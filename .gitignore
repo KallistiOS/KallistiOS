@@ -30,6 +30,8 @@ examples/dreamcast/conio/adventure/data.c
 examples/dreamcast/conio/adventure/setup
 examples/dreamcast/png/romdisk_boot.img
 examples/dreamcast/pvr/modifier_volume_tex/romdisk/fruit.kmg
+examples/dreamcast/pvr/bumpmap/romdisk/bricks.kmg
+examples/dreamcast/pvr/bumpmap/romdisk/bumpmap.raw
 examples/dreamcast/pvr/texture_render/texture_render.bin
 utils/dc-chain/logs
 utils/dc-chain/*.tar.bz2
