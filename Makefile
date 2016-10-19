@@ -34,7 +34,7 @@ distclean: clean
 	-rm -f addons/lib/$(KOS_ARCH)/*
 
 kos-ports_all:
-	$(KOS_MAKE) -C ../kos-ports all KOS_BASE=$(CURDIR)
+	../kos-ports/utils/build-all.sh
 
 kos-ports_clean:
 	$(KOS_MAKE) -C ../kos-ports clean KOS_BASE=$(CURDIR)

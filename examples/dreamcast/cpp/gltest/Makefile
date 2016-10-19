@@ -17,7 +17,7 @@ rm-elf:
 	-rm -f $(TARGET) romdisk.*
 
 $(TARGET): $(OBJS) romdisk.o
-	kos-c++ -o $(TARGET) $(OBJS) romdisk.o -lgl -lkosutils
+	kos-c++ -o $(TARGET) $(OBJS) romdisk.o -lGL -lkosutils
 
 romdisk.img:
 	$(KOS_GENROMFS) -f romdisk.img -d romdisk -v
