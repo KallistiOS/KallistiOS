@@ -1,0 +1,20 @@
+--- gcc-4.7.3/gcc/Makefile.in	2013-04-01 10:11:11.000000000 +0200
++++ gcc-4.7.3-keep/gcc/Makefile.in	2016-10-15 00:17:04.600424979 +0200
+@@ -4255,8 +4255,6 @@
+ 
+ # Remake the info files.
+ 
+-doc: $(BUILD_INFO) $(GENERATED_MANPAGES)
+-
+ INFOFILES = doc/cpp.info doc/gcc.info doc/gccint.info \
+             doc/gccinstall.info doc/cppinternals.info
+ 
+@@ -4546,7 +4544,7 @@
+ # Install the driver last so that the window when things are
+ # broken is small.
+ install: install-common $(INSTALL_HEADERS) \
+-    install-cpp install-man install-info install-@POSUB@ \
++    install-cpp install-man install-@POSUB@ \
+     install-driver install-lto-wrapper install-gcc-ar
+ 
+ ifeq ($(enable_plugin),yes)
