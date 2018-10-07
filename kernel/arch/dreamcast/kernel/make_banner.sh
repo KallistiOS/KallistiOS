@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Re-creates the banner.h file for each compilation run
 
