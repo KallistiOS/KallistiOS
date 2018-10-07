@@ -10,7 +10,7 @@ relver='##version##'
 printf '"KallistiOS ' >> banner.h
 if [ -d "$KOS_BASE/.git" ]; then
     printf 'Git revision ' >> banner.h
-    gitrev=`git describe --dirty`
+    gitrev=`git describe --dirty --always`
     printf "$gitrev" >> banner.h
     printf ':\\n\"\n' >> banner.h
 else
