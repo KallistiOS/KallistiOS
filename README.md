@@ -18,4 +18,4 @@ A more complete installation script, guide as well as programming tutorials may 
 
 [Ask for help on the forums](http://dcemulation.org/phpBB/viewforum.php?f=29).
 
-**IRC chat:** [irc.freenode.net](irc.freenode.net) `#dreamcastdev`
+**IRC chat:** `irc.freenode.net` `#dreamcastdev`
