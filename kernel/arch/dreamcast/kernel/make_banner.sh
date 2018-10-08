@@ -10,7 +10,7 @@ relver='##version##'
 printf '"KallistiOS ' >> banner.h
 if [ -d "$KOS_BASE/.git" ]; then
     printf 'Git revision ' >> banner.h
-    gitrev=`git describe --dirty`
+    gitrev=`git describe --dirty --always`
     printf "$gitrev" >> banner.h
     printf ':\\n\"\n' >> banner.h
 else
@@ -25,7 +25,7 @@ printf '\\n"\n' >> banner.h
 
 printf '"  ' >> banner.h
 tmp=`whoami`
-printf "$tmp" >> banner.h
+printf "$tmp" | sed "s/\\\/\\\\\\\/g" >> banner.h
 printf '@' >> banner.h
 
 if [ `uname` = Linux ]; then
