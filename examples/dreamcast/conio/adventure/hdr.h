@@ -55,6 +55,12 @@
 
 /* hdr.h: included by c advent files */
 #ifdef SETUP
+#ifdef __MINGW32__
+#define _BSD_SOURCE
+#include <sys/bsdtypes.h>
+#include <stdlib.h>
+#define srandom srand
+#endif
 #include <sys/types.h>
 #include <signal.h>
 #else

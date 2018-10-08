@@ -78,10 +78,15 @@ main(int argc, char **argv) {
     FILE *infile;
     int c, count, linestart;
 
-    if(argc != 2) printf(USAGE);
+    if(argc != 2) {
+		printf(USAGE);
+		exit(2);
+	}
 
-    if((infile = fopen(argv[1], "r")) == NULL)
+    if((infile = fopen(argv[1], "r")) == NULL) {
         printf("Can't read file %s", argv[1]);
+		exit(1);
+	}
 
     puts("/*\n * data.c: created by setup from the ascii data file.");
     puts(SIG1);
