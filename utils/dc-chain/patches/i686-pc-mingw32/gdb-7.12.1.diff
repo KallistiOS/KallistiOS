@@ -1,0 +1,13 @@
+--- gdb-7.12.1/gdb/ser-mingw.c	2017-01-21 13:46:47 +0000
++++ gdb-7.12.1/gdb/ser-mingw.c.patch	2018-08-24 08:30:27 +0000
+@@ -31,6 +31,10 @@
+ 
+ #include "command.h"
+ 
++#ifndef ERROR_IO_PENDING
++#include <winerror.h>
++#endif
++
+ void _initialize_ser_windows (void);
+ 
+ struct ser_windows_state
