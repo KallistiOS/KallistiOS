@@ -2,7 +2,7 @@
 
 This document contains all the instructions to create a fully working environment for **Sega Dreamcast** programming under **MinGW/MSYS**. This document was created because making a working environment under **MinGW/MSYS** is really difficult. If you are using another environment, including **MinGW-w64/MSYS2**, please [visit the official wiki](http://dcemulation.org/?title=Development) to get more information.
 
-This document applies only on the original **MinGW/MSYS** environment provided by [MinGW.org](http://www.mingw.org)
+This document applies only on the original **MinGW/MSYS** environment provided by [MinGW.org](http://www.mingw.org).
 
 ## Installation of MinGW/MSYS ##
 

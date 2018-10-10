@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # Getting versions defined in Makefile
 source ./version.sh

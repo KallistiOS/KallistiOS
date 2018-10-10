@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # This shell script extract versions from Makefile
 # It's used in ./download.sh, ./unpack.sh and ./cleanup.sh
