@@ -223,9 +223,9 @@ $(build_binutils): logdir
 	mv $(src_dir)/bfd/doc/bfd.texinfo2 $(src_dir)/bfd/doc/bfd.texinfo
 	-mkdir -p $(build)
 	> $(log)
-	cd $(build); ../$(src_dir)/configure --target=$(target) --prefix=$(prefix) --disable-werror $(libbfd_install_flag) CXX=$(CXX) $(to_log)
-	$(MAKE) $(makejobs) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
-	$(MAKE) -C $(build) install DESTDIR=$(DESTDIR) $(to_log)
+#	cd $(build); ../$(src_dir)/configure --target=$(target) --prefix=$(prefix) --disable-werror $(libbfd_install_flag) CXX=$(CXX) $(to_log)
+#	$(MAKE) $(makejobs) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
+#	$(MAKE) -C $(build) install DESTDIR=$(DESTDIR) $(to_log)
 # Move sh-elf libbfd into a nicer place, as our cross-compiler is made by us for
 # our usage... so no problems about system libbfd conflicts!
 # See: https://www.sourceware.org/ml/binutils/2004-03/msg00337.html
@@ -233,7 +233,13 @@ $(build_binutils): logdir
 	if test "$(target)" = "$(sh_target)"; then \
 		echo "+++ Installing Binary File Descriptor library (libbfd) for $(target)..."; \
 		$(MAKE) -C $(build)/zlib install DESTDIR=$(DESTDIR) $(to_log); \
+		if ! test -d "$(sh_prefix)/include/"; then \
+			mkdir $(sh_prefix)/include/; \
+		fi; \
 		mv $(libbfd_src_bin_dir)/include/* $(sh_prefix)/include/; \
+		if ! test -d "$(sh_prefix)/lib/"; then \
+			mkdir $(sh_prefix)/lib/; \
+		fi; \
 		mv $(libbfd_src_bin_dir)/lib/* $(sh_prefix)/lib/; \
 		rmdir $(libbfd_src_bin_dir)/include/; \
 		rmdir $(libbfd_src_bin_dir)/lib/; \
