@@ -193,12 +193,12 @@ build_arm_targets=build-arm-binutils build-arm-gcc build-arm-gcc-pass1
 $(build_sh4_targets): prefix = $(sh_prefix)
 $(build_sh4_targets): target = $(sh_target)
 $(build_sh4_targets): extra_configure_args = --with-multilib-list=m4-single-only,m4-nofpu,m4 --with-endian=little --with-cpu=m4-single-only
-ifdef MINGW32
-# To compile dc-tool, we need to install libbfd, at least under MinGW/MSYS.
+
+# To compile dc-tool, we need to install libbfd for sh-elf.
 # This is done when making build-sh4-binutils.
-    $(build_sh4_targets): libbfd_install_flag = -enable-install-libbfd
-    $(build_sh4_targets): libbfd_src_bin_dir = $(sh_prefix)/$(host_triplet)/$(sh_target)
-endif
+$(build_sh4_targets): libbfd_install_flag = -enable-install-libbfd
+$(build_sh4_targets): libbfd_src_bin_dir = $(sh_prefix)/$(host_triplet)/$(sh_target)
+
 $(build_arm_targets): prefix = $(arm_prefix)
 $(build_arm_targets): target = $(arm_target)
 $(build_arm_targets): extra_configure_args = --with-arch=armv4
