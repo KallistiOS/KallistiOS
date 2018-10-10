@@ -1,5 +1,5 @@
 # Dreamcast toolchain makefile    by Jim Ursetto
-# adapted from Stalin's build script version 0.3
+# adapted from Stalin's build script version 0.4
 #
 # Interesting parameters:
 # erase=0|1                     Erase build directories on the fly to save space
@@ -19,6 +19,48 @@
 # gdb
 # insight
 
+
+# Check the presence of ./config.guess
+# This will help a lot to execute conditional steps depending on the host.
+config_guess_check=$(shell test -f ./config.guess || echo 1)
+ifeq ($(config_guess_check),1)
+  $(error Please execute ./download.sh first)
+endif
+
+# Determine if we are running under MinGW/MSYS
+host_triplet=$(shell ./config.guess)
+ifeq ($(host_triplet),i686-pc-mingw32)
+  $(info MinGW/MSYS build environment detected)
+  MINGW32 := 1
+endif
+
+# Check the MSYS POSIX emulation layer version...
+#
+# This is needed as a severe bug exists in the /bin/msys-1.0.dll file.
+# Indeed, the heap size is too small and hardcoded, which causes the error:
+#   Couldn't commit memory for cygwin heap, Win32 error
+#
+# The only solution to build gcc for sh-elf target under MinGW/MSYS is to
+# temporarily replace the /bin/msys-1.0.dll shipped with MinGW environment
+# (which is the v1.0.19 at this time) with the patched version provided in the
+# ./host/i686-pc-mingw32/ directory. You just need the msys-1.0.dll file of this
+# package. Copy the original file somewhere and replace it with the provided
+# patched version.
+#
+# The patched version is coming from the C::B Advanced package. The major fix 
+# applied is the heap size increase, from 256 MB to more than 1024 MB.
+#
+# After building the whole toolchain, please remove the patched version and move
+# the original /bin/msys-1.0.dll file back in place.
+ifdef MINGW32
+  msys_patched_checksum=2e627b60938fb8894b3536fc8fe0587a5477f570
+  msys_checksum=$(shell sha1sum /bin/msys-1.0.dll | cut -c-40)
+  ifneq ($(msys_checksum),$(msys_patched_checksum))	
+    $(warning Please consider temporarily patching /bin/msys-1.0.dll!)
+  endif
+endif
+
+
 # User configuration
 sh_target=sh-elf
 arm_target=arm-eabi
@@ -28,11 +70,18 @@ arm_prefix := /opt/toolchains/dc/$(arm_target)
 kos_root=$(CURDIR)/../../..
 # kos_base: equivalent of KOS_BASE (contains include/ and kernel/)
 kos_base=$(CURDIR)/../..
+
+# Libraries versions
 binutils_ver=2.27
 gcc_ver=4.7.3
 newlib_ver=2.0.0
-gdb_ver=7.11.1
+gdb_ver=7.12.1
 insight_ver=6.8-1
+
+# Internal GCC libraries versions, this is used in the version.sh script
+gmp_ver=4.3.2
+mpfr_ver=2.4.2
+mpc_ver=0.8.1
 
 # With GCC 4.x versions, the patches provide a kos thread model, so you should
 # use it. With 3.4.6, you probably want posix here. If you really don't want
@@ -48,6 +97,11 @@ verbose=1
 # with just one running at a time. So, if you run into trouble, then you should
 # clear this variable and try again with just one job running.
 makejobs=-j4
+
+# Under MinGW/MSYS (I don't know for MinGW-w64/MSYS2), only one job is possible.
+ifdef MINGW32
+  makejobs=
+endif
 
 # Set the languages to build for pass 2 of building gcc for sh-elf. The default
 # here is to build C, C++, Objective C, and Objective C++. You may want to take
@@ -128,6 +182,12 @@ build_arm_targets=build-arm-binutils build-arm-gcc build-arm-gcc-pass1
 $(build_sh4_targets): prefix = $(sh_prefix)
 $(build_sh4_targets): target = $(sh_target)
 $(build_sh4_targets): extra_configure_args = --with-multilib-list=m4-single-only,m4-nofpu,m4 --with-endian=little --with-cpu=m4-single-only
+ifdef MINGW32
+# To compile dc-tool, we need to install libbfd, at least under MinGW/MSYS.
+# This is done when making build-sh4-binutils.
+    $(build_sh4_targets): libbfd_install_flag = -enable-install-libbfd
+    $(build_sh4_targets): libbfd_src_bin_dir = $(sh_prefix)/$(host_triplet)/$(sh_target)
+endif
 $(build_arm_targets): prefix = $(arm_prefix)
 $(build_arm_targets): target = $(arm_target)
 $(build_arm_targets): extra_configure_args = --with-arch=armv4
@@ -152,10 +212,24 @@ $(build_binutils): logdir
 	mv $(src_dir)/bfd/doc/bfd.texinfo2 $(src_dir)/bfd/doc/bfd.texinfo
 	-mkdir -p $(build)
 	> $(log)
-	cd $(build); ../$(src_dir)/configure --target=$(target) --prefix=$(prefix) --disable-werror CXX=$(CXX) $(to_log)
+	cd $(build); ../$(src_dir)/configure --target=$(target) --prefix=$(prefix) --disable-werror $(libbfd_install_flag) CXX=$(CXX) $(to_log)
 	$(MAKE) $(makejobs) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
 	$(MAKE) -C $(build) install DESTDIR=$(DESTDIR) $(to_log)
-	$(clean_up)
+# Move sh-elf libbfd into a nicer place, as our cross-compiler is made by us for
+# our usage... so no problems about system libbfd conflicts!
+# See: https://www.sourceware.org/ml/binutils/2004-03/msg00337.html
+# Also, install zlib at the same time as we need it to use libbfd.
+	if test "$(target)" = "$(sh_target)"; then \
+		echo "+++ Installing Binary File Descriptor library (libbfd) for $(target)..."; \
+		$(MAKE) -C $(build)/zlib install DESTDIR=$(DESTDIR) $(to_log); \
+		mv $(libbfd_src_bin_dir)/include/* $(sh_prefix)/include/; \
+		mv $(libbfd_src_bin_dir)/lib/* $(sh_prefix)/lib/; \
+		rmdir $(libbfd_src_bin_dir)/include/; \
+		rmdir $(libbfd_src_bin_dir)/lib/; \
+		rmdir $(libbfd_src_bin_dir)/; \
+		rmdir $(sh_prefix)/$(host_triplet)/; \
+	fi;
+	$(clean_up)	
 
 $(build_gcc_pass1) $(build_gcc_pass2): build = build-gcc-$(target)-$(gcc_ver)
 $(build_gcc_pass1) $(build_gcc_pass2): src_dir = gcc-$(gcc_ver)
@@ -192,9 +266,29 @@ fixup-sh4-newlib: $(build_newlib)
 	cp $(kos_base)/include/pthread.h $(newlib_inc)
 	cp $(kos_base)/include/sys/_pthread.h $(newlib_inc)/sys
 	cp $(kos_base)/include/sys/sched.h $(newlib_inc)/sys
+ifndef MINGW32
 	ln -nsf $(kos_base)/include/kos $(newlib_inc)
 	ln -nsf $(kos_base)/kernel/arch/dreamcast/include/arch $(newlib_inc)
 	ln -nsf $(kos_base)/kernel/arch/dreamcast/include/dc   $(newlib_inc)
+else
+# Under MinGW/MSYS, the ln tool is not efficient, so it's better to do a simple
+# copy. Please keep that in mind when upgrading KallistiOS or your toolchain!
+	@echo ""
+	@echo ""
+	@echo "                              *** W A R N I N G ***"
+	@echo ""
+	@echo "    Be careful when upgrading KallistiOS or your toolchain!"
+	@echo "    You need to fixup-sh4-newlib again as the 'ln' utility is not working"
+	@echo "    properly on MinGW/MSYS environment!"
+	@echo ""
+	@echo "    See ./host/i686-pc-mingw32/ for details."
+	@echo ""
+	@echo ""
+	@sleep 5
+	cp -r $(kos_base)/include/kos $(newlib_inc)
+	cp -r $(kos_base)/kernel/arch/dreamcast/include/arch $(newlib_inc)
+	cp -r $(kos_base)/kernel/arch/dreamcast/include/dc   $(newlib_inc)
+endif
 
 $(build_gcc_pass2): log = $(logdir)/$(build)-pass2.log
 $(build_gcc_pass2): logdir
@@ -212,17 +306,29 @@ $(build_gcc_pass2): logdir
 
 # GDB building
 
+# Under MinGW/MSYS, a little fix is needed to compile gdb, at least with 7.12.1.
+ifdef MINGW32
+    gdb_patches := $(wildcard $(patches)/$(host_triplet)/gdb-$(gdb_ver)*.diff)	
+endif
+
 gdb-$(gdb_ver).tar.gz:
 	@echo "+++ Downloading GDB..."
 	wget -c ftp://ftp.gnu.org/gnu/gdb/gdb-$(gdb_ver).tar.gz
 
-unpack_gdb: gdb-$(gdb_ver).tar.gz unpack_gdb_stamp
+unpack_gdb: gdb-$(gdb_ver).tar.gz unpack_gdb_stamp patch_gdb_stamp
 
 unpack_gdb_stamp:
 	@echo "+++ Unpacking GDB..."
 	rm -f $@
 	rm -rf gdb-$(gdb_ver)
 	tar xf gdb-$(gdb_ver).tar.gz
+	touch $@
+
+patch_gdb_stamp:
+	rm -f $@
+ifdef MINGW32
+	patch -N -d gdb-$(gdb_ver) -p1 < $(gdb_patches)
+endif
 	touch $@
 
 build_gdb: log = $(logdir)/gdb-$(gdb_ver).log
@@ -309,7 +415,7 @@ clean:
 	-rm -rf build-gcc-$(arm_target)-$(gcc_ver)
 	-rm -rf build-binutils-$(sh_target)-$(binutils_ver)
 	-rm -rf build-binutils-$(arm_target)-$(binutils_ver)
-	-rm -rf build-gdb-$(gdb_ver) install_gdb_stamp build_gdb_stamp unpack_gdb_stamp
+	-rm -rf build-gdb-$(gdb_ver) install_gdb_stamp build_gdb_stamp unpack_gdb_stamp patch_gdb_stamp
 	-rm -rf build-insight-$(insight_ver) install_insight_stamp build_insight_stamp unpack_insight_stamp
 
 logdir:

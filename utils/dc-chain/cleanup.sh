@@ -1,12 +1,7 @@
 #!/bin/sh
 
-# These version numbers are all that should ever have to be changed.
-export GCC_VER=4.7.3
-export BINUTILS_VER=2.27
-export NEWLIB_VER=2.0.0
-export GMP_VER=4.3.2
-export MPFR_VER=2.4.2
-export MPC_VER=0.8.1
+# Getting versions defined in Makefile
+source ./version.sh
 
 while [ "$1" != "" ]; do
     PARAM=`echo $1 | awk -F= '{print $1}'`
@@ -51,10 +46,18 @@ if [ -n "$MPC_VER" ]; then
     rm -f mpc-$MPC_VER.tar.gz
 fi
 
+if [ -f "gdb-$GDB_VER.tar.gz" ]; then
+	rm -f gdb-$GDB_VER.tar.gz
+fi
+
+if [ -f "insight-${INSIGHT_VER}a.tar.bz2" ]; then
+	rm -f insight-${INSIGHT_VER}a.tar.bz2
+fi
+
 echo "Done!"
 echo "---------------------------------------"
 
-# Clean up
+# Clean up unpacked sources...
 echo "Deleting unpacked package sources..."
 rm -rf binutils-$BINUTILS_VER
 rm -rf gcc-$GCC_VER
@@ -72,20 +75,43 @@ if [ -n "$MPC_VER" ]; then
     rm -rf mpc-$MPC_VER
 fi
 
+if [ -d "gdb-$GDB_VER" ]; then
+    rm -rf gdb-$GDB_VER
+fi
+
+if [ -d "insight-$INSIGHT_VER" ]; then
+    rm -rf insight-$INSIGHT_VER
+fi
+
 echo "Done!"
 echo "---------------------------------------"
 
 # Clean up any stale build directories.
 echo "Cleaning up build directories..."
 
-rm -rf build-*
+# Remove the real config.guess file as we don't need that anymore
+if [ -f "config.guess" ]; then
+	rm -f config.guess
+fi
+touch config.guess
+	
+# Cleaning up build directories.
+make clean
 
 echo "Done!"
 echo "---------------------------------------"
 
-# Clean up the logs.
+# Clean up the logs
 echo "Cleaning up build logs..."
 
-rm -f logs/*.log
+if [ -d "logs/" ]; then
+	rm -f logs/*.log
+	rmdir logs/
+fi
 
 echo "Done!"
+
+# Clean up config.guess.
+if [ -f "config.guess" ]; then
+	rm -f config.guess
+fi

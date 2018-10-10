@@ -19,3 +19,8 @@ Generic newlib fixups (applied directly after newlib is installed):
 	ln -nsf $(kos_base)/include/kos $(newlib_inc)                        # so KOS includes are available as kos/file.h
 	ln -nsf $(kos_base)/kernel/arch/dreamcast/include/arch $(newlib_inc) # kos/thread.h requires arch/arch.h
 	ln -nsf $(kos_base)/kernel/arch/dreamcast/include/dc   $(newlib_inc) # arch/arch.h requires dc/video.h
+
+Note: For MinGW/MSYS, these newlib fixups should be manually applied.
+      See ./host/i686-pc-mingw32 for details.
+      For all the others platforms, these fixups are applied automatically.
+ 

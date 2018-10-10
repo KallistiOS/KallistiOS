@@ -1,12 +1,7 @@
 #!/bin/sh
 
-# These version numbers are all that should ever have to be changed.
-export GCC_VER=4.7.3
-export BINUTILS_VER=2.27
-export NEWLIB_VER=2.0.0
-export GMP_VER=4.3.2
-export MPFR_VER=2.4.2
-export MPC_VER=0.8.1
+# Getting versions defined in Makefile
+source ./version.sh
 
 while [ "$1" != "" ]; do
     PARAM=`echo $1 | awk -F= '{print $1}'`
@@ -56,6 +51,8 @@ if command -v wget >/dev/null 2>&1; then
         echo "Downloading MPC $MPC_VER..."
         wget -c ftp://gcc.gnu.org/pub/gcc/infrastructure/mpc-$MPC_VER.tar.gz || exit 1
     fi
+	
+	wget -O config.guess -c 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD' || exit 1
 elif command -v curl >/dev/null 2>&1; then
     echo "Downloading Binutils $BINUTILS_VER..."
     curl -C - -O ftp://ftp.gnu.org/gnu/binutils/binutils-$BINUTILS_VER.tar.bz2 || exit 1
@@ -78,6 +75,8 @@ elif command -v curl >/dev/null 2>&1; then
         echo "Downloading MPC $MPC_VER..."
         curl -C - -O ftp://gcc.gnu.org/pub/gcc/infrastructure/mpc-$MPC_VER.tar.gz || exit 1
     fi
+	
+	curl -C - -o config.guess 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD' || exit 1 
 else
     echo >&2 "You must have either wget or cURL installed to use this script!"
     exit 1

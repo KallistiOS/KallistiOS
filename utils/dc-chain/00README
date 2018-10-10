@@ -1,4 +1,4 @@
-dc-chain 0.3
+dc-chain 0.4
 ------------
 
 This package contains a Makefile which both simplifies building the Dreamcast
@@ -11,21 +11,39 @@ complex example, 'make patch-gcc build-sh4-gcc-pass1 thread_model=single' will
 build a patched, single-threaded sh4 gcc pass 1 compiler.  Please see the
 comments at the top of the Makefile for more options.
 
-Before you start, change the variables in the User Configuration section to
-match your environment.  They can be overridden at the command line as well.
+Before you start, change the variables in the User Configuration section of the
+Makefile to match your environment.  They can be overridden at the command line
+as well.
 
-Then untar your binutils, gcc-core, and optionally newlib and gcc-g++
-distributions into this directory (or copy Makefile and patches/ into your
-build directory.)  Also, ensure the KOS distribution is unpacked, and set 
-its path in the Makefile, because some KOS includes are copied over to newlib.
+Then execute the following:
+./download.sh
+./unpack.sh
 
 Finally, run make.  If anything goes wrong, check the output in logs/.
+
+Note: On MinGW/MSYS, you need to use a special version of the "msys-1.0.dll", 
+with the heap size increased to its maximum (from 256MB to 1024MB).  This is 
+absolutely necessary as the sh gcc build will fail if that patched version is 
+not installed.  After building the whole toolchains, it's strongly recommended 
+to reinstall the original "msys-1.0.dll" to its location. For more details, see
+./host/i686-pc-mingw32/.
+
+After the toolchain compilation, you can cleanup everything by entering:
+./cleanup.sh
 
 Some patches are included in this package as well.  As of this writing,
 they patch newlib-2.0.0 and gcc-4.7.3 to work with KOS.
 
-You should not attempt to spawn multiple jobs with make. Using "make -j2" or any
-other number after the -j will probably break things. There is however now an
-option inside the Makefile to set the number of jobs for the building phases.
+Speaking about the best versions to use for the Dreamcast of binutils, gcc, 
+newlib, gdb and all linked dependencies, they are already set up in the
+Makefile.  This is particulary true for gcc, the best version to use at this 
+time is the 4.7.3.  Greater versions has serious drawbacks so it's better to
+stick with that version.
+
+You should not attempt to spawn multiple jobs with make.  Using "make -j2" or 
+any other number after the -j will probably break things.  There is however now 
+an option inside the Makefile to set the number of jobs for the building phases.
 Set the makejobs variable in the Makefile to whatever you would normally feel
 the need to use on the command line, and it will do the right thing.
+On MinGW/MSYS, it has been confirmed that multiple jobs breaks the toolchain, so
+please don't try to do that under this environment.
