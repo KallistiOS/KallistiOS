@@ -81,3 +81,6 @@ else
     echo >&2 "You must have either wget or cURL installed to use this script!"
     exit 1
 fi
+
+# This is needed at least for FreeBSD.
+chmod 764 ./config.guess

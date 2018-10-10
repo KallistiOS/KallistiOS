@@ -27,11 +27,19 @@ ifeq ($(config_guess_check),1)
   $(error Please execute ./download.sh first)
 endif
 
-# Determine if we are running under MinGW/MSYS
+# Retrieve the host triplet
 host_triplet=$(shell ./config.guess)
+
+# Determine if we are running under MinGW/MSYS
 ifeq ($(host_triplet),i686-pc-mingw32)
   $(info MinGW/MSYS build environment detected)
   MINGW32 := 1
+endif
+
+# Determine if we are running under FreeBSD
+ifeq ($(shell echo $(host_triplet) | grep -q "freebsd" && echo "1"),1)
+  $(info FreeBSD build environment detected)
+  FREEBSD := 1
 endif
 
 # Check the MSYS POSIX emulation layer version...
@@ -111,6 +119,9 @@ pass2_languages=c,c++,objc,obj-c++
 
 # Change this if you don't have Bash installed in /bin
 SHELL = /bin/bash
+ifdef FREEBSD
+  SHELL = /usr/local/bin/bash   
+endif
 
 # GCC compiles fine with clang, but only if we use libstdc++ instead of libc++.
 UNAME_S := $(shell uname -s)
