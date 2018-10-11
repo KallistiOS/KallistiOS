@@ -25,7 +25,7 @@ printf '\\n"\n' >> banner.h
 
 printf '"  ' >> banner.h
 tmp=`whoami`
-printf "$tmp" | sed "s/\\\/\\\\\\\/g" >> banner.h
+printf "$tmp" >> banner.h
 printf '@' >> banner.h
 
 if [ `uname` = Linux ]; then
