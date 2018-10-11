@@ -147,6 +147,12 @@ binutils_dir=binutils-$(binutils_ver)
 gcc_dir=gcc-$(gcc_ver)
 newlib_dir=newlib-$(newlib_ver)
 
+# Check if we are curl or wget...
+web_downloader := $(shell which wget)
+ifeq ($(web_downloader),)
+  USE_CURL := 1
+endif
+
 all: patch build
 
 # ---- patch {{{
@@ -323,6 +329,8 @@ $(build_gcc_pass2): logdir
 
 # GDB building
 
+gdb_url := ftp://ftp.gnu.org/gnu/gdb/gdb-$(gdb_ver).tar.gz
+
 # Under MinGW/MSYS, a little fix is needed to compile gdb, at least with 7.12.1.
 ifdef MINGW32
     gdb_patches := $(wildcard $(patches)/$(host_triplet)/gdb-$(gdb_ver)*.diff)	
@@ -330,7 +338,11 @@ endif
 
 gdb-$(gdb_ver).tar.gz:
 	@echo "+++ Downloading GDB..."
-	wget -c ftp://ftp.gnu.org/gnu/gdb/gdb-$(gdb_ver).tar.gz
+ifndef USE_CURL
+	wget -c $(gdb_url)
+else
+	curl -O -J $(gdb_url)
+endif
 
 unpack_gdb: gdb-$(gdb_ver).tar.gz unpack_gdb_stamp patch_gdb_stamp
 
@@ -380,9 +392,15 @@ gdb: install_gdb
 
 # Insight building
 
+insight_url = ftp://sourceware.org/pub/insight/releases/insight-$(insight_ver)a.tar.bz2
+
 insight-$(insight_ver)a.tar.bz2:
 	@echo "+++ Downloading Insight..."
-	wget -c ftp://sourceware.org/pub/insight/releases/insight-$(insight_ver)a.tar.bz2
+ifndef USE_CURL
+	wget -c $(insight_url)
+else
+	curl -O -J $(insight_url)
+endif
 
 unpack_insight: insight-$(insight_ver)a.tar.bz2 unpack_insight_stamp
 
