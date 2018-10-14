@@ -232,10 +232,13 @@ $(build_binutils): logdir
 	cd $(build); ../$(src_dir)/configure --target=$(target) --prefix=$(prefix) --disable-werror $(libbfd_install_flag) CXX=$(CXX) $(to_log)
 	$(MAKE) $(makejobs) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
 	$(MAKE) -C $(build) install DESTDIR=$(DESTDIR) $(to_log)
-# Move sh-elf libbfd into a nicer place, as our cross-compiler is made by us for
-# our usage... so no problems about system libbfd conflicts!
+# This part is about BFD for sh-elf target.
+# It will move sh-elf libbfd into a nicer place, as our cross-compiler is made 
+# by us for our usage... so no problems about system libbfd conflicts!
 # See: https://www.sourceware.org/ml/binutils/2004-03/msg00337.html
 # Also, install zlib at the same time as we need it to use libbfd.
+# Note: libbfd is used for compiling dc-tool, but mainly on MinGW/MSYS.
+# For others platforms, it uses libelf instead.
 	if test "$(target)" = "$(sh_target)" && ! test -z "$(libbfd_src_bin_dir)"; then \
 		echo "+++ Installing Binary File Descriptor library (libbfd) for $(target)..."; \
 		$(MAKE) -C $(build)/zlib install DESTDIR=$(DESTDIR) $(to_log); \
