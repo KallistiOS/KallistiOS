@@ -82,5 +82,5 @@ else
     exit 1
 fi
 
-# This is needed at least for FreeBSD.
+# This is needed for all system except MinGW.
 chmod 764 ./config.guess

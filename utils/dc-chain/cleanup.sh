@@ -3,6 +3,8 @@
 # Getting versions defined in Makefile
 source ./version.sh
 
+export config_guess="./config.guess"
+
 while [ "$1" != "" ]; do
     PARAM=`echo $1 | awk -F= '{print $1}'`
     case $PARAM in
@@ -90,11 +92,12 @@ echo "---------------------------------------"
 echo "Cleaning up build directories..."
 
 # Remove the real config.guess file as we don't need that anymore
-if [ -f "config.guess" ]; then
-	rm -f config.guess
+if [ -f ${config_guess} ]; then
+	rm -f ${config_guess}
 fi
-touch config.guess
-	
+touch ${config_guess}
+chmod 764 ${config_guess}
+
 # Cleaning up build directories.
 make clean
 
@@ -110,8 +113,13 @@ if [ -d "logs/" ]; then
 fi
 
 echo "Done!"
+echo "---------------------------------------"
 
-# Clean up config.guess.
-if [ -f "config.guess" ]; then
-	rm -f config.guess
+# Clean up config.guess
+echo "Cleaning up ${config_guess}..."
+
+if [ -f ${config_guess} ]; then
+	rm -f ${config_guess}
 fi
+
+echo "Done!"
