@@ -44,7 +44,7 @@ printf ';\n' >> banner.h
 
 printf 'static const char kern_version[] = \n"' >> banner.h
 
-if test -z "$gitrev"; then
+if [ -z "$gitrev" ]; then
     printf "$relver" >> banner.h
 else
     printf "${gitrev#?}" >> banner.h
