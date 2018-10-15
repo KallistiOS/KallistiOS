@@ -31,9 +31,16 @@ endif
 host_triplet=$(shell ./config.guess)
 
 # Determine if we are running under MinGW/MSYS
+# This will make difference between MinGW/MSYS and MinGW-w64/MSYS2
 ifeq ($(host_triplet),i686-pc-mingw32)
-  $(info MinGW/MSYS build environment detected)
-  MINGW32 := 1
+  is_original_mingw=$(shell pacman --version >nul 2>&1 || echo 1)
+  ifeq ($(is_original_mingw),1)
+    $(info MinGW/MSYS build environment detected)
+    MINGW32 := 1
+  else
+    $(info MinGW-w64/MSYS2 build environment detected)  
+    MINGW64 := 1
+  endif
 endif
 
 # Determine if we are running under FreeBSD
@@ -120,7 +127,7 @@ pass2_languages=c,c++,objc,obj-c++
 # Change this if you don't have Bash installed in /bin
 SHELL = /bin/bash
 ifdef FREEBSD
-  SHELL = /usr/local/bin/bash   
+  SHELL = /usr/local/bin/bash
 endif
 
 # GCC compiles fine with clang, but only if we use libstdc++ instead of libc++.
