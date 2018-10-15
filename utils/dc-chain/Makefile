@@ -38,8 +38,10 @@ ifeq ($(host_triplet),i686-pc-mingw32)
     $(info MinGW/MSYS build environment detected)
     MINGW32 := 1
   else
-    $(info MinGW-w64/MSYS2 build environment detected)  
+    $(info MinGW-w64/MSYS2 build environment detected)
     MINGW64 := 1
+# config.guess is not reliable in this environment	
+    host_triplet=$(shell echo $MSYSTEM_CHOST)
   endif
 endif
 
