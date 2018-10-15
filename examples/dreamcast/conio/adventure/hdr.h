@@ -55,14 +55,20 @@
 
 /* hdr.h: included by c advent files */
 #ifdef SETUP
+
 #ifdef __MINGW32__
-#ifndef _MINGW_W64
+#ifdef _MINGW_W64
+/* MinGW-w64/MSYS2 */
+typedef unsigned long u_long;
+#else
+/* MinGW/MSYS */
 #define _BSD_SOURCE
 #include <sys/bsdtypes.h>
+#endif
 #include <stdlib.h>
 #define srandom srand
-#endif
-#endif
+#endif /* __MINGW32__ */
+
 #include <sys/types.h>
 #include <signal.h>
 #else
