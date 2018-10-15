@@ -23,7 +23,7 @@ ifeq ($(shell echo $(HOST) | cut -c-5),MINGW)
 # Both MinGW/MSYS legacy environment and MinGW-w64/MSYS2 environment
   MINGW32 := 1
   mingw_w64_checker = $(shell echo $$MSYSTEM_CHOST)
-  ifneq ($(mingw_w64),)
+  ifneq ($(mingw_w64_checker),)
 # Only MinGW-w64/MSYS2 environment, both for x86 / x64
     MINGW64 := 1
   else
