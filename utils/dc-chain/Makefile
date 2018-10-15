@@ -19,64 +19,8 @@
 # gdb
 # insight
 
-
-# Check the presence of ./config.guess
-# This will help a lot to execute conditional steps depending on the host.
-config_guess_check=$(shell test -f ./config.guess || echo 1)
-ifeq ($(config_guess_check),1)
-  $(error Please execute ./download.sh first)
-endif
-
-# Retrieve the host triplet
-host_triplet=$(shell ./config.guess)
-
-# Determine if we are running under MinGW/MSYS
-# This will make difference between MinGW/MSYS and MinGW-w64/MSYS2
-ifeq ($(host_triplet),i686-pc-mingw32)
-  is_original_mingw=$(shell pacman --version >nul 2>&1 || echo 1)
-  ifeq ($(is_original_mingw),1)
-    $(info MinGW/MSYS build environment detected)
-    MINGW32 := 1
-  else
-    $(info MinGW-w64/MSYS2 build environment detected)
-    MINGW64 := 1
-# config.guess is not reliable in this environment	
-    host_triplet=$(shell echo $$MSYSTEM_CHOST)
-  endif
-endif
-
-# Determine if we are running under FreeBSD
-ifeq ($(shell echo $(host_triplet) | grep -q "freebsd" && echo "1"),1)
-  $(info FreeBSD build environment detected)
-  FREEBSD := 1
-endif
-
-# Check the MSYS POSIX emulation layer version...
-#
-# This is needed as a severe bug exists in the /bin/msys-1.0.dll file.
-# Indeed, the heap size is too small and hardcoded, which causes the error:
-#   Couldn't commit memory for cygwin heap, Win32 error
-#
-# The only solution to build gcc for sh-elf target under MinGW/MSYS is to
-# temporarily replace the /bin/msys-1.0.dll shipped with MinGW environment
-# (which is the v1.0.19 at this time) with the patched version provided in the
-# ./host/i686-pc-mingw32/ directory. You just need the msys-1.0.dll file of this
-# package. Copy the original file somewhere and replace it with the provided
-# patched version.
-#
-# The patched version is coming from the C::B Advanced package. The major fix 
-# applied is the heap size increase, from 256 MB to more than 1024 MB.
-#
-# After building the whole toolchain, please remove the patched version and move
-# the original /bin/msys-1.0.dll file back in place.
-ifdef MINGW32
-  msys_patched_checksum=2e627b60938fb8894b3536fc8fe0587a5477f570
-  msys_checksum=$(shell sha1sum /bin/msys-1.0.dll | cut -c-40)
-  ifneq ($(msys_checksum),$(msys_patched_checksum))	
-    $(warning Please consider temporarily patching /bin/msys-1.0.dll!)
-  endif
-endif
-
+# Initialization rules
+include Makefile.rules
 
 # User configuration
 sh_target=sh-elf
@@ -116,7 +60,7 @@ verbose=1
 makejobs=-j4
 
 # Under MinGW/MSYS (I don't know for MinGW-w64/MSYS2), only one job is possible.
-ifdef MINGW32
+ifdef MINGW
   makejobs=
 endif
 
@@ -301,7 +245,7 @@ fixup-sh4-newlib: $(build_newlib)
 	cp $(kos_base)/include/pthread.h $(newlib_inc)
 	cp $(kos_base)/include/sys/_pthread.h $(newlib_inc)/sys
 	cp $(kos_base)/include/sys/sched.h $(newlib_inc)/sys
-ifndef MINGW32
+ifndef MINGW
 	ln -nsf $(kos_base)/include/kos $(newlib_inc)
 	ln -nsf $(kos_base)/kernel/arch/dreamcast/include/arch $(newlib_inc)
 	ln -nsf $(kos_base)/kernel/arch/dreamcast/include/dc   $(newlib_inc)
@@ -316,7 +260,7 @@ else
 	@echo "    You need to fixup-sh4-newlib again as the 'ln' utility is not working"
 	@echo "    properly on MinGW/MSYS environment!"
 	@echo ""
-	@echo "    See ./host/i686-pc-mingw32/ for details."
+	@echo "    See ./doc/mingw/ for details."
 	@echo ""
 	@echo ""
 	@sleep 5
@@ -344,7 +288,7 @@ $(build_gcc_pass2): logdir
 gdb_url := ftp://ftp.gnu.org/gnu/gdb/gdb-$(gdb_ver).tar.gz
 
 # Under MinGW/MSYS, a little fix is needed to compile gdb, at least with 7.12.1.
-ifdef MINGW32
+ifdef MINGW
     gdb_patches := $(wildcard $(patches)/$(host_triplet)/gdb-$(gdb_ver)*.diff)	
 endif
 
@@ -367,7 +311,7 @@ unpack_gdb_stamp:
 
 patch_gdb_stamp:
 	rm -f $@
-ifdef MINGW32
+ifdef MINGW
 	patch -N -d gdb-$(gdb_ver) -p1 < $(gdb_patches)
 endif
 	touch $@

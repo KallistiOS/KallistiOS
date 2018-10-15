@@ -1,6 +1,7 @@
 *.o
 *.elf
 *.exe
+*.dll
 *.map
 *~
 .*.swp
