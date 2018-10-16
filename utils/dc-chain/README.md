@@ -1,4 +1,4 @@
-# dc-chain 0.4 #
+# dc-chain #
 
 This package contains a `Makefile` which both simplifies building the whole 
 **Sega Dreamcast** toolchain, and gives you substantial control.
@@ -17,24 +17,24 @@ The **dc-chain** `Makefile` is ready to build everything you need to compile
 ## Usage ##
 
 Before you start, please browse the `./doc` directory to check if they are
-special instructions building the whole toolchain for your environment. 
+full instructions for building the whole toolchain for your environment.
 
-After that, change the variables in the `User Configuration` section of the
-`Makefile` to match your environment. They can be overridden at the command line 
-as well. Please note, a lot of conditional instructions have been added, so it
-should work most of the time just out-of-the-box for your environment.
+Below you will find some generic instructions:
 
-Then execute the following:
+1. Change the variables in the `User Configuration` section of the `Makefile`
+   to match your environment. They can be overridden at the command line as
+   well. Please note, a lot of conditional instructions have been added, so it
+   should work most of the time just out-of-the-box for your environment.
+
+2. Then execute the following for preparing the sources:
 
 	./download.sh
 	./unpack.sh
 
-These instructions will prepare sources package.
-
-Finally, enter:
+3. Finally, input (for **BSD**, please use `gmake` instead):
 
 	make
-
+	
 Depending of your environment, this can take a bunch of hours. So please be
 patient!
 
