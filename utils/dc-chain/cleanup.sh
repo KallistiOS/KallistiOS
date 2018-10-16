@@ -91,15 +91,13 @@ echo "---------------------------------------"
 # Clean up any stale build directories.
 echo "Cleaning up build directories..."
 
-# Remove the real config.guess file as we don't need that anymore
-if [ -f ${config_guess} ]; then
-	rm -f ${config_guess}
+export make = "make"
+if ! [ -z "command -v gmake" ]; then
+	export make = "gmake"
 fi
-touch ${config_guess}
-chmod 764 ${config_guess}
 
 # Cleaning up build directories.
-make clean
+${make} clean
 
 echo "Done!"
 echo "---------------------------------------"
