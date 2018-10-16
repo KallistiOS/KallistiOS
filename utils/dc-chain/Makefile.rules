@@ -50,6 +50,7 @@ ifneq ($(shell echo $(host_triplet) | grep -i 'mingw'),)
 # config.guess is not reliable in this environment	
     host_triplet=$(shell echo $$MSYSTEM_CHOST)
   endif
+  MINGW32 := 1  
   WINDOWS := 1  
 endif
 
