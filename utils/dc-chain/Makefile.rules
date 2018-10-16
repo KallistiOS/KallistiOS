@@ -10,6 +10,33 @@ endif
 # Retrieve the host triplet
 host_triplet=$(shell ./config.guess)
 
+# Retrieve the system
+uname_s := $(shell uname -s)
+
+# Determine if we are running macOS
+ifeq ($(uname_s),Darwin)
+  $(info macOS build environment detected)
+  MACOS := 1
+endif
+
+# Determine if we are running Linux
+ifeq ($(uname_s),Linux)
+  $(info GNU/Linux build environment detected)
+  LINUX := 1
+endif
+
+# Determine if we are running under FreeBSD
+ifeq ($(shell echo $(host_triplet) | grep -q "freebsd" && echo "1"),1)
+  $(info FreeBSD build environment detected)
+  FREEBSD := 1
+endif
+
+# Determine if we are running Cygwin
+ifneq ($(shell echo $(host_triplet) | grep -i 'cygwin'),)
+  CYGWIN := 1
+  WINDOWS := 1  
+endif
+
 # Determine if we are running under MinGW/MSYS
 # This will make difference between MinGW/MSYS and MinGW-w64/MSYS2
 ifneq ($(shell echo $(host_triplet) | grep -i 'mingw'),)
@@ -23,12 +50,7 @@ ifneq ($(shell echo $(host_triplet) | grep -i 'mingw'),)
 # config.guess is not reliable in this environment	
     host_triplet=$(shell echo $$MSYSTEM_CHOST)
   endif
-endif
-
-# Determine if we are running under FreeBSD
-ifeq ($(shell echo $(host_triplet) | grep -q "freebsd" && echo "1"),1)
-  $(info FreeBSD build environment detected)
-  FREEBSD := 1
+  WINDOWS := 1  
 endif
 
 # Check the MSYS POSIX emulation layer version...
