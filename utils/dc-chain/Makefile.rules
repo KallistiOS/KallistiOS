@@ -40,7 +40,7 @@ endif
 # Determine if we are running under MinGW/MSYS
 # This will make difference between MinGW/MSYS and MinGW-w64/MSYS2
 ifneq ($(shell echo $(host_triplet) | grep -i 'mingw'),)
-  is_legacy_mingw=$(shell pacman --version >nul 2>&1 || echo 1)
+  is_legacy_mingw=$(shell pacman --version >/dev/null 2>&1 || echo 1)
   ifeq ($(is_legacy_mingw),1)
     $(info MinGW/MSYS build environment detected)
     MINGW := 1
