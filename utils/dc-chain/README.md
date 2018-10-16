@@ -70,7 +70,7 @@ high-priority.
 
 ## Advanced options ##
 
-You may attempt to spawn multiple jobs with make. Using `make -j4` is
+You may attempt to spawn multiple jobs with `make`. Using `make -j4` is
 recommended for speeding up the building of the toolchain. There is an option 
 inside the `Makefile` to set the number of jobs for the building phases.
 Set the `makejobs` variable in the `Makefile` to whatever you would normally
@@ -81,7 +81,8 @@ trouble, you should clear this variable and try again with just one
 job running.
 
 On **MinGW/MSYS** environment, it has been confirmed that multiple jobs breaks
-the toolchain, so please don't try to do that under this environment.
+the toolchain, so please don't try to do that under this environment. This
+option is disabled by default in this scenario.
 
 ## Final note ##
 
