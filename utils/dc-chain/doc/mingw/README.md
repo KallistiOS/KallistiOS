@@ -28,6 +28,9 @@ Check if you can run the tools from the **Windows Command Interpreter** (`cmd`):
 - `svn --version`
 - `python --version`
 
+All these commands should produces an output containing the version of each
+component.
+
 ## Installation of MinGW/MSYS ##
 
 1. Open your browser on [MinGW.org](http://www.mingw.org) and download
@@ -52,8 +55,11 @@ packages:
  - `msys-wget`
  - `msys-coreutils-ext`
 
-Now we can commit the changes by selecting `Installation` > `Apply Changes`,
-confirm the opening window by hitting the `Apply` button.
+5. Now we can commit the changes by selecting `Installation` > `Apply Changes`,
+   confirm the opening window by hitting the `Apply` button.
+
+The **MinGW/MSYS** base environment is ready, but a patch should be installed
+before doing anything. It's the purpose of the section located below.
 
 ## Patching the MSYS installation ##
 
@@ -78,8 +84,10 @@ original version.
 
 To install the **MSYS** heap patch:
 
-1. Fire up at least one time the **MSYS** bash (it's needed to create some
-   necessary file, e.g. the `/etc/fstab` file).
+1. Fire up at least one time the **MSYS** Shell (it's needed to create some
+   necessary file, e.g. the `/etc/fstab` file). You can do that by
+   double-clicking the shortcut on your desktop (or alternatively,
+   double-clicking on the `${MINGW_ROOT}\msys\1.0\msys.bat` batch file).
 2. Close the bash by entering the `exit` command.
 3. Move the original `/bin/msys-1.0.dll`
   (i.e. `${MINGW_ROOT}\msys\1.0\bin\msys-1.0.dll`) outside its folder (please 
@@ -130,8 +138,7 @@ necessary. Open that file with a text editor and locate the `User configuration`
 section. You can tweak some parameters, but usually everything is ready to
 work out-of-the-box. For example, it isn't recommended to change the toolchains
 program versions. The highest versions confirmed to work with the
-**Sega Dreamcast** are always already set in that `Makefile` (e.g. `gcc 4.8.x`
-branch is unstable, so it's really better to stick with the `4.7.3` version).
+**Sega Dreamcast** are always already set in that `Makefile`.
 
 To make the toolchains, do the following:
 
@@ -166,12 +173,14 @@ After everything is done, you can cleanup all temporary files by entering:
 
 	./cleanup.sh
 
-## Remove the MSYS environment patch ##
+## Removing the MSYS heap patch ##
 
-Don't forget to replace the patched `msys-1.0.dll` with its original version
-(i.e. the patched file `SHA-1` is `4f7c8eb2d061cdf4d256df624f260d0e58043072`).
+After your toolchain is ready, please don't forget to replace the patched
+`msys-1.0.dll` with its original version (i.e. the patched file `SHA-1`
+is `4f7c8eb2d061cdf4d256df624f260d0e58043072`).
 
-To do that, you will need to close the running **MSYS** Shell!
+But before replacing the file, close the running **MSYS** Shell by entering
+the `exit` command!
 
 ## Fixing up Newlib for SH-4 ##
 

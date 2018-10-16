@@ -31,14 +31,21 @@ Then execute the following:
 
 These instructions will prepare sources package.
 
-Finally, run `make`.
+Finally, enter:
+
+	make
 
 Depending of your environment, this can take a bunch of hours. So please be
-patient! Also note, if anything goes wrong, check the output in `logs/`.
+patient!
+
+Also note, if anything goes wrong, check the output in `logs/`.
 
 For the `sh-elf` toolchain, if you want to use the **GNU Debugger** (`gdb`),
-you can run `make gdb`. This will install `gdb` in the `sh-elf` toolchain.
-You don't need to do that for the `arm-eabi` target (`gdb` is used with
+you can make it by entering:
+
+	make gdb
+
+This will install `gdb` in the `sh-elf` toolchain (`gdb` is used with
 `dcload/dc-tool` programs, which are part of **KallistiOS** too).
 
 After the toolchain compilation, you can cleanup everything by entering:
