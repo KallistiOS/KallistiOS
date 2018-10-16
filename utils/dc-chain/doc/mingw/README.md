@@ -1,7 +1,7 @@
 # Sega Dreamcast toolchain with MinGW/MSYS #
 
 This document contains all the instructions to create a fully working
-environment for **Sega Dreamcast** programming under **MinGW/MSYS**.
+toolchain targeting the **Sega Dreamcast** system under **MinGW/MSYS**.
 
 This document applies only on the original **MinGW/MSYS** environment provided
 by [MinGW.org](http://www.mingw.org). For **MinGW-w64/MSYS2** environment, check
@@ -14,7 +14,7 @@ build the whole toolchain:
 
 - [Git](https://git-scm.com/)
 - [Subversion Client](https://sliksvn.com/download/)
-- [Python 2](https://www.python.org/downloads/) - (**Python 3** is un-tested)
+- [Python 2](https://www.python.org/downloads/) - (**Python 3** is untested)
 
 **Git** is needed right now, as **Subversion Client** and **Python 2** will be
 needed only when building `kos-ports`. But it's better to install these now.
@@ -31,15 +31,19 @@ Check if you can run the tools from the **Windows Command Interpreter** (`cmd`):
 ## Installation of MinGW/MSYS ##
 
 1. Open your browser on [MinGW.org](http://www.mingw.org) and download
-`mingw-get-setup.exe` from the [MinGW repository](https://osdn.net/projects/mingw/releases/).
+`mingw-get-setup.exe` from the
+[MinGW repository](https://osdn.net/projects/mingw/releases/).
 
 2. Run `mingw-get-setup.exe` on **Administrator mode** (starting from
 **Microsoft Windows Vista**) then click on the `Install` button. In the
-`Installation Directory` text box, input `C:\dcsdk\`. Leave the other options
-to its defaults then click on `Continue`. The **MinGW/MSYS** installation
-begins. When the progress bar is full, click on the `Continue` button.
+`Installation Directory` text box, input `C:\dcsdk\` or something else. The
+`Installation Directory` will be called `${MINGW_ROOT}` later in the document.
 
-3. When the **MinGW Installation Manager** shows up, select the following
+3. Leave the other options to its defaults then click on `Continue`. 
+The **MinGW/MSYS** installation begins. When the progress bar is full, click on
+the `Continue` button.
+
+4. When the **MinGW Installation Manager** shows up, select the following
 packages:
  - `mingw32-base`
  - `mingw32-gcc-g++`
@@ -62,8 +66,9 @@ In order to resolve this bug, you must install the `msys-1.0.dll` from the
 [C::B Advanced package](https://sourceforge.net/projects/cbadvanced/files/)
 which has been patched to increase the heap internal memory size at its maximum
 value (i.e. from `256 MB` to more than `1 GB`). The issue is that package was
-removed from the [C::B Advanced](https://sourceforge.net/projects/cbadvanced/files/)
-repository, as they are now using the modern **MinGW-w64/MSYS2** environment.
+removed from the 
+[C::B Advanced](https://sourceforge.net/projects/cbadvanced/files/) repository,
+as they are now using the modern **MinGW-w64/MSYS2** environment.
 Fortunately, the required package was cached in this directory, under the
 following name: `msysCORE-1.0.18-1-heap-patch-20140117.7z`.
 
@@ -77,11 +82,11 @@ To install the **MSYS** heap patch:
    necessary file, e.g. the `/etc/fstab` file).
 2. Close the bash by entering the `exit` command.
 3. Move the original `/bin/msys-1.0.dll`
-  (i.e. `C:\dcsdk\msys\1.0\bin\msys-1.0.dll`) outside its folder (please don't
-  just rename the file in the `/bin` folder!).
+  (i.e. `${MINGW_ROOT}\msys\1.0\bin\msys-1.0.dll`) outside its folder (please 
+  don't just rename the file in the `/bin` folder!).
 4. Extract the patched `msys-1.0.dll` from 
    `msysCORE-1.0.18-1-heap-patch-20140117.7z` and place it in the `/bin`
-   directory (i.e. `C:\dcsdk\msys\1.0\bin\`).
+   directory (i.e. `${MINGW_ROOT}\msys\1.0\bin\`).
 
 ## Checking the `/mingw` mount point ##
 
@@ -90,25 +95,30 @@ mount point.
 
 Before doing anything, just check if you can access the `/mingw` mount point
 with the `cd /mingw` command. If this isn't the case, please check the content
-of the `/etc/fstab` file (i.e. `C:\dcsdk\msys\1.0\etc\fstab`).
+of the `/etc/fstab` file (i.e. `${MINGW_ROOT}\msys\1.0\etc\fstab`).
 
 ## Preparing the environment ##
 
 1. Open the **MSYS** Shell by double-clicking the shortcut on your desktop (or
-   alternatively, double-click on the `C:\dcsdk\msys\1.0\msys.bat`).
+   alternatively, double-click on the `${MINGW_ROOT}\msys\1.0\msys.bat` batch 
+   file).
    
-2. Enter the following:
+2. Enter the following to prepare **KallistiOS**:
 
 		mkdir -p /opt/toolchains/dc/
 		cd /opt/toolchains/dc/
 		git clone https://github.com/KallistiOS/KallistiOS.git kos
 		git clone https://github.com/KallistiOS/kos-ports.git
-		mkdir dcload/
-		cd dcload/
+
+3. Enter the following to prepare **dcload**/**dc-tool** (part of 
+   **KallistiOS**):
+ 
+		mkdir -p /opt/toolchains/dc/dcload/
+		cd /opt/toolchains/dc/dcload/
 		git clone https://github.com/KallistiOS/dcload-serial.git
 		git clone https://github.com/KallistiOS/dcload-ip.git
 
-Now it's time to use the **dc-chain** `Makefile`.
+Everything is ready, now it's time to use the make the toolchain.
 
 ## Toolchain compilation ##
 
@@ -125,35 +135,61 @@ branch is unstable, so it's really better to stick with the `4.7.3` version).
 
 To make the toolchains, do the following:
 
-1. Start the **MSYS** shell if not already done.
+1. Start the **MSYS** Shell if not already done.
 2. Navigate to the `dc-chain` directory by entering:
 
 		cd /opt/toolchains/dc/kos/utils/dc-chain/
 	
-3. Enter `./download.sh`. This will download all the source packages for all components.
-4. Enter `./unpack.sh`. This will unpack all packages.
-5. Enter `make`.
+3. Enter the following to download all source packages for all components:
 
-Now it's time to take a coffee as this process is really long: several hours will be needed to make the full toolchain!
+		./download.sh
 
-If you want to install the **GNU Debugger** (`gdb`), just enter `make gdb`. This will install `sh-elf-gdb` and can be used to debug programs throught `dc-load/dc-tool`.
+4. Enter the following to unpack all source packages.
 
-After everything is done, you can cleanup all temporary files by just entering `./cleanup.sh`.
+		./unpack.sh
 
-Don't forget to replace the patched `msys-1.0.dll` with its original version (i.e. the patched file `SHA-1` is `4f7c8eb2d061cdf4d256df624f260d0e58043072`).
+5. Enter the following to launch the process:
+
+		make
+
+Now it's time to take a coffee as this process is really long: several hours
+will be needed to make the full toolchain!
+
+If you want to install the **GNU Debugger** (`gdb`), just enter:
+
+	make gdb
+
+This will install `sh-elf-gdb` and can be used to debug programs through
+`dc-load/dc-tool`.
+
+After everything is done, you can cleanup all temporary files by entering:
+
+	./cleanup.sh
+
+## Remove the MSYS environment patch ##
+
+Don't forget to replace the patched `msys-1.0.dll` with its original version
+(i.e. the patched file `SHA-1` is `4f7c8eb2d061cdf4d256df624f260d0e58043072`).
+
+To do that, you will need to close the running **MSYS** Shell!
 
 ## Fixing up Newlib for SH-4 ##
 
-The `ln` command in the **MinGW/MSYS** environment is not effective, as symbolic links are not well managed under this environment.
-That's why you need to manually fix up **SH-4** `newlib` when updating your toolchain (i.e. rebuilding it) and/or updating **KallistiOS**.
+The `ln` command in the **MinGW/MSYS** environment is not effective, as
+symbolic links are not well managed under this environment.
+That's why you need to manually fix up **SH-4** `newlib` when updating your
+toolchain (i.e. rebuilding it) and/or updating **KallistiOS**.
 
 This is the purpose of the provided `fixup-sh4-newlib.sh` shell script.
 
-Before executing it, just edit it to be sure if the `$toolchains_base` variable is correctly set. Then execute it by just entering `./fixup-sh4-newlib.sh`.
+Before executing it, just edit it to be sure if the `$toolchains_base` variable
+is correctly set. Then execute it by just entering `./fixup-sh4-newlib.sh`.
 
-## Final note ##
+## Conclusion ##
 
 After following this guide, the toolchain should be ready.
 
-You can just compile **KallistiOS** by following the same guide as the others platforms, that's why it isn't described here.
-Please read the `/opt/toolchains/dc/kos/doc/README` file to learn the next steps.
+Now it's time to compile **KallistiOS**.
+
+Please read the `/opt/toolchains/dc/kos/doc/README` file to learn the next
+steps.
