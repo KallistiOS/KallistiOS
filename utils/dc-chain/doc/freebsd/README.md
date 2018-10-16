@@ -14,7 +14,8 @@ Another option is to install the `sudo` command by entering:
 
 	pkg install sudo
 
-In that case, you will need to add the `sudo` command before entering all the commands specified below.
+In that case, you will need to add the `sudo` command before entering all the
+commands specified below.
 
 ## Prerequisites ##
 
@@ -23,7 +24,8 @@ build the whole toolchain.
 
 On **FreeBSD** system, the package manager is the `pkg` tool.
  
-If you never used the `pkg` tool before, you will be asked to install it. Please do this before continuing reading the document.
+If you never used the `pkg` tool before, you will be asked to install it. Please
+do this before continuing reading the document.
 
 ### Required packages ###
 
@@ -31,9 +33,12 @@ The packages below need to be installed:
 
 	pkg install gcc gmake binutils texinfo bash libjpeg-turbo png
 
-In **BSD** systems, the `make` is **NOT** the **GNU Make** tool.
+In **BSD** systems, the `make` is **NOT** the same as the **GNU Make** tool.
+Everything in the package needs `gmake`, you can't use `make` in **BSD**
+systems.
 
-Plus, by default the `sh` shell is run, and the whole **KallistiOS** package needs `bash`, that's why it needs to be installed.
+Plus, by default the `sh` shell is run, and the whole **KallistiOS** package
+needs `bash`, that's why it needs to be installed.
 
 ### Additional packages ###
 
@@ -44,13 +49,15 @@ These additional packages are required too:
 **Git** is needed right now, as **Subversion Client** and **Python 2** will be
 needed only when building `kos-ports`. But it's better to install these now.
 
-By the way you can check the installation success by entering something like `git --version`. This should returns something like `git version X.Y.Z`.
+By the way you can check the installation success by entering something like
+`git --version`. This should returns something like `git version X.Y.Z`.
 
 A cool text editor should be useful too:
 
 	pkg install nano
 
-Of course, this step is optional, you can use `vi` or something else if you want.
+Of course, this step is optional, you can use `vi` or something else if you
+want.
 
 ## Preparing the environment installation ##
 
@@ -77,15 +84,15 @@ Everything is ready, now it's time to use the make the toolchain.
 toolchains from source codes: **dc-chain**.
 
 The **dc-chain** system is mainly composed by a `Makefile` doing all the
-necessary. Open that file with a text editor (e.g. `nano`) and locate the `User configuration`
-section. You can tweak some parameters, but usually everything is ready to
-work out-of-the-box. For example, it isn't recommended to change the toolchains
-program versions. The highest versions confirmed to work with the
-**Sega Dreamcast** are always already set in that `Makefile`.
+necessary. Open that file with a text editor (e.g. `nano`) and locate the 
+`User configuration` section. You can tweak some parameters, but usually
+everything is ready to work out-of-the-box. For example, it isn't recommended
+to change the toolchains program versions. The highest versions confirmed to
+work with the **Sega Dreamcast** are always already set in that `Makefile`.
 
 To make the toolchains, do the following:
 
-1. Run `bash`, if not already done, as the scripts needs to be run within `bash`:
+1. Run `bash`, if not already done:
 
 		bash
 
