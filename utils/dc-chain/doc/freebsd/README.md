@@ -8,9 +8,14 @@ applicable on all **BSD** systems like **NetBSD** and **OpenBSD**.
 
 ## Introduction ##
 
-All the operations in this document should be executed with the `root` user.
+On **FreeBSD** system, the package manager is the `pkg` tool.
+ 
+If you never used the `pkg` tool before, you will be asked to install it. Please
+do this before continuing reading the document.
 
-Another option is to install the `sudo` command by entering:
+All the operations in this document should be executed with the `root` user. If 
+you don't want to connect with the `root` user, another option is to install
+the `sudo` command by entering:
 
 	pkg install sudo
 
@@ -22,12 +27,7 @@ commands specified below.
 Before doing anything, you will have to install some prerequisites in order to
 build the whole toolchain.
 
-On **FreeBSD** system, the package manager is the `pkg` tool.
- 
-If you never used the `pkg` tool before, you will be asked to install it. Please
-do this before continuing reading the document.
-
-### Required packages ###
+### Installation of required packages ###
 
 The packages below need to be installed:
 
@@ -40,7 +40,7 @@ systems.
 Plus, by default the `sh` shell is run, and the whole **KallistiOS** package
 needs `bash`, that's why it needs to be installed.
 
-### Additional packages ###
+### Installation of additional packages ###
 
 These additional packages are required too:
 

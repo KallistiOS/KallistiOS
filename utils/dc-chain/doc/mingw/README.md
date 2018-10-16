@@ -7,6 +7,12 @@ This document applies only on the original **MinGW/MSYS** environment provided
 by [MinGW.org](http://www.mingw.org). For **MinGW-w64/MSYS2** environment, check
 the `../mingw-w64` directory.
 
+## Introduction ##
+
+On the **MinGW/MSYS** system, the package manager is the `mingw-get` tool.
+
+In this document, it will be used in graphical mode (GUI).
+
 ## Prerequisites ##
 
 Before doing anything, you'll have to install some prerequisites in order to
@@ -33,9 +39,9 @@ component.
 
 ## Installation of MinGW/MSYS ##
 
-1. Open your browser on [MinGW.org](http://www.mingw.org) and download
+1. Open your browser on [**MinGW.org**](http://www.mingw.org) and download
 `mingw-get-setup.exe` from the
-[MinGW repository](https://osdn.net/projects/mingw/releases/).
+[**MinGW** repository](https://osdn.net/projects/mingw/releases/).
 
 2. Run `mingw-get-setup.exe` on **Administrator mode** (starting from
 **Microsoft Windows Vista**) then click on the `Install` button. In the
@@ -189,10 +195,29 @@ symbolic links are not well managed under this environment.
 That's why you need to manually fix up **SH-4** `newlib` when updating your
 toolchain (i.e. rebuilding it) and/or updating **KallistiOS**.
 
-This is the purpose of the provided `fixup-sh4-newlib.sh` shell script.
+This is the purpose of the provided `./packages/fixup-sh4-newlib.sh` script.
 
 Before executing it, just edit it to be sure if the `$toolchains_base` variable
 is correctly set. Then execute it by just entering `./fixup-sh4-newlib.sh`.
+
+## About static binaries ##
+
+If you are making the whole toolchains on **MinGW/MSYS**, if your host is
+**Microsoft Windows XP**, all the produced binaries in the toolchain will
+be statically linked, i.e. they can be run **outside** the **MSYS** environment:
+For example, if you just double-click on any `sh-elf` binary (e.g. `sh-elf-gcc`)
+the program should run.
+
+If you are compiling the toolchains on a modern host like 
+**Microsoft Windows 7**, the binaries will be dynamically linked, so if you try 
+to double-click on any `sh-elf` binary, you will have the following message:
+
+	The file libintl-8.dll is missing from your computer.
+
+Of course, this is not relevant if you are working directly from the 
+**MinGW/MSYS** environment, but this point can be notable if you want to use
+these toolchains from an IDE (like **Code::Blocks**), i.e. **outside** the
+**MinGW/MSYS** environment.
 
 ## Next steps ##
 
