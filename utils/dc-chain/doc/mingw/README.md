@@ -105,7 +105,7 @@ Before doing anything, just check if you can access the `/mingw` mount point
 with the `cd /mingw` command. If this isn't the case, please check the content
 of the `/etc/fstab` file (i.e. `${MINGW_ROOT}\msys\1.0\etc\fstab`).
 
-## Preparing the environment ##
+## Preparing the environment installation ##
 
 1. Open the **MSYS** Shell by double-clicking the shortcut on your desktop (or
    alternatively, double-click on the `${MINGW_ROOT}\msys\1.0\msys.bat` batch 
@@ -194,7 +194,7 @@ This is the purpose of the provided `fixup-sh4-newlib.sh` shell script.
 Before executing it, just edit it to be sure if the `$toolchains_base` variable
 is correctly set. Then execute it by just entering `./fixup-sh4-newlib.sh`.
 
-## Conclusion ##
+## Next steps ##
 
 After following this guide, the toolchain should be ready.
 
