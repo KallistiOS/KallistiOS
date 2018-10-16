@@ -91,9 +91,9 @@ echo "---------------------------------------"
 # Clean up any stale build directories.
 echo "Cleaning up build directories..."
 
-export make = "make"
+export make="make"
 if ! [ -z "command -v gmake" ]; then
-	export make = "gmake"
+	export make="gmake"
 fi
 
 # Cleaning up build directories.
