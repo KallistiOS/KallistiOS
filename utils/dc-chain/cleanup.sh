@@ -32,7 +32,7 @@ done
 
 # Clean up downloaded tarballs...
 echo "Deleting downloaded packages..."
-rm -f binutils-$BINUTILS_VER.tar.bz2
+rm -f binutils-$BINUTILS_VER.tar.xz
 rm -f gcc-$GCC_VER.tar.bz2
 rm -f newlib-$NEWLIB_VER.tar.gz
 

@@ -31,7 +31,7 @@ done
 # Download everything.
 if command -v wget >/dev/null 2>&1; then
     echo "Downloading binutils-$BINUTILS_VER..."
-    wget -c ftp://ftp.gnu.org/gnu/binutils/binutils-$BINUTILS_VER.tar.bz2 || exit 1
+    wget -c ftp://ftp.gnu.org/gnu/binutils/binutils-$BINUTILS_VER.tar.xz || exit 1
     echo "Downloading GCC $GCC_VER..."
     wget -c ftp://ftp.gnu.org/gnu/gcc/gcc-$GCC_VER/gcc-$GCC_VER.tar.bz2 || exit 1
     echo "Downloading Newlib $NEWLIB_VER..."
@@ -55,7 +55,7 @@ if command -v wget >/dev/null 2>&1; then
 	wget -O config.guess -c 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD' || exit 1
 elif command -v curl >/dev/null 2>&1; then
     echo "Downloading Binutils $BINUTILS_VER..."
-    curl -C - -O ftp://ftp.gnu.org/gnu/binutils/binutils-$BINUTILS_VER.tar.bz2 || exit 1
+    curl -C - -O ftp://ftp.gnu.org/gnu/binutils/binutils-$BINUTILS_VER.tar.xz || exit 1
     echo "Downloading GCC $GCC_VER..."
     curl -C - -O ftp://ftp.gnu.org/gnu/gcc/gcc-$GCC_VER/gcc-$GCC_VER.tar.bz2 || exit 1
     echo "Downloading Newlib $NEWLIB_VER..."

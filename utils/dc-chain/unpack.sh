@@ -33,7 +33,7 @@ rm -rf binutils-$BINUTILS_VER gcc-$GCC_VER newlib-$NEWLIB_VER
 rm -rf gmp-$GMP_VER mpfr-$MPFR_VER mpc-$MPC_VER
 
 # Unpack everything.
-tar jxf binutils-$BINUTILS_VER.tar.bz2 || exit 1
+tar jxf binutils-$BINUTILS_VER.tar.xz || exit 1
 tar jxf gcc-$GCC_VER.tar.bz2 || exit 1
 tar zxf newlib-$NEWLIB_VER.tar.gz || exit 1
 
