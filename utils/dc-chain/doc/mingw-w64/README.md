@@ -109,7 +109,7 @@ By the way you can check the installation success by entering something like
 
 Everything is ready, now it's time to use the make the toolchain.
 
-## Toolchain compilation ##
+## Compilation ##
 
 **KallistiOS** provides a complete system that make and install all required
 toolchains from source codes: **dc-chain**.
@@ -120,6 +120,8 @@ section. You can tweak some parameters, but usually everything is ready to
 work out-of-the-box. For example, it isn't recommended to change the toolchains
 program versions. The highest versions confirmed to work with the
 **Sega Dreamcast** are always already set in that `Makefile`.
+
+### Making the toolchain ###
 
 To make the toolchains, do the following:
 
@@ -143,12 +145,16 @@ To make the toolchains, do the following:
 Now it's time to take a coffee as this process is really long: several hours
 will be needed to make the full toolchain!
 
+### Making the GNU Debugger (gdb) ###
+
 If you want to install the **GNU Debugger** (`gdb`), just enter:
 
 	make gdb
 
 This will install `sh-elf-gdb` and can be used to debug programs through
 `dc-load/dc-tool`.
+
+### Removing all useless files ###
 
 After everything is done, you can cleanup all temporary files by entering:
 
