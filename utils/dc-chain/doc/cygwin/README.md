@@ -17,27 +17,31 @@ This document was written when using the `i686` version, so if you are using
 the `x86_64` version, you should replace all `i686` keywords in the packages
 name with `x86_64`.
 
-There is no particular improvement by running a specific flavors, so it's
-should be nice to stick with your **Windows** host flavor, i.e. if you are
-using **Windows x64**, then use the `x86_64` flavor.
+Please note that in the past, the **Cygwin** `x86_64` had problems with the
+toolchain, so its usage is not recommended.
 
 ## Installation of Cygwin ##
 
 1. Open your browser on [**Cygwin.com**](https://www.cygwin.com/) and download
-   `setup-${arch}.exe` (e.g. `setup-x86_64.exe`) from the 
+   `setup-${arch}.exe` (e.g. `setup-i686.exe`) from the 
    [**Cygwin** website](https://cygwin.com/install.html).
 
 2. Run `setup-${arch}.exe` on **Administrator mode** (starting from
-   **Microsoft Windows Vista**) then click on the `Install` button. In the
-`Installation Directory` text box, input `C:\dcsdk\` or something else. The
-`Installation Directory` will be called `${MINGW_ROOT}` later in the document.
+   **Microsoft Windows Vista**) then click on the `Next` button. 
 
-3. Leave the other options to its defaults then click on `Continue`. 
-The **Cygwin** installation begins. When the progress bar is full, click on
-the `Continue` button.
+3. Choose `Install from Internet` then click on the `Next` button.
 
-4. When the **MinGW Installation Manager** shows up, select the following
-packages:
+4. In the `Root Directory` text box, input `C:\dcsdk\` or something else. The
+`Root Directory` will be called `${CYGWIN_ROOT}` later in the document. Click on the `Next` button.
+
+5. In the `Local Package Directory`, input what you want. It should be a good idea to put the packages in the **Cygwin** directory, e.g. in `${CYGWIN_ROOT}\var\cache\packages\`. Click on the `Next` button.
+
+6. Adjust proxy settings as needed, then click on the `Next` button.
+
+7. Choose a FTP location near you and click the `Next` button.
+
+8. When the **Select Packages** window shows up, select the following
+packages, by using the `Search` text box (it should be more efficient to choose the `Category` view):
 
 	- `autoconf`
 	- `automake`
@@ -55,16 +59,17 @@ packages:
 	- `subversion`
 	- `texinfo`
 
-5. Now we can commit the changes by selecting `Installation` > `Apply Changes`,
-   confirm the opening window by hitting the `Apply` button.
+9. Validate the installation by clicking the `Next` button, the click on the `Terminate` button to exit the installer. It should be a good idea to create the shortcuts on the Desktop and/or in the Start Menu.
 
-The **Cygwin** base environment is ready, but a patch should be installed
-before doing anything. It's the purpose of the section located below.
+10. Move the `setup-${arch}.exe` file in the `${CYGWIN_ROOT}` directory. This is important if you want to update your **Cygwin** installation.
+
+The **Cygwin** base environment is ready. It's time to setup the 
+whole environment to build the toolchains.
 
 ## Preparing the environment installation ##
 
-1. Open the **Cygwin** Terminal by double-clicking the shortcut on your desktop 
-   (or alternatively, double-click on the `${MINGW_ROOT}\msys\1.0\msys.bat` batch 
+1. Open the **Cygwin Terminal** by double-clicking the shortcut on your Desktop 
+   (or alternatively, double-click on the `${CYGWIN_ROOT}\cygwin.bat` batch 
    file).
    
 2. Enter the following to prepare **KallistiOS**:
@@ -100,7 +105,7 @@ program versions. The highest versions confirmed to work with the
 
 To make the toolchains, do the following:
 
-1. Start the **MSYS** Shell if not already done.
+1. Start the **Cygwin Terminal** if not already done.
 
 2. Navigate to the `dc-chain` directory by entering:
 

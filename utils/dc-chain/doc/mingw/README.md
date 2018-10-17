@@ -90,7 +90,7 @@ original version.
 
 To install the **MSYS** heap patch:
 
-1. Fire up at least one time the **MSYS** Shell (it's needed to create some
+1. Fire up at least one time the **MSYS Shell** (it's needed to create some
    necessary file, e.g. the `/etc/fstab` file). You can do that by
    double-clicking the shortcut on your desktop (or alternatively,
    double-clicking on the `${MINGW_ROOT}\msys\1.0\msys.bat` batch file).
@@ -113,7 +113,7 @@ of the `/etc/fstab` file (i.e. `${MINGW_ROOT}\msys\1.0\etc\fstab`).
 
 ## Preparing the environment installation ##
 
-1. Open the **MSYS** Shell by double-clicking the shortcut on your desktop (or
+1. Open the **MSYS Shell** by double-clicking the shortcut on your desktop (or
    alternatively, double-click on the `${MINGW_ROOT}\msys\1.0\msys.bat` batch 
    file).
    
@@ -150,7 +150,7 @@ program versions. The highest versions confirmed to work with the
 
 To make the toolchains, do the following:
 
-1. Start the **MSYS** Shell if not already done.
+1. Start the **MSYS Shell** if not already done.
 2. Navigate to the `dc-chain` directory by entering:
 
 		cd /opt/toolchains/dc/kos/utils/dc-chain/
@@ -191,7 +191,7 @@ After your toolchain is ready, please don't forget to replace the patched
 `msys-1.0.dll` with its original version (i.e. the patched file `SHA-1`
 is `4f7c8eb2d061cdf4d256df624f260d0e58043072`).
 
-But before replacing the file, close the running **MSYS** Shell by entering
+But before replacing the file, close the running **MSYS Shell** by entering
 the `exit` command!
 
 ## Fixing up Newlib for SH-4 ##

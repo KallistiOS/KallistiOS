@@ -21,13 +21,10 @@ This document was written when using the `i686` version, so if you are using
 the `x86_64` version, you should replace all `i686` keywords in the packages
 name with `x86_64`.
 
-There is no particular improvement by running a specific flavors, so it's
-should be nice to stick with your Windows host flavor, i.e. if you are using
-**Windows x64**, then use the `x86_64` flavor.
+We don't know if the `x86_64` version is stable in this context. For your information, in the past some problems happened with the `x86_64` **Cygwin** version. Feel free to try it out if you want.
 
 Please note also, the **Microsoft Windows XP** support was dropped on this
-environment. If you need support for this old platform (as some tools for the 
-**Sega Dreamcast** may run only on **Windows XP**), you need to use the 
+environment. If you need support for this old platform, you need to use the 
 **MinGW/MSYS** environment instead.
 
 ## Installation of MinGW-w64/MSYS2 ##
@@ -44,7 +41,7 @@ environment. If you need support for this old platform (as some tools for the
    Click on the `Next` button to continue.
 
 3. Click on the `Next` button again, then click on the `Finish` button to start
-   the **MSYS2** Shell.
+   the **MSYS2 Shell**.
 
 The **MinGW-w64/MSYS2** base environment is now ready. It's time to setup the 
 whole environment to build the toolchains.
@@ -61,7 +58,7 @@ At the end of the process, a similar message to this one should be appear:
 	warning: for example close your terminal window instead of calling exit
 
 It means only the `pacman` runtime has been updated. Close the terminal as 
-requested. Restart the **MSYS2** Shell and run the same command again:
+requested. Restart the **MSYS2 Shell** and run the same command again:
 
 	pacman -Syuu
 
@@ -70,7 +67,7 @@ This should update all the packages of the **MinGW-w64/MSYS2** environment.
 ### Installation of required packages ###
 
 The packages below need to be installed to build the toolchains, so open the
-**MSYS2** Shell and input:
+**MSYS2 Shell** and input:
 
 	pacman -Sy --needed base-devel mingw-w64-i686-toolchain mingw-w64-i686-libpng mingw-w64-i686-libjpeg
 
@@ -88,7 +85,7 @@ By the way you can check the installation success by entering something like
 
 ## Preparing the environment installation ##
 
-1. Open the **MSYS2** Shell by double-clicking the shortcut on your start menu 
+1. Open the **MSYS2 Shell** by double-clicking the shortcut on your start menu 
    (or alternatively, double-click on the `${MINGW_ROOT}\mingw${arch}.exe` file,
    e.g. `${MINGW_ROOT}\mingw32.exe`).
    
@@ -125,7 +122,7 @@ program versions. The highest versions confirmed to work with the
 
 To make the toolchains, do the following:
 
-1. Start the **MSYS2** Shell if not already done.
+1. Start the **MSYS2 Shell** if not already done.
 2. Navigate to the `dc-chain` directory by entering:
 
 		cd /opt/toolchains/dc/kos/utils/dc-chain/
