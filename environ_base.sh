@@ -42,18 +42,18 @@ export KOS_CPPSTD="-std=gnu++98"
 export KOS_GCCVER="`kos-cc -dumpversion`"
 
 case $KOS_GCCVER in
-  4*)
-    export KOS_LDFLAGS="${KOS_LDFLAGS} ${KOS_LD_SCRIPT} -nodefaultlibs ${KOS_LIB_PATHS}" ;;
-  *)
+  2* | 3*)
     export KOS_LDFLAGS="${KOS_LDFLAGS} -nostartfiles -nostdlib ${KOS_LIB_PATHS}" ;;
+  *)
+    export KOS_LDFLAGS="${KOS_LDFLAGS} ${KOS_LD_SCRIPT} -nodefaultlibs ${KOS_LIB_PATHS}" ;;
 esac
 
 # Some extra vars based on architecture
 export KOS_ARCH_DIR="${KOS_BASE}/kernel/arch/${KOS_ARCH}"
 
 case $KOS_GCCVER in
-  4*)
-    export KOS_START="" ;;
-  *)
+  2* | 3*)
     export KOS_START="${KOS_ARCH_DIR}/kernel/startup.o" ;;
+  *)
+    export KOS_START="" ;;
 esac

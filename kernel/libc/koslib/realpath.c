@@ -43,8 +43,8 @@
 /* Newlib doesn't prototype these two functions in strict standards compliant
    mode, so we'll do it here. They're still provided either way, but they're
    not prototyped if we use -std=c99 (or any other non-gnuXX value). */
-size_t	 _EXFUN(strlcat,(char *, const char *, size_t));
-size_t	 _EXFUN(strlcpy,(char *, const char *, size_t));
+size_t strlcat(char *, const char *, size_t);
+size_t strlcpy(char *, const char *, size_t);
 #endif
 
 /*
