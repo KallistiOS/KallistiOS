@@ -134,6 +134,40 @@ of the `/etc/fstab` file (i.e. `${MINGW_ROOT}\msys\1.0\etc\fstab`).
 
 Everything is ready, now it's time to use the make the toolchain.
 
+## About making toolchain static binaries ##
+
+By default, all the binaries of the toolchain (e.g. `sh-elf-gcc`...) are
+dynamically linked, and that's the way that meant to be. The drawback is,
+if you want to use the toolchain outside the **MinGW/MSYS** environment and
+the binaries are dynamically linked, you'll have some error messages like:
+
+	The file libintl-8.dll is missing from your computer.
+
+This happens if you just double-click on any `sh-elf` binaries (e.g.
+`sh-elf-gcc`), even with `arm-eabi` binaries.
+
+In the **MinGW/MSYS** environment, you will have the possibility to make the
+toolchain binaries statically linked, i.e. they can be run **outside** the
+**MinGW/MSYS** environment:
+
+1. Open the **dc-chain** `Makefile` with a text editor.
+
+2. Locate the `STANDALONE_BINARY` flag and set it to `1`.
+
+3. Build the toolchain as usual with `make`.
+
+Now, if you just double-click on any `sh-elf` binary (e.g. `sh-elf-gcc`)
+the program should run properly.
+
+Of course, this is not relevant if you are working directly from the 
+**MinGW/MSYS** environment (i.e. from the **MSYS Shell**), but this point can
+be notable if you want to use these toolchains from an IDE (like
+**Code::Blocks**, **CodeLite**...), i.e. **outside** the **MinGW/MSYS**
+environment.
+
+Basically, if you just plan to use the **MinGW/MSYS** environment through the
+**MSYS Shell**, just let the `STANDALONE_BINARY` flag undefined.
+
 ## Compilation ##
 
 **KallistiOS** provides a complete system that make and install all required
@@ -205,28 +239,6 @@ This is the purpose of the provided `./packages/fixup-sh4-newlib.sh` script.
 
 Before executing it, just edit it to be sure if the `$toolchains_base` variable
 is correctly set. Then execute it by just entering `./fixup-sh4-newlib.sh`.
-
-## About static binaries ##
-
-If you are making the whole toolchains on **MinGW/MSYS**, if your host is
-**Microsoft Windows XP**, all the produced binaries in the toolchain will
-be statically linked, i.e. they can be run **outside** the **MSYS** environment:
-For example, if you just double-click on any `sh-elf` binary (e.g. `sh-elf-gcc`)
-the program should run.
-
-If you are compiling the toolchains on a modern host like 
-**Microsoft Windows 7**, the binaries will be dynamically linked, so if you try 
-to double-click on any `sh-elf` binary, you will have the following message:
-
-	The file libintl-8.dll is missing from your computer.
-
-Of course, this is not relevant if you are working directly from the 
-**MinGW/MSYS** environment, but this point can be notable if you want to use
-these toolchains from an IDE (like **Code::Blocks**), i.e. **outside** the
-**MinGW/MSYS** environment.
-
-**Note:** This apply only on **MinGW/MSYS** environment with the heap patch
-applied!
 
 ## Next steps ##
 
