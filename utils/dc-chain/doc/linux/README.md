@@ -12,7 +12,8 @@ On **Ubuntu** family system, the package manager is the `apt-get` tool.
 
 All the operations in this document should be executed with the `root` user. If 
 you don't want to connect with the `root` user, another option is to use
-the `sudo` command which comes installed by default on **Lubuntu** and **Ubuntu** systems family.
+the `sudo` command which comes installed by default on **Lubuntu** and
+**Ubuntu** systems family.
 
 In that case, you will need to add the `sudo` command before entering all the
 commands specified below.
@@ -41,7 +42,7 @@ The packages below need to be installed:
 
 These additional packages are required too:
 
-	pkg install git subversion python
+	apt-get install git subversion python
 
 **Git** is needed right now, as **Subversion Client** and **Python 2** will be
 needed only when building `kos-ports`. But it's better to install these now.
