@@ -59,7 +59,7 @@ verbose=1
 # clear this variable and try again with just one job running.
 makejobs=-j4
 
-# Under MinGW/MSYS (I don't know for MinGW-w64/MSYS2), only one job is possible.
+# Under MinGW/MSYS only one job is possible.
 ifdef MINGW
   makejobs=
 endif
@@ -76,6 +76,12 @@ ifdef FREEBSD
   SHELL = /usr/local/bin/bash
 endif
 
+# MinGW/MSYS
+# Define this if you want a standalone, no dependency binary (i.e. static)
+# When the binary is standalone, it can be run outside MSYS environment
+# This is NOT recommended. Use it if you know what you are doing.
+#STANDALONE_BINARY = 1
+
 # GCC compiles fine with clang, but only if we use libstdc++ instead of libc++.
 ifdef MACOS
   ifneq ($(shell $(CXX) --version | grep clang),)
@@ -87,7 +93,6 @@ endif
 ifeq ($(CXX),)
   CXX := g++
 endif
-
 
 # Makefile variables
 install=$(prefix)/bin
@@ -103,6 +108,16 @@ newlib_dir=newlib-$(newlib_ver)
 web_downloader := $(shell which wget)
 ifeq ($(web_downloader),)
   USE_CURL := 1
+endif
+
+# Set static flags to pass to configure if needed
+ifeq ($(STANDALONE_BINARY),1)
+  ifndef MINGW
+    $(warning STANDALONE_BINARY should be used ONLY on MinGW/MSYS environement)
+  endif
+# Note the extra minus before -static
+# See: https://stackoverflow.com/a/29055118/3726096
+  static_flag := --enable-static --disable-shared "LDFLAGS=--static"
 endif
 
 all: patch build
@@ -177,11 +192,13 @@ $(build_binutils): src_dir = binutils-$(binutils_ver)
 $(build_binutils): log = $(logdir)/$(build).log
 $(build_binutils): logdir
 	@echo "+++ Building $(src_dir) to $(build)..."
-	sed -e 's/ @colophon/ @@colophon/' -e 's/doc@cygnus.com/doc@@cygnus.com/' $(src_dir)/bfd/doc/bfd.texinfo > $(src_dir)/bfd/doc/bfd.texinfo2
+	sed -e 's/ @colophon/ @@colophon/' -e 's/doc@cygnus.com/doc@@cygnus.com/' \
+		$(src_dir)/bfd/doc/bfd.texinfo > $(src_dir)/bfd/doc/bfd.texinfo2
 	mv $(src_dir)/bfd/doc/bfd.texinfo2 $(src_dir)/bfd/doc/bfd.texinfo
 	-mkdir -p $(build)
 	> $(log)
-	cd $(build); ../$(src_dir)/configure --target=$(target) --prefix=$(prefix) --disable-werror $(libbfd_install_flag) CXX=$(CXX) $(to_log)
+	cd $(build); ../$(src_dir)/configure --target=$(target) --prefix=$(prefix) \
+		--disable-werror $(libbfd_install_flag) CXX=$(CXX) $(static_flag) $(to_log)
 	$(MAKE) $(makejobs) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
 	$(MAKE) -C $(build) install DESTDIR=$(DESTDIR) $(to_log)
 # This part is about BFD for sh-elf target.
@@ -216,7 +233,9 @@ $(build_gcc_pass1): logdir
 	@echo "+++ Building $(src_dir) to $(build) (pass 1)..."
 	-mkdir -p $(build)
 	> $(log)
-	cd $(build);  ../$(src_dir)/configure --target=$(target) --prefix=$(prefix) --without-headers --with-newlib --enable-languages=c --disable-libssp --disable-tls $(extra_configure_args) CXX=$(CXX) $(to_log)
+	cd $(build);  ../$(src_dir)/configure --target=$(target) --prefix=$(prefix) \
+		--without-headers --with-newlib --enable-languages=c --disable-libssp \
+		--disable-tls $(extra_configure_args) CXX=$(CXX) $(static_flag) $(to_log)
 	$(MAKE) $(makejobs) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
 	$(MAKE) -C $(build) install DESTDIR=$(DESTDIR) $(to_log)
 
@@ -227,7 +246,8 @@ $(build_newlib): logdir
 	@echo "+++ Building $(src_dir) to $(build)..."
 	-mkdir -p $(build)
 	> $(log)
-	cd $(build); ../$(src_dir)/configure --target=$(target) --prefix=$(prefix) $(extra_configure_args) $(to_log)
+	cd $(build); ../$(src_dir)/configure --target=$(target) --prefix=$(prefix) \
+		$(extra_configure_args) $(to_log)
 	$(MAKE) $(makejobs) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
 	$(MAKE) -C $(build) install DESTDIR=$(DESTDIR) $(to_log)
 	$(clean_up)
@@ -274,8 +294,10 @@ $(build_gcc_pass2): logdir
 	@echo "+++ Building $(src_dir) to $(build) (pass 2)..."
 	-mkdir -p $(build)
 	> $(log)
-	cd $(build);  ../$(src_dir)/configure --target=$(target) --prefix=$(prefix) --with-newlib --disable-libssp --disable-tls \
-	   --enable-threads=$(thread_model) --enable-languages=$(pass2_languages) $(extra_configure_args) CXX=$(CXX) $(to_log)
+	cd $(build);  ../$(src_dir)/configure --target=$(target) --prefix=$(prefix) \
+		--with-newlib --disable-libssp --disable-tls \
+		--enable-threads=$(thread_model) --enable-languages=$(pass2_languages) \
+		$(extra_configure_args) CXX=$(CXX) $(static_flag) $(to_log)
 	$(MAKE) $(makejobs) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
 	$(MAKE) -C $(build) install DESTDIR=$(DESTDIR) $(to_log)
 	$(clean_up)
@@ -329,7 +351,10 @@ build_gdb_stamp:
 	cd build-gdb-$(gdb_ver); ../gdb-$(gdb_ver)/configure \
 	    --disable-werror \
 	    --prefix=$(sh_prefix) \
-	    --target=$(sh_target) $(to_log)
+	    --target=$(sh_target) \
+		CXX=$(CXX) \
+		$(static_flag) \
+		$(to_log)
 	$(MAKE) $(makejobs) -C build-gdb-$(gdb_ver) $(to_log)
 	touch $@
 
@@ -380,7 +405,10 @@ build_insight_stamp:
 	cd build-insight-$(insight_ver); ../insight-$(insight_ver)/configure \
 	    --disable-werror \
 	    --prefix=$(sh_prefix) \
-	    --target=$(sh_target) $(to_log)
+	    --target=$(sh_target) \
+		CXX=$(CXX) \
+		$(static_flag) \
+		$(to_log)
 	$(MAKE) $(makejobs) -C build-insight-$(insight_ver) $(to_log)
 	touch $@
 
