@@ -123,10 +123,15 @@ endif
 all: patch build
 
 # ---- patch {{{
-binutils_patches    := $(wildcard $(patches)/binutils-$(binutils_ver)*.diff)
-gcc_patches    := $(wildcard $(patches)/gcc-$(gcc_ver)*.diff)
-newlib_patches := $(wildcard $(patches)/newlib-$(newlib_ver)*.diff)
-kos_patches    := $(wildcard $(patches)/kos-*.diff)
+binutils_patches 	:= $(wildcard $(patches)/binutils-$(binutils_ver)*.diff)
+gcc_patches    		:= $(wildcard $(patches)/gcc-$(gcc_ver)*.diff)
+newlib_patches 		:= $(wildcard $(patches)/newlib-$(newlib_ver)*.diff)
+kos_patches    		:= $(wildcard $(patches)/kos-*.diff)
+
+ifdef MINGW
+# Additional patches for MinGW/MSYS
+  binutils_patches	+= $(wildcard $(patches)/$(host_triplet)/binutils-$(binutils_ver)*.diff)	
+endif
 
 patch_targets=patch-binutils patch-gcc patch-newlib patch-kos
 
