@@ -31,7 +31,7 @@ build the whole toolchain.
 
 The packages below need to be installed:
 
-	pkg install gcc gmake binutils texinfo bash libjpeg-turbo png
+	pkg install gcc gmake binutils texinfo bash libjpeg-turbo png libelf
 
 In **BSD** systems, the `make` is **NOT** the same as the **GNU Make** tool.
 Everything in the package needs `gmake`, you can't use `make` in **BSD**
