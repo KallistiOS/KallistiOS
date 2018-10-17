@@ -3,7 +3,7 @@
 # Getting versions defined in Makefile
 source ./version.sh
 
-export config_guess="./config.guess"
+config_guess="./config.guess"
 
 while [ "$1" != "" ]; do
     PARAM=`echo $1 | awk -F= '{print $1}'`
@@ -91,9 +91,9 @@ echo "---------------------------------------"
 # Clean up any stale build directories.
 echo "Cleaning up build directories..."
 
-export make="make"
-if ! [ -z "command -v gmake" ]; then
-	export make="gmake"
+make="make"
+if ! [ -z "$(command -v gmake)" ]; then
+	make="gmake"
 fi
 
 # Cleaning up build directories.
