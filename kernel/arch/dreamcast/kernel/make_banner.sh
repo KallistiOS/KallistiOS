@@ -12,10 +12,10 @@ if [ -d "$KOS_BASE/.git" ]; then
     printf 'Git revision ' >> banner.h
     gitrev=`git describe --dirty --always`
     printf "$gitrev" >> banner.h
-    printf ':\\n\"\n' >> banner.h
+    printf ':\\n"\n' >> banner.h
 else
     printf "$relver" >> banner.h
-    printf ':\\n\"\n' >> banner.h
+    printf ':\\n"\n' >> banner.h
 fi
 
 printf '"  ' >> banner.h
@@ -44,7 +44,7 @@ printf ';\n' >> banner.h
 
 printf 'static const char kern_version[] = \n"' >> banner.h
 
-if [ -z "$gitrev" ]; then
+if [ -n "$gitrev" ]; then
     printf "$relver" >> banner.h
 else
     printf "${gitrev#?}" >> banner.h
