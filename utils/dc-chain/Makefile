@@ -354,8 +354,7 @@ build_gdb_stamp:
 	    --disable-werror \
 	    --prefix=$(sh_prefix) \
 	    --target=$(sh_target) \
-		$(static_flag) \
-		$(to_log)
+	    $(to_log)
 	$(MAKE) $(makejobs) -C build-gdb-$(gdb_ver) $(to_log)
 	touch $@
 
@@ -407,8 +406,7 @@ build_insight_stamp:
 	    --disable-werror \
 	    --prefix=$(sh_prefix) \
 	    --target=$(sh_target) \
-		$(static_flag) \
-		$(to_log)
+	    $(to_log)
 	$(MAKE) $(makejobs) -C build-insight-$(insight_ver) $(to_log)
 	touch $@
 
