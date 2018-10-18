@@ -5,7 +5,7 @@ This package contains a `Makefile` which both simplifies building the whole
 
 The toolchain is composed by:
 
-- An `sh-elf` toolchain, which is the main toolchain. It targets the CPU of the 
+- A `sh-elf` toolchain, which is the main toolchain. It targets the CPU of the 
 **Dreamcast**, i.e. the **Hitachi SH-4 CPU** (**SuperH**).
 - An `arm-eabi` toolchain, which is the toolchain used only for the **Yamaha
 Super Intelligent Sound Processor** (**AICA**). This processor is based
