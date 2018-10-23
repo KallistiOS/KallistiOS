@@ -72,8 +72,7 @@ ifdef FREEBSD
 endif
 
 # GCC compiles fine with clang, but only if we use libstdc++ instead of libc++.
-UNAME_S := $(shell uname -s)
-ifeq ($(UNAME_S),Darwin)
+ifdef MACOS
   ifneq ($(shell $(CXX) --version | grep clang),)
     CXX := "$(CXX) -stdlib=libstdc++"
   endif
@@ -83,7 +82,6 @@ endif
 ifeq ($(CXX),)
   CXX := g++
 endif
-
 
 # Makefile variables
 install=$(prefix)/bin
