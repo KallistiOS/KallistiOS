@@ -1,0 +1,33 @@
+diff -crB gdb-7.12.1/gdb/python/python-internal.h gdb-7.12.1-mingw/gdb/python/python-internal.h
+*** gdb-7.12.1/gdb/python/python-internal.h	Sat Jan 21 13:48:42 2017
+--- gdb-7.12.1-mingw/gdb/python/python-internal.h	Fri Oct 19 14:57:02 2018
+***************
+*** 91,96 ****
+--- 91,101 ----
+  /* Include the Python header files using angle brackets rather than
+     double quotes.  On case-insensitive filesystems, this prevents us
+     from including our python/python.h header file.  */
++ #ifdef __MINGW32__
++ #ifndef _hypot
++ #define _hypot hypot
++ #endif
++ #endif
+  #include <Python.h>
+  #include <frameobject.h>
+  
+diff -crB gdb-7.12.1/gdb/ser-mingw.c gdb-7.12.1-mingw/gdb/ser-mingw.c
+*** gdb-7.12.1/gdb/ser-mingw.c	Sat Jan 21 13:46:47 2017
+--- gdb-7.12.1-mingw/gdb/ser-mingw.c	Fri Oct 19 14:02:42 2018
+***************
+*** 31,36 ****
+--- 31,40 ----
+  
+  #include "command.h"
+  
++ #ifndef ERROR_IO_PENDING
++ #include <winerror.h>
++ #endif
++ 
+  void _initialize_ser_windows (void);
+  
+  struct ser_windows_state

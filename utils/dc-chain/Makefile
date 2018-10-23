@@ -59,6 +59,11 @@ verbose=1
 # clear this variable and try again with just one job running.
 makejobs=-j4
 
+# Under MinGW/MSYS only one job is possible.
+ifdef MINGW
+  makejobs=
+endif
+
 # Set the languages to build for pass 2 of building gcc for sh-elf. The default
 # here is to build C, C++, Objective C, and Objective C++. You may want to take
 # out the latter two if you're not worried about them and/or you're short on
@@ -70,6 +75,12 @@ SHELL = /bin/bash
 ifdef FREEBSD
   SHELL = /usr/local/bin/bash
 endif
+
+# MinGW/MSYS
+# Define this if you want a standalone, no dependency binary (i.e. static)
+# When the binary is standalone, it can be run outside MinGW/MSYS environment.
+# This is NOT recommended. Use it if you know what you are doing.
+#STANDALONE_BINARY = 1
 
 # GCC compiles fine with clang, but only if we use libstdc++ instead of libc++.
 ifdef MACOS
@@ -99,6 +110,16 @@ ifeq ($(web_downloader),)
   USE_CURL := 1
 endif
 
+# Set static flags to pass to configure if needed
+ifeq ($(STANDALONE_BINARY),1)
+  ifndef MINGW
+    $(warning STANDALONE_BINARY should be used ONLY on MinGW/MSYS environment)
+  endif
+# Note the extra minus before -static
+# See: https://stackoverflow.com/a/29055118/3726096
+  static_flag := --enable-static --disable-shared "LDFLAGS=--static"
+endif
+
 all: patch build
 
 # ---- patch {{{
@@ -106,6 +127,11 @@ binutils_patches 	:= $(wildcard $(patches)/binutils-$(binutils_ver)*.diff)
 gcc_patches    		:= $(wildcard $(patches)/gcc-$(gcc_ver)*.diff)
 newlib_patches 		:= $(wildcard $(patches)/newlib-$(newlib_ver)*.diff)
 kos_patches    		:= $(wildcard $(patches)/kos-*.diff)
+
+ifdef MINGW
+# Additional patches for MinGW/MSYS
+  binutils_patches	+= $(wildcard $(patches)/$(host_triplet)/binutils-$(binutils_ver)*.diff)	
+endif
 
 patch_targets=patch-binutils patch-gcc patch-newlib patch-kos
 
@@ -145,6 +171,14 @@ build_arm_targets=build-arm-binutils build-arm-gcc build-arm-gcc-pass1
 $(build_sh4_targets): prefix = $(sh_prefix)
 $(build_sh4_targets): target = $(sh_target)
 $(build_sh4_targets): extra_configure_args = --with-multilib-list=m4-single-only,m4-nofpu,m4 --with-endian=little --with-cpu=m4-single-only
+
+ifdef MINGW
+# To compile dc-tool, we need to install libbfd for sh-elf.
+# This is done when making build-sh4-binutils.
+  $(build_sh4_targets): libbfd_install_flag = -enable-install-libbfd
+  $(build_sh4_targets): libbfd_src_bin_dir = $(sh_prefix)/$(host_triplet)/$(sh_target)
+endif
+
 $(build_arm_targets): prefix = $(arm_prefix)
 $(build_arm_targets): target = $(arm_target)
 $(build_arm_targets): extra_configure_args = --with-arch=armv4
@@ -167,10 +201,34 @@ $(build_binutils): logdir
 	@echo "+++ Building $(src_dir) to $(build)..."
 	-mkdir -p $(build)
 	> $(log)
-	cd $(build); ../$(src_dir)/configure --target=$(target) --prefix=$(prefix) --disable-werror CXX=$(CXX) $(to_log)
+	cd $(build); ../$(src_dir)/configure --target=$(target) --prefix=$(prefix) \
+		--disable-werror $(libbfd_install_flag) CXX=$(CXX) $(static_flag) $(to_log)
 	$(MAKE) $(makejobs) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
 	$(MAKE) -C $(build) install DESTDIR=$(DESTDIR) $(to_log)
-	$(clean_up)
+# MinGW/MSYS
+# This part is about BFD for sh-elf target.
+# It will move sh-elf libbfd into a nicer place, as our cross-compiler is made 
+# by us for our usage... so no problems about system libbfd conflicts!
+# See: https://www.sourceware.org/ml/binutils/2004-03/msg00337.html
+# Also, install zlib at the same time as we need it to use libbfd.
+# Note: BFD for sh-elf is used for compiling dc-tool. Others platforms uses libelf.
+	if test "$(target)" = "$(sh_target)" && ! test -z "$(libbfd_src_bin_dir)"; then \
+		echo "+++ Installing Binary File Descriptor library (libbfd) for $(target)..."; \
+		$(MAKE) -C $(build)/zlib install DESTDIR=$(DESTDIR) $(to_log); \
+		if ! test -d "$(sh_prefix)/include/"; then \
+			mkdir $(sh_prefix)/include/; \
+		fi; \
+		mv $(libbfd_src_bin_dir)/include/* $(sh_prefix)/include/; \
+		if ! test -d "$(sh_prefix)/lib/"; then \
+			mkdir $(sh_prefix)/lib/; \
+		fi; \
+		mv $(libbfd_src_bin_dir)/lib/* $(sh_prefix)/lib/; \
+		rmdir $(libbfd_src_bin_dir)/include/; \
+		rmdir $(libbfd_src_bin_dir)/lib/; \
+		rmdir $(libbfd_src_bin_dir)/; \
+		rmdir $(sh_prefix)/$(host_triplet)/; \
+	fi;
+	$(clean_up)	
 
 $(build_gcc_pass1) $(build_gcc_pass2): build = build-gcc-$(target)-$(gcc_ver)
 $(build_gcc_pass1) $(build_gcc_pass2): src_dir = gcc-$(gcc_ver)
@@ -179,7 +237,9 @@ $(build_gcc_pass1): logdir
 	@echo "+++ Building $(src_dir) to $(build) (pass 1)..."
 	-mkdir -p $(build)
 	> $(log)
-	cd $(build);  ../$(src_dir)/configure --target=$(target) --prefix=$(prefix) --without-headers --with-newlib --enable-languages=c --disable-libssp --disable-tls $(extra_configure_args) CXX=$(CXX) $(to_log)
+	cd $(build);  ../$(src_dir)/configure --target=$(target) --prefix=$(prefix) \
+		--without-headers --with-newlib --enable-languages=c --disable-libssp \
+		--disable-tls $(extra_configure_args) CXX=$(CXX) $(static_flag) $(to_log)
 	$(MAKE) $(makejobs) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
 	$(MAKE) -C $(build) install DESTDIR=$(DESTDIR) $(to_log)
 
@@ -190,7 +250,8 @@ $(build_newlib): logdir
 	@echo "+++ Building $(src_dir) to $(build)..."
 	-mkdir -p $(build)
 	> $(log)
-	cd $(build); ../$(src_dir)/configure --target=$(target) --prefix=$(prefix) $(extra_configure_args) $(to_log)
+	cd $(build); ../$(src_dir)/configure --target=$(target) --prefix=$(prefix) \
+		$(extra_configure_args) $(to_log)
 	$(MAKE) $(makejobs) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
 	$(MAKE) -C $(build) install DESTDIR=$(DESTDIR) $(to_log)
 	$(clean_up)
@@ -207,17 +268,40 @@ fixup-sh4-newlib: $(build_newlib)
 	cp $(kos_base)/include/pthread.h $(newlib_inc)
 	cp $(kos_base)/include/sys/_pthread.h $(newlib_inc)/sys
 	cp $(kos_base)/include/sys/sched.h $(newlib_inc)/sys
+ifndef MINGW32
 	ln -nsf $(kos_base)/include/kos $(newlib_inc)
 	ln -nsf $(kos_base)/kernel/arch/dreamcast/include/arch $(newlib_inc)
 	ln -nsf $(kos_base)/kernel/arch/dreamcast/include/dc   $(newlib_inc)
+else
+# Under MinGW/MSYS or MinGW-w64/MSYS2, the ln tool is not efficient, so it's
+# better to do a simple copy. Please keep that in mind when upgrading
+# KallistiOS or your toolchain!
+	@echo ""
+	@echo ""
+	@echo "                              *** W A R N I N G ***"
+	@echo ""
+	@echo "    Be careful when upgrading KallistiOS or your toolchain!"
+	@echo "    You need to fixup-sh4-newlib again as the 'ln' utility is not working"
+	@echo "    properly on MinGW/MSYS and MinGW-w64/MSYS2 environments!"
+	@echo ""
+	@echo "    See ./doc/mingw/ for details."
+	@echo ""
+	@echo ""
+	@sleep 5
+	cp -r $(kos_base)/include/kos $(newlib_inc)
+	cp -r $(kos_base)/kernel/arch/dreamcast/include/arch $(newlib_inc)
+	cp -r $(kos_base)/kernel/arch/dreamcast/include/dc   $(newlib_inc)
+endif
 
 $(build_gcc_pass2): log = $(logdir)/$(build)-pass2.log
 $(build_gcc_pass2): logdir
 	@echo "+++ Building $(src_dir) to $(build) (pass 2)..."
 	-mkdir -p $(build)
 	> $(log)
-	cd $(build);  ../$(src_dir)/configure --target=$(target) --prefix=$(prefix) --with-newlib --disable-libssp --disable-tls \
-	   --enable-threads=$(thread_model) --enable-languages=$(pass2_languages) $(extra_configure_args) CXX=$(CXX) $(to_log)
+	cd $(build);  ../$(src_dir)/configure --target=$(target) --prefix=$(prefix) \
+		--with-newlib --disable-libssp --disable-tls \
+		--enable-threads=$(thread_model) --enable-languages=$(pass2_languages) \
+		$(extra_configure_args) CXX=$(CXX) $(static_flag) $(to_log)
 	$(MAKE) $(makejobs) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
 	$(MAKE) -C $(build) install DESTDIR=$(DESTDIR) $(to_log)
 	$(clean_up)
@@ -229,6 +313,11 @@ $(build_gcc_pass2): logdir
 
 gdb_url := ftp://ftp.gnu.org/gnu/gdb/gdb-$(gdb_ver).tar.gz
 
+# Under MinGW/MSYS, a little fix is needed to compile gdb, at least with 7.12.1.
+ifdef MINGW
+    gdb_patches := $(wildcard $(patches)/$(host_triplet)/gdb-$(gdb_ver)*.diff)	
+endif
+
 gdb-$(gdb_ver).tar.gz:
 	@echo "+++ Downloading GDB..."
 ifndef USE_CURL
@@ -237,13 +326,20 @@ else
 	curl -O -J $(gdb_url)
 endif
 
-unpack_gdb: gdb-$(gdb_ver).tar.gz unpack_gdb_stamp
+unpack_gdb: gdb-$(gdb_ver).tar.gz unpack_gdb_stamp patch_gdb_stamp
 
 unpack_gdb_stamp:
 	@echo "+++ Unpacking GDB..."
 	rm -f $@
 	rm -rf gdb-$(gdb_ver)
 	tar xf gdb-$(gdb_ver).tar.gz
+	touch $@
+
+patch_gdb_stamp:
+	rm -f $@
+ifdef MINGW
+	patch -N -d gdb-$(gdb_ver) -p1 < $(gdb_patches)
+endif
 	touch $@
 
 build_gdb: log = $(logdir)/gdb-$(gdb_ver).log
@@ -259,7 +355,9 @@ build_gdb_stamp:
 	cd build-gdb-$(gdb_ver); ../gdb-$(gdb_ver)/configure \
 	    --disable-werror \
 	    --prefix=$(sh_prefix) \
-	    --target=$(sh_target) $(to_log)
+	    --target=$(sh_target) \
+	    $(static_flag) \
+	    $(to_log)
 	$(MAKE) $(makejobs) -C build-gdb-$(gdb_ver) $(to_log)
 	touch $@
 
@@ -310,7 +408,9 @@ build_insight_stamp:
 	cd build-insight-$(insight_ver); ../insight-$(insight_ver)/configure \
 	    --disable-werror \
 	    --prefix=$(sh_prefix) \
-	    --target=$(sh_target) $(to_log)
+	    --target=$(sh_target) \
+	    $(static_flag) \
+	    $(to_log)
 	$(MAKE) $(makejobs) -C build-insight-$(insight_ver) $(to_log)
 	touch $@
 
@@ -336,7 +436,7 @@ clean:
 	-rm -rf build-gcc-$(arm_target)-$(gcc_ver)
 	-rm -rf build-binutils-$(sh_target)-$(binutils_ver)
 	-rm -rf build-binutils-$(arm_target)-$(binutils_ver)
-	-rm -rf build-gdb-$(gdb_ver) install_gdb_stamp build_gdb_stamp unpack_gdb_stamp
+	-rm -rf build-gdb-$(gdb_ver) install_gdb_stamp build_gdb_stamp unpack_gdb_stamp patch_gdb_stamp
 	-rm -rf build-insight-$(insight_ver) install_insight_stamp build_insight_stamp unpack_insight_stamp
 
 logdir:
