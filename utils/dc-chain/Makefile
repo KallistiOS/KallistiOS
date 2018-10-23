@@ -67,6 +67,9 @@ pass2_languages=c,c++,objc,obj-c++
 
 # Change this if you don't have Bash installed in /bin
 SHELL = /bin/bash
+ifdef FREEBSD
+  SHELL = /usr/local/bin/bash
+endif
 
 # GCC compiles fine with clang, but only if we use libstdc++ instead of libc++.
 UNAME_S := $(shell uname -s)
