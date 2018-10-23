@@ -25,6 +25,6 @@ linklib:
 clean: defaultclean
          
 defaultclean: clean_subdirs
-	-rm -f $(OBJS) $(KOS_BASE)/addons/lib/$(KOS_ARCH)/$(TARGET) $(LOCAL_CLEAN)
+	-rm -f $(OBJS) $(LOCAL_CLEAN)
 
 include $(KOS_BASE)/Makefile.rules
