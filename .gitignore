@@ -27,6 +27,7 @@ utils/dcbumpgen/dcbumpgen
 examples/dreamcast/basic/exec/romdisk/sub.bin
 examples/dreamcast/kgl/basic/vq/fruit.vq
 examples/dreamcast/conio/adventure/data.c
+examples/dreamcast/conio/adventure/datagen
 examples/dreamcast/conio/adventure/setup
 examples/dreamcast/png/romdisk_boot.img
 examples/dreamcast/pvr/modifier_volume_tex/romdisk/fruit.kmg

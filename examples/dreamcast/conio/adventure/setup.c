@@ -66,7 +66,7 @@ static const char rcsid[] =
 /* #include <err.h> */
 #include "hdr.h"        /* SEED lives in there; keep them coordinated. */
 
-#define USAGE "Usage: setup file > data.c (file is typically glorkz)"
+#define USAGE "Usage: setup file > data.c (file is typically glorkz)\n"
 
 #define YES 1
 #define NO  0
@@ -78,10 +78,15 @@ main(int argc, char **argv) {
     FILE *infile;
     int c, count, linestart;
 
-    if(argc != 2) printf(USAGE);
+    if(argc != 2) {
+		printf(USAGE);
+		exit(2);
+	}
 
-    if((infile = fopen(argv[1], "r")) == NULL)
-        printf("Can't read file %s", argv[1]);
+    if((infile = fopen(argv[1], "r")) == NULL) {
+        printf("Can't read file %s\n", argv[1]);
+		exit(1);
+	}
 
     puts("/*\n * data.c: created by setup from the ascii data file.");
     puts(SIG1);
