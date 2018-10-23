@@ -1,5 +1,5 @@
 # Dreamcast toolchain makefile    by Jim Ursetto
-# adapted from Stalin's build script version 0.3
+# adapted from Stalin's build script version 0.4
 #
 # Interesting parameters:
 # erase=0|1                     Erase build directories on the fly to save space
@@ -28,11 +28,18 @@ arm_prefix := /opt/toolchains/dc/$(arm_target)
 kos_root=$(CURDIR)/../../..
 # kos_base: equivalent of KOS_BASE (contains include/ and kernel/)
 kos_base=$(CURDIR)/../..
+
+# Libraries versions
 binutils_ver=2.31.1
 gcc_ver=4.7.3
 newlib_ver=2.0.0
-gdb_ver=7.11.1
+gdb_ver=7.12.1
 insight_ver=6.8-1
+
+# Internal GCC libraries versions, this is used in the version.sh script
+gmp_ver=4.3.2
+mpfr_ver=2.4.2
+mpc_ver=0.8.1
 
 # With GCC 4.x versions, the patches provide a kos thread model, so you should
 # use it. With 3.4.6, you probably want posix here. If you really don't want
@@ -82,13 +89,19 @@ binutils_dir=binutils-$(binutils_ver)
 gcc_dir=gcc-$(gcc_ver)
 newlib_dir=newlib-$(newlib_ver)
 
+# Check if we are curl or wget...
+web_downloader := $(shell which wget)
+ifeq ($(web_downloader),)
+  USE_CURL := 1
+endif
+
 all: patch build
 
 # ---- patch {{{
-binutils_patches    := $(wildcard $(patches)/binutils-$(binutils_ver)*.diff)
-gcc_patches    := $(wildcard $(patches)/gcc-$(gcc_ver)*.diff)
-newlib_patches := $(wildcard $(patches)/newlib-$(newlib_ver)*.diff)
-kos_patches    := $(wildcard $(patches)/kos-*.diff)
+binutils_patches 	:= $(wildcard $(patches)/binutils-$(binutils_ver)*.diff)
+gcc_patches    		:= $(wildcard $(patches)/gcc-$(gcc_ver)*.diff)
+newlib_patches 		:= $(wildcard $(patches)/newlib-$(newlib_ver)*.diff)
+kos_patches    		:= $(wildcard $(patches)/kos-*.diff)
 
 patch_targets=patch-binutils patch-gcc patch-newlib patch-kos
 
@@ -210,9 +223,15 @@ $(build_gcc_pass2): logdir
 
 # GDB building
 
+gdb_url := ftp://ftp.gnu.org/gnu/gdb/gdb-$(gdb_ver).tar.gz
+
 gdb-$(gdb_ver).tar.gz:
 	@echo "+++ Downloading GDB..."
-	wget -c ftp://ftp.gnu.org/gnu/gdb/gdb-$(gdb_ver).tar.gz
+ifndef USE_CURL
+	wget -c $(gdb_url)
+else
+	curl -O -J $(gdb_url)
+endif
 
 unpack_gdb: gdb-$(gdb_ver).tar.gz unpack_gdb_stamp
 
@@ -255,9 +274,15 @@ gdb: install_gdb
 
 # Insight building
 
+insight_url = ftp://sourceware.org/pub/insight/releases/insight-$(insight_ver)a.tar.bz2
+
 insight-$(insight_ver)a.tar.bz2:
 	@echo "+++ Downloading Insight..."
-	wget -c ftp://sourceware.org/pub/insight/releases/insight-$(insight_ver)a.tar.bz2
+ifndef USE_CURL
+	wget -c $(insight_url)
+else
+	curl -O -J $(insight_url)
+endif
 
 unpack_insight: insight-$(insight_ver)a.tar.bz2 unpack_insight_stamp
 
