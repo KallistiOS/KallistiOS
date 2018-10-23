@@ -3,6 +3,8 @@
 # Getting versions defined in Makefile
 source ./version.sh
 
+config_guess="./config.guess"
+
 while [ "$1" != "" ]; do
     PARAM=`echo $1 | awk -F= '{print $1}'`
     case $PARAM in
@@ -106,6 +108,16 @@ echo "Cleaning up build logs..."
 if [ -d "logs/" ]; then
 	rm -f logs/*.log
 	rmdir logs/
+fi
+
+echo "Done!"
+echo "---------------------------------------"
+
+# Clean up config.guess
+echo "Cleaning up ${config_guess}..."
+
+if [ -f ${config_guess} ]; then
+	rm -f ${config_guess}
 fi
 
 echo "Done!"

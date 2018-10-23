@@ -19,6 +19,9 @@
 # gdb
 # insight
 
+# Initialization rules
+include Makefile.rules
+
 # User configuration
 sh_target=sh-elf
 arm_target=arm-eabi

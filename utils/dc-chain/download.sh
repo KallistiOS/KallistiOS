@@ -15,6 +15,9 @@ while [ "$1" != "" ]; do
         --no-mpc)
             unset MPC_VER
             ;;
+        --config-guess-only)
+            CONFIG_GUESS_ONLY=1
+            ;;
         --no-deps)
             unset GMP_VER
             unset MPFR_VER
@@ -65,5 +68,19 @@ if [ -z "${CONFIG_GUESS_ONLY}" ]; then
 		${WEB_DOWNLOADER} ftp://gcc.gnu.org/pub/gcc/infrastructure/mpc-$MPC_VER.tar.gz || exit 1
 	fi
 fi
+
+# Downloading config.guess.
+CONFIG_GUESS="config.guess"
+WEB_DOWNLOAD_OUTPUT_SWITCH="-O"
+if ! [ -z "${IS_CURL}" ]; then
+	WEB_DOWNLOADER="$(echo ${WEB_DOWNLOADER} | cut -c-9)"
+	WEB_DOWNLOAD_OUTPUT_SWITCH="-o"
+fi
+echo "Downloading ${CONFIG_GUESS}..."
+
+${WEB_DOWNLOADER} ${WEB_DOWNLOAD_OUTPUT_SWITCH} ${CONFIG_GUESS} "http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=${CONFIG_GUESS};hb=HEAD" || exit 1
+
+# This is needed for all system except MinGW.
+chmod 764 "./${CONFIG_GUESS}"
 
 echo "Done!"
