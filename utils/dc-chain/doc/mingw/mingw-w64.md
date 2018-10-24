@@ -21,7 +21,9 @@ This document was written when using the `i686` version, so if you are using
 the `x86_64` version, you should replace all `i686` keywords in the packages
 name with `x86_64`.
 
-We don't know if the `x86_64` version is stable in this context. For your information, in the past some problems happened with the `x86_64` **Cygwin** version. Feel free to try it out if you want.
+We don't know if the `x86_64` version is stable in this context. For your 
+information, in the past some problems happened with the `x86_64` **Cygwin** 
+version. Feel free to try it out if you want.
 
 Please note also, the **Microsoft Windows XP** support was dropped on this
 environment. If you need support for this old platform, you need to use the 
@@ -69,7 +71,7 @@ This should update all the packages of the **MinGW-w64/MSYS2** environment.
 The packages below need to be installed to build the toolchains, so open the
 **MSYS2 Shell** and input:
 
-	pacman -Sy --needed base-devel mingw-w64-i686-toolchain mingw-w64-i686-libpng mingw-w64-i686-libjpeg
+	pacman -Sy --needed base-devel mingw-w64-i686-toolchain mingw-w64-i686-libpng mingw-w64-i686-libjpeg mingw-w64-i686-libelf
 
 ### Installation of additional packages ###
 
