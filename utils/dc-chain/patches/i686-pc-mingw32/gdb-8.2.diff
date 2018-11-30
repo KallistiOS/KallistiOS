@@ -1,0 +1,27 @@
+diff -ruN gdb-8.2/gdb/gnulib/import/strerror-override.c gdb-8.2-mingw/gdb/gnulib/import/strerror-override.c
+--- gdb-8.2/gdb/gnulib/import/strerror-override.c	2018-09-05 07:44:28 +0000
++++ gdb-8.2-mingw/gdb/gnulib/import/strerror-override.c	2018-11-30 19:37:03 +0000
+@@ -25,6 +25,9 @@
+ 
+ #if GNULIB_defined_EWINSOCK /* native Windows platforms */
+ # if HAVE_WINSOCK2_H
++#  ifdef __MINGW32__
++#  include <winerror.h>
++#  endif
+ #  include <winsock2.h>
+ # endif
+ #endif
+diff -ruN gdb-8.2/gdb/ser-mingw.c gdb-8.2-mingw/gdb/ser-mingw.c
+--- gdb-8.2/gdb/ser-mingw.c	2018-09-05 07:44:28 +0000
++++ gdb-8.2-mingw/gdb/ser-mingw.c	2018-11-30 19:57:46 +0000
+@@ -29,6 +29,10 @@
+ #include <unistd.h>
+ #include <sys/types.h>
+ 
++#ifndef ERROR_IO_PENDING
++#include <winerror.h>
++#endif
++
+ #include "command.h"
+ 
+ struct ser_windows_state

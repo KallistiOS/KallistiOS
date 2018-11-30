@@ -36,7 +36,7 @@ kos_base=$(CURDIR)/../..
 binutils_ver=2.31.1
 gcc_ver=4.7.3
 newlib_ver=2.0.0
-gdb_ver=7.12.1
+gdb_ver=8.2
 insight_ver=6.8-1
 
 # Internal GCC libraries versions, this is used in the version.sh script
