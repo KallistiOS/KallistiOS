@@ -29,9 +29,9 @@ kos_root=$(CURDIR)/../../..
 # kos_base: equivalent of KOS_BASE (contains include/ and kernel/)
 kos_base=$(CURDIR)/../..
 sh_binutils_ver=2.34
-sh_gcc_ver=9.3.0
+sh_gcc_ver=10.1.0
 newlib_ver=3.3.0
-gdb_ver=9.1
+gdb_ver=9.2
 insight_ver=6.8-1
 
 # The ARM version of binutils/gcc is separated out as the
