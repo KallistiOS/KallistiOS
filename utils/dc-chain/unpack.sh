@@ -1,13 +1,13 @@
 #!/bin/sh
 
 # These version numbers are all that should ever have to be changed.
-export SH_GCC_VER=9.3.0
+export SH_GCC_VER=10.1.0
 export ARM_GCC_VER=8.4.0
 export BINUTILS_VER=2.34
 export NEWLIB_VER=3.3.0
-export GMP_VER=6.1.0
-export MPFR_VER=3.1.4
-export MPC_VER=1.0.3
+export GMP_VER=6.2.0
+export MPFR_VER=4.0.2
+export MPC_VER=1.1.0
 
 while [ "$1" != "" ]; do
     PARAM=`echo $1 | awk -F= '{print $1}'`
@@ -39,26 +39,26 @@ rm -rf binutils-$BINUTILS_VER gcc-$SH_GCC_VER gcc-$ARM_GCC_VER newlib-$NEWLIB_VE
 rm -rf gmp-$GMP_VER mpfr-$MPFR_VER mpc-$MPC_VER
 
 # Unpack everything.
-tar xf binutils-$BINUTILS_VER.tar.xz || exit 1
-tar xf gcc-$SH_GCC_VER.tar.gz || exit 1
-tar xf gcc-$ARM_GCC_VER.tar.gz || exit 1
-tar xf newlib-$NEWLIB_VER.tar.gz || exit 1
+tar xvJpf binutils-$BINUTILS_VER.tar.xz || exit 1
+tar xvpf gcc-$SH_GCC_VER.tar.gz || exit 1
+tar xvpf gcc-$ARM_GCC_VER.tar.gz || exit 1
+tar xvpf newlib-$NEWLIB_VER.tar.gz || exit 1
 
 # Unpack the GCC dependencies and move them into their required locations.
 if [ -n "$GMP_VER" ]; then
-    tar jxf gmp-$GMP_VER.tar.bz2 || exit 1
-    cp -pr gmp-$GMP_VER gcc-$SH_GCC_VER/gmp
+    tar xvpf gmp-$GMP_VER.tar.gz || exit 1
+    cp -apr gmp-$GMP_VER gcc-$SH_GCC_VER/gmp
     mv gmp-$GMP_VER gcc-$ARM_GCC_VER/gmp
 fi
 
 if [ -n "$MPFR_VER" ]; then
-    tar jxf mpfr-$MPFR_VER.tar.bz2 || exit 1
-    cp -pr mpfr-$MPFR_VER gcc-$SH_GCC_VER/mpfr
+    tar xvpf mpfr-$MPFR_VER.tar.gz || exit 1
+    cp -apr mpfr-$MPFR_VER gcc-$SH_GCC_VER/mpfr
     mv mpfr-$MPFR_VER gcc-$ARM_GCC_VER/mpfr
 fi
 
 if [ -n "$MPC_VER" ]; then
-    tar zxf mpc-$MPC_VER.tar.gz || exit 1
-    cp -pr mpc-$MPC_VER gcc-$SH_GCC_VER/mpc
+    tar xvpf mpc-$MPC_VER.tar.gz || exit 1
+    cp -apr mpc-$MPC_VER gcc-$SH_GCC_VER/mpc
     mv mpc-$MPC_VER gcc-$ARM_GCC_VER/mpc
 fi

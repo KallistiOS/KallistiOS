@@ -1,13 +1,13 @@
 #!/bin/sh
 
 # These version numbers are all that should ever have to be changed.
-export SH_GCC_VER=9.3.0
+export SH_GCC_VER=10.1.0
 export ARM_GCC_VER=8.4.0
 export BINUTILS_VER=2.34
 export NEWLIB_VER=3.3.0
-export GMP_VER=6.1.0
-export MPFR_VER=3.1.4
-export MPC_VER=1.0.3
+export GMP_VER=6.2.0
+export MPFR_VER=4.0.2
+export MPC_VER=1.1.0
 
 while [ "$1" != "" ]; do
     PARAM=`echo $1 | awk -F= '{print $1}'`
@@ -42,11 +42,11 @@ rm -f gcc-$ARM_GCC_VER.tar.gz
 rm -f newlib-$NEWLIB_VER.tar.gz
 
 if [ -n "$GMP_VER" ]; then
-    rm -f gmp-$GMP_VER.tar.bz2
+    rm -f gmp-$GMP_VER.tar.gz
 fi
 
 if [ -n "$MPFR_VER" ]; then
-    rm -f mpfr-$MPFR_VER.tar.bz2
+    rm -f mpfr-$MPFR_VER.tar.gz
 fi
 
 if [ -n "$MPC_VER" ]; then
