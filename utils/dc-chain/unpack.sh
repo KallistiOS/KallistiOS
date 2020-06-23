@@ -1,13 +1,7 @@
 #!/bin/sh
 
 # These version numbers are all that should ever have to be changed.
-export SH_GCC_VER=10.1.0
-export ARM_GCC_VER=8.4.0
-export BINUTILS_VER=2.34
-export NEWLIB_VER=3.3.0
-export GMP_VER=6.2.0
-export MPFR_VER=4.0.2
-export MPC_VER=1.1.0
+VERSION_SH=`source ./version.sh`
 
 while [ "$1" != "" ]; do
     PARAM=`echo $1 | awk -F= '{print $1}'`
