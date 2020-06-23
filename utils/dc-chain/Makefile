@@ -29,19 +29,22 @@ kos_root=$(CURDIR)/../../..
 # kos_base: equivalent of KOS_BASE (contains include/ and kernel/)
 kos_base=$(CURDIR)/../..
 
-VERSION_SH := $(shell source ./version.sh)
+# Change this if you don't have Bash installed in /bin
+SHELL = /bin/bash
 
-sh_binutils_ver=$(BINUTILS_VER)
-sh_gcc_ver=$(SH_GCC_VER)
-newlib_ver=$(NEWLIB_VER)
-gdb_ver=$(GDB_VER)
-insight_ver=$(INSIGHT_VER)
+include ./version.sh
+
+sh_binutils_ver:=$(BINUTILS_VER)
+sh_gcc_ver:=$(SH_GCC_VER)
+newlib_ver:=$(NEWLIB_VER)
+gdb_ver:=$(GDB_VER)
+insight_ver:=$(INSIGHT_VER)
 
 # The ARM version of binutils/gcc is separated out as the
 # particular CPU versions we need may not be available in
 # newer versions of GCC.
-arm_binutils_ver=$(BINUTILS_VER)
-arm_gcc_ver=$(ARM_GCC_VER)
+arm_binutils_ver:=$(BINUTILS_VER)
+arm_gcc_ver:=$(ARM_GCC_VER)
 
 # With GCC 4.x versions and higher, the patches provide a kos thread model, 
 # so you should use it. With 3.4.6, you probably want posix here. If you 
@@ -64,8 +67,6 @@ makejobs=-j2
 # hard drive space.
 pass2_languages=c,c++,objc,obj-c++
 
-# Change this if you don't have Bash installed in /bin
-SHELL = /bin/bash
 
 # GCC compiles fine with clang, but only if we use libstdc++ instead of libc++.
 UNAME_S := $(shell uname -s)
