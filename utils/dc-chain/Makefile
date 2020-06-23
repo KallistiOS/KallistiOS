@@ -29,7 +29,7 @@ kos_root=$(CURDIR)/../../..
 # kos_base: equivalent of KOS_BASE (contains include/ and kernel/)
 kos_base=$(CURDIR)/../..
 
-VERSION_SH := $(source ./version.sh)
+VERSION_SH := $(shell source ./version.sh)
 
 sh_binutils_ver=$(BINUTILS_VER)
 sh_gcc_ver=$(SH_GCC_VER)
