@@ -33,13 +33,13 @@ __BEGIN_DECLS
     \headerfile dc/vmu_pkg.h
 */
 typedef struct vmu_pkg {
-    char        desc_short[20];     /**< \brief Short file description */
-    char        desc_long[36];      /**< \brief Long file description */
-    char        app_id[20];         /**< \brief Application ID */
-    int         icon_cnt;           /**< \brief Number of icons */
-    int         icon_anim_speed;    /**< \brief Icon animation speed */
-    int         eyecatch_type;      /**< \brief "Eyecatch" type */
-    int         data_len;           /**< \brief Number of data (payload) bytes */
+    char        desc_short[16];     /**< \brief Short file description */
+    char        desc_long[32];      /**< \brief Long file description */
+    char        app_id[16];         /**< \brief Application ID */
+    uint16      icon_cnt;           /**< \brief Number of icons */
+    uint16      icon_anim_speed;    /**< \brief Icon animation speed */
+    uint16      eyecatch_type;      /**< \brief "Eyecatch" type */
+    uint32      data_len;           /**< \brief Number of data (payload) bytes */
     uint16      icon_pal[16];       /**< \brief Icon palette (ARGB4444) */
     const uint8 *icon_data;         /**< \brief 512*n bytes of icon data */
     const uint8 *eyecatch_data;     /**< \brief Eyecatch data */
