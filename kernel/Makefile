@@ -12,9 +12,9 @@ STUBS = stubs/kernel_export_stubs.o stubs/arch_export_stubs.o
 KOS_CFLAGS += $(KOS_CSTD)
 
 all: subdirs $(STUBS)
-	rm -f $(KOS_BASE)/lib/$(KOS_ARCH)/libkallisti.a
-	kos-ar rcs $(KOS_BASE)/lib/$(KOS_ARCH)/libkallisti.a build/*.o
-	kos-ar rcs $(KOS_BASE)/lib/$(KOS_ARCH)/libkallisti_exports.a stubs/*.o
+	rm -f $(KOS_BASE)/lib/$(KOS_ARCH)/libkallisti$(KOS_SUBARCH_SUFFIX).a
+	kos-ar rcs $(KOS_BASE)/lib/$(KOS_ARCH)/libkallisti$(KOS_SUBARCH_SUFFIX).a build/*.o
+	kos-ar rcs $(KOS_BASE)/lib/$(KOS_ARCH)/libkallisti$(KOS_SUBARCH_SUFFIX)_exports.a stubs/*.o
 
 stubs/kernel_export_stubs.c: exports.txt
 	$(KOS_BASE)/utils/genexports/genexportstubs.sh $< stubs/kernel_export_stubs.c
