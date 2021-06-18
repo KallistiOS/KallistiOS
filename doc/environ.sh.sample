@@ -19,6 +19,17 @@ export KOS_ARCH="dreamcast"
 #  "naomi" - a NAOMI or NAOMI 2 arcade board
 export KOS_SUBARCH="pristine"
 
+
+#suffix used to generate subarch-specific lib files
+case $KOS_SUBARCH in
+  "navi" )
+    export KOS_SUBARCH_SUFFIX="navi" ;;
+  "naomi" )
+    export KOS_SUBARCH_SUFFIX="naomi" ;;
+  *)
+    export KOS_SUBARCH_SUFFIX="" ;;
+esac
+
 # KOS main base path
 export KOS_BASE="/opt/toolchains/dc/kos"
 export KOS_PORTS="${KOS_BASE}/../kos-ports"
