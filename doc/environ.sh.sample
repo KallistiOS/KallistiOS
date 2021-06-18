@@ -19,7 +19,6 @@ export KOS_ARCH="dreamcast"
 #  "naomi" - a NAOMI or NAOMI 2 arcade board
 export KOS_SUBARCH="pristine"
 
-
 #suffix used to generate subarch-specific lib files
 case $KOS_SUBARCH in
   "navi" )
