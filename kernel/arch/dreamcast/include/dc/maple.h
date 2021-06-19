@@ -262,7 +262,7 @@ typedef struct maple_device {
 
 /** \brief  Internal representation of a Maple port.
 
-    each maple port can contain up to 6 devices, the first one of which is
+    Each maple port can contain up to 6 devices, the first one of which is
     always the port itself.
 
     \headerfile dc/maple.h
@@ -636,6 +636,44 @@ int maple_driver_detach(int p, int u);
     \retval -1              If any callbacks return <0.
 */
 int maple_driver_foreach(maple_driver_t *drv, int (*callback)(maple_device_t *));
+
+/** \brief  Maple attach callback type.
+
+    Functions of this type can be set with maple_attach_callback() to respond
+    automatically to the attachment of a maple device that supports specified
+    functions.
+*/
+typedef void (*maple_attach_callback_t)(maple_device_t *dev);
+
+/** \brief  Set an automatic maple attach callback.
+
+    This function sets a callback function to be called when the specified
+    maple device that supports functions has been attached.
+
+    \param  functions       The functions maple device must support. Set to
+                            0 to support all maple devices.
+    \param  cb              The callback to call when the maple is attached.
+*/
+void maple_attach_callback(uint32 functions, maple_attach_callback_t cb);
+
+/** \brief  Maple detach callback type.
+
+    Functions of this type can be set with maple_detach_callback() to respond
+    automatically to the detachment of a maple device that supports specified
+    functions.
+*/
+typedef void (*maple_detach_callback_t)(maple_device_t *dev);
+
+/** \brief  Set an automatic maple detach callback.
+
+    This function sets a callback function to be called when the specified
+    maple device that supports functions has been detached.
+
+    \param  functions       The functions maple device must support. Set to
+                            0 to support all maple devices.
+    \param  cb              The callback to call when the maple is detached.
+*/
+void maple_detach_callback(uint32 functions, maple_detach_callback_t cb);
 
 /**************************************************************************/
 /* maple_irq.c */
