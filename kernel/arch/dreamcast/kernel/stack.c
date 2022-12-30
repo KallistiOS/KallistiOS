@@ -29,7 +29,7 @@ void arch_stk_trace_at(uint32 fp, int n) {
     dbgio_printf("-------- Stack Trace (innermost first) ---------\n");
 
     while(fp != 0xffffffff) {
-        if((fp & 3) || (fp < 0x8c000000) || (fp > 0x8d000000)) {
+        if((fp & 3) || (fp < 0x8c000000) || (fp > mm_top())) {
             dbgio_printf("   (invalid frame pointer)\n");
             break;
         }

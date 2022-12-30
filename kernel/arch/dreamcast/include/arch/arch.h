@@ -31,7 +31,7 @@ __BEGIN_DECLS
 /** \brief  Page count "variable".
 
     The number of pages is static, so we can optimize this quite a bit. */
-#define page_count      ((16*1024*1024 - 0x10000) / PAGESIZE)
+#define page_count      ((hardware_memsize()*1024 - 0x10000) / PAGESIZE)
 #else
 #define page_count      ((32*1024*1024 - 0x10000) / PAGESIZE)
 #endif
@@ -135,6 +135,31 @@ void __crtend_pullin();
     \retval 0               On success (no error conditions defined).
 */
 int mm_init();
+
+/** \brief  Determine the address of top of memory.
+    \return The address that forms the upper bound of system RAM.
+*/
+size_t mm_top();
+
+/** \defgroup hw_memsizes           Console memory sizes
+    These are the various memory sizes, in kilobytes, that can be returned by the
+    hardware_memsize() function.
+    @{
+*/
+#define HW_MEM_16           16384   /**< \brief 16MB retail Dreamcast */
+#define HW_MEM_32           32768   /**< \brief 32MB modded Dreamcast */
+/** @} */
+
+/** \brief  Determine how much memory is installed in current machine.
+    \return The total size of system memory in kilobytes.
+*/
+size_t hardware_memsize();
+
+/** \brief Use this macro to easily determine if system has doubled RAM.
+    \return True if doubled RAM, false if standard RAM.
+*/
+
+#define DBL_MEM ((hardware_memsize() == HW_MEM_32) ? 1 : 0 )
 
 /** \brief  Request more core memory from the system.
     \param  increment       The number of bytes requested.
@@ -361,7 +386,7 @@ const char *kos_get_authors(void);
     \return                 Whether the address is valid or not for normal
                             memory access.
 */
-#define arch_valid_address(ptr) ((ptr_t)(ptr) >= 0x8c010000 && (ptr_t)(ptr) < 0x8d000000)
+#define arch_valid_address(ptr) ((ptr_t)(ptr) >= 0x8c010000 && (ptr_t)(ptr) < mm_top())
 #else
 #define arch_valid_address(ptr) ((ptr_t)(ptr) >= 0x8c010000 && (ptr_t)(ptr) < 0x8e000000)
 #endif

@@ -1,6 +1,6 @@
 ! KallistiOS ##version##
 !
-! startup.s
+! startup.S
 ! (c)2000-2001 Dan Potter
 !
 ! This file must appear FIRST in your linking order, or your program won't
@@ -71,7 +71,19 @@ init:
 	! Save the current stack, and set a new stack (higher up in RAM)
 	mov.l	old_stack_addr,r0
 	mov.l	r15,@r0
-	mov.l	new_stack,r15
+	mov.l	new_stack_16m,r15
+#ifndef _arch_sub_naomi
+#ifdef __KOS_GCC_AMX3_32MB__
+	! Set stack based on MCR
+	mov.l	mcr,r1
+	mov.l	@r1,r0
+	and	#0x38,r0
+	cmp/eq	#0x18,r0
+	bf	mcr_16m
+	mov.l	new_stack_32m,r15
+#endif
+#endif
+mcr_16m:
 
 	! Save VBR
 	mov.l	old_vbr_addr,r0
@@ -173,8 +185,12 @@ old_stack_addr:
 __arch_old_stack:
 old_stack:
 	.long	0
-new_stack:
+new_stack_16m:
 	.long	0x8d000000
+new_stack_32m:
+	.long	0x8e000000
+mcr:
+	.long	0xff800014
 p2_mask:
 	.long	0xa0000000
 setup_cache_addr:

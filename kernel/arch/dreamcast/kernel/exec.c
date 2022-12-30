@@ -20,7 +20,7 @@ extern uint32 _arch_exec_template[];
 extern uint32 _arch_exec_template_values[];
 extern uint32 _arch_exec_template_end[];
 
-/* Pull this in from startup.s */
+/* Pull this in from startup.S */
 extern uint32 _arch_old_sr, _arch_old_vbr, _arch_old_stack, _arch_old_fpscr;
 
 /* Replace the currently running image with whatever is at

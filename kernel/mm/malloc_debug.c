@@ -108,7 +108,7 @@ void *malloc(size_t amt) {
     spinlock_unlock(&mutex);
 
     printf("Thread %d/%08lx allocated %d bytes at %08lx; %08lx left\n",
-           ctl->thread, ctl->addr, ctl->size, space, 0x8d000000 - (uint32)sbrk(0));
+           ctl->thread, ctl->addr, ctl->size, space, mm_top() - (uint32)sbrk(0));
 
     assert(!(((uint32)space) & 7));
 
@@ -178,7 +178,7 @@ void free(void *block) {
     printf("Thread %d/%08x freeing block @ %08x\n",
            thd_current->tid, pr, (uint32)block);
 
-    if(((uint32)block) & 7 || (uint32)block < 0x8c010000 || (uint32)block >= 0x8d000000) {
+    if(((uint32)block) & 7 || (uint32)block < 0x8c010000 || (uint32)block >= mm_top()) {
         printf("   ATTEMPT TO FREE INVALID ADDRESS!\n");
         spinlock_unlock(&mutex);
         return;
