@@ -1,6 +1,21 @@
+diff -ruN gcc-9.3.0/gcc/config/sh/sh-c.c gcc-9.3.0-kos/gcc/config/sh/sh-c.c
+--- gcc-9.3.0/gcc/config/sh/sh-c.c	2022-12-29 18:46:56.670285086 -0600
++++ gcc-9.3.0-kos/gcc/config/sh/sh-c.c	2022-12-29 19:09:47.328886123 -0600
+@@ -141,4 +141,11 @@
+ 
+   cpp_define_formatted (pfile, "__SH_ATOMIC_MODEL_%s__",
+ 			selected_atomic_model ().cdef_name);
++
++  /* Custom built-in defines for KallistiOS */
++  builtin_define ("__KOS_GCC_PATCHED__");
++  cpp_define_formatted (pfile, "__KOS_GCC_PATCHLEVEL__=%d",
++			2022123000);
++  /* Toolchain supports setting up stack for 32MB if using AMX3  */
++  builtin_define ("__KOS_GCC_AMX3_32MB__");
+ }
 diff -ruN gcc-9.3.0/gcc/configure gcc-9.3.0-kos/gcc/configure
---- gcc-9.3.0/gcc/configure	2020-03-12 07:08:30.000000000 -0400
-+++ gcc-9.3.0-kos/gcc/configure	2020-04-03 16:07:04.540000000 -0400
+--- gcc-9.3.0/gcc/configure	2022-12-29 18:46:58.648287347 -0600
++++ gcc-9.3.0-kos/gcc/configure	2022-12-29 18:47:19.889311626 -0600
 @@ -11862,7 +11862,7 @@
      target_thread_file='single'
      ;;
@@ -11,9 +26,9 @@ diff -ruN gcc-9.3.0/gcc/configure gcc-9.3.0-kos/gcc/configure
      ;;
    *)
 diff -ruN gcc-9.3.0/libgcc/config/sh/crt1.S gcc-9.3.0-kos/libgcc/config/sh/crt1.S
---- gcc-9.3.0/libgcc/config/sh/crt1.S	2020-03-12 07:07:23.000000000 -0400
-+++ gcc-9.3.0-kos/libgcc/config/sh/crt1.S	2020-04-03 16:07:04.540000000 -0400
-@@ -1,724 +1,197 @@
+--- gcc-9.3.0/libgcc/config/sh/crt1.S	2022-12-29 18:46:55.934284245 -0600
++++ gcc-9.3.0-kos/libgcc/config/sh/crt1.S	2022-12-29 18:51:26.073593036 -0600
+@@ -1,724 +1,209 @@
 -/* Copyright (C) 2000-2019 Free Software Foundation, Inc.
 -   This file was pretty much copied from newlib.
 +! KallistiOS ##version##
@@ -232,7 +247,15 @@ diff -ruN gcc-9.3.0/libgcc/config/sh/crt1.S gcc-9.3.0-kos/libgcc/config/sh/crt1.
 +	! Save the current stack, and set a new stack (higher up in RAM)
 +	mov.l	old_stack_addr,r0
 +	mov.l	r15,@r0
-+	mov.l	new_stack,r15
++	! Set stack based on MCR
++	mov.l   new_stack_16m,r15
++	mov.l   mcr,r1
++	mov.l   @r1,r0
++	and     #0x38,r0
++	cmp/eq  #0x18,r0
++	bf      mcr_16m
++	mov.l   new_stack_32m,r15
++mcr_16m:
 +
 +	! Save VBR
 +	mov.l	old_vbr_addr,r0
@@ -896,8 +919,12 @@ diff -ruN gcc-9.3.0/libgcc/config/sh/crt1.S gcc-9.3.0-kos/libgcc/config/sh/crt1.
 +__arch_old_stack:
 +old_stack:
 +	.long	0
-+new_stack:
++new_stack_16m:
 +	.long	0x8d000000
++new_stack_32m:
++	.long   0x8e000000
++mcr:
++	.long   0xff800014
 +p2_mask:
 +	.long	0xa0000000
 +setup_cache_addr:
@@ -919,8 +946,8 @@ diff -ruN gcc-9.3.0/libgcc/config/sh/crt1.S gcc-9.3.0-kos/libgcc/config/sh/crt1.
 +ccr_data_ocram:
 +	.word	0x092d
 diff -ruN gcc-9.3.0/libgcc/config/sh/fake-kos.S gcc-9.3.0-kos/libgcc/config/sh/fake-kos.S
---- gcc-9.3.0/libgcc/config/sh/fake-kos.S	1969-12-31 19:00:00.000000000 -0500
-+++ gcc-9.3.0-kos/libgcc/config/sh/fake-kos.S	2020-04-03 16:07:04.540000000 -0400
+--- gcc-9.3.0/libgcc/config/sh/fake-kos.S	1969-12-31 18:00:00.000000000 -0600
++++ gcc-9.3.0-kos/libgcc/config/sh/fake-kos.S	2022-12-29 18:47:19.890311627 -0600
 @@ -0,0 +1,78 @@
 +! Weakly linked symbols used to get GCC to hopefully compile itself properly.
 +! These will be replaced by the real symbols in actual compiled programs.
@@ -1001,8 +1028,8 @@ diff -ruN gcc-9.3.0/libgcc/config/sh/fake-kos.S gcc-9.3.0-kos/libgcc/config/sh/f
 +    rts
 +    mov     #-1, r0
 diff -ruN gcc-9.3.0/libgcc/config/sh/gthr-kos.h gcc-9.3.0-kos/libgcc/config/sh/gthr-kos.h
---- gcc-9.3.0/libgcc/config/sh/gthr-kos.h	1969-12-31 19:00:00.000000000 -0500
-+++ gcc-9.3.0-kos/libgcc/config/sh/gthr-kos.h	2020-04-03 16:07:04.540000000 -0400
+--- gcc-9.3.0/libgcc/config/sh/gthr-kos.h	1969-12-31 18:00:00.000000000 -0600
++++ gcc-9.3.0-kos/libgcc/config/sh/gthr-kos.h	2022-12-29 18:47:19.890311627 -0600
 @@ -0,0 +1,401 @@
 +/* Copyright (C) 2009, 2010, 2011, 2012, 2020 Lawrence Sebald */
 +
@@ -1406,8 +1433,8 @@ diff -ruN gcc-9.3.0/libgcc/config/sh/gthr-kos.h gcc-9.3.0-kos/libgcc/config/sh/g
 +
 +#endif /* ! GCC_GTHR_KOS_H */
 diff -ruN gcc-9.3.0/libgcc/config/sh/t-sh gcc-9.3.0-kos/libgcc/config/sh/t-sh
---- gcc-9.3.0/libgcc/config/sh/t-sh	2020-03-12 07:07:23.000000000 -0400
-+++ gcc-9.3.0-kos/libgcc/config/sh/t-sh	2020-04-03 16:07:04.540000000 -0400
+--- gcc-9.3.0/libgcc/config/sh/t-sh	2022-12-29 18:46:55.934284245 -0600
++++ gcc-9.3.0-kos/libgcc/config/sh/t-sh	2022-12-29 18:47:19.890311627 -0600
 @@ -23,6 +23,8 @@
    $(LIB1ASMFUNCS_CACHE)
  LIB1ASMFUNCS_CACHE = _ic_invalidate _ic_invalidate_array
@@ -1418,8 +1445,8 @@ diff -ruN gcc-9.3.0/libgcc/config/sh/t-sh gcc-9.3.0-kos/libgcc/config/sh/t-sh
  	$(gcc_compile) -c $<
  
 diff -ruN gcc-9.3.0/libgcc/configure gcc-9.3.0-kos/libgcc/configure
---- gcc-9.3.0/libgcc/configure	2020-03-12 07:07:23.000000000 -0400
-+++ gcc-9.3.0-kos/libgcc/configure	2020-04-03 16:07:04.540000000 -0400
+--- gcc-9.3.0/libgcc/configure	2022-12-29 18:46:55.972284289 -0600
++++ gcc-9.3.0-kos/libgcc/configure	2022-12-29 18:47:19.890311627 -0600
 @@ -5550,6 +5550,7 @@
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;
@@ -1429,8 +1456,8 @@ diff -ruN gcc-9.3.0/libgcc/configure gcc-9.3.0-kos/libgcc/configure
  
  
 diff -ruN gcc-9.3.0/libstdc++-v3/config/cpu/sh/atomicity.h gcc-9.3.0-kos/libstdc++-v3/config/cpu/sh/atomicity.h
---- gcc-9.3.0/libstdc++-v3/config/cpu/sh/atomicity.h	2020-03-12 07:07:24.000000000 -0400
-+++ gcc-9.3.0-kos/libstdc++-v3/config/cpu/sh/atomicity.h	2020-04-03 16:07:04.540000000 -0400
+--- gcc-9.3.0/libstdc++-v3/config/cpu/sh/atomicity.h	2022-12-29 18:46:56.181284527 -0600
++++ gcc-9.3.0-kos/libstdc++-v3/config/cpu/sh/atomicity.h	2022-12-29 18:47:19.890311627 -0600
 @@ -22,14 +22,40 @@
  // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
  // <http://www.gnu.org/licenses/>.
@@ -1482,8 +1509,8 @@ diff -ruN gcc-9.3.0/libstdc++-v3/config/cpu/sh/atomicity.h gcc-9.3.0-kos/libstdc
 +_GLIBCXX_END_NAMESPACE_VERSION
 +} // namespace
 diff -ruN gcc-9.3.0/libstdc++-v3/configure gcc-9.3.0-kos/libstdc++-v3/configure
---- gcc-9.3.0/libstdc++-v3/configure	2020-03-12 07:07:24.000000000 -0400
-+++ gcc-9.3.0-kos/libstdc++-v3/configure	2020-04-03 16:07:04.540000000 -0400
+--- gcc-9.3.0/libstdc++-v3/configure	2022-12-29 18:46:56.479284868 -0600
++++ gcc-9.3.0-kos/libstdc++-v3/configure	2022-12-29 18:47:19.894311632 -0600
 @@ -15629,6 +15629,7 @@
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;

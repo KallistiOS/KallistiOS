@@ -1,6 +1,22 @@
-diff -ruN gcc-4.7.4/gcc/configure gcc-4.7.4-new/gcc/configure
---- gcc-4.7.4/gcc/configure	2014-02-12 16:43:47.000000000 +0000
-+++ gcc-4.7.4-new/gcc/configure	2020-03-25 14:40:04.452765679 +0000
+diff -ruN --no-dereference gcc-4.7.4/gcc/config/sh/sh.h gcc-4.7.4-kos/gcc/config/sh/sh.h
+--- gcc-4.7.4/gcc/config/sh/sh.h	2022-12-29 19:24:53.850990179 -0600
++++ gcc-4.7.4-kos/gcc/config/sh/sh.h	2022-12-29 19:42:54.714327736 -0600
+@@ -93,6 +93,12 @@
+     builtin_define ("__FMOVD_ENABLED__"); \
+   builtin_define (TARGET_LITTLE_ENDIAN \
+ 		  ? "__LITTLE_ENDIAN__" : "__BIG_ENDIAN__"); \
++  /* Custom built-in defines for KallistiOS */ \
++  builtin_define ("__KOS_GCC_PATCHED__"); \
++  cpp_define_formatted (pfile, "__KOS_GCC_PATCHLEVEL__=%d", \
++			2022123000); \
++  /* Toolchain supports setting up stack for 32MB if using AMX3  */ \
++  builtin_define ("__KOS_GCC_AMX3_32MB__"); \
+ } while (0)
+ 
+ /* Value should be nonzero if functions must have frame pointers.
+diff -ruN --no-dereference gcc-4.7.4/gcc/configure gcc-4.7.4-kos/gcc/configure
+--- gcc-4.7.4/gcc/configure	2022-12-29 19:24:52.915989025 -0600
++++ gcc-4.7.4-kos/gcc/configure	2022-12-29 19:25:16.801018486 -0600
 @@ -11338,7 +11338,7 @@
      target_thread_file='single'
      ;;
@@ -10,9 +26,9 @@ diff -ruN gcc-4.7.4/gcc/configure gcc-4.7.4-new/gcc/configure
      target_thread_file=${enable_threads}
      ;;
    *)
-diff -ruN gcc-4.7.4/gcc/cp/cfns.h gcc-4.7.4-new/gcc/cp/cfns.h
---- gcc-4.7.4/gcc/cp/cfns.h	2009-04-21 20:03:23.000000000 +0100
-+++ gcc-4.7.4-new/gcc/cp/cfns.h	2020-03-25 14:40:04.460765725 +0000
+diff -ruN --no-dereference gcc-4.7.4/gcc/cp/cfns.h gcc-4.7.4-kos/gcc/cp/cfns.h
+--- gcc-4.7.4/gcc/cp/cfns.h	2022-12-29 19:24:52.890988994 -0600
++++ gcc-4.7.4-kos/gcc/cp/cfns.h	2022-12-29 19:25:16.801018486 -0600
 @@ -53,6 +53,9 @@
  static unsigned int hash (const char *, unsigned int);
  #ifdef __GNUC__
@@ -32,9 +48,9 @@ diff -ruN gcc-4.7.4/gcc/cp/cfns.h gcc-4.7.4-new/gcc/cp/cfns.h
  
    switch (hval)
      {
-diff -ruN gcc-4.7.4/gcc/doc/gcc.texi gcc-4.7.4-new/gcc/doc/gcc.texi
---- gcc-4.7.4/gcc/doc/gcc.texi	2010-06-10 00:46:33.000000000 +0100
-+++ gcc-4.7.4-new/gcc/doc/gcc.texi	2020-03-25 14:40:04.464765748 +0000
+diff -ruN --no-dereference gcc-4.7.4/gcc/doc/gcc.texi gcc-4.7.4-kos/gcc/doc/gcc.texi
+--- gcc-4.7.4/gcc/doc/gcc.texi	2022-12-29 19:24:52.909989017 -0600
++++ gcc-4.7.4-kos/gcc/doc/gcc.texi	2022-12-29 19:25:16.801018486 -0600
 @@ -86,9 +86,9 @@
  @item GNU Press
  @tab Website: www.gnupress.org
@@ -47,10 +63,10 @@ diff -ruN gcc-4.7.4/gcc/doc/gcc.texi gcc-4.7.4-new/gcc/doc/gcc.texi
  @item 51 Franklin Street, Fifth Floor
  @tab Tel 617-542-5942
  @item Boston, MA 02110-1301 USA
-diff -ruN gcc-4.7.4/libgcc/config/sh/crt1.S gcc-4.7.4-new/libgcc/config/sh/crt1.S
---- gcc-4.7.4/libgcc/config/sh/crt1.S	2011-11-02 14:33:56.000000000 +0000
-+++ gcc-4.7.4-new/libgcc/config/sh/crt1.S	2020-03-25 14:40:04.485765870 +0000
-@@ -1,1369 +1,202 @@
+diff -ruN --no-dereference gcc-4.7.4/libgcc/config/sh/crt1.S gcc-4.7.4-kos/libgcc/config/sh/crt1.S
+--- gcc-4.7.4/libgcc/config/sh/crt1.S	2022-12-29 19:24:52.804988888 -0600
++++ gcc-4.7.4-kos/libgcc/config/sh/crt1.S	2022-12-29 19:28:07.978229651 -0600
+@@ -1,1369 +1,214 @@
 -/* Copyright (C) 2000, 2001, 2003, 2004, 2005, 2006, 2009, 2011
 -   Free Software Foundation, Inc.
 -   This file was pretty much copied from newlib.
@@ -913,7 +929,15 @@ diff -ruN gcc-4.7.4/libgcc/config/sh/crt1.S gcc-4.7.4-new/libgcc/config/sh/crt1.
 +	! Save the current stack, and set a new stack (higher up in RAM)
 +	mov.l	old_stack_addr,r0
 +	mov.l	r15,@r0
-+	mov.l	new_stack,r15
++	! Set stack based on MCR
++	mov.l   new_stack_16m,r15
++	mov.l   mcr,r1
++	mov.l   @r1,r0
++	and     #0x38,r0
++	cmp/eq  #0x18,r0
++	bf      mcr_16m
++	mov.l   new_stack_32m,r15
++mcr_16m:
 +
 +	! Save VBR
 +	mov.l	old_vbr_addr,r0
@@ -1254,8 +1278,12 @@ diff -ruN gcc-4.7.4/libgcc/config/sh/crt1.S gcc-4.7.4-new/libgcc/config/sh/crt1.
 +__arch_old_stack:
 +old_stack:
 +	.long	0
-+new_stack:
-+	.long	0x8d000000
++new_stack_16m:
++	.long   0x8d000000
++new_stack_32m:
++	.long   0x8e000000
++mcr:
++	.long   0xff800014
 +p2_mask:
 +	.long	0xa0000000
 +setup_cache_addr:
@@ -1601,9 +1629,9 @@ diff -ruN gcc-4.7.4/libgcc/config/sh/crt1.S gcc-4.7.4-new/libgcc/config/sh/crt1.
 -	.ualong	0x0
 -#endif /* VBR_SETUP */
 -#endif /* ! __SH5__ */
-diff -ruN gcc-4.7.4/libgcc/config/sh/fake-kos.S gcc-4.7.4-new/libgcc/config/sh/fake-kos.S
---- gcc-4.7.4/libgcc/config/sh/fake-kos.S	1970-01-01 01:00:00.000000000 +0100
-+++ gcc-4.7.4-new/libgcc/config/sh/fake-kos.S	2020-03-25 14:40:04.486765876 +0000
+diff -ruN --no-dereference gcc-4.7.4/libgcc/config/sh/fake-kos.S gcc-4.7.4-kos/libgcc/config/sh/fake-kos.S
+--- gcc-4.7.4/libgcc/config/sh/fake-kos.S	1969-12-31 18:00:00.000000000 -0600
++++ gcc-4.7.4-kos/libgcc/config/sh/fake-kos.S	2022-12-29 19:25:16.802018487 -0600
 @@ -0,0 +1,75 @@
 +! Weakly linked symbols used to get GCC to hopefully compile itself properly.
 +! These will be replaced by the real symbols in actual compiled programs.
@@ -1681,9 +1709,9 @@ diff -ruN gcc-4.7.4/libgcc/config/sh/fake-kos.S gcc-4.7.4-new/libgcc/config/sh/f
 +    mov     #-1, r0
 +    
 \ No newline at end of file
-diff -ruN gcc-4.7.4/libgcc/config/sh/gthr-kos.h gcc-4.7.4-new/libgcc/config/sh/gthr-kos.h
---- gcc-4.7.4/libgcc/config/sh/gthr-kos.h	1970-01-01 01:00:00.000000000 +0100
-+++ gcc-4.7.4-new/libgcc/config/sh/gthr-kos.h	2020-03-25 14:40:04.486765876 +0000
+diff -ruN --no-dereference gcc-4.7.4/libgcc/config/sh/gthr-kos.h gcc-4.7.4-kos/libgcc/config/sh/gthr-kos.h
+--- gcc-4.7.4/libgcc/config/sh/gthr-kos.h	1969-12-31 18:00:00.000000000 -0600
++++ gcc-4.7.4-kos/libgcc/config/sh/gthr-kos.h	2022-12-29 19:25:16.802018487 -0600
 @@ -0,0 +1,355 @@
 +/* Copyright (C) 2009, 2010, 2011, 2012 Lawrence Sebald */
 +
@@ -2040,9 +2068,9 @@ diff -ruN gcc-4.7.4/libgcc/config/sh/gthr-kos.h gcc-4.7.4-new/libgcc/config/sh/g
 +#endif /* _LIBOBJC */
 +
 +#endif /* ! GCC_GTHR_KOS_H */
-diff -ruN gcc-4.7.4/libgcc/config/sh/t-sh gcc-4.7.4-new/libgcc/config/sh/t-sh
---- gcc-4.7.4/libgcc/config/sh/t-sh	2011-11-07 17:14:32.000000000 +0000
-+++ gcc-4.7.4-new/libgcc/config/sh/t-sh	2020-03-25 14:40:04.488765888 +0000
+diff -ruN --no-dereference gcc-4.7.4/libgcc/config/sh/t-sh gcc-4.7.4-kos/libgcc/config/sh/t-sh
+--- gcc-4.7.4/libgcc/config/sh/t-sh	2022-12-29 19:24:52.804988888 -0600
++++ gcc-4.7.4-kos/libgcc/config/sh/t-sh	2022-12-29 19:25:16.802018487 -0600
 @@ -24,6 +24,8 @@
    $(LIB1ASMFUNCS_CACHE)
  LIB1ASMFUNCS_CACHE = _ic_invalidate _ic_invalidate_array
@@ -2052,9 +2080,9 @@ diff -ruN gcc-4.7.4/libgcc/config/sh/t-sh gcc-4.7.4-new/libgcc/config/sh/t-sh
  crt1.o: $(srcdir)/config/sh/crt1.S
  	$(gcc_compile) -c $<
  
-diff -ruN gcc-4.7.4/libgcc/configure gcc-4.7.4-new/libgcc/configure
---- gcc-4.7.4/libgcc/configure	2012-08-06 15:34:27.000000000 +0100
-+++ gcc-4.7.4-new/libgcc/configure	2020-03-25 14:40:04.508766004 +0000
+diff -ruN --no-dereference gcc-4.7.4/libgcc/configure gcc-4.7.4-kos/libgcc/configure
+--- gcc-4.7.4/libgcc/configure	2022-12-29 19:24:52.789988869 -0600
++++ gcc-4.7.4-kos/libgcc/configure	2022-12-29 19:25:16.802018487 -0600
 @@ -4480,6 +4480,7 @@
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;
@@ -2063,9 +2091,9 @@ diff -ruN gcc-4.7.4/libgcc/configure gcc-4.7.4-new/libgcc/configure
  esac
  
  # Substitute configuration variables
-diff -ruN gcc-4.7.4/libstdc++-v3/config/cpu/sh/atomicity.h gcc-4.7.4-new/libstdc++-v3/config/cpu/sh/atomicity.h
---- gcc-4.7.4/libstdc++-v3/config/cpu/sh/atomicity.h	2020-03-25 15:15:51.300215413 +0000
-+++ gcc-4.7.4-new/libstdc++-v3/config/cpu/sh/atomicity.h	2020-03-25 15:16:20.010371542 +0000
+diff -ruN --no-dereference gcc-4.7.4/libstdc++-v3/config/cpu/sh/atomicity.h gcc-4.7.4-kos/libstdc++-v3/config/cpu/sh/atomicity.h
+--- gcc-4.7.4/libstdc++-v3/config/cpu/sh/atomicity.h	2022-12-29 19:24:52.024987925 -0600
++++ gcc-4.7.4-kos/libstdc++-v3/config/cpu/sh/atomicity.h	2022-12-29 19:25:16.802018487 -0600
 @@ -80,7 +80,12 @@
  
  namespace 
