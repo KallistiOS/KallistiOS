@@ -50,7 +50,8 @@ static void __attribute__((__noreturn__)) wait_exit() {
 
 int main(int argc, char *argv[]) {
     kos_blockdev_t sd_dev;
-    uint64 begin, end, timer;
+    uint64 begin, end, timer, average;
+    uint64 sum = 0;
     uint8_t pt;
 
     dbgio_dev_select("fb");
@@ -69,20 +70,26 @@ int main(int argc, char *argv[]) {
         wait_exit();
     }
 
-    dbglog(DBG_DEBUG, "Reading 1024 blocks.\n");
+    dbglog(DBG_DEBUG, "Calculating reading average of 1024 blocks.\n");
 
-    begin = timer_ms_gettime64();
+    for(int i=0;i<10;i++)
+    {
+        begin = timer_ms_gettime64();
 
-    if(sd_dev.read_blocks(&sd_dev, 0, 1024, tbuf)) {
-        dbglog(DBG_DEBUG, "couldn't read block: %s\n", strerror(errno));
-        return -1;
+        if(sd_dev.read_blocks(&sd_dev, 0, 1024, tbuf)) {
+            dbglog(DBG_DEBUG, "couldn't read block: %s\n", strerror(errno));
+            return -1;
+        }
+
+        end = timer_ms_gettime64();
+        timer = end - begin;
+        sum += timer;
     }
 
-    end = timer_ms_gettime64();
-    timer = end - begin;
+    average = sum/10;
 
-    dbglog(DBG_DEBUG, "SD card read took %llu ms (%.3f KB/sec)\n",
-        timer, (512 * 1024) / ((double)timer));
+    dbglog(DBG_DEBUG, "SD card read average took %llu ms (%.3f KB/sec)\n",
+        average, (512 * 1024) / ((double)average));
 
     sd_shutdown();
     wait_exit();
