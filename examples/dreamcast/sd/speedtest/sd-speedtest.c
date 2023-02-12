@@ -71,7 +71,7 @@ int i;
         wait_exit();
     }
 
-    dbglog(DBG_DEBUG, "Calculating reading average of 1024 blocks.\n");
+    dbglog(DBG_DEBUG, "Calculating average speed for reading 1024 blocks.\n");
 
     for(i = 0; i < 10; i++) {
         begin = timer_ms_gettime64();
