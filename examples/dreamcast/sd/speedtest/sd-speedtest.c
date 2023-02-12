@@ -73,8 +73,7 @@ int i;
 
     dbglog(DBG_DEBUG, "Calculating reading average of 1024 blocks.\n");
 
-    for(int i=0;i<10;i++)
-    {
+    for(i = 0; i < 10; i++) {
         begin = timer_ms_gettime64();
 
         if(sd_dev.read_blocks(&sd_dev, 0, 1024, tbuf)) {
