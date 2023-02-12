@@ -89,7 +89,7 @@ int i;
     average = sum/10;
 
     dbglog(DBG_DEBUG, "SD card read average took %llu ms (%.3f KB/sec)\n",
-        average, (512 * 1024) / ((double)average));
+           average, (512 * 1024) / ((double)average));
 
     sd_shutdown();
     wait_exit();
