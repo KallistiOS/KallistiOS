@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
     uint64 begin, end, timer, average;
     uint64 sum = 0;
     uint8_t pt;
-int i;
+    int i;
 
     dbgio_dev_select("fb");
     dbglog(DBG_DEBUG, "Initializing SD card.\n");
