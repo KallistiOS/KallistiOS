@@ -58,7 +58,7 @@ extern uint32 _arch_mem_top;
 #define DEFAULT_PIXEL_MODE  PM_RGB565
 
 /** \brief  Default serial bitrate. */
-#define DEFAULT_SERIAL_BAUD 57600
+#define DEFAULT_SERIAL_BAUD 115200
 
 /** \brief  Default serial FIFO behavior. */
 #define DEFAULT_SERIAL_FIFO 1

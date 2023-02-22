@@ -193,23 +193,21 @@ int scif_init_fake() {
     return 0;
 }
 
-/* Initialize the SCIF port; baud_rate must be at least 9600 and
-   no more than 57600. 115200 does NOT work for most PCs. */
+/* Initialize the SCIF port; */
 /* recv trigger to 1 byte */
 int scif_init() {
     int i;
     unsigned char scbrr2;
     unsigned short scsmr2;
 
-    /* int fifo = 1; */
-
     /*  If dcload-serial is active, then do nothing here, or we'll
         screw that up. */
     if(dcload_type == DCLOAD_TYPE_SER)
         return 0;
 
-    /* Disable interrupts, transmit/receive, and use internal clock */
-    SCSCR2 = 0;
+    /* Disable interrupts, transmit/receive,
+       and use internal or external clock */
+    SCSCR2 = serial_baud ? 0x0 : 0x02;
 
     /* Enter reset mode */
     SCFCR2 = 0x06;
@@ -226,7 +224,7 @@ int scif_init() {
         scsmr2 = 2;
         scbrr2 = (50000000 / (512 * serial_baud)) - 1;
     }
-    else {
+    else if (serial_baud) {
         scsmr2 = 3;
         scbrr2 = (50000000 / (2048 * serial_baud)) - 1;
     }
@@ -255,7 +253,8 @@ int scif_init() {
     SCLSR2 = 0;
 
     /* Enable transmit/receive */
-    SCSCR2 = 0x30;
+    /* If external clock is used set CKE1 bit */
+    SCSCR2 = serial_baud ? 0x30 : 0x32;
 
     /* Wait a bit for it to stabilize */
     for(i = 0; i < 800000; i++)
