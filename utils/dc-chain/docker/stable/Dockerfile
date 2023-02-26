@@ -18,7 +18,7 @@ RUN apk --update add --no-cache \
 	curl \
 	wget \
 	git \
-	python \
+	python3 \
 	subversion \
 	&& apk --update add --no-cache libelf-dev --repository=http://dl-cdn.alpinelinux.org/alpine/v3.9/main \
 	&& rm -rf /var/cache/apk/*
@@ -27,8 +27,8 @@ RUN apk --update add --no-cache \
 # You may adapt the KallistiOS repository URL if needed
 RUN mkdir -p /opt/toolchains/dc \
 	&& git clone https://git.code.sf.net/p/cadcdev/kallistios /opt/toolchains/dc/kos \
-	&& cd /opt/toolchains/dc/kos/utils/dc-chain
-	&& cp config.mk.stable.sample config.mk
+	&& cd /opt/toolchains/dc/kos/utils/dc-chain \
+	&& cp config.mk.stable.sample config.mk \
 	&& ./download.sh && ./unpack.sh && make && make gdb \
 	&& rm -rf /opt/toolchains/dc/kos
 
