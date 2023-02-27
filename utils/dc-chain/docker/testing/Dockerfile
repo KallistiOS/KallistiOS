@@ -29,6 +29,7 @@ RUN mkdir -p /opt/toolchains/dc \
 	&& git clone https://git.code.sf.net/p/cadcdev/kallistios /opt/toolchains/dc/kos \
 	&& cd /opt/toolchains/dc/kos/utils/dc-chain \
 	&& cp config.mk.testing.sample config.mk \
+	&& sed -i -e 's/#use_custom_dependencies=1/use_custom_dependencies=1/g' config.mk \
 	&& ./download.sh && ./unpack.sh && make && make gdb \
 	&& rm -rf /opt/toolchains/dc/kos
 
