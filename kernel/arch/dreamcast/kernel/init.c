@@ -175,6 +175,8 @@ int  __attribute__((weak)) arch_auto_init() {
 }
 
 void  __attribute__((weak)) arch_auto_shutdown() {
+    fflush(stdout);
+
 #ifndef _arch_sub_naomi
     fs_dclsocket_shutdown();
     net_shutdown();
