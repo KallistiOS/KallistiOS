@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
     pvr_init_defaults();
 
     // Load a texture
-    txr = plx_txr_load("/rd/dan.jpg", 0, 0);
+    txr = plx_txr_load("/rd/dan.png", 0, 0);
 
     if(!txr)
         return 0;
