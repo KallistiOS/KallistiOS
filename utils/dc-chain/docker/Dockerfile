@@ -1,6 +1,14 @@
 #
-# Dockerfile for Sega Dreamcast Toolchains Maker (dc-chain): Testing
+# Dockerfile for Sega Dreamcast Toolchains Maker (dc-chain)
 #
+# usage:
+#   - build one of the images:
+#       docker build -t dcchain:latest . 
+#       docker build -t dcchain:testing --build-arg dc_chain=testing . 
+#       docker build -t dcchain:bleeding --build-arg dc_chain=bleeding . 
+#       docker build -t dcchain:legacy --build-arg dc_chain=legacy . 
+#   - create and run a container, eg for latest:
+#       docker run -it --name containername dcchain:latest /bin/bash
 
 # Stage 1
 FROM alpine:latest as build
@@ -25,10 +33,11 @@ RUN apk --update add --no-cache \
 
 # Making Sega Dreamcast toolchains
 # You may adapt the KallistiOS repository URL if needed
+ARG dc_chain=stable
 RUN mkdir -p /opt/toolchains/dc \
 	&& git clone https://git.code.sf.net/p/cadcdev/kallistios /opt/toolchains/dc/kos \
 	&& cd /opt/toolchains/dc/kos/utils/dc-chain \
-	&& cp config.mk.testing.sample config.mk \
+	&& cp config.mk.$dc_chain.sample config.mk \
 	&& sed -i -e 's/#use_custom_dependencies=1/use_custom_dependencies=1/g' config.mk \
 	&& ./download.sh && ./unpack.sh && make && make gdb \
 	&& rm -rf /opt/toolchains/dc/kos
