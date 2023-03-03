@@ -34,6 +34,9 @@ static void sphere(float radius, int slices, int stacks) {
     float   x, y, z, g, b;
     float   yaw;
 
+    /* Put our own polygon header */
+    pvr_prim(&hdr, sizeof(hdr));
+
     /* Initialize xmtrx with the values from KGL */
     plx_mat_identity();
     plx_mat3d_apply(PLX_MAT_SCREENVIEW);
@@ -94,9 +97,6 @@ static void sphere_frame_opaque() {
 
     pvr_scene_begin();
     pvr_list_begin(PVR_LIST_OP_POLY);
-
-    /* Put our own polygon header */
-    pvr_prim(&hdr, sizeof(hdr));
 
     /* Setup our Direct Render state: pick a store queue and setup QACR0/1 */
     pvr_dr_init(dr_state);
