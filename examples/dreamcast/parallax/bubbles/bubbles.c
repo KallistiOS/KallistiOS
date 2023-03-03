@@ -27,24 +27,18 @@ the same, but it uses the Parallax functions instead of KGL.
 static float phase = 0.0f;
 static pvr_poly_cxt_t cxt;
 static pvr_poly_hdr_t hdr;
+static pvr_dr_state_t  dr_state;
 static void sphere(float radius, int slices, int stacks) {
     int i, j;
     float   pitch, pitch2;
     float   x, y, z, g, b;
-    float   yaw, yaw2;
-    pvr_dr_state_t  dr_state;
-
-    /* Setup our Direct Render state: pick a store queue and setup QACR0/1 */
-    pvr_dr_init(dr_state);
+    float   yaw;
 
     /* Initialize xmtrx with the values from KGL */
     plx_mat_identity();
     plx_mat3d_apply(PLX_MAT_SCREENVIEW);
     plx_mat3d_apply(PLX_MAT_PROJECTION);
     plx_mat3d_apply(PLX_MAT_MODELVIEW);
-
-    /* Put our own polygon header */
-    pvr_prim(&hdr, sizeof(hdr));
 
     /* Iterate over stacks */
     for(i = 0; i < stacks; i++) {
@@ -55,7 +49,6 @@ static void sphere(float radius, int slices, int stacks) {
            long triangle strip. */
         for(j = 0; j <= slices / 2; j++) {
             yaw = 2 * M_PI * ((float)j / (float)slices);
-            yaw2 = 2 * M_PI * ((float)(j + 1) / (float)slices);
 
             /* x, y+1 */
             x = radius * fcos(yaw) * fcos(pitch2);
@@ -101,6 +94,12 @@ static void sphere_frame_opaque() {
 
     pvr_scene_begin();
     pvr_list_begin(PVR_LIST_OP_POLY);
+
+    /* Put our own polygon header */
+    pvr_prim(&hdr, sizeof(hdr));
+
+    /* Setup our Direct Render state: pick a store queue and setup QACR0/1 */
+    pvr_dr_init(dr_state);
 
     plx_mat3d_identity();
     plx_mat3d_translate(0.0f, 0.0f, -12.0f);
