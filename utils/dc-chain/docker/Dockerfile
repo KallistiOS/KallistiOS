@@ -28,6 +28,7 @@ RUN apk --update add --no-cache \
 	git \
 	python3 \
 	subversion \
+	gmp-dev \
 	&& apk --update add --no-cache libelf-dev --repository=http://dl-cdn.alpinelinux.org/alpine/v3.9/main \
 	&& rm -rf /var/cache/apk/*
 
