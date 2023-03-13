@@ -33,6 +33,7 @@ static void ide_outp(int port, uint16 value, int size) {
             break;
         default:
             assert(0);
+            return;
     }
 
     //printf("ide_outp %02x -> %04x(%08x)\n", value, port, addr);
