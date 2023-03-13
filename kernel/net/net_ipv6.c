@@ -15,6 +15,9 @@
 #include "net_icmp6.h"
 #include "net_ipv4.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
+
 static net_ipv6_stats_t ipv6_stats = { 0 };
 const struct in6_addr in6addr_any = IN6ADDR_ANY_INIT;
 const struct in6_addr in6addr_loopback = IN6ADDR_LOOPBACK_INIT;
@@ -302,3 +305,5 @@ void net_ipv6_shutdown(void) {
     mac[5] = net_default_dev->ip6_lladdr.s6_addr[15];
     net_multicast_del(mac);
 }
+
+#pragma GCC diagnostic pop
