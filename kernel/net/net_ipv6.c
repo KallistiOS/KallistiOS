@@ -15,8 +15,10 @@
 #include "net_icmp6.h"
 #include "net_ipv4.h"
 
+#if __GNUC__ >= 12
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Waddress-of-packed-member"
+#endif
 
 static net_ipv6_stats_t ipv6_stats = { 0 };
 const struct in6_addr in6addr_any = IN6ADDR_ANY_INIT;
@@ -306,4 +308,6 @@ void net_ipv6_shutdown(void) {
     net_multicast_del(mac);
 }
 
+#if __GNUC__ >= 12
 #pragma GCC diagnostic pop
+#endif

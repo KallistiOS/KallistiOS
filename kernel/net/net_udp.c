@@ -23,8 +23,10 @@
 #include "net_ipv4.h"
 #include "net_ipv6.h"
 
+#if __GNUC__ >= 12
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Waddress-of-packed-member"
+#endif
 
 /* Default hop limit (or ttl for IPv4) for new sockets */
 #define UDP_DEFAULT_HOPS    64
@@ -1546,4 +1548,6 @@ void net_udp_shutdown(void) {
     fs_socket_proto_remove(&proto_lite);
 }
 
+#if __GNUC__ >= 12
 #pragma GCC diagnostic pop
+#endif
