@@ -1028,8 +1028,8 @@ static int fs_fat_unlink(vfs_handler_t *vfs, const char *fn) {
     if((irv = fat_erase_dentry(fs->fs, cl, off, lcl, loff)) < 0) {
         dbglog(DBG_ERROR, "fs_fat: Error erasing directory entry for file %s\n",
                fn);
+        errno = -irv;
         irv = -1;
-        errno = -err;
     }
 
     mutex_unlock(&fat_mutex);

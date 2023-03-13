@@ -139,15 +139,15 @@ static int nvflash_write(uint32 addr, uint8 value) {
 /* Write a block of data */
 int nvflash_write_block(uint32 addr, void * data, uint32 len) {
     uint8   * db = (uint8 *)data;
-    int i;
+    unsigned i;
 
     for(i = 0; i < len; i++) {
         if(!(i % 0x10000)) {
-            printf("nvflash_write_block: writing block at %08x\n", i + addr);
+            printf("nvflash_write_block: writing block at %08x\n", (unsigned)(i + addr));
         }
 
         if(nvflash_write(addr + i, db[i]) < 0) {
-            printf("nvflash_write_block: aborting block write at %d\n", i + addr);
+            printf("nvflash_write_block: aborting block write at %u\n", (unsigned)(i + addr));
             return -1;
         }
     }

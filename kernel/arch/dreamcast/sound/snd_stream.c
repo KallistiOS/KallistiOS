@@ -459,12 +459,12 @@ static void dma_chain(ptr_t data) {
 
 /* Poll streamer to load more data if neccessary */
 int snd_stream_poll(snd_stream_hnd_t hnd) {
-    uint32      ch0pos, ch1pos;
-    //int     realbuffer;
-    uint32     current_play_pos;
-    int     needed_samples;
-    int     got_samples;
-    void        *data;
+    uint32 ch0pos, ch1pos;
+    //int  realbuffer;
+    uint32 current_play_pos;
+    int    needed_samples;
+    int    got_samples;
+    void   *data;
 
     CHECK_HND(hnd);
 
@@ -496,7 +496,7 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
 
     if(needed_samples > 0) {
         if(streams[hnd].stereo) {
-            needed_samples = (needed_samples > streams[hnd].buffer_size/4) ? streams[hnd].buffer_size/4 : needed_samples;
+            needed_samples = ((unsigned)needed_samples > streams[hnd].buffer_size/4) ? (int)streams[hnd].buffer_size/4 : needed_samples;
             data = streams[hnd].get_data(hnd, needed_samples * 4, &got_samples);
             process_filters(hnd, &data, &got_samples);
 
@@ -508,7 +508,7 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
             }
         }
         else {
-            needed_samples = needed_samples > streams[hnd].buffer_size/2 ? streams[hnd].buffer_size/2 : needed_samples;
+            needed_samples = ((unsigned)needed_samples > streams[hnd].buffer_size/2) ? (int)streams[hnd].buffer_size/2 : needed_samples;
             data = streams[hnd].get_data(hnd, needed_samples * 2, &got_samples);
             process_filters(hnd, &data, &got_samples);
 

@@ -9,7 +9,7 @@
 typedef void *(*kthd_func)(void *);
 
 int thrd_create(thrd_t *thr, thrd_start_t func, void *arg) {
-    kthread_t *thd = thd_create(0, (kthd_func)func, arg);
+    kthread_t *thd = thd_create(0, (kthd_func)(void*)func, arg);
 
     if(!thd)
         return thrd_nomem;

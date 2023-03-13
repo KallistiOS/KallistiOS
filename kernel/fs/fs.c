@@ -52,7 +52,7 @@ typedef struct fs_hnd {
 fs_hnd_t * fd_table[FD_SETSIZE] = { NULL };
 
 /* For some reason, Newlib doesn't seem to define this function in stdlib.h. */
-extern char *realpath(const char *, const char *);
+extern char *realpath(const char *, char[PATH_MAX]);
 
 
 /* Internal file commands for root dir reading */
