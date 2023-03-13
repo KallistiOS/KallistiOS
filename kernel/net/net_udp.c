@@ -23,7 +23,7 @@
 #include "net_ipv4.h"
 #include "net_ipv6.h"
 
-#if __GNUC__ >= 12
+#if __GNUC__ >= 9
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Waddress-of-packed-member"
 #endif
@@ -1548,6 +1548,6 @@ void net_udp_shutdown(void) {
     fs_socket_proto_remove(&proto_lite);
 }
 
-#if __GNUC__ >= 12
+#if __GNUC__ >= 9
 #pragma GCC diagnostic pop
 #endif

@@ -15,7 +15,7 @@
 #include "net_icmp6.h"
 #include "net_ipv4.h"
 
-#if __GNUC__ >= 12
+#if __GNUC__ >= 9
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Waddress-of-packed-member"
 #endif
@@ -308,6 +308,6 @@ void net_ipv6_shutdown(void) {
     net_multicast_del(mac);
 }
 
-#if __GNUC__ >= 12
+#if __GNUC__ >= 9
 #pragma GCC diagnostic pop
 #endif

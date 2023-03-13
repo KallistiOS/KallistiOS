@@ -18,7 +18,7 @@
 #include "directory.h"
 #include "fatinternal.h"
 
-#if __GNUC__ >= 12
+#if __GNUC__ >= 9
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Waddress-of-packed-member"
 #endif
@@ -1397,6 +1397,6 @@ void fat_dentry_print(const fat_dentry_t *ent) {
 }
 #endif
 
-#if __GNUC__ >= 12
+#if __GNUC__ >= 9
 #pragma GCC diagnostic pop
 #endif
