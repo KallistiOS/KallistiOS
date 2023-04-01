@@ -1,5 +1,5 @@
 /* GhettoPlay: an Ogg Vorbis browser and playback util
-   (c)2000-2002 Dan Potter
+   (c)2000-2002 Megan Potter
    (c)2001 Thorsten Titze
 
    Distributed as an example for libdream 0.7
@@ -155,7 +155,7 @@ int main(int argc, char **argv) {
         draw_poly_box(0.0f, 10.0f, 640.0f, 20.0f + (24.0f * 2.0f) + 10.0f, 90.0f,
                       0.3f, 0.2f, 0.5f, 0.0f, 0.5f, 0.1f, 0.8f, 0.2f);
         draw_poly_strf(5.0f, 20.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-                       "      GhettoPlay  (C)2000-2002 by Dan Potter      ");
+                       "     GhettoPlay  (C)2000-2002 by Megan Potter     ");
         draw_poly_strf(5.0f, 48.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
                        "      sndoggvorbis (C)2001 by Thorsten Titze      ");
 

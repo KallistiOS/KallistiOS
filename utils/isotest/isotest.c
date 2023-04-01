@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    isotest.c
-   (c)2000 Dan Potter
+   (c)2000 Megan Potter
 
    Test ISO filesystem reader. This is a functional duplicate of fs_iso9660, but
    designed to run on a PC for testing.

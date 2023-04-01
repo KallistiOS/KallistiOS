@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    malloc_debug.c
-   (c)2001-2002 Dan Potter
+   (c)2001-2002 Megan Potter
 */
 
 #include <malloc.h>

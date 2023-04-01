@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    g2bus.c
-   (c)2000-2002 Dan Potter
+   (c)2000-2002 Megan Potter
 */
 
 /*

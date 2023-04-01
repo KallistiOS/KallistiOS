@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/maple/controller.h
-   (C)2000-2002 Jordan DeLong, Dan Potter
+   (C)2000-2002 Jordan DeLong, Megan Potter
 
    Thanks to Marcus Comstedt for information on the controller.
 */
@@ -14,7 +14,7 @@
     code.
 
     \author Jordan DeLong
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __DC_MAPLE_CONTROLLER_H

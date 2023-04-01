@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    font.c
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
 
    Note: axaxax.txf is Ray Larabie's AXAXAX font from his site:
    http://www.larabiefonts.com/

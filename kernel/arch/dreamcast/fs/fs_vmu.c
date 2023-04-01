@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    fs_vmu.c
-   Copyright (C) 2003 Dan Potter
+   Copyright (C) 2003 Megan Potter
    Copyright (C) 2012, 2013, 2014, 2016 Lawrence Sebald
 
 */

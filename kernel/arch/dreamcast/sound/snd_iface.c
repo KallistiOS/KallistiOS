@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    snd_iface.c
-   (c)2000-2002 Dan Potter
+   (c)2000-2002 Megan Potter
 
    SH-4 support routines for accessing the AICA via the standard KOS driver
 */

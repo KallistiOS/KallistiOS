@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kos/dbglog.h
-   Copyright (C)2004 Dan Potter
+   Copyright (C)2004 Megan Potter
 
 */
 
@@ -12,7 +12,7 @@
     used to restrict log messages, for instance to make it so that only the most
     urgent of messages get printed for a release version of a program.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __KOS_DBGLOG_H

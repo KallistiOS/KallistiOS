@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    arch/dreamcast/kernel/irq.c
-   Copyright (C) 2000-2001 Dan Potter
+   Copyright (C) 2000-2001 Megan Potter
 */
 
 /* This module contains low-level handling for IRQs and related exceptions. */

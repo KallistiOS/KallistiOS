@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kos/iovec.h
-   Copyright (C) 2001 Dan Potter
+   Copyright (C) 2001 Megan Potter
 
 */
 

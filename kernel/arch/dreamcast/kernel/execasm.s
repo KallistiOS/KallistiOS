@@ -1,7 +1,7 @@
 ! KallistiOS ##version##
 !
 !   arch/dreamcast/kernel/execasm.s
-!   Copyright (C) 2002 Dan Potter
+!   Copyright (C) 2002 Megan Potter
 !
 ! This is the assembler code on which exec.c bases its trampoline.
 !

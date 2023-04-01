@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/sound/sound.h
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
 
 */
 
@@ -13,7 +13,7 @@
     higher-level functionality in the sound effect support or streaming support,
     but this stuff can be very useful for some things.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __DC_SOUND_SOUND_H

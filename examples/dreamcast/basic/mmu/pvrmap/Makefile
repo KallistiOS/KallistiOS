@@ -1,6 +1,6 @@
 #
 # MMU test program: PVR memory map
-# (c)2002 Dan Potter
+# (c)2002 Megan Potter
 #   
 
 TARGET = pvrmap.elf

@@ -31,6 +31,9 @@ export KOS_PORTS="${KOS_BASE}/../kos-ports"
 export KOS_MAKE="make"
 #export KOS_MAKE="gmake"
 
+# CMake toolchain
+export KOS_CMAKE_TOOLCHAIN="${KOS_BASE}/utils/cmake/dreamcast.toolchain.cmake"
+
 # Load utility
 export KOS_LOADER="dc-tool -x"				# dcload, preconfigured
 # export KOS_LOADER="dc-tool-ser -t /dev/ttyS0 -x"	# dcload-serial

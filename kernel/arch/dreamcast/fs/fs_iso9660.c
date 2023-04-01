@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    fs_iso9660.c
-   Copyright (C) 2000, 2001, 2003 Dan Potter
+   Copyright (C) 2000, 2001, 2003 Megan Potter
    Copyright (C) 2001 Andrew Kieschnick
    Copyright (C) 2002 Bero
    Copyright (C) 2012, 2013, 2014, 2016 Lawrence Sebald

@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # arch/dreamcast/hardware/pvr/Makefile
-# (c)2002 Dan Potter
+# (c)2002 Megan Potter
 #
 
 # Memory management

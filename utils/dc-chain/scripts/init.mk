@@ -114,12 +114,26 @@ curl_cmd=curl -C - -O
 do_auto_fixup_sh4_newlib := 1
 ifdef auto_fixup_sh4_newlib
   ifeq (0,$(auto_fixup_sh4_newlib))
+    $(warning 'Disabling Newlib Auto Fixup)
     do_auto_fixup_sh4_newlib := 0
   endif
 endif
 
-ifeq (0,$(do_auto_fixup_sh4_newlib))
-  ifeq (kos,$(thread_model))
+# Determine if we want to apply KOS patches to GCC/Newlib/Binutils
+do_kos_patching := 1
+ifdef use_kos_patches
+  ifeq (0,$(use_kos_patches))
+    $(warning 'Disabling KOS Patches)
+    do_kos_patching := 0
+  endif
+endif
+
+# Report an error if KOS threading is enabled when patching or fixup is disabled
+ifeq (kos,$(thread_model))
+  ifeq (0,$(do_auto_fixup_sh4_newlib))
     $(error kos thread model is unsupported when Newlib fixup is disabled)
+  endif
+  ifeq (0,$(do_kos_patching))
+    $(error kos thread model is unsupported when KOS patches are disabled)
   endif
 endif

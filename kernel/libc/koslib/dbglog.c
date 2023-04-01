@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dbglog.c
-   Copyright (C)2000,2001,2004 Dan Potter
+   Copyright (C)2000,2001,2004 Megan Potter
 */
 
 #include <stdio.h>

@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # utils/rdtest/Makefile
-# (c)2000 Dan Potter
+# (c)2000 Megan Potter
 #
 
 all: rdtest

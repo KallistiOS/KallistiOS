@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # conio/wump/Makefile
-# (c)2002 Dan Potter
+# (c)2002 Megan Potter
 #
 
 all: rm-elf wump.elf

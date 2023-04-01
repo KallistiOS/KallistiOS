@@ -1,6 +1,6 @@
 #
 # MMU test program: NULL pointer detection
-# (c)2002 Dan Potter
+# (c)2002 Megan Potter
 #   
 
 TARGET = nullptr.elf

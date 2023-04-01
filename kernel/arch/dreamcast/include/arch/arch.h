@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    arch/dreamcast/include/arch.h
-   Copyright (C) 2001 Dan Potter
+   Copyright (C) 2001 Megan Potter
    Copyright (C) 2013, 2020 Lawrence Sebald
 
 */
@@ -12,7 +12,7 @@
     This file has various architecture specific options defined in it. Also, any
     functions that start with arch_ are in here.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __ARCH_ARCH_H

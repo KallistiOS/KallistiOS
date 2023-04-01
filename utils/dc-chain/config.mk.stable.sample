@@ -146,6 +146,11 @@ install_mode=install-strip
 # exactly what you are doing.
 #auto_fixup_sh4_newlib=0
 
+# Automatic patching for KOS (1|0)
+# Uncomment this if you want to disable applying KOS patches to the toolchain 
+# source files before building. This will disable usage of the 'kos' thread model. 
+#use_kos_patches=0
+
 # Force installation of BFD for SH (1|0)
 # Uncomment this if you want to force the installation of 'libbfd' for the SH
 # toolchain. This is required for MinGW/MSYS and can't be disabled in this

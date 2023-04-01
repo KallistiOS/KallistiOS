@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    newlib_exit.c
-   Copyright (C)2004 Dan Potter
+   Copyright (C)2004 Megan Potter
 
 */
 

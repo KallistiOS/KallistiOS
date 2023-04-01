@@ -2,7 +2,7 @@
 
 # bin2o (heh)
 # script to convert a binary data to an elf object file
-# (c)2000 Dan Potter
+# (c)2000 Megan Potter
 
 if [ $# != 3 ]; then
 	echo "usage: $0 \<input file\> \<symbol\> \<output file\>"

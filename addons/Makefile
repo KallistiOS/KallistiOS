@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # addons/Makefile
-# Copyright (C)2003 Dan Potter
+# Copyright (C)2003 Megan Potter
 #
 
 # What we want to do here, unlike previous versions, is to setup a system

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    snd_stream.c
-   Copyright (C) 2000, 2001, 2002, 2003, 2004 Dan Potter
+   Copyright (C) 2000, 2001, 2002, 2003, 2004 Megan Potter
    Copyright (C) 2002 Florian Schulze
    Copyright (C) 2020 Lawrence Sebald
 

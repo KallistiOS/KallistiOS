@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    arch/dreamcast/include/rtc.h
-   (c)2000-2001 Dan Potter
+   (c)2000-2001 Megan Potter
 
 */
 
@@ -12,7 +12,7 @@
     Dreamcast. Generally, you should prefer interacting with the higher level
     standard C functions, like time(), rather than these.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __ARCH_RTC_H

@@ -11,7 +11,7 @@
  * "test.ogg". Or you change the filename in this sourcecode
  */
 
-/* Modified to be an MP3 sample by Dan Potter */
+/* Modified to be an MP3 sample by Megan Potter */
 
 #include <kos.h>
 #include <mp3/sndserver.h>

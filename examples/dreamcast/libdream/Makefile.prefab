@@ -1,6 +1,6 @@
 #
 # Libdream Examples
-# (c)2000-2001 Dan Potter
+# (c)2000-2001 Megan Potter
 #
 
 TARGET = $(BIN).elf

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    mm.c
-   (c)2000-2001 Dan Potter
+   (c)2000-2001 Megan Potter
 */
 
 /* Defines a simple UNIX-style memory pool system. Since the Dreamcast has

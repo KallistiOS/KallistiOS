@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    g2bus.h
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
 
 */
 
@@ -22,7 +22,7 @@
     the rear, so you really do want to be using the higher-level stuff related
     to each device if at all possible!
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __DC_G2BUS_H

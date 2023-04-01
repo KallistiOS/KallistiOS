@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # arch/dreamcast/fs/Makefile
-# (c)2001 Dan Potter
+# (c)2001 Megan Potter
 #
 
 # Dreamcast-specific file systems

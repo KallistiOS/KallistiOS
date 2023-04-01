@@ -2,7 +2,7 @@
 
    kernel/net/net_arp.c
 
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
    Copyright (C) 2005, 2010, 2012, 2013, 2016 Lawrence Sebald
 */
 

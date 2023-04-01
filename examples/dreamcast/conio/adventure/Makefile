@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # conio/adventure/Makefile
-# (c)2002 Dan Potter
+# (c)2002 Megan Potter
 #
 
 # Program binary

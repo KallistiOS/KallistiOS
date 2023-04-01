@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    genwait.c
-   Copyright (C) 2002, 2003 Dan Potter
+   Copyright (C) 2002, 2003 Megan Potter
    Copyright (C) 2012 Lawrence Sebald
 */
 

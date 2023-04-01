@@ -3,7 +3,7 @@
 
    gltest.c
    (c)2014 Josh Pearson.
-   (c)2001 Dan Potter
+   (c)2001 Megan Potter
 */
 
 #include <kos.h>

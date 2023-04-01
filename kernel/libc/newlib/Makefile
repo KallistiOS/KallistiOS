@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # kernel/newlib/Makefile
-# Copyright (C)2004 Dan Potter
+# Copyright (C)2004 Megan Potter
 #
 
 #

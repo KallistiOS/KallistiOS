@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kos/include/dbgio.h
-   Copyright (C)2000,2004 Dan Potter
+   Copyright (C)2000,2004 Megan Potter
 
 */
 
@@ -13,7 +13,7 @@
     among these tools is the dcload console (dcload-serial, dcload-ip, and
     fs_dclsocket), a raw serial console, and a framebuffer based console.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __KOS_DBGIO_H

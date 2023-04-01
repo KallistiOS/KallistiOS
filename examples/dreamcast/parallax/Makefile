@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # examples/dreamcast/parallax/Makefile
-# (c)2002 Dan Potter
+# (c)2002 Megan Potter
 #
 
 TARGETS = font bubbles raster_melt sinus delay_cube rotocube serpent_dma

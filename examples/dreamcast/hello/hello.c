@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    hello.c
-   Copyright (C) 2001 Dan Potter
+   Copyright (C) 2001 Megan Potter
 */
 
 #include <kos.h>

@@ -2,7 +2,7 @@
 
    kernel/net/net_core.c
 
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
    Copyright (C) 2005, 2013 Lawrence Sebald
 */
 

@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # utils/bincnv/Makefile
-# (c)2000 Dan Potter
+# (c)2000 Megan Potter
 #
 
 all: bincnv

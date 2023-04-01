@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # arch/dreamcast/kernel/Makefile
-# (c)2000 Dan Potter
+# (c)2000 Megan Potter
 #
 
 # Generic kernel abstraction layer: this provides a set of routines

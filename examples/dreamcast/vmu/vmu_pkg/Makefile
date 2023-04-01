@@ -1,6 +1,6 @@
 #
 # vmu_pkg test program
-# (c)2002 Dan Potter
+# (c)2002 Megan Potter
 #   
 
 # Put the filename of the output binary here

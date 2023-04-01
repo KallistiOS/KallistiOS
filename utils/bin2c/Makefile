@@ -1,5 +1,5 @@
 # bin2c util
-# (c)2000 Dan Potter
+# (c)2000 Megan Potter
 
 all: bin2c
 

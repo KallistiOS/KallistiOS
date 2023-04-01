@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    2ndmix.c
-   (c)2000-2002 Dan Potter
+   (c)2000-2002 Megan Potter
 
 */
 
@@ -472,7 +472,7 @@ fontrow_t font_rows[FONT_ROWS];
 char *scrollypos = NULL;
 char scrolly[] =
     "\x02Stars:2ndMix\0"
-    "By Dan Potter\0"
+    "By Megan Potter\0"
     "\r\0"
 
     "\x0c"

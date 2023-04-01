@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    stack.c
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
 */
 
 /* Functions to tinker with the stack, includeing obtaining a stack

@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # examples/dreamcast/sound/Makefile
-# (c)2002 Dan Potter
+# (c)2002 Megan Potter
 #
 
 all:

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/maple/vmu.h
-   Copyright (C)2000-2002 Jordan DeLong and Dan Potter
+   Copyright (C)2000-2002 Jordan DeLong and Megan Potter
    Copyright (C)2008 Donald Haase
 
 */
@@ -14,7 +14,7 @@
     MAPLE_FUNC_MEMCARD, MAPLE_FUNC_LCD, and MAPLE_FUNC_CLOCK function codes.
 
     \author Jordan DeLong
-    \author Dan Potter
+    \author Megan Potter
     \author Donald Haase
 */
 

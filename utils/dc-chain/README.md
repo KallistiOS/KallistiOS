@@ -237,12 +237,22 @@ This flag is here mainly for producing [DreamSDK](https://dreamsdk.org).
 ### Automatic fixup SH-4 Newlib (use with care)
 
 Set `auto_fixup_sh4_newlib` to `0` if you want to disable the automatic fixup
-SH-4 Newlib needed by KallistiOS. This will keep the generated toolchain
-completely raw.
+SH-4 Newlib needed by KallistiOS. Setting this option along with 
+`use_kos_patches=0` will keep the generated toolchain completely raw. 
 
 **Note:** If you disable this flag, the KallistiOS threading model (`kos`) will
 be unavailable. Also, this may be a problem if you still apply the KallistiOS
 patches. **Use this flag with care**.
+
+### Automatic KOS Patching (use with care)
+Set `use_kos_patches` to `0` if you want to skip applying the KOS patches
+to the downloaded sources before building. Setting this option along with 
+`auto_fixup_sh4_newlib=0` will keep the generated toolchain completely raw.
+
+**Note:** If you disable this flag, the KallistiOS threading model (`kos`) will
+be unavailable. Also, this may be a problem if you still apply the KallistiOS
+patches. **Use this flag with care**.
+
 
 ## Usage
 

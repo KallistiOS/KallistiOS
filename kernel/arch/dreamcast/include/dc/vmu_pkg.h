@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/vmu_pkg.h
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
 
 */
 
@@ -12,7 +12,7 @@
     attached to VMU files for the BIOS to pay attention to them. This does not
     handle reading/writing files directly.
 
-    \author Dan Potter
+    \author Megan Potter
     \see    dc/fs_vmu.h
 */
 

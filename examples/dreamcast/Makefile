@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # examples/dreamcast/Makefile
-# Copyright (C)2003 Dan Potter
+# Copyright (C)2003 Megan Potter
 #
 
 DIRS = 2ndmix basic libdream kgl hello sound png network vmu conio pvr video \

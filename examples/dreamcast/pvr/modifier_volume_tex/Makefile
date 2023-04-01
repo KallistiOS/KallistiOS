@@ -1,6 +1,6 @@
 #
 # Basic KallistiOS skeleton / test program
-# (c)2001 Dan Potter
+# (c)2001 Megan Potter
 #
 
 # Put the filename of the output binary here

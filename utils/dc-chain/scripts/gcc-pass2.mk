@@ -5,7 +5,7 @@
 # Initially adapted from Stalin's build script version 0.3.
 #
 
-$(build_gcc_pass2): log = $(logdir)/$(build)-pass2.log
+$(build_gcc_pass2): build = build-gcc-$(target)-$(gcc_ver)-pass2
 $(build_gcc_pass2): logdir
 	@echo "+++ Building $(src_dir) to $(build) (pass 2)..."
 	-mkdir -p $(build)

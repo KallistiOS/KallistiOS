@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # thread/Makefile
-# (c)2001 Dan Potter
+# (c)2001 Megan Potter
 #
 
 OBJS =  sem.o cond.o mutex.o genwait.o

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    byteorder.c
-   Copyright (C) 2001 Dan Potter
+   Copyright (C) 2001 Megan Potter
    Copyright (C) 2016 Lawrence Sebald
 
 */

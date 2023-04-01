@@ -29,7 +29,7 @@ include scripts/init.mk
 # Makefile variables
 include scripts/variables.mk
 
-all: patch build
+all: build
 
 # ---- patch {{{
 

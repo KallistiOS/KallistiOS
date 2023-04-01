@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    navi/ide.h
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
 
 */
 
@@ -11,9 +11,9 @@
     This file is involved with accessing an IDE controller that is attached to
     the G2 Bus expansion port. Exact details of how to build such a device have
     been posted in various places around the Internet. This driver refers to the
-    device built by Dan as a part of the Navi project.
+    device built by Megan as a part of the Navi project.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __NAVI_IDE_H

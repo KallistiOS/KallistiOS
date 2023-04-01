@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kernel/thread/thread.c
-   Copyright (C) 2000, 2001, 2002, 2003 Dan Potter
+   Copyright (C) 2000, 2001, 2002, 2003 Megan Potter
    Copyright (C) 2010, 2016 Lawrence Sebald
 */
 

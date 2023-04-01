@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    pvr_internal.h
-   Copyright (C) 2002, 2003, 2004 Dan Potter
+   Copyright (C) 2002, 2003, 2004 Megan Potter
 
  */
 

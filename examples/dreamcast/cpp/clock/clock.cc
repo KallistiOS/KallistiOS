@@ -1,7 +1,7 @@
 // Originally from plib_examples
 // Ported to Dreamcast/KOS by Peter Hatch
 // read_input () code from KOS examples
-// Converted to a clock by Dan Potter
+// Converted to a clock by Megan Potter
 
 #include <kos.h>
 #include <time.h>

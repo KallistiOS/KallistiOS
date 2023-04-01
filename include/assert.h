@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    assert.h
-   Copyright (C)2002,2004 Dan Potter
+   Copyright (C)2002,2004 Megan Potter
 
 */
 
@@ -18,7 +18,7 @@ __BEGIN_DECLS
     This file contains the standard C assertions to raise an assertion or to
     change the assertion handler.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 /* This is nice and simple, modeled after the BSD one like most of KOS;

@@ -1,7 +1,7 @@
 #
 # OpenGL (c)2013-2014 Josh PH3NOM Pearson
 # tristripmark - triangle strip benchmark program 
-# (c)2001 Dan Potter, Paul Boese
+# (c)2001 Megan Potter, Paul Boese
 #   
 
 # Put the filename of the output binary here

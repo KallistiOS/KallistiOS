@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    bspline.h
-   Copyright (C) 2000 Dan Potter
+   Copyright (C) 2000 Megan Potter
 
 */
 
@@ -18,7 +18,7 @@
 
     Note that this module is NOT thread-safe.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #include <sys/cdefs.h>

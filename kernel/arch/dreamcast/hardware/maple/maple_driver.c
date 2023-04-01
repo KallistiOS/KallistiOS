@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    maple_driver.c
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
  */
 
 #include <string.h>

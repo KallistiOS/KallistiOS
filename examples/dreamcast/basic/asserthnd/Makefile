@@ -1,6 +1,6 @@
 #
 # assert handler test
-# (c)2002 Dan Potter
+# (c)2002 Megan Potter
 #
 
 TARGET = asserthnd.elf

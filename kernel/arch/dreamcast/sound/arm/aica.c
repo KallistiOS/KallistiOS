@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    aica.c
-   (c)2000-2002 Dan Potter
+   (c)2000-2002 Megan Potter
 
    ARM support routines for using the wavetable channels
 */

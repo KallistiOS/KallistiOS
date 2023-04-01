@@ -141,10 +141,14 @@ install_mode=install-strip
 
 # Automatic fixup SH-4 Newlib (1|0)
 # Uncomment this if you want to disable the automatic fixup sh4 newlib needed by
-# KallistiOS. This will keep the generated toolchain completely raw. This will
-# also disable the 'kos' thread model. Don't mess with that flag unless you know
-# exactly what you are doing.
+# KallistiOS. This will also disable the 'kos' thread model. Don't mess with that 
+# flag unless you know exactly what you are doing.
 #auto_fixup_sh4_newlib=0
+
+# Automatic patching for KOS (1|0)
+# Uncomment this if you want to disable applying KOS patches to the toolchain 
+# source files before building. This will disable usage of the 'kos' thread model. 
+#use_kos_patches=0
 
 # Force installation of BFD for SH (1|0)
 # Uncomment this if you want to force the installation of 'libbfd' for the SH

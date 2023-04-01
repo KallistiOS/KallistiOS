@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/net/broadband_adapter.h
-   Copyright (C) 2001-2002 Dan Potter
+   Copyright (C) 2001-2002 Megan Potter
 
 */
 
@@ -12,7 +12,7 @@
     "Broadband Adapter". There's not really anything that users will generally
     have to deal with in here.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __DC_NET_BROADBAND_ADAPTER_H

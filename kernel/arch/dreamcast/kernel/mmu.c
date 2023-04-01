@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    arch/dreamcast/kernel/mmu.c
-   (c)2001 Dan Potter
+   (c)2001 Megan Potter
 */
 
 /* SH-4 MMU related functions, ported up from KOS-MMU */

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kernel/arch/dreamcast/hardware/vblank.c
-   Copyright (C)2003 Dan Potter
+   Copyright (C)2003 Megan Potter
 */
 
 #include <malloc.h>

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    basic.c
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
    Copyright (C) 2009 Lawrence Sebald
 */
 

@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # libmp3/Makefile
-# (c)2001 Dan Potter
+# (c)2001 Megan Potter
 #
 
 OBJS = snd_iface.o snd_sfxmgr.o snd_stream.o snd_stream_drv.o snd_mem.o

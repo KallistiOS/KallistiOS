@@ -4,7 +4,7 @@
    Copyright (C) 2007, 2008, 2012, 2013, 2015 Lawrence Sebald
 
    Based on fs_dclnative.c and related files
-   Copyright (C) 2003 Dan Potter
+   Copyright (C) 2003 Megan Potter
 
    Portions of various supporting modules are
    Copyright (C) 2001 Andrew Kieschnick, imported

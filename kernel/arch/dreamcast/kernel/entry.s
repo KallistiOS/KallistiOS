@@ -1,7 +1,7 @@
 ! KallistiOS ##version##
 !
 !   arch/dreamcast/kernel/entry.s
-!   (c)2000-2001 Dan Potter
+!   (c)2000-2001 Megan Potter
 !
 ! Assembler code for entry and exit to/from the kernel via exceptions
 !

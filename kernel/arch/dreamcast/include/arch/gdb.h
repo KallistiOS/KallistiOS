@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    arch/dreamcast/include/arch/gdb.h
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
 
 */
 
@@ -10,7 +10,7 @@
 
     This file contains functions to set up and utilize GDB with KallistiOS.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __ARCH_GDB_H

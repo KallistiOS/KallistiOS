@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    newlib_gettimeofday.c
-   Copyright (C)2002,2004 Dan Potter
+   Copyright (C)2002,2004 Megan Potter
 
 */
 

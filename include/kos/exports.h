@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kos/exports.h
-   Copyright (C)2003 Dan Potter
+   Copyright (C)2003 Megan Potter
 
 */
 
@@ -12,7 +12,7 @@
     The kernel (at compile time) produces a list of exported symbols, which can
     be looked through using the funtionality in this file.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __KOS_EXPORTS_H

@@ -2,7 +2,7 @@
 
    net/broadband_adapter.c
 
-   Copyright (C) 2001,2003,2005 Dan Potter
+   Copyright (C) 2001,2003,2005 Megan Potter
    Copyright (C) 2004 Vincent Penne
    Copyright (C) 2007, 2008, 2010 Lawrence Sebald
 

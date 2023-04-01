@@ -1,7 +1,7 @@
 ! KallistiOS ##version##
 !
 ! startup.s
-! (c)2000-2001 Dan Potter
+! (c)2000-2001 Megan Potter
 !
 ! This file must appear FIRST in your linking order, or your program won't
 ! work correctly as a raw binary.

@@ -1,6 +1,6 @@
 #
 # KallistiOS network/httpd example
-# Copyright (C) 2002 Dan Potter
+# Copyright (C) 2002 Megan Potter
 #
 
 # Put the filename of the output binary here

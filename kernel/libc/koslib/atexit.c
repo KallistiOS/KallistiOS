@@ -2,7 +2,7 @@
 
    atexit.c
    Copyright (C)2002 Florian Schulze
-   Copyright (C)2003 Dan Potter
+   Copyright (C)2003 Megan Potter
 */
 
 #include <stdlib.h>

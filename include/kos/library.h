@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    include/kos/library.h
-   Copyright (C)2003 Dan Potter
+   Copyright (C)2003 Megan Potter
 
 */
 
@@ -19,7 +19,7 @@
     multiple times, and so that a close will act as expected in situations like
     this.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __KOS_LIBRARY_H

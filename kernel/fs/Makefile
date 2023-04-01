@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # kernel/fs/Makefile
-# (c)2000-2001 Dan Potter
+# (c)2000-2001 Megan Potter
 #
 
 OBJS = fs.o fs_dev.o fs_romdisk.o fs_ramdisk.o fs_pty.o

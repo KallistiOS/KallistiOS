@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    include/kos/mutex.h
-   Copyright (C) 2001, 2003 Dan Potter
+   Copyright (C) 2001, 2003 Megan Potter
    Copyright (C) 2012, 2015 Lawrence Sebald
 
 */

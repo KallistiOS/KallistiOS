@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    include/kos/sem.h
-   Copyright (C) 2001, 2003 Dan Potter
+   Copyright (C) 2001, 2003 Megan Potter
    Copyright (C) 2012 Lawrence Sebald
 
 */
@@ -15,7 +15,7 @@
     predetermined number of resources available, and the semaphore maintains the
     resources.
 
-    \author Dan Potter
+    \author Megan Potter
     \see    kos/mutex.h
 */
 

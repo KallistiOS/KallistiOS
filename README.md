@@ -23,7 +23,7 @@ Despite the console's age, KOS offers an extremely modern, programmer-friendly d
 * Flashrom Access 
 * AICA SPU Sound Processor Driver
 * Cache and Store Queue Management
-* Timer Peripherals and Real-Time Clock
+* Timer Peripherals, Real-Time Clock, Performance Counters
 * MMU Management API 
 * BIOS Font Rendering
 

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    flashrom.c
-   Copyright (c) 2003 Dan Potter
+   Copyright (c) 2003 Megan Potter
    Copyright (C) 2008 Lawrence Sebald
 */
 

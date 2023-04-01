@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kmgenc.c
-   Copyright (C)2003 Dan Potter
+   Copyright (C)2003 Megan Potter
    Portions Copyright (C)2002 Gil Megidish
 
    This utility loads JPGs and PNGs and converts them into KMGs of the

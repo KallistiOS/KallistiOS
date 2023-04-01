@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kernel/debug/dbgio.c
-   Copyright (C) 2004 Dan Potter
+   Copyright (C) 2004 Megan Potter
 */
 
 #include <string.h>

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    aica_comm.h
-   Copyright (C) 2000-2002 Dan Potter
+   Copyright (C) 2000-2002 Megan Potter
 
    Structure and constant definitions for the SH-4/AICA interface. This file is
    included from both the ARM and SH-4 sides of the fence.

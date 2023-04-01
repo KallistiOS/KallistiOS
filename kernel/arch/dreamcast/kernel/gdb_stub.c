@@ -10,7 +10,7 @@
 
      Modifications for the SH by Ben Lee and Steve Chamberlain
 
-     Modifications for KOS by Dan Potter (earlier) and Richard Moats (more
+     Modifications for KOS by Megan Potter (earlier) and Richard Moats (more
      recently).
 */
 

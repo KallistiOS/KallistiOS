@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    malloc.c
-   Copyright (C) 2003 Dan Potter
+   Copyright (C) 2003 Megan Potter
 
    Most of this module was written by Doug Lea and released into the
    public domain. We have incorporated it under the KallistiOS

@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # kernel/libc/koslib/Makefile
-# Copyright (C) 2004 Dan Potter
+# Copyright (C) 2004 Megan Potter
 #
 
 # In here we have pieces of the KOS libc that are either too custom or too

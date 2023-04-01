@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # arch/dreamcast/util/Makefile
-# Copyright (C) 2001 Dan Potter
+# Copyright (C) 2001 Megan Potter
 #
 
 OBJS = vmu_pkg.o screenshot.o minifont.o

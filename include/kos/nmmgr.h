@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kos/nmmgr.h
-   Copyright (C)2003 Dan Potter
+   Copyright (C)2003 Megan Potter
 
 */
 
@@ -12,7 +12,7 @@
     generic identifier for some kind of module. These modules may include
     services provided by the kernel (such as VFS handlers).
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __KOS_NMMGR_H

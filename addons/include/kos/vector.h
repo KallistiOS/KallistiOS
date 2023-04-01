@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kos/vector.h
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
 
 */
 
@@ -15,7 +15,7 @@
     graphics. These are used by the code in kos/bspline.h and can be useful
     elsewhere, as well.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #include <sys/cdefs.h>

@@ -1,6 +1,6 @@
 #
 # PVRMark-Strips-Direct
-# (c)2002 Dan Potter
+# (c)2002 Megan Potter
 #   
 
 TARGET = pvrmark_strips_direct.elf

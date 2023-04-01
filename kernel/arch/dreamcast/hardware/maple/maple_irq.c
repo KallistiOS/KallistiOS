@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    maple_irq.c
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
    Copyright (C) 2015 Lawrence Sebald
    Copyright (C) 2016 Joe Fenton
  */

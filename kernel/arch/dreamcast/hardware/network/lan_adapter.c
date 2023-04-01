@@ -2,7 +2,7 @@
 
    net/lan_adapter.c
 
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
    Copyright (C) 2010 Lawrence Sebald
 
 */

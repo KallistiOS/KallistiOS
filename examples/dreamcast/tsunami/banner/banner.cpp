@@ -1,7 +1,7 @@
 /* Tsunami for KallistiOS ##version##
 
    banner.cpp
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
 
    The included font (typewriter.txf) was pulled from the dcplib example
    in ../../cpp/dcplib.

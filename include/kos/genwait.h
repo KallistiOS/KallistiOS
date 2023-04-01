@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    include/kos/genwait.h
-   Copyright (C) 2003 Dan Potter
+   Copyright (C) 2003 Megan Potter
    Copyright (C) 2012 Lawrence Sebald
 
 */
@@ -15,7 +15,7 @@
     KOS' sync primatives (other than spinlocks) are based on this concept, and
     it can be used for some fairly useful things.
 
-    \author Dan Potter
+    \author Megan Potter
     \author Lawrence Sebald
 */
 

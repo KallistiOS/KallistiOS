@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/matrix.h
-   Copyright (C) 2000 Dan Potter
+   Copyright (C) 2000 Megan Potter
    Copyright (C) 2013, 2014 Josh "PH3NOM" Pearson
    Copyright (C) 2018 Lawrence Sebald
 
@@ -14,7 +14,7 @@
     SH4's matrix transformation unit. Higher level functionality, like the 3D
     functionality is built off of these operations.
 
-    \author Dan Potter
+    \author Megan Potter
     \author Josh "PH3NOM" Pearson
     \see    dc/matrix3d.h
 */

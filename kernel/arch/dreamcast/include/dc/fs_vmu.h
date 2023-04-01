@@ -20,7 +20,7 @@
     operations. It is generally easier to work with things at this level though,
     so that you can use the normal libc file access functions.
 
-    \author Dan Potter
+    \author Megan Potter
     \see    dc/vmu_pkg.h
     \see    dc/vmufs.h
 */

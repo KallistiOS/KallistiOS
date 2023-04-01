@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    fpu_exc.c
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
 */
 
 #include <kos.h>

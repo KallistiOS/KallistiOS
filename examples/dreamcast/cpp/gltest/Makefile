@@ -1,6 +1,6 @@
 #
 # KallistiGL test program in C++
-# (c)2001 Dan Potter
+# (c)2001 Megan Potter
 #   
 
 TARGET = gltest.elf

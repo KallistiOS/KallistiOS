@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    maple_enum.c
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
    (c)2008 Lawrence Sebald
  */
 

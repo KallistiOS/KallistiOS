@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # basic/threading/Makefile
-# (c)2001 Dan Potter
+# (c)2001 Megan Potter
 #
 
 all: rm-elf general_threading_test.elf

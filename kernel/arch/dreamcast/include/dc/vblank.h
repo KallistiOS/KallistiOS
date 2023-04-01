@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/vblank.h
-   Copyright (C)2003 Dan Potter
+   Copyright (C)2003 Megan Potter
 
 */
 
@@ -12,7 +12,7 @@
     interrupt that occurs. This gives a way to schedule small functions that
     must occur regularly, without using threads.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __DC_VBLANK_H

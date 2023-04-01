@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kernel/arch/dreamcast/include/dc/ubc.h
-   (C)2002 Dan Potter
+   (C)2002 Megan Potter
 
 */
 
@@ -10,7 +10,7 @@
 
     This file defines some functionality for using the SH4 UBC.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __DC_UBC_H

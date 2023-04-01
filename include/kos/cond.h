@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    include/kos/cond.h
-   Copyright (C)2001,2003 Dan Potter
+   Copyright (C)2001,2003 Megan Potter
 
 */
 
@@ -38,7 +38,7 @@
     function, and thus you will end up deadlocking if you use a recursive mutex
     that has been locked more than once.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __KOS_COND_H

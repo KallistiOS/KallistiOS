@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/sound/stream.h
-   Copyright (C) 2002, 2004 Dan Potter
+   Copyright (C) 2002, 2004 Megan Potter
    Copyright (C) 2020 Lawrence Sebald
 
 */
@@ -14,7 +14,7 @@
     libraries. Note that this does not actually handle decoding, so you'll have
     to worry about that yourself (or use something in kos-ports).
 
-    \author Dan Potter
+    \author Megan Potter
     \author Florian Schulze
     \author Lawrence Sebald
 */

@@ -2,7 +2,7 @@
 
    pvr_dma.c
    Copyright (C)2002 Roger Cattermole
-   Copyright (C)2004 Dan Potter
+   Copyright (C)2004 Megan Potter
    http://www.boob.co.uk
  */
 
@@ -15,7 +15,7 @@
 
 #include "pvr_internal.h"
 
-/* Modified for inclusion into KOS by Dan Potter */
+/* Modified for inclusion into KOS by Megan Potter */
 
 /* Signaling semaphore */
 static semaphore_t dma_done;

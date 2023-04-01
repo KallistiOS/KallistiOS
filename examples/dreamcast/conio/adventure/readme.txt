@@ -3,4 +3,4 @@ BSD games collection. It was originally a Fortran program, converted to
 C, and then converted out of the stone ages (aka -traditional) and ported
 to KOS by me. Enjoy!
 
-                                                     -Dan
+                                                     -Megan

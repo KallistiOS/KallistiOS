@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Little version release util for KOS
-# (c)2000-2002 Dan Potter
+# (c)2000-2002 Megan Potter
 
 # Call this program on each file to substitute in the proper version code
 # for the version header. This works with find|xargs.

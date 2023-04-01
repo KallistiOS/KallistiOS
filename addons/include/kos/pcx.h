@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kos/pcx.h
-   Copyright (C) 2000-2001 Dan Potter
+   Copyright (C) 2000-2001 Megan Potter
 
 */
 
@@ -17,7 +17,7 @@
     That said, libpcx is generally more useful than these functions for use on
     the Dreamcast.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #include <sys/cdefs.h>

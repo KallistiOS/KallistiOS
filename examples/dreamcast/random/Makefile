@@ -1,6 +1,6 @@
 #
 # Basic KallistiOS skeleton / test program
-# Copyright (C)2001-2004 Dan Potter
+# Copyright (C)2001-2004 Megan Potter
 #
 
 # Put the filename of the output binary here
@@ -13,6 +13,8 @@ OBJS = random.o romdisk.o
 # If you define this, the Makefile.rules will create a romdisk.o for you
 # from the named dir.
 KOS_ROMDISK_DIR = romdisk
+
+KOS_CFLAGS += -std=c99
 
 # The rm-elf step is to remove the target before building, to force the
 # re-creation of the rom disk.

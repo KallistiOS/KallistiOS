@@ -2,14 +2,14 @@
 
    kernel/arch/dreamcast/fs/fs_dcload.c
    Copyright (C) 2002 Andrew Kieschnick
-   Copyright (C) 2004 Dan Potter
+   Copyright (C) 2004 Megan Potter
    Copyright (C) 2012 Lawrence Sebald
 
 */
 
 /*
 
-This is a rewrite of Dan Potter's fs_serconsole to use the dcload / dc-tool
+This is a rewrite of Megan Potter's fs_serconsole to use the dcload / dc-tool
 fileserver and console.
 
 printf goes to the dc-tool console

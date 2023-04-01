@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kmg/kmg.h
-   Copyrigh (C)2003 Dan Potter
+   Copyrigh (C)2003 Megan Potter
 */
 
 #ifndef __KMG_KMG_H

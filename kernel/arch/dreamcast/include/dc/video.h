@@ -13,7 +13,7 @@
     defining the resolution of the display, dealing with the framebuffer, etc.
 
     \author Anders Clerwall
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __DC_VIDEO_H

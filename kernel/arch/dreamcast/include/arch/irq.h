@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    arch/dreamcast/include/irq.h
-   Copyright (C) 2000-2001 Dan Potter
+   Copyright (C) 2000-2001 Megan Potter
 
 */
 
@@ -13,7 +13,7 @@
     exceptions generated on the SH4, versus the asic layer which deals with
     actually differentiating "external" interrupts.
 
-    \author Dan Potter
+    \author Megan Potter
     \see    dc/asic.h
 */
 

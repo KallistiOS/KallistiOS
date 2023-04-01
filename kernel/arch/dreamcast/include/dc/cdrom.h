@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/cdrom.h
-   Copyright (C) 2000-2001 Dan Potter
+   Copyright (C) 2000-2001 Megan Potter
    Copyright (C) 2014 Donald Haase
 */
 
@@ -28,7 +28,7 @@ __BEGIN_DECLS
     level things with CDs. If you're looking for higher-level stuff, like 
     normal file reading, consult with the stuff for the fs and for fs_iso9660.
 
-    \author Dan Potter
+    \author Megan Potter
     \see    kos/fs.h
     \see    dc/fs_iso9660.h
 */

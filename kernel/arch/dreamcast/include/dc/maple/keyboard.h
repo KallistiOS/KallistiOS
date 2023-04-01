@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/maple/keyboard.h
-   Copyright (C) 2000-2002 Jordan DeLong and Dan Potter
+   Copyright (C) 2000-2002 Jordan DeLong and Megan Potter
    Copyright (C) 2012 Lawrence Sebald
 
 */
@@ -14,7 +14,7 @@
     code.
 
     \author Jordan DeLong
-    \author Dan Potter
+    \author Megan Potter
     \author Lawrence Sebald
 */
 

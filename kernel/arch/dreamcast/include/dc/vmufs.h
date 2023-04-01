@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/vmufs.h
-   Copyright (C) 2003 Dan Potter
+   Copyright (C) 2003 Megan Potter
 
 */
 
@@ -16,7 +16,7 @@
     Files on a VMU must be multiples of 512 bytes in size, and should have a
     header attached so that they show up in the BIOS menu.
 
-    \author Dan Potter
+    \author Megan Potter
     \see    dc/vmu_pkg.h
     \see    dc/fs_vmu.h
 */

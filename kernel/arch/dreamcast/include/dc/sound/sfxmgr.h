@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/sound/sfxmgr.h
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
 
 */
 
@@ -15,7 +15,7 @@
     buffer chaining or anything else complex. For more interesting stuff, you
     should probably look at the sound stream stuff instead.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __DC_SOUND_SFXMGR_H

@@ -3,5 +3,5 @@ included it here as a convienence. Note that this will probably not compile
 under Cygwin (though it might... never know =) and so I haven't put it 
 in the default build. You can compile your own by just doing "make" here.
 
-                                                   - Dan
+                                                   - Megan
                                                    

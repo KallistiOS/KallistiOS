@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    newlib_isatty.c
-   Copyright (C) 2004 Dan Potter
+   Copyright (C) 2004 Megan Potter
    Copyright (C) 2012 Lawrence Sebald
 
 */

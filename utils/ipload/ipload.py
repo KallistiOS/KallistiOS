@@ -2,7 +2,7 @@
 
 # ipload.py
 # Quick and dirty Python-based ip uploader for use with Marcus' IPLOAD
-# (c)2001 Dan Potter
+# (c)2001 Megan Potter
 #
 # Note: works ok with Python 2.0, untested with Python 1.x
 #

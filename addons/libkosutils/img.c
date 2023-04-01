@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    img.c
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
 
    Platform independent image handling
 */

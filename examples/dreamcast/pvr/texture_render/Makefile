@@ -1,6 +1,6 @@
 #
 # texture_render
-# (c) Dan Potter
+# (c) Megan Potter
 # (c) 2006 Lawrence Sebald
 #   
 

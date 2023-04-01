@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    exec.c
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
 */
 
 #include <arch/arch.h>

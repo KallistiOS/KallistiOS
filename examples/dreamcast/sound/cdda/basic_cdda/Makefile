@@ -1,6 +1,6 @@
 #
 # Basic CDDA program
-# (c)2002 Dan Potter
+# (c)2002 Megan Potter
 #   
 
 TARGET = basic_cdda.elf

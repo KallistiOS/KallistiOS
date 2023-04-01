@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    arch/dreamcast/include/arch/mmu.h
-   Copyright (C) 2001 Dan Potter
+   Copyright (C) 2001 Megan Potter
 
 */
 
@@ -35,10 +35,10 @@
     in here, for obvious reasons.
 
     This functionality was ported over to mainline KOS from the KOS-MMU project
-    of Dan Potter. Unfortunately, KOS-MMU never reached a real phase of maturity
+    of Megan Potter. Unfortunately, KOS-MMU never reached a real phase of maturity
     and usefulness, but this piece can be quite useful on its own.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __ARCH_MMU_H

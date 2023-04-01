@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kos/fs_romdisk.h
-   (c)2001 Dan Potter
+   (c)2001 Megan Potter
 
 */
 
@@ -18,7 +18,7 @@
     mount itself on /rd. You can also mount additional images that you load
     from some other source on whatever mountpoint you want.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __KOS_FS_ROMDISK_H

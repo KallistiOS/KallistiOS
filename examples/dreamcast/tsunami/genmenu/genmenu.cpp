@@ -1,7 +1,7 @@
 /* Tsunami for KallistiOS ##version##
 
    genmenu.cpp
-   Copyright (C)2003 Dan Potter
+   Copyright (C)2003 Megan Potter
 
    The included font (typewriter.txf) was pulled from the dcplib example
    in ../../cpp/dcplib.

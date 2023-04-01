@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    pvr_mem_core.c
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
 
    This was adapted from the system-wide malloc, but optimized for
    usage with the PVR texture memory pool. So that end there are a couple

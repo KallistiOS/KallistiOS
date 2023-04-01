@@ -20,7 +20,17 @@
 
 /* This function is declared in <stdlib.h> but behind an if __BSD_VISIBLE
    Declaring as extern here to avoid implicit declaration */
-void    arc4random_buf (void *, size_t);
+extern void arc4random_buf(void *, size_t);
+
+#if !defined(__NEWLIB__) || (__NEWLIB__ < 2 && __NEWLIB_MINOR__ < 4)
+/* Ensure the function is defined on versions of Newlib where it doesn't exist,
+   even though this isn't functional at all. This makes sure we don't get any
+   linker errors when -ffunction-sections isn't used, for instance. */
+void arc4random_buf(void *a, size_t b) {
+    (void)a;
+    (void)b;
+}
+#endif
 
 /* File handles */
 typedef struct dev_fh_str {

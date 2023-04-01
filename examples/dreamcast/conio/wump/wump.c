@@ -35,7 +35,7 @@
  * SUCH DAMAGE.
  */
 
-/* Ported to KOS/libconio by Dan Potter */
+/* Ported to KOS/libconio by Megan Potter */
 
 #ifndef lint
 static const char copyright[] =

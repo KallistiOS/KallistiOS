@@ -2,7 +2,7 @@
 
    ide.c
 
-   (c)1997,2002 Dan Potter
+   (c)1997,2002 Megan Potter
 
 */
 

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    snd_sfxmgr.c
-   Copyright (C) 2000, 2001, 2002, 2003, 2004 Dan Potter
+   Copyright (C) 2000, 2001, 2002, 2003, 2004 Megan Potter
 
    Sound effects management system; this thing loads and plays sound effects
    during game operation.

@@ -1,7 +1,7 @@
 #
 # OpenGL (c)2013-2014 Josh PH3NOM Pearson
 # trimark - GL_TRIANGLES benchmark
-# (c)2001 Dan Potter, Paul Boese
+# (c)2001 Megan Potter, Paul Boese
 #   
 
 TARGET = trimark.elf

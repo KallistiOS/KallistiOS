@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/pvr.h
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
    Copyright (C) 2014 Lawrence Sebald
 
    Low-level PVR 3D interface for the DC
@@ -20,7 +20,7 @@
     This file is used for pretty much everything related to the PVR, from memory
     management to actual primitive rendering.
 
-    \author Dan Potter
+    \author Megan Potter
     \author Roger Cattermole
     \author Paul Boese
     \author Brian Paul

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/flashrom.h
-   Copyright (C) 2003 Dan Potter
+   Copyright (C) 2003 Megan Potter
    Copyright (C) 2008 Lawrence Sebald
 
 */
@@ -16,7 +16,7 @@
     a Bad Idea(tm)), extreme care should be taken if you choose to use these
     functions!
 
-    \author Dan Potter
+    \author Megan Potter
     \author Lawrence Sebald
 */
 

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    arch/dreamcast/include/spinlock.h
-   Copyright (C) 2001 Dan Potter
+   Copyright (C) 2001 Megan Potter
 
 */
 
@@ -13,7 +13,7 @@
     more fully featured like mutexes, semaphores, reader-writer semaphores, or
     recursive locks.
 
-    \author Dan Potter
+    \author Megan Potter
 
     \see    kos/sem.h
     \see    kos/mutex.h

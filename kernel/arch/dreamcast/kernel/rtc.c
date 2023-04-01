@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    rtc.c
-   (c)2001 Dan Potter
+   (c)2001 Megan Potter
 */
 
 /* Real Time Clock support

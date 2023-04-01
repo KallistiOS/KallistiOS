@@ -3,7 +3,7 @@
 
    quadmark.c
    (c)2014 Josh Pearson
-   (c)2002 Dan Potter, Paul Boese
+   (c)2002 Megan Potter, Paul Boese
 */
 
 #include <kos.h>

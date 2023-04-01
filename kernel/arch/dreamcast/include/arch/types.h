@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    arch/dreamcast/include/types.h
-   (c)2000-2001 Dan Potter
+   (c)2000-2001 Megan Potter
 
 */
 
@@ -12,7 +12,7 @@
     types include ones that tell you exactly how long they are, as well as some
     BSD-isms.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __ARCH_TYPES_H

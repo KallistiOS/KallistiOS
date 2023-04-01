@@ -2,7 +2,7 @@
 
    cdrom.c
 
-   Copyright (C) 2000 Dan Potter
+   Copyright (C) 2000 Megan Potter
    Copyright (C) 2014 Lawrence Sebald
    Copyright (C) 2014 Donald Haase
 

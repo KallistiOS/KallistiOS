@@ -32,6 +32,19 @@ patch_gcc           = patch-sh4-gcc patch-arm-gcc
 patch_newlib        = patch-sh4-newlib
 patch_kos           = patch-kos
 
+# Patch
+# Apply sh4 newlib fixups (default is yes and this should be always the case!)
+ifeq (1,$(do_kos_patching))
+# Add Build Pre-Requisites for SH4 Steps
+  build-sh4-binutils: patch-sh4-binutils
+  build-sh4-gcc-pass1 build-sh4-gcc-pass2: patch-sh4-gcc
+  build-sh4-newlib-only: patch-sh4-newlib
+
+# Add Build Pre-Requisites for ARM Steps
+  build-arm-binutils: patch-arm-binutils
+  build-arm-gcc-pass1: patch-arm-gcc
+endif
+
 uname_p := $(shell uname -p)
 uname_s := $(shell uname -s)
 

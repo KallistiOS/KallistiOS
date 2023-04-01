@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    pvr_mem_core.h
-   (c)2001 Dan Potter
+   (c)2001 Megan Potter
 
    Imported from the public domain source by Doug Lea.
 

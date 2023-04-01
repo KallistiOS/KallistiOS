@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    fs_utils.c
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
    Copyright (C) 2014 Lawrence Sebald
 
 */

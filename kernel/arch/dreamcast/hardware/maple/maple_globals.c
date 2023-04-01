@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    maple_globals.c
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
  */
 
 #include <dc/maple.h>

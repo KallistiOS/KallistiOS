@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/maple.h
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
    Copyright (C) 2015 Lawrence Sebald
 
    This new driver's design is based loosely on the LinuxDC maple
@@ -20,7 +20,7 @@
     accessed through the functions here. Most of the drivers have their own
     functionality that is implemented in their header files, as well.
 
-    \author Dan Potter
+    \author Megan Potter
     \author Lawrence Sebald
 
     \see    dc/maple/controller.h

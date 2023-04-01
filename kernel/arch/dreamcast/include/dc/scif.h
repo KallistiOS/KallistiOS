@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/scif.h
-   Copyright (C) 2000,2001,2004 Dan Potter
+   Copyright (C) 2000,2001,2004 Megan Potter
    Copyright (C) 2012 Lawrence Sebald
    Copyright (C) 2023 Ruslan Rostovtsev
 
@@ -12,7 +12,7 @@
 
     This file deals with raw access to the serial port on the Dreamcast.
 
-    \author Dan Potter
+    \author Megan Potter
     \author Lawrence Sebald
     \author Ruslan Rostovtsev
 */

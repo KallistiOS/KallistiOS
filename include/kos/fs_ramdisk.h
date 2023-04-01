@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kos/fs_ramdisk.h
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
 
 */
 
@@ -16,7 +16,7 @@
 
     You only have one ramdisk available, and its mounted on /ram.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __KOS_FS_RAMDISK_H

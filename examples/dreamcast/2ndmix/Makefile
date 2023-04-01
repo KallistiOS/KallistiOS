@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # 2ndmix/Makefile
-# Copyright (C)2003 Dan Potter
+# Copyright (C)2003 Megan Potter
 #
 
 all: rm-elf 2ndmix.elf

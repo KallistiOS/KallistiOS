@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    include/kos/thread.h
-   Copyright (C) 2000, 2001, 2002, 2003 Dan Potter
+   Copyright (C) 2000, 2001, 2002, 2003 Megan Potter
    Copyright (C) 2009, 2010, 2016 Lawrence Sebald
 
 */
@@ -48,7 +48,7 @@ __BEGIN_DECLS
     thd_detach()). The old KOS threading system only had what would be
     considered detached threads.
 
-    \author Dan Potter
+    \author Megan Potter
     \author Lawrence Sebald
     \see    arch/timer.h
     \see    kos/genwait.h

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    arch/dreamcast/include/arch/stack.h
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
 
 */
 
@@ -13,7 +13,7 @@
     dcload terminal). These functions only work if frame pointers have been
     enabled at compile time (-DFRAME_POINTERS and no -fomit-frame-pointer flag).
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __ARCH_STACK_H

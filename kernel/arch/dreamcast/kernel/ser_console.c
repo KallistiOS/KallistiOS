@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    ser_console.c
-   (c)2001 Dan Potter
+   (c)2001 Megan Potter
 
  */
 

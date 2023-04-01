@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 #  crt0.s
-#  (c)2000-2002 Dan Potter
+#  (c)2000-2002 Megan Potter
 #
 #  Startup for ARM program
 #  Adapted from Marcus' AICA example among a few other sources =)

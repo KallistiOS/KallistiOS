@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/fs/iso9660.h
-   (c)2000-2001 Dan Potter
+   (c)2000-2001 Megan Potter
 
 */
 
@@ -17,7 +17,7 @@
     The implementation was originally based on a simple ISO9660 implementation
     by Marcus Comstedt.
 
-    \author Dan Potter
+    \author Megan Potter
     \author Andrew Kieschnick
     \author Bero
 */

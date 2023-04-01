@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    asic.c
-   Copyright (c)2000,2001,2002,2003 Dan Potter
+   Copyright (c)2000,2001,2002,2003 Megan Potter
 */
 
 /*

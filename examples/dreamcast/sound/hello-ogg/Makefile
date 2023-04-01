@@ -2,7 +2,7 @@
 #
 # Library Makefile
 # (c)2001 Thorsten Titze
-# Based on KOS Makefiles by Dan Potter
+# Based on KOS Makefiles by Megan Potter
 
 TARGET = vorbistest.elf
 OBJS = romdisk.o vorbistest.o

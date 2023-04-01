@@ -6,7 +6,7 @@
                  2016 Lawrence Sebald
 
    Portions adapted from KOS' old net_icmp.c file:
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
 
 */
 

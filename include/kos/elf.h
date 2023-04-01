@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kos/elf.h
-   Copyright (C)2000,2001,2003 Dan Potter
+   Copyright (C)2000,2001,2003 Megan Potter
 
 */
 
@@ -14,7 +14,7 @@
     meant for running multiple processes, but more for loadable library support
     within KOS.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __KOS_ELF_H

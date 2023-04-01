@@ -4,7 +4,7 @@
 # 
 # (c)2014 Josh Pearson
 # (c)2002 Paul Boese
-# (c)2001-2002 Dan Potter
+# (c)2001-2002 Megan Potter
 #
 # This will make all the examples, leaving only the elf files.
 # If you want to clean everything, use 'clean'.

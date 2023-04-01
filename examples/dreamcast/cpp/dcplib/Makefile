@@ -2,7 +2,7 @@
 # Font Test program makefile by Peter Hatch
 # based on
 # KallistiGL test program
-# (c)2001 Dan Potter
+# (c)2001 Megan Potter
 #   
 
 TARGET = fnt_test.elf

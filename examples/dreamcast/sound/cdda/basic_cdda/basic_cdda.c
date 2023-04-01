@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    basic_cdda.c
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
 */
 
 #include <kos.h>
