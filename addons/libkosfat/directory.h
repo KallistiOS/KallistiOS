@@ -14,8 +14,6 @@ __BEGIN_DECLS
 
 #include "fatfs.h"
 
-#define PACKED __attribute__((packed))
-
 typedef struct fat_dentry {
     uint8_t name[11];
     uint8_t attr;
