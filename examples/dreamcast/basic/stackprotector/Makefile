@@ -4,6 +4,9 @@ KOS_CFLAGS += -fstack-protector-all
 
 GCC_MAJOR = $(basename $(basename $(KOS_GCCVER)))
 
+clean:
+	-rm -f $(TARGET) $(OBJS)
+
 ifeq ($(GCC_MAJOR), 4) 
 
 all dist:
@@ -14,9 +17,6 @@ else
 all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules
-
-clean:
-	-rm -f $(TARGET) $(OBJS)
 
 rm-elf:
 	-rm -f $(TARGET)

@@ -30,6 +30,11 @@ for i in $includes; do
 	echo "#include <$i>" >> $outpfile
 done
 
+echo '/* Newlib with GCC 4.7.4 will not export fdopen from stdio.h. */' >> $outpfile
+echo '#if __GNUC__ == 4' >> $outpfile
+echo '	extern FILE* fdopen(int fd, const char* mode);' >> $outpfile
+echo '#endif' >> $outpfile
+
 # Now write out the sym table
 echo "export_sym_t ${outpsym}[] = {" >> $outpfile
 for i in $names; do
