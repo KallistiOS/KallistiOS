@@ -9,7 +9,7 @@ SUBDIRS = arch debug fs thread net libc exports
 STUBS = stubs/kernel_export_stubs.o stubs/arch_export_stubs.o
 
 # Everything from here up should be plain old C.
-KOS_CFLAGS += $(KOS_CSTD)
+KOS_CFLAGS += -std=gnu99
 
 all: subdirs $(STUBS)
 	rm -f $(KOS_BASE)/lib/$(KOS_ARCH)/libkallisti.a
