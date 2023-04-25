@@ -137,3 +137,15 @@ ifeq (kos,$(thread_model))
     $(error kos thread model is unsupported when KOS patches are disabled)
   endif
 endif
+
+ifdef newlib_c99_formats
+  ifneq (0,$(newlib_c99_formats))
+    newlib_extra_configure_args += --enable-newlib-io-c99-formats
+  endif
+endif
+
+ifdef newlib_opt_space
+  ifneq (0,$(newlib_opt_space))
+    newlib_extra_configure_args += --enable-target-optspace
+  endif
+endif

@@ -132,6 +132,18 @@ thread_model=kos
 # This may be useful only if you plan to debug the toolchain itself.
 install_mode=install-strip
 
+# C99 Format Specifier Support (1|0)
+# Define this to build SH4 Newlib with additional support for the C99 format
+# specifiers, used by printf and friends. These include support for size_t,
+# ptrdiff_t, intmax_t, and sized integral types. 
+#newlib_c99_formats=1
+
+# Optimize Newlib for Space (1|0)
+# Define this to enable optimizing for space when building Newlib. This will
+# build Newlib with compiler flags which favor smaller code sizes over faster
+# performance. 
+#newlib_opt_space=1
+
 # MinGW/MSYS
 # Standalone binaries (1|0)
 # Define this if you want a standalone, no dependency binaries (i.e. static)

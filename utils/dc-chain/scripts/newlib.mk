@@ -17,6 +17,7 @@ $(build_newlib): logdir
 	    --target=$(target) \
 	    --prefix=$(prefix) \
 	    $(extra_configure_args) \
+	    $(newlib_extra_configure_args) \
 	    CC_FOR_TARGET="$(SH_CC_FOR_TARGET)" \
 	    $(to_log)
 	$(MAKE) $(makejobs) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
