@@ -655,7 +655,7 @@ static void thd_timer_hnd(irq_context_t *context) {
    sleep because it eases the load on the system for the other
    threads. */
 void thd_sleep(int ms) {
-    if(thd_mode != THD_MODE_PREEMPT) {
+    if(thd_mode == THD_MODE_NONE) {
         timer_spin_sleep(ms);
         return;
     }
@@ -673,6 +673,10 @@ void thd_sleep(int ms) {
        purposes. 0xffffffff definitely doesn't exist as an object, so we'll
        use that for straight up timeouts. */
     genwait_wait((void *)0xffffffff, "thd_sleep", ms, NULL);
+	
+	/* If in coop mode, send this thread to the scheduler. */
+	if(thd_mode == THD_MODE_COOP)
+		thd_schedule(1,0);
 }
 
 /* Manually cause a re-schedule */
