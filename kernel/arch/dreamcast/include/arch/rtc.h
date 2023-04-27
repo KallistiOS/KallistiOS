@@ -92,7 +92,7 @@ __BEGIN_DECLS
 
 /** \brief Timestamp write enable
 
-    \ref{RTC_CTRL_ADDR} value to be written in order to unlock
+    #RTC_CTRL_ADDR value to be written in order to unlock
     writing to the timestamp registers.
 */
 #define RTC_CTRL_WRITE_EN         (1 << 0)

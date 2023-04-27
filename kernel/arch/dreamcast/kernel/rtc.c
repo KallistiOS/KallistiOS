@@ -76,7 +76,7 @@ int rtc_set_unix_secs(time_t secs) {
     const uint32_t adjusted = secs + RTC_UNIX_EPOCH_DELTA;
 
     /* Enable writing by setting LSB of control */
-    g2_write_32(RTC_CTRL_ADDR, 0x1);
+    g2_write_32(RTC_CTRL_ADDR, RTC_CTRL_WRITE_EN);
 
     /* Try 3 times to ensure we didn't write a value then have 
        the clock increment itself before the next. */
