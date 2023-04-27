@@ -163,6 +163,7 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - *** Add support for compiling with LTO [Paul Cercueil == PC]
 - DC  Fixed calling newlib's exit after returning from main so functions
       registered with atexit() are called [Colton Pawielski == CP]
+- *** Cleaned up + documented RTC driver, added support for setting time [FG]
 
 KallistiOS version 2.0.0 -----------------------------------------------
 - DC  Broadband Adapter driver fixes [Megan Potter == MP]

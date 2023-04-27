@@ -3,7 +3,7 @@
    rtc.c
    Copyright (C) 2001 Megan Potter
    Copyright (C) 2023 Falco Girgis
-   Copyright (C) 2023 SWAT
+   Copyright (C) 2023 Ruslan Rostovtsev
    Copyright (C) 2023 Megavolt85
 */
 
