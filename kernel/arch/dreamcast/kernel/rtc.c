@@ -97,7 +97,7 @@ int rtc_set_unix_secs(time_t secs) {
 
     /* Signify failure if the fetched time never matched the
        time we attempted to set. */
-    if(i == 3)
+    if(i == RTC_RETRY_COUNT)
         result = -1;
 
     /* We have to update the boot time now as well, subtracting
