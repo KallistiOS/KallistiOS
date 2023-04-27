@@ -4,7 +4,7 @@
    Copyright (C) 2001 Megan Potter
    Copyright (C) 2023 Falco Girgis
    Copyright (C) 2023 SWAT
-   Copyright (C) 2023 Metavolt85
+   Copyright (C) 2023 Megavolt85
 */
 
 /* Real Time Clock support
