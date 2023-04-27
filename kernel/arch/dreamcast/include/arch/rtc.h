@@ -28,7 +28,7 @@ __BEGIN_DECLS
 #include <time.h>
 
 /** \defgroup rtc Real-Time Clock
-    \brief Real-Time Clock Management 
+    \brief Real-Time Clock (RTC) Management
 
     Provides an API for fetching and managing the date/time using
     the Dreamcast's real-time clock. All timestamps are in standard
@@ -54,6 +54,48 @@ __BEGIN_DECLS
     Y2K and the last timestamp it can represent before rolling over is 
     February 06 2086 06:28:15. 
 */
+
+/** \defgroup rtc_regs Registers
+    \brief    RTC registers
+    \ingroup  rtc
+
+    All registers are located on the G2 BUS and must be read and
+    written to as full 32-byte values.
+@{*/
+
+/** \brief High 16-bit timestamp value
+
+    32-bit register containing the upper 16-bits of
+    the 32-bit timestamp in seconds. Only the lower 16-bits
+    are valid.
+
+    \note Writing to this register will lock the timestamp registers.
+ */
+#define RTC_TIMESTAMP_HIGH_ADDR   0xa0710000
+
+/** \brief Low 16-bit timestamp value
+
+    32-bit register containing the lower 16-bits of
+    the 32-bit timestamp in seconds. Only the lower 16-bits
+    are valid.
+ */
+#define RTC_TIMESTAMP_LOW_ADDR    0xa0710004
+
+/** \brief Timestamp control register
+
+    All fields are reserved except for #RTC_CTRL_WRITE_EN,
+    which is write-only.
+ */
+#define RTC_CTRL_ADDR             0xa0710008
+/**
+@} */
+
+/** \brief Timestamp write enable
+
+    \ref{RTC_CTRL_ADDR} value to be written in order to unlock
+    writing to the timestamp registers.
+*/
+#define RTC_CTRL_WRITE_EN         (1 << 0)
 
 /** \brief   Get the current date/time.
     \ingroup rtc

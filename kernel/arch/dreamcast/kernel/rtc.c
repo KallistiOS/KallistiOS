@@ -7,7 +7,7 @@
    Copyright (C) 2023 Megavolt85
 */
 
-/* Real Time Clock support
+/* Real-Time Clock (RTC) support
 
    The functions in here return various info about the real-world time and
    date stored in the machine. The general process here is to retrieve
@@ -28,9 +28,6 @@
 #include <arch/timer.h>
 #include <dc/g2bus.h>
 
-#define RTC_CONTROL_ADDR        0xa0710008  /* SFR with write-enable bit */
-#define RTC_SECONDS_HIGH_ADDR   0xa0710000  /* Upper 16 bits of timestamp */
-#define RTC_SECONDS_LOW_ADDR    0xa0710004  /* Lower 16 bits of timestamp */
 #define RTC_UNIX_EPOCH_DELTA    631152000   /* Twenty years in seconds */
 #define RTC_RETRY_COUNT         3           /* # of times to repeat on bad access */
 
@@ -49,14 +46,14 @@ time_t rtc_unix_secs(void) {
 
     for(;;) {
         for(i = 0; i < RTC_RETRY_COUNT; i++) {
-            rtcnew = ((g2_read_32(RTC_SECONDS_HIGH_ADDR) & 0xffff) << 16) | 
-                      (g2_read_32(RTC_SECONDS_LOW_ADDR) & 0xffff);
+            rtcnew = ((g2_read_32(RTC_TIMESTAMP_HIGH_ADDR) & 0xffff) << 16) |
+                      (g2_read_32(RTC_TIMESTAMP_LOW_ADDR) & 0xffff);
 
             if(rtcnew != rtcold)
                 break;
         }
 
-        if(i < 3)
+        if(i < RTC_RETRY_COUNT)
             rtcold = rtcnew;
         else
             break;
@@ -79,19 +76,18 @@ int rtc_set_unix_secs(time_t secs) {
     const uint32_t adjusted = secs + RTC_UNIX_EPOCH_DELTA;
 
     /* Enable writing by setting LSB of control */
-    g2_write_32(RTC_CONTROL_ADDR, 0x1);
+    g2_write_32(RTC_CTRL_ADDR, 0x1);
 
     /* Try 3 times to ensure we didn't write a value then have 
        the clock increment itself before the next. */
     for(i = 0; i < RTC_RETRY_COUNT; i++) { 
         /* Write the least-significant 16-bits first, because 
            writing to the high 16-bits will lock RTC writes. */
-        g2_write_32(RTC_SECONDS_LOW_ADDR, (adjusted) & 0xffff);
-        g2_write_32(RTC_SECONDS_HIGH_ADDR, (adjusted >> 16) & 0xffff);
+        g2_write_32(RTC_TIMESTAMP_LOW_ADDR, (adjusted) & 0xffff);
+        g2_write_32(RTC_TIMESTAMP_HIGH_ADDR, (adjusted >> 16) & 0xffff);
 
         /* Read the time back again, to ensure it was written properly. */
-        rtcnew = ((g2_read_32(RTC_SECONDS_HIGH_ADDR) & 0xffff) << 16) | 
-                  (g2_read_32(RTC_SECONDS_LOW_ADDR) & 0xffff);
+        rtcnew = rtc_unix_secs() + RTC_UNIX_EPOCH_DELTA;
 
         if(rtcnew == adjusted)
             break;
