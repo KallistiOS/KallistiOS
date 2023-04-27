@@ -1,20 +1,22 @@
 /* KallistiOS ##version##
 
    arch/dreamcast/include/rtc.h
-   (c)2000-2001 Megan Potter
-   (c)2023 Falco Girgis
+   Copyright (C) 2000-2001 Megan Potter
+   Copyright (C) 2023 Falco Girgis
 
 */
 
 /** \file    arch/rtc.h
-    \brief   Low-level real time clock functionality.
+    \brief   Low-level real-time clock functionality.
     \ingroup rtc
 
-    This file contains functions for interacting with the real time clock in the
+    This file contains functions for interacting with the real-time clock in the
     Dreamcast. Generally, you should prefer interacting with the higher level
-    standard C functions, like time(), rather than these.
+    standard C functions, like time(), rather than these when simply needing
+    to fetch the current system time.
 
     \author Megan Potter
+    \author Falco Girgis
 */
 
 #ifndef __ARCH_RTC_H
@@ -81,7 +83,7 @@ time_t rtc_unix_secs(void);
 */
 int rtc_set_unix_secs(time_t time);
 
-/** \brief   Get the time that the sytem was booted.
+/** \brief   Get the time somce the sytem was booted.
     \ingroup rtc
 
     This function retrieves the cached RTC value from when KallistiOS was started. As
@@ -89,7 +91,7 @@ int rtc_set_unix_secs(time_t time);
 
     \return                 The boot time as a UNIX-style timestamp.
 
-    \sa rtc_boot_time()
+    \sa rtc_unix_secs()
 */
 time_t rtc_boot_time(void);
 
