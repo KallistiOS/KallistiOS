@@ -3,15 +3,15 @@
 # lightgun/basic/Makefile
 #
 
-all: rm-elf lightgun.elf
-
-include $(KOS_BASE)/Makefile.rules
-
 TARGET = lightgun.elf
 OBJS = lightgun.o
 
-clean:
-	-rm -f $(TARGET) $(OBJS)
+all: rm-elf $(TARGET)
+
+include $(KOS_BASE)/Makefile.rules
+
+clean: rm-elf
+	-rm -f $(OBJS)
 
 rm-elf:
 	-rm -f $(TARGET)

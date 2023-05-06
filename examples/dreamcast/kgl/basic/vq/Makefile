@@ -7,8 +7,8 @@ all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules
 
-clean:
-	-rm -f $(TARGET) $(OBJS) fruit.vq
+clean: rm-elf
+	-rm -f $(OBJS) fruit.vq
 
 rm-elf:
 	-rm -f $(TARGET) 

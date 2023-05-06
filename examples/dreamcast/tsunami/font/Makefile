@@ -4,22 +4,21 @@
 #   
 
 TARGET = font.elf
-OBJS = font.o
+OBJS = font.o romdisk.o
 
 all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules
 
-clean:
-	-rm -f $(TARGET) $(OBJS) romdisk.*
+clean: rm-elf
+	-rm -f $(OBJS)
 
 rm-elf:
 	-rm -f $(TARGET) romdisk.*
 
-$(TARGET): $(OBJS) romdisk.o
+$(TARGET): $(OBJS)
 	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(TARGET) $(KOS_START) \
-		$(OBJS) romdisk.o $(OBJEXTRA) -ltsunami -lstdc++ -lparallax -lpng -ljpeg -lkmg -lz -lkosutils -lm $(KOS_LIBS) 
-
+		$(OBJS) $(OBJEXTRA) -ltsunami -lstdc++ -lparallax -lpng -ljpeg -lkmg -lz -lkosutils -lm $(KOS_LIBS) 
 
 romdisk.img:
 	$(KOS_GENROMFS) -f romdisk.img -d romdisk -v
@@ -31,6 +30,6 @@ run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 
 dist:
-	rm -f $(OBJS) romdisk.o romdisk.img
+	rm -f $(OBJS) romdisk.img
 	$(KOS_STRIP) $(TARGET)
 

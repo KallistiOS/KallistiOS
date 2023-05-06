@@ -4,24 +4,25 @@
 # (c)2002 Megan Potter
 #
 
-all: rm-elf bfont.elf
+TARGET = bfont.elf
+OBJS = bfont.o
+
+all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules
 
-OBJS = bfont.o
-
-clean:
-	-rm -f bfont.elf $(OBJS)
+clean: rm-elf
+	-rm -f $(OBJS)
 
 rm-elf:
-	-rm -f bfont.elf
+	-rm -f $(TARGET)
 
-bfont.elf: $(OBJS) 
-	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o bfont.elf $(KOS_START) $(OBJS) $(DATAOBJS) $(OBJEXTRA) $(KOS_LIBS)
+$(TARGET): $(OBJS) 
+	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(TARGET) $(KOS_START) $(OBJS) $(DATAOBJS) $(OBJEXTRA) $(KOS_LIBS)
 
-run: bfont.elf
-	$(KOS_LOADER) bfont.elf
+run: $(TARGET)
+	$(KOS_LOADER) $(TARGET)
 
 dist:
 	-rm -f $(OBJS)
-	$(KOS_STRIP) bfont.elf
+	$(KOS_STRIP) $(TARGET)

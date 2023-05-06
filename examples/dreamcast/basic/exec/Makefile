@@ -4,7 +4,7 @@
 #   
 
 TARGET = exec.elf
-OBJS = exec.o
+OBJS = exec.o romdisk.o
 
 SUBTARGET = romdisk/sub.bin
 SUBOBJS = sub.o
@@ -13,15 +13,15 @@ all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules
 
-clean:
-	-rm -f $(TARGET) $(OBJS) $(SUBTARGET) $(SUBOBJS) sub.elf romdisk.*
+clean: rm-elf
+	-rm -f $(OBJS) $(SUBTARGET) $(SUBOBJS) sub.elf
 
 rm-elf:
 	-rm -f $(TARGET) romdisk.*
 
-$(TARGET): $(OBJS) romdisk.o
+$(TARGET): $(OBJS)
 	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(TARGET) $(KOS_START) \
-		$(OBJS) romdisk.o $(OBJEXTRA) $(KOS_LIBS)
+		$(OBJS) $(OBJEXTRA) $(KOS_LIBS)
 
 $(SUBTARGET): $(SUBOBJS)
 	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o sub.elf $(KOS_START) \
@@ -39,6 +39,6 @@ run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 
 dist:
-	rm -f $(OBJS) sub.elf sub.o romdisk/sub.bin romdisk.o romdisk.img
+	rm -f $(OBJS) sub.elf sub.o romdisk/sub.bin romdisk.img
 	$(KOS_STRIP) $(TARGET)
 

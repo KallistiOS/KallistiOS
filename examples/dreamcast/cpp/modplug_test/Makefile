@@ -1,18 +1,18 @@
 TARGET = example.elf
-OBJS = example.o
+OBJS = example.o romdisk.o
 
 all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules
 
-clean:
-	-rm -f $(TARGET) $(OBJS) romdisk.*
+clean: rm-elf
+	-rm -f $(OBJS) 
 
 rm-elf:
 	-rm -f $(TARGET) romdisk.*
 
-$(TARGET): $(OBJS) romdisk.o
-	kos-c++ -o $(TARGET) $(OBJS) romdisk.o $(OBJEXTRA) -lmodplug -lm
+$(TARGET): $(OBJS)
+	kos-c++ -o $(TARGET) $(OBJS) $(OBJEXTRA) -lmodplug -lm
 
 romdisk.img:
 	$(KOS_GENROMFS) -f romdisk.img -d romdisk -v
@@ -24,5 +24,5 @@ run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 
 dist:
-	rm -f $(OBJS) romdisk.o romdisk.img
+	rm -f $(OBJS) romdisk.img
 	$(KOS_STRIP) $(TARGET)

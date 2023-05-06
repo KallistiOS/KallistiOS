@@ -1,16 +1,15 @@
 TARGET = example1.elf
-
 OBJS = example1.o
 
 all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules
 
-clean:
-	-rm -f $(TARGET) $(OBJS) romdisk.*
+clean: rm-elf
+	-rm -f $(OBJS)
 
 rm-elf:
-	-rm -f $(TARGET) romdisk.*
+	-rm -f $(TARGET)
 
 $(TARGET): $(OBJS)
 	kos-cc -o $(TARGET) $(OBJS) -lppp

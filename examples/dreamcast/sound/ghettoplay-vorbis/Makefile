@@ -1,14 +1,15 @@
 TARGET = ghettoplay.elf
-OBJS = romdisk.o ghettoplay.o texture.o bkg.o 3dutils.o songmenu.o
+OBJS = ghettoplay.o texture.o bkg.o 3dutils.o songmenu.o romdisk.o
 
 all: rm-elf $(TARGET)
 
-rm-elf:
-	-rm -f $(TARGET)
-	-rm -f romdisk.o romdisk.img
+include ${KOS_BASE}/Makefile.rules
 
 clean: rm-elf
 	-rm -f $(OBJS)
+
+rm-elf:
+	-rm -f $(TARGET) romdisk.*
 	
 $(TARGET): $(OBJS)
 	kos-cc -o $(TARGET) $(OBJS) -loggvorbisplay -lvorbis -logg -lm
@@ -19,12 +20,9 @@ romdisk.img:
 romdisk.o: romdisk.img
 	$(KOS_BASE)/utils/bin2o/bin2o romdisk.img romdisk romdisk.o
 
-run: 
+run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 
 dist:
-	rm -f $(OBJS) romdisk.o romdisk.img
+	rm -f $(OBJS) romdisk.img
 	$(KOS_STRIP) $(TARGET)
-	
-include ${KOS_BASE}/Makefile.rules
-

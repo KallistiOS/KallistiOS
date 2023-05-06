@@ -1,18 +1,22 @@
 TARGET = sdl_sound.elf
 OBJS = sdl_sound.o
 
-all: clean $(TARGET)
+all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules
 
-clean:
-	-rm -f $(TARGET) $(OBJS)
+clean: rm-elf
+	-rm -f $(OBJS)
+
+rm-elf:
+	-rm -f $(TARGET)
 
 $(TARGET): $(OBJS)
 	kos-cc -o $(TARGET) $(OBJS) $(DATAOBJS) $(OBJEXTRA) -lSDL
 
-run:
+run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 
-dist: $(TARGET)
+dist: 
+	rm -f $(OBJS)
 	$(KOS_STRIP) $(TARGET)

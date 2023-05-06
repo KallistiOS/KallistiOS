@@ -5,15 +5,14 @@
 #   
 
 TARGET = nehe05.elf
-
 OBJS = nehe05.o
 
 all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules
 
-clean:
-	-rm -f $(TARGET) $(OBJS)
+clean: rm-elf
+	-rm -f $(OBJS)
 
 rm-elf:
 	-rm -f $(TARGET)
