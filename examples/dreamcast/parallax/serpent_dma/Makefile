@@ -18,8 +18,7 @@ rm-elf:
 	-rm -f $(TARGET)
 
 $(TARGET): $(OBJS)
-	kos-cc $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(TARGET) $(KOS_START) \
-		$(OBJS) $(OBJEXTRA) -lparallax -lkosutils -lpng -ljpeg -lkmg -lz -lm $(KOS_LIBS)
+	kos-cc -o $(TARGET) $(OBJS) -lparallax -lkosutils -lpng -ljpeg -lkmg -lz -lm
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)

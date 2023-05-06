@@ -17,8 +17,7 @@ rm-elf:
 	-rm -f $(TARGET) romdisk.*
 
 $(TARGET): $(OBJS)
-	kos-cc $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(TARGET) $(KOS_START) \
-		$(OBJS) $(OBJEXTRA) -ltsunami -lstdc++ -lparallax -lpng -ljpeg -lkmg -lkosutils -lz -lm $(KOS_LIBS)
+	kos-cc -o $(TARGET) $(OBJS) -ltsunami -lstdc++ -lparallax -lpng -ljpeg -lkmg -lkosutils -lz -lm
 
 romdisk.img:
 	$(KOS_GENROMFS) -f romdisk.img -d romdisk -v

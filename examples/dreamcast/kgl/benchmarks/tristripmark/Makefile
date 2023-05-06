@@ -19,8 +19,7 @@ rm-elf:
 	-rm -f $(TARGET)
 
 $(TARGET): $(OBJS)
-	kos-cc $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(TARGET) $(KOS_START) \
-		$(OBJS) $(OBJEXTRA) -lGL $(KOS_LIBS)
+	kos-cc -o $(TARGET) $(OBJS) -lGL
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)

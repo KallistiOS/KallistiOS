@@ -12,8 +12,7 @@ rm-elf:
 	-rm -f $(TARGET) romdisk.*
 
 $(TARGET): $(OBJS)
-	kos-cc -o $(TARGET) $(OBJS) $(DATAOBJS) $(OBJEXTRA) \
-	-lopusplay -lopusfile -lopus -logg
+	kos-cc -o $(TARGET) $(OBJS) -lopusplay -lopusfile -lopus -logg
 
 romdisk.img:
 	$(KOS_GENROMFS) -f romdisk.img -d romdisk -v

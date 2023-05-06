@@ -14,8 +14,7 @@ rm-elf:
 	-rm -f $(TARGET) 
 
 $(TARGET): $(OBJS) 
-	kos-cc $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(TARGET) $(KOS_START) \
-		$(OBJS) $(OBJEXTRA) -L$(KOS_BASE)/lib -lGL $(KOS_LIBS) -lm
+	kos-cc -o $(TARGET) $(OBJS) -L$(KOS_BASE)/lib -lGL -lm
 
 fruit.o: fruit.vq
 	$(KOS_BASE)/utils/bin2o/bin2o fruit.vq fruit fruit.o

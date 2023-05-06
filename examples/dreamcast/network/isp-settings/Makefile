@@ -12,7 +12,7 @@ rm-elf:
 	-rm -f $(TARGET)
 
 $(TARGET): $(OBJS)
-	kos-cc -o $(TARGET) $(OBJS) $(OBJEXTRA)
+	kos-cc -o $(TARGET) $(OBJS)
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)

@@ -15,7 +15,7 @@ rm-elf:
 	-rm -f $(TARGET) romdisk_boot.*
 
 $(TARGET): $(OBJS) 
-	kos-cc $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $@ $(KOS_START) $^ -lpng -lz -lm $(KOS_LIBS)
+	kos-cc -o $(TARGET) $(OBJS) -lpng -lz -lm
 
 wfont.o: wfont.bin
 	$(KOS_BASE)/utils/bin2o/bin2o $< wfont $@
