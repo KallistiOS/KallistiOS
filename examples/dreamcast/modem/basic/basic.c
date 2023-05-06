@@ -1,6 +1,6 @@
 /* KallistiOS ##version##
 
-   example1.c
+   basic.c
    Copyright (C)2004 Nick Kochakian
 
    Connecting without events

@@ -20,6 +20,6 @@ $(TARGET): $(OBJS)
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET) -n
 
-dist:
+dist: $(TARGET)
 	rm -f $(OBJS)
 	$(KOS_STRIP) $(TARGET)

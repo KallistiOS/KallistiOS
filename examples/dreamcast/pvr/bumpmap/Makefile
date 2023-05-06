@@ -30,6 +30,6 @@ romdisk/bumpmap.raw: bumpmap.png
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET) -n
 
-dist:
+dist: $(TARGET)
 	rm -f $(OBJS) romdisk.img
 	$(KOS_STRIP) $(TARGET)

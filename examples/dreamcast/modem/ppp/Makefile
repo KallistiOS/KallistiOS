@@ -1,5 +1,5 @@
-TARGET = example1.elf
-OBJS = example1.o
+TARGET = ppp.elf
+OBJS = ppp.o
 
 all: rm-elf $(TARGET)
 
@@ -17,7 +17,7 @@ $(TARGET): $(OBJS)
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 
-dist:
+dist: $(TARGET)
 	rm -f $(OBJS)
 	$(KOS_STRIP) $(TARGET)
 

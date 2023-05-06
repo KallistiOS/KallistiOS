@@ -3,8 +3,8 @@
 # Copyright (C)2003 Nick Kochakian
 #   
 
-TARGET = example1.elf
-OBJS = example1.o
+TARGET = basic.elf
+OBJS = basic.o
 
 all: rm-elf $(TARGET)
 
@@ -22,7 +22,7 @@ $(TARGET): $(OBJS)
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 
-dist:
+dist: $(TARGET)
 	rm -f $(OBJS)
 	$(KOS_STRIP) $(TARGET)
 

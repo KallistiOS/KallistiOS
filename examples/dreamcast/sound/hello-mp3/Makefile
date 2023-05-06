@@ -25,7 +25,7 @@ run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 #	dc-tool -p -b 115200 -x $(TARGET)
 
-dist:
+dist: $(TARGET)
 	rm -f $(OBJS) romdisk.img
 	$(KOS_STRIP) $(TARGET)
 

@@ -34,6 +34,6 @@ $(TARGET): $(OBJS)
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 
-dist:
+dist: $(TARGET)
 	rm -f $(OBJS) romdisk.img
 	$(KOS_STRIP) $(TARGET)

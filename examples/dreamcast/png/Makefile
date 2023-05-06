@@ -15,7 +15,7 @@ rm-elf:
 	-rm -f $(TARGET) romdisk_boot.*
 
 $(TARGET): $(OBJS) 
-	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $@ $(KOS_START) $^ -lpng -lz -lm $(KOS_LIBS)
+	kos-cc $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $@ $(KOS_START) $^ -lpng -lz -lm $(KOS_LIBS)
 
 wfont.o: wfont.bin
 	$(KOS_BASE)/utils/bin2o/bin2o $< wfont $@
@@ -29,7 +29,7 @@ romdisk_boot.o: romdisk_boot.img
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 
-dist:
+dist: $(TARGET)
 	-rm -f $(OBJS) romdisk_boot.img
 	$(KOS_STRIP) example.elf
 

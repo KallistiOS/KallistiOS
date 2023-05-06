@@ -31,6 +31,6 @@ romdisk.o: romdisk.img
 run: $(TARGET)
 	dc-tool -n -x $(TARGET)
 
-dist:
+dist: $(TARGET)
 	rm -f $(OBJS) romdisk.img
 	$(KOS_STRIP) $(TARGET)

@@ -24,7 +24,7 @@ $(TARGET): $(OBJS)
 		$(OBJS) $(OBJEXTRA) $(KOS_LIBS)
 
 $(SUBTARGET): $(SUBOBJS)
-	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o sub.elf $(KOS_START) \
+	kos-cc $(KOS_CFLAGS) $(KOS_LDFLAGS) -o sub.elf $(KOS_START) \
 		$(SUBOBJS) $(OBJEXTRA) $(KOS_LIBS)
 	$(KOS_OBJCOPY) -O binary -R .stack sub.elf $(SUBTARGET)
 
@@ -38,7 +38,7 @@ romdisk.o: romdisk.img
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 
-dist:
+dist: $(TARGET)
 	rm -f $(OBJS) sub.elf sub.o romdisk/sub.bin romdisk.img
 	$(KOS_STRIP) $(TARGET)
 

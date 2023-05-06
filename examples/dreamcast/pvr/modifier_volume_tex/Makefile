@@ -20,7 +20,7 @@ rm-elf:
 	-rm -f $(TARGET) romdisk.*
 
 $(TARGET): $(OBJS)
-	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(TARGET) $(KOS_START) \
+	kos-cc $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(TARGET) $(KOS_START) \
 		$(OBJS) $(OBJEXTRA) -lkmg -lpcx -lkosutils $(KOS_LIBS)
 
 romdisk.img: romdisk/fruit.kmg romdisk/crate.pcx
@@ -36,7 +36,7 @@ romdisk/fruit.kmg: fruit.jpg
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET) -n
 
-dist:
+dist: $(TARGET)
 	rm -f $(OBJS) romdisk.img romdisk/fruit.kmg
 	$(KOS_STRIP) $(TARGET)
 
