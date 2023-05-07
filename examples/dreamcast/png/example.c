@@ -14,6 +14,8 @@
 /* font data */
 extern char wfont[];
 
+extern int zlib_getlength(char*);
+
 /* textures */
 pvr_ptr_t font_tex;
 pvr_ptr_t back_tex;
