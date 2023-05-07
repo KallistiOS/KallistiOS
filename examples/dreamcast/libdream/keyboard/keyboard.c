@@ -37,7 +37,7 @@ void kb_test() {
         } */
 
         /* Get queued keys */
-        while((k = kbd_get_key()) != -1) {
+        while((k = kbd_queue_pop(kbd, 1)) != -1) {
             if(k == 27) {
                 printf("ESC pressed\n");
                 return;

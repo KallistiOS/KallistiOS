@@ -33,22 +33,23 @@ int main(int argc, char **argv) {
     udp = net_udp_get_stats();
 
     printf("IPv4 Stats:\n"
-           "Packets sent successfully:       %6d\n"
-           "Packets that failed to send:     %6d\n"
-           "Packets received successfully:   %6d\n"
-           "Packets rejected (bad size):     %6d\n"
-           "                 (bad checksum): %6d\n"
-           "                 (bad protocol): %6d\n\n",
-           ip.pkt_sent, ip.pkt_send_failed, ip.pkt_recv, ip.pkt_recv_bad_size,
-           ip.pkt_recv_bad_chksum, ip.pkt_recv_bad_proto);
+           "Packets sent successfully:       %6ld\n"
+           "Packets that failed to send:     %6ld\n"
+           "Packets received successfully:   %6ld\n"
+           "Packets rejected (bad size):     %6ld\n"
+           "                 (bad checksum): %6ld\n"
+           "                 (bad protocol): %6ld\n\n",
+           ip.pkt_sent, ip.pkt_send_failed, ip.pkt_recv, 
+           ip.pkt_recv_bad_size, ip.pkt_recv_bad_chksum, 
+           ip.pkt_recv_bad_proto);
 
     printf("UDP Stats:\n"
-           "Packets sent successfully:       %6d\n"
-           "Packets that failed to send:     %6d\n"
-           "Packets received successfully:   %6d\n"
-           "Packets rejected (bad size):     %6d\n"
-           "                 (bad checksum): %6d\n"
-           "                 (no socket):    %6d\n\n",
+           "Packets sent successfully:       %6ld\n"
+           "Packets that failed to send:     %6ld\n"
+           "Packets received successfully:   %6ld\n"
+           "Packets rejected (bad size):     %6ld\n"
+           "                 (bad checksum): %6ld\n"
+           "                 (no socket):    %6ld\n\n",
            udp.pkt_sent, udp.pkt_send_failed, udp.pkt_recv,
            udp.pkt_recv_bad_size, udp.pkt_recv_bad_chksum,
            udp.pkt_recv_no_sock);

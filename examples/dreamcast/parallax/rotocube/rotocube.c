@@ -122,7 +122,7 @@ void drawwave(int theta) {
 }
 
 int main(int argc, char **argv) {
-    int done, i;
+    int done;
     int theta;
     pvr_stats_t stats;
 

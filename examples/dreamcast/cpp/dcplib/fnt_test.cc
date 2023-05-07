@@ -12,7 +12,7 @@ fntRenderer *text;
 
 const int MAX_FONTS = 20;
 
-char *font_names[MAX_FONTS] = {
+const char *font_names[MAX_FONTS] = {
     "sorority.txf",          /* This is the default */
     "charter.txf",
     "courier-bold.txf",

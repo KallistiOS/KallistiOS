@@ -35,7 +35,7 @@
  */
 
 #ifndef lint
-static const char copyright[] =
+static const char copyright[] __attribute__((unused)) =
     "@(#) Copyright (c) 1991, 1993\n\
 	The Regents of the University of California.  All rights reserved.\n";
 #endif /* not lint */
@@ -44,7 +44,7 @@ static const char copyright[] =
 #if 0
 static char sccsid[] = "@(#)setup.c	8.1 (Berkeley) 5/31/93";
 #endif
-static const char rcsid[] =
+static const char rcsid[] __attribute__((unused)) =
     "$FreeBSD: src/games/adventure/setup.c,v 1.8.2.1 2001/03/05 11:43:11 kris Exp $";
 #endif /* not lint */
 
@@ -103,7 +103,7 @@ main(int argc, char **argv) {
                 printf("\n\t");
 
             // printf("0x%02lx,", ('\t' ^ random()) & 0xFF);
-            printf("0x%02lx,", '\t');
+            printf("0x%02x,", '\t');
 
             while((c = getc(infile)) == ' ' && c != EOF);
 
@@ -123,7 +123,7 @@ main(int argc, char **argv) {
         if(count++ % LINE == 0)
             printf("\n\t");
 
-        printf("0x%02lx,", c);
+        printf("0x%02x,", c);
     }
 
     puts("\n\t0\n};");

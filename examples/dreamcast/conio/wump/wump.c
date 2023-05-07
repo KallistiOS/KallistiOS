@@ -38,7 +38,7 @@
 /* Ported to KOS/libconio by Megan Potter */
 
 #ifndef lint
-static const char copyright[] =
+static const char copyright[] __attribute__((unused)) =
     "@(#) Copyright (c) 1989, 1993\n\
 	The Regents of the University of California.  All rights reserved.\n";
 #endif /* not lint */
@@ -47,7 +47,7 @@ static const char copyright[] =
 #if 0
 static char sccsid[] = "@(#)wump.c	8.1 (Berkeley) 5/31/93";
 #endif
-static const char rcsid[] =
+static const char rcsid[] __attribute__((unused)) =
     "$FreeBSD: src/games/wump/wump.c,v 1.13.2.1 2000/08/17 06:24:54 jhb Exp $";
 #endif /* not lint */
 
@@ -159,8 +159,6 @@ main(argc, argv)
 int argc;
 char **argv;
 {
-    int c;
-
     /* If the user hits start, bail */
     cont_btn_callback(0, CONT_START, (cont_btn_callback_t)arch_exit);
 
@@ -168,6 +166,8 @@ char **argv;
     conio_init(CONIO_TTY_PVR, CONIO_INPUT_LINE);
 
 #if 0   /* KOS */
+
+    int c;
     /* revoke */
     setgid(getgid());
 
@@ -571,7 +571,7 @@ The arrow is weakly shot and can go no further!\n");
         /* each time you shoot, it's more likely the wumpus moves */
         static int lastchance = 2;
 
-        if(random() % level == EASY ? 12 : 9 < (lastchance += 2)) {
+        if((((random() % level) == EASY) ? 12 : 9) < (lastchance += 2)) {
             move_wump();
 
             if(wumpus_loc == player_loc)

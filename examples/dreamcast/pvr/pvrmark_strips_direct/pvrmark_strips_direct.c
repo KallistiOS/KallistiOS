@@ -33,7 +33,7 @@ void stats() {
     pvr_stats_t stats;
 
     pvr_get_stats(&stats);
-    dbglog(DBG_DEBUG, "3D Stats: %d frames, frame rate ~%f fps\n",
+    dbglog(DBG_DEBUG, "3D Stats: %ld frames, frame rate ~%f fps\n",
            stats.vbl_count, stats.frame_rate);
 }
 

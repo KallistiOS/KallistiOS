@@ -40,7 +40,7 @@
 #if 0
 static char sccsid[] = "@(#)io.c	8.1 (Berkeley) 5/31/93";
 #endif
-static const char rcsid[] =
+static const char rcsid[] __attribute__((unused)) =
     "$FreeBSD: src/games/adventure/io.c,v 1.8.2.1 2001/03/05 11:43:11 kris Exp $";
 #endif /* not lint */
 
@@ -619,7 +619,7 @@ int m;         /* msg is the number of all the p msgs for this place  */
 int skip;       /* assumes object 1 doesn't have prop 1, obj 2 no prop 2 &c*/
 {
     char *s, nonfirst;
-    char *numst, ps_save;
+    char *numst; //, ps_save;
     struct text *msg;
     char *tbuf;
 
@@ -638,7 +638,7 @@ int skip;       /* assumes object 1 doesn't have prop 1, obj 2 no prop 2 &c*/
 
         for(numst = s; (*s ^= *tape++) != TAB; s++); /* get number  */
 
-        ps_save = *s; /* Temporarily trash the string (cringe) */
+        //ps_save = *s; /* Temporarily trash the string (cringe) */
         *s++ = 0; /* decrypting number within the string          */
 
         if(atoi(numst) != 100 * skip && skip >= 0) {

@@ -79,8 +79,9 @@ GLubyte InitRenderTexture(GLsizei width, GLsizei height) {
                            RENDER_TEXTURE_ID, 0);
 
 	/* Verify the Frame Buffer Object is ready */
-    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         return 0;
+    }
 
 	/* Un-bind the Frame Buffer Object, to restore the window-frame-buffer */
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);

@@ -15,7 +15,7 @@ void setup_util_texture() {
     pvr_poly_cxt_t  cxt;
 
     util_texture = pvr_mem_malloc(256 * 256 * 2);
-    printf("util_texture at %08x\n", util_texture);
+    printf("util_texture at %08x\n", (unsigned int)util_texture);
     vram = (uint16 *)util_texture;
 
     /* First dump in the mouse cursor */

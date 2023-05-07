@@ -121,7 +121,6 @@ int main(int argc, char **argv) {
     float   r = 0.0f;
     float   dr = 2;
     float   z = -14.0f;
-    GLuint  texture;
     int trans = 0;
     pvr_stats_t stats;
 
@@ -142,7 +141,7 @@ int main(int argc, char **argv) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     /* Load a texture */
-    texture = glTextureLoadPVR("/rd/glass.pvr", 0, 0);
+    glTextureLoadPVR("/rd/glass.pvr", 0, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_FILTER, GL_FILTER_BILINEAR);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATEALPHA);
 
@@ -239,7 +238,7 @@ int main(int argc, char **argv) {
     }
 
     pvr_get_stats(&stats);
-    printf("VBL Count: %d, last_time: %f, frame rate: %f fps\n",
+    printf("VBL Count: %ld, last_time: %d, frame rate: %f fps\n",
            stats.vbl_count, stats.frame_last_time, stats.frame_rate);
 
     return 0;

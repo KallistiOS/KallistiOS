@@ -739,7 +739,7 @@ void font_init() {
     image = malloc(FONT_PIC_WIDTH * FONT_PIC_HEIGHT);
     pcxpal = pcxpall;
 
-    if(!load_pcx(FONT_NAME)) {
+    if(!load_pcx((char *)FONT_NAME)) {
         printf("Couldn't load PCX of font image\r\n");
         return;
     }

@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
     assert(subelf);
 
     /* Tell exec to replace us */
-    printf("sub.bin mapped at %08x, jumping to it!\n\n\n", subelf);
+    printf("sub.bin mapped at %08x, jumping to it!\n\n\n", (unsigned int)subelf);
     arch_exec(subelf, fs_total(f));
 
     /* Shouldn't get here */

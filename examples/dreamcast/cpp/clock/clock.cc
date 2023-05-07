@@ -84,7 +84,7 @@ void drawFrame() {
     text->end();
     y += 50;
 
-    sprintf(tmpbuf, "Unix Time: %d", t);
+    sprintf(tmpbuf, "Unix Time: %lld", t);
 
     text->begin();
     text->setColor(1, 1, 1);

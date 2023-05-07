@@ -20,7 +20,7 @@ typedef struct {
 } lst_entry;
 
 ///////// Mutex protected /////////
-static mutex_t * mut = NULL;
+static mutex_t mut = MUTEX_INITIALIZER;
 
 char curdir[1024] = "/";
 char playdir[1024] = "/";
@@ -44,7 +44,7 @@ static int lst_playing = -1;
 
 
 /* Code to draw a nice o-scope on the background during playback :) */
-static mutex_t * hookmut = NULL;
+static mutex_t hookmut = MUTEX_INITIALIZER;
 static int16 sndbuffer[2][16384];
 static int sndbuffer_cnt = 0;
 static uint64 last_time = 0;
@@ -56,7 +56,7 @@ static void snd_hook(int strm, void * obj, int freq, int chn, void ** buf, int *
     int actual;
     uint64 t;
 
-    mutex_lock(hookmut);
+    mutex_lock(&hookmut);
     actual = *req;
 
     if(actual > 16384 * 2)
@@ -75,7 +75,7 @@ static void snd_hook(int strm, void * obj, int freq, int chn, void ** buf, int *
 
     last_time = t;
     curpos = 0;
-    mutex_unlock(hookmut);
+    mutex_unlock(&hookmut);
 }
 
 #include <plx/dr.h>
@@ -84,7 +84,7 @@ static void draw_wave() {
     int idx, cnt;
     float x, p, y, z = 80.0f;
 
-    mutex_lock(hookmut);
+    mutex_lock(&hookmut);
 
     if(takeframes != 0 && sndbuffer_cnt != 0) {
         plx_dr_state_t dr;
@@ -110,7 +110,7 @@ static void draw_wave() {
             curpos = 0;
     }
 
-    mutex_unlock(hookmut);
+    mutex_unlock(&hookmut);
 }
 
 
@@ -124,11 +124,11 @@ static void *load_song_list(void * p) {
         d = fs_open(curdir, O_RDONLY | O_DIR);
 
         if(!d) {
-            mutex_lock(mut);
+            mutex_lock(&mut);
             num_entries = 1;
             strcpy(entries[0].fn, "Error!");
             entries[0].size = 0;
-            mutex_unlock(mut);
+            mutex_unlock(&mut);
             return NULL;
         }
     }
@@ -138,22 +138,22 @@ static void *load_song_list(void * p) {
         num_entries = 0;
 
         if(strcmp(curdir, "/")) {
-            mutex_lock(mut);
+            mutex_lock(&mut);
             strcpy(entries[0].fn, "<..>");
             entries[0].size = -1;
             num_entries++;
-            mutex_unlock(mut);
+            mutex_unlock(&mut);
         }
 
         while((de = fs_readdir(d)) && num_entries < 200) {
             printf("read entry '%s'\n", de->name);
 
             if(strcmp(de->name, ".") && strcmp(de->name, "..")) {
-                mutex_lock(mut);
+                mutex_lock(&mut);
                 strcpy(entries[num_entries].fn, de->name);
                 entries[num_entries].size = de->size;
                 num_entries++;
-                mutex_unlock(mut);
+                mutex_unlock(&mut);
             }
         }
     }
@@ -401,9 +401,9 @@ void check_controller() {
                     strcat(curdir, entries[selected].fn);
                 }
 
-                mutex_lock(mut);
+                mutex_lock(&mut);
                 selected = top = num_entries = 0;
-                mutex_unlock(mut);
+                mutex_unlock(&mut);
                 printf("current directory is now '%s'\n", curdir);
             }
         }
@@ -419,10 +419,6 @@ void check_inputs() {
 
 /* Main rendering of the song menu */
 void song_menu_render() {
-    if(mut == NULL) {
-        mut = mutex_create();
-        hookmut = mutex_create();
-    }
 
     if(!filtinitted) {
         snd_stream_filter_add(0, snd_hook, NULL);
@@ -444,9 +440,9 @@ void song_menu_render() {
             "Scanning Directory..."); */
 
     /* Draw the song listing */
-    mutex_lock(mut);
+    mutex_lock(&mut);
     draw_listing();
-    mutex_unlock(mut);
+    mutex_unlock(&mut);
 
     /* Adjust the throbber */
     throb += dthrob;

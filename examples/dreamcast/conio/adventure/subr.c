@@ -40,7 +40,7 @@
 #if 0
 static char sccsid[] = "@(#)subr.c	8.1 (Berkeley) 5/31/93";
 #endif
-static const char rcsid[] =
+static const char rcsid[] __attribute__((unused)) =
     "$FreeBSD: src/games/adventure/subr.c,v 1.7.2.1 2001/03/05 11:43:11 kris Exp $";
 #endif /* not lint */
 

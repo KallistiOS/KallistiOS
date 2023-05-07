@@ -402,8 +402,9 @@ int main(int argc, char **argv) {
         glutSwapBuffers();            
     }
 
-    for(int i = 0; i < 4; i++)
+    for(int i = 0; i < 4; i++) {
         delete cubes[i];
+    }
 
 	glDeleteTextures(1, &texture);
 

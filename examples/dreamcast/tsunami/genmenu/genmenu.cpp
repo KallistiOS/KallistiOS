@@ -94,6 +94,9 @@ public:
                     startExit();
 
                 break;
+            default:
+                printf("Unhandled Event Key\n");
+                break;
         }
 
         for(int i = 0; i < 3; i++) {
@@ -128,7 +131,6 @@ public:
 };
 
 int main(int argc, char **argv) {
-    int done = 0, done2 = 0;
 
     // Guard against an untoward exit during testing.
     cont_btn_callback(0, CONT_START | CONT_A | CONT_B | CONT_X | CONT_Y,

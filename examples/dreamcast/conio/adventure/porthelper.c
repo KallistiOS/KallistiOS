@@ -34,7 +34,7 @@ int getchar() {
 int putchar(int c) {
     if(c == '\t') {
         conio_printf("        ");
-        return;
+        return 0;
     }
 
     if(c != '\r' && c != '\n' && (c < 32 || c > 127))

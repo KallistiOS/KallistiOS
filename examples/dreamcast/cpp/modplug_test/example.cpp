@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
 
     printf("Memory allocated\n");
 
-    if(fs_read(hnd, mod_buffer, fs_total(hnd)) != fs_total(hnd)) {
+    if((size_t)fs_read(hnd, mod_buffer, fs_total(hnd)) != fs_total(hnd)) {
         printf("Read error\n");
         free(mod_buffer);
         return 0;
@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
 
     printf("Mod loaded\n");
     soundfile->SetWaveConfig(44100, 16, 2);
-    printf("Type: %i\n", soundfile->GetType());
+    printf("Type: %li\n", soundfile->GetType());
     printf("Title: %s\n", soundfile->GetTitle());
 
     /*fs_close(hnd);
