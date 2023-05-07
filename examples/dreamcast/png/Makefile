@@ -31,6 +31,6 @@ run: $(TARGET)
 
 dist: $(TARGET)
 	-rm -f $(OBJS) romdisk_boot.img
-	$(KOS_STRIP) example.elf
+	$(KOS_STRIP) $(TARGET)
 
 
