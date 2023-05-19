@@ -412,6 +412,8 @@ void thd_sleep(int ms);
     \param  prio            The priority value to assign to the thread.
 
     \retval 0               On success.
+    \retval -1              thd is NULL.
+    \retval -2              prio requested was out of range.
 */
 int thd_set_prio(kthread_t *thd, prio_t prio);
 

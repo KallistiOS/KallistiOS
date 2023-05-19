@@ -492,6 +492,12 @@ int thd_destroy(kthread_t *thd) {
 
 /* Set a thread's priority */
 int thd_set_prio(kthread_t *thd, prio_t prio) {
+    if(thd == NULL)
+        return -1;
+
+    if((prio < 0) || (prio > PRIO_MAX))
+        return -2;
+
     /* Set the new priority */
     thd->prio = prio;
     return 0;
