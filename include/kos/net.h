@@ -259,7 +259,8 @@ void net_arp_shutdown(void);
     \param  timestamp       The entry's timestamp. Set to 0 for a permanent
                             entry, otherwise set to the current number of
                             milliseconds since boot (i.e, timer_ms_gettime64()).
-    \retval 0               On success (no error conditions defined).
+    \retval 0               On success.
+    \retval -1              Error allocating memory.
 */
 int net_arp_insert(netif_t *nif, const uint8 mac[6], const uint8 ip[4],
                    uint64 timestamp);
@@ -280,6 +281,7 @@ int net_arp_insert(netif_t *nif, const uint8 mac[6], const uint8 ip[4],
     \retval 0               On success.
     \retval -1              A query is outstanding for that address.
     \retval -2              Address not found, query generated.
+    \retval -3              Error allocating memory.
 */
 int net_arp_lookup(netif_t *nif, const uint8 ip_in[4], uint8 mac_out[6],
                    const ip_hdr_t *pkt, const uint8 *data, int data_size);
