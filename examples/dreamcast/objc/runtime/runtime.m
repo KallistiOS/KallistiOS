@@ -1,11 +1,17 @@
-#include <stdio.h>
-#include <objc/objc.h>
-#import <objc/Object.h>
-#include <objc/runtime.h>
+/* KallistiOS ##version##
 
-@interface Person: Object 
- {
-    int douchewezel;
+   runtime.m
+   Copyright (C) 2023 Falco Girgis
+*/
+
+#import <objc/objc.h>
+#import <objc/Object.h>
+#import <objc/runtime.h>
+
+#include <stdio.h>
+
+@interface Person: Object {
+    int member;
  }
 - (void)test;
 + (void)initialize;
@@ -14,9 +20,10 @@
 @implementation Person
 + (void) initialize {
     printf("Objective-C static constructors work!\n\n");
+    fflush(stdout);
 }
 
- - (void)test {
+- (void)test {
     printf("ObjC method dispatch with class reflection work %s\n", class_getName([self class]));
     fflush(stdout);
 }  
