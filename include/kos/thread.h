@@ -68,6 +68,11 @@ __BEGIN_DECLS
 */
 #define PRIO_DEFAULT 10
 
+/** \brief  Initial Thread ID (tid).
+    TIDs are created starting from this value.
+*/
+#define TID_FIRST 1
+
 /* Pre-define list/queue types */
 struct kthread;
 
@@ -524,8 +529,11 @@ int thd_join(kthread_t * thd, void **value_ptr);
 
     \param  thd             The joinable thread to detach.
 
-    \return                 0 on success or less than 0 if the thread is
-                            non-existant or already detached.
+    \retval 0               On success.
+    \retval -1              NULL was passed in.
+    \retval -2              Thread not found.
+    \retval -3              Thread already detatched.
+
     \see    thd_join()
 */
 int thd_detach(kthread_t *thd);
@@ -560,8 +568,8 @@ int thd_pslist_queue(int (*pf)(const char *fmt, ...));
     This is normally done for you by default when KOS starts. This will also
     initialize all the various synchronization primitives.
 
-    \retval -1              If threads are already initialized.
     \retval 0               On success.
+    \retval -1              If threads are already initialized.
 */
 int thd_init(void);
 
