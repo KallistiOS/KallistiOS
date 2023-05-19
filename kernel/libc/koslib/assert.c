@@ -17,8 +17,8 @@
 #endif
 
 /* The default assert handler */
-static void assert_handler_default(const char *file, int line, const char *expr,
-                                   const char *msg, const char *func) {
+static void __noreturn assert_handler_default(const char *file, int line,
+                            const char *expr, const char *msg, const char *func) {
     dbglog(DBG_CRITICAL, "\n*** ASSERTION FAILURE ***\n");
 
     if(msg == NULL)
