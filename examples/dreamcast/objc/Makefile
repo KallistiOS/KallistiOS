@@ -12,4 +12,3 @@ clean:
 
 dist:
 	$(KOS_MAKE) -C runtime
-	
