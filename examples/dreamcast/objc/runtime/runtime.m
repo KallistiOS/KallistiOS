@@ -155,6 +155,7 @@ int main(int argc, char *argv[]) {
         goto exit;
     }
 
+<<<<<<< HEAD
     // Check if instance of Person responds to getBestFriend
     if(!class_respondsToSelector(objc_getClass("Person"), @selector(bestFriend))) { 
         fprintf(stderr, "Does not respond to getBestFriend message!\n");
