@@ -2,6 +2,10 @@
 
    runtime.m
    Copyright (C) 2023 Falco Girgis, Andrew Apperley
+
+   This example serves two purposes: to demonstrate the basic
+   usage of the Objective-C language runtime C API as well as 
+   to serve as a toolchain and sanity check to validate it. 
 */
 
 #import <objc/objc.h>
@@ -11,18 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-struct objc_ivar
-{
-	/**
-	 * Name of this instance variable.
-	 */
-	const char *name;
-	/**
-	 * Type encoding for this instance variable.
-	 */
-	const char *type;
-};
+#include <stdint.h>
 
 @interface Person: Object 
 {
@@ -34,7 +27,7 @@ struct objc_ivar
 }
 - (void)addName:(const char *)name age:(int)age height:(float)height;
 - (void)setBestFriend:(Person *)bestFriend;
-@property(nonatomic)Person *bestFriend;
+@property(nonatomic, assign)Person *bestFriend;
 @property(nonatomic)BOOL dead;
 @end
 
@@ -66,58 +59,142 @@ struct objc_ivar
 }
 @end
 
-void printIVarsForPerson(Person *person) {
-    unsigned int outCount;
-    int i;
-        Ivar *iVarList = class_copyIvarList(objc_getClass("Person"), &outCount);
-    for(i = 0; i < outCount; i++) {
-        Ivar _iVar = iVarList[i];
-        printf("iVar Name::%s \n", _iVar->name);
-        if (strcmp(_iVar->type, "i") == 0) {
-            printf("iVar Value::%d \n", object_getIvar(person, _iVar));
-        } else if (strcmp(_iVar->type, "r*") == 0) {
-            printf("iVar Value::%s \n", object_getIvar(person, _iVar));
-        } else if (strcmp(_iVar->type, "f") == 0) {
-            printf("iVar Value::%f \n", object_getIvar(person, _iVar));
-        } else if (strcmp(_iVar->type, "C") == 0) {
-            printf("iVar Value::%s \n", object_getIvar(person, _iVar) == 1 ? "true" : "false");
-        } else if (strcmp(_iVar->type, "@\"Person\"") == 0) {
-            printf("iVar Value::0x%x \n", object_getIvar(person, _iVar));
+BOOL printIVarsForPerson(const Person *person) {
+    BOOL success = YES;
+    unsigned int outCount = 0;
+
+    Ivar *iVarList = class_copyIvarList(objc_getClass("Person"), &outCount);
+    
+    printf("Discovered %u instance variables:\n", outCount);
+
+    // Ensure we found all 5 of them
+    if(outCount != 5) {
+        fprintf(stderr, "\tUnexpected count!\n");
+        success = NO;
+    }
+    else { 
+        // Iterate over them, printing name + property
+        for(unsigned i = 0; i < outCount; i++) {
+            Ivar iVar = iVarList[i];
+            const char* type = ivar_getTypeEncoding(iVar);
+            id value = object_getIvar(person, iVar);
+            
+            printf("\t[%u] %s: ", i, ivar_getName(iVar));
+
+            // Use the encoded type to tell us how to print the queried value
+            if(strcmp(type, "C") == 0) {
+                printf("%s\n", (uintptr_t)value == 1 ? "YES" : "NO");
+            } 
+            else {
+                const char* format;
+                if (strcmp(type, "i") == 0) {
+                    format = "%d";
+                } 
+                else if(strcmp(type, "r*") == 0) {
+                    format = "%s";
+                } 
+                else if(strcmp(type, "f") == 0) {
+                    format = "%f";
+                }
+                else if(strcmp(type, "@\"Person\"") == 0) {
+                    format = "%x";
+                }
+                else {
+                    fprintf(stderr, "Unexpected Type [%s]\n", type);
+                    success = NO; 
+                    break;
+                }
+
+                printf(format, value);
+                printf("\n");
+            }
         }
     }
+
     free(iVarList);
+    return success;
 }
 
 int main(int argc, char *argv[]) {
-    // Make Person instance
-    Person *person1 = class_createInstance(objc_getClass("Person"), 0);
-    [person1 addName: "Joe" age: 20 height: 6.1];
-    // Print Persons Name
-    Ivar ivar = class_getInstanceVariable(objc_getClass("Person"), "_name");
-    const char *name = object_getIvar(person1, ivar);
-    printf("Person Name: %s \n", name);
-    // Print ivars
-    printf("Person iVars Start:: \n");
-    printIVarsForPerson(person1);
-    printf("Person iVars End:: \n");
-    // Check if instance of Person responds to getBestFriend
-    BOOL respondsToGetBestFriendMethod = class_respondsToSelector(objc_getClass("Person"), @selector(bestFriend));
-    printf("Person responds to getBestFriend::%s \n", respondsToGetBestFriendMethod == 1 ? "true" : "false");
-    // Make instance of Person for bestfriend
-    Person *person2 = class_createInstance(objc_getClass("Person"), 0);
-    [person2 addName: "Jim" age: 30 height: 5.2];
-    [person2 setDead: YES];
-    // Add bestfriend to first person
-    object_setInstanceVariable(person1, "bestFriend", person2);
-    // Print ivars
-    printf("Person iVars Start:: \n");
-    printIVarsForPerson(person2);
-    printf("Person iVars End:: \n");
-    fflush(stdout);
+    int result = EXIT_SUCCESS;
+    Person *person1 = NULL;
+    Person *person2 = NULL;
 
-    if (!person1.bestFriend) {
-        return EXIT_FAILURE;
+    // Create a new instance of person, using the runtime
+    person1 = class_createInstance(objc_getClass("Person"), 0);
+
+    // Verify the runtime succeeded
+    if(!person1) {
+        fprintf(stderr, "Failed to create Person instance!\n");
+        result = EXIT_FAILURE;
+        goto exit;
+    } 
+    else printf("Created Person instance.\n");
+
+    // Call message handler for "addName," setting instance variables
+    [person1 addName: "Joe" age: 20 height: 6.1f];
+
+    // Dynamically query values of instance variables by string names
+    const char** name = NULL;
+    int* age = NULL;
+    float* height = NULL;
+    object_getInstanceVariable(person1, "_name", (void**)&name);
+    object_getInstanceVariable(person1, "_age", (void**)&age);
+    object_getInstanceVariable(person1, "_height", (void**)&height);
+
+    // Verify values were properly set and retrieved
+    if(!name || !age || !height || strcmp(*name, "Joe") != 0 || *age != 20 || *height != 6.1f) {
+        result = EXIT_FAILURE;
+        goto exit;
+    }
+    else printf("Set and retrieved instance variables.\n");
+    
+    // Use runtime to dynamically reflect over all properties
+    if(!(result = printIVarsForPerson(person1))) {
+        result = EXIT_FAILURE;
+        goto exit;
     }
 
-    return EXIT_SUCCESS;
+    // Check if instance of Person responds to getBestFriend
+    if(!class_respondsToSelector(objc_getClass("Person"), @selector(bestFriend))) { 
+        fprintf(stderr, "Does not respond to getBestFriend message!\n");
+        result = EXIT_FAILURE;
+        goto exit;
+    }
+    else printf("Checked for responding to message handler.\n");
+
+    // Use runtime to copy construct another Person instance
+    person2 = object_copy(person1, 0);
+    
+    if(!person1) {
+        fprintf(stderr, "Failed to copy Person instance!\n");
+        result = EXIT_FAILURE;
+        goto exit;
+    } 
+    else printf("Copied Person instance.\n");
+
+    // Initialize instance variables
+    [person2 addName: "Jim" age: 30 height: 5.2];
+    
+    // Test out properties
+    person2.dead = YES;
+    object_setInstanceVariable(person1, "_bestFriend", person2);
+
+    if(!person2.dead || person1.bestFriend != person2) {
+        fprintf(stderr, "Failed to set and retrieve properties!\n");
+        result = EXIT_FAILURE;
+    }
+
+exit:
+
+    // Clean up after ourselves
+    object_dispose(person1);
+    object_dispose(person2);
+
+    if(result == EXIT_FAILURE) 
+        fprintf(stderr, "**** FAILURE! ****\n");
+    else  
+        printf("**** SUCCESS! ****\n");
+    
+    return result;
 }

@@ -5,6 +5,7 @@
 
 TARGET = runtime.elf
 OBJS = runtime.o
+CFLAGS = -std=c11
 
 all: rm-elf $(TARGET)
 
