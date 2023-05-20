@@ -169,6 +169,7 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - DC  Cleaned up asic functions and corrected potential bugs [DH]
 - DC  Removed cooperative threading mode -- threading is always preemptive [DH]
 - DC  Added early user init function [PC]
+- *** Added Objective-C example testing/demonstrating C Runtime [FG]
 
 KallistiOS version 2.0.0 -----------------------------------------------
 - DC  Broadband Adapter driver fixes [Megan Potter == MP]
