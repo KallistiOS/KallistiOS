@@ -57,13 +57,7 @@ extern char *realpath(const char *, char[PATH_MAX]);
 
 /* Internal file commands for root dir reading */
 static fs_hnd_t * fs_root_opendir(void) {
-    fs_hnd_t    *hnd;
-
-    hnd = malloc(sizeof(fs_hnd_t));
-    hnd->handler = NULL;
-    hnd->hnd = 0;
-    hnd->refcnt = 0;
-    return hnd;
+    return calloc(1, sizeof(fs_hnd_t));
 }
 
 /* Not thread-safe right now */
