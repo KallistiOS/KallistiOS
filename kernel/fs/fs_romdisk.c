@@ -604,7 +604,7 @@ int fs_romdisk_mount(const char * mountpoint, const uint8 *img, int own_buffer) 
 
     if(strncmp((char *)img, "-rom1fs-", 8)) {
         dbglog(DBG_ERROR, "Rom disk image at %p is not a ROMFS image\n", img);
-        return -1;
+        return -2;
     }
     else {
         dbglog(DBG_DEBUG, "fs_romdisk: mounting image at %p at %s\n", img, mountpoint);
@@ -612,6 +612,11 @@ int fs_romdisk_mount(const char * mountpoint, const uint8 *img, int own_buffer) 
 
     /* Create a mount struct */
     mnt = (rd_image_t *)malloc(sizeof(rd_image_t));
+
+    if(mnt == NULL) {
+        errno=ENOMEM;
+        return -3;
+    }
     mnt->own_buffer = own_buffer;
     mnt->image = img;
     mnt->hdr = hdr;
@@ -620,6 +625,12 @@ int fs_romdisk_mount(const char * mountpoint, const uint8 *img, int own_buffer) 
 
     /* Make a VFS struct */
     vfsh = (vfs_handler_t *)malloc(sizeof(vfs_handler_t));
+
+    if(vfsh == NULL) {
+        free(mnt);
+        errno=ENOMEM;
+        return -3;
+    }
     memcpy(vfsh, &vh, sizeof(vfs_handler_t));
     strcpy(vfsh->nmmgr.pathname, mountpoint);
     vfsh->privdata = (void *)mnt;
