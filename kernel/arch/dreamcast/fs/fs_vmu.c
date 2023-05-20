@@ -129,6 +129,7 @@ static vmu_fh_t *vmu_open_vmu_dir(void) {
 #endif
 
     dh = malloc(sizeof(vmu_dh_t));
+    if(dh == NULL) return NULL;
     memset(dh, 0, sizeof(vmu_dh_t));
     dh->strtype = VMU_DIR;
     dh->dirblocks = malloc(num * sizeof(vmu_dir_t));
@@ -165,6 +166,9 @@ static vmu_fh_t *vmu_open_dir(maple_device_t * dev) {
 
     /* Allocate a handle for the dir blocks */
     dh = malloc(sizeof(vmu_dh_t));
+
+    if(dh == NULL) return NULL;
+
     dh->strtype = VMU_DIR;
     dh->dirblocks = dirents;
     dh->rootdir = 0;
@@ -185,6 +189,8 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
     /* Malloc a new fh struct */
     fd = malloc(sizeof(vmu_fh_t));
 
+    if(fd == NULL) return NULL;
+
     /* Fill in the filehandle struct */
     fd->strtype = VMU_FILE;
     fd->mode = mode;
@@ -203,10 +209,8 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
 
         if(rv < 0) {
             if(realmode == O_RDWR || realmode == O_WRONLY) {
-                /* In some modes failure is ok -- just setup a blank first block. */
-                data = malloc(512);
-                datasize = 512;
-                memset(data, 0, 512);
+                /* In some modes failure is ok -- flag to setup a blank first block. */
+                datasize = -1;
             }
             else {
                 free(fd);
@@ -215,8 +219,17 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
         }
     }
     else {
-        /* We're writing with truncate... just setup a blank first block. */
+        /* We're writing with truncate... flag to setup a blank first block. */
+        datasize = -1;
+    }
+
+    /* We were flagged to set up a blank first block */
+    if(datasize == -1) {
         data = malloc(512);
+        if(data == NULL) {
+            free(fd);
+            return NULL;
+        }
         datasize = 512;
         memset(data, 0, 512);
     }
@@ -226,6 +239,7 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
 
     if(fd->filesize == 0) {
         dbglog(DBG_WARNING, "VMUFS: can't open zero-length file %s\n", path);
+        free(fd->data);
         free(fd);
         return NULL;
     }

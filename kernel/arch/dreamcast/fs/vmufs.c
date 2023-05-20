@@ -543,12 +543,18 @@ static int vmufs_setup(maple_device_t * dev, vmu_root_t * root, vmu_dir_t ** dir
         if(!*fat) {
             dbglog(DBG_ERROR, "vmufs_setup: can't alloc %d bytes for FAT on device %c%c\n",
                    *fatsize, dev->port + 'A', dev->unit + '0');
+            if(dir)
+                free(*dir);
             goto dead;
         }
 
         /* Read it */
-        if(vmufs_fat_read(dev, root, *fat) < 0)
+        if(vmufs_fat_read(dev, root, *fat) < 0) {
+            free(*fat);
+            if(dir)
+                free(*dir);
             goto dead;
+        }
     }
 
     /* Ok, everything's cool */
