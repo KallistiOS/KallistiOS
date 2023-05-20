@@ -17,6 +17,13 @@
 #include <string.h>
 #include <stdint.h>
 
+/*
+Relatively simple Objective-C class flexing:
+  - inheritance
+  - instance variables
+  - properties
+  - message handlers
+*/
 @interface Person: Object 
 {
     const char *_name;
@@ -59,12 +66,16 @@
 }
 @end
 
-BOOL printIVarsForPerson(const Person *person) {
+/*
+   Utility function for reflecting over a Person, printing its
+   instance variables.
+*/
+static BOOL printIVarsForPerson(const Person *person) {
     BOOL success = YES;
     unsigned int outCount = 0;
 
+    // Retrieve a list of all instance variables
     Ivar *iVarList = class_copyIvarList(objc_getClass("Person"), &outCount);
-    
     printf("Discovered %u instance variables:\n", outCount);
 
     // Ensure we found all 5 of them
@@ -176,7 +187,7 @@ int main(int argc, char *argv[]) {
     // Initialize instance variables
     [person2 addName: "Jim" age: 30 height: 5.2];
     
-    // Test out properties
+    // Test out setting and retrieving properties
     person2.dead = YES;
     object_setInstanceVariable(person1, "_bestFriend", person2);
 
