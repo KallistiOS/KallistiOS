@@ -9,6 +9,7 @@ all:
 
 clean:
 	$(KOS_MAKE) -C runtime
-	
+
 dist:
 	$(KOS_MAKE) -C runtime
+	
