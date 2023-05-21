@@ -88,15 +88,17 @@ static BOOL printIVarsForPerson(const Person *person) {
         for(unsigned i = 0; i < outCount; i++) {
             Ivar iVar = iVarList[i];
             const char* type = ivar_getTypeEncoding(iVar);
-            id value = object_getIvar(person, iVar);
-            
+
             printf("\t[%u] %s: ", i, ivar_getName(iVar));
 
             // Use the encoded type to tell us how to print the queried value
-            if(strcmp(type, "C") == 0) {
-                printf("%s\n", (uintptr_t)value == 1 ? "YES" : "NO");
+            if(strcmp(type, "f") == 0) {
+                ptrdiff_t offset = ivar_getOffset(iVar);
+                printf("%f\n", *(float*)(((uint8_t*)person) + offset));
             } 
             else {
+                id value = object_getIvar(person, iVar);
+
                 const char* format;
                 if (strcmp(type, "i") == 0) {
                     format = "%d";
@@ -104,8 +106,8 @@ static BOOL printIVarsForPerson(const Person *person) {
                 else if(strcmp(type, "r*") == 0) {
                     format = "%s";
                 } 
-                else if(strcmp(type, "f") == 0) {
-                    format = "%f";
+                else if(strcmp(type, "C") == 0) {
+                    format = "%u";
                 }
                 else if(strcmp(type, "@\"Person\"") == 0) {
                     format = "%x";
@@ -146,22 +148,23 @@ int main(int argc, char *argv[]) {
     [person1 addName: "Joe" age: 20 height: 6.1f];
 
     // Dynamically query values of instance variables by string names
-    const char** name = NULL;
-    int* age = NULL;
-    float* height = NULL;
+    const char* name = NULL;
+    int age = 0;
+    float height = 0.0f;
     object_getInstanceVariable(person1, "_name", (void**)&name);
     object_getInstanceVariable(person1, "_age", (void**)&age);
     object_getInstanceVariable(person1, "_height", (void**)&height);
 
     // Verify values were properly set and retrieved
-    if(!name || !age || !height || strcmp(*name, "Joe") != 0 || *age != 20 || *height != 6.1f) {
+    if(strcmp(name, "Joe") != 0 || age != 20 || height != 6.1f) {
+        fprintf(stderr, "Failed to set and retrieve instance variables!\n");
         result = EXIT_FAILURE;
         goto exit;
     }
     else printf("Set and retrieved instance variables.\n");
     
     // Use runtime to dynamically reflect over all properties
-    if(!(result = printIVarsForPerson(person1))) {
+    if(!printIVarsForPerson(person1)) {
         result = EXIT_FAILURE;
         goto exit;
     }
@@ -177,7 +180,7 @@ int main(int argc, char *argv[]) {
     // Use runtime to copy construct another Person instance
     person2 = object_copy(person1, 0);
     
-    if(!person1) {
+    if(!person2) {
         fprintf(stderr, "Failed to copy Person instance!\n");
         result = EXIT_FAILURE;
         goto exit;
@@ -194,7 +197,7 @@ int main(int argc, char *argv[]) {
     if(!person2.dead || person1.bestFriend != person2) {
         fprintf(stderr, "Failed to set and retrieve properties!\n");
         result = EXIT_FAILURE;
-    }
+    } else printf("Set and retrieved properties!\n");
 
 exit:
 
