@@ -154,12 +154,11 @@ int thd_pslist_queue(int (*pf)(const char *fmt, ...)) {
 /* Highest thread id (used when assigning next thread id) */
 static tid_t tid_highest;
 
-/* Return the next available thread id. Asserts at wraparound. */
+/* Return the next available thread id (assumes wraparound will not run
+   into old processes). */
 static tid_t thd_next_free(void) {
-    tid_t id;
+    int id;
     id = tid_highest++;
-    /* Assert on wraparounds */
-    assert(id >= TID_FIRST);
     return id;
 }
 
@@ -358,77 +357,76 @@ kthread_t *thd_create_ex(kthread_attr_t *attr, void * (*routine)(void *param),
     /* Get a new thread id */
     tid = thd_next_free();
 
-    /* Create a new thread structure */
-    nt = malloc(sizeof(kthread_t));
+    if(tid >= 0) {
+        /* Create a new thread structure */
+        nt = malloc(sizeof(kthread_t));
 
-    if(nt != NULL) {
-        /* Clear out potentially unused stuff */
-        memset(nt, 0, sizeof(kthread_t));
+        if(nt != NULL) {
+            /* Clear out potentially unused stuff */
+            memset(nt, 0, sizeof(kthread_t));
 
-        /* Create a new thread stack */
-        if(!real_attr.stack_ptr) {
-            nt->stack = (uint32*)malloc(real_attr.stack_size);
+            /* Create a new thread stack */
+            if(!real_attr.stack_ptr) {
+                nt->stack = (uint32*)malloc(real_attr.stack_size);
 
-            if(!nt->stack) {
-                free(nt);
-                irq_restore(oldirq);
-                errno = ENOMEM;
-                return NULL;
+                if(!nt->stack) {
+                    free(nt);
+                    irq_restore(oldirq);
+                    return NULL;
+                }
             }
+            else {
+                nt->stack = (uint32*)real_attr.stack_ptr;
+            }
+
+            nt->stack_size = real_attr.stack_size;
+
+            /* Populate the context */
+            params[0] = (uint32)routine;
+            params[1] = (uint32)param;
+            params[2] = 0;
+            params[3] = 0;
+            irq_create_context(&nt->context,
+                               ((uint32)nt->stack) + nt->stack_size,
+                               (uint32)thd_birth, params, 0);
+
+            nt->tid = tid;
+            nt->prio = real_attr.prio;
+            nt->flags = THD_DEFAULTS;
+            nt->state = STATE_READY;
+
+            if(!real_attr.label) {
+                strcpy(nt->label, "[un-named kernel thread]");
+            }
+            else {
+                strncpy(nt->label, real_attr.label, 255);
+                nt->label[255] = 0;
+            }
+
+            if(thd_current)
+                strcpy(nt->pwd, thd_current->pwd);
+            else
+                strcpy(nt->pwd, "/");
+
+            _REENT_INIT_PTR((&(nt->thd_reent)));
+
+            /* Should we detach the thread? */
+            if(real_attr.create_detached)
+                nt->flags |= THD_DETACHED;
+
+            /* Initialize thread-local storage. */
+            LIST_INIT(&nt->tls_list);
+
+            /* Insert it into the thread list */
+            LIST_INSERT_HEAD(&thd_list, nt, t_list);
+
+            /* Add it to our count */
+            ++thd_count;
+
+            /* Schedule it */
+            thd_add_to_runnable(nt, 0);
         }
-        else {
-            nt->stack = (uint32*)real_attr.stack_ptr;
-        }
-
-        nt->stack_size = real_attr.stack_size;
-
-        /* Populate the context */
-        params[0] = (uint32)routine;
-        params[1] = (uint32)param;
-        params[2] = 0;
-        params[3] = 0;
-        irq_create_context(&nt->context,
-                           ((uint32)nt->stack) + nt->stack_size,
-                           (uint32)thd_birth, params, 0);
-
-        nt->tid = tid;
-        nt->prio = real_attr.prio;
-        nt->flags = THD_DEFAULTS;
-        nt->state = STATE_READY;
-
-        if(!real_attr.label) {
-            strcpy(nt->label, "[un-named kernel thread]");
-        }
-        else {
-            strncpy(nt->label, real_attr.label, 255);
-            nt->label[255] = 0;
-        }
-
-        if(thd_current)
-            strcpy(nt->pwd, thd_current->pwd);
-        else
-            strcpy(nt->pwd, "/");
-
-        _REENT_INIT_PTR((&(nt->thd_reent)));
-
-        /* Should we detach the thread? */
-        if(real_attr.create_detached)
-            nt->flags |= THD_DETACHED;
-
-        /* Initialize thread-local storage. */
-        LIST_INIT(&nt->tls_list);
-
-        /* Insert it into the thread list */
-        LIST_INSERT_HEAD(&thd_list, nt, t_list);
-
-        /* Add it to our count */
-        ++thd_count;
-
-        /* Schedule it */
-        thd_add_to_runnable(nt, 0);
     }
-    else /* nt == NULL */
-        errno = ENOMEM;
 
     irq_restore(oldirq);
     return nt;
@@ -890,7 +888,7 @@ int thd_init(void) {
     thd_mode = THD_MODE_PREEMPT;
 
     /* Initialize handle counters */
-    tid_highest = TID_FIRST;
+    tid_highest = 1;
 
     /* Initialize the thread list */
     LIST_INIT(&thd_list);
