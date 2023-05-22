@@ -11,7 +11,6 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-#include <errno.h>
 
 #include <sys/queue.h>
 #include <kos/fs.h>
@@ -147,7 +146,6 @@ sfxhnd_t snd_sfx_load(const char *fn) {
 
         if(tmp == NULL) {
             fs_close(fd);
-            errno = ENOMEM;
             return SFXHND_INVALID;
         }
 
@@ -165,7 +163,7 @@ sfxhnd_t snd_sfx_load(const char *fn) {
     if(t == NULL) {
         if(ownmem)
             free(tmp);
-        errno = ENOMEM;
+
         return SFXHND_INVALID;
     }
 
@@ -205,7 +203,7 @@ sfxhnd_t snd_sfx_load(const char *fn) {
             free(t);
             if(ownmem)
                 free(tmp);
-            errno = ENOMEM;
+
             return SFXHND_INVALID;
         }
 

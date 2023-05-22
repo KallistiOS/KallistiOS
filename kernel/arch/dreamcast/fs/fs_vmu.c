@@ -166,9 +166,7 @@ static vmu_fh_t *vmu_open_dir(maple_device_t * dev) {
 
     /* Allocate a handle for the dir blocks */
     dh = malloc(sizeof(vmu_dh_t));
-
     if(dh == NULL) return NULL;
-
     dh->strtype = VMU_DIR;
     dh->dirblocks = dirents;
     dh->rootdir = 0;
@@ -188,7 +186,6 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
 
     /* Malloc a new fh struct */
     fd = malloc(sizeof(vmu_fh_t));
-
     if(fd == NULL) return NULL;
 
     /* Fill in the filehandle struct */
