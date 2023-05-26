@@ -155,7 +155,7 @@ int main(int argc, char *argv[]) {
         plx_fcxt_end(cxt);
         pvr_scene_finish();
 
-		/* Store current button states + buttons which have been released. */
+        /* Store current button states + buttons which have been released. */
         state = (cont_state_t *)maple_dev_status(dev);
         rel_buttons = (old_buttons ^ state->buttons);	
 
