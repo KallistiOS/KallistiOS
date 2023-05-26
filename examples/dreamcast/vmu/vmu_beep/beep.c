@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
         dev = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
         vmudev = maple_enum_type(0, MAPLE_FUNC_CLOCK);
 
-        while (!dev) {
+        while(!dev) {
             pvr_wait_ready();
             pvr_scene_begin();
             pvr_list_begin(PVR_LIST_OP_POLY);
