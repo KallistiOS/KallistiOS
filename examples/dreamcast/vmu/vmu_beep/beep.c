@@ -48,9 +48,9 @@ int main(int argc, char *argv[]) {
     uint8_t n[8] = { 0, 0, 0, 0, 0, 0, 0, 0 }; //nibbles
     char s[8][2] = { "", "", "", "", "", "", "", "" };
 
-    /*if these buttons are pressed, exit_app */
+    /* If the face buttons are all pressed, exit the app */
     cont_btn_callback(0, CONT_START | CONT_A | CONT_B | CONT_X | CONT_Y,
-        (void(*)(uint8_t, uint32_t))arch_exit);
+                      (void(*)(uint8_t, uint32_t))arch_exit);
 
     pvr_init_defaults();
 
