@@ -1,8 +1,8 @@
-/*  VMU Beep for KallistiOS ##version##
+/*  KallistiOS ##version##
 
     beep.c
-    (C) 2004 SinisterTengu
-    (C) 2008 Donald Haase
+    Copyright (C) 2004 SinisterTengu
+    Copyright (C) 2008 Donald Haase
 
 */
 
