@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
 
     /* If the face buttons are all pressed, exit the app */
     cont_btn_callback(0, CONT_START | CONT_A | CONT_B | CONT_X | CONT_Y,
-                      (void(*)(uint8_t, uint32_t))arch_exit);
+                      (cont_btn_callback_t)arch_exit);
 
     pvr_init_defaults();
 
@@ -160,19 +160,19 @@ int main(int argc, char *argv[]) {
         rel_buttons = (old_buttons ^ state->buttons);	
 
         if((state->buttons & CONT_DPAD_LEFT) && (rel_buttons & CONT_DPAD_LEFT)) {
-            if (i > 0) i--;
+            if(i > 0) i--;
         }
 
         if((state->buttons & CONT_DPAD_RIGHT) && (rel_buttons & CONT_DPAD_RIGHT)) {
-            if (i < 7) i++;
+            if(i < 7) i++;
         }
 
         if((state->buttons & CONT_DPAD_UP) && (rel_buttons & CONT_DPAD_UP)) {
-            if (n[i] < 15) n[i]++;
+            if(n[i] < 15) n[i]++;
         }
 
         if((state->buttons & CONT_DPAD_DOWN) && (rel_buttons & CONT_DPAD_DOWN)) {
-            if (n[i] > 0) n[i]--;
+            if(n[i] > 0) n[i]--;
         }
 
         if((state->buttons & CONT_A) && (rel_buttons & CONT_A)) {
