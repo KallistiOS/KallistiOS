@@ -29,7 +29,7 @@ romdisk.o: romdisk.img
 	$(KOS_BASE)/utils/bin2o/bin2o romdisk.img romdisk romdisk.o
 
 run: $(TARGET)
-	dc-tool -n -x $(TARGET)
+	$(KOS_LOADER) $(TARGET) -n
 
 dist: $(TARGET)
 	rm -f $(OBJS) romdisk.img

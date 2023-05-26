@@ -8,10 +8,10 @@ all: rm-elf $(TARGET)
 include $(KOS_BASE)/Makefile.rules
 
 clean: rm-elf
-	-rm -f $(OBJS) fruit.vq
+	rm -f $(OBJS) fruit.vq
 
 rm-elf:
-	-rm -f $(TARGET) 
+	rm -f $(TARGET) 
 
 $(TARGET): $(OBJS) 
 	kos-cc -o $(TARGET) $(OBJS) -L$(KOS_BASE)/lib -lGL -lm

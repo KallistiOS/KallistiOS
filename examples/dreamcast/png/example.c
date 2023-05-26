@@ -208,8 +208,8 @@ void draw_frame(void) {
 }
 
 /* romdisk */
-extern uint8 romdisk_boot[];
-KOS_INIT_ROMDISK(romdisk_boot);
+extern uint8 romdisk[];
+KOS_INIT_ROMDISK(romdisk);
 
 int main(void) {
     int done = 0;

@@ -35,10 +35,10 @@ $(DATA_TARGET):
 	./$(SETUP_TARGET) $(DATA_SOURCE) > $(DATA_TARGET)
 
 clean: rm-elf
-	-rm -f $(OBJS) $(DATA_TARGET) $(SETUP_TARGET)
+	rm -f $(OBJS) $(DATA_TARGET) $(SETUP_TARGET)
 
 rm-elf:
-	-rm -f $(TARGET)
+	rm -f $(TARGET)
 
 $(TARGET): $(OBJS) 
 	kos-cc -o $(TARGET) $(OBJS) -lconio
@@ -47,5 +47,5 @@ run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 
 dist: $(TARGET)
-	-rm -f $(OBJS) $(DATA_TARGET) $(SETUP_TARGET)
+	rm -f $(OBJS) $(DATA_TARGET) $(SETUP_TARGET)
 	$(KOS_STRIP) $(TARGET)
