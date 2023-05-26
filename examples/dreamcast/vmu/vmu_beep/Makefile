@@ -1,6 +1,7 @@
 #
 # VMUBeep Test 2
-# (C) 2008 Donald Haase
+# Copyright (C) 2008 Donald Haase
+
 #   
 
 TARGET = beep.elf
