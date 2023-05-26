@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
 
     pvr_set_bg_color(0.0f, 0.0f, 0.0f);
 
-    for (;;) {
+    for(;;) {
         dev = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
         vmudev = maple_enum_type(0, MAPLE_FUNC_CLOCK);
 
