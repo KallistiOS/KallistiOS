@@ -159,23 +159,23 @@ int main(int argc, char *argv[]) {
         state = (cont_state_t *)maple_dev_status(dev);
         rel_buttons = (old_buttons ^ state->buttons);	
 
-        if ((state->buttons & CONT_DPAD_LEFT) && (rel_buttons & CONT_DPAD_LEFT)) {
+        if((state->buttons & CONT_DPAD_LEFT) && (rel_buttons & CONT_DPAD_LEFT)) {
             if (i > 0) i--;
         }
 
-        if ((state->buttons & CONT_DPAD_RIGHT) && (rel_buttons & CONT_DPAD_RIGHT)) {
+        if((state->buttons & CONT_DPAD_RIGHT) && (rel_buttons & CONT_DPAD_RIGHT)) {
             if (i < 7) i++;
         }
 
-        if ((state->buttons & CONT_DPAD_UP) && (rel_buttons & CONT_DPAD_UP)) {
+        if((state->buttons & CONT_DPAD_UP) && (rel_buttons & CONT_DPAD_UP)) {
             if (n[i] < 15) n[i]++;
         }
 
-        if ((state->buttons & CONT_DPAD_DOWN) && (rel_buttons & CONT_DPAD_DOWN)) {
+        if((state->buttons & CONT_DPAD_DOWN) && (rel_buttons & CONT_DPAD_DOWN)) {
             if (n[i] > 0) n[i]--;
         }
 
-        if ((state->buttons & CONT_A) && (rel_buttons & CONT_A)) {
+        if((state->buttons & CONT_A) && (rel_buttons & CONT_A)) {
             effect = (n[0] << 28) + (n[1] << 24) + (n[2] << 20) + (n[3] << 16) +
                      (n[4] << 12) + (n[5] << 8) + (n[6] << 4) + (n[7] << 0);
 
@@ -183,7 +183,7 @@ int main(int argc, char *argv[]) {
             printf("VMU Beep: 0x%lx!\n", effect);
         }
 
-        if ((state->buttons & CONT_B) && (rel_buttons & CONT_B)) {
+        if((state->buttons & CONT_B) && (rel_buttons & CONT_B)) {
             vmu_beep_raw(vmudev, 0x00000000);
             printf("Beep Stopped!\n");
         }
