@@ -25,7 +25,7 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-#include <kos/vector.h>
+#include <dc/vector.h>
 
 /** \brief  Copy the internal matrix to a memory one.
 

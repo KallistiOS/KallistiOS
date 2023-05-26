@@ -24,7 +24,7 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-#include <kos/vector.h>
+#include <dc/vector.h>
 
 /** \brief  Calculate and set b-spline coefficients.
 
