@@ -14,10 +14,10 @@ all: rm-elf $(TARGET)
 include $(KOS_BASE)/Makefile.rules
 
 clean: rm-elf
-	rm -f $(OBJS) romdisk/fruit.kmg
+	-rm -f $(OBJS) romdisk/fruit.kmg
 
 rm-elf:
-	rm -f $(TARGET) romdisk.*
+	-rm -f $(TARGET) romdisk.*
 
 $(TARGET): $(OBJS)
 	kos-cc -o $(TARGET) $(OBJS) -lkmg -lpcx -lkosutils
@@ -36,6 +36,6 @@ run: $(TARGET)
 	$(KOS_LOADER) $(TARGET) -n
 
 dist: $(TARGET)
-	rm -f $(OBJS) romdisk.img romdisk/fruit.kmg
+	-rm -f $(OBJS) romdisk.img romdisk/fruit.kmg
 	$(KOS_STRIP) $(TARGET)
 

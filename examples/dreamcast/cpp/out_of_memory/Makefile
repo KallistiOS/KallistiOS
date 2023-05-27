@@ -13,10 +13,10 @@ all: rm-elf $(TARGET)
 include $(KOS_BASE)/Makefile.rules
 
 clean: rm-elf
-	rm -f $(OBJS) 
+	-rm -f $(OBJS) 
 
 rm-elf:
-	rm -f $(TARGET) 
+	-rm -f $(TARGET) 
 
 $(TARGET): $(OBJS)
 	kos-c++ -o $(TARGET) $(OBJS) -lm
@@ -25,6 +25,6 @@ run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 
 dist: $(TARGET)
-	rm -f $(OBJS)
+	-rm -f $(OBJS)
 	$(KOS_STRIP) $(TARGET)
 

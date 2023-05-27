@@ -26,6 +26,6 @@ run: $(TARGET)
 #	dc-tool -p -b 115200 -x $(TARGET)
 
 dist: $(TARGET)
-	rm -f $(OBJS) romdisk.img
+	-rm -f $(OBJS) romdisk.img
 	$(KOS_STRIP) $(TARGET)
 

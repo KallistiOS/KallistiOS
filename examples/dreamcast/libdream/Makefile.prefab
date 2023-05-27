@@ -10,20 +10,18 @@ all: $(TARGET)
 include $(KOS_BASE)/Makefile.rules
 
 clean:
-	rm -f $(TARGET) $(OBJS) $(EXTRA_CLEAN)
+	-rm -f $(TARGET) $(OBJS) $(EXTRA_CLEAN)
 
 rm-elf:
-	rm -f $(TARGET)
+	-rm -f $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(TARGET) $(KOS_START) \
-		$(OBJS) $(DATAOBJS) $(OBJEXTRA) \
-		$(EXTRA_LIBS) $(KOS_LIBS)
+	kos-cc -o $(TARGET) $(OBJS)
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 
-dist:
-	rm -f $(OBJS) $(EXTRA_CLEAN)
+dist: $(TARGET)
+	-rm -f $(OBJS) $(EXTRA_CLEAN)
 	$(KOS_STRIP) $(TARGET)
 
