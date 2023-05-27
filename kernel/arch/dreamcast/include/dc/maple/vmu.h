@@ -207,13 +207,13 @@ int vmu_get_icon_shape(maple_device_t *dev, uint8_t *icon_shape);
 */
 
 /**
-    \brief   Pixel width of VMU screen
+    \brief   Pixel width of a standard VMU screen
     \ingroup maple_lcd
 */
 #define VMU_SCREEN_WIDTH    48
 
 /**
-    \brief Pixel height of VMU screen
+    \brief Pixel height of a standard VMU screen
     \ingroup maple_lcd
 */
 #define VMU_SCREEN_HEIGHT   32
@@ -379,9 +379,9 @@ int vmu_beep_raw(maple_device_t* dev, uint32_t beep);
     however, the parameters do support dual-channel stereo in case such a 
     VMU ever does come along. 
 
-               Period
-        +--------------------+
-        |                    |
+                          Period
+                  +---------------------+
+                  |                     |
                    __________            __________
                   |          |          |          |
                   |          |          |          |
