@@ -744,7 +744,13 @@ int vmufs_write(maple_device_t * dev, const char * fn, void * inbuf, int insize,
     nd.filetype = (flags & VMUFS_VMUGAME) ? 0xcc : 0x33;
     nd.copyprotect = (flags & VMUFS_NOCOPY) ? 0xff : 0x00;
     nd.firstblk = 0;
+
+    /* filename is not null terminated */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
     strncpy(nd.filename, fn, 12);
+#pragma GCC diagnostic pop
+
     vmufs_dir_fill_time(&nd);
     nd.filesize = insize / 512;
     nd.hdroff = (flags & VMUFS_VMUGAME) ? 1 : 0;

@@ -19,6 +19,9 @@
 #include <dc/flashrom.h>
 #include <arch/irq.h>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
+
 /* First, implementation of the syscall wrappers. */
 typedef int (*flashrom_sc)(int, void *, int, int);
 
@@ -863,3 +866,5 @@ int flashrom_get_pw_ispcfg(flashrom_ispcfg_t *out) {
 
     return out->valid_fields == 0 ? -2 : 0;
 }
+
+#pragma GCC diagnostic pop

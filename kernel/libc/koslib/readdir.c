@@ -32,7 +32,10 @@ struct dirent * readdir(DIR * dir) {
     else
         dir->d_ent.d_type = 8;  // DT_REG
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
     strncpy(dir->d_ent.d_name, d->name, 255);
+#pragma GCC diagnostic pop
 
     return &dir->d_ent;
 }

@@ -15,6 +15,9 @@
 
 #include "netcfg_icon.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-overflow"
+
 #if 0
 #define dbgp printf
 #else
@@ -71,17 +74,17 @@ int netcfg_load_from(const char * fn, netcfg_t * out) {
 
     assert(out);
 
-    // Open the file
+    /* Open the file */
     f = fopen(fn, "rb");
 
     if(!f)
         return -1;
 
-    // If we're reading from a VMU, seek past the header
-    // In the future, we could read this and use data_len to
-    // know how big the file really is
+    /* If we're reading from a VMU, seek past the header
+       In the future, we could read this and use data_len to
+       know how big the file really is */
     if(fn[0] == '/' && fn[1] == 'v' && fn[2] == 'm' && fn[3] == 'u') {
-        // Make sure there's a VMU header to skip. If so, skip it.
+        /* Make sure there's a VMU header to skip. If so, skip it. */
         fread(buf, 4, 1, f);
         buf[4] = 0;
 
@@ -89,13 +92,13 @@ int netcfg_load_from(const char * fn, netcfg_t * out) {
             fseek(f, 128 + 512, SEEK_SET);
     }
 
-    // Read each line...
+    /* Read each line... */
     while(fgets(buf, 64, f)) {
-        // Skip comments and blank lines
+        /* Skip comments and blank lines */
         if(buf[0] == 0 || buf[0] == '#')
             continue;
 
-        // Strip newlines
+        /* Strip newlines */
         l = strlen(buf);
 
         if(buf[l - 1] == '\n') {
@@ -108,7 +111,7 @@ int netcfg_load_from(const char * fn, netcfg_t * out) {
             l--;
         }
 
-        // Look for an equals
+        /* Look for an equals */
         b = strchr(buf, '=');
 
         if(!b)
@@ -117,7 +120,7 @@ int netcfg_load_from(const char * fn, netcfg_t * out) {
         *b = 0;
         b++;
 
-        // What was the line type?
+        /* What was the line type? */
         if(!strcmp(buf, "driver")) {
             strcpy(out->driver, b);
         }
@@ -190,7 +193,7 @@ int netcfg_load_flash(netcfg_t * out) {
     if(flashrom_get_ispcfg(&cfg) < 0)
         return -1;
 
-    // Start out with a clean config
+    /* Start out with a clean config */
     memset(out, 0, sizeof(netcfg_t));
 
 #define READIP(dst, src) \
@@ -256,7 +259,7 @@ int netcfg_load(netcfg_t * out) {
     dirent_t * d;
     char buf[64];
 
-    // Scan for VMUs
+    /* Scan for VMUs */
     f = fs_open("/vmu", O_RDONLY | O_DIR);
 
     if(f >= 0) {
@@ -278,20 +281,19 @@ int netcfg_load(netcfg_t * out) {
         }
     }
 
-    // Couldn't find anything. Try reading the config
-    // from flash.
+    /* Couldn't find anything. Try reading the config from flash */
     if(netcfg_load_flash(out) >= 0) {
         out->src = NETCFG_SRC_FLASH;
         return 0;
     }
 
-    // Didn't work out->. try the current dir.
+    /* Didn't work out->. try the current dir. */
     if(netcfg_load_from("net.cfg", out) >= 0) {
         out->src = NETCFG_SRC_CWD;
         return 0;
     }
 
-    // Finally, try the CD
+    /* Finally, try the CD */
     if(netcfg_load_from("/cd/net.cfg", out) >= 0) {
         out->src = NETCFG_SRC_CDROOT;
         return 0;
@@ -308,7 +310,7 @@ int netcfg_save_to(const char * fn, const netcfg_t * cfg) {
 
     dbgp("Saving: %s\n", fn);
 
-    // Open the output file
+    /* Open the output file */
     if(fn[0] == '/' && fn[1] == 'v' && fn[2] == 'm' && fn[3] == 'u') {
         dbgp("Saving to VMU\n");
         f = fopen("/ram/netcfg.tmp", "wb");
@@ -320,7 +322,7 @@ int netcfg_save_to(const char * fn, const netcfg_t * cfg) {
     if(!f)
         return -1;
 
-    // Write out each line...
+    /* Write out each line... */
     sprintf(buf, "# KOS Network Config written by netcfg_save_to\n");
 
     if(fwrite(buf, strlen(buf), 1, f) != 1)
@@ -365,7 +367,7 @@ int netcfg_save_to(const char * fn, const netcfg_t * cfg) {
 
     fclose(f);
 
-    //If we're saving to a VMU, tack on the header and send it out
+    /* If we're saving to a VMU, tack on the header and send it out */
     if(fn[0] == '/' && fn[1] == 'v' && fn[2] == 'm' && fn[3] == 'u') {
         netcfg_vmuify("/ram/netcfg.tmp", fn);
         unlink("/ram/netcfg.tmp");
@@ -383,7 +385,7 @@ int netcfg_save(const netcfg_t * cfg) {
     dirent_t * d;
     char buf[64];
 
-    // Scan for a VMU
+    /* Scan for a VMU */
     f = fs_open("/vmu", O_RDONLY | O_DIR);
 
     if(f < 0)
@@ -401,3 +403,5 @@ int netcfg_save(const netcfg_t * cfg) {
 
     return netcfg_save_to(buf, cfg);
 }
+
+#pragma GCC diagnostic pop
