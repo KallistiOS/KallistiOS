@@ -33,10 +33,13 @@ void netcfg_vmuify(const char *filename_in, const char *filename_out) {
     dbgp("Opening source file\n");
     fd = fs_open(filename_in, O_RDONLY);
     buf = (uint8 *) malloc(fs_total(fd));
+    if(buf == NULL)
+        return;
+
     fs_read(fd, buf, fs_total(fd));
     dbgp("Read %i bytes\n", fs_total(fd));
 
-    strcpy(pkg.desc_short, "KallistiOS 1.3");
+    strcpy(pkg.desc_short, "KallistiOS 2.1.0");
     strcpy(pkg.desc_long, "KOS Network Settings");
     strcpy(pkg.app_id, "KOS");
     pkg.icon_cnt = 1;
