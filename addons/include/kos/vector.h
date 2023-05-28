@@ -8,7 +8,8 @@
 /** \file   kos/vector.h
     \brief  Deprecated alias for <dc/vector.h>.
 
-    This file is provided for backwards compatibility. New code should include <dc/vector.h> directly.
+    This file is provided for backwards compatibility. New code should include
+    <dc/vector.h> directly.
 */
 
 #include <dc/vector.h>
