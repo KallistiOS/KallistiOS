@@ -15,9 +15,6 @@
 
 #include "netcfg_icon.h"
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-overflow"
-
 #if 0
 #define dbgp printf
 #else
@@ -260,7 +257,7 @@ int netcfg_load_flash(netcfg_t * out) {
 int netcfg_load(netcfg_t * out) {
     file_t f;
     dirent_t * d;
-    char buf[64];
+    char buf[288];
 
     /* Scan for VMUs */
     f = fs_open("/vmu", O_RDONLY | O_DIR);
@@ -307,7 +304,7 @@ int netcfg_load(netcfg_t * out) {
 
 int netcfg_save_to(const char * fn, const netcfg_t * cfg) {
     FILE * f;
-    char buf[64];
+    char buf[256];
 
     assert(cfg);
 
@@ -386,7 +383,7 @@ error:
 int netcfg_save(const netcfg_t * cfg) {
     file_t f;
     dirent_t * d;
-    char buf[64];
+    char buf[288];
 
     /* Scan for a VMU */
     f = fs_open("/vmu", O_RDONLY | O_DIR);
@@ -407,4 +404,3 @@ int netcfg_save(const netcfg_t * cfg) {
     return netcfg_save_to(buf, cfg);
 }
 
-#pragma GCC diagnostic pop

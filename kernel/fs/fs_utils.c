@@ -78,6 +78,7 @@ ssize_t fs_copy(const char * src, const char * dst) {
 ssize_t fs_load(const char * src, void ** out_ptr) {
     file_t  f;
     void    * data;
+    void    * new_data;
     uint8   * out;
     ssize_t total, left, r;
 
@@ -114,9 +115,9 @@ ssize_t fs_load(const char * src, void ** out_ptr) {
     }
 
     /* Did we get it all? If not, realloc the buffer */
-    if (left > 0) {
-        void * new_data = realloc(data, total);
-        if (new_data != NULL) {
+    if(left > 0) {
+        new_data = realloc(data, total);
+        if(new_data != NULL) {
             data = new_data;
         }
     }

@@ -8,6 +8,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <string.h>
+#include <stdio.h>
 #include <kos/fs.h>
 
 struct dirent * readdir(DIR * dir) {
@@ -32,10 +33,7 @@ struct dirent * readdir(DIR * dir) {
     else
         dir->d_ent.d_type = 8;  // DT_REG
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstringop-truncation"
-    strncpy(dir->d_ent.d_name, d->name, 255);
-#pragma GCC diagnostic pop
+    snprintf(dir->d_ent.d_name, sizeof(dir->d_ent.d_name), "%s", d->name);
 
     return &dir->d_ent;
 }
