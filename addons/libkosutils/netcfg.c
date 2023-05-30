@@ -257,7 +257,7 @@ int netcfg_load_flash(netcfg_t * out) {
 int netcfg_load(netcfg_t * out) {
     file_t f;
     dirent_t * d;
-    char buf[288];
+    char buf[64];
 
     /* Scan for VMUs */
     f = fs_open("/vmu", O_RDONLY | O_DIR);
@@ -271,7 +271,8 @@ int netcfg_load(netcfg_t * out) {
                 break;
             }
 
-            sprintf(buf, "/vmu/%s/net.cfg", d->name);
+            /* Valid names are a1, a2, b1, etc */
+            sprintf(buf, "/vmu/%.*s/net.cfg", 2, d->name);
 
             if(netcfg_load_from(buf, out) >= 0) {
                 out->src = NETCFG_SRC_VMU;
@@ -329,7 +330,7 @@ int netcfg_save_to(const char * fn, const netcfg_t * cfg) {
         goto error;
 
 #define WRITESTR(fmt, data) \
-    sprintf(buf, fmt, data); \
+   sprintf(buf, fmt, data); \
     if (fwrite(buf, strlen(buf), 1, f) != 1) \
         goto error;
 
@@ -383,7 +384,7 @@ error:
 int netcfg_save(const netcfg_t * cfg) {
     file_t f;
     dirent_t * d;
-    char buf[288];
+    char buf[64];
 
     /* Scan for a VMU */
     f = fs_open("/vmu", O_RDONLY | O_DIR);
@@ -398,7 +399,8 @@ int netcfg_save(const netcfg_t * cfg) {
         return -1;
     }
 
-    sprintf(buf, "/vmu/%s/net.cfg", d->name);
+    /* Valid names are a1, a2, b1, etc */
+    sprintf(buf, "/vmu/%.*s/net.cfg", 2, d->name);
     fs_close(f);
 
     return netcfg_save_to(buf, cfg);

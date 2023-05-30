@@ -33,7 +33,7 @@ struct dirent * readdir(DIR * dir) {
     else
         dir->d_ent.d_type = 8;  // DT_REG
 
-    snprintf(dir->d_ent.d_name, sizeof(dir->d_ent.d_name), "%s", d->name);
+    strncpy(dir->d_ent.d_name, d->name, sizeof(dir->d_ent.d_name));
 
     return &dir->d_ent;
 }
