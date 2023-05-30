@@ -5,7 +5,7 @@
 #
 
 DIRS = 2ndmix basic libdream kgl hello sound png network vmu conio pvr video \
-	   lua parallax modem dreameye sd g1ata lightgun keyboard sdl random
+	   lua parallax modem dreameye sd g1ata lightgun keyboard sdl random rumble
 ifdef KOS_CCPLUS
 	DIRS += cpp tsunami
 endif
