@@ -19,9 +19,6 @@
 #include <dc/flashrom.h>
 #include <arch/irq.h>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstringop-truncation"
-
 /* First, implementation of the syscall wrappers. */
 typedef int (*flashrom_sc)(int, void *, int, int);
 
@@ -72,8 +69,6 @@ int flashrom_delete(int offset) {
     return rv;
 }
 
-
-
 /* Higher level stuff follows */
 
 /* Internal function calculates the checksum of a flashrom block. Thanks
@@ -94,7 +89,6 @@ static int flashrom_calc_crc(uint8 * buffer) {
 
     return (~n) & 0xffff;
 }
-
 
 int flashrom_get_block(int partid, int blockid, uint8 * buffer_out) {
     int start, size;
@@ -500,8 +494,8 @@ int flashrom_get_ispcfg(flashrom_ispcfg_t * out) {
         if(!(out->valid_fields & FLASHROM_ISP_PHONE1)) {
             /* The full number is 27 digits in C6-C8,
             so we truncate it to fit the phone1 field */
-            strncpy(out->phone1, isp->c6.phone1_pt1, 12);
-            strncpy(out->phone1 + 12, isp->c7.phone1_pt2, 25 - 12);
+            memcpy(out->phone1, isp->c6.phone1_pt1, 12);
+            memcpy(out->phone1 + 12, isp->c7.phone1_pt2, 25 - 12);
             out->phone1[25] = '\0';
             out->valid_fields |= FLASHROM_ISP_PHONE1;
         }
@@ -690,7 +684,7 @@ int flashrom_get_pw_ispcfg(flashrom_ispcfg_t *out) {
         /* Copy the second part of the email address (if it exists). We don't
            set the email as valid here, since that really depends on the first
            part being found (PW 1.0 doesn't store anything in this place). */
-        strncpy(out->email + 32, isp->b80.email_pt2, 16);
+        sprintf(out->email + 32, "%.*s", 17, isp->b80.email_pt2);
     }
     else {
         /* If we couldn't find the PWBrowser block, punt, the PlanetWeb settings
@@ -703,7 +697,7 @@ int flashrom_get_pw_ispcfg(flashrom_ispcfg_t *out) {
         /* Copy the third part of the email address to the appropriate place.
            Note that PlanetWeb 1.0 doesn't store anything here, thus we'll just
            copy a null terminator. */
-        strncpy(out->email + 32 + 16, isp->b81.email_pt3, 14);
+        sprintf(out->email + 32 + 16, "%.*s", 15, isp->b81.email_pt3);
 
         /* Copy out the "Real Name" field. */
         strncpy(out->real_name, isp->b81.real_name, 30);
@@ -723,7 +717,7 @@ int flashrom_get_pw_ispcfg(flashrom_ispcfg_t *out) {
     /* Grab block 0x83 */
     if(flashrom_get_block(FLASHROM_PT_BLOCK_1, FLASHROM_B1_PW_SETTINGS_4, buffer) >= 0) {
         /* The modem init string continues at the start of this block. */
-        strncpy(out->modem_init + 30, (char *)isp->b83.modem_str2, 2);
+        memcpy(out->modem_init + 30, isp->b83.modem_str2, 2);
         out->modem_init[32] = '\0';
 
         /* Copy out the area code next. */
@@ -785,7 +779,7 @@ int flashrom_get_pw_ispcfg(flashrom_ispcfg_t *out) {
     /* Grab block 0xC1 */
     if(flashrom_get_block(FLASHROM_PT_BLOCK_1, FLASHROM_B1_PW_PPP2, buffer) >= 0) {
         /* Grab the rest of phone number 1. */
-        strncpy(out->phone1 + 3, isp->c1.phone1_pt2, 22);
+        memcpy(out->phone1 + 3, isp->c1.phone1_pt2, 22);
         out->phone1[25] = '\0';
         out->valid_fields |= FLASHROM_ISP_PHONE1;
 
@@ -819,7 +813,7 @@ int flashrom_get_pw_ispcfg(flashrom_ispcfg_t *out) {
         out->valid_fields |= FLASHROM_ISP_EMAIL;
 
         /* Grab the beginning of the SMTP server. */
-        strncpy(out->smtp, isp->c3.out_srv_p1, 12);
+        sprintf(out->smtp, "%.*s", 13, isp->c3.out_srv_p1);
         out->smtp[12] = '\0';
     }
 
@@ -844,7 +838,7 @@ int flashrom_get_pw_ispcfg(flashrom_ispcfg_t *out) {
     if(flashrom_get_block(FLASHROM_PT_BLOCK_1, FLASHROM_B1_PW_EMAIL_PROXY, buffer) >= 0) {
         /* Grab the end of the POP3 login. */
         strncpy(out->pop3_login + 8, isp->c5.em_login_p2, 8);
-        out->pop3_login[16] = '\0';
+        //out->pop3_login[16] = '\0';
         out->valid_fields |= FLASHROM_ISP_POP3_USER;
 
         /* Grab the POP3 password. */
@@ -866,5 +860,3 @@ int flashrom_get_pw_ispcfg(flashrom_ispcfg_t *out) {
 
     return out->valid_fields == 0 ? -2 : 0;
 }
-
-#pragma GCC diagnostic pop

@@ -1583,10 +1583,8 @@ static int fs_ext2_symlink(vfs_handler_t *vfs, const char *path1,
     /* Will the link fit in the inode? */
     if(len < 60) {
         /* We can make a fast symlink. */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstringop-truncation"
-        strncpy((char *)inode->i_block, path1, 60);
-#pragma GCC diagnostic pop
+        strncpy((char *)inode->i_block, path1, 59);
+        ((char *)inode->i_block)[len - 1] = '\0';
         inode->i_size = (uint32_t)len;
     }
     else {

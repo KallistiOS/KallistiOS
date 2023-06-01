@@ -8,7 +8,6 @@
 #include <dirent.h>
 #include <errno.h>
 #include <string.h>
-#include <stdio.h>
 #include <kos/fs.h>
 
 struct dirent * readdir(DIR * dir) {

@@ -702,7 +702,7 @@ int vmufs_write(maple_device_t * dev, const char * fn, void * inbuf, int insize,
     vmu_root_t  root;
     vmu_dir_t   * dir = NULL, nd;
     uint16      * fat = NULL;
-    int     oldinsize, fatsize, dirsize, idx, rv = 0, st;
+    int     oldinsize, fatsize, dirsize, idx, rv = 0, st, fnlength;
 
     /* Round up the size if necessary */
     oldinsize = insize;
@@ -745,11 +745,9 @@ int vmufs_write(maple_device_t * dev, const char * fn, void * inbuf, int insize,
     nd.copyprotect = (flags & VMUFS_NOCOPY) ? 0xff : 0x00;
     nd.firstblk = 0;
 
-    /* filename is not null terminated */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstringop-truncation"
-    strncpy(nd.filename, fn, 12);
-#pragma GCC diagnostic pop
+    fnlength = strlen(fn);
+    fnlength = fnlength > 12 ? 12 : fnlength;
+    memcpy(nd.filename, fn, fnlength);
 
     vmufs_dir_fill_time(&nd);
     nd.filesize = insize / 512;
