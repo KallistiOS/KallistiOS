@@ -157,7 +157,7 @@ int main(int argc, char **argv) {
     maple_device_t *dev;
     float val;
 
-    /* If the face buttons are all pressed, exit the app */
+    /* If start is pressed, exit the app. */
     cont_btn_callback(0, CONT_START,
                       (cont_btn_callback_t)arch_exit);
 
