@@ -158,7 +158,7 @@ int main(int argc, char **argv) {
     float val;
 
     /* If the face buttons are all pressed, exit the app */
-    cont_btn_callback(0, CONT_START | CONT_A | CONT_B | CONT_X | CONT_Y,
+    cont_btn_callback(0, CONT_START,
                       (cont_btn_callback_t)arch_exit);
 
     for (i = 0; ; i++) {
