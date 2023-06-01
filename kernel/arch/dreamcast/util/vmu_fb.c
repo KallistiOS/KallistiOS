@@ -98,10 +98,19 @@ void vmufb_clear_area(vmufb_t *fb,
 }
 
 void vmufb_present(const vmufb_t *fb, maple_device_t *dev) {
-    if (dev->info.connector_direction == 0) /* 0: UP - rotated like most controllers */
-        vmu_draw_lcd_rotated(dev, fb->data);
-    else /* 1: DOWN - not rotated, like lightgun */
+    /* Check for controller containing VMU (should always be same port, unit 0) */
+    maple_device_t* cont = maple_enum_dev(dev->port, 0);
+
+    /* If the VMU connector and controller connector face opposite directions, 
+       no flipping necessary (example: VMU in a lightgun). */
+    if(cont && (cont->info.functions & MAPLE_FUNC_CONTROLLER) &&
+      (cont->info.connector_direction != dev->info.connector_direction))
         vmu_draw_lcd(dev, fb->data);
+    
+    /* If we somehow found no corresponding controller, or connectors face the same direction,
+    we must rotate the image 180 degreees (example: VMU in a standard controller). */
+    else 
+        vmu_draw_lcd_rotated(dev, fb->data);
 }
 
 void vmufb_print_string_into(vmufb_t *fb,
