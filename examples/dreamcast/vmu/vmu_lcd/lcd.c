@@ -25,10 +25,13 @@
 #include <math.h>
 #include <stdint.h>
 
-/* 4x6 font from the Linux kernel (Public Domain):
+/* 4x6 font from the Linux kernel:
    https://github.com/torvalds/linux/blob/master/lib/fonts/font_mini_4x6.c
  
    Modified locally to pack the data better. 
+ 
+   Created by Kenneth Albanowski.
+   No rights reserved, released to the public domain.
  */
 static const char fontdata_4x6[] = {
     0xee, 0xee, 0xe0, 0xee, 0xee, 0xe0, 0xee, 0xee,
