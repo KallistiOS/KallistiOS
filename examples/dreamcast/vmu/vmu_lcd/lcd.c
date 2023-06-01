@@ -161,7 +161,7 @@ int main(int argc, char **argv) {
     cont_btn_callback(0, CONT_START,
                       (cont_btn_callback_t)arch_exit);
 
-    for (i = 0; ; i++) {
+    for(i = 0; ; i++) {
         vmufb_clear(&vmufb);
 
         val = (float)i * M_PI / 360.0f;
