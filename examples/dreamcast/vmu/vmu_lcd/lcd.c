@@ -179,9 +179,7 @@ int main(int argc, char **argv) {
                     &message[(i / 16) % sizeof(message)]);
 
 
-        for (vmu = 0;
-             !!(dev = maple_enum_type(vmu, MAPLE_FUNC_LCD));
-             vmu++) {
+        for(vmu = 0; !!(dev = maple_enum_type(vmu, MAPLE_FUNC_LCD)); vmu++) {
             vmufb_present(&vmufb, dev);
         }
     }
