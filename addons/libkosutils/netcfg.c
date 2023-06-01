@@ -330,7 +330,7 @@ int netcfg_save_to(const char * fn, const netcfg_t * cfg) {
         goto error;
 
 #define WRITESTR(fmt, data) \
-   sprintf(buf, fmt, data); \
+    sprintf(buf, fmt, data); \
     if (fwrite(buf, strlen(buf), 1, f) != 1) \
         goto error;
 
