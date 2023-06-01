@@ -1584,7 +1584,7 @@ static int fs_ext2_symlink(vfs_handler_t *vfs, const char *path1,
     if(len < 60) {
         /* We can make a fast symlink. */
         strncpy((char *)inode->i_block, path1, 59);
-        ((char *)inode->i_block)[len - 1] = '\0';
+        ((char *)inode->i_block)[60] = '\0';
         inode->i_size = (uint32_t)len;
     }
     else {

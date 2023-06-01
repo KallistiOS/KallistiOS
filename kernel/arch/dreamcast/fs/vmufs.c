@@ -748,6 +748,9 @@ int vmufs_write(maple_device_t * dev, const char * fn, void * inbuf, int insize,
     fnlength = strlen(fn);
     fnlength = fnlength > 12 ? 12 : fnlength;
     memcpy(nd.filename, fn, fnlength);
+    if (fnlength < 12) {
+        memset(nd.filename + fnlength, '\0', 12 - fnlength);
+    }
 
     vmufs_dir_fill_time(&nd);
     nd.filesize = insize / 512;
