@@ -6,7 +6,6 @@
 */
 
 #include <stdbool.h>
-#include <stdint.h>
 #include <string.h>
 
 #include <dc/maple/vmu.h>

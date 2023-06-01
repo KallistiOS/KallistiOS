@@ -13,6 +13,7 @@
 */
 
 #include <dc/maple.h>
+#include <stdint.h>
 
 /** \brief  VMU framebuffer.
 
