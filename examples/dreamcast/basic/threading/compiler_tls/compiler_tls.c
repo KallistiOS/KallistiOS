@@ -46,6 +46,31 @@ static _Alignas(128) thread_local char string[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ012
 static _Alignas(32) thread_local uint64_t tdata_test = 5;
 static volatile int errorCount = 0;
 
+static void test_alignment(void) { 
+    BUF_16.inner[0] = 0;
+    bool reproduced = false;
+
+    printf("Testing alignment.\n");
+
+    // Check if at least one byte has been offset improperly
+    printf("[");
+    for (int i = 0; i < 3; i++) {
+        if (BUF_4.inner[i] != 2) {
+            reproduced = true;
+        }
+        printf("%d, ", BUF_4.inner[i]);
+    }
+    printf("]\n");
+
+    if (reproduced) {
+        printf("Bug has been reproduced!\n");
+        ++errorCount;
+    }
+    else {
+        printf("There has been no issue!\n");
+    }
+}
+
 /* Thread Function */
 void *thd(void *v) {
     int i;
@@ -80,33 +105,10 @@ void *thd(void *v) {
         ++errorCount;
     }
 
+    test_alignment();
+
     printf("Finished Thread %d\n", id);
     return NULL;
-}
-
-static void test_alignment(void) { 
-    BUF_16.inner[0] = 0;
-    bool reproduced = false;
-
-    printf("Testing alignment.\n");
-
-    // Check if at least one byte has been offset improperly
-    printf("[");
-    for (int i = 0; i < 3; i++) {
-        if (BUF_4.inner[i] != 2) {
-            reproduced = true;
-        }
-        printf("%d, ", BUF_4.inner[i]);
-    }
-    printf("]\n");
-
-    if (reproduced) {
-        printf("Bug has been reproduced!\n");
-        ++errorCount;
-    }
-    else {
-        printf("There has been no issue!\n");
-    }
 }
 
 /* The main program */
@@ -147,8 +149,6 @@ int main(int argc, char **argv) {
         thd_join(threads[i], NULL);
     
     printf("Threads Finished!\n");
-
-    test_alignment();
     
     if(!errorCount) {
         printf("SUCCESS!\n");
