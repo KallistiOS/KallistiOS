@@ -36,6 +36,8 @@ void wait_for_dev_attach(maple_device_t **dev_ptr, unsigned int func) {
     point_t w = {40.0f, 200.0f, 10.0f, 0.0f};
 
     /* If we already have it, and it's still valid, leave */
+    /* dev->valid is set to 0 by the driver if the device 
+       is detatched, but dev will stay not-null */
     if((dev != NULL) && (dev->valid != 0)) return;
 
     /* Draw up a screen */
@@ -87,9 +89,12 @@ int main(int argc, char *argv[]) {
 
     for(;;) {
 
+        /* Before drawing the screen, trap into these functions to be 
+           sure that there's at least one controller and one rumbler */
         wait_for_dev_attach(&contdev, MAPLE_FUNC_CONTROLLER);
         wait_for_dev_attach(&purudev, MAPLE_FUNC_PURUPURU);
 
+        /* Start drawing and draw the header */
         pvr_wait_ready();
         pvr_scene_begin();
         pvr_list_begin(PVR_LIST_OP_POLY);
@@ -100,6 +105,7 @@ int main(int argc, char *argv[]) {
         plx_fcxt_setpos_pnt(cxt, &w);
         plx_fcxt_draw(cxt, "Rumble Test by Quzar");
 
+        /* Start drawing the changable section of the screen */
         w.x += 130; w.y += 120.0f;
         plx_fcxt_setpos_pnt(cxt, &w);
         plx_fcxt_setsize(cxt, 30.0f);
@@ -118,32 +124,6 @@ int main(int argc, char *argv[]) {
 
             plx_fcxt_draw(cxt, s[count]);
         }
-
-        plx_fcxt_setsize(cxt, 24.0f);
-        plx_fcxt_setcolor4f(cxt, 1.0f, 1.0f, 1.0f, 1.0f);
-        w.x = 65.0f; w.y += 50.0f;
-
-        plx_fcxt_setpos_pnt(cxt, &w);
-        plx_fcxt_draw(cxt, "Press left/right to switch digits.");
-        w.y += 25.0f;
-
-        plx_fcxt_setpos_pnt(cxt, &w);
-        plx_fcxt_draw(cxt, "Press up/down to change values.");
-        w.y += 25.0f;
-
-        plx_fcxt_setpos_pnt(cxt, &w);
-        plx_fcxt_draw(cxt, "Press A to start rumblin.");
-        w.y += 25.0f;
-
-        plx_fcxt_setpos_pnt(cxt, &w);
-        plx_fcxt_draw(cxt, "Press B to stop rumblin.");
-        w.y += 25.0f;
-
-        plx_fcxt_setpos_pnt(cxt, &w);
-        plx_fcxt_draw(cxt, "Press Start to quit.");
-
-        plx_fcxt_end(cxt);
-        pvr_scene_finish();
 
         /* Store current button states + buttons which have been released. */
         state = (cont_state_t *)maple_dev_status(contdev);
@@ -180,6 +160,33 @@ int main(int argc, char *argv[]) {
         }
 
         old_buttons = state->buttons ;
+
+        /* Draw the bottom half of the screen and finish it up */
+        plx_fcxt_setsize(cxt, 24.0f);
+        plx_fcxt_setcolor4f(cxt, 1.0f, 1.0f, 1.0f, 1.0f);
+        w.x = 65.0f; w.y += 50.0f;
+
+        plx_fcxt_setpos_pnt(cxt, &w);
+        plx_fcxt_draw(cxt, "Press left/right to switch digits.");
+        w.y += 25.0f;
+
+        plx_fcxt_setpos_pnt(cxt, &w);
+        plx_fcxt_draw(cxt, "Press up/down to change values.");
+        w.y += 25.0f;
+
+        plx_fcxt_setpos_pnt(cxt, &w);
+        plx_fcxt_draw(cxt, "Press A to start rumblin.");
+        w.y += 25.0f;
+
+        plx_fcxt_setpos_pnt(cxt, &w);
+        plx_fcxt_draw(cxt, "Press B to stop rumblin.");
+        w.y += 25.0f;
+
+        plx_fcxt_setpos_pnt(cxt, &w);
+        plx_fcxt_draw(cxt, "Press Start to quit.");
+
+        plx_fcxt_end(cxt);
+        pvr_scene_finish();
     }
 
     return 0;
