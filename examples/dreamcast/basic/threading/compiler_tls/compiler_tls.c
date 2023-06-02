@@ -29,6 +29,18 @@
 #define thread_local _Thread_local
 #endif
 
+typedef struct
+{
+    uint8_t inner[3];
+} Align4;
+
+typedef struct {
+    uint8_t inner[3];
+} Align16;
+
+static _Alignas(4)  thread_local Align4 BUF_4 = {.inner = {2, 2, 2}};
+static _Alignas(16) thread_local Align16 BUF_16 = {.inner = {1, 1, 1}};
+
 static _Alignas(64) thread_local uint32_t tbss_test = 0;
 static _Alignas(128) thread_local char string[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 static _Alignas(32) thread_local uint64_t tdata_test = 5;
@@ -72,9 +84,34 @@ void *thd(void *v) {
     return NULL;
 }
 
+static void test_alignment(void) { 
+    BUF_16.inner[0] = 0;
+    bool reproduced = false;
+
+    printf("Testing alignment.\n");
+
+    // Check if at least one byte has been offset improperly
+    printf("[");
+    for (int i = 0; i < 3; i++) {
+        if (BUF_4.inner[i] != 2) {
+            reproduced = true;
+        }
+        printf("%d, ", BUF_4.inner[i]);
+    }
+    printf("]\n");
+
+    if (reproduced) {
+        printf("Bug has been reproduced!\n");
+        ++errorCount;
+    }
+    else {
+        printf("There has been no issue!\n");
+    }
+}
+
 /* The main program */
 int main(int argc, char **argv) {
-    const int thread_count = 5;
+    const int thread_count = 3;
 
     int i;
     kthread_t * threads[thread_count];   
@@ -110,6 +147,8 @@ int main(int argc, char **argv) {
         thd_join(threads[i], NULL);
     
     printf("Threads Finished!\n");
+
+    test_alignment();
     
     if(!errorCount) {
         printf("SUCCESS!\n");
