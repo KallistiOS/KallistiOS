@@ -15,6 +15,9 @@
     the same. In each, a single 32-bit value is sent to the device which defines the 
     features of the rumbling.
 
+    TODO: This should be updated at some point to display and work from the macros in 
+    dc/maple/purupuru.h that define the characteristics of the raw 32-bit value.
+
  */
 
 #include <stdio.h>
@@ -31,6 +34,7 @@ KOS_INIT_ROMDISK(romdisk);
 
 plx_fcxt_t *cxt;
 
+/* This blocks waiting for a specified device to be present and valid */
 void wait_for_dev_attach(maple_device_t **dev_ptr, unsigned int func) {
     maple_device_t *dev = *dev_ptr;
     point_t w = {40.0f, 200.0f, 10.0f, 0.0f};
@@ -77,9 +81,6 @@ int main(int argc, char *argv[]) {
     uint8_t n[8] = { 0, 0, 0, 0, 0, 0, 0, 0 }; //nibbles
     char s[8][2] = { "", "", "", "", "", "", "", "" };
 
-    /* If A and B are pressed, exit the app */
-    cont_btn_callback(0, CONT_START, (cont_btn_callback_t)arch_exit);
-
     pvr_init_defaults();
 
     fnt = plx_font_load("/rd/axaxax.txf");
@@ -87,7 +88,8 @@ int main(int argc, char *argv[]) {
 
     pvr_set_bg_color(0.0f, 0.0f, 0.0f);
 
-    for(;;) {
+    /* Loop until Start is pressed */
+    for(;!(rel_buttons & CONT_START);) {
 
         /* Before drawing the screen, trap into these functions to be 
            sure that there's at least one controller and one rumbler */
@@ -161,7 +163,7 @@ int main(int argc, char *argv[]) {
 
         old_buttons = state->buttons ;
 
-        /* Draw the bottom half of the screen and finish it up */
+        /* Draw the bottom half of the screen and finish it up. */
         plx_fcxt_setsize(cxt, 24.0f);
         plx_fcxt_setcolor4f(cxt, 1.0f, 1.0f, 1.0f, 1.0f);
         w.x = 65.0f; w.y += 50.0f;
@@ -189,5 +191,8 @@ int main(int argc, char *argv[]) {
         pvr_scene_finish();
     }
 
+    /* Stop rumbling before exiting, if it still exists. */
+    if((purudev != NULL) && (purudev->valid != 0))
+        purupuru_rumble_raw(purudev, 0x00000000);
     return 0;
 }
