@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # Makefile.rules
-# (c)2000-2001 Dan Potter
+# (c)2000-2001 Megan Potter
 #
 
 # Global KallistiOS Makefile include
@@ -18,6 +18,12 @@ ifndef KOS_DEPDIR
 %.o: %.cpp
 	kos-c++ $(CFLAGS) $(CXXFLAGS) -c $< -o $@
 
+%.o: %.m
+	kos-cc $(CFLAGS) -c $< -o $@
+
+%.o: %.mm
+	kos-c++ $(CFLAGS) $(CXXFLAGS) -c $< -o $@
+
 else
 
 %.o: %.c
@@ -29,6 +35,12 @@ else
 %.o: %.cpp
 	kos-c++ $(CFLAGS) $(CXXFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.c,%.md,$(subst /,__,$(subst ..,,$<)))
 
+%.o: %.m
+	kos-cc $(CFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.m,%.md,$(subst /,__,$(subst ..,,$<)))
+
+%.o: %.mm
+	kos-c++ $(CFLAGS) $(CXXFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.mm,%.md,$(subst /,__,$(subst ..,,$<)))
+
 -include $(wildcard $(KOS_DEPDIR)/*.md)
 
 endif
@@ -37,7 +49,7 @@ endif
 	kos-as $< -o $@
 
 %.o: %.S
-	kos-as $< -o $@
+	kos-cc -c $< -o $@
 
 subdirs: $(patsubst %, _dir_%, $(SUBDIRS))
 

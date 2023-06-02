@@ -1,6 +1,6 @@
 /* KallistiOS ##version##
 
-   example1.c
+   ppp.c
    Copyright (C)2022 Luke Benstead
 
    Modem PPP example (intended for DreamPi connection)

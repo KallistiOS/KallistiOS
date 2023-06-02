@@ -176,7 +176,7 @@ struct sockaddr_storage {
 /** \brief  Protocol family for Internet domain sockets (IPv6). */
 #define PF_INET6    AF_INET6
 
-/** \brief  Disable furhter receive operations. */
+/** \brief  Disable further receive operations. */
 #define SHUT_RD   0x00000001
 
 /** \brief  Disable further send operations. */
@@ -345,7 +345,7 @@ int socket(int domain, int type, int protocol);
     This function returns the locally bound address information for a specified
     socket.
 
-    \param  s               The socket to get the name of.
+    \param  socket          The socket to get the name of.
     \param  name            Pointer to a sockaddr structure which will hold the
                             resulting address information.
     \param  name_len        The amount of space pointed to by name, in bytes.

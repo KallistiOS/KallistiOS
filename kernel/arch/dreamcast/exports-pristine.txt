@@ -5,11 +5,32 @@
 # aware that if you try to load someone else's module later, they might
 # be needing something in here.
 
+include kos.h
+include dc/sound/sound.h
+
 # ASIC
 asic_evt_set_handler
 asic_evt_disable_all
 asic_evt_disable
 asic_evt_enable
+
+# G1 Bus
+g1_dma_in_progress
+g1_ata_mutex_lock
+g1_ata_mutex_unlock
+g1_ata_select_device
+g1_ata_read_chs
+g1_ata_write_chs
+g1_ata_read_lba
+g1_ata_read_lba_dma
+g1_ata_write_lba
+g1_ata_write_lba_dma
+g1_ata_flush
+g1_ata_lba_mode
+g1_ata_blockdev_for_partition
+g1_ata_blockdev_for_device
+g1_ata_init
+g1_ata_shutdown
 
 # G2 Bus
 g2_read_8

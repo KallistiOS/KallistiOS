@@ -2,7 +2,7 @@
 
    net/lan_adapter.c
 
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
    Copyright (C) 2010 Lawrence Sebald
 
 */
@@ -254,7 +254,7 @@ static void la_write(int reg, int bank, int value) {
    manual -- it appears to contain only the MAC address and not a base
    address like the manual says. EEPROM is read one bit (!) at a time
    through the EEPROM interface port. */
-static void la_strobe_eeprom() {
+static void la_strobe_eeprom(void) {
     la_write(BMPR16, BMPR16_ECS);
     la_write(BMPR16, BMPR16_ECS | BMPR16_ESK);
     la_write(BMPR16, BMPR16_ECS | BMPR16_ESK);
@@ -312,7 +312,7 @@ static void la_read_eeprom(uint8 *data) {
 }
 
 /* Reset the lan adapter and verify that it's there and alive */
-static int la_detect() {
+static int la_detect(void) {
     int type;
 
     assert_msg(la_started == LA_NOT_STARTED, "la_detect called out of sequence");
@@ -339,7 +339,7 @@ static int la_detect() {
 }
 
 /* Reset the lan adapter and set it up for send/receive */
-static int la_hw_init() {
+static int la_hw_init(void) {
     int i;
 
     assert_msg(la_started == LA_DETECTED, "la_hw_init called out of sequence");
@@ -404,7 +404,7 @@ static int la_hw_init() {
 }
 
 /* Start lan adapter (after a stop) */
-static void la_start() {
+static void la_start(void) {
     assert_msg(la_started == LA_PAUSED, "la_start called out of sequence");
 
     /* Set normal receive mode */
@@ -413,7 +413,7 @@ static void la_start() {
 }
 
 /* Temporarily stop lan adapter */
-static void la_stop() {
+static void la_stop(void) {
     int timeout = 50;
 
     assert_msg(la_started == LA_RUNNING, "la_stop called out of sequence");
@@ -428,11 +428,9 @@ static void la_stop() {
 }
 
 /* Shut it down for good */
-static void la_hw_shutdown() {
+static void la_hw_shutdown(void) {
     /* Power down chip */
-    thd_sleep(2);
     la_write(DLCR7, la_read(DLCR7) & ~DLCR7_NSTBY);
-    thd_sleep(2);
 
     la_started = LA_NOT_STARTED;
 
@@ -489,7 +487,7 @@ static int la_tx(const uint8 * pkt, int len, int blocking) {
 static unsigned char current_pkt[1514];
 
 /* Check for received packets */
-static int la_rx() {
+static int la_rx(void) {
     int i, status, len, count;
 
     assert_msg(la_started == LA_RUNNING, "la_rx called out of sequence");
@@ -557,7 +555,7 @@ static void la_irq_hnd(uint32 code) {
 
 netif_t la_if;
 
-static void set_ipv6_lladdr() {
+static void set_ipv6_lladdr(void) {
     /* Set up the IPv6 link-local address. This is done in accordance with
        Section 4/5 of RFC 2464 based on the MAC Address of the adapter. */
     la_if.ip6_lladdr.__s6_addr.__s6_addr8[0]  = 0xFE;
@@ -703,7 +701,7 @@ static int la_if_set_mc(netif_t *self, const uint8 *list, int count) {
 }
 
 /* Set ISP configuration from the flashrom, as long as we're configured staticly */
-static void la_set_ispcfg() {
+static void la_set_ispcfg(void) {
     flashrom_ispcfg_t isp;
 
     if(flashrom_get_ispcfg(&isp) == -1)
@@ -737,7 +735,7 @@ static void la_set_ispcfg() {
 }
 
 /* Initialize */
-int la_init() {
+int la_init(void) {
     /* Initialize our state */
     la_started = LA_NOT_STARTED;
 
@@ -778,7 +776,7 @@ int la_init() {
 }
 
 /* Shutdown */
-int la_shutdown() {
+int la_shutdown(void) {
     la_if_shutdown(&la_if);
     return 0;
 }

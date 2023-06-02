@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    fs_iso9660.c
-   Copyright (C) 2000, 2001, 2003 Dan Potter
+   Copyright (C) 2000, 2001, 2003 Megan Potter
    Copyright (C) 2001 Andrew Kieschnick
    Copyright (C) 2002 Bero
    Copyright (C) 2012, 2013, 2014, 2016 Lawrence Sebald
@@ -45,7 +45,7 @@ ISO9660 systems, as these were used as references as well.
 #include <malloc.h>
 #include <errno.h>
 
-static int init_percd();
+static int init_percd(void);
 static int percd_done;
 
 /********************************************************************************/
@@ -241,7 +241,7 @@ static void bgrad_cache(cache_block_t **cache, int block) {
 /* Pulls the requested sector into a cache block and returns the cache
    block index. Note that the sector in question may already be in the
    cache, in which case it just returns the containing block. */
-static void iso_break_all();
+static void iso_break_all(void);
 static int bread_cache(cache_block_t **cache, uint32 sector) {
     int i, j, rv;
 
@@ -304,7 +304,7 @@ static int biread(uint32 sector) {
 }
 
 /* Clear both caches */
-static void bclear() {
+static void bclear(void) {
     bclear_cache(dcache);
     bclear_cache(icache);
 }
@@ -324,7 +324,7 @@ static iso_dirent_t root_dirent;
 
 /* Per-disc initialization; this is done every time it's discovered that
    a new CD has been inserted. */
-static int init_percd() {
+static int init_percd(void) {
     int     i, blk;
     CDROM_TOC   toc;
 
@@ -584,7 +584,7 @@ static mutex_t fh_mutex;
    is changed so that we don't accidentally try to keep on doing stuff
    with the old info. As files are closed and re-opened, the broken flag
    will be cleared. */
-static void iso_break_all() {
+static void iso_break_all(void) {
     int i;
 
     mutex_lock(&fh_mutex);
@@ -685,7 +685,7 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
            here commented out in case we could find a better use
            for it later than speed (i.e., preventing thread context
            switches). */
-        /* if (thissect == 2048 && toread >= 2048) {
+        /* if(thissect == 2048 && toread >= 2048) {
             // Round it off to an even sector count
             thissect = toread / 2048;
             toread = thissect * 2048;
@@ -694,7 +694,7 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
                 thissect);
 
             // Do the read
-            if (cdrom_read_sectors(outbuf,
+            if(cdrom_read_sectors(outbuf,
                 fh[fd].first_extent + fh[fd].ptr/2048 + 150,
                 thissect) < 0)
             {
@@ -915,7 +915,7 @@ static int iso_rewinddir(void * h) {
     return 0;
 }
 
-int iso_reset() {
+int iso_reset(void) {
     iso_break_all();
     bclear();
     percd_done = 0;
@@ -1052,7 +1052,7 @@ static vfs_handler_t vh = {
 };
 
 /* Initialize the file system */
-int fs_iso9660_init() {
+int fs_iso9660_init(void) {
     int i;
 
     /* Reset fd's */
@@ -1084,7 +1084,7 @@ int fs_iso9660_init() {
 }
 
 /* De-init the file system */
-int fs_iso9660_shutdown() {
+int fs_iso9660_shutdown(void) {
     int i;
 
     /* De-register with vblank */

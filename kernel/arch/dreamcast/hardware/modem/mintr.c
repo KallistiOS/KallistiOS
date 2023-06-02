@@ -609,7 +609,7 @@ void modemIntShutdown(void) {
 #define dspSetClear8(addr, mask, clear)\
     {\
         data = dspRead8(addr);\
-        if (!(clear))\
+        if(!(clear))\
             data |= mask;\
         else\
             data &= ~mask;\

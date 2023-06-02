@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/maple.h
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
    Copyright (C) 2015 Lawrence Sebald
 
    This new driver's design is based loosely on the LinuxDC maple
@@ -20,7 +20,7 @@
     accessed through the functions here. Most of the drivers have their own
     functionality that is implemented in their header files, as well.
 
-    \author Dan Potter
+    \author Megan Potter
     \author Lawrence Sebald
 
     \see    dc/maple/controller.h
@@ -262,7 +262,7 @@ typedef struct maple_device {
 
 /** \brief  Internal representation of a Maple port.
 
-    each maple port can contain up to 6 devices, the first one of which is
+    Each maple port can contain up to 6 devices, the first one of which is
     always the port itself.
 
     \headerfile dc/maple.h
@@ -417,33 +417,33 @@ extern maple_state_t maple_state;
     This will be done for you autmatically at init time, and there's probably
     not many reasons to be doing this during runtime.
 */
-void maple_bus_enable();
+void maple_bus_enable(void);
 
 /** \brief  Disable the Maple bus.
 
     There's really not many good reasons to be mucking with this at runtime.
 */
-void maple_bus_disable();
+void maple_bus_disable(void);
 
 /** \brief  Start a Maple DMA.
 
     This stuff will all be handled internally, so there's probably no reason to
     be doing this yourself.
 */
-void maple_dma_start();
+void maple_dma_start(void);
 
 /** \brief  Stop a Maple DMA.
 
     This stuff will all be handled internally, so there's probably no reason to
     be doing this yourself.
 */
-void maple_dma_stop();
+void maple_dma_stop(void);
 
 /** \brief  Is a Maple DMA in progress?
 
     \return                 Non-zero if a DMA is in progress.
 */
-int maple_dma_in_progress();
+int maple_dma_in_progress(void);
 
 /** \brief  Set the Maple DMA address.
 
@@ -553,7 +553,7 @@ void maple_sentinel_verify(const char * bufname, void * buffer, int bufsize);
 /* maple_queue.c */
 
 /** \brief  Send all queued frames. */
-void maple_queue_flush();
+void maple_queue_flush(void);
 
 /** \brief  Submit a frame for queueing.
 
@@ -637,6 +637,44 @@ int maple_driver_detach(int p, int u);
 */
 int maple_driver_foreach(maple_driver_t *drv, int (*callback)(maple_device_t *));
 
+/** \brief  Maple attach callback type.
+
+    Functions of this type can be set with maple_attach_callback() to respond
+    automatically to the attachment of a maple device that supports specified
+    functions.
+*/
+typedef void (*maple_attach_callback_t)(maple_device_t *dev);
+
+/** \brief  Set an automatic maple attach callback.
+
+    This function sets a callback function to be called when the specified
+    maple device that supports functions has been attached.
+
+    \param  functions       The functions maple device must support. Set to
+                            0 to support all maple devices.
+    \param  cb              The callback to call when the maple is attached.
+*/
+void maple_attach_callback(uint32 functions, maple_attach_callback_t cb);
+
+/** \brief  Maple detach callback type.
+
+    Functions of this type can be set with maple_detach_callback() to respond
+    automatically to the detachment of a maple device that supports specified
+    functions.
+*/
+typedef void (*maple_detach_callback_t)(maple_device_t *dev);
+
+/** \brief  Set an automatic maple detach callback.
+
+    This function sets a callback function to be called when the specified
+    maple device that supports functions has been detached.
+
+    \param  functions       The functions maple device must support. Set to
+                            0 to support all maple devices.
+    \param  cb              The callback to call when the maple is detached.
+*/
+void maple_detach_callback(uint32 functions, maple_detach_callback_t cb);
+
 /**************************************************************************/
 /* maple_irq.c */
 
@@ -656,7 +694,7 @@ void maple_dma_irq_hnd(uint32 code);
 /** \brief  Return the number of connected devices.
     \return                 The number of devices connected.
 */
-int maple_enum_count();
+int maple_enum_count(void);
 
 /** \brief  Get a raw device info struct for the given device.
     \param  p               The port to look up.
@@ -704,13 +742,13 @@ void * maple_dev_status(maple_device_t *dev);
 /** \brief  Initialize Maple.
     \return                 0 on success, <0 on failure.
 */
-int maple_init();
+int maple_init(void);
 
 /** \brief  Shutdown Maple. */
-void maple_shutdown();
+void maple_shutdown(void);
 
 /** \brief  Wait for the initial bus scan to complete. */
-void maple_wait_scan();
+void maple_wait_scan(void);
 
 /**************************************************************************/
 /* Convienence macros */
@@ -719,7 +757,7 @@ void maple_wait_scan();
    like this:
 
    MAPLE_FOREACH_BEGIN(MAPLE_FUNC_CONTROLLER, cont_state_t, st)
-    if (st->buttons & CONT_START)
+    if(st->buttons & CONT_START)
         return -1;
    MAPLE_FOREACH_END()
 
@@ -748,7 +786,7 @@ void maple_wait_scan();
         int __i; \
         \
         __i = 0; \
-        while ( (__dev = maple_enum_type(__i, TYPE)) ) { \
+        while( (__dev = maple_enum_type(__i, TYPE)) ) { \
             VAR = (VARTYPE *)maple_dev_status(__dev); \
             do {
 

@@ -1,23 +1,23 @@
 #
 # KallistiGL test program in C++
-# (c)2001 Dan Potter
+# (c)2001 Megan Potter
 #   
 
 TARGET = gltest.elf
-OBJS = gltest.o
+OBJS = gltest.o romdisk.o
 
 all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules
 
-clean:
-	-rm -f $(TARGET) $(OBJS) romdisk.*
+clean: rm-elf
+	-rm -f $(OBJS)
 
 rm-elf:
 	-rm -f $(TARGET) romdisk.*
 
-$(TARGET): $(OBJS) romdisk.o
-	kos-c++ -o $(TARGET) $(OBJS) romdisk.o -lGL -lkosutils
+$(TARGET): $(OBJS)
+	kos-c++ -o $(TARGET) $(OBJS) -lGL -lkosutils
 
 romdisk.img:
 	$(KOS_GENROMFS) -f romdisk.img -d romdisk -v
@@ -28,7 +28,7 @@ romdisk.o: romdisk.img
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 
-dist:
-	rm -f $(OBJS) romdisk.o romdisk.img
+dist: $(TARGET)
+	-rm -f $(OBJS) romdisk.img
 	$(KOS_STRIP) $(TARGET)
 

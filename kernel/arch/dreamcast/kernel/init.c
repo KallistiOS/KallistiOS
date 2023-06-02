@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    init.c
-   Copyright (C) 2003 Dan Potter
+   Copyright (C) 2003 Megan Potter
    Copyright (C) 2015 Lawrence Sebald
 */
 
@@ -22,17 +22,17 @@
 
 extern int _bss_start, end;
 
-void _atexit_call_all();
-
 /* ctor/dtor stuff from libgcc. */
 #if __GNUC__ == 4
 #define _init init
 #define _fini fini
 #endif
 
-void _init(void);
-void _fini(void);
-void __verify_newlib_patch();
+extern void _init(void);
+extern void _fini(void);
+extern void __verify_newlib_patch();
+
+void (*__kos_init_early_fn)(void) __attribute__((weak,section(".data"))) = NULL;
 
 int main(int argc, char **argv);
 uint32 _fs_dclsocket_get_ip(void);
@@ -61,7 +61,7 @@ int dbgio_handler_cnt = sizeof(dbgio_handlers) / sizeof(dbgio_handler_t *);
 /* Auto-init stuff: override with a non-weak symbol if you don't want all of
    this to be linked into your code (and do the same with the
    arch_auto_shutdown function too). */
-int  __attribute__((weak)) arch_auto_init() {
+int  __attribute__((weak)) arch_auto_init(void) {
 #ifndef _arch_sub_naomi
     union {
         uint32 ipl;
@@ -101,14 +101,16 @@ int  __attribute__((weak)) arch_auto_init() {
     hardware_sys_init();        /* DC low-level hardware init */
 
     /* Initialize our timer */
+    timer_ns_enable();
     timer_ms_enable();
     rtc_init();
 
     /* Threads */
-    if(__kos_init_flags & INIT_THD_PREEMPT)
-        thd_init(THD_MODE_PREEMPT);
-    else
-        thd_init(THD_MODE_COOP);
+    if(!(__kos_init_flags & INIT_THD_PREEMPT))
+        dbglog(DBG_WARNING, "Cooperative threading mode is deprecated. KOS is \
+        always in pre-emptive threading mode. \n");
+
+    thd_init();
 
     nmmgr_init();
 
@@ -116,6 +118,14 @@ int  __attribute__((weak)) arch_auto_init() {
     fs_pty_init();          /* Pty */
     fs_ramdisk_init();      /* Ramdisk */
     fs_romdisk_init();      /* Romdisk */
+
+/* The arc4random_buf() function used for random & urandom is only
+   available in newlib starting with version 2.4.0 */
+#if defined(__NEWLIB__) && !(__NEWLIB__ < 2 && __NEWLIB_MINOR__ < 4)
+    fs_dev_init();          /* /dev/urandom etc. */
+#else
+#warning "/dev filesystem is not supported with Newlib < 2.4.0"
+#endif
 
     hardware_periph_init();     /* DC peripheral init */
 
@@ -174,7 +184,7 @@ int  __attribute__((weak)) arch_auto_init() {
     return 0;
 }
 
-void  __attribute__((weak)) arch_auto_shutdown() {
+void  __attribute__((weak)) arch_auto_shutdown(void) {
 #ifndef _arch_sub_naomi
     fs_dclsocket_shutdown();
     net_shutdown();
@@ -194,6 +204,9 @@ void  __attribute__((weak)) arch_auto_shutdown() {
 #ifndef _arch_sub_naomi
     fs_iso9660_shutdown();
 #endif
+#if defined(__NEWLIB__) && !(__NEWLIB__ < 2 && __NEWLIB_MINOR__ < 4)
+    fs_dev_shutdown();
+#endif
     fs_ramdisk_shutdown();
     fs_romdisk_shutdown();
     fs_pty_shutdown();
@@ -203,7 +216,7 @@ void  __attribute__((weak)) arch_auto_shutdown() {
 }
 
 /* This is the entry point inside the C program */
-int arch_main() {
+void arch_main(void) {
     uint8 *bss_start = (uint8 *)(&_bss_start);
     uint8 *bss_end = (uint8 *)(&end);
     int rv;
@@ -219,23 +232,26 @@ int arch_main() {
     /* Ensure that UBC is not enabled from a previous session */
     ubc_disable_all();
 
+    /* Handle optional callback provided by KOS_INIT_EARLY() */
+    if(__kos_init_early_fn)
+        __kos_init_early_fn();
+
     /* Clear out the BSS area */
     memset(bss_start, 0, bss_end - bss_start);
 
     /* Do auto-init stuff */
     arch_auto_init();
 
-    /* Run ctors */
     __verify_newlib_patch();
+
+    /* Run ctors */
     _init();
 
     /* Call the user's main function */
     rv = main(0, NULL);
 
     /* Call kernel exit */
-    arch_exit();
-
-    return rv;
+    exit(rv);
 }
 
 /* Set the exit path (default is RETURN) */
@@ -246,9 +262,8 @@ void arch_set_exit_path(int path) {
 }
 
 /* Does the actual shutdown stuff for a proper shutdown */
-void arch_shutdown() {
+void arch_shutdown(void) {
     /* Run dtors */
-    _atexit_call_all();
     _fini();
 
     dbglog(DBG_CRITICAL, "arch: shutting down kernel\n");
@@ -279,41 +294,47 @@ void arch_shutdown() {
     irq_shutdown();
 }
 
-/* Generic kernel exit point (configurable) */
-void arch_exit() {
+/* Generic kernel exit point */
+void arch_exit(void) {
+    /* arch_exit always returns EXIT_SUCCESS (0)
+       if return codes are desired then a call to
+       newlib's exit() should be used in its place */
+    exit(EXIT_SUCCESS);
+}
+
+/* Return point from newlib's _exit() (configurable) */
+void arch_exit_handler(int ret_code) {
+    dbglog(DBG_INFO, "arch: exit return code %d\n", ret_code);
+
+    /* Shut down */
+    arch_shutdown();
+
     switch(arch_exit_path) {
         default:
             dbglog(DBG_CRITICAL, "arch: arch_exit_path has invalid value!\n");
             __fallthrough;
         case ARCH_EXIT_RETURN:
-            arch_return();
+            arch_return(ret_code);
             break;
         case ARCH_EXIT_MENU:
             arch_menu();
             break;
         case ARCH_EXIT_REBOOT:
-            arch_shutdown();
             arch_reboot();
             break;
     }
 }
 
 /* Called to shut down the system and return to the debug handler (if any) */
-void arch_return() {
-    /* Shut down */
-    arch_shutdown();
-
+void arch_return(int ret_code) {
     /* Jump back to the boot loader */
-    arch_real_exit();
+    arch_real_exit(ret_code);
 }
 
 /* Called to jump back to the BIOS menu; assumes a normal shutdown is possible */
-void arch_menu() {
+void arch_menu(void) {
     typedef void (*menufunc)(int) __noreturn;
     menufunc menu;
-
-    /* Shut down */
-    arch_shutdown();
 
     /* Jump to the menus */
     dbglog(DBG_CRITICAL, "arch: exiting the system to the BIOS menu\n");
@@ -323,7 +344,7 @@ void arch_menu() {
 
 /* Called to shut down non-gracefully; assume the system is in peril
    and don't try to call the dtors */
-void arch_abort() {
+void arch_abort(void) {
     /* Turn off UBC breakpoints, if any */
     ubc_disable_all();
 
@@ -342,12 +363,12 @@ void arch_abort() {
     /* Turn off any IRQs */
     irq_disable();
 
-    arch_real_exit();
+    arch_real_exit(EXIT_FAILURE);
 }
 
 /* Called to reboot the system; assume the system is in peril and don't
    try to call the dtors */
-void arch_reboot() {
+void arch_reboot(void) {
     typedef void (*reboot_func)() __noreturn;
     reboot_func rb;
 

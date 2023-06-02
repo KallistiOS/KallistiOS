@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    vmufs.c
-   Copyright (C) 2003 Dan Potter
+   Copyright (C) 2003 Megan Potter
 
 */
 
@@ -486,11 +486,11 @@ int vmufs_dir_free(vmu_root_t * root, vmu_dir_t * dir) {
     return freeblocks;
 }
 
-int vmufs_mutex_lock() {
+int vmufs_mutex_lock(void) {
     return mutex_lock(&mutex);
 }
 
-int vmufs_mutex_unlock() {
+int vmufs_mutex_unlock(void) {
     return mutex_unlock(&mutex);
 }
 
@@ -754,7 +754,7 @@ int vmufs_write(maple_device_t * dev, const char * fn, void * inbuf, int insize,
 
     /* Write out the data and update our structs */
     if((st = vmufs_file_write(dev, &root, fat, dir, &nd, inbuf, insize / 512)) < 0) {
-        if (st == -2)
+        if(st == -2)
             rv = -7;
         else
             rv = -4;
@@ -838,12 +838,12 @@ int vmufs_free_blocks(maple_device_t * dev) {
 
 
 
-int vmufs_init() {
+int vmufs_init(void) {
     mutex_init(&mutex, MUTEX_TYPE_NORMAL);
     return 0;
 }
 
-int vmufs_shutdown() {
+int vmufs_shutdown(void) {
     mutex_destroy(&mutex);
     return 0;
 }

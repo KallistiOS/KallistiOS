@@ -1,6 +1,6 @@
-diff --color -ruN --no-dereference gcc-4.7.4/gcc/config/sh/sh.h gcc-4.7.4-kos/gcc/config/sh/sh.h
---- gcc-4.7.4/gcc/config/sh/sh.h	2023-01-02 13:58:37.404216244 -0600
-+++ gcc-4.7.4-kos/gcc/config/sh/sh.h	2023-01-02 14:01:27.796461128 -0600
+diff -ruN gcc-4.7.4/gcc/config/sh/sh.h gcc-4.7.4-kos/gcc/config/sh/sh.h
+--- gcc-4.7.4/gcc/config/sh/sh.h	2023-05-19 21:08:39.913229830 -0500
++++ gcc-4.7.4-kos/gcc/config/sh/sh.h	2023-05-19 21:08:47.737321451 -0500
 @@ -93,6 +93,12 @@
      builtin_define ("__FMOVD_ENABLED__"); \
    builtin_define (TARGET_LITTLE_ENDIAN \
@@ -14,9 +14,9 @@ diff --color -ruN --no-dereference gcc-4.7.4/gcc/config/sh/sh.h gcc-4.7.4-kos/gc
  } while (0)
  
  /* Value should be nonzero if functions must have frame pointers.
-diff --color -ruN --no-dereference gcc-4.7.4/gcc/configure gcc-4.7.4-kos/gcc/configure
---- gcc-4.7.4/gcc/configure	2023-01-02 13:58:36.285214636 -0600
-+++ gcc-4.7.4-kos/gcc/configure	2023-01-02 13:58:54.491240801 -0600
+diff -ruN gcc-4.7.4/gcc/configure gcc-4.7.4-kos/gcc/configure
+--- gcc-4.7.4/gcc/configure	2023-05-19 21:08:39.545225523 -0500
++++ gcc-4.7.4-kos/gcc/configure	2023-05-19 21:08:47.737321451 -0500
 @@ -11338,7 +11338,7 @@
      target_thread_file='single'
      ;;
@@ -26,9 +26,9 @@ diff --color -ruN --no-dereference gcc-4.7.4/gcc/configure gcc-4.7.4-kos/gcc/con
      target_thread_file=${enable_threads}
      ;;
    *)
-diff --color -ruN --no-dereference gcc-4.7.4/gcc/cp/cfns.h gcc-4.7.4-kos/gcc/cp/cfns.h
---- gcc-4.7.4/gcc/cp/cfns.h	2023-01-02 13:58:37.377216206 -0600
-+++ gcc-4.7.4-kos/gcc/cp/cfns.h	2023-01-02 13:58:54.491240801 -0600
+diff -ruN gcc-4.7.4/gcc/cp/cfns.h gcc-4.7.4-kos/gcc/cp/cfns.h
+--- gcc-4.7.4/gcc/cp/cfns.h	2023-05-19 21:08:39.905229736 -0500
++++ gcc-4.7.4-kos/gcc/cp/cfns.h	2023-05-19 21:08:47.737321451 -0500
 @@ -53,6 +53,9 @@
  static unsigned int hash (const char *, unsigned int);
  #ifdef __GNUC__
@@ -48,9 +48,9 @@ diff --color -ruN --no-dereference gcc-4.7.4/gcc/cp/cfns.h gcc-4.7.4-kos/gcc/cp/
  
    switch (hval)
      {
-diff --color -ruN --no-dereference gcc-4.7.4/gcc/doc/gcc.texi gcc-4.7.4-kos/gcc/doc/gcc.texi
---- gcc-4.7.4/gcc/doc/gcc.texi	2023-01-02 13:58:36.278214626 -0600
-+++ gcc-4.7.4-kos/gcc/doc/gcc.texi	2023-01-02 13:58:54.491240801 -0600
+diff -ruN gcc-4.7.4/gcc/doc/gcc.texi gcc-4.7.4-kos/gcc/doc/gcc.texi
+--- gcc-4.7.4/gcc/doc/gcc.texi	2023-05-19 21:08:39.541225476 -0500
++++ gcc-4.7.4-kos/gcc/doc/gcc.texi	2023-05-19 21:08:47.737321451 -0500
 @@ -86,9 +86,9 @@
  @item GNU Press
  @tab Website: www.gnupress.org
@@ -63,10 +63,10 @@ diff --color -ruN --no-dereference gcc-4.7.4/gcc/doc/gcc.texi gcc-4.7.4-kos/gcc/
  @item 51 Franklin Street, Fifth Floor
  @tab Tel 617-542-5942
  @item Boston, MA 02110-1301 USA
-diff --color -ruN --no-dereference gcc-4.7.4/libgcc/config/sh/crt1.S gcc-4.7.4-kos/libgcc/config/sh/crt1.S
---- gcc-4.7.4/libgcc/config/sh/crt1.S	2023-01-02 13:58:36.183214490 -0600
-+++ gcc-4.7.4-kos/libgcc/config/sh/crt1.S	2023-01-02 13:59:37.563302704 -0600
-@@ -1,1369 +1,225 @@
+diff -ruN gcc-4.7.4/libgcc/config/sh/crt1.S gcc-4.7.4-kos/libgcc/config/sh/crt1.S
+--- gcc-4.7.4/libgcc/config/sh/crt1.S	2023-05-19 21:08:39.465224587 -0500
++++ gcc-4.7.4-kos/libgcc/config/sh/crt1.S	2023-05-19 21:08:47.737321451 -0500
+@@ -1,1369 +1,236 @@
 -/* Copyright (C) 2000, 2001, 2003, 2004, 2005, 2006, 2009, 2011
 -   Free Software Foundation, Inc.
 -   This file was pretty much copied from newlib.
@@ -219,7 +219,26 @@ diff --color -ruN --no-dereference gcc-4.7.4/libgcc/config/sh/crt1.S gcc-4.7.4-k
 -
 -#ifdef MMU_SUPPORT
 -	! Set up the VM using the MMU and caches
--
++! KallistiOS ##version##
++!
++! startup.s
++! (c)2000-2001 Megan Potter
++!
++! This file must appear FIRST in your linking order, or your program won't
++! work correctly as a raw binary.
++!
++! This is very loosely based on Marcus' crt0.s/startup.s
++!
++
++.globl start
++.globl _start
++.globl _arch_real_exit
++.globl __arch_old_sr
++.globl __arch_old_vbr
++.globl __arch_old_stack
++.globl __arch_old_fpscr
++.globl __arch_mem_top
+ 
 -	! .vm_ep is first instruction to execute
 -	! after VM initialization
 -	pt/l	.vm_ep, tr1
@@ -758,27 +777,10 @@ diff --color -ruN --no-dereference gcc-4.7.4/libgcc/config/sh/crt1.S gcc-4.7.4-k
 -profiling_enabled:
 -	.long 0
 -#endif
--
-+! KallistiOS ##version##
-+!
-+! startup.s
-+! (c)2000-2001 Dan Potter
-+!
-+! This file must appear FIRST in your linking order, or your program won't
-+! work correctly as a raw binary.
-+!
-+! This is very loosely based on Marcus' crt0.s/startup.s
-+!
-+
-+.globl start
-+.globl _start
-+.globl _arch_real_exit
-+.globl __arch_old_sr
-+.globl __arch_old_vbr
-+.globl __arch_old_stack
-+.globl __arch_old_fpscr
-+.globl __arch_mem_top
++.weak   _arch_stack_16m
++.weak   _arch_stack_32m
  
+-
 -	.section .text
 -	.global	start
 -	.import ___rtos_profiler_start_timer
@@ -929,6 +931,7 @@ diff --color -ruN --no-dereference gcc-4.7.4/libgcc/config/sh/crt1.S gcc-4.7.4-k
 +	mov.l	old_stack_addr,r0
 +	mov.l	r15,@r0
 +	mov.l   new_stack_16m,r15
++	mov.l	@r15,r15
 +
 +	! Check if 0xadffffff is a mirror of 0xacffffff, or if unique
 +	! If unique, then memory is 32MB instead of 16MB, and we must
@@ -939,6 +942,7 @@ diff --color -ruN --no-dereference gcc-4.7.4/libgcc/config/sh/crt1.S gcc-4.7.4-k
 +	mov	#0xba,r1
 +	mov.b	r1,@-r2			! Store 0xba to 0xacffffff
 +	mov.l	new_stack_32m,r1
++	mov.l	@r1,r1
 +	or	r0,r1
 +	mov	#0xab,r0
 +	mov.b	r0,@-r1			! Store 0xab in 0xadffffff
@@ -947,6 +951,7 @@ diff --color -ruN --no-dereference gcc-4.7.4/libgcc/config/sh/crt1.S gcc-4.7.4-k
 +	cmp/eq	r0,r1			! Check if values match
 +	bt	memchk_done		! If so, mirror - we're done, move on
 +	mov.l	new_stack_32m,r15	! If not, unique - set higher stack
++	mov.l	@r15,r15
 +memchk_done:
 +	mov.l	mem_top_addr,r0
 +	mov.l	r15,@r0			! Save address of top of memory
@@ -1111,6 +1116,9 @@ diff --color -ruN --no-dereference gcc-4.7.4/libgcc/config/sh/crt1.S gcc-4.7.4-k
 +	! Program can return here (not likely) or jump here directly
 +	! from anywhere in it to go straight back to the monitor
 +_arch_real_exit:
++	! Save exit code parameter to r8
++	mov r4, r8
++
 +	! Reset SR
 +	mov.l	old_sr,r0
 +	ldc	r0,sr
@@ -1404,6 +1412,8 @@ diff --color -ruN --no-dereference gcc-4.7.4/libgcc/config/sh/crt1.S gcc-4.7.4-k
 -	mov	r14,r15
 -	mov.l	@r15+,r14
 -	rts	
++	! Move saved exit code to be used as exit syscall parameter
++	mov r8, r5
 +	jsr	@r0
 +	mov	#15,r4
 +
@@ -1621,9 +1631,9 @@ diff --color -ruN --no-dereference gcc-4.7.4/libgcc/config/sh/crt1.S gcc-4.7.4-k
 +mem_top_addr:
 +	.long	__arch_mem_top
 +new_stack_16m:
-+	.long	0x8d000000
++	.long	_arch_stack_16m
 +new_stack_32m:
-+	.long	0x8e000000
++	.long	_arch_stack_32m
 +p2_mask:
 +	.long	0xa0000000
 +setup_cache_addr:
@@ -1644,9 +1654,9 @@ diff --color -ruN --no-dereference gcc-4.7.4/libgcc/config/sh/crt1.S gcc-4.7.4-k
 +	.word	0x090d
 +ccr_data_ocram:
 +	.word	0x092d
-diff --color -ruN --no-dereference gcc-4.7.4/libgcc/config/sh/fake-kos.S gcc-4.7.4-kos/libgcc/config/sh/fake-kos.S
+diff -ruN gcc-4.7.4/libgcc/config/sh/fake-kos.S gcc-4.7.4-kos/libgcc/config/sh/fake-kos.S
 --- gcc-4.7.4/libgcc/config/sh/fake-kos.S	1969-12-31 18:00:00.000000000 -0600
-+++ gcc-4.7.4-kos/libgcc/config/sh/fake-kos.S	2023-01-02 13:58:54.492240803 -0600
++++ gcc-4.7.4-kos/libgcc/config/sh/fake-kos.S	2023-05-19 21:08:47.737321451 -0500
 @@ -0,0 +1,75 @@
 +! Weakly linked symbols used to get GCC to hopefully compile itself properly.
 +! These will be replaced by the real symbols in actual compiled programs.
@@ -1724,9 +1734,9 @@ diff --color -ruN --no-dereference gcc-4.7.4/libgcc/config/sh/fake-kos.S gcc-4.7
 +    mov     #-1, r0
 +    
 \ No newline at end of file
-diff --color -ruN --no-dereference gcc-4.7.4/libgcc/config/sh/gthr-kos.h gcc-4.7.4-kos/libgcc/config/sh/gthr-kos.h
+diff -ruN gcc-4.7.4/libgcc/config/sh/gthr-kos.h gcc-4.7.4-kos/libgcc/config/sh/gthr-kos.h
 --- gcc-4.7.4/libgcc/config/sh/gthr-kos.h	1969-12-31 18:00:00.000000000 -0600
-+++ gcc-4.7.4-kos/libgcc/config/sh/gthr-kos.h	2023-01-02 13:58:54.492240803 -0600
++++ gcc-4.7.4-kos/libgcc/config/sh/gthr-kos.h	2023-05-19 21:08:47.737321451 -0500
 @@ -0,0 +1,355 @@
 +/* Copyright (C) 2009, 2010, 2011, 2012 Lawrence Sebald */
 +
@@ -2083,9 +2093,9 @@ diff --color -ruN --no-dereference gcc-4.7.4/libgcc/config/sh/gthr-kos.h gcc-4.7
 +#endif /* _LIBOBJC */
 +
 +#endif /* ! GCC_GTHR_KOS_H */
-diff --color -ruN --no-dereference gcc-4.7.4/libgcc/config/sh/t-sh gcc-4.7.4-kos/libgcc/config/sh/t-sh
---- gcc-4.7.4/libgcc/config/sh/t-sh	2023-01-02 13:58:36.183214490 -0600
-+++ gcc-4.7.4-kos/libgcc/config/sh/t-sh	2023-01-02 13:58:54.492240803 -0600
+diff -ruN gcc-4.7.4/libgcc/config/sh/t-sh gcc-4.7.4-kos/libgcc/config/sh/t-sh
+--- gcc-4.7.4/libgcc/config/sh/t-sh	2023-05-19 21:08:39.465224587 -0500
++++ gcc-4.7.4-kos/libgcc/config/sh/t-sh	2023-05-19 21:08:47.737321451 -0500
 @@ -24,6 +24,8 @@
    $(LIB1ASMFUNCS_CACHE)
  LIB1ASMFUNCS_CACHE = _ic_invalidate _ic_invalidate_array
@@ -2095,9 +2105,9 @@ diff --color -ruN --no-dereference gcc-4.7.4/libgcc/config/sh/t-sh gcc-4.7.4-kos
  crt1.o: $(srcdir)/config/sh/crt1.S
  	$(gcc_compile) -c $<
  
-diff --color -ruN --no-dereference gcc-4.7.4/libgcc/configure gcc-4.7.4-kos/libgcc/configure
---- gcc-4.7.4/libgcc/configure	2023-01-02 13:58:36.168214468 -0600
-+++ gcc-4.7.4-kos/libgcc/configure	2023-01-02 13:58:54.492240803 -0600
+diff -ruN gcc-4.7.4/libgcc/configure gcc-4.7.4-kos/libgcc/configure
+--- gcc-4.7.4/libgcc/configure	2023-05-19 21:08:39.457224494 -0500
++++ gcc-4.7.4-kos/libgcc/configure	2023-05-19 21:08:47.737321451 -0500
 @@ -4480,6 +4480,7 @@
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;
@@ -2106,9 +2116,42 @@ diff --color -ruN --no-dereference gcc-4.7.4/libgcc/configure gcc-4.7.4-kos/libg
  esac
  
  # Substitute configuration variables
-diff --color -ruN --no-dereference gcc-4.7.4/libstdc++-v3/config/cpu/sh/atomicity.h gcc-4.7.4-kos/libstdc++-v3/config/cpu/sh/atomicity.h
---- gcc-4.7.4/libstdc++-v3/config/cpu/sh/atomicity.h	2023-01-02 13:58:35.186213057 -0600
-+++ gcc-4.7.4-kos/libstdc++-v3/config/cpu/sh/atomicity.h	2023-01-02 13:58:54.493240804 -0600
+diff -ruN gcc-4.7.4/libobjc/Makefile.in gcc-4.7.4-kos/libobjc/Makefile.in
+--- gcc-4.7.4/libobjc/Makefile.in	2023-05-19 21:08:39.197221451 -0500
++++ gcc-4.7.4-kos/libobjc/Makefile.in	2023-05-19 21:09:56.730134438 -0500
+@@ -307,14 +307,16 @@
+ $(srcdir)/aclocal.m4: @MAINT@ $(aclocal_deps)
+ 	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
+ 
+-install: install-libs install-headers
++install-strip: INSTALL_STRIP_FLAG = -s
++install install-strip: install-libs install-headers
+ 
+ install-libs: installdirs
+ 	$(SHELL) $(multi_basedir)/mkinstalldirs $(DESTDIR)$(toolexeclibdir)
+-	$(LIBTOOL_INSTALL) $(INSTALL) libobjc$(libsuffix).la $(DESTDIR)$(toolexeclibdir);
++	$(LIBTOOL_INSTALL) $(INSTALL) $(INSTALL_STRIP_FLAG) \
++	  libobjc$(libsuffix).la $(DESTDIR)$(toolexeclibdir);
+ 	if [ "$(OBJC_BOEHM_GC)" ]; then \
+-	  $(LIBTOOL_INSTALL) $(INSTALL) libobjc_gc$(libsuffix).la \
+-				$(DESTDIR)$(toolexeclibdir);\
++	  $(LIBTOOL_INSTALL) $(INSTALL) $(INSTALL_STRIP_FLAG) \
++	    libobjc_gc$(libsuffix).la $(DESTDIR)$(toolexeclibdir);\
+ 	fi
+ 	$(MULTIDO) $(FLAGS_TO_PASS) multi-do DO="$@"
+ 	@-$(LIBTOOL) --mode=finish $(DESTDIR)$(toolexeclibdir)
+@@ -327,7 +329,7 @@
+ 	  $(INSTALL_DATA) $${realfile} $(DESTDIR)$(libsubdir)/$(includedirname)/objc; \
+ 	done
+ 
+-check uninstall install-strip dist installcheck installdirs:
++check uninstall dist installcheck installdirs:
+ 
+ mostlyclean:
+ 	-$(LIBTOOL_CLEAN) rm -f libobjc$(libsuffix).la libobjc_gc$(libsuffix).la *.lo
+diff -ruN gcc-4.7.4/libstdc++-v3/config/cpu/sh/atomicity.h gcc-4.7.4-kos/libstdc++-v3/config/cpu/sh/atomicity.h
+--- gcc-4.7.4/libstdc++-v3/config/cpu/sh/atomicity.h	2023-05-19 21:08:39.197221451 -0500
++++ gcc-4.7.4-kos/libstdc++-v3/config/cpu/sh/atomicity.h	2023-05-19 21:08:47.737321451 -0500
 @@ -80,7 +80,12 @@
  
  namespace 

@@ -47,9 +47,11 @@ static int initted = 0;
 /* IP fragment "thread" -- this thread is set up to delete fragments for which
    the "death_time" has passed. This is run approximately once every two
    seconds (since death_time is always on the order of seconds). */
-static void frag_thd_cb(void *data __attribute__((unused))) {
+static void frag_thd_cb(void *data) {
     struct ip_frag *f, *n;
     uint64 now = timer_ms_gettime64();
+
+    (void)data;
 
     mutex_lock(&frag_mutex);
 

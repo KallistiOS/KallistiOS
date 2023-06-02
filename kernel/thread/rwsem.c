@@ -14,7 +14,7 @@
 #include <kos/genwait.h>
 
 /* Allocate a new reader/writer semaphore */
-rw_semaphore_t *rwsem_create() {
+rw_semaphore_t *rwsem_create(void) {
     rw_semaphore_t *s;
 
     dbglog(DBG_WARNING, "Creating reader/writer semaphore with deprecated "
@@ -67,8 +67,10 @@ int rwsem_destroy(rw_semaphore_t *s) {
 int rwsem_read_lock_timed(rw_semaphore_t *s, int timeout) {
     int old, rv = 0;
 
-    if(irq_inside_int()) {
-        dbglog(DBG_WARNING, "rwsem_read_lock_timed: called inside interrupt\n");
+    if((rv = irq_inside_int())) {
+        dbglog(DBG_WARNING, "%s: called inside an interrupt with code: %x evt: %.4x\n",
+               timeout ? "rwsem_read_lock_timed" : "rwsem_read_lock",
+               ((rv>>16) & 0xf), (rv & 0xffff));
         errno = EPERM;
         return -1;
     }
@@ -266,7 +268,7 @@ int rwsem_read_trylock(rw_semaphore_t *s) {
     int old, rv;
 
     old = irq_disable();
-    
+
     if(s->initialized != 1 && s->initialized != 2) {
         rv = -1;
         errno = EINVAL;

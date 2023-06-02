@@ -1,6 +1,82 @@
+diff -ruN binutils-2.34/bfd/plugin.c binutils-2.34-mingw/bfd/plugin.c
+--- binutils-2.34/bfd/plugin.c	2020-01-18 13:55:47 +0000
++++ binutils-2.34-mingw/bfd/plugin.c	2023-05-07 16:36:07 +0000
+@@ -237,6 +237,7 @@
+   int i;
+   ld_plugin_onload onload;
+   enum ld_plugin_status status;
++  int result = 0;
+   struct plugin_list_entry *plugin_list_iter;
+ 
+   *has_plugin_p = 0;
+@@ -254,9 +255,10 @@
+     {
+       if (plugin_handle == plugin_list_iter->handle)
+ 	{
+-	  dlclose (plugin_handle);
++	  /* If we have the same plugin_handle, don't call dlclose() as this will
++         we trigger an 'Access Violation' error at least on Windows.  */	
+ 	  if (!plugin_list_iter->claim_file)
+-	    return 0;
++	    goto short_circuit;
+ 
+ 	  register_claim_file (plugin_list_iter->claim_file);
+ 	  goto have_claim_file;
+@@ -265,7 +267,7 @@
+ 
+   plugin_list_iter = bfd_malloc (sizeof *plugin_list_iter);
+   if (plugin_list_iter == NULL)
+-    return 0;
++    goto short_circuit;
+   plugin_list_iter->handle = plugin_handle;
+   plugin_list_iter->claim_file = NULL;
+   plugin_list_iter->next = plugin_list;
+@@ -273,7 +275,7 @@
+ 
+   onload = dlsym (plugin_handle, "onload");
+   if (!onload)
+-    return 0;
++    goto short_circuit;
+ 
+   i = 0;
+   tv[i].tv_tag = LDPT_MESSAGE;
+@@ -291,10 +293,11 @@
+   tv[i].tv_tag = LDPT_NULL;
+   tv[i].tv_u.tv_val = 0;
+ 
++  /* LTO plugin will call handler hooks to set up plugin handlers.  */
+   status = (*onload)(tv);
+ 
+   if (status != LDPS_OK)
+-    return 0;
++    goto short_circuit;
+ 
+   plugin_list_iter->claim_file = claim_file;
+ 
+@@ -304,13 +307,17 @@
+   abfd->plugin_format = bfd_plugin_no;
+ 
+   if (!claim_file)
+-    return 0;
++    goto short_circuit;
+ 
+   if (!try_claim (abfd))
+-    return 0;
++    goto short_circuit;
+ 
+   abfd->plugin_format = bfd_plugin_yes;
+-  return 1;
++  result = 1;
++
++short_circuit:
++  dlclose (plugin_handle);
++  return result;
+ }
+ 
+ /* There may be plugin libraries in lib/bfd-plugins.  */
 diff -ruN binutils-2.34/libctf/ctf-create.c binutils-2.34-mingw/libctf/ctf-create.c
 --- binutils-2.34/libctf/ctf-create.c	2020-01-18 13:55:48 +0000
-+++ binutils-2.34-mingw/libctf/ctf-create.c	2020-04-21 18:54:55 +0000
++++ binutils-2.34-mingw/libctf/ctf-create.c	2023-04-23 11:52:41 +0000
 @@ -23,6 +23,11 @@
  #include <string.h>
  #include <zlib.h>
@@ -15,7 +91,7 @@ diff -ruN binutils-2.34/libctf/ctf-create.c binutils-2.34-mingw/libctf/ctf-creat
  #endif
 diff -ruN binutils-2.34/libctf/ctf-subr.c binutils-2.34-mingw/libctf/ctf-subr.c
 --- binutils-2.34/libctf/ctf-subr.c	2020-01-18 13:55:48 +0000
-+++ binutils-2.34-mingw/libctf/ctf-subr.c	2020-04-21 18:54:20 +0000
++++ binutils-2.34-mingw/libctf/ctf-subr.c	2023-04-23 11:52:41 +0000
 @@ -26,6 +26,11 @@
  #include <string.h>
  #include <unistd.h>

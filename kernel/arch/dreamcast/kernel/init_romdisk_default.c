@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    init_defaults.c
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
 */
 
 #include <arch/arch.h>

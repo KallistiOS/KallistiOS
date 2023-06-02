@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/cdrom.h
-   Copyright (C) 2000-2001 Dan Potter
+   Copyright (C) 2000-2001 Megan Potter
    Copyright (C) 2014 Donald Haase
 */
 
@@ -28,7 +28,7 @@ __BEGIN_DECLS
     level things with CDs. If you're looking for higher-level stuff, like 
     normal file reading, consult with the stuff for the fs and for fs_iso9660.
 
-    \author Dan Potter
+    \author Megan Potter
     \see    kos/fs.h
     \see    dc/fs_iso9660.h
 */
@@ -266,7 +266,7 @@ int cdrom_change_datatype(int sector_part, int cdxa, int sector_size);
     \return                 \ref cd_cmd_response
     \see    cdrom_reinit_ex
 */
-int cdrom_reinit();
+int cdrom_reinit(void);
 
 /** \brief    Re-initialize the GD-ROM drive with custom parameters.
 
@@ -363,13 +363,13 @@ int cdrom_cdda_play(uint32 start, uint32 end, uint32 loops, int mode);
 
     \return                 \ref cd_cmd_response
 */
-int cdrom_cdda_pause();
+int cdrom_cdda_pause(void);
 
 /** \brief  Resume CDDA audio playback after a pause.
 
     \return                 \ref cd_cmd_response
 */
-int cdrom_cdda_resume();
+int cdrom_cdda_resume(void);
 
 /** \brief  Spin down the CD.
 
@@ -377,7 +377,7 @@ int cdrom_cdda_resume();
 
     \return                 \ref cd_cmd_response
 */
-int cdrom_spin_down();
+int cdrom_spin_down(void);
 
 /** \brief  Initialize the GD-ROM for reading CDs.
 
@@ -387,10 +387,10 @@ int cdrom_spin_down();
     \retval 0               On success.
     \retval -1              Already initted, shutdown before initting again.
 */
-int cdrom_init();
+int cdrom_init(void);
 
 /** \brief  Shutdown the CD reading system. */
-void cdrom_shutdown();
+void cdrom_shutdown(void);
 
 __END_DECLS
 

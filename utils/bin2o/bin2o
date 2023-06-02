@@ -1,47 +1,66 @@
-#!/bin/sh
+#! /usr/bin/env bash
 
 # bin2o (heh)
 # script to convert a binary data to an elf object file
-# (c)2000 Dan Potter
+# (c)2000 Megan Potter
+
+# Unfortunately pipefail is not POSIX, see https://github.com/koalaman/shellcheck/issues/2555.
+set -o pipefail
+set -o nounset
+set -o errexit
+
+error() {
+        echo "bin2o:" "$@" 1>&2
+}
 
 if [ $# != 3 ]; then
 	echo "usage: $0 \<input file\> \<symbol\> \<output file\>"
 	exit 0
 fi
 
-for i in KOS_ARCH KOS_AS KOS_AFLAGS KOS_LD; do
+for i in KOS_ARCH KOS_AS KOS_AFLAGS KOS_LD ; do
 	if [ -z "$(eval "echo \"\$$i\"")" ]; then
-		echo "Environment variable $i is undefined."
+		error "environment variable $i is undefined"
 		error=1
 	fi
 done
 
-if [ -n "$error" ]; then
+if [ -n "${error:-}" ]; then
 	exit 1
 fi
 
-TMPFILE1=/tmp/script$$.ld
-TMPFILE2=/tmp/obja$$.o
-TMPFILE3=/tmp/objb$$.o
+WORKDIR=$(mktemp -d)
 
-# Gotta do a different binary target here depending on the target
-if [ "$KOS_ARCH" = dreamcast ]; then
+TMPFILE1="$WORKDIR/script$$.ld"
+TMPFILE2="$WORKDIR/obja$$.o"
+TMPFILE3="$WORKDIR/objb$$.o"
+
+# Gotta do a different binary target here depending on the target.
+case $KOS_ARCH in
+dreamcast)
+        # shellcheck disable=SC2086
 	echo ".section .rodata; .align 2; " | "$KOS_AS" $KOS_AFLAGS -o "$TMPFILE3"
+        # shellcheck disable=SC2181
 	if [ $? -ne 0 ]; then exit 1; fi
 	echo "SECTIONS { .rodata : { _$2 = .; *(.data); _$2_end = .; } }" > "$TMPFILE1"
 	"$KOS_LD" --no-warn-mismatch --format binary --oformat elf32-shl "$1" --format elf32-shl "$TMPFILE3" -o "$TMPFILE2" -r -EL -T "$TMPFILE1"
+        # shellcheck disable=SC2181
 	if [ $? -ne 0 ]; then exit 1; fi
 	"$KOS_OBJCOPY" --set-section-flags .rodata=alloc,load,data,readonly "$TMPFILE2" "$3"
-	if [ $? -ne 0 ]; then exit 1; fi
-	rm -f "$TMPFILE1" "$TMPFILE2" "$TMPFILE3"
+        ;;
 
-elif [ "$KOS_ARCH" = gba ]; then
-	echo "SECTIONS { .rodata : { $2 = .; *(.data); $2_end = .; } }" > /tmp/script.ld
-	"$KOS_LD" --no-warn-mismatch --format binary --oformat elf32-littlearm "$1" -o "$3" -r -EL -T /tmp/script.ld
+gba)
+	echo "SECTIONS { .rodata : { $2 = .; *(.data); $2_end = .; } }" > "$WORKDIR/script.ld"
+	"$KOS_LD" --no-warn-mismatch --format binary --oformat elf32-littlearm "$1" -o "$3" -r -EL -T "$WORKDIR/script.ld"
+        ;;
 
-elif [ "$KOS_ARCH" = ps2 ]; then
-	echo "OUTPUT_ARCH(mips:5900) SECTIONS { .rodata : { _$2 = .; *(.data); _$2_end = .; } }" > /tmp/script.ld
-	"$KOS_LD" --no-warn-mismatch --format binary --oformat elf64-littlemips -mips3 "$1" -o "$3" -r -EL -T /tmp/script.ld
-fi
+ps2)
+	echo "OUTPUT_ARCH(mips:5900) SECTIONS { .rodata : { _$2 = .; *(.data); _$2_end = .; } }" > "$WORKDIR/script.ld"
+	"$KOS_LD" --no-warn-mismatch --format binary --oformat elf64-littlemips -mips3 "$1" -o "$3" -r -EL -T "$WORKDIR/script.ld"
+        ;;
 
-rm -f /tmp/script.ld
+*)
+        error "unsupported architecture \"$KOS_ARCH\""
+        exit 1
+        ;;
+esac

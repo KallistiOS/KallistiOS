@@ -1,0 +1,22 @@
+diff -ruN binutils-2.40/ld/Makefile.am binutils-2.40-mingw/ld/Makefile.am
+--- binutils-2.40/ld/Makefile.am	2023-01-14 00:00:00 +0000
++++ binutils-2.40-mingw/ld/Makefile.am	2023-02-27 22:00:48 +0000
+@@ -1096,6 +1096,7 @@
+ 	done
+ 	rm -f $(DESTDIR)$(bfdplugindir)/libdep.la
+ 	rm -f $(DESTDIR)$(bfdplugindir)/libdep.dll.a
++	rm -f $(DESTDIR)$(bfdplugindir)/libdep.a
+ 
+ # Stuff that should be included in a distribution.  The diststuff
+ # target is run by the taz target in ../Makefile.in.
+diff -ruN binutils-2.40/ld/Makefile.in binutils-2.40-mingw/ld/Makefile.in
+--- binutils-2.40/ld/Makefile.in	2023-01-14 00:00:00 +0000
++++ binutils-2.40-mingw/ld/Makefile.in	2023-02-27 22:00:21 +0000
+@@ -2709,6 +2709,7 @@
+ 	done
+ 	rm -f $(DESTDIR)$(bfdplugindir)/libdep.la
+ 	rm -f $(DESTDIR)$(bfdplugindir)/libdep.dll.a
++	rm -f $(DESTDIR)$(bfdplugindir)/libdep.a
+ diststuff: info $(EXTRA_DIST)
+ 
+ # Both info (ld.info) and ld.1 depend on configdoc.texi.

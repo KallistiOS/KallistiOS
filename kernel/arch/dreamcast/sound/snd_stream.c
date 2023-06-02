@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    snd_stream.c
-   Copyright (C) 2000, 2001, 2002, 2003, 2004 Dan Potter
+   Copyright (C) 2000, 2001, 2002, 2003, 2004 Megan Potter
    Copyright (C) 2002 Florian Schulze
    Copyright (C) 2020 Lawrence Sebald
 
@@ -240,7 +240,7 @@ void snd_stream_prefill(snd_stream_hnd_t hnd) {
 }
 
 /* Initialize stream system */
-int snd_stream_init() {
+int snd_stream_init(void) {
     /* Create stereo seperation buffers */
     if(!sep_buffer[0]) {
         sep_buffer[0] = memalign(32, (SND_STREAM_BUFFER_MAX / 2));
@@ -342,7 +342,7 @@ void snd_stream_destroy(snd_stream_hnd_t hnd) {
 }
 
 /* Shut everything down and free mem */
-void snd_stream_shutdown() {
+void snd_stream_shutdown(void) {
     /* Stop and destroy all active stream */
     int i;
 
@@ -459,12 +459,12 @@ static void dma_chain(ptr_t data) {
 
 /* Poll streamer to load more data if neccessary */
 int snd_stream_poll(snd_stream_hnd_t hnd) {
-    uint32      ch0pos, ch1pos;
-    //int     realbuffer;
-    uint32     current_play_pos;
-    int     needed_samples;
-    int     got_samples;
-    void        *data;
+    uint32 ch0pos, ch1pos;
+    //int  realbuffer;
+    uint32 current_play_pos;
+    int    needed_samples;
+    int    got_samples;
+    void   *data;
 
     CHECK_HND(hnd);
 
@@ -496,7 +496,7 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
 
     if(needed_samples > 0) {
         if(streams[hnd].stereo) {
-            needed_samples = (needed_samples > streams[hnd].buffer_size/4) ? streams[hnd].buffer_size/4 : needed_samples;
+            needed_samples = ((unsigned)needed_samples > streams[hnd].buffer_size/4) ? (int)streams[hnd].buffer_size/4 : needed_samples;
             data = streams[hnd].get_data(hnd, needed_samples * 4, &got_samples);
             process_filters(hnd, &data, &got_samples);
 
@@ -508,7 +508,7 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
             }
         }
         else {
-            needed_samples = needed_samples > streams[hnd].buffer_size/2 ? streams[hnd].buffer_size/2 : needed_samples;
+            needed_samples = ((unsigned)needed_samples > streams[hnd].buffer_size/2) ? (int)streams[hnd].buffer_size/2 : needed_samples;
             data = streams[hnd].get_data(hnd, needed_samples * 2, &got_samples);
             process_filters(hnd, &data, &got_samples);
 

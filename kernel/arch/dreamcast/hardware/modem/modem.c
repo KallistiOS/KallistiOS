@@ -96,7 +96,7 @@ const unsigned short modemBPSConstants[31] = {
 };
 
 /* Converts a MODEM_SPEED_* constant into a value in bits per second */
-__inline unsigned short speedCodeToBPS(unsigned char speed) {
+__inline static unsigned short speedCodeToBPS(unsigned char speed) {
     if(speed == MODEM_SPEED_1200)
         return 1200;
 
@@ -267,7 +267,7 @@ void modemTimeoutIncCallback(void) {
 /* Verifys if the controller data returned as a result of a reset is valid
    or not. Returns zero if the results are invalid other a non zero number
    is returned. */
-__inline int verifyControllerData(unsigned short *ctrlInfo) {
+__inline static int verifyControllerData(unsigned short *ctrlInfo) {
     /* RAM1 and RAM2 Checksums */
     if((ctrlInfo[0] == 0xEA3C || ctrlInfo[0] == 0x451) &&
             (ctrlInfo[1] == 0x5536 || ctrlInfo[1] == 0x49A5)) {
@@ -289,7 +289,7 @@ __inline int verifyControllerData(unsigned short *ctrlInfo) {
 
 /* Does the same thing as verifyControllerData but checks to see if the DSP
    values from the DSP self test are valid. */
-__inline int verifyDSPData(unsigned short *dspInfo) {
+__inline static int verifyDSPData(unsigned short *dspInfo) {
     /* EC Checksum */
     if(dspInfo[0] == 0xF083 || dspInfo[0] == 0xA577) {
         /* Multiplier Checksum */

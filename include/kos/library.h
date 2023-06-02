@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    include/kos/library.h
-   Copyright (C)2003 Dan Potter
+   Copyright (C)2003 Megan Potter
 
 */
 
@@ -19,7 +19,7 @@
     multiple times, and so that a close will act as expected in situations like
     this.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __KOS_LIBRARY_H
@@ -98,7 +98,7 @@ typedef struct klibrary {
 
         \return             The library's symbolic name
     */
-    const char * (*lib_get_name)();
+    const char * (*lib_get_name)(void);
 
     /** \brief  Retrieve the library's version.
 
@@ -108,7 +108,7 @@ typedef struct klibrary {
 
         \return             The library's version number
     */
-    uint32(*lib_get_version)();
+    uint32(*lib_get_version)(void);
 
     /** \brief  Open a library.
 
@@ -263,10 +263,10 @@ uint32 library_get_version(klibrary_t * lib);
 
 /** \cond */
 /* Init */
-int library_init();
+int library_init(void);
 
 /* Shutdown */
-void library_shutdown();
+void library_shutdown(void);
 /** \endcond */
 
 __END_DECLS

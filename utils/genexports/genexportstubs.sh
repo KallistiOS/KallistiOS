@@ -15,7 +15,7 @@ inpfile=$1
 outpfile=$2
 
 # Get the list of export names
-names=`cat $inpfile | grep -v '^#' | grep -v '^$' | sort`
+names=`cat $inpfile | grep -v '^#' | grep -v '^include ' | grep -v '^$' | sort`
 
 # Write out a header
 rm -f $outpfile

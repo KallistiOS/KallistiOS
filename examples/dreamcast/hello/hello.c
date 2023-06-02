@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    hello.c
-   Copyright (C) 2001 Dan Potter
+   Copyright (C) 2001 Megan Potter
 */
 
 #include <kos.h>
@@ -14,9 +14,8 @@ extern uint8 romdisk[];
    you need to set any flags you want here. Here are some possibilities:
 
    INIT_NONE        -- don't do any auto init
-   INIT_IRQ     -- Enable IRQs
-   INIT_THD_PREEMPT -- Enable pre-emptive threading
-   INIT_NET     -- Enable networking (including sockets)
+   INIT_IRQ         -- Enable IRQs
+   INIT_NET         -- Enable networking (including sockets)
    INIT_MALLOCSTATS -- Enable a call to malloc_stats() right before shutdown
 
    You can OR any or all of those together. If you want to start out with

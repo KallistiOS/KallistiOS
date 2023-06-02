@@ -9,13 +9,18 @@
 # 'Makefile.hostdetect' included in dcload packages, this version uses
 # the 'config.guess' mecanism which is more complete and accurate.
 
-# Check the presence of ./config.guess
+# Download ./config.guess if necessary
 # This will help a lot to execute conditional steps depending on the host.
+config_guess = config.guess
+config_guess_url = http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=${config_guess};hb=HEAD
+
 is_clean_target=$(findstring clean,$(MAKECMDGOALS))
 config_guess_check=$(shell test -f ./config.guess || echo 0)
 ifeq ($(is_clean_target),)
   ifeq ($(config_guess_check),0)
-    $(error Please execute ./download.sh first)
+    $(info Downloading $(config_guess))
+    $(shell $(call web_download,$(config_guess_url),$(config_guess)))
+    $(shell chmod +x $(config_guess))
   endif
 endif
 
@@ -27,6 +32,7 @@ endif
 # Retrieve the system
 uname_s := $(shell uname -s)
 uname_r := $(shell uname -r)
+uname_m := $(shell uname -m)
 
 # Determine if we are running macOS
 ifeq ($(uname_s),Darwin)

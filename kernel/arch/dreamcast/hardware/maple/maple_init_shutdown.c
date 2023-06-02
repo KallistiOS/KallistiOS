@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    maple_init.c
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
  */
 
 #include <malloc.h>
@@ -32,7 +32,7 @@
 */
 
 /* Initialize Hardware (call after driver inits) */
-int maple_hw_init() {
+int maple_hw_init(void) {
     maple_driver_t *drv;
     int p, u;
 
@@ -101,7 +101,7 @@ int maple_hw_init() {
 
 /* Turn off the maple bus, free mem */
 /* AGGG!! Someone save me from this idiotic voodoo bug fixing crap.. */
-void maple_hw_shutdown() {
+void maple_hw_shutdown(void) {
     int p, u, cnt;
     uint32  ptr;
 
@@ -144,7 +144,7 @@ void maple_hw_shutdown() {
 }
 
 /* Wait for the initial bus scan to complete */
-void maple_wait_scan() {
+void maple_wait_scan(void) {
     int     p, u;
     maple_device_t  *dev;
 
@@ -170,7 +170,7 @@ void maple_wait_scan() {
 }
 
 /* Full init: initialize known drivers and start maple operations */
-int maple_init() {
+int maple_init(void) {
     lightgun_init();
     cont_init();
     kbd_init();
@@ -184,7 +184,7 @@ int maple_init() {
 }
 
 /* Full shutdown: shutdown maple operations and known drivers */
-void maple_shutdown() {
+void maple_shutdown(void) {
     maple_hw_shutdown();
 
     dreameye_shutdown();

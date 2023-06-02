@@ -126,7 +126,7 @@ int dreameye_get_image_count(maple_device_t *dev, int block) {
         /* Wait for the Dreameye to accept it */
         if(genwait_wait(&dev->frame, "dreameye_get_image_count", 500,
                         NULL) < 0) {
-            if(dev->frame.state != MAPLE_FRAME_VACANT)  {
+            if(dev->frame.state != MAPLE_FRAME_VACANT) {
                 /* Something went wrong... */
                 dev->frame.state = MAPLE_FRAME_VACANT;
                 dbglog(DBG_ERROR, "dreameye_get_image_count: timeout to unit "
@@ -239,7 +239,7 @@ static int dreameye_get_transfer_count(maple_device_t *dev, uint8 img) {
     /* Wait for the Dreameye to accept it */
     if(genwait_wait(&dev->frame, "dreameye_get_transfer_count", 500,
                     NULL) < 0) {
-        if(dev->frame.state != MAPLE_FRAME_VACANT)  {
+        if(dev->frame.state != MAPLE_FRAME_VACANT) {
             /* Something went wrong... */
             dev->frame.state = MAPLE_FRAME_VACANT;
             dbglog(DBG_ERROR, "dreameye_get_transfer_count: timeout to unit "
@@ -430,12 +430,12 @@ static maple_driver_t dreameye_drv = {
 };
 
 /* Add the Dreameye to the driver chain */
-int dreameye_init() {
+int dreameye_init(void) {
     if(!dreameye_drv.drv_list.le_prev)
         return maple_driver_reg(&dreameye_drv);
     return -1;
 }
 
-void dreameye_shutdown() {
+void dreameye_shutdown(void) {
     maple_driver_unreg(&dreameye_drv);
 }

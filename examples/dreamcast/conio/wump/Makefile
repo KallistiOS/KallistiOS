@@ -1,27 +1,28 @@
 # KallistiOS ##version##
 #
 # conio/wump/Makefile
-# (c)2002 Dan Potter
+# (c)2002 Megan Potter
 #
 
-all: rm-elf wump.elf
+TARGET = wump.elf
+OBJS = wump.o
+
+all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules
 
-OBJS = wump.o
-
-clean:
-	-rm -f wump.elf $(OBJS)
+clean: rm-elf
+	-rm -f $(OBJS)
 
 rm-elf:
-	-rm -f wump.elf
+	-rm -f $(TARGET)
 
-wump.elf: $(OBJS) 
-	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o wump.elf $(KOS_START) $(OBJS) $(DATAOBJS) $(OBJEXTRA) -lconio $(KOS_LIBS)
+$(TARGET): $(OBJS) 
+	kos-cc -o $(TARGET) $(OBJS) -lconio
 
-run: wump.elf
-	$(KOS_LOADER) wump.elf
+run: $(TARGET)
+	$(KOS_LOADER) $(TARGET)
 
-dist:
+dist: $(TARGET)
 	-rm -f $(OBJS)
-	$(KOS_STRIP) wump.elf
+	$(KOS_STRIP) $(TARGET)

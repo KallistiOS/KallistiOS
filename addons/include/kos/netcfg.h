@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kos/netcfg.h
-   Copyright (C) 2003 Dan Potter
+   Copyright (C) 2003 Megan Potter
 
 */
 
@@ -19,7 +19,7 @@
     The data that is written out by this code is written in a relatively easy to
     parse text-based format.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #include <sys/cdefs.h>

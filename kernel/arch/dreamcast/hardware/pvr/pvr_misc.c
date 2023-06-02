@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    pvr_misc.c
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
    Copyright (C) 2014 Lawrence Sebald
 
  */
@@ -43,7 +43,7 @@ void pvr_set_zclip(float zc) {
 }
 
 /* Return the current VBlank count */
-int pvr_get_vbl_count() {
+int pvr_get_vbl_count(void) {
     return pvr_state.vbl_count;
 }
 
@@ -74,7 +74,7 @@ int pvr_get_stats(pvr_stats_t *stat) {
     return 0;
 }
 
-int pvr_vertex_dma_enabled() {
+int pvr_vertex_dma_enabled(void) {
     return pvr_state.dma_mode;
 }
 
@@ -135,12 +135,12 @@ void pvr_sync_stats(int event) {
 }
 
 /* Synchronize the viewed page with what's in pvr_state */
-void pvr_sync_view() {
+void pvr_sync_view(void) {
     vid_set_start(pvr_state.frame_buffers[pvr_state.view_target].frame);
 }
 
 /* Synchronize the registration buffer with what's in pvr_state */
-void pvr_sync_reg_buffer() {
+void pvr_sync_reg_buffer(void) {
     volatile pvr_ta_buffers_t *buf;
 
     buf = pvr_state.ta_buffers + pvr_state.ta_target;
@@ -165,7 +165,7 @@ void pvr_sync_reg_buffer() {
 
 /* Begin a render operation that has been queued completely (i.e., the
    opposite of ta_target) */
-void pvr_begin_queued_render() {
+void pvr_begin_queued_render(void) {
     volatile pvr_ta_buffers_t   * tbuf;
     volatile pvr_frame_buffers_t    * rbuf;
     pvr_bkg_poly_t  bkg;

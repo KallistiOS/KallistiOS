@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 #  crt0.s
-#  (c)2000-2002 Dan Potter
+#  (c)2000-2002 Megan Potter
 #
 #  Startup for ARM program
 #  Adapted from Marcus' AICA example among a few other sources =)
@@ -68,7 +68,7 @@ fiq_timer:
 	str	r9,[r8]
 	
 	# Request a new timer interrupt. We'll calculate the number
-	# put in here based on the "jps" (jiffies per second). 
+	# put in here based on the "jps" (jiffies per second).
 	ldr	r8, timer_control
 	mov	r9,#256-(44100/4410)
 #	ldr	r9,jps

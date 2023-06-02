@@ -2,14 +2,14 @@
 
    kernel/arch/dreamcast/fs/fs_dcload.c
    Copyright (C) 2002 Andrew Kieschnick
-   Copyright (C) 2004 Dan Potter
+   Copyright (C) 2004 Megan Potter
    Copyright (C) 2012 Lawrence Sebald
 
 */
 
 /*
 
-This is a rewrite of Dan Potter's fs_serconsole to use the dcload / dc-tool
+This is a rewrite of Megan Potter's fs_serconsole to use the dcload / dc-tool
 fileserver and console.
 
 printf goes to the dc-tool console
@@ -34,13 +34,13 @@ static spinlock_t mutex = SPINLOCK_INITIALIZER;
 
 #define plain_dclsc(...) ({ \
         int old = 0, rv; \
-        if (!irq_inside_int()) { \
+        if(!irq_inside_int()) { \
             old = irq_disable(); \
         } \
-        while ((*(vuint32 *)0xa05f688c) & 0x20) \
+        while((*(vuint32 *)0xa05f688c) & 0x20) \
             ; \
         rv = dcloadsyscall(__VA_ARGS__); \
-        if (!irq_inside_int()) \
+        if(!irq_inside_int()) \
             irq_restore(old); \
         rv; \
     })
@@ -51,7 +51,7 @@ static void * lwip_dclsc = 0;
 
 #define dclsc(...) ({ \
         int rv; \
-        if (lwip_dclsc) \
+        if(lwip_dclsc) \
             rv = (*(int (*)()) lwip_dclsc)(__VA_ARGS__); \
         else \
             rv = plain_dclsc(__VA_ARGS__); \
@@ -75,7 +75,7 @@ int dcload_write_buffer(const uint8 *data, int len, int xlat) {
     return len;
 }
 
-int dcload_read_cons() {
+int dcload_read_cons(void) {
     return -1;
 }
 
@@ -100,6 +100,7 @@ void *dcload_open(vfs_handler_t * vfs, const char *fn, int mode) {
     int hnd = 0;
     uint32 h;
     int dcload_mode = 0;
+    int mm = (mode & O_MODE_MASK);
 
     (void)vfs;
 
@@ -131,17 +132,15 @@ void *dcload_open(vfs_handler_t * vfs, const char *fn, int mode) {
         }
     }
     else {   /* hack */
-        if((mode & O_MODE_MASK) == O_RDONLY)
+        if(mm == O_RDONLY)
             dcload_mode = 0;
+        else if((mm & O_RDWR) == O_RDWR)
+            dcload_mode = 0x0202;
+        else if((mm & O_WRONLY) == O_WRONLY)
+            dcload_mode = 0x0201;
 
-        if((mode & O_MODE_MASK) == O_RDWR)
-            dcload_mode = 2 | 0x0200;
-
-        if((mode & O_MODE_MASK) == O_WRONLY)
-            dcload_mode = 1 | 0x0200;
-
-        if((mode & O_MODE_MASK) == O_APPEND)
-            dcload_mode =  2 | 8 | 0x0200;
+        if(mode & O_APPEND)
+            dcload_mode |= 0x0008;
 
         if(mode & O_TRUNC)
             dcload_mode |= 0x0400;
@@ -153,6 +152,7 @@ void *dcload_open(vfs_handler_t * vfs, const char *fn, int mode) {
     h = hnd;
 
     spinlock_unlock(&mutex);
+
     return (void *)h;
 }
 
@@ -467,9 +467,10 @@ static vfs_handler_t vh = {
 
 // We have to provide a minimal interface in case dcload usage is
 // disabled through init flags.
-static int never_detected() {
+static int never_detected(void) {
     return 0;
 }
+
 dbgio_handler_t dbgio_dcload = {
     "fs_dcload_uninit",
     never_detected,
@@ -483,7 +484,7 @@ dbgio_handler_t dbgio_dcload = {
     NULL
 };
 
-int fs_dcload_detected() {
+int fs_dcload_detected(void) {
     /* Check for dcload */
     if(*DCLOADMAGICADDR == DCLOADMAGICVALUE)
         return 1;
@@ -492,13 +493,15 @@ int fs_dcload_detected() {
 }
 
 static int *dcload_wrkmem = NULL;
+static const char * dbgio_dcload_name = "fs_dcload";
 int dcload_type = DCLOAD_TYPE_NONE;
 
 /* Call this before arch_init_all (or any call to dbgio_*) to use dcload's
    console output functions. */
-void fs_dcload_init_console() {
+void fs_dcload_init_console(void) {
     /* Setup our dbgio handler */
     memcpy(&dbgio_dcload, &dbgio_null, sizeof(dbgio_dcload));
+    dbgio_dcload.name = dbgio_dcload_name;
     dbgio_dcload.detected = fs_dcload_detected;
     dbgio_dcload.write_buffer = dcload_write_buffer;
     // dbgio_dcload.read = dcload_read_cons;
@@ -524,7 +527,7 @@ void fs_dcload_init_console() {
 }
 
 /* Call fs_dcload_init_console() before calling fs_dcload_init() */
-int fs_dcload_init() {
+int fs_dcload_init(void) {
     // This was already done in init_console.
     if(dcload_type == DCLOAD_TYPE_NONE)
         return -1;
@@ -533,7 +536,7 @@ int fs_dcload_init() {
     if((dcload_type == DCLOAD_TYPE_IP) && (__kos_init_flags & INIT_NET)) {
         dbglog(DBG_INFO, "dc-load console+kosnet, will switch to internal ethernet\n");
         return -1;
-        /* if (old_printk) {
+        /* if(old_printk) {
             dbgio_set_printk(old_printk);
             old_printk = 0;
         }
@@ -544,7 +547,7 @@ int fs_dcload_init() {
     return nmmgr_handler_add(&vh.nmmgr);
 }
 
-int fs_dcload_shutdown() {
+int fs_dcload_shutdown(void) {
     /* Check for dcload */
     if(*DCLOADMAGICADDR != DCLOADMAGICVALUE)
         return -1;

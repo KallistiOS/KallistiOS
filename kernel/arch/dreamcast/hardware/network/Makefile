@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # arch/dreamcast/hardware/network/Makefile
-# (c)2000-2001 Dan Potter
+# (c)2000-2001 Megan Potter
 #
 
 # Various network devices

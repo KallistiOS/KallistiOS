@@ -1,27 +1,28 @@
 # KallistiOS ##version##
 #
 # basic/threading/Makefile
-# (c)2001 Dan Potter
+# (c)2001 Megan Potter
 #
 
-all: rm-elf general_threading_test.elf
+TARGET = general_threading_test.elf
+OBJS = general_threading_test.o
+
+all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules
 
-OBJS = general_threading_test.o
-
-clean:
-	-rm -f general_threading_test.elf $(OBJS)
+clean: rm-elf
+	-rm -f $(OBJS)
 
 rm-elf:
-	-rm -f general_threading_test.elf
+	-rm -f $(TARGET)
 
-general_threading_test.elf: $(OBJS) 
-	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o general_threading_test.elf $(KOS_START) $(OBJS) $(DATAOBJS) $(OBJEXTRA) $(KOS_LIBS)
+$(TARGET): $(OBJS) 
+	kos-cc -o $(TARGET) $(OBJS)
 
-run: general_threading_test.elf
-	$(KOS_LOADER) general_threading_test.elf
+run: $(TARGET)
+	$(KOS_LOADER) $(TARGET)
 
-dist:
+dist: $(TARGET)
 	-rm -f $(OBJS)
-	$(KOS_STRIP) general_threading_test.elf
+	$(KOS_STRIP) $(TARGET)

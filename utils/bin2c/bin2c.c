@@ -1,7 +1,7 @@
 /* Converts a binary file into a C integer array (for inclusion in
    a source file)
 
-   (c)2000 Dan Potter
+   (c)2000 Megan Potter
 
 */
 

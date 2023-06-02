@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/maple/purupuru.h
-   Copyright (C) 2003 Dan Potter
+   Copyright (C) 2003 Megan Potter
    Copyright (C) 2005, 2010 Lawrence Sebald
 
 */
@@ -179,8 +179,8 @@ int purupuru_rumble_raw(maple_device_t *dev, uint32 effect);
 
 /* \cond */
 /* Init / Shutdown */
-int purupuru_init();
-void purupuru_shutdown();
+int purupuru_init(void);
+void purupuru_shutdown(void);
 /* \endcond */
 
 __END_DECLS

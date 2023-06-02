@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    snd_mem.c
-   (C)2002 Dan Potter
+   (C)2002 Megan Potter
 
  */
 
@@ -90,7 +90,7 @@ int snd_mem_init(uint32 reserve) {
 }
 
 /* Shut down the SPU allocator */
-void snd_mem_shutdown() {
+void snd_mem_shutdown(void) {
     snd_block_t *e, *n;
 
     if(!initted) return;
@@ -223,7 +223,7 @@ void snd_mem_free(uint32 addr) {
     }
 }
 
-uint32 snd_mem_available() {
+uint32 snd_mem_available(void) {
     snd_block_t *e;
     size_t      largest = 0;
 

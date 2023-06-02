@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
     song = fs_mmap(f);
 
     /* Start a song playing */
-    copy_s3m(song, len);
+    copy_s3m((char *)song, len);
 
     /* Close the file */
     fs_close(f);

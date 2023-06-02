@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/sound/sound.h
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
 
 */
 
@@ -13,7 +13,7 @@
     higher-level functionality in the sound effect support or streaming support,
     but this stuff can be very useful for some things.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __DC_SOUND_SOUND_H
@@ -55,7 +55,7 @@ void snd_mem_free(uint32 addr);
     \return                 The size of the largest available block of memory in
                             the SPU RAM pool.
 */
-uint32 snd_mem_available();
+uint32 snd_mem_available(void);
 
 /** \brief  Reinitialize the SPU RAM pool.
 
@@ -74,7 +74,7 @@ int snd_mem_init(uint32 reserve);
     as doing so will cause problems if you try to allocate SPU memory without
     calling snd_mem_init() afterwards.
 */
-void snd_mem_shutdown();
+void snd_mem_shutdown(void);
 
 /** \brief  Initialize the sound system.
 
@@ -84,7 +84,7 @@ void snd_mem_shutdown();
     AICA's ARM processor when it actually initializes anything. The default
     snd_stream_drv will be loaded if a new program is uploaded to the SPU.
 */
-int snd_init();
+int snd_init(void);
 
 /** \brief  Shut down the sound system.
 
@@ -92,7 +92,7 @@ int snd_init();
     disabling the SPU in the process. There's not generally many good reasons
     for doing this in your own code.
 */
-void snd_shutdown();
+void snd_shutdown(void);
 
 /** \brief  Copy a request packet to the AICA queue.
 
@@ -109,13 +109,13 @@ int snd_sh4_to_aica(void *packet, uint32 size);
 
     This function begins processing of any queued requests in the AICA queue.
 */
-void snd_sh4_to_aica_start();
+void snd_sh4_to_aica_start(void);
 
 /** \brief  Stop processing AICA queue requests.
 
     This function stops the processing of any queued requests in the AICA queue.
 */
-void snd_sh4_to_aica_stop();
+void snd_sh4_to_aica_stop(void);
 
 /** \brief  Transfer a packet of data from the AICA's SH4 queue.
 
@@ -136,7 +136,7 @@ int snd_aica_to_sh4(void *packetout);
     This function waits for the AICA to respond to a previously sent request.
     This function is not safe to call in an IRQ, as it does implicitly wait.
 */
-void snd_poll_resp();
+void snd_poll_resp(void);
 
 __END_DECLS
 

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    navi/flash.h
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
 
 */
 
@@ -13,7 +13,7 @@
     M29W800B, but should also work with other chips like the M29W160B or
     equivalent AMD chips.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __NAVI_FLASH_H

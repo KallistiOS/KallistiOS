@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    fs_romdisk.c
-   Copyright (C) 2001, 2002, 2003 Dan Potter
+   Copyright (C) 2001, 2002, 2003 Megan Potter
    Copyright (C) 2012, 2013, 2014, 2016 Lawrence Sebald
 
 */
@@ -525,7 +525,7 @@ static vfs_handler_t vh = {
 static int initted = 0;
 
 /* Initialize the file system */
-int fs_romdisk_init() {
+int fs_romdisk_init(void) {
     if(initted)
         return 0;
 
@@ -547,7 +547,7 @@ int fs_romdisk_init() {
 }
 
 /* De-init the file system; also unmounts any mounted images. */
-int fs_romdisk_shutdown() {
+int fs_romdisk_shutdown(void) {
     rd_image_t *n, *c;
 
     if(!initted)

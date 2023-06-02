@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    pvr_palette.c
-   (C)2002 Dan Potter
+   (C)2002 Megan Potter
 
  */
 

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kos_img.c
-   (c)2002 Jeffrey McBeth, Dan Potter
+   (c)2002 Jeffrey McBeth, Megan Potter
 
    Based on Jeff's png_load_texture routine, but loads into a
    KOS plat-independent image.

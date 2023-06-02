@@ -2,7 +2,7 @@
 
    pvr_dma.c
    Copyright (C)2002 Roger Cattermole
-   Copyright (C)2004 Dan Potter
+   Copyright (C)2004 Megan Potter
    http://www.boob.co.uk
  */
 
@@ -15,7 +15,7 @@
 
 #include "pvr_internal.h"
 
-/* Modified for inclusion into KOS by Dan Potter */
+/* Modified for inclusion into KOS by Megan Potter */
 
 /* Signaling semaphore */
 static semaphore_t dma_done;
@@ -146,11 +146,11 @@ int pvr_dma_load_ta(void * src, uint32 count, int block, pvr_dma_callback_t call
     return pvr_dma_transfer(src, 0, count, PVR_DMA_TA, block, callback, cbdata);
 }
 
-int pvr_dma_ready() {
+int pvr_dma_ready(void) {
     return pvrdma[PVR_DST] == 0;
 }
 
-void pvr_dma_init() {
+void pvr_dma_init(void) {
     /* Create an initially blocked semaphore */
     sem_init(&dma_done, 0);
     dma_blocking = 0;
@@ -162,7 +162,7 @@ void pvr_dma_init() {
     asic_evt_enable(ASIC_EVT_PVR_DMA, ASIC_IRQ_DEFAULT);
 }
 
-void pvr_dma_shutdown() {
+void pvr_dma_shutdown(void) {
     /* XXX Need to ensure that no DMA is in progress, does this work?? */
     if(!pvr_dma_ready()) {
         pvrdma[PVR_DST] = 0;

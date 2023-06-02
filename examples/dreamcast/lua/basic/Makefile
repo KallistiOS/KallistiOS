@@ -1,29 +1,30 @@
 # KallistiOS ##version##
 #
 # lua/basic/Makefile
-# (c)2002 Dan Potter
+# (c)2002 Megan Potter
 #
 
-all: rm-elf lua.elf
+TARGET = lua.elf
+OBJS = lua.o
+
+all: rm-elf $(TARGET)
 
 KOS_CFLAGS += -I$(KOS_PORTS)/include/lua
 
 include $(KOS_BASE)/Makefile.rules
 
-OBJS = lua.o
-
-clean:
-	-rm -f lua.elf $(OBJS)
+clean: rm-elf
+	-rm -f $(OBJS)
 
 rm-elf:
-	-rm -f lua.elf
+	-rm -f $(TARGET)
 
-lua.elf: $(OBJS)
-	kos-cc -o lua.elf $(OBJS) $(DATAOBJS) $(OBJEXTRA) -llua -lm
+$(TARGET): $(OBJS)
+	kos-cc -o $(TARGET) $(OBJS) -llua -lm
 
-run: lua.elf
-	$(KOS_LOADER) lua.elf
+run: $(TARGET)
+	$(KOS_LOADER) $(TARGET)
 
-dist:
+dist: $(TARGET)
 	-rm -f $(OBJS)
-	$(KOS_STRIP) lua.elf
+	$(KOS_STRIP) $(TARGET)

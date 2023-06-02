@@ -154,8 +154,8 @@ int dreameye_erase_image(maple_device_t *dev, uint8 image, int block);
 
 /* \cond */
 /* Init / Shutdown */
-int dreameye_init();
-void dreameye_shutdown();
+int dreameye_init(void);
+void dreameye_shutdown(void);
 /* \endcond */
 
 __END_DECLS

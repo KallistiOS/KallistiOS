@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kos/fs.h
-   Copyright (C) 2000, 2001, 2002, 2003 Dan Potter
+   Copyright (C) 2000, 2001, 2002, 2003 Megan Potter
    Copyright (C) 2012, 2013, 2014, 2016 Lawrence Sebald
 
 */
@@ -31,7 +31,7 @@ __BEGIN_DECLS
     portability reasons). However, if you want only to interact with KOS in your
     programs, feel free to use them to your heart's content!
 
-    \author Dan Potter
+    \author Megan Potter
     \author Lawrence Sebald
 */
 
@@ -377,7 +377,7 @@ dirent_t *fs_readdir(file_t hnd);
     are not documented here. Each filesystem may define any commands that are
     specific to it with its implementation of this function.
 
-    \param  fd              The file descriptor to use.
+    \param  hnd             The file descriptor to use.
     \param  cmd             The command to run.
     \param  ...             Arguments for the command specified.
     \return                 -1 on error.
@@ -645,7 +645,7 @@ void *fs_get_handle(file_t fd);
 /** \brief  Get the current working directory of the running thread.
     \return                 The current working directory.
 */
-const char *fs_getwd();
+const char *fs_getwd(void);
 
 /* Couple of util functions */
 
@@ -700,14 +700,14 @@ ssize_t fs_path_append(char *dst, const char *src, size_t len);
 
     \retval 0               On success.
 */
-int fs_init();
+int fs_init(void);
 
 /** \brief  Shut down the virtual filesystem.
 
     This is done for you by the normal shutdown procedure of KOS. There should
     not really be any reason for you to call this function yourself.
 */
-void fs_shutdown();
+void fs_shutdown(void);
 
 __END_DECLS
 

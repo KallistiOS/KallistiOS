@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    bspline.c
-   (c)2000 Dan Potter
+   (c)2000 Megan Potter
 
    For generating B-Spline curves
 

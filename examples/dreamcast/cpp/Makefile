@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # examples/dreamcast/cpp/Makefile
-# (c)2001-2002 Dan Potter
+# (c)2001-2002 Megan Potter
 #
 
 all:

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    snd_iface.c
-   (c)2000-2002 Dan Potter
+   (c)2000-2002 Megan Potter
 
    SH-4 support routines for accessing the AICA via the standard KOS driver
 */
@@ -34,7 +34,7 @@ static semaphore_t sem_qram;
 
 /* Initialize driver; note that this replaces the AICA program so that
    if you had anything else going on, it's gone now! */
-int snd_init() {
+int snd_init(void) {
     int amt;
 
     /* Finish loading the stream driver */
@@ -66,7 +66,7 @@ int snd_init() {
 }
 
 /* Shut everything down and free mem */
-void snd_shutdown() {
+void snd_shutdown(void) {
     if(initted) {
         spu_disable();
         sem_destroy(&sem_qram);
@@ -124,12 +124,12 @@ int snd_sh4_to_aica(void *packet, uint32 size) {
 }
 
 /* Start processing requests in the queue */
-void snd_sh4_to_aica_start() {
+void snd_sh4_to_aica_start(void) {
     g2_write_32(SPU_RAM_BASE + AICA_MEM_CMD_QUEUE + offsetof(aica_queue_t, process_ok), 1);
 }
 
 /* Stop processing requests in the queue */
-void snd_sh4_to_aica_stop() {
+void snd_sh4_to_aica_stop(void) {
     g2_write_32(SPU_RAM_BASE + AICA_MEM_CMD_QUEUE + offsetof(aica_queue_t, process_ok), 0);
 }
 
@@ -203,7 +203,7 @@ int snd_aica_to_sh4(void *packetout) {
 /* Poll for responses from the AICA. We assume here that we're not
    running in an interrupt handler (thread perhaps, of whoever
    is using us). */
-void snd_poll_resp() {
+void snd_poll_resp(void) {
     int     rv;
     uint32      pkt[AICA_CMD_MAX_SIZE];
     aica_cmd_t  * pktcmd;

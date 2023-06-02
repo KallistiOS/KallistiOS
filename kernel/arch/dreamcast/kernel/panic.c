@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    panic.c
-   (c)2001 Dan Potter
+   (c)2001 Megan Potter
 */
 
 #include <stdio.h>

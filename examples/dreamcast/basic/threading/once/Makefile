@@ -4,27 +4,26 @@
 # Copyright (C) 2009 Lawrence Sebald
 #
 
-all: rm-elf once_test.elf
+TARGET = once_test.elf
+OBJS = once_test.o
+
+all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules
-
-OBJS = once_test.o
 
 clean: rm-elf
 	-rm -f $(OBJS)
 
 rm-elf:
-	-rm -f once_test.elf
+	-rm -f $(TARGET)
 
-once_test.elf: $(OBJS)
-	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o once_test.elf $(KOS_START) \
-	$(OBJS) $(DATAOBJS) $(OBJEXTRA) $(KOS_LIBS)
+$(TARGET): $(OBJS)
+	kos-cc -o $(TARGET) $(OBJS)
 
+run: $(TARGET)
+	$(KOS_LOADER) $(TARGET)
 
-run: once_test.elf
-	$(KOS_LOADER) once_test.elf
-
-dist:
-	rm -f $(OBJS)
-	$(KOS_STRIP) once_test.elf
+dist: $(TARGET)
+	-rm -f $(OBJS)
+	$(KOS_STRIP) $(TARGET)
 

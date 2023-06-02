@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    cplusplus.c
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
 
    This is just a wrapper around malloc() and free() for C++ programs.
  */

@@ -2,7 +2,7 @@
 
    ide.c
 
-   (c)1997,2002 Dan Potter
+   (c)1997,2002 Megan Potter
 
 */
 
@@ -21,7 +21,8 @@ static uint32 hd_cyls, hd_heads, hd_sects;          /* hard disk geometry */
 
 
 static void ide_outp(int port, uint16 value, int size) {
-    uint32 addr, val2;
+    (void)size;
+    uint32 addr;
 
     switch(port & 0xff0) {
         case 0x1f0:
@@ -32,6 +33,7 @@ static void ide_outp(int port, uint16 value, int size) {
             break;
         default:
             assert(0);
+            return;
     }
 
     //printf("ide_outp %02x -> %04x(%08x)\n", value, port, addr);
@@ -51,6 +53,7 @@ uint16 ide_inp(int port, int size) {
             break;
         default:
             assert(0);
+            return 0;
     }
 
     value = g2_read_16(addr);
@@ -100,7 +103,8 @@ static void wait_data() {
 /* Reads a chunk of ascii out of the hd parms table */
 static char *get_ascii(uint16 *in_data, uint32 off_start, uint32 off_end) {
     static char ret_val [255];
-    int loop, loop1;
+    unsigned loop;
+    int loop1;
 
     /* First, construct a string from the controller-retrieved data */
     for(loop = off_start, loop1 = 0; loop <= off_end; loop++) {
@@ -193,7 +197,7 @@ static void linear_to_chs(uint32 linear, uint32 * cyl, uint32 * head, uint32 * s
 
 /* Read n sectors from the hard disk using PIO mode */
 int ide_read(uint32 linear, uint32 numsects, void * bufptr) {
-    int i;
+    unsigned i;
     uint32  cyl, head, sector;
 
     if(numsects > 1) {
@@ -214,7 +218,7 @@ int ide_read(uint32 linear, uint32 numsects, void * bufptr) {
 
 /* Write n sectors to the hard disk using PIO mode */
 int ide_write(uint32 linear, uint32 numsects, void *bufptr) {
-    int i;
+    unsigned i;
     uint32  cyl, head, sector;
 
     if(numsects > 1) {
@@ -261,10 +265,10 @@ int ide_init() {
     hd_heads = dd[3];
     hd_sects = dd[6];
 
-    dbglog(DBG_INFO, "ide0: %s, %dMB, CHS (%d/%d/%d)\n",
+    dbglog(DBG_INFO, "ide0: %s, %luMB, CHS (%u/%u/%u)\n",
            get_ascii(dd, 27, 46),
            (hd_cyls * hd_heads * hd_sects * 512L) / (1024L * 1024L),
-           hd_cyls, hd_heads, hd_sects);
+           (unsigned)hd_cyls, (unsigned)hd_heads, (unsigned)hd_sects);
 
     return 0;
 }

@@ -131,9 +131,9 @@ int     dcload_rename(vfs_handler_t * vfs, const char *fn1, const char *fn2);
 int     dcload_unlink(vfs_handler_t * vfs, const char *fn);
 
 /* Init func */
-void fs_dcload_init_console();
-int fs_dcload_init();
-int fs_dcload_shutdown();
+void fs_dcload_init_console(void);
+int fs_dcload_init(void);
+int fs_dcload_shutdown(void);
 
 /* Init func for dcload-ip + lwIP */
 int fs_dcload_init_lwip(void *p);
@@ -142,4 +142,4 @@ int fs_dcload_init_lwip(void *p);
 
 __END_DECLS
 
-#endif  /* __KALLISTI_FS_DCLOAD_H */
+#endif  /* __DC_FS_DCLOAD_H */

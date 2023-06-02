@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kos/img.h
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
 
 */
 
@@ -19,7 +19,7 @@
     All of the image-loading libraries in kos-ports should provide a function
     to load the image data into one of these types.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #include <sys/cdefs.h>

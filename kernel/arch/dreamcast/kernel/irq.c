@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    arch/dreamcast/kernel/irq.c
-   Copyright (C) 2000-2001 Dan Potter
+   Copyright (C) 2000-2001 Megan Potter
 */
 
 /* This module contains low-level handling for IRQs and related exceptions. */
@@ -32,7 +32,7 @@ static irq_context_t irq_context_default;
 
 /* Are we inside an interrupt? */
 static int inside_int;
-int irq_inside_int() {
+int irq_inside_int(void) {
     return inside_int;
 }
 
@@ -63,7 +63,7 @@ int irq_set_global_handler(irq_handler hnd) {
 }
 
 /* Get the global exception handler */
-irq_handler irq_get_global_handler() {
+irq_handler irq_get_global_handler(void) {
     return irq_hnd_global;
 }
 
@@ -129,7 +129,9 @@ void irq_handle_exception(int code) {
         arch_panic("double fault");
     }
 
-    inside_int = 1;
+    /* Reveal this info about the int to inside_int for better 
+       diagnostics returns if we try to do something in the int. */
+    inside_int = ((code&0xf)<<16) | (evt&0xffff);
 
     /* If there's a global handler, call it */
     if(irq_hnd_global) {
@@ -201,7 +203,7 @@ void irq_handle_trapa(irq_t code, irq_context_t *context) {
 }
 
 
-extern void irq_vma_table();
+extern void irq_vma_table(void);
 
 /* Switches register banks; call this outside of exception handling
    (but make sure interrupts are off!!) to change where registers will
@@ -214,7 +216,7 @@ void irq_set_context(irq_context_t *regbank) {
 }
 
 /* Return the current IRQ context */
-irq_context_t *irq_get_context() {
+irq_context_t *irq_get_context(void) {
     return irq_srt_addr;
 }
 
@@ -280,7 +282,7 @@ static uint32 pre_sr, pre_vbr;
 static int initted = 0;
 
 /* Init routine */
-int irq_init() {
+int irq_init(void) {
     /* Save SR and VBR */
     __asm__("stc    sr,r0\n"
             "mov.l  r0,%0" : : "m"(pre_sr));
@@ -328,7 +330,7 @@ int irq_init() {
     return 0;
 }
 
-void irq_shutdown() {
+void irq_shutdown(void) {
     if(!initted)
         return;
 

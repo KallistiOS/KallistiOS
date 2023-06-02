@@ -1,27 +1,28 @@
 # KallistiOS ##version##
 #
 # conio/basic/Makefile
-# (c)2002 Dan Potter
+# (c)2002 Megan Potter
 #
 
-all: rm-elf basic.elf
+TARGET = basic.elf
+OBJS = basic.o
+
+all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules
 
-OBJS = basic.o
-
-clean:
-	-rm -f basic.elf $(OBJS)
+clean: rm-elf
+	-rm -f $(OBJS)
 
 rm-elf:
-	-rm -f basic.elf
+	-rm -f $(TARGET)
 
-basic.elf: $(OBJS) 
-	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o basic.elf $(KOS_START) $(OBJS) $(DATAOBJS) $(OBJEXTRA) -lconio $(KOS_LIBS)
+$(TARGET): $(OBJS) 
+	kos-cc -o $(TARGET) $(OBJS) -lconio
 
-run: basic.elf
-	$(KOS_LOADER) basic.elf
+run: $(TARGET)
+	$(KOS_LOADER) $(TARGET)
 
-dist:
+dist: $(TARGET)
 	-rm -f $(OBJS)
-	$(KOS_STRIP) basic.elf
+	$(KOS_STRIP) $(TARGET)

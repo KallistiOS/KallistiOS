@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    ser_console.c
-   (c)2001 Dan Potter
+   (c)2001 Megan Potter
 
  */
 
@@ -34,7 +34,7 @@ static void ser_irq(irq_t source, irq_context_t *context) {
     sem_signal(chr_ready);
 }
 
-static char *read_line() {
+static char *read_line(void) {
     int q = 0, ch;
 
     while(1) {
@@ -61,7 +61,7 @@ static char *read_line() {
 
 static char curdir[256];
 
-static void interact() {
+static void interact(void) {
     char tmp[16];
     char *buf;
     int cnt = 0;
@@ -135,7 +135,7 @@ static void real_start(void *param) {
     dbgio_set_printk(old);
 }
 
-void ser_console_init() {
+void ser_console_init(void) {
     thd_create(real_start, NULL);
 }
 

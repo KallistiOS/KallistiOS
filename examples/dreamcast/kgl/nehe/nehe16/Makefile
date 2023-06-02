@@ -5,21 +5,20 @@
 #   
 
 TARGET = nehe16.elf
-OBJS = nehe16.o pvr-texture.o
+OBJS = nehe16.o pvr-texture.o romdisk.o
 
 all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules
 
-clean:
-	-rm -f $(TARGET) $(OBJS) romdisk.*
+clean: rm-elf
+	-rm -f $(OBJS)
 
 rm-elf:
 	-rm -f $(TARGET) romdisk.*
 
-$(TARGET): $(OBJS) romdisk.o
-	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(TARGET) $(KOS_START) \
-		$(OBJS) romdisk.o $(OBJEXTRA) -L$(KOS_BASE)/lib -lGL $(KOS_LIBS)
+$(TARGET): $(OBJS)
+	kos-cc -o $(TARGET) $(OBJS) -L$(KOS_BASE)/lib -lGL
 
 romdisk.img:
 	$(KOS_GENROMFS) -f romdisk.img -d romdisk -v
@@ -30,7 +29,7 @@ romdisk.o: romdisk.img
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 
-dist:
-	rm -f $(OBJS) romdisk.o romdisk.img
+dist: $(TARGET)
+	-rm -f $(OBJS) romdisk.img
 	$(KOS_STRIP) $(TARGET)
 

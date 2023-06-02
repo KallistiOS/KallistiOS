@@ -2,7 +2,7 @@
 
    net/broadband_adapter.c
 
-   Copyright (C) 2001,2003,2005 Dan Potter
+   Copyright (C) 2001,2003,2005 Megan Potter
    Copyright (C) 2004 Vincent Penne
    Copyright (C) 2007, 2008, 2010 Lawrence Sebald
 
@@ -47,10 +47,7 @@
 #define TX_BUFFER_LEN           (0x800)
 #define TX_NB_BUFFERS           4
 
-/* original value */
-//#define BBA_ASIC_IRQ ASIC_IRQB
-
-/* testing */
+/* This was originally set as ASIC_IRQB */
 #define BBA_ASIC_IRQ ASIC_IRQ_DEFAULT
 
 /* Use a customized g2_read_block function */
@@ -88,27 +85,34 @@ This driver has basically been rewritten since KOS 1.0.x.
 
 /****************************************************************************/
 /* GAPS PCI stuff probably ought to be moved to another file... */
+#define GAPS_BASE 0xa1000000
 
 /* Detect a GAPS PCI bridge */
-static int gaps_detect() {
+static int gaps_detect(void) {
     char str[16];
 
-    g2_read_block_8((uint8 *)str, 0xa1001400, 16);
+    g2_read_block_8((uint8 *)str, GAPS_BASE + 0x1400, 16);
 
     if(!strncmp(str, "GAPSPCI_BRIDGE_2", 16))
+    {
+        /* Set this to 0 first thing */
+        g2_write_32(GAPS_BASE + 0x1414, 0x00000000);
+        /* Turn GAPS off */
+        g2_write_32(GAPS_BASE + 0x1418, 0x5a14a501);
+
         return 0;
+    }
     else
         return -1;
 }
 
 /* Initialize GAPS PCI bridge */
-#define GAPS_BASE 0xa1000000
-static int gaps_init() {
+static int gaps_init(void) {
     int i;
 
-    /* Make sure we have one */
+    /* This shouldn't happen as init is done only if a detect succeded. */
     if(gaps_detect() < 0) {
-        dbglog(DBG_INFO, "bba: no ethernet card found\n");
+        dbglog(DBG_INFO, "bba: gaps_init called but no device detected\n");
         return -1;
     }
 
@@ -122,7 +126,7 @@ static int gaps_init() {
 
     if(!(g2_read_32(GAPS_BASE + 0x1418) & 1)) {
         dbglog(DBG_ERROR, "bba: GAPS PCI controller not responding; giving up!\n");
-        return -1;
+        return -2;
     }
 
     g2_write_32(GAPS_BASE + 0x1420, 0x01000000);
@@ -137,16 +141,69 @@ static int gaps_init() {
        ridiculous for accessing a single card that will probably never
        change. Considering that the DC is now out of production officially,
        there is a VERY good chance it will never change. */
-    g2_write_16(GAPS_BASE + 0x1606, 0xf900);
-    g2_write_32(GAPS_BASE + 0x1630, 0x00000000);
-    g2_write_8(GAPS_BASE + 0x163c, 0x00);
-    g2_write_8(GAPS_BASE + 0x160d, 0xf0);
-    g2_read_16(GAPS_BASE + 0x0004);
-    g2_write_16(GAPS_BASE + 0x1604, 0x0006);
-    g2_write_32(GAPS_BASE + 0x1614, 0x01000000);
-    g2_read_8(GAPS_BASE + 0x1650);
 
-    return 0;
+    /* VEN:DEV is 11db:1234 (vendor code is "Sega Enterprises, LTD")
+       The GAPS bridge is really just an MMU with a memory buffer that maps 
+       the RTL8139C to the Dreamcast's memory space, so these are actually 
+       the PCI configuration registers for the RTL8139, not GAPS (those are 
+       just the 0x1400 regs).
+
+       It has a custom ven:dev ID, but the class ID in 0x1608 indicates a 
+       network controller (byte 0x160b = 0x02 = network controller, 
+       0x160a = 0x00 = Ethernet controller)
+
+       See PCI Local Bus Specification 2.2 (2.3 has all the 2.2 stuff in 
+       it and the RTL8139C uses 2.2). This is also documented in the 
+       RTL8139C's datasheet, under "PCI Configuration Space Registers"
+    */
+
+    g2_write_16(GAPS_BASE + 0x1606, 0xf900);     /* PCI Status Register */
+    g2_write_32(GAPS_BASE + 0x1630, 0x00000000); /* PCI BMAR */
+    g2_write_8(GAPS_BASE + 0x163c, 0x00);        /* Interrupt Line */
+    g2_write_8(GAPS_BASE + 0x160d, 0xf0);        /* Primary Latency Timer */
+
+    /* PCI Command Register (Fast Back-to-Back is read-only 0 on this bridge)
+       0x1610 (BAR0, I/O BAR) reads back as 0x00000001, which is I/O Space Indicator
+    */
+    g2_write_16(GAPS_BASE + 0x1604, g2_read_16(GAPS_BASE + 0x1604) | 0x6);
+
+    g2_write_32(GAPS_BASE + 0x1614, 0x01000000); /* BAR1 (Memory BAR) */
+
+    /* There are two extra regs here that are GAPS-specific (0x1650 and 0x1654). */
+    if(g2_read_8(GAPS_BASE + 0x1650) & 0x1)
+    {
+        g2_write_16(GAPS_BASE + 0x1654, (g2_read_16(GAPS_BASE + 0x1654) & 0xfffc) | 0x8000);
+    }
+
+    /* Apparently we do this again */
+    g2_write_32(GAPS_BASE + 0x1414, 0x00000001); /* Interrupt enable */
+
+    /* Clear GAPS mem */
+    g2_memset_8(RTL_MEM, 0, (RX_BUFFER_LEN + (TX_BUFFER_LEN * TX_NB_BUFFERS)));
+    //Apparently the Cache should be invalidated also. Don't want to import that.
+
+    /* Another magic number sequence, possibly checking previous init. */
+    /* ASCII for 'SEGA' in little-endian */
+    if(g2_read_32(GAPS_BASE + 0x141c) == 0x41474553) {
+        g2_write_32(GAPS_BASE + 0x141c, 0x55aaff00);
+
+        if(g2_read_32(GAPS_BASE + 0x141c) == 0x55aaff00) {
+            g2_write_32(GAPS_BASE + 0x141c, 0xaa5500ff);
+
+            if(g2_read_32(GAPS_BASE + 0x141c) == 0xaa5500ff) {
+                g2_write_32(GAPS_BASE + 0x141c, 0x41474553);
+                /* I think GAPS automatically pulls RSTB low for 120ns, which 
+                   causes the EEPROM to autoload all the registers initially. 
+                   So we don't need to worry about it.
+                */
+                return 0;
+            }
+        }
+    }
+
+    dbglog(DBG_ERROR, "bba: GAPS PCI controller init failed!\n");
+
+    return -3;
 }
 
 /****************************************************************************/
@@ -160,7 +217,7 @@ struct {
 } rtl;
 
 /* 8, 16, and 32 bit access to the PCI I/O space (configured by GAPS) */
-#define NIC(ADDR) (0xa1001700 + (ADDR))
+#define NIC(ADDR) (GAPS_BASE + 0x1700 + (ADDR))
 
 /* 8 and 32 bit access to the PCI MEMMAP space (configured by GAPS) */
 static uint32 const rtl_mem = 0xa0000000 + RTL_MEM;
@@ -192,13 +249,31 @@ void bba_set_rx_callback(eth_rx_callback_t cb) {
     eth_rx_callback = cb;
 }
 
+static int rtl_reset(void) {
+    int i = 100;
+
+    /* Soft-reset the chip */
+    g2_write_8(NIC(RT_CHIPCMD), RT_CMD_RESET);
+
+    /* Wait for it to come back */
+    while((g2_read_8(NIC(RT_CHIPCMD)) & RT_CMD_RESET) && i > 0) {
+        i--;
+        thd_sleep(10);
+    }
+
+    if(g2_read_8(NIC(RT_CHIPCMD)) & RT_CMD_RESET) {
+        dbglog(DBG_ERROR, "bba: timed out on reset\n");
+        return -1;
+    }
+
+    return 0;
+}
 /*
   Initializes the BBA
 
   Returns 0 for success or -1 for failure.
  */
-static int bba_hw_init() {
-    int i;
+static int bba_hw_init(void) {
     uint32 tmp;
 
     link_stable = 0;
@@ -207,48 +282,6 @@ static int bba_hw_init() {
     /* Initialize GAPS */
     if(gaps_init() < 0)
         return -1;
-
-    /* Soft-reset the chip */
-    g2_write_8(NIC(RT_CHIPCMD), RT_CMD_RESET);
-
-    /* Wait for it to come back */
-    i = 100;
-
-    while((g2_read_8(NIC(RT_CHIPCMD)) & RT_CMD_RESET) && i > 0) {
-        i--;
-        thd_sleep(10);
-    }
-
-    if(g2_read_8(NIC(RT_CHIPCMD)) & RT_CMD_RESET) {
-        dbglog(DBG_ERROR, "bba: timed out on reset #1\n");
-        return -1;
-    }
-
-    /* Reset CONFIG1 */
-    g2_write_8(NIC(RT_CONFIG1), 0);
-
-    /* Enable auto-negotiation and restart that process */
-    /* NIC16(RT_MII_BMCR) = 0x1200; */
-    g2_write_16(NIC(RT_MII_BMCR), 0x9200);
-
-    /* Do another reset */
-    g2_write_8(NIC(RT_CHIPCMD), RT_CMD_RESET);
-
-    /* Wait for it to come back */
-    i = 100;
-
-    while((g2_read_8(NIC(RT_CHIPCMD)) & RT_CMD_RESET) && i > 0) {
-        i--;
-        thd_sleep(10);
-    }
-
-    if(g2_read_8(NIC(RT_CHIPCMD)) & RT_CMD_RESET) {
-        dbglog(DBG_ERROR, "bba: timed out on reset #2\n");
-        return -1;
-    }
-
-    /* Enable writing to the config registers */
-    g2_write_8(NIC(RT_CFG9346), 0xc0);
 
     /* Read MAC address */
     tmp = g2_read_32(NIC(RT_IDR0));
@@ -263,7 +296,50 @@ static int bba_hw_init() {
            rtl.mac[0], rtl.mac[1], rtl.mac[2],
            rtl.mac[3], rtl.mac[4], rtl.mac[5]);
 
-    /* Enable receive and transmit functions */
+    /* Reset the chip and wait for it to come back */
+    if(rtl_reset() < 0)
+        return -2;
+
+    /* Setup RX buffer */
+    g2_write_32(NIC(RT_RXBUF), RTL_MEM);
+
+    /* Setup TX buffers */
+    for(tmp=0; tmp<TX_NB_BUFFERS; tmp++)
+        g2_write_32(NIC(RT_TXADDR0 + (tmp*4)), RTL_MEM + (tmp* TX_BUFFER_LEN) + TX_BUFFER_OFFSET);
+
+    /* Magic reset */
+    if(rtl_reset() < 0)
+        return -3;
+
+    /* Perform some magic enable/disable dance */
+    g2_write_8(NIC(RT_CHIPCMD), RT_CMD_RX_ENABLE);
+
+    if(g2_read_8(NIC(RT_CHIPCMD)) == RT_CMD_RX_ENABLE) {
+        g2_write_8(NIC(RT_CHIPCMD), RT_CMD_TX_ENABLE);
+
+        if(g2_read_8(NIC(RT_CHIPCMD)) == RT_CMD_TX_ENABLE) {
+            /* Disable RX and TX */
+            g2_write_8(NIC(RT_CHIPCMD), 0);
+        }
+    }
+
+    /* Now a dance with the Multicast Register before Enabling */
+    g2_write_32(NIC(RT_MAR0), 0x55aaff00);
+    g2_write_32(NIC(RT_MAR4), 0xaa5500ff);
+
+    if((g2_read_32(NIC(RT_MAR0)) == 0x55aaff00) && 
+       (g2_read_32(NIC(RT_MAR4)) == 0xaa5500ff)) {
+        /* Enable receive and transmit functions */
+        g2_write_8(NIC(RT_CHIPCMD), RT_CMD_RX_ENABLE | RT_CMD_TX_ENABLE);
+
+        g2_write_32(NIC(RT_MAR0), 0xffffffff);
+        g2_write_32(NIC(RT_MAR4), 0xffffffff);
+    }
+
+    /* Disable all interrupts */
+    g2_write_16(NIC(RT_INTRMASK), 0);
+
+    /* Enable receive and transmit functions ... again*/
     g2_write_8(NIC(RT_CHIPCMD), RT_CMD_RX_ENABLE | RT_CMD_TX_ENABLE);
 
     /* Set Rx FIFO threashold to 1K, Rx size to 16k+16, 1024 byte DMA burst */
@@ -272,31 +348,25 @@ static int bba_hw_init() {
     /* Set Tx 1024 byte DMA burst */
     g2_write_32(NIC(RT_TXCONFIG), TX_CONFIG);
 
-    /* Turn off lan-wake and set the driver-loaded bit */
-    g2_write_8(NIC(RT_CONFIG1), (g2_read_8(NIC(RT_CONFIG1)) & ~0x30) | 0x20);
+    /* Enable writing to the config registers */
+    g2_write_8(NIC(RT_CFG9346), 0xc0);
+
+    /* Old style would turn of LWACT and on DVRLOAD. New also disables LED0 and enables LED1 */
+    g2_write_8(NIC(RT_CONFIG1), (g2_read_8(NIC(RT_CONFIG1)) & 
+        ~(RT_CONFIG1_LWACT | RT_CONFIG1_LED0)) | RT_CONFIG1_DVRLOAD | RT_CONFIG1_LED1);
 
     /* Enable FIFO auto-clear */
-    g2_write_8(NIC(RT_CONFIG4), g2_read_8(NIC(RT_CONFIG4)) | 0x80);
+    g2_write_8(NIC(RT_CONFIG4), g2_read_8(NIC(RT_CONFIG4)) | RT_CONFIG4_RxFIFIOAC);
+
+    /* Disable Link-Down Power Saver */
+    g2_write_8(NIC(RT_CONFIG5), g2_read_8(NIC(RT_CONFIG5)) | RT_CONFIG5_LDPS);
 
     /* Switch back to normal operation mode */
     g2_write_8(NIC(RT_CFG9346), 0);
 
-    /* Setup RX buffer */
-    g2_write_32(NIC(RT_RXBUF), RTL_MEM);
-
-    /* Setup TX buffers */
-    for(i=0; i<TX_NB_BUFFERS; i++)
-        g2_write_32(NIC(RT_TXADDR0 + (i*4)), RTL_MEM + (i* TX_BUFFER_LEN) + TX_BUFFER_OFFSET);
-
-    /* Reset RXMISSED counter */
-    g2_write_32(NIC(RT_RXMISSED), 0);
-
-    /* Enable receiving broadcast and physical match packets */
-    g2_write_32(NIC(RT_RXCONFIG), g2_read_32(NIC(RT_RXCONFIG)) | 0x0000000a);
-
     /* Filter out all multicast packets */
-    g2_write_32(NIC(RT_MAR0 + 0), 0);
-    g2_write_32(NIC(RT_MAR0 + 4), 0);
+    g2_write_32(NIC(RT_MAR0), 0);
+    g2_write_32(NIC(RT_MAR4), 0);
 
     /* Disable all multi-interrupts */
     g2_write_16(NIC(RT_MULTIINTR), 0);
@@ -318,17 +388,26 @@ static int bba_hw_init() {
                 RT_INT_RX_ERR |
                 RT_INT_RX_OK);
 
+    /* Reset RXMISSED counter */
+    g2_write_32(NIC(RT_RXMISSED), 0);
+
     /* Enable RX/TX once more */
     g2_write_8(NIC(RT_CHIPCMD), RT_CMD_RX_ENABLE | RT_CMD_TX_ENABLE);
+
+    /* Reset, Enable, and start auto-negotiation */
+    g2_write_16(NIC(RT_MII_BMCR), RT_MII_RESET | RT_MII_AN_ENABLE | RT_MII_AN_START);
 
     /* Initialize status vars */
     rtl.cur_tx = 0;
     rtl.cur_rx = 0;
 
+    /* Enable receiving broadcast and physical match packets */
+    g2_write_32(NIC(RT_RXCONFIG), g2_read_32(NIC(RT_RXCONFIG)) | 0x0000000a);
+
     return 0;
 }
 
-static void rx_reset() {
+static void rx_reset(void) {
     rtl.cur_rx = g2_read_16(NIC(RT_RXBUFHEAD));
     g2_write_16(NIC(RT_RXBUFTAIL), rtl.cur_rx - 16);
 
@@ -346,7 +425,7 @@ static void rx_reset() {
     g2_write_16(NIC(RT_INTRSTATUS), 0xffff);
 }
 
-static void bba_hw_shutdown() {
+static void bba_hw_shutdown(void) {
     /* Disable receiver */
     g2_write_32(NIC(RT_RXCONFIG), 0);
 
@@ -423,9 +502,9 @@ static void g2_read_block_8(uint8 *dst, uint8 *src, int len) {
     G2_LOCK(old1, old2);
 
     /* This is in case dst is not multiple of 4, which never happens here */
-    /*     while ( (((uint32)dst)&3) ) { */
+    /*     while( (((uint32)dst)&3) ) { */
     /*       *dst++ = *src++; */
-    /*       if (!--len) */
+    /*       if(!--len) */
     /*  return; */
     /*     } */
 
@@ -484,7 +563,7 @@ static semaphore_t bba_rx_sema;
 static int bba_rx_exit_thread;
 static semaphore_t bba_rx_sema2;
 
-static void bba_rx();
+static void bba_rx(void);
 
 #ifdef TX_SEMA
 static semaphore_t tx_sema;
@@ -635,10 +714,15 @@ static int bba_tx(const uint8 * pkt, int len, int wait)
 #endif
 {
     /*
-       int i;
+    int i;
 
-    printf("Transmitting packet:\r\n"); for (i=0; i<len; i++) { printf("%02x ", pkt[i]); if (i
-       && !(i % 16)) printf("\r\n"); } printf("\r\n");
+    dbglog(DBG_KDEBUG,"Transmitting packet:\r\n");
+    for(i=0; i<len; i++) {
+        dbglog(DBG_KDEBUG,"%02x ", pkt[i]);
+        if(i && !(i % 16))
+            printf("\r\n");
+    }
+    dbglog(DBG_KDEBUG,"\r\n");
     */
 
     //wait = BBA_TX_WAIT;
@@ -722,12 +806,12 @@ int bba_tx(const uint8 * pkt, int len, int wait) {
 }
 #endif
 
-void bba_lock() {
+void bba_lock(void) {
     //sem_wait(&bba_rx_sema2);
     //asic_evt_disable(ASIC_EVT_EXP_PCI, BBA_ASIC_IRQ);
 }
 
-void bba_unlock() {
+void bba_unlock(void) {
     //asic_evt_enable(ASIC_EVT_EXP_PCI, BBA_ASIC_IRQ);
     //sem_signal(&bba_rx_sema2);
 }
@@ -766,7 +850,7 @@ static void *bba_rx_threadfunc(void *dummy) {
     return NULL;
 }
 
-static void bba_rx() {
+static void bba_rx(void) {
     uint32 rx_status;
     size_t pkt_size, ring_offset;
 
@@ -779,11 +863,11 @@ static void bba_rx() {
         pkt_size = rx_size - 4;
 
         if(rx_size == 0xfff0) {
-            //dbglog(DBG_KDEBUG, "bba: early receive triggered\n");
+            dbglog(DBG_KDEBUG, "bba: early receive triggered\n");
             break;
         }
 
-        /*     if ( ( ( g2_read_16(NIC(RT_RXBUFHEAD)) - ring_offset ) & (RX_BUFFER_LEN-1)) < */
+        /*     if( ( ( g2_read_16(NIC(RT_RXBUFHEAD)) - ring_offset ) & (RX_BUFFER_LEN-1)) < */
         /*   ( (rx_size+4+3) & (RX_BUFFER_LEN-3-1) )) { */
         /*       //dbglog(DBG_KDEBUG, "bba: oops\n"); */
         /*       break; */
@@ -907,7 +991,7 @@ static void bba_irq_hnd(uint32 code) {
 
 netif_t bba_if;
 
-static void set_ipv6_lladdr() {
+static void set_ipv6_lladdr(void) {
     /* Set up the IPv6 link-local address. This is done in accordance with
        Section 4/5 of RFC 2464 based on the MAC Address of the adapter. */
     bba_if.ip6_lladdr.__s6_addr.__s6_addr8[0]  = 0xFE;
@@ -1079,8 +1163,8 @@ static int bba_if_set_mc(netif_t *self, const uint8 *list, int count) {
 
     if(count == 0) {
         /* Clear the multicast address filter */
-        g2_write_32(NIC(RT_MAR0 + 0), 0);
-        g2_write_32(NIC(RT_MAR0 + 4), 0);
+        g2_write_32(NIC(RT_MAR0), 0);
+        g2_write_32(NIC(RT_MAR4), 0);
 
         /* Disable multicast reception */
         old = g2_read_32(NIC(RT_RXCONFIG));
@@ -1098,8 +1182,8 @@ static int bba_if_set_mc(netif_t *self, const uint8 *list, int count) {
         }
 
         /* Set the multicast address filter */
-        g2_write_32(NIC(RT_MAR0 + 0), mar[0]);
-        g2_write_32(NIC(RT_MAR0 + 4), mar[1]);
+        g2_write_32(NIC(RT_MAR0), mar[0]);
+        g2_write_32(NIC(RT_MAR4), mar[1]);
 
         /* Enable multicast reception */
         old = g2_read_32(NIC(RT_RXCONFIG));
@@ -1115,7 +1199,7 @@ static void bba_if_netinput(uint8 *pkt, int pktsize) {
 }
 
 /* Set ISP configuration from the flashrom, as long as we're configured staticly */
-static void bba_set_ispcfg() {
+static void bba_set_ispcfg(void) {
     flashrom_ispcfg_t isp;
 
     if(flashrom_get_ispcfg(&isp) == -1)
@@ -1149,7 +1233,8 @@ static void bba_set_ispcfg() {
 }
 
 /* Initialize */
-int bba_init() {
+int bba_init(void) {
+
     /* Use the netcore callback */
     bba_set_rx_callback(bba_if_netinput);
 
@@ -1169,6 +1254,14 @@ int bba_init() {
     bba_if.index = 0;
     bba_if.dev_id = 0;
     bba_if.flags = NETIF_NO_FLAGS;
+    bba_if.if_detect = bba_if_detect;
+
+    /* Short circuit if no bba is detected */
+    if(bba_if.if_detect(&bba_if) < 0) {
+        dbglog(DBG_KDEBUG, "bba: no device detected\n");
+        return -1;
+    }
+
     bba_get_mac(bba_if.mac_addr);
     memset(bba_if.ip_addr, 0, sizeof(bba_if.ip_addr));
     memset(bba_if.netmask, 0, sizeof(bba_if.netmask));
@@ -1182,7 +1275,7 @@ int bba_init() {
     memset(&bba_if.ip6_gateway, 0, sizeof(bba_if.ip6_gateway));
     bba_if.mtu6 = 0;
     bba_if.hop_limit = 0;
-    bba_if.if_detect = bba_if_detect;
+
     bba_if.if_init = bba_if_init;
     bba_if.if_shutdown = bba_if_shutdown;
     bba_if.if_start = bba_if_start;
@@ -1198,19 +1291,13 @@ int bba_init() {
 
 #if 0
 
-    /* Try to detect/init us */
-    if(bba_if.if_detect(&bba_if) < 0) {
-        printf("net_bba: can't detect broadband adapter\n");
-        return -1;
-    }
-
     if(bba_if.if_init(&bba_if) < 0) {
-        printf("net_bba: can't init broadband adapter\n");
+        printf("bba: can't init broadband adapter\n");
         return -1;
     }
 
     if(bba_if.if_start(&bba_if) < 0) {
-        printf("net_bba: can't start broadband adapter\n");
+        printf("bba: can't start broadband adapter\n");
         return -1;
     }
 
@@ -1221,12 +1308,7 @@ int bba_init() {
 }
 
 /* Shutdown */
-int bba_shutdown() {
-#if 1
-    /* Unregister us (if neccessary) */
-    net_unreg_device(&bba_if);
-#endif
-
+int bba_shutdown(void) {
     /* Shutdown hardware */
     bba_if.if_stop(&bba_if);
     bba_if.if_shutdown(&bba_if);
@@ -1241,17 +1323,17 @@ int bba_shutdown() {
 
 #if 0
 int module_init(int argc, char **argv) {
-    printf("net_bba: initializing\n");
+    printf("bba: initializing\n");
 
     if(bba_init() < 0)
         return -1;
 
-    printf("net_bba: done initializing\n");
+    printf("bba: done initializing\n");
     return 0;
 }
 
-int module_shutdown() {
-    printf("net_bba: exiting\n");
+int module_shutdown(void) {
+    printf("bba: exiting\n");
 
     if(bba_shutdown() < 0)
         return -1;

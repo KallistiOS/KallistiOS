@@ -30,9 +30,11 @@ static kthread_t *thd;
 static int done = 0;
 static int cbid_top;
 
-static void *net_thd_thd(void *data __attribute__((unused))) {
+static void *net_thd_thd(void *data) {
     struct thd_cb *cb;
     uint64 now;
+
+    (void)data;
 
     while(!done) {
         now = timer_ms_gettime64();

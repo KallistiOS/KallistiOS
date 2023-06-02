@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    fs_pty.c
-   Copyright (C) 2003 Dan Potter
+   Copyright (C) 2003 Megan Potter
    Copyright (C) 2012, 2014, 2016 Lawrence Sebald
 
 */
@@ -186,13 +186,17 @@ int fs_pty_create(char * buffer, int maxbuflen, file_t * master_out, file_t * sl
 
 /* Autoclean totally unreferenced PTYs (zero refcnt). */
 /* XXX This is a kinda nasty piece of code... two goto's!! */
-static void pty_destroy_unused() {
+static void pty_destroy_unused(void) {
     ptyhalf_t * c, * n;
     int old;
 
     /* Make sure no one else is messing with the list and then disable
        everything for a bit */
-    mutex_lock(&list_mutex);
+    if(irq_inside_int())
+        mutex_trylock(&list_mutex);
+    else
+        mutex_lock(&list_mutex);
+
     old = irq_disable();
 
 again:
@@ -401,7 +405,11 @@ static int pty_close(void * h) {
 
     if(fdobj->type == PF_PTY) {
         /* De-ref this end of it */
-        mutex_lock(&fdobj->d.p->mutex);
+        if(irq_inside_int())
+            mutex_trylock(&fdobj->d.p->mutex);
+        else
+            mutex_lock(&fdobj->d.p->mutex);
+
         fdobj->d.p->refcnt--;
 
         if(fdobj->d.p->refcnt <= 0) {
@@ -763,7 +771,7 @@ static vfs_handler_t vh = {
 static int initted = 0;
 
 /* Initialize the file system */
-int fs_pty_init() {
+int fs_pty_init(void) {
     int cm, cs;
     int tm, ts;
 
@@ -794,14 +802,19 @@ int fs_pty_init() {
 }
 
 /* De-init the file system */
-int fs_pty_shutdown() {
+int fs_pty_shutdown(void) {
     ptyhalf_t *n, *c;
 
     if(!initted)
         return 0;
 
+    /* If we're in an int, lets do the trylock */
+    if(irq_inside_int())
+        mutex_trylock(&list_mutex);
+    else
+        mutex_lock(&list_mutex);
+
     /* Go through and free all the pty entries */
-    mutex_lock(&list_mutex);
     c = LIST_FIRST(&ptys);
 
     while(c != NULL) {

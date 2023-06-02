@@ -20,7 +20,7 @@
     operations. It is generally easier to work with things at this level though,
     so that you can use the normal libc file access functions.
 
-    \author Dan Potter
+    \author Megan Potter
     \see    dc/vmu_pkg.h
     \see    dc/vmufs.h
 */
@@ -35,8 +35,8 @@ __BEGIN_DECLS
 
 /* \cond */
 /* Initialization */
-int fs_vmu_init();
-int fs_vmu_shutdown();
+int fs_vmu_init(void);
+int fs_vmu_shutdown(void);
 /* \endcond */
 
 __END_DECLS

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/scif.h
-   Copyright (C) 2000,2001,2004 Dan Potter
+   Copyright (C) 2000,2001,2004 Megan Potter
    Copyright (C) 2012 Lawrence Sebald
    Copyright (C) 2023 Ruslan Rostovtsev
 
@@ -12,7 +12,7 @@
 
     This file deals with raw access to the serial port on the Dreamcast.
 
-    \author Dan Potter
+    \author Megan Potter
     \author Lawrence Sebald
     \author Ruslan Rostovtsev
 */
@@ -43,7 +43,7 @@ int scif_set_irq_usage(int on);
 /** \brief  Is the SCIF port detected? Of course it is!
     \return                 1
 */
-int scif_detected();
+int scif_detected(void);
 
 /** \brief  Initialize the SCIF port.
 
@@ -52,7 +52,7 @@ int scif_detected();
 
     \retval 0               On success (no error conditions defined).
 */
-int scif_init();
+int scif_init(void);
 
 /** \brief  Shutdown the SCIF port.
 
@@ -60,13 +60,13 @@ int scif_init();
 
     \retval 0               On success (no error conditions defined).
 */
-int scif_shutdown();
+int scif_shutdown(void);
 
 /** \brief  Read a single character from the SCIF port.
     \return                 The character read if one is available, otherwise -1
                             and errno is set to EAGAIN.
 */
-int scif_read();
+int scif_read(void);
 
 /** \brief  Write a single character to the SCIF port.
     \param  c               The character to write (only the low 8-bits are
@@ -84,7 +84,7 @@ int scif_write(int c);
     \retval 0               On success.
     \retval -1              If the SCIF port is disabled (errno set to EIO).
 */
-int scif_flush();
+int scif_flush(void);
 
 /** \brief  Write a whole buffer of data to the SCIF port.
 

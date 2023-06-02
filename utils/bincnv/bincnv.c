@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    bincnv.c
-   (c)2000 Dan Potter
+   (c)2000 Megan Potter
 
    Test ELF to BIN convertor.. loads to VMA 0x8c010000. This is an
    exact functional duplicate of the routine in process/elf.c and is

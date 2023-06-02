@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    mm.c
-   (c)2000-2001 Dan Potter
+   (c)2000-2001 Megan Potter
 */
 
 /* Defines a simple UNIX-style memory pool system. Since the Dreamcast has
@@ -27,7 +27,7 @@ extern unsigned long end;
 static void *sbrk_base;
 
 /* MM-wide initialization */
-int mm_init() {
+int mm_init(void) {
     int base = (int)(&end);
     base = (base / 4) * 4 + 4;  /* longword align */
     sbrk_base = (void*)base;

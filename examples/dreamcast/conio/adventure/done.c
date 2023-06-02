@@ -40,7 +40,7 @@
 #if 0
 static char sccsid[] = "@(#)done.c	8.1 (Berkeley) 5/31/93";
 #endif
-static const char rcsid[] =
+static const char rcsid[] __attribute__((unused)) =
     "$FreeBSD: src/games/adventure/done.c,v 1.7 1999/12/19 00:21:50 billf Exp $";
 #endif /* not lint */
 

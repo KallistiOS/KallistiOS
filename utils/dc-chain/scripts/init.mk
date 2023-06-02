@@ -106,20 +106,91 @@ ifdef MINGW
   endif
 endif
 
-# Web downloaders command-lines
-wget_cmd=wget -c
-curl_cmd=curl -C - -O
-
 # Determine if we want to apply fixup sh4 newlib
 do_auto_fixup_sh4_newlib := 1
 ifdef auto_fixup_sh4_newlib
   ifeq (0,$(auto_fixup_sh4_newlib))
+    $(warning 'Disabling Newlib Auto Fixup)
     do_auto_fixup_sh4_newlib := 0
   endif
 endif
 
-ifeq (0,$(do_auto_fixup_sh4_newlib))
-  ifeq (kos,$(thread_model))
-    $(error kos thread model is unsupported when Newlib fixup is disabled)
+# Determine if we want to apply KOS patches to GCC/Newlib/Binutils
+do_kos_patching := 1
+ifdef use_kos_patches
+  ifeq (0,$(use_kos_patches))
+    $(warning 'Disabling KOS Patches)
+    do_kos_patching := 0
   endif
 endif
+
+# Report an error if KOS threading is enabled when patching or fixup is disabled
+ifeq (kos,$(thread_model))
+  ifeq (0,$(do_auto_fixup_sh4_newlib))
+    $(error kos thread model is unsupported when Newlib fixup is disabled)
+  endif
+  ifeq (0,$(do_kos_patching))
+    $(error kos thread model is unsupported when KOS patches are disabled)
+  endif
+endif
+
+ifdef newlib_c99_formats
+  ifneq (0,$(newlib_c99_formats))
+    newlib_extra_configure_args += --enable-newlib-io-c99-formats
+  endif
+endif
+
+ifdef newlib_opt_space
+  ifneq (0,$(newlib_opt_space))
+    newlib_extra_configure_args += --enable-target-optspace
+  endif
+endif
+
+# Function to verify variable is not empty
+# Args:
+# 1 - Variable Name
+verify_not_empty = $(if $($(1)),,$(error $(1) cannot be empty))
+
+# Function to warn and fallback from one variable name to another
+# Args:
+# 1 - Current Variable Name
+# 2 - Fallback Variable Name
+warn_and_fallback = $(if $($(1)),, \
+                      $(warning $(1) not defined, falling back to $(2)) \
+                      $(call verify_not_empty,$(2)) \
+                      $(1) ?= $($(2)) \
+                      )
+
+
+# Fallback to _tarball_type config options if _download_type was not provided
+packages = gdb
+$(foreach package, $(packages), $(eval $(call warn_and_fallback,$(package)_download_type,$(package)_tarball_type)))
+
+# Web downloaders command-lines
+downloaders = curl wget
+wget_cmd = wget -c $(if $(2),-O $(2)) '$(1)'
+curl_cmd = curl --fail --location  -C - $(if $(2),-o $(2),-O) '$(1)' 
+
+ifneq ($(force_downloader),)
+# Check if specified downloader is in supported list
+  web_downloader = $(if $(filter $(downloaders),$(force_downloader)),$(force_downloader))
+else
+# If no downloader specified, check to see if any are detected
+  web_downloader = $(if $(shell command -v curl),curl,$(if $(shell command -v wget),wget))
+endif
+
+# Make sure valid downloader was found
+ifeq ($(web_downloader),)
+  ifeq ($(force_downloader),)
+    $(error No supported downloader was found ($(downloaders)))
+  else
+    $(error Unsupported downloader ($(force_downloader)), select from ($(downloaders))) 
+  endif
+endif
+
+$(info Using $(web_downloader) as download tool)
+# Function to call downloader
+# Args:
+# 1 - URL
+# 2 - Output File (Optional)
+web_download = $(call $(web_downloader)_cmd,$(1),$(2))

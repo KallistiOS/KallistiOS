@@ -9,6 +9,10 @@
 int main(int argc, char **argv) {
     int x, y;
 
+    /* Press all buttons to exit */
+    cont_btn_callback(0, CONT_START | CONT_A | CONT_B | CONT_X | CONT_Y,
+                      (void (*)(unsigned char, long  unsigned int))arch_exit);
+
     /* Bother us with output only if something died */
     dbglog_set_level(DBG_DEAD);
 
@@ -23,8 +27,9 @@ int main(int argc, char **argv) {
                                   | ((c >> 3) << 0);
         }
 
-    /* Pause to see the results */
-    usleep(5 * 1000 * 1000);
+    printf("\n\nPress all buttons simultaneously to exit.\n");
+    fflush(stdout);
+    while(1);
 
     return 0;
 }

@@ -40,7 +40,7 @@
 #if 0
 static char sccsid[] = "@(#)init.c	8.1 (Berkeley) 6/2/93";
 #endif
-static const char rcsid[] =
+static const char rcsid[] __attribute__((unused)) =
     "$FreeBSD: src/games/adventure/init.c,v 1.9.2.1 2001/03/05 11:43:11 kris Exp $";
 #endif /* not lint */
 
@@ -89,7 +89,7 @@ linkdata() {                            /*  secondary data manipulation */
     int i, j;
 
     /*      array linkages          */
-    for(i = 1; i <= LOCSIZ; i++)
+    for(i = 1; i < LOCSIZ; i++)
         if(ltext[i].seekadr != 0 && travel[i] != 0)
             if((travel[i]->tverb) == 1) cond[i] = 2;
 

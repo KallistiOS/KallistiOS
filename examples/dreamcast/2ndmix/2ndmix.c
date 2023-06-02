@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    2ndmix.c
-   (c)2000-2002 Dan Potter
+   (c)2000-2002 Megan Potter
 
 */
 
@@ -472,7 +472,7 @@ fontrow_t font_rows[FONT_ROWS];
 char *scrollypos = NULL;
 char scrolly[] =
     "\x02Stars:2ndMix\0"
-    "By Dan Potter\0"
+    "By Megan Potter\0"
     "\r\0"
 
     "\x0c"
@@ -739,7 +739,7 @@ void font_init() {
     image = malloc(FONT_PIC_WIDTH * FONT_PIC_HEIGHT);
     pcxpal = pcxpall;
 
-    if(!load_pcx(FONT_NAME)) {
+    if(!load_pcx((char *)FONT_NAME)) {
         printf("Couldn't load PCX of font image\r\n");
         return;
     }

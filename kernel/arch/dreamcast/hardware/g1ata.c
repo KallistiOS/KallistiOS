@@ -2,6 +2,7 @@
 
    hardware/g1ata.c
    Copyright (C) 2013, 2014, 2015 Lawrence Sebald
+   Copyright (C) 2015, 2023 Ruslan Rostovtsev
 */
 
 #include <errno.h>
@@ -94,6 +95,10 @@ typedef struct ata_devdata {
 #define G1_ATA_STATUS_REG       0xA05F709C      /* Read */
 #define G1_ATA_COMMAND_REG      0xA05F709C      /* Write */
 
+/* PIO-related registers. */
+#define G1_ATA_PIO_RACCESS_WAIT 0xA05F7490      /* Write-only */
+#define G1_ATA_PIO_WACCESS_WAIT 0xA05F7494      /* Write-only */
+
 /* DMA-related registers. */
 #define G1_ATA_DMA_RACCESS_WAIT 0xA05F74A0      /* Write-only */
 #define G1_ATA_DMA_WACCESS_WAIT 0xA05F74A4      /* Write-only */
@@ -102,6 +107,10 @@ typedef struct ata_devdata {
 #define G1_ATA_DMA_DIRECTION    0xA05F740C      /* Read/Write */
 #define G1_ATA_DMA_ENABLE       0xA05F7414      /* Read/Write */
 #define G1_ATA_DMA_STATUS       0xA05F7418      /* Read/Write */
+#define G1_ATA_DMA_PROTECTION   0xA05F74B8      /* Write-only */
+
+/* System memory protection unlock value. */
+#define G1_DMA_UNLOCK_SYSMEM    0x8843407F
 
 /* Bitmasks for the STATUS_REG/ALT_STATUS registers. */
 #define G1_ATA_SR_ERR   0x01
@@ -139,6 +148,7 @@ typedef struct ata_devdata {
 
 /* Access timing data. */
 #define G1_ACCESS_WDMA_MODE2        0x00001001
+#define G1_ACCESS_PIO_DEFAULT       0x00000222
 
 /* DMA Settings. */
 #define G1_DMA_TO_DEVICE            0
@@ -311,10 +321,12 @@ static int dma_common(uint8_t cmd, size_t nsects, uint32_t addr, int dir,
 }
 
 int g1_ata_read_chs(uint16_t c, uint8_t h, uint8_t s, size_t count,
-                    uint16_t *buf) {
+                    void *buf) {
     int rv = 0;
     unsigned int i, j;
     uint8_t nsects = (uint8_t)count;
+    uint16_t word;
+    uint8_t *ptr = (uint8_t *)buf;
 
     /* Make sure that we've been initialized and there's a disk attached. */
     if(!devices) {
@@ -373,7 +385,10 @@ int g1_ata_read_chs(uint16_t c, uint8_t h, uint8_t s, size_t count,
             }
 
             for(j = 0; j < 256; ++j) {
-                *buf++ = IN16(G1_ATA_DATA);
+                word = IN16(G1_ATA_DATA);
+                ptr[0] = word;
+                ptr[1] = word >> 8;
+                ptr += 2;
             }
         }
     }
@@ -387,10 +402,12 @@ out:
 }
 
 int g1_ata_write_chs(uint16_t c, uint8_t h, uint8_t s, size_t count,
-                     const uint16_t *buf) {
+                     const void *buf) {
     int rv = 0;
     unsigned int i, j;
     uint8_t nsects = (uint8_t)count;
+    uint16_t word;
+    uint8_t *ptr = (uint8_t *)buf;
 
     /* Make sure that we've been initialized and there's a disk attached. */
     if(!devices) {
@@ -443,7 +460,9 @@ int g1_ata_write_chs(uint16_t c, uint8_t h, uint8_t s, size_t count,
 
             /* Send the data! */
             for(j = 0; j < 256; ++j) {
-                OUT16(G1_ATA_DATA, *buf++);
+                word = ptr[0] | (ptr[1] << 8);
+                OUT16(G1_ATA_DATA, word);
+                ptr += 2;
             }
         }
     }
@@ -458,10 +477,12 @@ int g1_ata_write_chs(uint16_t c, uint8_t h, uint8_t s, size_t count,
     return rv;
 }
 
-int g1_ata_read_lba(uint64_t sector, size_t count, uint16_t *buf) {
+int g1_ata_read_lba(uint64_t sector, size_t count, void *buf) {
     int rv = 0;
     unsigned int i, j;
     uint8_t nsects = (uint8_t)count;
+    uint16_t word;
+    uint8_t *ptr = (uint8_t *)buf;
 
     /* Make sure that we've been initialized and there's a disk attached. */
     if(!devices) {
@@ -544,7 +565,10 @@ int g1_ata_read_lba(uint64_t sector, size_t count, uint16_t *buf) {
             }
 
             for(j = 0; j < 256; ++j) {
-                *buf++ = IN16(G1_ATA_DATA);
+                word = IN16(G1_ATA_DATA);
+                ptr[0] = word;
+                ptr[1] = word >> 8;
+                ptr += 2;
             }
         }
     }
@@ -557,7 +581,7 @@ out:
     return rv;
 }
 
-int g1_ata_read_lba_dma(uint64_t sector, size_t count, uint16_t *buf,
+int g1_ata_read_lba_dma(uint64_t sector, size_t count, void *buf,
                         int block) {
     int rv = 0;
     uint32_t addr;
@@ -677,10 +701,12 @@ int g1_ata_read_lba_dma(uint64_t sector, size_t count, uint16_t *buf,
     return rv;
 }
 
-int g1_ata_write_lba(uint64_t sector, size_t count, const uint16_t *buf) {
+int g1_ata_write_lba(uint64_t sector, size_t count, const void *buf) {
     int rv = 0;
     unsigned int i, j;
     uint8_t nsects = (uint8_t)count;
+    uint16_t word;
+    uint8_t *ptr = (uint8_t *)buf;
 
     /* Make sure that we've been initialized and there's a disk attached. */
     if(!devices) {
@@ -750,7 +776,9 @@ int g1_ata_write_lba(uint64_t sector, size_t count, const uint16_t *buf) {
 
             /* Send the data! */
             for(j = 0; j < 256; ++j) {
-                OUT16(G1_ATA_DATA, *buf++);
+                word = ptr[0] | (ptr[1] << 8);
+                OUT16(G1_ATA_DATA, word);
+                ptr += 2;
             }
         }
     }
@@ -765,7 +793,7 @@ int g1_ata_write_lba(uint64_t sector, size_t count, const uint16_t *buf) {
     return rv;
 }
 
-int g1_ata_write_lba_dma(uint64_t sector, size_t count, const uint16_t *buf,
+int g1_ata_write_lba_dma(uint64_t sector, size_t count, const void *buf,
                          int block) {
     int rv = 0;
     uint32_t addr;
@@ -914,6 +942,20 @@ int g1_ata_flush(void) {
     return 0;
 }
 
+int g1_ata_lba_mode(void) {
+    /* Make sure that we've been initialized and there's a disk attached. */
+    if(!devices) {
+        errno = ENXIO;
+        return -1;
+    }
+    if(!(device.capabilities & (1 << 9))) {
+        return 0; // CHS
+    } else if(!(device.command_sets & (1 << 26))) {
+        return 28; // LBA28
+    }
+    return 48; // LBA48
+}
+
 static int g1_ata_set_transfer_mode(uint8_t mode) {
     uint8_t status;
 
@@ -1025,7 +1067,10 @@ static int g1_ata_scan(void) {
     rv = 1;
 
     /* Set our transfer modes. */
-    g1_ata_set_transfer_mode(ATA_TRANSFER_PIO_DEFAULT);
+    if(!g1_ata_set_transfer_mode(ATA_TRANSFER_PIO_DEFAULT)) {
+        OUT32(G1_ATA_PIO_RACCESS_WAIT, G1_ACCESS_PIO_DEFAULT);
+        OUT32(G1_ATA_PIO_WACCESS_WAIT, G1_ACCESS_PIO_DEFAULT);
+    }
 
     /* Do we support Multiword DMA mode 2? If so, enable it. Otherwise, we won't
        even bother doing DMA at all. */
@@ -1033,6 +1078,7 @@ static int g1_ata_scan(void) {
         if(!g1_ata_set_transfer_mode(ATA_TRANSFER_WDMA(2))) {
             OUT32(G1_ATA_DMA_RACCESS_WAIT, G1_ACCESS_WDMA_MODE2);
             OUT32(G1_ATA_DMA_WACCESS_WAIT, G1_ACCESS_WDMA_MODE2);
+            OUT32(G1_ATA_DMA_PROTECTION, G1_DMA_UNLOCK_SYSMEM);
         }
         else {
             device.wdma_modes = 0;
@@ -1087,8 +1133,7 @@ static int atab_read_blocks_dma(kos_blockdev_t *d, uint64_t block, size_t count,
         return -1;
     }
 
-    return g1_ata_read_lba_dma(block + data->start_block, count,
-                               (uint16_t *)buf, 1);
+    return g1_ata_read_lba_dma(block + data->start_block, count, buf, 1);
 }
 
 static int atab_write_blocks(kos_blockdev_t *d, uint64_t block, size_t count,
@@ -1100,8 +1145,7 @@ static int atab_write_blocks(kos_blockdev_t *d, uint64_t block, size_t count,
         return -1;
     }
 
-    return g1_ata_write_lba(block + data->start_block, count,
-                            (const uint16_t *)buf);
+    return g1_ata_write_lba(block + data->start_block, count, buf);
 }
 
 static int atab_write_blocks_dma(kos_blockdev_t *d, uint64_t block,
@@ -1113,8 +1157,7 @@ static int atab_write_blocks_dma(kos_blockdev_t *d, uint64_t block,
         return -1;
     }
 
-    return g1_ata_write_lba_dma(block + data->start_block, count,
-                                (const uint16_t *)buf, 1);
+    return g1_ata_write_lba_dma(block + data->start_block, count, buf, 1);
 }
 
 static int atab_read_blocks_chs(kos_blockdev_t *d, uint64_t block, size_t count,
@@ -1134,7 +1177,7 @@ static int atab_read_blocks_chs(kos_blockdev_t *d, uint64_t block, size_t count,
     h = (uint8_t)((block / device.sectors) % device.heads);
     s = (uint8_t)((block % device.sectors) + 1);
 
-    return g1_ata_read_chs(c, h, s, count, (uint16_t *)buf);
+    return g1_ata_read_chs(c, h, s, count, buf);
 }
 
 static int atab_write_blocks_chs(kos_blockdev_t *d, uint64_t block,
@@ -1154,7 +1197,7 @@ static int atab_write_blocks_chs(kos_blockdev_t *d, uint64_t block,
     h = (uint8_t)((block / device.sectors) % device.heads);
     s = (uint8_t)((block % device.sectors) + 1);
 
-    return g1_ata_write_chs(c, h, s, count, (const uint16_t *)buf);
+    return g1_ata_write_chs(c, h, s, count, buf);
 }
 
 static uint64_t atab_count_blocks(kos_blockdev_t *d) {
@@ -1284,6 +1327,49 @@ int g1_ata_blockdev_for_partition(int partition, int dma, kos_blockdev_t *rv,
     return 0;
 }
 
+int g1_ata_blockdev_for_device(int dma, kos_blockdev_t *rv) {
+    ata_devdata_t *ddata;
+
+    if(!initted) {
+        errno = ENXIO;
+        return -1;
+    }
+
+    if(!rv) {
+        errno = EFAULT;
+        return -1;
+    }
+
+    /* Allocate the device data */
+    if(!(ddata = (ata_devdata_t *)malloc(sizeof(ata_devdata_t)))) {
+        errno = ENOMEM;
+        return -1;
+    }
+
+    /* Copy in the template block device and fill it in */
+    if(device.max_lba) {
+        if(dma && device.wdma_modes)
+            memcpy(rv, &ata_blockdev_dma, sizeof(kos_blockdev_t));
+        else
+            memcpy(rv, &ata_blockdev, sizeof(kos_blockdev_t));
+    }
+    else {
+        memcpy(rv, &ata_blockdev_chs, sizeof(kos_blockdev_t));
+    }
+
+    if(device.max_lba) {
+        ddata->end_block = device.max_lba;
+    }
+    else {
+        ddata->end_block = (device.cylinders * device.heads * device.sectors);
+    }
+    ddata->start_block = 0;
+    ddata->block_count = ddata->end_block + 1;
+    rv->dev_data = ddata;
+
+    return 0;
+}
+
 int g1_ata_init(void) {
     if(initted)
         return 0;
@@ -1298,11 +1384,11 @@ int g1_ata_init(void) {
 
     /* Hook all the DMA related events. */
     asic_evt_set_handler(ASIC_EVT_GD_DMA, g1_dma_irq_hnd);
-    asic_evt_enable(ASIC_EVT_GD_DMA, ASIC_IRQ_DEFAULT);
+    asic_evt_enable(ASIC_EVT_GD_DMA, ASIC_IRQB);
     asic_evt_set_handler(ASIC_EVT_GD_DMA_OVERRUN, g1_dma_irq_hnd);
-    asic_evt_enable(ASIC_EVT_GD_DMA_OVERRUN, ASIC_IRQ_DEFAULT);
+    asic_evt_enable(ASIC_EVT_GD_DMA_OVERRUN, ASIC_IRQB);
     asic_evt_set_handler(ASIC_EVT_GD_DMA_ILLADDR, g1_dma_irq_hnd);
-    asic_evt_enable(ASIC_EVT_GD_DMA_ILLADDR, ASIC_IRQ_DEFAULT);
+    asic_evt_enable(ASIC_EVT_GD_DMA_ILLADDR, ASIC_IRQB);
 
     initted = 1;
 
@@ -1323,10 +1409,10 @@ void g1_ata_shutdown(void) {
     memset(&device, 0, sizeof(device));
 
     /* Unhook the events and disable the IRQs. */
-    asic_evt_disable(ASIC_EVT_GD_DMA, ASIC_IRQ_DEFAULT);
+    asic_evt_disable(ASIC_EVT_GD_DMA, ASIC_IRQB);
     asic_evt_set_handler(ASIC_EVT_GD_DMA, NULL);
-    asic_evt_disable(ASIC_EVT_GD_DMA_OVERRUN, ASIC_IRQ_DEFAULT);
+    asic_evt_disable(ASIC_EVT_GD_DMA_OVERRUN, ASIC_IRQB);
     asic_evt_set_handler(ASIC_EVT_GD_DMA_OVERRUN, NULL);
-    asic_evt_disable(ASIC_EVT_GD_DMA_ILLADDR, ASIC_IRQ_DEFAULT);
+    asic_evt_disable(ASIC_EVT_GD_DMA_ILLADDR, ASIC_IRQB);
     asic_evt_set_handler(ASIC_EVT_GD_DMA_ILLADDR, NULL);
 }

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    hardware/scif.c
-   Copyright (C)2000,2001,2004 Dan Potter
+   Copyright (C)2000,2001,2004 Megan Potter
 */
 
 #include <stdio.h>
@@ -58,7 +58,7 @@ static uint8 recvbuf[BUFSIZE];
 static int rb_head = 0, rb_tail = 0, rb_cnt = 0;
 static int rb_paused = 0;
 
-static void rb_reset() {
+static void rb_reset(void) {
     rb_head = rb_tail = rb_cnt = rb_paused = 0;
 }
 
@@ -75,7 +75,7 @@ static void rb_push_char(int c) {
     }
 }
 
-static int rb_pop_char() {
+static int rb_pop_char(void) {
     int c;
     c = recvbuf[rb_tail];
     rb_tail = (rb_tail + 1) % BUFSIZE;
@@ -90,11 +90,11 @@ static int rb_pop_char() {
     return c;
 }
 
-/* static int rb_space_free() {
+/* static int rb_space_free(void) {
     return BUFSIZE - rb_cnt;
 } */
 
-static int rb_space_used() {
+static int rb_space_used(void) {
     return rb_cnt;
 }
 
@@ -184,21 +184,21 @@ int scif_set_irq_usage(int on) {
 
 /* We are always detected, though we might end up realizing there's no
    cable connected later... */
-int scif_detected() {
+int scif_detected(void) {
     return 1;
 }
 
 /* We use this for the dbgio interface because we always init SCIF. */
-int scif_init_fake() {
+int scif_init_fake(void) {
     return 0;
 }
 
 /* Initialize the SCIF port; */
 /* recv trigger to 1 byte */
-int scif_init() {
+int scif_init(void) {
     int i;
-    unsigned char scbrr2;
-    unsigned short scsmr2;
+    unsigned char scbrr2 = 0;
+    unsigned short scsmr2 = 0;
 
     /*  If dcload-serial is active, then do nothing here, or we'll
         screw that up. */
@@ -224,7 +224,7 @@ int scif_init() {
         scsmr2 = 2;
         scbrr2 = (50000000 / (512 * serial_baud)) - 1;
     }
-    else if (serial_baud) {
+    else if(serial_baud) {
         scsmr2 = 3;
         scbrr2 = (50000000 / (2048 * serial_baud)) - 1;
     }
@@ -263,13 +263,13 @@ int scif_init() {
     return 0;
 }
 
-int scif_shutdown() {
+int scif_shutdown(void) {
     scif_set_irq_usage(DBGIO_MODE_POLLED);
     return 0;
 }
 
 /* Read one char from the serial port (-1 if nothing to read) */
-int scif_read() {
+int scif_read(void) {
     if(!serial_enabled) {
         errno = EIO;
         return -1;
@@ -332,7 +332,7 @@ int scif_write(int c) {
 }
 
 /* Flush all FIFO'd bytes out of the serial port buffer */
-int scif_flush() {
+int scif_flush(void) {
     int timeout = 800000;
 
     if(!serial_enabled) {

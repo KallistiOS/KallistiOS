@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/flashrom.h
-   Copyright (C) 2003 Dan Potter
+   Copyright (C) 2003 Megan Potter
    Copyright (C) 2008 Lawrence Sebald
 
 */
@@ -16,7 +16,7 @@
     a Bad Idea(tm)), extreme care should be taken if you choose to use these
     functions!
 
-    \author Dan Potter
+    \author Megan Potter
     \author Lawrence Sebald
 */
 
@@ -220,7 +220,7 @@ int flashrom_get_syscfg(flashrom_syscfg_t * out);
     \see    fr_region
     \see    fr_errs
 */
-int flashrom_get_region();
+int flashrom_get_region(void);
 
 /** \defgroup fr_method Connection method types
 

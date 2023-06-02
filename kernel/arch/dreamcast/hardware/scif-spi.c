@@ -126,9 +126,12 @@ static void slow_rw_delay(void) {
     timer_clear(TMU1);
     timer_start(TMU1);
 
-    while(!timer_clear(TMU1)) ;
-    while(!timer_clear(TMU1)) ;
-    while(!timer_clear(TMU1)) ;
+    while(!timer_clear(TMU1))
+        ;
+    while(!timer_clear(TMU1))
+        ;
+    while(!timer_clear(TMU1))
+        ;
     timer_stop(TMU1);
 }
 

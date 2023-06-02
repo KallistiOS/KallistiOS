@@ -13,7 +13,7 @@
     defining the resolution of the display, dealing with the framebuffer, etc.
 
     \author Anders Clerwall
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __DC_VIDEO_H
@@ -47,8 +47,13 @@ __BEGIN_DECLS
 */
 #define PM_RGB555   0       /**< \brief RGB555 pixel mode (15-bit) */
 #define PM_RGB565   1       /**< \brief RGB565 pixel mode (16-bit) */
-#define PM_RGB888   3       /**< \brief RGB888 pixel mode (24-bit) */
+#define PM_RGB888P  2       /**< \brief RBG888 packed pixel mode (24-bit) */
+#define PM_RGB0888  3       /**< \brief RGB0888 pixel mode (32-bit) */
+#define PM_RGB888   PM_RGB0888 /**< \brief Backwards compatibility support */
 /** @} */
+
+/** \brief vid_pmode_bpp Video pixel mode depths */
+static const uint8 vid_pmode_bpp[4] = {2, 2, 3, 4};
 
 /** \brief  Generic display modes */
 enum {
@@ -181,7 +186,7 @@ extern uint32 *vram_l;
     \retval CT_RGB          If a RGB/SCART cable is connected.
     \retval CT_COMPOSITE    If a composite cable or RF switch is connected.
 */
-int vid_check_cable();
+int vid_check_cable(void);
 
 /** \brief  Set the VRAM base of the framebuffer.
 
@@ -197,7 +202,8 @@ void vid_set_start(uint32 base);
 
     This function sets the displayed framebuffer to the specified buffer and
     sets the vram_s and vram_l pointers to point at the next framebuffer, to
-    allow for tearing-free framebuffer-direct drawing.
+    allow for tearing-free framebuffer-direct drawing. The specified buffer 
+    is masked against (vid_mode->fb_count - 1) in order to loop around.
 
     \param  fb              The framebuffer to display (or -1 for the next one).
 */
@@ -232,13 +238,13 @@ void vid_clear(int r, int g, int b);
     This function is essentially a memset() for the whole of VRAM that will
     clear it all to 0 bytes.
 */
-void vid_empty();
+void vid_empty(void);
 
 /** \brief  Wait for VBlank.
 
     This function busy loops until the vertical blanking period starts.
 */
-void vid_waitvbl();
+void vid_waitvbl(void);
 
 /** \brief  Set the video mode.
 
@@ -277,7 +283,7 @@ void vid_init(int disp_mode, int pixel_mode);
     This function reinitializes the video system to what dcload and friends
     expect it to be.
 */
-void vid_shutdown();
+void vid_shutdown(void);
 
 /** \brief  Take a screenshot.
 

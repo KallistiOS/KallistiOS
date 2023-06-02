@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    maple_enum.c
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
    (c)2008 Lawrence Sebald
  */
 
@@ -9,7 +9,7 @@
 #include <kos/thread.h>
 
 /* Return the number of connected devices */
-int maple_enum_count() {
+int maple_enum_count(void) {
     int p, u, cnt;
 
     for(cnt = 0, p = 0; p < MAPLE_PORT_COUNT; p++)

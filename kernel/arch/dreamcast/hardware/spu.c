@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    spu.c
-   (c)2000-2001 Dan Potter
+   (c)2000-2001 Megan Potter
  */
 
 #include <dc/spu.h>
@@ -123,7 +123,7 @@ void spu_memset(uint32 dst, unsigned long what, int length) {
 }
 
 /* Reset the AICA channel registers */
-void spu_reset_chans() {
+void spu_reset_chans(void) {
     int i;
     g2_fifo_wait();
     g2_write_32(SNDREGADDR(0x2800), 0);
@@ -141,7 +141,7 @@ void spu_reset_chans() {
 
 /* Enable/disable the SPU; note that disable implies reset of the
    ARM CPU core. */
-void spu_enable() {
+void spu_enable(void) {
     /* Reset all the channels */
     spu_reset_chans();
 
@@ -149,7 +149,7 @@ void spu_enable() {
     g2_write_32(SNDREGADDR(0x2c00), g2_read_32(SNDREGADDR(0x2c00)) & ~1);
 }
 
-void spu_disable() {
+void spu_disable(void) {
     /* Stop the ARM processor */
     g2_write_32(SNDREGADDR(0x2c00), g2_read_32(SNDREGADDR(0x2c00)) | 1);
 
@@ -191,7 +191,7 @@ void spu_cdda_pan(int left_pan, int right_pan) {
 }
 
 /* Initialize CDDA stuff */
-static void spu_cdda_init() {
+static void spu_cdda_init(void) {
     spu_cdda_volume(15, 15);
     spu_cdda_pan(0, 31);
 }
@@ -204,7 +204,7 @@ void spu_master_mixer(int volume, int stereo) {
 
 /* Initialize the SPU; by default it will be left in a state of
    reset until you upload a program. */
-int spu_init() {
+int spu_init(void) {
     /* Stop the ARM */
     spu_disable();
 
@@ -229,7 +229,7 @@ int spu_init() {
 }
 
 /* Shutdown SPU */
-int spu_shutdown() {
+int spu_shutdown(void) {
     spu_disable();
     spu_memset(0, 0, 0x200000);
     return 0;

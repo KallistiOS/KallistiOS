@@ -57,7 +57,7 @@ LIST_HEAD(kthread_tls_kv_list, kthread_tls_kv);
 /* Retrieve the next key value (i.e, what key the next kthread_key_create will
    use). This function is not meant for external use (although it won't really
    hurt anything for you to call it). */
-kthread_key_t kthread_key_next();
+kthread_key_t kthread_key_next(void);
 /** \endcond */
 
 /** \brief  Create a new thread-local storage key.
@@ -122,8 +122,8 @@ int kthread_key_delete(kthread_key_t key);
 void kthread_key_delete_destructor(kthread_key_t key);
 
 /* Initialization and shutdown. Once again, internal use only. */
-int kthread_tls_init();
-void kthread_tls_shutdown();
+int kthread_tls_init(void);
+void kthread_tls_shutdown(void);
 /** \endcond */
 
 __END_DECLS

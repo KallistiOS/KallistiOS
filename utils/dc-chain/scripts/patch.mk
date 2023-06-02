@@ -32,6 +32,22 @@ patch_gcc           = patch-sh4-gcc patch-arm-gcc
 patch_newlib        = patch-sh4-newlib
 patch_kos           = patch-kos
 
+# Patch
+# Apply sh4 newlib fixups (default is yes and this should be always the case!)
+ifeq (1,$(do_kos_patching))
+# Add Build Pre-Requisites for SH4 Steps
+  build-sh4-binutils: patch-sh4-binutils
+  build-sh4-gcc-pass1 build-sh4-gcc-pass2: patch-sh4-gcc
+  build-sh4-newlib-only: patch-sh4-newlib
+
+# Add Build Pre-Requisites for ARM Steps
+  build-arm-binutils: patch-arm-binutils
+  build-arm-gcc-pass1: patch-arm-gcc
+
+# Add Patching Pre-Reqs for GDB
+  build_gdb: patch_gdb
+endif
+
 uname_p := $(shell uname -p)
 uname_s := $(shell uname -s)
 
@@ -42,7 +58,7 @@ define patch_apply
 	if ! test -f "$${stamp_file}"; then \
 		if ! test -z "$${patches}"; then \
 			echo "+++ Patching $(patch_target_name)..."; \
-			patch -N -d $(src_dir) -p1 < $${patches}; \
+			echo "$${patches}" | xargs -n 1 patch -N -d $(src_dir) -p1 -i; \
 		fi; \
 		touch "$${stamp_file}"; \
 	fi;
@@ -65,7 +81,7 @@ $(patch_gcc): diff_patches := $(wildcard $(patches)/$(src_dir)*.diff)
 $(patch_gcc): diff_patches += $(wildcard $(patches)/$(host_triplet)/$(src_dir)*.diff)
 ifeq ($(uname_s), Darwin)
 ifeq ($(uname_p), arm)
-$(patch_gcc): diff_patches := $(wildcard $(patches)/$(uname_p)-$(uname_s)/$(src_dir)*.diff)
+$(patch_gcc): diff_patches += $(wildcard $(patches)/$(uname_p)-$(uname_s)/$(src_dir)*.diff)
 endif
 endif
 $(patch_gcc):

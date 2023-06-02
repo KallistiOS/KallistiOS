@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # arch/dreamcast Makefile
-# Copyright (C) 2001 Dan Potter
+# Copyright (C) 2001 Megan Potter
 #
 
 SUBDIRS=fs hardware kernel math sound util

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    pvr_prim.c
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
 
  */
 
@@ -355,7 +355,7 @@ void pvr_sprite_compile(pvr_sprite_hdr_t *dst, pvr_sprite_cxt_t *src) {
     dst->mode2 |= (src->gen.color_clamp << PVR_TA_PM2_CLAMP_SHIFT) & PVR_TA_PM2_CLAMP_MASK;
     dst->mode2 |= (src->gen.alpha << PVR_TA_PM2_ALPHA_SHIFT) & PVR_TA_PM2_ALPHA_MASK;
 
-    if(src->txr.enable == PVR_TEXTURE_DISABLE)  {
+    if(src->txr.enable == PVR_TEXTURE_DISABLE) {
         dst->mode3 = 0;
     }
     else    {

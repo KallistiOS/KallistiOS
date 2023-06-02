@@ -15,7 +15,7 @@
 
 #include <arch/irq.h>
 
-mutex_t *mutex_create() {
+mutex_t *mutex_create(void) {
     mutex_t *rv;
 
     dbglog(DBG_WARNING, "Creating mutex with deprecated mutex_create(). Please "
@@ -85,9 +85,9 @@ int mutex_lock(mutex_t *m) {
 int mutex_lock_timed(mutex_t *m, int timeout) {
     int old, rv = 0;
 
-    if(irq_inside_int()) {
-        dbglog(DBG_WARNING, "%s: called inside interrupt\n",
-               timeout ? "mutex_lock_timed" : "mutex_lock");
+    if((rv = irq_inside_int())) {
+        dbglog(DBG_WARNING, "%s: called inside an interrupt with code: %x evt: %.4x\n",
+               timeout ? "mutex_lock_timed" : "mutex_lock", ((rv>>16) & 0xf), (rv & 0xffff));
         errno = EPERM;
         return -1;
     }

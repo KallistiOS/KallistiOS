@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    pvr_init_shutdown.c
-   Copyright (C) 2002, 2004 Dan Potter
+   Copyright (C) 2002, 2004 Megan Potter
 
  */
 
@@ -24,7 +24,7 @@
 /* Simpler function which initializes the PVR using 16/16 for the opaque
    and translucent lists, and 0's for everything else; 512k of vertex
    buffer. This is equivalent to the old ta_init_defaults() for now. */
-int pvr_init_defaults() {
+int pvr_init_defaults(void) {
     pvr_init_params_t params = {
         /* Enable opaque and translucent polygons with size 16 */
         { PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_0 },
@@ -195,7 +195,7 @@ int pvr_init(pvr_init_params_t *params) {
 
 /* Shut down the PVR chip from ready status, leaving it in 2D mode as it
    was before the init. */
-int pvr_shutdown() {
+int pvr_shutdown(void) {
     if(!pvr_state.valid)
         return -1;
 

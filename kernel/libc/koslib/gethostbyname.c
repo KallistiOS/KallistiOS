@@ -75,7 +75,8 @@ static int fill_hostent(const char *name, struct addrinfo *ai) {
     he.h_aliases[0] = NULL;
 
     /* Figure out how many addresses we have in the addrinfo chain. */
-    for(i = ai; i; i = i->ai_next, ++addrs) ;
+    for(i = ai; i; i = i->ai_next, ++addrs)
+        ;
 
     if(!(he.h_addr_list = (char **)malloc((addrs + 1) * sizeof(char *))))
         return NO_RECOVERY;

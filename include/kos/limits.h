@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kos/limits.h
-   (c)2000-2001 Dan Potter
+   (c)2000-2001 Megan Potter
 
 */
 
@@ -10,7 +10,7 @@
 
     This file contains definitions of limits of various things.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __KOS_LIMITS_H

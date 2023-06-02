@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/maple/controller.h
-   (C)2000-2002 Jordan DeLong, Dan Potter
+   (C)2000-2002 Jordan DeLong, Megan Potter
 
    Thanks to Marcus Comstedt for information on the controller.
 */
@@ -14,7 +14,7 @@
     code.
 
     \author Jordan DeLong
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __DC_MAPLE_CONTROLLER_H
@@ -48,7 +48,7 @@ __BEGIN_DECLS
 #define CONT_DPAD2_DOWN     (1<<13)
 #define CONT_DPAD2_LEFT     (1<<14)
 #define CONT_DPAD2_RIGHT    (1<<15)
-/* @} */
+/** @} */
 
 /* Raw controller condition structure */
 typedef struct {
@@ -111,8 +111,8 @@ typedef struct {
 
 /* \cond */
 /* Init / Shutdown */
-int cont_init();
-void    cont_shutdown();
+int cont_init(void);
+void cont_shutdown(void);
 /* \endcond */
 
 /** \brief  Controller automatic callback type.
@@ -134,7 +134,7 @@ typedef void (*cont_btn_callback_t)(uint8 addr, uint32 btns);
     \param  btns            The buttons bitmask to match.
     \param  cb              The callback to call when the buttons are pressed.
 */
-void    cont_btn_callback(uint8 addr, uint32 btns, cont_btn_callback_t cb);
+void cont_btn_callback(uint8 addr, uint32 btns, cont_btn_callback_t cb);
 
 /** \defgroup   controller_caps Controller capability bits.
 

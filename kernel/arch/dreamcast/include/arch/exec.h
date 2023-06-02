@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    arch/dreamcast/include/arch/exec.h
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
 
 */
 
@@ -13,7 +13,7 @@
     so is expected to replace the currently running binary in its entirety, and
     these functions do not return to the calling function.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __ARCH_EXEC_H

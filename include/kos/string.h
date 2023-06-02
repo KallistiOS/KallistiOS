@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kos/string.h
-   Copyright (C)2004 Dan Potter
+   Copyright (C)2004 Megan Potter
 
 */
 
@@ -12,7 +12,7 @@
     These variants copy/set memory in the specified block sizes, which may be
     helpful for interacting with memory-mapped hardware.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __KOS_STRING_H

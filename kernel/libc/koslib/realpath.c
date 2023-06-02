@@ -26,11 +26,10 @@
  * SUCH DAMAGE.
  */
 
+#include <kos/limits.h>
 #include <sys/cdefs.h>
-
 #include <sys/param.h>
 #include <sys/stat.h>
-#include <kos/limits.h>
 #include <kos/fs.h>
 
 #include <errno.h>
@@ -71,7 +70,7 @@ realpath(const char *path, char resolved[PATH_MAX]) {
         left_len = strlcpy(left, path + 1, sizeof(left));
     }
     else {
-        /* if (getcwd(resolved, PATH_MAX) == NULL) {
+        /* if(getcwd(resolved, PATH_MAX) == NULL) {
             strlcpy(resolved, ".", PATH_MAX);
             return (NULL);
         } */

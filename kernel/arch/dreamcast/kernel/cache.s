@@ -149,7 +149,7 @@ dpurge_loop:
 	rts
 	nop
 
-! This routine prefetch to operand cache the specified data range. 
+! This routine prefetch to operand cache the specified data range.
 ! r4 is starting address
 ! r5 is count
 _dcache_pref_range:

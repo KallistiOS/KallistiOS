@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    g2bus.h
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
 
 */
 
@@ -22,7 +22,7 @@
     the rear, so you really do want to be using the higher-level stuff related
     to each device if at all possible!
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __DC_G2BUS_H
@@ -223,7 +223,7 @@ void g2_memset_8(uint32 address, uint8 c, int amt);
     drained. The FIFO is 32 bytes in length, and thus when accessing AICA you
     must do this at least for every 8 32-bit writes that you execute.
 */
-void g2_fifo_wait();
+void g2_fifo_wait(void);
 
 __END_DECLS
 

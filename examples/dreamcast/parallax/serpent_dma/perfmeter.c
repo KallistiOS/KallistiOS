@@ -1,7 +1,7 @@
 /*
    perfmeter.c
 
-   Copyright (C)2003,2004 Dan Potter
+   Copyright (C)2003,2004 Megan Potter
 */
 
 /* Adapted from FoF/Tryptonite */

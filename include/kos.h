@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kos.h
-   Copyright (C) 2001 Dan Potter
+   Copyright (C) 2001 Megan Potter
 
 */
 
@@ -14,7 +14,7 @@
     You may want to include individual header files yourself if you need more
     fine-grained control, as may be more appropriate for some projects.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __KOS_H
@@ -35,6 +35,7 @@ __BEGIN_DECLS
 #include <kos/fs.h>
 #include <kos/fs_romdisk.h>
 #include <kos/fs_ramdisk.h>
+#include <kos/fs_dev.h>
 #include <kos/fs_pty.h>
 #include <kos/limits.h>
 #include <kos/thread.h>

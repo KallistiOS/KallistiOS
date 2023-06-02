@@ -5,11 +5,11 @@ all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules
 
-clean:
-	-rm -f $(TARGET) $(OBJS) romdisk.* romdisk/*.kmg romdisk/*.raw
+clean: rm-elf
+	-rm -f $(OBJS) romdisk/*.kmg romdisk/*.raw
 
 rm-elf:
-	-rm -f $(TARGET)
+	-rm -f $(TARGET) romdisk.*
 
 $(TARGET): $(OBJS)
 	kos-cc -o $(TARGET) $(OBJS) -lkmg -lkosutils
@@ -30,6 +30,6 @@ romdisk/bumpmap.raw: bumpmap.png
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET) -n
 
-dist:
-	rm -f $(OBJS)
+dist: $(TARGET)
+	-rm -f $(OBJS) romdisk.img
 	$(KOS_STRIP) $(TARGET)

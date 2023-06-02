@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    arch/dreamcast/include/arch/gdb.h
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
 
 */
 
@@ -10,7 +10,7 @@
 
     This file contains functions to set up and utilize GDB with KallistiOS.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __ARCH_GDB_H
@@ -24,7 +24,7 @@ __BEGIN_DECLS
     This function initializes GDB support. It should be the first thing you do
     in your program, when you wish to use GDB for debugging.
 */
-void gdb_init();
+void gdb_init(void);
 
 /** \brief  Manually raise a GDB breakpoint.
 
@@ -32,7 +32,7 @@ void gdb_init();
     the code, allowing you to inspect things with GDB at the point where the
     function is called.
 */
-void gdb_breakpoint();
+void gdb_breakpoint(void);
 
 __END_DECLS
 

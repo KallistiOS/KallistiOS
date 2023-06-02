@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kernel/debug/dbgio.c
-   Copyright (C) 2004 Dan Potter
+   Copyright (C) 2004 Megan Potter
 */
 
 #include <string.h>
@@ -44,7 +44,7 @@ int dbgio_dev_select(const char * name) {
     return -1;
 }
 
-const char * dbgio_dev_get() {
+const char * dbgio_dev_get(void) {
     if(!dbgio)
         return NULL;
     else
@@ -52,14 +52,14 @@ const char * dbgio_dev_get() {
 }
 
 static int dbgio_enabled = 1;
-void dbgio_enable() {
+void dbgio_enable(void) {
     dbgio_enabled = 1;
 }
-void dbgio_disable() {
+void dbgio_disable(void) {
     dbgio_enabled = 0;
 }
 
-int dbgio_init() {
+int dbgio_init(void) {
     int i;
 
     // Look for a valid interface.
@@ -94,7 +94,7 @@ int dbgio_set_irq_usage(int mode) {
     return -1;
 }
 
-int dbgio_read() {
+int dbgio_read(void) {
     if(dbgio_enabled) {
         assert(dbgio);
         return dbgio->read();
@@ -112,7 +112,7 @@ int dbgio_write(int c) {
     return -1;
 }
 
-int dbgio_flush() {
+int dbgio_flush(void) {
     if(dbgio_enabled) {
         assert(dbgio);
         return dbgio->flush();
@@ -185,20 +185,20 @@ int dbgio_printf(const char *fmt, ...) {
 
 
 // The null dbgio handler
-static int null_detected() {
+static int null_detected(void) {
     return 1;
 }
-static int null_init() {
+static int null_init(void) {
     return 0;
 }
-static int null_shutdown() {
+static int null_shutdown(void) {
     return 0;
 }
 static int null_set_irq_usage(int mode) {
     (void)mode;
     return 0;
 }
-static int null_read() {
+static int null_read(void) {
     errno = EAGAIN;
     return -1;
 }
@@ -206,7 +206,7 @@ static int null_write(int c) {
     (void)c;
     return 1;
 }
-static int null_flush() {
+static int null_flush(void) {
     return 0;
 }
 static int null_write_buffer(const uint8 *data, int len, int xlat) {

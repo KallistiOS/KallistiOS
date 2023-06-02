@@ -1,11 +1,12 @@
 # KallistiOS ##version##
 #
 # conio/adventure/Makefile
-# (c)2002 Dan Potter
+# (c)2002 Megan Potter
 #
 
 # Program binary
 TARGET = adventure.elf
+OBJS = porthelper.o crc.o done.o init.o io.o adventure.o save.o subr.o vocab.o wizard.o data.o globalvars.o
 
 # Script data files
 DATA_SOURCE = glorkz
@@ -29,24 +30,22 @@ all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules
 
-OBJS = porthelper.o crc.o done.o init.o io.o adventure.o save.o subr.o vocab.o wizard.o data.o globalvars.o
-
 $(DATA_TARGET):
 	$(HOST_CC) -o $(SETUP_TARGET) $(SETUP_SOURCE) $(SETUP_CFLAGS)
 	./$(SETUP_TARGET) $(DATA_SOURCE) > $(DATA_TARGET)
 
-clean:
-	-rm -f $(TARGET) $(OBJS) $(DATA_TARGET) $(SETUP_TARGET)
+clean: rm-elf
+	-rm -f $(OBJS) $(DATA_TARGET) $(SETUP_TARGET)
 
 rm-elf:
 	-rm -f $(TARGET)
 
 $(TARGET): $(OBJS) 
-	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(TARGET) $(KOS_START) $(OBJS) $(DATAOBJS) $(OBJEXTRA) -lconio $(KOS_LIBS)
+	kos-cc -o $(TARGET) $(OBJS) -lconio
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 
-dist:
+dist: $(TARGET)
 	-rm -f $(OBJS) $(DATA_TARGET) $(SETUP_TARGET)
 	$(KOS_STRIP) $(TARGET)

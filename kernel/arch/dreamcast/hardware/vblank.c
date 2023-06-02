@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kernel/arch/dreamcast/hardware/vblank.c
-   Copyright (C)2003 Dan Potter
+   Copyright (C)2003 Megan Potter
 */
 
 #include <malloc.h>
@@ -89,7 +89,7 @@ int vblank_handler_remove(int handle) {
     return rv;
 }
 
-int vblank_init() {
+int vblank_init(void) {
     /* Setup our data structures */
     TAILQ_INIT(&vblhnds);
     vblid_high = 1;
@@ -101,7 +101,7 @@ int vblank_init() {
     return 0;
 }
 
-int vblank_shutdown() {
+int vblank_shutdown(void) {
     struct vblhnd * c, * n;
 
     /* Disable and unhook the interrupt */

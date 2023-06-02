@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    raster_melt.c
-   Copyright (C)2003 Dan Potter
+   Copyright (C)2003 Megan Potter
 */
 
 #include <kos.h>
@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
     pvr_init_defaults();
 
     // Load a texture
-    txr = plx_txr_load("/rd/dan.jpg", 0, 0);
+    txr = plx_txr_load("/rd/megan.jpg", 0, 0);
 
     if(!txr)
         return 0;

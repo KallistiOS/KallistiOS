@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    hardware.c
-   Copyright (C) 2000-2001 Dan Potter
+   Copyright (C) 2000-2001 Megan Potter
    Copyright (C) 2013 Lawrence Sebald
 */
 
@@ -28,7 +28,7 @@ int hardware_sys_mode(int *region) {
     return (sm >> 4) & 0x0F;
 }
 
-int hardware_sys_init() {
+int hardware_sys_init(void) {
     /* Setup ASIC stuff */
     asic_init();
 
@@ -40,7 +40,7 @@ int hardware_sys_init() {
     return 0;
 }
 
-int hardware_periph_init() {
+int hardware_periph_init(void) {
     /* Init sound */
     spu_init();
     spu_dma_init();
@@ -67,7 +67,7 @@ int hardware_periph_init() {
     return 0;
 }
 
-void hardware_shutdown() {
+void hardware_shutdown(void) {
     switch(initted) {
         case 2:
 #ifndef _arch_sub_naomi

@@ -11,20 +11,19 @@ all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules
 
-clean:
-	-rm -f $(TARGET) $(OBJS)
+clean: rm-elf
+	-rm -f $(OBJS)
 
 rm-elf:
 	-rm -f $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(TARGET) $(KOS_START) \
-		$(OBJS) $(OBJEXTRA) -lparallax -lkosutils -lpng -ljpeg -lkmg -lz -lm $(KOS_LIBS)
+	kos-cc -o $(TARGET) $(OBJS) -lparallax -lkosutils -lpng -ljpeg -lkmg -lz -lm
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 
-dist:
-	rm -f $(OBJS)
+dist: $(TARGET)
+	-rm -f $(OBJS) romdisk.img
 	$(KOS_STRIP) $(TARGET)
 

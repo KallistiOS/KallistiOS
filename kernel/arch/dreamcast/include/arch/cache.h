@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    arch/dreamcast/include/cache.h
-   Copyright (C) 2001 Dan Potter
+   Copyright (C) 2001 Megan Potter
    Copyright (C) 2014, 2016, 2023 Ruslan Rostovtsev
 
 */
@@ -13,7 +13,7 @@
     Dreamcast, including functions to flush, invalidate, purge, prefetch and
     allocate the caches.
 
-    \author Dan Potter
+    \author Megan Potter
     \author Ruslan Rostovtsev
 */
 

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    fs.c
-   Copyright (C) 2000, 2001, 2002, 2003 Dan Potter
+   Copyright (C) 2000, 2001, 2002, 2003 Megan Potter
    Copyright (C) 2012, 2013, 2014, 2015, 2016 Lawrence Sebald
 
 */
@@ -52,11 +52,11 @@ typedef struct fs_hnd {
 fs_hnd_t * fd_table[FD_SETSIZE] = { NULL };
 
 /* For some reason, Newlib doesn't seem to define this function in stdlib.h. */
-extern char *realpath(const char *, const char *);
+extern char *realpath(const char *, char[PATH_MAX]);
 
 
 /* Internal file commands for root dir reading */
-static fs_hnd_t * fs_root_opendir() {
+static fs_hnd_t * fs_root_opendir(void) {
     fs_hnd_t    *hnd;
 
     hnd = malloc(sizeof(fs_hnd_t));
@@ -217,7 +217,7 @@ static int fs_hnd_assign(fs_hnd_t * hnd) {
     return i;
 }
 
-int fs_fdtbl_destroy() {
+int fs_fdtbl_destroy(void) {
     int i;
 
     for(i = 0; i < FD_SETSIZE; i++) {
@@ -632,7 +632,7 @@ int fs_chdir(const char *fn) {
     return 0;
 }
 
-const char *fs_getwd() {
+const char *fs_getwd(void) {
     return thd_get_pwd(thd_get_current());
 }
 
@@ -914,9 +914,9 @@ int fs_fstat(file_t fd, struct stat *st) {
 }
 
 /* Initialize FS structures */
-int fs_init() {
+int fs_init(void) {
     return 0;
 }
 
-void fs_shutdown() {
+void fs_shutdown(void) {
 }

@@ -5,7 +5,7 @@
 
 */
 
-/* Modified for vqenc by Dan Potter */
+/* Modified for vqenc by Megan Potter */
 
 #include <stdio.h>
 #include <stdlib.h>

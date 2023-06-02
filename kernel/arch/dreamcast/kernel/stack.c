@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    stack.c
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
 */
 
 /* Functions to tinker with the stack, includeing obtaining a stack
@@ -15,6 +15,13 @@
 #include <kos/dbgio.h>
 #include <arch/arch.h>
 #include <arch/stack.h>
+#include <stdint.h>
+
+static uintptr_t arch_stack_16m_dft = 0x8d000000;
+static uintptr_t arch_stack_32m_dft = 0x8e000000;
+
+extern uintptr_t arch_stack_16m __attribute__((weak,alias("arch_stack_16m_dft")));
+extern uintptr_t arch_stack_32m __attribute__((weak,alias("arch_stack_32m_dft")));
 
 /* Do a stack trace from the current function; leave off the first n frames
    (i.e., in assert()). */

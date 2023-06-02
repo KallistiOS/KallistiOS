@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    elf.c
-   Copyright (C)2000,2001,2003 Dan Potter
+   Copyright (C)2000,2001,2003 Megan Potter
 */
 
 #include <malloc.h>
@@ -374,7 +374,7 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
 
 #define DO_ONE(symname, outp) \
     sym = find_sym(ELF_SYM_PREFIX symname, symtab, symtabsize); \
-    if (sym < 0) { \
+    if(sym < 0) { \
         dbglog(DBG_ERROR, "elf_load: ELF contains no %s()\n", symname); \
         goto error3; \
     } \

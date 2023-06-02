@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    vmu.c
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
 */
 
 /* This simple example shows how to use the vmu_pkg_* functions to write

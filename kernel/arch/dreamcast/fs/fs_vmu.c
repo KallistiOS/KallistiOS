@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    fs_vmu.c
-   Copyright (C) 2003 Dan Potter
+   Copyright (C) 2003 Megan Potter
    Copyright (C) 2012, 2013, 2014, 2016 Lawrence Sebald
 
 */
@@ -727,13 +727,13 @@ static vfs_handler_t vh = {
     vmu_fstat
 };
 
-int fs_vmu_init() {
+int fs_vmu_init(void) {
     TAILQ_INIT(&vmu_fh);
     mutex_init(&fh_mutex, MUTEX_TYPE_NORMAL);
     return nmmgr_handler_add(&vh.nmmgr);
 }
 
-int fs_vmu_shutdown() {
+int fs_vmu_shutdown(void) {
     vmu_fh_t * c, * n;
 
     c = TAILQ_FIRST(&vmu_fh);

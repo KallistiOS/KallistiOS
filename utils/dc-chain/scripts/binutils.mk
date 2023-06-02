@@ -26,7 +26,7 @@ $(build_binutils): logdir
         $(to_log)
 	$(MAKE) $(makejobs) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
 	$(MAKE) -C $(build) $(install_mode) DESTDIR=$(DESTDIR) $(to_log)
-# MinGW/MSYS
+# MinGW/MSYS or 'sh_force_libbfd_installation=1'
 # This part is about BFD for sh-elf target.
 # It will move sh-elf libbfd into a nicer place, as our cross-compiler is made 
 # by us for our usage... so no problems about system libbfd conflicts!

@@ -70,7 +70,7 @@ typedef struct rw_semaphore {
     \par    Error Conditions:
     \em     ENOMEM - out of memory
 */
-rw_semaphore_t *rwsem_create() __depr("Use rwsem_init or RWSEM_INITIALIZER.");
+rw_semaphore_t *rwsem_create(void) __depr("Use rwsem_init or RWSEM_INITIALIZER.");
 
 /** \brief  Initialize a reader/writer semaphore.
 

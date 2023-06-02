@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    pvr_mem.c
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
 
  */
 
@@ -151,7 +151,7 @@ void pvr_mem_free(pvr_ptr_t chunk) {
 }
 
 /* Check the memory block list to see what's allocated */
-void pvr_mem_print_list() {
+void pvr_mem_print_list(void) {
 #ifdef PVR_KM_DBG
     memctl_t    * ctl;
 
@@ -165,14 +165,14 @@ void pvr_mem_print_list() {
 }
 
 /* Return the number of bytes available still in the memory pool */
-static uint32 pvr_mem_available_int() {
+static uint32 pvr_mem_available_int(void) {
     struct mallinfo mi = pvr_int_mallinfo();
 
     /* This magic formula is modeled after mstats() */
     return mi.arena - mi.uordblks;
 }
 
-uint32 pvr_mem_available() {
+uint32 pvr_mem_available(void) {
     CHECK_MEM_BASE;
 
     return pvr_mem_available_int() + (PVR_RAM_INT_TOP - (uint32)pvr_mem_base);
@@ -181,7 +181,7 @@ uint32 pvr_mem_available() {
 /* Reset the memory pool, equivalent to freeing all textures currently
    residing in RAM. This _must_ be done on a mode change, configuration
    change, etc. */
-void pvr_mem_reset() {
+void pvr_mem_reset(void) {
     if(!pvr_state.valid)
         pvr_mem_base = NULL;
     else {
@@ -191,7 +191,7 @@ void pvr_mem_reset() {
 }
 
 /* Print some statistics (like mallocstats) */
-void pvr_mem_stats() {
+void pvr_mem_stats(void) {
     printf("pvr_mem_stats():\n");
     pvr_int_malloc_stats();
     printf("max sbrk base: %08lx\n", (uint32)pvr_mem_base);

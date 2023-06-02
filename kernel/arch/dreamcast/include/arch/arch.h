@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    arch/dreamcast/include/arch.h
-   Copyright (C) 2001 Dan Potter
+   Copyright (C) 2001 Megan Potter
    Copyright (C) 2013, 2020 Lawrence Sebald
 
 */
@@ -12,7 +12,7 @@
     This file has various architecture specific options defined in it. Also, any
     functions that start with arch_ are in here.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __ARCH_ARCH_H
@@ -27,9 +27,9 @@ __BEGIN_DECLS
 #ifdef __KOS_GCC_32MB__
 extern uint32 _arch_mem_top;
 #else
-#pragma message "Outdated toolchain: not patched for 32MB support, limiting KOS"\
-         " to 16MB-only behavior to retain maximum compatibility. Please"\
-         " update toolchain."
+#pragma message "Outdated toolchain: not patched for 32MB support, limiting "\
+    "KOS to 16MB-only behavior to retain maximum compatibility. Please "\
+    "update your toolchain."
 #define _arch_mem_top   ((uint32) 0x8d000000)
 #endif
 
@@ -79,9 +79,9 @@ extern uint32 _arch_mem_top;
 void arch_panic(const char *str) __noreturn;
 
 /** \brief  Kernel C-level entry point.
-    \return                 The program's return value.
+    \note                   This function will never return!
 */
-int arch_main();
+void arch_main(void) __noreturn;
 
 /** \defgroup arch_retpaths         Potential exit paths from the kernel on
                                     arch_exit()
@@ -105,36 +105,27 @@ void arch_set_exit_path(int path);
 /** \brief  Generic kernel "exit" point.
     \note                   This function will never return!
 */
-void arch_exit() __noreturn;
+void arch_exit(void) __noreturn;
 
 /** \brief  Kernel "return" point.
     \note                   This function will never return!
 */
-void arch_return() __noreturn;
+void arch_return(int ret_code) __noreturn;
 
 /** \brief  Kernel "abort" point.
     \note                   This function will never return!
 */
-void arch_abort() __noreturn;
+void arch_abort(void) __noreturn;
 
 /** \brief  Kernel "reboot" call.
     \note                   This function will never return!
 */
-void arch_reboot() __noreturn;
+void arch_reboot(void) __noreturn;
 
 /** \brief Kernel "exit to menu" call.
     \note                   This function will never return!
 */
-void arch_menu() __noreturn;
-
-/** \brief  Call to run all ctors. */
-void arch_ctors();
-
-/** \brief  Call to run all dtors. */
-void arch_dtors();
-
-/** \brief  Hook to ensure linking of crtend.c. */
-void __crtend_pullin();
+void arch_menu(void) __noreturn;
 
 /** \defgroup hw_memsizes           Console memory sizes
     These are the various memory sizes, in bytes, that can be returned by the
@@ -159,7 +150,7 @@ void __crtend_pullin();
 /** \brief  Initialize the memory management system.
     \retval 0               On success (no error conditions defined).
 */
-int mm_init();
+int mm_init(void);
 
 /** \brief  Request more core memory from the system.
     \param  increment       The number of bytes requested.
@@ -191,6 +182,14 @@ extern void * __kos_romdisk;
 /** \brief  State that you don't want a romdisk. */
 #define KOS_INIT_ROMDISK_NONE   NULL
 
+/** \brief  Register a single function to be called very early in the boot
+            process, before the BSS section is cleared.
+
+    \param  func            The function to register. The prototype should be
+                            void func(void)
+*/
+#define KOS_INIT_EARLY(func) void (*__kos_init_early_fn)(void) = (func)
+
 /** \defgroup arch_initflags        Available flags for initialization
 
     These are the flags you can specify with KOS_INIT_FLAGS().
@@ -202,6 +201,7 @@ extern void * __kos_romdisk;
 
 #define INIT_NONE           0x0000  /**< \brief Don't init optional things */
 #define INIT_IRQ            0x0001  /**< \brief Enable IRQs at startup */
+/* Preemptive mode is the only mode now. Keeping define for compatability. */
 #define INIT_THD_PREEMPT    0x0002  /**< \brief Enable thread preemption */
 #define INIT_NET            0x0004  /**< \brief Enable built-in networking */
 #define INIT_MALLOCSTATS    0x0008  /**< \brief Enable malloc statistics */
@@ -220,7 +220,7 @@ extern void * __kos_romdisk;
 
     \note                   This function will never return!
 */
-void arch_real_exit() __noreturn;
+void arch_real_exit(int ret_code) __noreturn;
 
 /** \brief  Initialize bare-bones hardware systems.
 
@@ -229,7 +229,7 @@ void arch_real_exit() __noreturn;
 
     \retval 0               On success (no error conditions defined).
 */
-int hardware_sys_init();
+int hardware_sys_init(void);
 
 /** \brief  Initialize some peripheral systems.
 
@@ -238,7 +238,7 @@ int hardware_sys_init();
 
     \retval 0               On success (no error conditions defined).
 */
-int hardware_periph_init();
+int hardware_periph_init(void);
 
 /** \brief  Shut down hardware that was initted.
 
@@ -246,7 +246,7 @@ int hardware_periph_init();
     hardware_periph_init(). This will be done for you automatically by the
     various exit points, so you shouldn't have to do this yourself.
 */
-void hardware_shutdown();
+void hardware_shutdown(void);
 
 /** \defgroup hw_consoles           Console types
 

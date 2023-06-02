@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    include/kos/mutex.h
-   Copyright (C) 2001, 2003 Dan Potter
+   Copyright (C) 2001, 2003 Megan Potter
    Copyright (C) 2012, 2015 Lawrence Sebald
 
 */
@@ -107,7 +107,7 @@ typedef struct kos_mutex {
                             be used in any future code, and may be removed in
                             the future. You should instead use mutex_init().
 */
-mutex_t *mutex_create() __depr("Use mutex_init or an initializer.");
+mutex_t *mutex_create(void) __depr("Use mutex_init or an initializer.");
 
 /** \brief  Initialize a new mutex.
 
@@ -241,6 +241,7 @@ int mutex_unlock(mutex_t *m);
     will generally not be of much use outside of the kernel itself.
 
     \param  m               The mutex to unlock
+    \param  thd             The thread owning the mutex
     \retval 0               On success
     \retval -1              On error, errno will be set as appropriate.
 

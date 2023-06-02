@@ -1,7 +1,7 @@
 ! KallistiOS ##version##
 !
 !   arch/dreamcast/kernel/thdswitch.s
-!   Copyright (c)2003 Dan Potter
+!   Copyright (c)2003 Megan Potter
 !
 ! Assembler code for swapping out running threads
 !

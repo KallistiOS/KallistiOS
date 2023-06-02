@@ -5,6 +5,9 @@
 # aware that if you try to load someone else's module later, they might
 # be needing something in here.
 
+include kos.h
+include dc/sound/sound.h
+
 # ASIC
 asic_evt_set_handler
 asic_evt_disable_all

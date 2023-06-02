@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    maple_queue.c
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
    Copyright (C) 2015 Lawrence Sebald
  */
 
@@ -12,7 +12,7 @@
 #include <arch/irq.h>
 
 /* Send all queued frames */
-void maple_queue_flush() {
+void maple_queue_flush(void) {
     int     cnt, amt;
     uint32      *out, *last;
     maple_frame_t   *i;

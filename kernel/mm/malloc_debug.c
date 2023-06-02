@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    malloc_debug.c
-   (c)2001-2002 Dan Potter
+   (c)2001-2002 Megan Potter
 */
 
 #include <malloc.h>
@@ -221,7 +221,7 @@ void free(void *block) {
     spinlock_unlock(&mutex);
 }
 
-void malloc_stats() {
+void malloc_stats(void) {
     memctl_t *ctl;
     int dmgcnt, leaked, leakedcnt;
 

@@ -2,6 +2,7 @@
 
    dc/g1ata.h
    Copyright (C) 2013, 2014 Lawrence Sebald
+   Copyright (C) 2023 Ruslan Rostovtsev
 */
 
 /** \file   dc/g1ata.h
@@ -26,6 +27,7 @@
             bus, so be careful. ;)
 
     \author Lawrence Sebald
+    \author Ruslan Rostovtsev
 */
 
 #ifndef __DC_G1ATA_H
@@ -175,7 +177,7 @@ uint8_t g1_ata_select_device(uint8_t dev);
                         range of the disk
 */
 int g1_ata_read_chs(uint16_t c, uint8_t h, uint8_t s, size_t count,
-                    uint16_t *buf);
+                    void *buf);
 
 /** \brief  Write one or more disk sectors with Cylinder-Head-Sector addressing.
 
@@ -206,7 +208,7 @@ int g1_ata_read_chs(uint16_t c, uint8_t h, uint8_t s, size_t count,
                         range of the disk
 */
 int g1_ata_write_chs(uint16_t c, uint8_t h, uint8_t s, size_t count,
-                     const uint16_t *buf);
+                     const void *buf);
 
 /** \brief  Read one or more disk sectors with Linear Block Addressing (LBA).
 
@@ -233,7 +235,7 @@ int g1_ata_write_chs(uint16_t c, uint8_t h, uint8_t s, size_t count,
                         range of the disk \n
     \em     ENOTSUP - LBA mode not supported by the device
 */
-int g1_ata_read_lba(uint64_t sector, size_t count, uint16_t *buf);
+int g1_ata_read_lba(uint64_t sector, size_t count, void *buf);
 
 /** \brief  DMA read disk sectors with Linear Block Addressing (LBA).
 
@@ -267,7 +269,7 @@ int g1_ata_read_lba(uint64_t sector, size_t count, uint16_t *buf);
     \em     ENOTSUP - LBA mode not supported by the device \n
     \em     EPERM - device does not support DMA
 */
-int g1_ata_read_lba_dma(uint64_t sector, size_t count, uint16_t *buf,
+int g1_ata_read_lba_dma(uint64_t sector, size_t count, void *buf,
                         int block);
 
 /** \brief  Write one or more disk sectors with Linear Block Addressing (LBA).
@@ -294,7 +296,7 @@ int g1_ata_read_lba_dma(uint64_t sector, size_t count, uint16_t *buf,
                         range of the disk \n
     \em     ENOTSUP - LBA mode not supported by the device
 */
-int g1_ata_write_lba(uint64_t sector, size_t count, const uint16_t *buf);
+int g1_ata_write_lba(uint64_t sector, size_t count, const void *buf);
 
 /** \brief  DMA Write disk sectors with Linear Block Addressing (LBA).
 
@@ -327,7 +329,7 @@ int g1_ata_write_lba(uint64_t sector, size_t count, const uint16_t *buf);
     \em     ENOTSUP - LBA mode not supported by the device \n
     \em     EPERM - device does not support DMA
 */
-int g1_ata_write_lba_dma(uint64_t sector, size_t count, const uint16_t *buf,
+int g1_ata_write_lba_dma(uint64_t sector, size_t count, const void *buf,
                          int block);
 
 /** \brief  Flush the write cache on the attached disk.
@@ -345,6 +347,15 @@ int g1_ata_write_lba_dma(uint64_t sector, size_t count, const uint16_t *buf,
     \em     ENXIO - ATA support not initialized or no device attached
 */
 int g1_ata_flush(void);
+
+/** \brief  Get LBA mode of the attached disk.
+
+    \return                 -1 on error, 0 - CHS, 28 - LBA28, 48 - LBA48
+
+    \par    Error Conditions:
+    \em     ENXIO - ATA support not initialized or no device attached
+*/
+int g1_ata_lba_mode(void);
 
 /** \brief  Get a block device for a given partition on the slave ATA device.
 
@@ -374,6 +385,23 @@ int g1_ata_flush(void);
 */
 int g1_ata_blockdev_for_partition(int partition, int dma, kos_blockdev_t *rv,
                                   uint8_t *partition_type);
+
+/** \brief  Get a block device for the attached ATA device.
+
+    This function creates a block device descriptor for the attached ATA device.
+
+    \param  dma             Set to 1 to use DMA for reads/writes on the device,
+                            if available.
+    \param  rv              Used to return the block device. Must be non-NULL.
+    \retval 0               On success.
+    \retval -1              On error, errno will be set as appropriate.
+
+    \par    Error Conditions:
+    \em     ENXIO - ATA support not initialized or no device attached \n
+    \em     EFAULT - rv was NULL \n
+    \em     ENOMEM - out of memory
+*/
+int g1_ata_blockdev_for_device(int dma, kos_blockdev_t *rv);
 
 /** \brief  Initialize G1 ATA support.
 

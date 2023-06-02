@@ -324,14 +324,9 @@ uint32_t ppp_get_flags(void);
 */
 uint32_t ppp_get_peer_flags(void);
 
-/** \brief  Get the flags set for our side of the link.
+/** \brief  Set the flags set for our side of the link.
 
-    This function retrieves the connection flags set for our side of the PPP
-    link. Before link establishment, this indicates the flags we would like to
-    establish on the link and after establishment it represents the flags that
-    were actually negotiated during link establishment.
-
-    \return             Bitwise OR of \ref ppp_flags.
+    This function sets the connection flags for our side of the PPP link.
 */
 void ppp_set_flags(uint32_t flags);
 

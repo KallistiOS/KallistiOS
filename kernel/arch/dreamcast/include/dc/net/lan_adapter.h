@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/net/lan_adapter.h
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
 
 */
 
@@ -12,7 +12,7 @@
     Adapter". There's not really anything that users will generally have to deal
     with in here.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __DC_NET_LAN_ADAPTER_H
@@ -25,10 +25,10 @@ __BEGIN_DECLS
 
 /* \cond */
 /* Initialize */
-int la_init();
+int la_init(void);
 
 /* Shutdown */
-int la_shutdown();
+int la_shutdown(void);
 /* \endcond */
 
 __END_DECLS

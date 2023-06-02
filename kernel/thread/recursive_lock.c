@@ -12,7 +12,7 @@
 #include <kos/recursive_lock.h>
 
 /* Create a recursive lock */
-recursive_lock_t *rlock_create() {
+recursive_lock_t *rlock_create(void) {
     recursive_lock_t *rv;
 
     if(!(rv = (recursive_lock_t *)malloc(sizeof(recursive_lock_t)))) {

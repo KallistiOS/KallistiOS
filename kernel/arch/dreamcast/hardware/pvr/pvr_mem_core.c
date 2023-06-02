@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    pvr_mem_core.c
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
 
    This was adapted from the system-wide malloc, but optimized for
    usage with the PVR texture memory pool. So that end there are a couple
@@ -282,7 +282,7 @@ size_t public_pvr_mUSABLe(Void_t* m) {
     return result;
 }
 
-void public_pvr_mSTATs() {
+void public_pvr_mSTATs(void) {
     if(MALLOC_PREACTION != 0) {
         return;
     }
@@ -293,7 +293,7 @@ void public_pvr_mSTATs() {
     }
 }
 
-struct mallinfo public_pvr_mALLINFo() {
+struct mallinfo public_pvr_mALLINFo(void) {
     struct mallinfo m;
 
     if(MALLOC_PREACTION != 0) {
@@ -350,7 +350,7 @@ int public_pvr_mALLOPt(int p, int v) {
         INTERNAL_SIZE_T* mzp = (INTERNAL_SIZE_T*)(charp);                           \
         unsigned long mctmp = (nbytes)/sizeof(INTERNAL_SIZE_T);                     \
         long mcn;                                                                   \
-        if (mctmp < 8) mcn = 0; else { mcn = (mctmp-1)/8; mctmp %= 8; }             \
+        if(mctmp < 8) mcn = 0; else { mcn = (mctmp-1)/8; mctmp %= 8; }             \
         switch (mctmp) {                                                            \
             case 0: for(;;) { *mzp++ = 0;                                             \
                 case 7:           *mzp++ = 0;                                             \
@@ -612,7 +612,7 @@ nextchunk-> +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 /*  Same, except also perform argument check */
 
 #define checked_request2size(req, sz)                             \
-    if (REQUEST_OUT_OF_RANGE(req)) {                                \
+    if(REQUEST_OUT_OF_RANGE(req)) {                                \
         MALLOC_FAILURE_ACTION;                                        \
         return 0;                                                     \
     }                                                               \
@@ -1221,7 +1221,7 @@ static void do_check_inuse_chunk(p) mchunkptr p;
       Since more things can be checked with free chunks than inuse ones,
       if an inuse chunk borders them and debug is on, it's worth doing them.
     */
-    if(!prev_inuse(p))  {
+    if(!prev_inuse(p)) {
         /* Note that we cannot even look at prev unless it is not inuse */
         mchunkptr prv = prev_chunk(p);
         assert(next_chunk(prv) == p);
@@ -1300,7 +1300,7 @@ INTERNAL_SIZE_T s;
   display chunk addresses, sizes, bins, and other instrumentation.
 */
 
-static void do_check_malloc_state() {
+static void do_check_malloc_state(void) {
     mstate av = get_malloc_state();
     int i;
     mchunkptr p;
@@ -2095,7 +2095,7 @@ Void_t* mALLOc(bytes) size_t bytes;
                 unlink(victim, bck, fwd);
 
                 /* Exhaust */
-                if(remainder_size < MINSIZE)  {
+                if(remainder_size < MINSIZE) {
                     set_inuse_bit_at_offset(victim, size);
                     check_malloced_chunk(victim, nb);
                     return chunk2mem(victim);
@@ -3222,7 +3222,7 @@ size_t mUSABLe(mem) Void_t* mem;
   ------------------------------ mallinfo ------------------------------
 */
 
-struct mallinfo mALLINFo() {
+struct mallinfo mALLINFo(void) {
     mstate av = get_malloc_state();
     struct mallinfo mi;
     unsigned int i;
@@ -3282,7 +3282,7 @@ struct mallinfo mALLINFo() {
   ------------------------------ malloc_stats ------------------------------
 */
 
-void mSTATs() {
+void mSTATs(void) {
     struct mallinfo mi = mALLINFo();
 
     fprintf(stderr, "max system bytes = %10lu\n",
@@ -3347,7 +3347,7 @@ int value;
 }
 
 /* Reset function */
-void pvr_int_mem_reset() {
+void pvr_int_mem_reset(void) {
     /* This _should_ do it */
     memset(&av_, 0, sizeof(av_));
 }
@@ -3446,13 +3446,13 @@ void pvr_int_mem_reset() {
     void *ptr = 0;
     static void *sbrk_top = 0;
 
-    if (size > 0)
+    if(size > 0)
     {
-      if (size < MINIMUM_MORECORE_SIZE)
+      if(size < MINIMUM_MORECORE_SIZE)
          size = MINIMUM_MORECORE_SIZE;
-      if (CurrentExecutionLevel() == kTaskLevel)
+      if(CurrentExecutionLevel() == kTaskLevel)
          ptr = PoolAllocateResident(size + RM_PAGE_SIZE, 0);
-      if (ptr == 0)
+      if(ptr == 0)
       {
         return (void *) MORECORE_FAILURE;
       }
@@ -3463,7 +3463,7 @@ void pvr_int_mem_reset() {
       sbrk_top = (char *) ptr + size;
       return ptr;
     }
-    else if (size < 0)
+    else if(size < 0)
     {
       // we don't currently support shrink behavior
       return (void *) MORECORE_FAILURE;
@@ -3481,8 +3481,8 @@ void pvr_int_mem_reset() {
   {
     void **ptr;
 
-    for (ptr = our_os_pools; ptr < &our_os_pools[MAX_POOL_ENTRIES]; ptr++)
-      if (*ptr)
+    for(ptr = our_os_pools; ptr < &our_os_pools[MAX_POOL_ENTRIES]; ptr++)
+      if(*ptr)
       {
          PoolDeallocate(*ptr);
          *ptr = 0;

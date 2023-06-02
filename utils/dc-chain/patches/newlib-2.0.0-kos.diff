@@ -154,7 +154,7 @@ diff -ruN newlib-2.0.0/newlib/libc/sys/sh/sys/lock.h newlib-2.0.0-kos/newlib/lib
 +/* KallistiOS ##version##
 +
 +   lock_common.h
-+   Copyright (C)2004 Dan Potter
++   Copyright (C)2004 Megan Potter
 +
 +*/
 +

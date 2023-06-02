@@ -16,7 +16,6 @@ KOS_INIT_ROMDISK(romdisk);
 void draw_findings() {
     file_t      d;
     int     y = 88;
-    dirent_t    *de;
 
     d = fs_open("/vmu/a1", O_RDONLY | O_DIR);
 

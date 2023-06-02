@@ -179,7 +179,7 @@ int main () {
     float value, f = 0.0F;
     int i = 0;
     printf("static float exp_table[FOG_EXP_TABLE_SIZE] = {\n\t");
-    for ( ; i < FOG_EXP_TABLE_SIZE ; i++, f += FOG_INCR) {
+    for( ; i < FOG_EXP_TABLE_SIZE ; i++, f += FOG_INCR) {
         value = (float) exp(-f);
         printf("%01.8f, %s", value, ((i+1)%4)?" ":"\n\t");
     }

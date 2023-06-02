@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    arch/dreamcast/kernel/mmu.c
-   (c)2001 Dan Potter
+   (c)2001 Megan Potter
 */
 
 /* SH-4 MMU related functions, ported up from KOS-MMU */
@@ -22,7 +22,7 @@
 
 static volatile uint32 * const pteh = (uint32 *)(0xff000000);
 static volatile uint32 * const ptel = (uint32 *)(0xff000004);
-static volatile uint32 * const ptea = (uint32 *)(0xff000034);
+//static volatile uint32 * const ptea = (uint32 *)(0xff000034);
 static volatile uint32 * const ttb = (uint32 *)(0xff000008);
 static volatile uint32 * const tea = (uint32 *)(0xff00000c);
 static volatile uint32 * const mmucr = (uint32 *)(0xff000010);
@@ -101,7 +101,7 @@ static inline void mmu_ldtlb_quick(uint32 ptehv, uint32 ptelv) {
     *ptel = ptelv;
     __asm__("ldtlb");
 }
-static inline void mmu_ldtlb_wait() {
+static inline void mmu_ldtlb_wait(void) {
     __asm__("nop");
     __asm__("nop");
     __asm__("nop");
@@ -113,7 +113,7 @@ static inline void mmu_ldtlb_wait() {
 }
 
 /* Defined in mmuitlb.s */
-void mmu_reset_itlb();
+void mmu_reset_itlb(void);
 
 /* Defined below */
 static mmupage_t *map_virt(mmucontext_t *context, int virtpage);
@@ -477,7 +477,7 @@ int mmu_copyv(mmucontext_t *context1, struct iovec *iov1, int iovcnt1,
             run = dstcnt;
 
         /* Do the segment copy */
-        /* if (!sproket) {
+        /* if(!sproket) {
             dbgio_printf("Copying %08lx -> %08lx (%08lx -> %08lx), %d bytes\n",
                 srcptr, dstptr, src, dst, run);
             dbgio_flush();
@@ -576,7 +576,7 @@ int mmu_copyv(mmucontext_t *context1, struct iovec *iov1, int iovcnt1,
 /********************************************************************************/
 /* Exception handlers */
 
-mmu_mapfunc_t mmu_map_get_callback() {
+mmu_mapfunc_t mmu_map_get_callback(void) {
     return map_func;
 }
 
@@ -642,7 +642,7 @@ void mmu_gen_tlb_miss(const char *what, irq_t source, irq_context_t *context) {
     }
 
     /* Make sure we don't overwrite the last TLB entry */
-    /* if (GET_URC() == last_urc) {
+    /* if(GET_URC() == last_urc) {
         last_urc++;
         SET_URC(last_urc);
     } else {
@@ -703,7 +703,7 @@ static void initial_page_write(irq_t source, irq_context_t *context) {
 
 /********************************************************************************/
 /* Init routine */
-int mmu_init() {
+int mmu_init(void) {
     /* Setup last URC counter (to make sure we don't thrash the
        TLB caches accidentally) */
     last_urc = 0;
@@ -738,7 +738,7 @@ int mmu_init() {
 }
 
 /* Shutdown */
-void mmu_shutdown() {
+void mmu_shutdown(void) {
     /* Turn off MMU */
     *mmucr = 0x00000204;
 

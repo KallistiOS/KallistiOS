@@ -1,7 +1,7 @@
 ! KallistiOS ##version##
 !
 ! startup.s
-! (c)2000-2001 Dan Potter
+! (c)2000-2001 Megan Potter
 !
 ! This file must appear FIRST in your linking order, or your program won't
 ! work correctly as a raw binary.
@@ -17,6 +17,9 @@
 .globl __arch_old_stack
 .globl __arch_old_fpscr
 .globl __arch_mem_top
+
+.weak   _arch_stack_16m
+.weak   _arch_stack_32m
 
 _start:
 start:
@@ -73,6 +76,7 @@ init:
 	mov.l	old_stack_addr,r0
 	mov.l	r15,@r0
 	mov.l   new_stack_16m,r15
+	mov.l	@r15,r15
 
 	! Check if 0xadffffff is a mirror of 0xacffffff, or if unique
 	! If unique, then memory is 32MB instead of 16MB, and we must
@@ -83,6 +87,7 @@ init:
 	mov	#0xba,r1
 	mov.b	r1,@-r2			! Store 0xba to 0xacffffff
 	mov.l	new_stack_32m,r1
+	mov.l	@r1,r1
 	or	r0,r1
 	mov	#0xab,r0
 	mov.b	r0,@-r1			! Store 0xab in 0xadffffff
@@ -91,6 +96,7 @@ init:
 	cmp/eq	r0,r1			! Check if values match
 	bt	memchk_done		! If so, mirror - we're done, move on
 	mov.l	new_stack_32m,r15	! If not, unique - set higher stack
+	mov.l	@r15,r15
 memchk_done:
 	mov.l	mem_top_addr,r0
 	mov.l	r15,@r0			! Save address of top of memory
@@ -123,6 +129,9 @@ memchk_done:
 	! Program can return here (not likely) or jump here directly
 	! from anywhere in it to go straight back to the monitor
 _arch_real_exit:
+	! Save exit code parameter to r8
+	mov r4, r8
+
 	! Reset SR
 	mov.l	old_sr,r0
 	ldc	r0,sr
@@ -155,6 +164,8 @@ _arch_real_exit:
 
 	mov.l	dcload_syscall,r0
 	mov.l	@r0,r0
+	! Move saved exit code to be used as exit syscall parameter
+	mov r8, r5
 	jsr	@r0
 	mov	#15,r4
 
@@ -200,9 +211,9 @@ __arch_mem_top:
 mem_top_addr:
 	.long	__arch_mem_top
 new_stack_16m:
-	.long	0x8d000000
+	.long	_arch_stack_16m
 new_stack_32m:
-	.long	0x8e000000
+	.long	_arch_stack_32m
 p2_mask:
 	.long	0xa0000000
 setup_cache_addr:

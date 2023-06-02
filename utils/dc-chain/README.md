@@ -29,7 +29,6 @@ Components included in the toolchains built through `dc-chain` are:
 - **GNU Compiler Collection** (`gcc`, `g++`);
 - **Newlib** (mainly `libc` plus other libraries);
 - **GNU Debugger** (`gdb`) - Optional;
-- **Insight** (A `gdb` UI based on **X11**) - Optional.
 
 **Binutils** and **GCC** are installed for both targets (i.e. `sh-elf` and
 `arm-eabi`) where **Newlib** and **GNU Debugger** (**GDB**) are needed only
@@ -93,7 +92,6 @@ For the `sh-elf` toolchain, they are:
 - `sh_gcc_ver`
 - `newlib_ver`
 - `gdb_ver`
-- `insight_ver`
 
 For the `arm-eabi` toolchain, they are:
 
@@ -108,7 +106,7 @@ without problems.
 
 Working **GCC** and **Newlib** version combinations are:
 
-- GCC `12.2.0` with Newlib `4.3.0` for `sh-elf` and GCC `8.4.0` for `arm-eabi`
+- GCC `13.1.0` with Newlib `4.3.0` for `sh-elf` and GCC `8.5.0` for `arm-eabi`
   (**testing**; the most modern combination);
 - GCC `9.3.0` with Newlib `3.3.0` for `sh-elf` and GCC `8.4.0` for `arm-eabi`
   (**stable**; the most widely used, widely tested combination);
@@ -125,8 +123,8 @@ Just copy the relevant `config.mk` sample file to `config.mk` and you are good
 to go.
 
 **Note:** The GCC's maximum version number possible for the `arm-eabi` toolchain
-is `8.4.0`. Support of the **ARM7** chip is dropped after that GCC version. So
-don't try to update the version of the `arm-eabi-gcc` component.
+is `8.x`. Support of the **ARM7DI** chip is dropped after that GCC version. So
+don't try to update the version of the `arm-eabi-gcc` component beyond `8.x`.
 
 You have the possibility to **use custom dependencies for GCC** directly in the
 `config.mk` file. In that case, you have to define `use_custom_dependencies=1`.
@@ -135,10 +133,18 @@ Doing so will use your custom versions of **GMP**, **MPC**, **MPFR** and
 if you have trouble using the `contrib/download_prerequisites` script provided
 with GCC.
 
-Please note that you have the possibility to specify the `tarball_type`
-extensions you want to download too; this may be useful if a package
-changes its extension on the servers. For example, for GCC `4.7.4`, there is no
-`xz` tarball file, so you may change this to `gz`.
+Please note that you have the possibility to specify the tarball extensions
+you want to download using `download_type`; this may be useful if a
+package changes its extension on the servers. For example, for GCC `4.7.4`, 
+there is no `xz` tarball file, so you may change this to `gz`. In the case that
+`download_type` is not specified, `tarball_type` will be checked as a fallback to
+support legacy `config.mk` files.
+
+Git repositories can also be used to obtain source files. The git download method 
+can be selected by specifying `git` as the `download_type`. This enables
+the use of `git_repo` and `git_branch` variables to specify the repository
+and branch respectively. If `git_branch` is omitted, the default for the
+repository will be used.
 
 **Note:** All download URL are computed in the `scripts/common.sh` file, but
 you shouldn't update/change this.
@@ -237,12 +243,25 @@ This flag is here mainly for producing [DreamSDK](https://dreamsdk.org).
 ### Automatic fixup SH-4 Newlib (use with care)
 
 Set `auto_fixup_sh4_newlib` to `0` if you want to disable the automatic fixup
-SH-4 Newlib needed by KallistiOS. This will keep the generated toolchain
-completely raw.
+SH-4 Newlib needed by KallistiOS. Setting this option along with 
+`use_kos_patches=0` will keep the generated toolchain completely raw. 
 
 **Note:** If you disable this flag, the KallistiOS threading model (`kos`) will
 be unavailable. Also, this may be a problem if you still apply the KallistiOS
 patches. **Use this flag with care**.
+
+### Automatic KOS Patching (use with care)
+Set `use_kos_patches` to `0` if you want to skip applying the KOS patches
+to the downloaded sources before building. Setting this option along with 
+`auto_fixup_sh4_newlib=0` will keep the generated toolchain completely raw.
+
+**Note:** If you disable this flag, the KallistiOS threading model (`kos`) will
+be unavailable. Also, this may be a problem if you still apply the KallistiOS
+patches. **Use this flag with care**.
+
+### Override GNU Download Mirror
+Set `gnu_mirror` to override the default of `ftpmirror.gnu.org` when you have
+a prefered mirror to download GNU sources from.
 
 ## Usage
 
@@ -298,9 +317,9 @@ of the problematic step only rather than running the whole process again.
 
 Interesting targets (you can `make` any of these):
 
-- `all`: `patch` `build` (patch and build everything, excluding `gdb` and `insight`)
+- `all`: `patch` `build` (patch and build everything, excluding `gdb`)
 - `patch`: `patch-gcc` `patch-newlib` `patch-kos` (should be executed once)
-- `build`: `build-sh4` `build-arm` (build everything, excluding `gdb` and `insight`)
+- `build`: `build-sh4` `build-arm` (build everything, excluding `gdb`)
 - `build-sh4`: `build-sh4-binutils` `build-sh4-gcc` (build only `sh-elf` toolchain, excluding `gdb`)
 - `build-arm`: `build-arm-binutils` `build-arm-gcc` (build only `arm-eabi` toolchain)
 - `build-sh4-binutils` (build only `binutils` for `sh-elf`)
@@ -309,4 +328,3 @@ Interesting targets (you can `make` any of these):
 - `build-arm-gcc`: `build-arm-gcc-pass1` (build only `arm-eabi-gcc`)
 - `build-sh4-newlib`: `build-sh4-newlib-only` `fixup-sh4-newlib` (build only `newlib` for `sh-elf`)
 - `gdb` (build only `sh-elf-gdb`; it's never built automatically)
-- `insight` (build only `insight`; it's never built automatically)

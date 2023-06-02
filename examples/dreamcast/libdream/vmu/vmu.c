@@ -24,7 +24,7 @@ void draw_one(maple_device_t *addr, char *fn, uint16 hdrblock) {
 
         buf[0x10 + 32] = 0;
         bfont_draw_str(vram_s + y1 * 640 + 10 + (6 + strlen(fn)) * 12, 640, 0,
-                       buf + 0x10);
+                       (char *)(buf + 0x10));
     }
 
     y1 += 24;
@@ -106,7 +106,7 @@ void vmu_read_test() {
             ent16 = (uint16*)ent;
             ent[4 + 12] = 0;
 
-            if(!strcmp(ent + 4, "ICONDATA_VMS"))
+            if(!strcmp((char *)(ent + 4), "ICONDATA_VMS"))
                 icondata = ent16[1];
             else {
                 /* We don't handle FAT traversal... */

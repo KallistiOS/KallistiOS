@@ -1,6 +1,6 @@
 #
 # Basic KallistiOS skeleton / test program
-# (c)2001 Dan Potter
+# (c)2001 Megan Potter
 #
 
 # Put the filename of the output binary here
@@ -13,15 +13,14 @@ all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules
 
-clean:
-	-rm -f $(TARGET) $(OBJS) romdisk.* romdisk/fruit.kmg
+clean: rm-elf
+	-rm -f $(OBJS) romdisk/fruit.kmg
 
 rm-elf:
-	-rm -f $(TARGET)
+	-rm -f $(TARGET) romdisk.*
 
 $(TARGET): $(OBJS)
-	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(TARGET) $(KOS_START) \
-		$(OBJS) $(OBJEXTRA) -lkmg -lpcx -lkosutils $(KOS_LIBS)
+	kos-cc -o $(TARGET) $(OBJS) -lkmg -lpcx -lkosutils
 
 romdisk.img: romdisk/fruit.kmg romdisk/crate.pcx
 	$(KOS_GENROMFS) -f romdisk.img -d romdisk -v
@@ -36,7 +35,7 @@ romdisk/fruit.kmg: fruit.jpg
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET) -n
 
-dist:
-	rm -f $(OBJS) romdisk.* romdisk/fruit.kmg
+dist: $(TARGET)
+	-rm -f $(OBJS) romdisk.img romdisk/fruit.kmg
 	$(KOS_STRIP) $(TARGET)
 

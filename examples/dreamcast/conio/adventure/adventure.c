@@ -37,7 +37,7 @@
  */
 
 #ifndef lint
-static const char copyright[] =
+static const char copyright[] __attribute__((unused)) =
     "@(#) Copyright (c) 1991, 1993\n\
 	The Regents of the University of California.  All rights reserved.\n";
 #endif /* not lint */
@@ -46,7 +46,7 @@ static const char copyright[] =
 #if 0
 static char sccsid[] = "@(#)adventure.c	8.1 (Berkeley) 6/2/93";
 #endif
-static const char rcsid[] =
+static const char rcsid[] __attribute__((unused)) =
     "$FreeBSD: src/games/adventure/adventure.c,v 1.9.2.1 2001/03/05 11:43:11 kris Exp $";
 #endif /* not lint */
 

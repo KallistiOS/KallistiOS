@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kos/include/dbgio.h
-   Copyright (C)2000,2004 Dan Potter
+   Copyright (C)2000,2004 Megan Potter
 
 */
 
@@ -13,7 +13,7 @@
     among these tools is the dcload console (dcload-serial, dcload-ip, and
     fs_dclsocket), a raw serial console, and a framebuffer based console.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __KOS_DBGIO_H
@@ -42,19 +42,19 @@ typedef struct dbgio_handler {
         \retval 1           If the device is available and useable
         \retval 0           If the device is unavailable
     */
-    int (*detected)();
+    int (*detected)(void);
 
     /** \brief  Initialize this debug interface with default parameters.
         \retval 0           On success
         \retval -1          On failure
     */
-    int (*init)();
+    int (*init)(void);
 
     /** \brief  Shutdown this debug interface.
         \retval 0           On success
         \retval -1          On failure
     */
-    int (*shutdown)();
+    int (*shutdown)(void);
 
     /** \brief  Set either polled or IRQ usage for this interface.
         \param  mode        1 for IRQ-based usage, 0 for polled I/O
@@ -67,7 +67,7 @@ typedef struct dbgio_handler {
         \retval 0           On success
         \retval -1          On failure (set errno as appropriate)
     */
-    int (*read)();
+    int (*read)(void);
 
     /** \brief  Write one character to the console.
         \param  c           The character to write
@@ -82,7 +82,7 @@ typedef struct dbgio_handler {
         \retval 0           On success
         \retval -1          On error (set errno as appropriate)
     */
-    int (*flush)();
+    int (*flush)(void);
 
     /** \brief  Write an entire buffer of data to the console.
         \param  data        The buffer to write
@@ -129,7 +129,7 @@ int dbgio_dev_select(const char * name);
     \return                 The name of the current dbgio interface (or NULL if
                             no device is selected)
 */
-const char * dbgio_dev_get();
+const char * dbgio_dev_get(void);
 
 /** \brief  Initialize the dbgio console.
 
@@ -141,7 +141,7 @@ const char * dbgio_dev_get();
     \par    Error Conditions:
     \em     ENODEV - No devices could be detected/initialized
 */
-int dbgio_init();
+int dbgio_init(void);
 
 /** \brief  Set IRQ usage.
 
@@ -168,7 +168,7 @@ int dbgio_set_irq_usage(int mode);
     \retval 0               On success
     \retval -1              On error (errno should be set as appropriate)
 */
-int dbgio_read();
+int dbgio_read(void);
 
 /** \brief  Write one character to the console.
     \param  c               The character to write
@@ -183,7 +183,7 @@ int dbgio_write(int c);
     \retval 0               On success
     \retval -1              On error (errno should be set as appropriate)
 */
-int dbgio_flush();
+int dbgio_flush(void);
 
 /** \brief  Write an entire buffer of data to the console.
     \param  data            The buffer to write
@@ -218,10 +218,10 @@ int dbgio_write_buffer_xlat(const uint8 *data, int len);
 int dbgio_write_str(const char *str);
 
 /** \brief  Disable debug I/O globally. */
-void dbgio_disable();
+void dbgio_disable(void);
 
 /** \brief  Enable debug I/O globally. */
-void dbgio_enable();
+void dbgio_enable(void);
 
 /** \brief  Built-in debug I/O printf function.
     \param  fmt             A printf() style format string

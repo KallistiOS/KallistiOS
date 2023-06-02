@@ -1,12 +1,28 @@
 /* KallistiOS ##version##
 
    maple_driver.c
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
  */
 
 #include <string.h>
 #include <stdlib.h>
 #include <dc/maple.h>
+
+static maple_attach_callback_t attach_callback = NULL;
+static uint32 attach_callback_functions = 0;
+
+static maple_detach_callback_t detach_callback = NULL;
+static uint32 detach_callback_functions = 0;
+
+void maple_attach_callback(uint32 functions, maple_attach_callback_t cb) {
+    attach_callback_functions = functions;
+    attach_callback = cb;
+}
+
+void maple_detach_callback(uint32 functions, maple_detach_callback_t cb) {
+    detach_callback_functions = functions;
+    detach_callback = cb;
+}
 
 /* Register a maple device driver; do this before maple_init() */
 int maple_driver_reg(maple_driver_t *driver) {
@@ -63,6 +79,12 @@ int maple_driver_attach(maple_frame_t *det) {
     dev->status_valid = 0;
     dev->valid = 1;
 
+    if(!(attach_callback_functions) || (dev->info.functions & attach_callback_functions)) {
+        if(attach_callback) {
+            attach_callback(dev);
+        }
+    }
+
     return 0;
 }
 
@@ -80,6 +102,12 @@ int maple_driver_detach(int p, int u) {
 
     dev->valid = 0;
     dev->status_valid = 0;
+
+    if(!(detach_callback_functions) || (dev->info.functions & detach_callback_functions)) {
+        if(detach_callback) {
+            detach_callback(dev);
+        }
+    }
 
     return 0;
 }

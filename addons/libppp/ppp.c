@@ -684,7 +684,11 @@ int ppp_init(void) {
 int ppp_shutdown(void) {
     ppp_protocol_t *i, *next;
 
-    mutex_lock(&mutex);
+    /* If we're in an int, it's ok if we can't lock */
+    if(irq_inside_int())
+        mutex_trylock(&mutex);
+    else
+        mutex_lock(&mutex);
 
     if(!ppp_state.initted) {
         mutex_unlock(&mutex);

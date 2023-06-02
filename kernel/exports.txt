@@ -5,6 +5,12 @@
 
 # Libc ###############################
 
+include assert.h
+include malloc.h
+include stdlib.h
+include stdio.h
+include strings.h
+
 # Malloc
 malloc
 calloc
@@ -55,6 +61,8 @@ abs
 # __error
 
 ######################################
+
+include kos.h
 
 # Name Manager
 nmmgr_lookup

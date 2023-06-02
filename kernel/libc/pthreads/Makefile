@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # kernel/libc/pthreads/Makefile
-# Copyright (C)2004 Dan Potter
+# Copyright (C)2004 Megan Potter
 #
 
 # Minimalist pthreads to KOS mapping. Programs that really intensively

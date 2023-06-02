@@ -4,7 +4,7 @@
    Copyright (C) 2007, 2008, 2012, 2013, 2015 Lawrence Sebald
 
    Based on fs_dclnative.c and related files
-   Copyright (C) 2003 Dan Potter
+   Copyright (C) 2003 Megan Potter
 
    Portions of various supporting modules are
    Copyright (C) 2001 Andrew Kieschnick, imported
@@ -164,7 +164,7 @@ static void dcls_handle_vers(command_t *cmd) {
     send(dcls_socket, pktbuf, size, 0);
 }
 
-static void dcls_recv_loop() {
+static void dcls_recv_loop(void) {
     uint8 pkt[1514];
     command_t *cmd = (command_t *)pkt;
 
@@ -208,6 +208,7 @@ static void dcls_recv_loop() {
 static void *dcls_open(struct vfs_handler *vfs, const char *fn, int mode) {
     int hnd, locked;
     int dcload_mode = 0;
+    int mm = (mode & O_MODE_MASK);
     command_t *cmd = (command_t *)pktbuf;
 
     (void)vfs;
@@ -256,14 +257,15 @@ static void *dcls_open(struct vfs_handler *vfs, const char *fn, int mode) {
         }
     }
     else {
-        if((mode & O_MODE_MASK) == O_RDONLY)
+        if(mm == O_RDONLY)
             dcload_mode = 0;
-        else if((mode & O_MODE_MASK) == O_RDWR)
+        else if((mm & O_RDWR) == O_RDWR)
             dcload_mode = 0x0202;
-        else if((mode & O_MODE_MASK) == O_WRONLY)
+        else if((mm & O_WRONLY) == O_WRONLY)
             dcload_mode = 0x0201;
-        else if((mode & O_MODE_MASK) == O_APPEND)
-            dcload_mode = 0x020A;
+
+        if(mode & O_APPEND)
+            dcload_mode |= 0x0008;
 
         if(mode & O_TRUNC)
             dcload_mode |= 0x0400;
@@ -620,15 +622,15 @@ static int dcls_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
 }
 
 /* dbgio interface */
-static int dcls_detected() {
+static int dcls_detected(void) {
     return initted > 0;
 }
 
-static int dcls_fake_init() {
+static int dcls_fake_init(void) {
     return 0;
 }
 
-static int dcls_fake_shutdown() {
+static int dcls_fake_shutdown(void) {
     return 0;
 }
 
@@ -747,7 +749,7 @@ dbgio_handler_t dbgio_dcls = {
 };
 
 /* This function must be called prior to calling fs_dclsocket_init() */
-void fs_dclsocket_init_console() {
+void fs_dclsocket_init_console(void) {
     /* Make sure networking is up first of all */
     if(!net_default_dev) {
         return;
@@ -768,7 +770,7 @@ uint32 _fs_dclsocket_get_ip(void) {
     return dcloadsyscall(DCLOAD_GETHOSTINFO, &ip, &port);
 }
 
-int fs_dclsocket_init() {
+int fs_dclsocket_init(void) {
     struct sockaddr_in addr;
     int err;
     uint8 ipaddr[4], mac[6];
@@ -835,7 +837,7 @@ error:
     return -1;
 }
 
-int fs_dclsocket_shutdown() {
+int fs_dclsocket_shutdown(void) {
     int old;
     command_t cmd;
 
@@ -862,7 +864,7 @@ int fs_dclsocket_shutdown() {
     mutex_destroy(&mutex);
     initted = 0;
 
-    irq_enable(old);
+    irq_restore(old);
 
     /* Finally, clean up the socket */
     close(dcls_socket);

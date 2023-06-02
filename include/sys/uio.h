@@ -24,7 +24,7 @@
 __BEGIN_DECLS
 
 /** \brief  I/O vector structure
-    \headerfile sys/iovec.h
+    \headerfile sys/uio.h
 */
 struct iovec {
     /** \brief  Base address of memory for I/O. */

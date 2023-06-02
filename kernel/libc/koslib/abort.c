@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    abort.c
-   (c)2001 Dan Potter
+   (c)2001 Megan Potter
 
 */
 
@@ -9,7 +9,7 @@
 #include <arch/arch.h>
 
 /* This is probably the closest mapping we've got for abort() */
-void abort() {
+void abort(void) {
     arch_exit();
 }
 

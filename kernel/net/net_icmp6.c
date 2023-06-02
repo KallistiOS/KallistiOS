@@ -16,6 +16,11 @@
 #include "net_ipv6.h"
 #include "net_ipv4.h"   /* For net_ipv4_checksum() */
 
+#if __GNUC__ >= 9
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
+#endif
+
 /*
 This file implements RFC 4443, the Internet Control Message Protocol for IPv6.
 All messages mentioned below are from that RFC, unless otherwise specified.
@@ -802,3 +807,7 @@ int net_icmp6_send_param_prob(netif_t *net, uint8 code, uint32 ptr,
     return send_err_pkt(net, buf, sizeof(icmp6_param_problem_t), ppkt, psz,
                         mc_allow);
 }
+
+#if __GNUC__ >= 9
+#pragma GCC diagnostic pop
+#endif

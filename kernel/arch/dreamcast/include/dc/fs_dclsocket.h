@@ -28,10 +28,10 @@ __BEGIN_DECLS
 extern dbgio_handler_t dbgio_dcls;
 
 /* Initialization */
-void fs_dclsocket_init_console();
-int fs_dclsocket_init();
+void fs_dclsocket_init_console(void);
+int fs_dclsocket_init(void);
 
-int fs_dclsocket_shutdown();
+int fs_dclsocket_shutdown(void);
 /* \endcond */
 
 __END_DECLS

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    main.c
-   (c)2000-2002 Dan Potter
+   (c)2000-2002 Megan Potter
 
    Generic sound driver with streaming capabilities
 
@@ -137,7 +137,7 @@ uint32 process_one(uint32 tail) {
 
 /* Look for an available request in the command queue; if one is there
    then process it and move the tail pointer. */
-void process_cmd_queue() {
+void process_cmd_queue(void) {
     uint32      head, tail, tsloc, ts;
 
     /* Grab these values up front in case SH-4 changes head */
@@ -171,7 +171,7 @@ void process_cmd_queue() {
     }
 }
 
-int arm_main() {
+int arm_main(void) {
     int i;
 
     /* Setup our queues */

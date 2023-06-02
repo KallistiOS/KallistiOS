@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/biosfont.h
-   (c)2000-2001 Dan Potter
+   (c)2000-2001 Megan Potter
    Japanese Functions (c)2002 Kazuaki Matsumoto
    (c)2017 Donald Haase
 
@@ -14,7 +14,7 @@
     BIOS. These functions allow access to both the western character set and
     Japanese characters.
 
-    \author Dan Potter
+    \author Megan Potter
     \author Kazuaki Matsumoto
     \author Donald Haase
 */

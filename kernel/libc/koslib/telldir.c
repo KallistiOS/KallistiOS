@@ -1,15 +1,17 @@
 /* KallistiOS ##version##
 
    telldir.c
-   Copyright (C)2004 Dan Potter
+   Copyright (C)2004 Megan Potter
 
 */
 
 #include <kos/dbglog.h>
+#include <sys/dirent.h>
 #include <errno.h>
 
-// This isn't properly prototyped... sosume :)
-off_t telldir() {
+off_t telldir(DIR *dir) {
+    (void)dir;
+
     dbglog(DBG_WARNING, "telldir: call ignored\n");
     errno = ENOSYS;
     return -1;

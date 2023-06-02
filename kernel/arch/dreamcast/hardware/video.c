@@ -3,10 +3,11 @@
    video.c
 
    (c)2001 Anders Clerwall (scav)
-   Parts (c)2000-2001 Dan Potter
+   Parts (c)2000-2001 Megan Potter
  */
 
 #include <dc/video.h>
+#include <dc/pvr.h>
 #include <dc/sq.h>
 #include <string.h>
 #include <stdio.h>
@@ -407,7 +408,6 @@ vid_mode_t vid_builtin[DM_MODE_COUNT] = {
 };
 
 /*-----------------------------------------------------------------------------*/
-static vuint32 *regs = (uint32*)0xA05F8000;
 static vid_mode_t  currmode = { 0 };
 vid_mode_t  *vid_mode = 0;
 uint16      *vram_s;
@@ -424,9 +424,9 @@ uint32      *vram_l;
    This is a direct port of Marcus' assembly function of the
    same name.
 
-   [This is the old KOS function by Dan.]
+   [This is the old KOS function by Megan.]
 */
-int vid_check_cable() {
+int vid_check_cable(void) {
 #ifndef _arch_sub_naomi
     vuint32 * porta = (vuint32 *)0xff80002c;
 
@@ -499,7 +499,6 @@ void vid_set_mode(int dm, int pm) {
 
 /*-----------------------------------------------------------------------------*/
 void vid_set_mode_ex(vid_mode_t *mode) {
-    static uint8 bpp[4] = { 2, 2, 0, 4 };
     uint16 ct;
     uint32 data;
 
@@ -518,8 +517,8 @@ void vid_set_mode_ex(vid_mode_t *mode) {
     }
 
     /* Blank screen and reset display enable (looks nicer) */
-    regs[0x3A] |= 8;    /* Blank */
-    regs[0x11] &= ~1;   /* Display disable */
+    PVR_SET(PVR_VIDEO_CFG, PVR_GET(PVR_VIDEO_CFG) | 8);    /* Blank */
+    PVR_SET(PVR_FB_CFG_1, PVR_GET(PVR_FB_CFG_1) & ~1);   /* Display disable */
 
     /* Clear interlace flag if VGA (this maybe should be in here?) */
     if(ct == CT_VGA) {
@@ -546,30 +545,30 @@ void vid_set_mode_ex(vid_mode_t *mode) {
             data |= 2;
     }
 
-    regs[0x11] = data;
+    PVR_SET(PVR_FB_CFG_1, data);
 
     /* Linestride */
-    regs[0x13] = (mode->width * bpp[mode->pm]) / 8;
+    PVR_SET(PVR_RENDER_MODULO, (mode->width * vid_pmode_bpp[mode->pm]) / 8);
 
     /* Display size */
-    data = ((mode->width * bpp[mode->pm]) / 4) - 1;
+    data = ((mode->width * vid_pmode_bpp[mode->pm]) / 4) - 1;
 
     if(ct == CT_VGA || (!(mode->flags & VID_INTERLACE))) {
         data |= (1 << 20) | ((mode->height - 1) << 10);
     }
     else {
-        data |= (((mode->width * bpp[mode->pm] >> 2) + 1) << 20)
+        data |= (((mode->width * vid_pmode_bpp[mode->pm] >> 2) + 1) << 20)
                 | (((mode->height / 2) - 1) << 10);
     }
 
-    regs[0x17] = data;
+    PVR_SET(PVR_FB_SIZE, data);
 
     /* vblank irq */
     if(ct == CT_VGA) {
-        regs[0x33] = (mode->scanint1 << 16) | (mode->scanint2 << 1);
+        PVR_SET(PVR_VPOS_IRQ, (mode->scanint1 << 16) | (mode->scanint2 << 1));
     }
     else {
-        regs[0x33] = (mode->scanint1 << 16) | mode->scanint2;
+        PVR_SET(PVR_VPOS_IRQ, (mode->scanint1 << 16) | mode->scanint2);
     }
 
     /* Interlace stuff */
@@ -586,25 +585,25 @@ void vid_set_mode_ex(vid_mode_t *mode) {
         }
     }
 
-    regs[0x34] = data;
+    PVR_SET(PVR_IL_CFG, data);
 
     /* Border window */
-    regs[0x35] = (mode->borderx1 << 16) | mode->borderx2;
-    regs[0x37] = (mode->bordery1 << 16) | mode->bordery2;
+    PVR_SET(PVR_BORDER_X, (mode->borderx1 << 16) | mode->borderx2);
+    PVR_SET(PVR_BORDER_Y, (mode->bordery1 << 16) | mode->bordery2);
 
     /* Scanlines and clocks. */
-    regs[0x36] = (mode->scanlines << 16) | mode->clocks;
+    PVR_SET(PVR_SCAN_CLK, (mode->scanlines << 16) | mode->clocks);
 
     /* Horizontal pixel doubling */
     if(mode->flags & VID_PIXELDOUBLE) {
-        regs[0x3A] |= 0x100;
+        PVR_SET(PVR_VIDEO_CFG, PVR_GET(PVR_VIDEO_CFG) | 0x100);
     }
     else {
-        regs[0x3A] &= ~0x100;
+        PVR_SET(PVR_VIDEO_CFG, PVR_GET(PVR_VIDEO_CFG) & ~0x100);
     }
 
     /* Bitmap window */
-    regs[0x3B] = mode->bitmapx;
+    PVR_SET(PVR_BITMAP_X, mode->bitmapx);
     data = mode->bitmapy;
 
     if(mode->flags & VID_PAL) {
@@ -612,7 +611,7 @@ void vid_set_mode_ex(vid_mode_t *mode) {
     }
 
     data = (data << 16) | mode->bitmapy;
-    regs[0x3C] = data;
+    PVR_SET(PVR_BITMAP_Y, data);
 
     /* Everything is ok */
     memcpy(&currmode, mode, sizeof(vid_mode_t));
@@ -627,25 +626,23 @@ void vid_set_mode_ex(vid_mode_t *mode) {
         ((ct & 3) << 8);
 
     /* Re-enable the display */
-    regs[0x3A] &= ~8;
-    regs[0x11] |= 1;
+    PVR_SET(PVR_VIDEO_CFG, PVR_GET(PVR_VIDEO_CFG) & ~8);
+    PVR_SET(PVR_FB_CFG_1, PVR_GET(PVR_FB_CFG_1) | 1);
 }
 
 /*-----------------------------------------------------------------------------*/
 void vid_set_start(uint32 base) {
-    static uint8 bpp[4] = { 2, 2, 0, 4 };
-
     /* Set vram base of current framebuffer */
     base &= 0x007FFFFF;
-    regs[0x14] = base;
+    PVR_SET(PVR_FB_ADDR, base);
 
     /* These are nice to have. */
-    vram_s = (uint16*)(0xA5000000 | base);
-    vram_l = (uint32*)(0xA5000000 | base);
+    vram_s = (uint16*)(PVR_RAM_BASE | base);
+    vram_l = (uint32*)(PVR_RAM_BASE | base);
 
     /* Set odd-field if interlaced. */
     if(vid_mode->flags & VID_INTERLACE) {
-        regs[0x15] = base + (currmode.width * bpp[currmode.pm]);
+        PVR_SET(PVR_FB_IL_ADDR, base + (vid_mode->width * vid_pmode_bpp[vid_mode->pm]));
     }
 }
 
@@ -673,23 +670,23 @@ void vid_flip(int fb) {
 
     /* Set the vram_* pointers as expected */
     base = vid_mode->fb_base[(vid_mode->fb_curr + 1) & (vid_mode->fb_count - 1)];
-    vram_s = (uint16*)(0xA5000000 | base);
-    vram_l = (uint32*)(0xA5000000 | base);
+    vram_s = (uint16*)(PVR_RAM_BASE | base);
+    vram_l = (uint32*)(PVR_RAM_BASE | base);
 }
 
 /*-----------------------------------------------------------------------------*/
 uint32 vid_border_color(int r, int g, int b) {
-    uint32 obc = regs[0x0040 / 4];
-    regs[0x0040 / 4] = ((r & 0xFF) << 16) |
+    uint32 obc = PVR_GET(PVR_BORDER_COLOR);
+    PVR_SET(PVR_BORDER_COLOR, ((r & 0xFF) << 16) |
                        ((g & 0xFF) << 8) |
-                       (b & 0xFF);
+                       (b & 0xFF));
     return obc;
 }
 
 /*-----------------------------------------------------------------------------*/
 /* Clears the screen with a given color
 
-    [This is the old KOS function by Dan.]
+    [This is the old KOS function by Megan.]
 */
 void vid_clear(int r, int g, int b) {
     uint16 pixel16;
@@ -700,17 +697,25 @@ void vid_clear(int r, int g, int b) {
             pixel16 = ((r >> 3) << 10)
                       | ((g >> 3) << 5)
                       | ((b >> 3) << 0);
-            sq_set16(vram_s, pixel16, (vid_mode->width * vid_mode->height) * 2);
+            sq_set16(vram_s, pixel16, (vid_mode->width * vid_mode->height) * vid_pmode_bpp[PM_RGB555]);
             break;
         case PM_RGB565:
             pixel16 = ((r >> 3) << 11)
                       | ((g >> 2) << 5)
                       | ((b >> 3) << 0);
-            sq_set16(vram_s, pixel16, (vid_mode->width * vid_mode->height) * 2);
+            sq_set16(vram_s, pixel16, (vid_mode->width * vid_mode->height) * vid_pmode_bpp[PM_RGB565]);
             break;
-        case PM_RGB888:
+        case PM_RGB888P:
+            /* Need to come up with some way to fill this quickly. */
+            dbglog(DBG_WARNING, "vid_clear: PM_RGB888P not supported, clearing with 0\n");
+            sq_set32(vram_l, 0, (vid_mode->width * vid_mode->height) * vid_pmode_bpp[PM_RGB888P]);
+            break;
+        case PM_RGB0888:
             pixel32 = (r << 16) | (g << 8) | (b << 0);
-            sq_set32(vram_l, pixel32, (vid_mode->width * vid_mode->height) * 4);
+            sq_set32(vram_l, pixel32, (vid_mode->width * vid_mode->height) * vid_pmode_bpp[PM_RGB0888]);
+            break;
+        default:
+            dbglog(DBG_ERROR, "vid_clear: Invalid Pixel Mode: %i\n", vid_mode->pm);
             break;
     }
 }
@@ -718,12 +723,12 @@ void vid_clear(int r, int g, int b) {
 /*-----------------------------------------------------------------------------*/
 /* Clears all of video memory as quickly as possible
 
-    [This is the old KOS function by Dan.]
+    [This is the old KOS function by Megan.]
 */
-void vid_empty() {
+void vid_empty(void) {
     /* We'll use the actual base address here since the vram_* pointers
        can now move around */
-    sq_clr((uint32 *)0xa5000000, 8 * 1024 * 1024);
+    sq_clr((uint32 *)PVR_RAM_BASE, 8 * 1024 * 1024);
 }
 
 /*-----------------------------------------------------------------------------*/
@@ -733,15 +738,13 @@ void vid_empty() {
 
    Thanks to HeroZero for this info.
 
-   [This is the old KOS function by Dan.]
+   [This is the old KOS function by Megan.]
 */
-void vid_waitvbl() {
-    vuint32 *vbl = regs + 0x010c / 4;
-
-    while(!(*vbl & 0x01ff))
+void vid_waitvbl(void) {
+    while(!(PVR_GET(PVR_SYNC_STATUS) & 0x01ff))
         ;
 
-    while(*vbl & 0x01ff)
+    while(PVR_GET(PVR_SYNC_STATUS) & 0x01ff)
         ;
 }
 
@@ -754,7 +757,7 @@ void vid_init(int disp_mode, int pixel_mode) {
 }
 
 /*-----------------------------------------------------------------------------*/
-void vid_shutdown() {
+void vid_shutdown(void) {
     /* Play nice with loaders, like KOS used to do. */
     vid_init(DM_640x480, PM_RGB565);
 }

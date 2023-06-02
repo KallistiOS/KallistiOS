@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    rotocube.c
-   Copyright (C)2003 Dan Potter
+   Copyright (C)2003 Megan Potter
 */
 
 #include <kos.h>
@@ -122,7 +122,7 @@ void drawwave(int theta) {
 }
 
 int main(int argc, char **argv) {
-    int done, i;
+    int done;
     int theta;
     pvr_stats_t stats;
 

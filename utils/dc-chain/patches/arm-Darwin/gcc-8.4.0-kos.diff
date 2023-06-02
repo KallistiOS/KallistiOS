@@ -1,8 +1,21 @@
-diff -rUN gcc-8.4.0/gcc/config.host gcc-8.4.0/gcc/config.host
-index c65569da2..c1e4d9a20 100644
---- gcc-8.4.0/gcc/config.host	2019-06-26 05:15:46.000000000 -0400
-+++ gcc-8.4.0-kos/gcc/config.host   2020-03-27 23:04:55.000000000 -0400
-@@ -93,8 +93,8 @@ esac
+diff --color -ruN gcc-8.4.0/gcc/config/host-darwin.c gcc-8.4.0-kos/gcc/config/host-darwin.c
+--- gcc-8.4.0/gcc/config/host-darwin.c	2023-03-11 14:18:43
++++ gcc-8.4.0-kos/gcc/config/host-darwin.c	2023-03-11 14:20:47
+@@ -22,6 +22,10 @@
+ #include "coretypes.h"
+ #include "diagnostic-core.h"
+ #include "config/host-darwin.h"
++#include "hosthooks.h"
++#include "hosthooks-def.h"
++
++const struct host_hooks host_hooks = HOST_HOOKS_INITIALIZER;
+ 
+ /* Yes, this is really supposed to work.  */
+ static char pch_address_space[1024*1024*1024] __attribute__((aligned (4096)));
+diff --color -ruN gcc-8.4.0/gcc/config.host gcc-8.4.0-kos/gcc/config.host
+--- gcc-8.4.0/gcc/config.host	2023-03-11 14:18:55
++++ gcc-8.4.0-kos/gcc/config.host	2023-03-11 14:21:25
+@@ -93,8 +93,8 @@
  case ${host} in
    *-darwin*)
      # Generic darwin host support.
@@ -13,24 +26,3 @@ index c65569da2..c1e4d9a20 100644
      ;;
  esac
  
-diff -rUN gcc-8.4.0/gcc/config/host-darwin.c gcc-8.4.0/gcc/config/host-darwin.c
-index 8f700eec8..bd0b2804b 100644
-
---- gcc-8.4.0/gcc/config/host-darwin.c	2019-06-26 05:15:46.000000000 -0400
-+++ gcc-8.4.0-kos/gcc/config/host-darwin.c   2020-03-27 23:04:55.000000000 -0400
-@@ -22,6 +22,8 @@
- #include "coretypes.h"
- #include "diagnostic-core.h"
- #include "config/host-darwin.h"
-+#include "hosthooks.h"
-+#include "hosthooks-def.h"
- 
- /* Yes, this is really supposed to work.  */
- static char pch_address_space[1024*1024*1024] __attribute__((aligned (4096)));
-@@ -75,3 +77,5 @@ darwin_gt_pch_use_address (void *addr, size_t sz, int fd, size_t off)
- 
-   return ret;
- }
-+
-+const struct host_hooks host_hooks = HOST_HOOKS_INITIALIZER;
-\ No newline at end of file

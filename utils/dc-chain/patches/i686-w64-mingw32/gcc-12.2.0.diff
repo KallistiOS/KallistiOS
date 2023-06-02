@@ -1,0 +1,401 @@
+diff -ruN gcc-12.2.0/gcc/ada/adaint.c gcc-12.2.0-mingw/gcc/ada/adaint.c
+--- gcc-12.2.0/gcc/ada/adaint.c	2022-08-19 10:09:52.300658800 +0200
++++ gcc-12.2.0-mingw/gcc/ada/adaint.c	2023-02-23 23:06:29.194818000 +0100
+@@ -231,6 +231,7 @@
+ 
+ #elif defined (_WIN32)
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #include <accctrl.h>
+ #include <aclapi.h>
+diff -ruN gcc-12.2.0/gcc/ada/cio.c gcc-12.2.0-mingw/gcc/ada/cio.c
+--- gcc-12.2.0/gcc/ada/cio.c	2022-08-19 10:09:52.312659000 +0200
++++ gcc-12.2.0-mingw/gcc/ada/cio.c	2023-02-23 23:06:29.194818000 +0100
+@@ -67,6 +67,7 @@
+ #endif
+ 
+ #ifdef RTX
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #include <Rtapi.h>
+ #endif
+diff -ruN gcc-12.2.0/gcc/ada/ctrl_c.c gcc-12.2.0-mingw/gcc/ada/ctrl_c.c
+--- gcc-12.2.0/gcc/ada/ctrl_c.c	2022-08-19 10:09:52.312659000 +0200
++++ gcc-12.2.0-mingw/gcc/ada/ctrl_c.c	2023-02-23 23:06:29.210445600 +0100
+@@ -126,6 +126,7 @@
+ 
+ #elif defined (__MINGW32__)
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include "mingw32.h"
+ #include <windows.h>
+ 
+diff -ruN gcc-12.2.0/gcc/ada/expect.c gcc-12.2.0-mingw/gcc/ada/expect.c
+--- gcc-12.2.0/gcc/ada/expect.c	2022-08-19 10:09:52.348659500 +0200
++++ gcc-12.2.0-mingw/gcc/ada/expect.c	2023-02-23 23:06:29.210445600 +0100
+@@ -75,6 +75,7 @@
+ 
+ #ifdef _WIN32
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #include <process.h>
+ #include <signal.h>
+diff -ruN gcc-12.2.0/gcc/ada/gsocket.h gcc-12.2.0-mingw/gcc/ada/gsocket.h
+--- gcc-12.2.0/gcc/ada/gsocket.h	2022-08-19 10:09:52.372659800 +0200
++++ gcc-12.2.0-mingw/gcc/ada/gsocket.h	2023-02-23 23:06:29.210445600 +0100
+@@ -173,6 +173,7 @@
+ 
+ #endif
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ #elif defined(VMS)
+diff -ruN gcc-12.2.0/gcc/ada/mingw32.h gcc-12.2.0-mingw/gcc/ada/mingw32.h
+--- gcc-12.2.0/gcc/ada/mingw32.h	2022-08-19 10:09:52.456660800 +0200
++++ gcc-12.2.0-mingw/gcc/ada/mingw32.h	2023-02-23 23:06:29.225961000 +0100
+@@ -58,6 +58,7 @@
+ #define _X86INTRIN_H_INCLUDED
+ #define _EMMINTRIN_H_INCLUDED
+ #endif
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ /* After including this file it is possible to use the character t as prefix
+diff -ruN gcc-12.2.0/gcc/ada/mkdir.c gcc-12.2.0-mingw/gcc/ada/mkdir.c
+--- gcc-12.2.0/gcc/ada/mkdir.c	2022-08-19 10:09:52.456660800 +0200
++++ gcc-12.2.0-mingw/gcc/ada/mkdir.c	2023-02-23 23:06:29.225961000 +0100
+@@ -43,6 +43,7 @@
+ #endif
+ 
+ #ifdef __MINGW32__
++#define WIN32_LEAN_AND_MEAN
+ #include "mingw32.h"
+ #include <windows.h>
+ #ifdef MAXPATHLEN
+diff -ruN gcc-12.2.0/gcc/ada/rtfinal.c gcc-12.2.0-mingw/gcc/ada/rtfinal.c
+--- gcc-12.2.0/gcc/ada/rtfinal.c	2022-08-19 10:09:52.464660900 +0200
++++ gcc-12.2.0-mingw/gcc/ada/rtfinal.c	2023-02-23 23:06:29.241603800 +0100
+@@ -46,6 +46,7 @@
+ /*  see initialize.c  */
+ 
+ #if defined (__MINGW32__)
++#define WIN32_LEAN_AND_MEAN
+ #include "mingw32.h"
+ #include <windows.h>
+ 
+diff -ruN gcc-12.2.0/gcc/ada/rtinit.c gcc-12.2.0-mingw/gcc/ada/rtinit.c
+--- gcc-12.2.0/gcc/ada/rtinit.c	2022-08-19 10:09:52.464660900 +0200
++++ gcc-12.2.0-mingw/gcc/ada/rtinit.c	2023-02-23 23:06:29.241603800 +0100
+@@ -70,6 +70,7 @@
+    and finalize properly the run-time. */
+ 
+ #if defined (__MINGW32__)
++#define WIN32_LEAN_AND_MEAN
+ #include "mingw32.h"
+ #include <windows.h>
+ 
+diff -ruN gcc-12.2.0/gcc/ada/seh_init.c gcc-12.2.0-mingw/gcc/ada/seh_init.c
+--- gcc-12.2.0/gcc/ada/seh_init.c	2022-08-19 10:09:52.468661000 +0200
++++ gcc-12.2.0-mingw/gcc/ada/seh_init.c	2023-02-23 23:06:29.241603800 +0100
+@@ -34,6 +34,7 @@
+ 
+ #if defined (_WIN32) || (defined (__CYGWIN__) && defined (__SEH__))
+ /* Include system headers, before system.h poisons malloc.  */
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #include <excpt.h>
+ #endif
+diff -ruN gcc-12.2.0/gcc/ada/sysdep.c gcc-12.2.0-mingw/gcc/ada/sysdep.c
+--- gcc-12.2.0/gcc/ada/sysdep.c	2022-08-19 10:09:52.512661600 +0200
++++ gcc-12.2.0-mingw/gcc/ada/sysdep.c	2023-02-23 23:06:29.257223200 +0100
+@@ -217,6 +217,7 @@
+ #endif /* __CYGWIN__ */
+ 
+ #if defined (__CYGWIN__) || defined (__MINGW32__)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ int __gnat_is_windows_xp (void);
+@@ -593,6 +594,7 @@
+    Ada programs.  */
+ 
+ #ifdef WINNT
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ /* Provide functions to echo the values passed to WinMain (windows bindings
+diff -ruN gcc-12.2.0/gcc/ada/terminals.c gcc-12.2.0-mingw/gcc/ada/terminals.c
+--- gcc-12.2.0/gcc/ada/terminals.c	2022-08-19 10:09:52.512661600 +0200
++++ gcc-12.2.0-mingw/gcc/ada/terminals.c	2023-02-23 23:06:29.257223200 +0100
+@@ -151,6 +151,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #include <winternl.h>
+ #include <io.h>
+diff -ruN gcc-12.2.0/gcc/ada/tracebak.c gcc-12.2.0-mingw/gcc/ada/tracebak.c
+--- gcc-12.2.0/gcc/ada/tracebak.c	2022-08-19 10:09:52.512661600 +0200
++++ gcc-12.2.0-mingw/gcc/ada/tracebak.c	2023-02-23 23:06:29.272847800 +0100
+@@ -93,6 +93,7 @@
+ 
+ #if defined (_WIN64) && defined (__SEH__)
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ #define IS_BAD_PTR(ptr) (IsBadCodePtr((FARPROC)ptr))
+@@ -455,6 +456,7 @@
+ #elif defined (__i386__) || defined (__x86_64__)
+ 
+ #if defined (__WIN32)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #define IS_BAD_PTR(ptr) (IsBadCodePtr((FARPROC)ptr))
+ #elif defined (__sun__)
+diff -ruN gcc-12.2.0/gcc/diagnostic-color.cc gcc-12.2.0-mingw/gcc/diagnostic-color.cc
+--- gcc-12.2.0/gcc/diagnostic-color.cc	2022-08-19 10:09:52.812665400 +0200
++++ gcc-12.2.0-mingw/gcc/diagnostic-color.cc	2023-02-23 23:07:35.335490100 +0100
+@@ -22,6 +22,7 @@
+ #include "diagnostic-url.h"
+ 
+ #ifdef __MINGW32__
++#  define WIN32_LEAN_AND_MEAN
+ #  include <windows.h>
+ #endif
+ 
+diff -ruN gcc-12.2.0/gcc/jit/jit-w32.h gcc-12.2.0-mingw/gcc/jit/jit-w32.h
+--- gcc-12.2.0/gcc/jit/jit-w32.h	2022-08-19 10:09:52.932666900 +0200
++++ gcc-12.2.0-mingw/gcc/jit/jit-w32.h	2023-02-23 23:07:35.335490100 +0100
+@@ -20,6 +20,7 @@
+ 
+ #include "config.h"
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ namespace gcc {
+diff -ruN gcc-12.2.0/gcc/plugin.cc gcc-12.2.0-mingw/gcc/plugin.cc
+--- gcc-12.2.0/gcc/plugin.cc	2022-08-19 10:09:52.952667200 +0200
++++ gcc-12.2.0-mingw/gcc/plugin.cc	2023-02-23 23:07:35.351355900 +0100
+@@ -41,6 +41,7 @@
+ #ifndef NOMINMAX
+ #define NOMINMAX
+ #endif
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #endif
+ 
+diff -ruN gcc-12.2.0/gcc/prefix.cc gcc-12.2.0-mingw/gcc/prefix.cc
+--- gcc-12.2.0/gcc/prefix.cc	2022-08-19 10:09:53.104669100 +0200
++++ gcc-12.2.0-mingw/gcc/prefix.cc	2023-02-23 23:07:35.351355900 +0100
+@@ -67,6 +67,7 @@
+ #include "system.h"
+ #include "coretypes.h"
+ #if defined(_WIN32) && defined(ENABLE_WIN32_REGISTRY)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #endif
+ #include "prefix.h"
+diff -ruN gcc-12.2.0/libatomic/config/mingw/lock.c gcc-12.2.0-mingw/libatomic/config/mingw/lock.c
+--- gcc-12.2.0/libatomic/config/mingw/lock.c	2022-08-19 10:09:54.604688300 +0200
++++ gcc-12.2.0-mingw/libatomic/config/mingw/lock.c	2023-02-23 23:07:35.366983500 +0100
+@@ -23,6 +23,7 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #define UWORD __shadow_UWORD
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #undef UWORD
+ #include "libatomic_i.h"
+diff -ruN gcc-12.2.0/libffi/src/aarch64/ffi.c gcc-12.2.0-mingw/libffi/src/aarch64/ffi.c
+--- gcc-12.2.0/libffi/src/aarch64/ffi.c	2022-08-19 10:09:54.652688900 +0200
++++ gcc-12.2.0-mingw/libffi/src/aarch64/ffi.c	2023-02-23 23:07:35.366983500 +0100
+@@ -28,6 +28,7 @@
+ #include <ffi_common.h>
+ #include "internal.h"
+ #ifdef _WIN32
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h> /* FlushInstructionCache */
+ #endif
+ #include <tramp.h>
+diff -ruN gcc-12.2.0/libgcc/config/i386/enable-execute-stack-mingw32.c gcc-12.2.0-mingw/libgcc/config/i386/enable-execute-stack-mingw32.c
+--- gcc-12.2.0/libgcc/config/i386/enable-execute-stack-mingw32.c	2022-08-19 10:09:54.676689300 +0200
++++ gcc-12.2.0-mingw/libgcc/config/i386/enable-execute-stack-mingw32.c	2023-02-23 23:07:35.366983500 +0100
+@@ -22,6 +22,7 @@
+    see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+    <http://www.gnu.org/licenses/>.  */
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ extern void __enable_execute_stack (void *);
+diff -ruN gcc-12.2.0/libgcc/libgcc2.c gcc-12.2.0-mingw/libgcc/libgcc2.c
+--- gcc-12.2.0/libgcc/libgcc2.c	2022-08-19 10:09:54.728689900 +0200
++++ gcc-12.2.0-mingw/libgcc/libgcc2.c	2023-02-23 23:07:35.382499000 +0100
+@@ -2273,6 +2273,7 @@
+ /* Jump to a trampoline, loading the static chain address.  */
+ 
+ #if defined(WINNT) && ! defined(__CYGWIN__)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ int getpagesize (void);
+ int mprotect (char *,int, int);
+diff -ruN gcc-12.2.0/libgcc/unwind-generic.h gcc-12.2.0-mingw/libgcc/unwind-generic.h
+--- gcc-12.2.0/libgcc/unwind-generic.h	2022-08-19 10:09:54.732690000 +0200
++++ gcc-12.2.0-mingw/libgcc/unwind-generic.h	2023-02-23 23:07:35.382499000 +0100
+@@ -30,6 +30,7 @@
+ 
+ #if defined (__SEH__) && !defined (__USING_SJLJ_EXCEPTIONS__)
+ /* Only for _GCC_specific_handler.  */
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #endif
+ 
+diff -ruN gcc-12.2.0/libgfortran/intrinsics/sleep.c gcc-12.2.0-mingw/libgfortran/intrinsics/sleep.c
+--- gcc-12.2.0/libgfortran/intrinsics/sleep.c	2022-08-19 10:09:54.764690400 +0200
++++ gcc-12.2.0-mingw/libgfortran/intrinsics/sleep.c	2023-02-23 23:07:35.398137200 +0100
+@@ -30,6 +30,7 @@
+ #endif
+ 
+ #ifdef __MINGW32__
++# define WIN32_LEAN_AND_MEAN
+ # include <windows.h>
+ # undef sleep
+ # define sleep(x) Sleep(1000*(x))
+diff -ruN gcc-12.2.0/libgo/misc/cgo/test/callback_c.c gcc-12.2.0-mingw/libgo/misc/cgo/test/callback_c.c
+--- gcc-12.2.0/libgo/misc/cgo/test/callback_c.c	2022-08-19 10:09:55.088694500 +0200
++++ gcc-12.2.0-mingw/libgo/misc/cgo/test/callback_c.c	2023-02-23 23:07:35.398137200 +0100
+@@ -32,6 +32,7 @@
+ }
+ 
+ #ifdef WIN32
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ long long
+ mysleep(int seconds) {
+diff -ruN gcc-12.2.0/libgomp/config/mingw32/proc.c gcc-12.2.0-mingw/libgomp/config/mingw32/proc.c
+--- gcc-12.2.0/libgomp/config/mingw32/proc.c	2022-08-19 10:09:55.124695000 +0200
++++ gcc-12.2.0-mingw/libgomp/config/mingw32/proc.c	2023-02-23 23:07:35.398137200 +0100
+@@ -30,6 +30,7 @@
+    The following implementation uses win32 API routines.  */
+ 
+ #include "libgomp.h"
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ /* Count the CPU's currently available to this process.  */
+diff -ruN gcc-12.2.0/libiberty/make-temp-file.c gcc-12.2.0-mingw/libiberty/make-temp-file.c
+--- gcc-12.2.0/libiberty/make-temp-file.c	2022-08-19 10:09:55.184695800 +0200
++++ gcc-12.2.0-mingw/libiberty/make-temp-file.c	2023-02-23 23:07:35.398137200 +0100
+@@ -37,6 +37,7 @@
+ #include <sys/file.h>   /* May get R_OK, etc. on some systems.  */
+ #endif
+ #if defined(_WIN32) && !defined(__CYGWIN__)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #endif
+ #if HAVE_SYS_STAT_H
+diff -ruN gcc-12.2.0/libiberty/pex-win32.c gcc-12.2.0-mingw/libiberty/pex-win32.c
+--- gcc-12.2.0/libiberty/pex-win32.c	2022-08-19 10:09:55.184695800 +0200
++++ gcc-12.2.0-mingw/libiberty/pex-win32.c	2023-02-23 23:07:35.413641800 +0100
+@@ -20,6 +20,7 @@
+ 
+ #include "pex-common.h"
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ #ifdef HAVE_STDLIB_H
+diff -ruN gcc-12.2.0/libssp/ssp.c gcc-12.2.0-mingw/libssp/ssp.c
+--- gcc-12.2.0/libssp/ssp.c	2022-08-19 10:09:55.364698100 +0200
++++ gcc-12.2.0-mingw/libssp/ssp.c	2023-02-23 23:07:35.413641800 +0100
+@@ -55,6 +55,7 @@
+ /* Native win32 apps don't know about /dev/tty but can print directly
+    to the console using  "CONOUT$"   */
+ #if defined (_WIN32) && !defined (__CYGWIN__)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #include <wincrypt.h>
+ # define _PATH_TTY "CONOUT$"
+diff -ruN gcc-12.2.0/libstdc++-v3/src/c++11/system_error.cc gcc-12.2.0-mingw/libstdc++-v3/src/c++11/system_error.cc
+--- gcc-12.2.0/libstdc++-v3/src/c++11/system_error.cc	2022-08-19 10:09:55.528700200 +0200
++++ gcc-12.2.0-mingw/libstdc++-v3/src/c++11/system_error.cc	2023-02-23 23:07:35.429269900 +0100
+@@ -33,6 +33,7 @@
+ #undef __sso_string
+ 
+ #if defined(_WIN32) && !defined(__CYGWIN__)
++#define WIN32_LEAN_AND_MEAN
+ #include <memory>
+ #include <windows.h>
+ #endif
+diff -ruN gcc-12.2.0/libstdc++-v3/src/c++11/thread.cc gcc-12.2.0-mingw/libstdc++-v3/src/c++11/thread.cc
+--- gcc-12.2.0/libstdc++-v3/src/c++11/thread.cc	2022-08-19 10:09:55.528700200 +0200
++++ gcc-12.2.0-mingw/libstdc++-v3/src/c++11/thread.cc	2023-02-23 23:10:51.367102500 +0100
+@@ -34,6 +34,7 @@
+ # ifdef _GLIBCXX_HAVE_SLEEP
+ #  include <unistd.h>
+ # elif defined(_GLIBCXX_HAVE_WIN32_SLEEP)
++#  define WIN32_LEAN_AND_MEAN
+ #  include <windows.h>
+ # elif defined _GLIBCXX_NO_SLEEP && defined _GLIBCXX_HAS_GTHREADS
+ // We expect to be able to sleep for targets that support multiple threads:
+diff -ruN gcc-12.2.0/libstdc++-v3/src/c++17/fs_ops.cc gcc-12.2.0-mingw/libstdc++-v3/src/c++17/fs_ops.cc
+--- gcc-12.2.0/libstdc++-v3/src/c++17/fs_ops.cc	2022-08-19 10:09:55.532700200 +0200
++++ gcc-12.2.0-mingw/libstdc++-v3/src/c++17/fs_ops.cc	2023-02-23 23:07:35.429269900 +0100
+@@ -54,6 +54,7 @@
+ # include <utime.h> // utime
+ #endif
+ #ifdef _GLIBCXX_FILESYSTEM_IS_WINDOWS
++# define WIN32_LEAN_AND_MEAN
+ # include <windows.h>
+ #endif
+ 
+diff -ruN gcc-12.2.0/libstdc++-v3/src/filesystem/ops.cc gcc-12.2.0-mingw/libstdc++-v3/src/filesystem/ops.cc
+--- gcc-12.2.0/libstdc++-v3/src/filesystem/ops.cc	2022-08-19 10:09:55.540700300 +0200
++++ gcc-12.2.0-mingw/libstdc++-v3/src/filesystem/ops.cc	2023-02-23 23:07:35.444904400 +0100
+@@ -55,6 +55,7 @@
+ # include <utime.h> // utime
+ #endif
+ #ifdef _GLIBCXX_FILESYSTEM_IS_WINDOWS
++# define WIN32_LEAN_AND_MEAN
+ # include <windows.h>
+ #endif
+ 
+diff -ruN gcc-12.2.0/libvtv/vtv_malloc.cc gcc-12.2.0-mingw/libvtv/vtv_malloc.cc
+--- gcc-12.2.0/libvtv/vtv_malloc.cc	2022-08-19 10:09:55.760703100 +0200
++++ gcc-12.2.0-mingw/libvtv/vtv_malloc.cc	2023-02-23 23:07:35.444904400 +0100
+@@ -33,6 +33,7 @@
+ #include <stdlib.h>
+ #include <unistd.h>
+ #if defined (__CYGWIN__) || defined (__MINGW32__)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #else
+ #include <sys/mman.h>
+diff -ruN gcc-12.2.0/libvtv/vtv_rts.cc gcc-12.2.0-mingw/libvtv/vtv_rts.cc
+--- gcc-12.2.0/libvtv/vtv_rts.cc	2022-08-19 10:09:55.760703100 +0200
++++ gcc-12.2.0-mingw/libvtv/vtv_rts.cc	2023-02-23 23:07:35.460517900 +0100
+@@ -121,6 +121,7 @@
+ #include <stdio.h>
+ #include <string.h>
+ #if defined (__CYGWIN__) || defined (__MINGW32__)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #include <winternl.h>
+ #include <psapi.h>
+diff -ruN gcc-12.2.0/libvtv/vtv_utils.cc gcc-12.2.0-mingw/libvtv/vtv_utils.cc
+--- gcc-12.2.0/libvtv/vtv_utils.cc	2022-08-19 10:09:55.760703100 +0200
++++ gcc-12.2.0-mingw/libvtv/vtv_utils.cc	2023-02-23 23:07:35.460517900 +0100
+@@ -33,6 +33,7 @@
+ #include <stdlib.h>
+ #include <string.h>
+ #if defined (__CYGWIN__) || defined (__MINGW32__)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #else
+ #include <execinfo.h>

@@ -5,9 +5,10 @@
 # Initially adapted from Stalin's build script version 0.3.
 #
 
-$(build_gcc_pass1) $(build_gcc_pass2): build = build-gcc-$(target)-$(gcc_ver)
+build-sh4-gcc-pass1: build = build-gcc-$(target)-$(gcc_ver)-pass1
+build-arm-gcc-pass1: build = build-gcc-$(target)-$(gcc_ver)
 $(build_gcc_pass1) $(build_gcc_pass2): src_dir = gcc-$(gcc_ver)
-$(build_gcc_pass1): log = $(logdir)/$(build)-pass1.log
+$(build_gcc_pass1) $(build_gcc_pass2): log = $(logdir)/$(build).log
 $(build_gcc_pass1): logdir
 	@echo "+++ Building $(src_dir) to $(build) (pass 1)..."
 	-mkdir -p $(build)

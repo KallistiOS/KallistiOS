@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/asic.h
-   Copyright (C) 2001-2002 Dan Potter
+   Copyright (C) 2001-2002 Megan Potter
 
 */
 
@@ -15,7 +15,7 @@
     as well as the trapa instruction, and various exceptions -- those are not
     dealt with here).
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __DC_ASIC_H
@@ -24,7 +24,7 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
+#include <stdint.h>
 
 /* All event codes are two 8-bit integers; the top integer is the event code
    register to look in to check the event (and to acknolwedge it). The
@@ -101,27 +101,27 @@ __BEGIN_DECLS
 */
 #define ASIC_EVT_EXP_8BIT           0x0102  /**< \brief Modem / Lan Adapter */
 #define ASIC_EVT_EXP_PCI            0x0103  /**< \brief BBA IRQ */
-/** @}
-    @} */
+/** @} */
+/** @} */
 
 /** \defgroup asic_regs             ASIC registers
 
     These are the locations in memory where the ASIC registers sit.
     @{
 */
-#define ASIC_IRQD_A (*(vuint32*)0xa05f6910) /**< \brief IRQD first register */
-#define ASIC_IRQD_B (*(vuint32*)0xa05f6914) /**< \brief IRQD second register */
-#define ASIC_IRQD_C (*(vuint32*)0xa05f6918) /**< \brief IRQD third register */
-#define ASIC_IRQB_A (*(vuint32*)0xa05f6920) /**< \brief IRQB first register */
-#define ASIC_IRQB_B (*(vuint32*)0xa05f6924) /**< \brief IRQB second register */
-#define ASIC_IRQB_C (*(vuint32*)0xa05f6928) /**< \brief IRQB third register */
-#define ASIC_IRQ9_A (*(vuint32*)0xa05f6930) /**< \brief IRQ9 first register */
-#define ASIC_IRQ9_B (*(vuint32*)0xa05f6934) /**< \brief IRQ9 second register */
-#define ASIC_IRQ9_C (*(vuint32*)0xa05f6938) /**< \brief IRQ9 third register */
+#define ASIC_ACK_A            0xa05f6900  /**< \brief IRQD ACK register */
+#define ASIC_ACK_B            0xa05f6904  /**< \brief IRQB ACK register */
+#define ASIC_ACK_C            0xa05f6908  /**< \brief IRQ9 ACK register */
 
-#define ASIC_ACK_A  (*(vuint32*)0xa05f6900) /**< \brief IRQD ACK register */
-#define ASIC_ACK_B  (*(vuint32*)0xa05f6904) /**< \brief IRQB ACK register */
-#define ASIC_ACK_C  (*(vuint32*)0xa05f6908) /**< \brief IRQ9 ACK register */
+#define ASIC_IRQD_A            0xa05f6910  /**< \brief IRQD first register */
+#define ASIC_IRQD_B            0xa05f6914  /**< \brief IRQD second register */
+#define ASIC_IRQD_C            0xa05f6918  /**< \brief IRQD third register */
+#define ASIC_IRQB_A            0xa05f6920  /**< \brief IRQB first register */
+#define ASIC_IRQB_B            0xa05f6924  /**< \brief IRQB second register */
+#define ASIC_IRQB_C            0xa05f6928  /**< \brief IRQB third register */
+#define ASIC_IRQ9_A            0xa05f6930  /**< \brief IRQ9 first register */
+#define ASIC_IRQ9_B            0xa05f6934  /**< \brief IRQ9 second register */
+#define ASIC_IRQ9_C            0xa05f6938  /**< \brief IRQ9 third register */
 /** @} */
 
 /** \defgroup asic_irq_lv           ASIC IRQ levels
@@ -130,10 +130,12 @@ __BEGIN_DECLS
     be used instead.
     @{
 */
-#define ASIC_IRQ9           1   /**< \brief IRQ level 9 */
-#define ASIC_IRQB           2   /**< \brief IRQ level B (11) */
-#define ASIC_IRQD           3   /**< \brief IRQ level D (13) */
-#define ASIC_IRQ_DEFAULT    0   /**< \brief Pick an IRQ level for me! */
+#define ASIC_IRQ9           0  /**< \brief IRQ level 9 */
+#define ASIC_IRQB           1  /**< \brief IRQ level B (11) */
+#define ASIC_IRQD           2  /**< \brief IRQ level D (13) */
+
+#define ASIC_IRQ_MAX        3  /**< \brief Don't take irqs from here up */
+#define ASIC_IRQ_DEFAULT    ASIC_IRQ9  /**< \brief Pick an IRQ level for me! */
 /** @} */
 
 /** \brief  ASIC event handler type.
@@ -144,7 +146,7 @@ __BEGIN_DECLS
     \param  code            The ASIC event code that generated this event.
     \see    asic_events
 */
-typedef void (*asic_evt_handler)(uint32 code);
+typedef void (*asic_evt_handler)(uint32_t code);
 
 /** \brief  Set or remove an ASIC handler.
 
@@ -153,10 +155,9 @@ typedef void (*asic_evt_handler)(uint32 code);
 
     \param  code            The ASIC event code to hook (see \ref asic_events).
     \param  handler         The function to call when the event happens.
-    \retval 0               On success.
-    \retval -1              If an invalid code is specified.
+
 */
-int asic_evt_set_handler(uint32 code, asic_evt_handler handler);
+void asic_evt_set_handler(uint16_t code, asic_evt_handler handler);
 
 /** \brief  Disable all ASIC events.
 
@@ -164,7 +165,7 @@ int asic_evt_set_handler(uint32 code, asic_evt_handler handler);
     order to reinstate them, you must individually re-enable them. Not a very
     good idea to be doing this normally.
 */
-void asic_evt_disable_all();
+void asic_evt_disable_all(void);
 
 /** \brief  Disable one ASIC event.
 
@@ -177,7 +178,7 @@ void asic_evt_disable_all();
     \param  irqlevel        The IRQ level it was hooked on (see
                             \ref asic_irq_lv).
 */
-void asic_evt_disable(uint32 code, int irqlevel);
+void asic_evt_disable(uint16_t code, uint8_t irqlevel);
 
 /** \brief  Enable an ASIC event.
 
@@ -191,13 +192,13 @@ void asic_evt_disable(uint32 code, int irqlevel);
     \param  code            The ASIC event code to hook (see \ref asic_events).
     \param  irqlevel        The IRQ level to hook on (see \ref asic_irq_lv).
  */
-void asic_evt_enable(uint32 code, int irqlevel);
+void asic_evt_enable(uint16_t code, uint8_t irqlevel);
 
 /** \brief  Init ASIC events. */
-void asic_init();
+void asic_init(void);
 
 /** \brief  Shutdown ASIC events, disabling all hooks. */
-void asic_shutdown();
+void asic_shutdown(void);
 
 __END_DECLS
 

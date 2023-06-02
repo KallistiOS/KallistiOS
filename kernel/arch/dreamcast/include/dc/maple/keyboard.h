@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/maple/keyboard.h
-   Copyright (C) 2000-2002 Jordan DeLong and Dan Potter
+   Copyright (C) 2000-2002 Jordan DeLong and Megan Potter
    Copyright (C) 2012 Lawrence Sebald
 
 */
@@ -14,7 +14,7 @@
     code.
 
     \author Jordan DeLong
-    \author Dan Potter
+    \author Megan Potter
     \author Lawrence Sebald
 */
 
@@ -181,29 +181,28 @@ __BEGIN_DECLS
 #define KBD_REGION_ES       7           /**< \brief Spanish keyboard */
 /** @} */
 
-/** \defgroup   key_states States each key can be in.
+/** \defgroup   key_states  States each key can be in.
 
-	These are the different 'states' each key can be in. They are stored in 
-	kbd_state_t->matrix, and manipulated/checked by kbd_check_poll.
-	
-	none-> pressed or none
-	was pressed-> pressed or none 
-	pressed-> was_pressed
-	@{
+    These are the different 'states' each key can be in. They are stored in
+    kbd_state_t->matrix, and manipulated/checked by kbd_check_poll.
+
+    none-> pressed or none
+    was pressed-> pressed or none
+    pressed-> was_pressed
+    @{
 */
-
 #define KEY_STATE_NONE        0
-#define KEY_STATE_WAS_PRESSED 1 
-#define KEY_STATE_PRESSED     2	
-
+#define KEY_STATE_WAS_PRESSED 1
+#define KEY_STATE_PRESSED     2
 /** @} */
-/** \brief Maximum number of keys the DC can read simultaneously. 
+
+/** \brief Maximum number of keys the DC can read simultaneously.
     This is a hardware constant. The define prevents the magic number '6' from appearing.
 **/
 #define MAX_PRESSED_KEYS 6
 
 /** \brief Maximum number of keys a DC keyboard can have.
-	This is a hardware constant. The define prevents the magic number '256' from appearing.
+    This is a hardware constant. The define prevents the magic number '256' from appearing.
 **/
 #define MAX_KBD_KEYS 256
 
@@ -277,7 +276,7 @@ typedef struct kbd_state {
     int queue_tail;                     /**< \brief Key queue tail. */
     int queue_head;                     /**< \brief Key queue head. */
     int queue_len;                      /**< \brief Current length of queue. */
-    
+
     uint8 kbd_repeat_key;           /**< \brief Key that is repeating. */
     uint64 kbd_repeat_timer;        /**< \brief Time that the next repeat will trigger. */
 } kbd_state_t;
@@ -350,8 +349,8 @@ int kbd_queue_pop(maple_device_t *dev, int xlat);
 
 /* \cond */
 /* Init / Shutdown */
-int kbd_init();
-void kbd_shutdown();
+int kbd_init(void);
+void kbd_shutdown(void);
 /* \endcond */
 
 __END_DECLS

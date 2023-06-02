@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/vblank.h
-   Copyright (C)2003 Dan Potter
+   Copyright (C)2003 Megan Potter
 
 */
 
@@ -12,7 +12,7 @@
     interrupt that occurs. This gives a way to schedule small functions that
     must occur regularly, without using threads.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __DC_VBLANK_H
@@ -48,10 +48,10 @@ int vblank_handler_remove(int handle);
 /* \cond */
 /** Initialize the vblank handler. This must be called after the asic module
     is initialized. */
-int vblank_init();
+int vblank_init(void);
 
 /** Shut down the vblank handler. */
-int vblank_shutdown();
+int vblank_shutdown(void);
 /* \endcond */
 
 __END_DECLS

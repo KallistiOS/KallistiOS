@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kos/fs_ramdisk.h
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
 
 */
 
@@ -16,7 +16,7 @@
 
     You only have one ramdisk available, and its mounted on /ram.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __KOS_FS_RAMDISK_H
@@ -30,8 +30,8 @@ __BEGIN_DECLS
 #include <kos/fs.h>
 
 /** \cond */
-int fs_ramdisk_init();
-int fs_ramdisk_shutdown();
+int fs_ramdisk_init(void);
+int fs_ramdisk_shutdown(void);
 /** \endcond */
 
 /** \brief  Attach a block of memory as a file in the ramdisk.

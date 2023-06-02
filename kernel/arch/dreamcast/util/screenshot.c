@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    screenshot.c
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
    (c)2008 Donald Haase
  */
 

@@ -18,6 +18,10 @@
 int main(int argc, char **argv) {
     int x, y;
 
+    /* Press all buttons to exit */
+    cont_btn_callback(0, CONT_START | CONT_A | CONT_B | CONT_X | CONT_Y,
+                      (void (*)(unsigned char, long  unsigned int))arch_exit);
+
     /* Set video mode */
     vid_set_mode(DM_800x608, PM_RGB565);
 
@@ -39,8 +43,9 @@ int main(int argc, char **argv) {
         bfont_draw_str(vram_s + 10 * W + x, W, 0, tmp);
     }
 
-    /* Pause to see the results */
-    usleep(5 * 1000 * 1000);
+    printf("\n\nPress all buttons simultaneously to exit.\n");
+    fflush(stdout);
+    while(1);
 
     return 0;
 }

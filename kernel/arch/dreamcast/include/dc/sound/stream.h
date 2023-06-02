@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/sound/stream.h
-   Copyright (C) 2002, 2004 Dan Potter
+   Copyright (C) 2002, 2004 Megan Potter
    Copyright (C) 2020 Lawrence Sebald
 
 */
@@ -14,7 +14,7 @@
     libraries. Note that this does not actually handle decoding, so you'll have
     to worry about that yourself (or use something in kos-ports).
 
-    \author Dan Potter
+    \author Megan Potter
     \author Florian Schulze
     \author Lawrence Sebald
 */
@@ -80,7 +80,7 @@ void snd_stream_set_callback(snd_stream_hnd_t hnd, snd_stream_callback_t cb);
     not attempt to use this data in any way.
 
     \param  hnd             The stream handle to look up.
-    \param  cb              A pointer to the user data.
+    \param  d               A pointer to the user data.
 */
 void snd_stream_set_userdata(snd_stream_hnd_t hnd, void *d);
 
@@ -88,7 +88,7 @@ void snd_stream_set_userdata(snd_stream_hnd_t hnd, void *d);
 
     This function retrieves the set user data pointer for a given stream.
 
-    \param  handle          The stream handle to look up.
+    \param  hnd             The stream handle to look up.
     \return                 The user data pointer set for this stream or NULL
                             if no data pointer has been set.
 */
@@ -166,14 +166,14 @@ void snd_stream_prefill(snd_stream_hnd_t hnd);
     \retval -1              On failure.
     \retval 0               On success.
 */
-int snd_stream_init();
+int snd_stream_init(void);
 
 /** \brief  Shut down the stream system.
 
     This function shuts down the stream system and frees the memory associated
     with it. This does not call snd_shutdown().
 */
-void snd_stream_shutdown();
+void snd_stream_shutdown(void);
 
 /** \brief  Allocate a stream.
 

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    keyboard.c
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
    Copyright (C) 2012 Lawrence Sebald
    Copyright (C) 2018 Donald Haase
 */
@@ -390,7 +390,7 @@ static int kbd_enqueue(kbd_state_t *state, uint8 keycode, int mods) {
 }
 
 /* Take a key off the key queue, or return -1 if there is none waiting */
-int kbd_get_key() {
+int kbd_get_key(void) {
     int rv;
 
     /* If queueing isn't active, there won't be anything to get */
@@ -467,55 +467,55 @@ static void kbd_check_poll(maple_frame_t *frm) {
     for(i = 0; i < MAX_PRESSED_KEYS; i++) {
 
         /* Once we get to a 'none', the rest will be 'none' */
-		if (cond->keys[i] == KBD_KEY_NONE){
-			/* This could be used to indicate how many keys are pressed by setting it to ~i or i+1
-				or similar. This could be useful, but would make it a weird exception. */
-			/* If the first key in the key array is none, there are no non-modifer keys pressed at all. */
-			if (i==0)state->matrix[KBD_KEY_NONE] = KEY_STATE_PRESSED;
-			break;
-		}
+        if(cond->keys[i] == KBD_KEY_NONE) {
+            /* This could be used to indicate how many keys are pressed by setting it to ~i or i+1 
+                or similar. This could be useful, but would make it a weird exception. */
+            /* If the first key in the key array is none, there are no non-modifer keys pressed at all. */
+            if(i==0) state->matrix[KBD_KEY_NONE] = KEY_STATE_PRESSED;
+            break;
+        }
         /* Between None and A are error indicators. This would be a good place to do... something. If an error occurs the whole array will be error.*/
-		else if (cond->keys[i]>KBD_KEY_NONE && cond->keys[i]<KBD_KEY_A) {
+        else if(cond->keys[i]>KBD_KEY_NONE && cond->keys[i]<KBD_KEY_A) {
             state->matrix[cond->keys[i]] = KEY_STATE_PRESSED;
             break;
         }
         /* The rest of the keys are treated normally */
         else {
             /* If the key hadn't been pressed. */
-			if (state->matrix[cond->keys[i]] == KEY_STATE_NONE){
-				state->matrix[cond->keys[i]] = KEY_STATE_PRESSED;
-				kbd_enqueue(state, cond->keys[i], mods);
-				state->kbd_repeat_key = cond->keys[i];
-				state->kbd_repeat_timer = timer_ms_gettime64() + kbd_repeat_start;
-			}
-			/* If the key was already being pressed and was our one allowed repeating key, then... */
-			else if (state->matrix[cond->keys[i]] == KEY_STATE_WAS_PRESSED){
-				state->matrix[cond->keys[i]] = KEY_STATE_PRESSED;
-				if (state->kbd_repeat_key == cond->keys[i]){
-					uint64 time = timer_ms_gettime64();
-					/* We have passed the prescribed amount of time, and will repeat the key */
-					if(time >= (state->kbd_repeat_timer)){
-						kbd_enqueue(state, cond->keys[i], mods);
-						state->kbd_repeat_timer = time + kbd_repeat_interval;
-					}
-				}
-			}
-			else assert_msg(0, "invalid key matrix array detected");
+            if(state->matrix[cond->keys[i]] == KEY_STATE_NONE) {
+                state->matrix[cond->keys[i]] = KEY_STATE_PRESSED;
+                kbd_enqueue(state, cond->keys[i], mods);
+                state->kbd_repeat_key = cond->keys[i];
+                state->kbd_repeat_timer = timer_ms_gettime64() + kbd_repeat_start;
+            }
+            /* If the key was already being pressed and was our one allowed repeating key, then... */
+            else if(state->matrix[cond->keys[i]] == KEY_STATE_WAS_PRESSED) {
+                state->matrix[cond->keys[i]] = KEY_STATE_PRESSED;
+                if(state->kbd_repeat_key == cond->keys[i]) {
+                    uint64 time = timer_ms_gettime64();
+                    /* We have passed the prescribed amount of time, and will repeat the key */
+                    if(time >= (state->kbd_repeat_timer)) {
+                        kbd_enqueue(state, cond->keys[i], mods);
+                        state->kbd_repeat_timer = time + kbd_repeat_interval;
+                    }
+                }
+            }
+            else assert_msg(0, "invalid key matrix array detected");
         }
     }
 
     /* Now normalize the key matrix */
     /* If it was determined no keys are pressed, wipe the matrix */
-	if (state->matrix[KBD_KEY_NONE] == KEY_STATE_PRESSED)
+    if(state->matrix[KBD_KEY_NONE] == KEY_STATE_PRESSED)
         memset (state->matrix, KEY_STATE_NONE, MAX_KBD_KEYS);
     /* Otherwise, walk through the whole matrix */
     else    {
         for(i = 0; i < MAX_KBD_KEYS; i++) {
-            if (state->matrix[i] == KEY_STATE_NONE) continue;
+            if(state->matrix[i] == KEY_STATE_NONE) continue;
 
-           else if (state->matrix[i] == KEY_STATE_WAS_PRESSED) state->matrix[i] = KEY_STATE_NONE;
+            else if(state->matrix[i] == KEY_STATE_WAS_PRESSED) state->matrix[i] = KEY_STATE_NONE;
 
-            else if (state->matrix[i] == KEY_STATE_PRESSED)	state->matrix[i] = KEY_STATE_WAS_PRESSED;
+            else if(state->matrix[i] == KEY_STATE_PRESSED) state->matrix[i] = KEY_STATE_WAS_PRESSED;
             else assert_msg(0, "invalid key matrix array detected");
         }
     }
@@ -588,8 +588,8 @@ static int kbd_attach(maple_driver_t *drv, maple_device_t *dev) {
     /* Retrieve the region data */
     state->region = dev->info.function_data[d] & 0xFF;
 
-    if (state->region > KBD_NUM_KEYMAPS)
-        /* Unrecognized keyboards will appear as US keyboards... */
+    /* Unrecognized keyboards will appear as US keyboards... */
+    if(state->region > KBD_NUM_KEYMAPS)
         state->region = KBD_REGION_US;
 
     /* Make sure all the queue variables are set up properly... */
@@ -612,12 +612,12 @@ static maple_driver_t kbd_drv = {
 };
 
 /* Add the keyboard to the driver chain */
-int kbd_init() {
+int kbd_init(void) {
     if(!kbd_drv.drv_list.le_prev)
         return maple_driver_reg(&kbd_drv);
     return -1;
 }
 
-void kbd_shutdown() {
+void kbd_shutdown(void) {
     maple_driver_unreg(&kbd_drv);
 }

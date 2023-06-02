@@ -1,7 +1,7 @@
 // Originally from plib_examples
 // Ported to Dreamcast/KOS by Peter Hatch
 // read_input () code from KOS examples
-// Converted to a clock by Dan Potter
+// Converted to a clock by Megan Potter
 
 #include <kos.h>
 #include <time.h>
@@ -84,7 +84,7 @@ void drawFrame() {
     text->end();
     y += 50;
 
-    sprintf(tmpbuf, "Unix Time: %d", t);
+    sprintf(tmpbuf, "Unix Time: %lld", t);
 
     text->begin();
     text->setColor(1, 1, 1);

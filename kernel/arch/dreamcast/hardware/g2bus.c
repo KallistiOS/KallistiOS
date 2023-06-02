@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    g2bus.c
-   (c)2000-2002 Dan Potter
+   (c)2000-2002 Megan Potter
 */
 
 /*
@@ -215,7 +215,7 @@ void g2_memset_8(uint32 address, uint8 c, int amt) {
 
 /* When writing to the SPU RAM, this is required at least every 8 32-bit
    writes that you execute */
-void g2_fifo_wait() {
+void g2_fifo_wait(void) {
     vuint32 const *g2_fifo = (vuint32*)0xa05f688c;
     int i;
 

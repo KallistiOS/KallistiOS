@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    matrix3d.h
-   (c)2000 Dan Potter and Jordan DeLong
+   (c)2000 Megan Potter and Jordan DeLong
 
 */
 
@@ -11,7 +11,7 @@
     This file contains various 3D matrix math functionality for using the SH4's
     matrix transformation unit.
 
-    \author Dan Potter
+    \author Megan Potter
     \author Jordan DeLong
 */
 

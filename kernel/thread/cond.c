@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    cond.c
-   Copyright (C) 2001, 2003 Dan Potter
+   Copyright (C) 2001, 2003 Megan Potter
    Copyright (C) 2012 Lawrence Sebald
 */
 
@@ -23,7 +23,7 @@
 /**************************************/
 
 /* Allocate a new condvar */
-condvar_t *cond_create() {
+condvar_t *cond_create(void) {
     condvar_t *cv;
 
     dbglog(DBG_WARNING, "Creating condvar with deprecated cond_create(). "

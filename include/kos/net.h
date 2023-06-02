@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    include/kos/net.h
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
    Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2012, 2013,
                  2016 Lawrence Sebald
 
@@ -16,7 +16,7 @@
     TCP and UDP support both over IPv4 and IPv6.
 
     \author Lawrence Sebald
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __KOS_NET_H

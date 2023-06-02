@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kos/nmmgr.h
-   Copyright (C)2003 Dan Potter
+   Copyright (C)2003 Megan Potter
 
 */
 
@@ -12,7 +12,7 @@
     generic identifier for some kind of module. These modules may include
     services provided by the kernel (such as VFS handlers).
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __KOS_NMMGR_H
@@ -104,7 +104,7 @@ nmmgr_handler_t * nmmgr_lookup(const char *name);
 
     \return                 The head of the name handler list
 */
-nmmgr_list_t * nmmgr_get_list();
+nmmgr_list_t * nmmgr_get_list(void);
 
 /** \brief  Add a name handler.
 
@@ -127,8 +127,8 @@ int nmmgr_handler_remove(nmmgr_handler_t *hnd);
 
 /** \cond */
 /* Name manager init */
-int nmmgr_init();
-void    nmmgr_shutdown();
+int nmmgr_init(void);
+void nmmgr_shutdown(void);
 /** \endcond */
 
 __END_DECLS

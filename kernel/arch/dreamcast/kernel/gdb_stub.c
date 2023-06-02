@@ -10,7 +10,7 @@
 
      Modifications for the SH by Ben Lee and Steve Chamberlain
 
-     Modifications for KOS by Dan Potter (earlier) and Richard Moats (more
+     Modifications for KOS by Megan Potter (earlier) and Richard Moats (more
      recently).
 */
 
@@ -300,8 +300,7 @@ static char lowhex(int  x) {
  * Routines to handle hex data
  */
 
-static int
-hex(char ch) {
+static int hex(char ch) {
     if((ch >= 'a') && (ch <= 'f'))
         return (ch - 'a' + 10);
 
@@ -316,8 +315,7 @@ hex(char ch) {
 
 /* convert the memory, pointed to by mem into hex, placing result in buf */
 /* return a pointer to the last char put in buf (null) */
-static char *
-mem2hex(char *mem, char *buf, uint32 count) {
+static char * mem2hex(char *mem, char *buf, uint32 count) {
     uint32 i;
     int ch;
 
@@ -334,8 +332,7 @@ mem2hex(char *mem, char *buf, uint32 count) {
 /* convert the hex array pointed to by buf into binary, to be placed in mem */
 /* return a pointer to the character after the last byte written */
 
-static char *
-hex2mem(char *buf, char *mem, uint32 count) {
+static char * hex2mem(char *buf, char *mem, uint32 count) {
     uint32 i;
     unsigned char ch;
 
@@ -352,8 +349,7 @@ hex2mem(char *buf, char *mem, uint32 count) {
 /* WHILE WE FIND NICE HEX CHARS, BUILD AN INT */
 /* RETURN NUMBER OF CHARS PROCESSED           */
 /**********************************************/
-static int
-hexToInt(char **ptr, uint32 *intValue) {
+static int hexToInt(char **ptr, uint32 *intValue) {
     int numChars = 0;
     int hexValue;
 
@@ -381,8 +377,7 @@ hexToInt(char **ptr, uint32 *intValue) {
 
 /* scan for the sequence $<data>#<checksum>     */
 
-static unsigned char *
-getpacket(void) {
+static unsigned char * getpacket(void) {
     unsigned char *buffer = (unsigned char *)(&remcomInBuffer[0]);
     unsigned char checksum;
     unsigned char xmitcsum;
@@ -400,7 +395,7 @@ getpacket(void) {
         count = 0;
 
         /* now, read until a # or end of buffer is found */
-        while(count < BUFMAX) {
+        while(count < (BUFMAX-1)) {
             ch = getDebugChar();
 
             if(ch == '$')
@@ -447,8 +442,7 @@ getpacket(void) {
 
 /* send the packet in buffer. */
 
-static void
-putpacket(register char *buffer) {
+static void putpacket(register char *buffer) {
     register  int checksum;
 
     /*  $<packet info>#<checksum>. */
@@ -500,8 +494,7 @@ putpacket(register char *buffer) {
  * this function takes the SH-1 exception number and attempts to
  * translate this number into a unix compatible signal value
  */
-static int
-computeSignal(int exceptionVector) {
+static int computeSignal(int exceptionVector) {
     int sigval;
 
     switch(exceptionVector) {
@@ -526,8 +519,7 @@ computeSignal(int exceptionVector) {
     return (sigval);
 }
 
-static void
-doSStep(void) {
+static void doSStep(void) {
     short *instrMem;
     int displacement;
     int reg;
@@ -612,8 +604,7 @@ doSStep(void) {
 /* Undo the effect of a previous doSStep.  If we single stepped,
    restore the old instruction. */
 
-static void
-undoSStep(void) {
+static void undoSStep(void) {
     if(stepped) {
         short *instrMem;
         instrMem = instrBuffer.memAddr;
@@ -634,8 +625,7 @@ undoSStep(void) {
 #define WREG(r, o) (*((uint16*)((r)+(o))))
 #define BREG(r, o) (*((uint8*)((r)+(o))))
 
-static void
-hardBreakpoint(int set, int brktype, uint32 addr, int length, char* resBuffer) {
+static void hardBreakpoint(int set, int brktype, uint32 addr, int length, char* resBuffer) {
     char* const ucb_base = (char*)0xff200000;
     static const int ucb_step = 0xc;
     static const char BAR = 0x0, BAMR = 0x4, BBR = 0x8, /*BASR = 0x14,*/ BRCR = 0x20;
@@ -716,8 +706,7 @@ When in the monitor mode we talk a human on the serial line rather than gdb.
 */
 
 
-static void
-gdb_handle_exception(int exceptionVector) {
+static void gdb_handle_exception(int exceptionVector) {
     int sigval, stepping;
     uint32 addr, length;
     char *ptr;
@@ -867,14 +856,12 @@ gdb_handle_exception(int exceptionVector) {
    otherwise as a quick means to stop program execution and "break" into
    the debugger. */
 
-void
-gdb_breakpoint(void) {
+void gdb_breakpoint(void) {
     BREAKPOINT();
 }
 
 
-static char
-getDebugChar(void) {
+static char getDebugChar(void) {
     int ch;
 
     if(using_dcl) {
@@ -895,8 +882,7 @@ getDebugChar(void) {
     return ch;
 }
 
-static void
-putDebugChar(char ch) {
+static void putDebugChar(char ch) {
     if(using_dcl) {
         out_dcl_buf[out_dcl_pos++] = ch;
 
@@ -912,8 +898,7 @@ putDebugChar(char ch) {
     }
 }
 
-static void
-flushDebugChannel() {
+static void flushDebugChannel(void) {
     /* send the current complete packet and wait for a response */
     if(using_dcl) {
         if(in_dcl_pos >= in_dcl_size) {
@@ -951,7 +936,7 @@ static void handle_gdb_trapa(irq_t code, irq_context_t *context) {
     gdb_handle_exception(EXC_TRAPA);
 }
 
-void gdb_init() {
+void gdb_init(void) {
     if(dcload_gdbpacket(NULL, 0, NULL, 0) == 0)
         using_dcl = 1;
     else

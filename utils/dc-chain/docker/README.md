@@ -1,6 +1,6 @@
 # Dockerfile
 
-This directory contain a `Dockerfile` which demonstrate you how to build a
+This directory contains a `Dockerfile` which demonstrates you how to build a
 Docker image containing the minimal toolchains used for **Sega Dreamcast**
 development.
 
@@ -23,6 +23,6 @@ building them can take hours and don't change often.
 
 Of course, the Docker image produced here can be used for CI/CD pipelines!
 
-Don't hesitate to have multiple `config.mk` files; this may be useful for
-building customized toolchains (e.g. a `testing` Docker image with `gcc-9.3.0`
-and a `stable` one with `gcc-4.7.4`...).
+This Dockerfile builds the `stable` toolchain by default, but can be used to build the other 
+toolchains like `legacy`, `testing`, ..., as long as you pass the `dc_chain` argument
+in the docker command line (cfr Dockerfile for an example of the syntax).

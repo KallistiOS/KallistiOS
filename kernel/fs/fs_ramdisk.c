@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    fs_ramdisk.c
-   Copyright (C) 2002, 2003 Dan Potter
+   Copyright (C) 2002, 2003 Megan Potter
    Copyright (C) 2012, 2013, 2014, 2016 Lawrence Sebald
 
 */
@@ -289,37 +289,31 @@ static void * ramdisk_open(vfs_handler_t * vfs, const char *fn, int mode) {
     fh[fd].omode = mode;
 
     /* The rest require a bit more thought */
-    switch(mm) {
-        case O_RDONLY:
-            f->openfor = OPENFOR_READ;
-            fh[fd].ptr = 0;
-            break;
-        case O_RDWR:
-        case O_WRONLY:
-        case O_APPEND:
-
-            if(f->openfor == OPENFOR_READ)
-                goto error_out;
-
-            f->openfor = OPENFOR_WRITE;
-
-            if(mm == O_RDWR)
-                fh[fd].ptr = 0;
-            else
-                fh[fd].ptr = f->size;
-
-            break;
-        default:
-            assert_msg(0, "Unknown file mode");
-    }
-
-    /* If we're opening with O_TRUNC, kill the existing contents */
-    if(mm != O_RDONLY && (mode & O_TRUNC)) {
-        free(f->data);
-        f->data = malloc(1024);
-        f->datasize = 1024;
-        f->size = 0;
+    if(mm == O_RDONLY) {
+        f->openfor = OPENFOR_READ;
         fh[fd].ptr = 0;
+    }
+    else if((mm & O_RDWR) || (mm & O_WRONLY)) {
+        if(f->openfor == OPENFOR_READ)
+            goto error_out;
+
+        f->openfor = OPENFOR_WRITE;
+
+        if(mode & O_APPEND)
+            fh[fd].ptr = f->size;
+        /* If we're opening with O_TRUNC, kill the existing contents */
+        else if(mode & O_TRUNC) {
+            free(f->data);
+            f->data = malloc(1024);
+            f->datasize = 1024;
+            f->size = 0;
+            fh[fd].ptr = 0;
+        }
+        else
+            fh[fd].ptr = 0;
+    }
+    else {
+        assert_msg(0, "Unknown file mode");
     }
 
     /* If we opened a dir, then ptr is actually a pointer to the first
@@ -838,7 +832,7 @@ int fs_ramdisk_detach(const char * fn, void ** obj, size_t * size) {
 }
 
 /* Initialize the file system */
-int fs_ramdisk_init() {
+int fs_ramdisk_init(void) {
     /* Create an empty root dir */
     rootdir = (rd_dir_t *)malloc(sizeof(rd_dir_t));
     LIST_INIT(rootdir);
@@ -862,7 +856,7 @@ int fs_ramdisk_init() {
 }
 
 /* De-init the file system */
-int fs_ramdisk_shutdown() {
+int fs_ramdisk_shutdown(void) {
     rd_file_t *f1, *f2;
     /* For now assume there's only the root dir, since mkdir and
        rmdir aren't even implemented... */

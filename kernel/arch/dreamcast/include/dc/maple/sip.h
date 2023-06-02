@@ -196,8 +196,8 @@ int sip_stop_sampling(maple_device_t *dev, int block);
 
 /* \cond */
 /* Init / Shutdown */
-int sip_init();
-void sip_shutdown();
+int sip_init(void);
+void sip_shutdown(void);
 /* \endcond */
 
 __END_DECLS

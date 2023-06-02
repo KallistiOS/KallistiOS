@@ -270,7 +270,7 @@ diff --color -ruN newlib-4.3.0.20230120/newlib/libc/sys/sh/sys/lock.h newlib-4.3
 +/* KallistiOS ##version##
 +
 +   lock_common.h
-+   Copyright (C)2004 Dan Potter
++   Copyright (C)2004 Megan Potter
 +
 +*/
 +

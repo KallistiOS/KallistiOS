@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    isp-settings.c
-   Copyright (C) 2004 Dan Potter
+   Copyright (C) 2004 Megan Potter
    Copyright (C) 2015 Lawrence Sebald
 */
 
@@ -26,7 +26,11 @@ int main(int argc, char **argv) {
                 "PPPoE"
                 "Static",
             };
-            printf("Method:   %s\n", methods[cfg.method]);
+            /* Check that cfg.method is set to a known value */
+            if(cfg.method < (sizeof(methods) / sizeof(methods[0])))
+                printf("Method:   %s\n", methods[cfg.method]);
+            else
+                printf("Method:   unknown(%i)\n", cfg.method);
             printf("IP:       %i.%i.%i.%i\n", cfg.ip[0], cfg.ip[1], cfg.ip[2], cfg.ip[3]);
             printf("Netmask:  %i.%i.%i.%i\n", cfg.nm[0], cfg.nm[1], cfg.nm[2], cfg.nm[3]);
             printf("Gateway:  %i.%i.%i.%i\n", cfg.gw[0], cfg.gw[1], cfg.gw[2], cfg.gw[3]);

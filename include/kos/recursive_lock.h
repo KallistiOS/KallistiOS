@@ -45,7 +45,7 @@ typedef mutex_t recursive_lock_t;
     \return The created lock, or NULL on failure (errno will be set to ENOMEM to
             indicate that the system appears to be out of memory).
 */
-recursive_lock_t *rlock_create() __depr("Use mutexes instead.");
+recursive_lock_t *rlock_create(void) __depr("Use mutexes instead.");
 
 /** \brief  Destroy a recursive lock.
 

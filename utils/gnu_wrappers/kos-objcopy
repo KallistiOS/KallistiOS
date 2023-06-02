@@ -3,13 +3,13 @@
 OBJOUT=0
 
 for i in $@; do
-	if [ $i == "-O" ];then
+	if [ $i = "-O" ];then
 		OBJOUT=1
 	fi
-	if [ $i == binary -a $OBJOUT == 1 ];then
+	if [ $i = binary -a $OBJOUT = 1 ];then
 		RMSTACK="-R.stack"
 	fi
-	if [ $i == "-Obinary" ];then
+	if [ $i = "-Obinary" ];then
 		RMSTACK="-R.stack"
 	fi
 done

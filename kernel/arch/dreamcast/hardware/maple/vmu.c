@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    vmu.c
-   Copyright (C)2002,2003 Dan Potter
+   Copyright (C)2002,2003 Megan Potter
    Copyright (C)2008 Donald Haase
  */
 
@@ -12,6 +12,7 @@
 #include <kos/genwait.h>
 #include <dc/maple.h>
 #include <dc/maple/vmu.h>
+#include <dc/math.h>
 #include <dc/biosfont.h>
 #include <dc/vmufs.h>
 #include <arch/timer.h>
@@ -39,13 +40,13 @@ static maple_driver_t vmu_drv = {
 };
 
 /* Add the VMU to the driver chain */
-int vmu_init() {
+int vmu_init(void) {
     if(!vmu_drv.drv_list.le_prev)
         return maple_driver_reg(&vmu_drv);
     return -1;
 }
 
-void vmu_shutdown() {
+void vmu_shutdown(void) {
     maple_driver_unreg(&vmu_drv);
 }
 
@@ -155,7 +156,7 @@ int vmu_beep_raw(maple_device_t * dev, uint32 beep) {
 
     /* Wait for the timer to accept it */
     if(genwait_wait(&dev->frame, "vmu_beep_raw", 500, NULL) < 0) {
-        if(dev->frame.state != MAPLE_FRAME_VACANT)  {
+        if(dev->frame.state != MAPLE_FRAME_VACANT) {
             /* Something went wrong.... */
             dev->frame.state = MAPLE_FRAME_VACANT;
             dbglog(DBG_ERROR, "vmu_beep_raw: timeout to unit %c%c, beep: %lu\n",
@@ -169,7 +170,7 @@ int vmu_beep_raw(maple_device_t * dev, uint32 beep) {
 
 /* Draw a 1-bit bitmap on the LCD screen (48x32). return a -1 if
    an error occurs */
-int vmu_draw_lcd(maple_device_t * dev, void *bitmap) {
+int vmu_draw_lcd(maple_device_t * dev, const void *bitmap) {
     uint32 *    send_buf;
 
     assert(dev != NULL);
@@ -204,6 +205,17 @@ int vmu_draw_lcd(maple_device_t * dev, void *bitmap) {
     }
 
     return MAPLE_EOK;
+}
+
+int vmu_draw_lcd_rotated(maple_device_t *dev, const void *bitmap) {
+    uint32 bitmap_inverted[48];
+    unsigned int i;
+
+    for (i = 0; i < 48; i++) {
+        bitmap_inverted[i] = bit_reverse(((uint32 *)bitmap)[47 - i]);
+    }
+
+    return vmu_draw_lcd(dev, bitmap_inverted);
 }
 
 /* This function converts a xbm image to a 1-bit bitmap that can

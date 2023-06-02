@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    arch/dreamcast/include/spinlock.h
-   Copyright (C) 2001 Dan Potter
+   Copyright (C) 2001 Megan Potter
 
 */
 
@@ -13,7 +13,7 @@
     more fully featured like mutexes, semaphores, reader-writer semaphores, or
     recursive locks.
 
-    \author Dan Potter
+    \author Megan Potter
 
     \see    kos/sem.h
     \see    kos/mutex.h
@@ -70,11 +70,11 @@ typedef volatile int spinlock_t;
                                  : "=r" (__gotlock) \
                                  : "r" (__lock) \
                                  : "t", "memory"); \
-            if (!__gotlock) \
+            if(!__gotlock) \
                 thd_pass(); \
             else break; \
         } \
-    } while (0)
+    } while(0)
 
 /** \brief  Free a lock.
 
@@ -85,7 +85,7 @@ typedef volatile int spinlock_t;
 */
 #define spinlock_unlock(A) do { \
         *(A) = 0; \
-    } while (0)
+    } while(0)
 
 /** \brief  Determine if a lock is locked.
 

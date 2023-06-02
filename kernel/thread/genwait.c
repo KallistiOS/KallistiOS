@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    genwait.c
-   Copyright (C) 2002, 2003 Dan Potter
+   Copyright (C) 2002, 2003 Megan Potter
    Copyright (C) 2012 Lawrence Sebald
 */
 
@@ -63,7 +63,7 @@ static void tq_remove(kthread_t * thd) {
 
 /* Returns the top thread on the timer queue (next event). If nothing is
    queued, we'll return NULL. */
-static kthread_t * tq_next() {
+static kthread_t * tq_next(void) {
     return TAILQ_FIRST(&timer_queue);
 }
 
@@ -260,7 +260,7 @@ void genwait_check_timeouts(uint64 tm) {
     }
 }
 
-uint64 genwait_next_timeout() {
+uint64 genwait_next_timeout(void) {
     kthread_t * t;
 
     t = tq_next();
@@ -271,7 +271,7 @@ uint64 genwait_next_timeout() {
         return t->wait_timeout;
 }
 
-int genwait_init() {
+int genwait_init(void) {
     int i;
 
     for(i = 0; i < TABLESIZE; i++)
@@ -281,7 +281,7 @@ int genwait_init() {
     return 0;
 }
 
-void genwait_shutdown() {
+void genwait_shutdown(void) {
     /* XXX Do something about queued up procs */
 }
 

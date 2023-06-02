@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    pvr_mem_core.h
-   (c)2001 Dan Potter
+   (c)2001 Megan Potter
 
    Imported from the public domain source by Doug Lea.
 
@@ -998,12 +998,12 @@ struct mallinfo public_pvr_mALLINFo();
   struct Node* build_list() {
     struct Node** pool;
     int n = read_number_of_nodes_needed();
-    if (n <= 0) return 0;
+    if(n <= 0) return 0;
     pool = (struct Node**)(independent_calloc(n, sizeof(struct Node), 0);
-    if (pool == 0) die();
+    if(pool == 0) die();
     // organize into a linked list...
     struct Node* first = pool[0];
-    for (i = 0; i < n-1; ++i)
+    for(i = 0; i < n-1; ++i)
       pool[i]->next = pool[i+1];
     free(pool);     // Can now free the array (or not, if it is needed later)
     return first;
@@ -1058,7 +1058,7 @@ Void_t** public_pvr_iCALLOc();
     int msglen = strlen(msg);
     size_t sizes[3] = { sizeof(struct Head), msglen, sizeof(struct Foot) };
     void* chunks[3];
-    if (independent_comalloc(3, sizes, chunks) == 0)
+    if(independent_comalloc(3, sizes, chunks) == 0)
       die();
     struct Head* head = (struct Head*)(chunks[0]);
     char*        body = (char*)(chunks[1]);

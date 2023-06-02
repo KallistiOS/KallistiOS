@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/maple/vmu.h
-   Copyright (C)2000-2002 Jordan DeLong and Dan Potter
+   Copyright (C)2000-2002 Jordan DeLong and Megan Potter
    Copyright (C)2008 Donald Haase
 
 */
@@ -14,7 +14,7 @@
     MAPLE_FUNC_MEMCARD, MAPLE_FUNC_LCD, and MAPLE_FUNC_CLOCK function codes.
 
     \author Jordan DeLong
-    \author Dan Potter
+    \author Megan Potter
     \author Donald Haase
 */
 
@@ -97,7 +97,26 @@ int vmu_beep_raw(maple_device_t * dev, uint32 beep);
     \retval MAPLE_EAGAIN    If the command couldn't be sent. Try again later.
     \retval MAPLE_ETIMEOUT  If the command timed out while blocking.
 */
-int vmu_draw_lcd(maple_device_t * dev, void *bitmap);
+int vmu_draw_lcd(maple_device_t * dev, const void *bitmap);
+
+/** \brief  Display a 1bpp bitmap on a VMU screen.
+
+    This function sends a raw bitmap to a VMU to display on its screen. This
+    bitmap is 1bpp, and is 48x32 in size. This function is equivalent to
+    vmu_draw_lcd, but the image is rotated 180° so that the first byte of the
+    bitmap corresponds to the top-left corner, instead of the bottom-right one.
+
+    \param  dev             The device to draw to.
+    \param  bitmap          The bitmap to show.
+    \retval MAPLE_EOK       On success.
+    \retval MAPLE_EAGAIN    If the command couldn't be sent. Try again later.
+    \retval MAPLE_ETIMEOUT  If the command timed out while blocking.
+
+    \warning    This function is optimized by an assembly routine which operates
+                on 32 bits at a time. As such, the given bitmap must be 4-byte
+		aligned.
+*/
+int vmu_draw_lcd_rotated(maple_device_t * dev, const void *bitmap);
 
 /** \brief  Display a Xwindows XBM image on a VMU screen.
 
@@ -151,8 +170,8 @@ void vmu_set_icon(const char *vmu_icon);
 
 /* \cond */
 /* Init / Shutdown */
-int vmu_init();
-void vmu_shutdown();
+int vmu_init(void);
+void vmu_shutdown(void);
 /* \endcond */
 
 __END_DECLS

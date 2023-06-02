@@ -46,7 +46,7 @@ int minifont_draw(uint16 *buffer, uint32 bufwidth, uint32 c);
     Unicode, JIS, EUC, etc).
 
     \param  b               The buffer to draw to.
-    \param  width           The width of the buffer in pixels.
+    \param  bufwidth           The width of the buffer in pixels.
     \param  str             The string to draw.
     \return                 Amount of width covered in 16-bit increments.
 */

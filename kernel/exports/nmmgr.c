@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    nmmgr.c
-   Copyright (C) 2003 Dan Potter
+   Copyright (C) 2003 Megan Potter
 
 */
 
@@ -48,7 +48,7 @@ nmmgr_handler_t * nmmgr_lookup(const char *fn) {
         return cur;
 }
 
-nmmgr_list_t * nmmgr_get_list() {
+nmmgr_list_t * nmmgr_get_list(void) {
     return &nmmgr_handlers;
 }
 
@@ -68,7 +68,11 @@ int nmmgr_handler_remove(nmmgr_handler_t *hnd) {
     nmmgr_handler_t *c;
     int rv = -1;
 
-    mutex_lock(&mutex);
+    /* If we're in an int, lets do the trylock */
+    if(irq_inside_int())
+        mutex_trylock(&mutex);
+    else
+        mutex_lock(&mutex);
 
     /* Verify that it's actually in there */
     LIST_FOREACH(c, &nmmgr_handlers, list_ent) {
@@ -85,7 +89,7 @@ int nmmgr_handler_remove(nmmgr_handler_t *hnd) {
 }
 
 /* Initialize structures */
-int nmmgr_init() {
+int nmmgr_init(void) {
     int rv = 0;
 
     /* Start with no handlers */
@@ -97,7 +101,7 @@ int nmmgr_init() {
     return rv;
 }
 
-void nmmgr_shutdown() {
+void nmmgr_shutdown(void) {
     nmmgr_handler_t *c, *n;
 
     c = LIST_FIRST(&nmmgr_handlers);

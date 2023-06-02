@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    pvrmark_strips.c
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
 */
 
 #include <kos.h>
@@ -33,7 +33,7 @@ void stats() {
     pvr_stats_t stats;
 
     pvr_get_stats(&stats);
-    dbglog(DBG_DEBUG, "3D Stats: %d VBLs, frame rate ~%f fps\n",
+    dbglog(DBG_DEBUG, "3D Stats: %ld VBLs, frame rate ~%f fps\n",
            stats.vbl_count, stats.frame_rate);
 }
 
@@ -72,7 +72,6 @@ void setup() {
 void do_frame() {
     pvr_vertex_t vert;
     int x, y, z;
-    int size;
     int i, col;
 
     vid_border_color(0, 0, 0);

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    arch/dreamcast/include/irq.h
-   Copyright (C) 2000-2001 Dan Potter
+   Copyright (C) 2000-2001 Megan Potter
 
 */
 
@@ -13,7 +13,7 @@
     exceptions generated on the SH4, versus the asic layer which deals with
     actually differentiating "external" interrupts.
 
-    \author Dan Potter
+    \author Megan Potter
     \see    dc/asic.h
 */
 
@@ -244,14 +244,14 @@ typedef void (*irq_handler)(irq_t source, irq_context_t *context);
     \retval 1               If interrupt handling is in progress.
     \retval 0               If normal processing is in progress.
 */
-int irq_inside_int();
+int irq_inside_int(void);
 
 /** \brief  Pretend like we just came in from an interrupt and force
             a context switch back to the "current" context.
 
     Make sure you've called irq_set_context() before doing this!
 */
-void irq_force_return();
+void irq_force_return(void);
 
 /** \brief  Set or remove an IRQ handler.
 
@@ -296,7 +296,7 @@ int irq_set_global_handler(irq_handler hnd);
     \return                 The global exception handler set with
                             irq_set_global_handler(), or NULL if none is set.
 */
-irq_handler irq_get_global_handler();
+irq_handler irq_get_global_handler(void);
 
 /** \brief  Switch out contexts (for interrupt return).
 
@@ -314,7 +314,7 @@ void irq_set_context(irq_context_t *regbank);
 
     \return                 The current IRQ context.
 */
-irq_context_t *irq_get_context();
+irq_context_t *irq_get_context(void);
 
 /** \brief  Fill a newly allocated context block for usage with supervisor
             or user mode.
@@ -342,13 +342,13 @@ void irq_create_context(irq_context_t *context, uint32 stack_pointer,
                             can be used to restore this state later on with
                             irq_restore().
 */
-int irq_disable();
+int irq_disable(void);
 
 /** \brief  Enable all interrupts.
 
     This function will enable ALL interrupts, including external ones.
 */
-void irq_enable();
+void irq_enable(void);
 
 /** \brief  Restore IRQ state.
 
@@ -363,12 +363,12 @@ void irq_restore(int v);
 /** \brief  Initialize interrupts.
     \retval 0               On success (no error conditions defined).
 */
-int irq_init();
+int irq_init(void);
 
 /** \brief  Shutdown interrupts, restoring the state to how it was before
             irq_init() was called.
 */
-void irq_shutdown();
+void irq_shutdown(void);
 
 __END_DECLS
 

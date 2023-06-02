@@ -2,7 +2,7 @@
 
    general_threading_test.c
 
-   (c)2000-2002 Dan Potter
+   (c)2000-2002 Megan Potter
 
    A simple thread example
 

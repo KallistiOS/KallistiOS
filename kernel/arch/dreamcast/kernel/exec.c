@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    exec.c
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
 */
 
 #include <arch/arch.h>
@@ -59,7 +59,7 @@ void arch_exec_at(const void *image, uint32 length, uint32 address) {
     icache_flush_range((uint32)buffer, tcount * 4);
 
     /* printf("Finished trampoline:\n");
-    for (i=0; i<tcount; i++) {
+    for(i=0; i<tcount; i++) {
         printf("%08x: %08x\n", (uint32)(buffer + i), buffer[i]);
     } */
 

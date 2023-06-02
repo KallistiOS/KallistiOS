@@ -1,5 +1,5 @@
 /* GhettoPlay: an S3M browser and playback util
-   (c)2000 Dan Potter
+   (c)2000 Megan Potter
 */
 
 #include <stdarg.h>

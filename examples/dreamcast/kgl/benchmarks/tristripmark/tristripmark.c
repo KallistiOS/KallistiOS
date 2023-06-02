@@ -3,7 +3,7 @@
 
    tristripmark.c
    (c)2014 Josh Pearson
-   (c)2002 Dan Potter, Paul Boese
+   (c)2002 Megan Potter, Paul Boese
 */
 
 #include <kos.h>
@@ -39,7 +39,7 @@ void stats() {
     pvr_stats_t stats;
 
     pvr_get_stats(&stats);
-    dbglog(DBG_DEBUG, "3D Stats: %d VBLs, frame rate ~%f fps\n",
+    dbglog(DBG_DEBUG, "3D Stats: %ld VBLs, frame rate ~%f fps\n",
            stats.vbl_count, stats.frame_rate);
 }
 

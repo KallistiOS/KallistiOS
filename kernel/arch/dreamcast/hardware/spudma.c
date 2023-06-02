@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    spudma.c
-   Copyright (C)2001,2002,2004 Dan Potter
+   Copyright (C)2001,2002,2004 Megan Potter
  */
 
 #include <assert.h>
@@ -233,7 +233,7 @@ int spu_dma_transfer(void *from, uint32 dest, uint32 length, int block,
 }
 
 static int init;
-int spu_dma_init() {
+int spu_dma_init(void) {
     int i;
 
     if(init)
@@ -263,7 +263,7 @@ int spu_dma_init() {
     return 0;
 }
 
-void spu_dma_shutdown() {
+void spu_dma_shutdown(void) {
     int i;
 
     if(!init)

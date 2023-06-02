@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    fpu_exc.c
-   (c)2002 Dan Potter
+   (c)2002 Megan Potter
 */
 
 #include <kos.h>
@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     cont_btn_callback(0, CONT_START, (cont_btn_callback_t)arch_exit);
 
     fpscr = _get_fpscr();
-    printf("fpscr is %08x\n", fpscr);
+    printf("fpscr is %08x\n", (unsigned int)fpscr);
 
     while(d > 0.0) {
         printf("%f\n", d);

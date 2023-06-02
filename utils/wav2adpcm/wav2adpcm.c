@@ -9,7 +9,7 @@
 
     this code is for little endian machine
 
-    Modified by Dan Potter to read/write ADPCM WAV files, and to
+    Modified by Megan Potter to read/write ADPCM WAV files, and to
     handle stereo (though the stereo is very likely KOS specific
     since we make no effort to interleave it). Please see README.GPL
     in the KOS docs dir for more info on the GPL license.

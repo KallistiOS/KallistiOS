@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # Root Makefile
-# Copyright (C) 2003 Dan Potter
+# Copyright (C) 2003 Megan Potter
 #
 
 # Make sure things compile nice and cleanly. We don't necessarily want to push

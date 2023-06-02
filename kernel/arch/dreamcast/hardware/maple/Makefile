@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # arch/dreamcast/hardware/maple/Makefile
-# Copyright (C) 2000-2001 Dan Potter
+# Copyright (C) 2000-2001 Megan Potter
 #
 
 # Core maple handling stuff

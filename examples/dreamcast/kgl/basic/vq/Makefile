@@ -7,15 +7,14 @@ all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules
 
-clean:
-	-rm -f $(TARGET) $(OBJS) fruit.vq
+clean: rm-elf
+	-rm -f $(OBJS) fruit.vq
 
 rm-elf:
 	-rm -f $(TARGET) 
 
 $(TARGET): $(OBJS) 
-	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(TARGET) $(KOS_START) \
-		$(OBJS) $(OBJEXTRA) -L$(KOS_BASE)/lib -lGL $(KOS_LIBS) -lm
+	kos-cc -o $(TARGET) $(OBJS) -L$(KOS_BASE)/lib -lGL -lm
 
 fruit.o: fruit.vq
 	$(KOS_BASE)/utils/bin2o/bin2o fruit.vq fruit fruit.o
@@ -26,7 +25,7 @@ fruit.vq: fruit.jpg
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 
-dist:
-	rm -f $(OBJS) 
+dist: $(TARGET)
+	-rm -f $(OBJS) 
 	$(KOS_STRIP) $(TARGET)
 

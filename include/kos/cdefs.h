@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kos/cdefs.h
-   Copyright (C) 2002, 2004 Dan Potter
+   Copyright (C) 2002, 2004 Megan Potter
    Copyright (C) 2020, 2023 Lawrence Sebald
 
    Based loosely around some stuff in BSD's sys/cdefs.h
@@ -13,7 +13,7 @@
     This file contains definitions of various __attribute__ directives in
     shorter forms for use in programs (to aid in optimization, mainly).
 
-    \author Dan Potter
+    \author Megan Potter
     \author Lawrence Sebald
 */
 

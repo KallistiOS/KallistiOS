@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    pvr_scene.c
-   Copyright (C)2002,2004 Dan Potter
+   Copyright (C)2002,2004 Megan Potter
 
  */
 
@@ -86,7 +86,7 @@ void pvr_vertbuf_written(pvr_list_t list, uint32 amt) {
 
 /* Begin collecting data for a frame of 3D output to the off-screen
    frame buffer */
-void pvr_scene_begin() {
+void pvr_scene_begin(void) {
     int i;
 
     // Get general stuff ready.
@@ -165,7 +165,7 @@ int pvr_list_begin(pvr_list_t list) {
    a list that is already closed is also an error (-1). Note that if you open
    a list but do not submit any primitives, this causes a hardware error. For
    simplicity we just always submit a blank primitive. */
-int pvr_list_finish() {
+int pvr_list_finish(void) {
     /* Check to make sure we can do this */
 #ifndef NDEBUG
     if(!pvr_state.dma_mode && pvr_state.list_reg_open == -1) {
@@ -238,7 +238,7 @@ int pvr_list_flush(pvr_list_t list) {
    this has been called, you can not submit any more data until one of the
    pvr_scene_begin() functions is called again. An error (-1) is returned if
    you have not started a scene already. */
-int pvr_scene_finish() {
+int pvr_scene_finish(void) {
     int i, o;
     volatile pvr_dma_buffers_t * b;
 
@@ -296,7 +296,7 @@ int pvr_scene_finish() {
     return 0;
 }
 
-int pvr_wait_ready() {
+int pvr_wait_ready(void) {
     int t;
 
     assert(pvr_state.valid);
@@ -322,7 +322,7 @@ int pvr_wait_ready() {
     return 0;
 }
 
-int pvr_check_ready() {
+int pvr_check_ready(void) {
     assert(pvr_state.valid);
 
     if(sem_count((semaphore_t *)&pvr_state.ready_sem) > 0)

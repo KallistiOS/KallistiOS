@@ -8,7 +8,7 @@ diff -ruN gcc-4.5.2/gcc/config/sh/crt1.asm gcc-4.5.2-kos/gcc/config/sh/crt1.asm
 +! KallistiOS ##version##
 +!
 +! startup.s
-+! (c)2000-2001 Dan Potter
++! (c)2000-2001 Megan Potter
 +!
 +! This file must appear FIRST in your linking order, or your program won't
 +! work correctly as a raw binary.

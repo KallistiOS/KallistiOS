@@ -486,7 +486,7 @@ static void net_dhcp_bind(dhcp_pkt_t *pkt, int len) {
     irq_restore(old);
 }
 
-static void net_dhcp_thd(void *obj __attribute__((unused))) {
+static void net_dhcp_thd(void *obj) {
     struct dhcp_pkt_out *qpkt;
     uint64 now;
     struct sockaddr_in addr;
@@ -495,6 +495,8 @@ static void net_dhcp_thd(void *obj __attribute__((unused))) {
     socklen_t addr_len = sizeof(struct sockaddr_in);
     dhcp_pkt_t *pkt = (dhcp_pkt_t *)buf, *pkt2;
     int found;
+
+    (void)obj;
 
     now = timer_ms_gettime64();
     len = 0;

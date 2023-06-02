@@ -1,6 +1,6 @@
 #
 # Plasma PVR example
-# (c)2002 Dan Potter
+# (c)2002 Megan Potter
 #   
 
 TARGET = plasma.elf
@@ -10,20 +10,19 @@ all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules
 
-clean:
-	-rm -f $(TARGET) $(OBJS)
+clean: rm-elf
+	-rm -f $(OBJS)
 
 rm-elf:
 	-rm -f $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(TARGET) $(KOS_START) \
-		$(OBJS) $(OBJEXTRA) $(KOS_LIBS)
+	kos-cc -o $(TARGET) $(OBJS)
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET) -n
 
-dist:
-	rm -f $(OBJS)
+dist: $(TARGET)
+	-rm -f $(OBJS)
 	$(KOS_STRIP) $(TARGET)
 

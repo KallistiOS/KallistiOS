@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/maple/mouse.h
-   (C)2000-2002 Jordan DeLong and Dan Potter
+   (C)2000-2002 Jordan DeLong and Megan Potter
 
 */
 
@@ -12,7 +12,7 @@
     device.
 
     \author Jordan DeLong
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __DC_MAPLE_MOUSE_H
@@ -84,8 +84,8 @@ typedef struct {
 
 /* \cond */
 /* Init / Shutdown */
-int mouse_init();
-void    mouse_shutdown();
+int mouse_init(void);
+void mouse_shutdown(void);
 /* \endcond */
 
 __END_DECLS

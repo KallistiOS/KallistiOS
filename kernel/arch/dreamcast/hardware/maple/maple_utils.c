@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    maple_util.c
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
    Copyright (C) 2015 Lawrence Sebald
  */
 
@@ -11,22 +11,22 @@
 #include <dc/maple.h>
 
 /* Enable / Disable the bus */
-void maple_bus_enable() {
+void maple_bus_enable(void) {
     maple_write(MAPLE_ENABLE, MAPLE_ENABLE_ENABLED);
 }
-void maple_bus_disable() {
+void maple_bus_disable(void) {
     maple_write(MAPLE_ENABLE, MAPLE_ENABLE_DISABLED);
 }
 
 /* Start / Stop DMA */
-void maple_dma_start() {
+void maple_dma_start(void) {
     maple_write(MAPLE_STATE, MAPLE_STATE_DMA);
 }
-void maple_dma_stop() {
+void maple_dma_stop(void) {
     maple_write(MAPLE_STATE, MAPLE_STATE_IDLE);
 }
 
-int maple_dma_in_progress() {
+int maple_dma_in_progress(void) {
     return maple_read(MAPLE_STATE) & MAPLE_STATE_DMA;
 }
 

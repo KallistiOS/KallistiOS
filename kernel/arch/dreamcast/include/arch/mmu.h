@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    arch/dreamcast/include/arch/mmu.h
-   Copyright (C) 2001 Dan Potter
+   Copyright (C) 2001 Megan Potter
 
 */
 
@@ -35,10 +35,10 @@
     in here, for obvious reasons.
 
     This functionality was ported over to mainline KOS from the KOS-MMU project
-    of Dan Potter. Unfortunately, KOS-MMU never reached a real phase of maturity
+    of Megan Potter. Unfortunately, KOS-MMU never reached a real phase of maturity
     and usefulness, but this piece can be quite useful on its own.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __ARCH_MMU_H
@@ -305,7 +305,7 @@ typedef mmupage_t * (*mmu_mapfunc_t)(mmucontext_t * context, int virtpage);
 /** \brief  Get the current mapping function.
     \return                 The current function that maps pages.
 */
-mmu_mapfunc_t mmu_map_get_callback();
+mmu_mapfunc_t mmu_map_get_callback(void);
 
 /** \brief  Set a new MMU mapping handler.
 
@@ -325,7 +325,7 @@ mmu_mapfunc_t mmu_map_set_callback(mmu_mapfunc_t newfunc);
 
     \retval 0               On success (no error conditions defined).
 */
-int mmu_init();
+int mmu_init(void);
 
 /** \brief  Shutdown MMU support.
 
@@ -333,7 +333,10 @@ int mmu_init();
     gets done if you initialize the MMU in your program, so as to play nice with
     loaders and the like (that will not expect that its on, in general).
 */
-void mmu_shutdown();
+void mmu_shutdown(void);
+
+/** \brief  Reset ITLB. */
+void mmu_reset_itlb(void);
 
 __END_DECLS
 

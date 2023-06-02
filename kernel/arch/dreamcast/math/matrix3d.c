@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    matrix3d.c
-   Copyright (C) 2000-2002 Dan Potter and Jordan DeLong
+   Copyright (C) 2000-2002 Megan Potter and Jordan DeLong
    Copyright (C) 2014 Josh Pearson
 
    Some 3D utils to use with the matrix functions

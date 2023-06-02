@@ -40,9 +40,15 @@ $(build_sh4_targets): extra_configure_args = --with-multilib-list=m4-single-only
 $(build_sh4_targets): gcc_ver = $(sh_gcc_ver)
 $(build_sh4_targets): binutils_ver = $(sh_binutils_ver)
 
-ifdef MINGW
+# MinGW/MSYS or 'sh_force_libbfd_installation=1': install BFD if required.
 # To compile dc-tool, we need to install libbfd for sh-elf.
 # This is done when making build-sh4-binutils.
+ifdef sh_force_libbfd_installation
+  ifneq (0,$(sh_force_libbfd_installation))
+    do_sh_force_libbfd_installation := 1
+  endif
+endif
+ifneq ($(or $(MINGW),$(do_sh_force_libbfd_installation)),)
   $(build_sh4_targets): libbfd_install_flag = -enable-install-libbfd -enable-install-libiberty
   $(build_sh4_targets): libbfd_src_bin_dir = $(sh_prefix)/$(host_triplet)/$(sh_target)
 endif

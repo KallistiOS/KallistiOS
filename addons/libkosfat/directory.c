@@ -18,6 +18,11 @@
 #include "directory.h"
 #include "fatinternal.h"
 
+#if __GNUC__ >= 9
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
+#endif
+
 #ifdef __STRICT_ANSI__
 /* These don't necessarily get prototyped in string.h in standard-compliant mode
    as they are extensions to the standard. Declaring them this way shouldn't
@@ -1390,4 +1395,8 @@ void fat_dentry_print(const fat_dentry_t *ent) {
     dbglog(DBG_KDEBUG, "Cluster: %" PRIu32 "\n", cl);
     dbglog(DBG_KDEBUG, "Size: %" PRIu32 "\n", ent->size);
 }
+#endif
+
+#if __GNUC__ >= 9
+#pragma GCC diagnostic pop
 #endif

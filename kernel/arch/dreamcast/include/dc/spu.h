@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/spu.h
-   Copyright (C) 2000-2001 Dan Potter
+   Copyright (C) 2000-2001 Megan Potter
 
 */
 
@@ -10,7 +10,7 @@
 
     This file deals with memory transfers and the like for the sound hardware.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __DC_SPU_H
@@ -23,7 +23,7 @@ __BEGIN_DECLS
 #include <dc/g2bus.h>
 
 /** \brief  Waits for the sound FIFO to empty. */
-void spu_write_wait();
+void spu_write_wait(void);
 
 /** \brief  Copy a block of data to sound RAM.
 
@@ -104,13 +104,13 @@ int spu_dma_transfer(void * from, uint32 dest, uint32 length, int block,
 
     This function resets all sound channels and lets the ARM out of reset.
 */
-void spu_enable();
+void spu_enable(void);
 
 /** \brief  Disable the SPU.
 
     This function resets all sound channels and puts the ARM in a reset state.
 */
-void spu_disable();
+void spu_disable(void);
 
 /** \brief  Set CDDA volume.
 
@@ -146,7 +146,7 @@ void spu_master_mixer(int volume, int stereo);
 
     \retval 0               On success (no error conditions defined).
 */
-int spu_init();
+int spu_init(void);
 
 /** \brief  Shutdown the SPU.
 
@@ -154,7 +154,7 @@ int spu_init();
 
     \retval 0               On success (no error conditions defined).
 */
-int spu_shutdown();
+int spu_shutdown(void);
 
 /** \brief  Initialize SPU DMA support.
 
@@ -162,10 +162,13 @@ int spu_shutdown();
 
     \retval 0               On success (no error conditions defined).
 */
-int spu_dma_init();
+int spu_dma_init(void);
 
 /** \brief  Shutdown SPU DMA support. */
-void spu_dma_shutdown();
+void spu_dma_shutdown(void);
+
+/** \brief  Reset SPU channels. */
+void spu_reset_chans(void);
 
 __END_DECLS
 

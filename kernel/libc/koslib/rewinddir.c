@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    rewinddir.c
-   Copyright (C) 2004 Dan Potter
+   Copyright (C) 2004 Megan Potter
    Copyright (C) 2014 Lawrence Sebald
 
 */

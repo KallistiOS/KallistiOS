@@ -13,7 +13,7 @@ not strict rules that I'll lop off someone's head for not following. Just
 please do try to follow them if you want to commit changes to the core
 KOS pieces and it will make my life easier =)
 
-							-- Dan
+							-- Megan
 
 
 1) No GNU =) [imported from Linus]

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    pvr_buffers.c
-   Copyright (C) 2002, 2004 Dan Potter
+   Copyright (C) 2002, 2004 Megan Potter
    Copyright (C) 2014 Lawrence Sebald
 
  */

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kos/fs_romdisk.h
-   (c)2001 Dan Potter
+   (c)2001 Megan Potter
 
 */
 
@@ -18,7 +18,7 @@
     mount itself on /rd. You can also mount additional images that you load
     from some other source on whatever mountpoint you want.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __KOS_FS_ROMDISK_H
@@ -33,10 +33,10 @@ __BEGIN_DECLS
 
 /** \cond */
 /* Initialize the file system */
-int fs_romdisk_init();
+int fs_romdisk_init(void);
 
 /* De-init the file system; also unmounts any mounted images. */
-int fs_romdisk_shutdown();
+int fs_romdisk_shutdown(void);
 /** \endcond */
 
 /* NOTE: the mount/unmount are _not_ thread safe as regards doing multiple

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    asic.c
-   Copyright (c)2000,2001,2002,2003 Dan Potter
+   Copyright (c)2000,2001,2002,2003 Megan Potter
 */
 
 /*
@@ -95,51 +95,57 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <assert.h>
 #include <arch/irq.h>
 #include <dc/asic.h>
 #include <arch/spinlock.h>
 
+/* XXX These based on g1ata.c and pvr.h and should be replaced by a standardized method */
+#define IN32(addr)         (* ( (volatile uint32_t *)(addr) ) )
+#define OUT32(addr, data)  IN32(addr) = (data)
+
+/* The set of asic regs are spaced by 0x10 with 0x4 between each sub reg */
+#define ASIC_EVT_REG_ADDR(irq, sub) (ASIC_IRQD_A + (irq * 0x10) + (sub * 0x4))
+
+#define ASIC_EVT_REGS 3
+#define ASIC_EVT_REG_HNDS 32
+
 /* Exception table -- this table matches each potential G2 event to a function
    pointer. If the pointer is null, then nothing happens. Otherwise, the
    function will handle the exception. */
-static asic_evt_handler asic_evt_handlers[0x4][0x20];
+static asic_evt_handler asic_evt_handlers[ASIC_EVT_REGS][ASIC_EVT_REG_HNDS];
 
 /* Set a handler, or remove a handler */
-int asic_evt_set_handler(uint32 code, asic_evt_handler hnd) {
-    uint32 evtreg, evt;
+void asic_evt_set_handler(uint16_t code, asic_evt_handler hnd) {
+    uint8_t evtreg, evt;
 
     evtreg = (code >> 8) & 0xff;
     evt = code & 0xff;
 
-    if(evtreg > 0x4)
-        return -1;
-
-    if(evt > 0x20)
-        return -1;
+    assert((evtreg < ASIC_EVT_REGS) && (evt < ASIC_EVT_REG_HNDS));
 
     asic_evt_handlers[evtreg][evt] = hnd;
-
-    return 0;
 }
 
 /* The ASIC event handler; this is called from the global IRQ handler
    to handle external IRQ 9. */
 static void handler_irq9(irq_t source, irq_context_t *context) {
-    int reg, i;
-    vuint32 *asicack = (vuint32*)0xa05f6900;
-    uint32  mask;
+    uint8_t reg, i;
 
     (void)source;
     (void)context;
 
     /* Go through each event register and look for pending events */
-    for(reg = 0; reg < 3; reg++) {
+    for(reg = 0; reg < ASIC_EVT_REGS; reg++) {
         /* Read the event mask and clear pending */
-        mask = asicack[reg];
-        asicack[reg] = mask;
+        uint32_t mask = IN32(ASIC_ACK_A + (reg * 0x4));
+        OUT32(ASIC_ACK_A + (reg * 0x4), mask);
+
+        /* Short circuit going through the table if none on this reg */
+        if(mask == 0) continue;
 
         /* Search for relevant handlers */
-        for(i = 0; i < 32; i++) {
+        for(i = 0; i < ASIC_EVT_REG_HNDS; i++) {
             if(mask & (1 << i)) {
                 if(asic_evt_handlers[reg][i] != NULL) {
                     asic_evt_handlers[reg][i]((reg << 8) | i);
@@ -149,52 +155,52 @@ static void handler_irq9(irq_t source, irq_context_t *context) {
     }
 }
 
-
 /* Disable all G2 events */
-void asic_evt_disable_all() {
-    vuint32 * asicen;
-    int irq, sub;
+void asic_evt_disable_all(void) {
+    uint8_t irq, sub;
 
-    for(irq = 0; irq < 3; irq++) {
-        asicen = (vuint32*)(0xa05f6910 + irq * 0x10);
-
-        for(sub = 0; sub < 3; sub++) {
-            asicen[sub] = 0;
+    for(irq = 0; irq < ASIC_IRQ_MAX; irq++) {
+        for(sub = 0; sub < ASIC_EVT_REGS; sub++) {
+            OUT32(ASIC_EVT_REG_ADDR(irq, sub), 0);
         }
     }
 }
 
 /* Disable a particular G2 event */
-void asic_evt_disable(uint32 code, int irqlevel) {
-    vuint32 *asicen;
+void asic_evt_disable(uint16_t code, uint8_t irqlevel) {
+    assert(irqlevel < ASIC_IRQ_MAX);
 
-    /* Did the user choose an IRQ level? If not, give them 9 by default */
-    if(irqlevel == ASIC_IRQ_DEFAULT)
-        irqlevel = ASIC_IRQ9;
+    uint8_t evtreg, evt;
 
-    asicen = (vuint32*)(0xa05f6900 + irqlevel * 0x10);
-    asicen[((code >> 8) & 0xff)] &= ~(1 << (code & 0xff));
+    evtreg = (code >> 8) & 0xff;
+    evt = code & 0xff;
+
+    uint32_t addr = ASIC_EVT_REG_ADDR(irqlevel, evtreg);
+    uint32_t val = IN32(addr);
+    OUT32(addr, val & ~(1 << evt));
 }
 
 /* Enable a particular G2 event */
-void asic_evt_enable(uint32 code, int irqlevel) {
-    vuint32 *asicen;
+void asic_evt_enable(uint16_t code, uint8_t irqlevel) {
+    assert(irqlevel < ASIC_IRQ_MAX);
 
-    /* Did the user choose an IRQ level? If not, give them 9 by default */
-    if(irqlevel == ASIC_IRQ_DEFAULT)
-        irqlevel = ASIC_IRQ9;
+    uint8_t evtreg, evt;
 
-    asicen = (vuint32*)(0xa05f6900 + irqlevel * 0x10);
-    asicen[((code >> 8) & 0xff)] |= (1 << (code & 0xff));
+    evtreg = (code >> 8) & 0xff;
+    evt = code & 0xff;
+
+    uint32_t addr = ASIC_EVT_REG_ADDR(irqlevel, evtreg);
+    uint32_t val = IN32(addr);
+    OUT32(addr, val | (1 << evt));
 }
 
 /* Initialize events */
-static void asic_evt_init() {
+static void asic_evt_init(void) {
     /* Clear any pending interrupts and disable all events */
     asic_evt_disable_all();
-    ASIC_ACK_A = 0xffffffff;
-    ASIC_ACK_B = 0xffffffff;
-    ASIC_ACK_C = 0xffffffff;
+    OUT32(ASIC_ACK_A, 0xffffffff);
+    OUT32(ASIC_ACK_B, 0xffffffff);
+    OUT32(ASIC_ACK_C, 0xffffffff);
 
     /* Clear out the event table */
     memset(asic_evt_handlers, 0, sizeof(asic_evt_handlers));
@@ -206,7 +212,7 @@ static void asic_evt_init() {
 }
 
 /* Shutdown events */
-static void asic_evt_shutdown() {
+static void asic_evt_shutdown(void) {
     /* Disable all events */
     asic_evt_disable_all();
 
@@ -217,11 +223,10 @@ static void asic_evt_shutdown() {
 }
 
 /* Init routine */
-void asic_init() {
+void asic_init(void) {
     asic_evt_init();
 }
 
-
-void asic_shutdown() {
+void asic_shutdown(void) {
     asic_evt_shutdown();
 }

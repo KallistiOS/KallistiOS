@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    exports.c
-   Copyright (C)2003 Dan Potter
+   Copyright (C)2003 Megan Potter
 
 */
 
@@ -43,7 +43,7 @@ static symtab_handler_t st_arch = {
     arch_symtab
 };
 
-int export_init() {
+int export_init(void) {
     /* Add our two export tables */
     if(nmmgr_handler_add(&st_kern.nmmgr) < 0)
         return -1;

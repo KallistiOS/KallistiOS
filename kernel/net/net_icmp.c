@@ -2,7 +2,7 @@
 
    kernel/net/net_icmp.c
 
-   Copyright (C) 2002 Dan Potter
+   Copyright (C) 2002 Megan Potter
    Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2013 Lawrence Sebald
 
  */

@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # examples/dreamcast/video/Makefile
-# Copyright (C) 2002 Dan Potter
+# Copyright (C) 2002 Megan Potter
 #
 
 all:

@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kos/fs_pty.h
-   Copyright (C)2003 Dan Potter
+   Copyright (C)2003 Megan Potter
 
 */
 
@@ -16,7 +16,7 @@
 
     This file system mounts on /pty.
 
-    \author Dan Potter
+    \author Megan Potter
 */
 
 #ifndef __KOS_FS_PTY_H

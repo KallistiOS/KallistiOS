@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    rdtest.c
-   (c)2001 Dan Potter
+   (c)2001 Megan Potter
 
    Test romdisk filesystem reader. This is a functional duplicate of fs_romdisk, but
    designed to run on a PC for testing.

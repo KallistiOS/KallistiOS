@@ -30,26 +30,21 @@ static int min_x, min_y, max_x, max_y;
 #define FONT_WIDTH 256
 #define FONT_HEIGHT 48
 
-static int fb_detected() {
+static int fb_detected(void) {
     return 1;
 }
 
-static int fb_init() {
-    /* Assume we're using 640x480x16bpp */
-    fb = NULL;
-    fb_w = 640;
-    fb_h = 480;
-    min_x = 32;
-    min_y = 32;
-    max_x = 608;
-    max_y = 448;
-    cur_x = 32;
-    cur_y = 32;
+static int fb_init(void) {
+    /* Init based on current video mode, defaulting to 640x480x16bpp. */
+    if(vid_mode == 0)
+        dbgio_fb_set_target(NULL, 640, 480, 32, 32);
+    else
+        dbgio_fb_set_target(NULL, vid_mode->width, vid_mode->height, 32, 32);
 
     return 0;
 }
 
-static int fb_shutdown() {
+static int fb_shutdown(void) {
     return 0;
 }
 
@@ -58,7 +53,7 @@ static int fb_set_irq_usage(int mode) {
     return 0;
 }
 
-static int fb_read() {
+static int fb_read(void) {
     errno = EAGAIN;
     return -1;
 }
@@ -93,7 +88,7 @@ static int fb_write(int c) {
     return 1;
 }
 
-static int fb_flush() {
+static int fb_flush(void) {
     return 0;
 }
 

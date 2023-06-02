@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # kernel/exports/Makefile
-# Copyright (C)2003 Dan Potter
+# Copyright (C)2003 Megan Potter
 #
 
 OBJS = nmmgr.o kernel_exports.o exports.o library.o

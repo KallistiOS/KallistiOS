@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    flashrom.c
-   Copyright (c) 2003 Dan Potter
+   Copyright (c) 2003 Megan Potter
    Copyright (C) 2008 Lawrence Sebald
 */
 
@@ -230,7 +230,7 @@ int flashrom_get_syscfg(flashrom_syscfg_t * out) {
     return FLASHROM_ERR_NONE;
 }
 
-int flashrom_get_region() {
+int flashrom_get_region(void) {
     int start, size;
     char region[6] = { 0 };
 
