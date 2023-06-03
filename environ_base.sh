@@ -12,7 +12,7 @@ export KOS_ARCH_DIR="${KOS_BASE}/kernel/arch/${KOS_ARCH}"
 # Pull in the arch environ file
 . ${KOS_BASE}/environ_${KOS_ARCH}.sh
 
-# Add the gnu wrappers dir to the path if they are not already
+# Add the gnu wrappers dir to the path if it is not already
 if [[ ":$PATH:" != *":${KOS_BASE}/utils/gnu_wrappers"* ]]; then
   export PATH="${PATH}:${KOS_BASE}/utils/gnu_wrappers"
 fi
