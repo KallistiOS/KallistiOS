@@ -175,7 +175,7 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - DC  Improve fipr() and fipr_magnitude_sqr() functions [PC]
 - DC  Add optimized bit-reverse function && vmu_draw_lcd_rotated() [PC]
 - DC  Update bfont example for Dreamcast-specific characters [DH]
-- DC  Add example for VMU speaker use [DH] [FG]
+- DC  Add example for VMU speaker use [DH && FG]
 - DC  Add example for rumble accessory use [DH]
 
 KallistiOS version 2.0.0 -----------------------------------------------
