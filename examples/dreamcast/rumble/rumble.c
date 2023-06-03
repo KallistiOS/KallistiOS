@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
     pvr_set_bg_color(0.0f, 0.0f, 0.0f);
 
     /* Loop until Start is pressed */
-    for(;!(rel_buttons & CONT_START);) {
+    while(!(rel_buttons & CONT_START)) {
 
         /* Before drawing the screen, trap into these functions to be 
            sure that there's at least one controller and one rumbler */
