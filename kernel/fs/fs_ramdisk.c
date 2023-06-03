@@ -847,8 +847,8 @@ int fs_ramdisk_detach(const char * fn, void ** obj, size_t * size) {
 /* Initialize the file system */
 int fs_ramdisk_init(void) {
     /* Create an empty root dir */
-    rootdir = (rd_dir_t *)malloc(sizeof(rd_dir_t));
-    if(rootdir == NULL) return -1;
+    if(!(rootdir = (rd_dir_t *)malloc(sizeof(rd_dir_t))))
+        return -1;
 
     root = (rd_file_t *)malloc(sizeof(rd_file_t));
     if(root == NULL) {
