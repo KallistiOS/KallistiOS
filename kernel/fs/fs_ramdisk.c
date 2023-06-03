@@ -203,8 +203,8 @@ static rd_file_t * ramdisk_create_file(rd_dir_t * parent, const char * fn, int d
         return NULL;
 
     /* Now add a file to the parent */
-    f = (rd_file_t *)malloc(sizeof(rd_file_t));
-    if(f == NULL) return NULL;
+    if(!(f = (rd_file_t *)malloc(sizeof(rd_file_t))))
+        return NULL;
 
     f->name = strdup(p);
     if(f->name == NULL) {
