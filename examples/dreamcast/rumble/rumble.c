@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
         w.x += 48.0f;
         plx_fcxt_setpos_pnt(cxt, &w);
 
-        for(count = 0; count <= 7; count++, w.x+=25.0f) {
+        for(count = 0; count <= 7; count++, w.x += 25.0f) {
             if(i == count)
                 plx_fcxt_setcolor4f(cxt, 1.0f, 0.9f, 0.9f, 0.0f);
             else
