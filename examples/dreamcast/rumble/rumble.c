@@ -9,13 +9,13 @@
 /*
     This example allows you to send raw commands to the rumble accessory (aka purupuru).
 
-    This is a recreation of an original posted by SinisterTengu in 2004 here: 
-    https://dcemulation.org/phpBB/viewtopic.php?p=490067#p490067 . Unfortunately, 
-    that one is lost, but I had based my vmu_beep testing on it, and the principle is 
-    the same. In each, a single 32-bit value is sent to the device which defines the 
+    This is a recreation of an original posted by SinisterTengu in 2004 here:
+    https://dcemulation.org/phpBB/viewtopic.php?p=490067#p490067 . Unfortunately,
+    that one is lost, but I had based my vmu_beep testing on it, and the principle is
+    the same. In each, a single 32-bit value is sent to the device which defines the
     features of the rumbling.
 
-    TODO: This should be updated at some point to display and work from the macros in 
+    TODO: This should be updated at some point to display and work from the macros in
     dc/maple/purupuru.h that define the characteristics of the raw 32-bit value.
 
  */
@@ -23,9 +23,12 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#include <kos/init.h>
+
 #include <dc/maple.h>
 #include <dc/maple/controller.h>
 #include <dc/maple/purupuru.h>
+
 #include <plx/font.h>
 
 extern uint8_t romdisk[];
@@ -40,7 +43,7 @@ void wait_for_dev_attach(maple_device_t **dev_ptr, unsigned int func) {
     point_t w = {40.0f, 200.0f, 10.0f, 0.0f};
 
     /* If we already have it, and it's still valid, leave */
-    /* dev->valid is set to 0 by the driver if the device 
+    /* dev->valid is set to 0 by the driver if the device
        is detatched, but dev will stay not-null */
     if((dev != NULL) && (dev->valid != 0)) return;
 
@@ -91,7 +94,7 @@ int main(int argc, char *argv[]) {
     /* Loop until Start is pressed */
     while(!(rel_buttons & CONT_START)) {
 
-        /* Before drawing the screen, trap into these functions to be 
+        /* Before drawing the screen, trap into these functions to be
            sure that there's at least one controller and one rumbler */
         wait_for_dev_attach(&contdev, MAPLE_FUNC_CONTROLLER);
         wait_for_dev_attach(&purudev, MAPLE_FUNC_PURUPURU);

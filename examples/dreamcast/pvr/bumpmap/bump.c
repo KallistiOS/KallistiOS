@@ -17,7 +17,7 @@
 #include <dc/fmath.h>
 #include <dc/maple/controller.h>
 
-#include <arch/arch.h>
+#include <kos/init.h>
 
 #include <kmg/kmg.h>
 

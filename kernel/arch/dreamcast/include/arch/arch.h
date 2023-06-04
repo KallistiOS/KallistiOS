@@ -159,58 +159,9 @@ int mm_init(void);
 */
 void * mm_sbrk(unsigned long increment);
 
-/** \brief  Use this macro to determine the level of initialization you'd like
-            in your program by default.
-
-    The defaults line will be fine for most things.
-
-    \param  flags           Parts of KOS to init.
-*/
-#define KOS_INIT_FLAGS(flags)   uint32 __kos_init_flags = (flags)
-
-/** \brief  The init flags. Do not modify this directly! */
-extern uint32 __kos_init_flags;
-
-/** \brief  Define a romdisk for your program, if you'd like one.
-    \param  rd              Pointer to the romdisk image in your code.
-*/
-#define KOS_INIT_ROMDISK(rd)    void * __kos_romdisk = (rd)
-
-/** \brief  Built-in romdisk. Do not modify this directly! */
-extern void * __kos_romdisk;
-
-/** \brief  State that you don't want a romdisk. */
-#define KOS_INIT_ROMDISK_NONE   NULL
-
-/** \brief  Register a single function to be called very early in the boot
-            process, before the BSS section is cleared.
-
-    \param  func            The function to register. The prototype should be
-                            void func(void)
-*/
-#define KOS_INIT_EARLY(func) void (*__kos_init_early_fn)(void) = (func)
-
-/** \defgroup arch_initflags        Available flags for initialization
-
-    These are the flags you can specify with KOS_INIT_FLAGS().
-    @{
-*/
-/** \brief  Default init flags (IRQs on, preemption enabled). */
-#define INIT_DEFAULT \
-    (INIT_IRQ | INIT_THD_PREEMPT)
-
-#define INIT_NONE           0x0000  /**< \brief Don't init optional things */
-#define INIT_IRQ            0x0001  /**< \brief Enable IRQs at startup */
-/* Preemptive mode is the only mode now. Keeping define for compatability. */
-#define INIT_THD_PREEMPT    0x0002  /**< \brief Enable thread preemption */
-#define INIT_NET            0x0004  /**< \brief Enable built-in networking */
-#define INIT_MALLOCSTATS    0x0008  /**< \brief Enable malloc statistics */
-#define INIT_QUIET          0x0010  /**< \brief Disable dbgio */
-
-/* DC-specific stuff */
-#define INIT_OCRAM          0x10000 /**< \brief Use half of the dcache as RAM */
-#define INIT_NO_DCLOAD      0x20000 /**< \brief Disable dcload */
-/** @} */
+/* Bring in the init flags for compatibility with old code that expects them
+   here. */
+#include <kos/init.h>
 
 /* Dreamcast-specific arch init things */
 /** \brief  Jump back to the bootloader.

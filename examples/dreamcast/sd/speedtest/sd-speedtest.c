@@ -19,8 +19,8 @@
 #include <dc/maple/controller.h>
 
 #include <arch/timer.h>
-#include <arch/arch.h>
 
+#include <kos/init.h>
 #include <kos/dbgio.h>
 #include <kos/blockdev.h>
 

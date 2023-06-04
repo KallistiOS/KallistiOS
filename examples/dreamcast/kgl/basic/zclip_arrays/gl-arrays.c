@@ -1,5 +1,5 @@
 /* 
-   KallistiOS 2.0.0
+   KallistiOS ##version##
 
    gl-arrays.c
    (c)2014 Josh Pearson
@@ -15,7 +15,7 @@
 #include <GL/glu.h>
 #include <GL/glut.h>
 
-#include <arch/arch.h>
+#include <kos/init.h>
 
 /* Load a PVR texture - located in pvr-texture.c */
 extern GLuint glTextureLoadPVR(char *fname, unsigned char isMipMapped, unsigned char glMipMap);
@@ -114,4 +114,3 @@ int main(int argc, char **argv) {
 
     return 0;
 }
-

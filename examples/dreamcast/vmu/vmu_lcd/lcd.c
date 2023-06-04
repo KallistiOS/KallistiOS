@@ -10,26 +10,30 @@
     VMU's LCD display. It does so by rendering to a virtual
     framebuffer and then presenting it, which sends the updated
     framebuffer to the VMU over the maple protocol which displays
-    it. 
+    it.
 
-    This demo also shows off rendering dynamic text using an 
+    This demo also shows off rendering dynamic text using an
     embedded font.
  */
+
+#include <stdio.h>
+#include <math.h>
+#include <stdint.h>
+
+#include <kos/init.h>
 
 #include <dc/maple.h>
 #include <dc/maple/controller.h>
 #include <dc/maple/vmu.h>
 #include <dc/vmu_fb.h>
 
-#include <stdio.h>
-#include <math.h>
-#include <stdint.h>
+#include <arch/arch.h>
 
 /* 4x6 font from the Linux kernel:
    https://github.com/torvalds/linux/blob/master/lib/fonts/font_mini_4x6.c
- 
-   Modified locally to pack the data better. 
- 
+
+   Modified locally to pack the data better.
+
    Created by Kenneth Albanowski.
    No rights reserved, released to the public domain.
  */

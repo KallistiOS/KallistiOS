@@ -14,7 +14,7 @@
 #include <dc/maple/controller.h>
 #include <dc/sound/stream.h>
 
-#include <arch/arch.h>
+#include <kos/init.h>
 
 #include <opusplay/opusplay.h>
 
