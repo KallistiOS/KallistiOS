@@ -11,9 +11,6 @@
 #include <kos.h>
 #include <kos/string.h>
 
-extern uint8 romdisk[];
-KOS_INIT_ROMDISK(romdisk);
-
 void draw_dir() {
     file_t      d;
     int     y = 88;

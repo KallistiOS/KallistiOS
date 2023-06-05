@@ -1,5 +1,6 @@
 TARGET = ghettoplay.elf
 OBJS = ghettoplay.o texture.o bkg.o 3dutils.o songmenu.o romdisk.o
+KOS_ROMDISK_DIR = romdisk
 
 all: rm-elf $(TARGET)
 
@@ -13,12 +14,6 @@ rm-elf:
 	
 $(TARGET): $(OBJS)
 	kos-cc -o $(TARGET) $(OBJS) -loggvorbisplay -lvorbis -logg -lm
-
-romdisk.img:
-	$(KOS_GENROMFS) -f romdisk.img -d romdisk -v
-
-romdisk.o: romdisk.img
-	$(KOS_BASE)/utils/bin2o/bin2o romdisk.img romdisk romdisk.o
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)

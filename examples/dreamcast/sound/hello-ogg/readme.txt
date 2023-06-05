@@ -1,4 +1,3 @@
-This examples expects a file called "test.ogg" in the Romdisk. So just put
-a small Ogg/Vorbis file there, compile it and upload it to your DC to see
-it working.
-
+This example expects a file called "test.ogg" to exist in the root of the
+romdisk. Put a relatively small Ogg/Vorbis file with the correct filename in the
+romdisk directory before compiling if you want the example to work. ;)
