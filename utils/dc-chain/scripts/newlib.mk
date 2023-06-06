@@ -10,7 +10,6 @@ $(build_newlib): src_dir = newlib-$(newlib_ver)
 $(build_newlib): log = $(logdir)/$(build).log
 $(build_newlib): logdir
 	@echo "+++ Building $(src_dir) to $(build)..."
-	cp $(kos_base)/include/sys/lock.h $(src_dir)/newlib/libc/sys/sh/sys
 	-mkdir -p $(build)
 	> $(log)
 	cd $(build); \

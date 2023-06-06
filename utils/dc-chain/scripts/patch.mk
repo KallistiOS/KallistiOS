@@ -65,6 +65,12 @@ sh-gcc-fixup: fetch-sh-gcc
 	cp $(patches)/gcc/gthr-kos.h $(src_dir)/libgcc/config/sh/gthr-kos.h
 	cp $(patches)/gcc/fake-kos.S $(src_dir)/libgcc/config/sh/fake-kos.S
 
+# Copy over required KOS files to newlib directory before patching
+patch-sh4-newlib: sh-newlib-fixup
+sh-newlib-fixup: fetch-newlib
+	@echo "+++ Copying required KOS files into newlib directory..."
+	cp $(kos_base)/include/sys/lock.h $(src_dir)/newlib/libc/sys/sh/sys
+
 uname_p := $(shell uname -p)
 uname_s := $(shell uname -s)
 
