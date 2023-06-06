@@ -29,7 +29,6 @@
 __BEGIN_DECLS
 
 #include <arch/types.h>
-#include <kos/limits.h>
 #include <kos/fs.h>
 #include <kos/net.h>
 #include <sys/queue.h>

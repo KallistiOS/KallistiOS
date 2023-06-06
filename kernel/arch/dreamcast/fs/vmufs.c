@@ -543,12 +543,18 @@ static int vmufs_setup(maple_device_t * dev, vmu_root_t * root, vmu_dir_t ** dir
         if(!*fat) {
             dbglog(DBG_ERROR, "vmufs_setup: can't alloc %d bytes for FAT on device %c%c\n",
                    *fatsize, dev->port + 'A', dev->unit + '0');
+            if(dir)
+                free(*dir);
             goto dead;
         }
 
         /* Read it */
-        if(vmufs_fat_read(dev, root, *fat) < 0)
+        if(vmufs_fat_read(dev, root, *fat) < 0) {
+            free(*fat);
+            if(dir)
+                free(*dir);
             goto dead;
+        }
     }
 
     /* Ok, everything's cool */
@@ -702,7 +708,7 @@ int vmufs_write(maple_device_t * dev, const char * fn, void * inbuf, int insize,
     vmu_root_t  root;
     vmu_dir_t   * dir = NULL, nd;
     uint16      * fat = NULL;
-    int     oldinsize, fatsize, dirsize, idx, rv = 0, st;
+    int     oldinsize, fatsize, dirsize, idx, rv = 0, st, fnlength;
 
     /* Round up the size if necessary */
     oldinsize = insize;
@@ -744,7 +750,14 @@ int vmufs_write(maple_device_t * dev, const char * fn, void * inbuf, int insize,
     nd.filetype = (flags & VMUFS_VMUGAME) ? 0xcc : 0x33;
     nd.copyprotect = (flags & VMUFS_NOCOPY) ? 0xff : 0x00;
     nd.firstblk = 0;
-    strncpy(nd.filename, fn, 12);
+
+    fnlength = strlen(fn);
+    fnlength = fnlength > 12 ? 12 : fnlength;
+    memcpy(nd.filename, fn, fnlength);
+    if (fnlength < 12) {
+        memset(nd.filename + fnlength, '\0', 12 - fnlength);
+    }
+
     vmufs_dir_fill_time(&nd);
     nd.filesize = insize / 512;
     nd.hdroff = (flags & VMUFS_VMUGAME) ? 1 : 0;

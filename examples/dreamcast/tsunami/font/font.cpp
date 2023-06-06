@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
     int done = 0;
 
     cont_btn_callback(0, CONT_START | CONT_A | CONT_B | CONT_X | CONT_Y,
-                      (void (*)(unsigned char, long  unsigned int))arch_exit);
+                      (cont_btn_callback_t)arch_exit);
 
     pvr_init_defaults();
 

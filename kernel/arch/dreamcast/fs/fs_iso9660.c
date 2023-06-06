@@ -430,7 +430,7 @@ static iso_dirent_t *find_object(const char *fn, int dir,
     /* RockRidge */
     int     len;
     uint8       *pnt;
-    char        rrname[MAX_FN_LEN];
+    char        rrname[NAME_MAX];
     int     rrnamelen;
     int     size_left;
 

@@ -12,8 +12,10 @@ export KOS_ARCH_DIR="${KOS_BASE}/kernel/arch/${KOS_ARCH}"
 # Pull in the arch environ file
 . ${KOS_BASE}/environ_${KOS_ARCH}.sh
 
-# Add the gnu wrappers dir to the path
-export PATH="${PATH}:${KOS_BASE}/utils/gnu_wrappers"
+# Add the gnu wrappers dir to the path if it is not already
+if [[ ":$PATH:" != *":${KOS_BASE}/utils/gnu_wrappers"* ]]; then
+  export PATH="${PATH}:${KOS_BASE}/utils/gnu_wrappers"
+fi
 
 # Our includes
 export KOS_INC_PATHS="${KOS_INC_PATHS} -I${KOS_BASE}/include \
@@ -33,7 +35,7 @@ export KOS_OBJCOPY="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-objcopy"
 export KOS_LD="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-ld"
 export KOS_RANLIB="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-gcc-ranlib"
 export KOS_STRIP="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-strip"
-export KOS_CFLAGS="${KOS_CFLAGS} ${KOS_INC_PATHS} -D_arch_${KOS_ARCH} -D_arch_sub_${KOS_SUBARCH} -Wall -g -fno-builtin"
+export KOS_CFLAGS="${KOS_CFLAGS} ${KOS_INC_PATHS} -D_arch_${KOS_ARCH} -D_arch_sub_${KOS_SUBARCH} -Wall -g"
 export KOS_CPPFLAGS="${KOS_CPPFLAGS} ${KOS_INC_PATHS_CPP} -fno-operator-names"
 
 # Which standards modes we want to compile for

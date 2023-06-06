@@ -3,6 +3,7 @@
 #include <dc/biosfont.h>
 #include <dc/maple.h>
 #include <dc/maple/controller.h>
+#include <kos/init.h>
 
 extern uint8 romdisk[];
 KOS_INIT_ROMDISK(romdisk);

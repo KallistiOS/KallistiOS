@@ -17,6 +17,8 @@
 #include <dc/fmath.h>
 #include <dc/maple/controller.h>
 
+#include <kos/init.h>
+
 #include <kmg/kmg.h>
 
 static pvr_sprite_txr_t sprites[2];

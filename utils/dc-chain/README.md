@@ -59,9 +59,7 @@ for your computer installed. Indeed, to build the cross-compilers you'll need a
 working compilation environment on your computer.
 
 In addition, you must have `bash` installed on your host system. Other shells
-*may* work, but are not tested and not guaranteed to work. The `download.sh` and
-`unpack.sh` scripts should be able to find your system's installed `bash` so
-long as it is installed in a standard location.
+*may* work, but are not tested and not guaranteed to work.
 
 If you need help on this step, everything is described in the `./doc` directory.
 
@@ -146,8 +144,9 @@ the use of `git_repo` and `git_branch` variables to specify the repository
 and branch respectively. If `git_branch` is omitted, the default for the
 repository will be used.
 
-**Note:** All download URL are computed in the `scripts/common.sh` file, but
-you shouldn't update/change this.
+**Note:** All download URL are computed in the `scripts/download.mk` file, but
+you shouldn't update/change this as it can be overriden with the `gnu_mirror` 
+config option detailed below.
 
 ### Toolchains base
 
@@ -273,15 +272,13 @@ After installing all the prerequisites and tweaking the configuration with the
 Below you will find some generic instructions; you may find some specific
 instructions in the `./doc` directory for your environment.
 
-1. Execute the following for preparing the sources (if you have any syntax
-   errors running the scripts, try running with `bash` explicitly):
-
-		./download.sh
-		./unpack.sh
-
-2. Finally, input (for **BSD**, please use `gmake` instead):
+In the dc-chain directory, run (for **BSD**, please use `gmake` instead):
 
 		make
+
+This will build the ARM & SH4 toolchains. If you wish to only build the SH4
+toolchain and just use the prebuilt KOS sound driver run:
+    make build-sh4
 
 Depending of your environment, this can take a bunch of hours. So please be
 patient!
@@ -302,10 +299,9 @@ documentation to learn more on this point.
 
 ### Removing all useless files
 
-After the toolchain compilation, you can cleanup everything by entering (if
-you had to use `bash` explicitly above, you will need to do so again here):
+After the toolchain compilation, you can cleanup everything by entering:
 
-	./cleanup.sh
+	make clean
 
 This will save a lot of space by removing all unnecessary files.
 
@@ -317,7 +313,8 @@ of the problematic step only rather than running the whole process again.
 
 Interesting targets (you can `make` any of these):
 
-- `all`: `patch` `build` (patch and build everything, excluding `gdb`)
+- `all`: `fetch` `patch` `build` (fetch, patch and build everything, excluding `gdb`)
+- `fetch`: `fetch-sh4` `fetch-arm` `fetch-gdb`
 - `patch`: `patch-gcc` `patch-newlib` `patch-kos` (should be executed once)
 - `build`: `build-sh4` `build-arm` (build everything, excluding `gdb`)
 - `build-sh4`: `build-sh4-binutils` `build-sh4-gcc` (build only `sh-elf` toolchain, excluding `gdb`)

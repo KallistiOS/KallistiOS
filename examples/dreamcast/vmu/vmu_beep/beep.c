@@ -24,13 +24,18 @@
     Enjoy, and let me know about some interesting sounds.
  */
 
+#include <stdio.h>
+#include <stdint.h>
+
+#include <kos/init.h>
+
 #include <dc/maple.h>
 #include <dc/maple/controller.h>
 #include <dc/maple/vmu.h>
-#include <plx/font.h>
 
-#include <stdio.h>
-#include <stdint.h>
+#include <arch/arch.h>
+
+#include <plx/font.h>
 
 extern uint8_t romdisk[];
 KOS_INIT_FLAGS(INIT_DEFAULT);
@@ -157,7 +162,7 @@ int main(int argc, char *argv[]) {
 
         /* Store current button states + buttons which have been released. */
         state = (cont_state_t *)maple_dev_status(dev);
-        rel_buttons = (old_buttons ^ state->buttons);	
+        rel_buttons = (old_buttons ^ state->buttons);
 
         if((state->buttons & CONT_DPAD_LEFT) && (rel_buttons & CONT_DPAD_LEFT)) {
             if(i > 0) i--;

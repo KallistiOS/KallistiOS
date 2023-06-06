@@ -740,6 +740,7 @@ static int int_rename(fs_ext2_fs_t *fs, const char *fn1, const char *fn2,
                 if(dinode)
                     ext2_inode_put(dinode);
 
+                free(cp);
                 return -EINVAL;
             }
 
@@ -754,6 +755,7 @@ static int int_rename(fs_ext2_fs_t *fs, const char *fn1, const char *fn2,
                 if(dinode)
                     ext2_inode_put(dinode);
 
+                free(cp);
                 return -EINVAL;
             }
 
@@ -771,6 +773,7 @@ static int int_rename(fs_ext2_fs_t *fs, const char *fn1, const char *fn2,
                 if(dinode)
                     ext2_inode_put(dinode);
 
+                free(cp);
                 return irv;
             }
         }
@@ -823,8 +826,10 @@ static int int_rename(fs_ext2_fs_t *fs, const char *fn1, const char *fn2,
     /* If the thing we moved was a directory, we need to fix its '..' entry and
        update the reference counts of the inodes involved. */
     if(!isfile) {
-        if((ext2_dir_redir_entry(fs->fs, finode, "..", dpinode_num, NULL)))
+        if((ext2_dir_redir_entry(fs->fs, finode, "..", dpinode_num, NULL))) {
+            free(cp);
             return -EIO;
+        }
 
         --pinode->i_links_count;
         ++dpinode->i_links_count;
@@ -911,6 +916,7 @@ static int fs_ext2_rename(vfs_handler_t *vfs, const char *fn1,
     /* Find the inode of the entry we want to move. */
     if(!(inode = ext2_inode_get(fs->fs, dent->inode, &irv))) {
         mutex_unlock(&ext2_mutex);
+        free(cp);
         errno = EIO;
         return -1;
     }
@@ -1583,7 +1589,8 @@ static int fs_ext2_symlink(vfs_handler_t *vfs, const char *path1,
     /* Will the link fit in the inode? */
     if(len < 60) {
         /* We can make a fast symlink. */
-        strncpy((char *)inode->i_block, path1, 60);
+        strncpy((char *)inode->i_block, path1, 59);
+        ((char *)inode->i_block)[59] = '\0';
         inode->i_size = (uint32_t)len;
     }
     else {

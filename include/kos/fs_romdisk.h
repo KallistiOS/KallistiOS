@@ -28,7 +28,6 @@
 __BEGIN_DECLS
 
 #include <arch/types.h>
-#include <kos/limits.h>
 #include <kos/fs.h>
 
 /** \cond */
@@ -54,7 +53,9 @@ int fs_romdisk_shutdown(void);
                             free it if appropriate. If non-zero, img will be
                             freed when it is unmounted
     \retval 0               On success
-    \retval -1              On error
+    \retval -1              If fs_romdisk_init not called
+    \retval -2              If img is invalid
+    \retval -3              If a malloc fails
 */
 int fs_romdisk_mount(const char * mountpoint, const uint8 *img, int own_buffer);
 

@@ -174,9 +174,9 @@ int main(int argc, char **argv) {
 
         /* If we're playing a file fill out the File information */
         if(sndoggvorbis_isplaying()) {
-            char bitrate[6];
+            char bitrate[7];
             long bitrateval = sndoggvorbis_getbitrate();
-            sprintf(bitrate, "%6ld", bitrateval);
+            snprintf(bitrate, sizeof(bitrate), "%6ld", bitrateval);
             char * artist, * title, * genre;
 
             artist = sndoggvorbis_getartist();

@@ -57,15 +57,19 @@ export KOS_CC_PREFIX="sh-elf"
 export DC_ARM_BASE="/opt/toolchains/dc/arm-eabi"
 export DC_ARM_PREFIX="arm-eabi"
 
-# Expand PATH (comment out if you don't want this done here)
-export PATH="${PATH}:${KOS_CC_BASE}/bin:/opt/toolchains/dc/bin"
+# Expand PATH if not already set (comment out if you don't want this done here)
+if [[ ":$PATH:" != *":${KOS_CC_BASE}/bin:/opt/toolchains/dc/bin"* ]]; then
+  export PATH="${PATH}:${KOS_CC_BASE}/bin:/opt/toolchains/dc/bin"
+fi
 
 # reset some options because there's no reason for them to persist across
 # multiple sourcing of this
+export KOS_INC_PATHS=""
 export KOS_CFLAGS=""
 export KOS_CPPFLAGS=""
 export KOS_LDFLAGS=""
 export KOS_AFLAGS=""
+export DC_ARM_LDFLAGS=""
 
 # Setup some default CFLAGS for compilation. The things that will go here
 # are user specifyable, like optimization level and whether you want stack
@@ -78,6 +82,20 @@ export KOS_AFLAGS=""
 # recent toolchain (GCC 10+), and has not been thoroughly tested.
 export KOS_CFLAGS="-O2 -fomit-frame-pointer"
 # export KOS_CFLAGS="-O2 -DFRAME_POINTERS -fno-omit-frame-pointer"
+
+# Comment out this line to enable GCC to use its own builtin implementations of 
+# certain standard library functions. Under certain conditions, this can allow
+# compiler-optimized implementations to replace standard function invocations.
+# The downside of this is that it COULD interfere with Newlib or KOS implementations
+# of these functions, and it has not been tested thoroughly to ensure compatibility. 
+export KOS_CFLAGS="${KOS_CFLAGS} -fno-builtin"
+
+# Uncomment this line to enable the optimized fast-math instructions (FSSRA,
+# FSCA, and FSQRT) for calculating sin/cos, inverse square root, and square roots.
+# These can result in substantial performance gains for these kinds of operations;
+# however, they do so at the price of accuracy and are not IEEE compliant.
+# NOTE: This also requires -fno-builtin be removed from KOS_CFLAGS to take effect!
+# export KOS_CFLAGS="${KOS_CFLAGS} -ffast-math -ffp-contract=fast -mfsrra -mfsca"
 
 # Everything else is pretty much shared. If you want to configure compiler
 # options or other such things, look at this file.

@@ -148,7 +148,7 @@ static rd_file_t * ramdisk_find_path(rd_dir_t * parent, const char * fn, int dir
     if(fn[0] != 0) {
         f = ramdisk_find(parent, fn, strlen(fn));
 
-        if((!dir && f->type == STAT_TYPE_DIR) || (dir && f->type != STAT_TYPE_DIR))
+        if((f == NULL) || (!dir && f->type == STAT_TYPE_DIR) || (dir && f->type != STAT_TYPE_DIR))
             return NULL;
     }
     else {
@@ -203,8 +203,15 @@ static rd_file_t * ramdisk_create_file(rd_dir_t * parent, const char * fn, int d
         return NULL;
 
     /* Now add a file to the parent */
-    f = (rd_file_t *)malloc(sizeof(rd_file_t));
+    if(!(f = (rd_file_t *)malloc(sizeof(rd_file_t))))
+        return NULL;
+
     f->name = strdup(p);
+    if(f->name == NULL) {
+        free(f);
+        return NULL;
+    }
+
     f->size = 0;
     f->type = dir ? STAT_TYPE_DIR : STAT_TYPE_FILE;
     f->openfor = OPENFOR_NOTHING;
@@ -217,6 +224,12 @@ static rd_file_t * ramdisk_create_file(rd_dir_t * parent, const char * fn, int d
     else {
         f->data = malloc(sizeof(rd_dir_t));
         f->datasize = 0;
+    }
+
+    if(f->data == NULL) {
+        free(f->name);
+        free(f);
+        return NULL;
     }
 
     LIST_INSERT_HEAD(pdir, f, dirlist);
@@ -834,16 +847,30 @@ int fs_ramdisk_detach(const char * fn, void ** obj, size_t * size) {
 /* Initialize the file system */
 int fs_ramdisk_init(void) {
     /* Create an empty root dir */
-    rootdir = (rd_dir_t *)malloc(sizeof(rd_dir_t));
-    LIST_INIT(rootdir);
+    if(!(rootdir = (rd_dir_t *)malloc(sizeof(rd_dir_t))))
+        return -1;
+
     root = (rd_file_t *)malloc(sizeof(rd_file_t));
+    if(root == NULL) {
+        free(rootdir);
+        return -1;
+    }
+
     root->name = strdup("/");
+    if(root->name == NULL) {
+        free(root);
+        free(rootdir);
+        return -1;
+    }
+
     root->size = 0;
     root->type = STAT_TYPE_DIR;
     root->openfor = OPENFOR_NOTHING;
     root->usage = 0;
     root->data = rootdir;
     root->datasize = 0;
+
+    LIST_INIT(rootdir);
 
     /* Reset fd's */
     memset(fh, 0, sizeof(fh));

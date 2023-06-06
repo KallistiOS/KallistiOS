@@ -5,16 +5,16 @@
 # Initially adapted from Stalin's build script version 0.3.
 #
 
-build: build-sh4 build-arm build-done
-build-sh4: build-sh4-binutils build-sh4-gcc
-build-arm: build-arm-binutils build-arm-gcc
-build-sh4-gcc: build-sh4-gcc-pass1 build-sh4-newlib build-sh4-gcc-pass2
+build: build-sh4-done build-arm
+build-sh4: build-sh4-gcc
+build-arm: build-arm-gcc
+build-sh4-gcc: build-sh4-gcc-pass2
 build-arm-gcc: build-arm-gcc-pass1
 	$(clean_arm_hack)
 build-sh4-newlib: build-sh4-newlib-only fixup-sh4-newlib
 
 fixup_sh4_newlib_stamp = fixup-sh4-newlib.stamp
-build-done:
+build-sh4-done: build-sh4 
 	@if test -f "$(fixup_sh4_newlib_stamp)"; then \
 		echo ""; \
 		echo ""; \
@@ -39,6 +39,26 @@ $(build_sh4_targets): target = $(sh_target)
 $(build_sh4_targets): extra_configure_args = --with-multilib-list=m4-single-only --with-endian=little --with-cpu=m4-single-only
 $(build_sh4_targets): gcc_ver = $(sh_gcc_ver)
 $(build_sh4_targets): binutils_ver = $(sh_binutils_ver)
+
+# SH4 Build Dependencies
+build-sh4-gcc-pass1: build-sh4-binutils
+build-sh4-newlib-only: build-sh4-gcc-pass1
+build-sh4-gcc-pass2: fixup-sh4-newlib
+
+# ARM Build Dependencies
+build-arm-gcc-pass1: build-arm-binutils
+
+# SH4 Download Dependencies
+build-sh4-binutils: fetch-sh-binutils
+build-sh4-gcc-pass1 build-sh4-gcc-pass2: fetch-sh-gcc
+build-sh4-newlib-only: fetch-newlib
+
+# ARM Download Dependencies
+build-arm-binutils: fetch-arm-binutils
+build-arm-gcc-pass1: fetch-arm-gcc
+
+# GDB Patch Dependency
+build_gdb: patch_gdb
 
 # MinGW/MSYS or 'sh_force_libbfd_installation=1': install BFD if required.
 # To compile dc-tool, we need to install libbfd for sh-elf.

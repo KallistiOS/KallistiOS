@@ -17,13 +17,13 @@ clean: rm-elf
 rm-elf:
 	-rm -f $(TARGET)
 
-tls_test.elf: $(OBJS)
+$(TARGET): $(OBJS)
 	kos-cc -o $(TARGET) $(OBJS)
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 
 dist: $(TARGET)
-	rm -f $(OBJS)
+	-rm -f $(OBJS)
 	$(KOS_STRIP) $(TARGET)
 

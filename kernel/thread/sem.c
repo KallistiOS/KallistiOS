@@ -16,7 +16,6 @@
 #include <errno.h>
 
 #include <kos/thread.h>
-#include <kos/limits.h>
 #include <kos/sem.h>
 #include <kos/genwait.h>
 

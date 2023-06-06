@@ -141,6 +141,10 @@ int net_arp_insert(netif_t *nif, const uint8 mac[6], const uint8 ip[4],
 
     /* It's not there, add an entry */
     cur = (netarp_t *)malloc(sizeof(netarp_t));
+
+    if(cur == NULL)
+        return -1;
+
     memcpy(cur->mac, mac, 6);
     memcpy(cur->ip, ip, 4);
     cur->timestamp = timestamp;
@@ -186,6 +190,10 @@ int net_arp_lookup(netif_t *nif, const uint8 ip_in[4], uint8 mac_out[6],
 
     /* It's not there... Add an incomplete ARP entry */
     cur = (netarp_t *)malloc(sizeof(netarp_t));
+
+    if(cur == NULL)
+        return -3;
+
     memset(cur, 0, sizeof(netarp_t));
     memcpy(cur->ip, ip_in, 4);
     cur->timestamp = timer_ms_gettime64();

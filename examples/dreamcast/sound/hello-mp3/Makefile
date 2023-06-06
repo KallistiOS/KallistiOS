@@ -1,6 +1,7 @@
 
 TARGET = mp3test.elf
-OBJS = mp3test.o romdisk.o 
+OBJS = mp3test.o romdisk.o
+KOS_ROMDISK_DIR = romdisk
 
 all: rm-elf $(TARGET)
 
@@ -15,17 +16,11 @@ rm-elf:
 $(TARGET): $(OBJS) 
 	kos-cc -o $(TARGET) $(OBJS) -lmp3 -lm
 
-romdisk.img:
-	$(KOS_GENROMFS) -f romdisk.img -d romdisk -v
-
-romdisk.o: romdisk.img
-	$(KOS_BASE)/utils/bin2o/bin2o romdisk.img romdisk romdisk.o
-
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 #	dc-tool -p -b 115200 -x $(TARGET)
 
 dist: $(TARGET)
-	rm -f $(OBJS) romdisk.img
+	-rm -f $(OBJS) romdisk.img
 	$(KOS_STRIP) $(TARGET)
 

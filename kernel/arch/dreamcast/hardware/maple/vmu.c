@@ -20,6 +20,7 @@
 #include <kos/genwait.h>
 #include <dc/maple.h>
 #include <dc/maple/vmu.h>
+#include <dc/math.h>
 #include <dc/biosfont.h>
 #include <dc/vmufs.h>
 #include <arch/timer.h>
@@ -208,7 +209,7 @@ static void vmu_gen_callback(maple_frame_t *frame) {
    to last byte. This might necessitate refactoring as the
    clock is a seperate device from the screen and storage. */
 int vmu_beep_raw(maple_device_t *dev, uint32_t beep) {
-    uint32 *send_buf;
+    uint32_t *send_buf;
 
     assert(dev != NULL);
 
@@ -285,6 +286,17 @@ int vmu_draw_lcd(maple_device_t *dev, void *bitmap) {
     }
 
     return MAPLE_EOK;
+}
+
+int vmu_draw_lcd_rotated(maple_device_t *dev, const void *bitmap) {
+    uint32_t bitmap_inverted[48];
+    unsigned int i;
+
+    for (i = 0; i < 48; i++) {
+        bitmap_inverted[i] = bit_reverse(((uint32 *)bitmap)[47 - i]);
+    }
+
+    return vmu_draw_lcd(dev, bitmap_inverted);
 }
 
 /* This function converts a xbm image to a 1-bit bitmap that can
@@ -411,6 +423,7 @@ static void vmu_block_write_callback(maple_frame_t *frm) {
     /* Wakey, wakey! */
     genwait_wake_all(frm);
 }
+
 static int vmu_block_write_internal(maple_device_t * dev, uint16_t blocknum, const uint8_t *buffer) {
     maple_response_t *resp;
     int              rv, phase, r;

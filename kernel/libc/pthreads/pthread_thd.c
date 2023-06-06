@@ -2,6 +2,8 @@
 #include <errno.h>
 #include <assert.h>
 
+#include <kos/thread.h>
+
 /* Thread Creation, P1003.1c/Draft 10, p. 144 */
 
 int pthread_create(pthread_t *thread, const pthread_attr_t  *attr,

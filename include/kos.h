@@ -56,6 +56,7 @@ __BEGIN_DECLS
 #include <kos/elf.h>
 #include <kos/fs_socket.h>
 #include <kos/string.h>
+#include <kos/init.h>
 
 #include <arch/arch.h>
 #include <arch/cache.h>
@@ -66,11 +67,11 @@ __BEGIN_DECLS
 #include <arch/exec.h>
 #include <arch/stack.h>
 #include <arch/byteorder.h>
+#include <arch/rtc.h>
 
 #ifdef _arch_dreamcast
 #   include <arch/gdb.h>
 #   include <arch/mmu.h>
-#   include <arch/rtc.h>
 
 #   include <dc/asic.h>
 #   include <dc/biosfont.h>

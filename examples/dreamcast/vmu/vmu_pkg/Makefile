@@ -7,7 +7,7 @@
 TARGET = vmu.elf
 
 # List all of your C files here, but change the extension to ".o"
-OBJS = vmu.o romdisk.o
+OBJS = vmu.o
 
 all: rm-elf $(TARGET)
 
@@ -17,21 +17,15 @@ clean: rm-elf
 	-rm -f $(OBJS)
 
 rm-elf:
-	-rm -f $(TARGET) romdisk.*
+	-rm -f $(TARGET)
 
 $(TARGET): $(OBJS)
 	kos-cc -o $(TARGET) $(OBJS)
-
-romdisk.img:
-	$(KOS_GENROMFS) -f romdisk.img -d romdisk -v
-
-romdisk.o: romdisk.img
-	$(KOS_BASE)/utils/bin2o/bin2o romdisk.img romdisk romdisk.o
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 
 dist: $(TARGET)
-	rm -f $(OBJS) romdisk.img
+	-rm -f $(OBJS)
 	$(KOS_STRIP) $(TARGET)
 

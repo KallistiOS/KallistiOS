@@ -12,10 +12,9 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
+#include <kos/cdefs.h>
 #include <kos/tls.h>
-#include <arch/types.h>
 #include <arch/irq.h>
-#include <arch/arch.h>
 #include <sys/queue.h>
 #include <sys/reent.h>
 
@@ -482,6 +481,8 @@ void thd_sleep(int ms);
     \param  prio            The priority value to assign to the thread.
 
     \retval 0               On success.
+    \retval -1              thd is NULL.
+    \retval -2              prio requested was out of range.
 */
 int thd_set_prio(kthread_t *thd, prio_t prio);
 

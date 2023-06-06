@@ -14,6 +14,8 @@
 #include <dc/maple.h>
 #include <dc/maple/controller.h>
 
+#include <kos/init.h>
+
 #include <pcx/pcx.h>
 #include <kmg/kmg.h>
 

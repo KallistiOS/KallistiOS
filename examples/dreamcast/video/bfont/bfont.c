@@ -1,6 +1,12 @@
 /* Very simple test for bfont (and its various encodings) */
 
-#include <kos.h>
+#include <dc/biosfont.h>
+#include <dc/video.h>
+#include <dc/maple/controller.h>
+
+#include <arch/arch.h>
+
+#include <unistd.h>
 
 int main(int argc, char **argv) {
     int x, y, o;
@@ -13,35 +19,53 @@ int main(int argc, char **argv) {
                                   | ((c >> 3) << 0);
         }
 
-    o = 20 * 640 + 20;
+    /* Set our starting offset to one letter height away from the 
+       top of the screen and two widths from the left */
+    o = (640 * BFONT_HEIGHT) + (BFONT_THIN_WIDTH * 2);
 
     /* Test with ISO8859-1 encoding */
     bfont_set_encoding(BFONT_CODE_ISO8859_1);
-    bfont_draw_str(vram_s + o, 640, 1, "Test of basic ASCII");
-    o += 640 * 24;
-    bfont_draw_str(vram_s + o, 640, 1, "Parlez-vous franï¿½ais?");
-    o += 640 * 24;
+    bfont_draw_str(vram_s + o, 640, 1, "Test of basic ASCII");  
+    /* After each string, we'll increment the offset down by one row */
+    o += 640 * BFONT_HEIGHT;
+    bfont_draw_str(vram_s + o, 640, 1, "Parlez-vous français?");
+    o += 640 * BFONT_HEIGHT;
+
+    /* Do a second set drawn transparently */
     bfont_draw_str(vram_s + o, 640, 0, "Test of basic ASCII");
-    o += 640 * 24;
-    bfont_draw_str(vram_s + o, 640, 0, "Parlez-vous franï¿½ais?");
-    o += 640 * 24;
+    o += 640 * BFONT_HEIGHT;
+    bfont_draw_str(vram_s + o, 640, 0, "Parlez-vous français?");
+    o += 640 * BFONT_HEIGHT;
 
     /* Test with EUC encoding */
     bfont_set_encoding(BFONT_CODE_EUC);
-    bfont_draw_str(vram_s + o, 640, 1, "ï¿½ï¿½ï¿½ï¿½ï¿½Ë¤ï¿½ï¿½ EUC!");
-    o += 640 * 24;
-    bfont_draw_str(vram_s + o, 640, 0, "ï¿½ï¿½ï¿½ï¿½ï¿½Ë¤ï¿½ï¿½ EUC!");
-    o += 640 * 24;
+    bfont_draw_str(vram_s + o, 640, 1, "¤³¤ó¤Ë¤Á¤Ï EUC!");
+    o += 640 * BFONT_HEIGHT;
+    bfont_draw_str(vram_s + o, 640, 0, "¤³¤ó¤Ë¤Á¤Ï EUC!");
+    o += 640 * BFONT_HEIGHT;
 
     /* Test with Shift-JIS encoding */
     bfont_set_encoding(BFONT_CODE_SJIS);
-    bfont_draw_str(vram_s + o, 640, 1, "ï¿½Aï¿½hï¿½ï¿½ï¿½Xï¿½ÏŠï¿½ SJIS");
-    o += 640 * 24;
-    bfont_draw_str(vram_s + o, 640, 0, "ï¿½Aï¿½hï¿½ï¿½ï¿½Xï¿½ÏŠï¿½ SJIS");
-    o += 640 * 24;
+    bfont_draw_str(vram_s + o, 640, 1, "ƒAƒhƒŒƒX•ÏŠ· SJIS");
+    o += 640 * BFONT_HEIGHT;
+    bfont_draw_str(vram_s + o, 640, 0, "ƒAƒhƒŒƒX•ÏŠ· SJIS");
+    o += 640 * BFONT_HEIGHT;
 
-    /* Pause to see the results */
-    usleep(5 * 1000 * 1000);
+    /* Drawing the special symbols is a bit convoluted. First we'll draw some
+       standard text as above. */
+    bfont_set_encoding(BFONT_CODE_ISO8859_1);
+    bfont_draw_str(vram_s + o, 640, 1, "To exit, press ");
+
+    /* Then we set the mode to raw to draw the special character. */
+    bfont_set_encoding(BFONT_CODE_RAW);
+    /* Adjust the writing to start after "To exit, press " and draw the one char */
+    bfont_draw_wide(vram_s + o + (BFONT_THIN_WIDTH * 15), 640, 1, BFONT_STARTBUTTON);
+
+    /* If Start is pressed, exit the app */
+    cont_btn_callback(0, CONT_START, (cont_btn_callback_t)arch_exit);
+
+    /* Just trap here waiting for the button press */
+    for(;;) { usleep(50); }
 
     return 0;
 }

@@ -14,6 +14,8 @@
 #include <dc/maple/controller.h>
 #include <dc/sound/stream.h>
 
+#include <kos/init.h>
+
 #include <opusplay/opusplay.h>
 
 extern uint8 romdisk[];

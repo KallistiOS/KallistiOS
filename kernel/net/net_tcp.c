@@ -2099,7 +2099,7 @@ static short net_tcp_poll(net_socket_t *hnd, short events) {
 
         case TCP_STATE_TIME_WAIT:
         case TCP_STATE_CLOSING:
-            rv = POLLRDNORM;
+            rv |= POLLRDNORM;
             break;
 
         case TCP_STATE_SYN_RECEIVED:

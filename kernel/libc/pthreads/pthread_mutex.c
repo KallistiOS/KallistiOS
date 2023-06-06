@@ -6,6 +6,8 @@
 #include <errno.h>
 #include <assert.h>
 
+#include <kos/mutex.h>
+
 // XXX Recursive mutexes are not supported ... this could cause deadlocks
 // in code expecting it. Where do you set that!?
 

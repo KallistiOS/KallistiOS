@@ -201,7 +201,7 @@ void mmu_use_table(mmucontext_t *context);
     own, that means you will only ever have one of these, if any.
 
     \param  asid            The address space ID of this process.
-    \return                 The newly created context.
+    \return                 The newly created context or NULL on fail.
 */
 mmucontext_t *mmu_context_create(int asid);
 
@@ -271,7 +271,7 @@ void mmu_page_map(mmucontext_t *context, int virtpage, int physpage,
     \param  srcaddr         Source, in the mapped memory space.
     \param  srccnt          The number of bytes to copy.
     \param  buffer          The kernel buffer to copy into (should be in P1).
-    \return                 The number of bytes copied.
+    \return                 The number of bytes copied (failure causes arch_panic).
 */
 int mmu_copyin(mmucontext_t *context, uint32 srcaddr, uint32 srccnt,
                void *buffer);
@@ -285,6 +285,7 @@ int mmu_copyin(mmucontext_t *context, uint32 srcaddr, uint32 srccnt,
     \param  context2        The destination's context.
     \param  iov2            The scatter/gather array to copy to.
     \param  iovcnt2         The number of entries in iov2.
+    \return                 The number of bytes copied (failure causes arch_panic).
 */
 int mmu_copyv(mmucontext_t *context1, struct iovec *iov1, int iovcnt1,
               mmucontext_t *context2, struct iovec *iov2, int iovcnt2);

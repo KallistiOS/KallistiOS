@@ -3,6 +3,10 @@
 ! startup.s
 ! (c)2000-2001 Megan Potter
 !
+! This file is added to GCC during the patching stage of toolchain
+! compilation. Any changes to this file will not take effect until the
+! toolchain is recompiled.
+!
 ! This file must appear FIRST in your linking order, or your program won't
 ! work correctly as a raw binary.
 !

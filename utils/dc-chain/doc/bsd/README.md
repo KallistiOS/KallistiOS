@@ -93,15 +93,7 @@ To make the toolchains, do the following:
 
 		cd /opt/toolchains/dc/kos/utils/dc-chain/
 	
-3. Enter the following to download all source packages for all components:
-
-		./download.sh
-
-4. Enter the following to unpack all source packages.
-
-		./unpack.sh
-
-5. Enter the following to launch the process:
+3. Enter the following to start downloading and building toolchain:
 
 		gmake
 
@@ -121,7 +113,7 @@ This will install `sh-elf-gdb` and can be used to debug programs through
 
 After everything is done, you can cleanup all temporary files by entering:
 
-	./cleanup.sh
+	gmake clean
 
 ## Next steps ##
 

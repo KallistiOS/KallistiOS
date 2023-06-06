@@ -185,7 +185,7 @@ int fs_pty_create(char * buffer, int maxbuflen, file_t * master_out, file_t * sl
 }
 
 /* Autoclean totally unreferenced PTYs (zero refcnt). */
-/* XXX This is a kinda nasty piece of code... two goto's!! */
+/* XXX This is a kinda nasty piece of code... goto!! */
 static void pty_destroy_unused(void) {
     ptyhalf_t * c, * n;
     int old;
@@ -206,40 +206,35 @@ again:
         n = LIST_NEXT(c, list);
 
         /* Don't mess with the kernel console or locked items */
-        if(c->id == 0 || mutex_is_locked(&c->mutex))
-            goto next;
+        if((c->id != 0) && (!mutex_is_locked(&c->mutex))) {
 
-        /* Not in use? */
-        if(c->refcnt <= 0) {
-            /* Check to see if the other end is also free */
-            if(c->other->refcnt > 0)
-                goto next;
+            /* Make sure neither is in use */
+            if((c->refcnt <= 0) && (c->other->refcnt <= 0)) {
 
-            /* Free all our structs */
-            cond_destroy(&c->ready_read);
-            cond_destroy(&c->ready_write);
-            mutex_destroy(&c->mutex);
+                /* Free all our structs */
+                cond_destroy(&c->ready_read);
+                cond_destroy(&c->ready_write);
+                mutex_destroy(&c->mutex);
 
-            /* Remove us from the list */
-            LIST_REMOVE(c, list);
+                /* Remove us from the list */
+                LIST_REMOVE(c, list);
 
-            /* Now to deal with our partner... */
-            cond_destroy(&c->other->ready_read);
-            cond_destroy(&c->other->ready_write);
-            mutex_destroy(&c->other->mutex);
+                /* Now to deal with our partner... */
+                cond_destroy(&c->other->ready_read);
+                cond_destroy(&c->other->ready_write);
+                mutex_destroy(&c->other->mutex);
 
-            /* Remove it from the list */
-            LIST_REMOVE(c->other, list);
+                /* Remove it from the list */
+                LIST_REMOVE(c->other, list);
 
-            /* Free the structs */
-            free(c->other);
-            free(c);
+                /* Free the structs */
+                free(c->other);
+                free(c);
 
-            /* Need to restart */
-            goto again;
+                /* Need to restart */
+                goto again;
+            }
         }
-
-    next:
         c = n;
     }
 
@@ -298,6 +293,14 @@ static void * pty_open_dir(const char * fn, int mode) {
 
     /* Now return that as our handle item */
     fdobj = malloc(sizeof(pipefd_t));
+
+    if(fdobj == NULL) {
+        free(dl->items);
+        free(dl);
+        errno = ENOMEM;
+        goto done;  /* return */
+    }
+
     memset(fdobj, 0, sizeof(pipefd_t));
     fdobj->d.d = dl;
     fdobj->type = PF_DIR;
@@ -358,13 +361,19 @@ static void * pty_open_file(const char * fn, int mode) {
             ph = ph->other;
     }
 
+    fdobj = malloc(sizeof(pipefd_t));
+
+    if(fdobj == NULL) {
+        errno = ENOMEM;
+        return NULL;
+    }
+    memset(fdobj, 0, sizeof(pipefd_t));
+
     /* Now add a refcnt and return it */
     mutex_lock(&ph->mutex);
     ph->refcnt++;
     mutex_unlock(&ph->mutex);
 
-    fdobj = malloc(sizeof(pipefd_t));
-    memset(fdobj, 0, sizeof(pipefd_t));
     fdobj->d.p = ph;
     fdobj->type = PF_PTY;
     fdobj->mode = mode;

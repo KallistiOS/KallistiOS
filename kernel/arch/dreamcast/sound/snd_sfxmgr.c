@@ -143,6 +143,12 @@ sfxhnd_t snd_sfx_load(const char *fn) {
 
     if(!tmp) {
         tmp = malloc(len);
+
+        if(tmp == NULL) {
+            fs_close(fd);
+            return SFXHND_INVALID;
+        }
+
         fs_read(fd, tmp, len);
         ownmem = 1;
     }
@@ -153,6 +159,14 @@ sfxhnd_t snd_sfx_load(const char *fn) {
     fs_close(fd);
 
     t = malloc(sizeof(snd_effect_t));
+
+    if(t == NULL) {
+        if(ownmem)
+            free(tmp);
+
+        return SFXHND_INVALID;
+    }
+
     memset(t, 0, sizeof(snd_effect_t));
 
     /* Common characteristics not impacted by stream type */
@@ -184,6 +198,14 @@ sfxhnd_t snd_sfx_load(const char *fn) {
         uint16 * sepbuf;
 
         sepbuf = malloc(len / 2);
+
+        if(sepbuf == NULL) {
+            free(t);
+            if(ownmem)
+                free(tmp);
+
+            return SFXHND_INVALID;
+        }
 
         for(i = 0; i < len / 2; i += 2) {
             sepbuf[i / 2] = tmp[i + 1];

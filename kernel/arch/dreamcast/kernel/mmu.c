@@ -138,6 +138,10 @@ mmucontext_t *mmu_context_create(int asid) {
     int     i;
 
     cont = (mmucontext_t*)malloc(sizeof(mmucontext_t));
+
+    if(cont == NULL)
+        return NULL;
+
     cont->asid = asid;
 
     for(i = 0; i < MMU_PAGES; i++)

@@ -27,6 +27,9 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#include <kos/init.h>
+#include <arch/arch.h>
+
 #include "memtest.h"
 
 /* Leave space at the beginning and end of memory for this program and for the
@@ -38,9 +41,9 @@
 #define BASE_ADDRESS  (volatile datum *) (0x8c000000 + SAFE_AREA)
 
 /* Define the number of bytes to be tested. KallistiOS provides the
- * macros HW_MEM_16 and HW_MEM_32 which describe the number of bytes
- * available in standard supported console configurations (16777216
- * and 33554432, respectively). */
+ * macros HW_MEM_16 and HW_MEM_32 in <arch/arch.h> which describe
+ * the number of bytes available in standard supported console
+ * configurations (16777216 and 33554432, respectively). */
 #define NUM_BYTES_32  (HW_MEM_32 - SAFE_AREA - STACK_SIZE)
 #define NUM_BYTES_16  (HW_MEM_16 - SAFE_AREA - STACK_SIZE)
 

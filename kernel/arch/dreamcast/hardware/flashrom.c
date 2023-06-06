@@ -19,6 +19,26 @@
 #include <dc/flashrom.h>
 #include <arch/irq.h>
 
+static void strcpy_no_term(char *dest, const char *src, size_t destsize) {
+    size_t srclength;
+
+    srclength = strlen(src);
+    srclength = srclength > destsize ? destsize : srclength;
+    memcpy(dest, src, srclength);
+    if (srclength < destsize) {
+        memset(dest + srclength, '\0', destsize - srclength);
+    }
+}
+
+static void strcpy_with_term(char *dest, const char *src, size_t destsize) {
+    size_t srclength;
+
+    srclength = strlen(src);
+    srclength = srclength > destsize ? destsize : srclength;
+    memcpy(dest, src, srclength);
+    dest[srclength] = '\0';
+}
+
 /* First, implementation of the syscall wrappers. */
 typedef int (*flashrom_sc)(int, void *, int, int);
 
@@ -69,8 +89,6 @@ int flashrom_delete(int offset) {
     return rv;
 }
 
-
-
 /* Higher level stuff follows */
 
 /* Internal function calculates the checksum of a flashrom block. Thanks
@@ -91,7 +109,6 @@ static int flashrom_calc_crc(uint8 * buffer) {
 
     return (~n) & 0xffff;
 }
-
 
 int flashrom_get_block(int partid, int blockid, uint8 * buffer_out) {
     int start, size;
@@ -383,9 +400,9 @@ typedef struct {
 } isp_settings_t;
 
 int flashrom_get_ispcfg(flashrom_ispcfg_t * out) {
-    uint8       buffer[sizeof(isp_settings_t)];
-    isp_settings_t  * isp = (isp_settings_t *)buffer;
-    int     found = 0;
+    uint8 buffer[sizeof(isp_settings_t)];
+    isp_settings_t * isp = (isp_settings_t *)buffer;
+    int found = 0;
 
     /* Clean out the output config buffer. */
     memset(out, 0, sizeof(flashrom_ispcfg_t));
@@ -497,8 +514,8 @@ int flashrom_get_ispcfg(flashrom_ispcfg_t * out) {
         if(!(out->valid_fields & FLASHROM_ISP_PHONE1)) {
             /* The full number is 27 digits in C6-C8,
             so we truncate it to fit the phone1 field */
-            strncpy(out->phone1, isp->c6.phone1_pt1, 12);
-            strncpy(out->phone1 + 12, isp->c7.phone1_pt2, 25 - 12);
+            strcpy_no_term(out->phone1, isp->c6.phone1_pt1, 12);
+            strcpy_no_term(out->phone1 + 12, isp->c7.phone1_pt2, 25 - 12);
             out->phone1[25] = '\0';
             out->valid_fields |= FLASHROM_ISP_PHONE1;
         }
@@ -675,19 +692,17 @@ int flashrom_get_pw_ispcfg(flashrom_ispcfg_t *out) {
         }
 
         /* Copy out the outside dial prefix. */
-        strncpy(out->out_prefix, isp->b80.out_prefix, 8);
-        out->out_prefix[8] = '\0';
+        strcpy_with_term(out->out_prefix, isp->b80.out_prefix, 8);
         out->valid_fields |= FLASHROM_ISP_OUT_PREFIX;
 
         /* Copy out the call waiting prefix. */
-        strncpy(out->cw_prefix, isp->b80.cw_prefix, 8);
-        out->cw_prefix[8] = '\0';
+        strcpy_with_term(out->cw_prefix, isp->b80.cw_prefix, 8);
         out->valid_fields |= FLASHROM_ISP_CW_PREFIX;
 
         /* Copy the second part of the email address (if it exists). We don't
            set the email as valid here, since that really depends on the first
            part being found (PW 1.0 doesn't store anything in this place). */
-        strncpy(out->email + 32, isp->b80.email_pt2, 16);
+        strcpy_no_term(out->email + 32, isp->b80.email_pt2, 16);
     }
     else {
         /* If we couldn't find the PWBrowser block, punt, the PlanetWeb settings
@@ -700,11 +715,10 @@ int flashrom_get_pw_ispcfg(flashrom_ispcfg_t *out) {
         /* Copy the third part of the email address to the appropriate place.
            Note that PlanetWeb 1.0 doesn't store anything here, thus we'll just
            copy a null terminator. */
-        strncpy(out->email + 32 + 16, isp->b81.email_pt3, 14);
+        strcpy_no_term(out->email + 32 + 16, isp->b81.email_pt3, 14);
 
         /* Copy out the "Real Name" field. */
-        strncpy(out->real_name, isp->b81.real_name, 30);
-        out->real_name[30] = '\0';
+        strcpy_with_term(out->real_name, isp->b81.real_name, 30);
         out->valid_fields |= FLASHROM_ISP_REAL_NAME;
     }
 
@@ -712,25 +726,22 @@ int flashrom_get_pw_ispcfg(flashrom_ispcfg_t *out) {
     if(flashrom_get_block(FLASHROM_PT_BLOCK_1, FLASHROM_B1_PW_SETTINGS_3, buffer) >= 0) {
         /* The only thing in this block is the modem init string, go ahead and
            copy it to our destination. */
-        strncpy(out->modem_init, isp->b82.modem_str, 30);
-        out->modem_init[30] = '\0';
+        strcpy_with_term(out->modem_init, isp->b82.modem_str, 30);
         out->valid_fields |= FLASHROM_ISP_MODEM_INIT;
     }
 
     /* Grab block 0x83 */
     if(flashrom_get_block(FLASHROM_PT_BLOCK_1, FLASHROM_B1_PW_SETTINGS_4, buffer) >= 0) {
         /* The modem init string continues at the start of this block. */
-        strncpy(out->modem_init + 30, (char *)isp->b83.modem_str2, 2);
+        strcpy_no_term(out->modem_init + 30, (char *)isp->b83.modem_str2, 2);
         out->modem_init[32] = '\0';
 
         /* Copy out the area code next. */
-        strncpy(out->area_code, isp->b83.area_code, 3);
-        out->area_code[3] = '\0';
+        strcpy_with_term(out->area_code, isp->b83.area_code, 3);
         out->valid_fields |= FLASHROM_ISP_AREA_CODE;
 
         /* Copy the long-distance dial prefix */
-        strncpy(out->ld_prefix, isp->b83.ld_prefix, 20);
-        out->ld_prefix[20] = '\0';
+        strcpy_with_term(out->ld_prefix, isp->b83.ld_prefix, 20);
         out->valid_fields |= FLASHROM_ISP_LD_PREFIX;
     }
 
@@ -761,38 +772,32 @@ int flashrom_get_pw_ispcfg(flashrom_ispcfg_t *out) {
         }
 
         /* Grab the PPP Username. */
-        strncpy(out->ppp_login, isp->c0.ppp_login, 28);
-        out->ppp_login[28] = '\0';
+        strcpy_with_term(out->ppp_login, isp->c0.ppp_login, 28);
         out->valid_fields |= FLASHROM_ISP_PPP_USER;
 
         /* Grab the PPP Password. */
-        strncpy(out->ppp_passwd, isp->c0.ppp_passwd, 16);
-        out->ppp_passwd[16] = '\0';
+        strcpy_with_term(out->ppp_passwd, isp->c0.ppp_passwd, 16);
         out->valid_fields |= FLASHROM_ISP_PPP_PASS;
 
         /* Grab the area code for phone 1, stripping away the parenthesis. */
-        strncpy(out->p1_areacode, isp->c0.ac1 + 1, 3);
-        out->p1_areacode[3] = '\0';
+        strcpy_with_term(out->p1_areacode, isp->c0.ac1 + 1, 3);
 
         /* Grab the start of phone number 1. */
-        strncpy(out->phone1, isp->c0.phone1_pt1, 3);
-        out->phone1[3] = '\0';
+        strcpy_with_term(out->phone1, isp->c0.phone1_pt1, 3);
     }
 
     /* Grab block 0xC1 */
     if(flashrom_get_block(FLASHROM_PT_BLOCK_1, FLASHROM_B1_PW_PPP2, buffer) >= 0) {
         /* Grab the rest of phone number 1. */
-        strncpy(out->phone1 + 3, isp->c1.phone1_pt2, 22);
+        strcpy_no_term(out->phone1 + 3, isp->c1.phone1_pt2, 22);
         out->phone1[25] = '\0';
         out->valid_fields |= FLASHROM_ISP_PHONE1;
 
         /* Grab the area code for phone 2, stripping away the parenthesis. */
-        strncpy(out->p2_areacode, isp->c1.ac2 + 1, 3);
-        out->p2_areacode[3] = '\0';
+        strcpy_with_term(out->p2_areacode, isp->c1.ac2 + 1, 3);
 
         /* Grab the start of phone number 2. */
-        strncpy(out->phone2, isp->c1.phone2_pt1, 23);
-        out->phone2[23] = '\0';
+        strcpy_with_term(out->phone2, isp->c1.phone2_pt1, 23);
     }
 
     /* Grab block 0xC2 */
@@ -812,46 +817,41 @@ int flashrom_get_pw_ispcfg(flashrom_ispcfg_t *out) {
     /* Grab block 0xC3 */
     if(flashrom_get_block(FLASHROM_PT_BLOCK_1, FLASHROM_B1_PW_EMAIL1, buffer) >= 0) {
         /* Grab the beginning of the email address (or all of it in PW 1.0). */
-        strncpy(out->email, isp->c3.email_p1, 32);
+        strcpy_no_term(out->email, isp->c3.email_p1, 32);
         out->valid_fields |= FLASHROM_ISP_EMAIL;
 
         /* Grab the beginning of the SMTP server. */
-        strncpy(out->smtp, isp->c3.out_srv_p1, 12);
-        out->smtp[12] = '\0';
+        strcpy_with_term(out->smtp, isp->c3.out_srv_p1, 12);
     }
 
     /* Grab block 0xC4 */
     if(flashrom_get_block(FLASHROM_PT_BLOCK_1, FLASHROM_B1_PW_EMAIL2, buffer) >= 0) {
         /* Grab the end of the SMTP server. */
-        strncpy(out->smtp + 12, isp->c4.out_srv_p2, 18);
+        strcpy_no_term(out->smtp + 12, isp->c4.out_srv_p2, 18);
         out->smtp[30] = '\0';
         out->valid_fields |= FLASHROM_ISP_SMTP;
 
         /* Grab the POP3 server. */
-        strncpy(out->pop3, isp->c4.in_srv, 30);
-        out->pop3[30] = '\0';
+        strcpy_with_term(out->pop3, isp->c4.in_srv, 30);
         out->valid_fields |= FLASHROM_ISP_POP3;
 
         /* Grab the beginning of the POP3 login. */
-        strncpy(out->pop3_login, isp->c4.em_login_p1, 8);
-        out->pop3_login[8] = '\0';
+        strcpy_with_term(out->pop3_login, isp->c4.em_login_p1, 8);
     }
 
     /* Grab block 0xC5 */
     if(flashrom_get_block(FLASHROM_PT_BLOCK_1, FLASHROM_B1_PW_EMAIL_PROXY, buffer) >= 0) {
         /* Grab the end of the POP3 login. */
-        strncpy(out->pop3_login + 8, isp->c5.em_login_p2, 8);
+        strcpy_no_term(out->pop3_login + 8, isp->c5.em_login_p2, 8);
         out->pop3_login[16] = '\0';
         out->valid_fields |= FLASHROM_ISP_POP3_USER;
 
         /* Grab the POP3 password. */
-        strncpy(out->pop3_passwd, isp->c5.em_passwd, 16);
-        out->pop3_passwd[16] = '\0';
+        strcpy_with_term(out->pop3_passwd, isp->c5.em_passwd, 16);
         out->valid_fields |= FLASHROM_ISP_POP3_PASS;
 
         /* Grab the proxy server. */
-        strncpy(out->proxy_host, isp->c5.proxy_srv, 30);
-        out->proxy_host[30] = '\0';
+        strcpy_with_term(out->proxy_host, isp->c5.proxy_srv, 30);
         out->valid_fields |= FLASHROM_ISP_PROXY_HOST;
 
         /* Grab the proxy port. */

@@ -14,10 +14,10 @@ all: rm-elf $(TARGET)
 include $(KOS_BASE)/Makefile.rules
 
 clean: rm-elf
-	rm -f $(OBJS)
+	-rm -f $(OBJS)
 
 rm-elf:
-	rm -f $(TARGET) romdisk.*
+	-rm -f $(TARGET) romdisk.*
 
 $(TARGET): $(OBJS)
 	kos-cc -o $(TARGET) $(OBJS)
@@ -29,8 +29,8 @@ romdisk.o: romdisk.img
 	$(KOS_BASE)/utils/bin2o/bin2o romdisk.img romdisk romdisk.o
 
 run: $(TARGET)
-	dc-tool -n -x $(TARGET)
+	$(KOS_LOADER) $(TARGET) -n
 
 dist: $(TARGET)
-	rm -f $(OBJS) romdisk.img
+	-rm -f $(OBJS) romdisk.img
 	$(KOS_STRIP) $(TARGET)

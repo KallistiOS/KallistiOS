@@ -26,7 +26,6 @@
 __BEGIN_DECLS
 
 #include <arch/types.h>
-#include <kos/limits.h>
 #include <kos/fs.h>
 
 /** \brief  Create a new pseudo-terminal.

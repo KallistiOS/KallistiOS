@@ -20,7 +20,7 @@ char *inet_ntoa(struct in_addr addr) {
            values. This works, regardless of the endianness of the host system
            because the specs require the address passed in here to be in
            network byte order (big endian). */
-        part = ((uint8 *) &addr.s_addr)[i];
+        part = ((uint8_t *) &addr.s_addr)[i];
 
         do {
             *ch++ = '0' + (char)(part % 10);

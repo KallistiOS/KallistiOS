@@ -597,6 +597,7 @@ static int net_udp_socket(net_socket_t *hnd, int domain, int type, int proto) {
         proto = IPPROTO_UDP;
     }
     else if(proto != IPPROTO_UDP && proto != IPPROTO_UDPLITE) {
+        free(udpsock);
         errno = EPROTONOSUPPORT;
         return -1;
     }

@@ -20,6 +20,7 @@ printf goes to the dc-tool console
 #include <dc/fs_dcload.h>
 #include <kos/thread.h>
 #include <arch/spinlock.h>
+#include <arch/arch.h>
 #include <kos/dbgio.h>
 #include <kos/fs.h>
 

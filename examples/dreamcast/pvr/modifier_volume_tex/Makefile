@@ -36,6 +36,6 @@ run: $(TARGET)
 	$(KOS_LOADER) $(TARGET) -n
 
 dist: $(TARGET)
-	rm -f $(OBJS) romdisk.img romdisk/fruit.kmg
+	-rm -f $(OBJS) romdisk.img romdisk/fruit.kmg
 	$(KOS_STRIP) $(TARGET)
 

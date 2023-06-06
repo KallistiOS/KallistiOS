@@ -1,6 +1,6 @@
 
 TARGET = example.elf
-OBJS = example.o wfont.o romdisk_boot.o 
+OBJS = example.o wfont.o romdisk.o 
 
 all: rm-elf $(TARGET)
 
@@ -12,19 +12,19 @@ clean: rm-elf
 	-rm -f $(OBJS)
 	
 rm-elf:
-	-rm -f $(TARGET) romdisk_boot.*
+	-rm -f $(TARGET) romdisk.*
 
 $(TARGET): $(OBJS) 
 	kos-cc -o $(TARGET) $(OBJS) -lpng -lz -lm
 
 wfont.o: wfont.bin
-	$(KOS_BASE)/utils/bin2o/bin2o $< wfont $@
+	$(KOS_BASE)/utils/bin2o/bin2o wfont.bin wfont wfont.o
 
-romdisk_boot.img:
-	$(KOS_GENROMFS) -f $@ -d romdisk_boot -v
+romdisk.img:
+	$(KOS_GENROMFS) -f romdisk.img -d romdisk -v
 
-romdisk_boot.o: romdisk_boot.img
-	$(KOS_BASE)/utils/bin2o/bin2o $< romdisk_boot $@
+romdisk.o: romdisk.img
+	$(KOS_BASE)/utils/bin2o/bin2o romdisk.img romdisk romdisk.o
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)

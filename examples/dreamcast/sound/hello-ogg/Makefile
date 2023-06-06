@@ -5,7 +5,8 @@
 # Based on KOS Makefiles by Megan Potter
 
 TARGET = vorbistest.elf
-OBJS = vorbistest.o romdisk.o 
+OBJS = vorbistest.o romdisk.o
+KOS_ROMDISK_DIR = romdisk
 
 all: rm-elf $(TARGET)
 
@@ -23,17 +24,10 @@ $(TARGET): $(OBJS)
 	kos-cc -o $(TARGET) $(OBJS) -ltremor -lm
 #	kos-cc -o $(TARGET) $(OBJS) -loggvorbisplay -lvorbis -logg -lm
 
-romdisk.img:
-	$(KOS_GENROMFS) -f romdisk.img -d romdisk -v
-
-romdisk.o: romdisk.img
-	$(KOS_BASE)/utils/bin2o/bin2o romdisk.img romdisk romdisk.o
-
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
-#	dc-tool -p -b 115200 -x $(TARGET)
 
 dist: $(TARGET)
-	rm -f $(OBJS) romdisk.img
+	-rm -f $(OBJS) romdisk.img
 	$(KOS_STRIP) $(TARGET)
 

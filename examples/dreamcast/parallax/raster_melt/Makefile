@@ -24,6 +24,6 @@ run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 
 dist: $(TARGET)
-	rm -f $(OBJS) romdisk.img
+	-rm -f $(OBJS) romdisk.img
 	$(KOS_STRIP) $(TARGET)
 

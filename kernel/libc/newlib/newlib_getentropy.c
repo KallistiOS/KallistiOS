@@ -10,6 +10,8 @@
 #include <unistd.h>
 #include <sys/time.h>
 
+#include <arch/arch.h>
+
 int getentropy(void *ptr, size_t len) {
     const int block_size = 128;
     struct timeval tv;

@@ -9,7 +9,8 @@
 
 /* Draws one file entry, along with its "description" in the
    boot rom file manager. */
-int y1 = 20 + 36;
+static int y1 = 20 + 36;
+
 void draw_one(maple_device_t *addr, char *fn, uint16 hdrblock) {
     bfont_draw_str(vram_s + y1 * 640 + 10, 640, 0, "File ");
     bfont_draw_str(vram_s + y1 * 640 + 10 + 5 * 12, 640, 0, fn);

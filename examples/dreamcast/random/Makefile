@@ -7,12 +7,7 @@
 TARGET = random.elf
 
 # List all of your C files here, but change the extension to ".o"
-# Include "romdisk.o" if you want a rom disk.
-OBJS = random.o romdisk.o
-
-# If you define this, the Makefile.rules will create a romdisk.o for you
-# from the named dir.
-KOS_ROMDISK_DIR = romdisk
+OBJS = random.o
 
 KOS_CFLAGS += -std=c99
 
@@ -26,7 +21,7 @@ clean: rm-elf
 	-rm -f $(OBJS)
 
 rm-elf:
-	-rm -f $(TARGET) romdisk.*
+	-rm -f $(TARGET)
 
 $(TARGET): $(OBJS)
 	kos-cc -o $(TARGET) $(OBJS)
@@ -35,5 +30,5 @@ run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 
 dist: $(TARGET)
-	rm -f $(OBJS) romdisk.img
+	-rm -f $(OBJS)
 	$(KOS_STRIP) $(TARGET)

@@ -96,6 +96,7 @@ typedef void (*assert_handler_t)(const char * file, int line, const char * expr,
 /** \brief  Set an assertion handler to call on a failed assertion.
 
     The default assertion handler simply will print a message and call abort().
+    NULL is a valid value and will cause nothing to happen on an assert.
 
     \return                 The old assertion handler so it may be restored
                             later if appropriate.
