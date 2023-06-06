@@ -10,6 +10,7 @@ $(build_newlib): src_dir = newlib-$(newlib_ver)
 $(build_newlib): log = $(logdir)/$(build).log
 $(build_newlib): logdir
 	@echo "+++ Building $(src_dir) to $(build)..."
+	cp $(kos_base)/include/sys/lock.h $(src_dir)/newlib/libc/sys/sh/sys
 	-mkdir -p $(build)
 	> $(log)
 	cd $(build); \
@@ -48,7 +49,6 @@ fixup-sh4-newlib-apply: fixup-sh4-newlib-init
 	cp $(kos_base)/include/pthread.h $(newlib_inc)
 	cp $(kos_base)/include/sys/_pthread.h $(newlib_inc)/sys
 	cp $(kos_base)/include/sys/sched.h $(newlib_inc)/sys
-	cp $(kos_base)/include/sys/lock.h $(newlib_inc)/sys
 ifndef MINGW32
 	ln -nsf $(kos_base)/include/kos $(newlib_inc)
 	ln -nsf $(kos_base)/kernel/arch/dreamcast/include/arch $(newlib_inc)
