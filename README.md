@@ -1,6 +1,6 @@
 # KallistiOS
 
-KOS is an unofficial development environment for the SEGA Dreamcast game console with some support for the NAOMI and NAOMI 2 arcade boards.
+KOS is an unofficial development environment for the SEGA Dreamcast game console with some support for the NAOMI and NAOMI 2 arcade boards.  
 
 KOS was developed from scratch over the internet by a group of free software developers and has no relation to the official Sega Katana or Microsoft Windows CE Dreamcast development kits. This has allowed it to fuel a thriving Dreamcast homebrew scene, powering many commercial releases for the platform over the years. It supports a signficiant portion of the Dreamcast's hardware capabilities and a wide variety of peripherals, accessories, and add-ons for the console, including custom hardware modifications that have been created by the scene. 
 
@@ -76,8 +76,8 @@ Once you've set up the environment and are ready to begin developing, a good pla
 - Interactive Lua interpreter terminal
 
 ## Resources
-[DCEmulation Forums](http://dcemulation.org/phpBB/viewforum.php?f=29): Goldmine of Dreamcast development information and history
-[Dreamcast Wiki](http://dreamcast.wiki): Large collection of tutorials and articles for beginners
-[Simulant Discord Chat](https://discord.gg/bpDZHT78PA): Home to the official Discord channel of KOS
+[DCEmulation Forums](http://dcemulation.org/phpBB/viewforum.php?f=29): Goldmine of Dreamcast development information and history  
+[Dreamcast Wiki](http://dreamcast.wiki): Large collection of tutorials and articles for beginners  
+[Simulant Discord Chat](https://discord.gg/bpDZHT78PA): Home to the official Discord channel of KOS  
 IRC Channel: irc.libera.chat `#dreamcastdev`
 
