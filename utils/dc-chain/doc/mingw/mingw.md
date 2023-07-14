@@ -181,8 +181,8 @@ To make the toolchains, do the following:
 1. Start the **MSYS Shell** if not already done.
 2. Navigate to the `dc-chain` directory by entering:
    ```
-	cd /opt/toolchains/dc/kos/utils/dc-chain/
-	```
+   cd /opt/toolchains/dc/kos/utils/dc-chain/
+   ```
 3. Enter the following to start downloading and building toolchain:
    ```
 	make
