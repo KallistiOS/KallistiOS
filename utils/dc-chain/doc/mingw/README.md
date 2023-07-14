@@ -19,9 +19,9 @@ can be:
 1. Open the **MSYS Shell**.
 
 2. Enter the following:
-		
-		command -v pacman
-
+    ```
+    command -v pacman
+    ```  
 3. Check the output:
 
 	* If the output is blank: You are using the legacy **MinGW/MSYS**

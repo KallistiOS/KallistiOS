@@ -28,23 +28,23 @@ build the whole toolchains.
 ### Installation of required packages ###
 
 The packages below need to be installed:
-
-	apk --update add build-base patch bash texinfo libjpeg-turbo-dev libpng-dev	curl wget
-	
+```
+apk --update add build-base patch bash texinfo libjpeg-turbo-dev libpng-dev	curl wget
+```	
 At this time of writing, the `libelf-dev` package was missing from the main
 repository, so you have to execute the following to install it:
-
-	apk --update add libelf-dev --repository=http://dl-cdn.alpinelinux.org/alpine/v3.9/main
-
+```
+apk --update add libelf-dev --repository=http://dl-cdn.alpinelinux.org/alpine/v3.9/main
+```
 This may not be necessary depending if the `apk` repository was updated. Please
 keep in mind that you have to install the `libelf-dev` package.
 
 ### Installation of additional packages ###
 
 These additional packages are required too:
-
-	apk --update add git python subversion
-
+```
+apk --update add git python subversion
+```
 **Git** is needed right now, as **Subversion Client** and **Python 2** will be
 needed only when building `kos-ports`. But it's better to install these now.
 
@@ -54,12 +54,12 @@ By the way you can check the installation success by entering something like
 ## Preparing the environment installation ##
 
 Enter the following to prepare **KallistiOS** and the toolchains:
-
-	mkdir -p /opt/toolchains/dc/
-	cd /opt/toolchains/dc/
-	git clone git://git.code.sf.net/p/cadcdev/kallistios kos
-	git clone git://git.code.sf.net/p/cadcdev/kos-ports
-
+```
+mkdir -p /opt/toolchains/dc/
+cd /opt/toolchains/dc/
+git clone git://git.code.sf.net/p/cadcdev/kallistios kos
+git clone git://git.code.sf.net/p/cadcdev/kos-ports
+```
 Everything is ready, now it's time to make the toolchains.
 
 ## Compilation ##
@@ -76,31 +76,31 @@ the main `README.md` file at the root for more information.
 To make the toolchains, do the following:
 
 1. Navigate to the `dc-chain` directory by entering:
-
-		cd /opt/toolchains/dc/kos/utils/dc-chain/
-	
+	```
+	cd /opt/toolchains/dc/kos/utils/dc-chain/
+	```
 2. Enter the following to start downloading and building toolchain:
-
-		make
-
+	```
+	make
+	```
 Now it's time to take a coffee as this process is really long: several hours
 will be needed to make the full toolchains!
 
 ### Making the GNU Debugger (gdb) ###
 
 If you want to install the **GNU Debugger** (`gdb`), just enter:
-
-	make gdb
-
+```
+make gdb
+```
 This will install `sh-elf-gdb` and can be used to debug programs through
 `dc-load/dc-tool`.
 
 ### Removing all useless files ###
 
 After everything is done, you can cleanup all temporary files by entering:
-
-	./cleanup.sh
-
+```
+./cleanup.sh
+```
 ## Next steps ##
 
 After following this guide, the toolchains should be ready.

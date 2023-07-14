@@ -273,9 +273,9 @@ Below you will find some generic instructions; you may find some specific
 instructions in the `./doc` directory for your environment.
 
 In the dc-chain directory, run (for **BSD**, please use `gmake` instead):
-
-		make
-
+```
+make
+```
 This will build the ARM & SH4 toolchains. If you wish to only build the SH4
 toolchain and just use the prebuilt KOS sound driver run:
     make build-sh4
@@ -289,9 +289,9 @@ If anything goes wrong, check the output in `logs/`.
 
 For the `sh-elf` toolchain, if you want to use the **GNU Debugger** (`gdb`),
 you can make it by entering:
-
-	make gdb
-
+```
+make gdb
+```
 This will install `gdb` in the `sh-elf` toolchain. `gdb` is used with
 `dcload/dc-tool` programs, which are part of **KallistiOS** too, in order to do
 remote debugging of your **Dreamcast** programs. Please read the `dcload`
@@ -300,9 +300,9 @@ documentation to learn more on this point.
 ### Removing all useless files
 
 After the toolchain compilation, you can cleanup everything by entering:
-
-	make clean
-
+```
+make clean
+```
 This will save a lot of space by removing all unnecessary files.
 
 ## Final note
