@@ -127,7 +127,7 @@ This will install `sh-elf-gdb` and can be used to debug programs through
 
 After everything is done, you can cleanup all temporary files by entering:
 ```
-./cleanup.sh
+make clean
 ```
 ## Next steps ##
 
