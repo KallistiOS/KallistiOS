@@ -17,7 +17,7 @@
 # gdb
 
 # Toolchain versions for SH
-sh_binutils_ver=2.40
+sh_binutils_ver=2.41
 sh_gcc_ver=13.2.0
 newlib_ver=4.3.0.20230120
 gdb_ver=13.2
@@ -31,7 +31,7 @@ gdb_download_type=xz
 # Toolchain for ARM
 # The ARM version of binutils/gcc is separated out as the particular CPU
 # versions we need may not be available in newer versions of GCC.
-arm_binutils_ver=2.40
+arm_binutils_ver=2.41
 arm_gcc_ver=8.5.0
 
 # Tarball extensions to download for ARM
