@@ -1,6 +1,6 @@
 /* KallistiOS ##version##
 
-   timespec_get.c
+   clock_gettime.c
    Copyright (C) 2023 Falco Girgis
 */
 
