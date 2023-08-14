@@ -27,6 +27,27 @@ struct timespec;
 
 extern int timespec_get(struct timespec *ts, int base);
 
+#ifndef _POSIX_TIMERS
+#define _POSIX_TIMERS 1
+#endif 
+#ifdef _POSIX_MONOTONIC_CLOCK
+#define _POSIX_MONOTONIC_CLOCK 1
+#endif
+#ifdef _POSIX_CPUTIME
+#define _POSIX_CPUTIME 1
+#endif
+#ifdef _POSIX_THREAD_CPU_TIME
+#define _POSIX_THREAD_CPUTIME 1
+#endif
+
+#define CLOCK_MONOTONIC          (CLOCK_REALTIME + 1)
+#define CLOCK_PROCESS_CPUTIME_ID (CLOCK_REALTIME + 2)
+#define CLOCK_THREAD_CPUTIME_ID  (CLOCK_REALTIME + 3)
+
+extern int clock_getres(__clockid_t clk_id, struct timespec *res);
+extern int clock_gettime(__clockid_t clk_id, struct timespec *tp);
+extern int clock_settime(__clockid_t clk_id, const struct timespec *tp);
+
 __END_DECLS
 
 #endif /* !defined(__STRICT_ANSI__) || (__STDC_VERSION__ >= 201112L) || (__cplusplus >= 201703L) */
