@@ -6,6 +6,6 @@
 
 KOS_CFLAGS += -std=c11
 
-OBJS = clock_gettime.o
+OBJS = posix_memalign.o
 
 include $(KOS_BASE)/Makefile.prefab

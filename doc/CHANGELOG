@@ -178,6 +178,7 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - DC  Add example for VMU speaker use [DH && FG]
 - DC  Add example for rumble accessory use [DH]
 - *** Split init flags from <arch/arch.h> into <kos/init.h> [LS]
+- *** Added posix_memalign() implementation [FG]
 
 KallistiOS version 2.0.0 -----------------------------------------------
 - DC  Broadband Adapter driver fixes [Megan Potter == MP]
