@@ -1,6 +1,6 @@
 # KallistiOS ##version##
 #
-# kernel/libc/c11/Makefile
+# kernel/libc/posix/Makefile
 # Copyright (C) 2023 Falco Girgis
 #
 
