@@ -1,6 +1,6 @@
 /* KallistiOS ##version##
 
-   kos/time.h
+   kos/stdlib.h
    Copyright (C) 2023 Falco Girgis
 */
 
