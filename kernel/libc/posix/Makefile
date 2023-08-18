@@ -4,7 +4,7 @@
 # Copyright (C) 2023 Falco Girgis
 #
 
-KOS_CFLAGS += -std=c11
+KOS_CFLAGS += -std=gnu11
 
 OBJS = clock_gettime.o
 

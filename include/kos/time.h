@@ -27,6 +27,8 @@ struct timespec;
 
 extern int timespec_get(struct timespec *ts, int base);
 
+#ifndef __STRICT_ANSI__
+
 #ifndef _POSIX_TIMERS
 #define _POSIX_TIMERS 1
 #endif 
@@ -47,6 +49,8 @@ extern int timespec_get(struct timespec *ts, int base);
 extern int clock_getres(__clockid_t clk_id, struct timespec *res);
 extern int clock_gettime(__clockid_t clk_id, struct timespec *tp);
 extern int clock_settime(__clockid_t clk_id, const struct timespec *tp);
+
+#endif /* !defined(__STRICT_ANSI__) */
 
 __END_DECLS
 
