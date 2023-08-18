@@ -10,6 +10,7 @@
 # are not provided as part of Newlib.
 #
 
+CFLAGS += -std=c11
 OBJS = posix_memalign.o
 
 include $(KOS_BASE)/Makefile.prefab

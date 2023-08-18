@@ -15,16 +15,15 @@
 #ifndef __KOS_STDLIB_H
 #define __KOS_STDLIB_H
 
-#if !defined(__STRICT_ANSI__) || (__STDC_VERSION__ >= 201112L) || (__cplusplus >= 201703L)
+#if !defined(__STRICT_ANSI__)
 
 #include <kos/cdefs.h>
 
 __BEGIN_DECLS
 
-
 extern int posix_memalign(void **memptr, size_t alignment, size_t size);
 
 __END_DECLS
 
-#endif /* !defined(__STRICT_ANSI__) || (__STDC_VERSION__ >= 201112L) || (__cplusplus >= 201703L) */
+#endif /* !defined(__STRICT_ANSI__) */
 #endif /* !__KOS_STDLIB_H */

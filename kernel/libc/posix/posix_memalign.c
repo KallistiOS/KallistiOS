@@ -6,35 +6,38 @@
 
 #include <stdlib.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <assert.h>
 
 static inline int is_power_of_two(size_t x) {
-   return (x & (x - 1)) == 0;
+    return (x & (x - 1)) == 0;
 }
 
 static inline size_t aligned_size(size_t size, size_t alignment) {
-   const size_t align_rem = size % alignment;
-   size_t new_size = size;
+    const size_t align_rem = size % alignment;
+    size_t new_size = size;
 
-   if(align_rem)
-      new_size += (alignment - align_rem);
+    if(align_rem)
+        new_size += (alignment - align_rem);
 
-   return new_size;
+    return new_size;
 }
 
 int posix_memalign(void **memptr, size_t alignment, size_t size) {
-   if(alignment == 0 || !is_power_of_two(alignment) || alignment % sizeof(void*)) {
-      *memptr = NULL;
-      return EINVAL; 
-   }
+    assert(memptr);
 
-   if(!size) {
-      *memptr = NULL;
-      return 0;
-   }
+    if(!alignment || !is_power_of_two(alignment) || alignment % sizeof(void*)) {
+        *memptr = NULL;
+        return EINVAL;
+    }
 
-   size = aligned_size(size, alignment);
+    if(!size) {
+        *memptr = NULL;
+        return 0;
+    }
 
-   *memptr = aligned_alloc(alignment, size);
+    size = aligned_size(size, alignment);
+    *memptr = aligned_alloc(alignment, size);
 
-   return *memptr? 0 : ENOMEM;
+    return *memptr? 0 : ENOMEM;
 }
