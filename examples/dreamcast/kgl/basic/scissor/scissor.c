@@ -149,7 +149,7 @@ static void draw_gl(float rot, float x, float y) {
     glPopMatrix();
 }
 
-static void draw_ortho_scene() {
+static void draw_ortho_scene(void) {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glOrtho(0, 640, 0, 480, -1, 1);
@@ -169,7 +169,7 @@ static void draw_ortho_scene() {
     rect(512, 0, 512, 512);
 }
 
-static void draw_perspective_scene() {
+static void draw_perspective_scene(void) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(45.0f, 320.0f / 240.0f, 0.1f, 100.0f);

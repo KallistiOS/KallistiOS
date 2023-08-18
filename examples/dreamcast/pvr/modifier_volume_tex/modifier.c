@@ -29,7 +29,7 @@ static float mx = 320.0f, my = 240.0f;
 static pvr_list_t list = PVR_LIST_OP_POLY;
 static pvr_ptr_t txr1, txr2;
 
-void setup() {
+void setup(void) {
     pvr_poly_cxt_t cxt;
     int i;
     float x, y, z;
@@ -138,7 +138,7 @@ void setup() {
     }
 }
 
-int check_start() {
+int check_start(void) {
     maple_device_t *cont;
     cont_state_t *state;
 
@@ -169,7 +169,7 @@ int check_start() {
     return 0;
 }
 
-void do_frame() {
+void do_frame(void) {
     pvr_modifier_vol_t mod;
     int i;
 

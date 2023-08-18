@@ -13,7 +13,7 @@
 extern uint8 romdisk[];
 KOS_INIT_ROMDISK(romdisk);
 
-void draw_findings() {
+void draw_findings(void) {
     file_t      d;
     int     y = 88;
 
@@ -28,7 +28,7 @@ void draw_findings() {
 }
 
 int dev_checked = 0;
-void new_vmu() {
+void new_vmu(void) {
     maple_device_t * dev;
 
     dev = maple_enum_dev(0, 1);
@@ -49,7 +49,7 @@ void new_vmu() {
     }
 }
 
-int wait_start() {
+int wait_start(void) {
     maple_device_t *cont;
     cont_state_t *state;
 
@@ -71,7 +71,7 @@ int wait_start() {
 }
 
 /* Here's the actual meat of it */
-void write_game_entry() {
+void write_game_entry(void) {
     file_t f;
     int data_size;
     uint8 *data;

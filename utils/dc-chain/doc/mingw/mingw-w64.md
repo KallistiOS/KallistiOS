@@ -51,34 +51,34 @@ whole environment to build the toolchains.
 ### Update of your local installation ###
 
 The first thing to do after installing is to update your local installation:
-
-	pacman -Syuu
-
+```
+pacman -Syuu
+```
 At the end of the process, a similar message to this one should be appear:
-
-	warning: terminate MSYS2 without returning to shell and check for updates again
-	warning: for example close your terminal window instead of calling exit
-
+```
+warning: terminate MSYS2 without returning to shell and check for updates again
+warning: for example close your terminal window instead of calling exit
+```
 It means only the `pacman` runtime has been updated. Close the terminal as 
 requested. Restart the **MSYS2 Shell** and run the same command again:
-
-	pacman -Syuu
-
+```
+pacman -Syuu
+```
 This should update all the packages of the **MinGW-w64/MSYS2** environment.
 
 ### Installation of required packages ###
 
 The packages below need to be installed to build the toolchains, so open the
 **MSYS2 Shell** and input:
-
-	pacman -Sy --needed base-devel mingw-w64-i686-toolchains mingw-w64-i686-libpng mingw-w64-i686-libjpeg mingw-w64-i686-libelf
-
+```
+pacman -Sy --needed base-devel mingw-w64-i686-toolchains mingw-w64-i686-libpng mingw-w64-i686-libjpeg mingw-w64-i686-libelf
+```
 ### Installation of additional packages ###
 
 Additional packages are needed:
-
-	pacman -Sy git subversion python2
-
+```
+pacman -Sy git subversion python2
+```
 **Git** is needed right now, as **Subversion Client** and **Python 2** will be
 needed only when building `kos-ports`. But it's better to install these now.
 
@@ -115,31 +115,31 @@ To make the toolchains, do the following:
 
 1. Start the **MSYS2 Shell** if not already done.
 2. Navigate to the `dc-chain` directory by entering:
-
-		cd /opt/toolchains/dc/kos/utils/dc-chain/
-	
+	```
+	cd /opt/toolchains/dc/kos/utils/dc-chain/
+	```
 3. Enter the following to start downloading and building toolchain:
-
-		make
-
+	```
+	make
+	```
 Now it's time to take a coffee as this process is really long: several hours
 will be needed to make the full toolchains!
 
 ### Making the GNU Debugger (gdb) ###
 
 If you want to install the **GNU Debugger** (`gdb`), just enter:
-
-	make gdb
-
+```
+make gdb
+```
 This will install `sh-elf-gdb` and can be used to debug programs through
 `dc-load/dc-tool`.
 
 ### Removing all useless files ###
 
 After everything is done, you can cleanup all temporary files by entering:
-
-	make clean
-
+```
+make clean 
+```
 ## Fixing up Newlib for SH-4 ##
 
 The `ln` command in the **MinGW-w64/MSYS2** environment is not effective, as
@@ -151,9 +151,9 @@ This is the purpose of the provided `fixup-sh4-newlib.sh` script.
 
 Before executing it, just edit it to be sure if the `$toolchains_base` variable
 is correctly set. Then execute it by just entering:
-
-	./packages/fixup-sh4-newlib.sh
-
+```
+./packages/fixup-sh4-newlib.sh
+```
 ## Next steps ##
 
 After following this guide, the toolchains should be ready.

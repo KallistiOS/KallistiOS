@@ -14,7 +14,7 @@
 plx_font_t * font;
 plx_fcxt_t * fcxt;
 
-void pm_init() {
+void pm_init(void) {
     font = plx_font_load("/rd/font.txf");
     fcxt = plx_fcxt_create(font, PVR_LIST_TR_POLY);
 }
@@ -34,7 +34,7 @@ void pm_drawbar(float pct, float posx, float posy, float posz,
     plx_vert_inp(PLX_VERT_EOS, posx + len, posy, posz, c2);
 }
 
-void pm_draw() {
+void pm_draw(void) {
     char str[64];
     float pct;
     float posx = 64, posy = 96, posz = 4500;

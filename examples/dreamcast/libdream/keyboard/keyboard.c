@@ -1,6 +1,6 @@
 #include <kos.h>
 
-void kb_test() {
+void kb_test(void) {
     maple_device_t *cont, *kbd;
     cont_state_t *state;
     int k, x = 20, y = 20 + 24;

@@ -55,7 +55,7 @@ void glDrawQuads(float x, float y, float w, float h, int count,
     glEnd();
 }
 
-void RenderCallback() {
+void RenderCallback(void) {
     if(BLEND)
         glEnable(GL_BLEND);
 
@@ -72,7 +72,7 @@ void RenderCallback() {
     glutSwapBuffers();
 }
 
-int InputCallback() {
+int InputCallback(void) {
     maple_device_t *cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
 
     if(cont) {

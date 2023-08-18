@@ -127,10 +127,13 @@ typedef void (*cont_btn_callback_t)(uint8 addr, uint32 btns);
 /** \brief  Set an automatic button press callback.
 
     This function sets a callback function to be called when the specified
-    controller has the set of buttons given pressed.
+    controller has the set of buttons given pressed. Only one callback
+    is stored globally, so if this function is called multiple times,
+    subsequent calls overwrite the effects of previous ones.
 
     \param  addr            The controller to listen on. This value can be
-                            obtained by using maple_addr().
+                            obtained by using maple_addr(). The value 0 can
+                            be used to listen on all controllers.
     \param  btns            The buttons bitmask to match.
     \param  cb              The callback to call when the buttons are pressed.
 */

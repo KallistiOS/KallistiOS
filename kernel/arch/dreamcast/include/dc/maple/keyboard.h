@@ -319,7 +319,7 @@ void kbd_set_queue(int active) __attribute__((deprecated));
                             keyboards.
     \see                    kbd_queue_pop()
 */
-int kbd_get_key() __attribute__((deprecated));
+int kbd_get_key(void) __attribute__((deprecated));
 
 /** \brief  Pop a key off a specific keyboard's queue.
 

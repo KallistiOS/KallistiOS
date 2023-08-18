@@ -34,12 +34,12 @@ http_state_list_t states;
 #define st_foreach(var) TAILQ_FOREACH(var, &states, list)
 mutex_t list_mutex = MUTEX_INITIALIZER;
 
-int st_init() {
+int st_init(void) {
     TAILQ_INIT(&states);
     return 0;
 }
 
-http_state_t * st_create() {
+http_state_t * st_create(void) {
     http_state_t * ns;
 
     ns = calloc(1, sizeof(http_state_t));

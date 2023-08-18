@@ -76,7 +76,7 @@ uname_s := $(shell uname -s)
 
 # This is a common 'patch_apply' function used in all the cases
 define patch_apply
-	@stamp_file=patch-$(stamp_radical_name).stamp; \
+	@stamp_file=$(src_dir)/$(patch_target_name)_patch.stamp; \
 	patches=$$(echo "$(diff_patches)" | xargs); \
 	if ! test -f "$${stamp_file}"; then \
 		if ! test -z "$${patches}"; then \

@@ -12,7 +12,7 @@ static pvr_ptr_t chktexture;
 static float horizon = 340.0f;
 
 /* Make a nice (now familiar =) XOR pattern texture */
-void bkg_setup() {
+void bkg_setup(void) {
     int x, y;
     uint16 *texture;
 
@@ -29,7 +29,7 @@ void bkg_setup() {
 }
 
 /* Draws the floor polygon */
-static void draw_floor_poly() {
+static void draw_floor_poly(void) {
     pvr_vertex_t vert;
     float u2 = 0.374f, j = 0.0f;
 
@@ -82,7 +82,7 @@ static void draw_floor_poly() {
 }
 
 /* Draws the "wall" polygon */
-static void draw_wall_poly() {
+static void draw_wall_poly(void) {
     pvr_vertex_t    vertc;
 
     vertc.flags = PVR_CMD_VERTEX;
@@ -113,7 +113,7 @@ static void draw_wall_poly() {
     pvr_prim(&vertc, sizeof(vertc));
 }
 
-void bkg_render() {
+void bkg_render(void) {
     pvr_poly_cxt_t cxt;
     pvr_poly_hdr_t poly;
 

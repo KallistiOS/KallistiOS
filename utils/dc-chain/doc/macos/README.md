@@ -43,9 +43,9 @@ Please note, you can ignore these instructions below if you already have
 1. Open a **Terminal**.
 
 2. Then input:
-
-		xcode-select --install
-
+	```
+	xcode-select --install
+	```
 3. When the window opens, click on the `Install` button, then click on the
    `Accept` button.
 
@@ -64,30 +64,30 @@ here to fill this gap:
 1. Open a **Terminal** window.
 
 2. Execute the following:
-
-		/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-
+	```
+	/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+	```
 **Homebrew** is now installed. You can check if it's working by entering
 `brew --version`.
 
 ### Installation of required packages ###
 
 The packages below need to be installed:
-
-	brew install libjpeg libpng libelf
-
+```
+brew install libjpeg libpng libelf
+```
 All the other required packages have already been installed, i.e. `git`, `svn`
 or `python`.
 
 ## Preparing the environment installation ##
 
 Enter the following to prepare **KallistiOS** and the toolchains:
-
-	mkdir -p /opt/toolchains/dc/
-	cd /opt/toolchains/dc/
-	git clone git://git.code.sf.net/p/cadcdev/kallistios kos
-	git clone git://git.code.sf.net/p/cadcdev/kos-ports
-
+```
+mkdir -p /opt/toolchains/dc/
+cd /opt/toolchains/dc/
+git clone git://git.code.sf.net/p/cadcdev/kallistios kos
+git clone git://git.code.sf.net/p/cadcdev/kos-ports
+```
 Everything is ready, now it's time to make the toolchains.
 
 ## Compilation ##
@@ -104,31 +104,31 @@ the main `README.md` file at the root for more information.
 To make the toolchains, do the following:
 
 1. Navigate to the `dc-chain` directory by entering:
-
-		cd /opt/toolchains/dc/kos/utils/dc-chain/
-	
+	```
+	cd /opt/toolchains/dc/kos/utils/dc-chain/
+	```
 2. Enter the following to start downloading and building toolchain:
-
-		make
-
+	```
+	make
+	```
 Now it's time to take a coffee as this process is really long: several hours
 will be needed to make the full toolchains!
 
 ### Making the GNU Debugger (gdb) ###
 
 If you want to install the **GNU Debugger** (`gdb`), just enter:
-
-	make gdb
-
+```
+make gdb
+```
 This will install `sh-elf-gdb` and can be used to debug programs through
 `dc-load/dc-tool`.
 
 ### Removing all useless files ###
 
 After everything is done, you can cleanup all temporary files by entering:
-
-	./cleanup.sh
-
+```
+make clean
+```
 ## Next steps ##
 
 After following this guide, the toolchains should be ready.

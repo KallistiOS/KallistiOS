@@ -29,7 +29,7 @@ KOS_INIT_FLAGS(INIT_DEFAULT);
 
 static uint8_t tbuf[1024 * 512] __attribute__((aligned(32)));
 
-static void __attribute__((__noreturn__)) wait_exit() {
+static void __attribute__((__noreturn__)) wait_exit(void) {
     maple_device_t *dev;
     cont_state_t *state;
 

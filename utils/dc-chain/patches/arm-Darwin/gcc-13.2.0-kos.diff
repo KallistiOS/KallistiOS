@@ -1,0 +1,28 @@
+diff --color -ruN gcc-13.2.0/gcc/config/host-darwin.cc gcc-13.2.0-kos/gcc/config/host-darwin.cc
+--- gcc-13.2.0/gcc/config/host-darwin.cc	2023-03-11 14:18:10
++++ gcc-13.2.0-kos/gcc/config/host-darwin.cc	2023-03-11 14:22:40
+@@ -24,6 +24,10 @@
+ #include "diagnostic-core.h"
+ #include "config/host-darwin.h"
+ #include <errno.h>
++#include "hosthooks.h"
++#include "hosthooks-def.h"
++
++const struct host_hooks host_hooks = HOST_HOOKS_INITIALIZER;
+ 
+ /* For Darwin (macOS only) platforms, without ASLR (PIE) enabled on the
+    binaries, the following VM addresses are expected to be available.
+diff --color -ruN gcc-13.2.0/gcc/config.host gcc-13.2.0-kos/gcc/config.host
+--- gcc-13.2.0/gcc/config.host	2023-03-11 14:18:26
++++ gcc-13.2.0-kos/gcc/config.host	2023-03-11 14:23:01
+@@ -93,8 +93,8 @@
+ case ${host} in
+   *-darwin*)
+     # Generic darwin host support.
+-    out_host_hook_obj=host-darwin.o
+-    host_xmake_file="${host_xmake_file} x-darwin"
++    # out_host_hook_obj=host-darwin.o
++    # host_xmake_file="${host_xmake_file} x-darwin"
+     ;;
+ esac
+ 

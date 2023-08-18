@@ -25,7 +25,7 @@ int polycnt;
 int phase = PHASE_HALVE;
 float avgfps = -1;
 
-void running_stats() {
+void running_stats(void) {
     pvr_stats_t stats;
     pvr_get_stats(&stats);
 
@@ -35,7 +35,7 @@ void running_stats() {
         avgfps = (avgfps + stats.frame_rate) / 2.0f;
 }
 
-void stats() {
+void stats(void) {
     pvr_stats_t stats;
 
     pvr_get_stats(&stats);
@@ -44,7 +44,7 @@ void stats() {
 }
 
 
-int check_start() {
+int check_start(void) {
     maple_device_t *cont;
     cont_state_t *state;
 
@@ -62,7 +62,7 @@ int check_start() {
 
 pvr_poly_hdr_t hdr;
 
-void setup() {
+void setup(void) {
     glKosInit();
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -71,7 +71,7 @@ void setup() {
     glLoadIdentity();
 }
 
-void do_frame() {
+void do_frame(void) {
     int x, y, z;
     int size;
     int i;
@@ -105,7 +105,7 @@ void switch_tests(int ppf) {
     polycnt = ppf;
 }
 
-void check_switch() {
+void check_switch(void) {
     time_t now;
 
     now = time(NULL);

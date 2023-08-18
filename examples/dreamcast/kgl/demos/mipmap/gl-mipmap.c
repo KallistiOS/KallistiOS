@@ -31,7 +31,7 @@ extern GLuint glTextureLoadPVR(char *fname, unsigned char isMipMapped, unsigned 
 #define INP_EXIT        5
 
 /* Simple Input Callback with a return value */
-int InputCallback() {
+int InputCallback(void) {
     maple_device_t *cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
 
     if(cont) {
@@ -60,7 +60,7 @@ int InputCallback() {
 }
 
 /* Very Basic Open GL Initialization for 2D rendering */
-void RenderInit() {
+void RenderInit(void) {
     glKosInit(); /* GL Will Initialize the PVR */
 
     glShadeModel(GL_SMOOTH);

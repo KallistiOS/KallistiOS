@@ -72,6 +72,7 @@ __BEGIN_DECLS
 #ifdef _arch_dreamcast
 #   include <arch/gdb.h>
 #   include <arch/mmu.h>
+#   include <arch/memory.h>
 
 #   include <dc/asic.h>
 #   include <dc/biosfont.h>

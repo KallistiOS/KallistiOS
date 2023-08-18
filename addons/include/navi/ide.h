@@ -40,14 +40,14 @@ int ide_write(uint32 linear, uint32 numsects, void *bufptr);
 /** \brief  Retrieve the number of sectors from the hard disk.
     \returns                The total number of linear sectors.
 */
-uint32 ide_num_sectors();
+uint32 ide_num_sectors(void);
 
 /** \brief  Initialize Navi IDE.
     \return                 0 on success (no error conditions defined).
 */
-int ide_init();
+int ide_init(void);
 
 /** \brief  Shutdown Navi IDE. */
-void ide_shutdown();
+void ide_shutdown(void);
 
 #endif  /* __NAVI_IDE_H */

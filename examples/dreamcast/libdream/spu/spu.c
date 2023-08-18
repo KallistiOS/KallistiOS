@@ -31,7 +31,7 @@ void copy_s3m(char *song, int len) {
         ;
 }
 
-void wait_start() {
+void wait_start(void) {
     maple_device_t *cont;
     cont_state_t *state;
 

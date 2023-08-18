@@ -20,6 +20,11 @@
 #define NAME_MAX    256     /**< \brief Max filename length */
 #endif
 
+/* MAX_FN_LEN defined for legacy code compatibility */
+#ifndef MAX_FN_LEN
+#define MAX_FN_LEN  NAME_MAX
+#endif
+
 #ifndef PATH_MAX
 #define PATH_MAX    4096    /**< \brief Max path length */
 #endif

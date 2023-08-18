@@ -63,7 +63,7 @@ void draw_icondata(maple_device_t *addr, uint16 block) {
 }
 
 /* The full read test */
-void vmu_read_test() {
+void vmu_read_test(void) {
     int i, n, drawn = 0;
     maple_device_t *addr = maple_enum_type(0, MAPLE_FUNC_MEMCARD);
     uint8 *ent;

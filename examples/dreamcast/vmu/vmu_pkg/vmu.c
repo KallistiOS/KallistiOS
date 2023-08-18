@@ -11,7 +11,7 @@
 #include <kos.h>
 #include <kos/string.h>
 
-void draw_dir() {
+void draw_dir(void) {
     file_t      d;
     int     y = 88;
     dirent_t    *de;
@@ -35,7 +35,7 @@ void draw_dir() {
 }
 
 int dev_checked = 0;
-void new_vmu() {
+void new_vmu(void) {
     maple_device_t * dev;
 
     dev = maple_enum_dev(0, 1);
@@ -56,7 +56,7 @@ void new_vmu() {
     }
 }
 
-int wait_start() {
+int wait_start(void) {
     maple_device_t *cont;
     cont_state_t *state;
 
@@ -78,7 +78,7 @@ int wait_start() {
 }
 
 /* Here's the actual meat of it */
-void write_entry() {
+void write_entry(void) {
     vmu_pkg_t   pkg;
     uint8       data[4096], *pkg_out;
     int     pkg_size;

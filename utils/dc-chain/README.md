@@ -1,88 +1,87 @@
 # Sega Dreamcast Toolchains Maker (`dc-chain`)
 
-The **Sega Dreamcast Toolchains Maker** (`dc-chain`) utility is a set of files
-made for building all the needed toolchains used in **Sega Dreamcast**
-programming under the **KallistiOS** environment. It was first released by
-*Jim Ursetto* back in 2004 and was initially adapted from *Stalin*'s build
-script v0.3. This utility is part of **KallistiOS** (**KOS**).
+The **Sega Dreamcast Toolchains Maker** (`dc-chain`) is a utility to assist in
+building the toolchains and development environment needed for **Sega Dreamcast**
+programming. Initially adapted from *Stalin*'s build script, it was first
+released by *Jim Ursetto* back in 2004, and is now included as part of
+**KallistiOS** (**KOS**).
 
-By using this utility, 2 toolchains will be built for **Dreamcast** development:
+This utility is capable of building two toolchains for **Dreamcast** development:
 
-- A `sh-elf` toolchain, which is the main toolchain as it targets the CPU of the
-  **Dreamcast**, i.e. the **Hitachi SH-4 CPU** (a.k.a. **SuperH**).
-- An `arm-eabi` toolchain, which is the toolchain used only for the **Yamaha
-  Super Intelligent Sound Processor** (**AICA**). This processor is based
-  on an **ARM7** core. Under **KallistiOS**, only the sound driver is compiled
-  with that toolchain, so you won't need to use it directly.
+- The `sh-elf` toolchain, the primary cross-compiler toolchain targetting the
+  main CPU of the Dreamcast, the **Hitachi SuperH (SH4) CPU** .
+- The `arm-eabi` toolchain, used only for the **Yamaha Super Intelligent Sound
+  Processor** (**AICA**). This processor is based on an **ARM7** core.
 
-The `dc-chain` package will build everything you need to compile **KallistiOS**
-and then finally develop for the **Sega Dreamcast** system. Please note that
-`dc-chain` optimize the both toolchains for the use of **KallistiOS** so if you
-plan to use another **Dreamcast** library (e.g. `libronin`), `dc-chain` may
-not be so useful for you, at least *out-of-the-box*.
+The main `sh-elf` toolchain is required, but KallistiOS includes a precompiled
+AICA sound driver, so building the `arm-eabi` toolchain is only necessary when
+altering the sound driver or writing custom AICA code.
+
+The `sh-elf` toolchain by default is built to target KallistiOS specifically,
+however options are included to build a "raw" toolchain to allow targeting other
+Dreamcast libraries.
 
 ## Overview
 
-Components included in the toolchains built through `dc-chain` are:
+Toolchain components built through `dc-chain` include:
 
-- **Binutils** (mainly `ld` plus other tools);
-- **GNU Compiler Collection** (`gcc`, `g++`);
-- **Newlib** (mainly `libc` plus other libraries);
-- **GNU Debugger** (`gdb`) - Optional;
+- **Binutils** (including `ld` and related tools)
+- **GNU Compiler Collection** (`gcc`, `g++`, etc.)
+- **Newlib** (a C standard library for embedded systems)
+- **GNU Debugger** (`gdb`, optional)
 
-**Binutils** and **GCC** are installed for both targets (i.e. `sh-elf` and
-`arm-eabi`) where **Newlib** and **GNU Debugger** (**GDB**) are needed only
-for the main toolchain (`sh-elf`).
+**Binutils** and **GCC** are installed for both `sh-elf` and `arm-eabi`
+toolchains, while **Newlib** and **GNU Debugger** (**GDB**) are needed only for
+the main `sh-elf` toolchain.
 
 ## Getting started
 
-Before you start, please browse the `./doc` directory and check if they are
-full instructions for building the whole toolchains for your environment.
+Before you start, please browse the `doc` directory and check for full
+instructions for building the toolchains for your environment.
 
-A big effort was put to simplify the building process as much as possible, for
-all modern environments, mainly **Linux** (including **BSD**), **macOS** and
-**Windows** (including **Cygwin**, **MinGW-w64/MSYS2** and **MinGW/MSYS**).
-Indeed, a lot of conditional instructions have been added, so it should work
-most of the time just out-of-the-box for your environment.
+A big effort was put into simplifying the building process as much as possible
+for all modern environments, including **Linux**, **FreeBSD**, **macOS** and
+**Windows** (via **Windows Subsystem for Linux**, **Cygwin**, **MinGW-w64/MSYS2**
+or **MinGW/MSYS**). Many conditional instructions have been diligently added to
+the script to allow it to seemlessly function in many environments out of the box.
 
 ### `dc-chain` utility installation
-
-`dc-chain` is part of **KallistiOS** so you should have it installed in the
-`$KOS_BASE/utils/dc-chain` directory. You don't need to have **KallistiOS**
-configured (i.e. have the `$KOS_BASE/environ.sh` file created) as building
-toolchains is a prerequisite in order to build **KallistiOS** itself.
+`dc-chain` is packaged with KallistiOS, where it can be found within the
+`$KOS_BASE/utils/dc-chain` directory. As building this toolchain is a
+prerequisite to building KallistiOS, KallistiOS does not yet need to be
+configured to proceed to building the toolchain.
 
 ### Prerequisites installation
 
-You'll need your host toolchain (i.e. the regular `gcc` plus additional tools)
-for your computer installed. Indeed, to build the cross-compilers you'll need a
-working compilation environment on your computer.
+You'll need to have a host toolchain for your computer installed (i.e. the
+regular `gcc` and related tools) in order to build the cross compiler. The
+`dc-chain` scripts are intended to be used with a `bash` shell; other shells
+*may* work, but are not guaranteed to function properly.
 
-In addition, you must have `bash` installed on your host system. Other shells
-*may* work, but are not tested and not guaranteed to work.
-
-If you need help on this step, everything is described in the `./doc` directory.
-
-Please note that you may be required to use older versions of some of the
-prerequisites in certain configurations. For instance, building GCC 4.7.4 may
-require an older version of the `flex` tool be installed. If you receive errors
-about tools you have installed, check your system's package manager for an older
-version of that tool.
+Several dependencies such as `wget`, `gettext`, `texinfo`, `gmp`, `mpfr`,
+`libmpc`, etc. are required to build the toolchain. The `doc` directory contains
+useful platform-specific instructions for installing dependencies.
 
 ## Configuration
 
-In order to allow `dc-chain` to work, you'll need to provide a `config.mk` file.
-This file will contain the settings used for making the toolchains.
+Before running `dc-chain`, you will need to set up the `config.mk` file containing
+settings for building the toolchain(s). Most users can simply use the the default
+`config.mk.stable.sample` template, which contains a stable default configuration
+to make this easy for you. Additional configuration templates for alternative
+settings are available in the `config` directory; see `config/README.md` for more
+details. Most users can skip configuration without altering any options whatsoever.
+Simply copy the `config.mk.stable.sample` file from the `config` directory to use
+this configuration:
+```
+cp config/config.mk.stable.sample config.mk
+```
 
-You may create this `config.mk` file from scratch or use a provided template
-as base.
-
-Please find below every parameter available in the `config.mk` file and more
-information about `config.mk` templates.
+Additional settings are detailed below.
 
 ### Toolchains components
 
-All component's versions of the toolchains are declared in the `config.mk` file.
+You may adjust the version numbers of components to install through declarations
+within the `config.mk` file.
 
 For the `sh-elf` toolchain, they are:
 
@@ -96,95 +95,91 @@ For the `arm-eabi` toolchain, they are:
 - `arm_binutils_ver`
 - `arm_gcc_ver`
 
-Speaking about the best versions of the components to use for the Dreamcast
-development, this is a very critical point. Indeed, **GCC** and **Newlib**
-versions are core components; they are patched to compile with **KallistiOS**.
-For **Binutils** or **GDB**, you may in theory use the latest available versions
-without problems.
+Because the **GCC** and **Newlib** builds must be patched to target KallistiOS,
+you may only select versions with patches available when building the default
+toolchain targeting KallistiOS. See the alternate configurations in the `config`
+directory for examples.
 
-Working **GCC** and **Newlib** version combinations are:
+**Note:** The `arm-eabi` GCC does not need a KallistiOS patch. The latest
+version of GCC possible for the `arm-eabi` toolchain, however, is `8.5.0`.
+Support for the **ARM7DI** core in the AICA was dropped after the GCC `8.x`
+series. If you choose to compile the optional `arm-eabi` toolchain, it is
+recommended to just pick the latest `8.5.0`.
 
-- GCC `13.1.0` with Newlib `4.3.0` for `sh-elf` and GCC `8.5.0` for `arm-eabi`
-  (**testing**; the most modern combination);
-- GCC `9.3.0` with Newlib `3.3.0` for `sh-elf` and GCC `8.4.0` for `arm-eabi`
-  (**stable**; the most widely used, widely tested combination);
-- GCC `4.7.4` with Newlib `2.0.0` for `sh-elf` and `arm-eabi` (**legacy**; the
-  oldest supported combination, previously stable [some issues may happen in C++](https://dcemulation.org/phpBB/viewtopic.php?f=29&t=104724));
+For **Binutils** or **GDB**, the latest version typically just works.
 
-To help you on this, 3 `config.mk` templates are provided with `dc-chain`:
+For advanced users, you may specify **custom dependencies for GCC** directly in
+the `config.mk` file. You must define `use_custom_dependencies=1` to use your
+custom versions of **GMP**, **MPC**, **MPFR** and **ISL** rather than the
+versions provided with GCC.
 
-- `config.mk.testing.sample` (testing);
-- `config.mk.stable.sample` (stable);
-- `config.mk.legacy.sample` (legacy).
+You may need to specify the tarball extension of the archive containing the
+package you want to download using `download_type`. This is already properly set
+for you in the provided templates, but this may be altered in case a package
+changes its extension on the servers. For example, older GCC versions like
+`4.7.4`, there is no `xz` tarball file, so this setting must be `gz`.
 
-Just copy the relevant `config.mk` sample file to `config.mk` and you are good
-to go.
+Git repositories can also be used to obtain source files. The git download method
+can be selected by specifying `git` as the `download_type`. This enables the use
+of `git_repo` and `git_branch` variables to specify the repository and branch
+respectively. If `git_branch` is omitted, the default for the repository will be
+used.
 
-**Note:** The GCC's maximum version number possible for the `arm-eabi` toolchain
-is `8.x`. Support of the **ARM7DI** chip is dropped after that GCC version. So
-don't try to update the version of the `arm-eabi-gcc` component beyond `8.x`.
+Alternative mirrors for GNU software can be selected using the `gnu_mirror`
+option detailed below.
 
-You have the possibility to **use custom dependencies for GCC** directly in the
-`config.mk` file. In that case, you have to define `use_custom_dependencies=1`.
-Doing so will use your custom versions of **GMP**, **MPC**, **MPFR** and
-**ISL** rather than the provided versions with GCC. You may also use this flag
-if you have trouble using the `contrib/download_prerequisites` script provided
-with GCC.
+### Download protocol
 
-Please note that you have the possibility to specify the tarball extensions
-you want to download using `download_type`; this may be useful if a
-package changes its extension on the servers. For example, for GCC `4.7.4`, 
-there is no `xz` tarball file, so you may change this to `gz`. In the case that
-`download_type` is not specified, `tarball_type` will be checked as a fallback to
-support legacy `config.mk` files.
+You may specify the download protocol used when downloading packages with the
+`download_protocol` variable. Available options include `http`, `https` or `ftp`
+as you want. The default is `https`.
 
-Git repositories can also be used to obtain source files. The git download method 
-can be selected by specifying `git` as the `download_type`. This enables
-the use of `git_repo` and `git_branch` variables to specify the repository
-and branch respectively. If `git_branch` is omitted, the default for the
-repository will be used.
+### Force downloader
 
-**Note:** All download URL are computed in the `scripts/download.mk` file, but
-you shouldn't update/change this as it can be overriden with the `gnu_mirror` 
-config option detailed below.
+You must have either the [Wget](https://www.gnu.org/software/wget/) or
+[cURL](https://curl.haxx.se/) file downloading utilities installed to use
+dc-chain. You may specify which to use for downloading files with the
+`force_downloader` variable. If this variable is empty or commented, the web
+downloader tool will try to detect which is available and choose cURL if both are
+available.
+
+### Override GNU Download Mirror
+
+Set `gnu_mirror` to override the default `ftpmirror.gnu.org` mirror when you have
+a prefered mirror for downloading GNU sources.
 
 ### Toolchains base
 
-`toolchains_base` indicates the root directory where toolchains will be
-installed. This should match your `environ.sh` configuration. Default is
-`/opt/toolchains/dc`.
-
-In clear, after building the toolchains, by using the default `toolchains_base`,
-you'll have two additional directories:
-
-- `/opt/toolchains/dc/arm-eabi`;
-- `/opt/toolchains/dc/sh-elf`.
-
-Of course, you may adapt the path if needed; but it's better to use the standard
-path if possible.
-
-### Erase
-
-Set the `erase` flag to `1` to remove build directories on the fly to save
-space.
+`toolchains_base` specifies the root directory where toolchains will be
+installed. The default is `/opt/toolchains/dc`. If using this default, you will
+find the `sh-elf` toolchain installed at `/opt/toolchains/dc/sh-elf` and the
+`arm-eabi` toolchain at `/opt/toolchains/dc/arm-eabi`. These are also the default
+paths for the KallistiOS configuration. It is recommended to stick with these
+paths unless you have a specific need to change them.
 
 ### Verbose
 
-Set `verbose` to `1` to display output to screen as well as `log` files. In clear
-if `verbose` is set to `0`, all the output will be stored directly in the `log`
-files.
+Set `verbose` to `1` to display verbose build output to your terminal as well as
+write to `log` files. If `verbose` is set to `0`, the verbose output will only be
+stored in the `log` files.
+
+### Erase
+
+Set the `erase` flag to `1` to remove build directories on the fly to save space.
+
+### Install mode
+
+Set this to `install` if you want to debug the toolchains themselves or keep this
+as `install-strip` if you just want to use the produced toolchains in **release**
+mode. This drastically reduces the size of the toolchains.
 
 ### Make jobs
 
-You may attempt to spawn multiple jobs with `make`. Using `make -j2` is
-recommended for speeding up the building of the toolchain. There is an option
-inside the `config.mk` to set the number of jobs for the building phases.
-Set the `makejobs` variable in the `config.mk` to whatever you would normally
-feel the need to use on the command line, and it will do the right thing.
-
-In the old times, this option may break things, so, if you run into trouble,
-you should clear this variable and try again with just one job running (i.e.
-`makejobs=`).
+You may build the toolchains using multiple CPU threads by specifying the number
+of jobs in the `makejobs` variable. The default value is `-j2`, for two threads.
+This will dramatically speed up the compilation process. Previously, this option
+could potentially break things. If you run into trouble while building the
+toolchains, you may want to try setting this value to `-j1` to rule out issues.
 
 On **MinGW/MSYS** environment, it has been confirmed that multiple jobs breaks
 the toolchain all the time, so please don't try to do that under this
@@ -193,135 +188,131 @@ apply to **MinGW-w64/MSYS2**.
 
 ### Languages
 
-Use the `pass2_languages` variable to declare the languages you want to use.
-The default is to enable **C**, **C++**, **Objective C** and **Objective C++**.
-You may remove the latter two if you don't want them.
-
-### Download protocol
-
-You may have the possibility to change the download protocol used when
-downloading the packages (i.e. from `download.sh` script file).
-
-Set the `download_protocol` variable to `http`, `https` or `ftp` as you want.
-Default is `https`.
-
-### Force downloader
-
-You may specify here `wget` or `curl`. If this variable is empty or commented,
-the web downloader tool will be auto-detected in the following order:
-
-- cURL
-- Wget
-
-You must have either [Wget](https://www.gnu.org/software/wget/) or
-[cURL](https://curl.haxx.se/) installed to use dc-chain.
+The `pass2_languages` variable specifies the the languages you wish GCC to
+support. The supported options are **C**, **C++**, **Objective-C** and
+**Objective-C++**. The default is to build support for all.
 
 ### GCC threading model
 
-With GCC `4.x` versions and up, the patches provide a `kos` thread model, so you
-should use it. If you really don't want threading support for C++, Objective C
-or Objective C++, you can set this to `single`. With GCC `3.x`, you probably
-want `posix` here; but this mode is deprecated as the GCC `3.x` branch is not
-supported anymore.
+The KallistiOS patches provide a `kos` thread model required for use with
+KallistiOS. If you don't want threading support for C++, Objective-C, or
+Objective-C++, or are building a raw toolchain, you may set this to `single`.
+KallistiOS used the `posix` thread model with GCC `3.x`, but this configuration
+is no longer supported.
 
-### Install mode
+### Automatic KOS Patching
+Set `use_kos_patches` to `0` if you want to skip applying the KOS patches to the
+downloaded sources before building. Setting this option along with
+`auto_fixup_sh4_newlib=0` will keep the generated toolchain completely raw, e.g.
+for use with `libronin` instead of `KallistiOS`.
 
-Set this to `install` if you want to debug the toolchains themselves or keep
-this to `install-strip` if you just want to use the produced toolchains in
-**release** mode. This reduces the size of the toolchains drastically.
+**Note:** If you disable this flag, the KallistiOS threading model (`kos`) will
+be unavailable. **Use this flag with care**.
+
+### Automatic fixup of SH4 Newlib
+
+Set `auto_fixup_sh4_newlib` to `0` if you want to disable the automatic fixup of
+SH4 Newlib needed by KallistiOS. Only modify this option if you know what you are
+doing. Setting this option along with `use_kos_patches=0` will keep the generated
+toolchain completely raw, e.g. for use with `libronin` instead of `KallistiOS`.
+
+**Note:** If you disable this flag, the KallistiOS threading model (`kos`) will
+be unavailable. This will be a problem if you still apply the KallistiOS patches.
+**Use this flag with care**.
+
+### C99 Format Specifier Support
+
+Set `newlib_c99_formats` to `1` if you want to build SH4 Newlib with additional
+support for the C99 format specifiers, used by printf and friends. These include
+support for `size_t`, `ptrdiff_t`, `intmax_t`, and sized integral types.
+
+### Optimize Newlib for Space
+
+Set `newlib_opt_space` to `1` to enable optimizing for space when building
+Newlib. This will build Newlib with compiler flags which favor smaller code sizes
+over faster performance.
 
 ### Standalone binaries (MinGW/MSYS only)
 
-Set `standalone_binary` to `1` if you want to build static binaries, which may
-be run outside the MinGW/MSYS environment. This flag has no effect on other
-environments.
+Set `standalone_binary` to `1` if you want to build static binaries, which may be
+run outside the MinGW/MSYS environment. This flag has no effect on other
+environments. Building static binaries is useful only if you plan to use an IDE
+on Windows. This flag exists mainly for producing
+[DreamSDK](https://dreamsdk.org).
 
-Building static binaries are useful only if you plan to use an IDE on Windows.
-This flag is here mainly for producing [DreamSDK](https://dreamsdk.org).
+### Force installation of BFD for SH
 
-### Automatic fixup SH-4 Newlib (use with care)
+Set `sh_force_libbfd_installation` to `1` if youw ant to force the installation
+of `libbfd` for the SH toolchain. This is required for MinGW/MSYS and cannot be
+disabled in that scenario. This option is available to force the installation of
+`libbfd` in other environments. However, this won't be necessary in most cases,
+as `libelf`` is used almost everywhere. Please note, `libbfd`` cannot be
+portable if you built it in another environment. Don't mess with this flag unless
+you know exactly what you are doing.
 
-Set `auto_fixup_sh4_newlib` to `0` if you want to disable the automatic fixup
-SH-4 Newlib needed by KallistiOS. Setting this option along with 
-`use_kos_patches=0` will keep the generated toolchain completely raw. 
+## Building the toolchain
 
-**Note:** If you disable this flag, the KallistiOS threading model (`kos`) will
-be unavailable. Also, this may be a problem if you still apply the KallistiOS
-patches. **Use this flag with care**.
+With prerequisites installed and a `config.mk` configuration file in place, the
+toolchains are ready to be built. Generic instructions follow below, but you may
+find more detailed platform-specific instructions in the `doc` directory.
 
-### Automatic KOS Patching (use with care)
-Set `use_kos_patches` to `0` if you want to skip applying the KOS patches
-to the downloaded sources before building. Setting this option along with 
-`auto_fixup_sh4_newlib=0` will keep the generated toolchain completely raw.
-
-**Note:** If you disable this flag, the KallistiOS threading model (`kos`) will
-be unavailable. Also, this may be a problem if you still apply the KallistiOS
-patches. **Use this flag with care**.
-
-### Override GNU Download Mirror
-Set `gnu_mirror` to override the default of `ftpmirror.gnu.org` when you have
-a prefered mirror to download GNU sources from.
-
-## Usage
-
-After installing all the prerequisites and tweaking the configuration with the
-`config.mk` file, it's time to build the toolchains.
-
-### Making the toolchain
-
-Below you will find some generic instructions; you may find some specific
-instructions in the `./doc` directory for your environment.
-
-In the dc-chain directory, run (for **BSD**, please use `gmake` instead):
-
-		make
-
-This will build the ARM & SH4 toolchains. If you wish to only build the SH4
-toolchain and just use the prebuilt KOS sound driver run:
-    make build-sh4
-
-Depending of your environment, this can take a bunch of hours. So please be
-patient!
+In the dc-chain directory, you may run (for **BSD**, please use `gmake` instead):
+```
+make
+```
+This will build the `sh-elf` and `arm-eabi` toolchains. If you wish to only build
+the `sh-elf` toolchain and use the pre-built KOS sound driver, run:
+```
+make build-sh4
+```
+Depending on your hardware and environment, this process may take minutes to
+several hours, so please be patient!
 
 If anything goes wrong, check the output in `logs/`.
 
-### Making the GNU Debugger (gdb)
+## Building the GNU Debugger (gdb)
 
-For the `sh-elf` toolchain, if you want to use the **GNU Debugger** (`gdb`),
-you can make it by entering:
+For the `sh-elf` toolchain, if you want to use the **GNU Debugger** (`gdb`), you
+can build it by entering:
+```
+make gdb
+```
+This will install `gdb` in the `sh-elf` toolchain. `gdb` is used in conjunction
+with the `dcload/dc-tool` debug link utilities to perform remote debugging of
+**Dreamcast** programs. Further details can be found in the documentation for
+`dcload/dc-tool`.
 
-	make gdb
+## Cleaning up files
 
-This will install `gdb` in the `sh-elf` toolchain. `gdb` is used with
-`dcload/dc-tool` programs, which are part of **KallistiOS** too, in order to do
-remote debugging of your **Dreamcast** programs. Please read the `dcload`
-documentation to learn more on this point.
+After the toolchain compilation, you may save space by cleaning up downloaded and
+temporary generated files by entering:
+```
+make clean
+```
 
-### Removing all useless files
+## Finished
 
-After the toolchain compilation, you can cleanup everything by entering:
+Once the toolchains have been compiled, you are ready to build KallistiOS itself.
+See the KallistiOS documentation for further instructions.
 
-	make clean
-
-This will save a lot of space by removing all unnecessary files.
-
-## Final note
-
-Please see the comments at the top of the `config.mk` file for more build
-options. For example, if something goes wrong, you may restart the compilation
-of the problematic step only rather than running the whole process again.
+## Addendum
 
 Interesting targets (you can `make` any of these):
 
-- `all`: `fetch` `patch` `build` (fetch, patch and build everything, excluding `gdb`)
+- `all`: `fetch` `patch` `build` (fetch, patch and build everything, excluding
+  `gdb`)
 - `fetch`: `fetch-sh4` `fetch-arm` `fetch-gdb`
 - `patch`: `patch-gcc` `patch-newlib` `patch-kos` (should be executed once)
 - `build`: `build-sh4` `build-arm` (build everything, excluding `gdb`)
-- `build-sh4`: `build-sh4-binutils` `build-sh4-gcc` (build only `sh-elf` toolchain, excluding `gdb`)
-- `build-arm`: `build-arm-binutils` `build-arm-gcc` (build only `arm-eabi` toolchain)
+- `build-sh4`: `build-sh4-binutils` `build-sh4-gcc` (build only `sh-elf`
+  toolchain, excluding `gdb`)
+- `build-arm`: `build-arm-binutils` `build-arm-gcc` (build only `arm-eabi`
+  toolchain)
 - `build-sh4-binutils` (build only `binutils` for `sh-elf`)
 - `build-arm-binutils` (build only `binutils` for `arm-eabi`)
-- `build-sh4-gcc`: `build-sh4-gcc-pass1` `build-sh4-newlib` `build-sh4-gcc-pass2` (build only `sh-elf-gcc` and `sh-elf-g++`)
+- `build-sh4-gcc`: `build-sh4-gcc-pass1` `build-sh4-newlib` `build-sh4-gcc-pass2`
+  (build only `sh-elf-gcc` and `sh-elf-g++`)
 - `build-arm-gcc`: `build-arm-gcc-pass1` (build only `arm-eabi-gcc`)
-- `build-sh4-newlib`: `build-sh4-newlib-only` `fixup-sh4-newlib` (build only `newlib` for `sh-elf`)
+- `build-sh4-newlib`: `build-sh4-newlib-only` `fixup-sh4-newlib` (build only
+  `newlib` for `sh-elf`)
 - `gdb` (build only `sh-elf-gdb`; it's never built automatically)

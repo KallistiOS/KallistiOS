@@ -73,7 +73,7 @@
 static vuint8   * const flashport = (vuint8 *)0xa0000000;
 
 /* We'll do this before sending a command */
-static void send_unlock() {
+static void send_unlock(void) {
     flashport[ADDR_UNLOCK_1] = CMD_UNLOCK_DATA_1;
     flashport[ADDR_UNLOCK_2] = CMD_UNLOCK_DATA_2;
 }
@@ -175,7 +175,7 @@ int nvflash_erase_block(uint32 addr) {
 }
 
 /* Erase the whole flash chip */
-int nvflash_erase_all() {
+int nvflash_erase_all(void) {
     send_cmd(CMD_SECTOR_ERASE_UNLOCK_DATA);
     send_cmd(CMD_ERASE_ALL);
 
@@ -193,7 +193,7 @@ int nvflash_erase_all() {
 }
 
 /* Return 0 if we successfully detect a compatible device */
-int nvflash_detect() {
+int nvflash_detect(void) {
     uint16      mfr_id, dev_id;
 
     if(nvflash_read(0) == 0xff && nvflash_read(2) == 0x28) {

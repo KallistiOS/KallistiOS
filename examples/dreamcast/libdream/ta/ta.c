@@ -5,7 +5,7 @@
 
 /* This is really more complicated than it needs to be in this particular
    case, but it's nice and verbose. */
-int check_start() {
+int check_start(void) {
     maple_device_t *cont;
     cont_state_t *state;
 
@@ -56,7 +56,7 @@ polyplace_t polys[12] = {
 };
 
 /* Does one frame of polygon movement */
-void move_polys() {
+void move_polys(void) {
     int i;
     polyplace_t *p;
 
@@ -110,7 +110,7 @@ void draw_one_poly(polyplace_t *p) {
 
 uint32 color = 0;
 int dcolor = 5;
-void draw_frame() {
+void draw_frame(void) {
     pvr_poly_cxt_t  cxt;
     pvr_poly_hdr_t  poly;
     int i;

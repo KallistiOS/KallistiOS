@@ -149,7 +149,7 @@ static void draw_sphere(sphere_t *s, int list) {
 
 #define SPHERE_CNT 32
 static float r = 0;
-static void sphere_frame() {
+static void sphere_frame(void) {
     int i;
     //uint64 start;
     static sphere_t big_sphere = { 1.2f, 20, 20, NULL };
@@ -219,7 +219,7 @@ static void sphere_frame() {
     pvr_scene_finish();
 }
 
-void do_sphere_test() {
+void do_sphere_test(void) {
     pvr_set_bg_color(0.2f, 0.0f, 0.4f);
 
     pvr_poly_cxt_col(&cxt[0], PVR_LIST_OP_POLY);
