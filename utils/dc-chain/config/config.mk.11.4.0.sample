@@ -37,10 +37,10 @@ arm_gcc_download_type=xz
 #use_custom_dependencies=1
 
 # GCC dependencies for SH
-sh_gmp_ver=6.2.1
-sh_mpfr_ver=4.1.0
-sh_mpc_ver=1.2.1
-sh_isl_ver=0.24
+sh_gmp_ver=6.1.0
+sh_mpfr_ver=3.1.6
+sh_mpc_ver=1.0.3
+sh_isl_ver=0.18
 
 # Tarball extensions to download for GCC dependencies for SH
 sh_gmp_download_type=bz2
