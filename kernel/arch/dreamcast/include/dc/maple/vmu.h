@@ -235,7 +235,8 @@ int vmu_get_icon_shape(maple_device_t *dev, uint8_t *icon_shape);
 */
 int vmu_draw_lcd(maple_device_t * dev, const void *bitmap);
 
-/** \brief  Display a 1bpp bitmap on a VMU screen.
+/** \brief   Display a 1bpp bitmap on a VMU screen.
+    \ingroup maple_lcd
 
     This function sends a raw bitmap to a VMU to display on its screen. This
     bitmap is 1bpp, and is 48x32 in size. This function is equivalent to
@@ -400,19 +401,19 @@ int vmu_beep_raw(maple_device_t* dev, uint32_t beep);
     however, the parameters do support dual-channel stereo in case such a 
     VMU ever does come along. 
 
-                          Period
-                  +---------------------+
-                  |                     |
-                   __________            __________
-                  |          |          |          |
-                  |          |          |          |
-        __________|          |__________|          |
+                           Period
+                   +---------------------+
+                   |                     |
+    HIGH __________            __________
+                   |          |          |          |
+                   |          |          |          |
+                   |__________|          |__________|
+     LOW
+                              |          |
+                              +----------+
+                               Duty Cycle
 
-                  |          |
-                  +----------+        
-                   Duty Cycle
-
-                              WAVEFORM
+                         WAVEFORM
 
     To stop an active tone, one can simply generate a flat wave, such as by 
     submitting both values as 0s.
@@ -509,7 +510,19 @@ int vmu_get_datetime(maple_device_t *dev, time_t *time);
 /** \brief VMU's raw condition data: 0 = PRESSED, 1 = RELEASED */
 typedef uint8_t vmu_cond_t;
 /** \brief  VMU's "civilized" state data: 0 = RELEASED, 1 = PRESSED */
-typedef vmu_cond_t vmu_state_t;
+typedef union vmu_state {
+    uint8_t buttons;
+    struct {
+        uint8_t dpad_up:    1;
+        uint8_t dpad_down:  1;
+        uint8_t dpad_left:  1;
+        uint8_t dpad_right: 1;
+        uint8_t a:          1;
+        uint8_t b:          1;
+        uint8_t mode:       1;
+        uint8_t sleep:      1;
+    };
+} vmu_state_t;
 
 /** \brief   Enable/Disable polling for VMU input
     \ingroup maple_clock
@@ -546,11 +559,11 @@ int vmu_get_buttons_enabled(void);
 
 /** @} */
 
-/* \cond */
+/** \cond */
 /* Init / Shutdown -- Managed internally by KOS */
 int vmu_init(void);
 void vmu_shutdown(void);
-/* \endcond */
+/** \endcond */
 
 __END_DECLS
 
