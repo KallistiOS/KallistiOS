@@ -24,7 +24,9 @@ static inline size_t aligned_size(size_t size, size_t alignment) {
 }
 
 int posix_memalign(void **memptr, size_t alignment, size_t size) {
-    assert(memptr);
+    if(!memptr) {
+        return EFAULT;
+    }
 
     if(!alignment || !is_power_of_two(alignment) || alignment % sizeof(void*)) {
         *memptr = NULL;
