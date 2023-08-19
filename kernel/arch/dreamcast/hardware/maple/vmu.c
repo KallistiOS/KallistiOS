@@ -86,13 +86,28 @@ static void vmu_poll_reply(maple_frame_t* frm) {
     /* Update the status area from the response */
     if(frm->dev) {
         /* Verify the size of the frame and grab a pointer to it */
-        assert(sizeof(vmu_cond_t) == ((resp->data_len - 1) * 4));
+        //assert(resp->data_len == 7);
         raw = (vmu_cond_t *)(respbuf + 1);
 
         /* Fill the "nice" struct from the raw data */
         cooked = (vmu_state_t *)(frm->dev->status);
         /* Invert raw struct as nice struct */
         cooked->buttons = ~(*raw);
+
+        const maple_device_t *cont = maple_enum_dev(frm->dev->port, 0);
+
+        /* Check to see if the VMU is upside-down in the controller and readjust
+           its directional buttons accordingly. */
+        if(cont && (cont->info.functions & MAPLE_FUNC_CONTROLLER) &&
+           (frm->dev->info.connector_direction == cont->info.connector_direction)) {
+            cooked->buttons = (cooked->buttons & 0xf0)  |
+                              (cooked->dpad_up    << 1) | /* down */
+                              (cooked->dpad_down  << 0) | /* up */
+                              (cooked->dpad_left  << 3) | /* right */
+                              (cooked->dpad_right << 2);  /* left */
+
+        }
+
         frm->dev->status_valid = 1;
     }
 }
@@ -147,8 +162,7 @@ void vmu_shutdown(void) {
 }
 
 /* Dynamically add the periodic polling callback to the driver when button input is enabled. */
-void vmu_set_buttons_enabled(maple_device_t *dev, int enable) {
-    (void)dev;
+void vmu_set_buttons_enabled(int enable) {
     vmu_drv.periodic = enable ? vmu_periodic : NULL;
 }
 

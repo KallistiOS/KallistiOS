@@ -495,9 +495,13 @@ int vmu_get_datetime(maple_device_t *dev, time_t *time);
 
     VMU's button state/cond masks, same as capability masks
 
+    \note
+    The MODE and SLEEP button states are not pollable on
+    a standard VMU.
+
     @{
 */
-#define VMU_DPAD_UP    (1<<0)   /**< \brief Up Dpad button on the VMU */
+#define VMU_DPAD_UP    (0<<1)   /**< \brief Up Dpad button on the VMU */
 #define VMU_DPAD_DOWN  (1<<1)   /**< \brief Down Dpad button on the VMU */
 #define VMU_DPAD_LEFT  (2<<1)   /**< \brief Left Dpad button on the VMU */
 #define VMU_DPAD_RIGHT (3<<1)   /**< \brief Right Dpad button on the VMU */
@@ -542,7 +546,7 @@ typedef union vmu_state {
 
     \sa vmu_get_buttons_enabled
 */
-void vmu_set_buttons_enabled(maple_device_t *dev, int enable);
+void vmu_set_buttons_enabled(int enable);
 
 /** \brief   Check whether polling for VMU input has been enabled
     \ingroup maple_clock
