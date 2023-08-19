@@ -27,7 +27,7 @@ struct timespec;
 
 extern int timespec_get(struct timespec *ts, int base);
 
-#ifndef __STRICT_ANSI__
+#if !defined(__STRICT_ANSI__) || (_POSIX_C_SOURCE >= 199309L)
 
 #ifndef _POSIX_TIMERS
 #define _POSIX_TIMERS 1
