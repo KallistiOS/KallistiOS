@@ -36,7 +36,7 @@ int clock_gettime(clockid_t clk_id, struct timespec *ts) {
 
     switch(clk_id) {
     case CLOCK_REALTIME:
-        return timespec_get(ts, TIME_UTC) == TIME_UTC? 0 : -1;
+        return timespec_get(ts, TIME_UTC) == TIME_UTC ? 0 : -1;
     case CLOCK_MONOTONIC:
     case CLOCK_PROCESS_CPUTIME_ID:
     case CLOCK_THREAD_CPUTIME_ID: {
