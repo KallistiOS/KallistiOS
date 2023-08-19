@@ -9,6 +9,9 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnonnull-compare"
+
 static inline int is_power_of_two(size_t x) {
     return (x & (x - 1)) == 0;
 }
@@ -43,3 +46,5 @@ int posix_memalign(void **memptr, size_t alignment, size_t size) {
 
     return *memptr ? 0 : ENOMEM;
 }
+
+#pragma GCC diagnostic pop
