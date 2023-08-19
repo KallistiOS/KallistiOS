@@ -142,7 +142,7 @@ void draw_gl_cube(float x, float y, float z, uint32 color) {
 
 #define LGAP 13
 
-void draw_gl() {
+void draw_gl(void) {
     glPushMatrix();
 
     glTranslatef(0, 0.0f, z);
@@ -220,7 +220,7 @@ void draw_gl() {
     glPopMatrix();
 }
 
-void draw_gl2() {
+void draw_gl2(void) {
     glPushMatrix();
 
     glTranslatef(0, 0.0f, -z);
@@ -299,7 +299,7 @@ void draw_gl2() {
 }
 
 
-void draw_gl3() {
+void draw_gl3(void) {
     glPushMatrix();
 
     glTranslatef(0, 0.0f, -15);
@@ -378,7 +378,7 @@ void draw_gl3() {
 }
 
 
-void draw_gl4() {
+void draw_gl4(void) {
     glPushMatrix();
 
     glTranslatef(0, 0.0f, 15);
@@ -456,7 +456,7 @@ void draw_gl4() {
     glPopMatrix();
 }
 
-void draw_gl5() {
+void draw_gl5(void) {
     glPushMatrix();
 
     glTranslatef(0, 0.0f, -25);
@@ -535,7 +535,7 @@ void draw_gl5() {
 }
 
 
-void draw_gl6() {
+void draw_gl6(void) {
     glPushMatrix();
 
     glTranslatef(0, 0.0f, 25);
@@ -614,7 +614,7 @@ void draw_gl6() {
 }
 
 
-void draw_gl7() {
+void draw_gl7(void) {
     glPushMatrix();
 
     glTranslatef(0, 0.0f, -35);
@@ -693,7 +693,7 @@ void draw_gl7() {
 }
 
 
-void draw_gl8() {
+void draw_gl8(void) {
     glPushMatrix();
 
     glTranslatef(0, 0.0f, 35);
@@ -772,7 +772,7 @@ void draw_gl8() {
 }
 
 
-void draw_gl9() {
+void draw_gl9(void) {
     glPushMatrix();
 
     glTranslatef(0, 0.0f, -45);
@@ -851,7 +851,7 @@ void draw_gl9() {
 }
 
 
-void draw_gl10() {
+void draw_gl10(void) {
     glPushMatrix();
 
     glTranslatef(0, 0.0f, 45);
@@ -929,7 +929,7 @@ void draw_gl10() {
     glPopMatrix();
 }
 
-void GPU_Stats() {
+void GPU_Stats(void) {
     pvr_stats_t stats;
     pvr_get_stats(&stats);
 
@@ -957,7 +957,7 @@ extern uint8 romdisk[];
 KOS_INIT_ROMDISK(romdisk);
 
 static unsigned char LE[8] = {0, 1, 0, 0, 0, 0, 0, 0};
-int InputCb() {
+int InputCb(void) {
     maple_device_t *cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
 
     if(cont) {

@@ -7,6 +7,7 @@
 #include <malloc.h>
 #include <stdio.h>
 #include <assert.h>
+#include <arch/memory.h>
 #include <dc/maple.h>
 #include <dc/asic.h>
 #include <dc/vblank.h>
@@ -69,7 +70,7 @@ int maple_hw_init(void) {
     assert_msg((((uint32)maple_state.dma_buffer) & 0x1f) == 0, "DMA buffer was unaligned; bug in dlmalloc; please report!");
 
     /* Force it into the P2 area */
-    maple_state.dma_buffer = (uint8*)((((uint32)maple_state.dma_buffer) & 0x1fffffff) | 0xa0000000);
+    maple_state.dma_buffer = (uint8*)((((uint32)maple_state.dma_buffer) & MEM_AREA_CACHE_MASK) | MEM_AREA_P2_BASE);
 #if MAPLE_DMA_DEBUG
     maple_state.dma_buffer += 512;
     maple_sentinel_setup(maple_state.dma_buffer - 512, MAPLE_DMA_SIZE + 1024);
@@ -124,7 +125,7 @@ void maple_hw_shutdown(void) {
 #if MAPLE_DMA_DEBUG
         ptr -= 512;
 #endif
-        ptr = (ptr & 0x1fffffff) | 0x80000000;
+        ptr = (ptr & MEM_AREA_CACHE_MASK) | MEM_AREA_P1_BASE;
         free((void *)ptr);
         maple_state.dma_buffer = NULL;
     }

@@ -9,7 +9,7 @@
 #include "mouse1.h"
 pvr_ptr_t util_texture;
 pvr_poly_hdr_t util_txr_hdr;
-void setup_util_texture() {
+void setup_util_texture(void) {
     uint16  *vram;
     int x, y;
     pvr_poly_cxt_t  cxt;

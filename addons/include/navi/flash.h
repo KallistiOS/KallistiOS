@@ -25,7 +25,7 @@
     \return                 0 if a compatible flashrom is detected, <0 if the
                             normal Dreamcast BIOS is detected.
 */
-int nvflash_detect();
+int nvflash_detect(void);
 
 /** \brief  Erase a single block of flashrom.
     \param  addr            The block of the flashrom to erase.
@@ -45,6 +45,6 @@ int nvflash_write_block(uint32 addr, void * data, uint32 len);
 /** \brief  Erase the whole flashrom.
     \return                 0 on success, <0 on error.
 */
-int nvflash_erase_all();
+int nvflash_erase_all(void);
 
 #endif  /* __NAVI_FLASH_H */

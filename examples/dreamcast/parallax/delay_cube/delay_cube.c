@@ -41,7 +41,7 @@ each frame.
 // just like cubes. :)
 vector_t cube[6 * 6 * 6];
 int cubepnts = 6 * 6 * 6;
-void makecube() {
+void makecube(void) {
     int x, y, z;
 
     for(x = -3; x < 3; x++) {

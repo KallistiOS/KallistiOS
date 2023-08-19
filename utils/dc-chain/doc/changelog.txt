@@ -1,0 +1,175 @@
+2023-07-31: Update Binutils to 2.41. Verified no regressions in KOS examples compared to
+            current stable GCC 9.3.0, so promoting GCC 13.2.0 configuration to stable.
+            New config directory created to store alternative configurations, currently
+            including 4.7.4, 9.3.0, 10.5.0, 11.4.0, 13.2.0, and the latest development
+            version from git. Large revision of documentation. Updated Alpine
+            Dockerimage. (Eric Fradella)
+2023-07-27: Update GCC to 13.2.0 and GDB to 13.2. (Eric Fradella)
+2023-06-26: Fix an issue where patch stamps weren't getting deleted, add option to
+            make clean-keep-archives. (Eric Fradella)
+2023-06-06: Move Newlib 4.1.0 patch to historical folder as no configuration uses it.
+            (Donald Haase)
+2023-06-06: Update older Newlib patches to copy lock.h instead of patching it in. Adjust
+            patches to patching out syscalls as older Newlib versions do not support
+            the disable syscalls flag. (Donald Haase)
+2023-06-05: Change lock.h to get copied directly into Newlib and move lock.h patching
+            into patch.mk. (Donald Haase)
+2023-06-05: Fix patch.mk to add fetch dependency to sh4-fixup, fixing parallel building.
+            (Eric Fradella, Colton Pawielski)
+2023-06-04: Remove fake-kos, gthr-kos, and crt1 from GCC patches and copy them over from
+            file tree instead, reducing labor to generate GCC patches.
+            (Eric Fradella, Colton Pawielski)
+2023-06-03: Remove download/unpack/cleanup bash scripts and implement functionality
+            within Makefiles. (Colton Pawielski)
+2023-05-26: Set Newlib flag to disable syscalls instead of patching them out. Copy lock.h
+            instead of patching it in. Stop copying the DC include folder as it is
+            unneeded. (Donald Haase)
+2023-05-22: Update patches to fix libobjc Makefile so that library and headers are
+            properly installed with GCC. (Falco Girgis, Andrew Apperley, Eric Fradella)
+2023-05-20: Update GDB to use download_type variable in configuration. (Colton Pawielski)
+2023-05-15: Fix libobjc building after regression. (Eric Fradella)
+2023-05-15: Use mirrors instead of main GNU server for download sources. (James Peach)
+2023-05-14: Remove option to build insight as it no longer works. (Colton Pawielski)
+2023-05-13: Adjust GCC patches to allow sourcing stack address from C for both 16MB and
+            32MB stacks. (Paul Cercueil)
+2023-05-07: Fixed critical 'Access Violation' bug in Binutils 2.34 with LTO under MinGW. 
+            (SiZiOUS)
+2023-04-29: Add exit code as argument to dcload exit syscall. (Colton Pawielski)
+2023-04-27: Add ability to specify git repositories as download sources.
+            (Colton Pawielski)
+2023-04-25: Add support for Newlib configuration options newlib_c99_formats to enable
+            support for extended C99 format specifiers for printf and friends and
+            newlib_opt_space to enable building Newlib with size optimization enabled.
+            (Falco Girgis)
+2023-04-24: Add GCC 13.1.0 patch for SH toolchain under testing configuration.
+            (Eric Fradella)
+2023-04-19: Add GCC 8.5.0 patch for ARM toolchain under testing configuration.
+            (Eric Fradella)
+2023-04-03: Fix compilation of GDB under macOS. (Colton Pawielski)
+2023-03-23: Add use_kos_patches option to configuration to allow the building of fully
+            raw toolchains. (Colton Pawielski)
+2023-03-12: Separate pass1 and pass2 GCC build folders as using the same build folder for
+            both was causing an issue in pass 2 where gthr-kos.h file was failing to
+            replace gthr-default.h, causing issues threading support in GCC 9 and 12.
+            (Colton Pawielski).
+2023-03-11: Change arm-Darwin patches to run in addition to standard patches instead of
+            exclusively, bringing behavior in line with SiZiOUS's MinGW-w64 patches and
+            eliminating duplication of labor. (Eric Fradella)
+2023-03-04: Add gmp-dev to Dockerfile to fix GDB compilation. (Tchan0)
+2023-03-03: Add sh_force_libbfd_installation flag and remove libdep.a BFD plugin for
+            MinGW-w64. (SiZiOUS)
+2023-03-02: Merge Dockerfiles into one and allow building any of the three configurations
+            with the one Dockerfile using an argument. (Tchan0)
+2023-02-28: Update GDB version to 13.1 for testing configuration. (Eric Fradella)
+2023-02-27: Fix Dockerfile due to lack of --check option in sha512sum. (Tchan0)
+2023-02-26: Fix GCC 8.4.0 building under MinGW-w64. (SiZiOUS)
+2023-02-26: Fix Dockerfiles to specify python3 version and add missing endline continues.
+            (Tchan0)
+2023-02-24: Fix GCC 12.2.0 building under MinGW-w64/MSYS2. Adjust script to allow applying
+            several patch files at once. (SiZiOUS)
+2023-02-21: Update GCC dependency versions for "testing" configuration. (Falco Girgis)
+2023-02-04: Adjust configurations: 4.7.4 changes from "stable" to "legacy", 9.3.0 changes
+            from "testing" to "stable", 12.2.0 changes from "latest" to "testing".
+            (Falco Girgis)
+2023-02-04: Add patch for building GCC 12.2.0 on macOS. (Eric Fradella)
+2023-02-03: Add new "latest" configuration with new GCC 12.2.0 and Newlib 4.3.0 patches
+            and latest 2.40 Binutils version.
+            (Falco Girgis, Eric Fradella, Colton Pawielski)
+2023-01-04: Move old irrelevant GCC patches to historical folder. (Lawrence Sebald)
+2023-01-02: Add built-in __KOS_GCC_PATCHED__, __KOS_GCC_PATCHLEVEL__, and
+            __KOS_GCC_32MB__ defines to GCC to help track which KOS patches are applied to
+            GCC and which features may be patched in. Add support for detecting the
+            additional memory available in NAOMI systems and 32MB-modded Dreamcast
+            consoles and adjusting the stack pointer as necessary.
+            (Eric Fradella, Falco Girgis)
+2022-09-03: Fix for building under macOS with Apple Silicon processor. (Bemo)
+2022-08-25: Update readme to document that bash is the recommended shell for the download
+            and unpack scripts. (Lawrence Sebald)
+2022-08-17: Remove -J flag from cURL command in dc-chain. Update readme to mention
+            pitfalls of using older versions of toolchain. (Lawrence Sebald)
+2021-05-03: Fix download script to properly download Binutils for ARM. (7dog123)
+2021-02-25: Add stack protector stuff to Newlib 3.3.0 patch. (Lawrence Sebald)
+2020-09-22: Create separate "stable" (4.7.4) and "testing" (9.3.0) configurations.
+            (SiZiOUS)
+2020-08-31: Update dc-chain utility to work out of the box under many different
+            environments, including MinGW/MSYS, MinGW-w64/MSYS2, Cygin, Windows Subsystem
+            for Linux, macOS, Linux, and BSD. (SiZiOUS)
+2020-07-23: Fix Newlib 3.3.0 patch to use a sensible type for ino_t. (Lawrence Sebald)
+2020-04-07: Update to prefer curl over wget in download script. (Ben Baron)
+2020-04-06: Change GCC to install-strip to save hundreds of megabytes in space.
+            (Ben Baron)
+2020-04-05: Fix building GCC 9.3.0 with dependencies, update GMP, MPFR, MPC, and GDB
+            versions, fixed GDB clean in main Makefile. (Ben Baron)
+2020-04-03: Update GCC to 9.3.0, Binutils to 2.34, and Newlib to 3.3.0. Add support for
+            using different versions of GCC and Binutils for ARM due to GCC dropping
+            support for the AICA's ARM7DI core after GCC 8.x. GCC for ARM version bumped
+            to version 8.4.0. (Lawrence Sebald)
+2020-03-26: Add 4.7.4 patch with concurrence error fix, remove broken 4.7.3 patch.
+            (Luke Benstead)
+2019-07-17: Update download scripts to prefer HTTPS over FTP (Ellen Marie Dash)
+2018-09-18: Update Binutils version to 2.31.1. (Lawrence Sebald)
+2017-01-17: Make dc-chain not fail if patches have already been applied. (Lawrence Sebald)
+2016-12-11: Update GCC patch to make it compatible with newer makeinfo versions.
+            (Lawrence Sebald)
+2016-10-01: Update Binutils to 2.27.
+2016-09-22: Add cleanup.sh script. (Lawrence Sebald)
+2016-07-01: Update GDB to 7.11.1 and insight to 6.8 due to previous versions being
+            removed. Add more files to be cleaned up related to GDB/insight in the make
+            clean target. (Corbin, Nia, Lawrence Sebald)
+2016-01-14: Fix compiling GCC 4.7.3 with a host GCC version of 5.x and above.
+            (Luke Benstead)
+2014-12-05: Fix for systems using "gmake" instead of "make". Add --disable-werror to GDB
+            and insight configure arguments. (Christian Groessler)
+2014-04-30: Use GMP, MPC, and MPFR versions hosted and recommended by GCC developers.
+            (Lawrence Sebald)
+2014-02-17: Roll back to GCC 4.7.3 due to performance regressions in 4.8.x. Add a flag
+            to download/unpack scripts to not download and set up GCC dependencies in case
+            they are installed separately. (Lawrence Sebald)
+2013-12-06: Bump GCC back to 4.8.2 as issue should be fixed in KOS commit c2bdfac.
+            (Lawrence Sebald)
+2013-12-06: Rolling back GCC to 4.7.3 due to issues reported with 4.8.2 at
+            http://dcemulation.org/phpBB/viewtopic.php?f=29&t=102800. (Lawrence Sebald)
+2013-11-17: Update GCC to 4.8.2, automatically build GCC dependencies with GCC, add fix
+            for Mac OS X Mavericks. (Lawrence Sebald)
+2013-11-10: Remove --disable-werror to allow successful building with Clang.
+            (Lawrence Sebald)
+2013-05-30: Minor adjustments to Makefile: Get rid of #!, remove cd and add -d, remove +x
+            bit on the file. (Lawrence Sebald)
+2013-05-18: Update Binutils to 2.23.2, GCC to 4.7.3, Newlib to 2.0.0. Add makejobs
+            variable to allow multiple jobs to build. Fix issue causing Makefile to not
+            fail when verbose set to 1 and one of the jobs failed. (Lawrence Sebald)
+2012-07-08: Modify Makefile to allow KallistiOS to be in root folder other than 'kos'.
+            (Donald Haase)
+2012-07-06: Fix a possible parallel build issue. (Harley Laue)
+2012-06-11: Update GCC 4.5.2 and 4.7.0 patches. Make GCC 4.7.0 default now due to working
+            patches. (Lawrence Sebald)
+2012-06-10: Fix the GCC 4.5.2 patch so that GCC will actually compile. Building a new
+            toolchain is not recommended at the moment, as the patch is still using
+            deprecated functions. (Lawrence Sebald)
+2012-06-09: Revert to GCC 4.5.2 due to bug with frame pointers in sh-elf on GCC 4.7.0.
+            (Lawrence Sebald)
+2012-06-05: Add patches for GCC 4.7.0 and Newlib 1.12.0 and make them default.
+            (Lawrence Sebald)
+2011-12-11: Update Binutils to 2.22 due to 2.21 disappearing from GNU FTP.
+            (Lawrence Sebald)
+2011-01-31: Update dc-chain version to 0.3, add note to note use multiple jobs with make.
+            (Lawrence Sebald)
+2011-01-09: Binutils updated to 2.21, GCC to 4.5.2, and Newlib to 1.19.0.
+            (Lawrence Sebald)
+2011-01-08: Add in patches for GCC 4.5.2 and Newlib 1.19.0. These are updated for all
+            the new stuff in the KOS thread code. (Lawrence Sebald)
+2010-08-21: Add init fini patch to Newlib. (Cyle Terry, Lawrence Sebald)
+2010-05-15: Adding patches to support GCC 4.4.0 and 4.4.4, add patch to support
+            Newlib 1.18.0. Add cond_wait_recursive and cond_wait_timed_recursive (for GCC
+            4.4.4's C++0x threading support). Add _isatty_r function, as needed by
+            Newlib 1.18.0. (Lawrence Sebald)
+2010-04-10: Make Newlib 1.15.0 default as it is now required by KOS (Harley Laue)
+2008-05-21: Adjust DESTDIR. (Cyle Terry)
+2008-05-02: Revert default Newlib to 1.12.0 due to instability with 1.15.0. (Cyle Terry)
+2008-04-14: Update Newlib patch for Newlib 1.15.0. (Atani)
+2008-03-09: Adjust Newlib 1.12.0 patch. (Lawrence Sebald)
+2008-02-16: Add support for building GDB and insight. (Sam Steele, Christian Henz)
+2007-07-18: Update Binutils to 2.17 to fix GCC 4.x compilation. (Atani)
+2007-07-18: Update default paths. (Atani)
+2006-11-24: Fix commented out paths in dc-chain. (Megan Potter, Christian Henz)
+2006-09-17: dc-chain 0.1 added to KOS utils tree with GCC 3.4.6. (Megan Potter)

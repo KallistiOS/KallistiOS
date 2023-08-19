@@ -103,7 +103,7 @@ int *star_x = NULL, *star_y, *star_z;
 
 pvr_poly_hdr_t stars_header;
 
-void stars_init() {
+void stars_init(void) {
     int i;
     pvr_poly_cxt_t tmp;
 
@@ -145,7 +145,7 @@ void poly_pnt(int x, int y, float z, float size, int color) {
     pvr_prim(&vert, sizeof(vert));
 }
 
-void stars_one_frame() {
+void stars_one_frame(void) {
     int i, x1, y1, xn, yn, zn, c;
 
     /* Send polygon header to the TA using store queues */
@@ -320,7 +320,7 @@ void draw_cube(int which) {
 
 /* Draw six cubes arranged in a circle */
 int zooming = 1;
-void cube_one_frame() {
+void cube_one_frame(void) {
     int i, j;
 
     rotang = (rotang + 1) % 512;
@@ -348,7 +348,7 @@ void cube_one_frame() {
 int cubes_have_header = 0;
 pvr_poly_hdr_t cubes_header;
 
-void cubes_one_frame() {
+void cubes_one_frame(void) {
     pvr_poly_cxt_t tmp;
 
     if(!cubes_have_header) {
@@ -589,7 +589,7 @@ void font_draw_string(int x1, int y1, float color, char *str) {
     }
 }
 
-void font_next_screen() {
+void font_next_screen(void) {
     int width;
     int y, y1, x;
 
@@ -625,7 +625,7 @@ void font_next_screen() {
 
 #if 0
 /* Debug code to draw the font texture */
-void blit_font_texture() {
+void blit_font_texture(void) {
     vertex_ot_t vert;
 
     vert.flags = TA_VERTEX_NORMAL;
@@ -666,7 +666,7 @@ void blit_font_texture() {
 
 pvr_poly_hdr_t  font_header;
 
-void font_one_frame() {
+void font_one_frame(void) {
     int     done, y, actrows;
 
     actrows = 0;
@@ -725,7 +725,7 @@ void font_one_frame() {
     }
 }
 
-void font_init() {
+void font_init(void) {
     int x, y, c;
     uint8 pcxpall[768];
     volatile uint16 *vtex;
@@ -787,7 +787,7 @@ void font_init() {
 /********************************************************************/
 
 int framecnt = 0;
-void draw_one_frame() {
+void draw_one_frame(void) {
     /* Begin opaque polygons */
     pvr_wait_ready();
     pvr_scene_begin();

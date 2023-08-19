@@ -72,7 +72,7 @@ uint16 ide_inp(int port, int size) {
 
 /* These are to synchronize us with the controller so we don't do something
    it's not ready for */
-static void wait_controller() {
+static void wait_controller(void) {
     int timeout = 1000;
 
     while((inp(0x1f7) & 0x80) && timeout) {
@@ -86,7 +86,7 @@ static void wait_controller() {
     }
 }
 
-static void wait_data() {
+static void wait_data(void) {
     int timeout = 1000;
 
     while(!(inp(0x1f7) & 0x08) && timeout) {
@@ -236,12 +236,12 @@ int ide_write(uint32 linear, uint32 numsects, void *bufptr) {
 }
 
 /* Get the available space */
-uint32 ide_num_sectors() {
+uint32 ide_num_sectors(void) {
     return hd_cyls * hd_heads * hd_sects;
 }
 
 /* Initialize the device */
-int ide_init() {
+int ide_init(void) {
     int dd_off;
 
     dbglog(DBG_INFO, "ide_init: initializing\n");
@@ -273,7 +273,7 @@ int ide_init() {
     return 0;
 }
 
-void ide_shutdown() {
+void ide_shutdown(void) {
 }
 
 

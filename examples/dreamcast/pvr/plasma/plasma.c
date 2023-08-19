@@ -58,7 +58,7 @@ pvr_ptr_t txr[2];
 uint16 * txr_buf[2];
 int txr_cur;
 
-void plasma_init() {
+void plasma_init(void) {
     int i;
 
     xang = yang = 0;
@@ -71,7 +71,7 @@ void plasma_init() {
     }
 }
 
-void plasma_drawtex() {
+void plasma_drawtex(void) {
     uint16  *vrout = (uint16 *)(txr_buf[txr_cur]);
     int x, y, p, q, r;
 
@@ -105,7 +105,7 @@ void plasma_drawtex() {
     // pvr_txr_load_dma(txr_buf[txr_cur], txr[txr_cur], 64*64*2, 1, NULL, 0);
 }
 
-int check_start() {
+int check_start(void) {
     MAPLE_FOREACH_BEGIN(MAPLE_FUNC_CONTROLLER, cont_state_t, st)
 
     if(st->buttons & CONT_START)
@@ -115,7 +115,7 @@ int check_start() {
     return 0;
 }
 
-void pvr_setup() {
+void pvr_setup(void) {
     pvr_poly_cxt_t cxt;
     int i;
 
@@ -134,7 +134,7 @@ void pvr_setup() {
     txr_cur = 0;
 }
 
-void do_frame() {
+void do_frame(void) {
     pvr_vertex_t vert;
     float r, g, b;
 

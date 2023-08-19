@@ -27,24 +27,25 @@ build the whole toolchains.
 ### Update of your local installation ###
 
 The first thing to do is to update your local installation:
-
-	apt-get update
-	apt-get upgrade -y	
-
+```
+apt-get update
+apt-get upgrade -y	
+```
 This should update all the packages of the **Debian** environment.
 
 ### Installation of required packages ###
 
 The packages below need to be installed:
-
-	apt-get install build-essential texinfo libjpeg-dev libpng-dev libelf-dev
+```
+apt-get install build-essential texinfo libjpeg-dev libpng-dev libelf-dev
+```
 
 ### Installation of additional packages ###
 
 These additional packages are required too:
-
-	apt-get install git subversion python
-
+```
+apt-get install git subversion python
+```
 **Git** is needed right now, as **Subversion Client** and **Python 2** will be
 needed only when building `kos-ports`. But it's better to install these now.
 
@@ -54,12 +55,12 @@ By the way you can check the installation success by entering something like
 ## Preparing the environment installation ##
 
 Enter the following to prepare **KallistiOS** and the toolchains:
-
-	mkdir -p /opt/toolchains/dc/
-	cd /opt/toolchains/dc/
-	git clone git://git.code.sf.net/p/cadcdev/kallistios kos
-	git clone git://git.code.sf.net/p/cadcdev/kos-ports
-
+```
+mkdir -p /opt/toolchains/dc/
+cd /opt/toolchains/dc/
+git clone git://git.code.sf.net/p/cadcdev/kallistios kos
+git clone git://git.code.sf.net/p/cadcdev/kos-ports
+```
 Everything is ready, now it's time to make the toolchains.
 
 ## Compilation ##
@@ -76,31 +77,31 @@ the main `README.md` file at the root for more information.
 To make the toolchains, do the following:
 
 1. Navigate to the `dc-chain` directory by entering:
-
-		cd /opt/toolchains/dc/kos/utils/dc-chain/
-	
+	```
+	cd /opt/toolchains/dc/kos/utils/dc-chain/
+	```
 2. Enter the following to start downloading and building toolchain:
-
-		make
-
+	```
+	make
+	```
 Now it's time to take a coffee as this process is really long: several hours
 will be needed to make the full toolchains!
 
 ### Making the GNU Debugger (gdb) ###
 
 If you want to install the **GNU Debugger** (`gdb`), just enter:
-
-	make gdb
-
+```
+make gdb
+```
 This will install `sh-elf-gdb` and can be used to debug programs through
 `dc-load/dc-tool`.
 
 ### Removing all useless files ###
 
 After everything is done, you can cleanup all temporary files by entering:
-
-	make clean
-
+```
+make clean
+```
 ## Next steps ##
 
 After following this guide, the toolchains should be ready.

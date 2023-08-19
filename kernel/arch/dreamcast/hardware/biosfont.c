@@ -287,7 +287,7 @@ unsigned char bfont_draw_wide(void *b, uint32 bufwidth, uint8 opaque, uint32 c) 
    XXX: Seems like this can be shrunk to use uint8 for nChr/Mask/Flag and
     getting rid of nMask.
    */
-void bfont_draw_str_ex(void *b, uint32 width, uint32 fg, uint32 bg, uint8 bpp, uint8 opaque, char *str) {
+void bfont_draw_str_ex(void *b, uint32 width, uint32 fg, uint32 bg, uint8 bpp, uint8 opaque, const char *str) {
     uint16 nChr, nMask, nFlag;
     uint8 *buffer = (uint8 *)b;
 
@@ -336,7 +336,7 @@ void bfont_draw_str_ex(void *b, uint32 width, uint32 fg, uint32 bg, uint8 bpp, u
     }
 }
 
-void bfont_draw_str(void *b, uint32 width, uint8 opaque, char *str) {
+void bfont_draw_str(void *b, uint32 width, uint8 opaque, const char *str) {
     bfont_draw_str_ex(b, width, bfont_fgcolor, bfont_bgcolor, (bfont_32bit ? (sizeof (uint32)) : (sizeof (uint16))) << 3, opaque, str);
 }
 

@@ -7,12 +7,13 @@
 
 clean: clean-archives clean-downloads clean-builds clean_patches_stamp
 
+clean-keep-archives: clean-downloads clean-builds clean_patches_stamp
+
 clean_patches_stamp:
 	-@tmpdir=.tmp; \
 	if ! test -d "$${tmpdir}"; then \
 		mkdir "$${tmpdir}"; \
 	fi; \
-	mv patch-*.stamp $${tmpdir} 2>/dev/null; \
 	mv $(stamp_gdb_download) $${tmpdir} 2>/dev/null; \
 	mv $(stamp_gdb_patch) $${tmpdir} 2>/dev/null; \
 	rm -f *.stamp; \
@@ -30,7 +31,7 @@ clean-builds: clean_patches_stamp
 	-rm -rf build-$(gdb_name)
 
 clean-downloads: clean-gdb-sources clean-arm-sources clean-sh-sources
-	
+
 clean-gdb-sources:
 	-rm -rf $(gdb_name)
 

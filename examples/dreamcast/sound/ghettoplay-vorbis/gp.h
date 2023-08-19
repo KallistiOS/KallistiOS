@@ -9,13 +9,13 @@
 #define mcos(angle) fcos((angle) * 2 * M_PI / 256)
 
 /* bkg.c */
-void bkg_setup();
-void bkg_render();
+void bkg_setup(void);
+void bkg_render(void);
 
 /* texture.c */
 extern pvr_ptr_t        util_texture;
 extern pvr_poly_hdr_t       util_txr_hdr;
-void setup_util_texture();
+void setup_util_texture(void);
 
 /* 3dutils.c */
 void rotate(int zang, int xang, int yang, float *x, float *y, float *z);
@@ -27,6 +27,6 @@ void draw_poly_box(float x1, float y1, float x2, float y2, float z,
                    float a2, float r2, float g2, float b2);
 
 /* songmenu.c */
-void song_menu_render();
+void song_menu_render(void);
 
 #endif  /* __GP_H */

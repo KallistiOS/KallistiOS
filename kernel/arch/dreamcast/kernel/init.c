@@ -10,10 +10,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <kos/dbgio.h>
-#include <arch/timer.h>
 #include <arch/arch.h>
 #include <arch/irq.h>
+#include <arch/memory.h>
 #include <arch/rtc.h>
+#include <arch/timer.h>
 #include <dc/ubc.h>
 #include <dc/pvr.h>
 #include <dc/vmufs.h>
@@ -378,6 +379,6 @@ void arch_reboot(void) {
     irq_disable();
 
     /* Reboot */
-    rb = (reboot_func)0xa0000000;
+    rb = (reboot_func)(MEM_AREA_P2_BASE | 0x00000000);
     rb();
 }

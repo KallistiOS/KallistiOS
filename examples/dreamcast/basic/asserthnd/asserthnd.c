@@ -35,14 +35,14 @@ assuming you compiled your program with -g:
 
 */
 
-void func2() {
+void func2(void) {
     int a = 5;
 
     assert_msg(a != 5, "This is a test message!");
     assert(a != 5);
 }
 
-void func1() {
+void func1(void) {
     func2();
 }
 

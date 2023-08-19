@@ -11,7 +11,7 @@
 
 /* This is really more complicated than it needs to be in this particular
    case, but it's nice and verbose. */
-int check_start() {
+int check_start(void) {
     maple_device_t *cont;
     cont_state_t *state;
 
@@ -49,7 +49,7 @@ void lcd_gs_pixel(int x, int y, int amt) {
     for(i = 0; i < amt; i++)
         lcd_disp[i][(y * 48 + x) / 8] |= 0x80 >> (x & 7);
 }
-void lcd_gs_setup() {
+void lcd_gs_setup(void) {
     char **xpm = graphic_xpm + 12;  /* Skip header */
     int x, y;
 
@@ -93,7 +93,7 @@ void lcd_gs_setup() {
 }
 
 /* This performs the actual magic */
-void lcd_test() {
+void lcd_test(void) {
     int frame = 0;
 
     lcd_gs_setup();

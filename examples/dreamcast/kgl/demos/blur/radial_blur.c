@@ -238,7 +238,7 @@ void DrawGL(GLuint texID) {
 #define INCREASE_RADIAL_BLUR 4
 #define DECREASE_RADIAL_BLUR 5
 
-int InputCallback() {
+int InputCallback(void) {
     maple_device_t *cont;
     cont_state_t *state;
 

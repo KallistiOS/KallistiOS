@@ -1,6 +1,6 @@
 #include <kos.h>
 
-void mouse_test() {
+void mouse_test(void) {
     maple_device_t *cont, *mouse;
     cont_state_t *cstate;
     mouse_state_t *mstate;

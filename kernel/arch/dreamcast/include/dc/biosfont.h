@@ -388,7 +388,7 @@ unsigned char bfont_draw_wide(void *buffer, uint32 bufwidth, uint8 opaque,
 
 */
 void bfont_draw_str_ex(void *b, uint32 width, uint32 fg, uint32 bg, uint8 bpp,
-                       uint8 opaque, char *str);
+                       uint8 opaque, const char *str);
 
 /** \brief  Draw a full string to a buffer.
 
@@ -403,7 +403,7 @@ void bfont_draw_str_ex(void *b, uint32 width, uint32 fg, uint32 bg, uint8 bpp,
                             otherwise do not change them from what they are.
     \param  str             The string to draw.
 */
-void bfont_draw_str(void *b, uint32 width, uint8 opaque, char *str);
+void bfont_draw_str(void *b, uint32 width, uint8 opaque, const char *str);
 
 /** \brief  Find a VMU icon.
 

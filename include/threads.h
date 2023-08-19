@@ -369,7 +369,7 @@ extern int thrd_equal(thrd_t thr0, thrd_t thr1);
     \param  res             The return value of the thread.
     \note                   This function will not return.
 */
-extern _Noreturn void thrd_exit(int res);
+_Noreturn extern void thrd_exit(int res);
 
 /** \brief  Join a running thread.
 

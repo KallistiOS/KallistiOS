@@ -13,6 +13,6 @@
 #include <arch/timer.h>
 
 /* Get current hardware timing using arch/timer.h */
-unsigned int GetTime();
+unsigned int GetTime(void);
 
 #endif

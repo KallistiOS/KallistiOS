@@ -345,8 +345,9 @@ struct maple_device;
     \param capabilities    Capability mask the controller is expected 
                            to implement
 
-    \return                1 if the controller implements the given 
-                           capabilities, 0 otherwise.
+    \retval 1              The controller supports the given capabilities.
+    \retval 0              The controller doesn't support the given capabilities.
+    \retval -1             Invalid controller. 
 
     \sa cont_is_type
 */
@@ -500,8 +501,9 @@ int cont_has_capabilities(const struct maple_device *cont, uint32_t capabilities
     \param type            Type identifier or capability mask the
                            controller is expected to match
 
-    \return                1 if the controller matches the given type,
-                           0 otherwise.
+    \retval 1              The controller matches the given type.
+    \retval 0              The controller doesn't match the given type.
+    \retval -1             Invalid controller. 
 
     \sa cont_has_capabilities
 */

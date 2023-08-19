@@ -121,12 +121,12 @@ of the `/etc/fstab` file (i.e. `${MINGW_ROOT}\msys\1.0\etc\fstab`).
    file).
    
 2. Enter the following to prepare **KallistiOS**:
-
-		mkdir -p /opt/toolchains/dc/
-		cd /opt/toolchains/dc/
-		git clone git://git.code.sf.net/p/cadcdev/kallistios kos
-		git clone git://git.code.sf.net/p/cadcdev/kos-ports
-
+   ```
+	mkdir -p /opt/toolchains/dc/
+	cd /opt/toolchains/dc/
+	git clone git://git.code.sf.net/p/cadcdev/kallistios kos
+	git clone git://git.code.sf.net/p/cadcdev/kos-ports
+   ```
 Everything is ready, now it's time to make the toolchains.
 
 ## About making toolchains static binaries ##
@@ -135,9 +135,9 @@ By default, all the binaries of the toolchains (e.g. `sh-elf-gcc`...) are
 dynamically linked, and that's the way that meant to be. The drawback is,
 if you want to use the toolchains outside the **MinGW/MSYS** environment and
 the binaries are dynamically linked, you'll have some error messages like:
-
-	The file libintl-8.dll is missing from your computer.
-
+```
+The file libintl-8.dll is missing from your computer.
+```
 This happens if you just double-click on any `sh-elf` binaries (e.g.
 `sh-elf-gcc`), even with `arm-eabi` binaries.
 
@@ -180,31 +180,31 @@ To make the toolchains, do the following:
 
 1. Start the **MSYS Shell** if not already done.
 2. Navigate to the `dc-chain` directory by entering:
-
-		cd /opt/toolchains/dc/kos/utils/dc-chain/
-	
+   ```
+   cd /opt/toolchains/dc/kos/utils/dc-chain/
+   ```
 3. Enter the following to start downloading and building toolchain:
-
-		make
-
+   ```
+	make
+   ```
 Now it's time to take a coffee as this process is really long: several hours
 will be needed to make the full toolchains!
 
 ### Making the GNU Debugger (gdb) ###
 
 If you want to install the **GNU Debugger** (`gdb`), just enter:
-
-	make gdb
-
+```
+make gdb
+```
 This will install `sh-elf-gdb` and can be used to debug programs through
 `dc-load/dc-tool`.
 
 ### Removing all useless files ###
 
 After everything is done, you can cleanup all temporary files by entering:
-
-	make clean
-
+```
+make clean
+```
 ## Removing the MSYS heap patch ##
 
 After your toolchains is ready, please don't forget to replace the patched
@@ -225,9 +225,9 @@ This is the purpose of the provided `fixup-sh4-newlib.sh` script.
 
 Before executing it, just edit it to be sure if the `$toolchains_base` variable
 is correctly set. Then execute it by just entering:
-
-	./packages/fixup-sh4-newlib.sh
-
+```
+./packages/fixup-sh4-newlib.sh
+```
 ## Next steps ##
 
 After following this guide, the toolchains should be ready.

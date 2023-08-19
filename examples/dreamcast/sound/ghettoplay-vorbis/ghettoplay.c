@@ -21,7 +21,7 @@
 
 long bitrate;
 
-int check_start() {
+int check_start(void) {
     MAPLE_FOREACH_BEGIN(MAPLE_FUNC_CONTROLLER, cont_state_t, st)
 
     if(st->buttons & CONT_START) {
@@ -38,7 +38,7 @@ int check_start() {
 static int mx = 320, my = 240;
 static int lmx[5] = {320, 320, 320, 320, 320},
                     lmy[5] = {240, 240, 240, 240, 240};
-void mouse_render() {
+void mouse_render(void) {
     int i;
     int atall = 0;
 
@@ -82,7 +82,7 @@ void mouse_render() {
 #include "vmu_play.h"
 #include "vmu_ghettoplay.h"
 static int cycle = 0, phase = 1;
-void vmu_lcd_update() {
+void vmu_lcd_update(void) {
     switch(cycle) {
         case 0: {   /* Getto/Play/GettoPlay */
             if(phase == 1) {

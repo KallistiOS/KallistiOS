@@ -30,7 +30,7 @@ extern unsigned char fruit[];
 extern unsigned char fruit_end[];
 
 /* Load a texture with glCompressedTexImage2D */
-static int loadtxr() {
+static int loadtxr(void) {
 
     glGenTextures(1, texture);
     glBindTexture(GL_TEXTURE_2D, texture[0]);

@@ -227,3 +227,8 @@ __END_DECLS
 #ifdef _TIME_H_
 #include <kos/time.h>
 #endif
+
+#ifdef _STDLIB_H_
+#include <kos/stdlib.h>
+#endif
+

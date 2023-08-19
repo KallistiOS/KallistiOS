@@ -192,8 +192,6 @@ typedef struct maple_frame {
 #endif
 } maple_frame_t;
 
-#define MAPLE_FRAME_WORD_BYTES  4  /**< \brief Bytes within a single word of a frame */
-
 /** \defgroup maple_frame_states    States that frames can be in
     @{
 */

@@ -25,6 +25,6 @@
 
 #undef getchar
 #undef putchar
-int getchar();
+int getchar(void);
 
 #endif  /* __PORTHELPER_H */

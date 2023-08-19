@@ -6,7 +6,7 @@
 
 #include <kos.h>
 
-void func() {
+void func(void) {
     arch_stk_trace(0);
 }
 

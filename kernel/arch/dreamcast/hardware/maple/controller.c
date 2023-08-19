@@ -31,13 +31,14 @@ static uint32_t btn_callback_btns = 0;
 
 /* Check whether the controller has EXACTLY the given capabilties. */
 int cont_is_type(const maple_device_t *cont, uint32_t type) {
-    return cont->info.function_data[CONT_FUNCTION_DATA_INDEX] == type; 
+    return cont ? cont->info.function_data[CONT_FUNCTION_DATA_INDEX] == type :
+                  -1;
 }
 
 /* Check whether the controller has at LEAST the given capabilities. */
 int cont_has_capabilities(const maple_device_t *cont, uint32_t capabilities) {
-    return (cont->info.function_data[CONT_FUNCTION_DATA_INDEX] 
-            & capabilities) == capabilities;
+    return cont ? ((cont->info.function_data[CONT_FUNCTION_DATA_INDEX] 
+                   & capabilities) == capabilities) : -1;
 }
 
 /* Set a controller callback for a button combo; set addr=0 for any controller */
@@ -71,7 +72,7 @@ static void cont_reply(maple_frame_t *frm) {
     /* Update the status area from the response */
     if(frm->dev) {
         /* Verify the size of the frame and grab a pointer to it */
-        assert(sizeof(cont_cond_t) == ((resp->data_len - 1) * MAPLE_FRAME_WORD_BYTES));
+        assert(sizeof(cont_cond_t) == ((resp->data_len - 1) * sizeof(uint32_t)));
         raw = (cont_cond_t *)(respbuf + 1);
 
         /* Fill the "nice" struct from the raw data */

@@ -88,7 +88,7 @@ static void sphere(float radius, int slices, int stacks) {
 
 #define SPHERE_CNT 12
 static float r = 0;
-static void sphere_frame_opaque() {
+static void sphere_frame_opaque(void) {
     int i;
 
     vid_border_color(255, 0, 0);
@@ -140,7 +140,7 @@ static void sphere_frame_opaque() {
     phase += 2 * M_PI / 240.0f;
 }
 
-static void sphere_frame_trans() {
+static void sphere_frame_trans(void) {
     int i;
 
     vid_border_color(255, 0, 0);
@@ -173,7 +173,7 @@ static void sphere_frame_trans() {
     phase += 2 * M_PI / 240.0f;
 }
 
-void do_sphere_test() {
+void do_sphere_test(void) {
     maple_device_t *cont;
     cont_state_t *state;
     int     mode = 0;

@@ -4,7 +4,7 @@
 #include <kos.h>
 
 char buffer[2048];
-void cdfs_test() {
+void cdfs_test(void) {
     file_t fd;
     file_t d;
     dirent_t *de;

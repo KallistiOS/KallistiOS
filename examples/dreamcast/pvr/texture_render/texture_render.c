@@ -28,7 +28,7 @@ polyplace_t polys[6] = {
 };
 
 /* Does one frame of polygon movement */
-void move_polys() {
+void move_polys(void) {
     int i;
     polyplace_t *p;
 
@@ -115,7 +115,7 @@ int to_texture = 1;
 pvr_ptr_t d_texture;
 uint32 tx_x = 1024, tx_y = 512;
 
-void draw_frame() {
+void draw_frame(void) {
     pvr_poly_cxt_t  cxt;
     pvr_poly_hdr_t  poly;
     int i;
@@ -151,7 +151,7 @@ void draw_frame() {
         move_polys();
 }
 
-void draw_textured() {
+void draw_textured(void) {
     pvr_poly_cxt_t cxt;
     pvr_poly_hdr_t hdr;
     int i;

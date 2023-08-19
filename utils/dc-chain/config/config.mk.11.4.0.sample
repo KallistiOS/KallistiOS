@@ -5,22 +5,11 @@
 # Initially adapted from Stalin's build script version 0.3.
 #
 
-# Interesting targets (you can 'make' any of these):
-# all: patch build
-# patch: patch-gcc patch-newlib patch-kos
-# build: build-sh4 build-arm
-# build-sh4: build-sh4-binutils build-sh4-gcc
-# build-arm: build-arm-binutils build-arm-gcc
-# build-sh4-gcc: build-sh4-gcc-pass1 build-sh4-newlib build-sh4-gcc-pass2
-# build-arm-gcc: build-arm-gcc-pass1
-# build-sh4-newlib: build-sh4-newlib-only fixup-sh4-newlib
-# gdb
-
 # Toolchain versions for SH
-sh_binutils_ver=2.40
-sh_gcc_ver=13.1.0
+sh_binutils_ver=2.41
+sh_gcc_ver=11.4.0
 newlib_ver=4.3.0.20230120
-gdb_ver=13.1
+gdb_ver=13.2
 
 # Tarball extensions to download for SH
 sh_binutils_download_type=xz
@@ -29,9 +18,9 @@ newlib_download_type=gz
 gdb_download_type=xz
 
 # Toolchain for ARM
-# The ARM version of binutils/gcc is separated out as the particular CPU
-# versions we need may not be available in newer versions of GCC.
-arm_binutils_ver=2.40
+# The ARM version of gcc/binutils is separated as support for the ARM7DI core
+# used in the Dreamcast's AICA is not available in versions of GCC beyond 8.5.0.
+arm_binutils_ver=2.41
 arm_gcc_ver=8.5.0
 
 # Tarball extensions to download for ARM
@@ -39,23 +28,19 @@ arm_binutils_download_type=xz
 arm_gcc_download_type=xz
 
 # GCC custom dependencies
-# Specify here if you want to use custom GMP, MPFR and MPC libraries as they are
-# required when building GCC. If you leave this variable commented, all 
-# these dependencies will be automatically downloaded by using the provided 
-# '/contrib/download_prerequisites' shell script from the GCC packages, which is
-# recommended. The ISL dependency isn't mandatory; if you don't want it, you may 
-# just comment the version numbers (i.e. 'sh_isl_ver' and 'arm_isl_ver') to
-# disable the ISL library.
+# Specify here if you want to use custom GMP, MPFR and MPC libraries when
+# building GCC. It is recommended that you leave this variable commented, in
+# which case these dependencies will be automatically downloaded by using the
+# '/contrib/download_prerequisites' shell script provided within the GCC packages.
+# The ISL dependency isn't mandatory; if desired, you may comment the version
+# numbers (i.e. 'sh_isl_ver' and 'arm_isl_ver') to disable the ISL library.
 #use_custom_dependencies=1
 
-# Internal custom GCC libraries (i.e. GMP, MPFR, MPC and ISL) versions to use
-# only if the 'use_custom_dependencies' flag is set to '1'.
-
 # GCC dependencies for SH
-sh_gmp_ver=6.2.1
-sh_mpfr_ver=4.1.0
-sh_mpc_ver=1.2.1
-sh_isl_ver=0.24
+sh_gmp_ver=6.1.0
+sh_mpfr_ver=3.1.6
+sh_mpc_ver=1.0.3
+sh_isl_ver=0.18
 
 # Tarball extensions to download for GCC dependencies for SH
 sh_gmp_download_type=bz2
@@ -75,18 +60,40 @@ arm_mpfr_download_type=bz2
 arm_mpc_download_type=gz
 arm_isl_download_type=bz2
 
+# Download protocol (http|https|ftp)
+# Specify here the protocol you want to use for downloading the packages.
+download_protocol=https
+
+# Force downloader (curl|wget)
+# You may specify here 'wget' or 'curl'. If this variable is empty or commented,
+# web downloader tool will be auto-detected in the following order: cURL, Wget.
+# You must have either Wget or cURL installed to use dc-chain.
+#force_downloader=wget
+
+# Specify GNU Mirror override
+# The default mirror for GNU sources is `ftpmirror.gnu.org`
+# Setting this will allow overriding the default mirror which
+# may be desirable if you have a prefered mirror.
+#gnu_mirror=mirrors.kernel.org
+
 # Toolchains base
 # Indicate the root directory where toolchains will be installed
 # This should match your 'environ.sh' configuration
 toolchains_base=/opt/toolchains/dc
 
+# Verbose (1|0)
+# Display output to screen as well as log files
+verbose=1
+
 # Erase (1|0)
 # Erase build directories on the fly to save space
 erase=1
 
-# Verbose (1|0)
-# Display output to screen as well as log files
-verbose=1
+# Install mode (install-strip|install)
+# Use 'install-strip' mode for removing debugging symbols of the toolchains.
+# Use 'install' only if you want to enable debug symbols for the toolchains.
+# This may be useful only if you plan to debug the toolchain itself.
+install_mode=install-strip
 
 # Make jobs (-jn|<empty>)
 # Set this value to -jn where n is the number of jobs you want to run with make.
@@ -105,16 +112,6 @@ makejobs=-j2
 # hard drive space.
 pass2_languages=c,c++,objc,obj-c++
 
-# Download protocol (http|https|ftp)
-# Specify here the protocol you want to use for downloading the packages.
-download_protocol=https
-
-# Force downloader (curl|wget)
-# You may specify here 'wget' or 'curl'. If this variable is empty or commented,
-# web downloader tool will be auto-detected in the following order: cURL, Wget.
-# You must have either Wget or cURL installed to use dc-chain.
-#force_downloader=wget
-
 # GCC threading model (single|kos|posix*)
 # With GCC 4.x versions and up, the patches provide a 'kos' thread model, so you 
 # should use it. If you really don't want threading support for C++ (or 
@@ -123,11 +120,17 @@ download_protocol=https
 # is not anymore supported.
 thread_model=kos
 
-# Install mode (install-strip|install)
-# Use 'install-strip' mode for removing debugging symbols of the toolchains.
-# Use 'install' only if you want to enable debug symbols for the toolchains.
-# This may be useful only if you plan to debug the toolchain itself.
-install_mode=install-strip
+# Automatic patching for KOS (1|0)
+# Uncomment this if you want to disable applying KOS patches to the toolchain 
+# source files before building. This will disable usage of the 'kos' thread model. 
+#use_kos_patches=0
+
+# Automatic fixup SH-4 Newlib (1|0)
+# Uncomment this if you want to disable the automatic fixup sh4 newlib needed by
+# KallistiOS. This will keep the generated toolchain completely raw. This will
+# also disable the 'kos' thread model. Don't mess with that flag unless you know
+# exactly what you are doing.
+#auto_fixup_sh4_newlib=0
 
 # C99 Format Specifier Support (1|0)
 # Define this to build SH4 Newlib with additional support for the C99 format
@@ -148,18 +151,6 @@ install_mode=install-strip
 # environment. This is NOT recommended. Use it if you know what you are doing.
 #standalone_binary=1
 
-# Automatic fixup SH-4 Newlib (1|0)
-# Uncomment this if you want to disable the automatic fixup sh4 newlib needed by
-# KallistiOS. This will keep the generated toolchain completely raw. This will
-# also disable the 'kos' thread model. Don't mess with that flag unless you know
-# exactly what you are doing.
-#auto_fixup_sh4_newlib=0
-
-# Automatic patching for KOS (1|0)
-# Uncomment this if you want to disable applying KOS patches to the toolchain 
-# source files before building. This will disable usage of the 'kos' thread model. 
-#use_kos_patches=0
-
 # Force installation of BFD for SH (1|0)
 # Uncomment this if you want to force the installation of 'libbfd' for the SH
 # toolchain. This is required for MinGW/MSYS and can't be disabled in this
@@ -169,9 +160,3 @@ install_mode=install-strip
 # portable if you built it on another environment. Don't mess with that flag
 # unless you know exactly what you are doing.
 #sh_force_libbfd_installation=1
-
-# Specify GNU Mirror override
-# The default mirror for GNU sources is `ftpmirror.gnu.org`
-# Setting this will allow overriding the default mirror which
-# may be desirable if you have a prefered mirror.
-# gnu_mirror=mirrors.kernel.org

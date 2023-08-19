@@ -80,7 +80,7 @@ static void snd_hook(int strm, void * obj, int freq, int chn, void ** buf, int *
 
 #include <plx/dr.h>
 #include <plx/prim.h>
-static void draw_wave() {
+static void draw_wave(void) {
     int idx, cnt;
     float x, p, y, z = 80.0f;
 
@@ -164,7 +164,7 @@ static void *load_song_list(void * p) {
 }
 
 /* Draws the song listing */
-static void draw_listing() {
+static void draw_listing(void) {
     float y = 92.0f;
     int i, esel;
 
@@ -240,14 +240,14 @@ static void start(char *fn) {
     }
 }
 
-static void stop() {
+static void stop(void) {
     if(sndoggvorbis_isplaying()) {
         sndoggvorbis_stop();
     }
 }
 
 /* Handle controller input */
-void check_controller() {
+void check_controller(void) {
     static int up_moved = 0, down_moved = 0, a_pressed = 0, y_pressed = 0;
     maple_device_t *cont;
     cont_state_t *state;
@@ -413,12 +413,12 @@ void check_controller() {
 }
 
 /* Check maple bus inputs */
-void check_inputs() {
+void check_inputs(void) {
     check_controller();
 }
 
 /* Main rendering of the song menu */
-void song_menu_render() {
+void song_menu_render(void) {
 
     if(!filtinitted) {
         snd_stream_filter_add(0, snd_hook, NULL);

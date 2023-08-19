@@ -83,7 +83,7 @@ static pvr_ptr_t load_kmg(const char fn[]) {
     return rv;
 }
 
-static void setup() {
+static void setup(void) {
     pvr_sprite_cxt_t cxt;
 
     /* Load the textures. */
@@ -131,7 +131,7 @@ static void setup() {
     sprites[0].cuv = sprites[1].cuv = PVR_PACK_16BIT_UV(1.0f, 0.0f);
 }
 
-static void switch_textured() {
+static void switch_textured(void) {
     pvr_sprite_cxt_t cxt;
 
     if(!textured)
@@ -149,7 +149,7 @@ static void switch_textured() {
     textured = !textured;
 }
 
-static int check_start() {
+static int check_start(void) {
     maple_device_t *cont;
     cont_state_t *state;
     static int taken = 0;
@@ -184,7 +184,7 @@ static int check_start() {
     return 0;
 }
 
-static void do_frame() {
+static void do_frame(void) {
     shdr[0].oargb = pvr_pack_bump(bumpiness, F_PI / 4.0f, 5.0f * F_PI / 6.0f);
     shdr[0].argb = 0;
 
