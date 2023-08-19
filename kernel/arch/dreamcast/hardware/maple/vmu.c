@@ -593,12 +593,12 @@ int vmu_block_write(maple_device_t *dev, const uint16_t blocknum, const uint8_t 
     return rv;
 }
 
-int vmu_set_datetime(maple_device_t *dev, time_t time) {
+int vmu_set_datetime(maple_device_t *dev, time_t unix) {
     uint32_t *send_buf;
 
     assert(dev);
 
-    struct tm* btime = localtime(&time);
+    struct tm* btime = localtime(&unix);
     assert(btime); /* If you're failing here, that was an invalid unix timestamp */
 
     /* Lock the frame */
@@ -639,7 +639,7 @@ static void vmu_get_datetime_callback(maple_frame_t *frm) {
     genwait_wake_all(frm);
 }
 
-int vmu_get_datetime(maple_device_t *dev, time_t *time) {
+int vmu_get_datetime(maple_device_t *dev, time_t *unix) {
     maple_response_t *resp;
     int               rv;
     uint32_t          *send_buf;
@@ -671,7 +671,7 @@ int vmu_get_datetime(maple_device_t *dev, time_t *time) {
             dev->frame.state = MAPLE_FRAME_VACANT;
             dbglog(DBG_ERROR, "vmu_get_datetime: timeout to unit %c%c\n",
                    dev->port + 'A', dev->unit + '0');
-            *time = -1;
+            *unix = -1;
             return MAPLE_ETIMEOUT;
         }
     }
@@ -680,7 +680,7 @@ int vmu_get_datetime(maple_device_t *dev, time_t *time) {
         dbglog(DBG_ERROR, "vmu_get_datetime: incorrect state for unit %c%c (%d)\n",
                dev->port + 'A', dev->unit + '0', dev->frame.state);
         dev->frame.state = MAPLE_FRAME_VACANT;
-        *time = -1;
+        *unix = -1;
         return MAPLE_EFAIL;
     }
 
@@ -691,7 +691,7 @@ int vmu_get_datetime(maple_device_t *dev, time_t *time) {
     if(resp->response != MAPLE_RESPONSE_DATATRF
             || send_buf[0] != MAPLE_FUNC_CLOCK) {
         rv = MAPLE_EFAIL;
-        *time = -1;
+        *unix = -1;
         dbglog(DBG_ERROR, "vmu_get_datetime failed: %s(%d)/%08lx\r\n",
                maple_perror(resp->response), resp->response, send_buf[0]);
     }
@@ -699,7 +699,7 @@ int vmu_get_datetime(maple_device_t *dev, time_t *time) {
         rv = MAPLE_EOK;
         struct tm btime = { 0 };
         vmu_datetime_to_tm((const vmu_datetime_t*)(send_buf + 1), &btime);
-        *time = mktime(&btime);
+        *unix = mktime(&btime);
     }
 
     maple_frame_unlock(&dev->frame);

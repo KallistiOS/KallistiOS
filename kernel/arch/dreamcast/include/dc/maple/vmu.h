@@ -21,14 +21,6 @@
     \author Megan Potter
     \author Donald Haase
     \author Falco Girgis
-
-    \todo
-        - flesh out overall module documentation
-        - prevent broadcasting an icon from sending to rear VMUs
-        - implement timer for beeping waveform
-        - implement capability checks
-        - implement locking/unlocking 40 extra blocks
-        - implement root block queries
 */
 
 #ifndef __DC_MAPLE_VMU_H
@@ -165,7 +157,7 @@ int vmu_get_custom_color(maple_device_t *dev, uint8_t *red, uint8_t *green, uint
     icon by providing custom icons for both the DC BIOS menu and the VMU's LCD screen.
 
     \param  dev             The device to change the icon shape of.
-    \param  icon_shape      One of the values found in \ref{vmu_icons}.
+    \param  icon_shape      One of the values found in \ref vmu_icons.
 
     \retval 0               On success
     \retval -1              On failure
@@ -187,7 +179,7 @@ int vmu_set_icon_shape(maple_device_t *dev, uint8_t icon_shape);
     icon by providing custom icons for both the DC BIOS menu and the VMU's LCD screen.
 
     \param  dev             The device to change the icon shape of.
-    \param  icon_shape      One of the values found in \ref{vmu_icons}.
+    \param  icon_shape      One of the values found in \ref vmu_icons.
 
     \retval 0               On success
     \retval -1              On failure
@@ -233,15 +225,19 @@ int vmu_get_icon_shape(maple_device_t *dev, uint8_t *icon_shape);
 
     \sa vmu_draw_lcd_rotated, vmu_draw_lcd_xbm, vmu_set_icon
 */
-int vmu_draw_lcd(maple_device_t * dev, const void *bitmap);
+int vmu_draw_lcd(maple_device_t *dev, const void *bitmap);
 
 /** \brief   Display a 1bpp bitmap on a VMU screen.
     \ingroup maple_lcd
 
     This function sends a raw bitmap to a VMU to display on its screen. This
     bitmap is 1bpp, and is 48x32 in size. This function is equivalent to
-    vmu_draw_lcd, but the image is rotated 180° so that the first byte of the
+    vmu_draw_lcd(), but the image is rotated 180° so that the first byte of the
     bitmap corresponds to the top-left corner, instead of the bottom-right one.
+
+    \warning    This function is optimized by an assembly routine which operates
+                on 32 bits at a time. As such, the given bitmap must be 4-byte
+                aligned.
 
     \param  dev             The device to draw to.
     \param  bitmap          The bitmap to show.
@@ -249,13 +245,9 @@ int vmu_draw_lcd(maple_device_t * dev, const void *bitmap);
     \retval MAPLE_EAGAIN    If the command couldn't be sent. Try again later.
     \retval MAPLE_ETIMEOUT  If the command timed out while blocking.
 
-    \warning    This function is optimized by an assembly routine which operates
-                on 32 bits at a time. As such, the given bitmap must be 4-byte
-		        aligned.
-
-    \sa vmu_draw_lcd, vmu_draw_lcd_xbm
+    \sa vmu_draw_lcd, vmu_draw_lcd_xbm, vmu_set_icon
 */
-int vmu_draw_lcd_rotated(maple_device_t * dev, const void *bitmap);
+int vmu_draw_lcd_rotated(maple_device_t *dev, const void *bitmap);
 
 /** \brief   Display a Xwindows XBM image on a VMU screen.
     \ingroup maple_lcd
@@ -282,6 +274,9 @@ int vmu_draw_lcd_xbm(maple_device_t *dev, const char *vmu_icon);
     \note
     This is a convenience function for vmu_draw_lcd() to broadcast across all VMUs.
 
+    \todo
+    Prevent this routine from broadcasting to rear VMUs.
+
     \param  vmu_icon        The icon to set.
 
     \sa vmu_draw_lcd_xbm
@@ -299,7 +294,7 @@ void vmu_set_icon(const char *vmu_icon);
     \note
     A standard memory card has a block size of 512 bytes; however,
     the block size is a configurable parameter in the "root" block,
-    which can be queried for to cover supporting homebrew memory
+    which can be queried to cover supporting homebrew memory
     cards with larger block sizes.
 
     \warning
@@ -308,17 +303,13 @@ void vmu_set_icon(const char *vmu_icon);
     the filesystem by writing incorrect data. Instead, you should
     favor the high-level filesystem API found in vmufs.h, or just
     use the native C standard filesystem API within the virtual 
-    "/vmu/" root directory to operate on VMU data. 
+    `/vmu/` root directory to operate on VMU data. 
 */
 
 /** \brief   Read a block from a memory card.
     \ingroup maple_memcard
 
-    This function reads a raw block from a memory card.
-
-    \note
-    You most likely will not ever use this directly, but rather will
-    probably use the fs_vmu stuff.
+    This function performs a low-level raw block read from a memory card.
 
     \param  dev             The device to read from.
     \param  blocknum        The block number to read.
@@ -335,11 +326,7 @@ int vmu_block_read(maple_device_t *dev, uint16_t blocknum, uint8_t *buffer);
 /** \brief   Write a block to a memory card.
     \ingroup maple_memcard
 
-    This function writes a raw block to a memory card.
-
-    \note
-    You most likely will not ever use this directly, but rather will
-    probably use the fs_vmu stuff.
+    This function performs a low-level raw block write to a memory card.
 
     \param  dev             The device to write to.
     \param  blocknum        The block number to write.
@@ -349,7 +336,7 @@ int vmu_block_read(maple_device_t *dev, uint16_t blocknum, uint8_t *buffer);
     \retval MAPLE_ETIMEOUT  If the command timed out while blocking.
     \retval MAPLE_EFAIL     On errors other than timeout.
 
-    \sa vmu_block_write
+    \sa vmu_block_read
 */
 int vmu_block_write(maple_device_t *dev, uint16_t blocknum, const uint8_t *buffer);
 
@@ -364,11 +351,19 @@ int vmu_block_write(maple_device_t *dev, uint16_t blocknum, const uint8_t *buffe
         - input/button status
 */
 
+/** \name Buzzer
+    \brief Methods for tone generation.
+    @{
+*/
+
 /** \brief   Make a VMU beep (low-level).
     \ingroup maple_clock
 
     This function sends a raw beep to a VMU, causing the speaker to emit a tone
-    noise. See http://dcemulation.org/phpBB/viewtopic.php?f=29&t=97048 for the
+    noise.
+
+    \note
+    See http://dcemulation.org/phpBB/viewtopic.php?f=29&t=97048 for the
     original information about beeping.
 
     \warning
@@ -379,7 +374,7 @@ int vmu_block_write(maple_device_t *dev, uint16_t blocknum, const uint8_t *buffe
     \param  beep            The tone to generate. Byte values are as follows:
                                 1. period of square wave 1
                                 2. duty cycle of square wave 1
-                                3. period of square wave 2(ignored by
+                                3. period of square wave 2 (ignored by
                                    standard mono VMUs)
                                 4. duty cycle of square wave 2 (ignored by
                                    standard mono VMUs) 
@@ -388,7 +383,7 @@ int vmu_block_write(maple_device_t *dev, uint16_t blocknum, const uint8_t *buffe
     \retval MAPLE_EAGAIN    If the command couldn't be sent. Try again later.
     \retval MAPLE_ETIMEOUT  If the command timed out while blocking.
 
-    \sa vmu_block_read
+    \sa vmu_beep_waveform
 */
 int vmu_beep_raw(maple_device_t* dev, uint32_t beep);
 
@@ -401,19 +396,19 @@ int vmu_beep_raw(maple_device_t* dev, uint32_t beep);
     however, the parameters do support dual-channel stereo in case such a 
     VMU ever does come along. 
 
-                           Period
-                   +---------------------+
-                   |                     |
-    HIGH __________            __________
-                   |          |          |          |
-                   |          |          |          |
-                   |__________|          |__________|
-     LOW
-                              |          |
-                              +----------+
-                               Duty Cycle
-
-                         WAVEFORM
+                               Period
+                       +---------------------+
+                       |                     |
+        HIGH __________            __________
+                       |          |          |          |
+                       |          |          |          |
+                       |__________|          |__________|
+        LOW
+                                  |          |
+                                  +----------+
+                                   Duty Cycle
+        
+                             WAVEFORM
 
     To stop an active tone, one can simply generate a flat wave, such as by 
     submitting both values as 0s.
@@ -452,6 +447,13 @@ int vmu_beep_raw(maple_device_t* dev, uint32_t beep);
 */
 int vmu_beep_waveform(maple_device_t *dev, uint8_t period1, uint8_t duty_cycle1, uint8_t period2, uint8_t duty_cycle2);
 
+/** @} */
+
+/** \name Date/Time
+    \brief Methods for managing date and time.
+    @{
+*/
+
 /** \brief  Set the date and time on the VMU.
     \ingroup maple_clock
 
@@ -459,7 +461,7 @@ int vmu_beep_waveform(maple_device_t *dev, uint8_t period1, uint8_t duty_cycle1,
     the given standard C Unix timestamp.
 
     \param  dev             The device to write to.
-    \param  time            Seconds since Unix epoch
+    \param  unix            Seconds since Unix epoch
 
     \retval MAPLE_EOK       On success.
     \retval MAPLE_ETIMEOUT  If the command timed out while blocking.
@@ -467,7 +469,7 @@ int vmu_beep_waveform(maple_device_t *dev, uint8_t period1, uint8_t duty_cycle1,
 
     \sa vmu_get_datetime
 */
-int vmu_set_datetime(maple_device_t *dev, time_t time);
+int vmu_set_datetime(maple_device_t *dev, time_t unix);
 
 /** \brief   Get the date and time on the VMU.
     \ingroup maple_clock
@@ -476,10 +478,10 @@ int vmu_set_datetime(maple_device_t *dev, time_t time);
     as a single standard C Unix timestamp.
 
     \note
-    This is the VMU equivalent of calling `time(NULL)`.
+    This is the VMU equivalent of calling `time(unix)`.
 
     \param  dev             The device to write to.
-    \param  time            Seconds since Unix epoch
+    \param  unix            Seconds since Unix epoch (set to -1 upon failure)
 
     \retval MAPLE_EOK       On success.
     \retval MAPLE_ETIMEOUT  If the command timed out while blocking.
@@ -487,7 +489,9 @@ int vmu_set_datetime(maple_device_t *dev, time_t time);
 
     \sa vmu_set_datetime
 */
-int vmu_get_datetime(maple_device_t *dev, time_t *time);
+int vmu_get_datetime(maple_device_t *dev, time_t *unix);
+
+/** @} */
 
 /** \defgroup vmu_buttons VMU Buttons
     \brief    VMU button masks
@@ -501,6 +505,7 @@ int vmu_get_datetime(maple_device_t *dev, time_t *time);
 
     @{
 */
+
 #define VMU_DPAD_UP    (0<<1)   /**< \brief Up Dpad button on the VMU */
 #define VMU_DPAD_DOWN  (1<<1)   /**< \brief Down Dpad button on the VMU */
 #define VMU_DPAD_LEFT  (2<<1)   /**< \brief Left Dpad button on the VMU */
@@ -509,24 +514,36 @@ int vmu_get_datetime(maple_device_t *dev, time_t *time);
 #define VMU_B          (5<<1)   /**< \brief 'B' button on the VMU */
 #define VMU_MODE       (6<<1)   /**< \brief Mode button on the VMU */
 #define VMU_SLEEP      (7<<1)   /**< \brief Sleep button on the VMU */
-/** @} */
 
 /** \brief VMU's raw condition data: 0 = PRESSED, 1 = RELEASED */
 typedef uint8_t vmu_cond_t;
-/** \brief  VMU's "civilized" state data: 0 = RELEASED, 1 = PRESSED */
+
+/** \brief  VMU's "civilized" state data: 0 = RELEASED, 1 = PRESSED
+
+    \note
+    The Dpad buttons are automatically reoriented for you depending on
+    which direction the VMU is facing in a particular type of controller.
+ */
 typedef union vmu_state {
-    uint8_t buttons;
+    uint8_t buttons;            /**< \brief Combined button state mask */
     struct {
-        uint8_t dpad_up:    1;
-        uint8_t dpad_down:  1;
-        uint8_t dpad_left:  1;
-        uint8_t dpad_right: 1;
-        uint8_t a:          1;
-        uint8_t b:          1;
-        uint8_t mode:       1;
-        uint8_t sleep:      1;
+        uint8_t dpad_up:    1;  /**< \brief Dpad Up button state */
+        uint8_t dpad_down:  1;  /**< \brief Dpad Down button state */
+        uint8_t dpad_left:  1;  /**< \brief Dpad Left button state */
+        uint8_t dpad_right: 1;  /**< \brief Dpad Right button state */
+        uint8_t a:          1;  /**< \brief 'A' button state */
+        uint8_t b:          1;  /**< \brief 'B' button state */
+        uint8_t mode:       1;  /**< \brief Mode button state */
+        uint8_t sleep:      1;  /**< \brief Sleep button state */
     };
 } vmu_state_t;
+
+/** @} */
+
+/** \name Input
+    \brief Methods for polling button states.
+    @{
+*/
 
 /** \brief   Enable/Disable polling for VMU input
     \ingroup maple_clock
@@ -542,7 +559,8 @@ typedef union vmu_state {
     as extended controller inputs.
 
     \note
-    Polling for VMU input is disabled by default.
+    Polling for VMU input is disabled by default to reduce unecessary
+    Maple BUS traffic.
 
     \sa vmu_get_buttons_enabled
 */
@@ -555,7 +573,8 @@ void vmu_set_buttons_enabled(int enable);
     the VMU's button states has been enabled in the driver.
 
     \note
-    Polling for VMU input is disabled by default.
+    Polling for VMU input is disabled by default to reduce unecessary
+    Maple BUS traffic.
 
     \sa vmu_set_buttons_enabled
 */
