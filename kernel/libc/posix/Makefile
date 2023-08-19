@@ -4,8 +4,13 @@
 # Copyright (C) 2023 Falco Girgis
 #
 
-KOS_CFLAGS += -std=gnu11
+#
+# This dir contains the implementation of POSIX-specific 
+# C and C++ extensions which are implemented by KOS and 
+# are not provided as part of Newlib.
+#
 
-OBJS = clock_gettime.o
+CFLAGS += -std=gnu11
+OBJS = posix_memalign.o clock_gettime.o
 
 include $(KOS_BASE)/Makefile.prefab
