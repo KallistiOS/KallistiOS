@@ -14,11 +14,11 @@
 #ifndef __KOS_TIME_H
 #define __KOS_TIME_H
 
-#if !defined(__STRICT_ANSI__) || (__STDC_VERSION__ >= 201112L) || (__cplusplus >= 201703L)
-
 #include <kos/cdefs.h>
 
 __BEGIN_DECLS
+
+#if !defined(__STRICT_ANSI__) || (__STDC_VERSION__ >= 201112L) || (__cplusplus >= 201703L)
 
 /* Forward declaration. */
 struct timespec;
@@ -26,6 +26,8 @@ struct timespec;
 #define TIME_UTC 1
 
 extern int timespec_get(struct timespec *ts, int base);
+
+#endif /* !defined(__STRICT_ANSI__) || (__STDC_VERSION__ >= 201112L) || (__cplusplus >= 201703L) */
 
 #if !defined(__STRICT_ANSI__) || (_POSIX_C_SOURCE >= 199309L)
 
@@ -54,5 +56,4 @@ extern int clock_settime(__clockid_t clk_id, const struct timespec *tp);
 
 __END_DECLS
 
-#endif /* !defined(__STRICT_ANSI__) || (__STDC_VERSION__ >= 201112L) || (__cplusplus >= 201703L) */
 #endif /* !__KOS_TIME_H */
