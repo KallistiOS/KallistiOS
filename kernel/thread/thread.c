@@ -343,19 +343,26 @@ int thd_remove_from_runnable(kthread_t *thd) {
 /* Creates and initializes the static TLS segment for a thread,
    composed of a Thread Control Block (TCB), followed by .TDATA,
    followed by .TBSS, very carefully ensuring alignment of each
-   subchunk. */
+   subchunk. 
+*/
 static void* thd_create_tls_data(void) {
     /* Cached and typed local copies of TLS segment data for sizes, 
        alignments, and initial value data pointer, exported by the 
-       linker script. */
-    const uint8_t *tdata_start = (const uint8_t *)(&_tdata_start);
-    const size_t   tdata_size  = (size_t)(&_tdata_size);
-    const size_t   tbss_size   = (size_t)(&_tbss_size);
-    const size_t   tdata_align = (size_t)_tdata_align;
-    const size_t   tbss_align  = (size_t)_tbss_align;
+       linker script. 
+
+       SIZES MUST BE VOLATILE or the optimizer on non-debug builds will 
+       optimize zero-check conditionals away, since why would the 
+       address of a variable be NULL? (Linker script magic, it can be.)
+   */
+    const volatile size_t   tdata_size  = (size_t)(&_tdata_size);
+    const volatile size_t   tbss_size   = (size_t)(&_tbss_size);
+    const          size_t   tdata_align = tdata_size ? (size_t)_tdata_align : 1;
+    const          size_t   tbss_align  = tbss_size ? (size_t)_tbss_align : 1;
+    const          uint8_t *tdata_start = (const uint8_t *)(&_tdata_start);
 
     /* Each subsegment of the requested memory chunk must be aligned
-       by the largest segment's memory alignment requirements. */
+       by the largest segment's memory alignment requirements. 
+   */
     size_t align = 8;        /* tcbhead_t has to be aligned by 8. */
     if(tdata_align > align)
         align = tdata_align; /* .TDATA segment's alignment */
@@ -378,24 +385,32 @@ static void* thd_create_tls_data(void) {
     /* Allocate combined chunk with calculated size and alignment.  */
     tcbhead_t *tcbhead  = aligned_alloc(align, tls_size);
     assert(tcbhead);    
-
-    /* Set up subsegment pointers. */
-    void *tdata_segment = (uint8_t*)tcbhead + tdata_offset;
-    void *tbss_segment  = (uint8_t*)tcbhead + tbss_offset; 
-
-    /* Verify proper alignments of each subsegment. */
-    assert(!((uintptr_t)tcbhead % 8));    
-    assert(!((uintptr_t)tdata_segment % tdata_align));
-    assert(!((uintptr_t)tbss_segment % tbss_align));
-
-    /* Initialize each subsegment. */
+    assert(!((uintptr_t)tcbhead % 8)); 
 
     /* Since we aren't using either member within it, zero out tcbhead. */
-    memset(tcbhead, 0, sizeof(tcbhead_t));         
-    /* Initialize tdata_segment with .tdata bytes from ELF. */
-    memcpy(tdata_segment, tdata_start, tdata_size);
-    /* Zero-initialize tbss_segment. */
-    memset(tbss_segment, 0, tbss_size);
+    memset(tcbhead, 0, sizeof(tcbhead_t));  
+
+    /* Initialize .TDATA */
+    if(tdata_size) { 
+        void *tdata_segment = (uint8_t*)tcbhead + tdata_offset;
+
+        /* Verify proper alignment. */   
+        assert(!((uintptr_t)tdata_segment % tdata_align));
+
+        /* Initialize tdata_segment with .tdata bytes from ELF. */
+        memcpy(tdata_segment, tdata_start, tdata_size);
+    }
+
+    /* Initialize .TBSS */
+    if(tbss_size) { 
+        void *tbss_segment  = (uint8_t*)tcbhead + tbss_offset; 
+
+        /* Verify proper alignment. */
+        assert(!((uintptr_t)tbss_segment % tbss_align));
+           
+        /* Zero-initialize tbss_segment. */
+        memset(tbss_segment, 0, tbss_size);
+    }
 
     /* Return segment head: this is what GBR points to. */
     return tcbhead;

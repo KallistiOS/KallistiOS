@@ -7,7 +7,7 @@
 
    A simple example showing off thread local variables
 
-   This example launches two threads that access variables
+   This example launches several threads that access variables
    placed in the TLS segment by the compiler. The compiler
    is then able to generate trivial lookups based on the GBR
    register which holds the address to the current threads's
