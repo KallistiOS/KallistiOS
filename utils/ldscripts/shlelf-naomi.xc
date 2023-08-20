@@ -74,7 +74,17 @@ SECTIONS
   PROVIDE (__etext = .);
   PROVIDE (_etext = .);
   PROVIDE (etext = .);
-  .rodata         : { *(.rodata .rodata.* .gnu.linkonce.r.*) }
+  .rodata         : 
+  { 
+    *(.rodata .rodata.* .gnu.linkonce.r.*) 
+    . = ALIGN(4);
+    __tdata_align = .;
+    LONG (ALIGNOF(.tdata));
+    . = ALIGN(4);
+    __tbss_align = .;
+    LONG (ALIGNOF(.tbss));
+    . = ALIGN(4);
+  }
   .rodata1        : { *(.rodata1) }
   .sdata2         :
   {
