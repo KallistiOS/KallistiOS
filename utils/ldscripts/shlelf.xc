@@ -107,7 +107,7 @@ SECTIONS
     *(.tdata .tdata.* .gnu.linkonce.td.*) 
   }
   __tdata_size = SIZEOF(.tdata);
-  .tbss		  : 
+  .tbss	(NOLOAD)	  : 
   { 
     *(.tbss .tbss.* .gnu.linkonce.tb.*) 
     *(.tcommon)

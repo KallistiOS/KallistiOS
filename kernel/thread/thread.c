@@ -43,7 +43,7 @@ extern int _tbss_size;
 extern long _tdata_align, _tbss_align;
 
 /* Forward declare C11's aligned_alloc which we use to allocate TLS segments */
-void *aligned_alloc(size_t alignment, size_t size);
+extern void *aligned_alloc(size_t alignment, size_t size);
 
 /* Utility function for aligning an address or offset. */
 static inline size_t align_to(size_t address, size_t alignment) {
@@ -471,7 +471,6 @@ kthread_t *thd_create_ex(kthread_attr_t *attr, void * (*routine)(void *param),
 
             /* Set Thread Pointer */
             nt->context.gbr = (uint32_t)nt->tcbhead;
-
             nt->tid = tid;
             nt->prio = real_attr.prio;
             nt->flags = THD_DEFAULTS;
