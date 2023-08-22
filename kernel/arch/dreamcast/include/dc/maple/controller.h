@@ -1,8 +1,9 @@
 /* KallistiOS ##version##
 
    dc/maple/controller.h
-   (C) 2000-2002 Jordan DeLong, Megan Potter
-   (C) 2023 Falco Girgis
+   Copyright (C) 2000-2002 Jordan DeLong
+   Copyright (C) 2000-2002 Megan Potter
+   Copyright (C) 2023 Falco Girgis
 
    Thanks to Marcus Comstedt for information on the controller.
 */
@@ -59,7 +60,7 @@ __BEGIN_DECLS
    You can grab a pointer to a connected controller by 
    using the following:
 
-        maple_device_t* device = maple_enum_type(N, MAPLE_FUNC_CONTROLLER);
+        maple_device_t *device = maple_enum_type(N, MAPLE_FUNC_CONTROLLER);
 
         if(device) printf("Controller found!\n");
         else printf("Controller not found!\n");
@@ -77,7 +78,7 @@ __BEGIN_DECLS
     You can grab a controller's state structure, containing the state
     of all of its inputs by using:
 
-        cont_state_t* state = (cont_state_t*)maple_dev_status(device);
+        cont_state_t *state = (cont_state_t *)maple_dev_status(device);
 
     Next you can check for the state of a particular button with:
 
