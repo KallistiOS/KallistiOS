@@ -385,7 +385,7 @@ int vmu_block_write(maple_device_t *dev, uint16_t blocknum, const uint8_t *buffe
 
     \sa vmu_beep_waveform
 */
-int vmu_beep_raw(maple_device_t* dev, uint32_t beep);
+int vmu_beep_raw(maple_device_t *dev, uint32_t beep);
 
 /** \brief   Play VMU Buzzer tone.
     \ingroup maple_clock

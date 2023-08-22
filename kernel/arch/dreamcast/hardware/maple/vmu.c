@@ -37,7 +37,7 @@ typedef struct vmu_datetime {
     uint8_t  weekday; /* 0 - 6 (Starting with Monday) */
 } vmu_datetime_t;
 
-static void vmu_datetime_to_tm(const vmu_datetime_t *dt, struct tm* bt) {
+static void vmu_datetime_to_tm(const vmu_datetime_t *dt, struct tm *bt) {
     bt->tm_sec  = dt->second;
     bt->tm_min  = dt->minute;
     bt->tm_hour = dt->hour;
@@ -47,7 +47,7 @@ static void vmu_datetime_to_tm(const vmu_datetime_t *dt, struct tm* bt) {
     bt->tm_wday = dt->weekday != 6? dt->weekday + 1 : 0;
 }
 
-static void vmu_datetime_from_tm(vmu_datetime_t* dt, const struct tm* bt) {
+static void vmu_datetime_from_tm(vmu_datetime_t *dt, const struct tm *bt) {
     dt->second  = bt->tm_sec;
     dt->minute  = bt->tm_min;
     dt->hour    = bt->tm_hour;
@@ -63,7 +63,7 @@ static int vmu_attach(maple_driver_t *drv, maple_device_t *dev) {
     return 0;
 }
 
-static void vmu_poll_reply(maple_frame_t* frm) { 
+static void vmu_poll_reply(maple_frame_t *frm) { 
     maple_response_t   *resp;
     uint32_t           *respbuf;
     vmu_cond_t         *raw;
@@ -85,6 +85,8 @@ static void vmu_poll_reply(maple_frame_t* frm) {
 
     /* Update the status area from the response */
     if(frm->dev) {
+        const maple_device_t *cont = maple_enum_dev(frm->dev->port, 0);
+
         /* Verify the size of the frame and grab a pointer to it */
         //assert(resp->data_len == 7);
         raw = (vmu_cond_t *)(respbuf + 1);
@@ -93,8 +95,6 @@ static void vmu_poll_reply(maple_frame_t* frm) {
         cooked = (vmu_state_t *)(frm->dev->status);
         /* Invert raw struct as nice struct */
         cooked->buttons = ~(*raw);
-
-        const maple_device_t *cont = maple_enum_dev(frm->dev->port, 0);
 
         /* Check to see if the VMU is upside-down in the controller and readjust
            its directional buttons accordingly. */
@@ -117,7 +117,6 @@ static int vmu_poll(maple_device_t *dev) {
 
     /* Only query for button input on the front VMU of each controller. */
     if(dev->unit == 1) {
-
         if(maple_frame_lock(&dev->frame) < 0)
             return 0;
 
@@ -306,7 +305,7 @@ int vmu_draw_lcd(maple_device_t *dev, const void *bitmap) {
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);
-    send_buf = (uint32_t*)dev->frame.recv_buf;
+    send_buf = (uint32_t *)dev->frame.recv_buf;
     send_buf[0] = MAPLE_FUNC_LCD;
     send_buf[1] = 0;    /* Block / phase / partition */
     memcpy(send_buf + 2, bitmap, VMU_SCREEN_WIDTH * 4);
@@ -468,7 +467,7 @@ static void vmu_block_write_callback(maple_frame_t *frm) {
     genwait_wake_all(frm);
 }
 
-static int vmu_block_write_internal(maple_device_t * dev, uint16_t blocknum, const uint8_t *buffer) {
+static int vmu_block_write_internal(maple_device_t *dev, uint16_t blocknum, const uint8_t *buffer) {
     maple_response_t *resp;
     int              rv, phase, r;
     uint32_t         *send_buf;
@@ -574,7 +573,7 @@ static int vmu_block_write_internal(maple_device_t * dev, uint16_t blocknum, con
 
 /* Sometimes a flaky or stubborn card can be recovered by trying a couple
    of times... */
-int vmu_block_write(maple_device_t *dev, const uint16_t blocknum, const uint8_t *buffer) {
+int vmu_block_write(maple_device_t *dev, uint16_t blocknum, const uint8_t *buffer) {
     int i, rv;
 
     for(i = 0; i < 4; i++) {
@@ -595,11 +594,12 @@ int vmu_block_write(maple_device_t *dev, const uint16_t blocknum, const uint8_t 
 
 int vmu_set_datetime(maple_device_t *dev, time_t unix) {
     uint32_t *send_buf;
+    struct tm *btime;
 
     assert(dev);
 
-    struct tm* btime = localtime(&unix);
-    assert(btime); /* If you're failing here, that was an invalid unix timestamp */
+    btime = localtime(&unix);
+    assert(btime); /* A failure here means an invalid unix timestamp was given. */
 
     /* Lock the frame */
     if(maple_frame_lock(&dev->frame) < 0)
@@ -610,7 +610,7 @@ int vmu_set_datetime(maple_device_t *dev, time_t unix) {
     send_buf = (uint32_t *)dev->frame.recv_buf;
     send_buf[0] = MAPLE_FUNC_CLOCK;
     send_buf[1] = 0;
-    vmu_datetime_from_tm((vmu_datetime_t*)(send_buf + 2), btime);
+    vmu_datetime_from_tm((vmu_datetime_t *)(send_buf + 2), btime);
 
     dev->frame.cmd = MAPLE_COMMAND_BWRITE;
     dev->frame.dst_port = dev->port;
