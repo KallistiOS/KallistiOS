@@ -160,13 +160,13 @@ __BEGIN_DECLS
 #define BFONT_ICON_SNOWMAN               0x44
 #define BFONT_ICON_LIGHTNING             0x45
 #define BFONT_ICON_SUN                   0x46
-#define BFONT_ICON_CLOUD                 0x47 
+#define BFONT_ICON_CLOUD                 0x47
 #define BFONT_ICON_UMBRELLA              0x48
 #define BFONT_ICON_ONE_STAR              0x49
 #define BFONT_ICON_TWO_STARS             0x4A
 #define BFONT_ICON_THREE_STARS           0x4B
 #define BFONT_ICON_FOUR_STARS            0x4C
-#define BFONT_ICON_HEART                 0x4D 
+#define BFONT_ICON_HEART                 0x4D
 #define BFONT_ICON_DIAMOND               0x4E
 #define BFONT_ICON_SPADE                 0x4F
 #define BFONT_ICON_CLUB                  0x50
