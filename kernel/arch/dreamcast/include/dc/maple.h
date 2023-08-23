@@ -212,7 +212,7 @@ typedef struct maple_devinfo {
     uint32  functions;              /**< \brief Function codes supported */
     uint32  function_data[3];       /**< \brief Additional data per function */
     uint8   area_code;              /**< \brief Region code */
-    uint8   connector_direction;    /**< \brief ? */
+    uint8   connector_direction;    /**< \brief 0: UP (most controllers), 1: DOWN (lightgun, microphones) */
     char    product_name[30];       /**< \brief Name of device */
     char    product_license[60];    /**< \brief License statement */
     uint16  standby_power;          /**< \brief Power consumption (standby) */

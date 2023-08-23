@@ -11,22 +11,49 @@
 #include <string.h>
 #include <assert.h>
 
+/* Location of controller capabilities within function_data array */
+#define CONT_FUNCTION_DATA_INDEX  0 
+
+/* Raw controller condition structure */
+typedef struct cont_cond {
+    uint16_t buttons;  /* buttons bitfield */
+    uint8_t rtrig;     /* right trigger */
+    uint8_t ltrig;     /* left trigger */
+    uint8_t joyx;      /* joystick X */
+    uint8_t joyy;      /* joystick Y */
+    uint8_t joy2x;     /* second joystick X */
+    uint8_t joy2y;     /* second joystick Y */
+} cont_cond_t;
+
 static cont_btn_callback_t btn_callback = NULL;
-static uint8 btn_callback_addr = 0;
-static uint32 btn_callback_btns = 0;
+static uint8_t btn_callback_addr = 0;
+static uint32_t btn_callback_btns = 0;
+
+/* Check whether the controller has EXACTLY the given capabilties. */
+int cont_is_type(const maple_device_t *cont, uint32_t type) {
+    return cont ? cont->info.function_data[CONT_FUNCTION_DATA_INDEX] == type :
+                  -1;
+}
+
+/* Check whether the controller has at LEAST the given capabilities. */
+int cont_has_capabilities(const maple_device_t *cont, uint32_t capabilities) {
+    return cont ? ((cont->info.function_data[CONT_FUNCTION_DATA_INDEX] 
+                   & capabilities) == capabilities) : -1;
+}
 
 /* Set a controller callback for a button combo; set addr=0 for any controller */
-void cont_btn_callback(uint8 addr, uint32 btns, cont_btn_callback_t cb) {
+void cont_btn_callback(uint8_t addr, uint32_t btns, cont_btn_callback_t cb) {
     btn_callback_addr = addr;
     btn_callback_btns = btns;
     btn_callback = cb;
 }
 
+/* Response callback for the GETCOND Maple command. */
 static void cont_reply(maple_frame_t *frm) {
-    maple_response_t    *resp;
-    uint32          *respbuf;
-    cont_cond_t     *raw;
-    cont_state_t        *cooked;
+    maple_response_t *resp;
+    uint32_t         *respbuf;
+    cont_cond_t      *raw;
+    cont_state_t     *cooked;
 
     /* Unlock the frame now (it's ok, we're in an IRQ) */
     maple_frame_unlock(frm);
@@ -37,7 +64,7 @@ static void cont_reply(maple_frame_t *frm) {
     if(resp->response != MAPLE_RESPONSE_DATATRF)
         return;
 
-    respbuf = (uint32 *)resp->data;
+    respbuf = (uint32_t *)resp->data;
 
     if(respbuf[0] != MAPLE_FUNC_CONTROLLER)
         return;
@@ -45,7 +72,7 @@ static void cont_reply(maple_frame_t *frm) {
     /* Update the status area from the response */
     if(frm->dev) {
         /* Verify the size of the frame and grab a pointer to it */
-        assert(sizeof(cont_cond_t) == ((resp->data_len - 1) * 4));
+        assert(sizeof(cont_cond_t) == ((resp->data_len - 1) * sizeof(uint32_t)));
         raw = (cont_cond_t *)(respbuf + 1);
 
         /* Fill the "nice" struct from the raw data */
@@ -74,13 +101,13 @@ static void cont_reply(maple_frame_t *frm) {
 }
 
 static int cont_poll(maple_device_t *dev) {
-    uint32 * send_buf;
+    uint32_t *send_buf;
 
     if(maple_frame_lock(&dev->frame) < 0)
         return 0;
 
     maple_frame_init(&dev->frame);
-    send_buf = (uint32 *)dev->frame.recv_buf;
+    send_buf = (uint32_t *)dev->frame.recv_buf;
     send_buf[0] = MAPLE_FUNC_CONTROLLER;
     dev->frame.cmd = MAPLE_COMMAND_GETCOND;
     dev->frame.dst_port = dev->port;

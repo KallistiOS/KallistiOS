@@ -48,10 +48,6 @@ extern int timespec_get(struct timespec *ts, int base);
 #define CLOCK_PROCESS_CPUTIME_ID (CLOCK_REALTIME + 2)
 #define CLOCK_THREAD_CPUTIME_ID  (CLOCK_REALTIME + 3)
 
-extern int clock_getres(__clockid_t clk_id, struct timespec *res);
-extern int clock_gettime(__clockid_t clk_id, struct timespec *tp);
-extern int clock_settime(__clockid_t clk_id, const struct timespec *tp);
-
 #endif /* !defined(__STRICT_ANSI__) || (_POSIX_C_SOURCE >= 199309L) */
 
 __END_DECLS
