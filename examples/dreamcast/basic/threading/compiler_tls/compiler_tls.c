@@ -48,11 +48,11 @@ typedef struct {
    compiler will optimize away conditionals checking for values that it knows should be
    constant! 
 */
-static thread_local volatile _Alignas(4)  Align4   BUF_4           = {.inner = {2, 2, 2}};
-static thread_local volatile _Alignas(16) Align16  BUF_16          = {.inner = {1, 1, 1}};
-static thread_local volatile              uint16_t tlsUint16[256]  = { 0 };
+static thread_local volatile _Alignas(4)  Align4   tls_buff4       = {.inner = {2, 2, 2}};
+static thread_local volatile _Alignas(16) Align16  tls_buff16      = {.inner = {1, 1, 1}};
+static thread_local volatile              uint16_t tls_uint16[256] = { 0 };
 static thread_local volatile _Alignas(32) uint32_t tbss_test       = 0;
-static thread_local volatile _Alignas(32) char     tlsCharArray_[] = { "abcdefghijklmnopqrstuvwxyz012345" };
+static thread_local volatile _Alignas(32) char     tls_string[]    = { "abcdefghijklmnopqrstuvwxyz012345" };
 static thread_local volatile              uint32_t tdata_test      = 0x5A;
 
 /* 
@@ -62,7 +62,7 @@ static thread_local volatile              uint32_t tdata_test      = 0x5A;
  */
 void *thd(void *v) {
     int i;
-    int id = (int) v;
+    int id = (int)v;
     int ret = 0;
 
     printf("Started Thread %d\n", id);
@@ -95,15 +95,16 @@ void *thd(void *v) {
 
     /* Ensure default-aligned .TBSS data is initialized properly. */
     for(int i = 0; i < 256; ++i)
-        if(tlsUint16[i] != 0) {
-            fprintf(stderr, "tlsUint16[%d] failed!\n", i);
+        if(tls_uint16[i] != 0) {
+            fprintf(stderr, "tls_uint16[%d] failed!\n", i);
             ret = -1;
             break;
         }
 
     /* Ensure manually over-aligned .TDATA data is initialized properly. */
-    if(strcmp((const char*)tlsCharArray_, "abcdefghijklmnopqrstuvwxyz012345")) {
-        fprintf(stderr, "Alphabet check failed: %s\n", (const char*)tlsCharArray_);
+    if(strcmp((const char *)tls_string, "abcdefghijklmnopqrstuvwxyz012345")) {
+        fprintf(stderr, "tls_string check failed: %s\n", (const char *)tls_string);
+        ret = -1;
     }
 
     /* Check if at least one byte has been offset improperly
@@ -118,19 +119,19 @@ void *thd(void *v) {
 
     printf("[");
     for (int i = 0; i < 3; i++) {
-        if (BUF_4.inner[i] != 2) {
+        if (tls_buff4.inner[i] != 2) 
             reproduced = true;
-        }
-        printf("%d, ", BUF_4.inner[i]);
+        
+        printf("%d, ", tls_buff4.inner[i]);
     }
     printf("]\n");
 
     printf("[");
     for (int i = 0; i < 3; i++) {
-        if (BUF_16.inner[i] != 1) {
+        if (tls_buff16.inner[i] != 1) 
             reproduced = true;
-        }
-        printf("%d, ", BUF_16.inner[i]);
+        
+        printf("%d, ", tls_buff16.inner[i]);
     }
     printf("]\n");
 
@@ -145,43 +146,54 @@ void *thd(void *v) {
     printf("Finished Thread %d\n", id);
 
     /* Return the result back to the main function. */
-    return (void*)ret;
+    return (void *)ret;
 }
 
-/* The main program */
 int main(int argc, char **argv) {
-    const int thread_count = 5;
+    /* This is ridiculous, but lets do it anyway. */
+    const int thread_count = 200; 
     kthread_t *threads[thread_count]; 
-    int i, result = 0; 
+    int i, ret, result = 0; 
 
     printf("Starting Threads\n");
 
     /* Create a bunch of threads and put each through 
        the same series of tests on their own (hopefully)
        independent set of thread-local variables. */
-    for (i = 0; i < thread_count; i++) {
-        threads[i] = thd_create(0, thd, (void *) i + 1);
-    };
+    for (i = 0; i < thread_count; i++)
+        threads[i] = thd_create(0, thd, (void *)i + 1);
 
     /* Put the main thread through the same tests as thread 0. */
-    if((int)thd((void*) 0) == -1) {
+    ret = (int)thd((void *)0);
+    printf("Thread[0] returned: %d\n", ret);
+    
+    if(ret == -1)
         result = -1;
-    }
 
     /* Wait for each thread to return with its test result. */
     for(i = 0; i < thread_count; i++) {
-        int ret = (int) thd_join(threads[i], NULL);
-        printf("Thread[%d] Returned: %d\n", i + 1, ret);
-        if(ret == -1) 
+        int res = thd_join(threads[i], (void**)&ret);
+
+        if(res < 0) {
+            fprintf(stderr, "Thread[%d] failed to join: %d\n", i + 1, res);
             result = -1;
+        }
+        else {
+            printf("Thread[%d] returned: %d\n", i + 1, ret);
+            
+            if(ret == -1) 
+                result = -1;
+        }
     }
     
     printf("Threads Finished!\n");
 
-    if(result == -1)
+    if(result == -1) {
         fprintf(stderr, "\n\n***** TLS TEST FAILED! *****\n\n");
-    else 
+        return EXIT_FAILURE;
+    }
+    else {
         printf("\n\n***** TLS TEST SUCCESS! *****\n\n");
-    
-    return result == -1 ? EXIT_FAILURE : EXIT_SUCCESS;
+        return EXIT_SUCCESS;
+    }
 }
