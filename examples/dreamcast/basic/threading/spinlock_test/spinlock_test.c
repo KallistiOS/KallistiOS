@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
        and that the lock_counter was incremented twice for every 
        thread, plus 2 more for the main thread. 
     */
-    if(!join_error && lock_counter != (thread_count + 1) * 2) {
+    if(join_error || lock_counter != (thread_count + 1) * 2) {
         fprintf(stderr, "\n\n***** SPINLOCK TEST FAILED! *****\n\n");
         return EXIT_FAILURE;
     }
