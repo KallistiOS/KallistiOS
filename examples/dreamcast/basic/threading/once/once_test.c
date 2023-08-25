@@ -1,11 +1,11 @@
 /* KallistiOS ##version##
 
    once_test.c
-   Copyright (C) 2009 Lawrence Sebald
+   Copyright (C) 2009, 2023 Lawrence Sebald
 
 */
 
-/* This program is a test for the kthread_once_t type added in KOS 1.3.0. A once
+/* This program is a test for the kthread_once_t type added in KOS 2.0.0. A once
    object is used with the kthread_once function to ensure that an initializer
    function is only run once in a program (meaning multiple threads will not run
    the function. */
@@ -15,6 +15,7 @@
 #include <kos/once.h>
 
 #include <arch/arch.h>
+#include <arch/spinlock.h>
 #include <dc/maple.h>
 #include <dc/maple/controller.h>
 
@@ -22,10 +23,13 @@
 #define THD_COUNT 600
 
 kthread_once_t once = KTHREAD_ONCE_INIT;
+spinlock_t lock = SPINLOCK_INITIALIZER;
 int counter = 0;
 
 void once_func(void) {
+    spinlock_lock(&lock);
     ++counter;
+    spinlock_unlock(&lock);
 }
 
 void *thd_func(void *param UNUSED) {

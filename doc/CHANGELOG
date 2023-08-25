@@ -182,6 +182,8 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - *** Added clock_gettime(), clock_settime(), clock_getres() [FG]
 - DC  Refactored controller API, added capability groups and types [FG]
 - DC  VMU driver update for date/time, buttons, buzzer, and docs [FG]
+- DC  Add spinlock_trylock macro [LS]
+- *** Simplify kthread_once_t into a simple variable rather than a struct [LS]
 - *** Added toolchain and KOS support for C/C++ compiler-level TLS [CP && FG]
 
 KallistiOS version 2.0.0 -----------------------------------------------
