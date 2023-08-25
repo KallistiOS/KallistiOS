@@ -42,7 +42,7 @@ static spinlock_t lock = SPINLOCK_INITIALIZER;
    Calculates the Nth Fibonacci number. 
    Lets give the threads something to do while they wait!
 */
-static int fib(int n){
+static int fib(int n) {
     if (n <= 1)
         return n;
 
