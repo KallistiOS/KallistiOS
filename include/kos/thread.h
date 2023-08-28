@@ -386,7 +386,7 @@ kthread_t *thd_create(int detach, void *(*routine)(void *param), void *param);
 
     \sa thd_create, thd_destroy
 */
-kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
+kthread_t *thd_create_ex(const kthread_attr_t *__RESTRICT attr,
                          void *(*routine)(void *param), void *param);
 
 /** \brief       Brutally kill the given thread.
@@ -520,7 +520,7 @@ const char *thd_get_label(kthread_t *thd);
 
     \sa thd_get_label
 */
-void thd_set_label(kthread_t *thd, const char *restrict label);
+void thd_set_label(kthread_t *thd, const char *__RESTRICT label);
 
 /** \brief       Retrieve the thread's current working directory.
     \ingroup     threads
@@ -553,7 +553,7 @@ const char *thd_get_pwd(kthread_t *thd);
 
     \sa thd_get_pwd
 */
-void thd_set_pwd(kthread_t *thd, const char *restrict pwd);
+void thd_set_pwd(kthread_t *thd, const char *__RESTRICT pwd);
 
 /** \brief       Retrieve a pointer to the thread errno.
     \ingroup     threads
