@@ -184,7 +184,7 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - DC  VMU driver update for date/time, buttons, buzzer, and docs [FG]
 - DC  Add spinlock_trylock macro [LS]
 - *** Simplify kthread_once_t into a simple variable rather than a struct [LS]
-- *** Simplify sync primivitve structures to remove initialized member [LS]
+- *** Simplify sync primitive structures to remove initialized member [LS]
 
 KallistiOS version 2.0.0 -----------------------------------------------
 - DC  Broadband Adapter driver fixes [Megan Potter == MP]
