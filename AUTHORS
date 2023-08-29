@@ -51,26 +51,6 @@ Paul Cercueil: 2023, 2024, 2025
 
 Files with Specific licenses:
 -----------------------------
-include/pthread.h:
-/*  pthread.h
- *
- *  Written by Joel Sherrill <joel@OARcorp.com>.
- *
- *  COPYRIGHT (c) 1989-2000.
- *  On-Line Applications Research Corporation (OAR).
- *
- *  Permission to use, copy, modify, and distribute this software for any
- *  purpose without fee is hereby granted, provided that this entire notice
- *  is included in all copies of any software which is or includes a copy
- *  or modification of this software.
- *
- *  THIS SOFTWARE IS BEING PROVIDED "AS IS", WITHOUT ANY EXPRESS OR IMPLIED
- *  WARRANTY.  IN PARTICULAR,  THE AUTHOR MAKES NO REPRESENTATION
- *  OR WARRANTY OF ANY KIND CONCERNING THE MERCHANTABILITY OF THIS
- *  SOFTWARE OR ITS FITNESS FOR ANY PARTICULAR PURPOSE.
- *
- */
-
 kernel/arch/dreamcast/kernel/gdb_stub.c:
 /*   This is originally based on an m68k software stub written by Glenn
      Engel at HP, but has changed quite a bit.

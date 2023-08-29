@@ -210,6 +210,13 @@ forward, at least GCC 4.7.4 is required for building KOS. The GCC patches for
 4.x improved/cleaned up building with KOS a lot, and I doubt there's many good
 reasons to keep around support for the old patches with GCC 3.x.
 
+POSIX threading (pthreads) support has been moved out of the kernel and into
+its own addon library (libpthread). This support has been vastly improved and is
+much more complete and standard-compliant than it was before. It still isn't
+100% POSIX-compliant by any means, but it's a lot closer than it was. There is
+no guarantee that this will work with GCC's `--enable-threads=posix`, as that
+configuration is not tested/supported any longer in dc-chain.
+
 
 RELEASE NOTES for 2.0.0
 -----------------------
