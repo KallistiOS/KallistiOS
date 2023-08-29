@@ -36,7 +36,7 @@ OBJS += pthread_key_create.o pthread_key_delete.o pthread_getspecific.o \
 # Mutexes
 OBJS += pthread_mutex_init.o pthread_mutex_destroy.o pthread_mutex_lock.o \
         pthread_mutex_trylock.o pthread_mutex_timedlock.o \
-        pthread_mutex_consistent.o \
+        pthread_mutex_unlock.o pthread_mutex_consistent.o \
         pthread_mutexattr_init.o pthread_mutexattr_destroy.o \
         pthread_mutexattr_settype.o pthread_mutexattr_gettype.o \
         pthread_mutexattr_setrobust.o pthread_mutexattr_getrobust.o
