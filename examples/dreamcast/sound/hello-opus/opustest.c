@@ -15,6 +15,7 @@
 #include <dc/sound/stream.h>
 
 #include <kos/init.h>
+#include <kos/thread.h>
 
 #include <opusplay/opusplay.h>
 
