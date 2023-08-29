@@ -24,55 +24,6 @@ struct sched_param {
     int sched_priority;           /**< \brief Process execution scheduling priority */
 };
 
-// And all this maps pthread types to KOS types for pthread.h.
-#include <kos/thread.h>
-#include <kos/sem.h>
-#include <kos/cond.h>
-#include <kos/mutex.h>
-#include <kos/tls.h>
-#include <kos/once.h>
-
-// Missing structs we don't care about in this impl.
-/** \brief  POSIX mutex attributes.
-
-    Not implemented in KOS.
-
-    \headerfile sys/sched.h
-*/
-typedef struct {
-    // Empty
-} pthread_mutexattr_t;
-
-/** \brief  POSIX condition variable attributes.
-
-    Not implemented in KOS.
-
-    \headerfile sys/sched.h
-*/
-typedef struct {
-    // Empty
-} pthread_condattr_t;
-
-/** \brief  POSIX thread attributes.
-
-    Not implemented in KOS.
-
-    \headerfile sys/sched.h
-*/
-typedef struct {
-    // Empty
-} pthread_attr_t;
-
-// Map over KOS types. The mutex/condvar maps have to be pointers
-// because we allow _INIT #defines to work.
-typedef kthread_t * pthread_t;      /**< \brief POSIX thread type */
-typedef mutex_t pthread_mutex_t;    /**< \brief POSIX mutex type */
-typedef condvar_t pthread_cond_t;   /**< \brief POSIX condition type */
-
-// These, on the other hand, map right over.
-typedef kthread_once_t pthread_once_t;  /**< \brief POSIX once control */
-typedef kthread_key_t pthread_key_t;    /**< \brief POSIX thread data key */
-
 __END_DECLS
 
 #endif  /* __SYS_SCHED_H */
