@@ -17,6 +17,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <assert.h>
@@ -27,7 +28,24 @@
 /* Condvar/mutex used for timing below */
 pthread_mutex_t mut = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cv = PTHREAD_COND_INITIALIZER;
+pthread_rwlock_t rw = PTHREAD_RWLOCK_INITIALIZER;
 volatile int cv_ready = 0, cv_cnt = 0, cv_quit = 0;
+
+void *mut_thd(void *v) {
+    int r;
+    printf("Thread %d: Started\n", (int)v);
+
+    pthread_mutex_lock(&mut);
+    printf("Thread %d: Acquired the lock\n", (int)v);
+
+    r = rand() % 5;
+    printf("Thread %d: Sleeping for %d seconds\n", (int)v, r);
+    sleep(r);
+    printf("Thread %d: Woke up, releasing lock\n", (int)v);
+
+    pthread_mutex_unlock(&mut);
+    return NULL;
+}
 
 /* This routine will be started N times for the condvar testing */
 void *cv_thd(void *v) {
@@ -56,6 +74,38 @@ void *cv_thd(void *v) {
     return NULL;
 }
 
+void *rd_thd(void *v) {
+    int r;
+    printf("Thread %d: Started\n", (int)v);
+
+    pthread_rwlock_rdlock(&rw);
+    printf("Thread %d: Acquired the read lock\n", (int)v);
+
+    r = rand() % 5;
+    printf("Thread %d: Sleeping for %d seconds\n", (int)v, r);
+    sleep(r);
+    printf("Thread %d: Woke up, releasing read lock\n", (int)v);
+
+    pthread_rwlock_unlock(&rw);
+    return NULL;
+}
+
+void *wr_thd(void *v) {
+    int r;
+    printf("Thread %d: Started\n", (int)v);
+
+    pthread_rwlock_wrlock(&rw);
+    printf("Thread %d: Acquired the write lock\n", (int)v);
+
+    r = rand() % 3;
+    printf("Thread %d: Sleeping for %d seconds\n", (int)v, r);
+    sleep(r);
+    printf("Thread %d: Woke up, releasing write lock\n", (int)v);
+
+    pthread_rwlock_unlock(&rw);
+    return NULL;
+}
+
 /* The main program */
 int main(int argc, char **argv) {
     int x, y, i;
@@ -72,11 +122,23 @@ int main(int argc, char **argv) {
         for(x = 320; x < 640; x++)
             vram_s[y * 640 + x] = ((x * x) + (y * y)) & 0x1f;
 
-    printf("\n\nCondvar test; starting threads\n");
     printf("Main thread is %p\n", (void *)pthread_self());
 
-    for(i = 0; i < 10; i++) {
-        assert(pthread_create(&cvt[i], NULL, cv_thd, (void *)i));
+    printf("Starting mutex test...\n");
+    for(i = 0; i < 5; ++i) {
+        pthread_create(&cvt[i], NULL, mut_thd, (void *)i);
+        printf("Thread %d is %p\n", i, (void *)cvt[i]);
+    }
+
+    printf("Waiting for threads to return...\n");
+    for(i = 0; i < 5; i++)
+        pthread_join(cvt[i], NULL);
+
+    printf("Completed mutex test...\n");
+
+    printf("Starting condvar test...\n");
+    for(i = 0; i < 10; ++i) {
+        pthread_create(&cvt[i], NULL, cv_thd, (void *)i);
         printf("Thread %d is %p\n", i, (void *)cvt[i]);
     }
 
@@ -120,11 +182,29 @@ int main(int argc, char **argv) {
     pthread_cond_broadcast(&cv);
     pthread_mutex_unlock(&mut);
 
+    printf("Waiting for threads to return...\n");
     for(i = 0; i < 10; i++)
         pthread_join(cvt[i], NULL);
 
-    /* Shut it all down */
-    printf("Done.\n");
+    printf("Completed condvar test...\n");
+
+    printf("Starting rwlock test...\n");
+    for(i = 0; i < 10; ++i) {
+        if(i % 2) {
+            pthread_create(&cvt[i], NULL, rd_thd, (void *)i);
+            printf("Thread %d (read) is %p\n", i, (void *)cvt[i]);
+        }
+        else {
+            pthread_create(&cvt[i], NULL, wr_thd, (void *)i);
+            printf("Thread %d (write) is %p\n", i, (void *)cvt[i]);
+        }
+    }
+
+    printf("Waiting for threads to return...\n");
+    for(i = 0; i < 10; i++)
+        pthread_join(cvt[i], NULL);
+
+    printf("Completed rwlock test...\n");
 
     return 0;
 }
