@@ -31,6 +31,19 @@ pthread_cond_t cv = PTHREAD_COND_INITIALIZER;
 pthread_rwlock_t rw = PTHREAD_RWLOCK_INITIALIZER;
 volatile int cv_ready = 0, cv_cnt = 0, cv_quit = 0;
 
+void *filler_thd(void *v) {
+    int x, y;
+
+    printf("Filler thread started\n");
+
+    for(y = 0; y < 480; y++)
+        for(x = 0; x < 320; x++)
+            vram_s[y * 640 + x] = (((x * x) + (y * y)) & 0x1f) << 6;
+
+    printf("Filler thread finished\n");
+    return NULL;
+}
+
 void *mut_thd(void *v) {
     int r;
     printf("Thread %d: Started\n", (int)v);
@@ -109,7 +122,8 @@ void *wr_thd(void *v) {
 /* The main program */
 int main(int argc, char **argv) {
     int x, y, i;
-    pthread_t cvt[10];
+    pthread_t cvt[10], filler;
+    pthread_attr_t attr;
 
     cont_btn_callback(0, CONT_START | CONT_A | CONT_B | CONT_X | CONT_Y,
                       (cont_btn_callback_t)arch_exit);
@@ -123,6 +137,11 @@ int main(int argc, char **argv) {
             vram_s[y * 640 + x] = ((x * x) + (y * y)) & 0x1f;
 
     printf("Main thread is %p\n", (void *)pthread_self());
+
+    printf("Creating detached thread to fill in left half of screen\n");
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    pthread_create(&filler, &attr, filler_thd, NULL);
 
     printf("Starting mutex test...\n");
     for(i = 0; i < 5; ++i) {

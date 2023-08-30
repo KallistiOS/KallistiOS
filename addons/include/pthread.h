@@ -64,7 +64,7 @@ extern void pthread_exit(void *value_ptr);
 extern int pthread_join(pthread_t thread, void **value_ptr);
 extern pthread_t pthread_self(void);
 extern int pthread_getname_np(pthread_t thread, char *buf, size_t buflen);
-extern int pthread_setname_np(pthread_t thread, const char *buf); 
+extern int pthread_setname_np(pthread_t thread, const char *buf);
 
 /* Thread attributes */
 extern int pthread_attr_init(pthread_attr_t *attr);
@@ -72,7 +72,7 @@ extern int pthread_attr_destroy(pthread_attr_t *attr);
 
 extern int pthread_attr_getdetachstate(const pthread_attr_t *attr,
                                        int *detachstate);
-extern int pthread_attr_setdetatchstate(pthread_attr_t *attr, int detachstate);
+extern int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate);
 
 extern int pthread_attr_getguardsize(const pthread_attr_t *__RESTRICT attr,
                                      size_t *__RESTRICT guardsize);
