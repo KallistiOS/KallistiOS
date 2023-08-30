@@ -2,8 +2,7 @@
 #
 # basic/threading/spinlock_test/Makefile
 #
-# (c) 2023 Lawrence Sebald
-# (c) 2023 Falco Girgis
+# Copyright (C) 2023 Falco Girgis
 #
 
 TARGET = spinlock_test.elf

@@ -2,8 +2,7 @@
 
    spinlock_test.c
 
-   (c) 2023 Lawrence Sebald
-   (c) 2023 Falco Girgis
+   Copyright (C) 2023 Falco Girgis
 
     This file is a simple example of the different 
     ways in which to use a spinlock. It serves two 
@@ -58,7 +57,7 @@ static int fib(int n) {
 */
 void *thd(void *v) {
     unsigned tid = (unsigned)v;
-    unsigned fibres=0, fibn=0;
+    unsigned fibres = 0, fibn = 0;
 
     /* Continue calling spinlock_trylock() until eventually 
        locking succeeds. */
@@ -66,7 +65,7 @@ void *thd(void *v) {
         print("Thread[%u] still trying the lock!\n", tid);
         /* We can do something else while we wait! */
         fibres = fib(fibn++);
-        /* Optionally let the other threads have some time too. */
+        /* Let the other threads have some time too. */
         thd_pass();
     }
 
@@ -102,7 +101,7 @@ void *thd(void *v) {
 
     /* Return how far we got into the Fibonacci sequence
        while we waited for the lock. */
-    return (void*)(fibn - 1);
+    return (void *)(fibn - 1);
 }
 
 int main(int argc, char **argv) {
@@ -115,8 +114,8 @@ int main(int argc, char **argv) {
 
     /* Kick off a number of threads to all compete for our spinlock. */
     for (i = 0; i < thread_count; i++) {
-        threads[i] = thd_create(0, thd, (void *) i + 1);
-    };
+        threads[i] = thd_create(0, thd, (void *)(i + 1));
+    }
 
     /* Perform the same logic for the main thread. */
     thd((void*)0);
