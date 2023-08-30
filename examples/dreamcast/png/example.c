@@ -211,7 +211,7 @@ void draw_frame(void) {
 extern uint8 romdisk[];
 KOS_INIT_ROMDISK(romdisk);
 
-int main(void) {
+int main(int argc, char **argv) {
     int done = 0;
 
     /* init kos  */
