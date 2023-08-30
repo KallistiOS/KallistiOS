@@ -83,7 +83,7 @@ static kthread_t *thd_idle_thd = NULL;
 /*****************************************************************************/
 /* Debug */
 
-static const char *thd_state_to_str(kthread_t * thd) {
+static const char *thd_state_to_str(kthread_t *thd) {
     switch(thd->state) {
         case STATE_ZOMBIE:
             return "zombie";
@@ -105,7 +105,7 @@ static const char *thd_state_to_str(kthread_t * thd) {
     }
 }
 
-int thd_each(int (*cb)(kthread_t* thd, void* user_data), void* data) {
+int thd_each(int (*cb)(kthread_t *thd, void *user_data), void *data) {
     kthread_t *cur;
 
     LIST_FOREACH(cur, &thd_list, t_list) {
@@ -241,7 +241,7 @@ static void *thd_reaper(void *param) {
 /* Thread execution wrapper; when the thd_create function below
    adds a new thread to the thread chain, this function is the one
    that gets called in the new context. */
-static void thd_birth(void * (*routine)(void *param), void *param) {
+static void thd_birth(void *(*routine)(void *param), void *param) {
     /* Call the thread function */
     void *rv = routine(param);
 
@@ -419,8 +419,8 @@ static void* thd_create_tls_data(void) {
 /* New thread function; given a routine address, it will create a
    new kernel thread with the given attributes. When the routine
    returns, the thread will exit. Returns the new thread struct. */
-kthread_t *thd_create_ex(kthread_attr_t *attr, void * (*routine)(void *param),
-                         void *param) {
+kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
+                         void *(*routine)(void *param), void *param) {
     kthread_t *nt = NULL;
     tid_t tid;
     uint32_t params[4];
@@ -724,7 +724,7 @@ void thd_schedule_next(kthread_t *thd) {
 }
 
 /* See kos/thread.h for description */
-irq_context_t * thd_choose_new(void) {
+irq_context_t *thd_choose_new(void) {
     uint64_t now = timer_ms_gettime64();
 
     //printf("thd_choose_new() woken at %d\n", (uint32_t)now);
@@ -762,7 +762,8 @@ static void thd_timer_hnd(irq_context_t *context) {
 void thd_sleep(int ms) {
     /* This should never happen. This should, perhaps, assert. */
     if(thd_mode == THD_MODE_NONE) {
-        dbglog(DBG_WARNING, "thd_sleep called when threading not initialized.\n");
+        dbglog(DBG_WARNING, "thd_sleep called when threading not "
+               "initialized.\n");
         timer_spin_sleep(ms);
         return;
     }
@@ -792,7 +793,7 @@ void thd_pass(void) {
 }
 
 /* Wait for a thread to exit */
-int thd_join(kthread_t * thd, void **value_ptr) {
+int thd_join(kthread_t *thd, void **value_ptr) {
     int old, rv;
     kthread_t * t = NULL;
 
@@ -801,9 +802,9 @@ int thd_join(kthread_t * thd, void **value_ptr) {
         return -1;
 
     if((rv = irq_inside_int())) {
-        dbglog(DBG_WARNING, "thd_join(%p) called inside an interrupt with code: %x evt: %.4x\n",
-               (void *)thd,
-               ((rv>>16) & 0xf), (rv & 0xffff));
+        dbglog(DBG_WARNING, "thd_join(%p) called inside an interrupt with "
+               "code: %x evt: %.4x\n", (void *)thd, ((rv >> 16) & 0xf),
+               (rv & 0xffff));
         return -1;
     }
 
@@ -820,7 +821,7 @@ int thd_join(kthread_t * thd, void **value_ptr) {
     if(t != thd) {
         rv = -2;
     }
-    else if(thd->flags & THD_DETACHED) {
+    else if((thd->flags & THD_DETACHED)) {
         /* Can't join a detached thread */
         rv = -3;
     }
@@ -890,7 +891,7 @@ const char *thd_get_label(kthread_t *thd) {
     return thd->label;
 }
 
-void thd_set_label(kthread_t *thd, const char *label) {
+void thd_set_label(kthread_t *thd, const char *restrict label) {
     strncpy(thd->label, label, sizeof(thd->label) - 1);
 }
 
@@ -904,15 +905,15 @@ const char *thd_get_pwd(kthread_t *thd) {
     return thd->pwd;
 }
 
-void thd_set_pwd(kthread_t *thd, const char *pwd) {
+void thd_set_pwd(kthread_t *thd, const char *restrict pwd) {
     strncpy(thd->pwd, pwd, sizeof(thd->pwd) - 1);
 }
 
-int * thd_get_errno(kthread_t * thd) {
+int *thd_get_errno(kthread_t *thd) {
     return &thd->thd_errno;
 }
 
-struct _reent * thd_get_reent(kthread_t *thd) {
+struct _reent *thd_get_reent(kthread_t *thd) {
     return &thd->thd_reent;
 }
 
@@ -920,9 +921,8 @@ struct _reent * thd_get_reent(kthread_t *thd) {
 
 /* Change threading modes */
 int thd_set_mode(int mode) {
-
-    dbglog(DBG_WARNING, "thd_set_mode has no effect. Cooperative threading \
-        mode is deprecated. KOS is always in pre-emptive threading mode. \n");
+    dbglog(DBG_WARNING, "thd_set_mode() has no effect. Cooperative threading "
+           "mode is deprecated. Threading is always in preemptive mode.\n");
 
     return mode;
 }

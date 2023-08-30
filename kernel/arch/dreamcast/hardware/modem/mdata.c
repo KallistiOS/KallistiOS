@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    mdata.c
-   Copyright (C)2002, 2004 Nick Kochakian
+   Copyright (C) 2002, 2004 Nick Kochakian
 
    Distributed under the terms of the KOS license.
 */
@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <kos/dbglog.h>
+#include <kos/thread.h>
 #include <assert.h>
 #include <dc/modem/modem.h>
 #include "mintern.h"

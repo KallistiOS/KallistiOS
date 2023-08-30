@@ -64,7 +64,7 @@ __BEGIN_DECLS
     thd_detach()). The old KOS threading system only had what would be
     considered detached threads.
 
-    \sa semaphore_t, mutex_t, kthread_once_t, kthread_key_t
+    \sa semaphore_t, mutex_t, kthread_once_t, kthread_key_t, rw_semaphore_t
 */
 
 /** \brief   Maximal thread priority.
@@ -153,11 +153,11 @@ typedef struct kthread {
 
     /** \brief  Generic wait target, if waiting.
         \see    kos/genwait.h   */
-    void * wait_obj;
+    void *wait_obj;
 
     /** \brief  Generic wait message, if waiting.
         \see    kos/genwait.h   */
-    const char * wait_msg;
+    const char *wait_msg;
 
     /** \brief  Wait timeout callback.
 
@@ -166,7 +166,7 @@ typedef struct kthread {
 
         \param  obj         The object that we were waiting on.
     */
-    void (*wait_callback)(void * obj);
+    void (*wait_callback)(void *obj);
 
     /** \brief  Next scheduled time.
         This value is used for sleep and timed block operations. This value is
@@ -271,7 +271,7 @@ typedef struct kthread_attr {
 /** \defgroup thd_modes             Threading system modes
     \ingroup  threads
 
-    The threading system will always be in one of the following modes. This 
+    The threading system will always be in one of the following modes. This
     represents either pre-emptive scheduling or an un-initialized state.
 
     @{
@@ -306,7 +306,7 @@ extern kthread_t *thd_current;
 
     \return                 Whatever the unblocker deems necessary to return.
 */
-int thd_block_now(irq_context_t * mycxt);
+int thd_block_now(irq_context_t *mycxt);
 
 /** \brief   Find a new thread to swap in.
     \ingroup threads
@@ -321,7 +321,7 @@ int thd_block_now(irq_context_t * mycxt);
 
     \return                 The IRQ context of the thread selected.
 */
-irq_context_t * thd_choose_new(void);
+irq_context_t *thd_choose_new(void);
 
 /** \brief       Given a thread ID, locates the thread structure.
     \ingroup     threads
@@ -384,7 +384,7 @@ int thd_remove_from_runnable(kthread_t *thd);
 
     \sa thd_create_ex, thd_destroy
 */
-kthread_t *thd_create(int detach, void * (*routine)(void *param), void *param);
+kthread_t *thd_create(int detach, void *(*routine)(void *param), void *param);
 
 /** \brief   Create a new thread with the specified set of attributes.
     \ingroup threads
@@ -402,8 +402,8 @@ kthread_t *thd_create(int detach, void * (*routine)(void *param), void *param);
 
     \sa thd_create, thd_destroy
 */
-kthread_t *thd_create_ex(kthread_attr_t *attr, void *(*routine)(void *),
-                         void *param);
+kthread_t *thd_create_ex(const kthread_attr_t *__RESTRICT attr,
+                         void *(*routine)(void *param), void *param);
 
 /** \brief       Brutally kill the given thread.
     \ingroup     threads
@@ -438,7 +438,7 @@ void thd_exit(void *rv) __noreturn;
     \ingroup threads
 
     This function is the thread scheduler, and is generally called from a timer
-    interrupt. You will most likely never have a reason to call this function 
+    interrupt. You will most likely never have a reason to call this function
     directly.
 
     For most cases, you'll want to set front_of_line to zero, but read the
@@ -536,7 +536,7 @@ const char *thd_get_label(kthread_t *thd);
 
     \sa thd_get_label
 */
-void thd_set_label(kthread_t *thd, const char *label);
+void thd_set_label(kthread_t *thd, const char *__RESTRICT label);
 
 /** \brief       Retrieve the thread's current working directory.
     \ingroup     threads
@@ -569,7 +569,7 @@ const char *thd_get_pwd(kthread_t *thd);
 
     \sa thd_get_pwd
 */
-void thd_set_pwd(kthread_t *thd, const char *pwd);
+void thd_set_pwd(kthread_t *thd, const char *__RESTRICT pwd);
 
 /** \brief       Retrieve a pointer to the thread errno.
     \ingroup     threads
@@ -582,7 +582,7 @@ void thd_set_pwd(kthread_t *thd, const char *pwd);
 
     \return                 A pointer to the thread's errno.
 */
-int * thd_get_errno(kthread_t *thd);
+int *thd_get_errno(kthread_t *thd);
 
 /** \brief       Retrieve a pointer to the thread reent struct.
     \ingroup     threads
@@ -595,7 +595,7 @@ int * thd_get_errno(kthread_t *thd);
 
     \return                 The thread's reent struct.
 */
-struct _reent * thd_get_reent(kthread_t *thd);
+struct _reent *thd_get_reent(kthread_t *thd);
 
 /** \brief   Change threading modes.
     \ingroup threads
@@ -611,7 +611,7 @@ struct _reent * thd_get_reent(kthread_t *thd);
 
     \sa thd_get_mode
 */
-int thd_set_mode(int mode) __attribute__((deprecated));
+int thd_set_mode(int mode) __deprecated;
 
 /** \brief   Fetch the current threading mode.
     \ingroup threads
@@ -625,7 +625,7 @@ int thd_set_mode(int mode) __attribute__((deprecated));
 
     \sa thd_set_mode
 */
-int thd_get_mode(void) __attribute__((deprecated));
+int thd_get_mode(void) __deprecated;
 
 /** \brief       Wait for a thread to exit.
     \ingroup     threads
@@ -644,7 +644,7 @@ int thd_get_mode(void) __attribute__((deprecated));
 
     \sa thd_detach
 */
-int thd_join(kthread_t * thd, void **value_ptr);
+int thd_join(kthread_t *thd, void **value_ptr);
 
 /** \brief       Detach a joinable thread.
     \ingroup     threads
@@ -673,7 +673,7 @@ int thd_detach(kthread_t *thd);
 
     \sa thd_pslist
 */
-int thd_each(int (*cb)(kthread_t* thd, void* user_data), void* data);
+int thd_each(int (*cb)(kthread_t *thd, void *user_data), void *data);
 
 /** \brief   Print a list of all threads using the given print function.
     \ingroup threads

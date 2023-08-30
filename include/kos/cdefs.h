@@ -115,4 +115,18 @@
 /* GCC macros for special cases */
 /* #if __GNUC__ ==  */
 
+#ifndef __RESTRICT
+#if (__STDC_VERSION__ >= 199901L)
+#define __RESTRICT restrict
+#elif defined(__GNUC__) || defined(__GNUG__)
+#define __RESTRICT __restrict__
+#else /* < C99 and not GCC */
+#define __RESTRICT
+#endif
+#endif /* !__RESTRICT */
+
+#ifndef __GNUC__
+#define __extension__
+#endif
+
 #endif  /* __KOS_CDEFS_H */

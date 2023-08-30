@@ -184,6 +184,8 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - DC  VMU driver update for date/time, buttons, buzzer, and docs [FG]
 - DC  Add spinlock_trylock macro [LS]
 - *** Simplify kthread_once_t into a simple variable rather than a struct [LS]
+- *** Simplify sync primitive structures to remove initialized member [LS]
+- *** Move definition of __RESTRICT from <sys/_types.h> to <kos/cdefs.h> [LS]
 - *** Added toolchain and KOS support for C/C++ compiler-level TLS [CP && FG]
 
 KallistiOS version 2.0.0 -----------------------------------------------

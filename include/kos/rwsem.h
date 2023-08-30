@@ -40,8 +40,8 @@ __BEGIN_DECLS
     \headerfile kos/rwsem.h
 */
 typedef struct rw_semaphore {
-    /** \brief  Are we initialized? */
-    int initialized;
+    /** \brief  Was this structure created with rwsem_create()? */
+    int dynamic;
 
     /** \brief  The number of readers that are currently holding the lock. */
     int read_count;
@@ -54,7 +54,7 @@ typedef struct rw_semaphore {
 } rw_semaphore_t;
 
 /** \brief  Initializer for a transient reader/writer semaphore */
-#define RWSEM_INITIALIZER   { 1, 0, NULL, NULL }
+#define RWSEM_INITIALIZER   { 0, 0, NULL, NULL }
 
 /** \brief  Allocate a reader/writer semaphore.
 
