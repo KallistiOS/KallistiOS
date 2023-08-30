@@ -142,6 +142,7 @@ int main(int argc, char **argv) {
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
     pthread_create(&filler, &attr, filler_thd, NULL);
+    pthread_attr_destroy(&attr);
 
     printf("Starting mutex test...\n");
     for(i = 0; i < 5; ++i) {
