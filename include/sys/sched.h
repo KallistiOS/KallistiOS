@@ -7,7 +7,7 @@
 #ifndef __SYS_SCHED_H
 #define __SYS_SCHED_H
 
-#include <kos/cdefs.h>
+#include <sys/cdefs.h>
 __BEGIN_DECLS
 
 // These are copied from Newlib to make stuff compile as expected.
