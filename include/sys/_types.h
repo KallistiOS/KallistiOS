@@ -15,7 +15,7 @@ __BEGIN_DECLS
 
 #include <sys/lock.h>
 #include <newlib.h>
-#include <sys/_pthread_types.h>
+#include <sys/_pthreadtypes.h>
 
 /** \addtogroup system_types
     @{

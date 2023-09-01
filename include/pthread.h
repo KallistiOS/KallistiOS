@@ -25,7 +25,7 @@
 
 #include <sys/cdefs.h>
 #include <sys/features.h>
-#include <sys/_pthread_types.h>
+#include <sys/_pthreadtypes.h>
 
 #include <sched.h>
 #include <time.h>

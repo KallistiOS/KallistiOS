@@ -1,12 +1,12 @@
 /* KallistiOS ##version##
 
-   sys/_pthread_types.h
+   sys/_pthreadtypes.h
    Copyright (C) 2023 Lawrence Sebald
 
 */
 
-#ifndef __SYS_PTHREAD_TYPES_H
-#define __SYS_PTHREAD_TYPES_H
+#ifndef __SYS_PTHREADTYPES_H
+#define __SYS_PTHREADTYPES_H
 
 typedef unsigned long int pthread_t;
 
@@ -74,4 +74,4 @@ typedef union pthread_rwlock_t {
 #undef __PTHREAD_RWLOCK_SIZE
 #endif /* !__PTHREAD_HAVE_RWLOCK_TYPE */
 
-#endif /* !__SYS_PTHREAD_TYPES_H */
+#endif /* !__SYS_PTHREADTYPES_H */
