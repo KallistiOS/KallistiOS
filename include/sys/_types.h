@@ -202,9 +202,6 @@ typedef _CLOCK_T_   __clock_t;
 /* This is for old KOS source compatibility. */
 #include <arch/types.h>
 
-/* Include stuff to make pthreads work as well. */
-#include <sys/_pthread.h>
-
 #if __GNUC_MINOR__ > 95 || __GNUC__ >= 3
 typedef __builtin_va_list   __va_list;
 #else
