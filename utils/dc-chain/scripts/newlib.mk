@@ -43,6 +43,7 @@ fixup-sh4-newlib-apply: fixup-sh4-newlib-init
 # kos/thread.h requires arch/irq.h
 	cp $(kos_base)/include/pthread.h $(newlib_inc)
 	cp $(kos_base)/include/sys/_pthreadtypes.h $(newlib_inc)/sys
+	cp $(kos_base)/include/sys/_pthread.h $(newlib_inc)/sys
 	cp $(kos_base)/include/sys/sched.h $(newlib_inc)/sys
 ifndef MINGW32
 	ln -nsf $(kos_base)/include/kos $(newlib_inc)

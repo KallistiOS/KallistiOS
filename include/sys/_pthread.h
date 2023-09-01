@@ -1,17 +1,13 @@
 /** \file   sys/_pthread.h
-    \brief  Basic sys/_pthread.h file for newlib.
+    \brief  Basic sys/_pthread.h file for older versions of newlib.
 
-    This file specifies a few things to make sure pthreads stuff compiles.
+    This file ensures that the various pthread types get defined for older
+    versions of Newlib that use this file instead of <sys/_pthreadtypes.h>.
 */
 
 #ifndef __SYS__PTHREAD_H
 #define __SYS__PTHREAD_H
 
-/* Make sure pthreads compile ok. */
-/** \brief  POSIX threads supported (sorta) */
-#define _POSIX_THREADS
-
-/** \brief  POSIX timeouts supported (sorta) */
-#define _POSIX_TIMEOUTS
+#include <sys/_pthreadtypes.h>
 
 #endif  /* __SYS__PTHREAD_H */
