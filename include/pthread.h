@@ -63,8 +63,17 @@ int pthread_equal(pthread_t t1, pthread_t t2);
 void pthread_exit(void *value_ptr);
 int pthread_join(pthread_t thread, void **value_ptr);
 pthread_t pthread_self(void);
+int pthread_setschedprio(pthread_t thread, int prio);
+
+#if __GNU_VISIBLE || __BSD_VISIBLE
 int pthread_getname_np(pthread_t thread, char *buf, size_t buflen);
 int pthread_setname_np(pthread_t thread, const char *buf);
+#endif /* __GNU_VISIBLE || __BSD_VISIBLE */
+
+#if __BSD_VISIBLE
+int pthread_getprio(pthread_t thread);
+int pthread_setprio(pthread_t thread, int prio);
+#endif /* __BSD_VISIBLE */
 
 /* Thread attributes */
 int pthread_attr_init(pthread_attr_t *attr);
@@ -207,6 +216,12 @@ int pthread_getconcurrency(void);
 int pthread_setconcurrency(int new_level);
 int pthread_atfork(void (*prepare)(void), void (*parent)(void),
                    void (*child)(void));
+
+#if __GNU_VISIBLE || __BSD_VISIBLE
+/* Technically, the BSD prototype for this is to return void, not int.
+   Oh well... It always returns 0 anyway. */
+int pthread_yield(void);
+#endif /* __GNU_VISIBLE || __BSD_VISIBLE */
 
 __END_DECLS
 
