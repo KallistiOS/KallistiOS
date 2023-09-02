@@ -1719,7 +1719,7 @@ Void_t* public_mALLOc(size_t bytes) {
     m = (void *)(nt1 + BUFFER_SIZE / 4);
 
 #ifdef KM_DBG_VERBOSE
-    printf("Thread %d/%08lx allocated %d bytes at %08lx\n",
+    printf("Thread %d/%08lx allocated %lu bytes at %08lx\n",
            ctl->thread, ctl->addr, ctl->size, (uint32)m);
 #endif
 
@@ -2070,7 +2070,7 @@ Void_t* public_mEMALIGn(size_t alignment, size_t bytes) {
     assert(!((uint32)m % alignment));
 
 #ifdef KM_DBG_VERBOSE
-    printf("Thread %d/%08lx memalign allocated %d bytes at %08lx\n",
+    printf("Thread %d/%08lx memalign allocated %lu bytes at %08lx\n",
            ctl->thread, ctl->addr, ctl->size, (uint32)m);
 #endif
 
@@ -2145,7 +2145,7 @@ Void_t* public_cALLOc(size_t n, size_t elem_size) {
     memset(m, 0, bytes);
 
 #ifdef KM_DBG_VERBOSE
-    printf("Thread %d/%08lx calloc allocated %d bytes at %08lx\n",
+    printf("Thread %d/%08lx calloc allocated %lu bytes at %08lx\n",
            ctl->thread, ctl->addr, ctl->size, (uint32)m);
 #endif
 

@@ -106,7 +106,7 @@ pvr_ptr_t pvr_mem_malloc(size_t size) {
 #endif  /* PVR_KM_DBG */
 
 #ifdef PVR_KM_DBG_VERBOSE
-    printf("Thread %d/%08lx allocated %d bytes at %08lx\n",
+    printf("Thread %d/%08lx allocated %lu bytes at %08lx\n",
            ctl->thread, ctl->addr, ctl->size, rv32);
 #endif
 
@@ -157,8 +157,8 @@ void pvr_mem_print_list(void) {
 
     printf("pvr_mem_print_list block list:\n");
     LIST_FOREACH(ctl, &block_list, list) {
-        printf("  unfreed block at %08lx size %d, allocated by thread %d/%08lx\n",
-               ctl->block, ctl->size, ctl->thread, ctl->addr);
+        printf("  unfreed block at %08lx size %lu, allocated by thread %d/%08lx\n",
+               (unsigned long)ctl->block, ctl->size, ctl->thread, (unsigned long)ctl->addr);
     }
     printf("pvr_mem_print_list end block list\n");
 #endif  /* PVR_KM_DBG */
