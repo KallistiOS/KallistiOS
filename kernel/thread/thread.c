@@ -858,7 +858,7 @@ const char *thd_get_label(kthread_t *thd) {
     return thd->label;
 }
 
-void thd_set_label(kthread_t *thd, const char *restrict label) {
+void thd_set_label(kthread_t *__RESTRICT thd, const char *__RESTRICT label) {
     strncpy(thd->label, label, sizeof(thd->label) - 1);
 }
 
@@ -872,7 +872,7 @@ const char *thd_get_pwd(kthread_t *thd) {
     return thd->pwd;
 }
 
-void thd_set_pwd(kthread_t *thd, const char *restrict pwd) {
+void thd_set_pwd(kthread_t *__RESTRICT thd, const char *__RESTRICT pwd) {
     strncpy(thd->pwd, pwd, sizeof(thd->pwd) - 1);
 }
 

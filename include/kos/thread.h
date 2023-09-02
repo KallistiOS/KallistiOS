@@ -542,7 +542,7 @@ const char *thd_get_label(kthread_t *thd);
 
     \sa thd_get_label
 */
-void thd_set_label(kthread_t *thd, const char *__RESTRICT label);
+void thd_set_label(kthread_t *__RESTRICT thd, const char *__RESTRICT label);
 
 /** \brief       Retrieve the thread's current working directory.
     \relatesalso kthread_t
@@ -573,7 +573,7 @@ const char *thd_get_pwd(kthread_t *thd);
 
     \sa thd_get_pwd
 */
-void thd_set_pwd(kthread_t *thd, const char *__RESTRICT pwd);
+void thd_set_pwd(kthread_t *__RESTRICT thd, const char *__RESTRICT pwd);
 
 /** \brief       Retrieve a pointer to the thread errno.
     \relatesalso kthread_t
