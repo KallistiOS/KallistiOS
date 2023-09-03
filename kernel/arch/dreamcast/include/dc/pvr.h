@@ -562,7 +562,7 @@ typedef struct {
 /** @} */
 
 #define PVR_MODIFIER_CHEAP_SHADOW   0
-#define PVR_MODIFIER_NORMAL     1
+#define PVR_MODIFIER_NORMAL         1
 
 /** \defgroup pvr_mod_modes         Modifier volume mode parameters
 
