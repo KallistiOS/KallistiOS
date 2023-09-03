@@ -77,11 +77,11 @@ int pvr_dma_transfer(void * src, uint32 dest, uint32 count, int type,
 
     // Send the data to the right place
     if(type == PVR_DMA_TA)
-        dest_addr = (((unsigned long)dest) & 0xFFFFFF) | 0x10000000;
+        dest_addr = (((unsigned long)dest) & 0xFFFFFF) | PVR_TA_INPUT;
     else if(type == PVR_DMA_YUV)
-        dest_addr = (((unsigned long)dest) & 0xFFFFFF) | 0x10800000;
+        dest_addr = (((unsigned long)dest) & 0xFFFFFF) | PVR_TA_YUV_CONV;
     else
-        dest_addr = (((unsigned long)dest) & 0xFFFFFF) | 0x11000000;
+        dest_addr = (((unsigned long)dest) & 0xFFFFFF) | PVR_TA_TEX_MEM;
 
     // Make sure we're not already DMA'ing
     if(pvrdma[PVR_DST] != 0) {
