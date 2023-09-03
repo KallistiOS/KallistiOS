@@ -1071,6 +1071,7 @@ Striplength set to 2 */
 
 /* Useful memory locations */
 #define PVR_TA_INPUT        0x10000000  /**< \brief TA command input */
+#define PVR_TA_YUV_CONV     0x10800000  /**< \brief YUV converter */
 #define PVR_RAM_BASE        0xa5000000  /**< \brief PVR RAM (raw) */
 #define PVR_RAM_INT_BASE    0xa4000000  /**< \brief PVR RAM (interleaved) */
 
@@ -1089,7 +1090,7 @@ Striplength set to 2 */
 
     @{
 */
-#define PVR_RESET_ALL       0xffffffff  /**< \brief Reset the wole PVR */
+#define PVR_RESET_ALL       0xffffffff  /**< \brief Reset the whole PVR */
 #define PVR_RESET_NONE      0x00000000  /**< \brief Cancel reset state */
 #define PVR_RESET_TA        0x00000001  /**< \brief Reset only the TA */
 #define PVR_RESET_ISPTSP    0x00000002  /**< \brief Reset only the ISP/TSP */
@@ -2032,6 +2033,7 @@ int pvr_dma_transfer(void * src, uint32 dest, uint32 count, int type,
 #define PVR_DMA_VRAM64  0   /**< \brief Transfer to VRAM in interleaved mode */
 #define PVR_DMA_VRAM32  1   /**< \brief Transfer to VRAM in linear mode */
 #define PVR_DMA_TA      2   /**< \brief Transfer to the tile accelerator */
+#define PVR_DMA_YUV     3   /**< \brief Transfer to the YUV converter */
 /** @} */
 
 /** \brief  Load a texture using PVR DMA.

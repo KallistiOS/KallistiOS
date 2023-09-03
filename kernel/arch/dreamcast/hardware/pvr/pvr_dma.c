@@ -78,6 +78,8 @@ int pvr_dma_transfer(void * src, uint32 dest, uint32 count, int type,
     // Send the data to the right place
     if(type == PVR_DMA_TA)
         dest_addr = (((unsigned long)dest) & 0xFFFFFF) | 0x10000000;
+    else if(type == PVR_DMA_YUV)
+        dest_addr = (((unsigned long)dest) & 0xFFFFFF) | 0x10800000;
     else
         dest_addr = (((unsigned long)dest) & 0xFFFFFF) | 0x11000000;
 
