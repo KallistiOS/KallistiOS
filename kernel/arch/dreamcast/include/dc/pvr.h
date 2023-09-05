@@ -1073,7 +1073,7 @@ Striplength set to 2 */
 /* Useful memory locations */
 #define PVR_TA_INPUT        0x10000000  /**< \brief TA command input */
 #define PVR_TA_YUV_CONV     0x10800000  /**< \brief YUV converter */
-#define PVR_TA_TEX_MEM      0x11000000  /**< \brief YUV converter */
+#define PVR_TA_TEX_MEM      0x11000000  /**< \brief Texture memory */
 #define PVR_RAM_BASE        0xa5000000  /**< \brief PVR RAM (raw) */
 #define PVR_RAM_INT_BASE    0xa4000000  /**< \brief PVR RAM (interleaved) */
 
