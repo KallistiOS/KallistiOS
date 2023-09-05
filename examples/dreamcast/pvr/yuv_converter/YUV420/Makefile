@@ -31,4 +31,3 @@ run: $(TARGET)
 dist: $(TARGET)
 	-rm -f $(OBJS)
 	$(KOS_STRIP) $(TARGET)
-	
