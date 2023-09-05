@@ -128,7 +128,7 @@ int pvr_dma_transfer(void * src, uint32 dest, uint32 count, int type,
     dma_callback = callback;
     dma_cbdata = cbdata;
 
-    pvrdma[PVR_LMMODE0] = (type == PVR_DMA_VRAM64) ? 0 : 1;
+    pvrdma[PVR_LMMODE0] = type == PVR_DMA_VRAM64 ? 0 : 1;
     pvrdma[PVR_STATE] = dest_addr;
     pvrdma[PVR_LEN] = count;
     pvrdma[PVR_DST] = 0x1;

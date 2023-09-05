@@ -1,9 +1,37 @@
-/* KallistiOS ##version##
+/*  KallistiOS ##version##
 
-   examples/dreamcast/pvr/yuv_converter/YUV422/yuv422.c
-   Copyright (C) 2023 Andy Barajas
+    examples/dreamcast/pvr/yuv_converter/YUV422/yuv422.c
+    Copyright (C) 2023 Andy Barajas
 
-   This example demonstrates the use of TA's YUV converter.
+    This example shows how to use TA's YUV converter for YUV422p format.
+    A sample YUV422p image in the romdisk was made via ffmpeg:
+    
+       ffmpeg -i 422.png -pix_fmt yuv422p 422.yuv
+       
+    Note: This example is for YUV422 images in Y, U, V plane order. Hence
+    the p in YUV422p.
+    
+    PVR Register Config:
+    
+    1. Set destination for YUV conversion results:
+       PVR_SET(PVR_YUV_ADDR, (((unsigned int)pvr_txr_address) & 0xffffff));
+       
+    2. Define the type and size of conversion:
+       PVR_SET(PVR_YUV_CFG, (0x01 << 24) | 
+               (((PVR_TEXTURE_HEIGHT / 16) - 1) << 8) | 
+               ((PVR_TEXTURE_WIDTH / 16) - 1));
+               
+    The PVR_YUV_CFG register specifies conversion type and resulting image 
+    dimensions. The bit pattern (0x01 << 24) indicates YUV422; for YUV420,
+    it would be (0x00 << 24).
+    
+    PVR_GET(PVR_YUV_CFG) can read this register's value. The docs recommend it,
+    so it's good practice to include it.
+
+    This example utilizes the function convert_YUV422_to_YUV422_texture() to 
+    feed the YUV converter the necessary data in macro blocks. Although DMA 
+    can be used for this transfer, store queues are used by default as 
+    they offer better performance in this context.
 */
 
 #include <stdio.h>

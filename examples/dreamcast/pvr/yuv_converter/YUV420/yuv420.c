@@ -1,9 +1,36 @@
-/* KallistiOS ##version##
+/*  KallistiOS ##version##
+    examples/dreamcast/pvr/yuv_converter/YUV420/yuv420.c
+    Copyright (C) 2023 Andy Barajas
+    
+    This example shows how to use TA's YUV converter for YUV420p format.
+    A sample YUV420p image in the romdisk was made via ffmpeg:
+    
+       ffmpeg -i 420.png -pix_fmt yuv420p 420.yuv
+       
+    Note: This example is for YUV420 images in Y, U, V plane order. Hence
+    the p in YUV420p.
+    
+    PVR Register Config:
+    
+    1. Set destination for YUV conversion results:
+       PVR_SET(PVR_YUV_ADDR, (((unsigned int)pvr_txr_address) & 0xffffff));
+       
+    2. Define the type and size of conversion:
+       PVR_SET(PVR_YUV_CFG, (0x00 << 24) | 
+               (((PVR_TEXTURE_HEIGHT / 16) - 1) << 8) | 
+               ((PVR_TEXTURE_WIDTH / 16) - 1));
+               
+    The PVR_YUV_CFG register specifies conversion type and resulting image 
+    dimensions. The bit pattern (0x00 << 24) indicates YUV420; for YUV422,
+    it would be (0x01 << 24).
+    
+    PVR_GET(PVR_YUV_CFG) can read this register's value. The docs recommend it,
+    so it's good practice to include it.
 
-   examples/dreamcast/pvr/yuv_converter/YUV420/yuv420.c
-   Copyright (C) 2023 Andy Barajas
-
-   This example demonstrates the use of TA's YUV converter.
+    This example utilizes the function convert_YUV420_to_YUV422_texture() to 
+    feed the YUV converter the necessary data in macro blocks. Although DMA 
+    can be used for this transfer, store queues are used by default as 
+    they offer better performance in this context.
 */
 
 #include <stdio.h>
@@ -18,7 +45,8 @@
 #define PVR_TEXTURE_WIDTH 512
 #define PVR_TEXTURE_HEIGHT 512
 
-/* Dimensions have to be a multiple of 16 */
+/* The image dimensions can be different than the dimensions of the pvr
+   texture BUT the dimensions have to be a multiple of 16 */
 #define FRAME_TEXTURE_WIDTH 512
 #define FRAME_TEXTURE_HEIGHT 512
 
