@@ -46,7 +46,8 @@
 #define PVR_TEXTURE_WIDTH 512
 #define PVR_TEXTURE_HEIGHT 512
 
-/* Dimensions have to be a multiple of 16 */
+/* The image dimensions can be different than the dimensions of the pvr
+   texture BUT the dimensions have to be a multiple of 16 */
 #define FRAME_TEXTURE_WIDTH 512
 #define FRAME_TEXTURE_HEIGHT 512
 
