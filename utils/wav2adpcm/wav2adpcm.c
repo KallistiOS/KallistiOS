@@ -185,37 +185,37 @@ typedef struct wavhdr_t {
 int validate_wav_header(wavhdr_t *wavhdr, int format, int bits, FILE *in) {
     int result = 0;
 
-    if (memcmp(wavhdr->hdr1, "RIFF", 4)) {
+    if(memcmp(wavhdr->hdr1, "RIFF", 4)) {
         printf("Invalid RIFF header.\n");
         result = -1;
     }
 
-    if (memcmp(wavhdr->hdr2, "WAVEfmt ", 8)) {
+    if(memcmp(wavhdr->hdr2, "WAVEfmt ", 8)) {
         printf("Invalid WAVEfmt header.\n");
         result = -1;
     }
 
-    if (wavhdr->hdrsize != 0x10) {
+    if(wavhdr->hdrsize != 0x10) {
         printf("Invalid header size.\n");
         result = -1;
     }
 
-    if (wavhdr->format != format) {
+    if(wavhdr->format != format) {
         printf("Unsupported format.\n");
         result = -1;
     }
 
-    if (wavhdr->channels != 1 && wavhdr->channels != 2) {
+    if(wavhdr->channels != 1 && wavhdr->channels != 2) {
         printf("Unsupported number of channels.\n");
         result = -1;
     }
 
-    if (wavhdr->bits != bits) {
+    if(wavhdr->bits != bits) {
         printf("Unsupported bit depth.\n");
         result = -1;
     }
 
-    if (memcmp(wavhdr->hdr3, "data", 4))
+    if(memcmp(wavhdr->hdr3, "data", 4))
     {
         /* File contains meta data that we want to skip.
            Keep reading until we find the "data" header. */
@@ -230,9 +230,9 @@ int validate_wav_header(wavhdr_t *wavhdr, int format, int bits, FILE *in) {
             fread(&wavhdr->datasize, 1, 4, in);
 
             /* Skip the chunk if it's not the "data" chunk. */
-            if (memcmp(wavhdr->hdr3, "data", 4))
+            if(memcmp(wavhdr->hdr3, "data", 4))
                 fseek(in, wavhdr->datasize, SEEK_CUR);
-        } while (memcmp(wavhdr->hdr3, "data", 4));
+        } while(memcmp(wavhdr->hdr3, "data", 4));
     }
 
     return result;
