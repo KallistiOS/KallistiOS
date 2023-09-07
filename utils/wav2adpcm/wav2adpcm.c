@@ -239,7 +239,7 @@ int validate_wav_header(wavhdr_t *wavhdr, int format, int bits, FILE *in) {
 }
 
 int wav2adpcm(const char *infile, const char *outfile) {
-    struct wavhdr_t wavhdr;
+    wavhdr_t wavhdr;
     FILE *in, *out;
     size_t pcmsize, adpcmsize;
     short *pcmbuf;
