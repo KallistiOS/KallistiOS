@@ -165,8 +165,7 @@ void interleave(void *buffer, size_t size) {
     free(buf);
 }
 
-typedef struct wavhdr_t
-{
+typedef struct wavhdr_t {
     char hdr1[4];
     int32_t totalsize;
 
