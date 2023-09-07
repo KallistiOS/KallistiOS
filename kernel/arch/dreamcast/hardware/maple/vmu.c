@@ -210,7 +210,7 @@ int vmu_set_custom_color(maple_device_t *dev, uint8_t red, uint8_t green, uint8_
    for icon_shape are listed in the biosfont.h and start with
    BFONT_ICON_VMUICON. */
 int vmu_set_icon_shape(maple_device_t *dev, uint8_t icon_shape) {
-#ifdef _arch_sub_naomi
+#ifndef _arch_sub_naomi
     vmu_root_t root;
 
     if(icon_shape < BFONT_ICON_VMUICON || icon_shape > BFONT_ICON_EMBROIDERY)
