@@ -165,7 +165,7 @@ void interleave(void *buffer, size_t size) {
     free(buf);
 }
 
-struct wavhdr_t {
+typedef struct wavhdr_t {
     char hdr1[4];
     int32_t totalsize;
 
@@ -180,10 +180,66 @@ struct wavhdr_t {
 
     char hdr3[4];
     int32_t datasize;
-};
+} wavhdr_t;
+
+int validate_wav_header(wavhdr_t *wavhdr, int format, int bits, FILE *in) {
+    int result = 0;
+
+    if(memcmp(wavhdr->hdr1, "RIFF", 4)) {
+        printf("Invalid RIFF header.\n");
+        result = -1;
+    }
+
+    if(memcmp(wavhdr->hdr2, "WAVEfmt ", 8)) {
+        printf("Invalid WAVEfmt header.\n");
+        result = -1;
+    }
+
+    if(wavhdr->hdrsize != 0x10) {
+        printf("Invalid header size.\n");
+        result = -1;
+    }
+
+    if(wavhdr->format != format) {
+        printf("Unsupported format.\n");
+        result = -1;
+    }
+
+    if(wavhdr->channels != 1 && wavhdr->channels != 2) {
+        printf("Unsupported number of channels.\n");
+        result = -1;
+    }
+
+    if(wavhdr->bits != bits) {
+        printf("Unsupported bit depth.\n");
+        result = -1;
+    }
+
+    if(memcmp(wavhdr->hdr3, "data", 4))
+    {
+        /* File contains meta data that we want to skip.
+           Keep reading until we find the "data" header. */
+        fseek(in, wavhdr->datasize, SEEK_CUR);
+
+        do
+        {
+            /* Read the next chunk header */
+            fread(wavhdr->hdr3, 1, 4, in);
+
+            /* Read the chunk size */
+            fread(&wavhdr->datasize, 1, 4, in);
+
+            /* Skip the chunk if it's not the "data" chunk. */
+            if(memcmp(wavhdr->hdr3, "data", 4))
+                fseek(in, wavhdr->datasize, SEEK_CUR);
+        } while(memcmp(wavhdr->hdr3, "data", 4));
+    }
+
+    return result;
+}
 
 int wav2adpcm(const char *infile, const char *outfile) {
-    struct wavhdr_t wavhdr;
+    wavhdr_t wavhdr;
     FILE *in, *out;
     size_t pcmsize, adpcmsize;
     short *pcmbuf;
@@ -202,14 +258,7 @@ int wav2adpcm(const char *infile, const char *outfile) {
         return -1;
     }
 
-    if(memcmp(wavhdr.hdr1, "RIFF", 4)
-            || memcmp(wavhdr.hdr2, "WAVEfmt ", 8)
-            || memcmp(wavhdr.hdr3, "data", 4)
-            || wavhdr.hdrsize != 0x10
-            || wavhdr.format != 1
-            || (wavhdr.channels != 1 && wavhdr.channels != 2)
-            || wavhdr.bits != 16) {
-        fprintf(stderr, "Unsupported format.\n");
+    if(validate_wav_header(&wavhdr, 1, 16, in)) {
         fclose(in);
         return -1;
     }
@@ -244,8 +293,8 @@ int wav2adpcm(const char *infile, const char *outfile) {
     wavhdr.totalsize = wavhdr.datasize + sizeof(wavhdr) - 8;
 
     out = fopen(outfile, "wb");
-    if(fwrite(&wavhdr, sizeof(wavhdr), 1, out) != 1
-            || fwrite(adpcmbuf, adpcmsize, 1, out) != 1) {
+    if(fwrite(&wavhdr, sizeof(wavhdr), 1, out) != 1 || 
+       fwrite(adpcmbuf, adpcmsize, 1, out) != 1) {
         fprintf(stderr, "Cannot write ADPCM data.\n");
         fclose(out);
         return -1;
@@ -256,7 +305,7 @@ int wav2adpcm(const char *infile, const char *outfile) {
 }
 
 int adpcm2wav(const char *infile, const char *outfile) {
-    struct wavhdr_t wavhdr;
+    wavhdr_t wavhdr;
     FILE *in, *out;
     size_t pcmsize, adpcmsize;
     short *pcmbuf;
@@ -275,14 +324,7 @@ int adpcm2wav(const char *infile, const char *outfile) {
         return -1;
     }
 
-    if(memcmp(wavhdr.hdr1, "RIFF", 4)
-            || memcmp(wavhdr.hdr2, "WAVEfmt ", 8)
-            || memcmp(wavhdr.hdr3, "data", 4)
-            || wavhdr.hdrsize != 0x10
-            || wavhdr.format != 20
-            || (wavhdr.channels != 1 && wavhdr.channels != 2)
-            || wavhdr.bits != 4) {
-        fprintf(stderr, "Unsupported format.\n");
+    if(validate_wav_header(&wavhdr, 20, 4, in)) {
         fclose(in);
         return -1;
     }
@@ -316,8 +358,8 @@ int adpcm2wav(const char *infile, const char *outfile) {
     wavhdr.bits = 16;
 
     out = fopen(outfile, "wb");
-    if(fwrite(&wavhdr, sizeof(wavhdr), 1, out) != 1
-            || fwrite(pcmbuf, pcmsize, 1, out) != 1) {
+    if(fwrite(&wavhdr, sizeof(wavhdr), 1, out) != 1 || 
+       fwrite(pcmbuf, pcmsize, 1, out) != 1) {
         fprintf(stderr, "Cannot write WAV data.\n");
         fclose(out);
         return -1;
@@ -332,6 +374,10 @@ void usage() {
     printf("wav2adpcm: 16bit mono wav to aica adpcm and vice-versa (c)2002 BERO\n"
            " wav2adpcm -t <infile.wav> <outfile.wav>   (To adpcm)\n"
            " wav2adpcm -f <infile.wav> <outfile.wav>   (From adpcm)\n"
+           "\n"
+           "If you are having trouble with your input wav file you can run it"
+           "through ffmpeg first and then run wav2adpcm on output.wav:\n"
+           " ffmpeg -i input.wav -ac 1 -acodec pcm_s16le output.wav"
           );
 }
 

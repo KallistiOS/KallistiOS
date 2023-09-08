@@ -1310,8 +1310,10 @@ int bba_init(void) {
 /* Shutdown */
 int bba_shutdown(void) {
     /* Shutdown hardware */
-    bba_if.if_stop(&bba_if);
-    bba_if.if_shutdown(&bba_if);
+    if(bba_if.flags & NETIF_RUNNING)
+        bba_if.if_stop(&bba_if);
+    if(bba_if.flags & NETIF_INITIALIZED)
+        bba_if.if_shutdown(&bba_if);
 
 #ifdef TX_SEMA
     sem_destroy(&tx_sema);

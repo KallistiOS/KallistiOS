@@ -3,6 +3,7 @@
    pvr_dma.c
    Copyright (C)2002 Roger Cattermole
    Copyright (C)2004 Megan Potter
+   Copyright (C)2023 Andy Barajas
    http://www.boob.co.uk
  */
 
@@ -28,10 +29,10 @@ static vuint32  * const pvrdma = (vuint32 *)0xa05f6800;
 static vuint32  * const shdma  = (vuint32 *)0xffa00000;
 
 /* DMAC registers */
-#define DMAC_SAR2   0x20/4
-#define DMAC_DMATCR2    0x28/4
-#define DMAC_CHCR2  0x2c/4
-#define DMAC_DMAOR  0x40/4
+#define DMAC_SAR2    0x20/4
+#define DMAC_DMATCR2 0x28/4
+#define DMAC_CHCR2   0x2c/4
+#define DMAC_DMAOR   0x40/4
 
 /* PVR Dma registers - Offset by 0xA05F6800 */
 #define PVR_STATE   0x00
@@ -77,9 +78,11 @@ int pvr_dma_transfer(void * src, uint32 dest, uint32 count, int type,
 
     // Send the data to the right place
     if(type == PVR_DMA_TA)
-        dest_addr = (((unsigned long)dest) & 0xFFFFFF) | 0x10000000;
+        dest_addr = (((unsigned long)dest) & 0xFFFFFF) | PVR_TA_INPUT;
+    else if(type == PVR_DMA_YUV)
+        dest_addr = (((unsigned long)dest) & 0xFFFFFF) | PVR_TA_YUV_CONV;
     else
-        dest_addr = (((unsigned long)dest) & 0xFFFFFF) | 0x11000000;
+        dest_addr = (((unsigned long)dest) & 0xFFFFFF) | PVR_TA_TEX_MEM;
 
     // Make sure we're not already DMA'ing
     if(pvrdma[PVR_DST] != 0) {
@@ -91,15 +94,16 @@ int pvr_dma_transfer(void * src, uint32 dest, uint32 count, int type,
     val = shdma[DMAC_CHCR2];
 
     if(val & 0x1)  /* DE bit set so we must clear it */
-        shdma[DMAC_CHCR2] = val | 0x1;
+        shdma[DMAC_CHCR2] = val & ~0x1;
 
     if(val & 0x2)  /* TE bit set so we must clear it */
-        shdma[DMAC_CHCR2] = val | 0x2;
+        shdma[DMAC_CHCR2] = val & ~0x2;
 
     /* Check for 32-byte alignment */
     if(src_addr & 0x1F)
         dbglog(DBG_WARNING, "pvr_dma: src is not 32-byte aligned\n");
 
+    /* Align the source address (src_addr) to a 32-byte boundary */
     src_addr &= 0x0FFFFFE0;
 
     if(src_addr < 0x0c000000) {
@@ -138,12 +142,19 @@ int pvr_dma_transfer(void * src, uint32 dest, uint32 count, int type,
 
 /* Count is in bytes. */
 int pvr_txr_load_dma(void * src, pvr_ptr_t dest, uint32 count, int block,
-                     pvr_dma_callback_t callback, ptr_t cbdata) {
-    return pvr_dma_transfer(src, (uint32)dest, count, PVR_DMA_VRAM64, block, callback, cbdata);
+                    pvr_dma_callback_t callback, ptr_t cbdata) {
+    return pvr_dma_transfer(src, (uint32)dest, count, PVR_DMA_VRAM64, block, 
+                            callback, cbdata);
 }
 
-int pvr_dma_load_ta(void * src, uint32 count, int block, pvr_dma_callback_t callback, ptr_t cbdata) {
+int pvr_dma_load_ta(void * src, uint32 count, int block, 
+                    pvr_dma_callback_t callback, ptr_t cbdata) {
     return pvr_dma_transfer(src, 0, count, PVR_DMA_TA, block, callback, cbdata);
+}
+
+int pvr_dma_yuv_conv(void * src, uint32 count, int block,
+                    pvr_dma_callback_t callback, ptr_t cbdata) {
+    return pvr_dma_transfer(src, 0, count, PVR_DMA_YUV, block, callback, cbdata);
 }
 
 int pvr_dma_ready(void) {

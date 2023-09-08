@@ -1333,7 +1333,7 @@ static void do_check_malloc_state(void) {
 
     max_fast_bin = fastbin_index(av->max_fast);
 
-    for(i = 0; i < NFASTBINS; ++i) {
+    for(i = 0; i < (int)NFASTBINS; ++i) {
         p = av->fastbins[i];
 
         /* all bins past max_fast are empty */
@@ -1345,7 +1345,7 @@ static void do_check_malloc_state(void) {
             do_check_inuse_chunk(p);
             total += chunksize(p);
             /* chunk belongs in this bin */
-            assert(fastbin_index(chunksize(p)) == i);
+            assert(fastbin_index(chunksize(p)) == (unsigned)i);
             p = p->fd;
         }
     }
@@ -1379,7 +1379,7 @@ static void do_check_malloc_state(void) {
             if(i >= 2) {
                 /* chunk belongs in bin */
                 idx = bin_index(size);
-                assert(idx == i);
+                assert(idx == (unsigned)i);
                 /* lists are sorted */
                 assert(p->bk == b ||
                        (unsigned long)chunksize(p->bk) >= (unsigned long)chunksize(p));

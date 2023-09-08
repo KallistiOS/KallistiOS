@@ -86,8 +86,10 @@ int mutex_lock_timed(mutex_t *m, int timeout) {
     int old, rv = 0;
 
     if((rv = irq_inside_int())) {
-        dbglog(DBG_WARNING, "%s: called inside an interrupt with code: %x evt: %.4x\n",
-               timeout ? "mutex_lock_timed" : "mutex_lock", ((rv>>16) & 0xf), (rv & 0xffff));
+        dbglog(DBG_WARNING, "%s: called inside an interrupt with code: "
+               "%x evt: %.4x\n",
+               timeout ? "mutex_lock_timed" : "mutex_lock",
+               ((rv >> 16) & 0xf), (rv & 0xffff));
         errno = EPERM;
         return -1;
     }
@@ -165,6 +167,7 @@ int mutex_trylock(mutex_t *m) {
 
         switch(m->type) {
             case MUTEX_TYPE_NORMAL:
+            case MUTEX_TYPE_OLDNORMAL:
             case MUTEX_TYPE_ERRORCHECK:
                 if(m->count) {
                     errno = EDEADLK;
@@ -198,6 +201,7 @@ static int mutex_unlock_common(mutex_t *m, kthread_t *thd) {
 
     switch(m->type) {
         case MUTEX_TYPE_NORMAL:
+        case MUTEX_TYPE_OLDNORMAL:
             m->count = 0;
             m->holder = NULL;
             wakeup = 1;

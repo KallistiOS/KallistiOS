@@ -182,6 +182,12 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - *** Added clock_gettime(), clock_settime(), clock_getres() [FG]
 - DC  Refactored controller API, added capability groups and types [FG]
 - DC  VMU driver update for date/time, buttons, buzzer, and docs [FG]
+- DC  Add spinlock_trylock macro [LS]
+- *** Simplify kthread_once_t into a simple variable rather than a struct [LS]
+- *** Simplify sync primitive structures to remove initialized member [LS]
+- *** Move definition of __RESTRICT from <sys/_types.h> to <kos/cdefs.h> [LS]
+- DC  Added DMA YUV converter path. Adjust some name of related #defines. 
+      Added yuv examples [AB]
 - *** Added toolchain and KOS support for C/C++ compiler-level TLS [CP && FG]
 
 KallistiOS version 2.0.0 -----------------------------------------------

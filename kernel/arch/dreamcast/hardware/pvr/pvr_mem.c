@@ -58,8 +58,9 @@ static LIST_HEAD(memctl_list, memctl) block_list;
 
 /* PVR RAM base; NULL is considered invalid */
 static pvr_ptr_t pvr_mem_base = NULL;
-#define CHECK_MEM_BASE assert_msg(pvr_mem_base != NULL, \
-                                  "pvr_mem_* used, but PVR hasn't been initialized yet")
+#define CHECK_MEM_BASE \
+    assert_msg(pvr_mem_base != NULL, \
+               "pvr_mem_* used, but PVR hasn't been initialized yet")
 
 /* Used in pvr_mem_core.c */
 void * pvr_int_sbrk(size_t amt) {
@@ -94,7 +95,8 @@ pvr_ptr_t pvr_mem_malloc(size_t size) {
 
     rv32 = (uint32)pvr_int_malloc(size);
     assert_msg((rv32 & 0x1f) == 0,
-               "dlmalloc's alignment is broken; please make a bug report");
+               "dlmalloc's alignment is broken; "
+               "please make a bug report");
 
 #ifdef PVR_KM_DBG
     ctl = malloc(sizeof(memctl_t));
@@ -106,7 +108,7 @@ pvr_ptr_t pvr_mem_malloc(size_t size) {
 #endif  /* PVR_KM_DBG */
 
 #ifdef PVR_KM_DBG_VERBOSE
-    printf("Thread %d/%08lx allocated %d bytes at %08lx\n",
+    printf("Thread %d/%08lx allocated %lu bytes at %08lx\n",
            ctl->thread, ctl->addr, ctl->size, rv32);
 #endif
 
@@ -141,7 +143,9 @@ void pvr_mem_free(pvr_ptr_t chunk) {
     }
 
     if(!found) {
-        dbglog(DBG_ERROR, "pvr_mem_free: trying to free non-alloc'd block %08lx (called from %d/%08lx\n",
+        dbglog(DBG_ERROR, 
+               "pvr_mem_free: trying to free non-alloc'd block "
+               "%08lx (called from %d/%08lx\n",
                (uint32)chunk, thd_current->tid, ra);
     }
 
@@ -157,8 +161,10 @@ void pvr_mem_print_list(void) {
 
     printf("pvr_mem_print_list block list:\n");
     LIST_FOREACH(ctl, &block_list, list) {
-        printf("  unfreed block at %08lx size %d, allocated by thread %d/%08lx\n",
-               ctl->block, ctl->size, ctl->thread, ctl->addr);
+        printf("  unfreed block at %08lx size %lu, "
+               "allocated by thread %d/%08lx\n",
+               (unsigned long)ctl->block, ctl->size, 
+               ctl->thread, (unsigned long)ctl->addr);
     }
     printf("pvr_mem_print_list end block list\n");
 #endif  /* PVR_KM_DBG */
@@ -175,7 +181,8 @@ static uint32 pvr_mem_available_int(void) {
 uint32 pvr_mem_available(void) {
     CHECK_MEM_BASE;
 
-    return pvr_mem_available_int() + (PVR_RAM_INT_TOP - (uint32)pvr_mem_base);
+    return pvr_mem_available_int() + 
+        (PVR_RAM_INT_TOP - (uint32)pvr_mem_base);
 }
 
 /* Reset the memory pool, equivalent to freeing all textures currently

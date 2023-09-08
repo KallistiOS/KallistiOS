@@ -2,10 +2,10 @@
 
    keytest.c
    Copyright (C) 2018 Donald Haase
-   
+
 The Purpose of this program is to provide some testing of the basic keyboard functionality.
 
-Currently it merely takes in a preset number of printable test characters. This allows for the testing 
+Currently it merely takes in a preset number of printable test characters. This allows for the testing
 of basic US keyboard functionality, appropriate shift handling, and the newer key repeating feature.
 
 Room has been explicitly left open for further tests. It might be useful to include:
@@ -28,7 +28,7 @@ Room has been explicitly left open for further tests. It might be useful to incl
 KOS_INIT_FLAGS(INIT_DEFAULT);
 extern uint16		*vram_s;
 
-cont_state_t* first_kbd_state; 
+cont_state_t* first_kbd_state;
 maple_device_t* first_kbd_dev = NULL;
 
 /* Track how many times we try to find a keyboard before just quitting. */
@@ -37,7 +37,7 @@ uint8 no_kbd_loop = 0;
 uint8 test_phase = 0;
 
 
-void basic_typing (void) 
+void basic_typing (void)
 {
     int charcount = 0;
     int rv;
@@ -45,21 +45,21 @@ void basic_typing (void)
     uint32 offset = ((STARTLINE+(lines*BFONT_HEIGHT)) * WIDTH);
     bfont_draw_str(vram_s + offset, WIDTH, 1, "Test of basic typing. Enter 120 characters: ");
     offset = ((STARTLINE+((++lines)*BFONT_HEIGHT)) * WIDTH);
-    
+
     while (charcount < CHARSPERTEST) {
         rv = kbd_queue_pop(first_kbd_dev, 1);
         if(rv<0) continue;
-        
+
         bfont_draw(vram_s + offset, WIDTH, 1, (char)rv);
         offset += BFONT_THIN_WIDTH;
         charcount++;
-        if(!(charcount%CHARSPERLINE)) offset = ((STARTLINE+((++lines)*BFONT_HEIGHT)) * WIDTH);        
+        if(!(charcount%CHARSPERLINE)) offset = ((STARTLINE+((++lines)*BFONT_HEIGHT)) * WIDTH);
     }
     return;
 }
 
 
-int main(void)
+int main(int argc, char **argv)
 {
     for(;;) {
         /* If the dev is null, refresh it. */
@@ -74,16 +74,16 @@ int main(void)
         }
         /* Reset the timeout counter */
         no_kbd_loop = 0;
-        
+
         first_kbd_state = (cont_state_t *) maple_dev_status(first_kbd_dev);
         if(first_kbd_state == NULL) assert_msg(0, "Invalid Keyboard state returned");
-        
+
         if(test_phase == 0)
             basic_typing();
         else
             break;
-        
-        test_phase++;        
+
+        test_phase++;
     }
     return 0;
 }

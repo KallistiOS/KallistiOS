@@ -562,7 +562,7 @@ typedef struct {
 /** @} */
 
 #define PVR_MODIFIER_CHEAP_SHADOW   0
-#define PVR_MODIFIER_NORMAL     1
+#define PVR_MODIFIER_NORMAL         1
 
 /** \defgroup pvr_mod_modes         Modifier volume mode parameters
 
@@ -1059,7 +1059,8 @@ Striplength set to 2 */
 #define PVR_OPB_CFG             0x0140  /**< \brief Active lists / list size */
 #define PVR_TA_INIT             0x0144  /**< \brief Initialize vertex reg. params */
 #define PVR_YUV_ADDR            0x0148  /**< \brief YUV conversion destination */
-#define PVR_YUV_CFG_1           0x014c  /**< \brief YUV configuration */
+#define PVR_YUV_CFG             0x014c  /**< \brief YUV configuration */
+#define PVR_YUV_STAT            0x0150  /**< \bried The number of YUV macroblocks converted */
 
 #define PVR_UNK_0160            0x0160  /**< \brief ?? */
 #define PVR_TA_OPB_INIT         0x0164  /**< \brief Object pointer buffer position init */
@@ -1071,6 +1072,8 @@ Striplength set to 2 */
 
 /* Useful memory locations */
 #define PVR_TA_INPUT        0x10000000  /**< \brief TA command input */
+#define PVR_TA_YUV_CONV     0x10800000  /**< \brief YUV converter */
+#define PVR_TA_TEX_MEM      0x11000000  /**< \brief Texture memory */
 #define PVR_RAM_BASE        0xa5000000  /**< \brief PVR RAM (raw) */
 #define PVR_RAM_INT_BASE    0xa4000000  /**< \brief PVR RAM (interleaved) */
 
@@ -1089,7 +1092,7 @@ Striplength set to 2 */
 
     @{
 */
-#define PVR_RESET_ALL       0xffffffff  /**< \brief Reset the wole PVR */
+#define PVR_RESET_ALL       0xffffffff  /**< \brief Reset the whole PVR */
 #define PVR_RESET_NONE      0x00000000  /**< \brief Cancel reset state */
 #define PVR_RESET_TA        0x00000001  /**< \brief Reset only the TA */
 #define PVR_RESET_ISPTSP    0x00000002  /**< \brief Reset only the ISP/TSP */
@@ -2032,6 +2035,7 @@ int pvr_dma_transfer(void * src, uint32 dest, uint32 count, int type,
 #define PVR_DMA_VRAM64  0   /**< \brief Transfer to VRAM in interleaved mode */
 #define PVR_DMA_VRAM32  1   /**< \brief Transfer to VRAM in linear mode */
 #define PVR_DMA_TA      2   /**< \brief Transfer to the tile accelerator */
+#define PVR_DMA_YUV     3   /**< \brief Transfer to the YUV converter */
 /** @} */
 
 /** \brief  Load a texture using PVR DMA.
@@ -2080,6 +2084,29 @@ int pvr_txr_load_dma(void * src, pvr_ptr_t dest, uint32 count, int block,
  */
 int pvr_dma_load_ta(void * src, uint32 count, int block,
                     pvr_dma_callback_t callback, ptr_t cbdata);
+
+/** \brief  Load yuv data to the YUV converter using PVR DMA.
+
+    This is essentially a convenience wrapper for pvr_dma_transfer(), so all
+    notes that apply to it also apply here.
+
+    \param  src             Where to copy from. Must be 32-byte aligned.
+    \param  count           The number of bytes to copy. Must be a multiple of
+                            32.
+    \param  block           Non-zero if you want the function to block until the
+                            DMA completes.
+    \param  callback        A function to call upon completion of the DMA.
+    \param  cbdata          Data to pass to the callback function.
+    \retval 0               On success.
+    \retval -1              On failure. Sets errno as appropriate.
+
+    \par    Error Conditions:
+    \em     EINPROGRESS - DMA already in progress \n
+    \em     EFAULT - dest is not 32-byte aligned \n
+    \em     EIO - I/O error
+*/
+int pvr_dma_yuv_conv(void * src, uint32 count, int block,
+                     pvr_dma_callback_t callback, ptr_t cbdata);
 
 /** \brief  Is PVR DMA is inactive?
     \return                 Non-zero if there is no PVR DMA active, thus a DMA

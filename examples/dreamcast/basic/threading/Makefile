@@ -11,6 +11,7 @@ all:
 	$(KOS_MAKE) -C recursive_lock
 	$(KOS_MAKE) -C once
 	$(KOS_MAKE) -C tls
+	$(KOS_MAKE) -C spinlock_test
 
 clean:
 	$(KOS_MAKE) -C compiler_tls clean
@@ -19,6 +20,7 @@ clean:
 	$(KOS_MAKE) -C recursive_lock clean
 	$(KOS_MAKE) -C once clean
 	$(KOS_MAKE) -C tls clean
+	$(KOS_MAKE) -C spinlock_test clean
 
 dist:
 	$(KOS_MAKE) -C compiler_tls dist
@@ -27,4 +29,5 @@ dist:
 	$(KOS_MAKE) -C recursive_lock dist
 	$(KOS_MAKE) -C once dist
 	$(KOS_MAKE) -C tls dist
+	$(KOS_MAKE) -C spinlock_test dist
 

@@ -210,7 +210,7 @@ int vmu_set_custom_color(maple_device_t *dev, uint8_t red, uint8_t green, uint8_
    for icon_shape are listed in the biosfont.h and start with
    BFONT_ICON_VMUICON. */
 int vmu_set_icon_shape(maple_device_t *dev, uint8_t icon_shape) {
-#ifdef _arch_sub_naomi
+#ifndef _arch_sub_naomi
     vmu_root_t root;
 
     if(icon_shape < BFONT_ICON_VMUICON || icon_shape > BFONT_ICON_EMBROIDERY)
@@ -287,8 +287,10 @@ int vmu_beep_raw(maple_device_t *dev, uint32_t beep) {
     return MAPLE_EOK;
 }
 
-int vmu_beep(maple_device_t *dev, uint8_t period, uint8_t duty) {
-    const uint32_t raw_beep = ((period << 24) | ((period - duty)) << 16);
+int vmu_beep_waveform(maple_device_t *dev, uint8_t period1, uint8_t duty_cycle1, uint8_t period2, uint8_t duty_cycle2) {
+    const uint32_t raw_beep = (((period2 - duty_cycle2) << 24) | (period2 << 16) |
+                               ((period1 - duty_cycle1) <<  8) | (period1));
+
     return vmu_beep_raw(dev, raw_beep);
 }
 

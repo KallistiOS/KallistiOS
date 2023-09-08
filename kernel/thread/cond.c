@@ -34,14 +34,13 @@ condvar_t *cond_create(void) {
         return NULL;
     }
 
-    cv->initialized = 1;
     cv->dynamic = 1;
 
     return cv;
 }
 
 int cond_init(condvar_t *cv) {
-    cv->initialized = 1;
+    cv->dummy = 0;
     cv->dynamic = 0;
     return 0;
 }
@@ -50,8 +49,6 @@ int cond_init(condvar_t *cv) {
 int cond_destroy(condvar_t *cv) {
     /* Give all sleeping threads a timed out error */
     genwait_wake_all_err(cv, ENOTRECOVERABLE);
-
-    cv->initialized = 0;
 
     /* Free the memory */
     if(cv->dynamic)
@@ -71,13 +68,8 @@ int cond_wait_timed(condvar_t *cv, mutex_t *m, int timeout) {
 
     old = irq_disable();
 
-    if(!cv->initialized) {
-        errno = EINVAL;
-        irq_restore(old);
-        return -1;
-    }
-    else if(m->type < MUTEX_TYPE_NORMAL || m->type > MUTEX_TYPE_RECURSIVE ||
-            !mutex_is_locked(m)) {
+    if(m->type < MUTEX_TYPE_NORMAL || m->type > MUTEX_TYPE_RECURSIVE ||
+       !mutex_is_locked(m)) {
         errno = EINVAL;
         irq_restore(old);
         return -1;
@@ -111,14 +103,8 @@ int cond_signal(condvar_t *cv) {
 
     old = irq_disable();
 
-    if(!cv->initialized) {
-        errno = EINVAL;
-        rv = -1;
-    }
-    else {
-        /* Wake one thread who's waiting */
-        genwait_wake_one(cv);
-    }
+    /* Wake one thread who's waiting, if any */
+    genwait_wake_one(cv);
 
     irq_restore(old);
 
@@ -130,14 +116,8 @@ int cond_broadcast(condvar_t *cv) {
 
     old = irq_disable();
 
-    if(!cv->initialized) {
-        errno = EINVAL;
-        rv = -1;
-    }
-    else {
-        /* Wake all threads who are waiting */
-        genwait_wake_all(cv);
-    }
+    /* Wake all threads who are waiting */
+    genwait_wake_all(cv);
 
     irq_restore(old);
 

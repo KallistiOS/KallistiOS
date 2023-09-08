@@ -16,6 +16,7 @@
 #include <dc/net/lan_adapter.h>
 #include <arch/irq.h>
 #include <kos/net.h>
+#include <kos/thread.h>
 
 /*
 
@@ -780,4 +781,3 @@ int la_shutdown(void) {
     la_if_shutdown(&la_if);
     return 0;
 }
-

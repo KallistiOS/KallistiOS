@@ -24,7 +24,7 @@ void sq_clr(void *dest, int n) {
 
     /* Fill both store queues with zeroes */
     d[0] = d[1] = d[2] = d[3] = d[4] = d[5] = d[6] = d[7] =
-                                           d[8] = d[9] = d[10] = d[11] = d[12] = d[13] = d[14] = d[15] = 0;
+        d[8] = d[9] = d[10] = d[11] = d[12] = d[13] = d[14] = d[15] = 0;
 
     /* Write them as many times necessary */
     n >>= 5;
@@ -53,7 +53,7 @@ void * sq_cpy(void *dest, const void *src, int n) {
     n >>= 5;
 
     while(n--) {
-        __asm__("pref @%0" : : "r"(s + 8));  /* prefetch 32 bytes for next loop */
+        __asm__("pref @%0" : : "r"(s + 8));  /* prefetch 32 bytes */
         d[0] = *(s++);
         d[1] = *(s++);
         d[2] = *(s++);
@@ -88,7 +88,7 @@ void * sq_set(void *s, uint32 c, int n) {
 
     /* Fill both store queues with c */
     d[0] = d[1] = d[2] = d[3] = d[4] = d[5] = d[6] = d[7] =
-                                           d[8] = d[9] = d[10] = d[11] = d[12] = d[13] = d[14] = d[15] = c;
+        d[8] = d[9] = d[10] = d[11] = d[12] = d[13] = d[14] = d[15] = c;
 
     /* Write them as many times necessary */
     n >>= 5;
@@ -120,7 +120,7 @@ void * sq_set16(void *s, uint32 c, int n) {
 
     /* Fill both store queues with c */
     d[0] = d[1] = d[2] = d[3] = d[4] = d[5] = d[6] = d[7] =
-                                           d[8] = d[9] = d[10] = d[11] = d[12] = d[13] = d[14] = d[15] = c;
+        d[8] = d[9] = d[10] = d[11] = d[12] = d[13] = d[14] = d[15] = c;
 
     /* Write them as many times necessary */
     n >>= 5;
@@ -148,7 +148,7 @@ void * sq_set32(void *s, uint32 c, int n) {
 
     /* Fill both store queues with c */
     d[0] = d[1] = d[2] = d[3] = d[4] = d[5] = d[6] = d[7] =
-                                           d[8] = d[9] = d[10] = d[11] = d[12] = d[13] = d[14] = d[15] = c;
+        d[8] = d[9] = d[10] = d[11] = d[12] = d[13] = d[14] = d[15] = c;
 
     /* Write them as many times necessary */
     n >>= 5;

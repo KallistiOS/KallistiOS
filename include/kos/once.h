@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    include/kos/once.h
-   Copyright (C) 2009, 2010 Lawrence Sebald
+   Copyright (C) 2009, 2010, 2023 Lawrence Sebald
 
 */
 
@@ -31,13 +31,10 @@ __BEGIN_DECLS
 
     \headerfile kos/once.h
 */
-typedef struct {
-    int initialized;
-    int run;
-} kthread_once_t;
+typedef volatile int kthread_once_t;
 
 /** \brief  Initializer for a kthread_once_t object. */
-#define KTHREAD_ONCE_INIT { 1, 0 }
+#define KTHREAD_ONCE_INIT   0
 
 /** \brief  Run a function once.
 
@@ -48,9 +45,9 @@ typedef struct {
 
     \param  once_control    The kthread_once_t object to run against.
     \param  init_routine    The function to call.
-    \retval -1      On failure, and sets errno to one of the following: ENOMEM
-                    if out of memory, EPERM if called inside an interrupt, or
-                    EINTR if interrupted.
+    \retval -1      On failure, and sets errno to one of the following: EPERM if
+                    called inside an interrupt or EINVAL if *once_control is not
+                    valid or was not initialized with KTHREAD_ONCE_INIT.
     \retval 0       On success. */
 int kthread_once(kthread_once_t *once_control, void (*init_routine)(void));
 

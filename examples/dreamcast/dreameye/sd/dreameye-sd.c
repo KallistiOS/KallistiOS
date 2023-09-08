@@ -23,7 +23,7 @@
 int main(int argc, char *argv[]) {
     maple_device_t *dreameye;
     dreameye_state_t *state;
-    uint8 *buf;
+    uint8 *buf = NULL;
     int size, err;
     FILE *fp;
     int img_count, i;
