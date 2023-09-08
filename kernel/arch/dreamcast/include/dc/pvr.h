@@ -2038,12 +2038,6 @@ int pvr_dma_transfer(void * src, uint32 dest, uint32 count, int type,
 #define PVR_DMA_YUV     3   /**< \brief Transfer to the YUV converter */
 /** @} */
 
-#define pvr_txr_load_dma(src, dest, count, block, callback, cbdata) \
-    ({ \
-        __attribute__((deprecated("Use pvr_dma_load_txr instead."))) \
-        pvr_dma_load_txr(src, dest, count, block, callback, cbdata); \
-    })
-
 /** \brief  Load a texture using PVR DMA.
 
     This is essentially a convenience wrapper for pvr_dma_transfer(), so all
@@ -2065,7 +2059,7 @@ int pvr_dma_transfer(void * src, uint32 dest, uint32 count, int type,
     \em     EFAULT - dest is not 32-byte aligned \n
     \em     EIO - I/O error
 */
-int pvr_dma_load_txr(void * src, pvr_ptr_t dest, uint32 count, int block,
+int pvr_txr_load_dma(void * src, pvr_ptr_t dest, uint32 count, int block,
                      pvr_dma_callback_t callback, ptr_t cbdata);
 
 /** \brief  Load vertex data to the TA using PVR DMA.

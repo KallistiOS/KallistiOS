@@ -186,8 +186,8 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - *** Simplify kthread_once_t into a simple variable rather than a struct [LS]
 - *** Simplify sync primitive structures to remove initialized member [LS]
 - *** Move definition of __RESTRICT from <sys/_types.h> to <kos/cdefs.h> [LS]
-- DC  Added DMA YUV converter path. Adjust some name of related #defines
-      and function name to match the dma theme. Added yuv examples [AB]
+- DC  Added DMA YUV converter path. Adjust some name of related #defines. 
+      Added yuv examples [AB]
 
 KallistiOS version 2.0.0 -----------------------------------------------
 - DC  Broadband Adapter driver fixes [Megan Potter == MP]

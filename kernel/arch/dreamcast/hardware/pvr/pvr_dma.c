@@ -141,7 +141,7 @@ int pvr_dma_transfer(void * src, uint32 dest, uint32 count, int type,
 }
 
 /* Count is in bytes. */
-int pvr_dma_load_txr(void * src, pvr_ptr_t dest, uint32 count, int block,
+int pvr_txr_load_dma(void * src, pvr_ptr_t dest, uint32 count, int block,
                     pvr_dma_callback_t callback, ptr_t cbdata) {
     return pvr_dma_transfer(src, (uint32)dest, count, PVR_DMA_VRAM64, block, 
                             callback, cbdata);

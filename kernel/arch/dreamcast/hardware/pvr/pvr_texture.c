@@ -189,7 +189,7 @@ void pvr_txr_load_kimg(kos_img_t *img, pvr_ptr_t dst, uint32 flags) {
                to have to allocate an intermediary buffer. */
             if(flags & PVR_TXRLOAD_DMA) {
                 mutex_lock((mutex_t *)&pvr_state.dma_lock);
-                pvr_dma_load_txr(img->data, dst, img->byte_count,
+                pvr_txr_load_dma(img->data, dst, img->byte_count,
                                  (flags & PVR_TXRLOAD_NONBLOCK) ? 1 : 0, NULL, 0);
                 mutex_unlock((mutex_t *)&pvr_state.dma_lock);
             }
