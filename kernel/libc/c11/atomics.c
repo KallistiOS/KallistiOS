@@ -4,8 +4,16 @@
    Copyright (C) 2023 Falco Girgis
 */
 
+#include <arch/arch.h>
+#include <arch/cache.h>
 #include <arch/irq.h>
+#include <arch/spinlock.h>
+#include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
+
+#define GENERIC_LOCK_BLOCK_SIZE     (CPU_CACHE_BLOCK_SIZE * 4)
+#define GENERIC_LOCK_COUNT          (PAGESIZE / GENERIC_LOCK_BLOCK_SIZE)
 
 #define ATOMIC_LOAD_N_(type, n) \
     type \
@@ -99,52 +107,64 @@ ATOMIC_FETCH_N_(unsigned long long, 8, or, |=)
 ATOMIC_FETCH_N_(unsigned long long, 8, xor, ^=)
 ATOMIC_FETCH_NAND_N_(unsigned long long, 8)
 
+static spinlock_t locks[GENERIC_LOCK_COUNT] = {
+    [0 ... (GENERIC_LOCK_COUNT - 1)] = SPINLOCK_INITIALIZER
+};
+
+inline static uintptr_t address_to_spinlock(const volatile void *ptr) {
+    return ((uintptr_t)ptr / GENERIC_LOCK_BLOCK_SIZE) 
+                % GENERIC_LOCK_COUNT;
+}
+
 void __atomic_load(size_t size, 
-                   void *ptr, 
+                   const volatile void *ptr, 
                    void *ret, 
                    int memorder)
 {
     (void)memorder;
 
-    const int irq = irq_disable();
+    const uintptr_t lock = address_to_spinlock(ptr);
+    spinlock_lock(&locks[lock]);
     
-    memcpy(ret, ptr, size);
+    memcpy(ret, (const void *)ptr, size);
     
-    irq_restore(irq);
+    spinlock_unlock(&locks[lock]);
 }
 
 void __atomic_store(size_t size, 
-                    void *ptr, 
+                    volatile void *ptr, 
                     void *val, 
                     int memorder) 
 {
     (void)memorder;
     
-    const int irq = irq_disable();
+    const uintptr_t lock = address_to_spinlock(ptr);
+    spinlock_lock(&locks[lock]);
     
-    memcpy(ptr, val, size);
+    memcpy((void *)ptr, val, size);
     
-    irq_restore(irq);
+    spinlock_unlock(&locks[lock]);
 }
 
 void __atomic_exchange(size_t size,
-                       void *ptr,
+                       volatile void *ptr,
                        void *val,
                        void *ret,
                        int memorder)
 {
     (void)memorder;
 
-    const int irq = irq_disable();
+    const uintptr_t lock = address_to_spinlock(ptr);
+    spinlock_lock(&locks[lock]);
     
-    memcpy(ret, ptr, size);
-    memcpy(ptr, val, size);
+    memcpy(ret, (const void *)ptr, size);
+    memcpy((void *)ptr, val, size);
     
-    irq_restore(irq);                        
+    spinlock_unlock(&locks[lock]);                       
 }
 
 bool __atomic_compare_exchange(size_t size,
-                               void* ptr,
+                               volatile void* ptr,
                                void* expected,
                                void* desired,
                                int success_memorder,
@@ -154,17 +174,20 @@ bool __atomic_compare_exchange(size_t size,
     (void)fail_memorder;
 
     bool retval;
-    const int irq = irq_disable();
+    const uintptr_t lock = address_to_spinlock(ptr);
     
-    if(memcmp(ptr, expected, size) == 0) {
-        memcpy(ptr, desired, size);
+    spinlock_lock(&locks[lock]);
+    
+    if(memcmp((const void *)ptr, expected, size) == 0) {
+        memcpy((void *)ptr, desired, size);
         retval = true;
     } else {
-        memcpy(expected, ptr, size);
+        memcpy(expected, (const void *)ptr, size);
         retval = false;
     }
     
-    irq_restore(irq);  
+    spinlock_unlock(&locks[lock]); 
+
     return retval;
 }
 
@@ -173,5 +196,3 @@ bool __atomic_is_lock_free(size_t size, void *ptr) {
     (void) size;
     return true;
 }
-
-

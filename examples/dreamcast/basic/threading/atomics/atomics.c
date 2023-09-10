@@ -59,9 +59,13 @@ _Static_assert(ATOMIC_POINTER_LOCK_FREE == 2,
 _Static_assert(ATOMIC_LLONG_LOCK_FREE == 1,
                "Our long longs are expected to sometimes be lock free!");
 
-#define THREAD_COUNT    20    /* # of threads to spawn */
-#define ITERATION_COUNT 5     /* # of times to iterate over each atomic */
-#define BUFFER_SIZE     4096  /* Size of atomic buffer, intentionally ridiculous */
+#define THREAD_COUNT          20    /* # of threads to spawn */
+#define ITERATION_COUNT       5     /* # of times to iterate over each atomic */
+#define BUFFER_SIZE           4096  /* # of bytes in atomic buffer */
+#define BUFFER_UPDATE_COUNT   100   /* # of times to update atomic buffer */
+
+_Static_assert(THREAD_COUNT * ITERATION_COUNT <= UINT8_MAX,
+               "Threads * iterations would overflow uint8_t counters!");
 
 /* Generic buffer structure we will use with atomics. */
 typedef struct {
@@ -78,9 +82,9 @@ static atomic_short     short_atomic    = 0;
 static atomic_ptrdiff_t ptrdiff_atomic  = 0;
 static _Atomic(Buffer)  buffer_atomic   = { {0} };
 
-/* Utility function to do an "atomic" increment of
-   our massive buffer. */ 
-static void atomic_increment_buffer(unsigned tid) {
+/* Utility function to do an "atomic" fetch + add operation on our 
+   massive buffer. */ 
+static void atomic_add_buffer(unsigned tid, int delta) {
    /* Preload the initial value of the buffer. */
    Buffer desired, expected = atomic_load(&buffer_atomic);
 
@@ -90,12 +94,12 @@ static void atomic_increment_buffer(unsigned tid) {
       will return false, updating the "expected" value. We increment 
       the new value and try again. */
    do {
-      printf("Thread[%2u]: Attempting to increment buffer: [%u]\n", 
+      printf("Thread[%2u]: Attempting to add to buffer: [%u]\n", 
              tid,
              expected.values[0]);
 
       for(unsigned v = 0; v < sizeof(desired.values); ++v)
-         desired.values[v] = expected.values[v] + 1;
+         desired.values[v] = expected.values[v] + delta;
 
    } while(!atomic_compare_exchange_strong(&buffer_atomic,
                                            &expected,
@@ -131,6 +135,14 @@ int thread(void *arg) {
       /* Release the ghetto flag_atomic spinlock. */
       atomic_flag_clear(&flag_atomic);
       printf("Thread[%2u]: Released atomic flag lock.\n", tid);
+
+      /* Attempt to atomically add a value to our huge buffer structure a 
+         few times, to ensure the scheduler isn't able to preempt and break
+         its atomicity. */
+      for(int i = 0; i < BUFFER_UPDATE_COUNT; ++i) {
+         atomic_add_buffer(tid, i);
+         atomic_add_buffer(tid, -i);
+      }
 
       /* Create a second type of spinlock out of an atomic 
          boolean, doing the same thing as before: attempting
@@ -172,15 +184,12 @@ int thread(void *arg) {
          retval = -1;
       }
 
+      /* Ensure atomic bitwise operations work on various primitive types. */
       printf("Thread[%2u]: Performing bitwise operations.\n", tid);
 
-      /* Ensure atomic bitwise operations work on various primitive types. */
       atomic_fetch_or(&byte_atomic, tid);
       atomic_fetch_xor(&ptrdiff_atomic, tid);
       atomic_fetch_and(&int_atomic, tid);
-
-      /* Attempt to atomically increment our huge buffer structure. */
-      atomic_increment_buffer(tid);
    }
 
    /* Return any errors back to the main thread. */
@@ -354,7 +363,7 @@ int main(int arg, char* argv[]) {
    Buffer buff_value = atomic_load(&buffer_atomic);
    bool buffer_works = true;
    for(unsigned v = 0; v < sizeof(buff_value.values); ++v) {
-      if(buff_value.values[v] != THREAD_COUNT * ITERATION_COUNT) {
+      if(buff_value.values[v]) {
          fprintf(stderr, 
                  "buffer_atomic[%u] left in unexpected state: [%d]\n",
                  v, 
