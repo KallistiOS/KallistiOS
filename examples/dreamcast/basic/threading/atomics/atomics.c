@@ -170,7 +170,7 @@ int thread(void *arg) {
 
       printf("Thread[%2u]: Releasing atomic bool lock.\n", tid);
       
-      /* Do the reverse compare + exhange operation to release the lock, this
+      /* Do the reverse compare + exchange operation to release the lock, this
          time expecting it to be previously owned (true) and setting it to 
          false to release. */
       expected = true;
@@ -298,7 +298,6 @@ int main(int arg, char* argv[]) {
    for(unsigned i = 0; i < THREAD_COUNT; ++i)
       byte_expected_value |= i;
 
-   /* Note that memory order shouldn't do anything for our platform, just testing. */
    if((byte_value = atomic_load(&byte_atomic))
          != byte_expected_value)
    {

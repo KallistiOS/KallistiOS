@@ -4,6 +4,11 @@
    Copyright (C) 2023 Falco Girgis
 */
 
+/* This file provides the additional symbols required to provide 
+   support for C11 atomics with the "-matomic-model=soft-imask" 
+   build flag. 
+*/
+
 #include <arch/arch.h>
 #include <arch/cache.h>
 #include <arch/irq.h>
@@ -12,9 +17,10 @@
 #include <stdbool.h>
 #include <string.h>
 
-#define GENERIC_LOCK_BLOCK_SIZE     (CPU_CACHE_BLOCK_SIZE * 4)
-#define GENERIC_LOCK_COUNT          (PAGESIZE / GENERIC_LOCK_BLOCK_SIZE)
-
+/* Create a set of macros to codegen atomic symbols for primitive types. 
+   For these types, we simply disable interrupts then reenable them 
+   around accesses to our atomics to ensure their atomicity.
+*/
 #define ATOMIC_LOAD_N_(type, n) \
     type \
     __atomic_load_##n(const volatile void *ptr, int model) { \
@@ -96,6 +102,7 @@
         return ret;  \
     }
 
+/* GCC provides us with all primitive atomics except for 64-bit types. */
 ATOMIC_LOAD_N_(unsigned long long, 8)
 ATOMIC_STORE_N_(unsigned long long, 8)
 ATOMIC_EXCHANGE_N_(unsigned long long, 8)
@@ -107,13 +114,27 @@ ATOMIC_FETCH_N_(unsigned long long, 8, or, |=)
 ATOMIC_FETCH_N_(unsigned long long, 8, xor, ^=)
 ATOMIC_FETCH_NAND_N_(unsigned long long, 8)
 
+/* Provide GCC with symbols and logic required to implement 
+   generically sized atomics. Rather than disabling an enabling 
+   interrupts around primitive assignments, we use spinlocks 
+   around memcpy() calls. */
+
+/* Size of each memory region covered by an individual lock. */
+#define GENERIC_LOCK_BLOCK_SIZE     (CPU_CACHE_BLOCK_SIZE * 4)
+/* Locks have to be shared for each page with the MMU enabled, 
+   otherwise we can fail when aliasing an address range to muliple
+   pages. */
+#define GENERIC_LOCK_COUNT          (PAGESIZE / GENERIC_LOCK_BLOCK_SIZE)
+
+/* Create a hash table mapping a region of memory to a lock. */
 static spinlock_t locks[GENERIC_LOCK_COUNT] = {
     [0 ... (GENERIC_LOCK_COUNT - 1)] = SPINLOCK_INITIALIZER
 };
 
-inline static uintptr_t address_to_spinlock(const volatile void *ptr) {
-    return ((uintptr_t)ptr / GENERIC_LOCK_BLOCK_SIZE) 
-                % GENERIC_LOCK_COUNT;
+/* Our hash function which maps an address to its corresponding lock index. */
+inline static uintptr_t 
+address_to_spinlock(const volatile void *ptr) {
+    return ((uintptr_t)ptr / GENERIC_LOCK_BLOCK_SIZE) % GENERIC_LOCK_COUNT;
 }
 
 void __atomic_load(size_t size, 
@@ -193,6 +214,6 @@ bool __atomic_compare_exchange(size_t size,
 
 bool __atomic_is_lock_free(size_t size, void *ptr) {
     (void)ptr;
-    (void) size;
+    (void)size;
     return true;
 }
