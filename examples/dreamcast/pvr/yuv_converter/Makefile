@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
-# examples/dreamcast/pvr/Makefile
-# (c) 2023 Andy Barajas
+# examples/dreamcast/pvr/yuv_converter/Makefile
+# Copyright (C) 2023 Falco Girgis
 #
 
 all:
