@@ -171,7 +171,7 @@ bool __atomic_compare_exchange(size_t size,
 bool __atomic_is_lock_free(size_t size, void *ptr) {
     (void)ptr;
     (void) size;
-    return false;
+    return true;
 }
 
 
