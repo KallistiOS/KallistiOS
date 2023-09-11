@@ -186,32 +186,32 @@ int validate_wav_header(wavhdr_t *wavhdr, int format, int bits, FILE *in) {
     int result = 0;
 
     if(memcmp(wavhdr->hdr1, "RIFF", 4)) {
-        printf("Invalid RIFF header.\n");
+        fprintf(stderr, "Invalid RIFF header.\n");
         result = -1;
     }
 
     if(memcmp(wavhdr->hdr2, "WAVEfmt ", 8)) {
-        printf("Invalid WAVEfmt header.\n");
+        fprintf(stderr, "Invalid WAVEfmt header.\n");
         result = -1;
     }
 
     if(wavhdr->hdrsize != 0x10) {
-        printf("Invalid header size.\n");
+        fprintf(stderr, "Invalid header size.\n");
         result = -1;
     }
 
     if(wavhdr->format != format) {
-        printf("Unsupported format.\n");
+        fprintf(stderr, "Unsupported format.\n");
         result = -1;
     }
 
     if(wavhdr->channels != 1 && wavhdr->channels != 2) {
-        printf("Unsupported number of channels.\n");
+        fprintf(stderr, "Unsupported number of channels.\n");
         result = -1;
     }
 
     if(wavhdr->bits != bits) {
-        printf("Unsupported bit depth.\n");
+        fprintf(stderr, "Unsupported bit depth.\n");
         result = -1;
     }
 
@@ -224,10 +224,18 @@ int validate_wav_header(wavhdr_t *wavhdr, int format, int bits, FILE *in) {
         do
         {
             /* Read the next chunk header */
-            fread(wavhdr->hdr3, 1, 4, in);
+            if(fread(wavhdr->hdr3, 1, 4, in) != 4) {
+                fprintf(stderr, "Failed to read next chunk header!\n");
+                result = -1;
+                break;
+            }
 
             /* Read the chunk size */
-            fread(&wavhdr->datasize, 1, 4, in);
+            if(fread(&wavhdr->datasize, 1, 4, in) != 4) {
+                fprintf(stderr, "Failed to read chunk size!\n");
+                result = -1;
+                break;
+            }
 
             /* Skip the chunk if it's not the "data" chunk. */
             if(memcmp(wavhdr->hdr3, "data", 4))
@@ -294,11 +302,12 @@ int wav2adpcm(const char *infile, const char *outfile) {
 
     out = fopen(outfile, "wb");
     if(fwrite(&wavhdr, sizeof(wavhdr), 1, out) != 1 || 
-       fwrite(adpcmbuf, adpcmsize, 1, out) != 1) {
+        fwrite(adpcmbuf, adpcmsize, 1, out) != 1) {
         fprintf(stderr, "Cannot write ADPCM data.\n");
         fclose(out);
         return -1;
     }
+    
     fclose(out);
 
     return 0;

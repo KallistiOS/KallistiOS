@@ -8,7 +8,7 @@
 /** \file   arch/memory.h
     \brief  Constants for areas of the system memory map.
 
-    Various addresses and masks that are set by the SH7750. None of the values 
+    Various addresses and masks that are set by the SH7750. None of the values
     here are Dreamcast-specific.
 
     These values are drawn from the Hitatchi SH7750 Series Hardware Manual rev 6.0.
@@ -25,9 +25,9 @@ __BEGIN_DECLS
 /** \defgroup memory Memory
     \brief    Basics of the SH4 Memory Map
 
-    The SH7750 Series physical address space is mapped onto a 29-bit external 
-    memory space, with the upper 3 bits of the address indicating which memory 
-    region will be used. The P0/U0 memory region spans a 2GB space with the 
+    The SH7750 Series physical address space is mapped onto a 29-bit external
+    memory space, with the upper 3 bits of the address indicating which memory
+    region will be used. The P0/U0 memory region spans a 2GB space with the
     bottom 512MB mirrored to the P1, P2, and P3 regions.
 
 */
@@ -35,8 +35,8 @@ __BEGIN_DECLS
 /** \brief Mask a cache-agnostic address.
     \ingroup memory
 
-    This masks out the upper 3 bits of an address. This is used when it is 
-    necssary to access memory with a specified caching mode. This is needed for 
+    This masks out the upper 3 bits of an address. This is used when it is
+    necssary to access memory with a specified caching mode. This is needed for
     DMA and SQ usage as well as various MMU functions.
 
 */
@@ -45,8 +45,8 @@ __BEGIN_DECLS
 /** \brief U0 memory region (cachable).
     \ingroup memory
 
-    This is the base user mode memory address. It is cacheable as determined 
-    by the WT bit of the cache control register. By default KOS sets this to 
+    This is the base user mode memory address. It is cacheable as determined
+    by the WT bit of the cache control register. By default KOS sets this to
     copy-back mode.
 
     KOS runs in privileged mode, so this is here merely for completeness.
@@ -57,8 +57,8 @@ __BEGIN_DECLS
 /** \brief P0 memory region (cachable).
     \ingroup memory
 
-    This is the base privileged mode memory address. It is cacheable as determined 
-    by the WT bit of the cache control register. By default KOS sets this to 
+    This is the base privileged mode memory address. It is cacheable as determined
+    by the WT bit of the cache control register. By default KOS sets this to
     copy-back mode.
 
 */
@@ -67,10 +67,10 @@ __BEGIN_DECLS
 /** \brief P1 memory region (cachable).
     \ingroup memory
 
-    This is a modularly cachable memory region. It is cacheable as determined by 
-    the CB bit of the cache control register. That allows it to function in a 
-    different caching mode (copy-back v write-through) than the U0, P0, and P3 
-    regions, whose cache mode are governed by the WT bit. By default KOS sets this 
+    This is a modularly cachable memory region. It is cacheable as determined by
+    the CB bit of the cache control register. That allows it to function in a
+    different caching mode (copy-back v write-through) than the U0, P0, and P3
+    regions, whose cache mode are governed by the WT bit. By default KOS sets this
     to the same	copy-back mode as the other cachable regions.
 
 */
@@ -79,7 +79,7 @@ __BEGIN_DECLS
 /** \brief P2 memory region (non-cachable).
     \ingroup memory
 
-    This is the non-cachable memory region. It is most frequently for DMA 
+    This is the non-cachable memory region. It is most frequently for DMA
     transactions to ensure reads are not cached.
 
 */
@@ -94,7 +94,7 @@ __BEGIN_DECLS
 #define MEM_AREA_P3_BASE    0xc0000000
 
 /** \brief P4 SH-internal memory region (non-cachable).
-    \defgroup p4mem
+    \defgroup p4mem P4 memory region
     \ingroup memory
 
     This offset maps to on-chip I/O channels.
@@ -105,7 +105,7 @@ __BEGIN_DECLS
 /** \brief Store Queue (SQ) memory base.
     \ingroup p4mem
 
-    This offset maps to the SQ memory region. RW to addresses from 
+    This offset maps to the SQ memory region. RW to addresses from
     0xe0000000-0xe3ffffff follow SQ rules.
 
     \see dc\sq.h

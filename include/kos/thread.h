@@ -650,10 +650,12 @@ int thd_detach(kthread_t *thd);
     \ingroup     threads
     \relatesalso kthread_t
 
-    \param cb               The callback to call for each thread
+    \param cb               The callback to call for each thread. 
+                            If a nonzero value is returned, iteration
+                            ceases immediately.
     \param data             User data to be passed to the callback
 
-    \retval 0               On success.
+    \retval                 0 or the first nonzero value returned by \p cb.
 
     \sa thd_pslist
 */

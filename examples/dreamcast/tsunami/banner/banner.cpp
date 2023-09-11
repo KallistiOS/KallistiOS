@@ -42,6 +42,8 @@ even the main loop and user input eventually.
 #include <tsu/triggers/chainanim.h>
 #include <tsu/triggers/death.h>
 
+#include <memory>
+
 extern uint8 romdisk[];
 KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS);
 KOS_INIT_ROMDISK(romdisk);
@@ -117,34 +119,34 @@ int main(int argc, char **argv) {
     pvr_init_defaults();
 
     // Load a texture for our banner
-    RefPtr<Texture> txr = new Texture("/rd/logo.png", true);
+    auto txr = std::make_shared<Texture>("/rd/logo.png", true);
 
     // Setup a scene and place a banner in it
-    RefPtr<Scene> sc = new Scene();
-    RefPtr<Banner> b = new Banner(PVR_LIST_TR_POLY, txr);
+    auto sc = std::make_shared<Scene>();
+    auto b = std::make_shared<Banner>(PVR_LIST_TR_POLY, txr);
     sc->subAdd(b);
 
     // Put the banner off-screen to begin with, and attach a LogXYMover
     // animation to move it to 320,240
     b->setTranslate(Vector(800, 600, 10));
-    RefPtr<LogXYMover> mover = new LogXYMover(320, 240);
+    auto mover = std::make_shared<LogXYMover>(320, 240);
     b->animAdd(mover);
 
     // Add a trigger to the LogXYMover to chain to our Circler animation.
-    RefPtr<Circler> circ = new Circler(320, 240, 10, 75, 30);
-    mover->triggerAdd(new ChainAnimation(circ));
+    auto circ = std::make_shared<Circler>(320, 240, 10, 75, 30);
+    mover->triggerAdd(std::make_shared<ChainAnimation>(circ));
 
     // Add a couple of labels with explanation. Set each one's
     // initial alpha to 0 and fade them in over 30 frames.
-    RefPtr<Font> fnt = new Font("/rd/typewriter.txf");
-    RefPtr<Label> lbl1 = new Label(fnt, "Use the joystick to control the size", 24, true, true);
+    auto fnt = std::make_shared<Font>("/rd/typewriter.txf");
+    auto lbl1 = std::make_shared<Label>(fnt, "Use the joystick to control the size", 24, true, true);
     lbl1->setTranslate(Vector(320, 360, 20));
     sc->subAdd(lbl1);
     lbl1->setAlpha(0.0f);
-    RefPtr<AlphaFader> fader = new AlphaFader(1.0f, 1.0f / 30.0f);
+    auto fader = std::make_shared<AlphaFader>(1.0f, 1.0f / 30.0f);
     lbl1->animAdd(fader);
 
-    RefPtr<Label> lbl2 = new Label(fnt, "of the circle. Press START to quit.", 24, true, true);
+    auto lbl2 = std::make_shared<Label>(fnt, "of the circle. Press START to quit.", 24, true, true);
     lbl2->setTranslate(Vector(320, 360 + 24, 20));
     sc->subAdd(lbl2);
     lbl2->setAlpha(0.0f);
@@ -193,21 +195,21 @@ int main(int argc, char **argv) {
     printf("Starting exodus...\n");
 
     // Create an ExpXYMover heading off-screen and chain it to the Circler
-    RefPtr<ExpXYMover> mover2 = new ExpXYMover(-1.0f, -1.0f, 320 - 800, 240 - 600);
-    circ->triggerAdd(new ChainAnimation(mover2));
+    auto mover2 = std::make_shared<ExpXYMover>(-1.0f, -1.0f, 320 - 800, 240 - 600);
+    circ->triggerAdd(std::make_shared<ChainAnimation>(mover2));
 
     // Add a trigger to the ExpXYMover that will signal that the banner
     // is finished once it reaches the animation endpoint.
-    mover2->triggerAdd(new Death());
+    mover2->triggerAdd(std::make_shared<Death>());
 
     // Add faders with triggers; note we use two separate alpha faders
     // this time so we have two triggers (one per label)
-    fader = new AlphaFader(0.0f, -1.0f / 30.0f);
-    fader->triggerAdd(new Death());
+    fader = std::make_shared<AlphaFader>(0.0f, -1.0f / 30.0f);
+    fader->triggerAdd(std::make_shared<Death>());
     lbl1->animAdd(fader);
 
-    fader = new AlphaFader(0.0f, -1.0f / 30.0f);
-    fader->triggerAdd(new Death());
+    fader = std::make_shared<AlphaFader>(0.0f, -1.0f / 30.0f);
+    fader->triggerAdd(std::make_shared<Death>());
     lbl2->animAdd(fader);
 
     // Tell the circler we're about to finish up
@@ -243,7 +245,7 @@ int main(int argc, char **argv) {
         MAPLE_FOREACH_END()
     }
 
-    // Ok, we're all done! The RefPtrs will take care of mem cleanup.
+    // Ok, we're all done! The std::shared_ptrs will take care of mem cleanup.
 
     return 0;
 }

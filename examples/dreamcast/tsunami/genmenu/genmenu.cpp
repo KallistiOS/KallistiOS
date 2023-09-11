@@ -27,13 +27,15 @@ basics.
 #include <tsu/anims/alphafader.h>
 #include <tsu/triggers/death.h>
 
+#include <memory>
+
 extern uint8 romdisk[];
 KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS);
 KOS_INIT_ROMDISK(romdisk);
 
-class MyMenu : public GenericMenu, public RefCnt {
+class MyMenu : public GenericMenu {
 public:
-    MyMenu(Font * fnt) {
+    MyMenu(std::shared_ptr<Font> fnt) {
         // Offset our scene so 0,0,0 is the screen center with Z +10
         m_scene->setTranslate(Vector(320, 240, 10));
 
@@ -44,21 +46,21 @@ public:
         m_gray = Color(1, 0.7f, 0.7f, 0.7f);
 
         // Setup three labels and have them zoom in.
-        m_options[0] = new Label(fnt, "Do Thing 1", 24, true, true);
+        m_options[0] = std::make_shared<Label>(fnt, "Do Thing 1", 24, true, true);
         m_options[0]->setTranslate(Vector(0, 400, 0));
-        m_options[0]->animAdd(new LogXYMover(0, 0));
+        m_options[0]->animAdd(std::make_shared<LogXYMover>(0, 0));
         m_options[0]->setTint(m_white);
         m_scene->subAdd(m_options[0]);
 
-        m_options[1] = new Label(fnt, "Do Thing 2", 24, true, true);
+        m_options[1] = std::make_shared<Label>(fnt, "Do Thing 2", 24, true, true);
         m_options[1]->setTranslate(Vector(0, 400 + 400, 0));
-        m_options[1]->animAdd(new LogXYMover(0, 24));
+        m_options[1]->animAdd(std::make_shared<LogXYMover>(0, 24));
         m_options[1]->setTint(m_gray);
         m_scene->subAdd(m_options[1]);
 
-        m_options[2] = new Label(fnt, "Quit", 24, true, true);
+        m_options[2] = std::make_shared<Label>(fnt, "Quit", 24, true, true);
         m_options[2]->setTranslate(Vector(0, 400 + 400 + 400, 0));
-        m_options[2]->animAdd(new LogXYMover(0, 48));
+        m_options[2]->animAdd(std::make_shared<LogXYMover>(0, 48));
         m_options[2]->setTint(m_gray);
         m_scene->subAdd(m_options[2]);
 
@@ -109,16 +111,16 @@ public:
 
     virtual void startExit() {
         // Apply some expmovers to the options.
-        ExpXYMover * m = new ExpXYMover(0, 1, 0, 400);
-        m->triggerAdd(new Death());
+	auto m = std::make_shared<ExpXYMover>(0, 1, 0, 400);
+        m->triggerAdd(std::make_shared<Death>());
         m_options[0]->animAdd(m);
 
-        m = new ExpXYMover(0, 1.2, 0, 400);
-        m->triggerAdd(new Death());
+	m = std::make_shared<ExpXYMover>(0, 1.2, 0, 400);
+        m->triggerAdd(std::make_shared<Death>());
         m_options[1]->animAdd(m);
 
-        m = new ExpXYMover(0, 1.4, 0, 400);
-        m->triggerAdd(new Death());
+	m = std::make_shared<ExpXYMover>(0, 1.4, 0, 400);
+        m->triggerAdd(std::make_shared<Death>());
         m_options[2]->animAdd(m);
 
         GenericMenu::startExit();
@@ -126,7 +128,7 @@ public:
 
 
     Color       m_white, m_gray;
-    RefPtr<Label>   m_options[3];
+    std::shared_ptr<Label>   m_options[3];
     int     m_cursel;
 };
 
@@ -140,16 +142,16 @@ int main(int argc, char **argv) {
     pvr_init_defaults();
 
     // Load a font
-    RefPtr<Font> fnt = new Font("/rd/typewriter.txf");
+    auto fnt = std::make_shared<Font>("/rd/typewriter.txf");
 
     // Create a menu
-    RefPtr<MyMenu> mm = new MyMenu(fnt);
+    auto mm = std::make_shared<MyMenu>(fnt);
 
     // Do the menu
     mm->doMenu();
 
 
-    // Ok, we're all done! The RefPtrs will take care of mem cleanup.
+    // Ok, we're all done! The std::shared_ptrs will take care of mem cleanup.
 
     return 0;
 }
