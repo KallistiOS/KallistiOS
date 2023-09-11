@@ -236,8 +236,8 @@ int main(int arg, char* argv[]) {
       retval = -1;
    }
 
-   if(!atomic_is_lock_free(&buffer_atomic)) {
-      fprintf(stderr, "Struct atomics are not lock free!\n");
+   if(atomic_is_lock_free(&buffer_atomic)) {
+      fprintf(stderr, "Struct atomics are lock free!\n");
       retval = -1;
    }
 

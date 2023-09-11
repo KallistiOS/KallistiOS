@@ -212,8 +212,10 @@ bool __atomic_compare_exchange(size_t size,
     return retval;
 }
 
-bool __atomic_is_lock_free(size_t size, void *ptr) {
+/* All atomics for builtin types are lock-free, while our
+   generic atomics back-end utilizes spinlocks. */
+bool __atomic_is_lock_free(size_t size, const volatile void *ptr) {
     (void)ptr;
     (void)size;
-    return true;
+    return (size <= sizeof(long long)) ? true : false;
 }
