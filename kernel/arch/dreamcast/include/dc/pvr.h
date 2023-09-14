@@ -1060,7 +1060,7 @@ Striplength set to 2 */
 #define PVR_TA_INIT             0x0144  /**< \brief Initialize vertex reg. params */
 #define PVR_YUV_ADDR            0x0148  /**< \brief YUV conversion destination */
 #define PVR_YUV_CFG             0x014c  /**< \brief YUV configuration */
-#define PVR_YUV_STAT            0x0150  /**< \bried The number of YUV macroblocks converted */
+#define PVR_YUV_STAT            0x0150  /**< \brief The number of YUV macroblocks converted */
 
 #define PVR_UNK_0160            0x0160  /**< \brief ?? */
 #define PVR_TA_OPB_INIT         0x0164  /**< \brief Object pointer buffer position init */

@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # examples/dreamcast/pvr/Makefile
-# (c)2002 Megan Potter
+# Copyright (C) 2002 Megan Potter
 #
 
 all:
@@ -14,6 +14,7 @@ all:
 	$(KOS_MAKE) -C modifier_volume_tex
 	$(KOS_MAKE) -C cheap_shadow
 	$(KOS_MAKE) -C bumpmap
+	$(KOS_MAKE) -C yuv_converter
 
 clean:
 	$(KOS_MAKE) -C plasma clean
@@ -25,6 +26,7 @@ clean:
 	$(KOS_MAKE) -C modifier_volume_tex clean
 	$(KOS_MAKE) -C cheap_shadow clean
 	$(KOS_MAKE) -C bumpmap clean
+	$(KOS_MAKE) -C yuv_converter clean
 
 dist:
 	$(KOS_MAKE) -C plasma dist
@@ -36,3 +38,4 @@ dist:
 	$(KOS_MAKE) -C modifier_volume_tex dist
 	$(KOS_MAKE) -C cheap_shadow dist
 	$(KOS_MAKE) -C bumpmap dist
+	$(KOS_MAKE) -C yuv_converter dist 

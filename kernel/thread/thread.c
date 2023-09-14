@@ -107,9 +107,11 @@ static const char *thd_state_to_str(kthread_t *thd) {
 
 int thd_each(int (*cb)(kthread_t *thd, void *user_data), void *data) {
     kthread_t *cur;
+    int retval;
 
     LIST_FOREACH(cur, &thd_list, t_list) {
-        cb(cur, data);
+        if((retval = cb(cur, data)))
+            return retval;
     }
 
     return 0;

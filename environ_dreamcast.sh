@@ -1,7 +1,7 @@
 # KallistiOS environment variable settings. These are the shared pieces
 # for the Dreamcast(tm) platform.
 
-export KOS_CFLAGS="${KOS_CFLAGS} -ml -m4-single-only -ffunction-sections -fdata-sections -ftls-model=local-exec"
+export KOS_CFLAGS="${KOS_CFLAGS} -ml -m4-single-only -ffunction-sections -fdata-sections -matomic-model=soft-imask -ftls-model=local-exec"
 export KOS_AFLAGS="${KOS_AFLAGS} -little"
 
 if [ x${KOS_SUBARCH} = xnaomi ]; then
