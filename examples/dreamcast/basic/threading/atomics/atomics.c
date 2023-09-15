@@ -115,7 +115,6 @@ int thread(void *arg) {
 
    /* Do several iterations worth of atomic operations for each thread. */
    for(unsigned i = 0; i < ITERATION_COUNT; ++i) {
-
       /* Create a spin-lock out of "flag_atomic" by repeatedly testing
          and setting its value, while its previous value was not false
          (our initial "unlocked" state). */
@@ -151,13 +150,13 @@ int thread(void *arg) {
       bool expected = false;
       while(!atomic_compare_exchange_weak(&bool_atomic,
                                           &expected,
-                                          true))
-      { 
+                                          true)) { 
          printf("Thread[%2u]: Waiting to acquire atomic bool lock.\n", tid);
          /* This time we won't hog all of the CPU time waiting. */
          thrd_yield();
          expected = false;     
       }
+
       printf("Thread[%2u]: Acquired atomic bool lock.\n", tid);
 
       /* This time lets give other threads a chance to mess
@@ -176,8 +175,7 @@ int thread(void *arg) {
       expected = true;
       if(!atomic_compare_exchange_strong(&bool_atomic,
                                          &expected,
-                                         false))
-      {
+                                         false)) {
          fprintf(stderr, 
                  "Thread[%2u]: Unexpected value for atomic bool lock!\n",
                  tid);
@@ -246,9 +244,8 @@ int main(int arg, char* argv[]) {
    /* Create N-1 threads running the "thread()" function to
       manipulate and fight over various atomic data. */ 
    for(unsigned t = 0; t < THREAD_COUNT - 1; ++t) {
-      if(thrd_create(&threads[t], thread, (void *)t + 1)
-            != thrd_success) 
-      {
+      if(thrd_create(&threads[t], thread,
+                     (void *)t + 1) != thrd_success) {
          fprintf(stderr, "Failed to create thread: [%u]\n", t + 1);
          retval = -1;
       }
@@ -281,68 +278,81 @@ int main(int arg, char* argv[]) {
    if(atomic_flag_test_and_set(&flag_atomic)) {
       fprintf(stderr, "flag_atomic left in unexpected state: [true]\n");
       retval = -1;
-   } else printf("\tFlag atomics work.\n");
+   }
+   else {
+       printf("\tFlag atomics work.\n");
+   }
 
    /* Verify atomic bool state. */
    bool expected = false;
    if(!atomic_compare_exchange_weak(&bool_atomic,
                                     &expected,
-                                    true))
-   {
+                                    true)) {
       fprintf(stderr, "bool_atomic left in unexpected state: [true]\n");
       retval = -1;
-   } else printf("\tBool atomics work.\n");
+   }
+   else {
+       printf("\tBool atomics work.\n");
+   }
 
    /* Verify atomic byte state. */
    uint8_t byte_value, byte_expected_value = 0;
-   for(unsigned i = 0; i < THREAD_COUNT; ++i)
-      byte_expected_value |= i;
+   for(unsigned i = 0; i < THREAD_COUNT; ++i) {
+       byte_expected_value |= i;
+   }
 
-   if((byte_value = atomic_load(&byte_atomic))
-         != byte_expected_value)
-   {
+   if((byte_value = atomic_load(&byte_atomic)) != byte_expected_value) {
       fprintf(stderr, 
               "byte_atomic left in unexpected state: [%u]\n", 
               byte_value);
       retval = -1;
-   } else printf("\t8-bit atomics work.\n");
+   }
+   else {
+       printf("\t8-bit atomics work.\n");
+   }
 
    /* Verify atomic short state. */
    short short_value;
    /* Note that memory order shouldn't do anything for our platform, just testing. */
-   if((short_value = atomic_load(&short_atomic))
-         != -(THREAD_COUNT * ITERATION_COUNT))
-   {
+   if((short_value = atomic_load(&short_atomic)) !=
+           -(THREAD_COUNT * ITERATION_COUNT)) {
       fprintf(stderr, 
               "short_atomic left in unexpected state: [%i]\n", 
               short_value);
       retval = -1;
-   } else printf("\t16-bit atomics work.\n");
+   }
+   else {
+       printf("\t16-bit atomics work.\n");
+   }
 
    /* Verify atomic int state. */
    int int_value, int_expected_value = INT_MAX;
-   for(int i = 0; i < THREAD_COUNT; ++i)
-      int_expected_value &= i;
+   for(int i = 0; i < THREAD_COUNT; ++i) {
+       int_expected_value &= i;
+   }
    
-   if((int_value = atomic_load(&int_atomic)) 
-         != int_expected_value)
-   {
+   if((int_value = atomic_load(&int_atomic)) != int_expected_value) {
       fprintf(stderr, 
               "int_atomic left in unexpected state: [%d]\n", 
               int_value);
       retval = -1;
-   } else printf("\t32-bit atomics work.\n");
+   }
+   else {
+       printf("\t32-bit atomics work.\n");
+   }
 
    /* Verify atomic long long state. */
    uint64_t longlong_value;
-   if((longlong_value = atomic_load(&longlong_atomic)) 
-         != THREAD_COUNT * ITERATION_COUNT) 
-   {
+   if((longlong_value = atomic_load(&longlong_atomic)) !=
+           THREAD_COUNT * ITERATION_COUNT) {
       fprintf(stderr, 
               "longlong_atomic left in unexpected state: [%llu]\n", 
               longlong_value);
       retval = -1;
-   } printf("\t64-bit atomics work.\n");
+   }
+   else {
+       printf("\t64-bit atomics work.\n");
+   }
 
    /* Verify atomic ptrdiff_t state. */
    ptrdiff_t ptrdiff_value, ptrdiff_expected_value = 0;
@@ -356,7 +366,10 @@ int main(int arg, char* argv[]) {
               "ptrdiff_atomic left in unexpected state: [%d]\n", 
               ptrdiff_value);
       retval = -1;
-   } else printf("\tptrdiff_t atomics work.\n");
+   }
+   else {
+       printf("\tptrdiff_t atomics work.\n");
+   }
 
    /* Verify atomic buffer state. */
    Buffer buff_value = atomic_load(&buffer_atomic);

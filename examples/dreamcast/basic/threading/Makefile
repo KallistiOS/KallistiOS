@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # examples/dreamcast/basic/threading/Makefile
-# (c) 2002 Megan Potter
+# Copyright (C) 2002 Megan Potter
 #
 
 all:
