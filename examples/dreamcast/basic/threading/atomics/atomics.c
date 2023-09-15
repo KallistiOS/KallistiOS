@@ -109,7 +109,7 @@ static void atomic_add_buffer(unsigned tid, int delta) {
 }
 
 /* Per-thread entry point. */
-int thread(void *arg) { 
+static int thread(void *arg) { 
    unsigned tid = (unsigned)arg;
    int retval = 0;
 
