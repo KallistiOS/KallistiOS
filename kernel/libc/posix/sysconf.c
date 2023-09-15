@@ -6,15 +6,13 @@
 
 #include <arch/arch.h>
 #include <kos/netcfg.h>
-#include <kos/opts.h>
+#include <kos/fs.h>
 
 #include <malloc.h>
 #include <unistd.h>
 #include <errno.h>
 
 long sysconf(int name) {
-    int min;
-
     switch(name) {
         case _SC_HOST_NAME_MAX:  
             return sizeof ((netcfg_t *)NULL)->hostname;
@@ -23,14 +21,7 @@ long sysconf(int name) {
             return HZ;
         
         case _SC_OPEN_MAX:
-            min = FS_CD_MAX_FILES;
-
-            if(FS_ROMDISK_MAX_FILES < min)
-                min = FS_ROMDISK_MAX_FILES;
-            if(FS_RAMDISK_MAX_FILES < min)
-                min = FS_RAMDISK_MAX_FILES;
-            
-            return min;
+            return FD_SETSIZE;
 
         case _SC_PAGESIZE:
             return PAGESIZE;
@@ -46,7 +37,7 @@ long sysconf(int name) {
             return 1;
         
         default: 
-            errno = -EINVAL;
+            errno = EINVAL;
             return -1;
     }
 }
