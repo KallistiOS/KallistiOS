@@ -34,8 +34,8 @@
 #define ATOMIC_STORE_N_(type, n) \
     void \
     __atomic_store_##n(volatile void *ptr, type val, int model) { \
-        (void)model; \
         const int irq = irq_disable(); \
+        (void)model; \
         *(type *)ptr = val; \
         irq_restore(irq); \
     }
