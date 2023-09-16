@@ -2,8 +2,8 @@
 
    compiler_tls.c
 
-   (c) 2023 Colton Pawielski
-   (c) 2023 Falco Girgis
+   Copyright (C) 2023 Colton Pawielski
+   Copyright (C) 2023 Falco Girgis
 
    A simple example showing off thread local variables
 
@@ -69,7 +69,7 @@ void *thd(void *v) {
 
     /* Ensure zero-initialized .TBSS data have the correct initial 
        values and are unique to each thread. */
-    for (i = 0; i < 5; i++){        
+    for(i = 0; i < 5; i++) {
         printf("Thread[%d]\tbss_test = 0x%lX\n", id, tbss_test);
         tbss_test++;
         thd_sleep(50);
@@ -82,7 +82,7 @@ void *thd(void *v) {
 
     /* Ensure value-initialized .TDATA data have the correct initial 
        values and are unique to each thread. */
-    for (i = 0; i < 5; i++){
+    for(i = 0; i < 5; i++) {
         printf("Thread[%d]\ttdata_test = 0x%lX\n", id, tdata_test);
         tdata_test++;
         thd_sleep(50);
@@ -94,12 +94,13 @@ void *thd(void *v) {
     }
 
     /* Ensure default-aligned .TBSS data is initialized properly. */
-    for(int i = 0; i < 256; ++i)
+    for(i = 0; i < 256; ++i) {
         if(tls_uint16[i] != 0) {
             fprintf(stderr, "tls_uint16[%d] failed!\n", i);
             ret = -1;
             break;
         }
+    }
 
     /* Ensure manually over-aligned .TDATA data is initialized properly. */
     if(strcmp((const char *)tls_string, "abcdefghijklmnopqrstuvwxyz012345")) {
@@ -118,24 +119,26 @@ void *thd(void *v) {
     bool reproduced = false;
 
     printf("[");
-    for (int i = 0; i < 3; i++) {
-        if (tls_buff4.inner[i] != 2) 
+    for(i = 0; i < 3; i++) {
+        if(tls_buff4.inner[i] != 2) 
             reproduced = true;
         
         printf("%d, ", tls_buff4.inner[i]);
     }
+
     printf("]\n");
 
     printf("[");
-    for (int i = 0; i < 3; i++) {
-        if (tls_buff16.inner[i] != 1) 
+    for(i = 0; i < 3; i++) {
+        if(tls_buff16.inner[i] != 1) 
             reproduced = true;
         
         printf("%d, ", tls_buff16.inner[i]);
     }
+
     printf("]\n");
 
-    if (reproduced) {
+    if(reproduced) {
         fprintf(stderr, "Bug has been reproduced!\n");
         ret = -1;
     }
@@ -160,8 +163,9 @@ int main(int argc, char **argv) {
     /* Create a bunch of threads and put each through 
        the same series of tests on their own (hopefully)
        independent set of thread-local variables. */
-    for (i = 0; i < thread_count; i++)
+    for(i = 0; i < thread_count; i++) {
         threads[i] = thd_create(0, thd, (void *)i + 1);
+    }
 
     /* Put the main thread through the same tests as thread 0. */
     ret = (int)thd((void *)0);

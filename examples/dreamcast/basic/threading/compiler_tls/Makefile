@@ -2,8 +2,8 @@
 #
 # basic/threading/compiler_tls/Makefile
 #
-# (c)2001 Megan Potter
-# (c)2023 Colton Pawielski
+# Copyright (C) 2001 Megan Potter
+# Copyright (C) 2023 Colton Pawielski
 #
 
 EXAMPLE_NAME=compiler_tls

@@ -347,7 +347,7 @@ int thd_remove_from_runnable(kthread_t *thd) {
    followed by .TBSS, very carefully ensuring alignment of each
    subchunk. 
 */
-static void* thd_create_tls_data(void) {
+static void *thd_create_tls_data(void) {
     /* Cached and typed local copies of TLS segment data for sizes, 
        alignments, and initial value data pointer, exported by the 
        linker script. 
