@@ -408,7 +408,7 @@ static void *thd_create_tls_data(void) {
 
     /* Initialize .TBSS */
     if(tbss_size) { 
-        tbss_segment  = (uint8_t *)tcbhead + tbss_offset; 
+        tbss_segment = (uint8_t *)tcbhead + tbss_offset; 
 
         /* Verify proper alignment. */
         assert(!((uintptr_t)tbss_segment % tbss_align));
