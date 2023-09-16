@@ -188,6 +188,7 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - *** Move definition of __RESTRICT from <sys/_types.h> to <kos/cdefs.h> [LS]
 - DC  Added DMA YUV converter path. Adjust some name of related #defines. 
       Added yuv examples [AB]
+- *** Added GCC builtin functions for supporting all of C11 atomics [FG]
 - *** Added toolchain and KOS support for C/C++ compiler-level TLS [CP && FG]
 
 KallistiOS version 2.0.0 -----------------------------------------------
