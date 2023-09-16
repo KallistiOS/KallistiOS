@@ -42,9 +42,6 @@ extern int _tdata_start, _tdata_size;
 extern int _tbss_size;
 extern long _tdata_align, _tbss_align;
 
-/* Forward declare C11's aligned_alloc which we use to allocate TLS segments */
-extern void *aligned_alloc(size_t alignment, size_t size);
-
 /* Utility function for aligning an address or offset. */
 static inline size_t align_to(size_t address, size_t alignment) {
     return (address + (alignment - 1)) & ~(alignment - 1);
@@ -391,7 +388,7 @@ static void *thd_create_tls_data(void) {
         tls_size += (align - align_rem);
 
     /* Allocate combined chunk with calculated size and alignment.  */
-    tcbhead = aligned_alloc(align, tls_size);
+    tcbhead = memalign(align, tls_size);
     assert(tcbhead);    
     assert(!((uintptr_t)tcbhead % 8)); 
 
