@@ -348,6 +348,12 @@ int thd_remove_from_runnable(kthread_t *thd) {
    subchunk. 
 */
 static void *thd_create_tls_data(void) {
+    size_t align, tdata_offset, tdata_end, tbss_offset, 
+        tbss_end, align_rem, tls_size;
+    
+    tcbhead_t *tcbhead;
+    void *tdata_segment, *tbss_segment;
+
     /* Cached and typed local copies of TLS segment data for sizes, 
        alignments, and initial value data pointer, exported by the 
        linker script. 
@@ -365,27 +371,27 @@ static void *thd_create_tls_data(void) {
     /* Each subsegment of the requested memory chunk must be aligned
        by the largest segment's memory alignment requirements. 
    */
-    size_t align = 8;        /* tcbhead_t has to be aligned by 8. */
+    align = 8;               /* tcbhead_t has to be aligned by 8. */
     if(tdata_align > align)
         align = tdata_align; /* .TDATA segment's alignment */
     if(tbss_align > align)
         align = tbss_align;  /* .TBSS segment's alignment */
 
     /* Calculate the sizing and offset location of each subsegment. */
-    const size_t tdata_offset = align_to(sizeof(tcbhead_t), align);
-    const size_t tdata_end    = tdata_offset + tdata_size;
-    const size_t tbss_offset  = align_to(tdata_end, tbss_align);
-    const size_t tbss_end     = tbss_offset + tbss_size; 
+    tdata_offset = align_to(sizeof(tcbhead_t), align);
+    tdata_end    = tdata_offset + tdata_size;
+    tbss_offset  = align_to(tdata_end, tbss_align);
+    tbss_end     = tbss_offset + tbss_size; 
 
     /* Calculate final aligned size requirement. */
-    const size_t align_rem = tbss_end % align;
-    size_t       tls_size  = tbss_end;
+    align_rem = tbss_end % align;
+    tls_size  = tbss_end;
 
     if(align_rem)
         tls_size += (align - align_rem);
 
     /* Allocate combined chunk with calculated size and alignment.  */
-    tcbhead_t *tcbhead  = aligned_alloc(align, tls_size);
+    tcbhead = aligned_alloc(align, tls_size);
     assert(tcbhead);    
     assert(!((uintptr_t)tcbhead % 8)); 
 
@@ -394,7 +400,7 @@ static void *thd_create_tls_data(void) {
 
     /* Initialize .TDATA */
     if(tdata_size) { 
-        void *tdata_segment = (uint8_t*)tcbhead + tdata_offset;
+        tdata_segment = (uint8_t *)tcbhead + tdata_offset;
 
         /* Verify proper alignment. */   
         assert(!((uintptr_t)tdata_segment % tdata_align));
@@ -405,7 +411,7 @@ static void *thd_create_tls_data(void) {
 
     /* Initialize .TBSS */
     if(tbss_size) { 
-        void *tbss_segment  = (uint8_t*)tcbhead + tbss_offset; 
+        tbss_segment  = (uint8_t *)tcbhead + tbss_offset; 
 
         /* Verify proper alignment. */
         assert(!((uintptr_t)tbss_segment % tbss_align));
