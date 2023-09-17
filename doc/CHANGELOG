@@ -190,6 +190,7 @@ KallistiOS version 2.1.0 -----------------------------------------------
       Added yuv examples [AB]
 - *** Added GCC builtin functions for supporting all of C11 atomics [FG]
 - *** Added toolchain and KOS support for C/C++ compiler-level TLS [CP && FG]
+- DC  Added vmu functions to check/enable/disable the extra 41 blocks [AB]
 
 KallistiOS version 2.0.0 -----------------------------------------------
 - DC  Broadband Adapter driver fixes [Megan Potter == MP]
