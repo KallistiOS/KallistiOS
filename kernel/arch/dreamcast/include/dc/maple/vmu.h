@@ -3,7 +3,7 @@
    dc/maple/vmu.h
    Copyright (C) 2000-2002 Jordan DeLong, Megan Potter
    Copyright (C) 2008 Donald Haase
-   Copyright (C) 2023 Falco Girgis
+   Copyright (C) 2023 Falco Girgis, Andy Barajas
 
 */
 
@@ -87,13 +87,44 @@ __BEGIN_DECLS
     a VMU has been formatted.
 */
 
+/** \brief   Get the status of a VMUs extra 41 blocks
+    \ingroup vmu_settings
+
+    This function checks if the extra 41 blocks of a VMU have been
+    enabled.
+
+    \param  dev             The device to check the status of.
+
+    \retval 1               On success: extra blocks are enabled
+    \retval 0               On success: extra blocks are disabled
+    \retval -1              On failure
+
+    \sa vmu_has_extra_blocks
+*/
+int vmu_has_extra_blocks(maple_device_t *dev);
+
+/** \brief   Enable the extra 41 blocks of a VMU
+    \ingroup vmu_settings
+
+    This function enables/disables the extra 41 blocks of a specific VMU.
+
+    \param  dev             The device to enable/disable 41 blocks.
+    \param  enable          Values other than 0 enables. Equal to 0 disables.
+
+    \retval 0               On success
+    \retval -1              On failure
+
+    \sa vmu_use_extra_blocks
+*/
+int vmu_use_extra_blocks(maple_device_t *dev, int enable);
+
 /** \brief   Enable custom color of a VMU
     \ingroup vmu_settings
 
     This function enables/disables the custom color of a specific VMU. 
     This color is only displayed in the Dreamcast's file manager.
 
-    \param  dev             The device to enable custom color.
+    \param  dev             The device to enable/disable custom color.
     \param  enable          Values other than 0 enables. Equal to 0 disables.
 
     \retval 0               On success

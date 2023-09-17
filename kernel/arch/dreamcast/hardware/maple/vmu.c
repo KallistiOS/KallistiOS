@@ -170,6 +170,35 @@ int vmu_get_buttons_enabled(void) {
     return !!vmu_drv.periodic;
 }
 
+int vmu_has_extra_blocks(maple_device_t *dev) {
+    vmu_root_t root;
+
+    if(vmufs_root_read(dev, &root) < 0)
+        return -1;
+
+    if(root.blk_cnt == 241)
+        return 1;
+
+    if(vmufs_root_write(dev, &root) < 0)
+        return -1;
+
+    return 0;
+}
+
+int vmu_use_extra_blocks(maple_device_t *dev, int enable) {
+    vmu_root_t root;
+
+    if(vmufs_root_read(dev, &root) < 0)
+        return -1;
+
+    root.blk_cnt = (enable != 0) ? 241 : 200;
+
+    if(vmufs_root_write(dev, &root) < 0)
+        return -1;
+
+    return 0;
+}
+
 int vmu_use_custom_color(maple_device_t *dev, int enable) {
     vmu_root_t root;
 
