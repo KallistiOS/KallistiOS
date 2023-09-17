@@ -179,9 +179,6 @@ int vmu_has_extra_blocks(maple_device_t *dev) {
     if(root.blk_cnt == 241)
         return 1;
 
-    if(vmufs_root_write(dev, &root) < 0)
-        return -1;
-
     return 0;
 }
 
