@@ -108,6 +108,9 @@ int vmu_has_extra_blocks(maple_device_t *dev);
 
     This function enables/disables the extra 41 blocks of a specific VMU.
 
+    \warning    Enabling the extra blocks of a VMU may render it unusable
+                for a very few commercial games.
+
     \param  dev             The device to enable/disable 41 blocks.
     \param  enable          Values other than 0 enables. Equal to 0 disables.
 
