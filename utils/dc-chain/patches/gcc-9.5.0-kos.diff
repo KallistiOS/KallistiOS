@@ -1,0 +1,147 @@
+diff --color -ruN gcc-9.5.0/gcc/config/sh/sh-c.c gcc-9.5.0-kos/gcc/config/sh/sh-c.c
+--- gcc-9.5.0/gcc/config/sh/sh-c.c	2023-06-05 16:31:29.396332076 -0500
++++ gcc-9.5.0-kos/gcc/config/sh/sh-c.c	2023-06-05 16:31:31.707339829 -0500
+@@ -141,4 +141,11 @@
+ 
+   cpp_define_formatted (pfile, "__SH_ATOMIC_MODEL_%s__",
+ 			selected_atomic_model ().cdef_name);
++
++  /* Custom built-in defines for KallistiOS */
++  builtin_define ("__KOS_GCC_PATCHED__");
++  cpp_define_formatted (pfile, "__KOS_GCC_PATCHLEVEL__=%d",
++			2023010200);
++  /* Toolchain supports setting up stack for 32MB */
++  builtin_define ("__KOS_GCC_32MB__");
+ }
+diff --color -ruN gcc-9.5.0/gcc/configure gcc-9.5.0-kos/gcc/configure
+--- gcc-9.5.0/gcc/configure	2023-06-05 16:31:31.219338192 -0500
++++ gcc-9.5.0-kos/gcc/configure	2023-06-05 16:31:31.712339846 -0500
+@@ -11862,7 +11862,7 @@
+     target_thread_file='single'
+     ;;
+   aix | dce | lynx | mipssde | posix | rtems | \
+-  single | tpf | vxworks | win32)
++  single | tpf | vxworks | win32 | kos)
+     target_thread_file=${enable_threads}
+     ;;
+   *)
+diff --color -ruN gcc-9.5.0/libgcc/config/sh/t-sh gcc-9.5.0-kos/libgcc/config/sh/t-sh
+--- gcc-9.5.0/libgcc/config/sh/t-sh	2023-06-05 16:31:31.318338524 -0500
++++ gcc-9.5.0-kos/libgcc/config/sh/t-sh	2023-06-05 16:31:31.712339846 -0500
+@@ -23,6 +23,8 @@
+   $(LIB1ASMFUNCS_CACHE)
+ LIB1ASMFUNCS_CACHE = _ic_invalidate _ic_invalidate_array
+ 
++LIB2ADD = $(srcdir)/config/sh/fake-kos.S
++
+ crt1.o: $(srcdir)/config/sh/crt1.S
+ 	$(gcc_compile) -c $<
+ 
+diff --color -ruN gcc-9.5.0/libgcc/configure gcc-9.5.0-kos/libgcc/configure
+--- gcc-9.5.0/libgcc/configure	2023-06-05 16:31:31.323338541 -0500
++++ gcc-9.5.0-kos/libgcc/configure	2023-06-05 16:31:31.713339849 -0500
+@@ -5602,6 +5602,7 @@
+     tpf)	thread_header=config/s390/gthr-tpf.h ;;
+     vxworks)	thread_header=config/gthr-vxworks.h ;;
+     win32)	thread_header=config/i386/gthr-win32.h ;;
++    kos)    thread_header=config/sh/gthr-kos.h ;;
+ esac
+ 
+ 
+diff --color -ruN gcc-9.5.0/libobjc/Makefile.in gcc-9.5.0-kos/libobjc/Makefile.in
+--- gcc-9.5.0/libobjc/Makefile.in	2023-06-05 16:31:29.138331210 -0500
++++ gcc-9.5.0-kos/libobjc/Makefile.in	2023-06-05 16:31:31.713339849 -0500
+@@ -307,14 +307,16 @@
+ $(srcdir)/aclocal.m4: @MAINT@ $(aclocal_deps)
+ 	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
+ 
+-install: install-libs install-headers
++install-strip: INSTALL_STRIP_FLAG = -s
++install install-strip: install-libs install-headers
+ 
+ install-libs: installdirs
+ 	$(SHELL) $(multi_basedir)/mkinstalldirs $(DESTDIR)$(toolexeclibdir)
+-	$(LIBTOOL_INSTALL) $(INSTALL) libobjc$(libsuffix).la $(DESTDIR)$(toolexeclibdir);
++	$(LIBTOOL_INSTALL) $(INSTALL) $(INSTALL_STRIP_FLAG) \
++	  libobjc$(libsuffix).la $(DESTDIR)$(toolexeclibdir);
+ 	if [ "$(OBJC_BOEHM_GC)" ]; then \
+-	  $(LIBTOOL_INSTALL) $(INSTALL) libobjc_gc$(libsuffix).la \
+-				$(DESTDIR)$(toolexeclibdir);\
++	  $(LIBTOOL_INSTALL) $(INSTALL) $(INSTALL_STRIP_FLAG) \
++	    libobjc_gc$(libsuffix).la $(DESTDIR)$(toolexeclibdir);\
+ 	fi
+ 	$(MULTIDO) $(FLAGS_TO_PASS) multi-do DO="$@"
+ 	@-$(LIBTOOL) --mode=finish $(DESTDIR)$(toolexeclibdir)
+@@ -327,7 +329,7 @@
+ 	  $(INSTALL_DATA) $${realfile} $(DESTDIR)$(libsubdir)/$(includedirname)/objc; \
+ 	done
+ 
+-check uninstall install-strip dist installcheck installdirs:
++check uninstall dist installcheck installdirs:
+ 
+ mostlyclean:
+ 	-$(LIBTOOL_CLEAN) rm -f libobjc$(libsuffix).la libobjc_gc$(libsuffix).la *.lo
+diff --color -ruN gcc-9.5.0/libstdc++-v3/config/cpu/sh/atomicity.h gcc-9.5.0-kos/libstdc++-v3/config/cpu/sh/atomicity.h
+--- gcc-9.5.0/libstdc++-v3/config/cpu/sh/atomicity.h	2023-06-05 16:31:31.373338708 -0500
++++ gcc-9.5.0-kos/libstdc++-v3/config/cpu/sh/atomicity.h	2023-06-05 16:31:31.714339853 -0500
+@@ -22,14 +22,40 @@
+ // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+ // <http://www.gnu.org/licenses/>.
+ 
+-// Use the default atomicity stuff, which will use __atomic* builtins
+-// if threads are available, or the *_single functions on single-thread
+-// configurations.
+-// Actually we wouldn't need this header at all, but because of PR 53579
+-// libstdc++'s configury will not pickup the -matomic-model= option when
+-// set in the environment.  This makes it impossible to enable the proper
+-// atomic model on SH without modifying GCC itself, because libstdc++ always
+-// thinks the target doesn't do any atomics and uses the default mutex based
+-// implementation from cpu/generic/atomicity_mutex.
++/* This is generic/atomicity.h */
+ 
+ #include <ext/atomicity.h>
++#include <ext/concurrence.h>
++
++namespace 
++{
++  __gnu_cxx::__mutex&
++  get_atomic_mutex()
++  {
++    static __gnu_cxx::__mutex atomic_mutex;
++    return atomic_mutex;
++  }
++} // anonymous namespace
++
++namespace __gnu_cxx _GLIBCXX_VISIBILITY(default)
++{
++_GLIBCXX_BEGIN_NAMESPACE_VERSION
++
++  _Atomic_word
++  __attribute__ ((__unused__))
++  __exchange_and_add(volatile _Atomic_word* __mem, int __val) throw ()
++  {
++    __gnu_cxx::__scoped_lock sentry(get_atomic_mutex());
++    _Atomic_word __result;
++    __result = *__mem;
++    *__mem += __val;
++    return __result;
++  }
++
++  void
++  __attribute__ ((__unused__))
++  __atomic_add(volatile _Atomic_word* __mem, int __val) throw ()
++  { __exchange_and_add(__mem, __val); }
++
++_GLIBCXX_END_NAMESPACE_VERSION
++} // namespace
+diff --color -ruN gcc-9.5.0/libstdc++-v3/configure gcc-9.5.0-kos/libstdc++-v3/configure
+--- gcc-9.5.0/libstdc++-v3/configure	2023-06-05 16:31:31.657339661 -0500
++++ gcc-9.5.0-kos/libstdc++-v3/configure	2023-06-05 16:31:31.720339873 -0500
+@@ -15631,6 +15631,7 @@
+     tpf)	thread_header=config/s390/gthr-tpf.h ;;
+     vxworks)	thread_header=config/gthr-vxworks.h ;;
+     win32)	thread_header=config/i386/gthr-win32.h ;;
++    kos)    thread_header=config/sh/gthr-kos.h ;;
+ esac
+ 
+ 

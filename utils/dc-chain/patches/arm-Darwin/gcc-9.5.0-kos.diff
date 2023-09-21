@@ -1,0 +1,28 @@
+diff --color -ruN gcc-9.5.0/gcc/config/host-darwin.c gcc-9.5.0-kos/gcc/config/host-darwin.c
+--- gcc-9.5.0/gcc/config/host-darwin.c	2023-03-11 14:28:07
++++ gcc-9.5.0-kos/gcc/config/host-darwin.c	2023-03-11 14:28:57
+@@ -22,6 +22,10 @@
+ #include "coretypes.h"
+ #include "diagnostic-core.h"
+ #include "config/host-darwin.h"
++#include "hosthooks.h"
++#include "hosthooks-def.h"
++
++const struct host_hooks host_hooks = HOST_HOOKS_INITIALIZER;
+ 
+ /* Yes, this is really supposed to work.  */
+ static char pch_address_space[1024*1024*1024] __attribute__((aligned (4096)));
+diff --color -ruN gcc-9.5.0/gcc/config.host gcc-9.5.0-kos/gcc/config.host
+--- gcc-9.5.0/gcc/config.host	2023-03-11 14:28:19
++++ gcc-9.5.0-kos/gcc/config.host	2023-03-11 14:29:14
+@@ -93,8 +93,8 @@
+ case ${host} in
+   *-darwin*)
+     # Generic darwin host support.
+-    out_host_hook_obj=host-darwin.o
+-    host_xmake_file="${host_xmake_file} x-darwin"
++    # out_host_hook_obj=host-darwin.o
++    # host_xmake_file="${host_xmake_file} x-darwin"
+     ;;
+ esac
+ 

@@ -83,7 +83,7 @@ else()
 endif()
 
 ##### Configure Build Flags #####
-add_compile_options(-ml -m4-single-only -ffunction-sections -fdata-sections -ftls-model=local-exec)
+add_compile_options(-ml -m4-single-only -ffunction-sections -fdata-sections -matomic-model=soft-imask -ftls-model=local-exec)
 
 set(ENABLE_DEBUG_FLAGS   $<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>)
 set(ENABLE_RELEASE_FLAGS $<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>)
