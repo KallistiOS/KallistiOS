@@ -170,7 +170,7 @@ int vmu_get_buttons_enabled(void) {
     return !!vmu_drv.periodic;
 }
 
-int vmu_has_extra_blocks(maple_device_t *dev) {
+int vmu_has_241_blocks(maple_device_t *dev) {
     vmu_root_t root;
 
     if(vmufs_root_read(dev, &root) < 0)
