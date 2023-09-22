@@ -116,10 +116,8 @@ int vmu_has_extra_blocks(maple_device_t *dev);
 
     \retval 0               On success
     \retval -1              On failure
-
-    \sa vmu_use_extra_blocks
 */
-int vmu_use_extra_blocks(maple_device_t *dev, int enable);
+int vmu_toggle_241_blocks(maple_device_t *dev, int enable);
 
 /** \brief   Enable custom color of a VMU
     \ingroup vmu_settings
