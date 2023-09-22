@@ -98,10 +98,8 @@ __BEGIN_DECLS
     \retval 1               On success: extra blocks are enabled
     \retval 0               On success: extra blocks are disabled
     \retval -1              On failure
-
-    \sa vmu_has_extra_blocks
 */
-int vmu_has_extra_blocks(maple_device_t *dev);
+int vmu_has_241_blocks(maple_device_t *dev);
 
 /** \brief   Enable the extra 41 blocks of a VMU
     \ingroup vmu_settings
