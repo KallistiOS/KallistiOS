@@ -182,7 +182,7 @@ int vmu_has_extra_blocks(maple_device_t *dev) {
     return 0;
 }
 
-int vmu_use_extra_blocks(maple_device_t *dev, int enable) {
+int vmu_toggle_241_blocks(maple_device_t *dev, int enable) {
     vmu_root_t root;
 
     if(vmufs_root_read(dev, &root) < 0)
