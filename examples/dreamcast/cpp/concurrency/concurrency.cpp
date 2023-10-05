@@ -26,13 +26,29 @@
 #include <stop_token>
 #include <span>
 #include <random>
+#include <exception>
+#include <string>
 
 using namespace std::chrono_literals;
 
-/* ===== std::binary_semaphore ===== */
+class TestCaseException: public std::exception { 
+        std::string what_;
+    public:
+        TestCaseException(std::string str) noexcept:
+            what_(std::move(str)) {}
+
+        TestCaseException& 
+        operator=(const TestCaseException& other) noexcept = default;
+
+        const char* what() const noexcept override {
+            return what_.c_str();
+        }
+};
+
+/* ===== TEST CASE 1: std::binary_semaphore ===== */
 static std::binary_semaphore sem_main_to_thread, sem_thread_to_main;
 
-void semaphore_run() {
+void run_semaphore() {
     // wait for a signal from the main proc
     // by attempting to decrement the semaphore
     sem_main_to_thread.acquire();
@@ -40,25 +56,25 @@ void semaphore_run() {
     // this call blocks until the semaphore's count
     // is increased from the main proc
  
-    std::cout << "[SEMAPHORE] thread: Got the signal" << std::endl;
+    std::cout << "[BINARY_SEMAPHORE] thread: Got the signal" << std::endl;
  
     // wait for 3 seconds to imitate some work
     // being done by the thread
     std::this_thread::sleep_for(1s);
  
-    std::cout << "[SEMAPHORE] thread: Send the signal" << std::endl;
+    std::cout << "[BINARY_SEMAPHORE] thread: Send the signal" << std::endl;
  
     // signal the main proc back
     sem_thread_to_main.release();
 }
 
 void test_semaphore(void) {
-    std::cout << "[SEMAPHORE] Starting test." << std::endl;
+    std::cout << "[BINARY_SEMAPHORE] Starting test." << std::endl;
 
     // create some worker thread
-    std::thread thrWorker(semaphore_run);
+    std::thread thrWorker(run_semaphore);
  
-    std::cout << "[SEMAPHORE] main: Send the signal" << std::endl;
+    std::cout << "[BINARY_SEMAPHORE] main: Send the signal" << std::endl;
  
     // signal the worker thread to start working
     // by increasing the semaphore's count
@@ -68,12 +84,13 @@ void test_semaphore(void) {
     // by attempting to decrement the semaphore's count
     sem_thread_to_main.acquire();
  
-    std::cout << "[SEMAPHORE] main: Got the signal" << std::endl;
+    std::cout << "[BINARY_SEMAPHORE] main: Got the signal" << std::endl;
     thrWorker.join();
 
-    std::cout << "[SEMAPHORE] Finishing test." << std::endl;
+    std::cout << "[BINARY_SEMAPHORE] Finished test." << std::endl;
 }
 
+/* ===== TEST CASE 2: std::latch ===== */
 struct LatchJob {
     const std::string name;
     std::string product{"not worked"};
@@ -110,16 +127,21 @@ void test_latch() {
         job.action.join();
  
     std::cout << "done." << std::endl;
-    for (auto const& job : jobs)
+    for (auto const& job : jobs) {
+        if(job.product == "not worked") {
+            throw TestCaseException("[LATCH] Job failed to produce!");
+        }
         std::cout << "  " << job.product << std::endl;
+    }
 
-    std::cout << "[LATCH] Finishing test." << std::endl;
+    std::cout << "[LATCH] Finished test." << std::endl;
 }
 
+/* ===== TEST CASE 3: std::shared_lock ===== */
 
-class ThreadSafeCounter {
+class SharedLockCounter {
 public:
-    ThreadSafeCounter() = default;
+    SharedLockCounter() = default;
  
     // Multiple threads/readers can read the counter's value at the same time.
     unsigned int get() const {
@@ -144,8 +166,8 @@ private:
     unsigned int value_{};
 };
  
-void test_shared_mutex(void) {
-    ThreadSafeCounter counter;
+void test_shared_lock(void) {
+    SharedLockCounter counter;
 
     std::cout << "[SHARED_MUTEX] Starting test." << std::endl;
 
@@ -164,56 +186,75 @@ void test_shared_mutex(void) {
     thread1.join();
     thread2.join();
 
-    std::cout << "[SHARED_MUTEX] Finishing test." << std::endl;
+    if(counter.get() != 3) 
+        throw TestCaseException("[SHARED_MUTEX]: Unexpected counter value!");
+
+    std::cout << "[SHARED_MUTEX] Finished test." << std::endl;
 }
 
-std::mutex m;
-std::condition_variable cv;
-std::string data;
-bool ready = false;
-bool processed = false;
- 
-void condition_variable_run() {
+/* ===== TEST CASE 4: std::condition_variable ===== */
+static struct { 
+    std::mutex m;
+    std::condition_variable cv;
+    std::string data;
+    bool ready = false;
+    bool processed = false;
+} cond_variable_state;
+
+void run_condition_variable() {
     // Wait until main() sends data
-    std::unique_lock lk(m);
-    cv.wait(lk, []{return ready;});
+    std::unique_lock lk(cond_variable_state.m);
+    cond_variable_state.cv.wait(cond_variable_state.lk, 
+                                []{ return ready; });
  
     // after the wait, we own the lock.
-    std::cout << "Worker thread is processing data\n";
-    data += " after processing";
+    std::cout << "[COND_VARIABLE]: Worker thread is processing data" << std::endl;
+    cond_variable_state.data += " after processing";
  
     // Send data back to main()
-    processed = true;
-    std::cout << "Worker thread signals data processing completed\n";
+    cond_variable_state.processed = true;
+    std::cout << "[COND_VARIABLE]: Worker thread signals data "
+                 "processing completed" << std::endl;
  
     // Manual unlocking is done before notifying, to avoid waking up
     // the waiting thread only to block again (see notify_one for details)
-    lk.unlock();
-    cv.notify_one();
+    cond_variable_state.lk.unlock();
+    cond_variable_state.cv.notify_one();
 }
  
 void test_condition_variable() {
-    std::thread worker(condition_variable_run);
+    std::cout << "[COND_VARIABLE] Starting test." << std::endl;
+
+    std::thread worker(run_condition_variable);
  
-    data = "Example data";
+    cond_variable_state.data = "Example data";
     // send data to the worker thread
     {
-        std::lock_guard lk(m);
-        ready = true;
-        std::cout << "main() signals data ready for processing\n";
+        std::lock_guard lk(cond_variable_state.m);
+        cond_variable_state.ready = true;
+        std::cout << "[COND_VARIABLE] main() signals data ready "
+                     "for processing" << std::endl;
     }
-    cv.notify_one();
+    cond_variable_state.cv.notify_one();
  
     // wait for the worker
     {
-        std::unique_lock lk(m);
-        cv.wait(lk, []{return processed;});
+        std::unique_lock lk(cond_variable_state.m);
+        cond_variable_state.cv.wait(cond_variable_state.lk, 
+                                    []{ return processed; });
     }
-    std::cout << "Back in main(), data = " << data << '\n';
+    std::cout << "[COND_VARIABLE] Back in main(), data = " 
+              << data << std::endl;
  
+    if(cond_variable_state.data != "Example data after processing")
+        throw TestCaseException("[COND_VARIABLE]: Unexpected value for data!");
+
     worker.join();
+
+    std::cout << "[COND_VARIABLE] Finished test." << std::endl;
 }
 
+/* ===== TEST CASE 5: std::shared_timed_mutex ===== */
 class R {
     mutable std::shared_timed_mutex mut;
     /* data */
@@ -560,11 +601,10 @@ void test_coroutines() {
 //x stop token, stop source
 
 int main(int argc, char* argv[]) { 
-    /* Spawn an 10 automatically joined threads which will each call
-       run_tests() which will in turn spawn threads for and asynchronously
-       await the results of each individual test case... Basically making
-       each thread execute its own instances of every test case concurrently
-       (each of which spawns more threads for their respective tests). 
+    /* Spawn an 10 automatically joined threads which will each spawn threads 
+       for and asynchronously await the results of each individual test case... 
+       Basically making each thread execute its own instances of every test case 
+       concurrently (each of which spawns more threads for their respective tests). 
 
         Tests: thread, jthread, coroutines, atomics, thread-local storage, 
         lock_guard, scoped_lock, condition_variable, unique_lock, call_once
