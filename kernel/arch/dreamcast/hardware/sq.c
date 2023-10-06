@@ -42,6 +42,9 @@ void * sq_cpy(void *dest, const void *src, int n) {
             d[5] = *(s++);
             d[6] = *(s++);
             d[7] = *(s++);
+
+            /* Fire off store queue. __builtin would move it to the top so
+               use __asm__ instead */
             __asm__("pref @%0" : : "r"(d));
             d += 8;
         }
@@ -79,19 +82,6 @@ void * sq_cpy(void *dest, const void *src, int n) {
     /* Wait for both store queues to complete */
     d = (uint32_t *)MEM_AREA_SQ_BASE;
     d[0] = d[8] = 0;
-
-    return dest;
-}
-
-/* Copies n bytes from src to dest (in VRAM), dest must be 32-byte aligned */
-void * sq_cpy_pvr(void *dest, const void *src, int n) {
-    /* Set PVR LMMODE register */
-    SQ_PVR_LMMODE = 0;
-
-    /* Convert read/write area pointer to DMA write only area pointer */
-    uint32_t dma_area_ptr = (((uintptr_t)dest & 0xffffff) | 0x11000000);
-
-    sq_cpy((void*)dma_area_ptr, src, n);
 
     return dest;
 }
@@ -185,4 +175,30 @@ void * sq_set32(void *dest, uint32_t c, int n) {
 /* Clears n bytes at dest, dest must be 32-byte aligned */
 void sq_clr(void *dest, int n) {
     sq_set32(dest, 0, n);
+}
+
+/* Copies n bytes from src to dest (in VRAM), dest must be 32-byte aligned */
+void * sq_cpy_pvr(void *dest, const void *src, int n) {
+    /* Set PVR LMMODE register */
+    SQ_PVR_LMMODE = 0;
+
+    /* Convert read/write area pointer to DMA write only area pointer */
+    uint32_t dma_area_ptr = (((uintptr_t)dest & 0xffffff) | 0x11000000);
+
+    sq_cpy((void *)dma_area_ptr, src, n);
+
+    return dest;
+}
+
+/* Fills n bytes at PVR dest with short c, dest must be 32-byte aligned */
+void * sq_set_pvr(void *dest, uint32_t c, int n) {
+    /* Set PVR LMMODE register */
+    SQ_PVR_LMMODE = 0;
+
+    /* Convert read/write area pointer to DMA write only area pointer */
+    uint32_t dma_area_ptr = (((uintptr_t)dest & 0xffffff) | 0x11000000);
+
+    sq_set16((void *)dma_area_ptr, c, n);
+
+    return dest;
 }
