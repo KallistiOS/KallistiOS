@@ -103,7 +103,7 @@ void * sq_cpy(void *dest, const void *src, int n);
     \param  n               The number of bytes to set (multiple of 32).
     \return                 The original value of dest.
 
-    \sa sq_set16(), sq_set32(), sq_set32_pvr()
+    \sa sq_set16(), sq_set32(), sq_set_pvr()
 */
 void * sq_set(void *dest, uint32 c, int n);
 
@@ -122,7 +122,7 @@ void * sq_set(void *dest, uint32 c, int n);
     \param  n               The number of bytes to set (multiple of 32).
     \return                 The original value of dest.
 
-    \sa sq_set(), sq_set32(), sq_set32_pvr()
+    \sa sq_set(), sq_set32(), sq_set_pvr()
 */
 void * sq_set16(void *dest, uint32 c, int n);
 
@@ -140,7 +140,7 @@ void * sq_set16(void *dest, uint32 c, int n);
     \param  n               The number of bytes to set (multiple of 32).
     \return                 The original value of dest.
 
-    \sa sq_set(), sq_set16(), sq_set32_pvr()
+    \sa sq_set(), sq_set16(), sq_set_pvr()
 */
 void * sq_set32(void *dest, uint32 c, int n);
 
