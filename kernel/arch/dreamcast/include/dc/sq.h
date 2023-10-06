@@ -38,6 +38,7 @@ __BEGIN_DECLS
 
 #include <stdint.h>
 #include <arch/types.h>
+#include <arch/memory.h>
 
 /** \brief   Store Queue 0 access register 
     \ingroup store_queues
@@ -59,18 +60,13 @@ __BEGIN_DECLS
         QACR1 = val; \
     } while(0)
 
-/** \brief   Store Queue start area
-    \ingroup store_queues
-*/
-#define SQ_START_AREA     (0xe0000000)
-
 /** \brief   Mask dest to Store Queue area
     \ingroup store_queues
 */
 #define ALIGN_TO_32_BYTES(addr) ((addr) & 0x03ffffe0)
 #define SQ_MASK_DEST(dest)        \
             ((uint32_t *)(void *) \
-            (SQ_START_AREA |      \
+            (MEM_AREA_SQ_BASE |      \
             ALIGN_TO_32_BYTES((uint32_t)(dest))))
 
 

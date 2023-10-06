@@ -77,7 +77,7 @@ void * sq_cpy(void *dest, const void *src, size_t n) {
     }
 
     /* Wait for both store queues to complete */
-    d = (uint32_t *)SQ_START_AREA;
+    d = (uint32_t *)MEM_AREA_SQ_BASE;
     d[0] = d[8] = 0;
 
     return dest;
@@ -120,7 +120,7 @@ void * sq_set(void *dest, uint32_t c, size_t n) {
     }
 
     /* Wait for both store queues to complete */
-    d = (uint32_t *)SQ_START_AREA;
+    d = (uint32_t *)MEM_AREA_SQ_BASE;
     d[0] = d[8] = 0;
 
     return dest;
@@ -150,7 +150,7 @@ void * sq_set16(void *dest, uint32_t c, size_t n) {
     }
 
     /* Wait for both store queues to complete */
-    d = (uint32_t *)SQ_START_AREA;
+    d = (uint32_t *)MEM_AREA_SQ_BASE;
     d[0] = d[8] = 0;
 
     return dest;
@@ -176,7 +176,7 @@ void * sq_set32(void *dest, uint32_t c, size_t n) {
     }
 
     /* Wait for both store queues to complete */
-    d = (uint32_t *)SQ_START_AREA;
+    d = (uint32_t *)MEM_AREA_SQ_BASE;
     d[0] = d[8] = 0;
 
     return dest;
