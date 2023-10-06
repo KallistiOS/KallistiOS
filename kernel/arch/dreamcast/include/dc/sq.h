@@ -88,7 +88,7 @@ __BEGIN_DECLS
 
     \sa sq_cpy_pvr()
 */
-void * sq_cpy(void *dest, const void *src, size_t n);
+void * sq_cpy(void *dest, const void *src, int n);
 
 /** \brief   PVR register governing texture memory write data size
     \ingroup store_queues
@@ -118,7 +118,7 @@ void * sq_cpy(void *dest, const void *src, size_t n);
 
     \sa sq_cpy()
 */
-void * sq_cpy_pvr(void *dest, const void *src, size_t n);
+void * sq_cpy_pvr(void *dest, const void *src, int n);
 
 /** \brief   Set a block of memory to an 8-bit value.
     \ingroup store_queues
@@ -137,7 +137,7 @@ void * sq_cpy_pvr(void *dest, const void *src, size_t n);
 
     \sa sq_set16(), sq_set32()
 */
-void * sq_set(void *dest, uint32 c, size_t n);
+void * sq_set(void *dest, uint32 c, int n);
 
 /** \brief   Set a block of memory to a 16-bit value.
     \ingroup store_queues
@@ -156,7 +156,7 @@ void * sq_set(void *dest, uint32 c, size_t n);
 
     \sa sq_set(), sq_set32()
 */
-void * sq_set16(void *dest, uint32 c, size_t n);
+void * sq_set16(void *dest, uint32 c, int n);
 
 /** \brief   Set a block of memory to a 32-bit value.
     \ingroup store_queues
@@ -174,7 +174,7 @@ void * sq_set16(void *dest, uint32 c, size_t n);
 
     \sa sq_set(), sq_set16()
 */
-void * sq_set32(void *dest, uint32 c, size_t n);
+void * sq_set32(void *dest, uint32 c, int n);
 
 /** \brief   Clear a block of memory.
     \ingroup store_queues
@@ -188,7 +188,7 @@ void * sq_set32(void *dest, uint32 c, size_t n);
     \param  dest            The address to begin clearing at (32-byte aligned).
     \param  n               The number of bytes to clear (multiple of 32).
 */
-void sq_clr(void *dest, size_t n);
+void sq_clr(void *dest, int n);
 
 __END_DECLS
 

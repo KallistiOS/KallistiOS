@@ -15,7 +15,7 @@
 */
 
 /* Copies n bytes from src to dest, dest must be 32-byte aligned */
-void * sq_cpy(void *dest, const void *src, size_t n) {
+void * sq_cpy(void *dest, const void *src, int n) {
     uint32_t *d = SQ_MASK_DEST(dest);
     const uint32_t *s = src;
 
@@ -84,7 +84,7 @@ void * sq_cpy(void *dest, const void *src, size_t n) {
 }
 
 /* Copies n bytes from src to dest (in VRAM), dest must be 32-byte aligned */
-void * sq_cpy_pvr(void *dest, const void *src, size_t n) {
+void * sq_cpy_pvr(void *dest, const void *src, int n) {
     /* Set PVR LMMODE register */
     SQ_PVR_LMMODE = 0;
 
@@ -97,7 +97,7 @@ void * sq_cpy_pvr(void *dest, const void *src, size_t n) {
 }
 
 /* Fills n bytes at dest with byte c, dest must be 32-byte aligned */
-void * sq_set(void *dest, uint32_t c, size_t n) {
+void * sq_set(void *dest, uint32_t c, int n) {
     uint32_t *d = SQ_MASK_DEST(dest);
 
     /* Set store queue memory area as desired */
@@ -127,7 +127,7 @@ void * sq_set(void *dest, uint32_t c, size_t n) {
 }
 
 /* Fills n bytes at dest with short c, dest must be 32-byte aligned */
-void * sq_set16(void *dest, uint32_t c, size_t n) {
+void * sq_set16(void *dest, uint32_t c, int n) {
     uint32_t *d = SQ_MASK_DEST(dest);
 
     /* Set store queue memory area as desired */
@@ -157,7 +157,7 @@ void * sq_set16(void *dest, uint32_t c, size_t n) {
 }
 
 /* Fills n bytes at dest with int c, dest must be 32-byte aligned */
-void * sq_set32(void *dest, uint32_t c, size_t n) {
+void * sq_set32(void *dest, uint32_t c, int n) {
     uint32_t *d = SQ_MASK_DEST(dest);
 
     /* Set store queue memory area as desired */
@@ -183,6 +183,6 @@ void * sq_set32(void *dest, uint32_t c, size_t n) {
 }
 
 /* Clears n bytes at dest, dest must be 32-byte aligned */
-void sq_clr(void *dest, size_t n) {
+void sq_clr(void *dest, int n) {
     sq_set32(dest, 0, n);
 }
