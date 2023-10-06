@@ -7,6 +7,9 @@
 */
 
 #include <dc/sq.h>
+#include <kos/dbglog.h>
+
+#include <errno.h>
 
 /*
     Functions to clear, copy, and set memory using the sh4 store queues
@@ -135,12 +138,19 @@ void sq_clr(void *dest, int n) {
     sq_set32(dest, 0, n);
 }
 
-#define SQ_PVR_LMMODE (*(volatile uint32_t *)(void *)0xa05f6884)
+#define PVR_LMMODE    (*(volatile uint32_t *)(void *)0xa05f6884)
+#define PVR_DMA_DEST  (*(volatile uint32_t *)(void *)0xa05f6808)
 
 /* Copies n bytes from src to dest (in VRAM), dest must be 32-byte aligned */
 void * sq_cpy_pvr(void *dest, const void *src, int n) {
+    if(PVR_DMA_DEST != 0) {
+        dbglog(DBG_ERROR, "sq_cpy_pvr: PVR_DMA_DEST != 0\n");
+        errno = EINPROGRESS;
+        return dest;
+    }
+
     /* Set PVR LMMODE register */
-    SQ_PVR_LMMODE = 0;
+    PVR_LMMODE = 0;
 
     /* Convert read/write area pointer to DMA write only area pointer */
     uint32_t dma_area_ptr = (((uintptr_t)dest & 0xffffff) | 0x11000000);
@@ -152,8 +162,14 @@ void * sq_cpy_pvr(void *dest, const void *src, int n) {
 
 /* Fills n bytes at PVR dest with short c, dest must be 32-byte aligned */
 void * sq_set_pvr(void *dest, uint32_t c, int n) {
+    if(PVR_DMA_DEST != 0) {
+        dbglog(DBG_ERROR, "sq_set_pvr: PVR_DMA_DEST != 0\n");
+        errno = EINPROGRESS;
+        return dest;
+    }
+
     /* Set PVR LMMODE register */
-    SQ_PVR_LMMODE = 0;
+    PVR_LMMODE = 0;
 
     /* Convert read/write area pointer to DMA write only area pointer */
     uint32_t dma_area_ptr = (((uintptr_t)dest & 0xffffff) | 0x11000000);
