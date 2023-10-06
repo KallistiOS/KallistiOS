@@ -33,7 +33,7 @@ void * sq_cpy(void *dest, const void *src, int n) {
     /* If src is not 8-byte aligned, slow path */
     if ((uintptr_t)src & 7) {
         while(n--) {
-            __asm__("pref @%0" : : "r"(s + 8));  /* Prefetch 32 bytes for next loop */
+            __builtin_prefetch(s + 8); /* Prefetch 32 bytes for next loop */
             d[0] = *(s++);
             d[1] = *(s++);
             d[2] = *(s++);
@@ -115,7 +115,7 @@ void * sq_set(void *dest, uint32_t c, int n) {
     n >>= 5;
 
     while(n--) {
-        __asm__("pref @%0" : : "r"(d));
+        __builtin_prefetch(d);
         d += 8;
     }
 
@@ -145,7 +145,7 @@ void * sq_set16(void *dest, uint32_t c, int n) {
     n >>= 5;
 
     while(n--) {
-        __asm__("pref @%0" : : "r"(d));
+        __builtin_prefetch(d);
         d += 8;
     }
 
@@ -171,7 +171,7 @@ void * sq_set32(void *dest, uint32_t c, int n) {
     n >>= 5;
 
     while(n--) {
-        __asm__("pref @%0" : : "r"(d));
+        __builtin_prefetch(d);
         d += 8;
     }
 
