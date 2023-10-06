@@ -88,62 +88,20 @@ void * sq_cpy(void *dest, const void *src, int n) {
 
 /* Fills n bytes at dest with byte c, dest must be 32-byte aligned */
 void * sq_set(void *dest, uint32_t c, int n) {
-    uint32_t *d = SQ_MASK_DEST(dest);
-
-    /* Set store queue memory area as desired */
-    SET_QACR_REGS(dest);
-
     /* Duplicate low 8-bits of c into high 24-bits */
     c = c & 0xff;
     c = (c << 24) | (c << 16) | (c << 8) | c;
 
-    /* Fill both store queues with c */
-    d[0] = d[1] = d[2] = d[3] = d[4] = d[5] = d[6] = d[7] =
-            d[8] = d[9] = d[10] = d[11] = d[12] = d[13] = d[14] = d[15] = c;
-
-    /* Write them as many times necessary */
-    n >>= 5;
-
-    while(n--) {
-        __builtin_prefetch(d);
-        d += 8;
-    }
-
-    /* Wait for both store queues to complete */
-    d = (uint32_t *)MEM_AREA_SQ_BASE;
-    d[0] = d[8] = 0;
-
-    return dest;
+    return sq_set32(dest, c, n);
 }
 
 /* Fills n bytes at dest with short c, dest must be 32-byte aligned */
 void * sq_set16(void *dest, uint32_t c, int n) {
-    uint32_t *d = SQ_MASK_DEST(dest);
-
-    /* Set store queue memory area as desired */
-    SET_QACR_REGS(dest);
-
     /* Duplicate low 16-bits of c into high 16-bits */
     c = c & 0xffff;
     c = (c << 16) | c;
 
-    /* Fill both store queues with c */
-    d[0] = d[1] = d[2] = d[3] = d[4] = d[5] = d[6] = d[7] =
-            d[8] = d[9] = d[10] = d[11] = d[12] = d[13] = d[14] = d[15] = c;
-
-    /* Write them as many times necessary */
-    n >>= 5;
-
-    while(n--) {
-        __builtin_prefetch(d);
-        d += 8;
-    }
-
-    /* Wait for both store queues to complete */
-    d = (uint32_t *)MEM_AREA_SQ_BASE;
-    d[0] = d[8] = 0;
-
-    return dest;
+    return sq_set32(dest, c, n);
 }
 
 /* Fills n bytes at dest with int c, dest must be 32-byte aligned */
