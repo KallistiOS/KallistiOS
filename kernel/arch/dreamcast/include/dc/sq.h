@@ -158,11 +158,6 @@ void * sq_set32(void *dest, uint32 c, int n);
 */
 void sq_clr(void *dest, int n);
 
-/** \brief   PVR register governing texture memory write data size
-    \ingroup store_queues
-*/
-#define SQ_PVR_LMMODE (*(volatile uint32_t *)(void *)0xa05f6884)
-
 /** \brief   Copy a block of memory to VRAM
     \ingroup store_queues
     \author  TapamN

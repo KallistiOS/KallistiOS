@@ -135,6 +135,8 @@ void sq_clr(void *dest, int n) {
     sq_set32(dest, 0, n);
 }
 
+#define SQ_PVR_LMMODE (*(volatile uint32_t *)(void *)0xa05f6884)
+
 /* Copies n bytes from src to dest (in VRAM), dest must be 32-byte aligned */
 void * sq_cpy_pvr(void *dest, const void *src, int n) {
     /* Set PVR LMMODE register */
