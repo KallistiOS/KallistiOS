@@ -52,7 +52,8 @@ void * sq_cpy(void *dest, const void *src, int n) {
             d += 8;
         }
     } else { /* If src is 8-byte aligned, fast path */
-        /* Moop algorithm */
+        /* Moop algorithm; Using the fpu we can fill the queue faster before
+           firing it out off */
         __asm__ __volatile__ (
             "fschg\n\t"
             "clrs\n" 
@@ -64,7 +65,7 @@ void * sq_cpy(void *dest, const void *src, int n) {
             "fmov.d @%[in]+, %[scratch3]\n\t"
             "fmov.d @%[in]+, %[scratch4]\n\t"
             "add #32, %[out]\n\t"
-            "pref @%[in]\n\t"  /* pref the next iteration of s */
+            "pref @%[in]\n\t"  /* Prefetch 32 bytes for next loop */
             "dt %[size]\n\t"   /* while(n--) */
             "fmov.d %[scratch4], @-%[out]\n\t"
             "fmov.d %[scratch3], @-%[out]\n\t"
@@ -144,7 +145,7 @@ void sq_clr(void *dest, int n) {
 /* Copies n bytes from src to dest (in VRAM), dest must be 32-byte aligned */
 void * sq_cpy_pvr(void *dest, const void *src, int n) {
     if(PVR_DMA_DEST != 0) {
-        dbglog(DBG_ERROR, "sq_cpy_pvr: PVR_DMA_DEST != 0\n");
+        dbglog(DBG_ERROR, "sq_cpy_pvr: Previous DMA has not finished\n");
         errno = EINPROGRESS;
         return dest;
     }
@@ -163,7 +164,7 @@ void * sq_cpy_pvr(void *dest, const void *src, int n) {
 /* Fills n bytes at PVR dest with short c, dest must be 32-byte aligned */
 void * sq_set_pvr(void *dest, uint32_t c, int n) {
     if(PVR_DMA_DEST != 0) {
-        dbglog(DBG_ERROR, "sq_set_pvr: PVR_DMA_DEST != 0\n");
+        dbglog(DBG_ERROR, "sq_set_pvr: Previous DMA has not finished\n");
         errno = EINPROGRESS;
         return dest;
     }
