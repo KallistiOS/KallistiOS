@@ -7,7 +7,6 @@
 
 static void quit(void) {
      printf("DISABLING WATCHDOG!\n");
-     fflush(stdout); 
      wdt_disable();
      exit(EXIT_SUCCESS);
 }
@@ -26,7 +25,7 @@ int main(int argc, char* argv[]) {
     cont_btn_callback(0, CONT_START | CONT_A | CONT_B | CONT_X | CONT_Y,
                       (cont_btn_callback_t)quit);
 
-    wdt_enable_timer(0, 100, timer_callback, NULL);
+    wdt_enable_timer(0, 100, 5, timer_callback, NULL);
 
     while(1) {
         if(triggered) {
