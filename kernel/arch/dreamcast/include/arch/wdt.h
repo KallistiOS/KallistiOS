@@ -88,7 +88,7 @@ typedef void (*wdt_callback)(void *user_data);
 
     \param  initial_count   Initial value of the WDT counter (Normally 0).
     \param  microsec_period Timer callback interval in microseconds
-    \param  irq_prio        Priority for the interval timer IRQ (1-7)
+    \param  irq_prio        Priority for the interval timer IRQ (1-15)
     \param  callback        User function to invoke periodically
     \param  user_data       Arbitrary user-provided data for the callback
 

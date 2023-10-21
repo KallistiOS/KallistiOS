@@ -61,7 +61,7 @@ static void wdt_isr(irq_t src, irq_context_t *cxt) {
     /* Invoke user callback when enough time has elapsed */
     if(us_elapsed >= us_interval) { 
         callback(user_data);
-        us_elapsed = 0;
+        us_elapsed -= us_interval;
     }
 
     /* Reset interval timer overflow flag */
