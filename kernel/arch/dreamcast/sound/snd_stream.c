@@ -157,7 +157,7 @@ static void sep_data(void *buffer, int len, int stereo) {
 
     if(stereo) {
         bufsrc = (int16*)buffer;
-        bufdst = (int16*)sep_buffer[0];
+        bufdst = (int16 *)sep_buffer[0];
         x = 0;
         y = 0;
         cnt = len / 2;
@@ -172,7 +172,7 @@ static void sep_data(void *buffer, int len, int stereo) {
 
         bufsrc = (int16*)buffer;
         bufsrc++;
-        bufdst = (int16*)sep_buffer[1];
+        bufdst = (int16 *)sep_buffer[1];
         x = 1;
         y = 0;
         cnt = len / 2;

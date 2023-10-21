@@ -21,18 +21,42 @@ __BEGIN_DECLS
 #include <stdint.h>
 
 
-/** \brief  Separetes stereo PCM samples to 2 mono channel.
+/** \brief  Separates stereo PCM samples into 2 mono channels.
 
+
+    Splits a buffer containing 2 interleaved channels of 16-bit PCM samples into 2 separate buffers of 16-bit PCM samples.
+
+    \warning 
     All arguments must be 32-byte aligned.
+    
+    \param data   Source buffer of interleaved stereo samples
+    \param left   Destination buffer for left mono samples
+    \param right  Destination buffer for right mono samples
+    \param size   Size of the source buffer in bytes
+    
+    \sa snd_pcm16_split_sq()
 */
-void snd_pcm16_split(uint32_t *data, uint32_t *left, uint32_t *right, uint32_t size);
+void snd_pcm16_split(uint32_t *data, uint32_t *left, uint32_t *right, size_t size);
 
-/** \brief  Separetes stereo PCM samples to 2 mono channel with SQ transfer.
+/** \brief  Separates stereo PCM samples into 2 mono channels with SQ transfer.
 
+    Splits a buffer containing 2 interleaved channels of 16-bit PCM samples into 2 separate buffers of 16-bit PCM samples by using the store queues for data transfer.
+    
+    \warning 
     All arguments must be 32-byte aligned.
+    
+    \warning 
+    The store queues must be configured for transferring to the left and right destination buffers beforehand (QACRO <= left, QACRO1 <= right). 
+    
+    \param data   Source buffer of interleaved stereo samples
+    \param left   SQ-masked left destination buffer address
+    \param right  SQ-masked right destination buffer address
+    \param size   Size of the source buffer in bytes
+    
+    \sa snd_pcm16_split()
     Store queues must be prepared before.
 */
-void snd_pcm16_split_sq(uint32_t *data, uint32_t left, uint32_t right, uint32_t size);
+void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t size);
 
 
 __END_DECLS
