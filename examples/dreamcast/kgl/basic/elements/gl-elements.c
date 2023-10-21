@@ -78,6 +78,22 @@ void RenderCallback(GLuint texID) {
     glDisable(GL_KOS_NEARZ_CLIPPING);
 }
 
+int check_start(void) {
+    maple_device_t *cont;
+    cont_state_t *state;
+
+    cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
+
+    if(cont) {
+        state = (cont_state_t *)maple_dev_status(cont);
+
+        if(state)
+            return state->buttons & CONT_START;
+    }
+
+    return 0;
+}
+
 extern uint8 romdisk[];
 KOS_INIT_ROMDISK(romdisk);
 
@@ -98,6 +114,9 @@ int main(int argc, char **argv) {
     GLuint texID = glTextureLoadPVR("/rd/wp001vq.pvr", 0, 0);
 
     while(1) {
+        if(check_start())
+            break;
+
         /* Draw the "scene" */
         RenderCallback(texID);
 

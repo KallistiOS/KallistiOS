@@ -28,7 +28,7 @@ romdisk/bumpmap.raw: bumpmap.png
 	$(KOS_BASE)/utils/dcbumpgen/dcbumpgen $+ $@
 
 run: $(TARGET)
-	$(KOS_LOADER) $(TARGET) -n
+	$(KOS_LOADER) $(TARGET)
 
 dist: $(TARGET)
 	-rm -f $(OBJS) romdisk.img
