@@ -175,7 +175,6 @@ dcache_inval_range
 dcache_flush_range
 dcache_purge_range
 dcache_purge_all
-dcache_pref_range
 
 # Low-level debug I/O
 dbgio_set_irq_usage

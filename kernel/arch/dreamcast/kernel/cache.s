@@ -11,7 +11,6 @@
 	.globl _dcache_flush_range
 	.globl _dcache_purge_range
 	.globl _dcache_purge_all
-	.globl _dcache_pref_range
 
 ! r4 is starting address
 ! r5 is count
@@ -166,27 +165,6 @@ dpurge_all_loop:
 	add #32, r4		! += CPU_CACHE_BLOCK_SIZE
 	rts
 	nop
-
-
-! This routine prefetch to operand cache the specified data range.
-! r4 is starting address
-! r5 is count
-_dcache_pref_range:
-	! Get ending address from count and align start address
-	add	r4,r5
-	mov.l	l1align,r0
-	and	r0,r4
-	mov	r4,r6
-
-dpref_loop:
-	! Prefetch to the O cache
-	pref	@r4
-	cmp/hs	r4,r5
-	bt/s	dpref_loop
-	add	#32,r4		! += CPU_CACHE_BLOCK_SIZE
-
-	rts
-	mov	r6,r0
 
 
 	.align	2

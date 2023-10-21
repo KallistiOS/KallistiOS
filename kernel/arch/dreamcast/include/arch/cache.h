@@ -87,32 +87,34 @@ void dcache_purge_range(uint32 start, uint32 count);
 */
 void dcache_purge_all(uint32 start, uint32 count);
 
-/** \brief  Prefetch memory to the data/operand cache.
-
-    This function prefetch a range of the data/operand cache.
-
-    \param  start           The physical address to begin prefetching at.
-    \param  count           The number of bytes to prefetch.
-    \return                 The physical address aligned to cache block size.
-*/
-void *dcache_pref_range(uint32 start, uint32 count);
-
 /** \brief  Prefetch one block to the data/operand cache.
 
-    This function prefetch a range of the data/operand cache.
+    This function prefetch a block of the data/operand cache.
 
-    \param  src             The buffer to prefetch.
-    \return                 The buffer aligned to cache block size.
+    \param  src             The physical address to prefetch.
 */
-static __always_inline void *dcache_pref_block(const void *src) {
-    uint32 __cache_aligned = ((uint32)src) & ~(CPU_CACHE_BLOCK_SIZE - 1);
-    __asm__ __volatile__("pref @%[ptr]\n"
+static __always_inline void dcache_pref_block(const void *src) {
+    __asm__ __volatile__("pref @%0\n"
                          :
-                         : [ptr] "r" (__cache_aligned)
-                         :
+                         : "r" (src)
+                         : "memory"
     );
+}
 
-    return (void *)__cache_aligned;
+/** \brief  Allocate one block of the data/operand cache.
+
+    This function allocate a block of the data/operand cache.
+
+    \param  src             The physical address to allocate.
+    \param  value           The value written to first 4-byte.
+*/
+static __always_inline void dcache_alloc_block(const void *src, uint32 value) {
+    register int __value __asm__("r0") = value;
+    __asm__ __volatile__ ("movca.l r0,@%0\n\t"
+                         :
+                         : "r" (src), "r" (__value)
+                         : "memory"
+    );
 }
 
 __END_DECLS
