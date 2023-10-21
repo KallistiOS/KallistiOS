@@ -104,17 +104,17 @@ int main(int argc, char *argv[]) {
 
     /* Enable the WDT in interval counter mode, with a period of 500ms,
        an interrupt priority level of 15 (highest), and give it our 
-       timeout callback plus pass it out counter as its userdata pointer. */
+       timeout callback plus pass it our counter as its userdata pointer. */
     atomic_uint counter = 0;
     wdt_enable_timer(0, WDT_INTERVAL, 15, wdt_timeout, &counter);
 
     /* Begin spinning in a loop until either condition is met:
        1) The counter becomes greater than or equal to the expected value
-          (meaning our timeout has been called the expected number of times
-          from the Watchdog timer driver).
+          (meaning our callback has been called the expected number of times
+          from the Watchdog timer's interval interrupt).
        2) The elapsed time becomes greater than twice the expected number of
           seconds, meaning the watchdog interval timer is not behaving as we
-          expected it to behave.
+          expected it to behave (probably running on emulator).
      */ 
     const time_t start_time = time(NULL);
     time_t current_time = start_time;
