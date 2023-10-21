@@ -76,6 +76,17 @@ void dcache_flush_range(uint32 start, uint32 count);
 */
 void dcache_purge_range(uint32 start, uint32 count);
 
+/** \brief  Purge all the data/operand cache.
+
+    This function flushes all the data/operand cache, forcing a write-
+    back and invalidate on all of the cache blocks.
+
+    \param  start           The physical address for temporary buffer (32-byte aligned)
+    \param  count           The number of bytes of temporary buffer (8 KB or 16 KB)
+
+*/
+void dcache_purge_all(uint32 start, uint32 count);
+
 /** \brief  Prefetch memory to the data/operand cache.
 
     This function prefetch a range of the data/operand cache.
