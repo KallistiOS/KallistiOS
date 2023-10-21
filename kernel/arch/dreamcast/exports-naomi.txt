@@ -7,6 +7,7 @@
 
 include kos.h
 include dc/sound/sound.h
+include dc/sound/pcm_split.h
 
 # ASIC
 asic_evt_set_handler
@@ -111,6 +112,8 @@ snd_stream_queue_go
 snd_stream_stop
 snd_stream_poll
 snd_stream_volume
+snd_pcm16_split
+snd_pcm16_split_sq
 
 # Video
 vid_check_cable

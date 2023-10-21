@@ -4,6 +4,7 @@
    Copyright (C) 2000, 2001, 2002, 2003, 2004 Megan Potter
    Copyright (C) 2002 Florian Schulze
    Copyright (C) 2020 Lawrence Sebald
+   Copyright (C) 2023 Ruslan Rostovtsev
 
    SH-4 support routines for SPU streaming sound driver
 */
@@ -18,10 +19,12 @@
 #include <arch/cache.h>
 #include <arch/timer.h>
 #include <dc/g2bus.h>
+#include <dc/sq.h>
 #include <dc/spu.h>
 #include <dc/sound/sound.h>
 #include <dc/sound/stream.h>
 #include <dc/sound/sfxmgr.h>
+#include <dc/sound/pcm_split.h>
 
 #include "arm/aica_cmd_iface.h"
 
@@ -88,7 +91,7 @@ typedef struct strchan {
 static strchan_t streams[SND_STREAM_MAX];
 
 // Separation buffers (for stereo)
-int16 * sep_buffer[2] = { NULL, NULL };
+static uint32 *sep_buffer[2] = {NULL, NULL};
 
 /* the address of the sound ram from the SH4 side */
 #define SPU_RAM_BASE            0xa0800000
@@ -148,16 +151,13 @@ static void process_filters(snd_stream_hnd_t hnd, void **buffer, int *samplecnt)
     }
 }
 
-
-/* Performs stereo seperation for the two channels; this routine
-   has been optimized for the SH-4. */
 static void sep_data(void *buffer, int len, int stereo) {
     register int16  *bufsrc, *bufdst;
     register int    x, y, cnt;
 
     if(stereo) {
         bufsrc = (int16*)buffer;
-        bufdst = sep_buffer[0];
+        bufdst = (int16*)sep_buffer[0];
         x = 0;
         y = 0;
         cnt = len / 2;
@@ -172,7 +172,7 @@ static void sep_data(void *buffer, int len, int stereo) {
 
         bufsrc = (int16*)buffer;
         bufsrc++;
-        bufdst = sep_buffer[1];
+        bufdst = (int16*)sep_buffer[1];
         x = 1;
         y = 0;
         cnt = len / 2;
@@ -189,8 +189,27 @@ static void sep_data(void *buffer, int len, int stereo) {
     }
     else {
         memcpy(sep_buffer[0], buffer, len);
-        memcpy(sep_buffer[1], buffer, len);
+        sep_buffer[1] = sep_buffer[0];
     }
+}
+
+static void stereo_pcm16_split_sq(uint32 *data, uint32 aica_left, uint32 aica_right, uint32 size) {
+
+	/* Wait for both store queues to complete if they are already used */
+	uint32 *d = (uint32 *)0xe0000000;
+	d[0] = d[8] = 0;
+
+	uint32 masked_left = (0xe0000000 | (aica_left & 0x03ffffe0));
+	uint32 masked_right = (0xe0000000 | (aica_right & 0x03ffffe0));
+
+	/* Set store queue memory area as desired */
+	QACR0 = (aica_left >> 24) & 0x1c;
+	QACR1 = (aica_right >> 24) & 0x1c;
+
+	g2_fifo_wait();
+
+	/* Separating channels and do fill/write queues as many times necessary. */
+	snd_pcm16_split_sq(data, masked_left, masked_right, size);
 }
 
 /* Prefill buffers -- do this before calling start() */
@@ -202,37 +221,34 @@ void snd_stream_prefill(snd_stream_hnd_t hnd) {
 
     if(!streams[hnd].get_data) return;
 
-    /* Load first buffer */
-    /* XXX Note: This will not work if the full data size is less than
-       buffer_size or buffer_size/2. */
+    const uint32 buffer_size = streams[hnd].buffer_size;
+
     if(streams[hnd].stereo)
-        buf = streams[hnd].get_data(hnd, streams[hnd].buffer_size, &got);
+        buf = streams[hnd].get_data(hnd, buffer_size * 2, &got);
     else
-        buf = streams[hnd].get_data(hnd, streams[hnd].buffer_size / 2, &got);
+        buf = streams[hnd].get_data(hnd, buffer_size, &got);
 
     process_filters(hnd, &buf, &got);
-    sep_data(buf, (streams[hnd].buffer_size / 2), streams[hnd].stereo);
-    spu_memload(
-        streams[hnd].spu_ram_sch[0] + (streams[hnd].buffer_size / 2) * 0,
-        (uint8*)sep_buffer[0], streams[hnd].buffer_size / 2);
-    spu_memload(
-        streams[hnd].spu_ram_sch[1] + (streams[hnd].buffer_size / 2) * 0,
-        (uint8*)sep_buffer[1], streams[hnd].buffer_size / 2);
 
-    /* Load second buffer */
-    if(streams[hnd].stereo)
-        buf = streams[hnd].get_data(hnd, streams[hnd].buffer_size, &got);
-    else
-        buf = streams[hnd].get_data(hnd, streams[hnd].buffer_size / 2, &got);
-
-    process_filters(hnd, &buf, &got);
-    sep_data(buf, (streams[hnd].buffer_size / 2), streams[hnd].stereo);
-    spu_memload(
-        streams[hnd].spu_ram_sch[0] + (streams[hnd].buffer_size / 2) * 1,
-        (uint8*)sep_buffer[0], streams[hnd].buffer_size / 2);
-    spu_memload(
-        streams[hnd].spu_ram_sch[1] + (streams[hnd].buffer_size / 2) * 1,
-        (uint8*)sep_buffer[1], streams[hnd].buffer_size / 2);
+    if ((uintptr_t)buf & 31) {
+        sep_data(buf, got, streams[hnd].stereo);
+        spu_memload(streams[hnd].spu_ram_sch[0], (uint8*)sep_buffer[0], got);
+        spu_memload(streams[hnd].spu_ram_sch[1], (uint8*)sep_buffer[1], got);
+    }
+    else {
+        if (streams[hnd].stereo) {
+            stereo_pcm16_split_sq((uint32 *)buf,
+                streams[hnd].spu_ram_sch[0],
+                streams[hnd].spu_ram_sch[1],
+                got);
+        }
+        else {
+            g2_fifo_wait();
+            sq_cpy((uint32 *)streams[hnd].spu_ram_sch[0], buf, got);
+            g2_fifo_wait();
+            sq_cpy((uint32 *)streams[hnd].spu_ram_sch[1], buf, got);
+        }
+    }
 
     /* Start with playing on buffer 0 */
     streams[hnd].last_write_pos = 0;
@@ -243,8 +259,8 @@ void snd_stream_prefill(snd_stream_hnd_t hnd) {
 int snd_stream_init(void) {
     /* Create stereo seperation buffers */
     if(!sep_buffer[0]) {
-        sep_buffer[0] = memalign(32, (SND_STREAM_BUFFER_MAX / 2));
-        sep_buffer[1] = memalign(32, (SND_STREAM_BUFFER_MAX / 2));
+        sep_buffer[0] = memalign(32, SND_STREAM_BUFFER_MAX);
+        sep_buffer[1] = sep_buffer[0] + (SND_STREAM_BUFFER_MAX / 8);
     }
 
     /* Finish loading the stream driver */
@@ -355,7 +371,6 @@ void snd_stream_shutdown(void) {
     if(sep_buffer[0]) {
         free(sep_buffer[0]);
         sep_buffer[0] = NULL;
-        free(sep_buffer[1]);
         sep_buffer[1] = NULL;
     }
 }
@@ -527,11 +542,28 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
             return -3;
         }
 
-        sep_data(data, needed_samples * 2, streams[hnd].stereo);
+        if(streams[hnd].stereo) {
+            sep_buffer[1] = sep_buffer[0] + (SND_STREAM_BUFFER_MAX / 8);
+        }
+
+        if ((uintptr_t)data & 31) {
+            sep_data(data, needed_samples * 2, streams[hnd].stereo);
+        } 
+        else {
+            if(streams[hnd].stereo) {
+                snd_pcm16_split(data, sep_buffer[0], sep_buffer[1], needed_samples * 4);
+            }
+            else {
+                sep_buffer[0] = data;
+                sep_buffer[1] = data;
+            }
+        }
 
         // Second DMA will get started by the chain handler
-        dcache_flush_range((uint32)sep_buffer[0], needed_samples*2);
-        dcache_flush_range((uint32)sep_buffer[1], needed_samples*2);
+        dcache_flush_range((uint32)sep_buffer[0], needed_samples * 2);
+        if (streams[hnd].stereo) {
+            dcache_flush_range((uint32)sep_buffer[1], needed_samples * 2);
+        }
         dmadest = streams[hnd].spu_ram_sch[1] + (streams[hnd].last_write_pos * 2);
         dmacnt = needed_samples * 2;
         spu_dma_transfer(sep_buffer[0], streams[hnd].spu_ram_sch[0] + (streams[hnd].last_write_pos * 2), needed_samples * 2, 0, dma_chain, 0);

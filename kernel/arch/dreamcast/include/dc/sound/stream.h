@@ -3,6 +3,7 @@
    dc/sound/stream.h
    Copyright (C) 2002, 2004 Megan Potter
    Copyright (C) 2020 Lawrence Sebald
+   Copyright (C) 2023 Ruslan Rostovtsev
 
 */
 
@@ -17,6 +18,7 @@
     \author Megan Potter
     \author Florian Schulze
     \author Lawrence Sebald
+    \author Ruslan Rostovtsev
 */
 
 #ifndef __DC_SOUND_STREAM_H
@@ -56,7 +58,8 @@ typedef int snd_stream_hnd_t;
     \param  smp_req         The number of samples requested.
     \param  smp_recv        Used to return the number of samples available.
     \return                 A pointer to the buffer of samples. If stereo, the
-                            samples should be interleaved.
+                            samples should be interleaved. For best perfomance
+                            use 32-byte aligned pointer.
 */
 typedef void *(*snd_stream_callback_t)(snd_stream_hnd_t hnd, int smp_req,
                                        int *smp_recv);
