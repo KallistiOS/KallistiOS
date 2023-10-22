@@ -290,7 +290,7 @@ int InputCallback(void) {
     return 1;
 }
 
-int check_start(void) {
+static int check_start(void) {
     maple_device_t *cont;
     cont_state_t *state;
 
