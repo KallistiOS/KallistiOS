@@ -93,7 +93,7 @@ void RenderCallback(GLuint texID0, GLuint texID1) {
     glDisableClientState(GL_VERTEX_ARRAY);
 }
 
-int check_start(void) {
+static int check_start(void) {
     maple_device_t *cont;
     cont_state_t *state;
 
