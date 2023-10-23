@@ -5,7 +5,8 @@
 */
 
 /** \file   threads.h
-    \brief  C11 threading functionality.
+    \brief  C11 Threading API.
+    \ingroup threading
 
     This file contains the definitions needed for using C11 threads. The C11
     standard defines a number of threading-related primitives, which we wrap
@@ -36,7 +37,8 @@
 
 __BEGIN_DECLS
 
-/** \defgroup c11_thd_rvs               C11 Thread function return values
+/** \name Return values
+    \brief C11 Thread function return values
 
     Most of the C11 thread-related functions that return a result code return
     one of these.
@@ -83,7 +85,8 @@ extern void call_once(once_flag *flag, void (*func)(void));
 */
 typedef mutex_t mtx_t;
 
-/** \defgroup c11_mutex_types           C11 mutual exclusion lock types
+/** \name  Mutex types
+    \brief C11 mutual exclusion lock types
 
     These are the possible types of mutex locks that C11 allows for. Note that
     mtx_plain or mtx_recursive can be ORed with mtx_timed as well.

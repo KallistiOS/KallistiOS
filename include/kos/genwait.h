@@ -8,6 +8,7 @@
 
 /** \file   kos/genwait.h
     \brief  Generic wait system.
+    \ingroup kthreads
 
     The generic wait system in KOS, like many other portions of KOS, is based on
     an idea from the BSD kernel. It allows you to sleep on any random object and

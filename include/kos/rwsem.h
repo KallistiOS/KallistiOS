@@ -7,6 +7,7 @@
 
 /** \file   kos/rwsem.h
     \brief  Definition for a reader/writer semaphore.
+    \ingroup kthreads
 
     This file defines a concept of reader/writer semaphores. Basically, this
     type of lock allows an unlimited number of "readers" to acquire the lock at
@@ -61,6 +62,7 @@ typedef struct rw_semaphore {
     This function allocates a new reader/writer lock that is initially not
     locked either for reading or writing.
 
+    \deprecated
     This function is formally deprecated, and should not be used in newly
     written code. Instead, please use rwsem_init().
 

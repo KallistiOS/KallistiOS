@@ -290,9 +290,24 @@ int InputCallback(void) {
     return 1;
 }
 
+static int check_start(void) {
+    maple_device_t *cont;
+    cont_state_t *state;
+
+    cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
+
+    if(cont) {
+        state = (cont_state_t *)maple_dev_status(cont);
+
+        if(state)
+            return state->buttons & CONT_START;
+    }
+
+    return 0;
+}
+
 extern uint8 romdisk[];
 KOS_INIT_ROMDISK(romdisk);
-
 
 int main(int argc, char **argv) {
     printf("glRadialBlur beginning\n");
@@ -327,6 +342,9 @@ int main(int argc, char **argv) {
     GLubyte enable_radial = 0, radial_iterations = 8;
 
     while(1) {
+
+        if(check_start())
+            break;
 
         /* Draw the GL "scene" */
         if(enable_radial) {

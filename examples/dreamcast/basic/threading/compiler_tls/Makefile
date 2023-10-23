@@ -6,26 +6,25 @@
 # Copyright (C) 2023 Colton Pawielski
 #
 
-EXAMPLE_NAME=compiler_tls
+TARGET = compiler_tls.elf
+OBJS = compiler_tls.o
 
-all: rm-elf $(EXAMPLE_NAME).elf
+all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules
 
-OBJS = $(EXAMPLE_NAME).o
-
-clean:
-	-rm -f $(EXAMPLE_NAME).elf $(OBJS)
+clean: rm-elf
+	-rm -f $(OBJS)
 
 rm-elf:
-	-rm -f $(EXAMPLE_NAME).elf
+	-rm -f $(TARGET)
 
-$(EXAMPLE_NAME).elf: $(OBJS) 
-	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(EXAMPLE_NAME).elf -ftls-model=local-exec $(KOS_START) $(OBJS) $(DATAOBJS) $(OBJEXTRA) $(KOS_LIBS) -Wl,-Map=$(EXAMPLE_NAME).map
+$(TARGET): $(OBJS) 
+	kos-cc -o $(TARGET) -ftls-model=local-exec $(OBJS) -Wl,-Map=compiler_tls.map
 
-run: $(EXAMPLE_NAME).elf
-	$(KOS_LOADER) $(EXAMPLE_NAME).elf
+run: $(TARGET)
+	$(KOS_LOADER) $(TARGET)
 
-dist:
+dist: $(TARGET)
 	-rm -f $(OBJS)
-	$(KOS_STRIP) $(EXAMPLE_NAME).elf
+	$(KOS_STRIP) $(TARGET)

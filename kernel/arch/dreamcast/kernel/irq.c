@@ -339,4 +339,6 @@ void irq_shutdown(void) {
             "ldc    r0,sr" : : "m"(pre_sr));
     __asm__("mov.l  %0,r0\n"
             "ldc    r0,vbr" : : "m"(pre_vbr));
+
+    initted = 0;
 }

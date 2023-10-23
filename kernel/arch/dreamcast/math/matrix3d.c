@@ -126,7 +126,7 @@ void mat_perspective(float xcenter, float ycenter, float cot_fovy_2,
 
 /* The following lookat code is based heavily on KGL's gluLookAt */
 
-static void cross(const vec3f_t *v1, const vec3f_t *v2, vec3f_t *r) {
+static inline void cross(const vec3f_t *v1, const vec3f_t *v2, vec3f_t *r) {
     r->x = v1->y * v2->z - v1->z * v2->y;
     r->y = v1->z * v2->x - v1->x * v2->z;
     r->z = v1->x * v2->y - v1->y * v2->x;

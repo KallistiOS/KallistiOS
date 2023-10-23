@@ -103,7 +103,7 @@ maple_device_t * maple_enum_type_ex(int n, uint32 func, uint32 cap) {
    valid before returning. Cast to the appropriate type you're expecting. */
 void * maple_dev_status(maple_device_t *dev) {
     /* Is the device valid? */
-    if(!dev->valid)
+    if(!dev || !dev->valid)
         return NULL;
 
     /* Waits until the first DMA happens: crude but effective (replace me later) */

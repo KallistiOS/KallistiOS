@@ -7,6 +7,7 @@
 
 /** \file   kos/tls.h
     \brief  Thread-local storage support.
+    \ingroup kthreads
 
     This file contains the definitions used to support key/value pairs of
     thread-local storage in KOS.

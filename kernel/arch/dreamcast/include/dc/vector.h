@@ -22,8 +22,14 @@ __BEGIN_DECLS
 
 /** \brief  Basic 4x4 matrix type.
     \headerfile dc/vector.h
+
+    \warning
+    This type must always be allocated on 8-byte boundaries,
+    or else the API operating on it will crash on unaligned
+    accesses. Keep this in mind with heap allocation, where
+    you must ensure alignment manually.
 */
-typedef float matrix_t[4][4];
+typedef __attribute__ ((aligned (8))) float matrix_t[4][4];
 
 /** \brief  4-part vector type.
     \headerfile dc/vector.h

@@ -26,7 +26,7 @@ romdisk.o: romdisk.img
 	$(KOS_BASE)/utils/bin2o/bin2o romdisk.img romdisk romdisk.o
 
 run: $(TARGET)
-	$(KOS_LOADER) $(TARGET) -n
+	$(KOS_LOADER) $(TARGET)
 
 dist: $(TARGET)
 	-rm -f $(OBJS)
