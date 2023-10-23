@@ -32,7 +32,7 @@ __BEGIN_DECLS
     \param data   Source buffer of interleaved stereo samples
     \param left   Destination buffer for left mono samples
     \param right  Destination buffer for right mono samples
-    \param size   Size of the source buffer in bytes
+    \param size   Size of the source buffer in bytes (must be divisible by 32)
     
     \sa snd_pcm16_split_sq()
 */
@@ -51,7 +51,7 @@ void snd_pcm16_split(uint32_t *data, uint32_t *left, uint32_t *right, size_t siz
     \param data   Source buffer of interleaved stereo samples
     \param left   SQ-masked left destination buffer address
     \param right  SQ-masked right destination buffer address
-    \param size   Size of the source buffer in bytes
+    \param size   Size of the source buffer in bytes (must be divisible by 32)
     
     \sa snd_pcm16_split()
     Store queues must be prepared before.
