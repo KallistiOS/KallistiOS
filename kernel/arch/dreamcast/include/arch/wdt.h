@@ -104,7 +104,7 @@ void wdt_enable_timer(uint8_t initial_count,
 
     Stops the WDT if it was previously running and reconfigures it 
     to be used as a typical watchdog timer, generating a resest 
-    interupt upon counter overflow. To prevent this from happening,
+    interrupt upon counter overflow. To prevent this from happening,
     the user should be periodically resetting the counter.
 
     \note

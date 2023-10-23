@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
 
     /* Enable watchdog mode with a period of 5.25ms, causing a manual 
        reset interrupt signal to be raised upon timeout. This will 
-       case your Dreamcast to reboot immediately. */
+       cause your Dreamcast to reboot immediately. */
     wdt_enable_watchdog(0, WDT_CLK_DIV_4096, WDT_RST_MANUAL);
 
     /* Continually "pet" the watchdog timer in a loop, resetting its
@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
     /* Immediately disable the WDT once we're done with it. */
     wdt_disable();
 
-    /* Ensure that the WDT's counter wasn't stack at zero the whole
+    /* Ensure that the WDT's counter wasn't stuck at zero the whole
        time and that it was actually updating as expected. */
     if(!max_count) {
         fprintf(stderr, "The WDT counter never even incremented!\n\n");
