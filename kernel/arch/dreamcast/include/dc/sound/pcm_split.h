@@ -24,7 +24,8 @@ __BEGIN_DECLS
 /** \brief  Separates stereo PCM samples into 2 mono channels.
 
 
-    Splits a buffer containing 2 interleaved channels of 16-bit PCM samples into 2 separate buffers of 16-bit PCM samples.
+    Splits a buffer containing 2 interleaved channels of 16-bit PCM samples
+    into 2 separate buffers of 16-bit PCM samples.
 
     \warning 
     All arguments must be 32-byte aligned.
@@ -40,13 +41,16 @@ void snd_pcm16_split(uint32_t *data, uint32_t *left, uint32_t *right, size_t siz
 
 /** \brief  Separates stereo PCM samples into 2 mono channels with SQ transfer.
 
-    Splits a buffer containing 2 interleaved channels of 16-bit PCM samples into 2 separate buffers of 16-bit PCM samples by using the store queues for data transfer.
+    Splits a buffer containing 2 interleaved channels of 16-bit PCM samples
+    into 2 separate buffers of 16-bit PCM samples by using the store queues
+    for data transfer.
     
     \warning 
     All arguments must be 32-byte aligned.
     
     \warning 
-    The store queues must be configured for transferring to the left and right destination buffers beforehand (QACRO <= left, QACRO1 <= right). 
+    The store queues must be configured for transferring to the left and right
+    destination buffers beforehand (QACRO <= left, QACRO1 <= right).
     
     \param data   Source buffer of interleaved stereo samples
     \param left   SQ-masked left destination buffer address

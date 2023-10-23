@@ -480,6 +480,7 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
     int    needed_samples;
     int    got_samples;
     void   *data;
+    void   *first_dma_buf = sep_buffer[0];
 
     CHECK_HND(hnd);
 
@@ -554,19 +555,19 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
                 snd_pcm16_split(data, sep_buffer[0], sep_buffer[1], needed_samples * 4);
             }
             else {
-                sep_buffer[0] = data;
+                first_dma_buf = data;
                 sep_buffer[1] = data;
             }
         }
 
         // Second DMA will get started by the chain handler
-        dcache_flush_range((uint32)sep_buffer[0], needed_samples * 2);
+        dcache_flush_range((uint32)first_dma_buf, needed_samples * 2);
         if (streams[hnd].stereo) {
             dcache_flush_range((uint32)sep_buffer[1], needed_samples * 2);
         }
         dmadest = streams[hnd].spu_ram_sch[1] + (streams[hnd].last_write_pos * 2);
         dmacnt = needed_samples * 2;
-        spu_dma_transfer(sep_buffer[0], streams[hnd].spu_ram_sch[0] + (streams[hnd].last_write_pos * 2), needed_samples * 2, 0, dma_chain, 0);
+        spu_dma_transfer(first_dma_buf, streams[hnd].spu_ram_sch[0] + (streams[hnd].last_write_pos * 2), needed_samples * 2, 0, dma_chain, 0);
 
         streams[hnd].last_write_pos += needed_samples;
 
