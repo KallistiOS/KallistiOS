@@ -192,7 +192,7 @@ void * sq_cpy_pvr(void *dest, const void *src, int n);
     optimized for writing to a destination residing within VRAM.
 
     \warning
-    !!! Not be used at the same time as PVR DMA transfers !!!
+    This function cannot be used at the same time as a PVR DMA transfer.
     
     The dest pointer must be at least 32-byte aligned and reside in video 
     memory, n must be a multiple of 32 and only the low 16-bits are used 
