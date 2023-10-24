@@ -170,7 +170,7 @@ void sq_clr(void *dest, int n);
     sq_cpy() when using this function to write to VRAM.
 
     \warning
-    !!! Not be used at the same time as PVR DMA transfers !!!
+    This function cannot be used at the same time as a PVR DMA transfer.
 
     The dest pointer must be at least 32-byte aligned and reside 
     in video memory, the src pointer must be at least 8-byte aligned, 
