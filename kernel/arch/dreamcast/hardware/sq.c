@@ -9,8 +9,6 @@
 #include <dc/sq.h>
 #include <kos/dbglog.h>
 
-#include <errno.h>
-
 /*
     Functions to clear, copy, and set memory using the sh4 store queues
 
