@@ -3,6 +3,7 @@
 
 #include <kos.h>
 
+
 char buffer[2048];
 void cdfs_test(void) {
     file_t fd;

@@ -1,13 +1,11 @@
+# KallistiOS ##version##
 #
-# Basic KallistiOS skeleton / test program
-# (c)2001 Megan Potter
-#   
+# examples/dreamcast/basic/watchdog/Makefile
+# Copyright (c) 2023 Falco Girgis
+#
 
-# Put the filename of the output binary here
-TARGET = pvrmark.elf
-
-# List all of your C files here, but change the extension to ".o"
-OBJS = pvrmark.o
+TARGET = watchdog.elf
+OBJS = watchdog.o
 
 all: rm-elf $(TARGET)
 
@@ -28,4 +26,3 @@ run: $(TARGET)
 dist: $(TARGET)
 	-rm -f $(OBJS)
 	$(KOS_STRIP) $(TARGET)
-

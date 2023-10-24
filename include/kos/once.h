@@ -10,6 +10,7 @@
 
 /** \file   kos/once.h
     \brief  Dynamic package initialization.
+    \ingroup kthreads
 
     This file provides definitions for an object that functions the same way as
     the pthread_once_t function does from the POSIX specification. This object

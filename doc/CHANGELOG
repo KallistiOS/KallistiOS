@@ -191,6 +191,7 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - *** Added GCC builtin functions for supporting all of C11 atomics [FG]
 - *** Added toolchain and KOS support for C/C++ compiler-level TLS [CP && FG]
 - DC  Added vmu functions to check/enable/disable the extra 41 blocks [AB]
+- *** Added driver for the SH4's Watchdog Timer peripheral [FG]
 - DC  Added Moop powered fast path to sq_cpy, added TapamN pvr related sq functions [AB]
 
 KallistiOS version 2.0.0 -----------------------------------------------

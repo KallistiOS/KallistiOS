@@ -330,7 +330,6 @@ static int la_detect(void) {
     type = DLCR7_IDENT(la_read(DLCR7));
 
     if(type != DLCR7_ID_MB86967) {
-        dbglog(DBG_KDEBUG, "lan_adapter: no device detected (wrong type = %d)\n", type);
         return -1;
     }
 
@@ -746,6 +745,14 @@ int la_init(void) {
     la_if.index = 0;
     la_if.dev_id = 0;
     la_if.flags = NETIF_NO_FLAGS;
+    la_if.if_detect = la_if_detect;
+
+    /* Short circuit if no lan is detected */
+    if(la_if.if_detect(&la_if) < 0) {
+        dbglog(DBG_KDEBUG, "lan: no device detected\n");
+        return -1;
+    }
+
     memset(la_if.ip_addr, 0, sizeof(la_if.ip_addr));
     memset(la_if.netmask, 0, sizeof(la_if.netmask));
     memset(la_if.gateway, 0, sizeof(la_if.gateway));
@@ -758,7 +765,7 @@ int la_init(void) {
     memset(&la_if.ip6_gateway, 0, sizeof(la_if.ip6_gateway));
     la_if.mtu6 = 0;
     la_if.hop_limit = 0;
-    la_if.if_detect = la_if_detect;
+
     la_if.if_init = la_if_init;
     la_if.if_shutdown = la_if_shutdown;
     la_if.if_start = la_if_start;

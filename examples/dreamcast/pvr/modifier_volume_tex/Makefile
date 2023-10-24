@@ -33,7 +33,7 @@ romdisk/fruit.kmg: fruit.jpg
 	mv fruit.kmg romdisk/
 
 run: $(TARGET)
-	$(KOS_LOADER) $(TARGET) -n
+	$(KOS_LOADER) $(TARGET)
 
 dist: $(TARGET)
 	-rm -f $(OBJS) romdisk.img romdisk/fruit.kmg

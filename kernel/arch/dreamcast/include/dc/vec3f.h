@@ -109,7 +109,7 @@ typedef struct vec3f {
         register float __z  __asm__("fr2") = (z2-z1); \
         register float __w  __asm__("fr3"); \
         __asm__ __volatile__( \
-                       "fldi0 fr3\n" \
+                              "fldi0 fr3\n" \
                               "fipr  fv0,fv0\n" \
                               "fsqrt fr3\n" \
                               : "+f" (__w) \

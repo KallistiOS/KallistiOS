@@ -1,0 +1,23 @@
+/** \defgroup threading Threading
+    \brief    Threading and Concurrency
+
+    KOS offers a variety of different threading APIs, ranging from low-level
+    and platform-specific to high-level and cross-platform. Which you should
+    choose to interface with depends on the needs of your particular 
+    application.
+
+    API          |Description                                          
+    -------------|-----------------------------------------
+    kthreads     |Dreamcast-specific direct threading API
+    C11 threads  |Cross-platform builtin C threading API               
+    C++11 threads|Cross-platform builtin C++ threading API            
+    pthreads     |Cross-platform POSIX threading API
+
+    KOS's kthreads are the lowest-level threading back-end, with C11, C++11,
+    and POSIX threading APIs being thin layers of abstraction built upon 
+    them. If you're writing a Dreamcast-specific application, kthreads 
+    will give you the least indirection; however, if you're writing a 
+    cross-platform application or simply want to use an API that you're 
+    familiar with, one of the other cross-platform APIs may be preferable. 
+
+*/

@@ -8,6 +8,7 @@
 
 /** \file   kos/mutex.h
     \brief  Mutual exclusion locks.
+    \ingroup kthreads
 
     This file defines mutual exclusion locks (or mutexes for short). The concept
     of a mutex is one of the most common types of locks in a multi-threaded
@@ -71,7 +72,8 @@ typedef struct kos_mutex {
     int count;
 } mutex_t;
 
-/** \defgroup mutex_types               Mutex types
+/** \name  Mutex types
+    \brief Types of Mutexes supported by KOS
 
     The values defined in here are the various types of mutexes that KallistiOS
     supports.
@@ -98,6 +100,7 @@ typedef struct kos_mutex {
 
 /** \brief  Allocate a new mutex.
 
+    \deprecated
     This function allocates and initializes a new mutex for use. This function
     will always create mutexes of the type MUTEX_TYPE_NORMAL.
 

@@ -47,12 +47,6 @@ __BEGIN_DECLS
 */
 #define TMU2    2
 
-/** \brief  SH4 Watchdog Timer.
-
-    KallistiOS does not currently support using this timer.
-*/
-#define WDT     3
-
 /** \brief  Which timer does the thread system use? */
 #define TIMER_ID TMU0
 

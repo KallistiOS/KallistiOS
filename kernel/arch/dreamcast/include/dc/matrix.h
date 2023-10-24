@@ -31,6 +31,12 @@ __BEGIN_DECLS
 
     This function stores the current internal matrix to one in memory.
 
+    \warning
+    \p out MUST be at least 8-byte aligned!
+
+    \note
+    For best performance, 32-byte alignment of \p out is recommended.
+
     \param  out             A pointer to where to store the matrix (must be at
                             least 8-byte aligned, should be 32-byte aligned).
 */
@@ -39,6 +45,12 @@ void mat_store(matrix_t *out);
 /** \brief  Copy a memory matrix into the internal one.
 
     This function loads the internal matrix with the values of one in memory.
+
+    \warning
+    \p out MUST be at least 8-byte aligned!
+
+    \note 
+    For best performance, 32-byte alignment of \p out is recommended.
 
     \param  out             A pointer to where to load the matrix from (must be
                             at least 8-byte aligned, should be 32-byte aligned).
@@ -54,6 +66,12 @@ void mat_identity(void);
 /** \brief  Apply a matrix.
 
     This function multiplies a matrix in memory onto the internal matrix.
+
+    \warning
+    \p src MUST be at least 8-byte aligned!
+
+    \note 
+    For best performance, 32-byte alignment of \p src is recommended.
 
     \param  src             A poitner to the matrix to multiply.
 */

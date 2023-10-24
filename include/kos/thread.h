@@ -23,7 +23,7 @@ __BEGIN_DECLS
 
 /** \file    kos/thread.h
     \brief   Threading support.
-    \ingroup threads
+    \ingroup kthreads
 
     This file contains the interface to the threading system of KOS. Timer
     interrupts are used to reschedule threads within the system.
@@ -41,8 +41,9 @@ __BEGIN_DECLS
     \see    kos/tls.h
 */
 
-/** \defgroup threads Threads
-    \brief    Threading API
+/** \defgroup kthreads KThreads
+    \brief    KOS Native Threading API
+    \ingroup  threading
 
     The thread scheduler itself is a relatively simplistic priority scheduler.
     There is no provision for priorities to erode over time, so keep that in
@@ -68,7 +69,6 @@ __BEGIN_DECLS
 */
 
 /** \brief   Maximal thread priority.
-    \ingroup threads
 
     This macro defines the maximum value for a thread's priority. Note that the
     larger this number, the lower the priority of the thread.
@@ -76,14 +76,12 @@ __BEGIN_DECLS
 #define PRIO_MAX 4096
 
 /** \brief   Default thread priority.
-    \ingroup threads
 
     Threads are created by default with the priority specified.
 */
 #define PRIO_DEFAULT 10
 
 /** \brief   Size of a kthread's label
-    \ingroup threads
 
     Maximum number of characters in a thread's label or name
     (including NULL terminator).
@@ -91,7 +89,6 @@ __BEGIN_DECLS
 #define KTHREAD_LABEL_SIZE  256
 
 /** \brief   Size of a kthread's current directory
-    \ingroup threads
 
     Maximum number of characters in a thread's current working
     directory (including NULL terminator).
@@ -107,7 +104,6 @@ LIST_HEAD(ktlist, kthread);
 /* \endcond */
 
 /** \brief   Control Block Header
-    \ingroup threads
 
     Header preceeding the static TLS data segments as defined by
     the SH-ELF TLS ABI (version 1). This is what the thread pointer 
@@ -119,7 +115,6 @@ typedef struct tcbhead {
 } tcbhead_t;
 
 /** \brief   Structure describing one running thread.
-    \ingroup threads
 
     Each thread has one of these structures assigned to it, which holds all the
     data associated with the thread. There are various functions to manipulate
@@ -209,8 +204,8 @@ typedef struct kthread {
     void *rv;
 } kthread_t;
 
-/** \defgroup thd_flags             Thread flag values
-    \ingroup  threads
+/** \name     Thread flag values
+    \brief    kthread_t::flags values
 
     These are possible values for the flags field on the kthread_t structure.
     These can be ORed together.
@@ -223,8 +218,8 @@ typedef struct kthread {
 #define THD_DETACHED    4       /**< \brief Thread is detached */
 /** @} */
 
-/** \defgroup thd_states            Thread states
-    \ingroup  threads
+/** \name     Thread states
+    \brief    kthread_t::state values
 
     Each thread in the system is in exactly one of this set of states.
 
@@ -238,7 +233,6 @@ typedef struct kthread {
 /** @} */
 
 /** \brief   Thread creation attributes.
-    \ingroup threads
 
     This structure allows you to specify the various attributes for a thread to
     have when it is created. These can only be modified (in general) at thread
@@ -268,8 +262,8 @@ typedef struct kthread_attr {
     const char *label;
 } kthread_attr_t;
 
-/** \defgroup thd_modes             Threading system modes
-    \ingroup  threads
+/** \name   Threading system modes
+    \brief  kthread mode values
 
     The threading system will always be in one of the following modes. This
     represents either pre-emptive scheduling or an un-initialized state.
@@ -282,7 +276,6 @@ typedef struct kthread_attr {
 /** @} */
 
 /** \brief   The currently executing thread.
-    \ingroup threads
 
     \warning
     Do not manipulate this variable directly!
@@ -292,7 +285,6 @@ typedef struct kthread_attr {
 extern kthread_t *thd_current;
 
 /** \brief   Block the current thread.
-    \ingroup threads
 
     Blocks the calling thread and performs a reschedule as if a context switch
     timer had been executed. This is useful for, e.g., blocking on sync
@@ -309,7 +301,6 @@ extern kthread_t *thd_current;
 int thd_block_now(irq_context_t *mycxt);
 
 /** \brief   Find a new thread to swap in.
-    \ingroup threads
 
     This function looks at the state of the system and returns a new thread
     context to swap in. This is called from thd_block_now() and from the
@@ -324,7 +315,6 @@ int thd_block_now(irq_context_t *mycxt);
 irq_context_t *thd_choose_new(void);
 
 /** \brief       Given a thread ID, locates the thread structure.
-    \ingroup     threads
     \relatesalso kthread_t
 
     \param  tid             The thread ID to retrieve.
@@ -334,7 +324,6 @@ irq_context_t *thd_choose_new(void);
 kthread_t *thd_by_tid(tid_t tid);
 
 /** \brief       Enqueue a process in the runnable queue.
-    \ingroup     threads
     \relatesalso kthread_t
 
     This function adds a thread to the runnable queue after the process group of
@@ -351,7 +340,6 @@ kthread_t *thd_by_tid(tid_t tid);
 void thd_add_to_runnable(kthread_t *t, int front_of_line);
 
 /** \brief       Removes a thread from the runnable queue, if it's there.
-    \ingroup     threads
     \relatesalso kthread_t
 
     This function removes a thread from the runnable queue, if it is currently
@@ -367,7 +355,6 @@ void thd_add_to_runnable(kthread_t *t, int front_of_line);
 int thd_remove_from_runnable(kthread_t *thd);
 
 /** \brief       Create a new thread.
-    \ingroup     threads
     \relatesalso kthread_t
 
     This function creates a new kernel thread with default parameters to run the
@@ -387,7 +374,7 @@ int thd_remove_from_runnable(kthread_t *thd);
 kthread_t *thd_create(int detach, void *(*routine)(void *param), void *param);
 
 /** \brief   Create a new thread with the specified set of attributes.
-    \ingroup threads
+    \relatesalso kthread_t
 
     This function creates a new kernel thread with the specified set of
     parameters to run the given routine.
@@ -406,7 +393,6 @@ kthread_t *thd_create_ex(const kthread_attr_t *__RESTRICT attr,
                          void *(*routine)(void *param), void *param);
 
 /** \brief       Brutally kill the given thread.
-    \ingroup     threads
     \relatesalso kthread_t
 
     This function kills the given thread, removing it from the execution chain,
@@ -424,7 +410,6 @@ kthread_t *thd_create_ex(const kthread_attr_t *__RESTRICT attr,
 int thd_destroy(kthread_t *thd);
 
 /** \brief   Exit the current thread.
-    \ingroup threads
 
     This function ends the execution of the current thread, removing it from all
     execution queues. This function will never return to the thread. Returning
@@ -435,7 +420,6 @@ int thd_destroy(kthread_t *thd);
 void thd_exit(void *rv) __noreturn;
 
 /** \brief   Force a thread reschedule.
-    \ingroup threads
 
     This function is the thread scheduler, and is generally called from a timer
     interrupt. You will most likely never have a reason to call this function
@@ -455,7 +439,6 @@ void thd_exit(void *rv) __noreturn;
 void thd_schedule(int front_of_line, uint64_t now);
 
 /** \brief       Force a given thread to the front of the queue.
-    \ingroup     threads
     \relatesalso kthread_t
 
     This function promotes the given thread to be the next one that will be
@@ -465,7 +448,6 @@ void thd_schedule(int front_of_line, uint64_t now);
 void thd_schedule_next(kthread_t *thd);
 
 /** \brief   Throw away the current thread's timeslice.
-    \ingroup threads
 
     This function manually yields the current thread's timeslice to the system,
     forcing a reschedule to occur.
@@ -473,7 +455,6 @@ void thd_schedule_next(kthread_t *thd);
 void thd_pass(void);
 
 /** \brief   Sleep for a given number of milliseconds.
-    \ingroup threads
 
     This function puts the current thread to sleep for the specified amount of
     time. The thread will be removed from the runnable queue until the given
@@ -486,7 +467,6 @@ void thd_pass(void);
 void thd_sleep(int ms);
 
 /** \brief       Set a thread's priority value.
-    \ingroup     threads
     \relatesalso kthread_t
 
     This function is used to change the priority value of a thread. If the
@@ -503,7 +483,6 @@ void thd_sleep(int ms);
 int thd_set_prio(kthread_t *thd, prio_t prio);
 
 /** \brief       Retrieve the current thread's kthread struct.
-    \ingroup     threads
     \relatesalso kthread_t
 
     \return                 The current thread's structure.
@@ -511,7 +490,6 @@ int thd_set_prio(kthread_t *thd, prio_t prio);
 kthread_t *thd_get_current(void);
 
 /** \brief       Retrieve the thread's label.
-    \ingroup     threads
     \relatesalso kthread_t
 
     \param  thd             The thread to retrieve from.
@@ -523,7 +501,6 @@ kthread_t *thd_get_current(void);
 const char *thd_get_label(kthread_t *thd);
 
 /** \brief       Set the thread's label.
-    \ingroup     threads
     \relatesalso kthread_t
 
     This function sets the label of a thread, which is simply a human-readable
@@ -539,7 +516,6 @@ const char *thd_get_label(kthread_t *thd);
 void thd_set_label(kthread_t *thd, const char *__RESTRICT label);
 
 /** \brief       Retrieve the thread's current working directory.
-    \ingroup     threads
     \relatesalso kthread_t
 
     This function retrieves the working directory of a thread. Generally, you
@@ -556,7 +532,6 @@ void thd_set_label(kthread_t *thd, const char *__RESTRICT label);
 const char *thd_get_pwd(kthread_t *thd);
 
 /** \brief       Set the thread's current working directory.
-    \ingroup     threads
     \relatesalso kthread_t
 
     This function will set the working directory of a thread. Generally, you
@@ -572,7 +547,6 @@ const char *thd_get_pwd(kthread_t *thd);
 void thd_set_pwd(kthread_t *thd, const char *__RESTRICT pwd);
 
 /** \brief       Retrieve a pointer to the thread errno.
-    \ingroup     threads
     \relatesalso kthread_t
 
     This function retrieves a pointer to the errno value for the thread. You
@@ -585,7 +559,6 @@ void thd_set_pwd(kthread_t *thd, const char *__RESTRICT pwd);
 int *thd_get_errno(kthread_t *thd);
 
 /** \brief       Retrieve a pointer to the thread reent struct.
-    \ingroup     threads
     \relatesalso kthread_t
 
     This function is used to retrieve some internal state that is used by
@@ -598,12 +571,11 @@ int *thd_get_errno(kthread_t *thd);
 struct _reent *thd_get_reent(kthread_t *thd);
 
 /** \brief   Change threading modes.
-    \ingroup threads
 
     This function changes the current threading mode of the system.
     With preemptive threading being the only mode.
 
-    \warning
+    \deprecated
     This is now deprecated.
 
     \param  mode            One of the \ref thd_modes values.
@@ -614,11 +586,10 @@ struct _reent *thd_get_reent(kthread_t *thd);
 int thd_set_mode(int mode) __deprecated;
 
 /** \brief   Fetch the current threading mode.
-    \ingroup threads
 
     With preemptive threading being the only mode.
 
-    \warning
+    \deprecated
     This is now deprecated.
 
     \return                 The current mode of the threading system.
@@ -628,7 +599,6 @@ int thd_set_mode(int mode) __deprecated;
 int thd_get_mode(void) __deprecated;
 
 /** \brief       Wait for a thread to exit.
-    \ingroup     threads
     \relatesalso kthread_t
 
     This function "joins" a joinable thread. This means effectively that the
@@ -647,7 +617,6 @@ int thd_get_mode(void) __deprecated;
 int thd_join(kthread_t *thd, void **value_ptr);
 
 /** \brief       Detach a joinable thread.
-    \ingroup     threads
     \relatesalso kthread_t
 
     This function switches the specified thread's mode from THD_MODE_JOINABLE
@@ -663,7 +632,6 @@ int thd_join(kthread_t *thd, void **value_ptr);
 int thd_detach(kthread_t *thd);
 
 /** \brief       Iterate all threads and call the passed callback for each
-    \ingroup     threads
     \relatesalso kthread_t
 
     \param cb               The callback to call for each thread. 
@@ -678,7 +646,6 @@ int thd_detach(kthread_t *thd);
 int thd_each(int (*cb)(kthread_t *thd, void *user_data), void *data);
 
 /** \brief   Print a list of all threads using the given print function.
-    \ingroup threads
 
     \param  pf              The printf-like function to print with.
 
@@ -689,7 +656,6 @@ int thd_each(int (*cb)(kthread_t *thd, void *user_data), void *data);
 int thd_pslist(int (*pf)(const char *fmt, ...));
 
 /** \brief   Print a list of all queued threads using the given print function.
-    \ingroup threads
 
     \param  pf              The printf-like function to print with.
 
@@ -700,7 +666,6 @@ int thd_pslist(int (*pf)(const char *fmt, ...));
 int thd_pslist_queue(int (*pf)(const char *fmt, ...));
 
 /** \brief   Initialize the threading system.
-    \ingroup threads
 
     This is normally done for you by default when KOS starts. This will also
     initialize all the various synchronization primitives.
@@ -713,7 +678,6 @@ int thd_pslist_queue(int (*pf)(const char *fmt, ...));
 int thd_init(void);
 
 /** \brief   Shutdown the threading system.
-    \ingroup threads
 
     This is done for you by the normal shutdown procedure of KOS. This will
     also shutdown all the various synchronization primitives.

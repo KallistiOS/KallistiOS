@@ -7,12 +7,14 @@
 
 /** \file   kos/recursive_lock.h
     \brief  Definitions for a recursive mutex.
+    \ingroup kthreads
 
     This file defines a recursive lock mechanism, similar to a mutex, but that a
     single thread can obtain as many times as it wants. A single thread is still
     limited to holding the lock at a time, but it can hold it an "unlimited"
     number of times (actually limited to INT_MAX, but who's counting).
 
+    \deprecated
     These are now just wrappers around the MUTEX_TYPE_RECURSIVE that is now
     provided and will be removed at some point in the future. Please update your
     code to use that type instead.
@@ -40,6 +42,7 @@ typedef mutex_t recursive_lock_t;
 
 /** \brief  Allocate a new recursive lock.
 
+    \deprecated
     This function allocates a new recurisve lock that is initially not locked.
 
     \return The created lock, or NULL on failure (errno will be set to ENOMEM to
@@ -49,6 +52,7 @@ recursive_lock_t *rlock_create(void) __depr("Use mutexes instead.");
 
 /** \brief  Destroy a recursive lock.
 
+    \deprecated
     This function cleans up a recursive lock. It is an error to attempt to
     destroy a locked recursive lock.
 
@@ -57,7 +61,8 @@ recursive_lock_t *rlock_create(void) __depr("Use mutexes instead.");
 void rlock_destroy(recursive_lock_t *l) __depr("Use mutexes instead.");
 
 /** \brief  Lock a recursive lock.
-
+    
+    \deprecated
     This function attempts to lock the requested lock, and if it cannot it will
     block until that is possible.
 
@@ -72,6 +77,7 @@ int rlock_lock(recursive_lock_t *l) __depr("Use mutexes instead.");
 
 /** \brief  Lock a recursive lock (with a timeout).
 
+    \deprecated
     This function attempts to lock the requested lock, and if it cannot it will
     block until either it is possible to acquire the lock or timeout
     milliseconds have elapsed.
@@ -91,6 +97,7 @@ int rlock_lock_timed(recursive_lock_t *l, int timeout)
 
 /** \brief  Unlock a recursive lock.
 
+    \deprecated
     This function releases the lock one time from the current thread.
 
     \param  l       The recursive lock to unlock.
@@ -102,6 +109,7 @@ int rlock_unlock(recursive_lock_t *l) __depr("Use mutexes instead.");
 
 /** \brief  Attempt to lock a recursive lock without blocking.
 
+    \deprecated
     This function attempts to lock a recursive lock without blocking. This
     function, unlike rlock_lock and rlock_lock_timed is safe to call inside an
     interrupt.
@@ -116,7 +124,8 @@ int rlock_unlock(recursive_lock_t *l) __depr("Use mutexes instead.");
 int rlock_trylock(recursive_lock_t *l) __depr("Use mutexes instead.");
 
 /** \brief  Check if a recursive lock is currently held by any thread.
-
+    
+    \deprecated
     This function checks whether or not a lock is currently held by any thread,
     including the calling thread. Note that this is <b>NOT</b> a safe way to
     check if a lock <em>will</em> be held by the time you get around to locking
