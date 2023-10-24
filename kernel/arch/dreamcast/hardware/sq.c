@@ -162,8 +162,7 @@ void * sq_cpy_pvr(void *dest, const void *src, int n) {
 void * sq_set_pvr(void *dest, uint32_t c, int n) {
     if(PVR_DMA_DEST != 0) {
         dbglog(DBG_ERROR, "sq_set_pvr: Previous DMA has not finished\n");
-        errno = EINPROGRESS;
-        return dest;
+        return NULL;
     }
 
     /* Set PVR LMMODE register */
