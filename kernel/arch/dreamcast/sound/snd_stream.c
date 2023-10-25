@@ -24,7 +24,6 @@
 #include <dc/sound/sound.h>
 #include <dc/sound/stream.h>
 #include <dc/sound/sfxmgr.h>
-#include <dc/sound/pcm_split.h>
 
 #include "arm/aica_cmd_iface.h"
 

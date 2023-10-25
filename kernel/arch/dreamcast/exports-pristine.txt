@@ -7,7 +7,6 @@
 
 include kos.h
 include dc/sound/sound.h
-include dc/sound/pcm_split.h
 
 # ASIC
 asic_evt_set_handler
@@ -135,14 +134,27 @@ sq_set16
 sq_set32
 
 # Sound
+snd_mem_init
+snd_mem_shutdown
 snd_mem_malloc
 snd_mem_free
 snd_mem_available
+snd_init
+snd_shutdown
+snd_sh4_to_aica
+snd_sh4_to_aica_start
+snd_sh4_to_aica_stop
+snd_aica_to_sh4
+snd_poll_resp
 snd_sfx_unload_all
 snd_sfx_unload
 snd_sfx_load
 snd_sfx_play
 snd_sfx_stop_all
+snd_sfx_play_chn
+snd_sfx_stop
+snd_sfx_chn_alloc
+snd_sfx_chn_free
 snd_stream_set_callback
 snd_stream_filter_add
 snd_stream_filter_remove
@@ -155,6 +167,10 @@ snd_stream_queue_go
 snd_stream_stop
 snd_stream_poll
 snd_stream_volume
+snd_stream_alloc
+snd_stream_destroy
+snd_stream_reinit
+snd_stream_prefill
 snd_pcm16_split
 snd_pcm16_split_sq
 
