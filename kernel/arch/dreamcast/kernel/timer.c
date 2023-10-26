@@ -1,7 +1,8 @@
 /* KallistiOS ##version##
 
    timer.c
-   Copyright (c)2000, 2001, 2002 Megan Potter
+   Copyright (c) 2000, 2001, 2002 Megan Potter
+   Copyright (c) 2023 Falco Girgis
 */
 
 #include <assert.h>
@@ -11,22 +12,53 @@
 #include <arch/timer.h>
 #include <arch/irq.h>
 
-/* Quick access macros */
-#define TIMER8(o) ( *((volatile uint8*)(0xffd80000 + (o))) )
-#define TIMER16(o) ( *((volatile uint16*)(0xffd80000 + (o))) )
-#define TIMER32(o) ( *((volatile uint32*)(0xffd80000 + (o))) )
-#define TOCR    0x00       /* Timer Output Control Register */
-#define TSTR    0x04       /* Timer Start Register */
-#define TCOR0   0x08       /* Timer Constant Register 0 */
-#define TCNT0   0x0c       /* Timer Counter Register 0 */
-#define TCR0    0x10       /* Timer Control Register 0 */
-#define TCOR1   0x14       /* Timer Constant Register 1 */
-#define TCNT1   0x18       /* Timer Counter Register 1 */
-#define TCR1    0x1c       /* Timer Control Register 1 */
-#define TCOR2   0x20       /* Timer Constant Register 2 */
-#define TCNT2   0x24       /* Timer Counter Register 2 */
-#define TCR2    0x28       /* Timer Control Register 2 */
-#define TCPR2   0x2c       /* Timer Input Capture */
+/* Register access macros */
+#define TIMER8(o)   ( *((volatile uint8*)(TIMER_BASE + (o))) )
+#define TIMER16(o)  ( *((volatile uint16*)(TIMER_BASE + (o))) )
+#define TIMER32(o)  ( *((volatile uint32*)(TIMER_BASE + (o))) )
+
+/* Register base address */
+#define TIMER_BASE 0xffd80000 
+
+/* Register offsets */
+#define TOCR    0x00    /* Timer Output Control Register */
+#define TSTR    0x04    /* Timer Start Register */
+#define TCOR0   0x08    /* Timer Constant Register 0 */
+#define TCNT0   0x0c    /* Timer Counter Register 0 */
+#define TCR0    0x10    /* Timer Control Register 0 */
+#define TCOR1   0x14    /* Timer Constant Register 1 */
+#define TCNT1   0x18    /* Timer Counter Register 1 */
+#define TCR1    0x1c    /* Timer Control Register 1 */
+#define TCOR2   0x20    /* Timer Constant Register 2 */
+#define TCNT2   0x24    /* Timer Counter Register 2 */
+#define TCR2    0x28    /* Timer Control Register 2 */
+#define TCPR2   0x2c    /* Timer Input Capture */
+
+/* Timer Start Register fields */
+#define STR2    2   /* TCNT2 Counter Start */
+#define STR1    1   /* TCNT1 Counter Start */
+#define STR0    0   /* TCNT0 Counter Start */
+
+/* Timer Control Register fields */
+#define UCPF    9   /* Input Capture Interrupt Flag (TMU2 only) */
+#define UNF     8   /* Underflow Flag */
+#define ICPE1   7   /* Input Capture Control (TMU2 only) */
+#define ICP0    6  
+#define UNIE    5   /* Underflow Interrupt Control */
+#define CKEG1   4   /* Clock Edge */
+#define CKEG0   3
+#define TPSC2   2   /* Timer Prescalar */
+#define TPSC1   1
+#define TPSC0   0
+
+/* Timer Prescalar Values */
+typedef enum TPSC { 
+    PCK_DIV_4,      /* Pck/4 => 40ns */
+    PCK_DIV_16,     /* Pck/16 => */
+    PCK_DIV_64,     /* Pck/64 => */
+    PCK_DIV_256,    /* Pck/256 => */
+    PCK_DIV_1024    /* Pck/1024 => */
+} TPSC;
 
 static int tcors[] = { TCOR0, TCOR1, TCOR2 };
 static int tcnts[] = { TCNT0, TCNT1, TCNT2 };
@@ -36,9 +68,9 @@ static int tcrs[] = { TCR0, TCR1, TCR2 };
 int timer_prime(int which, uint32 speed, int interrupts) {
     /* P0/64 scalar, maybe interrupts */
     if(interrupts)
-        TIMER16(tcrs[which]) = 32 | 2;
+        TIMER16(tcrs[which]) = (1 << UNIE) | PCK_DIV_4;
     else
-        TIMER16(tcrs[which]) = 2;
+        TIMER16(tcrs[which]) = PCK_DIV_4;
 
     /* Initialize counters; formula is P0/(tps*64) */
     TIMER32(tcnts[which]) = 50000000 / (speed * 64);
@@ -140,8 +172,9 @@ int timer_ints_enabled(int which) {
 }
 
 /* Millisecond timer */
-static uint32 timer_ms_counter = 0;
-static uint32 timer_ms_countdown;
+static uint32 timer_ms_counter = 0; /* Seconds elapsed */
+static uint32 timer_ms_countdown;   /* Max counter value */
+
 static void timer_ms_handler(irq_t source, irq_context_t *context) {
     (void)source;
     (void)context;
@@ -165,9 +198,12 @@ void timer_ms_disable(void) {
 void timer_ms_gettime(uint32 *secs, uint32 *msecs) {
     uint32 used;
 
+    const int irqs = irq_disable();
+
     /* Seconds part comes from ms_counter */
-    if(secs)
+    if(secs) {
         *secs = timer_ms_counter;
+    }
 
     /* Milliseconds, we check how much of the timer has elapsed */
     if(msecs) {
@@ -175,6 +211,8 @@ void timer_ms_gettime(uint32 *secs, uint32 *msecs) {
         used = timer_ms_countdown - timer_count(TMU2);
         *msecs = used * 1000 / timer_ms_countdown;
     }
+
+    irq_restore(irqs);
 }
 
 uint64 timer_ms_gettime64(void) {
