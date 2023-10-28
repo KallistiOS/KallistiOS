@@ -40,18 +40,33 @@ __BEGIN_DECLS
     These are events that the PVR itself generates that can be hooked.
     @{
 */
-#define ASIC_EVT_PVR_RENDERDONE     0x0002  /**< \brief Render completed */
-#define ASIC_EVT_PVR_SCANINT1       0x0003  /**< \brief Scanline interrupt 1 */
-#define ASIC_EVT_PVR_SCANINT2       0x0004  /**< \brief Scanline interrupt 2 */
-#define ASIC_EVT_PVR_VBLINT         0x0005  /**< \brief VBL interrupt */
-#define ASIC_EVT_PVR_OPAQUEDONE     0x0007  /**< \brief Opaque list completed */
-#define ASIC_EVT_PVR_OPAQUEMODDONE  0x0008  /**< \brief Opaque modifiers completed */
-#define ASIC_EVT_PVR_TRANSDONE      0x0009  /**< \brief Transparent list completed */
-#define ASIC_EVT_PVR_TRANSMODDONE   0x000a  /**< \brief Transparent modifiers completed */
-#define ASIC_EVT_PVR_DMA            0x0013  /**< \brief PVR DMA complete */
-#define ASIC_EVT_PVR_PTDONE         0x0015  /**< \brief Punch-thrus completed */
-#define ASIC_EVT_PVR_PRIMOUTOFMEM   0x0202  /**< \brief Out of primitive memory */
-#define ASIC_EVT_PVR_MATOUTOFMEM    0x0203  /**< \brief Out of matrix memory */
+
+#define ASIC_EVT_PVR_RENDERDONE_VIDEO     0x0000  /**< \brief Video render stage completed */
+#define ASIC_EVT_PVR_RENDERDONE_ISP       0x0001  /**< \brief ISP render stage completed */
+#define ASIC_EVT_PVR_RENDERDONE_TSP       0x0002  /**< \brief TSP render stage completed */
+#define ASIC_EVT_PVR_VBLANK_BEG           0x0003  /**< \brief VBLANK begin interrupt */
+#define ASIC_EVT_PVR_VBLANK_END           0x0004  /**< \brief VBLANK end interrupt */
+#define ASIC_EVT_PVR_HBLANK_BEG           0x0005  /**< \brief HBLANK begin interrupt */
+
+#define ASIC_EVT_PVR_YUV_DONE             0x0007  /**< \brief YUV completed */
+#define ASIC_EVT_PVR_OPAQUEDONE           0x0007  /**< \brief Opaque list completed */
+#define ASIC_EVT_PVR_OPAQUEMODDONE        0x0008  /**< \brief Opaque modifiers completed */
+#define ASIC_EVT_PVR_TRANSDONE            0x0009  /**< \brief Transparent list completed */
+#define ASIC_EVT_PVR_TRANSMODDONE         0x000a  /**< \brief Transparent modifiers completed */
+
+#define ASIC_EVT_PVR_DMA                  0x0013  /**< \brief PVR DMA complete */
+#define ASIC_EVT_PVR_PTDONE               0x0015  /**< \brief Punch-thrus completed */
+
+/* Uncomment to print a message if an error is received in the PVR interrupt handler */
+/* #define DBG_PVR_ERRORS */
+
+#define ASIC_EVT_PVR_ISP_OUTOFMEM         0x0200  /**< \brief ISP out of memory */
+#define ASIC_EVT_PVR_STRIP_HALT           0x0201  /**< \brief Halt due to strip buffer error */
+#define ASIC_EVT_PVR_PARAM_OUTOFMEM       0x0202  /**< \brief Param out of memory */
+#define ASIC_EVT_PVR_OPB_OUTOFMEM         0x0203  /**< \brief OPB went past PVR_TA_OPB_END */
+#define ASIC_EVT_PVR_TA_INPUT_ERR         0x0204  /**< \brief Vertex input error */
+#define ASIC_EVT_PVR_TA_INPUT_OVERFLOW    0x0205  /**< \brief Vertex input overflowed queue */
+
 /** @} */
 
 /** \defgroup asic_gd_evts          Event codes for the GD controller

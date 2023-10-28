@@ -150,17 +150,23 @@ void pvr_sync_reg_buffer(void) {
     //PVR_SET(PVR_RESET, PVR_RESET_NONE);
 
     /* Set buffer pointers */
-    PVR_SET(PVR_TA_OPB_START,   buf->opb);
-    PVR_SET(PVR_TA_OPB_END,     buf->opb - buf->opb_size);
+    PVR_SET(PVR_TA_OPB_START,       buf->opb);
+    PVR_SET(PVR_TA_OPB_INIT,        buf->opb + buf->opb_size);
+    PVR_SET(PVR_TA_OPB_END,         buf->opb + buf->opb_size * (1 + buf->opb_overflow_count));
     PVR_SET(PVR_TA_VERTBUF_START,   buf->vertex);
-    PVR_SET(PVR_TA_VERTBUF_END, buf->vertex + buf->vertex_size);
-    PVR_SET(PVR_TA_OPB_INIT,    buf->opb);
+    PVR_SET(PVR_TA_VERTBUF_END,     buf->vertex + buf->vertex_size);
 
     /* Misc config parameters */
-    PVR_SET(PVR_TILEMAT_CFG,    pvr_state.tsize_const);     /* Tile count: (H/32-1) << 16 | (W/32-1) */
-    PVR_SET(PVR_OPB_CFG,        pvr_state.list_reg_mask);   /* List enables */
-    PVR_SET(PVR_TA_INIT,        PVR_TA_INIT_GO);        /* Confirm settings */
+    PVR_SET(PVR_TILEMAT_CFG,        pvr_state.tsize_const);     /* Tile count: (H/32-1) << 16 | (W/32-1) */
+    PVR_SET(PVR_OPB_CFG,            pvr_state.list_reg_mask);   /* List enables */
+    PVR_SET(PVR_TA_INIT,            PVR_TA_INIT_GO);            /* Confirm settings */
     (void)PVR_GET(PVR_TA_INIT);
+
+#if 0
+    printf("== SYNC REG BUFFER:\n");
+    printf("TA_OL_BASE: %08lx\nTA_OL_LIMIT: %08lx\nTA_NEXT_OPB: %08lx\n",
+           PVR_GET(TA_OL_BASE), PVR_GET(TA_OL_LIMIT), PVR_GET(TA_NEXT_OPB) << 2);
+#endif
 }
 
 /* Begin a render operation that has been queued completely (i.e., the
