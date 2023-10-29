@@ -151,16 +151,40 @@ static void process_filters(snd_stream_hnd_t hnd, void **buffer, int *samplecnt)
 }
 
 static void sep_data(void *buffer, int len, int stereo) {
-    uint32_t data;
     uint32_t *buf = (uint32_t *)buffer;
-    uint16_t *left = (uint16_t *)sep_buffer[1];
-    uint16_t *right = (uint16_t *)sep_buffer[0];
+    uint32_t *left_ptr = (uint32_t *)sep_buffer[1];
+    uint32_t *right_ptr = (uint32_t *)sep_buffer[0];
+    uint32_t data;
+    uint32_t left_val;
+    uint32_t right_val;
 
     if(stereo) {
-        for(; len > 0; len -= 2) {
+        len <<= 1;
+
+        for(; len > 8; len -= 8) {
+            dcache_pref_block(buf + 8);
+
             data = *buf++;
-            *left++ = (data >> 16);
-            *right++ = (data & 0xffff);
+            left_val = (data >> 16);
+            right_val = (data & 0xffff);
+
+            data = *buf++;
+            left_val |= (data & 0xffff0000);
+            right_val |= (data & 0xffff) << 16;
+
+            if(((uintptr_t)left_ptr & 31) == 0) {
+                dcache_alloc_block(left_ptr++, left_val);
+                dcache_alloc_block(right_ptr++, right_val);
+            }
+            else {
+                *left_ptr++ = left_val;
+                *right_ptr++ = right_val;
+            }
+        }
+        if(len) {
+            data = *buf++;
+            *(uint16_t *)left_ptr = (data >> 16);
+            *(uint16_t *)right_ptr = (data & 0xffff);
         }
     }
     else {
