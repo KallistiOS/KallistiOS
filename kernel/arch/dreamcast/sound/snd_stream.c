@@ -151,14 +151,13 @@ static void process_filters(snd_stream_hnd_t hnd, void **buffer, int *samplecnt)
 }
 
 static void sep_data(void *buffer, int len, int stereo) {
-
     uint32_t data;
     uint32_t *buf = (uint32_t *)buffer;
     uint16_t *left = (uint16_t *)sep_buffer[1];
     uint16_t *right = (uint16_t *)sep_buffer[0];
 
-    if (stereo) {
-        for (; len > 0; len -= 2) {
+    if(stereo) {
+        for(; len > 0; len -= 2) {
             data = *buf++;
             *left++ = (data >> 16);
             *right++ = (data & 0xffff);
@@ -197,13 +196,14 @@ static void snd_stream_prefill_part(snd_stream_hnd_t hnd, uint32_t offset) {
     int got = buffer_size;
     void *buf;
 
-    if (streams[hnd].stereo) {
+    if(streams[hnd].stereo) {
         buf = streams[hnd].get_data(hnd, buffer_size, &got);
-    } else {
+    }
+    else {
         buf = streams[hnd].get_data(hnd, buffer_size / 2, &got);
     }
 
-    if (buf == NULL) {
+    if(buf == NULL) {
         dbglog(DBG_ERROR, "snd_stream_prefill_part(): get_data() failed\n");
         return;
     }
@@ -214,12 +214,14 @@ static void snd_stream_prefill_part(snd_stream_hnd_t hnd, uint32_t offset) {
         sep_data(buf, got / 2, streams[hnd].stereo);
         spu_memload(left, sep_buffer[0], got);
         spu_memload(right, sep_buffer[1], got);
-    } else {
+    }
+    else {
         left |= 0x00800000;
         right |= 0x00800000;
         if (streams[hnd].stereo) {
             stereo_pcm16_split_sq((uint32_t *)buf, left, right, got);
-        } else {
+        }
+        else {
             g2_fifo_wait();
             sq_cpy((void *)left, buf, got);
             g2_fifo_wait();
@@ -230,10 +232,9 @@ static void snd_stream_prefill_part(snd_stream_hnd_t hnd, uint32_t offset) {
 
 /* Prefill buffers -- do this before calling start() */
 void snd_stream_prefill(snd_stream_hnd_t hnd) {
-
     CHECK_HND(hnd);
 
-    if (!streams[hnd].get_data) {
+    if(!streams[hnd].get_data) {
         return;
     }
 
