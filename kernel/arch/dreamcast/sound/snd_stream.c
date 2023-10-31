@@ -101,6 +101,8 @@ static uint32 *sep_buffer[2] = {NULL, NULL};
         assert( streams[(x)].initted ); \
     } while(0)
 
+void snd_pcm16_split_sq_start(uint32_t *data, uintptr_t left, uintptr_t right, size_t size);
+
 /* Set "get data" callback */
 void snd_stream_set_callback(snd_stream_hnd_t hnd, snd_stream_callback_t cb) {
     CHECK_HND(hnd);
@@ -193,23 +195,26 @@ static void sep_data(void *buffer, int len, int stereo) {
     }
 }
 
-static void stereo_pcm16_split_sq(uint32 *data, uint32 aica_left, uint32 aica_right, uint32 size) {
+void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t size) {
 
-	/* Wait for both store queues to complete if they are already used */
-	uint32 *d = (uint32 *)0xe0000000;
-	d[0] = d[8] = 0;
+    /* Wait for both store queues to complete if they are already used */
+    uint32 *d = (uint32 *)0xe0000000;
+    d[0] = d[8] = 0;
 
-	uint32 masked_left = (0xe0000000 | (aica_left & 0x03ffffe0));
-	uint32 masked_right = (0xe0000000 | (aica_right & 0x03ffffe0));
+    left |= 0x00800000;
+    right |= 0x00800000;
 
-	/* Set store queue memory area as desired */
-	QACR0 = (aica_left >> 24) & 0x1c;
-	QACR1 = (aica_right >> 24) & 0x1c;
+    uint32 masked_left = (0xe0000000 | (left & 0x03ffffe0));
+    uint32 masked_right = (0xe0000000 | (right & 0x03ffffe0));
 
-	g2_fifo_wait();
+    /* Set store queue memory area as desired */
+    QACR0 = (left >> 24) & 0x1c;
+    QACR1 = (right >> 24) & 0x1c;
 
-	/* Separating channels and do fill/write queues as many times necessary. */
-	snd_pcm16_split_sq(data, masked_left, masked_right, size);
+    g2_fifo_wait();
+
+    /* Separating channels and do fill/write queues as many times necessary. */
+    snd_pcm16_split_sq_start(data, masked_left, masked_right, size);
 }
 
 static void snd_stream_prefill_part(snd_stream_hnd_t hnd, uint32_t offset) {
@@ -236,20 +241,16 @@ static void snd_stream_prefill_part(snd_stream_hnd_t hnd, uint32_t offset) {
 
     if ((uintptr_t)buf & 31) {
         sep_data(buf, got / 2, streams[hnd].stereo);
-        spu_memload(left, sep_buffer[0], got);
-        spu_memload(right, sep_buffer[1], got);
+        spu_memload_sq(left, sep_buffer[0], got);
+        spu_memload_sq(right, sep_buffer[1], got);
     }
     else {
-        left |= 0x00800000;
-        right |= 0x00800000;
         if (streams[hnd].stereo) {
-            stereo_pcm16_split_sq((uint32_t *)buf, left, right, got);
+            snd_pcm16_split_sq((uint32_t *)buf, left, right, got);
         }
         else {
-            g2_fifo_wait();
-            sq_cpy((void *)left, buf, got);
-            g2_fifo_wait();
-            sq_cpy((void *)right, buf, got);
+            spu_memload_sq(left, buf, got);
+            spu_memload_sq(right, buf, got);
         }
     }
 }

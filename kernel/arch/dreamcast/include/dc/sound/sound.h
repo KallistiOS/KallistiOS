@@ -166,13 +166,9 @@ void snd_pcm16_split(uint32_t *data, uint32_t *left, uint32_t *right, size_t siz
     \warning 
     All arguments must be 32-byte aligned.
 
-    \warning 
-    The store queues must be configured for transferring to the left and right
-    destination buffers beforehand (QACRO <= left, QACRO1 <= right).
-
     \param data   Source buffer of interleaved stereo samples
-    \param left   SQ-masked left destination buffer address
-    \param right  SQ-masked right destination buffer address
+    \param left   Destination buffer address for left mono samples
+    \param right  Destination buffer address for right mono samples
     \param size   Size of the source buffer in bytes (must be divisible by 32)
 
     \sa snd_pcm16_split()

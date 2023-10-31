@@ -8,7 +8,7 @@
 
 .section .text
 .globl _snd_pcm16_split
-.globl _snd_pcm16_split_sq
+.globl _snd_pcm16_split_sq_start
 
 .align 2
 
@@ -64,9 +64,9 @@ _snd_pcm16_split:
 	mov #0, r0
 
 !
-! void snd_pcm16_split_sq(uint32_t *data, uint32_t left, uint32_t right, uint32_t size);
+! void snd_pcm16_split_sq_start(uint32_t *data, uint32_t left, uint32_t right, uint32_t size);
 !
-_snd_pcm16_split_sq:
+_snd_pcm16_split_sq_start:
 	mov #-5, r3
 	shld r3, r7
 	mov.l r8, @-r15
