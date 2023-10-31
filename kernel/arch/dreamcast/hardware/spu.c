@@ -1,11 +1,13 @@
 /* KallistiOS ##version##
 
    spu.c
-   (c)2000-2001 Megan Potter
+   Copyright (C) 2000,2001 Megan Potter
+   Copyright (C) 2023 Ruslan Rostovtsev
  */
 
 #include <dc/spu.h>
 #include <dc/g2bus.h>
+#include <dc/sq.h>
 #include <arch/timer.h>
 
 /*
@@ -60,6 +62,11 @@ void spu_memload(uint32 dst, void *src_void, int length) {
         g2_fifo_wait();
         g2_write_block_32((uint32*)src, dst, length);
     }
+}
+
+void spu_memload_sq(uint32 dst, void *src_void, int length) {
+    g2_fifo_wait();
+    sq_cpy((void *)(dst | 0x00800000), src_void, length);
 }
 
 void spu_memread(void *dst_void, uint32 src, int length) {

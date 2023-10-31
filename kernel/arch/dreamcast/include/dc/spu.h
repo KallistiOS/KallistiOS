@@ -1,7 +1,8 @@
 /* KallistiOS ##version##
 
    dc/spu.h
-   Copyright (C) 2000-2001 Megan Potter
+   Copyright (C) 2000,2001 Megan Potter
+   Copyright (C) 2023 Ruslan Rostovtsev
 
 */
 
@@ -11,6 +12,7 @@
     This file deals with memory transfers and the like for the sound hardware.
 
     \author Megan Potter
+    \author Ruslan Rostovtsev
 */
 
 #ifndef __DC_SPU_H
@@ -36,6 +38,20 @@ void spu_write_wait(void);
                             up to be a multiple of 4.
 */
 void spu_memload(uint32 to, void *from, int length);
+
+
+/** \brief  Copy a block of data to sound RAM.
+
+    This function acts much like memcpy() but copies to the sound RAM area
+    by using SQ.
+
+    \param  to              The offset in sound RAM to copy to. Do not include
+                            the 0xA0800000 part, it is implied.
+    \param  from            A pointer to copy from.
+    \param  length          The number of bytes to copy. Automatically rounded
+                            up to be a multiple of 4.
+*/
+void spu_memload_sq(uint32 to, void *from, int length);
 
 /** \brief  Copy a block of data from sound RAM.
 
