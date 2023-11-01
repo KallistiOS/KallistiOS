@@ -65,8 +65,32 @@ void spu_memload(uint32 dst, void *src_void, int length) {
 }
 
 void spu_memload_sq(uint32 dst, void *src_void, int length) {
+    uint8 *src = (uint8 *)src_void;
+
+    /* Make sure it's an even number of 32-bit words and convert the
+       count to a 32-bit word count */
+    if(length & 3) {
+        length = (length + 4) & ~3;
+    }
+
+    /* Add in the SPU RAM base (cached area) */
+    dst += 0x00800000;
+
+    /* Using SQs for all that is divisible by 32 */
+    const int aligned_len = length & ~31;
+    length &= 31;
+
     g2_fifo_wait();
-    sq_cpy((void *)(dst | 0x00800000), src_void, length);
+    sq_cpy((void *)dst, src, aligned_len);
+
+    if(length > 0) {
+        /* Non-cached area */
+        dst += 0xa0000000;
+        dst += aligned_len;
+        src += aligned_len;
+        g2_fifo_wait();
+        g2_write_block_32((uint32 *)src, dst, length >> 2);
+    }
 }
 
 void spu_memread(void *dst_void, uint32 src, int length) {
