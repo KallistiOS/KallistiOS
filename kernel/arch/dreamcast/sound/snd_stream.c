@@ -69,6 +69,9 @@ typedef struct strchan {
     // Our list of filter callback functions for this stream
     TAILQ_HEAD(filterlist, filter) filters;
 
+    // Sample type
+    int type;
+
     // Stereo/mono flag
     int stereo;
 
@@ -239,19 +242,22 @@ static void snd_stream_prefill_part(snd_stream_hnd_t hnd, uint32_t offset) {
 
     process_filters(hnd, &buf, &got);
 
-    if ((uintptr_t)buf & 31) {
-        sep_data(buf, got / 2, streams[hnd].stereo);
+    if(streams[hnd].stereo == 0) {
+        spu_memload_sq(left, buf, got);
+        spu_memload_sq(right, buf, got);
+    }
+    else if(((uintptr_t)buf & 31) || streams[hnd].type == AICA_SM_ADPCM_LS) {
+        if(streams[hnd].type == AICA_SM_ADPCM_LS) {
+            snd_adpcm_split(buf, sep_buffer[0], sep_buffer[1], got);
+        }
+        else {
+            sep_data(buf, got / 2, streams[hnd].stereo);
+        }
         spu_memload_sq(left, sep_buffer[0], got);
         spu_memload_sq(right, sep_buffer[1], got);
     }
     else {
-        if (streams[hnd].stereo) {
-            snd_pcm16_split_sq((uint32_t *)buf, left, right, got);
-        }
-        else {
-            spu_memload_sq(left, buf, got);
-            spu_memload_sq(right, buf, got);
-        }
+        snd_pcm16_split_sq((uint32_t *)buf, left, right, got);
     }
 }
 
@@ -403,13 +409,14 @@ void snd_stream_queue_disable(snd_stream_hnd_t hnd) {
 }
 
 /* Start streaming (or if queueing is enabled, just get ready) */
-void snd_stream_start(snd_stream_hnd_t hnd, uint32 freq, int st) {
+static void snd_stream_start_type(snd_stream_hnd_t hnd, uint32 type, uint32 freq, int st) {
     AICA_CMDSTR_CHANNEL(tmp, cmd, chan);
 
     CHECK_HND(hnd);
 
     if(!streams[hnd].get_data) return;
 
+    streams[hnd].type = type;
     streams[hnd].stereo = st;
     streams[hnd].frequency = freq;
 
@@ -426,7 +433,7 @@ void snd_stream_start(snd_stream_hnd_t hnd, uint32 freq, int st) {
     cmd->cmd_id = streams[hnd].ch[0];
     chan->cmd = AICA_CH_CMD_START | AICA_CH_START_DELAY;
     chan->base = streams[hnd].spu_ram_sch[0];
-    chan->type = AICA_SM_16BIT;
+    chan->type = type;
     chan->length = (streams[hnd].buffer_size / 2);
     chan->loop = 1;
     chan->loopstart = 0;
@@ -451,6 +458,14 @@ void snd_stream_start(snd_stream_hnd_t hnd, uint32 freq, int st) {
     /* Process the changes */
     if(!streams[hnd].queueing)
         snd_sh4_to_aica_start();
+}
+
+void snd_stream_start(snd_stream_hnd_t hnd, uint32 freq, int st) {
+    snd_stream_start_type(hnd, AICA_SM_16BIT, freq, st);
+}
+
+void snd_stream_start_adpcm(snd_stream_hnd_t hnd, uint32 freq, int st) {
+    snd_stream_start_type(hnd, AICA_SM_ADPCM_LS, freq, st);
 }
 
 /* Actually make it go (in queued mode) */
@@ -563,17 +578,19 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
             sep_buffer[1] = sep_buffer[0] + (SND_STREAM_BUFFER_MAX / 8);
         }
 
-        if ((uintptr_t)data & 31) {
+        if (((uintptr_t)data & 31) && (streams[hnd].type == AICA_SM_16BIT || streams[hnd].stereo == 0)) {
             sep_data(data, needed_samples * 2, streams[hnd].stereo);
-        } 
-        else {
-            if(streams[hnd].stereo) {
+        }
+        else if(streams[hnd].stereo) {
+            if(streams[hnd].type == AICA_SM_16BIT) {
                 snd_pcm16_split(data, sep_buffer[0], sep_buffer[1], needed_samples * 4);
             }
             else {
-                first_dma_buf = data;
-                sep_buffer[1] = data;
+                snd_adpcm_split(data, sep_buffer[0], sep_buffer[1], needed_samples * 4);
             }
+        } else {
+            first_dma_buf = data;
+            sep_buffer[1] = data;
         }
 
         // Second DMA will get started by the chain handler

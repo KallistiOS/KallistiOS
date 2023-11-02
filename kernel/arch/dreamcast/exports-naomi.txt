@@ -130,6 +130,7 @@ snd_stream_reinit
 snd_stream_prefill
 snd_pcm16_split
 snd_pcm16_split_sq
+snd_adpcm_split
 
 # Video
 vid_check_cable
