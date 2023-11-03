@@ -334,8 +334,8 @@ snd_stream_hnd_t snd_stream_alloc(snd_stream_callback_t cb, int bufsize) {
     TAILQ_INIT(&streams[hnd].filters);
 
     // Allocate stream buffers
-    streams[hnd].spu_ram_sch[0] = snd_mem_malloc(streams[hnd].buffer_size * 2);
-    streams[hnd].spu_ram_sch[1] = streams[hnd].spu_ram_sch[0] + streams[hnd].buffer_size;
+    streams[hnd].spu_ram_sch[0] = snd_mem_malloc(streams[hnd].buffer_size);
+    streams[hnd].spu_ram_sch[1] = snd_mem_malloc(streams[hnd].buffer_size);
 
     // And channels
     streams[hnd].ch[0] = snd_sfx_chn_alloc();
@@ -380,6 +380,7 @@ void snd_stream_destroy(snd_stream_hnd_t hnd) {
 
     snd_stream_stop(hnd);
     snd_mem_free(streams[hnd].spu_ram_sch[0]);
+    snd_mem_free(streams[hnd].spu_ram_sch[1]);
     memset(streams + hnd, 0, sizeof(streams[0]));
 }
 
