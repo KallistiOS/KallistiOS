@@ -80,8 +80,11 @@ void spu_memload_sq(uint32 dst, void *src_void, int length) {
     const int aligned_len = length & ~31;
     length &= 31;
 
-    g2_fifo_wait();
+    int old = irq_disable();
+    do { } while(*(vuint32 *)0xa05f688c & (1 << 5)) ; // FIFO_SH4
+    do { } while(*(vuint32 *)0xa05f688c & (1 << 4)) ; // FIFO_G2
     sq_cpy((void *)dst, src, aligned_len);
+    irq_restore(old);
 
     if(length > 0) {
         /* Non-cached area */
