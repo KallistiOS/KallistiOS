@@ -101,7 +101,7 @@ sfxhnd_t snd_sfx_load(const char *fn) {
     file_t fd;
     uint32_t len, hz;
     uint8_t *tmp;
-    uint16_t stereo, bitsize, fmt;
+    uint16_t channels, bitsize, fmt;
     snd_effect_t *t;
 
     dbglog(DBG_DEBUG, "snd_sfx: loading effect %s\n", fn);
@@ -127,7 +127,7 @@ sfxhnd_t snd_sfx_load(const char *fn) {
     /* Read WAV header info */
     fs_seek(fd, 0x14, SEEK_SET);
     fs_read(fd, &fmt, 2);
-    fs_read(fd, &stereo, 2);
+    fs_read(fd, &channels, 2);
     fs_read(fd, &hz, 4);
     fs_seek(fd, 0x22, SEEK_SET);
     fs_read(fd, &bitsize, 2);
@@ -137,7 +137,7 @@ sfxhnd_t snd_sfx_load(const char *fn) {
     fs_read(fd, &len, 4);
 
     dbglog(DBG_DEBUG, "WAVE file is %s, %luHZ, %d bits/sample, %lu bytes total,"
-           " format %d\n", stereo == 1 ? "mono" : "stereo", hz, bitsize, len, fmt);
+           " format %d\n", channels == 1 ? "mono" : "stereo", hz, bitsize, len, fmt);
 
     tmp = (uint8_t *)memalign(32, len);
 
@@ -146,8 +146,12 @@ sfxhnd_t snd_sfx_load(const char *fn) {
         return SFXHND_INVALID;
     }
 
-    fs_read(fd, tmp, len);
+    uint32_t rd = fs_read(fd, tmp, len);
     fs_close(fd);
+
+    if (rd != len) {
+        dbglog(DBG_WARNING, "snd_sfx: file has not been fully read.\n");
+    }
 
     t = malloc(sizeof(snd_effect_t));
 
@@ -160,19 +164,17 @@ sfxhnd_t snd_sfx_load(const char *fn) {
 
     /* Common characteristics not impacted by stream type */
     t->rate = hz;
-    t->stereo = stereo - 1;
+    t->stereo = channels - 1;
 
-    if(stereo == 1) {
+    if(channels == 1) {
         /* Mono PCM/ADPCM */
         t->len = len / 2; /* 16-bit samples */
-        t->rate = hz;
         t->locl = snd_mem_malloc(len);
 
         if(t->locl)
             spu_memload_sq(t->locl, tmp, len);
 
         t->locr = 0;
-        t->stereo = 0;
 
         if(fmt == 20) {
             t->fmt = AICA_SM_ADPCM;
@@ -181,20 +183,17 @@ sfxhnd_t snd_sfx_load(const char *fn) {
         else
             t->fmt = AICA_SM_16BIT;
     }
-    else if(stereo == 2 && fmt == 1) {
+    else if(channels == 2 && fmt == 1) {
         /* Stereo PCM */
         t->len = len / 4; /* Two stereo, 16-bit samples */
-        t->rate = hz;
+        t->fmt = AICA_SM_16BIT;
         t->locl = snd_mem_malloc(len / 2);
         t->locr = snd_mem_malloc(len / 2);
 
         if(t->locl && t->locr)
             snd_pcm16_split_sq((uint32_t *)tmp, t->locl, t->locr, len);
-
-        t->stereo = 1;
-        t->fmt = AICA_SM_16BIT;
     }
-    else if(stereo == 2 && fmt == 20) {
+    else if(channels == 2 && fmt == 20) {
         /* Stereo ADPCM ITU G.723 (channels are not interleaved) */
         uint8_t *right_buf = tmp + (len / 2);
         int ownmem = 0;
@@ -213,7 +212,7 @@ sfxhnd_t snd_sfx_load(const char *fn) {
         }
 
         t->len = len;   /* Two stereo, 4-bit samples */
-        t->rate = hz;
+        t->fmt = AICA_SM_ADPCM;
         t->locl = snd_mem_malloc(len / 2);
         t->locr = snd_mem_malloc(len / 2);
 
@@ -222,9 +221,6 @@ sfxhnd_t snd_sfx_load(const char *fn) {
 
         if(t->locr)
             spu_memload_sq(t->locr, right_buf, len / 2);
-
-        t->stereo = 1;
-        t->fmt = AICA_SM_ADPCM;
 
         if(ownmem)
             free(right_buf);
