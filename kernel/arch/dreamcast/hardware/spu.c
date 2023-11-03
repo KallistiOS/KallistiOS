@@ -30,7 +30,6 @@ kernel; so don't use them if you don't need to =).
 #define SNDREGADDR(x) (0xa0700000 + (x))
 #define CHNREGADDR(chn, x) SNDREGADDR(0x80*(chn) + (x))
 
-
 /* memcpy and memset designed for sound RAM; for addresses, don't
    bother to include the 0xa0800000 offset that is implied. 'length'
    must be a multiple of 4, but if it is not it will be rounded up. */
@@ -233,4 +232,13 @@ int spu_shutdown(void) {
     spu_disable();
     spu_memset(0, 0, 0x200000);
     return 0;
+}
+
+int spu_dma_transfer(void *from, uintptr_t dest, size_t length, int block,
+                     g2_dma_callback_t callback, void *cbdata) {
+    /* Adjust destination to SPU RAM */
+    dest += 0x00800000;
+
+    return g2_dma_transfer(from, (void *) dest, length, block, callback, cbdata, 0,
+                           SPU_DMA_MODE, SPU_DMA_G2CHN, SPU_DMA_SHCHN);
 }

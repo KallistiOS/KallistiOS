@@ -97,8 +97,8 @@ typedef g2_dma_callback_t spu_dma_callback_t;
     \em     EFAULT - from or dest is not aligned \n
     \em     EIO - I/O error
 */
-int spu_dma_transfer(void * from, uint32 dest, uint32 length, int block,
-                     spu_dma_callback_t callback, ptr_t cbdata);
+int spu_dma_transfer(void *from, uintptr_t dest, size_t length, int block,
+                     spu_dma_callback_t callback, void *cbdata);
 
 /** \brief  Enable the SPU.
 
@@ -155,17 +155,6 @@ int spu_init(void);
     \retval 0               On success (no error conditions defined).
 */
 int spu_shutdown(void);
-
-/** \brief  Initialize SPU DMA support.
-
-    This function sets up the DMA support for transfers to the sound RAM area.
-
-    \retval 0               On success (no error conditions defined).
-*/
-int spu_dma_init(void);
-
-/** \brief  Shutdown SPU DMA support. */
-void spu_dma_shutdown(void);
 
 /** \brief  Reset SPU channels. */
 void spu_reset_chans(void);

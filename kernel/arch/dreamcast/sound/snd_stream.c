@@ -482,7 +482,7 @@ void snd_stream_stop(snd_stream_hnd_t hnd) {
 
 /* The DMA will chain to this to start the second DMA. */
 static uint32 dmadest, dmacnt;
-static void dma_chain(ptr_t data) {
+static void dma_chain(void *data) {
     (void)data;
     spu_dma_transfer(sep_buffer[1], dmadest, dmacnt, 0, NULL, 0);
 }

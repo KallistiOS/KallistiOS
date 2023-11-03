@@ -442,64 +442,13 @@ static void bba_hw_shutdown(void) {
 #ifdef FAST_G2_READ
 #define g2_read_block_8 my_g2_read_block_8
 
-/*
-   G2 bus cycles must not be interrupted by IRQs or G2 DMA.
-   The following paired macros will take the necessary precautions.
- */
-
-#define DMAC_CHCR1 *((vuint32 *)0xffa0001c)
-#define DMAC_CHCR3 *((vuint32 *)0xffa0003c)
-
-#if 0
-
-/* this version stores also CHCR1 state and stop it, doesn't seem to make
-   any difference so I removed it for now */
-#define G2_LOCK(OLD1, OLD2) \
-    do { \
-        OLD1 = irq_disable(); \
-        /* suspend any G2 DMA here... */ \
-        OLD2 = (DMAC_CHCR3&0xffff) + (DMAC_CHCR1 <<16); \
-        DMAC_CHCR3 = (OLD2&0xffff) & ~1; \
-        DMAC_CHCR1 = (OLD2>>16) & ~1; \
-        while((*(vuint32 *)0xa05f688c) & 0x20) \
-            ; \
-    } while(0)
-
-#define G2_UNLOCK(OLD1, OLD2) \
-    do { \
-        /* resume any G2 DMA here... */ \
-        DMAC_CHCR3 = (OLD2&0xffff); \
-        DMAC_CHCR1 = (OLD2>>16); \
-        irq_restore(OLD1); \
-    } while(0)
-
-#else
-
-#define G2_LOCK(OLD1, OLD2) \
-    do { \
-        OLD1 = irq_disable(); \
-        /* suspend any G2 DMA here... */ \
-        OLD2 = DMAC_CHCR3; \
-        DMAC_CHCR3 = OLD2 & ~1; \
-        while((*(vuint32 *)0xa05f688c) & 0x20) \
-            ; \
-    } while(0)
-
-#define G2_UNLOCK(OLD1, OLD2) \
-    do { \
-        /* resume any G2 DMA here... */ \
-        DMAC_CHCR3 = OLD2; \
-        irq_restore(OLD1); \
-    } while(0)
-#endif
-
 static void g2_read_block_8(uint8 *dst, uint8 *src, int len) {
     if(len <= 0)
         return;
 
-    uint32 old1, old2;
+    g2_ctx_t ctx;
 
-    G2_LOCK(old1, old2);
+    ctx = g2_lock();
 
     /* This is in case dst is not multiple of 4, which never happens here */
     /*     while( (((uint32)dst)&3) ) { */
@@ -535,7 +484,7 @@ static void g2_read_block_8(uint8 *dst, uint8 *src, int len) {
     }
     while(--len);
 
-    G2_UNLOCK(old1, old2);
+    g2_unlock(ctx);
 }
 #endif
 
@@ -585,7 +534,7 @@ static void rx_finish_enq(int room) {
     }
 }
 
-static void bba_dma_cb(ptr_t p) {
+static void bba_dma_cb(void *p) {
     (void)p;
 
     if(next_len) {

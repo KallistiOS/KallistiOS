@@ -1,7 +1,8 @@
 /* KallistiOS ##version##
 
    g2bus.h
-   (c)2002 Megan Potter
+   Copyright (C) 2002 Megan Potter
+   Copyright (C) 2023 Andy Barajas
 
 */
 
@@ -23,6 +24,7 @@
     to each device if at all possible!
 
     \author Megan Potter
+    \author Andy Barajas
 */
 
 #ifndef __DC_G2BUS_H
@@ -31,50 +33,165 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
+#include <stdint.h>
+#include <arch/irq.h>
 #include <arch/types.h>
 
-/* DMA copy from SH-4 RAM to G2 bus (dir = 0) or the opposite;
-   length must be a multiple of 32,
-   and the source and destination addresses must be aligned on 32-byte
-   boundaries. If block is non-zero, this function won't return until
-   the transfer is complete. If callback is non-NULL, it will be called
-   upon completion (in an interrupt context!). Returns <0 on error.
+#include <dc/fifo.h>
 
-   Known working combination :
+/** \name       List of G2 Bus channels
+ 
+    AICA (SPU) is channel 0, BBA uses channel 1. CH2_DMA_G2CHN and 
+    CH3_DMA_G2CHN are not currently tied to any specific device.
 
-   g2chn = 0, sh4chn = 3 --> mode = 5 (but many other value seems OK ?)
-   g2chn = 1, sh4chn = 1 --> mode = 0 (or 4 better ?)
-   g2chn = 1, sh4chn = 0 --> mode = 3
+    \note 
+      A change in the implementation has rendered *_DMA_MODE and *_DMA_SHCHN 
+      obsolete.
 
-   It seems that g2chn is not important when choosing mode, so this mode parameter is probably
-   how we actually connect the sh4chn to the g2chn.
+      In the current implementation, *_DMA_MODE should always be set to zero 
+      (representing CPU_TRIGGER). There is also no involvement of SH4-DMA with
+      G2-DMA; therefore, the *_DMA_SHCHN values have been deprecated.
+      
+    @{
+*/
+#define SPU_DMA_G2CHN  0 /**< \brief AICA: G2 channel 0 */
+#define SPU_DMA_MODE   0 /**< \brief Unused; Here for compatibility */
+#define SPU_DMA_SHCHN  0 /**< \brief Unused; Here for compatibility */
 
-   Update : looks like there is a formula, mode = 3 + shchn
+#define BBA_DMA_G2CHN  1 /**< \brief BBA:  G2 channel 1 */
+#define BBA_DMA_MODE   0 /**< \brief Unused; Here for compatibility */
+#define BBA_DMA_SHCHN  0 /**< \brief Unused; Here for compatibility */
+
+#define CH2_DMA_G2CHN  2 /**< \brief CH2: G2 channel 2 */
+
+#define CH3_DMA_G2CHN  3 /**< \brief CH3: G2 channel 3 */
+/** @} */
+
+/** \brief  G2Bus DMA direction
+
+    The direction you want the data to go. SH4 to AICA, BBA, etc use
+    SH4TOG2BUS, otherwise G2BUSTOSH4.
+*/
+#define SH4TOG2BUS   0
+#define G2BUSTOSH4   1
+
+/** \brief  G2Bus DMA interrupt callback type.
+
+    Functions that act as callbacks when G2-DMA completes should be of this type.
+    These functions will be called inside an interrupt context, so don't try to
+    use anything that might stall.
+
+    \param  data            User data passed in to the g2_dma_transfer()
+                            function.
+*/
+typedef void (*g2_dma_callback_t)(void *data);
+
+/** \brief  Perform a DMA transfer between SH-4 RAM and G2 Bus
+
+    This function copies a block of data between SH-4 RAM and G2 Bus via DMA. 
+    You specify the direction of the copy (SH4TOG2BUS/G2BUSTOSH4). There are all 
+    kinds of constraints that must be fulfilled to actually do this, so
+    make sure to read all the fine print with the parameter list.
+
+    If a callback is specified, it will be called in an interrupt context, so
+    keep that in mind in writing the callback.
+
+    \param  sh4             Where to copy from/to. Must be 32-byte aligned.
+    \param  g2bus           Where to copy from/to. Must be 32-byte aligned.
+    \param  length          The number of bytes to copy. Must be a multiple of
+                            32.
+    \param  block           Non-zero if you want the function to block until the
+                            DMA completes.
+    \param  callback        A function to call upon completion of the DMA.
+    \param  cbdata          Data to pass to the callback function.
+    \param  dir             SH4TOG2BUS or G2BUSTOSH4.
+    \param  mode            Any value; Here for compatibility.
+    \param  g2chn           See g2b_channels.
+    \param  sh4chn          Any value; Here for compatibility.
+    \retval 0               On success.
+    \retval -1              On failure. Sets errno as appropriate.
+
+    \par    Error Conditions:
+    \em     EINPROGRESS - DMA already in progress \n
+    \em     EFAULT - sh4 and/or g2bus is not 32-byte aligned \n
+    \em     EINVAL - Invalid g2chn
+    \em     EIO - I/O error
 
 */
+int g2_dma_transfer(void *sh4, void *g2bus, size_t length, uint32_t block,
+                    g2_dma_callback_t callback, void *cbdata,
+                    uint32_t dir, uint32_t mode, uint32_t g2chn, uint32_t sh4chn);
 
-/* We use sh channel 3 here to avoid conflicts with the PVR. */
-#define SPU_DMA_MODE   6 /* should we use 6 instead, so that the formula is 3+shchn ?
-6 works too, so ... */
-#define SPU_DMA_G2CHN  0
-#define SPU_DMA_SHCHN  3
+/** \brief  Initialize DMA support.
 
-/* For BBA : sh channel 1 (doesn't seem used) and g2 channel 1 to no conflict with SPU */
-#define BBA_DMA_MODE   4
-#define BBA_DMA_G2CHN  1
-#define BBA_DMA_SHCHN  1
+    This function sets up the DMA support for transfers to/from the G2 Bus.
 
-/* For BBA2 : sh channel 0 (doesn't seem used) and g2 channel 2 to no conflict with SPU */
-/* This is a second DMA channels used for the BBA, just for fun and see if we can initiate
-   two DMA transfers with the BBA concurently. */
-#define BBA_DMA2_MODE   3
-#define BBA_DMA2_G2CHN  2
-#define BBA_DMA2_SHCHN  0
+    \retval 0               On success (no error conditions defined).
+*/
+int g2_dma_init(void);
 
-typedef void (*g2_dma_callback_t)(ptr_t data);
-int g2_dma_transfer(void *from, void * dest, uint32 length, int block,
-                    g2_dma_callback_t callback, ptr_t cbdata,
-                    uint32 dir, uint32 mode, uint32 g2chn, uint32 sh4chn);
+/** \brief  Shutdown DMA support. */
+void g2_dma_shutdown(void);
+
+/** \brief  G2 context
+
+    A G2 context containing the states of IRQs and G2 DMA. This struct
+    is used in with g2_lock() and g2_unlock().
+*/
+typedef struct { 
+    uint32_t irq_state;    /** \brief IRQ state when entering a G2 critical block */
+} g2_ctx_t;
+
+/* Internal constants */
+/** \cond */ 
+#define SPU_G2DMA_SUSPEND     (*((vuint32 *)0xa05f781C))
+#define BBA_G2DMA_SUSPEND     (*((vuint32 *)0xa05f783C))
+#define CH2_G2DMA_SUSPEND     (*((vuint32 *)0xa05f785C))
+/** \endcond */
+
+/** \brief  Disable IRQs and G2 DMA
+
+    This function makes the following g2_read_*()/g2_write_*() functions atomic 
+    by disabling IRQs and G2 DMA and storing their states. Pass the context 
+    created by this function to g2_unlock() to re-enable IRQs and G2 DMA.
+
+    \return                 The context containing the IRQ and G2 DMA states.
+*/
+static inline g2_ctx_t g2_lock(void) {
+    g2_ctx_t ctx;
+
+    ctx.irq_state = irq_disable();
+
+    /* Suspend any G2 DMA */
+    SPU_G2DMA_SUSPEND = 1;
+    BBA_G2DMA_SUSPEND = 1;
+    CH2_G2DMA_SUSPEND = 1;
+
+    while(FIFO_STATUS & FIFO_SH4);
+
+    return ctx;
+}
+
+/** \brief  Enable IRQs and G2 DMA
+
+    This function restores the IRQ and G2 DMA states using the context value
+    generated by g2_lock().
+
+    \param  ctx             The context containing IRQ and G2 DMA states.
+*/
+static inline void g2_unlock(g2_ctx_t ctx) {
+    /* Restore suspended G2 DMA */
+    SPU_G2DMA_SUSPEND = 0;
+    BBA_G2DMA_SUSPEND = 0;
+    CH2_G2DMA_SUSPEND = 0;
+
+    irq_restore(ctx.irq_state);
+}
+
+
+#undef SPU_G2DMA_SUSPEND
+#undef BBA_G2DMA_SUSPEND
+#undef CH2_G2DMA_SUSPEND
 
 /** \brief  Read one byte from G2.
 
@@ -84,7 +201,7 @@ int g2_dma_transfer(void *from, void * dest, uint32 length, int block,
     \param  address         The address in memory to read.
     \return                 The byte read from the address specified.
 */
-uint8 g2_read_8(uint32 address);
+uint8_t g2_read_8(uintptr_t address);
 
 /** \brief  Write a single byte to G2.
 
@@ -94,7 +211,7 @@ uint8 g2_read_8(uint32 address);
     \param  address         The address in memory to write to.
     \param  value           The value to write to that address.
 */
-void g2_write_8(uint32 address, uint8 value);
+void g2_write_8(uintptr_t address, uint8_t value);
 
 /** \brief  Read one 16-bit word from G2.
 
@@ -104,7 +221,7 @@ void g2_write_8(uint32 address, uint8 value);
     \param  address         The address in memory to read.
     \return                 The word read from the address specified.
 */
-uint16 g2_read_16(uint32 address);
+uint16 g2_read_16(uintptr_t address);
 
 /** \brief  Write a 16-bit word to G2.
 
@@ -114,7 +231,7 @@ uint16 g2_read_16(uint32 address);
     \param  address         The address in memory to write to.
     \param  value           The value to write to that address.
 */
-void g2_write_16(uint32 address, uint16 value);
+void g2_write_16(uintptr_t address, uint16_t value);
 
 /** \brief  Read one 32-bit dword from G2.
 
@@ -124,7 +241,7 @@ void g2_write_16(uint32 address, uint16 value);
     \param  address         The address in memory to read.
     \return                 The dword read from the address specified.
 */
-uint32 g2_read_32(uint32 address);
+uint32_t g2_read_32(uintptr_t address);
 
 /** \brief  Write a 32-bit dword to G2.
 
@@ -134,7 +251,7 @@ uint32 g2_read_32(uint32 address);
     \param  address         The address in memory to write to.
     \param  value           The value to write to that address.
 */
-void g2_write_32(uint32 address, uint32 value);
+void g2_write_32(uintptr_t address, uint32_t value);
 
 /** \brief  Read a block of bytes from G2.
 
@@ -145,7 +262,7 @@ void g2_write_32(uint32 address, uint32 value);
     \param  address         The address in G2-space to read from.
     \param  amt             The number of bytes to read.
 */
-void g2_read_block_8(uint8 * output, uint32 address, int amt);
+void g2_read_block_8(uint8_t * output, uintptr_t address, size_t amt);
 
 /** \brief  Write a block of bytes to G2.
 
@@ -156,7 +273,7 @@ void g2_read_block_8(uint8 * output, uint32 address, int amt);
     \param  address         The address in G2-space to write to.
     \param  amt             The number of bytes to write.
 */
-void g2_write_block_8(const uint8 * input, uint32 address, int amt);
+void g2_write_block_8(const uint8_t * input, uintptr_t address, size_t amt);
 
 /** \brief  Read a block of words from G2.
 
@@ -168,7 +285,7 @@ void g2_write_block_8(const uint8 * input, uint32 address, int amt);
     \param  address         The address in G2-space to read from.
     \param  amt             The number of words to read.
 */
-void g2_read_block_16(uint16 * output, uint32 address, int amt);
+void g2_read_block_16(uint16_t * output, uintptr_t address, size_t amt);
 
 /** \brief  Write a block of words to G2.
 
@@ -180,7 +297,7 @@ void g2_read_block_16(uint16 * output, uint32 address, int amt);
     \param  address         The address in G2-space to write to.
     \param  amt             The number of words to write.
 */
-void g2_write_block_16(const uint16 * input, uint32 address, int amt);
+void g2_write_block_16(const uint16_t * input, uintptr_t address, size_t amt);
 
 /** \brief  Read a block of dwords from G2.
 
@@ -192,7 +309,7 @@ void g2_write_block_16(const uint16 * input, uint32 address, int amt);
     \param  address         The address in G2-space to read from.
     \param  amt             The number of dwords to read.
 */
-void g2_read_block_32(uint32 * output, uint32 address, int amt);
+void g2_read_block_32(uint32_t * output, uintptr_t address, size_t amt);
 
 /** \brief  Write a block of dwords to G2.
 
@@ -204,7 +321,7 @@ void g2_read_block_32(uint32 * output, uint32 address, int amt);
     \param  address         The address in G2-space to write to.
     \param  amt             The number of dwords to write.
 */
-void g2_write_block_32(const uint32 * input, uint32 address, int amt);
+void g2_write_block_32(const uint32_t * input, uintptr_t address, size_t amt);
 
 /** \brief  Set a block of bytes to G2.
 
@@ -215,7 +332,7 @@ void g2_write_block_32(const uint32 * input, uint32 address, int amt);
     \param  c               The byte to write.
     \param  amt             The number of bytes to write.
 */
-void g2_memset_8(uint32 address, uint8 c, int amt);
+void g2_memset_8(uintptr_t address, uint8_t c, size_t amt);
 
 /** \brief  Wait for the G2 write FIFO to empty.
 
