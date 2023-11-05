@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    dc/spu.h
-   Copyright (C) 2000,2001 Megan Potter
+   Copyright (C) 2000, 2001 Megan Potter
    Copyright (C) 2023 Ruslan Rostovtsev
 
 */
@@ -43,7 +43,7 @@ void spu_memload(uint32 to, void *from, int length);
 /** \brief  Copy a block of data to sound RAM.
 
     This function acts much like memcpy() but copies to the sound RAM area
-    by using SQ.
+    by using the store queues.
 
     \param  to              The offset in sound RAM to copy to. Do not include
                             the 0xA0800000 part, it is implied.

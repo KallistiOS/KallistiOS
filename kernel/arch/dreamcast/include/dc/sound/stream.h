@@ -238,7 +238,7 @@ void snd_stream_queue_disable(snd_stream_hnd_t hnd);
 */
 void snd_stream_queue_go(snd_stream_hnd_t hnd);
 
-/** \brief  Start PCM 16-bit stream.
+/** \brief  Start a 16-bit PCM stream.
 
     This function starts processing the given stream, prefilling the buffers as
     necessary. In queueing mode, this will not start playback.
@@ -249,7 +249,7 @@ void snd_stream_queue_go(snd_stream_hnd_t hnd);
 */
 void snd_stream_start(snd_stream_hnd_t hnd, uint32 freq, int st);
 
-/** \brief  Start ADPCM 4-bit stream.
+/** \brief  Start a 4-bit ADPCM stream.
 
     This function starts processing the given stream, prefilling the buffers as
     necessary. In queueing mode, this will not start playback.
