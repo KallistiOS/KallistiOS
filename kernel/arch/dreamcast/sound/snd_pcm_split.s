@@ -8,12 +8,14 @@
 
 .section .text
 .globl _snd_pcm16_split
-.globl _snd_pcm16_split_sq
+.globl _snd_pcm16_split_sq_start
+.globl _snd_pcm8_split
+.globl _snd_adpcm_split
 
 .align 2
 
 !
-! void snd_pcm16_split(uint32_t *data, uint32_t *left, uint32_t *right, uint32_t size);
+! void snd_pcm16_split(uint32_t *data, uint32_t *left, uint32_t *right, size_t size);
 !
 _snd_pcm16_split:
 	mov #-5, r3
@@ -64,9 +66,9 @@ _snd_pcm16_split:
 	mov #0, r0
 
 !
-! void snd_pcm16_split_sq(uint32_t *data, uint32_t left, uint32_t right, uint32_t size);
+! void snd_pcm16_split_sq_start(uint32_t *data, uintptr_t left, uintptr_t right, size_t size);
 !
-_snd_pcm16_split_sq:
+_snd_pcm16_split_sq_start:
 	mov #-5, r3
 	shld r3, r7
 	mov.l r8, @-r15
@@ -110,5 +112,75 @@ _snd_pcm16_split_sq:
 	mov.l @r15+, r12
 	mov.l @r15+, r11
 	mov.l @r15+, r8
+	rts
+	nop
+
+!
+! void snd_pcm8_split(uint32_t *data, uint32_t *left, uint32_t *right, size_t size);
+!
+_snd_pcm8_split:
+	mov #-5, r1
+	shld r1, r7
+	mov #0, r0
+	mov #16, r1
+.pcm8_pref:
+	add #32, r4
+	pref @r4
+	add #-32, r4
+.pcm8_copy:
+	mov.b @r4+, r3
+	mov.b r3, @(r0,r5)
+	dt r1
+	mov.b @r4+, r3
+	mov.b r3, @(r0,r6)
+	bf/s .pcm8_copy
+	add #1, r0
+	dt r7
+	bf/s .pcm8_pref
+	mov #16, r1
+	rts
+	nop
+
+!
+! void snd_adpcm_split(uint32_t *data, uint32_t *left, uint32_t *right, size_t size);
+!
+_snd_adpcm_split:
+	mov #-5, r1
+	shld r1, r7
+	mov.l r10, @-r15
+	mov #16, r1
+.adpcm_pref:
+	add #32, r4
+	pref @r4
+	add #-32, r4
+.adpcm_copy:
+	dt r1
+	mov.w @r4+, r10
+	mov r10, r0
+	and #0xf0, r0
+	mov r0, r2
+	shlr2 r2
+	mov r10, r0
+	shlr2 r2
+	and #0x0f, r0
+	mov r0, r3
+	shlr8 r10
+	mov r10, r0
+	and #0xf0, r0
+	or r0, r2
+	mov.b r2, @r5
+	add #1, r5
+	mov r10, r0
+	and #0x0f, r0
+	shll2 r0
+	shll2 r0
+	or r0, r3
+	mov.b r3, @r6
+	bf/s .adpcm_copy
+	add #1, r6
+	dt r7
+	bf/s .adpcm_pref
+	mov #16, r1
+	mov.l @r15+, r10
 	rts
 	nop

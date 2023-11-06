@@ -1,11 +1,14 @@
 /* KallistiOS ##version##
 
    spu.c
-   (c)2000-2001 Megan Potter
+   Copyright (C) 2000, 2001 Megan Potter
+   Copyright (C) 2023 Ruslan Rostovtsev
  */
 
 #include <dc/spu.h>
 #include <dc/g2bus.h>
+#include <dc/sq.h>
+#include <arch/memory.h>
 #include <arch/timer.h>
 
 /*
@@ -58,6 +61,39 @@ void spu_memload(uint32 dst, void *src_void, int length) {
     if(length > 0) {
         g2_fifo_wait();
         g2_write_block_32((uint32*)src, dst, length);
+    }
+}
+
+void spu_memload_sq(uint32 dst, void *src_void, int length) {
+    uint8 *src = (uint8 *)src_void;
+    int aligned_len, old;
+
+    /* Make sure it's an even number of 32-bit words and convert the
+       count to a 32-bit word count */
+    if(length & 3) {
+        length = (length + 4) & ~3;
+    }
+
+    /* Add in the SPU RAM base (cached area) */
+    dst += 0x00800000;
+
+    /* Using SQs for all that is divisible by 32 */
+    aligned_len = length & ~31;
+    length &= 31;
+
+    old = irq_disable();
+    do { } while(*(vuint32 *)0xa05f688c & (1 << 5)); /* FIFO_SH4 */
+    do { } while(*(vuint32 *)0xa05f688c & (1 << 4)); /* FIFO_G2 */
+    sq_cpy((void *)dst, src, aligned_len);
+    irq_restore(old);
+
+    if(length > 0) {
+        /* Make sure the destination is in a non-cached area */
+        dst |= MEM_AREA_P2_BASE;
+        dst += aligned_len;
+        src += aligned_len;
+        g2_fifo_wait();
+        g2_write_block_32((uint32 *)src, dst, length >> 2);
     }
 }
 

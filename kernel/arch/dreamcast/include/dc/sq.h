@@ -63,10 +63,10 @@ __BEGIN_DECLS
 /** \brief   Mask dest to Store Queue area
     \ingroup store_queues
 */
-#define SQ_MASK_DEST(dest)        \
-            ((uint32_t *)(void *) \
-            (MEM_AREA_SQ_BASE |      \
-            (((uint32_t)(dest)) & 0x03ffffe0)))
+#define SQ_MASK_DEST(dest) \
+        ((uint32_t *)(void *) \
+        (MEM_AREA_SQ_BASE |   \
+        (((uint32_t)(dest)) & 0x03ffffe0)))
 
 /** \brief   Copy a block of memory.
     \ingroup store_queues
@@ -86,7 +86,7 @@ __BEGIN_DECLS
 
     \sa sq_cpy_pvr()
 */
-void * sq_cpy(void *dest, const void *src, int n);
+void * sq_cpy(void *dest, const void *src, size_t n);
 
 /** \brief   Set a block of memory to an 8-bit value.
     \ingroup store_queues
@@ -105,7 +105,7 @@ void * sq_cpy(void *dest, const void *src, int n);
 
     \sa sq_set16(), sq_set32(), sq_set_pvr()
 */
-void * sq_set(void *dest, uint32 c, int n);
+void * sq_set(void *dest, uint32_t c, size_t n);
 
 /** \brief   Set a block of memory to a 16-bit value.
     \ingroup store_queues
@@ -124,7 +124,7 @@ void * sq_set(void *dest, uint32 c, int n);
 
     \sa sq_set(), sq_set32(), sq_set_pvr()
 */
-void * sq_set16(void *dest, uint32 c, int n);
+void * sq_set16(void *dest, uint32_t c, size_t n);
 
 /** \brief   Set a block of memory to a 32-bit value.
     \ingroup store_queues
@@ -142,7 +142,7 @@ void * sq_set16(void *dest, uint32 c, int n);
 
     \sa sq_set(), sq_set16(), sq_set_pvr()
 */
-void * sq_set32(void *dest, uint32 c, int n);
+void * sq_set32(void *dest, uint32_t c, size_t n);
 
 /** \brief   Clear a block of memory.
     \ingroup store_queues
@@ -156,7 +156,7 @@ void * sq_set32(void *dest, uint32 c, int n);
     \param  dest            The address to begin clearing at (32-byte aligned).
     \param  n               The number of bytes to clear (multiple of 32).
 */
-void sq_clr(void *dest, int n);
+void sq_clr(void *dest, size_t n);
 
 /** \brief   Copy a block of memory to VRAM
     \ingroup store_queues
@@ -183,7 +183,7 @@ void sq_clr(void *dest, int n);
 
     \sa sq_cpy()
 */
-void * sq_cpy_pvr(void *dest, const void *src, int n);
+void * sq_cpy_pvr(void *dest, const void *src, size_t n);
 
 /** \brief   Set a block of PVR memory to a 16-bit value.
     \ingroup store_queues
@@ -205,7 +205,7 @@ void * sq_cpy_pvr(void *dest, const void *src, int n);
 
     \sa sq_set(), sq_set16(), sq_set32()
 */
-void * sq_set_pvr(void *dest, uint32 c, int n);
+void * sq_set_pvr(void *dest, uint32_t c, size_t n);
 
 __END_DECLS
 
