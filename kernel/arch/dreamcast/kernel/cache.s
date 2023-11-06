@@ -106,9 +106,9 @@ _dcache_flush_range:
 	shad    r1, r5           
 
 	! Compare with 512
-	mov.w   cache_lines, r2
+	mov.w   flush_check, r2
 	cmp/hi  r2, r5
-	bt      _dcache_flush_all  ! If lines > 512, jump to _dcache_flush_all
+	bt      _dcache_flush_all  ! If lines > flush_check, jump to _dcache_flush_all
 
 	! Align start address
 	mov.l	align_mask, r0
@@ -158,9 +158,9 @@ _dcache_purge_range:
 	shad    r1, r5           
 
 	! Compare with 512
-	mov.w   cache_lines, r2
+	mov.w   purge_check, r2
 	cmp/hi  r2, r5
-	bt      _dcache_purge_all  ! If lines > 512, jump to _dcache_purge_all
+	bt      _dcache_purge_all  ! If lines > purge_check, jump to _dcache_purge_all
 
 	! Align start address
 	mov.l	align_mask, r0
@@ -243,4 +243,18 @@ align_mask:
 	.long	~31		    ! Align address to 32-byte boundary
 cache_lines:
 	.word   512         ! Total number of cache lines in dcache
+
+! _dcache_flush_range can execute up to this amount of loops and 
+! beat execution time of _dcache_flush_all.  This means that 
+! dcache_flush_range can have count param set up to 107520 bytes 
+! and still be faster than dcache_flush_all.
+flush_check:
+	.word   3360
+	
+! _dcache_purge_range can execute up to this amount of loops and 
+! beat execution time of _dcache_purge_all.  This means that 
+! dcache_purge_range can have count param set up to 39936 bytes 
+! and still be faster than dcache_purge_all.
+purge_check:
+	.word   1248        
 
