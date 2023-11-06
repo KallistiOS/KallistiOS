@@ -15,6 +15,7 @@
 ! r4 is starting address
 ! r5 is count
 _icache_flush_range:
+.align 2
 	mov.l	ifr_addr, r0
 	mov.l	p2_mask, r1
 	or	    r1, r0
@@ -77,6 +78,7 @@ _icache_flush_range:
 ! r4 is starting address
 ! r5 is count
 _dcache_inval_range:
+.align 2
 	! Get ending address from count and align start address
 	add	    r4, r5
 	mov.l	align_mask, r0
@@ -101,6 +103,7 @@ _dcache_inval_range:
 ! r4 is starting address
 ! r5 is count
 _dcache_flush_range:
+.align 2
 	! Divide byte count by 32 
 	mov     #-5, r1
 	shad    r1, r5           
@@ -130,6 +133,7 @@ _dcache_flush_range:
 ! the U bit and V bit are set to 1.  Then updates the entry with
 ! U bit cleared.
 _dcache_flush_all:
+.align 2
 	mov.l   dca_addr, r1
 	mov.w	cache_lines, r2
 	mov.l   dc_ubit_mask, r3
@@ -153,6 +157,7 @@ _dcache_flush_all:
 ! r4 is starting address
 ! r5 is count
 _dcache_purge_range:
+.align 2
 	! Divide byte count by 32 
 	mov     #-5, r1
 	shad    r1, r5           
@@ -181,6 +186,7 @@ _dcache_purge_range:
 ! dcache entries.  It goes through and forces a write-back and invalidate
 ! on all of the dcache.
 _dcache_purge_all:
+.align 2
     mov.l   dca_addr, r1
     mov.w   cache_lines, r2
     mov     #0, r3
@@ -201,6 +207,7 @@ _dcache_purge_all:
 ! r4 is address for temporary buffer 32-byte aligned
 ! r5 is size of temporary buffer (8 KB or 16 KB)
 _dcache_purge_all_with_buffer:
+.align 2
 	mov     #0, r0
 	add     r4, r5
 
@@ -216,7 +223,7 @@ _dcache_purge_all_with_buffer:
 
 
 ! Variables
-	.align	2
+.align	2
 
 ! I-cache (Instruction cache)
 ica_addr:
@@ -246,10 +253,10 @@ cache_lines:
 
 ! _dcache_flush_range can execute up to this amount of loops and 
 ! beat execution time of _dcache_flush_all.  This means that 
-! dcache_flush_range can have count param set up to 107520 bytes 
+! dcache_flush_range can have count param set up to 66560 bytes 
 ! and still be faster than dcache_flush_all.
 flush_check:
-	.word   3360
+	.word   2080
 	
 ! _dcache_purge_range can execute up to this amount of loops and 
 ! beat execution time of _dcache_purge_all.  This means that 

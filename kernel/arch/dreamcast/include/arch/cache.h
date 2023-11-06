@@ -91,7 +91,7 @@ void dcache_flush_range(uintptr_t start, size_t count);
 
     \note
     dcache_flush_range() is faster than dcache_flush_all() if the count
-    param is 107520 or less.
+    param is 66560 or less.
 */
 void dcache_flush_all(void);
 
