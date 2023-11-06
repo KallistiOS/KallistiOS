@@ -89,7 +89,7 @@ void dcache_flush_range(uintptr_t start, size_t count);
     This function flushes all the data/operand cache, forcing a write-
     back on all of the cache blocks that are marked as dirty.
 
-    \warning
+    \note
     dcache_flush_range() is faster than dcache_flush_all() if the count
     param is 107520 or less.
 */
@@ -107,11 +107,12 @@ void dcache_purge_range(uintptr_t start, size_t count);
 
 /** \brief  Purge all the data/operand cache.
 
-    This function flushes all the data/operand cache, forcing a write-
-    back on all cache blocks that are marked as dirty and invalidates 
-    all of the cache blocks.
+    This function flushes the entire data/operand cache, ensuring that all 
+    cache blocks marked as dirty are written back to memory and all cache 
+    entries are invalidated. It does not require an additional buffer and is 
+    preferred when memory resources are constrained.
 
-    \warning
+    \note
     dcache_purge_range() is faster than dcache_purge_all() if the count
     param is 39936 or less.
 */
@@ -119,11 +120,22 @@ void dcache_purge_all(void);
 
 /** \brief  Purge all the data/operand cache with buffer.
 
-    This function flushes all the data/operand cache, forcing a write-
-    back and invalidate on all of the cache blocks using a buffer.
+    This function performs a purge of all data/operand cache blocks by 
+    utilizing an external buffer to speed up the write-back and invalidation 
+    process. It is always faster than dcache_purge_all() and is recommended 
+    where maximum speed is required.
 
-    \param  start           The physical address for temporary buffer (32-byte aligned)
-    \param  count           The number of bytes of temporary buffer (8 KB or 16 KB)
+    \note While this function offers a superior purge rate, it does require
+    the use of a temporary buffer. So use this function if you have an extra 
+    8/16 kb of memory laying around that you can utilize for no other purpose 
+    than for this function.
+
+    \param  start           The physical address for temporary buffer (32-byte 
+                            aligned)
+    \param  count           The size of the temporary buffer, which can be 
+                            either 8 KB or 16 KB, depending on cache 
+                            configuration - 8 KB buffer with OCRAM enabled, 
+                            otherwise 16 KB.
 
 */
 void dcache_purge_all_with_buffer(uintptr_t start, size_t count);
