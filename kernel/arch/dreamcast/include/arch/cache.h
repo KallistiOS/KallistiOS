@@ -103,7 +103,7 @@ void dcache_flush_all(void);
     \param  start           The physical address to begin purging at.
     \param  count           The number of bytes to purge.
 */
-void dcache_purge_range(uintptr_t start, uint32_t count);
+void dcache_purge_range(uintptr_t start, size_t count);
 
 /** \brief  Purge all the data/operand cache.
 
