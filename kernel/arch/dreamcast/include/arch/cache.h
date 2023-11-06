@@ -3,7 +3,7 @@
    arch/dreamcast/include/cache.h
    Copyright (C) 2001 Megan Potter
    Copyright (C) 2014, 2016, 2023 Ruslan Rostovtsev
-
+   Copyright (C) 2023 Andy Barajas
 */
 
 /** \file   arch/cache.h
@@ -15,6 +15,7 @@
 
     \author Megan Potter
     \author Ruslan Rostovtsev
+    \author Andy Barajas
 */
 
 #ifndef __ARCH_CACHE_H
@@ -23,12 +24,29 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
+#include <stdint.h>
 #include <arch/types.h>
+
+/** \brief  Obtain a non-cached pointer.
+
+    Modifies an address to enable non-cached access. Uncached RAM is very 
+    slow, and bypassing the cache only helps in very specific circumstances.
+
+    \author TapamN
+ */
+#define NONCACHED(addr) (typeof (&(addr)[0]))(((uintptr_t)(addr)) | 0x20000000)
+
+/** \brief  Obtain a cached pointer.
+
+    Modifies an address to enable cached access.
+
+    \author TapamN
+ */
+#define CACHED(addr)    (typeof (&(addr)[0]))(((uintptr_t)(addr)) & ~(0x20000000))
 
 /** \brief  SH4 cache block size.
 
-    The physical address will be aligned to this size in all
-    functions except dcache_alloc_write.
+    The size of a cache block.
 */
 #define CPU_CACHE_BLOCK_SIZE 32
 
@@ -39,7 +57,7 @@ __BEGIN_DECLS
     \param  start           The physical address to begin flushing at.
     \param  count           The number of bytes to flush.
 */
-void icache_flush_range(uint32 start, uint32 count);
+void icache_flush_range(uintptr_t start, size_t count);
 
 /** \brief  Invalidate the data/operand cache.
 
@@ -50,42 +68,57 @@ void icache_flush_range(uint32 start, uint32 count);
     \param  start           The physical address to begin invalidating at.
     \param  count           The number of bytes to invalidate.
 */
-void dcache_inval_range(uint32 start, uint32 count);
+void dcache_inval_range(uintptr_t start, size_t count);
 
 /** \brief  Flush the data/operand cache.
 
     This function flushes a range of the data/operand cache, forcing a write-
-    back on all of the data in the specified range. This does not invalidate the
-    cache in the process (meaning the blocks will still be in the cache, just
-    not marked as dirty after this has completed). If you wish to invalidate the
-    cache as well, call dcache_inval_range() after calling this function or
-    use dcache_purge_range() instead of dcache_flush_range().
+    back on all of the data in the specified range. This does not invalidate 
+    the cache in the process (meaning the blocks will still be in the cache, 
+    just not marked as dirty after this has completed). If you wish to 
+    invalidate the cache as well, call dcache_inval_range() after calling this
+    function or use dcache_purge_range() instead of dcache_flush_range().
 
     \param  start           The physical address to begin flushing at.
     \param  count           The number of bytes to flush.
 */
-void dcache_flush_range(uint32 start, uint32 count);
+void dcache_flush_range(uintptr_t start, size_t count);
+
+/** \brief  Flush all the data/operand cache.
+
+    This function flushes all the data/operand cache, forcing a write-
+    back on all of the cache blocks that are marked as dirty.
+*/
+void dcache_flush_all(void);
 
 /** \brief  Purge the data/operand cache.
 
     This function flushes a range of the data/operand cache, forcing a write-
-    back and invalidate on all of the data in the specified range.
+    back and then invalidates all of the data in the specified range.
 
     \param  start           The physical address to begin purging at.
     \param  count           The number of bytes to purge.
 */
-void dcache_purge_range(uint32 start, uint32 count);
+void dcache_purge_range(uintptr_t start, size_t count);
 
 /** \brief  Purge all the data/operand cache.
 
     This function flushes all the data/operand cache, forcing a write-
-    back and invalidate on all of the cache blocks.
+    back on all cache blocks that are marked as dirty and invalidates 
+    all of the cache blocks.
+*/
+void dcache_purge_all(void);
+
+/** \brief  Purge all the data/operand cache with buffer.
+
+    This function flushes all the data/operand cache, forcing a write-
+    back and invalidate on all of the cache blocks using a buffer.
 
     \param  start           The physical address for temporary buffer (32-byte aligned)
     \param  count           The number of bytes of temporary buffer (8 KB or 16 KB)
 
 */
-void dcache_purge_all(uint32 start, uint32 count);
+void dcache_purge_all_with_buffer(uintptr_t start, size_t count);
 
 /** \brief  Prefetch one block to the data/operand cache.
 
@@ -108,14 +141,14 @@ static __always_inline void dcache_pref_block(const void *src) {
     \param  src             The physical address to allocate.
     \param  value           The value written to first 4-byte.
 */
-static __always_inline void dcache_alloc_block(const void *src, uint32 value) {
-    register int __value __asm__("r0") = value;
-    __asm__ __volatile__ ("movca.l r0,@%0\n\t"
+static __always_inline void dcache_alloc_block(const void *src, uint32_t value) {
+    __asm__ __volatile__ ("movca.l r0, @%0\n\t"
                          :
-                         : "r" (src), "r" (__value)
+                         : "r" (src), "z" (value)
                          : "memory"
     );
 }
+
 
 __END_DECLS
 
