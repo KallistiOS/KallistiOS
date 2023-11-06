@@ -58,6 +58,17 @@ static volatile g2_dma_reg_t * const g2_dma = (g2_dma_reg_t *)G2_DMA_REG_BASE;
 #define HARDWARE_TRIGGER  1
 #define INTERRUPT_TRIGGER 2
 
+/*
+    Controls whether the DMA suspend register of a channel is enabled:
+        0x00000004: Enables the suspend register.
+        0x00000000: Disables the suspend register.
+
+    OR '|' this value with trigger when setting the trigger select of the
+    DMA channel.
+*/
+#define DMA_SUSPEND_ENABLED    0x00000004
+#define DMA_SUSPEND_DISABLED   0x00000000
+
 /*  
     For sh4 and g2bus addresses, ensure bits 31-29 & 4-0 are '0' to avoid 
     illegal interrupts. Only bits 28-5 are used for valid addresses. 
@@ -184,7 +195,7 @@ int g2_dma_transfer(void *sh4, void *g2bus, size_t length, uint32_t block,
     g2_dma->dma[g2chn].sh4_addr = ((uint32_t)sh4) & MASK_ADDRESS;
     g2_dma->dma[g2chn].size = length | RESET_ENABLED;
     g2_dma->dma[g2chn].dir = dir;
-    g2_dma->dma[g2chn].trigger_select = CPU_TRIGGER;
+    g2_dma->dma[g2chn].trigger_select = CPU_TRIGGER | DMA_SUSPEND_ENABLED;
 
     /* Start the DMA transfer */
     g2_dma->dma[g2chn].enable = 1;
