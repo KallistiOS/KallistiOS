@@ -108,7 +108,7 @@ _dcache_flush_range:
     mov      #-5, r1
     shad     r1, r5           
 
-    ! Compare with 512
+    ! Compare with flush_check
     mov.w    flush_check, r2
     cmp/hi   r2, r5
     bt       _dcache_flush_all  ! If lines > flush_check, jump to _dcache_flush_all
@@ -146,7 +146,7 @@ _dcache_flush_all:
 
     bf/s     .dflush_all_loop
     add      #32, r1     ! Move on to next entry
-    
+
     rts
     nop
 
@@ -163,7 +163,7 @@ _dcache_purge_range:
     mov      #-5, r1
     shad     r1, r5           
 
-    ! Compare with 512
+    ! Compare with purge_check
     mov.w    purge_check, r2
     cmp/hi   r2, r5
     bt       _dcache_purge_all  ! If lines > purge_check, jump to _dcache_purge_all
