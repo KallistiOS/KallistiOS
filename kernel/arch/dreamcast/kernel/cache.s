@@ -3,8 +3,8 @@
 !
 ! arch/dreamcast/kernel/cache.s
 !
-! Copyright (C) 2003 Megan Potter
-! Copyright (C) 2023 Ruslan Rostovtsev
+! Copyright (C) 2001 Megan Potter
+! Copyright (C) 2014, 2016, 2023 Ruslan Rostovtsev
 ! Copyright (C) 2023 Andy Barajas
 !
 ! Optimized assembler code for managing the cache.
