@@ -1,5 +1,16 @@
 
-.text
+! KallistiOS ##version##
+!
+! arch/dreamcast/kernel/cache.s
+!
+! Copyright (C) 2003 Megan Potter
+! Copyright (C) 2023 Ruslan Rostovtsev
+! Copyright (C) 2023 Andy Barajas
+!
+! Optimized assembler code for managing the cache.
+!
+
+    .text
     .globl _icache_flush_range
     .globl _dcache_inval_range
     .globl _dcache_flush_range
@@ -14,7 +25,7 @@
 !
 ! r4 is starting address
 ! r5 is count
-.align 2
+    .align 2
 _icache_flush_range:
     mov.l    ifr_addr, r0
     mov.l    p2_mask, r1
@@ -77,7 +88,7 @@ _icache_flush_range:
 !
 ! r4 is starting address
 ! r5 is count
-.align 2
+    .align 2
 _dcache_inval_range:
     ! Get ending address from count and align start address
     add      r4, r5
@@ -102,7 +113,7 @@ _dcache_inval_range:
 !
 ! r4 is starting address
 ! r5 is count
-.align 2
+    .align 2
 _dcache_flush_range:
     ! Divide byte count by 32 
     mov      #-5, r1
@@ -132,7 +143,7 @@ _dcache_flush_range:
 ! dcache entries.  It forces a write-back on all dcache entries where
 ! the U bit and V bit are set to 1.  Then updates the entry with
 ! U bit cleared.
-.align 2
+    .align 2
 _dcache_flush_all:
     mov.l    dca_addr, r1
     mov.w    cache_lines, r2
@@ -157,7 +168,7 @@ _dcache_flush_all:
 !
 ! r4 is starting address
 ! r5 is count
-.align 2
+    .align 2
 _dcache_purge_range:
     ! Divide byte count by 32 
     mov      #-5, r1
@@ -186,7 +197,7 @@ _dcache_purge_range:
 ! This routine uses the OC address array to have direct access to the
 ! dcache entries.  It goes through and forces a write-back and invalidate
 ! on all of the dcache.
-.align 2
+    .align 2
 _dcache_purge_all:
     mov.l    dca_addr, r1
     mov.w    cache_lines, r2
@@ -207,7 +218,7 @@ _dcache_purge_all:
 !
 ! r4 is address for temporary buffer 32-byte aligned
 ! r5 is size of temporary buffer (8 KB or 16 KB)
-.align 2
+    .align 2
 _dcache_purge_all_with_buffer:
     mov      #0, r0
     add      r4, r5
@@ -225,7 +236,7 @@ _dcache_purge_all_with_buffer:
 
 
 ! Variables
-.align    2
+    .align    2
 
 ! I-cache (Instruction cache)
 ica_addr:
