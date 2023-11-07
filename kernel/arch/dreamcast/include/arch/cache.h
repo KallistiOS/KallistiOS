@@ -27,23 +27,6 @@ __BEGIN_DECLS
 #include <stdint.h>
 #include <arch/types.h>
 
-/** \brief  Obtain a non-cached pointer.
-
-    Modifies an address to enable non-cached access. Uncached RAM is very 
-    slow, and bypassing the cache only helps in very specific circumstances.
-
-    \author TapamN
- */
-#define NONCACHED(addr) (typeof (&(addr)[0]))(((uintptr_t)(addr)) | 0x20000000)
-
-/** \brief  Obtain a cached pointer.
-
-    Modifies an address to enable cached access.
-
-    \author TapamN
- */
-#define CACHED(addr)    (typeof (&(addr)[0]))(((uintptr_t)(addr)) & ~(0x20000000))
-
 /** \brief  SH4 cache block size.
 
     The size of a cache block.
