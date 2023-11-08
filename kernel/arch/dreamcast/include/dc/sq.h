@@ -74,11 +74,33 @@ __BEGIN_DECLS
 
 /** \brief  Lock Store Queues
     \ingroup store_queues
+    
+    Locks the store queues so that they cannot be used from another thread 
+    until unlocked. 
+    
+    \warning
+    This function is called automatically by the store queue API provided by KOS; 
+    however, it must be called manually when driving the SQs directly from outside 
+    of this API. 
+    
+    \sa sq_unlock()
 */
 void sq_lock(void);
 
 /** \brief  Unlock Store Queues
     \ingroup store_queues
+    
+    Unlocks the store queues so that they can be used from any thread. 
+    
+    \note 
+    sq_lock() should've already been called previously.
+    
+    \warning
+    sq_lock() and sq_unlock() are called automatically by the store queue API provided 
+    by KOS; however, they must be called manually when driving the SQs directly from 
+    outside this API.
+    
+    \sa sq_lock()
 */
 void sq_unlock(void);
 

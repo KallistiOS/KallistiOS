@@ -219,7 +219,7 @@ void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t 
     snd_pcm16_split_sq_start(data, masked_left, masked_right, size);
 
     /* Wait for both store queues to complete if they are already used */
-    uint32 *d = (uint32 *)MEM_AREA_SQ_BASE;
+    uint32_t *d = (uint32_t *)MEM_AREA_SQ_BASE;
     d[0] = d[8] = 0;
 
     sq_unlock();

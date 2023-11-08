@@ -19,13 +19,13 @@
     Based on code by Marcus Comstedt, TapamN, and Moop
 */
 
-static mutex_t sq_mutex;
+static mutex_t sq_mutex = MUTEX_INITIALIZER;
 
-void sq_lock() {
+void sq_lock(void) {
     mutex_lock(&sq_mutex);
 }
 
-void sq_unlock() {
+void sq_unlock(void) {
     mutex_unlock(&sq_mutex);
 }
 
