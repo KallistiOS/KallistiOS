@@ -4,6 +4,7 @@
    Copyright (C) 2000-2001 Andrew Kieschnick
    Copyright (C) 2023 Falco Girgis
    Copyright (C) 2023 Andy Barajas
+   Copyright (C) 2023 Ruslan Rostovtsev
 */
 
 /** \file    dc/sq.h
@@ -53,20 +54,33 @@ __BEGIN_DECLS
 /** \brief   Set Store Queue QACR* registers
     \ingroup store_queues
 */
-#define SET_QACR_REGS(dest) \
+#define SET_QACR_REGS(dest0, dest1) \
     do { \
-        uint32_t val = ((uint32_t)(dest)) >> 24; \
-        QACR0 = val; \
-        QACR1 = val; \
+        QACR0 = ((uintptr_t)(dest0)) >> 24; \
+        QACR1 = ((uintptr_t)(dest1)) >> 24; \
     } while(0)
 
-/** \brief   Mask dest to Store Queue area
+/** \brief   Mask dest to Store Queue area as address
+    \ingroup store_queues
+*/
+#define SQ_MASK_DEST_ADDR(dest) \
+    (MEM_AREA_SQ_BASE | ((uintptr_t)(dest) & 0x03ffffe0))
+
+/** \brief   Mask dest to Store Queue area as pointer
     \ingroup store_queues
 */
 #define SQ_MASK_DEST(dest) \
-        ((uint32_t *)(void *) \
-        (MEM_AREA_SQ_BASE |   \
-        (((uint32_t)(dest)) & 0x03ffffe0)))
+    ((uint32_t *)(void *) SQ_MASK_DEST_ADDR(dest))
+
+/** \brief  Lock Store Queues
+    \ingroup store_queues
+*/
+void sq_lock(void);
+
+/** \brief  Unlock Store Queues
+    \ingroup store_queues
+*/
+void sq_unlock(void);
 
 /** \brief   Copy a block of memory.
     \ingroup store_queues

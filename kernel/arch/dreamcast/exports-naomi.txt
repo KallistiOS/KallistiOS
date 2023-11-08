@@ -75,6 +75,7 @@ vmu_pkg_parse
 
 # SPU
 spu_memload
+spu_memload_sq
 spu_memread
 spu_memset
 spu_dma_transfer
@@ -89,6 +90,8 @@ sq_cpy
 sq_set
 sq_set16
 sq_set32
+sq_lock
+sq_unlock
 
 # Sound
 snd_mem_init
