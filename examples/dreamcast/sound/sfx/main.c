@@ -1,3 +1,11 @@
+/* KallistiOS ##version##
+
+   main.c
+   Copyright (C) 2023 Andy Barajas
+
+   This example program simply demonstrations how to load and play
+   sound effects on their own channels as well as on the same channel.
+*/
 
 #include <stdio.h>
 #include <string.h>
@@ -18,13 +26,13 @@ KOS_INIT_ROMDISK(romdisk);
 
 static void draw_instructions(uint8_t volume);
 
-static cont_state_t* get_cont_state();
-static int button_pressed(unsigned int current_buttons, unsigned int changed_buttons, unsigned int button);
+static cont_state_t *get_cont_state();
+static int button_pressed(uint32_t current_buttons, uint32_t changed_buttons, uint32_t button);
 
 int main(int argc, char **argv) {
     uint8_t volume = 128;
     int volume_changed = 1;
-    cont_state_t* cond;
+    cont_state_t *cond;
 
     vid_set_mode(DM_640x480, PM_RGB555);
     // Initialize sound system
@@ -134,9 +142,9 @@ static void draw_instructions(uint8_t volume) {
     bfont_draw_str(vram_s + y*640+x, 640, color, "Press Start to exit program");
 }
 
-static cont_state_t* get_cont_state() {
-    maple_device_t* cont;
-    cont_state_t* state;
+static cont_state_t *get_cont_state() {
+    maple_device_t *cont;
+    cont_state_t *state;
 
     cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
     if(cont) {
@@ -147,7 +155,7 @@ static cont_state_t* get_cont_state() {
     return NULL;
 }
 
-static int button_pressed(unsigned int current_buttons, unsigned int changed_buttons, unsigned int button) {
+static int button_pressed(uint32_t current_buttons, uint32_t changed_buttons, uint32_t button) {
     if(changed_buttons & button) {
         if (current_buttons & button)
             return 1;
