@@ -1,3 +1,7 @@
+# KallistiOS ##version##
+#
+# examples/dreamcast/sound/sfx/Makefile
+#
 
 TARGET = sfx.elf
 OBJS = romdisk.o main.o
