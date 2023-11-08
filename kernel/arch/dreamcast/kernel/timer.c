@@ -6,16 +6,17 @@
 */
 
 #include <assert.h>
-
 #include <stdio.h>
+#include <stdint.h>
+
 #include <arch/arch.h>
 #include <arch/timer.h>
 #include <arch/irq.h>
 
 /* Register access macros */
-#define TIMER8(o)   ( *((volatile uint8*)(TIMER_BASE + (o))) )
-#define TIMER16(o)  ( *((volatile uint16*)(TIMER_BASE + (o))) )
-#define TIMER32(o)  ( *((volatile uint32*)(TIMER_BASE + (o))) )
+#define TIMER8(o)   ( *((volatile uint8_t*)(TIMER_BASE + (o))) )
+#define TIMER16(o)  ( *((volatile uint16_t*)(TIMER_BASE + (o))) )
+#define TIMER32(o)  ( *((volatile uint32_t*)(TIMER_BASE + (o))) )
 
 /* Register base address */
 #define TIMER_BASE 0xffd80000 
@@ -60,59 +61,58 @@ typedef enum TPSC {
     PCK_DIV_1024    /* Pck/1024 => */
 } TPSC;
 
-static int tcors[] = { TCOR0, TCOR1, TCOR2 };
-static int tcnts[] = { TCNT0, TCNT1, TCNT2 };
-static int tcrs[] = { TCR0, TCR1, TCR2 };
+static unsigned tcors[] = { TCOR0, TCOR1, TCOR2 };
+static unsigned tcnts[] = { TCNT0, TCNT1, TCNT2 };
+static unsigned tcrs[] = { TCR0, TCR1, TCR2 };
 
-/* Pre-initialize a timer; set values but don't start it */
-int timer_prime(int which, uint32 speed, int interrupts) {
-    /* P0/64 scalar, maybe interrupts */
-    if(interrupts)
-        TIMER16(tcrs[which]) = (1 << UNIE) | PCK_DIV_4;
-    else
-        TIMER16(tcrs[which]) = PCK_DIV_4;
+/* Apply timer configuration to registers */
+static int timer_prime_apply(int which, uint32_t count, int interrupts) { 
+    assert(which <= TMU2);
 
-    /* Initialize counters; formula is P0/(tps*64) */
-    TIMER32(tcnts[which]) = 50000000 / (speed * 64);
-    TIMER32(tcors[which]) = 50000000 / (speed * 64);
+    TIMER32(tcnts[which]) = count;
+    TIMER32(tcors[which]) = count; 
 
-    if(interrupts)
+    TIMER16(tcrs[which]) = PCK_DIV_64;
+
+    /* Enable IRQ generation plus unmask and set priority */
+    if(interrupts) {
+        TIMER16(tcrs[which]) |= (1 << UNIE);
         timer_enable_ints(which);
+    }
 
     return 0;
+}
+
+/* Pre-initialize a timer; set values but don't start it */
+int timer_prime(int which, uint32_t speed, int interrupts) {
+    /* Initialize counters; formula is P0/(tps*64) */
+    const uint32_t cd = 50000000 / (speed * 64);
+
+    return timer_prime_apply(which, cd, interrupts);
 }
 
 /* Works like timer_prime, but takes an interval in milliseconds
    instead of a rate. Used by the primary timer stuff. */
-static int timer_prime_wait(int which, uint32 millis, int interrupts) {
+static int timer_prime_wait(int which, uint32_t millis, int interrupts) {
     /* Calculate the countdown, formula is P0 * millis/64000. We
        rearrange the math a bit here to avoid integer overflows. */
-    uint32 cd = (50000000 / 64) * millis / 1000;
+    const uint32_t cd = (50000000 / 64) * millis / 1000;
 
-    /* P0/64 scalar, maybe interrupts */
-    if(interrupts)
-        TIMER16(tcrs[which]) = 32 | 2;
-    else
-        TIMER16(tcrs[which]) = 2;
-
-    /* Initialize counters */
-    TIMER32(tcnts[which]) = cd;
-    TIMER32(tcors[which]) = cd;
-
-    if(interrupts)
-        timer_enable_ints(which);
-
-    return 0;
+    return timer_prime_apply(which, cd, interrupts);
 }
 
 /* Start a timer -- starts it running (and interrupts if applicable) */
 int timer_start(int which) {
+    assert(which <= TMU2);
+
     TIMER8(TSTR) |= 1 << which;
     return 0;
 }
 
 /* Stop a timer -- and disables its interrupt */
 int timer_stop(int which) {
+    assert(which <= TMU2);
+
     timer_disable_ints(which);
 
     /* Stop timer */
@@ -122,16 +122,19 @@ int timer_stop(int which) {
 }
 
 /* Returns the count value of a timer */
-uint32 timer_count(int which) {
+uint32_t timer_count(int which) {
+    assert(which <= TMU2);
+
     return TIMER32(tcnts[which]);
 }
 
 /* Clears the timer underflow bit and returns what its value was */
 int timer_clear(int which) {
-    uint16 value = TIMER16(tcrs[which]);
-    TIMER16(tcrs[which]) &= ~0x100;
+    assert(which <= TMU2);
+    const uint16_t value = TIMER16(tcrs[which]);
 
-    return (value & 0x100) ? 1 : 0;
+    TIMER16(tcrs[which]) &= ~(1 << UNF);
+    return !!(value & (1 << UNF));
 }
 
 /* Spin-loop kernel sleep func: uses the secondary timer in the
@@ -142,7 +145,7 @@ void timer_spin_sleep(int ms) {
     timer_start(TMU1);
 
     while(ms > 0) {
-        while(!(TIMER16(tcrs[TMU1]) & 0x100))
+        while(!(TIMER16(tcrs[TMU1]) & (1 << UNF)))
             ;
 
         timer_clear(TMU1);
@@ -249,7 +252,7 @@ static timer_primary_callback_t tp_callback;
 static uint32 tp_ms_remaining;
 
 /* IRQ handler for the primary timer interrupt. */
-static void tp_handler(irq_t src, irq_context_t * cxt) {
+static void tp_handler(irq_t src, irq_context_t *cxt) {
     (void)src;
 
     /* Are we at zero? */
