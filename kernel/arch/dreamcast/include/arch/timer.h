@@ -1,8 +1,8 @@
 /* KallistiOS ##version##
 
    arch/dreamcast/include/timer.h
-   (c)2000-2001 Megan Potter
-
+   Copyright (c) 2000-2001 Megan Potter
+   
 */
 
 /** \file   arch/timer.h
@@ -20,10 +20,11 @@
 #ifndef __ARCH_TIMER_H
 #define __ARCH_TIMER_H
 
+
+#include <stdint.h>
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
 #include <arch/irq.h>
 
 /* Timer sources -- we get four on the SH4 */
@@ -59,7 +60,7 @@ __BEGIN_DECLS
     \param  interrupts      Set to 1 to receive interrupts when the timer ticks.
     \retval 0               On success.
 */
-int timer_prime(int which, uint32 speed, int interrupts);
+int timer_prime(int which, uint32_t speed, int interrupts);
 
 /** \brief  Start a timer.
 
@@ -88,7 +89,7 @@ int timer_stop(int which);
     \param  which           The timer to inspect (i.e, \ref TMU0).
     \return                 The timer's count.
 */
-uint32 timer_count(int which);
+uint32_t timer_count(int which);
 
 /** \brief  Clear the underflow bit of a timer.
 
@@ -164,7 +165,7 @@ void timer_ms_disable(void);
                             calculate (*secs * 1000) + *msecs, or use the
                             timer_ms_gettime64() function.
 */
-void timer_ms_gettime(uint32 *secs, uint32 *msecs);
+void timer_ms_gettime(uint32_t *secs, uint32_t *msecs);
 
 /** \brief  Get the current uptime of the system (in milliseconds).
 
@@ -174,7 +175,7 @@ void timer_ms_gettime(uint32 *secs, uint32 *msecs);
 
     \return                 The number of milliseconds since KOS started.
 */
-uint64 timer_ms_gettime64(void);
+uint64_t timer_ms_gettime64(void);
 
 /** \brief  Get the current uptime of the system (in microseconds).
 
@@ -184,7 +185,7 @@ uint64 timer_ms_gettime64(void);
 
     \return                 The number of microseconds since KOS started.
 */
-uint64 timer_us_gettime64(void);
+uint64_t timer_us_gettime64(void);
 
 /** \brief  Primary timer callback type. */
 typedef void (*timer_primary_callback_t)(irq_context_t *);
@@ -209,7 +210,7 @@ timer_primary_callback_t timer_primary_set_callback(timer_primary_callback_t cal
 
     \param  millis          The number of milliseconds to schedule for.
 */
-void timer_primary_wakeup(uint32 millis);
+void timer_primary_wakeup(uint32_t millis);
 
 /* \cond */
 /* Init function */

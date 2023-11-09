@@ -14,9 +14,9 @@
 #include <arch/irq.h>
 
 /* Register access macros */
-#define TIMER8(o)   ( *((volatile uint8_t*)(TIMER_BASE + (o))) )
-#define TIMER16(o)  ( *((volatile uint16_t*)(TIMER_BASE + (o))) )
-#define TIMER32(o)  ( *((volatile uint32_t*)(TIMER_BASE + (o))) )
+#define TIMER8(o)   ( *((volatile uint8_t  *)(TIMER_BASE + (o))) )
+#define TIMER16(o)  ( *((volatile uint16_t *)(TIMER_BASE + (o))) )
+#define TIMER32(o)  ( *((volatile uint32_t *)(TIMER_BASE + (o))) )
 
 /* Register base address */
 #define TIMER_BASE 0xffd80000 
@@ -158,25 +158,25 @@ void timer_spin_sleep(int ms) {
 /* Enable timer interrupts (high priority); needs to move
    to irq.c sometime. */
 void timer_enable_ints(int which) {
-    volatile uint16 *ipra = (uint16*)0xffd00004;
+    volatile uint16_t *ipra = (uint16_t *)0xffd00004;
     *ipra |= (0x000f << (12 - 4 * which));
 }
 
 /* Disable timer interrupts; needs to move to irq.c sometime. */
 void timer_disable_ints(int which) {
-    volatile uint16 *ipra = (uint16*)0xffd00004;
+    volatile uint16_t *ipra = (uint16_t *)0xffd00004;
     *ipra &= ~(0x000f << (12 - 4 * which));
 }
 
 /* Check whether ints are enabled */
 int timer_ints_enabled(int which) {
-    volatile uint16 *ipra = (uint16*)0xffd00004;
+    volatile uint16_t *ipra = (uint16_t *)0xffd00004;
     return (*ipra & (0x000f << (12 - 4 * which))) != 0;
 }
 
 /* Millisecond timer */
-static uint32 timer_ms_counter = 0; /* Seconds elapsed */
-static uint32 timer_ms_countdown;   /* Max counter value */
+static uint32_t timer_ms_counter = 0; /* Seconds elapsed */
+static uint32_t timer_ms_countdown;   /* Max counter value */
 
 static void timer_ms_handler(irq_t source, irq_context_t *context) {
     (void)source;
@@ -184,7 +184,7 @@ static void timer_ms_handler(irq_t source, irq_context_t *context) {
     timer_ms_counter++;
 
     /* Clear overflow bit so we can check it when returning time */
-    TIMER16(tcrs[TMU2]) &= ~0x100;
+    TIMER16(tcrs[TMU2]) &= ~(1 << UNF);
 }
 
 void timer_ms_enable(void) {
@@ -201,22 +201,24 @@ void timer_ms_disable(void) {
 }
 
 /* Return the number of ticks since KOS was booted */
-void timer_ms_gettime(uint32 *secs, uint32 *msecs) {
-    uint32 used;
+void timer_ms_gettime(uint32_t *secs, uint32_t *msecs) {
+    uint32_t used;
     const int irq_status = irq_disable();
 
     /* Seconds part comes from ms_counter */
     if(secs) {
         *secs = timer_ms_counter;
+
+        /* Overflow is only notable if we have seconds we can
+           overflow into, so avoid read of TCR if secs is null */
+        if(TIMER16(tcrs[TMU2] & (1 << UNF)))
+            (*secs)++;
     }
 
     /* Milliseconds, we check how much of the timer has elapsed */
     if(msecs) {
         assert(timer_ms_countdown > 0);
-        /* Overflow is only notable if we have seconds we can
-           overflow into, so avoid read of TCR if secs is null */
-        if (secs && TIMER16(tcrs[TMU2]) & 0x100)
-            *secs += 1;
+
         used = timer_count(TMU2);
         *msecs = (timer_ms_countdown - used) * 1000 / timer_ms_countdown;
     }
@@ -224,29 +226,30 @@ void timer_ms_gettime(uint32 *secs, uint32 *msecs) {
     irq_restore(irq_status);
 }
 
-uint64 timer_ms_gettime64(void) {
-    uint32 s, ms;
-    uint64 msec;
+uint64_t timer_ms_gettime64(void) {
+    uint32_t s, ms;
+    uint64_t msec;
 
     timer_ms_gettime(&s, &ms);
-    msec = ((uint64)s) * 1000 + ((uint64)ms);
+    msec = ((uint64_t)s) * 1000 + ((uint64_t)ms);
 
     return msec;
 }
 
-uint64 timer_us_gettime64(void) {
-    uint32 cnt, scnt;
-    uint64 usec;
-    uint64 used;
+uint64_t timer_us_gettime64(void) {
+    uint64_t usec, used;
+    uint32_t cnt;
 
-    int irq_status = irq_disable();
-    scnt = timer_ms_counter;
-    cnt = timer_count(TMU2);
-    if (TIMER16(tcrs[TMU2]) & 0x100) {
-        /* If we underflowed, add an extra second and reload microseconds */
+    const int irq_status = irq_disable();
+
+    uint32_t scnt = timer_ms_counter;
+
+    /* If we underflowed, add an extra second and reload microseconds */
+    if (TIMER16(tcrs[TMU2]) & (1 << UNF))
         scnt++;
-        cnt = timer_count(TMU2);
-    }
+    
+    cnt = timer_count(TMU2);
+    
     irq_restore(irq_status);
 
     assert(timer_ms_countdown > 0);
@@ -262,7 +265,7 @@ uint64 timer_us_gettime64(void) {
    millis has passed. For the DC you can't have timers spaced out more
    than about one second, so we emulate longer waits with a counter. */
 static timer_primary_callback_t tp_callback;
-static uint32 tp_ms_remaining;
+static uint32_t tp_ms_remaining;
 
 /* IRQ handler for the primary timer interrupt. */
 static void tp_handler(irq_t src, irq_context_t *cxt) {
@@ -278,7 +281,8 @@ static void tp_handler(irq_t src, irq_context_t *cxt) {
         /* Call the callback, if any */
         if(tp_callback)
             tp_callback(cxt);
-    } /* Do we have less than a second remaining? */
+    } 
+    /* Do we have less than a second remaining? */
     else if(tp_ms_remaining < 1000) {
         /* Schedule a "last leg" timer. */
         timer_stop(TMU0);
@@ -286,7 +290,8 @@ static void tp_handler(irq_t src, irq_context_t *cxt) {
         timer_clear(TMU0);
         timer_start(TMU0);
         tp_ms_remaining = 0;
-    } /* Otherwise, we're just counting down. */
+    } 
+    /* Otherwise, we're just counting down. */
     else {
         tp_ms_remaining -= 1000;
     }
@@ -314,7 +319,7 @@ timer_primary_callback_t timer_primary_set_callback(timer_primary_callback_t cb)
     return cbold;
 }
 
-void timer_primary_wakeup(uint32 millis) {
+void timer_primary_wakeup(uint32_t millis) {
     /* Don't allow zero */
     if(millis == 0) {
         assert_msg(millis != 0, "Received invalid wakeup delay");
