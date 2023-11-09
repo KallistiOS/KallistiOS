@@ -54,13 +54,13 @@ typedef struct strchan {
     int ch[2];
 
     // The last write position in the playing buffer
-    uint32 last_write_pos;
+    uint32_t last_write_pos;
 
     // The buffer size allocated for this stream.
     size_t buffer_size;
 
     // Stream data location in AICA RAM
-    uint32 spu_ram_sch[2];
+    uint32_t spu_ram_sch[2];
 
     // "Get data" callback; we'll call this any time we want to get
     // another buffer of output data.
@@ -96,7 +96,7 @@ typedef struct strchan {
 static strchan_t streams[SND_STREAM_MAX];
 
 // Separation buffers (for stereo)
-static uint32 *sep_buffer[2] = {NULL, NULL};
+static uint32_t *sep_buffer[2] = {NULL, NULL};
 
 static mutex_t stream_mutex = MUTEX_INITIALIZER;
 
@@ -113,7 +113,7 @@ static mutex_t stream_mutex = MUTEX_INITIALIZER;
 
 void snd_pcm16_split_sq_start(uint32_t *data, uintptr_t left, uintptr_t right, size_t size);
 
-static size_t samples_to_bytes(snd_stream_hnd_t hnd, size_t samples) {
+static inline size_t samples_to_bytes(snd_stream_hnd_t hnd, size_t samples) {
     switch(streams[hnd].bitsize) {
         case 4:
             return samples >> 1;
@@ -125,7 +125,7 @@ static size_t samples_to_bytes(snd_stream_hnd_t hnd, size_t samples) {
     }
 }
 
-static size_t bytes_to_samples(snd_stream_hnd_t hnd, size_t bytes) {
+static inline size_t bytes_to_samples(snd_stream_hnd_t hnd, size_t bytes) {
     switch(streams[hnd].bitsize) {
         case 4:
             return bytes << 1;
@@ -561,19 +561,19 @@ void snd_stream_stop(snd_stream_hnd_t hnd) {
 
 /* The DMA will chain to this to start the second DMA. */
 static uint32 dmadest, dmacnt;
-static void dma_done(ptr_t data) {
+static inline void dma_done(void *data) {
     (void)data;
     mutex_unlock(&stream_mutex);
 }
-static void dma_chain(ptr_t data) {
+static inline void dma_chain(void *data) {
     (void)data;
     spu_dma_transfer(sep_buffer[1], dmadest, dmacnt, 0, dma_done, 0);
 }
 
 /* Poll streamer to load more data if neccessary */
 int snd_stream_poll(snd_stream_hnd_t hnd) {
-    uint32 ch0pos, ch1pos, write_pos;
-    uint16 current_play_pos;
+    uint32_t ch0pos, ch1pos, write_pos;
+    uint16_t current_play_pos;
     int needed_samples = 0;
     int needed_bytes = 0;
     int got_bytes = 0;
@@ -626,7 +626,7 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
 
     needed_bytes = samples_to_bytes(hnd, needed_samples);
 
-    if((uint32)needed_bytes > stream->buffer_size / stream->channels) {
+    if((uint32_t)needed_bytes > stream->buffer_size / stream->channels) {
         needed_bytes = (int)stream->buffer_size / stream->channels;
     }
 
@@ -674,8 +674,8 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
             snd_adpcm_split(data, sep_buffer[0], sep_buffer[1], needed_bytes * 2);
         }
 
-        dcache_purge_range((uint32)sep_buffer[0], needed_bytes);
-        dcache_purge_range((uint32)sep_buffer[1], needed_bytes);
+        dcache_purge_range((uintptr_t)sep_buffer[0], needed_bytes);
+        dcache_purge_range((uintptr_t)sep_buffer[1], needed_bytes);
 
         // Second DMA will get started by the chain handler
         dmadest = stream->spu_ram_sch[1] + write_pos;
@@ -689,7 +689,7 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
         } else {
             first_dma_buf = data;
         }
-        dcache_purge_range((uint32)first_dma_buf, needed_bytes);
+        dcache_purge_range((uintptr_t)first_dma_buf, needed_bytes);
         spu_dma_transfer(first_dma_buf,
             stream->spu_ram_sch[0] + write_pos, needed_bytes, 0, dma_done, 0);
     }
