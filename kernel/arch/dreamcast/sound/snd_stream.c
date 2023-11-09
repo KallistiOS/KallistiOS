@@ -222,8 +222,8 @@ void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t 
     uint32_t *d = (uint32_t *)MEM_AREA_SQ_BASE;
     d[0] = d[8] = 0;
 
-    sq_unlock();
     irq_restore(old);
+    sq_unlock();
 }
 
 static void snd_stream_prefill_part(snd_stream_hnd_t hnd, uint32_t offset) {
