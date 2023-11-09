@@ -2,6 +2,7 @@
 
    aica_comm.h
    Copyright (C) 2000-2002 Megan Potter
+   Copyright (C) 2023 Ruslan Rostovtsev
 
    Structure and constant definitions for the SH-4/AICA interface. This file is
    included from both the ARM and SH-4 sides of the fence.
@@ -100,8 +101,9 @@ typedef struct aica_channel {
 #define AICA_CH_UPDATE_SET_PAN  0x00004000 /* panning       */
 
 /* Sample types */
-#define AICA_SM_8BIT    1
-#define AICA_SM_16BIT   0
-#define AICA_SM_ADPCM   2
+#define AICA_SM_16BIT    0 /* Linear PCM 16-bit */
+#define AICA_SM_8BIT     1 /* Linear PCM 8-bit */
+#define AICA_SM_ADPCM    2 /* Yamaha ADPCM 4-bit */
+#define AICA_SM_ADPCM_LS 3 /* Long stream ADPCM 4-bit */
 
 #endif /* !__DC_SOUND_AICA_COMM_H */

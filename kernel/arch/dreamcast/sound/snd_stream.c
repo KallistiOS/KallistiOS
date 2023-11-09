@@ -69,6 +69,9 @@ typedef struct strchan {
     // Our list of filter callback functions for this stream
     TAILQ_HEAD(filterlist, filter) filters;
 
+    // Sample type
+    int type;
+
     // Stereo/mono flag
     int stereo;
 
@@ -100,6 +103,8 @@ static uint32 *sep_buffer[2] = {NULL, NULL};
         assert( (x) >= 0 && (x) < SND_STREAM_MAX ); \
         assert( streams[(x)].initted ); \
     } while(0)
+
+void snd_pcm16_split_sq_start(uint32_t *data, uintptr_t left, uintptr_t right, size_t size);
 
 /* Set "get data" callback */
 void snd_stream_set_callback(snd_stream_hnd_t hnd, snd_stream_callback_t cb) {
@@ -151,40 +156,41 @@ static void process_filters(snd_stream_hnd_t hnd, void **buffer, int *samplecnt)
 }
 
 static void sep_data(void *buffer, int len, int stereo) {
-    register int16  *bufsrc, *bufdst;
-    register int    x, y, cnt;
+    uint32_t *buf = (uint32_t *)buffer;
+    uint32_t *left_ptr = (uint32_t *)sep_buffer[1];
+    uint32_t *right_ptr = (uint32_t *)sep_buffer[0];
+    uint32_t data;
+    uint32_t left_val;
+    uint32_t right_val;
 
     if(stereo) {
-        bufsrc = (int16*)buffer;
-        bufdst = (int16 *)sep_buffer[0];
-        x = 0;
-        y = 0;
-        cnt = len / 2;
+        len <<= 1;
 
-        do {
-            *bufdst = *bufsrc;
-            bufdst++;
-            bufsrc += 2;
-            cnt--;
+        for(; len > 8; len -= 8) {
+            dcache_pref_block(buf + 8);
+
+            data = *buf++;
+            left_val = (data >> 16);
+            right_val = (data & 0xffff);
+
+            data = *buf++;
+            left_val |= (data & 0xffff0000);
+            right_val |= (data & 0xffff) << 16;
+
+            if(((uintptr_t)left_ptr & 31) == 0) {
+                dcache_alloc_block(left_ptr++, left_val);
+                dcache_alloc_block(right_ptr++, right_val);
+            }
+            else {
+                *left_ptr++ = left_val;
+                *right_ptr++ = right_val;
+            }
         }
-        while(cnt > 0);
-
-        bufsrc = (int16*)buffer;
-        bufsrc++;
-        bufdst = (int16 *)sep_buffer[1];
-        x = 1;
-        y = 0;
-        cnt = len / 2;
-
-        do {
-            *bufdst = *bufsrc;
-            bufdst++;
-            bufsrc += 2;
-            cnt--;
-            x += 2;
-            y++;
+        if(len) {
+            data = *buf++;
+            *(uint16_t *)left_ptr = (data >> 16);
+            *(uint16_t *)right_ptr = (data & 0xffff);
         }
-        while(cnt > 0);
     }
     else {
         memcpy(sep_buffer[0], buffer, len);
@@ -192,62 +198,86 @@ static void sep_data(void *buffer, int len, int stereo) {
     }
 }
 
-static void stereo_pcm16_split_sq(uint32 *data, uint32 aica_left, uint32 aica_right, uint32 size) {
+void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t size) {
 
-	/* Wait for both store queues to complete if they are already used */
-	uint32 *d = (uint32 *)0xe0000000;
-	d[0] = d[8] = 0;
+    left |= 0x00800000;
+    right |= 0x00800000;
 
-	uint32 masked_left = (0xe0000000 | (aica_left & 0x03ffffe0));
-	uint32 masked_right = (0xe0000000 | (aica_right & 0x03ffffe0));
+    uint32 masked_left = (0xe0000000 | (left & 0x03ffffe0));
+    uint32 masked_right = (0xe0000000 | (right & 0x03ffffe0));
 
-	/* Set store queue memory area as desired */
-	QACR0 = (aica_left >> 24) & 0x1c;
-	QACR1 = (aica_right >> 24) & 0x1c;
+    /* Set store queue memory area as desired */
+    QACR0 = (left >> 24) & 0x1c;
+    QACR1 = (right >> 24) & 0x1c;
 
-	g2_fifo_wait();
+    int old = irq_disable();
+    do { } while(*(vuint32 *)0xa05f688c & (1 << 5)) ; // FIFO_SH4
+    do { } while(*(vuint32 *)0xa05f688c & (1 << 4)) ; // FIFO_G2
 
-	/* Separating channels and do fill/write queues as many times necessary. */
-	snd_pcm16_split_sq(data, masked_left, masked_right, size);
+    /* Separating channels and do fill/write queues as many times necessary. */
+    snd_pcm16_split_sq_start(data, masked_left, masked_right, size);
+
+    /* Wait for both store queues to complete if they are already used */
+    uint32 *d = (uint32 *)0xe0000000;
+    d[0] = d[8] = 0;
+
+    irq_restore(old);
+}
+
+static void snd_stream_prefill_part(snd_stream_hnd_t hnd, uint32_t offset) {
+
+    const uint32_t buffer_size = streams[hnd].buffer_size;
+    uintptr_t left = streams[hnd].spu_ram_sch[0] + offset;
+    uintptr_t right = streams[hnd].spu_ram_sch[1] + offset;
+    int got = buffer_size;
+    void *buf;
+
+    if(streams[hnd].stereo) {
+        buf = streams[hnd].get_data(hnd, buffer_size, &got);
+    }
+    else {
+        buf = streams[hnd].get_data(hnd, buffer_size / 2, &got);
+    }
+
+    if(buf == NULL) {
+        dbglog(DBG_ERROR, "snd_stream_prefill_part(): get_data() failed\n");
+        return;
+    }
+
+    process_filters(hnd, &buf, &got);
+
+    if(streams[hnd].stereo == 0) {
+        spu_memload_sq(left, buf, got);
+        spu_memload_sq(right, buf, got);
+    }
+    else if(((uintptr_t)buf & 31) || streams[hnd].type != AICA_SM_16BIT) {
+        if(streams[hnd].type == AICA_SM_8BIT) {
+            snd_pcm8_split(buf, sep_buffer[0], sep_buffer[1], got);
+        }
+        else if(streams[hnd].type == AICA_SM_ADPCM_LS) {
+            snd_adpcm_split(buf, sep_buffer[0], sep_buffer[1], got);
+        }
+        else {
+            sep_data(buf, got / 2, streams[hnd].stereo);
+        }
+        spu_memload_sq(left, sep_buffer[0], got);
+        spu_memload_sq(right, sep_buffer[1], got);
+    }
+    else {
+        snd_pcm16_split_sq((uint32_t *)buf, left, right, got);
+    }
 }
 
 /* Prefill buffers -- do this before calling start() */
 void snd_stream_prefill(snd_stream_hnd_t hnd) {
-    void *buf;
-    int got;
-
     CHECK_HND(hnd);
 
-    if(!streams[hnd].get_data) return;
-
-    const uint32 buffer_size = streams[hnd].buffer_size;
-
-    if(streams[hnd].stereo)
-        buf = streams[hnd].get_data(hnd, buffer_size * 2, &got);
-    else
-        buf = streams[hnd].get_data(hnd, buffer_size, &got);
-
-    process_filters(hnd, &buf, &got);
-
-    if ((uintptr_t)buf & 31) {
-        sep_data(buf, got, streams[hnd].stereo);
-        spu_memload(streams[hnd].spu_ram_sch[0], (uint8*)sep_buffer[0], got);
-        spu_memload(streams[hnd].spu_ram_sch[1], (uint8*)sep_buffer[1], got);
+    if(!streams[hnd].get_data) {
+        return;
     }
-    else {
-        if (streams[hnd].stereo) {
-            stereo_pcm16_split_sq((uint32 *)buf,
-                streams[hnd].spu_ram_sch[0],
-                streams[hnd].spu_ram_sch[1],
-                got);
-        }
-        else {
-            g2_fifo_wait();
-            sq_cpy((uint32 *)streams[hnd].spu_ram_sch[0], buf, got);
-            g2_fifo_wait();
-            sq_cpy((uint32 *)streams[hnd].spu_ram_sch[1], buf, got);
-        }
-    }
+
+    snd_stream_prefill_part(hnd, 0);
+    snd_stream_prefill_part(hnd, streams[hnd].buffer_size / 2);
 
     /* Start with playing on buffer 0 */
     streams[hnd].last_write_pos = 0;
@@ -307,8 +337,8 @@ snd_stream_hnd_t snd_stream_alloc(snd_stream_callback_t cb, int bufsize) {
     TAILQ_INIT(&streams[hnd].filters);
 
     // Allocate stream buffers
-    streams[hnd].spu_ram_sch[0] = snd_mem_malloc(streams[hnd].buffer_size * 2);
-    streams[hnd].spu_ram_sch[1] = streams[hnd].spu_ram_sch[0] + streams[hnd].buffer_size;
+    streams[hnd].spu_ram_sch[0] = snd_mem_malloc(streams[hnd].buffer_size);
+    streams[hnd].spu_ram_sch[1] = snd_mem_malloc(streams[hnd].buffer_size);
 
     // And channels
     streams[hnd].ch[0] = snd_sfx_chn_alloc();
@@ -353,6 +383,7 @@ void snd_stream_destroy(snd_stream_hnd_t hnd) {
 
     snd_stream_stop(hnd);
     snd_mem_free(streams[hnd].spu_ram_sch[0]);
+    snd_mem_free(streams[hnd].spu_ram_sch[1]);
     memset(streams + hnd, 0, sizeof(streams[0]));
 }
 
@@ -386,13 +417,14 @@ void snd_stream_queue_disable(snd_stream_hnd_t hnd) {
 }
 
 /* Start streaming (or if queueing is enabled, just get ready) */
-void snd_stream_start(snd_stream_hnd_t hnd, uint32 freq, int st) {
+static void snd_stream_start_type(snd_stream_hnd_t hnd, uint32 type, uint32 freq, int st) {
     AICA_CMDSTR_CHANNEL(tmp, cmd, chan);
 
     CHECK_HND(hnd);
 
     if(!streams[hnd].get_data) return;
 
+    streams[hnd].type = type;
     streams[hnd].stereo = st;
     streams[hnd].frequency = freq;
 
@@ -409,7 +441,7 @@ void snd_stream_start(snd_stream_hnd_t hnd, uint32 freq, int st) {
     cmd->cmd_id = streams[hnd].ch[0];
     chan->cmd = AICA_CH_CMD_START | AICA_CH_START_DELAY;
     chan->base = streams[hnd].spu_ram_sch[0];
-    chan->type = AICA_SM_16BIT;
+    chan->type = type;
     chan->length = (streams[hnd].buffer_size / 2);
     chan->loop = 1;
     chan->loopstart = 0;
@@ -434,6 +466,18 @@ void snd_stream_start(snd_stream_hnd_t hnd, uint32 freq, int st) {
     /* Process the changes */
     if(!streams[hnd].queueing)
         snd_sh4_to_aica_start();
+}
+
+void snd_stream_start(snd_stream_hnd_t hnd, uint32 freq, int st) {
+    snd_stream_start_type(hnd, AICA_SM_16BIT, freq, st);
+}
+
+void snd_stream_start_pcm8(snd_stream_hnd_t hnd, uint32 freq, int st) {
+    snd_stream_start_type(hnd, AICA_SM_8BIT, freq, st);
+}
+
+void snd_stream_start_adpcm(snd_stream_hnd_t hnd, uint32 freq, int st) {
+    snd_stream_start_type(hnd, AICA_SM_ADPCM_LS, freq, st);
 }
 
 /* Actually make it go (in queued mode) */
@@ -546,17 +590,22 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
             sep_buffer[1] = sep_buffer[0] + (SND_STREAM_BUFFER_MAX / 8);
         }
 
-        if ((uintptr_t)data & 31) {
+        if (((uintptr_t)data & 31) && (streams[hnd].type == AICA_SM_16BIT || streams[hnd].stereo == 0)) {
             sep_data(data, needed_samples * 2, streams[hnd].stereo);
-        } 
-        else {
-            if(streams[hnd].stereo) {
+        }
+        else if(streams[hnd].stereo) {
+            if(streams[hnd].type == AICA_SM_16BIT) {
                 snd_pcm16_split(data, sep_buffer[0], sep_buffer[1], needed_samples * 4);
             }
-            else {
-                first_dma_buf = data;
-                sep_buffer[1] = data;
+            else if(streams[hnd].type == AICA_SM_8BIT) {
+                snd_pcm8_split(data, sep_buffer[0], sep_buffer[1], needed_samples * 4);
             }
+            else {
+                snd_adpcm_split(data, sep_buffer[0], sep_buffer[1], needed_samples * 4);
+            }
+        } else {
+            first_dma_buf = data;
+            sep_buffer[1] = data;
         }
 
         // Second DMA will get started by the chain handler

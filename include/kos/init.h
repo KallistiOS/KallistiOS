@@ -38,7 +38,18 @@ __BEGIN_DECLS
     \see    kos_initflags
     \see    dreamcast_initflags
 */
-#define KOS_INIT_FLAGS(flags)   uint32 __kos_init_flags = (flags)
+#define KOS_INIT_FLAGS(flags) \
+    uint32 __kos_init_flags = (flags); \
+    extern void arch_init_net(void); \
+    void (*init_net_weak)(void) = ((flags) & INIT_NET) ? arch_init_net : NULL; \
+    extern void net_shutdown(void); \
+    void (*net_shutdown_weak)(void) = ((flags) & INIT_NET) ? net_shutdown : NULL; \
+    extern void bba_la_init(void); \
+    void (*bba_la_init_weak)(void) = ((flags) & INIT_NET) ? bba_la_init : NULL; \
+    extern void bba_la_shutdown(void); \
+    void (*bba_la_shutdown_weak)(void) = ((flags) & INIT_NET) ? bba_la_shutdown : NULL; \
+    extern int export_init(void); \
+    int (*export_init_weak)(void) = ((flags) & INIT_EXPORT) ? export_init : NULL
 
 /** \brief  The init flags. Do not modify this directly! */
 extern uint32 __kos_init_flags;
@@ -81,6 +92,7 @@ extern void * __kos_romdisk;
 #define INIT_NET            0x0004  /**< \brief Enable built-in networking */
 #define INIT_MALLOCSTATS    0x0008  /**< \brief Enable malloc statistics */
 #define INIT_QUIET          0x0010  /**< \brief Disable dbgio */
+#define INIT_EXPORT         0x0020  /**< \brief Export kernel symbols */
 /** @} */
 
 __END_DECLS

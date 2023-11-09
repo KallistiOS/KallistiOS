@@ -16,7 +16,7 @@
 */
 
 /* Copies n bytes from src to dest, dest must be 32-byte aligned */
-void * sq_cpy(void *dest, const void *src, int n) {
+void * sq_cpy(void *dest, const void *src, size_t n) {
     uint32_t *d = SQ_MASK_DEST(dest);
     const uint32_t *s = src;
 
@@ -89,7 +89,7 @@ void * sq_cpy(void *dest, const void *src, int n) {
 }
 
 /* Fills n bytes at dest with byte c, dest must be 32-byte aligned */
-void * sq_set(void *dest, uint32_t c, int n) {
+void * sq_set(void *dest, uint32_t c, size_t n) {
     /* Duplicate low 8-bits of c into high 24-bits */
     c = c & 0xff;
     c = (c << 24) | (c << 16) | (c << 8) | c;
@@ -98,7 +98,7 @@ void * sq_set(void *dest, uint32_t c, int n) {
 }
 
 /* Fills n bytes at dest with short c, dest must be 32-byte aligned */
-void * sq_set16(void *dest, uint32_t c, int n) {
+void * sq_set16(void *dest, uint32_t c, size_t n) {
     /* Duplicate low 16-bits of c into high 16-bits */
     c = c & 0xffff;
     c = (c << 16) | c;
@@ -107,7 +107,7 @@ void * sq_set16(void *dest, uint32_t c, int n) {
 }
 
 /* Fills n bytes at dest with int c, dest must be 32-byte aligned */
-void * sq_set32(void *dest, uint32_t c, int n) {
+void * sq_set32(void *dest, uint32_t c, size_t n) {
     uint32_t *d = SQ_MASK_DEST(dest);
 
     /* Set store queue memory area as desired */
@@ -133,7 +133,7 @@ void * sq_set32(void *dest, uint32_t c, int n) {
 }
 
 /* Clears n bytes at dest, dest must be 32-byte aligned */
-void sq_clr(void *dest, int n) {
+void sq_clr(void *dest, size_t n) {
     sq_set32(dest, 0, n);
 }
 
@@ -141,7 +141,7 @@ void sq_clr(void *dest, int n) {
 #define PVR_DMA_DEST  (*(volatile uint32_t *)(void *)0xa05f6808)
 
 /* Copies n bytes from src to dest (in VRAM), dest must be 32-byte aligned */
-void * sq_cpy_pvr(void *dest, const void *src, int n) {
+void * sq_cpy_pvr(void *dest, const void *src, size_t n) {
     if(PVR_DMA_DEST != 0) {
         dbglog(DBG_ERROR, "sq_cpy_pvr: Previous DMA has not finished\n");
         return NULL;
@@ -159,7 +159,7 @@ void * sq_cpy_pvr(void *dest, const void *src, int n) {
 }
 
 /* Fills n bytes at PVR dest with short c, dest must be 32-byte aligned */
-void * sq_set_pvr(void *dest, uint32_t c, int n) {
+void * sq_set_pvr(void *dest, uint32_t c, size_t n) {
     if(PVR_DMA_DEST != 0) {
         dbglog(DBG_ERROR, "sq_set_pvr: Previous DMA has not finished\n");
         return NULL;
