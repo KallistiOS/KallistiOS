@@ -564,12 +564,12 @@ void snd_stream_stop(snd_stream_hnd_t hnd) {
 /* The DMA will chain to this to start the second DMA. */
 static uint32_t dmacnt;
 static uintptr_t dmadest;
-static inline void dma_done(uint32_t data) {
+static inline void dma_done(void *data) {
     (void)data;
     mutex_unlock(&stream_mutex);
 }
 
-static inline void dma_chain(uint32_t data) {
+static inline void dma_chain(void *data) {
     (void)data;
     spu_dma_transfer(sep_buffer[1], dmadest, dmacnt, 0, dma_done, 0);
 }

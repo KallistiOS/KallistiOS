@@ -541,7 +541,7 @@ static void bba_dma_cb(void *p) {
         g2_dma_transfer(next_dst, next_src, next_len, 0,
                         bba_dma_cb, 0,  /* callback */
                         1,  /* dir = 1, we're *reading* from the g2 bus */
-                        BBA_DMA_MODE, BBA_DMA_G2CHN, BBA_DMA_SHCHN);
+                        0, G2_DMA_CHAN_BBA, 0);
         next_len = 0;
     }
     else {
@@ -585,7 +585,7 @@ static int bba_copy_dma(uint8 * dst, uint32 s, int len) {
             g2_dma_transfer(dst, src, len, 0,
                             bba_dma_cb, 0,  /* callback */
                             1,  /* dir = 1, we're *reading* from the g2 bus */
-                            BBA_DMA_MODE, BBA_DMA_G2CHN, BBA_DMA_SHCHN);
+                            0, G2_DMA_CHAN_BBA, 0);
         }
         else {
             next_dst = dst;

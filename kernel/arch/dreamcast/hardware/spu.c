@@ -276,5 +276,5 @@ int spu_dma_transfer(void *from, uintptr_t dest, size_t length, int block,
     dest += 0x00800000;
 
     return g2_dma_transfer(from, (void *) dest, length, block, callback, cbdata, 0,
-                           SPU_DMA_MODE, SPU_DMA_G2CHN, SPU_DMA_SHCHN);
+                           0, G2_DMA_CHAN_SPU, 0);
 }

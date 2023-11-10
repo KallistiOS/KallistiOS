@@ -54,17 +54,10 @@ __BEGIN_DECLS
       
     @{
 */
-#define SPU_DMA_G2CHN  0 /**< \brief AICA: G2 channel 0 */
-#define SPU_DMA_MODE   0 /**< \brief Unused; Here for compatibility */
-#define SPU_DMA_SHCHN  0 /**< \brief Unused; Here for compatibility */
-
-#define BBA_DMA_G2CHN  1 /**< \brief BBA:  G2 channel 1 */
-#define BBA_DMA_MODE   0 /**< \brief Unused; Here for compatibility */
-#define BBA_DMA_SHCHN  0 /**< \brief Unused; Here for compatibility */
-
-#define CH2_DMA_G2CHN  2 /**< \brief CH2: G2 channel 2 */
-
-#define CH3_DMA_G2CHN  3 /**< \brief CH3: G2 channel 3 */
+#define G2_DMA_CHAN_SPU  0 /**< \brief AICA: G2 channel 0 */
+#define G2_DMA_CHAN_BBA  1 /**< \brief BBA:  G2 channel 1 */
+#define G2_DMA_CHAN_CH2  2 /**< \brief CH2: G2 channel 2 */
+#define G2_DMA_CHAN_CH3  3 /**< \brief CH3: G2 channel 3 */
 /** @} */
 
 /** \brief  G2Bus DMA direction
@@ -72,8 +65,8 @@ __BEGIN_DECLS
     The direction you want the data to go. SH4 to AICA, BBA, etc use
     SH4TOG2BUS, otherwise G2BUSTOSH4.
 */
-#define SH4TOG2BUS   0
-#define G2BUSTOSH4   1
+#define G2_DMA_TO_G2   0
+#define G2_DMA_TO_SH4  1
 
 /** \brief  G2Bus DMA interrupt callback type.
 
@@ -142,11 +135,12 @@ typedef struct {
     uint32_t irq_state;    /** \brief IRQ state when entering a G2 critical block */
 } g2_ctx_t;
 
-/* Internal constants */
+/* Internal constants to access suspend registers for G2 DMA. They are not meant for
+   user-code use. */
 /** \cond */ 
-#define SPU_G2DMA_SUSPEND     (*((vuint32 *)0xa05f781C))
-#define BBA_G2DMA_SUSPEND     (*((vuint32 *)0xa05f783C))
-#define CH2_G2DMA_SUSPEND     (*((vuint32 *)0xa05f785C))
+#define G2_DMA_SUSPEND_SPU     (*((vuint32 *)0xa05f781C))
+#define G2_DMA_SUSPEND_BBA     (*((vuint32 *)0xa05f783C))
+#define G2_DMA_SUSPEND_CH2     (*((vuint32 *)0xa05f785C))
 /** \endcond */
 
 /** \brief  Disable IRQs and G2 DMA
@@ -163,9 +157,9 @@ static inline g2_ctx_t g2_lock(void) {
     ctx.irq_state = irq_disable();
 
     /* Suspend any G2 DMA */
-    SPU_G2DMA_SUSPEND = 1;
-    BBA_G2DMA_SUSPEND = 1;
-    CH2_G2DMA_SUSPEND = 1;
+    G2_DMA_SUSPEND_SPU = 1;
+    G2_DMA_SUSPEND_BBA = 1;
+    G2_DMA_SUSPEND_CH2 = 1;
 
     while(FIFO_STATUS & FIFO_SH4);
 
@@ -181,17 +175,17 @@ static inline g2_ctx_t g2_lock(void) {
 */
 static inline void g2_unlock(g2_ctx_t ctx) {
     /* Restore suspended G2 DMA */
-    SPU_G2DMA_SUSPEND = 0;
-    BBA_G2DMA_SUSPEND = 0;
-    CH2_G2DMA_SUSPEND = 0;
+    G2_DMA_SUSPEND_SPU = 0;
+    G2_DMA_SUSPEND_BBA = 0;
+    G2_DMA_SUSPEND_CH2 = 0;
 
     irq_restore(ctx.irq_state);
 }
 
 
-#undef SPU_G2DMA_SUSPEND
-#undef BBA_G2DMA_SUSPEND
-#undef CH2_G2DMA_SUSPEND
+#undef G2_DMA_SUSPEND_SPU
+#undef G2_DMA_SUSPEND_BBA
+#undef G2_DMA_SUSPEND_CH2
 
 /** \brief  Read one byte from G2.
 

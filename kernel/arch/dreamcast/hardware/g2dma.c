@@ -131,7 +131,7 @@ inline static void dma_disable(uint32_t chn) {
 static void g2_dma_irq_hnd(uint32_t code) {
     int chn = code - ASIC_EVT_G2_DMA0;
 
-    if(chn < SPU_DMA_G2CHN || chn > CH3_DMA_G2CHN) {
+    if(chn < G2_DMA_CHAN_SPU || chn > G2_DMA_CHAN_CH3) {
         dbglog(DBG_ERROR, "g2_dma: Wrong channel received in g2_dma_irq_hnd");
         return;
     }
@@ -158,7 +158,7 @@ int g2_dma_transfer(void *sh4, void *g2bus, size_t length, uint32_t block,
     (void)mode;
     (void)sh4chn;
 
-    if(g2chn > CH3_DMA_G2CHN) {
+    if(g2chn > G2_DMA_CHAN_CH3) {
         errno = EINVAL;
         return -1;
     }
