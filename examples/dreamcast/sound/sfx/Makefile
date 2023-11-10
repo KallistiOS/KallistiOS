@@ -4,7 +4,8 @@
 #
 
 TARGET = sfx.elf
-OBJS = romdisk.o main.o
+OBJS = main.o romdisk.o 
+KOS_ROMDISK_DIR = romdisk
 
 all: clean $(TARGET)
 
@@ -16,12 +17,6 @@ clean:
 
 $(TARGET): $(OBJS) 
 	kos-cc -o $(TARGET) $(OBJS)
-
-romdisk.img:
-	$(KOS_GENROMFS) -f romdisk.img -d romdisk -v
-
-romdisk.o: romdisk.img
-	$(KOS_BASE)/utils/bin2o/bin2o romdisk.img romdisk romdisk.o
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)

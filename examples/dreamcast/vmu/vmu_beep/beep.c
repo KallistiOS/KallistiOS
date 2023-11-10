@@ -37,9 +37,7 @@
 
 #include <plx/font.h>
 
-extern uint8_t romdisk[];
 KOS_INIT_FLAGS(INIT_DEFAULT);
-KOS_INIT_ROMDISK(romdisk);
 
 int main(int argc, char *argv[]) {
     maple_device_t *dev, *vmudev;

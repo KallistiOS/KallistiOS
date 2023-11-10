@@ -953,9 +953,6 @@ void GPU_Stats(void) {
         printf("PVR: WATING FOR STATS\n");
 }
 
-extern uint8 romdisk[];
-KOS_INIT_ROMDISK(romdisk);
-
 static unsigned char LE[8] = {0, 1, 0, 0, 0, 0, 0, 0};
 int InputCb(void) {
     maple_device_t *cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);

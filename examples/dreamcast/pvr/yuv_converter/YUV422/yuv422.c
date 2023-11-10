@@ -62,9 +62,6 @@ static uint8_t *y_plane;
 static uint8_t *u_plane;
 static uint8_t *v_plane;
 
-extern uint8_t romdisk[];
-KOS_INIT_ROMDISK(romdisk);
-
 static int load_image(void) {
     FILE *file = fopen("/rd/422.yuv", "rb");
     size_t read_size = 0;

@@ -256,9 +256,6 @@ pvr_init_params_t params = {
 // advantage of greater speed, but this will work for now.
 uint8 dmabuffers[2][4 * 1024 * 1024] __attribute__((aligned(32)));
 
-extern uint8 romdisk[];
-KOS_INIT_ROMDISK(romdisk);
-
 int main(int argc, char **argv) {
     /* Init PVR API */
     pvr_stats_t stats;

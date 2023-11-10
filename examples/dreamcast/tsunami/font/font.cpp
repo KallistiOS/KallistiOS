@@ -21,9 +21,7 @@
   graphs.
  */
 
-extern uint8 romdisk[];
 KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS);
-KOS_INIT_ROMDISK(romdisk);
 
 int main(int argc, char **argv) {
     int done = 0;

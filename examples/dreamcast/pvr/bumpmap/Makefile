@@ -1,5 +1,6 @@
 TARGET = bump.elf
 OBJS = bump.o romdisk.o
+KOS_ROMDISK_DIR = romdisk
 
 all: rm-elf $(TARGET)
 
