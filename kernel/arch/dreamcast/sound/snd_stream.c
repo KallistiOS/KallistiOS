@@ -248,7 +248,6 @@ void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t 
 }
 
 static void snd_stream_prefill_part(snd_stream_hnd_t hnd, uint32_t offset) {
-
     const size_t buffer_size = streams[hnd].buffer_size;
     const int chans = streams[hnd].channels;
     const uintptr_t left = streams[hnd].spu_ram_sch[0] + offset;
@@ -262,7 +261,7 @@ static void snd_stream_prefill_part(snd_stream_hnd_t hnd, uint32_t offset) {
         return;
     }
 
-    if (got > max_got) {
+    if(got > max_got) {
         got = max_got;
     }
 
@@ -504,7 +503,8 @@ static void snd_stream_start_type(snd_stream_hnd_t hnd, uint32 type, uint32 freq
         /* Start both channels simultaneously */
         cmd->cmd_id = (1 << streams[hnd].ch[0]) |
                     (1 << streams[hnd].ch[1]);
-    } else {
+    }
+    else {
         /* Start one channel */
         cmd->cmd_id = (1 << streams[hnd].ch[0]);
     }
@@ -565,6 +565,7 @@ static inline void dma_done(void *data) {
     (void)data;
     mutex_unlock(&stream_mutex);
 }
+
 static inline void dma_chain(void *data) {
     (void)data;
     spu_dma_transfer(sep_buffer[1], dmadest, dmacnt, 0, dma_done, 0);
@@ -599,7 +600,8 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
                     offsetof(aica_channel_t, pos));
         /* The channel position register is 16-bit on AICA side, keep it in mind */
         current_play_pos = (ch0pos < ch1pos ? ch0pos : ch1pos) & 0xffff;
-    } else {
+    }
+    else {
         current_play_pos = (ch0pos & 0xffff);
     }
 
@@ -686,7 +688,8 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
     else {
         if((uintptr_t)data & 31) {
             memcpy(sep_buffer[0], data, needed_bytes);
-        } else {
+        }
+        else {
             first_dma_buf = data;
         }
         dcache_purge_range((uintptr_t)first_dma_buf, needed_bytes);
