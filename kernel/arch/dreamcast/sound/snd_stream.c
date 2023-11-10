@@ -305,7 +305,7 @@ void snd_stream_prefill(snd_stream_hnd_t hnd) {
     snd_stream_prefill_part(hnd, 0);
     snd_stream_prefill_part(hnd, streams[hnd].buffer_size / 2);
 
-    /* Start with playing from begin */
+    /* Start playing from the beginning */
     streams[hnd].last_write_pos = 0;
     mutex_unlock(&stream_mutex);
 }
@@ -443,7 +443,7 @@ void snd_stream_queue_disable(snd_stream_hnd_t hnd) {
 }
 
 /* Start streaming (or if queueing is enabled, just get ready) */
-static void snd_stream_start_type(snd_stream_hnd_t hnd, uint32 type, uint32 freq, int st) {
+static void snd_stream_start_type(snd_stream_hnd_t hnd, uint32_t type, uint32_t freq, int st) {
     AICA_CMDSTR_CHANNEL(tmp, cmd, chan);
 
     CHECK_HND(hnd);
@@ -517,15 +517,15 @@ static void snd_stream_start_type(snd_stream_hnd_t hnd, uint32 type, uint32 freq
         snd_sh4_to_aica_start();
 }
 
-void snd_stream_start(snd_stream_hnd_t hnd, uint32 freq, int st) {
+void snd_stream_start(snd_stream_hnd_t hnd, uint32_t freq, int st) {
     snd_stream_start_type(hnd, AICA_SM_16BIT, freq, st);
 }
 
-void snd_stream_start_pcm8(snd_stream_hnd_t hnd, uint32 freq, int st) {
+void snd_stream_start_pcm8(snd_stream_hnd_t hnd, uint32_t freq, int st) {
     snd_stream_start_type(hnd, AICA_SM_8BIT, freq, st);
 }
 
-void snd_stream_start_adpcm(snd_stream_hnd_t hnd, uint32 freq, int st) {
+void snd_stream_start_adpcm(snd_stream_hnd_t hnd, uint32_t freq, int st) {
     snd_stream_start_type(hnd, AICA_SM_ADPCM_LS, freq, st);
 }
 
@@ -560,13 +560,14 @@ void snd_stream_stop(snd_stream_hnd_t hnd) {
 }
 
 /* The DMA will chain to this to start the second DMA. */
-static uint32 dmadest, dmacnt;
-static inline void dma_done(void *data) {
+static uint32_t dmacnt;
+static uintptr_t dmadest;
+static inline void dma_done(uint32_t data) {
     (void)data;
     mutex_unlock(&stream_mutex);
 }
 
-static inline void dma_chain(void *data) {
+static inline void dma_chain(uint32_t data) {
     (void)data;
     spu_dma_transfer(sep_buffer[1], dmadest, dmacnt, 0, dma_done, 0);
 }
@@ -639,16 +640,16 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
         needed_bytes = got_bytes / stream->channels;
     }
 
-    /* Round it to max sample size and stereo */
-    if(needed_bytes & 7) {
-        needed_bytes = (needed_bytes + 8) & ~7;
+    /* Round it a bit */
+    if(needed_bytes & 3) {
+        needed_bytes = (needed_bytes + 4) & ~3;
     }
 
     needed_samples = bytes_to_samples(hnd, needed_bytes);
     write_pos = samples_to_bytes(hnd, stream->last_write_pos);
 
     if(data == NULL) {
-        /* Fill the "other" buffer with zeros */
+        /* Fill with zeros */
         spu_memset(stream->spu_ram_sch[0] + write_pos, 0, needed_bytes);
         spu_memset(stream->spu_ram_sch[1] + write_pos, 0, needed_bytes);
         return -3;
