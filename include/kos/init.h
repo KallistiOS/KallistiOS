@@ -48,16 +48,19 @@ __BEGIN_DECLS
     void (*bba_la_init_weak)(void) = ((flags) & INIT_NET) ? bba_la_init : NULL; \
     extern void bba_la_shutdown(void); \
     void (*bba_la_shutdown_weak)(void) = ((flags) & INIT_NET) ? bba_la_shutdown : NULL; \
+    extern int fs_romdisk_init(void); \
+    int (*fs_romdisk_init_weak)(void) = ((flags) & INIT_FS_ROMDISK) ? fs_romdisk_init : NULL; \
+    extern int fs_romdisk_shutdown(void); \
+    int (*fs_romdisk_shutdown_weak)(void) = ((flags) & INIT_FS_ROMDISK) ? fs_romdisk_shutdown : NULL; \
     extern int export_init(void); \
     int (*export_init_weak)(void) = ((flags) & INIT_EXPORT) ? export_init : NULL
 
 /** \brief  The init flags. Do not modify this directly! */
 extern uint32 __kos_init_flags;
 
-/** \brief  Define a romdisk for your program, if you'd like one.
-    \param  rd                  Pointer to the romdisk image in your code.
-*/
-#define KOS_INIT_ROMDISK(rd)    void * __kos_romdisk = (rd)
+/** \brief  Deprecated and not useful anymore. */
+#define KOS_INIT_ROMDISK(rd) \
+    static void *__old_romdisk __attribute__((unused)) = (rd)
 
 /** \brief  Built-in romdisk. Do not modify this directly! */
 extern void * __kos_romdisk;
@@ -81,9 +84,9 @@ extern void * __kos_romdisk;
     \see    dreamcast_initflags
     @{
 */
-/** \brief  Default init flags (IRQs on, preemption enabled). */
+/** \brief  Default init flags (IRQs on, preemption enabled, romdisks). */
 #define INIT_DEFAULT \
-    (INIT_IRQ | INIT_THD_PREEMPT)
+    (INIT_IRQ | INIT_THD_PREEMPT | INIT_FS_ROMDISK)
 
 #define INIT_NONE           0x0000  /**< \brief Don't init optional things */
 #define INIT_IRQ            0x0001  /**< \brief Enable IRQs at startup */
@@ -93,6 +96,7 @@ extern void * __kos_romdisk;
 #define INIT_MALLOCSTATS    0x0008  /**< \brief Enable malloc statistics */
 #define INIT_QUIET          0x0010  /**< \brief Disable dbgio */
 #define INIT_EXPORT         0x0020  /**< \brief Export kernel symbols */
+#define INIT_FS_ROMDISK     0x0040  /**< \brief Enable support for romdisks */
 /** @} */
 
 __END_DECLS
