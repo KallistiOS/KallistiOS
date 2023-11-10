@@ -5,6 +5,7 @@
 
 TARGET = exec.elf
 OBJS = exec.o romdisk.o
+KOS_ROMDISK_DIR = romdisk
 
 SUBTARGET = romdisk/sub.bin
 SUBOBJS = sub.o
@@ -28,9 +29,6 @@ $(SUBTARGET): $(SUBOBJS)
 
 romdisk.img: $(SUBTARGET)
 	$(KOS_GENROMFS) -f romdisk.img -d romdisk -v -x .keepme
-
-romdisk.o: romdisk.img
-	$(KOS_BASE)/utils/bin2o/bin2o romdisk.img romdisk romdisk.o
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
