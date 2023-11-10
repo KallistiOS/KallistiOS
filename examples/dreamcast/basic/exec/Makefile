@@ -28,7 +28,6 @@ $(SUBTARGET): $(SUBOBJS)
 	$(KOS_OBJCOPY) -O binary sub.elf $(SUBTARGET)
 
 romdisk.img: $(SUBTARGET)
-	$(KOS_GENROMFS) -f romdisk.img -d romdisk -v -x .keepme
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)

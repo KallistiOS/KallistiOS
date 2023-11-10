@@ -25,7 +25,6 @@ $(TARGET): $(OBJS)
 	kos-cc -o $(TARGET) $(OBJS) -lkmg -lpcx -lkosutils
 
 romdisk.img: romdisk/fruit.kmg romdisk/crate.pcx
-	$(KOS_GENROMFS) -f romdisk.img -d romdisk -v
 
 romdisk/fruit.kmg: fruit.jpg
 	$(KOS_BASE)/utils/vqenc/vqenc -t -v -q -k fruit.jpg
