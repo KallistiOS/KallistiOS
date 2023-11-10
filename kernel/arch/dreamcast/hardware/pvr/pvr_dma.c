@@ -23,10 +23,10 @@
 static semaphore_t dma_done;
 static int32_t dma_blocking;
 static pvr_dma_callback_t dma_callback;
-static void* dma_cbdata;
+static void *dma_cbdata;
 
 /* DMA registers */
-static vuint32  * const pvr_dma = (vuint32 *)0xa05f6800;
+static vuint32 * const pvr_dma = (vuint32 *)0xa05f6800;
 
 /* PVR Dma registers - Offset by 0xA05F6800 */
 #define PVR_STATE   0x00
@@ -46,7 +46,7 @@ static void pvr_dma_irq_hnd(uint32_t code) {
         /* This song and dance is necessary because the handler
            could chain to itself. */
         pvr_dma_callback_t cb = dma_callback;
-        void* d = dma_cbdata;
+        void *d = dma_cbdata;
 
         dma_callback = NULL;
         dma_cbdata = 0;

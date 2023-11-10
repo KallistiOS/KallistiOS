@@ -105,9 +105,9 @@ typedef void (*g2_dma_callback_t)(void *data);
     \param  callback        A function to call upon completion of the DMA.
     \param  cbdata          Data to pass to the callback function.
     \param  dir             SH4TOG2BUS or G2BUSTOSH4.
-    \param  mode            Any value; Here for compatibility.
+    \param  mode            Ignored; for compatibility only.
     \param  g2chn           See g2b_channels.
-    \param  sh4chn          Any value; Here for compatibility.
+    \param  sh4chn          Ignored; for compatibility only.
     \retval 0               On success.
     \retval -1              On failure. Sets errno as appropriate.
 

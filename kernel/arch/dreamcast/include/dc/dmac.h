@@ -6,7 +6,7 @@
 */
 
 /** \file   dc/dmac.h
-    \brief  Macros to access the DMAC(Direct Memory Access Controller) 
+    \brief  Macros to access the DMA controller
     registers. 
 
     This header provides a set of macros to facilitate checking

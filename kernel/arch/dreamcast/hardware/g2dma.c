@@ -40,7 +40,7 @@ typedef struct {
 static semaphore_t dma_done[4];
 static int dma_blocking[4];
 static g2_dma_callback_t dma_callback[4];
-static void * dma_cbdata[4];
+static void *dma_cbdata[4];
 
 static int dma_init;
 
