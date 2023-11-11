@@ -368,7 +368,7 @@ sfxhnd_t snd_sfx_load(const char *fn) {
            wavhdr.fmt.format);
 
     sample_count = wavhdr.fmt.sample_size >= 8 
-        ? wavhdr.chunk.size / (wavhdr.fmt.sample_size / 8 * wavhdr.fmt.channels) 
+        ? wavhdr.chunk.size / ((wavhdr.fmt.sample_size / 8) * wavhdr.fmt.channels) 
         : wavhdr.chunk.size / (0.5 * wavhdr.fmt.channels);
 
     if(sample_count > 65534) {
