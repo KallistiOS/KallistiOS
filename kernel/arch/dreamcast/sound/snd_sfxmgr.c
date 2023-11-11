@@ -167,7 +167,7 @@ static int read_wav_header(file_t fd, wavhdr_t *wavhdr) {
     return 0;
 }
 
-static uint8_t* read_wav_data(file_t fd, wavhdr_t *wavhdr) {
+static uint8_t *read_wav_data(file_t fd, wavhdr_t *wavhdr) {
     /* Allocate memory for WAV data */
     uint8_t *wav_data = memalign(32, wavhdr->chunk.size);
 
@@ -397,7 +397,7 @@ sfxhnd_t snd_sfx_load(const char *fn) {
 
 int snd_sfx_play_chn(int chn, sfxhnd_t idx, int vol, int pan) {
     int size;
-    snd_effect_t * t = (snd_effect_t *)idx;
+    snd_effect_t *t = (snd_effect_t *)idx;
     AICA_CMDSTR_CHANNEL(tmp, cmd, chan);
 
     size = t->len;
