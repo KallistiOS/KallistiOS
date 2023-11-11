@@ -18,7 +18,3 @@ audio formats:
 Use the following command to convert a 16-bit stereo PCM WAV file (PCM16_stereo.wav) to a 8-bit stero PCM WAV file (PCM8_mono.wav):
 
 ffmpeg -i PCM16_stereo.wav -acodec pcm_u8 -ac 1 PCM8_mono.wav
-
-
-
-
