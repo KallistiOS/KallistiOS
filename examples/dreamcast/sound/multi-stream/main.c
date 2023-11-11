@@ -14,14 +14,17 @@
 
 static void draw_instructions(int faucet_vol, int brushing_vol);
 
-static cont_state_t* get_cont_state();
+static cont_state_t *get_cont_state();
 static int button_pressed(uint32_t current_buttons, uint32_t changed_buttons, uint32_t button);
 
 int main(int argc, char **argv) {
     uint8_t faucet_volume = 240;
     uint8_t brushing_volume = 240;
     int volume_changed = 1;
-    cont_state_t* cond;
+    cont_state_t *cond;
+    uint32_t current_buttons = 0;
+    uint32_t changed_buttons = 0;
+    uint32_t previous_buttons = 0;
 
     vid_set_mode(DM_640x480, PM_RGB555);
     // Initialize sound system and WAV
@@ -37,9 +40,6 @@ int main(int argc, char **argv) {
     wav_play(faucet);
     wav_play(brushing);
 
-    uint32_t current_buttons = 0;
-    uint32_t changed_buttons = 0;
-    uint32_t previous_buttons = 0;
 
     for(;;) {
         cond = get_cont_state();
@@ -129,13 +129,13 @@ static void draw_instructions(int faucet_vol, int brushing_vol) {
     bfont_draw_str(vram_s + y*640+x, 640, color, "Press Start to exit program");
 }
 
-static cont_state_t* get_cont_state() {
-    maple_device_t* cont;
-    cont_state_t* state;
+static cont_state_t *get_cont_state() {
+    maple_device_t *cont;
+    cont_state_t *state;
 
     cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
     if(cont) {
-        state = (cont_state_t*)maple_dev_status(cont);
+        state = (cont_state_t *)maple_dev_status(cont);
         return state;
     }
 
