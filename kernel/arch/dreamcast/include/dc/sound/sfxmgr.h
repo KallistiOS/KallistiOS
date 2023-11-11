@@ -32,7 +32,7 @@ __BEGIN_DECLS
     Each loaded sound effect will be assigned one of these, which is to be used
     for operations related to the effect, including playing it or unloading it.
 */
-typedef uint32 sfxhnd_t;
+typedef uint32_t sfxhnd_t;
 
 /** \brief  Invalid sound effect handle value.
 

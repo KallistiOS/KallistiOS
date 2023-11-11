@@ -340,8 +340,9 @@ err_occurred:
 sfxhnd_t snd_sfx_load(const char *fn) {
     file_t fd;
     wavhdr_t wavhdr;
-    uint8_t *wav_data;
     snd_effect_t *effect;
+    uint8_t *wav_data;
+    uint32_t sample_count;
 
     dbglog(DBG_DEBUG, "snd_sfx: loading effect %s\n", fn);
 
@@ -365,6 +366,14 @@ sfxhnd_t snd_sfx_load(const char *fn) {
            wavhdr.fmt.sample_size, 
            wavhdr.chunk.size, 
            wavhdr.fmt.format);
+
+    sample_count = wavhdr.fmt.sample_size >= 8 
+        ? wavhdr.chunk.size / (wavhdr.fmt.sample_size / 8 * wavhdr.fmt.channels) 
+        : wavhdr.chunk.size / (0.5 * wavhdr.fmt.channels);
+
+    if(sample_count > 65534) {
+        dbglog(DBG_WARNING, "WAVE file is over 65534 samples\n");
+    }
 
     /* Read WAV data */
     wav_data = read_wav_data(fd, &wavhdr);
@@ -452,7 +461,7 @@ int snd_sfx_play(sfxhnd_t idx, int vol, int pan) {
         return -1;
     }
     else {
-        sfx_nextchan = (chn + 2) % 64;  // in case of stereo
+        sfx_nextchan = (chn + 2) % 64;  /* in case of stereo */
         return snd_sfx_play_chn(chn, idx, vol, pan);
     }
 }
