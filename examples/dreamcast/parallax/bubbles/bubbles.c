@@ -263,7 +263,7 @@ int main(int argc, char **argv) {
     plx_mat3d_mode(PLX_MAT_MODELVIEW);
 
     /* Do the test */
-    printf("Bubbles KGL sample: press START to exit, A to toggle sphere type\n");
+    printf("Bubbles Parallax sample: press START to exit, A to toggle sphere type\n");
     do_sphere_test();
 
     return 0;
