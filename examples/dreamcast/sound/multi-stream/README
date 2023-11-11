@@ -1,0 +1,5 @@
+The sounds for this example originated from https://gamesounds.xyz/?dir=Sound%20Effects/Bathroom.
+
+They were then converted to a ADPCM wav file using ffmpeg with the following command:
+
+ffmpeg -i PCM16_stereo.wav -acodec adpcm_yamaha -ac 2 ADPCM_stereo.wav
