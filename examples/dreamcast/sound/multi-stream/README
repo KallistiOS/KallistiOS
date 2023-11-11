@@ -1,5 +1,5 @@
 Overview
-This example demonstrates audio playback using libwav (kos-port). The sounds utilized in this example were sourced from https://gamesounds.xyz/?dir=Sound%20Effects/Bathroom and converted to a ADPCM format.
+This example demonstrates audio playback using libwav (kos-port). The sounds utilized in this example were sourced from https://gamesounds.xyz/?dir=Sound%20Effects/Bathroom and converted to ADPCM format.
 
 Conversion to ADPCM Format
 This conversion was achieved using FFmpeg, a powerful multimedia framework. The following command was used for conversion:
