@@ -8,8 +8,8 @@
 */
 
 #include <kos.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
+#include <KGL/gl.h>
+#include <KGL/glu.h>
 
 #define PVR_HDR_SIZE 0x20
 

@@ -8,8 +8,8 @@
 
 #include <kos.h>
 
-#include <GL/gl.h>
-#include <GL/glut.h>
+#include <KGL/gl.h>
+#include <KGL/glut.h>
 
 #include <stdlib.h>
 #include <time.h>

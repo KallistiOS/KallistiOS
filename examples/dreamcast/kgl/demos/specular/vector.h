@@ -8,7 +8,7 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 
-#include <GL/gl.h>
+#include <KGL/gl.h>
 
 typedef float vector3f[3];
 typedef float vector4f[4];

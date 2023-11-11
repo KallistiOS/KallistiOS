@@ -20,7 +20,7 @@ rm-elf:
 	-rm -f $(TARGET) romdisk.*
 
 $(TARGET): $(OBJS)
-	kos-cc -o $(TARGET) $(OBJS) -L$(KOS_BASE)/lib -lGL -lpcx -lkosutils
+	kos-cc -o $(TARGET) $(OBJS) -L$(KOS_BASE)/lib -lKGL -lpcx -lkosutils
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
