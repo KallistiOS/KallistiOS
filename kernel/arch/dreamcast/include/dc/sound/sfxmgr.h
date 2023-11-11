@@ -45,7 +45,10 @@ typedef uint32 sfxhnd_t;
 
     This function loads a sound effect from a WAV file and returns a handle to
     it. The sound effect can be either stereo or mono, and must either be 8-bit
-    or 16-bit uncompressed PCM samples or 4-bit Yamaha ADPCM.
+    or 16-bit uncompressed PCM samples, or 4-bit Yamaha ADPCM.
+
+    \warning The sound effect you are loading must be at most 65534 samples 
+    in length.
 
     \param  fn              The file to load.
     \return                 A handle to the sound effect on success. On error,
