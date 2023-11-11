@@ -8,7 +8,8 @@
 #include <kos.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include <GL/glut.h>
+#include <GL/glext.h>
+#include <GL/glkos.h>
 
 /*
 
@@ -267,7 +268,7 @@ void loadtxr(const char *fname, GLuint *txr) {
                      0,
                      GL_RGB,
                      texFormat | texColor,
-                     texBuf);       
+                     texBuf);
 }
 
 int main(int argc, char **argv) {
@@ -300,9 +301,9 @@ int main(int argc, char **argv) {
 
     /* Load a texture and make it look nice */
     loadtxr("/rd/glass.pvr", &texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_FILTER, GL_FILTER_BILINEAR);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATEALPHA);
-
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
     printf("texture is %08x\n", texture);
 
@@ -394,7 +395,7 @@ int main(int argc, char **argv) {
         cubes[3]->draw();
 
         /* Finish the frame */
-        glutSwapBuffers();            
+        glKosSwapBuffers();
     }
 
     for(int i = 0; i < 4; i++) {

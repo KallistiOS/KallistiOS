@@ -1,10 +1,11 @@
 #
-# KallistiGL test program in C++
-# (c)2001 Megan Potter
+# Nehe26 example adapted from KGL
+# (c)2013-2014 Josh Pearson
+# (c)2001 Benoit Miller
 #   
 
-TARGET = gltest.elf
-OBJS = gltest.o romdisk.o
+TARGET = nehe26.elf
+OBJS = nehe26.o romdisk.o
 KOS_ROMDISK_DIR = romdisk
 
 all: rm-elf $(TARGET)
@@ -18,7 +19,7 @@ rm-elf:
 	-rm -f $(TARGET) romdisk.*
 
 $(TARGET): $(OBJS)
-	kos-c++ -o $(TARGET) $(OBJS) -lGL -lm -lkosutils
+	kos-cc -o $(TARGET) $(OBJS) -L$(KOS_BASE)/lib -lGL -lm
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
