@@ -22,10 +22,12 @@
 __BEGIN_DECLS
 
 #include <arch/types.h>
+#include <arch/memory.h>
 #include <dc/g2bus.h>
 
-/** \brief  Waits for the sound FIFO to empty. */
-void spu_write_wait(void);
+/** \brief  Sound ram address from the SH4 side */
+#define SPU_RAM_BASE 0x00800000
+#define SPU_RAM_UNCACHED_BASE (MEM_AREA_P2_BASE | SPU_RAM_BASE)
 
 /** \brief  Copy a block of data to sound RAM.
 
@@ -37,7 +39,7 @@ void spu_write_wait(void);
     \param  length          The number of bytes to copy. Automatically rounded
                             up to be a multiple of 4.
 */
-void spu_memload(uint32 to, void *from, int length);
+void spu_memload(uintptr_t to, void *from, size_t length);
 
 
 /** \brief  Copy a block of data to sound RAM.
@@ -51,7 +53,7 @@ void spu_memload(uint32 to, void *from, int length);
     \param  length          The number of bytes to copy. Automatically rounded
                             up to be a multiple of 4.
 */
-void spu_memload_sq(uint32 to, void *from, int length);
+void spu_memload_sq(uintptr_t to, void *from, size_t length);
 
 /** \brief  Copy a block of data from sound RAM.
 
@@ -63,7 +65,7 @@ void spu_memload_sq(uint32 to, void *from, int length);
     \param  length          The number of bytes to copy. Automatically rounded
                             up to be a multiple of 4.
 */
-void spu_memread(void *to, uint32 from, int length);
+void spu_memread(void *to, uintptr_t from, size_t length);
 
 /** \brief  Set a block of sound RAM to the specified value.
 
@@ -76,7 +78,7 @@ void spu_memread(void *to, uint32 from, int length);
     \param  length          The number of bytes to copy. Automatically rounded
                             up to be a multiple of 4.
 */
-void spu_memset(uint32 to, uint32 what, int length);
+void spu_memset(uintptr_t to, uint32_t what, size_t length);
 
 /* DMA copy from SH-4 RAM to SPU RAM; length must be a multiple of 32,
    and the source and destination addresses must be aligned on 32-byte

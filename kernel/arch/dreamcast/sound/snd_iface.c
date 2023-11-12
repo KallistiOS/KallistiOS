@@ -19,9 +19,6 @@
 
 #include "arm/aica_cmd_iface.h"
 
-/* the address of the sound ram from the SH4 side */
-#define SPU_RAM_BASE        0xa0800000
-
 /* Are we initted? */
 static int initted = 0;
 
@@ -83,10 +80,10 @@ int snd_sh4_to_aica(void *packet, uint32 size) {
     sem_wait(&sem_qram);
 
     /* Set these up for reference */
-    qa = SPU_RAM_BASE + AICA_MEM_CMD_QUEUE;
+    qa = SPU_RAM_UNCACHED_BASE + AICA_MEM_CMD_QUEUE;
     assert_msg(g2_read_32(qa + offsetof(aica_queue_t, valid)), "Queue is not yet valid");
 
-    bot = SPU_RAM_BASE + g2_read_32(qa + offsetof(aica_queue_t, data));
+    bot = SPU_RAM_UNCACHED_BASE + g2_read_32(qa + offsetof(aica_queue_t, data));
     top = bot + g2_read_32(qa + offsetof(aica_queue_t, size));
     start = bot + g2_read_32(qa + offsetof(aica_queue_t, head));
     pkt32 = (uint32 *)packet;
@@ -125,12 +122,12 @@ int snd_sh4_to_aica(void *packet, uint32 size) {
 
 /* Start processing requests in the queue */
 void snd_sh4_to_aica_start(void) {
-    g2_write_32(SPU_RAM_BASE + AICA_MEM_CMD_QUEUE + offsetof(aica_queue_t, process_ok), 1);
+    g2_write_32(SPU_RAM_UNCACHED_BASE + AICA_MEM_CMD_QUEUE + offsetof(aica_queue_t, process_ok), 1);
 }
 
 /* Stop processing requests in the queue */
 void snd_sh4_to_aica_stop(void) {
-    g2_write_32(SPU_RAM_BASE + AICA_MEM_CMD_QUEUE + offsetof(aica_queue_t, process_ok), 0);
+    g2_write_32(SPU_RAM_UNCACHED_BASE + AICA_MEM_CMD_QUEUE + offsetof(aica_queue_t, process_ok), 0);
 }
 
 /* Transfer one packet of data from the AICA->SH4 queue. Expects to
@@ -143,12 +140,12 @@ int snd_aica_to_sh4(void *packetout) {
     sem_wait(&sem_qram);
 
     /* Set these up for reference */
-    bot = SPU_RAM_BASE + AICA_MEM_RESP_QUEUE;
+    bot = SPU_RAM_UNCACHED_BASE + AICA_MEM_RESP_QUEUE;
     assert_msg(g2_read_32(bot + offsetof(aica_queue_t, valid)), "Queue is not yet valid");
 
-    top = SPU_RAM_BASE + AICA_MEM_RESP_QUEUE + g2_read_32(bot + offsetof(aica_queue_t, size));
-    start = SPU_RAM_BASE + AICA_MEM_RESP_QUEUE + g2_read_32(bot + offsetof(aica_queue_t, tail));
-    stop = SPU_RAM_BASE + AICA_MEM_RESP_QUEUE + g2_read_32(bot + offsetof(aica_queue_t, head));
+    top = SPU_RAM_UNCACHED_BASE + AICA_MEM_RESP_QUEUE + g2_read_32(bot + offsetof(aica_queue_t, size));
+    start = SPU_RAM_UNCACHED_BASE + AICA_MEM_RESP_QUEUE + g2_read_32(bot + offsetof(aica_queue_t, tail));
+    stop = SPU_RAM_UNCACHED_BASE + AICA_MEM_RESP_QUEUE + g2_read_32(bot + offsetof(aica_queue_t, head));
     cnt = 0;
     pkt32 = (uint32 *)packetout;
 
@@ -171,7 +168,7 @@ int snd_aica_to_sh4(void *packetout) {
     stop = start + size * 4;
 
     if(stop > top)
-        stop -= top - (SPU_RAM_BASE + AICA_MEM_RESP_QUEUE);
+        stop -= top - (SPU_RAM_UNCACHED_BASE + AICA_MEM_RESP_QUEUE);
 
     while(start != stop) {
         /* Fifo wait if necessary */
@@ -193,7 +190,7 @@ int snd_aica_to_sh4(void *packetout) {
     }
 
     /* Finally, write a new tail value to signify that we've removed a packet */
-    g2_write_32(bot + offsetof(aica_queue_t, tail), start - (SPU_RAM_BASE + AICA_MEM_RESP_QUEUE));
+    g2_write_32(bot + offsetof(aica_queue_t, tail), start - (SPU_RAM_UNCACHED_BASE + AICA_MEM_RESP_QUEUE));
 
     sem_signal(&sem_qram);
 
