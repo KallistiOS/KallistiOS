@@ -409,6 +409,7 @@ void snd_stream_destroy(snd_stream_hnd_t hnd) {
 
     snd_stream_stop(hnd);
     snd_mem_free(streams[hnd].spu_ram_sch[0]);
+    dbglog(DBG_INFO, "snd_stream: dealloc'd channels %d/%d\n", streams[hnd].ch[0], streams[hnd].ch[1]);
     memset(streams + hnd, 0, sizeof(streams[0]));
 }
 
