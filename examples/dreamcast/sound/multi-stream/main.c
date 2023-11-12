@@ -49,11 +49,11 @@ int main(int argc, char **argv) {
         
         // Play wav files if they arent playing already
         if(button_pressed(current_buttons, changed_buttons, CONT_X)) {
-            if(!wav_isplaying(faucet))
+            if(!wav_is_playing(faucet))
                 wav_play(faucet);
         }
         if(button_pressed(current_buttons, changed_buttons, CONT_Y)) {
-            if(!wav_isplaying(brushing))
+            if(!wav_is_playing(brushing))
                 wav_play(brushing);
         }
         // Stop playing faucet
