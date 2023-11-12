@@ -219,6 +219,8 @@ static void snd_pcm16_split_unaligned(void *buffer, void *left, void *right, siz
 }
 
 void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t size) {
+    g2_ctx_t ctx;
+
     /* SPU memory in cached area */
     left |= SPU_RAM_BASE;
     right |= SPU_RAM_BASE;
@@ -231,8 +233,9 @@ void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t 
     /* Set store queue memory area as desired */
     SET_QACR_REGS(left, right);
 
-    int old = irq_disable();
-    do { } while(FIFO_STATUS & (FIFO_SH4 | FIFO_G2));
+    /* Make sure the FIFOs are empty */
+    ctx = g2_lock();
+    g2_fifo_wait();
 
     /* Separating channels and do fill/write queues as many times necessary. */
     snd_pcm16_split_sq_start(data, masked_left, masked_right, size);
@@ -241,7 +244,7 @@ void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t 
     uint32_t *d = (uint32_t *)MEM_AREA_SQ_BASE;
     d[0] = d[8] = 0;
 
-    irq_restore(old);
+    g2_unlock(ctx);
     sq_unlock();
 }
 

@@ -62,7 +62,8 @@ void spu_memload(uintptr_t dst, void *src_void, size_t length) {
 
 void spu_memload_sq(uintptr_t dst, void *src_void, size_t length) {
     uint8_t *src = (uint8_t *)src_void;
-    int aligned_len, old;
+    int aligned_len;
+    g2_ctx_t ctx;
 
     /* Round up to the nearest multiple of 4 */
     if(length & 3) {
@@ -76,10 +77,13 @@ void spu_memload_sq(uintptr_t dst, void *src_void, size_t length) {
     /* Add in the SPU RAM base (cached area) */
     dst += SPU_RAM_BASE;
 
-    old = irq_disable();
-    do { } while(FIFO_STATUS & (FIFO_SH4 | FIFO_G2));
+    /* Make sure the FIFOs are empty */
+    ctx = g2_lock();
+    g2_fifo_wait();
+
     sq_cpy((void *)dst, src, aligned_len);
-    irq_restore(old);
+
+    g2_unlock(ctx);
 
     if(length > 0) {
         /* Make sure the destination is in a non-cached area */
