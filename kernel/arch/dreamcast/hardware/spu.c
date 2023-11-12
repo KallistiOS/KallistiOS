@@ -79,7 +79,6 @@ void spu_memload_sq(uintptr_t dst, void *src_void, size_t length) {
 
     /* Make sure the FIFOs are empty */
     ctx = g2_lock();
-    g2_fifo_wait();
 
     sq_cpy((void *)dst, src, aligned_len);
 

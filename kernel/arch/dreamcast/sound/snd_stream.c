@@ -235,7 +235,6 @@ void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t 
 
     /* Make sure the FIFOs are empty */
     ctx = g2_lock();
-    g2_fifo_wait();
 
     /* Separating channels and do fill/write queues as many times necessary. */
     snd_pcm16_split_sq_start(data, masked_left, masked_right, size);

@@ -161,7 +161,7 @@ static inline g2_ctx_t g2_lock(void) {
     G2_DMA_SUSPEND_BBA = 1;
     G2_DMA_SUSPEND_CH2 = 1;
 
-    while(FIFO_STATUS & FIFO_SH4);
+    while(FIFO_STATUS & (FIFO_SH4 | FIFO_G2));
 
     return ctx;
 }
