@@ -706,12 +706,15 @@ int getaddrinfo(const char *nodename, const char *servname,
         return 0;
     }
 
-    // Try to handle input as IPv4 address
-    uint32_t ip4_addr;
-    if (inet_pton(AF_INET, nodename, &ip4_addr) > 0) {
-        ihints.ai_family = AF_INET;
-        *res = add_ipv4_ai(ip4_addr, port, &ihints, NULL);
-        return 0;
+    /* Try to handle input as an IPv4 address */
+    if(ihints.ai_family == AI_INET || ihints.ai_family == AF_UNSPEC) {
+        uint32_t ip4_addr;
+
+        if(inet_pton(AF_INET, nodename, &ip4_addr) > 0) {
+            ihints.ai_family = AF_INET;
+            *res = add_ipv4_ai(ip4_addr, port, &ihints, NULL);
+            return 0;
+        }
     }
 
     // Try to handle input as IPv6 address
