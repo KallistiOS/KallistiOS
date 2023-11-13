@@ -331,6 +331,8 @@ snd_stream_hnd_t snd_stream_alloc(snd_stream_callback_t cb, int bufsize) {
     int i, old;
     snd_stream_hnd_t hnd;
 
+    mutex_lock(&stream_mutex);
+
     /* Get an unused handle */
     hnd = -1;
     old = irq_disable();
@@ -371,6 +373,8 @@ snd_stream_hnd_t snd_stream_alloc(snd_stream_callback_t cb, int bufsize) {
     streams[hnd].ch[1] = snd_sfx_chn_alloc();
     dbglog(DBG_INFO, "snd_stream: alloc'd channels %d/%d\n", streams[hnd].ch[0], streams[hnd].ch[1]);
 
+    mutex_unlock(&stream_mutex);
+
     return hnd;
 }
 
@@ -388,6 +392,8 @@ snd_stream_hnd_t snd_stream_reinit(snd_stream_hnd_t hnd, snd_stream_callback_t c
 
 void snd_stream_destroy(snd_stream_hnd_t hnd) {
     filter_t *c, *n;
+
+    mutex_lock(&stream_mutex);
 
     CHECK_HND(hnd);
 
@@ -411,6 +417,8 @@ void snd_stream_destroy(snd_stream_hnd_t hnd) {
     snd_mem_free(streams[hnd].spu_ram_sch[0]);
     dbglog(DBG_INFO, "snd_stream: dealloc'd channels %d/%d\n", streams[hnd].ch[0], streams[hnd].ch[1]);
     memset(streams + hnd, 0, sizeof(streams[0]));
+
+    mutex_unlock(&stream_mutex);
 }
 
 /* Shut everything down and free mem */
