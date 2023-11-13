@@ -26,8 +26,8 @@
 static int initted = 0;
 
 /* This will come from a seperately linked object file */
-extern uint8 snd_stream_drv[];
-extern uint8 snd_stream_drv_end[];
+extern uint8_t snd_stream_drv[];
+extern uint8_t snd_stream_drv_end[];
 
 /* Thread semaphore */
 static semaphore_t sem_qram;
@@ -46,7 +46,7 @@ int snd_init(void) {
         if(amt % 4)
             amt = (amt + 4) & ~3;
 
-        printf("snd_init(): loading %d bytes into SPU RAM\n", amt);
+        dbglog(DBG_DEBUG, "snd_init(): loading %d bytes into SPU RAM\n", amt);
         spu_memload(0, snd_stream_drv, amt);
 
         /* Enable the AICA and give it a few ms to start up */
@@ -76,8 +76,8 @@ void snd_shutdown(void) {
 }
 
 /* Submit a request to the SH4->AICA queue; size is in uint32's */
-int snd_sh4_to_aica(void *packet, uint32 size) {
-    uint32  qa, bot, start, top, *pkt32, cnt;
+int snd_sh4_to_aica(void *packet, uint32_t size) {
+    uint32_t  qa, bot, start, top, *pkt32, cnt;
     assert_msg(size < 256, "SH4->AICA packets may not be >256 uint32's long");
 
     sem_wait(&sem_qram);
@@ -204,9 +204,9 @@ int snd_aica_to_sh4(void *packetout) {
    running in an interrupt handler (thread perhaps, of whoever
    is using us). */
 void snd_poll_resp(void) {
-    int     rv;
-    uint32      pkt[AICA_CMD_MAX_SIZE];
-    aica_cmd_t  * pktcmd;
+    int rv;
+    uint32 pkt[AICA_CMD_MAX_SIZE];
+    aica_cmd_t *pktcmd;
 
     pktcmd = (aica_cmd_t *)pkt;
 
