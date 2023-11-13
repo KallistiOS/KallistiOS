@@ -335,7 +335,6 @@ snd_stream_hnd_t snd_stream_alloc(snd_stream_callback_t cb, int bufsize) {
 
     /* Get an unused handle */
     hnd = -1;
-    old = irq_disable();
 
     for(i = 0; i < SND_STREAM_MAX; i++) {
         if(!streams[i].initted) {
@@ -347,10 +346,10 @@ snd_stream_hnd_t snd_stream_alloc(snd_stream_callback_t cb, int bufsize) {
     if(hnd != -1)
         streams[hnd].initted = 1;
 
-    irq_restore(old);
-
-    if(hnd == -1)
+    if(hnd == -1) {
+        mutex_unlock(&stream_mutex);
         return SND_STREAM_INVALID;
+    }
 
     /* Default this for now */
     streams[hnd].buffer_size = bufsize;
@@ -397,8 +396,10 @@ void snd_stream_destroy(snd_stream_hnd_t hnd) {
 
     CHECK_HND(hnd);
 
-    if(!streams[hnd].initted)
+    if(!streams[hnd].initted) {
+        mutex_unlock(&stream_mutex);
         return;
+    }
 
     snd_sfx_chn_free(streams[hnd].ch[0]);
     snd_sfx_chn_free(streams[hnd].ch[1]);
