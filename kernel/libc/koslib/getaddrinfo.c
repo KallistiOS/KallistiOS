@@ -717,12 +717,15 @@ int getaddrinfo(const char *nodename, const char *servname,
         }
     }
 
-    // Try to handle input as IPv6 address
-    struct in6_addr addr;
-    if (inet_pton(AF_INET6, nodename, &addr.s6_addr) > 0) {
-        ihints.ai_family = AF_INET6;
-        *res = add_ipv6_ai(&addr, port, &ihints, NULL);
-        return 0;
+    /* Try to handle input as an IPv6 address */
+    if(ihints.ai_family == AF_INET6 || ihints.ai_family == AF_UNSPEC) {
+        struct in6_addr addr;
+
+        if(inet_pton(AF_INET6, nodename, &addr.s6_addr) > 0) {
+            ihints.ai_family = AF_INET6;
+            *res = add_ipv6_ai(&addr, port, &ihints, NULL);
+            return 0;
+        }
     }
 
     /* If we've gotten this far, do the lookup. */
