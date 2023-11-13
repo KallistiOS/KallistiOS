@@ -205,7 +205,7 @@ int snd_aica_to_sh4(void *packetout) {
    is using us). */
 void snd_poll_resp(void) {
     int rv;
-    uint32 pkt[AICA_CMD_MAX_SIZE];
+    uint32_t pkt[AICA_CMD_MAX_SIZE];
     aica_cmd_t *pktcmd;
 
     pktcmd = (aica_cmd_t *)pkt;
