@@ -26,6 +26,7 @@
 __BEGIN_DECLS
 
 #include <arch/types.h>
+#include <stdint.h>
 
 /** \brief  Sound effect handle type.
 
