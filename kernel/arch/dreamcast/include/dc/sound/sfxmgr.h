@@ -26,13 +26,14 @@
 __BEGIN_DECLS
 
 #include <arch/types.h>
+#include <stdint.h>
 
 /** \brief  Sound effect handle type.
 
     Each loaded sound effect will be assigned one of these, which is to be used
     for operations related to the effect, including playing it or unloading it.
 */
-typedef uint32 sfxhnd_t;
+typedef uint32_t sfxhnd_t;
 
 /** \brief  Invalid sound effect handle value.
 
@@ -45,7 +46,10 @@ typedef uint32 sfxhnd_t;
 
     This function loads a sound effect from a WAV file and returns a handle to
     it. The sound effect can be either stereo or mono, and must either be 8-bit
-    or 16-bit uncompressed PCM samples or 4-bit Yamaha ADPCM.
+    or 16-bit uncompressed PCM samples, or 4-bit Yamaha ADPCM.
+
+    \warning The sound effect you are loading must be at most 65534 samples 
+    in length.
 
     \param  fn              The file to load.
     \return                 A handle to the sound effect on success. On error,

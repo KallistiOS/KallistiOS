@@ -21,9 +21,6 @@
 #define CENTER 128
 #define RIGHT 255
 
-extern uint8 romdisk[];
-KOS_INIT_ROMDISK(romdisk);
-
 static void draw_instructions(uint8_t volume);
 
 static cont_state_t *get_cont_state();

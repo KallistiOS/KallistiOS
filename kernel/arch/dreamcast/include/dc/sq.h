@@ -4,6 +4,7 @@
    Copyright (C) 2000-2001 Andrew Kieschnick
    Copyright (C) 2023 Falco Girgis
    Copyright (C) 2023 Andy Barajas
+   Copyright (C) 2023 Ruslan Rostovtsev
 */
 
 /** \file    dc/sq.h
@@ -53,20 +54,55 @@ __BEGIN_DECLS
 /** \brief   Set Store Queue QACR* registers
     \ingroup store_queues
 */
-#define SET_QACR_REGS(dest) \
+#define SET_QACR_REGS(dest0, dest1) \
     do { \
-        uint32_t val = ((uint32_t)(dest)) >> 24; \
-        QACR0 = val; \
-        QACR1 = val; \
+        QACR0 = ((uintptr_t)(dest0)) >> 24; \
+        QACR1 = ((uintptr_t)(dest1)) >> 24; \
     } while(0)
 
-/** \brief   Mask dest to Store Queue area
+/** \brief   Mask dest to Store Queue area as address
+    \ingroup store_queues
+*/
+#define SQ_MASK_DEST_ADDR(dest) \
+    (MEM_AREA_SQ_BASE | ((uintptr_t)(dest) & 0x03ffffe0))
+
+/** \brief   Mask dest to Store Queue area as pointer
     \ingroup store_queues
 */
 #define SQ_MASK_DEST(dest) \
-        ((uint32_t *)(void *) \
-        (MEM_AREA_SQ_BASE |   \
-        (((uint32_t)(dest)) & 0x03ffffe0)))
+    ((uint32_t *)(void *) SQ_MASK_DEST_ADDR(dest))
+
+/** \brief  Lock Store Queues
+    \ingroup store_queues
+    
+    Locks the store queues so that they cannot be used from another thread 
+    until unlocked. 
+    
+    \warning
+    This function is called automatically by the store queue API provided by KOS; 
+    however, it must be called manually when driving the SQs directly from outside 
+    of this API. 
+    
+    \sa sq_unlock()
+*/
+void sq_lock(void);
+
+/** \brief  Unlock Store Queues
+    \ingroup store_queues
+    
+    Unlocks the store queues so that they can be used from any thread. 
+    
+    \note 
+    sq_lock() should've already been called previously.
+    
+    \warning
+    sq_lock() and sq_unlock() are called automatically by the store queue API provided 
+    by KOS; however, they must be called manually when driving the SQs directly from 
+    outside this API.
+    
+    \sa sq_lock()
+*/
+void sq_unlock(void);
 
 /** \brief   Copy a block of memory.
     \ingroup store_queues
@@ -99,7 +135,7 @@ void * sq_cpy(void *dest, const void *src, size_t n);
     and only the low 8-bits are used from c.
 
     \param  dest            The address to begin setting at (32-byte aligned).
-    \param  src             The value to set (in the low 8-bits).
+    \param  c               The value to set (in the low 8-bits).
     \param  n               The number of bytes to set (multiple of 32).
     \return                 The original value of dest.
 

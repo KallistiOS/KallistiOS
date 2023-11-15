@@ -89,6 +89,16 @@ void arch_init_net(void) {
 void (*init_net_weak)(void) __attribute__((weak));
 void (*net_shutdown_weak)(void) __attribute__((weak));
 
+int (*fs_romdisk_init_weak)(void) __attribute__((weak));
+int (*fs_romdisk_shutdown_weak)(void) __attribute__((weak));
+int (*fs_romdisk_mount_builtin_weak)(void) __attribute__((weak));
+int (*fs_romdisk_mount_builtin_weak_legacy)(void) __attribute__((weak));
+
+/* Mount the built-in romdisk to /rd. */
+int fs_romdisk_mount_builtin(void) {
+    return fs_romdisk_mount("/rd", __kos_romdisk, 0);
+}
+
 /* Auto-init stuff: override with a non-weak symbol if you don't want all of
    this to be linked into your code (and do the same with the
    arch_auto_shutdown function too). */
@@ -141,7 +151,10 @@ int  __attribute__((weak)) arch_auto_init(void) {
     fs_init();          /* VFS */
     fs_pty_init();          /* Pty */
     fs_ramdisk_init();      /* Ramdisk */
-    fs_romdisk_init();      /* Romdisk */
+
+    if(fs_romdisk_init_weak) {
+        fs_romdisk_init_weak(); /* Romdisk */
+    }
 
 /* The arc4random_buf() function used for random & urandom is only
    available in newlib starting with version 2.4.0 */
@@ -153,9 +166,10 @@ int  __attribute__((weak)) arch_auto_init(void) {
 
     hardware_periph_init();     /* DC peripheral init */
 
-    if(__kos_romdisk != NULL) {
-        fs_romdisk_mount("/rd", __kos_romdisk, 0);
-    }
+    if(fs_romdisk_mount_builtin_weak)
+        fs_romdisk_mount_builtin_weak();
+    else if(fs_romdisk_mount_builtin_weak_legacy)
+        fs_romdisk_mount_builtin_weak_legacy();
 
 #ifndef _arch_sub_naomi
     if(!(__kos_init_flags & INIT_NO_DCLOAD) && *DCLOADMAGICADDR == DCLOADMAGICVALUE) {
@@ -210,7 +224,9 @@ void  __attribute__((weak)) arch_auto_shutdown(void) {
     fs_dev_shutdown();
 #endif
     fs_ramdisk_shutdown();
-    fs_romdisk_shutdown();
+    if(fs_romdisk_shutdown_weak) {
+        fs_romdisk_shutdown_weak();
+    }
     fs_pty_shutdown();
     fs_shutdown();
     thd_shutdown();

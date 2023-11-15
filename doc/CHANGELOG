@@ -193,6 +193,16 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - DC  Added vmu functions to check/enable/disable the extra 41 blocks [AB]
 - *** Added driver for the SH4's Watchdog Timer peripheral [FG]
 - DC  Added Moop powered fast path to sq_cpy, added TapamN pvr related sq functions [AB]
+- DC  Garbage-collect network stack [PC]
+- DC  Rework romdisks [PC]
+- DC  Refactored g2bus API, converted magic values to macros, added
+      dc/fifo.h, dc/dmac.h file [AB]
+- DC  Fixes and improvments for G1 ATA devices [Ruslan Rostovtsev == RR]
+- DC  Fixed and improved SCIF SPI reading for use with SD [RR]
+- DC  SH4 cache improvements [RR]
+- DC  Optimized separating stereo PCM [RR]
+- DC  Refactored sfx and streaming to add SQ fast path [RR]
+- DC  Added 4/8-bit wav support to sfx and streaming [RR]
 
 KallistiOS version 2.0.0 -----------------------------------------------
 - DC  Broadband Adapter driver fixes [Megan Potter == MP]

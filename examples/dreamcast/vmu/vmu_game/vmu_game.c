@@ -10,9 +10,6 @@
 #include <kos.h>
 #include <kos/string.h>
 
-extern uint8 romdisk[];
-KOS_INIT_ROMDISK(romdisk);
-
 void draw_findings(void) {
     file_t      d;
     int     y = 88;

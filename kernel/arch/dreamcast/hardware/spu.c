@@ -8,7 +8,6 @@
 #include <dc/spu.h>
 #include <dc/g2bus.h>
 #include <dc/sq.h>
-#include <arch/memory.h>
 #include <arch/timer.h>
 
 /*
@@ -33,26 +32,22 @@ kernel; so don't use them if you don't need to =).
 #define SNDREGADDR(x) (0xa0700000 + (x))
 #define CHNREGADDR(chn, x) SNDREGADDR(0x80*(chn) + (x))
 
-
 /* memcpy and memset designed for sound RAM; for addresses, don't
    bother to include the 0xa0800000 offset that is implied. 'length'
    must be a multiple of 4, but if it is not it will be rounded up. */
-void spu_memload(uint32 dst, void *src_void, int length) {
-    uint8 *src = (uint8*)src_void;
+void spu_memload(uintptr_t dst, void *src_void, size_t length) {
+    uint8_t *src = (uint8_t *)src_void;
 
     /* Make sure it's an even number of 32-bit words and convert the
        count to a 32-bit word count */
-    if(length % 4)
-        length = (length / 4) + 1;
-    else
-        length = length / 4;
+    length = (length + 3) >> 2;
 
     /* Add in the SPU RAM base */
-    dst += 0xa0800000;
+    dst += SPU_RAM_UNCACHED_BASE;
 
     while(length > 8) {
         g2_fifo_wait();
-        g2_write_block_32((uint32*)src, dst, 8);
+        g2_write_block_32((uint32_t *)src, dst, 8);
 
         src += 8 * 4;
         dst += 8 * 4;
@@ -61,32 +56,33 @@ void spu_memload(uint32 dst, void *src_void, int length) {
 
     if(length > 0) {
         g2_fifo_wait();
-        g2_write_block_32((uint32*)src, dst, length);
+        g2_write_block_32((uint32_t *)src, dst, length);
     }
 }
 
-void spu_memload_sq(uint32 dst, void *src_void, int length) {
-    uint8 *src = (uint8 *)src_void;
-    int aligned_len, old;
+void spu_memload_sq(uintptr_t dst, void *src_void, size_t length) {
+    uint8_t *src = (uint8_t *)src_void;
+    int aligned_len;
+    g2_ctx_t ctx;
 
-    /* Make sure it's an even number of 32-bit words and convert the
-       count to a 32-bit word count */
+    /* Round up to the nearest multiple of 4 */
     if(length & 3) {
         length = (length + 4) & ~3;
     }
-
-    /* Add in the SPU RAM base (cached area) */
-    dst += 0x00800000;
 
     /* Using SQs for all that is divisible by 32 */
     aligned_len = length & ~31;
     length &= 31;
 
-    old = irq_disable();
-    do { } while(*(vuint32 *)0xa05f688c & (1 << 5)); /* FIFO_SH4 */
-    do { } while(*(vuint32 *)0xa05f688c & (1 << 4)); /* FIFO_G2 */
+    /* Add in the SPU RAM base (cached area) */
+    dst += SPU_RAM_BASE;
+
+    /* Make sure the FIFOs are empty */
+    ctx = g2_lock();
+
     sq_cpy((void *)dst, src, aligned_len);
-    irq_restore(old);
+
+    g2_unlock(ctx);
 
     if(length > 0) {
         /* Make sure the destination is in a non-cached area */
@@ -94,26 +90,23 @@ void spu_memload_sq(uint32 dst, void *src_void, int length) {
         dst += aligned_len;
         src += aligned_len;
         g2_fifo_wait();
-        g2_write_block_32((uint32 *)src, dst, length >> 2);
+        g2_write_block_32((uint32_t *)src, dst, length >> 2);
     }
 }
 
-void spu_memread(void *dst_void, uint32 src, int length) {
-    uint8 *dst = (uint8*)dst_void;
+void spu_memread(void *dst_void, uintptr_t src, size_t length) {
+    uint8_t *dst = (uint8_t *)dst_void;
 
     /* Make sure it's an even number of 32-bit words and convert the
        count to a 32-bit word count */
-    if(length % 4)
-        length = (length / 4) + 1;
-    else
-        length = length / 4;
+    length = (length + 3) >> 2;
 
     /* Add in the SPU RAM base */
-    src += 0xa0800000;
+    src += SPU_RAM_UNCACHED_BASE;
 
     while(length > 8) {
         g2_fifo_wait();
-        g2_read_block_32((uint32*)dst, src, 8);
+        g2_read_block_32((uint32_t *)dst, src, 8);
 
         src += 8 * 4;
         dst += 8 * 4;
@@ -122,27 +115,24 @@ void spu_memread(void *dst_void, uint32 src, int length) {
 
     if(length > 0) {
         g2_fifo_wait();
-        g2_read_block_32((uint32*)dst, src, length);
+        g2_read_block_32((uint32_t *)dst, src, length);
     }
 }
 
-void spu_memset(uint32 dst, unsigned long what, int length) {
-    uint32  blank[8];
+void spu_memset(uintptr_t dst, uint32_t what, size_t length) {
+    uint32_t  blank[8];
     int i;
 
     /* Make sure it's an even number of 32-bit words and convert the
        count to a 32-bit word count */
-    if(length % 4)
-        length = (length / 4) + 1;
-    else
-        length = length / 4;
+    length = (length + 3) >> 2;
 
     /* Initialize the array */
     for(i = 0; i < 8; i++)
         blank[i] = what;
 
     /* Add in the SPU RAM base */
-    dst += 0xa0800000;
+    dst += SPU_RAM_UNCACHED_BASE;
 
     while(length > 8) {
         g2_fifo_wait();
@@ -250,7 +240,7 @@ int spu_init(void) {
     /* Load a default "program" into the SPU that just executes
        an infinite loop, so that CD audio works. */
     g2_fifo_wait();
-    g2_write_32(0xa0800000, 0xeafffff8);
+    g2_write_32(SPU_RAM_UNCACHED_BASE, 0xeafffff8);
 
     /* Start the SPU again */
     spu_enable();
@@ -269,4 +259,13 @@ int spu_shutdown(void) {
     spu_disable();
     spu_memset(0, 0, 0x200000);
     return 0;
+}
+
+int spu_dma_transfer(void *from, uintptr_t dest, size_t length, int block,
+                     g2_dma_callback_t callback, void *cbdata) {
+    /* Adjust destination to SPU RAM */
+    dest += SPU_RAM_BASE;
+
+    return g2_dma_transfer(from, (void *) dest, length, block, callback, cbdata, 0,
+                           0, G2_DMA_CHAN_SPU, 0);
 }

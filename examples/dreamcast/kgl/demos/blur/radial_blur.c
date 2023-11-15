@@ -306,9 +306,6 @@ static int check_start(void) {
     return 0;
 }
 
-extern uint8 romdisk[];
-KOS_INIT_ROMDISK(romdisk);
-
 int main(int argc, char **argv) {
     printf("glRadialBlur beginning\n");
 

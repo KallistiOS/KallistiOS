@@ -5,8 +5,6 @@
 #include <dc/maple/controller.h>
 #include <kos/init.h>
 
-extern uint8 romdisk[];
-KOS_INIT_ROMDISK(romdisk);
 KOS_INIT_FLAGS(INIT_DEFAULT | INIT_NET);
 
 void httpd();

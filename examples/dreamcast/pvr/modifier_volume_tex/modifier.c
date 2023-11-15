@@ -233,9 +233,6 @@ static pvr_init_params_t pvr_params = {
     512 * 1024
 };
 
-extern uint8 romdisk[];
-KOS_INIT_ROMDISK(romdisk);
-
 int main(int argc, char *argv[]) {
     printf("---KallistiOS PVR Modifier Example (with textures)---\n");
     printf("Use the DPAD to move the modifier square around (it starts at ");

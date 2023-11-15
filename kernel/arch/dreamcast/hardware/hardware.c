@@ -57,7 +57,7 @@ void bba_la_shutdown(void) {
 int hardware_periph_init(void) {
     /* Init sound */
     spu_init();
-    spu_dma_init();
+    g2_dma_init();
 
 #ifndef _arch_sub_naomi
     /* Init CD-ROM.. NOTE: NO GD-ROM SUPPORT. ONLY CDs/CDRs. */
@@ -91,7 +91,7 @@ void hardware_shutdown(void) {
 #if 0
             cdrom_shutdown();
 #endif
-            spu_dma_shutdown();
+            g2_dma_shutdown();
             spu_shutdown();
             vid_shutdown();
             /* fallthru */

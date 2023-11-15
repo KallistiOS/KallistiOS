@@ -7,9 +7,6 @@
 #include <time.h>
 #include <dcplib/fnt.h>
 
-extern uint8 romdisk[];
-KOS_INIT_ROMDISK(romdisk);
-
 fntRenderer *text;
 fntTexFont *font;
 

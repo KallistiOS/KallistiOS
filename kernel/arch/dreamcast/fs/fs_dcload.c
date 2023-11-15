@@ -17,6 +17,7 @@ printf goes to the dc-tool console
 
 */
 
+#include <dc/fifo.h>
 #include <dc/fs_dcload.h>
 #include <kos/thread.h>
 #include <arch/spinlock.h>
@@ -38,7 +39,7 @@ static spinlock_t mutex = SPINLOCK_INITIALIZER;
         if(!irq_inside_int()) { \
             old = irq_disable(); \
         } \
-        while((*(vuint32 *)0xa05f688c) & 0x20) \
+        while(FIFO_STATUS & FIFO_SH4) \
             ; \
         rv = dcloadsyscall(__VA_ARGS__); \
         if(!irq_inside_int()) \

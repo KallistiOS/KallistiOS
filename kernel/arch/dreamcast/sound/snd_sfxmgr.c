@@ -27,12 +27,12 @@ struct snd_effect;
 LIST_HEAD(selist, snd_effect);
 
 typedef struct snd_effect {
-    uint32  locl, locr;
-    uint32  len;
-    uint32  rate;
-    uint32  used;
-    uint16  stereo;
-    uint32  fmt;
+    uint32_t  locl, locr;
+    uint32_t  len;
+    uint32_t  rate;
+    uint32_t  used;
+    uint32_t  fmt;
+    uint16_t  stereo;
 
     LIST_ENTRY(snd_effect)  list;
 } snd_effect_t;
@@ -43,11 +43,11 @@ struct selist snd_effects;
 static int sfx_nextchan = 0;
 
 /* Our channel-in-use mask. */
-static uint64 sfx_inuse = 0;
+static uint64_t sfx_inuse = 0;
 
 /* Unload all loaded samples and free their SPU RAM */
 void snd_sfx_unload_all(void) {
-    snd_effect_t * t, * n;
+    snd_effect_t *t, *n;
 
     t = LIST_FIRST(&snd_effects);
 
@@ -69,7 +69,7 @@ void snd_sfx_unload_all(void) {
 
 /* Unload a single sample */
 void snd_sfx_unload(sfxhnd_t idx) {
-    snd_effect_t * t = (snd_effect_t *)idx;
+    snd_effect_t *t = (snd_effect_t *)idx;
 
     if(idx == SFXHND_INVALID) {
         dbglog(DBG_WARNING, "snd_sfx: can't unload an invalid SFXHND\n");
@@ -85,233 +85,319 @@ void snd_sfx_unload(sfxhnd_t idx) {
     free(t);
 }
 
-/* WAV header:
-    0x08    -- "WAVE"
-    0x14    -- 1 for PCM, 20 for ADPCM
-    0x16    -- short num channels (1/2)
-    0x18    -- long  HZ
-    0x22    -- short 8 or 16 (bits)
-    0x28    -- long  data length
-    0x2c    -- data start
+typedef struct __attribute__((__packed__)) {
+    uint8_t riff[4];
+    int32_t totalsize;
+    uint8_t riff_format[4];
+} wavmagic_t;
 
- */
+typedef struct __attribute__((__packed__)) {
+    uint8_t id[4];
+    size_t size;
+} chunkhdr_t;
+
+typedef struct __attribute__((__packed__)) {
+    int16_t format;
+    int16_t channels;
+    int32_t sample_rate;
+    int32_t byte_per_sec;
+    int16_t blocksize;
+    int16_t sample_size;
+} fmthdr_t;
+
+/* WAV header */
+typedef struct __attribute__((__packed__)) {
+    wavmagic_t magic;
+
+    chunkhdr_t chunk;
+
+    fmthdr_t fmt;
+} wavhdr_t;
 
 /* WAV sample formats */
 #define WAVE_FMT_PCM                   0x0001 /* PCM */
 #define WAVE_FMT_YAMAHA_ADPCM_ITU_G723 0x0014 /* ITU G.723 Yamaha ADPCM (KallistiOS) */
 #define WAVE_FMT_YAMAHA_ADPCM          0x0020 /* Yamaha ADPCM (ffmpeg) */
 
-/* Load a sound effect from a WAV file and return a handle to it */
-sfxhnd_t snd_sfx_load(const char *fn) {
-    file_t fd;
-    uint32_t len, hz, rd;
-    uint8_t *tmp;
-    uint16_t channels, bitsize, fmt;
-    snd_effect_t *t;
+static int read_wav_header(file_t fd, wavhdr_t *wavhdr) {
+    if(fs_read(fd, &(wavhdr->magic), sizeof(wavhdr->magic)) != sizeof(wavhdr->magic)) {
+        dbglog(DBG_WARNING, "snd_sfx: can't read wav header\n");
+        return -1;
+    }
 
-    dbglog(DBG_DEBUG, "snd_sfx: loading effect %s\n", fn);
-
-    fd = fs_open(fn, O_RDONLY);
-
-    if(fd <= FILEHND_INVALID) {
-        dbglog(DBG_WARNING, "snd_sfx: can't open sfx %s\n", fn);
-        return SFXHND_INVALID;
+    if(strncmp((const char*)wavhdr->magic.riff, "RIFF", 4)) {
+        dbglog(DBG_WARNING, "snd_sfx: sfx file is not RIFF\n");
+        return -1;
     }
 
     /* Check file magic */
-    hz = 0;
-    fs_seek(fd, 0x08, SEEK_SET);
-    fs_read(fd, &hz, 4);
-
-    if(strncmp((char *)&hz, "WAVE", 4)) {
-        dbglog(DBG_WARNING, "snd_sfx: file is not RIFF WAVE\n");
-        fs_close(fd);
-        return SFXHND_INVALID;
+    if(strncmp((const char*)wavhdr->magic.riff_format, "WAVE", 4)) {
+        dbglog(DBG_WARNING, "snd_sfx: sfx file is not RIFF WAVE\n");
+        return -1;
     }
 
-    /* Read WAV header info */
-    fs_seek(fd, 0x14, SEEK_SET);
-    fs_read(fd, &fmt, 2);
-    fs_read(fd, &channels, 2);
-    fs_read(fd, &hz, 4);
-    fs_seek(fd, 0x22, SEEK_SET);
-    fs_read(fd, &bitsize, 2);
+    do {
+        /* Read the chunk header */
+        if(fs_read(fd, &(wavhdr->chunk), sizeof(wavhdr->chunk)) != sizeof(wavhdr->chunk)) {
+            dbglog(DBG_WARNING, "snd_sfx: can't read chunk header\n");
+            return -1;
+        }
+
+        /* If it is the fmt chunk, grab the fields we care about and skip the 
+           rest of the section if there is more */
+        if(strncmp((const char *)wavhdr->chunk.id, "fmt ", 4) == 0) {
+            if(fs_read(fd, &(wavhdr->fmt), sizeof(wavhdr->fmt)) != sizeof(wavhdr->fmt)) {
+                dbglog(DBG_WARNING, "snd_sfx: can't read fmt header\n");
+                return -1;
+            }
+
+            /* Skip the rest of the fmt chunk */ 
+            fs_seek(fd, wavhdr->chunk.size - sizeof(wavhdr->fmt), SEEK_CUR);
+        }
+        /* If we found the data chunk, we are done */
+        else if(strncmp((const char *)wavhdr->chunk.id, "data", 4) == 0) {
+            break;
+        }
+        /* Skip meta data */
+        else { 
+            fs_seek(fd, wavhdr->chunk.size, SEEK_CUR);
+        }
+    } while(1);
+
+    return 0;
+}
+
+static uint8_t *read_wav_data(file_t fd, wavhdr_t *wavhdr) {
+    /* Allocate memory for WAV data */
+    uint8_t *wav_data = memalign(32, wavhdr->chunk.size);
+
+    if(wav_data == NULL)
+        return NULL;
 
     /* Read WAV data */
-    fs_seek(fd, 0x28, SEEK_SET);
-    fs_read(fd, &len, 4);
-
-    dbglog(DBG_DEBUG, "WAVE file is %s, %luHZ, %d bits/sample, %lu bytes total,"
-           " format %d\n", channels == 1 ? "mono" : "stereo", hz, bitsize, len, fmt);
-
-    tmp = (uint8_t *)memalign(32, len);
-
-    if(tmp == NULL) {
-        fs_close(fd);
-        return SFXHND_INVALID;
-    }
-
-    rd = fs_read(fd, tmp, len);
-    fs_close(fd);
-
-    if (rd != len) {
+    if((size_t)fs_read(fd, wav_data, wavhdr->chunk.size) != wavhdr->chunk.size) {
         dbglog(DBG_WARNING, "snd_sfx: file has not been fully read.\n");
+        free(wav_data);
+        return NULL;
     }
 
-    t = malloc(sizeof(snd_effect_t));
+    return wav_data;
+}
 
-    if(t == NULL) {
-        free(tmp);
-        return SFXHND_INVALID;
-    }
+static snd_effect_t *create_snd_effect(wavhdr_t *wavhdr, uint8_t *wav_data) {
+    snd_effect_t *effect;
+    uint32_t len, rate;
+    uint16_t channels, bitsize, fmt;
+    
+    effect = malloc(sizeof(snd_effect_t));
+    if(effect == NULL)
+        return NULL;
 
-    memset(t, 0, sizeof(snd_effect_t));
+    memset(effect, 0, sizeof(snd_effect_t));
 
-    /* Common characteristics not impacted by stream type */
-    t->rate = hz;
-    t->stereo = channels - 1;
+    fmt = wavhdr->fmt.format;
+    channels = wavhdr->fmt.channels;
+    rate = wavhdr->fmt.sample_rate;
+    bitsize = wavhdr->fmt.sample_size;
+    len = wavhdr->chunk.size;
+
+    effect->rate = rate;
+    effect->stereo = channels > 1;
 
     if(channels == 1) {
         /* Mono PCM/ADPCM */
         if(fmt == WAVE_FMT_YAMAHA_ADPCM_ITU_G723 || fmt == WAVE_FMT_YAMAHA_ADPCM) {
-            t->fmt = AICA_SM_ADPCM;
-            t->len = len * 2; /* 4-bit packed samples */
+            effect->fmt = AICA_SM_ADPCM;
+            effect->len = len * 2; /* 4-bit packed samples */
         }
         else if(fmt == WAVE_FMT_PCM && bitsize == 8) {
-            t->fmt = AICA_SM_8BIT;
-            t->len = len;
+            effect->fmt = AICA_SM_8BIT;
+            effect->len = len;
         }
         else if(fmt == WAVE_FMT_PCM && bitsize == 16) {
-            t->fmt = AICA_SM_16BIT;
-            t->len = len / 2;
-        } else {
-            goto err_exit;
+            effect->fmt = AICA_SM_16BIT;
+            effect->len = len / 2;
         }
-        t->locl = snd_mem_malloc(len);
+        else {
+            goto err_occurred;
+        }
 
-        if(t->locl)
-            spu_memload_sq(t->locl, tmp, len);
+        effect->locl = snd_mem_malloc(len);
+        if(effect->locl)
+            spu_memload_sq(effect->locl, wav_data, len);
 
-        t->locr = 0;
+        effect->locr = 0;
     }
     else if(channels == 2 && fmt == WAVE_FMT_PCM && bitsize == 16) {
         /* Stereo 16-bit PCM */
-        t->len = len / 4; /* Two stereo, 16-bit samples */
-        t->fmt = AICA_SM_16BIT;
-        t->locl = snd_mem_malloc(len / 2);
-        t->locr = snd_mem_malloc(len / 2);
+        effect->len = len / 4; /* Two stereo, 16-bit samples */
+        effect->fmt = AICA_SM_16BIT;
+        effect->locl = snd_mem_malloc(len / 2);
+        effect->locr = snd_mem_malloc(len / 2);
 
-        if(t->locl && t->locr)
-            snd_pcm16_split_sq((uint32_t *)tmp, t->locl, t->locr, len);
+        if(effect->locl && effect->locr)
+            snd_pcm16_split_sq((uint32_t *)wav_data, effect->locl, effect->locr, len);
     }
     else if(channels == 2 && fmt == WAVE_FMT_PCM && bitsize == 8) {
         /* Stereo 8-bit PCM */
-        uint32_t *left_buf = (uint32_t *)memalign(32, len / 2);
+        uint32_t *left_buf = memalign(32, len / 2), *right_buf;
 
-        if(left_buf == NULL) {
-            goto err_exit;
-        }
-        uint32_t *right_buf = (uint32_t *)memalign(32, len / 2);
+        if(left_buf == NULL)
+            goto err_occurred;
 
+        right_buf = memalign(32, len / 2);
         if(right_buf == NULL) {
             free(left_buf);
-            goto err_exit;
+            goto err_occurred;
         }
-        snd_pcm8_split((uint32_t *)tmp, left_buf, right_buf, len);
 
-        t->fmt = AICA_SM_8BIT;
-        t->len = len / 2;
-        t->locl = snd_mem_malloc(len / 2);
-        t->locr = snd_mem_malloc(len / 2);
+        snd_pcm8_split((uint32_t *)wav_data, left_buf, right_buf, len);
 
-        if(t->locl)
-            spu_memload_sq(t->locl, left_buf, len / 2);
+        effect->fmt = AICA_SM_8BIT;
+        effect->len = len / 2;
+        effect->locl = snd_mem_malloc(len / 2);
+        effect->locr = snd_mem_malloc(len / 2);
 
-        if(t->locr)
-            spu_memload_sq(t->locr, right_buf, len / 2);
+        if(effect->locl)
+            spu_memload_sq(effect->locl, left_buf, len / 2);
+
+        if(effect->locr)
+            spu_memload_sq(effect->locr, right_buf, len / 2);
 
         free(left_buf);
         free(right_buf);
     }
     else if(channels == 2 && fmt == WAVE_FMT_YAMAHA_ADPCM_ITU_G723) {
         /* Stereo ADPCM ITU G.723 (channels are not interleaved) */
-        uint8_t *right_buf = tmp + (len / 2);
+        uint8_t *right_buf = wav_data + (len / 2);
         int ownmem = 0;
 
         if(((uintptr_t)right_buf) & 3) {
             right_buf = (uint8_t *)memalign(32, len / 2);
-            ownmem = 1;
 
-            if(right_buf == NULL) {
-                goto err_exit;
-            }
-            memcpy(right_buf, tmp + (len / 2), len / 2);
+            if(right_buf == NULL)
+                goto err_occurred;
+
+            ownmem = 1;
+            memcpy(right_buf, wav_data + (len / 2), len / 2);
         }
 
-        t->len = len;   /* Two stereo, 4-bit samples */
-        t->fmt = AICA_SM_ADPCM;
-        t->locl = snd_mem_malloc(len / 2);
-        t->locr = snd_mem_malloc(len / 2);
+        effect->len = len;   /* Two stereo, 4-bit samples */
+        effect->fmt = AICA_SM_ADPCM;
+        effect->locl = snd_mem_malloc(len / 2);
+        effect->locr = snd_mem_malloc(len / 2);
 
-        if(t->locl)
-            spu_memload_sq(t->locl, tmp, len / 2);
+        if(effect->locl)
+            spu_memload_sq(effect->locl, wav_data, len / 2);
 
-        if(t->locr)
-            spu_memload_sq(t->locr, right_buf, len / 2);
+        if(effect->locr)
+            spu_memload_sq(effect->locr, right_buf, len / 2);
 
         if(ownmem)
             free(right_buf);
     }
     else if(channels == 2 && fmt == WAVE_FMT_YAMAHA_ADPCM) {
         /* Stereo Yamaha ADPCM (channels are interleaved) */
-        uint32_t *left_buf = (uint32_t *)memalign(32, len / 2);
+        uint32_t *left_buf = (uint32_t *)memalign(32, len / 2), *right_buf;
 
-        if(left_buf == NULL) {
-            goto err_exit;
-        }
-        uint32_t *right_buf = (uint32_t *)memalign(32, len / 2);
+        if(left_buf == NULL)
+            goto err_occurred;
+
+
+        right_buf = (uint32_t *)memalign(32, len / 2);
 
         if(right_buf == NULL) {
             free(left_buf);
-            goto err_exit;
+            goto err_occurred;
         }
-        snd_adpcm_split((uint32_t *)tmp, left_buf, right_buf, len);
 
-        t->len = len; /* Two stereo, 4-bit samples */
-        t->fmt = AICA_SM_ADPCM;
-        t->locl = snd_mem_malloc(len / 2);
-        t->locr = snd_mem_malloc(len / 2);
+        snd_adpcm_split((uint32_t *)wav_data, left_buf, right_buf, len);
 
-        if(t->locl)
-            spu_memload_sq(t->locl, left_buf, len / 2);
+        effect->len = len; /* Two stereo, 4-bit samples */
+        effect->fmt = AICA_SM_ADPCM;
+        effect->locl = snd_mem_malloc(len / 2);
+        effect->locr = snd_mem_malloc(len / 2);
 
-        if(t->locr)
-            spu_memload_sq(t->locr, right_buf, len / 2);
+        if(effect->locl)
+            spu_memload_sq(effect->locl, left_buf, len / 2);
+
+        if(effect->locr)
+            spu_memload_sq(effect->locr, right_buf, len / 2);
 
         free(left_buf);
         free(right_buf);
     }
     else {
-        free(t);
-        t = SFXHND_INVALID;
+err_occurred:
+        free(effect);
+        effect = SFXHND_INVALID;
     }
 
-    free(tmp);
+    return effect;
+}
 
-    if(t != SFXHND_INVALID)
-        LIST_INSERT_HEAD(&snd_effects, t, list);
+/* Load a sound effect from a WAV file and return a handle to it */
+sfxhnd_t snd_sfx_load(const char *fn) {
+    file_t fd;
+    wavhdr_t wavhdr;
+    snd_effect_t *effect;
+    uint8_t *wav_data;
+    uint32_t sample_count;
 
-    return (sfxhnd_t)t;
+    dbglog(DBG_DEBUG, "snd_sfx: loading effect %s\n", fn);
 
-err_exit:
-    free(tmp);
-    free(t);
-    return SFXHND_INVALID;
+    /* Open the sound effect file */
+    fd = fs_open(fn, O_RDONLY);
+    if(fd <= FILEHND_INVALID) {
+        dbglog(DBG_WARNING, "snd_sfx: can't open sfx %s\n", fn);
+        return SFXHND_INVALID;
+    }
+
+    /* Read WAV header */
+    if(read_wav_header(fd, &wavhdr) < 0) {
+        fs_close(fd);
+        return SFXHND_INVALID;
+    }
+
+    dbglog(DBG_DEBUG, "WAVE file is %s, %luHZ, %d bits/sample, "
+        "%u bytes total, format %d\n", 
+           wavhdr.fmt.channels == 1 ? "mono" : "stereo", 
+           wavhdr.fmt.sample_rate, 
+           wavhdr.fmt.sample_size, 
+           wavhdr.chunk.size, 
+           wavhdr.fmt.format);
+
+    sample_count = wavhdr.fmt.sample_size >= 8 
+        ? wavhdr.chunk.size / ((wavhdr.fmt.sample_size / 8) * wavhdr.fmt.channels) 
+        : wavhdr.chunk.size / (0.5 * wavhdr.fmt.channels);
+
+    if(sample_count > 65534) {
+        dbglog(DBG_WARNING, "WAVE file is over 65534 samples\n");
+    }
+
+    /* Read WAV data */
+    wav_data = read_wav_data(fd, &wavhdr);
+    fs_close(fd);
+    if(!wav_data)
+        return SFXHND_INVALID;
+
+    /* Create and initialize sound effect */
+    effect = create_snd_effect(&wavhdr, wav_data);
+    if(!effect) {
+        free(wav_data);
+        return SFXHND_INVALID;
+    }
+
+    /* Finish up and return the sound effect handle */
+    free(wav_data);
+    LIST_INSERT_HEAD(&snd_effects, effect, list);
+
+    return (sfxhnd_t)effect;
 }
 
 int snd_sfx_play_chn(int chn, sfxhnd_t idx, int vol, int pan) {
     int size;
-    snd_effect_t * t = (snd_effect_t *)idx;
+    snd_effect_t *t = (snd_effect_t *)idx;
     AICA_CMDSTR_CHANNEL(tmp, cmd, chan);
 
     size = t->len;
@@ -375,7 +461,7 @@ int snd_sfx_play(sfxhnd_t idx, int vol, int pan) {
         return -1;
     }
     else {
-        sfx_nextchan = (chn + 2) % 64;  // in case of stereo
+        sfx_nextchan = (chn + 2) % 64;  /* in case of stereo */
         return snd_sfx_play_chn(chn, idx, vol, pan);
     }
 }

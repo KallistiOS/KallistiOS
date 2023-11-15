@@ -4,16 +4,30 @@
    Copyright (C) 2001 Andrew Kieschnick
    Copyright (C) 2023 Falco Girgis
    Copyright (C) 2023 Andy Barajas
+   Copyright (C) 2023 Ruslan Rostovtsev
 */
 
+#include <arch/cache.h>
 #include <dc/sq.h>
 #include <kos/dbglog.h>
+#include <kos/mutex.h>
+
 
 /*
     Functions to clear, copy, and set memory using the sh4 store queues
 
     Based on code by Marcus Comstedt, TapamN, and Moop
 */
+
+static mutex_t sq_mutex = MUTEX_INITIALIZER;
+
+void sq_lock(void) {
+    mutex_lock(&sq_mutex);
+}
+
+void sq_unlock(void) {
+    mutex_unlock(&sq_mutex);
+}
 
 /* Copies n bytes from src to dest, dest must be 32-byte aligned */
 void * sq_cpy(void *dest, const void *src, size_t n) {
@@ -25,8 +39,10 @@ void * sq_cpy(void *dest, const void *src, size_t n) {
     _Complex float ds3;
     _Complex float ds4;
 
+    sq_lock();
+
     /* Set store queue memory area as desired */
-    SET_QACR_REGS(dest);
+    SET_QACR_REGS(dest, dest);
 
     /* Fill/write queues as many times necessary */
     n >>= 5;
@@ -45,8 +61,8 @@ void * sq_cpy(void *dest, const void *src, size_t n) {
             d[7] = *(s++);
 
             /* Fire off store queue. __builtin would move it to the top so
-               use __asm__ instead */
-            __asm__("pref @%0" : : "r"(d));
+               use dcache_pref_block instead */
+            dcache_pref_block(d);
             d += 8;
         }
     } else { /* If src is 8-byte aligned, fast path */
@@ -85,6 +101,7 @@ void * sq_cpy(void *dest, const void *src, size_t n) {
     d = (uint32_t *)MEM_AREA_SQ_BASE;
     d[0] = d[8] = 0;
 
+    sq_unlock();
     return dest;
 }
 
@@ -110,8 +127,10 @@ void * sq_set16(void *dest, uint32_t c, size_t n) {
 void * sq_set32(void *dest, uint32_t c, size_t n) {
     uint32_t *d = SQ_MASK_DEST(dest);
 
+    sq_lock();
+
     /* Set store queue memory area as desired */
-    SET_QACR_REGS(dest);
+    SET_QACR_REGS(dest, dest);
 
     /* Fill both store queues with c */
     d[0] = d[1] = d[2] = d[3] = d[4] = d[5] = d[6] = d[7] =
@@ -129,6 +148,7 @@ void * sq_set32(void *dest, uint32_t c, size_t n) {
     d = (uint32_t *)MEM_AREA_SQ_BASE;
     d[0] = d[8] = 0;
 
+    sq_unlock();
     return dest;
 }
 
