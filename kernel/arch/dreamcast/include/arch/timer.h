@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    arch/dreamcast/include/timer.h
-   Copyright (c) 2000-2001 Megan Potter
+   Copyright (c) 2000, 2001 Megan Potter
    Copyright (c) 2023 Falco Girgis
    
 */
