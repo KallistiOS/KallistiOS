@@ -7,7 +7,6 @@
 
 #include <assert.h>
 #include <stdio.h>
-#include <stdint.h>
 
 #include <arch/arch.h>
 #include <arch/timer.h>
@@ -210,7 +209,7 @@ void timer_ms_disable(void) {
     timer_disable_ints(TMU2);
 }
 
-static void timer_gettime(uint32_t *secs, uint32_t *ticks, uint32_t div) {
+static void timer_getticks(uint32_t *secs, uint32_t *ticks, uint32_t div) {
     const int irq_status = irq_disable();
 
     if(secs) {
@@ -245,7 +244,7 @@ static void timer_gettime(uint32_t *secs, uint32_t *ticks, uint32_t div) {
 
 /* Return the number of ticks since KOS was booted */
 void timer_ms_gettime(uint32_t *secs, uint32_t *msecs) {
-    timer_gettime(secs, msecs, 1000000);
+    timer_getticks(secs, msecs, 1000000);
 }
 
 uint64_t timer_ms_gettime64(void) {
@@ -259,7 +258,7 @@ uint64_t timer_ms_gettime64(void) {
 }
 
 void timer_us_gettime(uint32_t *secs, uint32_t *usecs) {
-    timer_gettime(secs, usecs, 1000);
+    timer_getticks(secs, usecs, 1000);
 }
 
 uint64_t timer_us_gettime64(void) {
@@ -273,7 +272,7 @@ uint64_t timer_us_gettime64(void) {
 }
 
 void timer_ns_gettime(uint32_t *secs, uint32_t *usecs) { 
-    timer_gettime(secs, usecs, 1);
+    timer_getticks(secs, usecs, 1);
 }
 
 /* Primary kernel timer. What we'll do here is handle actual timer IRQs
