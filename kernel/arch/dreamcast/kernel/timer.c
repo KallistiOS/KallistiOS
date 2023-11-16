@@ -52,18 +52,28 @@
 #define TPSC1   1
 #define TPSC0   0
 
-/* Timer Prescalar Values */
+/* Timer Prescalar Values (Peripheral clock divided by N) */
 typedef enum TPSC { 
-    PCK_DIV_4,      /* Pck/4 => 40ns */
-    PCK_DIV_16,     /* Pck/16 => */
-    PCK_DIV_64,     /* Pck/64 => */
-    PCK_DIV_256,    /* Pck/256 => */
-    PCK_DIV_1024    /* Pck/1024 => */
+    PCK_DIV_4,      /* Pck/4    => 80ns */
+    PCK_DIV_16,     /* Pck/16   => 320ns*/
+    PCK_DIV_64,     /* Pck/64   => 1280ns*/
+    PCK_DIV_256,    /* Pck/256  => 5120ns*/
+    PCK_DIV_1024    /* Pck/1024 => 20480ns*/
 } TPSC;
 
+/* Timer registers, indexed by Timer ID. */
 static unsigned tcors[] = { TCOR0, TCOR1, TCOR2 };
 static unsigned tcnts[] = { TCNT0, TCNT1, TCNT2 };
 static unsigned tcrs[] = { TCR0, TCR1, TCR2 };
+/* Clock divisor value for each TPSC value. */
+static unsigned tdiv[] = { 4, 16, 64, 256, 1024 };
+/* Nanoseconds per counter tick for each TPSC value. */
+static unsigned tns[] = { 80, 320, 1280, 5120, 20480 }; 
+
+/* Timer TPSC values (4 for highest resolution timings) */
+#define TIMER_TPSC      PCK_DIV_4
+/* Timer IRQ priority levels (0-15) */
+#define TIMER_PRIO      15
 
 /* Apply timer configuration to registers */
 static int timer_prime_apply(int which, uint32_t count, int interrupts) { 
@@ -72,7 +82,7 @@ static int timer_prime_apply(int which, uint32_t count, int interrupts) {
     TIMER32(tcnts[which]) = count;
     TIMER32(tcors[which]) = count; 
 
-    TIMER16(tcrs[which]) = PCK_DIV_64;
+    TIMER16(tcrs[which]) = TIMER_TPSC;
 
     /* Enable IRQ generation plus unmask and set priority */
     if(interrupts) {
@@ -85,8 +95,8 @@ static int timer_prime_apply(int which, uint32_t count, int interrupts) {
 
 /* Pre-initialize a timer; set values but don't start it */
 int timer_prime(int which, uint32_t speed, int interrupts) {
-    /* Initialize counters; formula is P0/(tps*64) */
-    const uint32_t cd = 50000000 / (speed * 64);
+    /* Initialize counters; formula is P0/(tps*div) */
+    const uint32_t cd = 50000000 / (speed * tdiv[TIMER_TPSC]);
 
     return timer_prime_apply(which, cd, interrupts);
 }
@@ -94,9 +104,9 @@ int timer_prime(int which, uint32_t speed, int interrupts) {
 /* Works like timer_prime, but takes an interval in milliseconds
    instead of a rate. Used by the primary timer stuff. */
 static int timer_prime_wait(int which, uint32_t millis, int interrupts) {
-    /* Calculate the countdown, formula is P0 * millis/64000. We
+    /* Calculate the countdown, formula is P0 * millis/div*1000. We
        rearrange the math a bit here to avoid integer overflows. */
-    const uint32_t cd = (50000000 / 64) * millis / 1000;
+    const uint32_t cd = (50000000 / tdiv[TIMER_TPSC]) * millis / 1000;
 
     return timer_prime_apply(which, cd, interrupts);
 }
@@ -159,29 +169,29 @@ void timer_spin_sleep(int ms) {
    to irq.c sometime. */
 void timer_enable_ints(int which) {
     volatile uint16_t *ipra = (uint16_t *)0xffd00004;
-    *ipra |= (0x000f << (12 - 4 * which));
+    *ipra |= (TIMER_PRIO << (12 - 4 * which));
 }
 
 /* Disable timer interrupts; needs to move to irq.c sometime. */
 void timer_disable_ints(int which) {
     volatile uint16_t *ipra = (uint16_t *)0xffd00004;
-    *ipra &= ~(0x000f << (12 - 4 * which));
+    *ipra &= ~(TIMER_PRIO << (12 - 4 * which));
 }
 
 /* Check whether ints are enabled */
 int timer_ints_enabled(int which) {
     volatile uint16_t *ipra = (uint16_t *)0xffd00004;
-    return (*ipra & (0x000f << (12 - 4 * which))) != 0;
+    return (*ipra & (TIMER_PRIO << (12 - 4 * which))) != 0;
 }
 
 /* Millisecond timer */
-static uint32_t timer_ms_counter = 0; /* Seconds elapsed */
+static uint32_t timer_ms_sec_counter = 0; /* Seconds elapsed */
 static uint32_t timer_ms_countdown;   /* Max counter value */
 
 static void timer_ms_handler(irq_t source, irq_context_t *context) {
     (void)source;
     (void)context;
-    timer_ms_counter++;
+    timer_ms_sec_counter++;
 
     /* Clear overflow bit so we can check it when returning time */
     TIMER16(tcrs[TMU2]) &= ~(1 << UNF);
@@ -200,14 +210,11 @@ void timer_ms_disable(void) {
     timer_disable_ints(TMU2);
 }
 
-/* Return the number of ticks since KOS was booted */
-void timer_ms_gettime(uint32_t *secs, uint32_t *msecs) {
-    uint32_t used;
+static void timer_gettime(uint32_t *secs, uint32_t *ticks, uint32_t div) { 
     const int irq_status = irq_disable();
 
-    /* Seconds part comes from ms_counter */
     if(secs) {
-        *secs = timer_ms_counter;
+        *secs = timer_ms_sec_counter;
 
         /* Overflow is only notable if we have seconds we can
            overflow into, so avoid read of TCR if secs is null */
@@ -215,15 +222,24 @@ void timer_ms_gettime(uint32_t *secs, uint32_t *msecs) {
             (*secs)++;
     }
 
-    /* Milliseconds, we check how much of the timer has elapsed */
-    if(msecs) {
+    if(ticks) {
         assert(timer_ms_countdown > 0);
 
-        used = timer_count(TMU2);
-        *msecs = (timer_ms_countdown - used) * 1000 / timer_ms_countdown;
+        const uint64_t ticks64 = (timer_ms_countdown - TIMER32(tcnts[TMU2])) * 
+                                  tns[tcrs[TMU2] & (TPSC0 | TPSC1 | TPSC2)] / 
+                                  div;
+
+        assert(ticks64 <= UINT32_MAX);
+
+        *ticks = ticks64;
     }
 
     irq_restore(irq_status);
+}
+
+/* Return the number of ticks since KOS was booted */
+void timer_ms_gettime(uint32_t *secs, uint32_t *msecs) {
+    timer_gettime(secs, msecs, 1000000);
 }
 
 uint64_t timer_ms_gettime64(void) {
@@ -236,28 +252,22 @@ uint64_t timer_ms_gettime64(void) {
     return msec;
 }
 
+void timer_us_gettime(uint32_t *secs, uint32_t *usecs) { 
+    timer_gettime(secs, usecs, 1000);
+}
+
 uint64_t timer_us_gettime64(void) {
-    uint64_t usec, used;
-    uint32_t cnt;
+    uint32_t s, us;
+    uint64_t usec;
 
-    const int irq_status = irq_disable();
-
-    uint32_t scnt = timer_ms_counter;
-
-    /* If we underflowed, add an extra second and reload microseconds */
-    if (TIMER16(tcrs[TMU2]) & (1 << UNF))
-        scnt++;
-    
-    cnt = timer_count(TMU2);
-    
-    irq_restore(irq_status);
-
-    assert(timer_ms_countdown > 0);
-    used = timer_ms_countdown - cnt;
-    usec = scnt * 1000000;
-    usec += used * 1000000 / timer_ms_countdown;
+    timer_us_gettime(&s, &us);
+    usec = ((uint64_t)s) * 1000000 + ((uint64_t)us);
 
     return usec;
+}
+
+void timer_ns_gettime(uint32_t *secs, uint32_t *usecs) { 
+    timer_gettime(secs, usecs, 1);
 }
 
 /* Primary kernel timer. What we'll do here is handle actual timer IRQs

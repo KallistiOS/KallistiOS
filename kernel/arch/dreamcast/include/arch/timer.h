@@ -2,6 +2,7 @@
 
    arch/dreamcast/include/timer.h
    Copyright (c) 2000-2001 Megan Potter
+   Copyright (c) 2023 Falco Girgis
    
 */
 
@@ -15,6 +16,7 @@
     the gettime functions.
 
     \author Megan Potter
+    \author Falco Girgis
 */
 
 #ifndef __ARCH_TIMER_H
@@ -177,6 +179,21 @@ void timer_ms_gettime(uint32_t *secs, uint32_t *msecs);
 */
 uint64_t timer_ms_gettime64(void);
 
+/** \brief  Get the current uptime of the system.
+
+    This function retrieves the number of seconds and microseconds since KOS was
+    started.
+
+    \param  secs            A pointer to store the number of seconds since boot
+                            into.
+    \param  usecs           A pointer to store the number of microseconds past
+                            a second since boot.
+    \note                   To get the total number of microseconds since boot,
+                            calculate (*secs * 1000000) + *usecs, or use the
+                            timer_us_gettime64() function.
+*/
+void timer_us_gettime(uint32_t *secs, uint32_t *msecs);
+
 /** \brief  Get the current uptime of the system (in microseconds).
 
     This function retrieves the number of microseconds since KOS was started. It
@@ -186,6 +203,21 @@ uint64_t timer_ms_gettime64(void);
     \return                 The number of microseconds since KOS started.
 */
 uint64_t timer_us_gettime64(void);
+
+/** \brief  Get the current uptime of the system.
+
+    This function retrieves the number of seconds and nanoseconds since KOS was
+    started.
+
+    \param  secs            A pointer to store the number of seconds since boot
+                            into.
+    \param  nsecs           A pointer to store the number of nanoseconds past
+                            a second since boot.
+    \note                   To get the total number of nanoseconds since boot,
+                            calculate (*secs * 1000000000) + *nsecs, or use the
+                            timer_ns_gettime64() function.
+*/
+void timer_ns_gettime(uint32_t *secs, uint32_t *nsecs);
 
 /** \brief  Primary timer callback type. */
 typedef void (*timer_primary_callback_t)(irq_context_t *);
