@@ -68,7 +68,7 @@ static unsigned tcrs[] = { TCR0, TCR1, TCR2 };
 /* Clock divisor value for each TPSC value. */
 static unsigned tdiv[] = { 4, 16, 64, 256, 1024 };
 /* Nanoseconds per counter tick for each TPSC value. */
-static unsigned tns[] = { 80, 320, 1280, 5120, 20480 }; 
+static unsigned tns[] = { 80, 320, 1280, 5120, 20480 };
 
 /* Timer TPSC values (4 for highest resolution timings) */
 #define TIMER_TPSC      PCK_DIV_4
@@ -210,7 +210,7 @@ void timer_ms_disable(void) {
     timer_disable_ints(TMU2);
 }
 
-static void timer_gettime(uint32_t *secs, uint32_t *ticks, uint32_t div) { 
+static void timer_gettime(uint32_t *secs, uint32_t *ticks, uint32_t div) {
     const int irq_status = irq_disable();
 
     if(secs) {
@@ -225,10 +225,16 @@ static void timer_gettime(uint32_t *secs, uint32_t *ticks, uint32_t div) {
     if(ticks) {
         assert(timer_ms_countdown > 0);
 
+        /* We have to do the elapsed time calculations as a 64-bit unsigned
+           integer, otherwise when using the fastest clock speed for timers,
+           this value will very quickly overflow mid-expression, before the
+           final division. */
         const uint64_t ticks64 = (timer_ms_countdown - TIMER32(tcnts[TMU2])) * 
                                   tns[tcrs[TMU2] & (TPSC0 | TPSC1 | TPSC2)] / 
                                   div;
 
+        /* Should NEVER overflow...
+           at least based on how KOS configures the timers. */
         assert(ticks64 <= UINT32_MAX);
 
         *ticks = ticks64;
@@ -252,7 +258,7 @@ uint64_t timer_ms_gettime64(void) {
     return msec;
 }
 
-void timer_us_gettime(uint32_t *secs, uint32_t *usecs) { 
+void timer_us_gettime(uint32_t *secs, uint32_t *usecs) {
     timer_gettime(secs, usecs, 1000);
 }
 
