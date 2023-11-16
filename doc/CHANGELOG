@@ -203,6 +203,7 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - DC  Optimized separating stereo PCM [RR]
 - DC  Refactored sfx and streaming to add SQ fast path [RR]
 - DC  Added 4/8-bit wav support to sfx and streaming [RR]
+- *** Bumped up resolution of TMU timers + date/time functions [FG]
 
 KallistiOS version 2.0.0 -----------------------------------------------
 - DC  Broadband Adapter driver fixes [Megan Potter == MP]
