@@ -51,6 +51,9 @@
 #define TPSC1   1
 #define TPSC0   0
 
+/* Timer Prescalar mask */
+#define TPSC_MSK    0x7
+
 /* Timer Prescalar Values (Peripheral clock divided by N) */
 typedef enum TPSC { 
     PCK_DIV_4,      /* Pck/4    => 80ns */
@@ -229,7 +232,7 @@ static void timer_getticks(uint32_t *secs, uint32_t *ticks, uint32_t div) {
            this value will very quickly overflow mid-expression, before the
            final division. */
         const uint64_t ticks64 = (timer_ms_countdown - TIMER32(tcnts[TMU2])) * 
-                                  tns[tcrs[TMU2] & (TPSC0 | TPSC1 | TPSC2)] / 
+                                  tns[tcrs[TMU2] & TPSC_MSK] / 
                                   div;
 
         /* Should NEVER overflow...
