@@ -10,7 +10,7 @@
 #include <errno.h>
 #include <kos/mutex.h>
 
-int pthread_mutex_lock(pthread_mutex_t *mutex) {
+int pthread_mutex_trylock(pthread_mutex_t *mutex) {
     int old, rv = 0;
 
     old = errno;
