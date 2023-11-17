@@ -118,6 +118,7 @@ flashrom_get_region
 
 # SPU
 spu_memload
+spu_memload_sq
 spu_memread
 spu_memset
 spu_dma_transfer
@@ -132,6 +133,8 @@ sq_cpy
 sq_set
 sq_set16
 sq_set32
+sq_lock
+sq_unlock
 
 # Sound
 snd_mem_init
@@ -163,6 +166,8 @@ snd_stream_shutdown
 snd_stream_queue_enable
 snd_stream_queue_disable
 snd_stream_start
+snd_stream_start_pcm8
+snd_stream_start_adpcm
 snd_stream_queue_go
 snd_stream_stop
 snd_stream_poll
@@ -173,6 +178,8 @@ snd_stream_reinit
 snd_stream_prefill
 snd_pcm16_split
 snd_pcm16_split_sq
+snd_pcm8_split
+snd_adpcm_split
 
 # Video
 vid_check_cable

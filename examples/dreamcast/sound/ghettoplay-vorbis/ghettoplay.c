@@ -119,9 +119,6 @@ void vmu_lcd_update(void) {
     phase++;
 }
 
-extern uint8 romdisk[];
-KOS_INIT_ROMDISK(romdisk);
-
 /* Program entry */
 int main(int argc, char **argv) {
     /* Do basic setup */

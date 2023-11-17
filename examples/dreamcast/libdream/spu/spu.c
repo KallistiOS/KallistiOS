@@ -55,9 +55,6 @@ void wait_start(void) {
     }
 }
 
-extern uint8 romdisk[];
-KOS_INIT_ROMDISK(romdisk);
-
 int main(int argc, char **argv) {
     file_t f;
     int len;

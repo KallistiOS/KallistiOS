@@ -10,10 +10,7 @@
 #include <plx/context.h>
 #include <plx/prim.h>
 
-extern uint8 romdisk[];
-
 KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS);
-KOS_INIT_ROMDISK(romdisk);
 
 /*
 

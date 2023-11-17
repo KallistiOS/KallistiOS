@@ -15,11 +15,9 @@
 #include <oggvorbis/sndoggvorbis.h>
 #include "display.c"
 
-extern uint8 romdisk[];
 long bitrateold, bitratenew;
 
 KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS);
-KOS_INIT_ROMDISK(romdisk);
 
 int main(int argc, char **argv) {
     maple_device_t *cont;

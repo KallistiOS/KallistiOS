@@ -6,9 +6,6 @@
 
 #include <kos.h>
 
-/* You can safely remove this line if you don't use a ROMDISK */
-extern uint8 romdisk[];
-
 /* These macros tell KOS how to initialize itself. All of this initialization
    happens before main() gets called, and the shutdown happens afterwards. So
    you need to set any flags you want here. Here are some possibilities:
@@ -21,9 +18,6 @@ extern uint8 romdisk[];
    You can OR any or all of those together. If you want to start out with
    the current KOS defaults, use INIT_DEFAULT (or leave it out entirely). */
 KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS);
-
-/* And specify a romdisk, if you want one (or leave it out) */
-KOS_INIT_ROMDISK(romdisk);
 
 /* Your program's main entry point */
 int main(int argc, char **argv) {

@@ -59,17 +59,50 @@ dbgio_handler_t * dbgio_handlers[] = {
 };
 int dbgio_handler_cnt = sizeof(dbgio_handlers) / sizeof(dbgio_handler_t *);
 
+void arch_init_net(void) {
+    union {
+        uint32 ipl;
+        uint8 ipb[4];
+    } ip = { 0 };
+
+    if(!(__kos_init_flags & INIT_NO_DCLOAD) && dcload_type == DCLOAD_TYPE_IP) {
+        /* Grab the IP address from dcload before we disable dbgio... */
+        ip.ipl = _fs_dclsocket_get_ip();
+        dbglog(DBG_INFO, "dc-load says our IP is %d.%d.%d.%d\n", ip.ipb[3],
+               ip.ipb[2], ip.ipb[1], ip.ipb[0]);
+        dbgio_disable();
+    }
+
+    net_init(ip.ipl);     /* Enable networking (and drivers) */
+
+    if(!(__kos_init_flags & INIT_NO_DCLOAD) && dcload_type == DCLOAD_TYPE_IP) {
+        fs_dclsocket_init_console();
+
+        if(!fs_dclsocket_init()) {
+            dbgio_dev_select("fs_dclsocket");
+            dbgio_enable();
+            dbglog(DBG_INFO, "fs_dclsocket console support enabled\n");
+        }
+    }
+}
+
+void (*init_net_weak)(void) __attribute__((weak));
+void (*net_shutdown_weak)(void) __attribute__((weak));
+
+int (*fs_romdisk_init_weak)(void) __attribute__((weak));
+int (*fs_romdisk_shutdown_weak)(void) __attribute__((weak));
+int (*fs_romdisk_mount_builtin_weak)(void) __attribute__((weak));
+int (*fs_romdisk_mount_builtin_weak_legacy)(void) __attribute__((weak));
+
+/* Mount the built-in romdisk to /rd. */
+int fs_romdisk_mount_builtin(void) {
+    return fs_romdisk_mount("/rd", __kos_romdisk, 0);
+}
+
 /* Auto-init stuff: override with a non-weak symbol if you don't want all of
    this to be linked into your code (and do the same with the
    arch_auto_shutdown function too). */
 int  __attribute__((weak)) arch_auto_init(void) {
-#ifndef _arch_sub_naomi
-    union {
-        uint32 ipl;
-        uint8 ipb[4];
-    } ip;
-#endif
-
     /* Initialize memory management */
     mm_init();
 
@@ -106,11 +139,6 @@ int  __attribute__((weak)) arch_auto_init(void) {
     timer_ms_enable();
     rtc_init();
 
-    /* Threads */
-    if(!(__kos_init_flags & INIT_THD_PREEMPT))
-        dbglog(DBG_WARNING, "Cooperative threading mode is deprecated. KOS is \
-        always in pre-emptive threading mode. \n");
-
     thd_init();
 
     nmmgr_init();
@@ -118,7 +146,10 @@ int  __attribute__((weak)) arch_auto_init(void) {
     fs_init();          /* VFS */
     fs_pty_init();          /* Pty */
     fs_ramdisk_init();      /* Ramdisk */
-    fs_romdisk_init();      /* Romdisk */
+
+    if(fs_romdisk_init_weak) {
+        fs_romdisk_init_weak(); /* Romdisk */
+    }
 
 /* The arc4random_buf() function used for random & urandom is only
    available in newlib starting with version 2.4.0 */
@@ -130,9 +161,10 @@ int  __attribute__((weak)) arch_auto_init(void) {
 
     hardware_periph_init();     /* DC peripheral init */
 
-    if(__kos_romdisk != NULL) {
-        fs_romdisk_mount("/rd", __kos_romdisk, 0);
-    }
+    if(fs_romdisk_mount_builtin_weak)
+        fs_romdisk_mount_builtin_weak();
+    else if(fs_romdisk_mount_builtin_weak_legacy)
+        fs_romdisk_mount_builtin_weak_legacy();
 
 #ifndef _arch_sub_naomi
     if(!(__kos_init_flags & INIT_NO_DCLOAD) && *DCLOADMAGICADDR == DCLOADMAGICVALUE) {
@@ -155,31 +187,8 @@ int  __attribute__((weak)) arch_auto_init(void) {
     }
 
 #ifndef _arch_sub_naomi
-    if(__kos_init_flags & INIT_NET) {
-        ip.ipl = 0;
-
-        /* Check if the dcload-ip console is up, and if so, disable it,
-           otherwise we'll crash when we attempt to bring up the BBA */
-        if(!(__kos_init_flags & INIT_NO_DCLOAD) && dcload_type == DCLOAD_TYPE_IP) {
-            /* Grab the IP address from dcload before we disable dbgio... */
-            ip.ipl = _fs_dclsocket_get_ip();
-            dbglog(DBG_INFO, "dc-load says our IP is %d.%d.%d.%d\n", ip.ipb[3],
-                   ip.ipb[2], ip.ipb[1], ip.ipb[0]);
-            dbgio_disable();
-        }
-
-        net_init(ip.ipl);     /* Enable networking (and drivers) */
-
-        if(!(__kos_init_flags & INIT_NO_DCLOAD) && dcload_type == DCLOAD_TYPE_IP) {
-            fs_dclsocket_init_console();
-
-            if(!fs_dclsocket_init()) {
-                dbgio_dev_select("fs_dclsocket");
-                dbgio_enable();
-                dbglog(DBG_INFO, "fs_dclsocket console support enabled\n");
-            }
-        }
-    }
+    if(init_net_weak)
+        (*init_net_weak)();
 #endif
 
     return 0;
@@ -188,7 +197,8 @@ int  __attribute__((weak)) arch_auto_init(void) {
 void  __attribute__((weak)) arch_auto_shutdown(void) {
 #ifndef _arch_sub_naomi
     fs_dclsocket_shutdown();
-    net_shutdown();
+    if(net_shutdown_weak)
+        (*net_shutdown_weak)();
 #endif
 
     irq_disable();
@@ -209,7 +219,9 @@ void  __attribute__((weak)) arch_auto_shutdown(void) {
     fs_dev_shutdown();
 #endif
     fs_ramdisk_shutdown();
-    fs_romdisk_shutdown();
+    if(fs_romdisk_shutdown_weak) {
+        fs_romdisk_shutdown_weak();
+    }
     fs_pty_shutdown();
     fs_shutdown();
     thd_shutdown();

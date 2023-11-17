@@ -88,6 +88,8 @@ int nmmgr_handler_remove(nmmgr_handler_t *hnd) {
     return rv;
 }
 
+int (*export_init_weak)(void) __attribute__((weak));
+
 /* Initialize structures */
 int nmmgr_init(void) {
     int rv = 0;
@@ -96,7 +98,8 @@ int nmmgr_init(void) {
     LIST_INIT(&nmmgr_handlers);
 
     /* Initialize our internal exports */
-    export_init();
+    if(export_init_weak)
+        (*export_init_weak)();
 
     return rv;
 }

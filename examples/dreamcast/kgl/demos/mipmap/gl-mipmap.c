@@ -93,9 +93,6 @@ void RenderTexturedQuadCentered(GLuint texID, GLfloat width, GLfloat height) {
     glEnd();
 }
 
-extern uint8 romdisk[];
-KOS_INIT_ROMDISK(romdisk);
-
 int main(int argc, char **argv) {
     printf("OpenGL MipMap Example (C) 2014 PH3NOM\n");
 

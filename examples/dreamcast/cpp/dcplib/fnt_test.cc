@@ -5,9 +5,6 @@
 #include <kos.h>
 #include <dcplib/fnt.h>
 
-extern uint8 romdisk[];
-KOS_INIT_ROMDISK(romdisk);
-
 fntRenderer *text;
 
 const int MAX_FONTS = 20;

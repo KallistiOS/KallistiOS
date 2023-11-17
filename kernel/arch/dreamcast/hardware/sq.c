@@ -4,10 +4,14 @@
    Copyright (C) 2001 Andrew Kieschnick
    Copyright (C) 2023 Falco Girgis
    Copyright (C) 2023 Andy Barajas
+   Copyright (C) 2023 Ruslan Rostovtsev
 */
 
+#include <arch/cache.h>
 #include <dc/sq.h>
 #include <kos/dbglog.h>
+#include <kos/mutex.h>
+
 
 /*
     Functions to clear, copy, and set memory using the sh4 store queues
@@ -15,8 +19,18 @@
     Based on code by Marcus Comstedt, TapamN, and Moop
 */
 
+static mutex_t sq_mutex = MUTEX_INITIALIZER;
+
+void sq_lock(void) {
+    mutex_lock(&sq_mutex);
+}
+
+void sq_unlock(void) {
+    mutex_unlock(&sq_mutex);
+}
+
 /* Copies n bytes from src to dest, dest must be 32-byte aligned */
-void * sq_cpy(void *dest, const void *src, int n) {
+void * sq_cpy(void *dest, const void *src, size_t n) {
     uint32_t *d = SQ_MASK_DEST(dest);
     const uint32_t *s = src;
 
@@ -25,8 +39,10 @@ void * sq_cpy(void *dest, const void *src, int n) {
     _Complex float ds3;
     _Complex float ds4;
 
+    sq_lock();
+
     /* Set store queue memory area as desired */
-    SET_QACR_REGS(dest);
+    SET_QACR_REGS(dest, dest);
 
     /* Fill/write queues as many times necessary */
     n >>= 5;
@@ -45,8 +61,8 @@ void * sq_cpy(void *dest, const void *src, int n) {
             d[7] = *(s++);
 
             /* Fire off store queue. __builtin would move it to the top so
-               use __asm__ instead */
-            __asm__("pref @%0" : : "r"(d));
+               use dcache_pref_block instead */
+            dcache_pref_block(d);
             d += 8;
         }
     } else { /* If src is 8-byte aligned, fast path */
@@ -85,11 +101,12 @@ void * sq_cpy(void *dest, const void *src, int n) {
     d = (uint32_t *)MEM_AREA_SQ_BASE;
     d[0] = d[8] = 0;
 
+    sq_unlock();
     return dest;
 }
 
 /* Fills n bytes at dest with byte c, dest must be 32-byte aligned */
-void * sq_set(void *dest, uint32_t c, int n) {
+void * sq_set(void *dest, uint32_t c, size_t n) {
     /* Duplicate low 8-bits of c into high 24-bits */
     c = c & 0xff;
     c = (c << 24) | (c << 16) | (c << 8) | c;
@@ -98,7 +115,7 @@ void * sq_set(void *dest, uint32_t c, int n) {
 }
 
 /* Fills n bytes at dest with short c, dest must be 32-byte aligned */
-void * sq_set16(void *dest, uint32_t c, int n) {
+void * sq_set16(void *dest, uint32_t c, size_t n) {
     /* Duplicate low 16-bits of c into high 16-bits */
     c = c & 0xffff;
     c = (c << 16) | c;
@@ -107,11 +124,13 @@ void * sq_set16(void *dest, uint32_t c, int n) {
 }
 
 /* Fills n bytes at dest with int c, dest must be 32-byte aligned */
-void * sq_set32(void *dest, uint32_t c, int n) {
+void * sq_set32(void *dest, uint32_t c, size_t n) {
     uint32_t *d = SQ_MASK_DEST(dest);
 
+    sq_lock();
+
     /* Set store queue memory area as desired */
-    SET_QACR_REGS(dest);
+    SET_QACR_REGS(dest, dest);
 
     /* Fill both store queues with c */
     d[0] = d[1] = d[2] = d[3] = d[4] = d[5] = d[6] = d[7] =
@@ -129,11 +148,12 @@ void * sq_set32(void *dest, uint32_t c, int n) {
     d = (uint32_t *)MEM_AREA_SQ_BASE;
     d[0] = d[8] = 0;
 
+    sq_unlock();
     return dest;
 }
 
 /* Clears n bytes at dest, dest must be 32-byte aligned */
-void sq_clr(void *dest, int n) {
+void sq_clr(void *dest, size_t n) {
     sq_set32(dest, 0, n);
 }
 
@@ -141,7 +161,7 @@ void sq_clr(void *dest, int n) {
 #define PVR_DMA_DEST  (*(volatile uint32_t *)(void *)0xa05f6808)
 
 /* Copies n bytes from src to dest (in VRAM), dest must be 32-byte aligned */
-void * sq_cpy_pvr(void *dest, const void *src, int n) {
+void * sq_cpy_pvr(void *dest, const void *src, size_t n) {
     if(PVR_DMA_DEST != 0) {
         dbglog(DBG_ERROR, "sq_cpy_pvr: Previous DMA has not finished\n");
         return NULL;
@@ -159,7 +179,7 @@ void * sq_cpy_pvr(void *dest, const void *src, int n) {
 }
 
 /* Fills n bytes at PVR dest with short c, dest must be 32-byte aligned */
-void * sq_set_pvr(void *dest, uint32_t c, int n) {
+void * sq_set_pvr(void *dest, uint32_t c, size_t n) {
     if(PVR_DMA_DEST != 0) {
         dbglog(DBG_ERROR, "sq_set_pvr: Previous DMA has not finished\n");
         return NULL;

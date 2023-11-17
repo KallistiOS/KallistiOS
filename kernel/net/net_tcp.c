@@ -1688,6 +1688,10 @@ static int net_tcp_getsockopt(net_socket_t *hnd, int level, int option_name,
                     tmp = sock->state == TCP_STATE_LISTEN;
                     goto copy_int;
 
+                case SO_ERROR:
+                    /* Checking/resetting errors not implemented */
+                    goto simply_return;
+
                 case SO_RCVBUF:
                     tmp = sock->rcvbuf_sz;
                     goto copy_int;
@@ -1753,6 +1757,7 @@ copy_int:
         memcpy(option_value, &tmp, *option_len);
     }
 
+simply_return:
     mutex_unlock(&sock->mutex);
     rwsem_read_unlock(&tcp_sem);
     return 0;

@@ -146,6 +146,9 @@ static void timer_ms_handler(irq_t source, irq_context_t *context) {
     (void)source;
     (void)context;
     timer_ms_counter++;
+
+    /* Clear overflow bit so we can check it when returning time */
+    TIMER16(tcrs[TMU2]) &= ~0x100;
 }
 
 void timer_ms_enable(void) {
@@ -165,6 +168,8 @@ void timer_ms_disable(void) {
 void timer_ms_gettime(uint32 *secs, uint32 *msecs) {
     uint32 used;
 
+    int irq_status = irq_disable();
+
     /* Seconds part comes from ms_counter */
     if(secs)
         *secs = timer_ms_counter;
@@ -172,9 +177,14 @@ void timer_ms_gettime(uint32 *secs, uint32 *msecs) {
     /* Milliseconds, we check how much of the timer has elapsed */
     if(msecs) {
         assert(timer_ms_countdown > 0);
-        used = timer_ms_countdown - timer_count(TMU2);
-        *msecs = used * 1000 / timer_ms_countdown;
+        /* Overflow is only notable if we have seconds we can
+           overflow into, so avoid read of TCR if secs is null */
+        if (secs && TIMER16(tcrs[TMU2]) & 0x100)
+            *secs += 1;
+        used = timer_count(TMU2);
+        *msecs = (timer_ms_countdown - used) * 1000 / timer_ms_countdown;
     }
+    irq_restore(irq_status);
 }
 
 uint64 timer_ms_gettime64(void) {
@@ -192,8 +202,15 @@ uint64 timer_us_gettime64(void) {
     uint64 usec;
     uint64 used;
 
+    int irq_status = irq_disable();
     scnt = timer_ms_counter;
     cnt = timer_count(TMU2);
+    if (TIMER16(tcrs[TMU2]) & 0x100) {
+        /* If we underflowed, add an extra second and reload microseconds */
+        scnt++;
+        cnt = timer_count(TMU2);
+    }
+    irq_restore(irq_status);
 
     assert(timer_ms_countdown > 0);
     used = timer_ms_countdown - cnt;
@@ -389,4 +406,3 @@ inline uint64 timer_ns_gettime64(void) {
         return micro_secs * 1000;
     }
 }
-

@@ -27,7 +27,7 @@
 
 // Find the next list to DMA out. If we have none left to do, then do
 // nothing. Otherwise, start the DMA and chain back to us upon completion.
-static void dma_next_list(ptr_t data) {
+static void dma_next_list(void *data) {
     int i, did = 0;
     volatile pvr_dma_buffers_t * b;
 
