@@ -64,7 +64,7 @@
 #include <arch/wdt.h>
 
 // 20 seconds in us
-inline constexpr unsigned WATCHDOG_TIMEOUT = (100 * 1000 * 1000);  
+inline constexpr unsigned WATCHDOG_TIMEOUT = (20 * 1000 * 1000);  
 // Number of threads to spawn -- each of which runs the entire test suite
 inline constexpr int THREAD_COUNT = 10; 
 
