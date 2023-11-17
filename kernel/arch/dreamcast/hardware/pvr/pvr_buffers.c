@@ -260,7 +260,7 @@ void pvr_allocate_buffers(pvr_init_params_t *params) {
 
         /* Allocate extra space for overflow (when one OPB isn't big enough) */
         buf->opb_overflow_count = params->opb_overflow_count;
-        outaddr += opb_total_size * buf->opb_overflow_count;
+        outaddr += opb_total_size * (1 + buf->opb_overflow_count);
 
         /* Set up the opb pointers to each section */
         opb_size_accum = 0;
