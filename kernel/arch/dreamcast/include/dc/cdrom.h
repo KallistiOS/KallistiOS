@@ -3,6 +3,7 @@
    dc/cdrom.h
    Copyright (C) 2000-2001 Megan Potter
    Copyright (C) 2014 Donald Haase
+   Copyright (C) 2023 Ruslan Rostovtsev
 */
 
 #ifndef __DC_CDROM_H
@@ -29,6 +30,7 @@ __BEGIN_DECLS
     normal file reading, consult with the stuff for the fs and for fs_iso9660.
 
     \author Megan Potter
+    \author Ruslan Rostovtsev
     \see    kos/fs.h
     \see    dc/fs_iso9660.h
 */
@@ -40,20 +42,34 @@ __BEGIN_DECLS
 
     @{
 */
-#define CMD_PIOREAD 16  /**< \brief Read via PIO */
-#define CMD_DMAREAD 17  /**< \brief Read via DMA */
-#define CMD_GETTOC  18  /**< \brief Read TOC */
-#define CMD_GETTOC2 19  /**< \brief Read TOC */
-#define CMD_PLAY    20  /**< \brief Play track */
-#define CMD_PLAY2   21  /**< \brief Play sectors */
-#define CMD_PAUSE   22  /**< \brief Pause playback */
-#define CMD_RELEASE 23  /**< \brief Resume from pause */
-#define CMD_INIT    24  /**< \brief Initialize the drive */
-#define CMD_SEEK    27  /**< \brief Seek to a new position */
-#define CMD_READ    28  /**< \brief Read raw sectors */
-#define CMD_STOP    33  /**< \brief Stop the disc from spinning */
-#define CMD_GETSCD  34  /**< \brief Get subcode data */
-#define CMD_GETSES  35  /**< \brief Get session */
+#define CMD_CHECK_LICENSE       2  /**< \brief Check license */
+#define CMD_REQ_SPI_CMD         4  /**< \brief Request to Sega Packet Interface */
+#define CMD_PIOREAD            16  /**< \brief Read via PIO */
+#define CMD_DMAREAD            17  /**< \brief Read via DMA */
+#define CMD_GETTOC             18  /**< \brief Read TOC */
+#define CMD_GETTOC2            19  /**< \brief Read TOC */
+#define CMD_PLAY               20  /**< \brief Play track */
+#define CMD_PLAY2              21  /**< \brief Play sectors */
+#define CMD_PAUSE              22  /**< \brief Pause playback */
+#define CMD_RELEASE            23  /**< \brief Resume from pause */
+#define CMD_INIT               24  /**< \brief Initialize the drive */
+#define CMD_DMA_ABORT          25  /**< \brief Abort DMA transfer */
+#define CMD_OPEN_TRAY          26  /**< \brief Open CD tray (on DevBox?) */
+#define CMD_SEEK               27  /**< \brief Seek to a new position */
+#define CMD_DMAREAD_STREAM     28  /**< \brief Stream DMA until end/abort */
+#define CMD_NOP                29  /**< \brief No operation */
+#define CMD_REQ_MODE           30  /**< \brief Request mode */
+#define CMD_SET_MODE           31  /**< \brief Setup mode */
+#define CMD_SCAN_CD            32  /**< \brief Scan CD */
+#define CMD_STOP               33  /**< \brief Stop the disc from spinning */
+#define CMD_GETSCD             34  /**< \brief Get subcode data */
+#define CMD_GETSES             35  /**< \brief Get session */
+#define CMD_REQ_STAT           36  /**< \brief Request stat */
+#define CMD_PIOREAD_STREAM     37  /**< \brief Stream PIO until end/abort */
+#define CMD_DMAREAD_STREAM_EX  38  /**< \brief Stream DMA transfer */
+#define CMD_PIOREAD_STREAM_EX  39  /**< \brief Stream PIO transfer */
+#define CMD_GET_VERS           40  /**< \brief Get syscall driver version */
+#define CMD_MAX                47  /**< \brief Max of GD syscall commands */
 /** @} */
 
 /** \defgroup cd_cmd_response       CD-ROM command responses
@@ -78,7 +94,18 @@ __BEGIN_DECLS
 #define NO_ACTIVE   0   /**< \brief System inactive? */
 #define PROCESSING  1   /**< \brief Processing command */
 #define COMPLETED   2   /**< \brief Command completed successfully */
-#define ABORTED     3   /**< \brief Command aborted before completion */
+#define STREAMING   3   /**< \brief Stream type command is in progress */
+#define BUSY        4   /**< \brief GD syscalls is busy */
+/** @} */
+
+/** \defgroup cd_cmd_ata_status       CD-ROM ATA status
+    @{
+*/
+#define ATA_STAT_INTERNAL   0x00
+#define ATA_STAT_IRQ        0x01
+#define ATA_STAT_DRQ_0      0x02
+#define ATA_STAT_DRQ_1      0x03
+#define ATA_STAT_BUSY       0x04
 /** @} */
 
 /** \defgroup cdda_read_modes       CDDA read modes
@@ -107,12 +134,25 @@ __BEGIN_DECLS
     possible values for the first parameter sent to the GETSCD syscall.
     @{
 */
-#define CD_SUB_Q_CHANNEL        0    /**< \brief Read Q Channel Subcode Data */
-#define CD_SUB_CURRENT_POSITION 1    /**< \brief Read all Subcode Data for 
-                                                 most recent sector */
+#define CD_SUB_Q_ALL            0    /**< \brief Read all Subcode Data */
+#define CD_SUB_Q_CHANNEL        1    /**< \brief Read Q Channel Subcode Data */
 #define CD_SUB_MEDIA_CATALOG    2    /**< \brief Read the Media Catalog 
                                                  Subcode Data */
 #define CD_SUB_TRACK_ISRC       3    /**< \brief Read the ISRC Subcode Data */
+#define CD_SUB_RESERVED         4    /**< \brief Reserved */
+/** @} */
+
+/** \defgroup cd_subcode_audio    CD-ROM Subcode audio status
+
+    Information about CDDA playback from GETSCD syscall.
+    @{
+*/
+#define CD_SUB_AUDIO_STATUS_INVALID    0x00
+#define CD_SUB_AUDIO_STATUS_PLAYING    0x11
+#define CD_SUB_AUDIO_STATUS_PAUSED     0x12
+#define CD_SUB_AUDIO_STATUS_ENDED      0x13
+#define CD_SUB_AUDIO_STATUS_ERROR      0x14
+#define CD_SUB_AUDIO_STATUS_NO_INFO    0x15
 /** @} */
 
 /** \defgroup cd_read_sector_mode    CD-ROM Read Sector Mode
@@ -131,6 +171,7 @@ __BEGIN_DECLS
     cdrom_get_status() function.
     @{
 */
+#define CD_STATUS_READ_FAIL -1  /**< \brief Can't read status */
 #define CD_STATUS_BUSY      0   /**< \brief Drive is busy */
 #define CD_STATUS_PAUSED    1   /**< \brief Disc is paused */
 #define CD_STATUS_STANDBY   2   /**< \brief Drive is in standby */
@@ -139,6 +180,8 @@ __BEGIN_DECLS
 #define CD_STATUS_SCANNING  5   /**< \brief Drive is scanning */
 #define CD_STATUS_OPEN      6   /**< \brief Disc tray is open */
 #define CD_STATUS_NO_DISC   7   /**< \brief No disc inserted */
+#define CD_STATUS_RETRY     8   /**< \brief Retry is needed */
+#define CD_STATUS_ERROR     9   /**< \brief System error */
 /** @} */
 
 /** \defgroup cd_disc_types         CD-ROM drive disc types

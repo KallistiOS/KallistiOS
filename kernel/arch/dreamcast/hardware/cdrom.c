@@ -5,8 +5,10 @@
    Copyright (C) 2000 Megan Potter
    Copyright (C) 2014 Lawrence Sebald
    Copyright (C) 2014 Donald Haase
+   Copyright (C) 2023 Ruslan Rostovtsev
 
  */
+#include <assert.h>
 
 #include <dc/cdrom.h>
 #include <dc/g1ata.h>
@@ -81,17 +83,46 @@ static int gdc_change_data_type(void *param) {
     MAKE_SYSCALL(return, param, 0, 10);
 }
 
-/* Reset the GD-ROM */
-/* Stop gcc from complaining that we don't use it */
-static void gdc_reset(void) __attribute__((unused));
-static void gdc_reset(void) {
-    MAKE_SYSCALL(/**/, 0, 0, 9);
-}
-
 /* Abort the current command */
 static void gdc_abort_cmd(int cmd) {
     MAKE_SYSCALL(/**/, cmd, 0, 8);
 }
+#if 0 /* Not used yet */
+/* Reset the GD-ROM syscalls */
+static void gdc_reset(void) {
+    MAKE_SYSCALL(/**/, 0, 0, 9);
+}
+
+/* DMA end interrupt handler */
+static void gdc_dma_end(uintptr_t callback, void *param) {
+    MAKE_SYSCALL(/**/, callback, param, 5);
+}
+
+/* Request DMA transfer for DMAREAD_STREAM commands */
+static int gdc_req_dma_transfer(int f, int *params) {
+    MAKE_SYSCALL(return, f, params, 6);
+}
+
+/* Check DMA transfer for DMAREAD_STREAM commands */
+static int gdc_check_dma_transfer(int f, int *size) {
+    MAKE_SYSCALL(return, f, size, 7);
+}
+
+/* Setup PIO transfer end callback for PIOREAD_STREAM commands */
+static void gdc_set_pio_callback(uintptr_t callback, void *param) {
+    MAKE_SYSCALL(/**/, callback, param, 11);
+}
+
+/* Request PIO transfer for PIOREAD_STREAM commands */
+static int gdc_req_pio_transfer(int f, int *params) {
+    MAKE_SYSCALL(return, f, params, 12);
+}
+
+/* Check PIO transfer for PIOREAD_STREAM commands */
+static int gdc_check_pio_transfer(int f, int *size) {
+    MAKE_SYSCALL(return, f, size, 13);
+}
+#endif
 
 /* The G1 ATA access mutex */
 mutex_t _g1_ata_mutex = RECURSIVE_MUTEX_INITIALIZER;
@@ -104,33 +135,50 @@ int cdrom_set_sector_size(int size) {
 /* Command execution sequence */
 /* XXX: It might make sense to have a version of this that takes a timeout. */
 int cdrom_exec_cmd(int cmd, void *param) {
-    int status[4] = {0};
+    int status[4] = {
+        0, /* Error code 1 */
+        0, /* Error code 2 */
+        0, /* Transfered size */
+        0  /* ATA status waiting */
+    };
     int f, n;
 
+    assert(cmd > 0 && cmd < CMD_MAX);
     mutex_lock(&_g1_ata_mutex);
 
     /* Make sure to select the GD-ROM drive. */
     g1_ata_select_device(G1_ATA_MASTER);
 
-    /* Submit the command and wait for it to finish */
-    f = gdc_req_cmd(cmd, param);
+    /* Submit the command */
+    for(n = 0; n < 10; ++n) {
+        f = gdc_req_cmd(cmd, param);
+        if (f > 0) {
+            break;
+        }
+        gdc_exec_server();
+        thd_pass();
+    }
 
+    if(f <= 0) {
+        mutex_unlock(&_g1_ata_mutex);
+        return ERR_SYS;
+    }
+
+    /* Wait command to finish */
     do {
         gdc_exec_server();
         n = gdc_get_cmd_stat(f, status);
 
-        if(n == PROCESSING)
-            thd_pass();
-    }
-    while(n == PROCESSING)
-        ;
+        if(n != PROCESSING && n != BUSY) {
+            break;
+        }
+        thd_pass();
+    } while(1);
 
     mutex_unlock(&_g1_ata_mutex);
 
-    if(n == COMPLETED)
+    if(n == COMPLETED || n == STREAMING)
         return ERR_OK;
-    else if(n == ABORTED)
-        return ERR_ABORTED;
     else if(n == NO_ACTIVE)
         return ERR_NO_ACTIVE;
     else {
@@ -142,6 +190,8 @@ int cdrom_exec_cmd(int cmd, void *param) {
             default:
                 return ERR_SYS;
         }
+        if(status[1] != 0)
+            return ERR_SYS;
     }
 }
 
