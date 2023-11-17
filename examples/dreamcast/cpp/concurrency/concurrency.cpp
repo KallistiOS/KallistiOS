@@ -717,7 +717,7 @@ int main(int argc, char* argv[]) {
         std::vector<std::jthread> threads;
         
         for(int i = 0; i < THREAD_COUNT; ++i)
-            threads.emplace_back([]() {
+            threads.emplace_back([] {
                 return std::array { 
                     std::async(test_semaphore),
                     std::async(test_latch),
