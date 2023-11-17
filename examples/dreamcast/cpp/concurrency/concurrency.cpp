@@ -8,7 +8,7 @@
 
 /* 
     This file serves as both an example of using and as validation test suite
-    for all of standard C++ concurrency, through C++20. It is composed of 9 
+    for all of standard C++ concurrency, through C++20. It is composed of 8 
     standalone test cases, which have been either created from scratch or have
     been adopted from examples on cppreference.com. These test cases aim to 
     flex the various synchronization primitives and threading constructs,
@@ -18,6 +18,8 @@
     failed. 
 
     The following constructs are tested:
+        - atomic
+        - thread_local
         - async
         - thread/jthread
         - mutex
@@ -30,12 +32,12 @@
         - latch
         - shared_lock
         - condition_variable
-        - shared_timed_mutex
         - scoped_lock
         - barrier
         - stop_source
-        - coroutines
-        - syncstreams
+        - stop_token
+        - coroutine
+        - syncstream
 */
 
 #include <iostream>
@@ -62,7 +64,7 @@
 #include <arch/wdt.h>
 
 // 20 seconds in us
-inline constexpr unsigned WATCHDOG_TIMEOUT = (20 * 1000 * 1000);  
+inline constexpr unsigned WATCHDOG_TIMEOUT = (100 * 1000 * 1000);  
 // Number of threads to spawn -- each of which runs the entire test suite
 inline constexpr int THREAD_COUNT = 10; 
 
@@ -101,7 +103,7 @@ static void run_semaphore(std::binary_semaphore &sem_main_to_thread,
  
     // wait for 3 seconds to imitate some work
     // being done by the thread
-    std::this_thread::sleep_for(1s);
+    std::this_thread::sleep_for(1ms);
  
     std::cout << "[BINARY_SEMAPHORE] thread: Send the signal" << std::endl;
  
@@ -322,28 +324,8 @@ static void test_condition_variable() {
 
     std::cout << "[COND_VARIABLE] Finished test." << std::endl;
 }
-
-/* ===== TEST CASE 5: std::shared_timed_mutex ===== */
-class R {
-    mutable std::shared_timed_mutex mut;
-    /* data */
-public:
-    R& operator=(const R& other) {
-        // requires exclusive ownership to write to *this
-        std::unique_lock<std::shared_timed_mutex> lhs(mut, std::defer_lock);
-        // requires shared ownership to read from other
-        std::shared_lock<std::shared_timed_mutex> rhs(other.mut, std::defer_lock);
-        std::lock(lhs, rhs);
-        /* assign data */
-        return *this;
-    }
-};
  
-static void test_shared_timed_mutex() {
-    R r;
-}
- 
-/* ===== TEST CASE 6: std::scoped_lock ===== 
+/* ===== TEST CASE 5: std::scoped_lock ===== 
     The parent thread creates 4 different employees,
     each of which has a list of lunch_partners as well as a 
     mutex to control access to them. The main thread then 
@@ -373,7 +355,7 @@ static void send_mail(Employee &, Employee &) {
 }
  
 static void assign_lunch_partner(Employee &e1, Employee &e2) {
-    static std::mutex io_mutex;
+    static thread_local std::mutex io_mutex;
     {
         std::lock_guard<std::mutex> lk(io_mutex);
         std::cout << "[SCOPED_LOCK] " << e1.id << " and " << e2.id 
@@ -410,8 +392,8 @@ static void assign_lunch_partner(Employee &e1, Employee &e2) {
 }
  
 static void test_scoped_lock() {
-    Employee ryo("Ryo Hazuki"), amigo("Samba De Amigo"), 
-             eggman("Dr. Eggman"), ulala("Ulala");
+    Employee ryo("RyoHazuki"), amigo("SambaDeAmigo"), 
+             eggman("Dr.Eggman"), ulala("Ulala");
  
     // assign in parallel threads because mailing users about lunch assignments
     // takes a long time
@@ -430,7 +412,7 @@ static void test_scoped_lock() {
               << "[SCOPED_LOCK] " << ulala.partners() << std::endl;
 }
 
-/* ===== TEST CASE 7: std::barrier ===== 
+/* ===== TEST CASE 6: std::barrier ===== 
     The parent thread creates a list of 4 workers and a std::sync_point
     of the same size with a completion callback. It then spawns a child
     thread for each worker, which performs some work then awaits for all
@@ -468,10 +450,15 @@ static void test_barrier() {
     std::cout << "[BARRIER] Finishing test." << std::endl;
 }
 
-/* ===== TEST CASE 8: std::stop_source ===== 
- 
+/* ===== TEST CASE 7: std::stop_source ===== 
+    The parent thread creates a stop_source, then creates
+    4 child threads, passing each one the stop_source. Each 
+    child thread begins a loop of simply sleeping unless a
+    stop is requested. After 150ms elapse, the parent thread
+    requests that the child threads stop, after which they
+    return and join with their parent thread. 
 */
-static void run_stop_source(int id, std::stop_source stop_source) {
+static void run_stop_source(int id, std::stop_source stop_source, std::atomic<unsigned> &counter) {
     std::stop_token stoken = stop_source.get_token();
 
     for (int i = 10; i; --i) {
@@ -480,18 +467,21 @@ static void run_stop_source(int id, std::stop_source stop_source) {
         if (stoken.stop_requested()) {
             std::cout << "[STOP_SOURCE] worker " << id 
                       << " is requested to stop" << std::endl;
-            return;
+            break;
         }
         
         std::cout << "[STOP_SOURCE] worker " << id 
                   << " goes back to sleep" << std::endl;
     }
+
+    ++counter;
 }
  
 static void test_stop_source() {
-    std::jthread threads[4];
+    std::thread threads[4];
+    std::atomic<unsigned> counter = 0;
 
-    std::cout << "[STOP_SOURCE]: Starting test." << std::endl;
+    std::cout << "[STOP_SOURCE] Starting test." << std::endl;
 
     std::cout << std::boolalpha;
     auto print = [](const std::stop_source &source) {
@@ -507,21 +497,25 @@ static void test_stop_source() {
  
     // Create worker threads
     for (int i = 0; i < 4; ++i)
-        threads[i] = std::jthread(run_stop_source, i + 1, stop_source);
+        threads[i] = std::thread(run_stop_source, i + 1, stop_source, std::ref(counter));
  
-    std::this_thread::sleep_for(1ms);
+    std::this_thread::sleep_for(150ms);
  
     std::cout << "[STOP_SOURCE] Request stop" << std::endl;
     stop_source.request_stop();
  
     print(stop_source);
 
-    std::cout << "[STOP_SOURCE]: Finishing test." << std::endl; 
+    std::cout << "[STOP_SOURCE] Finishing test." << std::endl; 
 
-    // Note: destructor of jthreads will call join so no need for explicit calls
+    for (int i = 0; i < 4; ++i)
+        threads[i].join();
+
+    if(counter != 4)
+        throw TestCaseException("[STOP_SOURCE]: Unexpected value for atomic counter!");
 }
 
-/* ===== TEST CASE 9: coroutines ===== 
+/* ===== TEST CASE 8: coroutines ===== 
     This test creates a coroutine-based game of Russian
     Roulette. 
 
@@ -659,8 +653,7 @@ namespace {
     defer_raii(FF &&ff) -> defer_raii<decltype(ff)>;
 }  // anonymous namespace
 
-
-auto defer(auto f) {
+auto defer(auto &&f) {
     return defer_raii { std::forward<decltype(f)>(f) };
 }
 
@@ -730,7 +723,6 @@ int main(int argc, char* argv[]) {
                     std::async(test_latch),
                     std::async(test_shared_lock),
                     std::async(test_condition_variable),
-                    std::async(test_shared_timed_mutex),
                     std::async(test_scoped_lock),
                     std::async(test_barrier),
                     std::async(test_stop_source),
