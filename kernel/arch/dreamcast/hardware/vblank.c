@@ -95,8 +95,8 @@ int vblank_init(void) {
     vblid_high = 1;
 
     /* Hook and enable the interrupt */
-    asic_evt_set_handler(ASIC_EVT_PVR_VBLINT, vblank_handler);
-    asic_evt_enable(ASIC_EVT_PVR_VBLINT, ASIC_IRQ_DEFAULT);
+    asic_evt_set_handler(ASIC_EVT_PVR_VBLANK_BEG, vblank_handler);
+    asic_evt_enable(ASIC_EVT_PVR_VBLANK_BEG, ASIC_IRQ_DEFAULT);
 
     return 0;
 }
@@ -105,8 +105,8 @@ int vblank_shutdown(void) {
     struct vblhnd * c, * n;
 
     /* Disable and unhook the interrupt */
-    asic_evt_disable(ASIC_EVT_PVR_VBLINT, ASIC_IRQ_DEFAULT);
-    asic_evt_set_handler(ASIC_EVT_PVR_VBLINT, NULL);
+    asic_evt_disable(ASIC_EVT_PVR_VBLANK_BEG, ASIC_IRQ_DEFAULT);
+    asic_evt_set_handler(ASIC_EVT_PVR_VBLANK_BEG, NULL);
 
     /* Free any allocated handlers */
     c = TAILQ_FIRST(&vblhnds);

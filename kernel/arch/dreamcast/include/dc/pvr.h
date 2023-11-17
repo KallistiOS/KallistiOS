@@ -1030,7 +1030,7 @@ Striplength set to 2 */
 #define PVR_COLOR_CLAMP_MAX     0x00bc  /**< \brief RGB Color clamp max */
 #define PVR_COLOR_CLAMP_MIN     0x00c0  /**< \brief RGB Color clamp min */
 #define PVR_GUN_POS             0x00c4  /**< \brief Light gun position */
-#define PVR_UNK_00C8            0x00c8  /**< \brief ?? -- write same as border H in 00d4 << 16 */
+#define PVR_HPOS_IRQ            0x00c8  /**< \brief Horizontal position IRQ */
 #define PVR_VPOS_IRQ            0x00cc  /**< \brief Vertical position IRQ */
 #define PVR_IL_CFG              0x00d0  /**< \brief Interlacing config */
 #define PVR_BORDER_X            0x00d4  /**< \brief Window border X position */
@@ -1160,6 +1160,17 @@ typedef struct {
         when rendering translucent polygons, meaning you must pre-sort them
         yourself if you want them to appear in the right order. */
     int     autosort_disabled;
+
+
+    /** \brief  OPB Overflow Count.
+
+        Preallocates this many extra OPBs (sets of tile bins), allowing the PVR
+        to use the extra space when there's too much geometry in the first OPB.
+    
+        Increasing this value can eliminate artifacts where pieces of geometry
+        flicker in and out of existence along the tile boundaries. */
+
+    int     opb_overflow_count;
 
 } pvr_init_params_t;
 
