@@ -192,10 +192,10 @@ void pvr_allocate_buffers(pvr_init_params_t *params) {
        for each poly type */
     opb_total_size = 0;
 
-    /**
-     * Previously, we specified 1 << 20 to say that the OPB grows "down" when the TA needs more than one.
-     * To make it grow "up" instead (increasing addresses), we set 0 as the default value.
-    */
+    /* Previously, we specified 1 << 20 to say that the OPB grows "down" when
+       the TA needs more than one. To make it grow "up" instead (increasing addresses),
+       we set 0 as the default value.
+     */
 #if 0
     pvr_state.list_reg_mask = 1 << 20;
 #else

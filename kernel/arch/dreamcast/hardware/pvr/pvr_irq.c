@@ -12,7 +12,7 @@
 #include <arch/cache.h>
 #include "pvr_internal.h"
 
-#ifdef DBG_PVR_ERRORS
+#ifdef PVR_RENDER_DBG
 #include <stdio.h>
 #endif
 
@@ -106,12 +106,12 @@ void pvr_int_handler(uint32 code) {
             pvr_state.render_completed = 1;
             pvr_sync_stats(PVR_SYNC_RNDDONE);
             break;
-        case ASIC_EVT_PVR_VBLANK_BEG:
+        case ASIC_EVT_PVR_VBLANK_BEGIN:
             pvr_sync_stats(PVR_SYNC_VBLANK);
             break;
     }
 
-#ifdef DBG_PVR_ERRORS
+#ifdef PVR_RENDER_DBG
     /* Show register values on each interrupt */
     switch (code) {
         case ASIC_EVT_PVR_ISP_OUTOFMEM:
@@ -157,7 +157,7 @@ void pvr_int_handler(uint32 code) {
 
     if(!pvr_state.to_texture[bufn]) {
         // If it's not a vblank, ignore the rest of this for now.
-        if(code != ASIC_EVT_PVR_VBLANK_BEG)
+        if(code != ASIC_EVT_PVR_VBLANK_BEGIN)
             return;
     }
     else {

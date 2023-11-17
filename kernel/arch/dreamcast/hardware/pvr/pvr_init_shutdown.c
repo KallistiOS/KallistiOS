@@ -154,7 +154,7 @@ int pvr_init(pvr_init_params_t *params) {
     asic_evt_set_handler(ASIC_EVT_PVR_RENDERDONE_TSP, pvr_int_handler);
     asic_evt_enable(ASIC_EVT_PVR_RENDERDONE_TSP, ASIC_IRQ_DEFAULT);
 
-#ifdef DBG_PVR_ERRORS
+#ifdef PVR_RENDER_DBG
     /* Hook up interrupt handlers for error events */
     asic_evt_set_handler(ASIC_EVT_PVR_ISP_OUTOFMEM, pvr_int_handler);
     asic_evt_enable(ASIC_EVT_PVR_ISP_OUTOFMEM, ASIC_IRQ_DEFAULT);
