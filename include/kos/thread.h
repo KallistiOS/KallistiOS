@@ -271,18 +271,13 @@ typedef struct kthread_attr {
     @{
 */
 #define THD_MODE_NONE       -1  /**< \brief Threads not running */
-#define THD_MODE_COOP       0   /**< \brief Cooperative mode (deprecated) */
+#define THD_MODE_COOP       0   /**< \brief Cooperative mode \deprecated */
 #define THD_MODE_PREEMPT    1   /**< \brief Preemptive threading mode */
 /** @} */
 
-/** \brief   The currently executing thread.
-
-    \warning
-    Do not manipulate this variable directly!
-
-    \sa thd_get_current
-*/
+/** \cond The currently executing thread -- Do not manipulate directly! */
 extern kthread_t *thd_current;
+/** \endcond */
 
 /** \brief   Block the current thread.
 

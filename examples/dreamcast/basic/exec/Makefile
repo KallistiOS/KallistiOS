@@ -5,6 +5,7 @@
 
 TARGET = exec.elf
 OBJS = exec.o romdisk.o
+KOS_ROMDISK_DIR = romdisk
 
 SUBTARGET = romdisk/sub.bin
 SUBOBJS = sub.o
@@ -26,12 +27,7 @@ $(SUBTARGET): $(SUBOBJS)
 	kos-cc -o sub.elf $(SUBOBJS)
 	$(KOS_OBJCOPY) -O binary sub.elf $(SUBTARGET)
 
-# You can safely remove the next two targets if you don't use a ROMDISK
 romdisk.img: $(SUBTARGET)
-	$(KOS_GENROMFS) -f romdisk.img -d romdisk -v -x .keepme
-
-romdisk.o: romdisk.img
-	$(KOS_BASE)/utils/bin2o/bin2o romdisk.img romdisk romdisk.o
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)

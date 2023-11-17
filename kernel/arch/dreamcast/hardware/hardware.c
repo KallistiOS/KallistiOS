@@ -40,10 +40,24 @@ int hardware_sys_init(void) {
     return 0;
 }
 
+void (*bba_la_init_weak)(void) __attribute__((weak));
+void (*bba_la_shutdown_weak)(void) __attribute__((weak));
+
+void bba_la_init(void) {
+    /* Setup network (this won't do anything unless we enable netcore) */
+    bba_init();
+    la_init();
+}
+
+void bba_la_shutdown(void) {
+    la_shutdown();
+    bba_shutdown();
+}
+
 int hardware_periph_init(void) {
     /* Init sound */
     spu_init();
-    spu_dma_init();
+    g2_dma_init();
 
 #ifndef _arch_sub_naomi
     /* Init CD-ROM.. NOTE: NO GD-ROM SUPPORT. ONLY CDs/CDRs. */
@@ -57,9 +71,8 @@ int hardware_periph_init(void) {
     vid_init(DEFAULT_VID_MODE, DEFAULT_PIXEL_MODE);
 
 #ifndef _arch_sub_naomi
-    /* Setup network (this won't do anything unless we enable netcore) */
-    bba_init();
-    la_init();
+    if(bba_la_init_weak)
+        (*bba_la_init_weak)();
 #endif
 
     initted = 2;
@@ -71,14 +84,14 @@ void hardware_shutdown(void) {
     switch(initted) {
         case 2:
 #ifndef _arch_sub_naomi
-            la_shutdown();
-            bba_shutdown();
+            if(bba_la_shutdown_weak)
+                (*bba_la_shutdown_weak)();
 #endif
             maple_shutdown();
 #if 0
             cdrom_shutdown();
 #endif
-            spu_dma_shutdown();
+            g2_dma_shutdown();
             spu_shutdown();
             vid_shutdown();
             /* fallthru */

@@ -1,7 +1,8 @@
 /* KallistiOS ##version##
 
    dc/spu.h
-   Copyright (C) 2000-2001 Megan Potter
+   Copyright (C) 2000, 2001 Megan Potter
+   Copyright (C) 2023 Ruslan Rostovtsev
 
 */
 
@@ -11,6 +12,7 @@
     This file deals with memory transfers and the like for the sound hardware.
 
     \author Megan Potter
+    \author Ruslan Rostovtsev
 */
 
 #ifndef __DC_SPU_H
@@ -20,10 +22,12 @@
 __BEGIN_DECLS
 
 #include <arch/types.h>
+#include <arch/memory.h>
 #include <dc/g2bus.h>
 
-/** \brief  Waits for the sound FIFO to empty. */
-void spu_write_wait(void);
+/** \brief  Sound ram address from the SH4 side */
+#define SPU_RAM_BASE 0x00800000
+#define SPU_RAM_UNCACHED_BASE (MEM_AREA_P2_BASE | SPU_RAM_BASE)
 
 /** \brief  Copy a block of data to sound RAM.
 
@@ -35,7 +39,21 @@ void spu_write_wait(void);
     \param  length          The number of bytes to copy. Automatically rounded
                             up to be a multiple of 4.
 */
-void spu_memload(uint32 to, void *from, int length);
+void spu_memload(uintptr_t to, void *from, size_t length);
+
+
+/** \brief  Copy a block of data to sound RAM.
+
+    This function acts much like memcpy() but copies to the sound RAM area
+    by using the store queues.
+
+    \param  to              The offset in sound RAM to copy to. Do not include
+                            the 0xA0800000 part, it is implied.
+    \param  from            A pointer to copy from.
+    \param  length          The number of bytes to copy. Automatically rounded
+                            up to be a multiple of 4.
+*/
+void spu_memload_sq(uintptr_t to, void *from, size_t length);
 
 /** \brief  Copy a block of data from sound RAM.
 
@@ -47,7 +65,7 @@ void spu_memload(uint32 to, void *from, int length);
     \param  length          The number of bytes to copy. Automatically rounded
                             up to be a multiple of 4.
 */
-void spu_memread(void *to, uint32 from, int length);
+void spu_memread(void *to, uintptr_t from, size_t length);
 
 /** \brief  Set a block of sound RAM to the specified value.
 
@@ -60,7 +78,7 @@ void spu_memread(void *to, uint32 from, int length);
     \param  length          The number of bytes to copy. Automatically rounded
                             up to be a multiple of 4.
 */
-void spu_memset(uint32 to, uint32 what, int length);
+void spu_memset(uintptr_t to, uint32_t what, size_t length);
 
 /* DMA copy from SH-4 RAM to SPU RAM; length must be a multiple of 32,
    and the source and destination addresses must be aligned on 32-byte
@@ -97,8 +115,8 @@ typedef g2_dma_callback_t spu_dma_callback_t;
     \em     EFAULT - from or dest is not aligned \n
     \em     EIO - I/O error
 */
-int spu_dma_transfer(void * from, uint32 dest, uint32 length, int block,
-                     spu_dma_callback_t callback, ptr_t cbdata);
+int spu_dma_transfer(void *from, uintptr_t dest, size_t length, int block,
+                     spu_dma_callback_t callback, void *cbdata);
 
 /** \brief  Enable the SPU.
 
@@ -155,17 +173,6 @@ int spu_init(void);
     \retval 0               On success (no error conditions defined).
 */
 int spu_shutdown(void);
-
-/** \brief  Initialize SPU DMA support.
-
-    This function sets up the DMA support for transfers to the sound RAM area.
-
-    \retval 0               On success (no error conditions defined).
-*/
-int spu_dma_init(void);
-
-/** \brief  Shutdown SPU DMA support. */
-void spu_dma_shutdown(void);
 
 /** \brief  Reset SPU channels. */
 void spu_reset_chans(void);

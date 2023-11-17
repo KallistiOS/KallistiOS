@@ -30,9 +30,6 @@ static int textured = 1;
 
 #define SIZE 256
 
-extern uint8 romdisk[];
-KOS_INIT_ROMDISK(romdisk);
-
 #define CLAMP(low, high, value) (value < low ? low : (value > high ? high : value))
 
 static pvr_ptr_t load_texture(const char fn[]) {

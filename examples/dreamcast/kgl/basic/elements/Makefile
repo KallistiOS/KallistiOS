@@ -5,6 +5,7 @@
 
 TARGET = gl-elements.elf
 OBJS = gl-elements.o pvr-texture.o romdisk.o
+KOS_ROMDISK_DIR = romdisk
 
 all: rm-elf $(TARGET)
 
@@ -18,12 +19,6 @@ rm-elf:
 
 $(TARGET): $(OBJS)
 	kos-cc -o $(TARGET) $(OBJS) -L$(KOS_BASE)/lib -lGL -lm
-
-romdisk.img: 
-	$(KOS_GENROMFS) -f romdisk.img -d romdisk -v
-
-romdisk.o: romdisk.img
-	$(KOS_BASE)/utils/bin2o/bin2o romdisk.img romdisk romdisk.o
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)

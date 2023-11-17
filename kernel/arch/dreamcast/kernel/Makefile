@@ -11,7 +11,7 @@
 
 COPYOBJS = banner.o cache.o entry.o irq.o init.o mm.o panic.o
 COPYOBJS += rtc.o timer.o wdt.o
-COPYOBJS += init_flags_default.o init_romdisk_default.o
+COPYOBJS += init_flags_default.o
 COPYOBJS += mmu.o itlb.o
 COPYOBJS += exec.o execasm.o stack.o gdb_stub.o thdswitch.o arch_exports.o
 COPYOBJS += uname.o

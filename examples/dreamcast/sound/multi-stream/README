@@ -1,0 +1,20 @@
+Overview
+This example demonstrates audio playback using libwav (kos-port). The sounds utilized in this example were sourced from https://gamesounds.xyz/?dir=Sound%20Effects/Bathroom and converted to ADPCM format.
+
+Conversion to ADPCM Format
+This conversion was achieved using FFmpeg, a powerful multimedia framework. The following command was used for conversion:
+
+ffmpeg -i PCM16_stereo.wav -acodec adpcm_yamaha -ac 2 ADPCM_stereo.wav
+
+This command converts a stereo PCM WAV file (PCM16_stereo.wav) to a stereo Yamaha ADPCM WAV file (ADPCM_stereo.wav).
+
+Playback Using libwav (kos-port)
+The libwav (kos-port) library is used for audio playback in this project. It is versatile and supports all the Dreamcast
+audio formats:
+
+4-bit ADPCM data (as demonstrated in this example)
+8-bit and 16-bit uncompressed PCM data
+
+Use the following command to convert a 16-bit stereo PCM WAV file (PCM16_stereo.wav) to a 8-bit stereo PCM WAV file (PCM8_mono.wav):
+
+ffmpeg -i PCM16_stereo.wav -acodec pcm_u8 -ac 1 PCM8_mono.wav

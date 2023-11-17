@@ -4,9 +4,9 @@
 
 #
 
-KOS_ROMDISK_DIR = romdisk
 TARGET = rumble.elf
 OBJS = rumble.o romdisk.o
+KOS_ROMDISK_DIR = romdisk
 
 all: rm-elf $(TARGET)
 

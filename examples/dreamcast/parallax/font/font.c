@@ -14,9 +14,7 @@
 #include <plx/list.h>
 #include <plx/dr.h>
 
-extern uint8 romdisk[];
 KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS);
-KOS_INIT_ROMDISK(romdisk);
 
 int main(int argc, char **argv) {
     plx_font_t * fnt;

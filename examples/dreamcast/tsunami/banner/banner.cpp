@@ -44,9 +44,7 @@ even the main loop and user input eventually.
 
 #include <memory>
 
-extern uint8 romdisk[];
 KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS);
-KOS_INIT_ROMDISK(romdisk);
 
 // Simple animation class which rotates in a circle. This shows how
 // you can create your own animations very simply.

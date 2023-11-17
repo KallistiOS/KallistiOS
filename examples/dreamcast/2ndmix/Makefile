@@ -6,10 +6,10 @@
 
 TARGET = 2ndmix.elf
 OBJS = 2ndmix.o romdisk.o
+KOS_ROMDISK_DIR = romdisk
 
 all: rm-elf $(TARGET)
 
-KOS_ROMDISK_DIR = romdisk_boot
 include $(KOS_BASE)/Makefile.rules
 
 clean: rm-elf

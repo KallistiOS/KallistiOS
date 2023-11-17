@@ -90,9 +90,6 @@ void draw_gl(void) {
     }
 }
 
-extern uint8 romdisk[];
-KOS_INIT_ROMDISK(romdisk);
-
 int main(int argc, char **argv) {
     maple_device_t *cont;
     cont_state_t *state;

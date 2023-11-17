@@ -4,7 +4,6 @@
 
 TARGET = serpent.elf
 OBJS = serpent.o perfmeter.o romdisk.o
-
 KOS_ROMDISK_DIR = romdisk
 
 all: rm-elf $(TARGET)

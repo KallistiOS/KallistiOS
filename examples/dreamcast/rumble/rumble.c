@@ -31,9 +31,7 @@
 
 #include <plx/font.h>
 
-extern uint8_t romdisk[];
 KOS_INIT_FLAGS(INIT_DEFAULT);
-KOS_INIT_ROMDISK(romdisk);
 
 plx_fcxt_t *cxt;
 

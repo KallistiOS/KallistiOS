@@ -5,7 +5,7 @@
 #
 
 OBJS =
-SUBDIRS = arch debug fs thread net libc exports
+SUBDIRS = arch debug fs thread net libc exports romdisk
 STUBS = stubs/kernel_export_stubs.o stubs/arch_export_stubs.o
 
 # Everything from here up should be plain old C.
@@ -13,6 +13,7 @@ KOS_CFLAGS += $(KOS_CSTD)
 
 all: subdirs $(STUBS)
 	rm -f $(KOS_BASE)/lib/$(KOS_ARCH)/libkallisti.a
+	kos-ar rcs $(KOS_BASE)/lib/$(KOS_ARCH)/libromdiskbase.a romdisk/*.o
 	kos-ar rcs $(KOS_BASE)/lib/$(KOS_ARCH)/libkallisti.a build/*.o
 	kos-ar rcs $(KOS_BASE)/lib/$(KOS_ARCH)/libkallisti_exports.a stubs/*.o
 
@@ -27,6 +28,7 @@ include $(KOS_BASE)/Makefile.prefab
 clean: clean_subdirs
 	rm -f build/*.o
 	rm -f build/libc/*.o
+	rm -f romdisk/*.o
 	rm -f stubs/*.o stubs/kernel_export_stubs.c stubs/arch_export_stubs.c
 
 run:
