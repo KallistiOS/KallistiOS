@@ -4,8 +4,38 @@
 
    Copyright (C) 2023 Falco Girgis
 
+*/
 
+/* 
+    This file serves as both an example of using and as validation test suite
+    for all of standard C++ concurrency, through C++20. It is composed of 9 
+    standalone test cases, which have been either created from scratch or have
+    been adopted from examples on cppreference.com. These test cases aim to 
+    flex the various synchronization primitives and threading constructs,
+    demonstrating their usage and ensuring that KOS, the toolchain, and 
+    libstdc++ are behaving properly. After the tests run, a final result 
+    message will be displayed, indicating whether the test suite passed or 
+    failed. 
 
+    The following constructs are tested:
+        - async
+        - thread/jthread
+        - mutex
+        - shared_mutex
+        - unique_lock
+        - lock_guard
+        - future
+        - promise
+        - semaphore
+        - latch
+        - shared_lock
+        - condition_variable
+        - shared_timed_mutex
+        - scoped_lock
+        - barrier
+        - stop_source
+        - coroutines
+        - syncstreams
 */
 
 #include <iostream>
@@ -31,7 +61,10 @@
 
 #include <arch/wdt.h>
 
-#define WATCHDOG_TIMEOUT    (20 * 1000 * 1000)  // microseconds
+// 20 seconds in us
+inline constexpr unsigned WATCHDOG_TIMEOUT = (20 * 1000 * 1000);  
+// Number of threads to spawn -- each of which runs the entire test suite
+inline constexpr int THREAD_COUNT = 10; 
 
 using namespace std::chrono_literals;
 
@@ -50,7 +83,11 @@ class TestCaseException: public std::exception {
         }
 };
 
-/* ===== TEST CASE 1: std::binary_semaphore ===== */
+/* ===== TEST CASE 1: std::binary_semaphore ===== 
+    Simply spawns a worker thread and ping-pongs acquiring
+    and releasing two binary_semaphores between the worker and
+    parent thread.
+*/
 static void run_semaphore(std::binary_semaphore &sem_main_to_thread,
                           std::binary_semaphore &sem_thread_to_main) {
     // wait for a signal from the main proc
@@ -97,7 +134,14 @@ static void test_semaphore() {
     std::cout << "[BINARY_SEMAPHORE] Finished test." << std::endl;
 }
 
-/* ===== TEST CASE 2: std::latch ===== */
+/* ===== TEST CASE 2: std::latch ===== 
+    Creates 3 "Job" objects, each of which gets
+    managed by its own thread. First, the main thread
+    waits until all job threads have hit a synchronization
+    point (creating work). Then the workers wait until 
+    the main thread hits a synchronization point to begin
+    cleaning their work. 
+*/
 struct LatchJob {
     const std::string name;
     std::string product{"not worked"};
@@ -144,7 +188,14 @@ static void test_latch() {
     std::cout << "[LATCH] Finished test." << std::endl;
 }
 
-/* ===== TEST CASE 3: std::shared_lock ===== */
+/* ===== TEST CASE 3: std::shared_lock ===== 
+    Creates a SharedLockCounter in the parent thread, which then
+    gets passed to two child threads, both of which attempt to 
+    increment its value 3 times and print it. Write operations 
+    are protected via std::unique_locks, while the read operation,
+    get(), is protected by a std::shared_lock. This models a 
+    traditional "ReadWrite" lock.
+*/
 
 class SharedLockCounter {
 public:
@@ -178,7 +229,7 @@ static void test_shared_lock() {
 
     std::cout << "[SHARED_LOCK] Starting test." << std::endl;
 
-    auto increment_and_print = [&counter]() {
+    auto increment_and_print = [&counter] {
         for(int i{}; i != 3; ++i) {
             counter.increment();
             std::osyncstream(std::cout)
@@ -200,7 +251,17 @@ static void test_shared_lock() {
     std::cout << "[SHARED_LOCK] Finished test." << std::endl;
 }
 
-/* ===== TEST CASE 4: std::condition_variable ===== */
+/* ===== TEST CASE 4: std::condition_variable ===== 
+    Spawns a worker thread, passing it a state object with both a 
+    mutex and a condition_variable. The parent thread populates the 
+    data field within the state object then uses the condition_variable
+    to signal to one thread (the child) that its data is ready to process.
+    The parent thread then waits on the condition_variable, which the
+    child thread signals back when it is done processing its work data.
+
+    Basically the parent and child threads swap between signalling to 
+    each other to proceed execution via the condition_variable.
+*/
 struct CondVarState { 
     std::mutex m;
     std::condition_variable cv;
@@ -282,6 +343,16 @@ static void test_shared_timed_mutex() {
     R r;
 }
  
+/* ===== TEST CASE 6: std::scoped_lock ===== 
+    The parent thread creates 4 different employees,
+    each of which has a list of lunch_partners as well as a 
+    mutex to control access to them. The main thread then 
+    creates 4 child threads, passing each a different pair 
+    of employees. Each child thread uses a std::scoped_lock
+    to acquire the two employee locks simultaneously, before
+    adding them to each other's lunch partner lists. Finally, 
+    the resulting lunch partner lists are printed. 
+*/
 struct Employee {
     std::vector<std::string> lunch_partners;
     std::string id;
@@ -298,7 +369,7 @@ struct Employee {
  
 static void send_mail(Employee &, Employee &) {
     // simulate a time-consuming messaging operation
-    std::this_thread::sleep_for(1s);
+    std::this_thread::yield();
 }
  
 static void assign_lunch_partner(Employee &e1, Employee &e2) {
@@ -307,8 +378,6 @@ static void assign_lunch_partner(Employee &e1, Employee &e2) {
         std::lock_guard<std::mutex> lk(io_mutex);
         std::cout << "[SCOPED_LOCK] " << e1.id << " and " << e2.id 
                   << " are waiting for locks" << std::endl;
-    
-        std::this_thread::yield();
     }
  
     {
@@ -341,29 +410,37 @@ static void assign_lunch_partner(Employee &e1, Employee &e2) {
 }
  
 static void test_scoped_lock() {
-    Employee alice("Alice"), bob("Bob"), christina("Christina"), dave("Dave");
+    Employee ryo("Ryo Hazuki"), amigo("Samba De Amigo"), 
+             eggman("Dr. Eggman"), ulala("Ulala");
  
     // assign in parallel threads because mailing users about lunch assignments
     // takes a long time
     std::vector<std::thread> threads;
-    threads.emplace_back(assign_lunch_partner, std::ref(alice), std::ref(bob));
-    threads.emplace_back(assign_lunch_partner, std::ref(christina), std::ref(bob));
-    threads.emplace_back(assign_lunch_partner, std::ref(christina), std::ref(alice));
-    threads.emplace_back(assign_lunch_partner, std::ref(dave), std::ref(bob));
+    threads.emplace_back(assign_lunch_partner, std::ref(ryo), std::ref(amigo));
+    threads.emplace_back(assign_lunch_partner, std::ref(eggman), std::ref(amigo));
+    threads.emplace_back(assign_lunch_partner, std::ref(eggman), std::ref(ryo));
+    threads.emplace_back(assign_lunch_partner, std::ref(ulala), std::ref(amigo));
  
     for (auto &thread : threads)
         thread.join();
 
-    std::cout << "[SCOPED_LOCK] " << alice.partners() << '\n'  
-              << "[SCOPED_LOCK] " << bob.partners() << '\n'
-              << "[SCOPED_LOCK] " << christina.partners() << '\n' 
-              << "[SCOPED_LOCK] " << dave.partners() << std::endl;
+    std::cout << "[SCOPED_LOCK] " << ryo.partners() << '\n'  
+              << "[SCOPED_LOCK] " << amigo.partners() << '\n'
+              << "[SCOPED_LOCK] " << eggman.partners() << '\n' 
+              << "[SCOPED_LOCK] " << ulala.partners() << std::endl;
 }
 
+/* ===== TEST CASE 7: std::barrier ===== 
+    The parent thread creates a list of 4 workers and a std::sync_point
+    of the same size with a completion callback. It then spawns a child
+    thread for each worker, which performs some work then awaits for all
+    threads to hit the sync point before continuing on to clean the work
+    and finally hitting a second sync point before exiting. 
+*/
 static void test_barrier() {
     const auto workers = { "Dreamcast", "Playstation 2", "Gamecube", "Xbox" };
  
-    auto on_completion = []() noexcept {
+    auto on_completion = [] {
         // locking not needed here
         static auto phase = "... done\n" "Cleaning up...\n";
         std::cout << "[BARRIER] " << phase;
@@ -391,11 +468,14 @@ static void test_barrier() {
     std::cout << "[BARRIER] Finishing test." << std::endl;
 }
 
+/* ===== TEST CASE 8: std::stop_source ===== 
+ 
+*/
 static void run_stop_source(int id, std::stop_source stop_source) {
     std::stop_token stoken = stop_source.get_token();
 
     for (int i = 10; i; --i) {
-        std::this_thread::sleep_for(300ms);
+        std::this_thread::sleep_for(1ms);
         
         if (stoken.stop_requested()) {
             std::cout << "[STOP_SOURCE] worker " << id 
@@ -429,7 +509,7 @@ static void test_stop_source() {
     for (int i = 0; i < 4; ++i)
         threads[i] = std::jthread(run_stop_source, i + 1, stop_source);
  
-    std::this_thread::sleep_for(500ms);
+    std::this_thread::sleep_for(1ms);
  
     std::cout << "[STOP_SOURCE] Request stop" << std::endl;
     stop_source.request_stop();
@@ -441,15 +521,30 @@ static void test_stop_source() {
     // Note: destructor of jthreads will call join so no need for explicit calls
 }
 
-using namespace std;
+/* ===== TEST CASE 9: coroutines ===== 
+    This test creates a coroutine-based game of Russian
+    Roulette. 
+
+    The parent thread creates an array of 6 user_behavior_t
+    coroutine objects, which model the players. The parent
+    thread then creates a revolver, whose chamber size is 
+    as large as the number of players, and which chooses
+    one chamber position at random to load a bullet into. 
+
+    Finally, the parent thread calls russian_roulette(), 
+    which iterates over each user coroutine, updating its
+    state based on whether the revolver fired or hit the
+    player. It continues to do this until a victim has 
+    been found. 
+*/
 
 class promise_manual_control {
   public:
     auto initial_suspend() {
-        return suspend_always{}; // suspend after invoke
+        return std::suspend_always{}; // suspend after invoke
     }
     auto final_suspend() noexcept {
-        return suspend_always{}; // suspend after return
+        return std::suspend_always{}; // suspend after return
     }
     void unhandled_exception() {
         // this example never 'throw'. so nothing to do
@@ -457,7 +552,7 @@ class promise_manual_control {
 };
 
 //  behavior will be defined as a coroutine
-class user_behavior_t : public coroutine_handle<void> {
+class user_behavior_t : public std::coroutine_handle<void> {
   public:
     class promise_type : public promise_manual_control {
       public:
@@ -468,9 +563,9 @@ class user_behavior_t : public coroutine_handle<void> {
     };
 
   private:
-    user_behavior_t(promise_type* p) : coroutine_handle<void>{} {
-        coroutine_handle<void>& self = *this;
-        self = coroutine_handle<promise_type>::from_promise(*p);
+    user_behavior_t(promise_type* p) : std::coroutine_handle<void>{} {
+        std::coroutine_handle<void> &self = *this;
+        self = std::coroutine_handle<promise_type>::from_promise(*p);
     }
 
   public:
@@ -490,11 +585,11 @@ static auto select_chamber() -> chamber_t {
 //  trigger fires the bullet
 //  all players will 'wait' for it
 class trigger_t {
-    const chamber_t& loaded;
-    chamber_t& current;
+    const chamber_t &loaded;
+    chamber_t &current;
 
   public:
-    trigger_t(const chamber_t& _loaded, chamber_t& _current)
+    trigger_t(const chamber_t &_loaded, chamber_t &_current)
         : loaded{_loaded}, current{_current} {
     }
 
@@ -507,7 +602,7 @@ class trigger_t {
     bool await_ready() {
         return false;
     }
-    void await_suspend(coroutine_handle<void>) {}
+    void await_suspend(std::coroutine_handle<void>) {}
     bool await_resume() {
         return pull();
     }
@@ -520,7 +615,7 @@ class trigger_t {
 //     (fired = true; then return)
 //  3. be skipped because of the other player became a victim
 //     (destroyed when it is suspended - no output)
-static auto player(std::size_t id, bool& fired, trigger_t& trigger) -> user_behavior_t {
+static auto player(std::size_t id, bool &fired, trigger_t &trigger) -> user_behavior_t {
     // bang !
     fired = co_await trigger;
     fired ? std::cout << "[COROUTINES]: Player " << id << " dead  :(" << std::endl
@@ -570,24 +665,24 @@ auto defer(auto f) {
 }
 
 // the game will go on until the revolver fires its bullet
-static void russian_roulette(revolver_t& revolver, std::span<user_behavior_t> users) {
+static void russian_roulette(revolver_t &revolver, std::span<user_behavior_t> users) {
     bool fired = false;
 
     // spawn player coroutines with their id
     std::size_t id{};
-    for (auto& user : users)
+    for (auto &user : users)
         user = player(++id, fired, revolver);
 
     // cleanup the game on return
     auto on_finish = defer([users] {
-        for (coroutine_handle<void> &frame : users)
+        for (std::coroutine_handle<void> &frame : users)
             frame.destroy();
     });
 
     // until there is a victim ...
     for (id = 0u; fired == false; id = (id + 1) % users.size()) {
         // continue the users' behavior in round-robin manner
-        coroutine_handle<void>& task = users[id];
+        std::coroutine_handle<void> &task = users[id];
         if (task.done() == false)
             task.resume();
     }
@@ -597,7 +692,7 @@ static void test_coroutines() {
     std::cout << "[COROUTINES]: Starting test." << std::endl;
 
     // select some chamber with the users
-    array<user_behavior_t, 6> users{};
+    std::array<user_behavior_t, 6> users{};
     revolver_t revolver{select_chamber(),
                         static_cast<chamber_t>(users.max_size())};
 
@@ -606,7 +701,11 @@ static void test_coroutines() {
     std::cout << "[COROUTINES]: Finished test." << std::endl;
 }
 
+// Main program entry point 
 int main(int argc, char* argv[]) { 
+    /* Enable the watchdog timer so that if, for some reason, this
+       test deadlocks or hangs indefinitely, it will still gracefully
+       exit and report test failure back to dc-tool. */
     wdt_enable_timer(0, WATCHDOG_TIMEOUT, 0xf, 
                     [](void*) { 
                         std::cerr << "FAILURE: Watchdog timeout reached!"
@@ -614,6 +713,7 @@ int main(int argc, char* argv[]) {
                         exit(EXIT_FAILURE);
                     }, nullptr);
 
+    // Ensure that we disable the watchdog timer no matter how we exit 
     atexit(wdt_disable);
 
     /* Spawn N automatically joined threads which will each spawn threads 
@@ -623,7 +723,7 @@ int main(int argc, char* argv[]) {
     try { 
         std::vector<std::jthread> threads;
         
-        for(int i = 0; i < 10; ++i)
+        for(int i = 0; i < THREAD_COUNT; ++i)
             threads.emplace_back([]() {
                 return std::array { 
                     std::async(test_semaphore),
