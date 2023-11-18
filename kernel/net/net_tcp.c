@@ -1767,6 +1767,7 @@ static int net_tcp_setsockopt(net_socket_t *hnd, int level, int option_name,
                               const void *option_value, socklen_t option_len) {
     struct tcp_sock *sock;
     int tmp;
+    uint8_t *new_ptr;
 
     if(!option_value || !option_len) {
         errno = EFAULT;
@@ -1808,6 +1809,45 @@ static int net_tcp_setsockopt(net_socket_t *hnd, int level, int option_name,
                 case SO_ERROR:
                 case SO_TYPE:
                     goto ret_inval;
+
+                case SO_RCVBUF:
+                    if(option_len != sizeof(uint32_t))
+                        goto ret_inval;
+
+                    tmp = *(uint32_t *)option_value;
+                    /* Receive buffer size must be in the range 256 - 65535 */
+                    if(tmp < 256)
+                        tmp = 256;
+                    else if(tmp > 65535)
+                        tmp = 65535;
+
+                    new_ptr = realloc(sock->data.rcvbuf, tmp);
+                    if(!new_ptr)
+                        goto ret_nomem;
+
+                    sock->data.rcvbuf = new_ptr;
+                    sock->rcvbuf_sz = tmp;
+                    goto ret_success;
+
+                case SO_SNDBUF:
+                    if(option_len != sizeof(uint32_t))
+                        goto ret_inval;
+
+                    tmp = *(uint32_t *)option_value;
+                    /* Send buffer size must be in the range 2048 - 65535 */
+                    if(tmp < 2048)
+                        tmp = 2048;
+                    else if(tmp > 65535)
+                        tmp = 65535;
+
+                    new_ptr = realloc(sock->data.sndbuf, tmp);
+                    if(!new_ptr) {
+                        goto ret_nomem;
+                    }
+
+                    sock->data.sndbuf = new_ptr;
+                    sock->sndbuf_sz = tmp;
+                    goto ret_success;
             }
 
             break;
@@ -1887,6 +1927,12 @@ ret_inval:
     mutex_unlock(&sock->mutex);
     rwsem_read_unlock(&tcp_sem);
     errno = EINVAL;
+    return -1;
+
+ret_nomem:
+    mutex_unlock(&sock->mutex);
+    rwsem_read_unlock(&tcp_sem);
+    errno = ENOMEM;
     return -1;
 
 ret_success:
