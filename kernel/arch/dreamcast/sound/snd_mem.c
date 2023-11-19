@@ -1,7 +1,8 @@
 /* KallistiOS ##version##
 
    snd_mem.c
-   (C)2002 Megan Potter
+   Copyright (C) 2002 Megan Potter
+   Copyright (C) 2023 Ruslan Rostovtsev
 
  */
 
@@ -9,8 +10,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 #include <sys/queue.h>
 #include <dc/sound/sound.h>
+#include <arch/spinlock.h>
 
 /*
 
@@ -59,6 +62,8 @@ typedef struct snd_block_str {
 /* Our SPU RAM pool */
 static int initted = 0;
 static TAILQ_HEAD(snd_block_q, snd_block_str) pool = {0};
+static spinlock_t snd_mem_mutex = SPINLOCK_INITIALIZER;
+
 
 /* Reinitialize the pool with the given RAM base offset */
 int snd_mem_init(uint32 reserve) {
@@ -66,6 +71,16 @@ int snd_mem_init(uint32 reserve) {
 
     if(initted)
         snd_mem_shutdown();
+
+    if(irq_inside_int()) {
+        if(!spinlock_trylock(&snd_mem_mutex)) {
+            errno = EAGAIN;
+            return -1;
+        }
+    }
+    else {
+        spinlock_lock(&snd_mem_mutex);
+    }
 
     // Make sure our base is 32-byte aligned
     reserve = (reserve + 0x1f) & ~0x1f;
@@ -85,6 +100,7 @@ int snd_mem_init(uint32 reserve) {
 #endif
 
     initted = 1;
+    spinlock_unlock(&snd_mem_mutex);
 
     return 0;
 }
@@ -94,6 +110,16 @@ void snd_mem_shutdown(void) {
     snd_block_t *e, *n;
 
     if(!initted) return;
+
+    if(irq_inside_int()) {
+        if(!spinlock_trylock(&snd_mem_mutex)) {
+            errno = EAGAIN;
+            return;
+        }
+    }
+    else {
+        spinlock_lock(&snd_mem_mutex);
+    }
 
     e = TAILQ_FIRST(&pool);
 
@@ -112,6 +138,7 @@ void snd_mem_shutdown(void) {
     }
 
     initted = 0;
+    spinlock_unlock(&snd_mem_mutex);
 }
 
 /* Allocate a chunk of SPU RAM; we will return an offset into SPU RAM. */
@@ -123,6 +150,16 @@ uint32 snd_mem_malloc(size_t size) {
 
     if(size == 0)
         return 0;
+
+    if(irq_inside_int()) {
+        if(!spinlock_trylock(&snd_mem_mutex)) {
+            errno = EAGAIN;
+            return 0;
+        }
+    }
+    else {
+        spinlock_lock(&snd_mem_mutex);
+    }
 
     // Make sure the size is a multiple of 32 bytes to maintain alignment
     size = (size + 0x1f) & ~0x1f;
@@ -137,6 +174,7 @@ uint32 snd_mem_malloc(size_t size) {
 
     if(best == NULL) {
         dbglog(DBG_ERROR, "snd_mem_malloc: no chunks big enough for alloc(%d)\n", size);
+        spinlock_unlock(&snd_mem_mutex);
         return 0;
     }
 
@@ -146,6 +184,7 @@ uint32 snd_mem_malloc(size_t size) {
         dbglog(DBG_DEBUG, "snd_mem_malloc: allocating perfect-fit at %08lx for size %d\n", best->addr, best->size);
 #endif
         best->inuse = 1;
+        spinlock_unlock(&snd_mem_mutex);
         return best->addr;
     }
 
@@ -164,6 +203,8 @@ uint32 snd_mem_malloc(size_t size) {
 
     best->size = size;
     best->inuse = 1;
+
+    spinlock_unlock(&snd_mem_mutex);
     return best->addr;
 }
 
@@ -177,6 +218,16 @@ void snd_mem_free(uint32 addr) {
     if(addr == 0)
         return;
 
+    if(irq_inside_int()) {
+        if(!spinlock_trylock(&snd_mem_mutex)) {
+            errno = EAGAIN;
+            return;
+        }
+    }
+    else {
+        spinlock_lock(&snd_mem_mutex);
+    }
+
     /* Look for the block */
     TAILQ_FOREACH(e, &pool, qent) {
         if(e->addr == addr)
@@ -185,6 +236,7 @@ void snd_mem_free(uint32 addr) {
 
     if(!e) {
         dbglog(DBG_ERROR, "snd_mem_free: attempt to free non-existant block at %08lx\n", (uint32)e);
+        spinlock_unlock(&snd_mem_mutex);
         return;
     }
 
@@ -221,19 +273,30 @@ void snd_mem_free(uint32 addr) {
         TAILQ_REMOVE(&pool, o, qent);
         free(o);
     }
+    spinlock_unlock(&snd_mem_mutex);
 }
 
 uint32 snd_mem_available(void) {
     snd_block_t *e;
-    size_t      largest = 0;
+    size_t largest = 0;
 
     assert_msg(initted, "Use of snd_mem_available before snd_mem_init");
+
+    if(irq_inside_int()) {
+        if(!spinlock_trylock(&snd_mem_mutex)) {
+            errno = EAGAIN;
+            return 0;
+        }
+    }
+    else {
+        spinlock_lock(&snd_mem_mutex);
+    }
 
     TAILQ_FOREACH(e, &pool, qent) {
         if(e->size > largest)
             largest = e->size;
     }
 
+    spinlock_unlock(&snd_mem_mutex);
     return (uint32)largest;
 }
-

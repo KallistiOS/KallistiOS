@@ -331,7 +331,7 @@ snd_stream_hnd_t snd_stream_alloc(snd_stream_callback_t cb, int bufsize) {
     int i;
     snd_stream_hnd_t hnd;
 
-    mutex_lock(&stream_mutex);
+    mutex_lock_timed(&stream_mutex, LOCK_TIMEOUT_MS);
 
     /* Get an unused handle */
     hnd = -1;
@@ -392,9 +392,8 @@ snd_stream_hnd_t snd_stream_reinit(snd_stream_hnd_t hnd, snd_stream_callback_t c
 void snd_stream_destroy(snd_stream_hnd_t hnd) {
     filter_t *c, *n;
 
-    mutex_lock(&stream_mutex);
-
-    CHECK_HND(hnd);
+    assert(hnd >= 0 && hnd < SND_STREAM_MAX);
+    mutex_lock_timed(&stream_mutex, LOCK_TIMEOUT_MS);
 
     if(!streams[hnd].initted) {
         mutex_unlock(&stream_mutex);
@@ -592,10 +591,13 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
     void *first_dma_buf = sep_buffer[0];
     strchan_t *stream;
 
-    CHECK_HND(hnd);
+    assert(hnd >= 0 && hnd < SND_STREAM_MAX);
+    mutex_lock_timed(&stream_mutex, LOCK_TIMEOUT_MS);
+
     stream = &streams[hnd];
 
-    if(!stream->get_data) {
+    if(!stream->initted || !stream->get_data) {
+        mutex_unlock(&stream_mutex);
         return -1;
     }
 
@@ -617,6 +619,7 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
 
     if(samples_to_bytes(hnd, current_play_pos) >= stream->buffer_size) {
         dbglog(DBG_ERROR, "snd_stream_poll: chan0(%d).pos = %ld\n", stream->ch[0], ch0pos);
+        mutex_unlock(&stream_mutex);
         return -1;
     }
 
@@ -633,6 +636,7 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
     }
 
     if(needed_samples <= 0) {
+        mutex_unlock(&stream_mutex);
         return 0;
     }
 
@@ -661,10 +665,9 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
         /* Fill with zeros */
         spu_memset(stream->spu_ram_sch[0] + write_pos, 0, needed_bytes);
         spu_memset(stream->spu_ram_sch[1] + write_pos, 0, needed_bytes);
+        mutex_unlock(&stream_mutex);
         return -3;
     }
-
-    mutex_lock_timed(&stream_mutex, LOCK_TIMEOUT_MS);
 
     if(stream->channels == 2) {
         sep_buffer[1] = sep_buffer[0] + (SND_STREAM_BUFFER_MAX / 8);

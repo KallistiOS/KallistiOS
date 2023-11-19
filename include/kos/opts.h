@@ -59,6 +59,9 @@ __BEGIN_DECLS
 /* #define PVR_KM_DBG 1 */
 /* #define PVR_KM_DBG_VERBOSE 1 */
 
+/* Enable this define to enable PVR error interrupts and to have the interrupt
+   handler print them when they occur.  */
+/* #define PVR_RENDER_DBG */
 
 /* Aggregate debugging levels. It's probably best to enable these with your
    KOS_CFLAGS when compiling KOS itself, but they're all documented here and

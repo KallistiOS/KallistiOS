@@ -12,6 +12,10 @@
 #include <arch/cache.h>
 #include "pvr_internal.h"
 
+#ifdef PVR_RENDER_DBG
+#include <stdio.h>
+#endif
+
 /*
    PVR interrupt handler; the way things are setup, we're gonna get
    one of these for each full vertical refresh and at the completion
@@ -96,16 +100,45 @@ void pvr_int_handler(uint32 code) {
         case ASIC_EVT_PVR_PTDONE:
             pvr_state.lists_transferred |= 1 << PVR_OPB_PT;
             break;
-        case ASIC_EVT_PVR_RENDERDONE:
+        case ASIC_EVT_PVR_RENDERDONE_TSP:
             //DBG(("irq_renderdone\n"));
             pvr_state.render_busy = 0;
             pvr_state.render_completed = 1;
             pvr_sync_stats(PVR_SYNC_RNDDONE);
             break;
-        case ASIC_EVT_PVR_VBLINT:
+        case ASIC_EVT_PVR_VBLANK_BEGIN:
             pvr_sync_stats(PVR_SYNC_VBLANK);
             break;
     }
+
+#ifdef PVR_RENDER_DBG
+    /* Show register values on each interrupt */
+    switch (code) {
+        case ASIC_EVT_PVR_ISP_OUTOFMEM:
+            DBG(("[ERROR]: ASIC_EVT_PVR_ISP_OUTOFMEM\n"));
+            break;
+
+        case ASIC_EVT_PVR_STRIP_HALT:
+            DBG(("[ERROR]: ASIC_EVT_PVR_STRIP_HALT\n"));
+            break;
+
+        case ASIC_EVT_PVR_OPB_OUTOFMEM:
+            DBG(("[ERROR]: ASIC_EVT_PVR_OPB_OUTOFMEM\n"));
+            DBG(("PVR_TA_OPB_START: %08lx\nPVR_TA_OPB_END: %08lx\nPVR_TA_OPB_POS: %08lx\n",
+                PVR_GET(PVR_TA_OPB_START),
+                PVR_GET(PVR_TA_OPB_END),
+                PVR_GET(PVR_TA_OPB_POS) << 2));
+            break;
+
+        case ASIC_EVT_PVR_TA_INPUT_ERR:
+            DBG(("[ERROR]: ASIC_EVT_PVR_TA_INPUT_ERR\n"));
+            break;
+
+        case ASIC_EVT_PVR_TA_INPUT_OVERFLOW:
+            DBG(("[ERROR]: ASIC_EVT_PVR_TA_INPUT_OVERFLOW\n"));
+            break;
+    }
+#endif
 
     /* Update our stats if we finished all registration */
     switch(code) {
@@ -124,7 +157,7 @@ void pvr_int_handler(uint32 code) {
 
     if(!pvr_state.to_texture[bufn]) {
         // If it's not a vblank, ignore the rest of this for now.
-        if(code != ASIC_EVT_PVR_VBLINT)
+        if(code != ASIC_EVT_PVR_VBLANK_BEGIN)
             return;
     }
     else {

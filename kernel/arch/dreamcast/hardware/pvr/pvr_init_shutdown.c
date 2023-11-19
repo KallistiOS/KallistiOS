@@ -39,7 +39,10 @@ int pvr_init_defaults(void) {
         0,
 
         /* Translucent Autosort enabled. */
-        0
+        0,
+
+        /* Extra OPBs */
+        3
     };
 
     return pvr_init(&params);
@@ -137,6 +140,7 @@ int pvr_init(pvr_init_params_t *params) {
 
     /* Hook the PVR interrupt events on G2 */
     pvr_state.vbl_handle = vblank_handler_add(pvr_int_handler);
+    
     asic_evt_set_handler(ASIC_EVT_PVR_OPAQUEDONE, pvr_int_handler);
     asic_evt_enable(ASIC_EVT_PVR_OPAQUEDONE, ASIC_IRQ_DEFAULT);
     asic_evt_set_handler(ASIC_EVT_PVR_OPAQUEMODDONE, pvr_int_handler);
@@ -147,8 +151,22 @@ int pvr_init(pvr_init_params_t *params) {
     asic_evt_enable(ASIC_EVT_PVR_TRANSMODDONE, ASIC_IRQ_DEFAULT);
     asic_evt_set_handler(ASIC_EVT_PVR_PTDONE, pvr_int_handler);
     asic_evt_enable(ASIC_EVT_PVR_PTDONE, ASIC_IRQ_DEFAULT);
-    asic_evt_set_handler(ASIC_EVT_PVR_RENDERDONE, pvr_int_handler);
-    asic_evt_enable(ASIC_EVT_PVR_RENDERDONE, ASIC_IRQ_DEFAULT);
+    asic_evt_set_handler(ASIC_EVT_PVR_RENDERDONE_TSP, pvr_int_handler);
+    asic_evt_enable(ASIC_EVT_PVR_RENDERDONE_TSP, ASIC_IRQ_DEFAULT);
+
+#ifdef PVR_RENDER_DBG
+    /* Hook up interrupt handlers for error events */
+    asic_evt_set_handler(ASIC_EVT_PVR_ISP_OUTOFMEM, pvr_int_handler);
+    asic_evt_enable(ASIC_EVT_PVR_ISP_OUTOFMEM, ASIC_IRQ_DEFAULT);
+    asic_evt_set_handler(ASIC_EVT_PVR_STRIP_HALT, pvr_int_handler);
+    asic_evt_enable(ASIC_EVT_PVR_STRIP_HALT, ASIC_IRQ_DEFAULT);
+    asic_evt_set_handler(ASIC_EVT_PVR_OPB_OUTOFMEM, pvr_int_handler);
+    asic_evt_enable(ASIC_EVT_PVR_OPB_OUTOFMEM, ASIC_IRQ_DEFAULT);
+    asic_evt_set_handler(ASIC_EVT_PVR_TA_INPUT_ERR, pvr_int_handler);
+    asic_evt_enable(ASIC_EVT_PVR_TA_INPUT_ERR, ASIC_IRQ_DEFAULT);
+    asic_evt_set_handler(ASIC_EVT_PVR_TA_INPUT_OVERFLOW, pvr_int_handler);
+    asic_evt_enable(ASIC_EVT_PVR_TA_INPUT_OVERFLOW, ASIC_IRQ_DEFAULT);
+#endif
 
     /* 3d-specific parameters; these are all about rendering and
        nothing to do with setting up the video; some stuff in here
@@ -169,7 +187,8 @@ int pvr_init(pvr_init_params_t *params) {
     PVR_SET(PVR_UNK_007C, 0x0027df77);      /* M */
     PVR_SET(PVR_TEXTURE_MODULO, 0x00000000);    /* stride width */
     PVR_SET(PVR_FOG_DENSITY, 0x0000ff07);       /* fog density */
-    PVR_SET(PVR_UNK_00C8, PVR_GET(0x00d4) << 16);   /* M */
+    PVR_SET(PVR_HPOS_IRQ, PVR_GET(PVR_BORDER_X) << 16);   /* HBLANK settings (fire on line 0 at the start of the line) */
+    PVR_SET(PVR_VPOS_IRQ, PVR_GET(PVR_BORDER_Y));   /* VBLANK settings (VBLANK begin at start, VBLANK end at end) */
     PVR_SET(PVR_UNK_0118, 0x00008040);      /* M */
 
     /* Initialize PVR DMA */
@@ -218,8 +237,8 @@ int pvr_shutdown(void) {
     asic_evt_disable(ASIC_EVT_PVR_TRANSMODDONE, ASIC_IRQ_DEFAULT);
     asic_evt_set_handler(ASIC_EVT_PVR_PTDONE, NULL);
     asic_evt_disable(ASIC_EVT_PVR_PTDONE, ASIC_IRQ_DEFAULT);
-    asic_evt_set_handler(ASIC_EVT_PVR_RENDERDONE, NULL);
-    asic_evt_disable(ASIC_EVT_PVR_RENDERDONE, ASIC_IRQ_DEFAULT);
+    asic_evt_set_handler(ASIC_EVT_PVR_RENDERDONE_TSP, NULL);
+    asic_evt_disable(ASIC_EVT_PVR_RENDERDONE_TSP, ASIC_IRQ_DEFAULT);
 
     /* Shut down PVR DMA */
     pvr_dma_shutdown();
