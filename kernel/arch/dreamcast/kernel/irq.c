@@ -142,15 +142,15 @@ void irq_handle_exception(int code) {
     /* dbgio_printf("got int %04x %04x\n", code, evt); */
 
     /* If it's a timer interrupt, clear the status */
-    if(evt >= EXC_TMU0_TUNI0 && evt <= EXC_TMU2_TUNI2) {
-        if(evt == EXC_TMU0_TUNI0) {
-            timer_clear(TMU0);
+    if(evt >= EXC_TIMER_UNIT_0_TUNI0 && evt <= EXC_TIMER_UNIT_2_TUNI2) {
+        if(evt == EXC_TIMER_UNIT_0_TUNI0) {
+            timer_clear(TIMER_UNIT_0);
         }
-        else if(evt == EXC_TMU1_TUNI1) {
-            timer_clear(TMU1);
+        else if(evt == EXC_TIMER_UNIT_1_TUNI1) {
+            timer_clear(TIMER_UNIT_1);
         }
         else {
-            timer_clear(TMU2);
+            timer_clear(TIMER_UNIT_2);
         }
 
         handled = 1;

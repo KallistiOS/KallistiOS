@@ -122,17 +122,17 @@ uint8 scif_spi_rw_byte(uint8 b) {
 
 /* Very accurate 1.5usec delay... */
 static void slow_rw_delay(void) {
-    timer_prime(TMU1, 2000000, 0);
-    timer_clear(TMU1);
-    timer_start(TMU1);
+    timer_prime(TIMER_UNIT_1, 2000000, 0);
+    timer_clear(TIMER_UNIT_1);
+    timer_start(TIMER_UNIT_1);
 
-    while(!timer_clear(TMU1))
+    while(!timer_clear(TIMER_UNIT_1))
         ;
-    while(!timer_clear(TMU1))
+    while(!timer_clear(TIMER_UNIT_1))
         ;
-    while(!timer_clear(TMU1))
+    while(!timer_clear(TIMER_UNIT_1))
         ;
-    timer_stop(TMU1);
+    timer_stop(TIMER_UNIT_1);
 }
 
 uint8 scif_spi_slow_rw_byte(uint8 b) {

@@ -77,7 +77,7 @@ scif_spi_read_data
 timer_prime
 timer_start
 timer_stop
-timer_count
+timer_get_count
 timer_clear
 timer_enable_ints
 timer_disable_ints

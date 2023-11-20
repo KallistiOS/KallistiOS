@@ -90,7 +90,7 @@ int timer_stop(int which) {
 }
 
 /* Returns the count value of a timer */
-uint32 timer_count(int which) {
+uint32 timer_get_count(int which) {
     return TIMER32(tcnts[which]);
 }
 
@@ -105,19 +105,19 @@ int timer_clear(int which) {
 /* Spin-loop kernel sleep func: uses the secondary timer in the
    SH-4 to very accurately delay even when interrupts are disabled */
 void timer_spin_sleep(int ms) {
-    timer_prime(TMU1, 1000, 0);
-    timer_clear(TMU1);
-    timer_start(TMU1);
+    timer_prime(TIMER_UNIT_1, 1000, 0);
+    timer_clear(TIMER_UNIT_1);
+    timer_start(TIMER_UNIT_1);
 
     while(ms > 0) {
-        while(!(TIMER16(tcrs[TMU1]) & 0x100))
+        while(!(TIMER16(tcrs[TIMER_UNIT_1]) & 0x100))
             ;
 
-        timer_clear(TMU1);
+        timer_clear(TIMER_UNIT_1);
         ms--;
     }
 
-    timer_stop(TMU1);
+    timer_stop(TIMER_UNIT_1);
 }
 
 /* Enable timer interrupts (high priority); needs to move
@@ -148,20 +148,20 @@ static void timer_ms_handler(irq_t source, irq_context_t *context) {
     timer_ms_counter++;
 
     /* Clear overflow bit so we can check it when returning time */
-    TIMER16(tcrs[TMU2]) &= ~0x100;
+    TIMER16(tcrs[TIMER_UNIT_2]) &= ~0x100;
 }
 
 void timer_ms_enable(void) {
-    irq_set_handler(EXC_TMU2_TUNI2, timer_ms_handler);
-    timer_prime(TMU2, 1, 1);
-    timer_ms_countdown = timer_count(TMU2);
-    timer_clear(TMU2);
-    timer_start(TMU2);
+    irq_set_handler(EXC_TIMER_UNIT_2_TUNI2, timer_ms_handler);
+    timer_prime(TIMER_UNIT_2, 1, 1);
+    timer_ms_countdown = timer_get_count(TIMER_UNIT_2);
+    timer_clear(TIMER_UNIT_2);
+    timer_start(TIMER_UNIT_2);
 }
 
 void timer_ms_disable(void) {
-    timer_stop(TMU2);
-    timer_disable_ints(TMU2);
+    timer_stop(TIMER_UNIT_2);
+    timer_disable_ints(TIMER_UNIT_2);
 }
 
 /* Return the number of ticks since KOS was booted */
@@ -179,9 +179,9 @@ void timer_ms_gettime(uint32 *secs, uint32 *msecs) {
         assert(timer_ms_countdown > 0);
         /* Overflow is only notable if we have seconds we can
            overflow into, so avoid read of TCR if secs is null */
-        if (secs && TIMER16(tcrs[TMU2]) & 0x100)
+        if (secs && TIMER16(tcrs[TIMER_UNIT_2]) & 0x100)
             *secs += 1;
-        used = timer_count(TMU2);
+        used = timer_get_count(TIMER_UNIT_2);
         *msecs = (timer_ms_countdown - used) * 1000 / timer_ms_countdown;
     }
     irq_restore(irq_status);
@@ -204,11 +204,11 @@ uint64 timer_us_gettime64(void) {
 
     int irq_status = irq_disable();
     scnt = timer_ms_counter;
-    cnt = timer_count(TMU2);
-    if (TIMER16(tcrs[TMU2]) & 0x100) {
+    cnt = timer_get_count(TIMER_UNIT_2);
+    if (TIMER16(tcrs[TIMER_UNIT_2]) & 0x100) {
         /* If we underflowed, add an extra second and reload microseconds */
         scnt++;
-        cnt = timer_count(TMU2);
+        cnt = timer_get_count(TIMER_UNIT_2);
     }
     irq_restore(irq_status);
 
@@ -235,8 +235,8 @@ static void tp_handler(irq_t src, irq_context_t * cxt) {
     if(tp_ms_remaining == 0) {
         /* Disable any further timer events. The callback may
            re-enable them of course. */
-        timer_stop(TMU0);
-        timer_disable_ints(TMU0);
+        timer_stop(TIMER_UNIT_0);
+        timer_disable_ints(TIMER_UNIT_0);
 
         /* Call the callback, if any */
         if(tp_callback)
@@ -244,10 +244,10 @@ static void tp_handler(irq_t src, irq_context_t * cxt) {
     } /* Do we have less than a second remaining? */
     else if(tp_ms_remaining < 1000) {
         /* Schedule a "last leg" timer. */
-        timer_stop(TMU0);
-        timer_prime_wait(TMU0, tp_ms_remaining, 1);
-        timer_clear(TMU0);
-        timer_start(TMU0);
+        timer_stop(TIMER_UNIT_0);
+        timer_prime_wait(TIMER_UNIT_0, tp_ms_remaining, 1);
+        timer_clear(TIMER_UNIT_0);
+        timer_start(TIMER_UNIT_0);
         tp_ms_remaining = 0;
     } /* Otherwise, we're just counting down. */
     else {
@@ -260,15 +260,15 @@ static void timer_primary_init(void) {
     /* Clear out our vars */
     tp_callback = NULL;
 
-    /* Clear out TMU0 and get ready for wakeups */
-    irq_set_handler(EXC_TMU0_TUNI0, tp_handler);
-    timer_clear(TMU0);
+    /* Clear out TIMER_UNIT_0 and get ready for wakeups */
+    irq_set_handler(EXC_TIMER_UNIT_0_TUNI0, tp_handler);
+    timer_clear(TIMER_UNIT_0);
 }
 
 static void timer_primary_shutdown(void) {
-    timer_stop(TMU0);
-    timer_disable_ints(TMU0);
-    irq_set_handler(EXC_TMU0_TUNI0, NULL);
+    timer_stop(TIMER_UNIT_0);
+    timer_disable_ints(TIMER_UNIT_0);
+    irq_set_handler(EXC_TIMER_UNIT_0_TUNI0, NULL);
 }
 
 timer_primary_callback_t timer_primary_set_callback(timer_primary_callback_t cb) {
@@ -285,21 +285,21 @@ void timer_primary_wakeup(uint32 millis) {
     }
 
     /* Make sure we stop any previous wakeup */
-    timer_stop(TMU0);
+    timer_stop(TIMER_UNIT_0);
 
     /* If we have less than a second to wait, then just schedule the
        timeout event directly. Otherwise schedule a periodic second
        timer. We'll replace this on the last leg in the IRQ. */
     if(millis >= 1000) {
-        timer_prime_wait(TMU0, 1000, 1);
-        timer_clear(TMU0);
-        timer_start(TMU0);
+        timer_prime_wait(TIMER_UNIT_0, 1000, 1);
+        timer_clear(TIMER_UNIT_0);
+        timer_start(TIMER_UNIT_0);
         tp_ms_remaining = millis - 1000;
     }
     else {
-        timer_prime_wait(TMU0, millis, 1);
-        timer_clear(TMU0);
-        timer_start(TMU0);
+        timer_prime_wait(TIMER_UNIT_0, millis, 1);
+        timer_clear(TIMER_UNIT_0);
+        timer_start(TIMER_UNIT_0);
         tp_ms_remaining = 0;
     }
 }
@@ -326,9 +326,9 @@ void timer_shutdown(void) {
 
     /* Disable all timers */
     TIMER8(TSTR) = 0;
-    timer_disable_ints(TMU0);
-    timer_disable_ints(TMU1);
-    timer_disable_ints(TMU2);
+    timer_disable_ints(TIMER_UNIT_0);
+    timer_disable_ints(TIMER_UNIT_1);
+    timer_disable_ints(TIMER_UNIT_2);
 }
 
 /* Quick access macros */

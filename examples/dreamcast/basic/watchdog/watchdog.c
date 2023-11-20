@@ -121,7 +121,7 @@ int main(int argc, char *argv[]) {
     time_t elapsed_time = 0;
     while(1) {
         /* Measure our current time (using the C standard library, 
-           which internally uses the TMU2 peripheral). */
+           which internally uses the TIMER_UNIT_2 peripheral). */
         current_time = time(NULL);
         elapsed_time = current_time - start_time;
 
@@ -141,7 +141,7 @@ int main(int argc, char *argv[]) {
     printf("%u callbacks in %llu seconds!\n", counter, elapsed_time);
 
     /* Ensure that the amount of time elapsed based on WDT callbacks agrees
-       with the amount of time elapsed as reported by TMU2. */
+       with the amount of time elapsed as reported by TIMER_UNIT_2. */
     const unsigned diff_seconds = abs((int)elapsed_time - (int)WDT_SECONDS);
     if(diff_seconds > 1) {
         printf("Watchdog timing did not match system timing!\n"

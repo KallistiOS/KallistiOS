@@ -173,10 +173,10 @@ typedef struct irq_context {
 #define EXC_IRQC        0x0380  /**< \brief External IRQ request (level 12) */
 #define EXC_IRQD        0x03a0  /**< \brief External IRQ request (level 13) */
 #define EXC_IRQE        0x03c0  /**< \brief External IRQ request (level 14) */
-#define EXC_TMU0_TUNI0  0x0400  /**< \brief TMU0 underflow */
-#define EXC_TMU1_TUNI1  0x0420  /**< \brief TMU1 underflow */
-#define EXC_TMU2_TUNI2  0x0440  /**< \brief TMU2 underflow */
-#define EXC_TMU2_TICPI2 0x0460  /**< \brief TMU2 input capture */
+#define EXC_TIMER_UNIT_0_TUNI0  0x0400  /**< \brief TIMER_UNIT_0 underflow */
+#define EXC_TIMER_UNIT_1_TUNI1  0x0420  /**< \brief TIMER_UNIT_1 underflow */
+#define EXC_TIMER_UNIT_2_TUNI2  0x0440  /**< \brief TIMER_UNIT_2 underflow */
+#define EXC_TIMER_UNIT_2_TICPI2 0x0460  /**< \brief TIMER_UNIT_2 input capture */
 #define EXC_RTC_ATI     0x0480  /**< \brief RTC alarm interrupt */
 #define EXC_RTC_PRI     0x04a0  /**< \brief RTC periodic interrupt */
 #define EXC_RTC_CUI     0x04c0  /**< \brief RTC carry interrupt */
@@ -229,7 +229,7 @@ typedef struct irq_context {
 /** @} */
 
 /** \brief  The value of the timer IRQ */
-#define TIMER_IRQ       EXC_TMU0_TUNI0
+#define TIMER_IRQ       EXC_TIMER_UNIT_0_TUNI0
 
 /** \brief  The type of an interrupt identifier */
 typedef uint32 irq_t;

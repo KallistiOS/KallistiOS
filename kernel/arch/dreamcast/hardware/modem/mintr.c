@@ -742,7 +742,7 @@ void modemIntResetControlCode(void) {
     modemCallbackCode = NULL;
 }
 
-/* Timeout timer interrupt code. It uses TMU1 and can be setup to either set
+/* Timeout timer interrupt code. It uses TIMER_UNIT_1 and can be setup to either set
    a flag to a non zero value, call a function, or both when a timer interrupt
    is generated until it's stopped. */
 
@@ -762,17 +762,17 @@ void modemIntSetupTimeoutTimer(int bps, unsigned char *callbackFlag,
     modemTimeoutCallbackFlag = callbackFlag;
     modemTimeoutCallbackCode = callbackCode;
 
-    /* Setup TMU1 so it can act as a timeout indicator */
-    timer_stop(TMU1);
+    /* Setup TIMER_UNIT_1 so it can act as a timeout indicator */
+    timer_stop(TIMER_UNIT_1);
 
     /* Make sure the timeout variable is reset */
     if(modemTimeoutCallbackFlag != NULL)
         *modemTimeoutCallbackFlag = 0;
 
-    /* Modify TMU1 so that it can be used for a timeout */
-    irq_set_handler(EXC_TMU1_TUNI1, modemIntrTimeoutCallback);
-    timer_prime(TMU1, bps, 1);
-    timer_clear(TMU1);
+    /* Modify TIMER_UNIT_1 so that it can be used for a timeout */
+    irq_set_handler(EXC_TIMER_UNIT_1_TUNI1, modemIntrTimeoutCallback);
+    timer_prime(TIMER_UNIT_1, bps, 1);
+    timer_clear(TIMER_UNIT_1);
 
     /* It doesn't matter if this is called more than once consecutively even
        if the timer is still running */
@@ -782,15 +782,15 @@ void modemIntSetupTimeoutTimer(int bps, unsigned char *callbackFlag,
 
 void modemIntStartTimeoutTimer(void) {
     if(!(modemInternalFlags & MODEM_INTERNAL_FLAG_TIMER_RUNNING)) {
-        timer_start(TMU1);
+        timer_start(TIMER_UNIT_1);
         modemInternalFlags |= MODEM_INTERNAL_FLAG_TIMER_RUNNING;
     }
 }
 
 void modemIntResetTimeoutTimer(void) {
     if(modemInternalFlags & MODEM_INTERNAL_FLAG_TIMER_RUNNING) {
-        timer_stop(TMU1);
-        timer_clear(TMU1);
+        timer_stop(TIMER_UNIT_1);
+        timer_clear(TIMER_UNIT_1);
         modemInternalFlags &= ~MODEM_INTERNAL_FLAG_TIMER_RUNNING;
     }
 }
@@ -800,7 +800,7 @@ void modemIntShutdownTimeoutTimer(void) {
     modemIntResetTimeoutTimer();
 
     if(modemInternalFlags & MODEM_INTERNAL_FLAG_TIMER_HANDLER_SET) {
-        irq_set_handler(EXC_TMU1_TUNI1, NULL);
+        irq_set_handler(EXC_TIMER_UNIT_1_TUNI1, NULL);
         modemInternalFlags &= ~MODEM_INTERNAL_FLAG_TIMER_HANDLER_SET;
     }
 }
