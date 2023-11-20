@@ -19,6 +19,7 @@ Platform-specific changes are prefixed with the platform name, otherwise the cha
 - **Dreamcast**: Added Raytris raylib example by Niisoks [FG]
 - Removed old pthreads implementation from kernel/libc [LS]
 - Added new (more complete/compliant) pthreads implementation in addons/libpthread [LS]
+- Added implementation of thread barriers [LS]
 
 ## KallistiOS version 2.1.1
 - Added pvrtex utility by TapamN to utils [Daniel Fairchild == DF]
