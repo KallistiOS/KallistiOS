@@ -1,11 +1,11 @@
 # KallistiOS ##version##
 #
 # thread/Makefile
-# (c)2001 Megan Potter
+# Copyright (C) 2001 Megan Potter
 #
 
 OBJS =  sem.o cond.o mutex.o genwait.o
-OBJS += thread.o rwsem.o recursive_lock.o once.o tls.o
+OBJS += thread.o rwsem.o recursive_lock.o once.o tls.o barrier.o
 OBJS += oneshot_timer.o worker.o
 SUBDIRS = 
 
