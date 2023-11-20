@@ -140,12 +140,12 @@ int timer_ints_enabled(int which) {
 }
 
 /* Millisecond timer */
-static uint32 timer_ms_counter = 0;
+static uint32 timer_seconds_counter = 0;
 static uint32 timer_ms_countdown;
 static void timer_ms_handler(irq_t source, irq_context_t *context) {
     (void)source;
     (void)context;
-    timer_ms_counter++;
+    timer_seconds_counter++;
 
     /* Clear overflow bit so we can check it when returning time */
     TIMER16(tcrs[TIMER_UNIT_2]) &= ~0x100;
@@ -172,7 +172,7 @@ void timer_ms_gettime(uint32 *secs, uint32 *msecs) {
 
     /* Seconds part comes from ms_counter */
     if(secs)
-        *secs = timer_ms_counter;
+        *secs = timer_seconds_counter;
 
     /* Milliseconds, we check how much of the timer has elapsed */
     if(msecs) {
@@ -203,7 +203,7 @@ uint64 timer_us_gettime64(void) {
     uint64 used;
 
     int irq_status = irq_disable();
-    scnt = timer_ms_counter;
+    scnt = timer_seconds_counter;
     cnt = timer_get_count(TIMER_UNIT_2);
     if (TIMER16(tcrs[TIMER_UNIT_2]) & 0x100) {
         /* If we underflowed, add an extra second and reload microseconds */
