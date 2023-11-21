@@ -7,7 +7,6 @@
 #include <kos.h>
 #include <time.h>
 #include <dcplib/fnt.h>
-#include <stdio.h>
 
 fntRenderer *text;
 fntTexFont *font;
