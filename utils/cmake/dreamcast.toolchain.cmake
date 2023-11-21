@@ -74,7 +74,7 @@ ADD_DEFINITIONS(
 )
 
 if(${KOS_SUBARCH} MATCHES naomi)
-    ADD_DEFINITONS(
+    ADD_DEFINITIONS(
         -D__NAOMI__
         -D_arch_sub_naomi
     )
