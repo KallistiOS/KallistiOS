@@ -6,14 +6,18 @@
    
 */
 
-/** \file   arch/timer.h
-    \brief  Low-level timer functionality.
+/** \file    arch/timer.h
+    \brief   Low-level timer functionality.
+    \ingroup timers
 
     This file contains functions for interacting with the timer sources on the
     SH4. Many of these functions may interfere with thread operation or other
     such things, and should thus be used with caution. Basically, the only
     functionality that you might use in practice in here in normal programs is
     the gettime functions.
+
+    \sa arch/timer.h
+    \sa arch/wdt.h
 
     \author Megan Potter
     \author Falco Girgis
@@ -29,7 +33,16 @@ __BEGIN_DECLS
 
 #include <arch/irq.h>
 
-/* Timer sources -- we get four on the SH4 */
+/** \defgroup timers    Timer Unit (TMU) API
+
+*/
+
+/** \defgroup tmus   Timer Units Peripherals
+    \brief           TMU Constants
+    \ingroup         timers
+
+    @{ 
+*/
 
 /** \brief  SH4 Timer 0.
 
@@ -49,6 +62,8 @@ __BEGIN_DECLS
     This timer is used by the various gettime functions in this header.
 */
 #define TMU2    2
+
+/** @} */
 
 /** \brief  Which timer does the thread system use? */
 #define TIMER_ID TMU0
@@ -244,13 +259,13 @@ timer_primary_callback_t timer_primary_set_callback(timer_primary_callback_t cal
 */
 void timer_primary_wakeup(uint32_t millis);
 
-/* \cond */
+/** \cond */
 /* Init function */
 int timer_init(void);
 
 /* Shutdown */
 void timer_shutdown(void);
-/* \endcond */
+/** \endcond */
 
 /** \defgroup   perf_counters Performance Counters
     The performance counter API exposes the SH4's hardware profiling registers, 
