@@ -207,7 +207,7 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - *** Added <netinet/tcp.h> header file and required option [LS]
 - *** Added <netinet/udp.h> and <netinet/udplite.h> headers and move the related
       content from <netinet/in.h> [LS]
-- *** Bumped up resolution of TMU timers + date/time functions [FG]
+- *** Bumped up resolution of TMU timers + date/time functions [FG && PC]
 
 KallistiOS version 2.0.0 -----------------------------------------------
 - DC  Broadband Adapter driver fixes [Megan Potter == MP]
