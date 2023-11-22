@@ -1,8 +1,9 @@
 /* KallistiOS ##version##
 
    timer.c
-   Copyright (c) 2000, 2001, 2002 Megan Potter
-   Copyright (c) 2023 Falco Girgis
+   Copyright (C) 2000, 2001, 2002 Megan Potter
+   Copyright (C) 2023 Falco Girgis
+   Copyright (C) 2023 Paul Cercueil <paul@crapouillou.net>
 */
 
 #include <assert.h>
@@ -80,9 +81,6 @@ typedef enum PCK_DIV {
 static const unsigned tcors[] = { TCOR0, TCOR1, TCOR2 };
 static const unsigned tcnts[] = { TCNT0, TCNT1, TCNT2 };
 static const unsigned tcrs[] = { TCR0, TCR1, TCR2 };
-
-/* Nanoseconds per counter tick for each TPSC value. */
-static const unsigned tns[] = { 80, 320, 1280, 5120, 20480 };
 
 /* Apply timer configuration to registers. */
 static int timer_prime_apply(int which, uint32_t count, int interrupts) { 
@@ -193,9 +191,10 @@ int timer_ints_enabled(int which) {
     return (*ipra & (TIMER_PRIO << (12 - 4 * which))) != 0;
 }
 
-/* Millisecond timer private state */
-static uint32_t timer_ms_counter = 0; /* Seconds elapsed (since KOS startup) */
-static uint32_t timer_ms_countdown;   /* Max counter value (used as TMU2 reload) */
+/* Seconds elapsed (since KOS startup), updated from the TMU2 underflow ISR */
+static volatile uint32_t timer_ms_counter = 0; 
+/* Max counter value (used as TMU2 reload), to target a 1 second interval */
+static          uint32_t timer_ms_countdown;   
 
 /* TMU2 interrupt handler, called every second. Simply updates our
    running second counter and clears the underflow flag. */
@@ -222,77 +221,106 @@ void timer_ms_disable(void) {
     timer_disable_ints(TMU2);
 }
 
+/* Internal structure used to hold timer values in seconds + ticks. */
+typedef struct timer_value {
+    uint32_t secs, ticks;
+} timer_val_t;
+
 /* Generic function for retrieving the current time maintained by TMU2. 
    Returns the total amount of time that has elapsed since KOS has been
-   initialized.
+   initialized by using a LUT of precomputed, scaled timing values (tns)
+   plus a shift for optimized division. */
+static timer_val_t timer_getticks(const uint32_t *tns, uint32_t shift) {
+    uint32_t secs, unf1, unf2, counter1, counter2, delta, ticks;
+    uint16_t tmu2 = TIMER16(tcrs[TMU2]);
+    
+    do {
+        /* Read the underflow flag twice, and the counter twice.
+           - If both flags are set, it's just unrealistic that one
+             second elapsed between the two reads, therefore we can
+             assume that the interrupt did not fire yet, and both
+             the timer value and the computation of "secs" are valid.
+           - If one underflow flag is set, and the other is not,
+             the timer value or the "secs" value cannot be trusted;
+             loop and try again.
+           - If both flags are cleared, either the timer did not
+             underflow, or it did but the interrupt handler was quick
+             enough to clear the flag, in which case the computation
+             of "secs" may be wrong. We can check that by reading
+             the timer value again, and if it's above the previous
+             value, the timer underflowed and we have to try again.
 
-   "secs" are directly returned based on the current value of the second
-   counter, with care taken to address pending underflow.
+           This complex setup avoids the issue where the timer
+           underflows between the moment where you compute the
+           seconds value, and the moment where you read the timer.
+           It also does not require the interrupts to be masked. */
+        unf1 = !!(tmu2 & BIT(UNF));
+        secs = timer_ms_counter + unf1;
+        counter1 = TIMER32(tcnts[TMU2]);
 
-   "ticks" are the subsecond component which are calculated by directly 
-   using TMU2's current counter value. Their resolution is given by "res,"
-   which is the number of nanoseconds within a single tick. */
-static void timer_getticks(uint32_t *secs, uint32_t *ticks, uint32_t res) {
-    const int irq_status = irq_disable();
+        tmu2 = TIMER16(tcrs[TMU2]);
+        unf2 = !!(tmu2 & BIT(UNF));
+        counter2 = TIMER32(tcnts[TMU2]);
+    } while (unf1 != unf2 || counter1 < counter2);
 
-    if(secs) {
-        /* Underflow is only notable if we have seconds we can
-           overflow into, so avoid read of TCR if secs is NULL. */
-        const uint32_t underflow = !!(TIMER16(tcrs[TMU2]) & BIT(UNF));
-        *secs = timer_ms_counter + underflow;
-    }
+    delta = timer_ms_countdown - counter2;
 
-    if(ticks) {
-        assert(timer_ms_countdown > 0);
+    /* We have to do the elapsed time calculations as a 64-bit unsigned
+    integer, otherwise when using the fastest clock speed for timers,
+    this value will very quickly overflow mid-expression, before the
+    final division. */
+    ticks = ((uint64_t)delta * tns[tmu2 & TPSC]) >> shift;
 
-        /* We have to do the elapsed time calculations as a 64-bit unsigned
-           integer, otherwise when using the fastest clock speed for timers,
-           this value will very quickly overflow mid-expression, before the
-           final division. */
-        const uint64_t ticks64 = (timer_ms_countdown - TIMER32(tcnts[TMU2])) * 
-                                  tns[tcrs[TMU2] & TPSC] / res;
-
-        /* Should NEVER overflow...
-           at least based on how KOS configures the timers. */
-        assert(ticks64 <= UINT32_MAX);
-
-        *ticks = ticks64;
-    }
-
-    irq_restore(irq_status);
+    return (timer_val_t){ .secs = secs, .ticks = ticks, };
 }
 
-/* Return the number of ticks since KOS was booted */
+static const uint32_t tns_values_ms[] = {
+    /* 80, 320, 1280, 5120, 20480
+       each multiplied by (1 << 37) / (1000 * 1000) */
+    10995116, 43980465, 175921860, 703687442, 2814749767
+};
+
 void timer_ms_gettime(uint32_t *secs, uint32_t *msecs) {
-    timer_getticks(secs, msecs, 1000000);
+    const timer_val_t val = timer_getticks(tns_values_ms,  37);
+
+    if(secs)  *secs = val.secs;
+    if(msecs) *msecs = val.ticks;
 }
 
 uint64_t timer_ms_gettime64(void) {
-    uint32_t s, ms;
-    uint64_t msec;
+   const timer_val_t val = timer_getticks(tns_values_ms, 37);
 
-    timer_ms_gettime(&s, &ms);
-    msec = (uint64_t)s * 1000 + (uint64_t)ms;
-
-    return msec;
+    return (uint64_t)val.secs * 1000ull + (uint64_t)val.ticks;
 }
 
+static const uint32_t tns_values_us[] = {
+    /* 80, 320, 1280, 5120, 20480,
+       each multiplied by (1 << 27) / 1000 */
+    10737418, 42949673, 171798692, 687194767, 2748779069,
+};
+
 void timer_us_gettime(uint32_t *secs, uint32_t *usecs) {
-    timer_getticks(secs, usecs, 1000);
+    const timer_val_t val = timer_getticks(tns_values_us,  27);
+
+    if(secs)  *secs = val.secs;
+    if(usecs) *usecs = val.ticks;
 }
 
 uint64_t timer_us_gettime64(void) {
-    uint32_t s, us;
-    uint64_t usec;
+   const timer_val_t val = timer_getticks(tns_values_us, 27);
 
-    timer_us_gettime(&s, &us);
-    usec = (uint64_t)s * 1000000 + (uint64_t)us;
-
-    return usec;
+    return (uint64_t)val.secs * 1000000ull + (uint64_t)val.ticks;
 }
 
+static const uint32_t tns_values_ns[] = {
+    80, 320, 1280, 5120, 20480,
+};
+
 void timer_ns_gettime(uint32_t *secs, uint32_t *nsecs) { 
-    timer_getticks(secs, nsecs, 1);
+    const timer_val_t val = timer_getticks(tns_values_ns,  0);
+
+    if(secs)  *secs = val.secs;
+    if(nsecs) *nsecs = val.ticks;
 }
 
 /* Primary kernel timer. What we'll do here is handle actual timer IRQs
