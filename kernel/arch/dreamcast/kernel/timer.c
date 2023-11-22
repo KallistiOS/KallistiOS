@@ -13,9 +13,6 @@
 #include <arch/timer.h>
 #include <arch/irq.h>
 
-/* Bit mask from position */
-#define BIT(n)      (1 << (n))
-
 /* Register access macros */
 #define TIMER8(o)   ( *((volatile uint8_t  *)(TIMER_BASE + (o))) )
 #define TIMER16(o)  ( *((volatile uint16_t *)(TIMER_BASE + (o))) )
@@ -44,19 +41,12 @@
 #define STR0    0   /* TCNT0 Counter Start */
 
 /* Timer Control Register fields */
-#define UCPF    9   /* Input Capture Interrupt Flag (TMU2 only) */
-#define UNF     8   /* Underflow Flag */
-#define ICPE1   7   /* Input Capture Control (TMU2 only) */
-#define ICP0    6  
-#define UNIE    5   /* Underflow Interrupt Control */
-#define CKEG1   4   /* Clock Edge */
-#define CKEG0   3
-#define TPSC2   2   /* Timer Prescalar */
-#define TPSC1   1
-#define TPSC0   0
-
-/* Timer Prescalar mask */
-#define TPSC    (BIT(TPSC2) | BIT(TPSC1) | BIT(TPSC0))
+#define ICPF    (1 << 9)   /* Input Capture Interrupt Flag (TMU2 only) */
+#define UNF     (1 << 8)   /* Underflow Flag */
+#define ICPE    (3 << 6)   /* Input Capture Control (TMU2 only) */
+#define UNIE    (1 << 5)   /* Underflow Interrupt Control */
+#define CKEG    (3 << 3)   /* Clock Edge */
+#define TPSC    (7 << 0)   /* Timer Prescalar */
 
 /* Clock divisor value for each TPSC value. */
 #define TDIV(div)   (4 << (2 * div))
@@ -93,7 +83,7 @@ static int timer_prime_apply(int which, uint32_t count, int interrupts) {
 
     /* Enable IRQ generation plus unmask and set priority */
     if(interrupts) {
-        TIMER16(tcrs[which]) |= BIT(UNIE);
+        TIMER16(tcrs[which]) |= UNIE;
         timer_enable_ints(which);
     }
 
@@ -123,7 +113,7 @@ static int timer_prime_wait(int which, uint32_t millis, int interrupts) {
 int timer_start(int which) {
     assert(which <= TMU2);
 
-    TIMER8(TSTR) |= BIT(which);
+    TIMER8(TSTR) |= (1 << which);
     return 0;
 }
 
@@ -134,7 +124,7 @@ int timer_stop(int which) {
     timer_disable_ints(which);
 
     /* Stop timer */
-    TIMER8(TSTR) &= ~BIT(which);
+    TIMER8(TSTR) &= ~(1 << which);
 
     return 0;
 }
@@ -151,8 +141,8 @@ int timer_clear(int which) {
     assert(which <= TMU2);
     const uint16_t value = TIMER16(tcrs[which]);
 
-    TIMER16(tcrs[which]) &= ~BIT(UNF);
-    return !!(value & BIT(UNF));
+    TIMER16(tcrs[which]) &= ~UNF;
+    return !!(value & UNF);
 }
 
 /* Spin-loop kernel sleep func: uses the secondary timer in the
@@ -163,7 +153,7 @@ void timer_spin_sleep(int ms) {
     timer_start(TMU1);
 
     while(ms > 0) {
-        while(!(TIMER16(tcrs[TMU1]) & BIT(UNF)))
+        while(!(TIMER16(tcrs[TMU1]) & UNF))
             ;
 
         timer_clear(TMU1);
@@ -205,7 +195,7 @@ static void timer_ms_handler(irq_t source, irq_context_t *context) {
     timer_ms_counter++;
 
     /* Clear overflow bit so we can check it when returning time */
-    TIMER16(tcrs[TMU2]) &= ~BIT(UNF);
+    TIMER16(tcrs[TMU2]) &= ~UNF;
 }
 
 void timer_ms_enable(void) {
@@ -254,12 +244,12 @@ static timer_val_t timer_getticks(const uint32_t *tns, uint32_t shift) {
            underflows between the moment where you compute the
            seconds value, and the moment where you read the timer.
            It also does not require the interrupts to be masked. */
-        unf1 = !!(tmu2 & BIT(UNF));
+        unf1 = !!(tmu2 & UNF);
         secs = timer_ms_counter + unf1;
         counter1 = TIMER32(tcnts[TMU2]);
 
         tmu2 = TIMER16(tcrs[TMU2]);
-        unf2 = !!(tmu2 & BIT(UNF));
+        unf2 = !!(tmu2 & UNF);
         counter2 = TIMER32(tcnts[TMU2]);
     } while (unf1 != unf2 || counter1 < counter2);
 
