@@ -525,9 +525,9 @@ static vfs_handler_t vh = {
 static int initted = 0;
 
 /* Initialize the file system */
-int fs_romdisk_init(void) {
+void fs_romdisk_init(void) {
     if(initted)
-        return 0;
+        return;
 
     /* Init our list of mounted images */
     LIST_INIT(&romdisks);
@@ -542,16 +542,14 @@ int fs_romdisk_init(void) {
     mutex_init(&fh_mutex, MUTEX_TYPE_NORMAL);
 
     initted = 1;
-
-    return 0;
 }
 
 /* De-init the file system; also unmounts any mounted images. */
-int fs_romdisk_shutdown(void) {
+void fs_romdisk_shutdown(void) {
     rd_image_t *n, *c;
 
     if(!initted)
-        return 0;
+        return;
 
     /* Go through and free all the romdisk mount entries */
     c = LIST_FIRST(&romdisks);
@@ -581,8 +579,6 @@ int fs_romdisk_shutdown(void) {
     mutex_destroy(&fh_mutex);
 
     initted = 0;
-
-    return 0;
 }
 
 /* Mount a romdisk image; must have called fs_romdisk_init() earlier.

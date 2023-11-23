@@ -23,7 +23,7 @@ __BEGIN_DECLS
 
 /* \cond */
 /* Init / Shutdown */
-int lightgun_init(void);
+void lightgun_init(void);
 void lightgun_shutdown(void);
 /* \endcond */
 

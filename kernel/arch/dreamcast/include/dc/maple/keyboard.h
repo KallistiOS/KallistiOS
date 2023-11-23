@@ -349,7 +349,7 @@ int kbd_queue_pop(maple_device_t *dev, int xlat);
 
 /* \cond */
 /* Init / Shutdown */
-int kbd_init(void);
+void kbd_init(void);
 void kbd_shutdown(void);
 /* \endcond */
 

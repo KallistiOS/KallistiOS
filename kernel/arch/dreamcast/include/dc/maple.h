@@ -739,10 +739,8 @@ void * maple_dev_status(maple_device_t *dev);
 /**************************************************************************/
 /* maple_init.c */
 
-/** \brief  Initialize Maple.
-    \return                 0 on success, <0 on failure.
-*/
-int maple_init(void);
+/** \brief  Initialize Maple. */
+void maple_init(void);
 
 /** \brief  Shutdown Maple. */
 void maple_shutdown(void);

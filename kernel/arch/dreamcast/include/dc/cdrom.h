@@ -83,6 +83,7 @@ __BEGIN_DECLS
 #define ERR_SYS         3   /**< \brief System error */
 #define ERR_ABORTED     4   /**< \brief Command aborted */
 #define ERR_NO_ACTIVE   5   /**< \brief System inactive? */
+#define ERR_TIMEOUT     6   /**< \brief Aborted due to timeout */
 /** @} */
 
 /** \defgroup cd_cmd_status         CD-ROM Command Status responses
@@ -182,6 +183,7 @@ __BEGIN_DECLS
 #define CD_STATUS_NO_DISC   7   /**< \brief No disc inserted */
 #define CD_STATUS_RETRY     8   /**< \brief Retry is needed */
 #define CD_STATUS_ERROR     9   /**< \brief System error */
+#define CD_STATUS_FATAL     12  /**< \brief Need reset syscalls */
 /** @} */
 
 /** \defgroup cd_disc_types         CD-ROM drive disc types
@@ -190,11 +192,12 @@ __BEGIN_DECLS
     the cdrom_get_status() function.
     @{
 */
-#define CD_CDDA     0       /**< \brief Audio CD (Red book) */
+#define CD_CDDA     0x00    /**< \brief Audio CD (Red book) or no disc */
 #define CD_CDROM    0x10    /**< \brief CD-ROM or CD-R (Yellow book) */
 #define CD_CDROM_XA 0x20    /**< \brief CD-ROM XA (Yellow book extension) */
 #define CD_CDI      0x30    /**< \brief CD-i (Green book) */
 #define CD_GDROM    0x80    /**< \brief GD-ROM */
+#define CD_FAIL     0xf0    /**< \brief Need reset syscalls */
 /** @} */
 
 /** \brief  TOC structure returned by the BIOS.
@@ -255,7 +258,7 @@ int cdrom_set_sector_size(int size);
 /** \brief  Execute a CD-ROM command.
 
     This function executes the specified command using the BIOS syscall for
-    executing GD-ROM commands. This is now thread-safe to be called by users.
+    executing GD-ROM commands.
 
     \param  cmd             The command number to execute.
     \param  param           Data to pass to the syscall.
@@ -263,6 +266,19 @@ int cdrom_set_sector_size(int size);
     \return                 \ref cd_cmd_response
 */
 int cdrom_exec_cmd(int cmd, void *param);
+
+/** \brief  Execute a CD-ROM command with timeout.
+
+    This function executes the specified command using the BIOS syscall for
+    executing GD-ROM commands with timeout.
+
+    \param  cmd             The command number to execute.
+    \param  param           Data to pass to the syscall.
+    \param  timeout         Timeout in milliseconds.
+
+    \return                 \ref cd_cmd_response
+*/
+int cdrom_exec_cmd_timed(int cmd, void *param, int timeout);
 
 /** \brief  Get the status of the GD-ROM drive.
 
