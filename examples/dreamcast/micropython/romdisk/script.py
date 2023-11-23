@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # script.py
-# (c) 2023 Aaron Glazer
+# Copyright (C) 2023 Aaron Glazer
 #
 
 def f(n):

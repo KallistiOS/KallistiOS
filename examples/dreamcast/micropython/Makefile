@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # examples/dreamcast/micropython/Makefile
-# (c) 2023 Aaron Glazer
+# Copyright (C) 2023 Aaron Glazer
 #
 
 TARGET = micropython.elf
