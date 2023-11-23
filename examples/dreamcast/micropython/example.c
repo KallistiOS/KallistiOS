@@ -16,26 +16,13 @@
 static char mp_heap[8 * 1024];
 
 static void load_module(void) {
-    nlr_buf_t nlr;
-    if (nlr_push(&nlr) == 0) {
-        mp_lexer_t *lex = mp_lexer_new_from_file(qstr_from_str("/rd/script.py"));
-        mp_parse_tree_t parse_tree = mp_parse(lex, MP_PARSE_FILE_INPUT);
-        mp_obj_t mod = mp_compile(&parse_tree, lex->source_name, false);
-        mp_call_function_0(mod);
-
-        nlr_pop();
-    } else {
-        // uncaught exception
-        mp_obj_print_exception(&mp_plat_print, (mp_obj_t)nlr.ret_val);
-        exit(EXIT_FAILURE);
-    }
+    mp_lexer_t *lex = mp_lexer_new_from_file(qstr_from_str("/rd/script.py"));
+    mp_parse_tree_t parse_tree = mp_parse(lex, MP_PARSE_FILE_INPUT);
+    mp_obj_t mod = mp_compile(&parse_tree, lex->source_name, false);
+    mp_call_function_0(mod);
 }
 
-int main(int argc, const char* argv[]) {
-    mp_stack_ctrl_init();
-    gc_init(mp_heap, mp_heap + sizeof(mp_heap));
-    mp_init();
-
+static void demo(void) {
     printf("(entering script)\n");
     load_module();
     printf("(exited script)\n");
@@ -71,6 +58,22 @@ int main(int argc, const char* argv[]) {
             printf("(nil)");
         }
         printf(": %p\n", map->table[i].value);
+    }
+}
+
+int main(int argc, const char* argv[]) {
+    mp_stack_ctrl_init();
+    gc_init(mp_heap, mp_heap + sizeof(mp_heap));
+    mp_init();
+
+    nlr_buf_t nlr;
+    if (nlr_push(&nlr) == 0) {
+        demo();
+        nlr_pop();
+    } else {
+        printf("demo ran into an uncaught exception!\n");
+        mp_obj_print_exception(&mp_plat_print, (mp_obj_t)nlr.ret_val);
+        exit(EXIT_FAILURE);
     }
 
     mp_deinit();
