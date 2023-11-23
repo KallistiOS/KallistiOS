@@ -129,6 +129,12 @@ int timer_stop(int which) {
     return 0;
 }
 
+int timer_running(int which) {
+    assert(which <= TMU2);
+
+    return !!(TIMER8(TSTR) & (1 << which));
+}
+
 /* Returns the count value of a timer */
 uint32_t timer_count(int which) {
     assert(which <= TMU2);
@@ -222,7 +228,7 @@ typedef struct timer_value {
    plus a shift for optimized division. */
 static timer_val_t timer_getticks(const uint32_t *tns, uint32_t shift) {
     uint32_t secs, unf1, unf2, counter1, counter2, delta, ticks;
-    uint16_t tmu2 = TIMER16(tcrs[TMU2]);
+    uint16_t tmu2;
     
     do {
         /* Read the underflow flag twice, and the counter twice.
@@ -244,13 +250,14 @@ static timer_val_t timer_getticks(const uint32_t *tns, uint32_t shift) {
            underflows between the moment where you compute the
            seconds value, and the moment where you read the timer.
            It also does not require the interrupts to be masked. */
+        counter1 = TIMER32(tcnts[TMU2]);
+        tmu2 = TIMER16(tcrs[TMU2]);
         unf1 = !!(tmu2 & UNF);
         secs = timer_ms_counter + unf1;
-        counter1 = TIMER32(tcnts[TMU2]);
 
+        counter2 = TIMER32(tcnts[TMU2]);
         tmu2 = TIMER16(tcrs[TMU2]);
         unf2 = !!(tmu2 & UNF);
-        counter2 = TIMER32(tcnts[TMU2]);
     } while (unf1 != unf2 || counter1 < counter2);
 
     delta = timer_ms_countdown - counter2;
@@ -271,7 +278,7 @@ static const uint32_t tns_values_ms[] = {
 };
 
 void timer_ms_gettime(uint32_t *secs, uint32_t *msecs) {
-    const timer_val_t val = timer_getticks(tns_values_ms,  37);
+    const timer_val_t val = timer_getticks(tns_values_ms, 37);
 
     if(secs)  *secs = val.secs;
     if(msecs) *msecs = val.ticks;
@@ -290,7 +297,7 @@ static const uint32_t tns_values_us[] = {
 };
 
 void timer_us_gettime(uint32_t *secs, uint32_t *usecs) {
-    const timer_val_t val = timer_getticks(tns_values_us,  27);
+    const timer_val_t val = timer_getticks(tns_values_us, 27);
 
     if(secs)  *secs = val.secs;
     if(usecs) *usecs = val.ticks;
@@ -307,7 +314,7 @@ static const uint32_t tns_values_ns[] = {
 };
 
 void timer_ns_gettime(uint32_t *secs, uint32_t *nsecs) { 
-    const timer_val_t val = timer_getticks(tns_values_ns,  0);
+    const timer_val_t val = timer_getticks(tns_values_ns, 0);
 
     if(secs)  *secs = val.secs;
     if(nsecs) *nsecs = val.ticks;
