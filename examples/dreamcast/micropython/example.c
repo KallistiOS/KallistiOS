@@ -71,12 +71,12 @@ int main(int argc, const char* argv[]) {
         demo();
         nlr_pop();
     } else {
-        printf("demo ran into an uncaught exception!\n");
+        fprintf(stderr, "demo ran into an uncaught exception!\n");
         mp_obj_print_exception(&mp_plat_print, (mp_obj_t)nlr.ret_val);
         exit(EXIT_FAILURE);
     }
 
     mp_deinit();
 
-    return 0;
+    return EXIT_SUCCESS;
 }
