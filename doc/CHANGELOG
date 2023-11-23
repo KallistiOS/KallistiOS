@@ -209,6 +209,7 @@ KallistiOS version 2.1.0 -----------------------------------------------
       content from <netinet/in.h> [LS]
 - *** Added __weak, __used, likely() and unlikely() [FG]
 - DC  Added Maple-specific KOS_INIT_FLAGS() which allow for GC-ing unused drivers [FG]
+- DC  Added basic example for micropython KOS port [Aaron Glazer == AG]
 - *** Bumped up resolution of TMU timers + date/time functions [FG && PC]
 
 KallistiOS version 2.0.0 -----------------------------------------------
