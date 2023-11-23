@@ -13,9 +13,6 @@
 #include <micropython/py/qstr.h>
 #include <micropython/py/obj.h>
 
-extern uint8_t romdisk[];
-KOS_INIT_ROMDISK(romdisk);
-
 static char mp_heap[8 * 1024];
 
 static void load_module(void) {
@@ -34,7 +31,7 @@ static void load_module(void) {
     }
 }
 
-int main() {
+int main(int argc, const char* argv[]) {
     mp_stack_ctrl_init();
     gc_init(mp_heap, mp_heap + sizeof(mp_heap));
     mp_init();

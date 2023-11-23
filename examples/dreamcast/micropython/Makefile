@@ -5,8 +5,8 @@ CFLAGS += -I.
 CFLAGS += -Wall -Og
 
 SRCS += example.c
-OBJS += $(SRCS:.c=.o)
-OBJS += romdisk.o
+OBJS += example.o romdisk.o
+KOS_ROMDISK_DIR = romdisk
 
 # The rm-elf step is to remove the target before building, to force the
 # re-creation of the rom disk.
@@ -23,15 +23,9 @@ rm-elf:
 $(TARGET): $(OBJS)
 	kos-cc -o $(TARGET) $(OBJS) -lmicropython
 
-romdisk.img:
-	$(KOS_GENROMFS) -f romdisk.img -d romdisk -v
-
-romdisk.o: romdisk.img
-	$(KOS_BASE)/utils/bin2o/bin2o romdisk.img romdisk romdisk.o
-
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 
 dist: $(TARGET)
-	-rm -f $(OBJS) romdisk_boot.img
+	-rm -f $(OBJS) romdisk.img
 	$(KOS_STRIP) $(TARGET)
