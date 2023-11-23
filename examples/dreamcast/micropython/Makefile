@@ -1,3 +1,9 @@
+# KallistiOS ##version##
+#
+# examples/dreamcast/micropython/Makefile
+# (c) 2023 Aaron Glazer
+#
+
 TARGET = micropython.elf
 
 CFLAGS += -std=c99

@@ -1,3 +1,9 @@
+# KallistiOS ##version##
+#
+# script.py
+# (c) 2023 Aaron Glazer
+#
+
 def f(n):
     return n * n
 def g(n):

@@ -1,3 +1,12 @@
+/* KallistiOS ##version##
+
+   example.c
+   Copyright (C) 2023 Aaron Glazer
+
+   This example demonstrates basic usage of KOS's port
+   of micropython via its C API.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 
