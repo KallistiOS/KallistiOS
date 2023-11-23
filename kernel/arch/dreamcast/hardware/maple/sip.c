@@ -297,10 +297,9 @@ static maple_driver_t sip_drv = {
 };
 
 /* Add the SIP to the driver chain */
-int sip_init(void) {
+void sip_init(void) {
     if(!sip_drv.drv_list.le_prev)
-        return maple_driver_reg(&sip_drv);
-    return -1;
+        maple_driver_reg(&sip_drv);
 }
 
 void sip_shutdown(void) {

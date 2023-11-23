@@ -1,40 +1,60 @@
-# KallistiOS
 
-KOS is an unofficial development environment for the SEGA Dreamcast game console with some support for the NAOMI and NAOMI 2 arcade boards.
+<!-- PROJECT LOGO -->
+<br />
+<div align="center">
+  <h1 align="center">KallistiOS</h1>
+
+  <p align="center">
+    Independent SDK for the Sega Dreamcast
+    <br />
+    <a href="https://kos-docs.dreamcast.wiki"><strong>Explore the docs »</strong></a>
+  </p>
+</div>
+
+## Overview
+
+KOS is an unofficial development kit for the SEGA Dreamcast game console with some support for the NAOMI and NAOMI 2 arcade boards.
 
 KOS was developed from scratch over the internet by a group of free software developers and has no relation to the official Sega Katana or Microsoft Windows CE Dreamcast development kits. This has allowed it to fuel a thriving Dreamcast homebrew scene, powering many commercial releases for the platform over the years. It supports a signficiant portion of the Dreamcast's hardware capabilities and a wide variety of peripherals, accessories, and add-ons for the console, including custom hardware modifications that have been created by the scene. 
 
-Despite the console's age, KOS offers an extremely modern, programmer-friendly development environment, supporting portions of C23 and C++23, with the majority of their standard libraries fully supported and additional support for many POSIX APIs. Additionally, KOS-ports offers a rich set of add-on libraries such as SDL, OpenGL, and Lua for the platform.
+Despite the console's age, KOS offers an extremely modern, programmer-friendly development environment. Using the latest GCC toolchain, it supports the entirety of C17 and C++20 including their standard libraries, along with support for portions of C23, C++23, Objective-C, and various POSIX APIs. Additionally, KOS-ports offers a rich set of add-on libraries such as SDL, OpenGL, OpenAL, and Lua for the platform.
 
 ## Features
 ### Core Functionality
-* Concurrency with Kernel Threads, C11 Threads, C++11 `std::thread`, Pthreads
-* Virtual filesystem abstraction 
-* IPv4/IPv6 Network stack
-* Dynamically loading libraries/modules
-* GDB Debug stubs
+* Concurrency with Kernel Threads, C11 Threads, C++11 `std::thread`, POSIX threads
+* Virtual Filesystem Abstraction
+* IPv4/IPv6 Network Stack
+* Dynamically Loaded Libraries and Modules
+* GDB Debugger Support
 
 ### Dreamcast Hardware Support
-* GD-Rom driver
+* GD-ROM Optical Drive
 * Low-level 3D PowerVR Graphics 
 * SH4 ASM-Optimized Math Routines
 * SH4 SCIF Serial I/O
 * DMA Controller 
-* Flashrom Access 
+* Flashrom Filesystem
 * AICA SPU Sound Processor Driver
 * Cache and Store Queue Management
-* Timer Peripherals, Real-Time Clock, Performance Counters
-* MMU Management API 
+* Timer Peripherals, Real-Time Clock, Watchdog Timer
+* Performance Counters
+* MMU Management
 * BIOS Font Rendering
 
 ### Peripherals and Accessory Support
+* Controller, ASCII Pad
+* Arcade Stick, Twin Stick, Mission Stick
+* Keyboard
+* Mouse
 * Visual Memory Unit
 * Puru Puru Vibration Pack
 * Seaman Microphone
 * Dreameye Webcam
 * Lightgun 
-* Keyboard
-* Mouse
+* Racing Wheel
+* Fishing Rod
+* Samba De Amigo Maracas
+* Dance Mat
 * Dial-up Modem
 * Broadband Adapter
 * LAN Adapter

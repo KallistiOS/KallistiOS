@@ -205,6 +205,11 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - DC  Refactored sfx and streaming to add SQ fast path [RR]
 - DC  Added 4/8-bit wav support to sfx and streaming [RR]
 - *** Added <netinet/tcp.h> header file and required option [LS]
+- *** Added <netinet/udp.h> and <netinet/udplite.h> headers and move the related
+      content from <netinet/in.h> [LS]
+- *** Added __weak, __used, likely() and unlikely() [FG]
+- DC  Added Maple-specific KOS_INIT_FLAGS() which allow for GC-ing unused drivers [FG]
+- DC  Added basic example for micropython KOS port [Aaron Glazer == AG]
 
 KallistiOS version 2.0.0 -----------------------------------------------
 - DC  Broadband Adapter driver fixes [Megan Potter == MP]

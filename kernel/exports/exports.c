@@ -43,15 +43,10 @@ static symtab_handler_t st_arch = {
     arch_symtab
 };
 
-int export_init(void) {
+void export_init(void) {
     /* Add our two export tables */
-    if(nmmgr_handler_add(&st_kern.nmmgr) < 0)
-        return -1;
-
-    if(nmmgr_handler_add(&st_arch.nmmgr) < 0)
-        return -1;
-
-    return 0;
+    nmmgr_handler_add(&st_kern.nmmgr);
+    nmmgr_handler_add(&st_arch.nmmgr);
 }
 
 export_sym_t * export_lookup(const char * name) {
