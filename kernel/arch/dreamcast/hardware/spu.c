@@ -45,7 +45,7 @@ void spu_memload(uintptr_t dst, void *src_void, size_t length) {
     /* Add in the SPU RAM base */
     dst += SPU_RAM_UNCACHED_BASE;
 
-    while(length > 8) {
+    while(length >= 8) {
         g2_fifo_wait();
         g2_write_block_32((uint32_t *)src, dst, 8);
 
@@ -104,7 +104,7 @@ void spu_memread(void *dst_void, uintptr_t src, size_t length) {
     /* Add in the SPU RAM base */
     src += SPU_RAM_UNCACHED_BASE;
 
-    while(length > 8) {
+    while(length >= 8) {
         g2_fifo_wait();
         g2_read_block_32((uint32_t *)dst, src, 8);
 
@@ -134,7 +134,7 @@ void spu_memset(uintptr_t dst, uint32_t what, size_t length) {
     /* Add in the SPU RAM base */
     dst += SPU_RAM_UNCACHED_BASE;
 
-    while(length > 8) {
+    while(length >= 8) {
         g2_fifo_wait();
         g2_write_block_32(blank, dst, 8);
 
