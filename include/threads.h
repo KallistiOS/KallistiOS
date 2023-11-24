@@ -114,8 +114,7 @@ extern void mtx_destroy(mtx_t *mtx);
     protect critical sections of code.
 
     \param  mtx             The mutex to initialize.
-    \param  type            The type of mutex desired (see
-                            \ref c11_mutex_types).
+    \param  type            The type of mutex desired
     \retval thrd_success    On success.
     \retval thrd_error      If the request could not be honored.
 */

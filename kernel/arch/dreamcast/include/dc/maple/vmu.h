@@ -614,7 +614,7 @@ int vmu_get_buttons_enabled(void);
 
 /** \cond */
 /* Init / Shutdown -- Managed internally by KOS */
-int vmu_init(void);
+void vmu_init(void);
 void vmu_shutdown(void);
 /** \endcond */
 

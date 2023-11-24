@@ -3,18 +3,21 @@
    kos/cdefs.h
    Copyright (C) 2002, 2004 Megan Potter
    Copyright (C) 2020, 2023 Lawrence Sebald
+   Copyright (C) 2023 Falco Girgis
 
    Based loosely around some stuff in BSD's sys/cdefs.h
 */
 
 /** \file   kos/cdefs.h
-    \brief  Potentially useful definitions for C Programs.
+    \brief  Definitions for builtin attributes and compiler directives
 
     This file contains definitions of various __attribute__ directives in
-    shorter forms for use in programs (to aid in optimization, mainly).
+    shorter forms for use in programs. These typically aid  in optimizations
+    or provide the compiler with extra information about a symbol.
 
     \author Megan Potter
     \author Lawrence Sebald
+    \author Falco Girgis
 */
 
 #ifndef __KOS_CDEFS_H
@@ -45,6 +48,16 @@
 #define __unused    __attribute__((__unused__))
 #endif
 
+#ifndef __used
+/** \brief  Prevent a symbol from being removed from the binary. */
+#define __used      __attribute__((used))
+#endif
+
+#ifndef __weak
+/** \brief  Identify a function or variable that may be overriden by another symbol. */
+#define __weak      __attribute__((weak))
+#endif
+
 #ifndef __dead2
 /** \brief  Alias for \ref __noreturn. For BSD compatibility. */
 #define __dead2     __noreturn  /* BSD compat */
@@ -53,6 +66,32 @@
 #ifndef __pure2
 /** \brief  Alias for \ref __pure. For BSD compatibility. */
 #define __pure2     __pure      /* ditto */
+#endif
+
+#ifndef likely
+/** \brief  Directive to inform the compiler the condition is in the likely path.
+
+    This can be used around conditionals or loops to help inform the
+    compiler which path to optimize for as the common-case.
+
+    \param  exp     Boolean expression which expected to be true.
+
+    \sa unlikely()
+*/
+#define likely(exp)   __builtin_expect(!!(exp), 1)
+#endif
+
+#ifndef unlikely
+/** \brief  Directive to inform the compiler the condition is in the unlikely path.
+
+    This can be used around conditionals or loops to help inform the
+    compiler which path to optimize against as the infrequent-case.
+
+    \param  exp     Boolean expression which is expected to be false.
+
+    \sa likely()
+*/
+#define unlikely(exp) __builtin_expect(!!(exp), 0)
 #endif
 
 #ifndef __deprecated

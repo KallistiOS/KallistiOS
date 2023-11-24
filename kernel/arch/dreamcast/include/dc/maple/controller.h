@@ -512,7 +512,7 @@ int cont_is_type(const struct maple_device *cont, uint32_t type);
 
 /* \cond */
 /* Init / Shutdown */
-int cont_init(void);
+void cont_init(void);
 void cont_shutdown(void);
 /* \endcond */
 

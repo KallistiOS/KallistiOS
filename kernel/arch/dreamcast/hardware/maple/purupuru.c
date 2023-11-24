@@ -91,10 +91,9 @@ static maple_driver_t purupuru_drv = {
 };
 
 /* Add the purupuru to the driver chain */
-int purupuru_init(void) {
+void purupuru_init(void) {
     if(!purupuru_drv.drv_list.le_prev)
-        return maple_driver_reg(&purupuru_drv);
-    return -1;
+        maple_driver_reg(&purupuru_drv);
 }
 
 void purupuru_shutdown(void) {
