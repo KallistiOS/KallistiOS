@@ -251,7 +251,7 @@ void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t 
         }
 
         /* Write-back SQ0 */
-        dcache_pref_block(masked_left);
+        dcache_wback_sq(masked_left);
 
         /* Fill SQ1 */
         for(i = 16; i < 32; i += 2) {
@@ -259,7 +259,7 @@ void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t 
         }
 
         /* Write-back SQ1 */
-        dcache_pref_block(masked_left + 8);
+        dcache_wback_sq(masked_left + 8);
         masked_left += 16;
 
         /* Fill SQ0 */
@@ -268,7 +268,7 @@ void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t 
         }
 
         /* Write-back SQ0 */
-        dcache_pref_block(masked_right);
+        dcache_wback_sq(masked_right);
 
         /* Fill SQ1 */
         for(i = 16; i < 32; i += 2) {
@@ -276,7 +276,7 @@ void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t 
         }
 
         /* Write-back SQ1 */
-        dcache_pref_block(masked_right + 8);
+        dcache_wback_sq(masked_right + 8);
         masked_right += 16;
         s += 64;
     }

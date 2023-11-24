@@ -50,7 +50,7 @@ __attribute__((noinline)) void *sq_cpy(void *dest, const void *src, size_t n) {
     /* If src is not 8-byte aligned, slow path */
     if ((uintptr_t)src & 7) {
         while(n--) {
-            __builtin_prefetch(s + 8); /* Prefetch 32 bytes for next loop */
+            dcache_pref_block(s + 8); /* Prefetch 32 bytes for next loop */
             d[0] = *(s++);
             d[1] = *(s++);
             d[2] = *(s++);
@@ -59,10 +59,7 @@ __attribute__((noinline)) void *sq_cpy(void *dest, const void *src, size_t n) {
             d[5] = *(s++);
             d[6] = *(s++);
             d[7] = *(s++);
-
-            /* Fire off store queue. __builtin would move it to the top so
-               use dcache_pref_block instead */
-            dcache_pref_block(d);
+            dcache_wback_sq(d);
             d += 8;
         }
     } else { /* If src is 8-byte aligned, fast path */
@@ -132,15 +129,13 @@ void * sq_set32(void *dest, uint32_t c, size_t n) {
     /* Set store queue memory area as desired */
     SET_QACR_REGS(dest, dest);
 
-    /* Fill both store queues with c */
-    d[0] = d[1] = d[2] = d[3] = d[4] = d[5] = d[6] = d[7] =
-            d[8] = d[9] = d[10] = d[11] = d[12] = d[13] = d[14] = d[15] = c;
-
     /* Write them as many times necessary */
     n >>= 5;
 
     while(n--) {
-        __builtin_prefetch(d);
+        /* Fill both store queues with c */
+        d[0] = d[1] = d[2] = d[3] = d[4] = d[5] = d[6] = d[7] = c;
+        dcache_wback_sq(d);
         d += 8;
     }
 
