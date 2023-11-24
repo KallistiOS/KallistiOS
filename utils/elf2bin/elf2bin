@@ -3,7 +3,7 @@
 # elf2bin
 # script to convert an elf program to a bin(ary) program
 # then you can use 'scramble' to generate a '1ST_READ.BIN' file
-# this script is basically using 'strip' and 'objcopy'.
+# this script is basically a simplified 'kos-objcopy'.
 
 me=`basename "$0"`
 
