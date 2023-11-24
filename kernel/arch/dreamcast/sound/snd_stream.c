@@ -191,7 +191,7 @@ static void snd_pcm16_split_unaligned(void *buffer, void *left, void *right, siz
     uint32_t left_val;
     uint32_t right_val;
 
-    for(; len > 8; len -= 8) {
+    for(; len >= 8; len -= 8) {
         dcache_pref_block(buf + 8);
 
         data = *buf++;
@@ -220,15 +220,21 @@ static void snd_pcm16_split_unaligned(void *buffer, void *left, void *right, siz
 
 void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t size) {
     g2_ctx_t ctx;
+    uint32_t i;
+    uint16 *s = (uint16 *)data;
+    size_t remain = size;
+    uint32_t *masked_left;
+    uint32_t *masked_right;
 
     /* SPU memory in cached area */
     left |= SPU_RAM_BASE;
     right |= SPU_RAM_BASE;
 
-    uintptr_t masked_left = SQ_MASK_DEST_ADDR(left);
-    uintptr_t masked_right = SQ_MASK_DEST_ADDR(right);
+    masked_left = SQ_MASK_DEST(left);
+    masked_right = SQ_MASK_DEST(right);
 
     sq_lock();
+    dcache_pref_block(s);
 
     /* Set store queue memory area as desired */
     SET_QACR_REGS(left, right);
@@ -237,11 +243,64 @@ void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t 
     ctx = g2_lock();
 
     /* Separating channels and do fill/write queues as many times necessary. */
-    snd_pcm16_split_sq_start(data, masked_left, masked_right, size);
+    for(; remain >= 128; remain -= 128) {
+
+        /* Fill SQ0 */
+        for(i = 0; i < 16; i += 2) {
+            masked_left[i / 2] = (s[i * 2] << 16) | s[(i + 1) * 2];
+        }
+
+        /* Write-back SQ0 */
+        dcache_pref_block(masked_left);
+
+        /* Fill SQ1 */
+        for(i = 16; i < 32; i += 2) {
+            masked_left[i / 2] = (s[i * 2] << 16) | s[(i + 1) * 2];
+        }
+
+        /* Write-back SQ1 */
+        dcache_pref_block(masked_left + 8);
+        masked_left += 16;
+
+        /* Fill SQ0 */
+        for(i = 0; i < 16; i += 2) {
+            masked_right[i / 2] = (s[(i * 2) + 1] << 16) | s[((i + 1) * 2) + 1];
+        }
+
+        /* Write-back SQ0 */
+        dcache_pref_block(masked_right);
+
+        /* Fill SQ1 */
+        for(i = 16; i < 32; i += 2) {
+            masked_right[i / 2] = (s[(i * 2) + 1] << 16) | s[((i + 1) * 2) + 1];
+        }
+
+        /* Write-back SQ1 */
+        dcache_pref_block(masked_right + 8);
+        masked_right += 16;
+        s += 64;
+    }
 
     /* Wait for both store queues to complete if they are already used */
     uint32_t *d = (uint32_t *)MEM_AREA_SQ_BASE;
     d[0] = d[8] = 0;
+
+    if(remain) {
+
+        left |= MEM_AREA_P2_BASE;
+        right |= MEM_AREA_P2_BASE;
+        left += size - remain;
+        right += size - remain;
+
+        g2_fifo_wait();
+
+        for(; remain >= 4; remain -= 4) {
+            *((vuint16 *)left) = *s++;
+            *((vuint16 *)right) = *s++;
+            left += 2;
+            right += 2;
+        }
+    }
 
     g2_unlock(ctx);
     sq_unlock();
@@ -269,7 +328,6 @@ static void snd_stream_prefill_part(snd_stream_hnd_t hnd, uint32_t offset) {
 
     if(chans == 1) {
         spu_memload_sq(left, buf, got);
-        spu_memload_sq(right, buf, got);
         return;
     }
 
