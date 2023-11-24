@@ -4,7 +4,7 @@
 ! Copyright (C) 2023 Ruslan Rostovtsev
 !
 ! Optimized SH4 assembler code for separating stereo 8/16-bit PCM and
-! stereo 4-bit ADPCM to single channels.
+! stereo 4-bit ADPCM into independent single channels.
 !
 
 .section .text

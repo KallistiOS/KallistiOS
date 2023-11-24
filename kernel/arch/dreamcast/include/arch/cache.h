@@ -139,7 +139,7 @@ static __always_inline void dcache_pref_block(const void *src) {
 
 /** \brief  Write-back Store Queue buffer to external memory
 
-    This function initiate write-back for one Store Queue.
+    This function initiates write-back for one Store Queue.
 
     \param  src             The SQ mapped address to write-back.
 */
