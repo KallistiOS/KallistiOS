@@ -144,7 +144,7 @@ static __always_inline void dcache_pref_block(const void *src) {
     \param  src             The SQ mapped address to write-back.
 */
 static __always_inline void dcache_wback_sq(const void *src) {
-    __asm__ __volatile__("pref @%0\n"
+    dcache_pref_block(src);
                          :
                          : "r" (src)
                          : "memory"

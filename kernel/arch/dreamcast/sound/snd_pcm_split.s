@@ -68,7 +68,7 @@ _snd_pcm16_split:
 !
 ! void snd_pcm8_split(uint32_t *data, uint32_t *left, uint32_t *right, size_t size);
 !
-.align 2
+    .align 2
 _snd_pcm8_split:
 	mov #-5, r1
 	shld r1, r7
@@ -95,7 +95,7 @@ _snd_pcm8_split:
 !
 ! void snd_adpcm_split(uint32_t *data, uint32_t *left, uint32_t *right, size_t size);
 !
-.align 2
+    .align 2
 _snd_adpcm_split:
 	mov #-5, r1
 	shld r1, r7
