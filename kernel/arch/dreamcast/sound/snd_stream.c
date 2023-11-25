@@ -108,8 +108,6 @@ static mutex_t stream_mutex = MUTEX_INITIALIZER;
         assert( streams[(x)].initted ); \
     } while(0)
 
-void snd_pcm16_split_sq_start(uint32_t *data, uintptr_t left, uintptr_t right, size_t size);
-
 static inline size_t samples_to_bytes(snd_stream_hnd_t hnd, size_t samples) {
     switch(streams[hnd].bitsize) {
         case 4:

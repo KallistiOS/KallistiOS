@@ -16,7 +16,7 @@
 !
 ! void snd_pcm16_split(uint32_t *data, uint32_t *left, uint32_t *right, size_t size);
 !
-.align 2
+	.align 2
 _snd_pcm16_split:
 	mov #-5, r3
 	shld r3, r7

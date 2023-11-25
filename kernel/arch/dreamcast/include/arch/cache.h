@@ -145,10 +145,6 @@ static __always_inline void dcache_pref_block(const void *src) {
 */
 static __always_inline void dcache_wback_sq(const void *src) {
     dcache_pref_block(src);
-                         :
-                         : "r" (src)
-                         : "memory"
-    );
 }
 
 /** \brief  Allocate one block of the data/operand cache.

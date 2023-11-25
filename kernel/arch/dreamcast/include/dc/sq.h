@@ -12,6 +12,9 @@
     \brief   Functions to access the SH4 Store Queues.
 
     \author Andrew Kieschnick
+    \author Falco Girgis
+    \author Andy Barajas
+    \author Ruslan Rostovtsev
 */
 
 /** \defgroup  store_queues Store Queues
