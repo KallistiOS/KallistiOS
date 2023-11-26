@@ -188,6 +188,7 @@ pvr_dma_load_ta
 pvr_dma_yuv_conv
 pvr_sq_load
 pvr_sq_set16
+pvr_sq_set32
 pvr_fog_table_color
 pvr_fog_vertex_color
 pvr_fog_far_depth

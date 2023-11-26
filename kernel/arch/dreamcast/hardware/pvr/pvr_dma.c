@@ -216,7 +216,7 @@ void *pvr_sq_load(void *dest, const void *src, size_t n, int type) {
     return dest;
 }
 
-/* Fills n bytes at PVR dest with short c, dest must be 32-byte aligned */
+/* Fills n bytes at PVR dest with 16-bit c, dest must be 32-byte aligned */
 void *pvr_sq_set16(void *dest, uint32_t c, size_t n, int type) {
 
     if(pvr_dma[PVR_DST] != 0) {
@@ -227,6 +227,21 @@ void *pvr_sq_set16(void *dest, uint32_t c, size_t n, int type) {
 
     void *dma_area_ptr = (void *)pvr_dest_addr((uintptr_t)dest, type);
     sq_set16(dma_area_ptr, c, n);
+
+    return dest;
+}
+
+/* Fills n bytes at PVR dest with 32-bit c, dest must be 32-byte aligned */
+void *pvr_sq_set32(void *dest, uint32_t c, size_t n, int type) {
+
+    if(pvr_dma[PVR_DST] != 0) {
+        dbglog(DBG_ERROR, "pvr_sq_set16: PVR DMA has not finished\n");
+        errno = EINPROGRESS;
+        return NULL;
+    }
+
+    void *dma_area_ptr = (void *)pvr_dest_addr((uintptr_t)dest, type);
+    sq_set32(dma_area_ptr, c, n);
 
     return dest;
 }

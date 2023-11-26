@@ -1662,6 +1662,8 @@ typedef uint32_t pvr_dr_state_t;
 
 /** \brief  Initialize a state variable for Direct Rendering.
 
+    Store Queues are used.
+
     \param  vtx_buf_ptr     A variable of type pvr_dr_state_t to init.
 */
 void pvr_dr_init(pvr_dr_state_t *vtx_buf_ptr);
@@ -1685,11 +1687,12 @@ void pvr_dr_init(pvr_dr_state_t *vtx_buf_ptr);
     \param  addr            The address returned by pvr_dr_target(), after you
                             have written the primitive to it.
 */
-#define pvr_dr_commit(addr) dcache_wback_sq(addr)
+#define pvr_dr_commit(addr) sq_flush(addr)
 
 /** \brief  Finish work with Direct Rendering.
 
     Called atomatically in pvr_scene_finish().
+    Use it manually if you want to release Store Queues earlier.
 
 */
 void pvr_dr_finish();
@@ -2183,7 +2186,7 @@ void pvr_dma_shutdown(void);
     \param  type            The type of SQ/DMA transfer to do (see list of modes).
     \return                 The original value of dest.
 
-    \sa sq_cpy()
+    \sa pvr_sq_set32()
 */
 void *pvr_sq_load(void *dest, const void *src, size_t n, int type);
 
@@ -2206,9 +2209,31 @@ void *pvr_sq_load(void *dest, const void *src, size_t n, int type);
     \param  type            The type of SQ/DMA transfer to do (see list of modes).
     \return                 The original value of dest.
 
-    \sa sq_set(), sq_set16(), sq_set32()
+    \sa pvr_sq_set32()
 */
 void *pvr_sq_set16(void *dest, uint32_t c, size_t n, int type);
+
+/** \brief   Set a block of PVR memory to a 32-bit value.
+    \ingroup store_queues
+
+    This function is similar to sq_set32(), but it has been
+    optimized for writing to a destination residing within VRAM.
+
+    \warning
+    This function cannot be used at the same time as a PVR DMA transfer.
+
+    The dest pointer must be at least 32-byte aligned and reside in video 
+    memory, n must be a multiple of 32.
+
+    \param  dest            The address to begin setting at (32-byte aligned).
+    \param  c               The value to set.
+    \param  n               The number of bytes to set (multiple of 32).
+    \param  type            The type of SQ/DMA transfer to do (see list of modes).
+    \return                 The original value of dest.
+
+    \sa pvr_sq_set16
+*/
+void *pvr_sq_set32(void *dest, uint32_t c, size_t n, int type);
 
 /*********************************************************************/
 
