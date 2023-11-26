@@ -19,6 +19,25 @@
     Based on code by Marcus Comstedt, TapamN, and Moop
 */
 
+/** \brief   Store Queue 0 access register 
+    \ingroup store_queues
+*/
+#define QACR0 (*(volatile uint32_t *)(void *)0xff000038)
+
+/** \brief   Store Queue 1 access register 
+    \ingroup store_queues  
+*/
+#define QACR1 (*(volatile uint32_t *)(void *)0xff00003c)
+
+/** \brief   Set Store Queue QACR* registers
+    \ingroup store_queues
+*/
+#define SET_QACR_REGS(dest0, dest1) \
+    do { \
+        QACR0 = ((uintptr_t)(dest0)) >> 24; \
+        QACR1 = ((uintptr_t)(dest1)) >> 24; \
+    } while(0)
+
 static mutex_t sq_mutex = MUTEX_INITIALIZER;
 
 void sq_lock(void *dest0, void *dest1) {
@@ -64,7 +83,7 @@ __attribute__((noinline)) void *sq_cpy(void *dest, const void *src, size_t n) {
             d[5] = *(s++);
             d[6] = *(s++);
             d[7] = *(s++);
-            dcache_wback_sq(d);
+            sq_flush(d);
             d += 8;
         }
     } else { /* If src is 8-byte aligned, fast path */
@@ -133,7 +152,7 @@ void * sq_set32(void *dest, uint32_t c, size_t n) {
     while(n--) {
         /* Fill both store queues with c */
         d[0] = d[1] = d[2] = d[3] = d[4] = d[5] = d[6] = d[7] = c;
-        dcache_wback_sq(d);
+        sq_flush(d);
         d += 8;
     }
 

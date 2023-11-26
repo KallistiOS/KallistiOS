@@ -143,9 +143,7 @@ static __always_inline void dcache_pref_block(const void *src) {
 
     \param  src             The SQ mapped address to write-back.
 */
-static __always_inline void dcache_wback_sq(const void *src) {
-    dcache_pref_block(src);
-}
+#define dcache_wback_sq(ptr) dcache_pref_block(ptr)
 
 /** \brief  Allocate one block of the data/operand cache.
 

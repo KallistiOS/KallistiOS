@@ -43,25 +43,7 @@ __BEGIN_DECLS
 #include <stdint.h>
 #include <arch/types.h>
 #include <arch/memory.h>
-
-/** \brief   Store Queue 0 access register 
-    \ingroup store_queues
-*/
-#define QACR0 (*(volatile uint32_t *)(void *)0xff000038)
-
-/** \brief   Store Queue 1 access register 
-    \ingroup store_queues  
-*/
-#define QACR1 (*(volatile uint32_t *)(void *)0xff00003c)
-
-/** \brief   Set Store Queue QACR* registers
-    \ingroup store_queues
-*/
-#define SET_QACR_REGS(dest0, dest1) \
-    do { \
-        QACR0 = ((uintptr_t)(dest0)) >> 24; \
-        QACR1 = ((uintptr_t)(dest1)) >> 24; \
-    } while(0)
+#include <arch/cache.h>
 
 /** \brief   Mask dest to Store Queue area as address
     \ingroup store_queues
@@ -107,7 +89,7 @@ void sq_lock(void *dest0, void *dest1);
 */
 void sq_unlock(void);
 
-/** \brief  Wait for both store queues to complete 
+/** \brief  Wait for both Store Queues to complete 
     \ingroup store_queues
 
     Wait for both store queues to complete by writing to SQ area. 
@@ -115,6 +97,15 @@ void sq_unlock(void);
     \sa sq_lock()
 */
 void sq_wait(void);
+
+/** \brief  Write-back one Store Queue
+    \ingroup store_queues
+
+    Initiates write-back from SQ buffer to external memory.
+
+    \sa sq_wait()
+*/
+#define sq_flush(ptr) dcache_wback_sq(ptr)
 
 /** \brief   Copy a block of memory.
     \ingroup store_queues
