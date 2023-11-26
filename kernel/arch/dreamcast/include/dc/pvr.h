@@ -1077,6 +1077,7 @@ Striplength set to 2 */
 #define PVR_TA_INPUT        0x10000000  /**< \brief TA command input */
 #define PVR_TA_YUV_CONV     0x10800000  /**< \brief YUV converter */
 #define PVR_TA_TEX_MEM      0x11000000  /**< \brief Texture memory */
+#define PVR_RAM_BASE_P0     0x05000000  /**< \brief PVR RAM (raw) in P0 area */
 #define PVR_RAM_BASE        0xa5000000  /**< \brief PVR RAM (raw) */
 #define PVR_RAM_INT_BASE    0xa4000000  /**< \brief PVR RAM (interleaved) */
 
@@ -2053,6 +2054,7 @@ int pvr_dma_transfer(void *src, uintptr_t dest, size_t count, int type,
 #define PVR_DMA_VRAM32  1   /**< \brief Transfer to VRAM in linear mode */
 #define PVR_DMA_TA      2   /**< \brief Transfer to the tile accelerator */
 #define PVR_DMA_YUV     3   /**< \brief Transfer to the YUV converter */
+#define PVR_DMA_VRAM_RB 4   /**< \brief Transfer to VRAM over the Root bus */
 /** @} */
 
 /** \brief  Load a texture using PVR DMA.
@@ -2125,6 +2127,31 @@ int pvr_dma_load_ta(void *src, size_t count, int block,
 int pvr_dma_yuv_conv(void *src, size_t count, int block,
                      pvr_dma_callback_t callback, void *cbdata);
 
+/** \brief  Load data using PVR DMA over the Root bus.
+
+    This is essentially a convenience wrapper for pvr_dma_transfer(), so all
+    notes that apply to it also apply here.
+
+    \param  src             Where to copy from. Must be 32-byte aligned.
+    \param  dest            Where to copy to. Must be 32-byte aligned.
+    \param  count           The number of bytes to copy. Must be a multiple of
+                            32.
+    \param  block           Non-zero if you want the function to block until the
+                            DMA completes.
+    \param  direction       Transfer direction, 1 to PVR, 0 from PVR.
+    \param  callback        A function to call upon completion of the DMA.
+    \param  cbdata          Data to pass to the callback function.
+    \retval 0               On success.
+    \retval -1              On failure. Sets errno as appropriate.
+
+    \par    Error Conditions:
+    \em     EINPROGRESS - DMA already in progress \n
+    \em     EFAULT - dest is not 32-byte aligned \n
+    \em     EIO - I/O error
+*/
+int pvr_dma_rootbus(void *src, pvr_ptr_t dest, size_t count, int block,
+                     int direction, pvr_dma_callback_t callback, void *cbdata);
+
 /** \brief  Is PVR DMA is inactive?
     \return                 Non-zero if there is no PVR DMA active, thus a DMA
                             can begin or 0 if there is an active DMA.
@@ -2181,7 +2208,7 @@ void *pvr_sq_load(void *dest, const void *src, size_t n, int type);
 
     \sa sq_set(), sq_set16(), sq_set32()
 */
-void *pvr_sq_set(void *dest, uint32_t c, size_t n, int type);
+void *pvr_sq_set16(void *dest, uint32_t c, size_t n, int type);
 
 /*********************************************************************/
 

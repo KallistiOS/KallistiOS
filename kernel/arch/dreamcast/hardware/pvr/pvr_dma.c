@@ -65,18 +65,43 @@ static void pvr_dma_irq_hnd(uint32_t code) {
     }
 }
 
-int pvr_dma_transfer(void *src, uintptr_t dest, size_t count, int type,
-                     int block, pvr_dma_callback_t callback, void *cbdata) {
-    uint32_t src_addr = ((uint32_t)src);
-    uint32_t dest_addr;
+static uintptr_t pvr_dest_addr(uintptr_t dest, int type) {
+
+    uintptr_t dest_addr = dest;
 
     /* Send the data to the right place */
-    if(type == PVR_DMA_TA)
-        dest_addr = (dest & 0xFFFFFF) | PVR_TA_INPUT;
-    else if(type == PVR_DMA_YUV)
-        dest_addr = (dest & 0xFFFFFF) | PVR_TA_YUV_CONV;
-    else
-        dest_addr = (dest & 0xFFFFFF) | PVR_TA_TEX_MEM;
+    if(type == PVR_DMA_TA) {
+        dest_addr = ((uintptr_t)dest & 0xffffff) | PVR_TA_INPUT;
+        /* Use both 32-bit TA->VRAM buses */
+        pvr_dma[PVR_LMMODE0] = 0;
+        pvr_dma[PVR_LMMODE1] = 0; 
+    }
+    else if(type == PVR_DMA_YUV) {
+        dest_addr = ((uintptr_t)dest & 0xffffff) | PVR_TA_YUV_CONV;
+        pvr_dma[PVR_LMMODE0] = 0;
+        pvr_dma[PVR_LMMODE1] = 0; 
+    }
+    else if(type == PVR_DMA_VRAM64) {
+        dest_addr = ((uintptr_t)dest & 0xffffff) | PVR_TA_TEX_MEM;
+        pvr_dma[PVR_LMMODE0] = 0;
+        pvr_dma[PVR_LMMODE1] = 0; 
+    }
+    else if(type == PVR_DMA_VRAM32) {
+        dest_addr = ((uintptr_t)dest & 0xffffff) | PVR_TA_TEX_MEM;
+        /* Use only one 32-bit TA->VRAM bus */
+        pvr_dma[PVR_LMMODE0] = 1;
+        pvr_dma[PVR_LMMODE1] = 0;
+    }
+    else if(type == PVR_DMA_VRAM_RB) {
+        dest_addr = ((uintptr_t)dest & 0xffffff) | PVR_RAM_BASE_P0;
+    }
+
+    return dest_addr;
+}
+
+int pvr_dma_transfer(void *src, uintptr_t dest, size_t count, int type,
+                     int block, pvr_dma_callback_t callback, void *cbdata) {
+    uintptr_t src_addr = ((uintptr_t)src);
 
     /* Check for 32-byte alignment */
     if(src_addr & 0x1F) {
@@ -112,8 +137,7 @@ int pvr_dma_transfer(void *src, uintptr_t dest, size_t count, int type,
         return -1;
     }
 
-    pvr_dma[PVR_LMMODE0] = type == PVR_DMA_VRAM32 ? 1 : 0;
-    pvr_dma[PVR_STATE] = dest_addr;
+    pvr_dma[PVR_STATE] = pvr_dest_addr(dest, type);
     pvr_dma[PVR_LEN] = count;
     pvr_dma[PVR_DST] = 0x1;
 
@@ -139,6 +163,14 @@ int pvr_dma_load_ta(void *src, size_t count, int block,
 int pvr_dma_yuv_conv(void *src, size_t count, int block,
                     pvr_dma_callback_t callback, void *cbdata) {
     return pvr_dma_transfer(src, (uintptr_t)0, count, PVR_DMA_YUV, block, callback, cbdata);
+}
+
+int pvr_dma_rootbus(void *src, void *dest, size_t count, int block, int direction,
+                    pvr_dma_callback_t callback, void *cbdata) {
+    // TODO
+    (void)direction;
+    return pvr_dma_transfer(src, (uintptr_t)dest, count, PVR_DMA_VRAM_RB, block, 
+                            callback, cbdata);
 }
 
 int pvr_dma_ready(void) {
@@ -172,48 +204,29 @@ void pvr_dma_shutdown(void) {
 /* Copies n bytes from src to PVR dest, dest must be 32-byte aligned */
 void *pvr_sq_load(void *dest, const void *src, size_t n, int type) {
 
-    uint32_t dma_area_ptr;
-
     if(pvr_dma[PVR_DST] != 0) {
         dbglog(DBG_ERROR, "pvr_sq_load: PVR DMA has not finished\n");
+        errno = EINPROGRESS;
         return NULL;
     }
 
-    pvr_dma[PVR_LMMODE0] = type == PVR_DMA_VRAM32 ? 1 : 0;
-
-    /* Send the data to the right place */
-    if(type == PVR_DMA_TA)
-        dma_area_ptr = ((uintptr_t)dest & 0xffffff) | PVR_TA_INPUT;
-    else if(type == PVR_DMA_YUV)
-        dma_area_ptr = ((uintptr_t)dest & 0xffffff) | PVR_TA_YUV_CONV;
-    else
-        dma_area_ptr = ((uintptr_t)dest & 0xffffff) | PVR_TA_TEX_MEM;
-
-    sq_cpy((void *)dma_area_ptr, src, n);
+    void *dma_area_ptr = (void *)pvr_dest_addr((uintptr_t)dest, type);
+    sq_cpy(dma_area_ptr, src, n);
 
     return dest;
 }
 
 /* Fills n bytes at PVR dest with short c, dest must be 32-byte aligned */
-void *pvr_sq_set(void *dest, uint32_t c, size_t n, int type) {
-    uint32_t dma_area_ptr;
+void *pvr_sq_set16(void *dest, uint32_t c, size_t n, int type) {
 
     if(pvr_dma[PVR_DST] != 0) {
-        dbglog(DBG_ERROR, "pvr_sq_set: PVR DMA has not finished\n");
+        dbglog(DBG_ERROR, "pvr_sq_set16: PVR DMA has not finished\n");
+        errno = EINPROGRESS;
         return NULL;
     }
 
-    pvr_dma[PVR_LMMODE0] = type == PVR_DMA_VRAM32 ? 1 : 0;
-
-    /* Send the data to the right place */
-    if(type == PVR_DMA_TA)
-        dma_area_ptr = ((uintptr_t)dest & 0xffffff) | PVR_TA_INPUT;
-    else if(type == PVR_DMA_YUV)
-        dma_area_ptr = ((uintptr_t)dest & 0xffffff) | PVR_TA_YUV_CONV;
-    else
-        dma_area_ptr = ((uintptr_t)dest & 0xffffff) | PVR_TA_TEX_MEM;
-
-    sq_set16((void *)dma_area_ptr, c, n);
+    void *dma_area_ptr = (void *)pvr_dest_addr((uintptr_t)dest, type);
+    sq_set16(dma_area_ptr, c, n);
 
     return dest;
 }
