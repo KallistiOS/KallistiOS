@@ -227,6 +227,17 @@ int pvr_list_prim(pvr_list_t list, void * data, int size) {
     return 0;
 }
 
+void pvr_dr_init(pvr_dr_state_t *vtx_buf_ptr) {
+    *vtx_buf_ptr = 0;
+    sq_lock((void *)PVR_TA_INPUT, (void *)PVR_TA_INPUT);
+    pvr_state.dr_used = 1;
+}
+
+void pvr_dr_finish(void) {
+    pvr_state.dr_used = 0;
+    sq_unlock();
+}
+
 int pvr_list_flush(pvr_list_t list) {
     (void)list;
 
@@ -241,6 +252,10 @@ int pvr_list_flush(pvr_list_t list) {
 int pvr_scene_finish(void) {
     int i, o;
     volatile pvr_dma_buffers_t * b;
+
+    if(pvr_state.dr_used) {
+        pvr_dr_finish();
+    }
 
     // If we're in DMA mode, then this works a little differently...
     if(pvr_state.dma_mode) {

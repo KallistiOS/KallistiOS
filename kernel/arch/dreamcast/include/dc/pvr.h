@@ -38,6 +38,7 @@ __BEGIN_DECLS
 
 #include <arch/memory.h>
 #include <arch/types.h>
+#include <arch/cache.h>
 #include <dc/sq.h>
 #include <kos/img.h>
 
@@ -1662,11 +1663,7 @@ typedef uint32_t pvr_dr_state_t;
 
     \param  vtx_buf_ptr     A variable of type pvr_dr_state_t to init.
 */
-#define pvr_dr_init(vtx_buf_ptr) do { \
-        (vtx_buf_ptr) = 0; \
-        QACR0 = ((((uint32)PVR_TA_INPUT) >> 26) << 2) & 0x1c; \
-        QACR1 = ((((uint32)PVR_TA_INPUT) >> 26) << 2) & 0x1c; \
-    } while(0)
+void pvr_dr_init(pvr_dr_state_t *vtx_buf_ptr);
 
 /** \brief  Obtain the target address for Direct Rendering.
 
@@ -1679,7 +1676,7 @@ typedef uint32_t pvr_dr_state_t;
 */
 #define pvr_dr_target(vtx_buf_ptr) \
     ({ (vtx_buf_ptr) ^= 32; \
-        (pvr_vertex_t *)(MEM_AREA_P4_BASE | (vtx_buf_ptr)); \
+        (pvr_vertex_t *)(MEM_AREA_SQ_BASE | (vtx_buf_ptr)); \
     })
 
 /** \brief  Commit a primitive written into the Direct Rendering target address.
@@ -1687,7 +1684,14 @@ typedef uint32_t pvr_dr_state_t;
     \param  addr            The address returned by pvr_dr_target(), after you
                             have written the primitive to it.
 */
-#define pvr_dr_commit(addr) __asm__ __volatile__("pref @%0" : : "r" (addr))
+#define pvr_dr_commit(addr) dcache_wback_sq(addr)
+
+/** \brief  Finish work with Direct Rendering.
+
+    Called atomatically in pvr_scene_finish().
+
+*/
+void pvr_dr_finish();
 
 /** \brief  Submit a primitive of the given list type.
 
