@@ -77,35 +77,44 @@ __BEGIN_DECLS
 
 /** \brief  Lock Store Queues
     \ingroup store_queues
-    
+
     Locks the store queues so that they cannot be used from another thread 
     until unlocked. 
-    
+
     \warning
     This function is called automatically by the store queue API provided by KOS; 
     however, it must be called manually when driving the SQs directly from outside 
     of this API. 
-    
+
     \sa sq_unlock()
 */
-void sq_lock(void);
+void sq_lock(void *dest0, void *dest1);
 
 /** \brief  Unlock Store Queues
     \ingroup store_queues
-    
+
     Unlocks the store queues so that they can be used from any thread. 
-    
+
     \note 
     sq_lock() should've already been called previously.
-    
+
     \warning
     sq_lock() and sq_unlock() are called automatically by the store queue API provided 
     by KOS; however, they must be called manually when driving the SQs directly from 
     outside this API.
-    
+
     \sa sq_lock()
 */
 void sq_unlock(void);
+
+/** \brief  Wait for both store queues to complete 
+    \ingroup store_queues
+
+    Wait for both store queues to complete by writing to SQ area. 
+
+    \sa sq_lock()
+*/
+void sq_wait(void);
 
 /** \brief   Copy a block of memory.
     \ingroup store_queues
@@ -197,54 +206,6 @@ void * sq_set32(void *dest, uint32_t c, size_t n);
 */
 void sq_clr(void *dest, size_t n);
 
-/** \brief   Copy a block of memory to VRAM
-    \ingroup store_queues
-    \author  TapamN
-
-    This function is similar to sq_cpy(), but it has been
-    optimized for writing to a destination residing within VRAM.
-
-    \note
-    TapamN has reported over a 2x speedup versus the regular
-    sq_cpy() when using this function to write to VRAM.
-
-    \warning
-    This function cannot be used at the same time as a PVR DMA transfer.
-
-    The dest pointer must be at least 32-byte aligned and reside 
-    in video memory, the src pointer must be at least 8-byte aligned, 
-    and n must be a multiple of 32.
-
-    \param  dest            The address to copy to (32-byte aligned).
-    \param  src             The address to copy from (32-bit (8-byte) aligned).
-    \param  n               The number of bytes to copy (multiple of 32).
-    \return                 The original value of dest.
-
-    \sa sq_cpy()
-*/
-void * sq_cpy_pvr(void *dest, const void *src, size_t n);
-
-/** \brief   Set a block of PVR memory to a 16-bit value.
-    \ingroup store_queues
-
-    This function is similar to sq_set16(), but it has been
-    optimized for writing to a destination residing within VRAM.
-
-    \warning
-    This function cannot be used at the same time as a PVR DMA transfer.
-    
-    The dest pointer must be at least 32-byte aligned and reside in video 
-    memory, n must be a multiple of 32 and only the low 16-bits are used 
-    from c.
-
-    \param  dest            The address to begin setting at (32-byte aligned).
-    \param  c               The value to set (in the low 16-bits).
-    \param  n               The number of bytes to set (multiple of 32).
-    \return                 The original value of dest.
-
-    \sa sq_set(), sq_set16(), sq_set32()
-*/
-void * sq_set_pvr(void *dest, uint32_t c, size_t n);
 
 __END_DECLS
 

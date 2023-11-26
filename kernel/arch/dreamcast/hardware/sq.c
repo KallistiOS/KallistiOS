@@ -21,12 +21,20 @@
 
 static mutex_t sq_mutex = MUTEX_INITIALIZER;
 
-void sq_lock(void) {
+void sq_lock(void *dest0, void *dest1) {
     mutex_lock(&sq_mutex);
+    sq_wait();
+    SET_QACR_REGS(dest0, dest1);
 }
 
 void sq_unlock(void) {
     mutex_unlock(&sq_mutex);
+}
+
+void sq_wait(void) {
+    /* Wait for both store queues to complete */
+    uint32 *d = (uint32_t *)MEM_AREA_SQ_BASE;
+    d[0] = d[8] = 0;
 }
 
 /* Copies n bytes from src to dest, dest must be 32-byte aligned */
@@ -39,10 +47,7 @@ __attribute__((noinline)) void *sq_cpy(void *dest, const void *src, size_t n) {
     _Complex float ds3;
     _Complex float ds4;
 
-    sq_lock();
-
-    /* Set store queue memory area as desired */
-    SET_QACR_REGS(dest, dest);
+    sq_lock(dest, dest);
 
     /* Fill/write queues as many times necessary */
     n >>= 5;
@@ -94,10 +99,6 @@ __attribute__((noinline)) void *sq_cpy(void *dest, const void *src, size_t n) {
         );
     }
 
-    /* Wait for both store queues to complete */
-    d = (uint32_t *)MEM_AREA_SQ_BASE;
-    d[0] = d[8] = 0;
-
     sq_unlock();
     return dest;
 }
@@ -124,10 +125,7 @@ void * sq_set16(void *dest, uint32_t c, size_t n) {
 void * sq_set32(void *dest, uint32_t c, size_t n) {
     uint32_t *d = SQ_MASK_DEST(dest);
 
-    sq_lock();
-
-    /* Set store queue memory area as desired */
-    SET_QACR_REGS(dest, dest);
+    sq_lock(dest, dest);
 
     /* Write them as many times necessary */
     n >>= 5;
@@ -139,10 +137,6 @@ void * sq_set32(void *dest, uint32_t c, size_t n) {
         d += 8;
     }
 
-    /* Wait for both store queues to complete */
-    d = (uint32_t *)MEM_AREA_SQ_BASE;
-    d[0] = d[8] = 0;
-
     sq_unlock();
     return dest;
 }
@@ -150,43 +144,4 @@ void * sq_set32(void *dest, uint32_t c, size_t n) {
 /* Clears n bytes at dest, dest must be 32-byte aligned */
 void sq_clr(void *dest, size_t n) {
     sq_set32(dest, 0, n);
-}
-
-#define PVR_LMMODE    (*(volatile uint32_t *)(void *)0xa05f6884)
-#define PVR_DMA_DEST  (*(volatile uint32_t *)(void *)0xa05f6808)
-
-/* Copies n bytes from src to dest (in VRAM), dest must be 32-byte aligned */
-void * sq_cpy_pvr(void *dest, const void *src, size_t n) {
-    if(PVR_DMA_DEST != 0) {
-        dbglog(DBG_ERROR, "sq_cpy_pvr: Previous DMA has not finished\n");
-        return NULL;
-    }
-
-    /* Set PVR LMMODE register */
-    PVR_LMMODE = 0;
-
-    /* Convert read/write area pointer to DMA write only area pointer */
-    uint32_t dma_area_ptr = (((uintptr_t)dest & 0xffffff) | 0x11000000);
-
-    sq_cpy((void *)dma_area_ptr, src, n);
-
-    return dest;
-}
-
-/* Fills n bytes at PVR dest with short c, dest must be 32-byte aligned */
-void * sq_set_pvr(void *dest, uint32_t c, size_t n) {
-    if(PVR_DMA_DEST != 0) {
-        dbglog(DBG_ERROR, "sq_set_pvr: Previous DMA has not finished\n");
-        return NULL;
-    }
-
-    /* Set PVR LMMODE register */
-    PVR_LMMODE = 0;
-
-    /* Convert read/write area pointer to DMA write only area pointer */
-    uint32_t dma_area_ptr = (((uintptr_t)dest & 0xffffff) | 0x11000000);
-
-    sq_set16((void *)dma_area_ptr, c, n);
-
-    return dest;
 }

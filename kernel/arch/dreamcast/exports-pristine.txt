@@ -135,6 +135,7 @@ sq_set16
 sq_set32
 sq_lock
 sq_unlock
+sq_wait
 
 # Sound
 snd_mem_init
@@ -228,6 +229,8 @@ pvr_txr_load_dma
 pvr_dma_ready
 pvr_dma_load_ta
 pvr_dma_yuv_conv
+pvr_sq_load
+pvr_sq_set
 pvr_fog_table_color
 pvr_fog_vertex_color
 pvr_fog_far_depth

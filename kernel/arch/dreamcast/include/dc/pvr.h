@@ -3,6 +3,7 @@
    dc/pvr.h
    Copyright (C) 2002 Megan Potter
    Copyright (C) 2014 Lawrence Sebald
+   Copyright (C) 2023 Ruslan Rostovtsev
 
    Low-level PVR 3D interface for the DC
    Note: this API does _not_ handle any sort of transformations
@@ -26,6 +27,7 @@
     \author Brian Paul
     \author Lawrence Sebald
     \author Benoit Miller
+    \author Ruslan Rostovtsev
 */
 
 #ifndef __DC_PVR_H
@@ -2130,6 +2132,52 @@ void pvr_dma_init(void);
 
 /** \brief  Shut down PVR DMA. */
 void pvr_dma_shutdown(void);
+
+/** \brief   Copy a block of memory to VRAM
+    \ingroup store_queues
+
+    This function is similar to sq_cpy(), but it has been
+    optimized for writing to a destination residing within VRAM.
+
+    \warning
+    This function cannot be used at the same time as a PVR DMA transfer.
+
+    The dest pointer must be at least 32-byte aligned and reside 
+    in video memory, the src pointer must be at least 8-byte aligned, 
+    and n must be a multiple of 32.
+
+    \param  dest            The address to copy to (32-byte aligned).
+    \param  src             The address to copy from (32-bit (8-byte) aligned).
+    \param  n               The number of bytes to copy (multiple of 32).
+    \param  type            The type of SQ/DMA transfer to do (see list of modes).
+    \return                 The original value of dest.
+
+    \sa sq_cpy()
+*/
+void *pvr_sq_load(void *dest, const void *src, size_t n, int type);
+
+/** \brief   Set a block of PVR memory to a 16-bit value.
+    \ingroup store_queues
+
+    This function is similar to sq_set16(), but it has been
+    optimized for writing to a destination residing within VRAM.
+
+    \warning
+    This function cannot be used at the same time as a PVR DMA transfer.
+    
+    The dest pointer must be at least 32-byte aligned and reside in video 
+    memory, n must be a multiple of 32 and only the low 16-bits are used 
+    from c.
+
+    \param  dest            The address to begin setting at (32-byte aligned).
+    \param  c               The value to set (in the low 16-bits).
+    \param  n               The number of bytes to set (multiple of 32).
+    \param  type            The type of SQ/DMA transfer to do (see list of modes).
+    \return                 The original value of dest.
+
+    \sa sq_set(), sq_set16(), sq_set32()
+*/
+void *pvr_sq_set(void *dest, uint32_t c, size_t n, int type);
 
 /*********************************************************************/
 

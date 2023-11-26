@@ -231,14 +231,11 @@ void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t 
     masked_left = SQ_MASK_DEST(left);
     masked_right = SQ_MASK_DEST(right);
 
-    sq_lock();
+    sq_lock((void *)left, (void *)right);
     dcache_pref_block(s);
 
-    /* Set store queue memory area as desired */
-    SET_QACR_REGS(left, right);
-
     /* Make sure the FIFOs are empty */
-    ctx = g2_lock();
+    g2_fifo_wait();
 
     /* Separating channels and do fill/write queues as many times necessary. */
     for(; remain >= 128; remain -= 128) {
@@ -279,18 +276,16 @@ void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t 
         s += 64;
     }
 
-    /* Wait for both store queues to complete if they are already used */
-    uint32_t *d = (uint32_t *)MEM_AREA_SQ_BASE;
-    d[0] = d[8] = 0;
+    sq_unlock();
 
     if(remain) {
-
         left |= MEM_AREA_P2_BASE;
         right |= MEM_AREA_P2_BASE;
         left += size - remain;
         right += size - remain;
 
-        g2_fifo_wait();
+        ctx = g2_lock();
+        sq_wait();
 
         for(; remain >= 4; remain -= 4) {
             *((vuint16 *)left) = *s++;
@@ -298,10 +293,9 @@ void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t 
             left += 2;
             right += 2;
         }
+        g2_unlock(ctx);
     }
 
-    g2_unlock(ctx);
-    sq_unlock();
 }
 
 static void snd_stream_prefill_part(snd_stream_hnd_t hnd, uint32_t offset) {

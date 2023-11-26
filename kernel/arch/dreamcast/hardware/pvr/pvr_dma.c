@@ -1,9 +1,11 @@
 /* KallistiOS ##version##
 
    pvr_dma.c
-   Copyright (C)2002 Roger Cattermole
-   Copyright (C)2004 Megan Potter
-   Copyright (C)2023 Andy Barajas
+   Copyright (C) 2002 Roger Cattermole
+   Copyright (C) 2004 Megan Potter
+   Copyright (C) 2023 Andy Barajas
+   Copyright (C) 2023 Ruslan Rostovtsev
+
    http://www.boob.co.uk
  */
 
@@ -12,6 +14,7 @@
 #include <dc/pvr.h>
 #include <dc/asic.h>
 #include <dc/dmac.h>
+#include <dc/sq.h>
 #include <kos/thread.h>
 #include <kos/sem.h>
 
@@ -109,7 +112,7 @@ int pvr_dma_transfer(void *src, uintptr_t dest, size_t count, int type,
         return -1;
     }
 
-    pvr_dma[PVR_LMMODE0] = type == PVR_DMA_VRAM64 ? 0 : 1;
+    pvr_dma[PVR_LMMODE0] = type == PVR_DMA_VRAM32 ? 1 : 0;
     pvr_dma[PVR_STATE] = dest_addr;
     pvr_dma[PVR_LEN] = count;
     pvr_dma[PVR_DST] = 0x1;
@@ -164,4 +167,53 @@ void pvr_dma_shutdown(void) {
     asic_evt_disable(ASIC_EVT_PVR_DMA, ASIC_IRQ_DEFAULT);
     asic_evt_set_handler(ASIC_EVT_PVR_DMA, NULL);
     sem_destroy(&dma_done);
+}
+
+/* Copies n bytes from src to PVR dest, dest must be 32-byte aligned */
+void *pvr_sq_load(void *dest, const void *src, size_t n, int type) {
+
+    uint32_t dma_area_ptr;
+
+    if(pvr_dma[PVR_DST] != 0) {
+        dbglog(DBG_ERROR, "pvr_sq_load: PVR DMA has not finished\n");
+        return NULL;
+    }
+
+    pvr_dma[PVR_LMMODE0] = type == PVR_DMA_VRAM32 ? 1 : 0;
+
+    /* Send the data to the right place */
+    if(type == PVR_DMA_TA)
+        dma_area_ptr = ((uintptr_t)dest & 0xffffff) | PVR_TA_INPUT;
+    else if(type == PVR_DMA_YUV)
+        dma_area_ptr = ((uintptr_t)dest & 0xffffff) | PVR_TA_YUV_CONV;
+    else
+        dma_area_ptr = ((uintptr_t)dest & 0xffffff) | PVR_TA_TEX_MEM;
+
+    sq_cpy((void *)dma_area_ptr, src, n);
+
+    return dest;
+}
+
+/* Fills n bytes at PVR dest with short c, dest must be 32-byte aligned */
+void *pvr_sq_set(void *dest, uint32_t c, size_t n, int type) {
+    uint32_t dma_area_ptr;
+
+    if(pvr_dma[PVR_DST] != 0) {
+        dbglog(DBG_ERROR, "pvr_sq_set: PVR DMA has not finished\n");
+        return NULL;
+    }
+
+    pvr_dma[PVR_LMMODE0] = type == PVR_DMA_VRAM32 ? 1 : 0;
+
+    /* Send the data to the right place */
+    if(type == PVR_DMA_TA)
+        dma_area_ptr = ((uintptr_t)dest & 0xffffff) | PVR_TA_INPUT;
+    else if(type == PVR_DMA_YUV)
+        dma_area_ptr = ((uintptr_t)dest & 0xffffff) | PVR_TA_YUV_CONV;
+    else
+        dma_area_ptr = ((uintptr_t)dest & 0xffffff) | PVR_TA_TEX_MEM;
+
+    sq_set16((void *)dma_area_ptr, c, n);
+
+    return dest;
 }
