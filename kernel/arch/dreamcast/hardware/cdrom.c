@@ -471,7 +471,6 @@ int cdrom_spin_down(void) {
 
 /* Initialize: assume no threading issues */
 int cdrom_init(void) {
-    int status, disc_type;
     uint32_t p;
     volatile uint32_t *react = (uint32_t *)(0x005f74e4 | MEM_AREA_P2_BASE);
     volatile uint32_t *bios = (uint32_t *)MEM_AREA_P2_BASE;
