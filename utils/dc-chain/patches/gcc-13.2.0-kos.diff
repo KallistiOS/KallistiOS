@@ -160,20 +160,3 @@ diff --color -ruN gcc-13.2.0/libstdc++-v3/configure gcc-13.2.0-kos/libstdc++-v3/
      mcf)	thread_header=config/i386/gthr-mcf.h ;;
  esac
  
-diff --color -ruN gcc-13.2.0/gcc/config/sh/sh.cc gcc-13.2.0-kos/gcc/config/sh/sh.cc
---- gcc-13.2.0/gcc/config/sh/sh.cc	2023-11-26 08:34:56.426962700 +0900
-+++ gcc-13.2.0-kos/gcc/config/sh/sh.cc	2023-11-26 08:40:20.067698600 +0900
-@@ -71,6 +71,12 @@
- /* This file should be included last.  */
- #include "target-def.h"
- 
-+/* Fix fputs_unlocked not declared issue in Cygwin */
-+#ifdef __CYGWIN__
-+#undef fputs
-+#undef fprintf
-+#endif
-+
- int code_for_indirect_jump_scratch = CODE_FOR_indirect_jump_scratch;
- 
- #define CONST_OK_FOR_ADD(size) CONST_OK_FOR_I08 (size)
- 
