@@ -188,7 +188,7 @@ static void convert_YUV420_to_YUV422_texture(void) {
 
     for(y_blk = 0; y_blk < FRAME_TEXTURE_HEIGHT; y_blk += 16) {
         for(x_blk = 0; x_blk < FRAME_TEXTURE_WIDTH; x_blk += 16) {
-            
+
             /* U data for 16x16 pixels */
             for(i = 0; i < 8; ++i) {
                 index = (y_blk / 2 + i) * (FRAME_TEXTURE_WIDTH / 2) + 
@@ -215,21 +215,21 @@ static void convert_YUV420_to_YUV422_texture(void) {
 
             // dcache_flush_range((uint32_t)u_block, 64);
             // pvr_dma_yuv_conv( (void*)u_block, 64, 1, NULL, 0);
-            sq_cpy((void *)PVR_TA_YUV_CONV, (void *)u_block, 64);
+            pvr_sq_load((void *)PVR_TA_YUV_CONV, (void *)u_block, 64, PVR_DMA_YUV);
 
             // dcache_flush_range((uint32_t)v_block, 64);
             // pvr_dma_yuv_conv( (void*)v_block, 64, 1, NULL, 0);
-            sq_cpy((void *)PVR_TA_YUV_CONV, (void *)v_block, 64);
+            pvr_sq_load((void *)PVR_TA_YUV_CONV, (void *)v_block, 64, PVR_DMA_YUV);
 
             // dcache_flush_range((uint32_t)y_block, 256);
             // pvr_dma_yuv_conv( (void*)y_block, 256, 1, NULL, 0);
-            sq_cpy((void *)PVR_TA_YUV_CONV, (void *)y_block, 256);
+            pvr_sq_load((void *)PVR_TA_YUV_CONV, (void *)y_block, 256, PVR_DMA_YUV);
         }
 
         /* Send dummies if frame texture width doesnt match pvr texture width */
-        sq_set((void *)PVR_TA_YUV_CONV, 0, 
+        pvr_sq_set32((void *)PVR_TA_YUV_CONV, 0, 
                 BYTE_SIZE_FOR_16x16_BLOCK * 
-                ((PVR_TEXTURE_WIDTH >> 4) - (FRAME_TEXTURE_WIDTH >> 4)));
+                ((PVR_TEXTURE_WIDTH >> 4) - (FRAME_TEXTURE_WIDTH >> 4)), PVR_DMA_YUV);
     }
 }
 
