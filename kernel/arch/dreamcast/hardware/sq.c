@@ -34,8 +34,8 @@
 */
 #define SET_QACR_REGS(dest0, dest1) \
     do { \
-        QACR0 = ((uintptr_t)(dest0)) >> 24; \
-        QACR1 = ((uintptr_t)(dest1)) >> 24; \
+        QACR0 = (((uintptr_t)(dest0)) >> 24) & 0x1c; \
+        QACR1 = (((uintptr_t)(dest1)) >> 24) & 0x1c; \
     } while(0)
 
 static mutex_t sq_mutex = MUTEX_INITIALIZER;
