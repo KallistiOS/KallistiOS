@@ -67,33 +67,26 @@ static void pvr_dma_irq_hnd(uint32_t code) {
 
 static uintptr_t pvr_dest_addr(uintptr_t dest, int type) {
 
-    uintptr_t dest_addr = dest;
+    uintptr_t dest_addr;
 
     /* Send the data to the right place */
     if(type == PVR_DMA_TA) {
         dest_addr = ((uintptr_t)dest & 0xffffff) | PVR_TA_INPUT;
-        /* Use both 32-bit TA->VRAM buses */
-        pvr_dma[PVR_LMMODE0] = 0;
-        pvr_dma[PVR_LMMODE1] = 0; 
     }
     else if(type == PVR_DMA_YUV) {
         dest_addr = ((uintptr_t)dest & 0xffffff) | PVR_TA_YUV_CONV;
-        pvr_dma[PVR_LMMODE0] = 0;
-        pvr_dma[PVR_LMMODE1] = 0; 
     }
     else if(type == PVR_DMA_VRAM64) {
         dest_addr = ((uintptr_t)dest & 0xffffff) | PVR_TA_TEX_MEM;
-        pvr_dma[PVR_LMMODE0] = 0;
-        pvr_dma[PVR_LMMODE1] = 0; 
     }
     else if(type == PVR_DMA_VRAM32) {
-        dest_addr = ((uintptr_t)dest & 0xffffff) | PVR_TA_TEX_MEM;
-        /* Use only one 32-bit TA->VRAM bus */
-        pvr_dma[PVR_LMMODE0] = 1;
-        pvr_dma[PVR_LMMODE1] = 0;
+        dest_addr = ((uintptr_t)dest & 0xffffff) | PVR_TA_TEX_MEM_32;
     }
     else if(type == PVR_DMA_VRAM_RB) {
         dest_addr = ((uintptr_t)dest & 0xffffff) | PVR_RAM_BASE_P0;
+    }
+    else {
+        dest_addr = dest;
     }
 
     return dest_addr;
@@ -183,6 +176,12 @@ void pvr_dma_init(void) {
     dma_blocking = 0;
     dma_callback = NULL;
     dma_cbdata = 0;
+
+    /* Use 2x32-bit TA->VRAM buses for PVR_TA_TEX_MEM */
+    pvr_dma[PVR_LMMODE0] = 0;
+
+    /* Use single 32-bit TA->VRAM bus for PVR_TA_TEX_MEM_32 */
+    pvr_dma[PVR_LMMODE1] = 1;
 
     /* Hook the neccessary interrupts */
     asic_evt_set_handler(ASIC_EVT_PVR_DMA, pvr_dma_irq_hnd);
