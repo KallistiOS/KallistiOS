@@ -40,10 +40,9 @@
 
 static mutex_t sq_mutex = MUTEX_INITIALIZER;
 
-void sq_lock(void *dest0, void *dest1) {
+void sq_lock(void *dest) {
     mutex_lock(&sq_mutex);
-    sq_wait();
-    SET_QACR_REGS(dest0, dest1);
+    SET_QACR_REGS(dest, dest);
 }
 
 void sq_unlock(void) {
@@ -66,7 +65,7 @@ __attribute__((noinline)) void *sq_cpy(void *dest, const void *src, size_t n) {
     _Complex float ds3;
     _Complex float ds4;
 
-    sq_lock(dest, dest);
+    sq_lock(dest);
 
     /* Fill/write queues as many times necessary */
     n >>= 5;
@@ -144,7 +143,7 @@ void * sq_set16(void *dest, uint32_t c, size_t n) {
 void * sq_set32(void *dest, uint32_t c, size_t n) {
     uint32_t *d = SQ_MASK_DEST(dest);
 
-    sq_lock(dest, dest);
+    sq_lock(dest);
 
     /* Write them as many times necessary */
     n >>= 5;

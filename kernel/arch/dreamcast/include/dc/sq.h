@@ -70,7 +70,7 @@ __BEGIN_DECLS
 
     \sa sq_unlock()
 */
-void sq_lock(void *dest0, void *dest1);
+void sq_lock(void *dest);
 
 /** \brief  Unlock Store Queues
     \ingroup store_queues
@@ -84,6 +84,8 @@ void sq_lock(void *dest0, void *dest1);
     sq_lock() and sq_unlock() are called automatically by the store queue API provided 
     by KOS; however, they must be called manually when driving the SQs directly from 
     outside this API.
+
+    \param  dest            The address to copy to (32-byte aligned).
 
     \sa sq_lock()
 */
@@ -103,9 +105,11 @@ void sq_wait(void);
 
     Initiates write-back from SQ buffer to external memory.
 
+    \param  dest            The address to copy to (32-byte aligned).
+
     \sa sq_wait()
 */
-#define sq_flush(ptr) dcache_wback_sq(ptr)
+#define sq_flush(dest) dcache_wback_sq(dest)
 
 /** \brief   Copy a block of memory.
     \ingroup store_queues

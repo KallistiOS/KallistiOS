@@ -229,7 +229,7 @@ int pvr_list_prim(pvr_list_t list, void * data, int size) {
 
 void pvr_dr_init(pvr_dr_state_t *vtx_buf_ptr) {
     *vtx_buf_ptr = 0;
-    sq_lock((void *)PVR_TA_INPUT, (void *)PVR_TA_INPUT);
+    sq_lock((void *)PVR_TA_INPUT);
     pvr_state.dr_used = 1;
 }
 

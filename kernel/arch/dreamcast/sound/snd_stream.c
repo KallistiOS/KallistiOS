@@ -231,7 +231,7 @@ void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t 
     masked_left = SQ_MASK_DEST(left);
     masked_right = SQ_MASK_DEST(right);
 
-    sq_lock((void *)left, (void *)right);
+    sq_lock((void *)left);
     dcache_pref_block(s);
 
     /* Make sure the FIFOs are empty */
