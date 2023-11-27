@@ -52,7 +52,7 @@ void sq_unlock(void) {
 
 void sq_wait(void) {
     /* Wait for both store queues to complete */
-    uint32 *d = (uint32_t *)MEM_AREA_SQ_BASE;
+    uint32_t *d = (uint32_t *)MEM_AREA_SQ_BASE;
     d[0] = d[8] = 0;
 }
 

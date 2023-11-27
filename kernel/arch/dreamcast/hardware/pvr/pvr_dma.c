@@ -235,7 +235,7 @@ void *pvr_sq_set16(void *dest, uint32_t c, size_t n, int type) {
 void *pvr_sq_set32(void *dest, uint32_t c, size_t n, int type) {
 
     if(pvr_dma[PVR_DST] != 0) {
-        dbglog(DBG_ERROR, "pvr_sq_set16: PVR DMA has not finished\n");
+        dbglog(DBG_ERROR, "pvr_sq_set32: PVR DMA has not finished\n");
         errno = EINPROGRESS;
         return NULL;
     }
