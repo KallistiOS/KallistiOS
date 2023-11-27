@@ -82,8 +82,11 @@ static uintptr_t pvr_dest_addr(uintptr_t dest, int type) {
     else if(type == PVR_DMA_VRAM32) {
         dest_addr = ((uintptr_t)dest & 0xffffff) | PVR_TA_TEX_MEM_32;
     }
-    else if(type == PVR_DMA_VRAM_RB) {
-        dest_addr = ((uintptr_t)dest & 0xffffff) | PVR_RAM_BASE_P0;
+    else if(type == PVR_DMA_VRAM32_SB) {
+        dest_addr = ((uintptr_t)dest & 0xffffff) | PVR_RAM_BASE_32_P0;
+    }
+    else if(type == PVR_DMA_VRAM64_SB) {
+        dest_addr = ((uintptr_t)dest & 0xffffff) | PVR_RAM_BASE_64_P0;
     }
     else {
         dest_addr = dest;
@@ -156,14 +159,6 @@ int pvr_dma_load_ta(void *src, size_t count, int block,
 int pvr_dma_yuv_conv(void *src, size_t count, int block,
                     pvr_dma_callback_t callback, void *cbdata) {
     return pvr_dma_transfer(src, (uintptr_t)0, count, PVR_DMA_YUV, block, callback, cbdata);
-}
-
-int pvr_dma_rootbus(void *src, void *dest, size_t count, int block, int direction,
-                    pvr_dma_callback_t callback, void *cbdata) {
-    // TODO
-    (void)direction;
-    return pvr_dma_transfer(src, (uintptr_t)dest, count, PVR_DMA_VRAM_RB, block, 
-                            callback, cbdata);
 }
 
 int pvr_dma_ready(void) {

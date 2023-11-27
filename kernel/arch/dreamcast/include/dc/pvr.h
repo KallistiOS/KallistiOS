@@ -1074,13 +1074,14 @@ Striplength set to 2 */
 /** @} */
 
 /* Useful memory locations */
-#define PVR_TA_INPUT        0x10000000  /**< \brief TA command input */
-#define PVR_TA_YUV_CONV     0x10800000  /**< \brief YUV converter */
-#define PVR_TA_TEX_MEM      0x11000000  /**< \brief Texture memory */
-#define PVR_TA_TEX_MEM_32   0x13000000  /**< \brief Texture memory (mirror) */
-#define PVR_RAM_BASE_P0     0x05000000  /**< \brief PVR RAM (raw) in P0 area */
-#define PVR_RAM_BASE        0xa5000000  /**< \brief PVR RAM (raw) */
-#define PVR_RAM_INT_BASE    0xa4000000  /**< \brief PVR RAM (interleaved) */
+#define PVR_TA_INPUT        0x10000000  /**< \brief TA command input (64-bit, TA) */
+#define PVR_TA_YUV_CONV     0x10800000  /**< \brief YUV converter (64-bit, TA) */
+#define PVR_TA_TEX_MEM      0x11000000  /**< \brief VRAM 64-bit, TA=>VRAM */
+#define PVR_TA_TEX_MEM_32   0x13000000  /**< \brief VRAM 32-bit, TA->VRAM */
+#define PVR_RAM_BASE_32_P0  0x05000000  /**< \brief VRAM 32-bit, P0 area, PVR->VRAM */
+#define PVR_RAM_BASE_64_P0  0x04000000  /**< \brief VRAM 64-bit, P0 area, PVR->VRAM */
+#define PVR_RAM_BASE        0xa5000000  /**< \brief VRAM 32-bit, P2 area, PVR->VRAM */
+#define PVR_RAM_INT_BASE    0xa4000000  /**< \brief VRAM 64-bit, P2 area, PVR->VRAM */
 
 #define PVR_RAM_SIZE        (8*1024*1024)   /**< \brief RAM size in bytes */
 
@@ -2054,14 +2055,15 @@ int pvr_dma_transfer(void *src, uintptr_t dest, size_t count, int type,
 /** \defgroup pvr_dma_modes         Transfer modes with PVR DMA
     @{
 */
-#define PVR_DMA_VRAM64  0   /**< \brief Transfer to VRAM in interleaved mode */
-#define PVR_DMA_VRAM32  1   /**< \brief Transfer to VRAM in linear mode */
-#define PVR_DMA_TA      2   /**< \brief Transfer to the tile accelerator */
-#define PVR_DMA_YUV     3   /**< \brief Transfer to the YUV converter */
-#define PVR_DMA_VRAM_RB 4   /**< \brief Transfer to VRAM over the Root bus */
+#define PVR_DMA_VRAM64    0   /**< \brief Transfer to VRAM using TA bus */
+#define PVR_DMA_VRAM32    1   /**< \brief Transfer to VRAM using TA bus */
+#define PVR_DMA_TA        2   /**< \brief Transfer to the tile accelerator */
+#define PVR_DMA_YUV       3   /**< \brief Transfer to the YUV converter (TA) */
+#define PVR_DMA_VRAM32_SB 4   /**< \brief Transfer to/from VRAM using PVR i/f */
+#define PVR_DMA_VRAM64_SB 4   /**< \brief Transfer to/from VRAM using PVR i/f */
 /** @} */
 
-/** \brief  Load a texture using PVR DMA.
+/** \brief  Load a texture using TA DMA.
 
     This is essentially a convenience wrapper for pvr_dma_transfer(), so all
     notes that apply to it also apply here.
@@ -2085,7 +2087,7 @@ int pvr_dma_transfer(void *src, uintptr_t dest, size_t count, int type,
 int pvr_txr_load_dma(void *src, pvr_ptr_t dest, size_t count, int block,
                      pvr_dma_callback_t callback, void *cbdata);
 
-/** \brief  Load vertex data to the TA using PVR DMA.
+/** \brief  Load vertex data to the TA using TA DMA.
 
     This is essentially a convenience wrapper for pvr_dma_transfer(), so all
     notes that apply to it also apply here.
@@ -2108,7 +2110,7 @@ int pvr_txr_load_dma(void *src, pvr_ptr_t dest, size_t count, int block,
 int pvr_dma_load_ta(void *src, size_t count, int block,
                     pvr_dma_callback_t callback, void *cbdata);
 
-/** \brief  Load yuv data to the YUV converter using PVR DMA.
+/** \brief  Load yuv data to the YUV converter using TA DMA.
 
     This is essentially a convenience wrapper for pvr_dma_transfer(), so all
     notes that apply to it also apply here.
@@ -2130,31 +2132,6 @@ int pvr_dma_load_ta(void *src, size_t count, int block,
 */
 int pvr_dma_yuv_conv(void *src, size_t count, int block,
                      pvr_dma_callback_t callback, void *cbdata);
-
-/** \brief  Load data using PVR DMA over the Root bus.
-
-    This is essentially a convenience wrapper for pvr_dma_transfer(), so all
-    notes that apply to it also apply here.
-
-    \param  src             Where to copy from. Must be 32-byte aligned.
-    \param  dest            Where to copy to. Must be 32-byte aligned.
-    \param  count           The number of bytes to copy. Must be a multiple of
-                            32.
-    \param  block           Non-zero if you want the function to block until the
-                            DMA completes.
-    \param  direction       Transfer direction, 1 to PVR, 0 from PVR.
-    \param  callback        A function to call upon completion of the DMA.
-    \param  cbdata          Data to pass to the callback function.
-    \retval 0               On success.
-    \retval -1              On failure. Sets errno as appropriate.
-
-    \par    Error Conditions:
-    \em     EINPROGRESS - DMA already in progress \n
-    \em     EFAULT - dest is not 32-byte aligned \n
-    \em     EIO - I/O error
-*/
-int pvr_dma_rootbus(void *src, pvr_ptr_t dest, size_t count, int block,
-                     int direction, pvr_dma_callback_t callback, void *cbdata);
 
 /** \brief  Is PVR DMA is inactive?
     \return                 Non-zero if there is no PVR DMA active, thus a DMA
