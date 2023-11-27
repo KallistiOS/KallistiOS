@@ -713,8 +713,8 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
 
     if(data == NULL) {
         /* Fill with zeros */
-        spu_memset(stream->spu_ram_sch[0] + write_pos, 0, needed_bytes);
-        spu_memset(stream->spu_ram_sch[1] + write_pos, 0, needed_bytes);
+        spu_memset_sq(stream->spu_ram_sch[0] + write_pos, 0, needed_bytes);
+        spu_memset_sq(stream->spu_ram_sch[1] + write_pos, 0, needed_bytes);
         mutex_unlock(&stream_mutex);
         return -3;
     }

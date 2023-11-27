@@ -37,14 +37,14 @@ int snd_init(void) {
     /* Finish loading the stream driver */
     if(!initted) {
         spu_disable();
-        spu_memset(0, 0, AICA_RAM_START);
+        spu_memset_sq(0, 0, AICA_RAM_START);
         amt = snd_stream_drv_end - snd_stream_drv;
 
         if(amt % 4)
             amt = (amt + 4) & ~3;
 
         dbglog(DBG_DEBUG, "snd_init(): loading %d bytes into SPU RAM\n", amt);
-        spu_memload(0, snd_stream_drv, amt);
+        spu_memload_sq(0, snd_stream_drv, amt);
 
         /* Enable the AICA and give it a few ms to start up */
         spu_enable();

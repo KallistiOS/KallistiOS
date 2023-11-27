@@ -121,6 +121,7 @@ spu_memload
 spu_memload_sq
 spu_memread
 spu_memset
+spu_memset_sq
 spu_dma_transfer
 spu_reset_chans
 spu_enable
