@@ -176,6 +176,11 @@ int pvr_list_finish(void) {
 #endif  /* !NDEBUG */
 
     if(!pvr_state.dma_mode) {
+        /* Release Store Queues if they are used */
+        if(pvr_state.dr_used) {
+            pvr_dr_finish();
+        }
+
         /* In case we haven't sent anything in this list, send a dummy */
         pvr_blank_polyhdr(pvr_state.list_reg_open);
 
@@ -253,6 +258,7 @@ int pvr_scene_finish(void) {
     int i, o;
     volatile pvr_dma_buffers_t * b;
 
+    /* Release Store Queues if they are used */
     if(pvr_state.dr_used) {
         pvr_dr_finish();
     }
