@@ -82,11 +82,11 @@ static uintptr_t pvr_dest_addr(uintptr_t dest, int type) {
     else if(type == PVR_DMA_VRAM32) {
         dest_addr = ((uintptr_t)dest & 0xffffff) | PVR_TA_TEX_MEM_32;
     }
-    else if(type == PVR_DMA_VRAM32_SB) {
-        dest_addr = ((uintptr_t)dest & 0xffffff) | PVR_RAM_BASE_32_P0;
-    }
     else if(type == PVR_DMA_VRAM64_SB) {
         dest_addr = ((uintptr_t)dest & 0xffffff) | PVR_RAM_BASE_64_P0;
+    }
+    else if(type == PVR_DMA_VRAM32_SB) {
+        dest_addr = ((uintptr_t)dest & 0xffffff) | PVR_RAM_BASE_32_P0;
     }
     else {
         dest_addr = dest;

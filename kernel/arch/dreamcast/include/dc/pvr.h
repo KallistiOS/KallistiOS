@@ -1924,7 +1924,7 @@ void pvr_poly_cxt_txr_mod(pvr_poly_cxt_t *dst, pvr_list_t list,
 /** \brief  Load raw texture data from an SH-4 buffer into PVR RAM.
 
     This essentially just acts as a memcpy() from main RAM to PVR RAM, using
-    the store queues.
+    the Store Queues and 64-bit TA bus.
 
     \param  src             The location in main RAM holding the texture.
     \param  dst             The location in PVR RAM to copy to.
@@ -1952,7 +1952,7 @@ void pvr_txr_load(void *src, pvr_ptr_t dst, uint32_t count);
 #define PVR_TXRLOAD_FMT_NOTWIDDLE   0x80    /**< \brief Don't twiddle the texture while loading */
 #define PVR_TXRLOAD_DMA             0x8000  /**< \brief Use DMA to load the texture */
 #define PVR_TXRLOAD_NONBLOCK        0x4000  /**< \brief Use non-blocking loads (only for DMA) */
-#define PVR_TXRLOAD_SQ              0x2000  /**< \brief Use store queues to load */
+#define PVR_TXRLOAD_SQ              0x2000  /**< \brief Use Store Queues to load */
 /** @} */
 
 /** \brief  Load texture data from an SH-4 buffer into PVR RAM, twiddling it in
@@ -2021,7 +2021,7 @@ void pvr_txr_load_kimg(kos_img_t *img, pvr_ptr_t dst, uint32_t flags);
 */
 typedef void (*pvr_dma_callback_t)(void *data);
 
-/** \brief  Perform a DMA transfer to the PVR.
+/** \brief  Perform a DMA transfer to the PVR RAM over 64-bit TA bus.
 
     This function copies a block of data to the PVR or its memory via DMA. There
     are all kinds of constraints that must be fulfilled to actually do this, so
@@ -2052,7 +2052,7 @@ typedef void (*pvr_dma_callback_t)(void *data);
 int pvr_dma_transfer(void *src, uintptr_t dest, size_t count, int type,
                      int block, pvr_dma_callback_t callback, void *cbdata);
 
-/** \defgroup pvr_dma_modes         Transfer modes with PVR DMA
+/** \defgroup pvr_dma_modes     Transfer modes with TA/PVR DMA and Store Queues
     @{
 */
 #define PVR_DMA_VRAM64    0   /**< \brief Transfer to VRAM using TA bus */
@@ -2139,10 +2139,10 @@ int pvr_dma_yuv_conv(void *src, size_t count, int block,
 */
 int pvr_dma_ready(void);
 
-/** \brief  Initialize PVR DMA. */
+/** \brief  Initialize TA/PVR DMA. */
 void pvr_dma_init(void);
 
-/** \brief  Shut down PVR DMA. */
+/** \brief  Shut down TA/PVR DMA. */
 void pvr_dma_shutdown(void);
 
 /** \brief   Copy a block of memory to VRAM
