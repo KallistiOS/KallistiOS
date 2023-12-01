@@ -66,14 +66,7 @@ __BEGIN_DECLS
     (with an epoch of January 1, 1970 00:00). This is assumed to be in the
     timezone of the user (as the RTC does not support timezones).
 
-    \warning
-    This function may fail! Since the Dreamcast's BIOS allows for the clock to
-    be set to January 1, 1950 00:00, not all valid Dreamcast timestamps are
-    valid, positive Unix timestamps! Compare the return value to -1 to check for
-    sanity.
-
-    \return                 The current UNIX-style timestamp (local time) or
-                            -1 for failure.
+    \return                 The current UNIX-style timestamp (local time).
 
     \sa rtc_set_unix_secs(), rtc_boot_time()
 */
@@ -88,8 +81,8 @@ time_t rtc_unix_secs(void);
 
     \warning
     This function may fail! Since `time_t` is typically 64-bit while the RTC
-    uses a 32-bit timestamp, which also has a different epoch, not all `time_t`
-    values can be represented within the RTC!
+    uses a 32-bit timestamp (which also has a different epoch), not all
+    `time_t` values can be represented within the RTC!
 
     \param time             Unix timestamp to set the current time to
 
@@ -105,13 +98,7 @@ int rtc_set_unix_secs(time_t time);
     This function retrieves the cached RTC value from when KallistiOS was started. As
     with rtc_unix_secs(), this is a UNIX-style timestamp in local time.
 
-    \warning
-    Due to differences in epochs between the RTC's and UNIX's timestamps,
-    any DC with a BIOS time set before the UNIX epoch of January 1, 1970 00:00
-    will return -1 for an invalid, negative UNIX timestamp.
-
-    \return                 The boot time if it can be represented as a
-                            UNIX-style timestamp or -1 otherwise.
+    \return                 The boot time as a UNIX-style timestamp.
 
     \sa rtc_unix_secs()
 */

@@ -29,6 +29,7 @@
 #include <arch/timer.h>
 #include <dc/g2bus.h>
 #include <stdint.h>
+#include <assert.h>
 
 /*
     High 16-bit Timestamp Value
@@ -85,7 +86,7 @@ static time_t boot_time = 0;
 
 /* Returns the date/time value as a UNIX epoch time stamp */
 time_t rtc_unix_secs(void) {
-    uint32 rtcold, rtcnew;
+    uint32_t rtcold, rtcnew;
     int i;
 
     /* Try several times to make sure we don't read one value, then the
@@ -108,33 +109,27 @@ time_t rtc_unix_secs(void) {
             break;
     }
 
-    /* Subtract out 20 years, only if it creates a valid unix timestamp. */
-    if(rtcnew < RTC_UNIX_EPOCH_DELTA)
-        rtcnew = -1;
-    else
-        rtcnew -= RTC_UNIX_EPOCH_DELTA;
-
-    return rtcnew;
+    return rtcnew - RTC_UNIX_EPOCH_DELTA;
 }
 
 /* Sets the date/time value from a UNIX epoch time stamp, 
    returning 0 for success or -1 for failure. */
 int rtc_set_unix_secs(time_t secs) {
-    time_t adjusted_time = secs + RTC_UNIX_EPOCH_DELTA;
     int result = 0;
     uint32_t rtcnew;
     int i;
 
-    /* Early exit if the timestamp isn't even valid. */
-    if(secs == -1)
-        return -1;
-
-    /* Protect against overflowing our 32-bit timestamp. */
-    if(adjusted_time > UINT32_MAX)
-        return -1;
-
     /* Adjust by 20 years to get to the expected RTC time. */
+    const time_t adjusted_time = secs + RTC_UNIX_EPOCH_DELTA;
+
+    /* Protect against underflowing or overflowing our 32-bit timestamp. */
+    if(adjusted_time < 0 || adjusted_time > UINT32_MAX)
+        return -1;
+
+    /* Cache our unsigned 32-bit target value */
     const uint32_t adjusted = adjusted_time;
+
+    assert(adjusted == adjusted_time);
 
     /* Enable writing by setting LSB of control */
     g2_write_32(RTC_CTRL_ADDR, RTC_CTRL_WRITE_EN);
@@ -165,9 +160,9 @@ int rtc_set_unix_secs(time_t secs) {
     /* We have to update the boot time now as well, subtracting
        the amount of time that has elapsed since boot from the 
        new time we've just set. */
-    uint32 s, ms;
+    uint32_t s, ms;
     timer_ms_gettime(&s, &ms);
-    boot_time = rtcnew - RTC_UNIX_EPOCH_DELTA - s;
+    boot_time = ((time_t)rtcnew - RTC_UNIX_EPOCH_DELTA) - s;
 
     return result;
 }
