@@ -9,12 +9,21 @@ set -o pipefail
 set -o nounset
 set -o errexit
 
+me=`basename "$0"`
+
 error() {
-        echo "bin2o:" "$@" 1>&2
+	echo "$me: error:" "$@" 1>&2
+}
+
+# Remove the temporary directory
+cleanup() {
+	if [ -d "$WORKDIR" ]; then
+		rm -r "$WORKDIR"
+	fi
 }
 
 if [ $# != 3 ]; then
-	echo "usage: $0 \<input file\> \<symbol\> \<output file\>"
+	echo "usage: $me <input.bin> <symbol> <output.o>"
 	exit 0
 fi
 
@@ -38,29 +47,38 @@ TMPFILE3="$WORKDIR/objb$$.o"
 # Gotta do a different binary target here depending on the target.
 case $KOS_ARCH in
 dreamcast)
-        # shellcheck disable=SC2086
+	# shellcheck disable=SC2086
 	echo ".section .rodata; .align 2; " | "$KOS_AS" $KOS_AFLAGS -o "$TMPFILE3"
-        # shellcheck disable=SC2181
-	if [ $? -ne 0 ]; then exit 1; fi
+	# shellcheck disable=SC2181
+	if [ $? -ne 0 ]; then
+		cleanup
+		exit 1
+	fi
 	echo "SECTIONS { .rodata : { _$2 = .; *(.data); _$2_end = .; } }" > "$TMPFILE1"
 	"$KOS_LD" --no-warn-mismatch --format binary --oformat elf32-shl "$1" --format elf32-shl "$TMPFILE3" -o "$TMPFILE2" -r -EL -T "$TMPFILE1"
-        # shellcheck disable=SC2181
-	if [ $? -ne 0 ]; then exit 1; fi
+	# shellcheck disable=SC2181
+	if [ $? -ne 0 ]; then
+		cleanup
+		exit 1
+	fi
 	"$KOS_OBJCOPY" --set-section-flags .rodata=alloc,load,data,readonly "$TMPFILE2" "$3"
-        ;;
+	;;
 
 gba)
 	echo "SECTIONS { .rodata : { $2 = .; *(.data); $2_end = .; } }" > "$WORKDIR/script.ld"
 	"$KOS_LD" --no-warn-mismatch --format binary --oformat elf32-littlearm "$1" -o "$3" -r -EL -T "$WORKDIR/script.ld"
-        ;;
+	;;
 
 ps2)
 	echo "OUTPUT_ARCH(mips:5900) SECTIONS { .rodata : { _$2 = .; *(.data); _$2_end = .; } }" > "$WORKDIR/script.ld"
 	"$KOS_LD" --no-warn-mismatch --format binary --oformat elf64-littlemips -mips3 "$1" -o "$3" -r -EL -T "$WORKDIR/script.ld"
-        ;;
+	;;
 
 *)
-        error "unsupported architecture \"$KOS_ARCH\""
-        exit 1
-        ;;
+	error "unsupported architecture \"$KOS_ARCH\""
+	cleanup
+	exit 1
+	;;
 esac
+
+cleanup

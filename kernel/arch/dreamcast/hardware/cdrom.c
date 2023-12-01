@@ -316,7 +316,10 @@ int cdrom_reinit(void) {
 /* Enhanced cdrom_reinit, takes the place of the old 'sector_size' function */
 int cdrom_reinit_ex(int sector_part, int cdxa, int sector_size) {
     int r;
-    r = cdrom_exec_cmd_timed(CMD_INIT, NULL, 10000);
+
+    do {
+        r = cdrom_exec_cmd_timed(CMD_INIT, NULL, 10000);
+    } while(r == ERR_DISC_CHG);
 
     if(r == ERR_NO_DISC || r == ERR_SYS || r == ERR_TIMEOUT) {
         return r;
@@ -468,7 +471,6 @@ int cdrom_spin_down(void) {
 
 /* Initialize: assume no threading issues */
 int cdrom_init(void) {
-    int status, disc_type;
     uint32_t p;
     volatile uint32_t *react = (uint32_t *)(0x005f74e4 | MEM_AREA_P2_BASE);
     volatile uint32_t *bios = (uint32_t *)MEM_AREA_P2_BASE;
@@ -498,16 +500,7 @@ int cdrom_init(void) {
     gdc_init_system();
     mutex_unlock(&_g1_ata_mutex);
 
-    cdrom_get_status(&status, &disc_type);
-
-    if(status < CD_STATUS_OPEN && disc_type > CD_CDDA && disc_type < CD_FAIL) {
-        /* Do an initial initialization */
-        cdrom_reinit();
-    } else {
-        dbglog(DBG_INFO, "cdrom_init: No disc inserted\n");
-    }
-
-    return 0;
+    return cdrom_reinit();
 }
 
 void cdrom_shutdown(void) {

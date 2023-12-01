@@ -573,7 +573,7 @@ struct _reent *thd_get_reent(kthread_t *thd);
     \deprecated
     This is now deprecated.
 
-    \param  mode            One of the \ref thd_modes values.
+    \param  mode            One of the THD_MODE values.
     \return                 The old mode of the threading system.
 
     \sa thd_get_mode

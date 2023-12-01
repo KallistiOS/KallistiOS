@@ -15,6 +15,8 @@
     standard C functions, like time(), rather than these when simply needing
     to fetch the current system time.
 
+    \sa arch/wdt.h
+
     \author Megan Potter
     \author Falco Girgis
 */
@@ -53,6 +55,8 @@ __BEGIN_DECLS
     with an epoch of January 1, 1950 00:00. Because of this, the Dreamcast's
     Y2K and the last timestamp it can represent before rolling over is 
     February 06 2086 06:28:15.
+
+    \sa wdt
 */
 
 /** \defgroup rtc_regs Registers
