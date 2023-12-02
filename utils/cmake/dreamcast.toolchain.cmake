@@ -82,11 +82,8 @@ else()
     ADD_DEFINITIONS(-D_arch_sub_pristine)
 endif()
 
-separate_arguments(KOS_CFLAGS NATIVE_COMMAND $ENV{KOS_CFLAGS})
-
 ##### Configure Build Flags #####
-add_compile_options(${KOS_CFLAGS})
-#add_compile_options(-ml -m4-single-only -ffunction-sections -fdata-sections -matomic-model=soft-imask -ftls-model=local-exec)
+add_compile_options(-ml -m4-single-only -ffunction-sections -fdata-sections -matomic-model=soft-imask -ftls-model=local-exec)
 
 set(ENABLE_DEBUG_FLAGS   $<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>)
 set(ENABLE_RELEASE_FLAGS $<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>)
@@ -100,7 +97,7 @@ set(CMAKE_ASM_FLAGS "")
 set(CMAKE_ASM_FLAGS_RELEASE "")
 
 ##### Configure Include Directories #####
-set(CMAKE_SYSTEM_INCLUDE_PATH "${CMAKE_SYSTEM_INCLUDE_PATH} $ENV{KOS_INC_PATHS}")
+set(CMAKE_SYSTEM_INCLUDE_PATH "${CMAKE_SYSTEM_INCLUDE_PATH} ${KOS_BASE}/include ${KOS_BASE}/kernel/arch/dreamcast/include ${KOS_BASE}/addons/include ${KOS_PORTS}/include")
 
 INCLUDE_DIRECTORIES(
     $ENV{KOS_BASE}/include
@@ -128,5 +125,3 @@ LINK_DIRECTORIES(
 
 add_link_options(-L${KOS_BASE}/lib/dreamcast -L${KOS_BASE}/addons/lib/dreamcast -L${KOS_PORTS}/lib)
 LINK_LIBRARIES(-Wl,--start-group -lstdc++ -lkallisti -lc -lgcc -Wl,--end-group m)
-
-include("${KOS_BASE}/utils/cmake/dreamcast.cmake")

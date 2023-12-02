@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.23)
 
 ### Helper Function for Generating Romdisk ###
-function(kos_generate_romdisk target romdiskName romdiskPath)
+function(generate_romdisk target romdiskName romdiskPath)
     set(obj ${CMAKE_CURRENT_BINARY_DIR}/${romdiskName}.o)
     set(img ${CMAKE_CURRENT_BINARY_DIR}/${romdiskName}.img)
 
@@ -33,7 +33,7 @@ add_custom_command(
 endfunction()
 
 ### Function to Enable SH4 Math Optimizations ###
-function(kos_enable_sh4_math)
+function(enable_sh4_math)
     if(NOT ${PLATFORM_DREAMCAST})
         message(WARN " PLATFORM_DREAMCAST not set, skipping SH4 Math flags")
         return()
