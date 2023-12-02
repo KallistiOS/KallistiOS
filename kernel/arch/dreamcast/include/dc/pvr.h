@@ -1697,7 +1697,7 @@ void pvr_dr_init(pvr_dr_state_t *vtx_buf_ptr);
     Use it manually if you want to release Store Queues earlier.
 
 */
-void pvr_dr_finish();
+void pvr_dr_finish(void);
 
 /** \brief  Submit a primitive of the given list type.
 

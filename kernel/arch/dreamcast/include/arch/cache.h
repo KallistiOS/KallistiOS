@@ -141,7 +141,7 @@ static __always_inline void dcache_pref_block(const void *src) {
 
     This function initiates write-back for one Store Queue.
 
-    \param  src             The SQ mapped address to write-back.
+    \param  ptr             The SQ mapped address to write-back.
 */
 #define dcache_wback_sq(ptr) dcache_pref_block(ptr)
 
