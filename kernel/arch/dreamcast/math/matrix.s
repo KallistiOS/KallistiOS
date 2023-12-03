@@ -162,7 +162,7 @@ _mat_apply:
         fmov.s          fr14, @-r15
         fmov.s          fr13, @-r15
         fmov.s          fr12, @-r15
-    FPU_PAIRED_MODE
+        FPU_PAIRED_MODE
 !   nop
 
     fmov        @r4+,dr0 ! Load up first row.
@@ -221,7 +221,7 @@ _mat_apply:
     fmov        dr14, xd14
 !   nop
 
-    RESTORE_FPSCR
+        RESTORE_FPSCR
         fmov.s      @r15+, fr12
         fmov.s      @r15+, fr13
         fmov.s      @r15+, fr14
