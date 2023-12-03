@@ -281,7 +281,6 @@ int main(int argc, char **argv) {
 
     /* Initialize KOS */
     dbglog_set_level(DBG_WARNING);
-    pvr_init_defaults();
 
     printf("gltest beginning\n");
 
@@ -302,7 +301,7 @@ int main(int argc, char **argv) {
     /* Load a texture and make it look nice */
     loadtxr("/rd/glass.pvr", &texture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_FILTER, GL_FILTER_BILINEAR);
-    glTexEnvi(GL_TEXTURE_2D, GL_TEXTURE_ENV_MODE, GL_MODULATEALPHA);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATEALPHA);
 
 
     printf("texture is %08x\n", texture);
@@ -378,9 +377,13 @@ int main(int argc, char **argv) {
         glTranslatef(0.0f, 0.0f, z);
         glRotatef(r, 0.0f, 1.0f, 0.5f);
 
-        cubes[0]->draw();
+	/* Always draw 2 cubes as solids */
+	glEnable(GL_CULL_FACE);
+	glDisable(GL_BLEND);        
+	
+	cubes[0]->draw();
         cubes[1]->draw();
-
+	
         /* Potentially do two as translucent */
         if(trans & 1) {
             glEnable(GL_BLEND);
@@ -390,11 +393,6 @@ int main(int argc, char **argv) {
 
         cubes[2]->draw();
         cubes[3]->draw();
-
-        if(trans & 1) {
-            glEnable(GL_CULL_FACE);
-			glDisable(GL_BLEND);
-        }
 
         /* Finish the frame */
         glutSwapBuffers();            
