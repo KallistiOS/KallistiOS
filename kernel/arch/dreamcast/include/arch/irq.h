@@ -20,7 +20,6 @@
 #ifndef __ARCH_IRQ_H
 #define __ARCH_IRQ_H
 
-#include <stdint.h>
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
@@ -45,20 +44,19 @@ __BEGIN_DECLS
     \headerfile arch/irq.h
 */
 typedef struct irq_context {
-    uint32_t  r[16];       /**< \brief 16 general purpose (integer) registers */
-    uint32_t  pc;          /**< \brief Program counter */
-    uint32_t  pr;          /**< \brief Procedure register (aka return address) */
-    uint32_t  gbr;         /**< \brief Global base register */
-    uint32_t  vbr;         /**< \brief Vector base register */
-    uint32_t  mach;        /**< \brief Multiply-and-accumulate register (high) */
-    uint32_t  macl;        /**< \brief Multiply-and-accumulate register (low) */
-    uint32_t  sr;          /**< \brief Status register */
-    uint32_t  fpul;        /**< \brief Floating-point communication register */
-    uint32_t  frbank[16];  /**< \brief Secondary floating poing registers */
-    uint32_t  fr[16];      /**< \brief Primary floating point registers */
-    uint32_t  fpscr;       /**< \brief Floating-point status/control register */
-    uint8_t   padding[28]; /**< \brief Padding to make the struct size 256 bytes */
-} irq_context_t __attribute((aligned(32)));
+    uint32  r[16];      /**< \brief 16 general purpose (integer) registers */
+    uint32  pc;         /**< \brief Program counter */
+    uint32  pr;         /**< \brief Procedure register (aka return address) */
+    uint32  gbr;        /**< \brief Global base register */
+    uint32  vbr;        /**< \brief Vector base register */
+    uint32  mach;       /**< \brief Multiply-and-accumulate register (high) */
+    uint32  macl;       /**< \brief Multiply-and-accumulate register (low) */
+    uint32  sr;         /**< \brief Status register */
+    uint32  frbank[16]; /**< \brief Secondary floating poing registers */
+    uint32  fr[16];     /**< \brief Primary floating point registers */
+    uint32  fpscr;      /**< \brief Floating-point status/control register */
+    uint32  fpul;       /**< \brief Floatint-point communication register */
+} irq_context_t;
 
 /* A couple of architecture independent access macros */
 /** \brief  Fetch the program counter from an irq_context_t.
@@ -234,7 +232,7 @@ typedef struct irq_context {
 #define TIMER_IRQ       EXC_TMU0_TUNI0
 
 /** \brief  The type of an interrupt identifier */
-typedef uint32_t irq_t;
+typedef uint32 irq_t;
 
 /** \brief  The type of an IRQ handler
     \param  source          The IRQ that caused the handler to be called.
@@ -332,8 +330,8 @@ irq_context_t *irq_get_context(void);
                             to the architecture maximum.
     \param  usermode        1 to run the routine in user mode, 0 for supervisor.
 */
-void irq_create_context(irq_context_t *context, uint32_t stack_pointer,
-                        uint32_t routine, uint32_t *args, int usermode);
+void irq_create_context(irq_context_t *context, uint32 stack_pointer,
+                        uint32 routine, uint32 *args, int usermode);
 
 /* Enable/Disable interrupts */
 /** \brief  Disable interrupts.
