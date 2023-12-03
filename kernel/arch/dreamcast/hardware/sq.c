@@ -29,12 +29,24 @@ void sq_unlock(void) {
     mutex_unlock(&sq_mutex);
 }
 
+static inline uint32_t _get_fpscr() {
+    uint32_t fpscr;
+    __asm__ ("sts fpscr, %0" : "=r"(fpscr));
+    return fpscr;
+}
+
+static inline void _set_fpscr(uint32_t fpscr) {
+    __asm__ ("lds %0, fpscr" : : "r"(fpscr));
+}
+
+#define SINGLE_PAIR_MODE 1 << 20
+
 /* Copies n bytes from src to dest, dest must be 32-byte aligned */
 void * sq_cpy(void *dest, const void *src, size_t n) {
     uint32_t *d = SQ_MASK_DEST(dest);
     const uint32_t *s = src;
-    uint32_t fpscr = 0x00100000;
-    uint32_t old_fpscr = __builtin_sh_get_fpscr();
+    uint32_t fpscr = SINGLE_PAIR_MODE;
+    uint32_t old_fpscr = _get_fpscr();
 
     _Complex float ds;
     _Complex float ds2;
@@ -71,7 +83,7 @@ void * sq_cpy(void *dest, const void *src, size_t n) {
         /* Moop algorithm; Using the fpu we can fill the queue faster before
            firing it out off */
 
-        __builtin_sh_set_fpscr(fpscr);
+        _set_fpscr(fpscr);
         
         __asm__ __volatile__ (
             "clrs\n" 
@@ -99,7 +111,7 @@ void * sq_cpy(void *dest, const void *src, size_t n) {
             : "t", "memory" /* clobbers */
         );
 
-        __builtin_sh_set_fpscr(old_fpscr);
+        _set_fpscr(old_fpscr);
     }
 
     /* Wait for both store queues to complete */
