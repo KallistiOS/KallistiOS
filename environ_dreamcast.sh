@@ -1,14 +1,14 @@
 # KallistiOS environment variable settings. These are the shared pieces
 # for the Dreamcast(tm) platform.
 
-export KOS_CFLAGS="${KOS_CFLAGS} -ml -m4-single-only -ffunction-sections -fdata-sections -matomic-model=soft-imask -ftls-model=local-exec"
+export KOS_CFLAGS="${KOS_CFLAGS} -ml -m4-single -ffunction-sections -fdata-sections -matomic-model=soft-imask -ftls-model=local-exec"
 export KOS_AFLAGS="${KOS_AFLAGS} -little"
 
 if [ x${KOS_SUBARCH} = xnaomi ]; then
-	export KOS_LDFLAGS="${KOS_LDFLAGS} -ml -m4-single-only -Wl,-Ttext=0x8c020000 -Wl,--gc-sections"
+	export KOS_LDFLAGS="${KOS_LDFLAGS} -ml -m4-single -Wl,-Ttext=0x8c020000 -Wl,--gc-sections"
 	export KOS_LD_SCRIPT="-T${KOS_BASE}/utils/ldscripts/shlelf-naomi.xc"
 else
-	export KOS_LDFLAGS="${KOS_LDFLAGS} -ml -m4-single-only -Wl,-Ttext=0x8c010000 -Wl,--gc-sections"
+	export KOS_LDFLAGS="${KOS_LDFLAGS} -ml -m4-single -Wl,-Ttext=0x8c010000 -Wl,--gc-sections"
 	export KOS_LD_SCRIPT="-T${KOS_BASE}/utils/ldscripts/shlelf.xc"
 fi
 

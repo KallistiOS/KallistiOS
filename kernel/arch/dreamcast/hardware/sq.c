@@ -33,6 +33,8 @@ void sq_unlock(void) {
 void * sq_cpy(void *dest, const void *src, size_t n) {
     uint32_t *d = SQ_MASK_DEST(dest);
     const uint32_t *s = src;
+    uint32_t fpscr = 0x00100000;
+    uint32_t old_fpscr = __builtin_sh_get_fpscr();
 
     _Complex float ds;
     _Complex float ds2;
@@ -68,8 +70,10 @@ void * sq_cpy(void *dest, const void *src, size_t n) {
     } else { /* If src is 8-byte aligned, fast path */
         /* Moop algorithm; Using the fpu we can fill the queue faster before
            firing it out off */
+
+        __builtin_sh_set_fpscr(fpscr);
+        
         __asm__ __volatile__ (
-            "fschg\n\t"
             "clrs\n" 
             ".align 2\n"
             "1:\n\t"
@@ -88,13 +92,14 @@ void * sq_cpy(void *dest, const void *src, size_t n) {
             "pref @%[out]\n\t" /* Fire off store queue */
             "bf.s 1b\n\t"
             "add #32, %[out]\n\t"
-            "fschg\n"
             : [in] "+&r" ((uint32_t)s), [out] "+&r" ((uint32_t)d), 
               [size] "+&r" (n), [scratch] "=&d" (ds), [scratch2] "=&d" (ds2), 
-              [scratch3] "=&d" (ds3), [scratch4] "=&d" (ds4) /* outputs */
+              [scratch3] "=&d" (ds3), [scratch4] "=&d" (ds4)/* outputs */
             : /* inputs */
             : "t", "memory" /* clobbers */
         );
+
+        __builtin_sh_set_fpscr(old_fpscr);
     }
 
     /* Wait for both store queues to complete */

@@ -83,7 +83,7 @@ else()
 endif()
 
 ##### Configure Build Flags #####
-add_compile_options(-ml -m4-single-only -ffunction-sections -fdata-sections -matomic-model=soft-imask -ftls-model=local-exec)
+add_compile_options(-ml -m4-single -ffunction-sections -fdata-sections -matomic-model=soft-imask -ftls-model=local-exec)
 
 set(ENABLE_DEBUG_FLAGS   $<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>)
 set(ENABLE_RELEASE_FLAGS $<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>)
@@ -115,7 +115,7 @@ else()
     add_link_options(-Wl,-Ttext=0x8c010000 -T${KOS_BASE}/utils/ldscripts/shlelf.xc)
 endif()
 
-add_link_options(-ml -m4-single-only -Wl,--gc-sections -nodefaultlibs)
+add_link_options(-ml -m4-single -Wl,--gc-sections -nodefaultlibs)
 
 LINK_DIRECTORIES(
     ${KOS_BASE}/lib/dreamcast
