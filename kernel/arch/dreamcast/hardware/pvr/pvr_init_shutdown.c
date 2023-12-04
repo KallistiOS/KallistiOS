@@ -188,7 +188,7 @@ int pvr_init(pvr_init_params_t *params) {
     PVR_SET(PVR_TEXTURE_MODULO, 0x00000000);    /* stride width */
     PVR_SET(PVR_FOG_DENSITY, 0x0000ff07);       /* fog density */
     PVR_SET(PVR_HPOS_IRQ, PVR_GET(PVR_BORDER_X) << 16);   /* HBLANK settings (fire on line 0 at the start of the line) */
-    PVR_SET(PVR_VPOS_IRQ, PVR_GET(PVR_BORDER_Y));   /* VBLANK settings (VBLANK begin at start, VBLANK end at end) */
+    //PVR_SET(PVR_VPOS_IRQ, PVR_GET(PVR_BORDER_Y));   /* VBLANK settings (VBLANK begin at start, VBLANK end at end) */
     PVR_SET(PVR_UNK_0118, 0x00008040);      /* M */
 
     /* Initialize PVR DMA */
