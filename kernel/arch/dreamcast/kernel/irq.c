@@ -97,13 +97,13 @@ void irq_dump_regs(int code, int evt) {
 /* The C-level routine that processes context switching and other
    types of interrupts. NOTE: We are running on the stack of the process
    that was interrupted! */
-volatile uint32_t jiffies = 0;
+volatile uint32 jiffies = 0;
 void irq_handle_exception(int code) {
     /* Get the exception code */
     /* volatile uint32 *tra = (uint32*)0xff000020; */
-    volatile uint32_t *expevt = (uint32_t *)0xff000024;
-    volatile uint32_t *intevt = (uint32_t *)0xff000028;
-    uint32_t evt = 0;
+    volatile uint32 *expevt = (uint32*)0xff000024;
+    volatile uint32 *intevt = (uint32*)0xff000028;
+    uint32 evt = 0;
     int handled = 0;
 
     /* If it's a code 0, well, we shouldn't be here. */
@@ -186,9 +186,9 @@ void irq_handle_exception(int code) {
 
 void irq_handle_trapa(irq_t code, irq_context_t *context) {
     /* Get the exception code */
-    volatile uint32_t *tra = (uint32_t *)0xff000020;
+    volatile uint32 *tra = (uint32*)0xff000020;
     irq_handler hnd;
-    uint32_t vec;
+    uint32 vec;
 
     (void)code;
 
@@ -223,8 +223,8 @@ irq_context_t *irq_get_context(void) {
 /* Fill a newly allocated context block for usage with supervisor/kernel
    or user mode. The given parameters will be passed to the called routine (up
    to the architecture maximum). */
-void irq_create_context(irq_context_t *context, uint32_t stkpntr,
-                        uint32_t routine, uint32_t *args, int usermode) {
+void irq_create_context(irq_context_t *context, uint32 stkpntr,
+                        uint32 routine, uint32 *args, int usermode) {
     int i;
 
     /* Clear out user and FP regs */
@@ -244,7 +244,7 @@ void irq_create_context(irq_context_t *context, uint32_t stkpntr,
     context->fpul = 0;
 
     /* Setup the program frame */
-    context->pc = (uint32_t)routine;
+    context->pc = (uint32)routine;
     context->pr = 0;
     context->sr = 0x40000000;   /* note: need to handle IMASK */
     context->r[15] = stkpntr;
