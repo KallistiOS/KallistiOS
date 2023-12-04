@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+# elf2bin
+# script to convert an elf program to a bin(ary) program
+# then you can use 'scramble' to generate a '1ST_READ.BIN' file
+# this script is basically a simplified 'kos-objcopy'.
+
+me=`basename "$0"`
+
+# Retrieve args
+source=$1
+destination=$2
+
+# Check if we want to overwrite (force) the destination file
+force_switch=$3
+if [ "$destination" = "-f" ] || [ "$force_switch" = "-f" ]; then
+  force_switch=1
+  unset destination
+else
+  force_switch=0
+fi
+
+# Check for args
+if [ -z "$source" ]; then
+  echo "usage: $me <binary.elf> [binary.bin] [-f]";
+  exit 1
+fi
+
+# Check for source file existence
+if [ ! -f "$source" ]; then
+  echo "$me: error: file not found: $source";
+  exit 2
+fi
+
+# Compute destination file if destination arg is not passed
+if [ -z "$destination" ]; then
+  destination="${source%.*}.bin"
+fi
+
+# Check if destination file exists (or ignore if requested)
+if [ -f "$destination" ] && [ "$force_switch" = "0" ]; then
+  echo "$me: error: file already exists: $destination";
+  exit 3
+fi
+
+# Compute a temporary filename used to work on the elf file
+workdir=$(mktemp -d)
+tmpfile="$workdir/$(basename $0).$$.tmp"
+
+# Do the conversion
+cp "$source" "$tmpfile"
+kos-objcopy -O binary "$tmpfile" "$destination"
+
+# Remove the temporary directory
+if [ -d "$workdir" ]; then
+  rm -r "$workdir"
+fi

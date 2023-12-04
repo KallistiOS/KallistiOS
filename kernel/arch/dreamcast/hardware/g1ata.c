@@ -206,6 +206,8 @@ inline int g1_ata_mutex_lock(void) {
 }
 
 inline int g1_ata_mutex_unlock(void) {
+    /* Make sure to select the GD-ROM drive back. */
+    g1_ata_select_device(G1_ATA_MASTER);
     return mutex_unlock(&_g1_ata_mutex);
 }
 
@@ -222,6 +224,9 @@ static void g1_dma_irq_hnd(uint32 code) {
         }
 
         dma_in_progress = 0;
+
+        /* Make sure to select the GD-ROM drive back. */
+        g1_ata_select_device(G1_ATA_MASTER);
         mutex_unlock_as_thread(&_g1_ata_mutex, dma_thd);
     }
 }

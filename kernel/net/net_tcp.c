@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <poll.h>
 #include <sys/socket.h>
+#include <netinet/tcp.h>
 
 #include <kos/fs.h>
 #include <kos/net.h>
@@ -1708,7 +1709,6 @@ static int net_tcp_getsockopt(net_socket_t *hnd, int level, int option_name,
             break;
 
         case IPPROTO_IP:
-
             if(sock->domain != AF_INET)
                 goto ret_inval;
 
@@ -1721,7 +1721,6 @@ static int net_tcp_getsockopt(net_socket_t *hnd, int level, int option_name,
             break;
 
         case IPPROTO_IPV6:
-
             if(sock->domain != AF_INET6)
                 goto ret_inval;
 
@@ -1734,6 +1733,17 @@ static int net_tcp_getsockopt(net_socket_t *hnd, int level, int option_name,
                     tmp = !!(sock->flags & FS_SOCKET_V6ONLY);
                     goto copy_int;
             }
+
+            break;
+
+        case IPPROTO_TCP:
+            switch(option_name) {
+                case TCP_NODELAY:
+                    tmp = 1;
+                    goto copy_int;
+            }
+
+            break;
     }
 
     /* If it wasn't handled, return that error. */
@@ -1803,7 +1813,6 @@ static int net_tcp_setsockopt(net_socket_t *hnd, int level, int option_name,
 
     switch(level) {
         case SOL_SOCKET:
-
             switch(option_name) {
                 case SO_ACCEPTCONN:
                 case SO_ERROR:
@@ -1853,13 +1862,11 @@ static int net_tcp_setsockopt(net_socket_t *hnd, int level, int option_name,
             break;
 
         case IPPROTO_IP:
-
             if(sock->domain != AF_INET)
                 goto ret_inval;
 
             switch(option_name) {
                 case IP_TTL:
-
                     if(option_len != sizeof(int))
                         goto ret_inval;
 
@@ -1878,13 +1885,11 @@ static int net_tcp_setsockopt(net_socket_t *hnd, int level, int option_name,
             break;
 
         case IPPROTO_IPV6:
-
             if(sock->domain != AF_INET6)
                 goto ret_inval;
 
             switch(option_name) {
                 case IPV6_UNICAST_HOPS:
-
                     if(option_len != sizeof(int))
                         goto ret_inval;
 
@@ -1900,7 +1905,6 @@ static int net_tcp_setsockopt(net_socket_t *hnd, int level, int option_name,
                     goto ret_success;
 
                 case IPV6_V6ONLY:
-
                     if(option_len != sizeof(int))
                         goto ret_inval;
 
@@ -1910,6 +1914,22 @@ static int net_tcp_setsockopt(net_socket_t *hnd, int level, int option_name,
                         sock->flags |= FS_SOCKET_V6ONLY;
                     else
                         sock->flags &= ~FS_SOCKET_V6ONLY;
+
+                    goto ret_success;
+            }
+
+            break;
+
+        case IPPROTO_TCP:
+            switch(option_name) {
+                case TCP_NODELAY:
+                    if(option_len != sizeof(int))
+                        goto ret_inval;
+
+                    tmp = *((int *)option_value);
+
+                    if(tmp == 0)
+                        goto ret_inval;
 
                     goto ret_success;
             }

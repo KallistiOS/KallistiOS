@@ -8,8 +8,10 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <string.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <kos/dbgio.h>
+#include <kos/init.h>
 #include <arch/arch.h>
 #include <arch/irq.h>
 #include <arch/memory.h>
@@ -86,23 +88,39 @@ void arch_init_net(void) {
     }
 }
 
-void (*init_net_weak)(void) __attribute__((weak));
-void (*net_shutdown_weak)(void) __attribute__((weak));
+void vmu_fs_init(void) {
+    fs_vmu_init();
+    vmufs_init();
+}
 
-int (*fs_romdisk_init_weak)(void) __attribute__((weak));
-int (*fs_romdisk_shutdown_weak)(void) __attribute__((weak));
-int (*fs_romdisk_mount_builtin_weak)(void) __attribute__((weak));
-int (*fs_romdisk_mount_builtin_weak_legacy)(void) __attribute__((weak));
+void vmu_fs_shutdown(void) {
+    fs_vmu_shutdown();
+    vmufs_shutdown();
+}
 
 /* Mount the built-in romdisk to /rd. */
-int fs_romdisk_mount_builtin(void) {
-    return fs_romdisk_mount("/rd", __kos_romdisk, 0);
+void fs_romdisk_mount_builtin(void) {
+    fs_romdisk_mount("/rd", __kos_romdisk, 0);
 }
+
+void fs_romdisk_mount_builtin_legacy(void) {
+    fs_romdisk_mount_builtin();
+}
+
+KOS_INIT_FLAG_WEAK(arch_init_net, false);
+KOS_INIT_FLAG_WEAK(net_shutdown, false);
+KOS_INIT_FLAG_WEAK(maple_wait_scan, true);
+KOS_INIT_FLAG_WEAK(fs_romdisk_init, true);
+KOS_INIT_FLAG_WEAK(fs_romdisk_shutdown, true);
+KOS_INIT_FLAG_WEAK(fs_romdisk_mount_builtin, false);
+KOS_INIT_FLAG_WEAK(fs_romdisk_mount_builtin_legacy, false);
+KOS_INIT_FLAG_WEAK(vmu_fs_init, true);
+KOS_INIT_FLAG_WEAK(vmu_fs_shutdown, true);
 
 /* Auto-init stuff: override with a non-weak symbol if you don't want all of
    this to be linked into your code (and do the same with the
    arch_auto_shutdown function too). */
-int  __attribute__((weak)) arch_auto_init(void) {
+int  __weak arch_auto_init(void) {
     /* Initialize memory management */
     mm_init();
 
@@ -146,10 +164,7 @@ int  __attribute__((weak)) arch_auto_init(void) {
     fs_init();          /* VFS */
     fs_pty_init();          /* Pty */
     fs_ramdisk_init();      /* Ramdisk */
-
-    if(fs_romdisk_init_weak) {
-        fs_romdisk_init_weak(); /* Romdisk */
-    }
+    KOS_INIT_FLAG_CALL(fs_romdisk_init);    /* Romdisk */
 
 /* The arc4random_buf() function used for random & urandom is only
    available in newlib starting with version 2.4.0 */
@@ -161,10 +176,8 @@ int  __attribute__((weak)) arch_auto_init(void) {
 
     hardware_periph_init();     /* DC peripheral init */
 
-    if(fs_romdisk_mount_builtin_weak)
-        fs_romdisk_mount_builtin_weak();
-    else if(fs_romdisk_mount_builtin_weak_legacy)
-        fs_romdisk_mount_builtin_weak_legacy();
+    if(!KOS_INIT_FLAG_CALL(fs_romdisk_mount_builtin))
+        KOS_INIT_FLAG_CALL(fs_romdisk_mount_builtin_legacy);
 
 #ifndef _arch_sub_naomi
     if(!(__kos_init_flags & INIT_NO_DCLOAD) && *DCLOADMAGICADDR == DCLOADMAGICVALUE) {
@@ -174,8 +187,8 @@ int  __attribute__((weak)) arch_auto_init(void) {
 
     fs_iso9660_init();
 #endif
-    vmufs_init();
-    fs_vmu_init();
+
+    KOS_INIT_FLAG_CALL(vmu_fs_init);
 
     /* Initialize library handling */
     library_init();
@@ -183,22 +196,20 @@ int  __attribute__((weak)) arch_auto_init(void) {
     /* Now comes the optional stuff */
     if(__kos_init_flags & INIT_IRQ) {
         irq_enable();       /* Turn on IRQs */
-        maple_wait_scan();  /* Wait for the maple scan to complete */
+        KOS_INIT_FLAG_CALL(maple_wait_scan);  /* Wait for the maple scan to complete */
     }
 
 #ifndef _arch_sub_naomi
-    if(init_net_weak)
-        (*init_net_weak)();
+    KOS_INIT_FLAG_CALL(arch_init_net);
 #endif
 
     return 0;
 }
 
-void  __attribute__((weak)) arch_auto_shutdown(void) {
+void  __weak arch_auto_shutdown(void) {
 #ifndef _arch_sub_naomi
     fs_dclsocket_shutdown();
-    if(net_shutdown_weak)
-        (*net_shutdown_weak)();
+    KOS_INIT_FLAG_CALL(net_shutdown);
 #endif
 
     irq_disable();
@@ -210,8 +221,7 @@ void  __attribute__((weak)) arch_auto_shutdown(void) {
 #ifndef _arch_sub_naomi
     fs_dcload_shutdown();
 #endif
-    fs_vmu_shutdown();
-    vmufs_shutdown();
+    KOS_INIT_FLAG_CALL(vmu_fs_shutdown);
 #ifndef _arch_sub_naomi
     fs_iso9660_shutdown();
 #endif
@@ -219,9 +229,7 @@ void  __attribute__((weak)) arch_auto_shutdown(void) {
     fs_dev_shutdown();
 #endif
     fs_ramdisk_shutdown();
-    if(fs_romdisk_shutdown_weak) {
-        fs_romdisk_shutdown_weak();
-    }
+    KOS_INIT_FLAG_CALL(fs_romdisk_shutdown);
     fs_pty_shutdown();
     fs_shutdown();
     thd_shutdown();

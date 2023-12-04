@@ -192,7 +192,8 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - *** Added toolchain and KOS support for C/C++ compiler-level TLS [CP && FG]
 - DC  Added vmu functions to check/enable/disable the extra 41 blocks [AB]
 - *** Added driver for the SH4's Watchdog Timer peripheral [FG]
-- DC  Added Moop powered fast path to sq_cpy, added TapamN pvr related sq functions [AB]
+- DC  Added Moop powered fast path to sq_cpy, added TapamN pvr related sq
+      functions [AB]
 - DC  Garbage-collect network stack [PC]
 - DC  Rework romdisks [PC]
 - DC  Refactored g2bus API, converted magic values to macros, added
@@ -203,6 +204,12 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - DC  Optimized separating stereo PCM [RR]
 - DC  Refactored sfx and streaming to add SQ fast path [RR]
 - DC  Added 4/8-bit wav support to sfx and streaming [RR]
+- *** Added <netinet/tcp.h> header file and required option [LS]
+- *** Added <netinet/udp.h> and <netinet/udplite.h> headers and move the related
+      content from <netinet/in.h> [LS]
+- *** Added __weak, __used, likely() and unlikely() [FG]
+- DC  Added Maple-specific KOS_INIT_FLAGS() which allow for GC-ing unused drivers [FG]
+- DC  Added basic example for micropython KOS port [Aaron Glazer == AG]
 
 KallistiOS version 2.0.0 -----------------------------------------------
 - DC  Broadband Adapter driver fixes [Megan Potter == MP]

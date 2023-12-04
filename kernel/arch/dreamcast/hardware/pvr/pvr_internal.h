@@ -126,6 +126,7 @@ typedef struct {
     uint32  opb, opb_size;                  /* Object pointer buffers, size */
     uint32  opb_addresses[PVR_OPB_COUNT];        /* Object pointer buffers (of each type) */
     uint32  tile_matrix, tile_matrix_size;  /* Tile matrix, size */
+    uint32  opb_overflow_count;             /* Extra OPB space after opb_size for TA overflow */
 } pvr_ta_buffers_t;
 
 // DMA buffers structure: we have two sets of these
@@ -221,6 +222,9 @@ typedef struct {
 
     // Output address for to-texture mode
     uint32  to_txr_addr[2];
+
+    // Number of additional OPBs to allocate, allowing more geometry per tile.
+    uint32 opb_overflow_count;
 } pvr_state_t;
 
 /* There will be exactly one of these in KOS (in pvr_globals.c) */

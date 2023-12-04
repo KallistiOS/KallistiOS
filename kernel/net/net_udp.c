@@ -19,6 +19,8 @@
 #include <kos/fs_socket.h>
 #include <arch/irq.h>
 #include <sys/socket.h>
+#include <netinet/udp.h>
+#include <netinet/udplite.h>
 
 #include "net_ipv4.h"
 #include "net_ipv6.h"

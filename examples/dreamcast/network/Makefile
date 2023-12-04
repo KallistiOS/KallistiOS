@@ -12,6 +12,7 @@ all:
 	$(KOS_MAKE) -C dns-client
 	$(KOS_MAKE) -C httpd
 	$(KOS_MAKE) -C isp-settings
+	$(KOS_MAKE) -C ntp
 
 clean:
 	$(KOS_MAKE) -C basic clean
@@ -21,6 +22,7 @@ clean:
 	$(KOS_MAKE) -C dns-client clean
 	$(KOS_MAKE) -C httpd clean
 	$(KOS_MAKE) -C isp-settings clean
+	$(KOS_MAKE) -C ntp clean
 
 dist:
 	$(KOS_MAKE) -C basic dist
@@ -30,3 +32,4 @@ dist:
 	$(KOS_MAKE) -C dns-client dist
 	$(KOS_MAKE) -C httpd dist
 	$(KOS_MAKE) -C isp-settings dist
+	$(KOS_MAKE) -C ntp dist

@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # examples/dreamcast/cpp/Makefile
-# (c)2001-2002 Megan Potter
+# Copyright (C) 2001-2002 Megan Potter
 #
 
 all:
@@ -10,6 +10,7 @@ all:
 	$(KOS_MAKE) -C clock
 	$(KOS_MAKE) -C modplug_test
 	$(KOS_MAKE) -C out_of_memory
+	$(KOS_MAKE) -C concurrency
 
 clean:
 	$(KOS_MAKE) -C gltest clean
@@ -17,6 +18,7 @@ clean:
 	$(KOS_MAKE) -C clock clean
 	$(KOS_MAKE) -C modplug_test clean
 	$(KOS_MAKE) -C out_of_memory clean
+	$(KOS_MAKE) -C concurrency clean
 
 dist:
 	$(KOS_MAKE) -C gltest dist
@@ -24,5 +26,6 @@ dist:
 	$(KOS_MAKE) -C clock dist
 	$(KOS_MAKE) -C modplug_test dist
 	$(KOS_MAKE) -C out_of_memory dist
+	$(KOS_MAKE) -C concurrency dist
 
 

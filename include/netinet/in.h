@@ -197,10 +197,13 @@ extern const struct in6_addr in6addr_loopback;
     \see                ipv6_opts
     \see                udp_opts
     \see                udplite_opts
+    \see                tcp_opts
 
     @{
 */
+
 #define IP_TTL              24  /**< \brief TTL for unicast (get/set) */
+
 /** @} */
 
 /** \defgroup ipv6_opts                 IPv6 protocol level options
@@ -215,9 +218,11 @@ extern const struct in6_addr in6addr_loopback;
     \see                ipv4_opts
     \see                udp_opts
     \see                udplite_opts
+    \see                tcp_opts
 
     @{
 */
+
 #define IPV6_JOIN_GROUP     17  /**< \brief Join a multicast group (set) */
 #define IPV6_LEAVE_GROUP    18  /**< \brief Leave a multicast group (set) */
 #define IPV6_MULTICAST_HOPS 19  /**< \brief Hop limit for multicast (get/set) */
@@ -225,37 +230,7 @@ extern const struct in6_addr in6addr_loopback;
 #define IPV6_MULTICAST_LOOP 21  /**< \brief Multicasts loopback (get/set) */
 #define IPV6_UNICAST_HOPS   22  /**< \brief Hop limit for unicast (get/set) */
 #define IPV6_V6ONLY         23  /**< \brief IPv6 only -- no IPv4 (get/set) */
-/** @} */
 
-/** \defgroup udp_opts                  UDP protocol level options
-
-    These are the various socket-level options that can be accessed with the
-    setsockopt() and getsockopt() functions for the IPPROTO_UDP level value.
-
-    \see                so_opts
-    \see                ipv4_opts
-    \see                ipv6_opts
-    \see                udplite_opts
-
-    @{
-*/
-#define UDP_NOCHECKSUM          25  /**< \brief Don't calculate UDP checksums */
-/** @} */
-
-/** \defgroup udplite_opts              UDP-Lite protocol level options
-
-    These are the various socket-level options that can be accessed with the
-    setsockopt() and getsockopt() functions for the IPPROTO_UDPLITE level value.
-
-    \see                so_opts
-    \see                ipv4_opts
-    \see                ipv6_opts
-    \see                udp_opts
-
-    @{
-*/
-#define UDPLITE_SEND_CSCOV      26 /**< \brief Sending checksum coverage. */
-#define UDPLITE_RECV_CSCOV      27 /**< \brief Receiving checksum coverage. */
 /** @} */
 
 /** \brief  Test if an IPv6 Address is unspecified.

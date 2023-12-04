@@ -84,7 +84,7 @@ typedef struct {
 
 /* \cond */
 /* Init / Shutdown */
-int mouse_init(void);
+void mouse_init(void);
 void mouse_shutdown(void);
 /* \endcond */
 
