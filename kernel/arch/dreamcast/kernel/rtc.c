@@ -118,18 +118,16 @@ int rtc_set_unix_secs(time_t secs) {
     int result = 0;
     uint32_t rtcnew;
     int i;
+    uint32_t s, ms;
 
     /* Adjust by 20 years to get to the expected RTC time. */
     const time_t adjusted_time = secs + RTC_UNIX_EPOCH_DELTA;
+    const uint32_t adjusted = (const uint32_t)adjusted_time;
 
     /* Protect against underflowing or overflowing our 32-bit timestamp. */
     if(adjusted_time < 0 || adjusted_time > UINT32_MAX)
         return -1;
 
-    /* Cache our unsigned 32-bit target value */
-    const uint32_t adjusted = adjusted_time;
-
-    assert(adjusted == adjusted_time);
 
     /* Enable writing by setting LSB of control */
     g2_write_32(RTC_CTRL_ADDR, RTC_CTRL_WRITE_EN);
@@ -160,7 +158,6 @@ int rtc_set_unix_secs(time_t secs) {
     /* We have to update the boot time now as well, subtracting
        the amount of time that has elapsed since boot from the 
        new time we've just set. */
-    uint32_t s, ms;
     timer_ms_gettime(&s, &ms);
     boot_time = ((time_t)rtcnew - RTC_UNIX_EPOCH_DELTA) - s;
 
