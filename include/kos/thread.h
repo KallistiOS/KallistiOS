@@ -19,8 +19,6 @@ __BEGIN_DECLS
 #include <sys/reent.h>
 #include <stdint.h>
 
-#include <stdint.h>
-
 /** \file    kos/thread.h
     \brief   Threading support.
     \ingroup kthreads
