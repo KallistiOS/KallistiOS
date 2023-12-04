@@ -80,22 +80,12 @@
 ! With this 3 lines, the same cache line is filled 3 times with
 ! the corresponding memory penalties (high with the SH4).
 
-.macro FPU_PAIRED_MODE
-    sts         fpscr, r7
-    mov         #0x10, r0
-    shll16      r0
-    lds         r0, fpscr
-.endm
-.macro RESTORE_FPSCR
-    lds         r7, fpscr
-.endm
 
 ! Copy the internal matrix out to a memory one
 .globl _mat_store
 ! Number of cycles: ~12 cycles.
 _mat_store:
-    FPU_PAIRED_MODE
-
+    fschg
     add         #4*16, r4       ! Start at the end
 
     fmov        xd14, @-r4
@@ -108,13 +98,13 @@ _mat_store:
     fmov        xd0, @-r4
 
     rts
-    RESTORE_FPSCR
+    fschg
 
 ! Copy a memory matrix into the internal one
 .globl _mat_load
 ! Number of cycles: ~11 cycles.
 _mat_load:
-    FPU_PAIRED_MODE
+    fschg
     fmov        @r4+, xd0
 
     fmov        @r4+, xd2
@@ -126,7 +116,7 @@ _mat_load:
     fmov        @r4+, xd14
 
     rts
-    RESTORE_FPSCR
+    fschg
 
 ! Clear internal to an identity matrix
 ! Number of cycles: ~17 cycles.
@@ -140,7 +130,7 @@ _mat_identity:
     fldi0       fr4
 
     fldi1       fr5         ! Second float is one.
-    FPU_PAIRED_MODE
+    fschg
 
     fmov        dr2, xd0    ! Setup matrix.
     fmov        dr0, xd2
@@ -152,7 +142,7 @@ _mat_identity:
     fmov        dr4, xd14
 
     rts
-    RESTORE_FPSCR
+    fschg
 
 ! "Apply" a matrix: multiply a matrix onto the "internal" one.
 ! Number of cycles: ~32.
@@ -162,7 +152,7 @@ _mat_apply:
         fmov.s          fr14, @-r15
         fmov.s          fr13, @-r15
         fmov.s          fr12, @-r15
-        FPU_PAIRED_MODE
+    fschg
 !   nop
 
     fmov        @r4+,dr0 ! Load up first row.
@@ -221,7 +211,7 @@ _mat_apply:
     fmov        dr14, xd14
 !   nop
 
-        RESTORE_FPSCR
+    fschg
         fmov.s      @r15+, fr12
         fmov.s      @r15+, fr13
         fmov.s      @r15+, fr14
