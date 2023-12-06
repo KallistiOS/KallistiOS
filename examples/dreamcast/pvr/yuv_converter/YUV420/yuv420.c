@@ -158,17 +158,17 @@ static int setup_pvr(void) {
 
     vert[0].x = 0;
     vert[0].y = 0;
-    vert[0].u = 0.0;
-    vert[0].v = 0.0;
+    vert[0].u = 0;
+    vert[0].v = 0;
 
     vert[1].x = 640;
     vert[1].y = 0;
     vert[1].u = width_ratio;
-    vert[1].v = 0.0;
+    vert[1].v = 0;
 
     vert[2].x = 0;
     vert[2].y = 480;
-    vert[2].u = 0.0;
+    vert[2].u = 0;
     vert[2].v = height_ratio;
 
     vert[3].x = 640;

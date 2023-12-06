@@ -87,29 +87,29 @@ void draw_back(void) {
     vert.x = 1;
     vert.y = 1;
     vert.z = 1;
-    vert.u = 0.0;
-    vert.v = 0.0;
+    vert.u = 0;
+    vert.v = 0;
     pvr_prim(&vert, sizeof(vert));
 
     vert.x = 640;
     vert.y = 1;
     vert.z = 1;
-    vert.u = 1.0;
-    vert.v = 0.0;
+    vert.u = 1;
+    vert.v = 0;
     pvr_prim(&vert, sizeof(vert));
 
     vert.x = 1;
     vert.y = 480;
     vert.z = 1;
-    vert.u = 0.0;
-    vert.v = 1.0;
+    vert.u = 0;
+    vert.v = 1;
     pvr_prim(&vert, sizeof(vert));
 
     vert.x = 640;
     vert.y = 480;
     vert.z = 1;
-    vert.u = 1.0;
-    vert.v = 1.0;
+    vert.u = 1;
+    vert.v = 1;
     vert.flags = PVR_CMD_VERTEX_EOL;
     pvr_prim(&vert, sizeof(vert));
 }

@@ -5,8 +5,8 @@
 #include <math.h>
 
 /* Floating-point Sin/Cos; 256 angles, -1.0 to 1.0 */
-#define msin(angle) fsin((angle) * 2 * M_PI / 256)
-#define mcos(angle) fcos((angle) * 2 * M_PI / 256)
+#define msin(angle) fsin((angle) * 2 * F_PI / 256)
+#define mcos(angle) fcos((angle) * 2 * F_PI / 256)
 
 /* bkg.c */
 void bkg_setup(void);

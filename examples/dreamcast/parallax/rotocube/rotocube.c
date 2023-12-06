@@ -105,16 +105,16 @@ void drawwave(int theta) {
     plx_dr_init(&dr);
 
     // Convert to radians for sin/cos
-    t = theta * 2 * M_PI / 360.0f;
+    t = theta * 2 * F_PI / 360.0f;
 
     for(i = 0; i <= divs; i++) {
         x = i * 640.0f / divs;
 
         // These are more or less magic numbers I played with until
         // it looked neat.
-        y = 240.0f + fsin(t + i * M_PI / 64.0f) * 30.0f * fsin(t * 4);
-        y += fcos(t + i * M_PI / 36.0f) * 40.0f * fcos(t * 6);
-        y += fcos(t + i * M_PI / 30.0f) * 24.0f * fcos(t * 8);
+        y = 240.0f + fsin(t + i * F_PI / 64.0f) * 30.0f * fsin(t * 4);
+        y += fcos(t + i * F_PI / 36.0f) * 40.0f * fcos(t * 6);
+        y += fcos(t + i * F_PI / 30.0f) * 24.0f * fcos(t * 8);
 
         plx_vert_ind(&dr, PLX_VERT, x, y, 0.0001f, color);
         plx_vert_ind(&dr, i == divs ? PLX_VERT_EOS : PLX_VERT, x, 480.0f, 0.0001f, color);
@@ -195,7 +195,7 @@ int main(int argc, char **argv) {
     // for really poly intensive effects.
     pvr_get_stats(&stats);
     dbglog(DBG_DEBUG, "3D Stats: %ld vblanks, frame rate ~%f fps, max vertex used %d bytes\n",
-           stats.vbl_count, (double)stats.frame_rate, stats.vtx_buffer_used_max);
+           stats.vbl_count, stats.frame_rate, stats.vtx_buffer_used_max);
 
     return 0;
 }

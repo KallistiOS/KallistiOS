@@ -16,7 +16,7 @@
 #define SHIFT_X  0.01f
 #define SHIFT_Z  0.01f
 #define SHIFT_Y  0.2f
-#define ROT_XZ  ROTATION/5.0
+#define ROT_XZ  ROTATION/5.0f
 
 
 void InputCallback(vector3f campos, vector3f camdst) {

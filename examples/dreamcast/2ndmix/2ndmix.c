@@ -237,7 +237,7 @@ void draw_cube(int which) {
        then try setting *32 on ytrans to something higher =) */
     xtrans = mcos(ra) * 220;
     ytrans = msin((ra * 3) % 256) * 32;
-    ztrans = msin(ra) * 256 + 256.0;
+    ztrans = msin(ra) * 256 + 256.0f;
 
     for(cp = 0; cp < (NUM_FACES * 4 * 3); cp += 3) {
         x = cube_points[cp + 0] * mult * cubesizes[which];
@@ -274,7 +274,7 @@ void draw_cube(int which) {
 
         vert.x = xt + 320.0f;
         vert.y = yt + 240.0f;
-        vert.z = 128.0 - (z / 64.0);
+        vert.z = 128.0f - (z / 64.0f);
         a = 0.8f;
 
         if(ztrans == 0) ztrans++;

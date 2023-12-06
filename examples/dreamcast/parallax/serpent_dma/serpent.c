@@ -60,13 +60,13 @@ static void sphere(sphere_t *s) { /* {{{ */
 
     /* Iterate over stacks */
     for(i = 0; i < s->stacks; i++) {
-        pitch = 2 * M_PI * ((float)i / (float)s->stacks);
-        pitch2 = 2 * M_PI * ((float)(i + 1) / (float)s->stacks);
+        pitch = 2 * F_PI * ((float)i / (float)s->stacks);
+        pitch2 = 2 * F_PI * ((float)(i + 1) / (float)s->stacks);
 
         /* Iterate over slices: each entire stack will be one
            long triangle strip. */
         for(j = 0; j <= s->slices / 2; j++) {
-            yaw = 2 * M_PI * ((float)j / (float)s->slices);
+            yaw = 2 * F_PI * ((float)j / (float)s->slices);
 
             /* x, y+1 */
             v->x = s->radius * fcos(yaw) * fcos(pitch2);
@@ -172,7 +172,7 @@ static void sphere_frame(void) {
     plx_mat3d_push();
 
     for(i = 0; i < SPHERE_CNT; i++) {
-        plx_mat3d_translate(6.0f * fcos(i * 2 * M_PI / SPHERE_CNT), 0.0f, 6.0f * fsin(i * 2 * M_PI / SPHERE_CNT));
+        plx_mat3d_translate(6.0f * fcos(i * 2 * F_PI / SPHERE_CNT), 0.0f, 6.0f * fsin(i * 2 * F_PI / SPHERE_CNT));
         plx_mat3d_rotate(r, 1.0f, 1.0f, 1.0f);
 
         if(!(i % 2))
@@ -192,7 +192,7 @@ static void sphere_frame(void) {
     plx_mat3d_push();
 
     for(i = 0; i < SPHERE_CNT; i++) {
-        plx_mat3d_translate(3.0f * fcos(i * 2 * M_PI / SPHERE_CNT), 0.0f, 3.0f * fsin(i * 2 * M_PI / SPHERE_CNT));
+        plx_mat3d_translate(3.0f * fcos(i * 2 * F_PI / SPHERE_CNT), 0.0f, 3.0f * fsin(i * 2 * F_PI / SPHERE_CNT));
         plx_mat3d_rotate(r, 1.0f, 1.0f, 1.0f);
 
         if(!(i % 2))
@@ -212,7 +212,7 @@ static void sphere_frame(void) {
     //printf("%d\n", (uint32)(timer_ms_gettime64() - start));
 
     r++;
-    phase += 2 * M_PI / 240.0f;
+    phase += 2 * F_PI / 240.0f;
 
     pm_draw();
 
@@ -285,7 +285,7 @@ int main(int argc, char **argv) {
 
     pvr_get_stats(&stats);
     dbglog(DBG_DEBUG, "3D Stats: %ld vblanks, frame rate ~%f fps, max vertex used %d bytes\n",
-           stats.vbl_count, (double)stats.frame_rate, stats.vtx_buffer_used_max);
+           stats.vbl_count, stats.frame_rate, stats.vtx_buffer_used_max);
 
     return 0;
 }
