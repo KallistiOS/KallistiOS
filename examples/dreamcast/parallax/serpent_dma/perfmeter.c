@@ -48,10 +48,10 @@ void pm_draw(void) {
 
     // Make a nice stat display
     sprintf(str, "fps %.2f  buf %d  reg %d  rnd %d",
-            (float)stats.frame_rate,
-            (int)stats.buf_last_time,
-            (int)stats.reg_last_time,
-            (int)stats.rnd_last_time);
+            stats.frame_rate,
+            stats.buf_last_time,
+            stats.reg_last_time,
+            stats.rnd_last_time);
     plx_fcxt_setcolor4f(fcxt, 1, 1, 1, 1);
     plx_fcxt_setsize(fcxt, 16.0f);
     plx_fcxt_setpos(fcxt, posx, posy, posz);
@@ -60,7 +60,7 @@ void pm_draw(void) {
     plx_fcxt_end(fcxt);
 
     sprintf(str, "avg fps %.2f",
-            (float)(60.0f * stats.frame_count / stats.vbl_count));
+            60.0f * stats.frame_count / stats.vbl_count);
     plx_fcxt_setpos(fcxt, posx, posy + 16.0f, posz);
     plx_fcxt_begin(fcxt);
     plx_fcxt_draw(fcxt, str);
