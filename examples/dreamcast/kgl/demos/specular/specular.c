@@ -1060,7 +1060,7 @@ int main() {
     float Mat_Specular[3] = { 0.6f, 0.6f, 0.6f };
     glLightfv(GL_LIGHT0, GL_SPECULAR, Mat_Specular);
     glMaterialfv(GL_FRONT, GL_SPECULAR, Mat_Specular);
-    glMaterialf(GL_FRONT, GL_SHININESS, 10);
+    glMaterialf(GL_FRONT, GL_SHININESS, 10.0f);
 
     /* Set up the textures */
     texture[0] = glTextureLoadPVR("/rd/brick_w1.pvr", 0, 0);
