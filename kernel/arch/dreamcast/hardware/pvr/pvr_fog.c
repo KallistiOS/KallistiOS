@@ -151,8 +151,8 @@ union ieee32_t {
 
 /* helper functions */
 #define FOG_EXP_TABLE_SIZE 256
-#define FOG_MAX (10.0)
-#define EXP_FOG_MAX .0006595
+#define FOG_MAX (10.0f)
+#define EXP_FOG_MAX .0006595f
 #define FOG_INCR (FOG_MAX/FOG_EXP_TABLE_SIZE)
 
 /* A fast negative argument only exp function - That is it treats any
@@ -163,7 +163,7 @@ float neg_exp(float arg) {
     float result, f;
     int k;
 
-    f = (float)(ABS(arg) * (1.0 / FOG_INCR));
+    f = (float)(ABS(arg) * (1.0f / FOG_INCR));
     k = (int) f;
 
     if(k > FOG_EXP_TABLE_SIZE - 2)
