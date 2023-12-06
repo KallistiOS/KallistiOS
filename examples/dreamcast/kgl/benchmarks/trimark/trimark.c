@@ -40,7 +40,7 @@ void stats(void) {
 
     pvr_get_stats(&stats);
     dbglog(DBG_DEBUG, "3D Stats: %ld VBLs, frame rate ~%f fps\n",
-           stats.vbl_count, stats.frame_rate);
+           stats.vbl_count, (double)stats.frame_rate);
 }
 
 
@@ -112,7 +112,7 @@ void check_switch(void) {
 
     if(now >= (begin + 5)) {
         begin = time(NULL);
-        printf("  Average Frame Rate: ~%f fps (%d pps)\n", avgfps, (int)(polycnt * avgfps * 2));
+        printf("  Average Frame Rate: ~%f fps (%d pps)\n", (double)avgfps, (int)(polycnt * avgfps * 2));
 
         switch(phase) {
             case PHASE_HALVE:

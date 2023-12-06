@@ -195,7 +195,7 @@ int main(int argc, char **argv) {
     // for really poly intensive effects.
     pvr_get_stats(&stats);
     dbglog(DBG_DEBUG, "3D Stats: %ld vblanks, frame rate ~%f fps, max vertex used %d bytes\n",
-           stats.vbl_count, stats.frame_rate, stats.vtx_buffer_used_max);
+           stats.vbl_count, (double)stats.frame_rate, stats.vtx_buffer_used_max);
 
     return 0;
 }

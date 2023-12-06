@@ -946,7 +946,7 @@ void GPU_Stats(void) {
 
         if(fps.frame % 60 == 0) {
             printf("PVR FPS MIN: %.2f | MAX: %.2f | LAST: %.2f | AVG: %.2f\n",
-                   fps.min, fps.max, fps.last, fps.avg / fps.frame);
+                   (double)fps.min, (double)fps.max, (double)fps.last, (double)(fps.avg / fps.frame));
         }
     }
     else
