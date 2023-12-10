@@ -35,26 +35,11 @@ to a translucent poly to interfere with the cube.
 
 */
 
-// Draw a single point in 3D space. Uses the currently loaded matrix.
-void drawpnt(float x, float y, float z, float a, float r, float g, float b) {
-    uint32 col = plx_pack_color(a, r, g, b);
-
-    // Transform the point, clip the Z plane to avoid artifacts.
-    plx_mat_tfip_3d(x, y, z);
-
-    if(z <= 0.00001f) z = 0.00001f;
-
-    // Draw it.
-    plx_vert_inp(PLX_VERT, x, y + 1.0f, z, col);
-    plx_vert_inp(PLX_VERT, x, y, z, col);
-    plx_vert_inp(PLX_VERT, x + 1.0f, y + 1.0f, z, col);
-    plx_vert_inp(PLX_VERT_EOS, x + 1.0f, y, z, col);
-}
+static plx_dr_state_t dr;
 
 // Draws the full cube at the current position.
 void drawcube(void) {
     uint32 color = 0xff808080;
-    plx_dr_state_t dr;
 
     plx_dr_init(&dr);
 
@@ -100,9 +85,6 @@ void drawwave(int theta) {
     uint32 color = 0xffa0a0a0;
     int i, divs = 320;
     float x, y, t;
-    plx_dr_state_t dr;
-
-    plx_dr_init(&dr);
 
     // Convert to radians for sin/cos
     t = theta * 2 * M_PI / 360.0f;
@@ -116,8 +98,8 @@ void drawwave(int theta) {
         y += fcos(t + i * M_PI / 36.0f) * 40.0f * fcos(t * 6);
         y += fcos(t + i * M_PI / 30.0f) * 24.0f * fcos(t * 8);
 
-        plx_vert_ind(&dr, PLX_VERT, x, y, 0.0001f, color);
-        plx_vert_ind(&dr, i == divs ? PLX_VERT_EOS : PLX_VERT, x, 480.0f, 0.0001f, color);
+        plx_vert_inp(PLX_VERT, x, y, 0.0001f, color);
+        plx_vert_inp(i == divs ? PLX_VERT_EOS : PLX_VERT, x, 480.0f, 0.0001f, color);
     }
 }
 
