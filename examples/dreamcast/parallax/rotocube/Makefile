@@ -12,7 +12,7 @@ rm-elf:
 	-rm -f $(TARGET)
 
 $(TARGET): $(OBJS)
-	kos-cc -o $(TARGET) $(OBJS) -lparallax -lm
+	kos-cc -o $(TARGET) $(OBJS) -lparallax
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
