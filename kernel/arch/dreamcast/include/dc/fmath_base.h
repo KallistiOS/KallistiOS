@@ -24,7 +24,7 @@ __BEGIN_DECLS
 
 /** \cond */
 #define __fsin(x) \
-    ({ float __value, __arg = (x), __scale = 10430.37835; \
+    ({ float __value, __arg = (x), __scale = 10430.37835f; \
         __asm__("fmul   %2,%1\n\t" \
                 "ftrc   %1,fpul\n\t" \
                 "fsca   fpul,dr0\n\t" \
@@ -35,7 +35,7 @@ __BEGIN_DECLS
         __value; })
 
 #define __fcos(x) \
-    ({ float __value, __arg = (x), __scale = 10430.37835; \
+    ({ float __value, __arg = (x), __scale = 10430.37835f; \
         __asm__("fmul   %2,%1\n\t" \
                 "ftrc   %1,fpul\n\t" \
                 "fsca   fpul,dr0\n\t" \
@@ -46,7 +46,7 @@ __BEGIN_DECLS
         __value; })
 
 #define __ftan(x) \
-    ({ float __value, __arg = (x), __scale = 10430.37835; \
+    ({ float __value, __arg = (x), __scale = 10430.37835f; \
         __asm__("fmul   %2,%1\n\t" \
                 "ftrc   %1,fpul\n\t" \
                 "fsca   fpul,dr0\n\t" \
@@ -91,7 +91,7 @@ __BEGIN_DECLS
 
 #define __fsincos(r, s, c) \
     ({  register float __r __asm__("fr10") = r; \
-        register float __a __asm__("fr11") = 182.04444443; \
+        register float __a __asm__("fr11") = 182.04444443f; \
         __asm__("fmul fr11, fr10\n\t" \
                 "ftrc fr10, fpul\n\t" \
                 "fsca fpul, dr10\n\t" \
@@ -102,7 +102,7 @@ __BEGIN_DECLS
 
 #define __fsincosr(r, s, c) \
     ({  register float __r __asm__("fr10") = r; \
-        register float __a __asm__("fr11") = 10430.37835; \
+        register float __a __asm__("fr11") = 10430.37835f; \
         __asm__("fmul fr11, fr10\n\t" \
                 "ftrc fr10, fpul\n\t" \
                 "fsca fpul, dr10\n\t" \
