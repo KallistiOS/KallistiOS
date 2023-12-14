@@ -8,8 +8,9 @@
    bus driver.
 */
 
-/** \file   dc/maple.h
-    \brief  Maple Bus driver interface.
+/** \file    dc/maple.h
+    \brief   Maple Bus driver interface.
+    \ingroup maple
 
     This file provides support for accessing the Maple bus on the Dreamcast.
     Maple is the bus that all of your controllers and memory cards and the like
@@ -41,7 +42,12 @@ __BEGIN_DECLS
 #include <arch/types.h>
 #include <sys/queue.h>
 
-/** \brief  Enable Maple DMA debugging.
+/** \defgroup maple Maple Bus
+    \brief          Driver for the Dreamcast's Maple Peripheral Bus
+*/
+
+/** \brief   Enable Maple DMA debugging.
+    \ingroup maple
 
     Changing this to a 1 will add massive amounts of processing time to the
     maple system in general, but it can help in verifying DMA errors. In
@@ -49,7 +55,8 @@ __BEGIN_DECLS
 */
 #define MAPLE_DMA_DEBUG 0
 
-/** \brief  Enable Maple IRQ debugging.
+/** \brief   Enable Maple IRQ debugging.
+    \ingroup maple
 
     Changing this to a 1 will turn on intra-interrupt debugging messages, which
     may cause issues if you're using dcload rather than a raw serial debug
@@ -58,7 +65,8 @@ __BEGIN_DECLS
 */
 #define MAPLE_IRQ_DEBUG 0
 
-/** \defgroup maple_regs            Maple Bus register locations
+/** \defgroup maple_regs            Registers
+    \ingroup  maple
 
     These are various registers related to the Maple Bus. In general, you
     probably won't ever need to mess with these directly.
@@ -74,7 +82,8 @@ __BEGIN_DECLS
 #define MAPLE_RESET1    (MAPLE_BASE+0x8c)   /**< \brief Reset register #1 */
 /** @} */
 
-/** \defgroup maple_reg_values      Values to write to Maple Bus registers
+/** \defgroup maple_reg_values      Register Values
+    \ingroup  maple
 
     These are the values that are written to registers to get them to do their
     thing.
@@ -97,7 +106,8 @@ __BEGIN_DECLS
 
 /** @} */
 
-/** \defgroup maple_cmds            Maple commands and responses
+/** \defgroup maple_cmds            Commands and Responses
+    \ingroup  maple
 
     These are all either commands or responses to commands sent to or from Maple
     in normal operation.
@@ -127,7 +137,8 @@ __BEGIN_DECLS
 #define MAPLE_COMMAND_CAMCONTROL    17  /**< \brief Camera control */
 /** @} */
 
-/** \defgroup maple_functions       Maple device function codes
+/** \defgroup maple_functions       Function Codes
+    \ingroup  maple
 
     This is the list of maple device types (function codes). Each device must
     have at least one function to actually do anything.
@@ -161,7 +172,8 @@ struct maple_driver;
 LIST_HEAD(maple_driver_list, maple_driver);
 /* \endcond */
 
-/** \brief  Maple frame to be queued for transport.
+/** \brief   Maple frame to be queued for transport.
+    \ingroup maple
 
     Internal representation of a frame to be queued up for sending.
 
@@ -192,7 +204,8 @@ typedef struct maple_frame {
 #endif
 } maple_frame_t;
 
-/** \defgroup maple_frame_states    States that frames can be in
+/** \defgroup maple_frame_states    Frame States
+    \ingroup                        maple
     @{
 */
 #define MAPLE_FRAME_VACANT      0   /**< \brief Ready to be used */
@@ -201,7 +214,8 @@ typedef struct maple_frame {
 #define MAPLE_FRAME_RESPONDED   3   /**< \brief Frame has a response */
 /** @} */
 
-/** \brief  Maple device info structure.
+/** \brief   Maple device info structure.
+    \ingroup maple
 
     This structure is used by the hardware to deliver the response to the device
     info request.
@@ -219,7 +233,8 @@ typedef struct maple_devinfo {
     uint16  max_power;              /**< \brief Power consumption (max) */
 } maple_devinfo_t;
 
-/** \brief  Maple response frame structure.
+/** \brief   Maple response frame structure.
+    \ingroup maple
 
     This structure is used to deliver the actual response to a request placed.
     The data field is where all the interesting stuff will be.
@@ -234,7 +249,8 @@ typedef struct maple_response {
     uint8   data[];     /**< \brief Data (if any) */
 } maple_response_t;
 
-/** \brief  One maple device.
+/** \brief   One maple device.
+    \ingroup maple
 
     Note that we duplicate the port/unit info which is normally somewhat
     implicit so that we can pass around a pointer to a particular device struct.
@@ -260,8 +276,9 @@ typedef struct maple_device {
 #define MAPLE_PORT_COUNT    4   /**< \brief Number of ports on the bus */
 #define MAPLE_UNIT_COUNT    6   /**< \brief Max number of units per port */
 
-/** \brief  Internal representation of a Maple port.
-
+/** \brief   Internal representation of a Maple port.
+    \ingroup maple
+    
     Each maple port can contain up to 6 devices, the first one of which is
     always the port itself.
 
@@ -272,7 +289,8 @@ typedef struct maple_port {
     maple_device_t  units[MAPLE_UNIT_COUNT];    /**< \brief Pointers to active units */
 } maple_port_t;
 
-/** \brief  A maple device driver.
+/** \brief   A maple device driver.
+    \ingroup maple
 
     Anything which is added to this list is capable of handling one or more
     maple device types. When a device of the given type is connected (includes
@@ -322,7 +340,8 @@ typedef struct maple_driver {
     void (*detach)(struct maple_driver *drv, maple_device_t *dev);
 } maple_driver_t;
 
-/** \brief  Maple state structure.
+/** \brief   Maple state structure.
+    \ingroup maple
 
     We put everything in here to keep from polluting the global namespace too
     much.
@@ -373,7 +392,8 @@ typedef struct maple_state_str {
     int                         gun_y;
 } maple_state_t;
 
-/** \brief  Maple DMA buffer size.
+/** \brief   Maple DMA buffer size.
+    \ingroup maple
 
     Increase if you do a _LOT_ of maple stuff on every periodic interrupt.
 */
@@ -381,14 +401,19 @@ typedef struct maple_state_str {
 
 /* Maple memory read/write functions; these are just hooks in case
    we need to do something else later */
-/** \brief  Maple memory read macro. */
+/** \brief   Maple memory read macro.
+    \ingroup maple
+ */
 #define maple_read(A) ( *((vuint32*)(A)) )
 
-/** \brief  Maple memory write macro. */
+/** \brief   Maple memory write macro. 
+    \ingroup maple
+ */
 #define maple_write(A, V) ( *((vuint32*)(A)) = (V) )
 
 /* Return codes from maple access functions */
-/** \defgroup maple_func_rvs        Return values from Maple functions
+/** \defgroup maple_func_rvs        Return Values
+    \ingroup  maple
     @{
 */
 #define MAPLE_EOK       0   /**< \brief No error */
@@ -402,56 +427,64 @@ typedef struct maple_state_str {
 /**************************************************************************/
 /* maple_globals.c */
 
-/** \brief  Global state info.
+/** \cond  Global state info.
 
     Do not manipulate this state yourself, as it will likely break things if you
     do so.
 */
 extern maple_state_t maple_state;
+/** \endcond */
 
 /**************************************************************************/
 /* maple_utils.c */
 
-/** \brief  Enable the Maple bus.
+/** \brief   Enable the Maple bus.
+    \ingroup maple
 
     This will be done for you autmatically at init time, and there's probably
     not many reasons to be doing this during runtime.
 */
 void maple_bus_enable(void);
 
-/** \brief  Disable the Maple bus.
+/** \brief   Disable the Maple bus.
+    \ingroup maple
 
     There's really not many good reasons to be mucking with this at runtime.
 */
 void maple_bus_disable(void);
 
-/** \brief  Start a Maple DMA.
+/** \brief   Start a Maple DMA.
+    \ingroup maple
 
     This stuff will all be handled internally, so there's probably no reason to
     be doing this yourself.
 */
 void maple_dma_start(void);
 
-/** \brief  Stop a Maple DMA.
+/** \brief   Stop a Maple DMA.
+    \ingroup maple
 
     This stuff will all be handled internally, so there's probably no reason to
     be doing this yourself.
 */
 void maple_dma_stop(void);
 
-/** \brief  Is a Maple DMA in progress?
+/** \brief   Is a Maple DMA in progress?
+    \ingroup maple
 
     \return                 Non-zero if a DMA is in progress.
 */
 int maple_dma_in_progress(void);
 
-/** \brief  Set the Maple DMA address.
+/** \brief   Set the Maple DMA address.
+    \ingroup maple
 
     Once again, you should not muck around with this in your programs.
 */
 void maple_dma_addr(void *ptr);
 
-/** \brief  Return a "maple address" for a port, unit pair.
+/** \brief   Return a "maple address" for a port, unit pair.
+    \ingroup maple
 
     \param  port            The port to build the address for.
     \param  unit            The unit to build the address for.
@@ -459,9 +492,11 @@ void maple_dma_addr(void *ptr);
 */
 uint8 maple_addr(int port, int unit);
 
-/** \brief  Decompose a "maple address" into a port, unit pair.
-
-    WARNING: This function will not work with multi-cast addresses!
+/** \brief   Decompose a "maple address" into a port, unit pair.
+    \ingroup maple
+    
+    \warning
+    This function will not work with multi-cast addresses!
 
     \param  addr            The input address.
     \param  port            Output space for the port of the address.
@@ -469,7 +504,8 @@ uint8 maple_addr(int port, int unit);
 */
 void maple_raddr(uint8 addr, int * port, int * unit);
 
-/** \brief  Return a string with the capabilities of a given function code.
+/** \brief   Return a string with the capabilities of a given function code.
+    \ingroup maple
 
     This function is not re-entrant, and thus NOT THREAD SAFE.
 
@@ -478,7 +514,8 @@ void maple_raddr(uint8 addr, int * port, int * unit);
 */
 const char * maple_pcaps(uint32 functions);
 
-/** \brief  Return a string representing the maple response code.
+/** \brief   Return a string representing the maple response code.
+    \ingroup maple
 
     \param  response        The response code returned from the function.
     \return                 A string containing a textual respresentation of the
@@ -486,14 +523,17 @@ const char * maple_pcaps(uint32 functions);
 */
 const char * maple_perror(int response);
 
-/** \brief  Determine if a given device is valid.
+/** \brief   Determine if a given device is valid.
+    \ingroup maple
+
     \param  p               The port to check.
     \param  u               The unit to check.
     \return                 Non-zero if the device is valid.
 */
 int maple_dev_valid(int p, int u);
 
-/** \brief  Enable light gun mode for this frame.
+/** \brief   Enable light gun mode for this frame.
+    \ingroup maple
 
     This function enables light gun processing for the current frame of data.
     Light gun mode will automatically be disabled when the data comes back for
@@ -504,7 +544,8 @@ int maple_dev_valid(int p, int u);
 */
 int maple_gun_enable(int port);
 
-/** \brief  Disable light gun mode.
+/** \brief   Disable light gun mode.
+    \ingroup maple
 
     There is probably very little reason to call this function. Light gun mode
     is ordinarily disabled and is automatically disabled after the data has been
@@ -514,7 +555,8 @@ int maple_gun_enable(int port);
 */
 void maple_gun_disable(void);
 
-/** \brief  Read the light gun position values.
+/** \brief   Read the light gun position values.
+    \ingroup maple
 
     This function fetches the gun position values from the video hardware and
     returns them via the parameters. These values are not normalized before
@@ -535,13 +577,17 @@ void maple_gun_read_pos(int *x, int *y);
 #if MAPLE_DMA_DEBUG
 /* Debugging help */
 
-/** \brief  Setup a sentinel for debugging DMA issues.
+/** \brief   Setup a sentinel for debugging DMA issues.
+    \ingroup maple
+
     \param  buffer          The buffer to add the sentinel to.
     \param  bufsize         The size of the data in the buffer.
 */
 void maple_sentinel_setup(void * buffer, int bufsize);
 
-/** \brief  Verify the presence of the sentine.
+/** \brief   Verify the presence of the sentine.
+    \ingroup maple
+
     \param  bufname         A string to recognize the buffer by.
     \param  buffer          The buffer to check.
     \param  bufsize         The size of the buffer.
@@ -552,10 +598,13 @@ void maple_sentinel_verify(const char * bufname, void * buffer, int bufsize);
 /**************************************************************************/
 /* maple_queue.c */
 
-/** \brief  Send all queued frames. */
+/** \brief   Send all queued frames. 
+    \ingroup maple
+ */
 void maple_queue_flush(void);
 
-/** \brief  Submit a frame for queueing.
+/** \brief   Submit a frame for queueing.
+    \ingroup maple
 
     This will generally be called inside the periodic interrupt; however, if you
     need to do something asynchronously (e.g., VMU access) then it might cause
@@ -569,7 +618,8 @@ void maple_queue_flush(void);
 */
 int maple_queue_frame(maple_frame_t *frame);
 
-/** \brief  Remove a used frame from the queue.
+/** \brief   Remove a used frame from the queue.
+    \ingroup maple
 
     This will be done automatically when the frame is consumed.
 
@@ -579,7 +629,8 @@ int maple_queue_frame(maple_frame_t *frame);
 */
 int maple_queue_remove(maple_frame_t *frame);
 
-/** \brief  Initialize a new frame to prepare it to be placed on the queue.
+/** \brief   Initialize a new frame to prepare it to be placed on the queue.
+    \ingroup maple
 
     You should call this before you fill in the frame data.
 
@@ -587,19 +638,24 @@ int maple_queue_remove(maple_frame_t *frame);
 */
 void maple_frame_init(maple_frame_t *frame);
 
-/** \brief  Lock a frame so that someone else can't use it in the mean time.
+/** \brief   Lock a frame so that someone else can't use it in the mean time.
+    \ingroup maple
+
     \retval 0               On success.
     \retval -1              If the frame is already locked.
 */
 int maple_frame_lock(maple_frame_t *frame);
 
-/** \brief  Unlock a frame. */
+/** \brief   Unlock a frame. 
+    \ingroup maple
+ */
 void maple_frame_unlock(maple_frame_t *frame);
 
 /**************************************************************************/
 /* maple_driver.c */
 
-/** \brief  Register a maple device driver.
+/** \brief   Register a maple device driver.
+    \ingroup maple
 
     This should be done before calling maple_init().
 
@@ -607,19 +663,25 @@ void maple_frame_unlock(maple_frame_t *frame);
 */
 int maple_driver_reg(maple_driver_t *driver);
 
-/** \brief  Unregister a maple device driver.
+/** \brief   Unregister a maple device driver.
+    \ingroup maple
+
     \retval 0               On success (no error conditions defined).
 */
 int maple_driver_unreg(maple_driver_t *driver);
 
-/** \brief  Attach a maple device to a driver, if possible.
+/** \brief   Attach a maple device to a driver, if possible.
+    \ingroup maple
+
     \param  det             The detection frame.
     \retval 0               On success.
     \retval -1              If no driver is available.
 */
 int maple_driver_attach(maple_frame_t *det);
 
-/** \brief  Detach an attached maple device.
+/** \brief   Detach an attached maple device.
+    \ingroup maple
+
     \param  p               The port of the device to detach.
     \param  u               The unit of the device to detach.
     \retval 0               On success.
@@ -627,7 +689,9 @@ int maple_driver_attach(maple_frame_t *det);
 */
 int maple_driver_detach(int p, int u);
 
-/** \brief  For each device which the given driver controls, call the callback.
+/** \brief   For each device which the given driver controls, call the callback.
+    \ingroup maple
+
     \param  drv             The driver to loop through devices of.
     \param  callback        The function to call. The parameter is the device
                             that it is being called on. It should return 0 on
@@ -637,7 +701,8 @@ int maple_driver_detach(int p, int u);
 */
 int maple_driver_foreach(maple_driver_t *drv, int (*callback)(maple_device_t *));
 
-/** \brief  Maple attach callback type.
+/** \brief   Maple attach callback type.
+    \ingroup maple
 
     Functions of this type can be set with maple_attach_callback() to respond
     automatically to the attachment of a maple device that supports specified
@@ -645,7 +710,8 @@ int maple_driver_foreach(maple_driver_t *drv, int (*callback)(maple_device_t *))
 */
 typedef void (*maple_attach_callback_t)(maple_device_t *dev);
 
-/** \brief  Set an automatic maple attach callback.
+/** \brief   Set an automatic maple attach callback.
+    \ingroup maple
 
     This function sets a callback function to be called when the specified
     maple device that supports functions has been attached.
@@ -656,7 +722,8 @@ typedef void (*maple_attach_callback_t)(maple_device_t *dev);
 */
 void maple_attach_callback(uint32 functions, maple_attach_callback_t cb);
 
-/** \brief  Maple detach callback type.
+/** \brief   Maple detach callback type.
+    \ingroup maple
 
     Functions of this type can be set with maple_detach_callback() to respond
     automatically to the detachment of a maple device that supports specified
@@ -664,7 +731,8 @@ void maple_attach_callback(uint32 functions, maple_attach_callback_t cb);
 */
 typedef void (*maple_detach_callback_t)(maple_device_t *dev);
 
-/** \brief  Set an automatic maple detach callback.
+/** \brief   Set an automatic maple detach callback.
+    \ingroup maple
 
     This function sets a callback function to be called when the specified
     maple device that supports functions has been detached.
@@ -678,12 +746,16 @@ void maple_detach_callback(uint32 functions, maple_detach_callback_t cb);
 /**************************************************************************/
 /* maple_irq.c */
 
-/** \brief  Called on every VBL (~60fps).
+/** \brief   Called on every VBL (~60fps).
+    \ingroup maple
+    
     \param  code            The ASIC event code.
 */
 void maple_vbl_irq_hnd(uint32 code);
 
-/** \brief  Called after a Maple DMA send / receive pair completes.
+/** \brief   Called after a Maple DMA send / receive pair completes.
+    \ingroup maple 
+    
     \param  code            The ASIC event code.
 */
 void maple_dma_irq_hnd(uint32 code);
@@ -691,12 +763,16 @@ void maple_dma_irq_hnd(uint32 code);
 /**************************************************************************/
 /* maple_enum.c */
 
-/** \brief  Return the number of connected devices.
+/** \brief   Return the number of connected devices.
+    \ingroup maple
+
     \return                 The number of devices connected.
 */
 int maple_enum_count(void);
 
-/** \brief  Get a raw device info struct for the given device.
+/** \brief   Get a raw device info struct for the given device.
+    \ingroup maple
+
     \param  p               The port to look up.
     \param  u               The unit to look up.
     \return                 The device at that address, or NULL if no device is
@@ -704,15 +780,18 @@ int maple_enum_count(void);
 */
 maple_device_t * maple_enum_dev(int p, int u);
 
-/** \brief  Get the Nth device of the requested type (where N is zero-indexed).
+/** \brief   Get the Nth device of the requested type (where N is zero-indexed).
+    \ingroup maple
+
     \param  n               The index to look up.
     \param  func            The function code to look for.
     \return                 The device found, if any. NULL otherwise.
 */
 maple_device_t * maple_enum_type(int n, uint32 func);
 
-/** \brief  Return the Nth device that is of the requested type and supports the
-            list of capabilities given.
+/** \brief   Return the Nth device that is of the requested type and supports the
+             list of capabilities given.
+    \ingroup maple
 
     Note, this only currently makes sense for controllers, since some devices
     don't necessarily use the function data in the same manner that controllers
@@ -726,7 +805,8 @@ maple_device_t * maple_enum_type(int n, uint32 func);
 */
 maple_device_t * maple_enum_type_ex(int n, uint32 func, uint32 cap);
 
-/** \brief  Get the status struct for the requested maple device.
+/** \brief   Get the status struct for the requested maple device.
+    \ingroup maple
 
     This function will wait until the status is valid before returning.
     You should cast to the appropriate type you're expecting.
@@ -739,13 +819,19 @@ void * maple_dev_status(maple_device_t *dev);
 /**************************************************************************/
 /* maple_init.c */
 
-/** \brief  Initialize Maple. */
+/** \brief   Initialize Maple. 
+    \ingroup maple 
+ */
 void maple_init(void);
 
-/** \brief  Shutdown Maple. */
+/** \brief   Shutdown Maple. 
+    \ingroup maple
+ */
 void maple_shutdown(void);
 
-/** \brief  Wait for the initial bus scan to complete. */
+/** \brief   Wait for the initial bus scan to complete. 
+    \ingroup maple
+ */
 void maple_wait_scan(void);
 
 /**************************************************************************/
@@ -764,7 +850,8 @@ void maple_wait_scan(void);
    (i.e., { code })
  */
 
-/** \brief  Begin a foreach loop over Maple devices.
+/** \brief   Begin a foreach loop over Maple devices.
+    \ingroup maple
 
     This macro (along with the MAPLE_FOREACH_END() one) implements a simple
     foreach-style loop over the given type of devices. Essentially, it grabs the
@@ -788,7 +875,8 @@ void maple_wait_scan(void);
             VAR = (VARTYPE *)maple_dev_status(__dev); \
             do {
 
-/** \brief  End a foreach loop over Maple devices.
+/** \brief   End a foreach loop over Maple devices.
+    \ingroup maple
 
     Each MAPLE_FOREACH_BEGIN() must be paired with one of these after the loop
     body.

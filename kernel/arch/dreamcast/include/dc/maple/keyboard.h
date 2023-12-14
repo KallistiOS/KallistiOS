@@ -6,8 +6,9 @@
 
 */
 
-/** \file   dc/maple/keyboard.h
-    \brief  Definitions for using the keyboard device.
+/** \file    dc/maple/keyboard.h
+    \brief   Definitions for using the keyboard device.
+    \ingroup kbd
 
     This file contains the definitions needed to access the Maple keyboard
     device. Obviously, this corresponds to the MAPLE_FUNC_KEYBOARD function
@@ -27,7 +28,12 @@ __BEGIN_DECLS
 #include <arch/types.h>
 #include <dc/maple.h>
 
-/** \defgroup   kbd_mods    Keyboard modifier keys
+/** \defgroup kbd   Keyboard
+    \brief          Driver for the Dreamcast's Keyboard Input Device
+*/
+
+/** \defgroup   kbd_mods    Modifier Keys
+    \ingroup                kbd
 
     These are the various modifiers that can be pressed on the keyboard, and are
     reflected in the modifiers field of kbd_cond_t.
@@ -43,7 +49,8 @@ __BEGIN_DECLS
 #define KBD_MOD_S2          (1<<7)
 /** @} */
 
-/** \defgroup   kbd_leds    Keyboard LEDs
+/** \defgroup   kbd_leds    LEDs
+    \ingroup                kbd
 
     This is the LEDs that can be turned on and off on the keyboard. This list
     may not be exhaustive. Think of these sorta like an extension of the
@@ -55,7 +62,8 @@ __BEGIN_DECLS
 #define KBD_LED_SCRLOCK     (1<<2)
 /** @} */
 
-/** \defgroup   kbd_keys    Keyboard keys
+/** \defgroup   kbd_keys    Keys
+    \ingroup                kbd
 
     This is the list of keys that are on the keyboard that may be pressed. The
     keyboard returns keys in this format.
@@ -166,7 +174,8 @@ __BEGIN_DECLS
 #define KBD_KEY_S3              0x65
 /** @} */
 
-/** \defgroup   kbd_regions Keyboard region codes
+/** \defgroup   kbd_regions Region Codes
+    \ingroup                kbd
 
     This is the list of possible values for the "region" field in the
     kbd_state_t structure.
@@ -181,7 +190,9 @@ __BEGIN_DECLS
 #define KBD_REGION_ES       7           /**< \brief Spanish keyboard */
 /** @} */
 
-/** \defgroup   key_states  States each key can be in.
+/** \defgroup   key_states  Key States
+    \brief                  States each key can be in.
+    \ingroup                kbd
 
     These are the different 'states' each key can be in. They are stored in
     kbd_state_t->matrix, and manipulated/checked by kbd_check_poll.
@@ -196,17 +207,20 @@ __BEGIN_DECLS
 #define KEY_STATE_PRESSED     2
 /** @} */
 
-/** \brief Maximum number of keys the DC can read simultaneously.
+/** \brief   Maximum number of keys the DC can read simultaneously.
+    \ingroup kbd
     This is a hardware constant. The define prevents the magic number '6' from appearing.
 **/
 #define MAX_PRESSED_KEYS 6
 
-/** \brief Maximum number of keys a DC keyboard can have.
+/** \brief   Maximum number of keys a DC keyboard can have.
+    \ingroup kbd
     This is a hardware constant. The define prevents the magic number '256' from appearing.
 **/
 #define MAX_KBD_KEYS 256
 
-/** \brief  Size of a keyboard queue.
+/** \brief   Size of a keyboard queue.
+    \ingroup kbd
 
     Each keyboard queue will hold this many elements. Once the queue fills, no
     new elements will be placed on the queue. As long as you check the queue
@@ -216,7 +230,8 @@ __BEGIN_DECLS
 */
 #define KBD_QUEUE_SIZE 16
 
-/** \brief  Keyboard keymap.
+/** \brief   Keyboard keymap.
+    \ingroup kbd
 
     This structure represents a mapping from raw key values to ASCII values, if
     appropriate. This handles base values as well as shifted ("shift" and "Alt"
@@ -230,7 +245,8 @@ typedef struct kbd_keymap {
     uint8 alt[MAX_KBD_KEYS];
 } kbd_keymap_t;
 
-/** \brief  Keyboard raw condition structure.
+/** \brief   Keyboard raw condition structure.
+    \ingroup kbd
 
     This structure is what the keyboard responds with as its current status.
 
@@ -242,7 +258,8 @@ typedef struct {
     uint8 keys[MAX_PRESSED_KEYS];      /**< \brief Key codes for currently pressed keys. */
 } kbd_cond_t;
 
-/** \brief  Keyboard status structure.
+/** \brief   Keyboard status structure.
+    \ingroup kbd
 
     This structure holds information about the current status of the keyboard
     device. This is what maple_dev_status() will return.
@@ -281,7 +298,9 @@ typedef struct kbd_state {
     uint64 kbd_repeat_timer;        /**< \brief Time that the next repeat will trigger. */
 } kbd_state_t;
 
-/** \brief  Activate or deactivate global key queueing.
+/** \brief   Activate or deactivate global key queueing.
+    \ingroup kbd
+    \deprecated
 
     This function will turn the internal keyboard queueing on or off. Note that
     there is only one queue for the whole system, no matter how many keyboards
@@ -301,7 +320,9 @@ typedef struct kbd_state {
 */
 void kbd_set_queue(int active) __attribute__((deprecated));
 
-/** \brief  Pop a key off the global keyboard queue.
+/** \brief   Pop a key off the global keyboard queue.
+    \ingroup kbd
+    \deprecated
 
     This function pops the front off of the keyboard queue, and returns the
     value to the caller. The value returned will be the ASCII value of the key
@@ -321,7 +342,8 @@ void kbd_set_queue(int active) __attribute__((deprecated));
 */
 int kbd_get_key(void) __attribute__((deprecated));
 
-/** \brief  Pop a key off a specific keyboard's queue.
+/** \brief   Pop a key off a specific keyboard's queue.
+    \ingroup kbd
 
     This function pops the front element off of the specified keyboard queue,
     and returns the value of that key to the caller.

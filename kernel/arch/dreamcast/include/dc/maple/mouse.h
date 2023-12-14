@@ -5,8 +5,9 @@
 
 */
 
-/** \file   dc/maple/mouse.h
-    \brief  Definitions for using the mouse device.
+/** \file    dc/maple/mouse.h
+    \brief   Definitions for using the mouse device.
+    \ingroup mouse
 
     This file contains the definitions needed to access the Maple mouse type
     device.
@@ -23,7 +24,12 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 
+/** \defgroup   mouse   Mouse
+    \brief              Driver for the Dreamcast's Mouse Input Device
+*/
+
 /** \defgroup   mouse_buttons   Mouse button codes
+    \ingroup                    mouse
 
     These are the possible buttons to press on a maple bus mouse.
 
@@ -34,10 +40,12 @@ __BEGIN_DECLS
 #define MOUSE_SIDEBUTTON    (1<<3)  /**< \brief Side mouse button */
 /** @} */
 
-/** \brief  Mouse center value in the raw condition structure. */
+/** \brief   Mouse center value in the raw condition structure. 
+    \ingroup mouse
+ */
 #define MOUSE_DELTA_CENTER      0x200
 
-/* Raw mouse condition structure */
+/** \cond */
 typedef struct {
     uint16 buttons;
     uint16 dummy1;
@@ -48,6 +56,7 @@ typedef struct {
     uint32 dummy3;
     uint32 dummy4;
 } mouse_cond_t;
+/** \endcond */
 
 /* More civilized mouse structure. There are several significant
    differences in data interpretation between the "cooked" and
@@ -59,7 +68,8 @@ typedef struct {
    Note that this is what maple_dev_status() will return.
  */
 
-/** \brief  Mouse status structure.
+/** \brief   Mouse status structure.
+    \ingroup mouse
 
     This structure contains information about the status of the mouse device,
     and can be fetched with maple_dev_status().

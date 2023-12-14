@@ -5,8 +5,9 @@
 
 */
 
-/** \file   dc/asic.h
-    \brief  Dreamcast ASIC event handling support.
+/** \file    dc/asic.h
+    \brief   Dreamcast ASIC event handling support.
+    \ingroup asic
 
     This file provides definitions of the events that the ASIC (a part of the
     PVR) in the Dreamcast can trigger as IRQs, and ways to set responders for
@@ -26,21 +27,26 @@ __BEGIN_DECLS
 
 #include <stdint.h>
 
+/** \defgroup asic  Holly ASIC
+    \brief    Events pertaining to the DC's System ASIC
+
+*/ 
+
 /* All event codes are two 8-bit integers; the top integer is the event code
    register to look in to check the event (and to acknolwedge it). The
    register to check is 0xa05f6900+4*regnum. The bottom integer is the
    bit index within that register. */
 
-/** \defgroup asic_events           ASIC event codes
-    @{
+/** \defgroup asic_events           Event Codes
+    \ingroup  asic
 */
 
-/** \defgroup asic_pvr_evts         Event codes for the PVR chip
+/** \defgroup asic_events_pvr       PowerVR
+    \ingroup  asic_events
 
     These are events that the PVR itself generates that can be hooked.
     @{
 */
-
 #define ASIC_EVT_PVR_RENDERDONE_VIDEO     0x0000  /**< \brief Video render stage completed */
 #define ASIC_EVT_PVR_RENDERDONE_ISP       0x0001  /**< \brief ISP render stage completed */
 #define ASIC_EVT_PVR_RENDERDONE_TSP       0x0002  /**< \brief TSP render stage completed */
@@ -63,10 +69,10 @@ __BEGIN_DECLS
 #define ASIC_EVT_PVR_OPB_OUTOFMEM         0x0203  /**< \brief OPB went past PVR_TA_OPB_END */
 #define ASIC_EVT_PVR_TA_INPUT_ERR         0x0204  /**< \brief Vertex input error */
 #define ASIC_EVT_PVR_TA_INPUT_OVERFLOW    0x0205  /**< \brief Vertex input overflowed queue */
-
 /** @} */
 
-/** \defgroup asic_gd_evts          Event codes for the GD controller
+/** \defgroup asic_events_gd         GD-ROM Drive
+    \ingroup  asic_events
 
     These are events that the GD-ROM drive generates that can be hooked.
     @{
@@ -77,7 +83,8 @@ __BEGIN_DECLS
 #define ASIC_EVT_GD_DMA_ILLADDR     0x020c  /**< \brief GD-Rom DMA illegal address */
 /** @} */
 
-/** \defgroup asic_maple_evts       Event codes for the Maple controller
+/** \defgroup asic_events_maple      Maple
+    \ingroup  asic_events
 
     These are events that Maple generates that can be hooked.
     @{
@@ -86,7 +93,8 @@ __BEGIN_DECLS
 #define ASIC_EVT_MAPLE_ERROR        0x000d  /**< \brief Maple error (?) */
 /** @} */
 
-/** \defgroup asic_spu_evts         Event codes for the SPU
+/** \defgroup asic_events_spu       AICA
+    \ingroup  asic_events
 
     These are events that the SPU (AICA) generates that can be hooked.
     @{
@@ -95,7 +103,8 @@ __BEGIN_DECLS
 #define ASIC_EVT_SPU_IRQ            0x0101  /**< \brief SPU interrupt */
 /** @} */
 
-/** \defgroup asic_g2dma_evts       Event codes for G2 bus DMA
+/** \defgroup asic_events_g2dma     G2 Bus DMA
+    \ingroup  asic_events
 
     These are events that G2 bus DMA generates that can be hooked.
     @{
@@ -106,7 +115,8 @@ __BEGIN_DECLS
 #define ASIC_EVT_G2_DMA3            0x0012  /**< \brief G2 DMA channel 3 complete */
 /** @} */
 
-/** \defgroup asic_ext_evts         Event codes for the external port
+/** \defgroup asic_events_ext      External Port
+    \ingroup  asic_events
 
     These are events that external devices generate that can be hooked.
     @{
@@ -116,7 +126,8 @@ __BEGIN_DECLS
 /** @} */
 /** @} */
 
-/** \defgroup asic_regs             ASIC registers
+/** \defgroup asic_regs             Registers
+    \ingroup  asic
 
     These are the locations in memory where the ASIC registers sit.
     @{
@@ -136,7 +147,8 @@ __BEGIN_DECLS
 #define ASIC_IRQ9_C            0xa05f6938  /**< \brief IRQ9 third register */
 /** @} */
 
-/** \defgroup asic_irq_lv           ASIC IRQ levels
+/** \defgroup asic_irq_lv           IRQ Levels
+    \ingroup  asic
 
     You can pick one at hook time, or don't choose anything and the default will
     be used instead.
@@ -150,7 +162,8 @@ __BEGIN_DECLS
 #define ASIC_IRQ_DEFAULT    ASIC_IRQ9  /**< \brief Pick an IRQ level for me! */
 /** @} */
 
-/** \brief  ASIC event handler type.
+/** \brief   ASIC event handler type.
+    \ingroup asic
 
     Any event handlers registered must be of this type. These will be run in an
     interrupt context, so don't try anything funny.
@@ -160,7 +173,8 @@ __BEGIN_DECLS
 */
 typedef void (*asic_evt_handler)(uint32_t code);
 
-/** \brief  Set or remove an ASIC handler.
+/** \brief   Set or remove an ASIC handler.
+    \ingroup asic
 
     This function will register an event handler for a given event code, or if
     the handler is NULL, unregister any that is currently registered.
@@ -171,7 +185,8 @@ typedef void (*asic_evt_handler)(uint32_t code);
 */
 void asic_evt_set_handler(uint16_t code, asic_evt_handler handler);
 
-/** \brief  Disable all ASIC events.
+/** \brief   Disable all ASIC events.
+    \ingroup asic
 
     This function will disable hooks for every event that has been hooked. In
     order to reinstate them, you must individually re-enable them. Not a very
@@ -179,7 +194,8 @@ void asic_evt_set_handler(uint16_t code, asic_evt_handler handler);
 */
 void asic_evt_disable_all(void);
 
-/** \brief  Disable one ASIC event.
+/** \brief   Disable one ASIC event.
+    \ingroup asic
 
     This function will disable the hook for a specified code that was registered
     at the given IRQ level. Generally, you will never have to do this yourself
@@ -192,7 +208,8 @@ void asic_evt_disable_all(void);
 */
 void asic_evt_disable(uint16_t code, uint8_t irqlevel);
 
-/** \brief  Enable an ASIC event.
+/** \brief   Enable an ASIC event.
+    \ingroup asic
 
     This function will enable the hook for a specified code and register it at
     the given IRQ level. You should only register each event at a max of one
@@ -206,11 +223,11 @@ void asic_evt_disable(uint16_t code, uint8_t irqlevel);
  */
 void asic_evt_enable(uint16_t code, uint8_t irqlevel);
 
-/** \brief  Init ASIC events. */
+/** \cond   Enable ASIC events */
 void asic_init(void);
-
-/** \brief  Shutdown ASIC events, disabling all hooks. */
+/* Shutdown ASIC events, disabling all hooks. */
 void asic_shutdown(void);
+/** \endcond */
 
 __END_DECLS
 
