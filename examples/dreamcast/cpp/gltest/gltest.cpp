@@ -377,11 +377,11 @@ int main(int argc, char **argv) {
         glTranslatef(0.0f, 0.0f, z);
         glRotatef(r, 0.0f, 1.0f, 0.5f);
 
-	    /* Always draw 2 cubes as solids */
-	    glEnable(GL_CULL_FACE);
-	    glDisable(GL_BLEND);        
+	/* Always draw 2 cubes as solids */
+	glEnable(GL_CULL_FACE);
+	glDisable(GL_BLEND);        
 	
-	    cubes[0]->draw();
+	cubes[0]->draw();
         cubes[1]->draw();
         /* Potentially do two as translucent */
         if(trans & 1) {
