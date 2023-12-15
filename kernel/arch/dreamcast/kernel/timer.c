@@ -144,8 +144,10 @@ uint32_t timer_count(int which) {
 
 /* Clears the timer underflow bit and returns what its value was */
 int timer_clear(int which) {
+    uint16_t value;
+
     assert(which <= TMU2);
-    const uint16_t value = TIMER16(tcrs[which]);
+    value = TIMER16(tcrs[which]);
 
     TIMER16(tcrs[which]) &= ~UNF;
     return !!(value & UNF);
