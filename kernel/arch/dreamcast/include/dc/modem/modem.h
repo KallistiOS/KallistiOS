@@ -24,7 +24,7 @@
 
 /** \defgroup   modem           Modem
     \brief      Driver for the Dreamcast's built-in 56k Modem
-
+    \ingroup    networking_drivers
 */
 
 /** \defgroup   modem_modes     Modes of Operation

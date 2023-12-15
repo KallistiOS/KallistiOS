@@ -5,8 +5,9 @@
 
 */
 
-/** \file   dc/net/broadband_adapter.h
-    \brief  Broadband Adapter support.
+/** \file    dc/net/broadband_adapter.h
+    \brief   Broadband Adapter support.
+    \ingroup bba
 
     This file contains declarations related to support for the HIT-0400
     "Broadband Adapter". There's not really anything that users will generally
@@ -23,6 +24,7 @@ __BEGIN_DECLS
 
 /** \defgroup bba Broadband Adapter
     \brief        Driver for the Dreamcast's BBA (RTL8139C).
+    \ingroup      networking_drivers
 */
 
 /** \defgroup bba_regs  Register Definitions

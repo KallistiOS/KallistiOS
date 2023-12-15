@@ -39,6 +39,7 @@ __BEGIN_DECLS
 
 /** \defgroup asic_events           Event Codes
     \ingroup  asic
+    @{
 */
 
 /** \defgroup asic_events_pvr       PowerVR
@@ -124,6 +125,7 @@ __BEGIN_DECLS
 #define ASIC_EVT_EXP_8BIT           0x0102  /**< \brief Modem / Lan Adapter */
 #define ASIC_EVT_EXP_PCI            0x0103  /**< \brief BBA IRQ */
 /** @} */
+
 /** @} */
 
 /** \defgroup asic_regs             Registers
