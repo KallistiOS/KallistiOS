@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
     plx_cxt_culling(PLX_CULL_NONE);
 
     // Until the user hits start...
-    dt = 2 * M_PI / 160.0f;
+    dt = 2 * F_PI / 160.0f;
 
     for(done = 0, theta = 0.0f; !done;) {
         // Check for start
@@ -95,8 +95,8 @@ int main(int argc, char **argv) {
         // Move our counters
         theta += dt;
 
-        while(theta >= 2 * M_PI)
-            theta -= 2 * M_PI;
+        while(theta >= 2 * F_PI)
+            theta -= 2 * F_PI;
     }
 
     return 0;

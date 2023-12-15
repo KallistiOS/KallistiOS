@@ -59,48 +59,6 @@ __BEGIN_DECLS
     \sa wdt
 */
 
-/** \defgroup rtc_regs Registers
-    \brief    RTC registers
-    \ingroup  rtc
-
-    All registers are located on the G2 BUS and must be read and
-    written to as full 32-byte values.
-@{*/
-
-/** \brief High 16-bit timestamp value
-
-    32-bit register containing the upper 16-bits of
-    the 32-bit timestamp in seconds. Only the lower 16-bits
-    are valid.
-
-    \note Writing to this register will lock the timestamp registers.
- */
-#define RTC_TIMESTAMP_HIGH_ADDR   0xa0710000
-
-/** \brief Low 16-bit timestamp value
-
-    32-bit register containing the lower 16-bits of
-    the 32-bit timestamp in seconds. Only the lower 16-bits
-    are valid.
- */
-#define RTC_TIMESTAMP_LOW_ADDR    0xa0710004
-
-/** \brief Timestamp control register
-
-    All fields are reserved except for #RTC_CTRL_WRITE_EN,
-    which is write-only.
- */
-#define RTC_CTRL_ADDR             0xa0710008
-/**
-@} */
-
-/** \brief Timestamp write enable
-
-    #RTC_CTRL_ADDR value to be written in order to unlock
-    writing to the timestamp registers.
-*/
-#define RTC_CTRL_WRITE_EN         (1 << 0)
-
 /** \brief   Get the current date/time.
     \ingroup rtc
 
@@ -114,12 +72,17 @@ __BEGIN_DECLS
 */
 time_t rtc_unix_secs(void);
 
-/** \brief   Get the current date/time.
+/** \brief   Set the current date/time.
     \ingroup rtc
 
     This function sets the current RTC value as a standard UNIX timestamp
     (with an epoch of January 1, 1970 00:00). This is assumed to be in the
     timezone of the user (as the RTC does not support timezones).
+
+    \warning
+    This function may fail! Since `time_t` is typically 64-bit while the RTC
+    uses a 32-bit timestamp (which also has a different epoch), not all
+    `time_t` values can be represented within the RTC!
 
     \param time             Unix timestamp to set the current time to
 

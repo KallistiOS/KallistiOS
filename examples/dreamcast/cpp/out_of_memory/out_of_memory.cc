@@ -1,3 +1,16 @@
+/* KallistiOS ##version##
+
+   out_of_memory.cc
+   Copyright (C) 2023 Falco Girgis
+
+*/
+
+/* 
+    This is a simple example of how to gracefully handle running
+    out of memory in C++ with both a static handler and exceptions.
+    The same applies for C, except that malloc() will return NULL.
+*/
+
 #include <vector>
 #include <iostream>
 #include <cstdint>
@@ -7,7 +20,11 @@
 
 KOS_INIT_FLAGS(INIT_MALLOCSTATS);
 
-void new_handler_cb() {
+static unsigned new_handler_counter = 0;
+
+static void new_handler_cb() {
+    ++new_handler_counter; 
+
     std::cout << "new_handler callback invoked!" << std::endl;
 
     malloc_stats();
@@ -60,7 +77,15 @@ int main(int argc, char **argv) {
         }
     }
 
-    std::cout << "All done. Thank you for the RAM!" << std::endl;
+    const bool success = failed_once && (new_handler_counter == 1);
 
-    return !failed_once;
+    if(success) {
+        std::cout << "\n\nTEST SUCCESS! Thank you for the RAM!\n\n" << std::endl;
+        return EXIT_SUCCESS;
+    }
+    else {
+        std::cerr << "\n\nTEST FAILURE!\n\n";
+        return EXIT_FAILURE;
+    }
+
 }

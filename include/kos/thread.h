@@ -19,8 +19,6 @@ __BEGIN_DECLS
 #include <sys/reent.h>
 #include <stdint.h>
 
-#include <stdint.h>
-
 /** \file    kos/thread.h
     \brief   Threading support.
     \ingroup kthreads
@@ -123,6 +121,9 @@ typedef struct tcbhead {
     \headerfile kos/thread.h
 */
 typedef struct kthread {
+    /** \brief  Register store -- used to save thread context. */
+    irq_context_t context;
+
     /** \brief  Thread list handle. Not a function. */
     LIST_ENTRY(kthread) t_list;
 
@@ -176,9 +177,6 @@ typedef struct kthread {
     /** \brief  Current file system path. */
     char pwd[KTHREAD_PWD_SIZE];
 
-    /** \brief  Register store -- used to save thread context. */
-    irq_context_t context;
-
     /** \brief  Thread private stack.
         This should be a pointer to the base of a stack page. */
     uint32_t *stack;
@@ -202,7 +200,7 @@ typedef struct kthread {
     /** \brief  Return value of the thread function.
         This is only used in joinable threads.  */
     void *rv;
-} kthread_t;
+} kthread_t __attribute__((aligned(32)));
 
 /** \name     Thread flag values
     \brief    kthread_t::flags values

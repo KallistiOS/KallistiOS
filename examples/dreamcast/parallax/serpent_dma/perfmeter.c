@@ -49,9 +49,9 @@ void pm_draw(void) {
     // Make a nice stat display
     sprintf(str, "fps %.2f  buf %d  reg %d  rnd %d",
             (double)stats.frame_rate,
-            (int)stats.buf_last_time,
-            (int)stats.reg_last_time,
-            (int)stats.rnd_last_time);
+            stats.buf_last_time,
+            stats.reg_last_time,
+            stats.rnd_last_time);
     plx_fcxt_setcolor4f(fcxt, 1, 1, 1, 1);
     plx_fcxt_setsize(fcxt, 16.0f);
     plx_fcxt_setpos(fcxt, posx, posy, posz);

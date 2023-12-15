@@ -26,6 +26,7 @@
 #include <dc/maple/controller.h>
 #include <dc/maple/vmu.h>
 #include <dc/vmu_fb.h>
+#include <dc/fmath.h>
 
 #include <arch/arch.h>
 
@@ -172,7 +173,7 @@ int main(int argc, char **argv) {
     for(i = 0; ; i++) {
         vmufb_clear(&vmufb);
 
-        val = (float)i * M_PI / 360.0f;
+        val = (float)i * F_PI / 360.0f;
         x = 20 + (int)(20.0f * cosf(val));
         y = 12 + (int)(12.0f * sinf(val));
 

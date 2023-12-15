@@ -7,7 +7,8 @@
    Copyright (C) 2023 Megavolt85
 */
 
-/* Real-Time Clock (RTC) support
+/*
+   Real-Time Clock (RTC) Support
 
    The functions in here return various info about the real-world time and
    date stored in the machine. The general process here is to retrieve
@@ -28,16 +29,64 @@
 #include <arch/timer.h>
 #include <dc/g2bus.h>
 #include <stdint.h>
+#include <assert.h>
 
-#define RTC_UNIX_EPOCH_DELTA    631152000   /* Twenty years in seconds */
-#define RTC_RETRY_COUNT         3           /* # of times to repeat on bad access */
+/*
+    High 16-bit Timestamp Value
+
+    32-bit register containing the upper 16-bits of
+    the 32-bit timestamp in seconds. Only the lower 16-bits
+    are valid.
+
+    Writing to this register will lock the timestamp registers.
+*/
+#define RTC_TIMESTAMP_HIGH_ADDR   0xa0710000
+
+/*
+    Low 16-bit Timestamp Value
+
+    32-bit register containing the lower 16-bits of
+    the 32-bit timestamp in seconds. Only the lower 16-bits
+    are valid.
+*/
+#define RTC_TIMESTAMP_LOW_ADDR    0xa0710004
+
+/*
+    Timestamp Control Register
+
+    All fields are reserved except for RTC_CTRL_WRITE_EN,
+    which is write-only.
+*/
+#define RTC_CTRL_ADDR             0xa0710008
+
+/*
+    Timestamp Write Enable
+
+    RTC_CTRL_ADDR field to be written in order to unlock
+    writing to the timestamp registers.
+*/
+#define RTC_CTRL_WRITE_EN         (1 << 0)
+
+/*
+   Second Delta between Sega and Unix Epochs
+
+   Twenty years in seconds.
+*/
+#define RTC_UNIX_EPOCH_DELTA    631152000
+
+/*
+    # of Read/Write Retry Attempts
+
+    To ensure a coherent, race-free read/write operation.
+*/
+#define RTC_RETRY_COUNT         3
 
 /* The boot time; we'll save this in rtc_init() */
 static time_t boot_time = 0;
 
 /* Returns the date/time value as a UNIX epoch time stamp */
 time_t rtc_unix_secs(void) {
-    uint32 rtcold, rtcnew;
+    uint32_t rtcold, rtcnew;
     int i;
 
     /* Try several times to make sure we don't read one value, then the
@@ -60,10 +109,7 @@ time_t rtc_unix_secs(void) {
             break;
     }
 
-    /* Subtract out 20 years */
-    rtcnew = rtcnew - RTC_UNIX_EPOCH_DELTA;
-
-    return rtcnew;
+    return rtcnew - RTC_UNIX_EPOCH_DELTA;
 }
 
 /* Sets the date/time value from a UNIX epoch time stamp, 
@@ -72,9 +118,16 @@ int rtc_set_unix_secs(time_t secs) {
     int result = 0;
     uint32_t rtcnew;
     int i;
+    uint32_t s, ms;
 
     /* Adjust by 20 years to get to the expected RTC time. */
-    const uint32_t adjusted = secs + RTC_UNIX_EPOCH_DELTA;
+    const time_t adjusted_time = secs + RTC_UNIX_EPOCH_DELTA;
+    const uint32_t adjusted = (const uint32_t)adjusted_time;
+
+    /* Protect against underflowing or overflowing our 32-bit timestamp. */
+    if(adjusted_time < 0 || adjusted_time > UINT32_MAX)
+        return -1;
+
 
     /* Enable writing by setting LSB of control */
     g2_write_32(RTC_CTRL_ADDR, RTC_CTRL_WRITE_EN);
@@ -94,6 +147,9 @@ int rtc_set_unix_secs(time_t secs) {
             break;
     }
 
+    /* Disable further writing by clearing LSB of control */
+    g2_write_32(RTC_CTRL_ADDR, 0);
+
     /* Signify failure if the fetched time never matched the
        time we attempted to set. */
     if(i == RTC_RETRY_COUNT)
@@ -102,9 +158,8 @@ int rtc_set_unix_secs(time_t secs) {
     /* We have to update the boot time now as well, subtracting
        the amount of time that has elapsed since boot from the 
        new time we've just set. */
-    uint32 s, ms;
     timer_ms_gettime(&s, &ms);
-    boot_time = rtcnew - RTC_UNIX_EPOCH_DELTA - s;
+    boot_time = ((time_t)rtcnew - RTC_UNIX_EPOCH_DELTA) - s;
 
     return result;
 }
