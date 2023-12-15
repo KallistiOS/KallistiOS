@@ -383,7 +383,6 @@ int main(int argc, char **argv) {
 	
 	    cubes[0]->draw();
         cubes[1]->draw();
-	
         /* Potentially do two as translucent */
         if(trans & 1) {
             glEnable(GL_BLEND);
