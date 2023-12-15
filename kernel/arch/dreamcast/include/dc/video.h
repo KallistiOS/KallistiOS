@@ -5,8 +5,9 @@
 
 */
 
-/** \file   dc/video.h
-    \brief  Functions related to video output.
+/** \file    dc/video.h
+    \brief   Functions related to video output.
+    \ingroup video
 
     This file deals with the video output hardware in the Dreamcast. There are
     functions defined herein that deal with setting up the video hardware,
@@ -24,7 +25,12 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 
-/** \defgroup vid_ctype Video Cable types
+/** \defgroup video Video
+    \brief          General video driver managing resolution, framebuffer, etc.
+*/
+
+/** \defgroup vid_ctype Cable Types
+    \ingroup            video
 
     The vid_check_cable() function will return one of this set of values to let
     you know what type of cable is connected to the Dreamcast. These are also
@@ -40,6 +46,7 @@ __BEGIN_DECLS
 /** @} */
 
 /** \defgroup vid_pmode Video pixel modes
+    \ingroup            video
 
     This set of constants control the pixel mode that the framebuffer is set to.
 
@@ -55,7 +62,9 @@ __BEGIN_DECLS
 /** \brief vid_pmode_bpp Video pixel mode depths */
 static const uint8 vid_pmode_bpp[4] = {2, 2, 3, 4};
 
-/** \brief  Generic display modes */
+/** \brief   Generic display modes 
+    \ingroup video 
+ */
 enum {
     DM_GENERIC_FIRST = 0x1000,      /**< \brief First valid generic mode */
     DM_320x240 = 0x1000,            /**< \brief 320x240 resolution */
@@ -67,7 +76,8 @@ enum {
     DM_GENERIC_LAST = DM_768x576    /**< \brief Last valid generic mode */
 };
 
-/** \brief  Multi-buffered mode setting.
+/** \brief   Multi-buffered mode setting.
+    \ingroup video
 
     OR this with the generic mode to get four framebuffers instead of one.
 */
@@ -76,7 +86,9 @@ enum {
 //-----------------------------------------------------------------------------
 // More specific modes (and actual indeces into the mode table)
 
-/** \brief  Specific display modes */
+/** \brief   Specific display modes 
+    \ingroup video
+*/
 enum {
     DM_INVALID = 0,                 /**< \brief Invalid display mode */
     // Valid modes below
@@ -107,11 +119,14 @@ enum {
     DM_MODE_COUNT                   /**< \brief Number of modes */
 };
 
-/** \brief  The maximum number of framebuffers available. */
+/** \brief   The maximum number of framebuffers available.
+    \ingroup video
+ */
 #define VID_MAX_FB  4   // <-- This should be enough
 
 // These are for the "flags" field of "vid_mode_t"
-/** \defgroup vid_flags Flags for the field in vid_mode_t.
+/** \defgroup vid_flags vid_mode_t Field Flags.
+    \ingroup            video
 
     These flags indicate various things related to the modes for a vid_mode_t.
 
@@ -123,7 +138,8 @@ enum {
 #define VID_PAL         0x00000008  /**< \brief 50Hz refresh rate, if not VGA */
 /** @} */
 
-/** \brief  Video mode structure.
+/** \brief   Video mode structure.
+    \ingroup video
 
     KOS maintains a list of valid video modes internally that correspond to the
     specific display modes enumeration. Each of them is built of one of these.
@@ -157,10 +173,14 @@ typedef struct vid_mode {
     uint32  fb_base[VID_MAX_FB];    /**< \brief Offset to framebuffers */
 } vid_mode_t;
 
-/** \brief  The list of builtin video modes. Do not modify these! */
+/** \brief   The list of builtin video modes. Do not modify these! 
+    \ingroup video
+*/
 extern vid_mode_t vid_builtin[DM_MODE_COUNT];
 
-/** \brief  The current video mode. Do not modify directly! */
+/** \brief   The current video mode. Do not modify directly! 
+    \ingroup video 
+*/
 extern vid_mode_t *vid_mode;
 
 // These point to the current drawing area. If you're not using a multi-buffered
@@ -170,14 +190,19 @@ extern vid_mode_t *vid_mode;
 // though (if you use vid_set_start, they'll point at the display base, for
 // compatibility's sake).
 
-/** \brief  16-bit size pointer to the current drawing area. */
+/** \brief   16-bit size pointer to the current drawing area. 
+    \ingroup video
+*/
 extern uint16 *vram_s;
 
-/** \brief  32-bit size pointer to the current drawing area. */
+/** \brief   32-bit size pointer to the current drawing area. 
+    \ingroup video
+*/
 extern uint32 *vram_l;
 
 
-/** \brief  Retrieve the connected video cable type.
+/** \brief   Retrieve the connected video cable type.
+    \ingroup video 
 
     This function checks the video cable and reports what it finds.
 
@@ -188,7 +213,8 @@ extern uint32 *vram_l;
 */
 int vid_check_cable(void);
 
-/** \brief  Set the VRAM base of the framebuffer.
+/** \brief   Set the VRAM base of the framebuffer.
+    \ingroup video
 
     This function sets the vram_s and vram_l pointsers to specified offset
     within VRAM and sets the start position of the framebuffer to the same
@@ -198,7 +224,8 @@ int vid_check_cable(void);
 */
 void vid_set_start(uint32 base);
 
-/** \brief  Set the current framebuffer in a multibuffered setup.
+/** \brief   Set the current framebuffer in a multibuffered setup.
+    \ingroup video
 
     This function sets the displayed framebuffer to the specified buffer and
     sets the vram_s and vram_l pointers to point at the next framebuffer, to
@@ -209,7 +236,8 @@ void vid_set_start(uint32 base);
 */
 void vid_flip(int fb);
 
-/** \brief  Set the border color of the display.
+/** \brief   Set the border color of the display.
+    \ingroup video
 
     This sets the color of the border area of the display. On some screens, the
     border area may not be shown at all, whereas on some displays you may see
@@ -222,7 +250,8 @@ void vid_flip(int fb);
 */
 uint32 vid_border_color(int r, int g, int b);
 
-/** \brief  Clear the display.
+/** \brief   Clear the display.
+    \ingroup video
 
     This function sets the whole display to the specified color. Internally,
     this uses the store queues to actually clear the display entirely.
@@ -233,20 +262,23 @@ uint32 vid_border_color(int r, int g, int b);
 */
 void vid_clear(int r, int g, int b);
 
-/** \brief  Clear VRAM.
+/** \brief   Clear VRAM.
+    \ingroup video
 
     This function is essentially a memset() for the whole of VRAM that will
     clear it all to 0 bytes.
 */
 void vid_empty(void);
 
-/** \brief  Wait for VBlank.
+/** \brief   Wait for VBlank.
+    \ingroup video
 
     This function busy loops until the vertical blanking period starts.
 */
 void vid_waitvbl(void);
 
-/** \brief  Set the video mode.
+/** \brief   Set the video mode.
+    \ingroup video
 
     This function sets the current video mode to the one specified by the
     parameters.
@@ -256,7 +288,8 @@ void vid_waitvbl(void);
 */
 void vid_set_mode(int dm, int pm);
 
-/** \brief  Set the video mode.
+/** \brief   Set the video mode.
+    \ingroup video
 
     This function sets the current video mode to the mode structure passed in.
     You can use this to add support to your program for modes that KOS doesn't
@@ -267,7 +300,8 @@ void vid_set_mode(int dm, int pm);
 */
 void vid_set_mode_ex(vid_mode_t *mode);
 
-/** \brief  Initialize the video system.
+/** \brief   Initialize the video system.
+    \ingroup video
 
     This function initializes the video display, setting the mode to the
     specified parameters, clearing vram, and setting the first framebuffer as
@@ -278,14 +312,16 @@ void vid_set_mode_ex(vid_mode_t *mode);
 */
 void vid_init(int disp_mode, int pixel_mode);
 
-/** \brief  Shut down the video system.
+/** \brief   Shut down the video system.
+    \ingroup video
 
     This function reinitializes the video system to what dcload and friends
     expect it to be.
 */
 void vid_shutdown(void);
 
-/** \brief  Take a screenshot.
+/** \brief   Take a screenshot.
+    \ingroup video
 
     This function takes the current framebuffer (vram_s/vram_l) and dumps it out
     to a PPM file.
