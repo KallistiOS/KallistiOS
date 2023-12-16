@@ -2,6 +2,7 @@
 !
 !   arch/dreamcast/kernel/thdswitch.s
 !   Copyright (c)2003 Megan Potter
+!   Copyright (C) 2023 Paul Cercueil <paul@crapouillou.net>
 !
 ! Assembler code for swapping out running threads
 !
@@ -36,73 +37,77 @@ _thd_block_now:
 	mov.l		idaddr,r0
 	jsr		@r0
 	nop
+
 	lds.l		@r15+,pr
+	add		#0x72,r4
+
+	mov		r0,r1
+	add		#0x72,r4
+
+	sts.l		fpscr,@-r4	! save FPSCR 0xe0
+
+	mov		r4,r3
+	add		#-4,r3
+	mov		#0x7,r2
+
+1:
+	! Write a bogus value (r0) at each (i*0x20) offset of the irq context
+	! structure, using the movca.l opcode. This will pre-allocate cache
+	! blocks that covers the whole memory area, without fetching data
+	! from RAM, which means that the stores will then be as fast as they
+	! can be.
+	movca.l		r0,@r3
+	dt		r2
+	bf/s		1b
+	add		#-0x20,r3
 
 	! Ok save the "permanent" GPRs
-	mov.l		r8,@(0x20,r4)	! Save R8
-	mov.l		r9,@(0x24,r4)	! Save R9
-	mov.l		r10,@(0x28,r4)	! Save R10
-	mov.l		r11,@(0x2c,r4)	! Save R11
-	mov.l		r12,@(0x30,r4)	! Save R12
-	mov.l		r13,@(0x34,r4)	! Save R13
-	mov.l		r14,@(0x38,r4)	! Save R14 (FP maybe)
-	mov.l		r15,@(0x3c,r4)	! Save R15 (SP)
+	mov.l		r15,@-r4	! save R15   0xdc
+	mov		#0x30,r2	! Set bits 20/21 to r2
+	mov.l		r14,@-r4	! save R14
+	shll16		r2
+	mov.l		r13,@-r4	! save R13
+	mov.l		r12,@-r4	! save R12
+	mov.l		r11,@-r4	! save R11
+	mov.l		r10,@-r4	! save R10
+	mov.l		r9,@-r4		! save R9
+	mov.l		r8,@-r4		! save R8    0xc0
+	add		#-0x20,r4	! Skip R7-R0
+
+	lds		r2,fpscr	! Reset FPSCR, switch to bank 2, 64-bit I/O
+
+	fmov		dr14,@-r4	! Save FR15/FR14  0x98
+	fmov		dr12,@-r4	! Save FR13/FR12
+	fmov		dr10,@-r4	! Save FR11/FR10
+	fmov		dr8,@-r4	! Save FR9/FR8
+	fmov		dr6,@-r4	! Save FR7/FR6
+	fmov		dr4,@-r4	! Save FR5/FR4
+	fmov		dr2,@-r4	! Save FR3/FR2
+	fmov		dr0,@-r4	! Save FR1/FR0    0x60
+	frchg				! Switch back to first bank
+
+	fmov		dr14,@-r4	! Save FR15/FR14  0x58
+	fmov		dr12,@-r4	! Save FR13/FR12
+	fmov		dr10,@-r4	! Save FR11/FR10
+	fmov		dr8,@-r4	! Save FR9/FR8
+	fmov		dr6,@-r4	! Save FR7/FR6
+	fmov		dr4,@-r4	! Save FR5/FR4
+	fmov		dr2,@-r4	! Save FR3/FR2
+	fmov		dr0,@-r4	! Save FR1/FR0    0x20
+	fschg				! Restore 32-bit I/O
 
 	! Save any machine words. We want the swapping-in of this task
 	! to simulate returning from this function, so what we'll do is
 	! put PR as PC. Everything else can stay the same.
-	add		#0x5c,r4	! readjust register ptr
-	mov.l		r0,@-r4		! save SR   0x58
-	sts.l		macl,@-r4	! save MACL 0x54
-	sts.l		mach,@-r4	! save MACH 0x50
-	stc.l		vbr,@-r4	! save VBR  0x4c
-	stc.l		gbr,@-r4	! save GBR  0x48
-	sts.l		pr,@-r4		! save PR   0x44
-	sts.l		pr,@-r4		! save "PC" 0x40
-
-	! Save FPRs. We could probably skimp on FR0-FR7 but it'd probably
-	! be more trouble than it's worth to figure out which bank we're
-	! currently on, etc.
-	add		#0x60,r4	! readjust register pointer
-	add		#0x44,r4
-	sts.l		fpul,@-r4	! save FPUL  0xe0
-	sts.l		fpscr,@-r4	! save FPSCR 0xdc
-	mov		#0,r2		! Set known FP flags
-	lds		r2,fpscr
-	fmov.s		fr15,@-r4	! save FR15  0xd8
-	fmov.s		fr14,@-r4	! save FR14
-	fmov.s		fr13,@-r4	! save FR13
-	fmov.s		fr12,@-r4	! save FR12
-	fmov.s		fr11,@-r4	! save FR11
-	fmov.s		fr10,@-r4	! save FR10
-	fmov.s		fr9,@-r4	! save FR9
-	fmov.s		fr8,@-r4	! save FR8
-	fmov.s		fr7,@-r4	! save FR7
-	fmov.s		fr6,@-r4	! save FR6
-	fmov.s		fr5,@-r4	! save FR5
-	fmov.s		fr4,@-r4	! save FR4
-	fmov.s		fr3,@-r4	! save FR3
-	fmov.s		fr2,@-r4	! save FR2
-	fmov.s		fr1,@-r4	! save FR1
-	fmov.s		fr0,@-r4	! save FR0   0x9c
-	frchg				! Second FP bank
-	fmov.s		fr15,@-r4	! save FR15  0x98
-	fmov.s		fr14,@-r4	! save FR14
-	fmov.s		fr13,@-r4	! save FR13
-	fmov.s		fr12,@-r4	! save FR12
-	fmov.s		fr11,@-r4	! save FR11
-	fmov.s		fr10,@-r4	! save FR10
-	fmov.s		fr9,@-r4	! save FR9
-	fmov.s		fr8,@-r4	! save FR8
-	fmov.s		fr7,@-r4	! save FR7
-	fmov.s		fr6,@-r4	! save FR6
-	fmov.s		fr5,@-r4	! save FR5
-	fmov.s		fr4,@-r4	! save FR4
-	fmov.s		fr3,@-r4	! save FR3
-	fmov.s		fr2,@-r4	! save FR2
-	fmov.s		fr1,@-r4	! save FR1
-	fmov.s		fr0,@-r4	! save FR0   0x5c
-	frchg				! First FP bank again
+	sts.l		fpul,@-r4	! save FPUL 0x1c
+	mov		r1,r0
+	mov.l		r0,@-r4		! save SR
+	sts.l		macl,@-r4	! save MACL
+	sts.l		mach,@-r4	! save MACH
+	stc.l		vbr,@-r4	! save VBR
+	stc.l		gbr,@-r4	! save GBR
+	sts.l		pr,@-r4		! save PR
+	sts.l		pr,@-r4		! save "PC" 0x00
 
 	! Ok, everything is saved now. There's no need to switch stacks or
 	! anything, because any stack usage by the thread scheduler will not

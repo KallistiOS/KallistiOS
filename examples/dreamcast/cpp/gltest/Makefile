@@ -18,7 +18,7 @@ rm-elf:
 	-rm -f $(TARGET) romdisk.*
 
 $(TARGET): $(OBJS)
-	kos-c++ -o $(TARGET) $(OBJS) -lGL -lkosutils
+	kos-c++ -o $(TARGET) $(OBJS) -lGL -lm -lkosutils
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)

@@ -16,9 +16,9 @@
 
 #include <kos.h>
 
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glut.h>
+#include <KGL/gl.h>
+#include <KGL/glu.h>
+#include <KGL/glut.h>
 
 /* Load a PVR texture - located in pvr-texture.c */
 extern GLuint glTextureLoadPVR(char *fname, unsigned char isMipMapped, unsigned char glMipMap);
@@ -69,9 +69,9 @@ void RenderInit(void) {
 
 /* Render a Textured Quad of given texture ID, width, and height */
 void RenderTexturedQuadCentered(GLuint texID, GLfloat width, GLfloat height) {
-    GLfloat x1 = (vid_mode->width - width) / 2.0;
+    GLfloat x1 = (vid_mode->width - width) / 2.0f;
     GLfloat x2 = x1 + width;
-    GLfloat y1 = (vid_mode->height - height) / 2.0;
+    GLfloat y1 = (vid_mode->height - height) / 2.0f;
     GLfloat y2 = y1 + height;
 
     glBindTexture(GL_TEXTURE_2D, texID);

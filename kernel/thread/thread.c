@@ -455,7 +455,7 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
 
     if(tid >= 0) {
         /* Create a new thread structure */
-        nt = malloc(sizeof(kthread_t));
+        nt = memalign(32, sizeof(kthread_t));
 
         if(nt != NULL) {
             /* Clear out potentially unused stuff */

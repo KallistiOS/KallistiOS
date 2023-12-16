@@ -66,8 +66,8 @@ void plasma_init(void) {
     hsv = 0.0f;
 
     for(i = 0; i < 512; i++) {
-        pcos[i] = (short)(fcos(i * 2 * (2 * M_PI / 512.0f)) * 256.0f);
-        psin[i] = (short)(fsin(i * 2 * (2 * M_PI / 512.0f)) * 256.0f);
+        pcos[i] = (short)(fcos(i * 2 * (2 * F_PI / 512.0f)) * 256.0f);
+        psin[i] = (short)(fsin(i * 2 * (2 * F_PI / 512.0f)) * 256.0f);
     }
 }
 

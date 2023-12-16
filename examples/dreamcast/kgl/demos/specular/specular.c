@@ -9,9 +9,9 @@
 
 #include <kos.h>
 
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glut.h>
+#include <KGL/gl.h>
+#include <KGL/glu.h>
+#include <KGL/glut.h>
 
 #include "vector.h"
 #include "input.h"
@@ -39,9 +39,9 @@
 static GLfloat z = -5.0f;   /* Depth Into The Screen */
 static GLuint texture[2];   /* Storage For Two Textures */
 
-static vector3f      up = { 0,  1,  0 },
-                     camFrom = { -74, 10, 0.0 },
-                     camTo = { -74, 10, 10.0 };
+static vector3f      up = { 0.0f,  1.0f,  0.0f },
+                     camFrom = { -74.0f, 10.0f, 0.0f },
+                     camTo = { -74.0f, 10.0f, 10.0f };
 
 typedef struct {
     float min,
@@ -946,7 +946,7 @@ void GPU_Stats(void) {
 
         if(fps.frame % 60 == 0) {
             printf("PVR FPS MIN: %.2f | MAX: %.2f | LAST: %.2f | AVG: %.2f\n",
-                   (double)fps.min, (double)fps.max, (double)fps.last, (double)fps.avg / fps.frame);
+                   (double)fps.min, (double)fps.max, (double)fps.last, (double)(fps.avg / fps.frame));
         }
     }
     else
@@ -1021,9 +1021,9 @@ int main() {
     glEnable(GL_LIGHT0);
 
     /* Set Light and Material Parameters */
-    float lp[4] = { 0.0, 10.0, 0.0, 0.0 };
-    float lp2[4] = { 0.0, 10.0, 0.0, 0.0 };
-    float lc[4] = { -50.0, 10.0, 0.0, 0.0 };
+    float lp[4] = { 0.0f, 10.0f, 0.0f, 0.0f };
+    float lp2[4] = { 0.0f, 10.0f, 0.0f, 0.0f };
+    float lc[4] = { -50, 10.0f, 0.0f, 0.0f };
     float lcolor[3] = { 0.8f, 0.0f, 0.0f };
     float lcolor2[3] = { 0.0f, 0.0f, 0.8f };
     float lcolors[3] = { 0.6f, 0.6f, 0.6f };
@@ -1034,30 +1034,30 @@ int main() {
     glLightfv(GL_LIGHT1, GL_DIFFUSE, lcolor2);
     glLightfv(GL_LIGHT1, GL_SPECULAR, lcolors);
 
-    float l3c[3] = { 0.5, 0.5, 0.0 };
-    float l3p[4] = { 0, -10, 0, 0 };
-    float l3d[3] = { 0, 1, 0 };
+    float l3c[3] = { 0.5f, 0.5f, 0.0f };
+    float l3p[4] = { 0.0f, -10.0f, 0.0f, 0.0f };
+    float l3d[3] = { 0.0f, 1.0f, 0.0f };
     glLightfv(GL_LIGHT2, GL_POSITION, l3p);
     glLightfv(GL_LIGHT2, GL_DIFFUSE, l3c);
     glLightfv(GL_LIGHT2, GL_SPOT_DIRECTION, l3d);
 
-    float l4c[3] = { 0.0, 0.5, 0.5 };
-    float l4p[4] = { -50, -10, 0, 0 };
-    float l4d[3] = { 0, 1, 0 };
+    float l4c[3] = { 0.0f, 0.5f, 0.5f };
+    float l4p[4] = { -50, -10.0f, 0.0f, 0.0f };
+    float l4d[3] = { 0.0f, 1.0f, 0.0f };
     glLightfv(GL_LIGHT3, GL_POSITION, l4p);
     glLightfv(GL_LIGHT3, GL_DIFFUSE, l4c);
     glLightfv(GL_LIGHT3, GL_SPOT_DIRECTION, l4d);
 
 
-    float l5c[3] = { 0.0, 0.8, 0.0 };
-    float l5p[4] = { -50, -10, 50, 0 };
-    float l5d[3] = { 0, 1, 0 };
+    float l5c[3] = { 0.0f, 0.8f, 0.0f };
+    float l5p[4] = { -50.0f, -10.0f, 50.0f, 0.0f};
+    float l5d[3] = { 0.0f, 1.0f, 0.0f };
     glLightfv(GL_LIGHT4, GL_POSITION, l5p);
     glLightfv(GL_LIGHT4, GL_DIFFUSE, l5c);
     glLightfv(GL_LIGHT4, GL_SPOT_DIRECTION, l5d);
 
     /* Set Material Parameters */
-    float Mat_Specular[3] = { 0.6, 0.6, 0.6 };
+    float Mat_Specular[3] = { 0.6f, 0.6f, 0.6f };
     glLightfv(GL_LIGHT0, GL_SPECULAR, Mat_Specular);
     glMaterialfv(GL_FRONT, GL_SPECULAR, Mat_Specular);
     glMaterialf(GL_FRONT, GL_SHININESS, 10.0f);

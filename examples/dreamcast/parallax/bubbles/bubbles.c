@@ -45,13 +45,13 @@ static void sphere(float radius, int slices, int stacks) {
 
     /* Iterate over stacks */
     for(i = 0; i < stacks; i++) {
-        pitch = 2 * M_PI * ((float)i / (float)stacks);
-        pitch2 = 2 * M_PI * ((float)(i + 1) / (float)stacks);
+        pitch = 2 * F_PI * ((float)i / (float)stacks);
+        pitch2 = 2 * F_PI * ((float)(i + 1) / (float)stacks);
 
         /* Iterate over slices: each entire stack will be one
            long triangle strip. */
         for(j = 0; j <= slices / 2; j++) {
-            yaw = 2 * M_PI * ((float)j / (float)slices);
+            yaw = 2 * F_PI * ((float)j / (float)slices);
 
             /* x, y+1 */
             x = radius * fcos(yaw) * fcos(pitch2);
@@ -107,7 +107,7 @@ static void sphere_frame_opaque(void) {
     plx_mat3d_push();
 
     for(i = 0; i < SPHERE_CNT; i++) {
-        plx_mat3d_translate(6.0f * fcos(i * 2 * M_PI / SPHERE_CNT), 0.0f, 6.0f * fsin(i * 2 * M_PI / SPHERE_CNT));
+        plx_mat3d_translate(6.0f * fcos(i * 2 * F_PI / SPHERE_CNT), 0.0f, 6.0f * fsin(i * 2 * F_PI / SPHERE_CNT));
         plx_mat3d_rotate(r, 1.0f, 1.0f, 1.0f);
         sphere(1.2f, 20, 20);
 
@@ -123,7 +123,7 @@ static void sphere_frame_opaque(void) {
     plx_mat3d_push();
 
     for(i = 0; i < SPHERE_CNT; i++) {
-        plx_mat3d_translate(3.0f * fcos(i * 2 * M_PI / SPHERE_CNT), 0.0f, 3.0f * fsin(i * 2 * M_PI / SPHERE_CNT));
+        plx_mat3d_translate(3.0f * fcos(i * 2 * F_PI / SPHERE_CNT), 0.0f, 3.0f * fsin(i * 2 * F_PI / SPHERE_CNT));
         plx_mat3d_rotate(r, 1.0f, 1.0f, 1.0f);
         sphere(0.8f, 20, 20);
 
@@ -137,7 +137,7 @@ static void sphere_frame_opaque(void) {
     pvr_scene_finish();
 
     r++;
-    phase += 2 * M_PI / 240.0f;
+    phase += 2 * F_PI / 240.0f;
 }
 
 static void sphere_frame_trans(void) {
@@ -156,7 +156,7 @@ static void sphere_frame_trans(void) {
     plx_mat3d_push();
 
     for(i = 0; i < SPHERE_CNT; i++) {
-        plx_mat3d_translate(4.0f * fcos(i * 2 * M_PI / SPHERE_CNT), 0.0f, 4.0f * fsin(i * 2 * M_PI / SPHERE_CNT));
+        plx_mat3d_translate(4.0f * fcos(i * 2 * F_PI / SPHERE_CNT), 0.0f, 4.0f * fsin(i * 2 * F_PI / SPHERE_CNT));
         plx_mat3d_rotate(r, 1.0f, 1.0f, 1.0f);
         sphere(1.0f, 20, 20);
 
@@ -170,7 +170,7 @@ static void sphere_frame_trans(void) {
     pvr_scene_finish();
 
     r++;
-    phase += 2 * M_PI / 240.0f;
+    phase += 2 * F_PI / 240.0f;
 }
 
 void do_sphere_test(void) {
@@ -235,7 +235,19 @@ pvr_init_params_t params = {
     { PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_0 },
 
     /* Vertex buffer size 512K */
-    512 * 1024
+    512 * 1024,
+
+    /* No DMA */
+    0,
+
+    /* No FSAA */
+    0,
+
+    /* Translucent Autosort enabled. */
+    0,
+
+    /* Extra OPBs */
+    3
 };
 
 int main(int argc, char **argv) {
@@ -251,7 +263,7 @@ int main(int argc, char **argv) {
     plx_mat3d_mode(PLX_MAT_MODELVIEW);
 
     /* Do the test */
-    printf("Bubbles KGL sample: press START to exit, A to toggle sphere type\n");
+    printf("Bubbles Parallax sample: press START to exit, A to toggle sphere type\n");
     do_sphere_test();
 
     return 0;

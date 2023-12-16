@@ -51,7 +51,6 @@ __BEGIN_DECLS
     \headerfile arch/irq.h
 */
 typedef struct irq_context {
-    uint32  r[16];      /**< \brief 16 general purpose (integer) registers */
     uint32  pc;         /**< \brief Program counter */
     uint32  pr;         /**< \brief Procedure register (aka return address) */
     uint32  gbr;        /**< \brief Global base register */
@@ -59,11 +58,12 @@ typedef struct irq_context {
     uint32  mach;       /**< \brief Multiply-and-accumulate register (high) */
     uint32  macl;       /**< \brief Multiply-and-accumulate register (low) */
     uint32  sr;         /**< \brief Status register */
-    uint32  frbank[16]; /**< \brief Secondary floating poing registers */
-    uint32  fr[16];     /**< \brief Primary floating point registers */
-    uint32  fpscr;      /**< \brief Floating-point status/control register */
     uint32  fpul;       /**< \brief Floatint-point communication register */
-} irq_context_t;
+    uint32  fr[16];     /**< \brief Primary floating point registers */
+    uint32  frbank[16]; /**< \brief Secondary floating poing registers */
+    uint32  r[16];      /**< \brief 16 general purpose (integer) registers */
+    uint32  fpscr;      /**< \brief Floating-point status/control register */
+} irq_context_t __attribute__((aligned(32)));
 
 /* A couple of architecture independent access macros */
 /** \brief   Fetch the program counter from an irq_context_t.
