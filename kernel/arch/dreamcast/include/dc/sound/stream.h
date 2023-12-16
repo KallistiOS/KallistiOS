@@ -97,13 +97,6 @@ void snd_stream_set_userdata(snd_stream_hnd_t hnd, void *d);
 */
 void *snd_stream_get_userdata(snd_stream_hnd_t hnd);
 
-/* Add an effect filter to the sound stream chain. When the stream
-   buffer filler needs more data, it starts out by calling the initial
-   callback (set above). It then calls each function in the effect
-   filter chain, which can modify the buffer and the amount of data
-   available as well. Filters persist across multiple calls to _init()
-   but will be emptied by _shutdown(). */
-
 /** \brief  Stream filter callback type.
 
     Functions providing filters over the stream data will be of this type, and
@@ -127,6 +120,12 @@ typedef void (*snd_stream_filter_t)(snd_stream_hnd_t hnd, void *obj, int hz,
 
     This function adds a filter to the specified stream. The filter will be
     called on each block of data input to the stream from then forward.
+
+    When the stream buffer filler needs more data, it starts out by calling
+    the initial callback (set above). It then calls each function in the
+    effect filter chain, which can modify the buffer and the amount of data
+    available as well. Filters persist across multiple calls to _init()
+    but will be emptied by _shutdown().
 
     \param  hnd             The stream to add the filter to.
     \param  filtfunc        A pointer to the filter function.
