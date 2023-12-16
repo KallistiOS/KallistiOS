@@ -5,8 +5,9 @@
 
 */
 
-/** \file   arch/irq.h
-    \brief  Interrupt and exception handling.
+/** \file    arch/irq.h
+    \brief   Interrupt and exception handling.
+    \ingroup irqs
 
     This file contains various definitions and declarations related to handling
     interrupts and exceptions on the Dreamcast. This level deals with IRQs and
@@ -25,7 +26,12 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 
-/** \brief  The number of bytes required to save thread context.
+/** \defgroup irqs  Interrupts
+    \brief          IRQs and ISRs for the SH4's CPU
+*/
+
+/** \brief   The number of bytes required to save thread context.
+    \ingroup irqs
 
     This should include all general CPU registers, FP registers, and status regs
     (even if not all of these are actually used).
@@ -35,7 +41,8 @@ __BEGIN_DECLS
 */
 #define REG_BYTE_CNT 256            /* Currently really 228 */
 
-/** \brief  Architecture-specific structure for holding the processor state.
+/** \brief   Architecture-specific structure for holding the processor state.
+    \ingroup irqs
 
     This structure should hold register values and other important parts of the
     processor state. The size of this structure should be less than or equal
@@ -59,31 +66,44 @@ typedef struct irq_context {
 } irq_context_t;
 
 /* A couple of architecture independent access macros */
-/** \brief  Fetch the program counter from an irq_context_t.
+/** \brief   Fetch the program counter from an irq_context_t.
+    \ingroup irqs
+
     \param  c               The context to read from.
+    
     \return                 The program counter value.
 */
 #define CONTEXT_PC(c)   ((c).pc)
 
-/** \brief  Fetch the frame pointer from an irq_context_t.
+/** \brief   Fetch the frame pointer from an irq_context_t.
+    \ingroup irqs
+
     \param  c               The context to read from.
+    
     \return                 The frame pointer value.
 */
 #define CONTEXT_FP(c)   ((c).r[14])
 
-/** \brief  Fetch the stack pointer from an irq_context_t.
+/** \brief   Fetch the stack pointer from an irq_context_t.
+    \ingroup irqs
+
     \param  c               The context to read from.
+    
     \return                 The stack pointer value.
 */
 #define CONTEXT_SP(c)   ((c).r[15])
 
-/** \brief  Fetch the return value from an irq_context_t.
+/** \brief   Fetch the return value from an irq_context_t.
+    \ingroup irqs
+    
     \param  c               The context to read from.
+    
     \return                 The return value.
 */
 #define CONTEXT_RET(c)  ((c).r[0])
 
-/** \defgroup irq_exception_codes   SH4 exception codes
+/** \defgroup irq_exception_codes   Exception Codes
+    \ingroup                        irqs
 
     These are all of the exceptions that can be raised on the SH4, and their
     codes. They're divided into several logical groups.
@@ -93,7 +113,7 @@ typedef struct irq_context {
 /* Dreamcast-specific exception codes.. use these when getting or setting an
    exception code value. */
 
-/** \defgroup irq_reset_codes       Reset type
+/** \defgroup irq_reset_codes       Reset Type
 
     These are exceptions that essentially cause a reset of the system. They
     cannot actually be caught by normal means. They will all automatically cause
@@ -108,7 +128,7 @@ typedef struct irq_context {
 #define EXC_DTLB_MULTIPLE   0x0140  /**< \brief Data TLB multiple hit */
 /** @} */
 
-/** \defgroup irq_reexec_codes      Re-Execution type
+/** \defgroup irq_reexec_codes      Re-Execution Type
 
     These exceptions will stop the currently processing instruction, and
     transition into exception processing. After handling the exception (assuming
@@ -135,7 +155,7 @@ typedef struct irq_context {
 #define EXC_INITIAL_PAGE_WRITE  0x0080  /**< \brief Initial page write exception */
 /** @} */
 
-/** \defgroup irq_completion_codes  Completion type
+/** \defgroup irq_completion_codes  Completion Type
 
     These exceptions are actually handled in-between instructions, allowing the
     instruction that causes them to finish completely. The saved PC thus is the
@@ -147,14 +167,15 @@ typedef struct irq_context {
 #define EXC_USER_BREAK_POST 0x01e0  /**< \brief User break after instruction */
 /** @} */
 
-/** \defgroup irq_interrupt_codes   Interrupt (completion type)
+/** \defgroup irq_interrupt_codes   Interrupt (Completion Type)
+
+    \note   Not all of these have any meaning on the Dreamcast. Those that have
+            no meaning are only included for completeness.
 
     These exceptions are caused by interrupt requests. These generally are from
     peripheral devices, but NMIs, timer interrupts, and DMAC interrupts are also
     included here.
 
-    \note   Not all of these have any meaning on the Dreamcast. Those that have
-            no meaning are only included for completeness.
     @{
 */
 #define EXC_NMI         0x01c0  /**< \brief Nonmaskable interrupt */
@@ -228,77 +249,100 @@ typedef struct irq_context {
 #define EXC_OFFSET_600  3   /**< \brief Offset 0x600 */
 /** @} */
 
-/** \brief  The value of the timer IRQ */
+/** \brief   The value of the timer IRQ
+    \ingroup irqs
+*/
 #define TIMER_IRQ       EXC_TMU0_TUNI0
 
-/** \brief  The type of an interrupt identifier */
+/** \brief   The type of an interrupt identifier 
+    \ingroup irqs
+*/
 typedef uint32 irq_t;
 
-/** \brief  The type of an IRQ handler
+/** \brief   The type of an IRQ handler
+    \ingroup irqs 
+
     \param  source          The IRQ that caused the handler to be called.
     \param  context         The CPU's context.
 */
 typedef void (*irq_handler)(irq_t source, irq_context_t *context);
 
-/** \brief  Are we inside an interrupt handler?
+/** \brief   Are we inside an interrupt handler?
+    \ingroup irqs
+
     \retval 1               If interrupt handling is in progress.
     \retval 0               If normal processing is in progress.
 */
 int irq_inside_int(void);
 
-/** \brief  Pretend like we just came in from an interrupt and force
-            a context switch back to the "current" context.
+/** \brief   Pretend like we just came in from an interrupt and force
+             a context switch back to the "current" context.
+    \ingroup irqs
 
+    \warning
     Make sure you've called irq_set_context() before doing this!
 */
 void irq_force_return(void);
 
-/** \brief  Set or remove an IRQ handler.
-
+/** \brief   Set or remove an IRQ handler.
+    \ingroup irqs
+    
     Passing a NULL value for hnd will remove the current handler, if any.
 
     \param  source          The IRQ type to set the handler for
                             (see \ref irq_exception_codes).
     \param  hnd             A pointer to a procedure to handle the exception.
+    
     \retval 0               On success.
     \retval -1              If the source is invalid.
 */
 int irq_set_handler(irq_t source, irq_handler hnd);
 
-/** \brief  Get the address of the current handler for the IRQ type.
+/** \brief   Get the address of the current handler for the IRQ type.
+    \ingroup irqs
+
     \param  source          The IRQ type to look up.
+    
     \return                 A pointer to the procedure to handle the exception.
 */
 irq_handler irq_get_handler(irq_t source);
 
-/** \brief  Set or remove a handler for a trapa code.
+/** \brief   Set or remove a handler for a trapa code.
+    \ingroup irqs
+    
     \param  code            The value passed to the trapa opcode.
     \param  hnd             A pointer to the procedure to handle the trap.
+
     \retval 0               On success.
     \retval -1              If the code is invalid (greater than 0xFF).
 */
 int trapa_set_handler(irq_t code, irq_handler hnd);
 
-/** \brief  Set a global exception handler.
+/** \brief   Set a global exception handler.
+    \ingroup irqs
 
     This function sets a global catch-all handler for all exception types.
 
-    \param  hnd             A pointer to the procedure to handle the exception.
-    \retval 0               On success (no error conditions defined).
     \note                   The specific handler will still be called for the
                             exception if one is set. If not, setting one of
                             these will stop the unhandled exception error.
+
+    \param  hnd             A pointer to the procedure to handle the exception.
+
+    \retval 0               On success (no error conditions defined).
 */
 int irq_set_global_handler(irq_handler hnd);
 
-/** \brief  Get the global exception handler.
+/** \brief   Get the global exception handler.
+    \ingroup irqs
 
     \return                 The global exception handler set with
                             irq_set_global_handler(), or NULL if none is set.
 */
 irq_handler irq_get_global_handler(void);
 
-/** \brief  Switch out contexts (for interrupt return).
+/** \brief   Switch out contexts (for interrupt return).
+    \ingroup irqs
 
     This function will set the processor state that will be restored when the
     exception returns.
@@ -307,7 +351,8 @@ irq_handler irq_get_global_handler(void);
 */
 void irq_set_context(irq_context_t *regbank);
 
-/** \brief  Get the current IRQ context.
+/** \brief   Get the current IRQ context.
+    \ingroup irqs
 
     This will fetch the processor context prior to the exception handling during
     an IRQ service routine.
@@ -316,8 +361,9 @@ void irq_set_context(irq_context_t *regbank);
 */
 irq_context_t *irq_get_context(void);
 
-/** \brief  Fill a newly allocated context block for usage with supervisor
-            or user mode.
+/** \brief   Fill a newly allocated context block for usage with supervisor
+             or user mode.
+    \ingroup irqs
 
     The given parameters will be passed to the called routine (up to the
     architecture maximum). For the Dreamcast, this maximum is 4.
@@ -334,7 +380,8 @@ void irq_create_context(irq_context_t *context, uint32 stack_pointer,
                         uint32 routine, uint32 *args, int usermode);
 
 /* Enable/Disable interrupts */
-/** \brief  Disable interrupts.
+/** \brief   Disable interrupts.
+    \ingroup irqs
 
     This function will disable interrupts, but will leave exceptions enabled.
 
@@ -344,13 +391,15 @@ void irq_create_context(irq_context_t *context, uint32 stack_pointer,
 */
 int irq_disable(void);
 
-/** \brief  Enable all interrupts.
+/** \brief   Enable all interrupts.
+    \ingroup irqs
 
     This function will enable ALL interrupts, including external ones.
 */
 void irq_enable(void);
 
-/** \brief  Restore IRQ state.
+/** \brief   Restore IRQ state.
+    \ingroup irqs
 
     This function will restore the interrupt state to the value specified. This
     should correspond to a value returned by irq_disable().
@@ -360,13 +409,16 @@ void irq_enable(void);
 */
 void irq_restore(int v);
 
-/** \brief  Initialize interrupts.
+/** \brief   Initialize interrupts.
+    \ingroup irqs
+
     \retval 0               On success (no error conditions defined).
 */
 int irq_init(void);
 
-/** \brief  Shutdown interrupts, restoring the state to how it was before
-            irq_init() was called.
+/** \brief   Shutdown interrupts, restoring the state to how it was before
+             irq_init() was called.
+    \ingroup irqs
 */
 void irq_shutdown(void);
 

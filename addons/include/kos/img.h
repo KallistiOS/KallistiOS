@@ -8,8 +8,9 @@
 #ifndef __KOS_IMG_H
 #define __KOS_IMG_H
 
-/** \file   kos/img.h
-    \brief  Platform-independent image type.
+/** \file    kos/img.h
+    \brief   Platform-independent image type.
+    \ingroup video_img
 
     This file provides a platform-independent image type that is designed to
     hold any sort of textures or other image data. This type contains a very
@@ -27,7 +28,13 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 
-/** \brief  Platform-indpendent image type.
+/** \defgroup video_img  Image Type
+    \brief               Platform-Independent Image Representation
+    \ingroup             video
+*/
+
+/** \brief   Platform-indpendent image type.
+    \ingroup video_img
 
     You can use this type for textures or whatever you feel it's appropriate
     for. "width" and "height" are as you would expect. "format" has a lower-half
@@ -52,6 +59,7 @@ typedef struct kos_img {
 } kos_img_t;
 
 /** \defgroup   kos_img_fmt_macros  Macros for accessing the format of an image
+    \ingroup                        video_img
 
     These macros provide easy access to the fmt field of a kos_img_t object.
 
@@ -63,6 +71,7 @@ typedef struct kos_img {
     of the value, which contains the platform-independent half of the format.
 
     \param  x           An image format (fmt field of a kos_img_t).
+    
     \return             The platform-independent half of the format.
 */
 #define KOS_IMG_FMT_I(x) ((x) & 0xffff)
@@ -73,6 +82,7 @@ typedef struct kos_img {
     of the value, which contains the platform-specific half of the format.
 
     \param  x           An image format (fmt field of a kos_img_t).
+    
     \return             The platform-specific half of the format.
 */
 #define KOS_IMG_FMT_D(x) (((x) >> 16) & 0xffff)
@@ -87,6 +97,7 @@ typedef struct kos_img {
     \param  i           The platform-independent half of the format.
     \param  d           The platform-specific half of the format. This should
                         not be pre-shifted.
+    
     \return             A complete image format value, suitable for placing in
                         the fmt variable of a kos_img_t.
 */
@@ -95,6 +106,7 @@ typedef struct kos_img {
 /** @} */
 
 /** \defgroup   kos_img_fmts        Image format types
+    \ingroup                        video_img
 
     This is the list of platform-independent image types that can be used as the
     lower-half of the fmt value for a kos_img_t.
@@ -153,7 +165,8 @@ typedef struct kos_img {
 
 /** @} */
 
-/** \brief  Free a kos_img_t object.
+/** \brief   Free a kos_img_t object.
+    \ingroup video_img
 
     This function frees the data in a kos_img_t object, returning any memory to
     the heap as appropriate. Optionally, this can also free the object itself,

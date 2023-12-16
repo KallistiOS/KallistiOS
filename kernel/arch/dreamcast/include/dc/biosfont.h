@@ -30,6 +30,7 @@ __BEGIN_DECLS
 
 /** \defgroup bfont     BIOS Font
     \brief              API for the Dreamcast's built-in BIOS font
+    \ingroup            video
 */
 
 /** \defgroup bfont_size  Dimensions of the Bios Font

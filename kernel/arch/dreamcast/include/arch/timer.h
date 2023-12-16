@@ -220,6 +220,8 @@ void timer_shutdown(void);
 /* \endcond */
 
 /** \defgroup   perf_counters Performance Counters
+    \brief                    SH4 CPU Performance Counter Driver
+
     The performance counter API exposes the SH4's hardware profiling registers, 
     which consist of two different sets of independently operable 64-bit 
     counters.

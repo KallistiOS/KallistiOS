@@ -4,8 +4,9 @@
    Copyright (C) 2012 Lawrence Sebald
 */
 
-/** \file   poll.h
-    \brief  Definitions for the poll() function.
+/** \file    poll.h
+    \brief   Definitions for the poll() function.
+    \ingroup threading_polling
 
     This file contains the definitions needed for using the poll() function, as
     directed by the POSIX 2008 standard (aka The Open Group Base Specifications
@@ -26,10 +27,18 @@
 
 __BEGIN_DECLS
 
-/** \brief  Type representing a number of file descriptors. */
+/** \defgroup threading_polling Polling
+    \brief                      POSIX poll() API
+    \ingroup                    threading
+*/
+
+/** \brief   Type representing a number of file descriptors. 
+    \ingroup threading_polling
+ */
 typedef __uint32_t nfds_t;
 
-/** \brief  Structure representing a single file descriptor used by poll().
+/** \brief   Structure representing a single file descriptor used by poll().
+    \ingroup threading_polling
     \headerfile poll.h
 */
 struct pollfd {
@@ -39,6 +48,7 @@ struct pollfd {
 };
 
 /** \defgroup poll_events               Events for the poll() function
+    \ingroup                            threading_polling
 
     These are the events that can be set in the events or revents fields of the
     struct pollfd.
@@ -59,7 +69,8 @@ struct pollfd {
 #define POLLIN      (POLLRDNORM | POLLRDBAND)
 /** @} */
 
-/** \brief  Poll a group of file descriptors for activity.
+/** \brief   Poll a group of file descriptors for activity.
+    \ingroup threading_polling
 
     This function will poll a group of file descriptors to check for the events
     specified on them. The function shall block for the specified period of time
@@ -73,9 +84,11 @@ struct pollfd {
     \param  timeout     Maximum amount of time to block, in milliseconds. Pass
                         0 to ensure the function does not block and -1 to block
                         for an "infinite" amount of time, until an event occurs.
+    
     \return             -1 on error (sets errno as appropriate), or the number
                         of file descriptors that matched the event flags before
                         the function returns.
+    
     \sa     poll_events
 */
 int poll(struct pollfd fds[], nfds_t nfds, int timeout);

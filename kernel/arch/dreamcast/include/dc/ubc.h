@@ -5,8 +5,9 @@
 
 */
 
-/** \file   dc/ubc.h
-    \brief  User-break controller support.
+/** \file    dc/ubc.h
+    \brief   User-break controller support.
+    \ingroup ubc
 
     This file defines some functionality for using the SH4 UBC.
 
@@ -21,8 +22,14 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 
+/** \defgroup ubc   User Break Controller
+    \brief          Driver for the SH4's UBC
+*/
+
 /* From the SH-4 PDF */
-/** \defgroup   ubc_regs    UBC Registers
+/** \defgroup   ubc_regs    Registers
+    \brief                  User Break Controller Registers
+    \ingroup                ubc
 
     These registers are as documented in the SH4 manual. Consult it for more
     information.
