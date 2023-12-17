@@ -51,7 +51,7 @@ __BEGIN_DECLS
 #include <arch/types.h>
 #include <sys/uio.h>
 
-/** \defgroup mmu   Memory Management Unit
+/** \defgroup mmu   MMU
     \brief          Driver for the SH4's MMU (disabled by default).
     \ingroup        system
 

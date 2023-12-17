@@ -39,7 +39,7 @@ __BEGIN_DECLS
 /** \defgroup vfs_sockets   Sockets
     \brief                  VFS Driver for adding a BSD-sockets-like
                             filesystem.
-    \ingroup  vfs
+    \ingroup  vfs_drivers
 */
 
 struct fs_socket_proto;

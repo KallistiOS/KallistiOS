@@ -8,7 +8,7 @@
 
 /** \file    dc/spu.h
     \brief   Functions related to sound.
-    \ingroup audio
+    \ingroup audio_driver
 
     This file deals with memory transfers and the like for the sound hardware.
 
@@ -25,6 +25,10 @@ __BEGIN_DECLS
 #include <arch/types.h>
 #include <arch/memory.h>
 #include <dc/g2bus.h>
+
+/** \addtogroup audio_driver
+    @{
+*/
 
 /** \brief  Sound ram address from the SH4 side */
 #define SPU_RAM_BASE 0x00800000
@@ -177,6 +181,8 @@ int spu_shutdown(void);
 
 /** \brief  Reset SPU channels. */
 void spu_reset_chans(void);
+
+/** @} */
 
 __END_DECLS
 

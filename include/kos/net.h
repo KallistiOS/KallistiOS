@@ -9,7 +9,7 @@
 
 /** \file    kos/net.h
     \brief   Network support.
-    \ingroup networking
+    \ingroup networking_drivers
 
     This file contains declarations related to networking support.
 

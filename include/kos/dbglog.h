@@ -45,7 +45,8 @@ __BEGIN_DECLS
 */
 void dbglog(int level, const char *fmt, ...) __printflike(2, 3);
 
-/** \defgroup   dbglog_levels   Log levels for dbglog
+/** \defgroup   dbglog_levels   Log Levels
+    \brief                      dbglog severity levels
     \ingroup                    logging
 
     This is the list of levels that are allowed to be passed into the dbglog()

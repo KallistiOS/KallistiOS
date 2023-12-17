@@ -7,7 +7,7 @@
 
 /** \file    dc/fs_iso9660.h
     \brief   ISO9660 (CD-ROM) filesystem driver.
-    \ingroup vfs
+    \ingroup gdrom
 
     This driver implements support for reading files from a CD-ROM or CD-R in
     the Dreamcast's disc drive. This filesystem mounts itself on /cd.
@@ -33,6 +33,10 @@ __BEGIN_DECLS
 #include <kos/limits.h>
 #include <kos/fs.h>
 
+/** \addtogroup gdrom
+    @{
+*/
+
 /** \brief  Reset the internal ISO9660 cache.
 
     This function resets the cache of the ISO9660 driver, breaking connections
@@ -47,6 +51,8 @@ int iso_reset(void);
 int fs_iso9660_init(void);
 int fs_iso9660_shutdown(void);
 /* \endcond */
+
+/** @} */
 
 __END_DECLS
 

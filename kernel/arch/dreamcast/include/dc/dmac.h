@@ -7,7 +7,7 @@
 
 /** \file    dc/dmac.h
     \brief   Macros to access the DMA controller registers. 
-    \ingroup system
+    \ingroup system_dmac
 
     This header provides a set of macros to facilitate checking
     the values of various DMA channels on the system.
@@ -28,6 +28,14 @@
 
 #include <sys/cdefs.h>
 __BEGIN_DECLS
+
+/** \defgroup system_dmac   DMA
+    \brief                  Driver for the SH4's Direct Memory Access 
+                            Controller
+    \ingroup                system
+
+    @{
+*/
 
 #define DMAC_BASE     0xffa00000
 
@@ -121,6 +129,8 @@ __BEGIN_DECLS
 
 #define DMAOR_STATUS_MASK       0x8007
 #define DMAOR_NORMAL_OPERATION  0x8001
+
+/** @} */
 
 /** @} */
 

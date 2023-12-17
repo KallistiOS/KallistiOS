@@ -7,7 +7,7 @@
 
 /** \file    arpa/inet.h
     \brief   Definitions for internet operations.
-    \ingroup networking
+    \ingroup networking_utils
 
     This file contains the standard definitions (as directed by the POSIX 2008
     standard) for several internet-related functions.
@@ -28,6 +28,13 @@ __BEGIN_DECLS
    headers visible. */
 #include <netinet/in.h>
 #include <inttypes.h>
+
+/** \defgroup networking_utils  Utilities
+    \brief                      Miscellaneous networking utilities
+    \ingroup                    networking
+
+    @{
+*/
 
 /** \brief  Convert a 32-bit value from host byte order to network byte order.
     \param  value           The value to convert.
@@ -147,6 +154,8 @@ const char *inet_ntop(int af, const void *src, char *dst, socklen_t size);
                             form).
 */
 char *inet_ntoa(struct in_addr addr);
+
+/** @} */
 
 __END_DECLS
 

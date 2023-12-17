@@ -7,7 +7,7 @@
 
 /** \file    kos/library.h
     \brief   Dynamically loadable library support.
-    \ingroup vfs
+    \ingroup system_libraries
 
     This file contains definitions for accessing loadable libraries at runtime.
     Each library has a name and a version number that it can be referenced by.
@@ -32,6 +32,13 @@ __BEGIN_DECLS
 #include <kos/thread.h>
 #include <kos/elf.h>
 #include <kos/fs.h>
+
+/** \defgroup system_libraries  Libraries
+    \brief                      API for managing dynamically loaded libraries
+    \ingroup                    system
+
+    @{
+*/
 
 /** \cond */
 /* Pre-define list/queue types */
@@ -269,6 +276,8 @@ int library_init(void);
 /* Shutdown */
 void library_shutdown(void);
 /** \endcond */
+
+/** @} */
 
 __END_DECLS
 

@@ -8,7 +8,7 @@
 
 /** \file    arch/cache.h
     \brief   Cache management functionality.
-    \ingroup system
+    \ingroup system_cache
 
     This file contains definitions for functions that manage the cache in the
     Dreamcast, including functions to flush, invalidate, purge, prefetch and
@@ -27,6 +27,13 @@ __BEGIN_DECLS
 
 #include <stdint.h>
 #include <arch/types.h>
+
+/** \defgroup system_cache Cache
+    \brief                 Driver and API for managing the SH4's cache
+    \ingroup               system
+
+    @{
+*/
 
 /** \brief  SH4 cache block size.
 
@@ -153,6 +160,7 @@ static __always_inline void dcache_alloc_block(const void *src, uint32_t value) 
     );
 }
 
+/** @} */
 
 __END_DECLS
 

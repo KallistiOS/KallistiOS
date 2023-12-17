@@ -7,7 +7,7 @@
 
 /** \file    kos/exports.h
     \brief   Kernel exported symbols support.
-    \ingroup vfs
+    \ingroup system_libraries
 
     This file contains support related to dynamic linking of the kernel of KOS.
     The kernel (at compile time) produces a list of exported symbols, which can
@@ -23,6 +23,10 @@
 __BEGIN_DECLS
 
 #include <arch/types.h>
+
+/** \addtogroup system_libraries
+    @{
+*/
 
 /** \brief  A single export symbol.
 
@@ -64,6 +68,8 @@ void export_init(void);
     \return                 The export structure, or NULL on failure
 */
 export_sym_t * export_lookup(const char * name);
+
+/** @} */
 
 __END_DECLS
 

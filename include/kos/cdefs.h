@@ -10,7 +10,7 @@
 
 /** \file    kos/cdefs.h
     \brief   Definitions for builtin attributes and compiler directives
-    \ingroup system
+    \ingroup system_macros
 
     This file contains definitions of various __attribute__ directives in
     shorter forms for use in programs. These typically aid  in optimizations
@@ -25,6 +25,13 @@
 #define __KOS_CDEFS_H
 
 #include <sys/cdefs.h>
+
+/** \defgroup system_macros     Macros
+    \brief                      Various common macros used throughout the codebase
+    \ingroup                    system
+    
+    @{
+*/
 
 /* Check GCC version */
 #if __GNUC__ <= 3
@@ -168,5 +175,7 @@
 #ifndef __GNUC__
 #define __extension__
 #endif
+
+/** @} */
 
 #endif  /* __KOS_CDEFS_H */

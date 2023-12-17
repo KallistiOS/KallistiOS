@@ -9,7 +9,7 @@
 
 /** \file    dc/sound/stream.h
     \brief   Sound streaming support.
-    \ingroup audio
+    \ingroup audio_streaming
 
     This file contains declarations for doing streams of sound. This underlies
     pretty much any decoded sounds you might use, including the Ogg Vorbis
@@ -29,6 +29,12 @@
 __BEGIN_DECLS
 
 #include <arch/types.h>
+
+/** \defgroup audio_streaming   Streaming
+    \brief                      Streaming audio playback and management
+    \ingroup                    audio
+    @{
+*/
 
 /** \brief  The maximum number of streams that can be allocated at once. */
 #define SND_STREAM_MAX 4
@@ -302,6 +308,8 @@ int snd_stream_poll(snd_stream_hnd_t hnd);
     \param  vol             The volume to set. Valid values are 0-255.
 */
 void snd_stream_volume(snd_stream_hnd_t hnd, int vol);
+
+/** @} */
 
 __END_DECLS
 

@@ -21,7 +21,7 @@
 
 /** \file   pthread.h
     \brief  POSIX-compatibile (sorta) threading support.
-    \ingroup threading
+    \ingroup threading_posix
 
     This file was imported (with a few changes) from Newlib. If you really want
     to know about the functions in here, you should probably consult the Single

@@ -54,7 +54,7 @@ __BEGIN_DECLS
 
 /** \defgroup vfs_ext2  EXT2 
     \brief              KOS VFS support for the Second Extended Filesystem
-    \ingroup            vfs
+    \ingroup            vfs_drivers
 */
 
 /** \brief   Initialize fs_ext2.

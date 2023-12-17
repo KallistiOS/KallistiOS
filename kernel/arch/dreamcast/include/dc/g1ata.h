@@ -42,7 +42,7 @@ __BEGIN_DECLS
 
 /** \defgroup g1ata G1 ATA
     \brief          Driver for Accessing an ATA device on the G1 Bus
-    \ingroup        vfs
+    \ingroup        vfs_drivers
 */
 
 /** \defgroup ata_devices   ATA device definitions

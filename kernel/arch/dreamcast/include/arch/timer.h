@@ -435,10 +435,13 @@ void timer_shutdown(void);
 */
 #define PMCR_COUNT_RATIO_CYCLES 1
 
-/** \defgroup   perf_counters_modes Performance Counter Modes
+/** \defgroup   perf_counters_modes Modes
+    \brief                          Performance Counter Modes
+    \ingroup                        perf_counters
+
     This is the list of modes that are allowed to be passed into the perf_cntr_start()
     function, representing different things you want to count.
-    \ingroup perf_counters
+    
     @{
 */
 /*                MODE DEFINITION                  VALUE   MEASURMENT TYPE & NOTES */

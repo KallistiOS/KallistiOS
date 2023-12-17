@@ -7,7 +7,7 @@
 
 /** \file    kos/fs_romdisk.h
     \brief   ROMFS virtual file system.
-    \ingroup vfs
+    \ingroup vfs_romdisk
 
     This file contains support for the romdisk VFS. This VFS allows you to make
     Linux-style ROMFS images and either embed them into your binary or load them
@@ -30,6 +30,13 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 #include <kos/fs.h>
+
+/** \defgroup vfs_romdisk   Romdisk
+    \brief                  VFS driver for accessing romdisks binaries
+    \ingroup                vfs
+
+    @{
+*/
 
 /** \cond */
 /* Initialize the file system */
@@ -76,6 +83,8 @@ int fs_romdisk_mount(const char * mountpoint, const uint8 *img, int own_buffer);
     \em     ENOENT - no such ROMFS was mounted
 */
 int fs_romdisk_unmount(const char * mountpoint);
+
+/** @} */
 
 __END_DECLS
 

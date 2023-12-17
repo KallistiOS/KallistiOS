@@ -19,5 +19,9 @@
     will give you the least indirection; however, if you're writing a 
     cross-platform application or simply want to use an API that you're 
     familiar with, one of the other cross-platform APIs may be preferable. 
+*/
 
+/** \defgroup threading_posix   POSIX
+    \brief                      POSIX threading and concurrency APIs 
+    \ingroup                    threading
 */

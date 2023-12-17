@@ -1,13 +1,13 @@
 /* KallistiOS ##version##
 
    dc/vblank.h
-   Copyright (C)2003 Megan Potter
+   Copyright (C) 2003 Megan Potter
 
 */
 
 /** \file    dc/vblank.h
     \brief   VBlank handler registration.
-    \ingroup system
+    \ingroup system_vblank
 
     This file allows functions to be registered to be called on each vblank
     interrupt that occurs. This gives a way to schedule small functions that
@@ -24,6 +24,13 @@ __BEGIN_DECLS
 
 #include <dc/asic.h>
 
+/** \defgroup system_vblank     VBlank
+    \brief                      VBlank interrupt handler management
+    \ingroup                    system
+
+    @{
+*/
+
 /** \brief  Add a vblank handler.
 
     This function adds a handler to the vblank handler list. The function will
@@ -31,6 +38,7 @@ __BEGIN_DECLS
     were passed to the IRQ handler for vblanks.
 
     \param  hnd             The handler to add.
+    
     \return                 The handle id on success, or <0 on failure.
 */
 int vblank_handler_add(asic_evt_handler hnd);
@@ -41,6 +49,7 @@ int vblank_handler_add(asic_evt_handler hnd);
 
     \param  handle          The handle id to remove (returned by
                             vblank_handler_add() when the handler was added).
+    
     \retval 0               On success.
     \retval -1              On failure.
 */
@@ -54,6 +63,8 @@ int vblank_init(void);
 /** Shut down the vblank handler. */
 int vblank_shutdown(void);
 /* \endcond */
+
+/** @} */
 
 __END_DECLS
 

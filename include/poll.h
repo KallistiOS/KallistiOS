@@ -6,7 +6,7 @@
 
 /** \file    poll.h
     \brief   Definitions for the poll() function.
-    \ingroup threading_polling
+    \ingroup threading_posix
 
     This file contains the definitions needed for using the poll() function, as
     directed by the POSIX 2008 standard (aka The Open Group Base Specifications
@@ -27,9 +27,8 @@
 
 __BEGIN_DECLS
 
-/** \defgroup threading_polling Polling
-    \brief                      POSIX poll() API
-    \ingroup                    threading
+/** \addtogroup threading_posix
+    @{
 */
 
 /** \brief   Type representing a number of file descriptors. 
@@ -92,6 +91,8 @@ struct pollfd {
     \sa     poll_events
 */
 int poll(struct pollfd fds[], nfds_t nfds, int timeout);
+
+/** @} */
 
 __END_DECLS
 

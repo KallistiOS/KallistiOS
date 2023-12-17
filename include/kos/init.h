@@ -40,7 +40,7 @@ __BEGIN_DECLS
 #include <kos/init_base.h>
 #include <stdint.h>
 
-/** \defgroup init_flags Initialization Flags
+/** \defgroup init_flags Initialization
     \brief               KOS Driver Subystem and Component Initialization Flags
     \ingroup             system
 */

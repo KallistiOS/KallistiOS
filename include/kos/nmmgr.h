@@ -7,7 +7,7 @@
 
 /** \file    kos/nmmgr.h
     \brief   Name manager.
-    \ingroup vfs
+    \ingroup system_namemgr
 
     This file contains the definitions of KOS' name manager. A "name" is a
     generic identifier for some kind of module. These modules may include
@@ -26,23 +26,23 @@ __BEGIN_DECLS
 #include <kos/limits.h>
 #include <sys/queue.h>
 
-/** \defgroup vfs_namemgr   Name Manager
-    \brief                  Abstract Module System for KOS's VFS
-    \ingroup                vfs
+/** \defgroup system_namemgr Name Manager
+    \brief                   Abstract Module System for KOS's VFS
+    \ingroup                 system
 */
 
 /* Pre-define list types */
 struct nmmgr_handler;
 
 /** \brief   Name handler list type.
-    \ingroup vfs_namemgr
+    \ingroup system_namemgr
 
     Contrary to what doxygen may think, this is not a function.
 */
 typedef LIST_HEAD(nmmgr_list, nmmgr_handler) nmmgr_list_t;
 
 /** \brief   List entry initializer for static structs.
-    \ingroup vfs_namemgr
+    \ingroup system_namemgr
 
     If you are creating nmmgr handlers, this is what you should initialize the
     list_ent member with.
@@ -50,7 +50,7 @@ typedef LIST_HEAD(nmmgr_list, nmmgr_handler) nmmgr_list_t;
 #define NMMGR_LIST_INIT { NULL }
 
 /** \brief   Name handler interface.
-    \ingroup vfs_namemgr
+    \ingroup system_namemgr
 
     Every name handler must begin its information structures with this header.
     If the handler conforms to some well-defined interface (such as a VFS), then
@@ -74,13 +74,13 @@ typedef struct nmmgr_handler {
 
 /* Flag bits */
 /** \brief  This structure must be freed when removed. 
-    \ingroup vfs_namemgr
+    \ingroup system_namemgr
 */
 #define NMMGR_FLAGS_NEEDSFREE   0x00000001
 
 /** \defgroup   nmmgr_types     Handler Types
     \brief                      Name handler types
-    \ingroup                    vfs_namemgr
+    \ingroup                    system_namemgr
 
     This is the set of all defined types of name manager handlers. All system
     types are defined below NMMGR_SYS_MAX.
@@ -102,7 +102,7 @@ typedef struct nmmgr_handler {
 /** @} */
 
 /** \brief   Retrieve a name handler by name.
-    \ingroup vfs_namemgr
+    \ingroup system_namemgr
 
     This function will retrieve a name handler by its pathname.
 
@@ -113,7 +113,7 @@ typedef struct nmmgr_handler {
 nmmgr_handler_t * nmmgr_lookup(const char *name);
 
 /** \brief   Get the head element of the name list.
-    \ingroup vfs_namemgr
+    \ingroup system_namemgr
     
     \warning
     DO NOT MODIFY THE VALUE RETURNED BY THIS FUNCTION! In fact, don't ever call
@@ -124,7 +124,7 @@ nmmgr_handler_t * nmmgr_lookup(const char *name);
 nmmgr_list_t * nmmgr_get_list(void);
 
 /** \brief   Add a name handler.
-    \ingroup vfs_namemgr
+    \ingroup system_namemgr
 
     This function adds a new name handler to the list in the kernel.
 
@@ -135,7 +135,7 @@ nmmgr_list_t * nmmgr_get_list(void);
 int nmmgr_handler_add(nmmgr_handler_t *hnd);
 
 /** \brief   Remove a name handler.
-    \ingroup vfs_namemgr
+    \ingroup system_namemgr
 
     This function removes a name handler from the list in the kernel.
 

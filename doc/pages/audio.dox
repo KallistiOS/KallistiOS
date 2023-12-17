@@ -1,0 +1,3 @@
+/** \defgroup audio Audio
+    \brief    APIs for audio, sfx, and music playback and management
+*/

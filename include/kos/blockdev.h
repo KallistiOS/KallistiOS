@@ -6,7 +6,7 @@
 
 /** \file    kos/blockdev.h
     \brief   Definitions for a simple block device interface.
-    \ingroup vfs
+    \ingroup vfs_blockdev
 
     This file contains the definition of a very simple block device that is to
     be used with filesystems in the kernel. This device interface is designed to
@@ -30,6 +30,13 @@ __BEGIN_DECLS
 
 #include <stdint.h>
 #include <sys/types.h>
+
+/** \defgroup vfs_blockdev  Block Devices
+    \brief                  VFS driver for accessing block devices
+    \ingroup                vfs_drivers
+
+    @{
+*/
 
 /** \brief  A simple block device.
 
@@ -123,6 +130,8 @@ typedef struct kos_blockdev {
     */
     int (*flush)(struct kos_blockdev *d);
 } kos_blockdev_t;
+
+/** @} */
 
 __END_DECLS
 

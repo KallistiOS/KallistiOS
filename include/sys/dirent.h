@@ -7,7 +7,7 @@
 
 /** \file    dirent.h
     \brief   Directory entry functionality.
-    \ingroup vfs
+    \ingroup vfs_posix
 
     This partially implements the standard POSIX dirent.h functionality.
 
@@ -24,6 +24,10 @@ __BEGIN_DECLS
 #include <unistd.h>
 #include <arch/types.h>
 #include <kos/fs.h>
+
+/** \addtogroup vfs_posix
+    @{
+*/
 
 /** \brief  POSIX directory entry structure.
 
@@ -141,6 +145,8 @@ void seekdir(DIR *dir, off_t offset);
 
 /** \brief Not implemented */
 off_t telldir(DIR *dir);
+
+/** @} */
 
 __END_DECLS
 

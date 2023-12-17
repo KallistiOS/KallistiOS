@@ -8,7 +8,7 @@
 
 /** \file    dc/maple/purupuru.h
     \brief   Definitions for using the Puru Puru (Jump) Pack.
-    \ingroup peripherals
+    \ingroup peripherals_rumble
 
     This file contains the definitions needed to access maple jump pack devices.
     Puru Puru was Sega's internal name for the device, hence why its referred to
@@ -38,6 +38,13 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 #include <dc/maple.h>
+
+/** \defgroup peripherals_rumble    Rumble Pack
+    \brief                          Maple driver for vibration pack peripherals
+    \ingroup                        peripherals
+
+    @{
+*/
 
 /** \brief  Effect generation structure.
 
@@ -183,6 +190,8 @@ int purupuru_rumble_raw(maple_device_t *dev, uint32 effect);
 void purupuru_init(void);
 void purupuru_shutdown(void);
 /* \endcond */
+
+/** @} */
 
 __END_DECLS
 

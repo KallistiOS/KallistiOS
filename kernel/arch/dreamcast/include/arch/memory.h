@@ -23,7 +23,7 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-/** \defgroup memory Memory
+/** \defgroup memory Address Space
     \brief    Basics of the SH4 Memory Map
     \ingroup  system
 

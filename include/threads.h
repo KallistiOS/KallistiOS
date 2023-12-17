@@ -6,7 +6,7 @@
 
 /** \file   threads.h
     \brief  C11 Threading API.
-    \ingroup threading
+    \ingroup threading_c11
 
     This file contains the definitions needed for using C11 threads. The C11
     standard defines a number of threading-related primitives, which we wrap
@@ -36,6 +36,13 @@
 #include <kos/tls.h>
 
 __BEGIN_DECLS
+
+/** \defgroup threading_c11     C11
+    \brief                      C11 Threading APIs
+    \ingroup                    threading
+    
+    @{
+*/
 
 /** \name Return values
     \brief C11 Thread function return values
@@ -498,6 +505,8 @@ extern void *tss_get(tss_t key);
     \retval thrd_error      If the request cannot be honored.
 */
 extern int tss_set(tss_t key, void *val);
+
+/** @} */
 
 __END_DECLS
 

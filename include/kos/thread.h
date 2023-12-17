@@ -39,9 +39,9 @@ __BEGIN_DECLS
 #include <sys/reent.h>
 #include <stdint.h>
 
-/** \defgroup kthreads Kernel Threads
-    \brief    KOS Native Threading API
-    \ingroup  threading
+/** \defgroup kthreads  Kernel
+    \brief              KOS Native Kernel Threading API
+    \ingroup            threading
 
     The thread scheduler itself is a relatively simplistic priority scheduler.
     There is no provision for priorities to erode over time, so keep that in

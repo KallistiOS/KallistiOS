@@ -7,7 +7,7 @@
 
 /** \file    dc/matrix3d.h
     \brief   3D matrix operations.
-    \ingroup math
+    \ingroup math_matrices
 
     This file contains various 3D matrix math functionality for using the SH4's
     matrix transformation unit.
@@ -23,6 +23,10 @@
 __BEGIN_DECLS
 
 #include <dc/matrix.h>
+
+/** \addtogroup math_matrices
+    @{
+*/
 
 /** \brief  Rotate around the X-axis.
 
@@ -102,6 +106,8 @@ void mat_perspective(float xcenter, float ycenter, float cot_fovy_2,
     \param  up              The up vector.
 */
 void mat_lookat(const point_t * eye, const point_t * center, const vector_t * up);
+
+/** @} */
 
 __END_DECLS
 

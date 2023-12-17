@@ -37,7 +37,7 @@ __BEGIN_DECLS
 
 /** \defgroup vfs_fat   FAT
     \brief              FAT 12, 16, and 32-bit support for KOS's VFS
-    \ingroup            vfs
+    \ingroup            vfs_drivers
 */
 
 /** \brief   Initialize fs_fat.

@@ -8,7 +8,7 @@
 
 /** \file    kos/fs.h
     \brief   Virtual filesystem support.
-    \ingroup vfs
+    \ingroup vfs_generic
 
     This file contains the interface to the virtual filesystem (VFS) of KOS. The
     functions defined in this file make up the base of the filesystem operations
@@ -36,8 +36,9 @@ __BEGIN_DECLS
 
 #include <kos/nmmgr.h>
 
-/** \defgroup vfs   Filesystem
-    \brief          File I/O, filesystem, and storage media APIs
+/** \defgroup vfs_generic   Generic
+    \brief                  Generic, uniform access to a virtual filesystems
+    \ingroup                vfs
     @{
 */
 
@@ -218,8 +219,6 @@ struct fs_hnd;
 extern struct fs_hnd *fd_table[FD_SETSIZE];
 /** \endcond */
 
-/** @} */ 
-
 /* Open modes */
 #include <sys/fcntl.h>
 
@@ -249,7 +248,6 @@ extern struct fs_hnd *fd_table[FD_SETSIZE];
 
 /* Standard file descriptor functions */
 /** \brief   Open a file on the VFS.
-    \ingroup vfs
 
     This function opens the specified file, returning a new file descriptor to
     access the file.
@@ -266,7 +264,6 @@ extern struct fs_hnd *fd_table[FD_SETSIZE];
 file_t fs_open(const char *fn, int mode);
 
 /** \brief   Close an opened file.
-    \ingroup vfs
 
     This function closes the specified file descriptor, releasing all resources
     associated with the descriptor.
@@ -278,7 +275,6 @@ file_t fs_open(const char *fn, int mode);
 int fs_close(file_t hnd);
 
 /** \brief   Read from an opened file.
-    \ingroup vfs
 
     This function reads into the specified buffer from the file at its current
     file pointer.
@@ -294,7 +290,6 @@ int fs_close(file_t hnd);
 ssize_t fs_read(file_t hnd, void *buffer, size_t cnt);
 
 /** \brief   Write to an opened file.
-    \ingroup vfs
 
     This function writes the specfied buffer into the file at the current file
     pointer.
@@ -310,7 +305,6 @@ ssize_t fs_read(file_t hnd, void *buffer, size_t cnt);
 ssize_t fs_write(file_t hnd, const void *buffer, size_t cnt);
 
 /** \brief   Seek to a new position within a file.
-    \ingroup vfs
 
     This function moves the file pointer to the specified position within the
     file (the base of this position is determined by the whence parameter).
@@ -325,7 +319,6 @@ ssize_t fs_write(file_t hnd, const void *buffer, size_t cnt);
 off_t fs_seek(file_t hnd, off_t offset, int whence);
 
 /** \brief   Seek to a new position within a file (64-bit offsets).
-    \ingroup vfs
 
     This function moves the file pointer to the specified position within the
     file (the base of this position is determined by the whence parameter).
@@ -340,7 +333,6 @@ off_t fs_seek(file_t hnd, off_t offset, int whence);
 _off64_t fs_seek64(file_t hnd, _off64_t offset, int whence);
 
 /** \brief   Retrieve the position of the pointer within a file.
-    \ingroup vfs
 
     This function retrieves the current location of the file pointer within an
     opened file. This is an offset in bytes from the start of the file.
@@ -352,7 +344,6 @@ _off64_t fs_seek64(file_t hnd, _off64_t offset, int whence);
 off_t fs_tell(file_t hnd);
 
 /** \brief   Retrieve the position of the 64-bit pointer within a file.
-    \ingroup vfs
 
     This function retrieves the current location of the file pointer within an
     opened file. This is an offset in bytes from the start of the file.
@@ -364,7 +355,6 @@ off_t fs_tell(file_t hnd);
 _off64_t fs_tell64(file_t hnd);
 
 /** \brief   Retrieve the length of an opened file.
-    \ingroup vfs
 
     This file retrieves the length of the file associated with the given file
     descriptor.
@@ -379,7 +369,6 @@ _off64_t fs_tell64(file_t hnd);
 size_t fs_total(file_t hnd);
 
 /** \brief   Retrieve the length of an opened file as a 64-bit integer.
-    \ingroup vfs
 
     This file retrieves the length of the file associated with the given file
     descriptor.
@@ -395,7 +384,6 @@ uint64 fs_total64(file_t hnd);
 
 
 /** \brief   Read an entry from an opened directory.
-    \ingroup vfs
 
     This function reads the next entry from the directory specified by the given
     file descriptor.
@@ -407,7 +395,6 @@ uint64 fs_total64(file_t hnd);
 dirent_t *fs_readdir(file_t hnd);
 
 /** \brief   Execute a device-specific command on a file descriptor.
-    \ingroup vfs
 
     The types and formats of the commands are device/filesystem specific, and
     are not documented here. Each filesystem may define any commands that are
@@ -422,7 +409,6 @@ dirent_t *fs_readdir(file_t hnd);
 int fs_ioctl(file_t hnd, int cmd, ...);
 
 /** \brief   Rename the specified file to the given filename.
-    \ingroup vfs
 
     This function renames the file specified by the first argument to the second
     argument. The two paths should be on the same filesystem.
@@ -435,7 +421,6 @@ int fs_ioctl(file_t hnd, int cmd, ...);
 int fs_rename(const char *fn1, const char *fn2);
 
 /** \brief   Delete the specified file.
-    \ingroup vfs
 
     This function deletes the specified file from the filesystem. This should
     only be used for files, not for directories. For directories, use fs_rmdir()
@@ -448,7 +433,6 @@ int fs_rename(const char *fn1, const char *fn2);
 int fs_unlink(const char *fn);
 
 /** \brief   Change the current working directory of the current thread.
-    \ingroup vfs
 
     This function changes the current working directory for the current thread.
     Any relative paths passed into file-related functions will be relative to
@@ -461,7 +445,6 @@ int fs_unlink(const char *fn);
 int fs_chdir(const char *fn);
 
 /** \brief   Memory-map a previously opened file.
-    \ingroup vfs
 
     This file "maps" the opened file into memory, reading the whole file into a
     buffer, and returning that buffer. The returned buffer should not be freed,
@@ -481,7 +464,6 @@ int fs_chdir(const char *fn);
 void *fs_mmap(file_t hnd);
 
 /** \brief   Perform an I/O completion on the given file descriptor.
-    \ingroup vfs
 
     This function is used with asynchronous I/O to perform an I/O completion on
     the given file descriptor.
@@ -499,7 +481,6 @@ void *fs_mmap(file_t hnd);
 int fs_complete(file_t fd, ssize_t *rv);
 
 /** \brief   Create a directory.
-    \ingroup vfs
 
     This function creates the specified directory, if possible.
 
@@ -509,7 +490,6 @@ int fs_complete(file_t fd, ssize_t *rv);
 int fs_mkdir(const char *fn);
 
 /** \brief   Remove a directory by name.
-    \ingroup vfs
 
     This function removes the specified directory. The directory shall only be
     removed if it is empty.
@@ -521,7 +501,6 @@ int fs_mkdir(const char *fn);
 int fs_rmdir(const char *fn);
 
 /** \brief   Manipulate file control flags.
-    \ingroup vfs
 
     This function implements the standard C fcntl function.
 
@@ -534,7 +513,6 @@ int fs_rmdir(const char *fn);
 int fs_fcntl(file_t fd, int cmd, ...);
 
 /** \brief   Create a hard link.
-    \ingroup vfs
 
     This function implements the POSIX function link(), which creates a hard
     link for an existing file.
@@ -552,7 +530,6 @@ int fs_fcntl(file_t fd, int cmd, ...);
 int fs_link(const char *path1, const char *path2);
 
 /** \brief   Create a symbolic link.
-    \ingroup vfs
 
     This function implements the POSIX function symlink(), which creates a
     symbolic link on the filesystem. Symbolic links are not required to point to
@@ -572,7 +549,6 @@ int fs_link(const char *path1, const char *path2);
 int fs_symlink(const char *path1, const char *path2);
 
 /** \brief   Read the value of a symbolic link.
-    \ingroup vfs
 
     This function implements the POSIX function readlink(), which simply reads
     the value of the symbolic link at the end of a path. This does not resolve
@@ -595,7 +571,6 @@ int fs_symlink(const char *path1, const char *path2);
 ssize_t fs_readlink(const char *path, char *buf, size_t bufsize);
 
 /** \brief   Retrieve information about the specified path.
-    \ingroup vfs
 
     This function retrieves status information on the given path. This function
     now returns the normal POSIX-style struct stat, rather than the old KOS
@@ -614,7 +589,6 @@ ssize_t fs_readlink(const char *path, char *buf, size_t bufsize);
 int fs_stat(const char *path, struct stat *buf, int flag);
 
 /** \brief   Rewind a directory to the start.
-    \ingroup vfs
 
     This function rewinds the position of a directory stream to the beginning of
     the directory.
@@ -630,7 +604,6 @@ int fs_stat(const char *path, struct stat *buf, int flag);
 int fs_rewinddir(file_t hnd);
 
 /** \brief   Retrieve information about an opened file.
-    \ingroup vfs
 
     This function retrieves status information on the given file descriptor,
     which must correspond to an already opened file.
@@ -647,7 +620,6 @@ int fs_rewinddir(file_t hnd);
 int fs_fstat(file_t hnd, struct stat *buf);
 
 /** \brief   Duplicate a file descriptor.
-    \ingroup vfs
 
     This function duplicates the specified file descriptor, returning a new file
     descriptor that can be used to access the file. This is equivalent to the
@@ -660,7 +632,6 @@ int fs_fstat(file_t hnd, struct stat *buf);
 file_t fs_dup(file_t oldfd);
 
 /** \brief   Duplicate a file descriptor onto the specified descriptor.
-    \ingroup vfs
 
     This function duplicates the specified file descriptor onto the other file
     descriptor provided. If the newfd parameter represents an open file, that
@@ -675,7 +646,6 @@ file_t fs_dup(file_t oldfd);
 file_t fs_dup2(file_t oldfd, file_t newfd);
 
 /** \brief   Create a "transient" file descriptor.
-    \ingroup vfs
 
     This function creates and opens a new file descriptor that isn't associated
     directly with a file on the filesystem. This is used internally to actually
@@ -691,7 +661,6 @@ file_t fs_dup2(file_t oldfd, file_t newfd);
 file_t fs_open_handle(vfs_handler_t *vfs, void *hnd);
 
 /** \brief   Retrieve the VFS Handler for a file descriptor.
-    \ingroup vfs
 
     This function retrieves the Handler structure for the VFS of the specified
     file descriptor. There is generally no reason to call this function in user
@@ -704,7 +673,6 @@ file_t fs_open_handle(vfs_handler_t *vfs, void *hnd);
 vfs_handler_t *fs_get_handler(file_t fd);
 
 /** \brief   Retrieve the internal handle for a file descriptor.
-    \ingroup vfs
 
     This function retrieves the internal file handle data of the specified file
     descriptor. There is generally no reason to call this function in user code,
@@ -717,7 +685,6 @@ vfs_handler_t *fs_get_handler(file_t fd);
 void *fs_get_handle(file_t fd);
 
 /** \brief   Get the current working directory of the running thread.
-    \ingroup vfs
 
     \return                 The current working directory.
 */
@@ -726,7 +693,6 @@ const char *fs_getwd(void);
 /* Couple of util functions */
 
 /** \brief   Copy a file.
-    \ingroup vfs
 
     This function copies the file at src to dst on the filesystem.
 
@@ -738,7 +704,6 @@ const char *fs_getwd(void);
 ssize_t fs_copy(const char *src, const char *dst);
 
 /** \brief   Open and read a whole file into RAM.
-    \ingroup vfs
 
     This function opens the specified file, reads it into memory (allocating the
     necessary space with malloc), and closes the file. The caller is responsible
@@ -752,7 +717,6 @@ ssize_t fs_copy(const char *src, const char *dst);
 ssize_t fs_load(const char *src, void **out_ptr);
 
 /** \brief   Append a path component to a string.
-    \ingroup vfs
 
     This function acts mostly like the function strncat(), with a few slight
     differences. First, if the destination string doesn't end in a '/'
@@ -776,7 +740,6 @@ ssize_t fs_load(const char *src, void **out_ptr);
 ssize_t fs_path_append(char *dst, const char *src, size_t len);
 
 /** \brief   Initialize the virtual filesystem.
-    \ingroup vfs
 
     This is normally done for you by default when KOS starts. In general, there
     should be no reason for you to call this function.
@@ -786,12 +749,13 @@ ssize_t fs_path_append(char *dst, const char *src, size_t len);
 int fs_init(void);
 
 /** \brief   Shut down the virtual filesystem.
-    \ingroup vfs
 
     This is done for you by the normal shutdown procedure of KOS. There should
     not really be any reason for you to call this function yourself.
 */
 void fs_shutdown(void);
+
+/** @} */
 
 __END_DECLS
 

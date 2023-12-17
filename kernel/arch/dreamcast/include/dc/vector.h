@@ -10,7 +10,7 @@
 
 /** \file    dc/vector.h
     \brief   Primitive matrix, vector, and point types.
-    \ingroup math
+    \ingroup math_matrices
 
     This file provides a few primivite data types that are useful for 3D
     graphics.
@@ -20,6 +20,10 @@
 
 #include <sys/cdefs.h>
 __BEGIN_DECLS
+
+/** \addtogroup math_matrices
+    @{
+*/
 
 /** \brief  Basic 4x4 matrix type.
     \headerfile dc/vector.h
@@ -43,6 +47,8 @@ typedef struct vectorstr {
     \headerfile dc/vector.h
 */
 typedef vector_t point_t;
+
+/** @} */
 
 __END_DECLS
 

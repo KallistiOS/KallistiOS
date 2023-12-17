@@ -7,7 +7,7 @@
 
 /** \file    dc/fifo.h
     \brief   Macros to assess FIFO status.
-    \ingroup system
+    \ingroup system_fifo
 
     This header provides a set of macros to facilitate checking
     the status of various FIFOs on the system.
@@ -20,6 +20,13 @@
 
 #include <sys/cdefs.h>
 __BEGIN_DECLS
+
+/** \defgroup system_fifo   FIFO
+    \brief                  API for checking FIFO statuses
+    \ingroup                system
+
+    @{
+*/
 
 /** \brief Address of the FIFO status register. 
     Accessing this value provides the current status of all FIFOs.
@@ -45,6 +52,8 @@ __BEGIN_DECLS
 #define FIFO_EXTDEV (1 << 3)   /** \brief EXTDEV FIFO status mask. */
 #define FIFO_G2     (1 << 4)   /** \brief G2 FIFO status mask. */
 #define FIFO_SH4    (1 << 5)   /** \brief SH4 FIFO status mask. */
+
+/** @} */
 
 /** @} */
 

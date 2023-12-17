@@ -7,7 +7,7 @@
 
 /** \file    dc/maple/lightgun.h
     \brief   Definitions for using the light gun.
-    \ingroup peripherals
+    \ingroup peripherals_lightgun
 
     This file contains the definitions needed to access maple light gun devices.
     There's really no user-serviceable parts in here, as there's very little to
@@ -22,11 +22,20 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
+/** \defgroup peripherals_lightgun  Lightgun
+    \brief                          Maple driver for the lightgun accessory
+    \ingroup                        peripherals
+
+    @{
+*/
+
 /* \cond */
 /* Init / Shutdown */
 void lightgun_init(void);
 void lightgun_shutdown(void);
 /* \endcond */
+
+/** @} */
 
 __END_DECLS
 

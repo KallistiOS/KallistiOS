@@ -9,7 +9,7 @@
 /**
     \file    dc/fmath_base.h
     \brief   Base definitions for the DC's special math instructions
-    \ingroup math
+    \ingroup math_intrinsics
 
     \author Andrew Kieschnick
     \author Josh Pearson
@@ -22,7 +22,11 @@
 __BEGIN_DECLS
 
 
-/** PI constant (if you don't want full math.h) */
+/** \addtogroup math_intrinsics 
+    @{
+*/
+
+/** \brief PI constant (if you don't want full math.h) */
 #define F_PI 3.1415926f
 
 /** \cond */
@@ -158,6 +162,9 @@ __BEGIN_DECLS
         __z; })
 
 /** \endcond */
+
+/** @} */
+
 __END_DECLS
 
 #endif /* !__DC_FMATH_BASE_H */

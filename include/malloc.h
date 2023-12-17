@@ -8,7 +8,7 @@
 
 /** \file    malloc.h
     \brief   Standard C Malloc functionality
-    \ingroup system
+    \ingroup system_allocator
 
     This implements standard C heap allocation, deallocation, and stats.
 
@@ -23,6 +23,13 @@
 __BEGIN_DECLS
 
 #include <arch/types.h>
+
+/** \defgroup system_allocator  Allocator
+    \brief                      Dynamic memory heap management and allocation
+    \ingroup                    system
+
+    @{
+*/
 
 /* Unlike previous versions, we totally decouple the implementation from
    the declarations. */
@@ -234,6 +241,8 @@ int mem_check_block(void *p);
 /** \brief Only available with KM_DBG
  */
 int mem_check_all(void);
+
+/** @} */
 
 __END_DECLS
 

@@ -7,7 +7,7 @@
 
 /** \file    utsname.h
     \brief   Definitions for the uname() function.
-    \ingroup system
+    \ingroup system_posix
 
     This file contains the definitions needed for using the uname() function,
     as directed by the POSIX 2008 standard (aka The Open Group Base
@@ -22,6 +22,10 @@
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
+
+/** \addtogroup system_posix
+    @{
+*/
 
 #define _UTSNAME_LENGTH 64
 
@@ -49,6 +53,8 @@ struct utsname {
     \return             0 on success, -1 on error (setting errno appropriately).
 */
 int uname(struct utsname *n);
+
+/* @} */
 
 __END_DECLS
 

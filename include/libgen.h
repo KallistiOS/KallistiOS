@@ -6,7 +6,7 @@
 
 /** \file    libgen.h
     \brief   Definitions for pattern matching functions.
-    \ingroup system
+    \ingroup vfs_posix
 
     This file contains the definitions for the functions basename() and
     dirname() as specified by the POSIX standard. How the POSIX people came
@@ -25,6 +25,10 @@
 
 #include <sys/cdefs.h>
 __BEGIN_DECLS
+
+/** \addtogroup vfs_posix
+    @{
+*/
 
 /** \brief  Get the last component of a pathname.
 
@@ -55,6 +59,8 @@ char *basename(char *path);
     \return                 A pointer to the parent directory of the given path.
 */
 char *dirname(char *path);
+
+/** @} */
 
 __END_DECLS
 

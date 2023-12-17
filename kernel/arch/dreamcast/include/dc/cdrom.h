@@ -14,8 +14,9 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 
-/** \file   dc/cdrom.h
-    \brief  CD access to the GD-ROM drive.
+/** \file    dc/cdrom.h
+    \brief   CD access to the GD-ROM drive.
+    \ingroup gdrom
 
     This file contains the interface to the Dreamcast's GD-ROM drive. It is
     simply called cdrom.h and cdrom.c because, by design, you cannot directly

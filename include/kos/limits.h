@@ -6,8 +6,8 @@
 */
 
 /** \file    kos/limits.h
-    \brief   Limits.
-    \ingroup vfs
+    \brief   Limits
+    \ingroup system_posix
 
     This file contains definitions of limits of various things.
 
@@ -16,6 +16,10 @@
 
 #ifndef __KOS_LIMITS_H
 #define __KOS_LIMITS_H
+
+/** \addtogroup system_posix
+    @{
+*/
 
 #ifndef NAME_MAX
 #define NAME_MAX    256     /**< \brief Max filename length */
@@ -33,5 +37,7 @@
 #ifndef SYMLOOP_MAX
 #define SYMLOOP_MAX 16      /**< \brief Max number of symlinks resolved */
 #endif
+
+/** @} */
 
 #endif  /* __KOS_LIMITS_H */

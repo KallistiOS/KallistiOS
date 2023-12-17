@@ -1,0 +1,6 @@
+/** \defgroup debugging Debugging
+    \brief    APIs and drivers pertaining to logging, profiling, and debugging
+
+    In addition to the low-level debugging and logging drivers, KOS supports
+    all of the regular C and C++ stdout-related output utilities. 
+*/

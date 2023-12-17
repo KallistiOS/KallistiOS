@@ -7,7 +7,7 @@
 
 /** \file    dc/vec3f.h
     \brief   Basic matrix operations.
-    \ingroup math
+    \ingroup math_matrices
 
     This file contains various basic vector math functionality for using the
     SH4's vector instructions. Higher level functionality in KGL is built off
@@ -22,6 +22,10 @@
 
 #include <sys/cdefs.h>
 __BEGIN_DECLS
+
+/** \addtogroup math_matrices
+    @{
+*/
 
 typedef struct vec3f {
     float x, y, z;
@@ -432,6 +436,8 @@ typedef struct vec3f {
                               : "f" (__py), "f" (__pz), "f" (__r), "f" (__s) ); \
         py = __cy; pz = __cz; \
     }
+
+/** @} */
 
 __END_DECLS
 

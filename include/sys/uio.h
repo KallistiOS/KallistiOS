@@ -7,7 +7,7 @@
 
 /** \file    sys/uio.h
     \brief   Header for vector I/O.
-    \ingroup vfs
+    \ingroup vfs_posix
 
     This file contains definitions for vector I/O operations, as specified by
     the POSIX 2008 specification. Full vector-based I/O is not supported for
@@ -24,6 +24,10 @@
 
 __BEGIN_DECLS
 
+/** \addtogroup vfs_posix
+    @{
+*/
+
 /** \brief  I/O vector structure
     \headerfile sys/uio.h
 */
@@ -36,6 +40,8 @@ struct iovec {
 
 /** \brief  Old alias for the maximum length of an iovec. */
 #define UIO_MAXIOV IOV_MAX
+
+/** @} */
 
 __END_DECLS
 
