@@ -116,6 +116,7 @@ extern void * __kos_romdisk;
 #define KOS_INIT_EARLY(func) void (*__kos_init_early_fn)(void) = (func)
 
 /** \defgroup kos_initflags     Generic Flags
+    \brief                      Generic flags for use with KOS_INIT_FLAGS()
     \ingroup  init_flags
 
     These are the architecture-independent flags that can be specified with

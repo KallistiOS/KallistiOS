@@ -1,0 +1,13 @@
+/** \defgroup video Video
+    \brief          Graphics, rendering, and video APIs
+*/
+
+/** \defgroup video_fonts Fonts
+    \brief                Font rendering and management
+    \ingroup              video 
+*/
+
+/** \defgroup video_vram VRAM
+    \brief               Video memory access and management
+    \ingroup             video
+*/

@@ -5,8 +5,6 @@
    Copyright (C) 2014 Lawrence Sebald
 
    Low-level PVR 3D interface for the DC
-   Note: this API does _not_ handle any sort of transformations
-   (including perspective!) so for that, you should look to KGL.
 */
 
 /** \file    dc/pvr.h
@@ -20,6 +18,10 @@
 
     This file is used for pretty much everything related to the PVR, from memory
     management to actual primitive rendering.
+
+    \note
+    This API does \a not handle any sort of transformations
+    (including perspective!) so for that, you should look to KGL.
 
     \author Megan Potter
     \author Roger Cattermole
@@ -40,8 +42,8 @@ __BEGIN_DECLS
 #include <dc/sq.h>
 #include <kos/img.h>
 
-/** \defgroup pvr   3D Rendering
-    \brief          Low-level PVR (3D Hardware) Driver.
+/** \defgroup pvr   Rendering
+    \brief          Low-level PowerVR GPU Driver.
     \ingroup        video
 */
 
@@ -1032,32 +1034,45 @@ Striplength set to 2 */
 
 /**** Register macros ***************************************************/
 
+/** \defgroup pvr_registers         Register Access
+    \brief                          Direct PVR register and memory access
+    \ingroup                        pvr
+    @{
+*/
+
 /* We use these macros to do all PVR register access, so that it's
    simple later on to hook them for debugging or whatnot. */
 
 /** \brief   Retrieve a PVR register value
-    \ingroup pvr
-    \param   REG             The register to fetch
+
+    \param   REG             The register to fetch. See \ref pvr_regs.
+    
     \return                  The value of that register (32-bits)
 */
 #define PVR_GET(REG) (* ( (vuint32*)( 0xa05f8000 + (REG) ) ) )
 
 /** \brief   Set a PVR register value
-    \ingroup pvr
-    \param   REG             The register to set
+
+    \param   REG             The register to set. See \ref pvr_regs.
     \param   VALUE           The value to set in the register (32-bits)
 */
 #define PVR_SET(REG, VALUE) PVR_GET(REG) = (VALUE)
 
-/* The registers themselves; these are from Maiwe's powervr-reg.txt */
-/* Note that 2D specific registers have been excluded for now (like
-   vsync, hsync, v/h size, etc) */
+/** @} */
 
-/** \defgroup pvr_regs              Registers Offsets
-    \brief                          Offsets of Registers for the PVR
-    \ingroup                        pvr
+/** \defgroup pvr_regs   Offsets
+    \brief               PowerVR register offsets
+    \ingroup             pvr_registers
+
+    The registers themselves; these are from Maiwe's powervr-reg.txt.
+
+    \note
+    2D specific registers have been excluded for now (like
+    vsync, hsync, v/h size, etc) 
+
     @{
 */
+
 #define PVR_ID                  0x0000  /**< \brief Chip ID */
 #define PVR_REVISION            0x0004  /**< \brief Chip revision */
 #define PVR_RESET               0x0008  /**< \brief Reset pins */
@@ -1145,7 +1160,7 @@ Striplength set to 2 */
 
 /** \defgroup pvr_addresses     Addresses and Constants
     \brief                      Miscellaneous Addresses and Constants
-    \ingroup                    pvr
+    \ingroup                    pvr_registers
 
     Useful PVR memory locations and values.
 
@@ -1168,7 +1183,7 @@ Striplength set to 2 */
 
 /** \defgroup pvr_reset_vals        Reset Values
     \brief                          Values used to reset parts of the PVR
-    \ingroup                        pvr
+    \ingroup                        pvr_registers
 
     These values are written to the PVR_RESET register in order to reset the
     system or to take it out of reset.
@@ -1181,9 +1196,9 @@ Striplength set to 2 */
 #define PVR_RESET_ISPTSP    0x00000002  /**< \brief Reset only the ISP/TSP */
 /** @} */
 
-/** \defgroup pvr_go        Confirmation/Start Values
+/** \defgroup pvr_go        Init/Start Values
     \brief                  Values to be written to registers to conform or start operations.
-    \ingroup                pvr
+    \ingroup                pvr_registers
     @{
 */
 #define PVR_ISP_START_GO    0xffffffff  /**< \brief Write to the PVR_ISP_START register to start rendering */
@@ -1192,7 +1207,7 @@ Striplength set to 2 */
 /** @} */
 
 /* Initialization ****************************************************/
-/** \defgroup pvr_init  Initialization/Shutdown
+/** \defgroup pvr_init  Init/Shutdown
     \ingroup            pvr
 
     Initialization and shutdown: stuff you should only ever have to do
@@ -1310,7 +1325,7 @@ int pvr_shutdown(void);
 
 /* Misc parameters ***************************************************/
 
-/** \defgroup pvr_misc  Miscellaneous Global State Parameters
+/** \defgroup pvr_misc  Global State
     \ingroup            pvr
 
     These are miscellaneous parameters you can set which affect the
@@ -1369,6 +1384,7 @@ void pvr_set_zclip(float zc);
 int pvr_get_vbl_count(void);
 
 /** \defgroup pvr_stats         Statistics
+    \brief                      Rendering stats and metrics for profiling
     \ingroup                    pvr
 */
 
@@ -1410,15 +1426,20 @@ int pvr_get_stats(pvr_stats_t *stat);
 
 /* Palette management ************************************************/
 /** \defgroup pvr_pal_mgmt  Palettes
+    \brief                  Color palette management API of the PowerVR
     \ingroup                pvr
 
     In addition to its 16-bit truecolor modes, the PVR also supports some
-    nice paletted modes. These aren't useful for super high quality images
-    most of the time, but they can be useful for doing some interesting
-    special effects, like the old cheap "worm hole". 
+    nice paletted modes. 
+
+    \remark
+    These aren't useful for super high quality images most of the time,
+    but they can be useful for doing some interesting special effects,
+    like the old cheap "worm hole". 
 */
 
-/** \defgroup pvr_palfmts           Palette Formats
+/** \defgroup pvr_palfmts           Formats
+    \brief                          Color palette formats of the PowerVR
     \ingroup                        pvr_pal_mgmt
 
     Entries in the PVR's palettes can be of any of these formats. Note that you
@@ -1465,7 +1486,8 @@ static inline void pvr_set_pal_entry(uint32_t idx, uint32_t value) {
 
 
 /* Hardware Fog parameters *******************************************/
-/** \defgroup   pvr_fog     Hardware Fog
+/** \defgroup   pvr_fog     Fog
+    \brief                  Hardware Fog API for the PowerVR
     \ingroup                pvr
 
     \note 
@@ -1556,8 +1578,9 @@ void pvr_fog_table_custom(float tbl1[]);
 
 
 /* Memory management *************************************************/
-/** \defgroup pvr_mem_mgmt   Memory Management
-    \ingroup                 pvr
+/** \defgroup pvr_mem_mgmt   Allocator
+    \brief                   Memory management API for VRAM
+    \ingroup                 video_vram
 
     PVR memory management in KOS uses a modified dlmalloc; see the
     source file pvr_mem_core.c for more info. 
@@ -1572,6 +1595,7 @@ void pvr_fog_table_custom(float tbl1[]);
     allocations will be aligned to a 32-byte boundary.
 
     \param  size            The amount of memory to allocate
+    
     \return                 A pointer to the memory on success, NULL on error
 */
 pvr_ptr_t pvr_mem_malloc(size_t size);
@@ -1616,7 +1640,7 @@ void pvr_mem_print_list(void);
 void pvr_mem_stats(void);
 
 /* Scene rendering ***************************************************/
-/** \defgroup   pvr_scene_mgmt  Scene Management 
+/** \defgroup   pvr_scene_mgmt  Scene
     \ingroup                    pvr
 
     This API is used to submit triangle strips to the PVR via the TA
@@ -1799,6 +1823,7 @@ int pvr_list_finish(void);
     \param  data            The primitive to submit.
     \param  size            The length of the primitive, in bytes. Must be a
                             multiple of 32.
+    
     \retval 0               On success.
     \retval -1              On error.
 */
@@ -1826,6 +1851,7 @@ typedef uint32_t pvr_dr_state_t;
     \param  vtx_buf_ptr     State variable for Direct Rendering. Should be of
                             type pvr_dr_state_t, and must have been initialized
                             previously in the scene with pvr_dr_init().
+    
     \return                 A write-only destination address where a primitive
                             should be written to get ready to submit it to the
                             TA in DR mode.
@@ -1853,6 +1879,7 @@ typedef uint32_t pvr_dr_state_t;
     \param  data            The primitive to submit.
     \param  size            The size of the primitive in bytes. This must be a
                             multiple of 32.
+    
     \retval 0               On success.
     \retval -1              On error.
 */
@@ -1866,6 +1893,7 @@ int pvr_list_prim(pvr_list_t list, void *data, int size);
     both direct and DMA TA submission is possible.
 
     \param  list            The list to flush.
+    
     \retval -1              On error (it is not possible to succeed).
 */
 int pvr_list_flush(pvr_list_t list);

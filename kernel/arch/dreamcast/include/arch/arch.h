@@ -282,7 +282,7 @@ int hardware_sys_mode(int *region);
    they'll stay here. */
 
 /** \brief   Retrieve the banner printed at program initialization.
-    \ingroup arch
+    \ingroup attribution
 
     This function retrieves the banner string that is printed at initialization
     time by the kernel. This contains the version of KOS in use and basic
@@ -293,7 +293,7 @@ int hardware_sys_mode(int *region);
 const char *kos_get_banner(void);
 
 /** \brief   Retrieve the license information for the compiled copy of KOS.
-    \ingroup arch
+    \ingroup attribution
 
     This function retrieves a string containing the license terms that the
     version of KOS in use is distributed under. This can be used to easily add
@@ -304,13 +304,14 @@ const char *kos_get_banner(void);
 const char *kos_get_license(void);
 
 /** \brief   Retrieve a list of authors and the dates of their contributions.
-    \ingroup arch
+    \ingroup attribution
 
     This function retrieves the copyright information for the version of KOS in
     use. This function can be used to add such information to the credits of
     programs using KOS to give the appropriate credit to those that have worked
     on KOS.
 
+    \remark
     Remember, you do need to give credit where credit is due, and this is an
     easy way to do so. ;-)
 

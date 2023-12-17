@@ -28,9 +28,9 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 
-/** \defgroup bfont     BIOS Font
+/** \defgroup bfont     BIOS
     \brief              API for the Dreamcast's built-in BIOS font
-    \ingroup            video
+    \ingroup            video_fonts
 */
 
 /** \defgroup bfont_size  Dimensions of the Bios Font

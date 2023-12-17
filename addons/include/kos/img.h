@@ -28,8 +28,8 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 
-/** \defgroup video_img  Image Type
-    \brief               Platform-Independent Image Representation
+/** \defgroup video_img  Images
+    \brief               Platform-independent image representation
     \ingroup             video
 */
 
@@ -58,8 +58,14 @@ typedef struct kos_img {
     uint32 byte_count;  /**< \brief Length of the image data, in bytes. */
 } kos_img_t;
 
-/** \defgroup   kos_img_fmt_macros  Macros for accessing the format of an image
-    \ingroup                        video_img
+/** \defgroup video_img_fmt Format
+    \brief                  Video image formats
+    \ingroup                video_img
+*/
+
+/** \defgroup   kos_img_fmt_macros  Accessors
+    \brief                          Macros for accessing kos_image_t::fmt
+    \ingroup                        video_img_fmt
 
     These macros provide easy access to the fmt field of a kos_img_t object.
 
@@ -105,8 +111,9 @@ typedef struct kos_img {
 
 /** @} */
 
-/** \defgroup   kos_img_fmts        Image format types
-    \ingroup                        video_img
+/** \defgroup   kos_img_fmts        Types
+    \brief                          Video image format types
+    \ingroup                        video_img_fmt
 
     This is the list of platform-independent image types that can be used as the
     lower-half of the fmt value for a kos_img_t.

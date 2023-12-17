@@ -67,9 +67,9 @@ __BEGIN_DECLS
     KOS_INIT_FLAG(flags, INIT_MAPLE_ALL, maple_shutdown)
 
 
-/** \name    Dreamcast-Specific Flags
-    \brief   Dreamcast-specific initialization flags.
-    \ingroup init_flags
+/** \defgroup kos_init_flags_dc Dreamcast-Specific Flags
+    \brief    Dreamcast-specific initialization flags.
+    \ingroup  init_flags
 
     These are the Dreamcast-specific flags that can be specified with
     KOS_INIT_FLAGS.
