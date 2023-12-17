@@ -6,19 +6,6 @@
 
 */
 
-#ifndef __KOS_THREAD_H
-#define __KOS_THREAD_H
-
-#include <sys/cdefs.h>
-__BEGIN_DECLS
-
-#include <kos/cdefs.h>
-#include <kos/tls.h>
-#include <arch/irq.h>
-#include <sys/queue.h>
-#include <sys/reent.h>
-#include <stdint.h>
-
 /** \file    kos/thread.h
     \brief   Threading support.
     \ingroup kthreads
@@ -39,7 +26,20 @@ __BEGIN_DECLS
     \see    kos/tls.h
 */
 
-/** \defgroup kthreads KThreads
+#ifndef __KOS_THREAD_H
+#define __KOS_THREAD_H
+
+#include <sys/cdefs.h>
+__BEGIN_DECLS
+
+#include <kos/cdefs.h>
+#include <kos/tls.h>
+#include <arch/irq.h>
+#include <sys/queue.h>
+#include <sys/reent.h>
+#include <stdint.h>
+
+/** \defgroup kthreads Kernel Threads
     \brief    KOS Native Threading API
     \ingroup  threading
 
@@ -120,7 +120,7 @@ typedef struct tcbhead {
 
     \headerfile kos/thread.h
 */
-typedef struct kthread {
+typedef __attribute__((aligned(32))) struct kthread {
     /** \brief  Register store -- used to save thread context. */
     irq_context_t context;
 
@@ -200,7 +200,7 @@ typedef struct kthread {
     /** \brief  Return value of the thread function.
         This is only used in joinable threads.  */
     void *rv;
-} kthread_t __attribute__((aligned(32)));
+} kthread_t;
 
 /** \name     Thread flag values
     \brief    kthread_t::flags values

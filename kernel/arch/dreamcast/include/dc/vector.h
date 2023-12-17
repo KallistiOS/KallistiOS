@@ -8,8 +8,9 @@
 #ifndef __DC_VECTOR_H
 #define __DC_VECTOR_H
 
-/** \file   dc/vector.h
-    \brief  Primitive matrix, vector, and point types.
+/** \file    dc/vector.h
+    \brief   Primitive matrix, vector, and point types.
+    \ingroup math
 
     This file provides a few primivite data types that are useful for 3D
     graphics.

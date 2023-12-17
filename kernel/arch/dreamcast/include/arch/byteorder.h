@@ -5,8 +5,9 @@
 
 */
 
-/** \file   arch/byteorder.h
-    \brief  Byte-order related macros.
+/** \file    arch/byteorder.h
+    \brief   Byte-order related macros.
+    \ingroup system
 
     This file contains architecture-specific byte-order related macros and/or
     functions. Each platform should define six macros/functions in this file:

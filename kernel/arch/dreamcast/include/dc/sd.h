@@ -13,8 +13,9 @@ __BEGIN_DECLS
 #include <arch/types.h>
 #include <kos/blockdev.h>
 
-/** \file   dc/sd.h
-    \brief  Block-level access to an SD card attached to the SCIF port.
+/** \file    dc/sd.h
+    \brief   Block-level access to an SD card attached to the SCIF port.
+    \ingroup vfs
 
     This file contains the interface to working with the SD card reader that was
     designed by jj1odm. The SD card reader itself connects to the SCIF port and

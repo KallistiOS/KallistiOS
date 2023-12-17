@@ -5,8 +5,9 @@
 
 */
 
-/** \file   kos/fs_pty.h
-    \brief  Pseudo-terminal virtual file system.
+/** \file    kos/fs_pty.h
+    \brief   Pseudo-terminal virtual file system.
+    \ingroup vfs
 
     This file system implements a pseudo-terminal like concept (similar to
     /dev/pty in Linux). A call to fs_pty_create() will crate two file entries in

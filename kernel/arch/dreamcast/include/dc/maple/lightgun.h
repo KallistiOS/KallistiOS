@@ -5,8 +5,9 @@
 
 */
 
-/** \file   dc/maple/lightgun.h
-    \brief  Definitions for using the light gun.
+/** \file    dc/maple/lightgun.h
+    \brief   Definitions for using the light gun.
+    \ingroup peripherals
 
     This file contains the definitions needed to access maple light gun devices.
     There's really no user-serviceable parts in here, as there's very little to

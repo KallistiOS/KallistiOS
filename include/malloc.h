@@ -6,8 +6,9 @@
 
 */
 
-/** \file   malloc.h
-    \brief  Standard C Malloc functionality
+/** \file    malloc.h
+    \brief   Standard C Malloc functionality
+    \ingroup system
 
     This implements standard C heap allocation, deallocation, and stats.
 

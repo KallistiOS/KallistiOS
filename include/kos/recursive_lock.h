@@ -5,8 +5,8 @@
 
 */
 
-/** \file   kos/recursive_lock.h
-    \brief  Definitions for a recursive mutex.
+/** \file    kos/recursive_lock.h
+    \brief   Definitions for a recursive mutex.
     \ingroup kthreads
 
     This file defines a recursive lock mechanism, similar to a mutex, but that a

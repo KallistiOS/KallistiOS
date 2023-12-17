@@ -37,6 +37,7 @@ __BEGIN_DECLS
 
 /** \defgroup gdrom     GD-ROM 
     \brief              Driver for the Dreamcast's GD-ROM drive
+    \ingroup            vfs
 */
 
 /** \defgroup cd_cmd_codes          Syscall Command Codes

@@ -6,8 +6,9 @@
 
 */
 
-/** \file   dc/sound/sound.h
-    \brief  Low-level sound support and memory management.
+/** \file    dc/sound/sound.h
+    \brief   Low-level sound support and memory management.
+    \ingroup audio
 
     This file contains declarations for low-level sound operations and for SPU
     RAM pool memory management. Most of the time you'll be better off using the

@@ -44,6 +44,7 @@ __BEGIN_DECLS
 
 /** \defgroup maple Maple Bus
     \brief          Driver for the Dreamcast's Maple Peripheral Bus
+    \ingroup        peripherals
 */
 
 /** \brief   Enable Maple DMA debugging.

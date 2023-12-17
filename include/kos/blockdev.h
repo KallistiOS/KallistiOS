@@ -4,17 +4,9 @@
    Copyright (C) 2012, 2013 Lawrence Sebald
 */
 
-#ifndef __KOS_BLOCKDEV_H
-#define __KOS_BLOCKDEV_H
-
-#include <sys/cdefs.h>
-__BEGIN_DECLS
-
-#include <stdint.h>
-#include <sys/types.h>
-
-/** \file   kos/blockdev.h
-    \brief  Definitions for a simple block device interface.
+/** \file    kos/blockdev.h
+    \brief   Definitions for a simple block device interface.
+    \ingroup vfs
 
     This file contains the definition of a very simple block device that is to
     be used with filesystems in the kernel. This device interface is designed to
@@ -29,6 +21,15 @@ __BEGIN_DECLS
 
     \author Lawrence Sebald
 */
+
+#ifndef __KOS_BLOCKDEV_H
+#define __KOS_BLOCKDEV_H
+
+#include <sys/cdefs.h>
+__BEGIN_DECLS
+
+#include <stdint.h>
+#include <sys/types.h>
 
 /** \brief  A simple block device.
 

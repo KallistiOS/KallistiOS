@@ -26,6 +26,7 @@ __BEGIN_DECLS
 
 /** \defgroup   mouse   Mouse
     \brief              Driver for the Dreamcast's Mouse Input Device
+    \ingroup            peripherals
 */
 
 /** \defgroup   mouse_buttons   Mouse button codes

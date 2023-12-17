@@ -5,8 +5,9 @@
    Copyright (C) 2023 Ruslan Rostovtsev
 */
 
-/** \file   dc/g1ata.h
-    \brief  G1 bus ATA interface.
+/** \file    dc/g1ata.h
+    \brief   G1 bus ATA interface.
+    \ingroup g1ata
 
     This file provides support for accessing an ATA device on the G1 bus in the
     Dreamcast. The G1 bus usually contains a few useful pieces of the system,
@@ -41,6 +42,7 @@ __BEGIN_DECLS
 
 /** \defgroup g1ata G1 ATA
     \brief          Driver for Accessing an ATA device on the G1 Bus
+    \ingroup        vfs
 */
 
 /** \defgroup ata_devices   ATA device definitions

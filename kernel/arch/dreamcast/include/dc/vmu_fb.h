@@ -5,8 +5,9 @@
 
 */
 
-/** \file   dc/vmu_fb.h
-    \brief  VMU framebuffer.
+/** \file    dc/vmu_fb.h
+    \brief   VMU framebuffer.
+    \ingroup vmu
 
     This file provides an API that can be used to compose a 48x32 image that can
     then be displayed on the VMUs connected to the system.

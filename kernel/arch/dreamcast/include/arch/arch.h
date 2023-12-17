@@ -26,6 +26,7 @@ __BEGIN_DECLS
 
 /** \defgroup arch  Architecture
     \brief          Dreamcast Architecture-Specific Options and high-level API
+    \ingroup        system
     @{
 */
 

@@ -6,8 +6,9 @@
 
 */
 
-/** \file   dc/sound/sfxmgr.h
-    \brief  Basic sound effect support.
+/** \file    dc/sound/sfxmgr.h
+    \brief   Basic sound effect support.
+    \ingroup audio
 
     This file contains declarations for doing simple sound effects. This code is
     only usable for simple WAV files containing either 8-bit or 16-bit samples (stereo

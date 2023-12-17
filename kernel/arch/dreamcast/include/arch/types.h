@@ -5,8 +5,9 @@
 
 */
 
-/** \file   arch/types.h
-    \brief  Common integer types.
+/** \file    arch/types.h
+    \brief   Common integer types.
+    \ingroup system
 
     This file contains typedefs for some common/useful integer types. These
     types include ones that tell you exactly how long they are, as well as some

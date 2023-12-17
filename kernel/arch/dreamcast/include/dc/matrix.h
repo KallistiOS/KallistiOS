@@ -7,8 +7,9 @@
 
 */
 
-/** \file   dc/matrix.h
-    \brief  Basic matrix operations.
+/** \file    dc/matrix.h
+    \brief   Basic matrix operations.
+    \ingroup math
 
     This file contains various basic matrix math functionality for using the
     SH4's matrix transformation unit. Higher level functionality, like the 3D

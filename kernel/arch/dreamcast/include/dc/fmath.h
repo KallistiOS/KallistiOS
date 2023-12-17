@@ -6,6 +6,15 @@
 
 */
 
+/**
+    \file    dc/fmath.h
+    \brief   Inline functions for the DC's special math instructions
+    \ingroup math
+
+    \author Andrew Kieschnick
+    \author Lawrence Sebald
+*/
+
 #ifndef __DC_FMATH_H
 #define __DC_FMATH_H
 
@@ -14,13 +23,6 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 #include <dc/fmath_base.h>
-
-/**
-    \file   dc/fmath.h
-    \brief  Inline functions for the DC's special math instructions
-    \author Andrew Kieschnick
-    \author Lawrence Sebald
-*/
 
 /* Sigh... C99 treats inline stuff a lot differently than traditional GCC did,
    so we need to take care of that... */

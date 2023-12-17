@@ -5,8 +5,9 @@
 
 */
 
-/** \file   utsname.h
-    \brief  Definitions for the uname() function.
+/** \file    utsname.h
+    \brief   Definitions for the uname() function.
+    \ingroup system
 
     This file contains the definitions needed for using the uname() function,
     as directed by the POSIX 2008 standard (aka The Open Group Base

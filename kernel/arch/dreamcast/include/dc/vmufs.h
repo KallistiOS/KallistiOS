@@ -5,8 +5,9 @@
 
 */
 
-/** \file   dc/vmufs.h
-    \brief  Low-level VMU filesystem driver.
+/** \file    dc/vmufs.h
+    \brief   Low-level VMU filesystem driver.
+    \ingroup vfs
 
     The VMU filesystem driver mounts itself on /vmu of the VFS. Each memory card
     has its own subdirectory off of that directory (i.e, /vmu/a1 for slot 1 of

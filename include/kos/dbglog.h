@@ -28,6 +28,7 @@ __BEGIN_DECLS
 
 /** \defgroup logging   Logging
     \brief              KOS's Logging API 
+    \ingroup            debugging
 */
 
 /** \brief   Kernel debugging printf.

@@ -30,7 +30,7 @@ __BEGIN_DECLS
 /* All functions in this header return < 0 on failure, and 0 on success. */
 
 /** \defgroup networking Networking
-    \brief    APIs and Drivers for Network and Internet Connectivity
+    \brief    APIs and drivers for network and internet connectivity
 
     KOS' built-in network stack supports UDP over IPv4, and to some degree has
     some basic IPv6 support as well. This will change over time, hopefully

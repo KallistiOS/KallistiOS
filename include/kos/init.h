@@ -8,8 +8,9 @@
 
 */
 
-/** \file   kos/init.h
-    \brief  Initialization-related flags and macros.
+/** \file    kos/init.h
+    \brief   Initialization-related flags and macros.
+    \ingroup init_flags
 
     This file provides initialization-related flags and macros that can be used
     to set up various subsystems of KOS on startup. Only flags that are
@@ -41,6 +42,7 @@ __BEGIN_DECLS
 
 /** \defgroup init_flags Initialization Flags
     \brief               KOS Driver Subystem and Component Initialization Flags
+    \ingroup             system
 */
 
 /** \cond */

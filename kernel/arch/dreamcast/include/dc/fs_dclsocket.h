@@ -5,8 +5,9 @@
 
 */
 
-/** \file   dc/fs_dclsocket.h
-    \brief  Implementation of dcload-ip over KOS sockets.
+/** \file    dc/fs_dclsocket.h
+    \brief   Implementation of dcload-ip over KOS sockets.
+    \ingroup vfs
 
     This file contains declarations related to using dcload-ip over the KOS
     sockets system. If dcload-ip support is enabled at the same time as network

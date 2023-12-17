@@ -5,8 +5,9 @@
 
 */
 
-/** \file   kos/fs_dev.h
-    \brief  Driver for /dev/random and /dev/urandom.
+/** \file    kos/fs_dev.h
+    \brief   Driver for /dev/random and /dev/urandom.
+    \ingroup vfs
 
     This filesystem driver provides implementations of /dev/random
     and /dev/urandom for portability. It seeds randomness from

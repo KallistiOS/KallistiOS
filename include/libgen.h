@@ -4,8 +4,9 @@
    Copyright (C) 2020 Lawrence Sebald
 */
 
-/** \file   libgen.h
-    \brief  Definitions for pattern matching functions.
+/** \file    libgen.h
+    \brief   Definitions for pattern matching functions.
+    \ingroup system
 
     This file contains the definitions for the functions basename() and
     dirname() as specified by the POSIX standard. How the POSIX people came

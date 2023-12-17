@@ -29,6 +29,7 @@ __BEGIN_DECLS
 
 /** \defgroup elf   ELF File Format
     \brief          API for loading and managing ELF files
+    \ingroup        vfs
 */
 
 /** \brief   ELF file header.

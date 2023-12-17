@@ -5,8 +5,9 @@
 
 */
 
-/** \file   arch/exec.h
-    \brief  Program execution.
+/** \file    arch/exec.h
+    \brief   Program execution.
+    \ingroup system
 
     This file contains functions that allow you to replace the currently running
     program with another binary that has already been loaded into memory. Doing

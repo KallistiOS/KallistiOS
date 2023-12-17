@@ -5,8 +5,9 @@
 
 */
 
-/** \file   arpa/inet.h
-    \brief  Definitions for internet operations.
+/** \file    arpa/inet.h
+    \brief   Definitions for internet operations.
+    \ingroup networking
 
     This file contains the standard definitions (as directed by the POSIX 2008
     standard) for several internet-related functions.

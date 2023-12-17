@@ -5,8 +5,9 @@
 
 */
 
-/** \file   dc/maple/dreameye.h
-    \brief  Definitions for using the Dreameye Camera device.
+/** \file    dc/maple/dreameye.h
+    \brief   Definitions for using the Dreameye Camera device.
+    \ingroup peripherals
 
     This file contains the definitions needed to access the Maple Camera type
     device (aka, the Dreameye). Currently, this driver allows you to download

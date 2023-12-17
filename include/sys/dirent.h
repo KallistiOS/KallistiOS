@@ -5,8 +5,9 @@
 
 */
 
-/** \file   dirent.h
-    \brief  Directory entry functionality.
+/** \file    dirent.h
+    \brief   Directory entry functionality.
+    \ingroup vfs
 
     This partially implements the standard POSIX dirent.h functionality.
 

@@ -5,17 +5,19 @@
 
 */
 
+/**
+    \file    dc/math.h
+    \brief   Prototypes for optimized math functions written in ASM
+    \ingroup math
+
+    \author Paul Cercueil
+*/
+
 #ifndef __DC_MATH_H
 #define __DC_MATH_H
 
 #include <sys/cdefs.h>
 __BEGIN_DECLS
-
-/**
-    \file   dc/math.h
-    \brief  Prototypes for optimized math functions written in ASM
-    \author Paul Cercueil
-*/
 
 /**
     \brief  Returns the bit-reverse value of the argument (where MSB

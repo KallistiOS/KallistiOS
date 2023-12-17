@@ -40,8 +40,9 @@ __BEGIN_DECLS
 #include <dc/sq.h>
 #include <kos/img.h>
 
-/** \defgroup pvr   PowerVR Graphics
+/** \defgroup pvr   3D Rendering
     \brief          Low-level PVR (3D Hardware) Driver.
+    \ingroup        video
 */
 
 /* Data types ********************************************************/

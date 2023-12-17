@@ -5,8 +5,8 @@
 
 */
 
-/** \file   kos/rwsem.h
-    \brief  Definition for a reader/writer semaphore.
+/** \file    kos/rwsem.h
+    \brief   Definition for a reader/writer semaphore.
     \ingroup kthreads
 
     This file defines a concept of reader/writer semaphores. Basically, this

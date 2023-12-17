@@ -8,8 +8,9 @@
    Based loosely around some stuff in BSD's sys/cdefs.h
 */
 
-/** \file   kos/cdefs.h
-    \brief  Definitions for builtin attributes and compiler directives
+/** \file    kos/cdefs.h
+    \brief   Definitions for builtin attributes and compiler directives
+    \ingroup system
 
     This file contains definitions of various __attribute__ directives in
     shorter forms for use in programs. These typically aid  in optimizations

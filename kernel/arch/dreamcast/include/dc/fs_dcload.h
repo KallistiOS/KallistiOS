@@ -5,8 +5,9 @@
 
 */
 
-/** \file   dc/fs_dcload.h
-    \brief  Implementation of dcload "filesystem".
+/** \file    dc/fs_dcload.h
+    \brief   Implementation of dcload "filesystem".
+    \ingroup vfs
 
     This file contains declarations related to using dcload, both in its -ip and
     -serial forms. This is only used for dcload-ip support if the internal

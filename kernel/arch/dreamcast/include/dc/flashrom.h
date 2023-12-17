@@ -30,6 +30,7 @@ __BEGIN_DECLS
 
 /** \defgroup flashrom  Flashrom
     \brief              Driver for the Dreamcast's Internal Flash Storage
+    \ingroup            vfs
 */
 
 /** \defgroup fr_parts  Partitions

@@ -30,6 +30,7 @@ __BEGIN_DECLS
 
 /** \defgroup kbd   Keyboard
     \brief          Driver for the Dreamcast's Keyboard Input Device
+    \ingroup        peripherals
 */
 
 /** \defgroup   kbd_mods    Modifier Keys

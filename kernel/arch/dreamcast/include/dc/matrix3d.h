@@ -5,8 +5,9 @@
 
 */
 
-/** \file   dc/matrix3d.h
-    \brief  3D matrix operations.
+/** \file    dc/matrix3d.h
+    \brief   3D matrix operations.
+    \ingroup math
 
     This file contains various 3D matrix math functionality for using the SH4's
     matrix transformation unit.

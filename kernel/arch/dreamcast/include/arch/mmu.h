@@ -53,6 +53,7 @@ __BEGIN_DECLS
 
 /** \defgroup mmu   Memory Management Unit
     \brief          Driver for the SH4's MMU (disabled by default).
+    \ingroup        system
 
     Since the software has to handle TLB misses on the SH-4, we have freedom
     to use any page table format we want (and thus save space), but we must

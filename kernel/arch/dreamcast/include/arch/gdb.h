@@ -5,8 +5,9 @@
 
 */
 
-/** \file   arch/gdb.h
-    \brief  GNU Debugger support.
+/** \file    arch/gdb.h
+    \brief   GNU Debugger support.
+    \ingroup debugging
 
     This file contains functions to set up and utilize GDB with KallistiOS.
 

@@ -6,8 +6,9 @@
 
 */
 
-/** \file   dc/maple/purupuru.h
-    \brief  Definitions for using the Puru Puru (Jump) Pack.
+/** \file    dc/maple/purupuru.h
+    \brief   Definitions for using the Puru Puru (Jump) Pack.
+    \ingroup peripherals
 
     This file contains the definitions needed to access maple jump pack devices.
     Puru Puru was Sega's internal name for the device, hence why its referred to

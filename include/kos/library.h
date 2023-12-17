@@ -5,8 +5,9 @@
 
 */
 
-/** \file   kos/library.h
-    \brief  Dynamically loadable library support.
+/** \file    kos/library.h
+    \brief   Dynamically loadable library support.
+    \ingroup vfs
 
     This file contains definitions for accessing loadable libraries at runtime.
     Each library has a name and a version number that it can be referenced by.

@@ -5,8 +5,9 @@
 
 */
 
-/** \file   dc/fs_iso9660.h
-    \brief  ISO9660 (CD-ROM) filesystem driver.
+/** \file    dc/fs_iso9660.h
+    \brief   ISO9660 (CD-ROM) filesystem driver.
+    \ingroup vfs
 
     This driver implements support for reading files from a CD-ROM or CD-R in
     the Dreamcast's disc drive. This filesystem mounts itself on /cd.

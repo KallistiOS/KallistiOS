@@ -5,8 +5,9 @@
 
 */
 
-/** \file   arch/memory.h
-    \brief  Constants for areas of the system memory map.
+/** \file    arch/memory.h
+    \brief   Constants for areas of the system memory map.
+    \ingroup memory
 
     Various addresses and masks that are set by the SH7750. None of the values
     here are Dreamcast-specific.
@@ -24,6 +25,7 @@ __BEGIN_DECLS
 
 /** \defgroup memory Memory
     \brief    Basics of the SH4 Memory Map
+    \ingroup  system
 
     The SH7750 Series physical address space is mapped onto a 29-bit external
     memory space, with the upper 3 bits of the address indicating which memory

@@ -12,7 +12,8 @@
     This file provides an API for configuring and utilizing the SH4's watchdog
     timer as either a reset or an interval timer.
 
-    \sa timer.h, rtc.h
+    \sa arch/timer.h
+    \sa arch/rtc.h
 
     \author Falco Girgis
 */
@@ -27,6 +28,7 @@ __BEGIN_DECLS
 
 /** \defgroup wdt   Watchdog Timer
     \brief          Driver for using the WDT as a reset or interval timer
+    \ingroup        timing
 
     The watchdog timer (WDT) is a special-purpose timer peripheral integrated
     within the Dreamcast's SH4 CPU.

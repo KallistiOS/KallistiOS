@@ -6,8 +6,8 @@
 
 */
 
-/** \file   kos/sem.h
-    \brief  Semaphores.
+/** \file    kos/sem.h
+    \brief   Semaphores.
     \ingroup kthreads
 
     This file defines semaphores. A semaphore is a synchronization primitive

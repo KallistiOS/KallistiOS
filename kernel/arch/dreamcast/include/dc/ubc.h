@@ -24,6 +24,7 @@ __BEGIN_DECLS
 
 /** \defgroup ubc   User Break Controller
     \brief          Driver for the SH4's UBC
+    \ingroup        debugging
 */
 
 /* From the SH-4 PDF */

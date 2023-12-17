@@ -6,8 +6,9 @@
 
 */
 
-/** \file   dc/spu.h
-    \brief  Functions related to sound.
+/** \file    dc/spu.h
+    \brief   Functions related to sound.
+    \ingroup audio
 
     This file deals with memory transfers and the like for the sound hardware.
 

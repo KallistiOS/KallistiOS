@@ -28,6 +28,7 @@ __BEGIN_DECLS
 
 /** \defgroup irqs  Interrupts
     \brief          IRQs and ISRs for the SH4's CPU
+    \ingroup        system
 */
 
 /** \brief   The number of bytes required to save thread context.

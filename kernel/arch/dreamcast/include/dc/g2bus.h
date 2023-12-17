@@ -6,8 +6,9 @@
 
 */
 
-/** \file   dc/g2bus.h
-    \brief  G2 bus memory interface.
+/** \file    dc/g2bus.h
+    \brief   G2 bus memory interface.
+    \ingroup system
 
     This file provides low-level support for accessing devices on the G2 bus in
     the Dreamcast. The G2 bus contains the AICA, as well as the expansion port.

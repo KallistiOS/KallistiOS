@@ -5,8 +5,9 @@
 
 */
 
-/** \file   dc/minifont.h
-    \brief  Simple font drawing functions.
+/** \file    dc/minifont.h
+    \brief   Simple font drawing functions.
+    \ingroup video
 
     This file provides support for utilizing the "Naomi" font that is included
     in the KOS source code (in the utils/minifont.h file). This was designed for

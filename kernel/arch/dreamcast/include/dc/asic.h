@@ -28,7 +28,8 @@ __BEGIN_DECLS
 #include <stdint.h>
 
 /** \defgroup asic  Holly ASIC
-    \brief    Events pertaining to the DC's System ASIC
+    \brief          Events pertaining to the DC's System ASIC
+    \ingroup        system
 
 */ 
 

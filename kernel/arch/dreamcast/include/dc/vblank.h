@@ -5,8 +5,9 @@
 
 */
 
-/** \file   dc/vblank.h
-    \brief  VBlank handler registration.
+/** \file    dc/vblank.h
+    \brief   VBlank handler registration.
+    \ingroup system
 
     This file allows functions to be registered to be called on each vblank
     interrupt that occurs. This gives a way to schedule small functions that

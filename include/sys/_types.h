@@ -1,5 +1,6 @@
-/** \file   sys/_types.h
-    \brief  Internal typedefs.
+/** \file    sys/_types.h
+    \brief   Internal typedefs.
+    \ingroup system
 
     This file contains internal typedefs required by libc. You probably
     shouldn't use any of these in your code. Most of these are copied from

@@ -5,8 +5,9 @@
 
 */
 
-/** \file   dc/fs_vmu.h
-    \brief  VMU filesystem driver.
+/** \file    dc/fs_vmu.h
+    \brief   VMU filesystem driver.
+    \ingroup vfs
 
     The VMU filesystem driver mounts itself on /vmu of the VFS. Each memory card
     has its own subdirectory off of that directory (i.e, /vmu/a1 for slot 1 of
@@ -21,6 +22,7 @@
     so that you can use the normal libc file access functions.
 
     \author Megan Potter
+
     \see    dc/vmu_pkg.h
     \see    dc/vmufs.h
 */

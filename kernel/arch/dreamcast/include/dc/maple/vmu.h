@@ -37,6 +37,7 @@ __BEGIN_DECLS
 
 /** \defgroup vmu Visual Memory Unit
     \brief    VMU/VMS Maple Peripheral API
+    \ingroup  peripherals
 
     The Sega Dreamcast's Visual Memory Unit (VMU) 
     is an 8-Bit gaming device which, when plugged into 

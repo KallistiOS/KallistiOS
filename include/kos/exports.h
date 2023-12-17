@@ -5,8 +5,9 @@
 
 */
 
-/** \file   kos/exports.h
-    \brief  Kernel exported symbols support.
+/** \file    kos/exports.h
+    \brief   Kernel exported symbols support.
+    \ingroup vfs
 
     This file contains support related to dynamic linking of the kernel of KOS.
     The kernel (at compile time) produces a list of exported symbols, which can

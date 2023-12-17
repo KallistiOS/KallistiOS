@@ -7,8 +7,9 @@
 
 */
 
-/** \file   dc/sound/stream.h
-    \brief  Sound streaming support.
+/** \file    dc/sound/stream.h
+    \brief   Sound streaming support.
+    \ingroup audio
 
     This file contains declarations for doing streams of sound. This underlies
     pretty much any decoded sounds you might use, including the Ogg Vorbis

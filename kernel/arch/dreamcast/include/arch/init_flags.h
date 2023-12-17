@@ -7,8 +7,9 @@
 
 */
 
-/** \file   arch/init_flags.h
-    \brief  Dreamcast-specific initialization-related flags and macros.
+/** \file    arch/init_flags.h
+    \brief   Dreamcast-specific initialization-related flags and macros.
+    \ingroup init_flags
 
     This file provides initialization-related flags that are specific to the
     Dreamcast architecture.

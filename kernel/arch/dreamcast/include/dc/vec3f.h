@@ -5,8 +5,9 @@
 
 */
 
-/** \file   dc/vec3f.h
-    \brief  Basic matrix operations.
+/** \file    dc/vec3f.h
+    \brief   Basic matrix operations.
+    \ingroup math
 
     This file contains various basic vector math functionality for using the
     SH4's vector instructions. Higher level functionality in KGL is built off

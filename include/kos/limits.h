@@ -5,8 +5,9 @@
 
 */
 
-/** \file   kos/limits.h
-    \brief  Limits.
+/** \file    kos/limits.h
+    \brief   Limits.
+    \ingroup vfs
 
     This file contains definitions of limits of various things.
 

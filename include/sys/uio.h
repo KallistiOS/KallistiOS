@@ -5,8 +5,9 @@
 
 */
 
-/** \file   sys/uio.h
-    \brief  Header for vector I/O.
+/** \file    sys/uio.h
+    \brief   Header for vector I/O.
+    \ingroup vfs
 
     This file contains definitions for vector I/O operations, as specified by
     the POSIX 2008 specification. Full vector-based I/O is not supported for

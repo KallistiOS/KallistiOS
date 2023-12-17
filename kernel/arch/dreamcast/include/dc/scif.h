@@ -7,8 +7,9 @@
 
 */
 
-/** \file   dc/scif.h
-    \brief  Serial port functionality.
+/** \file    dc/scif.h
+    \brief   Serial port functionality.
+    \ingroup system
 
     This file deals with raw access to the serial port on the Dreamcast.
 

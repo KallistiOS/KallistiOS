@@ -5,9 +5,9 @@
 
 */
 
-/** \file   dc/dmac.h
-    \brief  Macros to access the DMA controller
-    registers. 
+/** \file    dc/dmac.h
+    \brief   Macros to access the DMA controller registers. 
+    \ingroup system
 
     This header provides a set of macros to facilitate checking
     the values of various DMA channels on the system.

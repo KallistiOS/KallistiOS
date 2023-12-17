@@ -5,8 +5,9 @@
 
 */
 
-/** \file   kos/fs_romdisk.h
-    \brief  ROMFS virtual file system.
+/** \file    kos/fs_romdisk.h
+    \brief   ROMFS virtual file system.
+    \ingroup vfs
 
     This file contains support for the romdisk VFS. This VFS allows you to make
     Linux-style ROMFS images and either embed them into your binary or load them

@@ -26,10 +26,11 @@ __BEGIN_DECLS
 #include <arch/types.h>
 
 /** \defgroup video Video
-    \brief          General video driver managing resolution, framebuffer, etc.
+    \brief          Video, rendering, graphics, framebuffer management, etc.
 */
 
 /** \defgroup vid_ctype Cable Types
+    \brief              Type of cable connected to the DC
     \ingroup            video
 
     The vid_check_cable() function will return one of this set of values to let
@@ -45,7 +46,8 @@ __BEGIN_DECLS
 #define CT_COMPOSITE    3   /**< \brief Composite cable or RF switch */
 /** @} */
 
-/** \defgroup vid_pmode Video pixel modes
+/** \defgroup vid_pmode Pixel Modes
+    \brief              Video pixel modes
     \ingroup            video
 
     This set of constants control the pixel mode that the framebuffer is set to.
@@ -125,7 +127,8 @@ enum {
 #define VID_MAX_FB  4   // <-- This should be enough
 
 // These are for the "flags" field of "vid_mode_t"
-/** \defgroup vid_flags vid_mode_t Field Flags.
+/** \defgroup vid_flags Video Mode Flags
+    \brief              vid_mode_t Field Flags
     \ingroup            video
 
     These flags indicate various things related to the modes for a vid_mode_t.

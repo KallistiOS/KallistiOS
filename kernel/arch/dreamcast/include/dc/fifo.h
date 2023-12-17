@@ -5,11 +5,13 @@
 
 */
 
-/** \file   dc/fifo.h
-    \brief  Macros to assess FIFO status.
+/** \file    dc/fifo.h
+    \brief   Macros to assess FIFO status.
+    \ingroup system
 
     This header provides a set of macros to facilitate checking
     the status of various FIFOs on the system.
+
     \author Andy Barajas
 */
 

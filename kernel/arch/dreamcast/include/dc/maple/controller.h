@@ -32,6 +32,7 @@ __BEGIN_DECLS
 
 /** \defgroup controller Controller
     \brief    Controller Maple Device API
+    \ingroup  peripherals
 
     This module contains the public API for the controller
     maple driver.

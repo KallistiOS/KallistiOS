@@ -5,8 +5,9 @@
 
 */
 
-/** \file   kos/fs_ramdisk.h
-    \brief  RAM-based virtual file system.
+/** \file    kos/fs_ramdisk.h
+    \brief   RAM-based virtual file system.
+    \ingroup vfs
 
     This file contains support for a ramdisk VFS. This VFS allows you to map
     memory into files that will appear in /ram. Files in this VFS can grow as

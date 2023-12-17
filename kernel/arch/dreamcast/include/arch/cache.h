@@ -6,8 +6,9 @@
    Copyright (C) 2023 Andy Barajas
 */
 
-/** \file   arch/cache.h
-    \brief  Cache management functionality.
+/** \file    arch/cache.h
+    \brief   Cache management functionality.
+    \ingroup system
 
     This file contains definitions for functions that manage the cache in the
     Dreamcast, including functions to flush, invalidate, purge, prefetch and

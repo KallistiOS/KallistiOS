@@ -5,8 +5,9 @@
 
 */
 
-/** \file   kos/string.h
-    \brief  Variants on standard block memory copy/set functions.
+/** \file    kos/string.h
+    \brief   Variants on standard block memory copy/set functions.
+    \ingroup system
 
     This file contains variants on the standard block memory copy/set functions.
     These variants copy/set memory in the specified block sizes, which may be

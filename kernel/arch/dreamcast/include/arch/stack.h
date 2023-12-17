@@ -5,8 +5,9 @@
 
 */
 
-/** \file   arch/stack.h
-    \brief  Stack traces.
+/** \file    arch/stack.h
+    \brief   Stack traces.
+    \ingroup debugging
 
     The functions in this file deal with doing stack traces. These functions
     will do a stack trace, as specified, printing it out to stdout (usually a
