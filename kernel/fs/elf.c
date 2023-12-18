@@ -1,7 +1,8 @@
 /* KallistiOS ##version##
 
    elf.c
-   Copyright (C)2000,2001,2003 Megan Potter
+   Copyright (C) 2000,2001,2003 Megan Potter
+   Copyright (C) 2023 Falco Girgis
 */
 
 #include <malloc.h>
@@ -15,27 +16,18 @@
 #include <kos/thread.h>
 #include <kos/library.h>
 
-/* What's our architecture code we're expecting? */
-#if defined(_arch_dreamcast)
-#   define ARCH_CODE EM_SH
-#elif defined(_arch_ia32)
-#   define ARCH_CODE EM_386
-#elif defined(_arch_gba)
-#   define ARCH_CODE EM_ARM
-#else
-#   error Unknown architecture
-#endif
-
-#define ELF_DEBUG 0
+#ifndef ELF_DEBUG 
+#   define ELF_DEBUG 0
+#endif 
 
 #if ELF_DEBUG
-#   define DBG(x) printf x
+#   define DBG(...) printf(__VA_ARGS__)
 #else
-#   define DBG(x)
+#   define DBG(...)
 #endif
 
 /* Finds a given symbol in a relocated ELF symbol table */
-static int find_sym(char *name, struct elf_sym_t* table, int tablelen) {
+static int find_sym(char *name, elf_sym_t *table, int tablelen) {
     int i;
 
     for(i = 0; i < tablelen; i++) {
@@ -52,19 +44,19 @@ static int find_sym(char *name, struct elf_sym_t* table, int tablelen) {
    will be set to the entry point. */
 /* There's a lot of shit in here that's not documented or very poorly
    documented by Intel.. I hope that this works for future compilers. */
-int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
-    uint8           *img, *imgout;
-    int         sz, i, j, sect;
-    struct elf_hdr_t    *hdr;
-    struct elf_shdr_t   *shdrs, *symtabhdr;
-    struct elf_sym_t    *symtab;
-    int         symtabsize;
-    struct elf_rel_t    *reltab;
-    struct elf_rela_t   *relatab;
-    int         reltabsize;
-    char            *stringtab;
-    uint32          vma;
-    file_t          fd;
+int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
+    uint8               *img, *imgout;
+    int                 sz, rsz, i, j, sect;
+    struct elf_hdr      *hdr;
+    struct elf_shdr     *shdrs, *symtabhdr;
+    struct elf_sym      *symtab;
+    int                 symtabsize;
+    struct elf_rel      *reltab;
+    struct elf_rela     *relatab;
+    int                 reltabsize;
+    char                *stringtab;
+    uint32              vma;
+    file_t              fd;
 
     (void)shell;
 
@@ -87,11 +79,16 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
         return -1;
     }
 
-    fs_read(fd, img, sz);
+    rsz = fs_read(fd, img, sz);
     fs_close(fd);
+    
+    if(rsz < sz) {
+        dbglog(DBG_ERROR, "elf_load: only read %d of %d bytes\n", rsz, sz);
+        goto error1;
+    }
 
     /* Header is at the front */
-    hdr = (struct elf_hdr_t *)(img + 0);
+    hdr = (struct elf_hdr *)(img + 0);
 
     if(hdr->ident[0] != 0x7f || strncmp((char *)hdr->ident + 1, "ELF", 3)) {
         dbglog(DBG_ERROR, "elf_load: file is not a valid ELF file\n");
@@ -105,28 +102,28 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
         goto error1;
     }
 
-    if(hdr->machine != ARCH_CODE) {
+    if(hdr->machine != EM_SH) {
         dbglog(DBG_ERROR, "elf_load: invalid architecture %02x in ELF file\n", hdr->machine);
         goto error1;
     }
 
     /* Print some debug info */
-    DBG(("File size is %d bytes\n", sz));
-    DBG(("	entry point	%08lx\n", hdr->entry));
-    DBG(("	ph offset	%08lx\n", hdr->phoff));
-    DBG(("	sh offset	%08lx\n", hdr->shoff));
-    DBG(("	flags		%08lx\n", hdr->flags));
-    DBG(("	ehsize		%08x\n", hdr->ehsize));
-    DBG(("	phentsize	%08x\n", hdr->phentsize));
-    DBG(("	phnum		%08x\n", hdr->phnum));
-    DBG(("	shentsize	%08x\n", hdr->shentsize));
-    DBG(("	shnum		%08x\n", hdr->shnum));
-    DBG(("	shstrndx	%08x\n", hdr->shstrndx));
+    DBG("File size is %d bytes\n", sz);
+    DBG("	entry point	%08lx\n", hdr->entry);
+    DBG("	ph offset	%08lx\n", hdr->phoff);
+    DBG("	sh offset	%08lx\n", hdr->shoff);
+    DBG("	flags		%08lx\n", hdr->flags);
+    DBG("	ehsize		%08x\n", hdr->ehsize);
+    DBG("	phentsize	%08x\n", hdr->phentsize);
+    DBG("	phnum		%08x\n", hdr->phnum);
+    DBG("	shentsize	%08x\n", hdr->shentsize);
+    DBG("	shnum		%08x\n", hdr->shnum);
+    DBG("	shstrndx	%08x\n", hdr->shstrndx);
 
     /* Locate the string table; SH elf files ought to have
        two string tables, one for section names and one for object
        string names. We'll look for the latter. */
-    shdrs = (struct elf_shdr_t *)(img + hdr->shoff);
+    shdrs = (struct elf_shdr *)(img + hdr->shoff);
     stringtab = NULL;
 
     for(i = 0; i < hdr->shnum; i++) {
@@ -155,8 +152,8 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
         goto error1;
     }
 
-    symtab = (struct elf_sym_t *)(img + symtabhdr->offset);
-    symtabsize = symtabhdr->size / sizeof(struct elf_sym_t);
+    symtab = (struct elf_sym *)(img + symtabhdr->offset);
+    symtabsize = symtabhdr->size / sizeof(struct elf_sym);
 
     /* Relocate symtab entries for quick access */
     for(i = 0; i < symtabsize; i++)
@@ -179,7 +176,7 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
         }
     }
 
-    DBG(("Final image is %d bytes\n", sz));
+    DBG("Final image is %d bytes\n", sz);
     out->data = imgout = malloc(sz);
 
     if(out->data == NULL) {
@@ -193,13 +190,13 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
     for(i = 0; i < hdr->shnum; i++) {
         if(shdrs[i].flags & SHF_ALLOC) {
             if(shdrs[i].type == SHT_NOBITS) {
-                DBG(("  setting %d bytes of zeros at %08x\n",
-                     shdrs[i].size, shdrs[i].addr));
+                DBG("  setting %d bytes of zeros at %08x\n",
+                     shdrs[i].size, shdrs[i].addr);
                 memset(imgout + shdrs[i].addr, 0, shdrs[i].size);
             }
             else {
-                DBG(("  copying %d bytes from %08x to %08x\n",
-                     shdrs[i].size, shdrs[i].offset, shdrs[i].addr));
+                DBG("  copying %d bytes from %08x to %08x\n",
+                     shdrs[i].size, shdrs[i].offset, shdrs[i].addr);
                 memcpy(imgout + shdrs[i].addr,
                        img + shdrs[i].offset,
                        shdrs[i].size);
@@ -209,16 +206,16 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
 
     /* Go through and patch in any symbols that are undefined */
     for(i = 1; i < symtabsize; i++) {
-        export_sym_t * sym;
+        export_sym_t *sym;
 
-        /* DBG((" symbol '%s': value %04lx, size %04lx, info %02x, other %02x, shndx %04lx\n",
+        /* DBG(" symbol '%s': value %04lx, size %04lx, info %02x, other %02x, shndx %04lx\n",
             (const char *)(symtab[i].name),
             symtab[i].value, symtab[i].size,
             symtab[i].info,
             symtab[i].other,
-            symtab[i].shndx)); */
+            symtab[i].shndx); */
         if(symtab[i].shndx != SHN_UNDEF || ELF32_ST_TYPE(symtab[i].info) == STT_SECTION) {
-            // DBG((" symbol '%s': skipping\n", (const char *)(symtab[i].name)));
+            // DBG(" symbol '%s': skipping\n", (const char *)(symtab[i].name));
             continue;
         }
 
@@ -231,9 +228,9 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
         }
 
         /* Patch it in */
-        DBG((" symbol '%s' patched to 0x%lx\n",
+        DBG(" symbol '%s' patched to 0x%lx\n",
              (const char *)(symtab[i].name),
-             sym->ptr));
+             sym->ptr);
         symtab[i].value = sym->ptr;
     }
 
@@ -245,12 +242,12 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
         if(shdrs[i].type != SHT_REL && shdrs[i].type != SHT_RELA) continue;
 
         sect = shdrs[i].info;
-        DBG(("Relocating (%s) on section %d\n", shdrs[i].type == SHT_REL ? "SHT_REL" : "SHT_RELA", sect));
+        DBG("Relocating (%s) on section %d\n", shdrs[i].type == SHT_REL ? "SHT_REL" : "SHT_RELA", sect);
 
         switch(shdrs[i].type) {
             case SHT_RELA:
-                relatab = (struct elf_rela_t *)(img + shdrs[i].offset);
-                reltabsize = shdrs[i].size / sizeof(struct elf_rela_t);
+                relatab = (struct elf_rela *)(img + shdrs[i].offset);
+                reltabsize = shdrs[i].size / sizeof(struct elf_rela);
 
                 for(j = 0; j < reltabsize; j++) {
                     int sym;
@@ -265,11 +262,11 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
                     sym = ELF32_R_SYM(relatab[j].info);
 
                     if(symtab[sym].shndx == SHN_UNDEF) {
-                        DBG(("  Writing undefined RELA %08x(%08lx+%08lx) -> %08x\n",
+                        DBG("  Writing undefined RELA %08x(%08lx+%08lx) -> %08x\n",
                              symtab[sym].value + relatab[j].addend,
                              symtab[sym].value,
                              relatab[j].addend,
-                             vma + shdrs[sect].addr + relatab[j].offset));
+                             vma + shdrs[sect].addr + relatab[j].offset);
                         *((uint32 *)(imgout
                                      + shdrs[sect].addr
                                      + relatab[j].offset))
@@ -277,10 +274,10 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
                               + relatab[j].addend;
                     }
                     else {
-                        DBG(("  Writing RELA %08x(%08x+%08x+%08x+%08x) -> %08x\n",
+                        DBG("  Writing RELA %08x(%08x+%08x+%08x+%08x) -> %08x\n",
                              vma + shdrs[symtab[sym].shndx].addr + symtab[sym].value + relatab[j].addend,
                              vma, shdrs[symtab[sym].shndx].addr, symtab[sym].value, relatab[j].addend,
-                             vma + shdrs[sect].addr + relatab[j].offset));
+                             vma + shdrs[sect].addr + relatab[j].offset);
                         *((uint32*)(imgout
                                     + shdrs[sect].addr      /* assuming 1 == .text */
                                     + relatab[j].offset))
@@ -294,8 +291,8 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
                 break;
 
             case SHT_REL:
-                reltab = (struct elf_rel_t *)(img + shdrs[i].offset);
-                reltabsize = shdrs[i].size / sizeof(struct elf_rel_t);
+                reltab = (struct elf_rel *)(img + shdrs[i].offset);
+                reltabsize = shdrs[i].size / sizeof(struct elf_rel);
 
                 for(j = 0; j < reltabsize; j++) {
                     int sym, info, pcrel;
@@ -316,10 +313,10 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
                         uint32 value = symtab[sym].value;
 
                         if(sect == 1 && j < 5) {
-                            DBG(("  Writing undefined %s %08x -> %08x",
+                            DBG("  Writing undefined %s %08x -> %08x",
                                  pcrel ? "PCREL" : "ABSREL",
                                  value,
-                                 vma + shdrs[sect].addr + reltab[j].offset));
+                                 vma + shdrs[sect].addr + reltab[j].offset);
                         }
 
                         if(pcrel)
@@ -331,7 +328,7 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
                         += value;
 
                         if(sect == 1 && j < 5) {
-                            DBG(("(%08x)\n", *((uint32 *)(imgout + shdrs[sect].addr + reltab[j].offset))));
+                            DBG("(%08x)\n", *((uint32 *)(imgout + shdrs[sect].addr + reltab[j].offset)));
                         }
                     }
                     else {
@@ -339,11 +336,11 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
                                        + symtab[sym].value;
 
                         if(sect == 1 && j < 5) {
-                            DBG(("  Writing %s %08x(%08x+%08x+%08x) -> %08x",
+                            DBG("  Writing %s %08x(%08x+%08x+%08x) -> %08x",
                                  pcrel ? "PCREL" : "ABSREL",
                                  value,
                                  vma, shdrs[symtab[sym].shndx].addr, symtab[sym].value,
-                                 vma + shdrs[sect].addr + reltab[j].offset));
+                                 vma + shdrs[sect].addr + reltab[j].offset);
                         }
 
                         if(pcrel)
@@ -355,7 +352,7 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
                         += value;
 
                         if(sect == 1 && j < 5) {
-                            DBG(("(%08x)\n", *((uint32 *)(imgout + shdrs[sect].addr + reltab[j].offset))));
+                            DBG("(%08x)\n", *((uint32 *)(imgout + shdrs[sect].addr + reltab[j].offset)));
                         }
                     }
                 }
@@ -391,7 +388,7 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
     }
 
     free(img);
-    DBG(("elf_load final ELF stats: memory image at %p, size %08lx\n\tentry pt %p\n", out->data, out->size, out->start));
+    DBG("elf_load final ELF stats: memory image at %p, size %08lx\n\tentry pt %p\n", out->data, out->size, out->start);
 
     /* Flush the icache for that zone */
     icache_flush_range((uint32)out->data, out->size);
