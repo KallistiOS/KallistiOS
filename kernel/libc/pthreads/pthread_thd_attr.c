@@ -123,7 +123,7 @@ int pthread_cancel(pthread_t thread) {
     return EINVAL;
 }
 
-/* Setting Cancelability State, P1003.1c/Draft 10, p. 183 */
+/* Setting Cancellability State, P1003.1c/Draft 10, p. 183 */
 
 int pthread_setcancelstate(int state, int *oldstate) {
     (void)state;

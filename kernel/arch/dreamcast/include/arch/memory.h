@@ -38,13 +38,13 @@ __BEGIN_DECLS
     \ingroup memory
 
     This masks out the upper 3 bits of an address. This is used when it is
-    necssary to access memory with a specified caching mode. This is needed for
+    necessary to access memory with a specified caching mode. This is needed for
     DMA and SQ usage as well as various MMU functions.
 
 */
 #define MEM_AREA_CACHE_MASK 0x1fffffff
 
-/** \brief U0 memory region base (cachable).
+/** \brief U0 memory region base (cacheable).
     \ingroup memory
 
     This is the base user mode memory address. It is cacheable as determined
@@ -56,7 +56,7 @@ __BEGIN_DECLS
 */
 #define MEM_AREA_U0_BASE    0x00000000
 
-/** \brief P0 memory region base (cachable).
+/** \brief P0 memory region base (cacheable).
     \ingroup memory
 
     This is the base privileged mode memory address. It is cacheable as determined
@@ -66,7 +66,7 @@ __BEGIN_DECLS
 */
 #define MEM_AREA_P0_BASE    0x00000000
 
-/** \brief P1 memory region base (cachable).
+/** \brief P1 memory region base (cacheable).
     \ingroup memory
 
     This is a modularly cachable memory region. It is cacheable as determined by
@@ -78,7 +78,7 @@ __BEGIN_DECLS
 */
 #define MEM_AREA_P1_BASE    0x80000000
 
-/** \brief P2 memory region base (non-cachable).
+/** \brief P2 memory region base (non-cacheable).
     \ingroup memory
 
     This is the non-cachable memory region. It is most frequently for DMA
@@ -87,7 +87,7 @@ __BEGIN_DECLS
 */
 #define MEM_AREA_P2_BASE    0xa0000000
 
-/** \brief P3 memory region base (cachable).
+/** \brief P3 memory region base (cacheable).
     \ingroup memory
 
     This functions as the lower 512MB of P0.
@@ -95,7 +95,7 @@ __BEGIN_DECLS
 */
 #define MEM_AREA_P3_BASE    0xc0000000
 
-/** \brief P4 memory region base (non-cachable)
+/** \brief P4 memory region base (non-cacheable)
     \ingroup memory
 
     This offset maps to on-chip I/O channels.
@@ -103,7 +103,7 @@ __BEGIN_DECLS
 #define MEM_AREA_P4_BASE    0xe0000000
 
 /** \defgroup p4mem     P4 memory region
-    \brief              P4 SH-internal memory region (non-cachable).
+    \brief              P4 SH-internal memory region (non-cacheable).
     \ingroup            memory
 */
 

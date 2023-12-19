@@ -21,7 +21,7 @@
     of ext2 and the availability of programs/drivers to read ext2 on most major
     OSes available for PCs today. The second purpose of this filesystem driver
     is to provide an alternative for fs_romdisk when swapping out disk images at
-    runtime. Basically, if a disk image is useful to you, but cacheing it fully
+    runtime. Basically, if a disk image is useful to you, but caching it fully
     in memory is not important, then you could rig up a relatively simple
     interface with this filesystem driver.
 

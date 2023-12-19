@@ -81,7 +81,7 @@ void mat_identity(void);
     \note 
     For best performance, 32-byte alignment of \p src is recommended.
 
-    \param  src             A poitner to the matrix to multiply.
+    \param  src             A pointer to the matrix to multiply.
 */
 void mat_apply(matrix_t *src);
 

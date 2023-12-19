@@ -106,7 +106,7 @@ typedef struct vfs_handler {
     nmmgr_handler_t nmmgr;
 
     /* Some VFS-specific pieces */
-    /** \brief Allow VFS cacheing; 0=no, 1=yes */
+    /** \brief Allow VFS caching; 0=no, 1=yes */
     int cache;
     /** \brief Pointer to private data for the handler */
     void *privdata;
@@ -291,7 +291,7 @@ ssize_t fs_read(file_t hnd, void *buffer, size_t cnt);
 
 /** \brief   Write to an opened file.
 
-    This function writes the specfied buffer into the file at the current file
+    This function writes the specified buffer into the file at the current file
     pointer.
 
     \param  hnd             The file descriptor to write into.

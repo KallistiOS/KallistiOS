@@ -22,7 +22,7 @@
 /* Are we initted? */
 static int initted = 0;
 
-/* This will come from a seperately linked object file */
+/* This will come from a separately linked object file */
 extern uint8_t snd_stream_drv[];
 extern uint8_t snd_stream_drv_end[];
 

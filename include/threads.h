@@ -69,7 +69,7 @@ __BEGIN_DECLS
 */
 typedef kthread_once_t once_flag;
 
-/** \brief  Macro to initiallize a once_flag object. */
+/** \brief  Macro to initialize a once_flag object. */
 #define ONCE_FLAG_INIT KTHREAD_ONCE_INIT
 
 /** \brief  Call a function one time, no matter how many threads try.
@@ -169,7 +169,7 @@ extern int mtx_timedlock(mtx_t *__RESTRICT mtx,
 
 /** \brief  Attempt to acquire a mutex lock.
 
-    This function attempts to acquire the specififed mutex and will not block if
+    This function attempts to acquire the specified mutex and will not block if
     it cannot be obtained.
 
     \param  mtx             The mutex to lock.

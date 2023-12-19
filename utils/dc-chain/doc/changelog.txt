@@ -92,7 +92,7 @@
 2020-09-22: Create separate "stable" (4.7.4) and "testing" (9.3.0) configurations.
             (SiZiOUS)
 2020-08-31: Update dc-chain utility to work out of the box under many different
-            environments, including MinGW/MSYS, MinGW-w64/MSYS2, Cygin, Windows Subsystem
+            environments, including MinGW/MSYS, MinGW-w64/MSYS2, Cygwin, Windows Subsystem
             for Linux, macOS, Linux, and BSD. (SiZiOUS)
 2020-07-23: Fix Newlib 3.3.0 patch to use a sensible type for ino_t. (Lawrence Sebald)
 2020-04-07: Update to prefer curl over wget in download script. (Ben Baron)

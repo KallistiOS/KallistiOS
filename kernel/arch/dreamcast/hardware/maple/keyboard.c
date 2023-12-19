@@ -178,7 +178,7 @@ static kbd_keymap_t keymaps[KBD_NUM_KEYMAPS] = {
     },
     {
         /* German/QWERTZ keyboard */
-        /* The hex values in the tables are the ISO-8859-15 represention of the
+        /* The hex values in the tables are the ISO-8859-15 representation of the
            German special chars. */
         {
             /* Base values */
@@ -249,7 +249,7 @@ static kbd_keymap_t keymaps[KBD_NUM_KEYMAPS] = {
     {
         /* ES (Spanish QWERTY) keyboard */
         /* The hex values in the tables are the ISO-8859-15 (Euro revision)
-           represention of the Spanish special chars. */
+           representation of the Spanish special chars. */
         {
             /* Base values */
             /* 0xa1: '¡', 0xba: 'º', 0xb4: '´', 0xe7: 'ç',

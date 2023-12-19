@@ -142,7 +142,7 @@ extern int h_errno;
 */
 void freeaddrinfo(struct addrinfo *ai);
 
-/** \brief   Get information about a specified addresss.
+/** \brief   Get information about a specified address.
     \ingroup network_db
 
     This function translates the name of a host and service into a set of socket

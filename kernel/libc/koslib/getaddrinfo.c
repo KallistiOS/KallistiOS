@@ -18,7 +18,7 @@
    The implementations of getaddrinfo() and freeaddrinfo() are new to this
    version of the code though.
 
-   Eventually, I'd like to add some sort of cacheing of results to this file so
+   Eventually, I'd like to add some sort of caching of results to this file so
    that if you look something up more than once, it doesn't have to go back out
    to the server to do so. But, for now, there is no local database of cached
    addresses...

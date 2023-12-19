@@ -200,7 +200,7 @@ typedef struct fs_socket_proto {
     */
     int (*listen)(net_socket_t *s, int backlog);
 
-    /** \brief  Recieve data on a socket created with the protocol.
+    /** \brief  Receive data on a socket created with the protocol.
 
         This function should implement the ::recvfrom() system call for the
         protocol. The semantics are exactly as expected for that function. Also,
@@ -267,7 +267,7 @@ typedef struct fs_socket_proto {
         \param  src         The interface the packet was input on
         \param  domain      The low-level protocol used (AF_INET or AF_INET6)
         \param  hdr         The low-level protocol header
-        \param  data        The packet itself, including any protcol headers,
+        \param  data        The packet itself, including any protocol headers,
                             but not any from lower-level protocols
         \param  size        The size of the packet, not including any lower-
                             level protocol headers
@@ -351,7 +351,7 @@ typedef struct fs_socket_proto {
     /** \brief  Poll for events.
 
         This function should check the given socket for any events that may have
-        already occured that are specified. This is used to back the ::poll()
+        already occurred that are specified. This is used to back the ::poll()
         system call. This function should not block to wait for any events. This
         function may be called in an interrupt.
 

@@ -272,7 +272,7 @@ typedef struct {
     \headerfile dc/maple/keyboard.h
 */
 typedef struct kbd_state {
-    /** \brief  The lastest raw condition of the keyboard. */
+    /** \brief  The latest raw condition of the keyboard. */
     kbd_cond_t cond;
 
     /** \brief  Key array.

@@ -251,7 +251,7 @@ int main(int argc, char **argv) {
 
     pvr_mem_free(d_texture);
 
-    /* Shutdown isn't technically neccessary, but is possible */
+    /* Shutdown isn't technically necessary, but is possible */
     pvr_shutdown();
 
     return 0;

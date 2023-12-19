@@ -41,7 +41,7 @@ typedef struct dbgio_handler {
     const char  * name;
 
     /** \brief  Detect this debug interface.
-        \retval 1           If the device is available and useable
+        \retval 1           If the device is available and usable
         \retval 0           If the device is unavailable
     */
     int (*detected)(void);

@@ -4,7 +4,7 @@
 /* volatile unsigned char *dc_snd_base = (unsigned char *)0x00800000; */
 #define dc_snd_base ((volatile unsigned char *)0x00800000)
 
-/* Some convienence macros */
+/* Some convenience macros */
 #define SNDREG32A(x) ((volatile unsigned long *)(dc_snd_base + (x)))
 #define SNDREG32(x) (*SNDREG32A(x))
 #define SNDREG8A(x) (dc_snd_base + (x))

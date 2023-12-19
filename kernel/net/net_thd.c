@@ -72,7 +72,7 @@ int net_thd_add_callback(void (*cb)(void *), void *data, uint64 timeout) {
     newcb->timeout = timeout;
     newcb->nextrun = timer_ms_gettime64() + timeout;
 
-    /* Disable interrupts, insert, and reenable interrupts */
+    /* Disable interrupts, insert, and re-enable interrupts */
     old = irq_disable();
     TAILQ_INSERT_TAIL(&cbs, newcb, thds);
     irq_restore(old);

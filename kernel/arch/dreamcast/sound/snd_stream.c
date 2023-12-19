@@ -580,7 +580,7 @@ static inline void dma_chain(void *data) {
     spu_dma_transfer(sep_buffer[1], dmadest, dmacnt, 0, dma_done, 0);
 }
 
-/* Poll streamer to load more data if neccessary */
+/* Poll streamer to load more data if necessary */
 int snd_stream_poll(snd_stream_hnd_t hnd) {
     uint32_t ch0pos, ch1pos, write_pos;
     uint16_t current_play_pos;
