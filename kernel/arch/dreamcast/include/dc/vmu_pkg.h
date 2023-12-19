@@ -79,7 +79,8 @@ typedef struct vmu_hdr {
     /* Eyecatch palette + bitmap */
 } vmu_hdr_t;
 
-/** \defgroup vmu_ectype    Eyecatch types.
+/** \defgroup vmu_ectype    Eyecatch Types
+    \brief                  Values for various VMU eyecatch formats
     \ingroup                vmu_package
 
     All eyecatches are 72x56, but the pixel format is variable. Note that in all

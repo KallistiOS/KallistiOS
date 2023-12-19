@@ -67,6 +67,7 @@ __BEGIN_DECLS
 #define MAPLE_IRQ_DEBUG 0
 
 /** \defgroup maple_regs            Registers
+    \brief                          Addresses for various maple registers
     \ingroup  maple
 
     These are various registers related to the Maple Bus. In general, you
@@ -84,6 +85,7 @@ __BEGIN_DECLS
 /** @} */
 
 /** \defgroup maple_reg_values      Register Values
+    \brief                          Values for various maple registers
     \ingroup  maple
 
     These are the values that are written to registers to get them to do their
@@ -108,6 +110,7 @@ __BEGIN_DECLS
 /** @} */
 
 /** \defgroup maple_cmds            Commands and Responses
+    \brief                          Maple command and response values
     \ingroup  maple
 
     These are all either commands or responses to commands sent to or from Maple
@@ -139,6 +142,7 @@ __BEGIN_DECLS
 /** @} */
 
 /** \defgroup maple_functions       Function Codes
+    \brief                          Values of maple "function" codes
     \ingroup  maple
 
     This is the list of maple device types (function codes). Each device must
@@ -206,6 +210,7 @@ typedef struct maple_frame {
 } maple_frame_t;
 
 /** \defgroup maple_frame_states    Frame States
+    \brief                          States for a maple frame
     \ingroup                        maple
     @{
 */
@@ -412,8 +417,8 @@ typedef struct maple_state_str {
  */
 #define maple_write(A, V) ( *((vuint32*)(A)) = (V) )
 
-/* Return codes from maple access functions */
 /** \defgroup maple_func_rvs        Return Values
+    \brief                          Return codes from maple access functions
     \ingroup  maple
     @{
 */

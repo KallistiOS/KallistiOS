@@ -232,6 +232,7 @@ int hardware_periph_init(void);
 void hardware_shutdown(void);
 
 /** \defgroup hw_consoles           Console Types
+    \brief                          Byte values returned by hardware_sys_mode()
     \ingroup  arch
 
     These are the various console types that can be returned by the
@@ -244,12 +245,15 @@ void hardware_shutdown(void);
 /** @} */
 
 /** \defgroup hw_regions            Region Codes
+    \brief                          Values returned by hardware_sys_mode();
     \ingroup  arch
 
     These are the various region codes that can be returned by the
-    hardware_sys_mode() function. Note that a retail Dreamcast will always
-    return 0 for the region code. You must read the region of a retail device
-    from the flashrom.
+    hardware_sys_mode() function. 
+
+    \note
+    A retail Dreamcast will always return 0 for the region code. 
+    You must read the region of a retail device from the flashrom.
 
     \see    fr_region
     \see    flashrom_get_region()

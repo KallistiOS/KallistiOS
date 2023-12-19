@@ -184,6 +184,7 @@ typedef struct knetif {
 } netif_t;
 
 /** \defgroup net_drivers_flags netif_t Flags
+    \brief                      Network interface flags
     \ingroup                    networking_drivers
     @{
 */
@@ -198,6 +199,7 @@ typedef struct knetif {
 /** @} */
 
 /** \defgroup net_drivers_returns    TX Return Values
+    \brief                           Driver return values for TX network interfaces
     \ingroup                         networking_drivers
     @{
  */
@@ -207,6 +209,7 @@ typedef struct knetif {
 /** @} */
 
 /** \defgroup net_drivers_blocking  Blocking Types
+    \brief                          Blocking type avlues for network interfaces
     \ingroup                        networking_drivers
     @{
  */
@@ -620,7 +623,8 @@ int net_icmp6_send_nadv(netif_t *net, const struct in6_addr *dst,
 */
 int net_icmp6_send_rsol(netif_t *net);
 
-/** \defgroup networking_icmpv6_unreachable Destination Unreachable Codes 
+/** \defgroup networking_icmpv6_unreachable Destination Unreachable Codes
+    \brief                                  Destination unreachable packet types
     \ingroup                                networking_icmpv6
 
     Only port unreachable really makes sense
@@ -650,6 +654,7 @@ int net_icmp6_send_dest_unreach(netif_t *net, uint8 code, const uint8 *ppkt,
                                 size_t psz);
 
 /** \defgroup networking_icmpv6_time_exceeded Time Exceeded Codes
+    \brief                                    Time exceeded codes for ICMPv6
     \ingroup                                  networking_icmpv6
 
     Only fragment reassembly time exceeded makes sense 
@@ -673,7 +678,8 @@ int net_icmp6_send_dest_unreach(netif_t *net, uint8 code, const uint8 *ppkt,
 int net_icmp6_send_time_exceeded(netif_t *net, uint8 code, const uint8 *ppkt,
                                  size_t psz);
 
-/** \defgroup networking_icmpv6_param_problem   Parameter Problem Codes 
+/** \defgroup networking_icmpv6_param_problem   Parameter Problem Codes
+    \brief                                      Codes for ICMPv6 parameter problem packets
     \ingroup                                    networking_icmpv6
     @{
  */

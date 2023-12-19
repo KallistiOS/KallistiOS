@@ -39,11 +39,13 @@ __BEGIN_DECLS
    bit index within that register. */
 
 /** \defgroup asic_events           Event Codes
+    \brief                          Values for various Holly event codes
     \ingroup  asic
     @{
 */
 
 /** \defgroup asic_events_pvr       PowerVR
+    \brief                          Event code values for PowerVR events
     \ingroup  asic_events
 
     These are events that the PVR itself generates that can be hooked.
@@ -73,7 +75,8 @@ __BEGIN_DECLS
 #define ASIC_EVT_PVR_TA_INPUT_OVERFLOW    0x0205  /**< \brief Vertex input overflowed queue */
 /** @} */
 
-/** \defgroup asic_events_gd         GD-ROM Drive
+/** \defgroup asic_events_gd        GD-ROM Drive
+    \brief                          Event code values for GD-ROM events
     \ingroup  asic_events
 
     These are events that the GD-ROM drive generates that can be hooked.
@@ -85,7 +88,8 @@ __BEGIN_DECLS
 #define ASIC_EVT_GD_DMA_ILLADDR     0x020c  /**< \brief GD-Rom DMA illegal address */
 /** @} */
 
-/** \defgroup asic_events_maple      Maple
+/** \defgroup asic_events_maple     Maple
+    \brief                          Event code values for Maple events
     \ingroup  asic_events
 
     These are events that Maple generates that can be hooked.
@@ -96,6 +100,7 @@ __BEGIN_DECLS
 /** @} */
 
 /** \defgroup asic_events_spu       AICA
+    \brief                          Event code values for AICA events
     \ingroup  asic_events
 
     These are events that the SPU (AICA) generates that can be hooked.
@@ -106,6 +111,7 @@ __BEGIN_DECLS
 /** @} */
 
 /** \defgroup asic_events_g2dma     G2 Bus DMA
+    \brief                          Event code values for G2 Bus events
     \ingroup  asic_events
 
     These are events that G2 bus DMA generates that can be hooked.
@@ -118,6 +124,7 @@ __BEGIN_DECLS
 /** @} */
 
 /** \defgroup asic_events_ext      External Port
+    \brief                          Event code values for external port events
     \ingroup  asic_events
 
     These are events that external devices generate that can be hooked.
@@ -130,6 +137,7 @@ __BEGIN_DECLS
 /** @} */
 
 /** \defgroup asic_regs             Registers
+    \brief                          Addresses for various ASIC eveng registers
     \ingroup  asic
 
     These are the locations in memory where the ASIC registers sit.
@@ -151,6 +159,7 @@ __BEGIN_DECLS
 /** @} */
 
 /** \defgroup asic_irq_lv           IRQ Levels
+    \brief                          values for the various ASIC event IRQ levels
     \ingroup  asic
 
     You can pick one at hook time, or don't choose anything and the default will

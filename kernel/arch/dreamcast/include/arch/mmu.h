@@ -84,6 +84,7 @@ __BEGIN_DECLS
 */
 
 /** \defgroup mmu_bit_macros        Address Bits
+    \brief                          Defintions and masks for address pages
     \ingroup                        mmu
 
     The MMU code uses these to determine the page of a request.
@@ -102,6 +103,7 @@ __BEGIN_DECLS
 /** @} */
 
 /** \defgroup mmu_prot_values       Protection Settings
+    \brief                          SH4 MMU page protection settings values
     \ingroup                        mmu
 
     Each page mapped via the MMU can be protected in a couple of different ways,
@@ -116,6 +118,7 @@ __BEGIN_DECLS
 /** @} */
 
 /** \defgroup mmu_cache_values      Cacheability Settings
+    \brief                          SH4 MMU page cachability settings values
     \ingroup                        mmu
 
     Each page mapped via the MMU can have its cacheability set individually.

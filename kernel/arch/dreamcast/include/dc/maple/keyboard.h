@@ -34,6 +34,7 @@ __BEGIN_DECLS
 */
 
 /** \defgroup   kbd_mods    Modifier Keys
+    \brief                  Masks for the various keyboard modifier keys
     \ingroup                kbd
 
     These are the various modifiers that can be pressed on the keyboard, and are
@@ -51,6 +52,7 @@ __BEGIN_DECLS
 /** @} */
 
 /** \defgroup   kbd_leds    LEDs
+    \brief                  Values for the different keyboard LEDs
     \ingroup                kbd
 
     This is the LEDs that can be turned on and off on the keyboard. This list
@@ -64,6 +66,7 @@ __BEGIN_DECLS
 /** @} */
 
 /** \defgroup   kbd_keys    Keys
+    \brief                  Values representing the various keyboard keys
     \ingroup                kbd
 
     This is the list of keys that are on the keyboard that may be pressed. The
@@ -176,6 +179,7 @@ __BEGIN_DECLS
 /** @} */
 
 /** \defgroup   kbd_regions Region Codes
+    \brief                  Region codes for the Dreamcast keyboard
     \ingroup                kbd
 
     This is the list of possible values for the "region" field in the

@@ -34,6 +34,7 @@
    in modem.h! */
 
 /** \defgroup   modem_speeds    Speed Values
+    \brief                      Modem speed values
     \ingroup    modem
 
     This group defines the available speed values that are able to be used with
@@ -65,6 +66,7 @@
 /** @} */
 
 /** \defgroup   modem_protocols Protocol Values
+    \brief                      Modem protocol values
     \ingroup    modem
 
     This group defines the available protocol values that are able to be used

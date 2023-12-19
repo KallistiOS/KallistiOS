@@ -217,7 +217,8 @@ extern const struct in6_addr in6addr_loopback;
 */
 #define IPPROTO_UDPLITE 136
 
-/** \defgroup ipv4_opts                 IPv4 protocol level options
+/** \defgroup ipv4_opts                 Options
+    \brief                              Options for v4 of the Internet Protocol
     \ingroup                            networking_ipv4
 
     These are the various socket-level optoins that can be accessed with the
@@ -239,7 +240,8 @@ extern const struct in6_addr in6addr_loopback;
 
 /** @} */
 
-/** \defgroup ipv6_opts                 IPv6 protocol level options
+/** \defgroup ipv6_opts                 Options
+    \brief                              Options for v6 of the Internet Protocol
     \ingroup                            networking_ipv6
 
     These are the various socket-level options that can be accessed with the

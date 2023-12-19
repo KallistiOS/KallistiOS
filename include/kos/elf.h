@@ -58,6 +58,7 @@ struct elf_hdr_t {
 };
 
 /** \defgroup elf_archs                 Architecture Types
+    \brief                              Relevant ELF architecture type codes
     \ingroup  elf
 
     These are the various architectures that we might care about for ELF files.
@@ -70,6 +71,7 @@ struct elf_hdr_t {
 /** @} */
 
 /** \defgroup elf_sections              Section Header Types
+    \brief                              ELF section header type values
     \ingroup  elf
 
     These are the various types of section headers that can exist in an ELF
@@ -97,6 +99,7 @@ the file */
 /** @} */
 
 /** \defgroup elf_hdrflags              Section Header Flags
+    \brief                              ELF section header flags
     \ingroup  elf
 
     These are the flags that can be set on a section header. These are related
@@ -111,6 +114,7 @@ the file */
 /** @} */
 
 /** \defgroup elf_specsec               Special Section Indeces
+    \brief                              ELF section indices
     \ingroup  elf
 
     These are the indices to be used in special situations in the section array.
@@ -163,6 +167,7 @@ switch (sh_type) {
 */
 
 /** \defgroup elf_binding               Symbol Binding Types
+    \brief                              ELF symbol binding type values
     \ingroup  elf
 
     These are the values that can be set to say how a symbol is bound in an ELF
@@ -176,6 +181,7 @@ switch (sh_type) {
 /** @} */
 
 /** \defgroup elf_symtype               Symbol Types
+    \brief                              ELF symbol type values
     \ingroup  elf
 
     These are the values that can be set to say what kind of symbol a given
@@ -254,7 +260,8 @@ struct elf_rel_t {
     uint32      info;       /**< \brief Symbol and type */
 };
 
-/** \defgroup elf_reltypes              ELF relocation types
+/** \defgroup elf_reltypes              Relocation Types
+    \brief                              ELF relocation type values
     \ingroup  elf
 
     These define the types of operations that can be done to calculate

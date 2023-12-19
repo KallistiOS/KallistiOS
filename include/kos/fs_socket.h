@@ -394,7 +394,8 @@ int fs_socket_shutdown(void);
 */
 net_socket_t *fs_socket_open_sock(fs_socket_proto_t *proto);
 
-/** \defgroup sock_flags                Socket flags
+/** \defgroup sock_flags                Flags
+    \brief                              Flags for Socket VFS
     \ingroup  vfs_sockets
 
     These are the available flags defined for sockets.

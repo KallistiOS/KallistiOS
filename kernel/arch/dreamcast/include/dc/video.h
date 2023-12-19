@@ -28,6 +28,7 @@ __BEGIN_DECLS
 /** \defgroup video_display Display
     \brief                  Display and framebuffer configuration
     \ingroup                video
+*/
 
 /** \defgroup video_modes Modes
     \brief                Video display modes and management
@@ -303,8 +304,13 @@ void vid_clear(int r, int g, int b);
 */
 void vid_empty(void);
 
+/** \defgroup video_misc Miscellaneous
+    \brief               Miscellaneous video API utilities
+    \ingroup            video
+*/
+
 /** \brief   Wait for VBlank.
-    \ingroup pvr
+    \ingroup video_misc
 
     This function busy loops until the vertical blanking period starts.
 */

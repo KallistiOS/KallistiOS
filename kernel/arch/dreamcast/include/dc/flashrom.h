@@ -247,6 +247,7 @@ int flashrom_get_syscfg(flashrom_syscfg_t * out);
 int flashrom_get_region(void);
 
 /** \defgroup fr_method Connection Methods
+    \brief              Connection method types stored within flashrom
     \ingroup            flashrom
 
     These values are representative of what type of ISP is configured in the

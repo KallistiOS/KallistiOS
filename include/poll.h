@@ -47,6 +47,7 @@ struct pollfd {
 };
 
 /** \defgroup poll_events               Events for the poll() function
+    \brief                              Masks representing event types for poll()
     \ingroup                            threading_polling
 
     These are the events that can be set in the events or revents fields of the

@@ -6,8 +6,3 @@
     \brief                Font rendering and management
     \ingroup              video 
 */
-
-/** \defgroup video_vram VRAM
-    \brief               Video memory access and management
-    \ingroup             video
-*/

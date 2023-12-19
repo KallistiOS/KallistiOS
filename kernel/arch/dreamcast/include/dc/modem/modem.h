@@ -28,6 +28,7 @@
 */
 
 /** \defgroup   modem_modes     Modes of Operation
+    \brief                      Operating modes for modem
     \ingroup    modem
 
     This group defines the modes that the Dreamcast modem can be in at any given
@@ -46,6 +47,7 @@
 /** @} */
 
 /** \defgroup   modem_v22bis    V.22bis Modes
+    \brief                      Modem V.22bis Modes
     \ingroup    modem
     @{
 */
@@ -57,6 +59,7 @@
 /** @} */
 
 /** \defgroup   modem_v22       V.22 Modes
+    \brief                      Modem V.22 Modes
     \ingroup    modem 
     @{
 */
@@ -65,6 +68,7 @@
 /** @} */
 
 /** \defgroup   modem_v32       V.32 Modes
+    \brief                      Modem V.32 Modes
     \ingroup    modem
     @{
 */
@@ -76,6 +80,7 @@
 /** @} */
 
 /** \defgroup   modem_v32bis    V.32bis Modes
+    \brief                      Modem V.32 Modes
     \ingroup    modem
     @{
 */
@@ -90,6 +95,7 @@
 /** @} */
 
 /** \defgroup   modem_v8        V.8 Modes
+    \brief                      Modem V.8 Modes
     \ingroup    modem
     @{
 */

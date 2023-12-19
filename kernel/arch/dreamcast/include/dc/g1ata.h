@@ -45,7 +45,8 @@ __BEGIN_DECLS
     \ingroup        vfs_drivers
 */
 
-/** \defgroup ata_devices   ATA device definitions
+/** \defgroup ata_devices   Device Definitions
+    \brief                  ATA device definitions
     \ingroup                g1ata
 
     The constants here represent the valid values that can be set as the active

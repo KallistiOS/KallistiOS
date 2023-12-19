@@ -42,6 +42,7 @@ __BEGIN_DECLS
 */
 
 /** \defgroup cd_cmd_codes          Syscall Command Codes
+    \brief                          Command codes for GD-ROM syscalsl
     \ingroup  gdrom
 
     These are the syscall command codes used to actually do stuff with the
@@ -80,6 +81,7 @@ __BEGIN_DECLS
 /** @} */
 
 /** \defgroup cd_cmd_response       Command Responses
+    \brief                          Responses from GD-ROM syscalls
     \ingroup  gdrom
 
     These are the values that the various functions can return as error codes.
@@ -95,6 +97,7 @@ __BEGIN_DECLS
 /** @} */
 
 /** \defgroup cd_cmd_status         Command Status Responses
+    \brief                          GD-ROM status responses
     \ingroup  gdrom
 
     These are the raw values the status syscall returns.
@@ -109,6 +112,7 @@ __BEGIN_DECLS
 /** @} */
 
 /** \defgroup cd_cmd_ata_status       ATA Statuses
+    \brief                            ATA statuses for GD-ROM driver
     \ingroup  gdrom 
 
     @{
@@ -121,6 +125,7 @@ __BEGIN_DECLS
 /** @} */
 
 /** \defgroup cdda_read_modes       CDDA Read Modes
+    \brief                          Read modes for CDDA
     \ingroup  gdrom
 
     Valid values to pass to the cdrom_cdda_play() function for the mode
@@ -132,6 +137,7 @@ __BEGIN_DECLS
 /** @} */
 
 /** \defgroup cd_read_sector_part    Read Sector Part
+    \brief                           Whether to read data or whole sector
     \ingroup  gdrom
 
     Parts of the a CD-ROM sector to read. These are possible values for the
@@ -143,6 +149,7 @@ __BEGIN_DECLS
 /** @} */
 
 /** \defgroup cd_read_subcode_type    Read Subcode Type
+    \brief                            Types of data to read from sector subcode
     \ingroup  gdrom
 
     Types of data available to read from the sector subcode. These are 
@@ -158,6 +165,7 @@ __BEGIN_DECLS
 /** @} */
 
 /** \defgroup cd_subcode_audio    Subcode Audio Status
+    \brief                        GETSCD syscall response codes
     \ingroup  gdrom
 
     Information about CDDA playback from GETSCD syscall.
@@ -172,6 +180,7 @@ __BEGIN_DECLS
 /** @} */
 
 /** \defgroup cd_read_sector_mode    Read Sector Mode
+    \brief                           Mode to use when reading sectors
     \ingroup  gdrom
 
     How to read the sectors of a CD, via PIO or DMA. 4th parameter of 
@@ -183,6 +192,7 @@ __BEGIN_DECLS
 /** @} */
 
 /** \defgroup cd_status_values      Status Values
+    \brief                          Status values for GD-ROM drive
     \ingroup  gdrom
 
     These are the values that can be returned as the status parameter from the
@@ -204,6 +214,7 @@ __BEGIN_DECLS
 /** @} */
 
 /** \defgroup cd_disc_types         Drive Disc Types
+    \brief                          Disc types within GD-ROM drive
     \ingroup  gdrom
 
     These are the values that can be returned as the disc_type parameter from
@@ -234,6 +245,7 @@ typedef struct {
 } CDROM_TOC;
 
 /** \defgroup cd_toc_access         TOC Access Macros
+    \brief                          Macros used to access the TOC
     \ingroup  gdrom
 
     @{

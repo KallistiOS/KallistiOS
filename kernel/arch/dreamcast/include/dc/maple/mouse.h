@@ -29,7 +29,8 @@ __BEGIN_DECLS
     \ingroup            peripherals
 */
 
-/** \defgroup   mouse_buttons   Mouse button codes
+/** \defgroup   mouse_buttons   Buttons
+    \brief                      Masks for the buttons on a mouse
     \ingroup                    mouse
 
     These are the possible buttons to press on a maple bus mouse.

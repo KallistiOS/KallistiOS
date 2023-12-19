@@ -104,6 +104,7 @@ typedef struct irq_context {
 #define CONTEXT_RET(c)  ((c).r[0])
 
 /** \defgroup irq_exception_codes   Exception Codes
+    \brief                          IRQ exception code values
     \ingroup                        irqs
 
     These are all of the exceptions that can be raised on the SH4, and their
@@ -115,6 +116,7 @@ typedef struct irq_context {
    exception code value. */
 
 /** \defgroup irq_reset_codes       Reset Type
+    \brief                          IRQ reset type codes
 
     These are exceptions that essentially cause a reset of the system. They
     cannot actually be caught by normal means. They will all automatically cause
@@ -130,6 +132,7 @@ typedef struct irq_context {
 /** @} */
 
 /** \defgroup irq_reexec_codes      Re-Execution Type
+    \brief                          IRQ re-execution type codes
 
     These exceptions will stop the currently processing instruction, and
     transition into exception processing. After handling the exception (assuming
@@ -157,6 +160,7 @@ typedef struct irq_context {
 /** @} */
 
 /** \defgroup irq_completion_codes  Completion Type
+    \brief                          IRQ completion type codes
 
     These exceptions are actually handled in-between instructions, allowing the
     instruction that causes them to finish completely. The saved PC thus is the
@@ -169,6 +173,7 @@ typedef struct irq_context {
 /** @} */
 
 /** \defgroup irq_interrupt_codes   Interrupt (Completion Type)
+    \brief                          IRQ interrupt completiion type codes
 
     \note   Not all of these have any meaning on the Dreamcast. Those that have
             no meaning are only included for completeness.
@@ -237,7 +242,9 @@ typedef struct irq_context {
 #define EXC_UNHANDLED_EXC   0x0fe0
 /** @} */
 
-/** \brief  irq_type_offsets        Exception type offsets
+/** \defgroup  irq_type_offsets        Exception type offsets
+    \brief                             Offsets within exception types
+    \ingroup                           irqs
 
     The following are a table of "type offsets" (see the Hitachi PDF). These are
     the 0x000, 0x100, 0x400, and 0x600 offsets.

@@ -54,7 +54,7 @@ struct utsname {
 */
 int uname(struct utsname *n);
 
-/* @} */
+/** @} */
 
 __END_DECLS
 
