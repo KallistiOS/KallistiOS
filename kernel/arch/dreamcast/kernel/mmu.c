@@ -13,6 +13,7 @@
 #include <arch/arch.h>
 #include <arch/types.h>
 #include <arch/irq.h>
+#include <arch/memory.h>
 #include <arch/mmu.h>
 #include <kos/dbgio.h>
 #include <arch/cache.h>
@@ -20,12 +21,12 @@
 /********************************************************************************/
 /* Register definitions */
 
-static volatile uint32 * const pteh = (uint32 *)(0xff000000);
-static volatile uint32 * const ptel = (uint32 *)(0xff000004);
-//static volatile uint32 * const ptea = (uint32 *)(0xff000034);
-static volatile uint32 * const ttb = (uint32 *)(0xff000008);
-static volatile uint32 * const tea = (uint32 *)(0xff00000c);
-static volatile uint32 * const mmucr = (uint32 *)(0xff000010);
+static volatile uint32 * const pteh = (uint32 *)(SH4_REG_MMU_PTEH);
+static volatile uint32 * const ptel = (uint32 *)(SH4_REG_MMU_PTEL);
+//static volatile uint32 * const ptea = (uint32 *)(SH4_REG_MMU_PTEA);
+static volatile uint32 * const ttb = (uint32 *)(SH4_REG_MMU_TTB);
+static volatile uint32 * const tea = (uint32 *)(SH4_REG_MMU_TEA);
+static volatile uint32 * const mmucr = (uint32 *)(SH4_REG_MMU_CR);
 
 #define SET_PTEH(VA, ASID) \
     do { *pteh = ((VA) & 0xfffffc00) | ((ASID) & 0xff); } while(0)

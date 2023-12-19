@@ -203,6 +203,155 @@ __BEGIN_DECLS
 */
 #define MEM_AREA_CTRL_REG_BASE                0xff000000
 
+/** \brief MMU Control Registers
+    \defgroup sh4_mmu_regs
+    \ingroup sh4_cr_regs
+
+    \see arch\mmu.h
+
+    These are registers for controlling the MMU as defined in table 3.1
+    of Hitatchi SH7750 Series Hardware Manual rev 6.0, titled "MMU Registers".
+    All are accessed as 32-bit values.
+
+*/
+
+/** \brief MMU Page table entry high.
+    \ingroup sh4_mmu_regs
+
+    When an MMU exception or address error exception occurs, the virtual page number (VPN)
+    (the upper 22-bits of the virtual address causing the exception) is written
+    to the register. The bottom 8 bits of the register are software-fillable as
+    an 8 bit ID (ASID) of the process causing the exception.
+*/
+#define SH4_REG_MMU_PTEH                      0xff000000
+
+/** \brief MMU Page table entry low.
+    \ingroup sh4_mmu_regs
+
+    Holds the physical page number (PPN) in bits 10-28 and page management flags in 0-8.
+*/
+#define SH4_REG_MMU_PTEL                      0xff000004
+
+/** \brief MMU Translation table base.
+    \ingroup sh4_mmu_regs
+
+    Holds the base address of the currently used page table.
+*/
+#define SH4_REG_MMU_TTB                       0xff000008
+
+/** \brief MMU TLB Exception address.
+    \ingroup sh4_mmu_regs
+
+    After an MMU exception or address error exception occurs, the virtual address where the
+    exception occurred is stored here.
+*/
+#define SH4_REG_MMU_TEA                       0xff00000c
+
+/** \brief MMU Control Register.
+    \ingroup sh4_mmu_regs
+
+    Holds configuration values including enable/disable of MMU Address Translation (at bit 0)
+*/
+#define SH4_REG_MMU_CR                        0xff000010
+
+/** \brief MMU Page table entry assistance.
+    \ingroup sh4_mmu_regs
+
+    Stores assistance bits for PCMCIA access to the UTLB via LDTLB. This is currently unused by KOS.
+*/
+#define SH4_REG_MMU_PTEA                      0xff000034
+
+/** \brief UBC Control Registers
+    \defgroup sh4_ubc_regs
+    \ingroup sh4_cr_regs
+
+    \see dc\ubc.h
+
+    These are registers for controlling the UBC as defined in table 20.1
+    of Hitatchi SH7750 Series Hardware Manual rev 6.0, titled "UBC Registers"
+
+*/
+
+/** \brief UBC Break ASID register A
+    \ingroup sh4_ubc_regs
+
+    Specifies the ASID used in the channel A break condition. 8-bit RW.
+*/
+#define SH4_REG_UBC_BASRA                     0xff000014
+
+/** \brief UBC Break ASID register B
+    \ingroup sh4_ubc_regs
+
+    Specifies the ASID used in the channel B break condition. 8-bit RW.
+*/
+#define SH4_REG_UBC_BASRB                     0xff000018
+
+/** \brief UBC Break address register A
+    \ingroup sh4_ubc_regs
+
+    Specifies the virtual address used in the channel A break conditions. 32-bit RW.
+*/
+#define SH4_REG_UBC_BARA                      0xff200000
+
+/** \brief UBC Break address mask register A
+    \ingroup sh4_ubc_regs
+
+    Specifies the settings for masking the ASID in channel A. 8-bit RW.
+*/
+#define SH4_REG_UBC_BAMRA                     0xff200004
+
+/** \brief UBC Break bus cycle register A
+    \ingroup sh4_ubc_regs
+
+    Sets three conditions: 1) instruction/operand access 2) RW 3) Operand size. 16-bit RW.
+*/
+#define SH4_REG_UBC_BBRA                      0xff200008
+
+/** \brief UBC Break address register B
+    \ingroup sh4_ubc_regs
+
+    Specifies the virtual address used in the channel B break conditions. 32-bit RW.
+*/
+#define SH4_REG_UBC_BARB                      0xff20000c
+
+/** \brief UBC Break address mask register B
+    \ingroup sh4_ubc_regs
+
+    Specifies the settings for masking the ASID in channel B. 8-bit RW.
+*/
+#define SH4_REG_UBC_BAMRB                     0xff200010
+
+/** \brief UBC Break bus cycle register B
+    \ingroup sh4_ubc_regs
+
+    Sets three conditions: 1) instruction/operand access 2) RW 3) Operand size. 16-bit RW.
+*/
+#define SH4_REG_UBC_BBRB                      0xff200014
+
+
+/** \brief UBC Break data register B
+    \ingroup sh4_ubc_regs
+
+    Specifies the data to be used in the channel B break conditions. 32-bit RW.
+    Currently unused by KOS
+*/
+#define SH4_REG_UBC_BDRB                      0xff200018
+
+/** \brief UBC Break mask register B
+    \ingroup sh4_ubc_regs
+
+    Specifies which bits of the break data set in SH4_REG_UBC_BDRB are to be masked. 32-bit RW.
+    Currently unused by KOS
+*/
+#define SH4_REG_UBC_BDMRB                     0xff20001c
+
+/** \brief UBC Break control register
+    \ingroup sh4_ubc_regs
+
+    Specifies various settings for UBC as well as condition match flags. 16-bit RW.
+*/
+#define SH4_REG_UBC_BRCR                      0xff200020
+
 __END_DECLS
 
 #endif /* __ARCH_MEMORY_H */
