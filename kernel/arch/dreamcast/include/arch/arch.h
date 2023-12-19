@@ -292,7 +292,7 @@ int hardware_sys_mode(int *region);
     time by the kernel. This contains the version of KOS in use and basic
     information about the environment in which it was compiled.
 
-    \retval                 A pointer to the banner string.
+    \return                 A pointer to the banner string.
 */
 const char *kos_get_banner(void);
 
@@ -303,7 +303,7 @@ const char *kos_get_banner(void);
     version of KOS in use is distributed under. This can be used to easily add
     information to your program to be displayed at runtime.
 
-    \retval                 A pointer to the license terms.
+    \return                 A pointer to the license terms.
 */
 const char *kos_get_license(void);
 
@@ -319,7 +319,7 @@ const char *kos_get_license(void);
     Remember, you do need to give credit where credit is due, and this is an
     easy way to do so. ;-)
 
-    \retval                 A pointer to the authors' copyright information.
+    \return                 A pointer to the authors' copyright information.
 */
 const char *kos_get_authors(void);
 
