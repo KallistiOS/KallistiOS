@@ -4,8 +4,18 @@
    Copyright (C) 2023 Lawrence Sebald
 */
 
-/* This will probably go away at some point in the future, if/when Newlib gets
-   an implementation of this function. But for now, it's here. */
+/** \file    kos/time.h
+    \brief   KOS-implementation of select POSIX extensions
+
+    Add select POSIX extensions to time.h which are not present within Newlib.
+
+    \remark
+    This will probably go away at some point in the future, if/when Newlib gets
+    an implementation of this function. But for now, it's here.
+
+    \author Lawrence Sebald
+*/
+
 
 #ifndef _TIME_H_
 #error "Do not include this file directly. Use <time.h> instead."

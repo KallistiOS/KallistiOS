@@ -48,6 +48,7 @@ __BEGIN_DECLS
 
 #define NFDBITS 32
 
+/** \brief Represents a set of file descriptors */
 typedef struct fd_set {
     unsigned long fds_bits[FD_SETSIZE / NFDBITS];
 } fd_set;

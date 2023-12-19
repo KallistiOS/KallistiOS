@@ -27,12 +27,15 @@ __BEGIN_DECLS
     @{
 */
 
+/** \brief 3D floating-point vector */
 typedef struct vec3f {
     float x, y, z;
 } vec3f_t;
 
+/** \cond */
 #define R_DEG 182.04444443623349541909523793743
 #define R_RAD 10430.37835
+/* \endcond */
 
 /** \brief  Macro to return the scalar dot product of two 3d vectors.
 
