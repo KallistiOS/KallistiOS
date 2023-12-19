@@ -76,7 +76,7 @@
 #define __pure2     __pure      /* ditto */
 #endif
 
-#ifndef likely
+#ifndef __likely
 /** \brief  Directive to inform the compiler the condition is in the likely path.
 
     This can be used around conditionals or loops to help inform the
@@ -84,12 +84,12 @@
 
     \param  exp     Boolean expression which expected to be true.
 
-    \sa unlikely()
+    \sa __unlikely()
 */
-#define likely(exp)   __builtin_expect(!!(exp), 1)
+#define __likely(exp)   __builtin_expect(!!(exp), 1)
 #endif
 
-#ifndef unlikely
+#ifndef __unlikely
 /** \brief  Directive to inform the compiler the condition is in the unlikely path.
 
     This can be used around conditionals or loops to help inform the
@@ -97,9 +97,9 @@
 
     \param  exp     Boolean expression which is expected to be false.
 
-    \sa likely()
+    \sa __likely()
 */
-#define unlikely(exp) __builtin_expect(!!(exp), 0)
+#define __unlikely(exp) __builtin_expect(!!(exp), 0)
 #endif
 
 #ifndef __deprecated
