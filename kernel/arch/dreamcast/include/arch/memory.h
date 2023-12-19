@@ -44,7 +44,7 @@ __BEGIN_DECLS
 */
 #define MEM_AREA_CACHE_MASK 0x1fffffff
 
-/** \brief U0 memory region (cachable).
+/** \brief U0 memory region base (cachable).
     \ingroup memory
 
     This is the base user mode memory address. It is cacheable as determined
@@ -56,7 +56,7 @@ __BEGIN_DECLS
 */
 #define MEM_AREA_U0_BASE    0x00000000
 
-/** \brief P0 memory region (cachable).
+/** \brief P0 memory region base (cachable).
     \ingroup memory
 
     This is the base privileged mode memory address. It is cacheable as determined
@@ -66,7 +66,7 @@ __BEGIN_DECLS
 */
 #define MEM_AREA_P0_BASE    0x00000000
 
-/** \brief P1 memory region (cachable).
+/** \brief P1 memory region base (cachable).
     \ingroup memory
 
     This is a modularly cachable memory region. It is cacheable as determined by
@@ -78,7 +78,7 @@ __BEGIN_DECLS
 */
 #define MEM_AREA_P1_BASE    0x80000000
 
-/** \brief P2 memory region (non-cachable).
+/** \brief P2 memory region base (non-cachable).
     \ingroup memory
 
     This is the non-cachable memory region. It is most frequently for DMA
@@ -87,7 +87,7 @@ __BEGIN_DECLS
 */
 #define MEM_AREA_P2_BASE    0xa0000000
 
-/** \brief P3 memory region (cachable).
+/** \brief P3 memory region base (cachable).
     \ingroup memory
 
     This functions as the lower 512MB of P0.
@@ -95,14 +95,17 @@ __BEGIN_DECLS
 */
 #define MEM_AREA_P3_BASE    0xc0000000
 
-/** \brief P4 SH-internal memory region (non-cachable).
-    \defgroup p4mem P4 memory region
+/** \brief P4 memory region base (non-cachable)
     \ingroup memory
 
     This offset maps to on-chip I/O channels.
-
 */
 #define MEM_AREA_P4_BASE    0xe0000000
+
+/** \defgroup p4mem     P4 memory region
+    \brief              P4 SH-internal memory region (non-cachable).
+    \ingroup            memory
+*/
 
 /** \brief Store Queue (SQ) memory base.
     \ingroup p4mem
@@ -203,8 +206,13 @@ __BEGIN_DECLS
 */
 #define MEM_AREA_CTRL_REG_BASE                0xff000000
 
-/** \brief MMU Control Registers
-    \defgroup sh4_mmu_regs
+/** \defgroup sh4_cr_regs   Control Registers
+    \brief                  Addresses of control registers within the P4 area
+    \ingroup                p4mem
+*/
+
+/** \defgroup sh4_mmu_regs MMU
+    \brief MMU Control Registers
     \ingroup sh4_cr_regs
 
     \see arch\mmu.h
@@ -261,8 +269,8 @@ __BEGIN_DECLS
 */
 #define SH4_REG_MMU_PTEA                      0xff000034
 
-/** \brief UBC Control Registers
-    \defgroup sh4_ubc_regs
+/** \defgroup sh4_ubc_regs UBC
+    \brief UBC Control Registers
     \ingroup sh4_cr_regs
 
     \see dc\ubc.h
