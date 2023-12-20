@@ -212,6 +212,7 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - DC  Added basic example for micropython KOS port [Aaron Glazer == AG]
 - DC  Improved performance of IRQ context save / restore [PC]
 - DC  Increased resolution of TMU timers + date/time functions [FG && PC]
+- *** Created separate performance counter driver and enhanced API [FG]
 
 KallistiOS version 2.0.0 -----------------------------------------------
 - DC  Broadband Adapter driver fixes [Megan Potter == MP]

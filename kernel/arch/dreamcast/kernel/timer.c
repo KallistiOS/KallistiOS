@@ -273,6 +273,7 @@ static timer_val_t timer_getticks(const uint32_t *tns, uint32_t shift) {
     return (timer_val_t){ .secs = secs, .ticks = ticks, };
 }
 
+/* Millisecond timer */
 static const uint32_t tns_values_ms[] = {
     /* 80, 320, 1280, 5120, 20480
        each multiplied by (1 << 37) / (1000 * 1000) */
@@ -292,6 +293,7 @@ uint64_t timer_ms_gettime64(void) {
     return (uint64_t)val.secs * 1000ull + (uint64_t)val.ticks;
 }
 
+/* Microsecond timer */
 static const uint32_t tns_values_us[] = {
     /* 80, 320, 1280, 5120, 20480,
        each multiplied by (1 << 27) / 1000 */
@@ -311,6 +313,7 @@ uint64_t timer_us_gettime64(void) {
     return (uint64_t)val.secs * 1000000ull + (uint64_t)val.ticks;
 }
 
+/* Nanosecond timer */
 static const uint32_t tns_values_ns[] = {
     80, 320, 1280, 5120, 20480,
 };
@@ -320,6 +323,12 @@ void timer_ns_gettime(uint32_t *secs, uint32_t *nsecs) {
 
     if(secs)  *secs = val.secs;
     if(nsecs) *nsecs = val.ticks;
+}
+
+uint64_t timer_ns_gettime64(void) {
+   const timer_val_t val = timer_getticks(tns_values_ns, 0);
+
+    return (uint64_t)val.secs * 1000000000ull + (uint64_t)val.ticks;
 }
 
 /* Primary kernel timer. What we'll do here is handle actual timer IRQs
@@ -408,7 +417,6 @@ void timer_primary_wakeup(uint32_t millis) {
     }
 }
 
-
 /* Init */
 int timer_init(void) {
     /* Disable all timers */
@@ -433,80 +441,4 @@ void timer_shutdown(void) {
     timer_disable_ints(TMU0);
     timer_disable_ints(TMU1);
     timer_disable_ints(TMU2);
-}
-
-/* Quick access macros */
-#define PMCR_CTRL(o)  ( *((volatile uint16*)(0xff000084) + (o << 1)) )
-#define PMCTR_HIGH(o) ( *((volatile uint32*)(0xff100004) + (o << 1)) )
-#define PMCTR_LOW(o)  ( *((volatile uint32*)(0xff100008) + (o << 1)) )
-
-#define PMCR_CLR        0x2000
-#define PMCR_PMST       0x4000
-#define PMCR_PMENABLE   0x8000
-#define PMCR_RUN        0xc000
-#define PMCR_PMM_MASK   0x003f
-
-#define PMCR_CLOCK_TYPE_SHIFT 8
-
-/* 5ns per count in 1 cycle = 1 count mode(PMCR_COUNT_CPU_CYCLES) */
-#define NS_PER_CYCLE      5
-
-/* Get a counter's current configuration */
-uint16 perf_cntr_get_config(int which) {
-    return PMCR_CTRL(which);
-}
-
-/* Start a performance counter */
-int perf_cntr_start(int which, int mode, int count_type) {
-    perf_cntr_clear(which);
-    PMCR_CTRL(which) = PMCR_RUN | mode | (count_type << PMCR_CLOCK_TYPE_SHIFT);
-
-    return 0;
-}
-
-/* Stop a performance counter */
-int perf_cntr_stop(int which) {
-    PMCR_CTRL(which) &= ~(PMCR_PMM_MASK | PMCR_PMENABLE);
-
-    return 0;
-}
-
-/* Clears a performance counter.  Has to stop it first. */
-int perf_cntr_clear(int which) {
-    perf_cntr_stop(which);
-    PMCR_CTRL(which) |= PMCR_CLR;
-
-    return 0;
-}
-
-/* Returns the count value of a counter */
-inline uint64 perf_cntr_count(int which) {
-    return (uint64)(PMCTR_HIGH(which) & 0xffff) << 32 | PMCTR_LOW(which);
-}
-
-void timer_ns_enable(void) {
-    perf_cntr_start(PRFC0, PMCR_ELAPSED_TIME_MODE, PMCR_COUNT_CPU_CYCLES);
-}
-
-void timer_ns_disable(void) {
-    uint16 config = PMCR_CTRL(PRFC0);
-
-    /* If timer is running, disable it */
-    if((config & PMCR_ELAPSED_TIME_MODE)) {
-        perf_cntr_clear(PRFC0);
-    }
-}
-
-inline uint64 timer_ns_gettime64(void) {
-    uint16 config = PMCR_CTRL(PRFC0);
-
-    /* If timer is running */
-    if((config & PMCR_ELAPSED_TIME_MODE)) {
-        uint64 cycles = perf_cntr_count(PRFC0);
-        return cycles * NS_PER_CYCLE;
-    }
-    else {
-        uint64 micro_secs = timer_us_gettime64();
-        return micro_secs * 1000;
-    }
 }
