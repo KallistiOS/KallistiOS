@@ -2786,7 +2786,7 @@ nextchunk-> +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     and consolidated sets of chunks, which is what these bins hold, so
     they can be found quickly.  All procedures maintain the invariant
     that no consolidated chunk physically borders another one, so each
-    chunk in a list is known to be proceeded and followed by either
+    chunk in a list is known to be preceded and followed by either
     inuse chunks or the ends of memory.
 
     Chunks in bins are kept in size order, with ties going to the
