@@ -206,10 +206,10 @@ uint64_t perf_cntr_count(perf_cntr_t counter);
     The performance counter timer is only counting *active* CPU cycles. This
     means that when KOS's thread scheduler uses the "sleep" instruction, 
     putting the CPU to sleep, these counters cease to record elapsed time. 
-    Because of this, they should only be used to measure small delats that
+    Because of this, they should only be used to measure small deltas that
     are not across frames.
 
-    \see timers
+    \sa timers
 
     @{
 */
