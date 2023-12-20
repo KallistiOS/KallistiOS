@@ -138,33 +138,35 @@ typedef enum perf_cntr_event {
 
     This function returns a performance counter's settings.
 
-    \param  which           The performance counter (i.e, \ref PRFC0 or PRFC1).
+    \param  counter         The performance counter (i.e, \ref PRFC0 or PRFC1).
+    \param  event_mode      Pointer to fill in with the counter's event mode
+    \param  clock_type      Pointer to fill in with the counter's clock type
     
     \retval true            The performance counter is running
     \retval false           the performance counter is stopped
 */
-bool perf_cntr_get_config(perf_cntr_t which, perf_cntr_event_t *mode,
-                          perf_cntr_clock_t *clock_type);
+bool perf_cntr_config(perf_cntr_t counter, perf_cntr_event_t *event_mode,
+                      perf_cntr_clock_t *clock_type);
 
 /** \brief  Start a performance counter.
 
     This function starts a performance counter
 
-    \param  which           The counter to start (i.e, \ref PRFC0 or PRFC1).
-    \param  mode            Use one of the 33 modes listed above.
-    \param  count_type      PMCR_COUNT_CPU_CYCLES or PMCR_COUNT_RATIO_CYCLES.
+    \param  counter         The counter to start (i.e, \ref PRFC0 or PRFC1).
+    \param  event_mode      Use one of the 33 event modes (pef_cntr_event_t).
+    \param  clock_type      PMCR_COUNT_CPU_CYCLES or PMCR_COUNT_RATIO_CYCLES.
 */
-void perf_cntr_start(perf_cntr_t which, perf_cntr_event_t mode,
-                    perf_cntr_clock_t clock_type);
+void perf_cntr_start(perf_cntr_t counter, perf_cntr_event_t event_mode,
+                     perf_cntr_clock_t clock_type);
 
 /** \brief  Stop a performance counter.
 
     This function stops a performance counter that was started with perf_cntr_start().
     Stopping a counter retains its count. To clear the count use perf_cntr_clear().
 
-    \param  which           The counter to stop (i.e, \ref PRFC0 or PRFC1).
+    \param  counter           The counter to stop (i.e, \ref PRFC0 or PRFC1).
 */
-void perf_cntr_stop(perf_cntr_t which);
+void perf_cntr_stop(perf_cntr_t counter);
 
 /** \brief  Clear a performance counter.
 
@@ -172,18 +174,19 @@ void perf_cntr_stop(perf_cntr_t which);
     This function stops the counter before clearing it because you cant clear 
     a running counter.
 
-    \param  which           The counter to clear (i.e, \ref PRFC0 or PRFC1).
+    \param  counter           The counter to clear (i.e, \ref PRFC0 or PRFC1).
 */
-void perf_cntr_clear(perf_cntr_t which);
+void perf_cntr_clear(perf_cntr_t counter);
 
 /** \brief  Obtain the count of a performance counter.
 
     This function simply returns the count of the counter.
 
-    \param  which           The counter to read (i.e, \ref PRFC0 or PRFC1).
+    \param  counter         The counter to read (i.e, \ref PRFC0 or PRFC1).
+    
     \return                 The counter's count.
 */
-uint64_t perf_cntr_count(perf_cntr_t which);
+uint64_t perf_cntr_count(perf_cntr_t counter);
 
 /** \defgroup perf_counters_timer Timer
     \brief    High-resolution performance counter-based timer API

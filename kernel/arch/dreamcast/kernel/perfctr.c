@@ -28,9 +28,9 @@
 #define NS_PER_CYCLE      5
 
 /* Get a counter's current configuration */
-bool perf_cntr_get_config(perf_cntr_t counter, 
-                          perf_cntr_event_t *event,
-                          perf_cntr_clock_t *clock) {
+bool perf_cntr_config(perf_cntr_t counter, 
+                      perf_cntr_event_t *event,
+                      perf_cntr_clock_t *clock) {
 
     const uint16_t config = PMCR_CTRL(counter);
 
@@ -77,7 +77,7 @@ bool perf_cntr_timer_enabled(void) {
     perf_cntr_event_t event;
     perf_cntr_clock_t clock;
 
-    return (perf_cntr_get_config(PRFC0, &event, &clock) &&
+    return (perf_cntr_config(PRFC0, &event, &clock) &&
             event == PMCR_ELAPSED_TIME_MODE &&
             clock == PMCR_COUNT_CPU_CYCLES);
 }
