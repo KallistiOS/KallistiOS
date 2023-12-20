@@ -246,7 +246,7 @@ extern "C" {
 
     int pthread_cancel(pthread_t thread);
 
-    /* Setting Cancellability State, P1003.1c/Draft 10, p. 183 */
+    /* Setting Cancelability State, P1003.1c/Draft 10, p. 183 */
 
     int pthread_setcancelstate(int state, int *oldstate);
     int pthread_setcanceltype(int type, int *oldtype);

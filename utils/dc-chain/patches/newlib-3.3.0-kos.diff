@@ -135,7 +135,7 @@ diff -ruN newlib-3.3.0/newlib/libc/include/sys/_pthreadtypes.h newlib-3.3.0-kos/
 -
 -typedef struct {
 -  int      is_initialized;
--  clock_t  clock;             /* specify clock for timeouts */
+-  clock_t  clock;             /* specifiy clock for timeouts */
 -#if defined(_POSIX_THREAD_PROCESS_SHARED)
 -  int      process_shared;    /* allow this to be shared amongst processes */
 -#endif
