@@ -203,11 +203,12 @@ uint64_t perf_cntr_count(perf_cntr_t counter);
     each tick to 80ns.
 
     \warning
-    The performance counter timer is only counting *active* CPU cycles. This
+    The performance counter timer is only counting \a active CPU cycles. This
     means that when KOS's thread scheduler uses the "sleep" instruction, 
     putting the CPU to sleep, these counters cease to record elapsed time. 
     Because of this, they should only be used to measure small deltas that
-    are not across frames.
+    are not across frames, when you want real wall time rather than active
+    CPU time.
 
     \sa timers
 
@@ -223,7 +224,10 @@ uint64_t perf_cntr_count(perf_cntr_t counter);
     This is on by default. The function uses \ref PRFC0 to do the work.
 
     \warning
-    The 
+    The performance counters are only counting \a active CPU cycles while in
+    this mode. This is analogous to providing you with the CPU time of your
+    application, not the actual wall-time or monotonic clock, as it ceases
+    to count when the kernel puts the CPU to sleep.
 */
 void perf_cntr_timer_enable(void);
 
