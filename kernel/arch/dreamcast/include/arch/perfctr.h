@@ -258,11 +258,17 @@ void perf_cntr_timer_disable(void);
 */
 bool perf_cntr_timer_enabled(void);
 
-/** \brief  Get the current uptime of the system (in nanoseconds).
+/** \brief  Get the current CPU time of the system (in nanoseconds)
 
-    This function retrieves the number of nanoseconds since KOS was started.
+    This function retrieves the number total amount of \a active CPU time since
+    perf_cntr_timer_enabled() was called. 
 
-    \return                 The number of nanoseconds since KOS started.
+    \note
+    It's called by default when KOS initializes, so unless you reinitialize it
+    later on, this should be the total CPU time since KOS booted up.
+
+    \return                 The number of nanoseconds of active CPU time since
+                            the timer was enabled.
 */
 uint64_t perf_cntr_timer_ns(void);
 
