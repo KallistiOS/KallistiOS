@@ -41,22 +41,26 @@ extern int timespec_get(struct timespec *ts, int base);
 
 #if !defined(__STRICT_ANSI__) || (_POSIX_C_SOURCE >= 199309L)
 
+/* We do not support POSIX timers! 
 #ifndef _POSIX_TIMERS
 #define _POSIX_TIMERS 1
-#endif 
-#ifdef _POSIX_MONOTONIC_CLOCK
+#endif */
+#ifndef _POSIX_MONOTONIC_CLOCK
 #define _POSIX_MONOTONIC_CLOCK 1
 #endif
-#ifdef _POSIX_CPUTIME
+#ifndef _POSIX_CPUTIME
 #define _POSIX_CPUTIME 1
 #endif
-#ifdef _POSIX_THREAD_CPU_TIME
+/* We do NOT support thread-specific
+   CPU time! 
+#ifndef _POSIX_THREAD_CPU_TIME
 #define _POSIX_THREAD_CPUTIME 1
 #endif
+*/
 
-#define CLOCK_MONOTONIC          (CLOCK_REALTIME + 1)
-#define CLOCK_PROCESS_CPUTIME_ID (CLOCK_REALTIME + 2)
-#define CLOCK_THREAD_CPUTIME_ID  (CLOCK_REALTIME + 3)
+//#define CLOCK_MONOTONIC          (CLOCK_REALTIME + 1)
+//#define CLOCK_PROCESS_CPUTIME_ID (CLOCK_REALTIME + 2)
+//#define CLOCK_THREAD_CPUTIME_ID  (CLOCK_REALTIME + 3)
 
 #endif /* !defined(__STRICT_ANSI__) || (_POSIX_C_SOURCE >= 199309L) */
 
