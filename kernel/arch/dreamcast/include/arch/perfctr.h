@@ -45,7 +45,6 @@ typedef enum perf_cntr {
 
         The first performance counter ID.
 
-        \warning
         This counter is used by KOS by default to implement the \ref
         perf_counters_timer API. Reference it for details on how to
         reconfigure it if necessary.
@@ -56,7 +55,6 @@ typedef enum perf_cntr {
 
         The second performance counter ID.
 
-        \note
         This counter is not used anywhere internally by KOS.
     */
     PRFC1
@@ -76,7 +74,6 @@ typedef enum perf_cntr_clock {
         Count CPU/bus ratio mode cycles (where `T = C x B / 24` and `T` is
         time, `C` is count, and `B` is time of one bus cycle).
 
-        \note
         `B` has been found to be approximately `1/99753008`, but actual time
         varies slightly. The target frequency is probably 99.75MHz.
     */
