@@ -18,7 +18,7 @@ __BEGIN_DECLS
     \author Lawrence Sebald
 */
 
-#define THD_BARRIER_SERIAL_THREAD   0x7fffffff;
+#define THD_BARRIER_SERIAL_THREAD   0x7fffffff
 
 #ifndef __KTHREAD_HAVE_BARRIER_TYPE
 #define __KTHREAD_HAVE_BARRIER_TYPE 1
