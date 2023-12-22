@@ -1,0 +1,163 @@
+#include <kos/thread.h>
+#include <kos/barrier.h>
+#include <arch/wdt.h>
+
+#include <stdlib.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdatomic.h>
+#include <stdio.h>
+
+#define WATCHDOG_TIMEOUT    (10 * 1000 * 1000) /* 10ms */
+#define THREAD_COUNT        15
+#define ITERATION_COUNT     20
+#define BARRIER_COUNT       5
+
+static struct {
+    thd_barrier_t barrier;
+    atomic_uint   pre_barrier_counter;
+    atomic_uint   serial_barrier_counter;
+    atomic_uint   post_barrier_counter;
+} data[BARRIER_COUNT] = { 0 };
+
+static bool run_iteration(void) {
+    bool success = true;
+    const tid_t id = thd_get_current()->tid;
+
+    for(unsigned b = 0; b < BARRIER_COUNT; ++b) {
+        ++data[b].pre_barrier_counter;
+
+        printf("Thread[%u]: Before barrier[%u]!\n", id, b);
+
+        const int ret = thd_barrier_wait(&data[b].barrier);
+
+        if(ret < 0) {
+            fprintf(stderr, "Thread[%u]: Wait on barrier[%u] failure: %d!\n",
+                    id, b, ret);
+            success = false;
+        }
+        else if(ret == THD_BARRIER_SERIAL_THREAD) {
+            printf("Thread[%u]: After barrier[%u]: SERIAL!\n", id, b);
+            ++data[b].serial_barrier_counter;
+        }
+        else { 
+            printf("Thread[%u]: After barrier[%u]: NONSERIAL!\n", id, b);
+        }
+
+        ++data[b].post_barrier_counter;
+    }
+
+    return success;
+}
+
+static void* thread_exec(void *user_data) {
+    bool success = true;
+
+    for(unsigned i = 0; i < ITERATION_COUNT; ++i) 
+        success &= run_iteration();
+
+    return (void*)success;
+}
+
+static void watchdog_timeout(void *user_data) {
+    (void)user_data;
+
+    fprintf(stderr, "\n**** FAILURE: Watchdog timeout reached! ****\n\n");
+    exit(EXIT_FAILURE);
+}
+
+int main(int argc, char* argv[]) { 
+    kthread_t *threads[THREAD_COUNT - 1];
+    bool success = true;
+
+    printf("Initializing Watchdog timer...\n");
+    wdt_enable_timer(0, WATCHDOG_TIMEOUT, 0xf, 
+                     watchdog_timeout, NULL);
+    atexit(wdt_disable);
+
+    printf("Creating %u barriers...\n", BARRIER_COUNT);
+    for(unsigned b = 0; b < BARRIER_COUNT; ++b) { 
+        const int ret = thd_barrier_init(&data[b].barrier, 
+                                         NULL, THREAD_COUNT);
+
+        if(ret) {
+            fprintf(stderr, "Failed to create barrier[%d]: %d\n", b, ret);
+            success = false;
+        }
+    }
+
+    printf("Spawning %u threads...\n", THREAD_COUNT - 1);
+    for(unsigned t = 0; t < THREAD_COUNT - 1; ++t) { 
+        threads[t] = thd_create(false, thread_exec, (void *)(t + 1));
+
+        if(!threads[t]) {
+            fprintf(stderr, "Failed to create thread %u!", t);
+            success = false;
+        }
+    }
+
+    printf("Executing logic from main thread...\n");
+    thread_exec(NULL);
+
+    printf("Joining threads...\n");
+    for(unsigned  t = 0; t < THREAD_COUNT - 1; ++t) {
+        bool thread_ret;
+        const int ret = thd_join(threads[t], (void**)&thread_ret);
+
+        if(ret) {
+            fprintf(stderr, "Failed to join thread %u with code: %d!\n", 
+                    t, ret);
+            success = false;
+        }
+        else if(!thread_ret) {
+            fprintf(stderr, "Thread %u returned an error!\n", t);
+            success = false;
+        }
+        else {
+            printf("Thread %u completed successfully!\n", t);
+        }
+    }
+
+    printf("Verifying counters...\n");
+    for(unsigned b = 0; b < BARRIER_COUNT; ++b) {
+        if(data[b].pre_barrier_counter != THREAD_COUNT * ITERATION_COUNT) {
+            fprintf(stderr, "Incorrect pre_barrier_counter[%u] - %u "
+                    "(%u expected)!\n", b, data[b].pre_barrier_counter,
+                    THREAD_COUNT * ITERATION_COUNT);
+            success = false;
+        }
+
+        if(data[b].pre_barrier_counter != THREAD_COUNT * ITERATION_COUNT) {
+            fprintf(stderr, "Incorrect post_barrier_counter[%u] - %u "
+                    "(%u expected)!\n", b, data[b].post_barrier_counter,
+                    THREAD_COUNT * ITERATION_COUNT);
+            success = false;
+        }
+
+        if(data[b].serial_barrier_counter != ITERATION_COUNT) {
+            fprintf(stderr, "Incorrect serial_barrier_counter[%u] - %u "
+                    "(%u expected)!\n", b, data[b].serial_barrier_counter,
+                    ITERATION_COUNT);
+            success = false;
+        }
+    }
+
+    printf("Destroying barriers...\n");
+    for(unsigned b = 0; b < BARRIER_COUNT; ++b) { 
+        const int ret = thd_barrier_destroy(&data[b].barrier);
+        
+        if(ret) {
+            fprintf(stderr, "Failed to destroy barrier[%d]: %d!\n", b, ret);
+            success = false;
+        }
+    }
+
+    if(success) {
+        printf("\n***** TEST COMPLETE: SUCCESS *****\n\n");
+        return EXIT_SUCCESS;
+    }
+    else {
+        fprintf(stderr, "\nXXXXX TEST COMPLETE: FAILURE XXXXX\n\n");
+        return EXIT_FAILURE;
+    }
+}
