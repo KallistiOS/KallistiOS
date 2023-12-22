@@ -1,41 +1,68 @@
+/*  KallistiOS ##version##
+
+    barrier.c
+
+    Copyright (c) 2023 Falco Girgis
+
+    kthread Barrier Example and Test
+
+    This is a small program that serves as an example of and test for KOS's
+    thread barrier API. It simply spawns a configurable amount of threads
+    which it then passes through a pipeline of a configurable number of
+    barriers a configurable number of times, incrementing counters which
+    are later used to verify proper control flow. The watchdog timer is
+    used to protect against any sort of deadlock should the test fail.
+
+ */
+
 #include <kos/thread.h>
 #include <kos/barrier.h>
 #include <arch/wdt.h>
 
 #include <stdlib.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdatomic.h>
 #include <stdio.h>
 
-#define WATCHDOG_TIMEOUT    (10 * 1000 * 1000) /* 10ms */
-#define THREAD_COUNT        15
-#define ITERATION_COUNT     20
-#define BARRIER_COUNT       5
+/* Configurable constants */
+#define WATCHDOG_TIMEOUT    (10 * 1000 * 1000) /* 10s */
+#define THREAD_COUNT        15  /* Number of threads to spawn */
+#define BARRIER_COUNT       15  /* Number of barriers within pipeline */
+#define ITERATION_COUNT     20  /* Number of times to run through pipeline */
 
+/* Our test data for the barrier pipeline */
 static struct {
-    thd_barrier_t barrier;
-    atomic_uint   pre_barrier_counter;
-    atomic_uint   serial_barrier_counter;
-    atomic_uint   post_barrier_counter;
+    /* KOS barrier */  
+    thd_barrier_t barrier;                 
+    /* Thread control-flow counters */ 
+    atomic_uint   pre_barrier_counter;    /* All threads entering the barrier */    
+    atomic_uint   serial_barrier_counter; /* Serial threads exiting the barrier */
+    atomic_uint   post_barrier_counter;   /* All threads exiting the barrier */
 } data[BARRIER_COUNT] = { 0 };
 
+/*  Runs the current thread through a single iteration of the 
+    barrier pipeline, incrementing counters as each barrier is
+    approached and exited. */
 static bool run_iteration(void) {
     bool success = true;
-    const tid_t id = thd_get_current()->tid;
+    const tid_t id = thd_get_id(thd_get_current());
 
+    /* Go through every barrier sequentially. */
     for(unsigned b = 0; b < BARRIER_COUNT; ++b) {
         ++data[b].pre_barrier_counter;
 
         printf("Thread[%u]: Before barrier[%u]!\n", id, b);
 
+        /* Wait for the barrier. */
         const int ret = thd_barrier_wait(&data[b].barrier);
 
+        /* Check for errors. */
         if(ret < 0) {
             fprintf(stderr, "Thread[%u]: Wait on barrier[%u] failure: %d!\n",
                     id, b, ret);
             success = false;
         }
+        /* Check if we were the lucky serial thread (should only be one!) */
         else if(ret == THD_BARRIER_SERIAL_THREAD) {
             printf("Thread[%u]: After barrier[%u]: SERIAL!\n", id, b);
             ++data[b].serial_barrier_counter;
@@ -50,15 +77,19 @@ static bool run_iteration(void) {
     return success;
 }
 
-static void* thread_exec(void *user_data) {
+/*  Entry-point for each thread. Simply runs the thread through
+    the pipeline barrier the configured number of iterations. */
+static void *thread_exec(void *user_data) {
     bool success = true;
 
+    /* Accumulate result code after each pipeline pass/ */
     for(unsigned i = 0; i < ITERATION_COUNT; ++i) 
         success &= run_iteration();
 
     return (void*)success;
 }
 
+/* WDT callback for test timeout failure */
 static void watchdog_timeout(void *user_data) {
     (void)user_data;
 
@@ -66,6 +97,7 @@ static void watchdog_timeout(void *user_data) {
     exit(EXIT_FAILURE);
 }
 
+/* Program entry-point */
 int main(int argc, char* argv[]) { 
     kthread_t *threads[THREAD_COUNT - 1];
     bool success = true;
