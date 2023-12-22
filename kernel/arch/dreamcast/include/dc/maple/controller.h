@@ -185,10 +185,6 @@ typedef struct cont_state {
     used, for instance, to implement the standard A+B+X+Y+Start method of ending
     the program running.
 
-    \warning
-    Your callback will be invoked within a context with interrupts disabled.
-    See cont_btn_callback for more information.
-
     \param addr             Maple BUS address to poll for the button mask
                             on, or 0 for all ports.
     \param btns             Mask of all buttons which should be pressed to
@@ -209,21 +205,13 @@ typedef void (*cont_btn_callback_t)(uint8_t addr, uint32_t btns);
     an address of '0' will cause it to be invoked for any port with a 
     device pressing the given buttons. Since you are passed back the address 
     of this device, You are free to implement your own filtering logic within
-    your callback.
-
-    \warning
-    The provided callback function is invoked within a context which has
-    interrupts disabled. This means that you should not do any sort of complex
-    processing or make any API calls which depend on interrupts to complete,
-    such as Maple or etherent processing whichy rely on packet transmission,
-    any sleeping or threading calls, blocking on any sort of file I/O, etc. 
-    This mechanism is typically used to quickly terminate the application
-    and should be used with caution.
+    your callback. Additionally only one callback can be installed at a time.
 
     \param  addr            The controller to listen on (or 0 for all ports). 
                             This value can be obtained by using maple_addr().
     \param  btns            The buttons bitmask to match.
-    \param  cb              The callback to call when the buttons are pressed.
+    \param  cb              The callback to call when the buttons are pressed, 
+                            or NULL to un-set the current callback.
 */
 void cont_btn_callback(uint8_t addr, uint32_t btns, cont_btn_callback_t cb);
 

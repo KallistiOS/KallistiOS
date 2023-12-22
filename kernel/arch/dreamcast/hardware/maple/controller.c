@@ -11,6 +11,9 @@
 #include <string.h>
 #include <assert.h>
 
+#include <kos/thread.h>
+#include <kos/mutex.h>
+
 /* Location of controller capabilities within function_data array */
 #define CONT_FUNCTION_DATA_INDEX  0 
 
@@ -29,6 +32,10 @@ static cont_btn_callback_t btn_callback = NULL;
 static uint8_t btn_callback_addr = 0;
 static uint32_t btn_callback_btns = 0;
 
+static kthread_t *btn_callback_thd = NULL;
+static uint8_t btn_callback_arg_addr = 0;
+static uint32_t btn_callback_arg_btns = 0;
+
 /* Check whether the controller has EXACTLY the given capabilties. */
 int cont_is_type(const maple_device_t *cont, uint32_t type) {
     return cont ? cont->info.function_data[CONT_FUNCTION_DATA_INDEX] == type :
@@ -41,11 +48,54 @@ int cont_has_capabilities(const maple_device_t *cont, uint32_t capabilities) {
                    & capabilities) == capabilities) : -1;
 }
 
+static void *btn_callback_wrapper(void *args) {
+    (void)args;
+
+    for(;;) {
+        btn_callback(btn_callback_arg_addr, btn_callback_arg_btns);
+        thd_pass();
+    }
+
+    return NULL;
+}
+
+void cont_btn_callback_shutdown(void) {
+    if(btn_callback_thd != NULL) {
+        /* This means either the callback is shutting down the 
+           whole system, or some jerk called this in the callback. */
+        if(thd_get_current()->tid == btn_callback_thd->tid)
+            return;
+
+        thd_destroy(btn_callback_thd);
+        btn_callback_thd = NULL;
+    }
+
+    btn_callback = NULL;
+    btn_callback_addr = 0;
+    btn_callback_btns = 0;
+    btn_callback_arg_addr = 0;
+    btn_callback_arg_btns = 0;
+}
+
 /* Set a controller callback for a button combo; set addr=0 for any controller */
 void cont_btn_callback(uint8_t addr, uint32_t btns, cont_btn_callback_t cb) {
+    /* Setting to NULL clears the current callback. */
+    if(cb == NULL) {
+        cont_btn_callback_shutdown();
+        return;
+    }
+
     btn_callback_addr = addr;
     btn_callback_btns = btns;
     btn_callback = cb;
+
+    btn_callback_thd = thd_create(0, btn_callback_wrapper, NULL);
+
+    /* This may require an update to thd_create to be able to send custom flags. 
+       Otherwise it might run before it gets removed. */
+    thd_remove_from_runnable(btn_callback_thd);
+
+    thd_set_label(btn_callback_thd, "cont_btn_callback");
 }
 
 /* Response callback for the GETCOND Maple command. */
@@ -86,14 +136,15 @@ static void cont_reply(maple_frame_t *frm) {
         cooked->joy2y = ((int)raw->joy2y) - 128;
         frm->dev->status_valid = 1;
 
-        /* Check for magic button sequences */
-        if(btn_callback) {
+        /* Check for magic button sequences, as long as no check is still processing */
+        if(btn_callback_thd && (thd_get_current()->tid != btn_callback_thd->tid)) {
             if(!btn_callback_addr ||
                     (btn_callback_addr &&
                      btn_callback_addr == maple_addr(frm->dev->port, frm->dev->unit))) {
                 if((cooked->buttons & btn_callback_btns) == btn_callback_btns) {
-                    btn_callback(maple_addr(frm->dev->port, frm->dev->unit),
-                                 cooked->buttons);
+                    btn_callback_arg_addr = maple_addr(frm->dev->port, frm->dev->unit);
+                    btn_callback_arg_btns = cooked->buttons;
+                    thd_schedule_next(btn_callback_thd);
                 }
             }
         }
@@ -141,4 +192,5 @@ void cont_init(void) {
 
 void cont_shutdown(void) {
     maple_driver_unreg(&controller_drv);
+    cont_btn_callback_shutdown();
 }

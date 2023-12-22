@@ -595,7 +595,7 @@ int thd_get_mode(void) __deprecated;
     \relatesalso kthread_t
 
     This function "joins" a joinable thread. This means effectively that the
-    calling thread blocks until the speified thread completes execution. It is
+    calling thread blocks until the specified thread completes execution. It is
     invalid to join a detached thread, only joinable threads may be joined.
 
     \param  thd             The joinable thread to join.
