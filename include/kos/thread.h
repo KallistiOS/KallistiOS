@@ -2,7 +2,7 @@
 
    include/kos/thread.h
    Copyright (C) 2000, 2001, 2002, 2003 Megan Potter
-   Copyright (C) 2009, 2010, 2016 Lawrence Sebald
+   Copyright (C) 2009, 2010, 2016, 2023 Lawrence Sebald
    Copyright (C) 2023 Colton Pawielski
    Copyright (C) 2023, 2024 Falco Girgis
 
@@ -508,8 +508,32 @@ void thd_sleep(unsigned ms);
     \retval 0               On success.
     \retval -1              thd is NULL.
     \retval -2              prio requested was out of range.
+
+    \sa thd_get_prio
 */
 int thd_set_prio(kthread_t *thd, prio_t prio);
+
+/** \brief       Retrieve a thread's priority value.
+    \relatesalso kthread_t
+
+    \param  thd             The thread to retrieve from. If NULL, the current
+                            thread will be used.
+
+    \return                 The priority value of the thread
+
+    \sa thd_set_prio
+*/
+prio_t thd_get_prio(kthread_t *thd);
+
+/** \brief       Retrieve a thread's numeric identifier.
+    \relatesalso kthread_t
+
+    \param  thd             The thread to retrieve from. If NULL, the current
+                            thread will be used.
+
+    \return                 The identifier of the thread
+*/
+tid_t thd_get_id(kthread_t *thd);
 
 /** \brief       Retrieve the current thread's kthread struct.
     \relatesalso kthread_t

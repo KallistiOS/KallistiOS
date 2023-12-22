@@ -2,7 +2,7 @@
 
    kernel/thread/thread.c
    Copyright (C) 2000, 2001, 2002, 2003 Megan Potter
-   Copyright (C) 2010, 2016 Lawrence Sebald
+   Copyright (C) 2010, 2016, 2023 Lawrence Sebald
    Copyright (C) 2023 Colton Pawielski
    Copyright (C) 2023, 2024 Falco Girgis
 */
@@ -553,6 +553,20 @@ int thd_set_prio(kthread_t *thd, prio_t prio) {
     return 0;
 }
 
+prio_t thd_get_prio(kthread_t *thd) {
+    if(!thd)
+        thd = thd_current;
+
+    return thd->prio;
+}
+
+tid_t thd_get_id(kthread_t *thd) {
+    if(!thd)
+        thd = thd_current;
+
+    return thd->tid;
+}
+
 /*****************************************************************************/
 /* Scheduling routines */
 
@@ -855,10 +869,16 @@ int thd_detach(kthread_t *thd) {
 /*****************************************************************************/
 /* Retrieve / set thread label */
 const char *thd_get_label(kthread_t *thd) {
+    if(!thd)
+        thd = thd_current;
+
     return thd->label;
 }
 
 void thd_set_label(kthread_t *__RESTRICT thd, const char *__RESTRICT label) {
+    if(!thd)
+        thd = thd_current;
+
     strncpy(thd->label, label, sizeof(thd->label) - 1);
 }
 
@@ -869,10 +889,16 @@ kthread_t *thd_get_current(void) {
 
 /* Retrieve / set thread pwd */
 const char *thd_get_pwd(kthread_t *thd) {
+    if(!thd)
+        thd = thd_current;
+
     return thd->pwd;
 }
 
 void thd_set_pwd(kthread_t *__RESTRICT thd, const char *__RESTRICT pwd) {
+    if(!thd)
+        thd = thd_current;
+
     strncpy(thd->pwd, pwd, sizeof(thd->pwd) - 1);
 }
 
