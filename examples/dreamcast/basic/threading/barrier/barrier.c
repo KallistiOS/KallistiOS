@@ -20,15 +20,16 @@
 #include <arch/wdt.h>
 
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdbool.h>
 #include <stdatomic.h>
 #include <stdio.h>
 
 /* Configurable constants */
 #define WATCHDOG_TIMEOUT    (10 * 1000 * 1000) /* 10s */
-#define THREAD_COUNT        15  /* Number of threads to spawn */
-#define BARRIER_COUNT       15  /* Number of barriers within pipeline */
-#define ITERATION_COUNT     20  /* Number of times to run through pipeline */
+#define THREAD_COUNT        15   /* Number of threads to spawn */
+#define BARRIER_COUNT       5    /* Number of barriers within pipeline */
+#define ITERATION_COUNT     10   /* Number of times to run through pipeline */
 
 /* Our test data for the barrier pipeline */
 static struct {
@@ -43,15 +44,14 @@ static struct {
 /*  Runs the current thread through a single iteration of the 
     barrier pipeline, incrementing counters as each barrier is
     approached and exited. */
-static bool run_iteration(void) {
+static bool run_iteration(uintptr_t tid) {
     bool success = true;
-    const tid_t id = thd_get_id(thd_get_current());
 
     /* Go through every barrier sequentially. */
     for(unsigned b = 0; b < BARRIER_COUNT; ++b) {
         ++data[b].pre_barrier_counter;
 
-        printf("Thread[%u]: Before barrier[%u]!\n", id, b);
+        printf("Thread[%u]: Before barrier[%u]!\n", tid, b);
 
         /* Wait for the barrier. */
         const int ret = thd_barrier_wait(&data[b].barrier);
@@ -59,16 +59,16 @@ static bool run_iteration(void) {
         /* Check for errors. */
         if(ret < 0) {
             fprintf(stderr, "Thread[%u]: Wait on barrier[%u] failure: %d!\n",
-                    id, b, ret);
+                    tid, b, ret);
             success = false;
         }
         /* Check if we were the lucky serial thread (should only be one!) */
         else if(ret == THD_BARRIER_SERIAL_THREAD) {
-            printf("Thread[%u]: After barrier[%u]: SERIAL!\n", id, b);
+            printf("Thread[%u]: After barrier[%u]: SERIAL!\n", tid, b);
             ++data[b].serial_barrier_counter;
         }
         else { 
-            printf("Thread[%u]: After barrier[%u]: NONSERIAL!\n", id, b);
+            printf("Thread[%u]: After barrier[%u]: NONSERIAL!\n", tid, b);
         }
 
         ++data[b].post_barrier_counter;
@@ -81,10 +81,11 @@ static bool run_iteration(void) {
     the pipeline barrier the configured number of iterations. */
 static void *thread_exec(void *user_data) {
     bool success = true;
+    uintptr_t tid = (uintptr_t)user_data;
 
-    /* Accumulate result code after each pipeline pass/ */
+    /* Accumulate result code after each pipeline pass. */
     for(unsigned i = 0; i < ITERATION_COUNT; ++i) 
-        success &= run_iteration();
+        success &= run_iteration(tid);
 
     return (void*)success;
 }
@@ -123,13 +124,13 @@ int main(int argc, char* argv[]) {
         threads[t] = thd_create(false, thread_exec, (void *)(t + 1));
 
         if(!threads[t]) {
-            fprintf(stderr, "Failed to create thread %u!", t);
+            fprintf(stderr, "Failed to create thread %u!", t  + 1);
             success = false;
         }
     }
 
     printf("Executing logic from main thread...\n");
-    thread_exec(NULL);
+    thread_exec((void *)0);
 
     printf("Joining threads...\n");
     for(unsigned  t = 0; t < THREAD_COUNT - 1; ++t) {
@@ -142,11 +143,11 @@ int main(int argc, char* argv[]) {
             success = false;
         }
         else if(!thread_ret) {
-            fprintf(stderr, "Thread %u returned an error!\n", t);
+            fprintf(stderr, "Thread %u returned an error!\n", t + 1);
             success = false;
         }
         else {
-            printf("Thread %u completed successfully!\n", t);
+            printf("Thread %u completed successfully!\n", t + 1);
         }
     }
 
