@@ -2,7 +2,7 @@
 
    kernel/thread/thread.c
    Copyright (C) 2000, 2001, 2002, 2003 Megan Potter
-   Copyright (C) 2010, 2016 Lawrence Sebald
+   Copyright (C) 2010, 2016, 2023 Lawrence Sebald
 */
 
 #include <stdlib.h>
@@ -342,8 +342,7 @@ int thd_remove_from_runnable(kthread_t *thd) {
 /* Creates and initializes the static TLS segment for a thread,
    composed of a Thread Control Block (TCB), followed by .TDATA,
    followed by .TBSS, very carefully ensuring alignment of each
-   subchunk. 
-*/
+   subchunk. */
 static void *thd_create_tls_data(void) {
     size_t align, tdata_offset, tdata_end, tbss_offset, 
         tbss_end, align_rem, tls_size;
@@ -357,8 +356,7 @@ static void *thd_create_tls_data(void) {
 
        SIZES MUST BE VOLATILE or the optimizer on non-debug builds will 
        optimize zero-check conditionals away, since why would the 
-       address of a variable be NULL? (Linker script magic, it can be.)
-   */
+       address of a variable be NULL? (Linker script magic, it can be.) */
     const volatile size_t   tdata_size  = (size_t)(&_tdata_size);
     const volatile size_t   tbss_size   = (size_t)(&_tbss_size);
     const          size_t   tdata_align = tdata_size ? (size_t)_tdata_align : 1;
@@ -366,8 +364,7 @@ static void *thd_create_tls_data(void) {
     const          uint8_t *tdata_start = (const uint8_t *)(&_tdata_start);
 
     /* Each subsegment of the requested memory chunk must be aligned
-       by the largest segment's memory alignment requirements. 
-   */
+       by the largest segment's memory alignment requirements. */
     align = 8;               /* tcbhead_t has to be aligned by 8. */
     if(tdata_align > align)
         align = tdata_align; /* .TDATA segment's alignment */
@@ -603,6 +600,20 @@ int thd_set_prio(kthread_t *thd, prio_t prio) {
     /* Set the new priority */
     thd->prio = prio;
     return 0;
+}
+
+prio_t thd_get_prio(kthread_t *thd) {
+    if(!thd)
+        thd = thd_current;
+
+    return thd->prio;
+}
+
+tid_t thd_get_id(kthread_t *thd) {
+    if(!thd)
+        thd = thd_current;
+
+    return thd->tid;
 }
 
 /*****************************************************************************/
@@ -893,10 +904,16 @@ int thd_detach(kthread_t *thd) {
 /*****************************************************************************/
 /* Retrive / set thread label */
 const char *thd_get_label(kthread_t *thd) {
+    if(!thd)
+        thd = thd_current;
+
     return thd->label;
 }
 
 void thd_set_label(kthread_t *__RESTRICT thd, const char *__RESTRICT label) {
+    if(!thd)
+        thd = thd_current;
+
     strncpy(thd->label, label, sizeof(thd->label) - 1);
 }
 
@@ -907,10 +924,16 @@ kthread_t *thd_get_current(void) {
 
 /* Retrieve / set thread pwd */
 const char *thd_get_pwd(kthread_t *thd) {
+    if(!thd)
+        thd = thd_current;
+
     return thd->pwd;
 }
 
 void thd_set_pwd(kthread_t *__RESTRICT thd, const char *__RESTRICT pwd) {
+    if(!thd)
+        thd = thd_current;
+
     strncpy(thd->pwd, pwd, sizeof(thd->pwd) - 1);
 }
 
