@@ -1,7 +1,7 @@
 #
-# dreampresent: a simple presentation tool for Sega Dreamcast written in Ruby
-# Copyright (C) 2019-2020 Yuji Yokoo
-
+# dreampresent
+# A simple presentation tool for Sega Dreamcast written in Ruby
+# Copyright (C) 2019-2024 Yuji Yokoo
 #
 
 # Project Name
@@ -16,6 +16,9 @@ BOOTFILE = 1ST_READ.BIN
 # "$(PROJECT).o" is a transpiled C source file generated using MRB_BYTECODE
 OBJS = $(PROJECT).o main.o dckos.o romdisk.o
 
+# Libraries used by the project
+LIBS = -lmruby -lm -lpng -lkosutils -lz
+
 # ROM Disk directory used for resources
 KOS_ROMDISK_DIR = romdisk
 
@@ -28,7 +31,7 @@ MRB_BYTECODE = $(PROJECT).c
 
 # Name of the compiled mruby script
 # This should match the definition in "main.c"
-MRB_BYTECODE_IREP_NAME = dreampresent_bytecode
+MRB_BYTECODE_IREP_NAME = $(PROJECT)_bytecode
 
 all: rm-elf $(TARGET)
 
@@ -41,10 +44,10 @@ rm-elf:
 	-rm -f $(TARGET) $(BINARY) $(BOOTFILE) $(MRB_BYTECODE) romdisk.*
 
 $(TARGET): $(OBJS)
-	kos-cc -o $(TARGET) $(OBJS) -lmruby -lm -lpng -lkosutils -lz
+	kos-cc -o $(TARGET) $(OBJS) $(LIBS)
 
 $(MRB_BYTECODE): $(MRB_SOURCES)
-	mrbc -g -B$(MRB_BYTECODE_IREP_NAME) -o $(MRB_BYTECODE) $(MRB_SOURCES)
+	mrbc -g -B $(MRB_BYTECODE_IREP_NAME) -o $(MRB_BYTECODE) $(MRB_SOURCES)
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
