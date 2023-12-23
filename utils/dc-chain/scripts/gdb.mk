@@ -43,9 +43,9 @@ $(stamp_gdb_build): patch_gdb
 	@echo "+++ Building GDB..."
 	rm -f $@
 	> $(log)
-	-rm -rf build-$(gdb_name)
-	mkdir build-$(gdb_name)
-	cd build-$(gdb_name); \
+	-rm -rf $(build)
+	mkdir $(build)
+	cd $(build); \
         ../$(gdb_name)/configure \
           --disable-werror \
           --prefix=$(sh_prefix) \
@@ -55,7 +55,7 @@ $(stamp_gdb_build): patch_gdb
           $(macos_gdb_configure_args) \
           $(static_flag) \
           $(to_log)
-	$(MAKE) $(makejobs) -C build-$(gdb_name) $(to_log)
+	$(MAKE) $(makejobs) -C $(build) $(to_log)
 	touch $@
 
 # This step runs post install to sign the sh-elf-gdb binary on MacOS
@@ -77,17 +77,20 @@ install_gdb: $(GDB_INSTALL_TARGET)
 # The 'install-strip' mode support is partial in GDB so there is a little hack
 # below to remove useless debug symbols
 # See: https://sourceware.org/legacy-ml/gdb-patches/2012-01/msg00335.html
+
 $(stamp_gdb_install): build_gdb
 	@echo "+++ Installing GDB..."
 	rm -f $@
-	$(MAKE) -C build-$(gdb_name) install DESTDIR=$(DESTDIR) $(to_log)
+	$(MAKE) -C $(build) install DESTDIR=$(DESTDIR) $(to_log)
 	@if test "$(install_mode)" = "install-strip"; then \
-		$(MAKE) -C build-$(gdb_name)/gdb $(install_mode) DESTDIR=$(DESTDIR) $(to_log); \
+		$(MAKE) -C $(build)/gdb $(install_mode) DESTDIR=$(DESTDIR) $(to_log); \
 		gdb_run=$(sh_prefix)/bin/$(sh_target)-run$(executable_extension); \
 		if test -f $${gdb_run}; then \
 			strip $${gdb_run}; \
 		fi; \
 	fi;
 	touch $@
+	$(clean_up)
 
+gdb: build = build-$(gdb_name)
 gdb: install_gdb
