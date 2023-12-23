@@ -3,8 +3,9 @@
 This is a presentation tool that runs on **Sega Dreamcast**. It's written in 
 **Ruby** and uses [mruby](https://mruby.org/).
 
-This tool was initially developed by Yuji Yokoo (@yujiyokoo) for the
-**RubyConf TW 2019** event (later it was updated for **RubyConf AU 2020**).
+This tool was initially developed by [@yujiyokoo](https://github.com/yujiyokoo) 
+for the **RubyConf TW 2019** event (later it was updated for 
+**RubyConf AU 2020**).
 
 ## Usage
 
