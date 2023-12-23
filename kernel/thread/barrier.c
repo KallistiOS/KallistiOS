@@ -186,6 +186,15 @@ int thd_barrier_wait(thd_barrier_t *b) {
             cond_wait(&b->b.cond, &b->b.mutex);
         } while(b->b.pass == pass);
 
+        --b->b.refcnt;
+
+        /* If we're cleaning up and this was the last thread to get the signal
+           to wake up from the wait, make sure that the thread cleaning up gets
+           the signal to complete the cleanup once we exit the critical
+           section. */
+        if(b->cleanup && b->b.refcnt == 0)
+            cond_broadcast(&b->b.cond);
+
         mutex_unlock(&b->b.mutex);
         return 0;
     }
