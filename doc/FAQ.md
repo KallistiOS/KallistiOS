@@ -407,14 +407,14 @@ following command:
 I personally don't recommend building every port, but rather building
 only those you use, but to each his own, as they say.
 
-### When I try to build a port, I get an error complaining that "curl" is not found. What's up with that?
+### When I try to build a port, I get an error complaining that `curl` is not found. What's up with that?
 
 The curl utility is used by default to download the distribution files
 for each port. If you'd rather use wget to do this (or any other similar
-utility), edit the kos-ports/config.mk file to point to your favorite
-utility. There is an example in there for using wget already -- just
-comment out the "FETCH_CMD = curl --progress-bar -O" line by putting a
-# in front of it, and uncomment the line below it to use wget instead.
+utility), edit the `kos-ports/config.mk` file to point to your favorite
+utility. There is an example in there for using `wget` already -- just
+comment out the `FETCH_CMD = curl --progress-bar -O` line by putting a
+`#` in front of it, and uncomment the line below it to use wget instead.
 
-As for why curl is the default, well, it's installed by default on OS X,
+As for why `curl` is the default, well, it's installed by default on OS X,
 and is easily available on just about any *nix-like system.
