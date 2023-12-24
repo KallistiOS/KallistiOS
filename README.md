@@ -19,15 +19,14 @@ KallistiOS offers a modern, programmer friendly environment for the vintage Drea
 
 KallistiOS also features a package manager called [**_kos-ports_**](https://github.com/KallistiOS/kos-ports) which gives developers the power to build and include a rich set of add-on libraries for various common audiovisual formats (jpg, png, mp3, ogg, mpeg), scripting languages (Lua, Tcl, MicroPython), and gaming APIs (OpenGL, OpenAL, SDL). 
 
-# Features
-## Core Functionality
+### Core Functionality
 * Concurrency with Kernel Threads, C11 Threads, C++11 `std::thread`, POSIX threads
 * Virtual Filesystem Abstraction
 * IPv4/IPv6 Network Stack
 * Dynamically Loaded Libraries and Modules
 * GDB Debugger Support
 
-## Dreamcast Hardware Support
+### Dreamcast Hardware Support
 * Optical Disc Drive
 * Low-level 3D PowerVR Graphics 
 * SH4 ASM-Optimized Math Routines
@@ -40,7 +39,7 @@ KallistiOS also features a package manager called [**_kos-ports_**](https://gith
 * Performance Counters
 * MMU Management
 
-## Peripherals and Accessory Support
+### Peripherals and Accessory Support
 * Standard controllers, expanded controllers with additional buttons and dual analog sticks 
 * Arcade Sticks and Twin Sticks
 * Lightguns, Racing Wheels, Fishing Rods, Samba Maracas, Dance Mat
