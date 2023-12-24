@@ -28,43 +28,29 @@ KallistiOS also features a package manager called [**_kos-ports_**](https://gith
 * GDB Debugger Support
 
 ## Dreamcast Hardware Support
-* GD-ROM Optical Drive
+* Optical Disc Drive
 * Low-level 3D PowerVR Graphics 
 * SH4 ASM-Optimized Math Routines
 * SH4 SCIF Serial I/O
 * DMA Controller 
-* Flashrom Filesystem
+* FlashROM Filesystem
 * AICA SPU Sound Processor Driver
 * Cache and Store Queue Management
 * Timer Peripherals, Real-Time Clock, Watchdog Timer
 * Performance Counters
 * MMU Management
-* BIOS Font Rendering
 
 ## Peripherals and Accessory Support
-* Controller, ASCII Pad
-* Arcade Stick, Twin Stick, Mission Stick
-* Keyboard
-* Mouse
-* Visual Memory Unit
-* Puru Puru Vibration Pack
-* Seaman Microphone
-* Dreameye Webcam
-* Lightgun 
-* Racing Wheel
-* Fishing Rod
-* Samba De Amigo Maracas
-* Dance Mat
-* Dial-up Modem
-* Broadband Adapter
-* LAN Adapter
-* VGA Adapter
-* SD Card Reader
+* Standard controllers, expanded controllers with additional buttons and dual analog sticks 
+* Arcade Sticks and Twin Sticks
+* Lightguns, Racing Wheels, Fishing Rods, Samba Maracas, Dance Mat
+* Visual Memory Unit, Memory Cards, Puru Puru/Jump Vibration Pack, Microphone, Dreameye Webcam
+* 33.6K and 56K Dial-up Modems, 100/10Mbps "Broadband Adapter", 10Mbps "LAN Adapter"
+* RCA, S-video, RGB, and VGA output
+* Serial-based SD card readers
 
-## Hardware Modification Support
-* IDE Hard Drive
-* 32MB RAM Upgrade
-* Custom BIOS Flashroms
+### Hardware Modification Support
+* IDE hard drive, 32MB RAM upgrade, custom BIOS flashROMs
 
 # Getting Started 
 A beginner's guide to development for the Sega Dreamcast along with detailed instructions for installing KOS and the required toolchains can be found on [dreamcast.wiki](https://dreamcast.wiki/Getting_Started_with_Dreamcast_development). Additional documentation can be found in the docs folder. 
