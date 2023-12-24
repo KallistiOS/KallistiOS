@@ -1,29 +1,27 @@
 # Overview
-KallistiOS is a pseudo-real-time operating system for gaming consoles,
+KallistiOS[^1] is a pseudo-real-time operating system for gaming consoles,
 licensed under the terms of the "new" BSD license (the one without the
-advertising clause). It is currently available for the Dreamcast*, but
-ports previously existed for the Gameboy Advance*, PlayStation 2*, and
-Intel* ia32 platforms, although none were particularly complete.
+advertising clause). It is currently available for the Dreamcast[^2], but
+ports previously existed for the Gameboy Advance[^2], PlayStation 2[^2], and
+Intel[^2] ia32 platforms, although none were particularly complete.
 
-Depending on whether you wish to see the fnords, you can pronounce it
-"kallisti-o's" (like a cereal) or "kallisti o s" (like an operating
+
+Depending on whether you wish to see the [fnords](https://en.wikipedia.org/wiki/Fnord),
+you can pronounce it
+_kallisti-o's_ (like a cereal) or _kallisti-o-s" (like an operating
 system). We like the former since it's silly to be so serious most of the
-time =). "Kallisti" means "to the fairest" in Greek. This was the word (so
-the story goes) that was inscribed on the golden apple that Eris threw
-into the banquet of the gods to start the Trojan war. This somehow landed
-her the title of matriarch of a silly religion called Discordianism, which
-is what the name pays homage to. If you want a short abbreviation, you can
-also refer to it as "KOS", which can be pronounced "k-os" (chaos) =).
-
-Note that this name is _not_ to be confused or associated with either the
-professional development company Kalisto Software* or the cracking group
-"Kalisto".
+time =). _Kallisti_ means "to the fairest" in Greek. This was the word 
+inscribed on the golden apple Eris threw into the banquet of the gods
+to start the Trojan war. This somehow landed her the title of matriarch
+of a silly religion called _Discordianism_, to which the KallistiOS name
+pays homage. If you want a short abbreviation, you can also refer to it
+as _KOS_, which can be pronounced _k-oss_ (like chaos) =).
 
 Now that that is cleared up... =)
 
 KallistiOS is a modular monolithic kernel, like Linux or FreeBSD. This
 means that there is a kernel library which you link with your own code.
-This library (libkallisti.a) contains the whole core OS functionality. You
+This library (`libkallisti.a`) contains the whole core OS functionality. You
 may also enable dynamically loaded modules which will link into your
 program at runtime and add extra functionality like new VFS modules,
 new peripheral device support, image loader plugins, etc. The possibilities
@@ -72,45 +70,20 @@ love to hear from you anyway!
 
 # Prerequisites
 Building KallistiOS from source entirely requires two things:
-- GNU Binutils / GCC, cross-compile to the platform of your choice; for
-  DC this is a compiler targeted for "sh-elf", as well as (optionally)
-  a compiler targeted for "arm-eabi". See below about version notes.
-- A working compiler toolchain that can be used to cross-compile the
-  requisite target toolchain (so GCC or Clang based, basically) and
-  GNU Make for your host platform
+- GNU Binutils / GCC, to cross-compile to your target platform; for
+  DC this is a compiler targeted for `sh-elf`. An `arm-eabi` toolchain
+  can optionally be used. 
+- A working host compiler toolchain that can be used to compile this
+  target cross-compiler toolchain (GCC or Clang) and GNU Make
+
+A toolchain-building script is included to build the cross-compiler. 
+See the [dc-chain documentation](../utils/dc-chain/README.md) for more
+information on installing the toolchain.
 
 If building KallistiOS to target NAOMI, additionally you will need to
 install libelf (and the development package, if applicable) for your
 host environment (or modify the utils/naomibintool Makefile to not
 use libelf and to define NO_LIBELF for building that tool).
-
-For the Dreamcast version, a Makefile is provided to build the requisite
-GCC, Binutils, and Newlib versions in the utils/dc-chain directory.
-
-If you don't have any of the above, please see one of the following sites
-for some more instructions (and perhaps a build script that may help you):
-
-  http://gamedev.allusion.net/softprj/kos/setup.php
-  http://dcemulation.org/
-
-On the Dreamcast, the 4.x series of GCC works pretty well. Look at the patches
-provided in utils/dc-chain/patches to see what versions have been tested and
-are known to work. In addition, some people still use earlier versions of GCC,
-such as 3.4.6 and 3.0.4. There are often strange bugs with GCC for SuperH, so
-if you deviate from these suggested versions, you're on your own (for instance,
-pretty much the entire 3.1.x, 3.2.x, and 3.3.x branches of GCC were broken for
-SuperH). Basically, if you use a newer version of GCC and find that it works
-perfectly, great -- let us know and give us the patches needed to make it work.
-However, if you find that it doesn't work, you're on your own to try to figure
-out why.
-
-If you wish to work with the sound processor on the Dreamcast, you'll need an
-ARM toolchain as well. ARM support is maintained pretty well in GCC, so most
-versions should "just work". The ARM processor in the sound unit is fairly old
-and doesn't support Thumb mode at all, so keep that in mind when building GCC.
-You do not necessarily need an ARM version of GCC to build KOS for the DC, as
-precompiled binaries are provided of the necessary code. As long as you don't
-intend to modify the sound driver, you don't need the ARM tools.
 
 # Building
 Building KOS itself is actually quite simple, especially if you don't want
@@ -127,9 +100,9 @@ them anymore.
 After you have a working environ script, run it with 'source environ.sh'
 and run your make program. For BSD people this may be 'gmake', otherwise
 it will probably be just 'make'. It should be done after a few minutes. If
-something goes wrong, please check the FAQ; if that fails, email one of us
-and we'll see what we can do. I recommend putting the 'source' line above
-into your shell's .rc/.login.
+something goes wrong, please check the [FAQ](FAQ.md); if that fails, you may
+seek support though [several options](../README.md#resources). I recommend
+putting the 'source' line above into your shell's .rc/.login.
 
 This process should work (and has been tested) under Linux, BSD, Cygwin and
 MinGW/MSYS. It is very doubtful that it will work in any non-*nix environment.
@@ -215,8 +188,11 @@ to SourceForge for all console-related things.
 
 `https://sourceforge.net/projects/cadcdev/`
 
+[^1]: Note that this name is _not_ to be confused or associated with either the
+  professional development company Kalisto Software* or the cracking group
+  "Kalisto".
 
-* "Sega", "Dreamcast", and NAOMI are registered trademarks of Sega Corporation.
+[^2]: "Sega", "Dreamcast", and NAOMI are registered trademarks of Sega Corporation.
   "Nintendo" and "Gameboy Advance" are registered trademarks of Nintendo of America
   Kalisto Software is a registered trademark of Kalisto Software, Inc.
   "PlayStation" is a registered trademark of Sony Computer Entertainment America
