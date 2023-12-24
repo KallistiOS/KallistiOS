@@ -64,17 +64,8 @@ code in it and is a clean example of a simple OS. Most of the interesting
 code from KOS-MMU was merged into KOS 1.1.x, 1.2.x, and 2.0.0.
 
 # Licensing
-Please read the file "LICENSE" for more information about this subject.
-This program is now distributed under a similar set of terms as earlier
-ones (libdream), and has changed since KallistiOS 0.7 (GPL). Even so, some
-of the software distributed with KOS (newlib math routines, Xing MP3
-engine, modplug, etc) are under different licenses. Please read "LICENSE"
-if in doubt!
-
-This software is optionally based in part on the work of the Independent JPEG
-Group (see addons/libjpeg/README).
-
-I have also added a somewhat informative "licensing" section to the FAQ.
+Please read [LICENSE.md](LICENSE.md) for more information about this subject.
+The [FAQ](FAQ.md) also contains an informative "licensing" section.
 
 If in doubt, please contact us. If you want to use KOS in a project, we'd
 love to hear from you anyway!
