@@ -27,8 +27,9 @@ Please read [LICENSE.KOS](license/LICENSE.KOS) for the full license text.
 
 The above information applies to the portions of KallistiOS that are copyrighted
 by the authors. BSD code that is included with KallistiOS is licensed under the
-BSD license -- please reference README.BSD. This BSD license is nearly identical
-to the KOS license, but ours has removed the "advertising clause." 
+BSD license -- please reference [LICENSE.BSD](license/LICENSE.BSD). This BSD
+license is nearly identical to the KOS license, but ours has removed the
+"advertising clause." 
 
 ## Included lwIP Code
 
@@ -69,6 +70,9 @@ from the KOS kos-ports tree) without making your program GPL'd, or
 something less restrictive (e.g., BSD license) but distributing it by
 the terms of the GPL. If you replace the MP3 engine, however, you _can_
 do this, as all of our libmp3 code is covered under the BSD license.
+
+See [LICENSE.GPL](license/LICENSE.GPL) and [LICENSE.LGPL](license/LICENSE.LGPL)
+for the text of these licenses.
 
 ## More licensing information
 If there is ever a question or you want to ask permission to do something
