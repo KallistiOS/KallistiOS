@@ -21,7 +21,7 @@ that this text is attached to them:
 >
 >   http://gamedev.allusion.net/
 
-Please read [README.KOS](README.KOS) for the full details.
+Please read [README.KOS](README.KOS) for the full license text.
 
 ## Included BSD Code
 
