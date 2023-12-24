@@ -1,12 +1,6 @@
-KallistiOS ##version##
-README
-Copyright (C) 2000-2003 Megan Potter
-Copyright (C) 2012-2014 Lawrence Sebald
-
-OVERVIEW
---------
+# Overview
 KallistiOS is a pseudo-real-time operating system for gaming consoles,
-licensed under the terms of the *new* BSD license (the one without the
+licensed under the terms of the "new" BSD license (the one without the
 advertising clause). It is currently available for the Dreamcast*, but
 ports previously existed for the Gameboy Advance*, PlayStation 2*, and
 Intel* ia32 platforms, although none were particularly complete.
@@ -69,9 +63,7 @@ KOS-MMU. It's not being worked on any more but it has some interesting
 code in it and is a clean example of a simple OS. Most of the interesting
 code from KOS-MMU was merged into KOS 1.1.x, 1.2.x, and 2.0.0.
 
-
-LICENSING
----------
+# Licensing
 Please read the file "LICENSE" for more information about this subject.
 This program is now distributed under a similar set of terms as earlier
 ones (libdream), and has changed since KallistiOS 0.7 (GPL). Even so, some
@@ -87,9 +79,7 @@ I have also added a somewhat informative "licensing" section to the FAQ.
 If in doubt, please contact us. If you want to use KOS in a project, we'd
 love to hear from you anyway!
 
-
-PREREQUISITES
--------------
+# Prerequisites
 Building KallistiOS from source entirely requires two things:
 - GNU Binutils / GCC, cross-compile to the platform of your choice; for
   DC this is a compiler targeted for "sh-elf", as well as (optionally)
@@ -131,9 +121,7 @@ You do not necessarily need an ARM version of GCC to build KOS for the DC, as
 precompiled binaries are provided of the necessary code. As long as you don't
 intend to modify the sound driver, you don't need the ARM tools.
 
-
-BUILDING
---------
+# Building
 Building KOS itself is actually quite simple, especially if you don't want
 to add new sections for yourself. Make a copy of doc/environ.sh.sample and
 call it environ.sh in your main KOS dir. Edit this file to match your
@@ -155,10 +143,7 @@ into your shell's .rc/.login.
 This process should work (and has been tested) under Linux, BSD, Cygwin and
 MinGW/MSYS. It is very doubtful that it will work in any non-*nix environment.
 
-
-VERSION CODES
--------------
-
+# Version Codes
 All KOS versions are composed of three sections: major, minor, micro. Major
 revisions are generally something that changes the OS fundamentally, or
 when we wait several years between releases =). The minor version number
@@ -170,9 +155,7 @@ snapshot of the 1.1 development series.
 And as always, if you want to be on the bleeding edge, use the Git
 repository hosted at SourceForge.
 
-
-HACKING
--------
+# Hacking
 If you are planning on doing your own hacking and potentially submitting
 patches for me to include, then I'd very much appreciate it if you would do
 this against the Git repository rather than a release tree. The general
@@ -216,10 +199,7 @@ README in the KOS tree) for some rationale for most of that formatting stuff.
 Note that some of that has changed over time (mainly when the maintainer of KOS
 changes), but it is still mostly right. ;-)
 
-
-OS MODE IS GONE FOR GOOD
-------------------------
-
+# OS Mode is Gone for Good
 All the interesting and maintainable pieces of the KOS 1.0.x "os mode" have
 been fully integrated back into the mainline KOS 2.0.0 tree. It is now used
 for dynamic module loading and does not include process support, etc. This
@@ -228,9 +208,7 @@ is unlikely to be revived again in the future.
 If you want this kind of functionality but still want an MMU-less
 environment for speed, I recommend porting uCLinux to your platform.
 
-
-PLATFORM NOTES
---------------
+# Platform Notes
 Dreamcast*
 
 - MPGLIB (LGPL MP3 library, which is also faster) is included, but does
@@ -242,9 +220,7 @@ There are no other supported platforms after KOS 2.0.0. They were all pretty
 much broken and unmaintained anyway, so they were removed shortly after the
 release of KOS 2.0.0.
 
-
-END
----
+# End
 That's where we leave off here. Now that you have a build and ready copy,
 you're ready to get to the more fun things. Please read the other documents
 in the "doc" directory for more information. Also check the FAQ if there
