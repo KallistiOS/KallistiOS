@@ -1,7 +1,7 @@
 # Overview
 KallistiOS[^1] is a development library and unikernel operating system for
-gaming consoles, licensed under a BSD-like free software license. It is
-currently only available for the Sega Dreamcast[^2], but ports previously
+gaming consoles licensed under a [permissive software license](LICENSE.md).
+It is currently only available for the Sega Dreamcast[^2], but ports previously
 existed for the Gameboy Advance[^2], PlayStation 2[^2], and Intel[^2]
 ia32 platforms, although none were particularly complete.
 
