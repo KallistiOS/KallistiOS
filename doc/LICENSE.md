@@ -14,14 +14,14 @@ that this text is attached to them:
 > This program is distributed in the hope that it will be useful,
 > but WITHOUT ANY WARRANY; without even the implied warranty of
 > MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> KOS License (README.KOS) for more details.
+> KOS License (LICENSE.KOS) for more details.
 >
 > You should have received a copy of the KOS License along with this
 > program; if not, please visit Cryptic Allusion Game Dev at:
 >
 >   http://gamedev.allusion.net/
 
-Please read [README.KOS](README.KOS) for the full license text.
+Please read [LICENSE.KOS](license/LICENSE.KOS) for the full license text.
 
 ## Included BSD Code
 
