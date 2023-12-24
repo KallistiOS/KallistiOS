@@ -67,7 +67,7 @@ Despite the console's age, KOS offers an extremely modern, programmer-friendly d
 * Custom BIOS Flashroms
 
 # Getting Started 
-A beginner's guide to development for the Sega Dreamcast along with detailed instructions for installing KOS and the required toolchains can be found on the [Dreamcast Wiki](https://dreamcast.wiki/Getting_Started_with_Dreamcast_development). Additional documentation can be found in the docs folder. 
+A beginner's guide to development for the Sega Dreamcast along with detailed instructions for installing KOS and the required toolchains can be found on [dreamcast.wiki](https://dreamcast.wiki/Getting_Started_with_Dreamcast_development). Additional documentation can be found in the docs folder. 
 
 # Examples 
 Once you've set up the environment and are ready to begin developing, a good place to start learning is the examples directory, which provides demos for the various KOS APIs and for interacting with the Dreamcast's hardware. Examples include:
@@ -96,7 +96,7 @@ Once you've set up the environment and are ready to begin developing, a good pla
 - Interactive Lua interpreter terminal
 
 # Resources
-[Dreamcast Wiki](http://dreamcast.wiki): Large collection of tutorials and articles for beginners  
+[dreamcast.wiki](http://dreamcast.wiki): Large collection of tutorials and articles for beginners  
 [Simulant Discord Chat](https://discord.gg/bpDZHT78PA): Home to the official Discord channel of KOS  
 [DCEmulation Forums](http://dcemulation.org/phpBB/viewforum.php?f=29): Goldmine of Dreamcast development information and history  
 IRC Channel: irc.libera.chat `#dreamcastdev`
