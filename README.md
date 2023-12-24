@@ -70,7 +70,8 @@ Despite the console's age, KOS offers an extremely modern, programmer-friendly d
 A beginner's guide to development for the Sega Dreamcast along with detailed instructions for installing KOS and the required toolchains can be found on [dreamcast.wiki](https://dreamcast.wiki/Getting_Started_with_Dreamcast_development). Additional documentation can be found in the docs folder. 
 
 # Licensing
-KallistiOS code is licensed under the BSD-like **KOS License**, however this distribution contains code licensed under various free software licenses. See [LICENSE.md](doc/LICENSE.md) for more information on licensing.
+KallistiOS itself is licensed under the BSD-like **KOS License**. **Attribution is not optional**. Additionally, this distribution contains code licensed under various free software licenses.
+See [LICENSE.md](doc/LICENSE.md) for more information on licensing, as well as [README.KOS](doc/README.KOS) for the actual **KOS License** text.
 
 # Examples 
 Once you've set up the environment and are ready to begin developing, a good place to start learning is the examples directory, which provides demos for the various KOS APIs and for interacting with the Dreamcast's hardware. Examples include:
