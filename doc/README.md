@@ -154,7 +154,7 @@ workflow to do this is to add/commit the changes to your local git repo
 and then send a patch for the revisions in question like so (where n is the
 number of commits you have made):
 
-git format-patch -n
+`git format-patch -n`
 
 This will write a number of .patch files to the current directory for the n
 most recent commits you have made. You can then upload those patches to the
@@ -168,7 +168,7 @@ In addition, for those used to working with pull requests on GitHub, I accept
 those as well. I assume you know how to make things work that way if you wish
 to go that route. The mirror of the repository at GitHub is currently at the
 following url:
-        https://github.com/KallistiOS/KallistiOS
+`https://github.com/KallistiOS/KallistiOS`
 
 I don't guarantee that any patch will get included (especially if your patch
 contains a lot of reformatting, sloppy coding, things at cross-purposes with
@@ -180,8 +180,11 @@ portions. There are tools out there to help you reformat your code so that it
 will match the rest of KOS a lot more nicely. One such tool is Artistic Style
 (http://astyle.sourceforge.net/). Here's a nice set of flags to feed to the
 astyle program to make your code match up nicely with the rest of KOS:
-  astyle --style=attach -s4 -c -S -w -y -f -U -p -m0 -xn -xc -xl -xk -C -N -Y \
+```
+astyle --style=attach -s4 -c -S -w -y -f -U -p -m0 -xn -xc -xl -xk -C -N -Y \
     -k3 -xL -xM -xQ -xP0 [your files go here]
+```
+
 I don't guarantee that this produces the exact same formatting as the rest of
 the code, but it should be pretty much correct (and I won't reject your patch
 for styling if you use this set of flags to astyle on it). You might also want
@@ -190,14 +193,6 @@ README in the KOS tree) for some rationale for most of that formatting stuff.
 Note that some of that has changed over time (mainly when the maintainer of KOS
 changes), but it is still mostly right. ;-)
 
-# OS Mode is Gone for Good
-All the interesting and maintainable pieces of the KOS 1.0.x "os mode" have
-been fully integrated back into the mainline KOS 2.0.0 tree. It is now used
-for dynamic module loading and does not include process support, etc. This
-is unlikely to be revived again in the future.
-
-If you want this kind of functionality but still want an MMU-less
-environment for speed, I recommend porting uCLinux to your platform.
 
 # Platform Notes
 Dreamcast*
@@ -212,16 +207,13 @@ much broken and unmaintained anyway, so they were removed shortly after the
 release of KOS 2.0.0.
 
 # End
-That's where we leave off here. Now that you have a build and ready copy,
-you're ready to get to the more fun things. Please read the other documents
-in the "doc" directory for more information. Also check the FAQ if there
-is something you were wondering.
+Please read the other documents in the "doc" directory for more information.
+Also check the FAQ if there is something you were wondering.
 
 Also, please take note of our new web URL (below). We have moved hosting
 to SourceForge for all console-related things.
 
-					Cryptic Allusion
-					http://gamedev.allusion.net/
+`https://sourceforge.net/projects/cadcdev/`
 
 
 * "Sega", "Dreamcast", and NAOMI are registered trademarks of Sega Corporation.
