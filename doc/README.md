@@ -6,7 +6,7 @@ existed for the Gameboy Advance[^2], PlayStation 2[^2], and Intel[^2]
 ia32 platforms, although none were particularly complete.
 
 Depending on whether you wish to see the [fnords](https://en.wikipedia.org/wiki/Fnord),
-you can pronounce it _kallisti-o's_ (like a cereal) or _kallisti-o-s" (like an operating
+you can pronounce it _kallisti-o's_ (like a cereal) or _kallisti-o-s_ (like an operating
 system). We like the former since it's silly to be so serious most of the
 time =). _Kallisti_ means "to the fairest" in Greek. This was the word 
 inscribed on the golden apple Eris threw into the banquet of the gods
