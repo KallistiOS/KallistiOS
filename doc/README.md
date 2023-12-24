@@ -1,14 +1,12 @@
 # Overview
-KallistiOS[^1] is a pseudo-real-time operating system for gaming consoles,
-licensed under the terms of the "new" BSD license (the one without the
-advertising clause). It is currently available for the Dreamcast[^2], but
-ports previously existed for the Gameboy Advance[^2], PlayStation 2[^2], and
-Intel[^2] ia32 platforms, although none were particularly complete.
-
+KallistiOS[^1] is a development library and unikernel operating system for
+gaming consoles, licensed under a BSD-like free software license. It is
+currently only available for the Sega Dreamcast[^2], but ports previously
+existed for the Gameboy Advance[^2], PlayStation 2[^2], and Intel[^2]
+ia32 platforms, although none were particularly complete.
 
 Depending on whether you wish to see the [fnords](https://en.wikipedia.org/wiki/Fnord),
-you can pronounce it
-_kallisti-o's_ (like a cereal) or _kallisti-o-s" (like an operating
+you can pronounce it _kallisti-o's_ (like a cereal) or _kallisti-o-s" (like an operating
 system). We like the former since it's silly to be so serious most of the
 time =). _Kallisti_ means "to the fairest" in Greek. This was the word 
 inscribed on the golden apple Eris threw into the banquet of the gods
