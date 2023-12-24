@@ -1,6 +1,6 @@
 /* KallistiOS ##version##
 
-   main.c
+   dreampresent
    Copyright (C) 2019-2024 Yuji Yokoo
 
    A simple presentation tool for Sega Dreamcast written in Ruby

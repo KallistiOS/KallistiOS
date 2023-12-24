@@ -1,6 +1,6 @@
 /* KallistiOS ##version##
 
-   main.c
+   mrbtris
    Copyright (C) 2019-2024 Yuji Yokoo
 
    A sample Tetris clone for Sega Dreamcast written in Ruby
