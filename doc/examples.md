@@ -1,4 +1,5 @@
 # Examples
+This page serves as an index for all KallistiOS examples.
 
 - [**2ndmix**](../examples/dreamcast/2ndmix/): The flagship KallistiOS demo. It is a remixed version of _Stars_, the first publicly available homebrew Dreamcast demo!
 - basic
