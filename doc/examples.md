@@ -1,6 +1,6 @@
 # Examples
 
-- **2ndmix**: The flagship KallistiOS demo. It is a remixed version of _Stars_, the first publicly available homebrew Dreamcast demo!
+- [**2ndmix**](../examples/dreamcast/2ndmix/): The flagship KallistiOS demo. It is a remixed version of _Stars_, the first publicly available homebrew Dreamcast demo!
 - basic
   - asserthnd
   - exec
@@ -32,7 +32,7 @@
   - basic
   - benchmarks
   - nehe
-- **hello**: demonstrates printing text to the console
+- [**hello**](../examples/dreamcast/hello/): demonstrates printing text to the console
 - keyboard
   - keytest
 - kgl
@@ -56,7 +56,7 @@
   - basic
 - lua
   - basic
-- **micropython**: Demonstrates basic usage of the MicroPython kos-port
+- [**micropython**](../examples/dreamcast/micropython): Demonstrates basic usage of the MicroPython kos-port
 - modem
   - basic
   - ppp
@@ -79,7 +79,7 @@
   - rotocube
   - serpent_dma
   - sinus
-- **png**: - Demonstrates the use of PNG textures, gzip decompression, and drawing text
+- [**png**](../examples/dreamcast/png): - Demonstrates the use of PNG textures, gzip decompression, and drawing text
 - pvr
   - bumpmap
   - cheap_shadow
@@ -91,8 +91,8 @@
   - pvrmark_strips_direct
   - texture_render
   - yuv_converter
-- **random**: Demonstrates generating random numbers using /dev/urandom
-- **rumble**: Demonstrates sending raw commands to the purupuru/jump pack
+- [**random**](../examples/dreamcast/random): Demonstrates generating random numbers using /dev/urandom
+- [**rumble**](../examples/dreamcast/rumble): Demonstrates sending raw commands to the purupuru/jump pack
 - sd
 - sdl
   -sound
