@@ -14,7 +14,7 @@ KallistiOS is a development library and operating system for the Sega Dreamcast 
 
 KallistiOS offers a modern, programmer friendly environment for the vintage Dreamcast system. The distribution includes [scripts for building and installing a cross-compiling toolchain](utils/dc-chain/README.md) using the latest GCC, Binutils, and Newlib. This allows for full support for C17 and C++20 standards and libraries, as well as various POSIX APIs. Preliminary support exists for C23, C++23, and Objective-C.
 
-KallistiOS also features a package manager called [**_kos-ports_**](https://github.com/KallistiOS/kos-ports) which gives developers the power to build and include a rich set of add-on libraries for various common audiovisual formats (jpg, png, mp3, ogg, mpeg), scripting languages (Lua, Tcl, MicroPython), and gaming APIs (OpenGL, OpenAL, SDL). 
+KallistiOS also features a package manager called [**_kos-ports_**](https://github.com/KallistiOS/kos-ports) which gives developers the power to build and include a rich set of add-on libraries for various common audiovisual formats (jpg, png, mp3, ogg, mpeg), compression formats (libbz2, zlib), scripting languages (Lua, Tcl, MicroPython), and gaming APIs (OpenGL, OpenAL, SDL). 
 
 ### Core Functionality
 * Concurrency with Kernel Threads, C11 Threads, C++11 `std::thread`, POSIX threads
