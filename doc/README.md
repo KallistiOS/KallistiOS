@@ -6,16 +6,16 @@ existed for the Gameboy Advance[^2], PlayStation 2[^2], and Intel[^2]
 ia32 platforms, although none were particularly complete.
 
 Depending on whether you wish to see the [fnords](https://en.wikipedia.org/wiki/Fnord),
-you can pronounce it _kallisti-o's_ (like a cereal) or _kallisti-o-s_ (like an operating
+you can pronounce it _Kallisti-O's_ (like a cereal) or _Kallisti O. S._ (like an operating
 system). We like the former since it's silly to be so serious most of the
-time =). _Kallisti_ means "to the fairest" in Greek. This was the word 
+time :smiley:. _Kallisti_ means "to the fairest" in Greek. This was the word 
 inscribed on the golden apple Eris threw into the banquet of the gods
 to start the Trojan war. This somehow landed her the title of matriarch
 of a silly religion called _Discordianism_, to which the KallistiOS name
 pays homage. If you want a short abbreviation, you can also refer to it
-as _KOS_, which can be pronounced _k-oss_ (like chaos) =).
+as _KOS_, which can be pronounced _k-oss_ (like chaos) :smiley:.
 
-Now that that is cleared up... =)
+Now that that is cleared up... :smiley:
 
 KallistiOS is a modular monolithic kernel, like Linux or FreeBSD. This
 means that there is a kernel library which you link with your own code.
@@ -24,7 +24,7 @@ may also enable dynamically loaded modules which will link into your
 program at runtime and add extra functionality like new VFS modules,
 new peripheral device support, image loader plugins, etc. The possibilities
 are limited only by your patience with adding enough exports to support
-the modules. ;)
+the modules. :wink:
 
 Note that this is different from previous versions of KOS which had an
 actual "OS mode". The new dynamic loader system is architected somewhat
@@ -42,7 +42,7 @@ What KallistiOS provides optionally:
 
 What KallistiOS is NOT:
 - UNIX (or even compatible)
-- Linux/BSD (those are their own ports! =)
+- Linux/BSD (those are their own ports! :smiley:
 - Memory protection; programs can overwrite each other at will#
 - Pretty much anything else you can think of that's not in the above list
 
@@ -108,7 +108,7 @@ MinGW/MSYS. It is very doubtful that it will work in any non-*nix environment.
 # Version Codes
 All KOS versions are composed of three sections: major, minor, micro. Major
 revisions are generally something that changes the OS fundamentally, or
-when we wait several years between releases =). The minor version number
+when we wait several years between releases :smiley:. The minor version number
 is used to denote a development series. This gets incremented basically
 whenever we feel that it is relevant to do so. Finally, the micro version
 denotes a sequence in the development series. 1.1.0 would be the first
@@ -162,7 +162,7 @@ for styling if you use this set of flags to astyle on it). You might also want
 to take a look at the coding_style.txt file (in the same directory as this
 README in the KOS tree) for some rationale for most of that formatting stuff.
 Note that some of that has changed over time (mainly when the maintainer of KOS
-changes), but it is still mostly right. ;-)
+changes), but it is still mostly right. :wink:
 
 
 # Platform Notes
