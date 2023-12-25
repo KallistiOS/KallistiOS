@@ -12,17 +12,17 @@ Brief explanation of included utilities
 - [**genexports**](genexports/): Scripts used by KallistiOS's build system to generate symbol exports
 - [**genromfs**](genromfs/): Generates romfs filesystems for embedding into KOS binaries
 - [**gentexfont**](gentexfont/): Creates TXF font files from X11 fonts
-- [**gnu_wrappers**](gnu_wrappers/): 
+- [**gnu_wrappers**](gnu_wrappers/): GCC wrapper scripts used by KallistiOS's build system
 - [**ipload**](ipload/): A simple Python-based IP uploader for use with Marcus Comstedt's IPLOAD
 - [**isotest**](isotest/): A PC-based iso9660 driver for testing KOS iso9660 filesystem code
-- [**kmgenc**](kmgenc/): 
-- [**ldscripts**](ldscripts/): 
-- [**makeip**](makeip/): 
-- [**makejitter**](makejitter/): 
-- [**naomibintool**](naomibintool/): 
-- [**naominetboot**](naominetboot/): 
-- [**rdtest**](rdtest/): 
-- [**scramble**](scramble/): 
-- [**version**](version/): 
-- [**vqenc**](vqenc/): 
-- [**wav2adpcm**](wav2adpcm/): 
+- [**kmgenc**](kmgenc/): Stores images as PVR textures in a KMG container
+- [**ldscripts**](ldscripts/): Linking scripts used by KallistiOS's build system
+- [**makeip**](makeip/): Generates Initial Program bootstrap files (IP.BIN)
+- [**makejitter**](makejitter/): Creates jitter tables
+- [**naomibintool**](naomibintool/): Builds a NAOMI ROM from ELF or BIN files
+- [**naominetboot**](naominetboot/): Uploads a program to a NAOMI NetDIMM
+- [**rdtest**](rdtest/): A PC-based romdisk driver for testing KOS romdisk filesystem code
+- [**scramble**](scramble/): Scrambles Dreamcast binaries to prepare for loading from disc
+- [**version**](version/): A utility to write the KallistiOS version to the header of project files
+- [**vqenc**](vqenc/): Compresses image files using the Dreamcast's Vector Quantization algorithm
+- [**wav2adpcm**](wav2adpcm/): Converts audio data between WAV and ADPCM formats
