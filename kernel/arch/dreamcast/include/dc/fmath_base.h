@@ -144,11 +144,11 @@ __BEGIN_DECLS
         register float __b __asm__("fr9") = (b);                        \
         register float __c __asm__("fr10") = (c);                       \
         register float __d __asm__("fr11") = (d);                       \
-        __asm__ __volatile__("fipr	fv8,fv4"                             \
-                             : "+f"(__z)                                \
+        __asm__ __volatile__("fipr	fv8,fv4"                        \
+                             : "+f"(__w)                                \
                              : "f"(__x), "f"(__y), "f"(__z), "f"(__w),  \
                                "f"(__a), "f"(__b), "f"(__c), "f"(__d)); \
-        __z;                                                            \
+        __w;                                                            \
     })
 
 /* Floating point inner product w/self (square of vector magnitude) */
@@ -159,10 +159,10 @@ __BEGIN_DECLS
         register float __w __asm__("fr7") = (w); \
         __asm__ __volatile__( \
                               "fipr	fv4,fv4" \
-                              : "+f" (__z) \
+                              : "+f" (__w) \
                               : "f" (__x), "f" (__y), "f" (__z), "f" (__w) \
                             ); \
-        __z; })
+        __w; })
 
 #else
 
@@ -177,7 +177,7 @@ __BEGIN_DECLS
         register float __b __asm__("fr8") = (b);                        \
         register float __c __asm__("fr11") = (c);                       \
         register float __d __asm__("fr10") = (d);                       \
-        __asm__ __volatile__("fipr	fv8,fv4"                             \
+        __asm__ __volatile__("fipr	fv8,fv4"                        \
                              : "+f"(__z)                                \
                              : "f"(__x), "f"(__y), "f"(__z), "f"(__w),  \
                                "f"(__a), "f"(__b), "f"(__c), "f"(__d)); \
