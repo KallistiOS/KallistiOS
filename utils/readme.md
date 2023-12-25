@@ -1,4 +1,6 @@
 # KallistiOS Utilities
+This directory contains a number of PC-side tools used for a variety of purposes. Some are meant to be used directly by users, while others are called through KallistiOS Makefiles. These utilities are built automatically when KallistiOS is built, and many KallistiOS examples depend on them in order to build. 
+
 - [**bin2c**](bin2c/): Converts a binary file to a C integer array for inclusion in a source file
 - [**bin2o**](bin2o/): Converts a binary files an object file for linking into a project
 - [**bincnv**](bincnv/): An ELF to BIN conversion testing utility
