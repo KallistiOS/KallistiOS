@@ -1,9 +1,6 @@
-
 <!-- PROJECT LOGO -->
-<br />
 <div align="center">
   <h1 align="center"><strong>KallistiOS</strong></h1>
-
   <p align="center">
     Independent SDK for the Sega Dreamcast
     <br />
