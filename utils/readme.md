@@ -14,7 +14,7 @@
 - [**ipload**](ipload/): A simple Python-based IP uploader for use with Marcus Comstedt's IPLOAD
 - [**isotest**](isotest/): A PC-based iso9660 driver for testing KOS iso9660 filesystem code
 - [**kmgenc**](kmgenc/): Stores images as PVR textures in a KMG container
-- [**ldscripts**](ldscripts/): Linking scripts used by KallistiOS's build system
+- [**ldscripts**](ldscripts/): Linker scripts used by KallistiOS's build system
 - [**makeip**](makeip/): Generates Initial Program bootstrap files (IP.BIN)
 - [**makejitter**](makejitter/): Creates jitter tables
 - [**naomibintool**](naomibintool/): Builds a NAOMI ROM from ELF or BIN files
