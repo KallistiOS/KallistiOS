@@ -68,6 +68,20 @@ install libelf (and the development package, if applicable) for your
 host environment (or modify the utils/naomibintool Makefile to not
 use libelf and to define NO_LIBELF for building that tool).
 
+# kos-ports
+***Brief explanation of kos-ports and link to repo***
+
+# Addons
+***Explain addons***
+[Addons](../addons/readme.md)
+
+# Utilities
+***Explain utilities***
+[Utilities](../utils/readme.md)
+
+# Examples
+[Examples](../examples/dreamcast/readme.md)
+
 # Building
 Building KOS itself is actually quite simple, especially if you don't want
 to add new sections for yourself. Make a copy of doc/environ.sh.sample and
