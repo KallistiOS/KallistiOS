@@ -5,8 +5,9 @@
 
 */
 
-/** \file   arch/memory.h
-    \brief  Constants for areas of the system memory map.
+/** \file    arch/memory.h
+    \brief   Constants for areas of the system memory map.
+    \ingroup memory
 
     Various addresses and masks that are set by the SH7750. None of the values
     here are Dreamcast-specific.
@@ -22,8 +23,9 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-/** \defgroup memory Memory
+/** \defgroup memory Address Space
     \brief    Basics of the SH4 Memory Map
+    \ingroup  system
 
     The SH7750 Series physical address space is mapped onto a 29-bit external
     memory space, with the upper 3 bits of the address indicating which memory
@@ -36,13 +38,13 @@ __BEGIN_DECLS
     \ingroup memory
 
     This masks out the upper 3 bits of an address. This is used when it is
-    necssary to access memory with a specified caching mode. This is needed for
+    necessary to access memory with a specified caching mode. This is needed for
     DMA and SQ usage as well as various MMU functions.
 
 */
 #define MEM_AREA_CACHE_MASK 0x1fffffff
 
-/** \brief U0 memory region (cachable).
+/** \brief U0 memory region base (cacheable).
     \ingroup memory
 
     This is the base user mode memory address. It is cacheable as determined
@@ -54,7 +56,7 @@ __BEGIN_DECLS
 */
 #define MEM_AREA_U0_BASE    0x00000000
 
-/** \brief P0 memory region (cachable).
+/** \brief P0 memory region base (cacheable).
     \ingroup memory
 
     This is the base privileged mode memory address. It is cacheable as determined
@@ -64,7 +66,7 @@ __BEGIN_DECLS
 */
 #define MEM_AREA_P0_BASE    0x00000000
 
-/** \brief P1 memory region (cachable).
+/** \brief P1 memory region base (cacheable).
     \ingroup memory
 
     This is a modularly cachable memory region. It is cacheable as determined by
@@ -76,7 +78,7 @@ __BEGIN_DECLS
 */
 #define MEM_AREA_P1_BASE    0x80000000
 
-/** \brief P2 memory region (non-cachable).
+/** \brief P2 memory region base (non-cacheable).
     \ingroup memory
 
     This is the non-cachable memory region. It is most frequently for DMA
@@ -85,7 +87,7 @@ __BEGIN_DECLS
 */
 #define MEM_AREA_P2_BASE    0xa0000000
 
-/** \brief P3 memory region (cachable).
+/** \brief P3 memory region base (cacheable).
     \ingroup memory
 
     This functions as the lower 512MB of P0.
@@ -93,14 +95,17 @@ __BEGIN_DECLS
 */
 #define MEM_AREA_P3_BASE    0xc0000000
 
-/** \brief P4 SH-internal memory region (non-cachable).
-    \defgroup p4mem P4 memory region
+/** \brief P4 memory region base (non-cacheable)
     \ingroup memory
 
     This offset maps to on-chip I/O channels.
-
 */
 #define MEM_AREA_P4_BASE    0xe0000000
+
+/** \defgroup p4mem     P4 memory region
+    \brief              P4 SH-internal memory region (non-cacheable).
+    \ingroup            memory
+*/
 
 /** \brief Store Queue (SQ) memory base.
     \ingroup p4mem
@@ -200,6 +205,160 @@ __BEGIN_DECLS
 
 */
 #define MEM_AREA_CTRL_REG_BASE                0xff000000
+
+/** \defgroup sh4_cr_regs   Control Registers
+    \brief                  Addresses of control registers within the P4 area
+    \ingroup                p4mem
+*/
+
+/** \defgroup sh4_mmu_regs MMU
+    \brief MMU Control Registers
+    \ingroup sh4_cr_regs
+
+    \see arch\mmu.h
+
+    These are registers for controlling the MMU as defined in table 3.1
+    of Hitatchi SH7750 Series Hardware Manual rev 6.0, titled "MMU Registers".
+    All are accessed as 32-bit values.
+
+*/
+
+/** \brief MMU Page table entry high.
+    \ingroup sh4_mmu_regs
+
+    When an MMU exception or address error exception occurs, the virtual page number (VPN)
+    (the upper 22-bits of the virtual address causing the exception) is written
+    to the register. The bottom 8 bits of the register are software-fillable as
+    an 8 bit ID (ASID) of the process causing the exception.
+*/
+#define SH4_REG_MMU_PTEH                      0xff000000
+
+/** \brief MMU Page table entry low.
+    \ingroup sh4_mmu_regs
+
+    Holds the physical page number (PPN) in bits 10-28 and page management flags in 0-8.
+*/
+#define SH4_REG_MMU_PTEL                      0xff000004
+
+/** \brief MMU Translation table base.
+    \ingroup sh4_mmu_regs
+
+    Holds the base address of the currently used page table.
+*/
+#define SH4_REG_MMU_TTB                       0xff000008
+
+/** \brief MMU TLB Exception address.
+    \ingroup sh4_mmu_regs
+
+    After an MMU exception or address error exception occurs, the virtual address where the
+    exception occurred is stored here.
+*/
+#define SH4_REG_MMU_TEA                       0xff00000c
+
+/** \brief MMU Control Register.
+    \ingroup sh4_mmu_regs
+
+    Holds configuration values including enable/disable of MMU Address Translation (at bit 0)
+*/
+#define SH4_REG_MMU_CR                        0xff000010
+
+/** \brief MMU Page table entry assistance.
+    \ingroup sh4_mmu_regs
+
+    Stores assistance bits for PCMCIA access to the UTLB via LDTLB. This is currently unused by KOS.
+*/
+#define SH4_REG_MMU_PTEA                      0xff000034
+
+/** \defgroup sh4_ubc_regs UBC
+    \brief UBC Control Registers
+    \ingroup sh4_cr_regs
+
+    \see dc\ubc.h
+
+    These are registers for controlling the UBC as defined in table 20.1
+    of Hitatchi SH7750 Series Hardware Manual rev 6.0, titled "UBC Registers"
+
+*/
+
+/** \brief UBC Break ASID register A
+    \ingroup sh4_ubc_regs
+
+    Specifies the ASID used in the channel A break condition. 8-bit RW.
+*/
+#define SH4_REG_UBC_BASRA                     0xff000014
+
+/** \brief UBC Break ASID register B
+    \ingroup sh4_ubc_regs
+
+    Specifies the ASID used in the channel B break condition. 8-bit RW.
+*/
+#define SH4_REG_UBC_BASRB                     0xff000018
+
+/** \brief UBC Break address register A
+    \ingroup sh4_ubc_regs
+
+    Specifies the virtual address used in the channel A break conditions. 32-bit RW.
+*/
+#define SH4_REG_UBC_BARA                      0xff200000
+
+/** \brief UBC Break address mask register A
+    \ingroup sh4_ubc_regs
+
+    Specifies the settings for masking the ASID in channel A. 8-bit RW.
+*/
+#define SH4_REG_UBC_BAMRA                     0xff200004
+
+/** \brief UBC Break bus cycle register A
+    \ingroup sh4_ubc_regs
+
+    Sets three conditions: 1) instruction/operand access 2) RW 3) Operand size. 16-bit RW.
+*/
+#define SH4_REG_UBC_BBRA                      0xff200008
+
+/** \brief UBC Break address register B
+    \ingroup sh4_ubc_regs
+
+    Specifies the virtual address used in the channel B break conditions. 32-bit RW.
+*/
+#define SH4_REG_UBC_BARB                      0xff20000c
+
+/** \brief UBC Break address mask register B
+    \ingroup sh4_ubc_regs
+
+    Specifies the settings for masking the ASID in channel B. 8-bit RW.
+*/
+#define SH4_REG_UBC_BAMRB                     0xff200010
+
+/** \brief UBC Break bus cycle register B
+    \ingroup sh4_ubc_regs
+
+    Sets three conditions: 1) instruction/operand access 2) RW 3) Operand size. 16-bit RW.
+*/
+#define SH4_REG_UBC_BBRB                      0xff200014
+
+
+/** \brief UBC Break data register B
+    \ingroup sh4_ubc_regs
+
+    Specifies the data to be used in the channel B break conditions. 32-bit RW.
+    Currently unused by KOS
+*/
+#define SH4_REG_UBC_BDRB                      0xff200018
+
+/** \brief UBC Break mask register B
+    \ingroup sh4_ubc_regs
+
+    Specifies which bits of the break data set in SH4_REG_UBC_BDRB are to be masked. 32-bit RW.
+    Currently unused by KOS
+*/
+#define SH4_REG_UBC_BDMRB                     0xff20001c
+
+/** \brief UBC Break control register
+    \ingroup sh4_ubc_regs
+
+    Specifies various settings for UBC as well as condition match flags. 16-bit RW.
+*/
+#define SH4_REG_UBC_BRCR                      0xff200020
 
 __END_DECLS
 

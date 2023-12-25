@@ -5,13 +5,14 @@
 
 */
 
-/** \file   kos/fs_ramdisk.h
-    \brief  RAM-based virtual file system.
+/** \file    kos/fs_ramdisk.h
+    \brief   RAM-based virtual file system.
+    \ingroup vfs_ramdisk
 
     This file contains support for a ramdisk VFS. This VFS allows you to map
     memory into files that will appear in /ram. Files in this VFS can grow as
     large as memory allows, and there is full read/write support here. This is
-    useful, for (for instance) cacheing files read from the CD-ROM or for making
+    useful, for (for instance) caching files read from the CD-ROM or for making
     temporary files.
 
     You only have one ramdisk available, and its mounted on /ram.
@@ -27,6 +28,13 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 #include <kos/fs.h>
+
+/** \defgroup vfs_ramdisk   Ramdisk
+    \brief                  Filesystem driver for accessing in-ram images
+    \ingroup                vfs
+
+    @{
+*/
 
 /** \cond */
 int fs_ramdisk_init(void);
@@ -61,6 +69,8 @@ int fs_ramdisk_attach(const char * fn, void * obj, size_t size);
     \retval -1              On failure
 */
 int fs_ramdisk_detach(const char * fn, void ** obj, size_t * size);
+
+/** @} */
 
 __END_DECLS
 

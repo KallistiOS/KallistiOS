@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
         changed_buttons = current_buttons ^ previous_buttons;
         previous_buttons = current_buttons;
         
-        // Play wav files if they arent playing already
+        // Play wav files if they aren't playing already
         if(button_pressed(current_buttons, changed_buttons, CONT_X)) {
             if(!wav_is_playing(faucet))
                 wav_play(faucet);

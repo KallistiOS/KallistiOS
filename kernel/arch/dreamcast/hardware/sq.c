@@ -30,7 +30,7 @@ void sq_unlock(void) {
 }
 
 /* Copies n bytes from src to dest, dest must be 32-byte aligned */
-void * sq_cpy(void *dest, const void *src, size_t n) {
+__attribute__((noinline)) void *sq_cpy(void *dest, const void *src, size_t n) {
     uint32_t *d = SQ_MASK_DEST(dest);
     const uint32_t *s = src;
 

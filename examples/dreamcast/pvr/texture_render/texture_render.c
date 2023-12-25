@@ -243,7 +243,7 @@ int main(int argc, char **argv) {
     end = timer_ms_gettime64();
 
     printf("%lu frames in %llu ms = %f FPS\n", counter, end - start,
-           counter / ((float)end - start) * 1000.0);
+           (double)(counter / ((float)end - start) * 1000.0f));
 
     pvr_get_stats(&stats);
     printf("From pvr_get_stats:\n\tVBlank Count: %lu\n\tFrame Count: %lu\n",
@@ -251,7 +251,7 @@ int main(int argc, char **argv) {
 
     pvr_mem_free(d_texture);
 
-    /* Shutdown isn't technically neccessary, but is possible */
+    /* Shutdown isn't technically necessary, but is possible */
     pvr_shutdown();
 
     return 0;

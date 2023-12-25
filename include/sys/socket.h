@@ -5,8 +5,9 @@
 
 */
 
-/** \file   sys/socket.h
-    \brief  Main sockets header.
+/** \file    sys/socket.h
+    \brief   Main sockets header.
+    \ingroup networking_sockets
 
     This file contains the standard definitions (as directed by the POSIX 2008
     spec) for socket-related functionality in the AF_INET and AF_INET6 address
@@ -25,6 +26,14 @@
 #include <sys/uio.h>
 
 __BEGIN_DECLS
+
+/** \defgroup networking_sockets    Sockets
+    \brief                          POSIX Sockets Interface for IPv4 and IPv6
+                                    Address Families
+    \ingroup                        networking
+
+    @{
+*/
 
 /** \brief  Socket length type. */
 typedef __uint32_t socklen_t;
@@ -104,7 +113,11 @@ struct sockaddr_storage {
 */
 #define SOL_SOCKET  1
 
-/** \defgroup so_opts                   Socket-level options
+/** @} */
+
+/** \defgroup so_opts                   Options
+    \brief                              Socket-level options
+    \ingroup                            networking_sockets
 
     These are the various socket-level options that can be accessed with the
     setsockopt() and getsockopt() functions for the SOL_SOCKET level value.
@@ -136,7 +149,9 @@ struct sockaddr_storage {
 #define SO_TYPE         16  /**< \brief Socket type (get) */
 /** @} */
 
-/** \defgroup msg_flags                 Socket message flags
+/** \defgroup msg_flags                 Message Flags
+    \brief                              Socket message flags
+    \ingroup                            networking_sockets
 
     The following flags can be used with the recv(), recvfrom(), send(),
     and sendto() functions as the flags parameter.
@@ -157,6 +172,10 @@ struct sockaddr_storage {
 #define MSG_WAITALL     0x40    /**< \brief Attempt to fill read buffer */
 #define MSG_DONTWAIT    0x80    /**< \brief Make this call non-blocking (non-standard) */
 /** @} */
+
+/** \addtogroup networking_sockets
+    @{
+*/
 
 /** \brief  Unspecified address family. */
 #define AF_UNSPEC   0
@@ -203,6 +222,7 @@ struct sockaddr_storage {
     \param  address_len A pointer to a socklen_t which specifies the amount of
                         space in address on input, and the amount used of the
                         space on output.
+    
     \return             On success, the non-negative file descriptor of the
                         new connection, otherwise -1 and errno will be set to
                         the appropriate error value.
@@ -217,6 +237,7 @@ int accept(int socket, struct sockaddr *address, socklen_t *address_len);
     \param  address     A pointer to a sockaddr structure where the name to be
                         assigned to the socket resides.
     \param  address_len The length of the address structure.
+    
     \retval 0           On success.
     \retval -1          On error, sets errno as appropriate.
 */
@@ -231,6 +252,7 @@ int bind(int socket, const struct sockaddr *address, socklen_t address_len);
     \param  address     A pointer to a sockaddr structure where the name of the
                         peer resides.
     \param  address_len The length of the address structure.
+    
     \retval 0           On success.
     \retval -1          On error, sets errno as appropriate.
 */
@@ -242,6 +264,7 @@ int connect(int socket, const struct sockaddr *address, socklen_t address_len);
 
     \param  socket      A connection-mode socket to listen on.
     \param  backlog     The number of queue entries.
+    
     \retval 0           On success.
     \retval -1          On error, sets errno as appropriate.
 */
@@ -255,6 +278,7 @@ int listen(int socket, int backlog);
     \param  buffer      A pointer to a buffer to store the message in.
     \param  length      The length of the buffer.
     \param  flags       The type of message reception. Set to 0 for now.
+    
     \return             On success, the length of the message in bytes. If no
                         messages are available, and the socket has been shut
                         down, 0. On error, -1, and sets errno as appropriate.
@@ -274,6 +298,7 @@ ssize_t recv(int socket, void *buffer, size_t length, int flags);
                         name in.
     \param  address_len A pointer to the length of the address structure on
                         input, the number of bytes used on output.
+    
     \return             On success, the length of the message in bytes. If no
                         messages are available, and the socket has been shut
                         down, 0. On error, -1, and sets errno as appropriate.
@@ -289,6 +314,7 @@ ssize_t recvfrom(int socket, void *buffer, size_t length, int flags,
     \param  message     A pointer to a buffer with the message to send.
     \param  length      The length of the message.
     \param  flags       The type of message transmission. Set to 0 for now.
+    
     \return             On success, the number of bytes sent. On error, -1,
                         and sets errno as appropriate.
 */
@@ -306,6 +332,7 @@ ssize_t send(int socket, const void *message, size_t length, int flags);
     \param  flags       The type of message transmission. Set to 0 for now.
     \param  dest_addr   A pointer to a sockaddr structure with the peer's name.
     \param  dest_len    The length of dest_addr, in bytes.
+    
     \return             On success, the number of bytes sent. On error, -1,
                         and sets errno as appropriate.
 */
@@ -318,8 +345,10 @@ ssize_t sendto(int socket, const void *message, size_t length, int flags,
 
     \param  socket      The socket to shutdown.
     \param  how         The type of shutdown.
+    
     \retval 0           On success.
     \retval -1          On error, sets errno as appropriate.
+    
     \see                SHUT_RD
     \see                SHUT_WR
     \see                SHUT_RDWR
@@ -335,6 +364,7 @@ int shutdown(int socket, int how);
     \param  type        The type of socket to be created (i.e, SOCK_DGRAM).
     \param  protocol    The protocol to use with the socket. May be 0 to allow
                         a default to be used.
+    
     \return             A non-negative file descriptor on success. -1 on error,
                         and sets errno as appropriate.
 */
@@ -351,6 +381,7 @@ int socket(int domain, int type, int protocol);
     \param  name_len        The amount of space pointed to by name, in bytes.
                             On return, this is set to the actual size of the
                             returned address information.
+    
     \retval -1              On error, sets errno as appropriate.
     \retval 0               On success.
 */
@@ -369,6 +400,7 @@ int getsockname(int socket, struct sockaddr *name, socklen_t *name_len);
     \param  option_len      The length of option_value on call, and the real
                             option length (if less than the original value)
                             on return.
+    
     \return                 Zero on success. -1 on error, and sets errno as
                             appropriate.
 
@@ -391,6 +423,7 @@ int getsockopt(int socket, int level, int option_name, void *option_value,
     \param  option_name     The option to set.
     \param  option_value    The value to set for the option.
     \param  option_len      The length of option_value in bytes.
+    
     \return                 Zero on success. -1 on error, and sets errno as
                             appropriate.
 
@@ -401,6 +434,8 @@ int getsockopt(int socket, int level, int option_name, void *option_value,
 */
 int setsockopt(int socket, int level, int option_name, const void *option_value,
                socklen_t option_len);
+
+/** @} */
 
 __END_DECLS
 

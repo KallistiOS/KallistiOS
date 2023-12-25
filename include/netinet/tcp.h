@@ -5,8 +5,9 @@
 
 */
 
-/** \file   netinet/tcp.h
-    \brief  Definitions for the Transmission Control Protocol.
+/** \file    netinet/tcp.h
+    \brief   Definitions for the Transmission Control Protocol.
+    \ingroup networking_tcp
 
     This file contains the standard definitions (as directed by the Open Group
     Base Specifications Issue 7, 2018 Edition aka POSIX 2017) for  functionality
@@ -24,10 +25,12 @@
 
 __BEGIN_DECLS
 
-/** \defgroup tcp_opts                  TCP protocol level options
+/** \defgroup tcp_opts                  Options
+    \brief                              TCP protocol level options
+    \ingroup                            networking_tcp
 
-    These are the various socket-level optoins that can be accessed with the
-    setsockopt() and getsockopt() fnctions for the IPPROTO_TCP level value.
+    These are the various socket-level options that can be accessed with the
+    setsockopt() and getsockopt() functions for the IPPROTO_TCP level value.
 
     All options listed here are at least guaranteed to be accepted by
     setsockopt() and getsockopt() for IPPROTO_TCP, however they are not

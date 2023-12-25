@@ -6,6 +6,21 @@
 
 */
 
+/** \file    kos/fs.h
+    \brief   Virtual filesystem support.
+    \ingroup vfs_generic
+
+    This file contains the interface to the virtual filesystem (VFS) of KOS. The
+    functions defined in this file make up the base of the filesystem operations
+    that can be performed by programs. The functions in here are abstracted by
+    various other layers in libc, and shouldn't be necessarily used (for
+    portability reasons). However, if you want only to interact with KOS in your
+    programs, feel free to use them to your heart's content!
+
+    \author Megan Potter
+    \author Lawrence Sebald
+*/
+
 #ifndef __KOS_FS_H
 #define __KOS_FS_H
 
@@ -21,21 +36,13 @@ __BEGIN_DECLS
 
 #include <kos/nmmgr.h>
 
-/** \file   kos/fs.h
-    \brief  Virtual filesystem support.
-
-    This file contains the interface to the virtual filesystem (VFS) of KOS. The
-    functions defined in this file make up the base of the filesystem operations
-    that can be performed by programs. The functions in here are abstracted by
-    various other layers in libc, and shouldn't be necessarily used (for
-    portability reasons). However, if you want only to interact with KOS in your
-    programs, feel free to use them to your heart's content!
-
-    \author Megan Potter
-    \author Lawrence Sebald
+/** \defgroup vfs_generic   Generic
+    \brief                  Generic, uniform access to a virtual filesystems
+    \ingroup                vfs
+    @{
 */
 
-/** \brief  Directory entry.
+/** \brief   Directory entry.
 
     All VFS handlers must conform to this interface in their directory entries.
 
@@ -52,7 +59,7 @@ typedef struct kos_dirent {
 struct vfs_handler;
 
 /* stat_t.unique */
-/**< \brief stat_t.unique: Constant to use denoting the file has no unique ID */
+/** \brief stat_t.unique: Constant to use denoting file has no unique ID */
 #define STAT_UNIQUE_NONE    0
 
 /* stat_t.type */
@@ -99,7 +106,7 @@ typedef struct vfs_handler {
     nmmgr_handler_t nmmgr;
 
     /* Some VFS-specific pieces */
-    /** \brief Allow VFS cacheing; 0=no, 1=yes */
+    /** \brief Allow VFS caching; 0=no, 1=yes */
     int cache;
     /** \brief Pointer to private data for the handler */
     void *privdata;
@@ -214,8 +221,9 @@ extern struct fs_hnd *fd_table[FD_SETSIZE];
 
 /* Open modes */
 #include <sys/fcntl.h>
-/** \defgroup open_modes            File open modes
 
+/** \anchor vfs_fopen_modes
+    \name   File Open Modes
     @{
 */
 #define O_MODE_MASK 0x0f        /**< \brief Mask for mode numbers */
@@ -226,7 +234,8 @@ extern struct fs_hnd *fd_table[FD_SETSIZE];
 #define O_META      0x2000      /**< \brief Open as metadata */
 /** @} */
 
-/** \defgroup seek_modes            Seek modes
+/** \anchor vfs_seek_modes
+    \name   Seek Modes
 
     These are the values you can pass for the whence parameter to fs_seek().
 
@@ -238,7 +247,7 @@ extern struct fs_hnd *fd_table[FD_SETSIZE];
 /** @} */
 
 /* Standard file descriptor functions */
-/** \brief  Open a file on the VFS.
+/** \brief   Open a file on the VFS.
 
     This function opens the specified file, returning a new file descriptor to
     access the file.
@@ -246,23 +255,26 @@ extern struct fs_hnd *fd_table[FD_SETSIZE];
     \param  fn              The path to open.
     \param  mode            The mode to use with opening the file. This may
                             include the standard open modes (O_RDONLY, O_WRONLY,
-                            etc), as well as values from the \ref open_modes
-                            list. Multiple values can be ORed together.
+                            etc), as well as values from the \ref vfs_fopen_modes
+                            "File Open Modes" list. Multiple values can be ORed
+                            together.
+    
     \return                 The new file descriptor on success, -1 on error.
 */
 file_t fs_open(const char *fn, int mode);
 
-/** \brief  Close an opened file.
+/** \brief   Close an opened file.
 
     This function closes the specified file descriptor, releasing all resources
     associated with the descriptor.
 
     \param  hnd             The file descriptor to close.
+    
     \return                 0 for success, -1 for error
 */
 int fs_close(file_t hnd);
 
-/** \brief  Read from an opened file.
+/** \brief   Read from an opened file.
 
     This function reads into the specified buffer from the file at its current
     file pointer.
@@ -271,26 +283,28 @@ int fs_close(file_t hnd);
     \param  buffer          The buffer to read into.
     \param  cnt             The size of the buffer (or the number of bytes
                             requested).
+    
     \return                 The number of bytes read, or -1 on error. Note that
                             this may not be the full number of bytes requested.
 */
 ssize_t fs_read(file_t hnd, void *buffer, size_t cnt);
 
-/** \brief  Write to an opened file.
+/** \brief   Write to an opened file.
 
-    This function writes the specfied buffer into the file at the current file
+    This function writes the specified buffer into the file at the current file
     pointer.
 
     \param  hnd             The file descriptor to write into.
     \param  buffer          The data to write into the file.
     \param  cnt             The size of the buffer, in bytes.
+    
     \return                 The number of bytes written, or -1 on failure. Note
                             that the number of bytes written may be less than
                             what was requested.
 */
 ssize_t fs_write(file_t hnd, const void *buffer, size_t cnt);
 
-/** \brief  Seek to a new position within a file.
+/** \brief   Seek to a new position within a file.
 
     This function moves the file pointer to the specified position within the
     file (the base of this position is determined by the whence parameter).
@@ -298,12 +312,13 @@ ssize_t fs_write(file_t hnd, const void *buffer, size_t cnt);
     \param  hnd             The file descriptor to move the pointer for.
     \param  offset          The offset in bytes from the specified base.
     \param  whence          The base of the pointer move. This should be one of
-                            the \ref seek_modes values.
+                            the \ref vfs_seek_modes "Seek Modes" values.
+    
     \return                 The new position of the file pointer.
 */
 off_t fs_seek(file_t hnd, off_t offset, int whence);
 
-/** \brief  Seek to a new position within a file (64-bit offsets).
+/** \brief   Seek to a new position within a file (64-bit offsets).
 
     This function moves the file pointer to the specified position within the
     file (the base of this position is determined by the whence parameter).
@@ -311,67 +326,75 @@ off_t fs_seek(file_t hnd, off_t offset, int whence);
     \param  hnd             The file descriptor to move the pointer for.
     \param  offset          The offset in bytes from the specified base.
     \param  whence          The base of the pointer move. This should be one of
-                            the \ref seek_modes values.
+                            the \ref vfs_seek_modes "Seek Modes" values.
+    
     \return                 The new position of the file pointer.
 */
 _off64_t fs_seek64(file_t hnd, _off64_t offset, int whence);
 
-/** \brief  Retrieve the position of the pointer within a file.
+/** \brief   Retrieve the position of the pointer within a file.
 
     This function retrieves the current location of the file pointer within an
     opened file. This is an offset in bytes from the start of the file.
 
     \param  hnd             The file descriptor to retrieve the pointer from.
+    
     \return                 The offset within the file for the pointer.
 */
 off_t fs_tell(file_t hnd);
 
-/** \brief  Retrieve the position of the 64-bit pointer within a file.
+/** \brief   Retrieve the position of the 64-bit pointer within a file.
 
     This function retrieves the current location of the file pointer within an
     opened file. This is an offset in bytes from the start of the file.
 
     \param  hnd             The file descriptor to retrieve the pointer from.
+    
     \return                 The offset within the file for the pointer.
 */
 _off64_t fs_tell64(file_t hnd);
 
-/** \brief  Retrieve the length of an opened file.
+/** \brief   Retrieve the length of an opened file.
 
     This file retrieves the length of the file associated with the given file
     descriptor.
 
-    \param  hnd             The file descriptor to retrieve the size from.
-    \return                 The length of the file on success, -1 on failure.
     \note                   size_t is unsigned, so the error return value is not
                             less than 0.
+
+    \param  hnd             The file descriptor to retrieve the size from.
+    
+    \return                 The length of the file on success, -1 on failure.
 */
 size_t fs_total(file_t hnd);
 
-/** \brief  Retrieve the length of an opened file as a 64-bit integer.
+/** \brief   Retrieve the length of an opened file as a 64-bit integer.
 
     This file retrieves the length of the file associated with the given file
     descriptor.
 
-    \param  hnd             The file descriptor to retrieve the size from.
-    \return                 The length of the file on success, -1 on failure.
     \note                   uint64 is unsigned, so the error return value is not
-                            less than 0.
+                            less than 0.                            
+
+    \param  hnd             The file descriptor to retrieve the size from.
+    
+    \return                 The length of the file on success, -1 on failure.
 */
 uint64 fs_total64(file_t hnd);
 
 
-/** \brief  Read an entry from an opened directory.
+/** \brief   Read an entry from an opened directory.
 
     This function reads the next entry from the directory specified by the given
     file descriptor.
 
     \param  hnd             The opened directory's file descriptor.
+    
     \return                 The next entry, or NULL on failure.
 */
 dirent_t *fs_readdir(file_t hnd);
 
-/** \brief  Execute a device-specific command on a file descriptor.
+/** \brief   Execute a device-specific command on a file descriptor.
 
     The types and formats of the commands are device/filesystem specific, and
     are not documented here. Each filesystem may define any commands that are
@@ -380,44 +403,48 @@ dirent_t *fs_readdir(file_t hnd);
     \param  hnd             The file descriptor to use.
     \param  cmd             The command to run.
     \param  ...             Arguments for the command specified.
+    
     \return                 -1 on error.
 */
 int fs_ioctl(file_t hnd, int cmd, ...);
 
-/** \brief  Rename the specified file to the given filename.
+/** \brief   Rename the specified file to the given filename.
 
     This function renames the file specified by the first argument to the second
     argument. The two paths should be on the same filesystem.
 
     \param  fn1             The existing file to rename.
     \param  fn2             The new filename to rename to.
+    
     \return                 0 on success, -1 on failure.
 */
 int fs_rename(const char *fn1, const char *fn2);
 
-/** \brief  Delete the specified file.
+/** \brief   Delete the specified file.
 
     This function deletes the specified file from the filesystem. This should
     only be used for files, not for directories. For directories, use fs_rmdir()
     instead of this function.
 
     \param  fn              The path to remove.
+    
     \return                 0 on success, -1 on failure.
 */
 int fs_unlink(const char *fn);
 
-/** \brief  Change the current working directory of the current thread.
+/** \brief   Change the current working directory of the current thread.
 
     This function changes the current working directory for the current thread.
     Any relative paths passed into file-related functions will be relative to
     the path that is changed to.
 
     \param  fn              The path to set as the current working directory.
+    
     \return                 0 on success, -1 on failure.
 */
 int fs_chdir(const char *fn);
 
-/** \brief  Memory-map a previously opened file.
+/** \brief   Memory-map a previously opened file.
 
     This file "maps" the opened file into memory, reading the whole file into a
     buffer, and returning that buffer. The returned buffer should not be freed,
@@ -425,33 +452,35 @@ int fs_chdir(const char *fn);
     up to the original length of the file, will be written back to the file when
     it is closed, assuming that the file is opened for writing.
 
-    \param  hnd             The descriptor to memory map.
-    \return                 The memory mapped buffer, or NULL on failure.
-
     \note                   Some of the filesystems in KallistiOS do not support
                             this operation. If you attempt to use this function
                             on a filesystem that does not support it, the
                             function will return NULL and set errno to EINVAL.
+
+    \param  hnd             The descriptor to memory map.
+    
+    \return                 The memory mapped buffer, or NULL on failure.
 */
 void *fs_mmap(file_t hnd);
 
-/** \brief  Perform an I/O completion on the given file descriptor.
+/** \brief   Perform an I/O completion on the given file descriptor.
 
     This function is used with asynchronous I/O to perform an I/O completion on
     the given file descriptor.
-
-    \param  fd              The descriptor to complete I/O on.
-    \param  rv              A buffer to store the size of the I/O in.
-    \return                 0 on success, -1 on failure.
 
     \note                   Most of the filesystems in KallistiOS do not support
                             this operation. If you attempt to use this function
                             on a filesystem that does not support it, the
                             function will return -1 and set errno to EINVAL.
+
+    \param  fd              The descriptor to complete I/O on.
+    \param  rv              A buffer to store the size of the I/O in.
+    
+    \return                 0 on success, -1 on failure.
 */
 int fs_complete(file_t fd, ssize_t *rv);
 
-/** \brief  Create a directory.
+/** \brief   Create a directory.
 
     This function creates the specified directory, if possible.
 
@@ -460,83 +489,88 @@ int fs_complete(file_t fd, ssize_t *rv);
 */
 int fs_mkdir(const char *fn);
 
-/** \brief  Remove a directory by name.
+/** \brief   Remove a directory by name.
 
     This function removes the specified directory. The directory shall only be
     removed if it is empty.
 
     \param  fn              The path of the directory to remove.
+    
     \return                 0 on success, -1 on failure.
 */
 int fs_rmdir(const char *fn);
 
-/** \brief  Manipulate file control flags.
+/** \brief   Manipulate file control flags.
 
     This function implements the standard C fcntl function.
 
     \param  fd              The file descriptor to use.
     \param  cmd             The command to run.
     \param  ...             Arguments for the command specified.
+    
     \return                 -1 on error (generally).
 */
 int fs_fcntl(file_t fd, int cmd, ...);
 
-/** \brief  Create a hard link.
+/** \brief   Create a hard link.
 
     This function implements the POSIX function link(), which creates a hard
     link for an existing file.
-
-    \param  path1           An existing file to create a new link to.
-    \param  path2           The pathname of the new link to be created.
-    \return                 0 on success, -1 on failure.
 
     \note                   Most filesystems in KallistiOS do not support hard
                             links. If you call this function on a filesystem
                             that does not support hard links, the function will
                             return -1 and set errno to EMLINK.
+
+    \param  path1           An existing file to create a new link to.
+    \param  path2           The pathname of the new link to be created.
+    
+    \return                 0 on success, -1 on failure.
 */
 int fs_link(const char *path1, const char *path2);
 
-/** \brief  Create a symbolic link.
+/** \brief   Create a symbolic link.
 
     This function implements the POSIX function symlink(), which creates a
     symbolic link on the filesystem. Symbolic links are not required to point to
     an existing file (per POSIX) and may result in circular links if care is not
     taken. For now, symbolic links cannot cross filesystem boundaries in KOS.
 
-    \param  path1           The content of the link (i.e, what to point at).
-    \param  path2           The pathname of the new link to be created.
-    \return                 0 on success, -1 on failure.
-
     \note                   Most filesystems in KallistiOS do not support
                             symbolic links. Filesystems that do not support
                             symlinks will simply set errno to ENOSYS and return
                             -1.
+
+    \param  path1           The content of the link (i.e, what to point at).
+    \param  path2           The pathname of the new link to be created.
+    
+    \return                 0 on success, -1 on failure.
 */
 int fs_symlink(const char *path1, const char *path2);
 
-/** \brief  Read the value of a symbolic link.
+/** \brief   Read the value of a symbolic link.
 
     This function implements the POSIX function readlink(), which simply reads
     the value of the symbolic link at the end of a path. This does not resolve
     any internal links and it does not canonicalize the path either.
 
-    \param  path            The symbolic link to read.
-    \param  buf             The buffer to place the link's contents in.
-    \param  bufsize         The number of bytes allocated to buf.
-    \return                 -1 on failure, the number of bytes placed into buf
-                            on success. If the return value is equal to bufsize,
-                            you may not have the whole link -- provide a larger
-                            buffer and try again.
-
     \note                   Most filesystems in KallistiOS do not support
                             symbolic links. Filesystems that do not support
                             symlinks will simply set errno to ENOSYS and return
                             -1.
+
+    \param  path            The symbolic link to read.
+    \param  buf             The buffer to place the link's contents in.
+    \param  bufsize         The number of bytes allocated to buf.
+    
+    \return                 -1 on failure, the number of bytes placed into buf
+                            on success. If the return value is equal to bufsize,
+                            you may not have the whole link -- provide a larger
+                            buffer and try again.
 */
 ssize_t fs_readlink(const char *path, char *buf, size_t bufsize);
 
-/** \brief  Retrieve information about the specified path.
+/** \brief   Retrieve information about the specified path.
 
     This function retrieves status information on the given path. This function
     now returns the normal POSIX-style struct stat, rather than the old KOS
@@ -549,51 +583,55 @@ ssize_t fs_readlink(const char *path, char *buf, size_t bufsize);
                             If you don't want to resolve any symbolic links at
                             the end of the path, pass AT_SYMLINK_NOFOLLOW,
                             otherwise pass 0.
+    
     \return                 0 on success, -1 on failure.
 */
 int fs_stat(const char *path, struct stat *buf, int flag);
 
-/** \brief  Rewind a directory to the start.
+/** \brief   Rewind a directory to the start.
 
     This function rewinds the position of a directory stream to the beginning of
     the directory.
 
-    \param  hnd             The opened directory's file descriptor.
-    \return                 0 on success, -1 on failure.
-
     \note                   Some filesystems may not support this function. If a
                             filesystem doesn't support it, errno will be set to
                             ENOSYS and -1 will be returned.
+
+    \param  hnd             The opened directory's file descriptor.
+    
+    \return                 0 on success, -1 on failure.
 */
 int fs_rewinddir(file_t hnd);
 
-/** \brief  Retrieve information about an opened file.
+/** \brief   Retrieve information about an opened file.
 
     This function retrieves status information on the given file descriptor,
     which must correspond to an already opened file.
 
-    \param  hnd             The file descriptor to retrieve information about.
-    \param  buf             The buffer to store stat information in.
-    \return                 0 on success, -1 on failure.
-
     \note                   Some filesystems may not support this function. If a
                             filesystem doesn't support it, errno will be set to
                             ENOSYS and -1 will be returned.
+
+    \param  hnd             The file descriptor to retrieve information about.
+    \param  buf             The buffer to store stat information in.
+    
+    \return                 0 on success, -1 on failure.
 */
 int fs_fstat(file_t hnd, struct stat *buf);
 
-/** \brief  Duplicate a file descriptor.
+/** \brief   Duplicate a file descriptor.
 
     This function duplicates the specified file descriptor, returning a new file
     descriptor that can be used to access the file. This is equivalent to the
     standard POSIX function dup().
 
     \param  oldfd           The old file descriptor to duplicate.
+    
     \return                 The new file descriptor on success, -1 on failure.
 */
 file_t fs_dup(file_t oldfd);
 
-/** \brief  Duplicate a file descriptor onto the specified descriptor.
+/** \brief   Duplicate a file descriptor onto the specified descriptor.
 
     This function duplicates the specified file descriptor onto the other file
     descriptor provided. If the newfd parameter represents an open file, that
@@ -602,11 +640,12 @@ file_t fs_dup(file_t oldfd);
 
     \param  oldfd           The old file descriptor to duplicate.
     \param  newfd           The descriptor to copy into.
+    
     \return                 The new file descriptor on success, -1 on failure.
 */
 file_t fs_dup2(file_t oldfd, file_t newfd);
 
-/** \brief  Create a "transient" file descriptor.
+/** \brief   Create a "transient" file descriptor.
 
     This function creates and opens a new file descriptor that isn't associated
     directly with a file on the filesystem. This is used internally to actually
@@ -616,50 +655,55 @@ file_t fs_dup2(file_t oldfd, file_t newfd);
 
     \param  vfs             The VFS handler structure to use for the file.
     \param  hnd             Internal handle data for the file.
+    
     \return                 The opened descriptor on success, -1 on failure.
 */
 file_t fs_open_handle(vfs_handler_t *vfs, void *hnd);
 
-/** \brief  Retrieve the VFS Handler for a file descriptor.
+/** \brief   Retrieve the VFS Handler for a file descriptor.
 
     This function retrieves the Handler structure for the VFS of the specified
     file descriptor. There is generally no reason to call this function in user
     code, as it is meant for use internally.
 
     \param  fd              The file descriptor to retrieve the handler for.
+    
     \return                 The VFS' handler structure.
 */
 vfs_handler_t *fs_get_handler(file_t fd);
 
-/** \brief  Retrieve the internal handle for a file descriptor.
+/** \brief   Retrieve the internal handle for a file descriptor.
 
     This function retrieves the internal file handle data of the specified file
     descriptor. There is generally no reason to call this function in user code,
     as it is meant for use internally.
 
     \param  fd              The file descriptor to retrieve the handler for.
+    
     \return                 The internal handle for the file descriptor.
 */
 void *fs_get_handle(file_t fd);
 
-/** \brief  Get the current working directory of the running thread.
+/** \brief   Get the current working directory of the running thread.
+
     \return                 The current working directory.
 */
 const char *fs_getwd(void);
 
 /* Couple of util functions */
 
-/** \brief  Copy a file.
+/** \brief   Copy a file.
 
     This function copies the file at src to dst on the filesystem.
 
     \param  src             The filename to copy from.
     \param  dst             The filename to copy to.
+    
     \return                 The number of bytes copied successfully.
 */
 ssize_t fs_copy(const char *src, const char *dst);
 
-/** \brief  Open and read a whole file into RAM.
+/** \brief   Open and read a whole file into RAM.
 
     This function opens the specified file, reads it into memory (allocating the
     necessary space with malloc), and closes the file. The caller is responsible
@@ -667,11 +711,12 @@ ssize_t fs_copy(const char *src, const char *dst);
 
     \param  src             The filename to open and read.
     \param  out_ptr         A pointer to the buffer on success, NULL otherwise.
+    
     \return                 The size of the file on success, -1 otherwise.
 */
 ssize_t fs_load(const char *src, void **out_ptr);
 
-/** \brief  Append a path component to a string.
+/** \brief   Append a path component to a string.
 
     This function acts mostly like the function strncat(), with a few slight
     differences. First, if the destination string doesn't end in a '/'
@@ -683,6 +728,7 @@ ssize_t fs_load(const char *src, void **out_ptr);
     \param  dst             The string to modify.
     \param  src             The path component to append.
     \param  len             The length allocated for dst.
+    
     \return                 The length of the new string (including the NUL
                             terminator) on success, -1 otherwise.
 
@@ -693,7 +739,7 @@ ssize_t fs_load(const char *src, void **out_ptr);
 */
 ssize_t fs_path_append(char *dst, const char *src, size_t len);
 
-/** \brief  Initialize the virtual filesystem.
+/** \brief   Initialize the virtual filesystem.
 
     This is normally done for you by default when KOS starts. In general, there
     should be no reason for you to call this function.
@@ -702,12 +748,14 @@ ssize_t fs_path_append(char *dst, const char *src, size_t len);
 */
 int fs_init(void);
 
-/** \brief  Shut down the virtual filesystem.
+/** \brief   Shut down the virtual filesystem.
 
     This is done for you by the normal shutdown procedure of KOS. There should
     not really be any reason for you to call this function yourself.
 */
 void fs_shutdown(void);
+
+/** @} */
 
 __END_DECLS
 

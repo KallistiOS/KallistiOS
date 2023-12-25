@@ -235,7 +235,7 @@ void snd_mem_free(uint32 addr) {
     }
 
     if(!e) {
-        dbglog(DBG_ERROR, "snd_mem_free: attempt to free non-existant block at %08lx\n", (uint32)e);
+        dbglog(DBG_ERROR, "snd_mem_free: attempt to free non-existent block at %08lx\n", (uint32)e);
         spinlock_unlock(&snd_mem_mutex);
         return;
     }

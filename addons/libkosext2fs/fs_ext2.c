@@ -723,7 +723,7 @@ static int int_rename(fs_ext2_fs_t *fs, const char *fn1, const char *fn2,
 
     /* Make sure the user isn't trying to do something really stupid, like
        moving a directory such that it would be an ancestor of itself... Note
-       that this is really inefficient, but without cacheing the entire
+       that this is really inefficient, but without caching the entire
        directory structure as we work down it, I'm not sure how I could make it
        much better... */
     if(!isfile && dpinode != pinode) {
@@ -1882,7 +1882,7 @@ static vfs_handler_t vh = {
         NMMGR_LIST_INIT         /* list */
     },
 
-    0, NULL,                    /* no cacheing, privdata */
+    0, NULL,                    /* no caching, privdata */
 
     fs_ext2_open,               /* open */
     fs_ext2_close,              /* close */

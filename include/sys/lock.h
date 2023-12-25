@@ -1,14 +1,25 @@
 /* KallistiOS ##version##
 
    lock_common.h
-   Copyright (C)2004 Megan Potter
+   Copyright (C) 2004 Megan Potter
 
    This file is patched into the dc-chain newlib's <sys/lock.h>, by newlib.mk 
    in \utils\dc-chain\scripts.
 */
 
+/** \file
+    \brief   KOS-specific patching for newlib's <sys/lock.h>
+
+    This file contains an implementation of the KOS threading back-end
+    that will be patched into newlib by the toolchain make scripts.
+
+    \author Megan Potter
+*/
+
 #ifndef __SYS_LOCK_H__
 #define __SYS_LOCK_H__
+
+/** \cond */
 
 typedef struct {
     void* owner;
@@ -50,6 +61,7 @@ void __newlib_lock_acquire_recursive(__newlib_recursive_lock_t*);
 void __newlib_lock_try_acquire_recursive(__newlib_recursive_lock_t*);
 void __newlib_lock_release_recursive(__newlib_recursive_lock_t*);
 
+/** \endcond */
 
 #endif // __NEWLIB_LOCK_COMMON_H
 

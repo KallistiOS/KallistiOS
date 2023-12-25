@@ -21,7 +21,7 @@
 
 /** \file   pthread.h
     \brief  POSIX-compatibile (sorta) threading support.
-    \ingroup threading
+    \ingroup threading_posix
 
     This file was imported (with a few changes) from Newlib. If you really want
     to know about the functions in here, you should probably consult the Single
@@ -56,7 +56,7 @@ extern "C" {
         and may not provide pthread_atfork():
 
         "Either the implementation shall support the pthread_atfork() function
-         as described above or the pthread_atfork() funciton shall not be
+         as described above or the pthread_atfork() function shall not be
          provided."
 
         NOTE: RTEMS does not provide pthread_atfork().  */

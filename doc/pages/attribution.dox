@@ -1,0 +1,10 @@
+/** \defgroup attribution  Attribution
+    \brief                 KOS banner, license, and authors 
+    
+    This API can be used to query for and display information
+    on KOS, its license, and its authors at runtime. 
+
+    \remark
+    The authors list can be used for credits screens in games
+    and applications to acknowledge KOS and its contributors. :)
+*/

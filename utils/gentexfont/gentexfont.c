@@ -192,7 +192,7 @@ static FontInfoPtr SuckGlyphsFromServer(Display * dpy, Font font) {
                     for(x = 0; x < charWidth; x++) {
                         /* XXX The algorithm used to suck across the font ensures that
                            each glyph begins on a byte boundary.  In theory this would
-                           make it convienent to copy the glyph into a byte oriented
+                           make it convenient to copy the glyph into a byte oriented
                            bitmap.  We actually use the XGetPixel function to extract
                            each pixel from the image which is not that efficient.  We
                            could either do tighter packing in the pixmap or more

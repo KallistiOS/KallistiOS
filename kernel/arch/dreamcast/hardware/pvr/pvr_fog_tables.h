@@ -35,7 +35,7 @@ float inverse_w_depth[] = {
     0.00500, 0.00481, 0.00463, 0.00446, 0.00431, 0.00417, 0.00403, 0.00391,
 };
 
-/* Code to generate the preceeding inverse_w_depth[] table
+/* Code to generate the preceding inverse_w_depth[] table
 #include <stdio.h>
 #include <math.h>
 
@@ -57,7 +57,7 @@ int main () {
 /*
  * This is essentially the same table as above except each value has been
  * multiplied by 259.999999. This table is used by the EXP and EXP2
- * fog functions in pvr_fog.c.  It just saves us one multiplcation per table
+ * fog functions in pvr_fog.c.  It just saves us one multiplication per table
  * entry.
  */
 float inverse_w_depth260[] = {
@@ -79,7 +79,7 @@ float inverse_w_depth260[] = {
     1.300, 1.250, 1.204, 1.161, 1.121, 1.083, 1.048, 1.016,
 };
 
-/* Code to generate the preceeding inverse_w_depth260[] table
+/* Code to generate the preceding inverse_w_depth260[] table
 #include <stdio.h>
 #include <math.h>
 
@@ -166,7 +166,7 @@ static float exp_table[] = {
     0.00005308,  0.00005104,  0.00004909,  0.00004721,
 };
 
-/* code to generate the preceeding table
+/* code to generate the preceding table
 
 #include <stdio.h>
 #include <math.h>

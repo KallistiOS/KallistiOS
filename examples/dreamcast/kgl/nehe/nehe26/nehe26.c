@@ -11,9 +11,9 @@
 
 #include <stdlib.h>
 
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glut.h>
+#include <KGL/gl.h>
+#include <KGL/glu.h>
+#include <KGL/glut.h>
 
 /* Morphing Points!
 
@@ -153,7 +153,7 @@ int initGL(GLvoid) {
     /* Set our perspective */
     gluPerspective(45.0f, ratio, 0.1f, 100.0f);
 
-    /* Make sure we're chaning the model view and not the projection */
+    /* Make sure we're changing the model view and not the projection */
     glMatrixMode(GL_MODELVIEW);
 
     /* Reset The View */

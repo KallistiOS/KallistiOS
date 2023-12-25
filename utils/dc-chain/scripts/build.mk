@@ -10,7 +10,6 @@ build-sh4: build-sh4-gcc
 build-arm: build-arm-gcc
 build-sh4-gcc: build-sh4-gcc-pass2
 build-arm-gcc: build-arm-gcc-pass1
-	$(clean_arm_hack)
 build-sh4-newlib: build-sh4-newlib-only fixup-sh4-newlib
 
 fixup_sh4_newlib_stamp = fixup-sh4-newlib.stamp

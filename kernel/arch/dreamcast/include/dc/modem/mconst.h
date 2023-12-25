@@ -1,14 +1,15 @@
 /* KallistiOS ##version##
 
    mconst.h
-   Copyright (C)2002, 2004 Nick Kochakian
+   Copyright (C) 2002, 2004 Nick Kochakian
 
    Distributed under the terms of the KOS license.
 
 */
 
-/** \file   dc/modem/mconst.h
-    \brief  Constants used in the modem driver.
+/** \file    dc/modem/mconst.h
+    \brief   Constants used in the modem driver.
+    \ingroup modem
 
     This file contains constants that are used for the modem driver. You should
     not ever need to include this file directly, as the main modem driver header
@@ -32,7 +33,9 @@
    something very bad to happen. Only use the MODEM_SPEED_* constants defined
    in modem.h! */
 
-/** \defgroup   modem_speeds    Modem speed values
+/** \defgroup   modem_speeds    Speed Values
+    \brief                      Modem speed values
+    \ingroup    modem
 
     This group defines the available speed values that are able to be used with
     the Dreamcast's modem. The actual speed value consists of one of these in
@@ -62,7 +65,9 @@
 #define MODEM_SPEED_33600 0xE
 /** @} */
 
-/** \defgroup   modem_protocols Modem protocol values
+/** \defgroup   modem_protocols Protocol Values
+    \brief                      Modem protocol values
+    \ingroup    modem
 
     This group defines the available protocol values that are able to be used
     with the Dreamcast's modem. The actual speed value consists of one of these
@@ -83,21 +88,27 @@
 #define MODEM_PROTOCOL_V8     0x6
 /** @} */
 
-/** \brief  Extract the protocol from a full speed/protocol value.
+/** \brief   Extract the protocol from a full speed/protocol value.
+    \ingroup modem
+
     \param  x           The speed/protocol value to look at.
     \return             The protocol in use.
     \see                modem_protocols
 */
 #define MODEM_SPEED_GET_PROTOCOL(x) ((modem_speed_t)(x) >> 4)
 
-/** \brief  Extract the speed from a full speed/protocol value.
+/** \brief   Extract the speed from a full speed/protocol value.
+    \ingroup modem
+
     \param  x           The speed/protocol value to look at.
     \return             The speed in use.
     \see                modem_speeds
 */
 #define MODEM_SPEED_GET_SPEED(x)    ((modem_speed_t)(x) & 0xF)
 
-/** \brief  Combine a protocol and speed into a single value.
+/** \brief   Combine a protocol and speed into a single value.
+    \ingroup modem
+
     \param  p           The protocol to use.
     \param  s           The speed to use.
     \return             The full speed/protocol value.
@@ -106,7 +117,9 @@
 */
 #define MODEM_MAKE_SPEED(p, s)      ((modem_speed_t)((((p) & 0xF) << 4) | ((s) & 0xF)))
 
-/** \brief  Modem speed/protocol value type. */
+/** \brief   Modem speed/protocol value type. 
+    \ingroup modem
+ */
 typedef unsigned char modem_speed_t;
 
 #endif

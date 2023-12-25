@@ -11,9 +11,9 @@
 
 #include <stdlib.h>
 
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glut.h>
+#include <KGL/gl.h>
+#include <KGL/glu.h>
+#include <KGL/glut.h>
 
 #define NUM_STARS 50        /* Number Of Stars To Draw */
 

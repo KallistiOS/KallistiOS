@@ -2,6 +2,7 @@
 // Ported to Dreamcast/KOS by Peter Hatch
 // read_input () code from KOS examples
 // Converted to a clock by Megan Potter
+// Resolution enhanced by Falco Girgis
 
 #include <kos.h>
 #include <time.h>
@@ -17,7 +18,7 @@ const char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
                          "Aug", "Sep", "Oct", "Nov", "Dec"
                        };
 
-float bg[3];                /* Current bg */
+float bg[3];                        /* Current bg */
 float bg_delta[3] = { 0.01f };      /* bg per-frame delta */
 int   bg_cur = 1;
 float bgarray[][3] = {
@@ -55,15 +56,15 @@ void bgframe() {
 }
 
 void drawFrame() {
-    time_t t;
+    struct timespec spec;
     struct tm tm;
     char tmpbuf[256];
     int y = 50;
 
     bgframe();
 
-    t = time(NULL);
-    localtime_r(&t, &tm);
+    timespec_get(&spec, TIME_UTC);
+    localtime_r(&spec.tv_sec, &tm);
 
     pvr_wait_ready();
     pvr_scene_begin();
@@ -77,11 +78,11 @@ void drawFrame() {
     text->begin();
     text->setColor(1, 1, 1);
     text->start2f(20, y);
-    text->puts("Simple DC Clock");
+    text->puts("(High Res) Simple DC Clock");
     text->end();
     y += 50;
 
-    sprintf(tmpbuf, "Unix Time: %lld", t);
+    sprintf(tmpbuf, "Unix: %lld", spec.tv_sec);
 
     text->begin();
     text->setColor(1, 1, 1);
@@ -100,8 +101,8 @@ void drawFrame() {
     text->end();
     y += 50;
 
-    sprintf(tmpbuf, "%02d:%02d:%02d",
-            tm.tm_hour, tm.tm_min, tm.tm_sec);
+    sprintf(tmpbuf, "%02d:%02d:%02d.%lu",
+            tm.tm_hour, tm.tm_min, tm.tm_sec, spec.tv_nsec);
 
     text->begin();
     text->setColor(1, 1, 1);

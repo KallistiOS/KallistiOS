@@ -5,8 +5,9 @@
 
 */
 
-/** \file   kos/elf.h
-    \brief  ELF binary loading support.
+/** \file    kos/elf.h
+    \brief   ELF binary loading support.
+    \ingroup elf
 
     This file contains the support functionality for loading ELF binaries in
     KOS. This includes the various header structures and whatnot that are used
@@ -26,7 +27,13 @@ __BEGIN_DECLS
 #include <arch/types.h>
 #include <sys/queue.h>
 
-/** \brief  ELF file header.
+/** \defgroup elf   ELF File Format
+    \brief          API for loading and managing ELF files
+    \ingroup        system_libraries
+*/
+
+/** \brief   ELF file header.
+    \ingroup elf
 
     This header is at the beginning of any valid ELF binary and serves to
     identify the architecture of the binary and various data about it.
@@ -50,7 +57,9 @@ struct elf_hdr_t {
     uint16 shstrndx;    /**< \brief String table section index */
 };
 
-/** \defgroup elf_archs                 ELF architecture types
+/** \defgroup elf_archs                 Architecture Types
+    \brief                              Relevant ELF architecture type codes
+    \ingroup  elf
 
     These are the various architectures that we might care about for ELF files.
 
@@ -61,7 +70,9 @@ struct elf_hdr_t {
 #define EM_SH   42  /**< \brief SuperH */
 /** @} */
 
-/** \defgroup elf_sections              Section header types
+/** \defgroup elf_sections              Section Header Types
+    \brief                              ELF section header type values
+    \ingroup  elf
 
     These are the various types of section headers that can exist in an ELF
     file.
@@ -87,7 +98,9 @@ the file */
 #define SHT_HIUSER  0xffffffff  /**< \brief End of program specific types */
 /** @} */
 
-/** \defgroup elf_hdrflags              Section header flags
+/** \defgroup elf_hdrflags              Section Header Flags
+    \brief                              ELF section header flags
+    \ingroup  elf
 
     These are the flags that can be set on a section header. These are related
     to whether the section should reside in memory and permissions on it.
@@ -100,7 +113,9 @@ the file */
 #define SHF_MASKPROC    0xf0000000  /**< \brief Processor specific mask */
 /** @} */
 
-/** \defgroup elf_specsec               Special section indeces
+/** \defgroup elf_specsec               Special Section Indices
+    \brief                              ELF section indices
+    \ingroup  elf
 
     These are the indices to be used in special situations in the section array.
 
@@ -110,7 +125,8 @@ the file */
 #define SHN_ABS     0xfff1  /**< \brief Absolute values */
 /** @} */
 
-/** \brief  ELF Section header.
+/** \brief   ELF Section header.
+    \ingroup elf
 
     This structure represents the header on each ELF section.
 
@@ -150,7 +166,9 @@ switch (sh_type) {
 
 */
 
-/** \defgroup elf_binding               Symbol binding types.
+/** \defgroup elf_binding               Symbol Binding Types
+    \brief                              ELF symbol binding type values
+    \ingroup  elf
 
     These are the values that can be set to say how a symbol is bound in an ELF
     binary. This is stored in the upper 4 bits of the info field in elf_sym_t.
@@ -162,7 +180,9 @@ switch (sh_type) {
 #define STB_WEAK    2       /**< \brief Weak-linked symbol */
 /** @} */
 
-/** \defgroup elf_symtype               Symbol types.
+/** \defgroup elf_symtype               Symbol Types
+    \brief                              ELF symbol type values
+    \ingroup  elf
 
     These are the values that can be set to say what kind of symbol a given
     symbol in an ELF file is. This is stored in the lower 4 bits of the info
@@ -177,8 +197,9 @@ switch (sh_type) {
 #define STT_FILE    4       /**< \brief Symbol is a file name */
 /** @} */
 
-/** \brief  Symbol table entry
-
+/** \brief   Symbol table entry
+    \ingroup elf
+    
     This structure represents a single entry in a symbol table in an ELF file.
 
     \headerfile kos/elf.h
@@ -192,21 +213,26 @@ struct elf_sym_t {
     uint16 shndx;       /**< \brief Section index */
 };
 
-/** \brief  Retrieve the binding type for a symbol.
+/** \brief   Retrieve the binding type for a symbol.
+    \ingroup elf
+
     \param  info            The info field of an elf_sym_t.
     \return                 The binding type of the symbol.
     \see                    elf_binding
 */
 #define ELF32_ST_BIND(info) ((info) >> 4)
 
-/** \brief  Retrieve the symbol type for a symbol.
+/** \brief   Retrieve the symbol type for a symbol.
+    \ingroup elf
+
     \param  info            The info field of an elf_sym_t.
     \return                 The symbol type of the symbol.
     \see                    elf_symtype
 */
 #define ELF32_ST_TYPE(info) ((info) & 0xf)
 
-/** \brief  ELF Relocation entry (with explicit addend).
+/** \brief   ELF Relocation entry (with explicit addend).
+    \ingroup elf
 
     This structure represents an ELF relocation entry with an explicit addend.
     This structure is used on some architectures, whereas others use the
@@ -220,7 +246,8 @@ struct elf_rela_t {
     int32 addend;       /**< \brief Constant addend for the symbol */
 };
 
-/** \brief  ELF Relocation entry (without explicit addend).
+/** \brief   ELF Relocation entry (without explicit addend).
+    \ingroup elf
 
     This structure represents an ELF relocation entry without an explicit
     addend. This structure is used on some architectures, whereas others use the
@@ -233,7 +260,9 @@ struct elf_rel_t {
     uint32      info;       /**< \brief Symbol and type */
 };
 
-/** \defgroup elf_reltypes              ELF relocation types
+/** \defgroup elf_reltypes              Relocation Types
+    \brief                              ELF relocation type values
+    \ingroup  elf
 
     These define the types of operations that can be done to calculate
     relocations within ELF files.
@@ -245,13 +274,17 @@ struct elf_rel_t {
 #define R_386_PC32  2       /**< \brief x86: Rel = Symbol + Addend - Value */
 /** @} */
 
-/** \brief  Retrieve the symbol index from a relocation entry.
+/** \brief   Retrieve the symbol index from a relocation entry.
+    \ingroup elf
+
     \param  i               The info field of an elf_rel_t or elf_rela_t.
     \return                 The symbol table index from that relocation entry.
 */
 #define ELF32_R_SYM(i) ((i) >> 8)
 
-/** \brief  Retrieve the relocation type from a relocation entry.
+/** \brief   Retrieve the relocation type from a relocation entry.
+    \ingroup elf
+
     \param  i               The info field of an elf_rel_t or an elf_rela_t.
     \return                 The relocation type of that relocation.
     \see                    elf_reltypes
@@ -260,7 +293,8 @@ struct elf_rel_t {
 
 struct klibrary;
 
-/** \brief  Kernel-specific definition of a loaded ELF binary.
+/** \brief   Kernel-specific definition of a loaded ELF binary.
+    \ingroup elf
 
     This structure represents the internal representation of a loaded ELF binary
     in KallistiOS (specifically as a dynamically loaded library).
@@ -280,7 +314,8 @@ typedef struct elf_prog {
     char fn[256];           /**< \brief Filename of library */
 } elf_prog_t;
 
-/** \brief  Load an ELF binary.
+/** \brief   Load an ELF binary.
+    \ingroup elf
 
     This function loads an ELF binary from the VFS and fills in an elf_prog_t
     for it.
@@ -292,7 +327,8 @@ typedef struct elf_prog {
 */
 int elf_load(const char *fn, struct klibrary * shell, elf_prog_t * out);
 
-/** \brief  Free a loaded ELF program.
+/** \brief   Free a loaded ELF program.
+    \ingroup elf
 
     This function cleans up an ELF binary that was loaded with elf_load().
 

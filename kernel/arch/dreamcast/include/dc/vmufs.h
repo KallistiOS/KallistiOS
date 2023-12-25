@@ -5,8 +5,9 @@
 
 */
 
-/** \file   dc/vmufs.h
-    \brief  Low-level VMU filesystem driver.
+/** \file    dc/vmufs.h
+    \brief   Low-level VMU filesystem driver.
+    \ingroup vfs_vmu
 
     The VMU filesystem driver mounts itself on /vmu of the VFS. Each memory card
     has its own subdirectory off of that directory (i.e, /vmu/a1 for slot 1 of
@@ -28,6 +29,10 @@
 __BEGIN_DECLS
 
 #include <dc/maple.h>
+
+/** \addtogroup vfs_vmu
+    @{
+*/
 
 /* \cond */
 #define __packed__ __attribute__((packed))
@@ -395,6 +400,8 @@ int vmufs_init(void);
     Must be called after everything is finished.
 */
 int vmufs_shutdown(void);
+
+/** @} */
 
 __END_DECLS
 

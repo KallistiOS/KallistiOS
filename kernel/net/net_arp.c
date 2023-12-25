@@ -21,7 +21,7 @@
 
 */
 
-/* ARP Packet Structre */
+/* ARP Packet Structure */
 #define packed __attribute__((packed))
 typedef struct {
     uint8 hw_type[2];

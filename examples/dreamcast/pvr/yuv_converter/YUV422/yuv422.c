@@ -156,23 +156,23 @@ static int setup_pvr(void) {
     float width_ratio = (float)FRAME_TEXTURE_WIDTH / PVR_TEXTURE_WIDTH;
     float height_ratio = (float)FRAME_TEXTURE_HEIGHT / PVR_TEXTURE_HEIGHT;
 
-    vert[0].x = 0;
-    vert[0].y = 0;
-    vert[0].u = 0.0;
-    vert[0].v = 0.0;
+    vert[0].x = 0.0f;
+    vert[0].y = 0.0f;
+    vert[0].u = 0.0f;
+    vert[0].v = 0.0f;
 
-    vert[1].x = 640;
-    vert[1].y = 0;
+    vert[1].x = 640.0f;
+    vert[1].y = 0.0f;
     vert[1].u = width_ratio;
-    vert[1].v = 0.0;
+    vert[1].v = 0.0f;
 
-    vert[2].x = 0;
-    vert[2].y = 480;
-    vert[2].u = 0.0;
+    vert[2].x = 0.0f;
+    vert[2].y = 480.0f;
+    vert[2].u = 0.0f;
     vert[2].v = height_ratio;
 
-    vert[3].x = 640;
-    vert[3].y = 480;
+    vert[3].x = 640.0f;
+    vert[3].y = 480.0f;
     vert[3].u = width_ratio;
     vert[3].v = height_ratio;
 
@@ -236,7 +236,7 @@ static void convert_YUV422_to_YUV422_texture(void) {
             sq_cpy((void *)PVR_TA_YUV_CONV, (void *)(y_block+128), 128);
         }
 
-        /* Send dummies if frame texture width doesnt match pvr texture width */
+        /* Send dummies if frame texture width doesn't match pvr texture width */
         sq_set((void *)PVR_TA_YUV_CONV, 0, 
                 BYTE_SIZE_FOR_16x16_BLOCK * 
                 ((PVR_TEXTURE_WIDTH >> 4) - (FRAME_TEXTURE_WIDTH >> 4)));

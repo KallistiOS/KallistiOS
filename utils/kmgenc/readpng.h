@@ -29,7 +29,7 @@ void readpng_version_info(void);
 uint32 readpng_init(FILE *infile);
 
 /* pNumChannels will be 3 for RGB images, and 4 for RGBA images
- * pRowBytes is the number of bytes necesary to hold one row
+ * pRowBytes is the number of bytes necessary to hold one row
  * the data gets returned as a flat stream of bytes, each row
  * starts at a multiple of pRowBytes
  * The caller is responsible for freeing the memory
