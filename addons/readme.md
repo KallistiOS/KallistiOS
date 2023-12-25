@@ -2,8 +2,8 @@
 
 The Addons system allows the creation of standalone addon packages, similar to the ports in the kos-ports system. 
 
-## Building 
-To install an add-on, simply place the addon directory inside this directory. Addons in this directory are automatically built when KallistiOS is built. Once built, the addon's headers will be available in `addons/include` and the built libraries in `addons/lib`. These paths are automatically included in your build flags if you are using the KOS Makefile system. If you wish to disable an addon, you may simply delete its directory or create an `unused` directory and move it within.
+## Installing addons
+To install an add-on, simply place the addon directory inside this directory. Addons in this directory are automatically built when KallistiOS is built. Once built, the addon's headers will be available in `addons/include` and the built libraries in `addons/lib`. These paths are automatically included in your build flags if you are using the KOS Makefile system. You may disable an addon by creating an `unused` directory and moving the addons within, or you may uninstall an addon outright by simply deleting its directory.
 
 A few addons are supplied with KallistiOS. These include:
 - [**libkosext2fs**](libkosext2fs/): A filesystem driver for the ext2 filesystem
