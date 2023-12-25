@@ -1,21 +1,6 @@
 # Overview
 KallistiOS[^1] is a development library and unikernel operating system for
-gaming consoles licensed under a [permissive software license](LICENSE.md).
-It is currently only available for the Sega Dreamcast[^2], but ports previously
-existed for the Gameboy Advance[^2], PlayStation 2[^2], and Intel[^2]
-ia32 platforms, although none were particularly complete.
-
-Depending on whether you wish to see the [fnords](https://en.wikipedia.org/wiki/Fnord),
-you can pronounce it _Kallisti-O's_ (like a cereal) or _Kallisti O. S._ (like an operating
-system). We like the former since it's silly to be so serious most of the
-time :smiley:. _Kallisti_ means "to the fairest" in Greek. This was the word 
-inscribed on the golden apple Eris threw into the banquet of the gods
-to start the Trojan war. This somehow landed her the title of matriarch
-of a silly religion called _Discordianism_, to which the KallistiOS name
-pays homage. If you want a short abbreviation, you can also refer to it
-as _KOS_, which can be pronounced _k-oss_ (like chaos) :smiley:.
-
-Now that that is cleared up... :smiley:
+the Sega Dreamcast[^1] licensed under a [permissive software license](LICENSE.md).
 
 KallistiOS is a modular monolithic kernel, like Linux or FreeBSD. This
 means that there is a kernel library which you link with your own code.
@@ -163,6 +148,55 @@ to take a look at the coding_style.txt file (in the same directory as this
 README in the KOS tree) for some rationale for most of that formatting stuff.
 Note that some of that has changed over time (mainly when the maintainer of KOS
 changes), but it is still mostly right. :wink:
+
+## History and Lore
+KallistiOS began its life as a hobby operating system written by Megan Potter 
+in the late 90s, not for the Sega Dreamcast, but for i386 PCs. Megan later
+became interested in hacking her new Sega Dreamcast console, and along with
+Jordan DeLong and Mike "Tursi" Brent, began work on the **libdream** library
+by adapting the work pioneered by Marcus Comstedt. _Stars_ and _Ghetto Pong_
+then become the first publicly released Dreamcast homebrew demo and game. 
+
+Later, they began discussing the idea of writing a real embedded operating
+system for Dreamcast, and KallistiOS was reborn. None of the original code
+survives in the Dreamcast version, but the concepts and name still do. 
+
+Depending on whether you wish to see the [fnords](https://en.wikipedia.org/wiki/Fnord),
+you can pronounce the name _Kallisti-O's_ (like a cereal) or _Kallisti O. S._ (like an operating
+system). We like the former since it's silly to be so serious most of the
+time :smiley:. _Kallisti_ means "to the fairest" in Greek. In Greek mythology, this
+word was inscribed upon a golden apple and thrown into the banquet of the gods by
+Eris, the goddess of discord and strife, in retaliation for being disinvited.
+
+The goddesses Hera, Athena, and Aphrodite then fought over who was deserving
+of the title _fairest_ and thus possession of the apple. Zeus, wishing to stay
+out of the matter, asked Paris, prince of Troy, to arbitrate the disagreement.
+Each goddess attempted to bribe Paris with a reward for choosing her. Paris chose
+Aphrodite, which won him the love of the most beautiful woman on Earth, who was
+Helen, Queen of Sparta. The Greeks sailed to Troy to retrieve her, starting the
+10 year Trojan War.
+
+This landed Eris the title of matriarch of a silly religion called _Discordianism_,
+to which the KallistiOS name pays homage. If you want a short abbreviation, you
+can also refer to it as _KOS_, which can be pronounced _k-oss_ (like chaos) :smiley:.
+
+If you think that is silly, well, the original suggestion for the name of
+the operating system was _HuevOS_, and the mascot was an egg wearing a sombrero
+and riding a surfboard. 😃 Eventually, though, _KallistiOS_ was chosen due to the
+authors' interest in Discordianism.
+
+The development of KallistiOS, credited to Megan Potter's _Cryptic Allusion_
+organization, accelerated through the end of 2000 and into 2001, and by May 2001
+Dreamcast dev pioneers _Cryptic Allusion_, _Ganksoft_, _Moving Target Software
+Design_, and _AndrewK/Napalm_ collaborated to design, produce, and distribute
+a collection of homebrew games and demos called _DC Tonic_ at the E3 Electronics
+Entertainment Exposition. The demo disc was a hit and both the demos and the
+KallistiOS software caught the attention and praise of Sega themselves. 
+
+Ports of KallistiOS once existed for the existed for the Gameboy Advance[^2],
+PlayStation 2[^2], and Intel[^2] ia32 platforms, although none were particularly
+complete. At this time, only the Sega Dreamcast portion remains, but the project
+architecture still exists to add additional consoles at later time.
 
 
 # Platform Notes
