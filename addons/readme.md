@@ -1,15 +1,10 @@
 # KallistiOS Addons
 
-What we want to do here, unlike previous versions, is to setup a system
-where you can just untar/unzip any port you want into here and it
-will automagically get built in the right way for the arch you are
-compiling for. To accomplish this, each port contains a "kos" directory
-with build quirks for each supported platform. This could be an empty
-file. The name of it is "$(KOS_ARCH).cnf". Any directory under here
-which contains something that looks like that will get built. So for
-example if you have libbz2 with kos/dreamcast.cnf and kos/gba.cnf, it
-will get built for DC and GBA. If there is no gba.cnf, then it gets
-built for only DC, and so forth. Once a lib is verified to work on a
-platform a .cnf file can be added for it. Alternatively if you don't
-want some ports to build then you can just move them up under an "unused"
-dir or some such.
+The Addons system allows the creation of standalone addon packages, similar to the ports in the kos-ports system. Although KallistiOS currently only supports the Sega Dreamcast platform, the system is designed to support build quirks for various platforms. Each addon contains a "kos" directory, which would contain `$(KOS_ARCH).cnf` files (so, as of now, just `dreamcast.cnf`). The addon's `Makefile` contains build instructions to build the addon for KallistiOS, while the `dreamcast.cnf` contains quirks specific to building for the Dreamcast. If there are no platform-specific build quirks, an empty file named `dreamcast.cnf` still needs to exist for the build system to recognize that Dreamcast is a valid target platform for the addon. If you wish to disable a specific addon, simply create an "unused" directory and move the addons you wish to disable there. 
+
+A few addons are supplied with KallistiOS. These include:
+- [**libkosext2fs**](libkosext2fs/): A filesystem driver for the ext2 filesystem
+- [**libkosfat**](libkosfat/): A filesystem driver for FAT12, FAT16, and FAT32 filesystems, with long name support
+- [**libkosutils**](libkosutils/): Utilities: Functions for B-spline curve generation, MD5 checksum handling, image handling, network configuration management, and PCX images
+- [**libnavi**](libnavi/): A flashROM driver and G2 ATA driver, historically used with Megan Potter's Navi Dreamcast hacking project
+- [**libppp**](libppp/): PPP protocol support for modem devices
