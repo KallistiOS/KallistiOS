@@ -6,7 +6,7 @@
 
 /* Defines a simple UNIX-style memory pool system. Since the Dreamcast has
    multiple distinct areas of memory used for different things, we'll
-   want to keep seperate pools. Mainly this will be used with the PowerVR
+   want to keep separate pools. Mainly this will be used with the PowerVR
    and the system RAM, since the SPU has its own program (that can do its
    own memory management). */
 

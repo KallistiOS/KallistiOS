@@ -4,17 +4,9 @@
    Copyright (C) 2012, 2013, 2019 Lawrence Sebald
 */
 
-#ifndef __FAT_FS_FAT_H
-#define __FAT_FS_FAT_H
-
-#include <sys/cdefs.h>
-__BEGIN_DECLS
-
-#include <stdint.h>
-#include <kos/blockdev.h>
-
-/** \file   fat/fs_fat.h
-    \brief  VFS interface for a FAT filesystem.
+/** \file    fat/fs_fat.h
+    \brief   VFS interface for a FAT filesystem.
+    \ingroup vfs_fat
 
     This file defines the public interface to add support for the FAT
     filesystem, as in common use on all kinds of systems and popularized by
@@ -34,7 +26,22 @@ __BEGIN_DECLS
     \author Lawrence Sebald
 */
 
-/** \brief  Initialize fs_fat.
+#ifndef __FAT_FS_FAT_H
+#define __FAT_FS_FAT_H
+
+#include <sys/cdefs.h>
+__BEGIN_DECLS
+
+#include <stdint.h>
+#include <kos/blockdev.h>
+
+/** \defgroup vfs_fat   FAT
+    \brief              FAT 12, 16, and 32-bit support for KOS's VFS
+    \ingroup            vfs_drivers
+*/
+
+/** \brief   Initialize fs_fat.
+    \ingroup vfs_fat
 
     This function initializes fs_fat, preparing various internal structures for
     use.
@@ -43,7 +50,8 @@ __BEGIN_DECLS
 */
 int fs_fat_init(void);
 
-/** \brief  Shut down fs_fat.
+/** \brief   Shut down fs_fat.
+    \ingroup vfs_fat
 
     This function shuts down fs_fat, basically undoing what fs_fat_init() did.
 
@@ -51,7 +59,9 @@ int fs_fat_init(void);
 */
 int fs_fat_shutdown(void);
 
-/** \defgroup fat_mount_flags          Mount flags for fs_fat
+/** \defgroup fat_mount_flags          Mount Flags
+    \brief                             Mount flags for fs_fat
+    \ingroup  vfs_fat
 
     These values are the valid flags that can be passed for the flags parameter
     to the fs_fat_mount() function. Note that these can be combined, except for
@@ -71,7 +81,8 @@ int fs_fat_shutdown(void);
 #define FS_FAT_MOUNT_READWRITE      0x00000001  /**< \brief Mount read-write */
 /** @} */
 
-/** \brief  Mount a FAT filesystem in the VFS.
+/** \brief   Mount a FAT filesystem in the VFS.
+    \ingroup vfs_fat
 
     This function mounts an fat filesystem to the specified mount point on the
     VFS. This function will detect whether or not an FAT filesystem exists on
@@ -81,24 +92,28 @@ int fs_fat_shutdown(void);
     \param  mp          The path to mount the filesystem at.
     \param  dev         The block device containing the filesystem.
     \param  flags       Mount flags. Bitwise OR of values from fat_mount_flags
+    
     \retval 0           On success.
     \retval -1          On error.
 */
 int fs_fat_mount(const char *mp, kos_blockdev_t *dev, uint32_t flags);
 
-/** \brief  Unmount a FAT filesystem from the VFS.
+/** \brief   Unmount a FAT filesystem from the VFS.
+    \ingroup vfs_fat
 
     This function unmoutns an FAT filesystem that was previously mounted by the
     fs_fat_mount() function.
 
     \param  mp          The mount point of the filesystem to be unmounted.
+    
     \retval 0           On success.
     \retval -1          On error.
 */
 int fs_fat_unmount(const char *mp);
 
-/** \brief  Sync a FAT filesystem, flushing all pending writes to the block
-            device.
+/** \brief   Sync a FAT filesystem, flushing all pending writes to the block
+             device.
+    \ingroup vfs_fat
 
     This function completes all pending writes on the filesystem, making sure
     all data and metadata are in a consistent state on the block device. As both
@@ -107,11 +122,12 @@ int fs_fat_unmount(const char *mp);
     be a good idea if there is a chance that the filesystem will not be
     unmounted cleanly.
 
+    \note   This function has no effect if the filesystem was mounted read-only.
+
     \param  mp          The mount point of the filesystem to be synced.
+    
     \retval 0           On success.
     \retval -1          On error.
-
-    \note   This function has no effect if the filesystem was mounted read-only.
 */
 int fs_fat_sync(const char *mp);
 

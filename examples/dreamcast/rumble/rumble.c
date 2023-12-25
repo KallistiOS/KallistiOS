@@ -42,7 +42,7 @@ void wait_for_dev_attach(maple_device_t **dev_ptr, unsigned int func) {
 
     /* If we already have it, and it's still valid, leave */
     /* dev->valid is set to 0 by the driver if the device
-       is detatched, but dev will stay not-null */
+       is detached, but dev will stay not-null */
     if((dev != NULL) && (dev->valid != 0)) return;
 
     /* Draw up a screen */
@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
         plx_fcxt_setpos_pnt(cxt, &w);
         plx_fcxt_draw(cxt, "Rumble Test by Quzar");
 
-        /* Start drawing the changable section of the screen */
+        /* Start drawing the changeable section of the screen */
         w.x += 130; w.y += 120.0f;
         plx_fcxt_setpos_pnt(cxt, &w);
         plx_fcxt_setsize(cxt, 30.0f);

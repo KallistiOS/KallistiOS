@@ -16,7 +16,7 @@
     functionality that you might use in practice in here in normal programs is
     the gettime functions.
 
-    \sa arch/timer.h
+    \sa arch/rtc.h
     \sa arch/wdt.h
 
     \author Megan Potter
@@ -35,6 +35,7 @@ __BEGIN_DECLS
 
 /** \defgroup timers    Timer Unit
     \brief              SH4 CPU peripheral providing timers and counters
+    \ingroup            timing
 
     The Dreamcast's SH4 includes an on-chip Timer Unit (TMU) containing 3
     independent 32-bit channels (TMU0-TMU2). Each channel provides a
@@ -396,6 +397,9 @@ void timer_shutdown(void);
 /** \endcond */
 
 /** \defgroup   perf_counters Performance Counters
+    \brief                    SH4 CPU Performance Counter Driver
+    \ingroup                  debugging
+
     The performance counter API exposes the SH4's hardware profiling registers, 
     which consist of two different sets of independently operable 64-bit 
     counters.
@@ -431,13 +435,16 @@ void timer_shutdown(void);
 */
 #define PMCR_COUNT_RATIO_CYCLES 1
 
-/** \defgroup   perf_counters_modes Performance Counter Modes
+/** \defgroup   perf_counters_modes Modes
+    \brief                          Performance Counter Modes
+    \ingroup                        perf_counters
+
     This is the list of modes that are allowed to be passed into the perf_cntr_start()
     function, representing different things you want to count.
-    \ingroup perf_counters
+    
     @{
 */
-/*                MODE DEFINITION                  VALUE   MEASURMENT TYPE & NOTES */
+/*                MODE DEFINITION                  VALUE   MEASUREMENT TYPE & NOTES */
 #define PMCR_INIT_NO_MODE                           0x00 /**< \brief None; Just here to be complete */
 #define PMCR_OPERAND_READ_ACCESS_MODE               0x01 /**< \brief Quantity; With cache */
 #define PMCR_OPERAND_WRITE_ACCESS_MODE              0x02 /**< \brief Quantity; With cache */
@@ -515,7 +522,7 @@ int perf_cntr_stop(int which);
     \ingroup perf_counters
 
     This function clears a performance counter. It resets its count to zero.
-    This function stops the counter before clearing it because you cant clear 
+    This function stops the counter before clearing it because you can't clear 
     a running counter.
 
     \param  which           The counter to clear (i.e, \ref PRFC0 or PRFC1).

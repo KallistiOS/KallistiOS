@@ -178,7 +178,7 @@ void pvr_dma_init(void) {
     /* Use single 32-bit TA->VRAM bus for PVR_TA_TEX_MEM_32 */
     pvr_dma[PVR_LMMODE1] = 1;
 
-    /* Hook the neccessary interrupts */
+    /* Hook the necessary interrupts */
     asic_evt_set_handler(ASIC_EVT_PVR_DMA, pvr_dma_irq_hnd);
     asic_evt_enable(ASIC_EVT_PVR_DMA, ASIC_IRQ_DEFAULT);
 }

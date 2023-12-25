@@ -5,8 +5,9 @@
 
 */
 
-/** \file   netinet/udplite.h
-    \brief  Definitions for UDP-Lite.
+/** \file    netinet/udplite.h
+    \brief   Definitions for UDP-Lite.
+    \ingroup networking_udp
 
     This file contains definitions related to UDP-Lite, a version of UDP that
     allows for partial checksum coverage (rather than requiring that either all
@@ -24,7 +25,9 @@
 
 __BEGIN_DECLS
 
-/** \defgroup udplite_opts              UDP-Lite protocol level options
+/** \defgroup udplite_opts              UDP-Lite Options
+    \brief                              UDP-Lite protocol level options
+    \ingroup                            networking_udp
 
     These are the various socket-level options that can be accessed with the
     setsockopt() and getsockopt() functions for the IPPROTO_UDPLITE level value.

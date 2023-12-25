@@ -5,8 +5,9 @@
 
 */
 
-/** \file   dc/fb_console.h
-    \brief  A simple dbgio interface to draw to the framebuffer.
+/** \file    dc/fb_console.h
+    \brief   A simple dbgio interface to draw to the framebuffer.
+    \ingroup logging
 
     This file contains definitions to interact with a simple framebuffer dbgio
     interface. This interface can be moved around in memory and can have its

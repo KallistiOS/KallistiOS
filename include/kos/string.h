@@ -5,8 +5,9 @@
 
 */
 
-/** \file   kos/string.h
-    \brief  Variants on standard block memory copy/set functions.
+/** \file    kos/string.h
+    \brief   Variants on standard block memory copy/set functions.
+    \ingroup system_types
 
     This file contains variants on the standard block memory copy/set functions.
     These variants copy/set memory in the specified block sizes, which may be
@@ -22,6 +23,10 @@
 __BEGIN_DECLS
 
 #include <string.h>
+
+/** \addtogroup system_types
+    @{
+*/
 
 /** \brief  Copy a block of memory, 4 bytes at a time.
 
@@ -74,6 +79,8 @@ void * memcpy2(void * dest, const void *src, size_t count);
     \return                 The original value of dest.
 */
 void * memset2(void * s, unsigned short c, size_t count);
+
+/** @} */
 
 __END_DECLS
 

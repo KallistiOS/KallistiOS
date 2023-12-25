@@ -39,7 +39,7 @@ int check_start(void) {
    do any parsing =) */
 #include "graphic.xpm"
 
-/* LCD Test: this will do a grayscale seperation into several "frames" and
+/* LCD Test: this will do a grayscale separation into several "frames" and
    flip through them quickly to give the illusion of grayscale on the LCD
    display. */
 uint8 lcd_disp[8][48 * 32 / 8];

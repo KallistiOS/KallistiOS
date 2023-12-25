@@ -1,14 +1,15 @@
 /* KallistiOS ##version##
 
    dc/biosfont.h
-   (c)2000-2001 Megan Potter
-   Japanese Functions (c)2002 Kazuaki Matsumoto
-   (c)2017 Donald Haase
+   Copyright (C) 2000-2001 Megan Potter
+   Japanese Functions Copyright (C) 2002 Kazuaki Matsumoto
+   Copyright (C) 2017 Donald Haase
 
 */
 
-/** \file   dc/biosfont.h
-    \brief  BIOS font drawing functions.
+/** \file    dc/biosfont.h
+    \brief   BIOS font drawing functions.
+    \ingroup bfont
 
     This file provides support for utilizing the font built into the Dreamcast's
     BIOS. These functions allow access to both the western character set and
@@ -27,7 +28,13 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 
+/** \defgroup bfont     BIOS
+    \brief              API for the Dreamcast's built-in BIOS font
+    \ingroup            video_fonts
+*/
+
 /** \defgroup bfont_size  Dimensions of the Bios Font
+    \ingroup              bfont
     @{
 */
 #define BFONT_THIN_WIDTH                        12   /**< \brief Width of Thin Font (ISO8859_1, half-JP) */
@@ -36,7 +43,9 @@ __BEGIN_DECLS
 /** @} */
 
 #define JISX_0208_ROW_SIZE  94
-/** \defgroup bfont_indicies Structure of the Bios Font
+/** \defgroup bfont_indicies Structure
+    \brief                   Structure of the Bios Font
+    \ingroup                 bfont
     @{
 */
 #define BFONT_NARROW_START          0   /**< \brief Start of Narrow Characters in Font Block */
@@ -220,7 +229,8 @@ __BEGIN_DECLS
 #define BFONT_ICON_EMBROIDERY            0x80
 /** @} */
 
-/** \brief  Set the font foreground color.
+/** \brief   Set the font foreground color.
+    \ingroup bfont
 
     This function selects the foreground color to draw when a pixel is opaque in
     the font. The value passed in for the color should be in whatever pixel
@@ -231,7 +241,8 @@ __BEGIN_DECLS
 */
 uint32 bfont_set_foreground_color(uint32 c);
 
-/** \brief  Set the font background color.
+/** \brief   Set the font background color.
+    \ingroup bfont
 
     This function selects the background color to draw when a pixel is drawn in
     the font. This color is only used for pixels not covered by the font when
@@ -242,7 +253,8 @@ uint32 bfont_set_foreground_color(uint32 c);
 */
 uint32 bfont_set_background_color(uint32 c);
 
-/** \brief  Set the font to draw 32-bit color.
+/** \brief   Set the font to draw 32-bit color.
+    \ingroup bfont
 
     This function changes whether the font draws colors as 32-bit or 16-bit. The
     default is to use 16-bit.
@@ -259,7 +271,8 @@ int bfont_set_32bit_mode(int on)
 #define BFONT_CODE_SJIS         2   /**< \brief Shift-JIS charset */
 #define BFONT_CODE_RAW          3   /**< \brief Raw indexing to the BFONT */
 
-/** \brief  Set the font encoding.
+/** \brief   Set the font encoding.
+    \ingroup bfont
 
     This function selects the font encoding that is used for the font. This
     allows you to select between the various character sets available.
@@ -272,7 +285,8 @@ int bfont_set_32bit_mode(int on)
 */
 void bfont_set_encoding(uint8 enc);
 
-/** \brief  Find an ISO-8859-1 character in the font.
+/** \brief   Find an ISO-8859-1 character in the font.
+    \ingroup bfont
 
     This function retrieves a pointer to the font data for the specified
     character in the font, if its available. Generally, you will not have to
@@ -283,7 +297,8 @@ void bfont_set_encoding(uint8 enc);
 */
 uint8 *bfont_find_char(uint32 ch);
 
-/** \brief  Find an full-width Japanese character in the font.
+/** \brief   Find an full-width Japanese character in the font.
+    \ingroup bfont
 
     This function retrieves a pointer to the font data for the specified
     character in the font, if its available. Generally, you will not have to
@@ -296,7 +311,8 @@ uint8 *bfont_find_char(uint32 ch);
 */
 uint8 *bfont_find_char_jp(uint32 ch);
 
-/** \brief  Find an half-width Japanese character in the font.
+/** \brief   Find an half-width Japanese character in the font.
+    \ingroup bfont
 
     This function retrieves a pointer to the font data for the specified
     character in the font, if its available. Generally, you will not have to
@@ -309,12 +325,13 @@ uint8 *bfont_find_char_jp(uint32 ch);
 */
 uint8 *bfont_find_char_jp_half(uint32 ch);
 
-/** \brief Draw a single character of any sort to the buffer.
+/** \brief   Draw a single character of any sort to the buffer.
+    \ingroup bfont
 
     This function draws a single character in the set encoding to the given
     buffer. This function sits under draw, draw_thin, and draw_wide, while
     exposing the colors and bitdepths desired. This will allow the writing
-    of bfont characters to palletted textures.
+    of bfont characters to paletted textures.
 
     \param buffer       The buffer to draw to.
     \param bufwidth     The width of the buffer in pixels.
@@ -332,7 +349,8 @@ unsigned char bfont_draw_ex(uint8 *buffer, uint32 bufwidth, uint32 fg,
                             uint32 bg, uint8 bpp, uint8 opaque, uint32 c,
                             uint8 wide, uint8 iskana);
 
-/** \brief  Draw a single character to a buffer.
+/** \brief   Draw a single character to a buffer.
+    \ingroup bfont
 
     This function draws a single character in the set encoding to the given
     buffer. Calling this is equivalent to calling bfont_draw_thin() with 0 for
@@ -347,7 +365,8 @@ unsigned char bfont_draw_ex(uint8 *buffer, uint32 bufwidth, uint32 fg,
 */
 unsigned char bfont_draw(void *buffer, uint32 bufwidth, uint8 opaque, uint32 c);
 
-/** \brief  Draw a single thin character to a buffer.
+/** \brief   Draw a single thin character to a buffer.
+    \ingroup bfont
 
     This function draws a single character in the set encoding to the given
     buffer. This only works with ISO-8859-1 characters and half-width kana.
@@ -363,7 +382,8 @@ unsigned char bfont_draw(void *buffer, uint32 bufwidth, uint8 opaque, uint32 c);
 unsigned char bfont_draw_thin(void *buffer, uint32 bufwidth, uint8 opaque,
                               uint32 c, uint8 iskana);
 
-/** \brief  Draw a single wide character to a buffer.
+/** \brief   Draw a single wide character to a buffer.
+    \ingroup bfont
 
     This function draws a single character in the set encoding to the given
     buffer. This only works with full-width kana and kanji.
@@ -378,7 +398,8 @@ unsigned char bfont_draw_thin(void *buffer, uint32 bufwidth, uint8 opaque,
 unsigned char bfont_draw_wide(void *buffer, uint32 bufwidth, uint8 opaque,
                               uint32 c);
 
-/** \brief  Draw a full string to any sort of buffer.
+/** \brief   Draw a full string to any sort of buffer.
+    \ingroup bfont
 
     This function draws a NUL-terminated string in the set encoding to the given
     buffer. This will automatically handle mixed half and full-width characters
@@ -398,7 +419,8 @@ unsigned char bfont_draw_wide(void *buffer, uint32 bufwidth, uint8 opaque,
 void bfont_draw_str_ex(void *b, uint32 width, uint32 fg, uint32 bg, uint8 bpp,
                        uint8 opaque, const char *str);
 
-/** \brief  Draw a full string to a buffer.
+/** \brief   Draw a full string to a buffer.
+    \ingroup bfont
 
     This function draws a NUL-terminated string in the set encoding to the given
     buffer. This will automatically handle mixed half and full-width characters
@@ -413,7 +435,8 @@ void bfont_draw_str_ex(void *b, uint32 width, uint32 fg, uint32 bg, uint8 bpp,
 */
 void bfont_draw_str(void *b, uint32 width, uint8 opaque, const char *str);
 
-/** \brief  Find a VMU icon.
+/** \brief   Find a VMU icon.
+    \ingroup bfont
 
     This function retrieves a pointer to the icon data for the specified VMU
     icon in the bios, if its available. The icon data is flipped both vertically

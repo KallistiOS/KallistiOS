@@ -5,8 +5,9 @@
 
 */
 
-/** \file   dc/vmu_pkg.h
-    \brief  VMU Packaging functionality.
+/** \file    dc/vmu_pkg.h
+    \brief   VMU Packaging functionality.
+    \ingroup vmu_package
 
     This file provides declarations for managing the headers that must be
     attached to VMU files for the BIOS to pay attention to them. This does not
@@ -24,7 +25,17 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 
-/** \brief  VMU Package type.
+/** \defgroup   vmu_package     Header Package
+    \brief                      API for Managing VMU File Headers
+    \ingroup                    vmu
+
+    This API is provided as a utility for easy management of VMS file headers.
+    These headers must be present on every file saved within the VMU's
+    filesystem for both the Dreamcast and VMU's BIOS to detect them properly.
+*/
+
+/** \brief   VMU Package type.
+    \ingroup vmu_package
 
     Anyone wanting to package a VMU file should create one of these somewhere;
     eventually it will be turned into a flat file that you can save using
@@ -46,7 +57,8 @@ typedef struct vmu_pkg {
     const uint8 *data;              /**< \brief Payload data */
 } vmu_pkg_t;
 
-/** \brief  Final VMU package type.
+/** \brief   Final VMU package type.
+    \ingroup vmu_package
 
     This structure will be written into the file itself, not vmu_pkg_t.
 
@@ -67,7 +79,9 @@ typedef struct vmu_hdr {
     /* Eyecatch palette + bitmap */
 } vmu_hdr_t;
 
-/** \defgroup vmu_ectype    Eyecatch types.
+/** \defgroup vmu_ectype    Eyecatch Types
+    \brief                  Values for various VMU eyecatch formats
+    \ingroup                vmu_package
 
     All eyecatches are 72x56, but the pixel format is variable. Note that in all
     of the cases which use a palette, the palette entries are in ARGB4444 format
@@ -81,7 +95,8 @@ typedef struct vmu_hdr {
 #define VMUPKG_EC_16COL     3   /**< \brief 16-color palette */
 /** @} */
 
-/** \brief  Convert a vmu_pkg_t into an array of uint8s.
+/** \brief   Convert a vmu_pkg_t into an array of uint8s.
+    \ingroup vmu_package
 
     This function converts a vmu_pkg_t structure into an array of uint8's which
     may be written to a VMU file via fs_vmu, or whatever.
@@ -93,7 +108,8 @@ typedef struct vmu_hdr {
 */
 int vmu_pkg_build(vmu_pkg_t *src, uint8 ** dst, int * dst_size);
 
-/** \brief  Parse an array of uint8s into a vmu_pkg_t.
+/** \brief   Parse an array of uint8s into a vmu_pkg_t.
+    \ingroup vmu_package
 
     This function does the opposite of vmu_pkg_build and is used to parse VMU
     files read in.

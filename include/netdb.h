@@ -5,8 +5,9 @@
 
 */
 
-/** \file   netdb.h
-    \brief  Network address database functionality.
+/** \file    netdb.h
+    \brief   Network address database functionality.
+    \ingroup network_db
 
     This file contains functions related to network address lookups, usually
     performed through DNS.
@@ -25,7 +26,13 @@ __BEGIN_DECLS
 #include <sys/socket.h>
 #include <inttypes.h>
 
-/** \brief  Network host entry.
+/** \defgroup network_db    Address Database
+    \brief                  Network Address Database Functionality
+    \ingroup                networking
+*/
+
+/** \brief   Network host entry.
+    \ingroup network_db
 
     This structure describes a network host entry in the address database. When
     looking up an address with the gethostbyname() function, one of these will
@@ -42,7 +49,8 @@ struct hostent {
 #define h_addr h_addr_list[0]       /**< \brief Primary network address. */
 };
 
-/** \brief  Network address information structure.
+/** \brief   Network address information structure.
+    \ingroup network_db
 
     This structure describes information on an address in the database. This
     structure is used by functions such as getaddrinfo() to return information
@@ -62,11 +70,14 @@ struct addrinfo {
     struct addrinfo *ai_next;       /**< \brief Next address entry (if any). */
 };
 
-/** \brief  Error value for gethostbyname().
-    \see    herrno_vals */
+/** \brief   Error value for gethostbyname().
+    \ingroup network_db
+    \see     herrno_vals */
 extern int h_errno;
 
-/** \defgroup herrno_vals               Error values for the h_errno variable
+/** \defgroup herrno_vals   h_errno Error Values
+    \brief                  Error values for the h_errno variable
+    \ingroup                network_db
 
     These are the possible values for h_errno, indicating errors returns from
     the gethostbyname() function.
@@ -79,7 +90,9 @@ extern int h_errno;
 #define NO_DATA             4       /**< \brief Host found, but no data. */
 /** @} */
 
-/** \defgroup addrinfo_errors           Errors for the getaddrinfo() function
+/** \defgroup addrinfo_errors   getaddrinfo() Error Values
+    \brief                      Errors for the getaddrinfo() function
+    \ingroup                    network_db
 
     These are the possible error return values from the getaddrinfo() function.
 
@@ -97,7 +110,9 @@ extern int h_errno;
 #define EAI_OVERFLOW        10      /**< \brief Argument buffer overflow. */
 /** @} */
 
-/** \defgroup addrinfo_flags            Flags for ai_flags in struct addrinfo
+/** \defgroup addrinfo_flags    addrinfo ai_flags
+    \brief                      Flags for ai_flags in struct addrinfo
+    \ingroup                    network_db
 
     These are the flags that can be set in the ai_flags field of struct
     addrinfo. These values can be bitwise ORed together.
@@ -117,7 +132,8 @@ extern int h_errno;
                                                 the system has a valid addr. */
 /** @} */
 
-/** \brief  Free an address information structure returned by getaddrinfo().
+/** \brief   Free an address information structure returned by getaddrinfo().
+    \ingroup network_db
 
     This function cleans up any memory associated with the specified
     struct addrinfo, which was returned previously by a call to getaddrinfo().
@@ -126,7 +142,8 @@ extern int h_errno;
 */
 void freeaddrinfo(struct addrinfo *ai);
 
-/** \brief  Get information about a specified addresss.
+/** \brief   Get information about a specified address.
+    \ingroup network_db
 
     This function translates the name of a host and service into a set of socket
     addresses and related information to be used in creating a socket. This
@@ -143,7 +160,8 @@ void freeaddrinfo(struct addrinfo *ai);
 int getaddrinfo(const char *nodename, const char *servname,
                 const struct addrinfo *hints, struct addrinfo **res);
 
-/** \brief  Look up a host by its name.
+/** \brief   Look up a host by its name.
+    \ingroup network_db
 
     This function queries the network address database (possibly recursively)
     for the network address of the specified hostname. This will first search
@@ -160,7 +178,8 @@ int getaddrinfo(const char *nodename, const char *servname,
 */
 struct hostent *gethostbyname(const char *name);
 
-/** \brief  Look up a host by its name and address family.
+/** \brief   Look up a host by its name and address family.
+    \ingroup network_db
 
     This function queries the network address database (possibly recursively)
     for the network address of the specified hostname. This will first search

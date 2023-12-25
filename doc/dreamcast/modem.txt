@@ -1,7 +1,7 @@
 KOS Notes
 ---------
 This driver was imported from Nick's sources, v1.1. The driver code is
-loacated in kernel/arch/dreamcast/hardware/modem, and the headers are
+located in kernel/arch/dreamcast/hardware/modem, and the headers are
 in kernel/arch/dreamcast/include/dc/modem. The original readme.txt
 follows:
 
@@ -9,11 +9,11 @@ follows:
 Changes
 -------
 v1.1
- - Changed the user accessable (non internal) function names to use a KOS
+ - Changed the user accessible (non internal) function names to use a KOS
    style naming convention
  - Made some internal functions actually internal
  - Added modem_has_data
- - Added descriptions for all user accessable functions
+ - Added descriptions for all user accessible functions
 
 Important
 ---------
@@ -50,7 +50,7 @@ Important
 
 Description of the modes of operation
 -------------------------------------
-The general connection routine: (This applys to ALL modes of operation!)
+The general connection routine: (This applies to ALL modes of operation!)
   1.) Set the mode of operation
       * If the mode is "remote mode" then make sure you dial a number before
         going to the next step.
@@ -72,7 +72,7 @@ The general connection routine: (This applys to ALL modes of operation!)
 
     As soon as this mode is set, the line is opened and the driver waits until
     the start of a handshake signal signal has been detected. It will then
-    attempt to connect automaticaly. The Dreamcast will always answer
+    attempt to connect automatically. The Dreamcast will always answer
     handshake signals not send them, this is mostly because it works out very
     well if you want to establish a direct connection between your Dreamcast
     and a computer.
@@ -106,7 +106,7 @@ int modem_is_connecting(void);
 Description: Determines if the modem is in the process of connecting to a
              remote modem.
 Returns:     A non zero value if a connection is being established, or zero
-             if a connection has been established or an error has occured.
+             if a connection has been established or an error has occurred.
 
 int modem_is_connected(void);
 Description: Determines if the modem has connected to a remote modem.

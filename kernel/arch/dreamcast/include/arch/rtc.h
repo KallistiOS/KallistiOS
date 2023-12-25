@@ -30,7 +30,8 @@ __BEGIN_DECLS
 #include <time.h>
 
 /** \defgroup rtc Real-Time Clock
-    \brief Real-Time Clock (RTC) Management
+    \brief        Real-Time Clock (RTC) Management
+    \ingroup      timing 
 
     Provides an API for fetching and managing the date/time using
     the Dreamcast's real-time clock. All timestamps are in standard
@@ -92,7 +93,7 @@ time_t rtc_unix_secs(void);
 */
 int rtc_set_unix_secs(time_t time);
 
-/** \brief   Get the time since the sytem was booted.
+/** \brief   Get the time since the system was booted.
     \ingroup rtc
 
     This function retrieves the cached RTC value from when KallistiOS was started. As

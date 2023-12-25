@@ -100,7 +100,7 @@ static void wait_data(void) {
     }
 }
 
-/* Reads a chunk of ascii out of the hd parms table */
+/* Reads a chunk of ascii out of the hd params table */
 static char *get_ascii(uint16 *in_data, uint32 off_start, uint32 off_end) {
     static char ret_val [255];
     unsigned loop;

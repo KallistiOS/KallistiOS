@@ -8,8 +8,9 @@
 
 */
 
-/** \file   kos/init.h
-    \brief  Initialization-related flags and macros.
+/** \file    kos/init.h
+    \brief   Initialization-related flags and macros.
+    \ingroup init_flags
 
     This file provides initialization-related flags and macros that can be used
     to set up various subsystems of KOS on startup. Only flags that are
@@ -39,6 +40,11 @@ __BEGIN_DECLS
 #include <kos/init_base.h>
 #include <stdint.h>
 
+/** \defgroup init_flags Initialization
+    \brief               KOS Driver Subsystem and Component Initialization Flags
+    \ingroup             system
+*/
+
 /** \cond */
 #ifdef __cplusplus
 #define __kos_cplusplus 1
@@ -46,16 +52,16 @@ __BEGIN_DECLS
 #define __kos_cplusplus 0
 #endif
 
- #define __KOS_INIT_FLAGS_0(flags) \
-     const uint32_t __kos_init_flags = (flags); \
-     KOS_INIT_FLAG(flags, INIT_NET, arch_init_net); \
-     KOS_INIT_FLAG(flags, INIT_NET, net_shutdown); \
-     KOS_INIT_FLAG(flags, INIT_NET, bba_la_init); \
-     KOS_INIT_FLAG(flags, INIT_NET, bba_la_shutdown); \
-     KOS_INIT_FLAG(flags, INIT_FS_ROMDISK, fs_romdisk_init); \
-     KOS_INIT_FLAG(flags, INIT_FS_ROMDISK, fs_romdisk_shutdown); \
-     KOS_INIT_FLAG(flags, INIT_EXPORT, export_init); \
-     KOS_INIT_FLAGS_ARCH(flags)
+#define __KOS_INIT_FLAGS_0(flags) \
+    const uint32_t __kos_init_flags = (flags); \
+    KOS_INIT_FLAG(flags, INIT_NET, arch_init_net); \
+    KOS_INIT_FLAG(flags, INIT_NET, net_shutdown); \
+    KOS_INIT_FLAG(flags, INIT_NET, bba_la_init); \
+    KOS_INIT_FLAG(flags, INIT_NET, bba_la_shutdown); \
+    KOS_INIT_FLAG(flags, INIT_FS_ROMDISK, fs_romdisk_init); \
+    KOS_INIT_FLAG(flags, INIT_FS_ROMDISK, fs_romdisk_shutdown); \
+    KOS_INIT_FLAG(flags, INIT_EXPORT, export_init); \
+    KOS_INIT_FLAGS_ARCH(flags)
 
 #define __KOS_INIT_FLAGS_1(flags) \
     extern "C" { \
@@ -71,7 +77,8 @@ __BEGIN_DECLS
 extern const uint32_t __kos_init_flags;
 /** \endcond */
 
-/** \brief  Exports and initializes the given KOS subsystems.
+/** \brief   Exports and initializes the given KOS subsystems.
+    \ingroup init_flags
 
     KOS_INIT_FLAGS() provides a mechanism through which various components
     of KOS can be enabled and initialized depending on whether their flag
@@ -99,15 +106,18 @@ extern void * __kos_romdisk;
 /** \brief  State that you don't want a romdisk. */
 #define KOS_INIT_ROMDISK_NONE   NULL
 
-/** \brief  Register a single function to be called very early in the boot
-            process, before the BSS section is cleared.
+/** \brief   Register a single function to be called very early in the boot
+             process, before the BSS section is cleared.
+    \ingroup init_flags
 
     \param  func            The function to register. The prototype should be
                             void func(void)
 */
 #define KOS_INIT_EARLY(func) void (*__kos_init_early_fn)(void) = (func)
 
-/** \defgroup kos_initflags     Available flags for initialization
+/** \defgroup kos_initflags     Generic Flags
+    \brief                      Generic flags for use with KOS_INIT_FLAGS()
+    \ingroup  init_flags
 
     These are the architecture-independent flags that can be specified with
     KOS_INIT_FLAGS.
@@ -121,7 +131,7 @@ extern void * __kos_romdisk;
 
 #define INIT_NONE        0x00000000  /**< \brief Don't init optional things */
 #define INIT_IRQ         0x00000001  /**< \brief Enable IRQs at startup */
-/* Preemptive mode is the only mode now. Keeping define for compatability. */
+/* Preemptive mode is the only mode now. Keeping define for compatibility. */
 #define INIT_THD_PREEMPT 0x00000002  /**< \deprecated Already default mode */
 #define INIT_NET         0x00000004  /**< \brief Enable built-in networking */
 #define INIT_MALLOCSTATS 0x00000008  /**< \brief Enable malloc statistics */

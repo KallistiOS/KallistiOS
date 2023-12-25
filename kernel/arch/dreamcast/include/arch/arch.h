@@ -6,8 +6,9 @@
 
 */
 
-/** \file   arch/arch.h
-    \brief  Dreamcast architecture specific options.
+/** \file    arch/arch.h
+    \brief   Dreamcast architecture specific options.
+    \ingroup arch
 
     This file has various architecture specific options defined in it. Also, any
     functions that start with arch_ are in here.
@@ -22,6 +23,12 @@
 __BEGIN_DECLS
 
 #include <arch/types.h>
+
+/** \defgroup arch  Architecture
+    \brief          Dreamcast Architecture-Specific Options and high-level API
+    \ingroup        system
+    @{
+*/
 
 /** \brief  Top of memory available, depending on memory size. */
 #ifdef __KOS_GCC_32MB__
@@ -83,9 +90,12 @@ void arch_panic(const char *str) __noreturn;
 */
 void arch_main(void) __noreturn;
 
-/** \defgroup arch_retpaths         Potential exit paths from the kernel on
-                                    arch_exit()
+/** @} */
 
+/** \defgroup arch_retpaths Exit Paths
+    \brief                  Potential exit paths from the kernel on
+                            arch_exit()
+    \ingroup                arch
     @{
 */
 #define ARCH_EXIT_RETURN    1   /**< \brief Return to loader */
@@ -93,7 +103,8 @@ void arch_main(void) __noreturn;
 #define ARCH_EXIT_REBOOT    3   /**< \brief Reboot the machine */
 /** @} */
 
-/** \brief  Set the exit path.
+/** \brief   Set the exit path.
+    \ingroup arch
 
     The default, if you don't call this, is ARCH_EXIT_RETURN.
 
@@ -102,57 +113,74 @@ void arch_main(void) __noreturn;
 */
 void arch_set_exit_path(int path);
 
-/** \brief  Generic kernel "exit" point.
+/** \brief   Generic kernel "exit" point.
+    \ingroup arch
     \note                   This function will never return!
 */
 void arch_exit(void) __noreturn;
 
-/** \brief  Kernel "return" point.
+/** \brief   Kernel "return" point.
+    \ingroup arch
     \note                   This function will never return!
 */
 void arch_return(int ret_code) __noreturn;
 
-/** \brief  Kernel "abort" point.
+/** \brief   Kernel "abort" point.
+    \ingroup arch
     \note                   This function will never return!
 */
 void arch_abort(void) __noreturn;
 
-/** \brief  Kernel "reboot" call.
+/** \brief   Kernel "reboot" call.
+    \ingroup arch
     \note                   This function will never return!
 */
 void arch_reboot(void) __noreturn;
 
-/** \brief Kernel "exit to menu" call.
+/** \brief   Kernel "exit to menu" call.
+    \ingroup arch
     \note                   This function will never return!
 */
 void arch_menu(void) __noreturn;
 
-/** \defgroup hw_memsizes           Console memory sizes
+/** \defgroup hw_memsizes           Memory Capacity
+    \brief                          Console memory sizes
+    \ingroup                        arch
+
     These are the various memory sizes, in bytes, that can be returned by the
     HW_MEMSIZE macro.
+
     @{
 */
 #define HW_MEM_16           16777216   /**< \brief 16M retail Dreamcast */
 #define HW_MEM_32           33554432   /**< \brief 32M NAOMI/modded Dreamcast */
 /** @} */
 
-/** \brief  Determine how much memory is installed in current machine.
+/** \brief   Determine how much memory is installed in current machine.
+    \ingroup arch
+
     \return The total size of system memory in bytes.
 */
 #define HW_MEMSIZE (_arch_mem_top - 0x8c000000)
 
-/** \brief Use this macro to easily determine if system has 32MB of RAM.
+/** \brief   Use this macro to easily determine if system has 32MB of RAM.
+    \ingroup arch
+
     \return Non-zero if console has 32MB of RAM, zero otherwise
 */
 #define DBL_MEM (_arch_mem_top - 0x8d000000)
 
 /* These are in mm.c */
-/** \brief  Initialize the memory management system.
+/** \brief   Initialize the memory management system.
+    \ingroup arch
+
     \retval 0               On success (no error conditions defined).
 */
 int mm_init(void);
 
-/** \brief  Request more core memory from the system.
+/** \brief   Request more core memory from the system.
+    \ingroup arch
+
     \param  increment       The number of bytes requested.
     \return                 A pointer to the memory.
     \note                   This function will panic if no memory is available.
@@ -164,7 +192,8 @@ void * mm_sbrk(unsigned long increment);
 #include <kos/init.h>
 
 /* Dreamcast-specific arch init things */
-/** \brief  Jump back to the bootloader.
+/** \brief   Jump back to the bootloader.
+    \ingroup arch
 
     You generally shouldn't use this function, but rather use arch_exit() or
     exit() instead.
@@ -173,7 +202,8 @@ void * mm_sbrk(unsigned long increment);
 */
 void arch_real_exit(int ret_code) __noreturn;
 
-/** \brief  Initialize bare-bones hardware systems.
+/** \brief   Initialize bare-bones hardware systems.
+    \ingroup arch
 
     This will be done automatically for you on start by the default arch_main(),
     so you shouldn't have to deal with this yourself.
@@ -182,7 +212,8 @@ void arch_real_exit(int ret_code) __noreturn;
 */
 int hardware_sys_init(void);
 
-/** \brief  Initialize some peripheral systems.
+/** \brief   Initialize some peripheral systems.
+    \ingroup arch
 
     This will be done automatically for you on start by the default arch_main(),
     so you shouldn't have to deal with this yourself.
@@ -191,7 +222,8 @@ int hardware_sys_init(void);
 */
 int hardware_periph_init(void);
 
-/** \brief  Shut down hardware that was initted.
+/** \brief   Shut down hardware that was initted.
+    \ingroup arch
 
     This function will shut down anything initted with hardware_sys_init() and
     hardware_periph_init(). This will be done for you automatically by the
@@ -199,7 +231,9 @@ int hardware_periph_init(void);
 */
 void hardware_shutdown(void);
 
-/** \defgroup hw_consoles           Console types
+/** \defgroup hw_consoles           Console Types
+    \brief                          Byte values returned by hardware_sys_mode()
+    \ingroup  arch
 
     These are the various console types that can be returned by the
     hardware_sys_mode() function.
@@ -210,12 +244,16 @@ void hardware_shutdown(void);
 #define HW_TYPE_SET5        0x9     /**< \brief A Set5.xx devkit. */
 /** @} */
 
-/** \defgroup hw_regions            Region codes
+/** \defgroup hw_regions            Region Codes
+    \brief                          Values returned by hardware_sys_mode();
+    \ingroup  arch
 
     These are the various region codes that can be returned by the
-    hardware_sys_mode() function. Note that a retail Dreamcast will always
-    return 0 for the region code. You must read the region of a retail device
-    from the flashrom.
+    hardware_sys_mode() function. 
+
+    \note
+    A retail Dreamcast will always return 0 for the region code. 
+    You must read the region of a retail device from the flashrom.
 
     \see    fr_region
     \see    flashrom_get_region()
@@ -228,7 +266,8 @@ void hardware_shutdown(void);
 #define HW_REGION_EUROPE    0xC     /**< \brief Europe (PAL) */
 /** @} */
 
-/** \brief  Retrieve the system mode of the console in use.
+/** \brief   Retrieve the system mode of the console in use.
+    \ingroup arch
 
     This function retrieves the system mode register of the console that is in
     use. This register details the actual system type in use (and in some system
@@ -246,47 +285,55 @@ int hardware_sys_mode(int *region);
 /* These three aught to be in their own header file at some point, but for now,
    they'll stay here. */
 
-/** \brief  Retrieve the banner printed at program initialization.
+/** \brief   Retrieve the banner printed at program initialization.
+    \ingroup attribution
 
     This function retrieves the banner string that is printed at initialization
     time by the kernel. This contains the version of KOS in use and basic
     information about the environment in which it was compiled.
 
-    \retval                 A pointer to the banner string.
+    \return                 A pointer to the banner string.
 */
 const char *kos_get_banner(void);
 
-/** \brief  Retrieve the license information for the compiled copy of KOS.
+/** \brief   Retrieve the license information for the compiled copy of KOS.
+    \ingroup attribution
 
     This function retrieves a string containing the license terms that the
     version of KOS in use is distributed under. This can be used to easily add
     information to your program to be displayed at runtime.
 
-    \retval                 A pointer to the license terms.
+    \return                 A pointer to the license terms.
 */
 const char *kos_get_license(void);
 
-/** \brief  Retrieve a list of authors and the dates of their contributions.
+/** \brief   Retrieve a list of authors and the dates of their contributions.
+    \ingroup attribution
 
     This function retrieves the copyright information for the version of KOS in
     use. This function can be used to add such information to the credits of
     programs using KOS to give the appropriate credit to those that have worked
     on KOS.
 
+    \remark
     Remember, you do need to give credit where credit is due, and this is an
     easy way to do so. ;-)
 
-    \retval                 A pointer to the authors' copyright information.
+    \return                 A pointer to the authors' copyright information.
 */
 const char *kos_get_authors(void);
 
-/** \brief  Dreamcast specific sleep mode "function". */
+/** \brief   Dreamcast specific sleep mode "function". 
+    \ingroup arch 
+*/
 #define arch_sleep() do { \
         __asm__ __volatile__("sleep"); \
     } while(0)
 
-/** \brief  DC specific "function" to get the return address from the current
-            function.
+/** \brief   DC specific "function" to get the return address from the current
+             function.
+    \ingroup arch
+
     \return                 The return address of the current function.
 */
 #define arch_get_ret_addr() ({ \
@@ -301,8 +348,10 @@ const char *kos_get_authors(void);
    valid if you have compiled your code WITHOUT -fomit-frame-pointer. These
    are mainly useful for getting a stack trace from an error. */
 
-/** \brief  DC specific "function" to get the frame pointer from the current
-            function.
+/** \brief   DC specific "function" to get the frame pointer from the current
+             function.
+    \ingroup arch
+
     \return                 The frame pointer from the current function.
     \note                   This only works if you don't disable frame pointers.
 */
@@ -314,24 +363,27 @@ const char *kos_get_authors(void);
                              : "memory" ); \
         fp; })
 
-/** \brief  Pass in a frame pointer value to get the return address for the
-            given frame.
+/** \brief   Pass in a frame pointer value to get the return address for the
+             given frame.
+    \ingroup arch
 
     \param  fptr            The frame pointer to look at.
     \return                 The return address of the pointer.
 */
 #define arch_fptr_ret_addr(fptr) (*((uint32*)fptr))
 
-/** \brief  Pass in a frame pointer value to get the previous frame pointer for
-            the given frame.
+/** \brief   Pass in a frame pointer value to get the previous frame pointer for
+             the given frame.
+    \ingroup arch
 
     \param  fptr            The frame pointer to look at.
     \return                 The previous frame pointer.
 */
 #define arch_fptr_next(fptr) (*((uint32*)(fptr+4)))
 
-/** \brief  Returns true if the passed address is likely to be valid. Doesn't
-            have to be exact, just a sort of general idea.
+/** \brief   Returns true if the passed address is likely to be valid. Doesn't
+             have to be exact, just a sort of general idea.
+    \ingroup arch
 
     \return                 Whether the address is valid or not for normal
                             memory access.

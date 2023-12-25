@@ -147,7 +147,7 @@ int cdrom_exec_cmd_timed(int cmd, void *param, int timeout) {
     int status[4] = {
         0, /* Error code 1 */
         0, /* Error code 2 */
-        0, /* Transfered size */
+        0, /* Transferred size */
         0  /* ATA status waiting */
     };
     gdc_cmd_hnd_t hnd;

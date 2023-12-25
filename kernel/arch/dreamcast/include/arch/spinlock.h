@@ -5,8 +5,9 @@
 
 */
 
-/** \file   arch/spinlock.h
-    \brief  Simple locking.
+/** \file    arch/spinlock.h
+    \brief   Simple locking.
+    \ingroup kthreads
 
     This file contains definitions for very simple locks. Most of the time, you
     will probably not use such low-level locking, but will opt for something

@@ -282,7 +282,7 @@ genromfs that does this for you. Here is a URL:
 
 ftp://sunsite.unc.edu/pub/Linux/system/recovery/genromfs-0.3.tar.gz
 
-Additionally, I have provided a copy of this program for your convienence.
+Additionally, I have provided a copy of this program for your convenience.
 You will need to edit your environ.sh/tcsh to change the paths if you want
 it to work "out of the box". If you are using Cygwin you will also need to
 make sure there's a /tmp path mount for bin2o's usage.

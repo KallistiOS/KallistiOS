@@ -28,7 +28,14 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 
-/** \defgroup fr_parts  Partitions available in the flashrom
+/** \defgroup flashrom  Flashrom
+    \brief              Driver for the Dreamcast's Internal Flash Storage
+    \ingroup            vfs
+*/
+
+/** \defgroup fr_parts  Partitions
+    \brief              Partitions available within the flashrom
+    \ingroup            flashrom
     @{
 */
 #define FLASHROM_PT_SYSTEM      0   /**< \brief Factory settings (read-only, 8K) */
@@ -39,7 +46,9 @@ __BEGIN_DECLS
 /** @} */
 
 
-/** \defgroup fr_blocks Logical blocks available in the flashrom
+/** \defgroup fr_blocks Logical Blocks
+    \brief              Logical blocks available in the flashrom
+    \ingroup            flashrom
     @{
 */
 #define FLASHROM_B1_SYSCFG          0x05    /**< \brief System config (BLOCK_1) */
@@ -70,7 +79,9 @@ __BEGIN_DECLS
 
 #define FLASHROM_OFFSET_CRC         62      /**< \brief Location of CRC in each block */
 
-/** \defgroup fr_errs   Error values for the flashrom_get_block() function
+/** \defgroup fr_errs   Error Values
+    \brief              Error values for the flashrom_get_block() function
+    \ingroup            flashrom
     @{
 */
 #define FLASHROM_ERR_NONE           0       /**< \brief Success */
@@ -85,7 +96,8 @@ __BEGIN_DECLS
 #define FLASHROM_ERR_READ_BLOCK     -9      /**< \brief Error reading block */
 /** @} */
 
-/** \brief  Retrieve information about the given partition.
+/** \brief   Retrieve information about the given partition.
+    \ingroup flashrom
 
     This function implements the FLASHROM_INFO syscall; given a partition ID,
     return two ints specifying the beginning and the size of the partition
@@ -99,7 +111,8 @@ __BEGIN_DECLS
 */
 int flashrom_info(int part, int * start_out, int * size_out);
 
-/** \brief  Read data from the flashrom.
+/** \brief   Read data from the flashrom.
+    \ingroup flashrom
 
     This function implements the FLASHROM_READ syscall; given a flashrom offset,
     an output buffer, and a count, this reads data from the flashrom.
@@ -112,7 +125,8 @@ int flashrom_info(int part, int * start_out, int * size_out);
 */
 int flashrom_read(int offset, void * buffer_out, int bytes);
 
-/** \brief  Write data to the flashrom.
+/** \brief   Write data to the flashrom.
+    \ingroup flashrom
 
     This function implements the FLASHROM_WRITE syscall; given a flashrom
     offset, an input buffer, and a count, this writes data to the flashrom.
@@ -129,7 +143,8 @@ int flashrom_read(int offset, void * buffer_out, int bytes);
 */
 int flashrom_write(int offset, void * buffer, int bytes);
 
-/** \brief  Delete data from the flashrom.
+/** \brief   Delete data from the flashrom.
+    \ingroup flashrom
 
     This function implements the FLASHROM_DELETE syscall; given a partition
     offset, that entire partition of the flashrom will be deleted and all data
@@ -146,7 +161,8 @@ int flashrom_delete(int offset);
 
 
 /* Medium-level functions */
-/** \brief  Get a logical block from the specified partition.
+/** \brief   Get a logical block from the specified partition.
+    \ingroup flashrom
 
     This function retrieves the specified block ID from the given partition. The
     newest version of the data is returned.
@@ -162,7 +178,9 @@ int flashrom_get_block(int partid, int blockid, uint8 * buffer_out);
 
 /* Higher level functions */
 
-/** \defgroup fr_langs  Language settings possible in the BIOS menu
+/** \defgroup fr_langs  Language Settings
+    \brief              Language settings possible in the BIOS menu
+    \ingroup            flashrom
 
     This set of constants will be returned as the language value in the
     flashrom_syscfg_t structure.
@@ -177,7 +195,8 @@ int flashrom_get_block(int partid, int blockid, uint8 * buffer_out);
 #define FLASHROM_LANG_ITALIAN   5   /**< \brief Italian language code */
 /** @} */
 
-/** \brief  System configuration structure.
+/** \brief   System configuration structure.
+    \ingroup flashrom
 
     This structure is filled in with the settings set in the BIOS from the
     flashrom_get_syscfg() function.
@@ -191,7 +210,9 @@ typedef struct flashrom_syscfg {
     int autostart;  /**< \brief Autostart discs? 0 == off, 1 == on */
 } flashrom_syscfg_t;
 
-/** \brief  Retrieve the current system configuration settings.
+/** \brief   Retrieve the current system configuration settings.
+    \ingroup flashrom
+
     \param  out             Storage for the configuration.
     \return                 0 on success, <0 on error.
     \see    fr_errs
@@ -199,7 +220,9 @@ typedef struct flashrom_syscfg {
 int flashrom_get_syscfg(flashrom_syscfg_t * out);
 
 
-/** \defgroup fr_region Region settings possible in the system
+/** \defgroup fr_region Region Settings
+    \brief              Region settings possible in the system
+    \ingroup            flashrom
 
     One of these values should be returned by flashrom_get_region().
 
@@ -211,7 +234,8 @@ int flashrom_get_syscfg(flashrom_syscfg_t * out);
 #define FLASHROM_REGION_EUROPE  3   /**< \brief European region */
 /** @} */
 
-/** \brief  Retrieve the console's region code.
+/** \brief   Retrieve the console's region code.
+    \ingroup flashrom
 
     This function attempts to find the region of the Dreamcast. It may or may
     not work on 100% of Dreamcasts, apparently.
@@ -222,7 +246,9 @@ int flashrom_get_syscfg(flashrom_syscfg_t * out);
 */
 int flashrom_get_region(void);
 
-/** \defgroup fr_method Connection method types
+/** \defgroup fr_method Connection Methods
+    \brief              Connection method types stored within flashrom
+    \ingroup            flashrom
 
     These values are representative of what type of ISP is configured in the
     flashrom.
@@ -233,11 +259,11 @@ int flashrom_get_region(void);
 #define FLASHROM_ISP_DHCP   1   /**< \brief DHCP-based ethernet */
 #define FLASHROM_ISP_PPPOE  2   /**< \brief PPPoE-based ethernet */
 #define FLASHROM_ISP_STATIC 3   /**< \brief Static IP-based ethernet */
-
-
 /** @} */
 
-/** \defgroup fr_fields Valid field constants for the flashrom_ispcfg_t struct
+/** \defgroup fr_fields ISP Config Fields
+    \brief              Valid field constants for the flashrom_ispcfg_t struct
+    \ingroup            flashrom
 
     The valid_fields field of the flashrom_ispcfg_t will have some combination
     of these ORed together to represent what data is filled in and believed
@@ -270,7 +296,9 @@ int flashrom_get_region(void);
 #define FLASHROM_ISP_PHONE2     (1 << 22)   /**< \brief Phone number 2 */
 /** @} */
 
-/** \defgroup fr_flags  Flags for the flashrom_ispcfg_t struct
+/** \defgroup fr_flags  ISP Config Flags
+    \brief              Flags for the flashrom_ispcfg_t struct
+    \ingroup            flashrom
 
     The flags field of the flashrom_ispcfg_t will have some combination of these
     ORed together to represent what settings were set.
@@ -283,7 +311,8 @@ int flashrom_get_region(void);
 #define FLASHROM_ISP_BLIND_DIAL     (1 <<  3)   /**< \brief Blind dial (don't wait for tone) */
 /** @} */
 
-/** \brief  ISP configuration structure.
+/** \brief   ISP configuration structure.
+    \ingroup flashrom
 
     This structure will be filled in by flashrom_get_ispcfg() (DreamPassport) or
     flashrom_get_pw_ispcfg() (PlanetWeb). Thanks to Sam Steele for the
@@ -326,7 +355,8 @@ typedef struct flashrom_ispcfg {
     char    phone2[26];     /**< \brief Phone number 2 */
 } flashrom_ispcfg_t;
 
-/** \brief  Retrieve DreamPassport's ISP configuration.
+/** \brief   Retrieve DreamPassport's ISP configuration.
+    \ingroup flashrom
 
     This function retrieves the console's ISP settings as set by DreamPassport,
     if they exist. You should check the valid_fields bitfield for the part of
@@ -338,7 +368,8 @@ typedef struct flashrom_ispcfg {
 */
 int flashrom_get_ispcfg(flashrom_ispcfg_t * out);
 
-/** \brief  Retrieve PlanetWeb's ISP configuration.
+/** \brief   Retrieve PlanetWeb's ISP configuration.
+    \ingroup flashrom
 
     This function retrieves the console's ISP settings as set by PlanetWeb (1.0
     and 2.1 have been verified to work), if they exist. You should check the

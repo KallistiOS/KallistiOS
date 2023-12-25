@@ -57,7 +57,7 @@ KallistiOS version 2.1.0 -----------------------------------------------
       all the way back in 2005 [Fredrik Ehnbom == FE]
 - *** Added the fs_path_append() function to append path components [LS]
 - *** Added a nanosleep() function to koslib by request [LS]
-- *** Added rewinddir() support to the VFS and serveral filesystems [LS]
+- *** Added rewinddir() support to the VFS and several filesystems [LS]
 - *** Added in C11 threading support [LS]
 - *** Added UDP Lite support to the network stack [LS]
 - DC  Adjust sq_cpy() to use a const pointer for the source [JP]
@@ -198,7 +198,7 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - DC  Rework romdisks [PC]
 - DC  Refactored g2bus API, converted magic values to macros, added
       dc/fifo.h, dc/dmac.h file [AB]
-- DC  Fixes and improvments for G1 ATA devices [Ruslan Rostovtsev == RR]
+- DC  Fixes and improvements for G1 ATA devices [Ruslan Rostovtsev == RR]
 - DC  Fixed and improved SCIF SPI reading for use with SD [RR]
 - DC  SH4 cache improvements [RR]
 - DC  Optimized separating stereo PCM [RR]
@@ -212,6 +212,7 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - DC  Added basic example for micropython KOS port [Aaron Glazer == AG]
 - DC  Improved performance of IRQ context save / restore [PC]
 - DC  Increased resolution of TMU timers + date/time functions [FG && PC]
+- *** Increased resolution of clock() and CLOCKS_PER_SEC to microseconds [FG]
 
 KallistiOS version 2.0.0 -----------------------------------------------
 - DC  Broadband Adapter driver fixes [Megan Potter == MP]
@@ -307,7 +308,7 @@ KallistiOS version 2.0.0 -----------------------------------------------
 - *** Adjusted makejitter makefile to use kos-ports headers [SS]
 - DC  Fill in dirent.attr for directories in is9660 [SS]
 - DC  Applied patch for opening correct iso9660 filenames [Christian Groessler == CG]
-- DC  Fixed bitmask for mouse buttons (makes 3rd button useable) [Fragger]
+- DC  Fixed bitmask for mouse buttons (makes 3rd button usable) [Fragger]
 - DC  Added experimental (read: partially working) render to texture support in
       the PVR module [LS]
 - DC  Added example program for render-to-texture [LS]
@@ -532,7 +533,7 @@ KallistiOS version 1.1.9 ------------------------------------------------
 - *** Changed fs_romdisk to allow multiple romdisk mounts [MP]
 - *** Added fs_copy and fs_load util functions [MP]
 - *** Changed sem_wait() and sem_wait_timed() so it doesn't assert() if
-      called from an interupt [MP]
+      called from an interrupt [MP]
 - *** Added the dlmalloc debugger [MP]
 - DC  Fixed bug with samples >64k looping accidentally [MP]
 - DC  Added stereo sample support [MP]
@@ -603,7 +604,7 @@ KallistiOS version 1.1.8 ------------------------------------------------
       glmisc.c [PB]
 - DC  Added "navi" subarch for my hardware experimenting work [MP]
 - DC  Fixed a bug in the cdrom drive which caused a lockup if the tray
-      was open during startup, and fixes compatability with navi [MP]
+      was open during startup, and fixes compatibility with navi [MP]
 - DC  Added GL_POLYGON and GL_QUAD_STRIP to gldraw.c. Thanks to Jesse Ruffin :)
       [Jesse Ruffin == JR]
 - DC  Various fs_vmu fixes: properly zero out directory entries on unlink,
@@ -640,7 +641,7 @@ KallistiOS version 1.1.8 ------------------------------------------------
 - *** Fix for BMP loader in libimageload [JBM]
 - DC  Japanese support for biosfont [Kazuaki Matsumoto == KM] [MP]
 - DC  Fix a NEARZ clipper bug in KGL. Misc Fixes. Added storage for
-      frustum atttributes [PB]
+      frustum attributes [PB]
 - DC  Change for fs_dcload that lets console output keep going out over
       dcload-ip up to the last second [MP]
 - DC  Removed some assert_msg's in KGL to make threaded programming with
@@ -698,7 +699,7 @@ KallistiOS version 1.1.7 ------------------------------------------------
 - *** Port of libbz2 [Sven Oliver Moll == SOM]
 - *** Changed around build process a bit check the README for
       more info [MP]
-- *** Libc split into seperate directory [MP]
+- *** Libc split into separate directory [MP]
 - DC  Renamed current g2_* stuff to asic_* [MP]
 - DC  Added new "g2bus" module to handle writing to the G2 bus [MP]
 - DC  Fixed default AICA program [RC]
@@ -709,7 +710,7 @@ KallistiOS version 1.1.7 ------------------------------------------------
 - DC  Rockridge fix for iso9660 [Takayama Fumihiko == TF]
 - DC  Port of XMMS' modplug [FS]
 - DC  Fix for store queue alignment [Andrew Kieschnick == ADK]
-- DC  Fix for stricmp/strnicmp problem with differnet length strings [ADK]
+- DC  Fix for stricmp/strnicmp problem with different length strings [ADK]
 - DC  More complete AICA driver [FS]
 - DC  atexit() support [FS]
 - DC  Circular buffering support for sndstream [FS]
@@ -899,7 +900,7 @@ KallistiOS version 1.1.2 ------------------------------------------------
 - DC  Fixed some dc-load init/shutdown bugs (adk)
 - *** Fixed a bug in the global Makefiles that made it not process
       the "SUBDIRS" entries normally
-- DC  PVR functionality ("ta" module) has been seperated into its own
+- DC  PVR functionality ("ta" module) has been separated into its own
       subdir, where it will eventually gain more functionality and be
       reorganized.
 - DC  As part of the above reorganization, TA initialization is no longer
@@ -971,7 +972,7 @@ KallistiOS version 1.0.0 ------------------------------------------------
 - fs_romdisk is now case-insensitive
 - init.klf now takes an optional command line parameter of the rc.boot name
 - Added serial ABI (thanks Brian Peek)
-- fs_iso9660 has improved cacheing now; a seperate data and inode cache is
+- fs_iso9660 has improved caching now; a separate data and inode cache is
   kept so that directory info doesn't have to be re-fetched after loading
   a large file. Also increased the number of cache buffers and got rid of
   the moronic init_percd() on every file open behavior.
@@ -1073,7 +1074,7 @@ KallistiOS version 0.7
 - Added some "const" keywords here and there, and made an effort to remove
   most of the in-block stack variables and in-var initializations. There are
   still a few in userland programs (jam notably).
-- Most things now work with default optimiztions (-O1 plus some other things).
+- Most things now work with default optimizations (-O1 plus some other things).
   -O2 seems to work for that matter, but I'm not pushing it yet =)
 - Increased max simultaneous open files on /bi to 8
 - Fixed iso_seek() for /cd

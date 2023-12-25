@@ -6,20 +6,27 @@
 
 */
 
+/**
+    \file    dc/fmath_base.h
+    \brief   Base definitions for the DC's special math instructions
+    \ingroup math_intrinsics
+
+    \author Andrew Kieschnick
+    \author Josh Pearson
+*/
+
 #ifndef __DC_FMATH_BASE_H
 #define __DC_FMATH_BASE_H
 
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-/**
-    \file dc/fmath_base.h
-    \brief  Base definitions for the DC's special math instructions
-    \author Andrew Kieschnick
-    \author Josh Pearson
+
+/** \addtogroup math_intrinsics 
+    @{
 */
 
-/** PI constant (if you don't want full math.h) */
+/** \brief PI constant (if you don't want full math.h) */
 #define F_PI 3.1415926f
 
 /** \cond */
@@ -155,6 +162,9 @@ __BEGIN_DECLS
         __z; })
 
 /** \endcond */
+
+/** @} */
+
 __END_DECLS
 
 #endif /* !__DC_FMATH_BASE_H */

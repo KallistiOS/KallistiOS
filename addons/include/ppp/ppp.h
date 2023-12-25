@@ -4,18 +4,9 @@
    Copyright (C) 2014 Lawrence Sebald
 */
 
-#ifndef __PPP_PPP_H
-#define __PPP_PPP_H
-
-#include <sys/cdefs.h>
-__BEGIN_DECLS
-
-#include <stdint.h>
-#include <sys/types.h>
-#include <sys/queue.h>
-
-/** \file   ppp/ppp.h
-    \brief  PPP interface for network communications.
+/** \file    ppp/ppp.h
+    \brief   PPP interface for network communications.
+    \ingroup networking_ppp
 
     This file defines the API provided by libppp to interact with the PPP stack.
     PPP is a network communication protocol used to establish a direct link
@@ -31,7 +22,24 @@ __BEGIN_DECLS
     \author Lawrence Sebald
 */
 
-/** \brief  PPP device structure.
+#ifndef __PPP_PPP_H
+#define __PPP_PPP_H
+
+#include <sys/cdefs.h>
+__BEGIN_DECLS
+
+#include <stdint.h>
+#include <sys/types.h>
+#include <sys/queue.h>
+
+/** \defgroup networking_ppp    PPP
+    \brief                      API for interacting with the Point-to-Point
+                                Protocol stack
+    \ingroup                    networking
+*/
+
+/** \brief   PPP device structure.
+    \ingroup networking_ppp
 
     This structure defines a basic output device for PPP packets. This structure
     is largely modeled after netif_t from the main network stack, with a bit of
@@ -107,10 +115,13 @@ typedef struct ppp_device {
     const uint8_t *(*rx)(struct ppp_device *self, ssize_t *out_len);
 } ppp_device_t;
 
-/** \brief  End of packet flag. */
+/** \brief   End of packet flag. 
+    \ingroup networking_ppp
+ */
 #define PPP_TX_END_OF_PKT    0x00000001
 
-/** \brief  PPP Protocol structure.
+/** \brief   PPP Protocol structure.
+    \ingroup networking_ppp
 
     Each protocol that the PPP library can handle must have one of these
     registered. All protocols should be registered BEFORE attempting to actually
@@ -189,10 +200,14 @@ typedef struct ppp_proto {
     void (*check_timeouts)(struct ppp_proto *self, uint64_t tm);
 } ppp_protocol_t;
 
-/** \brief  Static initializer for protocol list entry. */
+/** \brief   Static initializer for protocol list entry. 
+    \ingroup networking_ppp
+ */
 #define PPP_PROTO_ENTRY_INIT { NULL, NULL }
 
-/** \defgroup ppp_phases                PPP automaton phases
+/** \defgroup ppp_phases                Automaton Phases
+    \brief                              PPP automaton phases
+    \ingroup                            networking_ppp
 
     This list defines the phases of the PPP automaton, as described in Section
     3.2 of RFC 1661.
@@ -206,7 +221,8 @@ typedef struct ppp_proto {
 #define PPP_PHASE_TERMINATE     0x05    /**< \brief Tearing down the link. */
 /** @} */
 
-/** \brief  Set the device used to do PPP communications.
+/** \brief   Set the device used to do PPP communications.
+    \ingroup networking_ppp
 
     This function sets the device that further communications over a
     point-to-point link will take place over. The device need not be ready to
@@ -217,31 +233,35 @@ typedef struct ppp_proto {
     port to establish a link, the ppp_scif_init() function will call this for
     you.
 
-    \param  dev         The device to use for communication.
-    \return             0 on success, <0 on failure.
-
-    \note               Calling this function after establishing a PPP link will
+    \warning            Calling this function after establishing a PPP link will
                         fail.
+
+    \param  dev         The device to use for communication.
+    
+    \return             0 on success, <0 on failure.
 */
 int ppp_set_device(ppp_device_t *dev);
 
-/** \brief  Set the login credentials used to authenticate to the peer.
+/** \brief   Set the login credentials used to authenticate to the peer.
+    \ingroup networking_ppp
 
     This function sets the login credentials that will be used to authenticate
     to the peer, if the peer requests authentication. The specifics of how the
     authentication takes place depends on what options are configured when
     establishing the link.
 
+    \warning            Calling this function after establishing a PPP link will
+                        fail.
+
     \param  username    The username to authenticate as.
     \param  password    The password to use to authenticate.
+    
     \return             0 on success, <0 on failure.
-
-    \note               Calling this function after establishing a PPP link will
-                        fail.
 */
 int ppp_set_login(const char *username, const char *password);
 
-/** \brief  Send a packet on the PPP link.
+/** \brief   Send a packet on the PPP link.
+    \ingroup networking_ppp
 
     This function sends a single packet to the peer on the PPP link. Generally,
     you should not use this function directly, but rather use the facilities
@@ -250,11 +270,13 @@ int ppp_set_login(const char *username, const char *password);
     \param  data        The packet to send.
     \param  len         The length of the packet, in bytes.
     \param  proto       The PPP protocol number for the packet.
+    
     \return             0 on success, <0 on failure.
 */
 int ppp_send(const uint8_t *data, size_t len, uint16_t proto);
 
-/** \brief  Register a protocol with the PPP stack.
+/** \brief   Register a protocol with the PPP stack.
+    \ingroup networking_ppp
 
     This function adds a new protocol to the PPP stack, allowing the stack to
     communicate packets for the given protocol across the link. Generally, you
@@ -262,21 +284,25 @@ int ppp_send(const uint8_t *data, size_t len, uint16_t proto);
     a set of protocols to do normal communications.
 
     \param  hnd         A protocol handler structure.
+ 
     \return             0 on success, <0 on failure.
 */
 int ppp_add_protocol(ppp_protocol_t *hnd);
 
-/** \brief  Unregister a protocol from the PPP stack.
+/** \brief   Unregister a protocol from the PPP stack.
+    \ingroup networking_ppp
 
     This function removes protocol from the PPP stack. This should be done at
     shutdown time of any protocols added with ppp_add_protocol().
 
     \param  hnd         A protocol handler structure.
+    
     \return             0 on success, <0 on failure.
 */
 int ppp_del_protocol(ppp_protocol_t *hnd);
 
-/** \brief  Send a Protocol Reject packet on the link.
+/** \brief   Send a Protocol Reject packet on the link.
+    \ingroup networking_ppp
 
     This function sends a LCP protocol reject packet on the link for the
     specified packet. Generally, you should not have to call this function, as
@@ -285,11 +311,14 @@ int ppp_del_protocol(ppp_protocol_t *hnd);
     \param  proto       The PPP protocol number of the invalid packet.
     \param  pkt         The packet itself.
     \param  len         The length of the packet, in bytes.
+
     \return             0 on success, <0 on failure.
 */
 int ppp_lcp_send_proto_reject(uint16_t proto, const uint8_t *pkt, size_t len);
 
-/** \defgroup ppp_flags                 PPP link configuration flags
+/** \defgroup ppp_flags                 Configuration Flags
+    \brief                              PPP link configuration flags
+    \ingroup                            networking_ppp
 
     This list defines the flags we can negotiate during link establishment.
 
@@ -304,7 +333,8 @@ int ppp_lcp_send_proto_reject(uint16_t proto, const uint8_t *pkt, size_t len);
 #define PPP_FLAG_NO_ACCM        0x00000040  /**< \brief No ctl character map */
 /** @} */
 
-/** \brief  Get the flags set for our side of the link.
+/** \brief   Get the flags set for our side of the link.
+    \ingroup networking_ppp
 
     This function retrieves the connection flags set for our side of the PPP
     link. Before link establishment, this indicates the flags we would like to
@@ -315,7 +345,8 @@ int ppp_lcp_send_proto_reject(uint16_t proto, const uint8_t *pkt, size_t len);
 */
 uint32_t ppp_get_flags(void);
 
-/** \brief  Get the flags set for the peer's side of the link.
+/** \brief   Get the flags set for the peer's side of the link.
+    \ingroup networking_ppp
 
     This function retrieves the connection flags set for the other side of the
     PPP link. This value is only valid after link establishment.
@@ -324,13 +355,17 @@ uint32_t ppp_get_flags(void);
 */
 uint32_t ppp_get_peer_flags(void);
 
-/** \brief  Set the flags set for our side of the link.
+/** \brief   Set the flags set for our side of the link.
+    \ingroup networking_ppp
+
+    \param flags        Bitwise combination of \ref ppp_flags.
 
     This function sets the connection flags for our side of the PPP link.
 */
 void ppp_set_flags(uint32_t flags);
 
-/** \brief  Establish a point-to-point link across a previously set-up device.
+/** \brief   Establish a point-to-point link across a previously set-up device.
+    \ingroup networking_ppp
 
     This function establishes a point-to-point link to the peer across a device
     that was previously set up with ppp_set_device(). Before calling this
@@ -344,7 +379,8 @@ void ppp_set_flags(uint32_t flags);
 */
 int ppp_connect(void);
 
-/** \brief  Initialize the Dreamcast serial port for a PPP link.
+/** \brief   Initialize the Dreamcast serial port for a PPP link.
+    \ingroup networking_ppp
 
     This function sets up the Dreamcast serial port to act as a communications
     link for a point-to-point connection. This can be used in conjunction with a
@@ -352,11 +388,13 @@ int ppp_connect(void);
     if the target system is set up properly.
 
     \param  bps         The speed to initialize the serial port at.
+
     \return             0 on success, <0 on failure.
 */
 int ppp_scif_init(int bps);
 
-/** \brief  Initialize the Dreamcast modem for a PPP link.
+/** \brief   Initialize the Dreamcast modem for a PPP link.
+    \ingroup networking_ppp
 
     This function sets up the Dreamcast modem to act as a communications
     link for a point-to-point connection. This includes dialing the specified
@@ -367,6 +405,7 @@ int ppp_scif_init(int bps);
     \param  conn_rate   Storage for the connection rate, in bits per second. Set
                         to NULL if you do not need this value back from the
                         function.
+    
     \retval 0           On success.
     \retval -1          If modem initialization fails.
     \retval -2          If not using blind dial and no dial tone is detected
@@ -377,7 +416,8 @@ int ppp_scif_init(int bps);
 */
 int ppp_modem_init(const char *number, int blind, int *conn_rate);
 
-/** \brief  Initialize the PPP library.
+/** \brief   Initialize the PPP library.
+    \ingroup networking_ppp
 
     This function initializes the PPP library, preparing internal structures for
     use and initializing the PPP protocols needed for normal IP communications.
@@ -386,7 +426,8 @@ int ppp_modem_init(const char *number, int blind, int *conn_rate);
 */
 int ppp_init(void);
 
-/** \brief  Shut down the PPP library.
+/** \brief   Shut down the PPP library.
+    \ingroup networking_ppp
 
     This function cleans up the PPP library, shutting down any connections and
     deinitializing any protocols that have bene registered previously.

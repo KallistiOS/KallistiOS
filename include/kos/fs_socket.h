@@ -5,8 +5,9 @@
 
 */
 
-/** \file   kos/fs_socket.h
-    \brief  Definitions for a sockets "filesystem".
+/** \file    kos/fs_socket.h
+    \brief   Definitions for a sockets "filesystem".
+    \ingroup vfs_sockets
 
     This file provides definitions to support the BSD-sockets-like filesystem
     in KallistiOS. Technically, this filesystem mounts itself on /sock, but it
@@ -35,9 +36,16 @@ __BEGIN_DECLS
 #include <sys/socket.h>
 #include <stdint.h>
 
+/** \defgroup vfs_sockets   Sockets
+    \brief                  VFS Driver for adding a BSD-sockets-like
+                            filesystem.
+    \ingroup  vfs_drivers
+*/
+
 struct fs_socket_proto;
 
-/** \brief  Internal representation of a socket for fs_socket.
+/** \brief   Internal representation of a socket for fs_socket.
+    \ingroup vfs_sockets
 
     This structure is the internal representation of a socket "file" that is
     used within fs_socket. A normal user will never deal with this structure
@@ -62,7 +70,8 @@ typedef struct net_socket {
     void *data;
 } net_socket_t;
 
-/** \brief  Internal sockets protocol handler.
+/** \brief   Internal sockets protocol handler.
+    \ingroup vfs_sockets
 
     This structure is a protocol handler used within fs_socket. Each protocol
     that is supported has one of these registered for it within the kernel.
@@ -191,7 +200,7 @@ typedef struct fs_socket_proto {
     */
     int (*listen)(net_socket_t *s, int backlog);
 
-    /** \brief  Recieve data on a socket created with the protocol.
+    /** \brief  Receive data on a socket created with the protocol.
 
         This function should implement the ::recvfrom() system call for the
         protocol. The semantics are exactly as expected for that function. Also,
@@ -258,7 +267,7 @@ typedef struct fs_socket_proto {
         \param  src         The interface the packet was input on
         \param  domain      The low-level protocol used (AF_INET or AF_INET6)
         \param  hdr         The low-level protocol header
-        \param  data        The packet itself, including any protcol headers,
+        \param  data        The packet itself, including any protocol headers,
                             but not any from lower-level protocols
         \param  size        The size of the packet, not including any lower-
                             level protocol headers
@@ -342,7 +351,7 @@ typedef struct fs_socket_proto {
     /** \brief  Poll for events.
 
         This function should check the given socket for any events that may have
-        already occured that are specified. This is used to back the ::poll()
+        already occurred that are specified. This is used to back the ::poll()
         system call. This function should not block to wait for any events. This
         function may be called in an interrupt.
 
@@ -354,7 +363,9 @@ typedef struct fs_socket_proto {
     short (*poll)(net_socket_t *s, short events);
 } fs_socket_proto_t;
 
-/** \brief  Initializer for the entry field in the fs_socket_proto_t struct. */
+/** \brief   Initializer for the entry field in the fs_socket_proto_t struct. 
+    \ingroup vfs_sockets
+*/
 #define FS_SOCKET_PROTO_ENTRY { NULL, NULL }
 
 /* \cond */
@@ -363,7 +374,8 @@ int fs_socket_init(void);
 int fs_socket_shutdown(void);
 /* \endcond */
 
-/** \brief  Open a socket without calling the protocol initializer.
+/** \brief   Open a socket without calling the protocol initializer.
+    \ingroup vfs_sockets
 
     This function creates a new socket, but does not call the protocol's
     socket() function. This is meant to be used for things like accepting an
@@ -372,6 +384,7 @@ int fs_socket_shutdown(void);
     unless you are implementing a new protocol handler.
 
     \param  proto       The protocol to use for the socket.
+
     \return             The newly created socket on success, NULL on failure.
 
     \par    Error Conditions:
@@ -381,7 +394,9 @@ int fs_socket_shutdown(void);
 */
 net_socket_t *fs_socket_open_sock(fs_socket_proto_t *proto);
 
-/** \defgroup sock_flags                Socket flags
+/** \defgroup sock_flags                Flags
+    \brief                              Flags for Socket VFS
+    \ingroup  vfs_sockets
 
     These are the available flags defined for sockets.
 
@@ -396,7 +411,8 @@ net_socket_t *fs_socket_open_sock(fs_socket_proto_t *proto);
 #define FS_SOCKET_FAM_MAX   0x00800000  /** \brief Maximum family flag */
 /** @} */
 
-/** \brief  Input a packet into some socket family handler.
+/** \brief   Input a packet into some socket family handler.
+    \ingroup vfs_sockets
 
     This function is used by the lower-level network protocol handlers to input
     packets for further processing by upper-level protocols. This will call the
@@ -409,6 +425,7 @@ net_socket_t *fs_socket_open_sock(fs_socket_proto_t *proto);
     \param  data        The upper-level packet, without any lower-level protocol
                         headers, but with the upper-level ones intact
     \param  size        The size of the packet (the data parameter)
+
     \retval -2          The protocol is not known
     \retval -1          Protocol-level error processing packet
     \retval 0           On success
@@ -416,29 +433,36 @@ net_socket_t *fs_socket_open_sock(fs_socket_proto_t *proto);
 int fs_socket_input(netif_t *src, int domain, int protocol, const void *hdr,
                     const uint8 *data, size_t size);
 
-/** \brief  Add a new protocol for use with fs_socket.
+/** \brief   Add a new protocol for use with fs_socket.
+    \ingroup vfs_sockets
 
     This function registers a protocol handler with fs_socket for use when
     creating and using sockets. This protocol handler must implement all of the
     functions in the fs_socket_proto_t structure. See the code in
     kos/kernel/net/net_udp.c for an example of how to do this.
 
+    \warning
     This function is NOT safe to call inside an interrupt.
 
     \param  proto       The new protocol handler to register
+    
     \retval 0           On success (no error conditions are currently defined)
 */
 int fs_socket_proto_add(fs_socket_proto_t *proto);
 
-/** \brief  Unregister a protocol from fs_socket.
+/** \brief   Unregister a protocol from fs_socket.
+    \ingroup vfs_sockets
 
     This function does the exact opposite of fs_socket_proto_add, and removes
-    a protocol from use with fs_socket. It is the programmer's responsibility to
-    make sure that no sockets are still around that are registered with the
-    protocol to be removed (as they will not work properly once the handler has
-    been removed).
+    a protocol from use with fs_socket. 
+
+    \note
+    It is the programmer's responsibility to make sure that no sockets are
+    still around that are registered with the protocol to be removed (as
+    they will not work properly once the handler has been removed).
 
     \param  proto       The protocol handler to remove
+    
     \retval -1          On error (This function does not directly change errno)
     \retval 0           On success
 */

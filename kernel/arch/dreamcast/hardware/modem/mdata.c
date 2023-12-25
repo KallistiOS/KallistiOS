@@ -44,7 +44,7 @@ unsigned char txBufferLockFlag = 0;
 
 /* Checks for a lock set on a flag and sets (locks) the flag if it's not
    already set. Interrupts are disabled for a short period of time during the
-   process. Returns a non-zero value if the lock was successfuly set and the
+   process. Returns a non-zero value if the lock was successfully set and the
    calling process can proceed, otherwise the process should drop out from
    the function that it tried to lock the flag from. */
 int modemDataLockFlag(unsigned char *flag) {
@@ -347,7 +347,7 @@ int modem_dial(const char *digits) {
         length = strlen(digits);
 
         if(length > 0) {
-            /* Debug: The length of free space in the trasmit buffer should be
+            /* Debug: The length of free space in the transmit buffer should be
                       greater than or equal to the length of the input digits */
             assert(getChainBufferFreeSpace(txBuffer) >= length);
 

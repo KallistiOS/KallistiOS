@@ -47,7 +47,7 @@
    to do that while trying to process 3D graphics and such...
 
    This driver is really simplistic, but this should form the basis with
-   which a better one can be written if neccessary. It was developed using
+   which a better one can be written if necessary. It was developed using
    KOS CVS (1.1.5+).
 
    If anyone has a DC Lan Adapter which this doesn't work with, please let
@@ -700,7 +700,7 @@ static int la_if_set_mc(netif_t *self, const uint8 *list, int count) {
     return 0;
 }
 
-/* Set ISP configuration from the flashrom, as long as we're configured staticly */
+/* Set ISP configuration from the flashrom, as long as we're configured statically */
 static void la_set_ispcfg(void) {
     flashrom_ispcfg_t isp;
 

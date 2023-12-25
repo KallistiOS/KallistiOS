@@ -12,8 +12,8 @@
 
     The generic wait system in KOS, like many other portions of KOS, is based on
     an idea from the BSD kernel. It allows you to sleep on any random object and
-    later wake up any threads that happen to be sleeping on thta object. All of
-    KOS' sync primatives (other than spinlocks) are based on this concept, and
+    later wake up any threads that happen to be sleeping on that object. All of
+    KOS' sync primitives (other than spinlocks) are based on this concept, and
     it can be used for some fairly useful things.
 
     \author Megan Potter
@@ -108,7 +108,7 @@ void genwait_wake_one_err(void *obj, int err);
 
 /** \brief  Wake up a specific thread that is sleeping on an object.
 
-    This function wakes up the specfied thread, assuming it is sleeping on the
+    This function wakes up the specified thread, assuming it is sleeping on the
     specified object.
 
     \param  obj             The object to wake the thread from

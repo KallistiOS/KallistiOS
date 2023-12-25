@@ -236,7 +236,7 @@ static void convert_YUV422_to_YUV422_texture(void) {
             pvr_sq_load((void *)0, (void *)(y_block+128), 128, PVR_DMA_YUV);
         }
 
-        /* Send dummies if frame texture width doesnt match pvr texture width */
+        /* Send dummies if frame texture width doesn't match pvr texture width */
         pvr_sq_set32((void *)PVR_TA_YUV_CONV, 0, 
                 BYTE_SIZE_FOR_16x16_BLOCK * 
                 ((PVR_TEXTURE_WIDTH >> 4) - (FRAME_TEXTURE_WIDTH >> 4)), PVR_DMA_YUV);

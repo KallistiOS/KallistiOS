@@ -227,7 +227,7 @@ static void convert_YUV420_to_YUV422_texture(void) {
                 }
             }
         }
-
+        /* Send dummies if frame texture width doesn't match pvr texture width */
         for(i = 0; i < dummies; ++i) {
             db[i] = db[i + 1] = db[i + 2] = db[i + 3] = 
                 db[i + 4] = db[i + 5] = db[i + 6] = db[i + 7] = 0;
