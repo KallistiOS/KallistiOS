@@ -1,6 +1,4 @@
 # KallistiOS Utilities
-Brief explanation of included utilities
-
 - [**bin2c**](bin2c/): Converts a binary file to a C integer array for inclusion in a source file
 - [**bin2o**](bin2o/): Converts a binary files an object file for linking into a project
 - [**bincnv**](bincnv/): An ELF to BIN conversion testing utility
