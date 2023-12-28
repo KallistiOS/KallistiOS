@@ -69,7 +69,6 @@ __BEGIN_DECLS
 #include <arch/stack.h>
 #include <arch/byteorder.h>
 #include <arch/rtc.h>
-#include <arch/perfctr.h>
 
 #ifdef _arch_dreamcast
 #   include <arch/gdb.h>
@@ -101,6 +100,7 @@ __BEGIN_DECLS
 #   include <dc/modem/modem.h>
 #   include <dc/net/broadband_adapter.h>
 #   include <dc/net/lan_adapter.h>
+#   include <dc/perfctr.h>
 #   include <dc/pvr.h>
 #   include <dc/scif.h>
 #   include <dc/sd.h>

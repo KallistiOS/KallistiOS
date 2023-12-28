@@ -18,6 +18,8 @@
 #ifndef __DC_FMATH_BASE_H
 #define __DC_FMATH_BASE_H
 
+#include <arch/args.h>
+
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
@@ -132,14 +134,14 @@ __BEGIN_DECLS
 
 /* Floating point inner product (dot product) */
 #define __fipr(x, y, z, w, a, b, c, d) ({ \
-        register float __x __asm__("fr5") = (x); \
-        register float __y __asm__("fr4") = (y); \
-        register float __z __asm__("fr7") = (z); \
-        register float __w __asm__("fr6") = (w); \
-        register float __a __asm__("fr9") = (a); \
-        register float __b __asm__("fr8") = (b); \
-        register float __c __asm__("fr11") = (c); \
-        register float __d __asm__("fr10") = (d); \
+        register float __x __asm__(KOS_FPARG(0)) = (x); \
+        register float __y __asm__(KOS_FPARG(1)) = (y); \
+        register float __z __asm__(KOS_FPARG(2)) = (z); \
+        register float __w __asm__(KOS_FPARG(3)) = (w); \
+        register float __a __asm__(KOS_FPARG(4)) = (a); \
+        register float __b __asm__(KOS_FPARG(5)) = (b); \
+        register float __c __asm__(KOS_FPARG(6)) = (c); \
+        register float __d __asm__(KOS_FPARG(7)) = (d); \
         __asm__ __volatile__( \
                               "fipr	fv8,fv4" \
                               : "+f" (__z) \
@@ -150,10 +152,10 @@ __BEGIN_DECLS
 
 /* Floating point inner product w/self (square of vector magnitude) */
 #define __fipr_magnitude_sqr(x, y, z, w) ({ \
-        register float __x __asm__("fr5") = (x); \
-        register float __y __asm__("fr4") = (y); \
-        register float __z __asm__("fr7") = (z); \
-        register float __w __asm__("fr6") = (w); \
+        register float __x __asm__(KOS_FPARG(0)) = (x); \
+        register float __y __asm__(KOS_FPARG(1)) = (y); \
+        register float __z __asm__(KOS_FPARG(2)) = (z); \
+        register float __w __asm__(KOS_FPARG(3)) = (w); \
         __asm__ __volatile__( \
                               "fipr	fv4,fv4" \
                               : "+f" (__z) \

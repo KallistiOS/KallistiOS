@@ -5,7 +5,7 @@
    Copyright (C) 2023 Falco Girgis
 */
 
-#include <arch/perfctr.h>
+#include <dc/perfctr.h>
 #include <arch/timer.h>
 
 /* Control Registers */

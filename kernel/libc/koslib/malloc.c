@@ -5280,11 +5280,11 @@ void mSTATs(void) {
 #endif
 
 
-    fprintf(stderr, "max system bytes = %10lu\n",
+    dbglog(DBG_CRITICAL, "max system bytes = %10lu\n",
             (CHUNK_SIZE_T)(mi.usmblks));
-    fprintf(stderr, "system bytes     = %10lu\n",
+    dbglog(DBG_CRITICAL, "system bytes     = %10lu\n",
             (CHUNK_SIZE_T)(mi.arena + mi.hblkhd));
-    fprintf(stderr, "in use bytes     = %10lu\n",
+    dbglog(DBG_CRITICAL, "in use bytes     = %10lu\n",
             (CHUNK_SIZE_T)(mi.uordblks + mi.hblkhd));
 
 #ifdef WIN32
