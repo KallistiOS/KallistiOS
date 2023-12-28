@@ -706,9 +706,6 @@ int main(int argc, char* argv[]) {
                         exit(EXIT_FAILURE);
                     }, nullptr);
 
-    // Ensure that we disable the watchdog timer no matter how we exit 
-    atexit(wdt_disable);
-
     /* Spawn N automatically joined threads which will each spawn threads 
        for each test case and asynchronously wait upon their results... Basically 
        making each thread execute its own instances of every test case concurrently 
