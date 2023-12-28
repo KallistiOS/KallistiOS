@@ -257,7 +257,7 @@ bool perf_cntr_timer_enabled(void);
 
 /** \brief  Gets elapsed CPU time (in nanoseconds)
 
-    This function retrieves the number total amount of \a active CPU time since
+    This function retrieves the total amount of \a active CPU time since
     perf_cntr_timer_enabled() was called. 
 
     \note
