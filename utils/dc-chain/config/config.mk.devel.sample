@@ -148,6 +148,13 @@ thread_model=kos
 # ptrdiff_t, intmax_t, and sized integral types.
 newlib_c99_formats=1
 
+# Multibyte Character Set Support (1|0)
+# Define this to build Newlib with additional multibyte support. This enables
+# three special locales: "C-JIS", "C-SJIS", and "C-EUCJP". The multibyte
+# support extends to the mb and wc functions in stdlib as well as format
+# characters for the printf and scanf family of routines.
+#newlib_multibyte=1
+
 # Optimize Newlib for Space (1|0)
 # Define this to enable optimizing for space when building Newlib. This will
 # build Newlib with compiler flags which favor smaller code sizes over faster

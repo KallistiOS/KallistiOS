@@ -146,6 +146,12 @@ ifdef newlib_opt_space
   endif
 endif
 
+ifdef newlib_multibyte
+  ifneq (0,$(newlib_multibyte))
+    newlib_extra_configure_args += --enable-newlib-mb
+  endif
+endif
+
 # Function to verify variable is not empty
 # Args:
 # 1 - Variable Name
