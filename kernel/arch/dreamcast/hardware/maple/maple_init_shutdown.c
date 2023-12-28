@@ -94,7 +94,7 @@ static void maple_hw_init(void) {
     maple_write(MAPLE_SPEED, MAPLE_SPEED_2MBPS | MAPLE_SPEED_TIMEOUT(50000));
     maple_bus_enable();
 
-    /* Hook the neccessary interrupts */
+    /* Hook the necessary interrupts */
     maple_state.vbl_handle = vblank_handler_add(maple_vbl_irq_hnd);
     asic_evt_set_handler(ASIC_EVT_MAPLE_DMA, maple_dma_irq_hnd);
     asic_evt_enable(ASIC_EVT_MAPLE_DMA, ASIC_IRQ_DEFAULT);

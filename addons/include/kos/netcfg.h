@@ -135,12 +135,12 @@ int netcfg_load_flash(netcfg_t * out);
     \ingroup netcfg
 
     This function loads the network configuration data, searching in multiple
-    locations to attempt to find a file with a stored configurtion. This
+    locations to attempt to find a file with a stored configuration. This
     function will attempt to read the configuration from each VMU first (from 
     a file named net.cfg), then it will try the flashrom, followed by the
     current working directory, and lastly the root of the CD.
 
-    \param  out         Buffer to store the parsed configuraiton.
+    \param  out         Buffer to store the parsed configuration.
     
     \return             0 on success, <0 on failure.
 */

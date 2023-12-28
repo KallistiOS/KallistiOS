@@ -74,7 +74,7 @@ __BEGIN_DECLS
     has the possibility of using one or more of the 512 top-level slots. For
     a very small process (using one page for code/data and one for stack), it
     should be possible to achieve a page table footprint of one page. The tables
-    can grow from there as neccessary.
+    can grow from there as necessary.
 
     Virtual addresses are broken up as follows:
     - Bits 31 - 22     10 bits top-level page directory
@@ -84,7 +84,7 @@ __BEGIN_DECLS
 */
 
 /** \defgroup mmu_bit_macros        Address Bits
-    \brief                          Defintions and masks for address pages
+    \brief                          Definitions and masks for address pages
     \ingroup                        mmu
 
     The MMU code uses these to determine the page of a request.
@@ -126,9 +126,9 @@ __BEGIN_DECLS
     @{
 */
 #define MMU_NO_CACHE    1               /**< \brief Cache disabled */
-#define MMU_CACHE_BACK  2               /**< \brief Write-back cacheing */
-#define MMU_CACHE_WT    3               /**< \brief Write-through cacheing */
-#define MMU_CACHEABLE   MMU_CACHE_BACK  /**< \brief Default cacheing */
+#define MMU_CACHE_BACK  2               /**< \brief Write-back caching */
+#define MMU_CACHE_WT    3               /**< \brief Write-through caching */
+#define MMU_CACHEABLE   MMU_CACHE_BACK  /**< \brief Default caching */
 /** @} */
 
 /** \brief   MMU TLB entry for a single page.
@@ -258,7 +258,7 @@ int mmu_phys_to_virt(mmucontext_t *context, int physpage);
 
     This function switches to the given context's address space ID. The context
     should have already been made current with mmu_use_table().
-    You are responsible for invalidating any caches as neccessary, as well as
+    You are responsible for invalidating any caches as necessary, as well as
     invalidating any stale TLB entries.
 
     \param  context         The context to make current.

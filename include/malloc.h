@@ -132,7 +132,7 @@ void free(void *ptr);
                             memory allocation functions in this file (or must
                             be NULL).
     \param  size            The requested size of the new block of memory.
-    \return                 A pointer to the newly allocted/resized block of
+    \return                 A pointer to the newly allocated/resized block of
                             memory on success, or NULL on failure.
 
     \note                   If ptr is NULL on a call to this function, the

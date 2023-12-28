@@ -296,7 +296,7 @@ int main(int argc, char **argv) {
     /* Expect CW vertex order */
     glFrontFace(GL_CW);
 
-    /* Enable Transparancy */
+    /* Enable Transparency */
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     /* Load a texture and make it look nice */

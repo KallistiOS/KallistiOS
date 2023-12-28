@@ -18,7 +18,7 @@
 
 */
 
-/* note: this is my interpetation of stuffing the fog table
+/* note: this is my interpretation of stuffing the fog table
  *       in an attempt to satisfy the GL specs for GL_FOG_EXP
  *       GL_FOG_EXP2, and GL_LINEAR.
  *
@@ -85,7 +85,7 @@
  * The density value d is easy to deal with, but the eye distance to the
  * center of a fragment z, where z=(0,0,0,1) in eye coords is a problem. The
  * z values are ones you get after applying the projection and modelview
- * matrix to the vertices, bot how do you relate those values to the 128 entrys
+ * matrix to the vertices, bot how do you relate those values to the 128 entries
  * in the fog table?
  *
  * After some experiments with the InverseW_Depth function above and several
@@ -110,7 +110,7 @@
  * fog.  This module seems to work, but any corrections and insights that
  * would make it better would be appreciated.
  *
- * Special thanks goes to Simon Fenney for his explanation in the preceeding
+ * Special thanks goes to Simon Fenney for his explanation in the preceding
  * text and to Brian Paul (Mesa3D) for his fast negative exp function.
  *
  * Pb

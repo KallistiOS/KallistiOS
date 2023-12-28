@@ -215,7 +215,7 @@ typedef void (*cont_btn_callback_t)(uint8_t addr, uint32_t btns);
     The provided callback function is invoked within a context which has
     interrupts disabled. This means that you should not do any sort of complex
     processing or make any API calls which depend on interrupts to complete,
-    such as Maple or etherent processing whichy rely on packet transmission,
+    such as Maple or ethernet processing whichy rely on packet transmission,
     any sleeping or threading calls, blocking on any sort of file I/O, etc. 
     This mechanism is typically used to quickly terminate the application
     and should be used with caution.
@@ -276,7 +276,7 @@ void cont_btn_callback(uint8_t addr, uint32_t btns, cont_btn_callback_t cb);
     \brief    Bit masks representing common groups of capabilities
     \ingroup  controller_query_caps
 
-    These are a sets of capabilties providing a 
+    These are a sets of capabilities providing a 
     convenient way to test for high-level features,
     such as dual-analog sticks or extra buttons.
 
@@ -489,9 +489,9 @@ int cont_has_capabilities(const struct maple_device *cont, uint32_t capabilities
     capabilities associated with the given type. 
 
     \warning
-    Just becase a controller has all of the same capabilities of a 
+    Just because a controller has all of the same capabilities of a 
     type does not mean that it's that exact type. For example, the
-    ASCII Pad and Arcade Stick both implement the same capabilties,
+    ASCII Pad and Arcade Stick both implement the same capabilities,
     although they are not the same controllers. They would be 
     indistinguishable here, by design, so that you are able to 
     generalize to a collection of 1st or 3rd party controllers 

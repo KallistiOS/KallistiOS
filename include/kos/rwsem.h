@@ -317,7 +317,7 @@ int rwsem_read_upgrade(rw_semaphore_t *s);
     \par    Error Conditions:
     \em     EWOULDBLOCK - a call to rwsem_read_upgrade would block \n
     \em     EBUSY - another reader has already requested an upgrade \n
-    \em     EINVAL - the sempahore is not initialized
+    \em     EINVAL - the semaphore is not initialized
 */
 int rwsem_read_tryupgrade(rw_semaphore_t *s);
 

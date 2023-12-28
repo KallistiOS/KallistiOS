@@ -19,7 +19,7 @@
  * <file.bin> (output file):
  * First 4 bytes (integer) is number of vertices that follow.
  * Remainder of file 4 byte floats. Read in 3 at a time. We assume
- * litte endian packing.
+ * little endian packing.
  */
 
 #include <stdio.h>

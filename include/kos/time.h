@@ -34,6 +34,7 @@ __BEGIN_DECLS
 struct timespec;
 
 #define TIME_UTC 1
+#define CLOCKS_PER_SEC 1000000
 
 extern int timespec_get(struct timespec *ts, int base);
 

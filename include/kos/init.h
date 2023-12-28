@@ -41,7 +41,7 @@ __BEGIN_DECLS
 #include <stdint.h>
 
 /** \defgroup init_flags Initialization
-    \brief               KOS Driver Subystem and Component Initialization Flags
+    \brief               KOS Driver Subsystem and Component Initialization Flags
     \ingroup             system
 */
 
@@ -131,7 +131,7 @@ extern void * __kos_romdisk;
 
 #define INIT_NONE        0x00000000  /**< \brief Don't init optional things */
 #define INIT_IRQ         0x00000001  /**< \brief Enable IRQs at startup */
-/* Preemptive mode is the only mode now. Keeping define for compatability. */
+/* Preemptive mode is the only mode now. Keeping define for compatibility. */
 #define INIT_THD_PREEMPT 0x00000002  /**< \deprecated Already default mode */
 #define INIT_NET         0x00000004  /**< \brief Enable built-in networking */
 #define INIT_MALLOCSTATS 0x00000008  /**< \brief Enable malloc statistics */

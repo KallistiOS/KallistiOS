@@ -63,7 +63,7 @@ int net_reg_device(netif_t *device) {
     device->flags |= NETIF_REGISTERED;
 
     /* We need to do more processing in here eventually like looking for
-       duplicate device IDs and assigning new indeces, but that can
+       duplicate device IDs and assigning new indices, but that can
        wait until we're actually supporting a box with the possibility
        of more than one network interface... which probably won't happen
        any time soon... */

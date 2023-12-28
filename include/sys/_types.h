@@ -203,7 +203,7 @@ typedef _CLOCK_T_   __clock_t;
 #define IOV_MAX                 1024
 #endif
 
-/* This is for old KOS source compatability. */
+/* This is for old KOS source compatibility. */
 #include <arch/types.h>
 
 #if __GNUC_MINOR__ > 95 || __GNUC__ >= 3

@@ -90,7 +90,7 @@ static inline int __gthread_active_p(void) {
 /* Key structure for maintaining thread specific storage */
 static kthread_key_t _objc_thread_storage;
 
-/* Backend initialization funcitons */
+/* Backend initialization functions */
 
 /* Initialize the threads subsystem. */
 static inline int __gthread_objc_init_thread_system(void) {

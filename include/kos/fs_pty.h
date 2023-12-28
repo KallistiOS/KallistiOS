@@ -10,7 +10,7 @@
     \ingroup vfs_pty
 
     This file system implements a pseudo-terminal like concept (similar to
-    /dev/pty in Linux). A call to fs_pty_create() will crate two file entries in
+    /dev/pty in Linux). A call to fs_pty_create() will create two file entries in
     the VFS, /pty/maXX and /pty/slXX (XX being some hexadecimal number). From
     there, anybody can open up either end and send data to the other side. Think
     of it as a simple message passing interface.

@@ -256,7 +256,7 @@ int main(int arg, char* argv[]) {
       retval = -1;
 
    /* Await for each thread to complete its tasks and return its
-      satus code. */
+      status code. */
    printf("Joining threads: [%u]\n", THREAD_COUNT);
    
    for(unsigned t = 0; t < THREAD_COUNT - 1; ++t) {

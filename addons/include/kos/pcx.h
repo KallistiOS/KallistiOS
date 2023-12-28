@@ -12,7 +12,7 @@
     \brief  Small PCX Loader.
 
     This module provides a few functions used for loading PCX files. These
-    funcions were mainly for use on the GBA port of KallistiOS (which has been
+    functions were mainly for use on the GBA port of KallistiOS (which has been
     removed from the tree), although they can be used pretty much anywhere.
     That said, libpcx is generally more useful than these functions for use on
     the Dreamcast.
@@ -39,7 +39,7 @@ __BEGIN_DECLS
     \param  w_out       Buffer to return the width of the image in.
     \param  h_out       Buffer to return the height of the image in.
     \param  pic_out     Buffer to store image data in.
-    \return             0 on succes, < 0 on failure.
+    \return             0 on success, < 0 on failure.
 */
 int pcx_load_flat(const char *fn, int *w_out, int *h_out, void *pic_out);
 
@@ -58,7 +58,7 @@ int pcx_load_flat(const char *fn, int *w_out, int *h_out, void *pic_out);
                         height bytes in size.
     \param  pal_out     Buffer to store the palette data in. This should be
                         allocated to hold 256 uint16_t values.
-    \return             0 on succes, < 0 on failure.
+    \return             0 on success, < 0 on failure.
 */
 int pcx_load_palette(const char *fn, int *w_out, int *h_out, void *pic_out,
                      void *pal_out);

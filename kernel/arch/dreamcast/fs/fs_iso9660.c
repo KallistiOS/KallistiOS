@@ -187,8 +187,8 @@ static uint32 iso_733(const uint8 *from) {
 
 
 /********************************************************************************/
-/* Low-level block cacheing routines. This implements a simple queue-based
-   LRU/MRU cacheing system. Whenever a block is requested, it will be placed
+/* Low-level block caching routines. This implements a simple queue-based
+   LRU/MRU caching system. Whenever a block is requested, it will be placed
    on the MRU end of the queue. As more blocks are loaded than can fit in
    the cache, blocks are deleted from the LRU end. */
 
@@ -1021,7 +1021,7 @@ static vfs_handler_t vh = {
         NMMGR_LIST_INIT
     },
 
-    0, NULL,            /* no cacheing, privdata */
+    0, NULL,            /* no caching, privdata */
 
     iso_open,
     iso_close,

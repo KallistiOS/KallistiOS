@@ -93,7 +93,7 @@ time_t rtc_unix_secs(void);
 */
 int rtc_set_unix_secs(time_t time);
 
-/** \brief   Get the time since the sytem was booted.
+/** \brief   Get the time since the system was booted.
     \ingroup rtc
 
     This function retrieves the cached RTC value from when KallistiOS was started. As
