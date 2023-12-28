@@ -110,7 +110,7 @@ static int gaps_detect(void) {
 static int gaps_init(void) {
     int i;
 
-    /* This shouldn't happen as init is done only if a detect succeded. */
+    /* This shouldn't happen as init is done only if a detect succeeded. */
     if(gaps_detect() < 0) {
         dbglog(DBG_INFO, "bba: gaps_init called but no device detected\n");
         return -1;
@@ -342,7 +342,7 @@ static int bba_hw_init(void) {
     /* Enable receive and transmit functions ... again*/
     g2_write_8(NIC(RT_CHIPCMD), RT_CMD_RX_ENABLE | RT_CMD_TX_ENABLE);
 
-    /* Set Rx FIFO threashold to 1K, Rx size to 16k+16, 1024 byte DMA burst */
+    /* Set Rx FIFO threshold to 1K, Rx size to 16k+16, 1024 byte DMA burst */
     g2_write_32(NIC(RT_RXCONFIG), RX_CONFIG);
 
     /* Set Tx 1024 byte DMA burst */
@@ -564,7 +564,7 @@ static int bba_copy_dma(uint8 * dst, uint32 s, int len) {
 
         /*
            This way all will be nicely 32 bytes aligned (assuming that dst and src have
-           same alignement initially and that we don't care about the beginning of dst
+           same alignment initially and that we don't care about the beginning of dst
            buffer)
         */
         add = ((uint32) src) & 31;
@@ -1147,7 +1147,7 @@ static void bba_if_netinput(uint8 *pkt, int pktsize) {
     net_input(&bba_if, pkt, pktsize);
 }
 
-/* Set ISP configuration from the flashrom, as long as we're configured staticly */
+/* Set ISP configuration from the flashrom, as long as we're configured statically */
 static void bba_set_ispcfg(void) {
     flashrom_ispcfg_t isp;
 

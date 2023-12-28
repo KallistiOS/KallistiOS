@@ -18,7 +18,7 @@
 #include <string.h>
 
 /* Create a set of macros to codegen atomic symbols for primitive types. 
-   For these types, we simply disable interrupts then reenable them 
+   For these types, we simply disable interrupts then re-enable them 
    around accesses to our atomics to ensure their atomicity.
 */
 #define ATOMIC_LOAD_N_(type, n) \
@@ -122,7 +122,7 @@ ATOMIC_FETCH_NAND_N_(unsigned long long, 8)
 #define GENERIC_LOCK_BLOCK_SIZE     (CPU_CACHE_BLOCK_SIZE * 4)
 
 /* Locks have to be shared for each page with the MMU enabled, 
-   otherwise we can fail when aliasing an address range to muliple
+   otherwise we can fail when aliasing an address range to multiple
    pages. */
 #define GENERIC_LOCK_COUNT          (PAGESIZE / GENERIC_LOCK_BLOCK_SIZE)
 

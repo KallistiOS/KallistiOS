@@ -849,11 +849,11 @@ typedef struct {
     uint32_t d2;                 /**< \brief Dummy value */
 } pvr_vertex_pcm_t;
 
-/** \brief   PVR vertex type: Textured, packed color, affected by modifer volume.
+/** \brief   PVR vertex type: Textured, packed color, affected by modifier volume.
 
     Note that this vertex type has two copies of colors, offset colors, and
     texture coords. The second set of texture coords, colors, and offset colors
-    are used when enclosed within a modifer volume.
+    are used when enclosed within a modifier volume.
 
     \headerfile dc/pvr.h
 */
@@ -1727,7 +1727,7 @@ void pvr_mem_stats(void);
 
 /* Scene rendering ***************************************************/
 /** \defgroup   pvr_scene_mgmt  Scene Submission
-    \brief                      PowerVR API for submitting scene goemetry
+    \brief                      PowerVR API for submitting scene geometry
     \ingroup                    pvr
 
     This API is used to submit triangle strips to the PVR via the TA

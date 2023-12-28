@@ -195,7 +195,7 @@ static int add_to_codebook(context_t *cb, fquad_t *q) {
 
     cb->codes[index].index = index;
 
-    /* update sequencial id */
+    /* update sequential id */
     cb->in_use++;
     return index;
 }
@@ -311,7 +311,7 @@ static int divide(int *ptr, int stride, int x, int y, int blocksize, int seq) {
 
     switch(blocksize) {
         case 1:
-            /* cant divide anymore */
+            /* can't divide anymore */
             ptr[seq++] = y * stride + x;
             break;
 

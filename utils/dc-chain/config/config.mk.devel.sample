@@ -82,7 +82,7 @@ download_protocol=https
 # Specify GNU Mirror override
 # The default mirror for GNU sources is `ftpmirror.gnu.org`
 # Setting this will allow overriding the default mirror which
-# may be desirable if you have a prefered mirror.
+# may be desirable if you have a preferred mirror.
 #gnu_mirror=mirrors.kernel.org
 
 # Toolchains base
@@ -110,7 +110,7 @@ install_mode=install-strip
 # Tracking down problems with multiple make jobs is much more difficult than
 # with just one running at a time. So, if you run into trouble, then you should
 # clear this variable and try again with just one job running.
-# Please note, this value may be overriden in some cases; as issues were
+# Please note, this value may be overridden in some cases; as issues were
 # detected on some OS.
 makejobs=-j2
 
@@ -147,6 +147,13 @@ thread_model=kos
 # specifiers, used by printf and friends. These include support for size_t,
 # ptrdiff_t, intmax_t, and sized integral types.
 newlib_c99_formats=1
+
+# Multibyte Character Set Support (1|0)
+# Define this to build Newlib with additional multibyte support. This enables
+# three special locales: "C-JIS", "C-SJIS", and "C-EUCJP". The multibyte
+# support extends to the mb and wc functions in stdlib as well as format
+# characters for the printf and scanf family of routines.
+#newlib_multibyte=1
 
 # Optimize Newlib for Space (1|0)
 # Define this to enable optimizing for space when building Newlib. This will

@@ -46,7 +46,7 @@ __BEGIN_DECLS
     \ingroup networking_drivers
 
     Each usable network device should have one of these describing it. These
-    must be registered to the network layer before the device is useable.
+    must be registered to the network layer before the device is usable.
 
     \headerfile kos/net.h
 */
@@ -161,7 +161,7 @@ typedef struct knetif {
     */
     int (*if_tx_commit)(struct knetif * self);
 
-    /** \brief  Poll for queued receive packets, if neccessary.
+    /** \brief  Poll for queued receive packets, if necessary.
         \param  self        The network device in question.
         \return             0 on success, <0 on failure.
     */
@@ -397,7 +397,7 @@ extern net_input_func net_input_target;
              in the background.
     \ingroup networking_drivers
 
-    This function may or may not return immidiately but it won't take an
+    This function may or may not return immediately but it won't take an
     infinitely long time (so it's safe to call inside interrupt handlers).
 
     \param  device          The network device submitting packets.

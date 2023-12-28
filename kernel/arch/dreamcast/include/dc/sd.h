@@ -138,7 +138,7 @@ int sd_write_blocks(uint32 block, size_t count, const uint8 *buf);
     This is the raw size of the card, not its formatted capacity. To get the
     number of blocks from this, divide by 512.
 
-    \return                 On succes, the raw size of the SD card in bytes. On
+    \return                 On success, the raw size of the SD card in bytes. On
                             error, (uint64)-1.
 
     \par    Error Conditions:

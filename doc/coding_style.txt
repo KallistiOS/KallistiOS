@@ -181,7 +181,7 @@ Generally, you want your comments to tell WHAT your code does, not HOW.
 Rant about comments inside functions removed. I disagree. Linus said
 that comments inside functions are a bad thing and that if you need them
 then your functions have growth-hormone-imbalance syndrome. This isn't
-neccessarily true, and I feel like comments should be used as appropriate
+necessarily true, and I feel like comments should be used as appropriate
 given the guideline above. For example:
 
 /* This code tries to query the CD drive; if it fails, then the callback
@@ -342,7 +342,7 @@ by arch-specific headers:
 #include <arch/types.h>
 
 After that, feel free to put a block comment explaining what's in the file
-and describing any notes about the module, if neccessary / warranted,
+and describing any notes about the module, if necessary / warranted,
 followed by the functions/variables themselves.
 
 If the file is so large that it needs multiple sections, then you might

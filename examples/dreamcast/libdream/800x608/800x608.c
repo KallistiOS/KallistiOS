@@ -22,6 +22,9 @@ int main(int argc, char **argv) {
     cont_btn_callback(0, CONT_START | CONT_A | CONT_B | CONT_X | CONT_Y,
                       (cont_btn_callback_t)arch_exit);
 
+    printf("\n\n*** NOTE: This example is still a work in progress\n");
+    printf("          as this resolution is not fully supported! ***\n\n");
+
     /* Set video mode */
     vid_set_mode(DM_800x608, PM_RGB565);
 

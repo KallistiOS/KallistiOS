@@ -714,7 +714,7 @@ static int net_tcp_accept(net_socket_t *hnd, struct sockaddr *addr,
 
     newhnd->data = sock2;
 
-    /* Bad way of generating an initial sequence number, but techincally correct
+    /* Bad way of generating an initial sequence number, but technically correct
        by the wording of the RFC... */
     sock2->data.snd.iss = (uint32_t)(timer_us_gettime64() >> 2);
     sock2->data.snd.nxt = sock2->data.snd.iss + 1;
@@ -2545,7 +2545,7 @@ static int listen_pkt(netif_t *src, const struct in6_addr *srca,
         mss = 1460;
 
     /* If the SYN bit is set, we should check the security/compartment. We just
-       silently ignore them for now. We also ignore the precidence... Thus, the
+       silently ignore them for now. We also ignore the precedence... Thus, the
        next thing is to make sure that we don't already have this connection in
        the queue... */
     for(j = s->listen.head; j < s->listen.tail; ++j) {

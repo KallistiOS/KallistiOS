@@ -148,7 +148,7 @@
 /** \brief   Modem Event Types.
     \ingroup modem
 
-    These are teh events that a modem event handler should be expected to
+    These are the events that a modem event handler should be expected to
     receive at any given point in time.
 */
 typedef enum {

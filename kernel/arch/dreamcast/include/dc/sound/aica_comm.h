@@ -25,7 +25,7 @@ typedef unsigned long uint32;
 #endif
 
 /** \defgroup audio_aica AICA
-    \brief               API definining the SH4/AICA shared interface
+    \brief               API defining the SH4/AICA shared interface
     \ingroup             audio_driver
     @{
 */

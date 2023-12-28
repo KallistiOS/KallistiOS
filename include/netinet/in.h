@@ -221,8 +221,8 @@ extern const struct in6_addr in6addr_loopback;
     \brief                              Options for v4 of the Internet Protocol
     \ingroup                            networking_ipv4
 
-    These are the various socket-level optoins that can be accessed with the
-    setsockopt() and getsockopt() fnctions for the IPPROTO_IP level value.
+    These are the various socket-level options that can be accessed with the
+    setsockopt() and getsockopt() functions for the IPPROTO_IP level value.
 
     As there isn't really a full standard list of these defined in the SUS
     (apparently), only ones that we support are listed here.

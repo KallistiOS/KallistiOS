@@ -113,7 +113,7 @@ int pcx_load_flat(const char *fn, int *w_out, int *h_out, void *pic_out) {
     return 0;
 }
 
-/* This version writes out a seperate 15-bit BGR palette and decodes the paletted data
+/* This version writes out a separate 15-bit BGR palette and decodes the paletted data
    into another buffer 16 bits at a time. */
 int pcx_load_palette(const char *fn, int *w_out, int *h_out, void *pic_out, void *pal_out) {
     pcx_hdr *pcxh;

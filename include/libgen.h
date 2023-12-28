@@ -49,7 +49,7 @@ char *basename(char *path);
 
     This function retrieves the name of the parent directory of the file
     pathname specified. This function does not attempt to perform any sort of
-    path resolution to check for the existence of the specified diretory or to
+    path resolution to check for the existence of the specified directory or to
     resolve any symbolic links.
 
     \note   This function may modify its input and the returned value may be a

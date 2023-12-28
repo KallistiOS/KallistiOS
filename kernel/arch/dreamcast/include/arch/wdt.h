@@ -130,7 +130,7 @@ void wdt_enable_timer(uint8_t initial_count,
     \ingroup wdt
 
     Stops the WDT if it was previously running and reconfigures it 
-    to be used as a typical watchdog timer, generating a resest 
+    to be used as a typical watchdog timer, generating a reset 
     interrupt upon counter overflow. To prevent this from happening,
     the user should be periodically resetting the counter.
 

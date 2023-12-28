@@ -62,7 +62,7 @@
 #endif
 
 #ifndef __weak
-/** \brief  Identify a function or variable that may be overriden by another symbol. */
+/** \brief  Identify a function or variable that may be overridden by another symbol. */
 #define __weak      __attribute__((weak))
 #endif
 

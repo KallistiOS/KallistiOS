@@ -23,7 +23,7 @@
    submitted vertex data to a texture, without flushing the vertex
    data in main ram.  This makes using the "Radial Blur" effect
    quite efficient in terms of CPU usage.  GPU usage, however, is a
-   different story altogehter.  The PowerVR really struggles blending
+   different story altogether.  The PowerVR really struggles blending
    overlapped polygons, as we can see as we increase the number of
    polygons to be rendered into the translucent list by the radial
    blur effect.

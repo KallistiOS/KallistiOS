@@ -103,7 +103,7 @@ LIST_HEAD(ktlist, kthread);
 
 /** \brief   Control Block Header
 
-    Header preceeding the static TLS data segments as defined by
+    Header preceding the static TLS data segments as defined by
     the SH-ELF TLS ABI (version 1). This is what the thread pointer 
     (GBR) points to for compiler access to thread-local data. 
 */
@@ -603,7 +603,7 @@ int thd_get_mode(void) __deprecated;
                             or NULL if you don't care about it.
 
     \return                 0 on success, or less than 0 if the thread is
-                            non-existant or not joinable.
+                            non-existent or not joinable.
 
     \sa thd_detach
 */
@@ -619,7 +619,7 @@ int thd_join(kthread_t *thd, void **value_ptr);
     \param  thd             The joinable thread to detach.
 
     \return                 0 on success or less than 0 if the thread is
-                            non-existant or already detached.
+                            non-existent or already detached.
     \sa    thd_join()
 */
 int thd_detach(kthread_t *thd);

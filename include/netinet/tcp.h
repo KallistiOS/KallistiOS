@@ -29,8 +29,8 @@ __BEGIN_DECLS
     \brief                              TCP protocol level options
     \ingroup                            networking_tcp
 
-    These are the various socket-level optoins that can be accessed with the
-    setsockopt() and getsockopt() fnctions for the IPPROTO_TCP level value.
+    These are the various socket-level options that can be accessed with the
+    setsockopt() and getsockopt() functions for the IPPROTO_TCP level value.
 
     All options listed here are at least guaranteed to be accepted by
     setsockopt() and getsockopt() for IPPROTO_TCP, however they are not

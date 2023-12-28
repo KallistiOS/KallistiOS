@@ -35,7 +35,7 @@ char *strdup(const char *);
 
 #define INODE_FLAG_DIRTY    0x00000001
 
-/* Internal inode storage structure. This is used for cacheing used inodes. */
+/* Internal inode storage structure. This is used for caching used inodes. */
 static struct int_inode {
     /* Start with the on-disk inode itself to make the put() function easier.
        DO NOT MOVE THIS FROM THE BEGINNING OF THE STRUCTURE. */

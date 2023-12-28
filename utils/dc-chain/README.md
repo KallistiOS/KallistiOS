@@ -8,7 +8,7 @@ released by *Jim Ursetto* back in 2004, and is now included as part of
 
 This utility is capable of building two toolchains for **Dreamcast** development:
 
-- The `sh-elf` toolchain, the primary cross-compiler toolchain targetting the
+- The `sh-elf` toolchain, the primary cross-compiler toolchain targeting the
   main CPU of the Dreamcast, the **Hitachi SuperH (SH4) CPU** .
 - The `arm-eabi` toolchain, used only for the **Yamaha Super Intelligent Sound
   Processor** (**AICA**). This processor is based on an **ARM7** core.
@@ -43,7 +43,7 @@ A big effort was put into simplifying the building process as much as possible
 for all modern environments, including **Linux**, **FreeBSD**, **macOS** and
 **Windows** (via **Windows Subsystem for Linux**, **Cygwin**, **MinGW-w64/MSYS2**
 or **MinGW/MSYS**). Many conditional instructions have been diligently added to
-the script to allow it to seemlessly function in many environments out of the box.
+the script to allow it to seamlessly function in many environments out of the box.
 
 ### `dc-chain` utility installation
 `dc-chain` is packaged with KallistiOS, where it can be found within the
@@ -146,7 +146,7 @@ available.
 ### Override GNU Download Mirror
 
 Set `gnu_mirror` to override the default `ftpmirror.gnu.org` mirror when you have
-a prefered mirror for downloading GNU sources.
+a preferred mirror for downloading GNU sources.
 
 ### Toolchains base
 

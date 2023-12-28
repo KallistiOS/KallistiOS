@@ -11,7 +11,7 @@
 
     This file contains support related to dynamic linking of the kernel of KOS.
     The kernel (at compile time) produces a list of exported symbols, which can
-    be looked through using the funtionality in this file.
+    be looked through using the functionality in this file.
 
     \author Megan Potter
 */

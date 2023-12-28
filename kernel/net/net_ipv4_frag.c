@@ -56,7 +56,7 @@ static void frag_thd_cb(void *data) {
     mutex_lock(&frag_mutex);
 
     /* Look at each fragment item, and see if the timer has expired. If so,
-       remvoe it. */
+       remove it. */
     f = TAILQ_FIRST(&frags);
 
     while(f) {

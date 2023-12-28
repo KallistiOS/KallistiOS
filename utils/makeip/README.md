@@ -6,7 +6,7 @@ Program**. This file is often named `IP.BIN`. It's a critical component for
 any Dreamcast discs.
 
 `IP.BIN` file is used for making selfboot (**MIL-CD**) discs for **Sega
-Dreamcast** softwares. When the file is inserted in the bootsector of a disc,
+Dreamcast** software. When the file is inserted in the bootsector of a disc,
 the bootstrap program (`IP.BIN`) will execute the main program stored on the
 file system which is often named `1ST_READ.BIN`. Please note, the `IP.BIN`
 file is not needed on the file system as it's inserted in the bootsector.
@@ -110,7 +110,7 @@ switch. To print this list, use the `-u` switch instead of `-h`.
 
 ## MR Images
 
-**MR Image** is a special image format that can be inserted in the boostrap.
+**MR Image** is a special image format that can be inserted in the bootstrap.
 This kind of image are often saved as `iplogo.mr` or equivalent.
 
 With **IP creator** you will be able to:

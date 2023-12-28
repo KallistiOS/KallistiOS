@@ -139,7 +139,7 @@
 
     Responses can be run-length encoded to save space.  A '*' means that
     the next character is an ASCII encoding giving a repeat count which
-    stands for that many repititions of the character preceding the '*'.
+    stands for that many repetitions of the character preceding the '*'.
     The encoding is n+29, yielding a printable character where n >=3
     (which is where rle starts to win).  Don't use an n > 126.
 
@@ -810,7 +810,7 @@ static void gdb_handle_exception(int exceptionVector) {
                 stepping = 1;
                 __fallthrough;
             case 'c': {
-                /* tRY, to read optional parameter, pc unchanged if no parm */
+                /* tRY, to read optional parameter, pc unchanged if no param */
                 if(hexToInt(&ptr, &addr))
                     registers[PC] = addr;
 

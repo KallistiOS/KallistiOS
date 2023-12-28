@@ -61,7 +61,7 @@ typedef struct irq_context {
     uint32  sr;         /**< \brief Status register */
     uint32  fpul;       /**< \brief Floatint-point communication register */
     uint32  fr[16];     /**< \brief Primary floating point registers */
-    uint32  frbank[16]; /**< \brief Secondary floating poing registers */
+    uint32  frbank[16]; /**< \brief Secondary floating point registers */
     uint32  r[16];      /**< \brief 16 general purpose (integer) registers */
     uint32  fpscr;      /**< \brief Floating-point status/control register */
 } irq_context_t __attribute__((aligned(32)));
