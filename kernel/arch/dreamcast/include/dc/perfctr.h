@@ -6,7 +6,7 @@
    
 */
 
-/** \file    arch/perfctr.h
+/** \file    dc/perfctr.h
     \brief   Low-level performance counter API
     \ingroup perf_counters
 
