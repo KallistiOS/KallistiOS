@@ -275,4 +275,4 @@ uint64_t perf_cntr_timer_ns(void);
 
 __END_DECLS
 
-#endif /* __ARCH_PERFCTR_H */
+#endif /* __DC_PERFCTR_H */
