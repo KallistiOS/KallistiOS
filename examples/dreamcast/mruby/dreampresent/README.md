@@ -22,8 +22,17 @@ The time is currently hardcoded to `35` minutes.
 If you press `Right` on the D-pad, you move the time forward by 5 minutes,
 and back by 5 minutes if you press `Left`.
 
+## Compiling
+
+To compile this, you need to install the `mruby`, `libpng` and `zlib` KallistiOS
+Port, using the `kos-ports` repository.
+
+## License
+
+This example is under the MIT License. See `LICENSE` for details.
+
 ## Final note
 
 The initial source is available [here](https://github.com/yujiyokoo/dreampresent).
 This version of the source code is almost the same but adapted to be included as
-an example in KallistiOS, with Yuji Yokoo approval.
+an example in KallistiOS, with Yuji Yokoo approval, the original author.

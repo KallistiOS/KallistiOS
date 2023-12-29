@@ -1,3 +1,30 @@
+/* KallistiOS ##version##
+
+   dckos.c
+   Copyright (C) 2019-2024 Yuji Yokoo
+
+   Dreampresent
+   A simple presentation tool for Sega Dreamcast written in Ruby
+
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction, including without limitation the rights
+   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+   copies of the Software, and to permit persons to whom the Software is
+   furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included in
+   all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+*/
+
 #include <assert.h>
 #include <kos.h>
 #include <kos/img.h>
@@ -75,27 +102,27 @@ mrb_value check_btn(mrb_state *mrb, mrb_value self, uint16 target) {
 
 mrb_value btn_start(mrb_state *mrb, mrb_value self) {
   return check_btn(mrb, self, CONT_START);
-};
+}
 
 mrb_value btn_a(mrb_state *mrb, mrb_value self) {
   return check_btn(mrb, self, CONT_A);
-};
+}
 
 mrb_value btn_b(mrb_state *mrb, mrb_value self) {
   return check_btn(mrb, self, CONT_B);
-};
+}
 
 mrb_value dpad_down(mrb_state *mrb, mrb_value self) {
   return check_btn(mrb, self, CONT_DPAD_DOWN);
-};
+}
 
 mrb_value dpad_right(mrb_state *mrb, mrb_value self) {
   return check_btn(mrb, self, CONT_DPAD_RIGHT);
-};
+}
 
 mrb_value dpad_left(mrb_state *mrb, mrb_value self) {
   return check_btn(mrb, self, CONT_DPAD_LEFT);
-};
+}
 
 mrb_value draw_str(mrb_state *mrb, mrb_value self) {
   char *unwrapped_content;
@@ -318,5 +345,4 @@ void define_module_functions(mrb_state *mrb, struct RClass *module) {
   mrb_define_module_function(mrb, module, "draw_horizontal_line", draw_horizontal_line, MRB_ARGS_REQ(6));
   mrb_define_module_function(mrb, module, "draw_vertical_line", draw_vertical_line, MRB_ARGS_REQ(6));
   mrb_define_module_function(mrb, module, "next_video_mode", next_video_mode, MRB_ARGS_NONE());
-
 }
