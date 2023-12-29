@@ -66,7 +66,6 @@ static void pvr_dma_irq_hnd(uint32_t code) {
 }
 
 static uintptr_t pvr_dest_addr(uintptr_t dest, int type) {
-
     uintptr_t dest_addr;
 
     /* Send the data to the right place */
@@ -197,6 +196,7 @@ void pvr_dma_shutdown(void) {
 
 /* Copies n bytes from src to PVR dest, dest must be 32-byte aligned */
 void *pvr_sq_load(void *dest, const void *src, size_t n, int type) {
+    void *dma_area_ptr;
 
     if(pvr_dma[PVR_DST] != 0) {
         dbglog(DBG_ERROR, "pvr_sq_load: PVR DMA has not finished\n");
@@ -204,7 +204,7 @@ void *pvr_sq_load(void *dest, const void *src, size_t n, int type) {
         return NULL;
     }
 
-    void *dma_area_ptr = (void *)pvr_dest_addr((uintptr_t)dest, type);
+    dma_area_ptr = (void *)pvr_dest_addr((uintptr_t)dest, type);
     sq_cpy(dma_area_ptr, src, n);
 
     return dest;
@@ -212,6 +212,7 @@ void *pvr_sq_load(void *dest, const void *src, size_t n, int type) {
 
 /* Fills n bytes at PVR dest with 16-bit c, dest must be 32-byte aligned */
 void *pvr_sq_set16(void *dest, uint32_t c, size_t n, int type) {
+    void *dma_area_ptr;
 
     if(pvr_dma[PVR_DST] != 0) {
         dbglog(DBG_ERROR, "pvr_sq_set16: PVR DMA has not finished\n");
@@ -219,7 +220,7 @@ void *pvr_sq_set16(void *dest, uint32_t c, size_t n, int type) {
         return NULL;
     }
 
-    void *dma_area_ptr = (void *)pvr_dest_addr((uintptr_t)dest, type);
+    dma_area_ptr = (void *)pvr_dest_addr((uintptr_t)dest, type);
     sq_set16(dma_area_ptr, c, n);
 
     return dest;
@@ -227,6 +228,7 @@ void *pvr_sq_set16(void *dest, uint32_t c, size_t n, int type) {
 
 /* Fills n bytes at PVR dest with 32-bit c, dest must be 32-byte aligned */
 void *pvr_sq_set32(void *dest, uint32_t c, size_t n, int type) {
+    void *dma_area_ptr;
 
     if(pvr_dma[PVR_DST] != 0) {
         dbglog(DBG_ERROR, "pvr_sq_set32: PVR DMA has not finished\n");
@@ -234,7 +236,7 @@ void *pvr_sq_set32(void *dest, uint32_t c, size_t n, int type) {
         return NULL;
     }
 
-    void *dma_area_ptr = (void *)pvr_dest_addr((uintptr_t)dest, type);
+    dma_area_ptr = (void *)pvr_dest_addr((uintptr_t)dest, type);
     sq_set32(dma_area_ptr, c, n);
 
     return dest;

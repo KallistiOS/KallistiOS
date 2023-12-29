@@ -199,7 +199,7 @@ static void convert_YUV420_to_YUV422_texture(void) {
                 index = (y_blk / 2 + i) * (FRAME_TEXTURE_WIDTH / 2) + 
                         (x_blk / 2);
                 *((uint64_t*)&u_block[i * 8]) = *((uint64_t*)&u_plane[index]);
-                if((i + 1) % 4 == 0) {
+                if(!((i + 1) & 3)) {
                     sq_flush(&u_block[i * 8]);
                 }
             }
@@ -209,7 +209,7 @@ static void convert_YUV420_to_YUV422_texture(void) {
                 index = (y_blk / 2 + i) * (FRAME_TEXTURE_WIDTH / 2) + 
                         (x_blk / 2);
                 *((uint64_t*)&v_block[i * 8]) = *((uint64_t*)&v_plane[index]);
-                if((i + 1) % 4 == 0) {
+                if(!((i + 1) & 3)) {
                     sq_flush(&v_block[i * 8]);
                 }
             }
@@ -221,7 +221,7 @@ static void convert_YUV420_to_YUV422_texture(void) {
                              x_blk + (i % 2 * 8);
                     *((uint64_t*)&y_block[i * 64 + j * 8]) = 
                         *((uint64_t*)&y_plane[index]);
-                    if((j + 1) % 4 == 0) {
+                    if(!((j + 1) & 3)) {
                         sq_flush(&y_block[i * 64 + j * 8]);
                     }
                 }
