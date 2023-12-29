@@ -1,6 +1,6 @@
 /* KallistiOS ##version##
 
-   arch/dreamcast/include/perfctr.h
+   arch/dreamcast/include/dc/perfctr.h
    Copyright (C) 2023 Andy Barajas
    Copyright (C) 2023 Falco Girgis
    
