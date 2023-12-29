@@ -22,6 +22,10 @@ To compile this, you need to install the `mruby` KallistiOS Port, using the
 * Create unit tests
 * Use more Sega Dreamcast features
 
+## License
+
+This example is under the MIT License. See `LICENSE` for details.
+
 ## Final note
 
 The initial source is available [here](https://github.com/yujiyokoo/mrbtris-dreamcast).
