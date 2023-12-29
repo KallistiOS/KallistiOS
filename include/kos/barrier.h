@@ -32,7 +32,7 @@ typedef union kos_thd_barrier {
 #endif /* !__KTHREAD_HAVE_BARRIER_TYPE */
 
 int thd_barrier_init(thd_barrier_t *__RESTRICT barrier,
-                     void *__RESTRICT attr, unsigned count);
+                     const void *__RESTRICT attr, unsigned count);
 int thd_barrier_destroy(thd_barrier_t *barrier);
 
 int thd_barrier_wait(thd_barrier_t *barrier);
