@@ -30,3 +30,4 @@ $(build_gcc_pass1): logdir
 	      $(to_log)
 	$(MAKE) $(makejobs) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
 	$(MAKE) -C $(build) $(install_mode) DESTDIR=$(DESTDIR) $(to_log)
+	$(clean_up)

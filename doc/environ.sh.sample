@@ -120,7 +120,7 @@ export KOS_CFLAGS="${KOS_CFLAGS} -O2"
 
 # Additional Optimizations
 #
-# Uncomment this to enable what has been found emperically to be 
+# Uncomment this to enable what has been found empirically to be 
 # the optimal set of additional flags for release build performance 
 # on the current stable toolchain. NOTE: Certain KOS-ports and examples
 # do not work properly with "-flto=auto"!

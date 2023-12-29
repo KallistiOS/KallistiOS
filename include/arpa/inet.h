@@ -5,8 +5,9 @@
 
 */
 
-/** \file   arpa/inet.h
-    \brief  Definitions for internet operations.
+/** \file    arpa/inet.h
+    \brief   Definitions for internet operations.
+    \ingroup networking_utils
 
     This file contains the standard definitions (as directed by the POSIX 2008
     standard) for several internet-related functions.
@@ -27,6 +28,13 @@ __BEGIN_DECLS
    headers visible. */
 #include <netinet/in.h>
 #include <inttypes.h>
+
+/** \defgroup networking_utils  Utilities
+    \brief                      Miscellaneous networking utilities
+    \ingroup                    networking
+
+    @{
+*/
 
 /** \brief  Convert a 32-bit value from host byte order to network byte order.
     \param  value           The value to convert.
@@ -113,7 +121,7 @@ int inet_pton(int af, const char *src, void *dst);
 
 /** \brief  Convert a binary representation of an IP address to a string.
 
-    This function does the exact oposite of the inet_pton function, converting
+    This function does the exact opposite of the inet_pton function, converting
     a binary form of an address to a string. This function, unlike inet_ntoa, is
     reentrant, and is the function that you should generally use if you need to
     convert a binary representation of an IP address to a string.
@@ -146,6 +154,8 @@ const char *inet_ntop(int af, const void *src, char *dst, socklen_t size);
                             form).
 */
 char *inet_ntoa(struct in_addr addr);
+
+/** @} */
 
 __END_DECLS
 

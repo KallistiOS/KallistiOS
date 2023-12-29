@@ -20,7 +20,7 @@ int clock_getres(clockid_t clk_id, struct timespec *ts) {
                 return -1;
             }
             ts->tv_sec = 0;
-            ts->tv_nsec = 1000 * 1000;
+            ts->tv_nsec = 1;
             return 0;
             
         default:
@@ -30,7 +30,7 @@ int clock_getres(clockid_t clk_id, struct timespec *ts) {
 }
 
 int clock_gettime(clockid_t clk_id, struct timespec *ts) {
-    uint32_t secs, msecs; 
+    uint32_t secs, nsecs;
 
     if(!ts) {
         errno = EFAULT;
@@ -44,9 +44,9 @@ int clock_gettime(clockid_t clk_id, struct timespec *ts) {
         case CLOCK_MONOTONIC:
         case CLOCK_PROCESS_CPUTIME_ID:
         case CLOCK_THREAD_CPUTIME_ID:
-            timer_ms_gettime(&secs, &msecs);
+            timer_ns_gettime(&secs, &nsecs);
             ts->tv_sec = secs;
-            ts->tv_nsec = msecs * 1000 * 1000;
+            ts->tv_nsec = nsecs;
             return 0;
 
         default:

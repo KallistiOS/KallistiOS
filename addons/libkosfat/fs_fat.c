@@ -1307,7 +1307,7 @@ static vfs_handler_t vh = {
         NMMGR_LIST_INIT         /* list */
     },
 
-    0, NULL,                    /* no cacheing, privdata */
+    0, NULL,                    /* no caching, privdata */
 
     fs_fat_open,                /* open */
     fs_fat_close,               /* close */

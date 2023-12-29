@@ -5,8 +5,9 @@
 
 */
 
-/** \file   netinet/udp.h
-    \brief  Definitions for the User Datagram Protocol.
+/** \file    netinet/udp.h
+    \brief   Definitions for the User Datagram Protocol.
+    \ingroup networking_udp
 
     This file contains definitions related to the User Datagram Protocol (UDP).
     UDP is a connectionless datagram delivery protocol, which provides optional
@@ -24,7 +25,9 @@
 
 __BEGIN_DECLS
 
-/** \defgroup udp_opts                  UDP protocol level options
+/** \defgroup udp_opts                  UDP Options
+    \brief                              UDP protocol level options
+    \ingroup                            networking_udp
 
     These are the various socket-level options that can be accessed with the
     setsockopt() and getsockopt() functions for the IPPROTO_UDP level value.

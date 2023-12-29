@@ -5,8 +5,9 @@
 
 */
 
-/** \file   kos/dbglog.h
-    \brief  A debugging log.
+/** \file    kos/dbglog.h
+    \brief   A debugging log.
+    \ingroup logging
 
     This file contains declarations related a debugging log. This log can be
     used to restrict log messages, for instance to make it so that only the most
@@ -25,7 +26,13 @@ __BEGIN_DECLS
 #include <stdarg.h>
 #include <kos/fs.h>
 
-/** \brief  Kernel debugging printf.
+/** \defgroup logging   Logging
+    \brief              KOS's Logging API 
+    \ingroup            debugging
+*/
+
+/** \brief   Kernel debugging printf.
+    \ingroup logging    
 
     This function is similar to printf(), but filters its output through a log
     level check before being printed. This way, you can set the level of debug
@@ -38,7 +45,9 @@ __BEGIN_DECLS
 */
 void dbglog(int level, const char *fmt, ...) __printflike(2, 3);
 
-/** \defgroup   dbglog_levels   Log levels for dbglog
+/** \defgroup   dbglog_levels   Log Levels
+    \brief                      dbglog severity levels
+    \ingroup                    logging
 
     This is the list of levels that are allowed to be passed into the dbglog()
     function, representing different levels of importance.
@@ -55,7 +64,8 @@ void dbglog(int level, const char *fmt, ...) __printflike(2, 3);
 #define DBG_KDEBUG      7       /**< \brief Kernel debug messages */
 /** @} */
 
-/** \brief  Set the debugging log level.
+/** \brief   Set the debugging log level.
+    \ingroup logging
 
     This function sets the level for which dbglog() will ignore messages for if
     the message has a higher level.

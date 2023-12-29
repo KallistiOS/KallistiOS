@@ -14,10 +14,10 @@
     of a mutex is one of the most common types of locks in a multi-threaded
     environment. Mutexes do exactly what they sound like, they keep two (or
     more) threads mutually exclusive from one another. A mutex is used around
-    a block of code to prevent two threads from interfereing with one another
+    a block of code to prevent two threads from interfering with one another
     when only one would be appropriate to be in the block at a time.
 
-    KallistiOS implments 3 types of mutexes, to bring it roughly in-line with
+    KallistiOS implements 3 types of mutexes, to bring it roughly in-line with
     POSIX. The types of mutexes that can be made are normal, error-checking, and
     recursive. Each has its own strengths and weaknesses, which are briefly
     discussed below.
@@ -136,7 +136,7 @@ int mutex_init(mutex_t *m, int mtype);
     allocated internally for it. It is your responsibility to make sure that all
     threads waiting on the mutex are taken care of before destroying the mutex.
 
-    This function can be called on statically initialized as well as dyanmically
+    This function can be called on statically initialized as well as dynamically
     initialized mutexes.
 
     \retval 0               On success

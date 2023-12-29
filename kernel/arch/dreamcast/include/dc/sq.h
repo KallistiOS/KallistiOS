@@ -15,7 +15,8 @@
 */
 
 /** \defgroup  store_queues Store Queues
-    \brief  SH4 CPU Peripheral for burst memory transactions.
+    \brief     SH4 CPU Peripheral for burst memory transactions.
+    \ingroup   system
 
     The store queues are a way to do efficient burst transfers from the CPU to
     external memory. They can be used in a variety of ways, such as to transfer

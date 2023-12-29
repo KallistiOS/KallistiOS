@@ -8,8 +8,9 @@
 #ifndef __KOS_NETCFG_H
 #define __KOS_NETCFG_H
 
-/** \file   kos/netcfg.h
-    \brief  Network configuration interface.
+/** \file    kos/netcfg.h
+    \brief   Network configuration interface.
+    \ingroup netcfg
 
     This file provides a common interface for reading and writing the network
     configuration on KOS. The interface can read from the flashrom on the
@@ -27,7 +28,14 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 
-/** \defgroup   netcfg_methods  Network connection methods
+/** \defgroup   netcfg          Configuration
+    \brief                      KOS Network Configuration Management
+    \ingroup                    networking
+*/
+
+/** \defgroup   netcfg_methods  Methods
+    \brief                      Network connection methods
+    \ingroup                    netcfg
 
     These constants give the list of network connection methods that are
     supported by the netcfg_t type. One of these will be in the method field of
@@ -40,7 +48,9 @@ __BEGIN_DECLS
 #define NETCFG_METHOD_PPPOE     4   /**< \brief Use PPPoE. */
 /** @} */
 
-/** \defgroup   netcfg_srcs     Network configuration sources
+/** \defgroup   netcfg_srcs     Sources
+    \brief                      Network configuration sources
+    \ingroup                    netcfg
 
     These constants give the list of places that the network configuration might
     be read from. One of these constants should be in the src field of objects
@@ -54,7 +64,8 @@ __BEGIN_DECLS
 #define NETCFG_SRC_CDROOT   3   /**< \brief Read from the root of the CD. */
 /** @} */
 
-/** \brief  Network configuration information.
+/** \brief   Network configuration information.
+    \ingroup netcfg
 
     This structure contains information about the network configuration of the
     system, as set up by the user.
@@ -90,7 +101,8 @@ typedef struct netcfg {
     char driver[64];        /**< \brief Driver program filename (if any). */
 } netcfg_t;
 
-/** \brief  Load network configuration from a file.
+/** \brief   Load network configuration from a file.
+    \ingroup netcfg
 
     This function loads the network configuration that is stored in the given
     file to the network configuration structure passed in. This function will
@@ -99,36 +111,43 @@ typedef struct netcfg {
 
     \param  fn          The file to read the configuration from.
     \param  out         Buffer to store the parsed configuration.
+    
     \return             0 on success, <0 on failure.
 */
 int netcfg_load_from(const char * fn, netcfg_t * out);
 
-/** \brief  Load network configuration from the Dreamcast's flashrom.
+/** \brief   Load network configuration from the Dreamcast's flashrom.
+    \ingroup netcfg
 
     This function loads the network configuration that is stored in flashrom of
     the Dreamcast, parsing it into a netcfg_t.
 
-    \param  out         Buffer to store the parsed configuration.
-    \return             0 on success, <0 on failure.
     \note               This currently does not read the configuration stored by
                         the PlanetWeb browser at all.
+
+    \param  out         Buffer to store the parsed configuration.
+    
+    \return             0 on success, <0 on failure.
 */
 int netcfg_load_flash(netcfg_t * out);
 
-/** \brief  Load network configuration.
+/** \brief   Load network configuration.
+    \ingroup netcfg
 
     This function loads the network configuration data, searching in multiple
-    locations to attempt to find a file with a stored configurtion. This
+    locations to attempt to find a file with a stored configuration. This
     function will attempt to read the configuration from each VMU first (from 
     a file named net.cfg), then it will try the flashrom, followed by the
     current working directory, and lastly the root of the CD.
 
-    \param  out         Buffer to store the parsed configuraiton.
+    \param  out         Buffer to store the parsed configuration.
+    
     \return             0 on success, <0 on failure.
 */
 int netcfg_load(netcfg_t * out);
 
-/** \brief  Save network configuration to a file.
+/** \brief   Save network configuration to a file.
+    \ingroup netcfg
 
     This function saves the network configuration to the specified file. This
     function will automatically prepend the appropriate header if it is saved
@@ -136,16 +155,19 @@ int netcfg_load(netcfg_t * out);
 
     \param  fn          The file to save to.
     \param  cfg         The configuration to save.
+    
     \return             0 on success, <0 on failure.
 */
 int netcfg_save_to(const char * fn, const netcfg_t * cfg);
 
-/** \brief  Save network configuration to the first available VMU.
+/** \brief   Save network configuration to the first available VMU.
+    \ingroup netcfg
 
     This function saves the network configuration to first VMU that it finds. It
     will not retry if the first VMU doesn't have enough space to hold the file.
 
     \param  cfg         The configuration to save.
+    
     \return             0 on success, <0 on failure.
 */
 int netcfg_save(const netcfg_t * cfg);

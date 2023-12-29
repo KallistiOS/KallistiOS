@@ -4,8 +4,9 @@
    Copyright (C) 2020 Lawrence Sebald
 */
 
-/** \file   libgen.h
-    \brief  Definitions for pattern matching functions.
+/** \file    libgen.h
+    \brief   Definitions for pattern matching functions.
+    \ingroup vfs_posix
 
     This file contains the definitions for the functions basename() and
     dirname() as specified by the POSIX standard. How the POSIX people came
@@ -24,6 +25,10 @@
 
 #include <sys/cdefs.h>
 __BEGIN_DECLS
+
+/** \addtogroup vfs_posix
+    @{
+*/
 
 /** \brief  Get the last component of a pathname.
 
@@ -44,7 +49,7 @@ char *basename(char *path);
 
     This function retrieves the name of the parent directory of the file
     pathname specified. This function does not attempt to perform any sort of
-    path resolution to check for the existence of the specified diretory or to
+    path resolution to check for the existence of the specified directory or to
     resolve any symbolic links.
 
     \note   This function may modify its input and the returned value may be a
@@ -54,6 +59,8 @@ char *basename(char *path);
     \return                 A pointer to the parent directory of the given path.
 */
 char *dirname(char *path);
+
+/** @} */
 
 __END_DECLS
 

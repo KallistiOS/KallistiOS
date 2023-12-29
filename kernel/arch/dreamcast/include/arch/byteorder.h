@@ -5,8 +5,9 @@
 
 */
 
-/** \file   arch/byteorder.h
-    \brief  Byte-order related macros.
+/** \file    arch/byteorder.h
+    \brief   Byte-order related macros.
+    \ingroup system_arch
 
     This file contains architecture-specific byte-order related macros and/or
     functions. Each platform should define six macros/functions in this file:
@@ -30,6 +31,10 @@ __BEGIN_DECLS
 /* If we've included <arch/types.h>, this might already be defined... */
 #undef BYTE_ORDER
 #endif
+
+/** \addtogroup arch
+    @{
+*/
 
 /** \brief  Define the byte-order of the platform in use. */
 #define BYTE_ORDER      LITTLE_ENDIAN
@@ -117,6 +122,8 @@ __BEGIN_DECLS
     \return             The converted value.
 */
 #define arch_htonl(x) arch_swap32(x)
+
+/** @} */
 
 __END_DECLS
 

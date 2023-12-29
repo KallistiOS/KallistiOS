@@ -5,8 +5,9 @@
 
 */
 
-/** \file   arch/exec.h
-    \brief  Program execution.
+/** \file    arch/exec.h
+    \brief   Program execution.
+    \ingroup system_overlays
 
     This file contains functions that allow you to replace the currently running
     program with another binary that has already been loaded into memory. Doing
@@ -21,6 +22,13 @@
 
 #include <sys/cdefs.h>
 __BEGIN_DECLS
+
+/** \defgroup system_overlays   Overlays
+    \brief                      API for loading and executing overlays
+    \ingroup                    system
+
+    @{
+*/
 
 /** \brief  Replace the currently running binary.
 
@@ -43,6 +51,8 @@ void arch_exec_at(const void *image, uint32 length, uint32 address) __noreturn;
     \param  length          The length of the binary.
 */
 void arch_exec(const void *image, uint32 length) __noreturn;
+
+/** @} */
 
 __END_DECLS
 

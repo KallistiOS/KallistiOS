@@ -4,14 +4,9 @@
    Copyright (C) 2014 Lawrence Sebald
 */
 
-#ifndef __KOS_OPTS_H
-#define __KOS_OPTS_H
-
-#include <sys/cdefs.h>
-__BEGIN_DECLS
-
-/** \file   kos/opts.h
-    \brief  Compile-time options regarding debugging and other topics.
+/** \file    kos/opts.h
+    \brief   Compile-time options regarding debugging and other topics.
+    \ingroup debugging_options
 
     This file is meant to be a kind of Grand Central Station for all of the
     various compile-time options that can be set when building KOS. Each of the
@@ -31,8 +26,21 @@ __BEGIN_DECLS
     \author Lawrence Sebald
 */
 
-/* Various debug options. Uncomment the #define line to enable the specific
-   option described. */
+#ifndef __KOS_OPTS_H
+#define __KOS_OPTS_H
+
+#include <sys/cdefs.h>
+__BEGIN_DECLS
+
+/** \defgroup debugging_options Options
+    \brief                      Compile-time options for debugging KOS
+    \ingroup                    debugging
+
+   Various debug options. Uncomment the `#define` line to enable the specific
+   option described. 
+
+   @{
+*/
 
 /* Enable debugging in fs_vmu. */
 /* #define VMUFS_DEBUG 1 */
@@ -120,6 +128,8 @@ __BEGIN_DECLS
 #ifndef FS_RAMDISK_MAX_FILES
 #define FS_RAMDISK_MAX_FILES 8
 #endif
+
+/** @} */
 
 __END_DECLS
 

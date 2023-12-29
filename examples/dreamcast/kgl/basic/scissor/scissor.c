@@ -19,9 +19,9 @@
 
 #include <kos.h>
 
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glut.h>
+#include <KGL/gl.h>
+#include <KGL/glu.h>
+#include <KGL/glut.h>
 
 #define NUM_DEMOS 5
 enum { USERCLIP_INSIDE = 0, USERCLIP_OUTSIDE, USERCLIP_DISABLED,

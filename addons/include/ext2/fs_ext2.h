@@ -4,17 +4,9 @@
    Copyright (C) 2012, 2013 Lawrence Sebald
 */
 
-#ifndef __EXT2_FS_EXT2_H
-#define __EXT2_FS_EXT2_H
-
-#include <sys/cdefs.h>
-__BEGIN_DECLS
-
-#include <stdint.h>
-#include <kos/blockdev.h>
-
-/** \file   ext2/fs_ext2.h
-    \brief  VFS interface for an ext2 filesystem.
+/** \file    ext2/fs_ext2.h
+    \brief   VFS interface for an ext2 filesystem.
+    \ingroup vfs_ext2
 
     This file defines the public interface to add support for the Second
     Extended Filesystem (ext2) to KOS' VFS. ext2 is one of the many filesystems
@@ -29,7 +21,7 @@ __BEGIN_DECLS
     of ext2 and the availability of programs/drivers to read ext2 on most major
     OSes available for PCs today. The second purpose of this filesystem driver
     is to provide an alternative for fs_romdisk when swapping out disk images at
-    runtime. Basically, if a disk image is useful to you, but cacheing it fully
+    runtime. Basically, if a disk image is useful to you, but caching it fully
     in memory is not important, then you could rig up a relatively simple
     interface with this filesystem driver.
 
@@ -51,7 +43,22 @@ __BEGIN_DECLS
     \author Lawrence Sebald
 */
 
-/** \brief  Initialize fs_ext2.
+#ifndef __EXT2_FS_EXT2_H
+#define __EXT2_FS_EXT2_H
+
+#include <sys/cdefs.h>
+__BEGIN_DECLS
+
+#include <stdint.h>
+#include <kos/blockdev.h>
+
+/** \defgroup vfs_ext2  EXT2 
+    \brief              KOS VFS support for the Second Extended Filesystem
+    \ingroup            vfs_drivers
+*/
+
+/** \brief   Initialize fs_ext2.
+    \ingroup vfs_ext2
 
     This function initializes fs_ext2, preparing various internal structures for
     use.
@@ -60,7 +67,8 @@ __BEGIN_DECLS
 */
 int fs_ext2_init(void);
 
-/** \brief  Shut down fs_ext2.
+/** \brief   Shut down fs_ext2.
+    \ingroup vfs_ext2
 
     This function shuts down fs_ext2, basically undoing what fs_ext2_init() did.
 
@@ -68,7 +76,9 @@ int fs_ext2_init(void);
 */
 int fs_ext2_shutdown(void);
 
-/** \defgroup ext2_mount_flags          Mount flags for fs_ext2
+/** \defgroup ext2_mount_flags          Mount Flags
+    \brief                              Mount flags for fs_ext2
+    \ingroup                            vfs_ext2
 
     These values are the valid flags that can be passed for the flags parameter
     to the fs_ext2_mount() function. Note that these can be combined, except for
@@ -88,7 +98,8 @@ int fs_ext2_shutdown(void);
 #define FS_EXT2_MOUNT_READWRITE     0x00000001  /**< \brief Mount read-write */
 /** @} */
 
-/** \brief  Mount an ext2 filesystem in the VFS.
+/** \brief   Mount an ext2 filesystem in the VFS.
+    \ingroup vfs_ext2
 
     This function mounts an ext2 filesystem to the specified mount point on the
     VFS. This function will detect whether or not an ext2 filesystem exists on
@@ -98,24 +109,28 @@ int fs_ext2_shutdown(void);
     \param  mp          The path to mount the filesystem at.
     \param  dev         The block device containing the filesystem.
     \param  flags       Mount flags. Bitwise OR of values from ext2_mount_flags
+    
     \retval 0           On success.
     \retval -1          On error.
 */
 int fs_ext2_mount(const char *mp, kos_blockdev_t *dev, uint32_t flags);
 
-/** \brief  Unmount an ext2 filesystem from the VFS.
+/** \brief   Unmount an ext2 filesystem from the VFS.
+    \ingroup vfs_ext2
 
     This function unmoutns an ext2 filesystem that was previously mounted by the
     fs_ext2_mount() function.
 
     \param  mp          The mount point of the filesystem to be unmounted.
+    
     \retval 0           On success.
     \retval -1          On error.
 */
 int fs_ext2_unmount(const char *mp);
 
-/** \brief  Sync an ext2 filesystem, flushing all pending writes to the block
-            device.
+/** \brief   Sync an ext2 filesystem, flushing all pending writes to the block
+             device.
+    \ingroup vfs_ext2
 
     This function completes all pending writes on the filesystem, making sure
     all data and metadata are in a consistent state on the block device. As both
@@ -124,11 +139,12 @@ int fs_ext2_unmount(const char *mp);
     be a good idea if there is a chance that the filesystem will not be
     unmounted cleanly.
 
+    \note   This function has no effect if the filesystem was mounted read-only.
+
     \param  mp          The mount point of the filesystem to be synced.
+    
     \retval 0           On success.
     \retval -1          On error.
-
-    \note   This function has no effect if the filesystem was mounted read-only.
 */
 int fs_ext2_sync(const char *mp);
 

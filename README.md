@@ -15,7 +15,7 @@
 
 KOS is an unofficial development kit for the SEGA Dreamcast game console with some support for the NAOMI and NAOMI 2 arcade boards.
 
-KOS was developed from scratch over the internet by a group of free software developers and has no relation to the official Sega Katana or Microsoft Windows CE Dreamcast development kits. This has allowed it to fuel a thriving Dreamcast homebrew scene, powering many commercial releases for the platform over the years. It supports a signficiant portion of the Dreamcast's hardware capabilities and a wide variety of peripherals, accessories, and add-ons for the console, including custom hardware modifications that have been created by the scene. 
+KOS was developed from scratch over the internet by a group of free software developers and has no relation to the official Sega Katana or Microsoft Windows CE Dreamcast development kits. This has allowed it to fuel a thriving Dreamcast homebrew scene, powering many commercial releases for the platform over the years. It supports a significant portion of the Dreamcast's hardware capabilities and a wide variety of peripherals, accessories, and add-ons for the console, including custom hardware modifications that have been created by the scene. 
 
 Despite the console's age, KOS offers an extremely modern, programmer-friendly development environment. Using the latest GCC toolchain, it supports the entirety of C17 and C++20 including their standard libraries, along with support for portions of C23, C++23, Objective-C, and various POSIX APIs. Additionally, KOS-ports offers a rich set of add-on libraries such as SDL, OpenGL, OpenAL, and Lua for the platform.
 

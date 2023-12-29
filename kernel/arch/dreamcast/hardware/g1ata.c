@@ -659,7 +659,7 @@ int g1_ata_read_lba_dma(uint64_t sector, size_t count, void *buf,
         return -1;
     }
 
-    /* Set the settings for this transfer and reenable IRQs. */
+    /* Set the settings for this transfer and re-enable IRQs. */
     dma_blocking = block;
     dma_in_progress = 1;
     irq_restore(old);
@@ -871,7 +871,7 @@ int g1_ata_write_lba_dma(uint64_t sector, size_t count, const void *buf,
         return -1;
     }
 
-    /* Set the settings for this transfer and reenable IRQs. */
+    /* Set the settings for this transfer and re-enable IRQs. */
     dma_blocking = block;
     dma_in_progress = 1;
     irq_restore(old);

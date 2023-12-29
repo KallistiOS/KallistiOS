@@ -7,8 +7,9 @@
 
 */
 
-/** \file   dc/scif.h
-    \brief  Serial port functionality.
+/** \file    dc/scif.h
+    \brief   Serial port functionality.
+    \ingroup system_scif
 
     This file deals with raw access to the serial port on the Dreamcast.
 
@@ -25,6 +26,13 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 #include <kos/dbgio.h>
+
+/** \defgroup system_scif   SCIF
+    \brief                  Driver for managing the serial port
+    \ingroup                system
+
+    @{
+*/
 
 /** \brief  Set serial parameters.
     \param  baud            The bitrate to set.
@@ -197,6 +205,8 @@ uint8 scif_spi_read_byte(void);
     \param  len             Number of bytes to read from the device.
 */
 void scif_spi_read_data(uint8 *buffer, size_t len);
+
+/** @} */
 
 __END_DECLS
 

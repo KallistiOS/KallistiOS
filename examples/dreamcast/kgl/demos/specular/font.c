@@ -10,7 +10,7 @@
 #include <malloc.h>
 #include <stdio.h>
 
-#include <GL/gl.h>
+#include <KGL/gl.h>
 
 #include "font.h"
 

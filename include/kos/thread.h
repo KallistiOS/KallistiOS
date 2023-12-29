@@ -6,19 +6,6 @@
 
 */
 
-#ifndef __KOS_THREAD_H
-#define __KOS_THREAD_H
-
-#include <sys/cdefs.h>
-__BEGIN_DECLS
-
-#include <kos/cdefs.h>
-#include <kos/tls.h>
-#include <arch/irq.h>
-#include <sys/queue.h>
-#include <sys/reent.h>
-#include <stdint.h>
-
 /** \file    kos/thread.h
     \brief   Threading support.
     \ingroup kthreads
@@ -39,9 +26,22 @@ __BEGIN_DECLS
     \see    kos/tls.h
 */
 
-/** \defgroup kthreads KThreads
-    \brief    KOS Native Threading API
-    \ingroup  threading
+#ifndef __KOS_THREAD_H
+#define __KOS_THREAD_H
+
+#include <sys/cdefs.h>
+__BEGIN_DECLS
+
+#include <kos/cdefs.h>
+#include <kos/tls.h>
+#include <arch/irq.h>
+#include <sys/queue.h>
+#include <sys/reent.h>
+#include <stdint.h>
+
+/** \defgroup kthreads  Kernel
+    \brief              KOS Native Kernel Threading API
+    \ingroup            threading
 
     The thread scheduler itself is a relatively simplistic priority scheduler.
     There is no provision for priorities to erode over time, so keep that in
@@ -103,7 +103,7 @@ LIST_HEAD(ktlist, kthread);
 
 /** \brief   Control Block Header
 
-    Header preceeding the static TLS data segments as defined by
+    Header preceding the static TLS data segments as defined by
     the SH-ELF TLS ABI (version 1). This is what the thread pointer 
     (GBR) points to for compiler access to thread-local data. 
 */
@@ -120,7 +120,10 @@ typedef struct tcbhead {
 
     \headerfile kos/thread.h
 */
-typedef struct kthread {
+typedef __attribute__((aligned(32))) struct kthread {
+    /** \brief  Register store -- used to save thread context. */
+    irq_context_t context;
+
     /** \brief  Thread list handle. Not a function. */
     LIST_ENTRY(kthread) t_list;
 
@@ -173,9 +176,6 @@ typedef struct kthread {
 
     /** \brief  Current file system path. */
     char pwd[KTHREAD_PWD_SIZE];
-
-    /** \brief  Register store -- used to save thread context. */
-    irq_context_t context;
 
     /** \brief  Thread private stack.
         This should be a pointer to the base of a stack page. */
@@ -603,7 +603,7 @@ int thd_get_mode(void) __deprecated;
                             or NULL if you don't care about it.
 
     \return                 0 on success, or less than 0 if the thread is
-                            non-existant or not joinable.
+                            non-existent or not joinable.
 
     \sa thd_detach
 */
@@ -619,7 +619,7 @@ int thd_join(kthread_t *thd, void **value_ptr);
     \param  thd             The joinable thread to detach.
 
     \return                 0 on success or less than 0 if the thread is
-                            non-existant or already detached.
+                            non-existent or already detached.
     \sa    thd_join()
 */
 int thd_detach(kthread_t *thd);

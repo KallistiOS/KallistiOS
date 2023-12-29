@@ -753,7 +753,7 @@ static vfs_handler_t vh = {
         NMMGR_LIST_INIT
     },
 
-    0, NULL,            /* no cacheing, privdata */
+    0, NULL,            /* no caching, privdata */
 
     ramdisk_open,
     ramdisk_close,

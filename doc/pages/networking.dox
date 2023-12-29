@@ -1,0 +1,7 @@
+/** \defgroup networking Networking
+    \brief    APIs and drivers for network and internet connectivity
+
+    KOS' built-in network stack supports UDP over IPv4, and to some degree has
+    some basic IPv6 support as well. This will change over time, hopefully
+    leaving us with full TCP and UDP support both over IPv4 and IPv6.
+*/

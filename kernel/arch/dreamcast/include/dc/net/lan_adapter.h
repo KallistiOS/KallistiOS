@@ -5,8 +5,9 @@
 
 */
 
-/** \file   dc/net/lan_adapter.h
-    \brief  LAN Adapter support.
+/** \file    dc/net/lan_adapter.h
+    \brief   LAN Adapter support.
+    \ingroup lan_adapter
 
     This file contains declarations related to support for the HIT-0300 "LAN
     Adapter". There's not really anything that users will generally have to deal
@@ -22,6 +23,11 @@
 __BEGIN_DECLS
 
 #include <kos/net.h>
+
+/** \defgroup lan_adapter  LAN Adapter
+    \brief                 Driver for the Dreamcast's LAN Adapter
+    \ingroup               networking_drivers
+*/
 
 /* \cond */
 /* Initialize */

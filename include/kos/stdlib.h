@@ -4,9 +4,13 @@
    Copyright (C) 2023 Falco Girgis
 */
 
-/* 
-   Add select POSIX extensions to stdlib.h which are not present within Newlib.
-*/ 
+/** \file    kos/stdlib.h
+    \brief   KOS-implementation of select POSIX extensions
+
+    Add select POSIX extensions to stdlib.h which are not present within Newlib.
+
+    \author Falco Girgis
+*/
 
 #ifndef _STDLIB_H_
 #error "Do not include this file directly. Use <stdlib.h> instead."

@@ -28,7 +28,7 @@ kernel; so don't use them if you don't need to =).
 
 */
 
-/* Some convienence macros */
+/* Some convenience macros */
 #define SNDREGADDR(x) (0xa0700000 + (x))
 #define CHNREGADDR(chn, x) SNDREGADDR(0x80*(chn) + (x))
 

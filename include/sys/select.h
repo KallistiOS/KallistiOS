@@ -5,8 +5,9 @@
 
 */
 
-/** \file   select.h
-    \brief  Definitions for the select() function.
+/** \file    select.h
+    \brief   Definitions for the select() function.
+    \ingroup networking_sockets
 
     This file contains the definitions needed for using the select() function,
     as directed by the POSIX 2008 standard (aka The Open Group Base
@@ -47,6 +48,7 @@ __BEGIN_DECLS
 
 #define NFDBITS 32
 
+/** \brief Represents a set of file descriptors */
 typedef struct fd_set {
     unsigned long fds_bits[FD_SETSIZE / NFDBITS];
 } fd_set;
@@ -66,7 +68,7 @@ typedef struct fd_set {
 
 /** \brief  Wait for activity on a group of file descriptors.
 
-    This function will check the specfied group of file descriptors for activity
+    This function will check the specified group of file descriptors for activity
     and wait for activity (up to the timeout specified) if there is not any
     pending events already.
 
@@ -78,7 +80,7 @@ typedef struct fd_set {
     \param  errorfds    File descriptors to check for error/exceptional
                         conditions.
     \param  timeout     Maximum amount of time to block. Passing a 0 timeout
-                        will make the funciton not block, Passing NULL here will
+                        will make the function not block, Passing NULL here will
                         make the function block indefinitely.
     \return             -1 on error (sets errno as appropriate), or the number
                         of bits set in the fd sets on success (this may be 0 if

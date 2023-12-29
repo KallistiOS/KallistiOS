@@ -408,7 +408,7 @@ extern "C" {
       checking is fairly extensive, and will slow down execution
       noticeably. Calling malloc_stats or mallinfo with DEBUG set will
       attempt to check every non-mmapped allocated and free chunk in the
-      course of computing the summmaries. (By nature, mmapped regions
+      course of computing the summaries. (By nature, mmapped regions
       cannot be checked very much automatically.)
 
       Setting DEBUG may also be helpful if you are trying to modify
@@ -467,7 +467,7 @@ extern "C" {
       this case the alignment requirements turn out to negate any
       potential advantages of decreasing size_t word size.
 
-      Implementors: Beware of the possible combinations of:
+      Implementers: Beware of the possible combinations of:
          - INTERNAL_SIZE_T might be signed or unsigned, might be 32 or 64 bits,
            and might be the same width as int or as long
          - size_t might have different width and signedness as INTERNAL_SIZE_T
@@ -1091,7 +1091,7 @@ extern "C" {
       arena:     current total non-mmapped bytes allocated from system
       ordblks:   the number of free chunks
       smblks:    the number of fastbin blocks (i.e., small chunks that
-                   have been freed but not use resused or consolidated)
+                   have been freed but not use reused or consolidated)
       hblks:     current number of mmapped regions
       hblkhd:    total bytes held in mmapped regions
       usmblks:   the maximum total allocated space. This will be greater
@@ -2586,7 +2586,7 @@ nextchunk-> +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     the malloc code, but "mem" is the pointer that is returned to the
     user.  "Nextchunk" is the beginning of the next contiguous chunk.
 
-    Chunks always begin on even word boundries, so the mem portion
+    Chunks always begin on even word boundaries, so the mem portion
     (which is returned to the user) is also on an even word boundary, and
     thus at least double-word aligned.
 
@@ -2786,7 +2786,7 @@ nextchunk-> +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     and consolidated sets of chunks, which is what these bins hold, so
     they can be found quickly.  All procedures maintain the invariant
     that no consolidated chunk physically borders another one, so each
-    chunk in a list is known to be preceeded and followed by either
+    chunk in a list is known to be preceded and followed by either
     inuse chunks or the ends of memory.
 
     Chunks in bins are kept in size order, with ties going to the
@@ -5576,10 +5576,10 @@ History:
         Wolfram Gloger (Gloger@lrz.uni-muenchen.de).
       * Use last_remainder in more cases.
       * Pack bins using idea from  colin@nyx10.cs.du.edu
-      * Use ordered bins instead of best-fit threshhold
+      * Use ordered bins instead of best-fit threshold
       * Eliminate block-local decls to simplify tracing and debugging.
       * Support another case of realloc via move into top
-      * Fix error occuring when initial sbrk_base not word-aligned.
+      * Fix error occurring when initial sbrk_base not word-aligned.
       * Rely on page size for units instead of SBRK_UNIT to
         avoid surprises about sbrk alignment conventions.
       * Add mallinfo, mallopt. Thanks to Raymond Nijssen
