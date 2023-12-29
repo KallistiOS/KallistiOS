@@ -19,7 +19,7 @@
     \author Falco Girgis
 */
 
-#ifndef __ARCH_PERFCTR_H
+#ifndef __DC_PERFCTR_H
 #define __DC_PERFCTR_H
 
 #include <stdint.h>
