@@ -2,6 +2,7 @@
 
    dckos.c - Exposed functions for mruby: using KOS features (implementation) 
    Copyright (C) 2019-2024 Yuji Yokoo
+   Copyright (C) 2020-2024 Mickaël "SiZiOUS" Cardoso
 
    Dreampresent
    A simple presentation tool for Sega Dreamcast written in Ruby

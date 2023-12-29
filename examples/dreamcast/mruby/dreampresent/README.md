@@ -3,9 +3,15 @@
 This is a presentation tool that runs on **Sega Dreamcast**. It's written in 
 **Ruby** and uses [mruby](https://mruby.org/).
 
-This tool was initially developed by [@yujiyokoo](https://github.com/yujiyokoo) 
-for the **RubyConf TW 2019** event (later it was updated for 
-**RubyConf AU 2020**).
+This tool was initially developed by [Yuji Yokoo](https://github.com/yujiyokoo) 
+for the **RubyConf TW 2019** event; then it was later updated for the
+**RubyConf AU 2020** event. This project has been refactored by [Mickaël 
+"SiZiOUS" Cardoso](https://github.com/sizious).
+
+## Compiling
+
+To compile this, you need to install the `mruby`, `libpng` and `zlib` KallistiOS
+Port, using the `kos-ports` repository.
 
 ## Usage
 
@@ -21,11 +27,6 @@ The time is currently hardcoded to `35` minutes.
 
 If you press `Right` on the D-pad, you move the time forward by 5 minutes,
 and back by 5 minutes if you press `Left`.
-
-## Compiling
-
-To compile this, you need to install the `mruby`, `libpng` and `zlib` KallistiOS
-Port, using the `kos-ports` repository.
 
 ## License
 
