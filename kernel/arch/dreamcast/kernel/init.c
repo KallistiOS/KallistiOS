@@ -17,6 +17,8 @@
 #include <arch/memory.h>
 #include <arch/rtc.h>
 #include <arch/timer.h>
+#include <arch/wdt.h>
+#include <dc/perfctr.h>
 #include <dc/ubc.h>
 #include <dc/pvr.h>
 #include <dc/vmufs.h>
@@ -153,7 +155,7 @@ int  __weak arch_auto_init(void) {
     hardware_sys_init();        /* DC low-level hardware init */
 
     /* Initialize our timer */
-    timer_ns_enable();
+    perf_cntr_timer_enable();
     timer_ms_enable();
     rtc_init();
 
@@ -250,6 +252,9 @@ void arch_main(void) {
     *DMAOR = 0x8201;
 #endif /* _arch_sub_naomi */
 
+    /* Ensure the WDT is not enabled from a previous session */
+    wdt_disable();
+
     /* Ensure that UBC is not enabled from a previous session */
     ubc_disable_all();
 
@@ -288,6 +293,9 @@ void arch_shutdown(void) {
     _fini();
 
     dbglog(DBG_CRITICAL, "arch: shutting down kernel\n");
+
+    /* Disable the WDT, if active */
+    wdt_disable();
 
     /* Turn off UBC breakpoints, if any */
     ubc_disable_all();
@@ -366,6 +374,9 @@ void arch_menu(void) {
 /* Called to shut down non-gracefully; assume the system is in peril
    and don't try to call the dtors */
 void arch_abort(void) {
+    /* Disable the WDT, if active */
+    wdt_disable();
+
     /* Turn off UBC breakpoints, if any */
     ubc_disable_all();
 

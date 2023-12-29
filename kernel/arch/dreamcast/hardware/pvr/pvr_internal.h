@@ -223,8 +223,7 @@ typedef struct {
     // Output address for to-texture mode
     uint32  to_txr_addr[2];
 
-    // Number of additional OPBs to allocate, allowing more geometry per tile.
-    uint32 opb_overflow_count;
+    uint32  dr_used;
 } pvr_state_t;
 
 /* There will be exactly one of these in KOS (in pvr_globals.c) */

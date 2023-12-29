@@ -1,9 +1,11 @@
 /* KallistiOS ##version##
 
    pvr_dma.c
-   Copyright (C)2002 Roger Cattermole
-   Copyright (C)2004 Megan Potter
-   Copyright (C)2023 Andy Barajas
+   Copyright (C) 2002 Roger Cattermole
+   Copyright (C) 2004 Megan Potter
+   Copyright (C) 2023 Andy Barajas
+   Copyright (C) 2023 Ruslan Rostovtsev
+
    http://www.boob.co.uk
  */
 
@@ -12,6 +14,7 @@
 #include <dc/pvr.h>
 #include <dc/asic.h>
 #include <dc/dmac.h>
+#include <dc/sq.h>
 #include <kos/thread.h>
 #include <kos/sem.h>
 
@@ -62,18 +65,38 @@ static void pvr_dma_irq_hnd(uint32_t code) {
     }
 }
 
-int pvr_dma_transfer(void *src, uintptr_t dest, size_t count, int type,
-                     int block, pvr_dma_callback_t callback, void *cbdata) {
-    uint32_t src_addr = ((uint32_t)src);
-    uint32_t dest_addr;
+static uintptr_t pvr_dest_addr(uintptr_t dest, int type) {
+    uintptr_t dest_addr;
 
     /* Send the data to the right place */
-    if(type == PVR_DMA_TA)
-        dest_addr = (dest & 0xFFFFFF) | PVR_TA_INPUT;
-    else if(type == PVR_DMA_YUV)
-        dest_addr = (dest & 0xFFFFFF) | PVR_TA_YUV_CONV;
-    else
-        dest_addr = (dest & 0xFFFFFF) | PVR_TA_TEX_MEM;
+    if(type == PVR_DMA_TA) {
+        dest_addr = ((uintptr_t)dest & 0xffffff) | PVR_TA_INPUT;
+    }
+    else if(type == PVR_DMA_YUV) {
+        dest_addr = ((uintptr_t)dest & 0xffffff) | PVR_TA_YUV_CONV;
+    }
+    else if(type == PVR_DMA_VRAM64) {
+        dest_addr = ((uintptr_t)dest & 0xffffff) | PVR_TA_TEX_MEM;
+    }
+    else if(type == PVR_DMA_VRAM32) {
+        dest_addr = ((uintptr_t)dest & 0xffffff) | PVR_TA_TEX_MEM_32;
+    }
+    else if(type == PVR_DMA_VRAM64_SB) {
+        dest_addr = ((uintptr_t)dest & 0xffffff) | PVR_RAM_BASE_64_P0;
+    }
+    else if(type == PVR_DMA_VRAM32_SB) {
+        dest_addr = ((uintptr_t)dest & 0xffffff) | PVR_RAM_BASE_32_P0;
+    }
+    else {
+        dest_addr = dest;
+    }
+
+    return dest_addr;
+}
+
+int pvr_dma_transfer(void *src, uintptr_t dest, size_t count, int type,
+                     int block, pvr_dma_callback_t callback, void *cbdata) {
+    uintptr_t src_addr = ((uintptr_t)src);
 
     /* Check for 32-byte alignment */
     if(src_addr & 0x1F) {
@@ -109,8 +132,7 @@ int pvr_dma_transfer(void *src, uintptr_t dest, size_t count, int type,
         return -1;
     }
 
-    pvr_dma[PVR_LMMODE0] = type == PVR_DMA_VRAM64 ? 0 : 1;
-    pvr_dma[PVR_STATE] = dest_addr;
+    pvr_dma[PVR_STATE] = pvr_dest_addr(dest, type);
     pvr_dma[PVR_LEN] = count;
     pvr_dma[PVR_DST] = 0x1;
 
@@ -149,6 +171,12 @@ void pvr_dma_init(void) {
     dma_callback = NULL;
     dma_cbdata = 0;
 
+    /* Use 2x32-bit TA->VRAM buses for PVR_TA_TEX_MEM */
+    pvr_dma[PVR_LMMODE0] = 0;
+
+    /* Use single 32-bit TA->VRAM bus for PVR_TA_TEX_MEM_32 */
+    pvr_dma[PVR_LMMODE1] = 1;
+
     /* Hook the necessary interrupts */
     asic_evt_set_handler(ASIC_EVT_PVR_DMA, pvr_dma_irq_hnd);
     asic_evt_enable(ASIC_EVT_PVR_DMA, ASIC_IRQ_DEFAULT);
@@ -164,4 +192,52 @@ void pvr_dma_shutdown(void) {
     asic_evt_disable(ASIC_EVT_PVR_DMA, ASIC_IRQ_DEFAULT);
     asic_evt_set_handler(ASIC_EVT_PVR_DMA, NULL);
     sem_destroy(&dma_done);
+}
+
+/* Copies n bytes from src to PVR dest, dest must be 32-byte aligned */
+void *pvr_sq_load(void *dest, const void *src, size_t n, int type) {
+    void *dma_area_ptr;
+
+    if(pvr_dma[PVR_DST] != 0) {
+        dbglog(DBG_ERROR, "pvr_sq_load: PVR DMA has not finished\n");
+        errno = EINPROGRESS;
+        return NULL;
+    }
+
+    dma_area_ptr = (void *)pvr_dest_addr((uintptr_t)dest, type);
+    sq_cpy(dma_area_ptr, src, n);
+
+    return dest;
+}
+
+/* Fills n bytes at PVR dest with 16-bit c, dest must be 32-byte aligned */
+void *pvr_sq_set16(void *dest, uint32_t c, size_t n, int type) {
+    void *dma_area_ptr;
+
+    if(pvr_dma[PVR_DST] != 0) {
+        dbglog(DBG_ERROR, "pvr_sq_set16: PVR DMA has not finished\n");
+        errno = EINPROGRESS;
+        return NULL;
+    }
+
+    dma_area_ptr = (void *)pvr_dest_addr((uintptr_t)dest, type);
+    sq_set16(dma_area_ptr, c, n);
+
+    return dest;
+}
+
+/* Fills n bytes at PVR dest with 32-bit c, dest must be 32-byte aligned */
+void *pvr_sq_set32(void *dest, uint32_t c, size_t n, int type) {
+    void *dma_area_ptr;
+
+    if(pvr_dma[PVR_DST] != 0) {
+        dbglog(DBG_ERROR, "pvr_sq_set32: PVR DMA has not finished\n");
+        errno = EINPROGRESS;
+        return NULL;
+    }
+
+    dma_area_ptr = (void *)pvr_dest_addr((uintptr_t)dest, type);
+    sq_set32(dma_area_ptr, c, n);
+
+    return dest;
 }

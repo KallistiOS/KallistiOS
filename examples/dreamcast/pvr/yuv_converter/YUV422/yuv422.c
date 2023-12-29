@@ -213,33 +213,33 @@ static void convert_YUV422_to_YUV422_texture(void) {
 
             // dcache_flush_range((uint32_t)u_block, 64);
             // pvr_dma_yuv_conv( (void*)u_block, 64, 1, NULL, 0);
-            sq_cpy((void *)PVR_TA_YUV_CONV, (void *)u_block, 64);
+            pvr_sq_load((void *)0, (void *)u_block, 64, PVR_DMA_YUV);
 
             // dcache_flush_range((uint32_t)v_block, 64);
             // pvr_dma_yuv_conv( (void*)v_block, 64, 1, NULL, 0);
-            sq_cpy((void *)PVR_TA_YUV_CONV, (void *)v_block, 64);
+            pvr_sq_load((void *)0, (void *)v_block, 64, PVR_DMA_YUV);
 
             // dcache_flush_range((uint32_t)y_block, 128);
             // pvr_dma_yuv_conv( (void*)y_block, 128, 1, NULL, 0);
-            sq_cpy((void *)PVR_TA_YUV_CONV, (void *)y_block, 128);
+            pvr_sq_load((void *)0, (void *)y_block, 128, PVR_DMA_YUV);
 
             // dcache_flush_range((uint32_t)(u_block+64), 64);
             // pvr_dma_yuv_conv( (void*)(u_block+64), 64, 1, NULL, 0);
-            sq_cpy((void *)PVR_TA_YUV_CONV, (void *)(u_block+64), 64);
+            pvr_sq_load((void *)0, (void *)(u_block+64), 64, PVR_DMA_YUV);
 
             // dcache_flush_range((uint32_t)(v_block+64), 64);
             // pvr_dma_yuv_conv( (void*)(v_block+64), 64, 1, NULL, 0);
-            sq_cpy((void *)PVR_TA_YUV_CONV, (void *)(v_block+64), 64);
+            pvr_sq_load((void *)0, (void *)(v_block+64), 64, PVR_DMA_YUV);
 
             // dcache_flush_range((uint32_t)(y_block+128), 128);
             // pvr_dma_yuv_conv( (void*)(y_block+128), 128, 1, NULL, 0);
-            sq_cpy((void *)PVR_TA_YUV_CONV, (void *)(y_block+128), 128);
+            pvr_sq_load((void *)0, (void *)(y_block+128), 128, PVR_DMA_YUV);
         }
 
         /* Send dummies if frame texture width doesn't match pvr texture width */
-        sq_set((void *)PVR_TA_YUV_CONV, 0, 
-                BYTE_SIZE_FOR_16x16_BLOCK * 
-                ((PVR_TEXTURE_WIDTH >> 4) - (FRAME_TEXTURE_WIDTH >> 4)));
+        pvr_sq_set32((void *)PVR_TA_YUV_CONV, 0, 
+                     BYTE_SIZE_FOR_16x16_BLOCK * 
+                     ((PVR_TEXTURE_WIDTH >> 4) - (FRAME_TEXTURE_WIDTH >> 4)), PVR_DMA_YUV);
     }
 }
 

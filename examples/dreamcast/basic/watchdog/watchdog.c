@@ -30,7 +30,7 @@
 #define SEC             (1000 * MSEC)
 
 /* Test configuration constants */
-#define WDT_PET_COUNT   2000
+#define WDT_PET_COUNT   4000
 #define WDT_INTERVAL    (500 * MSEC)
 #define WDT_SECONDS     10 
 #define WDT_COUNT_MAX   ((WDT_SECONDS * SEC) / WDT_INTERVAL)
@@ -56,14 +56,6 @@ int main(int argc, char *argv[]) {
     cont_btn_callback(0, CONT_START | CONT_A | CONT_B | CONT_X | CONT_Y,
                       (cont_btn_callback_t)exit);
 
-    /* Note that is EXTREMELY important that the WDT gets disabled 
-       when it is done being used, otherwise it can continue running
-       after the application exits and can interfere with DC-Load 
-       operation. Since we have multiple exit points (one from returning
-       from main and one from the button callback), the safest thing to do
-       is to register wdt_disable() to be called automatically upon exit. */
-    atexit(wdt_disable);
-
     printf("\nEnabling WDT in watchdog mode!\n");
 
     /* Enable watchdog mode with a period of 5.25ms, causing a manual 
@@ -81,7 +73,8 @@ int main(int argc, char *argv[]) {
         if(current_count > max_count)  
             max_count = current_count;
 
-        wdt_pet();
+        if(current_count) 
+            wdt_pet();
     }
 
     /* Immediately disable the WDT once we're done with it. */
