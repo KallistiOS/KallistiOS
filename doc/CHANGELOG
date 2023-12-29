@@ -213,6 +213,7 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - DC  Improved performance of IRQ context save / restore [PC]
 - DC  Increased resolution of TMU timers + date/time functions [FG && PC]
 - *** Increased resolution of clock() and CLOCKS_PER_SEC to microseconds [FG]
+- DC  Created separate performance counter driver and enhanced API [FG]
 
 KallistiOS version 2.0.0 -----------------------------------------------
 - DC  Broadband Adapter driver fixes [Megan Potter == MP]

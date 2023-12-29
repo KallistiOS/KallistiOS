@@ -94,7 +94,6 @@ typedef enum vid_display_mode_generic {
     DM_GENERIC_FIRST = 0x1000,      /**< \brief First valid generic mode */
     DM_320x240 = 0x1000,            /**< \brief 320x240 resolution */
     DM_640x480,                     /**< \brief 640x480 resolution */
-    DM_800x608,                     /**< \brief 800x608 resolution */
     DM_256x256,                     /**< \brief 256x256 resolution */
     DM_768x480,                     /**< \brief 768x480 resolution */
     DM_768x576,                     /**< \brief 768x576 resolution */
@@ -121,7 +120,6 @@ typedef enum vid_display_mode {
     DM_320x240_NTSC,                /**< \brief 320x240 NTSC 60Hz */
     DM_640x480_VGA,                 /**< \brief 640x480 VGA 60Hz */
     DM_640x480_NTSC_IL,             /**< \brief 640x480 NTSC Interlaced 60Hz */
-    DM_800x608_VGA,                 /**< \brief 800x608 VGA 60Hz */
     DM_640x480_PAL_IL,              /**< \brief 640x480 PAL Interlaced 50Hz */
     DM_256x256_PAL_IL,              /**< \brief 256x256 PAL Interlaced 50Hz */
     DM_768x480_NTSC_IL,             /**< \brief 768x480 NTSC Interlaced 60Hz */
@@ -132,7 +130,6 @@ typedef enum vid_display_mode {
     DM_320x240_NTSC_MB,             /**< \brief 320x240 NTSC 60Hz, 4FBs */
     DM_640x480_VGA_MB,              /**< \brief 640x480 VGA 60Hz, 4FBs */
     DM_640x480_NTSC_IL_MB,          /**< \brief 640x480 NTSC IL 60Hz, 4FBs */
-    DM_800x608_VGA_MB,              /**< \brief 800x608 VGA 60Hz, 4FBs */
     DM_640x480_PAL_IL_MB,           /**< \brief 640x480 PAL IL 50Hz, 4FBs */
     DM_256x256_PAL_IL_MB,           /**< \brief 256x256 PAL IL 50Hz, 4FBs */
     DM_768x480_NTSC_IL_MB,          /**< \brief 768x480 NTSC IL 60Hz, 4FBs */
