@@ -1,6 +1,6 @@
 /* KallistiOS ##version##
 
-   dckos.h - Exposed functions
+   dckos.h - Exposed functions for mruby: using KOS features
    Copyright (C) 2019-2024 Yuji Yokoo
 
    Dreampresent

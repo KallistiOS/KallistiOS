@@ -1,6 +1,6 @@
 # KallistiOS ##version##
 #
-# presentation.rb
+# presentation.rb - Presentation handler
 # Copyright (C) 2019-2024 Yuji Yokoo
 #
 # Dreampresent

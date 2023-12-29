@@ -1,6 +1,6 @@
 # KallistiOS ##version##
 #
-# start.rb
+# start.rb - Bootstrap for Dreampresent Ruby application
 # Copyright (C) 2019-2024 Yuji Yokoo
 #
 # Dreampresent

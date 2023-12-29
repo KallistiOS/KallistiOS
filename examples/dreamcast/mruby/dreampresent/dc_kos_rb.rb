@@ -1,6 +1,6 @@
 # KallistiOS ##version##
 #
-# dc_kos_rb.rb
+# dc_kos_rb.rb - Ruby-level wrapper to KallistiOS
 # Copyright (C) 2019-2024 Yuji Yokoo
 #
 # Dreampresent

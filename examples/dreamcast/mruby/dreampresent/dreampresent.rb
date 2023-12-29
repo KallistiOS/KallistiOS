@@ -1,6 +1,6 @@
 # KallistiOS ##version##
 #
-# dreampresent.rb
+# dreampresent.rb - Main class definition
 # Copyright (C) 2019-2024 Yuji Yokoo
 #
 # Dreampresent

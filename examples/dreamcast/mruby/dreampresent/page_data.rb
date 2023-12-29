@@ -1,6 +1,6 @@
 # KallistiOS ##version##
 #
-# page_data.rb
+# page_data.rb - Handle page data/resources
 # Copyright (C) 2019-2024 Yuji Yokoo
 #
 # Dreampresent
