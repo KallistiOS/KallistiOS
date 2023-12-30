@@ -10,18 +10,32 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-/** \file   kos/barrier.h
-    \brief  Definitions thread barriers.
+/** \file       kos/barrier.h
+    \brief      Thread barriers.
+    \ingroup    kthreads
 
-    TODO: Write barrier description.
+    Thread barriers are used to synchronize the progress of multiple threads. A
+    barrier causes threads to wait until a specified number of threads have
+    reached a certain execution point, ensuring a consistent state across
+    different execution paths.
 
-    \author Lawrence Sebald
+    This synchronization primitive is essential for scenarios in parallel
+    programming where tasks executed by multiple threads must reach a certain
+    point before any can proceed, ensuring data consistency and coordination
+    among threads.
+
+    \author     Lawrence Sebald
 */
 
 #define THD_BARRIER_SERIAL_THREAD   0x7fffffff
 
 #ifndef __KTHREAD_HAVE_BARRIER_TYPE
+
+/** \cond */
 #define __KTHREAD_HAVE_BARRIER_TYPE 1
+/** \endcond */
+
+/** \brief  Size of a thread barrier, in bytes. */
 #define THD_BARRIER_SIZE            64
 
 typedef union kos_thd_barrier {
