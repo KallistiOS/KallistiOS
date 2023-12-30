@@ -445,9 +445,8 @@ void thd_exit(void *rv) __noreturn;
 
 /** \brief   Force a thread reschedule.
 
-    This function is the thread scheduler, and is generally called from a timer
-    interrupt. You will most likely never have a reason to call this function
-    directly.
+    This function is the thread scheduler, and MUST be called in an interrupt
+    context (typically from the primary timer interrupt).
 
     For most cases, you'll want to set front_of_line to zero, but read the
     comments in kernel/thread/thread.c for more info, especially if you need to
@@ -459,6 +458,9 @@ void thd_exit(void *rv) __noreturn;
     \param  now             Set to 0, unless you have a good reason not to.
 
     \sa thd_schedule_next
+    \warning                Never call this function from outside of an
+                            interrupt context! Doing so will almost certainly
+                            end very poorly.
 */
 void thd_schedule(bool front_of_line, uint64_t now);
 
@@ -701,7 +703,7 @@ unsigned thd_get_hz(void);
     \relatesalso kthread_t
 
     This function "joins" a joinable thread. This means effectively that the
-    calling thread blocks until the speified thread completes execution. It is
+    calling thread blocks until the specified thread completes execution. It is
     invalid to join a detached thread, only joinable threads may be joined.
 
     \param  thd             The joinable thread to join.
