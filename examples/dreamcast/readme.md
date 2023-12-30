@@ -114,6 +114,7 @@ This page serves as an index for all KallistiOS examples.
 - video
   - bfont
   - minifont
+  - multibuffer
   - palmenu
 - vmu
   - vmu_beep
