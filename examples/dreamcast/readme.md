@@ -44,7 +44,6 @@ This page serves as an index for all KallistiOS examples.
 - libdream
   - 320x240
   - 640x480
-  - 800x608
   - cdfs
   - keyboard
   - lcd
@@ -61,6 +60,9 @@ This page serves as an index for all KallistiOS examples.
 - modem
   - basic
   - ppp
+- mruby
+  - dreampresent
+  - mrbtris
 - network
   - basic
   - dns-client
