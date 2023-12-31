@@ -21,10 +21,11 @@
 
 /* Load raw texture data from an SH-4 buffer into PVR RAM */
 void pvr_txr_load(void * src, pvr_ptr_t dst, uint32 count) {
-    if(count % 4)
-        count = (count & 0xfffffffc) + 4;
+    if(count & 3) {
+        count = (count + 4) & ~3;
+    }
 
-    sq_cpy((uint32 *)dst, (uint32 *)src, count);
+    pvr_sq_load((uint32 *)dst, (uint32 *)src, count, PVR_DMA_VRAM64);
 }
 
 /* Linear/iterative twiddling algorithm from Marcus' tatest */
@@ -194,14 +195,10 @@ void pvr_txr_load_kimg(kos_img_t *img, pvr_ptr_t dst, uint32 flags) {
                 mutex_unlock((mutex_t *)&pvr_state.dma_lock);
             }
             else if(flags & PVR_TXRLOAD_SQ) {
-                sq_cpy(dst, img->data, img->byte_count);
+                pvr_txr_load(dst, img->data, img->byte_count);
             }
             else {
-                /* Store Queue usage here can screw things up if you're
-                   loading textures while sending display lists. Enable the
-                   PVR_TXRLOAD_SQ flag if you know you want it. */
                 memcpy4(dst, img->data, img->byte_count);
-                /* pvr_txr_load(img->data, dst, img->byte_count); */
             }
         }
     }

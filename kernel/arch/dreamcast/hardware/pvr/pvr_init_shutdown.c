@@ -119,6 +119,7 @@ int pvr_init(pvr_init_params_t *params) {
     pvr_state.rnd_last_len = -1;
     pvr_state.vtx_buf_used = 0;
     pvr_state.vtx_buf_used_max = 0;
+    pvr_state.dr_used = 0;
 
     /* If we're on a VGA box, disable vertical smoothing */
     if(vid_mode->cable_type == CT_VGA) {

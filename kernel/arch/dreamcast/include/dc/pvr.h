@@ -3,6 +3,7 @@
    dc/pvr.h
    Copyright (C) 2002 Megan Potter
    Copyright (C) 2014 Lawrence Sebald
+   Copyright (C) 2023 Ruslan Rostovtsev
 
    Low-level PVR 3D interface for the DC
 */
@@ -29,6 +30,7 @@
     \author Brian Paul
     \author Lawrence Sebald
     \author Benoit Miller
+    \author Ruslan Rostovtsev
 */
 
 #ifndef __DC_PVR_H
@@ -39,6 +41,7 @@ __BEGIN_DECLS
 
 #include <arch/memory.h>
 #include <arch/types.h>
+#include <arch/cache.h>
 #include <dc/sq.h>
 #include <kos/img.h>
 
@@ -1244,11 +1247,14 @@ Striplength set to 2 */
 
     @{
 */
-#define PVR_TA_INPUT        0x10000000  /**< \brief TA command input */
-#define PVR_TA_YUV_CONV     0x10800000  /**< \brief YUV converter */
-#define PVR_TA_TEX_MEM      0x11000000  /**< \brief Texture memory */
-#define PVR_RAM_BASE        0xa5000000  /**< \brief PVR RAM (raw) */
-#define PVR_RAM_INT_BASE    0xa4000000  /**< \brief PVR RAM (interleaved) */
+#define PVR_TA_INPUT        0x10000000  /**< \brief TA command input (64-bit, TA) */
+#define PVR_TA_YUV_CONV     0x10800000  /**< \brief YUV converter (64-bit, TA) */
+#define PVR_TA_TEX_MEM      0x11000000  /**< \brief VRAM 64-bit, TA=>VRAM */
+#define PVR_TA_TEX_MEM_32   0x13000000  /**< \brief VRAM 32-bit, TA->VRAM */
+#define PVR_RAM_BASE_32_P0  0x05000000  /**< \brief VRAM 32-bit, P0 area, PVR->VRAM */
+#define PVR_RAM_BASE_64_P0  0x04000000  /**< \brief VRAM 64-bit, P0 area, PVR->VRAM */
+#define PVR_RAM_BASE        0xa5000000  /**< \brief VRAM 32-bit, P2 area, PVR->VRAM */
+#define PVR_RAM_INT_BASE    0xa4000000  /**< \brief VRAM 64-bit, P2 area, PVR->VRAM */
 
 #define PVR_RAM_SIZE        (8*1024*1024)   /**< \brief RAM size in bytes */
 
@@ -1946,13 +1952,11 @@ typedef uint32_t pvr_dr_state_t;
 
 /** \brief   Initialize a state variable for Direct Rendering.
 
+    Store Queues are used.
+
     \param  vtx_buf_ptr     A variable of type pvr_dr_state_t to init.
 */
-#define pvr_dr_init(vtx_buf_ptr) do { \
-        (vtx_buf_ptr) = 0; \
-        QACR0 = ((((uint32)PVR_TA_INPUT) >> 26) << 2) & 0x1c; \
-        QACR1 = ((((uint32)PVR_TA_INPUT) >> 26) << 2) & 0x1c; \
-    } while(0)
+void pvr_dr_init(pvr_dr_state_t *vtx_buf_ptr);
 
 /** \brief   Obtain the target address for Direct Rendering.
 
@@ -1966,7 +1970,7 @@ typedef uint32_t pvr_dr_state_t;
 */
 #define pvr_dr_target(vtx_buf_ptr) \
     ({ (vtx_buf_ptr) ^= 32; \
-        (pvr_vertex_t *)(MEM_AREA_P4_BASE | (vtx_buf_ptr)); \
+        (pvr_vertex_t *)(MEM_AREA_SQ_BASE | (vtx_buf_ptr)); \
     })
 
 /** \brief   Commit a primitive written into the Direct Rendering target address.
@@ -1974,7 +1978,15 @@ typedef uint32_t pvr_dr_state_t;
     \param  addr            The address returned by pvr_dr_target(), after you
                             have written the primitive to it.
 */
-#define pvr_dr_commit(addr) __asm__ __volatile__("pref @%0" : : "r" (addr))
+#define pvr_dr_commit(addr) sq_flush(addr)
+
+/** \brief  Finish work with Direct Rendering.
+
+    Called atomatically in pvr_scene_finish().
+    Use it manually if you want to release Store Queues earlier.
+
+*/
+void pvr_dr_finish(void);
 
 /** @} */
 
@@ -2233,7 +2245,7 @@ void pvr_poly_cxt_txr_mod(pvr_poly_cxt_t *dst, pvr_list_t list,
     \ingroup pvr_txr_mgmt 
 
     This essentially just acts as a memcpy() from main RAM to PVR RAM, using
-    the store queues.
+    the Store Queues and 64-bit TA bus.
 
     \param  src             The location in main RAM holding the texture.
     \param  dst             The location in PVR RAM to copy to.
@@ -2263,7 +2275,7 @@ void pvr_txr_load(void *src, pvr_ptr_t dst, uint32_t count);
 #define PVR_TXRLOAD_FMT_NOTWIDDLE   0x80    /**< \brief Don't twiddle the texture while loading */
 #define PVR_TXRLOAD_DMA             0x8000  /**< \brief Use DMA to load the texture */
 #define PVR_TXRLOAD_NONBLOCK        0x4000  /**< \brief Use non-blocking loads (only for DMA) */
-#define PVR_TXRLOAD_SQ              0x2000  /**< \brief Use store queues to load */
+#define PVR_TXRLOAD_SQ              0x2000  /**< \brief Use Store Queues to load */
 
 /** @} */
 
@@ -2340,7 +2352,7 @@ void pvr_txr_load_kimg(kos_img_t *img, pvr_ptr_t dst, uint32_t flags);
 */
 typedef void (*pvr_dma_callback_t)(void *data);
 
-/** \brief   Perform a DMA transfer to the PVR.
+/** \brief   Perform a DMA transfer to the PVR RAM over 64-bit TA bus.
     \ingroup pvr_dma
 
     This function copies a block of data to the PVR or its memory via DMA. There
@@ -2373,17 +2385,20 @@ int pvr_dma_transfer(void *src, uintptr_t dest, size_t count, int type,
                      int block, pvr_dma_callback_t callback, void *cbdata);
 
 /** \defgroup pvr_dma_modes         Transfer Modes
-    \brief                          Transfer modes with PVR DMA
+    \brief                          Transfer modes with TA/PVR DMA and Store Queues
     \ingroup  pvr_dma
+
     @{
 */
-#define PVR_DMA_VRAM64  0   /**< \brief Transfer to VRAM in interleaved mode */
-#define PVR_DMA_VRAM32  1   /**< \brief Transfer to VRAM in linear mode */
-#define PVR_DMA_TA      2   /**< \brief Transfer to the tile accelerator */
-#define PVR_DMA_YUV     3   /**< \brief Transfer to the YUV converter */
+#define PVR_DMA_VRAM64    0   /**< \brief Transfer to VRAM using TA bus */
+#define PVR_DMA_VRAM32    1   /**< \brief Transfer to VRAM using TA bus */
+#define PVR_DMA_TA        2   /**< \brief Transfer to the tile accelerator */
+#define PVR_DMA_YUV       3   /**< \brief Transfer to the YUV converter (TA) */
+#define PVR_DMA_VRAM32_SB 4   /**< \brief Transfer to/from VRAM using PVR i/f */
+#define PVR_DMA_VRAM64_SB 4   /**< \brief Transfer to/from VRAM using PVR i/f */
 /** @} */
 
-/** \brief   Load a texture using PVR DMA.
+/** \brief   Load a texture using TA DMA.
     \ingroup pvr_dma
 
     This is essentially a convenience wrapper for pvr_dma_transfer(), so all
@@ -2408,7 +2423,7 @@ int pvr_dma_transfer(void *src, uintptr_t dest, size_t count, int type,
 int pvr_txr_load_dma(void *src, pvr_ptr_t dest, size_t count, int block,
                      pvr_dma_callback_t callback, void *cbdata);
 
-/** \brief   Load vertex data to the TA using PVR DMA.
+/** \brief   Load vertex data to the TA using TA DMA.
     \ingroup pvr_dma
 
     This is essentially a convenience wrapper for pvr_dma_transfer(), so all
@@ -2432,7 +2447,7 @@ int pvr_txr_load_dma(void *src, pvr_ptr_t dest, size_t count, int block,
 int pvr_dma_load_ta(void *src, size_t count, int block,
                     pvr_dma_callback_t callback, void *cbdata);
 
-/** \brief   Load yuv data to the YUV converter using PVR DMA.
+/** \brief   Load yuv data to the YUV converter using TA DMA.
     \ingroup pvr_dma
 
     This is essentially a convenience wrapper for pvr_dma_transfer(), so all
@@ -2463,15 +2478,83 @@ int pvr_dma_yuv_conv(void *src, size_t count, int block,
 */
 int pvr_dma_ready(void);
 
-/** \brief   Initialize PVR DMA. 
+/** \brief   Initialize TA/PVR DMA. 
     \ingroup pvr_dma
  */
 void pvr_dma_init(void);
 
-/** \brief   Shut down PVR DMA. 
+/** \brief   Shut down TA/PVR DMA. 
     \ingroup pvr_dma
  */
 void pvr_dma_shutdown(void);
+
+/** \brief   Copy a block of memory to VRAM
+    \ingroup store_queues
+
+    This function is similar to sq_cpy(), but it has been
+    optimized for writing to a destination residing within VRAM.
+
+    \warning
+    This function cannot be used at the same time as a PVR DMA transfer.
+
+    The dest pointer must be at least 32-byte aligned and reside 
+    in video memory, the src pointer must be at least 8-byte aligned, 
+    and n must be a multiple of 32.
+
+    \param  dest            The address to copy to (32-byte aligned).
+    \param  src             The address to copy from (32-bit (8-byte) aligned).
+    \param  n               The number of bytes to copy (multiple of 32).
+    \param  type            The type of SQ/DMA transfer to do (see list of modes).
+    \return                 The original value of dest.
+
+    \sa pvr_sq_set32()
+*/
+void *pvr_sq_load(void *dest, const void *src, size_t n, int type);
+
+/** \brief   Set a block of PVR memory to a 16-bit value.
+    \ingroup store_queues
+
+    This function is similar to sq_set16(), but it has been
+    optimized for writing to a destination residing within VRAM.
+
+    \warning
+    This function cannot be used at the same time as a PVR DMA transfer.
+    
+    The dest pointer must be at least 32-byte aligned and reside in video 
+    memory, n must be a multiple of 32 and only the low 16-bits are used 
+    from c.
+
+    \param  dest            The address to begin setting at (32-byte aligned).
+    \param  c               The value to set (in the low 16-bits).
+    \param  n               The number of bytes to set (multiple of 32).
+    \param  type            The type of SQ/DMA transfer to do (see list of modes).
+    \return                 The original value of dest.
+
+    \sa pvr_sq_set32()
+*/
+void *pvr_sq_set16(void *dest, uint32_t c, size_t n, int type);
+
+/** \brief   Set a block of PVR memory to a 32-bit value.
+    \ingroup store_queues
+
+    This function is similar to sq_set32(), but it has been
+    optimized for writing to a destination residing within VRAM.
+
+    \warning
+    This function cannot be used at the same time as a PVR DMA transfer.
+
+    The dest pointer must be at least 32-byte aligned and reside in video 
+    memory, n must be a multiple of 32.
+
+    \param  dest            The address to begin setting at (32-byte aligned).
+    \param  c               The value to set.
+    \param  n               The number of bytes to set (multiple of 32).
+    \param  type            The type of SQ/DMA transfer to do (see list of modes).
+    \return                 The original value of dest.
+
+    \sa pvr_sq_set16
+*/
+void *pvr_sq_set32(void *dest, uint32_t c, size_t n, int type);
 
 /*********************************************************************/
 

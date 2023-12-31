@@ -43,9 +43,9 @@ void spu_memload(uintptr_t dst, void *src_void, size_t length) {
     length = (length + 3) >> 2;
 
     /* Add in the SPU RAM base */
-    dst += SPU_RAM_UNCACHED_BASE;
+    dst |= SPU_RAM_UNCACHED_BASE;
 
-    while(length > 8) {
+    while(length >= 8) {
         g2_fifo_wait();
         g2_write_block_32((uint32_t *)src, dst, 8);
 
@@ -63,7 +63,6 @@ void spu_memload(uintptr_t dst, void *src_void, size_t length) {
 void spu_memload_sq(uintptr_t dst, void *src_void, size_t length) {
     uint8_t *src = (uint8_t *)src_void;
     int aligned_len;
-    g2_ctx_t ctx;
 
     /* Round up to the nearest multiple of 4 */
     if(length & 3) {
@@ -75,14 +74,12 @@ void spu_memload_sq(uintptr_t dst, void *src_void, size_t length) {
     length &= 31;
 
     /* Add in the SPU RAM base (cached area) */
-    dst += SPU_RAM_BASE;
+    dst |= SPU_RAM_BASE;
 
     /* Make sure the FIFOs are empty */
-    ctx = g2_lock();
+    g2_fifo_wait();
 
     sq_cpy((void *)dst, src, aligned_len);
-
-    g2_unlock(ctx);
 
     if(length > 0) {
         /* Make sure the destination is in a non-cached area */
@@ -102,9 +99,9 @@ void spu_memread(void *dst_void, uintptr_t src, size_t length) {
     length = (length + 3) >> 2;
 
     /* Add in the SPU RAM base */
-    src += SPU_RAM_UNCACHED_BASE;
+    src |= SPU_RAM_UNCACHED_BASE;
 
-    while(length > 8) {
+    while(length >= 8) {
         g2_fifo_wait();
         g2_read_block_32((uint32_t *)dst, src, 8);
 
@@ -132,9 +129,9 @@ void spu_memset(uintptr_t dst, uint32_t what, size_t length) {
         blank[i] = what;
 
     /* Add in the SPU RAM base */
-    dst += SPU_RAM_UNCACHED_BASE;
+    dst |= SPU_RAM_UNCACHED_BASE;
 
-    while(length > 8) {
+    while(length >= 8) {
         g2_fifo_wait();
         g2_write_block_32(blank, dst, 8);
 
@@ -145,6 +142,33 @@ void spu_memset(uintptr_t dst, uint32_t what, size_t length) {
     if(length > 0) {
         g2_fifo_wait();
         g2_write_block_32(blank, dst, length);
+    }
+}
+
+void spu_memset_sq(uintptr_t dst, uint32_t what, size_t length) {
+    int aligned_len;
+
+    /* Round up to the nearest multiple of 4 */
+    if(length & 3) {
+        length = (length + 4) & ~3;
+    }
+
+    /* Using SQs for all that is divisible by 32 */
+    aligned_len = length & ~31;
+    length &= 31;
+
+    /* Add in the SPU RAM base (cached area) */
+    dst |= SPU_RAM_BASE;
+
+    /* Make sure the FIFOs are empty */
+    g2_fifo_wait();
+
+    sq_set32((void *)dst, what, aligned_len);
+
+    if(length > 0) {
+        /* Make sure the destination is in a non-cached area */
+        dst += aligned_len;
+        spu_memset(dst, what, length);
     }
 }
 
@@ -235,7 +259,7 @@ int spu_init(void) {
     spu_disable();
 
     /* Clear out sound RAM */
-    spu_memset(0, 0, 0x200000);
+    spu_memset_sq(0, 0, 0x200000);
 
     /* Load a default "program" into the SPU that just executes
        an infinite loop, so that CD audio works. */
@@ -257,14 +281,14 @@ int spu_init(void) {
 /* Shutdown SPU */
 int spu_shutdown(void) {
     spu_disable();
-    spu_memset(0, 0, 0x200000);
+    spu_memset_sq(0, 0, 0x200000);
     return 0;
 }
 
 int spu_dma_transfer(void *from, uintptr_t dest, size_t length, int block,
                      g2_dma_callback_t callback, void *cbdata) {
     /* Adjust destination to SPU RAM */
-    dest += SPU_RAM_BASE;
+    dest |= SPU_RAM_BASE;
 
     return g2_dma_transfer(from, (void *) dest, length, block, callback, cbdata, 0,
                            0, G2_DMA_CHAN_SPU, 0);

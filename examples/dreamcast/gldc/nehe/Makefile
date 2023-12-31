@@ -6,7 +6,7 @@
 # This will make all the examples, leaving only the elf files.
 # If you want to clean everything, use 'clean'.
 
-SUBDIRS = nehe02 nehe05 nehe26
+SUBDIRS = nehe02 nehe05 nehe06 nehe08 nehe09 nehe16 nehe26
 
 all: $(patsubst %, _dir_%, $(SUBDIRS))
 

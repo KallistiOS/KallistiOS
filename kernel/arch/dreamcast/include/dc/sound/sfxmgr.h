@@ -3,6 +3,7 @@
    dc/sound/sfxmgr.h
    Copyright (C) 2002 Megan Potter
    Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023 Andy Barajas
 
 */
 
@@ -18,6 +19,8 @@
     should probably look at the sound stream stuff instead.
 
     \author Megan Potter
+    \author Ruslan Rostovtsev
+    \author Andy Barajas
 */
 
 #ifndef __DC_SOUND_SFXMGR_H

@@ -16,6 +16,7 @@
     but this stuff can be very useful for some things.
 
     \author Megan Potter
+    \author Ruslan Rostovtsev
 */
 
 #ifndef __DC_SOUND_SOUND_H
