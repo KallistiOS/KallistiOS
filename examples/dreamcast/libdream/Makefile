@@ -1,7 +1,7 @@
 # This will make all the examples, leaving only the elf files.
 # If you want to clean everything, use 'clean'.
 
-SUBDIRS  = 320x240 640x480 800x608 rgb888 ta
+SUBDIRS  = 320x240 640x480 rgb888 ta
 SUBDIRS += cdfs
 SUBDIRS += spu
 SUBDIRS += keyboard mouse lcd vmu

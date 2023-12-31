@@ -12,7 +12,7 @@
     This file contains support for a ramdisk VFS. This VFS allows you to map
     memory into files that will appear in /ram. Files in this VFS can grow as
     large as memory allows, and there is full read/write support here. This is
-    useful, for (for instance) cacheing files read from the CD-ROM or for making
+    useful, for (for instance) caching files read from the CD-ROM or for making
     temporary files.
 
     You only have one ramdisk available, and its mounted on /ram.

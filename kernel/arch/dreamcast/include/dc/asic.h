@@ -34,7 +34,7 @@ __BEGIN_DECLS
 */ 
 
 /* All event codes are two 8-bit integers; the top integer is the event code
-   register to look in to check the event (and to acknolwedge it). The
+   register to look in to check the event (and to acknowledge it). The
    register to check is 0xa05f6900+4*regnum. The bottom integer is the
    bit index within that register. */
 

@@ -47,13 +47,6 @@ __BEGIN_DECLS
 
     The timer can be stopped in either mode by calling wdt_disable().
 
-    \warning
-    Once the WDT has been enabled, special care must be taken to disable it
-    when exiting from the application. If left enabled, the WDT will continue
-    running beyond the lifetime of the application, causing either a reset or
-    an unhandled exception (depending on which mode was used), preventing you
-    from gracefully returning to a DC-Load session when testing.
-
     \sa rtc
 */
 
@@ -130,7 +123,7 @@ void wdt_enable_timer(uint8_t initial_count,
     \ingroup wdt
 
     Stops the WDT if it was previously running and reconfigures it 
-    to be used as a typical watchdog timer, generating a resest 
+    to be used as a typical watchdog timer, generating a reset 
     interrupt upon counter overflow. To prevent this from happening,
     the user should be periodically resetting the counter.
 

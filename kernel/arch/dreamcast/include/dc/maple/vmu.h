@@ -67,7 +67,7 @@ __BEGIN_DECLS
     following functions:
     - <b>MEMCARD</b>: Storage device used for saving and 
                       loading game files.
-    - <b>LCD</b>:     Secondary LCD display on which additonal
+    - <b>LCD</b>:     Secondary LCD display on which additional
                       information may be presented to the player.
     - <b>CLOCK</b>:   A device which maintains the current date 
                       and time, provides at least one buzzer for
@@ -320,7 +320,7 @@ void vmu_set_icon(const char *vmu_icon);
 
     The Memory Card Maple function is for exposing a low-level,
     block-based API that allows you to read from and write to
-    random blocks within the memory card's filesytem.
+    random blocks within the memory card's filesystem.
 
     \note
     A standard memory card has a block size of 512 bytes; however,
@@ -590,7 +590,7 @@ typedef union vmu_state {
     as extended controller inputs.
 
     \note
-    Polling for VMU input is disabled by default to reduce unecessary
+    Polling for VMU input is disabled by default to reduce unnecessary
     Maple BUS traffic.
 
     \sa vmu_get_buttons_enabled
@@ -604,7 +604,7 @@ void vmu_set_buttons_enabled(int enable);
     the VMU's button states has been enabled in the driver.
 
     \note
-    Polling for VMU input is disabled by default to reduce unecessary
+    Polling for VMU input is disabled by default to reduce unnecessary
     Maple BUS traffic.
 
     \sa vmu_set_buttons_enabled

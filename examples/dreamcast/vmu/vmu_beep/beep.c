@@ -12,7 +12,7 @@
 
     On a typical VMU, which only has a single channel, only the low 2 bytes are used to
     create a single waveform, with the lowest byte being the period of the waveform, and
-    the next byte being the duty cycle. Duty cyle should always be less than the period
+    the next byte being the duty cycle. Duty cycle should always be less than the period
     and is recommended to stay around 50%.
 
     All of the interface code for this was stolen from SinisterTengu's Puru Puru Demo from '04

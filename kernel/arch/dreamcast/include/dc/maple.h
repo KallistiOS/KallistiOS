@@ -426,7 +426,7 @@ typedef struct maple_state_str {
 #define MAPLE_EFAIL     -1  /**< \brief Command failed */
 #define MAPLE_EAGAIN    -2  /**< \brief Try again later */
 #define MAPLE_EINVALID  -3  /**< \brief Invalid command */
-#define MAPLE_ENOTSUPP  -4  /**< \brief Command not suppoted by device */
+#define MAPLE_ENOTSUPP  -4  /**< \brief Command not supported by device */
 #define MAPLE_ETIMEOUT  -5  /**< \brief Command timed out */
 /** @} */
 
@@ -447,7 +447,7 @@ extern maple_state_t maple_state;
 /** \brief   Enable the Maple bus.
     \ingroup maple
 
-    This will be done for you autmatically at init time, and there's probably
+    This will be done for you automatically at init time, and there's probably
     not many reasons to be doing this during runtime.
 */
 void maple_bus_enable(void);
@@ -516,7 +516,7 @@ void maple_raddr(uint8 addr, int * port, int * unit);
     This function is not re-entrant, and thus NOT THREAD SAFE.
 
     \param  functions       The list of function codes.
-    \return                 A string containting the capabilities.
+    \return                 A string containing the capabilities.
 */
 const char * maple_pcaps(uint32 functions);
 
@@ -524,7 +524,7 @@ const char * maple_pcaps(uint32 functions);
     \ingroup maple
 
     \param  response        The response code returned from the function.
-    \return                 A string containing a textual respresentation of the
+    \return                 A string containing a textual representation of the
                             response code.
 */
 const char * maple_perror(int response);
@@ -841,7 +841,7 @@ void maple_shutdown(void);
 void maple_wait_scan(void);
 
 /**************************************************************************/
-/* Convienence macros */
+/* Convenience macros */
 
 /* A "foreach" loop to scan all maple devices of a given type. It is used
    like this:

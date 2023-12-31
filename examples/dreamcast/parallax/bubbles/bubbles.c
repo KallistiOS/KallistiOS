@@ -99,7 +99,7 @@ static void sphere_frame_opaque(void) {
     pvr_list_begin(PVR_LIST_OP_POLY);
 
     /* Setup our Direct Render state: pick a store queue and setup QACR0/1 */
-    pvr_dr_init(dr_state);
+    pvr_dr_init(&dr_state);
 
     plx_mat3d_identity();
     plx_mat3d_translate(0.0f, 0.0f, -12.0f);

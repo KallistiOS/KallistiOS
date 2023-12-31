@@ -31,7 +31,7 @@ __BEGIN_DECLS
 #include <arch/types.h>
 
 /** \defgroup video_fonts_mini Mini
-    \brief                     Extra mini-font provied for Dreamcast and NAOMI
+    \brief                     Extra mini-font provided for Dreamcast and NAOMI
     \ingroup                   video_fonts
 
     @{

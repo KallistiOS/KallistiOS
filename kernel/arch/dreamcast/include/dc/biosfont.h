@@ -331,7 +331,7 @@ uint8 *bfont_find_char_jp_half(uint32 ch);
     This function draws a single character in the set encoding to the given
     buffer. This function sits under draw, draw_thin, and draw_wide, while
     exposing the colors and bitdepths desired. This will allow the writing
-    of bfont characters to palletted textures.
+    of bfont characters to paletted textures.
 
     \param buffer       The buffer to draw to.
     \param bufwidth     The width of the buffer in pixels.

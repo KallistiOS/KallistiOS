@@ -29,7 +29,7 @@ static cont_btn_callback_t btn_callback = NULL;
 static uint8_t btn_callback_addr = 0;
 static uint32_t btn_callback_btns = 0;
 
-/* Check whether the controller has EXACTLY the given capabilties. */
+/* Check whether the controller has EXACTLY the given capabilities. */
 int cont_is_type(const maple_device_t *cont, uint32_t type) {
     return cont ? cont->info.function_data[CONT_FUNCTION_DATA_INDEX] == type :
                   -1;

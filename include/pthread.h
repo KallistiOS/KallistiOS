@@ -56,7 +56,7 @@ extern "C" {
         and may not provide pthread_atfork():
 
         "Either the implementation shall support the pthread_atfork() function
-         as described above or the pthread_atfork() funciton shall not be
+         as described above or the pthread_atfork() function shall not be
          provided."
 
         NOTE: RTEMS does not provide pthread_atfork().  */

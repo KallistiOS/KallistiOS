@@ -113,7 +113,7 @@ the file */
 #define SHF_MASKPROC    0xf0000000  /**< \brief Processor specific mask */
 /** @} */
 
-/** \defgroup elf_specsec               Special Section Indeces
+/** \defgroup elf_specsec               Special Section Indices
     \brief                              ELF section indices
     \ingroup  elf
 

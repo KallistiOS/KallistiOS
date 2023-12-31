@@ -20,7 +20,7 @@ This module basically serves as a KOS-friendly front end and support routines
 for the pvr_mem_core module, which is a dlmalloc-derived malloc for use with
 the PVR memory pool.
 
-I was originally going to make a totally seperate thing that could be used
+I was originally going to make a totally separate thing that could be used
 to generically manage any memory pool, but then I realized what a gruelling
 and thankless task that would be when starting with dlmalloc, so we have this
 instead. ^_^;

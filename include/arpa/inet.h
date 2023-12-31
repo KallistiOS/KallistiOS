@@ -121,7 +121,7 @@ int inet_pton(int af, const char *src, void *dst);
 
 /** \brief  Convert a binary representation of an IP address to a string.
 
-    This function does the exact oposite of the inet_pton function, converting
+    This function does the exact opposite of the inet_pton function, converting
     a binary form of an address to a string. This function, unlike inet_ntoa, is
     reentrant, and is the function that you should generally use if you need to
     convert a binary representation of an IP address to a string.

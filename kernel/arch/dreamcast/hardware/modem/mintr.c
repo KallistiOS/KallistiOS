@@ -646,12 +646,12 @@ void modemIntSetupConnectionInterrupts(int clear) {
     dspSetClear8(MAKE_DSP_ADDR(0x245), 0x1, clear);
 }
 
-/* Similiar to modemIntSetupConnectionInterrupts in that it sets up temporary
+/* Similar to modemIntSetupConnectionInterrupts in that it sets up temporary
    interrupts, but they're disabled after a connection has been established */
 void modemIntSetupProtocolInterrupts(int clear) {
     unsigned char data;
 
-    /* Setup protocol specific interrupts that are only set temporarly */
+    /* Setup protocol specific interrupts that are only set temporarily */
     if(modemCfg.cInfo.protocol == MODEM_PROTOCOL_V8) {
         /* Enable interrupts for SECRXB to monitor the handshake. This will be
            disabled after the connection has completed. */
@@ -676,7 +676,7 @@ void modemIntSetupProtocolInterrupts(int clear) {
 
 /* Communicates with the modem's DSP to mask out some events on which a
    hardware interrupt should be generated. This also disables the default
-   IRQ on completeion of a DSP read or write. */
+   IRQ on completion of a DSP read or write. */
 void modemIntConfigModem(void) {
     modemIntResetControlCode();
 

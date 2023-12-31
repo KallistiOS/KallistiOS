@@ -14,13 +14,13 @@ import os, sys, struct
 from gimpfu import *
 from array import array
 
-def to_bytes(n, length, endianess='big'):
+def to_bytes(n, length, endianness='big'):
     if(sys.version_info[0] < 3):
         h = '%x' % n
         s = ('0'*(len(h) % 2) + h).zfill(length*2).decode('hex')
-        return s if endianess == 'big' else s[::-1]
+        return s if endianness == 'big' else s[::-1]
     else:
-        return n.to_bytes(length, byteorder=endianess)
+        return n.to_bytes(length, byteorder=endianness)
 
 def mr_encode(input, output, size):
     length = 0

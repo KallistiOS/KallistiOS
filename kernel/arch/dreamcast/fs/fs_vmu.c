@@ -24,7 +24,7 @@
 /*
 
 This is the vmu filesystem module.  Because there are no directories on vmu's
-it's pretty simple, however the filesystem uses a seperate directory for each
+it's pretty simple, however the filesystem uses a separate directory for each
 of the vmu slots, so if vmufs were mounted on /vmu, /vmu/a1/ is the dir for
 slot 1 on port a, and /vmu/c2 is slot 2 on port c, etc.
 

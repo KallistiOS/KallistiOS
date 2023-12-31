@@ -8,7 +8,7 @@
 !
 
 ! Routine that all exception handlers jump to after setting
-! an error code. Out of neccessity, all of this function is in
+! an error code. Out of necessity, all of this function is in
 ! assembler instead of C. Once the registers are saved, we will
 ! jump into a shared routine. This register save and restore code
 ! is mostly from my sh-stub code. For now this is pretty high overhead
@@ -261,7 +261,7 @@ tmh_clear:
 	! Coast is clear -- setup the args and call the C function. Regs R0-R7
 	! are volatile on SH-4 anyway, and R8-R14 will be saved if needed
 	! onto our temp stack. So all we need to worry about here, at least
-	! for this small C call, is the stack. To faciliate the stack, we'll
+	! for this small C call, is the stack. To facilitate the stack, we'll
 	! save R15 and setup a small temp stack.
 	mov.l	tmh_stack_save_addr,r0		! Setup stack
 	mov.l	r15,@r0

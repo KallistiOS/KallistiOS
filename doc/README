@@ -32,7 +32,7 @@ means that there is a kernel library which you link with your own code.
 This library (libkallisti.a) contains the whole core OS functionality. You
 may also enable dynamically loaded modules which will link into your
 program at runtime and add extra functionality like new VFS modules,
-new peripheral device support, image loader plugins, etc. The possiblities
+new peripheral device support, image loader plugins, etc. The possibilities
 are limited only by your patience with adding enough exports to support
 the modules. ;)
 

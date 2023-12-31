@@ -93,7 +93,7 @@ int *star_x = NULL, *star_y, *star_z;
 /* init stars so that they will be anywhere on the screen, but will start out
    as a single dot in the middle because of the Z coord.
 
-   This routine has been mathmatically optimized to produce the best possible
+   This routine has been mathematically optimized to produce the best possible
    spread of stars on the given starfield parameters by solving the
    perspective equation for X and Y. */
 

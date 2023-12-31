@@ -65,7 +65,7 @@ typedef int snd_stream_hnd_t;
     \param  smp_req         The number of samples requested.
     \param  smp_recv        Used to return the number of samples available.
     \return                 A pointer to the buffer of samples. If stereo, the
-                            samples should be interleaved. For best perfomance
+                            samples should be interleaved. For best performance
                             use 32-byte aligned pointer.
 */
 typedef void *(*snd_stream_callback_t)(snd_stream_hnd_t hnd, int smp_req,
