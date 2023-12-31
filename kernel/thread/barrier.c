@@ -42,7 +42,7 @@ STATIC_ASSERT(sizeof(thd_barrier_t) == THD_BARRIER_SIZE)
 
 #include <kos/barrier.h>
 
-int thd_barrier_init(thd_barrier_t *__RESTRICT b, void *__RESTRICT a,
+int thd_barrier_init(thd_barrier_t *__RESTRICT b, const void *__RESTRICT a,
                      unsigned count) {
     int tmp, rv;
 
