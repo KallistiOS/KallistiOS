@@ -6,7 +6,8 @@
 
 #include <arch/timer.h>
 #include <arch/rtc.h>
-#include <arch/perfctr.h>
+
+#include <dc/perfctr.h>
 
 #include <time.h>
 #include <errno.h>
