@@ -10,6 +10,7 @@
 #include <kos.h>
 
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -29,11 +30,6 @@
 #define SCREEN_WIDTH  640
 #define SCREEN_HEIGHT 400
 
-/* Set up some booleans */
-#define TRUE  1
-#define FALSE 0
-typedef unsigned int bool;
-
 /* Build Our Vertex Structure */
 typedef struct {
     float x, y, z; /* 3D Coordinates */
@@ -51,7 +47,7 @@ GLfloat xspeed, yspeed, zspeed;  /* Spin Speed                               */
 
 int key = 1;                     /* Make Sure Same Morph Key Not Pressed     */
 int step = 0, steps = 200;       /* Step Counter And Maximum Number Of Steps */
-bool morph = FALSE;              /* Default morph To False (Not Morphing)    */
+bool morph = false;              /* Default morph To false (Not Morphing)    */
 
 int maxver;                            /* Holds The Max Number Of Vertices   */
 object morph1, morph2, morph3, morph4, /* Our 4 Morphable Objects            */
@@ -203,7 +199,7 @@ int initGL(GLvoid) {
     /* Source & Destination Are Set To Equal First Object (morph1) */
     sour = dest = &morph1;
 
-    return(TRUE);
+    return(true);
 }
 
 void draw_gl(void) {
@@ -238,7 +234,7 @@ void draw_gl(void) {
      * * The Same Amount Of Verts For Simplicity, Could Use maxver Also)
      * */
     for(i = 0; i < morph1.verts; i++) {
-        /* If morph Is True Calculate Movement Otherwise Movement=0 */
+        /* If morph Is true Calculate Movement Otherwise Movement=0 */
         if(morph)
             q = calculate(i);
         else
@@ -293,7 +289,7 @@ void draw_gl(void) {
 
     /* If We're Morphing And We Haven't Gone Through All 200 Steps
      * Increase Our Step Counter
-     * Otherwise Set Morphing To False, Make Source=Destination And
+     * Otherwise Set Morphing To false, Make Source=Destination And
      * Set The Step Counter Back To Zero.
      */
 
@@ -301,7 +297,7 @@ void draw_gl(void) {
         step++;
     }
     else {
-        morph = FALSE;
+        morph = false;
         sour  = dest;
         step  = 0;
     }
@@ -340,25 +336,25 @@ int main(int argc, char **argv) {
             break;
 
         if((state->buttons & CONT_A) && !morph && NOT_LAST) {
-            morph = TRUE;
+            morph = true;
             dest = &morph1;
             last = CONT_A;
         }
 
         if((state->buttons & CONT_X) && !morph && NOT_LAST) {
-            morph = TRUE;
+            morph = true;
             dest = &morph2;
             last = CONT_X;
         }
 
         if((state->buttons & CONT_Y) && !morph && NOT_LAST) {
-            morph = TRUE;
+            morph = true;
             dest = &morph3;
             last = CONT_Y;
         }
 
         if((state->buttons & CONT_B) && !morph && NOT_LAST) {
-            morph = TRUE;
+            morph = true;
             dest = &morph4;
             last = CONT_B;
         }
