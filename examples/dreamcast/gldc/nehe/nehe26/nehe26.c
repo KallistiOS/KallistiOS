@@ -47,7 +47,7 @@ GLfloat xspeed, yspeed, zspeed;  /* Spin Speed                               */
 
 int key = 1;                     /* Make Sure Same Morph Key Not Pressed     */
 int step = 0, steps = 200;       /* Step Counter And Maximum Number Of Steps */
-bool morph = false;              /* Default morph To false (Not Morphing)    */
+bool morph = false;              /* Default morph To False (Not Morphing)    */
 
 int maxver;                            /* Holds The Max Number Of Vertices   */
 object morph1, morph2, morph3, morph4, /* Our 4 Morphable Objects            */
@@ -234,7 +234,7 @@ void draw_gl(void) {
      * * The Same Amount Of Verts For Simplicity, Could Use maxver Also)
      * */
     for(i = 0; i < morph1.verts; i++) {
-        /* If morph Is true Calculate Movement Otherwise Movement=0 */
+        /* If morph Is True, Calculate Movement Otherwise Movement=0 */
         if(morph)
             q = calculate(i);
         else
@@ -289,7 +289,7 @@ void draw_gl(void) {
 
     /* If We're Morphing And We Haven't Gone Through All 200 Steps
      * Increase Our Step Counter
-     * Otherwise Set Morphing To false, Make Source=Destination And
+     * Otherwise Set Morphing To False, Make Source=Destination And
      * Set The Step Counter Back To Zero.
      */
 
