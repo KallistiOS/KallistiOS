@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    clock_gettime.c
-   Copyright (C) 2023 Falco Girgis
+   Copyright (C) 2023, 2024 Falco Girgis
 */
 
 #include <arch/timer.h>
