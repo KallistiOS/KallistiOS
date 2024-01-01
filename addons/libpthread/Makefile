@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # addons/libpthread/Makefile
-# Copyright (C) 2023 Lawrence Sebald
+# Copyright (C) 2023, 2024 Lawrence Sebald
 #
 
 TARGET  = libpthread.a
@@ -58,6 +58,11 @@ OBJS += pthread_rwlockattr_init.o pthread_rwlockattr_destroy.o \
 # Spin Locks
 OBJS += pthread_spin_init.o pthread_spin_destroy.o pthread_spin_lock.o \
         pthread_spin_trylock.o pthread_spin_unlock.o
+
+# Barriers
+OBJS += pthread_barrierattr_init.o pthread_barrierattr_destroy.o \
+        pthread_barrier_init.o pthread_barrier_destroy.o \
+        pthread_barrier_wait.o
 
 # Misc.
 OBJS += pthread_atfork.o pthread_getsetconcurrency.o pthread_yield.o \

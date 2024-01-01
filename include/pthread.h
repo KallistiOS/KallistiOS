@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    pthread.h
-   Copyright (C) 2023 Lawrence Sebald
+   Copyright (C) 2023, 2024 Lawrence Sebald
 
 */
 
@@ -9,13 +9,19 @@
     \brief  POSIX threading support.
 
     This file contains functions and declarations related to POSIX threading
-    support. Please note that this support is not anywhere near actually POSIX-
+    support. Please note that this support is not exactly actually POSIX-
     compliant, but it provides much of the functionality that is useful in
     porting code to KOS.
 
     It is not recommended to use this POSIX threading support in code designed
     specifically for KOS -- instead it is recommended to use the built-in
-    threading support provided in-kernel.
+    threading support provided in-kernel. Most of the support defined in this
+    file is just wrapper functions around the in-kernel functionality.
+
+    In-depth documentation of POSIX threading can be found in IEEE Std
+    1003.1-2017. An online version of the documentation for this header in that
+    specification can be found at the following URL:
+    https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/pthread.h.html
 
     \author Lawrence Sebald
 */
@@ -210,6 +216,18 @@ int pthread_spin_destroy(pthread_spinlock_t *lock);
 int pthread_spin_lock(pthread_spinlock_t *lock);
 int pthread_spin_trylock(pthread_spinlock_t *lock);
 int pthread_spin_unlock(pthread_spinlock_t *lock);
+
+/* Barriers */
+#define PTHREAD_BARRIER_SERIAL_THREAD  0x7fffffff
+
+int pthread_barrier_init(pthread_barrier_t *__RESTRICT barrier,
+                         const pthread_barrierattr_t *__RESTRICT attr,
+                         unsigned count);
+int pthread_barrier_destroy(pthread_barrier_t *barrier);
+int pthread_barrier_wait(pthread_barrier_t *barrier);
+
+int pthread_barrierattr_init(pthread_barrierattr_t *attr);
+int pthread_barrierattr_destroy(pthread_barrierattr_t *attr);
 
 /* Misc. */
 int pthread_getconcurrency(void);
