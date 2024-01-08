@@ -90,10 +90,13 @@ To make the toolchains, do the following:
 	bash
 	```
 2. Navigate to the `dc-chain` directory by entering:
+	```
+	cd /opt/toolchains/dc/kos/utils/dc-chain/
+	```
+3. Provide your own `config.mk`. If you don't know which version
+   to choose, you may probably use `config.mk.stable.sample` as a template.
 
-		cd /opt/toolchains/dc/kos/utils/dc-chain/
-	
-3. Enter the following to start downloading and building toolchain:
+4. Enter the following to start downloading and building toolchain:
 	```
 	gmake
 	```
