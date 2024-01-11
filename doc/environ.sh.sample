@@ -2,22 +2,22 @@
 #
 # This is a sample script for configuring and customizing your
 # KOS build environment. Modify it to suit your setup. Several
-# settings may be enabled optionally or are provided with 
+# settings may be enabled optionally or are provided with
 # alternative values.
 #
-# This script is typically sourced in your current shell environment 
+# This script is typically sourced in your current shell environment
 # (probably by .bashrc, .bash_profile, or something similar), so that
 # the KOS environment is set up automatically for each shell session.
 #
 
-# Build Architecture 
+# Build Architecture
 #
 # Set the major architecture you'll be building for.
 # The only option here is "dreamcast" as of KOS 2.0.0.
 #
 export KOS_ARCH="dreamcast"
 
-# Build Sub-Architecture 
+# Build Sub-Architecture
 #
 # Defines the sub architecture your configuration
 # is targeting or uses an existing value that
@@ -47,15 +47,15 @@ export KOS_PORTS="${KOS_BASE}/../kos-ports"
 
 # SH Compiler Prefixes
 #
-# Specifies the path to and prefix for the main SH 
+# Specifies the path to and prefix for the main SH
 # GCC toolchain used to target the Dreamcast's SH4 CPU.
 #
-export KOS_CC_BASE="/opt/toolchains/dc/sh-elf"  
+export KOS_CC_BASE="/opt/toolchains/dc/sh-elf"
 export KOS_CC_PREFIX="sh-elf"
 
 # ARM Compiler Prefixes
 #
-# Specifies the path to and prefix for the additional ARM 
+# Specifies the path to and prefix for the additional ARM
 # GCC toolchain used to target the Dreamcast's AICA SPU.
 #
 export DC_ARM_BASE="/opt/toolchains/dc/arm-eabi"
@@ -78,8 +78,8 @@ export KOS_GENROMFS="${KOS_BASE}/utils/genromfs/genromfs"
 # Make Utility
 #
 # Configures the tool to be used as the main "make" utility
-# for building GNU Makefiles. On a platform such as BSD, 
-# the default can be changed to "gmake," for the GNU 
+# for building GNU Makefiles. On a platform such as BSD,
+# the default can be changed to "gmake," for the GNU
 # implementation.
 #
 export KOS_MAKE="make"
@@ -93,9 +93,9 @@ export KOS_MAKE="make"
 # or dc-tool-serial configuration, remembering to change the values
 # for the Dreamcast's IP address or the serial port interface.
 #
-export KOS_LOADER="dc-tool -x"				       
+export KOS_LOADER="dc-tool -x"
 #export KOS_LOADER="dc-tool-ip -t 192.168.1.100 -x"
-#export KOS_LOADER="dc-tool-ser -t /dev/ttyS0 -x" 
+#export KOS_LOADER="dc-tool-ser -t /dev/ttyS0 -x"
 
 # Default Compiler Flags
 #
@@ -109,19 +109,19 @@ export KOS_LDFLAGS=""
 export KOS_AFLAGS=""
 export DC_ARM_LDFLAGS=""
 
-# Optimization Level 
+# Optimization Level
 #
-# Controls the baseline optimization level to use when building. 
+# Controls the baseline optimization level to use when building.
 # Typically this is -Og (debugging), -O0, -01, -02, or -03.
-# NOTE: For our target, -O4 is a valid optimization level that has 
+# NOTE: For our target, -O4 is a valid optimization level that has
 # been seen to have some performance impact as well.
 #
 export KOS_CFLAGS="${KOS_CFLAGS} -O2"
 
 # Additional Optimizations
 #
-# Uncomment this to enable what has been found empirically to be 
-# the optimal set of additional flags for release build performance 
+# Uncomment this to enable what has been found empirically to be
+# the optimal set of additional flags for release build performance
 # on the current stable toolchain. NOTE: Certain KOS-ports and examples
 # do not work properly with "-flto=auto"!
 #
@@ -130,18 +130,18 @@ export KOS_CFLAGS="${KOS_CFLAGS} -O2"
 # Frame Pointers
 #
 # Controls whether frame pointers are emitted or not. Disabled by
-# default. Enable them if you plan to use GDB for debugging. 
+# default. Enable them if you plan to use GDB for debugging.
 #
 export KOS_CFLAGS="${KOS_CFLAGS} -fomit-frame-pointer"
 #export KOS_CFLAGS="${KOS_CFLAGS} -fno-omit-frame-pointer -DFRAME_POINTERS"
 
 # GCC Builtin Functions
 #
-# Comment out this line to enable GCC to use its own builtin implementations of 
+# Comment out this line to enable GCC to use its own builtin implementations of
 # certain standard library functions. Under certain conditions, this can allow
 # compiler-optimized implementations to replace standard function invocations.
 # The downside of this is that it COULD interfere with Newlib or KOS implementations
-# of these functions, and it has not been tested thoroughly to ensure compatibility. 
+# of these functions, and it has not been tested thoroughly to ensure compatibility.
 #
 export KOS_CFLAGS="${KOS_CFLAGS} -fno-builtin"
 
@@ -176,8 +176,9 @@ fi
 
 # Shared Compiler Configuration
 #
-# Include sub architecture-independent configuration file for shared 
-# environment settings. If you want to configure additional compiler 
+# Include sub architecture-independent configuration file for shared
+# environment settings. If you want to configure additional compiler
 # options or see where other build flags are set, look at this file.
 #
 . ${KOS_BASE}/environ_base.sh
+
