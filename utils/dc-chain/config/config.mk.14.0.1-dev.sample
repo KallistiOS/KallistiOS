@@ -5,22 +5,33 @@
 # Initially adapted from Stalin's build script version 0.3.
 #
 
+###############################################################################
+###############################################################################
+### THIS CONFIG IS FOR AN EXPERIMENTAL VERSION OF GCC!
+## THERE IS ONE KNOWN ISSUE BUILDING THIS VERSION as of 2024-01-04:
+## 1. GCC 14.0.1 currently does not build with m4-single-only precision, which
+##    is the only officially supported KOS mode for floating-point precision.
+###############################################################################
+###############################################################################
+
 # Toolchain versions for SH
-sh_binutils_ver=2.34
-sh_gcc_ver=9.5.0
-newlib_ver=4.3.0.20230120
+sh_binutils_ver=2.41
+sh_gcc_ver=14.0.1
+newlib_ver=4.4.0.20231231
 gdb_ver=14.1
 
 # Tarball extensions to download for SH
 sh_binutils_download_type=xz
-sh_gcc_download_type=xz
+sh_gcc_download_type=git
+sh_gcc_git_repo=git://gcc.gnu.org/git/gcc.git
+sh_gcc_git_branch=master
 newlib_download_type=gz
 gdb_download_type=xz
 
 # Toolchain for ARM
 # The ARM version of gcc/binutils is separated as support for the ARM7DI core
 # used in the Dreamcast's AICA is not available in versions of GCC beyond 8.5.0.
-arm_binutils_ver=2.34
+arm_binutils_ver=2.41
 arm_gcc_ver=8.5.0
 
 # Tarball extensions to download for ARM
@@ -37,10 +48,10 @@ arm_gcc_download_type=xz
 #use_custom_dependencies=1
 
 # GCC dependencies for SH
-sh_gmp_ver=6.1.0
-sh_mpfr_ver=3.1.4
-sh_mpc_ver=1.0.3
-sh_isl_ver=0.18
+sh_gmp_ver=6.2.1
+sh_mpfr_ver=4.1.0
+sh_mpc_ver=1.2.1
+sh_isl_ver=0.24
 
 # Tarball extensions to download for GCC dependencies for SH
 sh_gmp_download_type=bz2
@@ -105,24 +116,38 @@ install_mode=install-strip
 # detected on some OS.
 makejobs=-j2
 
-# Languages (c|c++|objc|obj-c++)
+# Languages (c|c++|objc|obj-c++|rust)
 # Set the languages to build for pass 2 of building gcc for sh-elf. The default
-# here is to build C, C++, Objective C, and Objective C++. You may want to take
-# out the latter two if you're not worried about them and/or you're short on
-# hard drive space.
-pass2_languages=c,c++,objc,obj-c++
+# here is to build C, C++, Objective-C, Objective-C++, and Rust. You may want
+# to take out some languages if you're not worried about them and/or you're
+# short on hard drive space. Only C is required to build KallistiOS, but some
+# included examples use other languages.
+pass2_languages=c,c++,objc,obj-c++,rust
+
+# Floating point precision support (m4|m4-single|m4-single-only)
+# Build support for various SH4 floating-point operation ABIs. KallistiOS only
+# officially supports single-precision-only mode. Add m4 (double precision) or
+# m4-single (single precision) to build experimental support for those ABIs.
+precision_modes=m4-single-only
+#precision_modes=m4,m4-single,m4-single-only
+
+# Default floating point mode (m4|m4-single|m4-single-only)
+# Choose the default floating point precision ABI used when GCC is invoked. This
+# can be overridden by using passing -m4, -m4-single, or -m4-single-only to GCC.
+# KallistiOS currently only supports m4-single-only, so that is the default.
+default_precision=m4-single-only
 
 # GCC threading model (single|kos|posix*)
-# With GCC 4.x versions and up, the patches provide a 'kos' thread model, so you 
-# should use it. If you really don't want threading support for C++ (or 
-# Objective C/Objective C++), you can set this to 'single'. With GCC 3.x, you 
+# With GCC 4.x versions and up, the patches provide a 'kos' thread model, so you
+# should use it. If you really don't want threading support for C++ (or
+# Objective C/Objective C++), you can set this to 'single'. With GCC 3.x, you
 # probably want 'posix' here; but this mode is deprecated as the GCC 3.x branch
 # is not anymore supported.
 thread_model=kos
 
 # Automatic patching for KOS (1|0)
-# Uncomment this if you want to disable applying KOS patches to the toolchain 
-# source files before building. This will disable usage of the 'kos' thread model. 
+# Uncomment this if you want to disable applying KOS patches to the toolchain
+# source files before building. This will disable usage of the 'kos' thread model.
 #use_kos_patches=0
 
 # Automatic fixup SH-4 Newlib (1|0)
