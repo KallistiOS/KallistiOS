@@ -155,6 +155,15 @@ export KOS_CFLAGS="${KOS_CFLAGS} -fno-builtin"
 #
 # export KOS_CFLAGS="${KOS_CFLAGS} -ffast-math -ffp-contract=fast -mfsrra -mfsca"
 
+# SH4 Floating Point Arithmetic Precision
+#
+# KallistiOS only officially supports the single-precision-only floating-point
+# arithmetic mode (-m4-single-only), but experimental support for the double
+# precision default (-m4) or double precision, single default (-m4-single) modes
+# can be enabled here by adjusting KOS_SH4_PRECISION.
+#
+export KOS_SH4_PRECISION="-m4-single-only"
+
 # Additional Tools Path
 #
 # If not already set, add "bin" directory to PATH variable, which is where
