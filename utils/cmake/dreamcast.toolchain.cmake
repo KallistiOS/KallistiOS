@@ -68,18 +68,12 @@ set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 
 ##### Add Platform-Specific #defines #####
-ADD_DEFINITIONS(
-    -D__DREAMCAST__
-    -D_arch_dreamcast
-)
+add_compile_definitions(__DREAMCAST__ _arch_dreamcast)
 
 if(${KOS_SUBARCH} MATCHES naomi)
-    ADD_DEFINITIONS(
-        -D__NAOMI__
-        -D_arch_sub_naomi
-    )
+    add_compile_definitions(__NAOMI__ _arch_sub_naomi)
 else()
-    ADD_DEFINITIONS(-D_arch_sub_pristine)
+    add_compile_definitions(_arch_sub_pristine)
 endif()
 
 ##### Configure Build Flags #####
@@ -99,7 +93,7 @@ set(CMAKE_ASM_FLAGS_RELEASE "")
 ##### Configure Include Directories #####
 set(CMAKE_SYSTEM_INCLUDE_PATH "${CMAKE_SYSTEM_INCLUDE_PATH} ${KOS_BASE}/include ${KOS_BASE}/kernel/arch/dreamcast/include ${KOS_BASE}/addons/include ${KOS_PORTS}/include")
 
-INCLUDE_DIRECTORIES(
+include_directories(
     $ENV{KOS_BASE}/include
     $ENV{KOS_BASE}/kernel/arch/dreamcast/include
     $ENV{KOS_BASE}/addons/include
@@ -117,11 +111,13 @@ endif()
 
 add_link_options(-ml -m4-single-only -Wl,--gc-sections -nodefaultlibs)
 
-LINK_DIRECTORIES(
+link_directories(
     ${KOS_BASE}/lib/dreamcast
     ${KOS_BASE}/addons/lib/dreamcast
     ${KOS_PORTS}/lib
 )
 
 add_link_options(-L${KOS_BASE}/lib/dreamcast -L${KOS_BASE}/addons/lib/dreamcast -L${KOS_PORTS}/lib)
-LINK_LIBRARIES(-Wl,--start-group -lstdc++ -lkallisti -lc -lgcc -Wl,--end-group m)
+link_libraries(-Wl,--start-group -lstdc++ -lkallisti -lc -lgcc -Wl,--end-group -lm)
+
+include("${KOS_BASE}/utils/cmake/dreamcast.cmake")
