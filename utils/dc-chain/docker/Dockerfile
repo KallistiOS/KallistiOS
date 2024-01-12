@@ -5,7 +5,7 @@
 #   - build one of the images:
 #       docker build -t dcchain:latest . 
 #       docker build -t dcchain:stable --build-arg dc_chain=stable .
-#       docker build -t dcchain:legacy --build-arg dc_chain=legacy . 
+#       docker build -t dcchain:9.3.0-legacy --build-arg dc_chain=9.3.0-legacy .
 #   - create and run a container, eg for latest:
 #       docker run -it --name containername dcchain:latest /bin/bash
 
