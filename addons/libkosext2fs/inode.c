@@ -1042,7 +1042,7 @@ int ext2_inode_by_path(ext2_fs_t *fs, const char *path, ext2_inode_t **rv,
     int blocks, i, block_size;
     uint8_t *buf;
     uint32_t *ib;
-    ext2_dirent_t *dent;
+    ext2_dirent_t *dent = NULL;
     int err = 0;
     size_t tmp_sz;
     char *symbuf;
