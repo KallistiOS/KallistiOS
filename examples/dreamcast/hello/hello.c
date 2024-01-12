@@ -17,19 +17,19 @@
 
    Here are some possible flags to pass to KOS_INIT_FLAGS():
 
-   INIT_NONE        -- don't do any auto init
-   INIT_IRQ         -- Enable IRQs
+   INIT_DEFAULT     -- do a normal init with the most common settings
+   INIT_IRQ         -- Enable IRQs (implied by INIT_DEFAULT)
    INIT_NET         -- Enable networking (including sockets)
    INIT_MALLOCSTATS -- Enable a call to malloc_stats() right before shutdown
+   INIT_NONE        -- don't do any auto init (you must manually init hardware)
 
    Refer to kos/init.h and arch/init_flags.h for the full list of flags.
    You can OR any or all of these together.
 
-   If you want to start out with the current KOS defaults, use INIT_DEFAULT.
-   You may now also omit KOS_INIT_FLAGS() altogether, which will also use
-   INIT_DEFAULT automatically, as we're doing here. This can be useful if
-   you're lazy or if you're building regular C or C++ code and don't want to
-   introduce KOS-specific DC code into the file.
+   If you wish to use the default initialization settings, specify
+   INIT_DEFAULT in your KOS_INIT_FLAGS(). You may also omit KOS_INIT_FLAGS()
+   from your program (as we are doing here since the above code is commented
+   out), which will automatically use the default initialization settings.
 */
 
 /* Your program's main entry point */
