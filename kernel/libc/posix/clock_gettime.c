@@ -32,7 +32,6 @@ int clock_getres(clockid_t clk_id, struct timespec *ts) {
         case CLOCK_REALTIME:
         case CLOCK_MONOTONIC:
         case CLOCK_PROCESS_CPUTIME_ID:
-        /* case CLOCK_THREAD_CPUTIME_ID: */
             if(!ts) {
                 errno = EFAULT;
                 return -1;
