@@ -3,27 +3,31 @@
 This document contains all the instructions to create a fully working
 toolchains targeting the **Sega Dreamcast** system under **macOS**.
 
-This document was written when using **macOS** (`10.14 Mojave`) but it should be
-applicable on all **macOS** systems. Note that Apple introduced some breaking
-changes in `10.14 Mojave`; so starting from that version, some header files have
-moved. They have been removed in `10.15 Catalina` and later versions.
+This document was initially written while using **macOS** (`10.14 Mojave`) but
+it should be applicable on all **macOS** systems. Note that Apple introduced some
+breaking changes in `10.14 Mojave`; so starting from that version, some header
+files have moved. They have been removed in `10.15 Catalina` and later versions.
 **dc-chain** supports all modern macOS versions, including `pre-Mojave`
 releases.
+
+This document has been refreshed using `14.2.1 Sonoma`.
 
 ## Introduction ##
 
 On **macOS** system, the package manager is the `brew` tool, which is provided
 by the [Homebrew project](https://brew.sh).
  
-If you never used the `brew` tool before, you will need to install it. The
-procedure to do that is given below.
+If you never used the `brew` tool before, you will need to install it, using
+your user session.
 
-All the operations in this document should be executed with the `root` user. To
-do that, from a **Terminal** window, input:
-
+All the operations in this document (excepting the `brew` installation and
+usage) should be executed with the `root` user. To do that, from a
+**Terminal** window, input:
+	```
 	sudo -s
-
-If you don't want to use the `root` user, another option is to use the `sudo`
+	```
+ 
+If you don't want to use the `root` user directly, another option is to use the `sudo`
 command. In that case, you will need to add the `sudo` command before entering
 all the commands specified below.
 
@@ -59,24 +63,21 @@ project. This is normal and doesn't affect the **dc-chain** process.
 
 As already said in the introduction, the **macOS** system doesn't come with a
 package manager, but fortunately, the [Homebrew project](https://brew.sh) is
-here to fill this gap:
+here to fill this gap.
 
-1. Open a **Terminal** window.
+Click [here](https://brew.sh) and follow the instructions. Please note,
+all operations done using **Homebrew** should be done under your user account,
+`root` is not allowed while using `brew`.
 
-2. Execute the following:
-	```
-	/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-	```
-**Homebrew** is now installed. You can check if it's working by entering
-`brew --version`.
+You can check later if `brew` is working by entering `brew --version`.
 
 ### Installation of required packages ###
 
 The packages below need to be installed:
 ```
-brew install libjpeg libpng libelf
+brew install libjpeg-turbo libpng libelf texinfo
 ```
-All the other required packages have already been installed, i.e. `git`, `svn`
+All the other required packages have already been installed, e.g., `git`
 or `python`.
 
 ## Preparing the environment installation ##
@@ -107,10 +108,15 @@ To make the toolchains, do the following:
 	```
 	cd /opt/toolchains/dc/kos/utils/dc-chain/
 	```
-2. Enter the following to start downloading and building toolchain:
+
+2. Provide your own `config.mk`. If you don't know which version to choose,
+   you may probably use `config.mk.stable.sample` as a template.
+    
+3. Enter the following to start downloading and building toolchain:
 	```
 	make
 	```
+
 Now it's time to take a coffee as this process is really long: several hours
 will be needed to make the full toolchains!
 

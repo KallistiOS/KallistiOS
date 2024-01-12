@@ -114,14 +114,20 @@ the main `README.md` file at the root for more information.
 To make the toolchains, do the following:
 
 1. Start the **MSYS2 Shell** if not already done.
+
 2. Navigate to the `dc-chain` directory by entering:
 	```
 	cd /opt/toolchains/dc/kos/utils/dc-chain/
 	```
-3. Enter the following to start downloading and building toolchain:
+
+3. Provide your own `config.mk`. If you don't know which version
+   to choose, you may probably use `config.mk.stable.sample` as a template.
+
+4. Enter the following to start downloading and building toolchain:
 	```
 	make
 	```
+
 Now it's time to take a coffee as this process is really long: several hours
 will be needed to make the full toolchains!
 
