@@ -112,6 +112,7 @@ __BEGIN_DECLS
 #   include <dc/vblank.h>
 #   include <dc/vec3f.h>
 #   include <dc/video.h>
+#   include <dc/vmu_fb.h>
 #   include <dc/vmu_pkg.h>
 #   include <dc/vmufs.h>
 #else   /* _arch_dreamcast */

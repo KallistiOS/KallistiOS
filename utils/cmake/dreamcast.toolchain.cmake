@@ -59,8 +59,12 @@ set(PLATFORM_DREAMCAST TRUE)
 
 ##### Configure Cross-Compiler #####
 set(CMAKE_CROSSCOMPILING TRUE)
-set(CMAKE_C_COMPILER ${KOS_CC_BASE}/bin/sh-elf-gcc)
-set(CMAKE_CXX_COMPILER ${KOS_CC_BASE}/bin/sh-elf-g++)
+
+set(CMAKE_ASM_COMPILER    ${KOS_CC_BASE}/bin/sh-elf-as)
+set(CMAKE_C_COMPILER      ${KOS_CC_BASE}/bin/sh-elf-gcc)
+set(CMAKE_CXX_COMPILER    ${KOS_CC_BASE}/bin/sh-elf-g++)
+set(CMAKE_OBJC_COMPILER   ${KOS_CC_BASE}/bin/sh-elf-gcc)
+set(CMAKE_OBJCXX_COMPILER ${KOS_CC_BASE}/bin/sh-elf-g++)
 
 set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 
@@ -100,8 +104,8 @@ include_directories(
     $ENV{KOS_PORTS}/include
 )
 
-##### Configure Libraries #####
-set(CMAKE_SYSTEM_LIBRARY_PATH "${CMAKE_SYSTEM_LIBRARY_PATH} ${KOS_BASE}/addons/lib/dreamcast ${KOS_PORTS}/lib")
+##### Configure Linker #####
+set(CMAKE_SYSTEM_LIBRARY_PATH "${CMAKE_SYSTEM_LIBRARY_PATH} ${KOS_BASE}/lib/dreamcast ${KOS_BASE}/addons/lib/dreamcast ${KOS_PORTS}/lib")
 
 if(${KOS_SUBARCH} MATCHES naomi)
     add_link_options(-Wl,-Ttext=0x8c020000 -T${KOS_BASE}/utils/ldscripts/shlelf-naomi.xc)
@@ -118,6 +122,13 @@ link_directories(
 )
 
 add_link_options(-L${KOS_BASE}/lib/dreamcast -L${KOS_BASE}/addons/lib/dreamcast -L${KOS_PORTS}/lib)
-link_libraries(-Wl,--start-group -lstdc++ -lkallisti -lc -lgcc -Wl,--end-group -lm)
+
+##### Custom Build Rules #####
+set(CMAKE_C_LINK_EXECUTABLE
+    "<CMAKE_C_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES> \
+    -lm -Wl,--start-group -lkallisti -lc -lgcc -Wl,--end-group")
+set(CMAKE_CXX_LINK_EXECUTABLE
+    "<CMAKE_CXX_COMPILER> <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES> \
+    -lm -Wl,--start-group -lstdc++ -lkallisti -lc -lgcc -Wl,--end-group")
 
 include("${KOS_BASE}/utils/cmake/dreamcast.cmake")
