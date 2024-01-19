@@ -189,9 +189,9 @@ static void enable_breakpoint(ubc_channel_t           ch,
 
 }
 
-bool ubc_enable_breakpoint(const ubc_breakpoint_t *bp,
-                           ubc_break_func_t       callback,
-                           void                   *user_data) {
+bool ubc_add_breakpoint(const ubc_breakpoint_t *bp,
+                        ubc_break_func_t       callback,
+                        void                   *user_data) {
 
     /* Check if we're dealing with a combined sequential breakpoint */
     if(bp->next) {
@@ -252,7 +252,7 @@ static void disable_breakpoint(ubc_channel_t ch) {
 }
 
 // Need to handle multi-breakpoint
-bool ubc_disable_breakpoint(const ubc_breakpoint_t *bp) {
+bool ubc_remove_breakpoint(const ubc_breakpoint_t *bp) {
     /* Disabling a sequential breakpoint pair */
     if(bp->next) {
         if(channel_state[ubc_channel_a].bp == bp &&
@@ -279,6 +279,11 @@ bool ubc_disable_breakpoint(const ubc_breakpoint_t *bp) {
 
     /* We never found your breakpoint! */
     return false;
+}
+
+void ubc_clear_breakpoints(void) {
+    disable_breakpoint(ubc_channel_a);
+    disable_breakpoint(ubc_channel_b);
 }
 
 static void handle_exception(irq_t code, irq_context_t *irq_ctx) {
@@ -328,8 +333,7 @@ static void handle_exception(irq_t code, irq_context_t *irq_ctx) {
 }
 
 void ubc_init(void) {
-    disable_breakpoint(ubc_channel_a);
-    disable_breakpoint(ubc_channel_b);
+    ubc_clear_breakpoints();
 
     BRCR = 0;
 
@@ -340,8 +344,7 @@ void ubc_init(void) {
 }
 
 void ubc_shutdown(void) {
-    disable_breakpoint(ubc_channel_a);
-    disable_breakpoint(ubc_channel_b);
+    ubc_clear_breakpoints();
 
     BRCR = 0;
 

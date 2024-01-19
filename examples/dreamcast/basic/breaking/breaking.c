@@ -16,14 +16,15 @@ static bool handlerfunc(const ubc_breakpoint_t *bp,
 }
 
 static void break_on_sized_data_write_value(void) {
-    uint16_t var, tmp;
+    uint16_t var;
+    volatile uint16_t tmp;
 
-    ubc_breakpoint_t bp = {
+    const ubc_breakpoint_t bp = {
         .address = &var,                  // address to break on
         .cond = {
             .access = ubc_access_operand, // instruction, operand, or both
             .rw     = ubc_rw_write,       // read, write, or both
-            .size   = ubc_size_word       // byte, word, longword, quadword
+            .size   = ubc_size_16bit      // 8, 16, 32, 64-bit, or any
         },
         .data = {
             .enabled = true,              // turn on data comparison
@@ -31,7 +32,7 @@ static void break_on_sized_data_write_value(void) {
         }
     };
 
-    ubc_enable_breakpoint(&bp,handlerfunc, NULL);
+    ubc_enable_breakpoint(&bp, handlerfunc, NULL);
 
     tmp = var; (void)tmp;
     assert(!handled_); //we only did a read
@@ -51,6 +52,8 @@ static void break_on_sized_data_write_value(void) {
 
 int main(int argc, char* argv[]) {
     break_on_sized_data_write_value();
+
+    UBC_BRK();
 
     return 0;
 }

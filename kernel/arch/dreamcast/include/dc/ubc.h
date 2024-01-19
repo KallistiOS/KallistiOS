@@ -1,7 +1,6 @@
 /* KallistiOS ##version##
 
    kernel/arch/dreamcast/include/dc/ubc.h
-   Copyright (C) 2002 Megan Potter
    Copyright (C) 2024 Falco Girgis
 */
 
@@ -16,7 +15,6 @@
     \todo
     Add support for using the DBR register as the breakpoint handler.
 
-    \author Megan Potter
     \author Falco Girgis
 */
 
@@ -60,12 +58,6 @@ __BEGIN_DECLS
 /** \cond Forward declarations */
 struct irq_context;
 /** \endcond */
-
-#define UBC_BRK() __asm(    \
-    /* "brk\n" */           \
-    ".word 0x003B\n"        \
-    "nop\n"                 \
-) /* needs to be a constant, not known to the assembler */
 
 /** \brief UBC address mask specifier
 
@@ -111,9 +103,9 @@ typedef enum ubc_access {
     either read or write.
 */
 typedef enum ubc_rw {
-    ubc_rw_either,  /**< \brief Read or write */
-    ubc_rw_read,    /**< \brief Read-only */
-    ubc_rw_write    /**< \brief Write-only */
+    ubc_rw_either, /**< \brief Read or write */
+    ubc_rw_read,   /**< \brief Read-only */
+    ubc_rw_write   /**< \brief Write-only */
 } ubc_rw_t;
 
 /** \brief UBC size condition type specifier
@@ -123,11 +115,11 @@ typedef enum ubc_rw {
     to breaking on any size.
 */
 typedef enum ubc_size {
-    ubc_size_any,      /**< \brief Any sizes */
-    ubc_size_byte,     /**< \brief 8-bit sizes */
-    ubc_size_word,     /**< \brief 16-bit sizes */
-    ubc_size_longword, /**< \brief 32-bit sizes */
-    ubc_size_quadword  /**< \brief 64-bit sizes */
+    ubc_size_any,   /**< \brief Any sizes */
+    ubc_size_8bit,  /**< \brief Byte sizes */
+    ubc_size_16bit, /**< \brief Word sizes */
+    ubc_size_32bit, /**< \brief Longword sizes */
+    ubc_size_64bit  /**< \brief Quadword sizes */
 } ubc_size_t;
 
 /** \brief UBC breakpoint structure
@@ -152,22 +144,22 @@ typedef struct ubc_breakpoint {
 
     /** \brief Conditional breakpoint settings */
     struct { 
-        /** \brief Which address bits to use */
+        /** \brief Which bits of the address to break on */
         ubc_address_mask_t address_mask;
 
         /** \brief Which type of access to break on */
         ubc_access_t       access;
 
-        /** \brief Read/write access condition */
+        /** \brief Read/write condition for operand-access breakpoints */
         ubc_rw_t           rw;
 
-        /** \brief Size access condition */
+        /** \brief Size condition for operand-access breakpoints */
         ubc_size_t         size;
     } cond;
 
-    /** \brief Optional ASID settings */
+    /** \brief Optional ASID settings for when using the MMU */
     struct { 
-        /** \brief Whether to require the ASID value */
+        /** \brief Whether to enable ASID value comparisons */
         bool    enabled;
 
         /** \brief ASID value to match for the address */
@@ -182,7 +174,7 @@ typedef struct ubc_breakpoint {
         /** \brief Comparison value for operand accesses */
         uint32_t value;
 
-        /** \brief Mask for which bits in the value are used */
+        /** \brief Which bits in the value are used in the data comparison */
         uint32_t mask;
     } data;
 
@@ -192,7 +184,7 @@ typedef struct ubc_breakpoint {
         bool break_after;
     } instr;
 
-    /** \brief Next breakpoint pointer, for sequential breakpoints
+    /** \brief Next breakpoint in the sequence
 
         \warning
         You can only ever have a single sequential breakpoint active at a time,
@@ -201,7 +193,7 @@ typedef struct ubc_breakpoint {
     struct ubc_breakpoint *next;
 } ubc_breakpoint_t;
 
-/** \brief UBC breakpoint user callback
+/** \brief Breakpoint user callback
 
     Typedef for the user function to be invoked upon a encountering a
     breakpoint.
@@ -213,24 +205,55 @@ typedef struct ubc_breakpoint {
     \param  ctx         Context of the current interrupt
     \param  user_data   User-supplied arbitrary callback data
 
-    \retval true        Unregister the handler upon callback completion
-    \retval false       Leave the handler in-place upon callback completion
+    \retval true        Remove the breakpoint upon callback completion
+    \retval false       Leave the breakpoint active upon callback completion
 */
 typedef bool (*ubc_break_func_t)(const ubc_breakpoint_t   *bp, 
                                  const struct irq_context *ctx, 
                                  void                     *user_data);
 
-bool ubc_enable_breakpoint(const ubc_breakpoint_t *bp,
-                           ubc_break_func_t       callback,
-                           void                   *user_data);
+/** \brief Enables a breakpoint
 
-bool ubc_disable_breakpoint(const ubc_breakpoint_t *bp);
+    Reserves a channel within the UBC for the given breakpoint.
 
+    \param  bp          Configuration details for the breakpoint
+    \param  callback    Handler which gets called upon breakpoint condition
+    \param  user_data   Optional data to pass back to \p callback handler
 
-void ubc_set_break_handler(ubc_break_func_t callback,
-                           void             *user_data);
+    \retval true        The breakpoint was set successfully
+    \retval false       The breakpoint failed to be set due to:
+                            - Invalid configuration
+                            - No available channel
 
-void ubc_break(void);
+    \sa ubc_remove_breakpoint()
+*/
+bool ubc_add_breakpoint(const ubc_breakpoint_t *bp,
+                        ubc_break_func_t       callback,
+                        void                   *user_data);
+
+/** \brief Disables a breakpoint
+
+    Removes a breakpoint from the UBC, freeing up a channel.
+
+    \param  bp      The breakpoint to remove
+
+    \retval true    The breakpoint was successfully removed
+    \retval false   The breakpoint was not found
+
+    \sa ubc_add_breakpoint(), ubc_clear_breakpoints()
+*/
+bool ubc_remove_breakpoint(const ubc_breakpoint_t *bp);
+
+/** \brief Disables all active breakpoints
+
+    Removes any breakpoints from the UBC, freeing up all channels.
+
+    \note
+    This is automatically called for you upon program termination.
+
+    \sa ubc_remove_breakpoint()
+*/
+void ubc_clear_breakpoints(void);
 
 /** \cond Called internally by KOS. */
 void ubc_init(void);
