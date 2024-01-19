@@ -129,7 +129,9 @@ int  __weak arch_auto_init(void) {
     /* Do this immediately so we can receive exceptions for init code
        and use ints for dbgio receive. */
     irq_init();         /* IRQs */
-    irq_disable();          /* Turn on exceptions */
+    irq_disable();      /* Turn on exceptions */
+
+    ubc_init();
 
 #ifndef _arch_sub_naomi
     if(!(__kos_init_flags & INIT_NO_DCLOAD))
@@ -256,7 +258,7 @@ void arch_main(void) {
     wdt_disable();
 
     /* Ensure that UBC is not enabled from a previous session */
-    ubc_init();
+    ubc_shutdown();
 
     /* Handle optional callback provided by KOS_INIT_EARLY() */
     if(__kos_init_early_fn)

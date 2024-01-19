@@ -15,7 +15,7 @@ static bool handlerfunc(const ubc_breakpoint_t *bp,
     return true;
 }
 
-static bool break_on_sized_data_write_value(void) {
+static void break_on_sized_data_write_value(void) {
     uint16_t var, tmp;
 
     ubc_breakpoint_t bp = {

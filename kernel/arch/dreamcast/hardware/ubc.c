@@ -77,77 +77,6 @@ static struct ubc_channel_state {
 static ubc_break_func_t break_cb = NULL;
 static void *break_ud = NULL;
 
-extern uintptr_t dbr_get(void);
-extern void dbr_set(uintptr_t address);
-
-static void disable_breakpoint(ubc_channel_t ch) {
-    /* Clear our state for the given channel. */
-    memset(&channel_state[ch], 0, sizeof(struct ubc_channel_state));
-    /* Clear UBC conditions for the given channel. */
-    BBR(ch) = 0;
-    BAMR(ch) = 0;
-    BASR(ch) = 0;
-    BAR(ch) = 0;
-}
-
-static void dbr_handler(int evt) {
-
-    bool serviced = false;
-    irq_context_t *irq_ctx = NULL;
-
-    if(BRCR & CMFA) {
-        bool disable = false;
-
-        if(channel_state[ubc_channel_a].cb)
-            disable = channel_state[ubc_channel_a].cb(channel_state[ubc_channel_a].bp,
-                                                      irq_ctx,
-                                                      channel_state[ubc_channel_a].ud);
-        if(disable) {
-            disable_breakpoint(ubc_channel_a);
-            if(BRCR & SEQ)
-                disable_breakpoint(ubc_channel_b);
-        }
-
-        BRCR &= ~CMFA;
-
-        serviced = true;
-    }
-
-    if(BRCR & CMFB) {
-        if(!(BRCR & SEQ))
-            if(channel_state[ubc_channel_b].cb)
-                if(channel_state[ubc_channel_b].cb(channel_state[ubc_channel_b].bp,
-                                                   irq_ctx,
-                                                   channel_state[ubc_channel_b].ud))
-                    disable_breakpoint(ubc_channel_b);
-
-        BRCR &= ~CMFB;
-
-        serviced = true;
-    }
-
-    if(!serviced) {
-        if(break_cb)
-            break_cb(NULL, irq_ctx, break_ud);
-        else
-            dbglog(DBG_CRITICAL, "Unhandled UBC break request!\n");
-    }
-
-}
-
-static __noinline void set_dbr(uintptr_t address) {
-    (void)address;
-    __asm__("ldc    R4, DBR" : : );
-}
-
-static __noinline uintptr_t get_dbr(void) {
-    uintptr_t dbr = 0;
-    __asm__("stc    DBR, R0\n"
-            "mov.l  R0, %0" : : "m"(dbr));
-    return dbr;
-}
-
-
 inline static uint8_t get_access_mask(ubc_access_t access) {
     switch(access) {
     case ubc_access_either:
@@ -166,6 +95,33 @@ inline static uint8_t get_rw_mask(ubc_rw_t rw) {
     }
 }
 
+inline static uint8_t get_address_mask(ubc_address_mask_t addr_mask) {
+    switch(addr_mask) {
+    case ubc_address_mask_all:
+        return 3;
+    case ubc_address_mask_16:
+        return 4;
+    case ubc_address_mask_20:
+        return 5;
+    default:
+        return addr_mask;
+    }
+}
+
+static void ubc_wait(void) {
+    __asm__ __volatile__("nop\n"
+                         "nop\n"
+                         "nop\n"
+                         "nop\n"
+                         "nop\n"
+                         "nop\n"
+                         "nop\n"
+                         "nop\n"
+                         "nop\n"
+                         "nop\n"
+                         "nop\n");
+}
+
 static void enable_breakpoint(ubc_channel_t           ch,
                               const ubc_breakpoint_t *bp,
                               ubc_break_func_t        cb,
@@ -179,11 +135,13 @@ static void enable_breakpoint(ubc_channel_t           ch,
     /* Configure Registers. */
 
     /* Address */
-    BAR(ch) = bp->address;
+    BAR(ch) = (uintptr_t)bp->address;
 
     /* Address mask */
-    BAMR(ch) = ((bp->cond.address_mask << (BAM_BIT_HIGH - (BAM_BITS - 1))) & BAM_HIGH) |
-                (bp->cond.address_mask & BAM_LOW);
+    const uint8_t address_mask = get_address_mask(bp->cond.address_mask);
+
+    BAMR(ch) = ((address_mask << (BAM_BIT_HIGH - (BAM_BITS - 1))) & BAM_HIGH) |
+                (address_mask & BAM_LOW);
 
     /* ASID */
     if(bp->asid.enabled) {
@@ -227,13 +185,13 @@ static void enable_breakpoint(ubc_channel_t           ch,
     BBR(ch) |= ((bp->cond.size << (SZ_BIT_HIGH - (SZ_BITS - 1))) & SZ_HIGH) |
                 (bp->cond.size & SZ_LOW);
 
-                ubc_wait();
+    ubc_wait();
 
 }
 
-bool __no_inline ubc_enable_breakpoint(const ubc_breakpoint_t *bp,
-                                       ubc_break_func_t       callback,
-                                       void                   *user_data) {
+bool ubc_enable_breakpoint(const ubc_breakpoint_t *bp,
+                           ubc_break_func_t       callback,
+                           void                   *user_data) {
 
     /* Check if we're dealing with a combined sequential breakpoint */
     if(bp->next) {
@@ -280,8 +238,21 @@ bool __no_inline ubc_enable_breakpoint(const ubc_breakpoint_t *bp,
     return true;
 }
 
+static void disable_breakpoint(ubc_channel_t ch) {
+    /* Clear our state for the given channel. */
+    memset(&channel_state[ch], 0, sizeof(struct ubc_channel_state));
+
+    /* Clear UBC conditions for the given channel. */
+    BBR(ch)  = 0;
+    BAMR(ch) = 0;
+    BASR(ch) = 0;
+    BAR(ch)  = 0;
+
+    ubc_wait();
+}
+
 // Need to handle multi-breakpoint
-bool __no_inline ubc_disable_breakpoint(const ubc_breakpoint_t *bp) {
+bool ubc_disable_breakpoint(const ubc_breakpoint_t *bp) {
     /* Disabling a sequential breakpoint pair */
     if(bp->next) {
         if(channel_state[ubc_channel_a].bp == bp &&
@@ -310,31 +281,73 @@ bool __no_inline ubc_disable_breakpoint(const ubc_breakpoint_t *bp) {
     return false;
 }
 
+static void handle_exception(irq_t code, irq_context_t *irq_ctx) {
+    (void)code;
 
-static void handle_exception(irq_t code, irq_context_t *context) {
-    dbr_handler(code);
+    bool serviced = false;
+
+    if(BRCR & CMFA) {
+        bool disable = false;
+
+        if(channel_state[ubc_channel_a].cb)
+            disable = channel_state[ubc_channel_a].cb(channel_state[ubc_channel_a].bp,
+                                                      irq_ctx,
+                                                      channel_state[ubc_channel_a].ud);
+        if(disable) {
+            disable_breakpoint(ubc_channel_a);
+            if(BRCR & SEQ)
+                disable_breakpoint(ubc_channel_b);
+        }
+
+        BRCR &= ~CMFA;
+
+        serviced = true;
+    }
+
+    if(BRCR & CMFB) {
+        if(!(BRCR & SEQ))
+            if(channel_state[ubc_channel_b].cb)
+                if(channel_state[ubc_channel_b].cb(channel_state[ubc_channel_b].bp,
+                                                   irq_ctx,
+                                                   channel_state[ubc_channel_b].ud))
+                    disable_breakpoint(ubc_channel_b);
+
+        BRCR &= ~CMFB;
+
+        serviced = true;
+    }
+
+    if(!serviced) {
+        if(break_cb)
+            break_cb(NULL, irq_ctx, break_ud);
+        else
+            dbglog(DBG_CRITICAL, "Unhandled UBC break request!\n");
+    }
+
+    ubc_wait();
 }
 
-void __no_inline ubc_init(void) {
-    disable_breakpoint(ubc_channel_a);
-    disable_breakpoint(ubc_channel_b);
-
-#if 1
-    irq_set_handler(EXC_USER_BREAK_PRE, handle_exception);
-    irq_set_handler(EXC_USER_BREAK_POST, handle_exception);
-#endif
-
-    //set_dbr((uintptr_t)dbr_handler);
-    //assert(get_dbr() == (uintptr_t)dbr_handler);
-
-    //BRCR = UBDE;
-
-    //printf("UBC INITTED!\n");
-}
-
-void __no_inline ubc_shutdown(void) {
+void ubc_init(void) {
     disable_breakpoint(ubc_channel_a);
     disable_breakpoint(ubc_channel_b);
 
     BRCR = 0;
+
+    irq_set_handler(EXC_USER_BREAK_PRE, handle_exception);
+    irq_set_handler(EXC_USER_BREAK_POST, handle_exception);
+
+    ubc_wait();
 }
+
+void ubc_shutdown(void) {
+    disable_breakpoint(ubc_channel_a);
+    disable_breakpoint(ubc_channel_b);
+
+    BRCR = 0;
+
+    irq_set_handler(EXC_USER_BREAK_PRE, NULL);
+    irq_set_handler(EXC_USER_BREAK_POST, NULL);
+
+    ubc_wait();
+}
+
