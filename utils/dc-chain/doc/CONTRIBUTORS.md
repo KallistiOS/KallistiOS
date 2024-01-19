@@ -18,4 +18,5 @@
 * 2020 [Ben Baron](https://github.com/einsteinx2)
 * 2020 [Jon Daniel](https://github.com/jopadan)
 * 2023 [Colton Pawielski](https://github.com/cepawiel)
-* 2023 [Eric Fradella](https://github.com/darcagn)
+* 2023, 2024 [Eric Fradella](https://github.com/darcagn)
+* 2023, 2024 [Falco Girgis](https://github.com/gyrovorbis)
