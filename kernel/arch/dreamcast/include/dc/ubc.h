@@ -144,7 +144,7 @@ typedef struct ubc_breakpoint {
 
     /** \brief Conditional breakpoint settings */
     struct { 
-        /** \brief Which bits of the address to break on */
+        /** \brief Which bits of the address to exclude from comparison */
         ubc_address_mask_t address_mask;
 
         /** \brief Which type of access to break on */
@@ -174,7 +174,7 @@ typedef struct ubc_breakpoint {
         /** \brief Comparison value for operand accesses */
         uint32_t value;
 
-        /** \brief Which bits in the value are used in the data comparison */
+        /** \brief Which bits in the value are excluded from data comparison */
         uint32_t mask;
     } data;
 
