@@ -188,7 +188,8 @@ typedef struct ubc_breakpoint {
 
         \warning
         You can only ever have a single sequential breakpoint active at a time,
-        and the maximum sequence length is 2 chained breakpoints.
+        and the maximum sequence length is 2 chained breakpoints. Data
+        comparison can only bet used in the second breakpoint of a sequence.
     */
     struct ubc_breakpoint *next;
 } ubc_breakpoint_t;

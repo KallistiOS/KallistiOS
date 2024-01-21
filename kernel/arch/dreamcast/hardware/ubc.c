@@ -15,13 +15,13 @@
 #include <string.h>
 #include <assert.h>
 
-#include <stdio.h>
+/* Macros for accessing SFRs common to both channels by index */
+#define BAR(o)  (*((vuint32 *)(uintptr_t)(SH4_REG_UBC_BARA  + (unsigned)o * 0xc))) /* Address */
+#define BASR(o) (*((vuint8  *)(uintptr_t)(SH4_REG_UBC_BASRA + (unsigned)o * 0x4))) /* ASID */
+#define BAMR(o) (*((vuint8  *)(uintptr_t)(SH4_REG_UBC_BAMRA + (unsigned)o * 0xc))) /* Address Mask */
+#define BBR(o)  (*((vuint16 *)(uintptr_t)(SH4_REG_UBC_BBRA  + (unsigned)o * 0xc))) /* Bus Cycle */
 
-#define BAR(o)  (*((vuint32 *)(uintptr_t)(SH4_REG_UBC_BARA  + (unsigned)o * 0xc)))
-#define BASR(o) (*((vuint8  *)(uintptr_t)(SH4_REG_UBC_BASRA + (unsigned)o * 0x4)))
-#define BAMR(o) (*((vuint8  *)(uintptr_t)(SH4_REG_UBC_BAMRA + (unsigned)o * 0xc)))
-#define BBR(o)  (*((vuint16 *)(uintptr_t)(SH4_REG_UBC_BBRA  + (unsigned)o * 0xc)))
-
+/* Macros for accessing individual, channel-specific SFRs */
 #define BARA  (BAR(ubc_channel_a))              /**< Break Address A */
 #define BASRA (BASR(ubc_channel_a))             /**< Break ASID A */
 #define BAMRA (BAMR(ubc_channel_a))             /**< Break Address Mask A */
@@ -34,49 +34,49 @@
 #define BDMRB (*((vuint32 *)SH4_REG_UBC_BDMRB)) /**< Break Data Mask B */
 #define BRCR  (*((vuint16 *)SH4_REG_UBC_BRCR))  /**< Break Control */
 
-// BASR
-#define BASM            (1 << 2)  /* Use ASID (0) or not (1) */
-#define BAM_BIT_HIGH    3
-#define BAM_BITS        3
-#define BAM_HIGH        (1 << BAM_BIT_HIGH)
-#define BAM_LOW         0x3
-#define BAM             (BAM_HIGH | BAM_LOW)     /* Which bits of BARA/BARB get used */
+/* BASR Fields */
+#define BASM            (1 << 2)             /* No ASID (1), use ASID (0) */
+#define BAM_BIT_HIGH    3                    /* High bit number for address mask */
+#define BAM_BITS        3                    /* Number of bits in address mask */
+#define BAM_HIGH        (1 << BAM_BIT_HIGH)  /* Mask for high bit of BAM */
+#define BAM_LOW         0x3                  /* Mask for low bits of BAM */
+#define BAM             (BAM_HIGH | BAM_LOW) /* Mask for all bits of BAM */
 
-// BBR
-#define ID_BIT          4
-#define ID              (3 << ID_BIT) // Instruction vs Data (or Either or Neither?)
-#define RW_BIT          2
-#define RW              (3 << RW_BIT) // Access Type (Read, Write, Both, Neither?) 
-#define SZ_BIT_HIGH     6
-#define SZ_BITS         3
-#define SZ_HIGH         (1 << SZ_BIT_HIGH)
-#define SZ_LOW          0x3
-#define SZ              (SZ_HIGH | SZ_LOW)   // Data size (Not used, byte, word, longword, quadword)
+/* BBR Fields */
+#define ID_BIT          4                  /* Bit position for access cycle field */
+#define ID              (3 << ID_BIT)      /* Bit mask for access cycle field */
+#define RW_BIT          2                  /* Bit position for R/W field */
+#define RW              (3 << RW_BIT)      /* Bit mask for R/W field */
+#define SZ_BIT_HIGH     6                  /* High bit for size field */
+#define SZ_BITS         3                  /* Number of bits in size field */
+#define SZ_HIGH         (1 << SZ_BIT_HIGH) /* Mask for high bit in size field */
+#define SZ_LOW          0x3                /* Mask for low bits in size field */
+#define SZ              (SZ_HIGH | SZ_LOW) /* Mask for all bits in size field */
 
-// BRCR
-#define CMFA    (1 << 15) // Set when break condition A is met (not cleared)
-#define CMFB    (1 << 14) // Set when break condition B is met (not cleared)
-#define PCBA    (1 << 10) // Instruction break condition A is before or after instruction execution
-#define DBEB    (1 << 7)  // Include Data Bus condition for channel B
-#define PCBB    (1 << 6)  // Instruction break condition B is before or after instruction execution
-#define SEQ     (1 << 3)  // A, B are independent (0) or sequential (1)
-#define UBDE    (1 << 0)  // Use debug function in DBR register
+/* BRCR Fields */
+#define CMFA    (1 << 15) /* Set when break condition A is met (not cleared) */
+#define CMFB    (1 << 14) /* Set when break condition B is met (not cleared) */
+#define PCBA    (1 << 10) /* Channel A instruction break after (1) or before (0) execution */
+#define DBEB    (1 << 7)  /* Include Data Bus condition for channel B */
+#define PCBB    (1 << 6)  /* Channel B instruction break after (1) or before (0) execution */
+#define SEQ     (1 << 3)  /* A, B are independent (0), or sequential [A->B] (1) */
+#define UBDE    (1 << 0)  /* Use debug function in DBR register rather than IRQ handler */
 
+/* Channel types */
 typedef enum ubc_channel {
     ubc_channel_a,      
     ubc_channel_b,     
     ubc_channel_count
 } ubc_channel_t;
 
+/* Internal state data for each channel. */
 static struct ubc_channel_state {
     const ubc_breakpoint_t *bp;
     ubc_break_func_t        cb;
     void                   *ud;
 } channel_state[ubc_channel_count] = { 0 };
 
-static ubc_break_func_t break_cb = NULL;
-static void *break_ud = NULL;
-
+/* Translates ubc_access_t to BBR.ID field format. */
 inline static uint8_t get_access_mask(ubc_access_t access) {
     switch(access) {
     case ubc_access_either:
@@ -86,6 +86,7 @@ inline static uint8_t get_access_mask(ubc_access_t access) {
     }
 }
 
+/* Translates ubc_rw_t to BBR.RW field format. */
 inline static uint8_t get_rw_mask(ubc_rw_t rw) {
     switch(rw) {
     case ubc_rw_either:
@@ -95,6 +96,7 @@ inline static uint8_t get_rw_mask(ubc_rw_t rw) {
     }
 }
 
+/* Translates ubc_address_mask_t to BASR.BAM field format. */
 inline static uint8_t get_address_mask(ubc_address_mask_t addr_mask) {
     switch(addr_mask) {
     case ubc_address_mask_all:
@@ -108,6 +110,7 @@ inline static uint8_t get_address_mask(ubc_address_mask_t addr_mask) {
     }
 }
 
+/* Stalls the pipeline while the UBC refreshes after changing its config. */
 static void ubc_wait(void) {
     __asm__ __volatile__("nop\n"
                          "nop\n"
@@ -122,6 +125,8 @@ static void ubc_wait(void) {
                          "nop\n");
 }
 
+/* Sets the state data and configures the UBC registers for the breakpoint on
+   the given channel. */
 static void enable_breakpoint(ubc_channel_t           ch,
                               const ubc_breakpoint_t *bp,
                               ubc_break_func_t        cb,
@@ -185,19 +190,20 @@ static void enable_breakpoint(ubc_channel_t           ch,
     BBR(ch) |= ((bp->cond.size << (SZ_BIT_HIGH - (SZ_BITS - 1))) & SZ_HIGH) |
                 (bp->cond.size & SZ_LOW);
 
+    /* Wait for UBC configuration to refresh. */
     ubc_wait();
-
 }
 
+/* Public entry-point for adding a breakpoint. */
 bool ubc_add_breakpoint(const ubc_breakpoint_t *bp,
                         ubc_break_func_t       callback,
                         void                   *user_data) {
 
     /* Check if we're dealing with a combined sequential breakpoint */
     if(bp->next) {
-        /* Basic sanity checks for debug builds */
-        assert(!bp->next->next);   /* Can only chain two */
-        assert(!bp->data.enabled); /* Channel B only for data */
+        /* Ensure we only have a sequence of 2, without leading data break. */
+        if(bp->next->next || bp->data.enabled)
+            return false;
 
         /* Ensure we have both channels free */
         if(channel_state[ubc_channel_a].bp || channel_state[ubc_channel_b].bp)
@@ -206,6 +212,7 @@ bool ubc_add_breakpoint(const ubc_breakpoint_t *bp,
         enable_breakpoint(ubc_channel_a, bp, callback, user_data);
         enable_breakpoint(ubc_channel_b, bp->next, callback, user_data);
 
+        /* Configure both channels to run sequentially*/
         BRCR |= SEQ;
     }
     /* Handle single-channel */ 
@@ -229,37 +236,58 @@ bool ubc_add_breakpoint(const ubc_breakpoint_t *bp,
                 return false;
         }
 
-        /* Configure both channels to run independently */
+        /* Configure both channels to run independently. */
         BRCR &= ~SEQ;
     }
 
+    /* Wait for UBC config to refresh. */
     ubc_wait();
 
     return true;
 }
 
+/* Clears the register config and static state data for the given channel. */
 static void disable_breakpoint(ubc_channel_t ch) {
-    /* Clear our state for the given channel. */
-    memset(&channel_state[ch], 0, sizeof(struct ubc_channel_state));
-
     /* Clear UBC conditions for the given channel. */
     BBR(ch)  = 0;
     BAMR(ch) = 0;
     BASR(ch) = 0;
     BAR(ch)  = 0;
 
+    /* Wait for UBC config to refresh. */
     ubc_wait();
+
+    /* Check whether we have a breakpoint without data-comparison on channel B,
+       which should get migrated to channel A, in case a data watchpoint gets
+       added later, so it can use channel B. */
+    if(ch == ubc_channel_a &&
+       channel_state[ubc_channel_b].bp &&
+       !channel_state[ubc_channel_b].bp->data.enabled) {
+
+        /* Copy channel B breakpoint to channel A. */
+        enable_breakpoint(ubc_channel_a,
+                          channel_state[ubc_channel_b].bp,
+                          channel_state[ubc_channel_b].cb,
+                          channel_state[ubc_channel_b].ud);
+
+        /* Disable original breakpoint on channel B. */
+        disable_breakpoint(ubc_channel_b);
+    }
+    else { /* Clear our state for the given channel. */
+        memset(&channel_state[ch], 0, sizeof(struct ubc_channel_state));
+    }
 }
 
-// Need to handle multi-breakpoint
+/* Finds the channel for a given breakpoint and disables it. */
 bool ubc_remove_breakpoint(const ubc_breakpoint_t *bp) {
     /* Disabling a sequential breakpoint pair */
     if(bp->next) {
         if(channel_state[ubc_channel_a].bp == bp &&
            channel_state[ubc_channel_b].bp == bp->next) {
             /* Clear both channels */
-            disable_breakpoint(ubc_channel_a);
             disable_breakpoint(ubc_channel_b);
+            disable_breakpoint(ubc_channel_a);
+
             /* Return success, we found it. */
             return true;
         }
@@ -271,6 +299,7 @@ bool ubc_remove_breakpoint(const ubc_breakpoint_t *bp) {
             /* Check if it has the given breakpoint */
             if(channel_state[ch].bp == bp) {
                 disable_breakpoint(ch);
+
                 /* Return success, we found it. */
                 return true;
             }
@@ -281,76 +310,105 @@ bool ubc_remove_breakpoint(const ubc_breakpoint_t *bp) {
     return false;
 }
 
+/* Disables all breakpoints. */
 void ubc_clear_breakpoints(void) {
-    disable_breakpoint(ubc_channel_a);
     disable_breakpoint(ubc_channel_b);
+    disable_breakpoint(ubc_channel_a);
 }
 
+/* Entry-point for UBC-related interrupt handling. */
 static void handle_exception(irq_t code, irq_context_t *irq_ctx) {
     (void)code;
 
     bool serviced = false;
 
-    if(BRCR & CMFA) {
+    /* Check if channel B's condition is active. */
+    if(BRCR & CMFB) {
         bool disable = false;
 
-        if(channel_state[ubc_channel_a].cb)
-            disable = channel_state[ubc_channel_a].cb(channel_state[ubc_channel_a].bp,
-                                                      irq_ctx,
-                                                      channel_state[ubc_channel_a].ud);
+        /* Invoke the user's callback if there is one. */
+        if(channel_state[ubc_channel_b].cb)
+            disable = channel_state[ubc_channel_b].cb(
+                            channel_state[ubc_channel_b].bp,
+                            irq_ctx,
+                            channel_state[ubc_channel_b].ud
+                        );
+
+        /* Check whether the breakpoint should disable itself. */
         if(disable) {
-            disable_breakpoint(ubc_channel_a);
+            disable_breakpoint(ubc_channel_b);
+
+            /* Disable the previous breakpoint too if it's a sequence. */
             if(BRCR & SEQ)
-                disable_breakpoint(ubc_channel_b);
+                disable_breakpoint(ubc_channel_a);
         }
 
-        BRCR &= ~CMFA;
-
-        serviced = true;
-    }
-
-    if(BRCR & CMFB) {
-        if(!(BRCR & SEQ))
-            if(channel_state[ubc_channel_b].cb)
-                if(channel_state[ubc_channel_b].cb(channel_state[ubc_channel_b].bp,
-                                                   irq_ctx,
-                                                   channel_state[ubc_channel_b].ud))
-                    disable_breakpoint(ubc_channel_b);
-
+        /* Reset the condition flag. */
         BRCR &= ~CMFB;
 
         serviced = true;
     }
 
-    if(!serviced) {
-        if(break_cb)
-            break_cb(NULL, irq_ctx, break_ud);
-        else
-            dbglog(DBG_CRITICAL, "Unhandled UBC break request!\n");
+    /* Check if channel A's condition is active. */
+    if(BRCR & CMFA) {
+        bool disable = false;
+
+        /* Only proceed if channel A is not part of a sequence, in which case
+           it should already be handled above by channel B's logic. */
+        if(!(BRCR & SEQ)) {
+
+            /* Invoke the user's callback if there is one. */
+            if(channel_state[ubc_channel_a].cb)
+                disable = channel_state[ubc_channel_a].cb(
+                                channel_state[ubc_channel_a].bp,
+                                irq_ctx,
+                                channel_state[ubc_channel_a].ud
+                            );
+
+            /* Check whether the breakpoint should disable itself. */
+            if(disable)
+                disable_breakpoint(ubc_channel_a);
+        }
+
+        /* Reset the condition flag. */
+        BRCR &= ~CMFA;
+
+        serviced = true;
     }
 
+    /* Check whether we have an unhandled break request. */
+    if(!serviced)
+        dbglog(DBG_WARNING, "Unhandled UBC break request!\n");
+
+    /* Wait for UBC configuration change to take effect. */
     ubc_wait();
 }
 
+/* UBC initialization routine called upon KOS init. */
 void ubc_init(void) {
+    /* Clear any accidental remaining breakpoints. */
     ubc_clear_breakpoints();
 
+    /* Clear the control register and wait for it to take effect. */
     BRCR = 0;
+    ubc_wait();
 
+    /* Install our exception handler for the UBC exception types. */
     irq_set_handler(EXC_USER_BREAK_PRE, handle_exception);
     irq_set_handler(EXC_USER_BREAK_POST, handle_exception);
-
-    ubc_wait();
 }
 
+/* UBC shutdown routine called when exiting KOS. */
 void ubc_shutdown(void) {
+    /* Clear any remaining breakpoints. */
     ubc_clear_breakpoints();
 
+    /* Clear the control register and wait for it to take effect. */
     BRCR = 0;
+    ubc_wait();
 
+    /* Uninstall our exception handler from the UBC exception types. */
     irq_set_handler(EXC_USER_BREAK_PRE, NULL);
     irq_set_handler(EXC_USER_BREAK_POST, NULL);
-
-    ubc_wait();
 }
 

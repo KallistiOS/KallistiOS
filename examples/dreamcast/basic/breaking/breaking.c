@@ -57,11 +57,11 @@ static bool break_on_instruction(void) {
 
 static bool break_on_data_region_read(void) {
     char upper_boundary = 0;
-    alignas(1024) char vars[1024] = {};
+    alignas(1024) volatile char vars[1024];
     char lower_boundary = 0;
 
     const ubc_breakpoint_t bp = {
-        .address = vars,
+        .address = (void *)vars,
         .cond = {
             .address_mask = ubc_address_mask_10,
             .rw           = ubc_rw_read
@@ -73,7 +73,7 @@ static bool break_on_data_region_read(void) {
     printf("Breaking on data region read... ");
     VERIFY(!((uintptr_t)vars & 0x3ff));
 
-    ubc_add_breakpoint(&bp, handlerfunc, (void *)true);
+    ubc_add_breakpoint(&bp, handlerfunc, (void *)false);
 
     volatile char temp;
     temp = upper_boundary; (void)temp;
@@ -89,12 +89,14 @@ static bool break_on_data_region_read(void) {
     VERIFY(handled_);
 
     handled_ = false;
-    temp = vars[511];
+    temp = vars[512];
     VERIFY(handled_);
 
     handled_ = false;
     temp = vars[1023];
     VERIFY(handled_);
+
+    ubc_remove_breakpoint(&bp);
 
     printf("SUCCESS!\n");
     return true;
@@ -145,11 +147,11 @@ static bool break_on_sized_data_write_value(void) {
    from a region of memory. */
 static bool break_on_sized_operand_region_access_value_range(void) {
     uint32_t upper_boundary = 0;
-    alignas(1024) uint32_t vars[1024 / sizeof(uint32_t)] = {};
+    alignas(1024) volatile uint32_t vars[1024 / sizeof(uint32_t)];
     uint32_t lower_boundary = 0;
 
     const ubc_breakpoint_t bp = {
-        .address = &vars,  // address to break on
+        .address = (void *)&vars,  // address to break on
         .cond = {
             .address_mask = ubc_address_mask_10, // don't care aabout lower 10 bits
             .access       = ubc_access_operand,  // instruction, operand, or both
@@ -182,8 +184,8 @@ static bool break_on_sized_operand_region_access_value_range(void) {
     VERIFY(!handled_);
 
     // Read from the region of interest as the wrong data size
-    volatile int8_t tmp8; (void)tmp8;
-    tmp8 = ((uint8_t *)vars)[1023];
+    volatile int16_t tmp16; (void)tmp16;
+    tmp16 = ((uint16_t *)vars)[1023 / sizeof(uint16_t)];
     VERIFY(!handled_);
 
     // Write to the region of interest an incorrect value
@@ -210,10 +212,64 @@ static bool break_on_sized_operand_region_access_value_range(void) {
 
     printf("SUCCESS!\n");
 
+    ubc_remove_breakpoint(&bp);
+
     return true;
 }
 
+//test_function
+
 // Sequential breakpoint
+bool break_on_sequence(void) {
+    alignas(1024) static uint32_t vars[1024 / sizeof(uint32_t)];
+
+    /* Create a sequential breakpoint on the conditions:
+            a. instruction - break on test_function
+            b. operand - break on writing value range to data range */
+    ubc_add_breakpoint(&(static ubc_breakpoint_t) {
+            .address = test_function,
+            .next = &(static ubc_breakpoint_t) {
+                .address = (void *)&vars,
+                .cond = {
+                    .address_mask = ubc_address_mask_10,
+                    .access       = ubc_access_operand,
+                    .rw           = ubc_rw_write,
+                    .size         = ubc_size_32bit
+                },
+                .data = {
+                    .enabled = true,
+                    .value   = 0x7fc,
+                    .mask    = 0x3
+                }
+            }
+        },
+        handlerfunc,
+        (void *)false);
+
+    /* Reset whether we've been handled. */
+    handled_ = false;
+
+    printf("Breaking on sequence... ");
+
+    vars[0] = 0xfc;
+    VERIFY(!handled_); /* Wrote wrong value without condition A first */
+
+    test_function("Sega", "Sony");
+    VERIFY(!handled_);  /* Hit condition A, but not B. */
+
+    *(uint16_t *)vars = 0x7fd;
+    VERIFY(!handled_); /* Wrote wrong value as wrong sized type .*/
+
+    vars[512 / sizeof(uint32_t)] = 0xfc;
+    VERIFY(!handled_); /* Wrote wrong value. */
+
+    vars[0] = 0x7fc;
+    VERIFY(handled_); /* Wrote correct value, fulfilling condition B */
+
+    printf("SUCCESS!\n");
+
+    return true;
+}
 
 int main(int argc, char* argv[]) {
     bool success = true;
@@ -222,7 +278,7 @@ int main(int argc, char* argv[]) {
     success &= break_on_data_region_read();
     success &= break_on_sized_data_write_value();
     success &= break_on_sized_operand_region_access_value_range();
-    // Sequential breakpoint
+    success &= break_on_sequence();
     // Verify ubc_add_breakpoint() fails gracefully
 
     if(success) {
