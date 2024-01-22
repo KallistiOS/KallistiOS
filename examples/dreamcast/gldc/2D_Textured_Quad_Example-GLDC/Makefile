@@ -9,7 +9,6 @@ KOS_LOADER = dc-tool-ip
 
 # Directories
 KOS_ROMDISK_DIR := romdisk
-INC				:= ./inc
 
 # File aggregators
 SRCS		:= main.cpp
