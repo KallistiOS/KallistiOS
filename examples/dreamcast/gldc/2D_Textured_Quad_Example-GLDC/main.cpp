@@ -127,8 +127,8 @@ int main(int argc, char **argv) {
 // ..:: Vertex / UV Data setup
    float uv[4][2]  = {
                         // UVs are in reverse Y order to flip image
-                        // GL expects 0,0 to be the top left corner of an image while
-                        // real world coordinates are typically bottom left.
+                        // GL expects 0,0 to be the bottom left corner of an image while
+                        // real world coordinates are typically top left.
                         // alt- use: stbi_set_flip_vertically_on_load(true); before loading texture.
                         // X    // Y
                         {0.0f, 0.0f},
