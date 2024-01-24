@@ -143,7 +143,7 @@ static void enable_breakpoint(ubc_channel_t           ch,
     BAR(ch) = (uintptr_t)bp->address;
 
     /* Address mask */
-    const uint8_t address_mask = get_address_mask(bp->cond.address_mask);
+    const uint8_t address_mask = get_address_mask(bp->address_mask);
 
     BAMR(ch) = ((address_mask << (BAM_BIT_HIGH - (BAM_BITS - 1))) & BAM_HIGH) |
                 (address_mask & BAM_LOW);
@@ -161,11 +161,11 @@ static void enable_breakpoint(ubc_channel_t           ch,
     }
 
     /* Data (channel B only) */
-    if(bp->data.enabled) {
+    if(bp->operand.data.enabled) {
         /* Data value */
-        BDRB = bp->data.value;
+        BDRB = bp->operand.data.value;
         /* Data mask */
-        BDMRB = bp->data.mask;
+        BDMRB = bp->operand.data.mask;
         /* Data enable */
         BRCR |= DBEB;
     }
@@ -175,20 +175,20 @@ static void enable_breakpoint(ubc_channel_t           ch,
     }
 
     /* Instruction */
-    if(bp->instr.break_after)
-        /* Instruction break after */ 
-        BRCR |= (ch == ubc_channel_a)? PCBA : PCBB;
-    else 
+    if(bp->instruction.break_before)
         /* Instruction break before */
         BRCR &= (ch == ubc_channel_a)? (~PCBA) : (~PCBB);
+    else
+        /* Instruction break after */
+        BRCR |= (ch == ubc_channel_a)? PCBA : PCBB;
 
     /* Set Access Type */
-    BBR(ch) |= get_access_mask(bp->cond.access) << ID_BIT;
+    BBR(ch) |= get_access_mask(bp->access) << ID_BIT;
     /* Read/Write type */
-    BBR(ch) |= get_rw_mask(bp->cond.rw) << RW_BIT;
+    BBR(ch) |= get_rw_mask(bp->operand.rw) << RW_BIT;
     /* Size type */
-    BBR(ch) |= ((bp->cond.size << (SZ_BIT_HIGH - (SZ_BITS - 1))) & SZ_HIGH) |
-                (bp->cond.size & SZ_LOW);
+    BBR(ch) |= ((bp->operand.size << (SZ_BIT_HIGH - (SZ_BITS - 1))) & SZ_HIGH)
+            |   (bp->operand.size & SZ_LOW);
 
     /* Wait for UBC configuration to refresh. */
     ubc_wait();
@@ -202,7 +202,7 @@ bool ubc_add_breakpoint(const ubc_breakpoint_t *bp,
     /* Check if we're dealing with a combined sequential breakpoint */
     if(bp->next) {
         /* Ensure we only have a sequence of 2, without leading data break. */
-        if(bp->next->next || bp->data.enabled)
+        if(bp->next->next || bp->operand.data.enabled)
             return false;
 
         /* Ensure we have both channels free */
@@ -218,7 +218,7 @@ bool ubc_add_breakpoint(const ubc_breakpoint_t *bp,
     /* Handle single-channel */ 
     else {
         /* Check if we require channel B */
-        if(bp->data.enabled) {
+        if(bp->operand.data.enabled) {
             /* Check if the channel is free */
             if(channel_state[ubc_channel_b].bp)
                 return false;
@@ -262,7 +262,7 @@ static void disable_breakpoint(ubc_channel_t ch) {
        added later, so it can use channel B. */
     if(ch == ubc_channel_a &&
        channel_state[ubc_channel_b].bp &&
-       !channel_state[ubc_channel_b].bp->data.enabled) {
+       !channel_state[ubc_channel_b].bp->operand.data.enabled) {
 
         /* Copy channel B breakpoint to channel A. */
         enable_breakpoint(ubc_channel_a,
@@ -343,19 +343,16 @@ static void handle_exception(irq_t code, irq_context_t *irq_ctx) {
                 disable_breakpoint(ubc_channel_a);
         }
 
-        /* Reset the condition flag. */
-        BRCR &= ~CMFB;
-
         serviced = true;
     }
 
     /* Check if channel A's condition is active. */
     if(BRCR & CMFA) {
-        bool disable = false;
 
         /* Only proceed if channel A is not part of a sequence, in which case
            it should already be handled above by channel B's logic. */
         if(!(BRCR & SEQ)) {
+            bool disable = false;
 
             /* Invoke the user's callback if there is one. */
             if(channel_state[ubc_channel_a].cb)
@@ -370,15 +367,15 @@ static void handle_exception(irq_t code, irq_context_t *irq_ctx) {
                 disable_breakpoint(ubc_channel_a);
         }
 
-        /* Reset the condition flag. */
-        BRCR &= ~CMFA;
-
         serviced = true;
     }
 
     /* Check whether we have an unhandled break request. */
     if(!serviced)
         dbglog(DBG_WARNING, "Unhandled UBC break request!\n");
+
+    /* Reset condition flags for both channels. */
+    BRCR &= ~(CMFA | CMFB);
 
     /* Wait for UBC configuration change to take effect. */
     ubc_wait();

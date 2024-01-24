@@ -139,65 +139,151 @@ typedef enum ubc_size {
     to set their respective `enable` members!
 */
 typedef struct ubc_breakpoint {
-    /** \brief Memory location of interest */
+    /** \brief Target address
+
+        Address used as the target or base memory address of a breakpoint.
+    */
     void *address;
 
-    /** \brief Conditional breakpoint settings */
-    struct { 
-        /** \brief Which bits of the address to exclude from comparison */
-        ubc_address_mask_t address_mask;
+    /** \brief Address mask
 
-        /** \brief Which type of access to break on */
-        ubc_access_t       access;
+        Controls which of the low bits of ubc_breakpoint_t::address get
+        excluded from the address comparison.
 
-        /** \brief Read/write condition for operand-access breakpoints */
-        ubc_rw_t           rw;
+        \note
+        This is used to create a breakpoint on a range of addresses.
+    */
+    ubc_address_mask_t address_mask;
 
-        /** \brief Size condition for operand-access breakpoints */
-        ubc_size_t         size;
-    } cond;
+    /** \brief Access type
 
-    /** \brief Optional ASID settings for when using the MMU */
-    struct { 
-        /** \brief Whether to enable ASID value comparisons */
-        bool    enabled;
+        Controls which type of access to the target address(es) to break on.
+    */
+    ubc_access_t access;
 
-        /** \brief ASID value to match for the address */
+    /** \brief Instruction access type settings
+
+        Contains settings which are specific to instruction (or either) type
+        accesses.
+    */
+    struct {
+        /** \brief Break before instruction execution
+
+            Causes the breakpoint to be triggered just before the target
+            instruction is actually executed.
+
+            \warning
+            Be careful when breaking before an instruction and returning
+            "false" in your handler callback, as this can cause an infinite
+            loop while the instruction gets repeatedly executed, repeatedly
+            triggering your breakpoint handler.
+        */
+        bool break_before;
+    } instruction;
+
+    /** \brief Operand access type settings
+
+        Contains settings which are specific to operand (or either) type
+        accesses.
+    */
+    struct {
+        /** \brief Read/write condition
+
+            Controls read/write condition for operand-access breakpoints
+        */
+        ubc_rw_t rw;
+
+        /** \brief Size condition
+
+            Controls size condition for operand-access breakpoints
+        */
+        ubc_size_t size;
+
+        /** \brief Optional operand data settings
+
+            These settings allow for triggering an operand-access breakpoint on
+            a particular value or range of values.
+
+            \warning
+            Only a single breakpoint utilizing data comparison settings may be
+            active at a time, due to UBC channel limitations.
+        */
+        struct {
+            /** \brief Enables data value comparisons
+
+                Must be enabled for data value comparisons to be used.
+            */
+            bool enabled;
+
+            /** \brief Data value for operand accesses
+
+                Value to use for data comparisons with operand-access
+                breakpoints.
+
+                \note
+                Since this field and its mask are only 32 bits wide, it will be
+                compared to both the high and low 32-bits when using 64-bit
+                operand sizes.
+            */
+            uint32_t value;
+
+            /** \brief Exclusion mask for data value comparison
+
+                Controls which bits get masked off and excluded from
+                operand-access value comparisons.
+
+                \note
+                This is used to break on a range of values.
+            */
+            uint32_t mask;
+        } data;
+
+    } operand;
+
+    /** \brief Optional ASID settings
+
+        These settings are used used when the MMU is enabled to distinguish
+        between memory pages with the same virtual address.
+    */
+    struct {
+        /** \brief Enables ASID value comparisons
+
+            Must be enabled for ubc_breakpoint_t::asid::value to be used.
+        */
+        bool enabled;
+
+        /** \brief ASID value
+
+            Sets the required ASID value for the virtual address given by
+            ubc_breakpoint_t::address to match for a particular breakpoint.
+        */
         uint8_t value;
     } asid;
 
-    /** \brief Optional operand data settings */
-    struct {
-        /** \brief Whether to enable data value comparisons */
-        bool     enabled;
-
-        /** \brief Comparison value for operand accesses */
-        uint32_t value;
-
-        /** \brief Which bits in the value are excluded from data comparison */
-        uint32_t mask;
-    } data;
-
-    /** \brief Optional instruction access type settings */
-    struct {
-        /** \brief Break after, not before, instruction access */
-        bool break_after;
-    } instr;
-
     /** \brief Next breakpoint in the sequence
+
+        Allows you to chain up to two breakpoint conditions together, creating
+        a sequential breakpoint.
 
         \warning
         You can only ever have a single sequential breakpoint active at a time,
-        and the maximum sequence length is 2 chained breakpoints. Data
-        comparison can only bet used in the second breakpoint of a sequence.
+        with no other regular breakpoints active, as it requires both UBC
+        channels to be in-use simultaneously.
+
+        \warning
+        Data comparison can only be used in the second breakpoint of a
+        sequence.
+
+        \warning
+        When using a sequential breakpoint, the instructions triggering the
+        first and second conditions must be \a{ at least } 4 instructions away.
     */
     struct ubc_breakpoint *next;
 } ubc_breakpoint_t;
 
 /** \brief Breakpoint user callback
 
-    Typedef for the user function to be invoked upon a encountering a
-    breakpoint.
+    Typedef for the user function to be invoked upon encountering a breakpoint.
 
     \warning
     This callback is invoked within the context of an interrupt handler!
@@ -208,6 +294,8 @@ typedef struct ubc_breakpoint {
 
     \retval true        Remove the breakpoint upon callback completion
     \retval false       Leave the breakpoint active upon callback completion
+
+    \sa ubc_add_breakpoint()
 */
 typedef bool (*ubc_break_func_t)(const ubc_breakpoint_t   *bp, 
                                  const struct irq_context *ctx, 
