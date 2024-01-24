@@ -248,7 +248,7 @@ typedef struct ubc_breakpoint {
     struct {
         /** \brief Enables ASID value comparisons
 
-            Must be enabled for ubc_breakpoint_t::asid::value to be used.
+            Must be enabled for ASID values to be used.
         */
         bool enabled;
 
@@ -276,7 +276,7 @@ typedef struct ubc_breakpoint {
 
         \warning
         When using a sequential breakpoint, the instructions triggering the
-        first and second conditions must be \a{ at least } 4 instructions away.
+        first and second conditions must be \a { at least } 4 instructions away.
     */
     struct ubc_breakpoint *next;
 } ubc_breakpoint_t;
