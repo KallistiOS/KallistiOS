@@ -35,7 +35,7 @@
 /* Your program's main entry point */
 int main(int argc, char *argv[]) {
     /* The requisite line */
-    printf("\nHello world!\n\n");
+    printf("Hello world!\n");
 
     return 0;
 }

@@ -272,6 +272,8 @@ void arch_main(void) {
 
     __verify_newlib_patch();
 
+    dbglog(DBG_INFO, "\n");
+
     /* Run ctors */
     _init();
 
@@ -335,7 +337,7 @@ void arch_exit(void) {
 
 /* Return point from newlib's _exit() (configurable) */
 void arch_exit_handler(int ret_code) {
-    dbglog(DBG_INFO, "arch: exit return code %d\n", ret_code);
+    dbglog(DBG_INFO, "\narch: exit return code %d\n", ret_code);
 
     /* Shut down */
     arch_shutdown();
