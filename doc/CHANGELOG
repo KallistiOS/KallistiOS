@@ -215,6 +215,7 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - *** Increased resolution of clock() and CLOCKS_PER_SEC to microseconds [FG]
 - DC  Created separate performance counter driver and enhanced API [FG]
 - *** Implemented _POSIX_CPUTIME in clock_gettime() using perf counter timer [FG]
+- DC  Added new driver for the SH4's UBC + high-level breakpoint API [FG]
 
 KallistiOS version 2.0.0 -----------------------------------------------
 - DC  Broadband Adapter driver fixes [Megan Potter == MP]
