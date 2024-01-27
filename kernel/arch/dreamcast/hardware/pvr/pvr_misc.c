@@ -62,7 +62,7 @@ int pvr_get_stats(pvr_stats_t *stat) {
     stat->rnd_last_time = pvr_state.rnd_last_len;
 
     if(stat->frame_last_time != 0)
-        stat->frame_rate = 1000.0f / stat->frame_last_time;
+        stat->frame_rate = 1000000000.0f / stat->frame_last_time;
     else
         stat->frame_rate = -1.0f;
 
@@ -85,9 +85,8 @@ void pvr_sync_stats(int event) {
     uint64  t;
     volatile pvr_ta_buffers_t *buf;
 
-
     /* Get the current time */
-    t = timer_ms_gettime64();
+    t = timer_ns_gettime64();
 
     switch(event) {
         case PVR_SYNC_VBLANK:
