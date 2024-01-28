@@ -60,10 +60,14 @@ __attribute__((noinline)) void *sq_cpy(void *dest, const void *src, size_t n) {
     uint32_t *d = SQ_MASK_DEST(dest);
     const uint32_t *s = src;
 
-    sq_lock(dest);
-
     /* Fill/write queues as many times necessary */
     n >>= 5;
+
+    /* Exit early if we dont have enough data to copy */
+    if(n == 0)
+        return dest;
+
+    sq_lock(dest);
 
     /* If src is not 8-byte aligned, slow path */
     if ((uintptr_t)src & 7) {
