@@ -60,11 +60,6 @@ __attribute__((noinline)) void *sq_cpy(void *dest, const void *src, size_t n) {
     uint32_t *d = SQ_MASK_DEST(dest);
     const uint32_t *s = src;
 
-    _Complex float ds;
-    _Complex float ds2;
-    _Complex float ds3;
-    _Complex float ds4;
-
     sq_lock(dest);
 
     /* Fill/write queues as many times necessary */
@@ -86,35 +81,7 @@ __attribute__((noinline)) void *sq_cpy(void *dest, const void *src, size_t n) {
             d += 8;
         }
     } else { /* If src is 8-byte aligned, fast path */
-        /* Moop algorithm; Using the fpu we can fill the queue faster before
-           firing it out off */
-        __asm__ __volatile__ (
-            "fschg\n\t"
-            "clrs\n" 
-            ".align 2\n"
-            "1:\n\t"
-            /* *d++ = *s++ */
-            "fmov.d @%[in]+, %[scratch]\n\t"
-            "fmov.d @%[in]+, %[scratch2]\n\t"
-            "fmov.d @%[in]+, %[scratch3]\n\t"
-            "fmov.d @%[in]+, %[scratch4]\n\t"
-            "add #32, %[out]\n\t"
-            "pref @%[in]\n\t"  /* Prefetch 32 bytes for next loop */
-            "dt %[size]\n\t"   /* while(n--) */
-            "fmov.d %[scratch4], @-%[out]\n\t"
-            "fmov.d %[scratch3], @-%[out]\n\t"
-            "fmov.d %[scratch2], @-%[out]\n\t"
-            "fmov.d %[scratch], @-%[out]\n\t"
-            "pref @%[out]\n\t" /* Fire off store queue */
-            "bf.s 1b\n\t"
-            "add #32, %[out]\n\t"
-            "fschg\n"
-            : [in] "+&r" ((uint32_t)s), [out] "+&r" ((uint32_t)d), 
-              [size] "+&r" (n), [scratch] "=&d" (ds), [scratch2] "=&d" (ds2), 
-              [scratch3] "=&d" (ds3), [scratch4] "=&d" (ds4) /* outputs */
-            : /* inputs */
-            : "t", "memory" /* clobbers */
-        );
+        sq_fast_cpy(d, s, n);
     }
 
     sq_unlock();

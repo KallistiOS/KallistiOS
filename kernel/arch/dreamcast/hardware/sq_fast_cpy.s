@@ -1,0 +1,46 @@
+! KallistiOS ##version##
+!
+! arch/dreamcast/hardware/sq_fast_path.s
+! Copyright (C) 2024 Andy Barajas
+!
+! Optimized SH4 assembler function for copying 32 bytes of data 
+! (8 bytes at a time) using pair single-precision data transfer
+! (specifically for store queues).
+!
+
+.globl _sq_fast_cpy
+
+!
+! void *sq_fast_cpy(uint32_t *dest, uint32_t *src, size_t n);
+!
+! r4: dest (should be 32-byte aligned store queue address)
+! r5: src (should be 8-byte aligned address)
+! r6: n (how many 32-byte blocks of data you want to copy)
+!
+    .align 2
+_sq_fast_cpy:
+    tst    r6, r6
+    bt/s   .exit       ! Test if size is 0
+    mov    r4, r0
+    mov    r4, r1
+    fschg              ! Change to pair single-precision data
+    1:
+    fmov.d @r5+, dr0
+    fmov.d @r5+, dr2
+    fmov.d @r5+, dr4
+    fmov.d @r5+, dr6
+    add    #32, r1
+    pref   @r5         ! Prefetch 32 bytes for next loop
+    dt     r6          ! while(n--)
+    fmov.d dr6, @-r1
+    fmov.d dr4, @-r1
+    fmov.d dr2, @-r1
+    fmov.d dr0, @-r1
+    pref   @r1         ! Fire off store queue
+    bf.s   1b
+    add    #32, r1
+    fschg
+
+.exit:
+    rts     
+    nop
