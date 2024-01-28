@@ -5,7 +5,7 @@
 !
 ! Optimized SH4 assembler function for copying 32 bytes of data 
 ! (8 bytes at a time) using pair single-precision data transfer
-! (specifically for store queues).
+! specifically for store queues.
 !
 
 .globl _sq_fast_cpy
@@ -19,12 +19,12 @@
 !
     .align 2
 _sq_fast_cpy:
+    fschg              ! Change to pair single-precision data
     tst    r6, r6
-    bt/s   .exit       ! Test if size is 0
+    bt/s   .exit       ! Exit if size is 0
     mov    r4, r0
     mov    r4, r1
-    fschg              ! Change to pair single-precision data
-    1:
+1:
     fmov.d @r5+, dr0
     fmov.d @r5+, dr2
     fmov.d @r5+, dr4
@@ -39,9 +39,7 @@ _sq_fast_cpy:
     pref   @r1         ! Fire off store queue
     bf.s   1b
     add    #32, r1
-    fschg
 
 .exit:
     rts     
-    nop
-    
+    fschg
