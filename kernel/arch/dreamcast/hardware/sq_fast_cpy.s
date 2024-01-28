@@ -44,3 +44,4 @@ _sq_fast_cpy:
 .exit:
     rts     
     nop
+    
