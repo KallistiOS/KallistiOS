@@ -24,12 +24,12 @@ _sq_fast_cpy:
     bt/s   .exit       ! Exit if size is 0
     mov    r4, r0
     mov    r4, r1
+    add    #32, r1
 1:
     fmov.d @r5+, dr0
     fmov.d @r5+, dr2
     fmov.d @r5+, dr4
     fmov.d @r5+, dr6
-    add    #32, r1
     pref   @r5         ! Prefetch 32 bytes for next loop
     dt     r6          ! while(n--)
     fmov.d dr6, @-r1
@@ -38,7 +38,7 @@ _sq_fast_cpy:
     fmov.d dr0, @-r1
     pref   @r1         ! Fire off store queue
     bf.s   1b
-    add    #32, r1
+    add    #64, r1
 
 .exit:
     rts     
