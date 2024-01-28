@@ -23,22 +23,24 @@ _sq_fast_cpy:
     tst    r6, r6
     bt/s   .exit       ! Exit if size is 0
     mov    r4, r0
-    add    #32, r4
 1:
     fmov.d @r5+, dr0
+    mov    r4, r1 
     fmov.d @r5+, dr2
+    add    #32, r1 
     fmov.d @r5+, dr4
     fmov.d @r5+, dr6
     pref   @r5         ! Prefetch 32 bytes for next loop
     dt     r6          ! while(n--)
-    fmov.d dr6, @-r4
-    fmov.d dr4, @-r4
-    fmov.d dr2, @-r4
-    fmov.d dr0, @-r4
-    pref   @r4         ! Fire off store queue
+    fmov.d dr6, @-r1
+    fmov.d dr4, @-r1
+    fmov.d dr2, @-r1
+    fmov.d dr0, @-r1
+    add    #32, r4
     bf.s   1b
-    add    #64, r4
+    pref   @r1         ! Fire off store queue
 
 .exit:
     rts     
     fschg
+
