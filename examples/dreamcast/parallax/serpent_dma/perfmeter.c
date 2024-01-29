@@ -72,15 +72,15 @@ void pm_draw(void) {
 
     posy += -40.0f;
 
-    pct = ((float)stats.buf_last_time) * 60.0f / 1000.0f;
+    pct = ((float)stats.buf_last_time) * 60.0f / 1000000000.0f;
     pm_drawbar(pct, posx, posy, posz, 0xff00c0c0, 0xff007070);
 
-    pct = ((float)stats.reg_last_time) * 60.0f / 1000.0f;
+    pct = ((float)stats.reg_last_time) * 60.0f / 1000000000.0f;
     posy += 8.0f;
     pm_drawbar(pct, posx, posy, posz, 0xff00c000, 0xff007000);
 
     // Draw a bargraph for rendering time
-    pct = ((float)stats.rnd_last_time) * 60.0f / 1000.0f;
+    pct = ((float)stats.rnd_last_time) * 60.0f / 1000000000.0f;
     posy += 8.0f;
     pm_drawbar(pct, posx, posy, posz, 0xffc0c000, 0xff707000);
 
