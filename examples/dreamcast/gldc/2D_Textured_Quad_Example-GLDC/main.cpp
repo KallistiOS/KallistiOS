@@ -108,7 +108,7 @@ int main(int argc, char **argv) {
     // Cleanup
     stbi_image_free(data);
 
-// ..:: Output any GL Errors
+    // ..:: Output any GL Errors
     GLenum error = glGetError();
     if (error != GL_NO_ERROR) {
         printf("OpenGL error: %x\n", error);
