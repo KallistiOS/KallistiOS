@@ -187,7 +187,7 @@ int main(int argc, char **argv) {
             width = height -= 4.0f;
         }
 
-// ..:: Begin GL Drawing
+        // ..:: Begin GL Drawing
         glClearColor(0.10f, 0.5f, 1.0f, 1.0f);              // Sets background Color
         glClear( GL_COLOR_BUFFER_BIT );                     // Clears screen to that color
 
