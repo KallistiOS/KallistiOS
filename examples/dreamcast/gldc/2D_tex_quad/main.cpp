@@ -1,6 +1,6 @@
 /*
     KallistiOS ##version##
-    examples/dreamcast/gldc/2D_Textured_Quad_Example-GLDC/main.cpp
+    examples/dreamcast/gldc/2D_tex_quad/main.cpp
     Copyright (C) 2024 Jason Rost (Oni Enzeru)
 
     Example of 2D Orthographic perspective rendering
@@ -16,7 +16,7 @@
 #include <GL/glext.h>
 #include <GL/glkos.h>
 
-// ..:: STB_Image form KOS-Port
+// ..:: STB_Image from KOS-Port
 #include <stb_image/stb_image.h>
 
 
@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
     unsigned char *data = stbi_load("/rd/crate.png", &width, &height, &nr_channels, 0);
 
     // texture load debug
-    printf("..:: STBI_IMAGE Data ::..\n");
+    printf("..:: STB_IMAGE Data ::..\n");
     printf("nr_channels: %d\n", nr_channels);
     printf("width:       %d\n", width);
     printf("height:      %d\n", height);
@@ -192,7 +192,7 @@ int main(int argc, char **argv) {
         glClear(GL_COLOR_BUFFER_BIT);                     // Clears screen to that color
 
         pos_x += state->joyx * 0.05;
-        pos_y += state->joyy * 0.05;
+        pos_y -= state->joyy * 0.05;
 
         // Apply texture data to all draw calls until next bind
         glBindTexture(GL_TEXTURE_2D, texture);
