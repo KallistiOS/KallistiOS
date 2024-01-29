@@ -150,8 +150,7 @@ int main(int argc, char **argv) {
     float rot   = 0.0f;
 
     while(1) {
-
-//..:: Check Controller Input
+        //..:: Check Controller Input
         state = (cont_state_t *)maple_dev_status(cont);
 
         if(!state) {
