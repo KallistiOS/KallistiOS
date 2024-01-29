@@ -891,7 +891,7 @@ int fs_ramdisk_shutdown(void) {
     rd_file_t *f1, *f2;
 
     /* Test if initted */
-    if(rootdir === NULL)
+    if(rootdir == NULL)
         return -1;
 
     /* For now assume there's only the root dir, since mkdir and
