@@ -164,7 +164,6 @@ int main(int argc, char **argv) {
 
         int16_t x_axis = state->joyx;
         int16_t y_axis = state->joyy;
-        //printf("jx: %d, jy: %d\n", x_axis, y_axis);
 
         //..:: Rotation on Triggers
         // Rotate CCW
