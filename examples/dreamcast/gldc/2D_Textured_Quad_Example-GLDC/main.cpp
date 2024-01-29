@@ -242,8 +242,8 @@ int main(int argc, char **argv) {
         glKosSwapBuffers();
     }
 
-// ..:: Cleanup Memory
-	glDeleteTextures(1, &texture);
+    // ..:: Cleanup Memory
+    glDeleteTextures(1, &texture);
 
     return 0;
 }
