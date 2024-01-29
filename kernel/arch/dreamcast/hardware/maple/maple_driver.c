@@ -26,6 +26,12 @@ void maple_detach_callback(uint32 functions, maple_detach_callback_t cb) {
 
 /* Register a maple device driver; do this before maple_init() */
 int maple_driver_reg(maple_driver_t *driver) {
+    /* Don't add two drivers for the same function */
+    maple_driver_t *i;
+    LIST_FOREACH(i, &maple_state.driver_list, drv_list)
+        if(i->functions & driver->functions)
+            return -1;
+
     /* Insert it into the device list */
     LIST_INSERT_HEAD(&maple_state.driver_list, driver, drv_list);
     return 0;
