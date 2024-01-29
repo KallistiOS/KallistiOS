@@ -78,6 +78,8 @@ void drawcube(void) {
     plx_vert_indm3(&dr, PLX_VERT, -3, 3,  3, color);
     plx_vert_indm3(&dr, PLX_VERT,  3, 3, -3, color);
     plx_vert_indm3(&dr, PLX_VERT_EOS,  3, 3,  3, color);
+
+    plx_dr_finish();
 }
 
 // Draws the wave in the background (2D)
