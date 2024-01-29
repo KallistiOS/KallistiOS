@@ -99,14 +99,14 @@ inline static uint8_t get_rw_mask(ubc_rw_t rw) {
 /* Translates ubc_address_mask_t to BASR.BAM field format. */
 inline static uint8_t get_address_mask(ubc_address_mask_t addr_mask) {
     switch(addr_mask) {
-    case ubc_address_mask_all:
-        return 3;
-    case ubc_address_mask_16:
-        return 4;
-    case ubc_address_mask_20:
-        return 5;
-    default:
-        return addr_mask;
+        case ubc_address_mask_all:
+            return 3;
+        case ubc_address_mask_16:
+            return 4;
+        case ubc_address_mask_20:
+            return 5;
+        default:
+            return addr_mask;
     }
 }
 
@@ -131,7 +131,6 @@ static void enable_breakpoint(ubc_channel_t           ch,
                               const ubc_breakpoint_t *bp,
                               ubc_break_func_t        cb,
                               void                   *ud) {
-
     /* Set state variables. */
     channel_state[ch].bp = bp;
     channel_state[ch].cb = cb;
@@ -198,7 +197,6 @@ static void enable_breakpoint(ubc_channel_t           ch,
 bool ubc_add_breakpoint(const ubc_breakpoint_t *bp,
                         ubc_break_func_t       callback,
                         void                   *user_data) {
-
     /* Check if we're dealing with a combined sequential breakpoint */
     if(bp->next) {
         /* Ensure we only have a sequence of 2, without leading data break. */
@@ -318,9 +316,9 @@ void ubc_clear_breakpoints(void) {
 
 /* Entry-point for UBC-related interrupt handling. */
 static void handle_exception(irq_t code, irq_context_t *irq_ctx) {
-    (void)code;
-
     bool serviced = false;
+
+    (void)code;
 
     /* Check if channel B's condition is active. */
     if(BRCR & CMFB) {
@@ -331,8 +329,7 @@ static void handle_exception(irq_t code, irq_context_t *irq_ctx) {
             disable = channel_state[ubc_channel_b].cb(
                             channel_state[ubc_channel_b].bp,
                             irq_ctx,
-                            channel_state[ubc_channel_b].ud
-                        );
+                            channel_state[ubc_channel_b].ud);
 
         /* Check whether the breakpoint should disable itself. */
         if(disable) {
@@ -348,7 +345,6 @@ static void handle_exception(irq_t code, irq_context_t *irq_ctx) {
 
     /* Check if channel A's condition is active. */
     if(BRCR & CMFA) {
-
         /* Only proceed if channel A is not part of a sequence, in which case
            it should already be handled above by channel B's logic. */
         if(!(BRCR & SEQ)) {
@@ -359,8 +355,7 @@ static void handle_exception(irq_t code, irq_context_t *irq_ctx) {
                 disable = channel_state[ubc_channel_a].cb(
                                 channel_state[ubc_channel_a].bp,
                                 irq_ctx,
-                                channel_state[ubc_channel_a].ud
-                            );
+                                channel_state[ubc_channel_a].ud);
 
             /* Check whether the breakpoint should disable itself. */
             if(disable)
