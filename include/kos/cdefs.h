@@ -155,8 +155,13 @@
 #endif
 
 #ifndef __always_inline
-/** \brief  Ask the compiler to always inline a given function. */
+/** \brief  Ask the compiler to \a always inline a given function. */
 #define __always_inline inline __attribute__((__always_inline__))
+#endif
+
+#ifndef __no_inline
+/** \brief Ask the compiler to \a never inline a given function. */
+#define __no_inline __attribute__((__noinline__))
 #endif
 
 /* GCC macros for special cases */

@@ -66,14 +66,21 @@ __BEGIN_DECLS
     \sa semaphore_t, mutex_t, kthread_once_t, kthread_key_t, rw_semaphore_t
 */
 
-/** \brief   Maximal thread priority.
+/** \brief  Process ID
+
+    This macro defines the single process ID that encompasses all of KOS and the
+    running application along with all of its threads.
+*/
+#define KOS_PID 1
+
+/** \brief   Maximal thread priority
 
     This macro defines the maximum value for a thread's priority. Note that the
     larger this number, the lower the priority of the thread.
 */
 #define PRIO_MAX 4096
 
-/** \brief   Default thread priority.
+/** \brief   Default thread priority
 
     Threads are created by default with the priority specified.
 */
