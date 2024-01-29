@@ -152,6 +152,13 @@ ifdef newlib_multibyte
   endif
 endif
 
+ifdef disable_nls
+  ifneq (0,$(disable_nls))
+    extra_configure_args += --disable-nls
+    binutils_extra_configure_args += --disable-nls
+  endif
+endif
+
 # Function to verify variable is not empty
 # Args:
 # 1 - Variable Name

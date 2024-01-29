@@ -7,7 +7,6 @@
 
 #include <assert.h>
 #include <dc/pvr.h>
-#include <dc/video.h>
 #include <dc/asic.h>
 #include <arch/cache.h>
 #include "pvr_internal.h"
@@ -236,5 +235,3 @@ void pvr_int_handler(uint32 code) {
         dma_next_list(0);
     }
 }
-
-

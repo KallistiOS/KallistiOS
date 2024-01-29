@@ -130,6 +130,7 @@ int main(int argc, char **argv) {
     gluPerspective(45.0f, 640.0f / 480.0f, 0.1f, 100.0f);
     glMatrixMode(GL_MODELVIEW);
     glEnable(GL_TEXTURE_2D);
+    glEnable(GL_DEPTH_TEST);
 
     /* Expect CW verts */
     glFrontFace(GL_CW);
@@ -146,6 +147,8 @@ int main(int argc, char **argv) {
     glClearColor(0.3f, 0.4f, 0.5f, 1.0f);
 
     while(1) {
+    	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
         /* Check key status */
         cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
 

@@ -20,6 +20,7 @@ $(build_binutils): logdir
         --prefix=$(prefix) \
         --disable-werror \
         $(libbfd_install_flag) \
+        $(binutils_extra_configure_args) \
         CC="$(CC)" \
         CXX="$(CXX)" \
         $(static_flag) \

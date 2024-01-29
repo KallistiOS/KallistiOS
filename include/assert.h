@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    assert.h
-   Copyright (C)2002,2004 Megan Potter
+   Copyright (C) 2002, 2004 Megan Potter
 
 */
 
@@ -12,8 +12,9 @@
 __BEGIN_DECLS
 
 /**
-    \file   assert.h
-    \brief  Standard C Assertions
+    \file    assert.h
+    \brief   Standard C Assertions
+    \ingroup assertions
 
     This file contains the standard C assertions to raise an assertion or to
     change the assertion handler.
@@ -21,10 +22,25 @@ __BEGIN_DECLS
     \author Megan Potter
 */
 
+/** \defgroup assertions Assertions
+    \brief    assert() management and custom handlers
+    \ingroup  debugging
+
+    KOS maps the standard C assert() mechanism to a default implementation
+    which logs the failed expression as well as the source code context.
+    A secondary assertion mechanism, assert_msg() is also provided for adding
+    a cusom message. You may also override KOS's assertion handler and replace
+    it with your own via assert_set_handler().
+
+    @{
+*/
+
 /* This is nice and simple, modeled after the BSD one like most of KOS;
    the addition here is assert_msg(), which allows you to provide an
    error message. */
+/** \cond */
 #define _assert(e) assert(e)
+/** \endcond */
 
 #ifdef NDEBUG
 #   define assert(e) ((void)0)
@@ -104,6 +120,8 @@ typedef void (*assert_handler_t)(const char * file, int line, const char * expr,
     \see    assert_handler_t
 */
 assert_handler_t assert_set_handler(assert_handler_t hnd);
+
+/** @} */
 
 __END_DECLS
 

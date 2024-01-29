@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # examples/dreamcast/basic/Makefile
-# (c)2002 Megan Potter
+# Copyright (C) 2002 Megan Potter
 #
 
 all:
@@ -14,6 +14,7 @@ all:
 	$(KOS_MAKE) -C stackprotector
 	$(KOS_MAKE) -C memtest32
 	$(KOS_MAKE) -C watchdog
+	$(KOS_MAKE) -C breaking
 
 clean:
 	$(KOS_MAKE) -C exec clean
@@ -25,6 +26,7 @@ clean:
 	$(KOS_MAKE) -C stackprotector clean
 	$(KOS_MAKE) -C memtest32 clean
 	$(KOS_MAKE) -C watchdog clean
+	$(KOS_MAKE) -C breaking clean
 
 dist:
 	$(KOS_MAKE) -C exec dist
@@ -36,3 +38,4 @@ dist:
 	$(KOS_MAKE) -C stackprotector dist
 	$(KOS_MAKE) -C memtest32 dist
 	$(KOS_MAKE) -C watchdog dist
+	$(KOS_MAKE) -C breaking dist

@@ -18,8 +18,8 @@ function(kos_bin2o inFile symbol)
 endfunction()
 
 function(kos_add_binary target inFile symbol)
-    set(outFile ${CMAKE_BINARY_DIR}/${symbol}.o)
-    kos_bin2o(${inFile} ${symbol} ${outFile})
+    set(outFile ${CMAKE_CURRENT_BINARY_DIR}/${symbol}.o)
+    kos_bin2o(${CMAKE_CURRENT_SOURCE_DIR}/${inFile} ${symbol} ${outFile})
     target_sources(${target} PRIVATE ${outFile})
 endfunction()
 
@@ -31,6 +31,8 @@ function(kos_add_romdisk target romdiskPath)
     else()
         set(romdiskName ${ARGN})
     endif()
+
+    set(romdiskPath ${CMAKE_CURRENT_SOURCE_DIR}/${romdiskPath})
 
     set(obj     ${CMAKE_CURRENT_BINARY_DIR}/${romdiskName}.o)
     set(obj_tmp ${CMAKE_CURRENT_BINARY_DIR}/${romdiskName}_tmp.o)
