@@ -15,7 +15,7 @@ SRCS		:= main.cpp
 OBJS		:= main.o romdisk.o
 
 # Compiler Flags
-CXXFLAGS	:= -std=c++20
+KOS_CPPSTD	:= -std=c++20
 LDLIBS 		:= -lstb_image -lGL -lkmg -lkosutils -lm
 
 TARGET = 2D_Textured_Quad_PNG.elf
