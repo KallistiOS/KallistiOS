@@ -47,7 +47,6 @@ void GL_Init(uint16_t w, uint16_t h) {
 }
 
 int main(int argc, char **argv) {
-
     // Setup for Controller
     maple_device_t  *cont;
     cont_state_t    *state;
