@@ -178,7 +178,7 @@ int main(int argc, char **argv) {
 
         //..:: Scale on Y / B
         // Scale up
-        if (state->y) {
+        if(state->y) {
             width = height += 4.0f;
         }
 
