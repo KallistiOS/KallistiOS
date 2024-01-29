@@ -7,7 +7,6 @@
     of a textured quad using PNGs and GLdc.
 */
 
-//..:: Dreamcast Open-SDK ::..
 #include <kos.h>
 #include <kos/img.h>
 
