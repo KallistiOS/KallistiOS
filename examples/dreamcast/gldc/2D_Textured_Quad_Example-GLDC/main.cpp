@@ -183,7 +183,7 @@ int main(int argc, char **argv) {
         }
 
         // Scale down
-        if (state->b) {
+        if(state->b) {
             width = height -= 4.0f;
         }
 
