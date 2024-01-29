@@ -1,16 +1,10 @@
-/* KallistiOS 2.0.1 + GLdc 1.1-451-g9f3f
+/*
+    KallistiOS ##version##
+    examples/dreamcast/gldc/2D_Textured_Quad_Example-GLDC/main.cpp
+    Copyright (C) 2024 Jason Rost (Oni Enzeru)
 
-    Project Name:   GLdc-2D-PNG-QUAD Example
-    FileName:       main.cpp
-    Author:         Jason Rost ( Oni Enzeru )
-    Creation Date:  1-22-24
-
-    Last Edit:      1-22-24
-
-    Purpose:        Example of 2D Orthographic perspective rendering
-                    of a textured quad using PNGs and GLdc on the SEGA Dreamcast.
-
-    Copyright:      (c)2024 Jason Rost ( Oni Enzeru )
+    Example of 2D Orthographic perspective rendering
+    of a textured quad using PNGs and GLdc.
 */
 
 //..:: Dreamcast Open-SDK ::..
