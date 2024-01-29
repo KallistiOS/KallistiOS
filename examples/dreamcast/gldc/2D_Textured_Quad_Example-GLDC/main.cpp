@@ -20,7 +20,7 @@
 #include <stb_image/stb_image.h>
 
 
-void GL_Init( uint16_t w, uint16_t h) {
+void GL_Init(uint16_t w, uint16_t h) {
     // Set "background" color to light blue
     glClearColor(0.10f, 0.5f, 1.0f, 1.0f);
     glEnable(GL_TEXTURE_2D);
