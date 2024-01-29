@@ -189,7 +189,7 @@ int main(int argc, char **argv) {
 
         // ..:: Begin GL Drawing
         glClearColor(0.10f, 0.5f, 1.0f, 1.0f);              // Sets background Color
-        glClear( GL_COLOR_BUFFER_BIT );                     // Clears screen to that color
+        glClear(GL_COLOR_BUFFER_BIT);                     // Clears screen to that color
 
         pos_x += state->joyx * 0.05;
         pos_y += state->joyy * 0.05;
