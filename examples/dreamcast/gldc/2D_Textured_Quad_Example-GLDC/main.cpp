@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
                         {  1.0f, -1.0f,  1.0f },    // Top Right
                         { -1.0f, -1.0f,  1.0f }     // Top Left
                       };
-// ..:: Setup some variables to manipulate position and rotation of our quad
+    // ..:: Setup some variables to manipulate position and rotation of our quad
     float pos_x = 320.0f;
     float pos_y = 240.0f;
     float rot   = 0.0f;
