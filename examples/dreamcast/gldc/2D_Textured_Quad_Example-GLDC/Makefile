@@ -5,7 +5,6 @@
 # Copyright (C) 2024 Jason Rost (OniEnzeru)
 #
 
-KOS_LOADER = dc-tool-ip
 
 # Directories
 KOS_ROMDISK_DIR := romdisk
