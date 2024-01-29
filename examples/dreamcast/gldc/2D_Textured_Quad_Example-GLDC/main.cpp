@@ -172,7 +172,7 @@ int main(int argc, char **argv) {
         }
 
         // Rotate CW
-        if (state->rtrig >= 255) {
+        if(state->rtrig >= 255) {
             rot -= 4.0f;
         }
 //..:: Scale on Y / B
