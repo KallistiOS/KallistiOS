@@ -34,5 +34,12 @@ $(TARGET): $(OBJS)
 $(OBJ)/%.o: $(SRC)/%.cpp | $(OBJ)
 	kos-c++ $(CXXFLAGS) -c $< -o $@
 
-push: $(TARGET)
-	$(KOS_LOADER) -x $(TARGET) -t 10.10.10.3 #ip of dc-load
+dist: $(TARGET)
+	-rm -f $(OBJS)
+	$(KOS_STRIP) $(TARGET)
+
+rm-elf:
+	-rm -f $(TARGET)
+
+run: $(TARGET)
+	$(KOS_LOADER) -x $(TARGET)
