@@ -1,8 +1,8 @@
 #
-# 2D_Textured_Quad_PNG Makefile
+# KallistiOS ##version##
 #
-# Author: Jason Rost (OniEnzeru)
-# Date:	  1/22/2024
+# examples/dreamcast/gldc/2D_Textured_Quad_Example-GLDC/Makefile
+# Copyright (C) 2024 Jason Rost (OniEnzeru)
 #
 
 KOS_LOADER = dc-tool-ip
