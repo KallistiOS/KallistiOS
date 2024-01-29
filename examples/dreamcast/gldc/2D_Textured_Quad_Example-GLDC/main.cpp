@@ -126,8 +126,8 @@ int main(int argc, char **argv) {
 // ..:: Vertex / UV Data setup
    float uv[4][2]  = {
                         // UVs are in reverse Y order to flip image
-                        // GL expects 0,0 to be the top left corner of an image while
-                        // real world coordinates are typically bottom left.
+                        // GL expects 0,0 to be the bottom left corner of an image while
+                        // real world coordinates are typically top left.
                         // alt- use: stbi_set_flip_vertically_on_load(true); before loading texture.
                         // X    // Y
                         {0.0f, 0.0f},
@@ -170,7 +170,7 @@ int main(int argc, char **argv) {
         }
 
         // Close program on Start Button
-        if(state->buttons & CONT_START)
+        if(state->start)
             break;
 
         int16_t x_axis = state->joyx;
@@ -189,12 +189,12 @@ int main(int argc, char **argv) {
         }
 //..:: Scale on Y / B
         // Scale up
-        if (state->buttons & CONT_Y) {
+        if (state->y) {
             width = height += 4.0f;
         }
 
         // Scale down
-        if (state->buttons & CONT_B) {
+        if (state->b) {
             width = height -= 4.0f;
         }
 
@@ -202,8 +202,8 @@ int main(int argc, char **argv) {
         glClearColor(0.10f, 0.5f, 1.0f, 1.0f);              // Sets background Color
         glClear( GL_COLOR_BUFFER_BIT );                     // Clears screen to that color
 
-        pos_x = pos_x + x_axis * 0.05;
-        pos_y = pos_y - y_axis * 0.05;
+        pos_x += state->joyx * 0.05;
+        pos_y += state->joyy * 0.05;
 
         // Apply texture data to all draw calls until next bind
         glBindTexture(GL_TEXTURE_2D, texture);
