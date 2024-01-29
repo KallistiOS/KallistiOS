@@ -175,7 +175,8 @@ int main(int argc, char **argv) {
         if(state->rtrig >= 255) {
             rot -= 4.0f;
         }
-//..:: Scale on Y / B
+
+        //..:: Scale on Y / B
         // Scale up
         if (state->y) {
             width = height += 4.0f;
