@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
 
     // ..:: Output any GL Errors
     GLenum error = glGetError();
-    if (error != GL_NO_ERROR) {
+    if(error != GL_NO_ERROR) {
         printf("OpenGL error: %x\n", error);
     }
 // ..:: Vertex / UV Data setup
