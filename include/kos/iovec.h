@@ -7,6 +7,7 @@
 
 /** \file   kos/iovec.h
     \brief  Deprecated header file for I/O scatter/gather arrays.
+    \deprecated
 
     See <sys/uio.h> for what used to be here.
 */
@@ -16,7 +17,9 @@
 
 #include <sys/uio.h>
 
-/** \brief  Compatibility typedef for old code. */
+/** \brief  Compatibility typedef for old code. 
+    \deprecated
+*/
 typedef struct iovec iovec_t;
 
 #endif  /* __KOS_IOVEC_H */
