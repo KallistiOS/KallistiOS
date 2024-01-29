@@ -167,7 +167,7 @@ int main(int argc, char **argv) {
 
         //..:: Rotation on Triggers
         // Rotate CCW
-        if (state->ltrig >= 255) {
+        if(state->ltrig >= 255) {
             rot += 4.0f;
         }
 
