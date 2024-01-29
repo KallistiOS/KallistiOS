@@ -16,11 +16,11 @@ OBJS		:= main.o romdisk.o
 
 # Compiler Flags
 CXXFLAGS	:= -std=c++20
-LDLIBS 		:= -lGL -lkmg -lkosutils -lm
+LDLIBS 		:= -lstb_image -lGL -lkmg -lkosutils -lm
 
 TARGET = 2D_Textured_Quad_PNG.elf
 
-.PHONY: all clean rm-elf push
+.PHONY: all clean push
 
 all: clean $(TARGET)
 include $(KOS_BASE)/Makefile.rules

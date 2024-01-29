@@ -23,9 +23,8 @@
 #include <GL/glext.h>
 #include <GL/glkos.h>
 
-// ..:: STB_Image must define here.
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+// ..:: STB_Image form KOS-Port
+#include <stb_image/stb_image.h>
 
 
 void GL_Init( uint16_t w, uint16_t h) {
@@ -198,7 +197,6 @@ int main(int argc, char **argv) {
         if (state->buttons & CONT_B) {
             width = height -= 4.0f;
         }
-
 
 // ..:: Begin GL Drawing
         glClearColor(0.10f, 0.5f, 1.0f, 1.0f);              // Sets background Color
