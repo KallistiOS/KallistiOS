@@ -25,8 +25,8 @@ TARGET = 2D_Textured_Quad_PNG.elf
 all: rm-elf $(TARGET)
 include $(KOS_BASE)/Makefile.rules
 
-clean:
-	rm -Rf $(OBJS) $(TARGET) romdisk.*
+clean: rm-elf
+	-rm -rf $(OBJS) romdisk.*
 
 $(TARGET): $(OBJS)
 	kos-c++ $(CXXFLAGS) -o $(TARGET) $(OBJS) $(LDLIBS)
