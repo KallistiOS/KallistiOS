@@ -29,7 +29,7 @@ clean: rm-elf
 	-rm -rf $(OBJS) romdisk.*
 
 $(TARGET): $(OBJS)
-	kos-c++ $(CXXFLAGS) -o $(TARGET) $(OBJS) $(LDLIBS)
+	kos-c++ -o $(TARGET) $(OBJS) $(LDLIBS)
 
 $(OBJ)/%.o: $(SRC)/%.cpp | $(OBJ)
 	kos-c++ $(CXXFLAGS) -c $< -o $@
