@@ -88,16 +88,15 @@ int main(int argc, char **argv) {
 
     // If data is loaded, apply texture formats and assign the data
     if(data) {
-        glTexImage2D(   GL_TEXTURE_2D,
-                        0,
-                        GL_RGBA,
-                        width,
-                        height,
-                        0,
-                        GL_RGBA,
-                        GL_UNSIGNED_BYTE,
-                        data
-                        );
+        glTexImage2D(GL_TEXTURE_2D,
+                     0,
+                     GL_RGBA,
+                     width,
+                     height,
+                     0,
+                     GL_RGBA,
+                     GL_UNSIGNED_BYTE,
+                     data);
 
         // Currently REQUIRED for OpenGLdc w/PNGs on Dreamcast
         glGenerateMipmapEXT(GL_TEXTURE_2D);
