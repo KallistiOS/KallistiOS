@@ -135,8 +135,6 @@ static void sphere_frame_opaque(void) {
 
     plx_mat3d_pop();
 
-    plx_dr_finish();
-
     vid_border_color(0, 0, 255);
     pvr_scene_finish();
 
