@@ -5,8 +5,9 @@
 
 */
 
-/** \file   arch/gdb.h
-    \brief  GNU Debugger support.
+/** \file    arch/gdb.h
+    \brief   GNU Debugger support.
+    \ingroup debugging_gdb
 
     This file contains functions to set up and utilize GDB with KallistiOS.
 
@@ -18,6 +19,13 @@
 
 #include <sys/cdefs.h>
 __BEGIN_DECLS
+
+/** \defgroup debugging_gdb GDB
+    \brief                  Interface for using the GNU Debugger
+    \ingroup                debugging
+
+    @{
+*/
 
 /** \brief  Initialize the GDB stub.
 
@@ -33,6 +41,8 @@ void gdb_init(void);
     function is called.
 */
 void gdb_breakpoint(void);
+
+/** @} */
 
 __END_DECLS
 

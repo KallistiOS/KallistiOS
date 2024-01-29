@@ -161,7 +161,7 @@ need to add -lkosutils to your link line somewhere.
 
 KOS now has a built-in network stack in the kernel/net directory. This is only
 usable at the moment with the Broadband Adapter or the Lan Adapter for the
-Dreamcast. It suports UDP and TCP over both IPv4 and IPv6. You also have an
+Dreamcast. It supports UDP and TCP over both IPv4 and IPv6. You also have an
 almost complete set of sockets functions so that you can use the networking
 support just like you would on any other OS. Add INIT_NET to your KOS_INIT_FLAGS
 to initialize the network support on startup.
@@ -216,7 +216,7 @@ but its been so long since anyone has updated this document...
 RELEASE NOTES for 1.2.0
 -----------------------
 The PVR API's performance/statistics measuring facility has changed.
-Rather than try to keep backwards compatability, the new structs have
+Rather than try to keep backwards compatibility, the new structs have
 been changed so that the names are more accurate. The main change that
 will be user-noticable is that "frame_count" has become "vbl_count",
 counting the number of VBlanks, which is a much more useful measurement
@@ -362,10 +362,10 @@ between the main program and an IRQ, etc. However, the timer is not
 hooked and no pre-emption will occur. If you enable pre-emptive
 mode, then this is basically like the old threads-enabled mode.
 
-Note that kos_init_defaults() is now a compatability shim which will
+Note that kos_init_defaults() is now a compatibility shim which will
 correct any implicit defaults. However, if you want better control over
 this situation, please change your program to use the macros. Also note
-that this and other compatability shims will be removed by the next
+that this and other compatibility shims will be removed by the next
 release version (i.e., removed in CVS after the tagging).
 
 The build process has changed slightly. The main change is that libc is
@@ -389,7 +389,7 @@ are still combined into libkallisti.a (easier linking until we have the
 installation mode available...)
 
 Libm from Newlib has been integrated into the source tree so that you
-no longer have to pull in a seperate Newlib binary. This also ensures that
+no longer have to pull in a separate Newlib binary. This also ensures that
 it's compiled with the same compiler flags as the rest of KOS.
 
 The new "PVR" API has completely replaced the old "TA" API. For the near
@@ -437,7 +437,7 @@ check to see what changed there. Paul has helpfully created a KGL manual
 as well, if you are looking for docs.
 
 Image loaders now use the kos_img_t system so that they can be platform
-independent and still pass around the data in a convienent format. This
+independent and still pass around the data in a convenient format. This
 also makes it easier to flip the data when loading it into the PVR RAM
 for KGL usage. The loaders for PCX and TGA have additionally been split
 out into their own libraries (libpcx, libtga). So you will need to

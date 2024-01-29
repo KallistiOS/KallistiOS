@@ -1,5 +1,6 @@
-/** \file   sys/_types.h
-    \brief  Internal typedefs.
+/** \file    sys/_types.h
+    \brief   Internal typedefs.
+    \ingroup system_types
 
     This file contains internal typedefs required by libc. You probably
     shouldn't use any of these in your code. Most of these are copied from
@@ -14,6 +15,10 @@ __BEGIN_DECLS
 
 #include <sys/lock.h>
 #include <newlib.h>
+
+/** \addtogroup system_types
+    @{
+*/
 
 // This part copied from newlib's sys/_types.h.
 #ifndef __off_t_defined
@@ -197,7 +202,7 @@ typedef _CLOCK_T_   __clock_t;
 #define IOV_MAX                 1024
 #endif
 
-/* This is for old KOS source compatability. */
+/* This is for old KOS source compatibility. */
 #include <arch/types.h>
 
 /* Include stuff to make pthreads work as well. */
@@ -208,6 +213,8 @@ typedef __builtin_va_list   __va_list;
 #else
 typedef char *          __va_list;
 #endif
+
+/** @} */
 
 __END_DECLS
 

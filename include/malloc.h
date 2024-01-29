@@ -6,8 +6,9 @@
 
 */
 
-/** \file   malloc.h
-    \brief  Standard C Malloc functionality
+/** \file    malloc.h
+    \brief   Standard C Malloc functionality
+    \ingroup system_allocator
 
     This implements standard C heap allocation, deallocation, and stats.
 
@@ -22,6 +23,13 @@
 __BEGIN_DECLS
 
 #include <arch/types.h>
+
+/** \defgroup system_allocator  Allocator
+    \brief                      Dynamic memory heap management and allocation
+    \ingroup                    system
+
+    @{
+*/
 
 /* Unlike previous versions, we totally decouple the implementation from
    the declarations. */
@@ -124,7 +132,7 @@ void free(void *ptr);
                             memory allocation functions in this file (or must
                             be NULL).
     \param  size            The requested size of the new block of memory.
-    \return                 A pointer to the newly allocted/resized block of
+    \return                 A pointer to the newly allocated/resized block of
                             memory on success, or NULL on failure.
 
     \note                   If ptr is NULL on a call to this function, the
@@ -233,6 +241,8 @@ int mem_check_block(void *p);
 /** \brief Only available with KM_DBG
  */
 int mem_check_all(void);
+
+/** @} */
 
 __END_DECLS
 

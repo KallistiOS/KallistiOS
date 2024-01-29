@@ -218,7 +218,7 @@ static void draw_listing(void) {
                   609.0f, 92.0f + esel * 24.0f + 25.0f, 95.0f,
                   throb, throb, 0.2f, 0.2f, throb, throb, 0.2f, 0.2f);
 
-    /* Put a hightlight bar under the playing file */
+    /* Put a highlight bar under the playing file */
     /* Only works correctly if you're in the same dir as the played file */
     if((sndoggvorbis_isplaying() && !(strcmp(playdir, curdir)) && (lst_size == 0))) {
         esel = (iplaying - top);

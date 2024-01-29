@@ -5,8 +5,9 @@
    Copyright (C) 2023 Ruslan Rostovtsev
 */
 
-/** \file   dc/g1ata.h
-    \brief  G1 bus ATA interface.
+/** \file    dc/g1ata.h
+    \brief   G1 bus ATA interface.
+    \ingroup g1ata
 
     This file provides support for accessing an ATA device on the G1 bus in the
     Dreamcast. The G1 bus usually contains a few useful pieces of the system,
@@ -39,7 +40,14 @@ __BEGIN_DECLS
 #include <stdint.h>
 #include <kos/blockdev.h>
 
-/** \defgroup ata_devices           ATA device definitions
+/** \defgroup g1ata G1 ATA
+    \brief          Driver for Accessing an ATA device on the G1 Bus
+    \ingroup        vfs_drivers
+*/
+
+/** \defgroup ata_devices   Device Definitions
+    \brief                  ATA device definitions
+    \ingroup                g1ata
 
     The constants here represent the valid values that can be set as the active
     device on the ATA bus. You should pass one of these values to the
@@ -55,7 +63,8 @@ __BEGIN_DECLS
 
     @{
 */
-/** \brief  ATA master device.
+/** \brief   ATA master device.
+    \ingroup g1ata
 
     This constant selects the master device on the ATA bus. This is normally the
     GD-ROM drive.
@@ -68,7 +77,8 @@ __BEGIN_DECLS
 */
 #define G1_ATA_MASTER       0x00
 
-/** \brief  ATA master device (compatible with old drives).
+/** \brief   ATA master device (compatible with old drives).
+    \ingroup g1ata
 
     This constant selects the master device on the ATA bus, with the old
     reserved bits set to 1. If you have a drive that predates ATA-2, then this
@@ -79,14 +89,16 @@ __BEGIN_DECLS
 */
 #define G1_ATA_MASTER_ALT   0x90
 
-/** \brief  ATA slave device.
+/** \brief   ATA slave device.
+    \ingroup g1ata
 
     This constant selects the slave device on the ATA bus. This is where you
     would find a hard drive, if the user has an adapter installed.
 */
 #define G1_ATA_SLAVE        0xB0
 
-/** \brief  Select LBA addressing mode.
+/** \brief   Select LBA addressing mode.
+    \ingroup g1ata
 
     OR this constant with one of the device constants (\ref G1_ATA_MASTER or
     \ref G1_ATA_SLAVE) to select LBA addressing mode. The various g1_ata_*
@@ -96,7 +108,8 @@ __BEGIN_DECLS
 #define G1_ATA_LBA_MODE     0x40
 /** @} */
 
-/** \brief  Is there a G1 DMA in progress currently?
+/** \brief   Is there a G1 DMA in progress currently?
+    \ingroup g1ata
 
     This function returns non-zero if a DMA is in progress. This can be used to
     check on the completion of DMA transfers when non-blocking mode was selected
@@ -106,7 +119,8 @@ __BEGIN_DECLS
 */
 int g1_dma_in_progress(void);
 
-/** \brief  Lock the G1 ATA mutex.
+/** \brief   Lock the G1 ATA mutex.
+    \ingroup g1ata
 
     This function locks the mutex that arbitrates access to the ATA bus. You
     should never have to do this on your own unless you're accessing devices
@@ -118,7 +132,8 @@ int g1_dma_in_progress(void);
 */
 int g1_ata_mutex_lock(void);
 
-/** \brief  Unlock the G1 ATA mutex.
+/** \brief   Unlock the G1 ATA mutex.
+    \ingroup g1ata
 
     This function unlocks the mutex that arbitrates access to the ATA bus. You
     should never have to do this on your own unless you're accessing devices
@@ -130,7 +145,8 @@ int g1_ata_mutex_lock(void);
 */
 int g1_ata_mutex_unlock(void);
 
-/** \brief  Set the active ATA device.
+/** \brief   Set the active ATA device.
+    \ingroup g1ata
 
     This function sets the device that any further ATA commands will go to. You
     shouldn't have to ever call this yourself, as it should be done for you by
@@ -147,7 +163,8 @@ int g1_ata_mutex_unlock(void);
 */
 uint8_t g1_ata_select_device(uint8_t dev);
 
-/** \brief  Read one or more disk sectors with Cylinder-Head-Sector addressing.
+/** \brief   Read one or more disk sectors with Cylinder-Head-Sector addressing.
+    \ingroup g1ata
 
     This function reads one or more 512-byte disk blocks from the slave device
     on the G1 ATA bus using Cylinder-Head-Sector addressing. This function uses
@@ -179,7 +196,8 @@ uint8_t g1_ata_select_device(uint8_t dev);
 int g1_ata_read_chs(uint16_t c, uint8_t h, uint8_t s, size_t count,
                     void *buf);
 
-/** \brief  Write one or more disk sectors with Cylinder-Head-Sector addressing.
+/** \brief   Write one or more disk sectors with Cylinder-Head-Sector addressing.
+    \ingroup g1ata
 
     This function writes one or more 512-byte disk blocks to the slave device
     on the G1 ATA bus using Cylinder-Head-Sector addressing. This function uses
@@ -210,7 +228,8 @@ int g1_ata_read_chs(uint16_t c, uint8_t h, uint8_t s, size_t count,
 int g1_ata_write_chs(uint16_t c, uint8_t h, uint8_t s, size_t count,
                      const void *buf);
 
-/** \brief  Read one or more disk sectors with Linear Block Addressing (LBA).
+/** \brief   Read one or more disk sectors with Linear Block Addressing (LBA).
+    \ingroup g1ata
 
     This function reads one or more 512-byte disk blocks from the slave device
     on the G1 ATA bus using LBA mode (either 28 or 48 bits, as appropriate).
@@ -237,7 +256,8 @@ int g1_ata_write_chs(uint16_t c, uint8_t h, uint8_t s, size_t count,
 */
 int g1_ata_read_lba(uint64_t sector, size_t count, void *buf);
 
-/** \brief  DMA read disk sectors with Linear Block Addressing (LBA).
+/** \brief   DMA read disk sectors with Linear Block Addressing (LBA).
+    \ingroup g1ata
 
     This function reads one or more 512-byte disk blocks from the slave device
     on the G1 ATA bus using LBA mode (either 28 or 48 bits, as appropriate).
@@ -272,7 +292,8 @@ int g1_ata_read_lba(uint64_t sector, size_t count, void *buf);
 int g1_ata_read_lba_dma(uint64_t sector, size_t count, void *buf,
                         int block);
 
-/** \brief  Write one or more disk sectors with Linear Block Addressing (LBA).
+/** \brief   Write one or more disk sectors with Linear Block Addressing (LBA).
+    \ingroup g1ata
 
     This function writes one or more 512-byte disk blocks to the slave device
     on the G1 ATA bus using LBA mode (either 28 or 48 bits, as appropriate).
@@ -298,7 +319,8 @@ int g1_ata_read_lba_dma(uint64_t sector, size_t count, void *buf,
 */
 int g1_ata_write_lba(uint64_t sector, size_t count, const void *buf);
 
-/** \brief  DMA Write disk sectors with Linear Block Addressing (LBA).
+/** \brief   DMA Write disk sectors with Linear Block Addressing (LBA).
+    \ingroup g1ata
 
     This function writes one or more 512-byte disk blocks to the slave device
     on the G1 ATA bus using LBA mode (either 28 or 48 bits, as appropriate).
@@ -332,7 +354,8 @@ int g1_ata_write_lba(uint64_t sector, size_t count, const void *buf);
 int g1_ata_write_lba_dma(uint64_t sector, size_t count, const void *buf,
                          int block);
 
-/** \brief  Flush the write cache on the attached disk.
+/** \brief   Flush the write cache on the attached disk.
+    \ingroup g1ata
 
     This function flushes the write cache on the disk attached as the slave
     device on the G1 ATA bus. This ensures that all writes that have previously
@@ -348,7 +371,8 @@ int g1_ata_write_lba_dma(uint64_t sector, size_t count, const void *buf,
 */
 int g1_ata_flush(void);
 
-/** \brief  Get LBA mode of the attached disk.
+/** \brief   Get LBA mode of the attached disk.
+    \ingroup g1ata
 
     \return                 -1 on error, 0 - CHS, 28 - LBA28, 48 - LBA48
 
@@ -357,7 +381,8 @@ int g1_ata_flush(void);
 */
 int g1_ata_lba_mode(void);
 
-/** \brief  Get a block device for a given partition on the slave ATA device.
+/** \brief   Get a block device for a given partition on the slave ATA device.
+    \ingroup g1ata
 
     This function creates a block device descriptor for the given partition on
     the attached ATA device. This block device is used to interface with various
@@ -386,7 +411,8 @@ int g1_ata_lba_mode(void);
 int g1_ata_blockdev_for_partition(int partition, int dma, kos_blockdev_t *rv,
                                   uint8_t *partition_type);
 
-/** \brief  Get a block device for the attached ATA device.
+/** \brief   Get a block device for the attached ATA device.
+    \ingroup g1ata
 
     This function creates a block device descriptor for the attached ATA device.
 
@@ -403,7 +429,8 @@ int g1_ata_blockdev_for_partition(int partition, int dma, kos_blockdev_t *rv,
 */
 int g1_ata_blockdev_for_device(int dma, kos_blockdev_t *rv);
 
-/** \brief  Initialize G1 ATA support.
+/** \brief   Initialize G1 ATA support.
+    \ingroup g1ata
 
     This function initializes the rest of this subsystem and completes a scan of
     the G1 ATA bus for devices. This function may take a while to complete with
@@ -414,7 +441,8 @@ int g1_ata_blockdev_for_device(int dma, kos_blockdev_t *rv);
 */
 int g1_ata_init(void);
 
-/** \brief  Shut down G1 ATA support.
+/** \brief   Shut down G1 ATA support.
+    \ingroup g1ata
 
     This function shuts down the rest of this subsystem, and attempts to flush
     the write cache of any attached slave devices. Accessing any ATA devices

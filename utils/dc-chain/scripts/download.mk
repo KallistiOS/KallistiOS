@@ -49,7 +49,7 @@ endef
 
 
 GCC_DEPS = gmp mpfr mpc isl
-# Function to setup variables for GCC depencencies
+# Function to setup variables for GCC dependencies
 # 1 - Arch (sh,arm)
 define gen_dep_download_vars
 $(foreach dep,$(GCC_DEPS),$(call gen_download_vars,$(dep),$(1)_,$($(1)_gcc_name)/$(dep)))

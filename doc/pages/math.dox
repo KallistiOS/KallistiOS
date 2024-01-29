@@ -1,0 +1,3 @@
+/** \defgroup math Math
+    \brief    SH4-optimized vector, matrix, and general math APIs
+*/

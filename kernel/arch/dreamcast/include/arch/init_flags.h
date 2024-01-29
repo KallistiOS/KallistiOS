@@ -7,8 +7,9 @@
 
 */
 
-/** \file   arch/init_flags.h
-    \brief  Dreamcast-specific initialization-related flags and macros.
+/** \file    arch/init_flags.h
+    \brief   Dreamcast-specific initialization-related flags and macros.
+    \ingroup init_flags
 
     This file provides initialization-related flags that are specific to the
     Dreamcast architecture.
@@ -28,9 +29,8 @@
 #include <kos/init_base.h>
 __BEGIN_DECLS
 
-/** \defgroup dreamcast_initflags   Dreamcast-specific initialization flags.
-
-    \brief Dreamcast-specific KOS_INIT Exports
+/** \brief   Dreamcast-specific KOS_INIT Exports
+    \ingroup init_flags
 
     This macro contains a list of all of the possible DC-specific
     exported functions based on their associated initialization flags.
@@ -67,8 +67,9 @@ __BEGIN_DECLS
     KOS_INIT_FLAG(flags, INIT_MAPLE_ALL, maple_shutdown)
 
 
-/** \name  Init Flags
-    \brief Dreamcast-specific initialization flags.
+/** \defgroup kos_init_flags_dc Dreamcast-Specific Flags
+    \brief    Dreamcast-specific initialization flags.
+    \ingroup  init_flags
 
     These are the Dreamcast-specific flags that can be specified with
     KOS_INIT_FLAGS.

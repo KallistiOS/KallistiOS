@@ -491,7 +491,7 @@ static vfs_handler_t vh = {
         NMMGR_LIST_INIT         /* list */
     },
 
-    0, NULL,                    /* no cacheing, privdata */
+    0, NULL,                    /* no caching, privdata */
 
     romdisk_open,
     romdisk_close,

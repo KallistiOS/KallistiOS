@@ -153,8 +153,8 @@ static uint32 iso_733(uint8 *from) {
 
 
 /********************************************************************************/
-/* Low-level block cacheing routines. This implements a simple queue-based
-   LRU/MRU cacheing system. Whenever a block is requested, it will be placed
+/* Low-level block caching routines. This implements a simple queue-based
+   LRU/MRU caching system. Whenever a block is requested, it will be placed
    on the MRU end of the queue. As more blocks are loaded than can fit in
    the cache, blocks are deleted from the LRU end. */
 
@@ -608,7 +608,7 @@ static dirent_t *iso_readdir(uint32 fd) {
 
 /* Put everything together */
 static vfs_handler vh = {
-    0, 0,       /* In-kernel, no cacheing */
+    0, 0,       /* In-kernel, no caching */
     iso_open,
     iso_close,
     iso_read,

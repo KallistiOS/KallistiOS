@@ -5,8 +5,8 @@
 
 */
 
-/** \file   kos/recursive_lock.h
-    \brief  Definitions for a recursive mutex.
+/** \file    kos/recursive_lock.h
+    \brief   Definitions for a recursive mutex.
     \ingroup kthreads
 
     This file defines a recursive lock mechanism, similar to a mutex, but that a
@@ -43,7 +43,7 @@ typedef mutex_t recursive_lock_t;
 /** \brief  Allocate a new recursive lock.
 
     \deprecated
-    This function allocates a new recurisve lock that is initially not locked.
+    This function allocates a new recursive lock that is initially not locked.
 
     \return The created lock, or NULL on failure (errno will be set to ENOMEM to
             indicate that the system appears to be out of memory).

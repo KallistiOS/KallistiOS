@@ -87,7 +87,7 @@ void do_frame(void) {
     pvr_list_begin(PVR_LIST_OP_POLY);
     pvr_prim(&hdr, sizeof(hdr));
 
-    pvr_dr_init(dr_state);
+    pvr_dr_init(&dr_state);
 
     x = getnum(1024);
     nextnum();

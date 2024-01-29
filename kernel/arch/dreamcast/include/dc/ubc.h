@@ -5,8 +5,9 @@
 
 */
 
-/** \file   dc/ubc.h
-    \brief  User-break controller support.
+/** \file    dc/ubc.h
+    \brief   User-break controller support.
+    \ingroup ubc
 
     This file defines some functionality for using the SH4 UBC.
 
@@ -20,24 +21,32 @@
 __BEGIN_DECLS
 
 #include <arch/types.h>
+#include <arch/memory.h>
+
+/** \defgroup ubc   User Break Controller
+    \brief          Driver for the SH4's UBC
+    \ingroup        debugging
+*/
 
 /* From the SH-4 PDF */
-/** \defgroup   ubc_regs    UBC Registers
+/** \defgroup   ubc_regs    Registers
+    \brief                  User Break Controller Registers
+    \ingroup                ubc
 
     These registers are as documented in the SH4 manual. Consult it for more
     information.
 
     @{
 */
-#define BARA (*((vuint32*)0xFF200000))  /**< \brief BARA register. */
-#define BASRA (*((vuint8*)0xFF000014))  /**< \brief BASRA register. */
-#define BAMRA (*((vuint8*)0xFF200004))  /**< \brief BAMRA register. */
-#define BBRA (*((vuint16*)0xFF200008))  /**< \brief BBRA register. */
-#define BARB (*((vuint32*)0xFF20000C))  /**< \brief BARB register. */
-#define BASRB (*((vuint8*)0xFF000018))  /**< \brief BASRB register. */
-#define BAMRB (*((vuint8*)0xFF200010))  /**< \brief BAMRB register. */
-#define BBRB (*((vuint16*)0xFF200014))  /**< \brief BBRB register. */
-#define BRCR (*((vuint16*)0xFF200020))  /**< \brief BRCR register. */
+#define BARA (*((vuint32*)SH4_REG_UBC_BARA))   /**< \brief BARA register. */
+#define BASRA (*((vuint8*)SH4_REG_UBC_BASRA))  /**< \brief BASRA register. */
+#define BAMRA (*((vuint8*)SH4_REG_UBC_BAMRA))  /**< \brief BAMRA register. */
+#define BBRA (*((vuint16*)SH4_REG_UBC_BBRA))   /**< \brief BBRA register. */
+#define BARB (*((vuint32*)SH4_REG_UBC_BARB))   /**< \brief BARB register. */
+#define BASRB (*((vuint8*)SH4_REG_UBC_BDRB))   /**< \brief BASRB register. */
+#define BAMRB (*((vuint8*)SH4_REG_UBC_BAMRB))  /**< \brief BAMRB register. */
+#define BBRB (*((vuint16*)SH4_REG_UBC_BBRB))   /**< \brief BBRB register. */
+#define BRCR (*((vuint16*)SH4_REG_UBC_BRCR))   /**< \brief BRCR register. */
 /** @} */
 
 /* These are inlined to avoid complications with using them */

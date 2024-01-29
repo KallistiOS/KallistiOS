@@ -3,11 +3,13 @@
    dc/sound/sfxmgr.h
    Copyright (C) 2002 Megan Potter
    Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023 Andy Barajas
 
 */
 
-/** \file   dc/sound/sfxmgr.h
-    \brief  Basic sound effect support.
+/** \file    dc/sound/sfxmgr.h
+    \brief   Basic sound effect support.
+    \ingroup audio_sfx
 
     This file contains declarations for doing simple sound effects. This code is
     only usable for simple WAV files containing either 8-bit or 16-bit samples (stereo
@@ -17,6 +19,8 @@
     should probably look at the sound stream stuff instead.
 
     \author Megan Potter
+    \author Ruslan Rostovtsev
+    \author Andy Barajas
 */
 
 #ifndef __DC_SOUND_SFXMGR_H
@@ -27,6 +31,13 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 #include <stdint.h>
+
+/** \defgroup audio_sfx     Sound Effects
+    \brief                  Sound Effect Playback and Management
+    \ingroup                audio
+
+    @{
+*/
 
 /** \brief  Sound effect handle type.
 
@@ -145,6 +156,8 @@ int snd_sfx_chn_alloc(void);
     \param  chn             The channel to free.
 */
 void snd_sfx_chn_free(int chn);
+
+/** @} */
 
 __END_DECLS
 

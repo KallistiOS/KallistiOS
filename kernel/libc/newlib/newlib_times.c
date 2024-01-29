@@ -3,6 +3,7 @@
    newlib_times.c
    Copyright (C) 2004 Megan Potter
    Copyright (C) 2022 Lawrence Sebald
+   Copyright (C) 2023 Falco Girgis
 
 */
 
@@ -11,13 +12,13 @@
 #include <sys/times.h>
 #include <arch/timer.h>
 
-int _times_r(struct _reent * re, struct tms * tmsbuf) {
+int _times_r(struct _reent *re, struct tms *tmsbuf) {
     (void)re;
 
     if(tmsbuf) {
-        /* Conveniently, CLOCKS_PER_SEC is 1000, so we can just use the
-           millisecond timer. */
-        tmsbuf->tms_utime = (clock_t)timer_ms_gettime64();
+        /* Conveniently, CLOCKS_PER_SEC is 1000000, so we can just use the
+           microsecond timer. */
+        tmsbuf->tms_utime = (clock_t)timer_us_gettime64();
         tmsbuf->tms_stime = 0;
         tmsbuf->tms_cutime = 0;
         tmsbuf->tms_cstime = 0;

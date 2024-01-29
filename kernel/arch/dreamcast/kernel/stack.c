@@ -4,7 +4,7 @@
    (c)2002 Megan Potter
 */
 
-/* Functions to tinker with the stack, includeing obtaining a stack
+/* Functions to tinker with the stack, including obtaining a stack
    trace when frame pointers are enabled. If frame pointers are enabled,
    then you'll need to also define FRAME_POINTERS to get support for stack
    traces.

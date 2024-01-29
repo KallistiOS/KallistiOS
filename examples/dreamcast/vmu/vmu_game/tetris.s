@@ -366,7 +366,7 @@ sleepmore:
 	set1 pcon,0	; Enter HALT mode
 	bp p7,0,quit	; Docked?
 	bp p3,7,sleepmore	; No SLEEP press yet
-	mov #$80,vccr	; Reenable LCD
+	mov #$80,vccr	; Re-enable LCD
 waitsleepup:
 	bn p3,7,waitsleepup
 	br getkeys

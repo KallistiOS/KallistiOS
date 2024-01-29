@@ -34,7 +34,7 @@ fiq:
 	ldr	r9,[r8]
 	and	r9,r9,#7
 
-	# Timer interupt?
+	# Timer interrupt?
 	cmp	r9,#2
 	beq	fiq_timer
 

@@ -4,17 +4,9 @@
    Copyright (C) 2012 Lawrence Sebald
 */
 
-#ifndef __DC_SD_H
-#define __DC_SD_H
-
-#include <sys/cdefs.h>
-__BEGIN_DECLS
-
-#include <arch/types.h>
-#include <kos/blockdev.h>
-
-/** \file   dc/sd.h
-    \brief  Block-level access to an SD card attached to the SCIF port.
+/** \file    dc/sd.h
+    \brief   Block-level access to an SD card attached to the SCIF port.
+    \ingroup vfs_sd
 
     This file contains the interface to working with the SD card reader that was
     designed by jj1odm. The SD card reader itself connects to the SCIF port and
@@ -40,6 +32,22 @@ __BEGIN_DECLS
 
     \author Lawrence Sebald
     \see    dc/scif.h
+*/
+
+#ifndef __DC_SD_H
+#define __DC_SD_H
+
+#include <sys/cdefs.h>
+__BEGIN_DECLS
+
+#include <arch/types.h>
+#include <kos/blockdev.h>
+
+/** \defgroup vfs_sd    SD Card
+    \brief              VFS driver for accessing SD cards over the SCIF port
+    \ingroup            vfs
+
+    @{
 */
 
 /** \brief  Calculate a SD/MMC-style CRC over a block of data.
@@ -130,7 +138,7 @@ int sd_write_blocks(uint32 block, size_t count, const uint8 *buf);
     This is the raw size of the card, not its formatted capacity. To get the
     number of blocks from this, divide by 512.
 
-    \return                 On succes, the raw size of the SD card in bytes. On
+    \return                 On success, the raw size of the SD card in bytes. On
                             error, (uint64)-1.
 
     \par    Error Conditions:
@@ -165,6 +173,8 @@ uint64 sd_get_size(void);
 */
 int sd_blockdev_for_partition(int partition, kos_blockdev_t *rv,
                               uint8 *partition_type);
+
+/** @} */
 
 __END_DECLS
 #endif /* !__DC_SD_H */

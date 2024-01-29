@@ -6,8 +6,9 @@
 
 */
 
-/** \file   dc/spu.h
-    \brief  Functions related to sound.
+/** \file    dc/spu.h
+    \brief   Functions related to sound.
+    \ingroup audio_driver
 
     This file deals with memory transfers and the like for the sound hardware.
 
@@ -24,6 +25,10 @@ __BEGIN_DECLS
 #include <arch/types.h>
 #include <arch/memory.h>
 #include <dc/g2bus.h>
+
+/** \addtogroup audio_driver
+    @{
+*/
 
 /** \brief  Sound ram address from the SH4 side */
 #define SPU_RAM_BASE 0x00800000
@@ -45,7 +50,7 @@ void spu_memload(uintptr_t to, void *from, size_t length);
 /** \brief  Copy a block of data to sound RAM.
 
     This function acts much like memcpy() but copies to the sound RAM area
-    by using the store queues.
+    by using the Store Queues.
 
     \param  to              The offset in sound RAM to copy to. Do not include
                             the 0xA0800000 part, it is implied.
@@ -79,6 +84,20 @@ void spu_memread(void *to, uintptr_t from, size_t length);
                             up to be a multiple of 4.
 */
 void spu_memset(uintptr_t to, uint32_t what, size_t length);
+
+
+/** \brief  Set a block of sound RAM to the specified value.
+
+    This function acts like memset4(), setting the specified block of sound RAM
+    to the given 32-bit value by using the Store Queues.
+
+    \param  to              The offset in sound RAM to set at. Do not include
+                            the 0xA0800000 part, it is implied.
+    \param  what            The value to set.
+    \param  length          The number of bytes to copy. Automatically rounded
+                            up to be a multiple of 4.
+*/
+void spu_memset_sq(uintptr_t to, uint32_t what, size_t length);
 
 /* DMA copy from SH-4 RAM to SPU RAM; length must be a multiple of 32,
    and the source and destination addresses must be aligned on 32-byte
@@ -176,6 +195,8 @@ int spu_shutdown(void);
 
 /** \brief  Reset SPU channels. */
 void spu_reset_chans(void);
+
+/** @} */
 
 __END_DECLS
 

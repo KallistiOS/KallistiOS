@@ -89,23 +89,6 @@ vid_mode_t vid_builtin[DM_MODE_COUNT] = {
         { 0, 0, 0, 0 }
     },
 
-    /* 800x608 NTSC 60Hz (VGA) [BROKEN!] */
-    /* DM_800x608_VGA */
-    {
-        DM_800x608,
-        320, 240,
-        VID_INTERLACE,
-        1/*CT_ANY*/, /* This will block the mode from being set. */
-        0,
-        262, 857,
-        164, 24,
-        21, 82,
-        141, 843,
-        24, 264,
-        0, 1,
-        { 0, 0, 0, 0 }
-    },
-
     /* 640x480 PAL 50Hz IL */
     /* DM_640x480_PAL_IL */
     {
@@ -277,23 +260,6 @@ vid_mode_t vid_builtin[DM_MODE_COUNT] = {
         0x15, 0x104,
         0x7E, 0x345,
         0x24, 0x204,
-        0, VID_MAX_FB,
-        { FBPOS(0), FBPOS(1), FBPOS(2), FBPOS(3) }
-    },
-
-    /* 800x608 NTSC 60Hz (VGA) [BROKEN!] */
-    /* DM_800x608_VGA_MB */
-    {
-        DM_800x608 | DM_MULTIBUFFER,
-        320, 240,
-        VID_INTERLACE,
-        1/*CT_ANY*/, /* This will block the mode from being set. */
-        0,
-        262, 857,
-        164, 24,
-        21, 82,
-        141, 843,
-        24, 264,
         0, VID_MAX_FB,
         { FBPOS(0), FBPOS(1), FBPOS(2), FBPOS(3) }
     },

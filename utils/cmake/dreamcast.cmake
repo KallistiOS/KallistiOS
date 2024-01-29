@@ -1,9 +1,42 @@
 cmake_minimum_required(VERSION 3.23)
 
+### Helper Function for Bin2Object ###
+function(kos_bin2o inFile symbol)
+    # outFile is optional and defaults to the symbol name in the build directory
+    if(NOT ${ARGC} EQUAL 3)
+        set(outFile ${CMAKE_CURRENT_BINARY_DIR}/${symbol}.o)
+    else()
+        set(outFile ${ARGN})
+    endif()
+
+    # Custom Command to generate romdisk object file from image
+    add_custom_command(
+        OUTPUT  ${outFile}
+        DEPENDS ${inFile}
+        COMMAND $ENV{KOS_BASE}/utils/bin2o/bin2o ${inFile} ${symbol} ${outFile}
+    )
+endfunction()
+
+function(kos_add_binary target inFile symbol)
+    set(outFile ${CMAKE_CURRENT_BINARY_DIR}/${symbol}.o)
+    kos_bin2o(${CMAKE_CURRENT_SOURCE_DIR}/${inFile} ${symbol} ${outFile})
+    target_sources(${target} PRIVATE ${outFile})
+endfunction()
+
 ### Helper Function for Generating Romdisk ###
-function(generate_romdisk target romdiskName romdiskPath)
-    set(obj ${CMAKE_CURRENT_BINARY_DIR}/${romdiskName}.o)
-    set(img ${CMAKE_CURRENT_BINARY_DIR}/${romdiskName}.img)
+function(kos_add_romdisk target romdiskPath)
+    # Name is optional and defaults to "romdisk"
+    if(NOT ${ARGC} EQUAL 3)
+        set(romdiskName romdisk)
+    else()
+        set(romdiskName ${ARGN})
+    endif()
+
+    set(romdiskPath ${CMAKE_CURRENT_SOURCE_DIR}/${romdiskPath})
+
+    set(obj     ${CMAKE_CURRENT_BINARY_DIR}/${romdiskName}.o)
+    set(obj_tmp ${CMAKE_CURRENT_BINARY_DIR}/${romdiskName}_tmp.o)
+    set(img     ${CMAKE_CURRENT_BINARY_DIR}/${romdiskName}.img)
 
     # Variable holding all files in the romdiskPath folder
     # CONFIGURE_DEPENDS causes the folder to always be rechecked
@@ -16,16 +49,19 @@ function(generate_romdisk target romdiskName romdiskPath)
     # Only run when folder contents have changed by depending on 
     # the romdiskFiles variable
     add_custom_command(
-        OUTPUT ${img}
-        COMMAND $ENV{KOS_GENROMFS} -f ${img} -d ${romdiskPath} -v
+        OUTPUT  ${img}
         DEPENDS ${romdiskFiles}
-)
+        COMMAND $ENV{KOS_BASE}/utils/genromfs/genromfs -f ${img} -d ${romdiskPath} -v
+    )
 
-  # Custom Command to generate romdisk object file from image
-add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${romdiskName}.o
-    COMMAND $ENV{KOS_BASE}/utils/bin2o/bin2o ${img} ${romdiskName} ${obj}
-    DEPENDS ${img}
+    kos_bin2o(${img} ${romdiskName} ${obj_tmp})
+
+    # Custom Command to generate romdisk object file from image
+    add_custom_command(
+        OUTPUT  ${obj}
+        DEPENDS ${obj_tmp}
+        COMMAND ${CMAKE_C_COMPILER} -o ${obj} -r ${obj_tmp} -L${KOS_BASE}/lib/dreamcast -Wl,--whole-archive -lromdiskbase
+        COMMAND rm ${obj_tmp}
     )
 
     # Append romdisk object to target
@@ -33,7 +69,7 @@ add_custom_command(
 endfunction()
 
 ### Function to Enable SH4 Math Optimizations ###
-function(enable_sh4_math)
+function(kos_enable_sh4_math)
     if(NOT ${PLATFORM_DREAMCAST})
         message(WARN " PLATFORM_DREAMCAST not set, skipping SH4 Math flags")
         return()

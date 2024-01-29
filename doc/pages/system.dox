@@ -1,0 +1,13 @@
+/** \defgroup system System
+    \brief    Miscellaneous DC architecture and system-related APIs
+*/
+
+/** \defgroup system_posix  POSIX
+    \brief                  POSIX-standard system-level APIs
+    \ingroup                system
+*/
+
+/** \defgroup system_types  Types
+    \brief                  Standard types and their utilities
+    \ingroup                system
+*/

@@ -5,8 +5,9 @@
 
 */
 
-/** \file   arch/types.h
-    \brief  Common integer types.
+/** \file    arch/types.h
+    \brief   Common integer types.
+    \ingroup system_types
 
     This file contains typedefs for some common/useful integer types. These
     types include ones that tell you exactly how long they are, as well as some
@@ -22,6 +23,10 @@
 __BEGIN_DECLS
 
 #include <stddef.h>
+
+/** \addtogroup system_types
+    @{
+*/
 
 /* Generic types */
 typedef unsigned long long uint64;  /**< \brief 64-bit unsigned integer */
@@ -89,6 +94,8 @@ typedef handle_t prio_t;            /**< \brief Priority value type */
 /** \brief  Endianness definition -- Little Endian */
 #define BYTE_ORDER  LITTLE_ENDIAN
 #endif
+
+/** @} */
 
 __END_DECLS
 

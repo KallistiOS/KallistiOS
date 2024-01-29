@@ -6,8 +6,9 @@
 
 */
 
-/** \file   dc/sound/sound.h
-    \brief  Low-level sound support and memory management.
+/** \file    dc/sound/sound.h
+    \brief   Low-level sound support and memory management.
+    \ingroup audio_driver
 
     This file contains declarations for low-level sound operations and for SPU
     RAM pool memory management. Most of the time you'll be better off using the
@@ -15,6 +16,7 @@
     but this stuff can be very useful for some things.
 
     \author Megan Potter
+    \author Ruslan Rostovtsev
 */
 
 #ifndef __DC_SOUND_SOUND_H
@@ -26,6 +28,13 @@ __BEGIN_DECLS
 #include <arch/types.h>
 #include <stdint.h>
 
+/** \defgroup audio_driver  Driver
+    \brief                  Low-level driver for SPU and audio management
+    \ingroup                audio
+
+    @{
+*/
+
 /** \brief  Allocate memory in the SPU RAM pool
 
     This function acts as the memory allocator for the SPU RAM pool. It acts
@@ -33,6 +42,7 @@ __BEGIN_DECLS
     return a pointer directly, but rather an offset in SPU RAM.
 
     \param  size            The amount of memory to allocate, in bytes.
+    
     \return                 The location of the start of the block on success,
                             or 0 on failure.
 */
@@ -203,6 +213,8 @@ void snd_pcm8_split(uint32_t *data, uint32_t *left, uint32_t *right, size_t size
     \sa snd_pcm16_split()
 */
 void snd_adpcm_split(uint32_t *data, uint32_t *left, uint32_t *right, size_t size);
+
+/** @} */
 
 __END_DECLS
 

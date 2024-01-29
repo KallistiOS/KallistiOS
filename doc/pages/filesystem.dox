@@ -1,0 +1,13 @@
+/** \defgroup vfs   Filesystem
+    \brief          File I/O, filesystem, and storage media APIs
+*/
+
+/** \defgroup vfs_drivers   Drivers
+    \brief                  Internal filesystem and storage device drivers
+    \ingroup                vfs
+*/
+
+/** \defgroup vfs_posix POSIX
+    \brief              POSIX-standard APIs for managing the filesystem
+    \ingroup            vfs
+*/

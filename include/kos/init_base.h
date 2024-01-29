@@ -5,12 +5,13 @@
 
 */
 
-/** \file   kos/init_base.h
-    \brief  Shared initialization macros and utilities
+/** \file    kos/init_base.h
+    \brief   Shared initialization macros and utilities
+    \ingroup init_flags
 
-   This file contains common utilities which can be included within
-   architecture-specific `init_flags.h` files, providing a base
-   layer of infrastructure for managing initialization flags.
+    This file contains common utilities which can be included within
+    architecture-specific `init_flags.h` files, providing a base
+    layer of infrastructure for managing initialization flags.
 
     \sa    kos/init.h
     \sa    arch/init_flags.h

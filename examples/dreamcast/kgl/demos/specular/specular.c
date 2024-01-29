@@ -950,7 +950,7 @@ void GPU_Stats(void) {
         }
     }
     else
-        printf("PVR: WATING FOR STATS\n");
+        printf("PVR: WAITING FOR STATS\n");
 }
 
 static unsigned char LE[8] = {0, 1, 0, 0, 0, 0, 0, 0};

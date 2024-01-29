@@ -5,8 +5,9 @@
 
 */
 
-/** \file   arch/mmu.h
-    \brief  Memory Management Unit and Translation Lookaside Buffer handling.
+/** \file    arch/mmu.h
+    \brief   Memory Management Unit and Translation Lookaside Buffer handling.
+    \ingroup mmu
 
     This file defines the interface to the Memory Management Unit (MMU) in the
     SH4. The MMU, while not used normally by KOS, is available for virtual
@@ -50,36 +51,41 @@ __BEGIN_DECLS
 #include <arch/types.h>
 #include <sys/uio.h>
 
-/* Since the software has to handle TLB misses on the SH-4, we have freedom
-   to use any page table format we want (and thus save space), but we must
-   make it quick to access. The SH-4 can address a maximum of 512M of address
-   space per "area", but we only care about one area, so this is the total
-   maximum addressable space. With 4K pages, that works out to 2^17 pages
-   that must be mappable, or 17 bits. We use 18 bits just to be sure (there
-   are a few left over).
+/** \defgroup mmu   MMU
+    \brief          Driver for the SH4's MMU (disabled by default).
+    \ingroup        system
 
-   Page tables (per-process) are a sparse two-level array. The virtual address
-   space is actually 2^30 bytes, or 2^(30-12)=2^18 pages, so there must be
-   a possibility of having that many page entries per process space. A full
-   page table for a process would be 1M, so this is obviously too big!! Thus
-   the sparse array.
+    Since the software has to handle TLB misses on the SH-4, we have freedom
+    to use any page table format we want (and thus save space), but we must
+    make it quick to access. The SH-4 can address a maximum of 512M of address
+    space per "area", but we only care about one area, so this is the total
+    maximum addressable space. With 4K pages, that works out to 2^17 pages
+    that must be mappable, or 17 bits. We use 18 bits just to be sure (there
+    are a few left over).
 
-   The bottom layer of the page tables consists of a sub-context array for
-   512 pages, which translates into 2K of storage space. The process then
-   has the possibility of using one or more of the 512 top-level slots. For
-   a very small process (using one page for code/data and one for stack), it
-   should be possible to achieve a page table footprint of one page. The tables
-   can grow from there as neccessary.
+    Page tables (per-process) are a sparse two-level array. The virtual address
+    space is actually 2^30 bytes, or 2^(30-12)=2^18 pages, so there must be
+    a possibility of having that many page entries per process space. A full
+    page table for a process would be 1M, so this is obviously too big!! Thus
+    the sparse array.
 
-   Virtual addresses are broken up as follows:
+    The bottom layer of the page tables consists of a sub-context array for
+    512 pages, which translates into 2K of storage space. The process then
+    has the possibility of using one or more of the 512 top-level slots. For
+    a very small process (using one page for code/data and one for stack), it
+    should be possible to achieve a page table footprint of one page. The tables
+    can grow from there as necessary.
 
-   Bits 31 - 22     10 bits top-level page directory
-   Bits 21 - 13     9 bits bottom-level page entry
-   Bits 11 - 0      Byte index into page
+    Virtual addresses are broken up as follows:
+    - Bits 31 - 22     10 bits top-level page directory
+    - Bits 21 - 13     9 bits bottom-level page entry
+    - Bits 11 - 0      Byte index into page
 
-   */
+*/
 
-/** \defgroup mmu_bit_macros        MMU address bit definitions
+/** \defgroup mmu_bit_macros        Address Bits
+    \brief                          Definitions and masks for address pages
+    \ingroup                        mmu
 
     The MMU code uses these to determine the page of a request.
 
@@ -96,7 +102,9 @@ __BEGIN_DECLS
 #define MMU_IND_MASK ((1 << MMU_IND_BITS) - 1)  /**< \brief Index mask */
 /** @} */
 
-/** \defgroup mmu_prot_values       MMU protection settings
+/** \defgroup mmu_prot_values       Protection Settings
+    \brief                          SH4 MMU page protection settings values
+    \ingroup                        mmu
 
     Each page mapped via the MMU can be protected in a couple of different ways,
     as specified here.
@@ -109,19 +117,22 @@ __BEGIN_DECLS
 #define MMU_ALL_RDWR        3   /**< \brief Full access, user and kernel */
 /** @} */
 
-/** \defgroup mmu_cache_values      MMU cacheability settings
+/** \defgroup mmu_cache_values      Cacheability Settings
+    \brief                          SH4 MMU page cachability settings values
+    \ingroup                        mmu
 
     Each page mapped via the MMU can have its cacheability set individually.
 
     @{
 */
 #define MMU_NO_CACHE    1               /**< \brief Cache disabled */
-#define MMU_CACHE_BACK  2               /**< \brief Write-back cacheing */
-#define MMU_CACHE_WT    3               /**< \brief Write-through cacheing */
-#define MMU_CACHEABLE   MMU_CACHE_BACK  /**< \brief Default cacheing */
+#define MMU_CACHE_BACK  2               /**< \brief Write-back caching */
+#define MMU_CACHE_WT    3               /**< \brief Write-through caching */
+#define MMU_CACHEABLE   MMU_CACHE_BACK  /**< \brief Default caching */
 /** @} */
 
-/** \brief  MMU TLB entry for a single page.
+/** \brief   MMU TLB entry for a single page.
+    \ingroup mmu
 
     The TLB entries on the SH4 are a single 32-bit dword in length. We store
     some other data here too for ease of use.
@@ -146,10 +157,13 @@ typedef struct mmupage {
     uint32  ptel;           /**< \brief Pre-built PTEL value */
 } mmupage_t;
 
-/** \brief  The number of pages in a sub-context. */
+/** \brief   The number of pages in a sub-context.
+    \ingroup mmu
+ */
 #define MMU_SUB_PAGES   512
 
-/** \brief  MMU sub-context type.
+/** \brief   MMU sub-context type.
+    \ingroup mmu
 
     We have two-level page tables on SH4, and each sub-context contains 512
     entries.
@@ -163,7 +177,8 @@ typedef struct mmusubcontext {
 /** \brief  The number of sub-contexts in the main level context. */
 #define MMU_PAGES   1024
 
-/** \brief  MMU context type.
+/** \brief   MMU context type.
+    \ingroup mmu
 
     This type is the top-level context that makes up the page table. There is
     one of these, with 1024 sub-contexts.
@@ -175,14 +190,15 @@ typedef struct mmucontext {
     int             asid;               /**< \brief Address Space ID */
 } mmucontext_t;
 
-/** \brief  "Current" page tables (for TLB exception handling).
-
+/** \cond
     You should not modify this directly, but rather use the functions provided
     to do so.
 */
 extern mmucontext_t *mmu_cxt_current;
+/** \endcond */
 
-/** \brief  Set the "current" page tables for TLB handling.
+/** \brief   Set the "current" page tables for TLB handling.
+    \ingroup mmu
 
     This function is useful if you're trying to implement a process model or
     something of the like on top of KOS. Essentially, this allows you to
@@ -194,7 +210,8 @@ extern mmucontext_t *mmu_cxt_current;
 */
 void mmu_use_table(mmucontext_t *context);
 
-/** \brief  Allocate a new MMU context.
+/** \brief   Allocate a new MMU context.
+    \ingroup mmu
 
     Each process should have exactly one of these, and these should not exist
     without a process. Since KOS doesn't actually have a process model of its
@@ -205,7 +222,8 @@ void mmu_use_table(mmucontext_t *context);
 */
 mmucontext_t *mmu_context_create(int asid);
 
-/** \brief  Destroy an MMU context when a process is being destroyed.
+/** \brief   Destroy an MMU context when a process is being destroyed.
+    \ingroup mmu
 
     This function cleans up a MMU context, deallocating any memory its using.
 
@@ -213,8 +231,9 @@ mmucontext_t *mmu_context_create(int asid);
 */
 void mmu_context_destroy(mmucontext_t *context);
 
-/** \brief  Using the given page tables, translate the virtual page ID to a
-            physical page ID.
+/** \brief   Using the given page tables, translate the virtual page ID to a
+             physical page ID.
+    \ingroup mmu
 
     \param  context         The context to look in.
     \param  virtpage        The virtual page number to look for.
@@ -223,8 +242,9 @@ void mmu_context_destroy(mmucontext_t *context);
 */
 int mmu_virt_to_phys(mmucontext_t *context, int virtpage);
 
-/** \brief  Using the given page tables, translate the physical page ID to a
-            virtual page ID.
+/** \brief   Using the given page tables, translate the physical page ID to a
+             virtual page ID.
+    \ingroup mmu
 
     \param  context         The context to look in.
     \param  physpage        The physical page number to look for.
@@ -233,18 +253,20 @@ int mmu_virt_to_phys(mmucontext_t *context, int virtpage);
 */
 int mmu_phys_to_virt(mmucontext_t *context, int physpage);
 
-/** \brief  Switch to the given context.
+/** \brief   Switch to the given context.
+    \ingroup mmu
 
     This function switches to the given context's address space ID. The context
     should have already been made current with mmu_use_table().
-    You are responsible for invalidating any caches as neccessary, as well as
+    You are responsible for invalidating any caches as necessary, as well as
     invalidating any stale TLB entries.
 
     \param  context         The context to make current.
 */
 void mmu_switch_context(mmucontext_t *context);
 
-/** \brief  Set the given virtual page to map to the given physical page.
+/** \brief   Set the given virtual page to map to the given physical page.
+    \ingroup mmu
 
     This implies turning on the "valid" bit. Also sets the other named
     attributes as specified.
@@ -264,8 +286,9 @@ void mmu_switch_context(mmucontext_t *context);
 void mmu_page_map(mmucontext_t *context, int virtpage, int physpage,
                   int count, int prot, int cache, int share, int dirty);
 
-/** \brief  Copy a chunk of data from a process' address space into a kernel
-            buffer, taking into account page mappings.
+/** \brief   Copy a chunk of data from a process' address space into a kernel
+             buffer, taking into account page mappings.
+    \ingroup mmu
 
     \param  context         The context to use.
     \param  srcaddr         Source, in the mapped memory space.
@@ -276,8 +299,9 @@ void mmu_page_map(mmucontext_t *context, int virtpage, int physpage,
 int mmu_copyin(mmucontext_t *context, uint32 srcaddr, uint32 srccnt,
                void *buffer);
 
-/** \brief  Copy a chunk of data from one process' address space to another
-            process' address space, taking into account page mappings.
+/** \brief   Copy a chunk of data from one process' address space to another
+             process' address space, taking into account page mappings.
+    \ingroup mmu
 
     \param  context1        The source's context.
     \param  iov1            The scatter/gather array to copy from.
@@ -290,7 +314,8 @@ int mmu_copyin(mmucontext_t *context, uint32 srcaddr, uint32 srccnt,
 int mmu_copyv(mmucontext_t *context1, struct iovec *iov1, int iovcnt1,
               mmucontext_t *context2, struct iovec *iov2, int iovcnt2);
 
-/** \brief  MMU mapping handler.
+/** \brief   MMU mapping handler.
+    \ingroup mmu
 
     This type is used for functions that will take over the mapping for the
     kernel. In general, there shouldn't be much use for taking this over
@@ -303,12 +328,14 @@ int mmu_copyv(mmucontext_t *context1, struct iovec *iov1, int iovcnt1,
 */
 typedef mmupage_t * (*mmu_mapfunc_t)(mmucontext_t * context, int virtpage);
 
-/** \brief  Get the current mapping function.
+/** \brief   Get the current mapping function.
+    \ingroup mmu
     \return                 The current function that maps pages.
 */
 mmu_mapfunc_t mmu_map_get_callback(void);
 
-/** \brief  Set a new MMU mapping handler.
+/** \brief   Set a new MMU mapping handler.
+    \ingroup mmu
 
     This function will allow you to set a new function to handle mapping for
     memory pages. There's not much of a reason to do this unless you really do
@@ -319,7 +346,8 @@ mmu_mapfunc_t mmu_map_get_callback(void);
 */
 mmu_mapfunc_t mmu_map_set_callback(mmu_mapfunc_t newfunc);
 
-/** \brief  Initialize MMU support.
+/** \brief   Initialize MMU support.
+    \ingroup mmu
 
     Unlike most things in KOS, the MMU is not initialized by a normal startup.
     This is because for most homebrew, its not needed.
@@ -328,7 +356,8 @@ mmu_mapfunc_t mmu_map_set_callback(mmu_mapfunc_t newfunc);
 */
 int mmu_init(void);
 
-/** \brief  Shutdown MMU support.
+/** \brief   Shutdown MMU support.
+    \ingroup mmu
 
     Turn off the MMU after it was initialized. You should try to make sure this
     gets done if you initialize the MMU in your program, so as to play nice with
@@ -336,7 +365,9 @@ int mmu_init(void);
 */
 void mmu_shutdown(void);
 
-/** \brief  Reset ITLB. */
+/** \brief   Reset ITLB.
+    \ingroup mmu
+ */
 void mmu_reset_itlb(void);
 
 __END_DECLS

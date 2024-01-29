@@ -113,7 +113,7 @@
 
 /* Note that these must match the list types in pvr.h; these are here
    mainly because they're easier to type =) */
-#define PVR_OPB_OP      0   /* Array indeces for these structures */
+#define PVR_OPB_OP      0   /* Array indices for these structures */
 #define PVR_OPB_OM      1
 #define PVR_OPB_TP      2
 #define PVR_OPB_TM      3
@@ -223,8 +223,7 @@ typedef struct {
     // Output address for to-texture mode
     uint32  to_txr_addr[2];
 
-    // Number of additional OPBs to allocate, allowing more geometry per tile.
-    uint32 opb_overflow_count;
+    uint32  dr_used;
 } pvr_state_t;
 
 /* There will be exactly one of these in KOS (in pvr_globals.c) */

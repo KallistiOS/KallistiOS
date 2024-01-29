@@ -108,7 +108,7 @@ void vmufb_present(const vmufb_t *fb, maple_device_t *dev) {
         vmu_draw_lcd(dev, fb->data);
     
     /* If we somehow found no corresponding controller, or connectors face the same direction,
-       we rotate the image 180 degreees (example: VMU in a standard controller). */
+       we rotate the image 180 degrees (example: VMU in a standard controller). */
     else 
         vmu_draw_lcd_rotated(dev, fb->data);
 }

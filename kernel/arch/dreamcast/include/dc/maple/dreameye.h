@@ -5,8 +5,9 @@
 
 */
 
-/** \file   dc/maple/dreameye.h
-    \brief  Definitions for using the Dreameye Camera device.
+/** \file    dc/maple/dreameye.h
+    \brief   Definitions for using the Dreameye Camera device.
+    \ingroup peripherals_camera
 
     This file contains the definitions needed to access the Maple Camera type
     device (aka, the Dreameye). Currently, this driver allows you to download
@@ -24,6 +25,13 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 #include <dc/maple.h>
+
+/** \defgroup peripherals_camera    Camera
+    \brief                          Maple driver for the DreamEye peripheral
+    \ingroup                        peripherals
+
+    @{
+*/
 
 /** \brief  Dreameye status structure.
 
@@ -157,6 +165,8 @@ int dreameye_erase_image(maple_device_t *dev, uint8 image, int block);
 void dreameye_init(void);
 void dreameye_shutdown(void);
 /* \endcond */
+
+/** @} */
 
 __END_DECLS
 

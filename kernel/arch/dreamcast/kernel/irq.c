@@ -309,7 +309,7 @@ int irq_init(void) {
     /* Set a default FPU exception handler */
     irq_set_handler(EXC_FPU, irq_def_fpu);
 
-    /* Set a default context (will be superceded if threads are
+    /* Set a default context (will be superseded if threads are
        enabled later) */
     irq_set_context(&irq_context_default);
 

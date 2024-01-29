@@ -277,7 +277,7 @@ __BEGIN_DECLS
   checking is fairly extensive, and will slow down execution
   noticeably. Calling malloc_stats or mallinfo with DEBUG set will
   attempt to check every non-mmapped allocated and free chunk in the
-  course of computing the summmaries. (By nature, mmapped regions
+  course of computing the summaries. (By nature, mmapped regions
   cannot be checked very much automatically.)
 
   Setting DEBUG may also be helpful if you are trying to modify
@@ -311,7 +311,7 @@ __BEGIN_DECLS
   this case the alignment requirements turn out to negate any
   potential advantages of decreasing size_t word size.
 
-  Implementors: Beware of the possible combinations of:
+  Implementers: Beware of the possible combinations of:
      - INTERNAL_SIZE_T might be signed or unsigned, might be 32 or 64 bits,
        and might be the same width as int or as long
      - size_t might have different width and signedness as INTERNAL_SIZE_T
@@ -935,7 +935,7 @@ int      public_pvr_mALLOPt();
   arena:     current total non-mmapped bytes allocated from system
   ordblks:   the number of free chunks
   smblks:    the number of fastbin blocks (i.e., small chunks that
-               have been freed but not use resused or consolidated)
+               have been freed but not use reused or consolidated)
   hblks:     current number of mmapped regions
   hblkhd:    total bytes held in mmapped regions
   usmblks:   the maximum total allocated space. This will be greater

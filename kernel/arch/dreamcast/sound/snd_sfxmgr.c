@@ -3,6 +3,7 @@
    snd_sfxmgr.c
    Copyright (C) 2000, 2001, 2002, 2003, 2004 Megan Potter
    Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023 Andy Barajas
 
    Sound effects management system; this thing loads and plays sound effects
    during game operation.

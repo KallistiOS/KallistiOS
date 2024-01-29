@@ -165,7 +165,7 @@ int main(int argc, char **argv) {
     while(!check_start())
         draw_frame();
 
-    /* Shutdown isn't technically neccessary, but is possible */
+    /* Shutdown isn't technically necessary, but is possible */
     pvr_shutdown();
 
     return 0;

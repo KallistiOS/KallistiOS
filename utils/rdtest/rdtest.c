@@ -88,7 +88,7 @@ static uint32 ntohl_32(const void *data) {
 /* Pointer to the ROMFS image created by the host PC */
 static uint8 *romdisk_image = NULL;
 
-/* Some convienence pointers */
+/* Some convenience pointers */
 static romdisk_hdr_t *romdisk_hdr = NULL;
 static uint32 romdisk_files = 0;
 
@@ -364,7 +364,7 @@ dirent_t *romdisk_readdir(uint32 fd) {
 
 /* Put everything together */
 static vfs_handler vh = {
-    0, 0,       /* In-kernel, no cacheing */
+    0, 0,       /* In-kernel, no caching */
     romdisk_open,
     romdisk_close,
     romdisk_read,

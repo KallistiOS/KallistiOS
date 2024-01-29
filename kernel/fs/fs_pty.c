@@ -383,7 +383,7 @@ static void * pty_open_file(const char * fn, int mode) {
 static void * pty_open(vfs_handler_t * vfs, const char * fn, int mode) {
     (void)vfs;
 
-    /* Skip any preceeding slash */
+    /* Skip any preceding slash */
     if(*fn == '/') fn++;
 
     /* Are they opening the root? As a dir? */
@@ -746,7 +746,7 @@ static vfs_handler_t vh = {
         NMMGR_LIST_INIT /* list */
     },
 
-    0, NULL,            /* no cacheing, privdata */
+    0, NULL,            /* no caching, privdata */
 
     pty_open,
     pty_close,

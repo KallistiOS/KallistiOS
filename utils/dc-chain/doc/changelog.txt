@@ -1,3 +1,6 @@
+2024-01-14: Added config option for disabling native language support (NLS) in GCC.
+            (Falco Girgis)
+2024-01-06: Update documentations (Mickaël Cardoso)
 2023-07-31: Update Binutils to 2.41. Verified no regressions in KOS examples compared to
             current stable GCC 9.3.0, so promoting GCC 13.2.0 configuration to stable.
             New config directory created to store alternative configurations, currently
@@ -92,7 +95,7 @@
 2020-09-22: Create separate "stable" (4.7.4) and "testing" (9.3.0) configurations.
             (SiZiOUS)
 2020-08-31: Update dc-chain utility to work out of the box under many different
-            environments, including MinGW/MSYS, MinGW-w64/MSYS2, Cygin, Windows Subsystem
+            environments, including MinGW/MSYS, MinGW-w64/MSYS2, Cygwin, Windows Subsystem
             for Linux, macOS, Linux, and BSD. (SiZiOUS)
 2020-07-23: Fix Newlib 3.3.0 patch to use a sensible type for ino_t. (Lawrence Sebald)
 2020-04-07: Update to prefer curl over wget in download script. (Ben Baron)

@@ -744,7 +744,7 @@ irq_context_t *thd_choose_new(void) {
 /*****************************************************************************/
 
 /* Timer function. Check to see if we were woken because of a timeout event
-   or because of a pre-empt. For timeouts, just go take care of it and sleep
+   or because of a preempt. For timeouts, just go take care of it and sleep
    again until our next context switch (if any). For pre-empts, re-schedule
    threads, swap out contexts, and sleep. */
 static void thd_timer_hnd(irq_context_t *context) {
@@ -780,7 +780,7 @@ void thd_sleep(int ms) {
         return;
     }
 
-    /* We can genwait on a non-existant object here with a timeout and
+    /* We can genwait on a non-existent object here with a timeout and
        have the exact same effect; as a nice bonus, this collapses both
        sleep cases into a single case, which is nice for scheduling
        purposes. 0xffffffff definitely doesn't exist as an object, so we'll
@@ -891,7 +891,7 @@ int thd_detach(kthread_t *thd) {
 
 
 /*****************************************************************************/
-/* Retrive / set thread label */
+/* Retrieve / set thread label */
 const char *thd_get_label(kthread_t *thd) {
     return thd->label;
 }

@@ -5,36 +5,27 @@
 # Initially adapted from Stalin's build script version 0.3.
 #
 
-###############################################################################
-###############################################################################
-### THIS CONFIG IS FOR AN EXPERIMENTAL VERSION OF GCC!
-## THERE ARE NO KNOWN ISSUES BUILDING THIS VERSION as of 2023-07-30.
-###############################################################################
-###############################################################################
-
 # Toolchain versions for SH
-sh_binutils_ver=2.41
-sh_gcc_ver=devel
-newlib_ver=4.3.0.20230120
-gdb_ver=14.1
+sh_binutils_ver=2.34
+sh_gcc_ver=4.7.4
+newlib_ver=2.0.0
+gdb_ver=9.2
 
 # Tarball extensions to download for SH
 sh_binutils_download_type=xz
-sh_gcc_download_type=git
-sh_gcc_git_repo=git://gcc.gnu.org/git/gcc.git
-sh_gcc_git_branch=master
+sh_gcc_download_type=bz2
 newlib_download_type=gz
 gdb_download_type=xz
 
 # Toolchain for ARM
 # The ARM version of gcc/binutils is separated as support for the ARM7DI core
 # used in the Dreamcast's AICA is not available in versions of GCC beyond 8.5.0.
-arm_binutils_ver=2.41
-arm_gcc_ver=8.5.0
+arm_binutils_ver=2.34
+arm_gcc_ver=4.7.4
 
 # Tarball extensions to download for ARM
 arm_binutils_download_type=xz
-arm_gcc_download_type=xz
+arm_gcc_download_type=bz2
 
 # GCC custom dependencies
 # Specify here if you want to use custom GMP, MPFR and MPC libraries when
@@ -46,10 +37,10 @@ arm_gcc_download_type=xz
 #use_custom_dependencies=1
 
 # GCC dependencies for SH
-sh_gmp_ver=6.2.1
-sh_mpfr_ver=4.1.0
-sh_mpc_ver=1.2.1
-sh_isl_ver=0.24
+sh_gmp_ver=4.3.2
+sh_mpfr_ver=2.4.2
+sh_mpc_ver=0.8.1
+#sh_isl_ver=0.18
 
 # Tarball extensions to download for GCC dependencies for SH
 sh_gmp_download_type=bz2
@@ -58,10 +49,10 @@ sh_mpc_download_type=gz
 sh_isl_download_type=bz2
 
 # GCC dependencies for ARM
-arm_gmp_ver=6.1.0
-arm_mpfr_ver=3.1.4
-arm_mpc_ver=1.0.3
-arm_isl_ver=0.18
+arm_gmp_ver=4.3.2
+arm_mpfr_ver=2.4.2
+arm_mpc_ver=0.8.1
+#arm_isl_ver=0.18
 
 # Tarball extensions to download for GCC dependencies for ARM
 arm_gmp_download_type=bz2
@@ -82,7 +73,7 @@ download_protocol=https
 # Specify GNU Mirror override
 # The default mirror for GNU sources is `ftpmirror.gnu.org`
 # Setting this will allow overriding the default mirror which
-# may be desirable if you have a prefered mirror.
+# may be desirable if you have a preferred mirror.
 #gnu_mirror=mirrors.kernel.org
 
 # Toolchains base
@@ -110,29 +101,41 @@ install_mode=install-strip
 # Tracking down problems with multiple make jobs is much more difficult than
 # with just one running at a time. So, if you run into trouble, then you should
 # clear this variable and try again with just one job running.
-# Please note, this value may be overriden in some cases; as issues were
+# Please note, this value may be overridden in some cases; as issues were
 # detected on some OS.
 makejobs=-j2
 
-# Languages (c|c++|objc|obj-c++|rust)
+# Languages (c|c++|objc|obj-c++)
 # Set the languages to build for pass 2 of building gcc for sh-elf. The default
-# here is to build C, C++, Objective-C, Objective-C++, and Rust. You may want
-# to take out some languages if you're not worried about them and/or you're
-# short on hard drive space. Only C is required to build KallistiOS, but some
-# included examples use other languages.
-pass2_languages=c,c++,objc,obj-c++,rust
+# here is to build C, C++, Objective C, and Objective C++. You may want to take
+# out the latter two if you're not worried about them and/or you're short on
+# hard drive space.
+pass2_languages=c,c++,objc,obj-c++
+
+# Floating point precision support (m4|m4-single|m4-single-only)
+# Build support for various SH4 floating-point operation ABIs. KallistiOS only
+# officially supports single-precision-only mode. Add m4 (double precision) or
+# m4-single (single precision) to build experimental support for those ABIs.
+precision_modes=m4-single-only
+#precision_modes=m4,m4-single,m4-single-only
+
+# Default floating point mode (m4|m4-single|m4-single-only)
+# Choose the default floating point precision ABI used when GCC is invoked. This
+# can be overridden by using passing -m4, -m4-single, or -m4-single-only to GCC.
+# KallistiOS currently only supports m4-single-only, so that is the default.
+default_precision=m4-single-only
 
 # GCC threading model (single|kos|posix*)
-# With GCC 4.x versions and up, the patches provide a 'kos' thread model, so you 
-# should use it. If you really don't want threading support for C++ (or 
-# Objective C/Objective C++), you can set this to 'single'. With GCC 3.x, you 
+# With GCC 4.x versions and up, the patches provide a 'kos' thread model, so you
+# should use it. If you really don't want threading support for C++ (or
+# Objective C/Objective C++), you can set this to 'single'. With GCC 3.x, you
 # probably want 'posix' here; but this mode is deprecated as the GCC 3.x branch
 # is not anymore supported.
 thread_model=kos
 
 # Automatic patching for KOS (1|0)
-# Uncomment this if you want to disable applying KOS patches to the toolchain 
-# source files before building. This will disable usage of the 'kos' thread model. 
+# Uncomment this if you want to disable applying KOS patches to the toolchain
+# source files before building. This will disable usage of the 'kos' thread model.
 #use_kos_patches=0
 
 # Automatic fixup SH-4 Newlib (1|0)
@@ -148,11 +151,23 @@ thread_model=kos
 # ptrdiff_t, intmax_t, and sized integral types.
 newlib_c99_formats=1
 
+# Multibyte Character Set Support (1|0)
+# Define this to build Newlib with additional multibyte support. This enables
+# three special locales: "C-JIS", "C-SJIS", and "C-EUCJP". The multibyte
+# support extends to the mb and wc functions in stdlib as well as format
+# characters for the printf and scanf family of routines.
+#newlib_multibyte=1
+
 # Optimize Newlib for Space (1|0)
 # Define this to enable optimizing for space when building Newlib. This will
 # build Newlib with compiler flags which favor smaller code sizes over faster
 # performance.
 #newlib_opt_space=1
+
+# Disable GCC Native Language Support (1|0)
+# By default, NLS allows GCC to output diagnostics in non-English languages.
+# Set this variable to disable NLS, forcing GCC to output in American English.
+#disable_nls=1
 
 # MinGW/MSYS
 # Standalone binaries (1|0)

@@ -10,7 +10,6 @@ build-sh4: build-sh4-gcc
 build-arm: build-arm-gcc
 build-sh4-gcc: build-sh4-gcc-pass2
 build-arm-gcc: build-arm-gcc-pass1
-	$(clean_arm_hack)
 build-sh4-newlib: build-sh4-newlib-only fixup-sh4-newlib
 
 fixup_sh4_newlib_stamp = fixup-sh4-newlib.stamp
@@ -36,7 +35,7 @@ build_arm_targets = build-arm-binutils build-arm-gcc build-arm-gcc-pass1
 # Available targets for SH
 $(build_sh4_targets): prefix = $(sh_prefix)
 $(build_sh4_targets): target = $(sh_target)
-$(build_sh4_targets): extra_configure_args = --with-multilib-list=m4-single-only --with-endian=little --with-cpu=m4-single-only
+$(build_sh4_targets): extra_configure_args += --with-multilib-list=$(precision_modes) --with-endian=little --with-cpu=$(default_precision)
 $(build_sh4_targets): gcc_ver = $(sh_gcc_ver)
 $(build_sh4_targets): binutils_ver = $(sh_binutils_ver)
 

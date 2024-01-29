@@ -8,8 +8,6 @@ hello		-- Serial output, partial initialization
 cdfs		-- Reading from a CD-Rom, quiet console output
 320x240		-- 320x240x565 mode, full init plus de-init of TA
 640x480		-- 640x480x565 mode, quiet console output
-800x608		-- 800x608x565 experimental mode; partial init;
-		   please see notes in C file
 rgb888		-- 640x480x888 mode
 ta		-- Tile accelerator; full init, sans threads and romdisk
 keyboard	-- Keyboard support, BIOS font; lowlevel only init

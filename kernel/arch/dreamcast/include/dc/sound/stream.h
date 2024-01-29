@@ -7,8 +7,9 @@
 
 */
 
-/** \file   dc/sound/stream.h
-    \brief  Sound streaming support.
+/** \file    dc/sound/stream.h
+    \brief   Sound streaming support.
+    \ingroup audio_streaming
 
     This file contains declarations for doing streams of sound. This underlies
     pretty much any decoded sounds you might use, including the Ogg Vorbis
@@ -28,6 +29,12 @@
 __BEGIN_DECLS
 
 #include <arch/types.h>
+
+/** \defgroup audio_streaming   Streaming
+    \brief                      Streaming audio playback and management
+    \ingroup                    audio
+    @{
+*/
 
 /** \brief  The maximum number of streams that can be allocated at once. */
 #define SND_STREAM_MAX 4
@@ -58,7 +65,7 @@ typedef int snd_stream_hnd_t;
     \param  smp_req         The number of samples requested.
     \param  smp_recv        Used to return the number of samples available.
     \return                 A pointer to the buffer of samples. If stereo, the
-                            samples should be interleaved. For best perfomance
+                            samples should be interleaved. For best performance
                             use 32-byte aligned pointer.
 */
 typedef void *(*snd_stream_callback_t)(snd_stream_hnd_t hnd, int smp_req,
@@ -97,13 +104,6 @@ void snd_stream_set_userdata(snd_stream_hnd_t hnd, void *d);
 */
 void *snd_stream_get_userdata(snd_stream_hnd_t hnd);
 
-/* Add an effect filter to the sound stream chain. When the stream
-   buffer filler needs more data, it starts out by calling the initial
-   callback (set above). It then calls each function in the effect
-   filter chain, which can modify the buffer and the amount of data
-   available as well. Filters persist across multiple calls to _init()
-   but will be emptied by _shutdown(). */
-
 /** \brief  Stream filter callback type.
 
     Functions providing filters over the stream data will be of this type, and
@@ -127,6 +127,12 @@ typedef void (*snd_stream_filter_t)(snd_stream_hnd_t hnd, void *obj, int hz,
 
     This function adds a filter to the specified stream. The filter will be
     called on each block of data input to the stream from then forward.
+
+    When the stream buffer filler needs more data, it starts out by calling
+    the initial callback (set above). It then calls each function in the
+    effect filter chain, which can modify the buffer and the amount of data
+    available as well. Filters persist across multiple calls to _init()
+    but will be emptied by _shutdown().
 
     \param  hnd             The stream to add the filter to.
     \param  filtfunc        A pointer to the filter function.
@@ -302,6 +308,8 @@ int snd_stream_poll(snd_stream_hnd_t hnd);
     \param  vol             The volume to set. Valid values are 0-255.
 */
 void snd_stream_volume(snd_stream_hnd_t hnd, int vol);
+
+/** @} */
 
 __END_DECLS
 

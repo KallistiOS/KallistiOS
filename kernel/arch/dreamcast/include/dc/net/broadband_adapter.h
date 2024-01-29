@@ -5,8 +5,9 @@
 
 */
 
-/** \file   dc/net/broadband_adapter.h
-    \brief  Broadband Adapter support.
+/** \file    dc/net/broadband_adapter.h
+    \brief   Broadband Adapter support.
+    \ingroup bba
 
     This file contains declarations related to support for the HIT-0400
     "Broadband Adapter". There's not really anything that users will generally
@@ -21,7 +22,19 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-/** \defgroup bba_regs  RTL8139C Register Definitions
+/** \defgroup bba Broadband Adapter
+    \brief    Driver for the Dreamcast's BBA (RTL8139C).
+    \ingroup  networking_drivers
+    @{
+*/
+
+/** \defgroup bba_regs Registers
+    \brief    Registers and related info for the broadband adapter
+    @{
+*/
+
+/** \defgroup bba_regs_locs Locations
+    \brief    Locations for various broadband adapter registers.
 
     The default assumption is that these are all RW at any aligned size unless 
     otherwise noted. ex (RW 32bit, RO 16/8) indicates read/write at 32bit and 
@@ -87,7 +100,13 @@ __BEGIN_DECLS
 #define RT_CONFIG5          0xD8    /**< \brief Config register 5 */
 /** @} */
 
-/** \defgroup bba_miicb RTL8139C MII (media independent interface) control bits
+/** \defgroup bba_regs_fields Fields
+    \brief    Register fields for the broadband adapter
+    @{
+*/
+
+/** \defgroup bba_miicb MII Control Bits
+    \brief    BBA media independent interface control register fields
     @{
 */
 #define RT_MII_RESET       0x8000  /**< \brief Reset the MII chip */
@@ -100,7 +119,8 @@ __BEGIN_DECLS
 #define RT_MII_DUPLEX      0x0100  /**< \brief 1 for full 0 for half. Ignored if AN enabled. */
 /** @} */
 
-/** \defgroup bba_miisb RTL8139C MII (media independent interface) status bits
+/** \defgroup bba_miisb MII Status Bits
+    \brief    BBA media independent interface status register fields
     @{
 */
 #define RT_MII_LINK         0x0004  /**< \brief Link is present */
@@ -112,7 +132,8 @@ __BEGIN_DECLS
 #define RT_MII_100_FULL     0x4000  /**< \brief Can do 100Mbit full */
 /** @} */
 
-/** \defgroup bba_cbits RTL8139C Command Bits
+/** \defgroup bba_cbits Command Bits
+    \brief    BBA command register fields
 
     OR appropriate bit values together and write into the RT_CHIPCMD register to
     execute the command.
@@ -125,7 +146,8 @@ __BEGIN_DECLS
 #define RT_CMD_RX_BUF_EMPTY 0x01 /**< \brief Empty the Rx buffer */
 /** @} */
 
-/** \defgroup bba_ibits RTL8139C Interrupt Status bits
+/** \defgroup bba_ibits Interrupt Status Bits
+    \brief    BBA interrupt status fields
     @{
 */
 #define RT_INT_PCIERR           0x8000  /**< \brief PCI Bus error */
@@ -139,11 +161,12 @@ __BEGIN_DECLS
 #define RT_INT_RX_ERR           0x0002  /**< \brief Rx error */
 #define RT_INT_RX_OK            0x0001  /**< \brief Rx OK */
 
-/** \brief  Composite RX bits we check for while doing an RX interrupt. */
+/** \brief Composite RX bits we check for while doing an RX interrupt. */
 #define RT_INT_RX_ACK (RT_INT_RXFIFO_OVERFLOW | RT_INT_RXBUF_OVERFLOW | RT_INT_RX_OK)
 /** @} */
 
-/** \defgroup bba_tbits RTL8139C Transmit Status bits
+/** \defgroup bba_tbits RTL8139C Transmit Status Bits
+    \brief    BBA transmit status register fields
     @{
 */
 #define RT_TX_CARRIER_LOST  0x80000000  /**< \brief Carrier sense lost */
@@ -155,7 +178,8 @@ __BEGIN_DECLS
 #define RT_TX_SIZE_MASK     0x00001fff  /**< \brief Descriptor size mask */
 /** @} */
 
-/** \defgroup bba_rbits RTL8139C receive status bits
+/** \defgroup bba_rbits Receive Status Bits
+    \brief    BBA receive status register fields
     @{
 */
 #define RT_RX_MULTICAST     0x8000  /**< \brief Multicast packet */
@@ -193,7 +217,8 @@ __BEGIN_DECLS
 #define RT_RXC_AAP         0x00000001  /**< \brief Accept Physical Address Packets */
 /** @} */
 
-/** \defgroup bba_config1bits RTL8139C Config Register 1 (RT_CONFIG1) bits
+/** \defgroup bba_config1bits RTL8139C Config Register 1 (RT_CONFIG1) Bits
+    \brief    BBA config register 1 fields
 
     From RTL8139C(L) datasheet v1.4
 
@@ -209,7 +234,8 @@ __BEGIN_DECLS
 #define RT_CONFIG1_PMEn     0x01 /**< \brief Power Management Enable */
 /** @} */
 
-/** \defgroup bba_config4bits RTL8139C Config Register 4 (RT_CONFIG4) bits
+/** \defgroup bba_config4bits RTL8139C Config Register 4 (RT_CONFIG4) Bits
+    \brief    BBA config register 4 fields
 
     From RTL8139C(L) datasheet v1.4. Only RT_CONFIG4_RxFIFIOAC is used.
 
@@ -225,7 +251,8 @@ __BEGIN_DECLS
 #define RT_CONFIG4_PBWake    0x01 /**< \brief Disable pre-Boot Wakeup. */
 /** @} */
 
-/** \defgroup bba_config5bits RTL8139C Config Register 5 (RT_CONFIG5) bits
+/** \defgroup bba_config5bits RTL8139C Config Register 5 (RT_CONFIG5) Bits
+    \brief    BBA config register 5 fields
 
     From RTL8139C(L) datasheet v1.4. Only RT_CONFIG5_LDPS is used.
 
@@ -241,7 +268,11 @@ __BEGIN_DECLS
 #define RT_CONFIG5_PME_STS  0x01 /**< \brief Allow PCI reset to set PME_Status bit. */
 /** @} */
 
-/** \brief  Retrieve the MAC Address of the attached BBA.
+/** @} */
+
+/** @} */
+
+/** \brief   Retrieve the MAC Address of the attached BBA.
 
     This function reads the MAC Address of the BBA and places it in the buffer
     passed in. The resulting data is undefined if no BBA is connected.
@@ -250,7 +281,12 @@ __BEGIN_DECLS
 */
 void bba_get_mac(uint8 *arr);
 
-/** \brief  Receive packet callback function type.
+/** \defgroup bba_rx RX
+    \brief    Receive packet API for the BBA
+    @{
+*/
+
+/** \brief   Receive packet callback function type.
 
     When a packet is received by the BBA, the callback function will be called
     to handle it.
@@ -260,7 +296,7 @@ void bba_get_mac(uint8 *arr);
 */
 typedef void (*eth_rx_callback_t)(uint8 *pkt, int len);
 
-/** \brief  Set the ethernet packet receive callback.
+/** \brief   Set the ethernet packet receive callback.
 
     This function sets the function called when a packet is received by the BBA.
     Generally, this inputs into the network layer.
@@ -269,7 +305,15 @@ typedef void (*eth_rx_callback_t)(uint8 *pkt, int len);
 */
 void bba_set_rx_callback(eth_rx_callback_t cb);
 
-/** \defgroup bba_txrv  Return values from bba_tx().
+/** @} */
+
+/** \defgroup bba_tx TX
+    \brief    Transmit packet API for the BBA
+    @{
+*/
+
+/** \defgroup bba_txrv  Return Values
+    \brief    Return values for bba_tx()
     @{
 */
 #define BBA_TX_OK       0   /**< \brief Transmit success */
@@ -277,10 +321,15 @@ void bba_set_rx_callback(eth_rx_callback_t cb);
 #define BBA_TX_AGAIN    -2  /**< \brief Retry transmit again */
 /** @} */
 
+/** \defgroup bba_wait  Wait Modes
+    \brief    Wait modes for bba_tx()
+    @{
+*/
 #define BBA_TX_NOWAIT   0   /**< \brief Don't block waiting for the transfer. */
 #define BBA_TX_WAIT     1   /**< \brief Wait, if needed on transfer. */
+/** @} */
 
-/** \brief  Transmit a single packet.
+/** \brief   Transmit a single packet.
 
     This function transmits a single packet on the bba, waiting for the link to
     become stable, if requested.
@@ -297,6 +346,8 @@ void bba_set_rx_callback(eth_rx_callback_t cb);
 */
 int bba_tx(const uint8 *pkt, int len, int wait);
 
+/** @} */
+
 /* \cond */
 /* Initialize */
 int bba_init(void);
@@ -304,6 +355,8 @@ int bba_init(void);
 /* Shutdown */
 int bba_shutdown(void);
 /* \endcond */
+
+/** @} */
 
 __END_DECLS
 

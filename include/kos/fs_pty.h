@@ -5,11 +5,12 @@
 
 */
 
-/** \file   kos/fs_pty.h
-    \brief  Pseudo-terminal virtual file system.
+/** \file    kos/fs_pty.h
+    \brief   Pseudo-terminal virtual file system.
+    \ingroup vfs_pty
 
     This file system implements a pseudo-terminal like concept (similar to
-    /dev/pty in Linux). A call to fs_pty_create() will crate two file entries in
+    /dev/pty in Linux). A call to fs_pty_create() will create two file entries in
     the VFS, /pty/maXX and /pty/slXX (XX being some hexadecimal number). From
     there, anybody can open up either end and send data to the other side. Think
     of it as a simple message passing interface.
@@ -27,6 +28,13 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 #include <kos/fs.h>
+
+/** \defgroup vfs_pty   PTY
+    \brief              VFS driver for accessing pseudo-TTY terminals
+    \ingroup            vfs
+
+    @{
+*/
 
 /** \brief  Create a new pseudo-terminal.
 
@@ -54,6 +62,8 @@ int fs_pty_create(char * buffer, int maxbuflen, file_t * master_out, file_t * sl
 int fs_pty_init(void);
 int fs_pty_shutdown(void);
 /** \endcond */
+
+/** @} */
 
 __END_DECLS
 

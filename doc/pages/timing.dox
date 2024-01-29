@@ -1,0 +1,6 @@
+/** \defgroup timing Timing
+    \brief    APIs and drivers pertaining to date and time
+
+    In addition to the low-level timing-related drivers, KOS supports
+    all of the standard C, C++, and POSIX timing APIs. 
+*/
