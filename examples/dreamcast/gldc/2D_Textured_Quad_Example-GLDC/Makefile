@@ -30,9 +30,6 @@ clean: rm-elf
 $(TARGET): $(OBJS)
 	kos-c++ -o $(TARGET) $(OBJS) $(LDLIBS)
 
-$(OBJ)/%.o: $(SRC)/%.cpp | $(OBJ)
-	kos-c++ $(CXXFLAGS) -c $< -o $@
-
 dist: $(TARGET)
 	-rm -f $(OBJS)
 	$(KOS_STRIP) $(TARGET)
