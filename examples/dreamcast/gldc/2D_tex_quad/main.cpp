@@ -162,9 +162,6 @@ int main(int argc, char **argv) {
         if(state->start)
             break;
 
-        int16_t x_axis = state->joyx;
-        int16_t y_axis = state->joyy;
-
         //..:: Rotation on Triggers
         // Rotate CCW
         if(state->ltrig >= 255) {
