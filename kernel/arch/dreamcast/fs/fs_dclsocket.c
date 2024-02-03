@@ -207,6 +207,7 @@ static void dcls_recv_loop(void) {
 
 static void *dcls_open(struct vfs_handler *vfs, const char *fn, int mode) {
     int hnd, locked;
+    size_t fnlen;
     int dcload_mode = 0;
     int mm = (mode & O_MODE_MASK);
     command_t *cmd = (command_t *)pktbuf;
@@ -245,12 +246,14 @@ static void *dcls_open(struct vfs_handler *vfs, const char *fn, int mode) {
             if(dcload_path)
                 free(dcload_path);
 
-            if(fn[strlen(realfn) - 1] == '/') {
-                dcload_path = (char *)malloc(strlen(realfn) + 1);
+            fnlen = strlen(realfn);
+
+            if(fn[fnlen - 1] == '/') {
+                dcload_path = (char *)malloc(fnlen + 1);
                 strcpy(dcload_path, realfn);
             }
             else {
-                dcload_path = (char *)malloc(strlen(realfn) + 2);
+                dcload_path = (char *)malloc(fnlen + 2);
                 strcpy(dcload_path, realfn);
                 strcat(dcload_path, "/");
             }
@@ -634,7 +637,7 @@ static int dcls_fake_shutdown(void) {
     return 0;
 }
 
-static int dcls_writebuf(const uint8 *buf, int len, int xlat) {
+static int dcls_writebuf(const uint8_t *buf, size_t len, int xlat) {
     int locked;
     command_3int_t cmd;
 
@@ -697,9 +700,9 @@ static vfs_handler_t vh = {
     /* Name handler */
     {
         "/pc",      /* name */
-        0,      /* tbfi */
+        0,          /* tbfi */
         0x00010000, /* Version 1.0 */
-        0,      /* flags */
+        0,          /* flags */
         NMMGR_TYPE_VFS,
         NMMGR_LIST_INIT
     },

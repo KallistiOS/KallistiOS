@@ -357,7 +357,7 @@ int scif_flush(void) {
 }
 
 /* Send an entire buffer */
-int scif_write_buffer(const uint8 *data, int len, int xlat) {
+int scif_write_buffer(const uint8_t *data, size_t len, int xlat) {
     int rv, i = 0, c;
 
     while(len-- > 0) {
@@ -387,7 +387,7 @@ int scif_write_buffer(const uint8 *data, int len, int xlat) {
 }
 
 /* Read an entire buffer (block) */
-int scif_read_buffer(uint8 *data, int len) {
+int scif_read_buffer(uint8_t *data, size_t len) {
     int c, i = 0;
 
     while(len-- > 0) {

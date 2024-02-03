@@ -2,6 +2,7 @@
 
    kernel/debug/dbgio.c
    Copyright (C) 2004 Megan Potter
+   Copyright (C) 2023 Falco Girgis
 */
 
 #include <string.h>
@@ -22,10 +23,10 @@
 */
 
 // Our currently selected handler.
-static dbgio_handler_t * dbgio = NULL;
+static const dbgio_handler_t *dbgio = NULL;
 
-int dbgio_dev_select(const char * name) {
-    int i;
+int dbgio_dev_select(const char *name) {
+    size_t i;
 
     for(i = 0; i < dbgio_handler_cnt; i++) {
         if(!strcmp(dbgio_handlers[i]->name, name)) {
@@ -44,7 +45,7 @@ int dbgio_dev_select(const char * name) {
     return -1;
 }
 
-const char * dbgio_dev_get(void) {
+const char *dbgio_dev_get(void) {
     if(!dbgio)
         return NULL;
     else
@@ -60,7 +61,7 @@ void dbgio_disable(void) {
 }
 
 int dbgio_init(void) {
-    int i;
+    size_t i;
 
     // Look for a valid interface.
     for(i = 0; i < dbgio_handler_cnt; i++) {
@@ -121,7 +122,7 @@ int dbgio_flush(void) {
     return -1;
 }
 
-int dbgio_write_buffer(const uint8 *data, int len) {
+int dbgio_write_buffer(const uint8_t *data, size_t len) {
     if(dbgio_enabled) {
         assert(dbgio);
         return dbgio->write_buffer(data, len, 0);
@@ -130,7 +131,7 @@ int dbgio_write_buffer(const uint8 *data, int len) {
     return -1;
 }
 
-int dbgio_read_buffer(uint8 *data, int len) {
+int dbgio_read_buffer(uint8_t *data, size_t len) {
     if(dbgio_enabled) {
         assert(dbgio);
         return dbgio->read_buffer(data, len);
@@ -139,7 +140,7 @@ int dbgio_read_buffer(uint8 *data, int len) {
     return -1;
 }
 
-int dbgio_write_buffer_xlat(const uint8 *data, int len) {
+int dbgio_write_buffer_xlat(const uint8_t *data, size_t len) {
     if(dbgio_enabled) {
         assert(dbgio);
         return dbgio->write_buffer(data, len, 1);
@@ -151,38 +152,33 @@ int dbgio_write_buffer_xlat(const uint8 *data, int len) {
 int dbgio_write_str(const char *str) {
     if(dbgio_enabled) {
         assert(dbgio);
-        return dbgio_write_buffer_xlat((const uint8*)str, strlen(str));
+        return dbgio_write_buffer_xlat((const uint8_t *)str, strlen(str));
     }
 
     return -1;
 }
 
-// Not re-entrant
-static char printf_buf[1024];
-static spinlock_t lock = SPINLOCK_INITIALIZER;
+int dbgio_vprintf(const char *fmt, va_list *var_args) { 
+    char buffer[1024];
+    int i = vsnprintf(buffer, sizeof(buffer), fmt, *var_args);
 
-int dbgio_printf(const char *fmt, ...) {
-    va_list args;
-    int i;
+    if(i >= (int)sizeof(buffer))
+        i = sizeof(buffer);
 
-    /* XXX This isn't correct. We could be inside an int with IRQs
-      enabled, and we could be outside an int with IRQs disabled, which
-      would cause a deadlock here. We need an irq_is_enabled()! */
-    if(!irq_inside_int())
-        spinlock_lock(&lock);
-
-    va_start(args, fmt);
-    i = vsprintf(printf_buf, fmt, args);
-    va_end(args);
-
-    dbgio_write_str(printf_buf);
-
-    if(!irq_inside_int())
-        spinlock_unlock(&lock);
+    dbgio_write_buffer_xlat((const uint8_t *)buffer, (size_t)i);
 
     return i;
 }
 
+int dbgio_printf(const char *fmt, ...) {
+    va_list args;
+
+    va_start(args, fmt);
+    const int i = dbgio_vprintf(fmt, &args);
+    va_end(args);
+
+    return i;
+}
 
 // The null dbgio handler
 static int null_detected(void) {
@@ -209,20 +205,20 @@ static int null_write(int c) {
 static int null_flush(void) {
     return 0;
 }
-static int null_write_buffer(const uint8 *data, int len, int xlat) {
+static int null_write_buffer(const uint8_t *data, size_t len, int xlat) {
     (void)data;
     (void)len;
     (void)xlat;
     return len;
 }
-static int null_read_buffer(uint8 * data, int len) {
+static int null_read_buffer(uint8_t* data, size_t len) {
     (void)data;
     (void)len;
     errno = EAGAIN;
     return -1;
 }
 
-dbgio_handler_t dbgio_null = {
+const dbgio_handler_t dbgio_null = {
     "null",
     null_detected,
     null_init,

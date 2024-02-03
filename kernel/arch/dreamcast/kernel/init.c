@@ -49,7 +49,7 @@ uint32 _fs_dclsocket_get_ip(void);
 #endif
 
 /* We have to put this here so we can include plat-specific devices */
-dbgio_handler_t * dbgio_handlers[] = {
+const dbgio_handler_t *dbgio_handlers[] = {
 #ifndef _arch_sub_naomi
     &dbgio_dcload,
     &dbgio_dcls,
@@ -61,7 +61,7 @@ dbgio_handler_t * dbgio_handlers[] = {
     &dbgio_fb
 #endif
 };
-int dbgio_handler_cnt = sizeof(dbgio_handlers) / sizeof(dbgio_handler_t *);
+const size_t dbgio_handler_cnt = sizeof(dbgio_handlers) / sizeof(dbgio_handler_t *);
 
 void arch_init_net(void) {
     union {

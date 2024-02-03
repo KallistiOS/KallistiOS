@@ -1,7 +1,8 @@
 /* KallistiOS ##version##
 
    panic.c
-   (c)2001 Megan Potter
+   Copyright (C) 2001 Megan Potter
+   Copyright (C) 2023 Falco Girgis
 */
 
 #include <stdio.h>
@@ -12,6 +13,6 @@
    can recover, call this. This is a pretty standard tactic from *nixy
    kernels which ought to be avoided if at all possible. */
 void arch_panic(const char *msg) {
-    printf("kernel panic: %s\r\n", msg);
+    fprintf(stderr, "kernel panic: %s\r\n", msg);
     arch_abort();
 }

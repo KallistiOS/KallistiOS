@@ -90,7 +90,7 @@ static int fb_flush(void) {
     return 0;
 }
 
-static int fb_write_buffer(const uint8 *data, int len, int xlat) {
+static int fb_write_buffer(const uint8_t *data, size_t len, int xlat) {
     int rv = len;
 
     (void)xlat;
@@ -102,7 +102,7 @@ static int fb_write_buffer(const uint8 *data, int len, int xlat) {
     return rv;
 }
 
-static int fb_read_buffer(uint8 * data, int len) {
+static int fb_read_buffer(uint8 *data, size_t len) {
     (void)data;
     (void)len;
     errno = EAGAIN;
