@@ -12,6 +12,16 @@
 
 #include "aica_comm.h"
 
+struct aica_header {
+    struct aica_queue   *cmd_queue;
+    struct aica_queue   *resp_queue;
+    struct aica_channel *channels;
+    void                *buffer;
+    unsigned int        buffer_size;
+};
+
+extern struct aica_header aica_header;
+
 /* This is where our SH-4/AICA comm variables go... */
 
 /* 0x000000 - 0x010000 are reserved for the program */

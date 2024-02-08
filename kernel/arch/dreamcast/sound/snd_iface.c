@@ -23,6 +23,14 @@
 #define AICA_CHANNEL_KEYONEX   0x8000
 #define AICA_CHANNEL_KEYONB    0x4000
 
+struct aica_header aica_header = {
+    .cmd_queue = (struct aica_queue *)AICA_MEM_CMD_QUEUE,
+    .resp_queue = (struct aica_queue *)AICA_MEM_RESP_QUEUE,
+    .channels = (struct aica_channel *)AICA_MEM_CHANNELS,
+    .buffer = (void *)AICA_RAM_START,
+    .buffer_size = AICA_RAM_END - AICA_RAM_START,
+};
+
 /* Are we initted? */
 static int initted = 0;
 
