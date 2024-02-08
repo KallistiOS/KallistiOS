@@ -7,27 +7,27 @@
    ARM support routines for using the wavetable channels
 */
 
-#include "aica_cmd_iface.h"
-#include "aica.h"
+#include <aicaos/irq.h>
+#include <registers.h>
 
-extern volatile aica_channel_t *chans;
+#include "aica.h"
 
 void aica_init(void) {
     int i, j;
 
     /* Initialize AICA channels */
-    SNDREG32(0x2800) = 0x0000;
+    SPU_REG32(REG_SPU_MASTER_VOL) = 0;
 
     for(i = 0; i < 64; i++) {
-        CHNREG32(i, 0) = 0x8000;
+        SPU_REG32(REG_SPU_PLAY_CTRL(i)) = SPU_FIELD_PREP(SPU_PLAY_CTRL_KEY, 0x2);
 
         for(j = 4; j < 0x80; j += 4)
-            CHNREG32(i, j) = 0;
+            SPU_REG32(CHN_REG(i, j)) = 0;
 
-        CHNREG32(i, 20) = 0x1f;
+        SPU_REG32(REG_SPU_AMP_ENV2(i)) = SPU_FIELD_PREP(SPU_AMP_ENV2_RELEASE, 0x1f);
     }
 
-    SNDREG32(0x2800) = 0x000f;
+    SPU_REG32(REG_SPU_MASTER_VOL) = SPU_FIELD_PREP(SPU_MASTER_VOL_VOL, 0xf);
 }
 
 /* Translates a volume from linear form to logarithmic form (required by
@@ -40,7 +40,7 @@ void aica_init(void) {
             else
                 logs[i] = 16.0 * log2(255.0 / i);
    */
-static uint8 logs[] = {
+static uint8_t logs[] = {
     255, 127, 111, 102, 95, 90, 86, 82, 79, 77, 74, 72, 70, 68, 66, 65,
     63, 62, 61, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 50, 49, 48,
     47, 47, 46, 45, 45, 44, 43, 43, 42, 42, 41, 41, 40, 40, 39, 39,
@@ -59,11 +59,11 @@ static uint8 logs[] = {
     1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-static inline uint8 calc_aica_vol(uint8 x) {
+static inline uint8_t calc_aica_vol(uint8_t x) {
     return logs[x];
 }
 
-static inline int calc_aica_pan(int x) {
+static inline uint8_t calc_aica_pan(uint8_t x) {
     if(x == 0x80)
         return 0;
     else if(x < 0x80) {
@@ -90,19 +90,12 @@ static inline int calc_aica_pan(int x) {
 
    This routine (and the similar ones) owe a lot to Marcus' sound example --
    I hadn't gotten quite this far into dissecting the individual regs yet. */
-void aica_play(int ch, int delay) {
-    uint32 smpptr   = chans[ch].base;
-    uint32 mode     = chans[ch].type;
-    uint32 loopst   = chans[ch].loopstart;
-    uint32 loopend  = chans[ch].loopend;
-    uint32 freq     = chans[ch].freq;
-    uint32 vol      = chans[ch].vol;
-    uint32 pan      = chans[ch].pan;
-    uint32 loopflag = chans[ch].loop;
-
-    uint32 freq_lo, freq_base = 5644800;
+void aica_play(uint8_t ch, void *smpptr, uint32_t mode,
+               uint16_t loopst, uint16_t loopend, uint32_t freq,
+               uint8_t vol, uint8_t pan, uint32_t flags) {
+    uint32_t freq_lo, freq_base = 5644800;
     int freq_hi = 7;
-    uint32 playCont;
+    uint32_t playCont;
 
     /* Stop the channel (if it's already playing) */
     aica_stop(ch);
@@ -123,55 +116,60 @@ void aica_play(int ch, int delay) {
        you are not looping, or the loop end point when you are (though
        storing more than that is a waste of memory if you're not doing
        volume enveloping). */
-    CHNREG32(ch, 8) = loopst & 0xffff;
-    CHNREG32(ch, 12) = loopend & 0xffff;
+    SPU_REG32(REG_SPU_LOOP_START(ch)) = loopst;
+    SPU_REG32(REG_SPU_LOOP_END(ch)) = loopend;
 
     /* Write resulting values */
-    CHNREG32(ch, 24) = (freq_hi << 11) | (freq_lo & 1023);
+    SPU_REG32(REG_SPU_PITCH(ch)) =
+        SPU_FIELD_PREP(SPU_PITCH_OCT, freq_hi) |
+        SPU_FIELD_PREP(SPU_PITCH_FNS, freq_lo);
 
     /* Convert the incoming pan into a hardware value and set it */
-    CHNREG8(ch, 36) = calc_aica_pan(pan);
-    CHNREG8(ch, 37) = 0xf;
-    /* turn off Low Pass Filter (LPF) */
-    CHNREG8(ch, 40) = 0x24;
-    /* Convert the incoming volume into a hardware value and set it */
-    CHNREG8(ch, 41) = calc_aica_vol(vol);
+    SPU_REG32(REG_SPU_VOL_PAN(ch)) =
+        SPU_FIELD_PREP(SPU_VOL_PAN_VOL, 0xf) |
+        SPU_FIELD_PREP(SPU_VOL_PAN_PAN, calc_aica_pan(pan));
+
+    /* turn off Low Pass Filter (LPF);
+       convert the incoming volume into a hardware value and set it */
+    SPU_REG32(REG_SPU_LPF1(ch)) = SPU_LPF1_OFF |
+        SPU_FIELD_PREP(SPU_LPF1_Q, 0x4) |
+        SPU_FIELD_PREP(SPU_LPF1_VOL, calc_aica_vol(vol));
 
     /* If we supported volume envelopes (which we don't yet) then
        this value would set that up. The top 4 bits determine the
        envelope speed. f is the fastest, 1 is the slowest, and 0
        seems to be an invalid value and does weird things). The
        default (below) sets it into normal mode (play and terminate/loop).
-    CHNREG32(ch, 16) = 0xf010;
+    SPU_REG32(REG_SPU_AMP_ENV1(ch)) = 0xf010;
     */
-    CHNREG32(ch, 16) = 0x1f;    /* No volume envelope */
+    SPU_REG32(REG_SPU_AMP_ENV1(ch)) =
+        SPU_FIELD_PREP(SPU_AMP_ENV1_ATTACK, 0x1f); /* No volume envelope */
 
 
     /* Set sample format, buffer address, and looping control. If
        0x0200 mask is set on reg 0, the sample loops infinitely. If
        it's not set, the sample plays once and terminates. We'll
        also set the bits to start playback here. */
-    CHNREG32(ch, 4) = smpptr & 0xffff;
-    playCont = (mode << 7) | (smpptr >> 16);
+    SPU_REG32(REG_SPU_ADDR_L(ch)) = (uint32_t)smpptr & 0xffff;
 
-    if(loopflag)
-        playCont |= 0x0200;
+    playCont = (mode << 7) | ((uint32_t)smpptr >> 16);
+    if(flags & AICA_PLAY_LOOP)
+        playCont |= SPU_PLAY_CTRL_LOOP;
+    if(!(flags & AICA_PLAY_DELAY))
+        playCont |= SPU_FIELD_PREP(SPU_PLAY_CTRL_KEY, 0x3); /* key on */
 
-    if(delay) {
-        CHNREG32(ch, 0) = playCont;         /* key off */
-    }
-    else {
-        CHNREG32(ch, 0) = 0xc000 | playCont;    /* key on */
-    }
+    SPU_REG32(REG_SPU_PLAY_CTRL(ch)) = playCont;
 }
 
 /* Start sound on all channels specified by chmap bitmap */
-void aica_sync_play(uint32 chmap) {
+void aica_sync_play(uint64_t chmap) {
     int i = 0;
 
     while(chmap) {
-        if(chmap & 0x1)
-            CHNREG32(i, 0) = CHNREG32(i, 0) | 0xc000;
+        if(chmap & 0x1) {
+            SPU_REG32(REG_SPU_PLAY_CTRL(i)) |=
+                SPU_FIELD_PREP(SPU_PLAY_CTRL_KEY, 0x3);
+        }
 
         i++;
         chmap >>= 1;
@@ -179,8 +177,13 @@ void aica_sync_play(uint32 chmap) {
 }
 
 /* Stop the sound on a given channel */
-void aica_stop(int ch) {
-    CHNREG32(ch, 0) = (CHNREG32(ch, 0) & ~0x4000) | 0x8000;
+void aica_stop(uint8_t ch) {
+    uint32_t ctrl = SPU_REG32(REG_SPU_PLAY_CTRL(ch));
+
+    ctrl = (ctrl & ~SPU_PLAY_CTRL_KEY) |
+        SPU_FIELD_PREP(SPU_PLAY_CTRL_KEY, 0x2);
+
+    SPU_REG32(REG_SPU_PLAY_CTRL(ch)) = ctrl;
 }
 
 
@@ -188,19 +191,25 @@ void aica_stop(int ch) {
    can do things like vibrato and panning effects. */
 
 /* Set channel volume */
-void aica_vol(int ch) {
-    CHNREG8(ch, 41) = calc_aica_vol(chans[ch].vol);
+void aica_vol(uint8_t ch, uint8_t vol) {
+    uint32_t lpf1 = SPU_REG32(REG_SPU_LPF1(ch));
+
+    lpf1 = (lpf1 & ~SPU_LPF1_VOL) |
+        SPU_FIELD_PREP(SPU_LPF1_VOL, calc_aica_vol(vol));
+
+    SPU_REG32(REG_SPU_LPF1(ch)) = lpf1;
 }
 
 /* Set channel pan */
-void aica_pan(int ch) {
-    CHNREG8(ch, 36) = calc_aica_pan(chans[ch].pan);
+void aica_pan(uint8_t ch, uint8_t pan) {
+    SPU_REG32(REG_SPU_VOL_PAN(ch)) =
+        SPU_FIELD_PREP(SPU_VOL_PAN_VOL, 0xf) |
+        SPU_FIELD_PREP(SPU_VOL_PAN_PAN, calc_aica_pan(pan));
 }
 
 /* Set channel frequency */
-void aica_freq(int ch) {
-    uint32 freq = chans[ch].freq;
-    uint32 freq_lo, freq_base = 5644800;
+void aica_freq(uint8_t ch, uint32_t freq) {
+    uint32_t freq_lo, freq_base = 5644800;
     int freq_hi = 7;
 
     while(freq < freq_base && freq_hi > -8) {
@@ -209,22 +218,28 @@ void aica_freq(int ch) {
     }
 
     freq_lo = (freq << 10) / freq_base;
-    CHNREG32(ch, 24) = (freq_hi << 11) | (freq_lo & 1023);
+    SPU_REG32(REG_SPU_PITCH(ch)) =
+        SPU_FIELD_PREP(SPU_PITCH_OCT, freq_hi) |
+        SPU_FIELD_PREP(SPU_PITCH_FNS, freq_lo);
 }
 
 /* Get channel position */
-int aica_get_pos(int ch) {
+uint16_t aica_get_pos(uint8_t ch) {
+    uint32_t val;
     int i;
 
+    irq_disable_scoped();
+
     /* Observe channel ch */
-    SNDREG8(0x280d) = ch;
+    val = SPU_REG32(REG_SPU_INFO_REQUEST);
+    SPU_REG32(REG_SPU_INFO_REQUEST) =
+        (val & ~SPU_INFO_REQUEST_REQ) |
+        SPU_FIELD_PREP(SPU_INFO_REQUEST_REQ, ch);
 
     /* Wait a while */
     for(i = 0; i < 20; i++)
         __asm__ volatile ("nop");  /* Prevent loop from being optimized out */
 
     /* Update position counters */
-    chans[ch].pos = SNDREG32(0x2814) & 0xffff;
-
-    return chans[ch].pos;
+    return SPU_REG32(REG_SPU_INFO_PLAY_POS);
 }
