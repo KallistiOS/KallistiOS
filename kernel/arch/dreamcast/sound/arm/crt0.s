@@ -115,6 +115,16 @@ start:
 	bic	r10,r10,#0x40
 	msr	CPSR_all,r10
 
+	# Clear BSS section
+	ldr     r2,=__bss_end
+	ldr     r1,=__bss_start
+	mov     r0,#0
+
+clear_bss_loop:
+	str	r0,[r2,#-4]!
+	cmp	r2,r1
+	bhi	clear_bss_loop
+
 	# Call the main for the SPU
 	bl	arm_main
 
