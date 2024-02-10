@@ -11,6 +11,7 @@
 
 .globl	arm_main
 .globl	jps
+.globl  timer
 
 # Meaningless but makes the linker shut up
 .globl	reset
@@ -64,7 +65,7 @@ fiq_busreq_loop:
 fiq_timer:
 	# Type 2 is timer interrupt. Increment timer variable.
 	# Update the next line to AICA_MEM_CLOCK if you change AICA_CMD_IFACE
-	mov	r8,#0x21000
+	ldr	r8,=timer
 	ldr	r9,[r8]
 	add	r9,r9,#1
 	str	r9,[r8]
@@ -94,6 +95,8 @@ fiq_done:
 	#ldmdb	sp!, {r0-r14}
 	subs	pc,r14,#4
 
+timer:
+	.long	0x00000000
 intreq:
 	.long	0x00802d00
 intclr:

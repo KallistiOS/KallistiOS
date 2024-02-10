@@ -16,9 +16,9 @@
 #include <stddef.h>
 #include <string.h>
 
-/****************** Timer *******************************************/
+extern volatile unsigned int timer;
 
-#define timer (*((volatile uint32 *)AICA_MEM_CLOCK))
+/****************** Timer *******************************************/
 
 void timer_wait(uint32 jiffies) {
     uint32 fin = timer + jiffies;
