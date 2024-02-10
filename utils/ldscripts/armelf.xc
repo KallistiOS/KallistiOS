@@ -24,4 +24,7 @@ SECTIONS
 	}
 
 	__bss_end = ALIGN(0x4);
+
+	__stack = 0x1FF000;
+	__fiq_stack = 0x1FFFFC;
 }
