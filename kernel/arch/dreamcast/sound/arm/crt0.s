@@ -109,7 +109,8 @@ jps:
 
 start:
 	# Setup a basic stack, disable IRQ, enable FIQ
-	mov	sp,#0xb000
+	ldr	sp,=__stack
+
 	mrs	r10,CPSR
 	orr	r10,r10,#0x80
 	bic	r10,r10,#0x40
