@@ -7,6 +7,8 @@
 #  Adapted from Marcus' AICA example among a few other sources =)
 
 .text
+.section .text.init
+
 .globl	arm_main
 .globl	jps
 
