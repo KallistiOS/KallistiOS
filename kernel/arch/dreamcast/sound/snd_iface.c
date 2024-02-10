@@ -14,6 +14,7 @@
 
 #include <kos/mutex.h>
 #include <arch/timer.h>
+#include <dc/aram.h>
 #include <dc/g2bus.h>
 #include <dc/spu.h>
 #include <dc/sound/cmd_iface.h>
@@ -65,7 +66,7 @@ int snd_init(void) {
         timer_spin_sleep(10);
 
         /* Initialize the RAM allocator */
-        snd_mem_init(AICA_RAM_START);
+        snd_mem_init((uint32_t)aica_header.buffer);
     }
 
     initted = 1;
@@ -85,20 +86,24 @@ void snd_shutdown(void) {
 /* Submit a request to the SH4->AICA queue; size is in uint32's */
 int snd_sh4_to_aica(void *packet, uint32_t size) {
     uint32_t qa, bot, start, top, *pkt32, cnt;
+    aica_queue_t cmd_queue;
     g2_ctx_t ctx;
+
     assert_msg(size < AICA_CMD_MAX_SIZE, "SH4->AICA packets may not be >256 uint32's long");
 
-    ctx = g2_lock();
+    /* Read the command queue's structure */
+    aram_read(&cmd_queue, (aram_addr_t)aica_header.cmd_queue, sizeof(cmd_queue));
 
-    /* Set these up for reference */
-    qa = SPU_RAM_UNCACHED_BASE + AICA_MEM_CMD_QUEUE;
-    assert_msg(g2_read_32_raw(qa + offsetof(aica_queue_t, valid)), "Queue is not yet valid");
+    assert_msg(cmd_queue.valid, "Queue is not yet valid");
 
-    bot = SPU_RAM_UNCACHED_BASE + g2_read_32_raw(qa + offsetof(aica_queue_t, data));
-    top = bot + g2_read_32_raw(qa + offsetof(aica_queue_t, size));
-    start = bot + g2_read_32_raw(qa + offsetof(aica_queue_t, head));
+    qa = (uint32_t)aica_header.cmd_queue + SPU_RAM_UNCACHED_BASE;
+    bot = SPU_RAM_UNCACHED_BASE + (uintptr_t)cmd_queue.data;
+    top = bot + cmd_queue.size;
+    start = bot + cmd_queue.head;
     pkt32 = (uint32_t *)packet;
     cnt = 0;
+
+    ctx = g2_lock();
 
     while(size-- > 0) {
         /* Fifo wait if necessary */
@@ -130,14 +135,18 @@ int snd_sh4_to_aica(void *packet, uint32_t size) {
 
 /* Start processing requests in the queue */
 void snd_sh4_to_aica_start(void) {
-    g2_write_32(SPU_RAM_UNCACHED_BASE + AICA_MEM_CMD_QUEUE + offsetof(aica_queue_t, process_ok), 1);
+    g2_write_32((uint32_t)aica_header.cmd_queue
+                + SPU_RAM_UNCACHED_BASE
+                + offsetof(aica_queue_t, process_ok), 1);
     mutex_unlock(&queue_proc_mutex);
 }
 
 /* Stop processing requests in the queue */
 void snd_sh4_to_aica_stop(void) {
     mutex_lock(&queue_proc_mutex);
-    g2_write_32(SPU_RAM_UNCACHED_BASE + AICA_MEM_CMD_QUEUE + offsetof(aica_queue_t, process_ok), 0);
+    g2_write_32((uint32_t)aica_header.cmd_queue
+                + SPU_RAM_UNCACHED_BASE
+                + offsetof(aica_queue_t, process_ok), 0);
 }
 
 /* Transfer one packet of data from the AICA->SH4 queue. Expects to
@@ -145,30 +154,30 @@ void snd_sh4_to_aica_stop(void) {
    if failure, 0 for no packets available, 1 otherwise. Failure
    might mean a permanent failure since the queue is probably out of sync. */
 int snd_aica_to_sh4(void *packetout) {
-    uint32  bot, start, stop, top, size, cnt, *pkt32;
-    g2_ctx_t ctx = g2_lock();
+    uint32_t bot, top, start, stop, size, cnt, *pkt32;
+    aica_queue_t resp_queue;
+    g2_ctx_t ctx;
 
-    /* Set these up for reference */
-    bot = SPU_RAM_UNCACHED_BASE + AICA_MEM_RESP_QUEUE;
-    assert_msg(g2_read_32_raw(bot + offsetof(aica_queue_t, valid)), "Queue is not yet valid");
+    /* Read the response queue's structure */
+    aram_read(&resp_queue, (aram_addr_t)aica_header.resp_queue, sizeof(resp_queue));
 
-    top = SPU_RAM_UNCACHED_BASE + AICA_MEM_RESP_QUEUE + g2_read_32_raw(bot + offsetof(aica_queue_t, size));
-    start = SPU_RAM_UNCACHED_BASE + AICA_MEM_RESP_QUEUE + g2_read_32_raw(bot + offsetof(aica_queue_t, tail));
-    stop = SPU_RAM_UNCACHED_BASE + AICA_MEM_RESP_QUEUE + g2_read_32_raw(bot + offsetof(aica_queue_t, head));
-    cnt = 0;
+    assert_msg(resp_queue.valid, "Queue is not yet valid");
+
+    bot = SPU_RAM_UNCACHED_BASE + (uintptr_t)resp_queue.data;
+    top = bot + resp_queue.size;
+    start = bot + resp_queue.tail;
+    stop = bot + resp_queue.head;
     pkt32 = (uint32_t *)packetout;
+    cnt = 0;
 
     /* Is there anything? */
-    if(start == stop) {
-        g2_unlock(ctx);
+    if(start == stop)
         return 0;
-    }
 
     /* Check for packet size overflow */
-    size = g2_read_32_raw(start + offsetof(aica_cmd_t, size));
+    size = g2_read_32(start + offsetof(aica_cmd_t, size));
 
     if(size >= AICA_CMD_MAX_SIZE) {
-        g2_unlock(ctx);
         dbglog(DBG_ERROR, "snd_aica_to_sh4(): packet larger than %d dwords\n", AICA_CMD_MAX_SIZE);
         return -1;
     }
@@ -177,7 +186,9 @@ int snd_aica_to_sh4(void *packetout) {
     stop = start + size * 4;
 
     if(stop > top)
-        stop -= top - (SPU_RAM_UNCACHED_BASE + AICA_MEM_RESP_QUEUE);
+        stop -= top - bot;
+
+    ctx = g2_lock();
 
     while(start != stop) {
         /* Fifo wait if necessary */
@@ -198,8 +209,12 @@ int snd_aica_to_sh4(void *packetout) {
     if((cnt & 7) == 0)
         g2_fifo_wait();
 
-    g2_write_32_raw(bot + offsetof(aica_queue_t, tail), start - (SPU_RAM_UNCACHED_BASE + AICA_MEM_RESP_QUEUE));
+    g2_write_32_raw((uint32_t)aica_header.resp_queue
+                    + SPU_RAM_UNCACHED_BASE
+                    + offsetof(aica_queue_t, tail),
+                    start - bot);
     g2_unlock(ctx);
+
 
     return 1;
 }
@@ -224,7 +239,10 @@ void snd_poll_resp(void) {
 }
 
 uint16_t snd_get_pos(unsigned int ch) {
-    return g2_read_32(SPU_RAM_UNCACHED_BASE + AICA_CHANNEL(ch) + offsetof(aica_channel_t, pos)) & 0xffff;
+    return g2_read_32(SPU_RAM_UNCACHED_BASE +
+                      (aram_addr_t)aica_header.channels +
+                      ch * sizeof(*aica_header.channels) +
+                      offsetof(aica_channel_t, pos));
 }
 
 bool snd_is_playing(unsigned int ch) {
