@@ -11,6 +11,48 @@
 #include <aicaos/init.h>
 #include <aicaos/irq.h>
 
+unsigned int timer;
+
+/* Called from crt0.s */
+__attribute__((interrupt("FIQ"))) void fiq_handler(void)
+{
+    unsigned int req = SPU_REG32(REG_SPU_INT_REQUEST);
+
+    switch (SPU_FIELD_GET(SPU_INT_REQUEST_CODE, req)) {
+    case SPU_INT_TIMER:
+        timer++;
+
+        /* Request a new timer interrupt. */
+        SPU_REG32(REG_SPU_TIMER0_CTRL) =
+            SPU_FIELD_PREP(SPU_TIMER_CTRL_START, 256 - 44100 / 1000) |
+            SPU_FIELD_PREP(SPU_TIMER_CTRL_DIV, SPU_TIMER_CTRL_DIV_1);
+
+        /* Ack the timer interrupt */
+        SPU_REG32(REG_SPU_INT_RESET) = SPU_INT_ENABLE_TIMER0;
+        break;
+
+    case SPU_INT_BUS:
+        while (SPU_REG32(REG_SPU_BUS_REQUEST) & SPU_INT_ENABLE_BUS);
+        break;
+
+    case SPU_INT_SH4:
+        /* Ack the SH4 interrupt */
+        SPU_REG32(REG_SPU_INT_RESET) = SPU_INT_ENABLE_SH4;
+        SPU_REG32(REG_SPU_INT_CLEAR) = 1;
+        break;
+
+    default:
+        /* Unhandled FIQ - nothing to do */
+        break;
+    }
+
+    /* ACK FIQ interrupt */
+    SPU_REG32(REG_SPU_INT_CLEAR) = 1;
+    SPU_REG32(REG_SPU_INT_CLEAR) = 1;
+    SPU_REG32(REG_SPU_INT_CLEAR) = 1;
+    SPU_REG32(REG_SPU_INT_CLEAR) = 1;
+}
+
 void irq_restore(irq_ctx_t ctx)
 {
     __asm__ volatile("msr CPSR_c,%0" : : "r"(ctx));
