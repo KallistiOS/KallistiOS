@@ -22,14 +22,6 @@ __noreturn void fiq_handler(void)
     switch (SPU_FIELD_GET(SPU_INT_REQUEST_CODE, req)) {
     case SPU_INT_TIMER:
         timer++;
-
-        /* Request a new timer interrupt. */
-        SPU_REG32(REG_SPU_TIMER0_CTRL) =
-            SPU_FIELD_PREP(SPU_TIMER_CTRL_START, 256 - 44100 / 1000) |
-            SPU_FIELD_PREP(SPU_TIMER_CTRL_DIV, SPU_TIMER_CTRL_DIV_1);
-
-        /* Ack the timer interrupt */
-        SPU_REG32(REG_SPU_INT_RESET) = SPU_INT_ENABLE_TIMER0;
         break;
 
     case SPU_INT_BUS:

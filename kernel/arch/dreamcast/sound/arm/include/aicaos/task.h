@@ -5,6 +5,11 @@
 
 #define DEFAULT_STACK_SIZE 4096
 
+/* 1764 ticks of the 44100 Hz clock == 25 Hz */
+#define DEFAULT_TIMEOUT_WAKEUP 1764
+
+typedef unsigned int ticks_t;
+
 struct context {
     /* XXX: don't change the order */
     unsigned int r0_r7[8];
@@ -16,6 +21,7 @@ struct context {
 enum task_state {
     TASK_DEAD,
     TASK_RUNNING,
+    TASK_SLEEPING,
 };
 
 enum task_prio {
@@ -32,6 +38,7 @@ struct task {
     struct context context;
     struct task *next;
     unsigned int id;
+    ticks_t wakeup;
     enum task_state state;
     const char *name;
 };
@@ -51,6 +58,30 @@ void task_reschedule(void);
  * The difference with a reschedule, is that yielding will cause the scheduler
  * to always pick a different task. */
 void task_yield(void);
+
+/* Sleep for a given number of 44100 Hz ticks */
+void task_sleep(ticks_t ticks);
+
+/* Convert from microseconds to ticks */
+static inline ticks_t us_to_ticks(unsigned int us)
+{
+    /* Similar as this: cnt = (us * 44100ull + 999999ull) / 1000000ull;
+     * But with the constants multiplied by 1.048576 so that we can
+     * replace the 64-bit division by a bit shift. */
+    return (us * 46242ull + 1048575ull) >> 20;
+}
+
+/* Convert from milliseconds to ticks */
+static inline ticks_t ms_to_ticks(unsigned int ms)
+{
+    return us_to_ticks(ms * 1000);
+}
+
+/* Convert from ticks to milliseconds */
+static inline unsigned int ticks_to_ms(ticks_t ticks)
+{
+    return ticks * 10 / 441;
+}
 
 /* Reschedule without saving the current task. */
 __noreturn void __task_reschedule(_Bool skip_me);
