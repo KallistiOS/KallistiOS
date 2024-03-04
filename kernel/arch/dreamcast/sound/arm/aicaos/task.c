@@ -20,6 +20,8 @@ static unsigned short last_pos;
 static unsigned int task_counter = 0;
 static struct task * tasks[TASK_PRIO_COUNT];
 
+static struct task *wait_queue;
+
 /* Inside task_asm.S */
 __noreturn void task_select(struct context *context);
 __noreturn void task_exit(void);
@@ -43,7 +45,7 @@ static void task_wakeup(unsigned short ticks)
 
     for (i = 0; i < TASK_PRIO_COUNT; i++) {
         for (task = tasks[i]; task; task = task->next) {
-            if (task->state == TASK_SLEEPING) {
+            if (task->state == TASK_SLEEPING || task->state == TASK_WAIT_UNTIL) {
                 if (task->wakeup > ticks)
                     task->wakeup -= ticks;
                 else
@@ -172,6 +174,8 @@ void task_init(struct task *task, const char *name, void *func,
     task->context.cpsr = 0x13; /* supervisor */
     task->state = TASK_RUNNING;
     task->name = name;
+    task->wait_next = NULL;
+    task->awaken = 0;
 
     irq_disable_scoped();
 
@@ -188,5 +192,52 @@ void task_sleep(ticks_t ticks)
         current_task->state = TASK_SLEEPING;
 
         task_reschedule();
+    }
+}
+
+_Bool task_wait_timeout(void *obj, ticks_t ticks)
+{
+    irq_disable_scoped();
+
+    current_task->wakeup = ticks;
+    if (ticks)
+        current_task->state = TASK_WAIT_UNTIL;
+    else
+        current_task->state = TASK_WAIT;
+
+    current_task->awaken = 0;
+    current_task->wait_obj = obj;
+
+    /* Add current task to the wait queue */
+    current_task->wait_next = wait_queue;
+    wait_queue = current_task;
+
+    task_reschedule();
+
+    return current_task->awaken;
+}
+
+void task_wake(void *obj, _Bool all)
+{
+    struct task *task, *prev = NULL;
+
+    irq_disable_scoped();
+
+    for (task = wait_queue; task; prev = task, task = task->wait_next) {
+        if ((task->state == TASK_WAIT || task->state == TASK_WAIT_UNTIL)
+            && task->wait_obj == obj) {
+            /* Remove task from wait queue */
+            if (prev)
+                prev->next = task->wait_next;
+            else
+                wait_queue = task->wait_next;
+
+            /* We're running again */
+            task->state = TASK_RUNNING;
+            task->awaken = 1;
+
+            if (!all)
+                break;
+        }
     }
 }

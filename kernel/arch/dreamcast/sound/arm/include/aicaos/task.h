@@ -22,6 +22,8 @@ enum task_state {
     TASK_DEAD,
     TASK_RUNNING,
     TASK_SLEEPING,
+    TASK_WAIT,
+    TASK_WAIT_UNTIL,
 };
 
 enum task_prio {
@@ -37,6 +39,9 @@ enum task_prio {
 struct task {
     struct context context;
     struct task *next;
+    struct task *wait_next;
+    _Bool awaken;
+    void *wait_obj;
     unsigned int id;
     ticks_t wakeup;
     enum task_state state;
@@ -58,6 +63,15 @@ void task_reschedule(void);
  * The difference with a reschedule, is that yielding will cause the scheduler
  * to always pick a different task. */
 void task_yield(void);
+
+_Bool task_wait_timeout(void *obj, ticks_t ticks);
+
+static inline void task_wait(void *obj)
+{
+    task_wait_timeout(obj, 0);
+}
+
+void task_wake(void *obj, _Bool all);
 
 /* Sleep for a given number of 44100 Hz ticks */
 void task_sleep(ticks_t ticks);
