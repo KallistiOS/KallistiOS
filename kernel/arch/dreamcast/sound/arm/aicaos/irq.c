@@ -10,11 +10,12 @@
 #include <registers.h>
 #include <aicaos/init.h>
 #include <aicaos/irq.h>
+#include <aicaos/task.h>
 
 unsigned int timer;
 
 /* Called from crt0.s */
-__attribute__((interrupt("FIQ"))) void fiq_handler(void)
+__noreturn void fiq_handler(void)
 {
     unsigned int req = SPU_REG32(REG_SPU_INT_REQUEST);
 
@@ -51,6 +52,9 @@ __attribute__((interrupt("FIQ"))) void fiq_handler(void)
     SPU_REG32(REG_SPU_INT_CLEAR) = 1;
     SPU_REG32(REG_SPU_INT_CLEAR) = 1;
     SPU_REG32(REG_SPU_INT_CLEAR) = 1;
+
+    /* Reschedule */
+    __task_reschedule(0);
 }
 
 void irq_restore(irq_ctx_t ctx)
