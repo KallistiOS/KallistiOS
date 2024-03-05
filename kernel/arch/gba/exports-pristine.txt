@@ -1,0 +1,9 @@
+# These are the arch-dependent exports. These are the things which ought to
+# be available but whose interfaces aren't arch-independent.
+#
+# You can comment out things you don't really want to export here, but be
+# aware that if you try to load someone else's module later, they might
+# be needing something in here.
+
+include kos.h
+
