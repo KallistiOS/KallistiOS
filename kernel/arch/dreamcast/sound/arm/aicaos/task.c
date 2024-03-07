@@ -176,6 +176,8 @@ void task_init(struct task *task, const char *name, void *func,
     task->name = name;
     task->wait_next = NULL;
     task->awaken = 0;
+    task->prio = prio;
+    task->real_prio = prio;
 
     irq_disable_scoped();
 
@@ -240,4 +242,40 @@ void task_wake(void *obj, _Bool all)
                 break;
         }
     }
+}
+
+static void task_set_prio(struct task *task, enum task_prio prio)
+{
+    struct task *tmp, *prev = NULL;
+    enum task_prio curr = task->prio;
+
+    for (tmp = tasks[curr]; tmp; prev = tmp, tmp = tmp->next) {
+        if (tmp == task) {
+            if (prev)
+                prev->next = tmp->next;
+            else
+                tasks[curr] = tmp->next;
+            break;
+        }
+    }
+
+    task->prio = prio;
+    task->next = tasks[prio];
+    tasks[prio] = task;
+}
+
+void task_boost(struct task *task)
+{
+    irq_disable_scoped();
+
+    if (current_task->prio < task->prio)
+        task_set_prio(task, current_task->prio);
+}
+
+void task_unboost(void)
+{
+    irq_disable_scoped();
+
+    if (current_task->prio != current_task->real_prio)
+        task_set_prio(current_task, current_task->real_prio);
 }
