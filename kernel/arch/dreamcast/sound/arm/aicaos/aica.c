@@ -12,10 +12,13 @@
 #include <aicaos/aica.h>
 #include <aicaos/init.h>
 #include <aicaos/irq.h>
+#include <aica_comm.h>
 #include <registers.h>
 
 /* Channels mask in inversed order (bit 0 is channel 63, bit 63 is channel 0) */
 static uint64_t channels_mask;
+
+static uint8_t counter_channel;
 
 static void aica_init(void) {
     int i, j;
@@ -33,8 +36,20 @@ static void aica_init(void) {
     }
 
     SPU_REG32(REG_SPU_MASTER_VOL) = SPU_FIELD_PREP(SPU_MASTER_VOL_VOL, 0xf);
+
+    /* Use a regular channel as a counter.
+     * Since timers are not readable, we use this channel to read how much time
+     * has elapsed since the last time a timer was programmed. */
+    counter_channel = aica_reserve_channel();
+    aica_play(counter_channel, (void *)0, AICA_SM_ADPCM, 0,
+              0xffff, 44100, 0, 0, AICA_PLAY_LOOP);
 }
 aicaos_initcall(aica_init);
+
+uint16_t aica_read_counter(void)
+{
+    return aica_get_pos(counter_channel);
+}
 
 /* Translates a volume from linear form to logarithmic form (required by
    the AICA chip
