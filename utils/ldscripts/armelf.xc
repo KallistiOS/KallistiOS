@@ -30,7 +30,9 @@ SECTIONS
 	}
 
 	__bss_end = ALIGN(0x4);
+	__heap_start = __bss_end;
 
+	__heap_end = 0x1FE000;
 	__stack = 0x1FF000;
 	__fiq_stack = 0x1FFFFC;
 }
