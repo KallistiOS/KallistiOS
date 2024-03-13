@@ -28,5 +28,8 @@ void aica_pan(uint8_t ch, uint8_t pan);
 void aica_freq(uint8_t ch, uint32_t freq);
 uint16_t aica_get_pos(uint8_t ch);
 
+uint8_t aica_reserve_channel(void);
+void aica_unreserve_channel(uint8_t ch);
+
 #endif  /* __AICAOS_AICA_H */
 

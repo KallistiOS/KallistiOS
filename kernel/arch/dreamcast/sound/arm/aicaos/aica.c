@@ -14,6 +14,9 @@
 #include <aicaos/irq.h>
 #include <registers.h>
 
+/* Channels mask in inversed order (bit 0 is channel 63, bit 63 is channel 0) */
+static uint64_t channels_mask;
+
 static void aica_init(void) {
     int i, j;
 
@@ -245,4 +248,23 @@ uint16_t aica_get_pos(uint8_t ch) {
 
     /* Update position counters */
     return SPU_REG32(REG_SPU_INFO_PLAY_POS);
+}
+
+uint8_t aica_reserve_channel(void)
+{
+    uint8_t ch;
+
+    irq_disable_scoped();
+
+    ch = __builtin_ffsll(~channels_mask) - 1;
+    channels_mask |= 1ull << ch;
+
+    return 63 - ch;
+}
+
+void aica_unreserve_channel(uint8_t ch)
+{
+    irq_disable_scoped();
+
+    channels_mask &= ~(1ull << (63 - ch));
 }
