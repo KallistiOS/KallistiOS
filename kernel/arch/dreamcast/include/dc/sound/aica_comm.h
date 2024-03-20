@@ -101,18 +101,13 @@ typedef struct aica_channel {
     \brief                   Values of commands for aica_cmd_t
     @{
 */
-#define AICA_CMD_NONE       0x00000000  /**< \brief No command (dummy packet)    */
-#define AICA_CMD_PING       0x00000001  /**< \brief Check for signs of life  */
 #define AICA_CMD_CHAN       0x00000002  /**< \brief Perform a wavetable action   */
-#define AICA_CMD_SYNC_CLOCK 0x00000003  /**< \brief Reset the millisecond clock  */
 /** @} */
 
 /** \defgroup audio_aica_resp Responses
     \brief                    Values of responses to aica_cmd_t commands
     @{
  */
-#define AICA_RESP_NONE      0x00000000  /**< \brief No response */
-#define AICA_RESP_PONG      0x00000001  /**< \brief Response to CMD_PING */
 #define AICA_RESP_DBGPRINT  0x00000002  /**< \brief Payload is a C string */
 /** @} */
 
