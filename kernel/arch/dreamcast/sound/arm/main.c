@@ -104,17 +104,8 @@ uint32 process_one(uint32 tail) {
 
     /* Figure out what type of packet it is */
     switch(pkt->cmd) {
-        case AICA_CMD_NONE:
-            break;
-        case AICA_CMD_PING:
-            /* Not implemented yet */
-            break;
         case AICA_CMD_CHAN:
             process_chn(pkt->cmd_id, (aica_channel_t *)pkt->cmd_data);
-            break;
-        case AICA_CMD_SYNC_CLOCK:
-            /* Reset our timer clock to zero */
-            timer = 0;
             break;
         default:
             /* error */
