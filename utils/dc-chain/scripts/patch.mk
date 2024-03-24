@@ -87,6 +87,25 @@ define patch_apply
 	fi;
 endef
 
+# This function is used to replace the config.guess & config.sub that come 
+# bundled with the sources with updated versions from GNU. This fixes issues
+# when trying to compile older versions of the toolchain software on newer
+# hardware.
+define update_configs
+	@echo "+++ Updating $(1) files in $(src_dir)"; \
+	files=$$(find $(src_dir) -name $(1)); \
+	echo "$${files}" | while I= read -r line; do \
+		echo "    $${line}"; \
+		cp $(1) $${line} > /dev/null; \
+	done; \
+	echo ""
+endef
+
+define update_config_guess_sub
+	$(call update_configs,config.guess)
+	$(call update_configs,config.sub)
+endef
+
 # Binutils
 $(patch_binutils): patch_target_name = Binutils
 $(patch_binutils): src_dir = binutils-$(binutils_ver)
@@ -95,6 +114,7 @@ $(patch_binutils): diff_patches := $(wildcard $(patches)/$(src_dir)*.diff)
 $(patch_binutils): diff_patches += $(wildcard $(patches)/$(host_triplet)/$(src_dir)*.diff)
 $(patch_binutils):
 	$(call patch_apply)
+	$(call update_config_guess_sub)
 
 # GNU Compiler Collection (GCC)
 $(patch_gcc): patch_target_name = GCC
@@ -109,6 +129,7 @@ endif
 endif
 $(patch_gcc):
 	$(call patch_apply)
+	$(call update_config_guess_sub)
 
 # Newlib
 $(patch_newlib): patch_target_name = Newlib
@@ -118,6 +139,7 @@ $(patch_newlib): diff_patches := $(wildcard $(patches)/$(src_dir)*.diff)
 $(patch_newlib): diff_patches += $(wildcard $(patches)/$(host_triplet)/$(src_dir)*.diff)
 $(patch_newlib):
 	$(call patch_apply)
+	$(call update_config_guess_sub)
 
 # KallistiOS
 $(patch_kos): patch_target_name = KallistiOS

@@ -8,4 +8,5 @@ insight-*
 build-*
 *.stamp
 config.guess
+config.sub
 config.mk

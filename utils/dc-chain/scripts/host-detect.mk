@@ -13,6 +13,8 @@
 # This will help a lot to execute conditional steps depending on the host.
 config_guess = config.guess
 config_guess_url = http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=${config_guess};hb=HEAD
+config_sub = config.sub
+config_sub_url = http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=${config_sub};hb=HEAD
 
 is_clean_target=$(findstring clean,$(MAKECMDGOALS))
 config_guess_check=$(shell test -f ./config.guess || echo 0)
@@ -20,6 +22,7 @@ ifeq ($(is_clean_target),)
   ifeq ($(config_guess_check),0)
     $(info Downloading $(config_guess))
     $(shell $(call web_download,$(config_guess_url),$(config_guess)))
+    $(shell $(call web_download,$(config_sub_url),$(config_sub)))
     $(shell chmod +x $(config_guess))
   endif
 endif

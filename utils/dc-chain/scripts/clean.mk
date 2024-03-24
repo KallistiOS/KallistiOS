@@ -50,6 +50,8 @@ clean-gdb-archives:
 	-rm $(gdb_file)
 
 clean-arm-archives:
+	-rm $(config_guess)
+	-rm $(config_sub)
 	-rm $(arm_binutils_file)
 	-rm $(arm_gcc_file)
 	-rm $(arm_gmp_file)
@@ -58,6 +60,8 @@ clean-arm-archives:
 	-rm $(arm_isl_file)
 
 clean-sh-archives:
+	-rm $(config_guess)
+	-rm $(config_sub)
 	-rm $(sh_binutils_file)
 	-rm $(sh_gcc_file)
 	-rm $(newlib_file)
