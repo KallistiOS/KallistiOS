@@ -338,6 +338,15 @@ uint64_t timer_ns_gettime64(void);
     direct manipulation of it will interfere with the API's proper functioning.
 */
 
+/** \brief      Legacy Alias for timer_spin_sleep_ms()
+    \ingroup    tmu_sleep
+    
+    \deprecated Use timer_spin_sleep_ms()
+
+    \sa timer_spin_sleep_us(), timer_spin_sleep_ns()
+*/
+#define timer_spin_sleep     timer_spin_sleep_ms
+
 /** \brief  Spin-loop sleep function.
     \ingroup tmu_sleep
 
@@ -345,8 +354,34 @@ uint64_t timer_ns_gettime64(void);
     and interrupts are disabled. It uses \ref TMU1 to sleep.
 
     \param  ms              The number of milliseconds to sleep.
+
+    \sa timer_spin_sleep_us(), timer_spin_sleep_ns()
 */
-void timer_spin_sleep(int ms);
+void timer_spin_sleep_ms(int ms);
+
+/** \brief  Spin-loop sleep function (Microsecond Resolution).
+    \ingroup tmu_sleep
+
+    This function is the microsecond-resolution equivalent of
+    timer_spin_sleep_ms().
+
+    \param  us              The number of microseconds to sleep.
+
+    \sa timer_spin_sleep_ms(), timer_spin_sleep_ns()
+*/
+void timer_spin_sleep_us(int us);
+
+/** \brief  Spin-loop sleep function (Nanosecond Resolution).
+    \ingroup tmu_sleep
+
+    This function is the nanosecond-resolution equivalent of
+    timer_spin_sleep_ms().
+
+    \param  ns              The number of nanoseconds to sleep.
+
+    \sa timer_spin_sleep_ms(), timer_spin_sleep_us()
+*/
+void timer_spin_sleep_ns(int ns);
 
 /** \defgroup tmu_primary   Primary Timer
     \brief                  Primary timer used by the kernel.

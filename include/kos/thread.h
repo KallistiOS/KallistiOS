@@ -3,7 +3,7 @@
    include/kos/thread.h
    Copyright (C) 2000, 2001, 2002, 2003 Megan Potter
    Copyright (C) 2009, 2010, 2016 Lawrence Sebald
-
+   Copyright (C) 2023 Falco Girgis
 */
 
 /** \file    kos/thread.h
@@ -454,6 +454,14 @@ void thd_schedule_next(kthread_t *thd);
 */
 void thd_pass(void);
 
+/** \brief Legacy alias for thd_sleep_ms()
+
+    \deprecated Use thd_sleep_ms().
+
+    \sa thd_sleep_us(), thd_sleep_ns()
+*/
+#define thd_sleep   thd_sleep_ms
+
 /** \brief   Sleep for a given number of milliseconds.
 
     This function puts the current thread to sleep for the specified amount of
@@ -463,8 +471,30 @@ void thd_pass(void);
     will likely sleep longer.
 
     \param  ms              The number of milliseconds to sleep.
+
+    \sa thd_sleep_us(), thd_sleep_ns()
 */
-void thd_sleep(int ms);
+void thd_sleep_ms(int ms);
+
+/** \brief   Sleep for a given number of microseconds.
+
+    This function is the microsecond-resolution equivalent of thd_sleep_ms().
+
+    \param  us              The number of microseconds to sleep.
+
+    \sa thd_sleep_ms(), thd_sleep_ns()
+*/
+void thd_sleep_us(int us);
+
+/** \brief   Sleep for a given number of nanoseconds.
+
+    This function is the nanosecond-resolution equivalent of thd_sleep_ms().
+
+    \param  ns              The number of nanoseconds to sleep.
+
+    \sa thd_sleep_ms(), thd_sleep_us()
+*/
+void thd_sleep_ns(int ns);
 
 /** \brief       Set a thread's priority value.
     \relatesalso kthread_t

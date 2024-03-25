@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
                       (cont_btn_callback_t)arch_exit);
 
     /* Print a banner */
-    printf("KOS 1.1.x thread program:\n");
+    printf("KOS 2.x thread program:\n");
 
     /* Create a semaphore for timing purposes */
     sem_init(&sem, 1);

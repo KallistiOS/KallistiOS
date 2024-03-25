@@ -152,23 +152,34 @@ int timer_clear(int which) {
     TIMER16(tcrs[which]) &= ~UNF;
     return !!(value & UNF);
 }
-
 /* Spin-loop kernel sleep func: uses the secondary timer in the
    SH-4 to very accurately delay even when interrupts are disabled */
-void timer_spin_sleep(int ms) {
-    timer_prime(TMU1, 1000, 0);
+static void timer_spin_sleep_ticks(unsigned speed, int ticks) {
+    timer_prime(TMU1, speed, 0);
     timer_clear(TMU1);
     timer_start(TMU1);
 
-    while(ms > 0) {
+    while(ticks > 0) {
         while(!(TIMER16(tcrs[TMU1]) & UNF))
             ;
 
         timer_clear(TMU1);
-        ms--;
+        ticks--;
     }
 
     timer_stop(TMU1);
+}
+
+void timer_spin_sleep_ms(int ms) {
+    timer_spin_sleep_ticks(1000, ms);
+}
+
+void timer_spin_sleep_us(int us) {
+    timer_spin_sleep_ticks(1000000, us);
+}
+
+void timer_spin_sleep_ns(int ns) {
+    timer_spin_sleep_ticks(1000000000, ns);
 }
 
 /* Enable timer interrupts; needs to move to irq.c sometime. */
