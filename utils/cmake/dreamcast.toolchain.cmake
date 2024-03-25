@@ -51,8 +51,10 @@ if(NOT DEFINED KOS_PORTS)
     message(VERBOSE "KOS_PORTS: ${KOS_PORTS}")
 endif()
 
+list(APPEND CMAKE_MODULE_PATH $ENV{KOS_BASE}/utils/cmake)
+
 ##### Configure CMake System #####
-set(CMAKE_SYSTEM_NAME Generic-ELF)
+set(CMAKE_SYSTEM_NAME Dreamcast)
 set(CMAKE_SYSTEM_VERSION 1)
 set(CMAKE_SYSTEM_PROCESSOR SH4)
 set(PLATFORM_DREAMCAST TRUE)
@@ -70,6 +72,10 @@ set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 
 # Never use the CMAKE_FIND_ROOT_PATH to find programs with find_program()
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+
+# Set sysroot to kos-ports folder
+set(CMAKE_SYSROOT ${KOS_PORTS})
+set(ENV{PKG_CONFIG_SYSROOT_DIR} ${KOS_PORTS})
 
 ##### Add Platform-Specific #defines #####
 add_compile_definitions(__DREAMCAST__ _arch_dreamcast)

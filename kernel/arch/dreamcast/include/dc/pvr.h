@@ -2395,7 +2395,7 @@ int pvr_dma_transfer(void *src, uintptr_t dest, size_t count, int type,
 #define PVR_DMA_TA        2   /**< \brief Transfer to the tile accelerator */
 #define PVR_DMA_YUV       3   /**< \brief Transfer to the YUV converter (TA) */
 #define PVR_DMA_VRAM32_SB 4   /**< \brief Transfer to/from VRAM using PVR i/f */
-#define PVR_DMA_VRAM64_SB 4   /**< \brief Transfer to/from VRAM using PVR i/f */
+#define PVR_DMA_VRAM64_SB 5   /**< \brief Transfer to/from VRAM using PVR i/f */
 /** @} */
 
 /** \brief   Load a texture using TA DMA.

@@ -14,10 +14,10 @@ clean:
 	$(KOS_MAKE) -C bfont clean
 	$(KOS_MAKE) -C palmenu clean
 	$(KOS_MAKE) -C minifont clean
-	$(KOS_MAKE) -C multibuffer
+	$(KOS_MAKE) -C multibuffer clean
 
 dist:
 	$(KOS_MAKE) -C bfont dist
 	$(KOS_MAKE) -C palmenu dist
 	$(KOS_MAKE) -C minifont dist
-	$(KOS_MAKE) -C multibuffer
+	$(KOS_MAKE) -C multibuffer dist

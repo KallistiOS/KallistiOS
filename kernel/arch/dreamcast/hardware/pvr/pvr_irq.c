@@ -77,8 +77,10 @@ static void dma_next_list(void *data) {
     }
 }
 
-void pvr_int_handler(uint32 code) {
+void pvr_int_handler(uint32 code, void *data) {
     int bufn = pvr_state.view_target;
+
+    (void)data;
 
     // What kind of event did we get?
     switch(code) {

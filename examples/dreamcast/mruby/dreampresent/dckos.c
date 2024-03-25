@@ -42,7 +42,7 @@
 #define CONV1555TO565(colour) ( (((colour) & 0x7C00) << 1) | (((colour) & 0x03E0) << 1) | ((colour) & 0x001F) )
 
 // CONVERT R, G, B to RGB565
-#define PACK_PIXEL(r, g, b) ( ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3)  )
+#define PACK_PIXEL(r, g, b) ( (((r) & 0xF8) << 8) | (((g) & 0xFC) << 3) | ((b) >> 3)  )
 
 int PX_PER_LINE = 640;
 

@@ -846,6 +846,10 @@ int fs_ramdisk_detach(const char * fn, void ** obj, size_t * size) {
 
 /* Initialize the file system */
 int fs_ramdisk_init(void) {
+    /* Test if initted */
+    if(rootdir != NULL)
+        return -1;
+
     /* Create an empty root dir */
     if(!(rootdir = (rd_dir_t *)malloc(sizeof(rd_dir_t))))
         return -1;
@@ -885,6 +889,11 @@ int fs_ramdisk_init(void) {
 /* De-init the file system */
 int fs_ramdisk_shutdown(void) {
     rd_file_t *f1, *f2;
+
+    /* Test if initted */
+    if(rootdir == NULL)
+        return -1;
+
     /* For now assume there's only the root dir, since mkdir and
        rmdir aren't even implemented... */
     f1 = LIST_FIRST(rootdir);

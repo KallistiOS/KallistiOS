@@ -38,10 +38,11 @@ __BEGIN_DECLS
     were passed to the IRQ handler for vblanks.
 
     \param  hnd             The handler to add.
+    \param  data            A user pointer that will be passed to the callback.
     
     \return                 The handle id on success, or <0 on failure.
 */
-int vblank_handler_add(asic_evt_handler hnd);
+int vblank_handler_add(asic_evt_handler hnd, void *data);
 
 /** \brief  Remove a vblank handler.
 

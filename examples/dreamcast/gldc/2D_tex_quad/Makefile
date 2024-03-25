@@ -38,4 +38,4 @@ rm-elf:
 	-rm -f $(TARGET)
 
 run: $(TARGET)
-	$(KOS_LOADER) -x $(TARGET)
+	$(KOS_LOADER) $(TARGET)

@@ -38,8 +38,9 @@ static vuint32 * const pvr_dma = (vuint32 *)0xa05f6800;
 #define PVR_LMMODE0 0x84/4
 #define PVR_LMMODE1 0x88/4
 
-static void pvr_dma_irq_hnd(uint32_t code) {
+static void pvr_dma_irq_hnd(uint32_t code, void *data) {
     (void)code;
+    (void)data;
 
     if(DMAC_DMATCR2 != 0)
         dbglog(DBG_INFO, "pvr_dma: The dma did not complete successfully\n");
@@ -178,7 +179,7 @@ void pvr_dma_init(void) {
     pvr_dma[PVR_LMMODE1] = 1;
 
     /* Hook the necessary interrupts */
-    asic_evt_set_handler(ASIC_EVT_PVR_DMA, pvr_dma_irq_hnd);
+    asic_evt_set_handler(ASIC_EVT_PVR_DMA, pvr_dma_irq_hnd, NULL);
     asic_evt_enable(ASIC_EVT_PVR_DMA, ASIC_IRQ_DEFAULT);
 }
 
@@ -190,7 +191,7 @@ void pvr_dma_shutdown(void) {
 
     /* Clean up */
     asic_evt_disable(ASIC_EVT_PVR_DMA, ASIC_IRQ_DEFAULT);
-    asic_evt_set_handler(ASIC_EVT_PVR_DMA, NULL);
+    asic_evt_remove_handler(ASIC_EVT_PVR_DMA);
     sem_destroy(&dma_done);
 }
 

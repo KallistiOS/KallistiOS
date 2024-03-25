@@ -15,6 +15,10 @@
     This will probably go away at some point in the future, if/when Newlib gets
     an implementation of this function. But for now, it's here.
 
+    \todo
+    - Implement _POSIX_TIMERS, which requires POSIX signals back-end.
+    - Implement thread-specific CPU time
+
     \author Lawrence Sebald
     \author Falco Girgis
 */
@@ -37,8 +41,11 @@ __BEGIN_DECLS
 struct timespec;
 
 #define TIME_UTC 1
+
+/* Microsecond resolution for clock(), per POSIX standard */
 #define CLOCKS_PER_SEC 1000000
 
+/* C11 nanosecond-resolution timing. */
 extern int timespec_get(struct timespec *ts, int base);
 
 #endif /* !defined(__STRICT_ANSI__) || (__STDC_VERSION__ >= 201112L) || (__cplusplus >= 201703L) */
@@ -63,6 +70,13 @@ extern int timespec_get(struct timespec *ts, int base);
 #define _POSIX_THREAD_CPUTIME 1
 #endif
 */
+
+/* Explicitly provided function declarations for POSIX clock API, since
+   getting them from Newlib requires supporting the rest of the _POSIX_TIMERS
+   API, which is not implemented yet. */
+extern int clock_settime(__clockid_t clock_id, const struct timespec *ts);
+extern int clock_gettime(__clockid_t clock_id, struct timespec *ts);
+extern int clock_getres(__clockid_t clock_id, struct timespec *res);
 
 #endif /* !defined(__STRICT_ANSI__) || (_POSIX_C_SOURCE >= 199309L) */
 

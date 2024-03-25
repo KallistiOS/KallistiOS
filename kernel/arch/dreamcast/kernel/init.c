@@ -50,16 +50,11 @@ uint32 _fs_dclsocket_get_ip(void);
 
 /* We have to put this here so we can include plat-specific devices */
 dbgio_handler_t * dbgio_handlers[] = {
-#ifndef _arch_sub_naomi
     &dbgio_dcload,
     &dbgio_dcls,
     &dbgio_scif,
     &dbgio_null,
     &dbgio_fb
-#else
-    &dbgio_null,
-    &dbgio_fb
-#endif
 };
 int dbgio_handler_cnt = sizeof(dbgio_handlers) / sizeof(dbgio_handler_t *);
 
@@ -133,13 +128,11 @@ int  __weak arch_auto_init(void) {
 
     ubc_init();
 
-#ifndef _arch_sub_naomi
     if(!(__kos_init_flags & INIT_NO_DCLOAD))
         fs_dcload_init_console();   /* Init dc-load console, if applicable */
 
     /* Init SCIF for debug stuff (maybe) */
     scif_init();
-#endif
 
     /* Init debug IO */
     dbgio_init();
@@ -183,12 +176,12 @@ int  __weak arch_auto_init(void) {
     if(!KOS_INIT_FLAG_CALL(fs_romdisk_mount_builtin))
         KOS_INIT_FLAG_CALL(fs_romdisk_mount_builtin_legacy);
 
-#ifndef _arch_sub_naomi
     if(!(__kos_init_flags & INIT_NO_DCLOAD) && *DCLOADMAGICADDR == DCLOADMAGICVALUE) {
         dbglog(DBG_INFO, "dc-load console support enabled\n");
         fs_dcload_init();
     }
 
+#ifndef _arch_sub_naomi
     fs_iso9660_init();
 #endif
 
@@ -211,8 +204,8 @@ int  __weak arch_auto_init(void) {
 }
 
 void  __weak arch_auto_shutdown(void) {
-#ifndef _arch_sub_naomi
     fs_dclsocket_shutdown();
+#ifndef _arch_sub_naomi
     KOS_INIT_FLAG_CALL(net_shutdown);
 #endif
 
@@ -222,9 +215,7 @@ void  __weak arch_auto_shutdown(void) {
     hardware_shutdown();
     pvr_shutdown();
     library_shutdown();
-#ifndef _arch_sub_naomi
     fs_dcload_shutdown();
-#endif
     KOS_INIT_FLAG_CALL(vmu_fs_shutdown);
 #ifndef _arch_sub_naomi
     fs_iso9660_shutdown();

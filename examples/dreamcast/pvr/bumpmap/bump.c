@@ -30,7 +30,7 @@ static int textured = 1;
 
 #define SIZE 256
 
-#define CLAMP(low, high, value) (value < low ? low : (value > high ? high : value))
+#define CLAMP(low, high, value) ((value) < (low) ? (low) : ((value) > (high) ? (high) : (value)))
 
 static pvr_ptr_t load_texture(const char fn[]) {
     FILE *fp;

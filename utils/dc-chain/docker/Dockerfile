@@ -34,7 +34,7 @@ RUN apk --update add --no-cache \
 # You may adapt the KallistiOS repository URL if needed
 ARG dc_chain=stable
 RUN mkdir -p /opt/toolchains/dc \
-	&& git clone https://git.code.sf.net/p/cadcdev/kallistios /opt/toolchains/dc/kos \
+	&& git clone https://git.code.sf.net/p/cadcdev/kallistios /opt/toolchains/dc/kos  || git clone https://github.com/KallistiOS/KallistiOS.git /opt/toolchains/dc/kos \
 	&& cd /opt/toolchains/dc/kos/utils/dc-chain \
 	&& cp config/config.mk.$dc_chain.sample config.mk \
 	&& sed -i -e 's/#use_custom_dependencies=1/use_custom_dependencies=1/g' config.mk \

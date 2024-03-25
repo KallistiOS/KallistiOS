@@ -240,7 +240,7 @@ static int thd_cb_id = 0;
 #define SEQ_GT(x, y)    (((int32_t)((x) - (y))) > 0)
 #define SEQ_GE(x, y)    (((int32_t)((x) - (y))) >= 0)
 
-#define MAX(x, y)       (x > y ? x : y)
+#define MAX(x, y)       ((x) > (y) ? (x) : (y))
 
 /* Forward declarations */
 static fs_socket_proto_t proto;

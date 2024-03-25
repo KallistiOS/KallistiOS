@@ -60,7 +60,7 @@ function(kos_add_romdisk target romdiskPath)
     add_custom_command(
         OUTPUT  ${obj}
         DEPENDS ${obj_tmp}
-        COMMAND ${CMAKE_C_COMPILER} -o ${obj} -r ${obj_tmp} -L${KOS_BASE}/lib/dreamcast -Wl,--whole-archive -lromdiskbase
+        COMMAND ${CMAKE_C_COMPILER} -o ${obj} -r ${obj_tmp} -L$ENV{KOS_BASE}/lib/dreamcast -Wl,--whole-archive -lromdiskbase
         COMMAND rm ${obj_tmp}
     )
 

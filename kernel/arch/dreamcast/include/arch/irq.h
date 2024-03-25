@@ -21,6 +21,7 @@
 #ifndef __ARCH_IRQ_H
 #define __ARCH_IRQ_H
 
+#include <stdint.h>
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
@@ -52,18 +53,18 @@ __BEGIN_DECLS
     \headerfile arch/irq.h
 */
 typedef struct irq_context {
-    uint32  pc;         /**< \brief Program counter */
-    uint32  pr;         /**< \brief Procedure register (aka return address) */
-    uint32  gbr;        /**< \brief Global base register */
-    uint32  vbr;        /**< \brief Vector base register */
-    uint32  mach;       /**< \brief Multiply-and-accumulate register (high) */
-    uint32  macl;       /**< \brief Multiply-and-accumulate register (low) */
-    uint32  sr;         /**< \brief Status register */
-    uint32  fpul;       /**< \brief Floatint-point communication register */
-    uint32  fr[16];     /**< \brief Primary floating point registers */
-    uint32  frbank[16]; /**< \brief Secondary floating point registers */
-    uint32  r[16];      /**< \brief 16 general purpose (integer) registers */
-    uint32  fpscr;      /**< \brief Floating-point status/control register */
+    uint32_t  pc;         /**< \brief Program counter */
+    uint32_t  pr;         /**< \brief Procedure register (aka return address) */
+    uint32_t  gbr;        /**< \brief Global base register */
+    uint32_t  vbr;        /**< \brief Vector base register */
+    uint32_t  mach;       /**< \brief Multiply-and-accumulate register (high) */
+    uint32_t  macl;       /**< \brief Multiply-and-accumulate register (low) */
+    uint32_t  sr;         /**< \brief Status register */
+    uint32_t  fpul;       /**< \brief Floatint-point communication register */
+    uint32_t  fr[16];     /**< \brief Primary floating point registers */
+    uint32_t  frbank[16]; /**< \brief Secondary floating point registers */
+    uint32_t  r[16];      /**< \brief 16 general purpose (integer) registers */
+    uint32_t  fpscr;      /**< \brief Floating-point status/control register */
 } irq_context_t __attribute__((aligned(32)));
 
 /* A couple of architecture independent access macros */
@@ -265,7 +266,7 @@ typedef struct irq_context {
 /** \brief   The type of an interrupt identifier 
     \ingroup irqs
 */
-typedef uint32 irq_t;
+typedef uint32_t irq_t;
 
 /** \brief   The type of an IRQ handler
     \ingroup irqs 
@@ -273,7 +274,7 @@ typedef uint32 irq_t;
     \param  source          The IRQ that caused the handler to be called.
     \param  context         The CPU's context.
 */
-typedef void (*irq_handler)(irq_t source, irq_context_t *context);
+typedef void (*irq_handler)(irq_t source, irq_context_t *context, void *data);
 
 /** \brief   Are we inside an interrupt handler?
     \ingroup irqs
@@ -300,11 +301,12 @@ void irq_force_return(void);
     \param  source          The IRQ type to set the handler for
                             (see \ref irq_exception_codes).
     \param  hnd             A pointer to a procedure to handle the exception.
+    \param  data            A pointer that will be passed along to the callback.
     
     \retval 0               On success.
     \retval -1              If the source is invalid.
 */
-int irq_set_handler(irq_t source, irq_handler hnd);
+int irq_set_handler(irq_t source, irq_handler hnd, void *data);
 
 /** \brief   Get the address of the current handler for the IRQ type.
     \ingroup irqs
@@ -320,11 +322,12 @@ irq_handler irq_get_handler(irq_t source);
     
     \param  code            The value passed to the trapa opcode.
     \param  hnd             A pointer to the procedure to handle the trap.
+    \param  data            A pointer that will be passed along to the callback.
 
     \retval 0               On success.
     \retval -1              If the code is invalid (greater than 0xFF).
 */
-int trapa_set_handler(irq_t code, irq_handler hnd);
+int trapa_set_handler(irq_t code, irq_handler hnd, void *data);
 
 /** \brief   Set a global exception handler.
     \ingroup irqs
@@ -336,10 +339,11 @@ int trapa_set_handler(irq_t code, irq_handler hnd);
                             these will stop the unhandled exception error.
 
     \param  hnd             A pointer to the procedure to handle the exception.
+    \param  data            A pointer that will be passed along to the callback.
 
     \retval 0               On success (no error conditions defined).
 */
-int irq_set_global_handler(irq_handler hnd);
+int irq_set_global_handler(irq_handler hnd, void *data);
 
 /** \brief   Get the global exception handler.
     \ingroup irqs
@@ -384,8 +388,8 @@ irq_context_t *irq_get_context(void);
                             to the architecture maximum.
     \param  usermode        1 to run the routine in user mode, 0 for supervisor.
 */
-void irq_create_context(irq_context_t *context, uint32 stack_pointer,
-                        uint32 routine, uint32 *args, int usermode);
+void irq_create_context(irq_context_t *context, uint32_t stack_pointer,
+                        uint32_t routine, uint32_t *args, int usermode);
 
 /* Enable/Disable interrupts */
 /** \brief   Disable interrupts.
