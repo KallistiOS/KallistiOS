@@ -1,18 +1,20 @@
-/* KallistiOS ##version##
+/*
+   AICAOS
 
    aica.c
-   (c)2000-2002 Megan Potter
-   (c)2024 Stefanos Kornilios Mitsis Poiitidis
+   Copyright (C) 2000-2002 Megan Potter
+   Copyright (C) 2024 Stefanos Kornilios Mitsis Poiitidis
+   Copyright (C) 2025 Paul Cercueil
 
    ARM support routines for using the wavetable channels
 */
 
+#include <aicaos/aica.h>
+#include <aicaos/init.h>
 #include <aicaos/irq.h>
 #include <registers.h>
 
-#include "aica.h"
-
-void aica_init(void) {
+static void aica_init(void) {
     int i, j;
 
     /* Initialize AICA channels */
@@ -29,6 +31,7 @@ void aica_init(void) {
 
     SPU_REG32(REG_SPU_MASTER_VOL) = SPU_FIELD_PREP(SPU_MASTER_VOL_VOL, 0xf);
 }
+aicaos_initcall(aica_init);
 
 /* Translates a volume from linear form to logarithmic form (required by
    the AICA chip

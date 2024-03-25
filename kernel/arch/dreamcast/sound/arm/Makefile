@@ -1,5 +1,5 @@
 TARGET = stream.drv
-OBJS = main.o aica.o
+OBJS = main.o
 
 .PHONY: all clean aicaos
 

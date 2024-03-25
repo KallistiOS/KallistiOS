@@ -10,11 +10,12 @@
 
 */
 
-#include "aica_cmd_iface.h"
-#include "aica.h"
+#include <aicaos/aica.h>
 
 #include <stddef.h>
 #include <string.h>
+
+#include "aica_cmd_iface.h"
 
 extern volatile unsigned int timer;
 
@@ -178,9 +179,6 @@ int main(int argc, char **argv) {
     q_resp->size = AICA_MEM_CHANNELS - q_resp->data;
     q_resp->process_ok = 1;
     q_resp->valid = 1;
-
-    /* Initialize the AICA part of the SPU */
-    aica_init();
 
     /* Wait for a command */
     for(; ;) {
