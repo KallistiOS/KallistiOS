@@ -15,7 +15,7 @@
 
 #define SIP_START_SAMPLING 0x80
 
-static void sip_start_sampling_cb(maple_frame_t *frame) {
+static void sip_start_sampling_cb(maple_state_t *, maple_frame_t *frame) {
     sip_state_t *sip;
     maple_response_t *resp;
 
@@ -36,7 +36,7 @@ static void sip_start_sampling_cb(maple_frame_t *frame) {
     genwait_wake_all(frame);
 }
 
-static void sip_stop_sampling_cb(maple_frame_t *frame) {
+static void sip_stop_sampling_cb(maple_state_t *, maple_frame_t *frame) {
     sip_state_t *sip;
     maple_response_t *resp;
 
@@ -207,7 +207,7 @@ int sip_stop_sampling(maple_device_t *dev, int block) {
     return MAPLE_EOK;
 }
 
-static void sip_reply(maple_frame_t *frm) {
+static void sip_reply(maple_state_t *, maple_frame_t *frm) {
     maple_response_t *resp;
     uint32 *respbuf;
     sip_state_t *sip;

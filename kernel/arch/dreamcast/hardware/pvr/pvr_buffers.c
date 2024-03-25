@@ -28,7 +28,7 @@
 
 #define IS_ALIGNED(x, m) ((x) % (m) == 0)
 
-#define LIST_ENABLED(i) (pvr_state.lists_enabled & (1 << i))
+#define LIST_ENABLED(i) (pvr_state.lists_enabled & (1 << (i)))
 
 
 /* Fill Tile Matrix buffers. This function takes a base address and sets up

@@ -8,17 +8,15 @@
 ###############################################################################
 ###############################################################################
 ### THIS CONFIG IS FOR AN EXPERIMENTAL VERSION OF GCC!
-## THERE IS ONE KNOWN ISSUE BUILDING THIS VERSION as of 2024-01-04:
-## 1. GCC 14.0.1 currently does not build with m4-single-only precision, which
-##    is the only officially supported KOS mode for floating-point precision.
+## THERE ARE NO KNOWN ISSUES BUILDING THIS VERSION as of 2024-02-10.
 ###############################################################################
 ###############################################################################
 
 # Toolchain versions for SH
-sh_binutils_ver=2.41
+sh_binutils_ver=2.42
 sh_gcc_ver=14.0.1
 newlib_ver=4.4.0.20231231
-gdb_ver=14.1
+gdb_ver=14.2
 
 # Tarball extensions to download for SH
 sh_binutils_download_type=xz
@@ -31,7 +29,7 @@ gdb_download_type=xz
 # Toolchain for ARM
 # The ARM version of gcc/binutils is separated as support for the ARM7DI core
 # used in the Dreamcast's AICA is not available in versions of GCC beyond 8.5.0.
-arm_binutils_ver=2.41
+arm_binutils_ver=2.42
 arm_gcc_ver=8.5.0
 
 # Tarball extensions to download for ARM

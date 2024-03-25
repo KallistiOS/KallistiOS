@@ -1,0 +1,18 @@
+#!/bin/bash
+
+## Make sure KOS_BASE is set
+if [ -z "${KOS_BASE}" ]; then
+    echo "The KOS_BASE environment variable has not been set!"
+    echo "\tDid you source your environ.sh file?"
+    exit 1
+fi
+
+if [ -z "$(which ccmake)" ]; then
+    echo "ccmake program is not present. Please install ccmake or cmake-curses-gui."
+    exit 1
+fi
+
+ccmake \
+  -DCMAKE_TOOLCHAIN_FILE="${KOS_BASE}/utils/cmake/dreamcast.toolchain.cmake" \
+  "$@"
+

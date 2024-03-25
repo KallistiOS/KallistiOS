@@ -16,7 +16,7 @@
 #include <GL/glext.h>
 
 #define PVR_HDR_SIZE 0x20
-#define MAX(x, y) ((x > y) ? x : y)
+#define MAX(x, y)       ((x) > (y) ? (x) : (y))
 
 static GLuint PVR_TextureHeight(unsigned char *HDR);
 static GLuint PVR_TextureWidth(unsigned char *HDR);
