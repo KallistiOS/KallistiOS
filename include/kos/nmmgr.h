@@ -60,12 +60,27 @@ typedef LIST_HEAD(nmmgr_list, nmmgr_handler) nmmgr_list_t;
 */
 typedef struct nmmgr_handler {
     char    pathname[NAME_MAX];   /* Path name */
-    int pid;            /* Process table ID for handler (0 == static) */
+    int pid;                /* Process table ID for handler (0 == static) */
     uint32  version;        /* Version code */
     uint32  flags;          /* Bitmask of flags */
     uint32  type;           /* Type of handler */
     LIST_ENTRY(nmmgr_handler)   list_ent;   /* Linked list entry */
 } nmmgr_handler_t;
+
+/** \brief   Alias handler interface.
+    \ingroup system_namemgr
+
+    The smallest possible extension of name handler, it has its own name 
+    but holds a pointer to a full handler of the appropriate type. This 
+    prevents the need to duplicate large vfs structures.
+
+*/
+typedef struct alias_handler {
+    /** \brief Name manager handler header */
+    nmmgr_handler_t nmmgr;
+
+    nmmgr_handler_t *alias;
+} alias_handler_t;
 
 /* Version codes ('version') have two pieces: a major and minor revision.
    A major revision (top 16 bits) means that the interfaces are totally
@@ -77,6 +92,16 @@ typedef struct nmmgr_handler {
     \ingroup system_namemgr
 */
 #define NMMGR_FLAGS_NEEDSFREE   0x00000001
+
+/** \brief  This structure maps into /dev/.
+    \ingroup system_namemgr
+*/
+#define NMMGR_FLAGS_INDEV       0x00000002
+
+/** \brief  This structure aliases another.
+    \ingroup system_namemgr
+*/
+#define NMMGR_FLAGS_ALIAS       0x00000004
 
 /** \defgroup   nmmgr_types     Handler Types
     \brief                      Name handler types

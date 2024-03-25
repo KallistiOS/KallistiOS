@@ -59,6 +59,11 @@ realpath(const char *path, char resolved[PATH_MAX]) {
     size_t left_len, resolved_len;
     char left[PATH_MAX], next_token[PATH_MAX];
 
+    if(path == NULL) {
+        errno = EINVAL;
+        return NULL;
+    }
+
     if(path[0] == '/') {
         resolved[0] = '/';
         resolved[1] = '\0';
