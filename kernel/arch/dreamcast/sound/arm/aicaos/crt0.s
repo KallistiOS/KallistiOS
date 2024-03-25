@@ -1,10 +1,10 @@
-# KallistiOS ##version##
+# AICAOS
 #
-#  crt0.s
-#  (c)2000-2002 Megan Potter
+# crt0.s
+# Copyright (C) 2000-2002 Megan Potter
 #
-#  Startup for ARM program
-#  Adapted from Marcus' AICA example among a few other sources =)
+# Startup for ARM program
+# Adapted from Marcus' AICA example among a few other sources =)
 
 .text
 .section .text.init
