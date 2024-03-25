@@ -7,7 +7,7 @@
    ARM support routines for using the wavetable channels
 */
 
-#include "aica_cmd_iface.h"
+#include <cmd_iface.h>
 #include "aica.h"
 
 extern volatile aica_channel_t *chans;

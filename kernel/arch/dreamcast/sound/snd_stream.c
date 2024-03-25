@@ -23,11 +23,10 @@
 #include <dc/g2bus.h>
 #include <dc/sq.h>
 #include <dc/spu.h>
+#include <dc/sound/cmd_iface.h>
 #include <dc/sound/sound.h>
 #include <dc/sound/stream.h>
 #include <dc/sound/sfxmgr.h>
-
-#include "arm/aica_cmd_iface.h"
 
 /*
 

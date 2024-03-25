@@ -12,8 +12,6 @@ OBJS = snd_iface.o \
 	snd_mem.o \
 	snd_pcm_split.o
 
-KOS_CFLAGS += -I $(KOS_BASE)/kernel/arch/dreamcast/include/dc/sound
-
 SUBDIRS = arm
 
 include $(KOS_BASE)/Makefile.prefab
