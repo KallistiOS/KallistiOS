@@ -2,13 +2,14 @@
    KallistiOS ##version##
    serpent.c
 
-   Copyright (C)2002,2004 Megan Potter
-   Copyright (C)2004 Jim Ursetto
+   Copyright (C) 2002,2004 Megan Potter
+   Copyright (C) 2004 Jim Ursetto
 */
 
 #include <kos.h>
 #include <math.h>
 #include <assert.h>
+#include <stdlib.h>
 #include <plx/matrix.h>
 #include <plx/prim.h>
 #include <plx/context.h>
@@ -274,9 +275,6 @@ int main(int argc, char **argv) {
     pvr_set_vertbuf(PVR_LIST_OP_POLY, dmabuffers[0], 4 * 1024 * 1024);
     pvr_set_vertbuf(PVR_LIST_TR_POLY, dmabuffers[1], 4 * 1024 * 1024);
 
-    // Escape hatch
-    cont_btn_callback(0, CONT_START | CONT_A, (cont_btn_callback_t)arch_exit);
-
     /* Init matrices */
     plx_mat3d_init();
     plx_mat3d_mode(PLX_MAT_PROJECTION);
@@ -292,8 +290,8 @@ int main(int argc, char **argv) {
     do_sphere_test();
 
     pvr_get_stats(&stats);
-    dbglog(DBG_DEBUG, "3D Stats: %ld vblanks, frame rate ~%f fps, max vertex used %d bytes\n",
-           stats.vbl_count, (double)stats.frame_rate, stats.vtx_buffer_used_max);
+    dbglog(DBG_DEBUG, "3D Stats: %u vblanks, frame rate ~%f fps, max vertex used %u bytes\n",
+           stats.vbl_count, stats.frame_rate, stats.vtx_buffer_used_max);
 
     return 0;
 }
