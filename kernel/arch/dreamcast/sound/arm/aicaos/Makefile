@@ -1,5 +1,5 @@
 TARGET = libaicaos.a
-OBJS = crt0.o
+OBJS = crt0.o main.o
 
 CC = $(DC_ARM_CC)
 AS = $(DC_ARM_AS)
