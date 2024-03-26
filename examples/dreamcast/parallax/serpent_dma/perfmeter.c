@@ -47,7 +47,7 @@ void pm_draw(void) {
     pvr_list_begin(PVR_LIST_TR_POLY);
 
     // Make a nice stat display
-    sprintf(str, "fps %.2f  buf %d  reg %d  rnd %d",
+    sprintf(str, "fps %.2f  buf %llu  reg %llu  rnd %llu",
             (double)stats.frame_rate,
             stats.buf_last_time,
             stats.reg_last_time,
