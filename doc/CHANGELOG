@@ -186,7 +186,7 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - *** Simplify kthread_once_t into a simple variable rather than a struct [LS]
 - *** Simplify sync primitive structures to remove initialized member [LS]
 - *** Move definition of __RESTRICT from <sys/_types.h> to <kos/cdefs.h> [LS]
-- DC  Added DMA YUV converter path. Adjust some name of related #defines. 
+- DC  Added DMA YUV converter path. Adjust some name of related #defines.
       Added yuv examples [AB]
 - *** Added GCC builtin functions for supporting all of C11 atomics [FG]
 - *** Added toolchain and KOS support for C/C++ compiler-level TLS [CP && FG]
@@ -219,6 +219,10 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - *** Implemented _POSIX_CPUTIME in clock_gettime() using perf counter timer [FG]
 - *** Implemented scandir() and alphasort() POSIX functions from dirent.h [FG]
 - DC  Added new driver for the SH4's UBC + high-level breakpoint API [FG]
+- *** Added implementation of thread barriers [LS]
+- *** Removed old pthreads implementation from kernel/libc [LS]
+- *** Added new (more complete/compliant) pthreads implementation in
+      addons/libpthread [LS]
 
 KallistiOS version 2.0.0 -----------------------------------------------
 - DC  Broadband Adapter driver fixes [Megan Potter == MP]

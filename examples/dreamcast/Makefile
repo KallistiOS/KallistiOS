@@ -1,12 +1,12 @@
 # KallistiOS ##version##
 #
 # examples/dreamcast/Makefile
-# Copyright (C)2003 Megan Potter
+# Copyright (C) 2003 Megan Potter
 #
 
 DIRS = 2ndmix basic libdream kgl hello sound png network vmu conio pvr video \
-	   lua parallax modem dreameye sd g1ata lightgun keyboard sdl random rumble \
-	   micropython
+       lua parallax modem dreameye sd g1ata lightgun keyboard sdl random \
+       rumble micropython pthread
 
 ifdef KOS_CCPLUS
 	DIRS += cpp tsunami
