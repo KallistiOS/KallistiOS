@@ -7,7 +7,13 @@ SECTIONS
 		*(.text*)
 	}
 
-	__rodata_start = ALIGN(0x4);
+	.init_table : {
+		__init_table_start = ALIGN(0x4);
+		KEEP(*(.init_table*))
+		__init_table_end = ALIGN(0x4);
+	}
+
+	__rodata_start = .;
 	.rodata : {
 		*(.rodata*)
 	}
