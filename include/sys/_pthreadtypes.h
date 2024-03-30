@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    sys/_pthreadtypes.h
-   Copyright (C) 2023 Lawrence Sebald
+   Copyright (C) 2023, 2024 Lawrence Sebald
 
 */
 
@@ -22,6 +22,10 @@ typedef struct pthread_rwlockattr_t {
 typedef struct pthread_condattr_t {
     /* Empty */
 } pthread_condattr_t;
+
+typedef struct pthread_barrierattr_t {
+    /* Empty */
+} pthread_barrierattr_t;
 
 /* The following types have no public elements. Their implementation is hidden
    from the public header. */
@@ -73,5 +77,17 @@ typedef union pthread_rwlock_t {
 
 #undef __PTHREAD_RWLOCK_SIZE
 #endif /* !__PTHREAD_HAVE_RWLOCK_TYPE */
+
+#ifndef __PTHREAD_HAVE_BARRIER_TYPE
+#define __PTHREAD_HAVE_BARRIER_TYPE 1
+#define __PTHREAD_BARRIER_SIZE      64
+
+typedef union pthread_barrier_t {
+    unsigned char __data[__PTHREAD_BARRIER_SIZE];
+    long int __align;
+} pthread_barrier_t;
+
+#undef __PTHREAD_BARRIER_SIZE
+#endif /* !__PTHREAD_HAVE_BARRIER_TYPE */
 
 #endif /* !__SYS_PTHREADTYPES_H */

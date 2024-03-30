@@ -9,7 +9,7 @@
 sh_binutils_ver=2.41
 sh_gcc_ver=13.2.0
 newlib_ver=4.3.0.20230120
-gdb_ver=14.1
+gdb_ver=14.2
 
 # Tarball extensions to download for SH
 sh_binutils_download_type=xz
@@ -112,17 +112,30 @@ makejobs=-j2
 # hard drive space.
 pass2_languages=c,c++,objc,obj-c++
 
+# Floating point precision support (m4|m4-single|m4-single-only)
+# Build support for various SH4 floating-point operation ABIs. KallistiOS only
+# officially supports single-precision-only mode. Add m4 (double precision) or
+# m4-single (single precision) to build experimental support for those ABIs.
+precision_modes=m4-single-only
+#precision_modes=m4,m4-single,m4-single-only
+
+# Default floating point mode (m4|m4-single|m4-single-only)
+# Choose the default floating point precision ABI used when GCC is invoked. This
+# can be overridden by using passing -m4, -m4-single, or -m4-single-only to GCC.
+# KallistiOS currently only supports m4-single-only, so that is the default.
+default_precision=m4-single-only
+
 # GCC threading model (single|kos|posix*)
-# With GCC 4.x versions and up, the patches provide a 'kos' thread model, so you 
-# should use it. If you really don't want threading support for C++ (or 
-# Objective C/Objective C++), you can set this to 'single'. With GCC 3.x, you 
+# With GCC 4.x versions and up, the patches provide a 'kos' thread model, so you
+# should use it. If you really don't want threading support for C++ (or
+# Objective C/Objective C++), you can set this to 'single'. With GCC 3.x, you
 # probably want 'posix' here; but this mode is deprecated as the GCC 3.x branch
 # is not anymore supported.
 thread_model=kos
 
 # Automatic patching for KOS (1|0)
-# Uncomment this if you want to disable applying KOS patches to the toolchain 
-# source files before building. This will disable usage of the 'kos' thread model. 
+# Uncomment this if you want to disable applying KOS patches to the toolchain
+# source files before building. This will disable usage of the 'kos' thread model.
 #use_kos_patches=0
 
 # Automatic fixup SH-4 Newlib (1|0)
@@ -150,6 +163,11 @@ newlib_c99_formats=1
 # build Newlib with compiler flags which favor smaller code sizes over faster
 # performance.
 #newlib_opt_space=1
+
+# Disable GCC Native Language Support (1|0)
+# By default, NLS allows GCC to output diagnostics in non-English languages.
+# Set this variable to disable NLS, forcing GCC to output in American English.
+#disable_nls=1
 
 # MinGW/MSYS
 # Standalone binaries (1|0)

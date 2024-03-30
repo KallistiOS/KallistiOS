@@ -58,7 +58,7 @@ __BEGIN_DECLS
 #define ASIC_EVT_PVR_VBLANK_END           0x0004  /**< \brief VBLANK end interrupt */
 #define ASIC_EVT_PVR_HBLANK_BEGIN         0x0005  /**< \brief HBLANK begin interrupt */
 
-#define ASIC_EVT_PVR_YUV_DONE             0x0007  /**< \brief YUV completed */
+#define ASIC_EVT_PVR_YUV_DONE             0x0006  /**< \brief YUV completed */
 #define ASIC_EVT_PVR_OPAQUEDONE           0x0007  /**< \brief Opaque list completed */
 #define ASIC_EVT_PVR_OPAQUEMODDONE        0x0008  /**< \brief Opaque modifiers completed */
 #define ASIC_EVT_PVR_TRANSDONE            0x0009  /**< \brief Transparent list completed */
@@ -181,9 +181,11 @@ __BEGIN_DECLS
     interrupt context, so don't try anything funny.
 
     \param  code            The ASIC event code that generated this event.
+    \param  data            The user pointer that was passed to
+                            \ref asic_evt_set_handler.
     \see    asic_events
 */
-typedef void (*asic_evt_handler)(uint32_t code);
+typedef void (*asic_evt_handler)(uint32_t code, void *data);
 
 /** \brief   Set or remove an ASIC handler.
     \ingroup asic
@@ -193,9 +195,41 @@ typedef void (*asic_evt_handler)(uint32_t code);
 
     \param  code            The ASIC event code to hook (see \ref asic_events).
     \param  handler         The function to call when the event happens.
+    \param  data            A user pointer that will be passed to the callback.
 
 */
-void asic_evt_set_handler(uint16_t code, asic_evt_handler handler);
+void asic_evt_set_handler(uint16_t code, asic_evt_handler handler, void *data);
+
+/** \brief   Register a threaded handler with the given ASIC event.
+    \ingroup asic
+
+    This function will spawn a thread, that will sleep until notified when an
+    event happens. It will then call the handler. As the handler is not called
+    in an interrupt context, it can hold locks, and even sleep.
+
+    \param  code            The ASIC event code to hook (see \ref asic_events).
+    \param  handler         The function to call when the event happens.
+    \param  data            A user pointer that will be passed to the callback.
+    \param  ack_and_mask    An optional function that will be called by the real
+                            interrupt handler, to acknowledge and mask the
+                            interrupt, so that it won't trigger again while the
+                            threaded handler is running.
+    \param  unmask          An optional function that will be called by the
+                            thread after the handler function returned, to
+                            re-enable the interrupt.
+*/
+int asic_evt_request_threaded_handler(uint16_t code, asic_evt_handler handler,
+                                      void *data,
+                                      void (*ack_and_mask)(uint16_t),
+                                      void (*unmask)(uint16_t));
+
+/** \brief   Unregister any handler set to the given ASIC event.
+    \ingroup asic
+
+    \param  code            The ASIC event code to unhook (see
+                            \ref asic_events).
+*/
+void asic_evt_remove_handler(uint16_t code);
 
 /** \brief   Disable all ASIC events.
     \ingroup asic

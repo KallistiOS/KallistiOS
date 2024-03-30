@@ -292,7 +292,7 @@ void pvr_blank_polyhdr_buf(int type, pvr_poly_hdr_t * buf);
 /**** pvr_irq.c *******************************************************/
 
 /* Interrupt handler for PVR events */
-void pvr_int_handler(uint32 code);
+void pvr_int_handler(uint32 code, void *data);
 
 
 #endif

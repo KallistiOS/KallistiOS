@@ -370,7 +370,7 @@ const char *kos_get_authors(void);
     \param  fptr            The frame pointer to look at.
     \return                 The return address of the pointer.
 */
-#define arch_fptr_ret_addr(fptr) (*((uint32*)fptr))
+#define arch_fptr_ret_addr(fptr) (*((uint32*)(fptr)))
 
 /** \brief   Pass in a frame pointer value to get the previous frame pointer for
              the given frame.
@@ -379,7 +379,7 @@ const char *kos_get_authors(void);
     \param  fptr            The frame pointer to look at.
     \return                 The previous frame pointer.
 */
-#define arch_fptr_next(fptr) (*((uint32*)(fptr+4)))
+#define arch_fptr_next(fptr) (*((uint32*)((fptr)+4)))
 
 /** \brief   Returns true if the passed address is likely to be valid. Doesn't
              have to be exact, just a sort of general idea.

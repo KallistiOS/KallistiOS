@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    pthread-internal.h
-   Copyright (C) 2023 Lawrence Sebald
+   Copyright (C) 2023, 2024 Lawrence Sebald
 */
 
 #ifndef __PTHREAD_INTERNAL_H
@@ -11,14 +11,17 @@
 #define __PTHREAD_HAVE_MUTEX_TYPE   1
 #define __PTHREAD_HAVE_COND_TYPE    1
 #define __PTHREAD_HAVE_RWLOCK_TYPE  1
+#define __PTHREAD_HAVE_BARRIER_TYPE 1
 
 #define __PTHREAD_ATTR_SIZE         32
 #define __PTHREAD_MUTEX_SIZE        32
 #define __PTHREAD_COND_SIZE         16
 #define __PTHREAD_RWLOCK_SIZE       32
+#define __PTHREAD_BARRIER_SIZE      64
 
 #include <sys/cdefs.h>
 #include <kos/thread.h>
+#include <kos/barrier.h>
 #include <kos/cond.h>
 #include <kos/mutex.h>
 #include <kos/rwsem.h>
@@ -47,6 +50,8 @@ typedef union pthread_rwlock_t {
     long int __align;
 } pthread_rwlock_t;
 
+typedef thd_barrier_t pthread_barrier_t;
+
 /* Clever trick to make sure that we don't botch any of these structures in the
    future... Taken from this stackoverflow thread:
    https://stackoverflow.com/questions/4079243 */
@@ -57,6 +62,8 @@ STATIC_ASSERT(sizeof(pthread_attr_t) == __PTHREAD_ATTR_SIZE)
 STATIC_ASSERT(sizeof(pthread_mutex_t) == __PTHREAD_MUTEX_SIZE)
 STATIC_ASSERT(sizeof(pthread_cond_t) == __PTHREAD_COND_SIZE)
 STATIC_ASSERT(sizeof(pthread_rwlock_t) == __PTHREAD_RWLOCK_SIZE)
+STATIC_ASSERT(sizeof(pthread_barrier_t) == __PTHREAD_BARRIER_SIZE)
+STATIC_ASSERT(__PTHREAD_BARRIER_SIZE == THD_BARRIER_SIZE)
 
 #undef STATIC_ASSERT
 

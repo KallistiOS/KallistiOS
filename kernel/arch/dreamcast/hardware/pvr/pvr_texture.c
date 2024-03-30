@@ -195,7 +195,7 @@ void pvr_txr_load_kimg(kos_img_t *img, pvr_ptr_t dst, uint32 flags) {
                 mutex_unlock((mutex_t *)&pvr_state.dma_lock);
             }
             else if(flags & PVR_TXRLOAD_SQ) {
-                pvr_txr_load(dst, img->data, img->byte_count);
+                pvr_txr_load(img->data, dst, img->byte_count);
             }
             else {
                 memcpy4(dst, img->data, img->byte_count);

@@ -719,6 +719,10 @@ void thd_schedule_next(kthread_t *thd) {
     if(!irq_inside_int())
         return;
 
+    /* We're already running now! */
+    if(thd == thd_current)
+        return;
+
     /* Can't boost a blocked thread */
     if(thd->state != STATE_READY)
         return;

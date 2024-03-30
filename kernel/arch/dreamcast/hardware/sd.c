@@ -24,7 +24,7 @@
 #define READ_RETRIES    50000
 #define WRITE_RETRIES   150000
 
-#define CMD(n) (n | 0x40)
+#define CMD(n) ((n) | 0x40)
 
 static int byte_mode = 0;
 static int is_mmc = 0;

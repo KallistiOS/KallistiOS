@@ -577,8 +577,9 @@ void modemConnection(void) {
     }
 }
 
-static void modemCallback(uint32 code) {
+static void modemCallback(uint32 code, void *data) {
     (void)code;
+    (void)data;
 
     if(modemCallbackCode != NULL)
         modemCallbackCode();
@@ -597,13 +598,13 @@ void modemIntInit(void) {
 
     /* Set the default IRQ handler */
     modemCallbackCode = NULL;
-    asic_evt_set_handler(ASIC_EVT_EXP_8BIT, modemCallback);
+    asic_evt_set_handler(ASIC_EVT_EXP_8BIT, modemCallback, NULL);
     asic_evt_enable(ASIC_EVT_EXP_8BIT, ASIC_IRQB);
 }
 
 void modemIntShutdown(void) {
     asic_evt_disable(ASIC_EVT_EXP_8BIT, ASIC_IRQB);
-    asic_evt_set_handler(ASIC_EVT_EXP_8BIT, NULL);
+    asic_evt_remove_handler(ASIC_EVT_EXP_8BIT);
 }
 
 #define dspSetClear8(addr, mask, clear)\
@@ -746,9 +747,11 @@ void modemIntResetControlCode(void) {
    a flag to a non zero value, call a function, or both when a timer interrupt
    is generated until it's stopped. */
 
-static void modemIntrTimeoutCallback(irq_t source, irq_context_t *context) {
+static void modemIntrTimeoutCallback(irq_t source, irq_context_t *context,
+                                     void *data) {
     (void)source;
     (void)context;
+    (void)data;
 
     if(modemTimeoutCallbackFlag != NULL)
         *modemTimeoutCallbackFlag = 1;
@@ -770,7 +773,7 @@ void modemIntSetupTimeoutTimer(int bps, unsigned char *callbackFlag,
         *modemTimeoutCallbackFlag = 0;
 
     /* Modify TMU1 so that it can be used for a timeout */
-    irq_set_handler(EXC_TMU1_TUNI1, modemIntrTimeoutCallback);
+    irq_set_handler(EXC_TMU1_TUNI1, modemIntrTimeoutCallback, NULL);
     timer_prime(TMU1, bps, 1);
     timer_clear(TMU1);
 
@@ -800,7 +803,7 @@ void modemIntShutdownTimeoutTimer(void) {
     modemIntResetTimeoutTimer();
 
     if(modemInternalFlags & MODEM_INTERNAL_FLAG_TIMER_HANDLER_SET) {
-        irq_set_handler(EXC_TMU1_TUNI1, NULL);
+        irq_set_handler(EXC_TMU1_TUNI1, NULL, NULL);
         modemInternalFlags &= ~MODEM_INTERNAL_FLAG_TIMER_HANDLER_SET;
     }
 }
