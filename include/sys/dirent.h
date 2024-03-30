@@ -66,7 +66,7 @@ struct dirent {
     off_t     d_off;              /**< \brief File offset */
     uint16_t  d_reclen;           /**< \brief Record length */
     uint8_t   d_type;             /**< \brief File type */
-    char      d_name[];           /**< \brief Filename */
+    char      d_name[0];          /**< \brief Filename */
 };
 
 /** \brief  Type representing a directory stream.
