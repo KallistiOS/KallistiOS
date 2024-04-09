@@ -3,8 +3,8 @@
    kernel/arch/dreamcast/include/dc/sq.h
    Copyright (C) 2000-2001 Andrew Kieschnick
    Copyright (C) 2023 Falco Girgis
-   Copyright (C) 2023 Andy Barajas
    Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023-2024 Andy Barajas
 */
 
 /** \file    dc/sq.h
@@ -128,9 +128,30 @@ void sq_wait(void);
     \param  n               The number of bytes to copy (multiple of 32).
     \return                 The original value of dest.
 
-    \sa sq_cpy_pvr()
+    \sa sq_fast_cpy()
 */
-void * sq_cpy(void *dest, const void *src, size_t n);
+void *sq_cpy(void *dest, const void *src, size_t n);
+
+/** \brief   Copy a block of memory.
+    \ingroup store_queues
+
+    This function is similar to sq_cpy() but expects the user to lock/unlock
+    the store queues before and after as well as having different requirements
+    for the params.
+
+    \warning
+    The dest pointer must be at least 32-byte aligned that already has been 
+    masked by SQ_MASK_DEST(), the src pointer must be at least 8-byte aligned, 
+    and n must be the number of 32-byte blocks you want to copy.
+
+    \param  dest            The store queue address to copy to (32-byte aligned).
+    \param  src             The address to copy from (8-byte aligned).
+    \param  n               The number of 32-byte blocks to copy.
+    \return                 The original value of dest.
+
+    \sa sq_cpy()
+ */
+void *sq_fast_cpy(void *dest, const void *src, size_t n);
 
 /** \brief   Set a block of memory to an 8-bit value.
     \ingroup store_queues
@@ -149,7 +170,7 @@ void * sq_cpy(void *dest, const void *src, size_t n);
 
     \sa sq_set16(), sq_set32(), sq_set_pvr()
 */
-void * sq_set(void *dest, uint32_t c, size_t n);
+void *sq_set(void *dest, uint32_t c, size_t n);
 
 /** \brief   Set a block of memory to a 16-bit value.
     \ingroup store_queues
@@ -168,7 +189,7 @@ void * sq_set(void *dest, uint32_t c, size_t n);
 
     \sa sq_set(), sq_set32(), sq_set_pvr()
 */
-void * sq_set16(void *dest, uint32_t c, size_t n);
+void *sq_set16(void *dest, uint32_t c, size_t n);
 
 /** \brief   Set a block of memory to a 32-bit value.
     \ingroup store_queues
@@ -186,7 +207,7 @@ void * sq_set16(void *dest, uint32_t c, size_t n);
 
     \sa sq_set(), sq_set16(), sq_set_pvr()
 */
-void * sq_set32(void *dest, uint32_t c, size_t n);
+void *sq_set32(void *dest, uint32_t c, size_t n);
 
 /** \brief   Clear a block of memory.
     \ingroup store_queues

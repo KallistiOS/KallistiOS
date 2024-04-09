@@ -140,32 +140,32 @@ int pvr_init(pvr_init_params_t *params) {
     }
 
     /* Hook the PVR interrupt events on G2 */
-    pvr_state.vbl_handle = vblank_handler_add(pvr_int_handler);
+    pvr_state.vbl_handle = vblank_handler_add(pvr_int_handler, NULL);
     
-    asic_evt_set_handler(ASIC_EVT_PVR_OPAQUEDONE, pvr_int_handler);
+    asic_evt_set_handler(ASIC_EVT_PVR_OPAQUEDONE, pvr_int_handler, NULL);
     asic_evt_enable(ASIC_EVT_PVR_OPAQUEDONE, ASIC_IRQ_DEFAULT);
-    asic_evt_set_handler(ASIC_EVT_PVR_OPAQUEMODDONE, pvr_int_handler);
+    asic_evt_set_handler(ASIC_EVT_PVR_OPAQUEMODDONE, pvr_int_handler, NULL);
     asic_evt_enable(ASIC_EVT_PVR_OPAQUEMODDONE, ASIC_IRQ_DEFAULT);
-    asic_evt_set_handler(ASIC_EVT_PVR_TRANSDONE, pvr_int_handler);
+    asic_evt_set_handler(ASIC_EVT_PVR_TRANSDONE, pvr_int_handler, NULL);
     asic_evt_enable(ASIC_EVT_PVR_TRANSDONE, ASIC_IRQ_DEFAULT);
-    asic_evt_set_handler(ASIC_EVT_PVR_TRANSMODDONE, pvr_int_handler);
+    asic_evt_set_handler(ASIC_EVT_PVR_TRANSMODDONE, pvr_int_handler, NULL);
     asic_evt_enable(ASIC_EVT_PVR_TRANSMODDONE, ASIC_IRQ_DEFAULT);
-    asic_evt_set_handler(ASIC_EVT_PVR_PTDONE, pvr_int_handler);
+    asic_evt_set_handler(ASIC_EVT_PVR_PTDONE, pvr_int_handler, NULL);
     asic_evt_enable(ASIC_EVT_PVR_PTDONE, ASIC_IRQ_DEFAULT);
-    asic_evt_set_handler(ASIC_EVT_PVR_RENDERDONE_TSP, pvr_int_handler);
+    asic_evt_set_handler(ASIC_EVT_PVR_RENDERDONE_TSP, pvr_int_handler, NULL);
     asic_evt_enable(ASIC_EVT_PVR_RENDERDONE_TSP, ASIC_IRQ_DEFAULT);
 
 #ifdef PVR_RENDER_DBG
     /* Hook up interrupt handlers for error events */
-    asic_evt_set_handler(ASIC_EVT_PVR_ISP_OUTOFMEM, pvr_int_handler);
+    asic_evt_set_handler(ASIC_EVT_PVR_ISP_OUTOFMEM, pvr_int_handler, NULL);
     asic_evt_enable(ASIC_EVT_PVR_ISP_OUTOFMEM, ASIC_IRQ_DEFAULT);
-    asic_evt_set_handler(ASIC_EVT_PVR_STRIP_HALT, pvr_int_handler);
+    asic_evt_set_handler(ASIC_EVT_PVR_STRIP_HALT, pvr_int_handler, NULL);
     asic_evt_enable(ASIC_EVT_PVR_STRIP_HALT, ASIC_IRQ_DEFAULT);
-    asic_evt_set_handler(ASIC_EVT_PVR_OPB_OUTOFMEM, pvr_int_handler);
+    asic_evt_set_handler(ASIC_EVT_PVR_OPB_OUTOFMEM, pvr_int_handler, NULL);
     asic_evt_enable(ASIC_EVT_PVR_OPB_OUTOFMEM, ASIC_IRQ_DEFAULT);
-    asic_evt_set_handler(ASIC_EVT_PVR_TA_INPUT_ERR, pvr_int_handler);
+    asic_evt_set_handler(ASIC_EVT_PVR_TA_INPUT_ERR, pvr_int_handler, NULL);
     asic_evt_enable(ASIC_EVT_PVR_TA_INPUT_ERR, ASIC_IRQ_DEFAULT);
-    asic_evt_set_handler(ASIC_EVT_PVR_TA_INPUT_OVERFLOW, pvr_int_handler);
+    asic_evt_set_handler(ASIC_EVT_PVR_TA_INPUT_OVERFLOW, pvr_int_handler, NULL);
     asic_evt_enable(ASIC_EVT_PVR_TA_INPUT_OVERFLOW, ASIC_IRQ_DEFAULT);
 #endif
 
@@ -226,17 +226,17 @@ int pvr_shutdown(void) {
 
     /* Unhook any int handlers */
     vblank_handler_remove(pvr_state.vbl_handle);
-    asic_evt_set_handler(ASIC_EVT_PVR_OPAQUEDONE, NULL);
+    asic_evt_remove_handler(ASIC_EVT_PVR_OPAQUEDONE);
     asic_evt_disable(ASIC_EVT_PVR_OPAQUEDONE, ASIC_IRQ_DEFAULT);
-    asic_evt_set_handler(ASIC_EVT_PVR_OPAQUEMODDONE, NULL);
+    asic_evt_remove_handler(ASIC_EVT_PVR_OPAQUEMODDONE);
     asic_evt_disable(ASIC_EVT_PVR_OPAQUEMODDONE, ASIC_IRQ_DEFAULT);
-    asic_evt_set_handler(ASIC_EVT_PVR_TRANSDONE, NULL);
+    asic_evt_remove_handler(ASIC_EVT_PVR_TRANSDONE);
     asic_evt_disable(ASIC_EVT_PVR_TRANSDONE, ASIC_IRQ_DEFAULT);
-    asic_evt_set_handler(ASIC_EVT_PVR_TRANSMODDONE, NULL);
+    asic_evt_remove_handler(ASIC_EVT_PVR_TRANSMODDONE);
     asic_evt_disable(ASIC_EVT_PVR_TRANSMODDONE, ASIC_IRQ_DEFAULT);
-    asic_evt_set_handler(ASIC_EVT_PVR_PTDONE, NULL);
+    asic_evt_remove_handler(ASIC_EVT_PVR_PTDONE);
     asic_evt_disable(ASIC_EVT_PVR_PTDONE, ASIC_IRQ_DEFAULT);
-    asic_evt_set_handler(ASIC_EVT_PVR_RENDERDONE_TSP, NULL);
+    asic_evt_remove_handler(ASIC_EVT_PVR_RENDERDONE_TSP);
     asic_evt_disable(ASIC_EVT_PVR_RENDERDONE_TSP, ASIC_IRQ_DEFAULT);
 
     /* Shut down PVR DMA */

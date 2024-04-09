@@ -17,6 +17,8 @@ $(build_gcc_pass1): logdir
 	    ../$(src_dir)/configure \
 	      --target=$(target) \
 	      --prefix=$(prefix) \
+	      --with-gnu-as \
+	      --with-gnu-ld \
 	      --without-headers \
 	      --with-newlib \
 	      --enable-languages=c \
@@ -24,6 +26,7 @@ $(build_gcc_pass1): logdir
 	      --enable-checking=release \
 	      $(extra_configure_args) \
 	      $(macos_gcc_configure_args) \
+	      MAKEINFO=missing \
 	      CC="$(CC)" \
 	      CXX="$(CXX)" \
 	      $(static_flag) \

@@ -220,7 +220,7 @@ static int la_started = LA_NOT_STARTED;
 static uint8 la_mac[6];
 
 /* Forward declaration */
-static void la_irq_hnd(uint32 code);
+static void la_irq_hnd(uint32 code, void *data);
 
 /* Set the current bank */
 static void la_set_bank(int bank) {
@@ -390,7 +390,7 @@ static int la_hw_init(void) {
     la_write(DLCR5, (la_read(DLCR5) & ~DLCR5_AM_MASK) | DLCR5_AM_OTHER);
 
     /* Setup interrupt handler */
-    asic_evt_set_handler(ASIC_EVT_EXP_8BIT, la_irq_hnd);
+    asic_evt_set_handler(ASIC_EVT_EXP_8BIT, la_irq_hnd, NULL);
     asic_evt_enable(ASIC_EVT_EXP_8BIT, ASIC_IRQB);
 
     /* Enable receive interrupt */
@@ -436,7 +436,7 @@ static void la_hw_shutdown(void) {
 
     /* Unhook interrupts */
     asic_evt_disable(ASIC_EVT_EXP_8BIT, ASIC_IRQB);
-    asic_evt_set_handler(ASIC_EVT_EXP_8BIT, NULL);
+    asic_evt_remove_handler(ASIC_EVT_EXP_8BIT);
 }
 
 /* We don't really need these stats right now but we might want 'em later */
@@ -528,10 +528,11 @@ static int la_rx(void) {
     }
 }
 
-static void la_irq_hnd(uint32 code) {
+static void la_irq_hnd(uint32 code, void *data) {
     int intr_rx, intr_tx, hnd = 0;
 
     (void)code;
+    (void)data;
 
     /* Acknowledge Lan Adapter interrupt(s) */
     intr_tx = la_read(DLCR0);

@@ -25,7 +25,7 @@ static float mx = 320.0f, my = 240.0f;
 static pvr_list_t list = PVR_LIST_OP_POLY;
 static float shadow = 0.5f;
 
-#define CLAMP(low, high, value) (value < low ? low : (value > high ? high : value))
+#define CLAMP(low, high, value) ((value) < (low) ? (low) : ((value) > (high) ? (high) : (value)))
 
 void setup(void) {
     pvr_poly_cxt_t cxt;

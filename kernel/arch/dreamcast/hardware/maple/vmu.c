@@ -63,7 +63,7 @@ static int vmu_attach(maple_driver_t *drv, maple_device_t *dev) {
     return 0;
 }
 
-static void vmu_poll_reply(maple_frame_t *frm) { 
+static void vmu_poll_reply(maple_state_t *, maple_frame_t *frm) {
     maple_response_t   *resp;
     uint32_t           *respbuf;
     vmu_cond_t         *raw;
@@ -264,7 +264,7 @@ int vmu_set_icon_shape(maple_device_t *dev, uint8_t icon_shape) {
    can stay the same */
 
 /* Callback that unlocks the frame, general use */
-static void vmu_gen_callback(maple_frame_t *frame) {
+static void vmu_gen_callback(maple_state_t *, maple_frame_t *frame) {
     /* Unlock the frame for the next usage */
     maple_frame_unlock(frame);
 
@@ -412,7 +412,7 @@ void vmu_set_icon(const char *vmu_icon) {
 /* Read the data in block blocknum into buffer, return a -1
    if an error occurs, for now we ignore MAPLE_RESPONSE_FILEERR,
    which will be changed shortly */
-static void vmu_block_read_callback(maple_frame_t *frm) {
+static void vmu_block_read_callback(maple_state_t *, maple_frame_t *frm) {
     /* Wakey, wakey! */
     genwait_wake_all(frm);
 }
@@ -486,7 +486,7 @@ int vmu_block_read(maple_device_t *dev, uint16_t blocknum, uint8_t *buffer) {
 
 /* writes buffer into block blocknum.  ret a -1 on error.  We don't do anything about the
    maple bus returning file errors, etc, right now, but that will change soon. */
-static void vmu_block_write_callback(maple_frame_t *frm) {
+static void vmu_block_write_callback(maple_state_t *, maple_frame_t *frm) {
     /* Reset the frame status (but still keep it for us to use) */
     frm->state = MAPLE_FRAME_UNSENT;
 
@@ -661,7 +661,7 @@ int vmu_set_datetime(maple_device_t *dev, time_t unix) {
     return MAPLE_EOK;
 }
 
-static void vmu_get_datetime_callback(maple_frame_t *frm) {
+static void vmu_get_datetime_callback(maple_state_t *, maple_frame_t *frm) {
     /* Wakey, wakey! */
     genwait_wake_all(frm);
 }

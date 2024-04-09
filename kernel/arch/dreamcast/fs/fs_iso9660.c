@@ -928,10 +928,11 @@ int iso_reset(void) {
    time someone calls in it'll get reset. */
 static int iso_last_status;
 static int iso_vblank_hnd;
-static void iso_vblank(uint32 evt) {
+static void iso_vblank(uint32 evt, void *data) {
     int status, disc_type;
 
     (void)evt;
+    (void)data;
 
     /* Get the status. This may fail if a CD operation is in
        progress in the foreground. */
@@ -1077,7 +1078,7 @@ int fs_iso9660_init(void) {
     iso_last_status = -1;
 
     /* Register with the vblank */
-    iso_vblank_hnd = vblank_handler_add(iso_vblank);
+    iso_vblank_hnd = vblank_handler_add(iso_vblank, NULL);
 
     /* Register with VFS */
     return nmmgr_handler_add(&vh.nmmgr);
