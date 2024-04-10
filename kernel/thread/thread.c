@@ -627,12 +627,14 @@ int thd_set_prio(kthread_t *thd, prio_t prio) {
 static void thd_update_cpu_time(kthread_t *thd) {
     if(perf_cntr_timer_enabled()) {
 
-        thd->cpu_time.scheduled = perf_cntr_timer_ns();
+        const uint64_t ns = perf_cntr_timer_ns();
 
         if(thd_current) {
             thd_current->cpu_time.total +=
-                thd->cpu_time.scheduled - thd_current->cpu_time.scheduled;
+                ns - thd_current->cpu_time.scheduled;
         }
+
+        thd->cpu_time.scheduled = ns;
     }
 }
 
