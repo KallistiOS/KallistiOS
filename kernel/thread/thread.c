@@ -3,6 +3,7 @@
    kernel/thread/thread.c
    Copyright (C) 2000, 2001, 2002, 2003 Megan Potter
    Copyright (C) 2010, 2016 Lawrence Sebald
+   Copyright (C) 2024 Falco Girgis
 */
 
 #include <stdlib.h>
@@ -21,6 +22,7 @@
 #include <kos/genwait.h>
 #include <arch/irq.h>
 #include <arch/timer.h>
+#include <dc/perfctr.h>
 #include <arch/arch.h>
 #include <assert.h>
 
@@ -66,13 +68,13 @@ static struct ktqueue run_queue;
 kthread_t *thd_current = NULL;
 
 /* Thread mode: uninitialized or pre-emptive. */
-static int thd_mode = THD_MODE_NONE;
+static kthread_mode_t thd_mode = THD_MODE_NONE;
 
 /* Reaper semaphore. Counts the number of threads waiting to be reaped. */
 static semaphore_t thd_reap_sem;
 
 /* Number of threads active in the system. */
-static uint32_t thd_count = 0;
+static size_t thd_count = 0;
 
 /* The idle task */
 static kthread_t *thd_idle_thd = NULL;
@@ -117,8 +119,11 @@ int thd_each(int (*cb)(kthread_t *thd, void *user_data), void *data) {
 int thd_pslist(int (*pf)(const char *fmt, ...)) {
     kthread_t *cur;
 
+    const uint64_t ns_time = perf_cntr_timer_ns();
+
     pf("All threads (may not be deterministic):\n");
-    pf("addr\t\ttid\tprio\tflags\twait_timeout\tstate     name\n");
+    pf("CUR MAX: %llu\n", ns_time);
+    pf("addr\t\ttid\tprio\tflags\t  wait_timeout\tcpu_time\tstate\t     name\n");
 
     LIST_FOREACH(cur, &thd_list, t_list) {
         pf("%08lx\t", CONTEXT_PC(cur->context));
@@ -129,9 +134,20 @@ int thd_pslist(int (*pf)(const char *fmt, ...)) {
         else
             pf("%d\t", cur->prio);
 
-        pf("%08lx\t", cur->flags);
-        pf("%ld\t\t", (uint32_t)cur->wait_timeout);
-        pf("%10s", thd_state_to_str(cur));
+        pf("%08lx  ", cur->flags);
+        pf("%lu\t", (uint32_t)cur->wait_timeout);
+
+        if(perf_cntr_timer_enabled()) {
+            const uint64_t cpu_time = thd_get_cpu_time(cur);
+
+            pf("%12llu (%.3lf%%)\t",
+                cpu_time, (double)cpu_time / (double)ns_time * 100.0);
+        }
+        else {
+            pf("%12s (?%%)\t", "?");
+        }
+
+        pf("%s\t", thd_state_to_str(cur));
         pf("%s\n", cur->label);
     }
     pf("--end of list--\n");
@@ -289,7 +305,7 @@ void thd_exit(void *rv) {
    process group of the same priority (front_of_line==0) or
    right before the process group of the same priority (front_of_line!=0).
    See thd_schedule for why this is helpful. */
-void thd_add_to_runnable(kthread_t *t, int front_of_line) {
+void thd_add_to_runnable(kthread_t *t, bool front_of_line) {
     kthread_t *i;
     int done;
 
@@ -533,7 +549,7 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
     return nt;
 }
 
-kthread_t *thd_create(int detach, void *(*routine)(void *), void *param) {
+kthread_t *thd_create(bool detach, void *(*routine)(void *), void *param) {
     kthread_attr_t attrs = { detach, 0, 0, 0, 0 };
     return thd_create_ex(&attrs, routine, param);
 }
@@ -608,6 +624,18 @@ int thd_set_prio(kthread_t *thd, prio_t prio) {
 /*****************************************************************************/
 /* Scheduling routines */
 
+static void thd_update_cpu_time(kthread_t *thd) {
+    if(perf_cntr_timer_enabled()) {
+
+        thd->cpu_time.scheduled = perf_cntr_timer_ns();
+
+        if(thd_current) {
+            thd_current->cpu_time.total +=
+                thd->cpu_time.scheduled - thd_current->cpu_time.scheduled;
+        }
+    }
+}
+
 /* Thread scheduler; this function will find a new thread to run when a
    context switch is requested. No work is done in here except to change
    out the thd_current variable contents. Assumed that we are in an
@@ -624,7 +652,7 @@ int thd_set_prio(kthread_t *thd, prio_t prio) {
    to make sure the priorities are all straight before returning, but you
    don't want a full context switch inside the same priority group.
 */
-void thd_schedule(int front_of_line, uint64_t now) {
+void thd_schedule(bool front_of_line, uint64_t now) {
     int dontenq;
     kthread_t *thd;
 
@@ -683,6 +711,8 @@ void thd_schedule(int front_of_line, uint64_t now) {
        run queue and switch to it. */
     thd_remove_from_runnable(thd);
 
+    thd_update_cpu_time(thd);
+
     thd_current = thd;
     _impure_ptr = &thd->thd_reent;
     thd->state = STATE_RUNNING;
@@ -726,6 +756,9 @@ void thd_schedule_next(kthread_t *thd) {
     }
 
     thd_remove_from_runnable(thd);
+
+    thd_update_cpu_time(thd);
+
     thd_current = thd;
     _impure_ptr = &thd->thd_reent;
     thd_current->state = STATE_RUNNING;
@@ -768,7 +801,7 @@ static void thd_timer_hnd(irq_context_t *context) {
 /* Thread blocking based sleeping; this is the preferred way to
    sleep because it eases the load on the system for the other
    threads. */
-void thd_sleep(int ms) {
+void thd_sleep(unsigned ms) {
     /* This should never happen. This should, perhaps, assert. */
     if(thd_mode == THD_MODE_NONE) {
         dbglog(DBG_WARNING, "thd_sleep called when threading not "
@@ -926,17 +959,29 @@ struct _reent *thd_get_reent(kthread_t *thd) {
     return &thd->thd_reent;
 }
 
+uint64_t thd_get_cpu_time(kthread_t *thd) {
+    /* Check whether we should force an update immediately for accuracy. */
+    if(thd == thd_get_current() && perf_cntr_timer_enabled()) {
+        const uint64_t ns = perf_cntr_timer_ns();
+
+        thd->cpu_time.total += ns - thd->cpu_time.scheduled;
+        thd->cpu_time.scheduled = ns;
+    }
+
+    return thd->cpu_time.total;
+}
+
 /*****************************************************************************/
 
 /* Change threading modes */
-int thd_set_mode(int mode) {
+int thd_set_mode(kthread_mode_t mode) {
     dbglog(DBG_WARNING, "thd_set_mode() has no effect. Cooperative threading "
            "mode is deprecated. Threading is always in preemptive mode.\n");
 
     return mode;
 }
 
-int thd_get_mode(void) {
+kthread_mode_t thd_get_mode(void) {
     return thd_mode;
 }
 
@@ -1036,6 +1081,13 @@ int thd_init(void) {
     reaper = thd_create(0, thd_reaper, NULL);
     strcpy(reaper->label, "[reaper]");
     thd_set_prio(reaper, 1);
+
+    /* Get initial timestamp */
+    if(perf_cntr_timer_enabled()) {
+        const uint64_t ns = perf_cntr_timer_ns();
+        kern->cpu_time.scheduled = ns;
+        kern->cpu_time.total = ns;
+    }
 
     /* Main thread -- the kern thread */
     thd_current = kern;
