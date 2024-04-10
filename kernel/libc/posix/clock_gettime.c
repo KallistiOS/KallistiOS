@@ -96,7 +96,7 @@ int clock_gettime(clockid_t clk_id, struct timespec *ts) {
                 return -1;
             }
 
-            ns64 = thd_get_cpu_time(thd_current());
+            ns64 = thd_get_cpu_time(thd_get_current());
             div_result = lldiv(ns64, 1000000000);
             ts->tv_sec = div_result.quot;
             ts->tv_nsec = div_result.rem;
