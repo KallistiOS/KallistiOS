@@ -122,8 +122,7 @@ int thd_pslist(int (*pf)(const char *fmt, ...)) {
     const uint64_t ns_time = perf_cntr_timer_ns();
 
     pf("All threads (may not be deterministic):\n");
-    pf("CUR MAX: %llu\n", ns_time);
-    pf("addr\t\ttid\tprio\tflags\t  wait_timeout\tcpu_time\tstate\t     name\n");
+    pf("addr\t\ttid\tprio\tflags\t  wait_timeout\tcpu_time\t      state\t  name\n");
 
     LIST_FOREACH(cur, &thd_list, t_list) {
         pf("%08lx\t", CONTEXT_PC(cur->context));
@@ -135,20 +134,20 @@ int thd_pslist(int (*pf)(const char *fmt, ...)) {
             pf("%d\t", cur->prio);
 
         pf("%08lx  ", cur->flags);
-        pf("%lu\t", (uint32_t)cur->wait_timeout);
+        pf("%12lu", (uint32_t)cur->wait_timeout);
 
         if(perf_cntr_timer_enabled()) {
             const uint64_t cpu_time = thd_get_cpu_time(cur);
 
-            pf("%12llu (%.3lf%%)\t",
+            pf("%12llu (%6.3lf%%)  ",
                 cpu_time, (double)cpu_time / (double)ns_time * 100.0);
         }
         else {
-            pf("%12s (?%%)\t", "?");
+            pf("%12s (?%%)  ", "?");
         }
 
-        pf("%s\t", thd_state_to_str(cur));
-        pf("%s\n", cur->label);
+        pf("%-10s  ", thd_state_to_str(cur));
+        pf("%-25s\n", cur->label);
     }
     pf("--end of list--\n");
 
