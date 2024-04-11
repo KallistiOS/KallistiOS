@@ -26,6 +26,7 @@
 
     \todo
         - Remove deprecated thread mode API
+        - Remove global extern pointer to current thread
 
     \author Megan Potter
     \author Lawrence Sebald
