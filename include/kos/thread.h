@@ -3,7 +3,8 @@
    include/kos/thread.h
    Copyright (C) 2000, 2001, 2002, 2003 Megan Potter
    Copyright (C) 2009, 2010, 2016 Lawrence Sebald
-   Copyright (C) 2024 Falco Girgis
+   Copyright (C) 2023 Colton Pawielski
+   Copyright (C) 2023, 2024 Falco Girgis
 
 */
 
@@ -71,6 +72,8 @@ __BEGIN_DECLS
     considered detached threads.
 
     \sa semaphore_t, mutex_t, kthread_once_t, kthread_key_t, rw_semaphore_t
+
+    @{
 */
 
 /** \brief  Process ID
@@ -116,36 +119,35 @@ LIST_HEAD(ktlist, kthread);
 /* \endcond */
 
 /** \name     Thread flag values
-    \brief    kthread_t::flags values
+    \brief    Flags for kthread_flags_t
 
     These are possible values for the flags field on the kthread_t structure.
     These can be ORed together.
 
     @{
 */
-#define THD_DEFAULTS    0       /**< \brief Defaults: no flags */
-#define THD_USER        1       /**< \brief Thread runs in user mode */
-#define THD_QUEUED      2       /**< \brief Thread is in the run queue */
-#define THD_DETACHED    4       /**< \brief Thread is detached */
+#define THD_DEFAULTS    0  /**< \brief Defaults: no flags */
+#define THD_USER        1  /**< \brief Thread runs in user mode */
+#define THD_QUEUED      2  /**< \brief Thread is in the run queue */
+#define THD_DETACHED    4  /**< \brief Thread is detached */
 /** @} */
 
-/** \name     Thread states
-    \brief    kthread_t::state values
+/** \brief Kernel thread flags type */
+typedef uint8_t kthread_flags_t;
+
+/** \brief Kernel thread state
 
     Each thread in the system is in exactly one of this set of states.
-
-    @{
 */
 typedef enum kthread_state {
     STATE_ZOMBIE   = 0x0000,  /**< \brief Waiting to die */
     STATE_RUNNING  = 0x0001,  /**< \brief Process is "current" */
     STATE_READY    = 0x0002,  /**< \brief Ready to be scheduled */
     STATE_WAIT     = 0x0003,  /**< \brief Blocked on a genwait */
-    STATE_FINISHED = 0x0004  /**< \brief Finished execution */
+    STATE_FINISHED = 0x0004   /**< \brief Finished execution */
 } kthread_state_t;
-/** @} */
 
-/** \brief   Control Block Header
+/** \brief   Thread Control Block Header
 
     Header preceding the static TLS data segments as defined by
     the SH-ELF TLS ABI (version 1). This is what the thread pointer 
@@ -161,8 +163,6 @@ typedef struct tcbhead {
     Each thread has one of these structures assigned to it, which holds all the
     data associated with the thread. There are various functions to manipulate
     the data in here, so you shouldn't generally do so manually.
-
-    \headerfile kos/thread.h
 */
 typedef __attribute__((aligned(32))) struct kthread {
     /** \brief  Register store -- used to save thread context. */
@@ -183,20 +183,22 @@ typedef __attribute__((aligned(32))) struct kthread {
     /** \brief  Static priority: 0..PRIO_MAX (higher means lower priority). */
     prio_t prio;
 
-    /** \brief  Thread flags.
-        \see    thd_flags   */
-    uint32_t flags;
+    /** \brief  Thread flags. */
+    kthread_flags_t flags;
 
-    /** \brief  Process state.
-        \see    thd_states  */
+    /** \brief  Process state */
     kthread_state_t state;
 
     /** \brief  Generic wait target, if waiting.
-        \see    kos/genwait.h   */
+
+        \see    kos/genwait.h
+    */
     void *wait_obj;
 
     /** \brief  Generic wait message, if waiting.
-        \see    kos/genwait.h   */
+
+        \see    kos/genwait.h
+    */
     const char *wait_msg;
 
     /** \brief  Wait timeout callback.
@@ -209,26 +211,33 @@ typedef __attribute__((aligned(32))) struct kthread {
     void (*wait_callback)(void *obj);
 
     /** \brief  Next scheduled time.
+
         This value is used for sleep and timed block operations. This value is
         in milliseconds since the start of timer_ms_gettime(). This should be
-        enough for something like 2 million years of wait time. ;) */
+        enough for something like 2 million years of wait time. ;)
+    */
     uint64_t wait_timeout;
 
+    /** \brief Per-Thread CPU Time. */
     struct {
-        uint64_t scheduled;
-        uint64_t total;
+        uint64_t scheduled; /**< \brief time when the thread became active */
+        uint64_t total;     /**< \brief total running CPU time for thread */
     } cpu_time;
 
     /** \brief  Thread label.
-        This value is used when printing out a user-readable process listing. */
+
+        This value is used when printing out a user-readable process listing.
+    */
     char label[KTHREAD_LABEL_SIZE];
 
     /** \brief  Current file system path. */
     char pwd[KTHREAD_PWD_SIZE];
 
     /** \brief  Thread private stack.
-        This should be a pointer to the base of a stack page. */
-    uint32_t *stack;
+
+        This should be a pointer to the base of a stack page.
+    */
+    void *stack;
 
     /** \brief  Size of the thread's stack, in bytes. */
     size_t stack_size;
@@ -240,18 +249,20 @@ typedef __attribute__((aligned(32))) struct kthread {
     struct _reent thd_reent;
 
     /** \brief  OS-level thread-local storage.
-        \see    kos/tls.h   */
+
+        \see    kos/tls.h
+    */
     struct kthread_tls_kv_list tls_list;
 
     /** \brief Compiler-level thread-local storage. */
     tcbhead_t* tcbhead;
 
     /** \brief  Return value of the thread function.
-        This is only used in joinable threads.  */
+
+        This is only used in joinable threads.
+    */
     void *rv;
 } kthread_t;
-
-
 
 /** \brief   Thread creation attributes.
 
@@ -283,20 +294,19 @@ typedef struct kthread_attr {
     const char *label;
 } kthread_attr_t;
 
-/** \name   Threading system modes
-    \brief  kthread mode values
+/** \brief  kthread mode values
+
+    \deprecated
+    Only preemptive scheduling is still supported!
 
     The threading system will always be in one of the following modes. This
     represents either pre-emptive scheduling or an un-initialized state.
-
-    @{
 */
 typedef enum kthread_mode {
     THD_MODE_NONE    = -1,  /**< \brief Threads not running */
     THD_MODE_COOP    =  0,  /**< \brief Cooperative mode \deprecated */
     THD_MODE_PREEMPT =  1   /**< \brief Preemptive threading mode */
 } kthread_mode_t;
-/** @} */
 
 /** \cond The currently executing thread -- Do not manipulate directly! */
 extern kthread_t *thd_current;
@@ -349,9 +359,9 @@ kthread_t *thd_by_tid(tid_t tid);
     of its priority group. Generally, you will not have to do this manually.
 
     \param  t               The thread to queue.
-    \param  front_of_line   Set to 1 to put this thread in front of other
-                            threads of the same priority, 0 to put it behind the
-                            other threads (normal behavior).
+    \param  front_of_line   Set to true to put this thread in front of other
+                            threads of the same priority, false to put it
+                            behind the other threads (normal behavior).
 
     \sa thd_remove_from_runnable
 */
@@ -380,8 +390,8 @@ int thd_remove_from_runnable(kthread_t *thd);
     routine completes if the thread is created detached, otherwise you must
     join the thread with thd_join() to clean up after it.
 
-    \param  detach          Set to 1 to create a detached thread. Set to 0 to
-                            create a joinable thread.
+    \param  detach          Set to true to create a detached thread. Set to
+                            false to create a joinable thread.
     \param  routine         The function to call in the new thread.
     \param  param           A parameter to pass to the function called.
 
@@ -391,7 +401,7 @@ int thd_remove_from_runnable(kthread_t *thd);
 */
 kthread_t *thd_create(bool detach, void *(*routine)(void *param), void *param);
 
-/** \brief   Create a new thread with the specified set of attributes.
+/** \brief       Create a new thread with the specified set of attributes.
     \relatesalso kthread_t
 
     This function creates a new kernel thread with the specified set of
@@ -449,7 +459,7 @@ void thd_exit(void *rv) __noreturn;
     thd_current. Set 'now' to non-zero if you want to use a particular system
     time for checking timeouts.
 
-    \param  front_of_line   Set to 0, unless you have a good reason not to.
+    \param  front_of_line   Set to false, unless you have a good reason not to.
     \param  now             Set to 0, unless you have a good reason not to.
 
     \sa thd_schedule_next
@@ -462,6 +472,8 @@ void thd_schedule(bool front_of_line, uint64_t now);
     This function promotes the given thread to be the next one that will be
     swapped in by the scheduler. This function is only callable inside an
     interrupt context (it simply returns otherwise).
+
+    \param  thd     The thread to schedule next.
 */
 void thd_schedule_next(kthread_t *thd);
 
@@ -479,6 +491,9 @@ void thd_pass(void);
     number of milliseconds passes. That is to say that the thread will sleep for
     at least the given number of milliseconds. If another thread is running, it
     will likely sleep longer.
+
+    \note
+    When \p ms is given a value of `0`, this is equivalent to thd_pass().
 
     \param  ms              The number of milliseconds to sleep.
 */
@@ -589,8 +604,23 @@ int *thd_get_errno(kthread_t *thd);
 struct _reent *thd_get_reent(kthread_t *thd);
 
 
-// returns false if the perf counter is reested and isn't configured properly
-// auto converts to timeval
+/** \brief       Retrieves the thread's elapsed CPU time
+    \relatesalso kthread_t
+
+    Returns the amount of active CPU time the thread has consume in
+    nanoseconds.
+
+    \warning
+    The implementation uses perf_cntr_timer_ns() internally when maintaining
+    this CPU time, so disabling or clearing the nanosecond timer will
+    interfere with this time keeping.
+
+    \param thd          The thead to retrieve the CPU time for
+
+    \retval             Total utilized CPU time in nanoseconds OR
+                        0 if the nanosecond timer of the performance
+                        counters has been disturbed.
+*/
 uint64_t thd_get_cpu_time(kthread_t *thd);
 
 /** \brief   Change threading modes.
@@ -599,9 +629,10 @@ uint64_t thd_get_cpu_time(kthread_t *thd);
     With preemptive threading being the only mode.
 
     \deprecated
-    This is now deprecated.
+    This is now deprecated
 
     \param  mode            One of the THD_MODE values.
+
     \return                 The old mode of the threading system.
 
     \sa thd_get_mode
@@ -650,7 +681,7 @@ int thd_join(kthread_t *thd, void **value_ptr);
 
     \return                 0 on success or less than 0 if the thread is
                             non-existent or already detached.
-    \sa    thd_join()
+    \sa thd_join()
 */
 int thd_detach(kthread_t *thd);
 
@@ -688,26 +719,12 @@ int thd_pslist(int (*pf)(const char *fmt, ...));
 */
 int thd_pslist_queue(int (*pf)(const char *fmt, ...));
 
-/** \brief   Initialize the threading system.
-
-    This is normally done for you by default when KOS starts. This will also
-    initialize all the various synchronization primitives.
-
-    \retval -1              If threads are already initialized.
-    \retval 0               On success.
-
-    \sa thd_shutdown
-*/
+/** \cond Handled internally by KOS */
 int thd_init(void);
-
-/** \brief   Shutdown the threading system.
-
-    This is done for you by the normal shutdown procedure of KOS. This will
-    also shutdown all the various synchronization primitives.
-
-    \sa thd_init
-*/
 void thd_shutdown(void);
+/** \endcond */
+
+/** @} */
 
 __END_DECLS
 

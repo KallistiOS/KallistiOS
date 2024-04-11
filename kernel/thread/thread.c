@@ -3,7 +3,8 @@
    kernel/thread/thread.c
    Copyright (C) 2000, 2001, 2002, 2003 Megan Potter
    Copyright (C) 2010, 2016 Lawrence Sebald
-   Copyright (C) 2024 Falco Girgis
+   Copyright (C) 2023 Colton Pawielski
+   Copyright (C) 2023, 2024 Falco Girgis
 */
 
 #include <stdlib.h>
@@ -122,10 +123,10 @@ int thd_pslist(int (*pf)(const char *fmt, ...)) {
     const uint64_t ns_time = perf_cntr_timer_ns();
 
     pf("All threads (may not be deterministic):\n");
-    pf("addr\t\ttid\tprio\tflags\t  wait_timeout\tcpu_time\t      state\t  name\n");
+    pf("addr\t  tid\tprio\tflags\t  wait_timeout\tcpu_time\t      state\t  name\n");
 
     LIST_FOREACH(cur, &thd_list, t_list) {
-        pf("%08lx\t", CONTEXT_PC(cur->context));
+        pf("%08lx  ", CONTEXT_PC(cur->context));
         pf("%d\t", cur->tid);
 
         if(cur->prio == PRIO_MAX)
@@ -147,7 +148,7 @@ int thd_pslist(int (*pf)(const char *fmt, ...)) {
         }
 
         pf("%-10s  ", thd_state_to_str(cur));
-        pf("%-25s\n", cur->label);
+        pf("%-10s\n", cur->label);
     }
     pf("--end of list--\n");
 
@@ -1083,10 +1084,16 @@ int thd_init(void) {
     strcpy(reaper->label, "[reaper]");
     thd_set_prio(reaper, 1);
 
-    /* Get initial timestamp */
+    /* Check whether we should set initial CPU time values. */
     if(perf_cntr_timer_enabled()) {
+        /* Get initial total process CPU time */
         const uint64_t ns = perf_cntr_timer_ns();
+        /* Set it as our scheduled timestamp */
         kern->cpu_time.scheduled = ns;
+        /* Also set it as our total CPU time, so that the main
+           thread is credited with consuming this CPU time, otherwise
+           it will be lost and thread totals will not equal process
+           total. */
         kern->cpu_time.total = ns;
     }
 
