@@ -14,7 +14,7 @@ int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id) {
     if(!attr)
         return EINVAL;
 
-    if(clock_id != CLOCK_REALTIME)
+    if(clock_id != CLOCK_MONOTONIC)
         return EINVAL;
 
     return 0;
