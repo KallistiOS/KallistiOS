@@ -219,6 +219,7 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - *** Implemented _POSIX_CPUTIME in clock_gettime() using perf counter timer [FG]
 - *** Implemented scandir() and alphasort() POSIX functions from dirent.h [FG]
 - DC  Added new driver for the SH4's UBC + high-level breakpoint API [FG]
+- DC  Add support for French AZERTY keyboards [PC]
 
 KallistiOS version 2.0.0 -----------------------------------------------
 - DC  Broadband Adapter driver fixes [Megan Potter == MP]
