@@ -4,6 +4,7 @@
    Copyright (C) 2002 Megan Potter
    Copyright (C) 2012 Lawrence Sebald
    Copyright (C) 2018 Donald Haase
+   Copyright (C) 2024 Paul Cercueil
 */
 
 #include <assert.h>
@@ -233,11 +234,60 @@ static kbd_keymap_t keymaps[KBD_NUM_KEYMAPS] = {
         }
     },
     {
-        /* French/AZERTY keyboard, probably. This one needs to be confirmed
-           still. */
-        { },
-        { },
-        { }
+        /* French/AZERTY keyboard */
+        /* The hex values in the tables are the ISO-8859-15 representation of the
+           French special chars. */
+        {
+            /* Base values */
+            0, 0, 0, 0, 'q', 'b', 'c', 'd',                 /* 0x00 - 0x07 */
+            'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',         /* 0x08 - 0x0F */
+            ',', 'n', 'o', 'p', 'a', 'r', 's', 't',         /* 0x10 - 0x17 */
+            'u', 'v', 'z', 'x', 'y', 'w', '&', 0xe9,        /* 0x18 - 0x1F */
+            '\"', '\'', '(', '-', 0xe8, '_', 0xe7, 0xe0,    /* 0x20 - 0x27 */
+            10, 27, 8, 9, ' ', ')', '=', '^',               /* 0x28 - 0x2F */
+            '$', 0, '*', 'm', 0xf9, 0xb2, ';', ':',         /* 0x30 - 0x37 */
+            '!', 0, 0, 0, 0, 0, 0, 0,                       /* 0x38 - 0x3F */
+            0, 0, 0, 0, 0, 0, 0, 0,                         /* 0x40 - 0x47 */
+            0, 0, 0, 0, 0, 0, 0, 0,                         /* 0x48 - 0x4F */
+            0, 0, 0, 0, '/', '*', '-', '+',                 /* 0x50 - 0x57 */
+            13, '1', '2', '3', '4', '5', '6', '7',          /* 0x58 - 0x5F */
+            '8', '9', '0', '.', 0, 0                        /* 0x60 - 0x65 */
+            /* All the rest are unused, and will be 0. */
+        },
+        {
+            /* Shifted values */
+            0, 0, 0, 0, 'Q', 'B', 'C', 'D',                 /* 0x00 - 0x07 */
+            'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',         /* 0x08 - 0x0F */
+            '?', 'N', 'O', 'P', 'A', 'R', 'S', 'T',         /* 0x10 - 0x17 */
+            'U', 'V', 'Z', 'X', 'Y', 'W', '1', '2',         /* 0x18 - 0x1F */
+            '3', '4', '5', '6', '7', '8', '9', '0',         /* 0x20 - 0x27 */
+            10, 27, 8, 9, ' ', 0xba, '+', 0,                /* 0x28 - 0x2F */
+            0xa3, 0, 0xb5, 'M', '%', 0xb3, '.', '/',        /* 0x30 - 0x37 */
+            0x7a, 0, 0, 0, 0, 0, 0, 0,                      /* 0x38 - 0x3F */
+            0, 0, 0, 0, 0, 0, 0, 0,                         /* 0x40 - 0x47 */
+            0, 0, 0, 0, 0, 0, 0, 0,                         /* 0x48 - 0x4F */
+            0, 0, 0, 0, '/', '*', '-', '+',                 /* 0x50 - 0x57 */
+            13, '1', '2', '3', '4', '5', '6', '7',          /* 0x58 - 0x5F */
+            '8', '9', '0', '.', 0, 0                        /* 0x60 - 0x65 */
+            /* All the rest are unused, and will be 0. */
+        },
+        {
+            /* "Alt" shifted values */
+            0, 0, 0, 0, 0xe4, 0, 0xa9, 0,                   /* 0x00 - 0x07 */
+            0xa4, 0, 0, 0, 0xee, 0xfc, 0xef, 0,             /* 0x08 - 0x0F */
+            0xbf, 0xf1, 0xbd, 0xf4, 0xe6, 0xea, 0xdf, 0,    /* 0x10 - 0x17 */
+            0xfb, 0, 0xe2, 0xbb, 0xfc, 0xab, 0, 0,          /* 0x18 - 0x1F */
+            '#', '{', '[', '|', 0, '\\', '^', '@',          /* 0x20 - 0x27 */
+            10, 27, 8, 9, ' ', ']', '}', '~',               /* 0x28 - 0x2F */
+            0, 0, 0, 0xf6, 0, 0xb9, 0xd7, 0xf7,             /* 0x30 - 0x37 */
+            0xa1, 0, 0, 0, 0, 0, 0, 0,                      /* 0x38 - 0x3F */
+            0, 0, 0, 0, 0, 0, 0, 0,                         /* 0x40 - 0x47 */
+            0, 0, 0, 0, 0, 0, 0, 0,                         /* 0x48 - 0x4F */
+            0, 0, 0, 0, '/', '*', '-', '+',                 /* 0x50 - 0x57 */
+            13, '1', '2', '3', '4', '5', '6', '7',          /* 0x58 - 0x5F */
+            '8', '9', '0', '.', 0, 0                        /* 0x60 - 0x65 */
+            /* All the rest are unused, and will be 0. */
+        }
     },
     {
         /* Italian/QWERTY keyboard, probably. This one needs to be confirmed

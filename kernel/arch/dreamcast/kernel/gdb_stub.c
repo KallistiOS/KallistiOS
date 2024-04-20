@@ -154,6 +154,7 @@
 #include <arch/arch.h>
 #include <arch/cache.h>
 
+#include <stddef.h>
 #include <string.h>
 
 /* Hitachi SH architecture instruction encoding masks */
@@ -235,18 +236,9 @@ static int dofault;  /* Non zero, bus errors will raise exception */
 /* debug > 0 prints ill-formed commands in valid packets & checksum errors */
 static int remote_debug;
 
-enum regnames {
-    R0, R1, R2, R3, R4, R5, R6, R7,
-    R8, R9, R10, R11, R12, R13, R14, R15,
-    PC, PR, GBR, VBR, MACH, MACL, SR,
-    FPUL, FPSCR,
-    FR0, FR1, FR2, FR3, FR4, FR5, FR6, FR7,
-    FR8, FR9, FR10, FR11, FR12, FR13, FR14, FR15
-};
-
 /* map from KOS register context order to GDB sh4 order */
 
-#define KOS_REG( r ) ( ((uint32)&((irq_context_t*)0)->r) / sizeof(uint32) )
+#define KOS_REG(r)      offsetof(irq_context_t, r)
 
 static uint32 kosRegMap[] = {
     KOS_REG(r[0]), KOS_REG(r[1]), KOS_REG(r[2]), KOS_REG(r[3]),
@@ -272,7 +264,7 @@ typedef struct {
 }
 stepData;
 
-static uint32 *registers;
+static irq_context_t *irq_ctx;
 static stepData instrBuffer;
 static char stepped;
 static const char hexchars[] = "0123456789abcdef";
@@ -525,7 +517,7 @@ static void doSStep(void) {
     int reg;
     unsigned short opcode, br_opcode;
 
-    instrMem = (short *) registers[PC];
+    instrMem = (short *) irq_ctx->pc;
 
     opcode = *instrMem;
     stepped = 1;
@@ -533,7 +525,7 @@ static void doSStep(void) {
     br_opcode = opcode & COND_BR_MASK;
 
     if(br_opcode == BT_INSTR || br_opcode == BTS_INSTR) {
-        if(registers[SR] & T_BIT_MASK) {
+        if(irq_ctx->sr & T_BIT_MASK) {
             displacement = (opcode & COND_DISP) << 1;
 
             if(displacement & 0x80)
@@ -543,7 +535,7 @@ static void doSStep(void) {
                * Remember PC points to second instr.
                * after PC of branch ... so add 4
                */
-            instrMem = (short *)(registers[PC] + displacement + 4);
+            instrMem = (short *)(irq_ctx->pc + displacement + 4);
         }
         else {
             /* can't put a trapa in the delay slot of a bt/s instruction */
@@ -551,7 +543,7 @@ static void doSStep(void) {
         }
     }
     else if(br_opcode == BF_INSTR || br_opcode == BFS_INSTR) {
-        if(registers[SR] & T_BIT_MASK) {
+        if(irq_ctx->sr & T_BIT_MASK) {
             /* can't put a trapa in the delay slot of a bf/s instruction */
             instrMem += (br_opcode == BFS_INSTR) ? 2 : 1;
         }
@@ -565,7 +557,7 @@ static void doSStep(void) {
                * Remember PC points to second instr.
                * after PC of branch ... so add 4
                */
-            instrMem = (short *)(registers[PC] + displacement + 4);
+            instrMem = (short *)(irq_ctx->pc + displacement + 4);
         }
     }
     else if((opcode & UCOND_DBR_MASK) == BRA_INSTR) {
@@ -578,17 +570,17 @@ static void doSStep(void) {
          * Remember PC points to second instr.
          * after PC of branch ... so add 4
          */
-        instrMem = (short *)(registers[PC] + displacement + 4);
+        instrMem = (short *)(irq_ctx->pc + displacement + 4);
     }
     else if((opcode & UCOND_RBR_MASK) == JSR_INSTR) {
         reg = (char)((opcode & UCOND_REG) >> 8);
 
-        instrMem = (short *) registers[reg];
+        instrMem = (short *) irq_ctx->r[reg];
     }
     else if(opcode == RTS_INSTR)
-        instrMem = (short *) registers[PR];
+        instrMem = (short *) irq_ctx->pr;
     else if(opcode == RTE_INSTR)
-        instrMem = (short *) registers[15];
+        instrMem = (short *) irq_ctx->r[15];
     else if((opcode & TRAPA_MASK) == TRAPA_INSTR)
         instrMem = (short *)((opcode & ~TRAPA_MASK) << 2);
     else
@@ -748,7 +740,7 @@ static void gdb_handle_exception(int exceptionVector) {
                 char* outBuf = remcomOutBuffer;
 
                 for(i = 0; i < NUMREGBYTES / 4; i++)
-                    outBuf = mem2hex((char *)(registers + kosRegMap[i]), outBuf, 4);
+                    outBuf = mem2hex((char *)((uint32)irq_ctx + kosRegMap[i]), outBuf, 4);
             }
             break;
 
@@ -757,7 +749,7 @@ static void gdb_handle_exception(int exceptionVector) {
                 char* inBuf = ptr;
 
                 for(i = 0; i < NUMREGBYTES / 4; i++, inBuf += 8)
-                    hex2mem(inBuf, (char *)(registers + kosRegMap[i]), 4);
+                    hex2mem(inBuf, (char *)((uint32)irq_ctx + kosRegMap[i]), 4);
 
                 strcpy(remcomOutBuffer, "OK");
             }
@@ -812,7 +804,7 @@ static void gdb_handle_exception(int exceptionVector) {
             case 'c': {
                 /* tRY, to read optional parameter, pc unchanged if no param */
                 if(hexToInt(&ptr, &addr))
-                    registers[PC] = addr;
+                    irq_ctx->pc = addr;
 
                 if(stepping)
                     doSStep();
@@ -914,14 +906,14 @@ static void flushDebugChannel(void) {
 
 static void handle_exception(irq_t code, irq_context_t *context, void *data) {
     (void)data;
-    registers = (uint32 *)context;
+    irq_ctx = context;
     gdb_handle_exception(code);
 }
 
 static void handle_user_trapa(irq_t code, irq_context_t *context, void *data) {
     (void)code;
     (void)data;
-    registers = (uint32 *)context;
+    irq_ctx = context;
     gdb_handle_exception(EXC_TRAPA);
 }
 
@@ -934,8 +926,8 @@ static void handle_gdb_trapa(irq_t code, irq_context_t *context, void *data) {
     */
     (void)code;
     (void)data;
-    registers = (uint32 *)context;
-    registers[PC] -= 2;
+    irq_ctx = context;
+    irq_ctx->pc -= 2;
     gdb_handle_exception(EXC_TRAPA);
 }
 

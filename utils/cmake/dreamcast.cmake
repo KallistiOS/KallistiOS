@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 3.23)
+### This minimum is based on the minimum requirement in dreamcast.toolchain.cmake
+cmake_minimum_required(VERSION 3.13)
 
 ### Helper Function for Bin2Object ###
 function(kos_bin2o inFile symbol)

@@ -190,7 +190,7 @@ __BEGIN_DECLS
 #define KBD_REGION_US       2           /**< \brief US keyboard */
 #define KBD_REGION_UK       3           /**< \brief UK keyboard */
 #define KBD_REGION_DE       4           /**< \brief German keyboard */
-#define KBD_REGION_FR       5           /**< \brief French keyboard (not supported yet) */
+#define KBD_REGION_FR       5           /**< \brief French keyboard */
 #define KBD_REGION_IT       6           /**< \brief Italian keyboard (not supported yet) */
 #define KBD_REGION_ES       7           /**< \brief Spanish keyboard */
 /** @} */
