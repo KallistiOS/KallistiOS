@@ -15,5 +15,8 @@ int pthread_condattr_init(pthread_condattr_t *attr) {
         return EFAULT;
 
     memset(attr, 0, sizeof(*attr));
+
+    attr->clock_id = CLOCK_REALTIME;
+
     return 0;
 }

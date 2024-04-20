@@ -14,14 +14,14 @@ int pthread_cond_init(pthread_cond_t *__RESTRICT cond,
                       const pthread_condattr_t *__RESTRICT attr) {
     int old, rv = 0;
 
-    (void)attr;
-
     if(!cond)
         return EFAULT;
 
     old = errno;
     if(cond_init(&cond->cond))
         rv = errno;
+
+    cond->attr = attr;
 
     errno = old;
     return rv;

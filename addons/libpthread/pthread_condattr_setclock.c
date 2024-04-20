@@ -2,6 +2,7 @@
 
    pthread_condattr_setclock.c
    Copyright (C) 2023 Lawrence Sebald
+   Copyright (C) 2024 Falco Girgis
 
 */
 
@@ -17,7 +18,6 @@ int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id) {
     switch(clock_id) {
         case CLOCK_REALTIME:
         case CLOCK_MONOTONIC:
-        case CLOCK_PROCESS_CPUTIME_ID:
             attr->clock_id = clock_id;
             break;
 

@@ -2,6 +2,8 @@
 
    pthread_cond_timedwait.c
    Copyright (C) 2023 Lawrence Sebald
+   Copyright (C) 2024 Eric Fradella
+   Copyright (C) 2024 Falco Girgis
 
 */
 
@@ -16,7 +18,8 @@ int pthread_cond_timedwait(pthread_cond_t *__RESTRICT cond,
                            const struct timespec *__RESTRICT abstime) {
     int old, rv = 0;
     int tmo;
-    struct timeval ctv;
+    struct timespec ctv;
+    clock_t clock;
 
     if(!mutex || !abstime)
         return EFAULT;
@@ -26,11 +29,13 @@ int pthread_cond_timedwait(pthread_cond_t *__RESTRICT cond,
 
     old = errno;
 
-    /* Figure out the timeout we need to provide. */
-    gettimeofday(&ctv, NULL);
+    clock = (cond->attr)? cond->attr->clock_id : CLOCK_REALTIME;
 
-    tmo = abstime->tv_sec - ctv.tv_sec;
-    tmo += abstime->tv_nsec / (1000 * 1000) - ctv.tv_usec / 1000;
+    /* Figure out the timeout we need to provide in milliseconds. */
+    clock_gettime(clock, &ctv);
+
+    tmo = (abstime->tv_sec - ctv.tv_sec) * 1000;
+    tmo += (abstime->tv_nsec - ctv.tv_nsec) / (1000 * 1000);
 
     if(tmo <= 0)
         return ETIMEDOUT;
