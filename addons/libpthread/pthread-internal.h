@@ -26,6 +26,12 @@
 #include <kos/mutex.h>
 #include <kos/rwsem.h>
 
+typedef union pthread_condattr_t {
+    clockid_t clock_id;
+    unsigned char __data[__PTHREAD_CONDATTR_SIZE];
+    long int __align;
+} pthread_condattr_t;
+
 typedef union pthread_attr_t {
     kthread_attr_t attr;
     unsigned char __data[__PTHREAD_ATTR_SIZE];
