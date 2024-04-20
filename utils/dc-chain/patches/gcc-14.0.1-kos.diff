@@ -152,7 +152,7 @@ diff -ruN gcc-14.0.1/libstdc++-v3/config/cpu/sh/atomicity.h gcc-14.0.1-kos/libst
 diff -ruN gcc-14.0.1/libstdc++-v3/configure gcc-14.0.1-kos/libstdc++-v3/configure
 --- gcc-14.0.1/libstdc++-v3/configure	2024-01-04 16:01:37.616069648 -0600
 +++ gcc-14.0.1-kos/libstdc++-v3/configure	2024-01-04 16:01:42.919094508 -0600
-@@ -15959,6 +15959,7 @@
+@@ -15974,6 +15974,7 @@
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;
      win32)	thread_header=config/i386/gthr-win32.h ;;
@@ -160,3 +160,60 @@ diff -ruN gcc-14.0.1/libstdc++-v3/configure gcc-14.0.1-kos/libstdc++-v3/configur
      mcf)	thread_header=config/i386/gthr-mcf.h ;;
  esac
  
+diff --color -ruN gcc-14.0.1/libstdc++-v3/include/bits/chrono_io.h gcc-14.0.1-kos/libstdc++-v3/include/bits/chrono_io.h
+--- gcc-14.0.1/libstdc++-v3/include/bits/chrono_io.h	2024-04-03 17:15:23.218387908 -0500
++++ gcc-14.0.1-kos/libstdc++-v3/include/bits/chrono_io.h	2024-04-03 17:26:31.045952218 -0500
+@@ -37,7 +37,6 @@
+ #include <sstream> // ostringstream
+ #include <iomanip> // setw, setfill
+ #include <format>
+-#include <charconv> // from_chars
+ 
+ #include <bits/streambuf_iterator.h>
+ 
+@@ -3657,17 +3656,13 @@
+ 			__err |= ios_base::eofbit;
+ 		      else
+ 			{
+-			  _CharT __dp = '.';
+-			  if (__loc != locale::classic())
+-			    {
+-			      auto& __np = use_facet<numpunct<_CharT>>(__loc);
+-			      __dp = __np.decimal_point();
+-			    }
++			  auto& __np = use_facet<numpunct<_CharT>>(__loc);
++			  auto __dp = __np.decimal_point();
+ 			  _CharT __c = _Traits::to_char_type(__i);
+ 			  if (__c == __dp)
+ 			    {
+ 			      (void) __is.get();
+-			      __buf.put('.');
++			      __buf.put(__c);
+ 			      int __prec
+ 				= hh_mm_ss<_Duration>::fractional_width;
+ 			      do
+@@ -3682,17 +3677,14 @@
+ 			    }
+ 			}
+ 
+-		      if (!__is_failed(__err)) [[likely]]
++		      if (!__is_failed(__err))
+ 			{
+-			  long double __val{};
+-			  string __str = std::move(__buf).str();
+-			  auto __first = __str.data();
+-			  auto __last = __first + __str.size();
+-			  using enum chars_format;
+-			  auto [ptr, ec] = std::from_chars(__first, __last,
+-							   __val, fixed);
+-			  if ((bool)ec || ptr != __last) [[unlikely]]
+-			    __err |= ios_base::failbit;
++			  auto& __ng = use_facet<num_get<_CharT>>(__loc);
++			  long double __val;
++			  ios_base::iostate __err2{};
++			  __ng.get(__buf, {}, __buf, __err2, __val);
++			  if (__is_failed(__err2)) [[unlikely]]
++			    __err |= __err2;
+ 			  else
+ 			    {
+ 			      duration<long double> __fs(__val);
