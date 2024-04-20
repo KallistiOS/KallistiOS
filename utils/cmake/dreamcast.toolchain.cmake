@@ -16,7 +16,8 @@
 # The original toolchain file was created by Kazade for the Simulant 
 # engine who has graciously allowed the rest of the scene to warez it. 
 
-cmake_minimum_required(VERSION 3.23)
+#### This minimum is due to the use of add_link_options
+cmake_minimum_required(VERSION 3.13)
 
 #### Set Configuration Variables From Environment ####
 if(NOT DEFINED KOS_BASE)

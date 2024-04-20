@@ -219,6 +219,7 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - *** Implemented _POSIX_CPUTIME in clock_gettime() using perf counter timer [FG]
 - *** Implemented scandir() and alphasort() POSIX functions from dirent.h [FG]
 - DC  Added new driver for the SH4's UBC + high-level breakpoint API [FG]
+- DC  Add support for French AZERTY keyboards [PC]
 - *** Added implementation of thread barriers [LS]
 - *** Removed old pthreads implementation from kernel/libc [LS]
 - *** Added new (more complete/compliant) pthreads implementation in

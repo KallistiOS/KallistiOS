@@ -61,6 +61,7 @@ __BEGIN_DECLS
     KOS_INIT_FLAG(flags, INIT_FS_ROMDISK, fs_romdisk_init); \
     KOS_INIT_FLAG(flags, INIT_FS_ROMDISK, fs_romdisk_shutdown); \
     KOS_INIT_FLAG(flags, INIT_EXPORT, export_init); \
+    KOS_INIT_FLAG_NONE(flags, INIT_NO_SHUTDOWN, kos_shutdown); \
     KOS_INIT_FLAGS_ARCH(flags)
 
 #define __KOS_INIT_FLAGS_1(flags) \
@@ -138,6 +139,7 @@ extern void * __kos_romdisk;
 #define INIT_QUIET       0x00000010  /**< \brief Disable dbgio */
 #define INIT_EXPORT      0x00000020  /**< \brief Export kernel symbols */
 #define INIT_FS_ROMDISK  0x00000040  /**< \brief Enable support for romdisks */
+#define INIT_NO_SHUTDOWN 0x00000080  /**< \brief Disable hardware shutdown */
 /** @} */
 
 __END_DECLS
