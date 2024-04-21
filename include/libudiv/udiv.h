@@ -1,18 +1,19 @@
-/* SPDX-License-Identifier: BSD-3-Clause
+/* SPDX-License-Identifier: BSD-3-Clause */
 
-   KallistiOS ##version##
+/* KallistiOS ##version##
 
    include/libudiv/udiv.h
-   Copyright (C) 2024 Paul Cercueil <paul@crapouillou.net>
+   Copyright (C) 2024 Paul Cercueil
 */
 
 /** \file    libudiv/udiv.h
     \brief   Fast uint32_t division routines
     \ingroup libudiv
 
-    This file was originally from `libudiv`.
+    This file was originally from
+    <a href="https://github.com/pcercuei/libudiv">libudiv</a>.
 
-    \author     Paul Cercueil
+    \author Paul Cercueil
 */
 
 #ifndef __LIBUDIV_H__
@@ -24,16 +25,16 @@
     \brief      Optimized unsigned 32-bit division routines
     \ingroup    math_general
 
-    libudiv is an optimized math library that provides routines for efficiently
-    dividing an unsigned 32-bit variable by a known unsigned 32-bit constant.
+    libudiv is a small library that provides optimized unsigned 32-bit division
+    routines to be used when the divisor is constant or seldomly updated.
 
     @{
 */
 
-/** \brief Divider for a uint32_t
+/** \brief Divisor for a uint32_t
 
-    This structure represents a cached, optimized form of a constant uint32_t
-    divisor value.
+    This structure represents a pre-processed form of an unsigned 32-bit
+    divisor.
 */
 typedef struct {
     /** \cond */
@@ -58,9 +59,9 @@ static inline udiv_t __udiv_set_divider(unsigned int div) {
 }
 /** \endcond */
 
-/** \brief Returns a udiv_t from a constant uint32_t
+/** \brief Convert a uint32_t divisor into a udiv_t
 
-    Used to convert a constant uint32_t value into an optimized udiv_t form.
+    Converts an unsigned 32-bit divisor value into a pre-processed udiv_t form.
 */
 #define udiv_set_divider(div) \
     __builtin_choose_expr(__builtin_constant_p(div), \
@@ -99,7 +100,7 @@ static inline unsigned int udiv_divide_fast(unsigned int val, udiv_t udiv) {
     \p udiv. This version has no restrictions on the \p udiv source value.
 
     \param  val     Dividend or numerator.
-    \param  udiv    Divisor or denomenator
+    \param  udiv    Divisor or denomenator.
 
     \returns        Quotient or result of the division.
 
