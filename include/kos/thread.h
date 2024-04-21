@@ -602,7 +602,7 @@ int thd_get_mode(void) __deprecated;
 
     Sets the frequency of the scheduler interrupts in hertz.
 
-    \param hertz    The new frequency in hertz (1-1000)
+    \param hertz    The new frequency in hertz (2-1000)
 
     \retval 0       The frequency was updated successfully.
     \retval -1      \p hertz is invalid.
@@ -620,7 +620,6 @@ int thd_set_hz(unsigned hertz);
     \sa thd_set_hz();
 */
 unsigned thd_get_hz(void);
-
 
 /** \brief       Wait for a thread to exit.
     \relatesalso kthread_t
