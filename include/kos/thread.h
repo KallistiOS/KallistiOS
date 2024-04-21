@@ -598,6 +598,30 @@ int thd_set_mode(int mode) __deprecated;
 */
 int thd_get_mode(void) __deprecated;
 
+/** \brief   Set the scheduler's frequency.
+
+    Sets the frequency of the scheduler interrupts in hertz.
+
+    \param hertz    The new frequency in hertz (1-1000)
+
+    \retval 0       The frequency was updated successfully.
+    \retval -1      \p hertz is invalid.
+
+    \sa thd_get_hz();
+*/
+int thd_set_hz(unsigned hertz);
+
+/** \brief   Fetch the scheduler's current frequency.
+
+    Queries the scheduler for its interrupt frequency in hertz.
+
+    \return                 Scheduler frequency in hertz.
+
+    \sa thd_set_hz();
+*/
+unsigned thd_get_hz(void);
+
+
 /** \brief       Wait for a thread to exit.
     \relatesalso kthread_t
 

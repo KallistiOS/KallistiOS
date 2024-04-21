@@ -50,6 +50,9 @@ static inline size_t align_to(size_t address, size_t alignment) {
 /*****************************************************************************/
 /* Thread scheduler data */
 
+/* Scheduler timer interrupt frequency (Hertz) */
+static unsigned thd_hz = HZ;
+
 /* Thread list. This includes all threads except dead ones. */
 static struct ktlist thd_list;
 
@@ -760,7 +763,7 @@ static void thd_timer_hnd(irq_context_t *context) {
     //printf("timer woke at %d\n", (uint32_t)now);
 
     thd_schedule(0, now);
-    timer_primary_wakeup(1000 / HZ);
+    timer_primary_wakeup(1000 / thd_hz);
 }
 
 /*****************************************************************************/
@@ -940,6 +943,19 @@ int thd_get_mode(void) {
     return thd_mode;
 }
 
+unsigned thd_get_hz(void) {
+    return thd_hz;
+}
+
+int thd_set_hz(unsigned hertz) {
+    if(!hertz || hertz >= 1000)
+        return -1;
+
+    thd_hz = hertz;
+
+    return 0;
+}
+
 /* Delete a TLS key. Note that currently this doesn't prevent you from reusing
    the key after deletion. This seems ok, as the pthreads standard states that
    using the key after deletion results in "undefined behavior".
@@ -1048,9 +1064,9 @@ int thd_init(void) {
     timer_primary_set_callback(thd_timer_hnd);
 
     /* Schedule our first wakeup */
-    timer_primary_wakeup(1000 / HZ);
+    timer_primary_wakeup(1000 / thd_hz);
 
-    dbglog(DBG_INFO, "thd: pre-emption enabled, HZ=%d\n", HZ);
+    dbglog(DBG_INFO, "thd: pre-emption enabled, HZ=%u\n", thd_hz);
 
     return 0;
 }
