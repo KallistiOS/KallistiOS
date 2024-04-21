@@ -1,17 +1,17 @@
-/* KallistiOS ##version##
+/* SPDX-License-Identifier: BSD-3-Clause
 
-   include/kos/udiv.h
+   KallistiOS ##version##
+
+   include/libudiv/udiv.h
    Copyright (C) 2024 Paul Cercueil <paul@crapouillou.net>
-
 */
 
-/** \file    kos/udiv.h
+/** \file    libudiv/udiv.h
     \brief   Fast uint32_t division routines
     \ingroup libudiv
 
     This file was originally from `libudiv`.
 
-    \copyright  SPDX-License-Identifier: BSD-3-Clause
     \author     Paul Cercueil
 */
 

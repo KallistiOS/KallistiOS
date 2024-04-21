@@ -11,6 +11,7 @@
 #include <malloc.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #include <reent.h>
 #include <errno.h>
 #include <kos/thread.h>
@@ -19,11 +20,10 @@
 #include <kos/rwsem.h>
 #include <kos/cond.h>
 #include <kos/genwait.h>
-#include <kos/udiv.h>
 #include <arch/irq.h>
 #include <arch/timer.h>
 #include <arch/arch.h>
-#include <assert.h>
+#include <libudiv/udiv.h>
 
 /*
 
