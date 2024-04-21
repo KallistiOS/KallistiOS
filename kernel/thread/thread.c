@@ -19,6 +19,7 @@
 #include <kos/rwsem.h>
 #include <kos/cond.h>
 #include <kos/genwait.h>
+#include <kos/udiv.h>
 #include <arch/irq.h>
 #include <arch/timer.h>
 #include <arch/arch.h>
@@ -52,6 +53,7 @@ static inline size_t align_to(size_t address, size_t alignment) {
 
 /* Scheduler timer interrupt frequency (Hertz) */
 static unsigned thd_hz = HZ;
+static udiv_t thd_hz_udiv = udiv_set_divider(HZ);
 
 /* Thread list. This includes all threads except dead ones. */
 static struct ktlist thd_list;
@@ -763,7 +765,7 @@ static void thd_timer_hnd(irq_context_t *context) {
     //printf("timer woke at %d\n", (uint32_t)now);
 
     thd_schedule(0, now);
-    timer_primary_wakeup(1000 / thd_hz);
+    timer_primary_wakeup(udiv_divide_fast(1000, thd_hz_udiv));
 }
 
 /*****************************************************************************/
@@ -952,6 +954,7 @@ int thd_set_hz(unsigned hertz) {
         return -1;
 
     thd_hz = hertz;
+    thd_hz_udiv = udiv_set_divider(hertz);
 
     return 0;
 }
@@ -1064,7 +1067,7 @@ int thd_init(void) {
     timer_primary_set_callback(thd_timer_hnd);
 
     /* Schedule our first wakeup */
-    timer_primary_wakeup(1000 / thd_hz);
+    timer_primary_wakeup(udiv_divide_fast(1000, thd_hz_udiv));
 
     dbglog(DBG_INFO, "thd: pre-emption enabled, HZ=%u\n", thd_hz);
 
