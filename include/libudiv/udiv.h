@@ -12,7 +12,7 @@
 
     This file was originally from `libudiv`.
 
-    \author     Paul Cercueil
+    \author Paul Cercueil
 */
 
 #ifndef __LIBUDIV_H__
