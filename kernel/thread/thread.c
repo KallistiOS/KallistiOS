@@ -948,7 +948,7 @@ unsigned thd_get_hz(void) {
 }
 
 int thd_set_hz(unsigned hertz) {
-    if(!hertz || hertz >= 1000)
+    if(!hertz || hertz > 1000)
         return -1;
 
     thd_hz = hertz;
