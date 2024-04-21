@@ -1053,7 +1053,7 @@ static vfs_handler_t vh = {
 };
 
 /* Initialize the file system */
-int fs_iso9660_init(void) {
+void fs_iso9660_init(void) {
     int i;
 
     /* Reset fd's */
@@ -1081,11 +1081,11 @@ int fs_iso9660_init(void) {
     iso_vblank_hnd = vblank_handler_add(iso_vblank, NULL);
 
     /* Register with VFS */
-    return nmmgr_handler_add(&vh.nmmgr);
+    nmmgr_handler_add(&vh.nmmgr);
 }
 
 /* De-init the file system */
-int fs_iso9660_shutdown(void) {
+void fs_iso9660_shutdown(void) {
     int i;
 
     /* De-register with vblank */
@@ -1101,5 +1101,5 @@ int fs_iso9660_shutdown(void) {
     mutex_destroy(&cache_mutex);
     mutex_destroy(&fh_mutex);
 
-    return nmmgr_handler_remove(&vh.nmmgr);
+    nmmgr_handler_remove(&vh.nmmgr);
 }

@@ -696,7 +696,7 @@ int fs_rmdir(const char * fn) {
     }
 }
 
-int fs_vfcntl(file_t fd, int cmd, va_list ap) {
+static int fs_vfcntl(file_t fd, int cmd, va_list ap) {
     fs_hnd_t *h = fs_map_hnd(fd);
     int rv;
 

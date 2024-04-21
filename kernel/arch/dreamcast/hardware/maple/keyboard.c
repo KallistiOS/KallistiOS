@@ -410,10 +410,10 @@ static int kbd_enqueue(kbd_state_t *state, uint8 keycode, int mods) {
         return 0;
 
     /* Queue the key up on the device-specific queue. */
-    if(state->queue_len < KBD_QUEUE_SIZE) {
+    if(atomic_load(&state->queue_len) < KBD_QUEUE_SIZE) {
         state->key_queue[state->queue_head] = keycode | (mods << 8);
         state->queue_head = (state->queue_head + 1) & (KBD_QUEUE_SIZE - 1);
-        ++state->queue_len;
+        atomic_fetch_add(&state->queue_len, 1);
     }
 
     /* If queueing is turned off, don't bother with the global queue. */
@@ -463,12 +463,12 @@ int kbd_queue_pop(maple_device_t *dev, int xlat) {
     uint32 rv, mods;
     uint8 ascii;
 
-    if(!state->queue_len)
+    if(!atomic_load(&state->queue_len))
         return -1;
 
     rv = state->key_queue[state->queue_tail];
     state->queue_tail = (state->queue_tail + 1) & (KBD_QUEUE_SIZE - 1);
-    --state->queue_len;
+    atomic_fetch_sub(&state->queue_len, 1);
 
     if(!xlat)
         return (int)rv;

@@ -140,8 +140,8 @@ int     dcload_unlink(vfs_handler_t * vfs, const char *fn);
 
 /* Init func */
 void fs_dcload_init_console(void);
-int fs_dcload_init(void);
-int fs_dcload_shutdown(void);
+void fs_dcload_init(void);
+void fs_dcload_shutdown(void);
 
 /* Init func for dcload-ip + lwIP */
 int fs_dcload_init_lwip(void *p);
