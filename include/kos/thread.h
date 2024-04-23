@@ -607,7 +607,7 @@ int thd_get_mode(void) __deprecated;
     \retval 0       The frequency was updated successfully.
     \retval -1      \p hertz is invalid.
 
-    \sa thd_get_hz();
+    \sa thd_get_hz(), HZ
 */
 int thd_set_hz(unsigned hertz);
 
@@ -617,7 +617,7 @@ int thd_set_hz(unsigned hertz);
 
     \return                 Scheduler frequency in hertz.
 
-    \sa thd_set_hz();
+    \sa thd_set_hz(), HZ
 */
 unsigned thd_get_hz(void);
 

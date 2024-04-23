@@ -23,7 +23,6 @@
 #include <arch/irq.h>
 #include <arch/timer.h>
 #include <arch/arch.h>
-#include <libudiv/udiv.h>
 
 /*
 
@@ -52,8 +51,7 @@ static inline size_t align_to(size_t address, size_t alignment) {
 /* Thread scheduler data */
 
 /* Scheduler timer interrupt frequency (Hertz) */
-static unsigned thd_hz = HZ;
-static udiv_t thd_hz_udiv = udiv_set_divider(HZ);
+static unsigned thd_sched_ms = 1000 / HZ;
 
 /* Thread list. This includes all threads except dead ones. */
 static struct ktlist thd_list;
@@ -765,7 +763,7 @@ static void thd_timer_hnd(irq_context_t *context) {
     //printf("timer woke at %d\n", (uint32_t)now);
 
     thd_schedule(0, now);
-    timer_primary_wakeup(udiv_divide_fast(1000, thd_hz_udiv));
+    timer_primary_wakeup(thd_sched_ms);
 }
 
 /*****************************************************************************/
@@ -946,15 +944,14 @@ int thd_get_mode(void) {
 }
 
 unsigned thd_get_hz(void) {
-    return thd_hz;
+    return 1000 / thd_sched_ms;
 }
 
 int thd_set_hz(unsigned hertz) {
-    if(hertz <= 1 || hertz > 1000)
+    if(!hertz || hertz > 1000)
         return -1;
 
-    thd_hz = hertz;
-    thd_hz_udiv = udiv_set_divider(hertz);
+    thd_sched_ms = 1000 / hertz;
 
     return 0;
 }
@@ -1067,9 +1064,9 @@ int thd_init(void) {
     timer_primary_set_callback(thd_timer_hnd);
 
     /* Schedule our first wakeup */
-    timer_primary_wakeup(udiv_divide_fast(1000, thd_hz_udiv));
+    timer_primary_wakeup(thd_sched_ms);
 
-    dbglog(DBG_INFO, "thd: pre-emption enabled, HZ=%u\n", thd_hz);
+    dbglog(DBG_INFO, "thd: pre-emption enabled, HZ=%u\n", thd_get_hz());
 
     return 0;
 }
