@@ -345,7 +345,7 @@ bool vid_get_enabled(void);
     Unlike vid_clear/vid_empty this does not modify any framebuffer.
     Instead it merely sets registers that immediately disable output.
 */
-void vid_set_enabled(bool);
+void vid_set_enabled(bool val);
 
 /** \defgroup video_misc Miscellaneous
     \brief               Miscellaneous video API utilities

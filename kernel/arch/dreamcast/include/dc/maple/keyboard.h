@@ -28,8 +28,6 @@ __BEGIN_DECLS
 #include <arch/types.h>
 #include <dc/maple.h>
 
-#include <stdatomic.h>
-
 /** \defgroup kbd   Keyboard
     \brief          Driver for the Dreamcast's Keyboard Input Device
     \ingroup        peripherals
@@ -299,7 +297,7 @@ typedef struct kbd_state {
     uint32 key_queue[KBD_QUEUE_SIZE];
     int queue_tail;                     /**< \brief Key queue tail. */
     int queue_head;                     /**< \brief Key queue head. */
-    atomic_int queue_len;               /**< \brief Current length of queue. */
+    volatile int queue_len;             /**< \brief Current length of queue. */
 
     uint8 kbd_repeat_key;           /**< \brief Key that is repeating. */
     uint64 kbd_repeat_timer;        /**< \brief Time that the next repeat will trigger. */

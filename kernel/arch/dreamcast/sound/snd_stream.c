@@ -589,6 +589,7 @@ void snd_stream_start_adpcm(snd_stream_hnd_t hnd, uint32_t freq, int st) {
 
 /* Actually make it go (in queued mode) */
 void snd_stream_queue_go(snd_stream_hnd_t hnd) {
+    (void)hnd;
     CHECK_HND(hnd);
     snd_sh4_to_aica_start();
 }

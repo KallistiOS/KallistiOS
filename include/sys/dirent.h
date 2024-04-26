@@ -62,11 +62,11 @@ __BEGIN_DECLS
     \headerfile sys/dirent.h
  */
 struct dirent {
-    int       d_ino;              /**< \brief File unique identifier. */
-    off_t     d_off;              /**< \brief File offset */
-    uint16_t  d_reclen;           /**< \brief Record length */
-    uint8_t   d_type;             /**< \brief File type */
-    char      d_name[0];          /**< \brief Filename */
+    int       d_ino;     /**< \brief File unique identifier. */
+    off_t     d_off;     /**< \brief File offset */
+    uint16_t  d_reclen;  /**< \brief Record length */
+    uint8_t   d_type;    /**< \brief File type */
+    char      d_name[0]; /**< \brief Filename */
 };
 
 /** \brief  Type representing a directory stream.

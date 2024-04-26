@@ -86,8 +86,6 @@ void sq_lock(void *dest);
     by KOS; however, they must be called manually when driving the SQs directly from 
     outside this API.
 
-    \param  dest            The address to copy to (32-byte aligned).
-
     \sa sq_lock()
 */
 void sq_unlock(void);

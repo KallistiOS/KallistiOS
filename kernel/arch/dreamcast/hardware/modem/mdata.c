@@ -399,6 +399,7 @@ void modemDataHandleDialingData(void) {
     if(modemDataLockFlag(&txBufferLockFlag)) {
         /* Get the byte to send to the MDP */
         length = readFromChainBuffer(txBuffer, &data, 1);
+        (void)length;
         assert(length == 1); /* Should have read one byte */
 
         /* If this is going to be the last byte of data sent to the MDP then

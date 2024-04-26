@@ -58,13 +58,13 @@ dbgio_handler_t * dbgio_handlers[] = {
 };
 int dbgio_handler_cnt = sizeof(dbgio_handlers) / sizeof(dbgio_handler_t *);
 
-void arch_init_net(void) {
+void arch_init_net_dcload_ip(void) {
     union {
         uint32 ipl;
         uint8 ipb[4];
     } ip = { 0 };
 
-    if(!(__kos_init_flags & INIT_NO_DCLOAD) && dcload_type == DCLOAD_TYPE_IP) {
+    if(dcload_type == DCLOAD_TYPE_IP) {
         /* Grab the IP address from dcload before we disable dbgio... */
         ip.ipl = _fs_dclsocket_get_ip();
         dbglog(DBG_INFO, "dc-load says our IP is %d.%d.%d.%d\n", ip.ipb[3],
@@ -74,7 +74,7 @@ void arch_init_net(void) {
 
     net_init(ip.ipl);     /* Enable networking (and drivers) */
 
-    if(!(__kos_init_flags & INIT_NO_DCLOAD) && dcload_type == DCLOAD_TYPE_IP) {
+    if(dcload_type == DCLOAD_TYPE_IP) {
         fs_dclsocket_init_console();
 
         if(!fs_dclsocket_init()) {
@@ -83,6 +83,18 @@ void arch_init_net(void) {
             dbglog(DBG_INFO, "fs_dclsocket console support enabled\n");
         }
     }
+}
+
+void arch_init_net_no_dcload(void) {
+    net_init(0);
+}
+
+KOS_INIT_FLAG_WEAK(arch_init_net_dcload_ip, true);
+KOS_INIT_FLAG_WEAK(arch_init_net_no_dcload, false);
+
+void arch_init_net(void) {
+    KOS_INIT_FLAG_CALL(arch_init_net_dcload_ip);
+    KOS_INIT_FLAG_CALL(arch_init_net_no_dcload);
 }
 
 void vmu_fs_init(void) {
@@ -114,6 +126,23 @@ KOS_INIT_FLAG_WEAK(fs_romdisk_mount_builtin_legacy, false);
 KOS_INIT_FLAG_WEAK(vmu_fs_init, true);
 KOS_INIT_FLAG_WEAK(vmu_fs_shutdown, true);
 
+#ifndef _arch_sub_naomi
+KOS_INIT_FLAG_WEAK(fs_iso9660_init, true);
+KOS_INIT_FLAG_WEAK(fs_iso9660_shutdown, true);
+#endif
+
+void dcload_init(void) {
+    if (*DCLOADMAGICADDR == DCLOADMAGICVALUE) {
+        dbglog(DBG_INFO, "dc-load console support enabled\n");
+        fs_dcload_init();
+    }
+}
+
+KOS_INIT_FLAG_WEAK(dcload_init, true);
+KOS_INIT_FLAG_WEAK(fs_dcload_init_console, true);
+KOS_INIT_FLAG_WEAK(fs_dcload_shutdown, true);
+KOS_INIT_FLAG_WEAK(fs_dclsocket_shutdown, true);
+
 /* Auto-init stuff: override with a non-weak symbol if you don't want all of
    this to be linked into your code (and do the same with the
    arch_auto_shutdown function too). */
@@ -128,8 +157,8 @@ int  __weak arch_auto_init(void) {
 
     ubc_init();
 
-    if(!(__kos_init_flags & INIT_NO_DCLOAD))
-        fs_dcload_init_console();   /* Init dc-load console, if applicable */
+    /* Init dc-load console, if applicable */
+    KOS_INIT_FLAG_CALL(fs_dcload_init_console);
 
     /* Init SCIF for debug stuff (maybe) */
     scif_init();
@@ -159,6 +188,8 @@ int  __weak arch_auto_init(void) {
     nmmgr_init();
 
     fs_init();          /* VFS */
+    fs_dev_init();
+    fs_null_init();
     fs_pty_init();          /* Pty */
     fs_ramdisk_init();      /* Ramdisk */
     KOS_INIT_FLAG_CALL(fs_romdisk_init);    /* Romdisk */
@@ -166,7 +197,7 @@ int  __weak arch_auto_init(void) {
 /* The arc4random_buf() function used for random & urandom is only
    available in newlib starting with version 2.4.0 */
 #if defined(__NEWLIB__) && !(__NEWLIB__ < 2 && __NEWLIB_MINOR__ < 4)
-    fs_dev_init();          /* /dev/urandom etc. */
+    fs_rnd_init();          /* /dev/urandom etc. */
 #else
 #warning "/dev filesystem is not supported with Newlib < 2.4.0"
 #endif
@@ -176,13 +207,10 @@ int  __weak arch_auto_init(void) {
     if(!KOS_INIT_FLAG_CALL(fs_romdisk_mount_builtin))
         KOS_INIT_FLAG_CALL(fs_romdisk_mount_builtin_legacy);
 
-    if(!(__kos_init_flags & INIT_NO_DCLOAD) && *DCLOADMAGICADDR == DCLOADMAGICVALUE) {
-        dbglog(DBG_INFO, "dc-load console support enabled\n");
-        fs_dcload_init();
-    }
+    KOS_INIT_FLAG_CALL(dcload_init);
 
 #ifndef _arch_sub_naomi
-    fs_iso9660_init();
+    KOS_INIT_FLAG_CALL(fs_iso9660_init);
 #endif
 
     KOS_INIT_FLAG_CALL(vmu_fs_init);
@@ -204,7 +232,7 @@ int  __weak arch_auto_init(void) {
 }
 
 void  __weak arch_auto_shutdown(void) {
-    fs_dclsocket_shutdown();
+    KOS_INIT_FLAG_CALL(fs_dclsocket_shutdown);
 #ifndef _arch_sub_naomi
     KOS_INIT_FLAG_CALL(net_shutdown);
 #endif
@@ -215,17 +243,19 @@ void  __weak arch_auto_shutdown(void) {
     hardware_shutdown();
     pvr_shutdown();
     library_shutdown();
-    fs_dcload_shutdown();
+    KOS_INIT_FLAG_CALL(fs_dcload_shutdown);
     KOS_INIT_FLAG_CALL(vmu_fs_shutdown);
 #ifndef _arch_sub_naomi
-    fs_iso9660_shutdown();
+    KOS_INIT_FLAG_CALL(fs_iso9660_shutdown);
 #endif
 #if defined(__NEWLIB__) && !(__NEWLIB__ < 2 && __NEWLIB_MINOR__ < 4)
-    fs_dev_shutdown();
+    fs_rnd_shutdown();
 #endif
     fs_ramdisk_shutdown();
     KOS_INIT_FLAG_CALL(fs_romdisk_shutdown);
     fs_pty_shutdown();
+    fs_null_shutdown();
+    fs_dev_shutdown();
     fs_shutdown();
     thd_shutdown();
     rtc_shutdown();

@@ -62,7 +62,7 @@ int pvr_get_stats(pvr_stats_t *stat) {
     stat->rnd_last_time = pvr_state.rnd_last_len;
 
     if(stat->frame_last_time != 0)
-        stat->frame_rate = 1000.0f / stat->frame_last_time;
+        stat->frame_rate = 1000000000.0f / stat->frame_last_time;
     else
         stat->frame_rate = -1.0f;
 
@@ -82,55 +82,54 @@ int pvr_vertex_dma_enabled(void) {
 
 /* Update statistical counters */
 void pvr_sync_stats(int event) {
-    uint64  t;
+    uint64_t t;
     volatile pvr_ta_buffers_t *buf;
 
+    if(event == PVR_SYNC_VBLANK) {
+        pvr_state.vbl_count++;
+    }
+    else {
+        /* Get the current time */
+        t = timer_ns_gettime64();
 
-    /* Get the current time */
-    t = timer_ms_gettime64();
+        switch(event) {
+            case PVR_SYNC_REGSTART:
+                pvr_state.reg_start_time = t;
+                break;
 
-    switch(event) {
-        case PVR_SYNC_VBLANK:
-            pvr_state.vbl_count++;
-            break;
+            case PVR_SYNC_REGDONE:
+                pvr_state.reg_last_len = t - pvr_state.reg_start_time;
 
-        case PVR_SYNC_REGSTART:
-            pvr_state.reg_start_time = t;
-            break;
+                buf = pvr_state.ta_buffers + pvr_state.ta_target;
+                pvr_state.vtx_buf_used = PVR_GET(PVR_TA_VERTBUF_POS) - buf->vertex;
 
-        case PVR_SYNC_REGDONE:
-            pvr_state.reg_last_len = (uint32)(t - pvr_state.reg_start_time);
+                if(pvr_state.vtx_buf_used > pvr_state.vtx_buf_used_max)
+                    pvr_state.vtx_buf_used_max = pvr_state.vtx_buf_used;
 
-            buf = pvr_state.ta_buffers + pvr_state.ta_target;
-            pvr_state.vtx_buf_used = PVR_GET(PVR_TA_VERTBUF_POS) - buf->vertex;
+                break;
 
-            if(pvr_state.vtx_buf_used > pvr_state.vtx_buf_used_max)
-                pvr_state.vtx_buf_used_max = pvr_state.vtx_buf_used;
+            case PVR_SYNC_RNDSTART:
+                pvr_state.rnd_start_time = t;
+                break;
 
-            break;
+            case PVR_SYNC_RNDDONE:
+                pvr_state.rnd_last_len = t - pvr_state.rnd_start_time;
+                break;
 
-        case PVR_SYNC_RNDSTART:
-            pvr_state.rnd_start_time = t;
-            break;
+            case PVR_SYNC_BUFSTART:
+                pvr_state.buf_start_time = t;
+                break;
 
-        case PVR_SYNC_RNDDONE:
-            pvr_state.rnd_last_len = (uint32)(t - pvr_state.rnd_start_time);
-            break;
+            case PVR_SYNC_BUFDONE:
+                pvr_state.buf_last_len = t - pvr_state.buf_start_time;
+                break;
 
-        case PVR_SYNC_BUFSTART:
-            pvr_state.buf_start_time = t;
-            break;
-
-        case PVR_SYNC_BUFDONE:
-            pvr_state.buf_last_len = (uint32)(t - pvr_state.buf_start_time);
-            break;
-
-        case PVR_SYNC_PAGEFLIP:
-            pvr_state.frame_last_len = (uint32)(t - pvr_state.frame_last_time);
-            pvr_state.frame_last_time = t;
-            pvr_state.frame_count++;
-            break;
-
+            case PVR_SYNC_PAGEFLIP:
+                pvr_state.frame_last_len = t - pvr_state.frame_last_time;
+                pvr_state.frame_last_time = t;
+                pvr_state.frame_count++;
+                break;
+        }
     }
 }
 
