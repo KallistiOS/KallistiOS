@@ -13,6 +13,7 @@
 #include <malloc.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #include <reent.h>
 #include <errno.h>
 #include <kos/thread.h>
@@ -25,7 +26,6 @@
 #include <arch/timer.h>
 #include <dc/perfctr.h>
 #include <arch/arch.h>
-#include <assert.h>
 
 /*
 
@@ -52,6 +52,9 @@ static inline size_t align_to(size_t address, size_t alignment) {
 
 /*****************************************************************************/
 /* Thread scheduler data */
+
+/* Scheduler timer interrupt frequency (Hertz) */
+static unsigned int thd_sched_ms = 1000 / HZ;
 
 /* Thread list. This includes all threads except dead ones. */
 static struct ktlist thd_list;
@@ -795,7 +798,7 @@ static void thd_timer_hnd(irq_context_t *context) {
     //printf("timer woke at %d\n", (uint32_t)now);
 
     thd_schedule(0, now);
-    timer_primary_wakeup(1000 / HZ);
+    timer_primary_wakeup(thd_sched_ms);
 }
 
 /*****************************************************************************/
@@ -987,6 +990,19 @@ kthread_mode_t thd_get_mode(void) {
     return thd_mode;
 }
 
+unsigned thd_get_hz(void) {
+    return 1000 / thd_sched_ms;
+}
+
+int thd_set_hz(unsigned int hertz) {
+    if(!hertz || hertz > 1000)
+        return -1;
+
+    thd_sched_ms = 1000 / hertz;
+
+    return 0;
+}
+
 /* Delete a TLS key. Note that currently this doesn't prevent you from reusing
    the key after deletion. This seems ok, as the pthreads standard states that
    using the key after deletion results in "undefined behavior".
@@ -1108,9 +1124,9 @@ int thd_init(void) {
     timer_primary_set_callback(thd_timer_hnd);
 
     /* Schedule our first wakeup */
-    timer_primary_wakeup(1000 / HZ);
+    timer_primary_wakeup(thd_sched_ms);
 
-    dbglog(DBG_INFO, "thd: pre-emption enabled, HZ=%d\n", HZ);
+    dbglog(DBG_INFO, "thd: pre-emption enabled, HZ=%u\n", thd_get_hz());
 
     return 0;
 }
