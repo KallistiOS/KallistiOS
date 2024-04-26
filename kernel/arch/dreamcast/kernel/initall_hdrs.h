@@ -4,6 +4,8 @@
 #include <kos/thread.h>
 #include <kos/fs_pty.h>
 #include <kos/fs_dev.h>
+#include <kos/fs_null.h>
+#include <kos/fs_random.h>
 #include <kos/fs_romdisk.h>
 #include <kos/fs_ramdisk.h>
 #include <kos/library.h>

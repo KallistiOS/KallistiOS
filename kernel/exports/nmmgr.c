@@ -46,8 +46,13 @@ nmmgr_handler_t * nmmgr_lookup(const char *fn) {
         /* Couldn't find a handler */
         return NULL;
     }
-    else
+    else {
+        /* If we found an alias, return its referent */
+        if(cur->flags & NMMGR_FLAGS_ALIAS)
+            return ((alias_handler_t*)cur)->alias;
+
         return cur;
+    }
 }
 
 nmmgr_list_t * nmmgr_get_list(void) {

@@ -36,7 +36,7 @@ extern dbgio_handler_t dbgio_dcls;
 void fs_dclsocket_init_console(void);
 int fs_dclsocket_init(void);
 
-int fs_dclsocket_shutdown(void);
+void fs_dclsocket_shutdown(void);
 /* \endcond */
 
 /** @} */

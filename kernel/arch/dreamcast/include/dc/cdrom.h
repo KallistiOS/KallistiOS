@@ -493,11 +493,8 @@ int cdrom_spin_down(void);
 
     This initializes the CD-ROM reading system, reactivating the drive and
     handling initial setup of the disc.
-
-    \retval 0               On success.
-    \retval -1              Already initted, shutdown before initting again.
 */
-int cdrom_init(void);
+void cdrom_init(void);
 
 /** \brief    Shutdown the CD reading system.
     \ingroup  gdrom

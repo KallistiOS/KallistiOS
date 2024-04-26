@@ -72,6 +72,9 @@ static dirent_t *fs_root_readdir(fs_hnd_t * handle) {
     nmhead = nmmgr_get_list();
 
     LIST_FOREACH(nmhnd, nmhead, list_ent) {
+        if((nmhnd->flags & NMMGR_FLAGS_INDEV))
+            continue;
+
         if(nmhnd->type != NMMGR_TYPE_VFS)
             continue;
 
@@ -696,7 +699,7 @@ int fs_rmdir(const char * fn) {
     }
 }
 
-int fs_vfcntl(file_t fd, int cmd, va_list ap) {
+static int fs_vfcntl(file_t fd, int cmd, va_list ap) {
     fs_hnd_t *h = fs_map_hnd(fd);
     int rv;
 

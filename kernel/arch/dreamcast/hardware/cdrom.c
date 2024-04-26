@@ -470,7 +470,7 @@ int cdrom_spin_down(void) {
 }
 
 /* Initialize: assume no threading issues */
-int cdrom_init(void) {
+void cdrom_init(void) {
     uint32_t p;
     volatile uint32_t *react = (uint32_t *)(0x005f74e4 | MEM_AREA_P2_BASE);
     volatile uint32_t *bios = (uint32_t *)MEM_AREA_P2_BASE;
@@ -500,7 +500,7 @@ int cdrom_init(void) {
     gdc_init_system();
     mutex_unlock(&_g1_ata_mutex);
 
-    return cdrom_reinit();
+    cdrom_reinit();
 }
 
 void cdrom_shutdown(void) {

@@ -10,9 +10,11 @@ export KOS_CFLAGS="${KOS_CFLAGS} ${KOS_SH4_PRECISION} -ml -ffunction-sections -f
 export KOS_AFLAGS="${KOS_AFLAGS} -little"
 
 if [ x${KOS_SUBARCH} = xnaomi ]; then
+	export KOS_CFLAGS="${KOS_CFLAGS} -D__NAOMI__"
 	export KOS_LDFLAGS="${KOS_LDFLAGS} ${KOS_SH4_PRECISION} -ml -Wl,-Ttext=0x8c020000 -Wl,--gc-sections"
 	export KOS_LD_SCRIPT="-T${KOS_BASE}/utils/ldscripts/shlelf-naomi.xc"
 else
+	export KOS_CFLAGS="${KOS_CFLAGS} -D__DREAMCAST__"
 	export KOS_LDFLAGS="${KOS_LDFLAGS} ${KOS_SH4_PRECISION} -ml -Wl,-Ttext=0x8c010000 -Wl,--gc-sections"
 	export KOS_LD_SCRIPT="-T${KOS_BASE}/utils/ldscripts/shlelf.xc"
 fi

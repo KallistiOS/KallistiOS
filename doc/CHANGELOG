@@ -220,6 +220,7 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - *** Implemented scandir() and alphasort() POSIX functions from dirent.h [FG]
 - DC  Added new driver for the SH4's UBC + high-level breakpoint API [FG]
 - DC  Add support for French AZERTY keyboards [PC]
+- DC  Increased the resolution of pvr_stats_t from milli to nanoseconds [FG]
 - *** Added thread support for tracking CPU time + updated clock_gettime() [FG]
 
 KallistiOS version 2.0.0 -----------------------------------------------

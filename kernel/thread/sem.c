@@ -174,6 +174,7 @@ int sem_signal(semaphore_t *sm) {
     /* Is there anyone waiting? If so, pass off to them */
     else if(sm->count < 0) {
         woken = genwait_wake_cnt(sm, 1, 0);
+        (void)woken;
         assert(woken == 1);
         sm->count++;
     }
