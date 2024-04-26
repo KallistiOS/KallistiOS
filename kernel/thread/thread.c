@@ -949,7 +949,7 @@ unsigned thd_get_hz(void) {
     return 1000 / thd_sched_ms;
 }
 
-int thd_set_hz(unsigned hertz) {
+int thd_set_hz(unsigned int hertz) {
     if(!hertz || hertz > 1000)
         return -1;
 

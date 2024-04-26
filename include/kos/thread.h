@@ -611,7 +611,7 @@ int thd_get_mode(void) __deprecated;
 
     \sa thd_get_hz(), HZ
 */
-int thd_set_hz(unsigned hertz);
+int thd_set_hz(unsigned int hertz);
 
 /** \brief   Fetch the scheduler's current frequency.
 
