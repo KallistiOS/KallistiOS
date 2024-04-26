@@ -53,7 +53,7 @@ static inline size_t align_to(size_t address, size_t alignment) {
 /* Thread scheduler data */
 
 /* Scheduler timer interrupt frequency (Hertz) */
-static unsigned thd_sched_ms = 1000 / HZ;
+static unsigned int thd_sched_ms = 1000 / HZ;
 
 /* Thread list. This includes all threads except dead ones. */
 static struct ktlist thd_list;
