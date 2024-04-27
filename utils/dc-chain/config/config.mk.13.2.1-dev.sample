@@ -8,7 +8,7 @@
 ###############################################################################
 ###############################################################################
 ### THIS CONFIG IS FOR AN EXPERIMENTAL VERSION OF GCC!
-## THERE ARE NO KNOWN ISSUES BUILDING THIS VERSION as of 2024-01-29.
+## THERE ARE NO KNOWN ISSUES BUILDING THIS VERSION as of 2024-04-23.
 ###############################################################################
 ###############################################################################
 
@@ -129,7 +129,6 @@ pass2_languages=c,c++,objc,obj-c++
 # (double-precision-default) which hasn't been tested, or you can simply stick
 # with m4-single-only to save disk space.
 precision_modes=m4-single-only,m4-single
-#precision_modes=m4-single-only,m4-single,m4
 
 # Default floating point mode (m4-single-only|m4-single|m4)
 # Choose the default floating point precision ABI used when GCC is invoked. This

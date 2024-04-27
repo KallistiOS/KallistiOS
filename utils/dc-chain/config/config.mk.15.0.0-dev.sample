@@ -5,27 +5,36 @@
 # Initially adapted from Stalin's build script version 0.3.
 #
 
+###############################################################################
+###############################################################################
+### THIS CONFIG IS FOR AN EXPERIMENTAL VERSION OF GCC!
+## THERE ARE NO KNOWN ISSUES BUILDING THIS VERSION as of 2024-04-26.
+###############################################################################
+###############################################################################
+
 # Toolchain versions for SH
-sh_binutils_ver=2.34
-sh_gcc_ver=4.7.4
-newlib_ver=2.0.0
-gdb_ver=9.2
+sh_binutils_ver=2.42
+sh_gcc_ver=15.0.0
+newlib_ver=4.4.0.20231231
+gdb_ver=14.2
 
 # Tarball extensions to download for SH
 sh_binutils_download_type=xz
-sh_gcc_download_type=bz2
+sh_gcc_download_type=git
+sh_gcc_git_repo=git://gcc.gnu.org/git/gcc.git
+sh_gcc_git_branch=master
 newlib_download_type=gz
 gdb_download_type=xz
 
 # Toolchain for ARM
 # The ARM version of gcc/binutils is separated as support for the ARM7DI core
 # used in the Dreamcast's AICA is not available in versions of GCC beyond 8.5.0.
-arm_binutils_ver=2.34
-arm_gcc_ver=4.7.4
+arm_binutils_ver=2.42
+arm_gcc_ver=8.5.0
 
 # Tarball extensions to download for ARM
 arm_binutils_download_type=xz
-arm_gcc_download_type=bz2
+arm_gcc_download_type=xz
 
 # GCC custom dependencies
 # Specify here if you want to use custom GMP, MPFR and MPC libraries when
@@ -37,10 +46,10 @@ arm_gcc_download_type=bz2
 #use_custom_dependencies=1
 
 # GCC dependencies for SH
-sh_gmp_ver=4.3.2
-sh_mpfr_ver=2.4.2
-sh_mpc_ver=0.8.1
-#sh_isl_ver=0.18
+sh_gmp_ver=6.2.1
+sh_mpfr_ver=4.1.0
+sh_mpc_ver=1.2.1
+sh_isl_ver=0.24
 
 # Tarball extensions to download for GCC dependencies for SH
 sh_gmp_download_type=bz2
@@ -49,10 +58,10 @@ sh_mpc_download_type=gz
 sh_isl_download_type=bz2
 
 # GCC dependencies for ARM
-arm_gmp_ver=4.3.2
-arm_mpfr_ver=2.4.2
-arm_mpc_ver=0.8.1
-#arm_isl_ver=0.18
+arm_gmp_ver=6.1.0
+arm_mpfr_ver=3.1.4
+arm_mpc_ver=1.0.3
+arm_isl_ver=0.18
 
 # Tarball extensions to download for GCC dependencies for ARM
 arm_gmp_download_type=bz2
@@ -105,11 +114,12 @@ install_mode=install-strip
 # detected on some OS.
 makejobs=-j2
 
-# Languages (c|c++|objc|obj-c++|d)
+# Languages (c|c++|objc|obj-c++|d|rust)
 # Set the languages to build for sh-elf gcc compilation pass 2. The default is
 # to build everything used by all KOS examples; however, only C is actually
 # required for KOS itself. D may also be enabled optionally on POSIX platforms
-# which have its external dependencies installed.
+# which have its external dependencies installed. The experimental GCCRS Rust
+# compiler can be enabled as well.
 pass2_languages=c,c++,objc,obj-c++
 
 # Floating point precision support (m4-single-only|m4-single|m4)
