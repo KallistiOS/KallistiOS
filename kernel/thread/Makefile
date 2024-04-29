@@ -6,6 +6,7 @@
 
 OBJS =  sem.o cond.o mutex.o genwait.o
 OBJS += thread.o rwsem.o recursive_lock.o once.o tls.o
+OBJS += worker.o
 SUBDIRS = 
 
 include $(KOS_BASE)/Makefile.prefab

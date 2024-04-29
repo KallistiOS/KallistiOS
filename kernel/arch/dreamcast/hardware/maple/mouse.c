@@ -9,7 +9,9 @@
 #include <string.h>
 #include <assert.h>
 
-static void mouse_reply(maple_state_t *, maple_frame_t *frm) {
+static void mouse_reply(maple_state_t *st, maple_frame_t *frm) {
+    (void)st;
+
     maple_response_t    *resp;
     uint32          *respbuf;
     mouse_cond_t        *raw;
