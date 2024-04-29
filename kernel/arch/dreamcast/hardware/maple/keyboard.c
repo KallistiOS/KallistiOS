@@ -580,7 +580,9 @@ static void kbd_check_poll(maple_frame_t *frm) {
     }
 }
 
-static void kbd_reply(maple_state_t *, maple_frame_t *frm) {
+static void kbd_reply(maple_state_t *st, maple_frame_t *frm) {
+    (void)st;
+
     maple_response_t *resp;
     uint32 *respbuf;
     kbd_state_t *state;
