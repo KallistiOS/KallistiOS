@@ -498,7 +498,7 @@ void thd_pass(void);
 
     \param  ms              The number of milliseconds to sleep.
 */
-void thd_sleep(unsigned ms);
+void thd_sleep(unsigned int ms);
 
 /** \brief       Set a thread's priority value.
     \relatesalso kthread_t
