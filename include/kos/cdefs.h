@@ -164,22 +164,6 @@
 #define __no_inline __attribute__((__noinline__))
 #endif
 
-#ifndef __sh4_single_only_inline
-#   if __SH4_SINGLE_ONLY__
-#       define __sh4_single_only_inline inline static
-#   else
-#       define __sh4_single_only_inline __no_inline
-#   endif
-#endif
-
-#ifndef __sh4_single_only_always_inline
-#   if __SH4_SINGLE_ONLY__
-#       define __sh4_single_only_always_inline __always_inline
-#   else
-#       define __sh4_single_only_always_inline __no_inline
-#   endif
-#endif
-
 /* GCC macros for special cases */
 /* #if __GNUC__ ==  */
 
