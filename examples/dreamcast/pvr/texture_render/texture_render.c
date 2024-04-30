@@ -246,7 +246,7 @@ int main(int argc, char **argv) {
            (double)(counter / ((float)end - start) * 1000.0f));
 
     pvr_get_stats(&stats);
-    printf("From pvr_get_stats:\n\tVBlank Count: %lu\n\tFrame Count: %lu\n",
+    printf("From pvr_get_stats:\n\tVBlank Count: %u\n\tFrame Count: %u\n",
            stats.vbl_count, stats.frame_count);
 
     pvr_mem_free(d_texture);

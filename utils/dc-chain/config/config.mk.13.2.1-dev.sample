@@ -8,7 +8,7 @@
 ###############################################################################
 ###############################################################################
 ### THIS CONFIG IS FOR AN EXPERIMENTAL VERSION OF GCC!
-## THERE ARE NO KNOWN ISSUES BUILDING THIS VERSION as of 2024-01-29.
+## THERE ARE NO KNOWN ISSUES BUILDING THIS VERSION as of 2024-04-23.
 ###############################################################################
 ###############################################################################
 
@@ -114,24 +114,26 @@ install_mode=install-strip
 # detected on some OS.
 makejobs=-j2
 
-# Languages (c|c++|objc|obj-c++)
-# Set the languages to build for pass 2 of building gcc for sh-elf. The default
-# here is to build C, C++, Objective C, and Objective C++. You may want to take
-# out the latter two if you're not worried about them and/or you're short on
-# hard drive space.
+# Languages (c|c++|objc|obj-c++|d)
+# Set the languages to build for sh-elf gcc compilation pass 2. The default is
+# to build everything used by all KOS examples; however, only C is actually
+# required for KOS itself. D may also be enabled optionally on POSIX platforms
+# which have its external dependencies installed.
 pass2_languages=c,c++,objc,obj-c++
 
-# Floating point precision support (m4|m4-single|m4-single-only)
+# Floating point precision support (m4-single-only|m4-single|m4)
 # Build support for various SH4 floating-point operation ABIs. KallistiOS only
-# officially supports single-precision-only mode. Add m4 (double precision) or
-# m4-single (single precision) to build experimental support for those ABIs.
-precision_modes=m4-single-only
-#precision_modes=m4,m4-single,m4-single-only
+# officially supports single-precision-only mode (m4-single-only); however,
+# experimental support for single-precision-default mode (m4-single) has just
+# been added to allow for the use of full 64-bit doubles. You may also add m4
+# (double-precision-default) which hasn't been tested, or you can simply stick
+# with m4-single-only to save disk space.
+precision_modes=m4-single-only,m4-single
 
-# Default floating point mode (m4|m4-single|m4-single-only)
+# Default floating point mode (m4-single-only|m4-single|m4)
 # Choose the default floating point precision ABI used when GCC is invoked. This
 # can be overridden by using passing -m4, -m4-single, or -m4-single-only to GCC.
-# KallistiOS currently only supports m4-single-only, so that is the default.
+# KOS currently only officially supports m4-single-only, so it is the default.
 default_precision=m4-single-only
 
 # GCC threading model (single|kos|posix*)

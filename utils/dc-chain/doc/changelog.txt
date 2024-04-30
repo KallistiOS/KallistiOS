@@ -1,4 +1,7 @@
-2024-04-21: Added config option for enabling iconv library support in Newlib.
+2024-04-30: Added config option for enabling iconv library support in Newlib.
+            (Falco Girgis)
+2024-04-21: Added D to list of supported languages, added m4-single as a
+            default precision mode, added --disable-libphobos to gcc-pass2
             (Falco Girgis)
 2024-01-14: Added config option for disabling native language support (NLS) in GCC.
             (Falco Girgis)

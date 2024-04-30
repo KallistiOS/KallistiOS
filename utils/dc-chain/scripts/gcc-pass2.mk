@@ -18,6 +18,7 @@ $(build_gcc_pass2): logdir
           --with-gnu-ld \
           --with-newlib \
           --disable-libssp \
+          --disable-libphobos \
           --enable-threads=$(thread_model) \
           --enable-languages=$(pass2_languages) \
           --enable-checking=release \

@@ -188,6 +188,8 @@ int  __weak arch_auto_init(void) {
     nmmgr_init();
 
     fs_init();          /* VFS */
+    fs_dev_init();
+    fs_null_init();
     fs_pty_init();          /* Pty */
     fs_ramdisk_init();      /* Ramdisk */
     KOS_INIT_FLAG_CALL(fs_romdisk_init);    /* Romdisk */
@@ -195,7 +197,7 @@ int  __weak arch_auto_init(void) {
 /* The arc4random_buf() function used for random & urandom is only
    available in newlib starting with version 2.4.0 */
 #if defined(__NEWLIB__) && !(__NEWLIB__ < 2 && __NEWLIB_MINOR__ < 4)
-    fs_dev_init();          /* /dev/urandom etc. */
+    fs_rnd_init();          /* /dev/urandom etc. */
 #else
 #warning "/dev filesystem is not supported with Newlib < 2.4.0"
 #endif
@@ -247,11 +249,13 @@ void  __weak arch_auto_shutdown(void) {
     KOS_INIT_FLAG_CALL(fs_iso9660_shutdown);
 #endif
 #if defined(__NEWLIB__) && !(__NEWLIB__ < 2 && __NEWLIB_MINOR__ < 4)
-    fs_dev_shutdown();
+    fs_rnd_shutdown();
 #endif
     fs_ramdisk_shutdown();
     KOS_INIT_FLAG_CALL(fs_romdisk_shutdown);
     fs_pty_shutdown();
+    fs_null_shutdown();
+    fs_dev_shutdown();
     fs_shutdown();
     thd_shutdown();
     rtc_shutdown();

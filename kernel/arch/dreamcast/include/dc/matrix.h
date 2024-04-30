@@ -105,11 +105,12 @@ void mat_transform(vector_t *invecs, vector_t *outvecs, int veccnt, int vecskip)
     the transformed coordinates. This is perfect, for instance, for transforming
     pvr_vertex_t vertices.
 
+    \note                   sq_lock() must have been called beforehand
+
     \param  input           The list of input vertices.
-    \param  output          The output pointer.
+    \param  output          The output pointer (SQ address)
     \param  veccnt          The number of vertices to transform.
-    \note                   The \ref QACR0 and \ref QACR1 registers must be set
-                            appropriately BEFORE calling this function.
+
     \author Jim Ursetto
 */
 void mat_transform_sq(void *input, void *output, int veccnt);
