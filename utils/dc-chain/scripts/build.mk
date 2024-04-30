@@ -33,7 +33,7 @@ build_sh4_targets = build-sh4-binutils build-sh4-gcc build-sh4-gcc-pass1 \
 build_arm_targets = build-arm-binutils build-arm-gcc build-arm-gcc-pass1
 
 # Available targets for SH
-$(build_sh4_targets): prefix = $(sh_prefix)
+$(build_sh4_targets): prefix = $(sh_toolchain_path)
 $(build_sh4_targets): target = $(sh_target)
 $(build_sh4_targets): extra_configure_args += --with-multilib-list=$(precision_modes) --with-endian=little --with-cpu=$(default_precision)
 $(build_sh4_targets): gcc_ver = $(sh_gcc_ver)
@@ -69,11 +69,11 @@ ifdef sh_force_libbfd_installation
 endif
 ifneq ($(or $(MINGW),$(do_sh_force_libbfd_installation)),)
   $(build_sh4_targets): libbfd_install_flag = -enable-install-libbfd -enable-install-libiberty
-  $(build_sh4_targets): libbfd_src_bin_dir = $(sh_prefix)/$(host_triplet)/$(sh_target)
+  $(build_sh4_targets): libbfd_src_bin_dir = $(sh_toolchain_path)/$(host_triplet)/$(sh_target)
 endif
 
 # Available targets for ARM
-$(build_arm_targets): prefix = $(arm_prefix)
+$(build_arm_targets): prefix = $(arm_toolchain_path)
 $(build_arm_targets): target = $(arm_target)
 $(build_arm_targets): extra_configure_args = --with-arch=armv4 --with-mode=arm --disable-multilib
 $(build_arm_targets): gcc_ver = $(arm_gcc_ver)

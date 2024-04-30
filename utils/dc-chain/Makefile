@@ -5,11 +5,11 @@
 # Initially adapted from Stalin's build script version 0.3.
 #
 
-# Please create/edit 'config.mk' to customize your 'dc-chain' setup.
+#
+# Please edit 'config.mk' to customize your 'dc-chain' setup.
 #
 
 # Display startup banner
-include scripts/banner-variables.mk
 include scripts/banner.mk
 
 # User configuration
@@ -18,6 +18,13 @@ ifneq ("$(wildcard $(config_file))","")
   include $(config_file)
 else
   $(error The required $(config_file) file is missing)
+endif
+
+# Toolchain configuration file
+ifneq ("$(wildcard config/config.$(toolchain_configuration).mk)","")
+  include config/config.$(toolchain_configuration).mk
+else
+  $(error No configuration found at config/config.$(toolchain_configuration).mk)
 endif
 
 # Download Functions

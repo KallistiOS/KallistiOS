@@ -2,7 +2,6 @@ The available templates include the following configurations:
 
 | filename | sh4 gcc | newlib | sh4 binutils | arm gcc | arm binutils | notes |
 |---------:|:-------:|:----------:|:------------:|:-------:|:----------------:|:------|
-| config.mk.4.7.4-legacy.sample | 4.7.4 | 2.0.0 | 2.34 | 4.7.4 | 2.34 | older toolchain based on GCC 4<br />former "stable" / "legacy" configuration<br /> [some issues may happen in C++](https://dcemulation.org/phpBB/viewtopic.php?f=29&t=104724) |
 | config.mk.9.3.0-legacy.sample | 9.3.0 | 3.3.0 | 2.34 | 8.4.0 | 2.34 | older toolchain based on GCC 9<br />former "stable" configuration |
 | config.mk.9.5.0-winxp.sample | 9.5.0 | 4.3.0 | 2.34 | 8.5.0 | 2.34 | latest WinXP-compatible toolchain with GCC 9 |
 | config.mk.10.5.0.sample | 10.5.0 | 4.3.0 | 2.41 | 8.5.0 | 2.41 | modern toolchain with GCC 10 |

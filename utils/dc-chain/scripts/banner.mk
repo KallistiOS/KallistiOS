@@ -5,6 +5,9 @@
 # Initially adapted from Stalin's build script version 0.3.
 #
 
+banner_text=Sega Dreamcast Toolchains Maker (dc-chain)
+banner_line=******************************************
+
 $(info $(banner_line))
 $(info $(banner_text))
 $(info $(banner_line))

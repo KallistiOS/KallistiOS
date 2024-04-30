@@ -20,7 +20,7 @@ $(build_gcc_pass2): logdir
           --disable-libssp \
           --disable-libphobos \
           --enable-threads=$(thread_model) \
-          --enable-languages=$(pass2_languages) \
+          --enable-languages=$(enabled_languages) \
           --enable-checking=release \
           $(extra_configure_args) \
           $(macos_gcc_configure_args) \
@@ -29,6 +29,6 @@ $(build_gcc_pass2): logdir
           CXX="$(CXX)" \
           $(static_flag) \
           $(to_log)
-	$(MAKE) $(makejobs) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
+	$(MAKE) $(jobs_arg) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
 	$(MAKE) -C $(build) $(install_mode) DESTDIR=$(DESTDIR) $(to_log)
 	$(clean_up)

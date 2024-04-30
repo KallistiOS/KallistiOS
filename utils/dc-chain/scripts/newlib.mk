@@ -21,11 +21,11 @@ $(build_newlib): logdir
 	    $(newlib_extra_configure_args) \
 	    CC_FOR_TARGET="$(SH_CC_FOR_TARGET)" \
 	    $(to_log)
-	$(MAKE) $(makejobs) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
+	$(MAKE) $(jobs_arg) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
 	$(MAKE) -C $(build) install DESTDIR=$(DESTDIR) $(to_log)
 	$(clean_up)
 
-fixup-sh4-newlib: newlib_inc = $(DESTDIR)$(sh_prefix)/$(sh_target)/include
+fixup-sh4-newlib: newlib_inc = $(sh_toolchain_path)/$(sh_target)/include
 fixup-sh4-newlib: fixup-sh4-newlib-init
 
 # Apply sh4 newlib fixups (default is yes and this should be always the case!)
