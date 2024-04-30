@@ -21,7 +21,7 @@ typedef struct pthread_rwlockattr_t {
 
 #ifndef __PTHREAD_HAVE_CONDATTR_TYPE
 #define __PTHREAD_HAVE_CONDATTR_TYPE   1
-#define __PTHREAD_CONDATTR_SIZE        4
+#define __PTHREAD_CONDATTR_SIZE        16
 
 typedef union pthread_condattr_t {
     unsigned char __data[__PTHREAD_CONDATTR_SIZE];
