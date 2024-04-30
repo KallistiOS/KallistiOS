@@ -21,7 +21,11 @@ int pthread_cond_init(pthread_cond_t *__RESTRICT cond,
     if(cond_init(&cond->cond))
         rv = errno;
 
-    cond->attr = attr;
+    /* Copy attributes over into the condition variable. */
+    if(attr)
+        cond->clock_id = attr->clock_id;
+    else
+        cond->clock_id = CLOCK_REALTIME;
 
     errno = old;
     return rv;

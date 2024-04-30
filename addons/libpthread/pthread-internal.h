@@ -19,7 +19,7 @@
 #define __PTHREAD_COND_SIZE             16
 #define __PTHREAD_RWLOCK_SIZE           32
 #define __PTHREAD_BARRIER_SIZE          64
-#define __PTHREAD_CONDATTR_SIZE         4
+#define __PTHREAD_CONDATTR_SIZE         16
 
 #include <sys/cdefs.h>
 #include <kos/thread.h>
@@ -51,7 +51,7 @@ typedef union pthread_mutex_t {
 typedef union pthread_cond_t {
     struct {
         condvar_t cond;
-        const pthread_condattr_t *attr;
+        clockid_t clock_id;
     };
     unsigned char __data[__PTHREAD_COND_SIZE];
     long int __align;

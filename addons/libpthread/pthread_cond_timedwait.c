@@ -19,7 +19,6 @@ int pthread_cond_timedwait(pthread_cond_t *__RESTRICT cond,
     int old, rv = 0;
     int tmo;
     struct timespec ctv;
-    clock_t clock;
 
     if(!mutex || !abstime)
         return EFAULT;
@@ -29,10 +28,8 @@ int pthread_cond_timedwait(pthread_cond_t *__RESTRICT cond,
 
     old = errno;
 
-    clock = (cond->attr)? cond->attr->clock_id : CLOCK_REALTIME;
-
     /* Figure out the timeout we need to provide in milliseconds. */
-    clock_gettime(clock, &ctv);
+    clock_gettime(cond->clock_id, &ctv);
 
     tmo = (abstime->tv_sec - ctv.tv_sec) * 1000;
     tmo += (abstime->tv_nsec - ctv.tv_nsec) / (1000 * 1000);
