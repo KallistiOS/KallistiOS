@@ -168,6 +168,13 @@ newlib_c99_formats=1
 # characters for the printf and scanf family of routines.
 #newlib_multibyte=1
 
+# iconv - Character Encoding Conversions Support (encoding list)
+# Define this to enable support for the iconv() function and <iconv.h> header
+# file. The given comma separated list tells Newlib which encoding types to
+# include converters for going to and from. For the full list of available
+# encodings, see the Newlib configuration documentation.
+#newlib_iconv_encodings=us_ascii,utf8,utf16,ucs_2_internal,ucs_4_internal
+
 # Optimize Newlib for Space (1|0)
 # Define this to enable optimizing for space when building Newlib. This will
 # build Newlib with compiler flags which favor smaller code sizes over faster
