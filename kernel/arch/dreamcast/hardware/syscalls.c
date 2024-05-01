@@ -232,3 +232,4 @@ int syscall_pio_check(int id, int *size) {
      MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_PIO_CHECK, 
         id, size, SUPER_FUNC_GDROM);
 }
+

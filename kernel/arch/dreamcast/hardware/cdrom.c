@@ -42,11 +42,12 @@ normally the case with the default options. If in doubt, decompile the
 output and look to make sure.
 
 XXX: This could all be done in a non-blocking way by taking advantage of
-command queuing. Every call to syscall_gdrom_send_command returns a 'request id' which
-just needs to eventually be checked by cmd_stat. A non-blocking version
-of all functions would simply require manual calls to check the status.
-Doing this would probably allow data reading while cdda is playing without
-hiccups (by severely reducing the number of gd commands being sent).
+command queuing. Every call to syscall_gdrom_send_command returns a 
+'request id' which just needs to eventually be checked by cmd_stat. A 
+non-blocking version of all functions would simply require manual calls 
+to check the status. Doing this would probably allow data reading while 
+cdda is playing without hiccups (by severely reducing the number of gd 
+commands being sent).
 */
 
 typedef int gdc_cmd_hnd_t;

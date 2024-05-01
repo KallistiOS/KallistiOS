@@ -319,7 +319,7 @@ void syscall_dma_callback(uintptr_t callback, void *param);
     CMD_DMAREAD_STREAM_EX (see cdrom.h).
 
     \param  id              The request id (>=0).
-    \param  param           The pointer to two 32-bit integers. The first 
+    \param  params          The pointer to two 32-bit integers. The first 
                             element indicates the destination address, and 
                             the second element identifies how many bytes to 
                             transfer.
@@ -363,7 +363,7 @@ void syscall_pio_callback(uintptr_t callback, void *param);
     CMD_PIOREAD_STREAM_EX (see cdrom.h).
 
     \param  id              The request id (>=0).
-    \param  param           The pointer to two 32-bit integers. The first 
+    \param  params          The pointer to two 32-bit integers. The first 
                             element indicates the destination address, and 
                             the second element identifies how many bytes to 
                             transfer.
@@ -391,3 +391,4 @@ int syscall_pio_check(int id, int *size);
 __END_DECLS
 
 #endif
+
