@@ -219,8 +219,6 @@ ifdef enable_libgccjit
   endif
 endif
 
-$(info Enabled languages are $(enabled_languages))
-
 # Function to verify variable is not empty
 # Args:
 # 1 - Variable Name

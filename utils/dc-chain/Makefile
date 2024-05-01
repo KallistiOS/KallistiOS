@@ -21,10 +21,10 @@ else
 endif
 
 # Toolchain configuration file
-ifneq ("$(wildcard config/config.$(toolchain_configuration).mk)","")
-  include config/config.$(toolchain_configuration).mk
+ifneq ("$(wildcard profiles/profile.$(toolchain_profile).mk)","")
+  include profiles/profile.$(toolchain_profile).mk
 else
-  $(error No configuration found at config/config.$(toolchain_configuration).mk)
+  $(error No configuration found at profiles/profile.$(toolchain_profile).mk)
 endif
 
 # Download Functions

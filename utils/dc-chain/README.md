@@ -64,69 +64,40 @@ useful platform-specific instructions for installing dependencies.
 
 ## Configuration
 
-Before running `dc-chain`, you will need to set up the `config.mk` file containing
-settings for building the toolchain(s). Most users can simply use the the default
-`config.mk.stable.sample` template, which contains a stable default configuration
-to make this easy for you. Additional configuration templates for alternative
-settings are available in the `config` directory; see `config/README.md` for more
-details. Most users can skip configuration without altering any options whatsoever.
-Simply copy the `config.mk.stable.sample` file from the `config` directory to use
-this configuration:
-```
-cp config/config.mk.stable.sample config.mk
-```
+Before running `dc-chain`, you may choose to set up the `config.mk` file containing
+selections for the toolchain profile and settings for building the toolchain(s).
+The normal, stable defaults have already been set up for you, so most users can
+skip this step.
 
-Additional settings are detailed below.
+### Toolchain profiles
 
-### Toolchains components
+The following toolchain profiles are available for users to select:
 
-You may adjust the version numbers of components to install through declarations
-within the `config.mk` file.
+| profile name | sh4 gcc | newlib | sh4 binutils | arm gcc | arm binutils | notes |
+|---------:|:-------:|:----------:|:------------:|:-------:|:----------------:|:------|
+| 9.3.0-legacy | 9.3.0 | 3.3.0 | 2.34 | 8.4.0 | 2.34 | older toolchain based on GCC 9<br />former "stable" configuration |
+| 9.5.0-winxp | 9.5.0 | 4.3.0 | 2.34 | 8.5.0 | 2.34 | latest WinXP-compatible toolchain with GCC 9 |
+| 10.5.0 | 10.5.0 | 4.3.0 | 2.41 | 8.5.0 | 2.41 | modern toolchain with GCC 10 |
+| 11.4.0 | 11.4.0 | 4.3.0 | 2.41 | 8.5.0 | 2.41 | modern toolchain with GCC 11 |
+| 12.3.0 | 12.3.0 | 4.3.0 | 2.41 | 8.5.0 | 2.41 | modern toolchain with GCC 12 |
+| **stable** | **13.2.0** | **4.3.0** | **2.41** | **8.5.0** | **2.41** | **modern toolchain with GCC 13.2.0 release**<br />**current "stable" configuration** |
+| 13.2.1-dev | 13.2.1 (git) | 4.4.0 | 2.41 | 8.5.0 | 2.41 | latest GCC 13 development version from git<br />known to build without issues |
+| 14.0.1-dev | 14.0.1 (git) | 4.4.0 | 2.41 | 8.5.0 | 2.41 | latest GCC 14 development version from git<br />known to build without issues |
+| 15.0.0-dev | 15.0.0 (git) | 4.4.0 | 2.41 | 8.5.0 | 2.41 | latest master development version from git<br />known to build without issues |
 
-For the `sh-elf` toolchain, they are:
+The **stable** profile is the primary, widely tested target for KallistiOS, and
+is the most recent toolchain profile known to work with all example programs.
+The **legacy** profile contains an older versions of the toolchain that may be
+useful in compiling older software. The non-"stable" alternative profiles are
+maintained at a lower priority and are not guaranteed to build, but feel free
+to open a bug report if issues are encountered building one of these profiles.
 
-- `sh_binutils_ver`
-- `sh_gcc_ver`
-- `newlib_ver`
-- `gdb_ver`
-
-For the `arm-eabi` toolchain, they are:
-
-- `arm_binutils_ver`
-- `arm_gcc_ver`
-
-Because the **GCC** and **Newlib** builds must be patched to target KallistiOS,
-you may only select versions with patches available when building the default
-toolchain targeting KallistiOS. See the alternate configurations in the `config`
-directory for examples.
-
-**Note:** The `arm-eabi` GCC does not need a KallistiOS patch. The latest
-version of GCC possible for the `arm-eabi` toolchain, however, is `8.5.0`.
-Support for the **ARM7DI** core in the AICA was dropped after the GCC `8.x`
-series. If you choose to compile the optional `arm-eabi` toolchain, it is
-recommended to just pick the latest `8.5.0`.
-
-For **Binutils** or **GDB**, the latest version typically just works.
-
-For advanced users, you may specify **custom dependencies for GCC** directly in
-the `config.mk` file. You must define `use_custom_dependencies=1` to use your
-custom versions of **GMP**, **MPC**, **MPFR** and **ISL** rather than the
-versions provided with GCC.
-
-You may need to specify the tarball extension of the archive containing the
-package you want to download using `download_type`. This is already properly set
-for you in the provided templates, but this may be altered in case a package
-changes its extension on the servers. For example, older GCC versions like
-`4.7.4`, there is no `xz` tarball file, so this setting must be `gz`.
-
-Git repositories can also be used to obtain source files. The git download method
-can be selected by specifying `git` as the `download_type`. This enables the use
-of `git_repo` and `git_branch` variables to specify the repository and branch
-respectively. If `git_branch` is omitted, the default for the repository will be
-used.
-
-Alternative mirrors for GNU software can be selected using the `gnu_mirror`
-option detailed below.
+Please note that if you choose to install an older version of the GCC compiler,
+you may be required to use older versions of some of the prerequisites in
+certain situations. If you receive errors about tools you have installed, check
+your system's package manager for an older version of that tool. Depending on
+availability, it may not be possible to build older versions of the toolchain
+on your platform. 
 
 ### Download protocol
 
@@ -252,7 +223,7 @@ you know exactly what you are doing.
 
 ## Building the toolchain
 
-With prerequisites installed and a `config.mk` configuration file in place, the
+With prerequisites installed and a `config.mk` set up with desired options, the
 toolchains are ready to be built. Generic instructions follow below, but you may
 find more detailed platform-specific instructions in the `doc` directory.
 

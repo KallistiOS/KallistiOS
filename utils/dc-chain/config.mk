@@ -5,11 +5,11 @@
 # Initially adapted from Stalin's build script version 0.3.
 #
 
-###############################
-### TOOLCHAIN CONFIGURATION ###
-###############################
+#########################
+### TOOLCHAIN PROFILE ###
+#########################
 
-# Choose a toolchain configuration from the following options:
+# Choose a toolchain profile from the following available options:
 # No longer supported upstream:
 # - 9.3.0-legacy: Former 'stable' option.
 # - 9.5.0-winxp:  Most recent versions of tools which run on Windows XP.
@@ -23,7 +23,7 @@
 # - 14.1.0-dev    Bleeding edge GCC 14 series from git.
 # - 15.0.0-dev    Bleeding edge GCC 15 series from git.
 # If unsure, select stable. See README.md for more detailed descriptions.
-toolchain_configuration=stable
+toolchain_profile=stable
 
 ########################
 ### DOWNLOAD OPTIONS ###
