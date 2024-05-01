@@ -5,7 +5,7 @@
 # Initially adapted from Stalin's build script version 0.3.
 #
 
-build: build-sh4-done build-arm
+build: build-sh4-done
 build-sh4: build-sh4-gcc
 build-arm: build-arm-gcc
 build-sh4-gcc: build-sh4-gcc-pass2

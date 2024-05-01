@@ -5,7 +5,7 @@
 # Initially adapted from Stalin's build script version 0.3.
 #
 
-patch: patch-sh4 patch-arm patch-kos
+patch: patch-sh4 patch-kos
 patch-sh4: patch-sh4-binutils patch-sh4-gcc patch-sh4-newlib
 patch-arm: patch-arm-binutils patch-arm-gcc
 
