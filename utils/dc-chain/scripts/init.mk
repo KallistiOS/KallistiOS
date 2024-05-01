@@ -206,6 +206,30 @@ ifdef enable_d
   endif
 endif
 
+ifdef enable_fortran
+  ifneq (0,$(enable_fortran))
+    enabled_languages := $(enabled_languages),fortran
+  endif
+endif
+
+ifdef enable_modula2
+  ifneq (0,$(enable_modula2))
+    enabled_languages := $(enabled_languages),m2
+  endif
+endif
+
+ifdef enable_ada
+  ifneq (0,$(enable_ada))
+    enabled_languages := $(enabled_languages),ada
+  endif
+endif
+
+ifdef enable_go
+  ifneq (0,$(enable_go))
+    enabled_languages := $(enabled_languages),go
+  endif
+endif
+
 ifdef enable_rust
   ifneq (0,$(enable_rust))
     enabled_languages := $(enabled_languages),rust
