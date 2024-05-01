@@ -173,7 +173,7 @@ int syscall_gdrom_send_command(uint8_t cmd, void *params) {
         cmd, params, SUPER_FUNC_GDROM);
 }
 
-int syscall_gdrom_check_command(uint8_t id, void *status) {
+int syscall_gdrom_check_command(uint32_t id, void *status) {
     MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_CHECK_COMMAND, 
         id, status, SUPER_FUNC_GDROM);
 }
@@ -183,7 +183,7 @@ void syscall_gdrom_run_commands(void) {
         PARAM_NA, PARAM_NA, SUPER_FUNC_GDROM);
 }
 
-int syscall_gdrom_abort_command(uint8_t id) {
+int syscall_gdrom_abort_command(uint32_t id) {
     MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_ABORT_COMMAND, 
         id, PARAM_NA, SUPER_FUNC_GDROM);
 }
@@ -208,12 +208,12 @@ void syscall_dma_callback(uintptr_t callback, void *param) {
         callback, param, SUPER_FUNC_GDROM);
 }
 
-int syscall_dma_transfer(int id, int *params) {
+int syscall_dma_transfer(uint32_t id, int *params) {
     MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_DMA_TRANSFER, 
         id, params, SUPER_FUNC_GDROM);
 }
 
-int syscall_dma_check(int id, int *size) {
+int syscall_dma_check(uint32_t id, int *size) {
     MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_DMA_CHECK, 
         id, size, SUPER_FUNC_GDROM);
 }
@@ -223,12 +223,12 @@ void syscall_pio_callback(uintptr_t callback, void *param) {
         callback, param, SUPER_FUNC_GDROM);
 }
 
-int syscall_pio_transfer(int id, int *params) {
+int syscall_pio_transfer(uint32_t id, int *params) {
     MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_PIO_TRANSFER, 
         id, params, SUPER_FUNC_GDROM);
 }
 
-int syscall_pio_check(int id, int *size) {
+int syscall_pio_check(uint32_t id, int *size) {
      MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_PIO_CHECK, 
         id, size, SUPER_FUNC_GDROM);
 }

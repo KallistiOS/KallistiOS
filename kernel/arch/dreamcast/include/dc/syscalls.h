@@ -239,7 +239,7 @@ int syscall_gdrom_send_command(uint8_t cmd, void *params);
 
     \sa syscall_gdrom_send_command(), syscall_gdrom_run_commands()
 */
-int syscall_gdrom_check_command(uint8_t id, void *status);
+int syscall_gdrom_check_command(uint32_t id, void *status);
 
 /** \brief   Process queued GDROM commands.
     \ingroup system_calls
@@ -261,7 +261,7 @@ void syscall_gdrom_run_commands(void);
     \return                 0 on success, or non-zero on
                             failure.
 */
-int syscall_gdrom_abort_command(uint8_t id);
+int syscall_gdrom_abort_command(uint32_t id);
 
 /** \brief   Sets/gets the sector mode for read commands.
     \ingroup system_calls
@@ -327,7 +327,7 @@ void syscall_dma_callback(uintptr_t callback, void *param);
     \return                 0 on success, or non-zero on
                             failure.
 */
-int syscall_dma_transfer(int id, int *params);
+int syscall_dma_transfer(uint32_t id, int *params);
 
 /** \brief   Checks a DMA transfer
     \ingroup system_calls
@@ -342,7 +342,7 @@ int syscall_dma_transfer(int id, int *params);
     \retval 0               On success.
     \retval -1              On failure.
 */
-int syscall_dma_check(int id, int *size);
+int syscall_dma_check(uint32_t id, int *size);
 
 /** \brief   Setup GDROM PIO callback
     \ingroup system_calls
@@ -371,7 +371,7 @@ void syscall_pio_callback(uintptr_t callback, void *param);
     \return                 0 on success, or non-zero on
                             failure.
 */
-int syscall_pio_transfer(int id, int *params);
+int syscall_pio_transfer(uint32_t id, int *params);
 
 /** \brief   Checks a PIO transfer
     \ingroup system_calls
@@ -386,7 +386,7 @@ int syscall_pio_transfer(int id, int *params);
     \retval 0               On success.
     \retval -1              On failure.
 */
-int syscall_pio_check(int id, int *size);
+int syscall_pio_check(uint32_t id, int *size);
 
 __END_DECLS
 
