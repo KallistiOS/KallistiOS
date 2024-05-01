@@ -36,9 +36,9 @@ $(build_gcc_pass2): logdir
           CXX="$(CXX)" \
           $(static_flag) \
           $(to_log)
-	$(MAKE) $(jobs_arg) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
-	ifneq (,$(findstring ada,$(enabled_languages)))
-	  $(MAKE) $(makejobs) -C $(build)/gcc cross-gnattools DESTDIR=$(DESTDIR) $(to_log)
-  endif
-  $(MAKE) -C $(build) $(install_mode) DESTDIR=$(DESTDIR) $(to_log)
-	$(clean_up)
+				$(MAKE) $(jobs_arg) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
+        ifneq (,$(findstring ada,$(enabled_languages)))
+					$(MAKE) $(jobs_arg) -C $(build)/gcc cross-gnattools ada.all.cross DESTDIR=$(DESTDIR) $(to_log)
+        endif
+				$(MAKE) -C $(build) $(install_mode) DESTDIR=$(DESTDIR) $(to_log)
+				$(clean_up)
