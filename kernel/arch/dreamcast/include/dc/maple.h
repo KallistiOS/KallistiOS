@@ -278,7 +278,7 @@ typedef struct maple_device {
     struct maple_driver     *drv;           /**< \brief Driver which handles this device */
 
     volatile int            status_valid;   /**< \brief Have we got our first status update? */
-    uint8                   status[1024];   /**< \brief Status buffer (for pollable devices) */
+    uint8                   *status;        /**< \brief Status buffer (for pollable devices) */
 } maple_device_t;
 
 #define MAPLE_PORT_COUNT    4   /**< \brief Number of ports on the bus */
@@ -314,6 +314,8 @@ typedef struct maple_driver {
 
     uint32      functions;  /**< \brief One or more MAPLE_FUNCs ORed together */
     const char  *name;      /**< \brief The driver name */
+
+    size_t      status_size;/**< \brief The size of the status buffer */
 
     /* Callbacks, to be filled in by the driver */
 

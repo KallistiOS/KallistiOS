@@ -88,6 +88,7 @@ static maple_driver_t purupuru_drv = {
     .functions = MAPLE_FUNC_PURUPURU,
     .name = "PuruPuru (Vibration) Pack",
     .periodic = purupuru_periodic,
+    .status_size = 1024,
     .attach = purupuru_attach,
     .detach = NULL
 };
