@@ -160,6 +160,13 @@ ifdef newlib_multibyte
   endif
 endif
 
+ifdef newlib_iconv_encodings
+  ifneq (0,$(newlib_iconv_encodings))
+    newlib_extra_configure_args += --enable-newlib-iconv
+    newlib_extra_configure_args += --enable-newlib-iconv-encodings=$(newlib_iconv_encodings)
+  endif
+endif
+
 # Handle install mode for toolchain debug symbols
 ifdef toolchain_debug
   ifneq (0,$(toolchain_debug))
