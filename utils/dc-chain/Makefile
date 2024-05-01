@@ -20,14 +20,14 @@ else
   $(error The required $(config_file) file is missing)
 endif
 
-# Toolchain configuration file
+# Toolchain profiles
 ifneq ("$(wildcard profiles/profile.$(toolchain_profile).mk)","")
   include profiles/profile.$(toolchain_profile).mk
 else
   $(error No configuration found at profiles/profile.$(toolchain_profile).mk)
 endif
 
-# Download Functions
+# Download functions
 include scripts/utils.mk
 
 # Detect host machine
@@ -39,7 +39,9 @@ include scripts/init.mk
 # Makefile variables
 include scripts/variables.mk
 
-all: build
+default: build gdb
+
+all: build build-arm gdb
 
 # ---- download {{{
 

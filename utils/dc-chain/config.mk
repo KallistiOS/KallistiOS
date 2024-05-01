@@ -11,17 +11,19 @@
 
 # Choose a toolchain profile from the following available options:
 # No longer supported upstream:
-# - 9.3.0-legacy: Former 'stable' option.
+# - 9.3.0-legacy: Former 'stable' option, based on GCC 9.3.0 and Newlib 3.3.0.
 # - 9.5.0-winxp:  Most recent versions of tools which run on Windows XP.
-# - 10.5.0:       Released 2023-07-07.
+# - 10.5.0:       Last release in the GCC 10 series, released 2023-07-07.
 # Supported upstream:
-# - 11.4.0:       Released 2023-05-15.
-# - 12.3.0:       Released 2023-05-08.
-# - stable:       Based on GCC 13.2.0. Released 2024-07-27.
+# - 11.4.0:       Latest release in the GCC 11 series, released 2023-05-15.
+# - 12.3.0:       Latest release in the GCC 12 series, released 2023-05-08.
+# - stable:       Tested stable; based on GCC 13.2.0, released 2023-07-27.
 # Development versions:
 # - 13.2.1-dev    Bleeding edge GCC 13 series from git.
-# - 14.1.0-dev    Bleeding edge GCC 14 series from git.
+# - 14.0.1-dev    Bleeding edge GCC 14 series from git.
 # - 15.0.0-dev    Bleeding edge GCC 15 series from git.
+# - gccrs-dev:    GCC fork for development of the GCCRS Rust compiler.
+# - rustc-dev:    GCC fork for development of the libgccjit rustc GCC codegen.
 # If unsure, select stable. See README.md for more detailed descriptions.
 toolchain_profile=stable
 
@@ -115,20 +117,22 @@ enable_objcpp=1
 ### Enable Ada
 # Builds Ada support. This will build the GNAT Ada compiler and tools but does
 # not build the libada runtime library. In order for this build to succeed, the
-# host's GCC version must match the target Dreamcast version, plus the same 
-# version of GNAT and its tools must be preinstalled (and in your path). 
+# host's GCC version must match the target Dreamcast version, plus the same
+# version of GNAT and its tools must be preinstalled (and in your path).
 #enable_ada=1
 
 ### Enable Rust
-# Builds the work-in-progress GCCRS Rust compiler frontend for GCC.
-# Requires a development version of GCC. This option is not to be confused with
-# support for using this toolchain as a backend for rustc; see libgccjit below.
+# Builds the work-in-progress GCCRS Rust compiler frontend for GCC. Requires a
+# development version of GCC. Use with the gccrs-dev toolchain profile for the
+# most recent updates to the GCCRS compiler. This option is not to be confused
+# with using this toolchain as a backend for rustc; see libgccjit below.
 #enable_rust=1
 
 ### Enable libgccjit
 # Enables the libgccjit embeddable GCC library. This is most commonly enabled to
-# allow using this toolchain as a backend for the official rustc compiler. This
-# will force the toolchain host code to build as position-independent code,
+# allow using this toolchain as a backend for the official rustc compiler. Use
+# with the rustc-dev toolchain profile if this is your use case. Enabling this
+# option will force the toolchain host code to build as position-independent,
 # which will result in slightly slower compilation times for this toolchain.
 #enable_libgccjit=1
 
