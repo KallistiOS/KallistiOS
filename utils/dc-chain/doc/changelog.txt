@@ -1,3 +1,4 @@
+2024-05-01: Added config option for enabling the Ada langauge (Falco Girgis)  
 2024-04-30: Added config option for enabling iconv library support in Newlib.
             (Falco Girgis)
 2024-04-21: Added D to list of supported languages, added m4-single as a
