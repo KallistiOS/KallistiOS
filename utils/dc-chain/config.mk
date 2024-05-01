@@ -112,6 +112,13 @@ enable_objcpp=1
 # compiler installation.
 #enable_d=1
 
+### Enable Ada
+# Builds Ada support. This will build the GNAT Ada compiler and tools but does
+# not build the libada runtime library. In order for this build to succeed, the
+# host's GCC version must match the target Dreamcast version, plus the same 
+# version of GNAT and its tools must be preinstalled (and in your path). 
+#enable_ada=1
+
 ### Enable Rust
 # Builds the work-in-progress GCCRS Rust compiler frontend for GCC.
 # Requires a development version of GCC. This option is not to be confused with

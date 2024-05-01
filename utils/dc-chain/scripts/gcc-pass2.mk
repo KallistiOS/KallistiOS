@@ -5,6 +5,12 @@
 # Initially adapted from Stalin's build script version 0.3.
 #
 
+disable_libada=""
+
+ifneq (,$(findstring ada,$(pass2_languages)))
+	disable_libada=--disable-libada
+endif
+
 $(build_gcc_pass2): build = build-gcc-$(target)-$(gcc_ver)-pass2
 $(build_gcc_pass2): logdir
 	@echo "+++ Building $(src_dir) to $(build) (pass 2)..."
@@ -19,6 +25,7 @@ $(build_gcc_pass2): logdir
           --with-newlib \
           --disable-libssp \
           --disable-libphobos \
+          $(disable_libada) \
           --enable-threads=$(thread_model) \
           --enable-languages=$(enabled_languages) \
           --enable-checking=release \
@@ -30,5 +37,8 @@ $(build_gcc_pass2): logdir
           $(static_flag) \
           $(to_log)
 	$(MAKE) $(jobs_arg) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
-	$(MAKE) -C $(build) $(install_mode) DESTDIR=$(DESTDIR) $(to_log)
+	ifneq (,$(findstring ada,$(pass2_languages)))
+	  $(MAKE) $(makejobs) -C $(build)/gcc cross-gnattools DESTDIR=$(DESTDIR) $(to_log)
+  endif
+  $(MAKE) -C $(build) $(install_mode) DESTDIR=$(DESTDIR) $(to_log)
 	$(clean_up)
