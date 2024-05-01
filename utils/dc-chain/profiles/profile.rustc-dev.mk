@@ -18,23 +18,16 @@ sh_gcc_ver=rustc
 newlib_ver=4.4.0.20231231
 gdb_ver=14.2
 
-# Tarball extensions to download for SH
-sh_binutils_download_type=xz
+# Overide SH toolchain download type
 sh_gcc_download_type=git
 sh_gcc_git_repo=https://github.com/rust-lang/gcc.git
 sh_gcc_git_branch=master
-newlib_download_type=gz
-gdb_download_type=xz
 
 # Toolchain for ARM
 # The ARM version of gcc/binutils is separated as support for the ARM7DI core
 # used in the Dreamcast's AICA is not available in versions of GCC beyond 8.5.0.
 arm_binutils_ver=2.42
 arm_gcc_ver=8.5.0
-
-# Tarball extensions to download for ARM
-arm_binutils_download_type=xz
-arm_gcc_download_type=xz
 
 # GCC custom dependencies
 # Specify here if you want to use custom GMP, MPFR and MPC libraries when
@@ -51,20 +44,8 @@ sh_mpfr_ver=4.1.0
 sh_mpc_ver=1.2.1
 sh_isl_ver=0.24
 
-# Tarball extensions to download for GCC dependencies for SH
-sh_gmp_download_type=bz2
-sh_mpfr_download_type=bz2
-sh_mpc_download_type=gz
-sh_isl_download_type=bz2
-
 # GCC dependencies for ARM
 arm_gmp_ver=6.1.0
 arm_mpfr_ver=3.1.4
 arm_mpc_ver=1.0.3
 arm_isl_ver=0.18
-
-# Tarball extensions to download for GCC dependencies for ARM
-arm_gmp_download_type=bz2
-arm_mpfr_download_type=bz2
-arm_mpc_download_type=gz
-arm_isl_download_type=bz2
