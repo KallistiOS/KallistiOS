@@ -3,7 +3,6 @@
 #
 # usage:
 #   - build one of the images:
-#       docker build -t dcchain:latest . 
 #       docker build -t dcchain:stable --build-arg dc_chain=stable .
 #       docker build -t dcchain:9.3.0-legacy --build-arg dc_chain=9.3.0-legacy .
 #   - create and run a container, eg for latest:
@@ -36,8 +35,8 @@ ARG dc_chain=stable
 RUN mkdir -p /opt/toolchains/dc \
 	&& git clone https://git.code.sf.net/p/cadcdev/kallistios /opt/toolchains/dc/kos  || git clone https://github.com/KallistiOS/KallistiOS.git /opt/toolchains/dc/kos \
 	&& cd /opt/toolchains/dc/kos/utils/dc-chain \
-	&& cp config/config.mk.$dc_chain.sample config.mk \
-	&& sed -i -e 's/#use_custom_dependencies=1/use_custom_dependencies=1/g' config.mk \
+        && echo "toolchain_profile=$dc_chain" >> config.mk
+	&& sed -i -e 's/#use_custom_dependencies=1/use_custom_dependencies=1/g' profile/profile.$dc_chain.mk \
 	&& make && make gdb \
 	&& rm -rf /opt/toolchains/dc/kos
 
