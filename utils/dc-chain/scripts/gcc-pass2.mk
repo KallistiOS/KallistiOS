@@ -7,7 +7,7 @@
 
 disable_libada=""
 
-ifneq (,$(findstring ada,$(pass2_languages)))
+ifneq (,$(findstring ada,$(enabled_languages)))
 	disable_libada=--disable-libada
 endif
 
@@ -37,7 +37,7 @@ $(build_gcc_pass2): logdir
           $(static_flag) \
           $(to_log)
 	$(MAKE) $(jobs_arg) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
-	ifneq (,$(findstring ada,$(pass2_languages)))
+	ifneq (,$(findstring ada,$(enabled_languages)))
 	  $(MAKE) $(makejobs) -C $(build)/gcc cross-gnattools DESTDIR=$(DESTDIR) $(to_log)
   endif
   $(MAKE) -C $(build) $(install_mode) DESTDIR=$(DESTDIR) $(to_log)
