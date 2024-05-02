@@ -86,8 +86,8 @@
     so they had to be moved to their own file syscall_font.s.
 */
 
-/* Returns a value of a specified 'type' */
-#define MAKE_SYSCALL_RETURN(vec, func, r4, r5, r6, result, type) do { \
+/* Sets a value of a specified 'type' */
+#define MAKE_SYSCALL_SET(vec, func, r4, r5, r6, result, type) do { \
     uintptr_t *syscall_ptr = (uintptr_t *)(vec); \
     type (*syscall)() = (type (*)())(*syscall_ptr); \
     result = syscall((r4), (r5), (r6), (func)); \
@@ -127,7 +127,7 @@ uint64_t syscall_sysinfo_id(void) {
     uint64_t *id = NULL;
 
     syscall_sysinfo_init();
-    MAKE_SYSCALL_RETURN(VEC_SYSINFO, FUNC_SYSINFO_ID, 
+    MAKE_SYSCALL_SET(VEC_SYSINFO, FUNC_SYSINFO_ID, 
         PARAM_NA, PARAM_NA, PARAM_NA, id, uint64_t *);
 
     return (id != NULL) ? *id : 0;
@@ -193,6 +193,36 @@ int syscall_gdrom_sector_mode(void *mode) {
         mode, PARAM_NA, SUPER_FUNC_GDROM);
 }
 
+void syscall_gdrom_dma_callback(uintptr_t callback, void *param) {
+    MAKE_SYSCALL_VOID(VEC_MISC_GDROM, FUNC_GDROM_DMA_CALLBACK, 
+        callback, param, SUPER_FUNC_GDROM);
+}
+
+int syscall_gdrom_dma_transfer(uint32_t id, int *params) {
+    MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_DMA_TRANSFER, 
+        id, params, SUPER_FUNC_GDROM);
+}
+
+int syscall_gdrom_dma_check(uint32_t id, int *size) {
+    MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_DMA_CHECK, 
+        id, size, SUPER_FUNC_GDROM);
+}
+
+void syscall_gdrom_pio_callback(uintptr_t callback, void *param) {
+    MAKE_SYSCALL_VOID(VEC_MISC_GDROM, FUNC_GDROM_PIO_CALLBACK, 
+        callback, param, SUPER_FUNC_GDROM);
+}
+
+int syscall_gdrom_pio_transfer(uint32_t id, int *params) {
+    MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_PIO_TRANSFER, 
+        id, params, SUPER_FUNC_GDROM);
+}
+
+int syscall_gdrom_pio_check(uint32_t id, int *size) {
+     MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_PIO_CHECK, 
+        id, size, SUPER_FUNC_GDROM);
+}
+
 int syscall_misc_init(void) {
     MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_MISC_INIT, 
         PARAM_NA, PARAM_NA, SUPER_FUNC_MISC);
@@ -201,35 +231,5 @@ int syscall_misc_init(void) {
 int syscall_misc_setvector(uint8_t super, uintptr_t handler) {
     MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_MISC_SETVECTOR, 
         super, handler, SUPER_FUNC_MISC);
-}
-
-void syscall_dma_callback(uintptr_t callback, void *param) {
-    MAKE_SYSCALL_VOID(VEC_MISC_GDROM, FUNC_GDROM_DMA_CALLBACK, 
-        callback, param, SUPER_FUNC_GDROM);
-}
-
-int syscall_dma_transfer(uint32_t id, int *params) {
-    MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_DMA_TRANSFER, 
-        id, params, SUPER_FUNC_GDROM);
-}
-
-int syscall_dma_check(uint32_t id, int *size) {
-    MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_DMA_CHECK, 
-        id, size, SUPER_FUNC_GDROM);
-}
-
-void syscall_pio_callback(uintptr_t callback, void *param) {
-    MAKE_SYSCALL_VOID(VEC_MISC_GDROM, FUNC_GDROM_PIO_CALLBACK, 
-        callback, param, SUPER_FUNC_GDROM);
-}
-
-int syscall_pio_transfer(uint32_t id, int *params) {
-    MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_PIO_TRANSFER, 
-        id, params, SUPER_FUNC_GDROM);
-}
-
-int syscall_pio_check(uint32_t id, int *size) {
-     MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_PIO_CHECK, 
-        id, size, SUPER_FUNC_GDROM);
 }
 

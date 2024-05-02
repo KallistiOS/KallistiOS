@@ -75,10 +75,11 @@ int bfont_set_32bit_mode(int on) {
     return rv;
 }
 
-mutex_t _g1_bfont_mutex = MUTEX_INITIALIZER;
+/* From cdrom.c */
+extern mutex_t _g1_ata_mutex;
 
 int lock_bfont(void) {
-    if(mutex_lock(&_g1_bfont_mutex) == -1) return -1;
+    if(mutex_lock(&_g1_ata_mutex) == -1) return -1;
 
     /* Just make sure no outside system took the lock */
     while(syscall_font_lock() != 0)
@@ -88,7 +89,7 @@ int lock_bfont(void) {
 }
 
 int unlock_bfont(void) {
-    if(mutex_unlock(&_g1_bfont_mutex) == -1) return -1;
+    if(mutex_unlock(&_g1_ata_mutex) == -1) return -1;
 
     syscall_font_unlock();
 
