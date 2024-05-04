@@ -527,6 +527,9 @@ static int vmufs_setup(maple_device_t * dev, vmu_root_t * root, vmu_dir_t ** dir
             goto dead;
         }
 
+        /* Ensure that the dir is 0'd to avoid possible uninitialized reads */
+        memset(*dir, 0, sizeof(*dirsize));
+
         /* Read it */
         if(vmufs_dir_read(dev, root, *dir) < 0) {
             free(*dir);
