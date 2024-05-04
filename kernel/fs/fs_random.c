@@ -51,21 +51,21 @@ static rnd_fh_t *rnd_open_file(vfs_handler_t *vfs, const char *fn, int mode) {
     (void) fn;
 
     rnd_fh_t    * fd;       /* file descriptor */
-    int     realmode;
+
+    /* We only allow reading, not writing */
+    if((mode & O_MODE_MASK) != O_RDONLY) {
+        errno = EPERM;
+        return NULL;
 
     /* Malloc a new fh struct */
     fd = malloc(sizeof(rnd_fh_t));
+    if(!fd) {
+        errno = ENOMEM;
+        return NULL;
+    }
 
     /* Fill in the filehandle struct */
     fd->mode = mode;
-
-    realmode = mode & O_MODE_MASK;
-
-    /* We only allow reading, not writing */
-    if(realmode != O_RDONLY) {
-        free(fd);
-        return NULL;
-    }
 
     return fd;
 }
