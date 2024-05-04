@@ -32,7 +32,7 @@ struct dirent *readdir(DIR *dir) {
     else
         dir->d_ent.d_type = DT_REG;
 
-    strncpy(dir->d_name, d->name, sizeof(dir->d_name));
+    strncpy(dir->d_ent.d_name, d->name, sizeof(dir->d_ent.d_name));
 
     return &dir->d_ent;
 }

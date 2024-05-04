@@ -66,7 +66,7 @@ struct dirent {
     off_t     d_off;     /**< \brief File offset */
     uint16_t  d_reclen;  /**< \brief Record length */
     uint8_t   d_type;    /**< \brief File type */
-    char      d_name[0]; /**< \brief Filename */
+    char      d_name[NAME_MAX]; /**< \brief Filename */
 };
 
 /** \brief  Type representing a directory stream.
@@ -82,7 +82,6 @@ struct dirent {
 typedef struct {
     file_t          fd;               /**< \brief File descriptor for the directory */
     struct dirent   d_ent;            /**< \brief Current directory entry */
-    char            d_name[NAME_MAX]; /**< \brief Filename */
 } DIR;
 
 // Standard UNIX dir functions. Not all of these are fully functional
