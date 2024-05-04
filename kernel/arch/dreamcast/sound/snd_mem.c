@@ -89,6 +89,13 @@ int snd_mem_init(uint32 reserve) {
     TAILQ_INIT(&pool);
 
     blk = (snd_block_t *)malloc(sizeof(snd_block_t));
+
+    if(!blk) {
+        spinlock_unlock(&snd_mem_mutex);
+        errno = ENOMEM;
+        return -1;
+    }
+
     memset(blk, 0, sizeof(snd_block_t));
     blk->addr = reserve;
     blk->size = 2 * 1024 * 1024 - reserve;
@@ -190,6 +197,13 @@ uint32 snd_mem_malloc(size_t size) {
 
     /* Nope: break it up into two chunks */
     e = (snd_block_t*)malloc(sizeof(snd_block_t));
+
+    if(e == NULL) {
+        dbglog(DBG_ERROR, "snd_mem_malloc: not enough main memory to alloc(%d)\n", size);
+        spinlock_unlock(&snd_mem_mutex);
+        return 0;
+    }
+
     memset(e, 0, sizeof(snd_block_t));
     e->addr = best->addr + size;
     e->size = best->size - size;
