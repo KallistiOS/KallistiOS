@@ -6,14 +6,14 @@
 #
 
 #
-# Please edit 'config.mk' to customize your 'dc-chain' setup.
+# Please edit 'Makefile.cfg' to customize your 'dc-chain' setup.
 #
 
 # Display startup banner
 include scripts/banner.mk
 
 # User configuration
-config_file=config.mk
+config_file=Makefile.cfg
 ifneq ("$(wildcard $(config_file))","")
   include $(config_file)
 else

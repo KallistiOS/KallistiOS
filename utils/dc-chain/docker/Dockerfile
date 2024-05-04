@@ -35,7 +35,7 @@ ARG dc_chain=stable
 RUN mkdir -p /opt/toolchains/dc \
 	&& git clone https://git.code.sf.net/p/cadcdev/kallistios /opt/toolchains/dc/kos  || git clone https://github.com/KallistiOS/KallistiOS.git /opt/toolchains/dc/kos \
 	&& cd /opt/toolchains/dc/kos/utils/dc-chain \
-        && echo "toolchain_profile=$dc_chain" >> config.mk
+        && echo "toolchain_profile=$dc_chain" >> Makefile.cfg
 	&& echo "use_custom_dependencies=1" >> profile/profile.$dc_chain.mk \
 	&& make all \
 	&& rm -rf /opt/toolchains/dc/kos
