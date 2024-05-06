@@ -24,7 +24,7 @@ static inline bool posix_clk_id(int base, clockid_t *id) {
             *id = CLOCK_PROCESS_CPUTIME_ID;
             return true;
 
-/*  Awaiting PR for CLOCK_THREAD_CPUTIME_ID to be merged!
+    /*  Awaiting PR for CLOCK_THREAD_CPUTIME_ID to be merged!
         case TIME_THREAD_ACTIVE:
             *id = CLOCK_THREAD_CPUTIME_ID;
             return true; */
@@ -66,7 +66,7 @@ int timespec_getres(struct timespec *ts, int base) {
     return timespec_posix_adapter(ts, base, clock_getres);
 }
 
-/* C23/POSIX timegm() converts a UTC-based broken-down time to a unix 
+/*  C23/POSIX timegm() converts a UTC-based broken-down time to a unix
     timestamp... and since we have no timezone on the Dreamcast (yet),
     our local time is already UTC, which means this is going to be
     equivalent to using mktime()! 
