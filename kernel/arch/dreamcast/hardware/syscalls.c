@@ -59,7 +59,7 @@
 /* GDROM functions */
 #define FUNC_GDROM_SEND_COMMAND     0
 #define FUNC_GDROM_CHECK_COMMAND    1
-#define FUNC_GDROM_RUN_COMMANDS     2
+#define FUNC_GDROM_EXEC_SERVER      2
 #define FUNC_GDROM_INIT             3
 #define FUNC_GDROM_DRIVE_STATUS     4
 #define FUNC_GDROM_DMA_CALLBACK     5
@@ -178,8 +178,8 @@ int syscall_gdrom_check_command(uint32_t id, void *status) {
         id, status, SUPER_FUNC_GDROM);
 }
 
-void syscall_gdrom_run_commands(void) {
-    MAKE_SYSCALL_VOID(VEC_MISC_GDROM, FUNC_GDROM_RUN_COMMANDS, 
+void syscall_gdrom_exec_server(void) {
+    MAKE_SYSCALL_VOID(VEC_MISC_GDROM, FUNC_GDROM_EXEC_SERVER, 
         PARAM_NA, PARAM_NA, SUPER_FUNC_GDROM);
 }
 
