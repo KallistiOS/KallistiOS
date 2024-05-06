@@ -66,11 +66,11 @@ uint64_t syscall_sysinfo_id(void);
 
     This function returns the address of the ROM font.
 
-\warning
-Before attempting to access the font data, you should always call
-syscall_font_lock() to ensure that you have exclusive access to the
-data BUS the ROM is located on. Call syscall_font_unlock() when you're
-done accessing the data.
+    \warning
+    Before attempting to access the font data, you should always call
+    syscall_font_lock() to ensure that you have exclusive access to the
+    data BUS the ROM is located on. Call syscall_font_unlock() when you're
+    done accessing the data.
 
     \note
     Defined in syscall_font.s
@@ -207,17 +207,17 @@ int syscall_gdrom_check_drive(int32_t status[2]);
     This function sends a command to the GDROM queue.
 
     \note
-    Call syscall_gdrom_run_commands() to run queued commands.
+    Call syscall_gdrom_exec_server() to run queued commands.
 
-    \param  cmd             The command code (see CMD_* in cdrom.h).
+    \param  cmd             The command code (see CMD_* in \ref dc/cdrom.h).
     \param  params          The pointer to parameter block for the command, 
                             can be NULL if the command does not take 
                             parameters.
 
-    \return                 The request id (>=0) on success, or <0 error
+    \return                 The request id (>0) on success, or <=0 error
                             code on failure.
 
-    \sa syscall_gdrom_check_command(), syscall_gdrom_run_commands()
+    \sa syscall_gdrom_check_command(), syscall_gdrom_exec_server()
 */
 int syscall_gdrom_send_command(uint8_t cmd, void *params);
 
@@ -225,7 +225,7 @@ int syscall_gdrom_send_command(uint8_t cmd, void *params);
 
     This function checks if a queued command has completed.
 
-    \param  id              The request id (>=0).
+    \param  id              The request id (>0).
     \param  status          The pointer to four 32-bit integers to 
                             receive status information.
 
@@ -235,24 +235,25 @@ int syscall_gdrom_send_command(uint8_t cmd, void *params);
     \retval 3               Stream type command is in progress.
     \retval 4               GD syscalls are busy.
 
-    \sa syscall_gdrom_send_command(), syscall_gdrom_run_commands()
+    \sa syscall_gdrom_send_command(), syscall_gdrom_exec_server()
 */
 int syscall_gdrom_check_command(uint32_t id, int32_t status[4]);
 
 /** \brief   Process queued GDROM commands.
 
     This function starts processing queued commands. This must be 
-    called a few times to process all commands.
+    called a few times to process all commands. An example of it in 
+    use can be seen in \sa cdrom_exec_cmd_timed() (\ref hardware/cdrom.c).
 
     \sa syscall_gdrom_send_command(), syscall_gdrom_check_command()
 */
-void syscall_gdrom_run_commands(void);
+void syscall_gdrom_exec_server(void);
 
 /** \brief   Abort a queued GDROM command.
 
     This function tries to abort a previously queued command.
 
-    \param  id              The request id (>=0) to abort.
+    \param  id              The request id (>0) to abort.
 
     \return                 0 on success, or non-zero on
                             failure.
@@ -273,7 +274,6 @@ int syscall_gdrom_abort_command(uint32_t id);
 int syscall_gdrom_sector_mode(int32_t mode[4]);
 
 /** \brief   Setup GDROM DMA callback
-    \ingroup system_calls
 
     This function sets up DMA transfer end callback for 
     \ref CMD_DMAREAD_STREAM_EX (\ref dc/cdrom.h).
