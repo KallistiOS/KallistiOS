@@ -14,7 +14,7 @@ OBJS = hello.o
 # Its contents are accessible via the "/rd/" virtual directory at runtime.
 #KOS_ROMDISK_DIR = romdisk
 
-CFLAGS+=-std=c++23
+# Main rule which forces our ELF binary to be built
 all: rm-elf $(TARGET)
 
 # Include the common KOS Makefile rules and configuration
@@ -30,7 +30,7 @@ rm-elf:
 
 # Invokes the compiler to build the target from our object files
 $(TARGET): $(OBJS)
-	kos-cc -std=c++23 -o $(TARGET) $(OBJS)
+	kos-cc -o $(TARGET) $(OBJS)
 
 # Attempts to run the target using the configured loader application
 run: $(TARGET)
