@@ -87,6 +87,9 @@ __BEGIN_DECLS
    extern struct tm *gmtime_r(const __time_t *timer, struct tm *timeptr);
    extern struct tm *localtime_r(const __time_t *timer, struct tm *timeptr);
 
+   /* C23 added POSIX gmtime() for UTC broken-down time to a Unix timestamp. */
+   extern __time_t timegm(struct tm *timeptr);
+
 #endif
 
 /* =========== Enable the following for POSIX POSIX.1b (1993) =========== */

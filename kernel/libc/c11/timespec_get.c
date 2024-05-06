@@ -66,3 +66,12 @@ int timespec_getres(struct timespec *ts, int base) {
     return timespec_posix_adapter(ts, base, clock_getres);
 }
 
+/* C23/POSIX timegm() converts a UTC-based broken-down time to a unix 
+    timestamp... and since we have no timezone on the Dreamcast (yet),
+    our local time is already UTC, which means this is going to be
+    equivalent to using mktime()! 
+*/
+time_t timegm(struct tm *timeptr) {
+    return mktime(timeptr);
+}
+
