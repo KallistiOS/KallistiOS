@@ -85,7 +85,7 @@ int cdrom_exec_cmd_timed(int cmd, void *param, int timeout) {
         if (hnd != 0) {
             break;
         }
-        syscall_gdrom_run_commands();
+        syscall_gdrom_exec_server();
         thd_pass();
     }
 
@@ -99,7 +99,7 @@ int cdrom_exec_cmd_timed(int cmd, void *param, int timeout) {
         begin = timer_ms_gettime64();
     }
     do {
-        syscall_gdrom_run_commands();
+        syscall_gdrom_exec_server();
         n = syscall_gdrom_check_command(hnd, status);
 
         if(n != PROCESSING && n != BUSY) {
@@ -108,7 +108,7 @@ int cdrom_exec_cmd_timed(int cmd, void *param, int timeout) {
         if(timeout) {
             if((timer_ms_gettime64() - begin) >= (unsigned)timeout) {
                 syscall_gdrom_abort_command(hnd);
-                syscall_gdrom_run_commands();
+                syscall_gdrom_exec_server();
                 rv = ERR_TIMEOUT;
                 dbglog(DBG_ERROR, "cdrom_exec_cmd_timed: Timeout exceeded\n");
                 break;
