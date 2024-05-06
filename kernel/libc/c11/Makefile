@@ -4,7 +4,7 @@
 # Copyright (C) 2014, 2015, 2023 Lawrence Sebald
 #
 
-KOS_CFLAGS += -std=c11
+KOS_CFLAGS += -std=gnu11 -D__KOS_LIBC
 
 OBJS = call_once.o cnd_broadcast.o cnd_destroy.o cnd_init.o cnd_signal.o \
     cnd_timedwait.o cnd_wait.o mtx_destroy.o mtx_init.o mtx_lock.o \

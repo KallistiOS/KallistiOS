@@ -8,7 +8,7 @@
 /** \file    kos/time.h
     \brief   KOS-implementation of select C11 and POSIX extensions
 
-    Add select POSIX extensions and C11 functionality to time.h which are not
+    Add select POSIX extensions, C11, and C23 functionality to time.h which are not
     present within Newlib.
 
     \remark
@@ -23,9 +23,8 @@
     \author Falco Girgis
 */
 
-
 #ifndef _TIME_H_
-#error "Do not include this file directly. Use <time.h> instead."
+   #error "Do not include this file directly. Use <time.h> instead."
 #endif /* !_TIME_H_ */
 
 #ifndef __KOS_TIME_H
@@ -35,50 +34,92 @@
 
 __BEGIN_DECLS
 
-#if !defined(__STRICT_ANSI__) || (__STDC_VERSION__ >= 201112L) || (__cplusplus >= 201703L)
+/** \cond */
 
-/* Forward declaration. */
-struct timespec;
+/* Required definition for a fully C23-compliant <time.h> */
+#define __STDC_VERSION_TIME_H__  202311L
 
-#define TIME_UTC 1
+/* Microsecond resolution for clock(), per POSIX standard.. */
+#define CLOCKS_PER_SEC           1000000
 
-/* Microsecond resolution for clock(), per POSIX standard */
-#define CLOCKS_PER_SEC 1000000
+/* =============== Enable the following for >=c11, >=c++17 =================== */
+#if (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)) || \
+    (defined(__cplusplus)      && (__cplusplus >= 201703L))
 
-/* C11 nanosecond-resolution timing. */
-extern int timespec_get(struct timespec *ts, int base);
+   /* Only supported base time in C11. */
+   #define TIME_UTC 1
 
-#endif /* !defined(__STRICT_ANSI__) || (__STDC_VERSION__ >= 201112L) || (__cplusplus >= 201703L) */
-
-#if !defined(__STRICT_ANSI__) || (_POSIX_C_SOURCE >= 199309L)
-
-/* We do not support POSIX timers!
-#ifndef _POSIX_TIMERS
-#define _POSIX_TIMERS 1
-#endif */
-
-#ifndef _POSIX_MONOTONIC_CLOCK
-#define _POSIX_MONOTONIC_CLOCK 1
+   /* C11 nanosecond-resolution timing. */
+   struct timespec;
+   extern int timespec_get(struct timespec *ts, int base);
 #endif
 
-#ifndef _POSIX_CPUTIME
-#define _POSIX_CPUTIME 1
+/* ============ Enable the following for >=C2x, >C++20+, KOS ============== */
+#if (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 202000L)) || \
+    (defined(__cplusplus)      && (__cplusplus > 202002L))       || \
+     defined(__KOS_LIBC)
+
+   /* New POSIX-equivalent base times in C23. */
+   #define TIME_MONOTONIC     2
+   #define TIME_ACTIVE        3
+   #define TIME_THREAD_ACTIVE 4
+
+   /* Query for the resolution of a time base. */
+   extern int timespec_getres(struct timespec *ts, int base);
 #endif
 
-/* We do NOT support thread-specific CPU time!
-#ifndef _POSIX_THREAD_CPU_TIME
-#define _POSIX_THREAD_CPUTIME 1
+/* ===================== Enable the following for >=c2y ================== */
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 202300L)
+
+   /* Deprecate legacy time formatters with static internal state. */
+   struct tm;
+   [[deprecated]] extern char *asctime(const struct tm *timeptr);
+   [[deprecated]] extern char *ctime(const __time_t *timer);
 #endif
-*/
 
-/* Explicitly provided function declarations for POSIX clock API, since
-   getting them from Newlib requires supporting the rest of the _POSIX_TIMERS
-   API, which is not implemented yet. */
-extern int clock_settime(__clockid_t clock_id, const struct timespec *ts);
-extern int clock_gettime(__clockid_t clock_id, struct timespec *ts);
-extern int clock_getres(__clockid_t clock_id, struct timespec *res);
+/* =========== Enable the following for >=c2y, >c++20, KOS ============== */
+#if (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 202300L)) || \
+    (defined(__cplusplus)      && (__cplusplus > 202002L))       || \
+     defined(__KOS_LIBC)
 
-#endif /* !defined(__STRICT_ANSI__) || (_POSIX_C_SOURCE >= 199309L) */
+   /* POSIX reentrant equivalents of gmtime and localtime added to C23. */ 
+   struct tm;
+   extern struct tm *gmtime_r(const __time_t *timer, struct tm *timeptr);
+   extern struct tm *localtime_r(const __time_t *timer, struct tm *timeptr);
+
+#endif
+
+/* =========== Enable the following for POSIX POSIX.1b (1993) =========== */
+#if defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 199309L)
+
+   /* We do not support POSIX timers!
+   #ifndef _POSIX_TIMERS
+   #define _POSIX_TIMERS 1
+   #endif */
+
+   #ifndef _POSIX_MONOTONIC_CLOCK
+      #define _POSIX_MONOTONIC_CLOCK 1
+   #endif
+
+   #ifndef _POSIX_CPUTIME
+      #define _POSIX_CPUTIME 1
+   #endif
+
+   /* We do NOT support thread-specific CPU time!
+   #ifndef _POSIX_THREAD_CPU_TIME
+      #define _POSIX_THREAD_CPUTIME 1
+   #endif */
+
+   /* Explicitly provided function declarations for POSIX clock API, since
+      getting them from Newlib requires supporting the rest of the _POSIX_TIMERS
+      API, which is not implemented yet. */
+   extern int clock_settime(__clockid_t clock_id, const struct timespec *ts);
+   extern int clock_gettime(__clockid_t clock_id, struct timespec *ts);
+   extern int clock_getres(__clockid_t clock_id, struct timespec *res);
+
+#endif
+
+/** \endcond */
 
 __END_DECLS
 
