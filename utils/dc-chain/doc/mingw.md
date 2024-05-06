@@ -1,7 +1,7 @@
 # Sega Dreamcast Toolchains Maker (`dc-chain`) with MinGW/MSYS #
 
 This document contains all the instructions to create a fully working
-toolchains targeting the **Sega Dreamcast** system under **MinGW/MSYS**.
+toolchain targeting the **Sega Dreamcast** system under **MinGW/MSYS**.
 
 This document applies only on the legacy **MinGW/MSYS** environment provided
 by [MinGW.org](http://www.mingw.org). For **MinGW-w64/MSYS2** environment, read

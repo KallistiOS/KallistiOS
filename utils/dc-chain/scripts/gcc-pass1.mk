@@ -1,9 +1,5 @@
 # Sega Dreamcast Toolchains Maker (dc-chain)
 # This file is part of KallistiOS.
-#
-# Created by Jim Ursetto (2004)
-# Initially adapted from Stalin's build script version 0.3.
-#
 
 build-sh4-gcc-pass1: build = build-gcc-$(target)-$(gcc_ver)-pass1
 build-arm-gcc-pass1: build = build-gcc-$(target)-$(gcc_ver)

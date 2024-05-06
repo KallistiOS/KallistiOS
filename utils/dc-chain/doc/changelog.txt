@@ -1,12 +1,38 @@
-2024-05-01: Added config option for enabling the Ada langauge (Falco Girgis)  
+2024-05-02: Deprecated GCC 4.7.4 profile. Revamped configuration system into
+            separate profiles and Makefile.cfg. Revised configuration options
+            and documentation. (Eric Fradella)
+2024-05-01: Added config option for enabling the Ada langauge (Falco Girgis)
 2024-04-30: Added config option for enabling iconv library support in Newlib.
             (Falco Girgis)
+2024-04-29: Patch Newlib headers to expose lstat() declaration.
+            (Donald Haase, Eric Fradella)
+2024-04-26: Update git repo cloning to use treeless clone. (Eric Fradella)
 2024-04-21: Added D to list of supported languages, added m4-single as a
             default precision mode, added --disable-libphobos to gcc-pass2
             (Falco Girgis)
+2024-03-19: Disable building GCC documentation. (Paul Cercueil)
+2024-03-03: Update GDB to 14.2. (Eric Fradella)
+2024-02-21: Alter GCC configuration to let it know we use GNU tools. (Marc Poulhiès)
+2024-02-10: Patch Newlib to eliminate implicit function declarations, which were
+            converted from a warning to an error in GCC 14 series. (Eric Fradella)
+2024-01-29: Add support for Binutils 2.42. Update configuration to allow enabling
+            GCC's --enable-host-shared option. (Eric Fradella)
 2024-01-14: Added config option for disabling native language support (NLS) in GCC.
             (Falco Girgis)
 2024-01-06: Update documentations (Mickaël Cardoso)
+2024-01-04: Add configuration options for SH4 floating point precision. (Eric Fradella)
+2024-01-03: Add support for Newlib 4.4.0. (Eric Fradella)
+2023-12-28: Fix dc-chain host detection. (Colton Pawielski)
+2023-12-24: Fix issue cleaning directories after building. (Colton Pawielski)
+2023-12-23: Add multibyte character support as an option for Newlib.
+            (Falco Girgis, Eric Fradella)
+2023-12-03: Update configurations to build new GDB 14.1. (Eric Fradella)
+2023-11-26: Fix GCC 13.2.0 toolchain building on Cygwin. (ppxxcc)
+2023-11-17: Add C99 formatters as an option for Newlib. (Falco Girgis)
+2023-09-17: Add support for GCC 9.5.0-based toolchain compatible with Windows XP.
+            (Eric Fradella)
+2023-09-15: Modify build scripts to enable TLS support (Falco Girgis, Colton Pawielski)
+2023-08-21: Added Win32 patch for GDB 10.2 (Mickaël Cardoso)
 2023-07-31: Update Binutils to 2.41. Verified no regressions in KOS examples compared to
             current stable GCC 9.3.0, so promoting GCC 13.2.0 configuration to stable.
             New config directory created to store alternative configurations, currently

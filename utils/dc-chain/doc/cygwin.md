@@ -1,12 +1,12 @@
 # Sega Dreamcast Toolchains Maker (`dc-chain`) with Cygwin #
 
 This document contains all the instructions to create a fully working
-toolchains targeting the **Sega Dreamcast** system under **Cygwin**.
+toolchain targeting the **Sega Dreamcast** system under **Cygwin**.
 
 ## Introduction ##
 
-On the **Cygwin** system, the package manager is directly the
-`setup-${arch}.exe` file. It's designed to be run on graphical user-interface
+On the **Cygwin** system, the package manager is directly accessed using the
+`setup-${arch}.exe` file. It's designed to be run in graphical user-interface
 (GUI) mode.
 
 The **Cygwin** environment exists in two flavors:
@@ -19,7 +19,7 @@ the `x86_64` version, you should replace all `i686` keywords in the packages
 name with `x86_64`.
 
 Please note that in the past, the **Cygwin** `x86_64` had problems with the
-toolchains, so its usage is not recommended; but feel free to test it out.
+toolchains, so its usage is not recommended; feel free to test it out, however.
 
 ## Installation of Cygwin ##
 
@@ -27,8 +27,8 @@ toolchains, so its usage is not recommended; but feel free to test it out.
    `setup-${arch}.exe` (e.g. `setup-i686.exe`) from the 
    [**Cygwin** website](https://cygwin.com/install.html).
 
-2. Run `setup-${arch}.exe` on **Administrator mode** (starting from
-   **Microsoft Windows Vista**) then click on the `Next` button. 
+2. Run `setup-${arch}.exe` on **Administrator mode** (if using
+   **Microsoft Windows Vista** or later) then click on the `Next` button. 
 
 3. Choose `Install from Internet` then click on the `Next` button.
 
@@ -92,12 +92,11 @@ Everything is ready, now it's time to make the toolchains.
 
 ## Compilation ##
 
-**KallistiOS** provides a complete system that make and install all required
-toolchains from source codes: **dc-chain**.
-
-The **dc-chain** system is mainly composed by a `Makefile` doing all the
-necessary. In order to work, you'll need to provide a `config.mk` file. Read
-the main `README.md` file at the root for more information.
+The **dc-chain** system may be customized by altering the
+[`Makefile.cfg`](../Makefile.cfg) file in the root of the `dc-chain` directory
+tree. If this is desired, read the main [README.md](../README.md) for more
+information on setting up custom options for the toolchain; however, in most
+circumstances, the stable defaults already set up will be fine.
 
 ### Making the toolchains ###
 
@@ -110,25 +109,15 @@ To make the toolchains, do the following:
 	cd /opt/toolchains/dc/kos/utils/dc-chain/
 	```
 
-3. Provide your own `config.mk`. If you don't know which version
-   to choose, you may probably use `config.mk.stable.sample` as a template.
+3. Alter the `Makefile.cfg` file options to your liking.
 
 4. Enter the following to start downloading and building toolchain:
 	```
 	make
 	```
 
-Now it's time to take a coffee as this process is really long: several hours
-will be needed to make the full toolchains!
-
-### Making the GNU Debugger (gdb) ###
-
-If you want to install the **GNU Debugger** (`gdb`), just enter:
-```
-make gdb
-```
-This will install `sh-elf-gdb` and can be used to debug programs through
-`dc-load/dc-tool`.
+Now it's time to have a coffee as this process can be long: several minutes to
+hours will be needed to build the full toolchain, depending on your system.
 
 ### Removing all useless files ###
 
@@ -136,10 +125,11 @@ After everything is done, you can cleanup all temporary files by entering:
 ```
 make clean
 ```
+
 ## Next steps ##
 
 After following this guide, the toolchains should be ready.
 
 Now it's time to compile **KallistiOS**.
 
-You may consult the `README` file from KallistiOS now.
+You may consult the [`README`](../../../doc/README) file from KallistiOS now.

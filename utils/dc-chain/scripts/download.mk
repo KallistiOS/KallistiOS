@@ -1,10 +1,5 @@
 # Sega Dreamcast Toolchains Maker (dc-chain)
 # This file is part of KallistiOS.
-#
-# Modified by Colton Pawielski (2023)
-# Created by Jim Ursetto (2004)
-# Initially adapted from Stalin's build script version 0.3.
-#
 
 # Set default mirror if not specified
 gnu_mirror ?= ftpmirror.gnu.org
