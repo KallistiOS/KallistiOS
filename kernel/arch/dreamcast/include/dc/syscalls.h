@@ -8,6 +8,9 @@
     \brief     Functions to access the system calls of the Dreamcast ROM.
     \ingroup   system_calls
 
+\todo
+    - syscall_sysinfo_icon(): Discover + document icon format.
+
     \author Marcus Comstedt
     \author Andy Barajas
 */
@@ -17,10 +20,12 @@
     \ingroup   system
 
     This module encapsulates all the system calls available in the Dreamcast 
-    Operating System, allowing direct interaction with system hardware 
+    BIOS, allowing direct interaction with system hardware 
     components such as the GDROM drive, flash ROM, and bios fonts. These 
     functions are essential for performing low-level operations that are not
     handled by standard user-space APIs.
+    
+    @{
 */
 
 #ifndef __DC_SYSCALLS_H
@@ -33,7 +38,6 @@ __BEGIN_DECLS
 #include <sys/types.h>
 
 /** \brief   Reads an icon from the flashrom.
-    \ingroup system_calls
 
     This function reads an icon from the flashrom into a destination 
     buffer.
@@ -51,7 +55,6 @@ __BEGIN_DECLS
 int syscall_sysinfo_icon(uint32_t icon, uint8_t *dest);
 
 /** \brief   Reads the ID of the Dreamcast.
-    \ingroup system_calls
 
     This function returns the unique 64-bit ID for the Dreamcast.
 
@@ -60,9 +63,14 @@ int syscall_sysinfo_icon(uint32_t icon, uint8_t *dest);
 uint64_t syscall_sysinfo_id(void);
 
 /** \brief   Gets the romfont address.
-    \ingroup system_calls
 
     This function returns the address of the ROM font.
+
+\warning
+Before attempting to access the font data, you should always call
+syscall_font_lock() to ensure that you have exclusive access to the
+data BUS the ROM is located on. Call syscall_font_unlock() when you're
+done accessing the data.
 
     \note
     Defined in syscall_font.s
@@ -72,7 +80,6 @@ uint64_t syscall_sysinfo_id(void);
 uint8_t *syscall_font_address(void);
 
 /** \brief   Locks access to ROM font.
-    \ingroup system_calls
 
     This function tries to lock a mutex for exclusive access to the ROM 
     font. This is needed because you can't access the BIOS font during 
@@ -101,7 +108,6 @@ int syscall_font_lock(void);
 void syscall_font_unlock(void);
 
 /** \brief   Gets info on partition in the flashrom.
-    \ingroup system_calls
 
     This function fetches the info of a partition in the flashrom.
 
@@ -114,7 +120,6 @@ void syscall_font_unlock(void);
 int syscall_flashrom_info(uint32_t part, void *info);
 
 /** \brief   Read data from the flashrom.
-    \ingroup system_calls
 
     This function reads data from an offset into the flashrom to the 
     destination buffer.
@@ -131,7 +136,6 @@ int syscall_flashrom_info(uint32_t part, void *info);
 int syscall_flashrom_read(uint32_t pos, void *dest, size_t n);
 
 /** \brief   Write data to the flashrom.
-    \ingroup system_calls
 
     This function writes data to an offset into the flashrom from the 
     source buffer.
@@ -153,7 +157,6 @@ int syscall_flashrom_read(uint32_t pos, void *dest, size_t n);
 int syscall_flashrom_write(uint32_t pos, const void *src, size_t n);
 
 /** \brief   Delete a partition of the flashrom.
-    \ingroup system_calls
 
     This function returns a flashrom partition to all 1's, so that it may 
     be rewritten.
@@ -172,7 +175,6 @@ int syscall_flashrom_write(uint32_t pos, const void *src, size_t n);
 int syscall_flashrom_delete(uint32_t pos);
 
 /** \brief   Initialize the GDROM drive.
-    \ingroup system_calls
 
     This function initializes the GDROM drive. Should be called before any 
     commands are sent.
@@ -180,14 +182,12 @@ int syscall_flashrom_delete(uint32_t pos);
 void syscall_gdrom_init(void);
 
 /** \brief   Reset the GDROM drive.
-    \ingroup system_calls
 
     This function resets the GDROM drive.
 */
 void syscall_gdrom_reset(void);
 
 /** \brief   Checks the GDROM drive status.
-    \ingroup system_calls
 
     This function retrieves the general condition of the GDROM drive. It 
     populates a provided array with two elements. The first element 
@@ -200,10 +200,9 @@ void syscall_gdrom_reset(void);
     \return                 0 on success, or non-zero on
                             failure.
 */
-int syscall_gdrom_check_drive(void *status);
+int syscall_gdrom_check_drive(int32_t status[2]);
 
 /** \brief   Send a command to the GDROM command queue.
-    \ingroup system_calls
 
     This function sends a command to the GDROM queue.
 
@@ -223,7 +222,6 @@ int syscall_gdrom_check_drive(void *status);
 int syscall_gdrom_send_command(uint8_t cmd, void *params);
 
 /** \brief   Check status of queued command for the GDROM.
-    \ingroup system_calls
 
     This function checks if a queued command has completed.
 
@@ -239,10 +237,9 @@ int syscall_gdrom_send_command(uint8_t cmd, void *params);
 
     \sa syscall_gdrom_send_command(), syscall_gdrom_run_commands()
 */
-int syscall_gdrom_check_command(uint32_t id, void *status);
+int syscall_gdrom_check_command(uint32_t id, int32_t status[4]);
 
 /** \brief   Process queued GDROM commands.
-    \ingroup system_calls
 
     This function starts processing queued commands. This must be 
     called a few times to process all commands.
@@ -252,7 +249,6 @@ int syscall_gdrom_check_command(uint32_t id, void *status);
 void syscall_gdrom_run_commands(void);
 
 /** \brief   Abort a queued GDROM command.
-    \ingroup system_calls
 
     This function tries to abort a previously queued command.
 
@@ -264,7 +260,6 @@ void syscall_gdrom_run_commands(void);
 int syscall_gdrom_abort_command(uint32_t id);
 
 /** \brief   Sets/gets the sector mode for read commands.
-    \ingroup system_calls
 
     This function sets/gets the sector mode for read commands.
 
@@ -275,8 +270,7 @@ int syscall_gdrom_abort_command(uint32_t id);
     \retval 0               On success.
     \retval -1              On failure.
 */
-int syscall_gdrom_sector_mode(void *mode);
-
+int syscall_gdrom_sector_mode(int32_t mode[4]);
 
 /** \brief   Setup GDROM DMA callback
     \ingroup system_calls
