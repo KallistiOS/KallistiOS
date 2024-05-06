@@ -276,7 +276,7 @@ int syscall_gdrom_sector_mode(int32_t mode[4]);
     \ingroup system_calls
 
     This function sets up DMA transfer end callback for 
-    CMD_DMAREAD_STREAM_EX (see cdrom.h).
+    \ref CMD_DMAREAD_STREAM_EX (\ref dc/cdrom.h).
 
     \param  callback        The function to call upon completion of the DM.
     \param  param           The data to pass to the callback function.
@@ -284,10 +284,9 @@ int syscall_gdrom_sector_mode(int32_t mode[4]);
 void syscall_gdrom_dma_callback(uintptr_t callback, void *param);
 
 /** \brief   Initiates a GDROM DMA transfer
-    \ingroup system_calls
 
     This function initiates a DMA transfer for 
-    CMD_DMAREAD_STREAM_EX (see cdrom.h).
+    \ref CMD_DMAREAD_STREAM_EX (\ref dc/cdrom.h).
 
     \param  id              The request id (>=0).
     \param  params          The pointer to two 32-bit integers. The first 
@@ -298,13 +297,12 @@ void syscall_gdrom_dma_callback(uintptr_t callback, void *param);
     \return                 0 on success, or non-zero on
                             failure.
 */
-int syscall_gdrom_dma_transfer(uint32_t id, int *params);
+int syscall_gdrom_dma_transfer(uint32_t id, const int32_t params[2]);
 
 /** \brief   Checks a GDROM DMA transfer
-    \ingroup system_calls
 
     This function checks the progress of a DMA transfer for 
-    CMD_DMAREAD_STREAM_EX (see cdrom.h).
+    \ref CMD_DMAREAD_STREAM_EX (see \ref dc/cdrom.h).
 
     \param  id              The request id (>=0).
     \param  size            The pointer to receive the remaining amount of
@@ -313,13 +311,12 @@ int syscall_gdrom_dma_transfer(uint32_t id, int *params);
     \retval 0               On success.
     \retval -1              On failure.
 */
-int syscall_gdrom_dma_check(uint32_t id, int *size);
+int syscall_gdrom_dma_check(uint32_t id, size_t *size);
 
 /** \brief   Setup GDROM PIO callback
-    \ingroup system_calls
 
     This function sets up PIO transfer end callback for 
-    CMD_PIOREAD_STREAM_EX (see cdrom.h).
+    \ref CMD_PIOREAD_STREAM_EX (see \ref dc/cdrom.h).
 
     \param  callback        The function to call upon completion of the
                             transfer.
@@ -328,10 +325,9 @@ int syscall_gdrom_dma_check(uint32_t id, int *size);
 void syscall_gdrom_pio_callback(uintptr_t callback, void *param);
 
 /** \brief   Initiates a GDROM PIO transfer
-    \ingroup system_calls
 
     This function initiates a PIO transfer for 
-    CMD_PIOREAD_STREAM_EX (see cdrom.h).
+    \ref CMD_PIOREAD_STREAM_EX (see \ref dc/cdrom.h).
 
     \param  id              The request id (>=0).
     \param  params          The pointer to two 32-bit integers. The first 
@@ -342,13 +338,12 @@ void syscall_gdrom_pio_callback(uintptr_t callback, void *param);
     \return                 0 on success, or non-zero on
                             failure.
 */
-int syscall_gdrom_pio_transfer(uint32_t id, int *params);
+int syscall_gdrom_pio_transfer(uint32_t id, const int32_t params[2]);
 
 /** \brief   Checks a GDROM PIO transfer
-    \ingroup system_calls
 
     This function checks the progress of a PIO transfer for 
-    CMD_PIOREAD_STREAM_EX (see cdrom.h).
+    \ref CMD_PIOREAD_STREAM_EX (see \ref dc/cdrom.h).
 
     \param  id              The request id (>=0).
     \param  size            The pointer to receive the remaining amount of
@@ -357,10 +352,9 @@ int syscall_gdrom_pio_transfer(uint32_t id, int *params);
     \retval 0               On success.
     \retval -1              On failure.
 */
-int syscall_gdrom_pio_check(uint32_t id, int *size);
+int syscall_gdrom_pio_check(uint32_t id, size_t *size);
 
 /** \brief   Clear user defined vectors.
-    \ingroup system_calls
 
     This function clears all the user defined syscall vectors.
 
@@ -369,7 +363,6 @@ int syscall_gdrom_pio_check(uint32_t id, int *size);
 int syscall_misc_init(void);
 
 /** \brief   Register/Clear a user defined vector
-    \ingroup system_calls
 
     This function sets/clears the handler for one of the seven user defined
     vectors. Setting a handler is only allowed if it not currently set.
@@ -382,6 +375,8 @@ int syscall_misc_init(void);
     \retval -1              On failure.
 */
 int syscall_misc_setvector(uint8_t super, uintptr_t handler);
+
+/** @} */ 
 
 __END_DECLS
 
