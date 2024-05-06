@@ -97,7 +97,7 @@ __BEGIN_DECLS
 
    /* We do not support POSIX timers!
    #ifndef _POSIX_TIMERS
-   #define _POSIX_TIMERS 1
+      #define _POSIX_TIMERS 1
    #endif */
 
    #ifndef _POSIX_MONOTONIC_CLOCK
