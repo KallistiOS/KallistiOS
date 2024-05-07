@@ -1,9 +1,5 @@
 # Sega Dreamcast Toolchains Maker (dc-chain)
 # This file is part of KallistiOS.
-#
-# Created by Jim Ursetto (2004)
-# Initially adapted from Stalin's build script version 0.3.
-#
 
 ###############################################################################
 ###############################################################################
@@ -14,7 +10,7 @@
 
 # Toolchain versions for SH
 sh_binutils_ver=2.42
-sh_gcc_ver=14.0.1
+sh_gcc_ver=14.1.1
 newlib_ver=4.4.0.20231231
 gdb_ver=14.2
 

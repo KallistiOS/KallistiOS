@@ -6,7 +6,7 @@ programming.
 
 This script was adapted from earlier `dc-chain` scripts created by James
 Sumners and Jim Ursetto in the early days of the Dreamcast homebrew scene, but
-the utility has been largely expanded by many
+the utility has been [largely expanded and reworked](doc/changelog.txt) by many
 [contributors](doc/CONTRIBUTORS.md) since then, and it is now included as part
 of **KallistiOS** (**KOS**).
 
@@ -19,7 +19,8 @@ This utility is capable of building two toolchains for **Dreamcast** development
 
 The main `sh-elf` toolchain is required, but KallistiOS includes a precompiled
 AICA sound driver, so building the `arm-eabi` toolchain is only necessary when
-altering the sound driver or writing custom AICA code.
+altering the sound driver or writing custom AICA code; therefore, it is not
+built by default.
 
 The `sh-elf` toolchain by default is built to target KallistiOS specifically,
 however options are included to build a "raw" toolchain to allow targeting other
@@ -42,21 +43,25 @@ the main `sh-elf` toolchain.
 
 Before starting, please check the following pages for special instructions
 specific to your operating system or computing platform. These special
-instructions should be few, though, as much diligence was taken to add
+instructions should be limited, though, as much diligence was taken to add
 multiplatform functionality to be compatible in all modern environments.
 
 Tested environments with specific instructions are as follows:
 
-- **[BSD](doc/bsd.md)** (`FreeBSD 11.2`)
-- **[Cygwin](doc/cygwin.md)**
-- **GNU/Linux** ([`Alpine Linux 3.11`](doc/alpine.md),
-  [`Debian 10.3`](doc/debian.md))
+- **GNU/Linux** 
+  - [`Alpine Linux 3.11`](doc/alpine.md)
+  - [`Debian 10.3`](doc/debian.md)
+
 - **[macOS](doc/macos.md)** (`High Sierra 10.13`, `Mojave 10.14`,
-  `Catalina 10.15`, `Sonoma 14.2.1`)
-- **[MinGW/MSYS](doc/mingw.md)**
-- **[MinGW-w64/MSYS2](doc/mingw-w64.md)**
-- **Windows Subsystem for Linux (WSL)** (with [`Alpine Linux`](doc/alpine.md),
-  [`Ubuntu`](doc/ubuntu.md)); regular **GNU/Linux** instructions apply.
+  `Catalina 10.15`, `Sonoma 14.2.1`, etc.)
+
+- **[BSD](doc/bsd.md)** (`FreeBSD 13.1`)
+
+- **Windows**
+  - **Windows Subsystem for Linux (WSL)**: See standard Linux instructions.
+  - **[Cygwin](doc/cygwin.md)**
+  - **[MinGW/MSYS](doc/mingw.md)**
+  - **[MinGW-w64/MSYS2](doc/mingw-w64.md)**
 
 ### `dc-chain` utility installation
 `dc-chain` is packaged with KallistiOS, where it can be found within the
@@ -72,9 +77,8 @@ regular `gcc` and related tools) in order to build the cross compiler. The
 *may* work, but are not guaranteed to function properly.
 
 Several dependencies such as `wget`, `gettext`, `texinfo`, `gmp`, `mpfr`,
-`libmpc`, etc. are required to build the toolchain. The [`doc`](doc/README.md)
-directory contains useful platform-specific instructions for installing
-dependencies.
+`libmpc`, etc. are required to build the toolchain. Check the platform-specific
+instructions above for installing dependencies on your system.
 
 ## Configuration
 
@@ -82,13 +86,15 @@ Before running `dc-chain`, you may wish to set up the
 [`Makefile.cfg`](Makefile.cfg) file containing selections for the toolchain
 profile and additional configurable options for building the toolchain(s). The
 normal, stable defaults have already been set up for you, so most users can 
-skip this step.
+skip this step. If you'd like to make changes, open and read the options in
+[`Makefile.cfg`](Makefile.cfg) in your text editor.
 
 ### Toolchain profiles
 
-The following toolchain profiles are available for users to select:
+The following toolchain profiles are available for users to select in
+[`Makefile.cfg`](Makefile.cfg):
 
-| profile name | SH4 GCC | Newlib | SH4 Binutils | ARM GCC | ARM Binutils | Notes |
+| Profile Name | SH4 GCC | Newlib | SH4 Binutils | ARM GCC | ARM Binutils | Notes |
 |---------:|:-------:|:----------:|:------------:|:-------:|:----------------:|:------|
 | 9.3.0-legacy | 9.3.0 | 3.3.0 | 2.34 | 8.4.0 | 2.34 | Former 'stable' option, based on GCC 9<br />GCC 9 series support ended upstream |
 | 9.5.0-winxp | 9.5.0 | 4.3.0 | 2.34 | 8.5.0 | 2.34 | Most recent versions of tools which run on Windows XP<br />GCC 9 series support ended upstream |
@@ -96,8 +102,9 @@ The following toolchain profiles are available for users to select:
 | 11.4.0 | 11.4.0 | 4.3.0 | 2.41 | 8.5.0 | 2.41 | Latest release in the GCC 11 series, released 2023-05-15 |
 | 12.3.0 | 12.3.0 | 4.3.0 | 2.41 | 8.5.0 | 2.41 | Latest release in the GCC 12 series, released 2023-05-08 |
 | **stable** | **13.2.0** | **4.3.0** | **2.41** | **8.5.0** | **2.41** | **Tested stable; based on GCC 13.2.0, released 2023-07-27** |
+| 14.1.0 | 14.1.0 | 4.4.0 | 2.42 | 8.5.0 | 2.42 | Latest release in the GCC 14 series, released 2024-05-07 |
 | 13.2.1-dev | 13.2.1 (git) | 4.4.0 | 2.42 | 8.5.0 | 2.42 | Bleeding edge GCC 13 series from git |
-| 14.0.1-dev | 14.0.1 (git) | 4.4.0 | 2.42 | 8.5.0 | 2.42 | Bleeding edge GCC 14 series from git |
+| 14.1.1-dev | 14.0.1 (git) | 4.4.0 | 2.42 | 8.5.0 | 2.42 | Bleeding edge GCC 14 series from git |
 | 15.0.0-dev | 15.0.0 (git) | 4.4.0 | 2.42 | 8.5.0 | 2.42 | Bleeding edge GCC 15 series from git |
 | gccrs-dev | 14.x | 4.4.0 | 2.42 | 8.5.0 | 2.42 | GCC fork for development of the GCCRS Rust compiler |
 | rustc-dev | 14.x | 4.4.0 | 2.42 | 8.5.0 | 2.42 | GCC fork for development of the libgccjit rustc GCC codegen |
@@ -123,9 +130,7 @@ on your platform.
 ## Building the toolchain
 
 With prerequisites installed and a [`Makefile.cfg`](Makefile.cfg) set up with
-desired options, the toolchains are ready to be built. Generic instructions
-follow below, but you may find more detailed platform-specific instructions in
-the [`doc`](doc/README.md) directory.
+desired options, the toolchains are ready to be built.
 
 In the `dc-chain` directory, you may run (for **BSD**, please use `gmake`
 instead):
