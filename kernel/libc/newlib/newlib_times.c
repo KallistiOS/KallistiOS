@@ -22,13 +22,13 @@ int _times_r(struct _reent *re, struct tms *tmsbuf) {
             Use performance counters when available. */
         const uint64_t precise_clock =
             (perf_cntr_timer_enabled())?
-                (clock_t)(perf_cntr_timer_ns() / 1000) :
-                clock;
+                (perf_cntr_timer_ns() / 1000) : 
+                 timer_us_gettime64();
 
         /* We have to protect against overflow. */
         tmsbuf->tms_utime =
             (precise_clock <= UINT32_MAX)?
-                precise_clock : -1;
+                precise_clock : (clock_t)-1;
 
         /* System CPU Time: Unimplemented */
         tmsbuf->tms_stime = 0;
