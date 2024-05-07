@@ -49,19 +49,19 @@ multiplatform functionality to be compatible in all modern environments.
 Tested environments with specific instructions are as follows:
 
 - **GNU/Linux** 
-  - [`Alpine Linux 3.11`](doc/alpine.md)
-  - [`Debian 10.3`](doc/debian.md)
+  - [Alpine Linux 3.19](doc/alpine.md)
+  - [Debian 12.5](doc/debian.md)
 
-- **[macOS](doc/macos.md)** (`High Sierra 10.13`, `Mojave 10.14`,
-  `Catalina 10.15`, `Sonoma 14.2.1`, etc.)
+- **[macOS](doc/macos.md)** (High Sierra 10.13, Mojave 10.14,
+  Catalina 10.15, Sonoma 14.2.1, etc.)
 
-- **[BSD](doc/bsd.md)** (`FreeBSD 13.1`)
+- **[BSD](doc/bsd.md)** (`FreeBSD 14.0`)
 
 - **Windows**
   - **Windows Subsystem for Linux (WSL)**: See standard Linux instructions.
   - **[Cygwin](doc/cygwin.md)**
-  - **[MinGW/MSYS](doc/mingw.md)**
-  - **[MinGW-w64/MSYS2](doc/mingw-w64.md)**
+  - **[MinGW/MSYS](doc/mingw/mingw.md)**
+  - **[MinGW-w64/MSYS2](doc/mingw/mingw-w64.md)**
 
 ### `dc-chain` utility installation
 `dc-chain` is packaged with KallistiOS, where it can be found within the
@@ -78,7 +78,7 @@ regular `gcc` and related tools) in order to build the cross compiler. The
 
 Several dependencies such as `wget`, `gettext`, `texinfo`, `gmp`, `mpfr`,
 `libmpc`, etc. are required to build the toolchain. Check the platform-specific
-instructions above for installing dependencies on your system.
+instructions mentioned above for installing dependencies on your system.
 
 ## Configuration
 
