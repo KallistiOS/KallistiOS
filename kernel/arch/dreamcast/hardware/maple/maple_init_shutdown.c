@@ -161,7 +161,7 @@ void maple_wait_scan(void) {
             dev = &maple_state.ports[p].units[u];
 
             if(dev->valid) {
-                dbglog(DBG_INFO, "  %c%c: %s (%08lx: %s)\n",
+                dbglog(DBG_INFO, "  %c%c: %.30s (%08lx: %s)\n",
                        'A' + p, '0' + u,
                        dev->info.product_name,
                        dev->info.functions, maple_pcaps(dev->info.functions));
