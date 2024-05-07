@@ -1,14 +1,5 @@
-<style>
-table th:first-of-type {
-    width: 120px;
-}
-table th:nth-of-type(2) {
-    width: 120px;
-}
-</style>
-
-| Date   | Author(s) | Changes |
-|:-------|:----------|---------|
+| Date       | Author(s)     | Changes    |
+|:-----------|:--------------|------------|
 | 2024-05-02 | Eric Fradella | Deprecated GCC 4.7.4 profile. Revamped configuration system into separate profiles and Makefile.cfg. Revised configuration options and documentation. |
 | 2024-05-01 | Falco Girgis | Added config option for enabling the Ada langauge. |
 | 2024-05-01 | Falco Girgis | Added config option for enabling the Ada langauge. |
