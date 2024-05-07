@@ -13,7 +13,7 @@ of **KallistiOS** (**KOS**).
 This utility is capable of building two toolchains for **Dreamcast** development:
 
 - The `sh-elf` toolchain, the primary cross-compiler toolchain targeting the
-  main CPU of the Dreamcast, the **Hitachi SuperH (SH4) CPU** .
+  main CPU of the Dreamcast, the **Hitachi SuperH (SH4) CPU**.
 - The `arm-eabi` toolchain, used only for the **Yamaha Super Intelligent Sound
   Processor** (**AICA**). This processor is based on an **ARM7** core.
 
@@ -49,13 +49,13 @@ multiplatform functionality to be compatible in all modern environments.
 Tested environments with specific instructions are as follows:
 
 - **GNU/Linux** 
-  - [Alpine Linux 3.19](doc/alpine.md)
-  - [Debian 12.5](doc/debian.md)
+  - **[Alpine Linux 3.19](doc/alpine.md)**
+  - **[Debian 12.5](doc/debian.md)**
 
 - **[macOS](doc/macos.md)** (High Sierra 10.13, Mojave 10.14,
   Catalina 10.15, Sonoma 14.2.1, etc.)
 
-- **[BSD](doc/bsd.md)** (`FreeBSD 14.0`)
+- **[BSD](doc/bsd.md)** (FreeBSD 14.0)
 
 - **Windows**
   - **Windows Subsystem for Linux (WSL)**: See standard Linux instructions.
