@@ -140,7 +140,7 @@ void maple_hw_shutdown(void) {
         }
     }
 
-    dbglog(DBG_INFO, "maple: final stats -- device count = %d, vbl_cntr = %d, dma_cntr = %d\n",
+    dbglog(DBG_DEBUG, "maple: final stats -- device count = %d, vbl_cntr = %d, dma_cntr = %d\n",
            cnt, maple_state.vbl_cntr, maple_state.dma_cntr);
 }
 
