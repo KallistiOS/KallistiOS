@@ -168,7 +168,7 @@ Basically, if you just plan to use the **MinGW/MSYS** environment through the
 
 The **dc-chain** system may be customized by altering the
 [`Makefile.cfg`](../Makefile.cfg) file in the root of the `dc-chain` directory
-tree. If this is desired, read the main [README.md](../README.md) for more
+tree. If this is desired, read the main [README.md](../../README.md) for more
 information on setting up custom options for the toolchain; however, in most
 circumstances, the stable defaults already set up will be fine.
 

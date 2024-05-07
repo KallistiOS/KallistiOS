@@ -59,9 +59,9 @@ tree. If this is desired, read the main [README.md](../README.md) for more
 information on setting up custom options for the toolchain; however, in most
 circumstances, the stable defaults already set up will be fine.
 
-### Making the toolchains ###
+### Building the toolchain ###
 
-To make the toolchains, do the following:
+To build the toolchain, do the following:
 
 1. Run `bash`, if not already done:
 	```

@@ -91,9 +91,9 @@ tree. If this is desired, read the main [README.md](../README.md) for more
 information on setting up custom options for the toolchain; however, in most
 circumstances, the stable defaults already set up will be fine.
 
-### Making the toolchains ###
+### Building the toolchain ###
 
-To make the toolchains, do the following:
+To build the toolchain, do the following:
 
 1. Navigate to the `dc-chain` directory by entering:
 	```
@@ -101,7 +101,7 @@ To make the toolchains, do the following:
 	```
 
 2. Alter the `Makefile.cfg` file options to your liking.
-    
+
 3. Enter the following to start downloading and building toolchain:
 	```
 	make

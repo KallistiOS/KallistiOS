@@ -55,9 +55,9 @@ tree. If this is desired, read the main [README.md](../README.md) for more
 information on setting up custom options for the toolchain; however, in most
 circumstances, the stable defaults already set up will be fine.
 
-### Making the toolchains ###
+### Building the toolchain ###
 
-To make the toolchains, do the following:
+To build the toolchain, do the following:
 
 1. Navigate to the `dc-chain` directory by entering:
 	```
@@ -73,15 +73,6 @@ To make the toolchains, do the following:
 
 Now it's time to have a coffee as this process can be long: several minutes to
 hours will be needed to build the full toolchain, depending on your system.
-
-### Making the GNU Debugger (gdb) ###
-
-If you want to install the **GNU Debugger** (`gdb`), just enter:
-```
-make gdb
-```
-This will install `sh-elf-gdb` and can be used to debug programs through
-`dc-load/dc-tool`.
 
 ### Removing all useless files ###
 
