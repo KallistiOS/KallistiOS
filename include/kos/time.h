@@ -109,7 +109,7 @@ __BEGIN_DECLS
    #endif
 
    /* We do NOT support thread-specific CPU time!
-   #ifndef _POSIX_THREAD_CPU_TIME
+   #ifndef _POSIX_THREAD_CPUTIME
       #define _POSIX_THREAD_CPUTIME 1
    #endif */
 
