@@ -4,7 +4,7 @@
 # usage:
 #   - build one of the images:
 #       docker build -t dcchain:stable --build-arg dc_chain=stable .
-#       docker build -t dcchain:9.3.0-legacy --build-arg dc_chain=9.3.0-legacy .
+#       docker build -t dcchain:9.3.0-legacy --build-arg dc_chain=9.3.0-legacy --build-arg makejobs=4 .
 #   - create and run a container, e.g. for stable:
 #       docker run -it --name containername dcchain:stable /bin/bash
 
@@ -32,12 +32,11 @@ RUN apk --update add --no-cache \
 # Making Sega Dreamcast toolchains
 # You may adapt the KallistiOS repository URL if needed
 ARG dc_chain=stable
+ARG makejobs=2
 RUN mkdir -p /opt/toolchains/dc \
-	&& git clone https://git.code.sf.net/p/cadcdev/kallistios /opt/toolchains/dc/kos  || git clone https://github.com/KallistiOS/KallistiOS.git /opt/toolchains/dc/kos \
+	&& git clone https://git.code.sf.net/p/cadcdev/kallistios /opt/toolchains/dc/kos || git clone https://github.com/KallistiOS/KallistiOS.git /opt/toolchains/dc/kos \
 	&& cd /opt/toolchains/dc/kos/utils/dc-chain \
-        && echo "toolchain_profile=$dc_chain" >> Makefile.cfg
-	&& echo "use_custom_dependencies=1" >> profile/profile.$dc_chain.mk \
-	&& make all \
+	&& make all toolchain_profile=$dc_chain makejobs=$makejobs use_custom_dependencies=1
 	&& rm -rf /opt/toolchains/dc/kos
 
 # Stage 2
