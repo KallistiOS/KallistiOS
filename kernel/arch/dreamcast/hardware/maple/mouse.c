@@ -82,8 +82,7 @@ static maple_driver_t mouse_drv = {
 
 /* Add the mouse to the driver chain */
 void mouse_init(void) {
-    if(!mouse_drv.drv_list.le_prev)
-        maple_driver_reg(&mouse_drv);
+    maple_driver_reg(&mouse_drv);
 }
 
 void mouse_shutdown(void) {

@@ -153,8 +153,7 @@ static maple_driver_t vmu_drv = {
 
 /* Add the VMU to the driver chain */
 void vmu_init(void) {
-    if(!vmu_drv.drv_list.le_prev)
-        maple_driver_reg(&vmu_drv);
+    maple_driver_reg(&vmu_drv);
 }
 
 void vmu_shutdown(void) {

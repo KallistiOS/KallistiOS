@@ -137,8 +137,7 @@ static maple_driver_t controller_drv = {
 
 /* Add the controller to the driver chain */
 void cont_init(void) {
-    if(!controller_drv.drv_list.le_prev)
-        maple_driver_reg(&controller_drv);
+    maple_driver_reg(&controller_drv);
 }
 
 void cont_shutdown(void) {

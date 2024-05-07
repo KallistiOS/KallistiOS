@@ -674,8 +674,7 @@ static maple_driver_t kbd_drv = {
 
 /* Add the keyboard to the driver chain */
 void kbd_init(void) {
-    if(!kbd_drv.drv_list.le_prev)
-        maple_driver_reg(&kbd_drv);
+    maple_driver_reg(&kbd_drv);
 }
 
 void kbd_shutdown(void) {
