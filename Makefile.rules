@@ -51,6 +51,9 @@ endif
 %.o: %.S
 	kos-cc -c $< -o $@
 
+%.bin: %.elf
+	kos-objcopy -O binary $< $@
+
 subdirs: $(patsubst %, _dir_%, $(SUBDIRS))
 
 $(patsubst %, _dir_%, $(SUBDIRS)):

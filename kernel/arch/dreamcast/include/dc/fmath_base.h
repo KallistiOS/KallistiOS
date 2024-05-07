@@ -144,11 +144,11 @@ __BEGIN_DECLS
         register float __d __asm__(KOS_FPARG(7)) = (d); \
         __asm__ __volatile__( \
                               "fipr	fv8,fv4" \
-                              : "+f" (__z) \
+                              : "+f" (KOS_SH4_SINGLE_ONLY ? __w : __z) \
                               : "f" (__x), "f" (__y), "f" (__z), "f" (__w), \
                               "f" (__a), "f" (__b), "f" (__c), "f" (__d) \
                             ); \
-        __z; })
+        KOS_SH4_SINGLE_ONLY ? __w : __z; })
 
 /* Floating point inner product w/self (square of vector magnitude) */
 #define __fipr_magnitude_sqr(x, y, z, w) ({ \
@@ -158,10 +158,10 @@ __BEGIN_DECLS
         register float __w __asm__(KOS_FPARG(3)) = (w); \
         __asm__ __volatile__( \
                               "fipr	fv4,fv4" \
-                              : "+f" (__z) \
+                              : "+f" (KOS_SH4_SINGLE_ONLY ? __w : __z) \
                               : "f" (__x), "f" (__y), "f" (__z), "f" (__w) \
                             ); \
-        __z; })
+        KOS_SH4_SINGLE_ONLY ? __w : __z; })
 
 /** \endcond */
 

@@ -38,6 +38,10 @@ static null_fh_t *null_open_file(vfs_handler_t *vfs, const char *fn, int mode) {
 
     /* Malloc a new fh struct */
     fd = malloc(sizeof(null_fh_t));
+    if(!fd) {
+        errno = ENOMEM;
+        return NULL;
+    }
 
     /* Fill in the filehandle struct */
     fd->mode = mode;
