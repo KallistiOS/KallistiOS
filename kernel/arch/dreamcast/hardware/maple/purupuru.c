@@ -73,22 +73,12 @@ int purupuru_rumble(maple_device_t *dev, purupuru_effect_t *effect) {
 }
 
 
-static void purupuru_periodic(maple_driver_t *drv) {
-    (void)drv;
-}
-
-static int purupuru_attach(maple_driver_t *drv, maple_device_t *dev) {
-    (void)drv;
-    dev->status_valid = 1;
-    return 0;
-}
-
 /* Device Driver Struct */
 static maple_driver_t purupuru_drv = {
     .functions = MAPLE_FUNC_PURUPURU,
     .name = "PuruPuru (Vibration) Pack",
-    .periodic = purupuru_periodic,
-    .attach = purupuru_attach,
+    .periodic = NULL,
+    .attach = NULL,
     .detach = NULL
 };
 

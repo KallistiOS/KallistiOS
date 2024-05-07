@@ -285,9 +285,9 @@ int vmu_beep_raw(maple_device_t *dev, uint32_t beep) {
 
     assert(dev);
 
-    /* Lock the frame. XXX: Priority inversion issues here. */
-    while(maple_frame_lock(&dev->frame) < 0)
-        thd_pass();
+    /* Lock the frame */
+    if(maple_frame_lock(&dev->frame) < 0)
+        return MAPLE_EAGAIN;
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);
@@ -431,9 +431,9 @@ int vmu_block_read(maple_device_t *dev, uint16_t blocknum, uint8_t *buffer) {
 
     assert(dev != NULL);
 
-    /* Lock the frame. XXX: Priority inversion issues here. */
-    while(maple_frame_lock(&dev->frame) < 0)
-        thd_pass();
+    /* Lock the frame */
+    if(maple_frame_lock(&dev->frame) < 0)
+        return MAPLE_EAGAIN;
 
     /* This is (block << 24) | (phase << 8) | (partition (0 for all vmu)) */
     blkid = ((blocknum & 0xff) << 24) | ((blocknum >> 8) << 16);
@@ -636,9 +636,9 @@ int vmu_set_datetime(maple_device_t *dev, time_t unix) {
     btime = localtime(&unix);
     assert(btime); /* A failure here means an invalid unix timestamp was given. */
 
-    /* Lock the frame. XXX: Priority inversion issues here. */
-    while(maple_frame_lock(&dev->frame) < 0)
-        thd_pass();
+    /* Lock the frame */
+    if(maple_frame_lock(&dev->frame) < 0)
+        return MAPLE_EAGAIN;
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);
@@ -683,9 +683,9 @@ int vmu_get_datetime(maple_device_t *dev, time_t *unix) {
 
     assert(dev);
 
-    /* Lock the frame. XXX: Priority inversion issues here. */
-    while(maple_frame_lock(&dev->frame) < 0)
-        thd_pass();
+    /* Lock the frame */
+    if(maple_frame_lock(&dev->frame) < 0)
+        return MAPLE_EAGAIN;
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);

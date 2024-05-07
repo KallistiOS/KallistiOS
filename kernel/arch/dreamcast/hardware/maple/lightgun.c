@@ -10,18 +10,12 @@
 #include <dc/maple.h>
 #include <dc/maple/lightgun.h>
 
-static int lightgun_attach(maple_driver_t *drv, maple_device_t *dev) {
-    (void)drv;
-    dev->status_valid = 1;
-    return 0;
-}
-
 /* Device Driver Struct */
 static maple_driver_t lightgun_drv = {
     .functions = MAPLE_FUNC_LIGHTGUN,
     .name = "Lightgun",
     .periodic = NULL,
-    .attach = lightgun_attach,
+    .attach = NULL,
     .detach = NULL
 };
 
