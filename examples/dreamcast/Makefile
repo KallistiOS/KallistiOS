@@ -16,7 +16,7 @@ endif
 .PHONY: all $(DIRS)
 
 all: $(DIRS)
-	@echo "\n---------------------------------------------"
+	@echo "\n-------------------------------------------------"
 	@echo "$$(cat error_count.txt 2>/dev/null || echo 0) Error(s) occurred during the build process:"
 	@if [ -f errors.txt ]; then \
 		cat errors.txt; \
