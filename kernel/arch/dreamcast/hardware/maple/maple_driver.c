@@ -56,12 +56,17 @@ int maple_driver_attach(maple_frame_t *det) {
     resp = (maple_response_t *)det->recv_buf;
     devinfo = (maple_devinfo_t *)resp->data;
     attached = 0;
-    dev = &maple_state.ports[det->dst_port].units[det->dst_unit];
+
+    dev = calloc(1, sizeof(*dev));
+    if (!dev)
+        return -1;
+
     memcpy(&dev->info, devinfo, sizeof(maple_devinfo_t));
     dev->info.product_name[29] = 0;
     dev->info.product_license[59] = 0;
-    dev->status = NULL;
-    dev->drv = NULL;
+    dev->port = det->dst_port;
+    dev->unit = det->dst_unit;
+    dev->frame.state = MAPLE_FRAME_VACANT;
 
     /* Go through the list and look for a matching driver */
     LIST_FOREACH(i, &maple_state.driver_list, drv_list) {
@@ -86,13 +91,16 @@ int maple_driver_attach(maple_frame_t *det) {
     }
 
     /* Did we get any hits? */
-    if(!attached)
+    if(!attached) {
+        free(dev);
         return -1;
+    }
+
+    maple_state.ports[det->dst_port].units[det->dst_unit] = dev;
 
     /* Finish setting stuff up */
     dev->drv = i;
     dev->status_valid = 0;
-    dev->valid = 1;
 
     if(!(attach_callback_functions) || (dev->info.functions & attach_callback_functions)) {
         if(attach_callback) {
@@ -103,19 +111,10 @@ int maple_driver_attach(maple_frame_t *det) {
     return 0;
 }
 
-/* Detach an attached maple device */
-int maple_driver_detach(int p, int u) {
-    maple_device_t  *dev;
-
-    dev = &maple_state.ports[p].units[u];
-
-    if(!dev->valid)
-        return -1;
-
+static void maple_detach(maple_device_t *dev) {
     if(dev->drv && dev->drv->detach)
         dev->drv->detach(dev->drv, dev);
 
-    dev->valid = 0;
     dev->status_valid = 0;
 
     if(!(detach_callback_functions) || (dev->info.functions & detach_callback_functions)) {
@@ -125,7 +124,18 @@ int maple_driver_detach(int p, int u) {
     }
 
     free(dev->status);
+}
 
+/* Detach an attached maple device */
+int maple_driver_detach(int p, int u) {
+    maple_device_t *dev = maple_enum_dev(p, u);
+
+    if(!dev)
+        return -1;
+
+    maple_state.ports[p].units[u] = NULL;
+    maple_detach(dev);
+    free(dev);
     return 0;
 }
 
@@ -136,11 +146,9 @@ int maple_driver_foreach(maple_driver_t *drv, int (*callback)(maple_device_t *))
 
     for(p = 0; p < MAPLE_PORT_COUNT; p++) {
         for(u = 0; u < MAPLE_UNIT_COUNT; u++) {
-            dev = &maple_state.ports[p].units[u];
+            dev = maple_state.ports[p].units[u];
 
-            if(!dev->valid) continue;
-
-            if(dev->drv == drv && !dev->frame.queued)
+            if(dev && dev->drv == drv && !dev->frame.queued)
                 if(callback(dev) < 0)
                     return -1;
         }

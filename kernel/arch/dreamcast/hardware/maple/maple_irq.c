@@ -45,14 +45,16 @@ static bool vbl_send_devinfo(maple_frame_t *frame, int p, int u) {
 /* Do a potential disconnect on the named device (check to make sure it
    was connected first) */
 static void vbl_chk_disconnect(maple_state_t *state, int p, int u) {
-    if(state->ports[p].units[u].valid) {
+    (void)state;
+
+    if(maple_dev_valid(p, u)) {
 #if MAPLE_IRQ_DEBUG
         dbglog(DBG_KDEBUG, "maple: detach on device %c%c\n",
                'A' + p, '0' + u);
 #endif
 
         if(maple_driver_detach(p, u) >= 0) {
-            assert(!state->ports[p].units[u].valid);
+            assert(!maple_dev_valid(p, u));
         }
     }
 }
@@ -61,7 +63,7 @@ static void vbl_chk_next_subdev(maple_state_t *state, maple_frame_t *frm, int p)
     maple_device_t *dev = maple_enum_dev(p, 0);
     int u;
 
-    if (dev->probe_mask) {
+    if (dev && dev->probe_mask) {
         u = __builtin_ffs(dev->probe_mask);
         dev->probe_mask &= ~(1 << (u - 1));
 
@@ -75,7 +77,8 @@ static void vbl_chk_next_subdev(maple_state_t *state, maple_frame_t *frm, int p)
 static void vbl_dev_probed(maple_state_t *state, int p, int u) {
     maple_device_t *dev = maple_enum_dev(p, 0);
 
-    dev->dev_mask |= 1 << (u - 1);
+    if (dev)
+        dev->dev_mask |= 1 << (u - 1);
 }
 
 /* Check the sub-devices for a top-level port */
@@ -125,7 +128,9 @@ static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm) {
                 vbl_chk_disconnect(state, p, u);
             }
 
-            dev->dev_mask = 0;
+            if(dev)
+                dev->dev_mask = 0;
+
             state->scan_ready_mask |= 1 << p;
         }
         else {
@@ -137,7 +142,7 @@ static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm) {
     }
     else if(resp->response == MAPLE_RESPONSE_DEVINFO) {
         /* Device is present, check for connections */
-        if(!maple_dev_valid(p, u)) {
+        if(!dev) {
 #if MAPLE_IRQ_DEBUG
             dbglog(DBG_KDEBUG, "maple: attach on device %c%c\n",
                    'A' + p, '0' + u);

@@ -267,7 +267,6 @@ typedef struct maple_response {
 */
 typedef struct maple_device {
     /* Public */
-    int             valid;  /**< \brief Is this a valid device? */
     int             port;   /**< \brief Maple bus port connected to */
     int             unit;   /**< \brief Unit number, off of the port */
     maple_devinfo_t info;   /**< \brief Device info struct */
@@ -296,7 +295,7 @@ typedef struct maple_device {
 */
 typedef struct maple_port {
     int             port;                       /**< \brief Port ID */
-    maple_device_t  units[MAPLE_UNIT_COUNT];    /**< \brief Pointers to active units */
+    maple_device_t *units[MAPLE_UNIT_COUNT];    /**< \brief Pointers to active units */
 } maple_port_t;
 
 /** \brief   A maple device driver.

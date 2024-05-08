@@ -37,23 +37,8 @@
 /* Initialize Hardware (call after driver inits) */
 static void maple_hw_init(void) {
     maple_driver_t *drv;
-    int p, u;
 
     dbglog(DBG_INFO, "maple: active drivers:\n");
-
-    /* Reset structures */
-    for(p = 0; p < MAPLE_PORT_COUNT; p++) {
-        maple_state.ports[p].port = p;
-
-        for(u = 0; u < MAPLE_UNIT_COUNT; u++) {
-            maple_state.ports[p].units[u].port = p;
-            maple_state.ports[p].units[u].unit = u;
-            maple_state.ports[p].units[u].valid = 0;
-            maple_state.ports[p].units[u].dev_mask = 0;
-            maple_state.ports[p].units[u].frame.queued = 0;
-            maple_state.ports[p].units[u].frame.state = MAPLE_FRAME_VACANT;
-        }
-    }
 
     TAILQ_INIT(&maple_state.frame_queue);
 
@@ -154,9 +139,9 @@ void maple_wait_scan(void) {
 
     for(p = 0; p < MAPLE_PORT_COUNT; p++) {
         for(u = 0; u < MAPLE_UNIT_COUNT; u++) {
-            dev = &maple_state.ports[p].units[u];
+            dev = maple_enum_dev(p, u);
 
-            if(dev->valid) {
+            if(dev) {
                 dbglog(DBG_INFO, "  %c%c: %s (%08lx: %s)\n",
                        'A' + p, '0' + u,
                        dev->info.product_name,
