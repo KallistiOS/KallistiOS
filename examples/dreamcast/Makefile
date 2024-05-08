@@ -5,7 +5,7 @@
 # Copyright (C) 2024 Andy Barajas
 #
 
-DIRS = 2ndmix basic libdream kgl hello sound png network vmu conio pvr video \
+DIRS := 2ndmix basic libdream kgl hello sound png network vmu conio pvr video \
 	   lua parallax modem dreameye sd g1ata lightgun keyboard sdl dev rumble \
 	   micropython
 
@@ -13,36 +13,63 @@ ifdef KOS_CCPLUS
 	DIRS += cpp tsunami
 endif
 
-ERROR_LOG = build_errors.log
+.PHONY: all $(DIRS)
 
-.PHONY: all clean dist show_errors clean_up
+all: $(DIRS)
+	@echo "\n---------------------------------------------"
+	@echo "$$(cat error_count.txt 2>/dev/null || echo 0) Error(s) occurred during the build process:"
+	@if [ -f errors.txt ]; then \
+		cat errors.txt; \
+	fi
+	@rm -f errors.txt error_count.txt
 
-all: show_errors clean_up
+$(DIRS):
+	@$(KOS_MAKE) check-dir DIR=$@
 
-build_all:
-	@echo "Starting build..."
-	@rm -f $(ERROR_LOG)
-	@for i in $(DIRS); do \
-		$(KOS_MAKE) -C $$i || echo "Failed to build in $$i" >> $(ERROR_LOG); \
-	done
-
-show_errors: build_all
-	@if [ -s $(ERROR_LOG) ]; then \
-		echo "\n----------------------\nErrors occurred during build:"; \
-		cat $(ERROR_LOG); \
-	else \
-		echo "Build completed successfully, no errors."; \
+# ALGORITHM EXPLANATION:
+# This script recursively checks each directory to determine if it should 
+# execute its Makefile based on the presence of Makefiles in its subdirectories.
+#
+# Steps:
+# 1. For each directory, identify all direct subdirectories.
+# 2. Check each subdirectory for the existence of a Makefile.
+# 3. If any subdirectory contains a Makefile, recursively perform this check on 
+#    that subdirectory and do not execute the Makefile in the current directory.
+# 4. If no subdirectories contain a Makefile, execute the Makefile in the 
+#    current directory.
+#
+# Purpose:
+# - This approach ensures that Makefiles are only executed in the most specific 
+#   (deepest) directories that do not contain further subdirectories with 
+#   Makefiles.
+# - This prevents redundant builds in parent directories and ensures errors are
+#   logged with specific directory paths, providing clear visibility into which 
+#   particular build process failed without aggregating errors at a higher 
+#   directory level.
+check-dir:
+	@subdirs="$$(find $(DIR) -maxdepth 1 -mindepth 1 -type d)"; \
+	should_make="yes"; \
+	for subdir in $$subdirs; do \
+		if [ -e "$$subdir/Makefile" ]; then \
+			should_make="no"; \
+			$(KOS_MAKE) check-dir DIR=$$subdir; \
+		fi; \
+	done; \
+	if [ "$$should_make" = "yes" ]; then \
+		$(KOS_MAKE) -C $(DIR); \
+		rv=$$?; \
+		if [ "$$rv" -ne 0 ]; then \
+			echo "$(DIR): Build failed with return code $$rv" >> errors.txt; \
+			echo $$(($$(cat error_count.txt 2>/dev/null || echo 0) + 1)) > error_count.txt; \
+		fi; \
 	fi
 
-clean: clean_up
-	@for i in $(DIRS); do \
-		$(KOS_MAKE) -C $$i clean || echo "Failed to clean $$i" >> $(ERROR_LOG); \
+clean:
+	@for dir in $(DIRS); do \
+		$(KOS_MAKE) -C $$dir clean; \
 	done
 
-dist: clean_up
-	@for i in $(DIRS); do \
-		$(KOS_MAKE) -C $$i dist || echo "Failed to distribute $$i" >> $(ERROR_LOG); \
+dist:
+	@for dir in $(DIRS); do \
+		$(KOS_MAKE) -C $$dir dist; \
 	done
-
-clean_up:
-	@rm -f $(ERROR_LOG)
