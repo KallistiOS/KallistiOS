@@ -388,6 +388,7 @@ void arch_return(int ret_code) {
 
 /* Called to jump back to the BIOS menu; assumes a normal shutdown is possible */
 void arch_menu(void) {
+    dbglog(DBG_CRITICAL, "arch: exiting the system to the BIOS menu\n");
     syscall_system_bios_menu();
 }
 

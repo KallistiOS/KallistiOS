@@ -247,22 +247,19 @@ int syscall_misc_setvector(uint32_t super, uintptr_t handler) {
 }
 
 /* Function pointer type definition for system call functions. */
+typedef void (*system_func)(int) __noreturn;
 
-
-void syscall_system_restart(void) {
-    typedef void (*system_func)(int) __noreturn;
+void syscall_system_reset(void) {
     system_func system = (system_func)(*((uintptr_t *) VEC_SYSTEM));
     system(FUNC_SYSTEM_RESET);
 }
 
 void syscall_system_bios_menu(void) {
-    typedef void (*system_func)(int) __noreturn;
     system_func system = (system_func)(*((uintptr_t *) VEC_SYSTEM));
     system(FUNC_SYSTEM_BIOS_MENU);
 }
 
 void syscall_system_cd_menu(void) {
-    typedef void (*system_func)(int) __noreturn;
     system_func system = (system_func)(*((uintptr_t *) VEC_SYSTEM));
     system(FUNC_SYSTEM_CD_MENU);
 }

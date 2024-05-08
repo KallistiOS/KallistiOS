@@ -376,11 +376,11 @@ int syscall_misc_init(void);
 */
 int syscall_misc_setvector(uint32_t super, uintptr_t handler);
 
-/** \brief   Restarts the Dreamcast.
+/** \brief   Resets the Dreamcast.
 
-    This function restarts the Dreamcast console.
+    This function soft resets the Dreamcast console.
 */
-void syscall_system_restart(void) __noreturn;
+void syscall_system_reset(void) __noreturn;
 
 /** \brief   Go to the BIOS menu.
 
