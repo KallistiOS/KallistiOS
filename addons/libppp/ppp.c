@@ -460,6 +460,8 @@ int ppp_set_login(const char *username, const char *password) {
 
     if(password) {
         if(!(pw = (char *)malloc(strlen(password) + 1))) {
+            if(username)
+                free(un);
             mutex_unlock(&mutex);
             return -1;
         }
