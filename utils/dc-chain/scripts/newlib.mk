@@ -13,7 +13,7 @@ $(build_newlib): logdir
 	    --disable-newlib-supplied-syscalls \
 	    --target=$(target) \
 	    --prefix=$(prefix) \
-	    $(extra_configure_args) \
+	    $(cpu_configure_args) \
 	    $(newlib_extra_configure_args) \
 	    CC_FOR_TARGET="$(SH_CC_FOR_TARGET)" \
 	    $(to_log)
