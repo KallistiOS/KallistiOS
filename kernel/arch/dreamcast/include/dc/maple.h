@@ -273,11 +273,13 @@ typedef struct maple_device {
     maple_devinfo_t info;   /**< \brief Device info struct */
 
     /* Private */
-    int                     dev_mask;       /**< \brief Device-present mask for unit 0's */
     maple_frame_t           frame;          /**< \brief One rx/tx frame */
     struct maple_driver     *drv;           /**< \brief Driver which handles this device */
 
-    volatile int            status_valid;   /**< \brief Have we got our first status update? */
+    uint8                   probe_mask;     /**< \brief Mask of sub-devices left to probe */
+    uint8                   dev_mask;       /**< \brief Device-present mask for unit 0's */
+
+    volatile uint8          status_valid;   /**< \brief Have we got our first status update? */
     uint8                   *status;        /**< \brief Status buffer (for pollable devices) */
 } maple_device_t;
 
@@ -381,13 +383,10 @@ typedef struct maple_state_str {
     volatile int                dma_in_progress;
 
     /** \brief  Next port that will be auto-detected */
-    int                         detect_port_next;
+    uint8                       detect_port_next;
 
-    /** \brief  Next unit which will be auto-detected */
-    int                         detect_unit_next;
-
-    /** \brief  Did the detect wrap? */
-    volatile int                detect_wrapped;
+    /** \brief  Mask of ports that completed the initial scan */
+    volatile uint8              scan_ready_mask;
 
     /** \brief  Our vblank handler handle */
     int                         vbl_handle;

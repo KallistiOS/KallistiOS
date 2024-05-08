@@ -83,8 +83,7 @@ static void maple_hw_init(void) {
     /* Initialize other misc stuff */
     maple_state.vbl_cntr = maple_state.dma_cntr = 0;
     maple_state.detect_port_next = 0;
-    maple_state.detect_unit_next = 0;
-    maple_state.detect_wrapped = 0;
+    maple_state.scan_ready_mask = 0;
     maple_state.gun_port = -1;
     maple_state.gun_x = maple_state.gun_y = -1;
 
@@ -150,7 +149,7 @@ void maple_wait_scan(void) {
     maple_device_t  *dev;
 
     /* Wait for it to finish */
-    while(maple_state.detect_wrapped < 1)
+    while(maple_state.scan_ready_mask != 0xf)
         thd_pass();
 
     /* Enumerate everything */
