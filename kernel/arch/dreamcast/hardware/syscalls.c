@@ -24,6 +24,8 @@
 #define VEC_BIOFONT       (MEM_AREA_P1_BASE | 0x0C0000B4)
 #define VEC_FLASHROM      (MEM_AREA_P1_BASE | 0x0C0000B8)
 #define VEC_MISC_GDROM    (MEM_AREA_P1_BASE | 0x0C0000BC)
+#define VEC_GDROM2        (MEM_AREA_P1_BASE | 0x0C0000C0)
+#define VEC_SYSTEM        (MEM_AREA_P1_BASE | 0x0C0000E0)
 
 /*
     For each indirect vector there is a number of different functions (FUNC_*) 
@@ -71,6 +73,13 @@
 #define FUNC_GDROM_PIO_CALLBACK     11
 #define FUNC_GDROM_PIO_TRANSFER     12
 #define FUNC_GDROM_PIO_CHECK        13
+#define FUNC_GDROM_UNKNOWN1         14
+#define FUNC_GDROM_CHANGE_CD        15
+
+/* SYSTEM functions */
+#define FUNC_SYSTEM_RESET           -1
+#define FUNC_SYSTEM_BIOS_MENU       1
+#define FUNC_SYSTEM_CD_MENU         3
 
 /* A param we submit when functions have unused variables */
 #define PARAM_NA  0
@@ -163,17 +172,21 @@ void syscall_gdrom_reset(void) {
         PARAM_NA, PARAM_NA, SUPER_FUNC_GDROM);
 }
 
-int syscall_gdrom_check_drive(void *status) {
+int syscall_gdrom_check_drive(uint32_t status[2]) {
     MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_DRIVE_STATUS, 
         status, PARAM_NA, SUPER_FUNC_GDROM);
 }
 
-int syscall_gdrom_send_command(uint8_t cmd, void *params) {
-    MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_SEND_COMMAND,
-        cmd, params, SUPER_FUNC_GDROM);
+uint32_t syscall_gdrom_send_command(uint32_t cmd, void *params) {
+    uint32_t request_id = 0;
+
+    MAKE_SYSCALL_SET(VEC_MISC_GDROM, FUNC_GDROM_SEND_COMMAND, 
+        cmd, params, SUPER_FUNC_GDROM, request_id, uint32_t);
+    
+    return request_id;
 }
 
-int syscall_gdrom_check_command(uint32_t id, void *status) {
+int syscall_gdrom_check_command(uint32_t id, int32_t status[4]) {
     MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_CHECK_COMMAND, 
         id, status, SUPER_FUNC_GDROM);
 }
@@ -188,7 +201,7 @@ int syscall_gdrom_abort_command(uint32_t id) {
         id, PARAM_NA, SUPER_FUNC_GDROM);
 }
 
-int syscall_gdrom_sector_mode(void *mode) {
+int syscall_gdrom_sector_mode(uint32_t mode[4]) {
     MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_SECTOR_MODE, 
         mode, PARAM_NA, SUPER_FUNC_GDROM);
 }
@@ -198,12 +211,12 @@ void syscall_gdrom_dma_callback(uintptr_t callback, void *param) {
         callback, param, SUPER_FUNC_GDROM);
 }
 
-int syscall_gdrom_dma_transfer(uint32_t id, int *params) {
+int syscall_gdrom_dma_transfer(uint32_t id, const int32_t params[2]) {
     MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_DMA_TRANSFER, 
         id, params, SUPER_FUNC_GDROM);
 }
 
-int syscall_gdrom_dma_check(uint32_t id, int *size) {
+int syscall_gdrom_dma_check(uint32_t id, size_t *size) {
     MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_DMA_CHECK, 
         id, size, SUPER_FUNC_GDROM);
 }
@@ -213,12 +226,12 @@ void syscall_gdrom_pio_callback(uintptr_t callback, void *param) {
         callback, param, SUPER_FUNC_GDROM);
 }
 
-int syscall_gdrom_pio_transfer(uint32_t id, int *params) {
+int syscall_gdrom_pio_transfer(uint32_t id, const int32_t params[2]) {
     MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_PIO_TRANSFER, 
         id, params, SUPER_FUNC_GDROM);
 }
 
-int syscall_gdrom_pio_check(uint32_t id, int *size) {
+int syscall_gdrom_pio_check(uint32_t id, size_t *size) {
      MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_PIO_CHECK, 
         id, size, SUPER_FUNC_GDROM);
 }
@@ -228,8 +241,29 @@ int syscall_misc_init(void) {
         PARAM_NA, PARAM_NA, SUPER_FUNC_MISC);
 }
 
-int syscall_misc_setvector(uint8_t super, uintptr_t handler) {
+int syscall_misc_setvector(uint32_t super, uintptr_t handler) {
     MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_MISC_SETVECTOR, 
         super, handler, SUPER_FUNC_MISC);
+}
+
+/* Function pointer type definition for system call functions. */
+
+
+void syscall_system_restart(void) {
+    typedef void (*system_func)(int) __noreturn;
+    system_func system = (system_func)(*((uintptr_t *) VEC_SYSTEM));
+    system(FUNC_SYSTEM_RESET);
+}
+
+void syscall_system_bios_menu(void) {
+    typedef void (*system_func)(int) __noreturn;
+    system_func system = (system_func)(*((uintptr_t *) VEC_SYSTEM));
+    system(FUNC_SYSTEM_BIOS_MENU);
+}
+
+void syscall_system_cd_menu(void) {
+    typedef void (*system_func)(int) __noreturn;
+    system_func system = (system_func)(*((uintptr_t *) VEC_SYSTEM));
+    system(FUNC_SYSTEM_CD_MENU);
 }
 

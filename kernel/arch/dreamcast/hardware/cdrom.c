@@ -66,7 +66,7 @@ int cdrom_exec_cmd(int cmd, void *param) {
 }
 
 int cdrom_exec_cmd_timed(int cmd, void *param, int timeout) {
-    int status[4] = {
+    int32_t status[4] = {
         0, /* Error code 1 */
         0, /* Error code 2 */
         0, /* Transferred size */

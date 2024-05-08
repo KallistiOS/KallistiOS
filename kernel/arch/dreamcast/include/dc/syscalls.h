@@ -69,7 +69,7 @@ uint64_t syscall_sysinfo_id(void);
     \warning
     Before attempting to access the font data, you should always call
     syscall_font_lock() to ensure that you have exclusive access to the
-    data BUS the ROM is located on. Call syscall_font_unlock() when you're
+    G1 BUS the ROM is located on. Call syscall_font_unlock() when you're
     done accessing the data.
 
     \note
@@ -83,7 +83,7 @@ uint8_t *syscall_font_address(void);
 
     This function tries to lock a mutex for exclusive access to the ROM 
     font. This is needed because you can't access the BIOS font during 
-    disk DMA.
+    G1 DMA.
 
     \note
     Defined in syscall_font.s
@@ -194,13 +194,13 @@ void syscall_gdrom_reset(void);
     indicates the current drive status, and the second element identifies 
     the type of disk inserted (if any).
 
-    \param  status          The pointer to two 32-bit integers to 
+    \param  status          The pointer to two 32-bit unsigned integers to 
                             receive extended status information.
 
     \return                 0 on success, or non-zero on
                             failure.
 */
-int syscall_gdrom_check_drive(int32_t status[2]);
+int syscall_gdrom_check_drive(uint32_t status[2]);
 
 /** \brief   Send a command to the GDROM command queue.
 
@@ -214,21 +214,21 @@ int syscall_gdrom_check_drive(int32_t status[2]);
                             can be NULL if the command does not take 
                             parameters.
 
-    \return                 The request id (>0) on success, or <=0 error
-                            code on failure.
+    \return                 The request id (>=1) on success, or 0 on failure.
 
     \sa syscall_gdrom_check_command(), syscall_gdrom_exec_server()
 */
-int syscall_gdrom_send_command(uint8_t cmd, void *params);
+uint32_t syscall_gdrom_send_command(uint32_t cmd, void *params);
 
 /** \brief   Check status of queued command for the GDROM.
 
     This function checks if a queued command has completed.
 
-    \param  id              The request id (>0).
+    \param  id              The request id (>=1).
     \param  status          The pointer to four 32-bit integers to 
                             receive status information.
 
+    \retval -1              Request has failed.
     \retval 0               Request not found.
     \retval 1               Request is still being processed.
     \retval 2               Request completed successfully.
@@ -243,7 +243,7 @@ int syscall_gdrom_check_command(uint32_t id, int32_t status[4]);
 
     This function starts processing queued commands. This must be 
     called a few times to process all commands. An example of it in 
-    use can be seen in \sa cdrom_exec_cmd_timed() (\ref hardware/cdrom.c).
+    use can be seen in \sa cdrom_exec_cmd_timed() (see hardware/cdrom.c).
 
     \sa syscall_gdrom_send_command(), syscall_gdrom_check_command()
 */
@@ -253,7 +253,7 @@ void syscall_gdrom_exec_server(void);
 
     This function tries to abort a previously queued command.
 
-    \param  id              The request id (>0) to abort.
+    \param  id              The request id (>=1) to abort.
 
     \return                 0 on success, or non-zero on
                             failure.
@@ -264,16 +264,16 @@ int syscall_gdrom_abort_command(uint32_t id);
 
     This function sets/gets the sector mode for read commands.
 
-    \param  status          The pointer to a struct of four 32 bit integers 
+    \param  mode            The pointer to a struct of four 32 bit integers 
                             containing new values, or to receive the old 
                             values.
 
     \retval 0               On success.
     \retval -1              On failure.
 */
-int syscall_gdrom_sector_mode(int32_t mode[4]);
+int syscall_gdrom_sector_mode(uint32_t mode[4]);
 
-/** \brief   Setup GDROM DMA callback
+/** \brief   Setup GDROM DMA callback.
 
     This function sets up DMA transfer end callback for 
     \ref CMD_DMAREAD_STREAM_EX (\ref dc/cdrom.h).
@@ -283,12 +283,12 @@ int syscall_gdrom_sector_mode(int32_t mode[4]);
 */
 void syscall_gdrom_dma_callback(uintptr_t callback, void *param);
 
-/** \brief   Initiates a GDROM DMA transfer
+/** \brief   Initiates a GDROM DMA transfer.
 
     This function initiates a DMA transfer for 
     \ref CMD_DMAREAD_STREAM_EX (\ref dc/cdrom.h).
 
-    \param  id              The request id (>=0).
+    \param  id              The request id (>=1).
     \param  params          The pointer to two 32-bit integers. The first 
                             element indicates the destination address, and 
                             the second element identifies how many bytes to 
@@ -299,12 +299,12 @@ void syscall_gdrom_dma_callback(uintptr_t callback, void *param);
 */
 int syscall_gdrom_dma_transfer(uint32_t id, const int32_t params[2]);
 
-/** \brief   Checks a GDROM DMA transfer
+/** \brief   Checks a GDROM DMA transfer.
 
     This function checks the progress of a DMA transfer for 
     \ref CMD_DMAREAD_STREAM_EX (see \ref dc/cdrom.h).
 
-    \param  id              The request id (>=0).
+    \param  id              The request id (>=1).
     \param  size            The pointer to receive the remaining amount of
                             bytes to transfer.
 
@@ -313,7 +313,7 @@ int syscall_gdrom_dma_transfer(uint32_t id, const int32_t params[2]);
 */
 int syscall_gdrom_dma_check(uint32_t id, size_t *size);
 
-/** \brief   Setup GDROM PIO callback
+/** \brief   Setup GDROM PIO callback.
 
     This function sets up PIO transfer end callback for 
     \ref CMD_PIOREAD_STREAM_EX (see \ref dc/cdrom.h).
@@ -324,12 +324,12 @@ int syscall_gdrom_dma_check(uint32_t id, size_t *size);
 */
 void syscall_gdrom_pio_callback(uintptr_t callback, void *param);
 
-/** \brief   Initiates a GDROM PIO transfer
+/** \brief   Initiates a GDROM PIO transfer.
 
     This function initiates a PIO transfer for 
     \ref CMD_PIOREAD_STREAM_EX (see \ref dc/cdrom.h).
 
-    \param  id              The request id (>=0).
+    \param  id              The request id (>=1).
     \param  params          The pointer to two 32-bit integers. The first 
                             element indicates the destination address, and 
                             the second element identifies how many bytes to 
@@ -340,12 +340,12 @@ void syscall_gdrom_pio_callback(uintptr_t callback, void *param);
 */
 int syscall_gdrom_pio_transfer(uint32_t id, const int32_t params[2]);
 
-/** \brief   Checks a GDROM PIO transfer
+/** \brief   Checks a GDROM PIO transfer.
 
     This function checks the progress of a PIO transfer for 
     \ref CMD_PIOREAD_STREAM_EX (see \ref dc/cdrom.h).
 
-    \param  id              The request id (>=0).
+    \param  id              The request id (>=1).
     \param  size            The pointer to receive the remaining amount of
                             bytes to transfer.
 
@@ -354,27 +354,45 @@ int syscall_gdrom_pio_transfer(uint32_t id, const int32_t params[2]);
 */
 int syscall_gdrom_pio_check(uint32_t id, size_t *size);
 
-/** \brief   Clear user defined vectors.
+/** \brief   Initializes all the syscall vectors.
 
-    This function clears all the user defined syscall vectors.
+    This function initializes all the syscall vectors to their default values.
 
     \return                 0
 */
 int syscall_misc_init(void);
 
-/** \brief   Register/Clear a user defined vector
+/** \brief   Set/Clear a user defined super function.
 
     This function sets/clears the handler for one of the seven user defined
-    vectors. Setting a handler is only allowed if it not currently set.
+    super functions. Setting a handler is only allowed if it not currently set.
 
-    \param  vector          The vector number (1-7).
+    \param  super           The super function number (1-7).
     \param  handler         The pointer to handler function, or NULL to
                             clear.
 
     \retval 0               On success.
     \retval -1              On failure.
 */
-int syscall_misc_setvector(uint8_t super, uintptr_t handler);
+int syscall_misc_setvector(uint32_t super, uintptr_t handler);
+
+/** \brief   Restarts the Dreamcast.
+
+    This function restarts the Dreamcast console.
+*/
+void syscall_system_restart(void) __noreturn;
+
+/** \brief   Go to the BIOS menu.
+
+    This function exits the program to the BIOS menu.
+*/
+void syscall_system_bios_menu(void) __noreturn;
+
+/** \brief   Exit to CD menu.
+
+    This function exits the program to the BIOS CD menu.
+*/
+void syscall_system_cd_menu(void) __noreturn;
 
 /** @} */ 
 
