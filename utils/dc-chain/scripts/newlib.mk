@@ -1,9 +1,5 @@
 # Sega Dreamcast Toolchains Maker (dc-chain)
 # This file is part of KallistiOS.
-#
-# Created by Jim Ursetto (2004)
-# Initially adapted from Stalin's build script version 0.3.
-#
 
 $(build_newlib): build = build-newlib-$(target)-$(newlib_ver)
 $(build_newlib): src_dir = newlib-$(newlib_ver)
@@ -17,15 +13,15 @@ $(build_newlib): logdir
 	    --disable-newlib-supplied-syscalls \
 	    --target=$(target) \
 	    --prefix=$(prefix) \
-	    $(extra_configure_args) \
+	    $(cpu_configure_args) \
 	    $(newlib_extra_configure_args) \
 	    CC_FOR_TARGET="$(SH_CC_FOR_TARGET)" \
 	    $(to_log)
-	$(MAKE) $(makejobs) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
+	$(MAKE) $(jobs_arg) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
 	$(MAKE) -C $(build) install DESTDIR=$(DESTDIR) $(to_log)
 	$(clean_up)
 
-fixup-sh4-newlib: newlib_inc = $(DESTDIR)$(sh_prefix)/$(sh_target)/include
+fixup-sh4-newlib: newlib_inc = $(sh_toolchain_path)/$(sh_target)/include
 fixup-sh4-newlib: fixup-sh4-newlib-init
 
 # Apply sh4 newlib fixups (default is yes and this should be always the case!)
