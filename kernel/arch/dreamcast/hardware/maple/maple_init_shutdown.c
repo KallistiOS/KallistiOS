@@ -132,10 +132,7 @@ void maple_hw_shutdown(void) {
     /* Free any attached devices */
     for(cnt = 0, p = 0; p < MAPLE_PORT_COUNT; p++) {
         for(u = 0; u < MAPLE_UNIT_COUNT; u++) {
-            if(maple_state.ports[p].units[u].valid) {
-                maple_state.ports[p].units[u].valid = 0;
-                cnt++;
-            }
+            cnt += !!maple_driver_detach(p, u);
         }
     }
 
