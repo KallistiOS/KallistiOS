@@ -9,7 +9,7 @@ build-arm-gcc: build-arm-gcc-pass1
 build-sh4-newlib: build-sh4-newlib-only fixup-sh4-newlib
 
 fixup_sh4_newlib_stamp = fixup-sh4-newlib.stamp
-build-sh4-done: build-sh4 
+build-sh4-done: build-sh4
 	@if test -f "$(fixup_sh4_newlib_stamp)"; then \
 		echo ""; \
 		echo ""; \

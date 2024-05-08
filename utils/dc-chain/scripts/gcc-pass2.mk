@@ -26,6 +26,7 @@ $(build_gcc_pass2): logdir
           --enable-languages=$(enabled_languages) \
           --enable-checking=release \
           $(extra_configure_args) \
+          $(gcc_extra_configure_args) \
           $(macos_gcc_configure_args) \
           MAKEINFO=missing \
           CC="$(CC)" \

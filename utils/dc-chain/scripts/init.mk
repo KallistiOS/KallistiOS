@@ -177,7 +177,7 @@ endif
 # Handle if Native Language Support is used
 ifdef disable_nls
   ifneq (0,$(disable_nls))
-    extra_configure_args += --disable-nls
+    gcc_extra_configure_args += --disable-nls
     binutils_extra_configure_args += --disable-nls
   endif
 endif
@@ -242,7 +242,7 @@ endif
 ifdef enable_libgccjit
   ifneq (0,$(enable_libgccjit))
     enabled_languages := $(enabled_languages),jit
-    extra_configure_args += --enable-host-shared
+    gcc_extra_configure_args += --enable-host-shared
   endif
 endif
 
