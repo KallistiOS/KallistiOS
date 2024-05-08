@@ -133,7 +133,7 @@ void dbgio_fb_set_target(uint16 *t, int w, int h, int borderx, int bordery) {
     min_x = borderx;
     min_y = bordery;
     max_x = fb_w - borderx;
-    max_y = fb_w - bordery;
+    max_y = fb_h - bordery;
     cur_x = min_x;
     cur_y = min_y;
 }

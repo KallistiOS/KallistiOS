@@ -3,11 +3,10 @@
 #
 # usage:
 #   - build one of the images:
-#       docker build -t dcchain:latest . 
 #       docker build -t dcchain:stable --build-arg dc_chain=stable .
-#       docker build -t dcchain:9.3.0-legacy --build-arg dc_chain=9.3.0-legacy .
-#   - create and run a container, eg for latest:
-#       docker run -it --name containername dcchain:latest /bin/bash
+#       docker build -t dcchain:9.3.0-legacy --build-arg dc_chain=9.3.0-legacy --build-arg makejobs=4 .
+#   - create and run a container, e.g. for stable:
+#       docker run -it --name containername dcchain:stable /bin/bash
 
 # Stage 1
 FROM alpine:latest as build
@@ -33,12 +32,11 @@ RUN apk --update add --no-cache \
 # Making Sega Dreamcast toolchains
 # You may adapt the KallistiOS repository URL if needed
 ARG dc_chain=stable
+ARG makejobs=2
 RUN mkdir -p /opt/toolchains/dc \
-	&& git clone https://git.code.sf.net/p/cadcdev/kallistios /opt/toolchains/dc/kos  || git clone https://github.com/KallistiOS/KallistiOS.git /opt/toolchains/dc/kos \
+	&& git clone https://git.code.sf.net/p/cadcdev/kallistios /opt/toolchains/dc/kos || git clone https://github.com/KallistiOS/KallistiOS.git /opt/toolchains/dc/kos \
 	&& cd /opt/toolchains/dc/kos/utils/dc-chain \
-	&& cp config/config.mk.$dc_chain.sample config.mk \
-	&& sed -i -e 's/#use_custom_dependencies=1/use_custom_dependencies=1/g' config.mk \
-	&& make && make gdb \
+	&& make all toolchain_profile=$dc_chain makejobs=$makejobs use_custom_dependencies=1
 	&& rm -rf /opt/toolchains/dc/kos
 
 # Stage 2
