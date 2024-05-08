@@ -73,3 +73,4 @@ dist:
 	@for dir in $(DIRS); do \
 		$(KOS_MAKE) -C $$dir dist; \
 	done
+	
