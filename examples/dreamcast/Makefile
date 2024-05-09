@@ -13,18 +13,19 @@ ifdef KOS_CCPLUS
 	DIRS += cpp tsunami
 endif
 
-.PHONY: all $(DIRS)
+.PHONY: all
 
-all: $(DIRS)
+all:
+	@for dir in $(DIRS); do \
+		$(KOS_MAKE) check-dir DIR=$$dir; \
+	done;
+
 	@if [ -f errors.txt ]; then \
 		echo "\n-------------------------------------------------"; \
 		echo "$$(cat error_count.txt 2>/dev/null || echo 0) error(s) occurred during the build process:"; \
 		cat errors.txt; \
-	fi
+	fi;
 	@rm -f errors.txt error_count.txt
-
-$(DIRS):
-	@$(KOS_MAKE) check-dir DIR=$@
 
 # ALGORITHM EXPLANATION:
 # This script recursively checks each directory to determine if it should 
@@ -47,9 +48,8 @@ $(DIRS):
 #   particular build process failed without aggregating errors at a higher 
 #   directory level.
 check-dir:
-	@subdirs="$$(find $(DIR) -maxdepth 1 -mindepth 1 -type d)"; \
-	should_make="yes"; \
-	for subdir in $$subdirs; do \
+	@should_make="yes"; \
+	for subdir in $(DIR)/*; do \
 		if [ -e "$$subdir/Makefile" ]; then \
 			should_make="no"; \
 			$(KOS_MAKE) check-dir DIR=$$subdir; \
@@ -62,7 +62,7 @@ check-dir:
 			echo "$(DIR): Build failed with return code $$rv" >> errors.txt; \
 			echo $$(($$(cat error_count.txt 2>/dev/null || echo 0) + 1)) > error_count.txt; \
 		fi; \
-	fi
+	fi;
 
 clean:
 	@for dir in $(DIRS); do \
