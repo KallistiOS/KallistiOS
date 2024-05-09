@@ -172,6 +172,8 @@ ifdef libstdcxx_tzdb
   else
     gcc_extra_configure_args += --with-libstdcxx-zoneinfo=$(libstdcxx_tzdb),static
   endif
+else
+  gcc_extra_configure_args += --with-libstdcxx-zoneinfo=no
 endif
 
 # Handle install mode for toolchain debug symbols
