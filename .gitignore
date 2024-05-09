@@ -17,6 +17,7 @@ kernel/arch/dreamcast/sound/arm/stream.drv
 lib/dreamcast/*.a
 addons/lib/dreamcast/*.a
 utils/bincnv/bincnv
+utils/bincnv/bincnv.dSYM/
 utils/genromfs/genromfs
 utils/vqenc/vqenc
 utils/wav2adpcm/wav2adpcm
