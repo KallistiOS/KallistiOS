@@ -2,7 +2,8 @@
 
 | Date<br/>_____________ | Author(s)<br/>_____________ | Changes<br/>_____________ |
 |:-----------------------|:----------------------------|---------------------------|
-| 2024-05-02| Eric Fradella | Deprecated GCC 4.7.4 profile. Revamped configuration system into separate profiles and Makefile.cfg. Revised configuration options and documentation. |
+| 2024-05-08 | Falco Girgis | Added configuration option for libstdc++'s timezone database. |
+| 2024-05-02 | Eric Fradella | Deprecated GCC 4.7.4 profile. Revamped configuration system into separate profiles and Makefile.cfg. Revised configuration options and documentation. |
 | 2024-05-01 | Falco Girgis | Added config option for enabling the Ada langauge. |
 | 2024-04-30 | Falco Girgis | Added config option for enabling iconv library support in Newlib. |
 | 2024-04-29 | Donald Haase<br/>Eric Fradella | Patch Newlib headers to expose lstat() declaration. |
