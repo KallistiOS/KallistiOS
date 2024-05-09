@@ -43,7 +43,7 @@ export KOS_BASE="/opt/toolchains/dc/kos"
 #
 # Specifies the path to the KOS-ports directory
 #
-export KOS_PORTS="$/opt/toolchains/dc/kos-ports"
+export KOS_PORTS="/opt/toolchains/dc/kos-ports"
 
 # SH Compiler Prefixes
 #
