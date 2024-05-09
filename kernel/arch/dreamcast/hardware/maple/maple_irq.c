@@ -143,6 +143,13 @@ static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm) {
                    'A' + p, '0' + u);
 #endif
 
+            if (irq_inside_int() && !malloc_irq_safe()) {
+                /* We can't create a device now. Fail silently as the device
+                 * will be re-probed in the next loop of the periodic IRQ. */
+                maple_frame_unlock(frm);
+                return;
+            }
+
             if(maple_driver_attach(frm) >= 0) {
                 assert(maple_dev_valid(p, u));
             }
