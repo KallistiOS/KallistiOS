@@ -49,52 +49,41 @@ int maple_driver_attach(maple_frame_t *det) {
     maple_driver_t      *i;
     maple_response_t    *resp;
     maple_devinfo_t     *devinfo;
-    maple_device_t      *dev;
-    int         attached;
+    maple_device_t      *dev = NULL;
 
     /* Resolve some pointers first */
     resp = (maple_response_t *)det->recv_buf;
     devinfo = (maple_devinfo_t *)resp->data;
-    attached = 0;
-
-    dev = calloc(1, sizeof(*dev));
-    if (!dev)
-        return -1;
-
-    memcpy(&dev->info, devinfo, sizeof(maple_devinfo_t));
-    dev->info.product_name[29] = 0;
-    dev->info.product_license[59] = 0;
-    dev->port = det->dst_port;
-    dev->unit = det->dst_unit;
-    dev->frame.state = MAPLE_FRAME_VACANT;
 
     /* Go through the list and look for a matching driver */
     LIST_FOREACH(i, &maple_state.driver_list, drv_list) {
         /* For now we just pick the first matching driver */
         if(i->functions & devinfo->functions) {
-            if (i->status_size) {
-                dev->status = calloc(1, i->status_size);
-                if (!dev->status)
-                    break;
-            }
+            /* Driver matches. Alloc a device. */
+            dev = calloc(1, sizeof(*dev) + i->status_size);
+            if (!dev)
+                return 1;
 
-            /* Driver matches, try an attach if we need to */
-            if(!(i->attach) || (i->attach(i, dev) >= 0)) {
-                /* Success: make it permanent */
-                attached = 1;
+            memcpy(&dev->info, devinfo, sizeof(maple_devinfo_t));
+            dev->info.product_name[29] = 0;
+            dev->info.product_license[59] = 0;
+            dev->port = det->dst_port;
+            dev->unit = det->dst_unit;
+            dev->frame.state = MAPLE_FRAME_VACANT;
+
+            /* Try to attach if we need to */
+            if(!(i->attach) || (i->attach(i, dev) >= 0))
                 break;
-            }
 
-            if (i->status_size)
-                free(dev->status);
+            /* Attach failed, free the device */
+            free(dev);
+            dev = NULL;
         }
     }
 
     /* Did we get any hits? */
-    if(!attached) {
-        free(dev);
+    if(!dev)
         return -1;
-    }
 
     maple_state.ports[det->dst_port].units[det->dst_unit] = dev;
 
@@ -122,8 +111,6 @@ static void maple_detach(maple_device_t *dev) {
             detach_callback(dev);
         }
     }
-
-    free(dev->status);
 }
 
 /* Detach an attached maple device */

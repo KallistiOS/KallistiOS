@@ -279,7 +279,8 @@ typedef struct maple_device {
     uint8                   dev_mask;       /**< \brief Device-present mask for unit 0's */
 
     volatile uint8          status_valid;   /**< \brief Have we got our first status update? */
-    uint8                   *status;        /**< \brief Status buffer (for pollable devices) */
+
+    uint32                  status[];       /**< \brief Status buffer (for pollable devices) */
 } maple_device_t;
 
 #define MAPLE_PORT_COUNT    4   /**< \brief Number of ports on the bus */
