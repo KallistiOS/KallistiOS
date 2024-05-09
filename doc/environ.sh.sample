@@ -161,13 +161,13 @@ export KOS_CFLAGS="${KOS_CFLAGS} -fno-builtin"
 # however, they do so at the price of accuracy and are not IEEE compliant.
 # NOTE: This also requires -fno-builtin be removed from KOS_CFLAGS to take effect!
 #
-# export KOS_CFLAGS="${KOS_CFLAGS} -ffast-math -ffp-contract=fast -mfsrra -mfsca"
+#export KOS_CFLAGS="${KOS_CFLAGS} -ffast-math -ffp-contract=fast -mfsrra -mfsca"
 
 # SH4 Floating Point Arithmetic Precision
 #
 # KallistiOS only officially supports the single-precision-only floating-point
-# arithmetic mode (-m4-single-only), but double precision default (-m4) or
-# double precision, single default (-m4-single) modes can be enabled here by
+# arithmetic mode (-m4-single-only), but double precision, single default
+# (-m4-single) or double precision default (-m4) modes can be enabled here by
 # adjusting KOS_SH4_PRECISION.
 # WARNING: Adjusting this setting has a high likelihood of breaking KallistiOS,
 #          kos-ports, and existing codebases which assume -m4-single-only.
@@ -176,6 +176,16 @@ export KOS_CFLAGS="${KOS_CFLAGS} -fno-builtin"
 #       with support for these modes, which is not the case by default!
 #
 export KOS_SH4_PRECISION="-m4-single-only"
+
+# Use LRA (Local Register Allocator) Pass
+#
+# Uncomment this line to use the modern Local Register Allocator pass during
+# code generation instead of the default older reload pass. This option is
+# known to be unstable or less performant for SH at this time, but will likely
+# become mandatory in future versions of GCC, so feel free to help us test.
+# Only enable this setting if you understand what you are doing!
+#
+#export KOS_CFLAGS="${KOS_CFLAGS} -mlra"
 
 # Additional Tools Path
 #
@@ -194,4 +204,3 @@ fi
 # options or see where other build flags are set, look at this file.
 #
 . ${KOS_BASE}/environ_base.sh
-
