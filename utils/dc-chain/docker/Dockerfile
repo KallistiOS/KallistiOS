@@ -14,20 +14,23 @@ MAINTAINER KallistiOS <cadcdev-kallistios@lists.sourceforge.net>
 
 # Installing prerequisites
 RUN apk --update add --no-cache \
-	build-base \
-	patch \
-	bash \
-	texinfo \
-	libjpeg-turbo-dev \
-	libpng-dev \
-	curl \
-	wget \
-	git \
-	python3 \
-	subversion \
-	gmp-dev \
-	elfutils-dev \
-	&& rm -rf /var/cache/apk/*
+        build-base \
+        gmp-dev \
+        mpfr-dev \
+        mpc1-dev \
+        patch \
+        bash \
+        texinfo \
+        flex \
+        curl \
+        wget \
+        git \
+        subversion \
+        elfutils-dev \
+        libjpeg-turbo-dev \
+        libpng-dev \
+        python3 \
+        && rm -rf /var/cache/apk/*
 
 # Making Sega Dreamcast toolchains
 # You may adapt the KallistiOS repository URL if needed
@@ -36,7 +39,7 @@ ARG makejobs=2
 RUN mkdir -p /opt/toolchains/dc \
 	&& git clone https://git.code.sf.net/p/cadcdev/kallistios /opt/toolchains/dc/kos || git clone https://github.com/KallistiOS/KallistiOS.git /opt/toolchains/dc/kos \
 	&& cd /opt/toolchains/dc/kos/utils/dc-chain \
-	&& make all toolchain_profile=$dc_chain makejobs=$makejobs use_custom_dependencies=1
+	&& make build toolchain_profile=$dc_chain makejobs=$makejobs \
 	&& rm -rf /opt/toolchains/dc/kos
 
 # Stage 2
