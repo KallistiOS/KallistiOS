@@ -33,17 +33,23 @@ else
     export KOS_SUBARCH
 fi
 
+# DC Root Path
+#
+# Specifies the path to the DC root directory
+#
+export DC_BASE="/opt/toolchains/dc"
+
 # KOS Root Path
 #
 # Specifies the path to the KOS root directory
 #
-export KOS_BASE="/opt/toolchains/dc/kos"
+export KOS_BASE="${DC_BASE}/kos"
 
 # KOS-Ports Path
 #
 # Specifies the path to the KOS-ports directory
 #
-export KOS_PORTS="${KOS_BASE}/../kos-ports"
+export KOS_PORTS="${DC_BASE}/kos-ports"
 
 # SH Compiler Prefixes
 #
