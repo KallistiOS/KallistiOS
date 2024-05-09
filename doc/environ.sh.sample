@@ -177,12 +177,12 @@ export KOS_CFLAGS="${KOS_CFLAGS} -fno-builtin"
 #
 export KOS_SH4_PRECISION="-m4-single-only"
 
-# Use LRA (Local Register Allocator) pass
+# Use LRA (Local Register Allocator) Pass
 #
 # Uncomment this line to use the modern Local Register Allocator pass during
 # code generation instead of the default older reload pass. This option is
 # known to be unstable or less performant for SH at this time, but will likely
-# become mandatory in future versions of GCC.
+# become mandatory in future versions of GCC, so feel free to help us test.
 # Only enable this setting if you understand what you are doing!
 #
 #export KOS_CFLAGS="${KOS_CFLAGS} -mlra"
