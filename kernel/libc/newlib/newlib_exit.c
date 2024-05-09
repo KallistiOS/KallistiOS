@@ -21,7 +21,7 @@ void kos_shutdown(void)
 
 KOS_INIT_FLAG_WEAK(kos_shutdown, true);
 
-void _exit(int code) {
+__used void _exit(int code) {
     ret_code = code;
 
     KOS_INIT_FLAG_CALL(kos_shutdown);
