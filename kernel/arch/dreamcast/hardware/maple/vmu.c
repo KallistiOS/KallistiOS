@@ -85,33 +85,33 @@ static void vmu_poll_reply(maple_state_t *st, maple_frame_t *frm) {
     if(respbuf[0] != MAPLE_FUNC_CLOCK)
         return;
 
-    /* Update the status area from the response */
-    if(frm->dev) {
-        const maple_device_t *cont = maple_enum_dev(frm->dev->port, 0);
+    if(!frm->dev)
+        return;
 
-        /* Verify the size of the frame and grab a pointer to it */
-        //assert(resp->data_len == 7);
-        raw = (vmu_cond_t *)(respbuf + 1);
+    /* Verify the size of the frame and grab a pointer to it */
+    //assert(resp->data_len == 7);
+    raw = (vmu_cond_t *)(respbuf + 1);
 
-        /* Fill the "nice" struct from the raw data */
-        cooked = (vmu_state_t *)(frm->dev->status);
-        /* Invert raw struct as nice struct */
-        cooked->buttons = ~(*raw);
+    /* Fill the "nice" struct from the raw data */
+    cooked = (vmu_state_t *)(frm->dev->status);
+    /* Invert raw struct as nice struct */
+    cooked->buttons = ~(*raw);
 
-        /* Check to see if the VMU is upside-down in the controller and readjust
-           its directional buttons accordingly. */
-        if(cont && (cont->info.functions & MAPLE_FUNC_CONTROLLER) &&
-           (frm->dev->info.connector_direction == cont->info.connector_direction)) {
-            cooked->buttons = (cooked->buttons & 0xf0)  |
-                              (cooked->dpad_up    << 1) | /* down */
-                              (cooked->dpad_down  << 0) | /* up */
-                              (cooked->dpad_left  << 3) | /* right */
-                              (cooked->dpad_right << 2);  /* left */
+    /* Check to see if the VMU is upside-down in the controller and readjust
+       its directional buttons accordingly. */
+    const maple_device_t *cont = maple_enum_dev(frm->dev->port, 0);
 
-        }
+    if(cont && (cont->info.functions & MAPLE_FUNC_CONTROLLER) &&
+       (frm->dev->info.connector_direction == cont->info.connector_direction)) {
+        cooked->buttons = (cooked->buttons & 0xf0)  |
+                          (cooked->dpad_up    << 1) | /* down */
+                          (cooked->dpad_down  << 0) | /* up */
+                          (cooked->dpad_left  << 3) | /* right */
+                          (cooked->dpad_right << 2);  /* left */
 
-        frm->dev->status_valid = 1;
     }
+
+    frm->dev->status_valid = 1;
 }
 
 static int vmu_poll(maple_device_t *dev) {

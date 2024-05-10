@@ -71,35 +71,36 @@ static void cont_reply(maple_state_t *st, maple_frame_t *frm) {
     if(respbuf[0] != MAPLE_FUNC_CONTROLLER)
         return;
 
-    /* Update the status area from the response */
-    if(frm->dev) {
-        /* Verify the size of the frame and grab a pointer to it */
-        assert(sizeof(cont_cond_t) == ((resp->data_len - 1) * sizeof(uint32_t)));
-        raw = (cont_cond_t *)(respbuf + 1);
+    if(!frm->dev)
+        return;
 
-        /* Fill the "nice" struct from the raw data */
-        cooked = (cont_state_t *)(frm->dev->status);
-        cooked->buttons = (~raw->buttons) & 0xffff;
-        cooked->ltrig = raw->ltrig;
-        cooked->rtrig = raw->rtrig;
-        cooked->joyx = ((int)raw->joyx) - 128;
-        cooked->joyy = ((int)raw->joyy) - 128;
-        cooked->joy2x = ((int)raw->joy2x) - 128;
-        cooked->joy2y = ((int)raw->joy2y) - 128;
-        frm->dev->status_valid = 1;
+    /* Verify the size of the frame and grab a pointer to it */
+    assert(sizeof(cont_cond_t) == ((resp->data_len - 1) * sizeof(uint32_t)));
+    raw = (cont_cond_t *)(respbuf + 1);
 
-        /* Check for magic button sequences */
-        if(btn_callback) {
-            if(!btn_callback_addr ||
-                    (btn_callback_addr &&
-                     btn_callback_addr == maple_addr(frm->dev->port, frm->dev->unit))) {
-                if((cooked->buttons & btn_callback_btns) == btn_callback_btns) {
-                    btn_callback(maple_addr(frm->dev->port, frm->dev->unit),
-                                 cooked->buttons);
-                }
+    /* Fill the "nice" struct from the raw data */
+    cooked = (cont_state_t *)(frm->dev->status);
+    cooked->buttons = (~raw->buttons) & 0xffff;
+    cooked->ltrig = raw->ltrig;
+    cooked->rtrig = raw->rtrig;
+    cooked->joyx = ((int)raw->joyx) - 128;
+    cooked->joyy = ((int)raw->joyy) - 128;
+    cooked->joy2x = ((int)raw->joy2x) - 128;
+    cooked->joy2y = ((int)raw->joy2y) - 128;
+    frm->dev->status_valid = 1;
+
+    /* Check for magic button sequences */
+    if(btn_callback) {
+        if(!btn_callback_addr ||
+                (btn_callback_addr &&
+                 btn_callback_addr == maple_addr(frm->dev->port, frm->dev->unit))) {
+            if((cooked->buttons & btn_callback_btns) == btn_callback_btns) {
+                btn_callback(maple_addr(frm->dev->port, frm->dev->unit),
+                             cooked->buttons);
             }
         }
     }
+
 }
 
 static int cont_poll(maple_device_t *dev) {
