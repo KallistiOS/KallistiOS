@@ -2,7 +2,7 @@
 #define __KOS_VERSION_H
 
 #define KOS_VERSION_MAJOR   2
-#define KOS_VERSION_MINOR   0
+#define KOS_VERSION_MINOR   1
 #define KOS_VERSION_PATCH   0
 
 #define KOS_VERSION \
@@ -35,7 +35,7 @@ __BEGIN_DECLS
 typedef uint32_t kos_version_t;
 
 kos_version_t kos_version(void);
-const char* kos_version_string(void);
+const char *kos_version_string(void);
 
 __END_DECLS
 
