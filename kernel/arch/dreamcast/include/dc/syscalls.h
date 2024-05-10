@@ -10,6 +10,7 @@
 
 \todo
     - syscall_sysinfo_icon(): Discover + document icon format.
+    - Look into additional syscall vector for GD-ROM - 0x0C0000C0
 
     \author Marcus Comstedt
     \author Andy Barajas
