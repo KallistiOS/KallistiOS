@@ -74,7 +74,7 @@
 #define FUNC_GDROM_PIO_TRANSFER     12
 #define FUNC_GDROM_PIO_CHECK        13
 #define FUNC_GDROM_UNKNOWN1         14
-#define FUNC_GDROM_CHANGE_CD        15
+#define FUNC_GDROM_UNKNOWN2         15
 
 /* SYSTEM functions */
 #define FUNC_SYSTEM_RESET           -1
