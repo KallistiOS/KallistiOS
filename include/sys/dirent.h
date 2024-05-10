@@ -98,7 +98,7 @@ typedef struct {
             /** \brief Current directory entry (alias) */
             struct dirent d_ent2;
             /** \brief Storage for d_ent::d_name[] FAM */
-            char          d_name[NAME_MAX];
+            char          d_name[NAME_MAX + 1];
         };
     };
 } DIR;
