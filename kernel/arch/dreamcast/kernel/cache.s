@@ -24,16 +24,15 @@
 ! taken from sh-stub.c.
 !
 ! r4 is starting address
-! r5 is count
+! r5 is size
     .align 2
 _icache_flush_range:
-    ! Exit early if no blocks to flush
-    mov      #0, r0
-    cmp/eq   r0, r5
-    bt       .iflush_exit
-    
+    tst      r5, r5          ! Test if size is 0
     mov.l    ifr_addr, r0
+
+    bt       .iflush_exit    ! Exit early if no blocks to flush
     mov.l    p2_mask, r1
+
     or       r1, r0
     jmp      @r0
     nop
@@ -46,7 +45,7 @@ _icache_flush_range:
     or       r1, r0
     ldc      r0, sr
 
-    ! Get ending address from count and align start address
+    ! Get ending address from size and align start address
     add      r4, r5
     mov.l    align_mask, r0
     and      r0, r4
@@ -94,18 +93,16 @@ _icache_flush_range:
 ! if you care about the contents.
 !
 ! r4 is starting address
-! r5 is count
+! r5 is size
     .align 2
 _dcache_inval_range:
-    ! Exit early if no blocks to inval
-    mov      #0, r0
-    cmp/eq   r0, r5
-    bt       .dinval_exit
+    tst      r5, r5         ! Test if size is 0
+    mov.l    align_mask, r0   
 
-    ! Get ending address from count and align start address
-    add      r4, r5
-    mov.l    align_mask, r0
-    and      r0, r4
+    bt       .dinval_exit   ! Exit early if no blocks to inval
+    add      r4, r5         ! Get ending address from size
+    
+    and      r0, r4         ! Align start address
 
 .dinval_loop:
     ! Invalidate the dcache
@@ -125,23 +122,21 @@ _dcache_inval_range:
 ! we flush the whole cache instead.
 !
 ! r4 is starting address
-! r5 is count
+! r5 is size
     .align 2
 _dcache_flush_range:
-    ! Exit early if no blocks to flush
-    mov      #0, r0
-    cmp/eq   r0, r5
-    bt       .dflush_exit    
-
-    ! Compare with flush_check
+    ! Check that 0 < size < flush_check
+    tst      r5, r5
     mov.l    flush_check, r2
-    cmp/hi   r2, r5
-    bt       _dcache_flush_all  ! If count > flush_check, jump to _dcache_flush_all
-
-    ! Get ending address from count and align start address
-    add      r4, r5
+    
+    bt       .dflush_exit       ! Exit early if no blocks to flush
     mov.l    align_mask, r0
-    and      r0, r4
+
+    cmp/hi   r2, r5             ! Compare with flush_check
+    add      r4, r5             ! Get ending address from size
+    
+    bt       _dcache_flush_all  ! If size > flush_check, jump to _dcache_flush_all
+    and      r0, r4             ! Align start address
 
 .dflush_loop:
     ! Write back the dcache
@@ -183,23 +178,21 @@ _dcache_flush_all:
 ! we purge the whole cache instead.
 !
 ! r4 is starting address
-! r5 is count
+! r5 is size
     .align 2
 _dcache_purge_range:
-    ! Exit early if no blocks to purge
-    mov      #0, r0
-    cmp/eq   r0, r5
-    bt       .dpurge_exit         
-
-    ! Compare with purge_check
+    ! Check that 0 < size < purge_check  
+    tst      r5, r5  
     mov.l    purge_check, r2
-    cmp/hi   r2, r5
-    bt       _dcache_purge_all  ! If count > purge_check, jump to _dcache_purge_all
+    
+    bt       .dpurge_exit       ! Exit early if no blocks to purge
+    mov.l    align_mask, r0 
 
-    ! Get ending address from count and align start address
-    add      r4, r5
-    mov.l    align_mask, r0
-    and      r0, r4
+    cmp/hi   r2, r5             ! Compare with purge_check
+    add      r4, r5             ! Get ending address from size
+
+    bt       _dcache_purge_all  ! If size > purge_check, jump to _dcache_purge_all
+    and      r0, r4             ! Align start address
 
 .dpurge_loop:
     ! Write back and invalidate the D cache
@@ -285,12 +278,12 @@ cache_lines:
 
     .align    2
 
-! _dcache_flush_range can have count param set up to 66560 bytes 
+! _dcache_flush_range can have size param set up to 66560 bytes 
 ! and still be faster than dcache_flush_all.
 flush_check:
     .long    66560
     
-! _dcache_purge_range can have count param set up to 39936 bytes 
+! _dcache_purge_range can have size param set up to 39936 bytes 
 ! and still be faster than dcache_purge_all.
 purge_check:
     .long    39936        
