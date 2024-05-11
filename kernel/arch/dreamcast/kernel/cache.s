@@ -285,16 +285,12 @@ cache_lines:
 
     .align    2
 
-! _dcache_flush_range can execute up to this amount of loops and 
-! beat execution time of _dcache_flush_all.  This means that 
-! dcache_flush_range can have count param set up to 66560 bytes 
+! _dcache_flush_range can have count param set up to 66560 bytes 
 ! and still be faster than dcache_flush_all.
 flush_check:
     .long    66560
     
-! _dcache_purge_range can execute up to this amount of loops and 
-! beat execution time of _dcache_purge_all.  This means that 
-! dcache_purge_range can have count param set up to 39936 bytes 
+! _dcache_purge_range can have count param set up to 39936 bytes 
 ! and still be faster than dcache_purge_all.
 purge_check:
     .long    39936        
