@@ -275,7 +275,7 @@ unsigned char bfont_draw_ex(uint8 *buffer, uint32 bufwidth, uint32 fg, uint32 bg
     }
 
     if(unlock_bfont() < 0)
-        dbglog(DBG_ERROR, "bfont_draw_ex: error rereleasing font access\n");
+        dbglog(DBG_ERROR, "bfont_draw_ex: error releasing font access\n");
 
     /* Return the horizontal distance covered in bytes */
     if(wide)
