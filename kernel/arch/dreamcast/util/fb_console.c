@@ -76,10 +76,10 @@ static int fb_write(int c) {
         /* If going down a line put us over the edge of the screen, move
            everything up a line, fixing the problem. */
         if(cur_y + FONT_CHAR_HEIGHT > max_y) {
-            memcpy2(t + min_y * fb_w, t + (min_y + FONT_CHAR_HEIGHT) * fb_w,
+            memcpy4(t + min_y * fb_w, t + (min_y + FONT_CHAR_HEIGHT) * fb_w,
                     (cur_y - min_y - FONT_CHAR_HEIGHT) * fb_w * 2);
             cur_y -= FONT_CHAR_HEIGHT;
-            memset2(t + cur_y * fb_w, 0, FONT_CHAR_HEIGHT * fb_w * 2);
+            memset4(t + cur_y * fb_w, 0, FONT_CHAR_HEIGHT * fb_w * 2);
         }
     }
 

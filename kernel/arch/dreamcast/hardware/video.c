@@ -10,6 +10,7 @@
 #include <dc/video.h>
 #include <dc/pvr.h>
 #include <dc/sq.h>
+#include <kos/platform.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -210,18 +211,18 @@ uint32_t      *vram_l;
    [This is the old KOS function by Megan.]
 */
 int8_t vid_check_cable(void) {
-#ifndef _arch_sub_naomi
     volatile uint32_t * porta = (vuint32 *)0xff80002c;
+
+    if (KOS_PLATFORM_IS_NAOMI) {
+        /* XXXX: This still needs to be figured out for NAOMI. For now, assume
+           VGA mode. */
+        return CT_VGA;
+    }
 
     *porta = (*porta & 0xfff0ffff) | 0x000a0000;
 
     /* Read port8 and port9 */
     return (*((volatile uint16_t*)(porta + 1)) >> 8) & 3;
-#else
-    /* XXXX: This still needs to be figured out for NAOMI. For now, assume
-       VGA mode. */
-    return CT_VGA;
-#endif
 }
 
 /*-----------------------------------------------------------------------------*/

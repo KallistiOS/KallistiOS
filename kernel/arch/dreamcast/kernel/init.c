@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <kos/dbgio.h>
 #include <kos/init.h>
+#include <kos/platform.h>
 #include <arch/arch.h>
 #include <arch/irq.h>
 #include <arch/memory.h>
@@ -42,11 +43,9 @@ void (*__kos_init_early_fn)(void) __attribute__((weak,section(".data"))) = NULL;
 int main(int argc, char **argv);
 uint32 _fs_dclsocket_get_ip(void);
 
-#ifdef _arch_sub_naomi
 #define SAR2    ((vuint32 *)0xFFA00020)
 #define CHCR2   ((vuint32 *)0xFFA0002C)
 #define DMAOR   ((vuint32 *)0xFFA00040)
-#endif
 
 /* We have to put this here so we can include plat-specific devices */
 dbgio_handler_t * dbgio_handlers[] = {
@@ -125,11 +124,8 @@ KOS_INIT_FLAG_WEAK(fs_romdisk_mount_builtin, false);
 KOS_INIT_FLAG_WEAK(fs_romdisk_mount_builtin_legacy, false);
 KOS_INIT_FLAG_WEAK(vmu_fs_init, true);
 KOS_INIT_FLAG_WEAK(vmu_fs_shutdown, true);
-
-#ifndef _arch_sub_naomi
 KOS_INIT_FLAG_WEAK(fs_iso9660_init, true);
 KOS_INIT_FLAG_WEAK(fs_iso9660_shutdown, true);
-#endif
 
 void dcload_init(void) {
     if (*DCLOADMAGICADDR == DCLOADMAGICVALUE) {
@@ -209,9 +205,8 @@ int  __weak arch_auto_init(void) {
 
     KOS_INIT_FLAG_CALL(dcload_init);
 
-#ifndef _arch_sub_naomi
-    KOS_INIT_FLAG_CALL(fs_iso9660_init);
-#endif
+    if (!KOS_PLATFORM_IS_NAOMI)
+        KOS_INIT_FLAG_CALL(fs_iso9660_init);
 
     KOS_INIT_FLAG_CALL(vmu_fs_init);
 
@@ -224,18 +219,16 @@ int  __weak arch_auto_init(void) {
         KOS_INIT_FLAG_CALL(maple_wait_scan);  /* Wait for the maple scan to complete */
     }
 
-#ifndef _arch_sub_naomi
-    KOS_INIT_FLAG_CALL(arch_init_net);
-#endif
+    if (!KOS_PLATFORM_IS_NAOMI)
+        KOS_INIT_FLAG_CALL(arch_init_net);
 
     return 0;
 }
 
 void  __weak arch_auto_shutdown(void) {
     KOS_INIT_FLAG_CALL(fs_dclsocket_shutdown);
-#ifndef _arch_sub_naomi
-    KOS_INIT_FLAG_CALL(net_shutdown);
-#endif
+    if (!KOS_PLATFORM_IS_NAOMI)
+        KOS_INIT_FLAG_CALL(net_shutdown);
 
     irq_disable();
     snd_shutdown();
@@ -245,9 +238,8 @@ void  __weak arch_auto_shutdown(void) {
     library_shutdown();
     KOS_INIT_FLAG_CALL(fs_dcload_shutdown);
     KOS_INIT_FLAG_CALL(vmu_fs_shutdown);
-#ifndef _arch_sub_naomi
-    KOS_INIT_FLAG_CALL(fs_iso9660_shutdown);
-#endif
+    if (!KOS_PLATFORM_IS_NAOMI)
+        KOS_INIT_FLAG_CALL(fs_iso9660_shutdown);
 #if defined(__NEWLIB__) && !(__NEWLIB__ < 2 && __NEWLIB_MINOR__ < 4)
     fs_rnd_shutdown();
 #endif
@@ -267,13 +259,13 @@ void arch_main(void) {
     uint8 *bss_end = (uint8 *)(&end);
     int rv;
 
-#ifdef _arch_sub_naomi
-    /* Ugh. I'm really not sure why we have to set up these DMA registers this
-       way on boot, but failing to do so breaks maple... */
-    *SAR2 = 0;
-    *CHCR2 = 0x1201;
-    *DMAOR = 0x8201;
-#endif /* _arch_sub_naomi */
+    if (KOS_PLATFORM_IS_NAOMI) {
+        /* Ugh. I'm really not sure why we have to set up these DMA registers this
+           way on boot, but failing to do so breaks maple... */
+        *SAR2 = 0;
+        *CHCR2 = 0x1201;
+        *DMAOR = 0x8201;
+    }
 
     /* Ensure the WDT is not enabled from a previous session */
     wdt_disable();
