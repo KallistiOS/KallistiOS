@@ -182,7 +182,7 @@ _dcache_flush_all:
     .align 2
 _dcache_purge_range:
     ! Check that 0 < size < purge_check  
-    tst      r5, r5  
+    tst      r5, r5
     mov.l    purge_check, r2
     
     bt       .dpurge_exit       ! Exit early if no blocks to purge
@@ -266,6 +266,16 @@ dca_addr:
 dc_ubit_mask:
     .long    0xfffffffd    ! Mask to zero out U bit
 
+! _dcache_flush_range can have size param set up to 66560 bytes 
+! and still be faster than dcache_flush_all.
+flush_check:
+    .long    66560
+    
+! _dcache_purge_range can have size param set up to 39936 bytes 
+! and still be faster than dcache_purge_all.
+purge_check:
+    .long    39936 
+
 ! Shared    
 p2_mask:    
     .long    0xa0000000
@@ -275,16 +285,5 @@ align_mask:
     .long    ~31           ! Align address to 32-byte boundary
 cache_lines:
     .word    512           ! Total number of cache lines in dcache
-
-    .align    2
-
-! _dcache_flush_range can have size param set up to 66560 bytes 
-! and still be faster than dcache_flush_all.
-flush_check:
-    .long    66560
-    
-! _dcache_purge_range can have size param set up to 39936 bytes 
-! and still be faster than dcache_purge_all.
-purge_check:
-    .long    39936        
+       
 
