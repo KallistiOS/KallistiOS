@@ -5,7 +5,7 @@
 !
 ! Copyright (C) 2001 Megan Potter
 ! Copyright (C) 2014, 2016, 2023 Ruslan Rostovtsev
-! Copyright (C) 2023 Andy Barajas
+! Copyright (C) 2023, 2024 Andy Barajas
 !
 ! Optimized assembler code for managing the cache.
 !
@@ -27,6 +27,11 @@
 ! r5 is count
     .align 2
 _icache_flush_range:
+    ! Exit early if no blocks to flush
+    mov      #0, r0
+    cmp/eq   r0, r5
+    bt       .iflush_exit
+    
     mov.l    ifr_addr, r0
     mov.l    p2_mask, r1
     or       r1, r0
@@ -49,7 +54,7 @@ _icache_flush_range:
     mov.l    ic_entry_mask, r2
     mov.l    ic_valid_mask, r3
 
-.flush_loop:
+.iflush_loop:
     ! Write back D cache
     ocbwb    @r4
 
@@ -63,7 +68,7 @@ _icache_flush_range:
 
     add      #32, r4       ! Move on to next cache block
     cmp/hs   r4, r5
-    bt/s     .flush_loop
+    bt/s     .iflush_loop
     mov.l    r7, @r6       ! *addr = data    
 
     ! Restore old SR
@@ -78,6 +83,8 @@ _icache_flush_range:
     nop
     nop
     nop
+
+.iflush_exit:
     rts
     nop
 
@@ -90,6 +97,11 @@ _icache_flush_range:
 ! r5 is count
     .align 2
 _dcache_inval_range:
+    ! Exit early if no blocks to inval
+    mov      #0, r0
+    cmp/eq   r0, r5
+    bt       .dinval_exit
+
     ! Get ending address from count and align start address
     add      r4, r5
     mov.l    align_mask, r0
@@ -102,6 +114,7 @@ _dcache_inval_range:
     bt/s     .dinval_loop
     add      #32, r4        ! Move on to next cache block
 
+.dinval_exit:
     rts
     nop
 
@@ -115,26 +128,29 @@ _dcache_inval_range:
 ! r5 is count
     .align 2
 _dcache_flush_range:
-    ! Divide byte count by 32 
-    mov      #-5, r1
-    shad     r1, r5           
+    ! Exit early if no blocks to flush
+    mov      #0, r0
+    cmp/eq   r0, r5
+    bt       .dflush_exit    
 
     ! Compare with flush_check
-    mov.w    flush_check, r2
+    mov.l    flush_check, r2
     cmp/hi   r2, r5
-    bt       _dcache_flush_all  ! If lines > flush_check, jump to _dcache_flush_all
+    bt       _dcache_flush_all  ! If count > flush_check, jump to _dcache_flush_all
 
-    ! Align start address
+    ! Get ending address from count and align start address
+    add      r4, r5
     mov.l    align_mask, r0
     and      r0, r4
 
 .dflush_loop:
     ! Write back the dcache
     ocbwb    @r4
-    dt       r5
-    bf/s     .dflush_loop
+    cmp/hs   r4, r5
+    bt/s     .dflush_loop
     add      #32, r4        ! Move on to next cache block
 
+.dflush_exit:
     rts
     nop
 
@@ -170,26 +186,29 @@ _dcache_flush_all:
 ! r5 is count
     .align 2
 _dcache_purge_range:
-    ! Divide byte count by 32 
-    mov      #-5, r1
-    shad     r1, r5           
+    ! Exit early if no blocks to purge
+    mov      #0, r0
+    cmp/eq   r0, r5
+    bt       .dpurge_exit         
 
     ! Compare with purge_check
-    mov.w    purge_check, r2
+    mov.l    purge_check, r2
     cmp/hi   r2, r5
-    bt       _dcache_purge_all  ! If lines > purge_check, jump to _dcache_purge_all
+    bt       _dcache_purge_all  ! If count > purge_check, jump to _dcache_purge_all
 
-    ! Align start address
+    ! Get ending address from count and align start address
+    add      r4, r5
     mov.l    align_mask, r0
     and      r0, r4
 
 .dpurge_loop:
     ! Write back and invalidate the D cache
     ocbp     @r4
-    dt       r5
-    bf/s     .dpurge_loop
+    cmp/hs   r4, r5
+    bt/s     .dpurge_loop
     add      #32, r4     ! Move on to next cache block
 
+.dpurge_exit:
     rts
     nop
 
@@ -264,17 +283,19 @@ align_mask:
 cache_lines:
     .word    512           ! Total number of cache lines in dcache
 
+    .align    2
+
 ! _dcache_flush_range can execute up to this amount of loops and 
 ! beat execution time of _dcache_flush_all.  This means that 
 ! dcache_flush_range can have count param set up to 66560 bytes 
 ! and still be faster than dcache_flush_all.
 flush_check:
-    .word    2080
+    .long    66560
     
 ! _dcache_purge_range can execute up to this amount of loops and 
 ! beat execution time of _dcache_purge_all.  This means that 
 ! dcache_purge_range can have count param set up to 39936 bytes 
 ! and still be faster than dcache_purge_all.
 purge_check:
-    .word    1248        
+    .long    39936        
 
