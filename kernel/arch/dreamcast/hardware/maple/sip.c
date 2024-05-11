@@ -242,7 +242,6 @@ static void sip_reply(maple_state_t *st, maple_frame_t *frm) {
         /* Call the user's callback. */
         sip->callback(frm->dev, resp->data + 8, (resp->data_len << 2) - 8);
     }
-
 }
 
 static int sip_poll(maple_device_t *dev) {
