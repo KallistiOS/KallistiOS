@@ -3,6 +3,7 @@
    flashrom.c
    Copyright (c) 2003 Megan Potter
    Copyright (C) 2008 Lawrence Sebald
+   Copyright (C) 2024 Andy Barajas
 */
 
 /*
@@ -17,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <dc/flashrom.h>
+#include <dc/syscalls.h>
 #include <arch/irq.h>
 
 static void strcpy_no_term(char *dest, const char *src, size_t destsize) {
@@ -39,17 +41,13 @@ static void strcpy_with_term(char *dest, const char *src, size_t destsize) {
     dest[srclength] = '\0';
 }
 
-/* First, implementation of the syscall wrappers. */
-typedef int (*flashrom_sc)(int, void *, int, int);
-
 int flashrom_info(int part, int * start_out, int * size_out) {
-    flashrom_sc sc = (flashrom_sc)(*((uint32 *)0x8c0000b8));
     uint32  ptrs[2];
     int old, rv;
 
     old = irq_disable();
 
-    if(!(rv = sc(part, ptrs, 0, 0))) {
+    if(!(rv = syscall_flashrom_info(part, ptrs))) {
         *start_out = ptrs[0];
         *size_out = ptrs[1];
     }
@@ -60,31 +58,28 @@ int flashrom_info(int part, int * start_out, int * size_out) {
 }
 
 int flashrom_read(int offset, void * buffer_out, int bytes) {
-    flashrom_sc sc = (flashrom_sc)(*((uint32 *)0x8c0000b8));
     int old, rv;
 
     old = irq_disable();
-    rv = sc(offset, buffer_out, bytes, 1);
+    rv = syscall_flashrom_read(offset, buffer_out, bytes);
     irq_restore(old);
     return rv;
 }
 
 int flashrom_write(int offset, void * buffer, int bytes) {
-    flashrom_sc sc = (flashrom_sc)(*((uint32 *)0x8c0000b8));
     int old, rv;
 
     old = irq_disable();
-    rv = sc(offset, buffer, bytes, 2);
+    rv = syscall_flashrom_write(offset, buffer, bytes);
     irq_restore(old);
     return rv;
 }
 
 int flashrom_delete(int offset) {
-    flashrom_sc sc = (flashrom_sc)(*((uint32 *)0x8c0000b8));
     int old, rv;
 
     old = irq_disable();
-    rv = sc(offset, 0, 0, 3);
+    rv = syscall_flashrom_delete(offset);
     irq_restore(old);
     return rv;
 }
