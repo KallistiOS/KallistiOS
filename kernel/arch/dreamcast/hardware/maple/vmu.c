@@ -90,13 +90,13 @@ static void vmu_poll_reply(maple_state_t *st, maple_frame_t *frm) {
         return;
 
     /* Verify the size of the frame and grab a pointer to it */
-    //assert(resp->data_len == 7);
+    assert(sizeof(vmu_cond_t) == ((resp->data_len - 1) * sizeof(uint32_t)));
     raw = (vmu_cond_t *)(respbuf + 1);
 
     /* Fill the "nice" struct from the raw data */
     cooked = (vmu_state_t *)(frm->dev->status);
     /* Invert raw struct as nice struct */
-    cooked->buttons = ~(*raw);
+    cooked->buttons = ~(raw->raw_buttons);
 
     /* Check to see if the VMU is upside-down in the controller and readjust
        its directional buttons accordingly. */
