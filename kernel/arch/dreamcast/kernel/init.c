@@ -23,6 +23,7 @@
 #include <dc/ubc.h>
 #include <dc/pvr.h>
 #include <dc/vmufs.h>
+#include <dc/syscalls.h>
 
 #include "initall_hdrs.h"
 
@@ -379,13 +380,8 @@ void arch_return(int ret_code) {
 
 /* Called to jump back to the BIOS menu; assumes a normal shutdown is possible */
 void arch_menu(void) {
-    typedef void (*menufunc)(int) __noreturn;
-    menufunc menu;
-
-    /* Jump to the menus */
     dbglog(DBG_CRITICAL, "arch: exiting the system to the BIOS menu\n");
-    menu = (menufunc)(*((uint32 *) 0x8c0000e0));
-    menu(1);
+    syscall_system_bios_menu();
 }
 
 /* Called to shut down non-gracefully; assume the system is in peril

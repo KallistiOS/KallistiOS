@@ -223,6 +223,7 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - DC  Increased the resolution of pvr_stats_t from milli to nanoseconds [FG]
 - *** Added support for modifying scheduler frequency at runtime [FG]
 - *** Add support for worker threads [PC]
+- DC  Added new System Calls module [AB]
 
 KallistiOS version 2.0.0 -----------------------------------------------
 - DC  Broadband Adapter driver fixes [Megan Potter == MP]
