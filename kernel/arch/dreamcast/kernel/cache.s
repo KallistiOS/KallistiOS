@@ -19,9 +19,8 @@
     .globl _dcache_purge_all
     .globl _dcache_purge_all_with_buffer
 
-! Routine to flush parts of cache.. Thanks to the Linux-SH guys
-! for the algorithm. The original version of this routine was
-! taken from sh-stub.c.
+! This routine goes through and flushes/invalidates the icache 
+! for a given range.
 !
 ! r4 is starting address
 ! r5 is size
