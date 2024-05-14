@@ -152,7 +152,7 @@ If anything goes wrong, check the output in `logs/`.
 After the toolchain compilation, you may save space by cleaning up downloaded and
 temporary generated files by entering:
 ```
-make clean
+make distclean
 ```
 
 ## Finished

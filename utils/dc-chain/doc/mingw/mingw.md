@@ -197,7 +197,7 @@ hours will be needed to build the full toolchain, depending on your system.
 
 After everything is done, you can cleanup all temporary files by entering:
 ```
-make clean
+make distclean
 ```
 ## Removing the MSYS heap patch ##
 

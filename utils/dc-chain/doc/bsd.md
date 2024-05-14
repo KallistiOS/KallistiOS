@@ -85,7 +85,7 @@ hours will be needed to build the full toolchain, depending on your system.
 
 After everything is done, you can cleanup all temporary files by entering:
 ```
-gmake clean
+gmake distclean
 ```
 ## Next steps ##
 
