@@ -21,7 +21,7 @@ $(build_gcc_pass1): logdir
 	      --disable-libssp \
 	      --enable-checking=release \
 	      $(cpu_configure_args) \
-	      $(gcc_extra_configure_args) \
+	      $(gcc_pass1_configure_args) \
 	      $(macos_gcc_configure_args) \
 	      MAKEINFO=missing \
 	      CC="$(CC)" \

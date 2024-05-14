@@ -3,7 +3,7 @@
 
 disable_libada=""
 
-ifneq (,$(findstring ada,$(enabled_languages)))
+ifneq (,$(findstring ada,$(pass2_languages)))
 	disable_libada=--disable-libada
 endif
 
@@ -23,10 +23,10 @@ $(build_gcc_pass2): logdir
           --disable-libphobos \
           $(disable_libada) \
           --enable-threads=$(thread_model) \
-          --enable-languages=$(enabled_languages) \
+          --enable-languages=$(pass2_languages) \
           --enable-checking=release \
           $(cpu_configure_args) \
-          $(gcc_extra_configure_args) \
+          $(gcc_pass2_configure_args) \
           $(macos_gcc_configure_args) \
           MAKEINFO=missing \
           CC="$(CC)" \
@@ -34,7 +34,7 @@ $(build_gcc_pass2): logdir
           $(static_flag) \
           $(to_log)
 				$(MAKE) $(jobs_arg) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
-        ifneq (,$(findstring ada,$(enabled_languages)))
+        ifneq (,$(findstring ada,$(pass2_languages)))
 					$(MAKE) $(jobs_arg) -C $(build)/gcc cross-gnattools ada.all.cross DESTDIR=$(DESTDIR) $(to_log)
         endif
 				$(MAKE) -C $(build) $(install_mode) DESTDIR=$(DESTDIR) $(to_log)
