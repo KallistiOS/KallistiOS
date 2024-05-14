@@ -208,6 +208,7 @@ endif
 ifdef enable_d
   ifneq (0,$(enable_d))
     pass2_languages := $(pass2_languages),d
+    gcc_pass2_configure_args += --disable-libphobos
   endif
 endif
 
@@ -226,6 +227,7 @@ endif
 ifdef enable_ada
   ifneq (0,$(enable_ada))
     pass2_languages := $(pass2_languages),ada
+    gcc_pass2_configure_args += --disable-libada
   endif
 endif
 
