@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+# Converts an ELF file to a GBA-compatible ROM file
+# (c)2001 Chuck mason
+#
+# This program was originally included as part of the libgba
+# library for GBA development, and is probably covered under
+# the GPL or LGPL license.
+#
+# usage: gba-elf2bin <elf> <bin>
+# 
+
+rm -f /tmp/tmp.{text,rodata,data,bss}
+
+OBJCOPY=arm-elf-objcopy
+
+$OBJCOPY -O binary -j .text $1 /tmp/tmp.text
+$OBJCOPY -O binary -j .sarm --change-section-lma .sarm=0 $1 /tmp/tmp.data
+$OBJCOPY -O binary -j .data --change-section-lma .data=0 $1 /tmp/tmp.data
+$OBJCOPY -O binary -j .rodata $1 /tmp/tmp.rodata
+$OBJCOPY -O binary -j .bss $1 /tmp/tmp.bss
+cat /tmp/tmp.{text,rodata,data,bss} > $2
+
+rm -f /tmp/tmp.{text,data,rodata,bss}
+
