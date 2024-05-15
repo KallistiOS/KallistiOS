@@ -17,11 +17,11 @@
 #
 #     kos-cmake /path/to/src
 #
-# Frame pointers are enabled in debug builds as these are required for 
+# Frame pointers are enabled in debug builds as these are required for
 # stack traces and GDB. They are disabled in release.
-# 
-# The original toolchain file was created by Kazade for the Simulant 
-# engine who has graciously allowed the rest of the scene to warez it. 
+#
+# The original toolchain file was created by Kazade for the Simulant
+# engine who has graciously allowed the rest of the scene to copy it.
 
 #### This minimum is due to the use of add_link_options
 cmake_minimum_required(VERSION 3.13)
@@ -50,11 +50,11 @@ set(PLATFORM_DREAMCAST TRUE)
 ##### Configure Cross-Compiler #####
 set(CMAKE_CROSSCOMPILING TRUE)
 
-set(CMAKE_ASM_COMPILER    ${KOS_BASE}/utils/gnu_wrappers/kos-as)
-set(CMAKE_C_COMPILER      ${KOS_BASE}/utils/gnu_wrappers/kos-cc)
-set(CMAKE_CXX_COMPILER    ${KOS_BASE}/utils/gnu_wrappers/kos-c++)
-set(CMAKE_OBJC_COMPILER   ${KOS_BASE}/utils/gnu_wrappers/kos-cc)
-set(CMAKE_OBJCXX_COMPILER ${KOS_BASE}/utils/gnu_wrappers/kos-c++)
+set(CMAKE_ASM_COMPILER    ${KOS_BASE}/utils/build_wrappers/kos-as)
+set(CMAKE_C_COMPILER      ${KOS_BASE}/utils/build_wrappers/kos-cc)
+set(CMAKE_CXX_COMPILER    ${KOS_BASE}/utils/build_wrappers/kos-c++)
+set(CMAKE_OBJC_COMPILER   ${KOS_BASE}/utils/build_wrappers/kos-cc)
+set(CMAKE_OBJCXX_COMPILER ${KOS_BASE}/utils/build_wrappers/kos-c++)
 
 set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 

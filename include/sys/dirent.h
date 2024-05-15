@@ -54,35 +54,53 @@ __BEGIN_DECLS
 #define DT_WHT      14  /**< \brief Whiteout (ignored) */
 /** @} */
 
-/** \brief  POSIX directory entry structure.
+/** \brief POSIX directory entry structure.
 
     This structure contains information about a single entry in a directory in
     the VFS.
-
-    \headerfile sys/dirent.h
  */
 struct dirent {
-    int       d_ino;     /**< \brief File unique identifier. */
-    off_t     d_off;     /**< \brief File offset */
-    uint16_t  d_reclen;  /**< \brief Record length */
-    uint8_t   d_type;    /**< \brief File type */
-    char      d_name[0]; /**< \brief Filename */
+    int      d_ino;    /**< \brief File unique identifier */
+    off_t    d_off;    /**< \brief File offset */
+    uint16_t d_reclen; /**< \brief Record length */
+    uint8_t  d_type;   /**< \brief File type */
+    /** \brief File name
+
+        \warning
+        This field is a flexible array member, which means the structure
+        requires manual over-allocation to reserve storage for this string.
+        \note
+        This allows us to optimize our memory usage by only allocating
+        exactly as many bytes as the string is long for this field.
+    */
+    char     d_name[];
 };
 
-/** \brief  Type representing a directory stream.
+/** \brief Type representing a directory stream.
 
     This type represents a directory stream and is used by the directory reading
     functions to trace their position in the directory.
 
-    The values in this function are all private and subject to change. Do not
-    attempt to use any of them directly.
-
-    \headerfile sys/dirent.h
+    \note
+    The end of this structure is providing extra fixed storage for its inner
+    d_ent.d_name[] FAM, hence the unionization of the d_ent structure along
+    with a d_name[NAME_MAX] extension.
 */
 typedef struct {
-    file_t          fd;               /**< \brief File descriptor for the directory */
-    struct dirent   d_ent;            /**< \brief Current directory entry */
-    char            d_name[NAME_MAX]; /**< \brief Filename */
+    /** \brief File descriptor for the directory */
+    file_t                fd;
+    /** \brief Union of dirent + extended dirent required for C++ */
+    union {
+        /** \brief Current directory entry */
+        struct dirent     d_ent; 
+        /** \brief Extended dirent structure with name storage */
+        struct {
+            /** \brief Current directory entry (alias) */
+            struct dirent d_ent2;
+            /** \brief Storage for d_ent::d_name[] FAM */
+            char          d_name[NAME_MAX + 1];
+        };
+    };
 } DIR;
 
 // Standard UNIX dir functions. Not all of these are fully functional
