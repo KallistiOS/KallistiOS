@@ -36,7 +36,6 @@ distclean: clean
 
 docs:
 	doxygen $(KOS_BASE)/doc/Doxyfile
-	doxygen
 
 docs_clean:
 	-rm -rf $(KOS_BASE)/doc/reference
