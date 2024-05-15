@@ -16,7 +16,7 @@ diff --color -ruN gcc-13.2.1/gcc/config/sh/sh-c.cc gcc-13.2.1-kos/gcc/config/sh/
 diff --color -ruN gcc-13.2.1/gcc/configure gcc-13.2.1-kos/gcc/configure
 --- gcc-13.2.1/gcc/configure	2023-06-04 20:48:49.679561957 -0500
 +++ gcc-13.2.1-kos/gcc/configure	2023-06-04 20:49:03.488606061 -0500
-@@ -13012,7 +13012,7 @@
+@@ -13058,7 +13058,7 @@
      target_thread_file='single'
      ;;
    aix | dce | lynx | mipssde | posix | rtems | \
@@ -152,7 +152,7 @@ diff --color -ruN gcc-13.2.1/libstdc++-v3/config/cpu/sh/atomicity.h gcc-13.2.1-k
 diff --color -ruN gcc-13.2.1/libstdc++-v3/configure gcc-13.2.1-kos/libstdc++-v3/configure
 --- gcc-13.2.1/libstdc++-v3/configure	2023-06-04 20:48:46.398551478 -0500
 +++ gcc-13.2.1-kos/libstdc++-v3/configure	2023-06-04 20:49:03.493606077 -0500
-@@ -15809,6 +15809,7 @@
+@@ -15825,6 +15825,7 @@
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;
      win32)	thread_header=config/i386/gthr-win32.h ;;

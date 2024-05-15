@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <kos/thread.h>
 #include <kos/genwait.h>
+#include <kos/platform.h>
 #include <dc/maple.h>
 #include <dc/maple/vmu.h>
 #include <dc/math.h>
@@ -63,7 +64,9 @@ static int vmu_attach(maple_driver_t *drv, maple_device_t *dev) {
     return 0;
 }
 
-static void vmu_poll_reply(maple_state_t *, maple_frame_t *frm) {
+static void vmu_poll_reply(maple_state_t *st, maple_frame_t *frm) {
+    (void)st;
+
     maple_response_t   *resp;
     uint32_t           *respbuf;
     vmu_cond_t         *raw;
@@ -235,8 +238,10 @@ int vmu_set_custom_color(maple_device_t *dev, uint8_t red, uint8_t green, uint8_
    for icon_shape are listed in the biosfont.h and start with
    BFONT_ICON_VMUICON. */
 int vmu_set_icon_shape(maple_device_t *dev, uint8_t icon_shape) {
-#ifndef _arch_sub_naomi
     vmu_root_t root;
+
+    if (KOS_PLATFORM_IS_NAOMI)
+        return -1;
 
     if(icon_shape < BFONT_ICON_VMUICON || icon_shape > BFONT_ICON_EMBROIDERY)
         return -1;
@@ -253,18 +258,15 @@ int vmu_set_icon_shape(maple_device_t *dev, uint8_t icon_shape) {
         return -1;
 
     return 0;
-#else
-    (void)dev;
-    (void)icon_shape;
-    return -1;
-#endif
 }
 
 /* These interfaces will probably change eventually, but for now they
    can stay the same */
 
 /* Callback that unlocks the frame, general use */
-static void vmu_gen_callback(maple_state_t *, maple_frame_t *frame) {
+static void vmu_gen_callback(maple_state_t *st, maple_frame_t *frame) {
+    (void)st;
+
     /* Unlock the frame for the next usage */
     maple_frame_unlock(frame);
 
@@ -412,7 +414,9 @@ void vmu_set_icon(const char *vmu_icon) {
 /* Read the data in block blocknum into buffer, return a -1
    if an error occurs, for now we ignore MAPLE_RESPONSE_FILEERR,
    which will be changed shortly */
-static void vmu_block_read_callback(maple_state_t *, maple_frame_t *frm) {
+static void vmu_block_read_callback(maple_state_t *st, maple_frame_t *frm) {
+    (void)st;
+
     /* Wakey, wakey! */
     genwait_wake_all(frm);
 }
@@ -486,7 +490,9 @@ int vmu_block_read(maple_device_t *dev, uint16_t blocknum, uint8_t *buffer) {
 
 /* writes buffer into block blocknum.  ret a -1 on error.  We don't do anything about the
    maple bus returning file errors, etc, right now, but that will change soon. */
-static void vmu_block_write_callback(maple_state_t *, maple_frame_t *frm) {
+static void vmu_block_write_callback(maple_state_t *st, maple_frame_t *frm) {
+    (void)st;
+
     /* Reset the frame status (but still keep it for us to use) */
     frm->state = MAPLE_FRAME_UNSENT;
 
@@ -661,7 +667,9 @@ int vmu_set_datetime(maple_device_t *dev, time_t unix) {
     return MAPLE_EOK;
 }
 
-static void vmu_get_datetime_callback(maple_state_t *, maple_frame_t *frm) {
+static void vmu_get_datetime_callback(maple_state_t *st, maple_frame_t *frm) {
+    (void)st;
+
     /* Wakey, wakey! */
     genwait_wake_all(frm);
 }

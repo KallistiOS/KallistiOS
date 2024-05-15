@@ -38,6 +38,19 @@ diff --color -ruN newlib-4.4.0.20231231/newlib/libc/include/assert.h newlib-4.4.
  
  #if __STDC_VERSION__ >= 201112L && !defined __cplusplus
  # define static_assert _Static_assert
+diff --color -ruN newlib-4.4.0.20231231/newlib/libc/include/sys/stat.h newlib-4.4.0.20231231-kos/newlib/libc/include/sys/stat.h
+--- newlib-4.4.0.20231231/newlib/libc/include/sys/stat.h	2024-04-28 15:07:54.520453819 -0400
++++ newlib-4.4.0.20231231-kos/newlib/libc/include/sys/stat.h	2023-12-31 12:00:18.000000000 -0500
+@@ -142,8 +142,8 @@
+ int	stat (const char *__restrict __path, struct stat *__restrict __sbuf );
+ mode_t	umask (mode_t __mask );
+ 
++int	lstat (const char *__restrict __path, struct stat *__restrict __buf );
+ #if defined (__SPU__) || defined(__rtems__) || defined(__CYGWIN__)
+-int	lstat (const char *__restrict __path, struct stat *__restrict __buf );
+ int	mknod (const char *__path, mode_t __mode, dev_t __dev );
+ #endif
+ 
 diff --color -ruN newlib-4.4.0.20231231/newlib/libc/include/sys/_pthreadtypes.h newlib-4.4.0.20231231-kos/newlib/libc/include/sys/_pthreadtypes.h
 --- newlib-4.4.0.20231231/newlib/libc/include/sys/_pthreadtypes.h	2024-02-10 09:30:58.783247676 -0600
 +++ newlib-4.4.0.20231231-kos/newlib/libc/include/sys/_pthreadtypes.h	2024-02-10 09:31:16.329331366 -0600
@@ -510,3 +523,5 @@ diff --color -ruN newlib-4.4.0.20231231/newlib/libm/complex/ctanl.c newlib-4.4.0
  	return w;
  }
 +#endif
+ 
+

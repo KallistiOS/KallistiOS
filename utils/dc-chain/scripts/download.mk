@@ -1,10 +1,5 @@
 # Sega Dreamcast Toolchains Maker (dc-chain)
 # This file is part of KallistiOS.
-#
-# Modified by Colton Pawielski (2023)
-# Created by Jim Ursetto (2004)
-# Initially adapted from Stalin's build script version 0.3.
-#
 
 # Set default mirror if not specified
 gnu_mirror ?= ftpmirror.gnu.org
@@ -127,7 +122,7 @@ GIT_TARGETS = $(foreach target,$(FROM_GIT_REPOS), $(stamp_$(target)_download))
 $(GIT_TARGETS):
 	@echo "+++ Cloning $(git_repo)..."
 	rm -rf $(name)
-	git clone $(git_repo) $(additional_git_args) $(if $(dest),$(dest),$(name))
+	git clone --filter=tree:0 $(git_repo) $(additional_git_args) $(if $(dest),$(dest),$(name))
 	touch $@
 
 
@@ -156,5 +151,5 @@ fetch-gdb: $(stamp_gdb_download)
 fetch-sh4: fetch-sh-binutils fetch-sh-gcc fetch-newlib
 fetch-arm: fetch-arm-binutils fetch-arm-gcc
 
-fetch: fetch-sh4 fetch-arm
+fetch: fetch-sh4
 fetch: fetch-gdb

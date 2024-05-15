@@ -202,6 +202,19 @@ diff -ruN newlib-3.3.0/newlib/libc/include/sys/signal.h newlib-3.3.0-kos/newlib/
  
  #if __POSIX_VISIBLE >= 199309
  
+diff --color -ruN newlib-3.3.0/newlib/libc/include/sys/stat.h newlib-3.3.0-kos/newlib/libc/include/sys/stat.h
+--- newlib-3.3.0/newlib/libc/include/sys/stat.h	2020-01-22 03:05:51.000000000 -0700
++++ newlib-3.3.0-kos/newlib/libc/include/sys/stat.h	2024-04-28 16:02:15.494325711 -0600
+@@ -142,8 +142,8 @@
+ int	stat (const char *__restrict __path, struct stat *__restrict __sbuf );
+ mode_t	umask (mode_t __mask );
+ 
+-#if defined (__SPU__) || defined(__rtems__) || defined(__CYGWIN__) && !defined(__INSIDE_CYGWIN__)
+ int	lstat (const char *__restrict __path, struct stat *__restrict __buf );
++#if defined (__SPU__) || defined(__rtems__) || defined(__CYGWIN__) && !defined(__INSIDE_CYGWIN__)
+ int	mknod (const char *__path, mode_t __mode, dev_t __dev );
+ #endif
+ 
 diff -ruN newlib-3.3.0/newlib/libc/include/sys/_types.h newlib-3.3.0-kos/newlib/libc/include/sys/_types.h
 --- newlib-3.3.0/newlib/libc/include/sys/_types.h	2020-01-22 05:05:51.000000000 -0500
 +++ newlib-3.3.0-kos/newlib/libc/include/sys/_types.h	2021-02-24 21:52:37.951297700 -0500

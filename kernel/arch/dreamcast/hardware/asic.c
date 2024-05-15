@@ -102,6 +102,7 @@
 #include <dc/asic.h>
 #include <arch/spinlock.h>
 #include <kos/genwait.h>
+#include <kos/worker_thread.h>
 
 /* XXX These based on g1ata.c and pvr.h and should be replaced by a standardized method */
 #define IN32(addr)         (* ( (volatile uint32_t *)(addr) ) )
@@ -121,11 +122,8 @@ typedef struct {
 struct asic_thdata {
     asic_evt_handler hdl;
     uint32_t source;
-    kthread_t *thd;
-    int genwait_obj;
+    kthread_worker_t *worker;
     void *data;
-    volatile bool quit;
-    volatile bool pending;
     void (*ack_and_mask)(uint16_t);
     void (*unmask)(uint16_t);
 };
@@ -253,29 +251,13 @@ void asic_shutdown(void) {
     asic_evt_shutdown();
 }
 
-static void * asic_threaded_irq(void *data) {
+static void asic_threaded_irq(void *data) {
     struct asic_thdata *thdata = data;
-    int flags;
 
-    for (;;) {
-        flags = irq_disable();
+    thdata->hdl(thdata->source, thdata->data);
 
-        if (!thdata->pending)
-            genwait_wait(&thdata->genwait_obj, thdata->thd->label, 0, NULL);
-
-        irq_restore(flags);
-
-        if (thdata->quit)
-            break;
-
-        thdata->pending = false;
-        thdata->hdl(thdata->source, thdata->data);
-
-        if (thdata->unmask)
-            thdata->unmask(thdata->source);
-    }
-
-    return NULL;
+    if (thdata->unmask)
+        thdata->unmask(thdata->source);
 }
 
 static void asic_thirq_dispatch(uint32_t source, void *data) {
@@ -286,8 +268,7 @@ static void asic_thirq_dispatch(uint32_t source, void *data) {
 
     thdata->source = source;
 
-    thdata->pending = true;
-    genwait_wake_one(&thdata->genwait_obj);
+    thd_worker_wakeup(thdata->worker);
 }
 
 int asic_evt_request_threaded_handler(uint16_t code, asic_evt_handler hnd,
@@ -297,6 +278,7 @@ int asic_evt_request_threaded_handler(uint16_t code, asic_evt_handler hnd,
 {
     struct asic_thdata *thdata;
     uint32_t flags;
+    kthread_t *thd;
 
     thdata = malloc(sizeof(*thdata));
     if (!thdata)
@@ -304,27 +286,26 @@ int asic_evt_request_threaded_handler(uint16_t code, asic_evt_handler hnd,
 
     thdata->hdl = hnd;
     thdata->data = data;
-    thdata->quit = false;
-    thdata->pending = false;
     thdata->ack_and_mask = ack_and_mask;
     thdata->unmask = unmask;
 
     flags = irq_disable();
 
-    thdata->thd = thd_create(0, asic_threaded_irq, thdata);
-    if (!thdata->thd) {
+    thdata->worker = thd_worker_create(asic_threaded_irq, thdata);
+    if (!thdata->worker) {
         irq_restore(flags);
         free(thdata);
         return -1; /* TODO: What return code? */
     }
 
     /* Set a reasonable name to ID the thread */
-    snprintf(thdata->thd->label, KTHREAD_LABEL_SIZE,
+    thd = thd_worker_get_thread(thdata->worker);
+    snprintf(thd->label, KTHREAD_LABEL_SIZE,
              "Threaded IRQ code: 0x%x evt: 0x%.4x",
              ((code >> 16) & 0xf), (code & 0xffff));
 
     /* Highest priority */
-    //thd_set_prio(thdata->thd, 0);
+    //thd_set_prio(thd, 0);
 
     asic_evt_set_handler(code, asic_thirq_dispatch, thdata);
 
@@ -347,11 +328,8 @@ void asic_evt_remove_handler(uint16_t code)
 
     if (entry.hdl == asic_thirq_dispatch) {
         thdata = entry.data;
-        thdata->quit = true;
 
-        genwait_wake_one(&thdata->genwait_obj);
-        thd_join(thdata->thd, NULL);
-
+        thd_worker_destroy(thdata->worker);
         free(thdata);
     }
 }

@@ -1,9 +1,11 @@
 # Sega Dreamcast Toolchains Maker (dc-chain)
 # This file is part of KallistiOS.
-#
-# Created by Jim Ursetto (2004)
-# Initially adapted from Stalin's build script version 0.3.
-#
+
+disable_libada=""
+
+ifneq (,$(findstring ada,$(enabled_languages)))
+	disable_libada=--disable-libada
+endif
 
 $(build_gcc_pass2): build = build-gcc-$(target)-$(gcc_ver)-pass2
 $(build_gcc_pass2): logdir
@@ -18,16 +20,22 @@ $(build_gcc_pass2): logdir
           --with-gnu-ld \
           --with-newlib \
           --disable-libssp \
+          --disable-libphobos \
+          $(disable_libada) \
           --enable-threads=$(thread_model) \
-          --enable-languages=$(pass2_languages) \
+          --enable-languages=$(enabled_languages) \
           --enable-checking=release \
-          $(extra_configure_args) \
+          $(cpu_configure_args) \
+          $(gcc_extra_configure_args) \
           $(macos_gcc_configure_args) \
           MAKEINFO=missing \
           CC="$(CC)" \
           CXX="$(CXX)" \
           $(static_flag) \
           $(to_log)
-	$(MAKE) $(makejobs) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
-	$(MAKE) -C $(build) $(install_mode) DESTDIR=$(DESTDIR) $(to_log)
-	$(clean_up)
+				$(MAKE) $(jobs_arg) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
+        ifneq (,$(findstring ada,$(enabled_languages)))
+					$(MAKE) $(jobs_arg) -C $(build)/gcc cross-gnattools ada.all.cross DESTDIR=$(DESTDIR) $(to_log)
+        endif
+				$(MAKE) -C $(build) $(install_mode) DESTDIR=$(DESTDIR) $(to_log)
+				$(clean_up)

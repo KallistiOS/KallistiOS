@@ -14,7 +14,9 @@
 /* Be warned, not all purus are created equal, in fact, most of
    them act different for just about everything you feed to them. */
 
-static void purupuru_rumble_cb(maple_state_t *, maple_frame_t *frame) {
+static void purupuru_rumble_cb(maple_state_t *st, maple_frame_t *frame) {
+    (void)st;
+
     /* Unlock the frame */
     maple_frame_unlock(frame);
 

@@ -33,9 +33,12 @@ utils/naomibintool/naomibintool
 utils/naominetboot/naominetboot
 examples/dreamcast/basic/exec/romdisk/sub.bin
 examples/dreamcast/kgl/basic/vq/fruit.vq
+examples/dreamcast/kgl/nehe/nehe26/data/txt2bin
 examples/dreamcast/conio/adventure/data.c
 examples/dreamcast/conio/adventure/datagen
 examples/dreamcast/png/romdisk_boot.img
+examples/dreamcast/pvr/bumpmap/romdisk/bricks.kmg
+examples/dreamcast/pvr/bumpmap/romdisk/bumpmap.raw
 examples/dreamcast/pvr/modifier_volume_tex/romdisk/fruit.kmg
 examples/dreamcast/pvr/texture_render/texture_render.bin
 utils/dc-chain/logs

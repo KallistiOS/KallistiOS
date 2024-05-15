@@ -49,7 +49,9 @@ void cont_btn_callback(uint8_t addr, uint32_t btns, cont_btn_callback_t cb) {
 }
 
 /* Response callback for the GETCOND Maple command. */
-static void cont_reply(maple_state_t *, maple_frame_t *frm) {
+static void cont_reply(maple_state_t *st, maple_frame_t *frm) {
+    (void)st;
+
     maple_response_t *resp;
     uint32_t         *respbuf;
     cont_cond_t      *raw;

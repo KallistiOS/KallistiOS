@@ -33,8 +33,8 @@ typedef struct vec3f {
 } vec3f_t;
 
 /** \cond */
-#define R_DEG 182.04444443623349541909523793743
-#define R_RAD 10430.37835
+#define R_DEG 182.04444443623349541909523793743f
+#define R_RAD 10430.37835f
 /* \endcond */
 
 /** \brief  Macro to return the scalar dot product of two 3d vectors.

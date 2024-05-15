@@ -1,25 +1,19 @@
 /* KallistiOS ##version##
 
    kos/fs_dev.h
-   (c)2023 - Luke Benstead
+   Copyright (C) 2024 Donald Haase
 
 */
 
 /** \file    kos/fs_dev.h
-    \brief   Driver for /dev/random and /dev/urandom.
+    \brief   Container for /dev.
     \ingroup vfs_dev
 
-    This filesystem driver provides implementations of /dev/random
-    and /dev/urandom for portability. It seeds randomness from
-    uninitialized memory, and the clock. Obviously we
-    are limited in how we can provide sufficient entropy on an
-    embedded platform like the Dreamcast so the randomness from
-    this driver will not win any awards but it should be sufficiently
-    good for most purposes.
+    This is a thin filesystem that allows the /dev folder 
+    and its contents to be read/listed as well new devices 
+    to be added under it.
 
-    /dev/random is an alias to /dev/urandom for now.
-
-    \author Luke Benstead
+    \author Donald Haase
 */
 
 #ifndef __DC_FS_DEV_H
@@ -31,7 +25,7 @@ __BEGIN_DECLS
 #include <kos/fs.h>
 
 /** \defgroup vfs_dev   Dev
-    \brief              VFS driver for /dev/random and /dev/urandom
+    \brief              VFS driver for /dev
     \ingroup            vfs
 
     @{

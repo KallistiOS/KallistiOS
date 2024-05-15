@@ -193,7 +193,7 @@ __BEGIN_DECLS
 #define RT_RX_STATUS_OK     0x0001  /**< \brief Status ok: a good packet was received */
 /** @} */
 
-/** \defgroup bba_config5bits RTL8139C RX Config Register (RT_RXCONFIG) bits
+/** \defgroup bba_configrx RTL8139C RX Config Register (RT_RXCONFIG) bits
 
     From RTL8139C(L) datasheet v1.4.
 

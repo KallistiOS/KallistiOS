@@ -379,7 +379,10 @@ void kbd_set_queue(int active) {
 }
 
 /* Take a key scancode, encode it appropriately, and place it on the
-   keyboard queue. At the moment we assume no key overflows. */
+   keyboard queue. At the moment we assume no key overflows.
+
+    NOTE: We are only calling this within an IRQ context, so operations on
+          kbd_state::queue_size are essentially atomic. */
 static int kbd_enqueue(kbd_state_t *state, uint8 keycode, int mods) {
     static char keymap_noshift[] = {
         /*0*/   0, 0, 0, 0, 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
@@ -463,12 +466,18 @@ int kbd_queue_pop(maple_device_t *dev, int xlat) {
     uint32 rv, mods;
     uint8 ascii;
 
-    if(!state->queue_len)
+    const int irqs = irq_disable();
+
+    if(!state->queue_len) {
+        irq_restore(irqs);
         return -1;
+    }
 
     rv = state->key_queue[state->queue_tail];
     state->queue_tail = (state->queue_tail + 1) & (KBD_QUEUE_SIZE - 1);
     --state->queue_len;
+
+    irq_restore(irqs);
 
     if(!xlat)
         return (int)rv;
@@ -571,7 +580,9 @@ static void kbd_check_poll(maple_frame_t *frm) {
     }
 }
 
-static void kbd_reply(maple_state_t *, maple_frame_t *frm) {
+static void kbd_reply(maple_state_t *st, maple_frame_t *frm) {
+    (void)st;
+
     maple_response_t *resp;
     uint32 *respbuf;
     kbd_state_t *state;
