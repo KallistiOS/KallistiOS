@@ -35,7 +35,7 @@ distclean: clean
 	-rm -f addons/lib/$(KOS_ARCH)/*
 
 docs:
-	cd $(KOS_BASE)/doc; \
+	doxygen $(KOS_BASE)/doc/Doxyfile
 	doxygen
 
 docs_clean:
