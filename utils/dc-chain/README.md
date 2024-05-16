@@ -82,12 +82,14 @@ instructions mentioned above for installing dependencies on your system.
 
 ## Configuration
 
-Before running `dc-chain`, you may wish to set up the
-[`Makefile.cfg`](Makefile.cfg) file containing selections for the toolchain
-profile and additional configurable options for building the toolchain(s). The
-normal, stable defaults have already been set up for you, so most users can 
-skip this step. If you'd like to make changes, open and read the options in
-[`Makefile.cfg`](Makefile.cfg) in your text editor.
+Before running `dc-chain`, you may wish to set up the `Makefile.cfg` file 
+containing selections for the toolchain profile and additional configurable
+options for building the toolchain(s). The normal, stable defaults have already
+been set up for you in [`Makefile.default.cfg`](Makefile.default.cfg), so most
+users can skip this step. If you'd like to make changes, copy
+[`Makefile.default.cfg`](Makefile.default.cfg) to `Makefile.cfg`; then open and
+read the options in [`Makefile.cfg`](Makefile.cfg) in your text editor. When
+building, the customizations in `Makefile.cfg` will override the defaults.
 
 ### Toolchain profiles
 
@@ -129,8 +131,8 @@ on your platform.
 
 ## Building the toolchain
 
-With prerequisites installed and a [`Makefile.cfg`](Makefile.cfg) set up with
-desired options, the toolchains are ready to be built.
+With prerequisites installed (and optionally a [`Makefile.cfg`](Makefile.cfg)
+set up with desired custom options), the toolchains are ready to be built.
 
 In the `dc-chain` directory, you may run (for **BSD**, please use `gmake`
 instead):
@@ -152,7 +154,7 @@ If anything goes wrong, check the output in `logs/`.
 After the toolchain compilation, you may save space by cleaning up downloaded and
 temporary generated files by entering:
 ```
-make clean
+make distclean
 ```
 
 ## Finished

@@ -1,9 +1,9 @@
 # Sega Dreamcast Toolchains Maker (dc-chain)
 # This file is part of KallistiOS.
 
-clean: clean-archives clean-downloads clean-builds clean_patches_stamp
+clean: clean-downloads clean-builds clean_patches_stamp
 
-clean-keep-archives: clean-downloads clean-builds clean_patches_stamp
+distclean: clean-archives clean-downloads clean-builds clean_patches_stamp
 
 clean_patches_stamp:
 	-@tmpdir=.tmp; \
