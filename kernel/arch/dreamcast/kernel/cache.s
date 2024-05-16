@@ -6,6 +6,7 @@
 ! Copyright (C) 2001 Megan Potter
 ! Copyright (C) 2014, 2016, 2023 Ruslan Rostovtsev
 ! Copyright (C) 2023, 2024 Andy Barajas
+! Copyright (C) 2024 Paul Cercueil
 !
 ! Optimized assembler code for managing the cache.
 !
