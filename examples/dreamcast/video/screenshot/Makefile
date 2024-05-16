@@ -13,7 +13,7 @@ include $(KOS_BASE)/Makefile.rules
 
 clean: rm-elf
 	-rm -f $(OBJS)
-	-rm -f test.ppm
+	-rm -f screenshot*.ppm
 
 rm-elf:
 	-rm -f $(TARGET)

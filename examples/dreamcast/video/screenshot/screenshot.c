@@ -18,7 +18,9 @@
    Ensure the '/pc/' directory path is correctly specified in the vid_screen_shot()
    function call so that the screenshot.ppm file is saved in the appropriate
    directory on your computer.
-*/ 
+*/
+
+#include <stdio.h>
 
 #include <dc/video.h>
 #include <dc/fmath.h>
@@ -28,10 +30,16 @@
 
 #include <kos/thread.h>
 
+#define SHOW_BLACK_BG 1
+
+/* Keeps track of the amount of screenshots you have taken */
+static int counter = 0;
+
 int main(int argc, char **argv) {
     uint8_t r, g, b;
     uint32_t t = 0;
     int font_height_offset = 0;
+    char filename[256];
 
     /* Adjust frequency for faster or slower transitions */
     float frequency = 0.01; 
@@ -52,8 +60,11 @@ int main(int argc, char **argv) {
             if(state->buttons & CONT_START)
                 break;
 
-            if(state->buttons & CONT_A)
-                vid_screen_shot("/pc/screenshot.ppm");
+            if(state->buttons & CONT_A) {
+                sprintf(filename, "/pc/screenshot%03d.ppm", counter);
+                vid_screen_shot(filename);
+                counter = (counter + 1) % 1000;
+            }
         }
 
         /* Wait for VBlank */
@@ -64,17 +75,20 @@ int main(int argc, char **argv) {
         g = (uint8_t)((fsin(frequency * t + 2 * F_PI / 3) * 127.5) + 127.5);
         b = (uint8_t)((fsin(frequency * t + 4 * F_PI / 3) * 127.5) + 127.5);
 
-        t += 1; /* Increment t to change color in the next cycle */
-        if(t == INT32_MAX) t = 0; /* Reset t to avoid overflow and ensure smooth cycling */
+        /* Increment t to change color in the next cycle */
+        t = (t + 1) % INT32_MAX;
 
         /* Draw Background */
         vid_clear(r, g, b);
 
         /* Draw Foreground */
         font_height_offset = (640 * (480 - (BFONT_HEIGHT * 6))) + (BFONT_THIN_WIDTH * 2);
-        bfont_draw_str(vram_s + font_height_offset, 640, 1, "Press Start to exit");
+        bfont_draw_str(vram_s + font_height_offset, 640, SHOW_BLACK_BG, 
+            "Press Start to exit");
+            
         font_height_offset += 640 * BFONT_HEIGHT * 2;
-        bfont_draw_str(vram_s + font_height_offset, 640, 1, "Press A to take a screen shot");
+        bfont_draw_str(vram_s + font_height_offset, 640, SHOW_BLACK_BG, 
+            "Press A to take a screen shot");
 
         /* Without this the bfont wont show on the screen */
         thd_sleep(10);

@@ -15,6 +15,8 @@
 #include <kos/fs.h>
 #include <arch/irq.h>
 
+#include <arch/timer.h>
+
 /*
 
 Provides a very simple screen shot facility (dumps raw RGB PPM files from the
@@ -34,7 +36,6 @@ int vid_screen_shot(const char *destfn) {
     int      i, numpix;
     uint32_t save;
     uint32_t pixel, pixel1, pixel2;
-    uint8_t  r, g, b;
     uint8_t  bpp;
     
     bpp = 3;    /* output to ppm is 3 bytes per pixel */
@@ -70,22 +71,16 @@ int vid_screen_shot(const char *destfn) {
                 pixel2 = pixel >> 16;
 
                 /* Process the first pixel */
-                r = (((pixel1 >> 10) & 0x1f) << 3);
-                g = (((pixel1 >> 5) & 0x1f) << 3);
-                b = (((pixel1 >> 0) & 0x1f) << 3);
-                buffer[i * 6 + 0] = r;
-                buffer[i * 6 + 1] = g;
-                buffer[i * 6 + 2] = b;
+                buffer[i * 6 + 0] = (((pixel1 >> 10) & 0x1f) << 3); /* R */
+                buffer[i * 6 + 1] = (((pixel1 >> 5) & 0x1f) << 3);  /* G */
+                buffer[i * 6 + 2] = (((pixel1 >> 0) & 0x1f) << 3);  /* B */
 
                 /* Process the second pixel */
-                r = (((pixel2 >> 10) & 0x1f) << 3);
-                g = (((pixel2 >> 5) & 0x1f) << 3);
-                b = (((pixel2 >> 0) & 0x1f) << 3);
-                buffer[i * 6 + 3] = r;
-                buffer[i * 6 + 4] = g;
-                buffer[i * 6 + 5] = b;
+                buffer[i * 6 + 3] = (((pixel2 >> 10) & 0x1f) << 3); /* R */
+                buffer[i * 6 + 4] = (((pixel2 >> 5) & 0x1f) << 3);  /* G */
+                buffer[i * 6 + 5] = (((pixel2 >> 0) & 0x1f) << 3);  /* B */
             }
-
+            
             break;
         }
         case(PM_RGB565): { /* (16-bit) */
@@ -96,20 +91,14 @@ int vid_screen_shot(const char *destfn) {
                 pixel2 = pixel >> 16;
 
                 /* Process the first pixel */
-                r = (((pixel1 >> 11) & 0x1f) << 3);
-                g = (((pixel1 >> 5) & 0x3f) << 2);
-                b = (((pixel1 >> 0) & 0x1f) << 3);
-                buffer[i * 6 + 0] = r;
-                buffer[i * 6 + 1] = g;
-                buffer[i * 6 + 2] = b;
+                buffer[i * 6 + 0] = (((pixel1 >> 11) & 0x1f) << 3); /* R */
+                buffer[i * 6 + 1] = (((pixel1 >> 5) & 0x3f) << 2);  /* G */
+                buffer[i * 6 + 2] = (((pixel1 >> 0) & 0x1f) << 3);  /* B */
 
                 /* Process the second pixel */
-                r = (((pixel2 >> 11) & 0x1f) << 3);
-                g = (((pixel2 >> 5) & 0x3f) << 2);
-                b = (((pixel2 >> 0) & 0x1f) << 3);
-                buffer[i * 6 + 3] = r;
-                buffer[i * 6 + 4] = g;
-                buffer[i * 6 + 5] = b;
+                buffer[i * 6 + 3] = (((pixel2 >> 11) & 0x1f) << 3); /* R */
+                buffer[i * 6 + 4] = (((pixel2 >> 5) & 0x3f) << 2);  /* G */
+                buffer[i * 6 + 5] = (((pixel2 >> 0) & 0x1f) << 3);  /* B */
             }
 
             break;
@@ -117,27 +106,24 @@ int vid_screen_shot(const char *destfn) {
         case(PM_RGB888P): { /* (24-bit) */
             vram_b = (uint8_t *)vram_l;
             for(i = 0; i < numpix; i++) {
-                buffer[i * 3 + 0] = vram_b[i * 3 + 2];
-				buffer[i * 3 + 1] = vram_b[i * 3 + 1];
-				buffer[i * 3 + 2] = vram_b[i * 3 + 0];
+                buffer[i * 3 + 0] = vram_b[i * 3 + 2]; /* R */
+                buffer[i * 3 + 1] = vram_b[i * 3 + 1]; /* G */
+                buffer[i * 3 + 2] = vram_b[i * 3 + 0]; /* B */
             }
-            
+
             break;
         }
         case(PM_RGB0888): { /* (32-bit) */
             for(i = 0; i < numpix; i++) {
                 pixel = vram_l[i];
-                r = (((pixel >> 16) & 0xff));
-                g = (((pixel >>  8) & 0xff));
-                b = (((pixel >>  0) & 0xff));
-                buffer[i * 3 + 0] = r;
-                buffer[i * 3 + 1] = g;
-                buffer[i * 3 + 2] = b;
+                buffer[i * 3 + 0] = (((pixel >> 16) & 0xff)); /* R */
+                buffer[i * 3 + 1] = (((pixel >>  8) & 0xff)); /* G */
+                buffer[i * 3 + 2] = (((pixel >>  0) & 0xff)); /* B */
             }
 
             break;
         }
-        
+
         default: {
             dbglog(DBG_ERROR, "vid_screen_shot: can't process pixel mode %d\n", vid_mode->pm);
             irq_restore(save);
