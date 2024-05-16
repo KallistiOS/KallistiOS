@@ -37,7 +37,6 @@ int vid_screen_shot(const char *destfn) {
     uint32_t save;
     uint32_t pixel, pixel1, pixel2;
     uint8_t  bpp;
-    
     bpp = 3;    /* output to ppm is 3 bytes per pixel */
     numpix = vid_mode->width * vid_mode->height;
 
