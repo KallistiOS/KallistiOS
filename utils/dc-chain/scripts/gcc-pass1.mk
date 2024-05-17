@@ -17,11 +17,11 @@ $(build_gcc_pass1): logdir
 	      --with-gnu-ld \
 	      --without-headers \
 	      --with-newlib \
-	      --enable-languages=c \
+	      --enable-languages=$(pass1_languages) \
 	      --disable-libssp \
 	      --enable-checking=release \
 	      $(cpu_configure_args) \
-	      $(gcc_extra_configure_args) \
+	      $(gcc_pass1_configure_args) \
 	      $(macos_gcc_configure_args) \
 	      MAKEINFO=missing \
 	      CC="$(CC)" \
