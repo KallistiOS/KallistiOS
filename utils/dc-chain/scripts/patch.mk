@@ -1,11 +1,7 @@
 # Sega Dreamcast Toolchains Maker (dc-chain)
 # This file is part of KallistiOS.
-#
-# Created by Jim Ursetto (2004)
-# Initially adapted from Stalin's build script version 0.3.
-#
 
-patch: patch-sh4 patch-arm patch-kos
+patch: patch-sh4
 patch-sh4: patch-sh4-binutils patch-sh4-gcc patch-sh4-newlib
 patch-arm: patch-arm-binutils patch-arm-gcc
 
@@ -30,7 +26,6 @@ $(patch_arm_targets): binutils_ver = $(arm_binutils_ver)
 patch_binutils      = patch-sh4-binutils patch-arm-binutils
 patch_gcc           = patch-sh4-gcc patch-arm-gcc
 patch_newlib        = patch-sh4-newlib
-patch_kos           = patch-kos
 
 # Patch
 # Apply sh4 newlib fixups (default is yes and this should be always the case!)
@@ -87,6 +82,25 @@ define patch_apply
 	fi;
 endef
 
+# This function is used to replace the config.guess & config.sub that come 
+# bundled with the sources with updated versions from GNU. This fixes issues
+# when trying to compile older versions of the toolchain software on newer
+# hardware.
+define update_configs
+	@echo "+++ Updating $(1) files in $(src_dir)"; \
+	files=$$(find $(src_dir) -name $(1)); \
+	echo "$${files}" | while I= read -r line; do \
+		echo "    $${line}"; \
+		cp $(1) $${line} > /dev/null; \
+	done; \
+	echo ""
+endef
+
+define update_config_guess_sub
+	$(call update_configs,config.guess)
+	$(call update_configs,config.sub)
+endef
+
 # Binutils
 $(patch_binutils): patch_target_name = Binutils
 $(patch_binutils): src_dir = binutils-$(binutils_ver)
@@ -95,6 +109,7 @@ $(patch_binutils): diff_patches := $(wildcard $(patches)/$(src_dir)*.diff)
 $(patch_binutils): diff_patches += $(wildcard $(patches)/$(host_triplet)/$(src_dir)*.diff)
 $(patch_binutils):
 	$(call patch_apply)
+	$(call update_config_guess_sub)
 
 # GNU Compiler Collection (GCC)
 $(patch_gcc): patch_target_name = GCC
@@ -109,6 +124,7 @@ endif
 endif
 $(patch_gcc):
 	$(call patch_apply)
+	$(call update_config_guess_sub)
 
 # Newlib
 $(patch_newlib): patch_target_name = Newlib
@@ -118,12 +134,4 @@ $(patch_newlib): diff_patches := $(wildcard $(patches)/$(src_dir)*.diff)
 $(patch_newlib): diff_patches += $(wildcard $(patches)/$(host_triplet)/$(src_dir)*.diff)
 $(patch_newlib):
 	$(call patch_apply)
-
-# KallistiOS
-$(patch_kos): patch_target_name = KallistiOS
-$(patch_kos): src_dir = $(kos_root)
-$(patch_kos): stamp_radical_name = kos
-$(patch_kos): diff_patches := $(wildcard $(patches)/$(src_dir)*.diff)
-$(patch_kos): diff_patches += $(wildcard $(patches)/$(host_triplet)/$(src_dir)*.diff)
-$(patch_kos):
-	$(call patch_apply)
+	$(call update_config_guess_sub)

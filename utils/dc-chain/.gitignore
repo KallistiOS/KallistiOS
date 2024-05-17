@@ -4,8 +4,8 @@ binutils-*
 gcc-*
 newlib-*
 gdb-*
-insight-*
 build-*
 *.stamp
 config.guess
-config.mk
+config.sub
+*.cfg

@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <kos/thread.h>
 #include <kos/genwait.h>
+#include <kos/platform.h>
 #include <dc/maple.h>
 #include <dc/maple/vmu.h>
 #include <dc/math.h>
@@ -237,8 +238,10 @@ int vmu_set_custom_color(maple_device_t *dev, uint8_t red, uint8_t green, uint8_
    for icon_shape are listed in the biosfont.h and start with
    BFONT_ICON_VMUICON. */
 int vmu_set_icon_shape(maple_device_t *dev, uint8_t icon_shape) {
-#ifndef _arch_sub_naomi
     vmu_root_t root;
+
+    if (KOS_PLATFORM_IS_NAOMI)
+        return -1;
 
     if(icon_shape < BFONT_ICON_VMUICON || icon_shape > BFONT_ICON_EMBROIDERY)
         return -1;
@@ -255,11 +258,6 @@ int vmu_set_icon_shape(maple_device_t *dev, uint8_t icon_shape) {
         return -1;
 
     return 0;
-#else
-    (void)dev;
-    (void)icon_shape;
-    return -1;
-#endif
 }
 
 /* These interfaces will probably change eventually, but for now they

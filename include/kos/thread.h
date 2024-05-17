@@ -498,7 +498,7 @@ void thd_pass(void);
 
     \param  ms              The number of milliseconds to sleep.
 */
-void thd_sleep(unsigned int ms);
+void thd_sleep(unsigned ms);
 
 /** \brief       Set a thread's priority value.
     \relatesalso kthread_t
@@ -653,29 +653,6 @@ int thd_set_mode(kthread_mode_t mode) __deprecated;
 */
 kthread_mode_t thd_get_mode(void) __deprecated;
 
-/** \brief   Set the scheduler's frequency.
-
-    Sets the frequency of the scheduler interrupts in hertz.
-
-    \param hertz    The new frequency in hertz (1-1000)
-
-    \retval 0       The frequency was updated successfully.
-    \retval -1      \p hertz is invalid.
-
-    \sa thd_get_hz(), HZ
-*/
-int thd_set_hz(unsigned int hertz);
-
-/** \brief   Fetch the scheduler's current frequency.
-
-    Queries the scheduler for its interrupt frequency in hertz.
-
-    \return                 Scheduler frequency in hertz.
-
-    \sa thd_set_hz(), HZ
-*/
-unsigned thd_get_hz(void);
-
 /** \brief       Wait for a thread to exit.
     \relatesalso kthread_t
 
@@ -743,9 +720,30 @@ int thd_pslist(int (*pf)(const char *fmt, ...));
 */
 int thd_pslist_queue(int (*pf)(const char *fmt, ...));
 
-/** \cond Handled internally by KOS */
+/** \cond INTERNAL */
+
+/** \brief  Initialize the threading system.
+    
+    This is normally done for you by default when KOS starts. This will also
+    initialize all the various synchronization primitives.
+    
+    \retval -1              If threads are already initialized.
+    \retval 0               On success.
+    
+    \sa thd_shutdown
+*/
 int thd_init(void);
+
+
+/** \brief   Shutdown the threading system.
+ 
+    This is done for you by the normal shutdown procedure of KOS. This will
+    also shutdown all the various synchronization primitives.
+ 
+    \sa thd_init
+*/
 void thd_shutdown(void);
+
 /** \endcond */
 
 /** @} */

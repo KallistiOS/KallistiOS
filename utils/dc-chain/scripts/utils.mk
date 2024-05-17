@@ -1,8 +1,5 @@
 # Sega Dreamcast Toolchains Maker (dc-chain)
 # This file is part of KallistiOS.
-#
-# Added by Colton Pawielski (2023)
-#
 
 # Web downloaders command-lines
 downloaders = curl wget
