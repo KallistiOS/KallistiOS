@@ -7,4 +7,5 @@ gdb-*
 build-*
 *.stamp
 config.guess
-Makefile.cfg
+config.sub
+*.cfg

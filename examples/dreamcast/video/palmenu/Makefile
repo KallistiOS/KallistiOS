@@ -1,3 +1,8 @@
+# KallistiOS ##version##
+#
+# video/palmenu/Makefile
+#
+
 # Put the filename of the output binary here
 TARGET = palmenu.elf
 
