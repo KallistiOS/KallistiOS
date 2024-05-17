@@ -41,7 +41,7 @@ export KOS_CPPFLAGS="${KOS_CPPFLAGS} ${KOS_INC_PATHS_CPP} -fno-operator-names"
 # Which standards modes we want to compile for
 # Note that this only covers KOS itself, not necessarily anything else compiled
 # with kos-cc or kos-c++.
-export KOS_CSTD="-std=c17"
+export KOS_CSTD="-std=gnu17"
 export KOS_CPPSTD="-std=gnu++17"
 
 export KOS_GCCVER="`kos-cc -dumpversion`"
