@@ -3,7 +3,8 @@
    arch/dreamcast/include/timer.h
    Copyright (c) 2000, 2001 Megan Potter
    Copyright (c) 2023 Falco Girgis
-   
+   Copyright (c) 2024 Paul Cercueil
+
 */
 
 /** \file    arch/timer.h
@@ -347,6 +348,31 @@ uint64_t timer_ns_gettime64(void);
     \param  ms              The number of milliseconds to sleep.
 */
 void timer_spin_sleep(int ms);
+
+/** \brief  Spin-loop delay function with microsecond granularity
+    \ingroup tmu_sleep
+
+    This function is meant as a very accurate delay function, even if threading
+    and interrupts are disabled. It is a delay and not a sleep, which means that
+    the CPU will be busy-looping during that time frame. For any time frame
+    bigger than a few hundred microseconds, it is recommended to sleep instead.
+
+    \param  us              The number of microseconds to wait for.
+    \sa timer_spin_delay_ns, thd_sleep
+*/
+void timer_spin_delay_us(unsigned short us);
+
+/** \brief  Spin-loop delay function with nanosecond granularity
+    \ingroup tmu_sleep
+
+    This function is meant as a very accurate delay function, even if threading
+    and interrupts are disabled. It is a delay and not a sleep, which means that
+    the CPU will be busy-looping during that time frame.
+
+    \param  ns              The number of nanoseconds to wait for.
+    \sa timer_spin_delay_us, thd_sleep
+*/
+void timer_spin_delay_ns(unsigned short ns);
 
 /** \defgroup tmu_primary   Primary Timer
     \brief                  Primary timer used by the kernel.

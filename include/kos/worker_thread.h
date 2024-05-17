@@ -37,9 +37,8 @@ __BEGIN_DECLS
 
 struct kthread_worker;
 
-/** \brief   Structure describing one worker thread.
-
-    \headerfile kos/thread.h
+/** \struct  kthread_worker_t
+    \brief   Opaque structure describing one worker thread.
 */
 typedef struct kthread_worker kthread_worker_t;
 
@@ -145,7 +144,7 @@ void thd_worker_add_job(kthread_worker_t *thd, kthread_job_t *job);
     previously queued using thd_worker_add_job(). This function is typically
     used inside the work function registered with thd_worker_create().
 
-    \param  thd             The worker thread to add a job to.
+    \param  worker          The worker thread to add a job to.
 
     \return                 A new job to process, or NULL if there is none.
 */
