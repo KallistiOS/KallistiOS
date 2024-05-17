@@ -966,12 +966,8 @@ struct _reent *thd_get_reent(kthread_t *thd) {
 
 uint64_t thd_get_cpu_time(kthread_t *thd) {
     /* Check whether we should force an update immediately for accuracy. */
-    if(thd == thd_get_current() && perf_cntr_timer_enabled()) {
-        const uint64_t ns = perf_cntr_timer_ns();
-
-        thd->cpu_time.total += ns - thd->cpu_time.scheduled;
-        thd->cpu_time.scheduled = ns;
-    }
+    if(thd == thd_get_current())
+        thd_update_cpu_time(thd);
 
     return thd->cpu_time.total;
 }
