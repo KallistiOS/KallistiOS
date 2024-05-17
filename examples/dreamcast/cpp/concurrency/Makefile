@@ -18,7 +18,7 @@ rm-elf:
 	-rm -f $(TARGET) 
 
 $(TARGET): $(OBJS) 
-	kos-c++ -o $(TARGET) $(OBJS) -lm
+	kos-c++ -o $(TARGET) $(OBJS)
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)

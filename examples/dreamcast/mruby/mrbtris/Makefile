@@ -16,7 +16,7 @@ BOOTFILE = 1ST_READ.BIN
 OBJS = $(PROJECT).o main.o dckos.o romdisk.o
 
 # Libraries used by the project
-LIBS = -lmruby -lm
+LIBS = -lmruby
 
 # ROM Disk directory used for resources
 KOS_ROMDISK_DIR = romdisk

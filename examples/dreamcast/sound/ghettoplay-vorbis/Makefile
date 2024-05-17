@@ -13,7 +13,7 @@ rm-elf:
 	-rm -f $(TARGET) romdisk.*
 	
 $(TARGET): $(OBJS)
-	kos-cc -o $(TARGET) $(OBJS) -loggvorbisplay -lvorbis -logg -lm
+	kos-cc -o $(TARGET) $(OBJS) -loggvorbisplay -lvorbis -logg
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)

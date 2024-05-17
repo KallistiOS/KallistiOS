@@ -18,7 +18,7 @@ rm-elf:
 	-rm -f $(TARGET) romdisk.*
 
 $(TARGET): $(OBJS)
-	kos-cc -o $(TARGET) $(OBJS) -ltsunami -lstdc++ -lparallax -lpng -ljpeg -lkmg -lkosutils -lz -lm
+	kos-cc -o $(TARGET) $(OBJS) -ltsunami -lstdc++ -lparallax -lpng -ljpeg -lkmg -lkosutils -lz
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
