@@ -40,7 +40,7 @@ docs:
 docs_clean:
 	-rm -rf $(KOS_BASE)/doc/reference
 
-docs_open:
+docs_open: docs
 	open $(KOS_BASE)/doc/reference/html/index.html
 
 kos-ports_all:
