@@ -14,7 +14,7 @@ rm-elf:
 	-rm -f $(TARGET) 
 
 $(TARGET): $(OBJS) 
-	kos-cc -o $(TARGET) $(OBJS) -L$(KOS_BASE)/lib -lKGL -lm
+	kos-cc -o $(TARGET) $(OBJS) -L$(KOS_BASE)/lib -lKGL
 
 fruit.o: fruit.vq
 	$(KOS_BASE)/utils/bin2o/bin2o fruit.vq fruit fruit.o
