@@ -608,7 +608,7 @@ struct _reent *thd_get_reent(kthread_t *thd);
 /** \brief       Retrieves the thread's elapsed CPU time
     \relatesalso kthread_t
 
-    Returns the amount of active CPU time the thread has consume in
+    Returns the amount of active CPU time the thread has consumed in
     nanoseconds.
 
     \warning
