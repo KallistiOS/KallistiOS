@@ -143,6 +143,17 @@ export KOS_CFLAGS="${KOS_CFLAGS} -O2"
 export KOS_CFLAGS="${KOS_CFLAGS} -fomit-frame-pointer"
 #export KOS_CFLAGS="${KOS_CFLAGS} -fno-omit-frame-pointer -DFRAME_POINTERS"
 
+# Stack Protector
+#
+# Controls whether GCC emits extra code to check for buffer overflows or stack
+# smashing, which can be very useful for debugging. -fstack-protector only
+# covers vulnerable objects, while -fstack-protector-strong provides medium
+# coverage, and -fstack-protector-all provides full coverage. You may also
+# override the default stack excepton handler by providing your own
+# implementation of "void __stack_chk_fail(void)."
+#
+#export KOS_CFLAGS="${KOS_CFLAGS} -fstack-protector-all"
+
 # GCC Builtin Functions
 #
 # Comment out this line to enable GCC to use its own builtin implementations of
