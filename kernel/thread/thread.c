@@ -121,9 +121,8 @@ int thd_each(int (*cb)(kthread_t *thd, void *user_data), void *data) {
 }
 
 int thd_pslist(int (*pf)(const char *fmt, ...)) {
+    uint64_t cpu_time, ns_time;
     kthread_t *cur;
-
-    const uint64_t ns_time = perf_cntr_timer_ns();
 
     pf("All threads (may not be deterministic):\n");
     pf("addr\t  tid\tprio\tflags\t  wait_timeout\tcpu_time\t      state\t  name\n");
@@ -140,15 +139,11 @@ int thd_pslist(int (*pf)(const char *fmt, ...)) {
         pf("%08lx  ", cur->flags);
         pf("%12lu", (uint32_t)cur->wait_timeout);
 
-        if(perf_cntr_timer_enabled()) {
-            const uint64_t cpu_time = thd_get_cpu_time(cur);
+        ns_time = perf_cntr_timer_ns();
+        cpu_time = thd_get_cpu_time(cur);
 
-            pf("%12llu (%6.3lf%%)  ",
-                cpu_time, (double)cpu_time / (double)ns_time * 100.0);
-        }
-        else {
-            pf("%12s (?%%)  ", "?");
-        }
+        pf("%12llu (%6.3lf%%)  ",
+            cpu_time, (double)cpu_time / (double)ns_time * 100.0);
 
         pf("%-10s  ", thd_state_to_str(cur));
         pf("%-10s\n", cur->label);
@@ -628,17 +623,12 @@ int thd_set_prio(kthread_t *thd, prio_t prio) {
 /* Scheduling routines */
 
 static void thd_update_cpu_time(kthread_t *thd) {
-    if(perf_cntr_timer_enabled()) {
+    const uint64_t ns = perf_cntr_timer_ns();
 
-        const uint64_t ns = perf_cntr_timer_ns();
+    thd_current->cpu_time.total +=
+            ns - thd_current->cpu_time.scheduled;
 
-        if(thd_current) {
-            thd_current->cpu_time.total +=
-                ns - thd_current->cpu_time.scheduled;
-        }
-
-        thd->cpu_time.scheduled = ns;
-    }
+    thd->cpu_time.scheduled = ns;
 }
 
 /* Thread scheduler; this function will find a new thread to run when a
@@ -1045,6 +1035,7 @@ int kthread_key_delete(kthread_key_t key) {
 
 /* Init */
 int thd_init(void) {
+    uint64_t ns;
     kthread_t *kern, *reaper;
 
     /* Make sure we're not already running */
@@ -1096,22 +1087,11 @@ int thd_init(void) {
     strcpy(reaper->label, "[reaper]");
     thd_set_prio(reaper, 1);
 
-    /* Check whether we should set initial CPU time values. */
-    if(perf_cntr_timer_enabled()) {
-        /* Get initial total process CPU time */
-        const uint64_t ns = perf_cntr_timer_ns();
-        /* Set it as our scheduled timestamp */
-        kern->cpu_time.scheduled = ns;
-        /* Also set it as our total CPU time, so that the main
-           thread is credited with consuming this CPU time, otherwise
-           it will be lost and thread totals will not equal process
-           total. */
-        kern->cpu_time.total = ns;
-    }
-
     /* Main thread -- the kern thread */
     thd_current = kern;
     irq_set_context(&kern->context);
+
+    thd_update_cpu_time(thd_current);
 
     /* Initialize thread sync primitives */
     genwait_init();
@@ -1122,7 +1102,7 @@ int thd_init(void) {
     /* Schedule our first wakeup */
     timer_primary_wakeup(thd_sched_ms);
 
-    dbglog(DBG_INFO, "thd: pre-emption enabled, HZ=%u\n", thd_get_hz());
+    dbglog(DBG_DEBUG, "thd: pre-emption enabled, HZ=%u\n", thd_get_hz());
 
     return 0;
 }
