@@ -163,6 +163,19 @@ ifdef newlib_iconv_encodings
   endif
 endif
 
+# Handle libstdc++ configuration options
+ifdef libstdcxx_tzdb
+  ifeq (0,$(libstdcxx_tzdb))
+    gcc_extra_configure_args += --with-libstdcxx-zoneinfo=no
+  else ifeq (1,$(libstdcxx_tzdb))
+    gcc_extra_configure_args += --with-libstdcxx-zoneinfo=yes
+  else
+    gcc_extra_configure_args += --with-libstdcxx-zoneinfo=$(libstdcxx_tzdb),static
+  endif
+else
+  gcc_extra_configure_args += --with-libstdcxx-zoneinfo=no
+endif
+
 # Handle install mode for toolchain debug symbols
 ifdef toolchain_debug
   ifneq (0,$(toolchain_debug))
