@@ -749,7 +749,6 @@ int thd_pslist_queue(int (*pf)(const char *fmt, ...));
     
     This is normally done for you by default when KOS starts. This will also
     initialize all the various synchronization primitives.
-    
     \retval -1              If threads are already initialized.
     \retval 0               On success.
     \sa thd_shutdown
