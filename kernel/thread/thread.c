@@ -1035,7 +1035,6 @@ int kthread_key_delete(kthread_key_t key) {
 
 /* Init */
 int thd_init(void) {
-    uint64_t ns;
     kthread_t *kern, *reaper;
 
     /* Make sure we're not already running */
