@@ -752,7 +752,6 @@ int thd_pslist_queue(int (*pf)(const char *fmt, ...));
     
     \retval -1              If threads are already initialized.
     \retval 0               On success.
-    
     \sa thd_shutdown
 */
 int thd_init(void);
