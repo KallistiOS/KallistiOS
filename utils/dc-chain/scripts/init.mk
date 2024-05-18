@@ -1,9 +1,5 @@
 # Sega Dreamcast Toolchains Maker (dc-chain)
 # This file is part of KallistiOS.
-#
-# Created by Jim Ursetto (2004)
-# Initially adapted from Stalin's build script version 0.3.
-#
 
 # Catch-all: CC
 GCC = gcc
@@ -96,13 +92,20 @@ ifdef WINDOWS
   executable_extension=.exe
 endif
 
+# Set up the argument for jobs to be used if specified
+ifdef makejobs
+  ifneq (1,$(makejobs))
+    jobs_arg = -j$(makejobs)
+  endif
+endif
+
 # MinGW/MSYS
 # Disable makejobs possibility in legacy MinGW/MSYS environment as this breaks
 # the build
 ifdef MINGW
-  ifneq ($(makejobs),)
+  ifneq ($(jobs_arg),)
     $(warning 'makejobs' is unsupported in this environment.  Ignoring.)
-    makejobs=
+    jobs_arg=
   endif
 endif
 
@@ -134,6 +137,7 @@ ifeq (kos,$(thread_model))
   endif
 endif
 
+# Handle Newlib configuration options
 ifdef newlib_c99_formats
   ifneq (0,$(newlib_c99_formats))
     newlib_extra_configure_args += --enable-newlib-io-c99-formats
@@ -159,16 +163,103 @@ ifdef newlib_iconv_encodings
   endif
 endif
 
+# Handle libstdc++ configuration options
+ifdef libstdcxx_tzdb
+  ifeq (0,$(libstdcxx_tzdb))
+    gcc_extra_configure_args += --with-libstdcxx-zoneinfo=no
+  else ifeq (1,$(libstdcxx_tzdb))
+    gcc_extra_configure_args += --with-libstdcxx-zoneinfo=yes
+  else
+    gcc_extra_configure_args += --with-libstdcxx-zoneinfo=$(libstdcxx_tzdb),static
+  endif
+else
+  gcc_extra_configure_args += --with-libstdcxx-zoneinfo=no
+endif
+
+# Handle install mode for toolchain debug symbols
+ifdef toolchain_debug
+  ifneq (0,$(toolchain_debug))
+    install_mode = install
+  else
+    install_mode = install-strip
+  endif
+else
+  install_mode = install-strip
+endif
+
+# Handle if Native Language Support is used
 ifdef disable_nls
   ifneq (0,$(disable_nls))
-    extra_configure_args += --disable-nls
+    gcc_pass1_configure_args += --disable-nls
+    gcc_pass2_configure_args += --disable-nls
     binutils_extra_configure_args += --disable-nls
   endif
 endif
 
-ifdef enable_host_shared
-  ifneq (0,$(enable_host_shared))
-    extra_configure_args += --enable-host-shared
+# Handle language support options
+pass1_languages := c
+pass2_languages := c
+
+ifdef enable_cpp
+  ifneq (0,$(enable_cpp))
+    pass2_languages := $(pass2_languages),c++
+  endif
+endif
+
+ifdef enable_objc
+  ifneq (0,$(enable_objc))
+    pass2_languages := $(pass2_languages),objc
+  endif
+endif
+
+ifdef enable_objcpp
+  ifneq (0,$(enable_objcpp))
+    pass2_languages := $(pass2_languages),obj-c++
+  endif
+endif
+
+ifdef enable_d
+  ifneq (0,$(enable_d))
+    pass2_languages := $(pass2_languages),d
+    gcc_pass2_configure_args += --disable-libphobos
+  endif
+endif
+
+ifdef enable_fortran
+  ifneq (0,$(enable_fortran))
+    pass2_languages := $(pass2_languages),fortran
+  endif
+endif
+
+ifdef enable_modula2
+  ifneq (0,$(enable_modula2))
+    pass2_languages := $(pass2_languages),m2
+  endif
+endif
+
+ifdef enable_ada
+  ifneq (0,$(enable_ada))
+    pass2_languages := $(pass2_languages),ada
+    gcc_pass2_configure_args += --disable-libada
+  endif
+endif
+
+ifdef enable_go
+  ifneq (0,$(enable_go))
+    pass2_languages := $(pass2_languages),go
+  endif
+endif
+
+ifdef enable_rust
+  ifneq (0,$(enable_rust))
+    pass2_languages := $(pass2_languages),rust
+  endif
+endif
+
+ifdef enable_libgccjit
+  ifneq (0,$(enable_libgccjit))
+    pass1_languages := $(pass1_languages),jit
+    gcc_pass1_configure_args += --enable-host-shared
   endif
 endif
 

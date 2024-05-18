@@ -223,6 +223,9 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - DC  Increased the resolution of pvr_stats_t from milli to nanoseconds [FG]
 - *** Added support for modifying scheduler frequency at runtime [FG]
 - *** Add support for worker threads [PC]
+- DC  Added new System Calls module [AB]
+- DC  Add timer_spin_delay_{us,ns} and use them in scif-spi [PC]
+- *** Added thread support for tracking CPU time + updated clock_gettime() [FG]
 - *** Added full support for <time.h> additions from C23 standard. [FG]
 
 KallistiOS version 2.0.0 -----------------------------------------------

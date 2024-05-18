@@ -13,8 +13,8 @@ export KOS_ARCH_DIR="${KOS_BASE}/kernel/arch/${KOS_ARCH}"
 . ${KOS_BASE}/environ_${KOS_ARCH}.sh
 
 # Add the gnu wrappers dir to the path if it is not already
-if [[ ":$PATH:" != *":${KOS_BASE}/utils/gnu_wrappers"* ]]; then
-  export PATH="${PATH}:${KOS_BASE}/utils/gnu_wrappers"
+if [[ ":$PATH:" != *":${KOS_BASE}/utils/build_wrappers:"* ]]; then
+  export PATH="${PATH}:${KOS_BASE}/utils/build_wrappers"
 fi
 
 # Our includes
@@ -24,7 +24,7 @@ export KOS_INC_PATHS="${KOS_INC_PATHS} -I${KOS_BASE}/include \
 
 # "System" libraries
 export KOS_LIB_PATHS="-L${KOS_BASE}/lib/${KOS_ARCH} -L${KOS_BASE}/addons/lib/${KOS_ARCH} -L${KOS_PORTS}/lib"
-export KOS_LIBS="-Wl,--start-group -lkallisti -lc -lgcc -Wl,--end-group"
+export KOS_LIBS="-Wl,--start-group -lkallisti -lm -lc -lgcc -Wl,--end-group"
 
 # Main arch compiler paths
 export KOS_CC="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-gcc"

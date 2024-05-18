@@ -8,7 +8,7 @@ OBJS = mke2fs.o
 
 # We need the private headers from libkosext2fs, since we're not using the
 # facilities of fs_ext2 here.
-KOS_CFLAGS += -I$(KOS_BASE)/addons/libkosext2fs -Werror -W -std=gnu99
+KOS_CFLAGS := -I$(KOS_BASE)/addons/libkosext2fs -Werror -W -std=gnu99 $(KOS_CFLAGS)
 
 all: rm-elf $(TARGET)
 

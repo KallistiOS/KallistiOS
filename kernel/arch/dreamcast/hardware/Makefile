@@ -12,6 +12,9 @@ ifneq ($(KOS_SUBARCH), naomi)
 	OBJS += biosfont.o cdrom.o flashrom.o
 endif
 
+# System Calls
+OBJS += syscalls.o syscall_font.o
+
 # G2
 OBJS += g2dma.o
 

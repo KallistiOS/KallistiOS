@@ -20,7 +20,7 @@ rm-elf:
 	-rm -f $(TARGET)
 
 $(TARGET): $(OBJS)
-	kos-cc -o $(TARGET) $(OBJS) -llua -lm
+	kos-cc -o $(TARGET) $(OBJS) -llua
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)

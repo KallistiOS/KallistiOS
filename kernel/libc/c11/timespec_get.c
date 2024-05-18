@@ -24,10 +24,9 @@ static inline bool posix_clk_id(int base, clockid_t *id) {
             *id = CLOCK_PROCESS_CPUTIME_ID;
             return true;
 
-    /*  Awaiting PR for CLOCK_THREAD_CPUTIME_ID to be merged!
         case TIME_THREAD_ACTIVE:
             *id = CLOCK_THREAD_CPUTIME_ID;
-            return true; */
+            return true;
 
         default:
             return false;
