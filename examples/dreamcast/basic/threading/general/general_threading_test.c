@@ -2,7 +2,8 @@
 
    general_threading_test.c
 
-   (c)2000-2002 Megan Potter
+   Copyright (C) 2000-2002 Megan Potter
+   Copyright (C) 2024 Falco Girgis
 
    A simple thread example
 
@@ -45,9 +46,9 @@ void *thd_1(void *v) {
 
     printf("Thread 1 waiting:\n");
     thd_sleep(5000);
- 
+
     thd_pslist(printf);
- 
+
     printf("Thread 1 exiting\n");
     return NULL;
 }
@@ -66,7 +67,7 @@ void *thd_2(void *v) {
     printf("sem_wait_timed returns %d\n", sem_wait_timed(&sem, 200));
     printf("sem_wait_timed returns %d\n", sem_wait_timed(&sem, 200));
     printf("sem_wait_timed returns %d\n", sem_wait_timed(&sem, 200));
-    
+
     thd_pslist(printf);
 
     printf("Thread 2 exiting\n");
