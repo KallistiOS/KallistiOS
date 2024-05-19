@@ -27,6 +27,8 @@
 #include <dc/perfctr.h>
 #include <arch/arch.h>
 
+#include "cas.h"
+
 /*
 
 This module supports thread scheduling in KOS. The timer interrupt is used
@@ -719,6 +721,13 @@ void thd_schedule(bool front_of_line, uint64_t now) {
             thd_pslist_queue(printf);
             assert_msg(0, "Thread stack underrun");
         }
+    }
+
+    if (CONTEXT_PC(thd_current->context) >= (uint32_t)_sh_cas_atomic_begin
+	&& CONTEXT_PC(thd_current->context) < (uint32_t)&_sh_cas_atomic_end) {
+	    /* If the thread was interrupted during an atomic compare-and-swap,
+	       reset it to the beginning of the compare-and-swap. */
+	    CONTEXT_PC(thd_current->context) = (uint32_t)_sh_cas_atomic_begin;
     }
 
     irq_set_context(&thd_current->context);
