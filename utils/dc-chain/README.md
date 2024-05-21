@@ -104,8 +104,9 @@ The following toolchain profiles are available for users to select in
 | 11.4.0 | 11.4.0 | 4.3.0 | 2.41 | 8.5.0 | 2.41 | Latest release in the GCC 11 series, released 2023-05-15 |
 | 12.3.0 | 12.3.0 | 4.3.0 | 2.41 | 8.5.0 | 2.41 | Latest release in the GCC 12 series, released 2023-05-08 |
 | **stable** | **13.2.0** | **4.3.0** | **2.41** | **8.5.0** | **2.41** | **Tested stable; based on GCC 13.2.0, released 2023-07-27** |
+| 13.3.0 | 13.3.0 | 4.4.0 | 2.42 | 8.5.0 | 2.42 | Latest release in the GCC 13 series, released 2024-05-21 |
 | 14.1.0 | 14.1.0 | 4.4.0 | 2.42 | 8.5.0 | 2.42 | Latest release in the GCC 14 series, released 2024-05-07 |
-| 13.2.1-dev | 13.2.1 (git) | 4.4.0 | 2.42 | 8.5.0 | 2.42 | Bleeding edge GCC 13 series from git |
+| 13.3.1-dev | 13.3.1 (git) | 4.4.0 | 2.42 | 8.5.0 | 2.42 | Bleeding edge GCC 13 series from git |
 | 14.1.1-dev | 14.0.1 (git) | 4.4.0 | 2.42 | 8.5.0 | 2.42 | Bleeding edge GCC 14 series from git |
 | 15.0.0-dev | 15.0.0 (git) | 4.4.0 | 2.42 | 8.5.0 | 2.42 | Bleeding edge GCC 15 series from git |
 | gccrs-dev | 14.x | 4.4.0 | 2.42 | 8.5.0 | 2.42 | GCC fork for development of the GCCRS Rust compiler |
