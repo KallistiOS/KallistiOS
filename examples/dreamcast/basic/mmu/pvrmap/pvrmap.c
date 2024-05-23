@@ -33,6 +33,11 @@ int main(int argc, char **argv) {
     /* Draw a nice pattern to the NULL space */
     vr = NULL;
 
+/* Make sure the compiler doesn't complain about the bad thing 
+we are doing intentionally */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wanalyzer-null-dereference"
+
     for(y = 0; y < 480; y++) {
         for(x = 0; x < 640; x++) {
             int v = ((x * x + y * y) & 255);
@@ -45,6 +50,9 @@ int main(int argc, char **argv) {
                               | ((v >> 3) << 0);
         }
     }
+
+/* Turn the warning back on */
+#pragma GCC diagnostic pop
 
     /* Draw some text */
     bfont_draw_str(vr + 20 * 640 + 20, 640, 0, "Press START!");

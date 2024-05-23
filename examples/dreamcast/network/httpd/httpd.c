@@ -185,7 +185,7 @@ int do_dirlist(const char * name, http_state_t * hs, file_t f) {
     dirent_t * d;
     int dlsize, r;
 
-    dl = malloc(65536);    
+    dl = malloc(65536);
     dlout = dl;
     
     if(dl == NULL)
