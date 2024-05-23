@@ -15,8 +15,9 @@ KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS);
 
 int main(int argc, char **argv) {
     mmucontext_t * cxt;
-    uint16 * vr;
-    int x, y, done = 0;
+    uint16_t * vr;
+    bool done = false;
+    uint16_t x, y = 0;
 
     /* Initialize MMU support */
     mmu_init();
@@ -40,7 +41,7 @@ we are doing intentionally */
 
     for(y = 0; y < 480; y++) {
         for(x = 0; x < 640; x++) {
-            int v = ((x * x + y * y) & 255);
+            uint8_t v = ((x * x + y * y) & 0xff);
 
             if(v >= 128)
                 v = 127 - (v - 128);
@@ -62,7 +63,7 @@ we are doing intentionally */
         MAPLE_FOREACH_BEGIN(MAPLE_FUNC_CONTROLLER, cont_state_t, st)
 
         if(st->buttons & CONT_START)
-            done = 1;
+            done = true;
 
         MAPLE_FOREACH_END()
     }

@@ -37,7 +37,7 @@ we are doing intentionally */
     /* Do something naughty; note that this will actually work
        for both reads and writes in this case, but we can only
        really effectively test one ;) */
-    *((uint16*)NULL) = 0;
+    *((uint16_t *)NULL) = 0;
 
 /* Turn the warning back on */
 #pragma GCC diagnostic pop
@@ -49,5 +49,3 @@ we are doing intentionally */
 
     return 0;
 }
-
-
