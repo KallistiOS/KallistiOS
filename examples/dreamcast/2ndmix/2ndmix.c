@@ -398,6 +398,11 @@ int load_pcx(char *pcxdata) {
     int num_bytes;
     struct  pcx_hdr pcxh;
 
+    if(image == NULL) {
+        printf("Image not allocated\r\n");
+        return 0;
+    }
+
     bytes = 0;
 
     memcpy(&pcxh, pcxdata, sizeof(pcxh));
