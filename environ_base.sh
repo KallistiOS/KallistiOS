@@ -32,6 +32,7 @@ export KOS_CCPLUS="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-g++"
 export KOS_AS="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-as"
 export KOS_AR="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-gcc-ar"
 export KOS_OBJCOPY="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-objcopy"
+export KOS_OBJDUMP="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-objdump"
 export KOS_LD="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-ld"
 export KOS_RANLIB="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-gcc-ranlib"
 export KOS_STRIP="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-strip"
@@ -41,8 +42,8 @@ export KOS_CPPFLAGS="${KOS_CPPFLAGS} ${KOS_INC_PATHS_CPP} -fno-operator-names"
 # Which standards modes we want to compile for
 # Note that this only covers KOS itself, not necessarily anything else compiled
 # with kos-cc or kos-c++.
-export KOS_CSTD="-std=c99"
-export KOS_CPPSTD="-std=gnu++98"
+export KOS_CSTD="-std=gnu17"
+export KOS_CPPSTD="-std=gnu++17"
 
 export KOS_GCCVER="`kos-cc -dumpversion`"
 
