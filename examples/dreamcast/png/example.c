@@ -30,10 +30,9 @@ void back_init(void) {
 /* init font */
 void font_init(void) {
     int i, x, y, c;
-    unsigned short * temp_tex;
+    unsigned short temp_tex[256 * 128 * 2];
 
     font_tex = pvr_mem_malloc(256 * 256 * 2);
-    temp_tex = (unsigned short *)malloc(256 * 128 * 2);
 
     c = 0;
 
@@ -53,7 +52,7 @@ void font_init(void) {
             c += 16;
         }
 
-    pvr_txr_load_ex(temp_tex, font_tex, 256, 256, PVR_TXRLOAD_16BPP);
+    pvr_txr_load_ex(&temp_tex, font_tex, 256, 256, PVR_TXRLOAD_16BPP);
 }
 
 void text_init(void) {
