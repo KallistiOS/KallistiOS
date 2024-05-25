@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <dc/asic.h>
 #include <arch/rtc.h>
-#include <kos.h>
+
 #include <kos/oneshot_timer.h>
 #include "dc/modem/modem.h"
 #include "mintern.h"
