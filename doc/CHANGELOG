@@ -226,6 +226,8 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - DC  Added new System Calls module [AB]
 - DC  Add timer_spin_delay_{us,ns} and use them in scif-spi [PC]
 - *** Added thread support for tracking CPU time + updated clock_gettime() [FG]
+- *** Added support for one-shot timers [PC]
+- DC  Use one-shot timers for timeout and a proper polling mechanism in modem [PC]
 
 KallistiOS version 2.0.0 -----------------------------------------------
 - DC  Broadband Adapter driver fixes [Megan Potter == MP]
