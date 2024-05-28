@@ -311,8 +311,7 @@ void *client_thread(void *p) {
     fs_close(f);
 
 out:
-    if(buf != NULL)
-        free(buf);
+    free(buf);
     printf("httpd: closed client connection %d\n", hs->socket);
     close(hs->socket);
     st_destroy(hs);
