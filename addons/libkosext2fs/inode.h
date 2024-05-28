@@ -162,4 +162,6 @@ uint8_t *ext2_inode_read_block(ext2_fs_t *fs, const ext2_inode_t *inode,
 int ext2_resolve_symlink(ext2_fs_t *fs, ext2_inode_t *inode, char *rv,
                          size_t *rv_len);
 
+__END_DECLS
+
 #endif /* !__EXT2_INODE_H */
