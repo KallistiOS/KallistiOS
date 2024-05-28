@@ -121,4 +121,6 @@ static inline void oneshot_timer_reset(oneshot_timer_t *timer) {
     oneshot_timer_start(timer);
 }
 
+__END_DECLS
+
 #endif /* __KOS_ONESHOT_TIMER_H */
