@@ -54,7 +54,7 @@ we are doing intentionally */
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wanalyzer-out-of-bounds"
 
-__attribute__((noinline)) void badfunc(void) {
+__noinline void badfunc(void) {
     char buffer[8];
     strcpy(buffer, "This string is entirely too long and will overflow.");
 }
