@@ -5,7 +5,10 @@
 */
 
 #include <malloc.h>
-#include <arch/types.h>
+#include <string.h>
+#include <stdio.h>
+#include <assert.h>
+#include <arch/arch.h>
 #include <kos/thread.h>
 #include <arch/spinlock.h>
 
@@ -39,7 +42,7 @@ static memctl_t *first = NULL, *last = NULL;
 void * sbrk(int amt);
 
 void *calloc(size_t nmemb, size_t size) {
-    uint32 sb, pr = arch_get_ret_addr();
+    uint32 pr = arch_get_ret_addr();
     void * ptr;
     memctl_t * ctl;
 
@@ -107,7 +110,7 @@ void *malloc(size_t amt) {
 
     spinlock_unlock(&mutex);
 
-    printf("Thread %d/%08lx allocated %d bytes at %08lx; %08lx left\n",
+    printf("Thread %d/%08lx allocated %ld bytes at %08lx; %08lx left\n",
            ctl->thread, ctl->addr, ctl->size, space, _arch_mem_top - (uint32)sbrk(0));
 
     assert(!(((uint32)space) & 7));
@@ -120,7 +123,7 @@ void *memalign(size_t alignment, size_t amt) {
     memctl_t * ctl;
     void *rv;
 
-    printf("memalign: real address for the following is %08x\n   ", pr);
+    printf("memalign: real address for the following is %08lx\n   ", pr);
 
     sb = (uint32)sbrk(0);
 
@@ -139,10 +142,10 @@ void *memalign(size_t alignment, size_t amt) {
 
 void * realloc(void *ptr, size_t newsize) {
     memctl_t *ctl;
-    uint32 sb, pr = arch_get_ret_addr();
+    uint32 pr = arch_get_ret_addr();
     void *nb;
 
-    printf("realloc: real address for the following is %08x\n   ", pr);
+    printf("realloc: real address for the following is %08lx\n   ", pr);
 
     /* Don't realloc if we don't need to */
     ctl = get_memctl(ptr);
@@ -175,7 +178,7 @@ void free(void *block) {
 
     spinlock_lock(&mutex);
 
-    printf("Thread %d/%08x freeing block @ %08x\n",
+    printf("Thread %d/%08lx freeing block @ %08lx\n",
            thd_current->tid, pr, (uint32)block);
 
     if(((uint32)block) & 7 || (uint32)block < 0x8c010000 || (uint32)block >= _arch_mem_top) {
@@ -187,7 +190,7 @@ void free(void *block) {
     ctl = get_memctl(block);
 
     if(ctl->magic != BLOCK_MAGIC) {
-        printf("  'magic' is not correct! %08x\n", ctl->magic);
+        printf("  'magic' is not correct! %08lx\n", ctl->magic);
         spinlock_unlock(&mutex);
         return;
     }
@@ -201,7 +204,7 @@ void free(void *block) {
 
     for(i = sizeof(memctl_t) / 4; i < 1024 / 4; i++) {
         if(nt1[i] != PRE_MAGIC) {
-            printf("  pre-magic is wrong at index %d (%08x)\n", i, nt1[i]);
+            printf("  pre-magic is wrong at index %d (%08lx)\n", i, nt1[i]);
             ctl->damaged = 1;
             break;
         }
@@ -211,7 +214,7 @@ void free(void *block) {
 
     for(i = 0; i < 1024 / 4; i++) {
         if(nt2[i] != POST_MAGIC) {
-            printf("  post-magic is wrong at index %d (%08x)\n", i, nt2[i]);
+            printf("  post-magic is wrong at index %d (%08lx)\n", i, nt2[i]);
             ctl->damaged = 1;
             //break;
         }
@@ -230,7 +233,7 @@ void malloc_stats(void) {
         return;
     }
 
-    printf("%d TOTAL BYTES OF MEMORY ALLOCATED\n",
+    printf("%ld TOTAL BYTES OF MEMORY ALLOCATED\n",
            (uint32)sbrk(0) - (uint32)first);
 
     ctl = first;
@@ -241,14 +244,14 @@ void malloc_stats(void) {
 
     while(ctl) {
         if(ctl->inuse) {
-            printf("  INUSE %08x: size %d, thread %d, addr %08x, type %s\n",
+            printf("  INUSE %08lx: size %ld, thread %d, addr %08lx, type %s\n",
                    (uint32)ctl + 1024, ctl->size, ctl->thread, ctl->addr, ctl->type);
             leaked += ctl->size;
             leakedcnt++;
         }
 
         if(ctl->damaged) {
-            printf("  DMGED %08x: size %d, thread %d, addr %08x, type %s\n",
+            printf("  DMGED %08lx: size %ld, thread %d, addr %08lx, type %s\n",
                    (uint32)ctl + 1024, ctl->size, ctl->thread, ctl->addr, ctl->type);
             dmgcnt++;
         }
