@@ -1674,6 +1674,8 @@ static LIST_HEAD(memctl_list, memctl) block_list;
 
 #define get_memctl(p) ((memctl_t *)( ((uint32)(p)) - BUFFER_SIZE ))
 
+#define get_cur_tid_safe ((thd_current == NULL) ? (tid_t)0 : thd_current->tid)
+
 #endif  /* KM_DEBUG */
 
 Void_t* public_mALLOc(size_t bytes) {
@@ -1699,7 +1701,7 @@ Void_t* public_mALLOc(size_t bytes) {
     memset(ctl, 0, sizeof(memctl_t));
     ctl->magic = BLOCK_MAGIC;
     ctl->size = bytes;
-    ctl->thread = thd_current->tid;
+    ctl->thread = get_cur_tid_safe;
     ctl->addr = rv;
 
     nt1 = (uint32*)ctl;
@@ -1752,7 +1754,7 @@ void public_fREe(Void_t* m) {
 
 #ifdef KM_DBG_VERBOSE
     printf("Thread %d/%08lx freeing block @ %08lx\n",
-           thd_current->tid, rv, (uint32)m);
+           get_cur_tid_safe, rv, (uint32)m);
 #endif
 
     ctl = get_memctl(m);
@@ -1760,7 +1762,7 @@ void public_fREe(Void_t* m) {
     if(ctl->magic != BLOCK_MAGIC) {
 #ifndef KM_DBG_VERBOSE
         printf("Thread %d/%08lx freeing block @ %08lx\n",
-               thd_current->tid, rv, (uint32)m);
+               get_cur_tid_safe, rv, (uint32)m);
 #endif
         printf("  'magic' is not correct! %08lx\n", ctl->magic);
     }
@@ -1771,7 +1773,7 @@ void public_fREe(Void_t* m) {
             if(nt[i] != PRE_MAGIC) {
 #ifndef KM_DBG_VERBOSE
                 printf("Thread %d/%08lx freeing block @ %08lx\n",
-                       thd_current->tid, rv, (uint32)m);
+                       get_cur_tid_safe, rv, (uint32)m);
 #endif
                 printf("  pre-magic is wrong at index %lu (%08lx)\n",
                        i, nt[i]);
@@ -1785,7 +1787,7 @@ void public_fREe(Void_t* m) {
             if(nt[i] != POST_MAGIC) {
 #ifndef KM_DBG_VERBOSE
                 printf("Thread %d/%08lx freeing block @ %08lx\n",
-                       thd_current->tid, rv, (uint32)m);
+                       get_cur_tid_safe, rv, (uint32)m);
 #endif
                 printf("  post-magic is wrong at index %lu (%08lx)\n",
                        i, nt[i]);
@@ -1819,7 +1821,7 @@ int mem_check_block(Void_t* m) {
 
     if(ctl->magic != BLOCK_MAGIC) {
         printf("Thread %d/%08lx checking block @ %08lx\n",
-               thd_current->tid, rv, (uint32)m);
+               get_cur_tid_safe, rv, (uint32)m);
         printf("  'magic' is not correct! %08lx\n", ctl->magic);
         retv = -1;
     }
@@ -1829,7 +1831,7 @@ int mem_check_block(Void_t* m) {
         for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++) {
             if(nt[i] != PRE_MAGIC) {
                 printf("Thread %d/%08lx checking block @ %08lx\n",
-                       thd_current->tid, rv, (uint32)m);
+                       get_cur_tid_safe, rv, (uint32)m);
                 printf("  pre-magic is wrong at index %lu (%08lx)\n",
                        i, nt[i]);
                 dmg = 1;
@@ -1842,7 +1844,7 @@ int mem_check_block(Void_t* m) {
         for(i = 0; i < BUFFER_SIZE / 4; i++) {
             if(nt[i] != POST_MAGIC) {
                 printf("Thread %d/%08lx checking block @ %08lx\n",
-                       thd_current->tid, rv, (uint32)m);
+                       get_cur_tid_safe, rv, (uint32)m);
                 printf("  post-magic is wrong at index %lu (%08lx)\n",
                        i, nt[i]);
                 dmg = 1;
@@ -1876,7 +1878,7 @@ int mem_check_all(void) {
 
 #ifdef KM_DBG_VERBOSE
     printf("Thread %d/%08lx checking all memory blocks\n",
-           thd_current->tid, rv);
+           get_cur_tid_safe, rv);
 #endif
 
     LIST_FOREACH(ctl, &block_list, list) {
@@ -1910,7 +1912,7 @@ Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
 
 #ifdef KM_DBG_VERBOSE
     printf("Thread %d/%08lx reallocing block @ %08lx to %d bytes\n",
-           thd_current->tid, rv, (uint32)m, bytes);
+           get_cur_tid_safe, rv, (uint32)m, bytes);
 #endif
 
     // We can't check realloc'ing the zero block (this is valid but of
@@ -1921,7 +1923,7 @@ Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
         if(ctl->magic != BLOCK_MAGIC) {
 #ifndef KM_DBG_VERBOSE
             printf("Thread %d/%08lx reallocing block @ %08lx to %d bytes\n",
-                   thd_current->tid, rv, (uint32)m, bytes);
+                   get_cur_tid_safe, rv, (uint32)m, bytes);
 #endif
             printf("  'magic' is not correct! %08lx\n", ctl->magic);
             dmg = 1;
@@ -1933,7 +1935,7 @@ Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
                 if(nt[i] != PRE_MAGIC) {
 #ifndef KM_DBG_VERBOSE
                     printf("Thread %d/%08lx reallocing block @ %08lx to %d bytes\n",
-                           thd_current->tid, rv, (uint32)m, bytes);
+                           get_cur_tid_safe, rv, (uint32)m, bytes);
 #endif
                     printf("  pre-magic is wrong at index %lu (%08lx)\n",
                            i, nt[i]);
@@ -1947,7 +1949,7 @@ Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
                 if(nt[i] != POST_MAGIC) {
 #ifndef KM_DBG_VERBOSE
                     printf("Thread %d/%08lx reallocing block @ %08lx to %d bytes\n",
-                           thd_current->tid, rv, (uint32)m, bytes);
+                           get_cur_tid_safe, rv, (uint32)m, bytes);
 #endif
                     printf("  post-magic is wrong at index %lu (%08lx)\n",
                            i, nt[i]);
@@ -1991,7 +1993,7 @@ Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
             memset(ctl, 0, sizeof(memctl_t));
             ctl->magic = BLOCK_MAGIC;
             ctl->size = bytes;
-            ctl->thread = thd_current->tid;
+            ctl->thread = get_cur_tid_safe;
             ctl->addr = rv;
 
             nt = (uint32*)ctl;
@@ -2049,7 +2051,7 @@ Void_t* public_mEMALIGn(size_t alignment, size_t bytes) {
     memset(ctl, 0, BUFFER_SIZE);
     ctl->magic = BLOCK_MAGIC;
     ctl->size = bytes;
-    ctl->thread = thd_current->tid;
+    ctl->thread = get_cur_tid_safe;
     ctl->addr = rv;
 
     nt1 = (uint32*)ctl;
@@ -2124,7 +2126,7 @@ Void_t* public_cALLOc(size_t n, size_t elem_size) {
     memset(ctl, 0, BUFFER_SIZE);
     ctl->magic = BLOCK_MAGIC;
     ctl->size = bytes;
-    ctl->thread = thd_current->tid;
+    ctl->thread = get_cur_tid_safe;
     ctl->addr = rv;
 
     nt1 = (uint32*)ctl;
