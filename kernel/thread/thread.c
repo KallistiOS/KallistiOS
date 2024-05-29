@@ -1108,19 +1108,14 @@ int thd_init(void) {
 
 /* Shutdown */
 void thd_shutdown(void) {
-    kthread_t *n1, *n2;
+    kthread_t *cur;
 
     /* Remove our pre-emption handler */
     timer_primary_set_callback(NULL);
 
     /* Kill remaining live threads */
-    n1 = LIST_FIRST(&thd_list);
-
-    while(n1 != NULL) {
-        n2 = LIST_NEXT(n1, t_list);
-        free(n1->stack);
-        free(n1);
-        n1 = n2;
+    LIST_FOREACH(cur, &thd_list, t_list) {
+        thd_destroy(cur);
     }
 
     sem_destroy(&thd_reap_sem);
