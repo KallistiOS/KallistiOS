@@ -43,12 +43,8 @@ void dbglog(int level, const char *fmt, ...) {
     i= vsnprintf(printf_buf, sizeof(printf_buf), fmt, args);
     va_end(args);
 
-    if(i >= 0) {
-        if(level >= DBG_ERROR && !irq_inside_int())
-            fs_write(1, printf_buf, strlen(printf_buf));
-        else
-            dbgio_write_str(printf_buf);
-    }
+    if(i >= 0)
+        dbgio_write_str(printf_buf);
 
     if(level >= DBG_ERROR && !irq_inside_int())
         spinlock_unlock(&mutex);
