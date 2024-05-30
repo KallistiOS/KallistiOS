@@ -175,7 +175,7 @@ int dbgio_printf(const char *fmt, ...) {
     i = vsnprintf(printf_buf, sizeof(printf_buf), fmt, args);
     va_end(args);
 
-    if(!i)
+    if(i >= 0)
         dbgio_write_str(printf_buf);
 
     if(!irq_inside_int())

@@ -43,7 +43,7 @@ void dbglog(int level, const char *fmt, ...) {
     i= vsnprintf(printf_buf, sizeof(printf_buf), fmt, args);
     va_end(args);
 
-    if(!i) {
+    if(i >= 0) {
         if(level >= DBG_ERROR && !irq_inside_int())
             fs_write(1, printf_buf, strlen(printf_buf));
         else
