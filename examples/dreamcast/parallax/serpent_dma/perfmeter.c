@@ -35,7 +35,7 @@ void pm_drawbar(float pct, float posx, float posy, float posz,
 }
 
 void pm_draw(void) {
-    char str[64];
+    char str[128];
     float pct;
     float posx = 64, posy = 96, posz = 4500;
 
