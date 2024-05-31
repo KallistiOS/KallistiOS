@@ -213,8 +213,8 @@ static int fs_hnd_assign(fs_hnd_t * hnd) {
 int fs_fdtbl_destroy(void) {
     int i;
 
-    /* XXX We start at 3 here to avoid freeing the reserved root,
-       and pty fhs */
+    /* XXX We start at 3 here to avoid freeing the reserved
+        stdin, stdout, and stderr pty fhs */
     for(i = 3; i < FD_SETSIZE; i++) {
         if(fd_table[i])
             fs_hnd_unref(fd_table[i]);
