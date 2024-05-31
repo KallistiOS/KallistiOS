@@ -59,7 +59,7 @@ void text_init(void) {
     int length = zlib_getlength("/rd/text.gz");
     gzFile f;
 
-    data = (char *)malloc(length + 1); // I am not currently freeing it
+    data = (char *)malloc(length + 1);
 
     f = gzopen("/rd/text.gz", "r");
     gzread(f, data, length);
@@ -232,6 +232,8 @@ int main(int argc, char **argv) {
 
         draw_frame();
     }
+
+    free(data);
 
     return 0;
 }

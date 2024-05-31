@@ -862,6 +862,12 @@ int main() {
         draw_one_frame();
     }
 
+    /* Clean up what we allocated */
+    free(charmap);
+    free(star_x);
+    free(star_y);
+    free(star_z);
+
     printf("Done, returning\n");
     return 0;
 }
