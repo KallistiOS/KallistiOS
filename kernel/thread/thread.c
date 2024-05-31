@@ -40,6 +40,9 @@ also using their queue library verbatim (sys/queue.h).
 
 */
 
+/* Imaginary object to pass to genwait() when sleeping a thread. */
+#define THREAD_SLEEP_GENWAIT_OBJECT ((void *)0xffffffff)
+
 /* TLS Section ELF data - exported from linker script. */
 extern int _tdata_start, _tdata_size;
 extern int _tbss_size;
@@ -54,7 +57,7 @@ static inline size_t align_to(size_t address, size_t alignment) {
 /* Thread scheduler data */
 
 /* Scheduler timer interrupt frequency (Hertz) */
-static unsigned int thd_sched_ms = 1000 / HZ;
+static unsigned int thd_sched_ns = 1000000000 / HZ;
 
 /* Thread list. This includes all threads except dead ones. */
 static struct ktlist thd_list;
@@ -548,7 +551,7 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
 }
 
 kthread_t *thd_create(bool detach, void *(*routine)(void *), void *param) {
-    kthread_attr_t attrs = { detach, 0, 0, 0, 0 };
+    const kthread_attr_t attrs = { detach, 0, 0, 0, 0 };
     return thd_create_ex(&attrs, routine, param);
 }
 
@@ -652,7 +655,7 @@ void thd_schedule(bool front_of_line, uint64_t now) {
     kthread_t *thd;
 
     if(now == 0)
-        now = timer_ms_gettime64();
+        now = timer_ns_gettime64();
 
     /* We won't re-enqueue the current thread if it's NULL (i.e., the
        thread blocked itself somewhere) or if it's a zombie (below) */
@@ -683,7 +686,7 @@ void thd_schedule(bool front_of_line, uint64_t now) {
         if(thd->state == STATE_READY)
             break;
     }
-
+#if 1
     /* If we didn't already re-enqueue the thread and we are supposed to do so,
        do it now. */
     if(!front_of_line && !dontenq && thd_current->state == STATE_RUNNING) {
@@ -695,7 +698,7 @@ void thd_schedule(bool front_of_line, uint64_t now) {
         if(thd == NULL || thd == thd_idle_thd)
             thd = thd_current;
     }
-
+#endif
     /* Didn't find one? Big problem here... */
     if(thd == NULL) {
         thd_pslist(printf);
@@ -762,7 +765,7 @@ void thd_schedule_next(kthread_t *thd) {
 
 /* See kos/thread.h for description */
 irq_context_t *thd_choose_new(void) {
-    uint64_t now = timer_ms_gettime64();
+    uint64_t now = timer_ns_gettime64();
 
     //printf("thd_choose_new() woken at %d\n", (uint32_t)now);
 
@@ -773,6 +776,47 @@ irq_context_t *thd_choose_new(void) {
     return &thd_current->context;
 }
 
+static volatile uint64_t thd_wakeup_sched = 0;
+static volatile uint64_t thd_wakeup_timeout = 0;
+static volatile bool updated = false;
+
+    static volatile long unsigned counter = 0;
+
+static uint64_t thd_sched_rem(uint64_t now) {
+    if(!now)
+        now = timer_ns_gettime64();
+
+    if(thd_wakeup_timeout <= now)
+        return 0;
+    else
+        return thd_wakeup_timeout - now;
+}
+
+void thd_update_timer(uint64_t now, uint64_t max_ns) {
+    #if 0
+    const int irqs = irq_disable();
+
+    if(!now)
+        now = timer_ns_gettime64();
+
+    const uint64_t rem = thd_sched_rem(now);
+    
+    if(max_ns < rem) {
+        timer_primary_wakeup(max_ns);
+        updated = true;
+
+        //printf("[%lu]: ADJ %llu => %llu\n", counter, rem, max_ns);
+        //fflush(stdout);
+
+        thd_wakeup_sched = now;
+        thd_wakeup_timeout = max_ns + now;
+    }
+
+    irq_restore(irqs);
+    #endif
+
+}
+
 /*****************************************************************************/
 
 /* Timer function. Check to see if we were woken because of a timeout event
@@ -780,15 +824,41 @@ irq_context_t *thd_choose_new(void) {
    again until our next context switch (if any). For pre-empts, re-schedule
    threads, swap out contexts, and sleep. */
 static void thd_timer_hnd(irq_context_t *context) {
-    /* Get the system time */
-    uint64_t now = timer_ms_gettime64();
-
     (void)context;
+    
+    updated = false;
+
+    /* Get the system time */
+    uint64_t now = timer_ns_gettime64();
 
     //printf("timer woke at %d\n", (uint32_t)now);
 
     thd_schedule(0, now);
-    timer_primary_wakeup(thd_sched_ms);
+#if 0
+    //if(updated) return;
+
+    now = timer_ns_gettime64();
+
+    uint64_t next_timeout = genwait_next_timeout();
+    if(next_timeout < now)
+        next_timeout = 0;
+    else next_timeout -= now;
+
+    uint64_t next = thd_sched_ns;
+    if(next_timeout < thd_sched_ns) {
+        next = next_timeout;
+    }
+
+    timer_primary_wakeup(next);
+
+    thd_wakeup_sched = now;
+    thd_wakeup_timeout = now + next;
+#else
+    timer_primary_wakeup(thd_sched_ns);
+#endif
+    //printf("[%lu]: <%s, %llu>\n", counter++, thd_get_label(thd_get_current()), next);
+    //fflush(stdout);
+
 }
 
 /*****************************************************************************/
@@ -796,18 +866,28 @@ static void thd_timer_hnd(irq_context_t *context) {
 /* Thread blocking based sleeping; this is the preferred way to
    sleep because it eases the load on the system for the other
    threads. */
-void thd_sleep(unsigned int ms) {
+void thd_sleep_ms(uint64_t ms) {
+    assert((uint64_t)ms * 1000000 <= UINT32_MAX);
+    thd_sleep_ns(ms * 1000000);
+}
+
+void thd_sleep_us(uint64_t us) {
+    assert((uint64_t)us * 1000 <= UINT32_MAX);
+    thd_sleep_ns(us * 1000);
+}
+
+void thd_sleep_ns(uint64_t ns) {
     /* This should never happen. This should, perhaps, assert. */
     if(thd_mode == THD_MODE_NONE) {
         dbglog(DBG_WARNING, "thd_sleep called when threading not "
                "initialized.\n");
-        timer_spin_sleep(ms);
+        timer_spin_delay_ns(ns);
         return;
     }
 
     /* A timeout of zero is the same as thd_pass() and passing zero
        down to genwait_wait() causes bad juju. */
-    if(!ms) {
+    if(!ns) {
         thd_pass();
         return;
     }
@@ -817,7 +897,8 @@ void thd_sleep(unsigned int ms) {
        sleep cases into a single case, which is nice for scheduling
        purposes. 0xffffffff definitely doesn't exist as an object, so we'll
        use that for straight up timeouts. */
-    genwait_wait((void *)0xffffffff, "thd_sleep", ms, NULL);
+    genwait_wait_ns(THREAD_SLEEP_GENWAIT_OBJECT, "thd_sleep", ns, NULL);
+  //  thd_update_timer(0, true);
 }
 
 /* Manually cause a re-schedule */
@@ -977,14 +1058,14 @@ kthread_mode_t thd_get_mode(void) {
 }
 
 unsigned thd_get_hz(void) {
-    return 1000 / thd_sched_ms;
+    return 1000000000 / thd_sched_ns;
 }
 
 int thd_set_hz(unsigned int hertz) {
-    if(!hertz || hertz > 1000)
+    if(!hertz || hertz > 1000000000)
         return -1;
 
-    thd_sched_ms = 1000 / hertz;
+    thd_sched_ns = 1000000000 / hertz;
 
     return 0;
 }
@@ -1099,7 +1180,7 @@ int thd_init(void) {
     timer_primary_set_callback(thd_timer_hnd);
 
     /* Schedule our first wakeup */
-    timer_primary_wakeup(thd_sched_ms);
+    timer_primary_wakeup(thd_sched_ns);
 
     dbglog(DBG_DEBUG, "thd: pre-emption enabled, HZ=%u\n", thd_get_hz());
 

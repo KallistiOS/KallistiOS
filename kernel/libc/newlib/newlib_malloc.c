@@ -5,6 +5,7 @@
 
 */
 
+#include <sys/cdefs.h>
 #include <stdlib.h>
 #include <reent.h>
 
@@ -18,7 +19,7 @@ void * _malloc_r(struct _reent * re, size_t amt) {
     (void)re;
     return malloc(amt);
 }
-void * _calloc_r(struct _reent * re, size_t nmemb, size_t size) {
+__used void * _calloc_r(struct _reent * re, size_t nmemb, size_t size) {
     (void)re;
     return calloc(nmemb, size);
 }

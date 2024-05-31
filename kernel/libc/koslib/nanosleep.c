@@ -2,15 +2,18 @@
 
    nanosleep.c
    Copyright (C) 2014 Lawrence Sebald
+   Copyright (C) 2024 Falco Girgis
 
 */
 
 #include <time.h>
 #include <errno.h>
+#include <assert.h>
+
 #include <kos/thread.h>
 
 int nanosleep(const struct timespec *rqtp, struct timespec *rmtp) {
-    int ms;
+    uint64_t ns;
 
     /* Make sure we aren't inside an interrupt first... */
     if(irq_inside_int()) {
@@ -23,15 +26,10 @@ int nanosleep(const struct timespec *rqtp, struct timespec *rmtp) {
 
     /* Calculate the number of milliseconds to sleep for. No, you don't get
        anywhere near nanosecond precision here. */
-    ms = rqtp->tv_sec * 1000 + rqtp->tv_nsec / 1000000;
-
-    /* We need to sleep for *at least* how long is specified, so if they've
-       given us a non-whole number of milliseconds, then add one to the time. */
-    if(rqtp->tv_nsec % 1000000)
-        ++ms;
+    ns = rqtp->tv_sec * 1000000000 + rqtp->tv_nsec;
 
     /* Make sure they gave us something valid. */
-    if(ms < 0) {
+    if(!(ns > 0)) {
         if(rmtp)
             *rmtp = *rqtp;
 
@@ -39,8 +37,10 @@ int nanosleep(const struct timespec *rqtp, struct timespec *rmtp) {
         return -1;
     }
 
+    assert(ns <= UINT32_MAX);
+
     /* Sleep! */
-    thd_sleep(ms);
+    thd_sleep_ns(ns);
 
     /* thd_sleep will always sleep for at least the specified time, so clear out
        the remaining time, if it was given to us. */

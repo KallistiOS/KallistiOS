@@ -28,6 +28,8 @@ __BEGIN_DECLS
 
 #include <kos/thread.h>
 
+#define genwait_wait genwait_wait_ms
+
 /** \brief  Sleep on an object.
 
     This function sleeps on the specified object. You are not allowed to call
@@ -46,7 +48,47 @@ __BEGIN_DECLS
     \par    Error Conditions:
     \em     EAGAIN - on timeout
 */
-int genwait_wait(void * obj, const char * mesg, int timeout, void (*callback)(void *));
+int genwait_wait_ms(void *obj, const char *mesg, uint64_t timeout, void (*callback)(void *));
+
+/** \brief  Sleep on an object.
+
+    This function sleeps on the specified object. You are not allowed to call
+    this function inside an interrupt.
+
+    \param  obj             The object to sleep on
+    \param  mesg            A message to show in the status
+    \param  timeout         If not woken before this many microseconds have
+                            passed, wake up anyway
+    \param  callback        If non-NULL, call this function with obj as its
+                            argument if the wait times out (but before the
+                            calling thread has been woken back up)
+    \retval 0               On successfully being woken up (not by timeout)
+    \retval -1              On error or being woken by timeout
+
+    \par    Error Conditions:
+    \em     EAGAIN - on timeout
+*/
+int genwait_wait_us(void *obj, const char *mesg, uint64_t timeout, void (*callback)(void *));
+
+/** \brief  Sleep on an object.
+
+    This function sleeps on the specified object. You are not allowed to call
+    this function inside an interrupt.
+
+    \param  obj             The object to sleep on
+    \param  mesg            A message to show in the status
+    \param  timeout         If not woken before this many nanoseconds have
+                            passed, wake up anyway
+    \param  callback        If non-NULL, call this function with obj as its
+                            argument if the wait times out (but before the
+                            calling thread has been woken back up)
+    \retval 0               On successfully being woken up (not by timeout)
+    \retval -1              On error or being woken by timeout
+
+    \par    Error Conditions:
+    \em     EAGAIN - on timeout
+*/
+int genwait_wait_ns(void *obj, const char *mesg, uint64_t timeout, void (*callback)(void *));
 
 /* Wake up N threads waiting on the given object. If cnt is <=0, then we
    wake all threads. Returns the number of threads actually woken. */
@@ -66,7 +108,7 @@ int genwait_wait(void * obj, const char * mesg, int timeout, void (*callback)(vo
                             threads.
     \return                 The number of threads woken
 */
-int genwait_wake_cnt(void * obj, int cnt, int err);
+int genwait_wake_cnt(void *obj, int cnt, int err);
 
 /** \brief  Wake up all threads sleeping on an object.
 
@@ -75,7 +117,7 @@ int genwait_wake_cnt(void * obj, int cnt, int err);
     \param  obj             The object to wake threads that are sleeping on it
     \see    genwait_wake_cnt()
 */
-void genwait_wake_all(void * obj);
+void genwait_wake_all(void *obj);
 
 /** \brief  Wake up one thread sleeping on an object.
 
@@ -84,7 +126,7 @@ void genwait_wake_all(void * obj);
     \param  obj             The object to wake threads that are sleeping on it
     \see    genwait_wake_cnt()
 */
-void genwait_wake_one(void * obj);
+void genwait_wake_one(void *obj);
 
 /** \brief  Wake up all threads sleeping on an object, with an error.
 
@@ -130,9 +172,9 @@ int genwait_wake_thd(void *obj, kthread_t *thd, int err);
     There should be no reason you need to call this function, it is called
     internally by the scheduler for you.
 
-    \param  now             The current system time, in milliseconds since boot
+    \param  now             The current system time, in nanoseconds since boot
 */
-void genwait_check_timeouts(uint64 now);
+void genwait_check_timeouts(uint64_t now);
 
 /** \brief  Look for the next timeout event time.
 
@@ -140,10 +182,10 @@ void genwait_check_timeouts(uint64 now);
     function is for the internal use of the scheduler, and should not be called
     from user code.
 
-    \return                 The next timeout time in milliseconds since boot, or
+    \return                 The next timeout time in nanoseconds since boot, or
                             0 if there are no pending genwait_wait() calls
 */
-uint64 genwait_next_timeout(void);
+uint64_t genwait_next_timeout(void);
 
 /** \cond */
 /* Initialize the genwait system */

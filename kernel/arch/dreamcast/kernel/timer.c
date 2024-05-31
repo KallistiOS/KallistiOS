@@ -2,7 +2,7 @@
 
    timer.c
    Copyright (C) 2000, 2001, 2002 Megan Potter
-   Copyright (C) 2023 Falco Girgis
+   Copyright (C) 2023, 2024 Falco Girgis
    Copyright (C) 2023, 2024 Paul Cercueil <paul@crapouillou.net>
 */
 
@@ -73,7 +73,8 @@ static const unsigned tcnts[] = { TCNT0, TCNT1, TCNT2 };
 static const unsigned tcrs[] = { TCR0, TCR1, TCR2 };
 
 /* Apply timer configuration to registers. */
-static int timer_prime_apply(int which, uint32_t count, int interrupts) { 
+static int timer_prime_apply(timer_channel_t which, uint32_t count, bool interrupts) { 
+    assert(count);
     assert(which <= TMU2);
 
     TIMER32(tcnts[which]) = count;
@@ -92,25 +93,30 @@ static int timer_prime_apply(int which, uint32_t count, int interrupts) {
 
 /* Pre-initialize a timer; set values but don't start it.
    "speed" is the number of desired ticks per second. */
-int timer_prime(int which, uint32_t speed, int interrupts) {
+int timer_prime(timer_channel_t which, uint32_t speed, bool interrupts) {
+    assert(speed);
     /* Initialize counters; formula is P0/(tps*div) */
     const uint32_t cd = TIMER_PCK / (speed * TDIV(TIMER_TPSC));
-
+    assert(cd);
     return timer_prime_apply(which, cd, interrupts);
 }
 
-/* Works like timer_prime, but takes an interval in milliseconds
+/* Works like timer_prime, but takes an interval in nanoseconds
    instead of a rate. Used by the primary timer stuff. */
-static int timer_prime_wait(int which, uint32_t millis, int interrupts) {
-    /* Calculate the countdown, formula is P0 * millis/div*1000. We
+static int timer_prime_wait(timer_channel_t which, uint64_t ns, bool interrupts) {
+    /* Calculate the countdown, formula is P0 * ns/div*1000000000. We
        rearrange the math a bit here to avoid integer overflows. */
-    const uint32_t cd = (TIMER_PCK / TDIV(TIMER_TPSC)) * millis / 1000;
-
+    const uint64_t cd = ((TIMER_PCK / TDIV(TIMER_TPSC)) * ns) / 1000000000ull;
+    //printf("TIME_WAIT: %llu, %llu\n", ns, cd);
+    //fflush(stdout);
+    
+    assert(cd);
+    assert(cd <= UINT32_MAX);
     return timer_prime_apply(which, cd, interrupts);
 }
 
 /* Start a timer -- starts it running (and interrupts if applicable) */
-int timer_start(int which) {
+int timer_start(timer_channel_t which) {
     assert(which <= TMU2);
 
     TIMER8(TSTR) |= (1 << which);
@@ -118,7 +124,7 @@ int timer_start(int which) {
 }
 
 /* Stop a timer -- and disables its interrupt */
-int timer_stop(int which) {
+int timer_stop(timer_channel_t which) {
     assert(which <= TMU2);
 
     timer_disable_ints(which);
@@ -129,21 +135,21 @@ int timer_stop(int which) {
     return 0;
 }
 
-int timer_running(int which) {
+bool timer_running(timer_channel_t which) {
     assert(which <= TMU2);
 
     return !!(TIMER8(TSTR) & (1 << which));
 }
 
 /* Returns the count value of a timer */
-uint32_t timer_count(int which) {
+uint32_t timer_count(timer_channel_t which) {
     assert(which <= TMU2);
 
     return TIMER32(tcnts[which]);
 }
 
 /* Clears the timer underflow bit and returns what its value was */
-int timer_clear(int which) {
+int timer_clear(timer_channel_t which) {
     uint16_t value;
 
     assert(which <= TMU2);
@@ -155,52 +161,50 @@ int timer_clear(int which) {
 
 /* Spin-loop kernel sleep func: uses the secondary timer in the
    SH-4 to very accurately delay even when interrupts are disabled */
-void timer_spin_sleep(int ms) {
-    timer_prime(TMU1, 1000, 0);
-    timer_clear(TMU1);
-    timer_start(TMU1);
-
-    while(ms > 0) {
-        while(!(TIMER16(tcrs[TMU1]) & UNF))
-            ;
-
-        timer_clear(TMU1);
-        ms--;
-    }
-
-    timer_stop(TMU1);
-}
-
-void timer_spin_delay_ns(unsigned short ns) {
-    uint64_t timeout = timer_ns_gettime64() + ns;
+void timer_spin_delay_ms(unsigned short ms) {
+    const uint64_t timeout = timer_ms_gettime64() + ms;
 
     /* Note that we don't actually care about the counter overflowing.
-       Nobody will run their Dreamcast straight for 585 years. */
-    while(timer_ns_gettime64() < timeout);
+       Nobody will run their Dreamcast straight for 584942417 years. */
+    while(timer_ms_gettime64() < timeout);
 }
 
 void timer_spin_delay_us(unsigned short us) {
-    uint64_t timeout = timer_us_gettime64() + us;
+    const uint64_t timeout = timer_us_gettime64() + us;
 
     /* Note that we don't actually care about the counter overflowing.
        Nobody will run their Dreamcast straight for 584942 years. */
     while(timer_us_gettime64() < timeout);
 }
 
+void timer_spin_delay_ns(unsigned short ns) {
+    const uint64_t timeout = timer_ns_gettime64() + ns;
+
+    /* Note that we don't actually care about the counter overflowing.
+       Nobody will run their Dreamcast straight for 585 years. */
+    while(timer_ns_gettime64() < timeout);
+}
+
 /* Enable timer interrupts; needs to move to irq.c sometime. */
-void timer_enable_ints(int which) {
+void timer_enable_ints(timer_channel_t which) {
+    assert(which <= TMU2);
+
     volatile uint16_t *ipra = (uint16_t *)0xffd00004;
     *ipra |= (TIMER_PRIO << (12 - 4 * which));
 }
 
 /* Disable timer interrupts; needs to move to irq.c sometime. */
-void timer_disable_ints(int which) {
+void timer_disable_ints(timer_channel_t which) {
+    assert(which <= TMU2);
+
     volatile uint16_t *ipra = (uint16_t *)0xffd00004;
     *ipra &= ~(TIMER_PRIO << (12 - 4 * which));
 }
 
 /* Check whether ints are enabled */
-int timer_ints_enabled(int which) {
+bool timer_ints_enabled(timer_channel_t which) {
+    assert(which <= TMU2);
+
     volatile uint16_t *ipra = (uint16_t *)0xffd00004;
     return (*ipra & (TIMER_PRIO << (12 - 4 * which))) != 0;
 }
@@ -348,12 +352,30 @@ uint64_t timer_ns_gettime64(void) {
     return (uint64_t)val.secs * 1000000000ull + (uint64_t)val.ticks;
 }
 
+void timer_spin_sleep_ms(uint32_t ms) {
+    const uint64_t target = timer_ms_gettime64() + ms;
+
+    while(__likely(timer_ms_gettime64() < target));
+}
+
+void timer_spin_sleep_us(uint32_t us) {
+    const uint64_t target = timer_us_gettime64() + us;
+
+    while(__likely(timer_us_gettime64() < target));
+}
+
+void timer_spin_sleep_ns(uint32_t ns) {
+    const uint64_t target = timer_ns_gettime64() + ns;
+
+    while(__likely(timer_ns_gettime64() < target));
+}
+
 /* Primary kernel timer. What we'll do here is handle actual timer IRQs
    internally, and call the callback only after the appropriate number of
    millis has passed. For the DC you can't have timers spaced out more
    than about one second, so we emulate longer waits with a counter. */
 static timer_primary_callback_t tp_callback;
-static uint32_t tp_ms_remaining;
+static uint64_t tp_ns_remaining;
 
 /* IRQ handler for the primary timer interrupt. */
 static void tp_handler(irq_t src, irq_context_t *cxt, void *data) {
@@ -361,28 +383,28 @@ static void tp_handler(irq_t src, irq_context_t *cxt, void *data) {
     (void)data;
 
     /* Are we at zero? */
-    if(tp_ms_remaining == 0) {
+    if(!tp_ns_remaining) {
         /* Disable any further timer events. The callback may
            re-enable them of course. */
-        timer_stop(TMU0);
-        timer_disable_ints(TMU0);
+        timer_stop(TIMER_ID);
+        timer_disable_ints(TIMER_ID);
 
         /* Call the callback, if any */
         if(tp_callback)
             tp_callback(cxt);
     } 
     /* Do we have less than a second remaining? */
-    else if(tp_ms_remaining < 1000) {
+    else if(tp_ns_remaining < 1000000000) {
         /* Schedule a "last leg" timer. */
-        timer_stop(TMU0);
-        timer_prime_wait(TMU0, tp_ms_remaining, 1);
-        timer_clear(TMU0);
-        timer_start(TMU0);
-        tp_ms_remaining = 0;
+        timer_stop(TIMER_ID);
+        timer_prime_wait(TIMER_ID, tp_ns_remaining, 1);
+        timer_clear(TIMER_ID);
+        timer_start(TIMER_ID);
+        tp_ns_remaining = 0;
     } 
     /* Otherwise, we're just counting down. */
     else {
-        tp_ms_remaining -= 1000;
+        tp_ns_remaining -= 1000000000;
     }
 }
 
@@ -397,41 +419,41 @@ static void timer_primary_init(void) {
 }
 
 static void timer_primary_shutdown(void) {
-    timer_stop(TMU0);
-    timer_disable_ints(TMU0);
-    irq_set_handler(EXC_TMU0_TUNI0, NULL, NULL);
+    timer_stop(TIMER_ID);
+    timer_disable_ints(TIMER_ID);
+    irq_set_handler(EXC_TMU0_TUNI0 + TIMER_ID, NULL, NULL);
 }
 
 timer_primary_callback_t timer_primary_set_callback(timer_primary_callback_t cb) {
-    timer_primary_callback_t cbold = tp_callback;
+    const timer_primary_callback_t cbold = tp_callback;
     tp_callback = cb;
     return cbold;
 }
 
-void timer_primary_wakeup(uint32_t millis) {
+void timer_primary_wakeup(uint64_t ns) {
     /* Don't allow zero */
-    if(millis == 0) {
-        assert_msg(millis != 0, "Received invalid wakeup delay");
-        millis++;
+    if(ns < 80) {
+       // assert_msg(ns != 0, "Received invalid wakeup delay");
+        ns = 80;
     }
 
     /* Make sure we stop any previous wakeup */
-    timer_stop(TMU0);
+    timer_stop(TIMER_ID);
 
     /* If we have less than a second to wait, then just schedule the
        timeout event directly. Otherwise schedule a periodic second
        timer. We'll replace this on the last leg in the IRQ. */
-    if(millis >= 1000) {
-        timer_prime_wait(TMU0, 1000, 1);
-        timer_clear(TMU0);
-        timer_start(TMU0);
-        tp_ms_remaining = millis - 1000;
+    if(ns >= 1000000000) {
+        timer_prime_wait(TIMER_ID, 1000000000, 1);
+        timer_clear(TIMER_ID);
+        timer_start(TIMER_ID);
+        tp_ns_remaining = ns - 1000000000;
     }
     else {
-        timer_prime_wait(TMU0, millis, 1);
-        timer_clear(TMU0);
-        timer_start(TMU0);
-        tp_ms_remaining = 0;
+        timer_prime_wait(TIMER_ID, ns, 1);
+        timer_clear(TIMER_ID);
+        timer_start(TIMER_ID);
+        tp_ns_remaining = 0;
     }
 }
 

@@ -214,9 +214,8 @@ typedef __attribute__((aligned(32))) struct kthread {
     /** \brief  Next scheduled time.
 
         This value is used for sleep and timed block operations. This value is
-        in milliseconds since the start of timer_ms_gettime(). This should be
-        enough for something like 2 million years of wait time. ;)
-    */
+        in nanoseconds since the start of timer_ns_gettime(). This should be
+        enough for something like 292 years of wait time. ;) */
     uint64_t wait_timeout;
 
     /** \brief Per-Thread CPU Time. */
@@ -485,6 +484,14 @@ void thd_schedule_next(kthread_t *thd);
 */
 void thd_pass(void);
 
+/** \brief      Sleep for a given number of milliseconds
+    \deprecated Use thd_sleep_ms() instead.
+
+    \note
+    This macro is simply an alternate name for thd_sleep_ms().
+*/
+#define thd_sleep   thd_sleep_ms
+
 /** \brief   Sleep for a given number of milliseconds.
 
     This function puts the current thread to sleep for the specified amount of
@@ -497,8 +504,38 @@ void thd_pass(void);
     When \p ms is given a value of `0`, this is equivalent to thd_pass().
 
     \param  ms              The number of milliseconds to sleep.
+
+    \sa thd_sleep_us(), thd_sleep_ns()
 */
-void thd_sleep(unsigned ms);
+void thd_sleep_ms(uint64_t ms);
+
+/** \brief   Sleep for a given number of microseconds
+
+    This function puts the current thread to sleep for the specified amount of
+    time. The thread will be removed from the runnable queue until the given
+    number of microseconds passes. That is to say that the thread will sleep for
+    at least the given number of microseconds. If another thread is running, it
+    will likely sleep longer.
+
+    \param  us              The number of microseconds to sleep.
+
+    \sa thd_sleep_ms(), thd_sleep_ns()
+*/
+void thd_sleep_us(uint64_t us);
+
+/** \brief   Sleep for a given number of nanoseconds
+
+    This function puts the current thread to sleep for the specified amount of
+    time. The thread will be removed from the runnable queue until the given
+    number of nanoseconds passes. That is to say that the thread will sleep for
+    at least the given number of nanoseconds. If another thread is running, it
+    will likely sleep longer.
+
+    \param  ns              The number of nanoseconds to sleep.
+
+    \sa thd_sleep_ms(), thd_sleep_us()
+*/
+void thd_sleep_ns(uint64_t ns);
 
 /** \brief       Set a thread's priority value.
     \relatesalso kthread_t
