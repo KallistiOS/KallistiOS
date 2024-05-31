@@ -21,6 +21,8 @@
 .globl __arch_old_stack
 .globl __arch_old_fpscr
 .globl __arch_mem_top
+.globl __arch_argc
+.globl __arch_argv
 
 .weak   _arch_stack_16m
 .weak   _arch_stack_32m
@@ -226,6 +228,14 @@ init_addr:
 	.long	init
 main_addr:
 	.long	_arch_main
+__arch_argc:
+	.long 	0
+argc_addr:
+	.long __arch_argc
+__arch_argv:
+	.long 	0
+argv_addr:
+	.long __arch_argv
 mmu_addr:
 	.long	0xff000010
 fpscr_addr:

@@ -3,6 +3,7 @@
    init.c
    Copyright (C) 2003 Megan Potter
    Copyright (C) 2015 Lawrence Sebald
+   Copyright (C) 2024 Falco Girgis
 */
 
 #include <stdio.h>
@@ -35,13 +36,16 @@ extern int _bss_start, end;
 #define _fini fini
 #endif
 
+extern int _arch_argc;
+extern const char **_arch_argv;
+
 extern void _init(void);
 extern void _fini(void);
 extern void __verify_newlib_patch();
 
 void (*__kos_init_early_fn)(void) __attribute__((weak,section(".data"))) = NULL;
 
-int main(int argc, char **argv);
+int main(int argc, const char **argv);
 uint32 _fs_dclsocket_get_ip(void);
 
 #define SAR2    ((vuint32 *)0xFFA00020)
@@ -292,7 +296,7 @@ void arch_main(void) {
     _init();
 
     /* Call the user's main function */
-    rv = main(0, NULL);
+    rv = main(_arch_argc, _arch_argv);
 
     /* Call kernel exit */
     exit(rv);

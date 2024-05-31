@@ -243,6 +243,8 @@ typedef __attribute__((aligned(32))) struct kthread {
     /** \brief  Size of the thread's stack, in bytes. */
     size_t stack_size;
 
+    bool stack_static;
+
     /** \brief  Thread errno variable. */
     int thd_errno;
 
@@ -293,6 +295,8 @@ typedef struct kthread_attr {
 
     /** \brief  Thread label. */
     const char *label;
+
+    bool stack_static;
 } kthread_attr_t;
 
 /** \brief  kthread mode values

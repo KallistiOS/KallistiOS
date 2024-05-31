@@ -487,6 +487,7 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
             }
             else {
                 nt->stack = (uint32_t*)real_attr.stack_ptr;
+                nt->stack_static = real_attr.stack_static;
             }
 
             nt->stack_size = real_attr.stack_size;
@@ -1063,7 +1064,11 @@ int thd_init(void) {
     thd_count = 0;
 
     /* Setup a kernel task for the currently running "main" thread */
-    kern = thd_create(0, NULL, NULL);
+    kern = thd_create_ex(&(const kthread_attr_t) {
+        .stack_size = UINT16_MAX,
+        .stack_ptr = (void *)_arch_mem_top - UINT16_MAX,
+        .stack_static = true
+    }, NULL, NULL);
     strcpy(kern->label, "[kernel]");
     kern->state = STATE_RUNNING;
 
@@ -1118,7 +1123,8 @@ void thd_shutdown(void) {
 
     while(n1 != NULL) {
         n2 = LIST_NEXT(n1, t_list);
-        free(n1->stack);
+        if(!n1->stack_static)
+            free(n1->stack);
         free(n1);
         n1 = n2;
     }

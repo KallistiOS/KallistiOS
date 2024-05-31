@@ -21,8 +21,14 @@ int main(int argc, char **argv) {
     assert(subelf);
 
     /* Tell exec to replace us */
-    printf("sub.bin mapped at %08x, jumping to it!\n\n\n", (unsigned int)subelf);
-    arch_exec(subelf, fs_total(f));
+    printf("sub.bin mapped at %08x, "
+           "jumping to it!\n\n\n", 
+           (unsigned int)subelf);
+    
+    arch_exec_with_args(subelf, fs_total(f), 
+                        "Hello", "World", "from", 
+                        "my", "sub ELF", "command",
+                        "line", "args", NULL);
 
     /* Shouldn't get here */
     assert_msg(false, "exec call failed");
