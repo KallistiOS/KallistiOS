@@ -8,6 +8,7 @@
 */
 
 #include <arch/cache.h>
+#include <arch/mmu.h>
 #include <dc/sq.h>
 #include <kos/dbglog.h>
 #include <kos/mutex.h>
@@ -40,12 +41,20 @@
 
 static mutex_t sq_mutex = MUTEX_INITIALIZER;
 
+static mmu_token_t mmu_token;
+
 void sq_lock(void *dest) {
     mutex_lock(&sq_mutex);
+
+    /* Disable MMU, because SQs work differently when it's enabled, and we
+     * don't support it. */
+    mmu_token = mmu_disable();
+
     SET_QACR_REGS(dest, dest);
 }
 
 void sq_unlock(void) {
+    mmu_restore(mmu_token);
     mutex_unlock(&sq_mutex);
 }
 
