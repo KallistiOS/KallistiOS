@@ -1835,7 +1835,9 @@ Void_t* public_mALLOc(size_t bytes) {
 void public_fREe(Void_t* m) {
 #ifdef KM_DBG
     memctl_t * ctl;
+#ifdef KM_DBG_VERBOSE
     uint32 rv = arch_get_ret_addr();
+#endif
 #endif
 
     /* standard C says if block is NULL, do not try to free it */
