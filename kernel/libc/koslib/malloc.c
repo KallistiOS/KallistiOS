@@ -1684,10 +1684,10 @@ char dbg_print_buffer[256];
 enum func_type_names { name_MALLOC = 0, name_REALLOC = 1, name_MEMALIGN = 2, name_CALLOC = 3,
     name_FREE = 4, name_CHECKALL = 5, name_CHECK = 6, name_STATS = 7};
 
-static const char * func_type[8] =
+static const char *func_type[8] =
     {"malloc", "realloc", "memalign", "calloc", "free", "check_all", "check", "stats"};
 
-void dbg_print_thd_addr_action(tid_t thread, uint32 addr, void* m, size_t s, uint8 which) {
+void dbg_print_thd_addr_action(tid_t thread, uint32 addr, void *m, size_t s, uint8_t which) {
     strcpy(dbg_print_buffer, "Thread ");
     itoa(thread, (dbg_print_buffer + strlen(dbg_print_buffer)), 10);
     strcat(dbg_print_buffer, ", addr 0x");
@@ -1713,7 +1713,7 @@ void dbg_print_thd_addr_action(tid_t thread, uint32 addr, void* m, size_t s, uin
     dbgio_write_str(dbg_print_buffer);
 }
 
-int mem_check_block_int(memctl_t * ctl, int source) {
+int mem_check_block_int(memctl_t *ctl, int source) {
     uint32 rv = arch_get_ret_addr(), *nt, i;
     int dmg = 0;
     int retv = 0;
