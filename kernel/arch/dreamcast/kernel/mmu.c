@@ -766,3 +766,15 @@ void mmu_shutdown(void) {
     irq_set_handler(EXC_DTLB_PV_WRITE, NULL, NULL);
     irq_set_handler(EXC_INITIAL_PAGE_WRITE, NULL, NULL);
 }
+
+mmu_token_t mmu_disable(void) {
+    mmu_token_t token = (mmu_token_t)*mmucr;
+
+    *mmucr &= ~0x1;
+
+    return token;
+}
+
+void mmu_restore(mmu_token_t token) {
+    *mmucr = (uint32)token;
+}

@@ -27,7 +27,7 @@
 /* 5ns per count in 1 cycle = 1 count mode(PMCR_COUNT_CPU_CYCLES) */
 #define NS_PER_CYCLE      5
 
-/* Get a counter's current configuration */
+/* Get a counter's current configuration. */
 bool perf_cntr_config(perf_cntr_t counter, 
                       perf_cntr_event_t *event,
                       perf_cntr_clock_t *clock) {
@@ -40,7 +40,7 @@ bool perf_cntr_config(perf_cntr_t counter,
     return (config & PMCR_RUN);
 }
 
-/* Start a performance counter */
+/* Start a performance counter. */
 void perf_cntr_start(perf_cntr_t counter, 
                      perf_cntr_event_t event, 
                      perf_cntr_clock_t clock) {
@@ -52,9 +52,14 @@ void perf_cntr_start(perf_cntr_t counter,
                         event;
 }
 
-/* Stop a performance counter */
+/* Stop a performance counter. */
 void perf_cntr_stop(perf_cntr_t counter) {
-    PMCR_CTRL(counter) &= ~(PMCR_PMMODE | PMCR_PMENABLE);
+    PMCR_CTRL(counter) &= ~PMCR_RUN;
+}
+
+/* Resume a performance counter. */
+void perf_cntr_resume(perf_cntr_t counter) {
+    PMCR_CTRL(counter) |= PMCR_RUN;
 }
 
 /* Clears a performance counter.  Has to stop it first. */

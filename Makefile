@@ -2,6 +2,7 @@
 #
 # Root Makefile
 # Copyright (C) 2003 Megan Potter
+# Copyright (C) 2024 Falco Girgis
 #
 
 # Make sure things compile nice and cleanly. We don't necessarily want to push
@@ -32,6 +33,15 @@ clean:
 distclean: clean
 	-rm -f lib/$(KOS_ARCH)/*
 	-rm -f addons/lib/$(KOS_ARCH)/*
+
+docs:
+	doxygen $(KOS_BASE)/doc/Doxyfile
+
+docs_clean:
+	-rm -rf $(KOS_BASE)/doc/reference
+
+docs_open: docs
+	open $(KOS_BASE)/doc/reference/html/index.html
 
 kos-ports_all:
 	$(KOS_PORTS)/utils/build-all.sh

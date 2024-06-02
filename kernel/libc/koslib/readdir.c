@@ -12,6 +12,7 @@
 
 struct dirent *readdir(DIR *dir) {
     dirent_t *d;
+    size_t len;
 
     if(!dir) {
         errno = EBADF;
@@ -32,7 +33,12 @@ struct dirent *readdir(DIR *dir) {
     else
         dir->d_ent.d_type = DT_REG;
 
-    strncpy(dir->d_name, d->name, sizeof(dir->d_name));
+    len = strlen(d->name);
+    if(len > sizeof(dir->d_name) - 1)
+        len = sizeof(dir->d_name) - 1;
+
+    strncpy(dir->d_ent.d_name, d->name, len);
+    dir->d_ent.d_name[len] = '\0';
 
     return &dir->d_ent;
 }

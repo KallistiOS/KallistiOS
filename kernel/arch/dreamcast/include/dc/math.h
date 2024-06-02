@@ -35,4 +35,6 @@ unsigned int bit_reverse(unsigned int value);
 
 /** @} */
 
+__END_DECLS
+
 #endif /* __DC_MATH_H */

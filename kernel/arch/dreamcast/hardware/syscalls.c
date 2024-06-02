@@ -73,8 +73,8 @@
 #define FUNC_GDROM_PIO_CALLBACK     11
 #define FUNC_GDROM_PIO_TRANSFER     12
 #define FUNC_GDROM_PIO_CHECK        13
-#define FUNC_GDROM_UNKNOWN1         14
-#define FUNC_GDROM_UNKNOWN2         15
+#define FUNC_GDROM_STUB1            14
+#define FUNC_GDROM_STUB2            15
 
 /* SYSTEM functions */
 #define FUNC_SYSTEM_RESET           -1

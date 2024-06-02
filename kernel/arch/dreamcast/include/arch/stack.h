@@ -6,7 +6,7 @@
 */
 
 /** \file    arch/stack.h
-    \brief   Stack traces.
+    \brief   Stack tracing.
     \ingroup debugging_stacktrace
 
     The functions in this file deal with doing stack traces. These functions

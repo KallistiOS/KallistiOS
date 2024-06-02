@@ -16,7 +16,7 @@ rm-elf:
 	-rm -f $(TARGET) romdisk.*
 
 $(TARGET): $(OBJS) 
-	kos-cc -o $(TARGET) $(OBJS) -lpng -lz -lm
+	kos-cc -o $(TARGET) $(OBJS) -lpng -lz
 
 wfont.o: wfont.bin
 	$(KOS_BASE)/utils/bin2o/bin2o wfont.bin wfont wfont.o
