@@ -141,7 +141,7 @@ static void irq_dump_regs(int code, int evt) {
             if((fp & 3) || (fp < 0x8c000000) || (fp > _arch_mem_top))
                 break;
 
-            dbglog(DBG_DEAD, " %08lx\n", arch_fptr_ret_addr(fp));
+            dbglog(DBG_DEAD, " %08lx", arch_fptr_ret_addr(fp));
             fp = arch_fptr_next(fp);
         }
 #endif
