@@ -212,7 +212,7 @@ void maple_vbl_irq_hnd(uint32 code, void *data) {
 /* Called after a Maple DMA send / receive pair completes */
 void maple_dma_irq_hnd(uint32 code, void *data) {
     maple_state_t *state = data;
-    maple_frame_t   *i;
+    maple_frame_t   *i, *tmp;
     int8        resp;
     uint32 gun;
 
@@ -231,7 +231,7 @@ void maple_dma_irq_hnd(uint32 code, void *data) {
 #endif
 
     /* For each queued frame, call its callback if it's done */
-    TAILQ_FOREACH(i, &state->frame_queue, frameq) {
+    TAILQ_FOREACH_SAFE(i, &state->frame_queue, frameq, tmp) {
         /* Skip any unsent or stale items */
         if(i->state != MAPLE_FRAME_SENT)
             continue;
