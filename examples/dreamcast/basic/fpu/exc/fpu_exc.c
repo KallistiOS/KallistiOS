@@ -42,8 +42,8 @@ fpscr_stringify(unsigned int value, char* buffer, size_t bytes) {
             !!(value & (1 << 19)),
             !!(value & (1 << 18)),
             (value >> 12) & 0x3f,
-            (value >> 7) & 0x3f,
-            (value >> 2) & 0x3f,
+            (value >> 7) & 0x1f,
+            (value >> 2) & 0x1f,
             value & 0x3);
 
     return buffer;
