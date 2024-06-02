@@ -252,8 +252,6 @@ void maple_dma_irq_hnd(uint32 code, void *data) {
         /* Mark it as responded to */
         i->state = MAPLE_FRAME_RESPONDED;
 
-        /* It's safe to do this during a TAILQ_FOREACH (verified) but
-           this isn't a good practice for non-TAILQ types =) */
         maple_queue_remove(i);
 
         /* If it's got a callback, call it; otherwise unlock
