@@ -21,6 +21,7 @@ static maple_driver_t lightgun_drv = {
     .functions = MAPLE_FUNC_LIGHTGUN,
     .name = "Lightgun",
     .periodic = NULL,
+    .status_size = 1024,
     .attach = lightgun_attach,
     .detach = NULL
 };

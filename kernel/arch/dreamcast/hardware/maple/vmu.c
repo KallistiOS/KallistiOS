@@ -148,6 +148,7 @@ static maple_driver_t vmu_drv = {
     .functions = MAPLE_FUNC_MEMCARD | MAPLE_FUNC_LCD | MAPLE_FUNC_CLOCK,
     .name = "VMU Driver",
     .periodic = NULL,
+    .status_size = sizeof(vmu_state_t),
     .attach = vmu_attach,
     .detach = NULL
 };
