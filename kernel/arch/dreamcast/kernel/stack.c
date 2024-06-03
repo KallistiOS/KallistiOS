@@ -48,7 +48,7 @@ void arch_stk_trace_at(uint32_t fp, size_t n) {
 
             /* Validate the return address */
             if(!arch_valid_address(fp)) {
-                dbgio_printf("   %08lx   (invalid return address)\n");
+                dbgio_printf("   %08lx   (invalid return address)\n", fp);
                 break;
             } else
                 dbgio_printf("   %08lx\n", fp);
