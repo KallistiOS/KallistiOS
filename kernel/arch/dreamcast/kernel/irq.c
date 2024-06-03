@@ -98,19 +98,23 @@ static char *irq_exception_string(int evt) {
             return "Data address error (read)";
         case EXC_DATA_ADDRESS_WRITE:
             return "Data address error (write)";
-        case EXC_DTLB_MISS_READ:
-            return "Data TLB miss (read)";
-        case EXC_DTLB_MISS_WRITE:
-            return "Data TLB miss (write)";
-        case EXC_DTLB_PV_READ:
-            return "Data TLB protection violation (read)";
+        case EXC_DTLB_MISS_READ:  /* or EXC_ITLB_MISS */
+            return "Instruction or Data(read) TLB miss";  
+        case EXC_DTLB_MISS_WRITE:  
+            return "Data(write) TLB miss";
+        case EXC_DTLB_PV_READ:  /* or EXC_ITLB_PV */
+            return "Instruction or Data(read) TLB protection violation";  
         case EXC_DTLB_PV_WRITE:
             return "Data TLB protection violation (write)";
         case EXC_FPU:
             return "FPU exception";
-        case EXC_INITIAL_PAGE_WRITE:
-            return "Initial page write exception";
-        default:
+        case EXC_INITIAL_PAGE_WRITE:  
+            return "Initial page write exception";  
+        case EXC_TRAPA:  
+            return "Unconditional trap (trapa)"; 
+        case EXC_USER_BREAK_POST:  /* or EXC_USER_BREAK_PRE */
+            return "User break";  
+        default:  
             return "Unknown exception";
     }
 }
@@ -138,10 +142,18 @@ static void irq_dump_regs(int code, int evt) {
 
 #ifdef FRAME_POINTERS
         while(fp != 0xffffffff) {
+            /* Validate the function pointer (fp) */
             if((fp & 3) || (fp < 0x8c000000) || (fp > _arch_mem_top))
                 break;
 
-            dbglog(DBG_DEAD, " %08lx", arch_fptr_ret_addr(fp));
+            /* Get the return address from the function pointer */
+            fp = arch_fptr_ret_addr(fp);
+
+            /* Validate the return address */
+            if(!arch_valid_address(fp))
+                break;
+
+            dbglog(DBG_DEAD, " %08lx", fp);
             fp = arch_fptr_next(fp);
         }
 #endif

@@ -53,7 +53,7 @@ void arch_stk_trace(int n);
     \param  fp              The frame pointer to start from.
     \param  n               The number of frames to leave off.
 */
-void arch_stk_trace_at(uint32 fp, int n);
+void arch_stk_trace_at(uint32_t fp, size_t n);
 
 /** @} */
 
