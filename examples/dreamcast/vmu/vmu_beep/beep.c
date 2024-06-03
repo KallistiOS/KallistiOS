@@ -38,12 +38,11 @@
 
 #include <plx/font.h>
 
-KOS_INIT_FLAGS(INIT_DEFAULT);
 
-plx_font_t *fnt;
-plx_fcxt_t *cxt;
+static plx_font_t *fnt;
+static plx_fcxt_t *cxt;
 
-void cleanup(void) {
+static void cleanup(void) {
     plx_font_destroy(fnt);
     plx_fcxt_destroy(cxt);
 }
