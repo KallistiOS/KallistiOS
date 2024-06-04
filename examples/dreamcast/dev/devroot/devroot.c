@@ -2,7 +2,7 @@
 
    devroot.c
    Copyright (C) 2024 Donald Haase
-   
+
    This example demonstrates the expected behavior of reading from the 
    / and /dev dirs, as well as attempting to open a non-existant device 
    for the same.
@@ -43,6 +43,8 @@ void printdir(char* fn) {
         }
         else
             printf("FAIL: Counted %i entries the first time and %i the second.\n", cnt1, cnt2);
+
+        closedir(d);
     }
 }
 

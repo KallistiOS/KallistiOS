@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include <kos/init.h>
 
@@ -37,13 +38,18 @@
 
 #include <plx/font.h>
 
-KOS_INIT_FLAGS(INIT_DEFAULT);
+
+static plx_font_t *fnt;
+static plx_fcxt_t *cxt;
+
+static void cleanup(void) {
+    plx_font_destroy(fnt);
+    plx_fcxt_destroy(cxt);
+}
 
 int main(int argc, char *argv[]) {
     maple_device_t *dev, *vmudev;
     cont_state_t *state;
-    plx_font_t *fnt;
-    plx_fcxt_t *cxt;
     point_t w;
     int i = 0, count = 0;
     uint16_t old_buttons = 0, rel_buttons = 0;
@@ -51,6 +57,7 @@ int main(int argc, char *argv[]) {
     uint8_t n[8] = { 0, 0, 0, 0, 0, 0, 0, 0 }; //nibbles
     char s[8][2] = { "", "", "", "", "", "", "", "" };
 
+    atexit(cleanup);
     /* If the face buttons are all pressed, exit the app */
     cont_btn_callback(0, CONT_START | CONT_A | CONT_B | CONT_X | CONT_Y,
                       (cont_btn_callback_t)arch_exit);

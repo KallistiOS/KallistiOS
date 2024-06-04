@@ -398,6 +398,11 @@ int load_pcx(char *pcxdata) {
     int num_bytes;
     struct  pcx_hdr pcxh;
 
+    if(image == NULL) {
+        printf("Image not allocated\r\n");
+        return 0;
+    }
+
     bytes = 0;
 
     memcpy(&pcxh, pcxdata, sizeof(pcxh));
@@ -856,6 +861,12 @@ int main() {
 
         draw_one_frame();
     }
+
+    /* Clean up what we allocated */
+    free(charmap);
+    free(star_x);
+    free(star_y);
+    free(star_z);
 
     printf("Done, returning\n");
     return 0;
