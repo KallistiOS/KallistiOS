@@ -62,7 +62,7 @@ static int push_back(struct dirent ***list, int *size, int *capacity,
     entry_size = sizeof(struct dirent) + strlen(dir->d_name) + 1;
     new_dir = malloc(entry_size);
 
-    /* Check for malloc() failure of the singel entry */
+    /* Check for malloc() failure of the single entry */
     if(!new_dir)
         goto out_of_memory;
 

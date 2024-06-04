@@ -83,10 +83,48 @@ int trapa_set_handler(irq_t code, irq_handler hnd, void *data) {
     return 0;
 }
 
+/* Get a string description of the exception */
+static char *irq_exception_string(int evt) {
+    switch(evt) {
+        case EXC_ILLEGAL_INSTR:
+            return "Illegal instruction";
+        case EXC_SLOT_ILLEGAL_INSTR:
+            return "Slot illegal instruction";
+        case EXC_GENERAL_FPU:
+            return "General FPU exception";
+        case EXC_SLOT_FPU:
+            return "Slot FPU exception";
+        case EXC_DATA_ADDRESS_READ:
+            return "Data address error (read)";
+        case EXC_DATA_ADDRESS_WRITE:
+            return "Data address error (write)";
+        case EXC_DTLB_MISS_READ:  /* or EXC_ITLB_MISS */
+            return "Instruction or Data(read) TLB miss";  
+        case EXC_DTLB_MISS_WRITE:  
+            return "Data(write) TLB miss";
+        case EXC_DTLB_PV_READ:  /* or EXC_ITLB_PV */
+            return "Instruction or Data(read) TLB protection violation";  
+        case EXC_DTLB_PV_WRITE:
+            return "Data TLB protection violation (write)";
+        case EXC_FPU:
+            return "FPU exception";
+        case EXC_INITIAL_PAGE_WRITE:  
+            return "Initial page write exception";  
+        case EXC_TRAPA:  
+            return "Unconditional trap (trapa)"; 
+        case EXC_USER_BREAK_POST:  /* or EXC_USER_BREAK_PRE */
+            return "User break";  
+        default:  
+            return "Unknown exception";
+    }
+}
+
 /* Print a kernel panic reg dump */
 extern irq_context_t *irq_srt_addr;
-void irq_dump_regs(int code, int evt) {
+static void irq_dump_regs(int code, int evt) {
+    uint32_t fp;
     uint32_t *regs = irq_srt_addr->r;
+
     dbglog(DBG_DEAD, "Unhandled exception: PC %08lx, code %d, evt %04x\n",
            irq_srt_addr->pc, code, (uint16)evt);
     dbglog(DBG_DEAD, " R0-R7: %08lx %08lx %08lx %08lx %08lx %08lx %08lx %08lx\n",
@@ -94,11 +132,34 @@ void irq_dump_regs(int code, int evt) {
     dbglog(DBG_DEAD, " R8-R15: %08lx %08lx %08lx %08lx %08lx %08lx %08lx %08lx\n",
            regs[8], regs[9], regs[10], regs[11], regs[12], regs[13], regs[14], regs[15]);
     dbglog(DBG_DEAD, " SR %08lx PR %08lx\n", irq_srt_addr->sr, irq_srt_addr->pr);
-    arch_stk_trace_at(regs[14], 0);
-    /* dbgio_printf(" Vicinity code ");
-    dbgio_printf(" @%08lx: %04x %04x %04x %04x %04x\n",
-        srt_addr->pc-4, *((uint16*)(srt_addr->pc-4)), *((uint16*)(srt_addr->pc-2)),
-        *((uint16*)(srt_addr->pc)), *((uint16*)(srt_addr->pc+2)), *((uint16*)(srt_addr->pc+4))); */
+    fp = regs[14];
+    arch_stk_trace_at(fp, 0);
+    
+    if(code == 1) {
+        dbglog(DBG_DEAD, "Encountered %s. Use this terminal command to help"
+            " diagnose:\n\n\t$KOS_ADDR2LINE -e your_program.elf %08lx %08lx", 
+            irq_exception_string(evt), irq_srt_addr->pc, irq_srt_addr->pr);
+
+#ifdef FRAME_POINTERS
+        while(fp != 0xffffffff) {
+            /* Validate the function pointer (fp) */
+            if((fp & 3) || (fp < 0x8c000000) || (fp > _arch_mem_top))
+                break;
+
+            /* Get the return address from the function pointer */
+            fp = arch_fptr_ret_addr(fp);
+
+            /* Validate the return address */
+            if(!arch_valid_address(fp))
+                break;
+
+            dbglog(DBG_DEAD, " %08lx", fp);
+            fp = arch_fptr_next(fp);
+        }
+#endif
+
+        dbglog(DBG_DEAD, "\n");
+    }
 }
 
 /* The C-level routine that processes context switching and other

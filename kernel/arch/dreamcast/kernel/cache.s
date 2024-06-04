@@ -5,7 +5,8 @@
 !
 ! Copyright (C) 2001 Megan Potter
 ! Copyright (C) 2014, 2016, 2023 Ruslan Rostovtsev
-! Copyright (C) 2023 Andy Barajas
+! Copyright (C) 2023, 2024 Andy Barajas
+! Copyright (C) 2024 Paul Cercueil
 !
 ! Optimized assembler code for managing the cache.
 !
@@ -19,16 +20,19 @@
     .globl _dcache_purge_all
     .globl _dcache_purge_all_with_buffer
 
-! Routine to flush parts of cache.. Thanks to the Linux-SH guys
-! for the algorithm. The original version of this routine was
-! taken from sh-stub.c.
+! This routine goes through and flushes/invalidates the icache 
+! for a given range.
 !
 ! r4 is starting address
-! r5 is count
+! r5 is size
     .align 2
 _icache_flush_range:
+    tst      r5, r5          ! Test if size is 0
     mov.l    ifr_addr, r0
+
+    bt       .iflush_exit    ! Exit early if no blocks to flush
     mov.l    p2_mask, r1
+
     or       r1, r0
     jmp      @r0
     nop
@@ -41,7 +45,7 @@ _icache_flush_range:
     or       r1, r0
     ldc      r0, sr
 
-    ! Get ending address from count and align start address
+    ! Get ending address from size and align start address
     add      r4, r5
     mov.l    align_mask, r0
     and      r0, r4
@@ -49,7 +53,7 @@ _icache_flush_range:
     mov.l    ic_entry_mask, r2
     mov.l    ic_valid_mask, r3
 
-.flush_loop:
+.iflush_loop:
     ! Write back D cache
     ocbwb    @r4
 
@@ -63,7 +67,7 @@ _icache_flush_range:
 
     add      #32, r4       ! Move on to next cache block
     cmp/hs   r4, r5
-    bt/s     .flush_loop
+    bt/s     .iflush_loop
     mov.l    r7, @r6       ! *addr = data    
 
     ! Restore old SR
@@ -78,6 +82,8 @@ _icache_flush_range:
     nop
     nop
     nop
+
+.iflush_exit:
     rts
     nop
 
@@ -87,13 +93,16 @@ _icache_flush_range:
 ! if you care about the contents.
 !
 ! r4 is starting address
-! r5 is count
+! r5 is size
     .align 2
 _dcache_inval_range:
-    ! Get ending address from count and align start address
-    add      r4, r5
-    mov.l    align_mask, r0
-    and      r0, r4
+    tst      r5, r5         ! Test if size is 0
+    mov.l    align_mask, r0   
+
+    bt       .dinval_exit   ! Exit early if no blocks to inval
+    add      r4, r5         ! Get ending address from size
+    
+    and      r0, r4         ! Align start address
 
 .dinval_loop:
     ! Invalidate the dcache
@@ -102,6 +111,7 @@ _dcache_inval_range:
     bt/s     .dinval_loop
     add      #32, r4        ! Move on to next cache block
 
+.dinval_exit:
     rts
     nop
 
@@ -112,29 +122,30 @@ _dcache_inval_range:
 ! we flush the whole cache instead.
 !
 ! r4 is starting address
-! r5 is count
+! r5 is size
     .align 2
 _dcache_flush_range:
-    ! Divide byte count by 32 
-    mov      #-5, r1
-    shad     r1, r5           
-
-    ! Compare with flush_check
-    mov.w    flush_check, r2
-    cmp/hi   r2, r5
-    bt       _dcache_flush_all  ! If lines > flush_check, jump to _dcache_flush_all
-
-    ! Align start address
+    ! Check that 0 < size < flush_check
+    tst      r5, r5
+    mov.l    flush_check, r2
+    
+    bt       .dflush_exit       ! Exit early if no blocks to flush
     mov.l    align_mask, r0
-    and      r0, r4
+
+    cmp/hi   r2, r5             ! Compare with flush_check
+    add      r4, r5             ! Get ending address from size
+    
+    bt       _dcache_flush_all  ! If size > flush_check, jump to _dcache_flush_all
+    and      r0, r4             ! Align start address
 
 .dflush_loop:
     ! Write back the dcache
     ocbwb    @r4
-    dt       r5
-    bf/s     .dflush_loop
+    cmp/hs   r4, r5
+    bt/s     .dflush_loop
     add      #32, r4        ! Move on to next cache block
 
+.dflush_exit:
     rts
     nop
 
@@ -167,29 +178,30 @@ _dcache_flush_all:
 ! we purge the whole cache instead.
 !
 ! r4 is starting address
-! r5 is count
+! r5 is size
     .align 2
 _dcache_purge_range:
-    ! Divide byte count by 32 
-    mov      #-5, r1
-    shad     r1, r5           
+    ! Check that 0 < size < purge_check  
+    tst      r5, r5
+    mov.l    purge_check, r2
+    
+    bt       .dpurge_exit       ! Exit early if no blocks to purge
+    mov.l    align_mask, r0 
 
-    ! Compare with purge_check
-    mov.w    purge_check, r2
-    cmp/hi   r2, r5
-    bt       _dcache_purge_all  ! If lines > purge_check, jump to _dcache_purge_all
+    cmp/hi   r2, r5             ! Compare with purge_check
+    add      r4, r5             ! Get ending address from size
 
-    ! Align start address
-    mov.l    align_mask, r0
-    and      r0, r4
+    bt       _dcache_purge_all  ! If size > purge_check, jump to _dcache_purge_all
+    and      r0, r4             ! Align start address
 
 .dpurge_loop:
     ! Write back and invalidate the D cache
     ocbp     @r4
-    dt       r5
-    bf/s     .dpurge_loop
+    cmp/hs   r4, r5
+    bt/s     .dpurge_loop
     add      #32, r4     ! Move on to next cache block
 
+.dpurge_exit:
     rts
     nop
 
@@ -254,6 +266,16 @@ dca_addr:
 dc_ubit_mask:
     .long    0xfffffffd    ! Mask to zero out U bit
 
+! _dcache_flush_range can have size param set up to 66560 bytes 
+! and still be faster than dcache_flush_all.
+flush_check:
+    .long    66560
+    
+! _dcache_purge_range can have size param set up to 39936 bytes 
+! and still be faster than dcache_purge_all.
+purge_check:
+    .long    39936 
+
 ! Shared    
 p2_mask:    
     .long    0xa0000000
@@ -263,18 +285,5 @@ align_mask:
     .long    ~31           ! Align address to 32-byte boundary
 cache_lines:
     .word    512           ! Total number of cache lines in dcache
-
-! _dcache_flush_range can execute up to this amount of loops and 
-! beat execution time of _dcache_flush_all.  This means that 
-! dcache_flush_range can have count param set up to 66560 bytes 
-! and still be faster than dcache_flush_all.
-flush_check:
-    .word    2080
-    
-! _dcache_purge_range can execute up to this amount of loops and 
-! beat execution time of _dcache_purge_all.  This means that 
-! dcache_purge_range can have count param set up to 39936 bytes 
-! and still be faster than dcache_purge_all.
-purge_check:
-    .word    1248        
+       
 

@@ -13,7 +13,7 @@ rm-elf:
 	-rm -f $(TARGET) romdisk.*
 
 $(TARGET): $(OBJS)
-	kos-c++ -o $(TARGET) $(OBJS) -lmodplug -lm
+	kos-c++ -o $(TARGET) $(OBJS) -lmodplug
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)

@@ -29,10 +29,18 @@ int main(int argc, char **argv) {
     /* Set our handler */
     mmu_map_set_callback(catchnull);
 
+/* Make sure the compiler doesn't complain about the bad thing 
+we are doing intentionally */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wanalyzer-null-dereference"
+
     /* Do something naughty; note that this will actually work
        for both reads and writes in this case, but we can only
        really effectively test one ;) */
-    *((uint16*)NULL) = 0;
+    *((uint16_t *)NULL) = 0;
+
+/* Turn the warning back on */
+#pragma GCC diagnostic pop
 
     /* We shouldn't get here... */
 
@@ -41,5 +49,3 @@ int main(int argc, char **argv) {
 
     return 0;
 }
-
-

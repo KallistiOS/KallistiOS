@@ -2,6 +2,7 @@
 
    stackprotector.c
    Copyright (C) 2021 Lawrence Sebald
+   Copyright (C) 2024 Falco Girgis
 */
 
 /* This example shows how to make use of GCC's -fstack-protector options to
@@ -26,30 +27,50 @@
 #include <string.h>
 #include <stdio.h>
 #include <arch/arch.h>
+#include <stdlib.h>
 
 /* This function will override the default stack protector handler that is
    defined in Newlib. This is not necessary to enable the stack protector,
    but is nice for being able to draw the error message to the screen or
-   whatnot (not that we do any of that here). */
-void __stack_chk_fail(void) {
+   whatnot (not that we do any of that here).
+
+   NOTE: Typically you would want to call abort() and/or write to stderr
+         rather than stdout, but we exit gracefully in this example due to
+         the fact that we're simply testing the stack checker functionality.
+
+   WARNING: This function must be explicitly marked with the used attribute
+            when compiling with LTO enabled to prevent it from being removed,
+            which means you will be calling into Newlib's default handler.
+*/
+__used void __stack_chk_fail(void) {
     unsigned int pr = (unsigned int)arch_get_ret_addr();
     printf("Stack smashed at PR=0x%08x\n", pr);
-    printf("Aborting program.\n");
-    arch_abort();
+    printf("Successfully detected stack corruption!\n");
+    exit(EXIT_SUCCESS);
 }
 
-__attribute__((noinline)) void badfunc(void) {
+/* Make sure the compiler doesn't complain about the bad thing 
+we are doing intentionally */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wanalyzer-out-of-bounds"
+
+__noinline void badfunc(void) {
     char buffer[8];
     strcpy(buffer, "This string is entirely too long and will overflow.");
 }
 
+/* Turn the warning back on */
+#pragma GCC diagnostic pop
+
 int main(int argc, char **argv) {
     printf("Stack protector test....\n");
     printf("About to call badfunc()...\n");
-    badfunc();
-    printf("This shouldn't print out if stack protector is enabled.\n");
 
-    return 0;
+    badfunc();
+
+    fprintf(stderr, "This shouldn't print out if stack protector is enabled.\n");
+
+    return EXIT_FAILURE;
 }
 
 

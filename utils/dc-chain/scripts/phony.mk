@@ -8,4 +8,5 @@
 .PHONY: build build-sh4 build-arm $(build_sh4_targets) $(build_arm_targets)
 .PHONY: build-binutils build-newlib build-gcc-pass1 build-gcc-pass2 fixup-sh4-newlib
 .PHONY: gdb install_gdb build_gdb
-.PHONY: clean clean-builds clean-downloads clean-archives
+.PHONY: clean clean-builds clean-downloads
+.PHONY: distclean clean-builds clean-downloads clean-archives

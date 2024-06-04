@@ -11,9 +11,15 @@ include scripts/banner.mk
 # User configuration
 config_file=Makefile.cfg
 ifneq ("$(wildcard $(config_file))","")
+  $(info +++ Using configuration from $(config_file))
   include $(config_file)
 else
-  $(error The required $(config_file) file is missing)
+  ifneq ("$(wildcard Makefile.default.cfg)","")
+    $(info +++ Using configuration from Makefile.default.cfg)
+    include Makefile.default.cfg
+  else
+    $(error No configuration file found at $(config_file) or Makefile.default.cfg)
+  endif
 endif
 
 # Toolchain profiles
@@ -21,7 +27,7 @@ include scripts/profile-defaults.mk
 ifneq ("$(wildcard profiles/profile.$(toolchain_profile).mk)","")
   include profiles/profile.$(toolchain_profile).mk
 else
-  $(error No configuration found at profiles/profile.$(toolchain_profile).mk)
+  $(error No toolchain profile file found at profiles/profile.$(toolchain_profile).mk)
 endif
 
 # Download functions

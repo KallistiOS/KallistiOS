@@ -82,12 +82,14 @@ instructions mentioned above for installing dependencies on your system.
 
 ## Configuration
 
-Before running `dc-chain`, you may wish to set up the
-[`Makefile.cfg`](Makefile.cfg) file containing selections for the toolchain
-profile and additional configurable options for building the toolchain(s). The
-normal, stable defaults have already been set up for you, so most users can 
-skip this step. If you'd like to make changes, open and read the options in
-[`Makefile.cfg`](Makefile.cfg) in your text editor.
+Before running `dc-chain`, you may wish to set up the `Makefile.cfg` file 
+containing selections for the toolchain profile and additional configurable
+options for building the toolchain(s). The normal, stable defaults have already
+been set up for you in [`Makefile.default.cfg`](Makefile.default.cfg), so most
+users can skip this step. If you'd like to make changes, copy
+[`Makefile.default.cfg`](Makefile.default.cfg) to `Makefile.cfg`; then open and
+read the options in [`Makefile.cfg`](Makefile.cfg) in your text editor. When
+building, the customizations in `Makefile.cfg` will override the defaults.
 
 ### Toolchain profiles
 
@@ -102,8 +104,9 @@ The following toolchain profiles are available for users to select in
 | 11.4.0 | 11.4.0 | 4.3.0 | 2.41 | 8.5.0 | 2.41 | Latest release in the GCC 11 series, released 2023-05-15 |
 | 12.3.0 | 12.3.0 | 4.3.0 | 2.41 | 8.5.0 | 2.41 | Latest release in the GCC 12 series, released 2023-05-08 |
 | **stable** | **13.2.0** | **4.3.0** | **2.41** | **8.5.0** | **2.41** | **Tested stable; based on GCC 13.2.0, released 2023-07-27** |
+| 13.3.0 | 13.3.0 | 4.4.0 | 2.42 | 8.5.0 | 2.42 | Latest release in the GCC 13 series, released 2024-05-21 |
 | 14.1.0 | 14.1.0 | 4.4.0 | 2.42 | 8.5.0 | 2.42 | Latest release in the GCC 14 series, released 2024-05-07 |
-| 13.2.1-dev | 13.2.1 (git) | 4.4.0 | 2.42 | 8.5.0 | 2.42 | Bleeding edge GCC 13 series from git |
+| 13.3.1-dev | 13.3.1 (git) | 4.4.0 | 2.42 | 8.5.0 | 2.42 | Bleeding edge GCC 13 series from git |
 | 14.1.1-dev | 14.0.1 (git) | 4.4.0 | 2.42 | 8.5.0 | 2.42 | Bleeding edge GCC 14 series from git |
 | 15.0.0-dev | 15.0.0 (git) | 4.4.0 | 2.42 | 8.5.0 | 2.42 | Bleeding edge GCC 15 series from git |
 | gccrs-dev | 14.x | 4.4.0 | 2.42 | 8.5.0 | 2.42 | GCC fork for development of the GCCRS Rust compiler |
@@ -129,8 +132,8 @@ on your platform.
 
 ## Building the toolchain
 
-With prerequisites installed and a [`Makefile.cfg`](Makefile.cfg) set up with
-desired options, the toolchains are ready to be built.
+With prerequisites installed (and optionally a [`Makefile.cfg`](Makefile.cfg)
+set up with desired custom options), the toolchains are ready to be built.
 
 In the `dc-chain` directory, you may run (for **BSD**, please use `gmake`
 instead):
@@ -152,7 +155,7 @@ If anything goes wrong, check the output in `logs/`.
 After the toolchain compilation, you may save space by cleaning up downloaded and
 temporary generated files by entering:
 ```
-make clean
+make distclean
 ```
 
 ## Finished

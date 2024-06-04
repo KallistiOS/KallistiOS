@@ -2,7 +2,8 @@
 
    general_threading_test.c
 
-   (c)2000-2002 Megan Potter
+   Copyright (C) 2000-2002 Megan Potter
+   Copyright (C) 2024 Falco Girgis
 
    A simple thread example
 
@@ -27,6 +28,8 @@ void *thd_0(void *v) {
         for(x = 0; x < 320; x++)
             vram_s[y * 640 + x] = (((x * x) + (y * y)) & 0x1f) << 11;
 
+    thd_pslist(printf);
+
     printf("Thread 0 finished\n");
     return NULL;
 }
@@ -43,6 +46,9 @@ void *thd_1(void *v) {
 
     printf("Thread 1 waiting:\n");
     thd_sleep(5000);
+
+    thd_pslist(printf);
+
     printf("Thread 1 exiting\n");
     return NULL;
 }
@@ -61,6 +67,9 @@ void *thd_2(void *v) {
     printf("sem_wait_timed returns %d\n", sem_wait_timed(&sem, 200));
     printf("sem_wait_timed returns %d\n", sem_wait_timed(&sem, 200));
     printf("sem_wait_timed returns %d\n", sem_wait_timed(&sem, 200));
+
+    thd_pslist(printf);
+
     printf("Thread 2 exiting\n");
     return NULL;
 }
@@ -106,7 +115,7 @@ int main(int argc, char **argv) {
                       (cont_btn_callback_t)arch_exit);
 
     /* Print a banner */
-    printf("KOS 1.1.x thread program:\n");
+    printf("KOS 2.0.x thread program:\n");
 
     /* Create a semaphore for timing purposes */
     sem_init(&sem, 1);
@@ -188,6 +197,8 @@ int main(int argc, char **argv) {
     cv_quit = 1;
     cond_broadcast(&cv);
     mutex_unlock(&mut);
+
+    thd_pslist(printf);
 
     for(i = 0; i < 10; i++)
         thd_join(t3[i], NULL);
