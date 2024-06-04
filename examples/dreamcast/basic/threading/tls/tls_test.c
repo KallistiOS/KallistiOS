@@ -13,6 +13,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdatomic.h>
+#include <errno.h>
+#include <string.h>
 
 #include <kos/thread.h>
 #include <kos/once.h>
@@ -60,7 +62,7 @@ static void *thd_func(void *param UNUSED) {
     printf("Thd %d: Will create key 2, if its not created\n", cur->tid);
 
     if((retval = kthread_once(&once, &once_func))) {
-        fprintf(stderr, "kthread_once failed with %d!\n", retval);
+        fprintf(stderr, "kthread_once failed with %s!\n", strerror(errno));
         thd_exit((void *)false);
     }
 
