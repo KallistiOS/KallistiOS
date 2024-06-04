@@ -66,6 +66,8 @@ static struct {
     unsigned char map[16384];
 } bin_info;
 
+extern dbgio_handler_t dbgio_null;
+
 extern int dcload_type;
 static int initted = 0;
 static int escape = 0;
@@ -622,7 +624,7 @@ static int dcls_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
 }
 
 /* dbgio interface */
-static int dcls_detected(void) {
+static bool dcls_detected(void) {
     return initted > 0;
 }
 
@@ -634,7 +636,7 @@ static int dcls_fake_shutdown(void) {
     return 0;
 }
 
-static int dcls_writebuf(const uint8 *buf, int len, int xlat) {
+static int dcls_writebuf(const uint8_t *buf, size_t len, bool xlat) {
     int locked;
     command_3int_t cmd;
 
@@ -745,7 +747,8 @@ dbgio_handler_t dbgio_dcls = {
     NULL,
     NULL,
     dcls_writebuf,
-    NULL
+    NULL,
+    { NULL }
 };
 
 /* This function must be called prior to calling fs_dclsocket_init() */

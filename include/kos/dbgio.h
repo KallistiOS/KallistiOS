@@ -1,20 +1,21 @@
 /* KallistiOS ##version##
 
    kos/include/dbgio.h
-   Copyright (C)2000,2004 Megan Potter
-
+   Copyright (C) 2000, 2004 Megan Potter
+   Copyright (C) 2024 Falco Girgis
 */
 
 /** \file    kos/dbgio.h
     \brief   Debug I/O.
-    \ingroup logging
+    \ingroup logging_dbgio
 
     This file contains the Debug I/O system, which abstracts things so that
     various types of debugging tools can be used by programs in KOS. Included
     among these tools is the dcload console (dcload-serial, dcload-ip, and
-    fs_dclsocket), a raw serial console, and a framebuffer based console.
+    fs_dclsocket), a raw serial console, and a framebuffer-based console.
 
     \author Megan Potter
+    \author Falco Girgis
 */
 
 #ifndef __KOS_DBGIO_H
@@ -23,28 +24,52 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdarg.h>
 
-/** \brief   Debug I/O Interface.
-    \ingroup logging
+#include <sys/types.h>
+#include <sys/queue.h>
+
+/** \defgroup logging_dbgio     Debug I/O
+    \brief    Debug I/O System and Abstraction  
+    \ingroup  logging
+
+    @{
+*/
+
+/** \brief IRQ mode to use with Debug I/O. 
+
+    Two different IRQ modes which may be supported by a dbgio_handler.
+
+    \sa    dbgio_set_irq_usage()
+*/
+typedef enum dbgio_mode {
+    DBGIO_MODE_POLLED = 0, /**< Polled I/O mode */
+    DBGIO_MODE_IRQ    = 1  /**< IRQ-based I/O mode */
+} dbgio_mode_t;
+
+/** \cond */
+LIST_HEAD(dbgio_list, dbgio_handler);
+/** \endcond */
+
+/** \brief   Debug I/O Driver Interface.
 
     This struct represents a single dbgio interface. This should represent
     a generic pollable console interface. We will store an ordered list of
     these statically linked into the program and fall back from one to the
     next until one returns true for detected(). Note that the last device in
     this chain is the null console, which will always return true.
-
-    \headerfile kos/dbgio.h
 */
 typedef struct dbgio_handler {
     /** \brief  Name of the dbgio handler */
-    const char  * name;
+    const char  *name;
 
     /** \brief  Detect this debug interface.
-        \retval 1           If the device is available and usable
-        \retval 0           If the device is unavailable
+        \retval true        If the device is available and usable
+        \retval false       If the device is unavailable
     */
-    int (*detected)(void);
+    bool (*detected)(void);
 
     /** \brief  Initialize this debug interface with default parameters.
         \retval 0           On success
@@ -59,11 +84,11 @@ typedef struct dbgio_handler {
     int (*shutdown)(void);
 
     /** \brief  Set either polled or IRQ usage for this interface.
-        \param  mode        1 for IRQ-based usage, 0 for polled I/O
+        \param  mode        Desired IRQ mode for the interface.
         \retval 0           On success
         \retval -1          On failure
     */
-    int (*set_irq_usage)(int mode);
+    int (*set_irq_usage)(dbgio_mode_t mode);
 
     /** \brief  Read one character from the console.
         \retval 0           On success
@@ -93,7 +118,7 @@ typedef struct dbgio_handler {
         \return             Number of characters written on success, or -1 on
                             failure (set errno as appropriate)
     */
-    int (*write_buffer)(const uint8 *data, int len, int xlat);
+    int (*write_buffer)(const uint8_t *data, size_t len, bool xlat);
 
     /** \brief  Read an entire buffer of data from the console.
         \param  data        The buffer to read into
@@ -101,20 +126,25 @@ typedef struct dbgio_handler {
         \return             Number of characters read on success, or -1 on
                             failure (set errno as appropriate)
     */
-    int (*read_buffer)(uint8 *data, int len);
+    int (*read_buffer)(uint8_t *data, size_t len);
+
+    /** \brief List of registered dbgio_handlers. 
+    
+        This member is managed internally and doesn't need to be set.
+    */
+    LIST_ENTRY(dbgio_handler) registry;
 } dbgio_handler_t;
 
-/** \cond */
-/* These two should be initialized in arch. */
-extern dbgio_handler_t * dbgio_handlers[];
-extern int dbgio_handler_cnt;
+int dbgio_register(dbgio_handler_t *handler);
 
-/* This is defined by the shared code, in case there's no valid handler. */
-extern dbgio_handler_t dbgio_null;
-/** \endcond */
+int dbgio_unregister(dbgio_handler_t *handler);
+
+dbgio_handler_t *dbgio_find(const char *name);
+
+int dbgio_aux_select(const char* name);
+const char *dbgio_aux_get(void);
 
 /** \brief   Select a new dbgio interface by name.
-    \ingroup logging
 
     This function manually selects a new dbgio interface by name. This function
     will allow you to select a device, even if it is not detected.
@@ -127,18 +157,16 @@ extern dbgio_handler_t dbgio_null;
     \par    Error Conditions:
     \em     ENODEV - The specified device could not be initialized
 */
-int dbgio_dev_select(const char * name);
+int dbgio_dev_select(const char *name);
 
 /** \brief   Fetch the name of the currently selected dbgio interface.
-    \ingroup logging
 
     \return                 The name of the current dbgio interface (or NULL if
                             no device is selected)
 */
-const char * dbgio_dev_get(void);
+const char *dbgio_dev_get(void);
 
 /** \brief   Initialize the dbgio console.
-    \ingroup logging
 
     This function is called internally, and shouldn't need to be called by any
     user programs.
@@ -153,7 +181,6 @@ const char * dbgio_dev_get(void);
 int dbgio_init(void);
 
 /** \brief   Set IRQ usage.
-    \ingroup logging
 
     The dbgio system defaults to polled usage. Some devices may not support IRQ
     mode at all.
@@ -163,24 +190,10 @@ int dbgio_init(void);
     \retval 0               On success
     \retval -1              On error (errno should be set as appropriate)
 */
-int dbgio_set_irq_usage(int mode);
+int dbgio_set_irq_usage(dbgio_mode_t mode);
 
-/** \brief   Polled I/O mode.
-    \ingroup logging
-
-    \see    dbgio_set_irq_usage()
-*/
-#define DBGIO_MODE_POLLED 0
-
-/** \brief   IRQ-based I/O mode.
-    \ingroup logging
-
-    \see    dbgio_set_irq_usage()
-*/
-#define DBGIO_MODE_IRQ 1
 
 /** \brief   Read one character from the console.
-    \ingroup logging
 
     \retval 0               On success
     \retval -1              On error (errno should be set as appropriate)
@@ -188,7 +201,6 @@ int dbgio_set_irq_usage(int mode);
 int dbgio_read(void);
 
 /** \brief   Write one character to the console.
-    \ingroup logging
 
     \note                   Interfaces may require a call to flush() before the
                             output is actually flushed to the console.
@@ -201,7 +213,6 @@ int dbgio_read(void);
 int dbgio_write(int c);
 
 /** \brief   Flush any queued output.
-    \ingroup logging
 
     \retval 0               On success
     \retval -1              On error (errno should be set as appropriate)
@@ -209,7 +220,6 @@ int dbgio_write(int c);
 int dbgio_flush(void);
 
 /** \brief   Write an entire buffer of data to the console.
-    \ingroup logging
 
     \param  data            The buffer to write
     \param  len             The length of the buffer
@@ -217,10 +227,9 @@ int dbgio_flush(void);
     \return                 Number of characters written on success, or -1 on
                             failure (errno should be set as appropriate)
 */
-int dbgio_write_buffer(const uint8 *data, int len);
+int dbgio_write_buffer(const uint8_t *data, size_t len);
 
 /** \brief   Read an entire buffer of data from the console.
-    \ingroup logging
 
     \param  data            The buffer to read into
     \param  len             The length of the buffer
@@ -228,11 +237,10 @@ int dbgio_write_buffer(const uint8 *data, int len);
     \return                 Number of characters read on success, or -1 on
                             failure (errno should be set as appropriate)
 */
-int dbgio_read_buffer(uint8 *data, int len);
+int dbgio_read_buffer(uint8_t *data, size_t len);
 
 /** \brief   Write an entire buffer of data to the console (potentially with
              newline transformations).
-    \ingroup logging
 
     \param  data            The buffer to write
     \param  len             The length of the buffer
@@ -240,10 +248,9 @@ int dbgio_read_buffer(uint8 *data, int len);
     \return                 Number of characters written on success, or -1 on
                             failure (errno should be set as appropriate)
 */
-int dbgio_write_buffer_xlat(const uint8 *data, int len);
+int dbgio_write_buffer_xlat(const uint8_t *data, size_t len);
 
 /** \brief   Write a NUL-terminated string to the console.
-    \ingroup logging
 
     \param  str             The string to write
     
@@ -253,17 +260,14 @@ int dbgio_write_buffer_xlat(const uint8 *data, int len);
 int dbgio_write_str(const char *str);
 
 /** \brief   Disable debug I/O globally.
-    \ingroup logging
 */
 void dbgio_disable(void);
 
 /** \brief   Enable debug I/O globally. 
-    \ingroup logging
 */
 void dbgio_enable(void);
 
 /** \brief   Built-in debug I/O printf function.
-    \ingroup logging
     
     \param  fmt             A printf() style format string
     \param  ...             Format arguments
@@ -272,6 +276,10 @@ void dbgio_enable(void);
                             should be set as appropriate)
 */
 int dbgio_printf(const char *fmt, ...) __printflike(1, 2);
+
+int dbgio_vprintf(const char *fmt, va_list var_args); 
+
+/** @} */
 
 __END_DECLS
 

@@ -48,6 +48,12 @@ uint32 _fs_dclsocket_get_ip(void);
 #define CHCR2   ((vuint32 *)0xFFA0002C)
 #define DMAOR   ((vuint32 *)0xFFA00040)
 
+extern dbgio_handler_t dbgio_dcload;
+extern dbgio_handler_t dbgio_dcls;
+extern dbgio_handler_t dbgio_scif;
+extern dbgio_handler_t dbgio_null;
+extern dbgio_handler_t dbgio_fb;
+
 /* We have to put this here so we can include plat-specific devices */
 dbgio_handler_t * dbgio_handlers[] = {
     &dbgio_dcload,
@@ -56,7 +62,7 @@ dbgio_handler_t * dbgio_handlers[] = {
     &dbgio_null,
     &dbgio_fb
 };
-int dbgio_handler_cnt = sizeof(dbgio_handlers) / sizeof(dbgio_handler_t *);
+size_t const dbgio_handler_cnt = sizeof(dbgio_handlers) / sizeof(dbgio_handler_t *);
 
 void arch_init_net_dcload_ip(void) {
     union {

@@ -37,10 +37,6 @@ __BEGIN_DECLS
     @{
 */
 
-/* \cond */
-extern dbgio_handler_t dbgio_dcload;
-/* \endcond */
-
 /* dcload magic value */
 /** \brief  The dcload magic value! */
 #define DCLOADMAGICVALUE 0xdeadbeef

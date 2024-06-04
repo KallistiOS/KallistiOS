@@ -46,12 +46,12 @@ void scif_set_parameters(int baud, int fifo);
     \param  on              1 to enable IRQ usage, 0 for polled I/O.
     \retval 0               On success (no error conditions defined).
 */
-int scif_set_irq_usage(int on);
+int scif_set_irq_usage(dbgio_mode_t on);
 
 /** \brief  Is the SCIF port detected? Of course it is!
     \return                 1
 */
-int scif_detected(void);
+bool scif_detected(void);
 
 /** \brief  Initialize the SCIF port.
 
@@ -104,7 +104,7 @@ int scif_flush(void);
     \param  xlat            If set to 1, all newlines will be written as CRLF.
     \return                 The number of bytes written on success, -1 on error.
 */
-int scif_write_buffer(const uint8 *data, int len, int xlat);
+int scif_write_buffer(const uint8_t *data, size_t len, bool xlat);
 
 /** \brief  Read a buffer of data from the SCIF port.
 
@@ -115,10 +115,7 @@ int scif_write_buffer(const uint8 *data, int len, int xlat);
     \param  len             The number of bytes to read.
     \return                 The number of bytes read on success, -1 on error.
 */
-int scif_read_buffer(uint8 *data, int len);
-
-/** \brief  SCIF debug I/O handler. Do not modify! */
-extern dbgio_handler_t dbgio_scif;
+int scif_read_buffer(uint8_t *data, size_t len);
 
 /* Low-level SPI related functionality below here... */
 /** \brief  Initialize the SCIF port for use of an SPI peripheral.
@@ -161,7 +158,7 @@ void scif_spi_set_cs(int v);
     \param  b               The byte to write out to the port.
     \return                 The byte returned from the card.
 */
-uint8 scif_spi_rw_byte(uint8 b);
+uint8_t scif_spi_rw_byte(uint8_t b);
 
 /** \brief  Read and write one byte from the SPI device, slowly.
 
@@ -175,7 +172,7 @@ uint8 scif_spi_rw_byte(uint8 b);
     \param  b               The byte to write out to the port.
     \return                 The byte returned from the card.
 */
-uint8 scif_spi_slow_rw_byte(uint8 b);
+uint8_t scif_spi_slow_rw_byte(uint8_t b);
 
 
 /** \brief  Write a byte to the SPI device.
@@ -185,7 +182,7 @@ uint8 scif_spi_slow_rw_byte(uint8 b);
 
     \param  b               The byte to write out to the port.
 */
-void scif_spi_write_byte(uint8 b);
+void scif_spi_write_byte(uint8_t b);
 
 /** \brief  Read a byte from the SPI device.
 
@@ -194,7 +191,7 @@ void scif_spi_write_byte(uint8 b);
 
     \return                 The byte returned from the device.
 */
-uint8 scif_spi_read_byte(void);
+uint8_t scif_spi_read_byte(void);
 
 /** \brief  Read a data from the SPI device.
 
@@ -204,7 +201,7 @@ uint8 scif_spi_read_byte(void);
     \param  buffer          Buffer to store read data into.
     \param  len             Number of bytes to read from the device.
 */
-void scif_spi_read_data(uint8 *buffer, size_t len);
+void scif_spi_read_data(uint8_t *buffer, size_t len);
 
 /** @} */
 

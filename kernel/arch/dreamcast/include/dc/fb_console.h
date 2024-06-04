@@ -29,10 +29,6 @@ __BEGIN_DECLS
 
 #include <kos/dbgio.h>
 
-/* \cond */
-extern dbgio_handler_t dbgio_fb;
-/* \endcond */
-
 /** \brief  Set the target for the framebuffer dbgio device.
 
     This function allows you to set a target for the dbgio device on the
@@ -52,7 +48,8 @@ extern dbgio_handler_t dbgio_fb;
     \param  bordery         How much border to leave around the target in the
                             Y direction.
 */
-void dbgio_fb_set_target(uint16 *t, int w, int h, int borderx, int bordery);
+void dbgio_fb_set_target(uint16_t *t, unsigned int w, unsigned int h, 
+                         unsigned int borderx, unsigned int bordery);
 
 __END_DECLS
 

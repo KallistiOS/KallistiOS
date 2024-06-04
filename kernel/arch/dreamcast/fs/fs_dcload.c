@@ -32,6 +32,8 @@ printf goes to the dc-tool console
 #include <malloc.h>
 #include <errno.h>
 
+extern dbgio_handler_t dbgio_null;
+
 static spinlock_t mutex = SPINLOCK_INITIALIZER;
 
 #define plain_dclsc(...) ({ \
@@ -62,7 +64,7 @@ static void * lwip_dclsc = 0;
 
 /* Printk replacement */
 
-int dcload_write_buffer(const uint8 *data, int len, int xlat) {
+int dcload_write_buffer(const uint8_t *data, size_t len, bool xlat) {
     (void)xlat;
 
     if(lwip_dclsc && irq_inside_int()) {
@@ -98,7 +100,7 @@ size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_
 }
 
 static char *dcload_path = NULL;
-void *dcload_open(vfs_handler_t * vfs, const char *fn, int mode) {
+void *dcload_open(vfs_handler_t *vfs, const char *fn, int mode) {
     int hnd = 0;
     uint32 h;
     int dcload_mode = 0;
@@ -469,8 +471,8 @@ static vfs_handler_t vh = {
 
 // We have to provide a minimal interface in case dcload usage is
 // disabled through init flags.
-static int never_detected(void) {
-    return 0;
+static bool never_detected(void) {
+    return false;
 }
 
 dbgio_handler_t dbgio_dcload = {
@@ -483,15 +485,16 @@ dbgio_handler_t dbgio_dcload = {
     NULL,
     NULL,
     NULL,
-    NULL
+    NULL,
+    { NULL }
 };
 
-int fs_dcload_detected(void) {
+bool fs_dcload_detected(void) {
     /* Check for dcload */
     if(*DCLOADMAGICADDR == DCLOADMAGICVALUE)
-        return 1;
+        return true;
     else
-        return 0;
+        return false;
 }
 
 static int *dcload_wrkmem = NULL;

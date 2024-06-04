@@ -154,7 +154,7 @@ static void scif_data_irq(irq_t src, irq_context_t *cxt, void *data) {
 
 /* Are we using IRQs? */
 static int scif_irq_usage = 0;
-int scif_set_irq_usage(int on) {
+int scif_set_irq_usage(dbgio_mode_t on) {
     scif_irq_usage = on;
 
     /* Clear out the buffer in any case */
@@ -186,8 +186,8 @@ int scif_set_irq_usage(int on) {
 
 /* We are always detected, though we might end up realizing there's no
    cable connected later... */
-int scif_detected(void) {
-    return 1;
+bool scif_detected(void) {
+    return true;
 }
 
 /* We use this for the dbgio interface because we always init SCIF. */
@@ -359,7 +359,7 @@ int scif_flush(void) {
 }
 
 /* Send an entire buffer */
-int scif_write_buffer(const uint8 *data, int len, int xlat) {
+int scif_write_buffer(const uint8_t *data, size_t len, bool xlat) {
     int rv, i = 0, c;
 
     while(len-- > 0) {
@@ -389,7 +389,7 @@ int scif_write_buffer(const uint8 *data, int len, int xlat) {
 }
 
 /* Read an entire buffer (block) */
-int scif_read_buffer(uint8 *data, int len) {
+int scif_read_buffer(uint8_t *data, size_t len) {
     int c, i = 0;
 
     while(len-- > 0) {
@@ -416,5 +416,6 @@ dbgio_handler_t dbgio_scif = {
     scif_write,
     scif_flush,
     scif_write_buffer,
-    scif_read_buffer
+    scif_read_buffer,
+    { NULL }
 };

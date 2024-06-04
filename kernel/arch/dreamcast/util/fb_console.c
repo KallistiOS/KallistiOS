@@ -18,16 +18,16 @@
    the network stack, and I figured other people would probably get some use out
    of it as well. */
 
-static uint16 *fb;
-static int fb_w, fb_h;
-static int cur_x, cur_y;
-static int min_x, min_y, max_x, max_y;
+static uint16_t *fb;
+static unsigned int fb_w, fb_h;
+static unsigned int cur_x, cur_y;
+static unsigned int min_x, min_y, max_x, max_y;
 
 #define FONT_CHAR_WIDTH 12
 #define FONT_CHAR_HEIGHT 24
 
-static int fb_detected(void) {
-    return 1;
+static bool fb_detected(void) {
+    return true;
 }
 
 static int fb_init(void) {
@@ -46,7 +46,7 @@ static int fb_shutdown(void) {
     return 0;
 }
 
-static int fb_set_irq_usage(int mode) {
+static int fb_set_irq_usage(dbgio_mode_t mode) {
     (void)mode;
     return 0;
 }
@@ -90,7 +90,7 @@ static int fb_flush(void) {
     return 0;
 }
 
-static int fb_write_buffer(const uint8 *data, int len, int xlat) {
+static int fb_write_buffer(const uint8_t *data, size_t len, bool xlat) {
     int rv = len;
 
     (void)xlat;
@@ -102,7 +102,7 @@ static int fb_write_buffer(const uint8 *data, int len, int xlat) {
     return rv;
 }
 
-static int fb_read_buffer(uint8 * data, int len) {
+static int fb_read_buffer(uint8_t *data, size_t len) {
     (void)data;
     (void)len;
     errno = EAGAIN;
@@ -119,10 +119,12 @@ dbgio_handler_t dbgio_fb = {
     fb_write,
     fb_flush,
     fb_write_buffer,
-    fb_read_buffer
+    fb_read_buffer,
+    { NULL }
 };
 
-void dbgio_fb_set_target(uint16 *t, int w, int h, int borderx, int bordery) {
+void dbgio_fb_set_target(uint16_t *t, unsigned int w, unsigned int h, 
+                         unsigned int borderx, unsigned int bordery) {
     /* Set up all the new parameters. */
     fb = t;
 

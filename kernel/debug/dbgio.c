@@ -2,6 +2,7 @@
 
    kernel/debug/dbgio.c
    Copyright (C) 2004 Megan Potter
+   Copyright (C) 2024 Falco Girgis
 */
 
 #include <string.h>
@@ -9,8 +10,8 @@
 #include <stdio.h>
 #include <errno.h>
 #include <assert.h>
+
 #include <kos/dbgio.h>
-#include <arch/spinlock.h>
 
 /*
   This module handles a swappable debug console. These functions used to be
@@ -21,21 +22,97 @@
   See the dbgio.h header for more info on exactly how this works.
 */
 
-// Our currently selected handler.
-static dbgio_handler_t * dbgio = NULL;
+extern dbgio_handler_t *dbgio_handlers[];
+extern const size_t dbgio_handler_cnt;
 
-int dbgio_dev_select(const char * name) {
-    int i;
+/* Our currently selected handler (main device) */
+static dbgio_handler_t *dbgio = NULL;
+/* Our optional auxiliar handler */
+static dbgio_handler_t *dbgio_aux = NULL;
+/* List of all registered handlers */
+static struct dbgio_list dbgio_registry = LIST_HEAD_INITIALIZER(dbgio_registry);
+/* Whether we're currently enabling or disabling dbgio. */
+static bool dbgio_enabled = true;
 
-    for(i = 0; i < dbgio_handler_cnt; i++) {
-        if(!strcmp(dbgio_handlers[i]->name, name)) {
-            /* Try to initialize the device, and if we can't then bail. */
-            if(dbgio_handlers[i]->init()) {
-                errno = ENODEV;
-                return -1;
-            }
+int dbgio_register(dbgio_handler_t *handler) {
+    assert(!dbgio_find(handler->name));
 
-            dbgio = dbgio_handlers[i];
+    LIST_INSERT_HEAD(&dbgio_registry, handler, registry);
+
+    return 0;
+}
+
+int dbgio_unregister(dbgio_handler_t *handler) {
+    LIST_REMOVE(handler, registry);
+
+    return 0;
+}
+
+dbgio_handler_t *dbgio_find(const char *name) {
+    dbgio_handler_t *handler;
+
+    LIST_FOREACH(handler, &dbgio_registry, registry) {
+        if(!strcmp(handler->name, name))
+            return handler;
+    }
+
+    return NULL;
+}
+
+int dbgio_dev_select(const char *name) {
+    dbgio_handler_t *dev = dbgio_find(name);
+    
+    if(!dev || dev->init()) {
+        errno = ENODEV;
+        return -1;
+    }
+
+    dbgio = dev;
+
+    return 0;
+}
+
+int dbgio_aux_select(const char *name) {
+    dbgio_handler_t *aux = NULL;
+
+    if(name) {
+        aux = dbgio_find(name);
+        if(!aux || aux->init()) {
+            errno = ENODEV;
+            return -1;
+        }
+    }
+
+    dbgio_aux = aux;
+
+    return 0;
+}
+
+const char *dbgio_dev_get(void) {
+    return dbgio? dbgio->name : NULL;
+}
+
+const char *dbgio_aux_get(void) {
+    return dbgio_aux? dbgio_aux->name : NULL;
+}
+
+void dbgio_enable(void) {
+    dbgio_enabled = true;
+}
+
+void dbgio_disable(void) {
+    dbgio_enabled = false;
+}
+
+int dbgio_init(void) {
+    dbgio_handler_t *handler;
+
+    for(int i = dbgio_handler_cnt; i >= 0; --i)
+        dbgio_register(dbgio_handlers[i]);
+
+    LIST_FOREACH(handler, &dbgio_registry, registry) {
+        if(handler->detected() && !handler->init()) {
+            dbgio = handler;
             return 0;
         }
     }
@@ -44,48 +121,7 @@ int dbgio_dev_select(const char * name) {
     return -1;
 }
 
-const char * dbgio_dev_get(void) {
-    if(!dbgio)
-        return NULL;
-    else
-        return dbgio->name;
-}
-
-static int dbgio_enabled = 1;
-void dbgio_enable(void) {
-    dbgio_enabled = 1;
-}
-void dbgio_disable(void) {
-    dbgio_enabled = 0;
-}
-
-int dbgio_init(void) {
-    int i;
-
-    // Look for a valid interface.
-    for(i = 0; i < dbgio_handler_cnt; i++) {
-        if(dbgio_handlers[i]->detected()) {
-            // Select this device.
-            dbgio = dbgio_handlers[i];
-
-            // Try to init it. If it fails, then move on to the
-            // next one anyway.
-            if(!dbgio->init()) {
-                // Worked.
-                return 0;
-            }
-
-            // Failed... nuke it and continue.
-            dbgio = NULL;
-        }
-    }
-
-    // Didn't find an interface.
-    errno = ENODEV;
-    return -1;
-}
-
-int dbgio_set_irq_usage(int mode) {
+int dbgio_set_irq_usage(dbgio_mode_t mode) {
     if(dbgio_enabled) {
         assert(dbgio);
         return dbgio->set_irq_usage(mode);
@@ -121,16 +157,21 @@ int dbgio_flush(void) {
     return -1;
 }
 
-int dbgio_write_buffer(const uint8 *data, int len) {
+int dbgio_write_buffer(const uint8_t *data, size_t len) {
     if(dbgio_enabled) {
         assert(dbgio);
-        return dbgio->write_buffer(data, len, 0);
+        const int ret = dbgio->write_buffer(data, len, false);
+
+        if(dbgio_aux)
+            dbgio_aux->write_buffer(data, len, false);
+
+        return ret;
     }
 
     return -1;
 }
 
-int dbgio_read_buffer(uint8 *data, int len) {
+int dbgio_read_buffer(uint8_t *data, size_t len) {
     if(dbgio_enabled) {
         assert(dbgio);
         return dbgio->read_buffer(data, len);
@@ -139,10 +180,15 @@ int dbgio_read_buffer(uint8 *data, int len) {
     return -1;
 }
 
-int dbgio_write_buffer_xlat(const uint8 *data, int len) {
+int dbgio_write_buffer_xlat(const uint8_t *data, size_t len) {
     if(dbgio_enabled) {
         assert(dbgio);
-        return dbgio->write_buffer(data, len, 1);
+        const int ret = dbgio->write_buffer(data, len, true);
+    
+        if(dbgio_aux) 
+            dbgio_aux->write_buffer(data, len, true);
+
+        return ret;
     }
 
     return -1;
@@ -157,65 +203,66 @@ int dbgio_write_str(const char *str) {
     return -1;
 }
 
-// Not re-entrant
-static char printf_buf[1024];
-static spinlock_t lock = SPINLOCK_INITIALIZER;
-
 int dbgio_printf(const char *fmt, ...) {
     va_list args;
-    int i;
-
-    /* XXX This isn't correct. We could be inside an int with IRQs
-      enabled, and we could be outside an int with IRQs disabled, which
-      would cause a deadlock here. We need an irq_is_enabled()! */
-    if(!irq_inside_int())
-        spinlock_lock(&lock);
 
     va_start(args, fmt);
-    i = vsprintf(printf_buf, fmt, args);
+    const int ret = dbgio_vprintf(fmt, args);
     va_end(args);
 
-    dbgio_write_str(printf_buf);
+    return ret;
+}
 
-    if(!irq_inside_int())
-        spinlock_unlock(&lock);
+int dbgio_vprintf(const char *fmt, va_list var_args) {
+    char buffer[1024];
+    
+    const int i = vsnprintf(buffer, sizeof(buffer), fmt, var_args);
+
+    dbgio_write_str(buffer);
 
     return i;
 }
 
-
-// The null dbgio handler
-static int null_detected(void) {
-    return 1;
+/* The null dbgio handler */
+static bool null_detected(void) {
+    return true;
 }
+
 static int null_init(void) {
     return 0;
 }
+
 static int null_shutdown(void) {
     return 0;
 }
-static int null_set_irq_usage(int mode) {
+
+static int null_set_irq_usage(dbgio_mode_t mode) {
     (void)mode;
     return 0;
 }
+
 static int null_read(void) {
     errno = EAGAIN;
     return -1;
 }
+
 static int null_write(int c) {
     (void)c;
     return 1;
 }
+
 static int null_flush(void) {
     return 0;
 }
-static int null_write_buffer(const uint8 *data, int len, int xlat) {
+
+static int null_write_buffer(const uint8_t *data, size_t len, bool xlat) {
     (void)data;
     (void)len;
     (void)xlat;
     return len;
 }
-static int null_read_buffer(uint8 * data, int len) {
+
+static int null_read_buffer(uint8_t *data, size_t len) {
     (void)data;
     (void)len;
     errno = EAGAIN;
@@ -232,5 +279,6 @@ dbgio_handler_t dbgio_null = {
     null_write,
     null_flush,
     null_write_buffer,
-    null_read_buffer
+    null_read_buffer,
+    { NULL }
 };
