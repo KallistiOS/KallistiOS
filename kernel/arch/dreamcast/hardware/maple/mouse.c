@@ -31,20 +31,20 @@ static void mouse_reply(maple_state_t *st, maple_frame_t *frm) {
     if(respbuf[0] != MAPLE_FUNC_MOUSE)
         return;
 
-    /* Update the status area from the response */
-    if(frm->dev) {
-        /* Verify the size of the frame and grab a pointer to it */
-        assert(sizeof(mouse_cond_t) == ((resp->data_len - 1) * 4));
-        raw = (mouse_cond_t *)(respbuf + 1);
+    if(!frm->dev)
+        return;
 
-        /* Fill the "nice" struct from the raw data */
-        cooked = (mouse_state_t *)(frm->dev->status);
-        cooked->buttons = (~raw->buttons) & 14;
-        cooked->dx = raw->dx - MOUSE_DELTA_CENTER;
-        cooked->dy = raw->dy - MOUSE_DELTA_CENTER;
-        cooked->dz = raw->dz - MOUSE_DELTA_CENTER;
-        frm->dev->status_valid = 1;
-    }
+    /* Verify the size of the frame and grab a pointer to it */
+    assert(sizeof(mouse_cond_t) == ((resp->data_len - 1) * sizeof(uint32_t)));
+    raw = (mouse_cond_t *)(respbuf + 1);
+
+    /* Fill the "nice" struct from the raw data */
+    cooked = (mouse_state_t *)(frm->dev->status);
+    cooked->buttons = (~raw->buttons) & 14;
+    cooked->dx = raw->dx - MOUSE_DELTA_CENTER;
+    cooked->dy = raw->dy - MOUSE_DELTA_CENTER;
+    cooked->dz = raw->dz - MOUSE_DELTA_CENTER;
+    frm->dev->status_valid = 1;
 }
 
 static int mouse_poll(maple_device_t *dev) {
@@ -82,8 +82,7 @@ static maple_driver_t mouse_drv = {
 
 /* Add the mouse to the driver chain */
 void mouse_init(void) {
-    if(!mouse_drv.drv_list.le_prev)
-        maple_driver_reg(&mouse_drv);
+    maple_driver_reg(&mouse_drv);
 }
 
 void mouse_shutdown(void) {

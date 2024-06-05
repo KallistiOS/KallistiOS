@@ -1,7 +1,8 @@
 # KallistiOS ##version##
 #
 # Makefile.rules
-# (c)2000-2001 Megan Potter
+# Copyright (c) 2000, 2001 Megan Potter
+# Copyright (c) 2024 Eric Fradella
 #
 
 # Global KallistiOS Makefile include
@@ -73,4 +74,22 @@ romdisk.o: romdisk.img
 	$(KOS_BASE)/utils/bin2o/bin2o romdisk.img romdisk romdisk_tmp.o
 	$(KOS_CC) -o romdisk.o -r romdisk_tmp.o $(KOS_LIB_PATHS) -Wl,--whole-archive -lromdiskbase
 	rm romdisk_tmp.o
+endif
+
+# Define KOS_GCCVER_MIN in your Makefile if you want to enforce a minimum GCC version.
+ifdef KOS_GCCVER_MIN
+  ifeq ($(shell \
+    awk 'BEGIN { \
+        split("$(KOS_GCCVER_MIN)", min, "."); \
+        split("$(KOS_GCCVER)", cur, "."); \
+        if (cur[1] > min[1] || \
+           (cur[1] == min[1] && cur[2] > min[2]) || \
+           (cur[1] == min[1] && cur[2] == min[2] && cur[3] >= min[3])) { \
+            print 1; \
+        } else { \
+            print 0; \
+        } \
+    }'), 0)
+    $(error A minimum GCC version of $(KOS_GCCVER_MIN) is required, but $(KOS_GCCVER) is currently in use.)
+  endif
 endif

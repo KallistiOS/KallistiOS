@@ -172,10 +172,11 @@ int dbgio_printf(const char *fmt, ...) {
         spinlock_lock(&lock);
 
     va_start(args, fmt);
-    i = vsprintf(printf_buf, fmt, args);
+    i = vsnprintf(printf_buf, sizeof(printf_buf), fmt, args);
     va_end(args);
 
-    dbgio_write_str(printf_buf);
+    if(i >= 0)
+        dbgio_write_str(printf_buf);
 
     if(!irq_inside_int())
         spinlock_unlock(&lock);
