@@ -225,7 +225,7 @@ typedef void (*cont_btn_callback_t)(uint8_t addr, uint32_t btns);
     \param  btns            The buttons bitmask to match.
     \param  cb              The callback to call when the buttons are pressed.
 */
-void cont_btn_callback(uint8_t addr, uint32_t btns, cont_btn_callback_t cb);
+int cont_btn_callback(uint8_t addr, uint32_t btns, cont_btn_callback_t cb);
 
 /** \defgroup controller_query_caps Querying Capabilities
     \brief    API used to query for a controller's capabilities
