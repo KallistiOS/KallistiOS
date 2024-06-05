@@ -37,8 +37,8 @@
 /* Internal flag bits */
 #define MODEM_INTERNAL_FLAG_INIT_ATEXIT       0x1 /* Set when atexit from modem_init is called */
 #define MODEM_INTERNAL_FLAG_INT_INIT_ATEXIT   0x2 /* Set when atexit from modemIntInit is called */
-#define MODEM_INTERNAL_FLAG_TIMER_HANDLER_SET 0x4 /* The interrupt handler for TMU1 has been set */
-#define MODEM_INTERNAL_FLAG_TIMER_RUNNING     0x8 /* TMU1 is running */
+#define MODEM_INTERNAL_FLAG_TIMER_HANDLER_SET 0x4 /* The timeout callback has been registered */
+#define MODEM_INTERNAL_FLAG_TIMER_RUNNING     0x8 /* The timeout timer is running */
 
 /* Configuration flag bits */
 #define MODEM_CFG_FLAG_ORIGINATE       0x1  /* Set if the MDP is originating, clear when the MDP is answering */
@@ -112,11 +112,6 @@ void modemIntSetupProtocolInterrupts(int clear);
 void modemIntConfigModem(void);
 void modemIntSetHandler(int protocol, int mode);
 void modemIntResetControlCode(void);
-void modemIntSetupTimeoutTimer(int bps, unsigned char *callbackFlag,
-                               void (*callbackCode)(void));
-void modemIntStartTimeoutTimer(void);
-void modemIntResetTimeoutTimer(void);
-void modemIntShutdownTimeoutTimer(void);
 void modemInternalSetupDialingInts(int clear);
 
 /* From modem.c */

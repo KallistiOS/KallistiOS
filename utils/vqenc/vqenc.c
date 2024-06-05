@@ -684,30 +684,21 @@ static void place_quads(context_t *cb, mipmap_t *m) {
 
 
 static const char *figure_outfilename(const char *f, const char *newext) {
-    char *newname;
     char *ext;
+    size_t namelen;
+    char *newname;
 
     ext = strrchr(f, '.');
 
-    if(ext == NULL) {
-        newname = (char *)malloc(strlen(f) + strlen(newext) + 2);
+    namelen = (ext == NULL) ? strlen(f) : (ext - f);
 
-        if(newname) {
-            sprintf(newname, "%s.%s", f, newext);
-        }
-    }
-    else {
-        int len;
+    newname = (char *)calloc(namelen + strlen(newext) + 2, sizeof(char));
 
-        len = (ext - f) + strlen(newext) + 2;
-        newname = (char *)malloc(len);
+    if(!newname) return NULL;
 
-        if(newname) {
-            strcpy(newname, f);
-            ext = strrchr(newname, '.') + 1;
-            strcpy(ext, newext);
-        }
-    }
+    strncpy(newname, f, namelen);
+    strcat(newname, ".");
+    strcat(newname, newext);
 
     return newname;
 }
