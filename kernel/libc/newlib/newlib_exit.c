@@ -13,7 +13,7 @@ extern void arch_exit_handler(int ret_code) __noreturn;
 
 static int ret_code;
 
-static void kos_shutdown(void) {
+void kos_shutdown(void) {
     arch_exit_handler(ret_code);
 
     __builtin_unreachable();
