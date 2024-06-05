@@ -13,10 +13,6 @@ void mouse_test(void) {
 
         if(!cont) continue;
 
-        mouse = maple_enum_type(0, MAPLE_FUNC_MOUSE);
-
-        if(!mouse) continue;
-
         /* Check for start on the controller */
         cstate = (cont_state_t *)maple_dev_status(cont);
 
@@ -32,11 +28,14 @@ void mouse_test(void) {
 
         thd_sleep(10);
 
+        mouse = maple_enum_type(0, MAPLE_FUNC_MOUSE);
+
+        if(!mouse) continue;
+
         /* Check for mouse input */
         mstate = (mouse_state_t *)maple_dev_status(mouse);
 
-        if(!mstate)
-            continue;
+        if(!mstate) continue;
 
         /* Move the cursor if applicable */
         if(mstate->dx || mstate->dy || mstate->dz) {

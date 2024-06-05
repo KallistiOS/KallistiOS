@@ -216,6 +216,10 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - DC  Added centralized header for Dreamcast Memory map (arch/memory.h) [DH]
 - DC  Refactored multibuffer video modes and added example of their use [DH]
 - DC  Created separate performance counter driver and enhanced API [FG]
+- *** Added implementation of thread barriers [LS]
+- *** Removed old pthreads implementation from kernel/libc [LS]
+- *** Added new (more complete/compliant) pthreads implementation in
+      addons/libpthread [LS]
 - *** Implemented _POSIX_CPUTIME in clock_gettime() using perf counter timer [FG]
 - *** Implemented scandir() and alphasort() POSIX functions from dirent.h [FG]
 - DC  Added new driver for the SH4's UBC + high-level breakpoint API [FG]
@@ -224,10 +228,10 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - *** Added support for modifying scheduler frequency at runtime [FG]
 - *** Add support for worker threads [PC]
 - DC  Added new System Calls module [AB]
-- *** Added implementation of thread barriers [LS]
-- *** Removed old pthreads implementation from kernel/libc [LS]
-- *** Added new (more complete/compliant) pthreads implementation in
-      addons/libpthread [LS]
+- DC  Add timer_spin_delay_{us,ns} and use them in scif-spi [PC]
+- *** Added thread support for tracking CPU time + updated clock_gettime() [FG]
+- *** Added support for one-shot timers [PC]
+- DC  Use one-shot timers for timeout and a proper polling mechanism in modem [PC]
 - *** Added support for pthread_condattr_setclock() [FG]
 
 KallistiOS version 2.0.0 -----------------------------------------------

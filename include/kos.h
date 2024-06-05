@@ -57,6 +57,7 @@ __BEGIN_DECLS
 #include <kos/fs_socket.h>
 #include <kos/string.h>
 #include <kos/init.h>
+#include <kos/oneshot_timer.h>
 
 #include <arch/arch.h>
 #include <arch/cache.h>

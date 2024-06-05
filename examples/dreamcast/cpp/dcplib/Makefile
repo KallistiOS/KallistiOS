@@ -20,7 +20,7 @@ rm-elf:
 	-rm -f $(TARGET) romdisk.*
 
 $(TARGET): $(OBJS)
-	kos-c++ -o $(TARGET) $(OBJS) -ldcplib -lm
+	kos-c++ -o $(TARGET) $(OBJS) -ldcplib
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)

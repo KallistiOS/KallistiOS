@@ -92,11 +92,12 @@ Everything is ready, now it's time to make the toolchains.
 
 ## Compilation ##
 
-The **dc-chain** system may be customized by altering the
-[`Makefile.cfg`](../Makefile.cfg) file in the root of the `dc-chain` directory
-tree. If this is desired, read the main [README.md](../README.md) for more
-information on setting up custom options for the toolchain; however, in most
-circumstances, the stable defaults already set up will be fine.
+The **dc-chain** system may be customized by setting up a
+[`Makefile.cfg`] file in the root of the `dc-chain` directory tree. If this is
+desired, read the main [README.md](../README.md) for more information on
+setting up custom options for the toolchain; however, in most circumstances,
+the stable defaults already present in
+[`Makefile.default.cfg`](../Makefile.default.cfg) will be fine.
 
 ### Building the toolchain ###
 
@@ -109,7 +110,7 @@ To build the toolchain, do the following:
 	cd /opt/toolchains/dc/kos/utils/dc-chain/
 	```
 
-3. Alter the `Makefile.cfg` file options to your liking.
+3. (Optional) Copy and alter the `Makefile.cfg` file options to your liking.
 
 4. Enter the following to start downloading and building toolchain:
 	```
@@ -123,7 +124,7 @@ hours will be needed to build the full toolchain, depending on your system.
 
 After everything is done, you can cleanup all temporary files by entering:
 ```
-make clean
+make distclean
 ```
 
 ## Next steps ##

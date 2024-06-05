@@ -1,7 +1,8 @@
 /* KallistiOS ##version##
 
    mintr.c
-   Copyright (C)2002, 2004 Nick Kochakian
+   Copyright (C) 2002, 2004 Nick Kochakian
+   Copyright (C) 2024 Paul Cercueil
 
    Distributed under the terms of the KOS license.
 */
@@ -11,51 +12,49 @@
 #include <stdlib.h>
 #include <dc/asic.h>
 #include <arch/rtc.h>
-#include <kos.h>
+
+#include <kos/oneshot_timer.h>
 #include "dc/modem/modem.h"
 #include "mintern.h"
+
+/* Forward declarations */
+static void modemIntResetTimeoutTimer(void);
+static void modemIntShutdownTimeoutTimer(void);
+static void modemIntSetupTimeoutTimer(unsigned int timeout_secs,
+                                      void (*callbackCode)(void *));
+static void modemIntStartTimeoutTimer(void);
+
+static oneshot_timer_t *oneshot;
 
 /* This controls the code that's executed during a modem generated interrupt */
 void (*modemCallbackCode)(void) = NULL;
 
-/* Flag pointer and function callback used by the timeout timer */
-unsigned char *modemTimeoutCallbackFlag         = NULL;
-void (*modemTimeoutCallbackCode)(void) = NULL;
+void mintDelayCallback(void *d) {
+    (void)d;
 
-/* This is used for a slight delay after connection. The Dreamcast's modem
-   seems to jump into a ready state faster than my computer's modem which
-   can cause problems if nothing's done about it. */
-int mintCounter = 0; /* mm mints */
+    modemIntResetTimeoutTimer();
+    modemIntShutdownTimeoutTimer();
 
-void mintDelayCallback(void) {
-    mintCounter++;
+    modemCfg.flags &= ~MODEM_CFG_FLAG_CONNECTING;
+    modemCfg.flags |= MODEM_CFG_FLAG_CONNECTED;
 
-    if(mintCounter >= 5) {
-        modemIntResetTimeoutTimer();
-        modemIntShutdownTimeoutTimer();
-        mintCounter = 0; /* Reset the counter for subsequent connections */
+    /* Reset the EQM configuration data */
+    modemCfg.eqm.flags       = 0;
+    modemCfg.eqm.attempts    = 0;
+    modemCfg.eqm.counter     = 0;
+    modemCfg.eqm.lastCounter = 0;
+    modemCfg.eqm.auxCounter  = 0;
 
-        modemCfg.flags &= ~MODEM_CFG_FLAG_CONNECTING;
-        modemCfg.flags |= MODEM_CFG_FLAG_CONNECTED;
+    /* Setup the connection interrupts */
+    modemIntSetupConnectionInterrupts(0);
 
-        /* Reset the EQM configuration data */
-        modemCfg.eqm.flags       = 0;
-        modemCfg.eqm.attempts    = 0;
-        modemCfg.eqm.counter     = 0;
-        modemCfg.eqm.lastCounter = 0;
-        modemCfg.eqm.auxCounter  = 0;
+    modemDataClearBuffers();
 
-        /* Setup the connection interrupts */
-        modemIntSetupConnectionInterrupts(0);
+    modemDataUpdateTXBuffer();
+    modemDataUpdateRXBuffer();
 
-        modemDataClearBuffers();
-
-        modemDataUpdateTXBuffer();
-        modemDataUpdateRXBuffer();
-
-        if(modemCfg.eventHandler)
-            modemCfg.eventHandler(MODEM_EVENT_CONNECTED);
-    }
+    if(modemCfg.eventHandler)
+        modemCfg.eventHandler(MODEM_EVENT_CONNECTED);
 }
 
 /* Aborts any connection that is currently being made */
@@ -70,7 +69,9 @@ void modemConnectionAbort(void) {
         modemCfg.eventHandler(MODEM_EVENT_CONNECTION_FAILED);
 }
 
-void mintInitialConnectionTimeoutCallback(void) {
+void mintInitialConnectionTimeoutCallback(void *d) {
+    (void)d;
+
     /* If the modem is in the state MODEM_STATE_CONNECTING and the timeout
        counter goes over a certain value, then it's assumed that nothing useful
        is going to happen and the connection should be aborted */
@@ -78,16 +79,16 @@ void mintInitialConnectionTimeoutCallback(void) {
     /* It only takes about 10 seconds to connect from this state, so this
        should be a long enough time to wait before aborting */
 
-    mintCounter++;
-
-    if(modemCfg.actual.state == MODEM_STATE_CONNECTING && mintCounter >= 25)
+    if(modemCfg.actual.state == MODEM_STATE_CONNECTING)
         modemConnectionAbort();
 }
 
 /* This is called after a timer interrupt is generated after a period of one
    second after the answer tone is detected. This is also called by answering
    modes when a connection should be established. */
-void modemConnectionAnswerCallback(void) {
+void modemConnectionAnswerCallback(void *d) {
+    (void)d;
+
     modemIntShutdownTimeoutTimer();
 
     /* Establish a connection */
@@ -99,8 +100,7 @@ void modemConnectionAnswerCallback(void) {
 
     /* Set up the counter so that after a period of time, the
        connection can be aborted if no progress is being made */
-    mintCounter = 0;
-    modemIntSetupTimeoutTimer(1, NULL, mintInitialConnectionTimeoutCallback);
+    modemIntSetupTimeoutTimer(25, mintInitialConnectionTimeoutCallback);
     modemIntStartTimeoutTimer();
 }
 
@@ -441,7 +441,7 @@ int modemConnectionErrorHandler(void) {
         /* Unless an abort is about to happen, errors that can be recovered from
            reset the timeout counter */
         if(!abort)
-            mintCounter = 0;
+            oneshot_timer_reset(oneshot);
     }
 
     /* Phase state monitoring */
@@ -454,7 +454,7 @@ int modemConnectionErrorHandler(void) {
         if((data & 0xE0) != (modemCfg.actual.phaseState & 0xE0)) {
             /* Phase change */
             if((data & 0xE0) < (modemCfg.actual.phaseState & 0xE0))
-                mintCounter = 0; /* Phase fallback, reset the timeout counter */
+                oneshot_timer_reset(oneshot); /* Phase fallback, reset the timeout counter */
 
             /* Update both the phase and the phase state */
             modemCfg.actual.phaseState = data;
@@ -463,9 +463,7 @@ int modemConnectionErrorHandler(void) {
         if((data & 0x1F) != (modemCfg.actual.phaseState & 0x1F)) {
             /* Phase state change */
             if((data & 0x1F) < (modemCfg.actual.phaseState & 0x1F))
-                mintCounter = 0; /* Phase state fallback, reset the timeout
-
-                                 counter */
+                oneshot_timer_reset(oneshot); /* Phase state fallback, reset the timeout counter */
 
             /* Update the phase state */
             modemCfg.actual.phaseState &= ~0x1F;
@@ -490,7 +488,7 @@ void modemConnection(void) {
             /* For answering modes only. Waits for a ring before
                attempting a connection. */
             if(modemRead(REGLOC(0xF)) & 0x8)
-                modemConnectionAnswerCallback();
+                modemConnectionAnswerCallback(NULL);
 
             break;
 
@@ -514,8 +512,7 @@ void modemConnection(void) {
 
                 /* Setup the timeout timer to delay for 1 second before
                    calling the callback function */
-                modemIntSetupTimeoutTimer(1, NULL,
-                                          modemConnectionAnswerCallback);
+                modemIntSetupTimeoutTimer(1, modemConnectionAnswerCallback);
                 modemIntStartTimeoutTimer();
             }
 
@@ -559,8 +556,7 @@ void modemConnection(void) {
                 modemCfg.actual.state = MODEM_STATE_NULL;
                 modemCallbackCode     = modemConnectedUpdate;
 
-                mintCounter = 0;
-                modemIntSetupTimeoutTimer(1, NULL, mintDelayCallback);
+                modemIntSetupTimeoutTimer(5, mintDelayCallback);
                 modemIntStartTimeoutTimer();
             }
 
@@ -600,11 +596,16 @@ void modemIntInit(void) {
     modemCallbackCode = NULL;
     asic_evt_set_handler(ASIC_EVT_EXP_8BIT, modemCallback, NULL);
     asic_evt_enable(ASIC_EVT_EXP_8BIT, ASIC_IRQB);
+
+    /* Oneshot timer will be configured later. */
+    oneshot = oneshot_timer_create(NULL, NULL, 0);
 }
 
 void modemIntShutdown(void) {
     asic_evt_disable(ASIC_EVT_EXP_8BIT, ASIC_IRQB);
     asic_evt_remove_handler(ASIC_EVT_EXP_8BIT);
+
+    oneshot_timer_destroy(oneshot);
 }
 
 #define dspSetClear8(addr, mask, clear)\
@@ -743,39 +744,10 @@ void modemIntResetControlCode(void) {
     modemCallbackCode = NULL;
 }
 
-/* Timeout timer interrupt code. It uses TMU1 and can be setup to either set
-   a flag to a non zero value, call a function, or both when a timer interrupt
-   is generated until it's stopped. */
-
-static void modemIntrTimeoutCallback(irq_t source, irq_context_t *context,
-                                     void *data) {
-    (void)source;
-    (void)context;
-    (void)data;
-
-    if(modemTimeoutCallbackFlag != NULL)
-        *modemTimeoutCallbackFlag = 1;
-
-    if(modemTimeoutCallbackCode != NULL)
-        modemTimeoutCallbackCode();
-}
-
-void modemIntSetupTimeoutTimer(int bps, unsigned char *callbackFlag,
-                               void (*callbackCode)(void)) {
-    modemTimeoutCallbackFlag = callbackFlag;
-    modemTimeoutCallbackCode = callbackCode;
-
-    /* Setup TMU1 so it can act as a timeout indicator */
-    timer_stop(TMU1);
-
-    /* Make sure the timeout variable is reset */
-    if(modemTimeoutCallbackFlag != NULL)
-        *modemTimeoutCallbackFlag = 0;
-
-    /* Modify TMU1 so that it can be used for a timeout */
-    irq_set_handler(EXC_TMU1_TUNI1, modemIntrTimeoutCallback, NULL);
-    timer_prime(TMU1, bps, 1);
-    timer_clear(TMU1);
+static void modemIntSetupTimeoutTimer(unsigned int timeout_secs,
+                                      void (*callbackCode)(void *)) {
+    oneshot_timer_stop(oneshot);
+    oneshot_timer_setup(oneshot, callbackCode, NULL, timeout_secs * 1000);
 
     /* It doesn't matter if this is called more than once consecutively even
        if the timer is still running */
@@ -783,27 +755,25 @@ void modemIntSetupTimeoutTimer(int bps, unsigned char *callbackFlag,
     modemInternalFlags &= ~MODEM_INTERNAL_FLAG_TIMER_RUNNING;
 }
 
-void modemIntStartTimeoutTimer(void) {
+static void modemIntStartTimeoutTimer(void) {
     if(!(modemInternalFlags & MODEM_INTERNAL_FLAG_TIMER_RUNNING)) {
-        timer_start(TMU1);
         modemInternalFlags |= MODEM_INTERNAL_FLAG_TIMER_RUNNING;
+        oneshot_timer_start(oneshot);
     }
 }
 
-void modemIntResetTimeoutTimer(void) {
+static void modemIntResetTimeoutTimer(void) {
     if(modemInternalFlags & MODEM_INTERNAL_FLAG_TIMER_RUNNING) {
-        timer_stop(TMU1);
-        timer_clear(TMU1);
+        oneshot_timer_stop(oneshot);
         modemInternalFlags &= ~MODEM_INTERNAL_FLAG_TIMER_RUNNING;
     }
 }
 
-void modemIntShutdownTimeoutTimer(void) {
+static void modemIntShutdownTimeoutTimer(void) {
     /* Stop the timer if it's still running */
     modemIntResetTimeoutTimer();
 
     if(modemInternalFlags & MODEM_INTERNAL_FLAG_TIMER_HANDLER_SET) {
-        irq_set_handler(EXC_TMU1_TUNI1, NULL, NULL);
         modemInternalFlags &= ~MODEM_INTERNAL_FLAG_TIMER_HANDLER_SET;
     }
 }

@@ -48,7 +48,8 @@ int main(int argc, char **argv) {
     uint32_t previous_buttons = 0;
 
     for(;;) {
-        cond = get_cont_state();
+        if(!(cond = get_cont_state()))
+            continue;
         current_buttons = cond->buttons;
         changed_buttons = current_buttons ^ previous_buttons;
         previous_buttons = current_buttons;

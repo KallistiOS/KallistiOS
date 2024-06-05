@@ -51,9 +51,10 @@ static void sphere(sphere_t *s) { /* {{{ */
     float   yaw;
     pvr_vertex_t *v;
 
-    v = (pvr_vertex_t *)malloc(s->stacks * (s->slices + 2) * sizeof(pvr_vertex_t) + 32);
-    v = (pvr_vertex_t *)(((uint32)v & ~31) + 32); /* align to 32 bytes */
-    s->data = v;
+    s->data = (pvr_vertex_t *)memalign(32, s->stacks * (s->slices + 2) * sizeof(pvr_vertex_t));
+    if(s->data == NULL) return;
+
+    v = s->data;
     // s->data_trans = (pvr_vertex_t *)malloc(s->stacks * (s->slices+2) * sizeof(pvr_vertex_t));
     /* transformed data -- for testing mat_transform */
     printf("allocated %d bytes for %d stacks, %d + 2 slices, and %d-byte pvr_vertex_t\n",

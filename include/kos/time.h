@@ -65,11 +65,9 @@ extern int timespec_get(struct timespec *ts, int base);
 #define _POSIX_CPUTIME 1
 #endif
 
-/* We do NOT support thread-specific CPU time!
-#ifndef _POSIX_THREAD_CPU_TIME
+#ifndef _POSIX_THREAD_CPUTIME
 #define _POSIX_THREAD_CPUTIME 1
 #endif
-*/
 
 /* Explicitly provided function declarations for POSIX clock API, since
    getting them from Newlib requires supporting the rest of the _POSIX_TIMERS

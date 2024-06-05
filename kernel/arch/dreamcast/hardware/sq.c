@@ -8,6 +8,7 @@
 */
 
 #include <arch/cache.h>
+#include <arch/mmu.h>
 #include <dc/sq.h>
 #include <kos/dbglog.h>
 #include <kos/mutex.h>
@@ -40,12 +41,20 @@
 
 static mutex_t sq_mutex = MUTEX_INITIALIZER;
 
+static mmu_token_t mmu_token;
+
 void sq_lock(void *dest) {
     mutex_lock(&sq_mutex);
+
+    /* Disable MMU, because SQs work differently when it's enabled, and we
+     * don't support it. */
+    mmu_token = mmu_disable();
+
     SET_QACR_REGS(dest, dest);
 }
 
 void sq_unlock(void) {
+    mmu_restore(mmu_token);
     mutex_unlock(&sq_mutex);
 }
 
@@ -93,7 +102,7 @@ __attribute__((noinline)) void *sq_cpy(void *dest, const void *src, size_t n) {
 }
 
 /* Fills n bytes at dest with byte c, dest must be 32-byte aligned */
-void * sq_set(void *dest, uint32_t c, size_t n) {
+void *sq_set(void *dest, uint32_t c, size_t n) {
     /* Duplicate low 8-bits of c into high 24-bits */
     c = c & 0xff;
     c = (c << 24) | (c << 16) | (c << 8) | c;
@@ -102,7 +111,7 @@ void * sq_set(void *dest, uint32_t c, size_t n) {
 }
 
 /* Fills n bytes at dest with short c, dest must be 32-byte aligned */
-void * sq_set16(void *dest, uint32_t c, size_t n) {
+void *sq_set16(void *dest, uint32_t c, size_t n) {
     /* Duplicate low 16-bits of c into high 16-bits */
     c = c & 0xffff;
     c = (c << 16) | c;
@@ -111,7 +120,7 @@ void * sq_set16(void *dest, uint32_t c, size_t n) {
 }
 
 /* Fills n bytes at dest with int c, dest must be 32-byte aligned */
-void * sq_set32(void *dest, uint32_t c, size_t n) {
+void *sq_set32(void *dest, uint32_t c, size_t n) {
     uint32_t *d = SQ_MASK_DEST(dest);
 
     sq_lock(dest);

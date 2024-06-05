@@ -28,24 +28,24 @@ all:
 	@rm -f errors.txt error_count.txt
 
 # ALGORITHM EXPLANATION:
-# This script recursively checks each directory to determine if it should 
+# This script recursively checks each directory to determine if it should
 # execute its Makefile based on the presence of Makefiles in its subdirectories.
 #
 # Steps:
 # 1. For each directory, identify all direct subdirectories.
 # 2. Check each subdirectory for the existence of a Makefile.
-# 3. If any subdirectory contains a Makefile, recursively perform this check on 
+# 3. If any subdirectory contains a Makefile, recursively perform this check on
 #    that subdirectory and do not execute the Makefile in the current directory.
-# 4. If no subdirectories contain a Makefile, execute the Makefile in the 
+# 4. If no subdirectories contain a Makefile, execute the Makefile in the
 #    current directory.
 #
 # Purpose:
-# - This approach ensures that Makefiles are only executed in the most specific 
-#   (deepest) directories that do not contain further subdirectories with 
+# - This approach ensures that Makefiles are only executed in the most specific
+#   (deepest) directories that do not contain further subdirectories with
 #   Makefiles.
 # - This prevents redundant builds in parent directories and ensures errors are
-#   logged with specific directory paths, providing clear visibility into which 
-#   particular build process failed without aggregating errors at a higher 
+#   logged with specific directory paths, providing clear visibility into which
+#   particular build process failed without aggregating errors at a higher
 #   directory level.
 check-dir:
 	@should_make="yes"; \
@@ -73,4 +73,3 @@ dist:
 	@for dir in $(DIRS); do \
 		$(KOS_MAKE) -C $$dir dist; \
 	done
-

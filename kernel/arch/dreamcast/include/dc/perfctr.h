@@ -147,11 +147,13 @@ bool perf_cntr_config(perf_cntr_t counter, perf_cntr_event_t *event_mode,
 
 /** \brief  Start a performance counter.
 
-    This function starts a performance counter
+    This function starts a performance counter.
 
     \param  counter         The counter to start (i.e, \ref PRFC0 or PRFC1).
     \param  event_mode      Use one of the 33 event modes (pef_cntr_event_t).
     \param  clock_type      PMCR_COUNT_CPU_CYCLES or PMCR_COUNT_RATIO_CYCLES.
+
+    \sa perf_cntr_stop(), perf_cntr_resume()
 */
 void perf_cntr_start(perf_cntr_t counter, perf_cntr_event_t event_mode,
                      perf_cntr_clock_t clock_type);
@@ -162,8 +164,20 @@ void perf_cntr_start(perf_cntr_t counter, perf_cntr_event_t event_mode,
     Stopping a counter retains its count. To clear the count use perf_cntr_clear().
 
     \param  counter           The counter to stop (i.e, \ref PRFC0 or PRFC1).
+
+    \sa perf_cntr_clear()
 */
 void perf_cntr_stop(perf_cntr_t counter);
+
+/** \brief Resume a performance counter.
+
+    This function resumes a stopped performance counter.
+
+    \param counter          The counter to resume (i.e. \ref PRFC0 or PRFC1).
+
+    \sa perf_cntr_stop()
+*/
+void perf_cntr_resume(perf_cntr_t counter);
 
 /** \brief  Clear a performance counter.
 
