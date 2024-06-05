@@ -86,33 +86,33 @@ static void vmu_poll_reply(maple_state_t *st, maple_frame_t *frm) {
     if(respbuf[0] != MAPLE_FUNC_CLOCK)
         return;
 
-    /* Update the status area from the response */
-    if(frm->dev) {
-        const maple_device_t *cont = maple_enum_dev(frm->dev->port, 0);
+    if(!frm->dev)
+        return;
 
-        /* Verify the size of the frame and grab a pointer to it */
-        //assert(resp->data_len == 7);
-        raw = (vmu_cond_t *)(respbuf + 1);
+    /* Verify the size of the frame and grab a pointer to it */
+    assert(sizeof(vmu_cond_t) == ((resp->data_len - 1) * sizeof(uint32_t)));
+    raw = (vmu_cond_t *)(respbuf + 1);
 
-        /* Fill the "nice" struct from the raw data */
-        cooked = (vmu_state_t *)(frm->dev->status);
-        /* Invert raw struct as nice struct */
-        cooked->buttons = ~(*raw);
+    /* Fill the "nice" struct from the raw data */
+    cooked = (vmu_state_t *)(frm->dev->status);
+    /* Invert raw struct as nice struct */
+    cooked->buttons = ~(raw->raw_buttons);
 
-        /* Check to see if the VMU is upside-down in the controller and readjust
-           its directional buttons accordingly. */
-        if(cont && (cont->info.functions & MAPLE_FUNC_CONTROLLER) &&
-           (frm->dev->info.connector_direction == cont->info.connector_direction)) {
-            cooked->buttons = (cooked->buttons & 0xf0)  |
-                              (cooked->dpad_up    << 1) | /* down */
-                              (cooked->dpad_down  << 0) | /* up */
-                              (cooked->dpad_left  << 3) | /* right */
-                              (cooked->dpad_right << 2);  /* left */
+    /* Check to see if the VMU is upside-down in the controller and readjust
+       its directional buttons accordingly. */
+    const maple_device_t *cont = maple_enum_dev(frm->dev->port, 0);
 
-        }
+    if(cont && (cont->info.functions & MAPLE_FUNC_CONTROLLER) &&
+       (frm->dev->info.connector_direction == cont->info.connector_direction)) {
+        cooked->buttons = (cooked->buttons & 0xf0)  |
+                          (cooked->dpad_up    << 1) | /* down */
+                          (cooked->dpad_down  << 0) | /* up */
+                          (cooked->dpad_left  << 3) | /* right */
+                          (cooked->dpad_right << 2);  /* left */
 
-        frm->dev->status_valid = 1;
     }
+
+    frm->dev->status_valid = 1;
 }
 
 static int vmu_poll(maple_device_t *dev) {
@@ -154,8 +154,7 @@ static maple_driver_t vmu_drv = {
 
 /* Add the VMU to the driver chain */
 void vmu_init(void) {
-    if(!vmu_drv.drv_list.le_prev)
-        maple_driver_reg(&vmu_drv);
+    maple_driver_reg(&vmu_drv);
 }
 
 void vmu_shutdown(void) {
@@ -283,9 +282,9 @@ int vmu_beep_raw(maple_device_t *dev, uint32_t beep) {
 
     assert(dev);
 
-    /* Lock the frame. XXX: Priority inversion issues here. */
-    while(maple_frame_lock(&dev->frame) < 0)
-        thd_pass();
+    /* Lock the frame */
+    if(maple_frame_lock(&dev->frame) < 0)
+        return MAPLE_EAGAIN;
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);
@@ -429,9 +428,9 @@ int vmu_block_read(maple_device_t *dev, uint16_t blocknum, uint8_t *buffer) {
 
     assert(dev != NULL);
 
-    /* Lock the frame. XXX: Priority inversion issues here. */
-    while(maple_frame_lock(&dev->frame) < 0)
-        thd_pass();
+    /* Lock the frame */
+    if(maple_frame_lock(&dev->frame) < 0)
+        return MAPLE_EAGAIN;
 
     /* This is (block << 24) | (phase << 8) | (partition (0 for all vmu)) */
     blkid = ((blocknum & 0xff) << 24) | ((blocknum >> 8) << 16);
@@ -634,9 +633,9 @@ int vmu_set_datetime(maple_device_t *dev, time_t unix) {
     btime = localtime(&unix);
     assert(btime); /* A failure here means an invalid unix timestamp was given. */
 
-    /* Lock the frame. XXX: Priority inversion issues here. */
-    while(maple_frame_lock(&dev->frame) < 0)
-        thd_pass();
+    /* Lock the frame */
+    if(maple_frame_lock(&dev->frame) < 0)
+        return MAPLE_EAGAIN;
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);
@@ -681,9 +680,9 @@ int vmu_get_datetime(maple_device_t *dev, time_t *unix) {
 
     assert(dev);
 
-    /* Lock the frame. XXX: Priority inversion issues here. */
-    while(maple_frame_lock(&dev->frame) < 0)
-        thd_pass();
+    /* Lock the frame */
+    if(maple_frame_lock(&dev->frame) < 0)
+        return MAPLE_EAGAIN;
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);

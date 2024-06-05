@@ -1673,6 +1673,105 @@ typedef struct memctl {
 static LIST_HEAD(memctl_list, memctl) block_list;
 
 #define get_memctl(p) ((memctl_t *)( ((uint32)(p)) - BUFFER_SIZE ))
+#define get_buff_p(m) ((void *)( ((uint32)(m)) + BUFFER_SIZE ))
+
+#define get_cur_tid_safe ((thd_current == NULL) ? (tid_t)0 : thd_current->tid)
+
+#include <kos/dbgio.h>
+#include <stdlib.h>
+char dbg_print_buffer[256];
+
+enum func_type_names { name_MALLOC = 0, name_REALLOC = 1, name_MEMALIGN = 2, name_CALLOC = 3,
+    name_FREE = 4, name_CHECKALL = 5, name_CHECK = 6, name_STATS = 7};
+
+static const char *func_type[8] =
+    {"malloc", "realloc", "memalign", "calloc", "free", "check_all", "check", "stats"};
+
+void dbg_print_thd_addr_action(tid_t thread, uint32 addr, void *m, size_t s, uint8_t which) {
+    strcpy(dbg_print_buffer, "Thread ");
+    itoa(thread, (dbg_print_buffer + strlen(dbg_print_buffer)), 10);
+    strcat(dbg_print_buffer, ", addr 0x");
+    itoa(addr, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+    strcat(dbg_print_buffer, " ");
+    strcat(dbg_print_buffer, func_type[which]);
+
+    if(which >= name_CHECKALL)
+        strcat(dbg_print_buffer, "ing all memory blocks");
+    else if(which == name_FREE) {
+        strcat(dbg_print_buffer, "ing mem @ 0x");
+        itoa((uint32)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+    }
+    else {
+        strcat(dbg_print_buffer, "ing ");
+        itoa(s, (dbg_print_buffer + strlen(dbg_print_buffer)), 10);
+        strcat(dbg_print_buffer, " bytes @ 0x");
+        itoa((uint32)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+    }
+
+    strcat(dbg_print_buffer, "\n");
+
+    dbgio_write_str(dbg_print_buffer);
+}
+
+int mem_check_block_int(memctl_t *ctl, int source) {
+    uint32 rv = arch_get_ret_addr(), *nt, i;
+    int dmg = 0;
+    int retv = 0;
+
+    if(ctl->magic != BLOCK_MAGIC) {
+        dbg_print_thd_addr_action(get_cur_tid_safe, rv, get_buff_p(ctl), 0, source);
+
+        strcpy(dbg_print_buffer, "  'magic' is not correct! 0x");
+        itoa(ctl->magic, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+        strcat(dbg_print_buffer, "\n");
+        dbgio_write_str(dbg_print_buffer);
+        
+        retv = -1;
+    }
+    else {
+        nt = (uint32 *)ctl;
+
+        for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++) {
+            if(nt[i] != PRE_MAGIC) {
+                dbg_print_thd_addr_action(get_cur_tid_safe, rv, get_buff_p(ctl), 0, source);
+
+                strcpy(dbg_print_buffer, "  pre-magic is wrong at index ");
+                itoa(i, (dbg_print_buffer + strlen(dbg_print_buffer)), 10);
+                strcat(dbg_print_buffer, " (0x");
+                itoa(nt[i], (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+                strcat(dbg_print_buffer, ")\n");
+                dbgio_write_str(dbg_print_buffer);
+
+                dmg = 1;
+                retv = -2;
+            }
+        }
+
+        nt = ctl->post;
+
+        for(i = 0; i < BUFFER_SIZE / 4; i++) {
+            if(nt[i] != POST_MAGIC) {
+                dbg_print_thd_addr_action(get_cur_tid_safe, rv, get_buff_p(ctl), 0, source);
+
+                strcpy(dbg_print_buffer, "  post-magic is wrong at index ");
+                itoa(i, (dbg_print_buffer + strlen(dbg_print_buffer)), 10);
+                strcat(dbg_print_buffer, " (0x");
+                itoa(nt[i], (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+                strcat(dbg_print_buffer, ")\n");
+                dbgio_write_str(dbg_print_buffer);
+
+                dmg = 1;
+                retv = -3;
+            }
+        }
+
+        if(dmg) {
+             dbgio_write_str("  DAMAGED BLOCK DURING MEM_CHECK_BLOCK\n");
+        }
+    }
+
+    return retv;
+}
 
 #endif  /* KM_DEBUG */
 
@@ -1699,7 +1798,7 @@ Void_t* public_mALLOc(size_t bytes) {
     memset(ctl, 0, sizeof(memctl_t));
     ctl->magic = BLOCK_MAGIC;
     ctl->size = bytes;
-    ctl->thread = thd_current->tid;
+    ctl->thread = get_cur_tid_safe;
     ctl->addr = rv;
 
     nt1 = (uint32*)ctl;
@@ -1712,15 +1811,15 @@ Void_t* public_mALLOc(size_t bytes) {
     for(i = 0; i < BUFFER_SIZE / 4; i++)
         nt2[i] = POST_MAGIC;
 
-    ctl->type = "malloc";
+    ctl->type = func_type[0];
 
     LIST_INSERT_HEAD(&block_list, ctl, list);
 
     m = (void *)(nt1 + BUFFER_SIZE / 4);
 
+
 #ifdef KM_DBG_VERBOSE
-    printf("Thread %d/%08lx allocated %lu bytes at %08lx\n",
-           ctl->thread, ctl->addr, ctl->size, (uint32)m);
+    dbg_print_thd_addr_action(ctl->thread, ctl->addr, m, bytes, name_MALLOC);
 #endif
 
 #else
@@ -1735,9 +1834,10 @@ Void_t* public_mALLOc(size_t bytes) {
 
 void public_fREe(Void_t* m) {
 #ifdef KM_DBG
-    uint32 rv = arch_get_ret_addr(), *nt, i;
     memctl_t * ctl;
-    int dmg = 0;
+#ifdef KM_DBG_VERBOSE
+    uint32 rv = arch_get_ret_addr();
+#endif
 #endif
 
     /* standard C says if block is NULL, do not try to free it */
@@ -1751,51 +1851,12 @@ void public_fREe(Void_t* m) {
 #ifdef KM_DBG
 
 #ifdef KM_DBG_VERBOSE
-    printf("Thread %d/%08lx freeing block @ %08lx\n",
-           thd_current->tid, rv, (uint32)m);
+    dbg_print_thd_addr_action(get_cur_tid_safe, rv, m, 0, name_FREE);
 #endif
 
     ctl = get_memctl(m);
 
-    if(ctl->magic != BLOCK_MAGIC) {
-#ifndef KM_DBG_VERBOSE
-        printf("Thread %d/%08lx freeing block @ %08lx\n",
-               thd_current->tid, rv, (uint32)m);
-#endif
-        printf("  'magic' is not correct! %08lx\n", ctl->magic);
-    }
-    else {
-        nt = (uint32 *)ctl;
-
-        for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++) {
-            if(nt[i] != PRE_MAGIC) {
-#ifndef KM_DBG_VERBOSE
-                printf("Thread %d/%08lx freeing block @ %08lx\n",
-                       thd_current->tid, rv, (uint32)m);
-#endif
-                printf("  pre-magic is wrong at index %lu (%08lx)\n",
-                       i, nt[i]);
-                dmg = 1;
-            }
-        }
-
-        nt = ctl->post;
-
-        for(i = 0; i < BUFFER_SIZE / 4; i++) {
-            if(nt[i] != POST_MAGIC) {
-#ifndef KM_DBG_VERBOSE
-                printf("Thread %d/%08lx freeing block @ %08lx\n",
-                       thd_current->tid, rv, (uint32)m);
-#endif
-                printf("  post-magic is wrong at index %lu (%08lx)\n",
-                       i, nt[i]);
-                dmg = 1;
-            }
-        }
-
-        if(dmg)
-            printf("  DAMAGED BLOCK DURING FREE\n");
-
+    if(mem_check_block_int(ctl, name_FREE) != -1) {
         LIST_REMOVE(ctl, list);
         fREe(ctl);
     }
@@ -1808,54 +1869,11 @@ void public_fREe(Void_t* m) {
     }
 }
 
-int mem_check_block(Void_t* m) {
+int mem_check_block(void *m) {
 #ifdef KM_DBG
-    uint32 rv = arch_get_ret_addr(), *nt, i;
     memctl_t * ctl;
-    int dmg = 0;
-    int retv = 0;
-
     ctl = get_memctl(m);
-
-    if(ctl->magic != BLOCK_MAGIC) {
-        printf("Thread %d/%08lx checking block @ %08lx\n",
-               thd_current->tid, rv, (uint32)m);
-        printf("  'magic' is not correct! %08lx\n", ctl->magic);
-        retv = -1;
-    }
-    else {
-        nt = (uint32 *)ctl;
-
-        for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++) {
-            if(nt[i] != PRE_MAGIC) {
-                printf("Thread %d/%08lx checking block @ %08lx\n",
-                       thd_current->tid, rv, (uint32)m);
-                printf("  pre-magic is wrong at index %lu (%08lx)\n",
-                       i, nt[i]);
-                dmg = 1;
-                retv = -2;
-            }
-        }
-
-        nt = ctl->post;
-
-        for(i = 0; i < BUFFER_SIZE / 4; i++) {
-            if(nt[i] != POST_MAGIC) {
-                printf("Thread %d/%08lx checking block @ %08lx\n",
-                       thd_current->tid, rv, (uint32)m);
-                printf("  post-magic is wrong at index %lu (%08lx)\n",
-                       i, nt[i]);
-                dmg = 1;
-                retv = -3;
-            }
-        }
-
-        if(dmg) {
-            printf("  DAMAGED BLOCK DURING MEM_CHECK_BLOCK\n");
-        }
-    }
-
-    return retv;
+    return mem_check_block_int(ctl, name_CHECK);
 #else
     (void)m;
     return 0;
@@ -1875,12 +1893,11 @@ int mem_check_all(void) {
     }
 
 #ifdef KM_DBG_VERBOSE
-    printf("Thread %d/%08lx checking all memory blocks\n",
-           thd_current->tid, rv);
+    dbg_print_thd_addr_action(get_cur_tid_safe, rv, 0, 0, name_CHECKALL);
 #endif
 
     LIST_FOREACH(ctl, &block_list, list) {
-        rvp = mem_check_block((void *)(((uint32)ctl) + BUFFER_SIZE));
+        rvp = mem_check_block_int(ctl, name_CHECKALL);
 
         if(rvp < 0)
             retv = rvp;
@@ -1907,60 +1924,17 @@ Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
     }
 
 #ifdef KM_DBG
+    ctl = get_memctl(m);
 
 #ifdef KM_DBG_VERBOSE
-    printf("Thread %d/%08lx reallocing block @ %08lx to %d bytes\n",
-           thd_current->tid, rv, (uint32)m, bytes);
+    dbg_print_thd_addr_action(get_cur_tid_safe, rv, m, bytes, name_REALLOC);
 #endif
 
     // We can't check realloc'ing the zero block (this is valid but of
     // course there is no "previous" block to check).
     if(m != NULL) {
-        ctl = get_memctl(m);
-
-        if(ctl->magic != BLOCK_MAGIC) {
-#ifndef KM_DBG_VERBOSE
-            printf("Thread %d/%08lx reallocing block @ %08lx to %d bytes\n",
-                   thd_current->tid, rv, (uint32)m, bytes);
-#endif
-            printf("  'magic' is not correct! %08lx\n", ctl->magic);
-            dmg = 1;
-        }
-        else {
-            nt = (uint32 *)ctl;
-
-            for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++) {
-                if(nt[i] != PRE_MAGIC) {
-#ifndef KM_DBG_VERBOSE
-                    printf("Thread %d/%08lx reallocing block @ %08lx to %d bytes\n",
-                           thd_current->tid, rv, (uint32)m, bytes);
-#endif
-                    printf("  pre-magic is wrong at index %lu (%08lx)\n",
-                           i, nt[i]);
-                    dmg = 1;
-                }
-            }
-
-            nt = ctl->post;
-
-            for(i = 0; i < BUFFER_SIZE / 4; i++) {
-                if(nt[i] != POST_MAGIC) {
-#ifndef KM_DBG_VERBOSE
-                    printf("Thread %d/%08lx reallocing block @ %08lx to %d bytes\n",
-                           thd_current->tid, rv, (uint32)m, bytes);
-#endif
-                    printf("  post-magic is wrong at index %lu (%08lx)\n",
-                           i, nt[i]);
-                    dmg = 1;
-                }
-            }
-
-            if(dmg) {
-                printf("  DAMAGED BLOCK DURING REALLOC\n");
-            }
-
+        if(mem_check_block_int(ctl, name_REALLOC) != -1)
             LIST_REMOVE(ctl, list);
-        }
     }
     else
         ctl = NULL;
@@ -1977,8 +1951,12 @@ Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
             assert(ctl != NULL);
 
 #ifdef KM_DBG_VERBOSE
-        printf("  realloc'd block %08lx to %08lx\n",
-               (uint32)m, ((uint32)ctl) + BUFFER_SIZE);
+    strcpy(dbg_print_buffer, " realloc'd block 0x");
+    itoa((uint32)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+    strcat(dbg_print_buffer, " to 0x");
+    itoa(((uint32)ctl) + BUFFER_SIZE, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+    strcat(dbg_print_buffer, "\n");
+    dbgio_write_str(dbg_print_buffer);
 #endif
 
         // If they realloc'd to zero, we're done here.
@@ -1991,7 +1969,7 @@ Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
             memset(ctl, 0, sizeof(memctl_t));
             ctl->magic = BLOCK_MAGIC;
             ctl->size = bytes;
-            ctl->thread = thd_current->tid;
+            ctl->thread = get_cur_tid_safe;
             ctl->addr = rv;
 
             nt = (uint32*)ctl;
@@ -2008,7 +1986,7 @@ Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
 
             LIST_INSERT_HEAD(&block_list, ctl, list);
 
-            ctl->type = "realloc";
+            ctl->type = func_type[1];
 
             m = (void *)(((uint32)ctl) + BUFFER_SIZE);
         }
@@ -2049,7 +2027,7 @@ Void_t* public_mEMALIGn(size_t alignment, size_t bytes) {
     memset(ctl, 0, BUFFER_SIZE);
     ctl->magic = BLOCK_MAGIC;
     ctl->size = bytes;
-    ctl->thread = thd_current->tid;
+    ctl->thread = get_cur_tid_safe;
     ctl->addr = rv;
 
     nt1 = (uint32*)ctl;
@@ -2062,7 +2040,7 @@ Void_t* public_mEMALIGn(size_t alignment, size_t bytes) {
     for(i = 0; i < BUFFER_SIZE / 4; i++)
         nt2[i] = POST_MAGIC;
 
-    ctl->type = "memalign";
+    ctl->type = func_type[2];
 
     LIST_INSERT_HEAD(&block_list, ctl, list);
 
@@ -2070,8 +2048,7 @@ Void_t* public_mEMALIGn(size_t alignment, size_t bytes) {
     assert(!((uint32)m % alignment));
 
 #ifdef KM_DBG_VERBOSE
-    printf("Thread %d/%08lx memalign allocated %lu bytes at %08lx\n",
-           ctl->thread, ctl->addr, ctl->size, (uint32)m);
+    dbg_print_thd_addr_action(ctl->thread, ctl->addr, m, bytes, name_MEMALIGN);
 #endif
 
 #else
@@ -2124,7 +2101,7 @@ Void_t* public_cALLOc(size_t n, size_t elem_size) {
     memset(ctl, 0, BUFFER_SIZE);
     ctl->magic = BLOCK_MAGIC;
     ctl->size = bytes;
-    ctl->thread = thd_current->tid;
+    ctl->thread = get_cur_tid_safe;
     ctl->addr = rv;
 
     nt1 = (uint32*)ctl;
@@ -2137,7 +2114,7 @@ Void_t* public_cALLOc(size_t n, size_t elem_size) {
     for(i = 0; i < BUFFER_SIZE / 4; i++)
         nt2[i] = POST_MAGIC;
 
-    ctl->type = "calloc";
+    ctl->type = func_type[3];
 
     LIST_INSERT_HEAD(&block_list, ctl, list);
 
@@ -2145,8 +2122,7 @@ Void_t* public_cALLOc(size_t n, size_t elem_size) {
     memset(m, 0, bytes);
 
 #ifdef KM_DBG_VERBOSE
-    printf("Thread %d/%08lx calloc allocated %lu bytes at %08lx\n",
-           ctl->thread, ctl->addr, ctl->size, (uint32)m);
+    dbg_print_thd_addr_action(ctl->thread, ctl->addr, m, bytes, name_CALLOC);
 #endif
 
 #else
@@ -2214,7 +2190,6 @@ size_t public_mUSABLe(Void_t* m) {
 void public_mSTATs(void) {
 #ifdef KM_DBG
     memctl_t *c;
-    uint32 * nt, i;
 #endif
 
     if(MALLOC_PREACTION != 0) {
@@ -2226,33 +2201,17 @@ void public_mSTATs(void) {
 #ifdef KM_DBG
 
     if(!LIST_EMPTY(&block_list)) {
-        printf("KM_DBG: Still-allocated memory blocks:\n");
+        dbglog(DBG_CRITICAL, "KM_DBG: Still-allocated memory blocks:\n");
         LIST_FOREACH(c, &block_list, list) {
-            printf("  INUSE %08lx: size %lu, thread %d, addr %08lx, type %s\n",
+            dbglog(DBG_CRITICAL, "  INUSE %08lx: size %lu, thread %d, addr %08lx, type %s\n",
                    (uint32)c + BUFFER_SIZE, c->size, c->thread,
                    c->addr, c->type);
 
-            nt = (uint32 *)c;
-
-            for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++) {
-                if(nt[i] != PRE_MAGIC) {
-                    printf("     pre-magic is wrong at index %lu (%08lx)\n",
-                           i, nt[i]);
-                }
-            }
-
-            nt = c->post;
-
-            for(i = 0; i < BUFFER_SIZE / 4; i++) {
-                if(nt[i] != POST_MAGIC) {
-                    printf("     post-magic is wrong at index %lu (%08lx)\n",
-                           i, nt[i]);
-                }
-            }
+            mem_check_block_int(c, name_STATS);
         }
     }
     else {
-        printf("KM_DBG: All memory blocks were properly freed\n");
+        dbglog(DBG_CRITICAL, "KM_DBG: All memory blocks were properly freed\n");
     }
 
 #endif

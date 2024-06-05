@@ -72,7 +72,7 @@ int nmmgr_handler_add(nmmgr_handler_t *hnd) {
 
 /* Remove a name handler */
 int nmmgr_handler_remove(nmmgr_handler_t *hnd) {
-    nmmgr_handler_t *c;
+    nmmgr_handler_t *c, *tmp;
     int rv = -1;
 
     /* If we're in an int, lets do the trylock */
@@ -82,7 +82,7 @@ int nmmgr_handler_remove(nmmgr_handler_t *hnd) {
         mutex_lock(&mutex);
 
     /* Verify that it's actually in there */
-    LIST_FOREACH(c, &nmmgr_handlers, list_ent) {
+    LIST_FOREACH_SAFE(c, &nmmgr_handlers, list_ent, tmp) {
         if(c == hnd) {
             LIST_REMOVE(hnd, list_ent);
             rv = 0;

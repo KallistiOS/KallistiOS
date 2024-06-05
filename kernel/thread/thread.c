@@ -229,7 +229,7 @@ static void *thd_idle_task(void *param) {
 /* Reaper function. This function is here to reap old zombie threads as they are
    created. */
 static void *thd_reaper(void *param) {
-    kthread_t *thd;
+    kthread_t *thd, *tmp;
 
     (void)param;
 
@@ -239,7 +239,7 @@ static void *thd_reaper(void *param) {
 
         /* Find the first zombie thread and reap it (only do one at a time so
            that the semaphore stays current) */
-        LIST_FOREACH(thd, &thd_list, t_list) {
+        LIST_FOREACH_SAFE(thd, &thd_list, t_list, tmp) {
             if(thd->state == STATE_ZOMBIE) {
                 thd_destroy(thd);
                 break;
@@ -997,7 +997,7 @@ int thd_set_hz(unsigned int hertz) {
 int kthread_key_delete(kthread_key_t key) {
     int old = irq_disable();
     kthread_t *cur;
-    kthread_tls_kv_t *i;
+    kthread_tls_kv_t *i, *tmp;
 
     /* Make sure the key is valid. */
     if(key >= kthread_key_next() || key < 1) {
@@ -1015,7 +1015,7 @@ int kthread_key_delete(kthread_key_t key) {
 
     /* Go through each thread searching for (and removing) the data. */
     LIST_FOREACH(cur, &thd_list, t_list) {
-        LIST_FOREACH(i, &cur->tls_list, kv_list) {
+        LIST_FOREACH_SAFE(i, &cur->tls_list, kv_list, tmp) {
             if(i->key == key) {
                 LIST_REMOVE(i, kv_list);
                 free(i);
@@ -1108,19 +1108,14 @@ int thd_init(void) {
 
 /* Shutdown */
 void thd_shutdown(void) {
-    kthread_t *n1, *n2;
+    kthread_t *cur, *tmp;
 
     /* Remove our pre-emption handler */
     timer_primary_set_callback(NULL);
 
     /* Kill remaining live threads */
-    n1 = LIST_FIRST(&thd_list);
-
-    while(n1 != NULL) {
-        n2 = LIST_NEXT(n1, t_list);
-        free(n1->stack);
-        free(n1);
-        n1 = n2;
+    LIST_FOREACH_SAFE(cur, &thd_list, t_list, tmp) {
+        thd_destroy(cur);
     }
 
     sem_destroy(&thd_reap_sem);

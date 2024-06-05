@@ -228,6 +228,8 @@ typedef struct maple_frame {
     This structure is used by the hardware to deliver the response to the device
     info request.
 
+    \note product_name and product_license are not guaranteed to be NULL terminated.
+
     \headerfile dc/maple.h
 */
 typedef struct maple_devinfo {

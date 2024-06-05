@@ -547,7 +547,10 @@ int vmu_get_datetime(maple_device_t *dev, time_t *unix);
 #define VMU_SLEEP      (7<<1)   /**< \brief Sleep button on the VMU */
 
 /** \brief VMU's raw condition data: 0 = PRESSED, 1 = RELEASED */
-typedef uint8_t vmu_cond_t;
+typedef struct vmu_cond {
+    uint8_t raw_buttons;        /**< \brief Combined button mask */
+    uint8_t dummy[3];           /**< \brief Unused response data */
+} vmu_cond_t;
 
 /** \brief  VMU's "civilized" state data: 0 = RELEASED, 1 = PRESSED
 

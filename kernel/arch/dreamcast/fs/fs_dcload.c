@@ -513,17 +513,20 @@ void fs_dcload_init_console(void) {
     if(*DCLOADMAGICADDR != DCLOADMAGICVALUE)
         return;
 
-    /* Give dcload the 64k it needs to compress data (if on serial) */
-    dcload_wrkmem = malloc(65536);
 
-    if(dcload_wrkmem) {
-        if(dclsc(DCLOAD_ASSIGNWRKMEM, dcload_wrkmem) == -1) {
-            free(dcload_wrkmem);
-            dcload_type = DCLOAD_TYPE_IP;
-            dcload_wrkmem = NULL;
-        }
-        else {
-            dcload_type = DCLOAD_TYPE_SER;
+    /* dcload IP will always return -1 here. Serial will return 0 and make
+      no change since it already holds 0 as 'no mem assigned */
+    if(dclsc(DCLOAD_ASSIGNWRKMEM, 0) == -1) {
+        dcload_type = DCLOAD_TYPE_IP;
+    }
+    else {
+        dcload_type = DCLOAD_TYPE_SER;
+
+        /* Give dcload the 64k it needs to compress data (if on serial) */
+        dcload_wrkmem = malloc(65536);
+        if(dcload_wrkmem) {
+            if(dclsc(DCLOAD_ASSIGNWRKMEM, dcload_wrkmem) == -1)
+                free(dcload_wrkmem);
         }
     }
 }
