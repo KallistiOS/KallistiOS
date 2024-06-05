@@ -2,6 +2,7 @@
 
    pthread_rwlock_timedrdlock.c
    Copyright (C) 2023 Lawrence Sebald
+   Copyright (C) 2024 Eric Fradella
 
 */
 
@@ -15,7 +16,7 @@ int pthread_rwlock_timedrdlock(pthread_rwlock_t *__RESTRICT rwlock,
                                const struct timespec *__RESTRICT abstime) {
     int old, rv = 0;
     int tmo;
-    struct timeval ctv;
+    struct timespec ctv;
 
     if(!rwlock || !abstime)
         return EFAULT;
@@ -32,11 +33,11 @@ int pthread_rwlock_timedrdlock(pthread_rwlock_t *__RESTRICT rwlock,
     if(!rwsem_read_trylock(&rwlock->rwsem))
         return 0;
 
-    /* Figure out the timeout we need to provide. */
-    gettimeofday(&ctv, NULL);
+    /* Figure out the timeout we need to provide in milliseconds. */
+    clock_gettime(CLOCK_REALTIME, &ctv);
 
-    tmo = abstime->tv_sec - ctv.tv_sec;
-    tmo += abstime->tv_nsec / (1000 * 1000) - ctv.tv_usec / 1000;
+    tmo = (abstime->tv_sec - ctv.tv_sec) * 1000;
+    tmo += (abstime->tv_nsec - ctv.tv_nsec) / (1000 * 1000);
 
     if(tmo <= 0)
         return ETIMEDOUT;

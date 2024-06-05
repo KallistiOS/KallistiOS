@@ -12,7 +12,7 @@ __BEGIN_DECLS
 
 /** \file       kos/barrier.h
     \brief      Thread barriers.
-    \ingroup    kthreads
+    \ingroup    barriers
 
     Thread barriers are used to synchronize the progress of multiple threads. A
     barrier causes threads to wait until a specified number of threads have
@@ -27,6 +27,17 @@ __BEGIN_DECLS
     \author     Lawrence Sebald
 */
 
+/** \defgroup barriers Barriers
+    \brief    KOS barrier API for kernel threads
+    \ingroup  kthreads
+
+    Barriers are a type of synchronization method which halt execution
+    for group of threads until a certain number of them have reached
+    the barrier. 
+
+    @{
+*/
+
 /** \brief      Constant returned to one thread from pthread_barrier_wait().
 
     A single (unspecified) thread will be returned this value after successfully
@@ -36,9 +47,9 @@ __BEGIN_DECLS
 */
 #define THD_BARRIER_SERIAL_THREAD   0x7fffffff
 
+/** \cond */
 #ifndef __KTHREAD_HAVE_BARRIER_TYPE
 
-/** \cond */
 #define __KTHREAD_HAVE_BARRIER_TYPE 1
 /** \endcond */
 
@@ -54,11 +65,15 @@ __BEGIN_DECLS
     \headerfile kos/barrier.h
 */
 typedef union kos_thd_barrier {
+    /** \cond Opaque structure */
     unsigned char __opaque[THD_BARRIER_SIZE];
     long int __align;
+    /** \endcond */
 } thd_barrier_t;
 
+/** \cond */
 #endif /* !__KTHREAD_HAVE_BARRIER_TYPE */
+/** \endcond */
 
 /** \brief      Initialize a thread barrier.
 
@@ -120,6 +135,8 @@ int thd_barrier_destroy(thd_barrier_t *barrier);
     \em     EPERM - Function was called in an interrupt context
 */
 int thd_barrier_wait(thd_barrier_t *barrier);
+
+/** @} */
 
 __END_DECLS
 

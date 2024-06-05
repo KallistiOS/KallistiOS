@@ -15,6 +15,6 @@ int pthread_condattr_getclock(const pthread_condattr_t *__RESTRICT attr,
     if(!attr)
         return EINVAL;
 
-    *clock_id = CLOCK_REALTIME;
+    *clock_id = attr->clock_id;
     return 0;
 }

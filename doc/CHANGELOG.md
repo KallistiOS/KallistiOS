@@ -20,6 +20,7 @@ Platform-specific changes are prefixed with the platform name, otherwise the cha
 - Removed old pthreads implementation from kernel/libc [LS]
 - Added new (more complete/compliant) pthreads implementation in addons/libpthread [LS]
 - Added implementation of thread barriers [LS]
+- Added support for pthread_condattr_setclock() [FG]
 
 ## KallistiOS version 2.1.1
 - Added pvrtex utility by TapamN to utils [Daniel Fairchild == DF]

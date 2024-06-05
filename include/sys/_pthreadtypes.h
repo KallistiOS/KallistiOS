@@ -19,9 +19,17 @@ typedef struct pthread_rwlockattr_t {
     /* Empty */
 } pthread_rwlockattr_t;
 
-typedef struct pthread_condattr_t {
-    /* Empty */
+#ifndef __PTHREAD_HAVE_CONDATTR_TYPE
+#define __PTHREAD_HAVE_CONDATTR_TYPE   1
+#define __PTHREAD_CONDATTR_SIZE        16
+
+typedef union pthread_condattr_t {
+    unsigned char __data[__PTHREAD_CONDATTR_SIZE];
+    long int __align;
 } pthread_condattr_t;
+
+#undef __PTHREAD_CONDATTR_SIZE
+#endif /* !__PTHREAD_HAVE_CONDATTR_TYPE */
 
 typedef struct pthread_barrierattr_t {
     /* Empty */
