@@ -167,8 +167,7 @@ void loadtxr(const char *fname, GLuint *txr) {
     tex = fopen(fname, "rb");
 
     if(tex == NULL) {
-        printf("FILE READ ERROR: %s\n", fname);
-
+        fprintf(stderr, "FILE READ ERROR: %s\n", fname);
         while(1);
     }
 
@@ -194,39 +193,31 @@ void loadtxr(const char *fname, GLuint *txr) {
     if(compressed) {
         if(twiddled) {
             switch(color) {
-                case 0x0: {
+                case 0x0:
                     texFormat = GL_COMPRESSED_ARGB_1555_VQ_TWID_KOS;
-                } break;
-                case 0x01: {
+                    break;
+                case 0x01:
                     texFormat = GL_COMPRESSED_RGB_565_VQ_TWID_KOS;
-                } break;
-                case 0x02: {
+                    break;
+                case 0x02:
                     texFormat = GL_COMPRESSED_ARGB_4444_VQ_TWID_KOS;
-                }
-                break;
-                default:
-                    texFormat = GL_UNSIGNED_SHORT_5_6_5;
+                    break;
             }
         } else {
             switch(color) {
-                case 0: {
+                case 0:
                     texFormat = GL_COMPRESSED_ARGB_1555_VQ_KOS;
-                } break;
-                case 1: {
+                    break;
+                case 1:
                     texFormat = GL_COMPRESSED_RGB_565_VQ_KOS;
-                } break;
-                case 2: {
+                    break;
+                case 2:
                     texFormat = GL_COMPRESSED_ARGB_4444_VQ_KOS;
-                }
-                break;
-                default:
-                    texFormat = GL_UNSIGNED_SHORT_5_6_5;
+                    break;
             }
         }
-    } else {
-        if(color == 1) {
-            texFormat = GL_UNSIGNED_SHORT_5_6_5;
-        }
+    } else if(color == 1) {
+        texFormat = GL_UNSIGNED_SHORT_5_6_5;
     }
 
     printf("TEXTURE Resolution: %ix%i\n", texW, texH);
