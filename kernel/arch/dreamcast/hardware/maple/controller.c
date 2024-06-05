@@ -29,9 +29,6 @@ typedef struct cont_cond {
     uint8_t joy2y;     /* second joystick Y */
 } cont_cond_t;
 
-struct cont_callback_params;
-LIST_HEAD(cont_btn_callback_list, cont_callback_params);
-
 typedef struct cont_callback_params {
     cont_btn_callback_t cb;
     uint8_t addr;
@@ -41,10 +38,11 @@ typedef struct cont_callback_params {
     uint8_t cur_addr;
     uint32_t cur_btns;
 
-    LIST_ENTRY(cont_callback_params)  listent;
+    TAILQ_ENTRY(cont_callback_params)  listent;
 } cont_callback_params_t;
 
-static struct cont_btn_callback_list btn_cbs;
+static TAILQ_HEAD(cont_btn_callback_list, cont_callback_params) btn_cbs;
+
 static mutex_t btn_cbs_mtx = MUTEX_INITIALIZER;
 
 /* Check whether the controller has EXACTLY the given capabilities. */
@@ -65,24 +63,15 @@ void cont_btn_callback_del(cont_callback_params_t *params) {
 
     mutex_lock(&btn_cbs_mtx);
 
-    LIST_FOREACH_SAFE(c, &btn_cbs, listent, n) {
-        if(params == NULL) {
-            LIST_REMOVE(c, listent);
-            thd_worker_destroy(c->worker);
-            free(c);
-        }
-        else if((params->addr == c->addr) &&
-            (params->btns == c->btns)) {
-                if(params->cb == NULL) {
-                    LIST_REMOVE(c, listent);
+    TAILQ_FOREACH_SAFE(c, &btn_cbs, listent, n) {
+        if((params == NULL) || ((params->addr == c->addr) &&
+            (params->btns == c->btns))) {
+
+                if((params == NULL) || (params->cb == NULL) ||
+                    (params->cb == c->cb)) {
+                    TAILQ_REMOVE(&btn_cbs, c, listent);
                     thd_worker_destroy(c->worker);
                     free(c);
-                }
-                else if(params->cb == c->cb) {
-                    LIST_REMOVE(c, listent);
-                    thd_worker_destroy(c->worker);
-                    free(c);
-                    break;
                 }
             }
     }
@@ -123,7 +112,10 @@ int cont_btn_callback(uint8_t addr, uint32_t btns, cont_btn_callback_t cb) {
 
     mutex_lock(&btn_cbs_mtx);
 
-    LIST_INSERT_HEAD(&btn_cbs, params, listent);
+    if(addr)
+        TAILQ_INSERT_HEAD(&btn_cbs, params, listent);
+    else
+        TAILQ_INSERT_TAIL(&btn_cbs, params, listent);
 
     mutex_unlock(&btn_cbs_mtx);
 
@@ -173,7 +165,7 @@ static void cont_reply(maple_state_t *st, maple_frame_t *frm) {
     frm->dev->status_valid = 1;
 
     /* Check for magic button sequences */
-    LIST_FOREACH(c, &btn_cbs, listent) {
+    TAILQ_FOREACH(c, &btn_cbs, listent) {
         if(!c->addr ||
                 (c->addr &&
                  c->addr == maple_addr(frm->dev->port, frm->dev->unit))) {
@@ -221,6 +213,7 @@ static maple_driver_t controller_drv = {
 
 /* Add the controller to the driver chain */
 void cont_init(void) {
+    TAILQ_INIT(&btn_cbs);
     maple_driver_reg(&controller_drv);
 }
 
