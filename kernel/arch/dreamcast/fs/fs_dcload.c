@@ -515,7 +515,7 @@ void fs_dcload_init_console(void) {
 
 
     /* dcload IP will always return -1 here. Serial will return 0 and make
-    no change since it already holds 0 as 'no mem assigned */
+      no change since it already holds 0 as 'no mem assigned */
     if(dclsc(DCLOAD_ASSIGNWRKMEM, 0) == -1) {
         dcload_type = DCLOAD_TYPE_IP;
     }

@@ -40,7 +40,7 @@ void dbglog(int level, const char *fmt, ...) {
         spinlock_lock(&mutex);
 
     va_start(args, fmt);
-    i= vsnprintf(printf_buf, sizeof(printf_buf), fmt, args);
+    i = vsnprintf(printf_buf, sizeof(printf_buf), fmt, args);
     va_end(args);
 
     if(i >= 0)
