@@ -94,7 +94,8 @@ void thd_worker_destroy(kthread_worker_t *worker) {
     worker->quit = true;
     genwait_wake_one(worker);
 
-    thd_join(worker->thd, NULL);
+    if(worker->thd != thd_get_current())
+        thd_join(worker->thd, NULL);
     free(worker);
 }
 
