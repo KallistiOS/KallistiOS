@@ -136,27 +136,39 @@ static void irq_dump_regs(int code, int evt) {
     arch_stk_trace_at(fp, 0);
     
     if(code == 1) {
-        dbglog(DBG_DEAD, "Encountered %s. Use this terminal command to help"
-            " diagnose:\n\n\t$KOS_ADDR2LINE -e your_program.elf %08lx %08lx", 
-            irq_exception_string(evt), irq_srt_addr->pc, irq_srt_addr->pr);
+        dbglog(DBG_DEAD, "\nEncountered %s. ", irq_exception_string(evt)); 
+        
+        /* Construct template message only if either PC/PR address is valid */
+        if(arch_valid_text_address(irq_srt_addr->pc) || 
+           arch_valid_text_address(irq_srt_addr->pr)) {
+            
+            dbglog(DBG_DEAD, "Use this template terminal command to help"
+                " diagnose:\n\n\t$KOS_ADDR2LINE -e prog.elf");
+            
+            if(arch_valid_text_address(irq_srt_addr->pc))
+                dbglog(DBG_DEAD, " %08lx", irq_srt_addr->pc);
+
+            if(arch_valid_text_address(irq_srt_addr->pr))
+                dbglog(DBG_DEAD, " %08lx", irq_srt_addr->pr);
 
 #ifdef FRAME_POINTERS
-        while(fp != 0xffffffff) {
-            /* Validate the function pointer (fp) */
-            if((fp & 3) || (fp < 0x8c000000) || (fp > _arch_mem_top))
-                break;
+            while(fp != 0xffffffff) {
+                /* Validate the function pointer (fp) */
+                if((fp & 3) || (fp < 0x8c000000) || (fp > _arch_mem_top))
+                    break;
 
-            /* Get the return address from the function pointer */
-            fp = arch_fptr_ret_addr(fp);
+                /* Get the return address from the function pointer */
+                fp = arch_fptr_ret_addr(fp);
 
-            /* Validate the return address */
-            if(!arch_valid_address(fp))
-                break;
+                /* Validate the return address */
+                if(!arch_valid_text_address(fp))
+                    break;
 
-            dbglog(DBG_DEAD, " %08lx", fp);
-            fp = arch_fptr_next(fp);
-        }
+                dbglog(DBG_DEAD, " %08lx", fp);
+                fp = arch_fptr_next(fp);
+            }
 #endif
+        }
 
         dbglog(DBG_DEAD, "\n");
     }

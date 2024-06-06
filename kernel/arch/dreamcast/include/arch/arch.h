@@ -40,6 +40,10 @@ extern uint32 _arch_mem_top;
 #define _arch_mem_top   ((uint32) 0x8d000000)
 #endif
 
+/** \brief  Start and End address for .text portion of program. */
+extern char _executable_start;
+extern char _etext; 
+
 #define PAGESIZE        4096            /**< \brief Page size (for MMU) */
 #define PAGESIZE_BITS   12              /**< \brief Bits for page size */
 #define PAGEMASK        (PAGESIZE - 1)  /**< \brief Mask for page offset */
@@ -414,6 +418,16 @@ const char *kos_get_authors(void);
                             memory access.
 */
 #define arch_valid_address(ptr) ((ptr_t)(ptr) >= 0x8c010000 && (ptr_t)(ptr) < _arch_mem_top)
+
+/** \brief   Returns true if the passed address is in the text section of your
+             program.
+    \ingroup arch
+
+    \return                 Whether the address is valid or not for text
+                            memory access.
+*/
+#define arch_valid_text_address(ptr) \
+    ((uintptr_t)(ptr) >= (uintptr_t)&_executable_start && (uintptr_t)(ptr) < (uintptr_t)&_etext)
 
 __END_DECLS
 
