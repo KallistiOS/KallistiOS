@@ -53,7 +53,7 @@ int clock_getres(clockid_t clk_id, struct timespec *ts) {
 int clock_gettime(clockid_t clk_id, struct timespec *ts) {
     lldiv_t  div_result;
     uint64_t ns64;
-    uint32_t secs, nsecs;
+    uint32_t secs, nsecs, secs_offset=0;
 
     if(!ts) {
         errno = EFAULT;
@@ -61,14 +61,16 @@ int clock_gettime(clockid_t clk_id, struct timespec *ts) {
     }
 
     switch(clk_id) {
-        /* Use C11's nanosecond-resolution timestamp */
+        /* Use the nanosecond resolution boot time
+           + RTC bios time */
         case CLOCK_REALTIME:
-            return timespec_get(ts, TIME_UTC) == TIME_UTC ? 0 : -1;
+            secs_offset = rtc_boot_time();
+            /* fall through */
 
         /* Use the nanosecond resolution boot time */
         case CLOCK_MONOTONIC:
             timer_ns_gettime(&secs, &nsecs);
-            ts->tv_sec = secs;
+            ts->tv_sec = secs + secs_offset;
             ts->tv_nsec = nsecs;
             return 0;
 

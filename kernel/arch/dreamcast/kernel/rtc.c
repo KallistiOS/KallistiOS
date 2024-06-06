@@ -128,7 +128,6 @@ int rtc_set_unix_secs(time_t secs) {
     if(adjusted_time < 0 || adjusted_time > UINT32_MAX)
         return -1;
 
-
     /* Enable writing by setting LSB of control */
     g2_write_32(RTC_CTRL_ADDR, RTC_CTRL_WRITE_EN);
 
