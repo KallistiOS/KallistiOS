@@ -124,6 +124,8 @@ extern irq_context_t *irq_srt_addr;
 static void irq_dump_regs(int code, int evt) {
     uint32_t fp;
     uint32_t *regs = irq_srt_addr->r;
+    bool valid_pc;
+    bool valid_pr;
 
     dbglog(DBG_DEAD, "Unhandled exception: PC %08lx, code %d, evt %04x\n",
            irq_srt_addr->pc, code, (uint16)evt);
@@ -138,17 +140,17 @@ static void irq_dump_regs(int code, int evt) {
     if(code == 1) {
         dbglog(DBG_DEAD, "\nEncountered %s. ", irq_exception_string(evt)); 
         
+        valid_pc = arch_valid_text_address(irq_srt_addr->pc);
+        valid_pr = arch_valid_text_address(irq_srt_addr->pr);
         /* Construct template message only if either PC/PR address is valid */
-        if(arch_valid_text_address(irq_srt_addr->pc) || 
-           arch_valid_text_address(irq_srt_addr->pr)) {
-            
+        if(valid_pc || valid_pr) {
             dbglog(DBG_DEAD, "Use this template terminal command to help"
                 " diagnose:\n\n\t$KOS_ADDR2LINE -e prog.elf");
             
-            if(arch_valid_text_address(irq_srt_addr->pc))
+            if(valid_pc)
                 dbglog(DBG_DEAD, " %08lx", irq_srt_addr->pc);
 
-            if(arch_valid_text_address(irq_srt_addr->pr))
+            if(valid_pr)
                 dbglog(DBG_DEAD, " %08lx", irq_srt_addr->pr);
 
 #ifdef FRAME_POINTERS
