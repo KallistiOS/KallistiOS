@@ -23,7 +23,7 @@
 #include <dc/maple/controller.h>
 
 #define UNUSED __attribute__((unused))
-#define THD_COUNT 600
+#define THD_COUNT (475 * (DBL_MEM? 2 : 1))
 
 static kthread_once_t once = KTHREAD_ONCE_INIT;
 static spinlock_t lock = SPINLOCK_INITIALIZER;
@@ -64,7 +64,7 @@ static void *thd_func(void *param UNUSED) {
     return NULL;
 }
 
-KOS_INIT_FLAGS(INIT_DEFAULT);
+KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS);
 
 int main(int argc, char *argv[]) {
     int i, retval, success = 1;
@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
     printf("Waiting for the threads to finish\n");
 
     for(i = 0; i < THD_COUNT; ++i) {
-        if((retval = thd_join(thds[i], NULL) < 0)) {
+        if((retval = thd_join(thds[i], NULL)) < 0) {
             fprintf(stderr, "Failed to join thread[%d]: %d\n", 
                     i, retval);
             success = 0;

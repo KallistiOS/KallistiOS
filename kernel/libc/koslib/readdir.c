@@ -33,9 +33,7 @@ struct dirent *readdir(DIR *dir) {
     else
         dir->d_ent.d_type = DT_REG;
 
-    len = strlen(d->name);
-    if(len > sizeof(dir->d_name) - 1)
-        len = sizeof(dir->d_name) - 1;
+    len = strnlen(d->name, sizeof(dir->d_name) - 1);
 
     strncpy(dir->d_ent.d_name, d->name, len);
     dir->d_ent.d_name[len] = '\0';

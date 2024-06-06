@@ -170,9 +170,9 @@ export KOS_CFLAGS="${KOS_CFLAGS} -fno-builtin"
 # FSCA, and FSQRT) for calculating sin/cos, inverse square root, and square roots.
 # These can result in substantial performance gains for these kinds of operations;
 # however, they do so at the price of accuracy and are not IEEE compliant.
-# NOTE: This also requires -fno-builtin be removed from KOS_CFLAGS to take effect!
+# NOTE: Enabling this option will also override -fno-builtin!
 #
-#export KOS_CFLAGS="${KOS_CFLAGS} -ffast-math -ffp-contract=fast -mfsrra -mfsca"
+#export KOS_CFLAGS="${KOS_CFLAGS} -fbuiltin -ffast-math -ffp-contract=fast -mfsrra -mfsca"
 
 # SH4 Floating Point Arithmetic Precision
 #
