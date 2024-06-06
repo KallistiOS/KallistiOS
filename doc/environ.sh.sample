@@ -61,6 +61,15 @@ export KOS_CC_PREFIX="sh-elf"
 export DC_ARM_BASE="/opt/toolchains/dc/arm-eabi"
 export DC_ARM_PREFIX="arm-eabi"
 
+# External Dreamcast Tools Path
+#
+# Specifies the path where Dreamcast tools that are not part of KOS are to be
+# installed. This includes, for example, dc-tool-ip, dc-tool-serial, and the
+# mrbc bytecode compiler. This directory, along with SH and ARM compiler
+# toolchains, will be added to your PATH environment variable.
+#
+export DC_TOOLS_BASE="/opt/toolchains/dc/bin"
+
 # CMake Toolchain Path
 #
 # Specifies the path to the toolchain file used to target
@@ -197,16 +206,6 @@ export KOS_SH4_PRECISION="-m4-single-only"
 # Only enable this setting if you understand what you are doing!
 #
 #export KOS_CFLAGS="${KOS_CFLAGS} -mlra"
-
-# Additional Tools Path
-#
-# If not already set, add "bin" directory to PATH variable, which is where
-# additional tools such as dc-tool-ip and dc-tool-serial are typically
-# installed. Comment this out if you don't want this included within your PATH.
-#
-if [[ ":$PATH:" != *":${KOS_CC_BASE}/bin:/opt/toolchains/dc/bin"* ]]; then
-  export PATH="${PATH}:${KOS_CC_BASE}/bin:/opt/toolchains/dc/bin"
-fi
 
 # Shared Compiler Configuration
 #
