@@ -3,7 +3,7 @@
 
 # Add the default external DC tools path if it isn't already set.
 if [ -z "${DC_TOOLS_BASE}" ] ; then
-    export DC_TOOLS_BASE="/opt/toolchains/dc/bin"
+    export DC_TOOLS_BASE="${KOS_CC_BASE}/../bin"
 fi
 
 # Add the external DC tools dir to the path if it is not already.
