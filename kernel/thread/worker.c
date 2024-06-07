@@ -41,6 +41,7 @@ static void *thd_worker_thread(void *d) {
         worker->routine(worker->data);
     }
 
+    free(worker);
     return NULL;
 }
 
@@ -94,9 +95,7 @@ void thd_worker_destroy(kthread_worker_t *worker) {
     worker->quit = true;
     genwait_wake_one(worker);
 
-    if(worker->thd != thd_get_current())
-        thd_join(worker->thd, NULL);
-    free(worker);
+    thd_join(worker->thd, NULL);
 }
 
 kthread_t *thd_worker_get_thread(kthread_worker_t *worker) {
