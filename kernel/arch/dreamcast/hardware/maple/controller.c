@@ -57,8 +57,16 @@ int cont_has_capabilities(const maple_device_t *cont, uint32_t capabilities) {
                    & capabilities) == capabilities) : -1;
 }
 
-/* ???: Perhaps this should return the number removed? Not sure if that would have value */
-void cont_btn_callback_del(cont_callback_params_t *params) {
+/* This is an internal function for deleting a callback. It happens
+    currently in two different ways. Either a NULL callback was
+    requested for an addr/btns combination, or we are shutting down
+    entirely by passing NULL and cleaning out all entries.
+
+    XXX: This could be useful as part of a more robust Public API
+    that would check the rest of the controller joy/trig/dpad and
+    just have callback-based input handling.
+*/
+static void cont_btn_callback_del(cont_callback_params_t *params) {
     cont_callback_params_t *c, *n;
 
     mutex_lock(&btn_cbs_mtx);
