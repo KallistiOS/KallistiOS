@@ -22,31 +22,46 @@ on sunsite.unc.edu in /pub/Linux/system/recovery/, or as a package under Debian 
 #include <kos/fs_romdisk.h>
 #include <kos/opts.h>
 #include <malloc.h>
+#include <stdbool.h>
 #include <string.h>
 #include <strings.h>
 #include <stdio.h>
 #include <assert.h>
 #include <errno.h>
 
+#define ROMFS_MAXFN 128
+#define ROMFH_HRD 0
+#define ROMFH_DIR 1
+#define ROMFH_REG 2
+#define ROMFH_LNK 3
+#define ROMFH_BLK 4
+#define ROMFH_CHR 5
+#define ROMFH_SCK 6
+#define ROMFH_FIF 7
+#define ROMFH_EXEC 8
+
+#define RD_VN_MAX 16
+#define RD_FN_MAX 16
+
 /* Header definitions from Linux ROMFS documentation; all integer quantities are
    expressed in big-endian notation. Unfortunately the ROMFS guys were being
    clever and made this header a variable length depending on the size of
    the volume name *groan*. Its size will be a multiple of 16 bytes though. */
 typedef struct {
-    char    magic[8];       /* Should be "-rom1fs-" */
-    uint32  full_size;      /* Full size of the file system */
-    uint32  checksum;       /* Checksum */
-    char    volume_name[16];    /* Volume name (zero-terminated) */
+    char    magic[8];               /* Should be "-rom1fs-" */
+    uint32  full_size;              /* Full size of the file system */
+    uint32  checksum;               /* Checksum */
+    char    volume_name[RD_VN_MAX]; /* Volume name (zero-terminated) */
 } romdisk_hdr_t;
 
 /* File header info; note that this header plus filename must be a multiple of
    16 bytes, and the following file data must also be a multiple of 16 bytes. */
 typedef struct {
-    uint32  next_header;        /* Offset of next header */
-    uint32  spec_info;      /* Spec info */
-    uint32  size;           /* Data size */
-    uint32  checksum;       /* File checksum */
-    char    filename[16];       /* File name (zero-terminated) */
+    uint32  next_header;            /* Offset of next header */
+    uint32  spec_info;              /* Spec info */
+    uint32  size;                   /* Data size */
+    uint32  checksum;               /* File checksum */
+    char    filename[RD_FN_MAX];    /* File name (zero-terminated) */
 } romdisk_file_t;
 
 
@@ -84,12 +99,15 @@ static rdi_list_t romdisks;
    too lazy right now. =) */
 static struct {
     uint32      index;      /* romfs image index */
-    int     dir;        /* >0 if a directory */
+    bool        dir;        /* true if a directory */
     uint32      ptr;        /* Current read position in bytes */
     uint32      size;       /* Length of file in bytes */
     dirent_t    dirent;     /* A static dirent to pass back to clients */
     rd_image_t  * mnt;      /* Which mount instance are we using? */
 } fh[FS_ROMDISK_MAX_FILES];
+
+#define FH_INDEX_FREE 0
+#define FH_INDEX_RESERVED -1
 
 /* Mutex for file handles */
 static mutex_t fh_mutex;
@@ -97,7 +115,7 @@ static mutex_t fh_mutex;
 /* Given a filename and a starting romdisk directory listing (byte offset),
    search for the entry in the directory and return the byte offset to its
    entry. */
-static uint32 romdisk_find_object(rd_image_t * mnt, const char *fn, size_t fnlen, int dir, uint32 offset) {
+static uint32_t romdisk_find_object(rd_image_t *mnt, const char *fn, size_t fnlen, bool dir, uint32_t offset) {
     uint32          i, ni, type;
     const romdisk_file_t    *fhdr;
 
@@ -151,10 +169,10 @@ static uint32 romdisk_find_object(rd_image_t * mnt, const char *fn, size_t fnlen
    find_object_path in iso9660.
 
    fn:      object filename (absolute path)
-   dir:     0 if looking for a file, 1 if looking for a dir
+   dir:     false if looking for a file, true if looking for a dir
 
    It will return an offset in the romdisk image for the object. */
-static uint32 romdisk_find(rd_image_t * mnt, const char *fn, int dir) {
+static uint32_t romdisk_find(rd_image_t *mnt, const char *fn, bool dir) {
     const char      *cur;
     uint32          i;
     const romdisk_file_t    *fhdr;
@@ -165,7 +183,7 @@ static uint32 romdisk_find(rd_image_t * mnt, const char *fn, int dir) {
 
     while((cur = strchr(fn, '/'))) {
         if(cur != fn) {
-            i = romdisk_find_object(mnt, fn, cur - fn, 1, i);
+            i = romdisk_find_object(mnt, fn, cur - fn, true, i);
 
             if(i == 0) return 0;
 
@@ -218,8 +236,8 @@ static void * romdisk_open(vfs_handler_t * vfs, const char *fn, int mode) {
     mutex_lock(&fh_mutex);
 
     for(fd = 0; fd < FS_ROMDISK_MAX_FILES; fd++)
-        if(fh[fd].index == 0) {
-            fh[fd].index = -1;
+        if(fh[fd].index == FH_INDEX_FREE) {
+            fh[fd].index = FH_INDEX_RESERVED;
             break;
         }
 
@@ -232,8 +250,8 @@ static void * romdisk_open(vfs_handler_t * vfs, const char *fn, int mode) {
 
     /* Fill the fd structure */
     fhdr = (const romdisk_file_t *)(mnt->image + filehdr);
-    fh[fd].index = filehdr + sizeof(romdisk_file_t) + (strlen(fhdr->filename) / 16) * 16;
-    fh[fd].dir = (mode & O_DIR) ? 1 : 0;
+    fh[fd].index = filehdr + sizeof(romdisk_file_t) + (strlen(fhdr->filename) / RD_FN_MAX) * RD_FN_MAX;
+    fh[fd].dir = ((mode & O_DIR) != 0);
     fh[fd].ptr = 0;
     fh[fd].size = ntohl_32(&fhdr->size);
     fh[fd].mnt = mnt;
@@ -248,7 +266,7 @@ static int romdisk_close(void * h) {
     /* Check that the fd is valid */
     if(fd < FS_ROMDISK_MAX_FILES) {
         /* No need to lock the mutex: this is an atomic op */
-        fh[fd].index = 0;
+        fh[fd].index = FH_INDEX_FREE;
     }
     return 0;
 }
@@ -258,7 +276,7 @@ static ssize_t romdisk_read(void * h, void *buf, size_t bytes) {
     file_t fd = (file_t)h;
 
     /* Check that the fd is valid */
-    if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == 0 || fh[fd].dir) {
+    if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == FH_INDEX_FREE || fh[fd].dir) {
         errno = EINVAL;
         return -1;
     }
@@ -274,12 +292,22 @@ static ssize_t romdisk_read(void * h, void *buf, size_t bytes) {
     return bytes;
 }
 
+/* Just to get the errno that might be better recognized upstream. */
+static ssize_t romdisk_write(void *h, const void *buf, size_t bytes) {
+    (void)h;
+    (void)buf;
+    (void)bytes;
+    
+    errno = ENXIO;
+    return -1;
+}
+
 /* Seek elsewhere in a file */
 static off_t romdisk_seek(void * h, off_t offset, int whence) {
     file_t fd = (file_t)h;
 
     /* Check that the fd is valid */
-    if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == 0 || fh[fd].dir) {
+    if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == FH_INDEX_FREE || fh[fd].dir) {
         errno = EBADF;
         return -1;
     }
@@ -328,7 +356,7 @@ static off_t romdisk_seek(void * h, off_t offset, int whence) {
 static off_t romdisk_tell(void * h) {
     file_t fd = (file_t)h;
 
-    if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == 0 || fh[fd].dir) {
+    if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == FH_INDEX_FREE || fh[fd].dir) {
         errno = EINVAL;
         return -1;
     }
@@ -340,7 +368,7 @@ static off_t romdisk_tell(void * h) {
 static size_t romdisk_total(void * h) {
     file_t fd = (file_t)h;
 
-    if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == 0 || fh[fd].dir) {
+    if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == FH_INDEX_FREE || fh[fd].dir) {
         errno = EINVAL;
         return -1;
     }
@@ -354,7 +382,7 @@ static dirent_t *romdisk_readdir(void * h) {
     int type;
     file_t fd = (file_t)h;
 
-    if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == 0 || !fh[fd].dir) {
+    if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == FH_INDEX_FREE || !fh[fd].dir) {
         errno = EBADF;
         return NULL;
     }
@@ -393,10 +421,19 @@ static dirent_t *romdisk_readdir(void * h) {
     return &fh[fd].dirent;
 }
 
+/* Just to get the errno that might be better recognized upstream. */
+static int romdisk_unlink(vfs_handler_t *vfs, const char *fn) {
+    (void)vfs;
+    (void)fn;
+
+    errno = EROFS;
+    return -1;
+}
+
 static void *romdisk_mmap(void * h) {
     file_t fd = (file_t)h;
 
-    if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == 0) {
+    if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == FH_INDEX_FREE) {
         errno = EINVAL;
         return NULL;
     }
@@ -411,7 +448,7 @@ static int romdisk_fcntl(void *h, int cmd, va_list ap) {
 
     (void)ap;
 
-    if(fd >= FS_ROMDISK_MAX_FILES || !fh[fd].index) {
+    if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == FH_INDEX_FREE) {
         errno = EBADF;
         return -1;
     }
@@ -441,7 +478,7 @@ static int romdisk_fcntl(void *h, int cmd, va_list ap) {
 static int romdisk_rewinddir(void *h) {
     file_t fd = (file_t)h;
 
-    if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == 0 || !fh[fd].dir) {
+    if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == FH_INDEX_FREE || !fh[fd].dir) {
         errno = EBADF;
         return -1;
     }
@@ -479,6 +516,26 @@ static int romdisk_fstat(void *h, struct stat *st) {
     return 0;
 }
 
+static int romdisk_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
+                        int flag) {
+    rd_image_t      *mnt = (rd_image_t *)vfs->privdata;
+    file_t fd;
+
+    (void)flag;
+
+    /* Someone did stat("/rd") */
+    /* XXX: Maybe this should be disallowed with ENOENT */
+    if(strlen(path) == 0) {
+        fd = romdisk_find(mnt, "", 1);
+    }
+    else {
+        fd = romdisk_find(mnt, path + 1,
+            ((path + strlen(path)) == strrchr(path,'/')) );
+    }
+
+    return romdisk_fstat(&fd, st);
+}
+
 /* This is a template that will be used for each mount */
 static vfs_handler_t vh = {
     /* Name Handler */
@@ -496,17 +553,17 @@ static vfs_handler_t vh = {
     romdisk_open,
     romdisk_close,
     romdisk_read,
-    NULL,                       /* write */
+    romdisk_write,
     romdisk_seek,
     romdisk_tell,
     romdisk_total,
     romdisk_readdir,
     NULL,                       /* ioctl */
     NULL,                       /* rename */
-    NULL,                       /* unlink */
+    romdisk_unlink,
     romdisk_mmap,
     NULL,                       /* complete */
-    NULL,                       /* stat */
+    romdisk_stat,
     NULL,                       /* mkdir */
     NULL,                       /* rmdir */
     romdisk_fcntl,
@@ -536,7 +593,7 @@ void fs_romdisk_init(void) {
     memset(fh, 0, sizeof(fh));
 
     /* Mark the first as active so we can have an error FD of zero */
-    fh[0].index = -1;
+    fh[0].index = FH_INDEX_RESERVED;
 
     /* Init thread mutexes */
     mutex_init(&fh_mutex, MUTEX_TYPE_NORMAL);
@@ -617,7 +674,7 @@ int fs_romdisk_mount(const char * mountpoint, const uint8 *img, int own_buffer) 
     mnt->image = img;
     mnt->hdr = hdr;
     mnt->files = sizeof(romdisk_hdr_t)
-                 + (strlen(hdr->volume_name) / 16) * 16;
+                 + (strlen(hdr->volume_name) / RD_VN_MAX) * RD_VN_MAX;
 
     /* Make a VFS struct */
     vfsh = (vfs_handler_t *)malloc(sizeof(vfs_handler_t));
@@ -646,19 +703,18 @@ int fs_romdisk_mount(const char * mountpoint, const uint8 *img, int own_buffer) 
 /* Unmount a romdisk image */
 int fs_romdisk_unmount(const char * mountpoint) {
     rd_image_t  * n;
-    int     found = 0;
     int     rv = 0;
 
     mutex_lock(&fh_mutex);
 
     LIST_FOREACH(n, &romdisks, list_ent) {
         if(!strcmp(mountpoint, n->vfsh->nmmgr.pathname)) {
-            found = 1;
             break;
         }
     }
 
-    if(found) {
+    /* If the LIST_FOREACH goes to the end n will be NULL */
+    if(n != NULL) {
         /* Remove it from the mount list */
         LIST_REMOVE(n, list_ent);
 

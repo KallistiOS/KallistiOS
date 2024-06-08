@@ -211,9 +211,13 @@ int fs_socket_input(netif_t *src, int domain, int protocol, const void *hdr,
 
     TAILQ_FOREACH(i, &protocols, entry) {
         if(i->protocol == protocol) {
-            rv = i->input(src, domain, hdr, data, size);
             break;
         }
+    }
+
+     /* If i is NULL, we got through the whole list without finding anything. */
+    if(i != NULL) {
+        rv = i->input(src, domain, hdr, data, size);
     }
 
     mutex_unlock(&proto_rlock);
@@ -259,11 +263,14 @@ int fs_socket_proto_remove(fs_socket_proto_t *proto) {
 
     TAILQ_FOREACH(i, &protocols, entry) {
         if(i == proto) {
-            /* We've got it, remove it. */
-            TAILQ_REMOVE(&protocols, proto, entry);
-            rv = 0;
             break;
         }
+    }
+     /* If i is NULL, we got through the whole list without finding anything. */
+    if(i != NULL) {
+        /* We've got it, remove it. */
+        TAILQ_REMOVE(&protocols, proto, entry);
+        rv = 0;
     }
 
     mutex_unlock(&proto_rlock);
@@ -298,8 +305,8 @@ int socket(int domain, int type, int protocol) {
         }
     }
 
-    /* If i is NULL, we got through the whole list without finding anything. */
-    if(!i) {
+     /* If i is NULL, we got through the whole list without finding anything. */
+    if(i != NULL) {
         errno = EPROTONOSUPPORT;
         mutex_unlock(&proto_rlock);
         return -1;

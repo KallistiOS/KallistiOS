@@ -570,11 +570,11 @@ static iso_dirent_t *find_object_path(const char *fn, int dir, iso_dirent_t *sta
    too lazy right now. =) */
 static struct {
     uint32      first_extent;   /* First sector */
-    int     dir;        /* >0 if a directory */
-    uint32      ptr;        /* Current read position in bytes */
-    uint32      size;       /* Length of file in bytes */
-    dirent_t    dirent;     /* A static dirent to pass back to clients */
-    int     broken;     /* >0 if the CD has been swapped out since open */
+    int         dir;            /* >0 if a directory */
+    uint32_t    ptr;            /* Current read position in bytes */
+    uint32      size;           /* Length of file in bytes */
+    dirent_t    dirent;         /* A static dirent to pass back to clients */
+    int         broken;         /* >0 if the CD has been swapped out since open */
 } fh[FS_CD_MAX_FILES];
 
 /* Mutex for file handles */

@@ -333,15 +333,12 @@ static fs_hnd_t * fs_map_hnd(file_t fd) {
 /* Close a file and clean up the handle */
 int fs_close(file_t fd) {
     int retval;
-    fs_hnd_t * hnd = fs_map_hnd(fd);
+    fs_hnd_t * h = fs_map_hnd(fd);
 
-    if(!hnd) {
-      errno = EBADF;
-      return -1;
-    }
+    if(h == NULL) return -1;
 
     /* Deref it and remove it from our table */
-    retval = fs_hnd_unref(hnd);
+    retval = fs_hnd_unref(h);
     fd_table[fd] = NULL;
     return retval ? -1 : 0;
 }
@@ -505,10 +502,7 @@ uint64 fs_total64(file_t fd) {
 dirent_t *fs_readdir(file_t fd) {
     fs_hnd_t *h = fs_map_hnd(fd);
 
-    if(h == NULL) {
-        errno = EBADF;
-        return NULL;
-    }
+    if(h == NULL) return NULL;
 
     if(h->handler == NULL)
         return fs_root_readdir(h);
@@ -525,10 +519,7 @@ int fs_vioctl(file_t fd, int cmd, va_list ap) {
     fs_hnd_t *h = fs_map_hnd(fd);
     int rv;
 
-    if(!h) {
-        errno = EBADF;
-        return -1;
-    }
+    if(h == NULL) return -1;
 
     if(!h->handler || !h->handler->ioctl) {
         errno = EINVAL;
@@ -701,10 +692,7 @@ static int fs_vfcntl(file_t fd, int cmd, va_list ap) {
     fs_hnd_t *h = fs_map_hnd(fd);
     int rv;
 
-    if(!h) {
-        errno = EBADF;
-        return -1;
-    }
+    if(h == NULL) return -1;
 
     if(!h->handler || !h->handler->fcntl) {
         errno = ENOSYS;
@@ -864,10 +852,7 @@ int fs_stat(const char *path, struct stat *buf, int flag) {
 int fs_rewinddir(file_t fd) {
     fs_hnd_t *h = fs_map_hnd(fd);
 
-    if(!h) {
-        errno = EBADF;
-        return -1;
-    }
+    if(h == NULL) return -1;
 
     if(h->handler == NULL) {
         h->hnd = (void *)0;
@@ -885,10 +870,7 @@ int fs_rewinddir(file_t fd) {
 int fs_fstat(file_t fd, struct stat *st) {
     fs_hnd_t *h = fs_map_hnd(fd);
 
-    if(!h) {
-        errno = EBADF;
-        return -1;
-    }
+    if(h == NULL) return -1;
 
     if(!st) {
         errno = EFAULT;

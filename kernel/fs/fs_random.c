@@ -335,12 +335,8 @@ int fs_rnd_shutdown(void) {
     rnd_fh_t * c, * n;
 
     /* First, clean up any open files */
-    c = TAILQ_FIRST(&rnd_fh);
-
-    while(c) {
-        n = TAILQ_NEXT(c, listent);
+    TAILQ_FOREACH_SAFE(c, &rnd_fh, listent, n) {
         free(c);
-        c = n;
     }
 
     mutex_destroy(&fh_mutex);

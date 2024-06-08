@@ -259,12 +259,8 @@ int fs_null_shutdown(void) {
     null_fh_t * c, * n;
 
     /* First, clean up any open files */
-    c = TAILQ_FIRST(&null_fh);
-
-    while(c) {
-        n = TAILQ_NEXT(c, listent);
+    TAILQ_FOREACH_SAFE(c, &null_fh, listent, n) {
         free(c);
-        c = n;
     }
 
     mutex_destroy(&fh_mutex);
