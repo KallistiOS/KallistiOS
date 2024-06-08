@@ -50,34 +50,36 @@ __BEGIN_DECLS
 
     @{
 */
-#define CMD_CHECK_LICENSE       2  /**< \brief Check license */
-#define CMD_REQ_SPI_CMD         4  /**< \brief Request to Sega Packet Interface */
-#define CMD_PIOREAD            16  /**< \brief Read via PIO */
-#define CMD_DMAREAD            17  /**< \brief Read via DMA */
-#define CMD_GETTOC             18  /**< \brief Read TOC */
-#define CMD_GETTOC2            19  /**< \brief Read TOC */
-#define CMD_PLAY               20  /**< \brief Play track */
-#define CMD_PLAY2              21  /**< \brief Play sectors */
-#define CMD_PAUSE              22  /**< \brief Pause playback */
-#define CMD_RELEASE            23  /**< \brief Resume from pause */
-#define CMD_INIT               24  /**< \brief Initialize the drive */
-#define CMD_DMA_ABORT          25  /**< \brief Abort DMA transfer */
-#define CMD_OPEN_TRAY          26  /**< \brief Open CD tray (on DevBox?) */
-#define CMD_SEEK               27  /**< \brief Seek to a new position */
-#define CMD_DMAREAD_STREAM     28  /**< \brief Stream DMA until end/abort */
-#define CMD_NOP                29  /**< \brief No operation */
-#define CMD_REQ_MODE           30  /**< \brief Request mode */
-#define CMD_SET_MODE           31  /**< \brief Setup mode */
-#define CMD_SCAN_CD            32  /**< \brief Scan CD */
-#define CMD_STOP               33  /**< \brief Stop the disc from spinning */
-#define CMD_GETSCD             34  /**< \brief Get subcode data */
-#define CMD_GETSES             35  /**< \brief Get session */
-#define CMD_REQ_STAT           36  /**< \brief Request stat */
-#define CMD_PIOREAD_STREAM     37  /**< \brief Stream PIO until end/abort */
-#define CMD_DMAREAD_STREAM_EX  38  /**< \brief Stream DMA transfer */
-#define CMD_PIOREAD_STREAM_EX  39  /**< \brief Stream PIO transfer */
-#define CMD_GET_VERS           40  /**< \brief Get syscall driver version */
-#define CMD_MAX                47  /**< \brief Max of GD syscall commands */
+enum cd_cmd_code {
+    CMD_CHECK_LICENSE     =  2,  /**< \brief Check license */
+    CMD_REQ_SPI_CMD       =  4,  /**< \brief Request to Sega Packet Interface */
+    CMD_PIOREAD           = 16,  /**< \brief Read via PIO */
+    CMD_DMAREAD           = 17,  /**< \brief Read via DMA */
+    CMD_GETTOC            = 18,  /**< \brief Read TOC */
+    CMD_GETTOC2           = 19,  /**< \brief Read TOC */
+    CMD_PLAY              = 20,  /**< \brief Play track */
+    CMD_PLAY2             = 21,  /**< \brief Play sectors */
+    CMD_PAUSE             = 22,  /**< \brief Pause playback */
+    CMD_RELEASE           = 23,  /**< \brief Resume from pause */
+    CMD_INIT              = 24,  /**< \brief Initialize the drive */
+    CMD_DMA_ABORT         = 25,  /**< \brief Abort DMA transfer */
+    CMD_OPEN_TRAY         = 26,  /**< \brief Open CD tray (on DevBox?) */
+    CMD_SEEK              = 27,  /**< \brief Seek to a new position */
+    CMD_DMAREAD_STREAM    = 28,  /**< \brief Stream DMA until end/abort */
+    CMD_NOP               = 29,  /**< \brief No operation */
+    CMD_REQ_MODE          = 30,  /**< \brief Request mode */
+    CMD_SET_MODE          = 31,  /**< \brief Setup mode */
+    CMD_SCAN_CD           = 32,  /**< \brief Scan CD */
+    CMD_STOP              = 33,  /**< \brief Stop the disc from spinning */
+    CMD_GETSCD            = 34,  /**< \brief Get subcode data */
+    CMD_GETSES            = 35,  /**< \brief Get session */
+    CMD_REQ_STAT          = 36,  /**< \brief Request stat */
+    CMD_PIOREAD_STREAM    = 37,  /**< \brief Stream PIO until end/abort */
+    CMD_DMAREAD_STREAM_EX = 38,  /**< \brief Stream DMA transfer */
+    CMD_PIOREAD_STREAM_EX = 39,  /**< \brief Stream PIO transfer */
+    CMD_GET_VERS          = 40,  /**< \brief Get syscall driver version */
+    CMD_MAX               = 47,  /**< \brief Max of GD syscall commands */
+};
 /** @} */
 
 /** \defgroup cd_cmd_response       Command Responses
@@ -87,13 +89,15 @@ __BEGIN_DECLS
     These are the values that the various functions can return as error codes.
     @{
 */
-#define ERR_OK          0   /**< \brief No error */
-#define ERR_NO_DISC     1   /**< \brief No disc in drive */
-#define ERR_DISC_CHG    2   /**< \brief Disc changed, but not reinitted yet */
-#define ERR_SYS         3   /**< \brief System error */
-#define ERR_ABORTED     4   /**< \brief Command aborted */
-#define ERR_NO_ACTIVE   5   /**< \brief System inactive? */
-#define ERR_TIMEOUT     6   /**< \brief Aborted due to timeout */
+enum cd_cmd_response {
+    ERR_OK        = 0,   /**< \brief No error */
+    ERR_NO_DISC   = 1,   /**< \brief No disc in drive */
+    ERR_DISC_CHG  = 2,   /**< \brief Disc changed, but not reinitted yet */
+    ERR_SYS       = 3,   /**< \brief System error */
+    ERR_ABORTED   = 4,   /**< \brief Command aborted */
+    ERR_NO_ACTIVE = 5,   /**< \brief System inactive? */
+    ERR_TIMEOUT   = 6,   /**< \brief Aborted due to timeout */
+};
 /** @} */
 
 /** \defgroup cd_cmd_status         Command Status Responses
@@ -103,12 +107,14 @@ __BEGIN_DECLS
     These are the raw values the status syscall returns.
     @{
 */
-#define FAILED      -1  /**< \brief Command failed */
-#define NO_ACTIVE   0   /**< \brief System inactive? */
-#define PROCESSING  1   /**< \brief Processing command */
-#define COMPLETED   2   /**< \brief Command completed successfully */
-#define STREAMING   3   /**< \brief Stream type command is in progress */
-#define BUSY        4   /**< \brief GD syscalls is busy */
+enum cd_cmd_status {
+    FAILED     = -1,   /**< \brief Command failed */
+    NO_ACTIVE  =  0,   /**< \brief System inactive? */
+    PROCESSING =  1,   /**< \brief Processing command */
+    COMPLETED  =  2,   /**< \brief Command completed successfully */
+    STREAMING  =  3,   /**< \brief Stream type command is in progress */
+    BUSY       =  4,   /**< \brief GD syscalls is busy */
+};
 /** @} */
 
 /** \defgroup cd_cmd_ata_status       ATA Statuses
@@ -117,11 +123,13 @@ __BEGIN_DECLS
 
     @{
 */
-#define ATA_STAT_INTERNAL   0x00
-#define ATA_STAT_IRQ        0x01
-#define ATA_STAT_DRQ_0      0x02
-#define ATA_STAT_DRQ_1      0x03
-#define ATA_STAT_BUSY       0x04
+enum cd_cmd_ata_status {
+    ATA_STAT_INTERNAL  = 0,
+    ATA_STAT_IRQ       = 1,
+    ATA_STAT_DRQ_0     = 2,
+    ATA_STAT_DRQ_1     = 3,
+    ATA_STAT_BUSY      = 4,
+};
 /** @} */
 
 /** \defgroup cdda_read_modes       CDDA Read Modes
@@ -132,8 +140,10 @@ __BEGIN_DECLS
     parameter.
     @{
 */
-#define CDDA_TRACKS     1   /**< \brief Play by track number */
-#define CDDA_SECTORS    2   /**< \brief Play by sector number */
+enum cdda_read_modes {
+    CDDA_TRACKS   = 1,   /**< \brief Play by track number */
+    CDDA_SECTORS  = 2,   /**< \brief Play by sector number */
+};
 /** @} */
 
 /** \defgroup cd_read_sector_part    Read Sector Part
@@ -144,8 +154,10 @@ __BEGIN_DECLS
     third parameter word sent with the change data type syscall.
     @{
 */
-#define CDROM_READ_WHOLE_SECTOR 0x1000    /**< \brief Read the whole sector */
-#define CDROM_READ_DATA_AREA    0x2000    /**< \brief Read the data area */
+enum cd_read_sector_part {
+    CDROM_READ_WHOLE_SECTOR = 0x1000,    /**< \brief Read the whole sector */
+    CDROM_READ_DATA_AREA    = 0x2000,    /**< \brief Read the data area */
+};
 /** @} */
 
 /** \defgroup cd_read_subcode_type    Read Subcode Type
@@ -156,12 +168,13 @@ __BEGIN_DECLS
     possible values for the first parameter sent to the GETSCD syscall.
     @{
 */
-#define CD_SUB_Q_ALL            0    /**< \brief Read all Subcode Data */
-#define CD_SUB_Q_CHANNEL        1    /**< \brief Read Q Channel Subcode Data */
-#define CD_SUB_MEDIA_CATALOG    2    /**< \brief Read the Media Catalog 
-                                                 Subcode Data */
-#define CD_SUB_TRACK_ISRC       3    /**< \brief Read the ISRC Subcode Data */
-#define CD_SUB_RESERVED         4    /**< \brief Reserved */
+enum cd_read_subcode_type {
+    CD_SUB_Q_ALL          = 0,    /**< \brief Read all Subcode Data */
+    CD_SUB_Q_CHANNEL      = 1,    /**< \brief Read Q Channel Subcode Data */
+    CD_SUB_MEDIA_CATALOG  = 2,    /**< \brief Read the Media Catalog Subcode Data */
+    CD_SUB_TRACK_ISRC     = 3,    /**< \brief Read the ISRC Subcode Data */
+    CD_SUB_RESERVED       = 4,    /**< \brief Reserved */
+};
 /** @} */
 
 /** \defgroup cd_subcode_audio    Subcode Audio Status
@@ -171,12 +184,14 @@ __BEGIN_DECLS
     Information about CDDA playback from GETSCD syscall.
     @{
 */
-#define CD_SUB_AUDIO_STATUS_INVALID    0x00
-#define CD_SUB_AUDIO_STATUS_PLAYING    0x11
-#define CD_SUB_AUDIO_STATUS_PAUSED     0x12
-#define CD_SUB_AUDIO_STATUS_ENDED      0x13
-#define CD_SUB_AUDIO_STATUS_ERROR      0x14
-#define CD_SUB_AUDIO_STATUS_NO_INFO    0x15
+enum cd_subcode_audio {
+    CD_SUB_AUDIO_STATUS_INVALID    = 0x00,
+    CD_SUB_AUDIO_STATUS_PLAYING    = 0x11,
+    CD_SUB_AUDIO_STATUS_PAUSED     = 0x12,
+    CD_SUB_AUDIO_STATUS_ENDED      = 0x13,
+    CD_SUB_AUDIO_STATUS_ERROR      = 0x14,
+    CD_SUB_AUDIO_STATUS_NO_INFO    = 0x15,
+};
 /** @} */
 
 /** \defgroup cd_read_sector_mode    Read Sector Mode
@@ -187,8 +202,10 @@ __BEGIN_DECLS
     cdrom_read_sectors_ex.
     @{
 */
-#define CDROM_READ_PIO 0    /**< \brief Read sector(s) in PIO mode */
-#define CDROM_READ_DMA 1    /**< \brief Read sector(s) in DMA mode */
+enum cd_read_sector_mode {
+    CDROM_READ_PIO = 0,    /**< \brief Read sector(s) in PIO mode */
+    CDROM_READ_DMA = 1,    /**< \brief Read sector(s) in DMA mode */
+};
 /** @} */
 
 /** \defgroup cd_status_values      Status Values
@@ -199,18 +216,20 @@ __BEGIN_DECLS
     cdrom_get_status() function.
     @{
 */
-#define CD_STATUS_READ_FAIL -1  /**< \brief Can't read status */
-#define CD_STATUS_BUSY      0   /**< \brief Drive is busy */
-#define CD_STATUS_PAUSED    1   /**< \brief Disc is paused */
-#define CD_STATUS_STANDBY   2   /**< \brief Drive is in standby */
-#define CD_STATUS_PLAYING   3   /**< \brief Drive is currently playing */
-#define CD_STATUS_SEEKING   4   /**< \brief Drive is currently seeking */
-#define CD_STATUS_SCANNING  5   /**< \brief Drive is scanning */
-#define CD_STATUS_OPEN      6   /**< \brief Disc tray is open */
-#define CD_STATUS_NO_DISC   7   /**< \brief No disc inserted */
-#define CD_STATUS_RETRY     8   /**< \brief Retry is needed */
-#define CD_STATUS_ERROR     9   /**< \brief System error */
-#define CD_STATUS_FATAL     12  /**< \brief Need reset syscalls */
+enum cd_status_values {
+    CD_STATUS_READ_FAIL = -1,   /**< \brief Can't read status */
+    CD_STATUS_BUSY      =  0,   /**< \brief Drive is busy */
+    CD_STATUS_PAUSED    =  1,   /**< \brief Disc is paused */
+    CD_STATUS_STANDBY   =  2,   /**< \brief Drive is in standby */
+    CD_STATUS_PLAYING   =  3,   /**< \brief Drive is currently playing */
+    CD_STATUS_SEEKING   =  4,   /**< \brief Drive is currently seeking */
+    CD_STATUS_SCANNING  =  5,   /**< \brief Drive is scanning */
+    CD_STATUS_OPEN      =  6,   /**< \brief Disc tray is open */
+    CD_STATUS_NO_DISC   =  7,   /**< \brief No disc inserted */
+    CD_STATUS_RETRY     =  8,   /**< \brief Retry is needed */
+    CD_STATUS_ERROR     =  9,   /**< \brief System error */
+    CD_STATUS_FATAL     =  12,  /**< \brief Need reset syscalls */
+};
 /** @} */
 
 /** \defgroup cd_disc_types         Drive Disc Types
@@ -221,12 +240,14 @@ __BEGIN_DECLS
     the cdrom_get_status() function.
     @{
 */
-#define CD_CDDA     0x00    /**< \brief Audio CD (Red book) or no disc */
-#define CD_CDROM    0x10    /**< \brief CD-ROM or CD-R (Yellow book) */
-#define CD_CDROM_XA 0x20    /**< \brief CD-ROM XA (Yellow book extension) */
-#define CD_CDI      0x30    /**< \brief CD-i (Green book) */
-#define CD_GDROM    0x80    /**< \brief GD-ROM */
-#define CD_FAIL     0xf0    /**< \brief Need reset syscalls */
+enum cd_disc_types {
+    CD_CDDA     = 0x00,    /**< \brief Audio CD (Red book) or no disc */
+    CD_CDROM    = 0x10,    /**< \brief CD-ROM or CD-R (Yellow book) */
+    CD_CDROM_XA = 0x20,    /**< \brief CD-ROM XA (Yellow book extension) */
+    CD_CDI      = 0x30,    /**< \brief CD-i (Green book) */
+    CD_GDROM    = 0x80,    /**< \brief GD-ROM */
+    CD_FAIL     = 0xf0,    /**< \brief Need reset syscalls */
+};
 /** @} */
 
 /** \brief  TOC structure returned by the BIOS.
