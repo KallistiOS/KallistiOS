@@ -352,17 +352,6 @@ int cdrom_get_status(int *status, int *disc_type);
 /** \brief    Change the datatype of disc.
     \ingroup  gdrom
 
-    \note                   This function is formally deprecated. It should not
-                            be used in any future code, and may be removed in
-                            the future. You should instead use
-                            cdrom_change_datatype.
-*/
-int cdrom_change_dataype(int sector_part, int cdxa, int sector_size)
-                        __depr("Use cdrom_change_datatype instead.");
-
-/** \brief    Change the datatype of disc.
-    \ingroup  gdrom
-
     This function will take in all parameters to pass to the change_datatype
     syscall. This allows these parameters to be modified without a reinit.
 
@@ -374,6 +363,14 @@ int cdrom_change_dataype(int sector_part, int cdxa, int sector_size)
     \see    cd_read_sector_part
 */
 int cdrom_change_datatype(int sector_part, int cdxa, int sector_size);
+
+/** \cond */
+static inline int
+__depr("Use cdrom_change_datatype instead.")
+cdrom_change_dataype(int sector_part, int cdxa, int sector_size) {
+    return cdrom_change_datatype(sector_part, cdxa, sector_size);
+}
+/** \endcond */
 
 /** \brief    Re-initialize the GD-ROM drive.
     \ingroup  gdrom
