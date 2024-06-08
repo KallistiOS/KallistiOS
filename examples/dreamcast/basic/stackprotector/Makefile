@@ -1,15 +1,13 @@
+#
+# Stack Protector Test/Example
+# Copyright (C) 2021 Lawrence Sebald
+# Copyright (C) 2024 Falco Girgis
+#
+
 TARGET = stackprotector.elf
 OBJS = stackprotector.o
 KOS_CFLAGS += -fstack-protector-all
-
-GCC_MAJOR = $(basename $(basename $(KOS_GCCVER)))
-
-ifeq ($(GCC_MAJOR), 4) 
-
-all dist clean:
-	$(warning GCC4 missing stackprotector patch, skipping)
-
-else
+KOS_GCCVER_MIN = 4.0.0
 
 all: rm-elf $(TARGET)
 
@@ -34,4 +32,3 @@ dist: $(TARGET)
 
 .PHONY: run dist clean rm-elf
 
-endif

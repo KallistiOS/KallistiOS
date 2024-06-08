@@ -17,7 +17,7 @@ rm-elf:
 	-rm -f $(TARGET)
 
 $(TARGET): $(OBJS) 
-	kos-cc -o $(TARGET) $(OBJS) -lkosh -lconio -lm
+	kos-cc -o $(TARGET) $(OBJS) -lkosh -lconio
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)

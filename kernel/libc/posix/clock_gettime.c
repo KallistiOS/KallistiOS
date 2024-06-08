@@ -34,6 +34,7 @@ int clock_getres(clockid_t clk_id, struct timespec *ts) {
         case CLOCK_REALTIME:
         case CLOCK_MONOTONIC:
         case CLOCK_PROCESS_CPUTIME_ID:
+        case CLOCK_THREAD_CPUTIME_ID:
             if(!ts) {
                 errno = EFAULT;
                 return -1;
@@ -52,7 +53,7 @@ int clock_getres(clockid_t clk_id, struct timespec *ts) {
 int clock_gettime(clockid_t clk_id, struct timespec *ts) {
     lldiv_t  div_result;
     uint64_t ns64;
-    uint32_t secs, nsecs;
+    uint32_t secs, nsecs, secs_offset=0;
 
     if(!ts) {
         errno = EFAULT;
@@ -60,14 +61,16 @@ int clock_gettime(clockid_t clk_id, struct timespec *ts) {
     }
 
     switch(clk_id) {
-        /* Use C11's nanosecond-resolution timestamp */
+        /* Use the nanosecond resolution boot time
+           + RTC bios time */
         case CLOCK_REALTIME:
-            return timespec_get(ts, TIME_UTC) == TIME_UTC ? 0 : -1;
+            secs_offset = rtc_boot_time();
+            /* fall through */
 
         /* Use the nanosecond resolution boot time */
         case CLOCK_MONOTONIC:
             timer_ns_gettime(&secs, &nsecs);
-            ts->tv_sec = secs;
+            ts->tv_sec = secs + secs_offset;
             ts->tv_nsec = nsecs;
             return 0;
 
@@ -86,8 +89,21 @@ int clock_gettime(clockid_t clk_id, struct timespec *ts) {
             ts->tv_nsec = div_result.rem;
             return 0;
 
-        /* Fail out for any other unsupported CPU type */
-        /* case CLOCK_THREAD_CPUTIME_ID: */
+        /* Use the kthread-specific CPU time counters */
+        case CLOCK_THREAD_CPUTIME_ID:
+            /* Check whether they are configured properly
+               as an interval timer. */
+            if(!perf_cntr_timer_enabled()) {
+                errno = EINVAL;
+                return -1;
+            }
+
+            ns64 = thd_get_cpu_time(thd_get_current());
+            div_result = lldiv(ns64, 1000000000);
+            ts->tv_sec = div_result.quot;
+            ts->tv_nsec = div_result.rem;
+            return 0;
+
         default:
             errno = EINVAL;
             return -1;

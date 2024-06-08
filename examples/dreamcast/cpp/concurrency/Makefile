@@ -1,11 +1,12 @@
 #
 # C++ Concurrency Test/Example
-# (c) 2023 Falco Girgis
-#   
+# Copyright (C) 2023, 2024 Falco Girgis
+#
 
 TARGET = concurrency.elf
 OBJS = concurrency.o
-KOS_CPPFLAGS += -std=c++20 
+KOS_CPPFLAGS += -std=c++20
+KOS_GCCVER_MIN = 12.0.0
 
 all: rm-elf $(TARGET)
 
@@ -18,7 +19,7 @@ rm-elf:
 	-rm -f $(TARGET) 
 
 $(TARGET): $(OBJS) 
-	kos-c++ -o $(TARGET) $(OBJS) -lm
+	kos-c++ -o $(TARGET) $(OBJS)
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)

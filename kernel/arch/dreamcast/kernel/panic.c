@@ -12,6 +12,6 @@
    can recover, call this. This is a pretty standard tactic from *nixy
    kernels which ought to be avoided if at all possible. */
 void arch_panic(const char *msg) {
-    printf("kernel panic: %s\r\n", msg);
+    printf("\nkernel panic: %s\r\n", msg);
     arch_abort();
 }

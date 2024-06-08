@@ -232,14 +232,15 @@ static void sip_reply(maple_state_t *st, maple_frame_t *frm) {
     if(respbuf[0] != MAPLE_FUNC_MICROPHONE)
         return;
 
-    if(frm->dev) {
-        sip = (sip_state_t *)frm->dev->status;
-        frm->dev->status_valid = 1;
+    if(!frm->dev)
+        return;
 
-        if(sip->is_sampling && sip->callback) {
-            /* Call the user's callback. */
-            sip->callback(frm->dev, resp->data + 8, (resp->data_len << 2) - 8);
-        }
+    sip = (sip_state_t *)frm->dev->status;
+    frm->dev->status_valid = 1;
+
+    if(sip->is_sampling && sip->callback) {
+        /* Call the user's callback. */
+        sip->callback(frm->dev, resp->data + 8, (resp->data_len << 2) - 8);
     }
 }
 
@@ -304,8 +305,7 @@ static maple_driver_t sip_drv = {
 
 /* Add the SIP to the driver chain */
 void sip_init(void) {
-    if(!sip_drv.drv_list.le_prev)
-        maple_driver_reg(&sip_drv);
+    maple_driver_reg(&sip_drv);
 }
 
 void sip_shutdown(void) {

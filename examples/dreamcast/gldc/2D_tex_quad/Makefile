@@ -15,7 +15,7 @@ OBJS		:= main.o romdisk.o
 
 # Compiler Flags
 KOS_CPPSTD	:= -std=c++20
-LDLIBS 		:= -lstb_image -lGL -lkmg -lkosutils -lm
+LDLIBS 		:= -lstb_image -lGL -lkmg -lkosutils
 
 TARGET = 2D_tex_quad.elf
 

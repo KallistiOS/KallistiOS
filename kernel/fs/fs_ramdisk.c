@@ -907,6 +907,7 @@ int fs_ramdisk_shutdown(void) {
     }
 
     free(rootdir);
+    free(root->name);
     free(root);
 
     mutex_destroy(&rd_mutex);

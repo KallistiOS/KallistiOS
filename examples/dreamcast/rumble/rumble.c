@@ -195,5 +195,9 @@ int main(int argc, char *argv[]) {
     /* Stop rumbling before exiting, if it still exists. */
     if((purudev != NULL) && (purudev->valid != 0))
         purupuru_rumble_raw(purudev, 0x00000000);
+
+    plx_font_destroy(fnt);
+    plx_fcxt_destroy(cxt);
+
     return 0;
 }

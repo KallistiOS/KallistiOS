@@ -119,7 +119,7 @@ pvr_ptr_t pvr_mem_malloc(size_t size) {
 void pvr_mem_free(pvr_ptr_t chunk) {
 #ifdef PVR_KM_DBG
     uint32      ra = arch_get_ret_addr();
-    memctl_t    * ctl;
+    memctl_t    *ctl, *tmp;
     int     found;
 #endif  /* PVR_KM_DBG */
 
@@ -133,7 +133,7 @@ void pvr_mem_free(pvr_ptr_t chunk) {
 #ifdef PVR_KM_DBG
     found = 0;
 
-    LIST_FOREACH(ctl, &block_list, list) {
+    LIST_FOREACH_SAFE(ctl, &block_list, list, tmp) {
         if(ctl->block == chunk) {
             LIST_REMOVE(ctl, list);
             free(ctl);

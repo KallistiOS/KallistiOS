@@ -112,4 +112,6 @@ int fat_write_fsinfo(fat_fs_t *fs);
 void fat_print_superblock(const fat_superblock_t *sb);
 #endif
 
+__END_DECLS
+
 #endif /* !__FAT_BPB_H */
