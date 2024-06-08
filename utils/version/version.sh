@@ -7,18 +7,20 @@
 # Call this program on each file to substitute in the proper version code
 # for the version header. This works with find|xargs.
 #
-# NOTE: Typically you do not want to explicitly provide a version number
-#       to this script, as it will automatically source the version
-# 		information from the KOS environment variables which come from
-#       include/kos/version.h, which should always be the main source of
-#       truth for a release version!
+# NOTE: The version ID comes from environ_base.sh environ variables which
+#       themselves are sourced from $KOS_BASE/include/kos/version.h as the
+#		ultimate source of truth for KOS's version.
 
-VERSION=$1
-if [[ -z "$var" ]]; then
-	VERSION="$KOS_VERSION"
+VERSION=$KOS_VERSION
+if [ -z "$VERSION" ]; then
+	echo "Failed to find KOS_VERSION environment variable!"
+	exit 1
 fi
-shift
-for i in $*; do
+if [ -z "$1" ]; then
+	echo "No file(s) specified!"
+	exit 1
+fi
+for i in $@; do
 	echo processing $i to version $VERSION
 	sed -e "s/##version##/$VERSION/g" < $i > /tmp/tmp1.out
 	sed -e "s/\\\\#\\\\#version\\\\#\\\\#/$VERSION/g" < /tmp/tmp1.out > $i
