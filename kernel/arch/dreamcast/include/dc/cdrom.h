@@ -41,14 +41,12 @@ __BEGIN_DECLS
     \ingroup            vfs
 */
 
-/** \defgroup cd_cmd_codes          Syscall Command Codes
-    \brief                          Command codes for GD-ROM syscalsl
+/** \enum cd_cmd_code
+    \brief                          Command codes for GD-ROM syscalls
     \ingroup  gdrom
 
     These are the syscall command codes used to actually do stuff with the
     GD-ROM drive. These were originally provided by maiwe.
-
-    @{
 */
 enum cd_cmd_code {
     CMD_CHECK_LICENSE     =  2,  /**< \brief Check license */
@@ -80,14 +78,12 @@ enum cd_cmd_code {
     CMD_GET_VERS          = 40,  /**< \brief Get syscall driver version */
     CMD_MAX               = 47,  /**< \brief Max of GD syscall commands */
 };
-/** @} */
 
-/** \defgroup cd_cmd_response       Command Responses
+/** \enum cd_cmd_response
     \brief                          Responses from GD-ROM syscalls
     \ingroup  gdrom
 
     These are the values that the various functions can return as error codes.
-    @{
 */
 enum cd_cmd_response {
     ERR_OK        = 0,   /**< \brief No error */
@@ -98,14 +94,12 @@ enum cd_cmd_response {
     ERR_NO_ACTIVE = 5,   /**< \brief System inactive? */
     ERR_TIMEOUT   = 6,   /**< \brief Aborted due to timeout */
 };
-/** @} */
 
-/** \defgroup cd_cmd_status         Command Status Responses
+/** \enum cd_cmd_status
     \brief                          GD-ROM status responses
     \ingroup  gdrom
 
     These are the raw values the status syscall returns.
-    @{
 */
 enum cd_cmd_status {
     FAILED     = -1,   /**< \brief Command failed */
@@ -115,13 +109,10 @@ enum cd_cmd_status {
     STREAMING  =  3,   /**< \brief Stream type command is in progress */
     BUSY       =  4,   /**< \brief GD syscalls is busy */
 };
-/** @} */
 
-/** \defgroup cd_cmd_ata_status       ATA Statuses
+/** \enum cd_cmd_ata_status
     \brief                            ATA statuses for GD-ROM driver
     \ingroup  gdrom
-
-    @{
 */
 enum cd_cmd_ata_status {
     ATA_STAT_INTERNAL  = 0,
@@ -130,43 +121,55 @@ enum cd_cmd_ata_status {
     ATA_STAT_DRQ_1     = 3,
     ATA_STAT_BUSY      = 4,
 };
-/** @} */
 
-/** \defgroup cdda_read_modes       CDDA Read Modes
+/** \enum cdda_read_modes
     \brief                          Read modes for CDDA
     \ingroup  gdrom
 
     Valid values to pass to the cdrom_cdda_play() function for the mode
     parameter.
-    @{
 */
 enum cdda_read_modes {
     CDDA_TRACKS   = 1,   /**< \brief Play by track number */
     CDDA_SECTORS  = 2,   /**< \brief Play by sector number */
 };
-/** @} */
 
-/** \defgroup cd_read_sector_part    Read Sector Part
+/** \enum cd_read_sector_part
     \brief                           Whether to read data or whole sector
     \ingroup  gdrom
 
     Parts of the a CD-ROM sector to read. These are possible values for the
     third parameter word sent with the change data type syscall.
-    @{
 */
 enum cd_read_sector_part {
     CDROM_READ_WHOLE_SECTOR = 0x1000,    /**< \brief Read the whole sector */
     CDROM_READ_DATA_AREA    = 0x2000,    /**< \brief Read the data area */
 };
-/** @} */
 
-/** \defgroup cd_read_subcode_type    Read Subcode Type
+/** \enum cd_track_type
+    \brief                           Track type to read as (if applicable).
+    \ingroup  gdrom
+
+    Track type used to read a sector. These are possible values for the
+    second parameter word sent with the change data type syscall.
+*/
+enum cd_track_type {
+    CD_TRACK_TYPE_UNKNOWN     = 0x0e00,
+    CD_TRACK_TYPE_MODE2_NONXA = 0x0c00,
+    CD_TRACK_TYPE_MODE2_FORM2 = 0x0a00,
+    CD_TRACK_TYPE_MODE2_FORM1 = 0x0800,
+    CD_TRACK_TYPE_MODE2       = 0x0600,
+    CD_TRACK_TYPE_MODE1       = 0x0400,
+    CD_TRACK_TYPE_CDDA        = 0x0200,
+    CD_TRACK_TYPE_ANY         = 0x0000,
+};
+
+/** \enum cd_read_subcode_type
     \brief                            Types of data to read from sector subcode
     \ingroup  gdrom
 
     Types of data available to read from the sector subcode. These are
     possible values for the first parameter sent to the GETSCD syscall.
-    @{
 */
 enum cd_read_subcode_type {
     CD_SUB_Q_ALL          = 0,    /**< \brief Read all Subcode Data */
@@ -175,14 +178,12 @@ enum cd_read_subcode_type {
     CD_SUB_TRACK_ISRC     = 3,    /**< \brief Read the ISRC Subcode Data */
     CD_SUB_RESERVED       = 4,    /**< \brief Reserved */
 };
-/** @} */
 
-/** \defgroup cd_subcode_audio    Subcode Audio Status
-    \brief                        GETSCD syscall response codes
+/** \enum cd_subcode_audio
+    \brief                        Subcode Audio Status
     \ingroup  gdrom
 
     Information about CDDA playback from GETSCD syscall.
-    @{
 */
 enum cd_subcode_audio {
     CD_SUB_AUDIO_STATUS_INVALID    = 0x00,
@@ -192,29 +193,25 @@ enum cd_subcode_audio {
     CD_SUB_AUDIO_STATUS_ERROR      = 0x14,
     CD_SUB_AUDIO_STATUS_NO_INFO    = 0x15,
 };
-/** @} */
 
-/** \defgroup cd_read_sector_mode    Read Sector Mode
+/** \enum cd_read_sector_mode
     \brief                           Mode to use when reading sectors
     \ingroup  gdrom
 
     How to read the sectors of a CD, via PIO or DMA. 4th parameter of
     cdrom_read_sectors_ex.
-    @{
 */
 enum cd_read_sector_mode {
     CDROM_READ_PIO = 0,    /**< \brief Read sector(s) in PIO mode */
     CDROM_READ_DMA = 1,    /**< \brief Read sector(s) in DMA mode */
 };
-/** @} */
 
-/** \defgroup cd_status_values      Status Values
+/** \enum cd_status_values
     \brief                          Status values for GD-ROM drive
     \ingroup  gdrom
 
     These are the values that can be returned as the status parameter from the
     cdrom_get_status() function.
-    @{
 */
 enum cd_status_values {
     CD_STATUS_READ_FAIL = -1,   /**< \brief Can't read status */
@@ -230,15 +227,13 @@ enum cd_status_values {
     CD_STATUS_ERROR     =  9,   /**< \brief System error */
     CD_STATUS_FATAL     =  12,  /**< \brief Need reset syscalls */
 };
-/** @} */
 
-/** \defgroup cd_disc_types         Drive Disc Types
+/** \enum cd_disc_types
     \brief                          Disc types within GD-ROM drive
     \ingroup  gdrom
 
     These are the values that can be returned as the disc_type parameter from
     the cdrom_get_status() function.
-    @{
 */
 enum cd_disc_types {
     CD_CDDA     = 0x00,    /**< \brief Audio CD (Red book) or no disc */
@@ -248,7 +243,6 @@ enum cd_disc_types {
     CD_GDROM    = 0x80,    /**< \brief GD-ROM */
     CD_FAIL     = 0xf0,    /**< \brief Need reset syscalls */
 };
-/** @} */
 
 /** \brief  TOC structure returned by the BIOS.
     \ingroup gdrom
@@ -308,7 +302,7 @@ typedef struct {
 
     \return                 \ref cd_cmd_response
 */
-int cdrom_set_sector_size(int size);
+enum cd_cmd_response cdrom_set_sector_size(size_t size);
 
 /** \brief    Execute a CD-ROM command.
     \ingroup  gdrom
@@ -321,7 +315,7 @@ int cdrom_set_sector_size(int size);
 
     \return                 \ref cd_cmd_response
 */
-int cdrom_exec_cmd(int cmd, void *param);
+enum cd_cmd_response cdrom_exec_cmd(enum cd_cmd_code cmd, void *param);
 
 /** \brief    Execute a CD-ROM command with timeout.
     \ingroup  gdrom
@@ -335,7 +329,8 @@ int cdrom_exec_cmd(int cmd, void *param);
 
     \return                 \ref cd_cmd_response
 */
-int cdrom_exec_cmd_timed(int cmd, void *param, int timeout);
+enum cd_cmd_response
+cdrom_exec_cmd_timed(enum cd_cmd_code cmd, void *param, unsigned long timeout);
 
 /** \brief    Get the status of the GD-ROM drive.
     \ingroup  gdrom
@@ -347,7 +342,8 @@ int cdrom_exec_cmd_timed(int cmd, void *param, int timeout);
     \see    cd_status_values
     \see    cd_disc_types
 */
-int cdrom_get_status(int *status, int *disc_type);
+enum cd_cmd_response
+cdrom_get_status(enum cd_status_values *status, enum cd_disc_types *disc_type);
 
 /** \brief    Change the datatype of disc.
     \ingroup  gdrom
@@ -362,12 +358,15 @@ int cdrom_get_status(int *status, int *disc_type);
     \return                 \ref cd_cmd_response
     \see    cd_read_sector_part
 */
-int cdrom_change_datatype(int sector_part, int cdxa, int sector_size);
+enum cd_cmd_response
+cdrom_change_datatype(enum cd_read_sector_part sector_part,
+                      enum cd_track_type cdxa, size_t sector_size);
 
 /** \cond */
-static inline int
+static inline enum cd_cmd_response
 __depr("Use cdrom_change_datatype instead.")
-cdrom_change_dataype(int sector_part, int cdxa, int sector_size) {
+cdrom_change_dataype(enum cd_read_sector_part sector_part,
+                     enum cd_track_type cdxa, size_t sector_size) {
     return cdrom_change_datatype(sector_part, cdxa, sector_size);
 }
 /** \endcond */
@@ -381,7 +380,7 @@ cdrom_change_dataype(int sector_part, int cdxa, int sector_size) {
     \return                 \ref cd_cmd_response
     \see    cdrom_reinit_ex
 */
-int cdrom_reinit(void);
+enum cd_cmd_response cdrom_reinit(void);
 
 /** \brief    Re-initialize the GD-ROM drive with custom parameters.
     \ingroup  gdrom
@@ -398,7 +397,9 @@ int cdrom_reinit(void);
     \see    cd_read_sector_part
     \see    cdrom_change_datatype
 */
-int cdrom_reinit_ex(int sector_part, int cdxa, int sector_size);
+enum cd_cmd_response
+cdrom_reinit_ex(enum cd_read_sector_part sector_part,
+                enum cd_track_type cdxa, size_t sector_size);
 
 /** \brief    Read the table of contents from the disc.
     \ingroup  gdrom
@@ -409,7 +410,8 @@ int cdrom_reinit_ex(int sector_part, int cdxa, int sector_size);
     \param  session         The session of the disc to read.
     \return                 \ref cd_cmd_response
 */
-int cdrom_read_toc(CDROM_TOC *toc_buffer, int session);
+enum cd_cmd_response
+cdrom_read_toc(CDROM_TOC *toc_buffer, unsigned int session);
 
 /** \brief    Read one or more sector from a CD-ROM.
     \ingroup  gdrom
@@ -426,7 +428,9 @@ int cdrom_read_toc(CDROM_TOC *toc_buffer, int session);
     \return                 \ref cd_cmd_response
     \see    cd_read_sector_mode
 */
-int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode);
+enum cd_cmd_response
+cdrom_read_sectors_ex(void *buffer, unsigned int sector, size_t cnt,
+                      enum cd_read_sector_mode mode);
 
 /** \brief    Read one or more sector from a CD-ROM in PIO mode.
     \ingroup  gdrom
@@ -439,7 +443,8 @@ int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode);
     \return                 \ref cd_cmd_response
     \see    cdrom_read_sectors_ex
 */
-int cdrom_read_sectors(void *buffer, int sector, int cnt);
+enum cd_cmd_response
+cdrom_read_sectors(void *buffer, unsigned int sector, size_t cnt);
 
 /** \brief    Read subcode data from the most recently read sectors.
     \ingroup  gdrom
@@ -455,7 +460,8 @@ int cdrom_read_sectors(void *buffer, int sector, int cnt);
     \return                 \ref cd_cmd_response
     \see    cd_read_subcode_type
 */
-int cdrom_get_subcode(void *buffer, int buflen, int which);
+enum cd_cmd_response
+cdrom_get_subcode(void *buffer, size_t buflen, enum cd_read_subcode_type which);
 
 /** \brief    Locate the sector of the data track.
     \ingroup  gdrom
@@ -479,21 +485,23 @@ uint32 cdrom_locate_data_track(CDROM_TOC *toc);
     \param  mode            The mode to play (see \ref cdda_read_modes).
     \return                 \ref cd_cmd_response
 */
-int cdrom_cdda_play(uint32 start, uint32 end, uint32 loops, int mode);
+enum cd_cmd_response
+cdrom_cdda_play(uint32 start, uint32 end, uint32 loops,
+                enum cdda_read_modes mode);
 
 /** \brief    Pause CDDA audio playback.
     \ingroup  gdrom
 
     \return                 \ref cd_cmd_response
 */
-int cdrom_cdda_pause(void);
+enum cd_cmd_response cdrom_cdda_pause(void);
 
 /** \brief    Resume CDDA audio playback after a pause.
     \ingroup  gdrom
 
     \return                 \ref cd_cmd_response
 */
-int cdrom_cdda_resume(void);
+enum cd_cmd_response cdrom_cdda_resume(void);
 
 /** \brief    Spin down the CD.
     \ingroup  gdrom
@@ -502,7 +510,7 @@ int cdrom_cdda_resume(void);
 
     \return                 \ref cd_cmd_response
 */
-int cdrom_spin_down(void);
+enum cd_cmd_response cdrom_spin_down(void);
 
 /** \brief    Initialize the GD-ROM for reading CDs.
     \ingroup  gdrom

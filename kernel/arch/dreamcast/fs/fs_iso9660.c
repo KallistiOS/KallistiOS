@@ -926,10 +926,11 @@ int iso_reset(void) {
    be careful about modifying variables that are in use in the
    foreground, so instead we'll just set a "dead" flag and next
    time someone calls in it'll get reset. */
-static int iso_last_status;
+static enum cd_status_values iso_last_status;
 static int iso_vblank_hnd;
 static void iso_vblank(uint32 evt, void *data) {
-    int status, disc_type;
+    enum cd_status_values status;
+    enum cd_disc_types disc_type;
 
     (void)evt;
     (void)data;
@@ -1075,7 +1076,7 @@ void fs_iso9660_init(void) {
     }
 
     percd_done = 0;
-    iso_last_status = -1;
+    iso_last_status = CD_STATUS_READ_FAIL;
 
     /* Register with the vblank */
     iso_vblank_hnd = vblank_handler_add(iso_vblank, NULL);

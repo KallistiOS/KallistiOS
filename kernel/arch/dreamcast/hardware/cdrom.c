@@ -55,7 +55,7 @@ typedef int gdc_cmd_hnd_t;
 /* The G1 ATA access mutex */
 mutex_t _g1_ata_mutex = MUTEX_INITIALIZER;
 
-static int cdrom_get_track_type(void)
+static enum cd_track_type cdrom_get_track_type(void)
 {
     uint32_t params[4];
 
@@ -64,11 +64,12 @@ static int cdrom_get_track_type(void)
     return params[1] == 32 ? 0x0800 : 0x0400;
 }
 
-int cdrom_set_sector_size(int size) {
-    int sector_part, cdxa;
+enum cd_cmd_response cdrom_set_sector_size(size_t size) {
+    enum cd_read_sector_part sector_part;
+    enum cd_track_type cdxa;
 
     if(size == 2352) {
-        cdxa = 0;
+        cdxa = CD_TRACK_TYPE_ANY;
         sector_part = CDROM_READ_WHOLE_SECTOR;
     } else {
         cdxa = cdrom_get_track_type();
@@ -79,11 +80,12 @@ int cdrom_set_sector_size(int size) {
 }
 
 /* Command execution sequence */
-int cdrom_exec_cmd(int cmd, void *param) {
+enum cd_cmd_response cdrom_exec_cmd(enum cd_cmd_code cmd, void *param) {
     return cdrom_exec_cmd_timed(cmd, param, 0);
 }
 
-int cdrom_exec_cmd_timed(int cmd, void *param, int timeout) {
+enum cd_cmd_response
+cdrom_exec_cmd_timed(enum cd_cmd_code cmd, void *param, unsigned long timeout) {
     int32_t status[4] = {
         0, /* Error code 1 */
         0, /* Error code 2 */
@@ -158,7 +160,8 @@ int cdrom_exec_cmd_timed(int cmd, void *param, int timeout) {
 }
 
 /* Return the status of the drive as two integers (see constants) */
-int cdrom_get_status(int *status, int *disc_type) {
+enum cd_cmd_response
+cdrom_get_status(enum cd_status_values *status, enum cd_disc_types *disc_type) {
     int rv = ERR_OK;
     uint32_t params[2];
 
@@ -204,7 +207,9 @@ int cdrom_get_status(int *status, int *disc_type) {
 }
 
 /* Wrapper for the change datatype syscall */
-int cdrom_change_datatype(int sector_part, int cdxa, int sector_size) {
+enum cd_cmd_response
+cdrom_change_datatype(enum cd_read_sector_part sector_part,
+                      enum cd_track_type cdxa, size_t sector_size) {
     int rv = ERR_OK;
     uint32_t params[4];
 
@@ -220,12 +225,14 @@ int cdrom_change_datatype(int sector_part, int cdxa, int sector_size) {
 }
 
 /* Re-init the drive, e.g., after a disc change, etc */
-int cdrom_reinit(void) {
+enum cd_cmd_response cdrom_reinit(void) {
     return cdrom_set_sector_size(2048);
 }
 
 /* Enhanced cdrom_reinit, takes the place of the old 'sector_size' function */
-int cdrom_reinit_ex(int sector_part, int cdxa, int sector_size) {
+enum cd_cmd_response
+cdrom_reinit_ex(enum cd_read_sector_part sector_part,
+                enum cd_track_type cdxa, size_t sector_size) {
     int r;
 
     do {
@@ -242,7 +249,8 @@ int cdrom_reinit_ex(int sector_part, int cdxa, int sector_size) {
 }
 
 /* Read the table of contents */
-int cdrom_read_toc(CDROM_TOC *toc_buffer, int session) {
+enum cd_cmd_response
+cdrom_read_toc(CDROM_TOC *toc_buffer, unsigned int session) {
     struct {
         int session;
         void *buffer;
@@ -258,7 +266,9 @@ int cdrom_read_toc(CDROM_TOC *toc_buffer, int session) {
 }
 
 /* Enhanced Sector reading: Choose mode to read in. */
-int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode) {
+enum cd_cmd_response
+cdrom_read_sectors_ex(void *buffer, unsigned int sector, size_t cnt,
+                      enum cd_read_sector_mode mode) {
     struct {
         int sec, num;
         void *buffer;
@@ -285,7 +295,8 @@ int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode) {
 }
 
 /* Basic old sector read */
-int cdrom_read_sectors(void *buffer, int sector, int cnt) {
+enum cd_cmd_response
+cdrom_read_sectors(void *buffer, unsigned int sector, size_t cnt) {
     return cdrom_read_sectors_ex(buffer, sector, cnt, CDROM_READ_PIO);
 }
 
@@ -295,7 +306,8 @@ int cdrom_read_sectors(void *buffer, int sector, int cnt) {
    a time. */
 /* XXX: Use some CD-Gs and other stuff to test if you get more than just the
    Q byte */
-int cdrom_get_subcode(void *buffer, int buflen, int which) {
+enum cd_cmd_response
+cdrom_get_subcode(void *buffer, size_t buflen, enum cd_read_subcode_type which) {
     struct {
         int which;
         int buflen;
@@ -335,7 +347,9 @@ uint32 cdrom_locate_data_track(CDROM_TOC *toc) {
    repeat -- number of times to repeat (0-15, 15=infinite)
    mode   -- CDDA_TRACKS or CDDA_SECTORS
  */
-int cdrom_cdda_play(uint32 start, uint32 end, uint32 repeat, int mode) {
+enum cd_cmd_response
+cdrom_cdda_play(uint32 start, uint32 end, uint32 repeat,
+                enum cdda_read_modes mode) {
     struct {
         int start;
         int end;
@@ -360,21 +374,21 @@ int cdrom_cdda_play(uint32 start, uint32 end, uint32 repeat, int mode) {
 }
 
 /* Pause CDDA audio playback */
-int cdrom_cdda_pause(void) {
+enum cd_cmd_response cdrom_cdda_pause(void) {
     int rv;
     rv = cdrom_exec_cmd(CMD_PAUSE, NULL);
     return rv;
 }
 
 /* Resume CDDA audio playback */
-int cdrom_cdda_resume(void) {
+enum cd_cmd_response cdrom_cdda_resume(void) {
     int rv;
     rv = cdrom_exec_cmd(CMD_RELEASE, NULL);
     return rv;
 }
 
 /* Spin down the CD */
-int cdrom_spin_down(void) {
+enum cd_cmd_response cdrom_spin_down(void) {
     int rv;
     rv = cdrom_exec_cmd(CMD_STOP, NULL);
     return rv;
