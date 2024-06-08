@@ -421,4 +421,4 @@ bool kos_version_max(uint8_t major, uint16_t minor, uint8_t patch);
 
 __END_DECLS
 
-#endif
+#endif /* __KOS_VERSION_H */

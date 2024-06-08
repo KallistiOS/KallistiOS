@@ -1,10 +1,20 @@
+/* KallistiOS ##version##
+
+   version.c
+   Copyright (C) 2024 Falco Girgis
+*/
+
+/* This file contains the exported public symbols which can be used by user
+    applications to query for the run-time version of KOS.
+*/
+
 #include <kos/version.h>
 
 kos_version_t kos_version(void) {
     return KOS_VERSION;
 }
 
-const char* kos_version_string(void) {
+const char *kos_version_string(void) {
     return KOS_VERSION_STRING;
 }
 

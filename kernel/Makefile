@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # kernel Makefile
-# (c)2001 Megan Potter
+# Copyright (C) 2001 Megan Potter
 #
 
 OBJS = version.o
