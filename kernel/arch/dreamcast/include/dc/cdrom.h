@@ -352,7 +352,7 @@ cdrom_get_status(enum cd_status_values *status, enum cd_disc_types *disc_type);
     syscall. This allows these parameters to be modified without a reinit.
 
     \param sector_part      How much of each sector to return.
-    \param cdxa             What CDXA mode to read as (if applicable).
+    \param track_type       What track type to read as (if applicable).
     \param sector_size      What sector size to read (eg. - 2048, 2532).
 
     \return                 \ref cd_cmd_response
@@ -360,14 +360,14 @@ cdrom_get_status(enum cd_status_values *status, enum cd_disc_types *disc_type);
 */
 enum cd_cmd_response
 cdrom_change_datatype(enum cd_read_sector_part sector_part,
-                      enum cd_track_type cdxa, size_t sector_size);
+                      enum cd_track_type track_type, size_t sector_size);
 
 /** \cond */
 static inline enum cd_cmd_response
 __depr("Use cdrom_change_datatype instead.")
 cdrom_change_dataype(enum cd_read_sector_part sector_part,
-                     enum cd_track_type cdxa, size_t sector_size) {
-    return cdrom_change_datatype(sector_part, cdxa, sector_size);
+                     enum cd_track_type track_type, size_t sector_size) {
+    return cdrom_change_datatype(sector_part, track_type, sector_size);
 }
 /** \endcond */
 
@@ -390,7 +390,7 @@ enum cd_cmd_response cdrom_reinit(void);
     reinitialization, as opposed to defaults.
 
     \param sector_part      How much of each sector to return.
-    \param cdxa             What CDXA mode to read as (if applicable).
+    \param track_type       What track type to read as (if applicable).
     \param sector_size      What sector size to read (eg. - 2048, 2532).
 
     \return                 \ref cd_cmd_response
@@ -399,7 +399,7 @@ enum cd_cmd_response cdrom_reinit(void);
 */
 enum cd_cmd_response
 cdrom_reinit_ex(enum cd_read_sector_part sector_part,
-                enum cd_track_type cdxa, size_t sector_size);
+                enum cd_track_type track_type, size_t sector_size);
 
 /** \brief    Read the table of contents from the disc.
     \ingroup  gdrom

@@ -66,17 +66,17 @@ static enum cd_track_type cdrom_get_track_type(void)
 
 enum cd_cmd_response cdrom_set_sector_size(size_t size) {
     enum cd_read_sector_part sector_part;
-    enum cd_track_type cdxa;
+    enum cd_track_type type;
 
     if(size == 2352) {
-        cdxa = CD_TRACK_TYPE_ANY;
+        type = CD_TRACK_TYPE_ANY;
         sector_part = CDROM_READ_WHOLE_SECTOR;
     } else {
-        cdxa = cdrom_get_track_type();
+        type = cdrom_get_track_type();
         sector_part = CDROM_READ_DATA_AREA;
     }
 
-    return cdrom_reinit_ex(sector_part, cdxa, size);
+    return cdrom_reinit_ex(sector_part, type, size);
 }
 
 /* Command execution sequence */
@@ -209,7 +209,7 @@ cdrom_get_status(enum cd_status_values *status, enum cd_disc_types *disc_type) {
 /* Wrapper for the change datatype syscall */
 enum cd_cmd_response
 cdrom_change_datatype(enum cd_read_sector_part sector_part,
-                      enum cd_track_type cdxa, size_t sector_size) {
+                      enum cd_track_type track_type, size_t sector_size) {
     int rv = ERR_OK;
     uint32_t params[4];
 
@@ -217,7 +217,7 @@ cdrom_change_datatype(enum cd_read_sector_part sector_part,
 
     params[0] = 0;              /* 0 = set, 1 = get */
     params[1] = sector_part;    /* Get Data or Full Sector */
-    params[2] = cdxa;           /* CD-XA mode 1/2 */
+    params[2] = track_type;     /* Track type (Mode 2 form 1, mode 1 ...) */
     params[3] = sector_size;    /* sector size */
     rv = syscall_gdrom_sector_mode(params);
     mutex_unlock(&_g1_ata_mutex);
@@ -232,7 +232,7 @@ enum cd_cmd_response cdrom_reinit(void) {
 /* Enhanced cdrom_reinit, takes the place of the old 'sector_size' function */
 enum cd_cmd_response
 cdrom_reinit_ex(enum cd_read_sector_part sector_part,
-                enum cd_track_type cdxa, size_t sector_size) {
+                enum cd_track_type track_type, size_t sector_size) {
     int r;
 
     do {
@@ -243,7 +243,7 @@ cdrom_reinit_ex(enum cd_read_sector_part sector_part,
         return r;
     }
 
-    r = cdrom_change_datatype(sector_part, cdxa, sector_size);
+    r = cdrom_change_datatype(sector_part, track_type, sector_size);
 
     return r;
 }
