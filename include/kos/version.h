@@ -4,6 +4,7 @@
    include/kos/version.h
    Copyright (C) 2024 Falco Girgis
    Copyright (C) 2024 Donald Haase
+   Copyright (C) 2024 Luke Benstead
 
 */
 
@@ -16,6 +17,7 @@
 
     \author Falco Girgis
     \author Donald Haase
+    \author Luke Benstead
 */
 
 #ifndef __KOS_VERSION_H
@@ -116,15 +118,31 @@
     \code{.c}
         #if KOS_VERSION_MIN(2, 0, 0)
             // Do something requiring at least KOS 2.0.0 to compile.
-        #elif KOS_VERSION_MAX(2, 5, 1)
-            // Do something that was deprecated after KOS 2.5.1.
-        #elif KOS_VERSION_EQUAL(3, 1, 2)
+        #elif KOS_VERSION_BELOW(2, 5, 1)
+            // Do something that was deprecated in KOS 2.5.1.
+        #elif KOS_VERSION_IS(3, 1, 2)
             // Do something for an exact version match.
         #endif
     \endcode
 
     @{
 */
+
+/** Compile-time check for being above a given KOS version.
+
+    Checks to see whether the current KOS version is higher than the given
+    version.
+
+    \param  major    Major version component.
+    \param  minor    Minor version component.
+    \param  patch    Patch version component.
+
+    \retval true     KOS's version is higher.
+    \retval false    KOS's version is the same or lower.
+
+*/
+#define KOS_VERSION_ABOVE(major, minor, patch) \
+    KOS_VERSION_MAKE_ABOVE(major, minor, patch, KOS_VERSION)
 
 /** Compile-time check for a minimum KOS version.
     
@@ -153,8 +171,8 @@
     \retval true     KOS's version is the same.
     \retval false    KOS's version is different.
 */
-#define KOS_VERSION_EQUAL(major, minor, patch) \
-    KOS_VERSION_MAKE_EQUAL(major, minor, patch, KOS_VERSION)
+#define KOS_VERSION_IS(major, minor, patch) \
+    KOS_VERSION_MAKE_IS(major, minor, patch, KOS_VERSION)
 
 /** Compile-time check for a maximum KOS version.
 
@@ -170,6 +188,22 @@
 */
 #define KOS_VERSION_MAX(major, minor, patch) \
     KOS_VERSION_MAKE_MAX(major, minor, patch, KOS_VERSION)
+
+/** Compile-time check for being below a given KOS version.
+
+    Checks to see whether the current KOS version is lower than the given
+    version.
+
+    \param  major    Major version component.
+    \param  minor    Minor version component.
+    \param  patch    Patch version component.
+
+    \retval true     KOS's version is lower.
+    \retval false    KOS's version is the same or higher.
+
+*/
+#define KOS_VERSION_BELOW(major, minor, patch) \
+    KOS_VERSION_MAKE_BELOW(major, minor, patch, KOS_VERSION)
 
 /** @} */
 
@@ -233,6 +267,24 @@
     \brief Utilities for creating version checks.
     @{
 */
+/** Creates a check for being above a given version.
+
+    Used to create a compile-time greater-than check against another version.
+
+    \note
+    Simply wrap this in a function to implement a runtime check.
+
+    \param major    Major version component.
+    \param minor    Minor version component.
+    \param patch    Patch version component.
+    \param version  The reference version ID.
+
+    \retval true    The given version is above \p version.
+    \retval false   The given version is at or below \p version.
+*/
+#define KOS_VERSION_MAKE_ABOVE(major, minor, patch, version) \
+    (KOS_VERSION_MAKE(major, minor, patch) > version)
+
 /** Creates a minimum version check. 
 
     Used to create a compile-time minimum version check.
@@ -242,7 +294,7 @@
 
     \param major    Major version component.
     \param minor    Minor version component.
-    \param patch    patch version component.
+    \param patch    Patch version component.
     \param version  The minimum version ID.
 
     \retval true    The given version is at or above \p version.
@@ -260,13 +312,13 @@
 
     \param major    Major version component.
     \param minor    Minor version component.
-    \param patch    patch version component.
+    \param patch    Patch version component.
     \param version  The exact version ID to match.
 
     \retval true    The given version matches \p version exactly.
     \retval false   The given version does not match \p version.
 */
-#define KOS_VERSION_MAKE_EQUAL(major, minor, patch, version) \
+#define KOS_VERSION_MAKE_IS(major, minor, patch, version) \
     (KOS_VERSION_MAKE(major, minor, patch) == version)
 
 /** Creates a maximum version check. 
@@ -278,7 +330,7 @@
 
     \param major    Major version component.
     \param minor    Minor version component.
-    \param patch    patch version component.
+    \param patch    Patch version component.
     \param version  The maximum version ID.
 
     \retval true    The given version is at or below \p version.
@@ -287,6 +339,24 @@
 */
 #define KOS_VERSION_MAKE_MAX(major, minor, patch, version) \
     (KOS_VERSION_MAKE(major, minor, patch) <= version)
+
+/** Creates a check for being below a given version.
+
+    Used to create a compile-time less-than check against another version.
+
+    \note
+    Simply wrap this in a function to implement a runtime check.
+
+    \param major    Major version component.
+    \param minor    Minor version component.
+    \param patch    Patch version component.
+    \param version  The reference version ID.
+
+    \retval true    The given version is below \p version.
+    \retval false   The given version is at or above \p version.
+*/
+#define KOS_VERSION_MAKE_BELOW(major, minor, patch, version) \
+    (KOS_VERSION_MAKE(major, minor, patch) < version)
 /** @} */
 
 /** \cond INTERNAL */
@@ -361,14 +431,28 @@ const char* kos_version_string(void);
     \code{.c}
         if(kos_version_min(2, 0, 0))
             // Do something requiring at least KOS 2.0.0 to compile.
-        else if(kos_version_max(2, 5, 1))
-            // Do something that was deprecated after KOS 2.5.1.
-        else if(kos_version_equal(3, 1, 2))
+        else if(kos_version_below(2, 5, 1))
+            // Do something that was deprecated in KOS 2.5.1.
+        else if(kos_version_is(3, 1, 2))
             // Do something for an exact version match.
     \endcode
 
     @{
 */
+
+/** Above version run-time check for KOS.
+
+    Check whether the current run-time version of KOS is above the
+    given version.
+
+    \param major    Major version component.
+    \param minor    Minor version component.
+    \param patch    Patch version component.
+
+    \retval true    KOS is above the given version.
+    \retval false   KOS is at or below the given version.
+*/
+bool kos_version_above(uint8_t major, uint16_t minor, uint8_t patch);
 
 /** Minimum version run-time check for KOS
 
@@ -377,7 +461,7 @@ const char* kos_version_string(void);
 
     \param major    Major version component.
     \param minor    Minor version component.
-    \param patch    patch versoin component.
+    \param patch    patch version component.
 
     \retval true    KOS is at or above the minimum version.
     \retval false   KOS is below teh minimum version.
@@ -391,27 +475,42 @@ bool kos_version_min(uint8_t major, uint16_t minor, uint8_t patch);
 
     \param major    Major version component.
     \param minor    Minor version component.
-    \param patch    patch version component.
+    \param patch    Patch version component.
 
     \retval true    The version matches exactly.
     \retval false   The version does not match. 
 */
-bool kos_version_equal(uint8_t major, uint16_t minor, uint8_t patch);
+bool kos_version_is(uint8_t major, uint16_t minor, uint8_t patch);
 
 /** Maximum version run-time check for KOS
 
-    Checks whether the current run-time ersion of KOS is at most the
+    Checks whether the current run-time version of KOS is at most the
     given version.
 
     \param major    Major version component.
     \param minor    Minor version component.
-    \param patch    patch versoin component.
+    \param patch    Patch version component.
 
     \retval true    KOS is at or below the maximum version.
     \retval false   KOS is above the maximum version.
 
 */
 bool kos_version_max(uint8_t major, uint16_t minor, uint8_t patch);
+
+/** Below version run-time check for KOS
+
+    Checks whether the current run-time version of KOS is below the given
+    version.
+
+    \param major    Major version component.
+    \param minor    Minor version component.
+    \param patch    Patch version component.
+
+    \retval true    KOS is below the given version.
+    \retval false   KOS is at or above the given version.
+
+*/
+bool kos_version_below(uint8_t major, uint16_t minor, uint8_t patch);
 
 /** @} */
 
