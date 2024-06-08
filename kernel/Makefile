@@ -2,6 +2,7 @@
 #
 # kernel Makefile
 # Copyright (C) 2001 Megan Potter
+# Copyright (C) 2024 Falco Girgis
 #
 
 OBJS = version.o
