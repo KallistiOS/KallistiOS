@@ -365,8 +365,6 @@ int cdrom_change_dataype(int sector_part, int cdxa, int sector_size)
 
     This function will take in all parameters to pass to the change_datatype
     syscall. This allows these parameters to be modified without a reinit.
-    Each parameter allows -1 as a default, which is tied to the former static
-    values provided by cdrom_reinit and cdrom_set_sector_size.
 
     \param sector_part      How much of each sector to return.
     \param cdxa             What CDXA mode to read as (if applicable).
@@ -381,7 +379,7 @@ int cdrom_change_datatype(int sector_part, int cdxa, int sector_size);
     \ingroup  gdrom
 
     This function is for reinitializing the GD-ROM drive after a disc change to
-    its default settings. Calls cdrom_reinit(-1,-1,-1)
+    its default settings.
 
     \return                 \ref cd_cmd_response
     \see    cdrom_reinit_ex

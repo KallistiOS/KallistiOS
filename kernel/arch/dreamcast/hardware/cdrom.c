@@ -55,9 +55,27 @@ typedef int gdc_cmd_hnd_t;
 /* The G1 ATA access mutex */
 mutex_t _g1_ata_mutex = MUTEX_INITIALIZER;
 
-/* Shortcut to cdrom_reinit_ex. Typically this is the only thing changed. */
+static int cdrom_get_track_type(void)
+{
+    uint32_t params[4];
+
+    syscall_gdrom_check_drive(params);
+
+    return params[1] == 32 ? 0x0800 : 0x0400;
+}
+
 int cdrom_set_sector_size(int size) {
-    return cdrom_reinit_ex(-1, -1, size);
+    int sector_part, cdxa;
+
+    if(size == 2352) {
+        cdxa = 0;
+        sector_part = CDROM_READ_WHOLE_SECTOR;
+    } else {
+        cdxa = cdrom_get_track_type();
+        sector_part = CDROM_READ_DATA_AREA;
+    }
+
+    return cdrom_reinit_ex(sector_part, cdxa, size);
 }
 
 /* Command execution sequence */
@@ -197,29 +215,6 @@ int cdrom_change_datatype(int sector_part, int cdxa, int sector_size) {
 
     mutex_lock(&_g1_ata_mutex);
 
-    /* Check if we are using default params */
-    if(sector_size == 2352) {
-        if(cdxa == -1)
-            cdxa = 0;
-
-        if(sector_part == -1)
-            sector_part = CDROM_READ_WHOLE_SECTOR;
-    }
-    else {
-        if(cdxa == -1) {
-            /* If not overriding cdxa, check what the drive thinks we should
-               use */
-            syscall_gdrom_check_drive(params);
-            cdxa = (params[1] == 32 ? 2048 : 1024);
-        }
-
-        if(sector_part == -1)
-            sector_part = CDROM_READ_DATA_AREA;
-
-        if(sector_size == -1)
-            sector_size = 2048;
-    }
-
     params[0] = 0;              /* 0 = set, 1 = get */
     params[1] = sector_part;    /* Get Data or Full Sector */
     params[2] = cdxa;           /* CD-XA mode 1/2 */
@@ -231,8 +226,7 @@ int cdrom_change_datatype(int sector_part, int cdxa, int sector_size) {
 
 /* Re-init the drive, e.g., after a disc change, etc */
 int cdrom_reinit(void) {
-    /* By setting -1 to each parameter, they fall to the old defaults */
-    return cdrom_reinit_ex(-1, -1, -1);
+    return cdrom_set_sector_size(2048);
 }
 
 /* Enhanced cdrom_reinit, takes the place of the old 'sector_size' function */
