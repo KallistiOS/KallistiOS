@@ -27,7 +27,7 @@ __BEGIN_DECLS
     CD, it will automatically detect and react to disc changes for you.
 
     This file only facilitates reading raw sectors and doing other fairly low-
-    level things with CDs. If you're looking for higher-level stuff, like 
+    level things with CDs. If you're looking for higher-level stuff, like
     normal file reading, consult with the stuff for the fs and for fs_iso9660.
 
     \author Megan Potter
@@ -36,7 +36,7 @@ __BEGIN_DECLS
     \see    dc/fs_iso9660.h
 */
 
-/** \defgroup gdrom     GD-ROM 
+/** \defgroup gdrom     GD-ROM
     \brief              Driver for the Dreamcast's GD-ROM drive
     \ingroup            vfs
 */
@@ -113,7 +113,7 @@ __BEGIN_DECLS
 
 /** \defgroup cd_cmd_ata_status       ATA Statuses
     \brief                            ATA statuses for GD-ROM driver
-    \ingroup  gdrom 
+    \ingroup  gdrom
 
     @{
 */
@@ -141,7 +141,7 @@ __BEGIN_DECLS
     \ingroup  gdrom
 
     Parts of the a CD-ROM sector to read. These are possible values for the
-    third parameter word sent with the change data type syscall. 
+    third parameter word sent with the change data type syscall.
     @{
 */
 #define CDROM_READ_WHOLE_SECTOR 0x1000    /**< \brief Read the whole sector */
@@ -152,7 +152,7 @@ __BEGIN_DECLS
     \brief                            Types of data to read from sector subcode
     \ingroup  gdrom
 
-    Types of data available to read from the sector subcode. These are 
+    Types of data available to read from the sector subcode. These are
     possible values for the first parameter sent to the GETSCD syscall.
     @{
 */
@@ -183,7 +183,7 @@ __BEGIN_DECLS
     \brief                           Mode to use when reading sectors
     \ingroup  gdrom
 
-    How to read the sectors of a CD, via PIO or DMA. 4th parameter of 
+    How to read the sectors of a CD, via PIO or DMA. 4th parameter of
     cdrom_read_sectors_ex.
     @{
 */
@@ -342,9 +342,9 @@ int cdrom_change_dataype(int sector_part, int cdxa, int sector_size)
 /** \brief    Change the datatype of disc.
     \ingroup  gdrom
 
-    This function will take in all parameters to pass to the change_datatype 
-    syscall. This allows these parameters to be modified without a reinit. 
-    Each parameter allows -1 as a default, which is tied to the former static 
+    This function will take in all parameters to pass to the change_datatype
+    syscall. This allows these parameters to be modified without a reinit.
+    Each parameter allows -1 as a default, which is tied to the former static
     values provided by cdrom_reinit and cdrom_set_sector_size.
 
     \param sector_part      How much of each sector to return.
@@ -370,8 +370,8 @@ int cdrom_reinit(void);
 /** \brief    Re-initialize the GD-ROM drive with custom parameters.
     \ingroup  gdrom
 
-    At the end of each cdrom_reinit(), cdrom_change_datatype is called. 
-    This passes in the requested values to that function after 
+    At the end of each cdrom_reinit(), cdrom_change_datatype is called.
+    This passes in the requested values to that function after
     reinitialization, as opposed to defaults.
 
     \param sector_part      How much of each sector to return.
@@ -428,8 +428,8 @@ int cdrom_read_sectors(void *buffer, int sector, int cnt);
 /** \brief    Read subcode data from the most recently read sectors.
     \ingroup  gdrom
 
-    After reading sectors, this can pull subcode data regarding the sectors 
-    read. If reading all subcode data with CD_SUB_CURRENT_POSITION, this needs 
+    After reading sectors, this can pull subcode data regarding the sectors
+    read. If reading all subcode data with CD_SUB_CURRENT_POSITION, this needs
     to be performed one sector at a time.
 
     \param  buffer          Space to store the read subcode data.

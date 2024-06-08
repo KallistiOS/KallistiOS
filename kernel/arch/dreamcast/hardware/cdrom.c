@@ -42,11 +42,11 @@ normally the case with the default options. If in doubt, decompile the
 output and look to make sure.
 
 XXX: This could all be done in a non-blocking way by taking advantage of
-command queuing. Every call to syscall_gdrom_send_command returns a 
-'request id' which just needs to eventually be checked by cmd_stat. A 
-non-blocking version of all functions would simply require manual calls 
-to check the status. Doing this would probably allow data reading while 
-cdda is playing without hiccups (by severely reducing the number of gd 
+command queuing. Every call to syscall_gdrom_send_command returns a
+'request id' which just needs to eventually be checked by cmd_stat. A
+non-blocking version of all functions would simply require manual calls
+to check the status. Doing this would probably allow data reading while
+cdda is playing without hiccups (by severely reducing the number of gd
 commands being sent).
 */
 
@@ -207,7 +207,7 @@ int cdrom_change_datatype(int sector_part, int cdxa, int sector_size) {
     }
     else {
         if(cdxa == -1) {
-            /* If not overriding cdxa, check what the drive thinks we should 
+            /* If not overriding cdxa, check what the drive thinks we should
                use */
             syscall_gdrom_check_drive(params);
             cdxa = (params[1] == 32 ? 2048 : 1024);
@@ -284,7 +284,7 @@ int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode) {
 
     /* The DMA mode blocks the thread it is called in by the way we execute
        gd syscalls. It does however allow for other threads to run. */
-    /* XXX: DMA Mode may conflict with using a second G1ATA device. More 
+    /* XXX: DMA Mode may conflict with using a second G1ATA device. More
        testing is needed from someone with such a device.
     */
     if(mode == CDROM_READ_DMA)
@@ -302,9 +302,9 @@ int cdrom_read_sectors(void *buffer, int sector, int cnt) {
 
 
 /* Read a piece of or all of the Q byte of the subcode of the last sector read.
-   If you need the subcode from every sector, you cannot read more than one at 
+   If you need the subcode from every sector, you cannot read more than one at
    a time. */
-/* XXX: Use some CD-Gs and other stuff to test if you get more than just the 
+/* XXX: Use some CD-Gs and other stuff to test if you get more than just the
    Q byte */
 int cdrom_get_subcode(void *buffer, int buflen, int which) {
     struct {
