@@ -172,6 +172,10 @@ static void cont_reply(maple_state_t *st, maple_frame_t *frm) {
     cooked->joy2y = ((int)raw->joy2y) - 128;
     frm->dev->status_valid = 1;
 
+    /* If someone is in the middle of modifying the list, don't process callbacks */
+    if(mutex_trylock(&btn_cbs_mtx))
+        return;
+
     /* Check for magic button sequences */
     TAILQ_FOREACH(c, &btn_cbs, listent) {
         if(!c->addr ||
