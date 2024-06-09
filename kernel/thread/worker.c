@@ -91,6 +91,7 @@ void thd_worker_wakeup(kthread_worker_t *worker) {
 
 void thd_worker_destroy(kthread_worker_t *worker) {
     uint32_t flags;
+    kthread_t *thd;
 
     assert(worker != NULL);
 
@@ -98,10 +99,11 @@ void thd_worker_destroy(kthread_worker_t *worker) {
 
     worker->quit = true;
     genwait_wake_one(worker);
+    thd = worker->thd;
 
     irq_restore(flags);
 
-    thd_join(worker->thd, NULL);
+    thd_join(thd, NULL);
 }
 
 kthread_t *thd_worker_get_thread(kthread_worker_t *worker) {
