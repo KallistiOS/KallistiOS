@@ -565,6 +565,11 @@ int thd_destroy(kthread_t *thd) {
        and unblock them. */
     genwait_wake_all(thd);
 
+    /* If this thread was waiting on anything, remove it from
+       the genwait queue. */
+    if(thd->wait_obj)
+        genwait_wake_thd(thd->wait_obj, thd, 0);
+
     /* De-schedule the thread if it's scheduled and free the
        thread structure */
     thd_remove_from_runnable(thd);
