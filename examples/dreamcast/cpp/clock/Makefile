@@ -8,6 +8,8 @@ TARGET = clock.elf
 OBJS = clock.o romdisk.o
 KOS_ROMDISK_DIR = romdisk
 
+KOS_CPPFLAGS += -std=gnu++17
+
 all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules

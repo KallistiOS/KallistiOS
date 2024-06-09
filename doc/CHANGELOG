@@ -228,6 +228,7 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - *** Added thread support for tracking CPU time + updated clock_gettime() [FG]
 - *** Added support for one-shot timers [PC]
 - DC  Use one-shot timers for timeout and a proper polling mechanism in modem [PC]
+- *** Added full support for <time.h> additions from C23 standard. [FG]
 
 KallistiOS version 2.0.0 -----------------------------------------------
 - DC  Broadband Adapter driver fixes [Megan Potter == MP]
