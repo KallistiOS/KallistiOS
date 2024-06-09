@@ -23,7 +23,7 @@ CRT1_DIR = $(shell $(KOS_CC) $(KOS_SH4_PRECISION) -print-file-name=crt1.o | sed 
 myall: $(OBJS)
 	-cp $(COPYOBJS) $(KOS_BASE)/kernel/build/
 	-rm banner.h authors.h banner.o uname.o
-	cp startup.o $(CRT1_DIR)crt1.o
+	-cp startup.o $(CRT1_DIR)crt1.o
 
 include $(KOS_BASE)/Makefile.prefab
 
