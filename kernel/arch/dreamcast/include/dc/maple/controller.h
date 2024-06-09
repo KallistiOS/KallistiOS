@@ -214,7 +214,7 @@ typedef void (*cont_btn_callback_t)(uint8_t addr, uint32_t btns);
     \param  btns            The buttons bitmask to match.
     \param  cb              The callback to call when the buttons are pressed.
                             Passing NULL will uninstall all callbacks on the
-                            addr/btn combination.
+                            addr/btns combination.
 */
 int cont_btn_callback(uint8_t addr, uint32_t btns, cont_btn_callback_t cb);
 
