@@ -40,6 +40,8 @@ also using their queue library verbatim (sys/queue.h).
 
 */
 
+#define THD_KERNEL_STACK_SIZE (64 * 1024)
+
 /* TLS Section ELF data - exported from linker script. */
 extern int _tdata_start, _tdata_size;
 extern int _tbss_size;
@@ -407,7 +409,7 @@ static void *thd_create_tls_data(void) {
     assert(!((uintptr_t)tcbhead % 8)); 
 
     /* Since we aren't using either member within it, zero out tcbhead. */
-    memset(tcbhead, 0, sizeof(tcbhead_t));  
+    bzero(tcbhead, sizeof(tcbhead_t));
 
     /* Initialize .TDATA */
     if(tdata_size) { 
@@ -428,7 +430,7 @@ static void *thd_create_tls_data(void) {
         assert(!((uintptr_t)tbss_segment % tbss_align));
            
         /* Zero-initialize tbss_segment. */
-        memset(tbss_segment, 0, tbss_size);
+        bzero(tbss_segment, tbss_size);
     }
 
     /* Return segment head: this is what GBR points to. */
@@ -444,7 +446,7 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
     tid_t tid;
     uint32_t params[4];
     int oldirq = 0;
-    kthread_attr_t real_attr = { 0, THD_STACK_SIZE, NULL, PRIO_DEFAULT, NULL };
+    kthread_attr_t real_attr = { false, THD_STACK_SIZE, NULL, PRIO_DEFAULT, NULL };
 
     if(attr)
         real_attr = *attr;
@@ -473,7 +475,10 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
 
         if(nt != NULL) {
             /* Clear out potentially unused stuff */
-            memset(nt, 0, sizeof(kthread_t));
+            bzero(nt, sizeof(kthread_t));
+
+            /* Initialize the flags to defaults immediately. */
+            nt->flags = THD_DEFAULTS;
 
             /* Create a new thread stack */
             if(!real_attr.stack_ptr) {
@@ -484,6 +489,9 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
                     irq_restore(oldirq);
                     return NULL;
                 }
+
+                /* Since we allocated the stack, we own the stack! */
+                nt->flags |= THD_OWNS_STACK;
             }
             else {
                 nt->stack = (uint32_t*)real_attr.stack_ptr;
@@ -507,7 +515,6 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
             nt->context.gbr = (uint32_t)nt->tcbhead;
             nt->tid = tid;
             nt->prio = real_attr.prio;
-            nt->flags = THD_DEFAULTS;
             nt->state = STATE_READY;
 
             if(!real_attr.label) {
@@ -548,7 +555,7 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
 }
 
 kthread_t *thd_create(bool detach, void *(*routine)(void *), void *param) {
-    kthread_attr_t attrs = { detach, 0, 0, 0, 0 };
+    kthread_attr_t attrs = { detach, 0, NULL, 0, NULL };
     return thd_create_ex(&attrs, routine, param);
 }
 
@@ -565,28 +572,35 @@ int thd_destroy(kthread_t *thd) {
        and unblock them. */
     genwait_wake_all(thd);
 
-    /* De-schedule the thread if it's scheduled and free the
-       thread structure */
+    /* If this thread was waiting on something, we need to remove it from
+       genwait so that it doesn't try to notify a dead thread later. */
+    if(thd->wait_obj)
+        genwait_wake_thd(thd->wait_obj, thd, ECANCELED);
+
+    /* De-schedule the thread if it's scheduled. */
     thd_remove_from_runnable(thd);
+
+    /* Remove it from the thread list. */
     LIST_REMOVE(thd, t_list);
 
-    /* Clean up any thread-local data */
+    /* Call destructors on TLS entries.  */
     LIST_FOREACH(i, &thd->tls_list, kv_list) {
         if(i->destructor) {
             i->destructor(i->data);
         }
     }
 
+    /* Free TLS entries. */
     i = LIST_FIRST(&thd->tls_list);
-
     while(i != NULL) {
         i2 = LIST_NEXT(i, kv_list);
         free(i);
         i = i2;
     }
 
-    /* Free its stack */
-    free(thd->stack);
+    /* Free its stack (if we're managing it). */
+    if(thd->flags & THD_OWNS_STACK)
+        free(thd->stack);
 
     /* Free static TLS segment */
     free(thd->tcbhead);
@@ -1035,6 +1049,11 @@ int kthread_key_delete(kthread_key_t key) {
 
 /* Init */
 int thd_init(void) {
+    const kthread_attr_t kern_attr = {
+        .stack_size = THD_KERNEL_STACK_SIZE,
+        .stack_ptr  = (void *)_arch_mem_top - THD_KERNEL_STACK_SIZE,
+        .label      = "[kernel]"
+    };
     kthread_t *kern, *reaper;
 
     /* Make sure we're not already running */
@@ -1063,8 +1082,7 @@ int thd_init(void) {
     thd_count = 0;
 
     /* Setup a kernel task for the currently running "main" thread */
-    kern = thd_create(0, NULL, NULL);
-    strcpy(kern->label, "[kernel]");
+    kern = thd_create_ex(&kern_attr, NULL, NULL);
     kern->state = STATE_RUNNING;
 
     /* Initialize GBR register for Main Thread */
