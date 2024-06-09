@@ -29,7 +29,7 @@ static void *thd_worker_thread(void *d) {
     for (;;) {
         flags = irq_disable();
 
-        if (!worker->pending)
+        if ((!worker->pending) && (!worker->quit))
             genwait_wait(worker, worker->thd->label, 0, NULL);
 
         irq_restore(flags);
