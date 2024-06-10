@@ -409,7 +409,7 @@ static void *thd_create_tls_data(void) {
     assert(!((uintptr_t)tcbhead % 8)); 
 
     /* Since we aren't using either member within it, zero out tcbhead. */
-    bzero(tcbhead, sizeof(tcbhead_t));
+    memset(tcbhead, 0, sizeof(tcbhead_t));
 
     /* Initialize .TDATA */
     if(tdata_size) { 
@@ -430,7 +430,7 @@ static void *thd_create_tls_data(void) {
         assert(!((uintptr_t)tbss_segment % tbss_align));
            
         /* Zero-initialize tbss_segment. */
-        bzero(tbss_segment, tbss_size);
+        memset(tbss_segment, 0, tbss_size);
     }
 
     /* Return segment head: this is what GBR points to. */
@@ -475,7 +475,7 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
 
         if(nt != NULL) {
             /* Clear out potentially unused stuff */
-            bzero(nt, sizeof(kthread_t));
+            memset(nt, 0, sizeof(kthread_t));
 
             /* Initialize the flags to defaults immediately. */
             nt->flags = THD_DEFAULTS;
