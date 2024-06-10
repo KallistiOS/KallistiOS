@@ -188,6 +188,8 @@ static void cont_reply(maple_state_t *st, maple_frame_t *frm) {
             }
         }
     }
+
+    mutex_unlock(&btn_cbs_mtx);
 }
 
 static int cont_poll(maple_device_t *dev) {
