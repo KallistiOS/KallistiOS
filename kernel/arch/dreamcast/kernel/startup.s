@@ -45,9 +45,8 @@ setup_cache:
 	! Now that we are in P2, it's safe to enable the cache
 	! Check to see if we should enable OCRAM.
 	mov.l	kos_init_flags_addr, r0
-	add	#2, r0
-	mov.w	@r0, r0
-	tst	#1, r0
+	mov.b 	@(3,r0),r0
+	tst 	#0x10,r0
 	bf	.L_setup_cache_L0
 	mov.w	ccr_data,r1
 	bra	.L_setup_cache_L1
