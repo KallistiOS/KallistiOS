@@ -40,8 +40,6 @@ also using their queue library verbatim (sys/queue.h).
 
 */
 
-#define THD_KERNEL_STACK_SIZE (64 * 1024)
-
 /* TLS Section ELF data - exported from linker script. */
 extern int _tdata_start, _tdata_size;
 extern int _tbss_size;
