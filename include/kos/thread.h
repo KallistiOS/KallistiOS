@@ -2,7 +2,7 @@
 
    include/kos/thread.h
    Copyright (C) 2000, 2001, 2002, 2003 Megan Potter
-   Copyright (C) 2009, 2010, 2016 Lawrence Sebald
+   Copyright (C) 2009, 2010, 2016, 2023 Lawrence Sebald
    Copyright (C) 2023 Colton Pawielski
    Copyright (C) 2023, 2024 Falco Girgis
 
@@ -151,8 +151,8 @@ typedef enum kthread_state {
 /** \brief   Thread Control Block Header
 
     Header preceding the static TLS data segments as defined by
-    the SH-ELF TLS ABI (version 1). This is what the thread pointer 
-    (GBR) points to for compiler access to thread-local data. 
+    the SH-ELF TLS ABI (version 1). This is what the thread pointer
+    (GBR) points to for compiler access to thread-local data.
 */
 typedef struct tcbhead {
     void *dtv;               /**< \brief Dynamic TLS vector (unused) */
@@ -450,9 +450,8 @@ void thd_exit(void *rv) __noreturn;
 
 /** \brief   Force a thread reschedule.
 
-    This function is the thread scheduler, and is generally called from a timer
-    interrupt. You will most likely never have a reason to call this function
-    directly.
+    This function is the thread scheduler, and MUST be called in an interrupt
+    context (typically from the primary timer interrupt).
 
     For most cases, you'll want to set front_of_line to zero, but read the
     comments in kernel/thread/thread.c for more info, especially if you need to
@@ -464,6 +463,9 @@ void thd_exit(void *rv) __noreturn;
     \param  now             Set to 0, unless you have a good reason not to.
 
     \sa thd_schedule_next
+    \warning                Never call this function from outside of an
+                            interrupt context! Doing so will almost certainly
+                            end very poorly.
 */
 void thd_schedule(bool front_of_line, uint64_t now);
 
@@ -513,8 +515,32 @@ void thd_sleep(unsigned ms);
     \retval 0               On success.
     \retval -1              thd is NULL.
     \retval -2              prio requested was out of range.
+
+    \sa thd_get_prio
 */
 int thd_set_prio(kthread_t *thd, prio_t prio);
+
+/** \brief       Retrieve a thread's priority value.
+    \relatesalso kthread_t
+
+    \param  thd             The thread to retrieve from. If NULL, the current
+                            thread will be used.
+
+    \return                 The priority value of the thread
+
+    \sa thd_set_prio
+*/
+prio_t thd_get_prio(kthread_t *thd);
+
+/** \brief       Retrieve a thread's numeric identifier.
+    \relatesalso kthread_t
+
+    \param  thd             The thread to retrieve from. If NULL, the current
+                            thread will be used.
+
+    \return                 The identifier of the thread
+*/
+tid_t thd_get_id(kthread_t *thd);
 
 /** \brief       Retrieve the current thread's kthread struct.
     \relatesalso kthread_t
@@ -547,7 +573,7 @@ const char *thd_get_label(kthread_t *thd);
 
     \sa thd_get_label
 */
-void thd_set_label(kthread_t *thd, const char *__RESTRICT label);
+void thd_set_label(kthread_t *__RESTRICT thd, const char *__RESTRICT label);
 
 /** \brief       Retrieve the thread's current working directory.
     \relatesalso kthread_t
@@ -578,7 +604,7 @@ const char *thd_get_pwd(kthread_t *thd);
 
     \sa thd_get_pwd
 */
-void thd_set_pwd(kthread_t *thd, const char *__RESTRICT pwd);
+void thd_set_pwd(kthread_t *__RESTRICT thd, const char *__RESTRICT pwd);
 
 /** \brief       Retrieve a pointer to the thread errno.
     \relatesalso kthread_t
@@ -680,7 +706,7 @@ unsigned thd_get_hz(void);
     \relatesalso kthread_t
 
     This function "joins" a joinable thread. This means effectively that the
-    calling thread blocks until the speified thread completes execution. It is
+    calling thread blocks until the specified thread completes execution. It is
     invalid to join a detached thread, only joinable threads may be joined.
 
     \param  thd             The joinable thread to join.
@@ -712,7 +738,7 @@ int thd_detach(kthread_t *thd);
 /** \brief       Iterate all threads and call the passed callback for each
     \relatesalso kthread_t
 
-    \param cb               The callback to call for each thread. 
+    \param cb               The callback to call for each thread.
                             If a nonzero value is returned, iteration
                             ceases immediately.
     \param data             User data to be passed to the callback
@@ -746,7 +772,7 @@ int thd_pslist_queue(int (*pf)(const char *fmt, ...));
 /** \cond INTERNAL */
 
 /** \brief  Initialize the threading system.
-    
+
     This is normally done for you by default when KOS starts. This will also
     initialize all the various synchronization primitives.
     \retval -1              If threads are already initialized.
@@ -757,10 +783,10 @@ int thd_init(void);
 
 
 /** \brief   Shutdown the threading system.
- 
+
     This is done for you by the normal shutdown procedure of KOS. This will
     also shutdown all the various synchronization primitives.
- 
+
     \sa thd_init
 */
 void thd_shutdown(void);

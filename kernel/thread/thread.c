@@ -2,7 +2,7 @@
 
    kernel/thread/thread.c
    Copyright (C) 2000, 2001, 2002, 2003 Megan Potter
-   Copyright (C) 2010, 2016 Lawrence Sebald
+   Copyright (C) 2010, 2016, 2023 Lawrence Sebald
    Copyright (C) 2023 Colton Pawielski
    Copyright (C) 2023, 2024 Falco Girgis
 */
@@ -356,23 +356,21 @@ int thd_remove_from_runnable(kthread_t *thd) {
 /* Creates and initializes the static TLS segment for a thread,
    composed of a Thread Control Block (TCB), followed by .TDATA,
    followed by .TBSS, very carefully ensuring alignment of each
-   subchunk. 
-*/
+   subchunk. */
 static void *thd_create_tls_data(void) {
-    size_t align, tdata_offset, tdata_end, tbss_offset, 
+    size_t align, tdata_offset, tdata_end, tbss_offset,
         tbss_end, align_rem, tls_size;
-    
+
     tcbhead_t *tcbhead;
     void *tdata_segment, *tbss_segment;
 
-    /* Cached and typed local copies of TLS segment data for sizes, 
-       alignments, and initial value data pointer, exported by the 
-       linker script. 
+    /* Cached and typed local copies of TLS segment data for sizes,
+       alignments, and initial value data pointer, exported by the
+       linker script.
 
-       SIZES MUST BE VOLATILE or the optimizer on non-debug builds will 
-       optimize zero-check conditionals away, since why would the 
-       address of a variable be NULL? (Linker script magic, it can be.)
-   */
+       SIZES MUST BE VOLATILE or the optimizer on non-debug builds will
+       optimize zero-check conditionals away, since why would the
+       address of a variable be NULL? (Linker script magic, it can be.) */
     const volatile size_t   tdata_size  = (size_t)(&_tdata_size);
     const volatile size_t   tbss_size   = (size_t)(&_tbss_size);
     const          size_t   tdata_align = tdata_size ? (size_t)_tdata_align : 1;
@@ -380,8 +378,7 @@ static void *thd_create_tls_data(void) {
     const          uint8_t *tdata_start = (const uint8_t *)(&_tdata_start);
 
     /* Each subsegment of the requested memory chunk must be aligned
-       by the largest segment's memory alignment requirements. 
-   */
+       by the largest segment's memory alignment requirements. */
     align = 8;               /* tcbhead_t has to be aligned by 8. */
     if(tdata_align > align)
         align = tdata_align; /* .TDATA segment's alignment */
@@ -392,7 +389,7 @@ static void *thd_create_tls_data(void) {
     tdata_offset = align_to(sizeof(tcbhead_t), align);
     tdata_end    = tdata_offset + tdata_size;
     tbss_offset  = align_to(tdata_end, tbss_align);
-    tbss_end     = tbss_offset + tbss_size; 
+    tbss_end     = tbss_offset + tbss_size;
 
     /* Calculate final aligned size requirement. */
     align_rem = tbss_end % align;
@@ -403,17 +400,17 @@ static void *thd_create_tls_data(void) {
 
     /* Allocate combined chunk with calculated size and alignment.  */
     tcbhead = memalign(align, tls_size);
-    assert(tcbhead);    
-    assert(!((uintptr_t)tcbhead % 8)); 
+    assert(tcbhead);
+    assert(!((uintptr_t)tcbhead % 8));
 
     /* Since we aren't using either member within it, zero out tcbhead. */
-    memset(tcbhead, 0, sizeof(tcbhead_t));  
+    memset(tcbhead, 0, sizeof(tcbhead_t));
 
     /* Initialize .TDATA */
-    if(tdata_size) { 
+    if(tdata_size) {
         tdata_segment = (uint8_t *)tcbhead + tdata_offset;
 
-        /* Verify proper alignment. */   
+        /* Verify proper alignment. */
         assert(!((uintptr_t)tdata_segment % tdata_align));
 
         /* Initialize tdata_segment with .tdata bytes from ELF. */
@@ -421,12 +418,12 @@ static void *thd_create_tls_data(void) {
     }
 
     /* Initialize .TBSS */
-    if(tbss_size) { 
-        tbss_segment = (uint8_t *)tcbhead + tbss_offset; 
+    if(tbss_size) {
+        tbss_segment = (uint8_t *)tcbhead + tbss_offset;
 
         /* Verify proper alignment. */
         assert(!((uintptr_t)tbss_segment % tbss_align));
-           
+
         /* Zero-initialize tbss_segment. */
         memset(tbss_segment, 0, tbss_size);
     }
@@ -617,6 +614,20 @@ int thd_set_prio(kthread_t *thd, prio_t prio) {
     /* Set the new priority */
     thd->prio = prio;
     return 0;
+}
+
+prio_t thd_get_prio(kthread_t *thd) {
+    if(!thd)
+        thd = thd_current;
+
+    return thd->prio;
+}
+
+tid_t thd_get_id(kthread_t *thd) {
+    if(!thd)
+        thd = thd_current;
+
+    return thd->tid;
 }
 
 /*****************************************************************************/
@@ -925,10 +936,16 @@ int thd_detach(kthread_t *thd) {
 /*****************************************************************************/
 /* Retrieve / set thread label */
 const char *thd_get_label(kthread_t *thd) {
+    if(!thd)
+        thd = thd_current;
+
     return thd->label;
 }
 
-void thd_set_label(kthread_t *thd, const char *restrict label) {
+void thd_set_label(kthread_t *__RESTRICT thd, const char *__RESTRICT label) {
+    if(!thd)
+        thd = thd_current;
+
     strncpy(thd->label, label, sizeof(thd->label) - 1);
 }
 
@@ -939,10 +956,16 @@ kthread_t *thd_get_current(void) {
 
 /* Retrieve / set thread pwd */
 const char *thd_get_pwd(kthread_t *thd) {
+    if(!thd)
+        thd = thd_current;
+
     return thd->pwd;
 }
 
-void thd_set_pwd(kthread_t *thd, const char *restrict pwd) {
+void thd_set_pwd(kthread_t *__RESTRICT thd, const char *__RESTRICT pwd) {
+    if(!thd)
+        thd = thd_current;
+
     strncpy(thd->pwd, pwd, sizeof(thd->pwd) - 1);
 }
 

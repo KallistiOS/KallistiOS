@@ -22,7 +22,7 @@ please see the README.KOS file in the doc directory.
 Contributors list (under the normal KOS license):
 -------------------------------------------------
 Megan Potter: 1997, 2000, 2001, 2002, 2003, 2004
-Lawrence Sebald: 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023
+Lawrence Sebald: 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024
 Sam Steele: 2004
 Gil Megidish: 2002
 Florian Schulze: 2002
@@ -51,26 +51,6 @@ Paul Cercueil: 2023, 2024
 
 Files with Specific licenses:
 -----------------------------
-include/pthread.h:
-/*  pthread.h
- *
- *  Written by Joel Sherrill <joel@OARcorp.com>.
- *
- *  COPYRIGHT (c) 1989-2000.
- *  On-Line Applications Research Corporation (OAR).
- *
- *  Permission to use, copy, modify, and distribute this software for any
- *  purpose without fee is hereby granted, provided that this entire notice
- *  is included in all copies of any software which is or includes a copy
- *  or modification of this software.
- *
- *  THIS SOFTWARE IS BEING PROVIDED "AS IS", WITHOUT ANY EXPRESS OR IMPLIED
- *  WARRANTY.  IN PARTICULAR,  THE AUTHOR MAKES NO REPRESENTATION
- *  OR WARRANTY OF ANY KIND CONCERNING THE MERCHANTABILITY OF THIS
- *  SOFTWARE OR ITS FITNESS FOR ANY PARTICULAR PURPOSE.
- *
- */
-
 kernel/libc/koslib/realpath.c:
 /*
  * Copyright (c) 2003 Constantin S. Svintsoff <kostik@iclub.nsu.ru>
