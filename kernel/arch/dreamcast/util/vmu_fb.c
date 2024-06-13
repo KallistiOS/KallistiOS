@@ -11,9 +11,6 @@
 #include <dc/maple/vmu.h>
 #include <dc/vmu_fb.h>
 
-#define GENMASK(h, l) \
-    (((unsigned int)-1 << (l)) & ((unsigned int)-1 >> (31 - (h))))
-
 static uint64_t extract_bits(const uint8_t *data,
                              unsigned int offt, unsigned int w) {
     uint32_t tmp, lsb, nb_bits;
