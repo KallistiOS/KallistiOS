@@ -23,6 +23,9 @@
 
 #include "browse.h"
 
+#define SCREEN_WIDTH 640
+#define SCREEN_HEIGHT 480
+
 int main(int argc, char **argv) {
     cont_state_t *cond;
     
@@ -103,15 +106,14 @@ int main(int argc, char **argv) {
                     /* Navigate to it and get the directory contents */
                     memset(directory_temp, 0, BUFFER_LENGTH);
                     fs_path_append(directory_temp, current_directory, BUFFER_LENGTH);
-                    printf("%s\n", directory_temp);
+                    //printf("%s\n", directory_temp);
                     fs_path_append(directory_temp, directory_contents[selector_index].filename, BUFFER_LENGTH);
-                    printf("%s\n", directory_temp);
-
-
+                    //printf("%s\n", directory_temp);
 
                     content_count = browse_directory(directory_temp, directory_contents);
                     if(content_count > 0) {
                         realpath(directory_temp, current_directory);
+                        //strcpy(current_directory, directory_temp);
                         changed_directory = true;
                         selector_index = 0;
                     } 
@@ -293,12 +295,12 @@ static int browse_directory(char *directory, directory_file_t directory_contents
 }
 
 static void prompt_message(char *message, bool highlight_yes) {
-    int x = 20 + 24, y = 350;
+    int x = 20 + BFONT_HEIGHT, y = 350;
     int color = 1;
 
     bfont_set_foreground_color(0xFFFFFFFF);
     bfont_set_background_color(0x00000000);
-    bfont_draw_str(vram_s + y*640+x, 640, color, message);
+    bfont_draw_str(vram_s + y*SCREEN_WIDTH+x, SCREEN_WIDTH, color, message);
 
     if(highlight_yes) {
         bfont_set_foreground_color(0x00000000);
@@ -309,7 +311,7 @@ static void prompt_message(char *message, bool highlight_yes) {
         bfont_set_background_color(0x00000000);
     }
     y += 24;
-    bfont_draw_str(vram_s + y*640+x, 640, color, "YES");
+    bfont_draw_str(vram_s + y*SCREEN_WIDTH+x, SCREEN_WIDTH, color, "YES");
 
     if(highlight_yes) {
         bfont_set_foreground_color(0xFFFFFFFF);
@@ -320,20 +322,20 @@ static void prompt_message(char *message, bool highlight_yes) {
         bfont_set_background_color(0xFFFFFFFF);
     }
     y += 24;
-    bfont_draw_str(vram_s + y*640+x, 640, color, "NO");
+    bfont_draw_str(vram_s + y*SCREEN_WIDTH+x, SCREEN_WIDTH, color, "NO");
 }
 
 static void draw_directory_selector(int index) {
-    int x = 24, y = 24 + (index  *24);
+    int x = BFONT_HEIGHT, y = BFONT_HEIGHT + (index * BFONT_HEIGHT);
     int color = 1;
 
     bfont_set_foreground_color(0xFFFFFFFF);
     bfont_set_background_color(0x00000000);
-    bfont_draw_str(vram_s + y*640+x, 640, color, ">");
+    bfont_draw_str(vram_s + y*SCREEN_WIDTH+x, SCREEN_WIDTH, color, ">");
 }
 
 static void draw_directory_contents(directory_file_t directory_contents[], int num) {
-    int x = 20 + 24, y = 24;
+    int x = 20 + BFONT_HEIGHT, y = BFONT_HEIGHT;
     int color = 1;
     int count = 0;
     char str[80];
@@ -342,16 +344,16 @@ static void draw_directory_contents(directory_file_t directory_contents[], int n
     bfont_set_background_color(0x00000000);
     for(int i=0;i<num;i++) {
         if(directory_contents[i].is_dir) {
-             sprintf(str, "%-40s%s", directory_contents[i].filename, "< DIR >");
-             bfont_draw_str(vram_s + y*640+x, 640, color, str);
+            snprintf(str, sizeof(str), "%-40s%s", directory_contents[i].filename, "< DIR >");
+            bfont_draw_str(vram_s + y*SCREEN_WIDTH+x, SCREEN_WIDTH, color, str);
         }
         else {
-            bfont_draw_str(vram_s + y*640+x, 640, color, directory_contents[i].filename);
+            bfont_draw_str(vram_s + y*SCREEN_WIDTH+x, SCREEN_WIDTH, color, directory_contents[i].filename);
         }
         count++;
-        y += 24;
+        y += BFONT_HEIGHT;
 
-        if(y >= (480 - 24))
+        if(y >= (SCREEN_HEIGHT - BFONT_HEIGHT))
             break;
     }
 }
@@ -369,11 +371,6 @@ static cont_state_t *get_cont_state() {
     return NULL;
 }
 
-static int button_pressed(unsigned int current_buttons, unsigned int changed_buttons, unsigned int button) {
-    if (changed_buttons & button) {
-        if (current_buttons & button)
-            return 1;
-    }
-
-    return 0;
+static bool button_pressed(unsigned int current_buttons, unsigned int changed_buttons, unsigned int button) {
+    return !!(changed_buttons & current_buttons & button);
 }

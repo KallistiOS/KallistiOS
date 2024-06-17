@@ -25,6 +25,6 @@ static void draw_directory_contents(directory_file_t directory_contents[], int n
 static int browse_directory(char *directory, directory_file_t directory_contents[]);
 
 static cont_state_t *get_cont_state();
-static int button_pressed(unsigned int current_buttons, unsigned int changed_buttons, unsigned int button);
+static bool button_pressed(unsigned int current_buttons, unsigned int changed_buttons, unsigned int button);
 
 #endif
