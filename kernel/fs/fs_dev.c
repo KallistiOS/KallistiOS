@@ -25,7 +25,11 @@ typedef struct dev_hnd {
 static dev_hnd_t dev_root_hnd = {0};
 static dirent_t dev_readdir_dirent;
 
-static dirent_t *dev_root_readdir(dev_hnd_t * handle) {
+/* Add .. path */
+static int readdir_idx = 0;
+static dirent_t dev_dotdot_dirent;
+
+static dirent_t *dev_root_readdir(dev_hnd_t *handle) {
     nmmgr_handler_t *nmhnd;
     nmmgr_list_t    *nmhead;
     int         cnt;
@@ -54,14 +58,18 @@ static dirent_t *dev_root_readdir(dev_hnd_t * handle) {
     return &dev_readdir_dirent;
 }
 
-
 dirent_t *dev_readdir(void *f) {
-    dev_hnd_t * hnd = (dev_hnd_t *)f;
+    dev_hnd_t *hnd = (dev_hnd_t *)f;
 
     if((!hnd) || (hnd != &dev_root_hnd)
         || (hnd->refcnt <= 0)) {
         errno = EBADF;
         return NULL;
+    }
+
+    if(readdir_idx == 0) {
+        readdir_idx++;
+        return &dev_dotdot_dirent;
     }
 
     return dev_root_readdir(hnd);
@@ -78,6 +86,7 @@ int dev_rewinddir(void *f) {
 
     /* Reset our position */
     hnd->hnd = 0;
+    readdir_idx = 0;
 
     return 0;
 }
@@ -113,6 +122,11 @@ int dev_close(void *f) {
     }
 
     hnd->refcnt--;
+
+    /* Reset our position */
+    hnd->hnd = 0;
+    readdir_idx = 0;
+
     return 0;
 }
 
@@ -160,6 +174,13 @@ static vfs_handler_t vh = {
 int fs_dev_init(void) {
     dev_root_hnd.handler = &vh.nmmgr;
     dev_root_hnd.refcnt = 0;
+
+    /* Add .. path support */
+    strcpy(dev_dotdot_dirent.name, "..");
+    dev_dotdot_dirent.attr = O_DIR;
+    dev_dotdot_dirent.size = -1;
+    dev_dotdot_dirent.time = 0;
+
     return nmmgr_handler_add(&vh.nmmgr);
 }
 

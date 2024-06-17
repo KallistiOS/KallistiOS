@@ -70,6 +70,7 @@ typedef struct vmu_dh_str {
 
     int rootdir;                        /* 1 if we're reading /vmu */
     dirent_t dirent;                    /* Dirent to pass back */
+    int idx;                            /* Current index for readdir */
     vmu_dir_t *dirblocks;               /* Copy of all directory blocks */
     uint16 entry;                       /* Current dirent */
     uint16 dircnt;                      /* Count of dir entries */
@@ -330,8 +331,8 @@ static int vmu_close(void * hnd) {
 
     switch(fh->strtype) {
         case VMU_DIR: {
-            vmu_dh_t * dir = (vmu_dh_t *)hnd;
-
+            vmu_dh_t *dir = (vmu_dh_t *)hnd;
+            dir->idx = 0;
             if(dir->dirblocks)
                 free(dir->dirblocks);
 
@@ -532,8 +533,15 @@ static dirent_t *vmu_readdir(void * fd) {
     if(dh->entry >= dh->dircnt)
         return NULL;
 
-    /* printf("VMUFS: reading non-null entry %d\n", dh->entry); */
-
+    if(dh->idx == 0) {
+        strcpy(dh->dirent.name, "..");
+        dh->dirent.attr = O_DIR;
+        dh->dirent.size = -1;
+        dh->dirent.time = 0;
+        dh->idx++;
+        return &dh->dirent;
+    }
+    
     /* Ok, extract it and fill the dirent struct */
     dir = dh->dirblocks + dh->entry;
 
@@ -657,7 +665,7 @@ static int vmu_rewinddir(void * fd) {
     /* Rewind to the beginning of the directory. */
     dh = (vmu_dh_t*)fd;
     dh->entry = 0;
-
+    dh->idx = 0;
     /* TODO: Technically, we need to re-scan the directory here, but for now we
        will punt on that requirement. */
 

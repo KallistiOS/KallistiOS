@@ -569,12 +569,13 @@ static iso_dirent_t *find_object_path(const char *fn, int dir, iso_dirent_t *sta
 /* File handles.. I could probably do this with a linked list, but I'm just
    too lazy right now. =) */
 static struct {
-    uint32      first_extent;   /* First sector */
-    int     dir;        /* >0 if a directory */
-    uint32      ptr;        /* Current read position in bytes */
-    uint32      size;       /* Length of file in bytes */
-    dirent_t    dirent;     /* A static dirent to pass back to clients */
-    int     broken;     /* >0 if the CD has been swapped out since open */
+    uint32_t first_extent;  /* First sector */
+    uint32_t ptr;           /* Current read position in bytes */
+    uint32_t size;          /* Length of file in bytes */
+    dirent_t dirent;        /* A static dirent to pass back to clients */
+    int dir;                /* >0 if a directory */
+    int broken;             /* >0 if the CD has been swapped out since open */
+    int idx;                /* Current index for readdir */
 } fh[FS_CD_MAX_FILES];
 
 /* Mutex for file handles */
@@ -649,6 +650,7 @@ static int iso_close(void * h) {
     if(fd < FS_CD_MAX_FILES) {
         /* No need to lock the mutex: this is an atomic op */
         fh[fd].first_extent = 0;
+        fh[fd].idx = 0;
     }
     return 0;
 }
@@ -827,8 +829,17 @@ static dirent_t *iso_readdir(void * h) {
         return NULL;
     }
 
+    if(fh[fd].idx == 0) {
+        strcpy(fh[fd].dirent.name, "..");
+        fh[fd].dirent.attr = O_DIR;
+        fh[fd].dirent.size = -1;
+        fh[fd].dirent.time = 0;
+        fh[fd].idx++;
+        return &fh[fd].dirent;
+    }
+
     /* Scan forwards until we find the next valid entry, an
-       end-of-entry mark, or run out of dir size. */
+    end-of-entry mark, or run out of dir size. */
     c = -1;
     de = NULL;
 
@@ -912,6 +923,7 @@ static int iso_rewinddir(void * h) {
 
     /* Rewind to the beginning of the directory. */
     fh[fd].ptr = 0;
+    fh[fd].idx = 0;
     return 0;
 }
 
