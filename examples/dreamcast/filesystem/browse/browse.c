@@ -310,7 +310,7 @@ static void prompt_message(char *message, bool highlight_yes) {
         bfont_set_foreground_color(0xFFFFFFFF);
         bfont_set_background_color(0x00000000);
     }
-    y += 24;
+    y += BFONT_HEIGHT;
     bfont_draw_str(vram_s + y*SCREEN_WIDTH+x, SCREEN_WIDTH, color, "YES");
 
     if(highlight_yes) {
@@ -321,7 +321,7 @@ static void prompt_message(char *message, bool highlight_yes) {
         bfont_set_foreground_color(0x00000000);
         bfont_set_background_color(0xFFFFFFFF);
     }
-    y += 24;
+    y += BFONT_HEIGHT;
     bfont_draw_str(vram_s + y*SCREEN_WIDTH+x, SCREEN_WIDTH, color, "NO");
 }
 
