@@ -73,14 +73,14 @@ typedef struct diritem {
     char    name[32];
     int size;
 } diritem_t;
-
 typedef struct dirlist {
-    diritem_t  *items;
-    int        cnt;
-    int        ptr;
-    int        idx;      /* Current index for readdir */
-    dirent_t   dirent;
-    mutex_t    mutex;
+    diritem_t   * items;
+    int     cnt;
+    int     ptr;
+
+    dirent_t    dirent;
+
+    mutex_t     mutex;
 } dirlist_t;
 
 /* We'll have one of these for each opened pipe */
@@ -165,6 +165,7 @@ int fs_pty_create(char * buffer, int maxbuflen, file_t * master_out, file_t * sl
     LIST_INSERT_HEAD(&ptys, master, list);
     LIST_INSERT_HEAD(&ptys, slave, list);
     mutex_unlock(&list_mutex);
+
 
     /* Call back up to fs to open two file descriptors */
     sprintf(mname, "/pty/ma%02x", master->id);
@@ -405,14 +406,11 @@ static void * pty_open(vfs_handler_t * vfs, const char * fn, int mode) {
 }
 
 /* Close pty or dirlist */
-static int pty_close(void *h) {
-    pipefd_t *fdobj;
+static int pty_close(void * h) {
+    pipefd_t * fdobj;
 
     assert(h);
     fdobj = (pipefd_t *)h;
-    if(fdobj->mode & O_DIR) {
-        fdobj->d.d->idx = 0;
-    }
 
     if(fdobj->type == PF_PTY) {
         /* De-ref this end of it */
@@ -632,9 +630,9 @@ static size_t pty_total(void * h) {
 }
 
 /* Read a directory entry */
-static dirent_t *pty_readdir(void *h) {
-    pipefd_t  *fdobj = (pipefd_t *)h;
-    dirlist_t *dl;
+static dirent_t * pty_readdir(void * h) {
+    pipefd_t * fdobj = (pipefd_t *)h;
+    dirlist_t * dl;
 
     assert(h);
 
@@ -649,15 +647,6 @@ static dirent_t *pty_readdir(void *h) {
         return NULL;
     }
 
-    if(dl->idx == 0) {
-        strcpy(dl->dirent.name, "..");
-        dl->dirent.attr = O_DIR;
-        dl->dirent.size = -1;
-        dl->dirent.time = 0;
-        dl->idx++;
-        return &dl->dirent;
-    }
-    
     dl->dirent.size = dl->items[dl->ptr].size;
     strcpy(dl->dirent.name, dl->items[dl->ptr].name);
     dl->dirent.time = 0;
@@ -680,8 +669,6 @@ static int pty_rewinddir(void *h) {
 
     dl = fdobj->d.d;
     dl->ptr = 0;
-    dl->idx = 0;
-
     return 0;
 }
 

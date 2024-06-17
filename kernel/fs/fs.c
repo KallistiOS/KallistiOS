@@ -43,9 +43,10 @@ something like this:
 /* File handle structure; this is an entirely internal structure so it does
    not go in a header file. */
 typedef struct fs_hnd {
-    vfs_handler_t   *handler;   /* Handler */
-    void *      hnd;        /* Handler-internal */
-    int     refcnt;     /* Reference count */
+    vfs_handler_t *handler;   /* Handler */
+    void *hnd;   /* Handler-internal */
+    int refcnt;  /* Reference count */
+    int idx;     /* Current index for readdir */
 } fs_hnd_t;
 
 /* The global file descriptor table */
@@ -55,6 +56,9 @@ fs_hnd_t * fd_table[FD_SETSIZE] = { NULL };
 static fs_hnd_t * fs_root_opendir(void) {
     return calloc(1, sizeof(fs_hnd_t));
 }
+
+/* Support . && .. path */
+static dirent_t dot_dirent;
 
 /* Not thread-safe right now */
 static dirent_t root_readdir_dirent;
@@ -333,12 +337,14 @@ static fs_hnd_t * fs_map_hnd(file_t fd) {
 /* Close a file and clean up the handle */
 int fs_close(file_t fd) {
     int retval;
-    fs_hnd_t * hnd = fs_map_hnd(fd);
+    fs_hnd_t *hnd = fs_map_hnd(fd);
 
     if(!hnd) {
       errno = EBADF;
       return -1;
     }
+
+    hnd->idx = 0;
 
     /* Deref it and remove it from our table */
     retval = fs_hnd_unref(hnd);
@@ -518,7 +524,27 @@ dirent_t *fs_readdir(file_t fd) {
         return NULL;
     }
 
-    return h->handler->readdir(h->hnd);
+    if((h->handler->nmmgr.flags & NMMGR_FLAGS_DOT_DIRS) == NMMGR_FLAGS_DOT_DIRS)
+        return h->handler->readdir(h->hnd);
+    else {
+        if(h->idx == 0) {
+            strcpy(dot_dirent.name, ".");
+            dot_dirent.attr = O_DIR;
+            dot_dirent.size = -1;
+            dot_dirent.time = 0;
+            h->idx++;
+            return &dot_dirent;
+        } else if(h->idx == 1) {
+            strcpy(dot_dirent.name, "..");
+            dot_dirent.attr = O_DIR;
+            dot_dirent.size = -1;
+            dot_dirent.time = 0;
+            h->idx++;
+            return &dot_dirent;
+        } else {
+            return h->handler->readdir(h->hnd);
+        }
+    }
 }
 
 int fs_vioctl(file_t fd, int cmd, va_list ap) {
@@ -878,6 +904,8 @@ int fs_rewinddir(file_t fd) {
         errno = ENOSYS;
         return -1;
     }
+
+    h->idx = 0;
 
     return h->handler->rewinddir(h->hnd);
 }

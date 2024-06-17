@@ -84,7 +84,7 @@ typedef struct alias_handler {
 
 /* Version codes ('version') have two pieces: a major and minor revision.
    A major revision (top 16 bits) means that the interfaces are totally
-   incompatible. A minor revision (lower 16 bits) diffrentiates between
+   incompatible. A minor revision (lower 16 bits) differentiates between
    mostly-compatible but newer/older revisions of the implementing code. */
 
 /* Flag bits */
@@ -102,6 +102,11 @@ typedef struct alias_handler {
     \ingroup system_namemgr
 */
 #define NMMGR_FLAGS_ALIAS       0x00000004
+
+/** \brief  This structure already contains . and .. directories.
+    \ingroup system_namemgr
+*/
+#define NMMGR_FLAGS_DOT_DIRS    0x00000008
 
 /** \defgroup   nmmgr_types     Handler Types
     \brief                      Name handler types

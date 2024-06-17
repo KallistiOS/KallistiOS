@@ -96,7 +96,6 @@ static struct {
     uint32      ptr;        /* Current read position in bytes */
     dirent_t    dirent;     /* A static dirent to pass back to clients */
     int         omode;      /* Open mode */
-    int         idx;        /* Current index for readdir */
 } fh[FS_RAMDISK_MAX_FILES];
 
 /* Mutex for file system structs */
@@ -372,12 +371,6 @@ static int ramdisk_close(void * h) {
            open. Remove the openfor status. */
         if(f->usage == 0)
             f->openfor = OPENFOR_NOTHING;
-
-        /* Reset the directory index if the handle corresponds to a 
-           directory */
-        if (fh[fd].dir) {
-            fh[fd].idx = 0;
-        }
     }
 
     mutex_unlock(&rd_mutex);
@@ -535,46 +528,32 @@ static size_t ramdisk_total(void * h) {
 }
 
 /* Read a directory entry */
-static dirent_t *ramdisk_readdir(void *h) {
-    rd_file_t *f;
-    dirent_t  *rv = NULL;
-    file_t    fd = (file_t)h;
+static dirent_t *ramdisk_readdir(void * h) {
+    rd_file_t   * f;
+    dirent_t    * rv = NULL;
+    file_t      fd = (file_t)h;
 
     mutex_lock(&rd_mutex);
 
-    if(fd < FS_RAMDISK_MAX_FILES && fh[fd].dir) {
-        /* If it's the first call, return `..` */
-        if(fh[fd].idx == 0) {
-            strcpy(fh[fd].dirent.name, "..");
+    if(fd < FS_RAMDISK_MAX_FILES && fh[fd].file != NULL && fh[fd].ptr != 0 && fh[fd].dir) {
+        /* Find the current file and advance to the next */
+        f = (rd_file_t *)fh[fd].ptr;
+        fh[fd].ptr = (uint32)LIST_NEXT(f, dirlist);
+
+        /* Copy out the requested data */
+        strcpy(fh[fd].dirent.name, f->name);
+        fh[fd].dirent.time = 0;
+
+        if(f->type == STAT_TYPE_DIR) {
             fh[fd].dirent.attr = O_DIR;
             fh[fd].dirent.size = -1;
-            fh[fd].dirent.time = 0;
-            fh[fd].idx++;
-            rv = &fh[fd].dirent;
-        } else {
-            /* Find the current file and advance to the next */
-            if(fh[fd].file != NULL && fh[fd].ptr != 0) {
-                f = (rd_file_t *)fh[fd].ptr;
-                fh[fd].ptr = (uint32)LIST_NEXT(f, dirlist);
-
-                /* Copy out the requested data */
-                strcpy(fh[fd].dirent.name, f->name);
-                fh[fd].dirent.time = 0;
-
-                if(f->type == STAT_TYPE_DIR) {
-                    fh[fd].dirent.attr = O_DIR;
-                    fh[fd].dirent.size = -1;
-                }
-                else {
-                    fh[fd].dirent.attr = 0;
-                    fh[fd].dirent.size = f->size;
-                }
-
-                rv = &fh[fd].dirent;
-            } else {
-                fh[fd].idx = 0; /* Reset the index for readdir */
-            }
         }
+        else {
+            fh[fd].dirent.attr = 0;
+            fh[fd].dirent.size = f->size;
+        }
+
+        rv = &fh[fd].dirent;
     }
     else {
         errno = EBADF;
@@ -718,8 +697,6 @@ static int ramdisk_rewinddir(void * h) {
     else {
         /* Rewind to the first file. */
         fh[fd].ptr = (uint32)LIST_FIRST((rd_dir_t *)fh[fd].file->data);
-        /* Reset the index for readdir */
-        fh[fd].idx = 0;  
     }
 
     mutex_unlock(&rd_mutex);

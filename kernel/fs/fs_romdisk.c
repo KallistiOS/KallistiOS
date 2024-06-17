@@ -92,7 +92,7 @@ static struct {
 } fh[FS_ROMDISK_MAX_FILES];
 
 /* File types */
-#define ROMFH_HRD   0
+#define ROMFH_HRD   0 /* . or .. dirs */
 #define ROMFH_DIR   1
 #define ROMFH_MASK  3
 
@@ -492,7 +492,7 @@ static vfs_handler_t vh = {
         { 0 },                  /* name */
         0,                      /* in-kernel */
         0x00010000,             /* Version 1.0 */
-        NMMGR_FLAGS_NEEDSFREE,  /* We malloc each VFS struct */
+        NMMGR_FLAGS_NEEDSFREE | NMMGR_FLAGS_DOT_DIRS,  /* We malloc each VFS struct */
         NMMGR_TYPE_VFS,         /* VFS handler */
         NMMGR_LIST_INIT         /* list */
     },
