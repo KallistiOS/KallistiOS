@@ -166,7 +166,6 @@ int fs_pty_create(char * buffer, int maxbuflen, file_t * master_out, file_t * sl
     LIST_INSERT_HEAD(&ptys, slave, list);
     mutex_unlock(&list_mutex);
 
-
     /* Call back up to fs to open two file descriptors */
     sprintf(mname, "/pty/ma%02x", master->id);
     sprintf(sname, "/pty/sl%02x", slave->id);
@@ -411,7 +410,9 @@ static int pty_close(void *h) {
 
     assert(h);
     fdobj = (pipefd_t *)h;
-    fdobj->d.d->idx = 0;
+    if(fdobj->mode & O_DIR) {
+        fdobj->d.d->idx = 0;
+    }
 
     if(fdobj->type == PF_PTY) {
         /* De-ref this end of it */
@@ -680,6 +681,7 @@ static int pty_rewinddir(void *h) {
     dl = fdobj->d.d;
     dl->ptr = 0;
     dl->idx = 0;
+
     return 0;
 }
 
