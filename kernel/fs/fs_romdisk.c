@@ -381,7 +381,9 @@ static dirent_t *romdisk_readdir(void * h) {
     strcpy(fh[fd].dirent.name, fhdr->filename);
     fh[fd].dirent.time = 0;
 
-    if((type & 3) == 1) {
+    if((type & 3) == 1 ||
+        !strcmp(fh[fd].dirent.name, ".") ||
+        !strcmp(fh[fd].dirent.name, "..")) {
         fh[fd].dirent.attr = O_DIR;
         fh[fd].dirent.size = -1;
     }
