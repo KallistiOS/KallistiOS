@@ -1,6 +1,16 @@
 # KallistiOS environment variable settings. These are the shared pieces
 # for the Dreamcast(tm) platform.
 
+# Add the default external DC tools path if it isn't already set.
+if [ -z "${DC_TOOLS_BASE}" ] ; then
+    export DC_TOOLS_BASE="${KOS_CC_BASE}/../bin"
+fi
+
+# Add the external DC tools dir to the path if it is not already.
+if [[ ":$PATH:" != *":${DC_TOOLS_BASE}:"* ]]; then
+  export PATH="${PATH}:${DC_TOOLS_BASE}"
+fi
+
 # Default the SH4 floating point precision if it isn't already set.
 if [ -z "${KOS_SH4_PRECISION}" ] ; then
     export KOS_SH4_PRECISION="-m4-single-only"

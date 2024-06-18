@@ -67,6 +67,9 @@ extern uint32 _arch_mem_top;
 /** \brief  Default thread stack size. */
 #define THD_STACK_SIZE  32768
 
+/** \brief Main/kernel thread's stack size. */
+#define THD_KERNEL_STACK_SIZE (64 * 1024)
+
 /** \brief  Default video mode. */
 #define DEFAULT_VID_MODE    DM_640x480
 
