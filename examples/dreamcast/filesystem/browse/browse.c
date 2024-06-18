@@ -46,9 +46,6 @@ int main(int argc, char **argv) {
     /* Mount the SD card if one is attached to the Dreamcast */
     mounted_sd = mount_sd_fat();
 
-    // mount_romdisk("/cd/stage1.img", "/stage1");
-    // mount_romdisk("/cd/stage2.img", "/stage2");
-
     /* Start off at the root of the dreamcast and get its contents */
     strcpy(current_directory, "/");
     content_count = browse_directory(current_directory, directory_contents);
@@ -106,14 +103,11 @@ int main(int argc, char **argv) {
                     /* Navigate to it and get the directory contents */
                     memset(directory_temp, 0, BUFFER_LENGTH);
                     fs_path_append(directory_temp, current_directory, BUFFER_LENGTH);
-                    //printf("%s\n", directory_temp);
                     fs_path_append(directory_temp, directory_contents[selector_index].filename, BUFFER_LENGTH);
-                    //printf("%s\n", directory_temp);
 
                     content_count = browse_directory(directory_temp, directory_contents);
                     if(content_count > 0) {
                         realpath(directory_temp, current_directory);
-                        //strcpy(current_directory, directory_temp);
                         changed_directory = true;
                         selector_index = 0;
                     } 
@@ -203,13 +197,13 @@ static int mount_sd_fat() {
         return 0;
     }
 
-    if(fs_fat_init()) {
-        fprintf(stderr, "Could not initialize fs_fat!\n");
-        return 0;
-    }
-        
     if(sd_blockdev_for_partition(0, &sd_dev, &partition_type)) {
         fprintf(stderr, "Could not find the first partition on the SD card!\n");
+        return 0;
+    }
+
+    if(fs_fat_init()) {
+        fprintf(stderr, "Could not initialize fs_fat!\n");
         return 0;
     }
 
@@ -228,18 +222,6 @@ static void unmount_sd_fat() {
     fs_fat_unmount("/sd");
     fs_fat_shutdown();
     sd_shutdown();
-}
-
-static int mount_romdisk(char *filepath, char *mountpoint) {
-    void *buffer = NULL;
-    ssize_t filesize = fs_load(filepath, &buffer);
-
-    if(filesize != -1) {
-        fs_romdisk_mount(mountpoint, buffer, 1);
-        return 1;
-    }
-    else
-        return 0;
 }
 
 static void show_prompt(char *current_directory, bool mounted_sd, bool highlight_yes) {
@@ -270,7 +252,7 @@ static void delete_file(char *filename, bool mounted_sd) {
     }
 }
 
-static int browse_directory(char *directory, directory_file_t directory_contents[]) {
+static int browse_directory(char *directory, directory_file_t *directory_contents) {
     int count = 0;
     DIR *d;
     struct dirent *entry;
@@ -334,7 +316,7 @@ static void draw_directory_selector(int index) {
     bfont_draw_str(vram_s + y*SCREEN_WIDTH+x, SCREEN_WIDTH, color, ">");
 }
 
-static void draw_directory_contents(directory_file_t directory_contents[], int num) {
+static void draw_directory_contents(directory_file_t *directory_contents, int num) {
     int x = 20 + BFONT_HEIGHT, y = BFONT_HEIGHT;
     int color = 1;
     int count = 0;
