@@ -97,7 +97,7 @@ void draw_back(void) {
     vert.v = 0.0f;
     pvr_prim(&vert, sizeof(vert));
 
-    vert.x = 1.0f;
+    vert.x = 0.0f;
     vert.y = 480.0f;
     vert.z = 1.0f;
     vert.u = 0.0f;
