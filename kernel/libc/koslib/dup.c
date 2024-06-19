@@ -12,7 +12,6 @@ int dup(int oldfd) {
     return fs_dup(oldfd);
 }
 
-int dup2(int oldfd, int newfd)
-{
+int dup2(int oldfd, int newfd) {
     return fs_dup2(oldfd, newfd);
 }
