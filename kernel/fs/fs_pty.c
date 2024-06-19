@@ -122,8 +122,10 @@ int fs_pty_create(char * buffer, int maxbuflen, file_t * master_out, file_t * sl
     /* Alloc new structs */
     master = malloc(sizeof(ptyhalf_t));
 
-    if(!master)
+    if(!master) {
+        errno = ENOMEM;
         return -1;
+    }
 
     memset(master, 0, sizeof(ptyhalf_t));
     slave = malloc(sizeof(ptyhalf_t));
@@ -166,7 +168,6 @@ int fs_pty_create(char * buffer, int maxbuflen, file_t * master_out, file_t * sl
     LIST_INSERT_HEAD(&ptys, slave, list);
     mutex_unlock(&list_mutex);
 
-
     /* Call back up to fs to open two file descriptors */
     sprintf(mname, "/pty/ma%02x", master->id);
     sprintf(sname, "/pty/sl%02x", slave->id);
@@ -174,7 +175,7 @@ int fs_pty_create(char * buffer, int maxbuflen, file_t * master_out, file_t * sl
 
     if(boot) {
         /* Get the slave channel setup first, and dup it across
-           our stdin, stdout, and stderr. */
+           our stdout and stderr. */
         fs_dup2(*slave_out, 1);
         fs_dup2(*slave_out, 2);
     }
@@ -502,8 +503,9 @@ static ssize_t pty_read(void * h, void * buf, size_t bytes) {
     }
 
     /* Special case the unattached console */
-    if(ph->id == 0 && !ph->master && ph->other->refcnt == 0)
+    if(ph->id == 0 && !ph->master && ph->other->refcnt == 0) {
         return pty_read_serial(fdobj, ph, buf, bytes);
+    }
 
     /* Lock the ptyhalf */
     mutex_lock(&ph->mutex);
@@ -563,8 +565,7 @@ static ssize_t pty_write(void * h, const void * buf, size_t bytes) {
     /* Special case the unattached console */
     if(ph->id == 0 && !ph->master && ph->other->refcnt == 0) {
         /* This actually blocks, but fooey.. :) */
-        // dbgio_write_buffer_xlat((const uint8 *)buf, bytes);
-        dbgio_write_str((const char *)buf);
+        dbgio_write_buffer_xlat((const uint8 *)buf, bytes);
         return bytes;
     }
 
@@ -588,7 +589,6 @@ static ssize_t pty_write(void * h, const void * buf, size_t bytes) {
 
     /* Figure out how much to write */
     avail = PTY_BUFFER_SIZE - ph->cnt;
-
     if(avail < bytes)
         bytes = avail;
 

@@ -363,13 +363,6 @@ ssize_t fs_read(file_t fd, void *buffer, size_t cnt) {
 ssize_t fs_write(file_t fd, const void *buffer, size_t cnt) {
     fs_hnd_t *h;
 
-    // XXX This is a hack to make newlib printf work because it
-    // doesn't like fs_pty. I'll figure out why later...
-    if(fd == 1 || fd == 2) {
-        dbgio_write_buffer_xlat((const uint8 *)buffer, cnt);
-        return cnt;
-    }
-
     h = fs_map_hnd(fd);
 
     if(h == NULL) return -1;
