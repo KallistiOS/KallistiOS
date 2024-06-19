@@ -90,8 +90,7 @@ int main(int argc, char **argv) {
         bfont_draw_str(vram_s + font_height_offset, 640, SHOW_BLACK_BG, 
             "Press A to take a screen shot");
 
-        /* Without this the bfont wont show on the screen */
-        thd_sleep(10);
+        vid_flip(-1);
     }
 
     return 0;

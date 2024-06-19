@@ -85,6 +85,7 @@ GLuint glTextureLoadPVR(char *fname, unsigned char isMipMapped, unsigned char gl
         TEX0 = malloc(texSize);
 
     fread(TEX0, 1, texSize, tex); /* Read in the PVR texture data */
+    fclose(tex);
 
     /* Generate and bind a texture as normal for Open GL */
     glGenTextures(1, &texID);
