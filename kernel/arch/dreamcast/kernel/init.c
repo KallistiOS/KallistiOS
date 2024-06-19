@@ -3,6 +3,7 @@
    init.c
    Copyright (C) 2003 Megan Potter
    Copyright (C) 2015 Lawrence Sebald
+   Copyright (C) 2024 Falco Girgis
 */
 
 #include <stdio.h>
@@ -10,6 +11,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <signal.h>
 #include <kos/dbgio.h>
 #include <kos/init.h>
 #include <kos/platform.h>
@@ -38,6 +40,7 @@ extern int _bss_start, end;
 extern void _init(void);
 extern void _fini(void);
 extern void __verify_newlib_patch();
+extern int _init_signal(void);
 
 void (*__kos_init_early_fn)(void) __attribute__((weak,section(".data"))) = NULL;
 
@@ -254,6 +257,47 @@ void  __weak arch_auto_shutdown(void) {
     rtc_shutdown();
 }
 
+static void signal_irq_handler(irq_t source, irq_context_t *context, void *data) {
+    (void)context;
+    (void)data;
+
+    switch(source) {
+        case EXC_ILLEGAL_INSTR:
+        case EXC_SLOT_ILLEGAL_INSTR:
+            raise(SIGILL);
+            break;
+
+        /*case EXC_DATA_ADDRESS_READ:*/
+        case EXC_DATA_ADDRESS_WRITE:
+        case EXC_INSTR_ADDRESS:
+            raise(SIGSEGV);
+            break;
+
+        case EXC_FPU:
+        case EXC_SLOT_FPU:
+        case EXC_GENERAL_FPU:
+            raise(SIGFPE);
+            break;
+
+        default: assert(false);
+    }
+}
+
+void signals_init(void) {
+    /* Initialize Newlib's internal signal structure. */
+    _init_signal();
+
+    irq_set_handler(EXC_ILLEGAL_INSTR, signal_irq_handler, NULL); 
+    irq_set_handler(EXC_SLOT_ILLEGAL_INSTR, signal_irq_handler, NULL);   
+    irq_set_handler(EXC_INSTR_ADDRESS, signal_irq_handler, NULL);
+    irq_set_handler(EXC_DATA_ADDRESS_WRITE, signal_irq_handler, NULL);
+    irq_set_handler(EXC_FPU, signal_irq_handler, NULL);
+    irq_set_handler(EXC_SLOT_FPU, signal_irq_handler, NULL);
+    irq_set_handler(EXC_GENERAL_FPU, signal_irq_handler, NULL);
+}
+
+KOS_INIT_FLAG_WEAK(signals_init, true);
+
 /* This is the entry point inside the C program */
 void arch_main(void) {
     uint8 *bss_start = (uint8 *)(&_bss_start);
@@ -285,6 +329,8 @@ void arch_main(void) {
     arch_auto_init();
 
     __verify_newlib_patch();
+
+    KOS_INIT_FLAG_CALL(signals_init);
 
     dbglog(DBG_INFO, "\n");
 

@@ -62,6 +62,7 @@ __BEGIN_DECLS
     KOS_INIT_FLAG(flags, INIT_FS_ROMDISK, fs_romdisk_shutdown); \
     KOS_INIT_FLAG(flags, INIT_EXPORT, export_init); \
     KOS_INIT_FLAG_NONE(flags, INIT_NO_SHUTDOWN, kos_shutdown); \
+    KOS_INIT_FLAG(flags, INIT_SIGNALS, signals_init); \
     KOS_INIT_FLAGS_ARCH(flags)
 
 #define __KOS_INIT_FLAGS_1(flags) \
@@ -128,7 +129,7 @@ extern void * __kos_romdisk;
 */
 /** \brief  Default init flags (IRQs on, preemption enabled, romdisks). */
 #define INIT_DEFAULT    (INIT_IRQ | INIT_THD_PREEMPT | INIT_FS_ROMDISK | \
-                         INIT_DEFAULT_ARCH)
+                         INIT_SIGNALS | INIT_DEFAULT_ARCH)
 
 #define INIT_NONE        0x00000000  /**< \brief Don't init optional things */
 #define INIT_IRQ         0x00000001  /**< \brief Enable IRQs at startup */
@@ -140,6 +141,7 @@ extern void * __kos_romdisk;
 #define INIT_EXPORT      0x00000020  /**< \brief Export kernel symbols */
 #define INIT_FS_ROMDISK  0x00000040  /**< \brief Enable support for romdisks */
 #define INIT_NO_SHUTDOWN 0x00000080  /**< \brief Disable hardware shutdown */
+#define INIT_SIGNALS     0x00000100  /**< \brief Enable C signal types */
 /** @} */
 
 __END_DECLS

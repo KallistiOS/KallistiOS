@@ -277,7 +277,7 @@ static timer_val_t timer_getticks(const uint32_t *tns, uint32_t shift) {
         counter2 = TIMER32(tcnts[TMU2]);
         tmu2 = TIMER16(tcrs[TMU2]);
         unf2 = !!(tmu2 & UNF);
-    } while (unf1 != unf2 || counter1 < counter2);
+    } while (__unlikely(unf1 != unf2 || counter1 < counter2));
 
     delta = timer_ms_countdown - counter2;
 

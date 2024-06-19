@@ -6,12 +6,13 @@
 */
 
 #include <stdlib.h>
+#include <signal.h>
 #include <arch/arch.h>
 
 /* abort() causes abnormal/erroneous program termination
    WITHOUT calling the atexit() handlers. This will eventually
    return EXIT_FAILURE as the program's return code. */
 __used void abort(void) {
-    arch_abort();
+   raise(SIGABRT);
 }
 

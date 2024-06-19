@@ -5,6 +5,10 @@
 
 TARGET = nullptr.elf
 OBJS = nullptr.o
+# This is required to tell GCC not to optimize away our
+# NULL dereference and that it can actually be a valid
+# memory address.
+KOS_CFLAGS += -fno-delete-null-pointer-checks
 
 all: rm-elf $(TARGET)
 

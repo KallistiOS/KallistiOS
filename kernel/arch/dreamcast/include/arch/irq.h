@@ -2,6 +2,8 @@
 
    arch/dreamcast/include/irq.h
    Copyright (C) 2000-2001 Megan Potter
+   Copyright (C) 2024 Paul Cercueil
+   Copyright (C) 2024 Falco Girgis
 
 */
 
@@ -15,12 +17,20 @@
     actually differentiating "external" interrupts.
 
     \author Megan Potter
+    \author Paul Cercueil
+    \author Falco Girgis
+
     \see    dc/asic.h
+
+    \todo
+        - Save and restore SH4 DBR register in irq_context_t.
+        - Why are we clearing TMU flags every interrupt, when the handlers do too?
 */
 
 #ifndef __ARCH_IRQ_H
 #define __ARCH_IRQ_H
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <sys/cdefs.h>
 __BEGIN_DECLS
@@ -30,10 +40,11 @@ __BEGIN_DECLS
 /** \defgroup irqs  Interrupts
     \brief          IRQs and ISRs for the SH4's CPU
     \ingroup        system
+
+    @{
 */
 
 /** \brief   The number of bytes required to save thread context.
-    \ingroup irqs
 
     This should include all general CPU registers, FP registers, and status regs
     (even if not all of these are actually used).
@@ -44,18 +55,15 @@ __BEGIN_DECLS
 #define REG_BYTE_CNT 256            /* Currently really 228 */
 
 /** \brief   Architecture-specific structure for holding the processor state.
-    \ingroup irqs
 
     This structure should hold register values and other important parts of the
     processor state. The size of this structure should be less than or equal
     to the REG_BYTE_CNT value.
-
-    \headerfile arch/irq.h
 */
-typedef struct irq_context {
+typedef __attribute__((aligned(32))) struct irq_context {
     uint32_t  pc;         /**< \brief Program counter */
     uint32_t  pr;         /**< \brief Procedure register (aka return address) */
-    uint32_t  gbr;        /**< \brief Global base register */
+    uint32_t  gbr;        /**< \brief Global base register (TLS segment ptr) */
     uint32_t  vbr;        /**< \brief Vector base register */
     uint32_t  mach;       /**< \brief Multiply-and-accumulate register (high) */
     uint32_t  macl;       /**< \brief Multiply-and-accumulate register (low) */
@@ -65,11 +73,14 @@ typedef struct irq_context {
     uint32_t  frbank[16]; /**< \brief Secondary floating point registers */
     uint32_t  r[16];      /**< \brief 16 general purpose (integer) registers */
     uint32_t  fpscr;      /**< \brief Floating-point status/control register */
-} irq_context_t __attribute__((aligned(32)));
+} irq_context_t;
 
-/* A couple of architecture independent access macros */
+/** \name Context Accessors
+    \brief Architecture-independent context access macros
+
+    @{
+*/
 /** \brief   Fetch the program counter from an irq_context_t.
-    \ingroup irqs
 
     \param  c               The context to read from.
     
@@ -78,7 +89,6 @@ typedef struct irq_context {
 #define CONTEXT_PC(c)   ((c).pc)
 
 /** \brief   Fetch the frame pointer from an irq_context_t.
-    \ingroup irqs
 
     \param  c               The context to read from.
     
@@ -87,7 +97,6 @@ typedef struct irq_context {
 #define CONTEXT_FP(c)   ((c).r[14])
 
 /** \brief   Fetch the stack pointer from an irq_context_t.
-    \ingroup irqs
 
     \param  c               The context to read from.
     
@@ -96,7 +105,6 @@ typedef struct irq_context {
 #define CONTEXT_SP(c)   ((c).r[15])
 
 /** \brief   Fetch the return value from an irq_context_t.
-    \ingroup irqs
     
     \param  c               The context to read from.
     
@@ -104,9 +112,10 @@ typedef struct irq_context {
 */
 #define CONTEXT_RET(c)  ((c).r[0])
 
+/** @} */
+
 /** \defgroup irq_exception_codes   Exception Codes
     \brief                          IRQ exception code values
-    \ingroup                        irqs
 
     These are all of the exceptions that can be raised on the SH4, and their
     codes. They're divided into several logical groups.
@@ -243,9 +252,8 @@ typedef struct irq_context {
 #define EXC_UNHANDLED_EXC   0x0fe0
 /** @} */
 
-/** \defgroup  irq_type_offsets        Exception type offsets
+/** \defgroup  irq_type_offsets        Exception Type Offsets
     \brief                             Offsets within exception types
-    \ingroup                           irqs
 
     The following are a table of "type offsets" (see the Hitachi PDF). These are
     the 0x000, 0x100, 0x400, and 0x600 offsets.
@@ -258,43 +266,66 @@ typedef struct irq_context {
 #define EXC_OFFSET_600  3   /**< \brief Offset 0x600 */
 /** @} */
 
-/** \brief   The value of the timer IRQ
-    \ingroup irqs
-*/
+/** \brief   The value of the timer IRQ */
 #define TIMER_IRQ       EXC_TMU0_TUNI0
 
-/** \brief   The type of an interrupt identifier 
-    \ingroup irqs
-*/
+/** \brief   The type of an interrupt identifier */
 typedef uint32_t irq_t;
 
 /** \brief   The type of an IRQ handler
-    \ingroup irqs 
 
     \param  source          The IRQ that caused the handler to be called.
     \param  context         The CPU's context.
+    \param  data            Arbitrary userdata associated with the handler.
 */
 typedef void (*irq_handler)(irq_t source, irq_context_t *context, void *data);
 
-/** \brief   Are we inside an interrupt handler?
-    \ingroup irqs
+/** \brief   Resume normal execution from IRQ context.
 
-    \retval 1               If interrupt handling is in progress.
-    \retval 0               If normal processing is in progress.
-*/
-int irq_inside_int(void);
-
-/** \brief   Pretend like we just came in from an interrupt and force
-             a context switch back to the "current" context.
-    \ingroup irqs
+    Pretend like we just came in from an interrupt and force a context switch
+    back to the "current" context.
 
     \warning
     Make sure you've called irq_set_context() before doing this!
+
+    \sa irq_set_context()
 */
 void irq_force_return(void);
 
+/** \name  IRQ Queries
+    \brief Methods for querying active IRQ information.
+
+    @{
+*/
+
+/** \brief   Returns whether inside of an interrupt context.
+
+    \retval true               If interrupt handling is in progress.
+    \retval false              If normal processing is in progress.
+
+    \sa iq_active_int()
+*/
+bool irq_inside_int(void);
+
+/** \brief  Returns the active IRQ source.
+
+    \retval >0               Exception code (\ref irq_exception codes) for
+                             active IRQ context.
+    \retval 0                No IRQ context is active.
+
+    \sa irq_inside_int()
+*/
+irq_t irq_active_int(void);
+
+/** @} */
+
+/** \name  IRQ Handlers
+    \brief Installed for each individual IRQ type
+
+    @{
+*/
+
 /** \brief   Set or remove an IRQ handler.
-    \ingroup irqs
     
     Passing a NULL value for hnd will remove the current handler, if any.
 
@@ -305,20 +336,32 @@ void irq_force_return(void);
     
     \retval 0               On success.
     \retval -1              If the source is invalid.
+
+    \sa irq_get_handler()
 */
 int irq_set_handler(irq_t source, irq_handler hnd, void *data);
 
 /** \brief   Get the address of the current handler for the IRQ type.
-    \ingroup irqs
 
     \param  source          The IRQ type to look up.
+    \param  data            A pointer to a void* which will be filled in with
+                            the handler's userdata, or NULL if not interested.
     
     \return                 A pointer to the procedure to handle the exception.
+
+    \sa irq_set_handler()
 */
-irq_handler irq_get_handler(irq_t source);
+irq_handler irq_get_handler(irq_t source, void **data);
+
+/** @} */
+
+/** \name  TRAPA Handlers
+    \brief One called for each value passed to the TRAPA instruction.
+
+    @{
+*/
 
 /** \brief   Set or remove a handler for a trapa code.
-    \ingroup irqs
     
     \param  code            The value passed to the trapa opcode.
     \param  hnd             A pointer to the procedure to handle the trap.
@@ -326,11 +369,32 @@ irq_handler irq_get_handler(irq_t source);
 
     \retval 0               On success.
     \retval -1              If the code is invalid (greater than 0xFF).
+
+    \sa trapa_get_handler()
 */
 int trapa_set_handler(irq_t code, irq_handler hnd, void *data);
 
+/** \brief Get an existing TRAPA handler.
+
+    \param code             The value passed to the trapa opcode.
+    \param data             A pointer to a void* which will be filled in with
+                            the handler's userdata, or NULL if not interested.
+
+    \return                 A pointer to the procedure to handle the TRAP code.
+
+    \sa trapa_set_handler()
+*/
+irq_handler trapa_get_handler(irq_t code, void **data);
+
+/** @} */
+
+/** \name  Global Handler
+    \brief Install to filter all incoming IRQs
+
+    @{
+*/
+
 /** \brief   Set a global exception handler.
-    \ingroup irqs
 
     This function sets a global catch-all handler for all exception types.
 
@@ -346,36 +410,47 @@ int trapa_set_handler(irq_t code, irq_handler hnd, void *data);
 int irq_set_global_handler(irq_handler hnd, void *data);
 
 /** \brief   Get the global exception handler.
-    \ingroup irqs
+
+    \param data             A pointer to a void* which will be filled in with
+                            the handler's userdata, or NULL if not interested.
 
     \return                 The global exception handler set with
                             irq_set_global_handler(), or NULL if none is set.
 */
-irq_handler irq_get_global_handler(void);
+irq_handler irq_get_global_handler(void **data);
+
+/** @} */
+
+/** \name  Context Management
+    \brief Creating, storing, and modifying IRQ contexts.
+
+    @{
+*/
 
 /** \brief   Switch out contexts (for interrupt return).
-    \ingroup irqs
 
     This function will set the processor state that will be restored when the
     exception returns.
 
     \param  regbank         The values of all registers to be restored.
+
+    \sa irq_get_context()
 */
 void irq_set_context(irq_context_t *regbank);
 
 /** \brief   Get the current IRQ context.
-    \ingroup irqs
 
     This will fetch the processor context prior to the exception handling during
     an IRQ service routine.
 
     \return                 The current IRQ context.
+
+    \sa irq_set_context()
 */
 irq_context_t *irq_get_context(void);
 
 /** \brief   Fill a newly allocated context block for usage with supervisor
              or user mode.
-    \ingroup irqs
 
     The given parameters will be passed to the called routine (up to the
     architecture maximum). For the Dreamcast, this maximum is 4.
@@ -386,53 +461,93 @@ irq_context_t *irq_get_context(void);
     \param  args            Any arguments to set in the registers. This cannot
                             be NULL, and must have enough values to fill in up
                             to the architecture maximum.
-    \param  usermode        1 to run the routine in user mode, 0 for supervisor.
+    \param  usermode        true to run the routine in user mode, false for
+                            supervisor.
 */
 void irq_create_context(irq_context_t *context, uint32_t stack_pointer,
-                        uint32_t routine, uint32_t *args, int usermode);
+                        uint32_t routine, const uint32_t *args, bool usermode);
 
-/* Enable/Disable interrupts */
+/** @} */
+
+/** \name  IMASK Management
+    \brief Accessors and modifiers of the interrupt mask state.
+
+    @{
+*/
+
+/** \brief  Get status register contents.
+
+    Returns the current value of the status register, as is returned when
+    calling irq_disable().
+
+    \note
+    This is the entire status register word, not just the `IMASK` field.
+
+    \retval                 Status register word
+
+    \sa irq_disable()
+*/
+int irq_get_sr(void);
+
 /** \brief   Disable interrupts.
-    \ingroup irqs
 
     This function will disable interrupts, but will leave exceptions enabled.
 
     \return                 The state of IRQs before calling the function. This
                             can be used to restore this state later on with
                             irq_restore().
+
+    \sa irq_restore(), irq_enable()
 */
 int irq_disable(void);
 
 /** \brief   Enable all interrupts.
-    \ingroup irqs
 
     This function will enable ALL interrupts, including external ones.
+
+    \sa irq_disable()
 */
 void irq_enable(void);
 
 /** \brief   Restore IRQ state.
-    \ingroup irqs
 
     This function will restore the interrupt state to the value specified. This
     should correspond to a value returned by irq_disable().
 
     \param  v               The IRQ state to restore. This should be a value
                             returned by irq_disable().
+
+    \sa irq_disable()
 */
 void irq_restore(int v);
 
+/** @} */
+
+/** \name  Startup + Shutdown
+    \brief Initializing and shutting down IRQ management
+
+    @{
+*/
+
 /** \brief   Initialize interrupts.
-    \ingroup irqs
 
     \retval 0               On success (no error conditions defined).
+
+    \sa irq_shutdown()
 */
 int irq_init(void);
 
-/** \brief   Shutdown interrupts, restoring the state to how it was before
-             irq_init() was called.
-    \ingroup irqs
+/** \brief   Shutdown interrupts.
+
+    Restores the state to how it was before irq_init() was called.
+
+    \sa irq_init()
 */
 void irq_shutdown(void);
+
+/** @} */
+
+/** @} */
 
 __END_DECLS
 
