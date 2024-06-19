@@ -176,8 +176,8 @@ int fs_pty_create(char * buffer, int maxbuflen, file_t * master_out, file_t * sl
     if(boot) {
         /* Get the slave channel setup first, and dup it across
            our stdout and stderr. */
-        fs_dup2(*slave_out, 1);
-        fs_dup2(*slave_out, 2);
+        fs_dup2(*slave_out, STDOUT_FILENO);
+        fs_dup2(*slave_out, STDERR_FILENO);
     }
 
     *master_out = fs_open(mname, O_RDWR);
@@ -503,9 +503,8 @@ static ssize_t pty_read(void * h, void * buf, size_t bytes) {
     }
 
     /* Special case the unattached console */
-    if(ph->id == 0 && !ph->master && ph->other->refcnt == 0) {
+    if(ph->id == 0 && !ph->master && ph->other->refcnt == 0)
         return pty_read_serial(fdobj, ph, buf, bytes);
-    }
 
     /* Lock the ptyhalf */
     mutex_lock(&ph->mutex);
