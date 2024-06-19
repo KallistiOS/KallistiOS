@@ -12,7 +12,7 @@
 int pipe(int pipefd[2]) {
     int master_fd, slave_fd;
 
-    if (pipefd == NULL) {
+    if(pipefd == NULL) {
         errno = EFAULT;
         return -1;
     }
@@ -21,10 +21,10 @@ int pipe(int pipefd[2]) {
     if(fs_pty_create(NULL, 0, &master_fd, &slave_fd) < 0)
         return -1;
 
-    if (master_fd < 0)
+    if(master_fd < 0)
         return -1;
 
-    if (slave_fd < 0) {
+    if(slave_fd < 0) {
         fs_close(master_fd);
         return -1;
     }
