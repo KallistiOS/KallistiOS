@@ -9,18 +9,34 @@
 
 #include <unistd.h>
 #include <errno.h>
+
+#include <sys/stat.h>
 #include <sys/reent.h>
 
+#define PTY_DEV (dev_t)('p' | ('t' << 8) | ('y' << 16))
+
 int isatty(int fd) {
+    struct stat statbuf;
+
     if(fd < 0) {
         errno = EBADF;
         return 0;
     }
 
-    /* Make sure that stdin, stdout, stderr is shown as a tty, otherwise
+    /* Make sure that stdin is shown as a tty, otherwise
        it won't be set as line-buffered. */
-    if(fd >= STDIN_FILENO && fd <= STDERR_FILENO)
+    if(fd == STDIN_FILENO) {
         return 1;
+    }
+
+    if(fstat(fd, &statbuf) == -1) {
+        return 0;
+    }
+
+    /* Check if PTY */
+    if(statbuf.st_dev == PTY_DEV) {
+        return 1;
+    }
 
     return 0;
 }
