@@ -25,18 +25,15 @@ int isatty(int fd) {
 
     /* Make sure that stdin is shown as a tty, otherwise
        it won't be set as line-buffered. */
-    if(fd == STDIN_FILENO) {
+    if(fd == STDIN_FILENO)
         return 1;
-    }
 
-    if(fstat(fd, &statbuf) == -1) {
+    if(fstat(fd, &statbuf) == -1)
         return 0;
-    }
 
     /* Check if PTY */
-    if(statbuf.st_dev == PTY_DEV) {
+    if(statbuf.st_dev == PTY_DEV)
         return 1;
-    }
 
     return 0;
 }
