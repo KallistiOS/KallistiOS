@@ -522,6 +522,12 @@ static ssize_t pty_read(void * h, void * buf, size_t bytes) {
         cond_wait(&ph->ready_read, &ph->mutex);
     }
 
+    /* If the buffer is empty and the other end is closed, return 0 */
+    if(!ph->cnt && ph->other->refcnt == 0) {
+        bytes = 0;
+        goto done;
+    }
+
     /* Figure out how much to read */
     avail = ph->cnt;
 
@@ -585,6 +591,12 @@ static ssize_t pty_write(void * h, const void * buf, size_t bytes) {
         }
 
         cond_wait(&ph->ready_write, &ph->mutex);
+    }
+
+    /* If the buffer is full and the other end is closed, return 0 */
+    if(ph->cnt >= PTY_BUFFER_SIZE && ph->refcnt == 0) {
+        bytes = 0;
+        goto done;
     }
 
     /* Figure out how much to write */
