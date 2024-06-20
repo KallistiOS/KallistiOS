@@ -73,6 +73,7 @@ typedef struct diritem {
     char    name[32];
     int size;
 } diritem_t;
+
 typedef struct dirlist {
     diritem_t   * items;
     int     cnt;
