@@ -98,6 +98,7 @@ typedef struct pipefd {
     int mode;
 } pipefd_t;
 
+
 #define PF_PTY  0
 #define PF_DIR  1
 
@@ -189,9 +190,6 @@ cleanup:
     
     if(*slave_out > 0)
         fs_close(*slave_out);
-
-    if(*master_out > 0)
-        fs_close(*master_out);
 
     return -1;
 }
