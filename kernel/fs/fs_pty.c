@@ -196,8 +196,6 @@ cleanup:
     if(*master_out > 0)
         fs_close(*master_out);
 
-    pty_destroy_unused();   
-
     return -1;
 }
 
