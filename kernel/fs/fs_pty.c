@@ -98,6 +98,8 @@ typedef struct pipefd {
     int mode;
 } pipefd_t;
 
+/* Here incase fs_pty_create() fails */
+static void pty_destroy_unused(void);
 
 #define PF_PTY  0
 #define PF_DIR  1
@@ -190,6 +192,8 @@ cleanup:
     
     if(*slave_out > 0)
         fs_close(*slave_out);
+    else
+        pty_destroy_unused();
 
     return -1;
 }
