@@ -98,6 +98,9 @@ typedef struct pipefd {
     int mode;
 } pipefd_t;
 
+/* Incase things in fs_pty_create go south */
+static void pty_destroy_unused(void);
+
 #define PF_PTY  0
 #define PF_DIR  1
 
@@ -114,30 +117,26 @@ int fs_pty_create(char * buffer, int maxbuflen, file_t * master_out, file_t * sl
     if(!master_out || !slave_out)
         return -1;
 
+    /* Initialize outputs to invalid values */
+    *master_out = -1;
+    *slave_out = -1;
+
     /* Are we bootstrapping? */
-    if(LIST_EMPTY(&ptys))
-        boot = 1;
-    else
-        boot = 0;
+    boot = LIST_EMPTY(&ptys);
 
     /* Alloc new structs */
-    master = malloc(sizeof(ptyhalf_t));
-
+    master = calloc(1, sizeof(ptyhalf_t));
     if(!master) {
         errno = ENOMEM;
         return -1;
     }
 
-    memset(master, 0, sizeof(ptyhalf_t));
-    slave = malloc(sizeof(ptyhalf_t));
-
+    slave = calloc(1, sizeof(ptyhalf_t));
     if(!slave) {
         free(master);
         errno = ENOMEM;
         return -1;
     }
-
-    memset(slave, 0, sizeof(ptyhalf_t));
 
     /* Hook 'em up */
     master->other = slave;
@@ -173,6 +172,8 @@ int fs_pty_create(char * buffer, int maxbuflen, file_t * master_out, file_t * sl
     sprintf(mname, "/pty/ma%02x", master->id);
     sprintf(sname, "/pty/sl%02x", slave->id);
     *slave_out = fs_open(sname, O_RDWR);
+    if(*slave_out < 0)
+        goto cleanup;
 
     if(boot) {
         /* Get the slave channel setup first, and dup it across
@@ -182,8 +183,22 @@ int fs_pty_create(char * buffer, int maxbuflen, file_t * master_out, file_t * sl
     }
 
     *master_out = fs_open(mname, O_RDWR);
+    if(*master_out < 0)
+        goto cleanup;
 
     return 0;
+
+cleanup:
+    
+    if(*slave_out > 0)
+        fs_close(*slave_out);
+
+    if(*master_out > 0)
+        fs_close(*master_out);
+
+    pty_destroy_unused();   
+
+    return -1;
 }
 
 /* Autoclean totally unreferenced PTYs (zero refcnt). */

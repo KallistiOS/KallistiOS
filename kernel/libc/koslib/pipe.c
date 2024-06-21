@@ -21,14 +21,6 @@ int pipe(int pipefd[2]) {
     if(fs_pty_create(NULL, 0, &master_fd, &slave_fd) < 0)
         return -1;
 
-    if(master_fd < 0)
-        return -1;
-
-    if(slave_fd < 0) {
-        fs_close(master_fd);
-        return -1;
-    }
-
     /* Set the file descriptors for the pipe */
     pipefd[0] = master_fd;  /* Reading end */
     pipefd[1] = slave_fd;   /* Writing end */
