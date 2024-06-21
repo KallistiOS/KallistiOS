@@ -98,9 +98,6 @@ typedef struct pipefd {
     int mode;
 } pipefd_t;
 
-/* Incase things in fs_pty_create go south */
-static void pty_destroy_unused(void);
-
 #define PF_PTY  0
 #define PF_DIR  1
 
