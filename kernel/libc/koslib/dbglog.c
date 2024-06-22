@@ -46,10 +46,9 @@ void dbglog(int level, const char *fmt, ...) {
     va_end(args);
 
     if(i > 0) {
-        if(irq_inside_int())
-            dbgio_write_str(printf_buf);
-        else
-            fs_write(STDOUT_FILENO, printf_buf, strlen(printf_buf));
+        if(irq_inside_int() || 
+            (fs_write(STDOUT_FILENO, printf_buf, strlen(printf_buf)) < 0))
+                dbgio_write_str(printf_buf);        
     }
 
     if(level >= DBG_ERROR && !irq_inside_int())
