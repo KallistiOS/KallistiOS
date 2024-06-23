@@ -9,7 +9,7 @@ typedef struct directory_file {
     bool  is_dir;
 } directory_file_t;
 
-static int mount_sd_fat();
+static bool mount_sd_fat();
 static void unmount_sd_fat();
 
 static void show_prompt(char *current_directory, bool mounted_sd, bool highlight_yes);
