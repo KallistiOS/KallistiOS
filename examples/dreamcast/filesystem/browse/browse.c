@@ -26,6 +26,10 @@
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 
+/* Mounting FAT formatted SD card */
+static kos_blockdev_t sd_dev;
+static uint8_t partition_type;
+
 int main(int argc, char **argv) {
     cont_state_t *cond;
     
@@ -187,35 +191,30 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-static int mount_sd_fat() {
-    kos_blockdev_t sd_dev;
-    uint8_t partition_type;
-
+static bool mount_sd_fat() {
     if(sd_init()) {
         fprintf(stderr, "Could not initialize the SD card. Please make sure that you "
                "have an SD card adapter plugged in and an SD card inserted.\n");
-        return 0;
+        return false;
     }
 
     if(sd_blockdev_for_partition(0, &sd_dev, &partition_type)) {
         fprintf(stderr, "Could not find the first partition on the SD card!\n");
-        return 0;
+        return false;
     }
 
     if(fs_fat_init()) {
         fprintf(stderr, "Could not initialize fs_fat!\n");
-        return 0;
+        return false;
     }
 
     if(fs_fat_mount("/sd", &sd_dev, FS_FAT_MOUNT_READWRITE)) {
         fprintf(stderr, "Could not mount SD card as fatfs. Please make sure the card "
             "has been properly formatted.\n");
-        return 0;
+        return false;
     }
 
-    printf("SD Card mounted Successfully\n");
-
-    return 1;
+    return true;
 }
 
 static void unmount_sd_fat() {
