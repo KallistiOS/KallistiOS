@@ -258,7 +258,10 @@ static int browse_directory(char *directory, directory_file_t *directory_content
     struct dirent *entry;
 
     /* Open the directory */
-    if(!(d = opendir(directory)));
+    if (!(d = opendir(directory))) {
+        fprintf(stderr, "browse_directory: opendir failed\n");
+        return 0;
+    }
 
     /* Clear out all files */
     memset(directory_contents, 0, sizeof(directory_contents[0])*100);
@@ -266,7 +269,8 @@ static int browse_directory(char *directory, directory_file_t *directory_content
     /* Read all the filenames in the directory */
     while((entry = readdir(d)) && count < 100) {
         directory_contents[count].is_dir = (entry->d_type == DT_DIR);
-        strncpy(directory_contents[count].filename, entry->d_name, strlen(entry->d_name));
+        strncpy(directory_contents[count].filename, entry->d_name, sizeof(directory_contents[count].filename) - 1);
+        directory_contents[count].filename[sizeof(directory_contents[count].filename) - 1] = '\0';  // Ensure null-termination
         count++;
     }
 

@@ -387,7 +387,8 @@ static dirent_t *romdisk_readdir(void * h) {
     fh[fd].dirent.time = 0;
 
     if((type & ROMFH_MASK) == ROMFH_DIR ||
-       (type & ROMFH_MASK) == ROMFH_HRD) {
+            strcmp(fh[fd].dirent.name, ".") == 0 ||
+            strcmp(fh[fd].dirent.name, "..") == 0) {
         fh[fd].dirent.attr = O_DIR;
         fh[fd].dirent.size = -1;
     }
