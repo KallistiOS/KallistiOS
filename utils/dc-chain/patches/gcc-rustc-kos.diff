@@ -160,19 +160,3 @@ diff --color -ruN gcc-rustc/libstdc++-v3/configure gcc-rustc-kos/libstdc++-v3/co
      mcf)	thread_header=config/i386/gthr-mcf.h ;;
  esac
  
-diff --color -ruN gcc-rustc/gcc/Makefile.in gcc-rustc-fixed/gcc/Makefile.in
---- gcc-rustc/gcc/Makefile.in	2024-02-02 23:22:39.325757298 -0600
-+++ gcc-rustc-fixed/gcc/Makefile.in	2024-02-02 23:23:59.164140697 -0600
-@@ -2422,6 +2422,12 @@
- 	$(COMPILE) $<
- 	$(POSTCOMPILE)
- 
-+# Files used by the JIT language front end.
-+
-+default-jit.o: config/default-jit.cc
-+	$(COMPILE) $<
-+	$(POSTCOMPILE)
-+
- # Files used by the Rust language front end.
- 
- default-rust.o: config/default-rust.cc
