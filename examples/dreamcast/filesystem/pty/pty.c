@@ -2,6 +2,12 @@
 
    pty.c
    Copyright (C) 2024 Andress Barajas
+
+   This program demonstrates the creation and usage of a pseudo-terminal (PTY) 
+   pair. It involves creating a master and a slave PTY, writing a message to 
+   the master PTY, and reading the message from the slave PTY. It also 
+   demonstrates handling non-blocking read operations and performs clean-up of 
+   resources before exiting.
 */
 
 #include <kos/fs_pty.h>
@@ -12,8 +18,9 @@
 
 int main(int argc, char* argv[]) {
     /* Create a PTY pair */
-    file_t master_fd=NULL, slave_fd=NULL;
+    file_t master_fd = NULL, slave_fd = NULL;
     int retval = EXIT_SUCCESS;
+
     if(fs_pty_create(NULL, 0, &master_fd, &slave_fd) < 0) {
         fprintf(stderr, "Error creating PTY pair");
         goto failure;
@@ -65,6 +72,7 @@ int main(int argc, char* argv[]) {
         buffer[bytes_read] = '\0';
         printf("Received 2nd message: %s\n", buffer);
     }
+    
     /* Jump over failure and only do clean-up */
     goto cleanup;
     
