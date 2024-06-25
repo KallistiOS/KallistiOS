@@ -12,28 +12,25 @@
 
 int main(int argc, char* argv[]) {
     /* Create a PTY pair */
-    file_t master_fd, slave_fd;
+    file_t master_fd=NULL, slave_fd=NULL;
+    int retval = EXIT_SUCCESS;
     if(fs_pty_create(NULL, 0, &master_fd, &slave_fd) < 0) {
         fprintf(stderr, "Error creating PTY pair");
-        return 1;
+        goto failure;
     }
 
     /* Set non-blocking mode on the slave_fd for testing */
     int flags = fcntl(slave_fd, F_GETFL, 0);
     if(fcntl(slave_fd, F_SETFL, flags | O_NONBLOCK) < 0) {
         fprintf(stderr, "Error setting O_NONBLOCK");
-        fs_close(master_fd);
-        fs_close(slave_fd);
-        return 1;
+        goto failure;
     }
 
     /* Write to the master end of the PTY */
     const char *msg = "Hello from master!";
     if(write(master_fd, msg, strlen(msg)) < 0) {
         fprintf(stderr, "Error writing to master PTY");
-        fs_close(master_fd);
-        fs_close(slave_fd);
-        return 1;
+        goto failure;
     }
 
     /* Read from the slave end of the PTY */
@@ -44,9 +41,7 @@ int main(int argc, char* argv[]) {
             printf("No data available (non-blocking mode)\n");
         } else {
             fprintf(stderr, "Error reading from slave PTY");
-            fs_close(master_fd);
-            fs_close(slave_fd);
-            return 1;
+            goto failure;
         }
     } else {
         /* Null-terminate and print the received message */
@@ -61,9 +56,7 @@ int main(int argc, char* argv[]) {
             printf("No more data available (non-blocking mode)\n");
         } else {
             fprintf(stderr, "Error reading from slave PTY");
-            fs_close(master_fd);
-            fs_close(slave_fd);
-            return 1;
+            goto failure;
         }
     } else if (bytes_read == 0) {
         printf("No more data to read (EOF)\n");
@@ -72,12 +65,19 @@ int main(int argc, char* argv[]) {
         buffer[bytes_read] = '\0';
         printf("Received 2nd message: %s\n", buffer);
     }
+    /* Jump over failure and only do clean-up */
+    goto cleanup;
+    
+    /* Set exit code and clean up */
+failure:
+    retval = EXIT_FAILURE;
 
     /* Clean up resources */
-    fs_close(master_fd);
-    fs_close(slave_fd);
+cleanup:
+    if(master_fd) fs_close(master_fd);
+    if(slave_fd) fs_close(slave_fd);
 
     printf("DONE!\n");
 
-    return 0;
+    return retval;
 }
