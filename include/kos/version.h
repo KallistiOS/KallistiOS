@@ -65,6 +65,11 @@
     |\ref version_comptime_check "Compile-Time"|Preprocessor directives, conditional compilation.
     |\ref version_runtime_check "Run-Time"|if statements, conditional branches
 
+    \warning
+    It is very important that you use the provided version-check mechanisms when
+    comparing two different versions together, as no assurance is made that
+    versions can be correctly compared as integers.
+
     ## App Versioning
     The same \ref version_utils used to implement the KOS versioning
     API are available as part of the public API so that they may be used to 
@@ -223,7 +228,7 @@
     |Component|Bits|Range
     |---------|----|------
     |Major    |8   |0-255
-    |Minor    |16  |0-65535
+    |Minor    |8   |0-255
     |Patch    |8   |0-255
 
     @{
@@ -244,7 +249,7 @@
     \returns        Packed version identifier.
 */
 #define KOS_VERSION_MAKE(major, minor, patch) \
-    ((kos_version_t)((major) << 24) | ((minor) << 8) | (patch))
+    ((kos_version_t)((major) << 16) | ((minor) << 8) | (patch))
 
 /** Creates a version string from its constituents. 
 
@@ -267,6 +272,23 @@
     \brief Utilities for creating version checks.
     @{
 */
+/** Creates a generic check against a given version.
+
+    Bottom-level macro used to create all compile-time comparison checks against
+    other versions.
+
+    \param major    Major version component.
+    \param minor    Minor version component.
+    \param patch    Patch version component.
+    \param op       Integer comparison operator (`<=`, `>=`, `!=`, `==`, etc)/
+    \param version  Encoded version to compare against.
+
+    \returns        Boolean value for the given version compared against
+                    \p version using \p op.
+*/
+#define KOS_VERSION_MAKE_COMPARISON(major, minor, patch, op, version) \
+    (KOS_VERSION_MAKE(major, minor, patch) op (version & 0xffffff))
+
 /** Creates a check for being above a given version.
 
     Used to create a compile-time greater-than check against another version.
@@ -283,7 +305,7 @@
     \retval false   The given version is at or below \p version.
 */
 #define KOS_VERSION_MAKE_ABOVE(major, minor, patch, version) \
-    (KOS_VERSION_MAKE(major, minor, patch) > version)
+    (KOS_VERSION_MAKE_COMPARISON(major, minor, patch, >, version))
 
 /** Creates a minimum version check. 
 
@@ -301,7 +323,7 @@
     \retval false   The given version is below \p version.
 */
 #define KOS_VERSION_MAKE_MIN(major, minor, patch, version) \
-    (KOS_VERSION_MAKE(major, minor, patch) >= version)
+    (KOS_VERSION_MAKE_COMPARISON(major, minor, patch, >=, version))
 
 /** Creates an exact version check. 
 
@@ -319,7 +341,7 @@
     \retval false   The given version does not match \p version.
 */
 #define KOS_VERSION_MAKE_IS(major, minor, patch, version) \
-    (KOS_VERSION_MAKE(major, minor, patch) == version)
+    (KOS_VERSION_MAKE_COMPARISON(major, minor, patch, ==, version))
 
 /** Creates a maximum version check. 
 
@@ -338,7 +360,7 @@
 
 */
 #define KOS_VERSION_MAKE_MAX(major, minor, patch, version) \
-    (KOS_VERSION_MAKE(major, minor, patch) <= version)
+    (KOS_VERSION_MAKE_COMPARISON(major, minor, patch, <=, version))
 
 /** Creates a check for being below a given version.
 
@@ -356,7 +378,7 @@
     \retval false   The given version is at or above \p version.
 */
 #define KOS_VERSION_MAKE_BELOW(major, minor, patch, version) \
-    (KOS_VERSION_MAKE(major, minor, patch) < version)
+    (KOS_VERSION_MAKE_COMPARISON(major, minor, patch, <, version))
 /** @} */
 
 /** \cond INTERNAL */
@@ -383,7 +405,12 @@ __BEGIN_DECLS
 
 /** Type of a KOS version identifier. 
 
-    This identifier packs the 3 version components into a single opaque ID. 
+    This identifier packs the 3 version components into a single opaque ID.
+
+    \warning
+    It is not safe to compare two different versions together as if they were
+    regular integral types. You must use the Run-time
+    \ref version_runtime_check API.
 */
 typedef uint32_t kos_version_t;
 
