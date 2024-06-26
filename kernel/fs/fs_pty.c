@@ -35,6 +35,7 @@ or space present.
 #include <stdio.h>
 #include <assert.h>
 #include <errno.h>
+#include <sys/ioctl.h>
 
 /* pty buffer size */
 #define PTY_BUFFER_SIZE 1024
@@ -61,6 +62,8 @@ typedef struct ptyhalf {
 
     mutex_t     mutex;
     condvar_t   ready_read, ready_write;
+
+    struct termios termios;
 } ptyhalf_t;
 
 /* Our global pty list */
@@ -151,6 +154,10 @@ int fs_pty_create(char * buffer, int maxbuflen, file_t * master_out, file_t * sl
 
     /* Reset their refcnts (these will get increased in a minute) */
     master->refcnt = slave->refcnt = 0;
+
+    /* Initialize the termios structures with default values */
+    memset(&master->termios, 0, sizeof(struct termios));
+    memset(&slave->termios, 0, sizeof(struct termios));
 
     /* Allocate a mutex for each for multiple readers or writers */
     mutex_init(&master->mutex, MUTEX_TYPE_NORMAL);
@@ -680,20 +687,31 @@ static dirent_t * pty_readdir(void * h) {
     return &dl->dirent;
 }
 
-static int pty_rewinddir(void *h) {
-    pipefd_t *fdobj = (pipefd_t *)h;
-    dirlist_t *dl;
+static int pty_ioctl(void *h, int cmd, va_list ap) {
+    pipefd_t *fd = (pipefd_t *)h;
+    ptyhalf_t *ph = fd->d.p;
+    void *arg = va_arg(ap, void*);
 
-    assert(h);
-
-    if(fdobj->type != PF_DIR) {
+    if (!fd || fd->type != PF_PTY) {
         errno = EBADF;
         return -1;
     }
 
-    dl = fdobj->d.d;
-    dl->ptr = 0;
-    return 0;
+    switch (cmd) {
+        case TIOCGETA:
+            if (arg == NULL) {
+                errno = EINVAL;
+                return -1;
+            }
+            memcpy(arg, &ph->termios, sizeof(struct termios));
+            return 0;
+
+        /* Add other ioctl cases here */
+
+        default:
+            errno = ENOTTY;
+            return -1;
+    }
 }
 
 static int pty_fcntl(void *h, int cmd, va_list ap) {
@@ -732,6 +750,22 @@ static int pty_fcntl(void *h, int cmd, va_list ap) {
     }
 
     return rv;
+}
+
+static int pty_rewinddir(void *h) {
+    pipefd_t *fdobj = (pipefd_t *)h;
+    dirlist_t *dl;
+
+    assert(h);
+
+    if(fdobj->type != PF_DIR) {
+        errno = EBADF;
+        return -1;
+    }
+
+    dl = fdobj->d.d;
+    dl->ptr = 0;
+    return 0;
 }
 
 static int pty_fstat(void *h, struct stat *st) {
@@ -780,7 +814,7 @@ static vfs_handler_t vh = {
     NULL,
     pty_total,
     pty_readdir,
-    NULL,
+    pty_ioctl,
     NULL,
     NULL,
     NULL,

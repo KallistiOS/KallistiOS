@@ -10,13 +10,11 @@
 #include <unistd.h>
 #include <errno.h>
 
-#include <sys/stat.h>
 #include <sys/reent.h>
-
-#define PTY_DEV (dev_t)('p' | ('t' << 8) | ('y' << 16))
+#include <sys/termios.h>
 
 int isatty(int fd) {
-    struct stat statbuf;
+    struct termios term;
 
     if(fd < 0) {
         errno = EBADF;
@@ -28,14 +26,7 @@ int isatty(int fd) {
     if(fd == STDIN_FILENO)
         return 1;
 
-    if(fstat(fd, &statbuf) == -1)
-        return 0;
-
-    /* Check if PTY */
-    if(statbuf.st_dev == PTY_DEV)
-        return 1;
-
-    return 0;
+    return tcgetattr(fd, &term) == 0;
 }
 
 int _isatty_r(struct _reent *reent, int fd) {
