@@ -343,7 +343,11 @@ int fs_close(file_t fd) {
 
     /* Deref it and remove it from our table */
     retval = fs_hnd_unref(hnd);
-    hnd->idx = 0;
+
+    /* Reset our position */
+    if(hnd->refcnt == 0)
+        hnd->hnd = 0;
+
     fd_table[fd] = NULL;
     return retval ? -1 : 0;
 }
