@@ -397,6 +397,7 @@ static int dcload_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
         return 0;
     }
 
+    errno = ENOENT;
     return -1;
 }
 

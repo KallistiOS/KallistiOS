@@ -92,7 +92,6 @@ function(kos_add_romdisk target romdiskPath)
         OUTPUT  ${obj}
         DEPENDS ${obj_tmp}
         COMMAND ${KOS_CC_BASE}/bin/sh-elf-gcc -o ${obj} -r ${obj_tmp} -L${KOS_BASE}/lib/dreamcast -Wl,--whole-archive -lromdiskbase
-        COMMAND rm ${obj_tmp}
     )
 
     # Append romdisk object to target
