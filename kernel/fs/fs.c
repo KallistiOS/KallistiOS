@@ -337,14 +337,13 @@ int fs_close(file_t fd) {
     fs_hnd_t *hnd = fs_map_hnd(fd);
 
     if(!hnd) {
-      errno = EBADF;
-      return -1;
+        errno = EBADF;
+        return -1;
     }
-
-    hnd->idx = 0;
 
     /* Deref it and remove it from our table */
     retval = fs_hnd_unref(hnd);
+    hnd->idx = 0;
     fd_table[fd] = NULL;
     return retval ? -1 : 0;
 }
