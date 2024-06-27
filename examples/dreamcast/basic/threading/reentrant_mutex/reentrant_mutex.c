@@ -36,19 +36,19 @@ typedef struct {
     unsigned count;             /* Reentrant count */
 } reentrant_mutex_t;
 
-/* Initializes our reentraint_mutex structure. */
+/* Initializes our reentrant_mutex structure. */
 static void reentrant_mutex_init(reentrant_mutex_t *rmutex) {
     mutex_init(&rmutex->mutex, MUTEX_TYPE_NORMAL);
     atomic_store(&rmutex->owner, NULL);
     rmutex->count = 0;
 }
 
-/* Uninitializes our reentraint_mutex structure. */
+/* Uninitializes our reentrant_mutex structure. */
 static void reentrant_mutex_uninit(reentrant_mutex_t *rmutex) {
     mutex_destroy(&rmutex->mutex);
 }
  
-/* Locks our reentraint_mutex structure. */
+/* Locks our reentrant_mutex structure. */
 static void reentrant_mutex_lock(reentrant_mutex_t *rmutex) {
     /* If we are the owning thread, we must have already acquired the mutex. */
     if(atomic_load(&rmutex->owner) == (_Atomic kthread_t *)thd_current) {
@@ -76,7 +76,7 @@ static void reentrant_mutex_lock(reentrant_mutex_t *rmutex) {
     }
 }
 
-/* Unlocks our reentraint_mutex structure. */
+/* Unlocks our reentrant_mutex structure. */
 static void reentrant_mutex_unlock(reentrant_mutex_t *rmutex) {
     /* We better currently be the owning thread if we're attempting to unlock it! */
     if(atomic_load(&rmutex->owner) == (_Atomic kthread_t *)thd_current) {
@@ -109,7 +109,7 @@ static reentrant_mutex_t rmutex;
 /* Variable all threads are fighting over modifying. */
 static int shared_variable = 0;
  
-/* Exec function for each thread. Attempts to acquire the reentraint_mutex
+/* Exec function for each thread. Attempts to acquire the reentrant_mutex
    multiple times, potentially yielding in between each acquisition,
    and incrementing the shared variable once while the thread owns the lock. */
 static void *thread_func(void *arg) {
