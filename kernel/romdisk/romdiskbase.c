@@ -6,9 +6,9 @@
 
 #include <kos/fs_romdisk.h>
 
-extern unsigned char romdisk[];
+extern const unsigned char romdisk_data[];
 
-void *__kos_romdisk = romdisk;
+const void *__kos_romdisk = romdisk_data;
 
 extern void fs_romdisk_mount_builtin(void);
 

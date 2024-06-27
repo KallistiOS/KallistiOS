@@ -71,9 +71,10 @@ romdisk.img:
 	$(KOS_GENROMFS) -f romdisk.img -d $(KOS_ROMDISK_DIR) -v -x .svn -x .keepme
 
 romdisk.o: romdisk.img
-	$(KOS_BASE)/utils/bin2o/bin2o romdisk.img romdisk romdisk_tmp.o
+	$(KOS_BASE)/utils/bin2c/bin2c romdisk.img romdisk_tmp.c romdisk
+	$(KOS_CC) $(KOS_CFLAGS) -o romdisk_tmp.o -c romdisk_tmp.c
 	$(KOS_CC) -o romdisk.o -r romdisk_tmp.o $(KOS_LIB_PATHS) -Wl,--whole-archive -lromdiskbase
-	rm romdisk_tmp.o
+	rm romdisk_tmp.c romdisk_tmp.o
 endif
 
 # Define KOS_GCCVER_MIN in your Makefile if you want to enforce a minimum GCC version.
