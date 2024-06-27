@@ -91,11 +91,6 @@ static struct {
     rd_image_t  * mnt;      /* Which mount instance are we using? */
 } fh[FS_ROMDISK_MAX_FILES];
 
-/* File types */
-#define ROMFH_HRD   0 /* . or .. dirs */
-#define ROMFH_DIR   1
-#define ROMFH_MASK  3
-
 /* Mutex for file handles */
 static mutex_t fh_mutex;
 
@@ -386,9 +381,7 @@ static dirent_t *romdisk_readdir(void * h) {
     strcpy(fh[fd].dirent.name, fhdr->filename);
     fh[fd].dirent.time = 0;
 
-    if((type & ROMFH_MASK) == ROMFH_DIR ||
-            strcmp(fh[fd].dirent.name, ".") == 0 ||
-            strcmp(fh[fd].dirent.name, "..") == 0) {
+    if((type & 3) == 1) {
         fh[fd].dirent.attr = O_DIR;
         fh[fd].dirent.size = -1;
     }
@@ -493,7 +486,7 @@ static vfs_handler_t vh = {
         { 0 },                  /* name */
         0,                      /* in-kernel */
         0x00010000,             /* Version 1.0 */
-        NMMGR_FLAGS_NEEDSFREE | NMMGR_FLAGS_DOT_DIRS,  /* We malloc each VFS struct */
+        NMMGR_FLAGS_NEEDSFREE,  /* We malloc each VFS struct */
         NMMGR_TYPE_VFS,         /* VFS handler */
         NMMGR_LIST_INIT         /* list */
     },

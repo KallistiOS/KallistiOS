@@ -432,7 +432,7 @@ static vfs_handler_t vh = {
         "/pc",          /* name */
         0,              /* tbfi */
         0x00010000,     /* Version 1.0 */
-        NMMGR_FLAGS_DOT_DIRS, /* flags */
+        0,              /* flags */
         NMMGR_TYPE_VFS,
         NMMGR_LIST_INIT
     },

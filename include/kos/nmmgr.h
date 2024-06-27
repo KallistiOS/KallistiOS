@@ -103,11 +103,6 @@ typedef struct alias_handler {
 */
 #define NMMGR_FLAGS_ALIAS       0x00000004
 
-/** \brief  This structure already contains . and .. directories.
-    \ingroup system_namemgr
-*/
-#define NMMGR_FLAGS_DOT_DIRS    0x00000008
-
 /** \defgroup   nmmgr_types     Handler Types
     \brief                      Name handler types
     \ingroup                    system_namemgr

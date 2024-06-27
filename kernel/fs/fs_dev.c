@@ -113,11 +113,6 @@ int dev_close(void *f) {
     }
 
     hnd->refcnt--;
-
-    if(hnd->refcnt == 0)
-        /* Reset our position */
-        hnd->hnd = 0;
-
     return 0;
 }
 

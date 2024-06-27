@@ -57,9 +57,6 @@ static fs_hnd_t * fs_root_opendir(void) {
     return calloc(1, sizeof(fs_hnd_t));
 }
 
-/* Support . && .. path */
-static dirent_t dot_dirent;
-
 /* Not thread-safe right now */
 static dirent_t root_readdir_dirent;
 static dirent_t *fs_root_readdir(fs_hnd_t * handle) {
@@ -509,6 +506,8 @@ uint64 fs_total64(file_t fd) {
 }
 
 dirent_t *fs_readdir(file_t fd) {
+    static dirent_t dot_dirent;
+    static dirent_t *temp_dirent;
     fs_hnd_t *h = fs_map_hnd(fd);
 
     if(h == NULL) {
@@ -524,26 +523,50 @@ dirent_t *fs_readdir(file_t fd) {
         return NULL;
     }
 
-    if((h->handler->nmmgr.flags & NMMGR_FLAGS_DOT_DIRS) == NMMGR_FLAGS_DOT_DIRS)
-        return h->handler->readdir(h->hnd);
-    else {
-        if(h->idx == 0) {
-            strcpy(dot_dirent.name, ".");
-            dot_dirent.attr = O_DIR;
-            dot_dirent.size = -1;
-            dot_dirent.time = 0;
+    switch (h->idx) {
+        case 0:
+            temp_dirent = h->handler->readdir(h->hnd);
             h->idx++;
-            return &dot_dirent;
-        } else if(h->idx == 1) {
-            strcpy(dot_dirent.name, "..");
-            dot_dirent.attr = O_DIR;
-            dot_dirent.size = -1;
-            dot_dirent.time = 0;
+
+            /* Does fs provide its own . directory? */
+            if (strcmp(temp_dirent->name, ".") == 0) {
+                return temp_dirent;
+            } else {
+                /* Send . directory first */
+                strcpy(dot_dirent.name, ".");
+                dot_dirent.attr = O_DIR;
+                dot_dirent.size = -1;
+                dot_dirent.time = 0;
+                return &dot_dirent;
+            }
+        case 1:
             h->idx++;
-            return &dot_dirent;
-        } else {
+
+            /* Did fs provide its own . directory? */
+            if (strcmp(temp_dirent->name, ".") == 0) {
+                /* Read a new entry */
+                temp_dirent = h->handler->readdir(h->hnd);
+            }
+
+            /* Does fs provide its own .. directory? */
+            if (strcmp(temp_dirent->name, "..") == 0) {
+                h->idx++;
+                return temp_dirent;
+            } else {
+                /* Send .. directory second */
+                strcpy(dot_dirent.name, "..");
+                dot_dirent.attr = O_DIR;
+                dot_dirent.size = -1;
+                dot_dirent.time = 0;
+                return &dot_dirent;
+            }
+        case 2:
+            h->idx++;
+            /* FS didnt provide a . or .. directory. 
+               Return what we read first */
+            return temp_dirent;
+        default:
             return h->handler->readdir(h->hnd);
-        }
     }
 }
 
