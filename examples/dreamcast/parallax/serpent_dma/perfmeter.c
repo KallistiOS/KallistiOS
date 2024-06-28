@@ -7,6 +7,7 @@
 /* Adapted from FoF/Tryptonite */
 
 #include <kos.h>
+#include <stdlib.h>
 #include <plx/font.h>
 #include <plx/prim.h>
 #include <plx/context.h>
@@ -14,9 +15,15 @@
 plx_font_t * font;
 plx_fcxt_t * fcxt;
 
+void pm_shutdown(void) {
+    plx_fcxt_destroy(fcxt);
+    plx_font_destroy(font);
+}
+
 void pm_init(void) {
     font = plx_font_load("/rd/font.txf");
     fcxt = plx_fcxt_create(font, PVR_LIST_TR_POLY);
+    atexit(pm_shutdown);
 }
 
 void pm_drawbar(float pct, float posx, float posy, float posz,
