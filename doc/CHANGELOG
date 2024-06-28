@@ -230,6 +230,9 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - DC  Use one-shot timers for timeout and a proper polling mechanism in modem [PC]
 - *** Added pvrtex utility by TapamN to utils [DF == Daniel Fairchild]
 - *** Added full support for <time.h> additions from C23 standard. [FG]
+- *** Fixes mutexes not working properly [PC]
+- DC  fs_dcload: Set errno on error in dcload_stat() [PC]
+- *** Create romdisks with bin2c instead of bin2o [PC]
 
 KallistiOS version 2.0.0 -----------------------------------------------
 - DC  Broadband Adapter driver fixes [Megan Potter == MP]
