@@ -1,3 +1,15 @@
+diff -ruN gcc-13.2.0/gcc/config/sh/elf.h gcc-13.2.0-kos/gcc/config/sh/elf.h
+--- gcc-13.2.0/gcc/config/sh/elf.h	2024-06-03 21:27:36.000000000 -0700
++++ gcc-13.2.0-kos/gcc/config/sh/elf.h	2024-06-03 21:54:24.000000000 -0700
+@@ -69,7 +69,7 @@
+ 
+ #undef STARTFILE_SPEC
+ #define STARTFILE_SPEC \
+-  "%{!shared: crt1.o%s} crti.o%s \
++  "%{!shared: %{pg:gcrt1.o%s}%{!pg:crt1.o%s}} crti.o%s \
+    %{!shared:crtbegin.o%s} %{shared:crtbeginS.o%s}"
+ 
+ #undef ENDFILE_SPEC
 diff --color -ruN gcc-13.2.0/gcc/config/sh/sh-c.cc gcc-13.2.0-kos/gcc/config/sh/sh-c.cc
 --- gcc-13.2.0/gcc/config/sh/sh-c.cc	2023-06-04 20:48:46.612552162 -0500
 +++ gcc-13.2.0-kos/gcc/config/sh/sh-c.cc	2023-06-04 20:49:03.486606055 -0500
@@ -28,7 +40,7 @@ diff --color -ruN gcc-13.2.0/gcc/configure gcc-13.2.0-kos/gcc/configure
 diff --color -ruN gcc-13.2.0/libgcc/config/sh/t-sh gcc-13.2.0-kos/libgcc/config/sh/t-sh
 --- gcc-13.2.0/libgcc/config/sh/t-sh	2023-06-04 20:48:45.741549380 -0500
 +++ gcc-13.2.0-kos/libgcc/config/sh/t-sh	2023-06-04 20:49:03.488606061 -0500
-@@ -23,6 +23,8 @@
+@@ -23,9 +23,14 @@
    $(LIB1ASMFUNCS_CACHE)
  LIB1ASMFUNCS_CACHE = _ic_invalidate _ic_invalidate_array
  
@@ -37,6 +49,24 @@ diff --color -ruN gcc-13.2.0/libgcc/config/sh/t-sh gcc-13.2.0-kos/libgcc/config/
  crt1.o: $(srcdir)/config/sh/crt1.S
  	$(gcc_compile) -c $<
  
++gcrt1.o: $(srcdir)/config/sh/crt1.S
++	$(gcc_compile) -c -DPROFILE $<
++
+ ic_invalidate_array_4-100.o: $(srcdir)/config/sh/lib1funcs.S
+ 	$(gcc_compile) -c -DL_ic_invalidate_array -DWAYS=1 -DWAY_SIZE=0x2000 $<
+ libic_invalidate_array_4-100.a: ic_invalidate_array_4-100.o
+diff -ruN gcc-13.2.0/libgcc/config.host gcc-13.2.0-kos/libgcc/config.host
+--- gcc-13.2.0/libgcc/config.host	2024-06-03 21:27:33.000000000 -0700
++++ gcc-13.2.0-kos/libgcc/config.host	2024-06-03 21:53:41.000000000 -0700
+@@ -1358,7 +1358,7 @@
+ 	;;
+ sh-*-elf* | sh[12346l]*-*-elf*)
+ 	tmake_file="$tmake_file sh/t-sh t-crtstuff-pic t-fdpbit"
+-	extra_parts="$extra_parts crt1.o crti.o crtn.o crtbeginS.o crtendS.o \
++	extra_parts="$extra_parts crt1.o gcrt1.o crti.o crtn.o crtbeginS.o crtendS.o \
+ 		libic_invalidate_array_4-100.a \
+ 		libic_invalidate_array_4-200.a \
+ 		libic_invalidate_array_4a.a \
 diff --color -ruN gcc-13.2.0/libgcc/configure gcc-13.2.0-kos/libgcc/configure
 --- gcc-13.2.0/libgcc/configure	2023-06-04 20:48:45.787549527 -0500
 +++ gcc-13.2.0-kos/libgcc/configure	2023-06-04 20:49:03.489606065 -0500
