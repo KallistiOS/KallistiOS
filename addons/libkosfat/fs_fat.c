@@ -939,7 +939,6 @@ static dirent_t *fs_fat_readdir(void *h) {
     if(dent->attr & FAT_ATTR_DIRECTORY) {
         fh[fd].dent.attr = O_DIR;
         fh[fd].dent.size = -1;
-        fh[fd].dent.time = 0;
     }
 
     /* We're done. Return the static dirent_t. */
