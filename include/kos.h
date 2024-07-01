@@ -32,6 +32,7 @@ __BEGIN_DECLS
 #include <string.h>
 #include <unistd.h>
 
+#include <kos/version.h>
 #include <kos/fs.h>
 #include <kos/fs_romdisk.h>
 #include <kos/fs_ramdisk.h>
