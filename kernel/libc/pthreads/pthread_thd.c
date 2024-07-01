@@ -70,3 +70,8 @@ pthread_t pthread_self(void) {
 int pthread_equal(pthread_t t1, pthread_t t2) {
     return t1 == t2;
 }
+
+int pthread_atfork(void (*)(void), void (*)(void), void (*)(void))
+{
+    return 0;
+}

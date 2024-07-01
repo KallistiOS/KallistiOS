@@ -1,6 +1,11 @@
 # KallistiOS environment variable settings. These are the shared pieces
 # that are generated from the user config. Configure if you like.
 
+export KOS_VERSION_MAJOR=`awk '$2 == "KOS_VERSION_MAJOR"{print $3; exit}' ${KOS_BASE}/include/kos/version.h`
+export KOS_VERSION_MINOR=`awk '$2 == "KOS_VERSION_MINOR"{print $3; exit}' ${KOS_BASE}/include/kos/version.h`
+export KOS_VERSION_PATCH=`awk '$2 == "KOS_VERSION_PATCH"{print $3; exit}' ${KOS_BASE}/include/kos/version.h`
+export KOS_VERSION="${KOS_VERSION_MAJOR}.${KOS_VERSION_MINOR}.${KOS_VERSION_PATCH}"
+
 # Default the kos-ports path if it isn't already set.
 if [ -z "${KOS_PORTS}" ] ; then
     export KOS_PORTS="${KOS_BASE}/../kos-ports"

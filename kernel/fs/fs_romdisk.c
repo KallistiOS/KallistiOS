@@ -91,6 +91,11 @@ static struct {
     rd_image_t  * mnt;      /* Which mount instance are we using? */
 } fh[FS_ROMDISK_MAX_FILES];
 
+/* File type */
+#define ROMFH_DIR   1
+
+#define ROMFH_MASK  3
+
 /* Mutex for file handles */
 static mutex_t fh_mutex;
 
@@ -381,7 +386,9 @@ static dirent_t *romdisk_readdir(void * h) {
     strcpy(fh[fd].dirent.name, fhdr->filename);
     fh[fd].dirent.time = 0;
 
-    if((type & 3) == 1) {
+    if((type & ROMFH_MASK) == ROMFH_DIR ||
+            strcmp(fh[fd].dirent.name, ".") == 0 ||
+            strcmp(fh[fd].dirent.name, "..") == 0) {
         fh[fd].dirent.attr = O_DIR;
         fh[fd].dirent.size = -1;
     }
