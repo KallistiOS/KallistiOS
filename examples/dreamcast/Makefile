@@ -6,7 +6,7 @@
 #
 
 DIRS = 2ndmix basic libdream kgl hello sound png network vmu conio pvr video \
-	   lua parallax modem dreameye sd g1ata lightgun keyboard sdl dev rumble \
+	   lua parallax modem dreameye filesystem sd g1ata lightgun keyboard sdl dev rumble \
 	   micropython
 
 ifdef KOS_CCPLUS

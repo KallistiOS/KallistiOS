@@ -1,17 +1,18 @@
 # KallistiOS ##version##
 #
 # kernel Makefile
-# (c)2001 Megan Potter
+# Copyright (C) 2001 Megan Potter
+# Copyright (C) 2024 Falco Girgis
 #
 
-OBJS =
+OBJS = version.o
 SUBDIRS = arch debug fs thread net libc exports romdisk
 STUBS = stubs/kernel_export_stubs.o stubs/arch_export_stubs.o
 
 # Everything from here up should be plain old C.
 KOS_CFLAGS += $(KOS_CSTD)
 
-all: subdirs $(STUBS)
+all: subdirs $(STUBS) $(OBJS)
 	rm -f $(KOS_BASE)/lib/$(KOS_ARCH)/libkallisti.a
 	kos-ar rcs $(KOS_BASE)/lib/$(KOS_ARCH)/libromdiskbase.a romdisk/*.o
 	kos-ar rcs $(KOS_BASE)/lib/$(KOS_ARCH)/libkallisti.a build/*.o

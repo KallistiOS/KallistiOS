@@ -1,6 +1,7 @@
 # Auxiliary CMake Utility Functions
 #   Copyright (C) 2023 Colton Pawielski
 #   Copyright (C) 2024 Falco Girgis
+#   Copyright (C) 2024 Paul Cercueil
 #
 # This file implements utilities for the following additional functionality
 # which exists in the KOS Make build system:
@@ -65,8 +66,7 @@ function(kos_add_romdisk target romdiskPath)
 
     file(REAL_PATH "${romdiskPath}" romdiskPath)
 
-    set(obj     ${CMAKE_CURRENT_BINARY_DIR}/${romdiskName}.o)
-    set(obj_tmp ${CMAKE_CURRENT_BINARY_DIR}/${romdiskName}_tmp.o)
+    set(c_tmp   ${CMAKE_CURRENT_BINARY_DIR}/${romdiskName}_tmp.c)
     set(img     ${CMAKE_CURRENT_BINARY_DIR}/${romdiskName}.img)
 
     # Variable holding all files in the romdiskPath folder
@@ -85,16 +85,13 @@ function(kos_add_romdisk target romdiskPath)
         COMMAND ${KOS_BASE}/utils/genromfs/genromfs -f ${img} -d ${romdiskPath} -v
     )
 
-    kos_bin2o(${img} ${romdiskName} ${obj_tmp})
-
-    # Custom Command to generate romdisk object file from image
     add_custom_command(
-        OUTPUT  ${obj}
-        DEPENDS ${obj_tmp}
-        COMMAND ${KOS_CC_BASE}/bin/sh-elf-gcc -o ${obj} -r ${obj_tmp} -L${KOS_BASE}/lib/dreamcast -Wl,--whole-archive -lromdiskbase
-        COMMAND rm ${obj_tmp}
+        OUTPUT ${c_tmp}
+        DEPENDS ${img}
+        COMMAND ${KOS_BASE}/utils/bin2c/bin2c ${img} ${c_tmp} romdisk
     )
 
     # Append romdisk object to target
-    target_sources(${target} PRIVATE ${obj})
+    target_sources(${target} PRIVATE ${c_tmp})
+    target_link_options(${target} PRIVATE -Wl,--whole-archive -lromdiskbase -Wl,--no-whole-archive)
 endfunction()

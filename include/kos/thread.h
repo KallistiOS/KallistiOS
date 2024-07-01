@@ -131,6 +131,7 @@ LIST_HEAD(ktlist, kthread);
 #define THD_USER        1  /**< \brief Thread runs in user mode */
 #define THD_QUEUED      2  /**< \brief Thread is in the run queue */
 #define THD_DETACHED    4  /**< \brief Thread is detached */
+#define THD_OWNS_STACK  8  /**< \brief Thread manages stack lifetime */
 /** @} */
 
 /** \brief Kernel thread flags type */

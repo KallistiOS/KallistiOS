@@ -11,6 +11,8 @@
 #include <GL/glext.h>
 #include <GL/glkos.h>
 
+#define PVR_HDR_SIZE 0x20
+
 /*
 
 This is a really simple KallistiGL example. It shows off several things:
@@ -157,93 +159,65 @@ public:
 
 /* Load a PVR texture using glTexImage2D */
 void loadtxr(const char *fname, GLuint *txr) {
-#define PVR_HDR_SIZE 0x20
     FILE *tex = NULL;
     unsigned char *texBuf;
+    uint8_t HDR[PVR_HDR_SIZE];
     unsigned int texSize;
-
+    
     tex = fopen(fname, "rb");
 
     if(tex == NULL) {
-        printf("FILE READ ERROR: %s\n", fname);
-
+        fprintf(stderr, "FILE READ ERROR: %s\n", fname);
         while(1);
     }
 
     fseek(tex, 0, SEEK_END);
-    texSize = ftell(tex);
+    texSize = ftell(tex) - PVR_HDR_SIZE;
+    fseek(tex, 0, SEEK_SET);
+
+    /* Read in the PVR texture file header */
+    fread(HDR, 1, PVR_HDR_SIZE, tex);
 
     texBuf = (unsigned char*)malloc(texSize);
-    fseek(tex, 0, SEEK_SET);
-    fread(texBuf, 1, texSize, tex);
+    fread(texBuf, 1, texSize, tex); /* Read in the PVR texture data */
     fclose(tex);
 
-    int texW = texBuf[PVR_HDR_SIZE - 4] | texBuf[PVR_HDR_SIZE - 3] << 8;
-    int texH = texBuf[PVR_HDR_SIZE - 2] | texBuf[PVR_HDR_SIZE - 1] << 8;
-    int texFormat, texColor;
+    int texW = HDR[PVR_HDR_SIZE - 4] | HDR[PVR_HDR_SIZE - 3] << 8;
+    int texH = HDR[PVR_HDR_SIZE - 2] | HDR[PVR_HDR_SIZE - 1] << 8;
+    uint32_t color = (uint32_t)HDR[PVR_HDR_SIZE - 8];
+    uint32_t format = (uint32_t)HDR[PVR_HDR_SIZE - 7];
+    bool twiddled = format == 0x01;
+    bool compressed = (format == 0x10 || format == 0x03);
+    int texFormat = GL_UNSIGNED_SHORT_5_6_5;
 
-    switch((unsigned int)texBuf[PVR_HDR_SIZE - 8]) {
-        case 0x00:
-            texColor = PVR_TXRFMT_ARGB1555;
-            break; //(bilevel translucent alpha 0,255)
-
-        case 0x01:
-            texColor = PVR_TXRFMT_RGB565;
-            break; //(non translucent RGB565 )
-
-        case 0x02:
-            texColor = PVR_TXRFMT_ARGB4444;
-            break; //(translucent alpha 0-255)
-
-        case 0x03:
-            texColor = PVR_TXRFMT_YUV422;
-            break; //(non translucent UYVY )
-
-        case 0x04:
-            texColor = PVR_TXRFMT_BUMP;
-            break; //(special bump-mapping format)
-
-        case 0x05:
-            texColor = PVR_TXRFMT_PAL4BPP;
-            break; //(4-bit palleted texture)
-
-        case 0x06:
-            texColor = PVR_TXRFMT_PAL8BPP;
-            break; //(8-bit palleted texture)
-
-        default:
-			texColor = PVR_TXRFMT_RGB565;
-            break;
-    }
-
-    switch((unsigned int)texBuf[PVR_HDR_SIZE - 7]) {
-        case 0x01:
-            texFormat = PVR_TXRFMT_TWIDDLED;
-            break;//SQUARE TWIDDLED
-
-        case 0x03:
-            texFormat = PVR_TXRFMT_VQ_ENABLE;
-            break;//VQ TWIDDLED
-
-        case 0x09:
-            texFormat = PVR_TXRFMT_NONTWIDDLED;
-            break;//RECTANGLE
-
-        case 0x0B:
-            texFormat = PVR_TXRFMT_STRIDE | PVR_TXRFMT_NONTWIDDLED;
-            break;//RECTANGULAR STRIDE
-
-        case 0x0D:
-            texFormat = PVR_TXRFMT_TWIDDLED;
-            break;//RECTANGULAR TWIDDLED
-
-        case 0x10:
-            texFormat = PVR_TXRFMT_VQ_ENABLE | PVR_TXRFMT_NONTWIDDLED;
-            break;//SMALL VQ
-
-        default:
-            texFormat = PVR_TXRFMT_NONE;
-            break;
+    if(compressed) {
+        if(twiddled) {
+            switch(color) {
+                case 0x0:
+                    texFormat = GL_COMPRESSED_ARGB_1555_VQ_TWID_KOS;
+                    break;
+                case 0x01:
+                    texFormat = GL_COMPRESSED_RGB_565_VQ_TWID_KOS;
+                    break;
+                case 0x02:
+                    texFormat = GL_COMPRESSED_ARGB_4444_VQ_TWID_KOS;
+                    break;
+            }
+        } else {
+            switch(color) {
+                case 0:
+                    texFormat = GL_COMPRESSED_ARGB_1555_VQ_KOS;
+                    break;
+                case 1:
+                    texFormat = GL_COMPRESSED_RGB_565_VQ_KOS;
+                    break;
+                case 2:
+                    texFormat = GL_COMPRESSED_ARGB_4444_VQ_KOS;
+                    break;
+            }
+        }
+    } else if(color == 1) {
+        texFormat = GL_UNSIGNED_SHORT_5_6_5;
     }
 
     printf("TEXTURE Resolution: %ix%i\n", texW, texH);
@@ -254,7 +228,7 @@ void loadtxr(const char *fname, GLuint *txr) {
     if(texFormat & PVR_TXRFMT_VQ_ENABLE)
         glCompressedTexImage2D(GL_TEXTURE_2D,
                                0,
- 	                       texFormat | texColor,
+ 	                       texFormat,
  	                       texW,
  	                       texH,
  	                       0,
@@ -267,7 +241,7 @@ void loadtxr(const char *fname, GLuint *txr) {
                      texW, texH,
                      0,
                      GL_RGB,
-                     texFormat | texColor,
+                     texFormat,
                      texBuf);
 }
 

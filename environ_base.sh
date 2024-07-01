@@ -1,6 +1,11 @@
 # KallistiOS environment variable settings. These are the shared pieces
 # that are generated from the user config. Configure if you like.
 
+export KOS_VERSION_MAJOR=`awk '$2 == "KOS_VERSION_MAJOR"{print $3; exit}' ${KOS_BASE}/include/kos/version.h`
+export KOS_VERSION_MINOR=`awk '$2 == "KOS_VERSION_MINOR"{print $3; exit}' ${KOS_BASE}/include/kos/version.h`
+export KOS_VERSION_PATCH=`awk '$2 == "KOS_VERSION_PATCH"{print $3; exit}' ${KOS_BASE}/include/kos/version.h`
+export KOS_VERSION="${KOS_VERSION_MAJOR}.${KOS_VERSION_MINOR}.${KOS_VERSION_PATCH}"
+
 # Default the kos-ports path if it isn't already set.
 if [ -z "${KOS_PORTS}" ] ; then
     export KOS_PORTS="${KOS_BASE}/../kos-ports"
@@ -12,7 +17,12 @@ export KOS_ARCH_DIR="${KOS_BASE}/kernel/arch/${KOS_ARCH}"
 # Pull in the arch environ file
 . ${KOS_BASE}/environ_${KOS_ARCH}.sh
 
-# Add the gnu wrappers dir to the path if it is not already
+# Add the compiler bins dir to the path if it is not already
+if [[ ":$PATH:" != *":${KOS_CC_BASE}/bin:"* ]]; then
+  export PATH="${PATH}:${KOS_CC_BASE}/bin"
+fi
+
+# Add the build wrappers dir to the path if it is not already
 if [[ ":$PATH:" != *":${KOS_BASE}/utils/build_wrappers:"* ]]; then
   export PATH="${PATH}:${KOS_BASE}/utils/build_wrappers"
 fi
