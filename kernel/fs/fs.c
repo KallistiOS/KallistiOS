@@ -346,7 +346,7 @@ int fs_close(file_t fd) {
 
     /* Reset our position */
     if(hnd->refcnt == 0)
-        hnd->hnd = 0;
+        hnd->idx = 0;
 
     fd_table[fd] = NULL;
     return retval ? -1 : 0;
