@@ -22,7 +22,7 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
+#include <stdint.h>
 
 /** \defgroup   mouse   Mouse
     \brief              Driver for the Dreamcast's Mouse Input Device
@@ -49,14 +49,14 @@ __BEGIN_DECLS
 
 /** \cond */
 typedef struct {
-    uint16 buttons;
-    uint16 dummy1;
-    int16 dx;
-    int16 dy;
-    int16 dz;
-    uint16 dummy2;
-    uint32 dummy3;
-    uint32 dummy4;
+    uint16_t    buttons;
+    uint16_t    dummy1;
+    int16_t     dx;
+    int16_t     dy;
+    int16_t     dz;
+    uint16_t    dummy2;
+    uint32_t    dummy3;
+    uint32_t    dummy4;
 } mouse_cond_t;
 /** \endcond */
 
@@ -82,7 +82,7 @@ typedef struct {
     /** \brief  Buttons pressed bitmask.
         \see    mouse_buttons
     */
-    uint32  buttons;
+    uint32_t  buttons;
 
     /** \brief  X movement value */
     int dx;

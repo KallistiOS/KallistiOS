@@ -2,6 +2,7 @@
 
    modem.c
    Copyright (C)2002, 2004 Nick Kochakian
+   Copyright (C) 2024 Paul Cercueil
 
    Distributed under the terms of the KOS license.
 */
@@ -13,8 +14,7 @@
 #include "dc/modem/modem.h"
 #include "mintern.h"
 
-/* These timeout values are not exact! */
-#define MODEM_215MS_TIMEOUT 8
+#define MODEM_TIMEOUT_MS 215
 
 void modemHardReset(void);
 void modemSoftReset(void);
@@ -101,14 +101,6 @@ __inline static unsigned short speedCodeToBPS(unsigned char speed) {
         return 1200;
 
     return (unsigned short)speed * 2400;
-}
-
-unsigned char modemTimeout = 0;
-
-/* Need this for the timeout loops, otherwise the program never breaks out
-   of them for some reason. */
-int __isLessThan(int x, int y) {
-    return (x < y) ? 1 : 0;
 }
 
 /* Sets the members of a MODEM_CINFO structure based on the defined protocol
@@ -260,10 +252,6 @@ unsigned char modemGetCCFromProtocolAndDataRate(const unsigned char protocol,
     return cc;
 }
 
-void modemTimeoutIncCallback(void) {
-    modemTimeout++;
-}
-
 /* Verifys if the controller data returned as a result of a reset is valid
    or not. Returns zero if the results are invalid other a non zero number
    is returned. */
@@ -312,6 +300,7 @@ __inline static int verifyDSPData(unsigned short *dspInfo) {
    This only needs to be called ONCE during the modemInit function. */
 int modemSelfTest(void) {
     int            i;
+    unsigned int   ms;
     unsigned short ctrlInfo[7];
     unsigned short dspInfo[6];
 
@@ -347,9 +336,6 @@ int modemSelfTest(void) {
        there's no modem present.
     */
 
-    modemIntSetupTimeoutTimer(MODEM_215MS_TIMEOUT, &modemTimeout, NULL);
-    modemTimeout = 0;
-
     /* Soft reset */
     modemSetBits(REGLOC(0x1A), 0x80);
     modemSetBits(REGLOC(0x1F), 0x1);
@@ -371,17 +357,15 @@ int modemSelfTest(void) {
         /* This resets bit 3 in register 0x1E */
         modemRead(REGLOC(0x10));
 
-        modemIntStartTimeoutTimer(); /* Start the timeout counter */
+        for(ms = 0; ms < MODEM_TIMEOUT_MS; ms++) {
+            if(modemRead(REGLOC(0x1E)) & 0x8)
+                break;
 
-        while(!(modemRead(REGLOC(0x1E)) & 0x8) && !modemTimeout);
+            thd_sleep(1);
+        }
 
-        modemIntResetTimeoutTimer(); /* Stop the timeout counter before an
-                                        interrupt is generated if it hasn't
-                                        done so already */
-
-        if(modemTimeout) {
+        if(ms == MODEM_TIMEOUT_MS) {
             /* Too late */
-            modemIntShutdownTimeoutTimer();
             return 0;
         }
     }
@@ -397,19 +381,16 @@ int modemSelfTest(void) {
     dspInfo[5] = readValue16(REGLOC(0x11), REGLOC(0x0));
 
     /* Wait for a bit */
-    modemIntStartTimeoutTimer(); /* Start the timeout counter. It should have been
-                                    reset at this point so it starts counting
-                                    from zero not where it was stopped
-                                    last. */
+    for(ms = 0; ms < MODEM_TIMEOUT_MS; ms++) {
+        if(!(modemRead(REGLOC(0x1F)) & 0x1))
+            break;
 
-    while((modemRead(REGLOC(0x1F)) & 0x1) && !modemTimeout);
+        thd_sleep(1);
+    }
 
-    modemIntResetTimeoutTimer();
-    timer_spin_sleep(50); /* Wait for 10ms before accessing the MDP again */
+    thd_sleep(10); /* Wait for 10ms before accessing the MDP again */
 
-    modemIntShutdownTimeoutTimer();
-
-    if(modemTimeout) {
+    if(ms == MODEM_TIMEOUT_MS) {
         /* No modem, I guess. It timed out, so that might mean something. */
         return 0;
     }
@@ -741,6 +722,8 @@ void modemDropLine(void) {
 }
 
 void modem_disconnect(void) {
+    unsigned int i;
+
     if(!(modemCfg.flags & MODEM_CFG_FLAG_CONNECTED))
         return;
 
@@ -750,11 +733,6 @@ void modem_disconnect(void) {
     /* Any disconnection attempt will abort and forcefully terminate the
        connection if nothing happens after 5 seconds of starting to attempt
        a disconnection */
-
-    modemTimeout = 0;
-
-    modemIntSetupTimeoutTimer(1, NULL, modemTimeoutIncCallback);
-    modemIntStartTimeoutTimer();
 
     switch(modemCfg.cInfo.protocol) {
         case MODEM_PROTOCOL_V32:
@@ -766,32 +744,36 @@ void modem_disconnect(void) {
             modemSetBits(REGLOC(0x15), 0x4); /* Set RREN */
 
             /* Wait for a disconnection or a timeout */
-            while(__isLessThan(modemTimeout, 5) &&
-                    (modemRead(REGLOC(0xF)) & 0x80));
+            for (i = 0; i < 500; i++) {
+                if (!(modemRead(REGLOC(0xF)) & 0x80))
+                    break;
 
+                thd_sleep(10);
+            }
             break;
 
         case MODEM_PROTOCOL_V34:
             modemWrite(REGLOC(0x12), 0xC0);
             modemSetBits(REGLOC(0x15), 0x4); /* Set RREN */
 
-            while(__isLessThan(modemTimeout, 5) &&
-                    (modemRead(REGLOC(0xF)) & 0x80) &&
-                    modemRead(REGLOC(0x14)) != 0x96);
+            for (i = 0; i < 500; i++) {
+                if (!(modemRead(REGLOC(0xF)) & 0x80) ||
+                    modemRead(REGLOC(0x14)) == 0x96) {
+                    break;
+                }
 
+                thd_sleep(10);
+            }
             break;
 
         default:
             modemClearBits(REGLOC(0x9), 0x5); /* Reset DTR and DATA */
 
             /* Wait for 2 seconds just because */
-            while(__isLessThan(modemTimeout, 2));
+            thd_sleep(2000);
 
             break;
     }
-
-    modemIntResetTimeoutTimer();
-    modemIntShutdownTimeoutTimer();
 
     modemDropLine();
 }

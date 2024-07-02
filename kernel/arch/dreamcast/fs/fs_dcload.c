@@ -397,6 +397,7 @@ static int dcload_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
         return 0;
     }
 
+    errno = ENOENT;
     return -1;
 }
 
@@ -513,31 +514,34 @@ void fs_dcload_init_console(void) {
     if(*DCLOADMAGICADDR != DCLOADMAGICVALUE)
         return;
 
-    /* Give dcload the 64k it needs to compress data (if on serial) */
-    dcload_wrkmem = malloc(65536);
 
-    if(dcload_wrkmem) {
-        if(dclsc(DCLOAD_ASSIGNWRKMEM, dcload_wrkmem) == -1) {
-            free(dcload_wrkmem);
-            dcload_type = DCLOAD_TYPE_IP;
-            dcload_wrkmem = NULL;
-        }
-        else {
-            dcload_type = DCLOAD_TYPE_SER;
+    /* dcload IP will always return -1 here. Serial will return 0 and make
+      no change since it already holds 0 as 'no mem assigned */
+    if(dclsc(DCLOAD_ASSIGNWRKMEM, 0) == -1) {
+        dcload_type = DCLOAD_TYPE_IP;
+    }
+    else {
+        dcload_type = DCLOAD_TYPE_SER;
+
+        /* Give dcload the 64k it needs to compress data (if on serial) */
+        dcload_wrkmem = malloc(65536);
+        if(dcload_wrkmem) {
+            if(dclsc(DCLOAD_ASSIGNWRKMEM, dcload_wrkmem) == -1)
+                free(dcload_wrkmem);
         }
     }
 }
 
 /* Call fs_dcload_init_console() before calling fs_dcload_init() */
-int fs_dcload_init(void) {
+void fs_dcload_init(void) {
     // This was already done in init_console.
     if(dcload_type == DCLOAD_TYPE_NONE)
-        return -1;
+        return;
 
     /* Check for combination of KOS networking and dcload-ip */
     if((dcload_type == DCLOAD_TYPE_IP) && (__kos_init_flags & INIT_NET)) {
         dbglog(DBG_INFO, "dc-load console+kosnet, will switch to internal ethernet\n");
-        return -1;
+        return;
         /* if(old_printk) {
             dbgio_set_printk(old_printk);
             old_printk = 0;
@@ -546,13 +550,13 @@ int fs_dcload_init(void) {
     }
 
     /* Register with VFS */
-    return nmmgr_handler_add(&vh.nmmgr);
+    nmmgr_handler_add(&vh.nmmgr);
 }
 
-int fs_dcload_shutdown(void) {
+void fs_dcload_shutdown(void) {
     /* Check for dcload */
     if(*DCLOADMAGICADDR != DCLOADMAGICVALUE)
-        return -1;
+        return;
 
     /* Free dcload wrkram */
     if(dcload_wrkmem) {
@@ -566,7 +570,7 @@ int fs_dcload_shutdown(void) {
         dbgio_dev_select("scif");
     }
 
-    return nmmgr_handler_remove(&vh.nmmgr);
+    nmmgr_handler_remove(&vh.nmmgr);
 }
 
 /* used for dcload-ip + lwIP

@@ -30,10 +30,9 @@ void back_init(void) {
 /* init font */
 void font_init(void) {
     int i, x, y, c;
-    unsigned short * temp_tex;
+    unsigned short temp_tex[256 * 128 * 2];
 
     font_tex = pvr_mem_malloc(256 * 256 * 2);
-    temp_tex = (unsigned short *)malloc(256 * 128 * 2);
 
     c = 0;
 
@@ -53,14 +52,14 @@ void font_init(void) {
             c += 16;
         }
 
-    pvr_txr_load_ex(temp_tex, font_tex, 256, 256, PVR_TXRLOAD_16BPP);
+    pvr_txr_load_ex(&temp_tex, font_tex, 256, 256, PVR_TXRLOAD_16BPP);
 }
 
 void text_init(void) {
     int length = zlib_getlength("/rd/text.gz");
     gzFile f;
 
-    data = (char *)malloc(length + 1); // I am not currently freeing it
+    data = (char *)malloc(length + 1);
 
     f = gzopen("/rd/text.gz", "r");
     gzread(f, data, length);
@@ -98,7 +97,7 @@ void draw_back(void) {
     vert.v = 0.0f;
     pvr_prim(&vert, sizeof(vert));
 
-    vert.x = 1.0f;
+    vert.x = 0.0f;
     vert.y = 480.0f;
     vert.z = 1.0f;
     vert.u = 0.0f;
@@ -233,6 +232,8 @@ int main(int argc, char **argv) {
 
         draw_frame();
     }
+
+    free(data);
 
     return 0;
 }

@@ -4,6 +4,7 @@
    Copyright (C) 2002 Megan Potter
    Copyright (C) 2012 Lawrence Sebald
    Copyright (C) 2018 Donald Haase
+   Copyright (C) 2024 Paul Cercueil
 */
 
 #include <assert.h>
@@ -233,11 +234,60 @@ static kbd_keymap_t keymaps[KBD_NUM_KEYMAPS] = {
         }
     },
     {
-        /* French/AZERTY keyboard, probably. This one needs to be confirmed
-           still. */
-        { },
-        { },
-        { }
+        /* French/AZERTY keyboard */
+        /* The hex values in the tables are the ISO-8859-15 representation of the
+           French special chars. */
+        {
+            /* Base values */
+            0, 0, 0, 0, 'q', 'b', 'c', 'd',                 /* 0x00 - 0x07 */
+            'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',         /* 0x08 - 0x0F */
+            ',', 'n', 'o', 'p', 'a', 'r', 's', 't',         /* 0x10 - 0x17 */
+            'u', 'v', 'z', 'x', 'y', 'w', '&', 0xe9,        /* 0x18 - 0x1F */
+            '\"', '\'', '(', '-', 0xe8, '_', 0xe7, 0xe0,    /* 0x20 - 0x27 */
+            10, 27, 8, 9, ' ', ')', '=', '^',               /* 0x28 - 0x2F */
+            '$', 0, '*', 'm', 0xf9, 0xb2, ';', ':',         /* 0x30 - 0x37 */
+            '!', 0, 0, 0, 0, 0, 0, 0,                       /* 0x38 - 0x3F */
+            0, 0, 0, 0, 0, 0, 0, 0,                         /* 0x40 - 0x47 */
+            0, 0, 0, 0, 0, 0, 0, 0,                         /* 0x48 - 0x4F */
+            0, 0, 0, 0, '/', '*', '-', '+',                 /* 0x50 - 0x57 */
+            13, '1', '2', '3', '4', '5', '6', '7',          /* 0x58 - 0x5F */
+            '8', '9', '0', '.', 0, 0                        /* 0x60 - 0x65 */
+            /* All the rest are unused, and will be 0. */
+        },
+        {
+            /* Shifted values */
+            0, 0, 0, 0, 'Q', 'B', 'C', 'D',                 /* 0x00 - 0x07 */
+            'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',         /* 0x08 - 0x0F */
+            '?', 'N', 'O', 'P', 'A', 'R', 'S', 'T',         /* 0x10 - 0x17 */
+            'U', 'V', 'Z', 'X', 'Y', 'W', '1', '2',         /* 0x18 - 0x1F */
+            '3', '4', '5', '6', '7', '8', '9', '0',         /* 0x20 - 0x27 */
+            10, 27, 8, 9, ' ', 0xba, '+', 0,                /* 0x28 - 0x2F */
+            0xa3, 0, 0xb5, 'M', '%', 0xb3, '.', '/',        /* 0x30 - 0x37 */
+            0x7a, 0, 0, 0, 0, 0, 0, 0,                      /* 0x38 - 0x3F */
+            0, 0, 0, 0, 0, 0, 0, 0,                         /* 0x40 - 0x47 */
+            0, 0, 0, 0, 0, 0, 0, 0,                         /* 0x48 - 0x4F */
+            0, 0, 0, 0, '/', '*', '-', '+',                 /* 0x50 - 0x57 */
+            13, '1', '2', '3', '4', '5', '6', '7',          /* 0x58 - 0x5F */
+            '8', '9', '0', '.', 0, 0                        /* 0x60 - 0x65 */
+            /* All the rest are unused, and will be 0. */
+        },
+        {
+            /* "Alt" shifted values */
+            0, 0, 0, 0, 0xe4, 0, 0xa9, 0,                   /* 0x00 - 0x07 */
+            0xa4, 0, 0, 0, 0xee, 0xfc, 0xef, 0,             /* 0x08 - 0x0F */
+            0xbf, 0xf1, 0xbd, 0xf4, 0xe6, 0xea, 0xdf, 0,    /* 0x10 - 0x17 */
+            0xfb, 0, 0xe2, 0xbb, 0xfc, 0xab, 0, 0,          /* 0x18 - 0x1F */
+            '#', '{', '[', '|', 0, '\\', '^', '@',          /* 0x20 - 0x27 */
+            10, 27, 8, 9, ' ', ']', '}', '~',               /* 0x28 - 0x2F */
+            0, 0, 0, 0xf6, 0, 0xb9, 0xd7, 0xf7,             /* 0x30 - 0x37 */
+            0xa1, 0, 0, 0, 0, 0, 0, 0,                      /* 0x38 - 0x3F */
+            0, 0, 0, 0, 0, 0, 0, 0,                         /* 0x40 - 0x47 */
+            0, 0, 0, 0, 0, 0, 0, 0,                         /* 0x48 - 0x4F */
+            0, 0, 0, 0, '/', '*', '-', '+',                 /* 0x50 - 0x57 */
+            13, '1', '2', '3', '4', '5', '6', '7',          /* 0x58 - 0x5F */
+            '8', '9', '0', '.', 0, 0                        /* 0x60 - 0x65 */
+            /* All the rest are unused, and will be 0. */
+        }
     },
     {
         /* Italian/QWERTY keyboard, probably. This one needs to be confirmed
@@ -329,7 +379,10 @@ void kbd_set_queue(int active) {
 }
 
 /* Take a key scancode, encode it appropriately, and place it on the
-   keyboard queue. At the moment we assume no key overflows. */
+   keyboard queue. At the moment we assume no key overflows.
+
+    NOTE: We are only calling this within an IRQ context, so operations on
+          kbd_state::queue_size are essentially atomic. */
 static int kbd_enqueue(kbd_state_t *state, uint8 keycode, int mods) {
     static char keymap_noshift[] = {
         /*0*/   0, 0, 0, 0, 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
@@ -413,12 +466,18 @@ int kbd_queue_pop(maple_device_t *dev, int xlat) {
     uint32 rv, mods;
     uint8 ascii;
 
-    if(!state->queue_len)
+    const int irqs = irq_disable();
+
+    if(!state->queue_len) {
+        irq_restore(irqs);
         return -1;
+    }
 
     rv = state->key_queue[state->queue_tail];
     state->queue_tail = (state->queue_tail + 1) & (KBD_QUEUE_SIZE - 1);
     --state->queue_len;
+
+    irq_restore(irqs);
 
     if(!xlat)
         return (int)rv;
@@ -521,7 +580,9 @@ static void kbd_check_poll(maple_frame_t *frm) {
     }
 }
 
-static void kbd_reply(maple_frame_t *frm) {
+static void kbd_reply(maple_state_t *st, maple_frame_t *frm) {
+    (void)st;
+
     maple_response_t *resp;
     uint32 *respbuf;
     kbd_state_t *state;
@@ -541,14 +602,18 @@ static void kbd_reply(maple_frame_t *frm) {
     if(respbuf[0] != MAPLE_FUNC_KEYBOARD)
         return;
 
+    if(!frm->dev)
+        return;
+
+    /* Verify the size of the frame */
+    assert(sizeof(kbd_cond_t) == ((resp->data_len - 1) * sizeof(uint32_t)));
+
     /* Update the status area from the response */
-    if(frm->dev) {
-        state = (kbd_state_t *)frm->dev->status;
-        cond = (kbd_cond_t *)&state->cond;
-        memcpy(cond, respbuf + 1, (resp->data_len - 1) * sizeof(*respbuf));
-        frm->dev->status_valid = 1;
-        kbd_check_poll(frm);
-    }
+    state = (kbd_state_t *)frm->dev->status;
+    cond = (kbd_cond_t *)&state->cond;
+    memcpy(cond, respbuf + 1, (resp->data_len - 1) * sizeof(uint32_t));
+    frm->dev->status_valid = 1;
+    kbd_check_poll(frm);
 }
 
 static int kbd_poll_intern(maple_device_t *dev) {
@@ -613,8 +678,7 @@ static maple_driver_t kbd_drv = {
 
 /* Add the keyboard to the driver chain */
 void kbd_init(void) {
-    if(!kbd_drv.drv_list.le_prev)
-        maple_driver_reg(&kbd_drv);
+    maple_driver_reg(&kbd_drv);
 }
 
 void kbd_shutdown(void) {

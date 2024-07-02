@@ -2,24 +2,27 @@
 
    video.c
 
-   (c)2001 Anders Clerwall (scav)
-   Parts (c)2000-2001 Megan Potter
+   Copyright (C) 2001 Anders Clerwall (scav)
+   Copyright (C) 2000-2001 Megan Potter
+   Copyright (C) 2023-2024 Donald Haase
  */
 
 #include <dc/video.h>
 #include <dc/pvr.h>
 #include <dc/sq.h>
+#include <kos/platform.h>
 #include <string.h>
 #include <stdio.h>
 
-#define FBPOS(n) (n * 0x200000)
+/* The size of the vram. TODO: This needs a better home */
+#define PVR_MEM_SIZE 0x800000
 
 /*-----------------------------------------------------------------------------*/
 /* This table is indexed w/ DM_* */
 vid_mode_t vid_builtin[DM_MODE_COUNT] = {
     /* NULL mode.. */
     /* DM_INVALID = 0 */
-    { 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, { 0, 0, 0, 0 } },
+    { 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
 
     /* 320x240 VGA 60Hz */
     /* DM_320x240_VGA */
@@ -30,12 +33,11 @@ vid_mode_t vid_builtin[DM_MODE_COUNT] = {
         CT_VGA,
         0,
         262, 857,
-        0xAC, 0x28,
-        0x15, 0x104,
+        172, 40,
+        21, 260,
         141, 843,
         24, 263,
-        0, 1,
-        { 0, 0, 0, 0 }
+        0, 1, 0
     },
 
     /* 320x240 NTSC 60Hz */
@@ -47,12 +49,11 @@ vid_mode_t vid_builtin[DM_MODE_COUNT] = {
         CT_ANY,
         0,
         262, 857,
-        0xA4, 0x18,
-        0x15, 0x104,
+        164, 24,
+        21, 260,
         141, 843,
         24, 263,
-        0, 1,
-        { 0, 0, 0, 0 }
+        0, 1, 0
     },
 
     /* 640x480 VGA 60Hz */
@@ -60,16 +61,15 @@ vid_mode_t vid_builtin[DM_MODE_COUNT] = {
     {
         DM_640x480,
         640, 480,
-        VID_INTERLACE,
+        0,
         CT_VGA,
         0,
-        0x20C, 0x359,
-        0xAC, 0x28,
-        0x15, 0x104,
-        0x7E, 0x345,
-        0x24, 0x204,
-        0, 1,
-        { 0, 0, 0, 0 }
+        524, 857,
+        172, 40,
+        21, 260,
+        126, 837,
+        36, 516,
+        0, 1, 0
     },
 
     /* 640x480 NTSC 60Hz IL */
@@ -80,30 +80,12 @@ vid_mode_t vid_builtin[DM_MODE_COUNT] = {
         VID_INTERLACE,
         CT_ANY,
         0,
-        0x20C, 0x359,
-        0xA4, 0x12,
-        0x15, 0x104,
-        0x7E, 0x345,
-        0x24, 0x204,
-        0, 1,
-        { 0, 0, 0, 0 }
-    },
-
-    /* 800x608 NTSC 60Hz (VGA) [BROKEN!] */
-    /* DM_800x608_VGA */
-    {
-        DM_800x608,
-        320, 240,
-        VID_INTERLACE,
-        1/*CT_ANY*/, /* This will block the mode from being set. */
-        0,
-        262, 857,
-        164, 24,
-        21, 82,
-        141, 843,
-        24, 264,
-        0, 1,
-        { 0, 0, 0, 0 }
+        524, 857,
+        164, 18,
+        21, 260,
+        126, 837,
+        36, 516,
+        0, 1, 0
     },
 
     /* 640x480 PAL 50Hz IL */
@@ -114,13 +96,12 @@ vid_mode_t vid_builtin[DM_MODE_COUNT] = {
         VID_INTERLACE | VID_PAL,
         CT_ANY,
         0,
-        0x270, 0x35F,
-        0xAE, 0x2D,
-        0x15, 0x104,
-        0x8D, 0x34B,
-        0x2C, 0x26C,
-        0, 1,
-        { 0, 0, 0, 0 }
+        624, 863,
+        174, 45,
+        21, 260,
+        141, 843,
+        44, 620,
+        0, 1, 0
     },
 
     /* 256x256 PAL 50Hz IL (seems to output the same w/o VID_PAL, ie. in NTSC IL mode) */
@@ -133,11 +114,10 @@ vid_mode_t vid_builtin[DM_MODE_COUNT] = {
         0,
         624, 863,
         226, 37,
-        0x15, 0x104,
-        0x8D, 0x34B,
-        0x2C, 0x26C,
-        0, 1,
-        { 0, 0, 0, 0 }
+        21, 260,
+        141, 843,
+        44, 620,
+        0, 1, 0
     },
 
     /* 768x480 NTSC 60Hz IL (thanks DCGrendel) */
@@ -150,11 +130,10 @@ vid_mode_t vid_builtin[DM_MODE_COUNT] = {
         0,
         524, 857,
         96, 18,
-        0x15, 0x104,
-        0x2e, 0x345,
-        0x24, 0x204,
-        0, 1,
-        { 0, 0, 0, 0 }
+        21, 260,
+        46, 837,
+        36, 516,
+        0, 1, 0
     },
 
     /* 768x576 PAL 50Hz IL (DCG) */
@@ -167,11 +146,10 @@ vid_mode_t vid_builtin[DM_MODE_COUNT] = {
         0,
         624, 863,
         88, 16,
-        0x18, 0x104,
-        0x36, 0x34b,
-        0x2c, 0x26c,
-        0, 1,
-        { 0, 0, 0, 0 }
+        24, 260,
+        54, 843,
+        44, 620,
+        0, 1, 0
     },
 
     /* 768x480 PAL 50Hz IL */
@@ -184,11 +162,10 @@ vid_mode_t vid_builtin[DM_MODE_COUNT] = {
         0,
         624, 863,
         88, 16,
-        0x18, 0x104,
-        0x36, 0x34b,
-        0x2c, 0x26c,
-        0, 1,
-        { 0, 0, 0, 0 }
+        24, 260,
+        54, 843,
+        44, 620,
+        0, 1, 0
     },
 
     /* 320x240 PAL 50Hz (thanks Marco Martins aka Mekanaizer) */
@@ -204,205 +181,12 @@ vid_mode_t vid_builtin[DM_MODE_COUNT] = {
         21, 260,
         141, 843,
         44, 620,
-        0, 1,
-        { 0, 0, 0, 0 }
-    },
-
-    /* All of the modes below this comment are exactly the same as the ones
-       above, other than that they support multiple framebuffers (in the current
-       case, 4). They're only particularly useful if you're doing a drawing by
-       directly writing to the framebuffer, and are not useful at all if you're
-       using the PVR to do your drawing. */
-    /* 320x240 VGA 60Hz */
-    /* DM_320x240_VGA_MB */
-    {
-        DM_320x240 | DM_MULTIBUFFER,
-        320, 240,
-        VID_PIXELDOUBLE | VID_LINEDOUBLE,
-        CT_VGA,
-        0,
-        262, 857,
-        0xAC, 0x28,
-        0x15, 0x104,
-        141, 843,
-        24, 263,
-        0, VID_MAX_FB,
-        { FBPOS(0), FBPOS(1), FBPOS(2), FBPOS(3) }
-    },
-
-    /* 320x240 NTSC 60Hz */
-    /* DM_320x240_NTSC_MB */
-    {
-        DM_320x240 | DM_MULTIBUFFER,
-        320, 240,
-        VID_PIXELDOUBLE | VID_LINEDOUBLE,
-        CT_ANY,
-        0,
-        262, 857,
-        0xA4, 0x18,
-        0x15, 0x104,
-        141, 843,
-        24, 263,
-        0, VID_MAX_FB,
-        { FBPOS(0), FBPOS(1), FBPOS(2), FBPOS(3) }
-    },
-
-    /* 640x480 VGA 60Hz */
-    /* DM_640x480_VGA_MB */
-    {
-        DM_640x480 | DM_MULTIBUFFER,
-        640, 480,
-        VID_INTERLACE,
-        CT_VGA,
-        0,
-        0x20C, 0x359,
-        0xAC, 0x28,
-        0x15, 0x104,
-        0x7E, 0x345,
-        0x24, 0x204,
-        0, VID_MAX_FB,
-        { FBPOS(0), FBPOS(1), FBPOS(2), FBPOS(3) }
-    },
-
-    /* 640x480 NTSC 60Hz IL */
-    /* DM_640x480_NTSC_IL_MB */
-    {
-        DM_640x480 | DM_MULTIBUFFER,
-        640, 480,
-        VID_INTERLACE,
-        CT_ANY,
-        0,
-        0x20C, 0x359,
-        0xA4, 0x12,
-        0x15, 0x104,
-        0x7E, 0x345,
-        0x24, 0x204,
-        0, VID_MAX_FB,
-        { FBPOS(0), FBPOS(1), FBPOS(2), FBPOS(3) }
-    },
-
-    /* 800x608 NTSC 60Hz (VGA) [BROKEN!] */
-    /* DM_800x608_VGA_MB */
-    {
-        DM_800x608 | DM_MULTIBUFFER,
-        320, 240,
-        VID_INTERLACE,
-        1/*CT_ANY*/, /* This will block the mode from being set. */
-        0,
-        262, 857,
-        164, 24,
-        21, 82,
-        141, 843,
-        24, 264,
-        0, VID_MAX_FB,
-        { FBPOS(0), FBPOS(1), FBPOS(2), FBPOS(3) }
-    },
-
-    /* 640x480 PAL 50Hz IL */
-    /* DM_640x480_PAL_IL_MB */
-    {
-        DM_640x480 | DM_MULTIBUFFER,
-        640, 480,
-        VID_INTERLACE | VID_PAL,
-        CT_ANY,
-        0,
-        0x270, 0x35F,
-        0xAE, 0x2D,
-        0x15, 0x104,
-        0x8D, 0x34B,
-        0x2C, 0x26C,
-        0, VID_MAX_FB,
-        { FBPOS(0), FBPOS(1), FBPOS(2), FBPOS(3) }
-    },
-
-    /* 256x256 PAL 50Hz IL (seems to output the same w/o VID_PAL, ie. in NTSC IL mode) */
-    /* DM_256x256_PAL_IL_MB */
-    {
-        DM_256x256 | DM_MULTIBUFFER,
-        256, 256,
-        VID_PIXELDOUBLE | VID_LINEDOUBLE | VID_INTERLACE | VID_PAL,
-        CT_ANY,
-        0,
-        624, 863,
-        226, 37,
-        0x15, 0x104,
-        0x8D, 0x34B,
-        0x2C, 0x26C,
-        0, VID_MAX_FB,
-        { FBPOS(0), FBPOS(1), FBPOS(2), FBPOS(3) }
-    },
-
-    /* 768x480 NTSC 60Hz IL (thanks DCGrendel) */
-    /* DM_768x480_NTSC_IL_MB */
-    {
-        DM_768x480 | DM_MULTIBUFFER,
-        768, 480,
-        VID_INTERLACE,
-        CT_ANY,
-        0,
-        524, 857,
-        96, 18,
-        0x15, 0x104,
-        0x2e, 0x345,
-        0x24, 0x204,
-        0, VID_MAX_FB,
-        { FBPOS(0), FBPOS(1), FBPOS(2), FBPOS(3) }
-    },
-
-    /* 768x576 PAL 50Hz IL (DCG) */
-    /* DM_768x576_PAL_IL_MB */
-    {
-        DM_768x576 | DM_MULTIBUFFER,
-        768, 576,
-        VID_INTERLACE | VID_PAL,
-        CT_ANY,
-        0,
-        624, 863,
-        88, 16,
-        0x18, 0x104,
-        0x36, 0x34b,
-        0x2c, 0x26c,
-        0, VID_MAX_FB,
-        { FBPOS(0), FBPOS(1), FBPOS(2), FBPOS(3) }
-    },
-
-    /* 768x480 PAL 50Hz IL */
-    /* DM_768x480_PAL_IL_MB */
-    {
-        DM_768x480 | DM_MULTIBUFFER,
-        768, 480,
-        VID_INTERLACE | VID_PAL,
-        CT_ANY,
-        0,
-        624, 863,
-        88, 16,
-        0x18, 0x104,
-        0x36, 0x34b,
-        0x2c, 0x26c,
-        0, VID_MAX_FB,
-        { FBPOS(0), FBPOS(1), FBPOS(2), FBPOS(3) }
-    },
-
-    /* 320x240 PAL 50Hz (thanks Marco Martins aka Mekanaizer) */
-    /* DM_320x240_PAL_MB */
-    {
-        DM_320x240 | DM_MULTIBUFFER,
-        320, 240,
-        VID_PIXELDOUBLE | VID_LINEDOUBLE | VID_PAL,
-        CT_ANY,
-        0,
-        312, 863,
-        174, 45,
-        21, 260,
-        141, 843,
-        44, 620,
-        0, VID_MAX_FB,
-        { FBPOS(0), FBPOS(1), FBPOS(2), FBPOS(3) }
+        0, 1, 0
     },
 
     /* END */
     /* DM_SENTINEL */
-    { 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, { 0, 0, 0, 0 } }
+    { 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 }
 
     /* DM_MODE_COUNT */
 };
@@ -410,8 +194,8 @@ vid_mode_t vid_builtin[DM_MODE_COUNT] = {
 /*-----------------------------------------------------------------------------*/
 static vid_mode_t  currmode = { 0 };
 vid_mode_t  *vid_mode = 0;
-uint16      *vram_s;
-uint32      *vram_l;
+uint16_t      *vram_s;
+uint32_t      *vram_l;
 
 /*-----------------------------------------------------------------------------*/
 /* Checks the attached cable type (to the A/V port). Returns
@@ -426,31 +210,31 @@ uint32      *vram_l;
 
    [This is the old KOS function by Megan.]
 */
-int vid_check_cable(void) {
-#ifndef _arch_sub_naomi
-    vuint32 * porta = (vuint32 *)0xff80002c;
+int8_t vid_check_cable(void) {
+    volatile uint32_t * porta = (vuint32 *)0xff80002c;
+
+    if (KOS_PLATFORM_IS_NAOMI) {
+        /* XXXX: This still needs to be figured out for NAOMI. For now, assume
+           VGA mode. */
+        return CT_VGA;
+    }
 
     *porta = (*porta & 0xfff0ffff) | 0x000a0000;
 
     /* Read port8 and port9 */
-    return (*((vuint16*)(porta + 1)) >> 8) & 3;
-#else
-    /* XXXX: This still needs to be figured out for NAOMI. For now, assume
-       VGA mode. */
-    return 0;
-#endif
+    return (*((volatile uint16_t*)(porta + 1)) >> 8) & 3;
 }
 
 /*-----------------------------------------------------------------------------*/
-void vid_set_mode(int dm, int pm) {
+void vid_set_mode(int dm, vid_pixel_mode_t pm) {
     vid_mode_t mode;
-    int i, ct, found, dm2;
+    int i, ct, found, mb;
 
     ct = vid_check_cable();
 
     /* Remove the multi-buffering flag from the mode, if its present, and save
        the state of that flag. */
-    dm2 = dm & DM_MULTIBUFFER;
+    mb = dm & DM_MULTIBUFFER;
     dm &= ~DM_MULTIBUFFER;
 
     /* Check to see if we should use a direct mode index, a generic
@@ -463,7 +247,7 @@ void vid_set_mode(int dm, int pm) {
 
         for(i = 1; i < DM_SENTINEL; i++) {
             /* Is it the right generic mode? */
-            if(vid_builtin[i].generic != (dm | dm2))
+            if(vid_builtin[i].generic != dm)
                 continue;
 
             /* Do we have the right cable type? */
@@ -490,6 +274,18 @@ void vid_set_mode(int dm, int pm) {
     /* We set this here so actual mode is bit-depth independent.. */
     mode.pm = pm;
 
+    /* Calculate basic size needed for a framebuffer */
+    mode.fb_size = (mode.width * mode.height) * vid_pmode_bpp[mode.pm];
+
+    /* Ensure the FBs are 32-bit aligned */
+    if(mode.fb_size % 4)
+        mode.fb_size = (mode.fb_size + 4) & ~3;
+
+    if(mb == DM_MULTIBUFFER) {
+        /* Fill vram with framebuffers */
+        mode.fb_count = PVR_MEM_SIZE / mode.fb_size;
+    }
+
     /* This is also to be generic */
     mode.cable_type = ct;
 
@@ -499,8 +295,8 @@ void vid_set_mode(int dm, int pm) {
 
 /*-----------------------------------------------------------------------------*/
 void vid_set_mode_ex(vid_mode_t *mode) {
-    uint16 ct;
-    uint32 data;
+    uint16_t ct;
+    uint32_t data;
 
 
     /* Verify cable type for video mode. */
@@ -517,8 +313,10 @@ void vid_set_mode_ex(vid_mode_t *mode) {
     }
 
     /* Blank screen and reset display enable (looks nicer) */
-    PVR_SET(PVR_VIDEO_CFG, PVR_GET(PVR_VIDEO_CFG) | 8);    /* Blank */
-    PVR_SET(PVR_FB_CFG_1, PVR_GET(PVR_FB_CFG_1) & ~1);   /* Display disable */
+    vid_set_enabled(false);
+
+    /* Also clear any set border color now */
+    vid_border_color(0, 0, 0);
 
     /* Clear interlace flag if VGA (this maybe should be in here?) */
     if(ct == CT_VGA) {
@@ -528,12 +326,10 @@ void vid_set_mode_ex(vid_mode_t *mode) {
             mode->scanlines *= 2;
     }
 
-    dbglog(DBG_INFO, "vid_set_mode: %ix%i%s %s%s\n", mode->width, mode->height,
+    dbglog(DBG_INFO, "vid_set_mode: %ix%i%s %s with %i framebuffers.\n", mode->width, mode->height,
            (mode->flags & VID_INTERLACE) ? "IL" : "",
            (mode->cable_type == CT_VGA) ? "VGA" : (mode->flags & VID_PAL) ? "PAL" : "NTSC",
-           (mode->generic & DM_MULTIBUFFER) ? " multi-buffered" : "");
-
-    vid_border_color(0, 0, 0);
+           mode->fb_count);
 
     /* Pixelformat */
     data = (mode->pm << 2);
@@ -604,21 +400,21 @@ void vid_set_mode_ex(vid_mode_t *mode) {
 
     /* Bitmap window */
     PVR_SET(PVR_BITMAP_X, mode->bitmapx);
-    data = mode->bitmapy;
 
+    /* The upper 16 bits map to field-2 and need to be one more for PAL */
     if(mode->flags & VID_PAL) {
-        data++;
+        PVR_SET(PVR_BITMAP_Y, ((mode->bitmapy + 1) << 16) | mode->bitmapy);
     }
-
-    data = (data << 16) | mode->bitmapy;
-    PVR_SET(PVR_BITMAP_Y, data);
+    else {
+        PVR_SET(PVR_BITMAP_Y, (mode->bitmapy << 16) | mode->bitmapy);
+    }
 
     /* Everything is ok */
     memcpy(&currmode, mode, sizeof(vid_mode_t));
     vid_mode = &currmode;
 
     /* Set up the framebuffer */
-    vid_mode->fb_curr = -1;
+    vid_mode->fb_curr = ~0;
     vid_flip(0);
 
     /* Set cable type */
@@ -626,19 +422,21 @@ void vid_set_mode_ex(vid_mode_t *mode) {
         ((ct & 3) << 8);
 
     /* Re-enable the display */
-    PVR_SET(PVR_VIDEO_CFG, PVR_GET(PVR_VIDEO_CFG) & ~8);
-    PVR_SET(PVR_FB_CFG_1, PVR_GET(PVR_FB_CFG_1) | 1);
+    vid_set_enabled(true);
 }
 
 /*-----------------------------------------------------------------------------*/
-void vid_set_start(uint32 base) {
+void vid_set_vram(uint32_t base) {
+    vram_s = (uint16_t*)(PVR_RAM_BASE | base);
+    vram_l = (uint32_t*)(PVR_RAM_BASE | base);
+}
+
+void vid_set_start(uint32_t base) {
     /* Set vram base of current framebuffer */
-    base &= 0x007FFFFF;
+    base &= (PVR_MEM_SIZE - 1);
     PVR_SET(PVR_FB_ADDR, base);
 
-    /* These are nice to have. */
-    vram_s = (uint16*)(PVR_RAM_BASE | base);
-    vram_l = (uint32*)(PVR_RAM_BASE | base);
+    vid_set_vram(base);
 
     /* Set odd-field if interlaced. */
     if(vid_mode->flags & VID_INTERLACE) {
@@ -646,37 +444,50 @@ void vid_set_start(uint32 base) {
     }
 }
 
+uint32_t vid_get_start(int32_t fb) {
+    /* If out of bounds, return current fb addr */
+    if((fb < 0) || (fb >= vid_mode->fb_count)) {
+        fb = vid_mode->fb_curr;
+    }
+
+    return (vid_mode->fb_size * fb);
+}
+
 /*-----------------------------------------------------------------------------*/
-void vid_flip(int fb) {
-    uint16 oldfb;
-    uint32 base;
+void vid_set_fb(int32_t fb) {
+    uint16_t oldfb = vid_mode->fb_curr;
 
-    oldfb = vid_mode->fb_curr;
-
-    if(fb < 0) {
+    if((fb < 0) || (fb >= vid_mode->fb_count)) {
         vid_mode->fb_curr++;
     }
     else {
         vid_mode->fb_curr = fb;
     }
 
-    vid_mode->fb_curr &= (vid_mode->fb_count - 1);
+    /* Roll over */
+    vid_mode->fb_curr = vid_mode->fb_curr % vid_mode->fb_count;
 
     if(vid_mode->fb_curr == oldfb) {
         return;
     }
 
-    vid_set_start(vid_mode->fb_base[vid_mode->fb_curr]);
-
-    /* Set the vram_* pointers as expected */
-    base = vid_mode->fb_base[(vid_mode->fb_curr + 1) & (vid_mode->fb_count - 1)];
-    vram_s = (uint16*)(PVR_RAM_BASE | base);
-    vram_l = (uint32*)(PVR_RAM_BASE | base);
+    vid_set_start(vid_get_start(vid_mode->fb_curr));
 }
 
 /*-----------------------------------------------------------------------------*/
-uint32 vid_border_color(int r, int g, int b) {
-    uint32 obc = PVR_GET(PVR_BORDER_COLOR);
+void vid_flip(int32_t fb) {
+    uint32_t base;
+
+    vid_set_fb(fb);
+
+    /* Set the vram_* pointers to the next fb */
+    base = vid_get_start(((vid_mode->fb_curr + 1) % vid_mode->fb_count));
+    vid_set_vram(base);
+}
+
+/*-----------------------------------------------------------------------------*/
+uint32_t vid_border_color(uint8_t r, uint8_t g, uint8_t b) {
+    uint32_t obc = PVR_GET(PVR_BORDER_COLOR);
     PVR_SET(PVR_BORDER_COLOR, ((r & 0xFF) << 16) |
                        ((g & 0xFF) << 8) |
                        (b & 0xFF));
@@ -684,13 +495,10 @@ uint32 vid_border_color(int r, int g, int b) {
 }
 
 /*-----------------------------------------------------------------------------*/
-/* Clears the screen with a given color
-
-    [This is the old KOS function by Megan.]
-*/
-void vid_clear(int r, int g, int b) {
-    uint16 pixel16;
-    uint32 pixel32;
+/* Clears the screen with a given color */
+void vid_clear(uint8_t r, uint8_t g, uint8_t b) {
+    uint16_t pixel16;
+    uint32_t pixel32;
 
     switch(vid_mode->pm) {
         case PM_RGB555:
@@ -721,14 +529,31 @@ void vid_clear(int r, int g, int b) {
 }
 
 /*-----------------------------------------------------------------------------*/
-/* Clears all of video memory as quickly as possible
-
-    [This is the old KOS function by Megan.]
-*/
+/* Clears all of video memory as quickly as possible */
 void vid_empty(void) {
-    /* We'll use the actual base address here since the vram_* pointers
-       can now move around */
-    sq_clr((uint32 *)PVR_RAM_BASE, 8 * 1024 * 1024);
+    sq_clr((uint32_t *)PVR_RAM_BASE, PVR_MEM_SIZE);
+}
+
+/*-----------------------------------------------------------------------------*/
+bool vid_get_enabled(void) {
+    if(PVR_GET(PVR_FB_CFG_1) & 1) return true;
+    else return false;
+}
+
+void vid_set_enabled(bool val) {
+    /* If it's already the current setting, dont' do anything */
+    if(val == vid_get_enabled()) return;
+
+    if(val) {
+        /* Re-enable the display */
+        PVR_SET(PVR_VIDEO_CFG, PVR_GET(PVR_VIDEO_CFG) & ~8);
+        PVR_SET(PVR_FB_CFG_1, PVR_GET(PVR_FB_CFG_1) | 1);
+    }
+    else {
+        /* Blank screen and reset display enable (looks nicer) */
+        PVR_SET(PVR_VIDEO_CFG, PVR_GET(PVR_VIDEO_CFG) | 8);    /* Blank */
+        PVR_SET(PVR_FB_CFG_1, PVR_GET(PVR_FB_CFG_1) & ~1);     /* Display disable */
+    }
 }
 
 /*-----------------------------------------------------------------------------*/
@@ -738,7 +563,6 @@ void vid_empty(void) {
 
    Thanks to HeroZero for this info.
 
-   [This is the old KOS function by Megan.]
 */
 void vid_waitvbl(void) {
     while(!(PVR_GET(PVR_SYNC_STATUS) & 0x01ff))
@@ -749,15 +573,14 @@ void vid_waitvbl(void) {
 }
 
 /*-----------------------------------------------------------------------------*/
-void vid_init(int disp_mode, int pixel_mode) {
+void vid_init(int disp_mode, vid_pixel_mode_t pixel_mode) {
     /* Set mode and clear vram */
     vid_set_mode(disp_mode, pixel_mode);
-    vid_clear(0, 0, 0);
-    vid_flip(0);
+    vid_empty();
 }
 
 /*-----------------------------------------------------------------------------*/
 void vid_shutdown(void) {
-    /* Play nice with loaders, like KOS used to do. */
+    /* Reset back to default mode, in case we're going back to a loader. */
     vid_init(DM_640x480, PM_RGB565);
 }

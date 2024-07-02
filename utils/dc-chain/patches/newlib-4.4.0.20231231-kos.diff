@@ -1,0 +1,527 @@
+diff --color -ruN newlib-4.4.0.20231231/newlib/configure.host newlib-4.4.0.20231231-kos/newlib/configure.host
+--- newlib-4.4.0.20231231/newlib/configure.host	2024-02-10 09:30:58.772247624 -0600
++++ newlib-4.4.0.20231231-kos/newlib/configure.host	2024-02-10 09:31:16.329331366 -0600
+@@ -322,6 +322,7 @@
+ 	;;
+   sh | sh64)
+ 	machine_dir=sh
++	newlib_cflags="${newlib_cflags} -DREENTRANT_SYSCALLS_PROVIDED -DMALLOC_PROVIDED -DABORT_PROVIDED -DHAVE_FCNTL -ffunction-sections -fdata-sections"
+ 	;;
+   sparc*)
+ 	libm_machine_dir=sparc
+diff --color -ruN newlib-4.4.0.20231231/newlib/libc/include/assert.h newlib-4.4.0.20231231-kos/newlib/libc/include/assert.h
+--- newlib-4.4.0.20231231/newlib/libc/include/assert.h	2024-02-10 09:30:58.781247667 -0600
++++ newlib-4.4.0.20231231-kos/newlib/libc/include/assert.h	2024-02-10 09:31:16.329331366 -0600
+@@ -13,8 +13,8 @@
+ #ifdef NDEBUG           /* required by ANSI standard */
+ # define assert(__e) ((void)0)
+ #else
+-# define assert(__e) ((__e) ? (void)0 : __assert_func (__FILE__, __LINE__, \
+-						       __ASSERT_FUNC, #__e))
++# define assert(__e) ((__e) ? (void)0 : __assert (__FILE__, __LINE__, \
++                              #__e, (char *)0, __ASSERT_FUNC))
+ 
+ # ifndef __ASSERT_FUNC
+   /* Use g++'s demangled names in C++.  */
+@@ -36,10 +36,10 @@
+ # endif /* !__ASSERT_FUNC */
+ #endif /* !NDEBUG */
+ 
+-void __assert (const char *, int, const char *)
+-	    _ATTRIBUTE ((__noreturn__));
+-void __assert_func (const char *, int, const char *, const char *)
+-	    _ATTRIBUTE ((__noreturn__));
++void __assert(const char *, int, const char *, const char *,
++              const char *) _ATTRIBUTE ((__noreturn__));
++void __assert_func(const char *, int, const char *, const char *)
++             _ATTRIBUTE ((__noreturn__));
+ 
+ #if __STDC_VERSION__ >= 201112L && !defined __cplusplus
+ # define static_assert _Static_assert
+diff --color -ruN newlib-4.4.0.20231231/newlib/libc/include/sys/stat.h newlib-4.4.0.20231231-kos/newlib/libc/include/sys/stat.h
+--- newlib-4.4.0.20231231/newlib/libc/include/sys/stat.h	2024-04-28 15:07:54.520453819 -0400
++++ newlib-4.4.0.20231231-kos/newlib/libc/include/sys/stat.h	2023-12-31 12:00:18.000000000 -0500
+@@ -142,8 +142,8 @@
+ int	stat (const char *__restrict __path, struct stat *__restrict __sbuf );
+ mode_t	umask (mode_t __mask );
+ 
++int	lstat (const char *__restrict __path, struct stat *__restrict __buf );
+ #if defined (__SPU__) || defined(__rtems__) || defined(__CYGWIN__)
+-int	lstat (const char *__restrict __path, struct stat *__restrict __buf );
+ int	mknod (const char *__path, mode_t __mode, dev_t __dev );
+ #endif
+ 
+diff --color -ruN newlib-4.4.0.20231231/newlib/libc/include/sys/_pthreadtypes.h newlib-4.4.0.20231231-kos/newlib/libc/include/sys/_pthreadtypes.h
+--- newlib-4.4.0.20231231/newlib/libc/include/sys/_pthreadtypes.h	2024-02-10 09:30:58.783247676 -0600
++++ newlib-4.4.0.20231231-kos/newlib/libc/include/sys/_pthreadtypes.h	2024-02-10 09:31:16.329331366 -0600
+@@ -22,16 +22,6 @@
+ 
+ #include <sys/sched.h>
+ 
+-/*
+- *  2.5 Primitive System Data Types,  P1003.1c/D10, p. 19.
+- */
+-
+-#if defined(__XMK__)
+-typedef unsigned int pthread_t;          /* identify a thread */
+-#else
+-typedef __uint32_t pthread_t;            /* identify a thread */
+-#endif
+-
+ /* P1003.1c/D10, p. 118-119 */
+ #define PTHREAD_SCOPE_PROCESS 0
+ #define PTHREAD_SCOPE_SYSTEM  1
+@@ -46,36 +36,6 @@
+ #define PTHREAD_CREATE_DETACHED 0
+ #define PTHREAD_CREATE_JOINABLE  1
+ 
+-#if defined(__XMK__)
+-typedef struct pthread_attr_s {
+-  int contentionscope;
+-  struct sched_param schedparam;
+-  int  detachstate;
+-  void *stackaddr;
+-  size_t stacksize;
+-} pthread_attr_t;
+-
+-#define PTHREAD_STACK_MIN       200
+-
+-#else /* !defined(__XMK__) */
+-typedef struct {
+-  int is_initialized;
+-  void *stackaddr;
+-  int stacksize;
+-  int contentionscope;
+-  int inheritsched;
+-  int schedpolicy;
+-  struct sched_param schedparam;
+-
+-  /* P1003.4b/D8, p. 54 adds cputime_clock_allowed attribute.  */
+-#if defined(_POSIX_THREAD_CPUTIME)
+-  int  cputime_clock_allowed;  /* see time.h */
+-#endif
+-  int  detachstate;
+-} pthread_attr_t;
+-
+-#endif /* !defined(__XMK__) */
+-
+ #if defined(_POSIX_THREAD_PROCESS_SHARED)
+ /* NOTE: P1003.1c/D10, p. 81 defines following values for process_shared.  */
+ 
+@@ -143,91 +103,6 @@
+ 
+ #endif /* !defined(_UNIX98_THREAD_MUTEX_ATTRIBUTES) */
+ 
+-#if defined(__XMK__)
+-typedef unsigned int pthread_mutex_t;    /* identify a mutex */
+-
+-typedef struct {
+-  int type;
+-} pthread_mutexattr_t;
+-
+-#else /* !defined(__XMK__) */
+-typedef __uint32_t pthread_mutex_t;      /* identify a mutex */
+-
+-typedef struct {
+-  int   is_initialized;
+-#if defined(_POSIX_THREAD_PROCESS_SHARED)
+-  int   process_shared;  /* allow mutex to be shared amongst processes */
+-#endif
+-#if defined(_POSIX_THREAD_PRIO_PROTECT)
+-  int   prio_ceiling;
+-  int   protocol;
+-#endif
+-#if defined(_UNIX98_THREAD_MUTEX_ATTRIBUTES)
+-  int type;
+-#endif
+-  int   recursive;
+-} pthread_mutexattr_t;
+-#endif /* !defined(__XMK__) */
+-
+-#define _PTHREAD_MUTEX_INITIALIZER ((pthread_mutex_t) 0xFFFFFFFF)
+-
+-/* Condition Variables */
+-
+-typedef __uint32_t pthread_cond_t;       /* identify a condition variable */
+-
+-#define _PTHREAD_COND_INITIALIZER ((pthread_cond_t) 0xFFFFFFFF)
+-
+-typedef struct {
+-  int      is_initialized;
+-  clock_t  clock;             /* specifiy clock for timeouts */
+-#if defined(_POSIX_THREAD_PROCESS_SHARED)
+-  int      process_shared;    /* allow this to be shared amongst processes */
+-#endif
+-} pthread_condattr_t;         /* a condition attribute object */
+-
+-/* Keys */
+-
+-typedef __uint32_t pthread_key_t;        /* thread-specific data keys */
+-
+-typedef struct {
+-  int   is_initialized;  /* is this structure initialized? */
+-  int   init_executed;   /* has the initialization routine been run? */
+-} pthread_once_t;       /* dynamic package initialization */
+-
+-#define _PTHREAD_ONCE_INIT  { 1, 0 }  /* is initialized and not run */
+ #endif /* defined(_POSIX_THREADS) || __POSIX_VISIBLE >= 199506 */
+ 
+-/* POSIX Barrier Types */
+-
+-#if defined(_POSIX_BARRIERS)
+-typedef __uint32_t pthread_barrier_t;        /* POSIX Barrier Object */
+-typedef struct {
+-  int   is_initialized;  /* is this structure initialized? */
+-#if defined(_POSIX_THREAD_PROCESS_SHARED)
+-  int   process_shared;       /* allow this to be shared amongst processes */
+-#endif
+-} pthread_barrierattr_t;
+-#endif /* defined(_POSIX_BARRIERS) */
+-
+-/* POSIX Spin Lock Types */
+-
+-#if defined(_POSIX_SPIN_LOCKS)
+-typedef __uint32_t pthread_spinlock_t;        /* POSIX Spin Lock Object */
+-#endif /* defined(_POSIX_SPIN_LOCKS) */
+-
+-/* POSIX Reader/Writer Lock Types */
+-
+-#if defined(_POSIX_READER_WRITER_LOCKS)
+-typedef __uint32_t pthread_rwlock_t;         /* POSIX RWLock Object */
+-
+-#define _PTHREAD_RWLOCK_INITIALIZER ((pthread_rwlock_t) 0xFFFFFFFF)
+-
+-typedef struct {
+-  int   is_initialized;       /* is this structure initialized? */
+-#if defined(_POSIX_THREAD_PROCESS_SHARED)
+-  int   process_shared;       /* allow this to be shared amongst processes */
+-#endif
+-} pthread_rwlockattr_t;
+-#endif /* defined(_POSIX_READER_WRITER_LOCKS) */
+-
+ #endif /* ! _SYS__PTHREADTYPES_H_ */
+diff --color -ruN newlib-4.4.0.20231231/newlib/libc/include/sys/signal.h newlib-4.4.0.20231231-kos/newlib/libc/include/sys/signal.h
+--- newlib-4.4.0.20231231/newlib/libc/include/sys/signal.h	2024-02-10 09:30:58.783247676 -0600
++++ newlib-4.4.0.20231231-kos/newlib/libc/include/sys/signal.h	2024-02-10 09:31:16.329331366 -0600
+@@ -223,9 +223,11 @@
+ int sigaltstack (const stack_t *__restrict, stack_t *__restrict);
+ #endif
+ 
++#if 0
+ #if __POSIX_VISIBLE >= 199506
+ int pthread_kill (pthread_t, int);
+ #endif
++#endif
+ 
+ #if __POSIX_VISIBLE >= 199309
+ 
+diff --color -ruN newlib-4.4.0.20231231/newlib/libc/include/sys/_types.h newlib-4.4.0.20231231-kos/newlib/libc/include/sys/_types.h
+--- newlib-4.4.0.20231231/newlib/libc/include/sys/_types.h	2024-02-10 09:30:58.783247676 -0600
++++ newlib-4.4.0.20231231-kos/newlib/libc/include/sys/_types.h	2024-02-10 09:31:16.329331366 -0600
+@@ -69,7 +69,7 @@
+ 
+ #ifndef __machine_ino_t_defined
+ #if (defined(__i386__) && (defined(GO32) || defined(__MSDOS__))) || \
+-    defined(__sparc__) || defined(__SPU__)
++    defined(__sparc__) || defined(__SPU__) || defined(__sh__)
+ typedef unsigned long __ino_t;
+ #else
+ typedef unsigned short __ino_t;
+diff --color -ruN newlib-4.4.0.20231231/newlib/libc/ssp/stack_protector.c newlib-4.4.0.20231231-kos/newlib/libc/ssp/stack_protector.c
+--- newlib-4.4.0.20231231/newlib/libc/ssp/stack_protector.c	2024-02-10 09:30:58.832247910 -0600
++++ newlib-4.4.0.20231231-kos/newlib/libc/ssp/stack_protector.c	2024-02-10 09:31:16.329331366 -0600
+@@ -32,12 +32,11 @@
+ #endif
+ 
+ void
+-__attribute__((__noreturn__))
++__attribute__((__noreturn__, weak))
+ __stack_chk_fail (void)
+ {
+   char msg[] = "*** stack smashing detected ***: terminated\n";
+   write (2, msg, strlen (msg));
+-  raise (SIGABRT);
+   _exit (127);
+ }
+ 
+diff --color -ruN newlib-4.4.0.20231231/newlib/libc/stdlib/assert.c newlib-4.4.0.20231231-kos/newlib/libc/stdlib/assert.c
+--- newlib-4.4.0.20231231/newlib/libc/stdlib/assert.c	2024-02-10 09:30:58.811247810 -0600
++++ newlib-4.4.0.20231231-kos/newlib/libc/stdlib/assert.c	2024-02-10 09:31:16.329331366 -0600
+@@ -47,6 +47,8 @@
+ #include <stdlib.h>
+ #include <stdio.h>
+ 
++#if 0
++
+ #ifndef HAVE_ASSERT_FUNC
+ /* func can be NULL, in which case no function information is given.  */
+ void
+@@ -72,3 +74,7 @@
+    __assert_func (file, line, NULL, failedexpr);
+   /* NOTREACHED */
+ }
++#endif
++// This is put in here to cause link errors if a proper newlib isn't present.
++int __newlib_kos_patch = 1;
++
+diff --color -ruN newlib-4.4.0.20231231/newlib/libm/complex/cargl.c newlib-4.4.0.20231231-kos/newlib/libm/complex/cargl.c
+--- newlib-4.4.0.20231231/newlib/libm/complex/cargl.c	2024-02-10 09:30:58.838247939 -0600
++++ newlib-4.4.0.20231231-kos/newlib/libm/complex/cargl.c	2024-02-10 09:25:08.854578630 -0600
+@@ -7,12 +7,11 @@
+ #include <complex.h>
+ #include <math.h>
+ 
++/* On platforms where long double is as wide as double.  */
++#ifdef _LDBL_EQ_DBL
+ long double
+ cargl(long double complex z)
+ {     
+-       #ifdef _LDBL_EQ_DBL
+          return carg (z);
+-       #else
+-         return atan2l (cimagl (z), creall (z));
+-       #endif
+ }
++#endif
+diff --color -ruN newlib-4.4.0.20231231/newlib/libm/complex/catanl.c newlib-4.4.0.20231231-kos/newlib/libm/complex/catanl.c
+--- newlib-4.4.0.20231231/newlib/libm/complex/catanl.c	2024-02-10 09:30:58.838247939 -0600
++++ newlib-4.4.0.20231231-kos/newlib/libm/complex/catanl.c	2024-02-10 09:25:03.094551157 -0600
+@@ -33,6 +33,8 @@
+ #include <math.h>
+ #include "cephes_subrl.h"
+ 
++/* On platforms where long double is as wide as double.  */
++#ifdef _LDBL_EQ_DBL
+ #ifdef __weak_alias
+ __weak_alias(catanl, _catanl)
+ #endif
+@@ -72,4 +74,4 @@
+ 	w = HUGE_VALL + HUGE_VALL * I;
+ 	return w;
+ }
+-
++#endif
+diff --color -ruN newlib-4.4.0.20231231/newlib/libm/complex/ccoshl.c newlib-4.4.0.20231231-kos/newlib/libm/complex/ccoshl.c
+--- newlib-4.4.0.20231231/newlib/libm/complex/ccoshl.c	2024-02-10 09:30:58.838247939 -0600
++++ newlib-4.4.0.20231231-kos/newlib/libm/complex/ccoshl.c	2024-02-10 09:25:21.637639601 -0600
+@@ -32,6 +32,8 @@
+ #include <complex.h>
+ #include <math.h>
+ 
++/* On platforms where long double is as wide as double.  */
++#ifdef _LDBL_EQ_DBL
+ long double complex
+ ccoshl(long double complex z)
+ {
+@@ -43,3 +45,4 @@
+ 	w = coshl(x) * cosl(y) + (sinhl(x) * sinl(y)) * I;
+ 	return w;
+ }
++#endif
+diff --color -ruN newlib-4.4.0.20231231/newlib/libm/complex/ccosl.c newlib-4.4.0.20231231-kos/newlib/libm/complex/ccosl.c
+--- newlib-4.4.0.20231231/newlib/libm/complex/ccosl.c	2024-02-10 09:30:58.838247939 -0600
++++ newlib-4.4.0.20231231-kos/newlib/libm/complex/ccosl.c	2024-02-10 09:26:34.295986157 -0600
+@@ -33,6 +33,8 @@
+ #include <math.h>
+ #include "cephes_subrl.h"
+ 
++/* On platforms where long double is as wide as double.  */
++#ifdef _LDBL_EQ_DBL
+ long double complex
+ ccosl(long double complex z)
+ {
+@@ -43,3 +45,4 @@
+ 	w = cosl(creall(z)) * ch - (sinl(creall(z)) * sh) * I;
+ 	return w;
+ }
++#endif
+diff --color -ruN newlib-4.4.0.20231231/newlib/libm/complex/cephes_subrl.c newlib-4.4.0.20231231-kos/newlib/libm/complex/cephes_subrl.c
+--- newlib-4.4.0.20231231/newlib/libm/complex/cephes_subrl.c	2024-02-10 09:30:58.839247944 -0600
++++ newlib-4.4.0.20231231-kos/newlib/libm/complex/cephes_subrl.c	2024-02-10 09:26:48.976056176 -0600
+@@ -35,6 +35,8 @@
+ 
+ /* calculate cosh and sinh */
+ 
++/* On platforms where long double is as wide as double.  */
++#ifdef _LDBL_EQ_DBL
+ void
+ _cchshl(long double x, long double *c, long double *s)
+ {
+@@ -51,6 +53,7 @@
+ 		*c = e + ei;
+ 	}
+ }
++#endif
+ 
+ /* Program to subtract nearest integer multiple of PI */
+ 
+@@ -85,6 +88,8 @@
+ 
+ /* Taylor series expansion for cosh(2y) - cos(2x) */
+ 
++/* On platforms where long double is as wide as double.  */
++#ifdef _LDBL_EQ_DBL
+ long double
+ _ctansl(long double complex z)
+ {
+@@ -126,3 +131,4 @@
+ 	} while (fabsl(t/d) > MACHEPL);
+ 	return d;
+ }
++#endif
+diff --color -ruN newlib-4.4.0.20231231/newlib/libm/complex/cexpl.c newlib-4.4.0.20231231-kos/newlib/libm/complex/cexpl.c
+--- newlib-4.4.0.20231231/newlib/libm/complex/cexpl.c	2024-02-10 09:30:58.839247944 -0600
++++ newlib-4.4.0.20231231-kos/newlib/libm/complex/cexpl.c	2024-02-10 09:26:53.999080135 -0600
+@@ -32,6 +32,8 @@
+ #include <complex.h>
+ #include <math.h>
+ 
++/* On platforms where long double is as wide as double.  */
++#ifdef _LDBL_EQ_DBL
+ long double complex
+ cexpl(long double complex z)
+ {
+@@ -44,3 +46,4 @@
+ 	w = r * cosl(y) + r * sinl(y) * I;
+ 	return w;
+ }
++#endif
+diff --color -ruN newlib-4.4.0.20231231/newlib/libm/complex/clogl.c newlib-4.4.0.20231231-kos/newlib/libm/complex/clogl.c
+--- newlib-4.4.0.20231231/newlib/libm/complex/clogl.c	2024-02-10 09:30:58.839247944 -0600
++++ newlib-4.4.0.20231231-kos/newlib/libm/complex/clogl.c	2024-02-10 09:27:03.088123487 -0600
+@@ -32,6 +32,8 @@
+ #include <complex.h>
+ #include <math.h>
+ 
++/* On platforms where long double is as wide as double.  */
++#ifdef _LDBL_EQ_DBL
+ long double complex
+ clogl(long double complex z)
+ {
+@@ -44,3 +46,4 @@
+ 	w = p + rr * I;
+ 	return w;
+ }
++#endif
+diff --color -ruN newlib-4.4.0.20231231/newlib/libm/complex/cpowl.c newlib-4.4.0.20231231-kos/newlib/libm/complex/cpowl.c
+--- newlib-4.4.0.20231231/newlib/libm/complex/cpowl.c	2024-02-10 09:30:58.839247944 -0600
++++ newlib-4.4.0.20231231-kos/newlib/libm/complex/cpowl.c	2024-02-10 09:27:11.728164697 -0600
+@@ -32,6 +32,8 @@
+ #include <complex.h>
+ #include <math.h>
+ 
++/* On platforms where long double is as wide as double.  */
++#ifdef _LDBL_EQ_DBL
+ long double complex
+ cpowl(long double complex a, long double complex z)
+ {
+@@ -54,3 +56,4 @@
+ 	w = r * cosl(theta) + (r * sinl(theta)) * I;
+ 	return w;
+ }
++#endif
+diff --color -ruN newlib-4.4.0.20231231/newlib/libm/complex/cprojl.c newlib-4.4.0.20231231-kos/newlib/libm/complex/cprojl.c
+--- newlib-4.4.0.20231231/newlib/libm/complex/cprojl.c	2024-02-10 09:30:58.838247939 -0600
++++ newlib-4.4.0.20231231-kos/newlib/libm/complex/cprojl.c	2024-02-10 09:27:19.272200680 -0600
+@@ -45,6 +45,9 @@
+  *
+  * INFINITY + I * copysign(0.0, cimag(z))
+  */
++
++/* On platforms where long double is as wide as double.  */
++#ifdef _LDBL_EQ_DBL
+ long double complex
+ cprojl(long double complex z)
+ {
+@@ -62,3 +65,4 @@
+ 
+ 	return (w.z);
+ }
++#endif
+diff --color -ruN newlib-4.4.0.20231231/newlib/libm/complex/csinhl.c newlib-4.4.0.20231231-kos/newlib/libm/complex/csinhl.c
+--- newlib-4.4.0.20231231/newlib/libm/complex/csinhl.c	2024-02-10 09:30:58.838247939 -0600
++++ newlib-4.4.0.20231231-kos/newlib/libm/complex/csinhl.c	2024-02-10 09:27:27.167238336 -0600
+@@ -32,6 +32,8 @@
+ #include <complex.h>
+ #include <math.h>
+ 
++/* On platforms where long double is as wide as double.  */
++#ifdef _LDBL_EQ_DBL
+ long double complex
+ csinhl(long double complex z)
+ {
+@@ -43,3 +45,4 @@
+ 	w = sinhl(x) * cosl(y) + (coshl(x) * sinl(y)) * I;
+ 	return w;
+ }
++#endif
+diff --color -ruN newlib-4.4.0.20231231/newlib/libm/complex/csinl.c newlib-4.4.0.20231231-kos/newlib/libm/complex/csinl.c
+--- newlib-4.4.0.20231231/newlib/libm/complex/csinl.c	2024-02-10 09:30:58.838247939 -0600
++++ newlib-4.4.0.20231231-kos/newlib/libm/complex/csinl.c	2024-02-10 09:27:34.343272564 -0600
+@@ -33,6 +33,8 @@
+ #include <math.h>
+ #include "cephes_subrl.h"
+ 
++/* On platforms where long double is as wide as double.  */
++#ifdef _LDBL_EQ_DBL
+ long double complex
+ csinl(long double complex z)
+ {
+@@ -43,3 +45,4 @@
+ 	w = sinl(creall(z)) * ch + (cosl(creall(z)) * sh) * I;
+ 	return w;
+ }
++#endif
+diff --color -ruN newlib-4.4.0.20231231/newlib/libm/complex/csqrtl.c newlib-4.4.0.20231231-kos/newlib/libm/complex/csqrtl.c
+--- newlib-4.4.0.20231231/newlib/libm/complex/csqrtl.c	2024-02-10 09:30:58.838247939 -0600
++++ newlib-4.4.0.20231231-kos/newlib/libm/complex/csqrtl.c	2024-02-10 09:27:56.954380412 -0600
+@@ -49,6 +49,8 @@
+ 
+ #define cpackl(r, i) ((r) + (i) * I)
+ 
++/* On platforms where long double is as wide as double.  */
++#ifdef _LDBL_EQ_DBL
+ long double complex
+ csqrtl(long double complex z)
+ {
+@@ -110,3 +112,4 @@
+ 	else
+ 		return (result);
+ }
++#endif
+diff --color -ruN newlib-4.4.0.20231231/newlib/libm/complex/ctanhl.c newlib-4.4.0.20231231-kos/newlib/libm/complex/ctanhl.c
+--- newlib-4.4.0.20231231/newlib/libm/complex/ctanhl.c	2024-02-10 09:30:58.839247944 -0600
++++ newlib-4.4.0.20231231-kos/newlib/libm/complex/ctanhl.c	2024-02-10 09:28:01.056399977 -0600
+@@ -32,6 +32,8 @@
+ #include <complex.h>
+ #include <math.h>
+ 
++/* On platforms where long double is as wide as double.  */
++#ifdef _LDBL_EQ_DBL
+ long double complex
+ ctanhl(long double complex z)
+ {
+@@ -45,3 +47,4 @@
+ 
+ 	return w;
+ }
++#endif
+diff --color -ruN newlib-4.4.0.20231231/newlib/libm/complex/ctanl.c newlib-4.4.0.20231231-kos/newlib/libm/complex/ctanl.c
+--- newlib-4.4.0.20231231/newlib/libm/complex/ctanl.c	2024-02-10 09:30:58.839247944 -0600
++++ newlib-4.4.0.20231231-kos/newlib/libm/complex/ctanl.c	2024-02-10 09:28:05.960423368 -0600
+@@ -34,6 +34,8 @@
+ #include <math.h>
+ #include "cephes_subrl.h"
+ 
++/* On platforms where long double is as wide as double.  */
++#ifdef _LDBL_EQ_DBL
+ long double complex
+ ctanl(long double complex z)
+ {
+@@ -54,3 +56,4 @@
+ 	w = sinl(2.0L * creall(z)) / d + (sinhl(2.0L * cimagl(z)) / d) * I;
+ 	return w;
+ }
++#endif
+ 
+

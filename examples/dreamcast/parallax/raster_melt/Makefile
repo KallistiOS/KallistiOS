@@ -13,7 +13,7 @@ rm-elf:
 	-rm -f $(TARGET) romdisk.*
 
 $(TARGET): $(OBJS)
-	kos-cc -o $(TARGET) $(OBJS) -lparallax -ljpeg -lkmg -lpng -lz -lkosutils -lm
+	kos-cc -o $(TARGET) $(OBJS) -lparallax -ljpeg -lkmg -lpng -lz -lkosutils
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)

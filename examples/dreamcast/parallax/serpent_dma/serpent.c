@@ -2,13 +2,14 @@
    KallistiOS ##version##
    serpent.c
 
-   Copyright (C)2002,2004 Megan Potter
-   Copyright (C)2004 Jim Ursetto
+   Copyright (C) 2002,2004 Megan Potter
+   Copyright (C) 2004 Jim Ursetto
 */
 
 #include <kos.h>
 #include <math.h>
 #include <assert.h>
+#include <stdlib.h>
 #include <plx/matrix.h>
 #include <plx/prim.h>
 #include <plx/context.h>
@@ -43,6 +44,9 @@ typedef struct {
     pvr_vertex_t *data;
 } sphere_t;
 
+static sphere_t big_sphere = { 1.2f, 20, 20, NULL };
+static sphere_t small_sphere = { 0.8f, 20, 20, NULL };
+
 static void sphere(sphere_t *s) { /* {{{ */
     int i, j;
     float   pitch, pitch2;
@@ -50,9 +54,10 @@ static void sphere(sphere_t *s) { /* {{{ */
     float   yaw;
     pvr_vertex_t *v;
 
-    v = (pvr_vertex_t *)malloc(s->stacks * (s->slices + 2) * sizeof(pvr_vertex_t) + 32);
-    v = (pvr_vertex_t *)(((uint32)v & ~31) + 32); /* align to 32 bytes */
-    s->data = v;
+    s->data = (pvr_vertex_t *)memalign(32, s->stacks * (s->slices + 2) * sizeof(pvr_vertex_t));
+    if(s->data == NULL) return;
+
+    v = s->data;
     // s->data_trans = (pvr_vertex_t *)malloc(s->stacks * (s->slices+2) * sizeof(pvr_vertex_t));
     /* transformed data -- for testing mat_transform */
     printf("allocated %d bytes for %d stacks, %d + 2 slices, and %d-byte pvr_vertex_t\n",
@@ -129,10 +134,8 @@ static void draw_sphere(sphere_t *s, int list) {
 
     /* Transform and write vertices to the TA via the store queues */
     vd = (pvr_vertex_t *)pvr_vertbuf_tail(list);
-    QACR0 = ((((uint32)vd) >> 26) << 2) & 0x1c;
-    QACR1 = ((((uint32)vd) >> 26) << 2) & 0x1c;
-    sqd = (void *)
-          (0xe0000000 | (((uint32)vd) & 0x03ffffe0));
+    sq_lock(vd);
+    sqd = (void *) SQ_MASK_DEST_ADDR(vd);
     /* {
         int o = irq_disable();
         printf("transforming to %p, len %d\n",
@@ -141,6 +144,7 @@ static void draw_sphere(sphere_t *s, int list) {
     } */
 
     mat_transform_sq(v, sqd, s->stacks * (s->slices + 2));
+    sq_unlock();
 
     pvr_vertbuf_written(list, 32 * s->stacks * (s->slices + 2));
 
@@ -152,8 +156,6 @@ static float r = 0;
 static void sphere_frame(void) {
     int i;
     //uint64 start;
-    static sphere_t big_sphere = { 1.2f, 20, 20, NULL };
-    static sphere_t small_sphere = { 0.8f, 20, 20, NULL };
 
     if(!big_sphere.data)
         sphere(&big_sphere);
@@ -275,9 +277,6 @@ int main(int argc, char **argv) {
     pvr_set_vertbuf(PVR_LIST_OP_POLY, dmabuffers[0], 4 * 1024 * 1024);
     pvr_set_vertbuf(PVR_LIST_TR_POLY, dmabuffers[1], 4 * 1024 * 1024);
 
-    // Escape hatch
-    cont_btn_callback(0, CONT_START | CONT_A, (cont_btn_callback_t)arch_exit);
-
     /* Init matrices */
     plx_mat3d_init();
     plx_mat3d_mode(PLX_MAT_PROJECTION);
@@ -293,8 +292,11 @@ int main(int argc, char **argv) {
     do_sphere_test();
 
     pvr_get_stats(&stats);
-    dbglog(DBG_DEBUG, "3D Stats: %ld vblanks, frame rate ~%f fps, max vertex used %d bytes\n",
-           stats.vbl_count, (double)stats.frame_rate, stats.vtx_buffer_used_max);
+    dbglog(DBG_DEBUG, "3D Stats: %u vblanks, frame rate ~%f fps, max vertex used %u bytes\n",
+           stats.vbl_count, stats.frame_rate, stats.vtx_buffer_used_max);
+
+    free(big_sphere.data);
+    free(small_sphere.data);
 
     return 0;
 }

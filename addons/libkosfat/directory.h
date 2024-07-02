@@ -81,4 +81,6 @@ void fat_update_mtime(fat_dentry_t *ent);
 void fat_dentry_print(const fat_dentry_t *ent);
 #endif
 
+__END_DECLS
+
 #endif /* !__FAT_DIRECTORY_H */

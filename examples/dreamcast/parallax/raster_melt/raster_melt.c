@@ -83,6 +83,7 @@ int main(int argc, char **argv) {
             y += 2.0f;
     }
 
+    plx_txr_destroy(txr);
     return 0;
 }
 

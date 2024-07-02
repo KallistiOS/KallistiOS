@@ -1,35 +1,50 @@
 # Sega Dreamcast Toolchains Maker (dc-chain)
 # This file is part of KallistiOS.
-#
-# Created by Jim Ursetto (2004)
-# Initially adapted from Stalin's build script version 0.3.
-#
 
-# Please create/edit 'config.mk' to customize your 'dc-chain' setup.
+#
+# Please edit 'Makefile.cfg' to customize your 'dc-chain' setup.
 #
 
 # Display startup banner
-include scripts/banner-variables.mk
 include scripts/banner.mk
 
 # User configuration
-config_file=config.mk
+config_file=Makefile.cfg
 ifneq ("$(wildcard $(config_file))","")
+  $(info +++ Using configuration from $(config_file))
   include $(config_file)
 else
-  $(error The required $(config_file) file is missing)
+  ifneq ("$(wildcard Makefile.default.cfg)","")
+    $(info +++ Using configuration from Makefile.default.cfg)
+    include Makefile.default.cfg
+  else
+    $(error No configuration file found at $(config_file) or Makefile.default.cfg)
+  endif
 endif
 
-# Initialization rules
-include scripts/init.mk
+# Toolchain profiles
+include scripts/profile-defaults.mk
+ifneq ("$(wildcard profiles/profile.$(toolchain_profile).mk)","")
+  include profiles/profile.$(toolchain_profile).mk
+else
+  $(error No toolchain profile file found at profiles/profile.$(toolchain_profile).mk)
+endif
+
+# Download functions
+include scripts/utils.mk
 
 # Detect host machine
 include scripts/host-detect.mk
 
+# Initialization rules
+include scripts/init.mk
+
 # Makefile variables
 include scripts/variables.mk
 
-all: build
+default: build gdb
+
+all: build build-arm gdb
 
 # ---- download {{{
 

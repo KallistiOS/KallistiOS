@@ -145,6 +145,14 @@ static __always_inline void dcache_pref_block(const void *src) {
     );
 }
 
+/** \brief  Write-back Store Queue buffer to external memory
+
+    This function initiates write-back for one Store Queue.
+
+    \param  ptr             The SQ mapped address to write-back.
+*/
+#define dcache_wback_sq(ptr) dcache_pref_block(ptr)
+
 /** \brief  Allocate one block of the data/operand cache.
 
     This function allocate a block of the data/operand cache.

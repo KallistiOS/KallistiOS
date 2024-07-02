@@ -837,12 +837,12 @@ error:
     return -1;
 }
 
-int fs_dclsocket_shutdown(void) {
+void fs_dclsocket_shutdown(void) {
     int old;
     command_t cmd;
 
     if(initted != 2)
-        return -1;
+        return;
 
     dbglog(DBG_INFO, "fs_dclsocket: About to disable console\n");
 
@@ -869,5 +869,5 @@ int fs_dclsocket_shutdown(void) {
     /* Finally, clean up the socket */
     close(dcls_socket);
 
-    return nmmgr_handler_remove(&vh.nmmgr);
+    nmmgr_handler_remove(&vh.nmmgr);
 }

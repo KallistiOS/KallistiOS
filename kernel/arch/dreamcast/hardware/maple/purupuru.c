@@ -14,7 +14,9 @@
 /* Be warned, not all purus are created equal, in fact, most of
    them act different for just about everything you feed to them. */
 
-static void purupuru_rumble_cb(maple_frame_t *frame) {
+static void purupuru_rumble_cb(maple_state_t *st, maple_frame_t *frame) {
+    (void)st;
+
     /* Unlock the frame */
     maple_frame_unlock(frame);
 
@@ -71,29 +73,18 @@ int purupuru_rumble(maple_device_t *dev, purupuru_effect_t *effect) {
 }
 
 
-static void purupuru_periodic(maple_driver_t *drv) {
-    (void)drv;
-}
-
-static int purupuru_attach(maple_driver_t *drv, maple_device_t *dev) {
-    (void)drv;
-    dev->status_valid = 1;
-    return 0;
-}
-
 /* Device Driver Struct */
 static maple_driver_t purupuru_drv = {
     .functions = MAPLE_FUNC_PURUPURU,
     .name = "PuruPuru (Vibration) Pack",
-    .periodic = purupuru_periodic,
-    .attach = purupuru_attach,
+    .periodic = NULL,
+    .attach = NULL,
     .detach = NULL
 };
 
 /* Add the purupuru to the driver chain */
 void purupuru_init(void) {
-    if(!purupuru_drv.drv_list.le_prev)
-        maple_driver_reg(&purupuru_drv);
+    maple_driver_reg(&purupuru_drv);
 }
 
 void purupuru_shutdown(void) {

@@ -1,13 +1,9 @@
 # Sega Dreamcast Toolchains Maker (dc-chain)
 # This file is part of KallistiOS.
-#
-# Created by Jim Ursetto (2004)
-# Initially adapted from Stalin's build script version 0.3.
-#
 
-clean: clean-archives clean-downloads clean-builds clean_patches_stamp
+clean: clean-downloads clean-builds clean_patches_stamp
 
-clean-keep-archives: clean-downloads clean-builds clean_patches_stamp
+distclean: clean-archives clean-downloads clean-builds clean_patches_stamp
 
 clean_patches_stamp:
 	-@tmpdir=.tmp; \
@@ -47,21 +43,25 @@ clean-sh-sources:
 clean-archives: clean-gdb-archives clean-arm-archives clean-sh-archives
 
 clean-gdb-archives:
-	-rm $(gdb_file)
+	-rm -f $(gdb_file)
 
 clean-arm-archives:
-	-rm $(arm_binutils_file)
-	-rm $(arm_gcc_file)
-	-rm $(arm_gmp_file)
-	-rm $(arm_mpfr_file)
-	-rm $(arm_mpc_file)
-	-rm $(arm_isl_file)
+	-rm -f $(config_guess)
+	-rm -f $(config_sub)
+	-rm -f $(arm_binutils_file)
+	-rm -f $(arm_gcc_file)
+	-rm -f $(arm_gmp_file)
+	-rm -f $(arm_mpfr_file)
+	-rm -f $(arm_mpc_file)
+	-rm -f $(arm_isl_file)
 
 clean-sh-archives:
-	-rm $(sh_binutils_file)
-	-rm $(sh_gcc_file)
-	-rm $(newlib_file)
-	-rm $(sh_gmp_file)
-	-rm $(sh_mpfr_file)
-	-rm $(sh_mpc_file)
-	-rm $(sh_isl_file)
+	-rm -f $(config_guess)
+	-rm -f $(config_sub)
+	-rm -f $(sh_binutils_file)
+	-rm -f $(sh_gcc_file)
+	-rm -f $(newlib_file)
+	-rm -f $(sh_gmp_file)
+	-rm -f $(sh_mpfr_file)
+	-rm -f $(sh_mpc_file)
+	-rm -f $(sh_isl_file)

@@ -61,6 +61,7 @@ __BEGIN_DECLS
     KOS_INIT_FLAG(flags, INIT_FS_ROMDISK, fs_romdisk_init); \
     KOS_INIT_FLAG(flags, INIT_FS_ROMDISK, fs_romdisk_shutdown); \
     KOS_INIT_FLAG(flags, INIT_EXPORT, export_init); \
+    KOS_INIT_FLAG_NONE(flags, INIT_NO_SHUTDOWN, kos_shutdown); \
     KOS_INIT_FLAGS_ARCH(flags)
 
 #define __KOS_INIT_FLAGS_1(flags) \
@@ -95,13 +96,13 @@ extern const uint32_t __kos_init_flags;
 
 /** \brief  Deprecated and not useful anymore. */
 #define KOS_INIT_ROMDISK(rd) \
-    void *__kos_romdisk = (rd); \
+    const void *__kos_romdisk = (rd); \
     extern void fs_romdisk_mount_builtin_legacy(void); \
     void (*fs_romdisk_mount_builtin_legacy_weak)(void) = fs_romdisk_mount_builtin_legacy
 
 
 /** \brief  Built-in romdisk. Do not modify this directly! */
-extern void * __kos_romdisk;
+extern const void * __kos_romdisk;
 
 /** \brief  State that you don't want a romdisk. */
 #define KOS_INIT_ROMDISK_NONE   NULL
@@ -138,6 +139,7 @@ extern void * __kos_romdisk;
 #define INIT_QUIET       0x00000010  /**< \brief Disable dbgio */
 #define INIT_EXPORT      0x00000020  /**< \brief Export kernel symbols */
 #define INIT_FS_ROMDISK  0x00000040  /**< \brief Enable support for romdisks */
+#define INIT_NO_SHUTDOWN 0x00000080  /**< \brief Disable hardware shutdown */
 /** @} */
 
 __END_DECLS

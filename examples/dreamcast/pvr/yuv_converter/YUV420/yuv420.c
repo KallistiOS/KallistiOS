@@ -1,6 +1,7 @@
 /*  KallistiOS ##version##
     examples/dreamcast/pvr/yuv_converter/YUV420/yuv420.c
     Copyright (C) 2023 Andy Barajas
+    Copyright (C) 2023 Ruslan Rostovtsev
     
     This example shows how to use TA's YUV converter for YUV420p format.
     A sample YUV420p image in the romdisk was made via ffmpeg:
@@ -181,19 +182,26 @@ static int setup_pvr(void) {
 
 static void convert_YUV420_to_YUV422_texture(void) {
     int i, j, index, x_blk, y_blk;
+    size_t dummies = (BYTE_SIZE_FOR_16x16_BLOCK *
+        ((PVR_TEXTURE_WIDTH >> 4) - (FRAME_TEXTURE_WIDTH >> 4))) >> 5;
+    uint32_t *db = (uint32_t *)SQ_MASK_DEST_ADDR(PVR_TA_YUV_CONV);
+    uint8_t *u_block = (uint8_t *)SQ_MASK_DEST_ADDR(PVR_TA_YUV_CONV);
+    uint8_t *v_block = (uint8_t *)SQ_MASK_DEST_ADDR(PVR_TA_YUV_CONV + 64);
+    uint8_t *y_block = (uint8_t *)SQ_MASK_DEST_ADDR(PVR_TA_YUV_CONV + 128);
 
-    unsigned char u_block[64] __attribute__((aligned(32)));
-    unsigned char v_block[64] __attribute__((aligned(32)));
-    unsigned char y_block[256] __attribute__((aligned(32)));
+    sq_lock((void *)PVR_TA_YUV_CONV);
 
     for(y_blk = 0; y_blk < FRAME_TEXTURE_HEIGHT; y_blk += 16) {
         for(x_blk = 0; x_blk < FRAME_TEXTURE_WIDTH; x_blk += 16) {
-            
+
             /* U data for 16x16 pixels */
             for(i = 0; i < 8; ++i) {
                 index = (y_blk / 2 + i) * (FRAME_TEXTURE_WIDTH / 2) + 
                         (x_blk / 2);
                 *((uint64_t*)&u_block[i * 8]) = *((uint64_t*)&u_plane[index]);
+                if(!((i + 1) & 3)) {
+                    sq_flush(&u_block[i * 8]);
+                }
             }
 
             /* V data for 16x16 pixels */
@@ -201,6 +209,9 @@ static void convert_YUV420_to_YUV422_texture(void) {
                 index = (y_blk / 2 + i) * (FRAME_TEXTURE_WIDTH / 2) + 
                         (x_blk / 2);
                 *((uint64_t*)&v_block[i * 8]) = *((uint64_t*)&v_plane[index]);
+                if(!((i + 1) & 3)) {
+                    sq_flush(&v_block[i * 8]);
+                }
             }
 
             /* Y data for 4 (8x8 pixels) */
@@ -210,27 +221,21 @@ static void convert_YUV420_to_YUV422_texture(void) {
                              x_blk + (i % 2 * 8);
                     *((uint64_t*)&y_block[i * 64 + j * 8]) = 
                         *((uint64_t*)&y_plane[index]);
+                    if(!((j + 1) & 3)) {
+                        sq_flush(&y_block[i * 64 + j * 8]);
+                    }
                 }
             }
-
-            // dcache_flush_range((uint32_t)u_block, 64);
-            // pvr_dma_yuv_conv( (void*)u_block, 64, 1, NULL, 0);
-            sq_cpy((void *)PVR_TA_YUV_CONV, (void *)u_block, 64);
-
-            // dcache_flush_range((uint32_t)v_block, 64);
-            // pvr_dma_yuv_conv( (void*)v_block, 64, 1, NULL, 0);
-            sq_cpy((void *)PVR_TA_YUV_CONV, (void *)v_block, 64);
-
-            // dcache_flush_range((uint32_t)y_block, 256);
-            // pvr_dma_yuv_conv( (void*)y_block, 256, 1, NULL, 0);
-            sq_cpy((void *)PVR_TA_YUV_CONV, (void *)y_block, 256);
         }
-
         /* Send dummies if frame texture width doesn't match pvr texture width */
-        sq_set((void *)PVR_TA_YUV_CONV, 0, 
-                BYTE_SIZE_FOR_16x16_BLOCK * 
-                ((PVR_TEXTURE_WIDTH >> 4) - (FRAME_TEXTURE_WIDTH >> 4)));
+        for(i = 0; i < dummies; ++i) {
+            db[i] = db[i + 1] = db[i + 2] = db[i + 3] = 
+                db[i + 4] = db[i + 5] = db[i + 6] = db[i + 7] = 0;
+            sq_flush(&db[i]);
+        }
     }
+
+    sq_unlock();
 }
 
 static void show_image(void) {

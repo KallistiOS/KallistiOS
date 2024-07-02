@@ -1,8 +1,8 @@
 /* KallistiOS ##version##
 
    readdir.c
-   Copyright (C)2004 Megan Potter
-
+   Copyright (C) 2004 Megan Potter
+   Copyright (C) 2024 Falco Girgis
 */
 
 #include <dirent.h>
@@ -10,8 +10,9 @@
 #include <string.h>
 #include <kos/fs.h>
 
-struct dirent * readdir(DIR * dir) {
-    dirent_t * d;
+struct dirent *readdir(DIR *dir) {
+    dirent_t *d;
+    size_t len;
 
     if(!dir) {
         errno = EBADF;
@@ -28,11 +29,14 @@ struct dirent * readdir(DIR * dir) {
     dir->d_ent.d_reclen = 0;
 
     if(d->size < 0)
-        dir->d_ent.d_type = 4;  // DT_DIR
+        dir->d_ent.d_type = DT_DIR;
     else
-        dir->d_ent.d_type = 8;  // DT_REG
+        dir->d_ent.d_type = DT_REG;
 
-    strncpy(dir->d_ent.d_name, d->name, sizeof(dir->d_ent.d_name));
+    len = strnlen(d->name, sizeof(dir->d_name) - 1);
+
+    strncpy(dir->d_ent.d_name, d->name, len);
+    dir->d_ent.d_name[len] = '\0';
 
     return &dir->d_ent;
 }

@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
-# basic/bfont/Makefile
-# (c)2002 Megan Potter
+# video/bfont/Makefile
+# Copyright (C) 2002 Megan Potter
 #
 
 TARGET = bfont.elf

@@ -190,19 +190,19 @@ typedef struct {
     uint32  bg_color;                   // Background color in ARGB format
 
     /* Running statistics on the PVR system. All vars are in terms
-       of milliseconds. */
-    uint32  vbl_count;                  // VBlank counter for animations and such
-    uint32  frame_count;                // Total number of viewed frames
-    uint64  frame_last_time;            // When did the last frame completion occur?
-    uint64  buf_start_time;             // When did the last DMA buffer fill begin?
-    uint64  reg_start_time;             // When did the last registration begin?
-    uint64  rnd_start_time;             // When did the last render begin?
-    int     frame_last_len;             // VBlank-to-VBlank length for the last frame (1.0/FrameRate)
-    int     buf_last_len;               // Cumulative buffer fill time for the last frame
-    int     reg_last_len;               // Registration time for the last frame
-    int     rnd_last_len;               // Render time for the last frame
-    uint32  vtx_buf_used;               // Vertex buffer used size for the last frame
-    uint32  vtx_buf_used_max;           // Maximum used vertex buffer size
+       of nanoseconds. */
+    uint64_t frame_last_time;            // When did the last frame completion occur?
+    uint64_t buf_start_time;             // When did the last DMA buffer fill begin?
+    uint64_t reg_start_time;             // When did the last registration begin?
+    uint64_t rnd_start_time;             // When did the last render begin?
+    uint64_t frame_last_len;             // VBlank-to-VBlank length for the last frame (1.0/FrameRate)
+    uint64_t buf_last_len;               // Cumulative buffer fill time for the last frame
+    uint64_t reg_last_len;               // Registration time for the last frame
+    uint64_t rnd_last_len;               // Render time for the last frame
+    size_t   vbl_count;                  // VBlank counter for animations and such
+    size_t   frame_count;                // Total number of viewed frames
+    size_t   vtx_buf_used;               // Vertex buffer used size for the last frame
+    size_t   vtx_buf_used_max;           // Maximum used vertex buffer size
 
     /* Wait-ready semaphore: this will be signaled whenever the pvr_wait_ready()
        call should be ready to return. */
@@ -223,8 +223,7 @@ typedef struct {
     // Output address for to-texture mode
     uint32  to_txr_addr[2];
 
-    // Number of additional OPBs to allocate, allowing more geometry per tile.
-    uint32 opb_overflow_count;
+    uint32  dr_used;
 } pvr_state_t;
 
 /* There will be exactly one of these in KOS (in pvr_globals.c) */
@@ -293,7 +292,7 @@ void pvr_blank_polyhdr_buf(int type, pvr_poly_hdr_t * buf);
 /**** pvr_irq.c *******************************************************/
 
 /* Interrupt handler for PVR events */
-void pvr_int_handler(uint32 code);
+void pvr_int_handler(uint32 code, void *data);
 
 
 #endif

@@ -103,9 +103,10 @@ static int rb_space_used(void) {
    must look for available data and error conditions, and clear them all
    out if possible. If our internal ring buffer comes close to overflowing,
    the best we can do is twiddle RTS/CTS for a while. */
-static void scif_err_irq(irq_t src, irq_context_t * cxt) {
+static void scif_err_irq(irq_t src, irq_context_t *cxt, void *data) {
     (void)src;
     (void)cxt;
+    (void)data;
 
     /* Clear status bits */
     SCSCR2 &= ~0x08;
@@ -131,9 +132,10 @@ static void scif_err_irq(irq_t src, irq_context_t * cxt) {
     }
 }
 
-static void scif_data_irq(irq_t src, irq_context_t * cxt) {
+static void scif_data_irq(irq_t src, irq_context_t *cxt, void *data) {
     (void)src;
     (void)cxt;
+    (void)data;
 
     /* Clear status bits */
     SCSCR2 &= ~0x40;
@@ -160,9 +162,9 @@ int scif_set_irq_usage(int on) {
 
     if(scif_irq_usage) {
         /* Hook the SCIF interrupt */
-        irq_set_handler(EXC_SCIF_ERI, scif_err_irq);
-        irq_set_handler(EXC_SCIF_BRI, scif_err_irq);
-        irq_set_handler(EXC_SCIF_RXI, scif_data_irq);
+        irq_set_handler(EXC_SCIF_ERI, scif_err_irq, NULL);
+        irq_set_handler(EXC_SCIF_BRI, scif_err_irq, NULL);
+        irq_set_handler(EXC_SCIF_RXI, scif_data_irq, NULL);
         *((vuint16*)0xffd0000c) |= 0x000e << 4;
 
         /* Enable transmit/receive, recv/recv error ints */
@@ -174,9 +176,9 @@ int scif_set_irq_usage(int on) {
 
         /* Unhook the SCIF interrupt */
         *((vuint16*)0xffd0000c) &= ~(0x000e << 4);
-        irq_set_handler(EXC_SCIF_ERI, NULL);
-        irq_set_handler(EXC_SCIF_BRI, NULL);
-        irq_set_handler(EXC_SCIF_RXI, NULL);
+        irq_set_handler(EXC_SCIF_ERI, NULL, NULL);
+        irq_set_handler(EXC_SCIF_BRI, NULL, NULL);
+        irq_set_handler(EXC_SCIF_RXI, NULL, NULL);
     }
 
     return 0;

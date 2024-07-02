@@ -93,30 +93,49 @@
 
  */
 
+#include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
 #include <arch/irq.h>
 #include <dc/asic.h>
 #include <arch/spinlock.h>
+#include <kos/genwait.h>
+#include <kos/worker_thread.h>
 
 /* XXX These based on g1ata.c and pvr.h and should be replaced by a standardized method */
 #define IN32(addr)         (* ( (volatile uint32_t *)(addr) ) )
 #define OUT32(addr, data)  IN32(addr) = (data)
 
 /* The set of asic regs are spaced by 0x10 with 0x4 between each sub reg */
-#define ASIC_EVT_REG_ADDR(irq, sub) (ASIC_IRQD_A + (irq * 0x10) + (sub * 0x4))
+#define ASIC_EVT_REG_ADDR(irq, sub) (ASIC_IRQD_A + ((irq) * 0x10) + ((sub) * 0x4))
 
 #define ASIC_EVT_REGS 3
 #define ASIC_EVT_REG_HNDS 32
 
+typedef struct {
+    asic_evt_handler hdl;
+    void *data;
+} asic_evt_handler_entry_t;
+
+struct asic_thdata {
+    asic_evt_handler hdl;
+    uint32_t source;
+    kthread_worker_t *worker;
+    void *data;
+    void (*ack_and_mask)(uint16_t);
+    void (*unmask)(uint16_t);
+};
+
 /* Exception table -- this table matches each potential G2 event to a function
    pointer. If the pointer is null, then nothing happens. Otherwise, the
    function will handle the exception. */
-static asic_evt_handler asic_evt_handlers[ASIC_EVT_REGS][ASIC_EVT_REG_HNDS];
+static asic_evt_handler_entry_t
+asic_evt_handlers[ASIC_EVT_REGS][ASIC_EVT_REG_HNDS];
 
 /* Set a handler, or remove a handler */
-void asic_evt_set_handler(uint16_t code, asic_evt_handler hnd) {
+void asic_evt_set_handler(uint16_t code, asic_evt_handler hnd, void *data) {
     uint8_t evtreg, evt;
 
     evtreg = (code >> 8) & 0xff;
@@ -124,12 +143,14 @@ void asic_evt_set_handler(uint16_t code, asic_evt_handler hnd) {
 
     assert((evtreg < ASIC_EVT_REGS) && (evt < ASIC_EVT_REG_HNDS));
 
-    asic_evt_handlers[evtreg][evt] = hnd;
+    asic_evt_handlers[evtreg][evt] = (asic_evt_handler_entry_t){ hnd, data };
 }
 
 /* The ASIC event handler; this is called from the global IRQ handler
    to handle external IRQ 9. */
-static void handler_irq9(irq_t source, irq_context_t *context) {
+static void handler_irq9(irq_t source, irq_context_t *context, void *data) {
+    const asic_evt_handler_entry_t (*const handlers)[ASIC_EVT_REG_HNDS] = data;
+    const asic_evt_handler_entry_t *entry;
     uint8_t reg, i;
 
     (void)source;
@@ -146,11 +167,10 @@ static void handler_irq9(irq_t source, irq_context_t *context) {
 
         /* Search for relevant handlers */
         for(i = 0; i < ASIC_EVT_REG_HNDS; i++) {
-            if(mask & (1 << i)) {
-                if(asic_evt_handlers[reg][i] != NULL) {
-                    asic_evt_handlers[reg][i]((reg << 8) | i);
-                }
-            }
+            entry = &handlers[reg][i];
+
+            if((mask & (1 << i)) && entry->hdl != NULL)
+                entry->hdl((reg << 8) | i, entry->data);
         }
     }
 }
@@ -206,9 +226,9 @@ static void asic_evt_init(void) {
     memset(asic_evt_handlers, 0, sizeof(asic_evt_handlers));
 
     /* Hook IRQ9,B,D */
-    irq_set_handler(EXC_IRQ9, handler_irq9);
-    irq_set_handler(EXC_IRQB, handler_irq9);
-    irq_set_handler(EXC_IRQD, handler_irq9);
+    irq_set_handler(EXC_IRQ9, handler_irq9, asic_evt_handlers);
+    irq_set_handler(EXC_IRQB, handler_irq9, asic_evt_handlers);
+    irq_set_handler(EXC_IRQD, handler_irq9, asic_evt_handlers);
 }
 
 /* Shutdown events */
@@ -217,9 +237,9 @@ static void asic_evt_shutdown(void) {
     asic_evt_disable_all();
 
     /* Unhook handlers */
-    irq_set_handler(EXC_IRQ9, NULL);
-    irq_set_handler(EXC_IRQB, NULL);
-    irq_set_handler(EXC_IRQD, NULL);
+    irq_set_handler(EXC_IRQ9, NULL, NULL);
+    irq_set_handler(EXC_IRQB, NULL, NULL);
+    irq_set_handler(EXC_IRQD, NULL, NULL);
 }
 
 /* Init routine */
@@ -229,4 +249,87 @@ void asic_init(void) {
 
 void asic_shutdown(void) {
     asic_evt_shutdown();
+}
+
+static void asic_threaded_irq(void *data) {
+    struct asic_thdata *thdata = data;
+
+    thdata->hdl(thdata->source, thdata->data);
+
+    if (thdata->unmask)
+        thdata->unmask(thdata->source);
+}
+
+static void asic_thirq_dispatch(uint32_t source, void *data) {
+    struct asic_thdata *thdata = data;
+
+    if (thdata->ack_and_mask)
+        thdata->ack_and_mask(source);
+
+    thdata->source = source;
+
+    thd_worker_wakeup(thdata->worker);
+}
+
+int asic_evt_request_threaded_handler(uint16_t code, asic_evt_handler hnd,
+                                      void *data,
+                                      void (*ack_and_mask)(uint16_t),
+                                      void (*unmask)(uint16_t))
+{
+    struct asic_thdata *thdata;
+    uint32_t flags;
+    kthread_t *thd;
+
+    thdata = malloc(sizeof(*thdata));
+    if (!thdata)
+        return -1; /* TODO: What return code? */
+
+    thdata->hdl = hnd;
+    thdata->data = data;
+    thdata->ack_and_mask = ack_and_mask;
+    thdata->unmask = unmask;
+
+    flags = irq_disable();
+
+    thdata->worker = thd_worker_create(asic_threaded_irq, thdata);
+    if (!thdata->worker) {
+        irq_restore(flags);
+        free(thdata);
+        return -1; /* TODO: What return code? */
+    }
+
+    /* Set a reasonable name to ID the thread */
+    thd = thd_worker_get_thread(thdata->worker);
+    snprintf(thd->label, KTHREAD_LABEL_SIZE,
+             "Threaded IRQ code: 0x%x evt: 0x%.4x",
+             ((code >> 16) & 0xf), (code & 0xffff));
+
+    /* Highest priority */
+    //thd_set_prio(thd, 0);
+
+    asic_evt_set_handler(code, asic_thirq_dispatch, thdata);
+
+    irq_restore(flags);
+
+    return 0;
+}
+
+void asic_evt_remove_handler(uint16_t code)
+{
+    asic_evt_handler_entry_t entry;
+    struct asic_thdata *thdata;
+    uint8_t evtreg, evt;
+
+    evtreg = (code >> 8) & 0xff;
+    evt = code & 0xff;
+
+    entry = asic_evt_handlers[evtreg][evt];
+    asic_evt_set_handler(code, NULL, NULL);
+
+    if (entry.hdl == asic_thirq_dispatch) {
+        thdata = entry.data;
+
+        thd_worker_destroy(thdata->worker);
+        free(thdata);
+    }
 }

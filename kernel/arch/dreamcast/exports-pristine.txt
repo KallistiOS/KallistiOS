@@ -121,6 +121,7 @@ spu_memload
 spu_memload_sq
 spu_memread
 spu_memset
+spu_memset_sq
 spu_dma_transfer
 spu_reset_chans
 spu_enable
@@ -135,6 +136,7 @@ sq_set16
 sq_set32
 sq_lock
 sq_unlock
+sq_wait
 
 # Sound
 snd_mem_init
@@ -182,19 +184,25 @@ snd_pcm8_split
 snd_adpcm_split
 
 # Video
-vid_check_cable
+vid_mode
 vram_s
 vram_l
-vid_mode
-vid_set_mode
-vid_set_mode_ex
+vid_check_cable
+vid_set_vram
 vid_set_start
+vid_get_start
+vid_set_fb
 vid_flip
 vid_border_color
 vid_clear
 vid_empty
+vid_get_enabled
+vid_set_enabled
 vid_waitvbl
+vid_set_mode
+vid_set_mode_ex
 vid_init
+vid_shutdown
 
 # Maple
 cont_btn_callback
@@ -228,6 +236,9 @@ pvr_txr_load_dma
 pvr_dma_ready
 pvr_dma_load_ta
 pvr_dma_yuv_conv
+pvr_sq_load
+pvr_sq_set16
+pvr_sq_set32
 pvr_fog_table_color
 pvr_fog_vertex_color
 pvr_fog_far_depth

@@ -3,7 +3,7 @@
    timer.c
    Copyright (C) 2000, 2001, 2002 Megan Potter
    Copyright (C) 2023 Falco Girgis
-   Copyright (C) 2023 Paul Cercueil <paul@crapouillou.net>
+   Copyright (C) 2023, 2024 Paul Cercueil <paul@crapouillou.net>
 */
 
 #include <assert.h>
@@ -171,6 +171,22 @@ void timer_spin_sleep(int ms) {
     timer_stop(TMU1);
 }
 
+void timer_spin_delay_ns(unsigned short ns) {
+    uint64_t timeout = timer_ns_gettime64() + ns;
+
+    /* Note that we don't actually care about the counter overflowing.
+       Nobody will run their Dreamcast straight for 585 years. */
+    while(timer_ns_gettime64() < timeout);
+}
+
+void timer_spin_delay_us(unsigned short us) {
+    uint64_t timeout = timer_us_gettime64() + us;
+
+    /* Note that we don't actually care about the counter overflowing.
+       Nobody will run their Dreamcast straight for 584942 years. */
+    while(timer_us_gettime64() < timeout);
+}
+
 /* Enable timer interrupts; needs to move to irq.c sometime. */
 void timer_enable_ints(int which) {
     volatile uint16_t *ipra = (uint16_t *)0xffd00004;
@@ -196,9 +212,10 @@ static          uint32_t timer_ms_countdown;
 
 /* TMU2 interrupt handler, called every second. Simply updates our
    running second counter and clears the underflow flag. */
-static void timer_ms_handler(irq_t source, irq_context_t *context) {
+static void timer_ms_handler(irq_t source, irq_context_t *context, void *data) {
     (void)source;
     (void)context;
+    (void)data;
 
     timer_ms_counter++;
 
@@ -207,7 +224,7 @@ static void timer_ms_handler(irq_t source, irq_context_t *context) {
 }
 
 void timer_ms_enable(void) {
-    irq_set_handler(EXC_TMU2_TUNI2, timer_ms_handler);
+    irq_set_handler(EXC_TMU2_TUNI2, timer_ms_handler, NULL);
     timer_prime(TMU2, 1, 1);
     timer_ms_countdown = timer_count(TMU2);
     timer_clear(TMU2);
@@ -273,6 +290,7 @@ static timer_val_t timer_getticks(const uint32_t *tns, uint32_t shift) {
     return (timer_val_t){ .secs = secs, .ticks = ticks, };
 }
 
+/* Millisecond timer */
 static const uint32_t tns_values_ms[] = {
     /* 80, 320, 1280, 5120, 20480
        each multiplied by (1 << 37) / (1000 * 1000) */
@@ -292,6 +310,7 @@ uint64_t timer_ms_gettime64(void) {
     return (uint64_t)val.secs * 1000ull + (uint64_t)val.ticks;
 }
 
+/* Microsecond timer */
 static const uint32_t tns_values_us[] = {
     /* 80, 320, 1280, 5120, 20480,
        each multiplied by (1 << 27) / 1000 */
@@ -311,6 +330,7 @@ uint64_t timer_us_gettime64(void) {
     return (uint64_t)val.secs * 1000000ull + (uint64_t)val.ticks;
 }
 
+/* Nanosecond timer */
 static const uint32_t tns_values_ns[] = {
     80, 320, 1280, 5120, 20480,
 };
@@ -322,6 +342,12 @@ void timer_ns_gettime(uint32_t *secs, uint32_t *nsecs) {
     if(nsecs) *nsecs = val.ticks;
 }
 
+uint64_t timer_ns_gettime64(void) {
+   const timer_val_t val = timer_getticks(tns_values_ns, 0);
+
+    return (uint64_t)val.secs * 1000000000ull + (uint64_t)val.ticks;
+}
+
 /* Primary kernel timer. What we'll do here is handle actual timer IRQs
    internally, and call the callback only after the appropriate number of
    millis has passed. For the DC you can't have timers spaced out more
@@ -330,8 +356,9 @@ static timer_primary_callback_t tp_callback;
 static uint32_t tp_ms_remaining;
 
 /* IRQ handler for the primary timer interrupt. */
-static void tp_handler(irq_t src, irq_context_t *cxt) {
+static void tp_handler(irq_t src, irq_context_t *cxt, void *data) {
     (void)src;
+    (void)data;
 
     /* Are we at zero? */
     if(tp_ms_remaining == 0) {
@@ -365,14 +392,14 @@ static void timer_primary_init(void) {
     tp_callback = NULL;
 
     /* Clear out TMU0 and get ready for wakeups */
-    irq_set_handler(EXC_TMU0_TUNI0, tp_handler);
+    irq_set_handler(EXC_TMU0_TUNI0, tp_handler, NULL);
     timer_clear(TMU0);
 }
 
 static void timer_primary_shutdown(void) {
     timer_stop(TMU0);
     timer_disable_ints(TMU0);
-    irq_set_handler(EXC_TMU0_TUNI0, NULL);
+    irq_set_handler(EXC_TMU0_TUNI0, NULL, NULL);
 }
 
 timer_primary_callback_t timer_primary_set_callback(timer_primary_callback_t cb) {
@@ -408,7 +435,6 @@ void timer_primary_wakeup(uint32_t millis) {
     }
 }
 
-
 /* Init */
 int timer_init(void) {
     /* Disable all timers */
@@ -433,80 +459,4 @@ void timer_shutdown(void) {
     timer_disable_ints(TMU0);
     timer_disable_ints(TMU1);
     timer_disable_ints(TMU2);
-}
-
-/* Quick access macros */
-#define PMCR_CTRL(o)  ( *((volatile uint16*)(0xff000084) + (o << 1)) )
-#define PMCTR_HIGH(o) ( *((volatile uint32*)(0xff100004) + (o << 1)) )
-#define PMCTR_LOW(o)  ( *((volatile uint32*)(0xff100008) + (o << 1)) )
-
-#define PMCR_CLR        0x2000
-#define PMCR_PMST       0x4000
-#define PMCR_PMENABLE   0x8000
-#define PMCR_RUN        0xc000
-#define PMCR_PMM_MASK   0x003f
-
-#define PMCR_CLOCK_TYPE_SHIFT 8
-
-/* 5ns per count in 1 cycle = 1 count mode(PMCR_COUNT_CPU_CYCLES) */
-#define NS_PER_CYCLE      5
-
-/* Get a counter's current configuration */
-uint16 perf_cntr_get_config(int which) {
-    return PMCR_CTRL(which);
-}
-
-/* Start a performance counter */
-int perf_cntr_start(int which, int mode, int count_type) {
-    perf_cntr_clear(which);
-    PMCR_CTRL(which) = PMCR_RUN | mode | (count_type << PMCR_CLOCK_TYPE_SHIFT);
-
-    return 0;
-}
-
-/* Stop a performance counter */
-int perf_cntr_stop(int which) {
-    PMCR_CTRL(which) &= ~(PMCR_PMM_MASK | PMCR_PMENABLE);
-
-    return 0;
-}
-
-/* Clears a performance counter.  Has to stop it first. */
-int perf_cntr_clear(int which) {
-    perf_cntr_stop(which);
-    PMCR_CTRL(which) |= PMCR_CLR;
-
-    return 0;
-}
-
-/* Returns the count value of a counter */
-inline uint64 perf_cntr_count(int which) {
-    return (uint64)(PMCTR_HIGH(which) & 0xffff) << 32 | PMCTR_LOW(which);
-}
-
-void timer_ns_enable(void) {
-    perf_cntr_start(PRFC0, PMCR_ELAPSED_TIME_MODE, PMCR_COUNT_CPU_CYCLES);
-}
-
-void timer_ns_disable(void) {
-    uint16 config = PMCR_CTRL(PRFC0);
-
-    /* If timer is running, disable it */
-    if((config & PMCR_ELAPSED_TIME_MODE)) {
-        perf_cntr_clear(PRFC0);
-    }
-}
-
-inline uint64 timer_ns_gettime64(void) {
-    uint16 config = PMCR_CTRL(PRFC0);
-
-    /* If timer is running */
-    if((config & PMCR_ELAPSED_TIME_MODE)) {
-        uint64 cycles = perf_cntr_count(PRFC0);
-        return cycles * NS_PER_CYCLE;
-    }
-    else {
-        uint64 micro_secs = timer_us_gettime64();
-        return micro_secs * 1000;
-    }
 }

@@ -54,10 +54,15 @@ size_t strlcpy(char *, const char *, size_t);
  * in which case the path which caused trouble is left in (resolved).
  */
 char *
-realpath(const char *path, char resolved[PATH_MAX]) {
+realpath(const char *__restrict path, char *__restrict resolved) {
     char *p, *q, *s;
     size_t left_len, resolved_len;
     char left[PATH_MAX], next_token[PATH_MAX];
+
+    if(path == NULL) {
+        errno = EINVAL;
+        return NULL;
+    }
 
     if(path[0] == '/') {
         resolved[0] = '/';

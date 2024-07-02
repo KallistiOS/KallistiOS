@@ -10,7 +10,7 @@
 # that minimum set must be present.
 
 COPYOBJS = banner.o cache.o entry.o irq.o init.o mm.o panic.o
-COPYOBJS += rtc.o timer.o wdt.o
+COPYOBJS += rtc.o timer.o wdt.o perfctr.o
 COPYOBJS += init_flags_default.o
 COPYOBJS += mmu.o itlb.o
 COPYOBJS += exec.o execasm.o stack.o gdb_stub.o thdswitch.o arch_exports.o
@@ -18,9 +18,12 @@ COPYOBJS += uname.o
 OBJS = $(COPYOBJS) startup.o
 SUBDIRS =
 
+CRT1_PATH = $(shell $(KOS_CC) $(KOS_CFLAGS) -print-file-name=crt1.o)
+
 myall: $(OBJS)
 	-cp $(COPYOBJS) $(KOS_BASE)/kernel/build/
 	-rm banner.h authors.h banner.o uname.o
+	-cp startup.o $(CRT1_PATH)
 
 include $(KOS_BASE)/Makefile.prefab
 

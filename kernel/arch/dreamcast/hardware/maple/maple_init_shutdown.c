@@ -95,8 +95,8 @@ static void maple_hw_init(void) {
     maple_bus_enable();
 
     /* Hook the necessary interrupts */
-    maple_state.vbl_handle = vblank_handler_add(maple_vbl_irq_hnd);
-    asic_evt_set_handler(ASIC_EVT_MAPLE_DMA, maple_dma_irq_hnd);
+    maple_state.vbl_handle = vblank_handler_add(maple_vbl_irq_hnd, &maple_state);
+    asic_evt_set_handler(ASIC_EVT_MAPLE_DMA, maple_dma_irq_hnd, &maple_state);
     asic_evt_enable(ASIC_EVT_MAPLE_DMA, ASIC_IRQ_DEFAULT);
 }
 
@@ -108,7 +108,7 @@ void maple_hw_shutdown(void) {
 
     /* Unhook interrupts */
     vblank_handler_remove(maple_state.vbl_handle);
-    asic_evt_set_handler(ASIC_EVT_MAPLE_DMA, NULL);
+    asic_evt_remove_handler(ASIC_EVT_MAPLE_DMA);
     asic_evt_disable(ASIC_EVT_MAPLE_DMA, ASIC_IRQ_DEFAULT);
 
     /* Stop any existing maple DMA and shut down the bus */
@@ -140,7 +140,7 @@ void maple_hw_shutdown(void) {
         }
     }
 
-    dbglog(DBG_INFO, "maple: final stats -- device count = %d, vbl_cntr = %d, dma_cntr = %d\n",
+    dbglog(DBG_DEBUG, "maple: final stats -- device count = %d, vbl_cntr = %d, dma_cntr = %d\n",
            cnt, maple_state.vbl_cntr, maple_state.dma_cntr);
 }
 
@@ -161,7 +161,7 @@ void maple_wait_scan(void) {
             dev = &maple_state.ports[p].units[u];
 
             if(dev->valid) {
-                dbglog(DBG_INFO, "  %c%c: %s (%08lx: %s)\n",
+                dbglog(DBG_INFO, "  %c%c: %.30s (%08lx: %s)\n",
                        'A' + p, '0' + u,
                        dev->info.product_name,
                        dev->info.functions, maple_pcaps(dev->info.functions));

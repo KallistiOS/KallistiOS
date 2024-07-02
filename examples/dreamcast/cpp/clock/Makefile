@@ -8,6 +8,8 @@ TARGET = clock.elf
 OBJS = clock.o romdisk.o
 KOS_ROMDISK_DIR = romdisk
 
+KOS_CPPFLAGS += -std=gnu++17
+
 all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules
@@ -19,7 +21,7 @@ rm-elf:
 	-rm -f $(TARGET) romdisk.*
 
 $(TARGET): $(OBJS)
-	kos-c++ -o $(TARGET) $(OBJS) -ldcplib -lm
+	kos-c++ -o $(TARGET) $(OBJS) -ldcplib
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)

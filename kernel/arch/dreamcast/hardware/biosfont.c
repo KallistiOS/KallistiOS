@@ -4,13 +4,17 @@
 
    Copyright (C) 2000-2002 Megan Potter
    Japanese code Copyright (C) Kazuaki Matsumoto
-   Copyright (C) 2017 Donald Haase
+   Copyright (C) 2017, 2024 Donald Haase
+   Copyright (C) 2024 Andy Barajas
 */
 
 #include <assert.h>
+
 #include <dc/biosfont.h>
-#include <dc/video.h>
+#include <dc/syscalls.h>
+
 #include <kos/dbglog.h>
+#include <kos/mutex.h>
 
 /*
 
@@ -71,20 +75,26 @@ int bfont_set_32bit_mode(int on) {
     return rv;
 }
 
-/* A little assembly that grabs the font address */
-extern uint8* get_font_address(void);
-__asm__("	.text\n"
-        "	.align 2\n"
-	".globl _get_font_address\n"
-        "_get_font_address:\n"
-        "	mov.l	syscall_b4,r0\n"
-        "	mov.l	@r0,r0\n"
-        "	jmp	@r0\n"
-        "	mov	#0,r1\n"
-        "\n"
-        "	.align 4\n"
-        "syscall_b4:\n"
-        "	.long	0x8c0000b4\n");
+/* From cdrom.c */
+extern mutex_t _g1_ata_mutex;
+
+int lock_bfont(void) {
+    if(mutex_lock(&_g1_ata_mutex) == -1) return -1;
+
+    /* Just make sure no outside system took the lock */
+    while(syscall_font_lock() != 0)
+        thd_pass();
+
+    return 0;
+}
+
+int unlock_bfont(void) {
+    if(mutex_unlock(&_g1_ata_mutex) == -1) return -1;
+
+    syscall_font_unlock();
+
+    return 0;
+}
 
 /* Shift-JIS -> JIS conversion */
 uint32 sjis2jis(uint32 sjis) {
@@ -115,7 +125,7 @@ uint32 euc2jis(uint32 euc) {
 
 /* Given an ASCII character, find it in the BIOS font if possible */
 uint8 *bfont_find_char(uint32 ch) {
-    uint8   *fa = get_font_address();
+    uint8   *fa = syscall_font_address();
     /* By default, map to a space */
     uint32 index = 72 << 2;
 
@@ -132,7 +142,7 @@ uint8 *bfont_find_char(uint32 ch) {
 
 /* JIS -> (kuten) -> address conversion */
 uint8 *bfont_find_char_jp(uint32 ch) {
-    uint8   *fa = get_font_address();
+    uint8   *fa = syscall_font_address();
     uint32 ku, ten, kuten = 0;
 
     /* Do the requested code conversion */
@@ -165,7 +175,7 @@ uint8 *bfont_find_char_jp(uint32 ch) {
 
 /* Half-width kana -> address conversion */
 uint8 *bfont_find_char_jp_half(uint32 ch) {
-    uint8 *fa = get_font_address();
+    uint8 *fa = syscall_font_address();
     return fa + (32 + ch) * (BFONT_THIN_WIDTH*BFONT_HEIGHT/8);
 }
 
@@ -228,9 +238,14 @@ unsigned char bfont_draw_ex(uint8 *buffer, uint32 bufwidth, uint32 fg, uint32 bg
         return 0;
     }
 
+    if(lock_bfont() < 0) {
+        dbglog(DBG_ERROR, "bfont_draw_ex: error requesting font access\n");
+        return 0;
+    }
+
     /* Translate the character */
     if(bfont_code_mode == BFONT_CODE_RAW)
-        ch = get_font_address() + c;
+        ch = syscall_font_address() + c;
     else if(wide && ((bfont_code_mode == BFONT_CODE_EUC) || (bfont_code_mode == BFONT_CODE_SJIS)))
         ch = bfont_find_char_jp(c);
     else {
@@ -258,6 +273,9 @@ unsigned char bfont_draw_ex(uint8 *buffer, uint32 bufwidth, uint32 fg, uint32 bg
         if(!wide) buffer += ((bufwidth - BFONT_THIN_WIDTH)*bpp)/8;
         else buffer += ((bufwidth - BFONT_WIDE_WIDTH)*bpp)/8;
     }
+
+    if(unlock_bfont() < 0)
+        dbglog(DBG_ERROR, "bfont_draw_ex: error releasing font access\n");
 
     /* Return the horizontal distance covered in bytes */
     if(wide)
@@ -346,6 +364,6 @@ uint8 *bfont_find_icon(uint8 icon) {
 
     int icon_offset = BFONT_VMU_DREAMCAST_SPECIFIC +
         (icon * BFONT_ICON_DIMEN * BFONT_ICON_DIMEN/8);
-    uint8 *fa = get_font_address();
+    uint8 *fa = syscall_font_address();
     return fa + icon_offset;
 }

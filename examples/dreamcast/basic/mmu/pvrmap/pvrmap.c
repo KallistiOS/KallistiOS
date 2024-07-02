@@ -15,8 +15,9 @@ KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS);
 
 int main(int argc, char **argv) {
     mmucontext_t * cxt;
-    uint16 * vr;
-    int x, y, done = 0;
+    uint16_t * vr;
+    bool done = false;
+    uint16_t x, y = 0;
 
     /* Initialize MMU support */
     mmu_init();
@@ -33,9 +34,14 @@ int main(int argc, char **argv) {
     /* Draw a nice pattern to the NULL space */
     vr = NULL;
 
+/* Make sure the compiler doesn't complain about the bad thing 
+we are doing intentionally */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wanalyzer-null-dereference"
+
     for(y = 0; y < 480; y++) {
         for(x = 0; x < 640; x++) {
-            int v = ((x * x + y * y) & 255);
+            uint8_t v = ((x * x + y * y) & 0xff);
 
             if(v >= 128)
                 v = 127 - (v - 128);
@@ -46,6 +52,9 @@ int main(int argc, char **argv) {
         }
     }
 
+/* Turn the warning back on */
+#pragma GCC diagnostic pop
+
     /* Draw some text */
     bfont_draw_str(vr + 20 * 640 + 20, 640, 0, "Press START!");
 
@@ -54,7 +63,7 @@ int main(int argc, char **argv) {
         MAPLE_FOREACH_BEGIN(MAPLE_FUNC_CONTROLLER, cont_state_t, st)
 
         if(st->buttons & CONT_START)
-            done = 1;
+            done = true;
 
         MAPLE_FOREACH_END()
     }

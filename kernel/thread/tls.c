@@ -57,9 +57,9 @@ static destructor kthread_key_get_destructor(kthread_key_t key) {
 
 /* Delete the destructor for a given key. */
 void kthread_key_delete_destructor(kthread_key_t key) {
-    kthread_tls_dest_t *i;
+    kthread_tls_dest_t *i, *tmp;
 
-    LIST_FOREACH(i, &dest_list, dest_list) {
+    LIST_FOREACH_SAFE(i, &dest_list, dest_list, tmp) {
         if(i->key == key) {
             LIST_REMOVE(i, dest_list);
             free(i);

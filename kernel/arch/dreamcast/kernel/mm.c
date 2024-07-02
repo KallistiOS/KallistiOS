@@ -47,7 +47,7 @@ void* mm_sbrk(unsigned long increment) {
 
     sbrk_base = (void *)(increment + (unsigned long)sbrk_base);
 
-    if(((uint32)sbrk_base) >= (_arch_mem_top - 65536)) {
+    if(((uint32)sbrk_base) >= (_arch_mem_top - THD_KERNEL_STACK_SIZE)) {
         dbglog(DBG_CRITICAL, "Out of memory. Requested sbrk_base %p, was %p, diff %lu\n",
                sbrk_base, base, increment);
         sbrk_base = base;  /* Restore old value and mark failed */

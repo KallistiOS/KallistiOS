@@ -57,6 +57,7 @@ __BEGIN_DECLS
 #include <kos/fs_socket.h>
 #include <kos/string.h>
 #include <kos/init.h>
+#include <kos/oneshot_timer.h>
 
 #include <arch/arch.h>
 #include <arch/cache.h>
@@ -100,6 +101,7 @@ __BEGIN_DECLS
 #   include <dc/modem/modem.h>
 #   include <dc/net/broadband_adapter.h>
 #   include <dc/net/lan_adapter.h>
+#   include <dc/perfctr.h>
 #   include <dc/pvr.h>
 #   include <dc/scif.h>
 #   include <dc/sd.h>
@@ -111,6 +113,7 @@ __BEGIN_DECLS
 #   include <dc/vblank.h>
 #   include <dc/vec3f.h>
 #   include <dc/video.h>
+#   include <dc/vmu_fb.h>
 #   include <dc/vmu_pkg.h>
 #   include <dc/vmufs.h>
 #else   /* _arch_dreamcast */

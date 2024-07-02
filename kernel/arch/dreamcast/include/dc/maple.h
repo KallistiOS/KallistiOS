@@ -175,6 +175,8 @@ TAILQ_HEAD(maple_frame_queue, maple_frame);
 
 struct maple_driver;
 LIST_HEAD(maple_driver_list, maple_driver);
+
+struct maple_state_str;
 /* \endcond */
 
 /** \brief   Maple frame to be queued for transport.
@@ -200,7 +202,7 @@ typedef struct maple_frame {
 
     struct maple_device *dev;       /**< \brief Does this belong to a device? */
 
-    void (*callback)(struct maple_frame *);     /**< \brief Response callback */
+    void (*callback)(struct maple_state_str *, struct maple_frame *);     /**< \brief Response callback */
 
 #if MAPLE_DMA_DEBUG
     uint8   recv_buf_arr[1024 + 1024 + 32]; /**< \brief Response receive area */
@@ -225,6 +227,8 @@ typedef struct maple_frame {
 
     This structure is used by the hardware to deliver the response to the device
     info request.
+
+    \note product_name and product_license are not guaranteed to be NULL terminated.
 
     \headerfile dc/maple.h
 */
@@ -756,15 +760,17 @@ void maple_detach_callback(uint32 functions, maple_detach_callback_t cb);
     \ingroup maple
     
     \param  code            The ASIC event code.
+    \param  data            The user pointer associated with this callback.
 */
-void maple_vbl_irq_hnd(uint32 code);
+void maple_vbl_irq_hnd(uint32 code, void *data);
 
 /** \brief   Called after a Maple DMA send / receive pair completes.
     \ingroup maple 
     
     \param  code            The ASIC event code.
+    \param  data            The user pointer associated with this callback.
 */
-void maple_dma_irq_hnd(uint32 code);
+void maple_dma_irq_hnd(uint32 code, void *data);
 
 /**************************************************************************/
 /* maple_enum.c */

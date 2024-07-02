@@ -104,6 +104,9 @@ int read_headers(http_state_t * hs, char * buffer, int bufsize) {
     char fn[256];
     int i, j;
 
+    if(buffer == NULL)
+        return -2;
+
     for(i = 0; ; i++) {
         if(readline(hs->socket, buffer, bufsize) < 0) {
             if(i > 0)
@@ -143,6 +146,9 @@ static const char * errmsg3 = "</h4>\n<hr>\nKOSHttp/1.0 server\n</body></html>";
 int send_error(http_state_t * hs, int errcode, const char * str) {
     char * buffer = malloc(65536);
 
+    if(buffer == NULL)
+        return -1;
+
     sprintf(buffer, "HTTP/1.0 %d %s\r\nContent-type: text/html\r\n\r\n", errcode, str);
     write(hs->socket, buffer, strlen(buffer));
 
@@ -181,6 +187,9 @@ int do_dirlist(const char * name, http_state_t * hs, file_t f) {
 
     dl = malloc(65536);
     dlout = dl;
+    
+    if(dl == NULL)
+        return -1;
 
     sprintf(dlout, "<html><head><title>Listing of %s</title></head></html>\n<body bgcolor=\"white\">\n", name);
     dlout += strlen(dlout);
@@ -210,8 +219,10 @@ int do_dirlist(const char * name, http_state_t * hs, file_t f) {
     while(dlsize > 0) {
         r = write(hs->socket, dlout, dlsize);
 
-        if(r <= 0)
+        if(r <= 0) {
+            free(dl);
             return -1;
+        }
 
         dlsize -= r;
         dlout += r;
@@ -253,7 +264,8 @@ void *client_thread(void *p) {
         f = fs_open(buf, O_RDONLY);
 
         if(f < 0) {
-            send_error(hs, 404, "File not found or unreadable");
+            if(send_error(hs, 404, "File not found or unreadable") < 0)
+                printf("Error sending 404\n");
             goto out;
         }
 

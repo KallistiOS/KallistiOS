@@ -5,6 +5,9 @@
 
 */
 
+#ifndef __DC_VMU_FB_H
+#define __DC_VMU_FB_H
+
 /** \file    dc/vmu_fb.h
     \brief   VMU framebuffer.
     \ingroup vmu
@@ -132,3 +135,5 @@ static __inline__ void
 vmufb_print_string(vmufb_t *fb, const vmufb_font_t *font, const char *str) {
     vmufb_print_string_into(fb, font, 0, 0, 48, 32, 0, str);
 }
+
+#endif /* __DC_VMU_FB_H */

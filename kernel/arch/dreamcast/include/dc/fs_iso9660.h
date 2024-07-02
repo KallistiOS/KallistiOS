@@ -48,8 +48,8 @@ __BEGIN_DECLS
 int iso_reset(void);
 
 /* \cond */
-int fs_iso9660_init(void);
-int fs_iso9660_shutdown(void);
+void fs_iso9660_init(void);
+void fs_iso9660_shutdown(void);
 /* \endcond */
 
 /** @} */
