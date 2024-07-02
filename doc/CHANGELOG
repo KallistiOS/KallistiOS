@@ -229,6 +229,10 @@ KallistiOS version 2.1.0 -----------------------------------------------
 - *** Added support for one-shot timers [PC]
 - DC  Use one-shot timers for timeout and a proper polling mechanism in modem [PC]
 - *** Added full support for <time.h> additions from C23 standard. [FG]
+- *** Fixes mutexes not working properly [PC]
+- DC  fs_dcload: Set errno on error in dcload_stat() [PC]
+- *** Create romdisks with bin2c instead of bin2o [PC]
+- *** Implemented versioning scheme for KOS API [FG && DH && LB]
 
 KallistiOS version 2.0.0 -----------------------------------------------
 - DC  Broadband Adapter driver fixes [Megan Potter == MP]
