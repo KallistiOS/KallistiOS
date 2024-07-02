@@ -35,4 +35,4 @@ dist:
 	$(KOS_MAKE) -C tls dist
 	$(KOS_MAKE) -C spinlock_test dist
 	$(KOS_MAKE) -C atomics dist
-	$(KOS_MAKE) -C reentraint_mutex dist
+	$(KOS_MAKE) -C reentrant_mutex dist

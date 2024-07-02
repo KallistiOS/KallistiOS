@@ -6,7 +6,7 @@
    Copyright (C) 2024 Falco Girgis
 
    Concurrency example that creates a "reentrant mutex" (aka recursive mutex)
-   ontop of KOS's basic mutex. 
+   on top of KOS's basic mutex. 
    
    Normally, you would not want to do this, as KOS mutexes can simply be used
    with "MUTEX_TYPE_RECURSIVE" to achieve the same behavior with less work;
@@ -14,6 +14,9 @@
    standard library to implement such functionality, so it's still a useful
    demonstration and serves as a validation test for the behavior of KOS's
    mutexes.
+
+  The referenced Rust implementation is available at
+  https://github.com/rust-lang/rust/blob/4bc39f02/library/std/src/sync/reentrant_lock.rs
 
  */
 
