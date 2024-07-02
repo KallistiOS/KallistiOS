@@ -140,16 +140,14 @@ int net_dev_init(void) {
 }
 
 /* Init */
-int net_init(uint32 ip) {
+static int net_init_base(void) {
     int rv = 0;
 
-    /* Make sure we haven't already done this */
-    if(net_initted)
-        return 0;
-
     /* Detect and potentially initialize devices */
-    if(net_dev_init() < 0)
+    if(net_dev_init() < 0) {
+        dbglog(DBG_CRITICAL, "Failed to initialize the network device.\n");
         return -1;
+    }
 
     /* Initialize the network thread. */
     net_thd_init();
@@ -179,6 +177,21 @@ int net_init(uint32 ip) {
     /* Initialize the DHCP system */
     net_dhcp_init();
 
+    return rv;
+}
+
+int net_init(uint32_t ip) {
+    int rv = 0;
+
+    /* Make sure we haven't already done this */
+    if(net_initted)
+        return 0;
+
+    /* Initialize device and its subsystems */
+    rv = net_init_base();
+    if(rv < 0)
+        return rv;
+
     if(net_default_dev) {
         /* Did we get a requested IP address? this normally happens over dcload-ip. */
         if(ip) {
@@ -186,17 +199,44 @@ int net_init(uint32 ip) {
             if(rv < 0) {
                 dbglog(DBG_DEBUG, "Failed to acquire the specified IP with DHCP\n");
 
-                /* If that fails, set the address manually. Although gateway
-                   and dns etc. will also manually need setting */
+                /* If that fails, set the address manually. */
                 net_ipv4_parse_address(ip, net_default_dev->ip_addr);
                 rv = 0;
             }
         }
 
         /* We didn't get a requested IP address, if we don't already have one
-           set, then do so via DHCP. */
+           set through flashrom, then do so via DHCP. */
         else if(!net_default_dev->ip_addr[0])
             rv = net_dhcp_request(0);
+    }
+
+    net_initted = 1;
+
+    return rv;
+}
+
+int net_init_static(uint32_t ip) {
+    int rv = 0;
+
+    /* Make sure we haven't already done this */
+    if(net_initted)
+        return 0;
+
+    /* Initialize device and its subsystems */
+    rv = net_init_base();
+    if(rv < 0)
+        return rv;
+
+    if(net_default_dev) {
+        if(ip)
+            net_ipv4_parse_address(ip, net_default_dev->ip_addr);
+
+        /* We didn't get a requested IP address, if we don't already have one
+           set through flashrom, then do so via DHCP. */   
+        else if(!net_default_dev->ip_addr[0]) {
+            rv = net_dhcp_request(0);
+        }
     }
 
     net_initted = 1;

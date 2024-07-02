@@ -24,6 +24,7 @@
 #include <dc/pvr.h>
 #include <dc/vmufs.h>
 #include <dc/syscalls.h>
+#include <dc/dmac.h>
 
 #include "initall_hdrs.h"
 
@@ -44,10 +45,6 @@ void (*__kos_init_early_fn)(void) __attribute__((weak,section(".data"))) = NULL;
 int main(int argc, char **argv);
 uint32 _fs_dclsocket_get_ip(void);
 
-#define SAR2    ((vuint32 *)0xFFA00020)
-#define CHCR2   ((vuint32 *)0xFFA0002C)
-#define DMAOR   ((vuint32 *)0xFFA00040)
-
 /* We have to put this here so we can include plat-specific devices */
 dbgio_handler_t * dbgio_handlers[] = {
     &dbgio_dcload,
@@ -58,10 +55,12 @@ dbgio_handler_t * dbgio_handlers[] = {
 };
 int dbgio_handler_cnt = sizeof(dbgio_handlers) / sizeof(dbgio_handler_t *);
 
+/* If headless(launching with -n option), dcload_type will always be 
+   DCLOAD_TYPE_NONE, so it will behave just like arch_init_net_no_dcload() */
 void arch_init_net_dcload_ip(void) {
     union {
-        uint32 ipl;
-        uint8 ipb[4];
+        uint32_t ipl;
+        uint8_t ipb[4];
     } ip = { 0 };
 
     if(dcload_type == DCLOAD_TYPE_IP) {
@@ -71,9 +70,14 @@ void arch_init_net_dcload_ip(void) {
                ip.ipb[2], ip.ipb[1], ip.ipb[0]);
         dbgio_disable();
     }
+    
+    /* Enable networking (and drivers) */
+    if((__kos_init_flags & INIT_NET_STATIC) == INIT_NET_STATIC)
+        net_init_static(ip.ipl);
+    else
+        net_init(ip.ipl);     
 
-    net_init(ip.ipl);     /* Enable networking (and drivers) */
-
+    /* If headless(-n) this will always be false */
     if(dcload_type == DCLOAD_TYPE_IP) {
         fs_dclsocket_init_console();
 
@@ -86,7 +90,10 @@ void arch_init_net_dcload_ip(void) {
 }
 
 void arch_init_net_no_dcload(void) {
-    net_init(0);
+    if((__kos_init_flags & INIT_NET_STATIC) == INIT_NET_STATIC)
+        net_init_static(0);
+    else
+        net_init(0);  
 }
 
 KOS_INIT_FLAG_WEAK(arch_init_net_dcload_ip, true);
@@ -206,7 +213,7 @@ int  __weak arch_auto_init(void) {
 
     KOS_INIT_FLAG_CALL(dcload_init);
 
-    if (!KOS_PLATFORM_IS_NAOMI)
+    if(!KOS_PLATFORM_IS_NAOMI)
         KOS_INIT_FLAG_CALL(fs_iso9660_init);
 
     KOS_INIT_FLAG_CALL(vmu_fs_init);
@@ -220,7 +227,7 @@ int  __weak arch_auto_init(void) {
         KOS_INIT_FLAG_CALL(maple_wait_scan);  /* Wait for the maple scan to complete */
     }
 
-    if (!KOS_PLATFORM_IS_NAOMI)
+    if(!KOS_PLATFORM_IS_NAOMI)
         KOS_INIT_FLAG_CALL(arch_init_net);
 
     return 0;
@@ -268,9 +275,9 @@ void arch_main(void) {
     if (KOS_PLATFORM_IS_NAOMI) {
         /* Ugh. I'm really not sure why we have to set up these DMA registers this
            way on boot, but failing to do so breaks maple... */
-        *SAR2 = 0;
-        *CHCR2 = 0x1201;
-        *DMAOR = 0x8201;
+        DMAC_SAR2 = 0;
+        DMAC_CHCR2 = 0x1201;
+        DMAC_DMAOR = 0x8201;
     }
 
     /* Ensure the WDT is not enabled from a previous session */

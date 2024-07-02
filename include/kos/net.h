@@ -977,19 +977,35 @@ int net_reg_device(netif_t *device);
 */
 int net_unreg_device(netif_t *device);
 
-/** \brief   Init network support.
+/** \brief   Init network support, preferring DHCP over static methods.
     \ingroup networking_drivers
     
     \note                   To auto-detect the IP address to assign to the
-                            default device (i.e, over DHCP or from the flashrom
-                            on the Dreamcast), pass 0 as the IP parameter.
+                            default device (i.e., over DHCP first and then 
+                            from the flashrom on the Dreamcast), pass 0 as 
+                            the IP parameter.
 
     \param  ip              The IPv4 address to set on the default device, in
                             host byte order.
 
     \return                 0 on success, <0 on failure.
 */
-int net_init(uint32 ip);
+int net_init(uint32_t ip);
+
+/** \brief   Init network support, preferring static methods over DHCP.
+    \ingroup networking_drivers
+    
+    \note                   To auto-detect the IP address to assign to the
+                            default device (i.e., from the flashrom
+                            on the Dreamcast first, then DHCP if we have to), 
+                            pass 0 as the IP parameter.
+
+    \param  ip              The IPv4 address to set on the default device, in
+                            host byte order.
+
+    \return                 0 on success, <0 on failure.
+*/
+int net_init_static(uint32_t ip);
 
 /** \brief   Shutdown network support. 
     \ingroup networking_drivers

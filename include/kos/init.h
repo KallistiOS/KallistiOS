@@ -140,6 +140,8 @@ extern const void * __kos_romdisk;
 #define INIT_EXPORT      0x00000020  /**< \brief Export kernel symbols */
 #define INIT_FS_ROMDISK  0x00000040  /**< \brief Enable support for romdisks */
 #define INIT_NO_SHUTDOWN 0x00000080  /**< \brief Disable hardware shutdown */
+#define INIT_NET_STATIC  0x00000104  /**< \brief Enable networking with a 
+                                           preference for static IP configuration */
 /** @} */
 
 __END_DECLS
