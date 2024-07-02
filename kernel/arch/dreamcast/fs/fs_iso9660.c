@@ -603,19 +603,26 @@ static void * iso_open(vfs_handler_t * vfs, const char *fn, int mode) {
     (void)vfs;
 
     /* Make sure they don't want to open things as writeable */
-    if((mode & O_MODE_MASK) != O_RDONLY)
+    if((mode & O_MODE_MASK) != O_RDONLY) {
+        errno = EROFS;
         return 0;
+    }
 
     /* Do this only when we need to (this is still imperfect) */
-    if(!percd_done && init_percd() < 0)
+    if(!percd_done && init_percd() < 0) {
+        errno = ENODEV;
         return 0;
+    }
 
     percd_done = 1;
 
     /* Find the file we want */
     de = find_object_path(fn, (mode & O_DIR) ? 1 : 0, &root_dirent);
 
-    if(!de) return 0;
+    if(!de) {
+        errno = ENOENT;
+        return 0;
+    }
 
     /* Find a free file handle */
     mutex_lock(&fh_mutex);
@@ -628,8 +635,10 @@ static void * iso_open(vfs_handler_t * vfs, const char *fn, int mode) {
 
     mutex_unlock(&fh_mutex);
 
-    if(fd >= FS_CD_MAX_FILES)
+    if(fd >= FS_CD_MAX_FILES) {
+        errno = ENFILE;
         return 0;
+    }
 
     /* Fill in the file handle and return the fd */
     fh[fd].first_extent = iso_733(de->extent);
@@ -660,8 +669,10 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
     file_t fd = (file_t)h;
 
     /* Check that the fd is valid */
-    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || fh[fd].broken)
+    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || fh[fd].broken) {
+        errno = EBADF;
         return -1;
+    }
 
     rv = 0;
     outbuf = (uint8 *)buf;
@@ -707,7 +718,10 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
         /* Do the read */
         c = bdread(fh[fd].first_extent + fh[fd].ptr / 2048);
 
-        if(c < 0) return -1;
+        if(c < 0) {
+            errno = EIO;
+            return -1;
+        }
 
         memcpy(outbuf, dcache[c]->data + (fh[fd].ptr % 2048), toread);
         /* } */
@@ -776,8 +790,10 @@ static off_t iso_seek(void * h, off_t offset, int whence) {
 static off_t iso_tell(void * h) {
     file_t fd = (file_t)h;
 
-    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || fh[fd].broken)
+    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || fh[fd].broken) {
+        errno = EBADF;
         return -1;
+    }
 
     return fh[fd].ptr;
 }
@@ -786,8 +802,10 @@ static off_t iso_tell(void * h) {
 static size_t iso_total(void * h) {
     file_t fd = (file_t)h;
 
-    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || fh[fd].broken)
+    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || fh[fd].broken) {
+        errno = EBADF;
         return -1;
+    }
 
     return fh[fd].size;
 }
