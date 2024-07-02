@@ -32,7 +32,7 @@
 /* Reentrant mutex we're implementing on top of KOS's normal mutex. */
 typedef struct {
     mutex_t mutex;              /* Regular mutex */
-    _Atomic kthread_t *owner;   /* current mutex owner */
+    _Atomic kthread_t *owner;   /* Current mutex owner */
     unsigned count;             /* Reentrant count */
 } reentrant_mutex_t;
 
@@ -141,6 +141,7 @@ static void *thread_func(void *arg) {
 
 int main(int argc, const char* argv[]) {
     kthread_t *threads[THREAD_COUNT];
+    bool success = true;
     
     /* Initialize our mutex */
     reentrant_mutex_init(&rmutex);
@@ -160,6 +161,12 @@ int main(int argc, const char* argv[]) {
     for(size_t i = 0; i < THREAD_COUNT; ++i)
         thd_join(threads[i], NULL);
 
+    /* Ensure our mutex is left in the expected state. */
+    if(rmutex.count || rmutex.owner || mutex_is_locked(&rmutex.mutex)) {
+        fprintf(stderr, "Recursive mutex was left in unexpected state!\n");
+        success = false;
+    }
+
     /* Clean up our mutex. */
     reentrant_mutex_uninit(&rmutex);
  
@@ -167,10 +174,11 @@ int main(int argc, const char* argv[]) {
  
     if(shared_variable == THREAD_COUNT) {
         printf("Reentrant lock test completed successfully!\n");
-        return EXIT_SUCCESS;
     } else {
         fprintf(stderr, "* * * FAILURE * * *\n");
         fprintf(stderr, "Shared variable != THREAD_COUNT!\n");
-        return EXIT_FAILURE;
+        success = false;
     }
+
+    return success? EXIT_SUCCESS : EXIT_FAILURE;
 }
