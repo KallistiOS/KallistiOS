@@ -13,6 +13,7 @@ all:
 	$(KOS_MAKE) -C tls
 	$(KOS_MAKE) -C spinlock_test
 	$(KOS_MAKE) -C atomics
+	$(KOS_MAKE) -C reentrant_mutex
 
 clean:
 	$(KOS_MAKE) -C compiler_tls clean
@@ -23,6 +24,7 @@ clean:
 	$(KOS_MAKE) -C tls clean
 	$(KOS_MAKE) -C spinlock_test clean
 	$(KOS_MAKE) -C atomics clean
+	$(KOS_MAKE) -C reentrant_mutex clean
 
 dist:
 	$(KOS_MAKE) -C compiler_tls dist
@@ -33,3 +35,4 @@ dist:
 	$(KOS_MAKE) -C tls dist
 	$(KOS_MAKE) -C spinlock_test dist
 	$(KOS_MAKE) -C atomics dist
+	$(KOS_MAKE) -C reentrant_mutex dist

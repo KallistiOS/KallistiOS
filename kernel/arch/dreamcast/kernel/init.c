@@ -231,10 +231,15 @@ void  __weak arch_auto_shutdown(void) {
     if (!KOS_PLATFORM_IS_NAOMI)
         KOS_INIT_FLAG_CALL(net_shutdown);
 
-    irq_disable();
     snd_shutdown();
-    timer_shutdown();
     hardware_shutdown();
+    /* XXX: We should investigate shrinking this irq_disabled
+       time. Until then, all these shut downs happen with
+       irqs disabled which prevents things like safely joining
+       threads or sending cleanup commands to hardware.
+    */
+    irq_disable();
+    timer_shutdown();
     pvr_shutdown();
     library_shutdown();
     KOS_INIT_FLAG_CALL(fs_dcload_shutdown);
