@@ -1,6 +1,6 @@
-diff --color -ruN gcc-rustc/gcc/config/sh/sh-c.cc gcc-rustc-kos/gcc/config/sh/sh-c.cc
---- gcc-rustc/gcc/config/sh/sh-c.cc	2024-02-02 23:52:38.294387173 -0600
-+++ gcc-rustc-kos/gcc/config/sh/sh-c.cc	2024-02-02 23:52:57.783480557 -0600
+diff --color -ruN gcc-12.4.0/gcc/config/sh/sh-c.cc gcc-12.4.0-kos/gcc/config/sh/sh-c.cc
+--- gcc-12.4.0/gcc/config/sh/sh-c.cc	2023-06-05 16:40:30.114092324 -0500
++++ gcc-12.4.0-kos/gcc/config/sh/sh-c.cc	2023-06-05 16:40:33.324101836 -0500
 @@ -141,4 +141,11 @@
  
    cpp_define_formatted (pfile, "__SH_ATOMIC_MODEL_%s__",
@@ -13,21 +13,43 @@ diff --color -ruN gcc-rustc/gcc/config/sh/sh-c.cc gcc-rustc-kos/gcc/config/sh/sh
 +  /* Toolchain supports setting up stack for 32MB */
 +  builtin_define ("__KOS_GCC_32MB__");
  }
-diff --color -ruN gcc-rustc/gcc/configure gcc-rustc-kos/gcc/configure
---- gcc-rustc/gcc/configure	2024-02-02 23:52:38.301387207 -0600
-+++ gcc-rustc-kos/gcc/configure	2024-02-02 23:52:57.786480571 -0600
-@@ -13217,7 +13217,7 @@
+diff --color -ruN gcc-12.4.0/gcc/config/sh/sh_treg_combine.cc gcc-12.4.0-kos/gcc/config/sh/sh_treg_combine.cc
+--- gcc-12.4.0/gcc/config/sh/sh_treg_combine.cc	2023-06-05 16:40:30.113092321 -0500
++++ gcc-12.4.0-kos/gcc/config/sh/sh_treg_combine.cc	2023-06-05 16:40:33.325101839 -0500
+@@ -37,6 +37,7 @@
+ #include "cfgrtl.h"
+ #include "tree-pass.h"
+ #include "expr.h"
++#include "tm-preds.h"
+ 
+ /*
+ This pass tries to optimize for example this:
+@@ -426,10 +427,6 @@
+   return GET_CODE (p) == SET && GET_CODE (XEXP (p, 1)) == IF_THEN_ELSE;
+ }
+ 
+-// FIXME: Remove dependency on SH predicate function somehow.
+-extern int t_reg_operand (rtx, machine_mode);
+-extern int negt_reg_operand (rtx, machine_mode);
+-
+ // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ // RTL pass class
+ 
+diff --color -ruN gcc-12.4.0/gcc/configure gcc-12.4.0-kos/gcc/configure
+--- gcc-12.4.0/gcc/configure	2023-06-05 16:40:32.624099762 -0500
++++ gcc-12.4.0-kos/gcc/configure	2023-06-05 16:40:33.327101845 -0500
+@@ -12908,7 +12908,7 @@
      target_thread_file='single'
      ;;
    aix | dce | lynx | mipssde | posix | rtems | \
--  single | tpf | vxworks | win32 | mcf)
-+  single | tpf | vxworks | win32 | kos | mcf)
+-  single | tpf | vxworks | win32)
++  single | tpf | vxworks | win32 | kos)
      target_thread_file=${enable_threads}
      ;;
    *)
-diff --color -ruN gcc-rustc/libgcc/config/sh/t-sh gcc-rustc-kos/libgcc/config/sh/t-sh
---- gcc-rustc/libgcc/config/sh/t-sh	2024-02-02 23:52:41.142400820 -0600
-+++ gcc-rustc-kos/libgcc/config/sh/t-sh	2024-02-02 23:52:57.787480576 -0600
+diff --color -ruN gcc-12.4.0/libgcc/config/sh/t-sh gcc-12.4.0-kos/libgcc/config/sh/t-sh
+--- gcc-12.4.0/libgcc/config/sh/t-sh	2023-06-05 16:40:32.839100399 -0500
++++ gcc-12.4.0-kos/libgcc/config/sh/t-sh	2023-06-05 16:40:33.327101845 -0500
 @@ -23,6 +23,8 @@
    $(LIB1ASMFUNCS_CACHE)
  LIB1ASMFUNCS_CACHE = _ic_invalidate _ic_invalidate_array
@@ -37,21 +59,21 @@ diff --color -ruN gcc-rustc/libgcc/config/sh/t-sh gcc-rustc-kos/libgcc/config/sh
  crt1.o: $(srcdir)/config/sh/crt1.S
  	$(gcc_compile) -c $<
  
-diff --color -ruN gcc-rustc/libgcc/configure gcc-rustc-kos/libgcc/configure
---- gcc-rustc/libgcc/configure	2024-02-02 23:52:41.146400839 -0600
-+++ gcc-rustc-kos/libgcc/configure	2024-02-02 23:52:57.787480576 -0600
-@@ -5763,6 +5763,7 @@
+diff --color -ruN gcc-12.4.0/libgcc/configure gcc-12.4.0-kos/libgcc/configure
+--- gcc-12.4.0/libgcc/configure	2023-06-05 16:40:32.844100414 -0500
++++ gcc-12.4.0-kos/libgcc/configure	2023-06-05 16:40:33.327101845 -0500
+@@ -5698,6 +5698,7 @@
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;
      win32)	thread_header=config/i386/gthr-win32.h ;;
-+    kos)	thread_header=config/sh/gthr-kos.h ;;
-     mcf)	thread_header=config/i386/gthr-mcf.h ;;
++    kos)    thread_header=config/sh/gthr-kos.h ;;
  esac
  
-diff --color -ruN gcc-rustc/libobjc/configure gcc-rustc-kos/libobjc/configure
---- gcc-rustc/libobjc/configure	2024-02-02 23:52:41.498402525 -0600
-+++ gcc-rustc-kos/libobjc/configure	2024-02-02 23:52:57.788480581 -0600
-@@ -2924,11 +2924,9 @@
+ 
+diff --color -ruN gcc-12.4.0/libobjc/configure gcc-12.4.0-kos/libobjc/configure
+--- gcc-12.4.0/libobjc/configure	2023-06-05 16:40:29.860091572 -0500
++++ gcc-12.4.0-kos/libobjc/configure	2023-06-05 16:40:33.328101848 -0500
+@@ -2917,11 +2917,9 @@
  
  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
  /* end confdefs.h.  */
@@ -63,9 +85,9 @@ diff --color -ruN gcc-rustc/libobjc/configure gcc-rustc-kos/libobjc/configure
    ;
    return 0;
  }
-diff --color -ruN gcc-rustc/libobjc/Makefile.in gcc-rustc-kos/libobjc/Makefile.in
---- gcc-rustc/libobjc/Makefile.in	2024-02-02 23:52:41.497402521 -0600
-+++ gcc-rustc-kos/libobjc/Makefile.in	2024-02-02 23:52:57.788480581 -0600
+diff --color -ruN gcc-12.4.0/libobjc/Makefile.in gcc-12.4.0-kos/libobjc/Makefile.in
+--- gcc-12.4.0/libobjc/Makefile.in	2023-06-05 16:40:29.859091569 -0500
++++ gcc-12.4.0-kos/libobjc/Makefile.in	2023-06-05 16:40:33.328101848 -0500
 @@ -308,14 +308,16 @@
  $(srcdir)/aclocal.m4: @MAINT@ $(aclocal_deps)
  	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
@@ -96,9 +118,9 @@ diff --color -ruN gcc-rustc/libobjc/Makefile.in gcc-rustc-kos/libobjc/Makefile.i
  
  mostlyclean:
  	-$(LIBTOOL_CLEAN) rm -f libobjc$(libsuffix).la libobjc_gc$(libsuffix).la *.lo
-diff --color -ruN gcc-rustc/libstdc++-v3/config/cpu/sh/atomicity.h gcc-rustc-kos/libstdc++-v3/config/cpu/sh/atomicity.h
---- gcc-rustc/libstdc++-v3/config/cpu/sh/atomicity.h	2024-02-02 23:52:41.633403172 -0600
-+++ gcc-rustc-kos/libstdc++-v3/config/cpu/sh/atomicity.h	2024-02-02 23:52:57.788480581 -0600
+diff --color -ruN gcc-12.4.0/libstdc++-v3/config/cpu/sh/atomicity.h gcc-12.4.0-kos/libstdc++-v3/config/cpu/sh/atomicity.h
+--- gcc-12.4.0/libstdc++-v3/config/cpu/sh/atomicity.h	2023-06-05 16:40:33.196101457 -0500
++++ gcc-12.4.0-kos/libstdc++-v3/config/cpu/sh/atomicity.h	2023-06-05 16:40:33.328101848 -0500
 @@ -22,14 +22,40 @@
  // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
  // <http://www.gnu.org/licenses/>.
@@ -149,14 +171,14 @@ diff --color -ruN gcc-rustc/libstdc++-v3/config/cpu/sh/atomicity.h gcc-rustc-kos
 +
 +_GLIBCXX_END_NAMESPACE_VERSION
 +} // namespace
-diff --color -ruN gcc-rustc/libstdc++-v3/configure gcc-rustc-kos/libstdc++-v3/configure
---- gcc-rustc/libstdc++-v3/configure	2024-02-02 23:52:41.639403201 -0600
-+++ gcc-rustc-kos/libstdc++-v3/configure	2024-02-02 23:52:57.792480600 -0600
-@@ -15959,6 +15959,7 @@
+diff --color -ruN gcc-12.4.0/libstdc++-v3/configure gcc-12.4.0-kos/libstdc++-v3/configure
+--- gcc-12.4.0/libstdc++-v3/configure	2023-06-05 16:40:33.205101484 -0500
++++ gcc-12.4.0-kos/libstdc++-v3/configure	2023-06-05 16:40:33.332101860 -0500
+@@ -15790,6 +15790,7 @@
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;
      win32)	thread_header=config/i386/gthr-win32.h ;;
-+    kos)	thread_header=config/sh/gthr-kos.h ;;
-     mcf)	thread_header=config/i386/gthr-mcf.h ;;
++    kos)    thread_header=config/sh/gthr-kos.h ;;
  esac
+ 
  
