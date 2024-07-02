@@ -39,10 +39,10 @@
 
 #include <plx/font.h>
 
-#define VMU_START_EFFECT 0x000065F0
-#define VMU_STOP_EFFECT  0x00000000
+#define VMU_DEFAULT_EFFECT 0x000065F0
+#define VMU_STOP_EFFECT    0x00000000
 
-static atomic_bool quit;
+static atomic_bool quit = false;
 
 static void on_reset(uint8_t addr, uint32_t btns) {
     (void)addr; (void)btns;
@@ -59,14 +59,14 @@ int main(int argc, char *argv[]) {
     uint16_t old_buttons = 0, rel_buttons = 0;
     uint32_t effect = 0;
     uint8_t n[8] = { /* nibbles */
-        (VMU_START_EFFECT >> 28) & 0xf,
-        (VMU_START_EFFECT >> 24) & 0xf,
-        (VMU_START_EFFECT >> 20) & 0xf,
-        (VMU_START_EFFECT >> 16) & 0xf,
-        (VMU_START_EFFECT >> 12) & 0xf,
-        (VMU_START_EFFECT >>  8) & 0xf,
-        (VMU_START_EFFECT >>  4) & 0xf,
-        (VMU_START_EFFECT >>  0) & 0xf
+        (VMU_DEFAULT_EFFECT >> 28) & 0xf,
+        (VMU_DEFAULT_EFFECT >> 24) & 0xf,
+        (VMU_DEFAULT_EFFECT >> 20) & 0xf,
+        (VMU_DEFAULT_EFFECT >> 16) & 0xf,
+        (VMU_DEFAULT_EFFECT >> 12) & 0xf,
+        (VMU_DEFAULT_EFFECT >>  8) & 0xf,
+        (VMU_DEFAULT_EFFECT >>  4) & 0xf,
+        (VMU_DEFAULT_EFFECT >>  0) & 0xf
     };
     char s[8][2] = { "", "", "", "", "", "", "", "" };
 
