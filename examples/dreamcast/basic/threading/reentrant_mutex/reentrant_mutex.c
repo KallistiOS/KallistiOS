@@ -24,8 +24,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <stdarg.h>
 #include <stdatomic.h>
- 
+#include <stdnoreturn.h>
+
 /* Number of threads to spawn */
 #define THREAD_COUNT     (DBL_MEM? 600 : 300)
  
@@ -50,6 +53,21 @@ static void reentrant_mutex_init(reentrant_mutex_t *rmutex) {
 static void reentrant_mutex_uninit(reentrant_mutex_t *rmutex) {
     mutex_destroy(&rmutex->mutex);
 }
+
+/* Reports an error for the current thread and exits with failure value. */
+noreturn static void failure(const char *fmt, ...) {
+    char buffer[1024];
+    va_list args;
+
+    va_start(args, fmt);
+    vsnprintf(buffer, sizeof(buffer), fmt, args);
+    va_end(args);
+
+    fprintf(stderr, "* * * FAILURE * * *\n");
+    fprintf(stderr, "thread %s: %s\n", thd_get_label(thd_current), buffer);
+
+    exit(EXIT_FAILURE);
+}
  
 /* Locks our reentrant_mutex structure. */
 static void reentrant_mutex_lock(reentrant_mutex_t *rmutex) {
@@ -57,24 +75,27 @@ static void reentrant_mutex_lock(reentrant_mutex_t *rmutex) {
     if(atomic_load(&rmutex->owner) == (_Atomic kthread_t *)thd_current) {
         /* Increment the lock count. */
         rmutex->count++;
+
+        /* Sanity check: mutex better be locked! */
+        if(!mutex_is_locked(&rmutex->mutex))
+            failure("Owns rmutex->mutex but it isn't locked!");
     } 
     else {
         kthread_t *expected = NULL;
         
         /* Attempt to acquire the mutex, since we are not the owning thread. */
-        mutex_lock(&rmutex->mutex);
+        if(mutex_lock(&rmutex->mutex) < 0)
+            failure("Failed to lock mutex: %s", strerror(errno));
+
         /* Set the owning thread to this thread. */
         atomic_compare_exchange_strong(&rmutex->owner, 
                                        &expected, 
                                        (_Atomic kthread_t *)thd_current);
         
         /* This should be impossible if our threading system is working properly. */
-        if(rmutex->count) {
-            fprintf(stderr, "* * * FAILURE * * *\n");
-            fprintf(stderr, "thread %s: rmutex->count was %u when it MUST be zero!\n",
-                    thd_get_label(thd_current), rmutex->count);
-            exit(EXIT_FAILURE);
-        }
+        if(rmutex->count)
+            failure("rmutex->count was %u when it MUST be zero!", rmutex->count);
+
         rmutex->count++;
     }
 }
@@ -87,7 +108,10 @@ static void reentrant_mutex_unlock(reentrant_mutex_t *rmutex) {
         if(atomic_fetch_sub(&rmutex->count, 1) == 1) {
             /* Clear the owning thread and release the mutex if counter hits 0. */
             atomic_store(&rmutex->owner, NULL);
-            mutex_unlock(&rmutex->mutex);
+
+            /* Unlock the mutex. */
+            if(mutex_unlock(&rmutex->mutex) < 0)
+                failure("Failed to unlock mutex: %s", strerror(errno));
         }
 
     } else {
@@ -101,7 +125,7 @@ static void maybe_pass(void) {
     unsigned value;
 
     getentropy(&value, sizeof(value));
-    
+
     value %= 100;
     if(value < THREAD_PASS_CHANCE)
         thd_pass();
@@ -118,33 +142,32 @@ static int shared_variable = 0;
 static void *thread_func(void *arg) {
     printf("Hello from thread %s!\n",
            thd_get_label(thd_current));
- 
+
     maybe_pass();
-    reentrant_mutex_lock(&rmutex);    // lock count = 1
- 
+    reentrant_mutex_lock(&rmutex);    /* lock count = 1 */
+
     maybe_pass();
-    reentrant_mutex_lock(&rmutex);    // lock count = 2
- 
+    reentrant_mutex_lock(&rmutex);    /* lock count = 2 */
+
     shared_variable++;
- 
+
     maybe_pass();
-    reentrant_mutex_unlock(&rmutex);  // lock count = 1
- 
+    reentrant_mutex_unlock(&rmutex);  /* lock count = 1 */
+
     maybe_pass();
-    reentrant_mutex_lock(&rmutex);    // lock count = 2
- 
+    reentrant_mutex_lock(&rmutex);    /* lock count = 2 */
+
     maybe_pass();
-    reentrant_mutex_unlock(&rmutex);  // lock count = 1
- 
+    reentrant_mutex_unlock(&rmutex);  /* lock count = 1 */
+
     maybe_pass();
-    reentrant_mutex_unlock(&rmutex);  // unlocked
+    reentrant_mutex_unlock(&rmutex);  /* unlocked */
  
     return NULL;
 }
 
 int main(int argc, const char* argv[]) {
     kthread_t *threads[THREAD_COUNT];
-    bool success = true;
     
     /* Initialize our mutex */
     reentrant_mutex_init(&rmutex);
@@ -153,6 +176,7 @@ int main(int argc, const char* argv[]) {
        each one gets spawned. */
     for(size_t i = 0; i < THREAD_COUNT; ++i) {
         threads[i] = thd_create(false, thread_func, NULL);
+
         char thd_label[16];
         snprintf(thd_label, sizeof(thd_label), "%u", i);
         thd_set_label(threads[i], thd_label);
@@ -165,23 +189,18 @@ int main(int argc, const char* argv[]) {
         thd_join(threads[i], NULL);
 
     /* Ensure our mutex is left in the expected state. */
-    if(rmutex.count || rmutex.owner || mutex_is_locked(&rmutex.mutex)) {
-        fprintf(stderr, "Recursive mutex was left in unexpected state!\n");
-        success = false;
-    }
+    if(rmutex.count || rmutex.owner || mutex_is_locked(&rmutex.mutex))
+        failure("Recursive mutex was left in unexpected state!");
 
     /* Clean up our mutex. */
     reentrant_mutex_uninit(&rmutex);
  
     printf("Shared variable is %d!\n", shared_variable);
  
-    if(shared_variable == THREAD_COUNT) {
+    if(shared_variable == THREAD_COUNT)
         printf("Reentrant lock test completed successfully!\n");
-    } else {
-        fprintf(stderr, "* * * FAILURE * * *\n");
-        fprintf(stderr, "Shared variable != THREAD_COUNT!\n");
-        success = false;
-    }
+    else
+        failure("Shared variable != THREAD_COUNT!");
 
-    return success? EXIT_SUCCESS : EXIT_FAILURE;
+    return EXIT_SUCCESS;
 }
