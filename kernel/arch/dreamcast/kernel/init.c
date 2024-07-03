@@ -63,10 +63,6 @@ void arch_init_net_dcload_ip(void) {
         uint32 ipl;
         uint8 ipb[4];
     } ip = { 0 };
-    ip.ipb[0] = 10;
-    ip.ipb[1] = 0;
-    ip.ipb[2] = 16;
-    ip.ipb[3] = 172;
 
     if(dcload_type == DCLOAD_TYPE_IP) {
         /* Grab the IP address from dcload before we disable dbgio... */

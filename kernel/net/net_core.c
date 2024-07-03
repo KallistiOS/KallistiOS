@@ -182,15 +182,15 @@ int net_init(uint32 ip) {
     if(net_default_dev) {
         /* Did we get a requested IP address? this normally happens over dcload-ip. */
         if(ip) {
-            // rv = net_dhcp_request(ip);
-            // if(rv < 0) {
-            //     dbglog(DBG_DEBUG, "Failed to acquire the specified IP with DHCP\n");
+            rv = net_dhcp_request(ip);
+            if(rv < 0) {
+                dbglog(DBG_DEBUG, "Failed to acquire the specified IP with DHCP\n");
 
                 /* If that fails, set the address manually. Although gateway
                    and dns etc. will also manually need setting */
                 net_ipv4_parse_address(ip, net_default_dev->ip_addr);
                 rv = 0;
-           // }
+            }
         }
 
         /* We didn't get a requested IP address, if we don't already have one
