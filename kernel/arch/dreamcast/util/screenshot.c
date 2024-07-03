@@ -141,7 +141,7 @@ int vid_screen_shot(const char *destfn) {
 
     /* Generate image data */
     buffer_size = vid_screen_shot_data(&buffer);
-    if(buffer_size == 0) {
+    if(!buffer_size) {
         dbglog(DBG_ERROR, "vid_screen_shot: couldn't generate image data\n");
         return -1;
     }
