@@ -29,9 +29,15 @@ size_t vid_screen_shot_data(uint8_t **buffer) {
     uint32_t pixel, pixel1, pixel2;
     size_t buffer_size;
     uint8_t bpp = 3; /* output to ppm is 3 bytes per pixel */
-    char header[256];
+    char *header;
     size_t header_size;
     uint8_t *data_ptr;
+
+    /* Create PPM header */
+    header_size = snprintf(NULL, 0, "P6\n#KallistiOS Screen Shot\n%d %d\n255\n", vid_mode->width, vid_mode->height) + 1;
+
+    /* Allocate header buffer on the stack */
+    header = (char *)alloca(header_size);
 
     /* Create PPM header */
     sprintf(header, "P6\n#KallistiOS Screen Shot\n%d %d\n255\n", vid_mode->width, vid_mode->height);
