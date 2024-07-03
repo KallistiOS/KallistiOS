@@ -2,8 +2,8 @@
 
     beep.c
     Copyright (C) 2004 SinisterTengu
-    Copyright (C) 2008 Donald Haase
-
+    Copyright (C) 2008, 2024 Donald Haase
+    Copyright (C) 2024 Falco Girgis
 */
 
 /*
@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdatomic.h>
 
 #include <kos/init.h>
 
@@ -38,29 +39,39 @@
 
 #include <plx/font.h>
 
+#define VMU_DEFAULT_EFFECT 0x000065F0
+#define VMU_STOP_EFFECT    0x00000000
 
-static plx_font_t *fnt;
-static plx_fcxt_t *cxt;
+static atomic_bool quit = false;
 
-static void cleanup(void) {
-    plx_font_destroy(fnt);
-    plx_fcxt_destroy(cxt);
+static void on_reset(uint8_t addr, uint32_t btns) {
+    (void)addr; (void)btns;
+    quit = true;
 }
 
 int main(int argc, char *argv[]) {
     maple_device_t *dev, *vmudev;
     cont_state_t *state;
     point_t w;
+    plx_font_t *fnt;
+    plx_fcxt_t *cxt;
     int i = 0, count = 0;
     uint16_t old_buttons = 0, rel_buttons = 0;
     uint32_t effect = 0;
-    uint8_t n[8] = { 0, 0, 0, 0, 0, 0, 0, 0 }; //nibbles
+    uint8_t n[8] = { /* nibbles */
+        (VMU_DEFAULT_EFFECT >> 28) & 0xf,
+        (VMU_DEFAULT_EFFECT >> 24) & 0xf,
+        (VMU_DEFAULT_EFFECT >> 20) & 0xf,
+        (VMU_DEFAULT_EFFECT >> 16) & 0xf,
+        (VMU_DEFAULT_EFFECT >> 12) & 0xf,
+        (VMU_DEFAULT_EFFECT >>  8) & 0xf,
+        (VMU_DEFAULT_EFFECT >>  4) & 0xf,
+        (VMU_DEFAULT_EFFECT >>  0) & 0xf
+    };
     char s[8][2] = { "", "", "", "", "", "", "", "" };
 
-    atexit(cleanup);
     /* If the face buttons are all pressed, exit the app */
-    cont_btn_callback(0, CONT_START | CONT_A | CONT_B | CONT_X | CONT_Y,
-                      (cont_btn_callback_t)arch_exit);
+    cont_btn_callback(0, CONT_RESET_BUTTONS, on_reset);
 
     pvr_init_defaults();
 
@@ -69,7 +80,7 @@ int main(int argc, char *argv[]) {
 
     pvr_set_bg_color(0.0f, 0.0f, 0.0f);
 
-    for(;;) {
+    while(!quit) {
         dev = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
         vmudev = maple_enum_type(0, MAPLE_FUNC_CLOCK);
 
@@ -160,7 +171,7 @@ int main(int argc, char *argv[]) {
         w.y += 25.0f;
 
         plx_fcxt_setpos_pnt(cxt, &w);
-        plx_fcxt_draw(cxt, "Press ABXYS to quit.");
+        plx_fcxt_draw(cxt, "Press A+B+X+Y+START to quit.");
 
         plx_fcxt_end(cxt);
         pvr_scene_finish();
@@ -187,19 +198,25 @@ int main(int argc, char *argv[]) {
 
         if((state->buttons & CONT_A) && (rel_buttons & CONT_A)) {
             effect = (n[0] << 28) + (n[1] << 24) + (n[2] << 20) + (n[3] << 16) +
-                     (n[4] << 12) + (n[5] << 8) + (n[6] << 4) + (n[7] << 0);
+                     (n[4] << 12) + (n[5] << 8)  + (n[6] << 4)  + (n[7] << 0);
 
             vmu_beep_raw(vmudev, effect);
             printf("VMU Beep: 0x%lx!\n", effect);
         }
 
         if((state->buttons & CONT_B) && (rel_buttons & CONT_B)) {
-            vmu_beep_raw(vmudev, 0x00000000);
+            vmu_beep_raw(vmudev, VMU_STOP_EFFECT);
             printf("Beep Stopped!\n");
         }
 
-        old_buttons = state->buttons ;
+        old_buttons = state->buttons;
     }
 
-    return 0;
+    if(vmudev)
+        vmu_beep_raw(vmudev, VMU_STOP_EFFECT);
+
+    plx_font_destroy(fnt);
+    plx_fcxt_destroy(cxt);
+
+    return EXIT_SUCCESS;
 }
