@@ -108,7 +108,7 @@ netif_t *net_set_default(netif_t *n) {
 }
 
 /* Device detect / init */
-int net_dev_init(void) {
+static int net_dev_init(void) {
     int detected = 0;
     netif_t *cur;
 
@@ -136,7 +136,7 @@ int net_dev_init(void) {
 
     dbglog(DBG_DEBUG, "net_dev_init: detected %d usable network device(s)\n", detected);
 
-    return 0;
+    return detected == 0 ? -1 : 0;
 }
 
 /* Init */
