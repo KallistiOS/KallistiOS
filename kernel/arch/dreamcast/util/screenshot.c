@@ -18,14 +18,10 @@
 #include <arch/timer.h>
 
 /*
+    Provides a very simple screen shot facility (dumps raw RGB PPM files from the
+    currently viewed framebuffer).
 
-Provides a very simple screen shot facility (dumps raw RGB PPM files from the
-currently viewed framebuffer).
-
-Destination file system must be writeable and have enough free space.
-
-This will now work with any of the supported video modes.
-
+    This will now work with any of the supported video modes.
 */
 
 size_t vid_screen_shot_data(uint8_t **buffer) {
@@ -127,6 +123,7 @@ size_t vid_screen_shot_data(uint8_t **buffer) {
     return buffer_size;
 }
 
+/* Destination file system must be writeable and have enough free space. */
 int vid_screen_shot(const char *destfn) {
     file_t   f;
     uint8_t *buffer;
