@@ -33,7 +33,7 @@ size_t vid_screen_shot_data(uint8_t **buffer) {
     size_t header_size;
     uint8_t *data_ptr;
 
-    /* Create PPM header */
+    /* Measure PPM header length */
     header_size = snprintf(NULL, 0, "P6\n#KallistiOS Screen Shot\n%d %d\n255\n", vid_mode->width, vid_mode->height) + 1;
 
     /* Allocate header buffer on the stack */
