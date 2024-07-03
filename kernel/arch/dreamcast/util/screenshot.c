@@ -63,10 +63,10 @@ size_t vid_screen_shot_data(uint8_t **buffer) {
     uint32_t save = irq_disable();
 
     /* Write out each pixel as 24-bits */
-    switch (vid_mode->pm) {
+    switch(vid_mode->pm) {
         case PM_RGB555:  /* (15-bit) */
             /* Process two 16-bit pixels at a time */
-            for (i = 0; i < numpix / 2; i++) {
+            for(i = 0; i < numpix / 2; i++) {
                 pixel = vram_l[i];
                 pixel1 = pixel & 0xFFFF;
                 pixel2 = pixel >> 16;
@@ -84,7 +84,7 @@ size_t vid_screen_shot_data(uint8_t **buffer) {
             break;
         case PM_RGB565: /* (16-bit) */
             /* Process two 16-bit pixels at a time */
-            for (i = 0; i < numpix / 2; i++) {
+            for(i = 0; i < numpix / 2; i++) {
                 pixel = vram_l[i];
                 pixel1 = pixel & 0xFFFF;
                 pixel2 = pixel >> 16;
@@ -101,14 +101,14 @@ size_t vid_screen_shot_data(uint8_t **buffer) {
             }
             break;
         case PM_RGB888P:  /* (24-bit) */
-            for (i = 0; i < numpix; i++) {
+            for(i = 0; i < numpix; i++) {
                 data_ptr[i * 3 + 0] = ((uint8_t *)vram_l)[i * 3 + 2]; /* R */
                 data_ptr[i * 3 + 1] = ((uint8_t *)vram_l)[i * 3 + 1]; /* G */
                 data_ptr[i * 3 + 2] = ((uint8_t *)vram_l)[i * 3 + 0]; /* B */
             }
             break;
         case PM_RGB0888:  /* (32-bit) */
-            for (i = 0; i < numpix; i++) {
+            for(i = 0; i < numpix; i++) {
                 pixel = vram_l[i];
                 data_ptr[i * 3 + 0] = (((pixel >> 16) & 0xff)); /* R */
                 data_ptr[i * 3 + 1] = (((pixel >> 8) & 0xff));  /* G */
