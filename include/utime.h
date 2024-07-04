@@ -1,10 +1,10 @@
 /* KallistiOS ##version##
 
-   kos/utime.h
+   utime.h
    Copyright (C) 2024 Falco Girgis
 */
 
-/** \file    kos/utime.h
+/** \file    utime.h
     \brief   KOS extension of Newlib's utime.h
 
     Newlib does not ever actually declare a prototype for utime() within
