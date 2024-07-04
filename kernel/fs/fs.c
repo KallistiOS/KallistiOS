@@ -169,22 +169,18 @@ static void fs_hnd_ref(fs_hnd_t * ref) {
    to a raw handle is no longer applicable. This function may destroy the
    file handle, so under no circumstances should you presume that it will
    still exist later. */
-static int fs_hnd_unref(fs_hnd_t * ref) {
+static int fs_hnd_unref(fs_hnd_t *ref) {
     int retval = 0;
     assert(ref);
     assert(ref->refcnt > 0);
-    ref->refcnt--;
 
-    if(ref->refcnt == 0) {
-        if(ref->handler != NULL) {
-            if(ref->handler->close == NULL) return retval;
+    if(--ref->refcnt > 0)
+        return retval; /* Still references left, nothing to do */
 
-            retval = ref->handler->close(ref->hnd);
-        }
+    if(ref->handler && ref->handler->close)
+        retval = ref->handler->close(ref->hnd);
 
-        free(ref);
-    }
-
+    free(ref);
     return retval;
 }
 
@@ -214,17 +210,11 @@ static int fs_hnd_assign(fs_hnd_t * hnd) {
 int fs_fdtbl_destroy(void) {
     int i;
 
-    for (i = 0; i < FD_SETSIZE; i++) {
-        fs_hnd_t *handle = fd_table[i];
+    for(i = 0; i < FD_SETSIZE; i++) {
+        if(fd_table[i])
+            fs_hnd_unref(fd_table[i]);
 
-        if(handle) {
-            if(handle->handler && handle->handler->close) {
-                handle->handler->close(handle->hnd);
-            }
-
-            free(handle);
-            fd_table[i] = NULL;
-        }
+        fd_table[i] = NULL;
     }
 
     return 0;
