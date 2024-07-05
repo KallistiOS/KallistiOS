@@ -108,7 +108,7 @@ static void pty_destroy_unused(void);
 #define PF_DIR  1
 
 /* Creates a pty pair */
-int fs_pty_create(char * buffer, int maxbuflen, file_t * master_out, file_t * slave_out) {
+int fs_pty_create(char *buffer, int maxbuflen, file_t *master_out, file_t *slave_out) {
     ptyhalf_t *master, *slave;
     int boot;
     char mname[16], sname[16];
@@ -208,7 +208,7 @@ cleanup:
 /* Autoclean totally unreferenced PTYs (zero refcnt). */
 /* XXX This is a kinda nasty piece of code... goto!! */
 static void pty_destroy_unused(void) {
-    ptyhalf_t * c, * n;
+    ptyhalf_t *c, *n;
     int old;
 
     /* Make sure no one else is messing with the list and then disable
@@ -427,8 +427,8 @@ static void * pty_open(vfs_handler_t * vfs, const char * fn, int mode) {
 }
 
 /* Close pty or dirlist */
-static int pty_close(void * h) {
-    pipefd_t * fdobj;
+static int pty_close(void *h) {
+    pipefd_t *fdobj;
 
     assert(h);
     fdobj = (pipefd_t *)h;
@@ -699,7 +699,7 @@ static int pty_ioctl(void *h, int cmd, va_list ap) {
 
     switch (cmd) {
         case TIOCGETA:
-            if (arg == NULL) {
+            if(arg == NULL) {
                 errno = EINVAL;
                 return -1;
             }
