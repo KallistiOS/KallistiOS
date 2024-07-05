@@ -15,10 +15,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <stdlib.h>
 
 int main(int argc, char* argv[]) {
     /* Create a PTY pair */
-    file_t master_fd = NULL, slave_fd = NULL;
+    file_t master_fd = -1, slave_fd = -1;
     int retval = EXIT_SUCCESS;
 
     if(fs_pty_create(NULL, 0, &master_fd, &slave_fd) < 0) {
