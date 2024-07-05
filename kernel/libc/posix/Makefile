@@ -11,6 +11,6 @@
 #
 
 CFLAGS += -std=gnu11
-OBJS = posix_memalign.o clock_gettime.o sysconf.o
+OBJS = posix_memalign.o clock_gettime.o settimeofday.o sysconf.o
 
 include $(KOS_BASE)/Makefile.prefab
