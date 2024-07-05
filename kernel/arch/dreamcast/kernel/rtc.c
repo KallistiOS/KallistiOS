@@ -8,7 +8,7 @@
 */
 
 /*
-Real-Time Clock (RTC) Support
+   Real-Time Clock (RTC) Support
 
    The functions in here return various info about the real-world time and
    date stored in the machine. The general process here is to retrieve
