@@ -246,12 +246,12 @@ void  __weak arch_auto_shutdown(void) {
 #if defined(__NEWLIB__) && !(__NEWLIB__ < 2 && __NEWLIB_MINOR__ < 4)
     fs_rnd_shutdown();
 #endif
+    fs_shutdown();
     fs_ramdisk_shutdown();
     KOS_INIT_FLAG_CALL(fs_romdisk_shutdown);
     fs_pty_shutdown();
     fs_null_shutdown();
     fs_dev_shutdown();
-    fs_shutdown();
     thd_shutdown();
     rtc_shutdown();
 }
