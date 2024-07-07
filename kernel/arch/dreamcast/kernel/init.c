@@ -24,6 +24,7 @@
 #include <dc/pvr.h>
 #include <dc/vmufs.h>
 #include <dc/syscalls.h>
+#include <dc/dmac.h>
 
 #include "initall_hdrs.h"
 
@@ -43,10 +44,6 @@ void (*__kos_init_early_fn)(void) __attribute__((weak,section(".data"))) = NULL;
 
 int main(int argc, char **argv);
 uint32 _fs_dclsocket_get_ip(void);
-
-#define SAR2    ((vuint32 *)0xFFA00020)
-#define CHCR2   ((vuint32 *)0xFFA0002C)
-#define DMAOR   ((vuint32 *)0xFFA00040)
 
 /* We have to put this here so we can include plat-specific devices */
 dbgio_handler_t * dbgio_handlers[] = {
@@ -231,10 +228,15 @@ void  __weak arch_auto_shutdown(void) {
     if (!KOS_PLATFORM_IS_NAOMI)
         KOS_INIT_FLAG_CALL(net_shutdown);
 
-    irq_disable();
     snd_shutdown();
-    timer_shutdown();
     hardware_shutdown();
+    /* XXX: We should investigate shrinking this irq_disabled
+       time. Until then, all these shut downs happen with
+       irqs disabled which prevents things like safely joining
+       threads or sending cleanup commands to hardware.
+    */
+    irq_disable();
+    timer_shutdown();
     pvr_shutdown();
     library_shutdown();
     KOS_INIT_FLAG_CALL(fs_dcload_shutdown);
@@ -244,12 +246,12 @@ void  __weak arch_auto_shutdown(void) {
 #if defined(__NEWLIB__) && !(__NEWLIB__ < 2 && __NEWLIB_MINOR__ < 4)
     fs_rnd_shutdown();
 #endif
+    fs_shutdown();
     fs_ramdisk_shutdown();
     KOS_INIT_FLAG_CALL(fs_romdisk_shutdown);
     fs_pty_shutdown();
     fs_null_shutdown();
     fs_dev_shutdown();
-    fs_shutdown();
     thd_shutdown();
     rtc_shutdown();
 }
@@ -263,9 +265,9 @@ void arch_main(void) {
     if (KOS_PLATFORM_IS_NAOMI) {
         /* Ugh. I'm really not sure why we have to set up these DMA registers this
            way on boot, but failing to do so breaks maple... */
-        *SAR2 = 0;
-        *CHCR2 = 0x1201;
-        *DMAOR = 0x8201;
+        DMAC_SAR2 = 0;
+        DMAC_CHCR2 = 0x1201;
+        DMAC_DMAOR = 0x8201;
     }
 
     /* Ensure the WDT is not enabled from a previous session */

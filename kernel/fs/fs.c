@@ -169,21 +169,18 @@ static void fs_hnd_ref(fs_hnd_t * ref) {
    to a raw handle is no longer applicable. This function may destroy the
    file handle, so under no circumstances should you presume that it will
    still exist later. */
-static int fs_hnd_unref(fs_hnd_t * ref) {
+static int fs_hnd_unref(fs_hnd_t *ref) {
     int retval = 0;
     assert(ref);
     assert(ref->refcnt > 0);
-    ref->refcnt--;
 
-    if(ref->refcnt == 0) {
-        if(ref->handler != NULL) {
-            if(ref->handler->close == NULL) return retval;
+    if(--ref->refcnt > 0)
+        return retval; /* Still references left, nothing to do */
 
-            retval = ref->handler->close(ref->hnd);
-        }
+    if(ref->handler && ref->handler->close)
+        retval = ref->handler->close(ref->hnd);
 
-        free(ref);
-    }
+    free(ref);
     return retval;
 }
 
@@ -213,9 +210,7 @@ static int fs_hnd_assign(fs_hnd_t * hnd) {
 int fs_fdtbl_destroy(void) {
     int i;
 
-    /* XXX We start at 3 here to avoid freeing the reserved
-        stdin, stdout, and stderr pty fhs */
-    for(i = 3; i < FD_SETSIZE; i++) {
+    for(i = 0; i < FD_SETSIZE; i++) {
         if(fd_table[i])
             fs_hnd_unref(fd_table[i]);
 
@@ -362,13 +357,6 @@ ssize_t fs_read(file_t fd, void *buffer, size_t cnt) {
 
 ssize_t fs_write(file_t fd, const void *buffer, size_t cnt) {
     fs_hnd_t *h;
-
-    // XXX This is a hack to make newlib printf work because it
-    // doesn't like fs_pty. I'll figure out why later...
-    if(fd == 1 || fd == 2) {
-        dbgio_write_buffer_xlat((const uint8 *)buffer, cnt);
-        return cnt;
-    }
 
     h = fs_map_hnd(fd);
 

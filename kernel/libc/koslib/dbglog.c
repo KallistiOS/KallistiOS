@@ -5,9 +5,11 @@
 */
 
 #include <stdio.h>
-#include <kos/dbglog.h>
 #include <stdarg.h>
+#include <unistd.h>
 #include <string.h>
+
+#include <kos/dbglog.h>
 #include <kos/thread.h>
 #include <kos/dbgio.h>
 #include <arch/spinlock.h>
@@ -43,8 +45,11 @@ void dbglog(int level, const char *fmt, ...) {
     i = vsnprintf(printf_buf, sizeof(printf_buf), fmt, args);
     va_end(args);
 
-    if(i >= 0)
-        dbgio_write_str(printf_buf);
+    if(i > 0) {
+        if(irq_inside_int() || 
+            (fs_write(STDOUT_FILENO, printf_buf, strlen(printf_buf)) < 0))
+                dbgio_write_str(printf_buf);        
+    }
 
     if(level >= DBG_ERROR && !irq_inside_int())
         spinlock_unlock(&mutex);
