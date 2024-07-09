@@ -1,3 +1,5 @@
+// Copyright (c) 2024 Eric Fradella
+// Copyright (c) 2024 Andress Barajas
 
 #include <stdio.h>
 #include <stdlib.h>
