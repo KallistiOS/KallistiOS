@@ -20,9 +20,11 @@
 #include <assert.h>
 #include <errno.h>
 
+#include <arch/arch.h>
 #include <arch/timer.h>
 #include <kos/genwait.h>
 #include <kos/sem.h>
+#include <kos/dbgio.h>
 
 /* Our sleep queues table. This is also modeled after the BSD numbers. I
    figure if they've been using it as long as they have, they must be
@@ -81,7 +83,6 @@ int genwait_wait(void * obj, const char * mesg, int timeout, void (*callback)(vo
 
     /* Prepare us for sleep */
     me = thd_current;
-    thd_current = NULL;
     me->state = STATE_WAIT;
     me->wait_obj = obj;
     me->wait_msg = mesg;
