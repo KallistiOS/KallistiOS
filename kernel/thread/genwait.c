@@ -20,11 +20,9 @@
 #include <assert.h>
 #include <errno.h>
 
-#include <arch/arch.h>
 #include <arch/timer.h>
 #include <kos/genwait.h>
 #include <kos/sem.h>
-#include <kos/dbgio.h>
 
 /* Our sleep queues table. This is also modeled after the BSD numbers. I
    figure if they've been using it as long as they have, they must be
