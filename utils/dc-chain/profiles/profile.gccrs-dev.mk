@@ -12,7 +12,7 @@
 sh_binutils_ver=2.42
 sh_gcc_ver=rs
 newlib_ver=4.4.0.20231231
-gdb_ver=14.2
+gdb_ver=15.1
 
 # Overide SH toolchain download type
 sh_gcc_download_type=git

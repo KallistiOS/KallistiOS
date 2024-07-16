@@ -81,7 +81,6 @@ int genwait_wait(void * obj, const char * mesg, int timeout, void (*callback)(vo
 
     /* Prepare us for sleep */
     me = thd_current;
-    thd_current = NULL;
     me->state = STATE_WAIT;
     me->wait_obj = obj;
     me->wait_msg = mesg;
