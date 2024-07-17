@@ -26,7 +26,10 @@ void convert(char *ifn, char *ofn, char *prefix) {
     fseek(i, 0, SEEK_SET);
     setbuf(o, buf);
 
+    fprintf(o, "#ifdef __cplusplus\nextern \"C\"\n#endif\n");
     fprintf(o, "const int %s_size = %d;\n", prefix, left);
+
+    fprintf(o, "#ifdef __cplusplus\nextern \"C\"\n#endif\n");
     fprintf(o, "const unsigned char %s_data[%d] =", prefix, left);
     fprintf(o, "{\n\t");
 
