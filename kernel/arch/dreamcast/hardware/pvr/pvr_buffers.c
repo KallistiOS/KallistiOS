@@ -132,7 +132,7 @@ void pvr_init_tile_matrices(int presort) {
         pvr_init_tile_matrix(i, presort);
 }
 
-void pvr_set_presort_mode(int presort) {
+void pvr_set_presort_mode(bool presort) {
     pvr_init_tile_matrix(pvr_state.ta_target, presort);
 }
 
@@ -151,7 +151,7 @@ up and placed at 0x000000 and 0x400000.
 #define BUF_ALIGN_MASK (BUF_ALIGN - 1)
 #define APPLY_ALIGNMENT(addr) (((addr) + BUF_ALIGN_MASK) & ~BUF_ALIGN_MASK)
 
-void pvr_allocate_buffers(pvr_init_params_t *params) {
+void pvr_allocate_buffers(const pvr_init_params_t *params) {
     volatile pvr_ta_buffers_t   *buf;
     volatile pvr_frame_buffers_t    *fbuf;
     int i, j;

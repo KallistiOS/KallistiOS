@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    pvr_fog.c
-   (C)2002 Paul Boese
+   Copyright (C) 2002 Paul Boese
 
  */
 
@@ -147,7 +147,7 @@ union ieee32_t {
 #define ABS(n) ( (n)<(0.0f) ? (-n):(n) )
 #define NEG(n) ( (n)>(0.0f) ? (-n):(n) )
 #define CLAMP01(x) \
-    ( (x)<(0.0f) ? ((x) = (0.0f)) : ((x)>(1.0f) ? ((x)=(1.0f)) : (x)) )
+    ( (x)<(0.0f) ? ((0.0f)) : ((x)>(1.0f) ? ((1.0f)) : (x)) )
 
 /* helper functions */
 #define FOG_EXP_TABLE_SIZE 256
@@ -158,7 +158,7 @@ union ieee32_t {
 /* A fast negative argument only exp function - That is it treats any
  * argument as a negative number
  */
-float neg_exp(float arg) {
+static float neg_exp(float arg) {
 
     float result, f;
     int k;
@@ -206,7 +206,7 @@ float neg_exp(float arg) {
      The special values for infinity and NaN are not dealt with at all.
 
  */
-uint32 float16(float f) {
+static uint32 float16(float f) {
     union ieee32_t float32;
     uint32 float16;
     uint32 sign, exponent, mantissa;
@@ -229,10 +229,6 @@ void pvr_fog_table_color(float a, float r, float g, float b) {
 
 /* Set the fog vertex color */
 void pvr_fog_vertex_color(float a, float r, float g, float b) {
-    (void)a;
-    (void)r;
-    (void)g;
-    (void)b;
     assert_msg(0, "not implemented");
     /*  PVR_SET(PVR_FOG_VERTEX_COLOR, PVR_PACK_COLOR(a, r, g, b)); */
 }
@@ -343,7 +339,7 @@ void pvr_fog_table_linear(float start, float end) {
  * 0th entry is farthest from eye. Last entry is nearest to eye.
  * The larger the value the heavier the fog.
  */
-void pvr_fog_table_custom(float tbl1[]) {
+void pvr_fog_table_custom(const float tbl1[]) {
     uint32 idx, i;
     uint32 value, valh, vall;
 

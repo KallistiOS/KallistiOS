@@ -31,7 +31,7 @@ void pvr_set_bg_color(float r, float g, float b) {
 }
 
 /* Enable/disable cheap shadow mode and set the cheap shadow scale register. */
-void pvr_set_shadow_scale(int enable, float scale_value) {
+void pvr_set_shadow_scale(bool enable, float scale_value) {
     int s = (int)(scale_value * 255);
 
     PVR_SET(PVR_CHEAP_SHADOW, ((!!enable) << 8) | (s & 0xFF));
@@ -43,7 +43,7 @@ void pvr_set_zclip(float zc) {
 }
 
 /* Return the current VBlank count */
-int pvr_get_vbl_count(void) {
+size_t pvr_get_vbl_count(void) {
     return pvr_state.vbl_count;
 }
 
@@ -74,7 +74,7 @@ int pvr_get_stats(pvr_stats_t *stat) {
     return 0;
 }
 
-int pvr_vertex_dma_enabled(void) {
+bool pvr_vertex_dma_enabled(void) {
     return pvr_state.dma_mode;
 }
 

@@ -20,7 +20,7 @@
 */
 
 /* Load raw texture data from an SH-4 buffer into PVR RAM */
-void pvr_txr_load(void * src, pvr_ptr_t dst, uint32 count) {
+void pvr_txr_load(const void *src, pvr_ptr_t dst, size_t count) {
     if(count & 3) {
         count = (count + 4) & ~3;
     }
@@ -52,9 +52,9 @@ void pvr_txr_load(void * src, pvr_ptr_t dst, uint32 count) {
        PVR_TXRLOAD_INVERT
 
 */
-void pvr_txr_load_ex(void * src, pvr_ptr_t dst, uint32 w, uint32 h,
-                     uint32 flags) {
-    uint32 x, y, yout, min, mask, bpp, invert;
+void pvr_txr_load_ex(const void* src, pvr_ptr_t dst, size_t w, size_t h,
+                     pvr_txr_load_t flags) {
+    uint32_t x, y, yout, min, mask, bpp, invert;
 
     /* Make sure we're attempting something we can do */
     switch(flags & PVR_TXRLOAD_FMT_MASK) {
@@ -143,8 +143,8 @@ void pvr_txr_load_ex(void * src, pvr_ptr_t dst, uint32 w, uint32 h,
 }
 
 /* Load a KOS Platform Independent Image (subject to restraint checking) */
-void pvr_txr_load_kimg(kos_img_t *img, pvr_ptr_t dst, uint32 flags) {
-    uint32 fmt, w, h;
+void pvr_txr_load_kimg(const kos_img_t *img, pvr_ptr_t dst, pvr_txr_load_t flags) {
+    uint32_t fmt, w, h;
 
     /* First check and make sure it's a format we can use */
     fmt = KOS_IMG_FMT_I(img->fmt) & KOS_IMG_FMT_MASK;
