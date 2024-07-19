@@ -4,7 +4,7 @@
 ###############################################################################
 ###############################################################################
 ### THIS CONFIG IS FOR AN EXPERIMENTAL VERSION OF GCC!
-## THERE ARE NO KNOWN ISSUES BUILDING THIS VERSION as of 2024-04-26.
+## THERE ARE NO KNOWN ISSUES BUILDING THIS VERSION as of 2024-07-09.
 ###############################################################################
 ###############################################################################
 
@@ -12,7 +12,7 @@
 sh_binutils_ver=2.42
 sh_gcc_ver=15.0.0
 newlib_ver=4.4.0.20231231
-gdb_ver=14.2
+gdb_ver=15.1
 
 # Overide SH toolchain download type
 sh_gcc_download_type=git
