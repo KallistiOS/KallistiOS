@@ -3,6 +3,12 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+
+#ifndef __always_inline
+/** \brief  Ask the compiler to \a always inline a given function. */
+#define __always_inline inline __attribute__((__always_inline__))
+#endif
+
 #include <dc/pvr.h>
 
 //These match up with the PVR hardware texture format bits

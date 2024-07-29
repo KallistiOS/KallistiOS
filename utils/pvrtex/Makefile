@@ -13,7 +13,7 @@ else
 	OPTMODE= -O3 -flto
 endif
 
-MYFLAGS=-flto=auto -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -Ilibavutil -I. -DCONFIG_MEMORY_POISONING=0 -DHAVE_FAST_UNALIGNED=0
+MYFLAGS=-flto=auto -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -Ilibavutil -I. -DCONFIG_MEMORY_POISONING=0 -DHAVE_FAST_UNALIGNED=0 -I${KOS_INC_PATHS}
 MYCPPFLAGS=$(MYFLAGS)
 MYCFLAGS=$(MYFLAGS) -Wno-pointer-sign
 
