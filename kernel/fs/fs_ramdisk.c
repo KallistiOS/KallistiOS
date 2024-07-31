@@ -107,7 +107,7 @@ static rd_file_t *ramdisk_find(rd_dir_t *parent, const char *name, size_t namele
     rd_file_t   *f;
 
     LIST_FOREACH(f, parent, dirlist) {
-        if(!strncasecmp(name, f->name, namelen) && strlen(f->name) == namelen)
+        if((strlen(f->name) == namelen) && !strncasecmp(name, f->name, namelen))
             return f;
     }
 
