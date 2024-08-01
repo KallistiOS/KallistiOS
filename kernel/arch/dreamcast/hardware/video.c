@@ -5,6 +5,7 @@
    Copyright (C) 2001 Anders Clerwall (scav)
    Copyright (C) 2000-2001 Megan Potter
    Copyright (C) 2023-2024 Donald Haase
+   Copyright (C) 2024 Andy Barajas
  */
 
 #include <dc/video.h>
@@ -496,28 +497,84 @@ uint32_t vid_border_color(uint8_t r, uint8_t g, uint8_t b) {
 void vid_clear(uint8_t r, uint8_t g, uint8_t b) {
     uint16_t pixel16;
     uint32_t pixel32;
+    /* PM_RGB888P (24-bit) Support */
+    uint32_t bgrb, grbg, rbgr;
+    uint32_t selector;
+    uint32_t *d;
+    size_t n;
 
     switch(vid_mode->pm) {
         case PM_RGB555:
-            pixel16 = ((r >> 3) << 10)
-                      | ((g >> 3) << 5)
-                      | ((b >> 3) << 0);
-            sq_set16(vram_s, pixel16, (vid_mode->width * vid_mode->height) * vid_pmode_bpp[PM_RGB555]);
+            pixel16 = ((r >> 3) << 10) | ((g >> 3) << 5) | ((b >> 3) << 0);
+            sq_set16(vram_s, pixel16, 
+                (vid_mode->width * vid_mode->height) * vid_pmode_bpp[PM_RGB555]);
             break;
         case PM_RGB565:
-            pixel16 = ((r >> 3) << 11)
-                      | ((g >> 2) << 5)
-                      | ((b >> 3) << 0);
-            sq_set16(vram_s, pixel16, (vid_mode->width * vid_mode->height) * vid_pmode_bpp[PM_RGB565]);
+            pixel16 = ((r >> 3) << 11) | ((g >> 2) << 5) | ((b >> 3) << 0);
+            sq_set16(vram_s, pixel16, 
+                (vid_mode->width * vid_mode->height) * vid_pmode_bpp[PM_RGB565]);
             break;
         case PM_RGB888P:
-            /* Need to come up with some way to fill this quickly. */
-            dbglog(DBG_WARNING, "vid_clear: PM_RGB888P not supported, clearing with 0\n");
-            sq_set32(vram_l, 0, (vid_mode->width * vid_mode->height) * vid_pmode_bpp[PM_RGB888P]);
+            bgrb = ((b << 24) | (g << 16) | (r << 8) | b);
+            grbg = ((g << 24) | (r << 16) | (b << 8) | g);
+            rbgr = ((r << 24) | (b << 16) | (g << 8) | r);
+
+            d = SQ_MASK_DEST(vram_l);
+            n = (vid_mode->width * vid_mode->height) * vid_pmode_bpp[PM_RGB888P];
+            selector = 0;
+
+            sq_lock(vram_l);
+
+            /* Calculate how many 32-byte blocks we are going to SQ */
+            n >>= 5;
+
+            while(n--) {
+                switch(selector) {
+                    case 0:
+                        d[0] = bgrb;
+                        d[1] = grbg;
+                        d[2] = rbgr;
+                        d[3] = bgrb;
+                        d[4] = grbg;
+                        d[5] = rbgr;
+                        d[6] = bgrb;
+                        d[7] = grbg;
+                        break;
+                    case 1:
+                        d[0] = rbgr;
+                        d[1] = bgrb;
+                        d[2] = grbg;
+                        d[3] = rbgr;
+                        d[4] = bgrb;
+                        d[5] = grbg;
+                        d[6] = rbgr;
+                        d[7] = bgrb;
+                        break;
+                    case 2:
+                        d[0] = grbg;
+                        d[1] = rbgr;
+                        d[2] = bgrb;
+                        d[3] = grbg;
+                        d[4] = rbgr;
+                        d[5] = bgrb;
+                        d[6] = grbg;
+                        d[7] = rbgr;
+                        break;
+                }
+
+                selector = (selector + 1) % 3;
+
+                sq_flush(d);
+                d += 8;
+            }
+
+            sq_unlock();
+
             break;
         case PM_RGB0888:
             pixel32 = (r << 16) | (g << 8) | (b << 0);
-            sq_set32(vram_l, pixel32, (vid_mode->width * vid_mode->height) * vid_pmode_bpp[PM_RGB0888]);
+            sq_set32(vram_l, pixel32, 
+                (vid_mode->width * vid_mode->height) * vid_pmode_bpp[PM_RGB0888]);
             break;
         default:
             dbglog(DBG_ERROR, "vid_clear: Invalid Pixel Mode: %i\n", vid_mode->pm);
