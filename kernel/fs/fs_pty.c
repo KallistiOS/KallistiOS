@@ -29,7 +29,6 @@ or space present.
 #include <kos/cond.h>
 #include <kos/fs_pty.h>
 #include <sys/queue.h>
-#include <malloc.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>

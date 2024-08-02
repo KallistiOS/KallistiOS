@@ -6,7 +6,7 @@
    This is just a wrapper around malloc() and free() for C++ programs.
  */
 
-#include <malloc.h>
+#include <stdlib.h>
 
 void *__builtin_new(int size) {
     return malloc(size);

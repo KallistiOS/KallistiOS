@@ -60,3 +60,6 @@ void* mm_sbrk(unsigned long increment) {
 
     return base;
 }
+
+void mm_shutdown(void) {
+}

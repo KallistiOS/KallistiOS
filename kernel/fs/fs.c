@@ -28,7 +28,6 @@ something like this:
 */
 
 #include <stdio.h>
-#include <malloc.h>
 #include <string.h>
 #include <assert.h>
 #include <errno.h>

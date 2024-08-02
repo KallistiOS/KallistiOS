@@ -10,7 +10,7 @@
 #include "pvr_internal.h"
 #include <stdio.h>
 
-#include <malloc.h> /* For the struct mallinfo defs */
+#include <kos/dlmalloc.h> /* For the struct mallinfo defs */
 
 #include <kos/opts.h>
 

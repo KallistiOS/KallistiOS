@@ -5,7 +5,6 @@
 */
 
 #include <stdio.h>
-#include <malloc.h>
 #include <arch/arch.h>
 
 /* If something goes badly wrong in the kernel and you don't think you

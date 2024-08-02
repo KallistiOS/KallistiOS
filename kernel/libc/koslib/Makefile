@@ -16,4 +16,12 @@ OBJS = abort.o byteorder.o memset2.o memset4.o memcpy2.o memcpy4.o \
 	gethostbyname.o getaddrinfo.o dirfd.o nanosleep.o basename.o dirname.o \
 	sched_yield.o dup.o dup2.o pipe.o
 
+ifneq ($(KOS_USE_TLSF),)
+malloc.o: CFLAGS += -DKOS_USE_TLSF
+OBJS += ../tlsf/tlsf.o malloc_tlsf.o
+else
+OBJS += dlmalloc.o
+dlmalloc.o: CFLAGS += -DUSE_DL_PREFIX
+endif
+
 include $(KOS_BASE)/Makefile.prefab

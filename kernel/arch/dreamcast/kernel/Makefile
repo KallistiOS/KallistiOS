@@ -9,12 +9,19 @@
 # target processor. Other routines may be present as well, but
 # that minimum set must be present.
 
-COPYOBJS = banner.o cache.o entry.o irq.o init.o mm.o panic.o
+COPYOBJS = banner.o cache.o entry.o irq.o init.o panic.o
 COPYOBJS += rtc.o timer.o wdt.o perfctr.o
 COPYOBJS += init_flags_default.o
 COPYOBJS += mmu.o itlb.o
 COPYOBJS += exec.o execasm.o stack.o gdb_stub.o thdswitch.o arch_exports.o
 COPYOBJS += uname.o
+
+ifneq ($(KOS_USE_TLSF),)
+COPYOBJS += mm_tlsf.o
+else
+COPYOBJS += mm.o
+endif
+
 OBJS = $(COPYOBJS) startup.o
 SUBDIRS =
 

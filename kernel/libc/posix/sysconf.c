@@ -8,8 +8,10 @@
 #include <kos/netcfg.h>
 #include <kos/fs.h>
 #include <kos/thread.h>
+#ifndef KOS_USE_TLSF
+#include <kos/dlmalloc.h> /* for mallinfo() */
+#endif
 
-#include <malloc.h>
 #include <unistd.h>
 #include <errno.h>
 #include <limits.h>
@@ -41,8 +43,10 @@ long sysconf(int name) {
         case _SC_PHYS_PAGES:
             return page_count;
         
+#ifndef KOS_USE_TLSF
         case _SC_AVPHYS_PAGES:
             return mallinfo().fordblks / PAGESIZE;
+#endif
 
         case _SC_NPROCESSORS_CONF: 
         case _SC_NPROCESSORS_ONLN: 

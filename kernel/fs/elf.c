@@ -4,9 +4,9 @@
    Copyright (C)2000,2001,2003 Megan Potter
 */
 
-#include <malloc.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <arch/cache.h>
 #include <arch/arch.h>
 #include <kos/fs.h>

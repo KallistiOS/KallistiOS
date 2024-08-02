@@ -12,7 +12,7 @@
 
 #include <errno.h>
 #include <string.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <sys/queue.h>
 #include <sys/socket.h>
 #include <netinet/in.h>

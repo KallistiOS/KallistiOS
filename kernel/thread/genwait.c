@@ -15,8 +15,8 @@
    as well as some more advanced stuff. */
 
 #include <string.h>
-#include <malloc.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <assert.h>
 #include <errno.h>
 

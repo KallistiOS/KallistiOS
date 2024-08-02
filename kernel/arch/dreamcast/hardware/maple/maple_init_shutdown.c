@@ -4,10 +4,10 @@
    Copyright (C) 2002 Megan Potter
  */
 
-#include <malloc.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <assert.h>
+#include <stdlib.h>
 #include <arch/memory.h>
 #include <dc/maple.h>
 #include <dc/asic.h>
@@ -64,9 +64,9 @@ static void maple_hw_init(void) {
 
     /* Allocate the DMA send buffer */
 #if MAPLE_DMA_DEBUG
-    maple_state.dma_buffer = memalign(32, MAPLE_DMA_SIZE + 1024);
+    maple_state.dma_buffer = aligned_alloc(32, MAPLE_DMA_SIZE + 1024);
 #else
-    maple_state.dma_buffer = memalign(32, MAPLE_DMA_SIZE);
+    maple_state.dma_buffer = aligned_alloc(32, MAPLE_DMA_SIZE);
 #endif
     assert_msg(maple_state.dma_buffer != NULL, "Couldn't allocate maple DMA buffer");
     assert_msg((((uint32)maple_state.dma_buffer) & 0x1f) == 0, "DMA buffer was unaligned; bug in dlmalloc; please report!");

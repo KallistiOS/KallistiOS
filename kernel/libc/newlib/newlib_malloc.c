@@ -8,6 +8,10 @@
 #include <stdlib.h>
 #include <reent.h>
 
+/* Declare memalign, since it may not be available in strict standard-compliant
+   mode. */
+extern void *memalign(size_t alignment, size_t size);
+
 // We have to provide these for Newlib's reent pieces.
 
 __used void _free_r(struct _reent *re, void *ptr) {
@@ -28,4 +32,9 @@ __used void *_calloc_r(struct _reent *re, size_t nmemb, size_t size) {
 __used void *_realloc_r(struct _reent *re, void *ptr, size_t size) {
     (void)re;
     return realloc(ptr, size);
+}
+
+__used void *_memalign_r(struct _reent *re, size_t align, size_t size) {
+    (void)re;
+    return memalign(align, size);
 }

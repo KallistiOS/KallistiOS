@@ -7,8 +7,8 @@
 */
 
 #include <string.h>
-#include <malloc.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <kos/net.h>
 #include <kos/thread.h>
 #include <arch/timer.h>

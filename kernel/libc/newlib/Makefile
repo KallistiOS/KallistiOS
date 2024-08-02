@@ -21,4 +21,8 @@ OBJS = lock_common.o newlib_close.o newlib_env_lock.o newlib_environ.o \
 	newlib_unlink.o newlib_wait.o newlib_write.o newlib_fcntl.o \
 	newlib_tcgetattr.o verify_newlib.o
 
+ifneq ($(KOS_USE_TLSF),)
+newlib_malloc.o: CFLAGS += -I../tlsf -DKOS_USE_TLSF
+endif
+
 include $(KOS_BASE)/Makefile.prefab

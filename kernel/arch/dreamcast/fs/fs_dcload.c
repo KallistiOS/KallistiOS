@@ -29,7 +29,7 @@ printf goes to the dc-tool console
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <errno.h>
 
 static spinlock_t mutex = SPINLOCK_INITIALIZER;
