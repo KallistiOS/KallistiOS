@@ -12,9 +12,8 @@
 # here too. ;-)
 KOS_CFLAGS += -Wextra -Wno-deprecated
 
-# Add stuff to DIRS to auto-compile it with the big tree.
-DIRS = utils
-DIRS += kernel addons # examples
+# Add stuff to SUBDIRS to auto-compile it with the big tree.
+SUBDIRS = utils kernel addons # examples
 
 # Detect a non-working or missing environ.sh file.
 ifndef KOS_BASE
@@ -24,11 +23,9 @@ error:
 	@exit 0
 endif
 
-all:
-	for i in $(DIRS); do $(KOS_MAKE) -C $$i || exit -1; done
+all: subdirs
 
-clean:
-	for i in $(DIRS); do $(KOS_MAKE) -C $$i clean || exit -1; done
+clean: clean_subdirs
 
 distclean: clean
 	-rm -f lib/$(KOS_ARCH)/*
@@ -53,7 +50,9 @@ kos-ports_distclean: kos-ports_clean
 	$(KOS_PORTS)/utils/uninstall-all.sh
 
 all_auto_kos_base:
-	$(KOS_MAKE) all KOS_BASE=$(CURDIR)
+	$(MAKE) all KOS_BASE=$(CURDIR)
 
 clean_auto_kos_base:
-	$(KOS_MAKE) clean KOS_BASE=$(CURDIR)
+	$(MAKE) clean KOS_BASE=$(CURDIR)
+
+include $(KOS_BASE)/Makefile.rules
