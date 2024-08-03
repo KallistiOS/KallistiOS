@@ -62,7 +62,8 @@ extern "C" {
         NOTE: RTEMS does not provide pthread_atfork().  */
 
 #if !defined(__rtems__)
-// #warning "Add pthread_atfork() prototype"
+    int pthread_atfork(void (*prepare)(void), void (*parent)(void),
+                    void (*child)(void));
 #endif
 
     /* Mutex Initialization Attributes, P1003.1c/Draft 10, p. 81 */

@@ -14,9 +14,6 @@
 #include <string.h>
 #include <stdio.h>
 
-/* The size of the vram. TODO: This needs a better home */
-#define PVR_MEM_SIZE 0x800000
-
 /*-----------------------------------------------------------------------------*/
 /* This table is indexed w/ DM_* */
 vid_mode_t vid_builtin[DM_MODE_COUNT] = {
@@ -283,7 +280,7 @@ void vid_set_mode(int dm, vid_pixel_mode_t pm) {
 
     if(mb == DM_MULTIBUFFER) {
         /* Fill vram with framebuffers */
-        mode.fb_count = PVR_MEM_SIZE / mode.fb_size;
+        mode.fb_count = PVR_RAM_SIZE / mode.fb_size;
     }
 
     /* This is also to be generic */
@@ -433,7 +430,7 @@ void vid_set_vram(uint32_t base) {
 
 void vid_set_start(uint32_t base) {
     /* Set vram base of current framebuffer */
-    base &= (PVR_MEM_SIZE - 1);
+    base &= (PVR_RAM_SIZE - 1);
     PVR_SET(PVR_FB_ADDR, base);
 
     vid_set_vram(base);
@@ -531,7 +528,7 @@ void vid_clear(uint8_t r, uint8_t g, uint8_t b) {
 /*-----------------------------------------------------------------------------*/
 /* Clears all of video memory as quickly as possible */
 void vid_empty(void) {
-    sq_clr((uint32_t *)PVR_RAM_BASE, PVR_MEM_SIZE);
+    sq_clr((uint32_t *)PVR_RAM_BASE, PVR_RAM_SIZE);
 }
 
 /*-----------------------------------------------------------------------------*/

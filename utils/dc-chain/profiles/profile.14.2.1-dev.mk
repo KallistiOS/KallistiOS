@@ -1,11 +1,23 @@
 # Sega Dreamcast Toolchains Maker (dc-chain)
 # This file is part of KallistiOS.
 
+###############################################################################
+###############################################################################
+### THIS CONFIG IS FOR AN EXPERIMENTAL VERSION OF GCC!
+## THERE ARE NO KNOWN ISSUES BUILDING THIS VERSION as of 2024-08-01.
+###############################################################################
+###############################################################################
+
 # Toolchain versions for SH
 sh_binutils_ver=2.42
-sh_gcc_ver=14.1.0
+sh_gcc_ver=14.2.1
 newlib_ver=4.4.0.20231231
 gdb_ver=15.1
+
+# Overide SH toolchain download type
+sh_gcc_download_type=git
+sh_gcc_git_repo=git://gcc.gnu.org/git/gcc.git
+sh_gcc_git_branch=releases/gcc-14
 
 # Toolchain for ARM
 # The ARM version of gcc/binutils is separated as support for the ARM7DI core
