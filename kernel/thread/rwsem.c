@@ -107,6 +107,13 @@ int rwsem_read_lock(rw_semaphore_t *s) {
     return rwsem_read_lock_timed(s, 0);
 }
 
+int rwsem_read_lock_irqsafe(rw_semaphore_t *s) {
+    if(irq_inside_int())
+        return rwsem_read_trylock(s);
+    else
+        return rwsem_read_lock(s);
+}
+
 /* Lock a reader/writer semaphore for writing */
 int rwsem_write_lock_timed(rw_semaphore_t *s, int timeout) {
     int old, rv = 0;
@@ -152,6 +159,13 @@ int rwsem_write_lock_timed(rw_semaphore_t *s, int timeout) {
 
 int rwsem_write_lock(rw_semaphore_t *s) {
     return rwsem_write_lock_timed(s, 0);
+}
+
+int rwsem_write_lock_irqsafe(rw_semaphore_t *s) {
+    if(irq_inside_int())
+        return rwsem_write_trylock(s);
+    else
+        return rwsem_write_lock(s);
 }
 
 /* Unlock a reader/writer semaphore from a read lock. */

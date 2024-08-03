@@ -206,22 +206,14 @@ static void dcls_recv_loop(void) {
 }
 
 static void *dcls_open(struct vfs_handler *vfs, const char *fn, int mode) {
-    int hnd, locked;
-    int dcload_mode = 0;
+    int hnd, dcload_mode = 0;
     int mm = (mode & O_MODE_MASK);
     command_t *cmd = (command_t *)pktbuf;
 
     (void)vfs;
 
-    locked = mutex_trylock(&mutex);
-
-    if(locked == -1 && irq_inside_int()) {
-        errno = EAGAIN;
-        return 0;
-    }
-    else if(locked == -1) {
-        mutex_lock(&mutex);
-    }
+    if(mutex_lock_irqsafe(&mutex))
+        return NULL;
 
     if(mode & O_DIR) {
         char realfn[fn[0] ? strlen(fn) + 1 : 2];
@@ -286,18 +278,11 @@ static void *dcls_open(struct vfs_handler *vfs, const char *fn, int mode) {
 }
 
 static int dcls_close(void *hnd) {
-    int fd = (int) hnd, locked;
+    int fd = (int) hnd;
     command_int_t *cmd = (command_int_t *)pktbuf;
 
-    locked = mutex_trylock(&mutex);
-
-    if(locked == -1 && irq_inside_int()) {
-        errno = EAGAIN;
+    if(mutex_lock_irqsafe(&mutex))
         return -1;
-    }
-    else if(locked == -1) {
-        mutex_lock(&mutex);
-    }
 
     if(fd > 100) {
         memcpy(cmd->id, "DC17", 4);
@@ -322,21 +307,13 @@ static int dcls_close(void *hnd) {
 
 static ssize_t dcls_read(void *hnd, void *buf, size_t cnt) {
     uint32 fd = (uint32) hnd;
-    int locked;
     command_3int_t *cmd = (command_3int_t *)pktbuf;
 
     if(!fd)
         return -1;
 
-    locked = mutex_trylock(&mutex);
-
-    if(locked == -1 && irq_inside_int()) {
-        errno = EAGAIN;
+    if(mutex_lock_irqsafe(&mutex))
         return -1;
-    }
-    else if(locked == -1) {
-        mutex_lock(&mutex);
-    }
 
     --fd;
 
@@ -355,21 +332,13 @@ static ssize_t dcls_read(void *hnd, void *buf, size_t cnt) {
 
 static ssize_t dcls_write(void *hnd, const void *buf, size_t cnt) {
     uint32 fd = (uint32) hnd;
-    int locked;
     command_3int_t *cmd = (command_3int_t *)pktbuf;
 
     if(!fd)
         return -1;
 
-    locked = mutex_trylock(&mutex);
-
-    if(locked == -1 && irq_inside_int()) {
-        errno = EAGAIN;
+    if(mutex_lock_irqsafe(&mutex))
         return -1;
-    }
-    else if(locked == -1) {
-        mutex_lock(&mutex);
-    }
 
     --fd;
 
@@ -388,21 +357,13 @@ static ssize_t dcls_write(void *hnd, const void *buf, size_t cnt) {
 
 static off_t dcls_seek(void *hnd, off_t offset, int whence) {
     uint32 fd = (uint32)hnd;
-    int locked;
     command_3int_t *command = (command_3int_t *)pktbuf;
 
     if(!hnd)
         return -1;
 
-    locked = mutex_trylock(&mutex);
-
-    if(locked == -1 && irq_inside_int()) {
-        errno = EAGAIN;
+    if(mutex_lock_irqsafe(&mutex))
         return -1;
-    }
-    else if(locked == -1) {
-        mutex_lock(&mutex);
-    }
 
     --fd;
 
@@ -437,7 +398,6 @@ static dirent_t their_dir;
 static dcload_dirent_t our_dir;
 
 static dirent_t *dcls_readdir(void *hnd) {
-    int locked;
     uint32 fd = (uint32) hnd;
     command_3int_t *cmd = (command_3int_t *)pktbuf;
 
@@ -446,15 +406,8 @@ static dirent_t *dcls_readdir(void *hnd) {
         return NULL;
     }
 
-    locked = mutex_trylock(&mutex);
-
-    if(locked == -1 && irq_inside_int()) {
-        errno = EAGAIN;
+    if(mutex_lock_irqsafe(&mutex))
         return NULL;
-    }
-    else if(locked == -1) {
-        mutex_lock(&mutex);
-    }
 
     memcpy(cmd->id, "DC18", 4);
     cmd->value0 = htonl(fd);
@@ -507,19 +460,12 @@ static dirent_t *dcls_readdir(void *hnd) {
 }
 
 static int dcls_rename(vfs_handler_t *vfs, const char *fn1, const char *fn2) {
-    int len1 = strlen(fn1), len2 = strlen(fn2), locked;
+    int len1 = strlen(fn1), len2 = strlen(fn2);
 
     (void)vfs;
 
-    locked = mutex_trylock(&mutex);
-
-    if(locked == -1 && irq_inside_int()) {
-        errno = EAGAIN;
+    if(mutex_lock_irqsafe(&mutex))
         return -1;
-    }
-    else if(locked == -1) {
-        mutex_lock(&mutex);
-    }
 
     memcpy(pktbuf, "DC07", 4);
     strcpy((char *)(pktbuf + 4), fn1);
@@ -544,19 +490,12 @@ static int dcls_rename(vfs_handler_t *vfs, const char *fn1, const char *fn2) {
 }
 
 static int dcls_unlink(vfs_handler_t *vfs, const char *fn) {
-    int len = strlen(fn) + 5, locked;
+    int len = strlen(fn) + 5;
 
     (void)vfs;
 
-    locked = mutex_trylock(&mutex);
-
-    if(locked == -1 && irq_inside_int()) {
-        errno = EAGAIN;
+    if(mutex_lock_irqsafe(&mutex))
         return -1;
-    }
-    else if(locked == -1) {
-        mutex_lock(&mutex);
-    }
 
     memcpy(pktbuf, "DC08", 4);
     strcpy((char *)(pktbuf + 4), fn);
@@ -574,19 +513,11 @@ static int dcls_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
                      int flag) {
     command_t *cmd = (command_t *)pktbuf;
     dcload_stat_t filestat;
-    int locked;
 
     (void)flag;
 
-    locked = mutex_trylock(&mutex);
-
-    if(locked == -1 && irq_inside_int()) {
-        errno = EAGAIN;
+    if(mutex_lock_irqsafe(&mutex))
         return -1;
-    }
-    else if(locked == -1) {
-        mutex_lock(&mutex);
-    }
 
     memcpy(cmd->id, "DC13", 4);
     cmd->address = htonl((uint32) &filestat);
@@ -635,7 +566,6 @@ static int dcls_fake_shutdown(void) {
 }
 
 static int dcls_writebuf(const uint8 *buf, int len, int xlat) {
-    int locked;
     command_3int_t cmd;
 
     (void)xlat;
@@ -643,15 +573,8 @@ static int dcls_writebuf(const uint8 *buf, int len, int xlat) {
     if(initted < 2)
         return -1;
 
-    locked = mutex_trylock(&mutex);
-
-    if(locked == -1 && irq_inside_int()) {
-        errno = EAGAIN;
+    if(mutex_lock_irqsafe(&mutex))
         return -1;
-    }
-    else if(locked == -1) {
-        mutex_lock(&mutex);
-    }
 
     memcpy(cmd.id, "DD02", 4);
     cmd.value0 = htonl(1);

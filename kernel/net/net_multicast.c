@@ -55,14 +55,9 @@ int net_multicast_add(const uint8 mac[6]) {
 
     memcpy(ent->mac, mac, 6);
 
-    if(irq_inside_int()) {
-        if(mutex_trylock(&mc_mutex)) {
-            free(ent);
-            return -1;
-        }
-    }
-    else {
-        mutex_lock(&mc_mutex);
+    if(mutex_lock_irqsafe(&mc_mutex)) {
+        free(ent);
+        return -1;
     }
 
     LIST_INSERT_HEAD(&multicasts, ent, entry);
@@ -77,14 +72,8 @@ int net_multicast_add(const uint8 mac[6]) {
 int net_multicast_del(const uint8 mac[6]) {
     mc_entry_t *i, *tmp;
 
-    if(irq_inside_int()) {
-        if(mutex_trylock(&mc_mutex)) {
-            return -1;
-        }
-    }
-    else {
-        mutex_lock(&mc_mutex);
-    }
+    if(mutex_lock_irqsafe(&mc_mutex))
+        return -1;
 
     /* Look for the one in question */
     i = LIST_FIRST(&multicasts);
@@ -112,14 +101,8 @@ int net_multicast_check(const uint8 mac[6]) {
     mc_entry_t *i;
     int rv = 0;
 
-    if(irq_inside_int()) {
-        if(mutex_trylock(&mc_mutex)) {
-            return -1;
-        }
-    }
-    else {
-        mutex_lock(&mc_mutex);
-    }
+    if(mutex_lock_irqsafe(&mc_mutex))
+        return -1;
 
     /* Look for the one in question */
     LIST_FOREACH(i, &multicasts, entry) {

@@ -215,14 +215,8 @@ int net_dhcp_request(uint32 required_address) {
         return -1;
     }
 
-    if(!irq_inside_int()) {
-        mutex_lock(&dhcp_lock);
-    }
-    else {
-        if(mutex_trylock(&dhcp_lock)) {
-            return -1;
-        }
-    }
+    if(mutex_lock_irqsafe(&dhcp_lock))
+        return -1;
 
     /* Fill in the initial DHCPDISCOVER packet */
     req->op = DHCP_OP_BOOTREQUEST;
@@ -501,7 +495,7 @@ static void net_dhcp_thd(void *obj) {
     now = timer_ms_gettime64();
     len = 0;
 
-    mutex_lock(&dhcp_lock);
+    mutex_lock_scoped(&dhcp_lock);
 
     /* Make sure we don't need to renew our lease */
     if(lease_expires <= now && (state == DHCP_STATE_BOUND ||
@@ -623,8 +617,6 @@ static void net_dhcp_thd(void *obj) {
             qpkt->next_delay <<= 1;
         }
     }
-
-    mutex_unlock(&dhcp_lock);
 }
 
 int net_dhcp_init(void) {
