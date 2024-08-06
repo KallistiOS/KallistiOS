@@ -174,9 +174,8 @@ void pvr_begin_queued_render(void) {
     volatile pvr_ta_buffers_t   * tbuf;
     volatile pvr_frame_buffers_t    * rbuf;
     pvr_bkg_poly_t  bkg;
-    uint32      *vrl, *bkgdata;
+    uint8_t      *vrl;
     uint32      vert_end;
-    int     i;
     int bufn = pvr_state.view_target;
     union {
         float f;
@@ -210,13 +209,9 @@ void pvr_begin_queued_render(void) {
     bkg.y3 = 480.0f;
     bkg.z3 = 0.2f;
     bkg.argb3 = pvr_state.bg_color;
-    bkgdata = (uint32 *)&bkg;
-    vrl = (uint32*)(PVR_RAM_BASE | PVR_GET(PVR_TA_VERTBUF_POS));
+    vrl = (uint8_t*)(PVR_RAM_BASE | PVR_GET(PVR_TA_VERTBUF_POS));
 
-    for(i = 0; i < 0x10; i++)
-        vrl[i] = bkgdata[i];
-
-    vrl[0x11] = 0;
+    memcpy(vrl, &bkg, sizeof(bkg));
 
     /* Reset the ISP/TSP, just in case */
     //PVR_SET(PVR_RESET, PVR_RESET_ISPTSP);
