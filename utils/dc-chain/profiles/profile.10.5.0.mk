@@ -2,7 +2,7 @@
 # This file is part of KallistiOS.
 
 # Toolchain versions for SH
-sh_binutils_ver=2.41
+sh_binutils_ver=2.43
 sh_gcc_ver=10.5.0
 newlib_ver=4.3.0.20230120
 gdb_ver=15.1
@@ -10,7 +10,7 @@ gdb_ver=15.1
 # Toolchain for ARM
 # The ARM version of gcc/binutils is separated as support for the ARM7DI core
 # used in the Dreamcast's AICA is not available in versions of GCC beyond 8.5.0.
-arm_binutils_ver=2.41
+arm_binutils_ver=2.43
 arm_gcc_ver=8.5.0
 
 # GCC custom dependencies
