@@ -199,15 +199,15 @@ void pvr_begin_queued_render(void) {
     bkg.flags2 = 0x20800440;    /*   what they mean for sure... heh =) */
     bkg.dummy = 0;
     bkg.x1 =   0.0f;
-    bkg.y1 = 480.0f;
+    bkg.y1 = (float)vid_mode->height;
     bkg.z1 = 0.2f;
     bkg.argb1 = pvr_state.bg_color;
     bkg.x2 =   0.0f;
     bkg.y2 =   0.0f;
     bkg.z2 = 0.2f;
     bkg.argb2 = pvr_state.bg_color;
-    bkg.x3 = 640.0f;
-    bkg.y3 = 480.0f;
+    bkg.x3 = (float)vid_mode->width;
+    bkg.y3 = (float)vid_mode->height;
     bkg.z3 = 0.2f;
     bkg.argb3 = pvr_state.bg_color;
     bkgdata = (uint32 *)&bkg;
