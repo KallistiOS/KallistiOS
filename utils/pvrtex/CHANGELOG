@@ -1,0 +1,29 @@
+Based on code by TapamN
+Source released here: https://dcemulation.org/phpBB/viewtopic.php?t=106138
+
+	Version 1.0
+		Initial release
+
+	Version 1.01
+		Program now displays error message when an error occurs loading a source image. Previously, the program would hit an assertion.
+
+		Fixed "--resize down" option. Previously, the program would round down sizes that were already a power-of-two, now sizes that are already POT are left unchanged.
+
+		Included a missing FFmpeg header file.
+
+---------------------------
+
+Adaption into KOS by Daniel Fairchild, 2024
+
+Version 1.0.2
+	Added install target in Makefile
+
+	Removed some dead code in nvmath.h that prevented compilation on ARM64 targets 
+
+	Added targets for generating header files from selected sections in the README file
+
+	Added command line option --examples/-E which outputs the "Usage Examples" section of the README file
+
+	Changed -h/--help option to output the "Command Line Options:" section of the README file
+
+	Added this CHANGELOG file
