@@ -310,14 +310,12 @@ int library_close(klibrary_t * lib) {
 /* Init/shutdown */
 
 /* Init */
-int library_init(void) {
+void library_init(void) {
     /* Initialize handle counters */
     libid_highest = 1;
 
     /* Initialize the library list */
     LIST_INIT(&library_list);
-
-    return 0;
 }
 
 /* Shutdown */

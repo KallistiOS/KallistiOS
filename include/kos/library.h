@@ -271,7 +271,7 @@ uint32 library_get_version(klibrary_t * lib);
 
 /** \cond */
 /* Init */
-int library_init(void);
+void library_init(void);
 
 /* Shutdown */
 void library_shutdown(void);

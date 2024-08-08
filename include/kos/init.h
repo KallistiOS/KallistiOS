@@ -126,20 +126,30 @@ extern const void * __kos_romdisk;
     \see    dreamcast_initflags
     @{
 */
-/** \brief  Default init flags (IRQs on, preemption enabled, romdisks). */
-#define INIT_DEFAULT    (INIT_IRQ | INIT_THD_PREEMPT | INIT_FS_ROMDISK | \
-                         INIT_DEFAULT_ARCH)
 
-#define INIT_NONE        0x00000000  /**< \brief Don't init optional things */
-#define INIT_IRQ         0x00000001  /**< \brief Enable IRQs at startup */
-/* Preemptive mode is the only mode now. Keeping define for compatibility. */
+/** Init flags to include all virtual filesystems (default). */
+#define INIT_FS_ALL     (INIT_FS_ROMDISK | INIT_FS_NULL | INIT_FS_PTY | \
+                         INIT_FS_RAMDISK | INIT_FS_RND  | INIT_FS_DEV)
+
+/** Default init flags (IRQs on, preemption enabled, romdisks). */
+#define INIT_DEFAULT    (INIT_IRQ     | INIT_THD_PREEMPT | INIT_FS_ALL | \
+                         INIT_LIBRARY | INIT_DEFAULT_ARCH)
+
+#define INIT_NONE        0x00000000  /**< Don't init optional things */
+#define INIT_IRQ         0x00000001  /**< Enable IRQs at startup */
 #define INIT_THD_PREEMPT 0x00000002  /**< \deprecated Already default mode */
-#define INIT_NET         0x00000004  /**< \brief Enable built-in networking */
-#define INIT_MALLOCSTATS 0x00000008  /**< \brief Enable malloc statistics */
-#define INIT_QUIET       0x00000010  /**< \brief Disable dbgio */
-#define INIT_EXPORT      0x00000020  /**< \brief Export kernel symbols */
-#define INIT_FS_ROMDISK  0x00000040  /**< \brief Enable support for romdisks */
-#define INIT_NO_SHUTDOWN 0x00000080  /**< \brief Disable hardware shutdown */
+#define INIT_NET         0x00000004  /**< Enable built-in networking */
+#define INIT_MALLOCSTATS 0x00000008  /**< Enable malloc statistics */
+#define INIT_QUIET       0x00000010  /**< Disable dbgio */
+#define INIT_EXPORT      0x00000020  /**< Export kernel symbols */
+#define INIT_LIBRARY     0x00000040  /**< Enable support for dynamic libraries. */
+#define INIT_FS_ROMDISK  0x00000080  /**< Enable support for romdisks */
+#define INIT_FS_NULL     0x00000100  /**< Enable support for /dev/null VFS */
+#define INIT_FS_PTY      0x00000200  /**< Enable support for PTY VFS */
+#define INIT_FS_RAMDISK  0x00000400  /**< Enable support for ramdisk VFS */
+#define INIT_FS_RND      0x00000800  /**< Enable support for /dev/urandom VFS */
+#define INIT_FS_DEV      0x00001000  /**< Enable support for /dev/ VFS */
+#define INIT_NO_SHUTDOWN 0x00002000  /**< Disable hardware shutdown */
 /** @} */
 
 __END_DECLS

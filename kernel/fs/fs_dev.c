@@ -162,13 +162,13 @@ static vfs_handler_t vh = {
     NULL                /* fstat */
 };
 
-int fs_dev_init(void) {
+void fs_dev_init(void) {
     dev_root_hnd.handler = &vh.nmmgr;
     dev_root_hnd.refcnt = 0;
-    return nmmgr_handler_add(&vh.nmmgr);
+    nmmgr_handler_add(&vh.nmmgr);
 }
 
-int fs_dev_shutdown(void) {
+void fs_dev_shutdown(void) {
     memset(&dev_root_hnd, 0, sizeof(dev_root_hnd));
-    return nmmgr_handler_remove(&vh.nmmgr);
+    nmmgr_handler_remove(&vh.nmmgr);
 }

@@ -245,17 +245,14 @@ static vfs_handler_t vh = {
     null_fstat
 };
 
-int fs_null_init(void) {
-    int rv = 0;
+void fs_null_init(void) {
     TAILQ_INIT(&null_fh);
     mutex_init(&fh_mutex, MUTEX_TYPE_NORMAL);
 
     nmmgr_handler_add(&vh.nmmgr);
-
-    return rv;
 }
 
-int fs_null_shutdown(void) {
+void fs_null_shutdown(void) {
     null_fh_t * c, * n;
 
     /* First, clean up any open files */
@@ -270,7 +267,5 @@ int fs_null_shutdown(void) {
     mutex_destroy(&fh_mutex);
 
     nmmgr_handler_remove(&vh.nmmgr);
-
-    return 0;
 }
 

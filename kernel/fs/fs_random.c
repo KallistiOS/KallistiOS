@@ -320,18 +320,15 @@ static alias_handler_t ah_u = {
     &vh.nmmgr                   /* Aliased nmmgr */
 };
 
-int fs_rnd_init(void) {
-    int rv = 0;
+void fs_rnd_init(void) {
     TAILQ_INIT(&rnd_fh);
     mutex_init(&fh_mutex, MUTEX_TYPE_NORMAL);
 
     nmmgr_handler_add(&vh.nmmgr);
     nmmgr_handler_add(&ah_u.nmmgr);
-
-    return rv;
 }
 
-int fs_rnd_shutdown(void) {
+void fs_rnd_shutdown(void) {
     rnd_fh_t * c, * n;
 
     /* First, clean up any open files */
@@ -347,6 +344,4 @@ int fs_rnd_shutdown(void) {
 
     nmmgr_handler_remove(&vh.nmmgr);
     nmmgr_handler_remove(&ah_u.nmmgr);
-
-    return 0;
 }
