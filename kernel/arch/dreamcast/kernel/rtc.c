@@ -28,8 +28,10 @@
 #include <arch/rtc.h>
 #include <arch/timer.h>
 #include <dc/g2bus.h>
+
 #include <stdint.h>
 #include <assert.h>
+#include <errno.h>
 
 /*
     High 16-bit Timestamp Value
@@ -125,8 +127,10 @@ int rtc_set_unix_secs(time_t secs) {
     const uint32_t adjusted = (const uint32_t)adjusted_time;
 
     /* Protect against underflowing or overflowing our 32-bit timestamp. */
-    if(adjusted_time < 0 || adjusted_time > UINT32_MAX)
+    if(adjusted_time < 0 || adjusted_time > UINT32_MAX) {
+        errno = EINVAL;
         return -1;
+    }
 
     /* Enable writing by setting LSB of control */
     g2_write_32(RTC_CTRL_ADDR, RTC_CTRL_WRITE_EN);
@@ -151,8 +155,10 @@ int rtc_set_unix_secs(time_t secs) {
 
     /* Signify failure if the fetched time never matched the
        time we attempted to set. */
-    if(i == RTC_RETRY_COUNT)
+    if(i == RTC_RETRY_COUNT) {
+        errno = EPERM;
         result = -1;
+    }
 
     /* We have to update the boot time now as well, subtracting
        the amount of time that has elapsed since boot from the 
