@@ -828,6 +828,7 @@ void thd_sleep(unsigned int ms) {
 }
 
 /* Manually cause a re-schedule */
+__used
 void thd_pass(void) {
     /* Makes no sense inside int */
     if(irq_inside_int()) return;
