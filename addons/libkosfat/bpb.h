@@ -64,7 +64,7 @@ typedef struct fat_bootblock {
         fat16_ebpb_t fat16;
         fat32_ebpb_t fat32;
     } ebpb;
-} __attribute__((packed)) fat_bootblock_t;
+} __attribute__((packed,aligned(32))) fat_bootblock_t;
 
 typedef struct fat32_fsinfo {
     uint32_t fsinfo_sig1;
@@ -74,7 +74,7 @@ typedef struct fat32_fsinfo {
     uint32_t last_alloc_cluster;
     uint8_t reserved2[12];
     uint32_t fsinfo_sig3;
-} __attribute__((packed)) fat32_fsinfo_t;
+} __attribute__((packed,aligned(32))) fat32_fsinfo_t;
 
 #define FAT32_FSINFO_SIG1 0x41615252
 #define FAT32_FSINFO_SIG2 0x61417272

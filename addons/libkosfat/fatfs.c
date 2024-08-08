@@ -4,6 +4,7 @@
    Copyright (C) 2012, 2013, 2019 Lawrence Sebald
 */
 
+#include <malloc.h>
 #include <stdio.h>
 #include <errno.h>
 #include <stdint.h>
@@ -315,7 +316,7 @@ fat_fs_t *fat_fs_init_ex(kos_blockdev_t *bd, uint32_t flags, int cache_sz,
     }
 
     for(j = 0; j < cache_sz; ++j) {
-        if(!(rv->bcache[j]->data = (uint8_t *)malloc(cluster_size))) {
+        if(!(rv->bcache[j]->data = (uint8_t *)memalign(32, cluster_size))) {
             goto out_bcache;
         }
 
@@ -337,7 +338,7 @@ fat_fs_t *fat_fs_init_ex(kos_blockdev_t *bd, uint32_t flags, int cache_sz,
     }
 
     for(j = 0; j < fcache_sz; ++j) {
-        if(!(rv->fcache[j]->data = (uint8_t *)malloc(block_size))) {
+        if(!(rv->fcache[j]->data = (uint8_t *)memalign(32, block_size))) {
             goto out_fcache2;
         }
 
