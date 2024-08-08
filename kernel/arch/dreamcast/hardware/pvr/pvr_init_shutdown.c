@@ -174,7 +174,7 @@ int pvr_init(pvr_init_params_t *params) {
        is still unknown. */
     PVR_SET(PVR_UNK_00A8, 0x15d1c951);      /* M (Unknown magic value) */
     PVR_SET(PVR_UNK_00A0, 0x00000020);      /* M */
-    PVR_SET(PVR_FB_CFG_2, 0x00000009);      /* alpha config */
+    /* PVR_FB_CFG_2 is configured in vid_set_mode() */
     PVR_SET(PVR_UNK_0110, 0x00093f39);      /* M */
     PVR_SET(PVR_UNK_0098, 0x00800408);      /* M */
     PVR_SET(PVR_TEXTURE_CLIP, 0x00000000);      /* texture clip distance */

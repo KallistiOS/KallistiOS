@@ -284,7 +284,7 @@ void pvr_allocate_buffers(pvr_init_params_t *params) {
 
         /* Output buffer */
         fbuf->frame = outaddr;
-        fbuf->frame_size = pvr_state.w * pvr_state.h * 2;
+        fbuf->frame_size = pvr_state.w * pvr_state.h * vid_pmode_bpp[vid_mode->pm];
         outaddr += fbuf->frame_size;
 
         /* N-byte align */

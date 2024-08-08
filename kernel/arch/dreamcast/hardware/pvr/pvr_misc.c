@@ -240,7 +240,7 @@ void pvr_begin_queued_render(void) {
     PVR_SET(PVR_PCLIP_Y, pvr_state.pclip_y);
 
     if(!pvr_state.to_texture[bufn])
-        PVR_SET(PVR_RENDER_MODULO, (pvr_state.w * 2) / 8);
+        PVR_SET(PVR_RENDER_MODULO, (pvr_state.w * vid_pmode_bpp[vid_mode->pm]) / 8);
     else
         PVR_SET(PVR_RENDER_MODULO, pvr_state.to_txr_rp[bufn]);
 
