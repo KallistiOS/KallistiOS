@@ -1,6 +1,6 @@
-diff --color -ruN gcc-11.4.0/gcc/config/sh/sh-c.c gcc-11.4.0-kos/gcc/config/sh/sh-c.c
---- gcc-11.4.0/gcc/config/sh/sh-c.c	2023-06-05 16:36:14.199287582 -0500
-+++ gcc-11.4.0-kos/gcc/config/sh/sh-c.c	2023-06-05 16:36:16.723296050 -0500
+diff --color -ruN gcc-11.5.0/gcc/config/sh/sh-c.c gcc-11.5.0-kos/gcc/config/sh/sh-c.c
+--- gcc-11.5.0/gcc/config/sh/sh-c.c	2023-06-05 16:36:14.199287582 -0500
++++ gcc-11.5.0-kos/gcc/config/sh/sh-c.c	2023-06-05 16:36:16.723296050 -0500
 @@ -141,4 +141,11 @@
  
    cpp_define_formatted (pfile, "__SH_ATOMIC_MODEL_%s__",
@@ -13,9 +13,9 @@ diff --color -ruN gcc-11.4.0/gcc/config/sh/sh-c.c gcc-11.4.0-kos/gcc/config/sh/s
 +  /* Toolchain supports setting up stack for 32MB */
 +  builtin_define ("__KOS_GCC_32MB__");
  }
-diff --color -ruN gcc-11.4.0/gcc/config/sh/sh_treg_combine.cc gcc-11.4.0-kos/gcc/config/sh/sh_treg_combine.cc
---- gcc-11.4.0/gcc/config/sh/sh_treg_combine.cc	2023-06-05 16:36:14.199287582 -0500
-+++ gcc-11.4.0-kos/gcc/config/sh/sh_treg_combine.cc	2023-06-05 16:36:16.724296054 -0500
+diff --color -ruN gcc-11.5.0/gcc/config/sh/sh_treg_combine.cc gcc-11.5.0-kos/gcc/config/sh/sh_treg_combine.cc
+--- gcc-11.5.0/gcc/config/sh/sh_treg_combine.cc	2023-06-05 16:36:14.199287582 -0500
++++ gcc-11.5.0-kos/gcc/config/sh/sh_treg_combine.cc	2023-06-05 16:36:16.724296054 -0500
 @@ -37,6 +37,7 @@
  #include "cfgrtl.h"
  #include "tree-pass.h"
@@ -35,10 +35,10 @@ diff --color -ruN gcc-11.4.0/gcc/config/sh/sh_treg_combine.cc gcc-11.4.0-kos/gcc
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // RTL pass class
  
-diff --color -ruN gcc-11.4.0/gcc/configure gcc-11.4.0-kos/gcc/configure
---- gcc-11.4.0/gcc/configure	2023-06-05 16:36:16.428295060 -0500
-+++ gcc-11.4.0-kos/gcc/configure	2023-06-05 16:36:16.726296060 -0500
-@@ -12635,7 +12635,7 @@
+diff --color -ruN gcc-11.5.0/gcc/configure gcc-11.5.0-kos/gcc/configure
+--- gcc-11.5.0/gcc/configure	2023-06-05 16:36:16.428295060 -0500
++++ gcc-11.5.0-kos/gcc/configure	2023-06-05 16:36:16.726296060 -0500
+@@ -12658,7 +12658,7 @@
      target_thread_file='single'
      ;;
    aix | dce | lynx | mipssde | posix | rtems | \
@@ -47,9 +47,9 @@ diff --color -ruN gcc-11.4.0/gcc/configure gcc-11.4.0-kos/gcc/configure
      target_thread_file=${enable_threads}
      ;;
    *)
-diff --color -ruN gcc-11.4.0/libgcc/config/sh/t-sh gcc-11.4.0-kos/libgcc/config/sh/t-sh
---- gcc-11.4.0/libgcc/config/sh/t-sh	2023-06-05 16:36:13.515285288 -0500
-+++ gcc-11.4.0-kos/libgcc/config/sh/t-sh	2023-06-05 16:36:16.726296060 -0500
+diff --color -ruN gcc-11.5.0/libgcc/config/sh/t-sh gcc-11.5.0-kos/libgcc/config/sh/t-sh
+--- gcc-11.5.0/libgcc/config/sh/t-sh	2023-06-05 16:36:13.515285288 -0500
++++ gcc-11.5.0-kos/libgcc/config/sh/t-sh	2023-06-05 16:36:16.726296060 -0500
 @@ -23,6 +23,8 @@
    $(LIB1ASMFUNCS_CACHE)
  LIB1ASMFUNCS_CACHE = _ic_invalidate _ic_invalidate_array
@@ -59,9 +59,9 @@ diff --color -ruN gcc-11.4.0/libgcc/config/sh/t-sh gcc-11.4.0-kos/libgcc/config/
  crt1.o: $(srcdir)/config/sh/crt1.S
  	$(gcc_compile) -c $<
  
-diff --color -ruN gcc-11.4.0/libgcc/configure gcc-11.4.0-kos/libgcc/configure
---- gcc-11.4.0/libgcc/configure	2023-06-05 16:36:13.547285395 -0500
-+++ gcc-11.4.0-kos/libgcc/configure	2023-06-05 16:36:16.727296064 -0500
+diff --color -ruN gcc-11.5.0/libgcc/configure gcc-11.5.0-kos/libgcc/configure
+--- gcc-11.5.0/libgcc/configure	2023-06-05 16:36:13.547285395 -0500
++++ gcc-11.5.0-kos/libgcc/configure	2023-06-05 16:36:16.727296064 -0500
 @@ -5688,6 +5688,7 @@
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;
@@ -70,9 +70,9 @@ diff --color -ruN gcc-11.4.0/libgcc/configure gcc-11.4.0-kos/libgcc/configure
  esac
  
  
-diff --color -ruN gcc-11.4.0/libobjc/configure gcc-11.4.0-kos/libobjc/configure
---- gcc-11.4.0/libobjc/configure	2023-06-05 16:36:13.230284332 -0500
-+++ gcc-11.4.0-kos/libobjc/configure	2023-06-05 16:36:16.728296067 -0500
+diff --color -ruN gcc-11.5.0/libobjc/configure gcc-11.5.0-kos/libobjc/configure
+--- gcc-11.5.0/libobjc/configure	2023-06-05 16:36:13.230284332 -0500
++++ gcc-11.5.0-kos/libobjc/configure	2023-06-05 16:36:16.728296067 -0500
 @@ -2917,11 +2917,9 @@
  
  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
@@ -85,9 +85,9 @@ diff --color -ruN gcc-11.4.0/libobjc/configure gcc-11.4.0-kos/libobjc/configure
    ;
    return 0;
  }
-diff --color -ruN gcc-11.4.0/libobjc/Makefile.in gcc-11.4.0-kos/libobjc/Makefile.in
---- gcc-11.4.0/libobjc/Makefile.in	2023-06-05 16:36:13.229284328 -0500
-+++ gcc-11.4.0-kos/libobjc/Makefile.in	2023-06-05 16:36:16.728296067 -0500
+diff --color -ruN gcc-11.5.0/libobjc/Makefile.in gcc-11.5.0-kos/libobjc/Makefile.in
+--- gcc-11.5.0/libobjc/Makefile.in	2023-06-05 16:36:13.229284328 -0500
++++ gcc-11.5.0-kos/libobjc/Makefile.in	2023-06-05 16:36:16.728296067 -0500
 @@ -308,14 +308,16 @@
  $(srcdir)/aclocal.m4: @MAINT@ $(aclocal_deps)
  	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
@@ -118,9 +118,9 @@ diff --color -ruN gcc-11.4.0/libobjc/Makefile.in gcc-11.4.0-kos/libobjc/Makefile
  
  mostlyclean:
  	-$(LIBTOOL_CLEAN) rm -f libobjc$(libsuffix).la libobjc_gc$(libsuffix).la *.lo
-diff --color -ruN gcc-11.4.0/libstdc++-v3/config/cpu/sh/atomicity.h gcc-11.4.0-kos/libstdc++-v3/config/cpu/sh/atomicity.h
---- gcc-11.4.0/libstdc++-v3/config/cpu/sh/atomicity.h	2023-06-05 16:36:13.754286089 -0500
-+++ gcc-11.4.0-kos/libstdc++-v3/config/cpu/sh/atomicity.h	2023-06-05 16:36:16.728296067 -0500
+diff --color -ruN gcc-11.5.0/libstdc++-v3/config/cpu/sh/atomicity.h gcc-11.5.0-kos/libstdc++-v3/config/cpu/sh/atomicity.h
+--- gcc-11.5.0/libstdc++-v3/config/cpu/sh/atomicity.h	2023-06-05 16:36:13.754286089 -0500
++++ gcc-11.5.0-kos/libstdc++-v3/config/cpu/sh/atomicity.h	2023-06-05 16:36:16.728296067 -0500
 @@ -22,14 +22,40 @@
  // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
  // <http://www.gnu.org/licenses/>.
@@ -171,10 +171,10 @@ diff --color -ruN gcc-11.4.0/libstdc++-v3/config/cpu/sh/atomicity.h gcc-11.4.0-k
 +
 +_GLIBCXX_END_NAMESPACE_VERSION
 +} // namespace
-diff --color -ruN gcc-11.4.0/libstdc++-v3/configure gcc-11.4.0-kos/libstdc++-v3/configure
---- gcc-11.4.0/libstdc++-v3/configure	2023-06-05 16:36:14.088287210 -0500
-+++ gcc-11.4.0-kos/libstdc++-v3/configure	2023-06-05 16:36:16.733296084 -0500
-@@ -15753,6 +15753,7 @@
+diff --color -ruN gcc-11.5.0/libstdc++-v3/configure gcc-11.5.0-kos/libstdc++-v3/configure
+--- gcc-11.5.0/libstdc++-v3/configure	2023-06-05 16:36:14.088287210 -0500
++++ gcc-11.5.0-kos/libstdc++-v3/configure	2023-06-05 16:36:16.733296084 -0500
+@@ -15769,6 +15769,7 @@
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;
      win32)	thread_header=config/i386/gthr-win32.h ;;

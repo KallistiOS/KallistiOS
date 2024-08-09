@@ -543,11 +543,8 @@ static int bba_copy_dma(uint8 * dst, uint32 s, int len) {
         dst -= add;
 
 #ifndef USE_P2_AREA
-        /*
-           used to be a call to dcache_inval_range, but for some strange reasons, I need to
-           make a full flush now ...
-        */
-        dcache_flush_range((uint32) dst, len);
+        /* Invalidate the dcache over the range of the data. */
+        dcache_inval_range((uint32) dst, len);
 #endif
 
         if(!dma_used) {

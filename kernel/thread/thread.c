@@ -660,15 +660,10 @@ static void thd_update_cpu_time(kthread_t *thd) {
    don't want a full context switch inside the same priority group.
 */
 void thd_schedule(bool front_of_line, uint64_t now) {
-    int dontenq;
     kthread_t *thd;
 
     if(now == 0)
         now = timer_ms_gettime64();
-
-    /* We won't re-enqueue the current thread if it's NULL (i.e., the
-       thread blocked itself somewhere) or if it's a zombie (below) */
-    dontenq = !thd_current;
 
     /* If there's only two thread left, it's the idle task and the reaper task:
        exit the OS */
@@ -679,7 +674,7 @@ void thd_schedule(bool front_of_line, uint64_t now) {
 
     /* If the current thread is supposed to be in the front of the line, and it
        did not die, re-enqueue it to the front of the line now. */
-    if(front_of_line && !dontenq && thd_current->state == STATE_RUNNING) {
+    if(front_of_line && thd_current->state == STATE_RUNNING) {
         thd_current->state = STATE_READY;
         thd_add_to_runnable(thd_current, front_of_line);
     }
@@ -698,7 +693,7 @@ void thd_schedule(bool front_of_line, uint64_t now) {
 
     /* If we didn't already re-enqueue the thread and we are supposed to do so,
        do it now. */
-    if(!front_of_line && !dontenq && thd_current->state == STATE_RUNNING) {
+    if(!front_of_line && thd_current->state == STATE_RUNNING) {
         thd_current->state = STATE_READY;
         thd_add_to_runnable(thd_current, front_of_line);
 

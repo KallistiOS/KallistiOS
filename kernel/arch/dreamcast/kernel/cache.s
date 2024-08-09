@@ -66,7 +66,7 @@ _icache_flush_range:
     and      r3, r7
 
     add      #32, r4       ! Move on to next cache block
-    cmp/hs   r4, r5
+    cmp/hi   r4, r5
     bt/s     .iflush_loop
     mov.l    r7, @r6       ! *addr = data    
 
@@ -107,9 +107,9 @@ _dcache_inval_range:
 .dinval_loop:
     ! Invalidate the dcache
     ocbi     @r4
-    cmp/hs   r4, r5
-    bt/s     .dinval_loop
     add      #32, r4        ! Move on to next cache block
+    cmp/hi   r4, r5
+    bt       .dinval_loop
 
 .dinval_exit:
     rts
@@ -141,9 +141,9 @@ _dcache_flush_range:
 .dflush_loop:
     ! Write back the dcache
     ocbwb    @r4
-    cmp/hs   r4, r5
-    bt/s     .dflush_loop
     add      #32, r4        ! Move on to next cache block
+    cmp/hi   r4, r5
+    bt       .dflush_loop
 
 .dflush_exit:
     rts
@@ -197,9 +197,9 @@ _dcache_purge_range:
 .dpurge_loop:
     ! Write back and invalidate the D cache
     ocbp     @r4
-    cmp/hs   r4, r5
-    bt/s     .dpurge_loop
     add      #32, r4     ! Move on to next cache block
+    cmp/hi   r4, r5
+    bt       .dpurge_loop
 
 .dpurge_exit:
     rts
@@ -239,9 +239,9 @@ _dcache_purge_all_with_buffer:
     ! Allocate and then invalidate the dcache line
     movca.l  r0, @r4
     ocbi     @r4
-    cmp/hs   r4, r5
-    bt/s     .dpurge_all_buffer_loop
     add      #32, r4        ! Move on to next cache block
+    cmp/hi   r4, r5
+    bt       .dpurge_all_buffer_loop
 
     rts
     nop

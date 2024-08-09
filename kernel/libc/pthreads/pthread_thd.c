@@ -71,7 +71,8 @@ int pthread_equal(pthread_t t1, pthread_t t2) {
     return t1 == t2;
 }
 
-int pthread_atfork(void (*)(void), void (*)(void), void (*)(void))
-{
+int pthread_atfork(void (*prepare)(void), void (*parent)(void),
+                   void (*child)(void)) {
+    (void)prepare; (void)parent; (void)child;
     return 0;
 }

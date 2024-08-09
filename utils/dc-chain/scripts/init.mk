@@ -63,7 +63,7 @@ ifdef MACOS
     sdkroot = $(shell xcrun --sdk macosx --show-sdk-path)
     macos_extra_args = -isysroot $(sdkroot)
     CC += -Wno-nullability-completeness -Wno-missing-braces $(macos_extra_args)
-    CXX += -stdlib=libc++ -mmacosx-version-min=10.7 $(macos_extra_args)
+    CXX += -stdlib=libc++ -mmacosx-version-min=10.14 $(macos_extra_args)
     SH_CC_FOR_TARGET += $(macos_extra_args)
     SH_CXX_FOR_TARGET += $(macos_extra_args)
     macos_gcc_configure_args = --with-sysroot --with-native-system-header=/usr/include

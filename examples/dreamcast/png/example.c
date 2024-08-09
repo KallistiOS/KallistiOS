@@ -30,7 +30,7 @@ void back_init(void) {
 /* init font */
 void font_init(void) {
     int i, x, y, c;
-    unsigned short temp_tex[256 * 128 * 2];
+    static unsigned short temp_tex[256 * 128 * 2];
 
     font_tex = pvr_mem_malloc(256 * 256 * 2);
 

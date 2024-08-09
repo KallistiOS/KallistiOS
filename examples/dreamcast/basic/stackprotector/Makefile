@@ -9,9 +9,11 @@ OBJS = stackprotector.o
 KOS_CFLAGS += -fstack-protector-all
 KOS_GCCVER_MIN = 4.0.0
 
-all: rm-elf $(TARGET)
-
 include $(KOS_BASE)/Makefile.rules
+
+ifeq ($(call KOS_GCCVER_MIN_CHECK,$(KOS_GCCVER_MIN)),1)
+
+all: rm-elf $(TARGET)
 
 clean: rm-elf
 	-rm -f $(OBJS)
@@ -29,6 +31,10 @@ dist: $(TARGET)
 	-rm -f $(OBJS)
 	$(KOS_STRIP) $(TARGET)
 
+else
+  all $(TARGET) clean rm-elf run dist:
+	$(KOS_GCCVER_MIN_WARNING)
+endif
 
 .PHONY: run dist clean rm-elf
 

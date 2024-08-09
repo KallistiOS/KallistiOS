@@ -113,11 +113,13 @@ extern __time_t timegm(struct tm *timeptr);
 #endif
 
 /* Explicitly provided function declarations for POSIX clock API, since
-getting them from Newlib requires supporting the rest of the _POSIX_TIMERS
-API, which is not implemented yet. */
+   getting them from Newlib requires supporting the rest of the _POSIX_TIMERS
+   API, which is not implemented yet. */
 extern int clock_settime(__clockid_t clock_id, const struct timespec *ts);
 extern int clock_gettime(__clockid_t clock_id, struct timespec *ts);
 extern int clock_getres(__clockid_t clock_id, struct timespec *res);
+
+extern int nanosleep(const struct timespec *req, struct timespec *rem);
 
 #endif
 

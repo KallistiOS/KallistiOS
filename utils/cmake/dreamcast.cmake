@@ -66,7 +66,13 @@ function(kos_add_romdisk target romdiskPath)
 
     file(REAL_PATH "${romdiskPath}" romdiskPath)
 
-    set(c_tmp   ${CMAKE_CURRENT_BINARY_DIR}/${romdiskName}_tmp.c)
+    if(CMAKE_CXX_COMPILER_LOADED)
+        set(tmpExt cpp)
+    else()
+        set(tmpExt c)
+    endif()
+
+    set(c_tmp   ${CMAKE_CURRENT_BINARY_DIR}/${romdiskName}_tmp.${tmpExt})
     set(img     ${CMAKE_CURRENT_BINARY_DIR}/${romdiskName}.img)
 
     # Variable holding all files in the romdiskPath folder

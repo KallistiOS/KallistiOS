@@ -9,10 +9,10 @@
 ###############################################################################
 
 # Toolchain versions for SH
-sh_binutils_ver=2.42
+sh_binutils_ver=2.43
 sh_gcc_ver=rs
 newlib_ver=4.4.0.20231231
-gdb_ver=14.2
+gdb_ver=15.1
 
 # Overide SH toolchain download type
 sh_gcc_download_type=git
@@ -22,7 +22,7 @@ sh_gcc_git_branch=master
 # Toolchain for ARM
 # The ARM version of gcc/binutils is separated as support for the ARM7DI core
 # used in the Dreamcast's AICA is not available in versions of GCC beyond 8.5.0.
-arm_binutils_ver=2.42
+arm_binutils_ver=2.43
 arm_gcc_ver=8.5.0
 
 # GCC custom dependencies

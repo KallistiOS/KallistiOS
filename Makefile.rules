@@ -77,20 +77,21 @@ romdisk.o: romdisk.img
 	rm romdisk_tmp.c romdisk_tmp.o
 endif
 
-# Define KOS_GCCVER_MIN in your Makefile if you want to enforce a minimum GCC version.
-ifdef KOS_GCCVER_MIN
-  ifeq ($(shell \
-    awk 'BEGIN { \
-        split("$(KOS_GCCVER_MIN)", min, "."); \
-        split("$(KOS_GCCVER)", cur, "."); \
-        if (cur[1] > min[1] || \
-           (cur[1] == min[1] && cur[2] > min[2]) || \
-           (cur[1] == min[1] && cur[2] == min[2] && cur[3] >= min[3])) { \
-            print 1; \
-        } else { \
-            print 0; \
-        } \
-    }'), 0)
-    $(error A minimum GCC version of $(KOS_GCCVER_MIN) is required, but $(KOS_GCCVER) is currently in use.)
-  endif
-endif
+define KOS_GCCVER_MIN_CHECK
+$(shell \
+	awk 'BEGIN { \
+		split("$(1)", min, "."); \
+		split("$(KOS_GCCVER)", cur, "."); \
+		if (cur[1] > min[1] || \
+			(cur[1] == min[1] && cur[2] > min[2]) || \
+			(cur[1] == min[1] && cur[2] == min[2] && cur[3] >= min[3])) { \
+			print 1; \
+		} else { \
+			print 0; \
+		} \
+	}')
+endef
+
+define KOS_GCCVER_MIN_WARNING
+@echo "Skipping $(TARGET) build as current GCC version ($(KOS_GCCVER)) is less than $(KOS_GCCVER_MIN)."
+endef
