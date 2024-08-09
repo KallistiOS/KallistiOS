@@ -42,11 +42,11 @@ normally the case with the default options. If in doubt, decompile the
 output and look to make sure.
 
 XXX: This could all be done in a non-blocking way by taking advantage of
-command queuing. Every call to syscall_gdrom_send_command returns a 
-'request id' which just needs to eventually be checked by cmd_stat. A 
-non-blocking version of all functions would simply require manual calls 
-to check the status. Doing this would probably allow data reading while 
-cdda is playing without hiccups (by severely reducing the number of gd 
+command queuing. Every call to syscall_gdrom_send_command returns a
+'request id' which just needs to eventually be checked by cmd_stat. A
+non-blocking version of all functions would simply require manual calls
+to check the status. Doing this would probably allow data reading while
+cdda is playing without hiccups (by severely reducing the number of gd
 commands being sent).
 */
 
@@ -55,17 +55,37 @@ typedef int gdc_cmd_hnd_t;
 /* The G1 ATA access mutex */
 mutex_t _g1_ata_mutex = MUTEX_INITIALIZER;
 
-/* Shortcut to cdrom_reinit_ex. Typically this is the only thing changed. */
-int cdrom_set_sector_size(int size) {
-    return cdrom_reinit_ex(-1, -1, size);
+static enum cd_track_type cdrom_get_track_type(void)
+{
+    uint32_t params[4];
+
+    syscall_gdrom_check_drive(params);
+
+    return params[1] == 32 ? 0x0800 : 0x0400;
+}
+
+enum cd_cmd_response cdrom_set_sector_size(size_t size) {
+    enum cd_read_sector_part sector_part;
+    enum cd_track_type type;
+
+    if(size == 2352) {
+        type = CD_TRACK_TYPE_ANY;
+        sector_part = CDROM_READ_WHOLE_SECTOR;
+    } else {
+        type = cdrom_get_track_type();
+        sector_part = CDROM_READ_DATA_AREA;
+    }
+
+    return cdrom_reinit_ex(sector_part, type, size);
 }
 
 /* Command execution sequence */
-int cdrom_exec_cmd(int cmd, void *param) {
+enum cd_cmd_response cdrom_exec_cmd(enum cd_cmd_code cmd, void *param) {
     return cdrom_exec_cmd_timed(cmd, param, 0);
 }
 
-int cdrom_exec_cmd_timed(int cmd, void *param, int timeout) {
+enum cd_cmd_response
+cdrom_exec_cmd_timed(enum cd_cmd_code cmd, void *param, unsigned long timeout) {
     int32_t status[4] = {
         0, /* Error code 1 */
         0, /* Error code 2 */
@@ -140,7 +160,8 @@ int cdrom_exec_cmd_timed(int cmd, void *param, int timeout) {
 }
 
 /* Return the status of the drive as two integers (see constants) */
-int cdrom_get_status(int *status, int *disc_type) {
+enum cd_cmd_response
+cdrom_get_status(enum cd_status_values *status, enum cd_disc_types *disc_type) {
     int rv = ERR_OK;
     uint32_t params[2];
 
@@ -185,44 +206,18 @@ int cdrom_get_status(int *status, int *disc_type) {
     return rv;
 }
 
-/* Helper function to account for long-standing typo */
-int cdrom_change_dataype(int sector_part, int cdxa, int sector_size) {
-    return cdrom_change_datatype(sector_part, cdxa, sector_size);
-}
-
 /* Wrapper for the change datatype syscall */
-int cdrom_change_datatype(int sector_part, int cdxa, int sector_size) {
+enum cd_cmd_response
+cdrom_change_datatype(enum cd_read_sector_part sector_part,
+                      enum cd_track_type track_type, size_t sector_size) {
     int rv = ERR_OK;
     uint32_t params[4];
 
     mutex_lock(&_g1_ata_mutex);
 
-    /* Check if we are using default params */
-    if(sector_size == 2352) {
-        if(cdxa == -1)
-            cdxa = 0;
-
-        if(sector_part == -1)
-            sector_part = CDROM_READ_WHOLE_SECTOR;
-    }
-    else {
-        if(cdxa == -1) {
-            /* If not overriding cdxa, check what the drive thinks we should 
-               use */
-            syscall_gdrom_check_drive(params);
-            cdxa = (params[1] == 32 ? 2048 : 1024);
-        }
-
-        if(sector_part == -1)
-            sector_part = CDROM_READ_DATA_AREA;
-
-        if(sector_size == -1)
-            sector_size = 2048;
-    }
-
     params[0] = 0;              /* 0 = set, 1 = get */
     params[1] = sector_part;    /* Get Data or Full Sector */
-    params[2] = cdxa;           /* CD-XA mode 1/2 */
+    params[2] = track_type;     /* Track type (Mode 2 form 1, mode 1 ...) */
     params[3] = sector_size;    /* sector size */
     rv = syscall_gdrom_sector_mode(params);
     mutex_unlock(&_g1_ata_mutex);
@@ -230,13 +225,14 @@ int cdrom_change_datatype(int sector_part, int cdxa, int sector_size) {
 }
 
 /* Re-init the drive, e.g., after a disc change, etc */
-int cdrom_reinit(void) {
-    /* By setting -1 to each parameter, they fall to the old defaults */
-    return cdrom_reinit_ex(-1, -1, -1);
+enum cd_cmd_response cdrom_reinit(void) {
+    return cdrom_set_sector_size(2048);
 }
 
 /* Enhanced cdrom_reinit, takes the place of the old 'sector_size' function */
-int cdrom_reinit_ex(int sector_part, int cdxa, int sector_size) {
+enum cd_cmd_response
+cdrom_reinit_ex(enum cd_read_sector_part sector_part,
+                enum cd_track_type track_type, size_t sector_size) {
     int r;
 
     do {
@@ -247,13 +243,14 @@ int cdrom_reinit_ex(int sector_part, int cdxa, int sector_size) {
         return r;
     }
 
-    r = cdrom_change_datatype(sector_part, cdxa, sector_size);
+    r = cdrom_change_datatype(sector_part, track_type, sector_size);
 
     return r;
 }
 
 /* Read the table of contents */
-int cdrom_read_toc(CDROM_TOC *toc_buffer, int session) {
+enum cd_cmd_response
+cdrom_read_toc(CDROM_TOC *toc_buffer, unsigned int session) {
     struct {
         int session;
         void *buffer;
@@ -269,7 +266,9 @@ int cdrom_read_toc(CDROM_TOC *toc_buffer, int session) {
 }
 
 /* Enhanced Sector reading: Choose mode to read in. */
-int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode) {
+enum cd_cmd_response
+cdrom_read_sectors_ex(void *buffer, unsigned int sector, size_t cnt,
+                      enum cd_read_sector_mode mode) {
     struct {
         int sec, num;
         void *buffer;
@@ -284,7 +283,7 @@ int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode) {
 
     /* The DMA mode blocks the thread it is called in by the way we execute
        gd syscalls. It does however allow for other threads to run. */
-    /* XXX: DMA Mode may conflict with using a second G1ATA device. More 
+    /* XXX: DMA Mode may conflict with using a second G1ATA device. More
        testing is needed from someone with such a device.
     */
     if(mode == CDROM_READ_DMA)
@@ -296,17 +295,19 @@ int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode) {
 }
 
 /* Basic old sector read */
-int cdrom_read_sectors(void *buffer, int sector, int cnt) {
+enum cd_cmd_response
+cdrom_read_sectors(void *buffer, unsigned int sector, size_t cnt) {
     return cdrom_read_sectors_ex(buffer, sector, cnt, CDROM_READ_PIO);
 }
 
 
 /* Read a piece of or all of the Q byte of the subcode of the last sector read.
-   If you need the subcode from every sector, you cannot read more than one at 
+   If you need the subcode from every sector, you cannot read more than one at
    a time. */
-/* XXX: Use some CD-Gs and other stuff to test if you get more than just the 
+/* XXX: Use some CD-Gs and other stuff to test if you get more than just the
    Q byte */
-int cdrom_get_subcode(void *buffer, int buflen, int which) {
+enum cd_cmd_response
+cdrom_get_subcode(void *buffer, size_t buflen, enum cd_read_subcode_type which) {
     struct {
         int which;
         int buflen;
@@ -346,7 +347,9 @@ uint32 cdrom_locate_data_track(CDROM_TOC *toc) {
    repeat -- number of times to repeat (0-15, 15=infinite)
    mode   -- CDDA_TRACKS or CDDA_SECTORS
  */
-int cdrom_cdda_play(uint32 start, uint32 end, uint32 repeat, int mode) {
+enum cd_cmd_response
+cdrom_cdda_play(uint32 start, uint32 end, uint32 repeat,
+                enum cdda_read_modes mode) {
     struct {
         int start;
         int end;
@@ -371,21 +374,21 @@ int cdrom_cdda_play(uint32 start, uint32 end, uint32 repeat, int mode) {
 }
 
 /* Pause CDDA audio playback */
-int cdrom_cdda_pause(void) {
+enum cd_cmd_response cdrom_cdda_pause(void) {
     int rv;
     rv = cdrom_exec_cmd(CMD_PAUSE, NULL);
     return rv;
 }
 
 /* Resume CDDA audio playback */
-int cdrom_cdda_resume(void) {
+enum cd_cmd_response cdrom_cdda_resume(void) {
     int rv;
     rv = cdrom_exec_cmd(CMD_RELEASE, NULL);
     return rv;
 }
 
 /* Spin down the CD */
-int cdrom_spin_down(void) {
+enum cd_cmd_response cdrom_spin_down(void) {
     int rv;
     rv = cdrom_exec_cmd(CMD_STOP, NULL);
     return rv;
