@@ -43,7 +43,7 @@ __BEGIN_DECLS
 
 #ifndef FD_SETSIZE
 /* This matches fs.h. */
-#define FD_SETSIZE 1024
+#define FD_SETSIZE 64
 #endif
 
 #define NFDBITS 32

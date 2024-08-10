@@ -208,7 +208,7 @@ typedef struct vfs_handler {
 /** \brief  The number of distinct file descriptors that can be in use at a
             time.
 */
-#define FD_SETSIZE  1024
+#define FD_SETSIZE  64
 
 /** \cond */
 /* This is the private struct that will be used as raw file handles

@@ -161,7 +161,7 @@ typedef _CLOCK_T_   __clock_t;
 
 // This part inserted to fix newlib brokenness.
 /** \brief  Size of an fd_set. */
-#define FD_SETSIZE      1024
+#define FD_SETSIZE      64
 
 /* The architecture should define the macro BYTE_ORDER in <arch/types.h> to
    equal one of these macros for code that looks for these BSD-style macros. */
