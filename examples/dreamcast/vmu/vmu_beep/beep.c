@@ -50,7 +50,7 @@ static void on_reset(uint8_t addr, uint32_t btns) {
 }
 
 int main(int argc, char *argv[]) {
-    maple_device_t *dev, *vmudev;
+    maple_device_t *dev, *vmudev = NULL;
     cont_state_t *state;
     point_t w;
     plx_font_t *fnt;
