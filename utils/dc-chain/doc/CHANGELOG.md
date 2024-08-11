@@ -2,6 +2,12 @@
 
 | Date<br/>_____________ | Author(s)<br/>_____________ | Changes<br/>_____________ |
 |:-----------------------|:----------------------------|---------------------------|
+| 2024-08-11 | Eric Fradella | Fix ARM toolchain build error when JIT is enabled for SH toolchain. |
+| 2024-08-07 | Eric Fradella | Updated binutils to 2.43. Updated GCC 11 profile with support for GCC 11.5.0. |
+| 2024-08-01 | Eric Fradella | Updated GCC 14 profile with support for GCC 14.2.0. |
+| 2024-07-15 | Eric Fradella | Updated profiles for GDB 15.1. |
+| 2024-06-26 | Eric Fradella | Updated GCC 12 profile with support for GCC 12.4.0. |
+| 2024-05-24 | Eric Fradella | Added support for GCC 13.3.0. |
 | 2024-05-08 | Falco Girgis | Added configuration option for libstdc++'s timezone database. |
 | 2024-05-02 | Eric Fradella | Deprecated GCC 4.7.4 profile. Revamped configuration system into separate profiles and Makefile.cfg. Revised configuration options and documentation. |
 | 2024-05-01 | Falco Girgis | Added config option for enabling the Ada langauge. |
