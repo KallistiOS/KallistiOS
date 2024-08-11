@@ -130,7 +130,7 @@ __BEGIN_DECLS
 #endif
 
 /** \brief  The number of distinct file descriptors that can be in use at a
-            time. */
+            time. This value can be overwritten in environ.sh */
 #ifndef FD_SETSIZE
 #define FD_SETSIZE 1024
 #endif
