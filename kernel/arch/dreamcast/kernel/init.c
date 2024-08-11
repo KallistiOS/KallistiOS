@@ -388,6 +388,7 @@ void arch_menu(void) {
 
 /* Called to shut down non-gracefully; assume the system is in peril
    and don't try to call the dtors */
+__used __noreturn
 void arch_abort(void) {
     /* Disable the WDT, if active */
     wdt_disable();
