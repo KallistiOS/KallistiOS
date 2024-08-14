@@ -9,8 +9,6 @@
 #define __always_inline inline __attribute__((__always_inline__))
 #endif
 
-#include <dc/pvr.h>
-
 //These match up with the PVR hardware texture format bits
 typedef enum fdtPixelFormat {
 	FDT_FMT_ARGB1555,
