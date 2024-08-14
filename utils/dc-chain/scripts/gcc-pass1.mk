@@ -2,7 +2,9 @@
 # This file is part of KallistiOS.
 
 build-sh4-gcc-pass1: build = build-gcc-$(target)-$(gcc_ver)-pass1
+build-sh4-gcc-pass1: enabled_languages = $(pass1_languages)
 build-arm-gcc-pass1: build = build-gcc-$(target)-$(gcc_ver)
+build-arm-gcc-pass1: enabled_languages = c
 $(build_gcc_pass1) $(build_gcc_pass2): src_dir = gcc-$(gcc_ver)
 $(build_gcc_pass1) $(build_gcc_pass2): log = $(logdir)/$(build).log
 $(build_gcc_pass1): logdir
@@ -17,7 +19,7 @@ $(build_gcc_pass1): logdir
 	      --with-gnu-ld \
 	      --without-headers \
 	      --with-newlib \
-	      --enable-languages=$(pass1_languages) \
+	      --enable-languages=$(enabled_languages) \
 	      --disable-libssp \
 	      --enable-checking=release \
 	      $(cpu_configure_args) \
