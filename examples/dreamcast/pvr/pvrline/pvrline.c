@@ -112,7 +112,7 @@ int main(int argc, char **argv)
 		 * incrementing offset added to endpoints
 		 * make endpoints get closer to the screen edges
 		 * force occasional endpoint swaps in the line drawing routine
-         */
+		 */
 		offset = (offset + 5) % 360;
 
 		for (int i = 0; i < linecount; i++) {
@@ -203,10 +203,10 @@ void draw_pvr_line(vec3f_t *v1, vec3f_t *v2, float width, int color,
 
 	/*
 	 * https://devcry.heiho.net/html/2017/20170820-opengl-line-drawing.html
-     *
+	 *
 	 * get the normal to the line segment running from v1 to v2
 	 * use normal to draw a quad covering the actual line segment
-     */
+	 */
 	float dx = ov2->x - ov1->x;
 	float dy = ov2->y - ov1->y;
 
