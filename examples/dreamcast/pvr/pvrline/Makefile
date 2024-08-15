@@ -1,8 +1,3 @@
-#
-# Basic KallistiOS skeleton / test program
-# (c)2024 Jason Martin
-#
-
 # Put the filename of the output binary here
 TARGET = pvrline.elf
 
