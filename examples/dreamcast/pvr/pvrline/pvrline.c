@@ -92,46 +92,14 @@ void draw_pvr_line(vec3f_t *v1, vec3f_t *v2, int width, int color, int which_lis
 	ly2 = v2->y;
 	lz2 = v2->z;
 
-	if (lx1 == lx2) {
-		if(ly1 > ly2) {
-			x1 = lx2;
-			y1 = ly2;
-			z1 = lz2;
-			x2 = lx1;
-			y2 = ly1;
-			z2 = lz1;
-		} else {
-			x1 = lx1;
-			y1 = ly1;
-			z1 = lz1;
-			x2 = lx2;
-			y2 = ly2;
-			z2 = lz2;
-		}
-	} else if (ly1 == ly2) {
-		if(lx1 < lx2) {
-			x1 = lx1;
-			y1 = ly1;
-			z1 = lz1;
-			x2 = lx2;
-			y2 = ly2;
-			z2 = lz2;
-		} else {
-			x1 = lx2;
-			y1 = ly2;
-			z1 = lz2;
-			x2 = lx1;
-			y2 = ly1;
-			z2 = lz1;
-		}
-	} else if(lx1 < lx2) {
+	if(lx1 <= lx2) {
 		x1 = lx1;
 		y1 = ly1;
 		z1 = lz1;
 		x2 = lx2;
 		y2 = ly2;
 		z2 = lz2;
-	} else { // if(lx1 > lx2)
+	} else {
 		x1 = lx2;
 		y1 = ly2;
 		z1 = lz2;
