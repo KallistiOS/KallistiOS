@@ -60,7 +60,7 @@ int main(int argc, char **argv)
 	maple_device_t *controller;
 	cont_state_t *cont;
 
-    printf("---KallistiOS PVR Line-drawing Example---\n");
+	printf("---KallistiOS PVR Line-drawing Example---\n");
 	printf("Press DPAD UP to increase line count\n\t(up to a maximum of 1536"
 		" lines).\n");
 	printf("Press DPAD DOWN to decrease line count\n\t(down to a minimum of 1"
