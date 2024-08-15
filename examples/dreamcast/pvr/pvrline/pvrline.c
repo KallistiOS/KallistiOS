@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
 void draw_pvr_line(vec3f_t *v1, vec3f_t *v2, int width, int color, int which_list, pvr_poly_hdr_t *which_hdr) {
 	pvr_vertex_t __attribute__((aligned(32))) line_verts[4];
 	pvr_vertex_t *vert = line_verts;
-	float lx1,lx2,ly1,ly2,lz1,lz2;
+
 	float x1,y1,x2,y2,z1,z2;
 
 	for (int i=0;i<4;i++) {
@@ -84,28 +84,20 @@ void draw_pvr_line(vec3f_t *v1, vec3f_t *v2, int width, int color, int which_lis
 	}
 	line_verts[3].flags = PVR_CMD_VERTEX_EOL;
 
-	lx1 = v1->x;
-	ly1 = v1->y;
-	lz1 = v1->z;
-
-	lx2 = v2->x;
-	ly2 = v2->y;
-	lz2 = v2->z;
-
-	if(lx1 <= lx2) {
-		x1 = lx1;
-		y1 = ly1;
-		z1 = lz1;
-		x2 = lx2;
-		y2 = ly2;
-		z2 = lz2;
+	if(v1->x <= v2->x) {
+		x1 = v1->x;
+		y1 = v1->y;
+		z1 = v1->z;
+		x2 = v2->x;
+		y2 = v2->y;
+		z2 = v2->z;
 	} else {
-		x1 = lx2;
-		y1 = ly2;
-		z1 = lz2;
-		x2 = lx1;
-		y2 = ly1;
-		z2 = lz1;
+		x1 = v2->x;
+		y1 = v2->y;
+		z1 = v2->z;
+		x2 = v1->x;
+		y2 = v1->y;
+		z2 = v1->z;
 	}
 
 	// https://devcry.heiho.net/html/2017/20170820-opengl-line-drawing.html
