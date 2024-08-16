@@ -237,7 +237,7 @@ void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t 
     /* Make sure the FIFOs are empty */
     g2_fifo_wait();
 
-    /* Separating channels and do fill/write queues as many times necessary. */
+    /* Separating channels and fill/write queues as many times as necessary. */
     for(; remain >= 128; remain -= 128) {
 
         /* Fill SQ0 */
