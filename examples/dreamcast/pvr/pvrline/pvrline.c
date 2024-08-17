@@ -36,7 +36,7 @@ uint8_t __attribute__((aligned(32))) tr_buf[VERTBUF_SIZE];
  * uses the PVR to draw a line with a triangle strip consisting of 4 vertices
  * representing a quad
 */
-void draw_pvr_line(vec3f_t *v1, vec3f_t *v2, float width, int color, 
+void draw_pvr_line(vec3f_t *v1, vec3f_t *v2, float width, int color,
 	int which_list, pvr_poly_hdr_t *which_hdr);
 
 int main(int argc, char **argv)
@@ -90,10 +90,13 @@ int main(int argc, char **argv)
 		if (controller) {
 			cont = maple_dev_status(controller);
 			if (cont->buttons & CONT_DPAD_UP) {
-				if (linecount < 1536)
+				if (linecount < 1536) {
 					linecount += 1;
+				}
 			} else if (cont->buttons & CONT_DPAD_DOWN) {
-				if (linecount > 1) linecount -= 1;
+				if (linecount > 1) {
+					linecount -= 1;
+				}
 			} else if (cont->buttons & CONT_A) {
 				linecount = 1;
 			} else if (cont->buttons & CONT_START) {
@@ -110,8 +113,9 @@ int main(int argc, char **argv)
 
 		/*
 		 * incrementing offset added to endpoints
-		 * make endpoints get closer to the screen edges
-		 * force occasional endpoint swaps in the line drawing routine
+		 * make endpoints occasionally move to other side of screen
+		 * from where they start
+		 * force swaps in the line drawing routine
 		 */
 		offset = (offset + 5) % 360;
 
@@ -132,7 +136,7 @@ int main(int argc, char **argv)
 			v1.x += offset;
 			v1.y += offset;
 
-			/* 
+			/*
 			 * subtract an offset in the range [0,359] from v2 x and y
 			 * x stays within [141,595]
 			 * y stays within [40,447]
@@ -152,18 +156,28 @@ int main(int argc, char **argv)
 			b = rand() % 256;
 			a = rand() % 256;
 
-			color = PVR_PACK_COLOR((float)a / 255.0f, (float)r / 255.0f, 
-						(float)g / 255.0f, (float)b / 255.0f);
+			color = PVR_PACK_COLOR((float)a / 255.0f,
+				(float)r / 255.0f,
+				(float)g / 255.0f,
+				(float)b / 255.0f);
 
 			width = (rand() % 5) + 1;
 
 			/* interleaved use of PVR polygon list types */
 			if (a == 255) {
-				/* when alpha is fully opaque, use the OP list */
-				draw_pvr_line(&v1, &v2, width, color, PVR_LIST_OP_POLY, &op_hdr);
+				/*
+				 * when alpha is fully opaque
+				 * use the OP list
+				 */
+				draw_pvr_line(&v1, &v2, width, color,
+					PVR_LIST_OP_POLY, &op_hdr);
 			} else {
-				/* when alpha is transparent at all, use the TR list */
-				draw_pvr_line(&v1, &v2, width, color, PVR_LIST_TR_POLY, &tr_hdr);
+				/*
+				 * when alpha is transparent at all
+				 * use the TR list
+				 */
+				draw_pvr_line(&v1, &v2, width, color,
+					PVR_LIST_TR_POLY, &tr_hdr);
 			}
 		}
 
@@ -216,7 +230,8 @@ void draw_pvr_line(vec3f_t *v1, vec3f_t *v2, float width, int color,
 	 * multiply by half of the line width
 	 * this scales the normal, making a quad with the requested line width
 	 */
-	float inverse_magnitude = frsqrt((dx*dx) + (dy*dy)) * ((float)width*0.5f);
+	float inverse_magnitude = frsqrt((dx*dx) + (dy*dy)) *
+		((float)width*0.5f);
 	float nx = -dy * inverse_magnitude;
 	float ny = dx * inverse_magnitude;
 
@@ -243,7 +258,7 @@ void draw_pvr_line(vec3f_t *v1, vec3f_t *v2, float width, int color,
 	vert->y = ov2->y - ny;
 	vert->z = ov2->z;
 
-	/* submit the poly header and triangle strip vertices to requested list */
+	/* submit the poly header and vertices to requested list */
 	pvr_list_prim(which_list, which_hdr, sizeof(pvr_poly_hdr_t));
 	pvr_list_prim(which_list, &line_verts, 4 * sizeof(pvr_vertex_t));
 }
