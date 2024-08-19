@@ -960,6 +960,80 @@ ret_success:
     return 0;
 }
 
+static int net_udp_getpeername(net_socket_t *hnd, struct sockaddr *name, socklen_t *name_len) {
+    struct udp_sock *sock;
+    struct sockaddr_in realaddr;
+    struct sockaddr_in6 realaddr6;
+
+    if(!name || !name_len) {
+        errno = EFAULT;
+        return -1;
+    }
+
+    if(irq_inside_int()) {
+        if(mutex_trylock(&udp_mutex) == -1) {
+            errno = EWOULDBLOCK;
+            return -1;
+        }
+    } else {
+        mutex_lock(&udp_mutex);
+    }
+
+    if(!(sock = (struct udp_sock *)hnd->data)) {
+        mutex_unlock(&udp_mutex);
+        errno = EBADF;
+        return -1;
+    }
+
+    /* If the socket is not connected, return an error */
+    if(IN6_IS_ADDR_UNSPECIFIED(&sock->remote_addr.sin6_addr) || sock->remote_addr.sin6_port == 0) {
+        mutex_unlock(&udp_mutex);
+        errno = ENOTCONN;
+        return -1;
+    }
+
+    /* Depending on the socket domain, return the appropriate address structure */
+    if(sock->domain == AF_INET) {
+        memset(&realaddr, 0, sizeof(struct sockaddr_in));
+        realaddr.sin_family = AF_INET;
+        realaddr.sin_addr.s_addr = sock->remote_addr.sin6_addr.__s6_addr.__s6_addr32[3];
+        realaddr.sin_port = sock->remote_addr.sin6_port;
+
+        if(*name_len <= sizeof(struct sockaddr_in)) {
+            /* Passed in a structure not big enough so truncate*/
+            memcpy(name, &realaddr, *name_len);
+            errno = ENOBUFS;
+        } else {
+            memcpy(name, &realaddr, sizeof(struct sockaddr_in));
+            *name_len = sizeof(struct sockaddr_in);
+            goto ret_success;
+        }
+    } else if(sock->domain == AF_INET6) {
+        memset(&realaddr6, 0, sizeof(struct sockaddr_in6));
+        realaddr6.sin6_family = AF_INET6;
+        realaddr6.sin6_addr = sock->remote_addr.sin6_addr;
+        realaddr6.sin6_port = sock->remote_addr.sin6_port;
+
+        if(*name_len <= sizeof(struct sockaddr_in6)) {
+            /* Passed in a structure not big enough */
+            memcpy(name, &realaddr6, *name_len);
+            errno = ENOBUFS;
+        } else {
+            memcpy(name, &realaddr6, sizeof(struct sockaddr_in6));
+            *name_len = sizeof(struct sockaddr_in6);
+            goto ret_success;
+        }
+    }
+
+    mutex_unlock(&udp_mutex);
+    errno = ENOTSOCK;
+    return -1;
+
+ret_success:
+    mutex_unlock(&udp_mutex);
+    return 0;
+}
+
 static int net_udp_fcntl(net_socket_t *hnd, int cmd, va_list ap) {
     struct udp_sock *sock;
     long val;
@@ -1433,6 +1507,7 @@ static fs_socket_proto_t proto = {
     net_udp_getsockopt,
     net_udp_setsockopt,
     net_udp_getsockname,
+    net_udp_getpeername,
     net_udp_fcntl,
     net_udp_poll
 };
@@ -1455,6 +1530,7 @@ static fs_socket_proto_t proto_lite = {
     net_udp_getsockopt,
     net_udp_setsockopt,
     net_udp_getsockname,
+    net_udp_getpeername,
     net_udp_fcntl,
     net_udp_poll
 };
