@@ -331,7 +331,7 @@ typedef struct fs_socket_proto {
         \param  name_len    The amount of space pointed to by name, in
                             bytes. On return, this is set to the actual size
                             of the returned address information.
-        \retval -1          On error (with errno set appropriately)
+        \retval -1          On error (with errno set appropriately).
         \retval 0           On success.
     */
     int (*getsockname)(net_socket_t *s, struct sockaddr *name, socklen_t *name_len);
@@ -348,8 +348,8 @@ typedef struct fs_socket_proto {
         \param  name_len    The amount of space pointed to by name, in
                             bytes. On return, this is set to the actual size
                             of the returned address information.
-        \retval -1          On error (with errno set appropriately)
-        \retval 0           On success
+        \retval -1          On error (with errno set appropriately).
+        \retval 0           On success.
     */
     int (*getpeername)(net_socket_t *s, struct sockaddr *name, socklen_t *name_len);
 
