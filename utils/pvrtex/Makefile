@@ -19,6 +19,7 @@ MYCFLAGS=$(MYFLAGS) -Wno-pointer-sign
 
 
 define textSegment2Header
+	mkdir -p info
 	awk '/$1/,/--------------------------------------------------------------------------/' README > $2/$3.txt
 	$(KOS_BASE)/utils/bin2c/bin2c $2/$3.txt $2/$3.h $(3)_txt
 	rm $2/$3.txt
@@ -47,7 +48,7 @@ README: readme_unformatted.txt
 
 all: $(TARGET) README
 
-install: all 
+install: all
 	install -m 755 $(TARGET) $(DC_TOOLS_BASE)/
 
 info/options.h: README Makefile
