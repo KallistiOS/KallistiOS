@@ -19,14 +19,12 @@ MYCFLAGS=$(MYFLAGS) -Wno-pointer-sign
 
 
 define textSegment2Header
-	awk '/$1/,/--------------------------------------------------------------------------/' README|xxd -i -n $2_$3 > $2/$3.h
+	awk '/$1/,/--------------------------------------------------------------------------/' README > $2/$3.txt
+	$(KOS_BASE)/utils/bin2c/bin2c $2/$3.txt $2/$3.h $(3)_txt
+	rm $2/$3.txt
 endef
 
-
-TOOLINSTALLDIR=$(KOS_BASE)/../bin
-
 .PHONY: all clean
-
 
 $(TARGET): $(OBJS)
 	gcc $(OPTMODE) -o $(TARGET) \
@@ -50,10 +48,10 @@ README: readme_unformatted.txt
 all: $(TARGET) README
 
 install: all 
-	install -m 755 $(TARGET) $(TOOLINSTALLDIR)/
+	install -m 755 $(TARGET) $(DC_TOOLS_BASE)/
 
-info/options.h: README
+info/options.h: README Makefile
 	$(call textSegment2Header,Command Line Options:,info,options)
 
-info/examples.h: README
+info/examples.h: README Makefile
 	$(call textSegment2Header,Usage Examples:,info,examples)
