@@ -416,7 +416,7 @@ int getsockname(int socket, struct sockaddr *name, socklen_t *name_len);
                                         socket.
 */
 int getpeername(int socket, struct sockaddr *restrict name, 
-                socklen_t *restrict name_len);
+                socklen_t *__RESTRICT name_len);
 
 /** \brief  Get socket options.
 
