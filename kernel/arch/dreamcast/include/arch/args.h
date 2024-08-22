@@ -14,7 +14,7 @@
     \author Paul Cercueil
 */
 
-#if __SH4_SINGLE_ONLY__
+#if defined(__SH4_SINGLE_ONLY__) && __SH4_SINGLE_ONLY__
 #define KOS_SH4_SINGLE_ONLY 1
 #else
 #define KOS_SH4_SINGLE_ONLY 0
