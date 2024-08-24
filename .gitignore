@@ -28,6 +28,7 @@ utils/gentexfont/gentexfont
 utils/isotest/isotest
 utils/makejitter/makejitter
 utils/dcbumpgen/dcbumpgen
+utils/dchemigen/dchemigen
 utils/scramble/scramble
 utils/makeip/makeip
 utils/naomibintool/naomibintool

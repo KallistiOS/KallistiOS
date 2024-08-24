@@ -1,0 +1,40 @@
+.TH DCHEMIGEN 1 "Aug 2024" "Version 1.0"
+.SH NAME
+dchemigen \- dchemigen a Dreamcast executable
+.SH SYNOPSIS
+.B dchemigen
+.IR from
+.IR to
+
+.SH DESCRIPTION
+.B dchemigen
+is used to generate SEGA Dreamcast PVR 2D normal map textures from 3D normal map images.
+
+.SH EXAMPLES
+
+.EX
+.B
+   dcbumpgen infile.png
+.EE
+
+.EX
+.B
+   dcbumpgen infile.png outfile.raw
+.EE
+
+.EX
+.B
+   dcbumpgen infile.jpg
+.EE
+
+.EX
+.B
+   dcbumpgen infile.jpg outfile.raw
+.EE
+
+.SH AUTHOR
+This manual page was initially written by Stefan Galowicz <bogglez@protonmail.ch>,
+for the KOS project.
+.TP
+The program has been initially written by Frederik Ehnbom in 2005.
+It was modified to take 3D x,y,z normal maps as input by Jason Martin in 2024.
