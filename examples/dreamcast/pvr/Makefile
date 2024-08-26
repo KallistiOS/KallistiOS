@@ -15,6 +15,7 @@ all:
 	$(KOS_MAKE) -C modifier_volume_tex
 	$(KOS_MAKE) -C cheap_shadow
 	$(KOS_MAKE) -C bumpmap
+	$(KOS_MAKE) -C normalmap
 	$(KOS_MAKE) -C yuv_converter
 
 clean:
@@ -28,6 +29,7 @@ clean:
 	$(KOS_MAKE) -C modifier_volume_tex clean
 	$(KOS_MAKE) -C cheap_shadow clean
 	$(KOS_MAKE) -C bumpmap clean
+	$(KOS_MAKE) -C normalmap clean
 	$(KOS_MAKE) -C yuv_converter clean
 
 dist:
@@ -41,4 +43,5 @@ dist:
 	$(KOS_MAKE) -C modifier_volume_tex dist
 	$(KOS_MAKE) -C cheap_shadow dist
 	$(KOS_MAKE) -C bumpmap dist
+	$(KOS_MAKE) -C normalmap dist
 	$(KOS_MAKE) -C yuv_converter dist 
