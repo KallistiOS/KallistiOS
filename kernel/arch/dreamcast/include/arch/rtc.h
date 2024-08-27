@@ -1,8 +1,8 @@
 /* KallistiOS ##version##
 
    arch/dreamcast/include/rtc.h
-   Copyright (C) 2000-2001 Megan Potter
-   Copyright (C) 2023 Falco Girgis
+   Copyright (C) 2000, 2001 Megan Potter
+   Copyright (C) 2023, 2024 Falco Girgis
 
 */
 
@@ -57,11 +57,12 @@ __BEGIN_DECLS
     Y2K and the last timestamp it can represent before rolling over is 
     February 06 2086 06:28:15.
 
-    \sa wdt
+    \sa wdt, timers, perf_counters
+
+    @{
 */
 
 /** \brief   Get the current date/time.
-    \ingroup rtc
 
     This function retrieves the current RTC value as a standard UNIX timestamp
     (with an epoch of January 1, 1970 00:00). This is assumed to be in the
@@ -69,12 +70,11 @@ __BEGIN_DECLS
 
     \return                 The current UNIX-style timestamp (local time).
 
-    \sa rtc_set_unix_secs(), rtc_boot_time()
+    \sa rtc_set_unix_secs()
 */
 time_t rtc_unix_secs(void);
 
 /** \brief   Set the current date/time.
-    \ingroup rtc
 
     This function sets the current RTC value as a standard UNIX timestamp
     (with an epoch of January 1, 1970 00:00). This is assumed to be in the
@@ -85,31 +85,37 @@ time_t rtc_unix_secs(void);
     uses a 32-bit timestamp (which also has a different epoch), not all
     `time_t` values can be represented within the RTC!
 
-    \param time             Unix timestamp to set the current time to
+    \param      time        Unix timestamp to set the current time to
 
-    \return                 0 for success or -1 for failure
+    \return                 0 for success or -1 for failure (with errno set
+                            appropriately).
+
+    \exception  EINVAL      \p time was an invalid timestamp or could not be
+                            represented on the AICA's RTC.
+    \exception  EPERM       Failed to set and successfully read back \p time
+                            from the RTC.
 
     \sa rtc_unix_secs()
 */
 int rtc_set_unix_secs(time_t time);
 
 /** \brief   Get the time since the system was booted.
-    \ingroup rtc
 
-    This function retrieves the cached RTC value from when KallistiOS was started. As
-    with rtc_unix_secs(), this is a UNIX-style timestamp in local time.
+    This function retrieves the cached RTC value from when KallistiOS was
+    started. As with rtc_unix_secs(), this is a UNIX-style timestamp in
+    local time.
 
     \return                 The boot time as a UNIX-style timestamp.
-
-    \sa rtc_unix_secs()
 */
 time_t rtc_boot_time(void);
 
-/* \cond */
+/* \cond INTERNAL */
 /* Internally called Init / Shutdown */
 int rtc_init(void);
 void rtc_shutdown(void);
 /* \endcond */
+
+/** @} */
 
 __END_DECLS
 
