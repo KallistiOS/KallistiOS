@@ -19,7 +19,7 @@ TESTS = \
 	" -i source.png -o $(RUN_DIR)/texture.dt -f pal8bpp -C 64 -d -p $(RUN_DIR)/preview.png"
 
 # Target to run all tests
-run-tests:
+received:
 	@mkdir -p $(RUN_DIR)
 	@for cmd in $(TESTS); do \
 		rm -f $(RUN_DIR)/*; \
@@ -29,9 +29,9 @@ run-tests:
 		mv $(RUN_DIR)/* $(RECEIVED_DIR)/$$TESTNAME; \
 	done
 
-.PHONY: run-tests
+.PHONY: received
 
-compare:
+compare: received
 	@for dir in $(RECEIVED_DIR)/*; do \
 		if [ -d "$$dir" ]; then \
 			echo "--------------------------------------------------$$FAILEDNUM"; \
