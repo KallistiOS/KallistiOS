@@ -1,4 +1,5 @@
 # Variables
+SOURCEIMAGE = crate.png
 TEST_DIR = tests
 APPROVED_DIR = $(TEST_DIR)/approved
 RECEIVED_DIR = $(TEST_DIR)/received
@@ -10,13 +11,14 @@ all: test
 
 # Define the array of commands
 TESTS = \
-	" -i source.png -o $(RUN_DIR)/texture.dt" \
-	" -i source.png -o $(RUN_DIR)/texture.vq" \
-	" -i source.png -o $(RUN_DIR)/texture.tex" \
-	" -i source.png -o $(RUN_DIR)/texture.dt -f argb4444 -d -c 64 -m quality -r -R" \
-	" -i source.png -o $(RUN_DIR)/texture.dt -f normal -m" \
-	" -i source.png -o $(RUN_DIR)/texture.dt -s" \
-	" -i source.png -o $(RUN_DIR)/texture.dt -f pal8bpp -C 64 -d -p $(RUN_DIR)/preview.png"
+	" -i $(SOURCEIMAGE) -o $(RUN_DIR)/texture.dt" \
+	" -i $(SOURCEIMAGE) -o $(RUN_DIR)/texture.vq" \
+	" -i $(SOURCEIMAGE) -o $(RUN_DIR)/texture.tex" \
+	" -i $(SOURCEIMAGE) -o $(RUN_DIR)/texture.dt -f argb4444 -d -c 64 -m quality -r -R" \
+	" -i $(SOURCEIMAGE) -o $(RUN_DIR)/texture.dt -f normal -m" \
+	" -i $(SOURCEIMAGE) -o $(RUN_DIR)/texture.dt -s" \
+	" -i $(SOURCEIMAGE) -o $(RUN_DIR)/texture.dt -f pal8bpp -C 64 -d" \
+	" -i $(SOURCEIMAGE) -o $(RUN_DIR)/texture.dt -f pal4bpp -d -p $(RUN_DIR)/preview.png"	
 
 # Target to run all tests
 received:
@@ -34,7 +36,7 @@ received:
 compare: received
 	@for dir in $(RECEIVED_DIR)/*; do \
 		if [ -d "$$dir" ]; then \
-			echo "--------------------------------------------------$$FAILEDNUM"; \
+			echo "--------------------------------------------------"; \
 			echo "\nComparing test in output in: $$dir"; \
 			for file in $$dir/*; do \
 				echo "comparing output received: $$(basename $$file) with approved"; \
