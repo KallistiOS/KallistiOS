@@ -5,7 +5,7 @@
    Copyright (C) 2000 Megan Potter
    Copyright (C) 2014 Lawrence Sebald
    Copyright (C) 2014 Donald Haase
-   Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024 Ruslan Rostovtsev
    Copyright (C) 2024 Andy Barajas
 
  */
@@ -55,6 +55,8 @@ typedef int gdc_cmd_hnd_t;
 /* The G1 ATA access mutex */
 mutex_t _g1_ata_mutex = MUTEX_INITIALIZER;
 
+static gdc_cmd_hnd_t cmd_hnd = 0;
+
 /* Shortcut to cdrom_reinit_ex. Typically this is the only thing changed. */
 int cdrom_set_sector_size(int size) {
     return cdrom_reinit_ex(-1, -1, size);
@@ -72,7 +74,6 @@ int cdrom_exec_cmd_timed(int cmd, void *param, int timeout) {
         0, /* Transferred size */
         0  /* ATA status waiting */
     };
-    gdc_cmd_hnd_t hnd;
     int n, rv = ERR_OK;
     uint64_t begin;
 
@@ -81,15 +82,15 @@ int cdrom_exec_cmd_timed(int cmd, void *param, int timeout) {
 
     /* Submit the command */
     for(n = 0; n < 10; ++n) {
-        hnd = syscall_gdrom_send_command(cmd, param);
-        if (hnd != 0) {
+        cmd_hnd = syscall_gdrom_send_command(cmd, param);
+        if (cmd_hnd != 0) {
             break;
         }
         syscall_gdrom_exec_server();
         thd_pass();
     }
 
-    if(hnd <= 0) {
+    if(cmd_hnd <= 0) {
         mutex_unlock(&_g1_ata_mutex);
         return ERR_SYS;
     }
@@ -100,15 +101,14 @@ int cdrom_exec_cmd_timed(int cmd, void *param, int timeout) {
     }
     do {
         syscall_gdrom_exec_server();
-        n = syscall_gdrom_check_command(hnd, status);
+        n = syscall_gdrom_check_command(cmd_hnd, status);
 
         if(n != PROCESSING && n != BUSY) {
             break;
         }
         if(timeout) {
             if((timer_ms_gettime64() - begin) >= (unsigned)timeout) {
-                syscall_gdrom_abort_command(hnd);
-                syscall_gdrom_exec_server();
+                cdrom_abort_cmd(timeout);
                 rv = ERR_TIMEOUT;
                 dbglog(DBG_ERROR, "cdrom_exec_cmd_timed: Timeout exceeded\n");
                 break;
@@ -137,6 +137,46 @@ int cdrom_exec_cmd_timed(int cmd, void *param, int timeout) {
         if(status[1] != 0)
             return ERR_SYS;
     }
+}
+
+int cdrom_abort_cmd(int timeout) {
+    int32_t status[4] = {
+        0, /* Error code 1 */
+        0, /* Error code 2 */
+        0, /* Transferred size */
+        0  /* ATA status waiting */
+    };
+    int rs;
+    uint64_t begin;
+
+    if (cmd_hnd <= 0) {
+        return ERR_NO_ACTIVE;
+    }
+    syscall_gdrom_abort_command(cmd_hnd);
+
+    if(timeout) {
+        begin = timer_ms_gettime64();
+    }
+    do {
+        syscall_gdrom_exec_server();
+        rs = syscall_gdrom_check_command(cmd_hnd, status);
+
+        if(rs == NO_ACTIVE || rs == COMPLETED) {
+            break;
+        }
+        if(timeout) {
+            if((timer_ms_gettime64() - begin) >= (unsigned)timeout) {
+                syscall_gdrom_abort_command(cmd_hnd);
+                syscall_gdrom_exec_server();
+                dbglog(DBG_ERROR, "cdrom_abort_cmd: Timeout exceeded\n");
+                return ERR_TIMEOUT;
+            }
+        }
+        thd_pass();
+    } while(1);
+
+    cmd_hnd = 0;
+    return ERR_OK;
 }
 
 /* Return the status of the drive as two integers (see constants) */
@@ -300,6 +340,70 @@ int cdrom_read_sectors(void *buffer, int sector, int cnt) {
     return cdrom_read_sectors_ex(buffer, sector, cnt, CDROM_READ_PIO);
 }
 
+int cdrom_pre_read_sectors(int sector, int cnt, int mode) {
+    struct {
+        int sec;
+        int num;
+    } params;
+    int rv = ERR_OK;
+
+    params.sec = sector; /* Starting sector */
+    params.num = cnt; /* Number of sectors, 0x1ff means until the end */
+
+    if(mode == CDROM_READ_DMA) {
+        rv = cdrom_exec_cmd(CMD_DMAREAD_STREAM, &params);
+    }
+    else if(mode == CDROM_READ_PIO) {
+        rv = cdrom_exec_cmd(CMD_PIOREAD_STREAM, &params);
+    }
+    return rv;
+}
+
+int cdrom_transfer_request(void *buffer, size_t size, int mode) {
+    int32_t params[2];
+    int rs;
+    size_t check_size = 0;
+    int32_t status[4] = {
+        0, /* Error code 1 */
+        0, /* Error code 2 */
+        0, /* Transferred size */
+        0  /* ATA status waiting */
+    };
+
+    params[0] = (uintptr_t)buffer;
+    params[1] = size;
+
+    if (mode == CDROM_READ_DMA) {
+        rs = syscall_gdrom_dma_transfer(cmd_hnd, params);
+
+        if (rs < 0) {
+            return ERR_SYS;
+        }
+        // TODO: Wait IRQ
+        do {
+            syscall_gdrom_exec_server();
+            rs = syscall_gdrom_check_command(cmd_hnd, status);
+
+            if(rs != STREAMING && rs != BUSY) {
+                break;
+            }
+            thd_pass();
+
+        } while (syscall_gdrom_dma_check(cmd_hnd, &check_size));
+    }
+    else if(mode == CDROM_READ_PIO) {
+        rs = syscall_gdrom_pio_transfer(cmd_hnd, params);
+
+        if (rs < 0) {
+            return ERR_SYS;
+        }
+
+        syscall_gdrom_exec_server();
+        syscall_gdrom_pio_check(cmd_hnd, &check_size);
+    }
+
+    return ERR_OK;
+}
 
 /* Read a piece of or all of the Q byte of the subcode of the last sector read.
    If you need the subcode from every sector, you cannot read more than one at 

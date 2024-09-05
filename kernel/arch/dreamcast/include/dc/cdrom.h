@@ -3,7 +3,7 @@
    dc/cdrom.h
    Copyright (C) 2000-2001 Megan Potter
    Copyright (C) 2014 Donald Haase
-   Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024 Ruslan Rostovtsev
 */
 
 #ifndef __DC_CDROM_H
@@ -316,6 +316,18 @@ int cdrom_exec_cmd(int cmd, void *param);
 */
 int cdrom_exec_cmd_timed(int cmd, void *param, int timeout);
 
+/** \brief    Abort last CD-ROM command.
+    \ingroup  gdrom
+
+    This function aborted the specified command using the BIOS syscall for
+    aborting GD-ROM commands.
+
+    \param  timeout         Timeout in milliseconds.
+
+    \return                 \ref cd_cmd_response
+*/
+int cdrom_abort_cmd(int timeout);
+
 /** \brief    Get the status of the GD-ROM drive.
     \ingroup  gdrom
 
@@ -424,6 +436,32 @@ int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode);
     \see    cdrom_read_sectors_ex
 */
 int cdrom_read_sectors(void *buffer, int sector, int cnt);
+
+/** \brief    Pre-read one or more sector from a CD-ROM.
+    \ingroup  gdrom
+
+    This function pre-reads the specified number of sectors from the disc.
+
+    \param  sector          The sector to start reading from.
+    \param  cnt             The number of sectors to read.
+    \param  mode            DMA or PIO
+    \return                 \ref cd_cmd_response
+    \see    cdrom_read_sectors_ex
+*/
+int cdrom_pre_read_sectors(int sector, int cnt, int mode);
+
+/** \brief    Request stream transfer.
+    \ingroup  gdrom
+
+    This function pre-reads the specified number of sectors from the disc.
+
+    \param  buffer          Space to store the read sectors (DMA aligned to 32, PIO to 2).
+    \param  size            The size in bytes to read (DMA min 32, PIO min 2).
+    \param  mode            DMA or PIO
+    \return                 \ref cd_cmd_response
+    \see    cdrom_read_sectors_ex
+*/
+int cdrom_transfer_request(void *buffer, size_t size, int mode);
 
 /** \brief    Read subcode data from the most recently read sectors.
     \ingroup  gdrom
