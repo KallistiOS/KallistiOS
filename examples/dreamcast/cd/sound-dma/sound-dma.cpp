@@ -3,8 +3,8 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
-#include "dc/cdrom.h"
-#include "arch/cache.h"
+#include <dc/cdrom.h>
+#include <arch/cache.h>
 
 #define AICA_REG(n) (*(volatile uint32_t*)(0xA0700000+n))
 #define GD_PROTECTION  (*(volatile uint32_t*)0xA05F74B8)

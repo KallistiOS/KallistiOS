@@ -5,10 +5,10 @@
 # Copyright (C) 2024 Stefanos Kornilios Mitsis Poiitidis
 #
 
-TARGET = cd-dma.elf
-TARGET_CDI = cd-dma.cdi
+TARGET = sound-dma.elf
+TARGET_CDI = sound-dma.cdi
 
-OBJS = cd-dma.o
+OBJS = sound-dma.o
 
 all: $(TARGET)
 
