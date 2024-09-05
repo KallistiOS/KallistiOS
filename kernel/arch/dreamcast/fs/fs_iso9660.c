@@ -1068,6 +1068,23 @@ static int iso_ioctl(void *h, int cmd, va_list ap) {
     }
 }
 
+static int iso_ioctl(void *h, int cmd, va_list ap) {
+    file_t fd = (file_t)h;
+
+    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || fh[fd].broken) {
+        errno = EBADF;
+        return -1;
+    }
+
+    switch (cmd) {
+        case IOCTL_ISO9660_GET_SECTOR:
+            return fh[fd].first_extent;
+        default:
+            errno = EINVAL;
+            return -1;
+    }
+}
+
 static int iso_rewinddir(void * h) {
     iso_fd_t *fd = (iso_fd_t *)h;
 
