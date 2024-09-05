@@ -14,6 +14,7 @@
 #include <arch/timer.h>
 #include <arch/memory.h>
 
+#include <dc/asic.h>
 #include <dc/cdrom.h>
 #include <dc/g1ata.h>
 #include <dc/syscalls.h>
@@ -56,6 +57,8 @@ typedef int gdc_cmd_hnd_t;
 mutex_t _g1_ata_mutex = MUTEX_INITIALIZER;
 
 static gdc_cmd_hnd_t cmd_hnd = 0;
+
+static semaphore_t dma_done = SEM_INITIALIZER(0);
 
 /* Shortcut to cdrom_reinit_ex. Typically this is the only thing changed. */
 int cdrom_set_sector_size(int size) {
@@ -379,17 +382,21 @@ int cdrom_transfer_request(void *buffer, size_t size, int mode) {
         if (rs < 0) {
             return ERR_SYS;
         }
-        // TODO: Wait IRQ
+        sem_wait(&dma_done);
+
         do {
             syscall_gdrom_exec_server();
             rs = syscall_gdrom_check_command(cmd_hnd, status);
 
-            if(rs != STREAMING && rs != BUSY) {
+            if (rs != STREAMING && rs != BUSY) {
+                return ERR_SYS;
+            }
+            if (syscall_gdrom_dma_check(cmd_hnd, &check_size) == 0) {
                 break;
             }
             thd_pass();
 
-        } while (syscall_gdrom_dma_check(cmd_hnd, &check_size));
+        } while (1);
     }
     else if(mode == CDROM_READ_PIO) {
         rs = syscall_gdrom_pio_transfer(cmd_hnd, params);
@@ -495,6 +502,13 @@ int cdrom_spin_down(void) {
     return rv;
 }
 
+static void g1_dma_irq_hnd(uint32 code, void *data) {
+    (void)code;
+    (void)data;
+    syscall_gdrom_dma_callback(0, NULL);
+    sem_signal(&dma_done);
+}
+
 /* Initialize: assume no threading issues */
 void cdrom_init(void) {
     uint32_t p;
@@ -526,10 +540,24 @@ void cdrom_init(void) {
     syscall_gdrom_init();
     mutex_unlock(&_g1_ata_mutex);
 
+    /* Hook all the DMA related events. */
+    asic_evt_set_handler(ASIC_EVT_GD_DMA, g1_dma_irq_hnd, NULL);
+    asic_evt_enable(ASIC_EVT_GD_DMA, ASIC_IRQB);
+    asic_evt_set_handler(ASIC_EVT_GD_DMA_OVERRUN, g1_dma_irq_hnd, NULL);
+    asic_evt_enable(ASIC_EVT_GD_DMA_OVERRUN, ASIC_IRQB);
+    asic_evt_set_handler(ASIC_EVT_GD_DMA_ILLADDR, g1_dma_irq_hnd, NULL);
+    asic_evt_enable(ASIC_EVT_GD_DMA_ILLADDR, ASIC_IRQB);
+
     cdrom_reinit();
 }
 
 void cdrom_shutdown(void) {
 
-    /* What would you want done here? */
+    /* Unhook the events and disable the IRQs. */
+    asic_evt_disable(ASIC_EVT_GD_DMA, ASIC_IRQB);
+    asic_evt_remove_handler(ASIC_EVT_GD_DMA);
+    asic_evt_disable(ASIC_EVT_GD_DMA_OVERRUN, ASIC_IRQB);
+    asic_evt_remove_handler(ASIC_EVT_GD_DMA_OVERRUN);
+    asic_evt_disable(ASIC_EVT_GD_DMA_ILLADDR, ASIC_IRQB);
+    asic_evt_remove_handler(ASIC_EVT_GD_DMA_ILLADDR);
 }
