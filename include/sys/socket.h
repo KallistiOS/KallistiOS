@@ -415,7 +415,7 @@ int getsockname(int socket, struct sockaddr *name, socklen_t *name_len);
                             - ENOTSOCK: The socket argument does not refer to a 
                                         socket.
 */
-int getpeername(int socket, struct sockaddr *restrict name, 
+int getpeername(int socket, struct sockaddr *__RESTRICT name, 
                 socklen_t *__RESTRICT name_len);
 
 /** \brief  Get socket options.
