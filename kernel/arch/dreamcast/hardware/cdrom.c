@@ -57,7 +57,9 @@ typedef int gdc_cmd_hnd_t;
 mutex_t _g1_ata_mutex = MUTEX_INITIALIZER;
 
 static gdc_cmd_hnd_t cmd_hnd = 0;
-
+static int dma_in_progress = 0;
+static int dma_blocking = 0;
+static kthread_t *dma_thd = NULL;
 static semaphore_t dma_done = SEM_INITIALIZER(0);
 
 /* Shortcut to cdrom_reinit_ex. Typically this is the only thing changed. */
@@ -111,6 +113,7 @@ int cdrom_exec_cmd_timed(int cmd, void *param, int timeout) {
         }
         if(timeout) {
             if((timer_ms_gettime64() - begin) >= (unsigned)timeout) {
+                mutex_unlock(&_g1_ata_mutex);
                 cdrom_abort_cmd(timeout);
                 rv = ERR_TIMEOUT;
                 dbglog(DBG_ERROR, "cdrom_exec_cmd_timed: Timeout exceeded\n");
@@ -120,7 +123,12 @@ int cdrom_exec_cmd_timed(int cmd, void *param, int timeout) {
         thd_pass();
     } while(1);
 
-    mutex_unlock(&_g1_ata_mutex);
+    if (n != STREAMING) {
+        cmd_hnd = 0;
+    }
+    if (rv != ERR_TIMEOUT) {
+        mutex_unlock(&_g1_ata_mutex);
+    }
 
     if(rv != ERR_OK)
         return rv;
@@ -149,12 +157,14 @@ int cdrom_abort_cmd(int timeout) {
         0, /* Transferred size */
         0  /* ATA status waiting */
     };
-    int rs;
+    int rs, rv = ERR_OK;
     uint64_t begin;
 
     if (cmd_hnd <= 0) {
         return ERR_NO_ACTIVE;
     }
+
+    mutex_lock(&_g1_ata_mutex);
     syscall_gdrom_abort_command(cmd_hnd);
 
     if(timeout) {
@@ -169,17 +179,19 @@ int cdrom_abort_cmd(int timeout) {
         }
         if(timeout) {
             if((timer_ms_gettime64() - begin) >= (unsigned)timeout) {
-                syscall_gdrom_abort_command(cmd_hnd);
-                syscall_gdrom_exec_server();
-                dbglog(DBG_ERROR, "cdrom_abort_cmd: Timeout exceeded\n");
-                return ERR_TIMEOUT;
+                dbglog(DBG_ERROR, "cdrom_abort_cmd: Timeout exceeded, resetting syscalls.\n");
+                rv = ERR_TIMEOUT;
+                syscall_gdrom_reset();
+                syscall_gdrom_init();
+                break;
             }
         }
         thd_pass();
     } while(1);
 
     cmd_hnd = 0;
-    return ERR_OK;
+    mutex_unlock(&_g1_ata_mutex);
+    return rv;
 }
 
 /* Return the status of the drive as two integers (see constants) */
@@ -348,10 +360,14 @@ int cdrom_pre_read_sectors(int sector, int cnt, int mode) {
         int sec;
         int num;
     } params;
-    int rv = ERR_OK;
+    int rv = ERR_SYS;
 
-    params.sec = sector; /* Starting sector */
-    params.num = cnt; /* Number of sectors, 0x1ff means until the end */
+    params.sec = sector;
+    params.num = cnt;
+
+    if (cmd_hnd > 0) {
+        cdrom_abort_cmd(10000);
+    }
 
     if(mode == CDROM_READ_DMA) {
         rv = cdrom_exec_cmd(CMD_DMAREAD_STREAM, &params);
@@ -362,9 +378,61 @@ int cdrom_pre_read_sectors(int sector, int cnt, int mode) {
     return rv;
 }
 
-int cdrom_transfer_request(void *buffer, size_t size, int mode) {
-    int32_t params[2];
+int cdrom_pre_read_finish(int mode) {
+    int rv = ERR_OK;
     int rs;
+    int32_t status[4] = {
+        0, /* Error code 1 */
+        0, /* Error code 2 */
+        0, /* Transferred size */
+        0  /* ATA status waiting */
+    };
+
+    if (cmd_hnd <= 0) {
+        return rv;
+    }
+    if (mode != CDROM_READ_DMA || cdrom_transfer_in_progress(NULL, mode) == 0) {
+        mutex_lock(&_g1_ata_mutex);
+    }
+
+    do {
+        syscall_gdrom_exec_server();
+        rs = syscall_gdrom_check_command(cmd_hnd, status);
+
+        if (rs < 0) {
+            rv = ERR_SYS;
+            break;
+        }
+        else if (rs == COMPLETED || rs == NO_ACTIVE) {
+            break;
+        }
+        else if (rs == STREAMING) {
+            mutex_unlock(&_g1_ata_mutex);
+            cdrom_abort_cmd(10000);
+            break;
+        }
+        thd_pass();
+    } while (1);
+
+    cmd_hnd = 0;
+
+    if (rs != STREAMING) {
+        mutex_unlock(&_g1_ata_mutex);
+    }
+
+    if (mode == CDROM_READ_DMA && dma_in_progress) {
+        dma_in_progress = 0;
+        if (dma_blocking) {
+            dma_blocking = 0;
+            sem_signal(&dma_done);
+        }
+    }
+    return rv;
+}
+
+int cdrom_transfer_request(void *buffer, size_t size, int block, int mode) {
+    int rs;
+    int32_t params[2];
     size_t check_size = 0;
     int32_t status[4] = {
         0, /* Error code 1 */
@@ -373,14 +441,37 @@ int cdrom_transfer_request(void *buffer, size_t size, int mode) {
         0  /* ATA status waiting */
     };
 
-    params[0] = (uintptr_t)buffer;
+    if (cmd_hnd <= 0) {
+        return ERR_NO_ACTIVE;
+    }
+    if (cdrom_transfer_in_progress(NULL, mode)) {
+        return ERR_SYS;
+    }
+
+    params[0] = ((uintptr_t)buffer) & MEM_AREA_CACHE_MASK;
     params[1] = size;
+    mutex_lock(&_g1_ata_mutex);
 
     if (mode == CDROM_READ_DMA) {
+
+        dma_in_progress = 1;
+        dma_blocking = block;
+        dma_thd = thd_current;
+
+        if(irq_inside_int()) {
+            dma_thd = (kthread_t *)0xFFFFFFFF;
+        }
+
         rs = syscall_gdrom_dma_transfer(cmd_hnd, params);
 
         if (rs < 0) {
+            dma_in_progress = 0;
+            dma_blocking = 0;
+            mutex_unlock(&_g1_ata_mutex);
             return ERR_SYS;
+        }
+        if (block == 0) {
+            return ERR_OK;
         }
         sem_wait(&dma_done);
 
@@ -388,9 +479,14 @@ int cdrom_transfer_request(void *buffer, size_t size, int mode) {
             syscall_gdrom_exec_server();
             rs = syscall_gdrom_check_command(cmd_hnd, status);
 
-            if (rs != STREAMING && rs != BUSY) {
+            if (rs < 0) {
+                mutex_unlock(&_g1_ata_mutex);
                 return ERR_SYS;
             }
+            else if(rs == COMPLETED || rs == NO_ACTIVE) {
+                cmd_hnd = 0;
+            }
+
             if (syscall_gdrom_dma_check(cmd_hnd, &check_size) == 0) {
                 break;
             }
@@ -402,14 +498,52 @@ int cdrom_transfer_request(void *buffer, size_t size, int mode) {
         rs = syscall_gdrom_pio_transfer(cmd_hnd, params);
 
         if (rs < 0) {
+            mutex_unlock(&_g1_ata_mutex);
             return ERR_SYS;
         }
+        do {
+            syscall_gdrom_exec_server();
+            rs = syscall_gdrom_check_command(cmd_hnd, status);
 
-        syscall_gdrom_exec_server();
-        syscall_gdrom_pio_check(cmd_hnd, &check_size);
+            if (rs < 0) {
+                return ERR_SYS;
+            }
+            else if(rs == COMPLETED || rs == NO_ACTIVE) {
+                cmd_hnd = 0;
+            }
+
+            if (syscall_gdrom_pio_check(cmd_hnd, &check_size) == 0) {
+                break;
+            }
+            thd_pass();
+        } while (1);
     }
 
+    mutex_unlock(&_g1_ata_mutex);
     return ERR_OK;
+}
+
+int cdrom_transfer_in_progress(size_t *size, int mode) {
+    int rv = 0;
+    size_t check_size = 0;
+
+    if (cmd_hnd <= 0) {
+        return rv;
+    }
+    else if (mode == CDROM_READ_DMA) {
+        rv = syscall_gdrom_dma_check(cmd_hnd, &check_size);
+    }
+    else if (mode == CDROM_READ_PIO) {
+        rv = syscall_gdrom_pio_check(cmd_hnd, &check_size);
+    }
+
+    if (size) {
+        *size = check_size;
+    }
+    if (rv == 0) {
+        syscall_gdrom_exec_server();
+    }
+    return rv;
 }
 
 /* Read a piece of or all of the Q byte of the subcode of the last sector read.
@@ -505,8 +639,18 @@ int cdrom_spin_down(void) {
 static void g1_dma_irq_hnd(uint32 code, void *data) {
     (void)code;
     (void)data;
-    syscall_gdrom_dma_callback(0, NULL);
-    sem_signal(&dma_done);
+
+    if (dma_in_progress) {
+        syscall_gdrom_dma_callback(0, NULL);
+        dma_in_progress = 0;
+
+        if(dma_blocking) {
+            dma_blocking = 0;
+            mutex_unlock_as_thread(&_g1_ata_mutex, dma_thd);
+            sem_signal(&dma_done);
+            thd_schedule(1, 0);
+        }
+    }
 }
 
 /* Initialize: assume no threading issues */
