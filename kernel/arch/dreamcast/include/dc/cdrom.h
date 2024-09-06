@@ -437,7 +437,7 @@ int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode);
 */
 int cdrom_read_sectors(void *buffer, int sector, int cnt);
 
-/** \brief    Pre-read one or more sector from a CD-ROM.
+/** \brief    Start streaming from a CD-ROM.
     \ingroup  gdrom
 
     This function pre-reads the specified number of sectors from the disc.
@@ -448,44 +448,41 @@ int cdrom_read_sectors(void *buffer, int sector, int cnt);
     \return                 \ref cd_cmd_response
     \see    cdrom_transfer_request
 */
-int cdrom_pre_read_sectors(int sector, int cnt, int mode);
+int cdrom_stream_start(int sector, int cnt, int mode);
 
-/** \brief    Finish pre-reading for stream transfer.
+/** \brief    Stop streaming from a CD-ROM.
     \ingroup  gdrom
 
     This function finishing stream commands.
 
-    \param  mode            \ref cd_read_sector_mode
     \return                 \ref cd_cmd_response
     \see    cdrom_transfer_request
 */
-int cdrom_pre_read_finish(int mode);
+int cdrom_stream_stop();
 
 /** \brief    Request stream transfer.
     \ingroup  gdrom
 
-    This function pre-reads the specified number of sectors from the disc.
+    This function request data from stream.
 
     \param  buffer          Space to store the read sectors (DMA aligned to 32, PIO to 2).
     \param  size            The size in bytes to read (DMA min 32, PIO min 2).
     \param  block           Non-zero to block until DMA transfer completes.
-    \param  mode            \ref cd_read_sector_mode
     \return                 \ref cd_cmd_response
     \see    cdrom_pre_read_sectors
 */
-int cdrom_transfer_request(void *buffer, size_t size, int block, int mode);
+int cdrom_stream_request(void *buffer, size_t size, int block);
 
 /** \brief    Check requested stream transfer.
     \ingroup  gdrom
 
-    This function pre-reads the specified number of sectors from the disc.
+    This function check requested stream transfer.
 
-    \param  mode            \ref cd_read_sector_mode
     \param  size            The transfered (if in progress) or remain size in bytes.
     \return                 1 - is in progress, 0 - done
     \see    cdrom_transfer_request
 */
-int cdrom_transfer_in_progress(size_t *size, int mode);
+int cdrom_stream_progress(size_t *size);
 
 /** \brief    Read subcode data from the most recently read sectors.
     \ingroup  gdrom
