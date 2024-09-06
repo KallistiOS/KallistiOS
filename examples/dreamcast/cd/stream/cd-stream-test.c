@@ -3,7 +3,7 @@
    cd-stream-test.c
    Copyright (C) 2024 Ruslan Rostovtsev
 
-   This example program simply show how streams works.
+   This example program simply show how CD streams works.
 */
 
 #include <stdio.h>
@@ -25,10 +25,9 @@
 #include <kos/dbglog.h>
 
 #define BUFFER_SIZE (4 << 11)
-#define STREAM_LBA 150
 
-static uint8 dma_buf[BUFFER_SIZE] __attribute__((aligned(32)));
-static uint8 pio_buf[BUFFER_SIZE] __attribute__((aligned(2)));
+static uint8_t dma_buf[BUFFER_SIZE] __attribute__((aligned(32)));
+static uint8_t pio_buf[BUFFER_SIZE] __attribute__((aligned(2)));
 
 static void __attribute__((__noreturn__)) wait_exit(void) {
     maple_device_t *dev;
@@ -50,7 +49,7 @@ static void __attribute__((__noreturn__)) wait_exit(void) {
     }
 }
 
-static int cd_stream_test(uint32_t lba, uint8 *buffer, size_t size, int mode) {
+static int cd_stream_test(uint32_t lba, uint8_t *buffer, size_t size, int mode) {
 
     int rs;
     size_t cur_size;
@@ -105,22 +104,36 @@ static int cd_stream_test(uint32_t lba, uint8 *buffer, size_t size, int mode) {
 
 int main(int argc, char *argv[]) {
     int rs, i, j;
+    uint32_t lba = 150;
+    CDROM_TOC toc;
 
     dbgio_dev_select("fb");
     dbglog(DBG_DEBUG, "Start CD-ROM stream test.\n\n");
 
     memset(dma_buf, 0xff, BUFFER_SIZE);
-    memset(pio_buf, 0x00, BUFFER_SIZE);
-    dcache_inval_range((uintptr_t)dma_buf, BUFFER_SIZE);
+    memset(pio_buf, 0xee, BUFFER_SIZE);
 
-    rs = cd_stream_test(STREAM_LBA, dma_buf, BUFFER_SIZE, CDROM_READ_DMA);
+    rs = cdrom_read_toc(&toc, 0);
+
+    if (rs != ERR_OK) {
+        dbglog(DBG_ERROR, "No disc present.\n");
+        goto exit;
+    }
+    lba = cdrom_locate_data_track(&toc);
+
+    if (lba == 0) {
+        dbglog(DBG_ERROR, "No data track on disc.\n");
+    }
+
+    dcache_inval_range((uintptr_t)dma_buf, BUFFER_SIZE);
+    rs = cd_stream_test(lba, dma_buf, BUFFER_SIZE, CDROM_READ_DMA);
 
     if (rs != ERR_OK) {
         dbglog(DBG_ERROR, "DMA stream test failed.\n");
         goto exit;
     }
 
-    rs = cd_stream_test(STREAM_LBA, pio_buf, BUFFER_SIZE, CDROM_READ_PIO);
+    rs = cd_stream_test(lba, pio_buf, BUFFER_SIZE, CDROM_READ_PIO);
 
     if (rs != ERR_OK) {
         dbglog(DBG_ERROR, "PIO stream test failed.\n");
@@ -156,11 +169,11 @@ int main(int argc, char *argv[]) {
 
     if (dma_buf[i] == 0xff) {
         dcache_inval_range((uintptr_t)dma_buf, BUFFER_SIZE);
-        rs = cdrom_read_sectors_ex(dma_buf, STREAM_LBA,
+        rs = cdrom_read_sectors_ex(dma_buf, lba,
             BUFFER_SIZE >> 11, CDROM_READ_DMA);
     }
     else {
-        rs = cdrom_read_sectors_ex(pio_buf, STREAM_LBA,
+        rs = cdrom_read_sectors_ex(pio_buf, lba,
             BUFFER_SIZE >> 11, CDROM_READ_PIO);
     }
 

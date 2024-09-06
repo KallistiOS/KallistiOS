@@ -461,6 +461,7 @@ int cdrom_stream_request(void *buffer, size_t size, int block) {
         return ERR_NO_ACTIVE;
     }
     if (cdrom_stream_progress(NULL)) {
+        dbglog(DBG_ERROR, "cdrom_stream_request: Previous request in progress.\n");
         return ERR_SYS;
     }
 
@@ -511,6 +512,7 @@ int cdrom_stream_request(void *buffer, size_t size, int block) {
             }
             else if(rs == COMPLETED || rs == NO_ACTIVE) {
                 cmd_hnd = 0;
+                break;
             }
 
             if (syscall_gdrom_dma_check(cmd_hnd, &check_size) == 0) {
@@ -522,7 +524,6 @@ int cdrom_stream_request(void *buffer, size_t size, int block) {
     }
     else if(stream_mode == CDROM_READ_PIO) {
 
-        params[0] = (uintptr_t)buffer;
         rs = syscall_gdrom_pio_transfer(cmd_hnd, params);
 
         if (rs < 0) {
@@ -534,10 +535,12 @@ int cdrom_stream_request(void *buffer, size_t size, int block) {
             rs = syscall_gdrom_check_command(cmd_hnd, status);
 
             if (rs < 0) {
+                mutex_unlock(&_g1_ata_mutex);
                 return ERR_SYS;
             }
             else if(rs == COMPLETED || rs == NO_ACTIVE) {
                 cmd_hnd = 0;
+                break;
             }
 
             if (syscall_gdrom_pio_check(cmd_hnd, &check_size) == 0) {
