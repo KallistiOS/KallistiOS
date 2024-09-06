@@ -392,13 +392,13 @@ int getsockname(int socket, struct sockaddr *name, socklen_t *name_len);
 
     This function retrieves the address of the peer connected to the socket
     specified by the socket descriptor. The address is returned in the buffer
-    pointed to by the addr parameter, and the actual length of the address is
-    returned in the addrlen parameter.
+    pointed to by the name parameter, and the actual length of the address is
+    returned in the name_len parameter.
 
     \param  socket          A socket that is already connected to a peer.
     \param  name            A pointer to a sockaddr structure where the peer 
                             address will be stored.
-    \param  address_len     A pointer to a socklen_t variable that specifies the 
+    \param  name_len        A pointer to a socklen_t variable that specifies the 
                             length of the address structure.
                             On return, it will contain the actual size of the 
                             address returned.
@@ -414,6 +414,7 @@ int getsockname(int socket, struct sockaddr *name, socklen_t *name_len);
                             - ENOTCONN: The socket is not connected.
                             - ENOTSOCK: The socket argument does not refer to a 
                                         socket.
+                            - EOPNOTSUPP: The socket does not support getpeername.
 */
 int getpeername(int socket, struct sockaddr *__RESTRICT name, 
                 socklen_t *__RESTRICT name_len);

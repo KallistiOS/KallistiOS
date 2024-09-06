@@ -542,7 +542,7 @@ int getsockname(int sock, struct sockaddr *name, socklen_t *name_len) {
     return hnd->protocol->getsockname(hnd, name, name_len);
 }
 
-int getpeername(int sock, struct sockaddr *restrict name, socklen_t *restrict name_len) {
+int getpeername(int sock, struct sockaddr *__RESTRICT name, socklen_t *__RESTRICT name_len) {
     net_socket_t *hnd;
 
     hnd = (net_socket_t *)fs_get_handle(sock);
@@ -555,6 +555,11 @@ int getpeername(int sock, struct sockaddr *restrict name, socklen_t *restrict na
     /* Make sure this is actually a socket. */
     if(fs_get_handler(sock) != &vh) {
         errno = ENOTSOCK;
+        return -1;
+    }
+
+    if(!hnd->protocol->getpeername) {
+        errno = EOPNOTSUPP;
         return -1;
     }
 
