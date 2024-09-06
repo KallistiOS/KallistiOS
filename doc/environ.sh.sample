@@ -129,7 +129,7 @@ export DC_ARM_LDFLAGS=""
 # Optimization Level
 #
 # Controls the baseline optimization level to use when building.
-# Typically this is -Og (debugging), -O0, -01, -02, or -03.
+# Typically this is -Og (debugging), -O0, -O1, -O2, or -O3.
 # NOTE: For our target, -O4 is a valid optimization level that has
 # been seen to have some performance impact as well.
 #

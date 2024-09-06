@@ -172,6 +172,8 @@ int  __weak arch_auto_init(void) {
     timer_init();           /* Timers */
     hardware_sys_init();        /* DC low-level hardware init */
 
+    syscall_sysinfo_init();
+
     /* Initialize our timer */
     perf_cntr_timer_enable();
     timer_ms_enable();
