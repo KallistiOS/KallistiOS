@@ -11,6 +11,8 @@
  */
 #include <assert.h>
 
+#include <arch/cache.h>
+#include <arch/irq.h>
 #include <arch/timer.h>
 #include <arch/memory.h>
 
@@ -50,6 +52,15 @@ to check the status. Doing this would probably allow data reading while
 cdda is playing without hiccups (by severely reducing the number of gd 
 commands being sent).
 */
+
+/* Protection register. */
+#define G1_ATA_DMA_PROTECTION   0x005F74B8
+/* Protection register code. */
+#define G1_DMA_UNLOCK_CODE      0x8843
+/* System memory protection unlock value. */
+#define G1_DMA_UNLOCK_SYSMEM    (G1_DMA_UNLOCK_CODE << 16 | 0x407F)
+/* All memory protection unlock value. */
+#define G1_DMA_UNLOCK_ALLMEM    (G1_DMA_UNLOCK_CODE << 16 | 0x007F)
 
 typedef int gdc_cmd_hnd_t;
 
@@ -477,10 +488,6 @@ int cdrom_stream_request(void *buffer, size_t size, int block) {
         dma_blocking = block;
         dma_thd = thd_current;
 
-        if(irq_inside_int()) {
-            dma_thd = (kthread_t *)0xFFFFFFFF;
-        }
-
         rs = syscall_gdrom_dma_transfer(cmd_hnd, params);
 
         if (rs < 0) {
@@ -674,6 +681,21 @@ static void g1_dma_irq_hnd(uint32 code, void *data) {
     }
 }
 
+static void unlock_dma_memory() {
+    volatile uint32_t *prot_reg = (uint32_t *)(G1_ATA_DMA_PROTECTION | MEM_AREA_P2_BASE);
+    volatile uint32_t *first_entry = (uint32_t *)(0x0c001c20 | MEM_AREA_P2_BASE);
+    volatile uint32_t *second_entry = (uint32_t *)(0x0c0023fc | MEM_AREA_P2_BASE);
+
+    if (*first_entry == (uint32_t)G1_DMA_UNLOCK_SYSMEM) {
+        *first_entry = G1_DMA_UNLOCK_ALLMEM;
+    }
+    if (*second_entry == (uint32_t)G1_DMA_UNLOCK_SYSMEM) {
+        *second_entry = G1_DMA_UNLOCK_ALLMEM;
+    }
+    icache_flush_range(0x0c000000 | MEM_AREA_P1_BASE, 16 << 10);
+    *prot_reg = G1_DMA_UNLOCK_ALLMEM;
+}
+
 /* Initialize: assume no threading issues */
 void cdrom_init(void) {
     uint32_t p;
@@ -703,6 +725,8 @@ void cdrom_init(void) {
     /* Reset system functions */
     syscall_gdrom_reset();
     syscall_gdrom_init();
+
+    unlock_dma_memory();
     mutex_unlock(&_g1_ata_mutex);
 
     /* Hook all the DMA related events. */
