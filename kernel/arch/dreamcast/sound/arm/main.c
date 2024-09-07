@@ -35,12 +35,12 @@ void *memcpy(void *dest, const void *src, size_t count) {
     const uint32 *src32;
 
     /* If both src and dest are 4-byte aligned */
-    if(((unsigned long)dest & 3) == 0 && ((unsigned long)src & 3) == 0) {
+    if(((uint32)dest & 3) == 0 && ((uint32)src & 3) == 0) {
         dest32 = (uint32 *)dest;
         src32 = (const uint32 *)src;
 
         /* Copy 4-byte chunks */
-        while (count >= 4) {
+        while(count >= 4) {
             *dest32++ = *src32++;
             count -= 4;
         }
@@ -51,9 +51,8 @@ void *memcpy(void *dest, const void *src, size_t count) {
     }
 
     /* Handle unaligned or remaining bytes */
-    while(count > 0) {
+    while(count--) {
         *dest8++ = *src8++;
-        count--;
     }
 
     return dest;
