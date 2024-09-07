@@ -129,8 +129,9 @@ __BEGIN_DECLS
 #define FS_RAMDISK_MAX_FILES 8
 #endif
 
-/** \brief  The number of distinct file descriptors that can be in use at a
-            time. This value can be overwritten in environ.sh */
+/** \brief  The number of distinct file descriptors, including files and
+            network sockets, that can be in use at a time. Decreasing this
+            value can reduce memory usage.  */
 #ifndef FD_SETSIZE
 #define FD_SETSIZE 1024
 #endif

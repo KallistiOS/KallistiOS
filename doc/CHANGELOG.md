@@ -195,6 +195,7 @@ Platform-specific changes are prefixed with the platform name, otherwise the cha
 - Added support for one-shot timers [PC]
 - **Dreamcast**: Use one-shot timers for timeout and a proper polling mechanism in modem [PC]
 - Added pvrtex utility by TapamN to utils [DF == Daniel Fairchild]
+- **Dreamcast**: Added a set of known working purupuru bit patterns and a browsing mechanism to the rumble example [DF]
 - Added full support for <time.h> additions from C23 standard. [FG]
 - Fixes mutexes not working properly [PC]
 - **Dreamcast**: fs_dcload: Set errno on error in dcload_stat() [PC]

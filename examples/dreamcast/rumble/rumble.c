@@ -3,6 +3,7 @@
     rumble.c
     Copyright (C) 2004 SinisterTengu
     Copyright (C) 2008, 2023 Donald Haase
+    Copyright (C) 2024 Daniel Fairchild
 
 */
 
@@ -35,6 +36,121 @@ KOS_INIT_FLAGS(INIT_DEFAULT);
 
 plx_fcxt_t *cxt;
 
+
+typedef union rumble_fields {
+  uint32_t raw;
+  struct {
+    /* Special Effects and motor select. The normal purupuru packs will
+only have one motor. Selecting MOTOR2 for these is probably not
+a good idea. The PULSE setting here supposably creates a sharp
+pulse effect, when ORed with the special field. */
+
+    /** \brief  Yet another pulse effect.
+        This supposedly creates a sharp pulse effect.
+    */
+    uint32_t special_pulse : 1;
+    uint32_t : 3; // unused
+
+    /** \brief  Select motor #1.
+
+        Most jump packs only have one motor, but on things that do have more
+       than one motor (like PS1->Dreamcast controller adapters that support
+       rumble), this selects the first motor.
+    */
+    uint32_t special_motor1 : 1;
+    uint32_t : 2; // unused
+
+    /** \brief  Select motor #2.
+
+        Most jump packs only have one motor, but on things that do have more
+       than one motor (like PS1->Dreamcast controller adapters that support
+       rumble), this selects the second motor.
+    */
+    uint32_t special_motor2 : 1;
+
+    /** \brief  Ignore this command.
+
+        Valid value 15 (0xF).
+
+        Most jump packs will ignore commands with this set in effect1,
+       apparently.
+    */
+    uint32_t fx1_powersave : 4;
+
+    /** \brief  Upper nibble of effect1.
+
+        This value works with the lower nibble of the effect2 field to
+        increase the intensity of the rumble effect.
+        Valid values are 0-7.
+
+        \see    rumble_fields_t.fx2_lintensity
+    */
+    uint32_t fx1_intensity : 3;
+
+    /** \brief  Give a pulse effect to the rumble.
+
+        This probably should be used with rumble_fields_t.fx1_pulse as well.
+
+        \see    rumble_fields_t.fx2_pulse
+    */
+    uint32_t fx1_pulse : 1;
+
+    /** \brief  Lower-nibble of effect2.
+
+        This value works with the upper nibble of the effect1
+        field to increase the intensity of the rumble effect.
+        Valid values are 0-7.
+
+        \see    rumble_fields_t.fx1_intensity
+    */
+    uint32_t fx2_lintensity : 3;
+
+    /** \brief  Give a pulse effect to the rumble.
+
+        This probably should be used with rumble_fields_t.fx1_pulse as well.
+
+        \see    rumble_fields_t.fx1_intensity
+    */
+    uint32_t fx2_pulse : 1;
+
+    /** \brief  Upper-nibble of effect2.
+
+        This apparently lowers the rumble's intensity somewhat.
+        Valid values are 0-7.
+    */
+    uint32_t fx2_uintensity : 3;
+
+    /* OR these in with your effect2 value if you feel so inclined.
+       if you or the PULSE effect in here, you probably should also
+       do so with the effect1 one below. */
+
+    /** \brief  Give a decay effect to the rumble on some packs. */
+    uint32_t fx2_decay : 1;
+
+    /** \brief  The duration of the effect. No idea on units... */
+    uint32_t duration : 8;
+  };
+} rumble_fields_t;
+
+
+void print_rumble_fields(uint32_t raw) {
+  rumble_fields_t fields = {.raw = raw};
+  printf("Rumble Fields:\n");
+  printf("  .special_pulse   =  %u,\n", fields.special_pulse);
+  printf("  .special_motor1  =  %u,\n", fields.special_motor1);
+  printf("  .special_motor2  =  %u,\n", fields.special_motor2);
+
+  printf("  .fx1_pulse       =  %u,\n", fields.fx1_pulse);
+  printf("  .fx1_powersave   =  %u,\n", fields.fx1_powersave);
+  printf("  .fx1_intensity   =  %u,\n", fields.fx1_intensity);
+
+  printf("  .fx2_lintensity  =  %u,\n", fields.fx2_lintensity);
+  printf("  .fx2_pulse       =  %u,\n", fields.fx2_pulse);
+  printf("  .fx2_uintensity  =  %u,\n", fields.fx2_uintensity);
+  printf("  .fx2_decay       =  %u,\n", fields.fx2_decay);
+
+  printf("  .duration        =  %u,\n", fields.duration);
+}
 /* This blocks waiting for a specified device to be present and valid */
 void wait_for_dev_attach(maple_device_t **dev_ptr, unsigned int func) {
     maple_device_t *dev = *dev_ptr;
@@ -69,6 +185,28 @@ void wait_for_dev_attach(maple_device_t **dev_ptr, unsigned int func) {
     }
 }
 
+
+typedef struct {
+  uint32_t pattern;
+  const char *description;
+} baked_pattern_t;
+
+static size_t catalog_index = 0;
+static const baked_pattern_t catalog[] = {
+    {.pattern = 0x011A7010, .description = "Basic Thud (simple .5s jolt)"},
+    {.pattern = 0x31071011, .description = "Car Idle (69 Mustang)"},
+    {.pattern = 0x2615F010, .description = "Car Idle (VW beetle)"},
+    {.pattern = 0x3339F010, .description = "Eathquake (Vibrate, and fade out)"},
+    {.pattern = 0x05281011, .description = "Helicopter"},
+    {.pattern = 0x00072010, .description = "Ship's Thrust (as in AAC)"},
+};
+
+static inline void word2hexbytes(uint32_t word, uint8_t *bytes) {
+  for (int i = 0; i < 8; i++) {
+    bytes[i] = (word >> (28 - (i * 4))) & 0xf;
+  }
+}
+
 int main(int argc, char *argv[]) {
 
     cont_state_t *state;
@@ -79,8 +217,9 @@ int main(int argc, char *argv[]) {
     int i = 0, count = 0;
     uint16_t old_buttons = 0, rel_buttons = 0;
     uint32_t effect = 0;
-    uint8_t n[8] = { 0, 0, 0, 0, 0, 0, 0, 0 }; //nibbles
+    uint8_t n[8];
     char s[8][2] = { "", "", "", "", "", "", "", "" };
+    word2hexbytes(0, n);
 
     pvr_init_defaults();
 
@@ -148,6 +287,16 @@ int main(int argc, char *argv[]) {
             if(n[i] > 0) n[i]--;
         }
 
+        if ((state->buttons & CONT_X) && (rel_buttons & CONT_X)) {
+            printf("Setting baked pattern:\n\t'%s'\n", catalog[catalog_index].description);
+            word2hexbytes(catalog[catalog_index].pattern, n);
+            catalog_index++;
+            if (catalog_index >= sizeof(catalog) / sizeof(baked_pattern_t)) {
+                catalog_index = 0;
+            }
+        }
+
+
         if((state->buttons & CONT_A) && (rel_buttons & CONT_A)) {
             effect = (n[0] << 28) + (n[1] << 24) + (n[2] << 20) + (n[3] << 16) +
                      (n[4] << 12) + (n[5] << 8) + (n[6] << 4) + (n[7] << 0);
@@ -155,6 +304,7 @@ int main(int argc, char *argv[]) {
             purupuru_rumble_raw(purudev, effect);
             /* We print these out to make it easier to track the options chosen */
             printf("Rumble: 0x%lx!\n", effect);
+            print_rumble_fields(effect);
         }
 
         if((state->buttons & CONT_B) && (rel_buttons & CONT_B)) {
@@ -183,6 +333,10 @@ int main(int argc, char *argv[]) {
 
         plx_fcxt_setpos_pnt(cxt, &w);
         plx_fcxt_draw(cxt, "Press B to stop rumblin.");
+        w.y += 25.0f;
+
+        plx_fcxt_setpos_pnt(cxt, &w);
+        plx_fcxt_draw(cxt, "Press X for next baked pattern");
         w.y += 25.0f;
 
         plx_fcxt_setpos_pnt(cxt, &w);
