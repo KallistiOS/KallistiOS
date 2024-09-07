@@ -29,12 +29,32 @@ void timer_wait(uint32 jiffies) {
 #include <stddef.h>
 
 void *memcpy(void *dest, const void *src, size_t count) {
-    uint32 *tmp = (uint32 *) dest;
-    uint32 *s = (uint32 *) src;
-    count = count / 4;
+    uint8 *dest8 = (uint8 *)dest;
+    const uint8 *src8 = (const uint8 *)src;
+    uint32 *dest32;
+    const uint32 *src32;
 
-    while(count--)
-        *tmp++ = *s++;
+    /* If both src and dest are 4-byte aligned */
+    if(((unsigned long)dest & 3) == 0 && ((unsigned long)src & 3) == 0) {
+        dest32 = (uint32 *)dest;
+        src32 = (const uint32 *)src;
+
+        /* Copy 4-byte chunks */
+        while (count >= 4) {
+            *dest32++ = *src32++;
+            count -= 4;
+        }
+
+        /* Handle remaining bytes (if count was not divisible by 4) */
+        dest8 = (uint8 *)dest32;
+        src8 = (const uint8 *)src32;
+    }
+
+    /* Handle unaligned or remaining bytes */
+    while(count > 0) {
+        *dest8++ = *src8++;
+        count--;
+    }
 
     return dest;
 }
