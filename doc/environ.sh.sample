@@ -129,7 +129,7 @@ export DC_ARM_LDFLAGS=""
 # Optimization Level
 #
 # Controls the baseline optimization level to use when building.
-# Typically this is -Og (debugging), -O0, -01, -02, or -03.
+# Typically this is -Og (debugging), -O0, -O1, -O2, or -O3.
 # NOTE: For our target, -O4 is a valid optimization level that has
 # been seen to have some performance impact as well.
 #
@@ -143,21 +143,6 @@ export KOS_CFLAGS="${KOS_CFLAGS} -O2"
 # do not work properly with "-flto=auto"!
 #
 #export KOS_CFLAGS="${KOS_CFLAGS} -freorder-blocks-algorithm=simple -flto=auto"
-
-# RAM-Saving Optimization
-#
-# Uncomment the line below to reduce the default size of FD_SETSIZE from the
-# default value of 1024 to 64. FD_SETSIZE defines the maximum number of files
-# that can be opened simultaneously, including files on the ramdisk, romdisk, 
-# CD, VMU, network sockets, etc. The default setting allows 1024 files to be
-# opened at once, which is typically more than most use cases require.
-#
-# By reducing this value, you can save approximately ~11.25 KB of RAM, which 
-# can be particularly useful when porting large games to the Dreamcast that 
-# are strapped for memory. However, be cautious not to set it too low, as this 
-# may limit the number of files and sockets that can be opened simultaneously.
-#
-# export KOS_CFLAGS="${KOS_CFLAGS} -DFD_SETSIZE=64"
 
 # Frame Pointers
 #
