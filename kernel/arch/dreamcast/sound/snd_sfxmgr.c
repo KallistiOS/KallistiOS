@@ -4,6 +4,7 @@
    Copyright (C) 2000, 2001, 2002, 2003, 2004 Megan Potter
    Copyright (C) 2023 Ruslan Rostovtsev
    Copyright (C) 2023 Andy Barajas
+   Copyright (C) 2024 Stefanos Kornilios Mitsis Poiitidis
 
    Sound effects management system; this thing loads and plays sound effects
    during game operation.
@@ -447,7 +448,7 @@ int snd_sfx_play(sfxhnd_t idx, int vol, int pan) {
     chn = sfx_nextchan;
     moved = 0;
 
-    while(sfx_inuse & (1 << chn)) {
+    while(sfx_inuse & (1ULL << chn)) {
         chn = (chn + 1) % 64;
 
         if(sfx_nextchan == chn)
@@ -490,7 +491,7 @@ void snd_sfx_stop_all(void) {
     int i;
 
     for(i = 0; i < 64; i++) {
-        if(sfx_inuse & (1 << i))
+        if(sfx_inuse & (1ULL << i))
             continue;
 
         snd_sfx_stop(i);
@@ -503,13 +504,13 @@ int snd_sfx_chn_alloc(void) {
     old = irq_disable();
 
     for(chn = 0; chn < 64; chn++)
-        if(!(sfx_inuse & (1 << chn)))
+        if(!(sfx_inuse & (1ULL << chn)))
             break;
 
     if(chn >= 64)
         chn = -1;
     else
-        sfx_inuse |= 1 << chn;
+        sfx_inuse |= 1ULL << chn;
 
     irq_restore(old);
 
@@ -520,6 +521,6 @@ void snd_sfx_chn_free(int chn) {
     int old;
 
     old = irq_disable();
-    sfx_inuse &= ~(1 << chn);
+    sfx_inuse &= ~(1ULL << chn);
     irq_restore(old);
 }
