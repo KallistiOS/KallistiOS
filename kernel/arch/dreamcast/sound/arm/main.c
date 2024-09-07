@@ -28,9 +28,10 @@ void timer_wait(uint32 jiffies) {
 
 #include <stddef.h>
 
-void * memcpy(void *dest, const void *src, size_t count) {
-    unsigned char *tmp = (unsigned char *) dest;
-    unsigned char *s = (unsigned char *) src;
+void *memcpy(void *dest, const void *src, size_t count) {
+    uint32 *tmp = (uint32 *) dest;
+    uint32 *s = (uint32 *) src;
+    count = count / 4;
 
     while(count--)
         *tmp++ = *s++;
