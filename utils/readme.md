@@ -2,7 +2,7 @@
 This directory contains a number of PC-side tools used for a variety of purposes. Some are meant to be used directly by users, while others are called through KallistiOS Makefiles. These utilities are built automatically when KallistiOS is built, and many KallistiOS examples depend upon them to build properly. An example of this would be using `vqenc` to generate textures from image files at build time.
 
 - [**bin2c**](bin2c/): Converts a binary file to a C integer array for inclusion in a source file
-- [**bin2o**](bin2o/): Converts a binary files an object file for linking into a project
+- [**bin2o**](bin2o/): Converts a binary file to an object file for linking into a project
 - [**bincnv**](bincnv/): An ELF to BIN conversion testing utility
 - [**blender**](blender/): A Python-based Blender export plugin
 - [**cmake**](cmake/): CMake configuration files to build KOS projects using CMake

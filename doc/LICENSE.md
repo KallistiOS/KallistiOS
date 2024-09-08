@@ -12,7 +12,7 @@ that this text is attached to them:
 > it under the terms of the KOS License.
 >
 > This program is distributed in the hope that it will be useful,
-> but WITHOUT ANY WARRANY; without even the implied warranty of
+> but WITHOUT ANY WARRANTY; without even the implied warranty of
 > MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 > KOS License (LICENSE.KOS) for more details.
 >
@@ -80,7 +80,7 @@ else with it, please contact the authors and we'll see how we can accommodate
 you.
 
 The Free Software Foundation has a very good source of information on
-the various licenses. Please see this page if you have license compatabality
+the various licenses. Please see this page if you have license compatibility
 questions:
 
 http://www.gnu.org/philosophy/license-list.html
