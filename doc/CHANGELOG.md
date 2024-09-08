@@ -2,6 +2,9 @@
 
 Platform-specific changes are prefixed with the platform name, otherwise the change is platform-independent. The name/initials of the person who is responsible for the change are listed in [square brackets] for most versions (where they are missing from early versions, assume that they should be attributed to Megan Potter).
 
+## KallistiOS version 2.2.0
+- Added pvrtex utility by TapamN to utils [DF == Daniel Fairchild]
+
 ## KallistiOS version 2.1.0
 - Cleaned up generated stubs files on a make clean [Lawrence Sebald == LS]
 - **Dreamcast**: Added a function to detect if the program is being run on a retail Dreamcast or a Set5.xx device [LS]
@@ -223,8 +226,7 @@ Platform-specific changes are prefixed with the platform name, otherwise the cha
 - **Dreamcast**: Update GCC 14.x toolchain profile to 14.2 [EF]
 - **Dreamcast**: Update GCC 11.x toolchain profile to 11.5, update Binutils to 2.43 [EF]
 - **Dreamcast**: Fix ARM toolchain build error when JIT is enabled for SH toolchain [EF]
-- Added pvrtex utility by TapamN to utils [DF == Daniel Fairchild]
-- **Dreamcast**: Added a set of known working purupuru bit patterns and a browsing mechanism to the rumble example [DF]
+- **Dreamcast**: Added a set of known working purupuru bit patterns and a browsing mechanism to the rumble example [DF == Daniel Fairchild]
 - Added full support for <time.h> additions from C23 standard. [FG]
 - Fixes mutexes not working properly [PC]
 - **Dreamcast**: fs_dcload: Set errno on error in dcload_stat() [PC]
