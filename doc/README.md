@@ -27,8 +27,8 @@ What KallistiOS provides optionally:
 
 What KallistiOS is NOT:
 - UNIX (or even compatible)
-- Linux/BSD (those are their own ports! :smiley:
-- Memory protection; programs can overwrite each other at will#
+- Linux/BSD (those are their own ports!) :smiley:
+- Memory protection; programs can overwrite each other at will
 - Pretty much anything else you can think of that's not in the above list
 
 (# There is an MMU module for the DC port, but nothing really uses it at
