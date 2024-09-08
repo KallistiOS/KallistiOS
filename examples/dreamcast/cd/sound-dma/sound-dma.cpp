@@ -1,16 +1,41 @@
-#include <stdio.h>
+/*  KallistiOS ##version##
 
+   sound-dma.cpp
+   Copyright (C) 2024 Stefanos Kornilios Mitsis Poiitidis
+*/
+
+/*
+   This example demonstrates how to get the sector and size of a file on the GD-ROM and then
+   DMA the file directly to sound ram for playback. The file is then played in a loop.
+ */
+
+#include <stdio.h>
+#include <errno.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
 
 #include <dc/cdrom.h>
 #include <arch/cache.h>
+#include <dc/maple.h>
+#include <dc/maple/controller.h>
+
+#include <atomic>
 
 #define AICA_REG(n) (*(volatile uint32_t*)(0xA0700000+n))
 #define GD_PROTECTION  (*(volatile uint32_t*)0xA05F74B8)
 #define SYSCALLS_32(n) (*(volatile uint32_t*)(0xAC000000 + n))
 
+std::atomic_bool quit;
+
+static void on_reset(uint8_t addr, uint32_t btns) {
+   (void)addr; (void)btns;
+   quit = true;
+}
+
 int main(int argc, char *argv[]) {
+
+   /* If the face buttons are all pressed, exit the app */
+   cont_btn_callback(0, CONT_RESET_BUTTONS, on_reset);
 
    // Patch system calls to unprotect the GD-ROM DMA for the entire address space
    SYSCALLS_32(0x1C20) = 0x8843007F;
@@ -21,7 +46,11 @@ int main(int argc, char *argv[]) {
 
    // Get the file sector and size
    int fd = open("/cd/test.pcm", O_RDONLY);
-   int file_sector = ioctl(fd, IOCTL_ISO9660_GET_SECTOR);
+   if (fd == -1) {
+      printf("unable to open /cd/test.pcm, errno=%d\n", errno);
+      return 1;
+   }
+   int file_sector = ioctl(fd, IOCTL_ISO9660_GET_FIRST_EXTENT);
    off_t file_size = lseek(fd, 0, SEEK_END);
    close(fd);
 
@@ -60,8 +89,10 @@ int main(int argc, char *argv[]) {
 
    AICA_REG(0x00) |= 0xC000; // KEY_ON, EX
 
-   // wait for ever
-   for(;;);
+   // wait untill all buttons are pressed
+   while (!quit) {
+      // do nothing
+   }
 
    return 0;
 }
