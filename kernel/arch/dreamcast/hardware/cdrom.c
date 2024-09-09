@@ -378,7 +378,7 @@ int cdrom_stream_start(int sector, int cnt, int mode) {
     params.num = cnt;
 
     if (cmd_hnd > 0) {
-        cdrom_abort_cmd(10000);
+        cdrom_abort_cmd(1000);
     }
 
     if (mode == CDROM_READ_DMA) {
@@ -424,7 +424,7 @@ int cdrom_stream_stop(void) {
         }
         else if (rs == STREAMING) {
             mutex_unlock(&_g1_ata_mutex);
-            cdrom_abort_cmd(10000);
+            cdrom_abort_cmd(1000);
             break;
         }
         thd_pass();
@@ -449,7 +449,7 @@ int cdrom_stream_stop(void) {
 int cdrom_stream_request(void *buffer, size_t size, int block) {
     int rs;
     int32_t params[2];
-    size_t check_size = 0;
+    size_t check_size = -1;
     int32_t status[4] = {
         0, /* Error code 1 */
         0, /* Error code 2 */
@@ -470,6 +470,9 @@ int cdrom_stream_request(void *buffer, size_t size, int block) {
         if (params[0] & 0x1f) {
             dbglog(DBG_ERROR, "cdrom_stream_request: Unaligned memory for DMA (32-byte).\n");
             return ERR_SYS;
+        }
+        if ((params[0] >> 24) == 0x0c) {
+            dcache_inval_range((uintptr_t)buffer, size);
         }
     }
     else if(stream_mode == CDROM_READ_PIO) {
@@ -514,8 +517,7 @@ int cdrom_stream_request(void *buffer, size_t size, int block) {
                 cmd_hnd = 0;
                 break;
             }
-
-            if (syscall_gdrom_dma_check(cmd_hnd, &check_size) == 0) {
+            else if (syscall_gdrom_dma_check(cmd_hnd, &check_size) == 0) {
                 break;
             }
             thd_pass();
@@ -542,8 +544,7 @@ int cdrom_stream_request(void *buffer, size_t size, int block) {
                 cmd_hnd = 0;
                 break;
             }
-
-            if (syscall_gdrom_pio_check(cmd_hnd, &check_size) == 0) {
+            else if (syscall_gdrom_pio_check(cmd_hnd, &check_size) == 0) {
                 break;
             }
             thd_pass();
@@ -559,20 +560,27 @@ int cdrom_stream_progress(size_t *size) {
     size_t check_size = 0;
 
     if (cmd_hnd <= 0) {
+        if (size) {
+            *size = check_size;
+        }
         return rv;
     }
-    else if (stream_mode == CDROM_READ_DMA) {
+    mutex_lock(&_g1_ata_mutex);
+
+    if (stream_mode == CDROM_READ_DMA) {
         rv = syscall_gdrom_dma_check(cmd_hnd, &check_size);
     }
     else if (stream_mode == CDROM_READ_PIO) {
         rv = syscall_gdrom_pio_check(cmd_hnd, &check_size);
     }
 
-    if (size) {
-        *size = check_size;
-    }
     if (rv == 0) {
         syscall_gdrom_exec_server();
+    }
+    mutex_unlock(&_g1_ata_mutex);
+
+    if (size) {
+        *size = check_size;
     }
     return rv;
 }
@@ -686,16 +694,21 @@ static void g1_dma_irq_hnd(uint32_t code, void *data) {
 
 static void unlock_dma_memory(void) {
     volatile uint32_t *prot_reg = (uint32_t *)(G1_ATA_DMA_PROTECTION | MEM_AREA_P2_BASE);
-    volatile uint32_t *first_entry = (uint32_t *)(0x0c001c20 | MEM_AREA_P2_BASE);
-    volatile uint32_t *second_entry = (uint32_t *)(0x0c0023fc | MEM_AREA_P2_BASE);
+    const size_t size_loc = 16 << 10;
+	uintptr_t start_loc = (0x0c000000 | MEM_AREA_P2_BASE);
+	uint32_t end_loc = start_loc + size_loc;
+    uintptr_t cur_loc;
+	int count = 0;
 
-    if (*first_entry == (uint32_t)G1_DMA_UNLOCK_SYSMEM) {
-        *first_entry = G1_DMA_UNLOCK_ALLMEM;
+	for(cur_loc = start_loc; cur_loc <= end_loc; cur_loc += sizeof(uint32_t)) {
+		if(*(uint32_t *)cur_loc == (uint32_t)G1_DMA_UNLOCK_SYSMEM) {
+			*(uint32_t *)cur_loc = G1_DMA_UNLOCK_ALLMEM;
+			++count;
+		}
+	}
+    if (count) {
+        icache_flush_range(0x0c000000 | MEM_AREA_P1_BASE, size_loc);
     }
-    if (*second_entry == (uint32_t)G1_DMA_UNLOCK_SYSMEM) {
-        *second_entry = G1_DMA_UNLOCK_ALLMEM;
-    }
-    icache_flush_range(0x0c000000 | MEM_AREA_P1_BASE, 16 << 10);
     *prot_reg = G1_DMA_UNLOCK_ALLMEM;
 }
 
