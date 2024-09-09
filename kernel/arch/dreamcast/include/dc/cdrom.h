@@ -13,6 +13,7 @@
 __BEGIN_DECLS
 
 #include <arch/types.h>
+#include <stdint.h>
 
 /** \file    dc/cdrom.h
     \brief   CD access to the GD-ROM drive.
@@ -413,7 +414,7 @@ int cdrom_read_toc(CDROM_TOC *toc_buffer, int session);
     This function reads the specified number of sectors from the disc, starting
     where requested. This will respect the size of the sectors set with
     cdrom_change_datatype(). The buffer must have enough space to store the
-    specified number of sectors.
+    specified number of sectors and size must be a multiple of 32 for DMA.
 
     \param  buffer          Space to store the read sectors.
     \param  sector          The sector to start reading from.

@@ -73,6 +73,7 @@ static int dma_in_progress = 0;
 static int dma_blocking = 0;
 static kthread_t *dma_thd = NULL;
 static semaphore_t dma_done = SEM_INITIALIZER(0);
+static int cur_sector_size = 2048;
 
 /* Shortcut to cdrom_reinit_ex. Typically this is the only thing changed. */
 int cdrom_set_sector_size(int size) {
@@ -291,6 +292,7 @@ int cdrom_change_datatype(int sector_part, int cdxa, int sector_size) {
     params[1] = sector_part;    /* Get Data or Full Sector */
     params[2] = cdxa;           /* CD-XA mode 1/2 */
     params[3] = sector_size;    /* sector size */
+    cur_sector_size = sector_size;
     rv = syscall_gdrom_sector_mode(params);
     mutex_unlock(&_g1_ata_mutex);
     return rv;
@@ -343,22 +345,37 @@ int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode) {
         int is_test;
     } params;
     int rv = ERR_OK;
+    uintptr_t buf_addr = ((uintptr_t)buffer);
 
     params.sec = sector;    /* Starting sector */
     params.num = cnt;       /* Number of sectors */
-    params.buffer = buffer; /* Output buffer */
     params.is_test = 0;     /* Enable test mode */
 
     /* The DMA mode blocks the thread it is called in by the way we execute
        gd syscalls. It does however allow for other threads to run. */
-    /* XXX: DMA Mode may conflict with using a second G1ATA device. More 
-       testing is needed from someone with such a device.
-    */
-    if(mode == CDROM_READ_DMA)
-        rv = cdrom_exec_cmd(CMD_DMAREAD, &params);
-    else if(mode == CDROM_READ_PIO)
-        rv = cdrom_exec_cmd(CMD_PIOREAD, &params);
+    if (mode == CDROM_READ_DMA) {
 
+        params.buffer = (void *)(buf_addr & MEM_AREA_CACHE_MASK);
+
+        if (buf_addr & 0x1f) {
+            dbglog(DBG_ERROR, "cdrom_read_sectors_ex: Unaligned memory for DMA (32-byte).\n");
+            return ERR_SYS;
+        }
+        if ((buf_addr >> 24) == 0x0c) {
+            dcache_inval_range((uintptr_t)params.buffer, cnt * cur_sector_size);
+        }
+        rv = cdrom_exec_cmd(CMD_DMAREAD, &params);
+    }
+    else if(mode == CDROM_READ_PIO) {
+
+        params.buffer = buffer;
+
+        if (buf_addr & 0x01) {
+            dbglog(DBG_ERROR, "cdrom_read_sectors_ex: Unaligned memory for PIO (2-byte).\n");
+            return ERR_SYS;
+        }
+        rv = cdrom_exec_cmd(CMD_PIOREAD, &params);
+    }
     return rv;
 }
 
@@ -695,17 +712,17 @@ static void g1_dma_irq_hnd(uint32_t code, void *data) {
 static void unlock_dma_memory(void) {
     volatile uint32_t *prot_reg = (uint32_t *)(G1_ATA_DMA_PROTECTION | MEM_AREA_P2_BASE);
     const size_t size_loc = 16 << 10;
-	uintptr_t start_loc = (0x0c000000 | MEM_AREA_P2_BASE);
-	uint32_t end_loc = start_loc + size_loc;
+    uintptr_t start_loc = (0x0c000000 | MEM_AREA_P2_BASE);
+    uint32_t end_loc = start_loc + size_loc;
     uintptr_t cur_loc;
-	int count = 0;
+    int count = 0;
 
-	for(cur_loc = start_loc; cur_loc <= end_loc; cur_loc += sizeof(uint32_t)) {
-		if(*(uint32_t *)cur_loc == (uint32_t)G1_DMA_UNLOCK_SYSMEM) {
-			*(uint32_t *)cur_loc = G1_DMA_UNLOCK_ALLMEM;
-			++count;
-		}
-	}
+    for(cur_loc = start_loc; cur_loc <= end_loc; cur_loc += sizeof(uint32_t)) {
+        if(*(uint32_t *)cur_loc == (uint32_t)G1_DMA_UNLOCK_SYSMEM) {
+            *(uint32_t *)cur_loc = G1_DMA_UNLOCK_ALLMEM;
+            ++count;
+        }
+    }
     if (count) {
         icache_flush_range(0x0c000000 | MEM_AREA_P1_BASE, size_loc);
     }
