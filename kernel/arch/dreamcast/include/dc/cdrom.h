@@ -319,14 +319,14 @@ int cdrom_exec_cmd_timed(int cmd, void *param, int timeout);
 /** \brief    Abort last CD-ROM command.
     \ingroup  gdrom
 
-    This function aborted the specified command using the BIOS syscall for
+    This function aborts the specified command using the BIOS syscall for
     aborting GD-ROM commands.
 
     \param  timeout         Timeout in milliseconds.
 
     \return                 \ref cd_cmd_response
 */
-int cdrom_abort_cmd(int timeout);
+int cdrom_abort_cmd(uint32_t timeout);
 
 /** \brief    Get the status of the GD-ROM drive.
     \ingroup  gdrom
@@ -458,7 +458,7 @@ int cdrom_stream_start(int sector, int cnt, int mode);
     \return                 \ref cd_cmd_response
     \see    cdrom_transfer_request
 */
-int cdrom_stream_stop();
+int cdrom_stream_stop(void);
 
 /** \brief    Request stream transfer.
     \ingroup  gdrom

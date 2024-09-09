@@ -3,7 +3,7 @@
    cd-stream-test.c
    Copyright (C) 2024 Ruslan Rostovtsev
 
-   This example program simply show how CD streams works.
+   This example program simply shows how CD streams works.
 */
 
 #include <stdio.h>

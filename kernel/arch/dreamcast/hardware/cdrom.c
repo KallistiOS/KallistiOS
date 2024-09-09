@@ -162,7 +162,7 @@ int cdrom_exec_cmd_timed(int cmd, void *param, int timeout) {
     }
 }
 
-int cdrom_abort_cmd(int timeout) {
+int cdrom_abort_cmd(uint32_t timeout) {
     int32_t status[4] = {
         0, /* Error code 1 */
         0, /* Error code 2 */
@@ -394,7 +394,7 @@ int cdrom_stream_start(int sector, int cnt, int mode) {
     return rv;
 }
 
-int cdrom_stream_stop() {
+int cdrom_stream_stop(void) {
     int rv = ERR_OK;
     int rs;
     int32_t status[4] = {
@@ -667,7 +667,7 @@ int cdrom_spin_down(void) {
     return rv;
 }
 
-static void g1_dma_irq_hnd(uint32 code, void *data) {
+static void g1_dma_irq_hnd(uint32_t code, void *data) {
     (void)code;
     (void)data;
 
@@ -684,7 +684,7 @@ static void g1_dma_irq_hnd(uint32 code, void *data) {
     }
 }
 
-static void unlock_dma_memory() {
+static void unlock_dma_memory(void) {
     volatile uint32_t *prot_reg = (uint32_t *)(G1_ATA_DMA_PROTECTION | MEM_AREA_P2_BASE);
     volatile uint32_t *first_entry = (uint32_t *)(0x0c001c20 | MEM_AREA_P2_BASE);
     volatile uint32_t *second_entry = (uint32_t *)(0x0c0023fc | MEM_AREA_P2_BASE);
