@@ -18,10 +18,10 @@ rm-elf:
 	-rm -f $(TARGET).elf $(TARGET).bin
 
 $(TARGET).elf: $(OBJS)
-	kos-cc -o $(TARGET) $(OBJS)
+	kos-cc -o $(TARGET).elf $(OBJS)
 
 run: $(TARGET).elf
-	$(KOS_LOADER) $(TARGET)
+	$(KOS_LOADER) $(TARGET).elf
 
 dist: $(TARGET).elf
 	-rm -f $(OBJS)

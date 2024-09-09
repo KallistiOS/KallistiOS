@@ -24,7 +24,7 @@
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>
 
-#define BUFFER_SIZE (4 << 11)
+#define BUFFER_SIZE (8 << 11)
 
 static uint8_t dma_buf[BUFFER_SIZE] __attribute__((aligned(32)));
 static uint8_t pio_buf[BUFFER_SIZE] __attribute__((aligned(2)));
@@ -73,11 +73,12 @@ static int cd_stream_test(uint32_t lba, uint8_t *buffer, size_t size, int mode) 
     rs = cdrom_stream_progress(&cur_size);
 
     if (rs != 0 || cur_size != (size / 2)) {
-        dbglog(DBG_ERROR, "Failed to check %s transfer.\n", stream_name);
+        dbglog(DBG_ERROR, "Failed to check %s transfer: rs=%d sz=%d\n",
+            stream_name, rs, cur_size);
         return -1;
     }
 
-    rs = cdrom_stream_request(buffer, size / 2, 1);
+    rs = cdrom_stream_request(buffer + (size / 2), size / 2, 1);
 
     if (rs != ERR_OK) {
         dbglog(DBG_ERROR, "Failed to request %s transfer.\n", stream_name);
@@ -87,7 +88,8 @@ static int cd_stream_test(uint32_t lba, uint8_t *buffer, size_t size, int mode) 
     rs = cdrom_stream_progress(&cur_size);
 
     if (rs != 0 || cur_size != 0) {
-        dbglog(DBG_ERROR, "Failed to check %s transfer.\n", stream_name);
+        dbglog(DBG_ERROR, "Failed to check %s transfer: rs=%d sz=%d\n",
+            stream_name, rs, cur_size);
         return -1;
     }
 
@@ -102,16 +104,39 @@ static int cd_stream_test(uint32_t lba, uint8_t *buffer, size_t size, int mode) 
     return 0;
 }
 
+int print_diff(uint8_t *pio_buf, uint8_t *dma_buf, size_t size) {
+    int i, j, rv = 0;
+
+    for(i = 0; i < size; ++i) {
+        if (dma_buf[i] != pio_buf[i]) {
+            rv = i;
+            if (i >= 8) {
+                i -= 8;
+            }
+            break;
+        }
+    }
+    dbglog(DBG_INFO, "DMA[%d]: ", i);
+
+    for(j = 0; j < 16; ++j) {
+        dbglog(DBG_INFO, "%02x", dma_buf[i + j]);
+    }
+    dbglog(DBG_INFO, "\nPIO[%d]: ", i);
+
+    for(j = 0; j < 16; ++j) {
+        dbglog(DBG_INFO, "%02x", pio_buf[i + j]);
+    }
+    dbglog(DBG_INFO, "\n\n");
+    return rv;
+}
+
 int main(int argc, char *argv[]) {
-    int rs, i, j;
-    uint32_t lba = 150;
+    int rs, i;
+    uint32_t lba;
     CDROM_TOC toc;
 
     dbgio_dev_select("fb");
-    dbglog(DBG_DEBUG, "Start CD-ROM stream test.\n\n");
-
-    memset(dma_buf, 0xff, BUFFER_SIZE);
-    memset(pio_buf, 0xee, BUFFER_SIZE);
+    dbglog(DBG_INFO, "CD-ROM stream test.\n\n");
 
     rs = cdrom_read_toc(&toc, 0);
 
@@ -125,7 +150,8 @@ int main(int argc, char *argv[]) {
         dbglog(DBG_ERROR, "No data track on disc.\n");
     }
 
-    dcache_inval_range((uintptr_t)dma_buf, BUFFER_SIZE);
+    memset(dma_buf, 0xff, BUFFER_SIZE);
+    dcache_flush_range((uintptr_t)dma_buf, BUFFER_SIZE);
     rs = cd_stream_test(lba, dma_buf, BUFFER_SIZE, CDROM_READ_DMA);
 
     if (rs != ERR_OK) {
@@ -133,6 +159,7 @@ int main(int argc, char *argv[]) {
         goto exit;
     }
 
+    memset(pio_buf, 0xee, BUFFER_SIZE);
     rs = cd_stream_test(lba, pio_buf, BUFFER_SIZE, CDROM_READ_PIO);
 
     if (rs != ERR_OK) {
@@ -145,50 +172,37 @@ int main(int argc, char *argv[]) {
         goto exit;
     }
 
-    dbglog(DBG_ERROR, "Stream data mismatch.\n");
-
-    for(i = 0; i < BUFFER_SIZE; ++i) {
-        if (dma_buf[i] != pio_buf[i]) {
-            if (i >= 8) {
-                i -= 6;
-            }
-            break;
-        }
-    }
-
-    dbglog(DBG_INFO, "DMA[%d]: ", i);
-    for(j = 0; j < 16; ++j) {
-        dbglog(DBG_INFO, "%02x", dma_buf[i + j]);
-    }
-
-    dbglog(DBG_INFO, "\nPIO[%d]: ", i);
-    for(j = 0; j < 16; ++j) {
-        dbglog(DBG_INFO, "%02x", pio_buf[i + j]);
-    }
-    dbglog(DBG_INFO, "\n");
+    dbglog(DBG_ERROR, "Stream data mismatch:\n");
+    i = print_diff(pio_buf, dma_buf, BUFFER_SIZE);
 
     if (dma_buf[i] == 0xff) {
-        dcache_inval_range((uintptr_t)dma_buf, BUFFER_SIZE);
+        dbglog(DBG_INFO, "Read DMA data.\n");
+        memset(dma_buf, 0xff, BUFFER_SIZE);
+        dcache_flush_range((uintptr_t)dma_buf, BUFFER_SIZE);
         rs = cdrom_read_sectors_ex(dma_buf, lba,
             BUFFER_SIZE >> 11, CDROM_READ_DMA);
     }
     else {
+        dbglog(DBG_INFO, "Read PIO data.\n");
+        memset(pio_buf, 0xee, BUFFER_SIZE);
         rs = cdrom_read_sectors_ex(pio_buf, lba,
             BUFFER_SIZE >> 11, CDROM_READ_PIO);
     }
 
     if (rs != ERR_OK) {
-        dbglog(DBG_ERROR, "%s read sectors failed.\n\n",
+        dbglog(DBG_ERROR, "%s read sectors failed.\n",
             dma_buf[i] == 0xff ? "DMA" : "PIO");
     }
     else if (memcmp(dma_buf, pio_buf, BUFFER_SIZE)) {
-        dbglog(DBG_ERROR, "Stream and read data mismatch.\n\n");
+        dbglog(DBG_ERROR, "Stream and read data mismatch:\n");
+        print_diff(pio_buf, dma_buf, BUFFER_SIZE);
     }
     else {
-        dbglog(DBG_ERROR, "Stream and read data matched.\n\n");
+        dbglog(DBG_INFO, "Stream and read data matched.\n");
     }
 
 exit:
+    dbglog(DBG_INFO, "\n");
     cdrom_abort_cmd(10000);
     wait_exit();
     return 0;
