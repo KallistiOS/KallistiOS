@@ -14,6 +14,7 @@
 #include <dc/syscalls.h>
 
 #include <kos/dbglog.h>
+#include <kos/thread.h>
 
 /*
 
