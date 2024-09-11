@@ -4,7 +4,7 @@
 # Copyright (C) 2001 Megan Potter
 #
 
-OBJS = vmu_fb.o vmu_pkg.o screenshot.o minifont.o
+OBJS = vmu_fb.o vmu_pkg.o vmu_printf.o screenshot.o minifont.o
 SUBDIRS =
 
 ifneq ($(KOS_SUBARCH), naomi)

@@ -197,14 +197,17 @@ static uint32 iso_733(const uint8 *from) {
    this cache. As the cache fills up, sectors are removed from the end
    of it. */
 typedef struct {
+    uint8   *data;          /* Sector data */
     uint32  sector;         /* CD sector */
-    uint8   data[2048];     /* Sector data */
 } cache_block_t;
 
 /* List of cache blocks (ordered least recently used to most recently) */
 #define NUM_CACHE_BLOCKS 16
 static cache_block_t *icache[NUM_CACHE_BLOCKS];     /* inode cache */
 static cache_block_t *dcache[NUM_CACHE_BLOCKS];     /* data cache */
+
+static unsigned char *cache_data;
+static cache_block_t *caches;
 
 /* Cache modification mutex */
 static mutex_t cache_mutex;
@@ -268,7 +271,7 @@ static int bread_cache(cache_block_t **cache, uint32 sector) {
     }
 
     /* Load the requested block */
-    j = cdrom_read_sectors(cache[i]->data, sector + 150, 1);
+    j = cdrom_read_sectors_ex(cache[i]->data, sector + 150, 1, CDROM_READ_DMA);
 
     if(j < 0) {
         //dbglog(DBG_ERROR, "fs_iso9660: can't read_sectors for %d: %d\n",
@@ -603,19 +606,26 @@ static void * iso_open(vfs_handler_t * vfs, const char *fn, int mode) {
     (void)vfs;
 
     /* Make sure they don't want to open things as writeable */
-    if((mode & O_MODE_MASK) != O_RDONLY)
+    if((mode & O_MODE_MASK) != O_RDONLY) {
+        errno = EROFS;
         return 0;
+    }
 
     /* Do this only when we need to (this is still imperfect) */
-    if(!percd_done && init_percd() < 0)
+    if(!percd_done && init_percd() < 0) {
+        errno = ENODEV;
         return 0;
+    }
 
     percd_done = 1;
 
     /* Find the file we want */
     de = find_object_path(fn, (mode & O_DIR) ? 1 : 0, &root_dirent);
 
-    if(!de) return 0;
+    if(!de) {
+        errno = ENOENT;
+        return 0;
+    }
 
     /* Find a free file handle */
     mutex_lock(&fh_mutex);
@@ -628,8 +638,10 @@ static void * iso_open(vfs_handler_t * vfs, const char *fn, int mode) {
 
     mutex_unlock(&fh_mutex);
 
-    if(fd >= FS_CD_MAX_FILES)
+    if(fd >= FS_CD_MAX_FILES) {
+        errno = ENFILE;
         return 0;
+    }
 
     /* Fill in the file handle and return the fd */
     fh[fd].first_extent = iso_733(de->extent);
@@ -660,8 +672,10 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
     file_t fd = (file_t)h;
 
     /* Check that the fd is valid */
-    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || fh[fd].broken)
+    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || fh[fd].broken) {
+        errno = EBADF;
         return -1;
+    }
 
     rv = 0;
     outbuf = (uint8 *)buf;
@@ -707,7 +721,10 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
         /* Do the read */
         c = bdread(fh[fd].first_extent + fh[fd].ptr / 2048);
 
-        if(c < 0) return -1;
+        if(c < 0) {
+            errno = EIO;
+            return -1;
+        }
 
         memcpy(outbuf, dcache[c]->data + (fh[fd].ptr % 2048), toread);
         /* } */
@@ -776,8 +793,10 @@ static off_t iso_seek(void * h, off_t offset, int whence) {
 static off_t iso_tell(void * h) {
     file_t fd = (file_t)h;
 
-    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || fh[fd].broken)
+    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || fh[fd].broken) {
+        errno = EBADF;
         return -1;
+    }
 
     return fh[fd].ptr;
 }
@@ -786,8 +805,10 @@ static off_t iso_tell(void * h) {
 static size_t iso_total(void * h) {
     file_t fd = (file_t)h;
 
-    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || fh[fd].broken)
+    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || fh[fd].broken) {
+        errno = EBADF;
         return -1;
+    }
 
     return fh[fd].size;
 }
@@ -1066,11 +1087,16 @@ void fs_iso9660_init(void) {
     mutex_init(&cache_mutex, MUTEX_TYPE_NORMAL);
     mutex_init(&fh_mutex, MUTEX_TYPE_NORMAL);
 
-    /* Allocate cache block space */
+    /* Allocate cache block space, properly aligned for DMA access */
+    cache_data = memalign(32, 2 * NUM_CACHE_BLOCKS * 2048);
+    caches = malloc(2 * NUM_CACHE_BLOCKS * sizeof(cache_block_t));
+
     for(i = 0; i < NUM_CACHE_BLOCKS; i++) {
-        icache[i] = malloc(sizeof(cache_block_t));
+        icache[i] = &caches[i * 2];
+        icache[i]->data = &cache_data[i * 2 * 2048];
         icache[i]->sector = -1;
-        dcache[i] = malloc(sizeof(cache_block_t));
+        dcache[i] = &caches[i * 2 + 1];
+        dcache[i]->data = &cache_data[i * 2 * 2048 + 2048];
         dcache[i]->sector = -1;
     }
 
@@ -1086,16 +1112,12 @@ void fs_iso9660_init(void) {
 
 /* De-init the file system */
 void fs_iso9660_shutdown(void) {
-    int i;
-
     /* De-register with vblank */
     vblank_handler_remove(iso_vblank_hnd);
 
     /* Dealloc cache block space */
-    for(i = 0; i < NUM_CACHE_BLOCKS; i++) {
-        free(icache[i]);
-        free(dcache[i]);
-    }
+    free(cache_data);
+    free(caches);
 
     /* Free muteces */
     mutex_destroy(&cache_mutex);

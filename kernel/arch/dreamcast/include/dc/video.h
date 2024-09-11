@@ -318,7 +318,7 @@ uint32_t vid_border_color(uint8_t r, uint8_t g, uint8_t b);
 void vid_clear(uint8_t r, uint8_t g, uint8_t b);
 
 /** \brief   Clear VRAM.
-    \ingroup video_vram
+    \ingroup video_fb
 
     This function is essentially a memset() for the whole of VRAM that will
     clear it all to 0 bytes.

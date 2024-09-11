@@ -35,6 +35,7 @@ or space present.
 #include <stdio.h>
 #include <assert.h>
 #include <errno.h>
+#include <sys/ioctl.h>
 
 /* pty buffer size */
 #define PTY_BUFFER_SIZE 1024
@@ -61,6 +62,8 @@ typedef struct ptyhalf {
 
     mutex_t     mutex;
     condvar_t   ready_read, ready_write;
+
+    struct termios termios;
 } ptyhalf_t;
 
 /* Our global pty list */
@@ -73,6 +76,7 @@ typedef struct diritem {
     char    name[32];
     int size;
 } diritem_t;
+
 typedef struct dirlist {
     diritem_t   * items;
     int     cnt;
@@ -97,11 +101,14 @@ typedef struct pipefd {
     int mode;
 } pipefd_t;
 
+/* Here incase fs_pty_create() fails */
+static void pty_destroy_unused(void);
+
 #define PF_PTY  0
 #define PF_DIR  1
 
 /* Creates a pty pair */
-int fs_pty_create(char * buffer, int maxbuflen, file_t * master_out, file_t * slave_out) {
+int fs_pty_create(char *buffer, int maxbuflen, file_t *master_out, file_t *slave_out) {
     ptyhalf_t *master, *slave;
     int boot;
     char mname[16], sname[16];
@@ -113,28 +120,26 @@ int fs_pty_create(char * buffer, int maxbuflen, file_t * master_out, file_t * sl
     if(!master_out || !slave_out)
         return -1;
 
+    /* Initialize outputs to invalid values */
+    *master_out = -1;
+    *slave_out = -1;
+
     /* Are we bootstrapping? */
-    if(LIST_EMPTY(&ptys))
-        boot = 1;
-    else
-        boot = 0;
+    boot = LIST_EMPTY(&ptys);
 
     /* Alloc new structs */
-    master = malloc(sizeof(ptyhalf_t));
-
-    if(!master)
+    master = calloc(1, sizeof(ptyhalf_t));
+    if(!master) {
+        errno = ENOMEM;
         return -1;
+    }
 
-    memset(master, 0, sizeof(ptyhalf_t));
-    slave = malloc(sizeof(ptyhalf_t));
-
+    slave = calloc(1, sizeof(ptyhalf_t));
     if(!slave) {
         free(master);
         errno = ENOMEM;
         return -1;
     }
-
-    memset(slave, 0, sizeof(ptyhalf_t));
 
     /* Hook 'em up */
     master->other = slave;
@@ -149,6 +154,10 @@ int fs_pty_create(char * buffer, int maxbuflen, file_t * master_out, file_t * sl
 
     /* Reset their refcnts (these will get increased in a minute) */
     master->refcnt = slave->refcnt = 0;
+
+    /* Initialize the termios structures with default values */
+    memset(&master->termios, 0, sizeof(struct termios));
+    memset(&slave->termios, 0, sizeof(struct termios));
 
     /* Allocate a mutex for each for multiple readers or writers */
     mutex_init(&master->mutex, MUTEX_TYPE_NORMAL);
@@ -166,28 +175,40 @@ int fs_pty_create(char * buffer, int maxbuflen, file_t * master_out, file_t * sl
     LIST_INSERT_HEAD(&ptys, slave, list);
     mutex_unlock(&list_mutex);
 
-
     /* Call back up to fs to open two file descriptors */
     sprintf(mname, "/pty/ma%02x", master->id);
     sprintf(sname, "/pty/sl%02x", slave->id);
     *slave_out = fs_open(sname, O_RDWR);
+    if(*slave_out < 0)
+        goto cleanup;
 
     if(boot) {
         /* Get the slave channel setup first, and dup it across
-           our stdin, stdout, and stderr. */
-        fs_dup2(*slave_out, 1);
-        fs_dup2(*slave_out, 2);
+           our stdout and stderr. */
+        fs_dup2(*slave_out, STDOUT_FILENO);
+        fs_dup2(*slave_out, STDERR_FILENO);
     }
 
     *master_out = fs_open(mname, O_RDWR);
+    if(*master_out < 0)
+        goto cleanup;
 
     return 0;
+
+cleanup:
+    
+    if(*slave_out > 0)
+        fs_close(*slave_out);
+    else
+        pty_destroy_unused();
+
+    return -1;
 }
 
 /* Autoclean totally unreferenced PTYs (zero refcnt). */
 /* XXX This is a kinda nasty piece of code... goto!! */
 static void pty_destroy_unused(void) {
-    ptyhalf_t * c, * n;
+    ptyhalf_t *c, *n;
     int old;
 
     /* Make sure no one else is messing with the list and then disable
@@ -406,8 +427,8 @@ static void * pty_open(vfs_handler_t * vfs, const char * fn, int mode) {
 }
 
 /* Close pty or dirlist */
-static int pty_close(void * h) {
-    pipefd_t * fdobj;
+static int pty_close(void *h) {
+    pipefd_t *fdobj;
 
     assert(h);
     fdobj = (pipefd_t *)h;
@@ -520,6 +541,12 @@ static ssize_t pty_read(void * h, void * buf, size_t bytes) {
         cond_wait(&ph->ready_read, &ph->mutex);
     }
 
+    /* If the buffer is empty and the other end is closed, return 0 */
+    if(!ph->cnt && ph->other->refcnt == 0) {
+        bytes = 0;
+        goto done;
+    }
+
     /* Figure out how much to read */
     avail = ph->cnt;
 
@@ -563,8 +590,7 @@ static ssize_t pty_write(void * h, const void * buf, size_t bytes) {
     /* Special case the unattached console */
     if(ph->id == 0 && !ph->master && ph->other->refcnt == 0) {
         /* This actually blocks, but fooey.. :) */
-        // dbgio_write_buffer_xlat((const uint8 *)buf, bytes);
-        dbgio_write_str((const char *)buf);
+        dbgio_write_buffer_xlat((const uint8 *)buf, bytes);
         return bytes;
     }
 
@@ -586,9 +612,14 @@ static ssize_t pty_write(void * h, const void * buf, size_t bytes) {
         cond_wait(&ph->ready_write, &ph->mutex);
     }
 
+    /* If the buffer is full and the other end is closed, return 0 */
+    if(ph->cnt >= PTY_BUFFER_SIZE && ph->refcnt == 0) {
+        bytes = 0;
+        goto done;
+    }
+
     /* Figure out how much to write */
     avail = PTY_BUFFER_SIZE - ph->cnt;
-
     if(avail < bytes)
         bytes = avail;
 
@@ -656,20 +687,31 @@ static dirent_t * pty_readdir(void * h) {
     return &dl->dirent;
 }
 
-static int pty_rewinddir(void *h) {
-    pipefd_t *fdobj = (pipefd_t *)h;
-    dirlist_t *dl;
+static int pty_ioctl(void *h, int cmd, va_list ap) {
+    pipefd_t *fd = (pipefd_t *)h;
+    ptyhalf_t *ph = fd->d.p;
+    void *arg = va_arg(ap, void*);
 
-    assert(h);
-
-    if(fdobj->type != PF_DIR) {
+    if (!fd || fd->type != PF_PTY) {
         errno = EBADF;
         return -1;
     }
 
-    dl = fdobj->d.d;
-    dl->ptr = 0;
-    return 0;
+    switch (cmd) {
+        case TIOCGETA:
+            if(arg == NULL) {
+                errno = EINVAL;
+                return -1;
+            }
+            memcpy(arg, &ph->termios, sizeof(struct termios));
+            return 0;
+
+        /* Add other ioctl cases here */
+
+        default:
+            errno = ENOTTY;
+            return -1;
+    }
 }
 
 static int pty_fcntl(void *h, int cmd, va_list ap) {
@@ -708,6 +750,22 @@ static int pty_fcntl(void *h, int cmd, va_list ap) {
     }
 
     return rv;
+}
+
+static int pty_rewinddir(void *h) {
+    pipefd_t *fdobj = (pipefd_t *)h;
+    dirlist_t *dl;
+
+    assert(h);
+
+    if(fdobj->type != PF_DIR) {
+        errno = EBADF;
+        return -1;
+    }
+
+    dl = fdobj->d.d;
+    dl->ptr = 0;
+    return 0;
 }
 
 static int pty_fstat(void *h, struct stat *st) {
@@ -756,7 +814,7 @@ static vfs_handler_t vh = {
     NULL,
     pty_total,
     pty_readdir,
-    NULL,
+    pty_ioctl,
     NULL,
     NULL,
     NULL,

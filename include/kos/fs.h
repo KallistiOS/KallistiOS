@@ -29,6 +29,7 @@ __BEGIN_DECLS
 
 #include <sys/types.h>
 #include <kos/limits.h>
+#include <kos/opts.h>
 #include <time.h>
 #include <sys/queue.h>
 #include <stdarg.h>
@@ -204,11 +205,6 @@ typedef struct vfs_handler {
     /** \brief Get status information on an already opened file. */
     int (*fstat)(void *hnd, struct stat *st);
 } vfs_handler_t;
-
-/** \brief  The number of distinct file descriptors that can be in use at a
-            time.
-*/
-#define FD_SETSIZE  1024
 
 /** \cond */
 /* This is the private struct that will be used as raw file handles

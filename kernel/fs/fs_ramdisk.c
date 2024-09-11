@@ -103,11 +103,11 @@ static mutex_t rd_mutex;
 
 /* Search a directory for the named file; return the struct if
    we find it. Assumes we hold rd_mutex. */
-static rd_file_t * ramdisk_find(rd_dir_t * parent, const char * name, int namelen) {
+static rd_file_t *ramdisk_find(rd_dir_t *parent, const char *name, size_t namelen) {
     rd_file_t   *f;
 
     LIST_FOREACH(f, parent, dirlist) {
-        if(!strncasecmp(name, f->name, namelen))
+        if((strlen(f->name) == namelen) && !strncasecmp(name, f->name, namelen))
             return f;
     }
 

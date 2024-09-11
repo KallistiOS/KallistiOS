@@ -1,0 +1,6 @@
+font2txf: Credits
+
+- Mark J. Kilgard: Creator of the Texture Mapped Font (TXF) format.
+- Chris Laurel and the Celestia project team: The initial authors of the original "ttf2txf" utility.
+  https://web.archive.org/web/20051104023112/http://www.shatters.net/~claurel/celestia/fonts/tt2txf/
+- Mickaël Cardoso (SiZiOUS): Complete refactoring of the project.
