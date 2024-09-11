@@ -20,6 +20,7 @@ information should be easily seen in the changelog.
 * /dev/ vfs supporting null, random, and urandom.
 * VFS Expanded with readlink, rewinddir, and more compliant readdir and stat.
 * Expanded C language support including C11, C17, and C23.
+* Expanded C++ language support including C++11, C++14, C++17, C++20, C++23, and C++26.
 * Expanded POSIX support: clock_gettime/settime/getres, getaddrinfo/freeaddrinfo, libgen.h, and more.
 * GCC 9-15 supported. Support for GCC 2-3 removed, and 4 deprecated.
 * Default language spec of the codebase is now gnu17/gnu++17.
