@@ -68,11 +68,15 @@ typedef int gdc_cmd_hnd_t;
 mutex_t _g1_ata_mutex = MUTEX_INITIALIZER;
 
 static gdc_cmd_hnd_t cmd_hnd = 0;
-static int stream_mode = 0;
+static int stream_mode = -1;
+static cdrom_stream_callback_t stream_cb = NULL;
+static void *stream_cb_param = NULL;
+
 static int dma_in_progress = 0;
 static int dma_blocking = 0;
 static kthread_t *dma_thd = NULL;
 static semaphore_t dma_done = SEM_INITIALIZER(0);
+
 static int cur_sector_size = 2048;
 
 /* Shortcut to cdrom_reinit_ex. Typically this is the only thing changed. */
@@ -128,20 +132,16 @@ int cdrom_exec_cmd_timed(int cmd, void *param, int timeout) {
         if(timeout) {
             if((timer_ms_gettime64() - begin) >= (unsigned)timeout) {
                 mutex_unlock(&_g1_ata_mutex);
-                cdrom_abort_cmd(timeout);
-                rv = ERR_TIMEOUT;
+                cdrom_abort_cmd(500);
                 dbglog(DBG_ERROR, "cdrom_exec_cmd_timed: Timeout exceeded\n");
-                break;
+                return ERR_TIMEOUT;
             }
         }
         thd_pass();
     } while(1);
 
     cmd_hnd = (n == STREAMING ? hnd : 0);
-
-    if (rv != ERR_TIMEOUT) {
-        mutex_unlock(&_g1_ata_mutex);
-    }
+    mutex_unlock(&_g1_ata_mutex);
 
     if(rv != ERR_OK)
         return rv;
@@ -203,7 +203,19 @@ int cdrom_abort_cmd(uint32_t timeout) {
     } while(1);
 
     cmd_hnd = 0;
+    stream_mode = -1;
     mutex_unlock(&_g1_ata_mutex);
+
+    if (dma_in_progress) {
+        dma_in_progress = 0;
+        if (dma_blocking) {
+            dma_blocking = 0;
+            sem_signal(&dma_done);
+        }
+    }
+    if (stream_cb) {
+        cdrom_stream_set_callback(0, NULL);
+    }
     return rv;
 }
 
@@ -395,7 +407,7 @@ int cdrom_stream_start(int sector, int cnt, int mode) {
     params.num = cnt;
 
     if (cmd_hnd > 0) {
-        cdrom_abort_cmd(1000);
+        cdrom_stream_stop();
     }
 
     if (mode == CDROM_READ_DMA) {
@@ -424,9 +436,11 @@ int cdrom_stream_stop(void) {
     if (cmd_hnd <= 0) {
         return rv;
     }
-    if (stream_mode != CDROM_READ_DMA || cdrom_stream_progress(NULL) == 0) {
-        mutex_lock(&_g1_ata_mutex);
+    if (dma_in_progress) {
+        mutex_unlock(&_g1_ata_mutex);
+        return cdrom_abort_cmd(1000);
     }
+    mutex_lock(&_g1_ata_mutex);
 
     do {
         syscall_gdrom_exec_server();
@@ -437,21 +451,19 @@ int cdrom_stream_stop(void) {
             break;
         }
         else if (rs == COMPLETED || rs == NO_ACTIVE) {
+            dbglog(DBG_DEBUG, "cdrom_stream_stop: complete.\n");
             break;
         }
         else if (rs == STREAMING) {
             mutex_unlock(&_g1_ata_mutex);
-            cdrom_abort_cmd(1000);
-            break;
+            return cdrom_abort_cmd(1000);
         }
         thd_pass();
     } while (1);
 
     cmd_hnd = 0;
-
-    if (rs != STREAMING) {
-        mutex_unlock(&_g1_ata_mutex);
-    }
+    stream_mode = -1;
+    mutex_unlock(&_g1_ata_mutex);
 
     if (dma_in_progress) {
         dma_in_progress = 0;
@@ -460,11 +472,14 @@ int cdrom_stream_stop(void) {
             sem_signal(&dma_done);
         }
     }
+    if (stream_cb) {
+        cdrom_stream_set_callback(0, NULL);
+    }
     return rv;
 }
 
 int cdrom_stream_request(void *buffer, size_t size, int block) {
-    int rs;
+    int rs, rv = ERR_OK;
     int32_t params[2];
     size_t check_size = -1;
     int32_t status[4] = {
@@ -477,8 +492,8 @@ int cdrom_stream_request(void *buffer, size_t size, int block) {
     if (cmd_hnd <= 0) {
         return ERR_NO_ACTIVE;
     }
-    if (cdrom_stream_progress(NULL)) {
-        dbglog(DBG_ERROR, "cdrom_stream_request: Previous request in progress.\n");
+    if (dma_in_progress) {
+        dbglog(DBG_ERROR, "cdrom_stream_request: Previous DMA request is in progress.\n");
         return ERR_SYS;
     }
 
@@ -509,6 +524,10 @@ int cdrom_stream_request(void *buffer, size_t size, int block) {
         dma_blocking = block;
         dma_thd = thd_current;
 
+        if (irq_inside_int()) {
+            dma_thd = (kthread_t *)0xFFFFFFFF;
+        }
+
         rs = syscall_gdrom_dma_transfer(cmd_hnd, params);
 
         if (rs < 0) {
@@ -518,7 +537,7 @@ int cdrom_stream_request(void *buffer, size_t size, int block) {
             return ERR_SYS;
         }
         if (block == 0) {
-            return ERR_OK;
+            return rv;
         }
         sem_wait(&dma_done);
 
@@ -527,8 +546,8 @@ int cdrom_stream_request(void *buffer, size_t size, int block) {
             rs = syscall_gdrom_check_command(cmd_hnd, status);
 
             if (rs < 0) {
-                mutex_unlock(&_g1_ata_mutex);
-                return ERR_SYS;
+                rv = ERR_SYS;
+                break;
             }
             else if(rs == COMPLETED || rs == NO_ACTIVE) {
                 cmd_hnd = 0;
@@ -554,14 +573,17 @@ int cdrom_stream_request(void *buffer, size_t size, int block) {
             rs = syscall_gdrom_check_command(cmd_hnd, status);
 
             if (rs < 0) {
-                mutex_unlock(&_g1_ata_mutex);
-                return ERR_SYS;
+                rv = ERR_SYS;
+                break;
             }
             else if(rs == COMPLETED || rs == NO_ACTIVE) {
                 cmd_hnd = 0;
                 break;
             }
             else if (syscall_gdrom_pio_check(cmd_hnd, &check_size) == 0) {
+                if (check_size == 0 && stream_cb) {
+                    stream_cb(stream_cb_param);
+                }
                 break;
             }
             thd_pass();
@@ -569,7 +591,7 @@ int cdrom_stream_request(void *buffer, size_t size, int block) {
     }
 
     mutex_unlock(&_g1_ata_mutex);
-    return ERR_OK;
+    return rv;
 }
 
 int cdrom_stream_progress(size_t *size) {
@@ -582,7 +604,6 @@ int cdrom_stream_progress(size_t *size) {
         }
         return rv;
     }
-    mutex_lock(&_g1_ata_mutex);
 
     if (stream_mode == CDROM_READ_DMA) {
         rv = syscall_gdrom_dma_check(cmd_hnd, &check_size);
@@ -591,15 +612,19 @@ int cdrom_stream_progress(size_t *size) {
         rv = syscall_gdrom_pio_check(cmd_hnd, &check_size);
     }
 
-    if (rv == 0) {
-        syscall_gdrom_exec_server();
-    }
-    mutex_unlock(&_g1_ata_mutex);
-
     if (size) {
         *size = check_size;
     }
     return rv;
+}
+
+void cdrom_stream_set_callback(cdrom_stream_callback_t callback, void *param) {
+    stream_cb = callback;
+    stream_cb_param = param;
+
+    if(stream_mode == CDROM_READ_PIO) {
+        syscall_gdrom_pio_callback((uintptr_t)stream_cb, stream_cb_param);
+    }
 }
 
 /* Read a piece of or all of the Q byte of the subcode of the last sector read.
@@ -697,7 +722,7 @@ static void g1_dma_irq_hnd(uint32_t code, void *data) {
     (void)data;
 
     if (dma_in_progress) {
-        syscall_gdrom_dma_callback(0, NULL);
+        syscall_gdrom_dma_callback((uintptr_t)stream_cb, stream_cb_param);
         dma_in_progress = 0;
 
         if(dma_blocking) {
@@ -706,6 +731,9 @@ static void g1_dma_irq_hnd(uint32_t code, void *data) {
             sem_signal(&dma_done);
             thd_schedule(1, 0);
         }
+    }
+    else if (cmd_hnd > 0) {
+        syscall_gdrom_dma_callback(0, NULL);
     }
 }
 

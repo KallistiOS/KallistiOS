@@ -49,10 +49,15 @@ static void __attribute__((__noreturn__)) wait_exit(void) {
     }
 }
 
+static void cd_stream_callback(void *param) {
+    (*(size_t *)param)++;
+}
+
 static int cd_stream_test(uint32_t lba, uint8_t *buffer, size_t size, int mode) {
 
     int rs;
-    size_t cur_size;
+    size_t cur_size = 0;
+    size_t cb_count = 0;
     char *stream_name = (mode == CDROM_READ_DMA ? "DMA" : "PIO");
 
     dbglog(DBG_DEBUG, "Start %s stream.\n", stream_name);
@@ -63,6 +68,7 @@ static int cd_stream_test(uint32_t lba, uint8_t *buffer, size_t size, int mode) 
         return -1;
     }
 
+    cdrom_stream_set_callback(cd_stream_callback, (void *)&cb_count);
     rs = cdrom_stream_request(buffer, size / 2, 1);
 
     if (rs != ERR_OK) {
@@ -100,7 +106,13 @@ static int cd_stream_test(uint32_t lba, uint8_t *buffer, size_t size, int mode) 
         return -1;
     }
 
-    dbglog(DBG_ERROR, "%s transfer done.\n", stream_name);
+    if (cb_count != 2) {
+        dbglog(DBG_ERROR, "%s transfer is done, but callback fails: %d\n",
+            stream_name, cb_count);
+        return -1;
+    }
+
+    dbglog(DBG_DEBUG, "%s transfer is done.\n", stream_name);
     return 0;
 }
 

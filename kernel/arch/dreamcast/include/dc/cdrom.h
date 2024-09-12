@@ -276,6 +276,10 @@ typedef struct {
 #define TOC_TRACK(n) ( ((n) & 0x00ff0000) >> 16 )
 /** @} */
 
+/** \brief  CD-ROM streams callback
+*/
+typedef void (*cdrom_stream_callback_t)(void *data);
+
 /** \brief    Set the sector size for read sectors.
     \ingroup  gdrom
 
@@ -484,6 +488,17 @@ int cdrom_stream_request(void *buffer, size_t size, int block);
     \see    cdrom_transfer_request
 */
 int cdrom_stream_progress(size_t *size);
+
+/** \brief    Setting up a callback for transfers.
+    \ingroup  gdrom
+
+    This callback is called for every transfer request that is completed.
+
+    \param  callback        Callback function.
+    \param  param           Callback function param.
+    \see    cdrom_transfer_request
+*/
+void cdrom_stream_set_callback(cdrom_stream_callback_t callback, void *param);
 
 /** \brief    Read subcode data from the most recently read sectors.
     \ingroup  gdrom
