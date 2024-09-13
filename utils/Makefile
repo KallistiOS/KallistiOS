@@ -13,7 +13,7 @@ endif
 # Ok for these to fail atm...
 
 all:
-	for i in $(DIRS); do $(KOS_MAKE) -C $$i; done
+	for i in $(DIRS); do $(KOS_MAKE) -C $$i || exit 1; done
 
 clean:
 	for i in $(DIRS); do $(KOS_MAKE) -C $$i clean; done

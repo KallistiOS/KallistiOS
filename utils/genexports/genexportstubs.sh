@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 usage() {
 	echo 'genexportstubs.sh <inpfile> <outpfile>'

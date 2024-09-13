@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # KallistiOS Environment Settings
 #
 # This is a sample script for configuring and customizing your
@@ -91,8 +93,11 @@ export KOS_GENROMFS="${KOS_BASE}/utils/genromfs/genromfs"
 # the default can be changed to "gmake," for the GNU
 # implementation.
 #
-export KOS_MAKE="make"
-#export KOS_MAKE="gmake"
+if uname -s | grep -q "BSD"; then
+    export KOS_MAKE="gmake"
+else
+    export KOS_MAKE="make"
+fi
 
 # Loader Utility
 #
@@ -213,4 +218,8 @@ export KOS_SH4_PRECISION="-m4-single-only"
 # environment settings. If you want to configure additional compiler
 # options or see where other build flags are set, look at this file.
 #
-. ${KOS_BASE}/environ_base.sh
+if uname -s | grep -q "BSD"; then
+    . ${KOS_BASE}/environ_base.sh
+else
+    source ${KOS_BASE}/environ_base.sh
+fi

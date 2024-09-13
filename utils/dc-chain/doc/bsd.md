@@ -32,7 +32,7 @@ build the whole toolchain.
 
 The packages below need to be installed:
 ```
-pkg install gcc gmake binutils texinfo bash libjpeg-turbo png libelf git subversion python3
+pkg install gcc gmake binutils texinfo bash jpeg-turbo libjpeg-turbo png libelf git subversion python3 gmp mpfr
 ```
 On **BSD** systems, the `make` command is **NOT** the same as the **GNU Make**
 tool; instead **GNU Make** is invoked using `gmake`; you must use `gmake`
@@ -72,8 +72,11 @@ To build the toolchain, do the following:
 	```
 	cd /opt/toolchains/dc/kos/utils/dc-chain/
 	```
-3. (Optional) Copy and alter the `Makefile.cfg` file options to your liking.
-
+3. Copy and alter the `Makefile.cfg` file options to your liking and use profile 14.2.0.
+	```
+	cp Makefile.default.cfg Makefile.cfg
+	sed -i '' 's/toolchain_profile=stable/toolchain_profile=14.2.0/' Makefile.cfg
+	```
 4. Enter the following to start downloading and building toolchain:
 	```
 	gmake

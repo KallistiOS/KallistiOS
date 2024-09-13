@@ -1,0 +1,165 @@
+name: Build
+
+# Trigger only on pull requests or pushes to the test branch
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:  # Allows manual triggering of the workflow via a button
+
+jobs:
+  build-ubuntu:
+    name: Build on Ubuntu
+    runs-on: ubuntu-latest
+
+    env:
+      TOOLCHAIN_PATH: /opt/toolchains/dc
+
+    steps:
+      # Checkout the repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Install dependencies on Ubuntu
+      - name: Set up dependencies on Ubuntu
+        run: |
+          sudo apt-get update
+          sudo apt install -y gawk patch bzip2 tar make libgmp-dev libmpfr-dev libmpc-dev gettext wget \
+            libelf-dev texinfo bison flex sed git build-essential diffutils curl libjpeg-dev libpng-dev \
+            python3 pkg-config cmake libisofs-dev meson ninja-build rake
+        shell: bash
+
+      # Create the toolchain directory and copy the code
+      - name: Create toolchain directory
+        run: |
+          sudo mkdir -p $TOOLCHAIN_PATH
+          sudo chmod -R 755 $TOOLCHAIN_PATH
+          sudo chown -R $(id -u):$(id -g) $TOOLCHAIN_PATH
+          mkdir -p $TOOLCHAIN_PATH/kos
+          cp -r $GITHUB_WORKSPACE/* $TOOLCHAIN_PATH/kos
+        shell: bash
+
+      # Build the SH4 toolchain
+      - name: Build SH4 Toolchain
+        run: |
+          cd $TOOLCHAIN_PATH/kos/utils/dc-chain
+          make
+        shell: bash
+
+      # Set up KOS environment and build KOS
+      - name: Set up KOS environment and build
+        run: |
+          cd $TOOLCHAIN_PATH/kos
+          cp doc/environ.sh.sample environ.sh  # Copy environment setup script
+          source $TOOLCHAIN_PATH/kos/environ.sh  # Source the environment
+          export LIBRARY_PATH="/usr/local/lib"
+          export CPATH="/usr/local/include"
+          make
+        shell: bash
+
+  build-macos:
+    name: Build on macOS
+    runs-on: macos-latest
+
+    env:
+      TOOLCHAIN_PATH: /opt/toolchains/dc
+
+    steps:
+      # Checkout the repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Install dependencies on macOS
+      - name: Set up dependencies on macOS
+        run: |
+          brew install texinfo libelf meson libisofs
+        shell: bash
+
+      # Create the toolchain directory and copy the code
+      - name: Create toolchain directory
+        run: |
+          sudo mkdir -p $TOOLCHAIN_PATH
+          sudo chmod -R 755 $TOOLCHAIN_PATH
+          sudo chown -R $(id -u):$(id -g) $TOOLCHAIN_PATH
+          mkdir -p $TOOLCHAIN_PATH/kos
+          cp -r $GITHUB_WORKSPACE/* $TOOLCHAIN_PATH/kos
+        shell: bash
+
+      # Configure the toolchain on macOS
+      - name: Configure the toolchain on macOS
+        run: |
+          cd $TOOLCHAIN_PATH/kos/utils/dc-chain
+          cp Makefile.default.cfg Makefile.cfg  # Copy default configuration
+          sed -i '' 's/toolchain_profile=stable/toolchain_profile=14.2.0/' Makefile.cfg  # Set profile
+        shell: bash
+
+      # Build the SH4 toolchain
+      - name: Build SH4 Toolchain
+        run: |
+          cd $TOOLCHAIN_PATH/kos/utils/dc-chain
+          make
+        shell: bash
+
+      # Set up KOS environment and build KOS
+      - name: Set up KOS environment and build
+        run: |
+          cd $TOOLCHAIN_PATH/kos
+          cp doc/environ.sh.sample environ.sh  # Copy environment setup script
+          source $TOOLCHAIN_PATH/kos/environ.sh  # Source the environment
+          export LIBRARY_PATH="$(brew --prefix)/lib"
+          export CPATH="$(brew --prefix)/include"
+          make
+        shell: bash
+
+  build-freebsd:
+    name: Build on FreeBSD
+    runs-on: ubuntu-latest
+    timeout-minutes: 60  # Extend the timeout to 60 minutes
+
+    env:
+      TOOLCHAIN_PATH: /opt/toolchains/dc
+
+    steps:
+      # Checkout the repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Set up and run the FreeBSD VM for testing
+      - name: Test in FreeBSD
+        id: test
+        uses: vmactions/freebsd-vm@v1
+        with:
+          envs: 'TOOLCHAIN_PATH'  # Pass the environment variable for the toolchain
+          usesh: true  # Use shell inside the FreeBSD VM
+          prepare: |
+            pkg install -y sudo  # Install sudo in the FreeBSD VM
+
+          run: |
+            # Create the toolchain directory and copy the code
+            sudo mkdir -p $TOOLCHAIN_PATH
+            sudo chmod -R 755 $TOOLCHAIN_PATH
+            sudo chown -R $(id -u):$(id -g) $TOOLCHAIN_PATH
+            mkdir -p $TOOLCHAIN_PATH/kos
+            cp -r $GITHUB_WORKSPACE/* $TOOLCHAIN_PATH/kos
+
+            # Install dependencies on FreeBSD
+            sudo pkg install -y gcc gmake binutils texinfo bash jpeg-turbo libjpeg-turbo png \
+              libelf git subversion python3 gmp mpfr
+
+            # Configure the toolchain on FreeBSD
+            cd $TOOLCHAIN_PATH/kos/utils/dc-chain
+            cp Makefile.default.cfg Makefile.cfg  # Copy default configuration
+            sed -i '' 's/toolchain_profile=stable/toolchain_profile=14.2.0/' Makefile.cfg  # Set profile
+
+            # Build the SH4 toolchain using gmake
+            cd $TOOLCHAIN_PATH/kos/utils/dc-chain
+            gmake
+
+            # Set up KOS environment and build KOS
+            cd $TOOLCHAIN_PATH/kos
+            cp doc/environ.sh.sample environ.sh  # Copy environment setup script
+            . $TOOLCHAIN_PATH/kos/environ.sh  # Source the environment (use '.' instead of 'source' on FreeBSD)
+            gmake
