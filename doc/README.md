@@ -69,18 +69,18 @@ host environment (or modify the utils/naomibintool Makefile to not
 use libelf and to define NO_LIBELF for building that tool).
 
 # kos-ports
-***Brief explanation of kos-ports and link to repo***
+[kos-ports](https://github.com/KallistiOS/kos-ports) is a package manager and repository of various useful libraries
+that have been ported to KOS.
 
 # Addons
-***Explain addons***
-[Addons](../addons/readme.md)
+[Addons](../addons/readme.md) are additional libraries that are kept as optional but
+were written specifically for and maintained alongside KOS unlike kos-ports.
 
 # Utilities
-***Explain utilities***
-[Utilities](../utils/readme.md)
+[Utilities](../utils/readme.md) contains various PC-side tools used to assist development.
 
 # Examples
-[Examples](../examples/dreamcast/readme.md)
+[Examples](../examples/dreamcast/readme.md) on using KOS, it's addons, and various kos-ports libs.
 
 # Building
 Building KOS itself is actually quite simple, especially if you don't want
