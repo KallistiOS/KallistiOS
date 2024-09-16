@@ -23,56 +23,15 @@ that this text is attached to them:
 
 Please read [LICENSE.KOS](license/LICENSE.KOS) for the full license text.
 
-## Included BSD Code
-
-The above information applies to the portions of KallistiOS that are copyrighted
-by the authors. BSD code that is included with KallistiOS is licensed under the
-BSD license -- please reference [LICENSE.BSD](license/LICENSE.BSD). This BSD
-license is nearly identical to the KOS license, but ours has removed the
-"advertising clause." 
-
-## Included lwIP Code
-
-KOS also optionally contains code from the "lwIP" TCP/IP stack,
-copyright 2001 Swedish Institute of Computer Science. This code is
-licensed under a license basically identical to the KOS license, but
-with their name. You can find the license in any of their files.
-
-## Included JPEG Code
-
-This software optionally is based in part on the work of the Independent
-JPEG Group (see kos-ports/libjpeg/README).
-
-## Included GPL/LGPL Code
-
-Some of the software included with the KOS distribution is not copyrighted
-by us, nor is it part of the codebase of KOS. Pretty much all of that
-code is contained in the "utils" directory, and will shortly be contained
-as well (or perhaps only) in the "addons"
-directory. 
+## Addons, Ports, and Utils
 Some of the software included with KallistiOS is not copyrighted by us, nor
 is it part of the codebase of KallistiOS. Most of that code will be found
 within the "utils" directory and the "addons" directory. Licenses on these
 pieces vary; please see the source of the program in question to be sure.
-In particular, genromfs, dialog, and the XingMP3 library (in 
-kos-ports/libmp3/xingmp3) are covered under the GPL, and MPGLIB
-(in kos-ports/libmp3/mpglib) is covered under the LGPL. I don't yell
-lightly, so pay attention to this:
 
-**IF YOU USE THE XINGMP3 LIBRARY IN YOUR PROGRAM, YOUR PROGRAM
-AUTOMATICALLY BECOMES RESTRICTED BY THE GPL LICENSE. IF YOU USE THE
-XINGMP3 LIBRARY IN YOUR PROGRAM, YOU MAY NOT DISTRIBUTE IT WITHOUT
-SOURCE CODE. END.**
-
-Just in case you missed that or don't like caps, you may not include the
-Xing MP3 library in your program (this currently means linking -lmp3
-from the KOS kos-ports tree) without making your program GPL'd, or
-something less restrictive (e.g., BSD license) but distributing it by
-the terms of the GPL. If you replace the MP3 engine, however, you _can_
-do this, as all of our libmp3 code is covered under the BSD license.
-
-See [LICENSE.GPL](license/LICENSE.GPL) and [LICENSE.LGPL](license/LICENSE.LGPL)
-for the text of these licenses.
+Additionally please note that the kos-ports repository provides ports of
+libraries with a variety of licenses. For each, the applicable license
+is noted in its Makefile as the LICENSE define.
 
 ## More licensing information
 If there is ever a question or you want to ask permission to do something
