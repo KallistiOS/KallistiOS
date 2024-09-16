@@ -30,48 +30,6 @@ have something to the effect of "derived from blagh.c in KOS 1.1.x".
 It's really a very small price to pay for this nice code library you
 can pull from freely :)
 
-### What is the GPL license? What exactly do its terms mean? Can I make a proprietary / "closed source" program using XingMP3? Can I distributed "forked" versions of XingMP3?
-
-The GPL says (again, in layman's terms) that if you make a derivative
-work (e.g., use its code in your program), then your program must be
-distributed under the terms of the GPL. Note that this does not mean you
-must change your license, as some people would say (excellent example:
-the Linux kernel contains BSD-licensed code, and BSD's kernel contains
-_optional_ GPL'd kernel modules). It does, however, mean that you must
-follow the GPL's terms for distribution. Additionally, if you make
-significant changes to the XingMP3 library (a direct derivative) then
-you must make the result licensed under the GPL.
-
-I use XingMP3 as the example here because it is going to be the one
-people have the most encounters with in their own programs. Genromfs is
-distributed along with KOS (aggregated) but is not part of it. XingMP3,
-however, is also "aggregated" but becomes a part of your program if you
-link the MP3 playback library. So if you want to do this, pay attention.
-
-This example is most analogous to the BSD kernel situation. They have a
-GPL'd math library that may be linked with the BSD kernel, but the
-resulting binary must always be accompanied by all of its source code
-(i.e., distributed under the terms of the GPL). The same is true with
-your own programs. You may not use the MP3 library without following
-similar restrictions: you may license it under any GPL-compatible
-license, but you may not distribute any part of it as a proprietary
-application.
-
-You may distributed "forked" versions of XingMP3, following the same
-restrictions. They must be licensed under the GPL license. You may add
-entirely new files to the library, licensed under a different license,
-but they must be distributable under the GPL's terms.
-
-Now then, if you don't like those restrictions, you are free to replace
-the XingMP3 engine with something else. In fact I would be overjoyed if
-someone provided me with a BSD-licensed MP3 engine. But for now, those
-are the breaks. Sorry.
-
-Also, to keep you safe from accidentally linking GPL'd code into your
-program, 100% of this code is located inside the "xingmp3" tree in the
-"libmp3" tree. All headers in the "include" directory for libmp3 are
-either ours, or similarly available under a BSD-like license.
-
 
 ## Operating System Basics
 

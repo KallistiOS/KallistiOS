@@ -214,12 +214,6 @@ architecture still exists to add additional consoles at later time.
 
 
 # Platform Notes
-Dreamcast*
-
-- MPGLIB (LGPL MP3 library, which is also faster) is included, but does
-  not work. If you want to screw with it yourself, check the libmp3 Makefile
-  and look at sndmp3_mpglib.c in that dir.
-- libs3m is present but doesn't really work. It needs serious porting work.
 
 There are no other supported platforms after KOS 2.0.0. They were all pretty
 much broken and unmaintained anyway, so they were removed shortly after the
