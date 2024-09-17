@@ -83,6 +83,13 @@ int mutex_lock(mutex_t *m) {
     return mutex_lock_timed(m, 0);
 }
 
+int mutex_lock_irqsafe(mutex_t *m) {
+    if(irq_inside_int())
+        return mutex_trylock(m);
+    else
+        return mutex_lock(m);
+}
+
 int mutex_lock_timed(mutex_t *m, int timeout) {
     uint64_t deadline = 0;
     int old, rv = 0;

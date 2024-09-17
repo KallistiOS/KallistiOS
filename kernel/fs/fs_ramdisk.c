@@ -248,7 +248,7 @@ static void * ramdisk_open(vfs_handler_t * vfs, const char *fn, int mode) {
     if(fn[0] == '/')
         fn++;
 
-    mutex_lock(&rd_mutex);
+    mutex_lock_scoped(&rd_mutex);
 
     /* Are we trying to do something stupid? */
     if((mode & O_DIR) && mm != O_RDONLY)
@@ -339,7 +339,6 @@ static void * ramdisk_open(vfs_handler_t * vfs, const char *fn, int mode) {
     f->usage++;
 
     /* Should do it... */
-    mutex_unlock(&rd_mutex);
     return (void *)fd;
 
 error_out:
@@ -347,7 +346,6 @@ error_out:
     if(fd != -1)
         fh[fd].file = NULL;
 
-    mutex_unlock(&rd_mutex);
     return NULL;
 }
 
@@ -356,7 +354,7 @@ static int ramdisk_close(void * h) {
     rd_file_t   *f;
     file_t      fd = (file_t)h;
 
-    mutex_lock(&rd_mutex);
+    mutex_lock_scoped(&rd_mutex);
 
     /* Check that the fd is valid */
     if(fd < FS_RAMDISK_MAX_FILES && fh[fd].file != NULL) {
@@ -373,7 +371,6 @@ static int ramdisk_close(void * h) {
             f->openfor = OPENFOR_NOTHING;
     }
 
-    mutex_unlock(&rd_mutex);
     return 0;
 }
 
@@ -382,7 +379,7 @@ static ssize_t ramdisk_read(void * h, void *buf, size_t bytes) {
     ssize_t rv = -1;
     file_t  fd = (file_t)h;
 
-    mutex_lock(&rd_mutex);
+    mutex_lock_scoped(&rd_mutex);
 
     /* Check that the fd is valid */
     if(fd < FS_RAMDISK_MAX_FILES && fh[fd].file != NULL && !fh[fd].dir) {
@@ -397,7 +394,6 @@ static ssize_t ramdisk_read(void * h, void *buf, size_t bytes) {
         rv = bytes;
     }
 
-    mutex_unlock(&rd_mutex);
     return rv;
 }
 
@@ -406,7 +402,7 @@ static ssize_t ramdisk_write(void * h, const void *buf, size_t bytes) {
     ssize_t rv = -1;
     file_t  fd = (file_t)h;
 
-    mutex_lock(&rd_mutex);
+    mutex_lock_scoped(&rd_mutex);
 
     /* Check that the fd is valid */
     if(fd < FS_RAMDISK_MAX_FILES && fh[fd].file != NULL && !fh[fd].dir && fh[fd].file->openfor == OPENFOR_WRITE) {
@@ -416,7 +412,7 @@ static ssize_t ramdisk_write(void * h, const void *buf, size_t bytes) {
             void * np = realloc(fh[fd].file->data, (fh[fd].ptr + bytes) + 4096);
 
             if(np == NULL)
-                goto error_out;
+                return -1;
 
             fh[fd].file->data = np;
             fh[fd].file->datasize = (fh[fd].ptr + bytes) + 4096;
@@ -433,22 +429,18 @@ static ssize_t ramdisk_write(void * h, const void *buf, size_t bytes) {
         rv = bytes;
     }
 
-error_out:
-    mutex_unlock(&rd_mutex);
     return rv;
 }
 
 /* Seek elsewhere in a file */
 static off_t ramdisk_seek(void * h, off_t offset, int whence) {
-    off_t   rv = -1;
     file_t  fd = (file_t)h;
 
-    mutex_lock(&rd_mutex);
+    mutex_lock_scoped(&rd_mutex);
 
     /* Check that the fd is valid */
     if(fd >= FS_RAMDISK_MAX_FILES || !fh[fd].file || fh[fd].dir) {
         errno = EBADF;
-        mutex_unlock(&rd_mutex);
         return -1;
     }
 
@@ -457,7 +449,6 @@ static off_t ramdisk_seek(void * h, off_t offset, int whence) {
         case SEEK_SET:
             if(offset < 0) {
                 errno = EINVAL;
-                mutex_unlock(&rd_mutex);
                 return -1;
             }
 
@@ -467,7 +458,6 @@ static off_t ramdisk_seek(void * h, off_t offset, int whence) {
         case SEEK_CUR:
             if(offset < 0 && ((uint32)-offset) > fh[fd].ptr) {
                 errno = EINVAL;
-                mutex_unlock(&rd_mutex);
                 return -1;
             }
 
@@ -477,7 +467,6 @@ static off_t ramdisk_seek(void * h, off_t offset, int whence) {
         case SEEK_END:
             if(offset < 0 && ((uint32)-offset) > fh[fd].file->size) {
                 errno = EINVAL;
-                mutex_unlock(&rd_mutex);
                 return -1;
             }
 
@@ -486,7 +475,6 @@ static off_t ramdisk_seek(void * h, off_t offset, int whence) {
 
         default:
             errno = EINVAL;
-            mutex_unlock(&rd_mutex);
             return -1;
     }
 
@@ -494,46 +482,39 @@ static off_t ramdisk_seek(void * h, off_t offset, int whence) {
     // XXXX: Technically this isn't correct. Fix it sometime.
     if(fh[fd].ptr > fh[fd].file->size) fh[fd].ptr = fh[fd].file->size;
 
-    rv = fh[fd].ptr;
-    mutex_unlock(&rd_mutex);
-    return rv;
+    return fh[fd].ptr;
 }
 
 /* Tell where in the file we are */
 static off_t ramdisk_tell(void * h) {
-    off_t   rv = -1;
     file_t  fd = (file_t)h;
 
-    mutex_lock(&rd_mutex);
+    mutex_lock_scoped(&rd_mutex);
 
     if(fd < FS_RAMDISK_MAX_FILES && fh[fd].file != NULL && !fh[fd].dir)
-        rv = fh[fd].ptr;
+        return fh[fd].ptr;
 
-    mutex_unlock(&rd_mutex);
-    return rv;
+    return -1;
 }
 
 /* Tell how big the file is */
 static size_t ramdisk_total(void * h) {
-    off_t   rv = -1;
     file_t  fd = (file_t)h;
 
-    mutex_lock(&rd_mutex);
+    mutex_lock_scoped(&rd_mutex);
 
     if(fd < FS_RAMDISK_MAX_FILES && fh[fd].file != NULL && !fh[fd].dir)
-        rv = fh[fd].file->size;
+        return fh[fd].file->size;
 
-    mutex_unlock(&rd_mutex);
-    return rv;
+    return -1;
 }
 
 /* Read a directory entry */
 static dirent_t *ramdisk_readdir(void * h) {
     rd_file_t   * f;
-    dirent_t    * rv = NULL;
     file_t      fd = (file_t)h;
 
-    mutex_lock(&rd_mutex);
+    mutex_lock_scoped(&rd_mutex);
 
     if(fd < FS_RAMDISK_MAX_FILES && fh[fd].file != NULL && fh[fd].ptr != 0 && fh[fd].dir) {
         /* Find the current file and advance to the next */
@@ -553,15 +534,12 @@ static dirent_t *ramdisk_readdir(void * h) {
             fh[fd].dirent.size = f->size;
         }
 
-        rv = &fh[fd].dirent;
+        return &fh[fd].dirent;
     }
     else {
         errno = EBADF;
+        return NULL;
     }
-
-    mutex_unlock(&rd_mutex);
-
-    return rv;
 }
 
 static int ramdisk_unlink(vfs_handler_t * vfs, const char *fn) {
@@ -570,7 +548,7 @@ static int ramdisk_unlink(vfs_handler_t * vfs, const char *fn) {
 
     (void)vfs;
 
-    mutex_lock(&rd_mutex);
+    mutex_lock_scoped(&rd_mutex);
 
     /* Find the file */
     f = ramdisk_find_path(rootdir, fn, 0);
@@ -591,34 +569,28 @@ static int ramdisk_unlink(vfs_handler_t * vfs, const char *fn) {
         }
     }
 
-    mutex_unlock(&rd_mutex);
     return rv;
 }
 
 static void * ramdisk_mmap(void * h) {
-    void    * rv = NULL;
     file_t  fd = (file_t)h;
 
-    mutex_lock(&rd_mutex);
+    mutex_lock_scoped(&rd_mutex);
 
-    if(fd < FS_RAMDISK_MAX_FILES && fh[fd].file != NULL && !fh[fd].dir) {
-        rv = fh[fd].file->data;
-    }
+    if(fd < FS_RAMDISK_MAX_FILES && fh[fd].file != NULL && !fh[fd].dir)
+        return fh[fd].file->data;
 
-    mutex_unlock(&rd_mutex);
-
-    return rv;
+    return NULL;
 }
 
 static int ramdisk_stat(vfs_handler_t *vfs, const char *path, struct stat *buf,
                         int flag) {
     rd_file_t *f;
-    int rv = -1;
 
     (void)vfs;
     (void)flag;
 
-    mutex_lock(&rd_mutex);
+    mutex_lock_scoped(&rd_mutex);
 
     /* Find the file */
     f = ramdisk_find_path(rootdir, path, 0);
@@ -644,74 +616,62 @@ static int ramdisk_stat(vfs_handler_t *vfs, const char *path, struct stat *buf,
     }
     else {
         errno = ENOENT;
-        rv = -1;
+        return -1;
     }
 
-    mutex_unlock(&rd_mutex);
-    return rv;
+    return -1;
 }
 
 static int ramdisk_fcntl(void *h, int cmd, va_list ap) {
     file_t fd = (file_t)h;
-    int rv = -1;
 
     (void)ap;
 
-    mutex_lock(&rd_mutex);
+    mutex_lock_scoped(&rd_mutex);
 
     if(fd >= FS_RAMDISK_MAX_FILES || !fh[fd].file) {
-        mutex_unlock(&rd_mutex);
         errno = EBADF;
         return -1;
     }
 
     switch(cmd) {
         case F_GETFL:
-            rv = fh[fd].omode;
-            break;
+            return fh[fd].omode;
 
         case F_SETFL:
         case F_GETFD:
         case F_SETFD:
-            rv = 0;
-            break;
+            return 0;
 
         default:
             errno = EINVAL;
+            return -1;
     }
-
-    mutex_unlock(&rd_mutex);
-    return rv;
 }
 
 static int ramdisk_rewinddir(void * h) {
-    int rv = 0;
     file_t fd = (file_t)h;
 
-    mutex_lock(&rd_mutex);
+    mutex_lock_scoped(&rd_mutex);
 
     if(fd >= FS_RAMDISK_MAX_FILES || !fh[fd].file || !fh[fd].dir) {
         errno = EBADF;
-        rv = -1;
-    }
-    else {
-        /* Rewind to the first file. */
-        fh[fd].ptr = (uint32)LIST_FIRST((rd_dir_t *)fh[fd].file->data);
+        return -1;
     }
 
-    mutex_unlock(&rd_mutex);
+    /* Rewind to the first file. */
+    fh[fd].ptr = (uint32)LIST_FIRST((rd_dir_t *)fh[fd].file->data);
 
-    return rv;
+    return 0;
 }
 
 static int ramdisk_fstat(void *h, struct stat *buf) {
     file_t fd = (file_t)h;
     rd_file_t *f;
 
-    mutex_lock(&rd_mutex);
+    mutex_lock_scoped(&rd_mutex);
 
     if(fd >= FS_RAMDISK_MAX_FILES || !fh[fd].file) {
-        mutex_unlock(&rd_mutex);
         errno = EBADF;
         return -1;
     }
@@ -737,7 +697,6 @@ static int ramdisk_fstat(void *h, struct stat *buf) {
     if(f->datasize & 0x3ff)
         ++buf->st_blocks;
 
-    mutex_unlock(&rd_mutex);
     return 0;
 }
 
