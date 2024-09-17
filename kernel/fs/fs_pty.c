@@ -213,10 +213,7 @@ static void pty_destroy_unused(void) {
 
     /* Make sure no one else is messing with the list and then disable
        everything for a bit */
-    if(irq_inside_int())
-        mutex_trylock(&list_mutex);
-    else
-        mutex_lock(&list_mutex);
+    mutex_lock_irqsafe(&list_mutex);
 
     old = irq_disable();
 
@@ -271,7 +268,7 @@ static void * pty_open_dir(const char * fn, int mode) {
 
     (void)fn;
 
-    mutex_lock(&list_mutex);
+    mutex_lock_scoped(&list_mutex);
 
     /* Go through and count the number of items */
     cnt = 0;
@@ -284,7 +281,7 @@ static void * pty_open_dir(const char * fn, int mode) {
 
     if(!dl) {
         errno = ENOMEM;
-        goto done;  /* return */
+        return NULL;
     }
 
     memset(dl, 0, sizeof(dirlist_t));
@@ -293,7 +290,7 @@ static void * pty_open_dir(const char * fn, int mode) {
     if(!dl->items) {
         free(dl);
         errno = ENOMEM;
-        goto done;  /* return */
+        return NULL;
     }
 
     memset(dl->items, 0, sizeof(diritem_t) * cnt);
@@ -319,7 +316,7 @@ static void * pty_open_dir(const char * fn, int mode) {
         free(dl->items);
         free(dl);
         errno = ENOMEM;
-        goto done;  /* return */
+        return NULL;
     }
 
     memset(fdobj, 0, sizeof(pipefd_t));
@@ -327,8 +324,6 @@ static void * pty_open_dir(const char * fn, int mode) {
     fdobj->type = PF_DIR;
     fdobj->mode = mode;
 
-done:
-    mutex_unlock(&list_mutex);
     return (void *)fdobj;
 }
 
@@ -435,10 +430,7 @@ static int pty_close(void *h) {
 
     if(fdobj->type == PF_PTY) {
         /* De-ref this end of it */
-        if(irq_inside_int())
-            mutex_trylock(&fdobj->d.p->mutex);
-        else
-            mutex_lock(&fdobj->d.p->mutex);
+        mutex_lock_irqsafe(&fdobj->d.p->mutex);
 
         fdobj->d.p->refcnt--;
 
@@ -875,11 +867,7 @@ int fs_pty_shutdown(void) {
     if(!initted)
         return 0;
 
-    /* If we're in an int, lets do the trylock */
-    if(irq_inside_int())
-        mutex_trylock(&list_mutex);
-    else
-        mutex_lock(&list_mutex);
+    mutex_lock_irqsafe(&list_mutex);
 
     /* Go through and free all the pty entries */
     c = LIST_FIRST(&ptys);
