@@ -188,8 +188,9 @@ __BEGIN_DECLS
     cdrom_read_sectors_ex.
     @{
 */
-#define CDROM_READ_PIO 0    /**< \brief Read sector(s) in PIO mode */
-#define CDROM_READ_DMA 1    /**< \brief Read sector(s) in DMA mode */
+#define CDROM_READ_PIO 0        /**< \brief Read sector(s) in PIO mode */
+#define CDROM_READ_DMA 1        /**< \brief Read sector(s) in DMA mode */
+#define CDROM_READ_DMA_IRQ 2    /**< \brief Read sector(s) in DMA + IRQ mode */
 /** @} */
 
 /** \defgroup cd_status_values      Status Values
