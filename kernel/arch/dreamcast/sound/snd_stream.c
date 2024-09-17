@@ -4,7 +4,7 @@
    Copyright (C) 2000, 2001, 2002, 2003, 2004 Megan Potter
    Copyright (C) 2002 Florian Schulze
    Copyright (C) 2020 Lawrence Sebald
-   Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024 Ruslan Rostovtsev
    Copyright (C) 2024 Stefanos Kornilios Mitsis Poiitidis
 
    SH-4 support routines for SPU streaming sound driver
@@ -91,6 +91,10 @@ typedef struct strchan {
 
     /* User data. */
     void *user_data;
+
+    uint32_t dma_length;
+    uintptr_t dma_dest;
+    kthread_t *poll_thd;
 } strchan_t;
 
 /* Our stream structs */
@@ -101,7 +105,9 @@ static uint32_t *sep_buffer[2] = {NULL, NULL};
 
 static mutex_t stream_mutex = MUTEX_INITIALIZER;
 
-#define LOCK_TIMEOUT_MS 1000
+static int max_channels = 2;
+
+#define LOCK_TIMEOUT_MS 500
 
 /* Check an incoming handle */
 #define CHECK_HND(x) do { \
@@ -363,15 +369,21 @@ void snd_stream_prefill(snd_stream_hnd_t hnd) {
 
 /* Initialize stream system */
 int snd_stream_init(void) {
-    /* Create stereo separation buffers */
-    if(!sep_buffer[0]) {
-        sep_buffer[0] = memalign(32, SND_STREAM_BUFFER_MAX);
-        sep_buffer[1] = sep_buffer[0] + (SND_STREAM_BUFFER_MAX / 8);
+    return snd_stream_init_ex(2, SND_STREAM_BUFFER_MAX);
+}
+
+int snd_stream_init_ex(int channels, size_t buffer_size) {
+    max_channels = channels;
+
+    if (channels == 2) {
+        /* Create stereo separation buffers */
+        sep_buffer[0] = memalign(32, buffer_size);
+        sep_buffer[1] = sep_buffer[0] + (buffer_size / 8);
     }
 
     /* Finish loading the stream driver */
     if(snd_init() < 0) {
-        dbglog(DBG_ERROR, "snd_stream_init(): snd_init() failed, giving up\n");
+        dbglog(DBG_ERROR, "snd_stream_init_ex(): snd_init() failed, giving up\n");
         return -1;
     }
 
@@ -382,8 +394,6 @@ snd_stream_hnd_t snd_stream_alloc(snd_stream_callback_t cb, int bufsize) {
     int i;
     snd_stream_hnd_t hnd;
 
-    mutex_lock_timed(&stream_mutex, LOCK_TIMEOUT_MS);
-
     /* Get an unused handle */
     hnd = -1;
 
@@ -393,14 +403,11 @@ snd_stream_hnd_t snd_stream_alloc(snd_stream_callback_t cb, int bufsize) {
             break;
         }
     }
-
-    if(hnd != -1)
-        streams[hnd].initted = 1;
-
     if(hnd == -1) {
-        mutex_unlock(&stream_mutex);
         return SND_STREAM_INVALID;
     }
+
+    streams[hnd].initted = 1;
 
     /* Default this for now */
     streams[hnd].buffer_size = bufsize;
@@ -415,16 +422,17 @@ snd_stream_hnd_t snd_stream_alloc(snd_stream_callback_t cb, int bufsize) {
     TAILQ_INIT(&streams[hnd].filters);
 
     /* Allocate stream buffers */
-    streams[hnd].spu_ram_sch[0] = snd_mem_malloc(streams[hnd].buffer_size * 2);
-    streams[hnd].spu_ram_sch[1] = streams[hnd].spu_ram_sch[0] + streams[hnd].buffer_size;
+    streams[hnd].spu_ram_sch[0] = snd_mem_malloc(streams[hnd].buffer_size * max_channels);
 
     /* And channels */
     streams[hnd].ch[0] = snd_sfx_chn_alloc();
-    streams[hnd].ch[1] = snd_sfx_chn_alloc();
-    dbglog(DBG_INFO, "snd_stream: alloc'd channels %d/%d\n", streams[hnd].ch[0], streams[hnd].ch[1]);
 
-    mutex_unlock(&stream_mutex);
+    if(max_channels == 2) {
+        streams[hnd].spu_ram_sch[1] = streams[hnd].spu_ram_sch[0] + streams[hnd].buffer_size;
+        streams[hnd].ch[1] = snd_sfx_chn_alloc();
+    }
 
+    // dbglog(DBG_INFO, "snd_stream: alloc'd channels %d/%d\n", streams[hnd].ch[0], streams[hnd].ch[1]);
     return hnd;
 }
 
@@ -451,8 +459,12 @@ void snd_stream_destroy(snd_stream_hnd_t hnd) {
         return;
     }
 
+    snd_stream_stop(hnd);
     snd_sfx_chn_free(streams[hnd].ch[0]);
-    snd_sfx_chn_free(streams[hnd].ch[1]);
+
+    if (max_channels == 2) {
+        snd_sfx_chn_free(streams[hnd].ch[1]);
+    }
 
     c = TAILQ_FIRST(&streams[hnd].filters);
 
@@ -464,9 +476,8 @@ void snd_stream_destroy(snd_stream_hnd_t hnd) {
 
     TAILQ_INIT(&streams[hnd].filters);
 
-    snd_stream_stop(hnd);
     snd_mem_free(streams[hnd].spu_ram_sch[0]);
-    dbglog(DBG_INFO, "snd_stream: dealloc'd channels %d/%d\n", streams[hnd].ch[0], streams[hnd].ch[1]);
+    // dbglog(DBG_INFO, "snd_stream: dealloc'd channels %d/%d\n", streams[hnd].ch[0], streams[hnd].ch[1]);
     memset(streams + hnd, 0, sizeof(streams[0]));
 
     mutex_unlock(&stream_mutex);
@@ -512,6 +523,11 @@ static void snd_stream_start_type(snd_stream_hnd_t hnd, uint32_t type, uint32_t 
     streams[hnd].type = type;
     streams[hnd].channels = st ? 2 : 1;
     streams[hnd].frequency = freq;
+
+    if(streams[hnd].channels > max_channels) {
+        dbglog(DBG_ERROR, "snd_stream_start_type: initted only for mono\n");
+        return;
+    }
 
     if(streams[hnd].type == AICA_SM_16BIT) {
         streams[hnd].bitsize = 16;
@@ -620,16 +636,14 @@ void snd_stream_stop(snd_stream_hnd_t hnd) {
 }
 
 /* The DMA will chain to this to start the second DMA. */
-static uint32_t dmacnt;
-static uintptr_t dmadest;
 static inline void dma_done(void *data) {
-    (void)data;
-    mutex_unlock(&stream_mutex);
+    strchan_t *stream = (strchan_t *)data;
+    mutex_unlock_as_thread(&stream_mutex, stream->poll_thd);
 }
 
 static inline void dma_chain(void *data) {
-    (void)data;
-    spu_dma_transfer(sep_buffer[1], dmadest, dmacnt, 0, dma_done, 0);
+    strchan_t *stream = (strchan_t *)data;
+    spu_dma_transfer(sep_buffer[1], stream->dma_dest, stream->dma_length, 0, dma_done, data);
 }
 
 /* Poll streamer to load more data if necessary */
@@ -644,12 +658,10 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
     strchan_t *stream;
 
     assert(hnd >= 0 && hnd < SND_STREAM_MAX);
-    mutex_lock_timed(&stream_mutex, LOCK_TIMEOUT_MS);
 
     stream = &streams[hnd];
 
     if(!stream->initted || !stream->get_data) {
-        mutex_unlock(&stream_mutex);
         return -1;
     }
 
@@ -671,7 +683,6 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
 
     if(samples_to_bytes(hnd, current_play_pos) >= stream->buffer_size) {
         dbglog(DBG_ERROR, "snd_stream_poll: chan0(%d).pos = %ld\n", stream->ch[0], ch0pos);
-        mutex_unlock(&stream_mutex);
         return -1;
     }
 
@@ -688,7 +699,6 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
     }
 
     if(needed_samples <= 0) {
-        mutex_unlock(&stream_mutex);
         return 0;
     }
 
@@ -698,6 +708,9 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
         needed_bytes = (int)stream->buffer_size / stream->channels;
     }
 
+    if (!stream->initted || !stream->get_data) {
+        return -2;
+    }
     data = stream->get_data(hnd, needed_bytes * stream->channels, &got_bytes);
     process_filters(hnd, &data, &got_bytes);
 
@@ -716,13 +729,15 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
     if(data == NULL) {
         /* Fill with zeros */
         spu_memset_sq(stream->spu_ram_sch[0] + write_pos, 0, needed_bytes);
-        spu_memset_sq(stream->spu_ram_sch[1] + write_pos, 0, needed_bytes);
-        mutex_unlock(&stream_mutex);
+
+        if(stream->channels == 2) {
+            spu_memset_sq(stream->spu_ram_sch[1] + write_pos, 0, needed_bytes);
+        }
         return -3;
     }
 
     if(stream->channels == 2) {
-        sep_buffer[1] = sep_buffer[0] + (SND_STREAM_BUFFER_MAX / 8);
+        mutex_lock_timed(&stream_mutex, LOCK_TIMEOUT_MS);
 
         if(streams[hnd].bitsize == 16) {
             if((uintptr_t)data & 31) {
@@ -744,11 +759,13 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
         dcache_purge_range((uintptr_t)sep_buffer[0], needed_bytes);
         dcache_purge_range((uintptr_t)sep_buffer[1], needed_bytes);
 
+        stream->dma_dest = stream->spu_ram_sch[1] + write_pos;
+        stream->dma_length = needed_bytes;
+        stream->poll_thd = thd_current;
+
         /* Second DMA will get started by the chain handler */
-        dmadest = stream->spu_ram_sch[1] + write_pos;
-        dmacnt = needed_bytes;
         spu_dma_transfer(first_dma_buf,
-            stream->spu_ram_sch[0] + write_pos, needed_bytes, 0, dma_chain, 0);
+            stream->spu_ram_sch[0] + write_pos, needed_bytes, 0, dma_chain, (void *)stream);
     }
     else {
         if((uintptr_t)data & 31) {
@@ -758,8 +775,12 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
             first_dma_buf = data;
         }
         dcache_purge_range((uintptr_t)first_dma_buf, needed_bytes);
+
+        mutex_lock_timed(&stream_mutex, LOCK_TIMEOUT_MS);
+        stream->poll_thd = thd_current;
+
         spu_dma_transfer(first_dma_buf,
-            stream->spu_ram_sch[0] + write_pos, needed_bytes, 0, dma_done, 0);
+            stream->spu_ram_sch[0] + write_pos, needed_bytes, 0, dma_done, (void *)stream);
     }
 
     stream->last_write_pos += needed_samples;
@@ -786,6 +807,8 @@ void snd_stream_volume(snd_stream_hnd_t hnd, int vol) {
     chan->vol = vol;
     snd_sh4_to_aica(tmp, cmd->size);
 
-    cmd->cmd_id = streams[hnd].ch[1];
-    snd_sh4_to_aica(tmp, cmd->size);
+    if(streams[hnd].channels == 2) {
+        cmd->cmd_id = streams[hnd].ch[1];
+        snd_sh4_to_aica(tmp, cmd->size);
+    }
 }

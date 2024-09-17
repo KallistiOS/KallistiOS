@@ -3,7 +3,7 @@
    dc/sound/stream.h
    Copyright (C) 2002, 2004 Megan Potter
    Copyright (C) 2020 Lawrence Sebald
-   Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024 Ruslan Rostovtsev
 
 */
 
@@ -176,6 +176,19 @@ void snd_stream_prefill(snd_stream_hnd_t hnd);
     \retval 0               On success.
 */
 int snd_stream_init(void);
+
+/** \brief  Initialize the stream system only for mono
+
+    The same as \ref snd_stream_init but it can either reduce or not allocate
+    the buffer for splitting the stereo stream at all.
+
+    \param  channels        Max channels for any streams.
+    \param  buffer_size     Max buffer size for any streams.
+
+    \retval -1              On failure.
+    \retval 0               On success.
+*/
+int snd_stream_init_ex(int channels, size_t buffer_size);
 
 /** \brief  Shut down the stream system.
 
