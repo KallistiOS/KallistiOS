@@ -581,20 +581,22 @@ int cdrom_stream_request(void *buffer, size_t size, int block) {
         dma_in_progress = 1;
         dma_blocking = block;
 
+        if(block == 0) {
+            dma_thd = thd_current;
+            if(irq_inside_int()) {
+                dma_thd = (kthread_t *)0xFFFFFFFF;
+            }
+        }
         rs = syscall_gdrom_dma_transfer(cmd_hnd, params);
 
         if(rs < 0) {
             dma_in_progress = 0;
             dma_blocking = 0;
+            dma_thd = NULL;
             mutex_unlock(&_g1_ata_mutex);
             return ERR_SYS;
         }
         if(block == 0) {
-            dma_thd = thd_current;
-
-            if(irq_inside_int()) {
-                dma_thd = (kthread_t *)0xFFFFFFFF;
-            }
             return rv;
         }
         if(stream_mode == CDROM_READ_DMA_IRQ) {
