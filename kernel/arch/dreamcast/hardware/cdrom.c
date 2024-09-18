@@ -96,7 +96,7 @@ static inline gdc_cmd_hnd_t cdrom_req_cmd(int cmd, void *param) {
     /* Submit the command */
     for(int n = 0; n < 10; ++n) {
         hnd = syscall_gdrom_send_command(cmd, param);
-        if (hnd != 0) {
+        if(hnd != 0) {
             break;
         }
         syscall_gdrom_exec_server();
@@ -175,7 +175,7 @@ int cdrom_abort_cmd(uint32_t timeout) {
     int rs, rv = ERR_OK;
     uint64_t begin;
 
-    if (cmd_hnd <= 0) {
+    if(cmd_hnd <= 0) {
         return ERR_NO_ACTIVE;
     }
 
@@ -208,14 +208,14 @@ int cdrom_abort_cmd(uint32_t timeout) {
     stream_mode = -1;
     mutex_unlock(&_g1_ata_mutex);
 
-    if (dma_in_progress) {
+    if(dma_in_progress) {
         dma_in_progress = 0;
-        if (dma_blocking) {
+        if(dma_blocking) {
             dma_blocking = 0;
             sem_signal(&dma_done);
         }
     }
-    if (stream_cb) {
+    if(stream_cb) {
         cdrom_stream_set_callback(0, NULL);
     }
     return rv;
@@ -361,7 +361,7 @@ static int cdrom_read_sectors_dma_irq(void *params) {
 
     hnd = cdrom_req_cmd(CMD_DMAREAD, params);
 
-    if (hnd <= 0) {
+    if(hnd <= 0) {
         dma_in_progress = 0;
         dma_blocking = 0;
         mutex_unlock(&_g1_ata_mutex);
@@ -373,11 +373,11 @@ static int cdrom_read_sectors_dma_irq(void *params) {
         syscall_gdrom_exec_server();
         rs = syscall_gdrom_check_command(hnd, status);
 
-        if (rs == PROCESSING) {
+        if(rs == PROCESSING) {
             sem_wait(&dma_done);
             continue;
         }
-        if (rs != BUSY) {
+        if(rs != BUSY) {
             break;
         }
 
@@ -387,7 +387,7 @@ static int cdrom_read_sectors_dma_irq(void *params) {
     cmd_hnd = 0;
     mutex_unlock(&_g1_ata_mutex);
 
-    if (rs == NO_ACTIVE || rs == COMPLETED) {
+    if(rs == NO_ACTIVE || rs == COMPLETED) {
         return ERR_OK;
     }
 
@@ -417,19 +417,19 @@ int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode) {
 
     /* The DMA mode blocks the thread it is called in by the way we execute
        gd syscalls. It does however allow for other threads to run. */
-    if (mode >= CDROM_READ_DMA) {
+    if(mode >= CDROM_READ_DMA) {
 
         params.buffer = (void *)(buf_addr & MEM_AREA_CACHE_MASK);
 
-        if (buf_addr & 0x1f) {
+        if(buf_addr & 0x1f) {
             dbglog(DBG_ERROR, "cdrom_read_sectors_ex: Unaligned memory for DMA (32-byte).\n");
             return ERR_SYS;
         }
-        if ((buf_addr >> 24) == 0x0c) {
+        if((buf_addr >> 24) == 0x0c) {
             dcache_inval_range((uintptr_t)params.buffer, cnt * cur_sector_size);
         }
 
-        if (mode == CDROM_READ_DMA_IRQ) {
+        if(mode == CDROM_READ_DMA_IRQ) {
             rv = cdrom_read_sectors_dma_irq(&params);
         }
         else {
@@ -440,7 +440,7 @@ int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode) {
 
         params.buffer = buffer;
 
-        if (buf_addr & 0x01) {
+        if(buf_addr & 0x01) {
             dbglog(DBG_ERROR, "cdrom_read_sectors_ex: Unaligned memory for PIO (2-byte).\n");
             return ERR_SYS;
         }
@@ -464,18 +464,18 @@ int cdrom_stream_start(int sector, int cnt, int mode) {
     params.sec = sector;
     params.num = cnt;
 
-    if (cmd_hnd > 0) {
+    if(cmd_hnd > 0) {
         cdrom_stream_stop();
     }
 
-    if (mode >= CDROM_READ_DMA) {
+    if(mode >= CDROM_READ_DMA) {
         rv = cdrom_exec_cmd(CMD_DMAREAD_STREAM, &params);
     }
-    else if (mode == CDROM_READ_PIO) {
+    else if(mode == CDROM_READ_PIO) {
         rv = cdrom_exec_cmd(CMD_PIOREAD_STREAM, &params);
     }
 
-    if (rv == ERR_OK) {
+    if(rv == ERR_OK) {
         stream_mode = mode;
     }
     return rv;
@@ -491,10 +491,10 @@ int cdrom_stream_stop(void) {
         0  /* ATA status waiting */
     };
 
-    if (cmd_hnd <= 0) {
+    if(cmd_hnd <= 0) {
         return rv;
     }
-    if (dma_in_progress) {
+    if(dma_in_progress) {
         mutex_unlock(&_g1_ata_mutex);
         return cdrom_abort_cmd(1000);
     }
@@ -504,33 +504,33 @@ int cdrom_stream_stop(void) {
         syscall_gdrom_exec_server();
         rs = syscall_gdrom_check_command(cmd_hnd, status);
 
-        if (rs < 0) {
+        if(rs < 0) {
             rv = ERR_SYS;
             break;
         }
-        else if (rs == COMPLETED || rs == NO_ACTIVE) {
+        else if(rs == COMPLETED || rs == NO_ACTIVE) {
             dbglog(DBG_DEBUG, "cdrom_stream_stop: complete.\n");
             break;
         }
-        else if (rs == STREAMING) {
+        else if(rs == STREAMING) {
             mutex_unlock(&_g1_ata_mutex);
             return cdrom_abort_cmd(1000);
         }
         thd_pass();
-    } while (1);
+    } while(1);
 
     cmd_hnd = 0;
     stream_mode = -1;
     mutex_unlock(&_g1_ata_mutex);
 
-    if (dma_in_progress) {
+    if(dma_in_progress) {
         dma_in_progress = 0;
-        if (dma_blocking) {
+        if(dma_blocking) {
             dma_blocking = 0;
             sem_signal(&dma_done);
         }
     }
-    if (stream_cb) {
+    if(stream_cb) {
         cdrom_stream_set_callback(0, NULL);
     }
     return rv;
@@ -547,27 +547,27 @@ int cdrom_stream_request(void *buffer, size_t size, int block) {
         0  /* ATA status waiting */
     };
 
-    if (cmd_hnd <= 0) {
+    if(cmd_hnd <= 0) {
         return ERR_NO_ACTIVE;
     }
-    if (dma_in_progress) {
+    if(dma_in_progress) {
         dbglog(DBG_ERROR, "cdrom_stream_request: Previous DMA request is in progress.\n");
         return ERR_SYS;
     }
 
-    if (stream_mode >= CDROM_READ_DMA) {
+    if(stream_mode >= CDROM_READ_DMA) {
         params[0] = ((uintptr_t)buffer) & MEM_AREA_CACHE_MASK;
-        if (params[0] & 0x1f) {
+        if(params[0] & 0x1f) {
             dbglog(DBG_ERROR, "cdrom_stream_request: Unaligned memory for DMA (32-byte).\n");
             return ERR_SYS;
         }
-        if ((params[0] >> 24) == 0x0c) {
+        if((params[0] >> 24) == 0x0c) {
             dcache_inval_range((uintptr_t)buffer, size);
         }
     }
     else if(stream_mode == CDROM_READ_PIO) {
         params[0] = (uintptr_t)buffer;
-        if (params[0] & 0x01) {
+        if(params[0] & 0x01) {
             dbglog(DBG_ERROR, "cdrom_stream_request: Unaligned memory for PIO (2-byte).\n");
             return ERR_SYS;
         }
@@ -576,28 +576,28 @@ int cdrom_stream_request(void *buffer, size_t size, int block) {
     params[1] = size;
     mutex_lock(&_g1_ata_mutex);
 
-    if (stream_mode >= CDROM_READ_DMA) {
+    if(stream_mode >= CDROM_READ_DMA) {
 
         dma_in_progress = 1;
         dma_blocking = block;
 
         rs = syscall_gdrom_dma_transfer(cmd_hnd, params);
 
-        if (rs < 0) {
+        if(rs < 0) {
             dma_in_progress = 0;
             dma_blocking = 0;
             mutex_unlock(&_g1_ata_mutex);
             return ERR_SYS;
         }
-        if (block == 0) {
+        if(block == 0) {
             dma_thd = thd_current;
 
-            if (irq_inside_int()) {
+            if(irq_inside_int()) {
                 dma_thd = (kthread_t *)0xFFFFFFFF;
             }
             return rv;
         }
-        if (stream_mode == CDROM_READ_DMA_IRQ) {
+        if(stream_mode == CDROM_READ_DMA_IRQ) {
             sem_wait(&dma_done);
         }
 
@@ -605,7 +605,7 @@ int cdrom_stream_request(void *buffer, size_t size, int block) {
             syscall_gdrom_exec_server();
             rs = syscall_gdrom_check_command(cmd_hnd, status);
 
-            if (rs < 0) {
+            if(rs < 0) {
                 rv = ERR_SYS;
                 break;
             }
@@ -613,18 +613,18 @@ int cdrom_stream_request(void *buffer, size_t size, int block) {
                 cmd_hnd = 0;
                 break;
             }
-            else if (syscall_gdrom_dma_check(cmd_hnd, &check_size) == 0) {
+            else if(syscall_gdrom_dma_check(cmd_hnd, &check_size) == 0) {
                 break;
             }
             thd_pass();
 
-        } while (1);
+        } while(1);
     }
     else if(stream_mode == CDROM_READ_PIO) {
 
         rs = syscall_gdrom_pio_transfer(cmd_hnd, params);
 
-        if (rs < 0) {
+        if(rs < 0) {
             mutex_unlock(&_g1_ata_mutex);
             return ERR_SYS;
         }
@@ -632,7 +632,7 @@ int cdrom_stream_request(void *buffer, size_t size, int block) {
             syscall_gdrom_exec_server();
             rs = syscall_gdrom_check_command(cmd_hnd, status);
 
-            if (rs < 0) {
+            if(rs < 0) {
                 rv = ERR_SYS;
                 break;
             }
@@ -640,14 +640,14 @@ int cdrom_stream_request(void *buffer, size_t size, int block) {
                 cmd_hnd = 0;
                 break;
             }
-            else if (syscall_gdrom_pio_check(cmd_hnd, &check_size) == 0) {
-                if (check_size == 0 && stream_cb) {
+            else if(syscall_gdrom_pio_check(cmd_hnd, &check_size) == 0) {
+                if(check_size == 0 && stream_cb) {
                     stream_cb(stream_cb_param);
                 }
                 break;
             }
             thd_pass();
-        } while (1);
+        } while(1);
     }
 
     mutex_unlock(&_g1_ata_mutex);
@@ -658,21 +658,21 @@ int cdrom_stream_progress(size_t *size) {
     int rv = 0;
     size_t check_size = 0;
 
-    if (cmd_hnd <= 0) {
-        if (size) {
+    if(cmd_hnd <= 0) {
+        if(size) {
             *size = check_size;
         }
         return rv;
     }
 
-    if (stream_mode >= CDROM_READ_DMA) {
+    if(stream_mode >= CDROM_READ_DMA) {
         rv = syscall_gdrom_dma_check(cmd_hnd, &check_size);
     }
-    else if (stream_mode == CDROM_READ_PIO) {
+    else if(stream_mode == CDROM_READ_PIO) {
         rv = syscall_gdrom_pio_check(cmd_hnd, &check_size);
     }
 
-    if (size) {
+    if(size) {
         *size = check_size;
     }
     return rv;
@@ -781,7 +781,7 @@ static void g1_dma_irq_hnd(uint32_t code, void *data) {
     (void)code;
     (void)data;
 
-    if (dma_in_progress) {
+    if(dma_in_progress) {
         syscall_gdrom_dma_callback((uintptr_t)stream_cb, stream_cb_param);
         dma_in_progress = 0;
 
@@ -795,7 +795,7 @@ static void g1_dma_irq_hnd(uint32_t code, void *data) {
             thd_schedule(1, 0);
         }
     }
-    else if (cmd_hnd > 0) {
+    else if(cmd_hnd > 0) {
         syscall_gdrom_dma_callback(0, NULL);
     }
 }
@@ -814,7 +814,7 @@ static void unlock_dma_memory(void) {
             ++count;
         }
     }
-    if (count) {
+    if(count) {
         icache_flush_range(0x0c000000 | MEM_AREA_P1_BASE, size_loc);
     }
     *prot_reg = G1_DMA_UNLOCK_ALLMEM;
