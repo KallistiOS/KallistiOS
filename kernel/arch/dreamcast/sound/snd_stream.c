@@ -375,7 +375,7 @@ int snd_stream_init(void) {
 int snd_stream_init_ex(int channels, size_t buffer_size) {
     max_channels = channels;
 
-    if (channels == 2) {
+    if(channels == 2) {
         /* Create stereo separation buffers */
         sep_buffer[0] = memalign(32, buffer_size);
         sep_buffer[1] = sep_buffer[0] + (buffer_size / 8);
@@ -462,7 +462,7 @@ void snd_stream_destroy(snd_stream_hnd_t hnd) {
     snd_stream_stop(hnd);
     snd_sfx_chn_free(streams[hnd].ch[0]);
 
-    if (max_channels == 2) {
+    if(max_channels == 2) {
         snd_sfx_chn_free(streams[hnd].ch[1]);
     }
 
@@ -708,7 +708,7 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
         needed_bytes = (int)stream->buffer_size / stream->channels;
     }
 
-    if (!stream->initted || !stream->get_data) {
+    if(!stream->initted || !stream->get_data) {
         return -2;
     }
     data = stream->get_data(hnd, needed_bytes * stream->channels, &got_bytes);

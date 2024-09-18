@@ -94,7 +94,6 @@ void spu_memload_sq(uintptr_t dst, void *src_void, size_t length) {
 }
 
 void spu_memload_dma(uintptr_t dst, void *src_void, size_t length) {
-
     uint8_t *src = (uint8_t *)src_void;
     size_t aligned_len;
 
@@ -108,8 +107,8 @@ void spu_memload_dma(uintptr_t dst, void *src_void, size_t length) {
     length &= 31;
 
     do {
-        if (spu_dma_transfer(src_void, dst, aligned_len, 1, NULL, NULL) < 0) {
-            if (errno == EINPROGRESS) {
+        if(spu_dma_transfer(src_void, dst, aligned_len, 1, NULL, NULL) < 0) {
+            if(errno == EINPROGRESS) {
                 thd_pass();
                 continue;
             }
