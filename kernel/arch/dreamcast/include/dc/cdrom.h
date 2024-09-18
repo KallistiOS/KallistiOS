@@ -188,9 +188,15 @@ __BEGIN_DECLS
     cdrom_read_sectors_ex.
     @{
 */
-#define CDROM_READ_PIO 0        /**< \brief Read sector(s) in PIO mode */
-#define CDROM_READ_DMA 1        /**< \brief Read sector(s) in DMA mode */
-#define CDROM_READ_DMA_IRQ 2    /**< \brief Read sector(s) in DMA + IRQ mode */
+/**< \brief Read sector(s) in PIO mode with polling syscalls */
+#define CDROM_READ_PIO 0
+/**< \brief Read sector(s) in DMA mode with polling syscalls */
+#define CDROM_READ_DMA 1
+/**< \brief Read sector(s) in DMA mode, but instead of polling syscalls
+ * and passing the current thread, a DMA IRQ with a semaphore wait is used.
+ * This very usable for a DMA stream transfers and DMA multi-sector readings.
+ */
+#define CDROM_READ_DMA_IRQ 2
 /** @} */
 
 /** \defgroup cd_status_values      Status Values

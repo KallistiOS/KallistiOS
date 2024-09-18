@@ -580,11 +580,6 @@ int cdrom_stream_request(void *buffer, size_t size, int block) {
 
         dma_in_progress = 1;
         dma_blocking = block;
-        dma_thd = thd_current;
-
-        if (irq_inside_int()) {
-            dma_thd = (kthread_t *)0xFFFFFFFF;
-        }
 
         rs = syscall_gdrom_dma_transfer(cmd_hnd, params);
 
@@ -595,9 +590,16 @@ int cdrom_stream_request(void *buffer, size_t size, int block) {
             return ERR_SYS;
         }
         if (block == 0) {
+            dma_thd = thd_current;
+
+            if (irq_inside_int()) {
+                dma_thd = (kthread_t *)0xFFFFFFFF;
+            }
             return rv;
         }
-        sem_wait(&dma_done);
+        if (stream_mode == CDROM_READ_DMA_IRQ) {
+            sem_wait(&dma_done);
+        }
 
         do {
             syscall_gdrom_exec_server();

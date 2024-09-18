@@ -58,7 +58,7 @@ static int cd_stream_test(uint32_t lba, uint8_t *buffer, size_t size, int mode) 
     int rs;
     size_t cur_size = 0;
     size_t cb_count = 0;
-    char *stream_name = (mode == CDROM_READ_DMA ? "DMA" : "PIO");
+    char *stream_name = (mode == CDROM_READ_PIO ? "PIO" : "DMA");
 
     dbglog(DBG_DEBUG, "Start %s stream.\n", stream_name);
     rs = cdrom_stream_start(lba, size / 2048, mode);
@@ -164,7 +164,7 @@ int main(int argc, char *argv[]) {
 
     memset(dma_buf, 0xff, BUFFER_SIZE);
     dcache_flush_range((uintptr_t)dma_buf, BUFFER_SIZE);
-    rs = cd_stream_test(lba, dma_buf, BUFFER_SIZE, CDROM_READ_DMA);
+    rs = cd_stream_test(lba, dma_buf, BUFFER_SIZE, CDROM_READ_DMA_IRQ);
 
     if (rs != ERR_OK) {
         dbglog(DBG_ERROR, "DMA stream test failed.\n");
