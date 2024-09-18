@@ -1797,6 +1797,92 @@ ret_success:
     return 0;
 }
 
+static int net_tcp_getpeername(net_socket_t *hnd, struct sockaddr *name, socklen_t *name_len) {
+    struct tcp_sock *sock;
+    struct sockaddr_in realaddr;
+    struct sockaddr_in6 realaddr6;
+
+    if(!name || !name_len) {
+        errno = EFAULT;
+        return -1;
+    }
+
+    if(irq_inside_int()) {
+        if(rwsem_read_trylock(&tcp_sem)) {
+            errno = EWOULDBLOCK;
+            return -1;
+        }
+    } else {
+        rwsem_read_lock(&tcp_sem);
+    }
+
+    if(!(sock = (struct tcp_sock *)hnd->data)) {
+        rwsem_read_unlock(&tcp_sem);
+        errno = EBADF;
+        return -1;
+    }
+
+    if(irq_inside_int()) {
+        if(mutex_trylock(&sock->mutex)) {
+            rwsem_read_unlock(&tcp_sem);
+            errno = EWOULDBLOCK;
+            return -1;
+        }
+    } else {
+        mutex_lock(&sock->mutex);
+    }
+
+    if(sock->state == TCP_STATE_CLOSED) {
+        mutex_unlock(&sock->mutex);
+        rwsem_read_unlock(&tcp_sem);
+        errno = ENOTCONN;
+        return -1;
+    }
+
+    if(sock->domain == AF_INET) {
+        memset(&realaddr, 0, sizeof(struct sockaddr_in));
+        realaddr.sin_family = AF_INET;
+        realaddr.sin_addr.s_addr =
+            sock->remote_addr.sin6_addr.__s6_addr.__s6_addr32[3];
+        realaddr.sin_port = sock->remote_addr.sin6_port;
+
+        if(*name_len <= sizeof(struct sockaddr_in)) {
+            /* Passed in a structure not big enough so truncate*/
+            memcpy(name, &realaddr, *name_len);
+            errno = ENOBUFS;
+        } else {
+            memcpy(name, &realaddr, sizeof(struct sockaddr_in));
+            *name_len = sizeof(struct sockaddr_in);
+            goto ret_success;
+        }
+    } else if(sock->domain == AF_INET6) {
+        memset(&realaddr6, 0, sizeof(struct sockaddr_in6));
+        realaddr6.sin6_family = AF_INET6;
+        realaddr6.sin6_addr = sock->remote_addr.sin6_addr;
+        realaddr6.sin6_port = sock->remote_addr.sin6_port;
+
+        if(*name_len <= sizeof(struct sockaddr_in6)) {
+            /* Passed in a structure not big enough */
+            memcpy(name, &realaddr6, *name_len);
+            errno = ENOBUFS;
+        } else {
+            memcpy(name, &realaddr6, sizeof(struct sockaddr_in6));
+            *name_len = sizeof(struct sockaddr_in6);
+            goto ret_success;
+        }
+    }
+
+    mutex_unlock(&sock->mutex);
+    rwsem_read_unlock(&tcp_sem);
+    errno = ENOTSOCK;
+    return -1;
+
+ret_success:
+    mutex_unlock(&sock->mutex);
+    rwsem_read_unlock(&tcp_sem);
+    return 0;
+}
+
 static int net_tcp_fcntl(net_socket_t *hnd, int cmd, va_list ap) {
 
     struct tcp_sock *sock;
@@ -2871,6 +2957,7 @@ static fs_socket_proto_t proto = {
     net_tcp_getsockopt,                 /* getsockopt */
     net_tcp_setsockopt,                 /* setsockopt */
     net_tcp_getsockname,                /* getsockname */
+    net_tcp_getpeername,                /* getpeername */
     net_tcp_fcntl,                      /* fcntl */
     net_tcp_poll                        /* poll */
 };

@@ -387,6 +387,38 @@ int socket(int domain, int type, int protocol);
 */
 int getsockname(int socket, struct sockaddr *name, socklen_t *name_len);
 
+/**
+    \brief  Get the name of the connected peer socket.
+
+    This function retrieves the address of the peer connected to the socket
+    specified by the socket descriptor. The address is returned in the buffer
+    pointed to by the name parameter, and the actual length of the address is
+    returned in the name_len parameter.
+
+    \param  socket          A socket that is already connected to a peer.
+    \param  name            A pointer to a sockaddr structure where the peer 
+                            address will be stored.
+    \param  name_len        A pointer to a socklen_t variable that specifies the 
+                            length of the address structure.
+                            On return, it will contain the actual size of the 
+                            address returned.
+
+    \retval 0               On success.
+    \retval -1              On error, sets errno as appropriate, such as:
+                            - EBADF: The socket argument is not a valid file 
+                                     descriptor.
+                            - EFAULT: The addr argument points to memory not in a 
+                                      valid part of the process address space.
+                            - ENOBUFS: Insufficient resources were available in the 
+                                       system to perform the operation.
+                            - ENOTCONN: The socket is not connected.
+                            - ENOTSOCK: The socket argument does not refer to a 
+                                        socket.
+                            - EOPNOTSUPP: The socket does not support getpeername.
+*/
+int getpeername(int socket, struct sockaddr *__RESTRICT name, 
+                socklen_t *__RESTRICT name_len);
+
 /** \brief  Get socket options.
 
     This function retrieves options associated with a socket. This function
