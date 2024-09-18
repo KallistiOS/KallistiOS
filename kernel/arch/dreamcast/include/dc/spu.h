@@ -47,7 +47,7 @@ __BEGIN_DECLS
 void spu_memload(uintptr_t to, void *from, size_t length);
 
 
-/** \brief  Copy a block of data to sound RAM.
+/** \brief  Copy a block of data to sound RAM by using the Store Queues.
 
     This function acts much like memcpy() but copies to the sound RAM area
     by using the Store Queues.
@@ -60,10 +60,10 @@ void spu_memload(uintptr_t to, void *from, size_t length);
 */
 void spu_memload_sq(uintptr_t to, void *from, size_t length);
 
-/** \brief  Copy a block of data to sound RAM.
+/** \brief  Copy a block of data to sound RAM by using DMA (or SQ on fails).
 
     This function acts much like memcpy() but copies to the sound RAM area
-    by using the DMA.
+    by using the DMA. If DMA fails, then will be used the Store Queues.
 
     \param  to              The offset in sound RAM to copy to. Do not include
                             the 0xA0800000 part, it is implied.

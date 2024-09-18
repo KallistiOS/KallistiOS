@@ -452,13 +452,12 @@ void snd_stream_destroy(snd_stream_hnd_t hnd) {
     filter_t *c, *n;
 
     assert(hnd >= 0 && hnd < SND_STREAM_MAX);
-    mutex_lock_timed(&stream_mutex, LOCK_TIMEOUT_MS);
 
     if(!streams[hnd].initted) {
-        mutex_unlock(&stream_mutex);
         return;
     }
 
+    mutex_lock_timed(&stream_mutex, LOCK_TIMEOUT_MS);
     snd_stream_stop(hnd);
     snd_sfx_chn_free(streams[hnd].ch[0]);
 

@@ -120,6 +120,7 @@ flashrom_get_region
 # SPU
 spu_memload
 spu_memload_sq
+spu_memload_dma
 spu_memread
 spu_memset
 spu_memset_sq

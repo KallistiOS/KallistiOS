@@ -97,6 +97,11 @@ void spu_memload_dma(uintptr_t dst, void *src_void, size_t length) {
     uint8_t *src = (uint8_t *)src_void;
     size_t aligned_len;
 
+    if(((uintptr_t)src_void) & 31) {
+        spu_memload_sq(dst, src_void, length);
+        return;
+    }
+
     /* Round up to the nearest multiple of 4 */
     if(length & 3) {
         length = (length + 4) & ~3;
