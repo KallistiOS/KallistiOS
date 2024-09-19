@@ -111,8 +111,6 @@ static mutex_t stream_mutex = MUTEX_INITIALIZER;
 
 static int max_channels = 2;
 
-#define LOCK_TIMEOUT_MS 500
-
 /* Check an incoming handle */
 #define CHECK_HND(x) do { \
         assert( (x) >= 0 && (x) < SND_STREAM_MAX ); \
@@ -370,7 +368,7 @@ void snd_stream_prefill(snd_stream_hnd_t hnd) {
     if(!stream->get_data && !stream->req_data) {
         return;
     }
-    mutex_lock_timed(&stream_mutex, LOCK_TIMEOUT_MS);
+    mutex_lock(&stream_mutex);
 
     if(stream->req_data) {
         filled = stream->req_data(hnd, stream->spu_ram_sch[0],
@@ -476,7 +474,7 @@ void snd_stream_destroy(snd_stream_hnd_t hnd) {
         return;
     }
 
-    mutex_lock_timed(&stream_mutex, LOCK_TIMEOUT_MS);
+    mutex_lock(&stream_mutex);
     snd_stream_stop(hnd);
     snd_sfx_chn_free(streams[hnd].ch[0]);
 
@@ -778,7 +776,7 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
     }
 
     if(stream->channels == 2) {
-        mutex_lock_timed(&stream_mutex, LOCK_TIMEOUT_MS);
+        mutex_lock(&stream_mutex);
 
         if(streams[hnd].bitsize == 16) {
             if((uintptr_t)data & 31) {
@@ -817,7 +815,7 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
         }
         dcache_purge_range((uintptr_t)first_dma_buf, needed_bytes);
 
-        mutex_lock_timed(&stream_mutex, LOCK_TIMEOUT_MS);
+        mutex_lock(&stream_mutex);
         stream->poll_thd = thd_current;
 
         spu_dma_transfer(first_dma_buf,

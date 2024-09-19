@@ -120,6 +120,7 @@ snd_sfx_stop
 snd_sfx_chn_alloc
 snd_sfx_chn_free
 snd_stream_set_callback
+snd_stream_set_callback_direct
 snd_stream_filter_add
 snd_stream_filter_remove
 snd_stream_init
