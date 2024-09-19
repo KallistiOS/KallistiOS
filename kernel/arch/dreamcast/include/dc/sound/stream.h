@@ -71,6 +71,21 @@ typedef int snd_stream_hnd_t;
 typedef void *(*snd_stream_callback_t)(snd_stream_hnd_t hnd, int smp_req,
                                        int *smp_recv);
 
+/** \brief  Direct stream data transfer callback type.
+
+    Functions for providing stream data will be of this type, and can be
+    registered with snd_stream_set_callback_direct().
+
+    \param  hnd             The stream handle being referred to.
+    \param  left            Left channel buffer address on AICA side.
+    \param  right           Right channel buffer address on AICA side.
+    \param  size_req        Requested size for each channel.
+    \retval -1              On failure.
+    \retval size_recv       On success, received size.
+*/
+typedef size_t (*snd_stream_callback_direct_t)(snd_stream_hnd_t hnd,
+    uintptr_t left,  uintptr_t right,  size_t size_req);
+
 /** \brief  Set the callback for a given stream.
 
     This function sets the get data callback function for a given stream,
@@ -80,6 +95,16 @@ typedef void *(*snd_stream_callback_t)(snd_stream_hnd_t hnd, int smp_req,
     \param  cb              A pointer to the callback function.
 */
 void snd_stream_set_callback(snd_stream_hnd_t hnd, snd_stream_callback_t cb);
+
+/** \brief  Set the callback for a given stream with direct transfer.
+
+    This function sets the get data callback function for a given stream,
+    overwriting any old callback that may have been in place.
+
+    \param  hnd             The stream handle for the callback.
+    \param  cb              A pointer to the callback function.
+*/
+void snd_stream_set_callback_direct(snd_stream_hnd_t hnd, snd_stream_callback_direct_t cb);
 
 /** \brief  Set the user data for a given stream.
 

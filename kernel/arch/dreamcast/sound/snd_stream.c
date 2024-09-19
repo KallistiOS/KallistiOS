@@ -67,6 +67,10 @@ typedef struct strchan {
        another buffer of output data. */
     snd_stream_callback_t get_data;
 
+    /* "Request data" callback; we'll call this any time we want to fill
+       buffers of AICA channels directly. */
+    snd_stream_callback_direct_t req_data;
+
     /* Our list of filter callback functions for this stream */
     TAILQ_HEAD(filterlist, filter) filters;
 
@@ -143,6 +147,11 @@ static inline size_t bytes_to_samples(snd_stream_hnd_t hnd, size_t bytes) {
 void snd_stream_set_callback(snd_stream_hnd_t hnd, snd_stream_callback_t cb) {
     CHECK_HND(hnd);
     streams[hnd].get_data = cb;
+}
+
+void snd_stream_set_callback_direct(snd_stream_hnd_t hnd, snd_stream_callback_direct_t cb) {
+    CHECK_HND(hnd);
+    streams[hnd].req_data = cb;
 }
 
 void snd_stream_set_userdata(snd_stream_hnd_t hnd, void *d) {
@@ -352,18 +361,28 @@ static void snd_stream_prefill_part(snd_stream_hnd_t hnd, uint32_t offset) {
 
 /* Prefill buffers -- implicitly called by snd_stream_start() */
 void snd_stream_prefill(snd_stream_hnd_t hnd) {
-    CHECK_HND(hnd);
+    size_t filled = 0;
+    strchan_t *stream;
 
-    if(!streams[hnd].get_data) {
+    CHECK_HND(hnd);
+    stream = &streams[hnd];
+
+    if(!stream->get_data && !stream->req_data) {
         return;
     }
-
     mutex_lock_timed(&stream_mutex, LOCK_TIMEOUT_MS);
-    snd_stream_prefill_part(hnd, 0);
-    snd_stream_prefill_part(hnd, streams[hnd].buffer_size / 2);
+
+    if(stream->req_data) {
+        filled = stream->req_data(hnd, stream->spu_ram_sch[0],
+            stream->spu_ram_sch[1], stream->buffer_size);
+    }
+    if(filled <= 0 && stream->get_data) {
+        snd_stream_prefill_part(hnd, 0);
+        snd_stream_prefill_part(hnd, stream->buffer_size / 2);
+    }
 
     /* Start playing from the beginning */
-    streams[hnd].last_write_pos = 0;
+    stream->last_write_pos = 0;
     mutex_unlock(&stream_mutex);
 }
 
@@ -517,7 +536,9 @@ static void snd_stream_start_type(snd_stream_hnd_t hnd, uint32_t type, uint32_t 
 
     CHECK_HND(hnd);
 
-    if(!streams[hnd].get_data) return;
+    if(!streams[hnd].get_data && !streams[hnd].req_data) {
+        return;
+    }
 
     streams[hnd].type = type;
     streams[hnd].channels = st ? 2 : 1;
@@ -616,7 +637,9 @@ void snd_stream_stop(snd_stream_hnd_t hnd) {
 
     CHECK_HND(hnd);
 
-    if(!streams[hnd].get_data) return;
+    if(!streams[hnd].get_data && !streams[hnd].req_data) {
+        return;
+    }
 
     /* Stop stream */
     /* Channel 0 */
@@ -657,10 +680,9 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
     strchan_t *stream;
 
     assert(hnd >= 0 && hnd < SND_STREAM_MAX);
-
     stream = &streams[hnd];
 
-    if(!stream->initted || !stream->get_data) {
+    if(!stream->initted || (!stream->get_data && !stream->req_data)) {
         return -1;
     }
 
@@ -707,9 +729,30 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
         needed_bytes = (int)stream->buffer_size / stream->channels;
     }
 
-    if(!stream->initted || !stream->get_data) {
+    if(!stream->initted) {
         return -2;
     }
+
+    write_pos = samples_to_bytes(hnd, stream->last_write_pos);
+
+    if(stream->req_data) {
+        got_bytes = stream->req_data(hnd,
+            stream->spu_ram_sch[0] + write_pos,
+            stream->channels == 2 ? (stream->spu_ram_sch[1] + write_pos) : 0,
+            needed_bytes);
+
+        if(got_bytes) {
+            if(got_bytes < needed_bytes) {
+                needed_bytes = got_bytes;
+            }
+            needed_samples = bytes_to_samples(hnd, needed_bytes);
+            goto stream_poll_exit;
+        }
+    }
+    if(!stream->get_data) {
+        return -3;
+    }
+
     data = stream->get_data(hnd, needed_bytes * stream->channels, &got_bytes);
     process_filters(hnd, &data, &got_bytes);
 
@@ -723,7 +766,6 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
     }
 
     needed_samples = bytes_to_samples(hnd, needed_bytes);
-    write_pos = samples_to_bytes(hnd, stream->last_write_pos);
 
     if(data == NULL) {
         /* Fill with zeros */
@@ -782,6 +824,7 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
             stream->spu_ram_sch[0] + write_pos, needed_bytes, 0, dma_done, (void *)stream);
     }
 
+stream_poll_exit:
     stream->last_write_pos += needed_samples;
     write_pos = (uint32_t)bytes_to_samples(hnd, stream->buffer_size);
 
