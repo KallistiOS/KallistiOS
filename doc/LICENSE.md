@@ -1,6 +1,7 @@
 # Licensing
 
 ## KallistiOS
+
 KallistiOS is licensed under the terms of the "new" BSD license. We are 
 calling our version of this license with the KOS copyright notice the **KOS
 License**. For all files that are copyrighted by the authors of KallistiOS
@@ -23,17 +24,22 @@ that this text is attached to them:
 
 Please read [LICENSE.KOS](license/LICENSE.KOS) for the full license text.
 
-## Addons, Ports, and Utils
+## Addons and Utils
+
 Some of the software included with KallistiOS is not copyrighted by us, nor
 is it part of the codebase of KallistiOS. Most of that code will be found
 within the "utils" directory and the "addons" directory. Licenses on these
 pieces vary; please see the source of the program in question to be sure.
 
-Additionally please note that the kos-ports repository provides ports of
-libraries with a variety of licenses. For each, the applicable license
-is noted in its Makefile as the LICENSE define.
+### kos-ports
+
+The kos-ports repository provides ports of libraries with a variety of
+licenses. For each, the applicable license is noted in its Makefile as
+the LICENSE define. This can also be verified with the original authors.
+Please review and be aware of these licenses if you wish to use kos-ports.
 
 ## More licensing information
+
 If there is ever a question or you want to ask permission to do something
 else with it, please contact the authors and we'll see how we can accommodate
 you.

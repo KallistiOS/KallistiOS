@@ -6,6 +6,7 @@
 
 This section is NOT legal advice. It's just a help to people who are
 having trouble with the myriad free software / "open source" licenses.
+If you need legal advice, we suggest contacting a professional.
 
 ### What is the new BSD/KOS license? What exactly do its terms mean? Can I make a proprietary / "closed source" program using KOS? Can I distribute "forked" versions of KOS?
 
@@ -26,9 +27,23 @@ with "I can rip and use this code with no credit". This is absolutely
 false. You may also not include the KOS code (or any other copyrighted
 code) in your program verbatim without credit and a copyright notice.
 Very small pieces are probably alright, but anything substantial must
-have something to the effect of "derived from blagh.c in KOS 1.1.x".
+have something to the effect of "derived from blagh.c in KOS 2.1.x".
 It's really a very small price to pay for this nice code library you
 can pull from freely :)
+
+### What about kos-ports licenses?
+
+The kos-ports repository provides ports of libraries with a variety of
+licenses. For each, the applicable license is noted in its Makefile as
+the LICENSE define. This can also be verified with the original authors.
+Please review and be aware of these licenses if you wish to use kos-ports.
+
+### Attribution
+
+To reiterate: THE KOS LICENSE DOES NOT ALLOW USE WITHOUT ATTRIBUTION
+In order to help facilitate this, we provide [the license text](./license/LICENSE.KOS),
+[a listing of authors](../AUTHORS), and functions `kos_get_authors` and 
+`kos_get_license` to easily access this text within your code.
 
 
 ## Operating System Basics
@@ -208,8 +223,7 @@ make sure there's a /tmp path mount for bin2o's usage.
 
 ## Memory Allocations
 
-### How can I determine how much RAM I have allocated / how much RAM my
-program is using?
+### How can I determine how much RAM I have allocated / how much RAM my program is using?
 
 This won't always be accurate, but in the kernel space you can call
 malloc_stats(). The output is sent to the kernel console.
@@ -258,8 +272,7 @@ thread primitives now in KOS this might not be as hard.
 
 ## Building
 
-### I'm having an issue building KOS; it gives me errors about not
-finding Makefiles or not finding include files.
+### I'm having an issue building KOS; it gives me errors about not finding Makefiles or not finding include files.
 
 Make sure you check the paths in environ.sh, and make sure you are
 running the script with the 'source' command (see the README). If in
@@ -276,6 +289,7 @@ previously but those should now be fixed.
 
 
 ## Debugging
+
 ### I work on a DC; I don't have a serial cable so how can I see the debug output?
 
 Use dc-load-ip with your broadband adapter or Lan adapter on the
@@ -283,8 +297,7 @@ Dreamcast. If you don't have one of those, you might look into fb_console,
 which you can redirect to either the whole frame buffer or a texture
 somewhere in VRAM.
 
-### I want to use the serial line but the pesky kernel debug output is
-getting in my way.
+### I want to use the serial line but the pesky kernel debug output is getting in my way.
 
 Use INIT_QUIET in your init flags or make sure the debugging output
 is not sent to the serial port by using dbgio_dev_select().
@@ -306,6 +319,7 @@ doesn't support any sort of tracing.
 
 
 ## kos-ports
+
 ### What is kos-ports?
 
 kos-ports is a repository of libraries that have been ported to or
