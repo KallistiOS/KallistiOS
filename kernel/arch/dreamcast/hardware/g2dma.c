@@ -197,7 +197,14 @@ int g2_dma_transfer(void *sh4, void *g2bus, size_t length, uint32_t block,
     g2_dma->dma[g2chn].sh4_addr = ((uint32_t)sh4) & MASK_ADDRESS;
     g2_dma->dma[g2chn].size = length | RESET_ENABLED;
     g2_dma->dma[g2chn].dir = dir;
-    g2_dma->dma[g2chn].trigger_select = CPU_TRIGGER | DMA_SUSPEND_ENABLED;
+
+    if(g2chn == G2_DMA_CHAN_SPU) {
+        /* Wait until fifo is empty and start. */
+        g2_dma->dma[g2chn].trigger_select = HARDWARE_TRIGGER | DMA_SUSPEND_ENABLED;
+    }
+    else {
+        g2_dma->dma[g2chn].trigger_select = CPU_TRIGGER | DMA_SUSPEND_ENABLED;
+    }
 
     /* Start the DMA transfer */
     g2_dma->dma[g2chn].enable = 1;
