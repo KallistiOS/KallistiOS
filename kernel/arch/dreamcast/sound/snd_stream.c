@@ -394,7 +394,7 @@ int snd_stream_init(void) {
 int snd_stream_init_ex(int channels, size_t buffer_size) {
     max_channels = channels;
 
-    if(channels == 2) {
+    if(channels == 2 && buffer_size > 0) {
         /* Create stereo separation buffers */
         sep_buffer[0] = memalign(32, buffer_size);
         sep_buffer[1] = sep_buffer[0] + (buffer_size / 8);
@@ -852,6 +852,27 @@ void snd_stream_volume(snd_stream_hnd_t hnd, int vol) {
 
     if(streams[hnd].channels == 2) {
         cmd->cmd_id = streams[hnd].ch[1];
+        snd_sh4_to_aica(tmp, cmd->size);
+    }
+}
+
+/* Set the panning on the streaming channels */
+void snd_stream_pan(snd_stream_hnd_t hnd, int left_pan, int right_pan) {
+    AICA_CMDSTR_CHANNEL(tmp, cmd, chan);
+
+    CHECK_HND(hnd);
+
+    cmd->cmd = AICA_CMD_CHAN;
+    cmd->timestamp = 0;
+    cmd->size = AICA_CMDSTR_CHANNEL_SIZE;
+    cmd->cmd_id = streams[hnd].ch[0];
+    chan->cmd = AICA_CH_CMD_UPDATE | AICA_CH_UPDATE_SET_PAN;
+    chan->pan = left_pan;
+    snd_sh4_to_aica(tmp, cmd->size);
+
+    if(streams[hnd].channels == 2) {
+        cmd->cmd_id = streams[hnd].ch[1];
+        chan->pan = right_pan;
         snd_sh4_to_aica(tmp, cmd->size);
     }
 }

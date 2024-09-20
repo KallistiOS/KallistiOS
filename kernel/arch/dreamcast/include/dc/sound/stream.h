@@ -347,6 +347,16 @@ int snd_stream_poll(snd_stream_hnd_t hnd);
 */
 void snd_stream_volume(snd_stream_hnd_t hnd, int vol);
 
+/** \brief  Set the panning on the stream.
+
+    This function sets the panning of the specified stream.
+
+    \param  hnd             The stream to set volume on.
+    \param  left_pan        The left panning to set. Valid values are 0-255.
+    \param  right_pan       The right panning to set. Valid values are 0-255.
+*/
+void snd_stream_pan(snd_stream_hnd_t hnd, int left_pan, int right_pan);
+
 /** @} */
 
 __END_DECLS

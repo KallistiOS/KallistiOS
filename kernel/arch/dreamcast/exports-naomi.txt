@@ -134,6 +134,7 @@ snd_stream_queue_go
 snd_stream_stop
 snd_stream_poll
 snd_stream_volume
+snd_stream_pan
 snd_stream_alloc
 snd_stream_destroy
 snd_stream_reinit
