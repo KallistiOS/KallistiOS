@@ -371,8 +371,10 @@ void snd_stream_prefill(snd_stream_hnd_t hnd) {
     mutex_lock(&stream_mutex);
 
     if(stream->req_data) {
-        filled = stream->req_data(hnd, stream->spu_ram_sch[0],
-            stream->spu_ram_sch[1], stream->buffer_size);
+        filled = stream->req_data(hnd,
+            stream->spu_ram_sch[0] | SPU_RAM_BASE,
+            stream->spu_ram_sch[1] | SPU_RAM_BASE,
+            stream->buffer_size);
     }
     if(filled <= 0 && stream->get_data) {
         snd_stream_prefill_part(hnd, 0);
@@ -735,8 +737,9 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
 
     if(stream->req_data) {
         got_bytes = stream->req_data(hnd,
-            stream->spu_ram_sch[0] + write_pos,
-            stream->channels == 2 ? (stream->spu_ram_sch[1] + write_pos) : 0,
+            (stream->spu_ram_sch[0] | SPU_RAM_BASE) + write_pos,
+            (stream->channels == 2 ?
+                ((stream->spu_ram_sch[1] | SPU_RAM_BASE) + write_pos) : 0),
             needed_bytes);
 
         if(got_bytes) {
