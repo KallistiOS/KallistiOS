@@ -64,7 +64,8 @@ __BEGIN_DECLS
 #define ASIC_EVT_PVR_TRANSDONE            0x0009  /**< \brief Transparent list completed */
 #define ASIC_EVT_PVR_TRANSMODDONE         0x000a  /**< \brief Transparent modifiers completed */
 
-#define ASIC_EVT_PVR_DMA                  0x0013  /**< \brief PVR DMA complete */
+#define ASIC_EVT_PVR_DMA                  0x000b  /**< \brief PVR DMA complete */
+#define ASIC_EVT_TA_DMA                   0x0013  /**< \brief TA DMA complete */
 #define ASIC_EVT_PVR_PTDONE               0x0015  /**< \brief Punch-thrus completed */
 
 #define ASIC_EVT_PVR_ISP_OUTOFMEM         0x0200  /**< \brief ISP out of memory */
