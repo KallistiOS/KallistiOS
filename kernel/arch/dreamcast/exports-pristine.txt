@@ -156,6 +156,7 @@ snd_poll_resp
 snd_sfx_unload_all
 snd_sfx_unload
 snd_sfx_load
+snd_sfx_load_ex
 snd_sfx_play
 snd_sfx_stop_all
 snd_sfx_play_chn
@@ -167,6 +168,7 @@ snd_stream_set_callback_direct
 snd_stream_filter_add
 snd_stream_filter_remove
 snd_stream_init
+snd_stream_init_ex
 snd_stream_shutdown
 snd_stream_queue_enable
 snd_stream_queue_disable

@@ -17,6 +17,7 @@
 #include <malloc.h>
 
 #include <sys/queue.h>
+#include <sys/ioctl.h>
 #include <kos/fs.h>
 #include <arch/irq.h>
 #include <dc/spu.h>
@@ -373,6 +374,122 @@ sfxhnd_t snd_sfx_load(const char *fn) {
     LIST_INSERT_HEAD(&snd_effects, effect, list);
 
     return (sfxhnd_t)effect;
+}
+
+sfxhnd_t snd_sfx_load_ex(const char *fn, uint32_t rate, uint16_t bitsize, uint16_t channels) {
+    file_t fd;
+    snd_effect_t *effect;
+    size_t len, chan_len;
+    uint32_t fs_rootbus_dma_ready = 0;
+    uint32_t fs_dma_len = 0;
+    uint8_t *tmp_buff = NULL;
+
+    fd = fs_open(fn, O_RDONLY);
+
+    if(fd <= FILEHND_INVALID) {
+        dbglog(DBG_ERROR, "snd_sfx_load_ex: can't open sfx %s\n", fn);
+        return SFXHND_INVALID;
+    }
+
+    len = fs_total(fd);
+
+    chan_len = len / channels;
+    effect = malloc(sizeof(snd_effect_t));
+
+    if(effect == NULL) {
+        goto err_occurred;
+    }
+
+    memset(effect, 0, sizeof(snd_effect_t));
+
+    effect->rate = rate;
+    effect->stereo = channels > 1;
+
+    switch(bitsize) {
+        case 4:
+            effect->fmt = AICA_SM_ADPCM;
+            effect->len = (len * 2) / channels;
+            break;
+        case 8:
+            effect->fmt = AICA_SM_8BIT;
+            effect->len = len / channels;
+            break;
+        case 16:
+            effect->fmt = AICA_SM_16BIT;
+            effect->len = (len / 2) / channels;
+            break;
+        default:
+            goto err_occurred;
+    }
+
+    if(effect->len > 65534) {
+        dbglog(DBG_WARNING, "snd_sfx_load_ex: PCM file is over 65534 samples\n");
+    }
+
+    effect->locl = snd_mem_malloc(chan_len);
+
+    if(!effect->locl) {
+        goto err_occurred;
+    }
+    /* Uncomment when implementation is merged.
+    if(fs_ioctl(fd, IOCTL_FS_ROOTBUS_DMA_LENGTH, &fs_dma_len) == 0) {
+        if(chan_len >= fs_dma_len && (chan_len & (fs_dma_len - 1)) == 0) {
+            fs_rootbus_dma_ready = 1;
+        }
+    }
+    */
+    if(fs_rootbus_dma_ready) {
+        if(fs_read(fd, (void *)(effect->locl | SPU_RAM_BASE), chan_len) <= 0) {
+            goto err_occurred;
+        }
+    }
+    else {
+        tmp_buff = memalign(32, chan_len);
+
+        if(fs_read(fd, tmp_buff, chan_len) <= 0) {
+            goto err_occurred;
+        }
+        spu_memload_sq(effect->locl, tmp_buff, chan_len);
+    }
+
+    if(channels > 1) {
+        effect->locr = snd_mem_malloc(chan_len);
+
+        if(!effect->locr) {
+            goto err_occurred;
+        }
+        if(fs_rootbus_dma_ready) {
+            if(fs_read(fd, (void *)(effect->locr | SPU_RAM_BASE), chan_len) <= 0) {
+                goto err_occurred;
+            }
+        }
+        else {
+            if(fs_read(fd, tmp_buff, chan_len) <= 0) {
+                goto err_occurred;
+            }
+            spu_memload_sq(effect->locr, tmp_buff, chan_len);
+        }
+    }
+
+    if(tmp_buff) {
+        free(tmp_buff);
+    }
+    fs_close(fd);
+    LIST_INSERT_HEAD(&snd_effects, effect, list);
+    return (sfxhnd_t)effect;
+
+err_occurred:
+    if(effect)
+        free(effect);
+    if(effect->locl)
+        snd_mem_free(effect->locl);
+    if(effect->locr)
+        snd_mem_free(effect->locr);
+    if(tmp_buff)
+        free(tmp_buff);
+
+    fs_close(fd);
+    return SFXHND_INVALID;
 }
 
 int snd_sfx_play_chn(int chn, sfxhnd_t idx, int vol, int pan) {
