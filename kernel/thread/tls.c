@@ -10,8 +10,8 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <errno.h>
-#include <malloc.h>
 
+#include <kos/malloc.h> /* for malloc_irq_safe() */
 #include <kos/tls.h>
 #include <kos/thread.h>
 #include <arch/irq.h>

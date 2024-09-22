@@ -13,4 +13,8 @@
 CFLAGS += -std=gnu11
 OBJS = posix_memalign.o clock_gettime.o settimeofday.o sysconf.o
 
+ifneq ($(KOS_USE_TLSF),)
+sysconf.o: CFLAGS += -DKOS_USE_TLSF
+endif
+
 include $(KOS_BASE)/Makefile.prefab

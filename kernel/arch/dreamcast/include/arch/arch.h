@@ -190,6 +190,11 @@ void arch_menu(void) __noreturn;
 */
 int mm_init(void);
 
+/** \brief   Shut down the memory management system.
+    \ingroup arch
+*/
+void mm_shutdown(void);
+
 /** \brief   Request more core memory from the system.
     \ingroup arch
 

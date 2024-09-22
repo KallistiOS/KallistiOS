@@ -27,7 +27,6 @@
 __BEGIN_DECLS
 
 #include <ctype.h>
-#include <malloc.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -44,6 +43,7 @@ __BEGIN_DECLS
 #include <kos/rwsem.h>
 #include <kos/once.h>
 #include <kos/tls.h>
+#include <kos/malloc.h>
 #include <kos/mutex.h>
 #include <kos/cond.h>
 #include <kos/genwait.h>

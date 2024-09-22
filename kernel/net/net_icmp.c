@@ -9,7 +9,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <sys/queue.h>
 #include <kos/net.h>
 #include <kos/thread.h>

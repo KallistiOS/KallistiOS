@@ -6,17 +6,17 @@
 # Libc ###############################
 
 include assert.h
-include malloc.h
 include stdlib.h
 include stdio.h
 include strings.h
+include kos/dlmalloc.h
 
 # Malloc
 malloc
 calloc
 free
 realloc
-memalign
+aligned_alloc
 valloc
 mallinfo
 malloc_stats

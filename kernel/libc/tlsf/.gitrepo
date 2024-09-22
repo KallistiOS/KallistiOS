@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/mattconte/tlsf
+	branch = master
+	commit = deff9ab509341f264addbd3c8ada533678591905
+	parent = 1a952556a59128490107a97997a49c414609962b
+	method = merge
+	cmdver = 0.4.6

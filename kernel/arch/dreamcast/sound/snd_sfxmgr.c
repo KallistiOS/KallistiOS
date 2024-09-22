@@ -14,7 +14,6 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-#include <malloc.h>
 
 #include <sys/queue.h>
 #include <kos/fs.h>
@@ -171,7 +170,7 @@ static int read_wav_header(file_t fd, wavhdr_t *wavhdr) {
 
 static uint8_t *read_wav_data(file_t fd, wavhdr_t *wavhdr) {
     /* Allocate memory for WAV data */
-    uint8_t *wav_data = memalign(32, wavhdr->chunk.size);
+    uint8_t *wav_data = aligned_alloc(32, wavhdr->chunk.size);
 
     if(wav_data == NULL)
         return NULL;
@@ -242,12 +241,12 @@ static snd_effect_t *create_snd_effect(wavhdr_t *wavhdr, uint8_t *wav_data) {
     }
     else if(channels == 2 && fmt == WAVE_FMT_PCM && bitsize == 8) {
         /* Stereo 8-bit PCM */
-        uint32_t *left_buf = memalign(32, len / 2), *right_buf;
+        uint32_t *left_buf = aligned_alloc(32, len / 2), *right_buf;
 
         if(left_buf == NULL)
             goto err_occurred;
 
-        right_buf = memalign(32, len / 2);
+        right_buf = aligned_alloc(32, len / 2);
         if(right_buf == NULL) {
             free(left_buf);
             goto err_occurred;
@@ -275,7 +274,7 @@ static snd_effect_t *create_snd_effect(wavhdr_t *wavhdr, uint8_t *wav_data) {
         int ownmem = 0;
 
         if(((uintptr_t)right_buf) & 3) {
-            right_buf = (uint8_t *)memalign(32, len / 2);
+            right_buf = (uint8_t *)aligned_alloc(32, len / 2);
 
             if(right_buf == NULL)
                 goto err_occurred;
@@ -300,13 +299,13 @@ static snd_effect_t *create_snd_effect(wavhdr_t *wavhdr, uint8_t *wav_data) {
     }
     else if(channels == 2 && fmt == WAVE_FMT_YAMAHA_ADPCM) {
         /* Stereo Yamaha ADPCM (channels are interleaved) */
-        uint32_t *left_buf = (uint32_t *)memalign(32, len / 2), *right_buf;
+        uint32_t *left_buf = (uint32_t *)aligned_alloc(32, len / 2), *right_buf;
 
         if(left_buf == NULL)
             goto err_occurred;
 
 
-        right_buf = (uint32_t *)memalign(32, len / 2);
+        right_buf = (uint32_t *)aligned_alloc(32, len / 2);
 
         if(right_buf == NULL) {
             free(left_buf);

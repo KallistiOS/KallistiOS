@@ -14,7 +14,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <sys/queue.h>
 
 #include <kos/mutex.h>
@@ -365,7 +365,7 @@ void snd_stream_prefill(snd_stream_hnd_t hnd) {
 int snd_stream_init(void) {
     /* Create stereo separation buffers */
     if(!sep_buffer[0]) {
-        sep_buffer[0] = memalign(32, SND_STREAM_BUFFER_MAX);
+        sep_buffer[0] = aligned_alloc(32, SND_STREAM_BUFFER_MAX);
         sep_buffer[1] = sep_buffer[0] + (SND_STREAM_BUFFER_MAX / 8);
     }
 

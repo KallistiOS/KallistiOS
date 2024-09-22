@@ -7,7 +7,7 @@
 /* SH-4 MMU related functions, ported up from KOS-MMU */
 
 #include <string.h>
-#include <malloc.h>
+#include <stdlib.h>
 
 #include <kos/thread.h>
 #include <arch/arch.h>

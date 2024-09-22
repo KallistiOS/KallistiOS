@@ -4,8 +4,8 @@
    Copyright (C)2003 Megan Potter
 */
 
-#include <malloc.h>
 #include <errno.h>
+#include <stdlib.h>
 #include <sys/queue.h>
 
 #include <arch/irq.h>

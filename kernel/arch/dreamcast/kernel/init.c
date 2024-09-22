@@ -6,10 +6,10 @@
 */
 
 #include <stdio.h>
-#include <malloc.h>
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <kos/malloc.h> /* for malloc_stats() */
 #include <kos/dbgio.h>
 #include <kos/init.h>
 #include <kos/platform.h>
@@ -256,6 +256,7 @@ void  __weak arch_auto_shutdown(void) {
     fs_dev_shutdown();
     thd_shutdown();
     rtc_shutdown();
+    mm_shutdown();
 }
 
 /* This is the entry point inside the C program */

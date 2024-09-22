@@ -10,12 +10,12 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-#include <malloc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <reent.h>
 #include <errno.h>
+#include <kos/malloc.h> /* for malloc_irq_safe() */
 #include <kos/thread.h>
 #include <kos/dbgio.h>
 #include <kos/sem.h>
@@ -402,7 +402,7 @@ static void *thd_create_tls_data(void) {
         tls_size += (align - align_rem);
 
     /* Allocate combined chunk with calculated size and alignment.  */
-    tcbhead = memalign(align, tls_size);
+    tcbhead = aligned_alloc(align, tls_size);
     assert(tcbhead);    
     assert(!((uintptr_t)tcbhead % 8)); 
 
@@ -469,7 +469,7 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
 
     if(tid >= 0) {
         /* Create a new thread structure */
-        nt = memalign(32, sizeof(kthread_t));
+        nt = aligned_alloc(32, sizeof(kthread_t));
 
         if(nt != NULL) {
             /* Clear out potentially unused stuff */
