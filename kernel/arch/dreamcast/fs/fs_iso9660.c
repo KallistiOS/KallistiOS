@@ -692,10 +692,10 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
         /* How much more can we read in the current sector? */
         thissect = 2048 - (fh[fd].ptr % 2048);
 
-        /* If we're on a sector boundary and we have two
-           full sectors to read, then short-circuit the cache here
+        /* If we're on a sector boundary and we have at least one
+           full sector to read, then short-circuit the cache here
            and use the multi-sector DMA reads from the CD unit. */
-        if(thissect == 2048 && toread >= (2 * 2048) && (((uintptr_t)outbuf) & 31) == 0) {
+        if(thissect == 2048 && toread >= 2048 && (((uintptr_t)outbuf) & 31) == 0) {
             // Round it off to an even sector count
             thissect = toread / 2048;
             toread = thissect * 2048;
@@ -923,9 +923,9 @@ static int iso_ioctl(void *h, int cmd, va_list ap) {
     }
 
     switch(cmd) {
-        case IOCTL_FS_ROOTBUS_DMA_READY:
+        case IOCTL_FS_ROOTBUS_DMA_LENGTH:
             if(arg != NULL) {
-                *(uint32_t *)arg = 1;
+                *(uint32_t *)arg = 2048;
             }
             return 0;
         default:
