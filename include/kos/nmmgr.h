@@ -84,7 +84,7 @@ typedef struct alias_handler {
 
 /* Version codes ('version') have two pieces: a major and minor revision.
    A major revision (top 16 bits) means that the interfaces are totally
-   incompatible. A minor revision (lower 16 bits) diffrentiates between
+   incompatible. A minor revision (lower 16 bits) differentiates between
    mostly-compatible but newer/older revisions of the implementing code. */
 
 /* Flag bits */
