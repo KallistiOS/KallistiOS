@@ -377,21 +377,24 @@ sfxhnd_t snd_sfx_load(const char *fn) {
 }
 
 sfxhnd_t snd_sfx_load_ex(const char *fn, uint32_t rate, uint16_t bitsize, uint16_t channels) {
-    file_t fd;
-    snd_effect_t *effect;
-    size_t len, chan_len;
-    uint32_t fs_rootbus_dma_ready = 0;
-    uint32_t fs_dma_len = 0;
-    uint8_t *tmp_buff = NULL;
-
-    fd = fs_open(fn, O_RDONLY);
+    sfxhnd_t effect;
+    file_t fd = fs_open(fn, O_RDONLY);
 
     if(fd <= FILEHND_INVALID) {
         dbglog(DBG_ERROR, "snd_sfx_load_ex: can't open sfx %s\n", fn);
         return SFXHND_INVALID;
     }
+    effect = snd_sfx_load_fd(fd, fs_total(fd), rate, bitsize, channels);
+    fs_close(fd);
+    return effect;
+}
 
-    len = fs_total(fd);
+sfxhnd_t snd_sfx_load_fd(file_t fd, size_t len, uint32_t rate, uint16_t bitsize, uint16_t channels) {
+    snd_effect_t *effect;
+    size_t chan_len;
+    uint32_t fs_rootbus_dma_ready = 0;
+    // uint32_t fs_dma_len = 0;
+    uint8_t *tmp_buff = NULL;
 
     chan_len = len / channels;
     effect = malloc(sizeof(snd_effect_t));
@@ -474,7 +477,6 @@ sfxhnd_t snd_sfx_load_ex(const char *fn, uint32_t rate, uint16_t bitsize, uint16
     if(tmp_buff) {
         free(tmp_buff);
     }
-    fs_close(fd);
     LIST_INSERT_HEAD(&snd_effects, effect, list);
     return (sfxhnd_t)effect;
 
@@ -487,8 +489,6 @@ err_occurred:
         snd_mem_free(effect->locr);
     if(tmp_buff)
         free(tmp_buff);
-
-    fs_close(fd);
     return SFXHND_INVALID;
 }
 

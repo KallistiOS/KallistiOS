@@ -114,6 +114,7 @@ snd_sfx_unload_all
 snd_sfx_unload
 snd_sfx_load
 snd_sfx_load_ex
+snd_sfx_load_fd
 snd_sfx_play
 snd_sfx_stop_all
 snd_sfx_play_chn
