@@ -1,20 +1,8 @@
 Some packages in the util directory are covered under the GNU Public
-License, version 2 or later. This includes genromfs and dialog. Some
-pieces of code that are aggregated with the KOS distribution (and have
-been ported to work with it) but are not part of the main distribution
-(such as the Xing MP3 player library) can be found in the "kos-ports"
-directory.
+License, version 2 or later. This includes genromfs and dialog. 
 
 PLEASE realize that if you modify or extend these programs, unlike the
-rest of KallistiOS, you must use the GPL as well. Using the XingMP3
-player library in your program will require that your program be covered
-under the GPL or some less restrictive license (such as the BSD
-license). Of course, even if you do this, you must make the full source
-to your program available under the terms of the GPL. There is a subtle
-difference here, but it's one you must observe. The old BSD license, for
-example, would not qualify since it adds extra restrictions above what
-the GPL allows (the advertising clause). The new BSD license and the KOS
-license are both acceptable since their terms are a subset of the GPL.
+rest of KallistiOS, you must use the GPL as well.
 
 Below is the full text of that license (GPL v2). Please see the file
 "LICENSE" for some more important licensing information.

@@ -75,11 +75,7 @@ int nmmgr_handler_remove(nmmgr_handler_t *hnd) {
     nmmgr_handler_t *c, *tmp;
     int rv = -1;
 
-    /* If we're in an int, lets do the trylock */
-    if(irq_inside_int())
-        mutex_trylock(&mutex);
-    else
-        mutex_lock(&mutex);
+    mutex_lock_irqsafe(&mutex);
 
     /* Verify that it's actually in there */
     LIST_FOREACH_SAFE(c, &nmmgr_handlers, list_ent, tmp) {
