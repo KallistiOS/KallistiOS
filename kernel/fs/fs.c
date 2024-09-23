@@ -43,9 +43,10 @@ something like this:
 /* File handle structure; this is an entirely internal structure so it does
    not go in a header file. */
 typedef struct fs_hnd {
-    vfs_handler_t   *handler;   /* Handler */
-    void *      hnd;        /* Handler-internal */
-    int     refcnt;     /* Reference count */
+    vfs_handler_t *handler;   /* Handler */
+    void *hnd;   /* Handler-internal */
+    int refcnt;  /* Reference count */
+    int idx;     /* Current index for readdir */
 } fs_hnd_t;
 
 /* The global file descriptor table */
@@ -332,15 +333,20 @@ static fs_hnd_t * fs_map_hnd(file_t fd) {
 /* Close a file and clean up the handle */
 int fs_close(file_t fd) {
     int retval;
-    fs_hnd_t * hnd = fs_map_hnd(fd);
+    fs_hnd_t *hnd = fs_map_hnd(fd);
 
     if(!hnd) {
-      errno = EBADF;
-      return -1;
+        errno = EBADF;
+        return -1;
     }
 
     /* Deref it and remove it from our table */
     retval = fs_hnd_unref(hnd);
+
+    /* Reset our position */
+    if(hnd->refcnt == 0)
+        hnd->idx = 0;
+
     fd_table[fd] = NULL;
     return retval ? -1 : 0;
 }
@@ -495,6 +501,8 @@ uint64 fs_total64(file_t fd) {
 }
 
 dirent_t *fs_readdir(file_t fd) {
+    static dirent_t dot_dirent;
+    static dirent_t *temp_dirent;
     fs_hnd_t *h = fs_map_hnd(fd);
 
     if(h == NULL) {
@@ -510,7 +518,51 @@ dirent_t *fs_readdir(file_t fd) {
         return NULL;
     }
 
-    return h->handler->readdir(h->hnd);
+    switch (h->idx) {
+        case 0:
+            temp_dirent = h->handler->readdir(h->hnd);
+            h->idx++;
+
+            /* Does fs provide its own . directory? */
+            if(strcmp(temp_dirent->name, ".") == 0) {
+                return temp_dirent;
+            } else {
+                /* Send . directory first */
+                strcpy(dot_dirent.name, ".");
+                dot_dirent.attr = O_DIR;
+                dot_dirent.size = -1;
+                dot_dirent.time = 0;
+                return &dot_dirent;
+            }
+        case 1:
+            h->idx++;
+
+            /* Did fs provide its own . directory? */
+            if(strcmp(temp_dirent->name, ".") == 0) {
+                /* Read a new entry */
+                temp_dirent = h->handler->readdir(h->hnd);
+            }
+
+            /* Does fs provide its own .. directory? */
+            if(strcmp(temp_dirent->name, "..") == 0) {
+                h->idx++;
+                return temp_dirent;
+            } else {
+                /* Send .. directory second */
+                strcpy(dot_dirent.name, "..");
+                dot_dirent.attr = O_DIR;
+                dot_dirent.size = -1;
+                dot_dirent.time = 0;
+                return &dot_dirent;
+            }
+        case 2:
+            h->idx++;
+            /* FS didnt provide a . or .. directory. 
+               Return what we read first */
+            return temp_dirent;
+        default:
+            return h->handler->readdir(h->hnd);
+    }
 }
 
 int fs_vioctl(file_t fd, int cmd, va_list ap) {
@@ -870,6 +922,8 @@ int fs_rewinddir(file_t fd) {
         errno = ENOSYS;
         return -1;
     }
+
+    h->idx = 0;
 
     return h->handler->rewinddir(h->hnd);
 }

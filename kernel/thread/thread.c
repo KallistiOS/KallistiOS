@@ -1131,7 +1131,8 @@ void thd_shutdown(void) {
 
     /* Kill remaining live threads */
     LIST_FOREACH_SAFE(cur, &thd_list, t_list, tmp) {
-        thd_destroy(cur);
+        if(cur->tid != 1)
+            thd_destroy(cur);
     }
 
     sem_destroy(&thd_reap_sem);

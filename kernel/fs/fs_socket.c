@@ -32,15 +32,8 @@ static mutex_t list_rlock = RECURSIVE_MUTEX_INITIALIZER;
 static int fs_socket_close(void *hnd) {
     net_socket_t *sock = (net_socket_t *)hnd;
 
-    if(irq_inside_int()) {
-        if(mutex_trylock(&list_rlock)) {
-            errno = EWOULDBLOCK;
-            return -1;
-        }
-    }
-    else {
-        mutex_lock(&list_rlock);
-    }
+    if(mutex_lock_irqsafe(&list_rlock))
+        return -1;
 
     LIST_REMOVE(sock, sock_list);
     mutex_unlock(&list_rlock);
@@ -200,14 +193,8 @@ int fs_socket_input(netif_t *src, int domain, int protocol, const void *hdr,
         return -1;
 
     /* Find the protocol handler and call its input function... */
-    if(irq_inside_int()) {
-        if(mutex_trylock(&proto_rlock)) {
-            return -1;
-        }
-    }
-    else {
-        mutex_lock(&proto_rlock);
-    }
+    if(mutex_lock_irqsafe(&proto_rlock))
+        return -1;
 
     TAILQ_FOREACH(i, &protocols, entry) {
         if(i->protocol == protocol) {
@@ -225,14 +212,8 @@ int fs_socket_proto_add(fs_socket_proto_t *proto) {
     if(!initted)
         return -1;
 
-    if(irq_inside_int()) {
-        if(mutex_trylock(&proto_rlock)) {
-            return -1;
-        }
-    }
-    else {
-        mutex_lock(&proto_rlock);
-    }
+    if(mutex_lock_irqsafe(&proto_rlock))
+        return -1;
 
     TAILQ_INSERT_TAIL(&protocols, proto, entry);
     mutex_unlock(&proto_rlock);
@@ -248,14 +229,8 @@ int fs_socket_proto_remove(fs_socket_proto_t *proto) {
         return -1;
 
     /* Make sure its registered. */
-    if(irq_inside_int()) {
-        if(mutex_trylock(&proto_rlock)) {
-            return -1;
-        }
-    }
-    else {
-        mutex_lock(&proto_rlock);
-    }
+    if(mutex_lock_irqsafe(&proto_rlock))
+        return -1;
 
     TAILQ_FOREACH(i, &protocols, entry) {
         if(i == proto) {
@@ -281,15 +256,8 @@ int socket(int domain, int type, int protocol) {
         return -1;
     }
 
-    if(irq_inside_int()) {
-        if(mutex_trylock(&proto_rlock)) {
-            errno = EWOULDBLOCK;
-            return -1;
-        }
-    }
-    else {
-        mutex_lock(&proto_rlock);
-    }
+    if(mutex_lock_irqsafe(&proto_rlock))
+        return -1;
 
     /* Look for a matching protocol entry. */
     TAILQ_FOREACH(i, &protocols, entry) {
@@ -335,15 +303,9 @@ int socket(int domain, int type, int protocol) {
     mutex_unlock(&proto_rlock);
 
     /* Add this socket into the list of sockets, and return */
-    if(irq_inside_int()) {
-        if(mutex_trylock(&list_rlock)) {
-            free(sock);
-            errno = EWOULDBLOCK;
-            return -1;
-        }
-    }
-    else {
-        mutex_lock(&list_rlock);
+    if(mutex_lock_irqsafe(&list_rlock)) {
+        free(sock);
+        return -1;
     }
 
     LIST_INSERT_HEAD(&sockets, sock, sock_list);
@@ -375,15 +337,9 @@ net_socket_t *fs_socket_open_sock(fs_socket_proto_t *proto) {
     sock->protocol = proto;
 
     /* Add this socket into the list of sockets, and return */
-    if(irq_inside_int()) {
-        if(mutex_trylock(&list_rlock)) {
-            free(sock);
-            errno = EWOULDBLOCK;
-            return NULL;
-        }
-    }
-    else {
-        mutex_lock(&list_rlock);
+    if(mutex_lock_irqsafe(&list_rlock)) {
+        free(sock);
+        return NULL;
     }
 
     LIST_INSERT_HEAD(&sockets, sock, sock_list);
@@ -584,6 +540,30 @@ int getsockname(int sock, struct sockaddr *name, socklen_t *name_len) {
     }
 
     return hnd->protocol->getsockname(hnd, name, name_len);
+}
+
+int getpeername(int sock, struct sockaddr *__RESTRICT name, socklen_t *__RESTRICT name_len) {
+    net_socket_t *hnd;
+
+    hnd = (net_socket_t *)fs_get_handle(sock);
+
+    if(hnd == NULL) {
+        errno = EBADF;
+        return -1;
+    }
+
+    /* Make sure this is actually a socket. */
+    if(fs_get_handler(sock) != &vh) {
+        errno = ENOTSOCK;
+        return -1;
+    }
+
+    if(!hnd->protocol->getpeername) {
+        errno = EOPNOTSUPP;
+        return -1;
+    }
+
+    return hnd->protocol->getpeername(hnd, name, name_len);
 }
 
 int getsockopt(int sock, int level, int option_name, void *option_value,
