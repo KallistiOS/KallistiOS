@@ -26,6 +26,7 @@
 __BEGIN_DECLS
 
 #include <newlib.h>
+#include <kos/opts.h>
 
 #if __NEWLIB__ > 2 || (__NEWLIB__ == 2 && __NEWLIB_MINOR__ > 2)
 #include <sys/_timeval.h>
@@ -40,11 +41,6 @@ __BEGIN_DECLS
 #ifndef _SYS_TYPES_FD_SET
 
 #define _SYS_TYPES_FD_SET
-
-#ifndef FD_SETSIZE
-/* This matches fs.h. */
-#define FD_SETSIZE 1024
-#endif
 
 #define NFDBITS 32
 

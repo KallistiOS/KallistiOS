@@ -38,6 +38,14 @@ __BEGIN_DECLS
 #include <stdint.h>
 #include <sys/types.h>
 
+/** \brief   Inits data needed by sysinfo id/icon
+    \note This is called automatically by KOS during initialization.
+    This function prepares syscall_sysinfo_icon and syscall_sysinfo_id 
+    calls for use by copying the relevant data from the system flashrom 
+    into 8C000068-8C00007F.
+*/
+void syscall_sysinfo_init(void);
+
 /** \brief   Reads an icon from the flashrom.
 
     This function reads an icon from the flashrom into a destination 

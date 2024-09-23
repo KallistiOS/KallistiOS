@@ -834,6 +834,7 @@ void thd_sleep(unsigned int ms) {
 }
 
 /* Manually cause a re-schedule */
+__used
 void thd_pass(void) {
     /* Makes no sense inside int */
     if(irq_inside_int()) return;
@@ -1147,7 +1148,8 @@ void thd_shutdown(void) {
 
     /* Kill remaining live threads */
     LIST_FOREACH_SAFE(cur, &thd_list, t_list, tmp) {
-        thd_destroy(cur);
+        if(cur->tid != 1)
+            thd_destroy(cur);
     }
 
     sem_destroy(&thd_reap_sem);

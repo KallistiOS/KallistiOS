@@ -5,6 +5,7 @@
    Copyright (C) 2002 Florian Schulze
    Copyright (C) 2020 Lawrence Sebald
    Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2024 Stefanos Kornilios Mitsis Poiitidis
 
    SH-4 support routines for SPU streaming sound driver
 */
@@ -237,7 +238,7 @@ void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t 
     /* Make sure the FIFOs are empty */
     g2_fifo_wait();
 
-    /* Separating channels and do fill/write queues as many times necessary. */
+    /* Separating channels and fill/write queues as many times as necessary. */
     for(; remain >= 128; remain -= 128) {
 
         /* Fill SQ0 */
@@ -559,12 +560,12 @@ static void snd_stream_start_type(snd_stream_hnd_t hnd, uint32_t type, uint32_t 
         snd_sh4_to_aica(tmp, cmd->size);
 
         /* Start both channels simultaneously */
-        cmd->cmd_id = (1 << streams[hnd].ch[0]) |
-                      (1 << streams[hnd].ch[1]);
+        cmd->cmd_id = (1ULL << streams[hnd].ch[0]) |
+                      (1ULL << streams[hnd].ch[1]);
     }
     else {
         /* Start one channel */
-        cmd->cmd_id = (1 << streams[hnd].ch[0]);
+        cmd->cmd_id = (1ULL << streams[hnd].ch[0]);
     }
 
     chan->cmd = AICA_CH_CMD_START | AICA_CH_START_SYNC;
