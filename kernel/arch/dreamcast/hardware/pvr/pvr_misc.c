@@ -8,9 +8,13 @@
 
 #include <assert.h>
 #include <string.h>
+#include <float.h>
+
 #include <arch/timer.h>
 #include <dc/pvr.h>
 #include <dc/video.h>
+#include <kos/string.h>
+
 #include "pvr_internal.h"
 
 /*
@@ -174,9 +178,8 @@ void pvr_begin_queued_render(void) {
     volatile pvr_ta_buffers_t   * tbuf;
     volatile pvr_frame_buffers_t    * rbuf;
     pvr_bkg_poly_t  bkg;
-    uint32      *vrl, *bkgdata;
+    uint32_t      *vrl;
     uint32      vert_end;
-    int     i;
     int bufn = pvr_state.view_target;
     union {
         float f;
@@ -197,26 +200,22 @@ void pvr_begin_queued_render(void) {
     /* Throw the background data on the end of the TA's list */
     bkg.flags1 = 0x90800000;    /* These are from libdream.. ought to figure out */
     bkg.flags2 = 0x20800440;    /*   what they mean for sure... heh =) */
-    bkg.dummy = 0;
-    bkg.x1 =   0.0f;
-    bkg.y1 = 480.0f;
-    bkg.z1 = 0.2f;
-    bkg.argb1 = pvr_state.bg_color;
-    bkg.x2 =   0.0f;
-    bkg.y2 =   0.0f;
-    bkg.z2 = 0.2f;
-    bkg.argb2 = pvr_state.bg_color;
-    bkg.x3 = 640.0f;
-    bkg.y3 = 480.0f;
-    bkg.z3 = 0.2f;
-    bkg.argb3 = pvr_state.bg_color;
-    bkgdata = (uint32 *)&bkg;
-    vrl = (uint32*)(PVR_RAM_BASE | PVR_GET(PVR_TA_VERTBUF_POS));
+    bkg.dummy  = 0;
+    bkg.x1     = 0.0f;
+    bkg.y1     = pvr_state.h;
+    bkg.z1     = FLT_EPSILON;
+    bkg.argb1  = pvr_state.bg_color;
+    bkg.x2     = 0.0f;
+    bkg.y2     = 0.0f;
+    bkg.z2     = FLT_EPSILON;
+    bkg.argb2  = pvr_state.bg_color;
+    bkg.x3     = pvr_state.w;
+    bkg.y3     = pvr_state.h;
+    bkg.z3     = FLT_EPSILON;
+    bkg.argb3  = pvr_state.bg_color;
+    vrl = (uint32_t *)(PVR_RAM_BASE | PVR_GET(PVR_TA_VERTBUF_POS));
 
-    for(i = 0; i < 0x10; i++)
-        vrl[i] = bkgdata[i];
-
-    vrl[0x11] = 0;
+    memcpy4(vrl, &bkg, sizeof(bkg));
 
     /* Reset the ISP/TSP, just in case */
     //PVR_SET(PVR_RESET, PVR_RESET_ISPTSP);
@@ -240,7 +239,7 @@ void pvr_begin_queued_render(void) {
     PVR_SET(PVR_PCLIP_Y, pvr_state.pclip_y);
 
     if(!pvr_state.to_texture[bufn])
-        PVR_SET(PVR_RENDER_MODULO, (pvr_state.w * 2) / 8);
+        PVR_SET(PVR_RENDER_MODULO, (pvr_state.w * vid_pmode_bpp[vid_mode->pm]) / 8);
     else
         PVR_SET(PVR_RENDER_MODULO, pvr_state.to_txr_rp[bufn]);
 

@@ -2,7 +2,7 @@
 
    hardware/g1ata.c
    Copyright (C) 2013, 2014, 2015 Lawrence Sebald
-   Copyright (C) 2015, 2023 Ruslan Rostovtsev
+   Copyright (C) 2015, 2023, 2024 Ruslan Rostovtsev
 */
 
 #include <errno.h>
@@ -109,8 +109,12 @@ typedef struct ata_devdata {
 #define G1_ATA_DMA_STATUS       0xA05F7418      /* Read/Write */
 #define G1_ATA_DMA_PROTECTION   0xA05F74B8      /* Write-only */
 
+/* Protection register code. */
+#define G1_DMA_UNLOCK_CODE      0x8843
 /* System memory protection unlock value. */
-#define G1_DMA_UNLOCK_SYSMEM    0x8843407F
+#define G1_DMA_UNLOCK_SYSMEM    (G1_DMA_UNLOCK_CODE << 16 | 0x407F)
+/* All memory protection unlock value. */
+#define G1_DMA_UNLOCK_ALLMEM    (G1_DMA_UNLOCK_CODE << 16 | 0x007F)
 
 /* Bitmasks for the STATUS_REG/ALT_STATUS registers. */
 #define G1_ATA_SR_ERR   0x01
@@ -170,6 +174,9 @@ static uint8_t orig_dev = 0x00;
 /* Variables related to DMA. */
 static int dma_in_progress = 0;
 static int dma_blocking = 0;
+static uint8_t dma_cmd = 0;
+static size_t dma_nb_sectors = 0;
+static uint64_t dma_sector = 0;
 static semaphore_t dma_done = SEM_INITIALIZER(0);
 static kthread_t *dma_thd = NULL;
 
@@ -211,12 +218,48 @@ inline int g1_ata_mutex_unlock(void) {
     return mutex_unlock(&_g1_ata_mutex);
 }
 
+static void g1_ata_set_sector_and_count(uint64_t sector, uint32_t count, int lba28) {
+    if(!lba28) {
+        OUT8(G1_ATA_SECTOR_COUNT, (uint8_t)(count >> 8));
+        OUT8(G1_ATA_LBA_LOW, (uint8_t)((sector >> 24) & 0xFF));
+        OUT8(G1_ATA_LBA_MID, (uint8_t)((sector >> 32) & 0xFF));
+        OUT8(G1_ATA_LBA_HIGH, (uint8_t)((sector >> 40) & 0xFF));
+    }
+
+    /* Write out the number of sectors we want and the lower 24-bits of
+       the LBA we're looking for. Note that putting 0 into the sector count
+       register returns 256 sectors. */
+    OUT8(G1_ATA_SECTOR_COUNT, (uint8_t)count);
+    OUT8(G1_ATA_LBA_LOW, (uint8_t)((sector >> 0) & 0xFF));
+    OUT8(G1_ATA_LBA_MID, (uint8_t)((sector >> 8) & 0xFF));
+    OUT8(G1_ATA_LBA_HIGH, (uint8_t)((sector >> 16) & 0xFF));
+}
+
 static void g1_dma_irq_hnd(uint32 code, void *data) {
+    int can_lba48 = CAN_USE_LBA48();
+    unsigned int nb_sectors;
+
     /* XXXX: Probably should look at the code to make sure it isn't an error. */
     (void)code;
     (void)data;
 
-    if(dma_in_progress) {
+    if(dma_in_progress && !can_lba48 && dma_nb_sectors > 256) {
+        dma_sector += 256;
+        dma_nb_sectors -= 256;
+        nb_sectors = dma_nb_sectors <= 256 ? dma_nb_sectors : 256;
+
+        /* Set the DMA parameters for the next transfer. */
+        g1_ata_set_sector_and_count(dma_sector, nb_sectors, 1);
+        OUT32(G1_ATA_DMA_ADDRESS, IN32(G1_ATA_DMA_ADDRESS) + 256 * 512);
+        OUT32(G1_ATA_DMA_LENGTH, nb_sectors * 512);
+
+        /* Write out the command to the device. */
+        OUT8(G1_ATA_COMMAND_REG, dma_cmd);
+
+        /* Re-start the DMA transfer. */
+        OUT32(G1_ATA_DMA_STATUS, 1);
+    }
+    else if(dma_in_progress) {
         /* Signal the calling thread to continue, if it is blocking. */
         if(dma_blocking) {
             sem_signal(&dma_done);
@@ -282,6 +325,8 @@ static inline int g1_ata_wait_drq(void) {
 static int dma_common(uint8_t cmd, size_t nsects, uint32_t addr, int dir,
                       int block) {
     uint8_t status;
+
+    dma_cmd = cmd;
 
     /* Set the thread ID that initiated this DMA. */
     dma_thd = thd_current;
@@ -489,6 +534,7 @@ int g1_ata_read_lba(uint64_t sector, size_t count, void *buf) {
     uint8_t nsects = (uint8_t)count;
     uint16_t word;
     uint8_t *ptr = (uint8_t *)buf;
+    int lba28, cmd;
 
     /* Make sure that we've been initialized and there's a disk attached. */
     if(!devices) {
@@ -520,44 +566,26 @@ int g1_ata_read_lba(uint64_t sector, size_t count, void *buf) {
         count -= nsects;
 
         /* Which mode are we using: LBA28 or LBA48? */
-        if((sector + nsects) <= 0x0FFFFFFF) {
+        lba28 = (sector + nsects) <= 0x0FFFFFFF;
+        if(lba28) {
             g1_ata_select_device(G1_ATA_SLAVE | G1_ATA_LBA_MODE |
                                  ((sector >> 24) & 0x0F));
-
-            /* Write out the number of sectors we want and the lower 24-bits of
-               the LBA we're looking for. */
-            OUT8(G1_ATA_SECTOR_COUNT, nsects);
-            OUT8(G1_ATA_LBA_LOW, (uint8_t)((sector >> 0) & 0xFF));
-            OUT8(G1_ATA_LBA_MID, (uint8_t)((sector >> 8) & 0xFF));
-            OUT8(G1_ATA_LBA_HIGH, (uint8_t)((sector >> 16) & 0xFF));
-
-            /* Wait until the drive is ready to accept the command. */
-            g1_ata_wait_nbsy();
-            g1_ata_wait_drdy();
-
-            /* Write out the command to the device. */
-            OUT8(G1_ATA_COMMAND_REG, ATA_CMD_READ_SECTORS);
+            cmd = ATA_CMD_READ_SECTORS;
         }
         else {
             g1_ata_select_device(G1_ATA_SLAVE | G1_ATA_LBA_MODE);
-
-            /* Write out the number of sectors we want and the LBA. */
-            OUT8(G1_ATA_SECTOR_COUNT, 0);
-            OUT8(G1_ATA_LBA_LOW, (uint8_t)((sector >> 24) & 0xFF));
-            OUT8(G1_ATA_LBA_MID, (uint8_t)((sector >> 32) & 0xFF));
-            OUT8(G1_ATA_LBA_HIGH, (uint8_t)((sector >> 40) & 0xFF));
-            OUT8(G1_ATA_SECTOR_COUNT, nsects);
-            OUT8(G1_ATA_LBA_LOW, (uint8_t)((sector >> 0) & 0xFF));
-            OUT8(G1_ATA_LBA_MID, (uint8_t)((sector >> 8) & 0xFF));
-            OUT8(G1_ATA_LBA_HIGH, (uint8_t)((sector >> 16) & 0xFF));
-
-            /* Wait until the drive is ready to accept the command. */
-            g1_ata_wait_nbsy();
-            g1_ata_wait_drdy();
-
-            /* Write out the command to the device. */
-            OUT8(G1_ATA_COMMAND_REG, ATA_CMD_READ_SECTORS_EXT);
+            cmd = ATA_CMD_READ_SECTORS_EXT;
         }
+
+        /* Write out the number of sectors we want and the LBA. */
+        g1_ata_set_sector_and_count(sector, nsects, lba28);
+
+        /* Wait until the drive is ready to accept the command. */
+        g1_ata_wait_nbsy();
+        g1_ata_wait_drdy();
+
+        /* Write out the command to the device. */
+        OUT8(G1_ATA_COMMAND_REG, cmd);
 
         /* Now, wait for the drive to give us back each sector. */
         for(i = 0; i < nsects; ++i, ++sector) {
@@ -589,9 +617,9 @@ out:
 
 int g1_ata_read_lba_dma(uint64_t sector, size_t count, void *buf,
                         int block) {
-    int rv = 0;
+    int lba28, old, can_lba48 = CAN_USE_LBA48();
     uint32_t addr;
-    int old, can_lba48 = CAN_USE_LBA48();
+    uint8_t cmd;
 
     /* Make sure we're actually being asked to do work... */
     if(!count)
@@ -621,7 +649,7 @@ int g1_ata_read_lba_dma(uint64_t sector, size_t count, void *buf,
     }
 
     /* Chaining isn't done yet, so make sure we don't need to. */
-    if(count > 65536 || (!can_lba48 && count > 256)) {
+    if(count > 65536) {
         errno = EOVERFLOW;
         return -1;
     }
@@ -641,8 +669,10 @@ int g1_ata_read_lba_dma(uint64_t sector, size_t count, void *buf,
         return -1;
     }
 
-    /* Invalidate the dcache over the range of the data. */
-    dcache_inval_range((uint32)buf, count * 512);
+    if((addr >> 24) == 0x0C) {
+        /* Invalidate the dcache over the range of the data. */
+        dcache_inval_range((uint32)buf, count * 512);
+    }
 
     /* Lock the mutex. It will be unlocked later in the IRQ handler. */
     if(g1_ata_mutex_lock())
@@ -663,56 +693,41 @@ int g1_ata_read_lba_dma(uint64_t sector, size_t count, void *buf,
     /* Set the settings for this transfer and re-enable IRQs. */
     dma_blocking = block;
     dma_in_progress = 1;
+    dma_nb_sectors = count;
+    dma_sector = sector;
     irq_restore(old);
+
+    if(!can_lba48 && count > 256)
+        count = 256;
 
     /* Wait for the device to signal it is ready. */
     g1_ata_wait_bsydrq();
 
     /* Which mode are we using: LBA28 or LBA48? */
-    if(!can_lba48 || use_lba28(sector, count)) {
+    lba28 = !can_lba48 || use_lba28(sector, count);
+    if(lba28) {
         g1_ata_select_device(G1_ATA_SLAVE | G1_ATA_LBA_MODE |
                              ((sector >> 24) & 0x0F));
-
-        /* Write out the number of sectors we want and the lower 24-bits of
-           the LBA we're looking for. Note that putting 0 into the sector count
-           register returns 256 sectors. */
-        OUT8(G1_ATA_SECTOR_COUNT, (uint8_t)count);
-        OUT8(G1_ATA_LBA_LOW, (uint8_t)((sector >> 0) & 0xFF));
-        OUT8(G1_ATA_LBA_MID, (uint8_t)((sector >> 8) & 0xFF));
-        OUT8(G1_ATA_LBA_HIGH, (uint8_t)((sector >> 16) & 0xFF));
-
-        /* Do the rest of the work... */
-        rv = dma_common(ATA_CMD_READ_DMA, count, addr, G1_DMA_TO_MEMORY, block);
+        cmd = ATA_CMD_READ_DMA;
     }
     else {
         g1_ata_select_device(G1_ATA_SLAVE | G1_ATA_LBA_MODE);
-
-        /* Write out the number of sectors we want and the LBA. Note that in
-           LBA48 mode, putting 0 into the sector count register returns 65536
-           sectors (not that we have that much RAM on the Dreamcast). */
-        OUT8(G1_ATA_SECTOR_COUNT, (uint8_t)(count >> 8));
-        OUT8(G1_ATA_LBA_LOW, (uint8_t)((sector >> 24) & 0xFF));
-        OUT8(G1_ATA_LBA_MID, (uint8_t)((sector >> 32) & 0xFF));
-        OUT8(G1_ATA_LBA_HIGH, (uint8_t)((sector >> 40) & 0xFF));
-        OUT8(G1_ATA_SECTOR_COUNT, (uint8_t)count);
-        OUT8(G1_ATA_LBA_LOW, (uint8_t)((sector >> 0) & 0xFF));
-        OUT8(G1_ATA_LBA_MID, (uint8_t)((sector >> 8) & 0xFF));
-        OUT8(G1_ATA_LBA_HIGH, (uint8_t)((sector >> 16) & 0xFF));
-
-        /* Do the rest of the work... */
-        rv = dma_common(ATA_CMD_READ_DMA_EXT, count, addr, G1_DMA_TO_MEMORY,
-                        block);
+        cmd = ATA_CMD_READ_DMA_EXT;
     }
 
-    return rv;
+    /* Write out the number of sectors we want and the LBA. */
+    g1_ata_set_sector_and_count(sector, count, lba28);
+
+    /* Do the rest of the work... */
+    return dma_common(cmd, count, addr, G1_DMA_TO_MEMORY, block);
 }
 
 int g1_ata_write_lba(uint64_t sector, size_t count, const void *buf) {
-    int rv = 0;
     unsigned int i, j;
     uint8_t nsects = (uint8_t)count;
     uint16_t word;
     uint8_t *ptr = (uint8_t *)buf;
+    int cmd, lba28;
 
     /* Make sure that we've been initialized and there's a disk attached. */
     if(!devices) {
@@ -744,36 +759,22 @@ int g1_ata_write_lba(uint64_t sector, size_t count, const void *buf) {
         count -= nsects;
 
         /* Which mode are we using: LBA28 or LBA48? */
-        if((sector + nsects) <= 0x0FFFFFFF) {
+        lba28 = (sector + nsects) <= 0x0FFFFFFF;
+        if(lba28) {
             g1_ata_select_device(G1_ATA_SLAVE | G1_ATA_LBA_MODE |
                                  ((sector >> 24) & 0x0F));
-
-            /* Write out the number of sectors we want and the lower 24-bits of
-               the LBA we're looking for. */
-            OUT8(G1_ATA_SECTOR_COUNT, nsects);
-            OUT8(G1_ATA_LBA_LOW, (uint8_t)((sector >> 0) & 0xFF));
-            OUT8(G1_ATA_LBA_MID, (uint8_t)((sector >> 8) & 0xFF));
-            OUT8(G1_ATA_LBA_HIGH, (uint8_t)((sector >> 16) & 0xFF));
-
-            /* Write out the command to the device. */
-            OUT8(G1_ATA_COMMAND_REG, ATA_CMD_WRITE_SECTORS);
+            cmd = ATA_CMD_WRITE_SECTORS;
         }
         else {
             g1_ata_select_device(G1_ATA_SLAVE | G1_ATA_LBA_MODE);
-
-            /* Write out the number of sectors we want and the LBA. */
-            OUT8(G1_ATA_SECTOR_COUNT, 0);
-            OUT8(G1_ATA_LBA_LOW, (uint8_t)((sector >> 24) & 0xFF));
-            OUT8(G1_ATA_LBA_MID, (uint8_t)((sector >> 32) & 0xFF));
-            OUT8(G1_ATA_LBA_HIGH, (uint8_t)((sector >> 40) & 0xFF));
-            OUT8(G1_ATA_SECTOR_COUNT, nsects);
-            OUT8(G1_ATA_LBA_LOW, (uint8_t)((sector >> 0) & 0xFF));
-            OUT8(G1_ATA_LBA_MID, (uint8_t)((sector >> 8) & 0xFF));
-            OUT8(G1_ATA_LBA_HIGH, (uint8_t)((sector >> 16) & 0xFF));
-
-            /* Write out the command to the device. */
-            OUT8(G1_ATA_COMMAND_REG, ATA_CMD_WRITE_SECTORS_EXT);
+            cmd = ATA_CMD_WRITE_SECTORS_EXT;
         }
+
+        /* Write out the number of sectors we want and the LBA. */
+        g1_ata_set_sector_and_count(sector, nsects, lba28);
+
+        /* Write out the command to the device. */
+        OUT8(G1_ATA_COMMAND_REG, cmd);
 
         /* Now, send the drive each sector. */
         for(i = 0; i < nsects; ++i, ++sector) {
@@ -792,18 +793,15 @@ int g1_ata_write_lba(uint64_t sector, size_t count, const void *buf) {
     /* Wait for the device to signal that it has finished writing the data. */
     g1_ata_wait_bsydrq();
 
-    rv = 0;
-
     g1_ata_mutex_unlock();
 
-    return rv;
+    return 0;
 }
 
 int g1_ata_write_lba_dma(uint64_t sector, size_t count, const void *buf,
                          int block) {
-    int rv = 0;
+    int cmd, lba28, old, can_lba48 = CAN_USE_LBA48();
     uint32_t addr;
-    int old, can_lba48 = CAN_USE_LBA48();
 
     /* Make sure we're actually being asked to do work... */
     if(!count)
@@ -853,8 +851,10 @@ int g1_ata_write_lba_dma(uint64_t sector, size_t count, const void *buf,
         return -1;
     }
 
-    /* Flush the dcache over the range of the data. */
-    dcache_flush_range((uint32)buf, count * 512);
+    if((addr >> 24) == 0x0C) {
+        /* Flush the dcache over the range of the data. */
+        dcache_flush_range((uint32)buf, count * 512);
+    }
 
     /* Lock the mutex. It will be unlocked in the IRQ handler later. */
     if(g1_ata_mutex_lock())
@@ -875,49 +875,30 @@ int g1_ata_write_lba_dma(uint64_t sector, size_t count, const void *buf,
     /* Set the settings for this transfer and re-enable IRQs. */
     dma_blocking = block;
     dma_in_progress = 1;
+    dma_nb_sectors = count;
+    dma_sector = sector;
     irq_restore(old);
 
     /* Wait for the device to signal it is ready. */
     g1_ata_wait_bsydrq();
 
     /* Which mode are we using: LBA28 or LBA48? */
-    if(!can_lba48 || use_lba28(sector, count)) {
+    lba28 = !can_lba48 || use_lba28(sector, count);
+    if(lba28) {
         g1_ata_select_device(G1_ATA_SLAVE | G1_ATA_LBA_MODE |
                              ((sector >> 24) & 0x0F));
-
-        /* Write out the number of sectors we have and the lower 24-bits of
-           the LBA we're looking for. Note that putting 0 into the sector count
-           register writes 256 sectors. */
-        OUT8(G1_ATA_SECTOR_COUNT, (uint8_t)count);
-        OUT8(G1_ATA_LBA_LOW, (uint8_t)((sector >> 0) & 0xFF));
-        OUT8(G1_ATA_LBA_MID, (uint8_t)((sector >> 8) & 0xFF));
-        OUT8(G1_ATA_LBA_HIGH, (uint8_t)((sector >> 16) & 0xFF));
-
-        /* Do the rest of the work... */
-        rv = dma_common(ATA_CMD_WRITE_DMA, count, addr, G1_DMA_TO_DEVICE,
-                        block);
+        cmd = ATA_CMD_WRITE_DMA;
     }
     else {
         g1_ata_select_device(G1_ATA_SLAVE | G1_ATA_LBA_MODE);
-
-        /* Write out the number of sectors we have and the LBA. Note that in
-           LBA48 mode, putting 0 into the sector count register writes 65536
-           sectors (not that we have that much RAM on the Dreamcast). */
-        OUT8(G1_ATA_SECTOR_COUNT, (uint8_t)(count >> 8));
-        OUT8(G1_ATA_LBA_LOW, (uint8_t)((sector >> 24) & 0xFF));
-        OUT8(G1_ATA_LBA_MID, (uint8_t)((sector >> 32) & 0xFF));
-        OUT8(G1_ATA_LBA_HIGH, (uint8_t)((sector >> 40) & 0xFF));
-        OUT8(G1_ATA_SECTOR_COUNT, (uint8_t)count);
-        OUT8(G1_ATA_LBA_LOW, (uint8_t)((sector >> 0) & 0xFF));
-        OUT8(G1_ATA_LBA_MID, (uint8_t)((sector >> 8) & 0xFF));
-        OUT8(G1_ATA_LBA_HIGH, (uint8_t)((sector >> 16) & 0xFF));
-
-        /* Do the rest of the work... */
-        rv = dma_common(ATA_CMD_WRITE_DMA_EXT, count, addr, G1_DMA_TO_DEVICE,
-                        block);
+        cmd = ATA_CMD_WRITE_DMA_EXT;
     }
 
-    return rv;
+    /* Write out the number of sectors we want and the LBA. */
+    g1_ata_set_sector_and_count(sector, count, lba28);
+
+    /* Do the rest of the work... */
+    return dma_common(cmd, count, addr, G1_DMA_TO_DEVICE, block);
 }
 
 int g1_ata_flush(void) {
@@ -1084,7 +1065,7 @@ static int g1_ata_scan(void) {
         if(!g1_ata_set_transfer_mode(ATA_TRANSFER_WDMA(2))) {
             OUT32(G1_ATA_DMA_RACCESS_WAIT, G1_ACCESS_WDMA_MODE2);
             OUT32(G1_ATA_DMA_WACCESS_WAIT, G1_ACCESS_WDMA_MODE2);
-            OUT32(G1_ATA_DMA_PROTECTION, G1_DMA_UNLOCK_SYSMEM);
+            OUT32(G1_ATA_DMA_PROTECTION, G1_DMA_UNLOCK_ALLMEM);
         }
         else {
             device.wdma_modes = 0;

@@ -1,0 +1,80 @@
+KOS Notes
+---------
+This driver was imported from Nick's sources, v1.1. The driver code is
+located in kernel/arch/dreamcast/hardware/modem, and the headers are
+in kernel/arch/dreamcast/include/dc/modem. The original readme.txt
+follows:
+
+
+Changes
+-------
+v1.1
+ - Changed the user accessible (non internal) function names to use a KOS
+   style naming convention
+ - Made some internal functions actually internal
+ - Added modem_has_data
+ - Added descriptions for all user accessible functions
+
+Important
+---------
+- TMU interrupt 1 is modified and disabled during and after the modem
+  detection sequence
+- The detection sequence needs to have very precise timing. It's ok to have
+  interrupt handlers enabled for the other TMUs but be aware that errors
+  could result if too much of the CPU's time is consumed while in these
+  interrupts.
+- When dialing, it takes about 1 second for the modem to open the phone line
+  and detect a dial tone. If there's no dial tone present then it will take
+  1.5 seconds for the dialing procedure to exit. It takes about 1 or more
+  additional seconds to dial the number that you gave the dialing procedure.
+  Dialing times will, of course, vary depending how long the number you are
+  dialing is. When you make the modem driver dial a number you should expect
+  that it will cause your program to be interrupted for about 1.5 or more
+  seconds.
+- It is recommended that you always use the automatic bit rate (speed)
+  detection as the parameter for the mode set procedure. If you set a specific
+  speed there's a chance that the connection may not be successful if the
+  remote computer that you are connecting to is configured to operate at a
+  different bit rate than the one you have specified.
+- You can only safely read and write data from the FIFO buffers 256 bytes at
+  a time. Doing more than this usually seems to create some unwanted feedback
+  on the other side.
+- The read and write functions will not always read or write the number of
+  bytes that you want them to! Check the return values. They tell you the
+  number of bytes that were actually written/read.
+      This is something that anyone who works with these communication devices
+  (even working with high speed network connections) needs to deal with,
+  because the operating environment for any such device is not always ideal.
+- Don't use the read or write functions inside of the callback functions
+  that are used when the modem asserts an IRQ.
+
+Description of the modes of operation
+-------------------------------------
+The general connection routine: (This applies to ALL modes of operation!)
+  1.) Set the mode of operation
+      * If the mode is "remote mode" then make sure you dial a number before
+        going to the next step.
+  2.) Wait until modemIsConnecting returns zero. You can do other things while
+      you're waiting, but don't try to access the modem until this happens.
+  3.) When modemIsConnecting returns zero, check the return value of
+      modemIsConnected. This will tell you if the modem has actually
+      established a connection or if there was an error during the connection
+      attempt. You can use modemGetLastError to get the error code if, at this
+      point, modemIsConnected returns zero.
+  4.) If modemIsConnected returns a non zero value (meaning that a connection
+      has been established), then you can go on to transmit data, etc.
+
+1.) Remote mode
+2.) Direct mode -
+    This mode assumes that you want to make a direct connection with another
+    modem. You should plug your Dreamcast's modem into the "line" jack of
+    the modem that you're connecting to.
+
+    As soon as this mode is set, the line is opened and the driver waits until
+    the start of a handshake signal signal has been detected. It will then
+    attempt to connect automatically. The Dreamcast will always answer
+    handshake signals not send them, this is mostly because it works out very
+    well if you want to establish a direct connection between your Dreamcast
+    and a computer.
+
+3.) Answer mode

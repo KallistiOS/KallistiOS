@@ -172,6 +172,8 @@ int  __weak arch_auto_init(void) {
     timer_init();           /* Timers */
     hardware_sys_init();        /* DC low-level hardware init */
 
+    syscall_sysinfo_init();
+
     /* Initialize our timer */
     perf_cntr_timer_enable();
     timer_ms_enable();
@@ -388,6 +390,7 @@ void arch_menu(void) {
 
 /* Called to shut down non-gracefully; assume the system is in peril
    and don't try to call the dtors */
+__used __noreturn
 void arch_abort(void) {
     /* Disable the WDT, if active */
     wdt_disable();

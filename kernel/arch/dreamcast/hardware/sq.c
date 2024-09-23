@@ -123,10 +123,14 @@ void *sq_set16(void *dest, uint32_t c, size_t n) {
 void *sq_set32(void *dest, uint32_t c, size_t n) {
     uint32_t *d = SQ_MASK_DEST(dest);
 
-    sq_lock(dest);
-
     /* Write them as many times necessary */
     n >>= 5;
+
+    /* Exit early if we dont have enough data to set */
+    if(n == 0)
+        return dest;
+
+    sq_lock(dest);
 
     while(n--) {
         /* Fill both store queues with c */

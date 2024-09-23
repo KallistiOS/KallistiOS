@@ -16,7 +16,7 @@ void cdfs_test(void) {
     /* Read and print the root directory */
     d = fs_open("/cd", O_RDONLY | O_DIR);
 
-    if(d == 0) {
+    if(d < 0) {
         printf("Can't open root!\r\n");
         return;
     }
@@ -37,7 +37,7 @@ void cdfs_test(void) {
     /* Read and print a file called README.TXT (if any) */
     fd = fs_open("/cd/readme.txt", O_RDONLY);
 
-    if(fd == 0) {
+    if(fd < 0) {
         printf("Can't open file README.TXT for reading.\r\n");
         return;
     }

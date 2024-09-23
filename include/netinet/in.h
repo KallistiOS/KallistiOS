@@ -208,7 +208,7 @@ extern const struct in6_addr in6addr_loopback;
 #define IPPROTO_UDP     17
 
 /** \brief   Internet Protocol Version 6. 
-    \ingroup networking_ipv
+    \ingroup networking_ip
 */
 #define IPPROTO_IPV6    41
 

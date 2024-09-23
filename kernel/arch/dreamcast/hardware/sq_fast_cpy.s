@@ -1,6 +1,6 @@
 ! KallistiOS ##version##
 !
-! arch/dreamcast/hardware/sq_fast_path.s
+! arch/dreamcast/hardware/sq_fast_cpy.s
 ! Copyright (C) 2024 Andy Barajas
 !
 ! Optimized SH4 assembler function for copying 32 bytes of data 
@@ -43,4 +43,3 @@ _sq_fast_cpy:
 .exit:
     rts     
     fschg
-

@@ -6,6 +6,7 @@
 
 all:
 	$(KOS_MAKE) -C plasma
+	$(KOS_MAKE) -C pvrline
 	$(KOS_MAKE) -C pvrmark
 	$(KOS_MAKE) -C pvrmark_strips
 	$(KOS_MAKE) -C pvrmark_strips_direct
@@ -18,6 +19,7 @@ all:
 
 clean:
 	$(KOS_MAKE) -C plasma clean
+	$(KOS_MAKE) -C pvrline clean
 	$(KOS_MAKE) -C pvrmark clean
 	$(KOS_MAKE) -C pvrmark_strips clean
 	$(KOS_MAKE) -C pvrmark_strips_direct clean
@@ -30,6 +32,7 @@ clean:
 
 dist:
 	$(KOS_MAKE) -C plasma dist
+	$(KOS_MAKE) -C pvrline dist
 	$(KOS_MAKE) -C pvrmark dist
 	$(KOS_MAKE) -C pvrmark_strips dist
 	$(KOS_MAKE) -C pvrmark_strips_direct dist

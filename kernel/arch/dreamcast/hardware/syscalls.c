@@ -116,18 +116,12 @@
     syscall((r4), (r5), (r6), (func)); \
 } while(0)
 
-/* 
-    Prepares FUNC_SYSINFO_ICON and FUNC_SYSINFO_ID calls for use by 
-    copying the relevant data from the system flashrom into 
-    8C000068-8C00007F.  No point in making this public.
-*/
-static void syscall_sysinfo_init(void) {
+void syscall_sysinfo_init(void) {
     MAKE_SYSCALL_VOID(VEC_SYSINFO, FUNC_SYSINFO_INIT, 
         PARAM_NA, PARAM_NA, PARAM_NA);
 }
 
 int syscall_sysinfo_icon(uint32_t icon, uint8_t *dest) {
-    syscall_sysinfo_init();
     MAKE_SYSCALL_INT(VEC_SYSINFO, FUNC_SYSINFO_ICON, 
         icon, dest, PARAM_NA);
 }
@@ -135,7 +129,6 @@ int syscall_sysinfo_icon(uint32_t icon, uint8_t *dest) {
 uint64_t syscall_sysinfo_id(void) {
     uint64_t *id = NULL;
 
-    syscall_sysinfo_init();
     MAKE_SYSCALL_SET(VEC_SYSINFO, FUNC_SYSINFO_ID, 
         PARAM_NA, PARAM_NA, PARAM_NA, id, uint64_t *);
 

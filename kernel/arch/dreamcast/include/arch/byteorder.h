@@ -32,7 +32,10 @@ __BEGIN_DECLS
 #undef BYTE_ORDER
 #endif
 
-/** \addtogroup arch
+/** \defgroup system_arch  Byte Order
+    \brief                 Byte-order management for the SH4 architecture
+    \ingroup               arch
+
     @{
 */
 

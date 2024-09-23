@@ -136,4 +136,15 @@ vmufb_print_string(vmufb_t *fb, const vmufb_font_t *font, const char *str) {
     vmufb_print_string_into(fb, font, 0, 0, 48, 32, 0, str);
 }
 
+/** \brief  Render a string to attached VMUs using the built-in font
+
+    Uses the built-in VMU font to render a string to all VMUs connected to the
+    system.
+
+    \param  fmt             The format string, optionally followed by extra
+                            arguments.
+ */
+__attribute__ ((format (printf, 1, 2)))
+void vmu_printf(const char *fmt, ...);
+
 #endif /* __DC_VMU_FB_H */
