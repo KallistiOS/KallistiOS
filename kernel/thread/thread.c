@@ -443,7 +443,6 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
     kthread_t *nt = NULL;
     tid_t tid;
     uint32_t params[4];
-    int oldirq = 0;
     kthread_attr_t real_attr = { false, THD_STACK_SIZE, NULL, PRIO_DEFAULT, NULL };
 
     if(attr)
@@ -462,7 +461,7 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
     if(!real_attr.prio)
         real_attr.prio = PRIO_DEFAULT;
 
-    oldirq = irq_disable();
+    irq_disable_scoped();
 
     /* Get a new thread id */
     tid = thd_next_free();
@@ -484,7 +483,6 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
 
                 if(!nt->stack) {
                     free(nt);
-                    irq_restore(oldirq);
                     return NULL;
                 }
 
@@ -548,7 +546,6 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
         }
     }
 
-    irq_restore(oldirq);
     return nt;
 }
 
@@ -560,11 +557,10 @@ kthread_t *thd_create(bool detach, void *(*routine)(void *), void *param) {
 /* Given a thread id, this function removes the thread from
    the execution chain. */
 int thd_destroy(kthread_t *thd) {
-    int oldirq = 0;
     kthread_tls_kv_t *i, *i2;
 
     /* Make sure there are no ints */
-    oldirq = irq_disable();
+    irq_disable_scoped();
 
     /* If any threads were waiting on this one, then go ahead
        and unblock them. */
@@ -608,9 +604,6 @@ int thd_destroy(kthread_t *thd) {
 
     /* Remove it from the count */
     --thd_count;
-
-    /* Put ints back the way they were */
-    irq_restore(oldirq);
 
     return 0;
 }
@@ -839,8 +832,8 @@ void thd_pass(void) {
 
 /* Wait for a thread to exit */
 int thd_join(kthread_t *thd, void **value_ptr) {
-    int old, rv;
     kthread_t * t = NULL;
+    int rv;
 
     /* Can't scan for NULL threads */
     if(thd == NULL)
@@ -857,7 +850,7 @@ int thd_join(kthread_t *thd, void **value_ptr) {
         return -1;
     }
 
-    old = irq_disable();
+    irq_disable_scoped();
 
     /* Search the thread list and make sure that this thread hasn't
        already died and been deallocated. */
@@ -890,20 +883,19 @@ int thd_join(kthread_t *thd, void **value_ptr) {
         thd_destroy(thd);
     }
 
-    irq_restore(old);
     return rv;
 }
 
 /* Detach a joinable thread */
 int thd_detach(kthread_t *thd) {
-    int old, rv = 0;
     kthread_t * t = NULL;
+    int rv = 0;
 
     /* Can't scan for NULL threads */
     if(thd == NULL)
         return -1;
 
-    old = irq_disable();
+    irq_disable_scoped();
 
     /* Search the thread list and make sure that this thread hasn't
        already died and been deallocated. */
@@ -929,7 +921,6 @@ int thd_detach(kthread_t *thd) {
         thd->flags |= THD_DETACHED;
     }
 
-    irq_restore(old);
     return rv;
 }
 
@@ -1007,20 +998,19 @@ int thd_set_hz(unsigned int hertz) {
    XXXX: This should really be in tls.c, but we need the list of threads to go
    through, so it ends up here instead. */
 int kthread_key_delete(kthread_key_t key) {
-    int old = irq_disable();
     kthread_t *cur;
     kthread_tls_kv_t *i, *tmp;
 
+    irq_disable_scoped();
+
     /* Make sure the key is valid. */
     if(key >= kthread_key_next() || key < 1) {
-        irq_restore(old);
         errno = EINVAL;
         return -1;
     }
 
     /* Make sure we can actually use free below. */
     if(!malloc_irq_safe()) {
-        irq_restore(old);
         errno = EPERM;
         return -1;
     }
@@ -1038,7 +1028,6 @@ int kthread_key_delete(kthread_key_t key) {
 
     kthread_key_delete_destructor(key);
 
-    irq_restore(old);
     return 0;
 }
 

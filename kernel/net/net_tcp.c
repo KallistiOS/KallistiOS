@@ -2971,14 +2971,13 @@ int net_tcp_init(void) {
 
 void net_tcp_shutdown(void) {
     struct tcp_sock *i, *tmp;
-    int old;
 
     /* Kill the thread and make sure we can grab the lock */
     if(thd_cb_id >= 0)
         net_thd_del_callback(thd_cb_id);
 
     /* Disable IRQs so we can kill the sockets in peace... */
-    old = irq_disable();
+    irq_disable_scoped();
 
     /* Clean up existing sockets */
     i = LIST_FIRST(&tcp_socks);
@@ -3006,6 +3005,4 @@ void net_tcp_shutdown(void) {
 
     /* Remove us from fs_socket and clean up the semaphore */
     fs_socket_proto_remove(&proto);
-
-    irq_restore(old);
 }
