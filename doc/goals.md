@@ -1,5 +1,6 @@
-Goals for KallistiOS (Dreamcast light-weight OS)
+# Goals for KallistiOS
 
+## Primary Goals
 - Thread support (within a single "process")
 - Synchronization support
 - Dreamcast hardware control with some (compile and runtime?) configuration,
@@ -23,14 +24,14 @@ Goals for KallistiOS (Dreamcast light-weight OS)
   big life saver.
 
 
-Non-goals for KallistiOS
+## Non-Goals
 
 - A lot of things that UNIX would provide -- like pipes, real tty's,
   etc.
 - Full memory protection support through the MMU.
 
 
-Hardware Control Layer
+## Hardware Control Layer
 
 - Provides synchronization for high-level primitives.
 - Basic initialization -- initializes all known system components for you

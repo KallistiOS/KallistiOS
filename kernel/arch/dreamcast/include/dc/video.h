@@ -418,7 +418,20 @@ void vid_shutdown(void);
     \param  destfn          The filename to save to.
     \return                 0 on success, <0 on failure.
 */
-int vid_screen_shot(const char * destfn);
+int vid_screen_shot(const char *destfn);
+
+/** \brief   Create image data from the current framebuffer.
+    \ingroup video_fb
+
+    This function takes the current framebuffer (/vram_l) and converts it into
+    24bpp image data. The function allocates memory for the image data, which 
+    the caller is responsible for freeing.
+
+    \param  buffer          A pointer to a uint8_t* that will be allocated and
+                            filled with the image data.
+    \return                 The size of the created image data in bytes, or 0 on failure.
+*/
+size_t vid_screen_shot_data(uint8_t **buffer);
 
 __END_DECLS
 

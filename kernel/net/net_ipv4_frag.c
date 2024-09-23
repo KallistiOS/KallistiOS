@@ -53,7 +53,7 @@ static void frag_thd_cb(void *data) {
 
     (void)data;
 
-    mutex_lock(&frag_mutex);
+    mutex_lock_scoped(&frag_mutex);
 
     /* Look at each fragment item, and see if the timer has expired. If so,
        remove it. */
@@ -70,8 +70,6 @@ static void frag_thd_cb(void *data) {
 
         f = n;
     }
-
-    mutex_unlock(&frag_mutex);
 }
 
 /* Set the bits in the bitfield for the given set of fragment blocks. */
@@ -258,15 +256,8 @@ int net_ipv4_reassemble(netif_t *src, const ip_hdr_t *hdr, const uint8 *data,
 
     /* This is usually called inside an interrupt, so try to safely lock the
        mutex, and bail if we can't. */
-    if(irq_inside_int()) {
-        if(mutex_trylock(&frag_mutex) == -1) {
-            errno = EWOULDBLOCK;
-            return -1;
-        }
-    }
-    else {
-        mutex_lock(&frag_mutex);
-    }
+    if(mutex_lock_irqsafe(&frag_mutex))
+        return -1;
 
     /* Find the packet if we already have this one in our data buffer. */
     TAILQ_FOREACH(f, &frags, listhnd) {
