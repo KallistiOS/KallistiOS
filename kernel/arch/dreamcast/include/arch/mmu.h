@@ -353,10 +353,8 @@ mmu_mapfunc_t mmu_map_set_callback(mmu_mapfunc_t newfunc);
 
     Unlike most things in KOS, the MMU is not initialized by a normal startup.
     This is because for most homebrew, its not needed.
-
-    \retval 0               On success (no error conditions defined).
 */
-int mmu_init(void);
+void mmu_init(void);
 
 /** \brief   Shutdown MMU support.
     \ingroup mmu

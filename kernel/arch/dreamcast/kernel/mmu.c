@@ -715,7 +715,7 @@ static void initial_page_write(irq_t source, irq_context_t *context, void *data)
 
 /********************************************************************************/
 /* Init routine */
-int mmu_init(void) {
+void mmu_init(void) {
     /* Setup last URC counter (to make sure we don't thrash the
        TLB caches accidentally) */
     last_urc = 0;
@@ -750,9 +750,6 @@ int mmu_init(void) {
 
     /* Clear the ITLB */
     mmu_reset_itlb();
-
-    /* All done */
-    return 0;
 }
 
 /* Shutdown */
