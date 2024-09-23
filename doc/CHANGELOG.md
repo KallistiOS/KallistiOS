@@ -5,6 +5,7 @@ Platform-specific changes are prefixed with the platform name, otherwise the cha
 ## KallistiOS version 2.2.0
 - Added pvrtex utility by TapamN to utils [DF == Daniel Fairchild]
 - Added . & .. directories to filesystems that lack it [AB]
+- Replaced previous implementation of realpath() to remove license from AUTHORS [AB]
 
 ## KallistiOS version 2.1.0
 - Cleaned up generated stubs files on a make clean [Lawrence Sebald == LS]
