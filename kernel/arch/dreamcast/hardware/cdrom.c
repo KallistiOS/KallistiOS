@@ -425,8 +425,8 @@ int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode) {
             dbglog(DBG_ERROR, "cdrom_read_sectors_ex: Unaligned memory for DMA (32-byte).\n");
             return ERR_SYS;
         }
-        if((buf_addr >> 24) == 0x0c) {
-            dcache_inval_range((uintptr_t)params.buffer, cnt * cur_sector_size);
+        if((((uintptr_t)params.buffer) >> 24) == 0x0c) {
+            dcache_inval_range(buf_addr, cnt * cur_sector_size);
         }
 
         if(mode == CDROM_READ_DMA_IRQ) {
@@ -509,7 +509,6 @@ int cdrom_stream_stop(void) {
             break;
         }
         else if(rs == COMPLETED || rs == NO_ACTIVE) {
-            dbglog(DBG_DEBUG, "cdrom_stream_stop: complete.\n");
             break;
         }
         else if(rs == STREAMING) {
