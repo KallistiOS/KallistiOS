@@ -44,6 +44,7 @@ ISO9660 systems, as these were used as references as well.
 #include <strings.h>
 #include <malloc.h>
 #include <errno.h>
+#include <sys/ioctl.h>
 
 static int init_percd(void);
 static int percd_done;
@@ -922,6 +923,23 @@ static dirent_t *iso_readdir(void * h) {
     return &fh[fd].dirent;
 }
 
+static int iso_ioctl(void *h, int cmd, va_list ap) {
+    file_t fd = (file_t)h;
+
+    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || fh[fd].broken) {
+        errno = EBADF;
+        return -1;
+    }
+
+    switch (cmd) {
+        case IOCTL_ISO9660_GET_FIRST_EXTENT:
+            return fh[fd].first_extent;
+        default:
+            errno = EINVAL;
+            return -1;
+    }
+}
+
 static int iso_rewinddir(void * h) {
     file_t fd = (file_t)h;
 
@@ -1053,7 +1071,7 @@ static vfs_handler_t vh = {
     iso_tell,
     iso_total,
     iso_readdir,
-    NULL,
+    iso_ioctl,
     NULL,
     NULL,
     NULL,
