@@ -2,7 +2,7 @@
 
    snd_sfxmgr.c
    Copyright (C) 2000, 2001, 2002, 2003, 2004 Megan Potter
-   Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024 Ruslan Rostovtsev
    Copyright (C) 2023 Andy Barajas
    Copyright (C) 2024 Stefanos Kornilios Mitsis Poiitidis
 
@@ -329,7 +329,7 @@ sfxhnd_t snd_sfx_load(const char *fn) {
     /* Open the sound effect file */
     fd = fs_open(fn, O_RDONLY);
     if(fd <= FILEHND_INVALID) {
-        dbglog(DBG_ERROR, "snd_sfx_load: can't open sfx %s\n", fn);
+        dbglog(DBG_ERROR, "snd_sfx_load: can't open %s\n", fn);
         return SFXHND_INVALID;
     }
 
@@ -435,14 +435,14 @@ sfxhnd_t snd_sfx_load_fd(file_t fd, size_t len, uint32_t rate, uint16_t bitsize,
         goto err_occurred;
     }
     /* Uncomment when implementation is merged.
-    if(fs_ioctl(fd, IOCTL_FS_ROOTBUS_DMA_LENGTH, &fs_dma_len) == 0) {
+    if(fs_ioctl(fd, IOCTL_FS_ROOTBUS_DMA_READY, &fs_dma_len) == 0) {
         if(chan_len >= fs_dma_len && (chan_len & (fs_dma_len - 1)) == 0) {
             fs_rootbus_dma_ready = 1;
         }
     }
     */
     if(fs_rootbus_dma_ready) {
-        if(fs_read(fd, (void *)(effect->locl | SPU_RAM_BASE), chan_len) <= 0) {
+        if(fs_read(fd, (void *)(effect->locl | SPU_RAM_UNCACHED_BASE), chan_len) <= 0) {
             goto err_occurred;
         }
     }
@@ -462,7 +462,7 @@ sfxhnd_t snd_sfx_load_fd(file_t fd, size_t len, uint32_t rate, uint16_t bitsize,
             goto err_occurred;
         }
         if(fs_rootbus_dma_ready) {
-            if(fs_read(fd, (void *)(effect->locr | SPU_RAM_BASE), chan_len) <= 0) {
+            if(fs_read(fd, (void *)(effect->locr | SPU_RAM_UNCACHED_BASE), chan_len) <= 0) {
                 goto err_occurred;
             }
         }

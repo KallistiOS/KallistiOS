@@ -2,7 +2,7 @@
 
    dc/sound/sfxmgr.h
    Copyright (C) 2002 Megan Potter
-   Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024 Ruslan Rostovtsev
    Copyright (C) 2023 Andy Barajas
 
 */
@@ -30,6 +30,7 @@
 __BEGIN_DECLS
 
 #include <arch/types.h>
+#include <kos/fs.h>
 #include <stdint.h>
 
 /** \defgroup audio_sfx     Sound Effects

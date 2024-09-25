@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <malloc.h>
+#include <errno.h>
 #include <sys/queue.h>
 
 #include <kos/mutex.h>
@@ -372,8 +373,8 @@ void snd_stream_prefill(snd_stream_hnd_t hnd) {
 
     if(stream->req_data) {
         filled = stream->req_data(hnd,
-            stream->spu_ram_sch[0] | SPU_RAM_BASE,
-            stream->spu_ram_sch[1] | SPU_RAM_BASE,
+            stream->spu_ram_sch[0] | SPU_RAM_UNCACHED_BASE,
+            stream->spu_ram_sch[1] | SPU_RAM_UNCACHED_BASE,
             stream->buffer_size);
     }
     if(filled <= 0 && stream->get_data) {
@@ -665,7 +666,11 @@ static inline void dma_done(void *data) {
 
 static inline void dma_chain(void *data) {
     strchan_t *stream = (strchan_t *)data;
-    spu_dma_transfer(sep_buffer[1], stream->dma_dest, stream->dma_length, 0, dma_done, data);
+    int rs = spu_dma_transfer(sep_buffer[1],
+        stream->dma_dest, stream->dma_length, 0, dma_done, data);
+    if(rs < 0) {
+        dma_done(data);
+    }
 }
 
 /* Poll streamer to load more data if necessary */
@@ -675,6 +680,7 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
     int needed_samples = 0;
     int needed_bytes = 0;
     int got_bytes = 0;
+    int rs;
     void *data;
     void *first_dma_buf = sep_buffer[0];
     strchan_t *stream;
@@ -737,9 +743,9 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
 
     if(stream->req_data) {
         got_bytes = stream->req_data(hnd,
-            (stream->spu_ram_sch[0] | SPU_RAM_BASE) + write_pos,
+            (stream->spu_ram_sch[0] | SPU_RAM_UNCACHED_BASE) + write_pos,
             (stream->channels == 2 ?
-                ((stream->spu_ram_sch[1] | SPU_RAM_BASE) + write_pos) : 0),
+                ((stream->spu_ram_sch[1] | SPU_RAM_UNCACHED_BASE) + write_pos) : 0),
             needed_bytes);
 
         if(got_bytes) {
@@ -804,10 +810,6 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
         stream->dma_dest = stream->spu_ram_sch[1] + write_pos;
         stream->dma_length = needed_bytes;
         stream->poll_thd = thd_current;
-
-        /* Second DMA will get started by the chain handler */
-        spu_dma_transfer(first_dma_buf,
-            stream->spu_ram_sch[0] + write_pos, needed_bytes, 0, dma_chain, (void *)stream);
     }
     else {
         if((uintptr_t)data & 31) {
@@ -820,10 +822,32 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
 
         mutex_lock(&stream_mutex);
         stream->poll_thd = thd_current;
-
-        spu_dma_transfer(first_dma_buf,
-            stream->spu_ram_sch[0] + write_pos, needed_bytes, 0, dma_done, (void *)stream);
     }
+
+    do {
+        rs = spu_dma_transfer(first_dma_buf,
+            stream->spu_ram_sch[0] + write_pos,
+            needed_bytes,
+            0,
+            (stream->channels == 1 ? dma_done : dma_chain),
+            (void *)stream);
+
+        if(rs < 0) {
+            if(errno == EINPROGRESS) {
+                thd_pass();
+                continue;
+            }
+            spu_memload_sq(stream->spu_ram_sch[0] + write_pos,
+                first_dma_buf, needed_bytes);
+
+            if(stream->channels == 2) {
+                spu_memload_sq(stream->spu_ram_sch[1] + write_pos,
+                    sep_buffer[1], needed_bytes);
+            }
+            mutex_unlock(&stream_mutex);
+        }
+        break;
+    } while(1);
 
 stream_poll_exit:
     stream->last_write_pos += needed_samples;
