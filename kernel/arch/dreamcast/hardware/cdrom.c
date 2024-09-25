@@ -208,13 +208,6 @@ int cdrom_abort_cmd(uint32_t timeout) {
     stream_mode = -1;
     mutex_unlock(&_g1_ata_mutex);
 
-    if(dma_in_progress) {
-        dma_in_progress = 0;
-        if(dma_blocking) {
-            dma_blocking = 0;
-            sem_signal(&dma_done);
-        }
-    }
     if(stream_cb) {
         cdrom_stream_set_callback(0, NULL);
     }
@@ -494,10 +487,6 @@ int cdrom_stream_stop(void) {
     if(cmd_hnd <= 0) {
         return rv;
     }
-    if(dma_in_progress) {
-        mutex_unlock(&_g1_ata_mutex);
-        return cdrom_abort_cmd(1000);
-    }
     mutex_lock(&_g1_ata_mutex);
 
     do {
@@ -522,13 +511,6 @@ int cdrom_stream_stop(void) {
     stream_mode = -1;
     mutex_unlock(&_g1_ata_mutex);
 
-    if(dma_in_progress) {
-        dma_in_progress = 0;
-        if(dma_blocking) {
-            dma_blocking = 0;
-            sem_signal(&dma_done);
-        }
-    }
     if(stream_cb) {
         cdrom_stream_set_callback(0, NULL);
     }
@@ -788,12 +770,12 @@ static void g1_dma_irq_hnd(uint32_t code, void *data) {
 
         if(dma_blocking) {
             dma_blocking = 0;
-            if(dma_thd) {
-                mutex_unlock_as_thread(&_g1_ata_mutex, dma_thd);
-                dma_thd = NULL;
-            }
             sem_signal(&dma_done);
             thd_schedule(1, 0);
+        }
+        else if(dma_thd) {
+            mutex_unlock_as_thread(&_g1_ata_mutex, dma_thd);
+            dma_thd = NULL;
         }
     }
     else if(cmd_hnd > 0) {
