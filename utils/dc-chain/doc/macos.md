@@ -101,7 +101,11 @@ To build the toolchain, do the following:
 	cd /opt/toolchains/dc/kos/utils/dc-chain/
 	```
 
-2. (Optional) Copy and alter the `Makefile.cfg` file options to your liking.
+2. (Optional) Copy and alter the `Makefile.cfg` file options to your liking and use profile 14.2.0.
+	```
+	cp Makefile.default.cfg Makefile.cfg # Copy default configuration
+	sed -i  s/toolchain_profile=stable/toolchain_profile=14.2.0/ Makefile.cfg  # Set profile
+	```
 
 3. Enter the following to start downloading and building toolchain:
 	```

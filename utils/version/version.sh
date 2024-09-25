@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # Little version release util for KOS
 # Copyright (C) 2000-2002 Megan Potter

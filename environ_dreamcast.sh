@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # KallistiOS environment variable settings. These are the shared pieces
 # for the Dreamcast(tm) platform.
 
@@ -7,8 +9,14 @@ if [ -z "${DC_TOOLS_BASE}" ] ; then
 fi
 
 # Add the external DC tools dir to the path if it is not already.
-if [[ ":$PATH:" != *":${DC_TOOLS_BASE}:"* ]]; then
+if uname -s | grep -q "BSD"; then
+	if [ ":$PATH:" != *":${DC_TOOLS_BASE}:"* ]; then
   export PATH="${PATH}:${DC_TOOLS_BASE}"
+	fi
+else
+	if [[ ":$PATH:" != *":${DC_TOOLS_BASE}:"* ]]; then
+  export PATH="${PATH}:${DC_TOOLS_BASE}"
+	fi
 fi
 
 # Default the SH4 floating point precision if it isn't already set.

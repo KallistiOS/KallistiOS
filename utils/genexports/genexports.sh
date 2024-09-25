@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 usage() {
 	echo 'genexports.sh <inpfile> <outpfile> <symbolname>'

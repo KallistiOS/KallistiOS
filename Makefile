@@ -21,7 +21,7 @@ ifndef KOS_BASE
 error:
 	@echo You don\'t seem to have a working  environ.sh file. Please take a look at
 	@echo doc/README for more info.
-	@exit 0
+	@exit 1
 endif
 
 all:
