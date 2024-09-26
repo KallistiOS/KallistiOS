@@ -412,6 +412,65 @@ static void *romdisk_mmap(void * h) {
     return (void *)(fh[fd].mnt->image + fh[fd].index);
 }
 
+static int romdisk_stat(vfs_handler_t *vfs, const char *path, struct stat *buf,
+                        int flag) {
+    (void)flag;
+    mode_t md;
+    uint32 filehdr;
+    const romdisk_file_t *fhdr;
+    rd_image_t *mnt = (rd_image_t *)vfs->privdata;
+
+    /* Root directory of romdisk */
+    if(strlen(path) == 0) {
+        fhdr = (const romdisk_file_t *)(mnt->image + filehdr);
+        buf->st_dev = (dev_t)((ptr_t)mnt);
+        memset(buf, 0, sizeof(struct stat));
+        buf->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP |
+            S_IROTH | S_IXOTH;;
+        buf->st_size = -1;
+
+        return 0;
+    }
+
+    /* First try opening as a file */
+    filehdr = romdisk_find(mnt, path + 1, 0);
+    md = S_IFREG;
+
+    /* If we couldn't get it as a file, try as a directory */
+    if(filehdr == 0) {
+        filehdr = romdisk_find(mnt, path + 1, 1);
+        md = S_IFDIR;
+    }
+
+    /* If we still don't have it, then we're not going to get it. */
+    if(filehdr == 0) {
+        errno = ENOENT;
+        return -1;
+    }
+       
+    fhdr = (const romdisk_file_t *)(mnt->image + filehdr);
+    buf->st_dev = (dev_t)((ptr_t)mnt);
+    buf->st_nlink = 1;
+    buf->st_blksize = 1024;
+    buf->st_mode = md | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP |
+            S_IROTH | S_IXOTH;
+
+    if(md == S_IFDIR) {
+        buf->st_size = -1;
+        buf->st_blocks = 0;
+    }
+    else {
+        buf->st_size = ntohl_32(&fhdr->size);
+        buf->st_blocks = buf->st_size >> 10;
+
+        /* Add one more block if there's a remainder */
+        if (buf->st_size & 0x3ff)
+            ++buf->st_blocks;
+    }
+
+    return 0;
+}
+
 static int romdisk_fcntl(void *h, int cmd, va_list ap) {
     file_t fd = (file_t)h;
     int rv = -1;
@@ -513,7 +572,7 @@ static vfs_handler_t vh = {
     NULL,                       /* unlink */
     romdisk_mmap,
     NULL,                       /* complete */
-    NULL,                       /* stat */
+    romdisk_stat,               /* stat */
     NULL,                       /* mkdir */
     NULL,                       /* rmdir */
     romdisk_fcntl,

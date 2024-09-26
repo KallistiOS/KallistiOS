@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
 
                     content_count = browse_directory(directory_temp, directory_contents);
                     if(content_count > 0) {
-                        realpath(directory_temp, current_directory);
+                        fs_normalize_path(directory_temp, current_directory);
                         changed_directory = true;
                         selector_index = 0;
                     } 
@@ -268,7 +268,7 @@ static int browse_directory(char *directory, directory_file_t *directory_content
 
     /* Open the directory */
     if (!(d = opendir(directory))) {
-        fprintf(stderr, "browse_directory: opendir failed\n");
+        fprintf(stderr, "browse_directory: opendir failed for %s\n", directory);
         return 0;
     }
 

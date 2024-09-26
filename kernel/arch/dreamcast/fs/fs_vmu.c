@@ -581,9 +581,17 @@ static int vmu_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
     (void)vfs;
     (void)flag;
 
-    /* The only thing we can stat right now is full VMUs, and what that
+    /* Root directory '/vmu' */
+    if(len == 0) {
+        memset(rv, 0, sizeof(struct stat));
+        rv->st_mode = S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO;
+        rv->st_size = -1;
+
+        return 0;
+    }
+    else if(len > 4) {
+            /* The only thing we can stat right now is full VMUs, and what that
        will get you is a count of free blocks in "size". */
-    if(len > 4) {
         /* XXXX: This isn't right, but it'll keep the old functionality of this
            function, at least. */
         errno = ENOTDIR;
