@@ -5,6 +5,21 @@
 
 #include "speedtest.h"
 
+/*
+   This file defines the handle_request function, which processes HTTP requests 
+   received by the speed test server. It parses the request, determines the HTTP 
+   method (GET or POST), and routes the request to the appropriate handler based 
+   on the requested path. It supports GET requests to serve files such as 
+   index.html and handles download and upload test endpoints to measure network 
+   speed.
+ 
+   Key paths:
+   - "/": serves the speed test HTML page (index.html).
+   - "/download-test?size=": initiates a download test of the requested size.
+   - "/upload-test": handles data uploads during an upload test.
+ */
+
+
 bool exact_match(const char *path, const char *pattern);
 bool prefix_match(const char *path, const char *pattern);
 
@@ -166,27 +181,6 @@ done_parsing:
             file = fs_open("/rd/index.html", O_RDONLY);
 
             send_ok(hr, "text/html");
-            while((cnt = fs_read(file, response_buf, BUFSIZE)) != 0) {
-                offset = 0;
-
-                while(cnt > 0) {
-                    wrote = send(hr->socket, response_buf + offset, cnt, MSG_NONE);
-
-                    if(wrote <= 0)
-                        break;
-
-                    cnt -= wrote;
-                    offset += wrote;
-                }
-            }
-
-            fs_close(file);
-            goto process_request_out;
-        } /* speedtest.js */
-        else if(exact_match(hr->path, "/speedtest.js")) {
-            file = fs_open("/rd/speedtest.js", O_RDONLY);
-
-            send_ok(hr, "text/javascript");
             while((cnt = fs_read(file, response_buf, BUFSIZE)) != 0) {
                 offset = 0;
 

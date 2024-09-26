@@ -1,9 +1,18 @@
 /* KallistiOS ##version##
 
    speedtest.c
-   Copyright (C) 2003 Megan Potter
-   Copyright (C) 2024 Megan Potter
+   Copyright (C) 2003, 2024 Megan Potter
    Copyright (C) 2024 Andress Barajas
+*/
+
+/*
+   This file sets up the Dreamcast network speed test server, which listens 
+   for HTTP requests on the network and performs download and upload speed tests. 
+   It creates a thread to handle incoming client connections and displays a basic 
+   status message on the Dreamcast screen. The browser-based front-end (index.html)
+   is used to run the test and display the results. The user can press the "START" 
+   button on the Dreamcast controller to shut down the server and exit the 
+   application.
 */
 
 #include <kos/init.h>
