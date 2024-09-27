@@ -16,6 +16,8 @@
 #include <assert.h>
 #include <reent.h>
 #include <errno.h>
+#include <stdalign.h>
+
 #include <kos/thread.h>
 #include <kos/dbgio.h>
 #include <kos/sem.h>
@@ -49,6 +51,10 @@ extern long _tdata_align, _tbss_align;
 static inline size_t align_to(size_t address, size_t alignment) {
     return (address + (alignment - 1)) & ~(alignment - 1);
 }
+
+/* Builtin background thread data */
+static alignas(8) uint8_t thd_reaper_stack[512];
+static alignas(8) uint8_t thd_idle_stack[64];
 
 /*****************************************************************************/
 /* Thread scheduler data */
@@ -514,7 +520,7 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
             nt->state = STATE_READY;
 
             if(!real_attr.label) {
-                strcpy(nt->label, "[un-named kernel thread]");
+                strcpy(nt->label, "unnamed");
             }
             else {
                 strncpy(nt->label, real_attr.label, 255);
@@ -1041,7 +1047,22 @@ int thd_init(void) {
         .stack_ptr  = (void *)_arch_mem_top - THD_KERNEL_STACK_SIZE,
         .label      = "[kernel]"
     };
-    kthread_t *kern, *reaper;
+
+    const kthread_attr_t reaper_attr = {
+        .stack_size = sizeof(thd_reaper_stack),
+        .stack_ptr  = thd_reaper_stack,
+        .prio       = 1,
+        .label      = "[reaper]"
+    };
+
+    const kthread_attr_t idle_attr = {
+        .stack_size = sizeof(thd_idle_stack),
+        .stack_ptr  = thd_idle_stack,
+        .prio       = PRIO_MAX,
+        .label      = "[idle]"
+    };
+
+    kthread_t *kern;
 
     /* Make sure we're not already running */
     if(thd_mode != THD_MODE_NONE)
@@ -1080,16 +1101,12 @@ int thd_init(void) {
 
     /* Setup an idle task that is always ready to run, in case everyone
        else is blocked on something. */
-    thd_idle_thd = thd_create(0, thd_idle_task, NULL);
-    strcpy(thd_idle_thd->label, "[idle]");
-    thd_set_prio(thd_idle_thd, PRIO_MAX);
+    thd_idle_thd = thd_create_ex(&idle_attr, thd_idle_task, NULL);
     thd_idle_thd->state = STATE_READY;
 
     /* Set up a thread to reap old zombies */
     sem_init(&thd_reap_sem, 0);
-    reaper = thd_create(0, thd_reaper, NULL);
-    strcpy(reaper->label, "[reaper]");
-    thd_set_prio(reaper, 1);
+    thd_create_ex(&reaper_attr, thd_reaper, NULL);
 
     /* Main thread -- the kern thread */
     thd_current = kern;
