@@ -4,6 +4,7 @@
    Copyright (C) 2012, 2019 Lawrence Sebald
 */
 
+#include <malloc.h>
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -18,7 +19,7 @@ static int fat_read_raw_boot(fat_bootblock_t *sb, kos_blockdev_t *bd) {
     if(bd->l_block_size > 9) {
         uint8_t *buf;
 
-        if(!(buf = (uint8_t *)malloc(1 << bd->l_block_size)))
+        if(!(buf = (uint8_t *)memalign(32, 1 << bd->l_block_size)))
             return -ENOMEM;
 
         if(bd->read_blocks(bd, 0, 1, buf))
@@ -27,9 +28,6 @@ static int fat_read_raw_boot(fat_bootblock_t *sb, kos_blockdev_t *bd) {
         memcpy(sb, buf, 512);
         free(buf);
         return 0;
-    }
-    else if(bd->l_block_size == 9) {
-        return bd->read_blocks(bd, 0, 1, sb);
     }
     else {
         return bd->read_blocks(bd, 0, 512 >> bd->l_block_size, sb);

@@ -9,7 +9,6 @@
 
 .section .text
 .globl _snd_pcm16_split
-.globl _snd_pcm16_split_sq_start
 .globl _snd_pcm8_split
 .globl _snd_adpcm_split
 

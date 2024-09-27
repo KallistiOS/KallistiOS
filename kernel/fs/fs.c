@@ -43,9 +43,10 @@ something like this:
 /* File handle structure; this is an entirely internal structure so it does
    not go in a header file. */
 typedef struct fs_hnd {
-    vfs_handler_t   *handler;   /* Handler */
-    void *      hnd;        /* Handler-internal */
-    int     refcnt;     /* Reference count */
+    vfs_handler_t *handler;   /* Handler */
+    void *hnd;   /* Handler-internal */
+    int refcnt;  /* Reference count */
+    int idx;     /* Current index for readdir */
 } fs_hnd_t;
 
 /* The global file descriptor table */
@@ -105,7 +106,7 @@ static fs_hnd_t * fs_hnd_open(const char *fn, int mode) {
     fs_hnd_t    *hnd;
     char        rfn[PATH_MAX];
 
-    if(!realpath(fn, rfn))
+    if(!fs_normalize_path(fn, rfn))
         return NULL;
 
     /* Are they trying to open the root? */
@@ -186,7 +187,7 @@ static int fs_hnd_unref(fs_hnd_t *ref) {
 
 /* Assigns a file descriptor (index) to a file handle (pointer). Will auto-
    reference the handle, and unrefs on error. */
-static int fs_hnd_assign(fs_hnd_t * hnd) {
+static int fs_hnd_assign(fs_hnd_t *hnd) {
     int i;
 
     fs_hnd_ref(hnd);
@@ -197,6 +198,10 @@ static int fs_hnd_assign(fs_hnd_t * hnd) {
             break;
 
     if(i >= FD_SETSIZE) {
+        dbglog(DBG_ERROR, "fs_hnd_assign: Update FD_SETSIZE definition in \
+              opts.h to support additional files being opened. Current \
+              limit is %d\n", FD_SETSIZE);
+
         fs_hnd_unref(hnd);
         errno = EMFILE;
         return -1;
@@ -328,15 +333,20 @@ static fs_hnd_t * fs_map_hnd(file_t fd) {
 /* Close a file and clean up the handle */
 int fs_close(file_t fd) {
     int retval;
-    fs_hnd_t * hnd = fs_map_hnd(fd);
+    fs_hnd_t *hnd = fs_map_hnd(fd);
 
     if(!hnd) {
-      errno = EBADF;
-      return -1;
+        errno = EBADF;
+        return -1;
     }
 
     /* Deref it and remove it from our table */
     retval = fs_hnd_unref(hnd);
+
+    /* Reset our position */
+    if(hnd->refcnt == 0)
+        hnd->idx = 0;
+
     fd_table[fd] = NULL;
     return retval ? -1 : 0;
 }
@@ -491,6 +501,8 @@ uint64 fs_total64(file_t fd) {
 }
 
 dirent_t *fs_readdir(file_t fd) {
+    static dirent_t dot_dirent;
+    static dirent_t *temp_dirent;
     fs_hnd_t *h = fs_map_hnd(fd);
 
     if(h == NULL) {
@@ -506,7 +518,51 @@ dirent_t *fs_readdir(file_t fd) {
         return NULL;
     }
 
-    return h->handler->readdir(h->hnd);
+    switch (h->idx) {
+        case 0:
+            temp_dirent = h->handler->readdir(h->hnd);
+            h->idx++;
+
+            /* Does fs provide its own . directory? */
+            if(strcmp(temp_dirent->name, ".") == 0) {
+                return temp_dirent;
+            } else {
+                /* Send . directory first */
+                strcpy(dot_dirent.name, ".");
+                dot_dirent.attr = O_DIR;
+                dot_dirent.size = -1;
+                dot_dirent.time = 0;
+                return &dot_dirent;
+            }
+        case 1:
+            h->idx++;
+
+            /* Did fs provide its own . directory? */
+            if(strcmp(temp_dirent->name, ".") == 0) {
+                /* Read a new entry */
+                temp_dirent = h->handler->readdir(h->hnd);
+            }
+
+            /* Does fs provide its own .. directory? */
+            if(strcmp(temp_dirent->name, "..") == 0) {
+                h->idx++;
+                return temp_dirent;
+            } else {
+                /* Send .. directory second */
+                strcpy(dot_dirent.name, "..");
+                dot_dirent.attr = O_DIR;
+                dot_dirent.size = -1;
+                dot_dirent.time = 0;
+                return &dot_dirent;
+            }
+        case 2:
+            h->idx++;
+            /* FS didnt provide a . or .. directory. 
+               Return what we read first */
+            return temp_dirent;
+        default:
+            return h->handler->readdir(h->hnd);
+    }
 }
 
 int fs_vioctl(file_t fd, int cmd, va_list ap) {
@@ -553,7 +609,7 @@ int fs_rename(const char *fn1, const char *fn2) {
     vfs_handler_t   *fh1, *fh2;
     char        rfn1[PATH_MAX], rfn2[PATH_MAX];
 
-    if(!realpath(fn1, rfn1) || !realpath(fn2, rfn2))
+    if(!fs_normalize_path(fn1, rfn1) || !fs_normalize_path(fn2, rfn2))
         return -1;
 
     /* Look for handlers */
@@ -589,7 +645,7 @@ int fs_unlink(const char *fn) {
     vfs_handler_t   *cur;
     char        rfn[PATH_MAX];
 
-    if(!realpath(fn, rfn))
+    if(!fs_normalize_path(fn, rfn))
         return -1;
 
     /* Look for a handler */
@@ -608,7 +664,7 @@ int fs_unlink(const char *fn) {
 int fs_chdir(const char *fn) {
     char        rfn[PATH_MAX];
 
-    if(!realpath(fn, rfn))
+    if(!fs_normalize_path(fn, rfn))
         return -1;
 
     thd_set_pwd(thd_get_current(), rfn);
@@ -649,7 +705,7 @@ int fs_mkdir(const char * fn) {
     vfs_handler_t   *cur;
     char        rfn[PATH_MAX];
 
-    if(!realpath(fn, rfn))
+    if(!fs_normalize_path(fn, rfn))
         return -1;
 
     /* Look for a handler */
@@ -669,7 +725,7 @@ int fs_rmdir(const char * fn) {
     vfs_handler_t   *cur;
     char        rfn[PATH_MAX];
 
-    if(!realpath(fn, rfn))
+    if(!fs_normalize_path(fn, rfn))
         return -1;
 
     /* Look for a handler */
@@ -718,7 +774,7 @@ int fs_link(const char *path1, const char *path2) {
     vfs_handler_t *fh1, *fh2;
     char rfn1[PATH_MAX], rfn2[PATH_MAX];
 
-    if(!realpath(path1, rfn1) || !realpath(path2, rfn2))
+    if(!fs_normalize_path(path1, rfn1) || !fs_normalize_path(path2, rfn2))
         return -1;
 
     /* Look for handlers */
@@ -755,7 +811,7 @@ int fs_symlink(const char *path1, const char *path2) {
     vfs_handler_t *vfs;
     char rfn[PATH_MAX];
 
-    if(!realpath(path2, rfn))
+    if(!fs_normalize_path(path2, rfn))
         return -1;
 
     /* Look for the handler */
@@ -866,6 +922,8 @@ int fs_rewinddir(file_t fd) {
         errno = ENOSYS;
         return -1;
     }
+
+    h->idx = 0;
 
     return h->handler->rewinddir(h->hnd);
 }

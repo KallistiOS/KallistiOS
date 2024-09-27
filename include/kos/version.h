@@ -98,7 +98,7 @@
 */
 
 #define KOS_VERSION_MAJOR   2   /**< KOS's current major revision number. */
-#define KOS_VERSION_MINOR   0   /**< KOS's current minor revision number. */
+#define KOS_VERSION_MINOR   1   /**< KOS's current minor revision number. */
 #define KOS_VERSION_PATCH   0   /**< KOS's current patch revision number. */
 
 /** KOS's current version as an integer ID. */

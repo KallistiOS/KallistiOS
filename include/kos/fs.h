@@ -29,6 +29,7 @@ __BEGIN_DECLS
 
 #include <sys/types.h>
 #include <kos/limits.h>
+#include <kos/opts.h>
 #include <time.h>
 #include <sys/queue.h>
 #include <stdarg.h>
@@ -204,11 +205,6 @@ typedef struct vfs_handler {
     /** \brief Get status information on an already opened file. */
     int (*fstat)(void *hnd, struct stat *st);
 } vfs_handler_t;
-
-/** \brief  The number of distinct file descriptors that can be in use at a
-            time.
-*/
-#define FD_SETSIZE  1024
 
 /** \cond */
 /* This is the private struct that will be used as raw file handles
@@ -738,6 +734,23 @@ ssize_t fs_load(const char *src, void **out_ptr);
     \em     ENAMETOOLONG - the resulting path would be longer than len bytes \n
 */
 ssize_t fs_path_append(char *dst, const char *src, size_t len);
+
+/** \brief   Normalize the specified path. 
+    This function acts mostly like the function realpath() but it only simplifies
+    a path by resolving . and .. components and removing redundant slashes.  It 
+    doesn't check if the path exists or resolve symbolic links.
+    \param  path            The path to normalize.
+    \param  resolved        The buffer to store resolved normalized path. It has 
+                            to be PATH_MAX bytes in size.
+    
+    \return                 A pointer to the normalized path on success, 
+                            or NULL on failure, in which case the path which 
+                            caused trouble is left in resolved.
+    \par    Error Conditions:
+    \em     EINVAL - path or resolved is a NULL pointer \n
+    \em     ENAMETOOLONG - the resulting path would be longer than PATH_MAX bytes \n
+*/
+char *fs_normalize_path(const char *__RESTRICT path, char *__RESTRICT resolved);
 
 /** \brief   Initialize the virtual filesystem.
 

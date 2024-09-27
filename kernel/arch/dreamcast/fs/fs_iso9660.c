@@ -197,14 +197,17 @@ static uint32 iso_733(const uint8 *from) {
    this cache. As the cache fills up, sectors are removed from the end
    of it. */
 typedef struct {
+    uint8   *data;          /* Sector data */
     uint32  sector;         /* CD sector */
-    uint8   data[2048];     /* Sector data */
 } cache_block_t;
 
 /* List of cache blocks (ordered least recently used to most recently) */
 #define NUM_CACHE_BLOCKS 16
 static cache_block_t *icache[NUM_CACHE_BLOCKS];     /* inode cache */
 static cache_block_t *dcache[NUM_CACHE_BLOCKS];     /* data cache */
+
+static unsigned char *cache_data;
+static cache_block_t *caches;
 
 /* Cache modification mutex */
 static mutex_t cache_mutex;
@@ -268,7 +271,7 @@ static int bread_cache(cache_block_t **cache, uint32 sector) {
     }
 
     /* Load the requested block */
-    j = cdrom_read_sectors(cache[i]->data, sector + 150, 1);
+    j = cdrom_read_sectors_ex(cache[i]->data, sector + 150, 1, CDROM_READ_DMA);
 
     if(j < 0) {
         //dbglog(DBG_ERROR, "fs_iso9660: can't read_sectors for %d: %d\n",
@@ -1084,11 +1087,16 @@ void fs_iso9660_init(void) {
     mutex_init(&cache_mutex, MUTEX_TYPE_NORMAL);
     mutex_init(&fh_mutex, MUTEX_TYPE_NORMAL);
 
-    /* Allocate cache block space */
+    /* Allocate cache block space, properly aligned for DMA access */
+    cache_data = memalign(32, 2 * NUM_CACHE_BLOCKS * 2048);
+    caches = malloc(2 * NUM_CACHE_BLOCKS * sizeof(cache_block_t));
+
     for(i = 0; i < NUM_CACHE_BLOCKS; i++) {
-        icache[i] = malloc(sizeof(cache_block_t));
+        icache[i] = &caches[i * 2];
+        icache[i]->data = &cache_data[i * 2 * 2048];
         icache[i]->sector = -1;
-        dcache[i] = malloc(sizeof(cache_block_t));
+        dcache[i] = &caches[i * 2 + 1];
+        dcache[i]->data = &cache_data[i * 2 * 2048 + 2048];
         dcache[i]->sector = -1;
     }
 
@@ -1104,16 +1112,12 @@ void fs_iso9660_init(void) {
 
 /* De-init the file system */
 void fs_iso9660_shutdown(void) {
-    int i;
-
     /* De-register with vblank */
     vblank_handler_remove(iso_vblank_hnd);
 
     /* Dealloc cache block space */
-    for(i = 0; i < NUM_CACHE_BLOCKS; i++) {
-        free(icache[i]);
-        free(dcache[i]);
-    }
+    free(cache_data);
+    free(caches);
 
     /* Free muteces */
     mutex_destroy(&cache_mutex);
