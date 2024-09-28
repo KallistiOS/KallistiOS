@@ -1946,6 +1946,9 @@ int pvr_list_finish(void);
     is enabled, the primitive will be appended to the end of the currently
     selected list's buffer.
 
+    \warning
+    \p data must be 32-byte aligned!
+
     \param  data            The primitive to submit.
     \param  size            The length of the primitive, in bytes. Must be a
                             multiple of 32.
