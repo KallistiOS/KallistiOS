@@ -11,36 +11,36 @@
 ifndef KOS_DEPDIR
 
 %.o: %.c
-	kos-cc $(CFLAGS) -c $< -o $@
+	kos-cc $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 %.o: %.cc
-	kos-c++ $(CFLAGS) $(CXXFLAGS) -c $< -o $@
+	kos-c++ $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 %.o: %.cpp
-	kos-c++ $(CFLAGS) $(CXXFLAGS) -c $< -o $@
+	kos-c++ $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 %.o: %.m
-	kos-cc $(CFLAGS) -c $< -o $@
+	kos-cc $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 %.o: %.mm
-	kos-c++ $(CFLAGS) $(CXXFLAGS) -c $< -o $@
+	kos-c++ $(CFLAGS) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 else
 
 %.o: %.c
-	kos-cc $(CFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.c,%.md,$(subst /,__,$(subst ..,,$<)))
+	kos-cc $(CFLAGS) $(CPPFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.c,%.md,$(subst /,__,$(subst ..,,$<)))
 
 %.o: %.cc
-	kos-c++ $(CFLAGS) $(CXXFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.c,%.md,$(subst /,__,$(subst ..,,$<)))
+	kos-c++ $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.c,%.md,$(subst /,__,$(subst ..,,$<)))
 
 %.o: %.cpp
-	kos-c++ $(CFLAGS) $(CXXFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.c,%.md,$(subst /,__,$(subst ..,,$<)))
+	kos-c++ $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.c,%.md,$(subst /,__,$(subst ..,,$<)))
 
 %.o: %.m
-	kos-cc $(CFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.m,%.md,$(subst /,__,$(subst ..,,$<)))
+	kos-cc $(CFLAGS) $(CPPFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.m,%.md,$(subst /,__,$(subst ..,,$<)))
 
 %.o: %.mm
-	kos-c++ $(CFLAGS) $(CXXFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.mm,%.md,$(subst /,__,$(subst ..,,$<)))
+	kos-c++ $(CFLAGS) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.mm,%.md,$(subst /,__,$(subst ..,,$<)))
 
 -include $(wildcard $(KOS_DEPDIR)/*.md)
 

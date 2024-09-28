@@ -1,14 +1,7 @@
-One package included as an option addon in KOS, mpglib, is covered under
-this license. The author said "LGPL" but did not specify a version, so I
-am assuming this version will work fine (I prefer this one since it
-doesn't have several paragraphs of space wasted about RMS' ideals and
-how the LGPL breaks them =).
+Some packages in the util directory are covered under this license.
 
 PLEASE realize that if you modify or extend these programs, unlike the
-rest of KallistiOS, you must use the LGPL as well. Using the MPGLIB MP3
-player library in your program will not require that your program be
-covered by the GPL, but any changes you make to the player library
-itself must be covered under that license.
+rest of KallistiOS, you must use the LGPL as well.
 
 Below is the full text of the license (LGPL v2). Please see the file "LICENSE"
 for some more important licensing information.

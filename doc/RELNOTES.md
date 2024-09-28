@@ -1,8 +1,56 @@
 KallistiOS ##version##
 Copyright (C) 2002, 2003 Megan Potter
 Copyright (C) 2012-2019 Lawrence Sebald
+Copyright (C) 2024 Donald Haase
 
 RELEASE NOTES for 2.1.0
+-----------------------
+
+# What's New in Version 2.1.0
+
+KOS v2.1.0 has been a long time in the making. As such, it seemed prudent to 
+provide an overview of the new functionality since v2.0.0 in 2013. We intend 
+to have more frequent versioned releases moving forward, so this kind of 
+information should be easily seen in the changelog.
+
+# Core Functionality
+* Cooperative Threading mode is no longer supported.
+* Static Thread Local Storage (TLS).
+* C11 threads and worker threads.
+* /dev/ vfs supporting null, random, and urandom.
+* VFS Expanded with readlink, rewinddir, and more compliant readdir and stat.
+* Expanded C language support including C11, C17, and C23.
+* Expanded C++ language support including C++11, C++14, C++17, C++20, C++23, and C++26.
+* Expanded POSIX support: clock_gettime/settime/getres, getaddrinfo/freeaddrinfo, libgen.h, and more.
+* GCC 9-15 supported. Support for GCC 2-3 removed, and 4 deprecated.
+* Default language spec of the codebase is now gnu17/gnu++17.
+
+# Dreamcast Hardware Support
+* NAOMI/NAOMI2 including net-dimm uploading.
+* New and enhanced driver for SH4 User Break Controller (UBC).
+* SH4 Watch Dog Timer (WDT) device.
+* Hardware Performance Counters.
+* Support for m4, and m4-single modes alongside m4-single-only.
+* Store Queue access is now managed by KOS and direct access may break.
+* PVR YUV converter DMA.
+* PVR 'cheap' shadows via volume modifiers.
+* PVR Two-pass render-to-texture option.
+* CD-ROM DMA, subcode, and alternative data type reading.
+* 4/8-bit wav support for sfx and streaming audio.
+
+## Peripherals and Accessory Support
+* French AZERTY, German, Spanish, and UK keyboards.
+* Basic Lightgun support based on libronin's implementation.
+* VMU buttons, date/time, BIOS color, and using the 'extra 41 blocks'.
+* Enhanced support for testing the capabilities of connected controllers.
+
+## Hardware Modification Support
+* Additional G1 ATA device (IDE hard drive mod).
+* 32MB RAM upgrade.
+* Custom BIOSes.
+* Navi modified Dreamcast subarch has been moved to addons.
+
+Below are more verbose notes for some of the changes
 -----------------------
 There are a lot less major changes in this release than in the previous one,
 that is for sure. Of course, this isn't to say that there hasn't been some

@@ -181,6 +181,10 @@
 #define __extension__
 #endif
 
+#ifndef __GNUC_STDC_INLINE__
+#define inline __inline__
+#endif
+
 /** @} */
 
 #endif  /* __KOS_CDEFS_H */
