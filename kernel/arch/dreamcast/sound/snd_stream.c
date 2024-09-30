@@ -397,8 +397,8 @@ int snd_stream_init_ex(int channels, size_t buffer_size) {
 
     if(channels == 2 && buffer_size > 0) {
         /* Create stereo separation buffers */
-        sep_buffer[0] = memalign(32, buffer_size);
-        sep_buffer[1] = sep_buffer[0] + (buffer_size / 8);
+        sep_buffer[0] = memalign(32, buffer_size * channels);
+        sep_buffer[1] = sep_buffer[0] + ((buffer_size * channels) / 8);
     }
 
     /* Finish loading the stream driver */
@@ -719,20 +719,24 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
         needed_samples = current_play_pos - stream->last_write_pos - 1;
         /* Round it to max sector size of supported storage devices */
         needed_samples &= ~(bytes_to_samples(hnd, 2048 / stream->channels) - 1);
+        needed_bytes = samples_to_bytes(hnd, needed_samples);
+        /* Reduce data requests */
+        if((uint32_t)needed_bytes < stream->buffer_size / 2) {
+            return 0;
+        }
     }
     else {
         needed_samples = bytes_to_samples(hnd, stream->buffer_size);
         needed_samples -= stream->last_write_pos;
+        needed_bytes = samples_to_bytes(hnd, needed_samples);
     }
 
     if(needed_samples <= 0) {
         return 0;
     }
 
-    needed_bytes = samples_to_bytes(hnd, needed_samples);
-
-    if((uint32_t)needed_bytes > stream->buffer_size / stream->channels) {
-        needed_bytes = (int)stream->buffer_size / stream->channels;
+    if((uint32_t)needed_bytes > stream->buffer_size) {
+        needed_bytes = (int)stream->buffer_size;
     }
 
     if(!stream->initted) {
