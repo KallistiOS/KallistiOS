@@ -163,7 +163,12 @@ int main(int argc, char *argv[]) {
     }
 
     memset(dma_buf, 0xff, BUFFER_SIZE);
-    dcache_flush_range((uintptr_t)dma_buf, BUFFER_SIZE);
+    /* Inside the cdrom driver the cache will be invalidated,
+       but we need to save what we wrote to it by memset.
+       In normal cases you don't need to do this.
+    */
+    dcache_purge_range((uintptr_t)dma_buf, BUFFER_SIZE);
+
     rs = cd_stream_test(lba, dma_buf, BUFFER_SIZE, CDROM_READ_DMA_IRQ);
 
     if (rs != ERR_OK) {
@@ -190,7 +195,12 @@ int main(int argc, char *argv[]) {
     if (dma_buf[i] == 0xff) {
         dbglog(DBG_INFO, "Read DMA data.\n");
         memset(dma_buf, 0xff, BUFFER_SIZE);
-        dcache_flush_range((uintptr_t)dma_buf, BUFFER_SIZE);
+        /* Inside the cdrom driver the cache will be invalidated,
+            but we need to save what we wrote to it by memset.
+            In normal cases you don't need to do this.
+        */
+        dcache_purge_range((uintptr_t)dma_buf, BUFFER_SIZE);
+
         rs = cdrom_read_sectors_ex(dma_buf, lba,
             BUFFER_SIZE >> 11, CDROM_READ_DMA);
     }

@@ -8,7 +8,7 @@ all:
 	$(KOS_MAKE) -C stream
 
 clean:
-	$(KOS_MAKE) -C stream
+	$(KOS_MAKE) -C stream clean
 
 dist:
-	$(KOS_MAKE) -C stream
+	$(KOS_MAKE) -C stream dist
