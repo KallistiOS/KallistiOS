@@ -70,6 +70,7 @@ arch_reboot
 arch_menu
 trapa_set_handler
 vid_screen_shot
+vid_screen_shot_data
 vmu_pkg_build
 vmu_pkg_parse
 

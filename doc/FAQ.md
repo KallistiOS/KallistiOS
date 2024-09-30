@@ -1,29 +1,16 @@
-KallistiOS ##version## FAQ
-Copyright (C) 2001 Megan Potter
-Copyright (C) 2012-2019 Lawrence Sebald
+# Frequently Asked Questions
 
-Here you may find some answers to some common questions we hear
-regarding the usage of KOS. We will be adding more to this file over
-time, but perhaps these can help you get started.
+## Licensing
 
-
-0 --- Licensing ---------------------------------------------------------
-
-0.0
+### Disclaimer
 
 This section is NOT legal advice. It's just a help to people who are
 having trouble with the myriad free software / "open source" licenses.
+If you need legal advice, we suggest contacting a professional.
 
+### What is the new BSD/KOS license? What exactly do its terms mean? Can I make a proprietary / "closed source" program using KOS? Can I distribute "forked" versions of KOS?
 
-0.1
-
-Q) What is the new BSD/KOS license? What exactly do its terms mean?
-
-Q) Can I make a proprietary / "closed source" program using KOS?
-
-Q) Can I distribute "forked" versions of KOS?
-
-A) The BSD license is pretty well understood among the free software
+The BSD license is pretty well understood among the free software
 community, but I'll go ahead and give a layman's description of it here.
 Basically what it says is that you can use the code in any of your
 programs (proprietary, free/"open source", etc) as long as you don't try
@@ -40,67 +27,30 @@ with "I can rip and use this code with no credit". This is absolutely
 false. You may also not include the KOS code (or any other copyrighted
 code) in your program verbatim without credit and a copyright notice.
 Very small pieces are probably alright, but anything substantial must
-have something to the effect of "derived from blagh.c in KOS 1.1.x".
+have something to the effect of "derived from blagh.c in KOS 2.1.x".
 It's really a very small price to pay for this nice code library you
 can pull from freely :)
 
+### What about kos-ports licenses?
 
-0.2
+The kos-ports repository provides ports of libraries with a variety of
+licenses. For each, the applicable license is noted in its Makefile as
+the LICENSE define. This can also be verified with the original authors.
+Please review and be aware of these licenses if you wish to use kos-ports.
 
-Q) What is the GPL license? What exactly do its terms mean?
+### Attribution
 
-Q) Can I make a proprietary / "closed source" program using XingMP3?
-
-Q) Can I distributed "forked" versions of XingMP3?
-
-A) The GPL says (again, in layman's terms) that if you make a derivative
-work (e.g., use its code in your program), then your program must be
-distributed under the terms of the GPL. Note that this does not mean you
-must change your license, as some people would say (excellent example:
-the Linux kernel contains BSD-licensed code, and BSD's kernel contains
-_optional_ GPL'd kernel modules). It does, however, mean that you must
-follow the GPL's terms for distribution. Additionally, if you make
-significant changes to the XingMP3 library (a direct derivative) then
-you must make the result licensed under the GPL.
-
-I use XingMP3 as the example here because it is going to be the one
-people have the most encounters with in their own programs. Genromfs is
-distributed along with KOS (aggregated) but is not part of it. XingMP3,
-however, is also "aggregated" but becomes a part of your program if you
-link the MP3 playback library. So if you want to do this, pay attention.
-
-This example is most analogous to the BSD kernel situation. They have a
-GPL'd math library that may be linked with the BSD kernel, but the
-resulting binary must always be accompanied by all of its source code
-(i.e., distributed under the terms of the GPL). The same is true with
-your own programs. You may not use the MP3 library without following
-similar restrictions: you may license it under any GPL-compatible
-license, but you may not distribute any part of it as a proprietary
-application.
-
-You may distributed "forked" versions of XingMP3, following the same
-restrictions. They must be licensed under the GPL license. You may add
-entirely new files to the library, licensed under a different license,
-but they must be distributable under the GPL's terms.
-
-Now then, if you don't like those restrictions, you are free to replace
-the XingMP3 engine with something else. In fact I would be overjoyed if
-someone provided me with a BSD-licensed MP3 engine. But for now, those
-are the breaks. Sorry.
-
-Also, to keep you safe from accidentally linking GPL'd code into your
-program, 100% of this code is located inside the "xingmp3" tree in the
-"libmp3" tree. All headers in the "include" directory for libmp3 are
-either ours, or similarly available under a BSD-like license.
+To reiterate: THE KOS LICENSE DOES NOT ALLOW USE WITHOUT ATTRIBUTION
+In order to help facilitate this, we provide [the license text](./license/LICENSE.KOS),
+[a listing of authors](../AUTHORS), and functions `kos_get_authors` and 
+`kos_get_license` to easily access this text within your code.
 
 
-1 --- OS Basics --------------------------------------------------------
+## Operating System Basics
 
-1.1
+### Why do you call this an "operating system" if it's just a library?
 
-Q) Why do you call this an "operating system" if it's just a library?
-
-A) This seems to be a point of common confusion. Most of the
+This seems to be a point of common confusion. Most of the
 misunderstanding stems from the fact that both the kernel and you can
 link the kernel itself into your program. Many people who are writing
 software have not really had much exposure to a true embedded
@@ -132,13 +82,9 @@ all at once instead of in two pieces. Your program also gets full,
 unfettered access to everything the kernel can do; so if you don't like
 the way it does something, you can change it.
 
+### What's a virtual file system, and why do I want one? Why don't I just talk directly to the device I want to use?
 
-1.2
-
-Q) What's a virtual file system, and why do I want one? Why don't I just
-talk directly to the device I want to use?
-
-A) A virtual file system is basically an object oriented multiplexer for
+A virtual file system is basically an object oriented multiplexer for
 a generic file interface. What that means in human-readable terms is that
 it translates a full path name to a device handle plus a device name. For
 example, if you access "/cd/foobar.txt", and "/cd" is mapped to the
@@ -157,15 +103,9 @@ relative paths to identify your files (no leading slashes) and then put a
 fs_chdir at the top of your program to switch to the file source, whether
 that's over the ethernet using a loader or from a CD.
 
+### What are threads? Why do I want to use them? Why are we wasting resources with such a silly thing on a console? Why don't you ninnies code like real men and do your own task multiplexing?!
 
-1.3
-
-Q) What are threads? Why do I want to use them?
-
-Q) Why are we wasting resources with such a silly thing on a console? Why
-don't you ninnies code like real men and do your own task multiplexing?!
-
-A) Threads are basically very light-weight processes or tasks. It is a
+Threads are basically very light-weight processes or tasks. It is a
 simple way to get the system to do more than one thing at once without
 explicitly taking control over that switching, such as making a load of
 "per frame" calls to do things like sound mixing. A very simple example
@@ -178,11 +118,13 @@ Especially from people disenfranchised with the removal of non-threaded
 mode from KOS earlier. This was a design decision that was made to
 prevent the continuing spread of code that looked like this:
 
+```
 if (thd_enabled) {
 	do one thing;
 } else {
 	do something else;
 }
+```
 
 The better, and somewhat counterintuitive answer, is that threading can
 actually _improve_ your program's performance. Most people who dislike
@@ -218,12 +160,9 @@ usage still. This is mostly a left-over vestige from the days when
 threads were optional (and when we had less info about hardware IRQ
 support), and is slowly being worked out.
 
+### What VFS modules are available?
 
-1.4
-
-Q) What VFS modules are available?
-
-A) Presently there are six in-kernel filesystems that you might interact with
+Presently there are six in-kernel filesystems that you might interact with
 on a semi-regular basis (and two in addon libraries):
 
 - ISO9660 -- mounts on /cd, and is a decent implementation of the
@@ -268,19 +207,13 @@ There probably isn't much of a good reason to do so, however.
 - fat -- much like ext2, can be mounted wherever you tell it to. This is
 implemented in the libkosfat library in the addons tree.
 
+### How can I make images for the romdisk file system? Where can I get this genromfs program to make ROMFS image for use with the romdisk file system?
 
-1.5
-
-Q) How can I make images for the romdisk file system?
-
-Q) Where can I get this genromfs program to make ROMFS image for use
-with the romdisk file system?
-
-A) This is a Linux utility (it used to be a Linux-specific file system
+This is a Linux utility (it used to be a Linux-specific file system
 but it is well used among embedded developers these days) called
 genromfs that does this for you. Here is a URL:
 
-ftp://sunsite.unc.edu/pub/Linux/system/recovery/genromfs-0.3.tar.gz
+`ftp://sunsite.unc.edu/pub/Linux/system/recovery/genromfs-0.3.tar.gz`
 
 Additionally, I have provided a copy of this program for your convenience.
 You will need to edit your environ.sh/tcsh to change the paths if you want
@@ -288,25 +221,16 @@ it to work "out of the box". If you are using Cygwin you will also need to
 make sure there's a /tmp path mount for bin2o's usage.
 
 
-2 --- Memory Allocation ------------------------------------------------
+## Memory Allocations
 
-2.1
+### How can I determine how much RAM I have allocated / how much RAM my program is using?
 
-Q) How can I determine how much RAM I have allocated / how much RAM my
-program is using?
-
-A) This won't always be accurate, but in the kernel space you can call
+This won't always be accurate, but in the kernel space you can call
 malloc_stats(). The output is sent to the kernel console.
 
+### My malloc()'s are failing. Why?  I tried malloc_stats() and it claims I allocated like four billion bytes of RAM!
 
-2.2
-
-Q) My malloc()'s are failing. Why?
-
-Q) I tried malloc_stats() and it claims I allocated like four billion
-bytes of RAM!
-
-A) You probably have a pointer overrun somewhere. Unfortunately these
+You probably have a pointer overrun somewhere. Unfortunately these
 are rather difficult to debug for now in KOS since it has no MMU
 support. I recommend old school debugging (calling malloc_stats() every
 so often to see when it bombs and narrowing it down, or perhaps
@@ -320,14 +244,11 @@ remaining at the end of the program. There is a similar facility for the
 PVR on the DC port (the PVR_KM_* and PVR_MALLOC_DEBUG macros in the same
 file).
 
+## Networking
 
-3 --- Networking ---------------------------------------------------
+### Does KOS have any kind of TCP/IP stack? Network support at all?
 
-3.1
-
-Q) Does KOS have any kind of TCP/IP stack? Network support at all?
-
-A) Yes. There is a working driver for the Sega broadband adapter (an
+Yes. There is a working driver for the Sega broadband adapter (an
 RTL8193C based 10/100 card) and the Lan Adapter on the DC. With regards
 to TCP/IP and friends, there is a built-in network stack provided in
 the kernel tree. There is also a PPP stack provided in the addons tree
@@ -337,12 +258,9 @@ lwIP used to be provided as an alternate TCP/IP stack for the BBA and
 Lan Adapters, however it was removed from the kos-ports tree as it has
 been deprecated by the built-in network stack.
 
+### What about the BSD stack?
 
-3.2
-
-Q) What about the BSD stack?
-
-A) That seems to be everyone's generic answer to wanting a TCP/IP stack.
+That seems to be everyone's generic answer to wanting a TCP/IP stack.
 Have you actually _looked_ at the BSD stack? Not just glanced through it
 at the files and said "oh yep, it's all there!" but really studied what
 it would take to do a port? If you're still interested then I welcome
@@ -352,57 +270,41 @@ foreign environment, but with the additions of semaphores and other
 thread primitives now in KOS this might not be as hard.
 
 
-4 --- Building -----------------------------------------------------
+## Building
 
-4.1
+### I'm having an issue building KOS; it gives me errors about not finding Makefiles or not finding include files.
 
-Q) I'm having an issue building KOS; it gives me errors about not
-finding Makefiles or not finding include files.
-
-A) Make sure you check the paths in environ.sh, and make sure you are
+Make sure you check the paths in environ.sh, and make sure you are
 running the script with the 'source' command (see the README). If in
 doubt, use 'set' or 'setenv' to find the environment variables. You
 should have a KOS_BASE variable. If you don't, then you haven't set up
 the and/or sourced environment script correctly in your shell.
 
+### Where is the source to bin2o? All your other stuff has source...
 
-4.2
-
-Q) Where is the source to bin2o? All your other stuff has source...
-
-A) Examine the file more closely. It _is_ the source code =). bin2o is
+Examine the file more closely. It _is_ the source code =). bin2o is
 a bash shell script that runs from a real bash on a *nix, or under the
 Cygwin bash. There were some issues with it running under Cygwin
 previously but those should now be fixed.
 
 
-5 --- Debugging ---------------------------------------------------------
+## Debugging
 
-5.1
+### I work on a DC; I don't have a serial cable so how can I see the debug output?
 
-Q) I work on a DC; I don't have a serial cable so how can I see the
-debug output?
-
-A) Use dc-load-ip with your broadband adapter or Lan adapter on the
+Use dc-load-ip with your broadband adapter or Lan adapter on the
 Dreamcast. If you don't have one of those, you might look into fb_console,
 which you can redirect to either the whole frame buffer or a texture
 somewhere in VRAM.
 
+### I want to use the serial line but the pesky kernel debug output is getting in my way.
 
-5.2
-
-Q) I want to use the serial line but the pesky kernel debug output is
-getting in my way.
-
-A) Use INIT_QUIET in your init flags or make sure the debugging output
+Use INIT_QUIET in your init flags or make sure the debugging output
 is not sent to the serial port by using dbgio_dev_select().
 
+### Can I trace through KOS using GDB or similar?
 
-5.3
-
-Q) Can I trace through KOS using GDB or similar?
-
-A) Yes, in theory. It will run just like any other program on your
+Yes, in theory. It will run just like any other program on your
 target hardware, but you will have to be aware that there are interrupts
 enabled and they are extremely relevant. They are used in things like
 hardware support, threading, and will be used other places later on.
@@ -416,13 +318,11 @@ for the DC port which lets you place manual breakpoints, but it
 doesn't support any sort of tracing.
 
 
-6 --- kos-ports ---------------------------------------------------------
+## kos-ports
 
-6.1
+### What is kos-ports?
 
-Q) What is kos-ports?
-
-A) kos-ports is a repository of libraries that have been ported to or
+kos-ports is a repository of libraries that have been ported to or
 designed for KallistiOS over the years. Most (but not all) of the ported
 libraries contain some KOS-specific functionality, such as interfacing
 with the PVR code for texture loading or other things of the sort.
@@ -436,12 +336,9 @@ kos-ports system keeps track of dependencies and other such things to
 ensure that you don't try to do something like building libpng without
 having zlib already built.
 
+### How do I get kos-ports?
 
-6.2
-
-Q) How do I get kos-ports?
-
-A) If you're using a release version of KOS, I'd recommend grabbing the
+If you're using a release version of KOS, I'd recommend grabbing the
 corresponding release version of the kos-ports tree from the sourceforge
 file release system (or by using a version-specific tag to check it out
 from the Git repository). That way, you'll know that each port should
@@ -463,14 +360,7 @@ You can then update the kos-ports tree by doing a "git pull" in the
 kos-ports directory (you will have to check each port for updates
 yourself).
 
-
-6.3
-
-Q) How do I build a port?
-
-Q) How do I update an installed version of a port?
-
-Q) How do I build every port that's available, as I used to do?
+### How do I build a port? How do I update an installed version of a port? How do I build every port that's available, as I used to do?
 
 To build one port (and any of its dependencies), simply cd to the port's
 directory in the kos-ports tree and run the following command:
@@ -489,21 +379,14 @@ following command:
 I personally don't recommend building every port, but rather building
 only those you use, but to each his own, as they say.
 
-
-6.4
-
-Q) When I try to build a port, I get an error complaining that "curl" is
-not found. What's up with that?
+### When I try to build a port, I get an error complaining that `curl` is not found. What's up with that?
 
 The curl utility is used by default to download the distribution files
 for each port. If you'd rather use wget to do this (or any other similar
-utility), edit the kos-ports/config.mk file to point to your favorite
-utility. There is an example in there for using wget already -- just
-comment out the "FETCH_CMD = curl --progress-bar -O" line by putting a
-# in front of it, and uncomment the line below it to use wget instead.
+utility), edit the `kos-ports/config.mk` file to point to your favorite
+utility. There is an example in there for using `wget` already -- just
+comment out the `FETCH_CMD = curl --progress-bar -O` line by putting a
+`#` in front of it, and uncomment the line below it to use wget instead.
 
-As for why curl is the default, well, it's installed by default on OS X,
+As for why `curl` is the default, well, it's installed by default on OS X,
 and is easily available on just about any *nix-like system.
-
-
---- End ------------------------------------------------------------

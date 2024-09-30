@@ -6,7 +6,7 @@
 #
 
 DIRS = 2ndmix basic libdream kgl hello sound png vmu conio pvr video \
-	   lua parallax dreameye filesystem sd lightgun keyboard sdl dev rumble \
+	   lua parallax dreameye filesystem lightgun keyboard sdl dev rumble \
 	   micropython
 
 ifneq ($(KOS_SUBARCH), naomi)

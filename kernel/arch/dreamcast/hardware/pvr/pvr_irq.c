@@ -40,6 +40,16 @@ static void dma_next_list(void *data) {
             // Get the buffers for this frame.
             b = pvr_state.dma_buffers + (pvr_state.ram_target ^ 1);
 
+            /* If we are in PVR DMA mode, yet we haven't associated a
+               RAM-residing vertex buffer with the current list
+               (because we submitted it directly, for example),
+               mark it as complete, so we skip trying to DMA it. */
+            if(!b->base[i]) {
+                pvr_state.lists_dmaed       |= 1 << i;
+                pvr_state.lists_transferred |= 1 << i;
+                continue;
+            }
+
             // Flush the last 32 bytes out of dcache, just in case.
             // dcache_flush_range((ptr_t)(b->base[i] + b->ptr[i] - 32), 32);
             dcache_flush_range((ptr_t)(b->base[i]), b->ptr[i] + 32);

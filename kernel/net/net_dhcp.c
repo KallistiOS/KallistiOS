@@ -392,7 +392,8 @@ static void net_dhcp_renew(void) {
 
 static void net_dhcp_bind(dhcp_pkt_t *pkt, int len) {
     uint32 tmp = ntohl(pkt->yiaddr);
-    uint32 old = irq_disable();
+
+    irq_disable_scoped();
 
     /* Bind the IP address first */
     net_default_dev->ip_addr[0] = (tmp >> 24) & 0xFF;
@@ -476,8 +477,6 @@ static void net_dhcp_bind(dhcp_pkt_t *pkt, int len) {
     }
 
     state = DHCP_STATE_BOUND;
-
-    irq_restore(old);
 }
 
 static void net_dhcp_thd(void *obj) {

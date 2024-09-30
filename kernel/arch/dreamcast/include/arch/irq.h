@@ -434,6 +434,25 @@ int irq_init(void);
 */
 void irq_shutdown(void);
 
+/** \cond */
+static inline void __irq_scoped_cleanup(int *state) {
+    irq_restore(*state);
+}
+
+#define ___irq_disable_scoped(l) \
+    int __scoped_irq_##l __attribute__((cleanup(__irq_scoped_cleanup))) = irq_disable()
+
+#define __irq_disable_scoped(l) ___irq_disable_scoped(l)
+/** \endcond */
+
+/** \brief  Disable interrupts with scope management.
+
+    This macro will disable interrupts, similarly to irq_disable(), with the
+    difference that the interrupt state will automatically be restored once the
+    execution exits the functional block in which the macro was called.
+*/
+#define irq_disable_scoped() __irq_disable_scoped(__LINE__)
+
 __END_DECLS
 
 #endif  /* __ARCH_IRQ_H */
