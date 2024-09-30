@@ -202,13 +202,13 @@ void snd_stream_prefill(snd_stream_hnd_t hnd);
 */
 int snd_stream_init(void);
 
-/** \brief  Initialize the stream system only for mono
+/** \brief  Initialize the stream system with limits.
 
     The same as \ref snd_stream_init but it can either reduce or not allocate
     the buffer for splitting the stereo stream at all.
 
     \param  channels        Max channels for any streams.
-    \param  buffer_size     Max buffer size for any streams.
+    \param  buffer_size     Max channel buffer size for any streams.
 
     \retval -1              On failure.
     \retval 0               On success.
@@ -227,7 +227,7 @@ void snd_stream_shutdown(void);
     This function allocates a stream and sets its parameters.
 
     \param  cb              The get data callback for the stream.
-    \param  bufsize         The size of the buffer for the stream.
+    \param  bufsize         The size of the buffer for each channel of the stream.
     \return                 A handle to the new stream on success,
                             SND_STREAM_INVALID on failure.
 */

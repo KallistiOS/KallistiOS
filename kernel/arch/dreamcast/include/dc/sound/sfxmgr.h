@@ -61,7 +61,7 @@ typedef uint32_t sfxhnd_t;
     or 16-bit uncompressed PCM samples, or 4-bit Yamaha ADPCM.
 
     \warning The sound effect you are loading must be at most 65534 samples 
-    in length
+    in length.
 
     \param  fn              The file to load.
     \return                 A handle to the sound effect on success. On error,
