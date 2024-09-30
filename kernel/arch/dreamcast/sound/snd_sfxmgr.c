@@ -391,8 +391,8 @@ sfxhnd_t snd_sfx_load_ex(const char *fn, uint32_t rate, uint16_t bitsize, uint16
 
 sfxhnd_t snd_sfx_load_fd(file_t fd, size_t len, uint32_t rate, uint16_t bitsize, uint16_t channels) {
     snd_effect_t *effect;
-    size_t chan_len;
-    uint32_t fs_rootbus_dma_ready = 0;
+    size_t chan_len, read_len;
+    // uint32_t fs_rootbus_dma_ready = 0;
     // uint32_t fs_dma_len = 0;
     uint8_t *tmp_buff = NULL;
 
@@ -400,7 +400,7 @@ sfxhnd_t snd_sfx_load_fd(file_t fd, size_t len, uint32_t rate, uint16_t bitsize,
     effect = malloc(sizeof(snd_effect_t));
 
     if(effect == NULL) {
-        goto err_occurred;
+        return SFXHND_INVALID;
     }
 
     memset(effect, 0, sizeof(snd_effect_t));
@@ -434,25 +434,29 @@ sfxhnd_t snd_sfx_load_fd(file_t fd, size_t len, uint32_t rate, uint16_t bitsize,
     if(!effect->locl) {
         goto err_occurred;
     }
+    read_len = chan_len;
     /* Uncomment when implementation is merged.
     if(fs_ioctl(fd, IOCTL_FS_ROOTBUS_DMA_READY, &fs_dma_len) == 0) {
-        if(chan_len >= fs_dma_len && (chan_len & (fs_dma_len - 1)) == 0) {
+        if(chan_len >= fs_dma_len) {
             fs_rootbus_dma_ready = 1;
         }
     }
-    */
     if(fs_rootbus_dma_ready) {
-        if(fs_read(fd, (void *)(effect->locl | SPU_RAM_UNCACHED_BASE), chan_len) <= 0) {
-            goto err_occurred;
-        }
-    }
-    else {
-        tmp_buff = memalign(32, chan_len);
+        read_len = chan_len & ~(fs_dma_len - 1);
 
-        if(fs_read(fd, tmp_buff, chan_len) <= 0) {
+        if(fs_read(fd, (void *)(effect->locl | SPU_RAM_UNCACHED_BASE), read_len) <= 0) {
             goto err_occurred;
         }
-        spu_memload_sq(effect->locl, tmp_buff, chan_len);
+        read_len = chan_len - read_len;
+    }
+    */
+    if(read_len > 0) {
+        tmp_buff = memalign(32, read_len);
+
+        if(fs_read(fd, tmp_buff, read_len) <= 0) {
+            goto err_occurred;
+        }
+        spu_memload_sq(effect->locl, tmp_buff, read_len);
     }
 
     if(channels > 1) {
@@ -461,16 +465,22 @@ sfxhnd_t snd_sfx_load_fd(file_t fd, size_t len, uint32_t rate, uint16_t bitsize,
         if(!effect->locr) {
             goto err_occurred;
         }
+        read_len = chan_len;
+        /* Uncomment when implementation is merged.
         if(fs_rootbus_dma_ready) {
+            read_len = chan_len & ~(fs_dma_len - 1);
+
             if(fs_read(fd, (void *)(effect->locr | SPU_RAM_UNCACHED_BASE), chan_len) <= 0) {
                 goto err_occurred;
             }
+            read_len = chan_len - read_len;
         }
-        else {
-            if(fs_read(fd, tmp_buff, chan_len) <= 0) {
+        */
+        if(read_len > 0) {
+            if(fs_read(fd, tmp_buff, read_len) <= 0) {
                 goto err_occurred;
             }
-            spu_memload_sq(effect->locr, tmp_buff, chan_len);
+            spu_memload_sq(effect->locr, tmp_buff, read_len);
         }
     }
 
@@ -481,14 +491,14 @@ sfxhnd_t snd_sfx_load_fd(file_t fd, size_t len, uint32_t rate, uint16_t bitsize,
     return (sfxhnd_t)effect;
 
 err_occurred:
-    if(effect)
-        free(effect);
     if(effect->locl)
         snd_mem_free(effect->locl);
     if(effect->locr)
         snd_mem_free(effect->locr);
     if(tmp_buff)
         free(tmp_buff);
+
+    free(effect);
     return SFXHND_INVALID;
 }
 
