@@ -51,7 +51,7 @@ set(PLATFORM_DREAMCAST TRUE)
 ##### Configure Cross-Compiler #####
 set(CMAKE_CROSSCOMPILING TRUE)
 
-set(CMAKE_ASM_COMPILER    ${KOS_BASE}/utils/build_wrappers/kos-as)
+set(CMAKE_ASM_COMPILER    ${KOS_BASE}/utils/build_wrappers/kos-cc)
 set(CMAKE_C_COMPILER      ${KOS_BASE}/utils/build_wrappers/kos-cc)
 set(CMAKE_CXX_COMPILER    ${KOS_BASE}/utils/build_wrappers/kos-c++)
 set(CMAKE_OBJC_COMPILER   ${KOS_BASE}/utils/build_wrappers/kos-cc)
