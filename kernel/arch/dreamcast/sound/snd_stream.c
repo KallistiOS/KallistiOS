@@ -437,6 +437,7 @@ snd_stream_hnd_t snd_stream_alloc(snd_stream_callback_t cb, int bufsize) {
 
     /* Setup the callback */
     snd_stream_set_callback(hnd, cb);
+    snd_stream_set_callback_direct(hnd, NULL);
 
     /* Initialize our filter chain list */
     TAILQ_INIT(&streams[hnd].filters);
@@ -464,6 +465,7 @@ snd_stream_hnd_t snd_stream_reinit(snd_stream_hnd_t hnd, snd_stream_callback_t c
 
     /* Setup the callback */
     snd_stream_set_callback(hnd, cb);
+    snd_stream_set_callback_direct(hnd, NULL);
 
     return hnd;
 }
@@ -721,7 +723,7 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
         needed_samples &= ~(bytes_to_samples(hnd, 2048 / stream->channels) - 1);
         needed_bytes = samples_to_bytes(hnd, needed_samples);
         /* Reduce data requests */
-        if((uint32_t)needed_bytes < stream->buffer_size / 2) {
+        if((uint32_t)needed_bytes < (stream->buffer_size / 2)) {
             return 0;
         }
     }
@@ -735,8 +737,8 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
         return 0;
     }
 
-    if((uint32_t)needed_bytes > stream->buffer_size) {
-        needed_bytes = (int)stream->buffer_size;
+    if((uint32_t)needed_bytes > stream->buffer_size / 2) {
+        needed_bytes = (int)stream->buffer_size / 2;
     }
 
     if(!stream->initted) {
