@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
 
                     content_count = browse_directory(directory_temp, directory_contents);
                     if(content_count > 0) {
-                        fs_normalize_path(directory_temp, current_directory);
+                        realpath(directory_temp, current_directory);
                         changed_directory = true;
                         selector_index = 0;
                     } 

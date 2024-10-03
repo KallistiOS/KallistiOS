@@ -412,22 +412,24 @@ static void *romdisk_mmap(void * h) {
     return (void *)(fh[fd].mnt->image + fh[fd].index);
 }
 
-static int romdisk_stat(vfs_handler_t *vfs, const char *path, struct stat *buf,
+static int romdisk_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
                         int flag) {
-    (void)flag;
     mode_t md;
-    uint32 filehdr;
+    uint32_t filehdr;
     const romdisk_file_t *fhdr;
     rd_image_t *mnt = (rd_image_t *)vfs->privdata;
+    size_t len = strlen(path);
+
+    (void)flag;
 
     /* Root directory of romdisk */
-    if(strlen(path) == 0) {
-        fhdr = (const romdisk_file_t *)(mnt->image + filehdr);
-        buf->st_dev = (dev_t)((ptr_t)mnt);
-        memset(buf, 0, sizeof(struct stat));
-        buf->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP |
-            S_IROTH | S_IXOTH;;
-        buf->st_size = -1;
+    if(len == 0 || (len == 1 && *path == '/')) {
+        memset(st, 0, sizeof(struct stat));
+        st->st_dev = (dev_t)((ptr_t)mnt);
+        st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP |
+            S_IROTH | S_IXOTH;
+        st->st_size = -1;
+        st->st_nlink = 2;
 
         return 0;
     }
@@ -448,24 +450,22 @@ static int romdisk_stat(vfs_handler_t *vfs, const char *path, struct stat *buf,
         return -1;
     }
        
-    fhdr = (const romdisk_file_t *)(mnt->image + filehdr);
-    buf->st_dev = (dev_t)((ptr_t)mnt);
-    buf->st_nlink = 1;
-    buf->st_blksize = 1024;
-    buf->st_mode = md | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP |
-            S_IROTH | S_IXOTH;
+    memset(st, 0, sizeof(struct stat));
+    st->st_dev = (dev_t)((ptr_t)mnt);
+    st->st_mode = md | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+    st->st_size = -1;
+    st->st_nlink = 2;
+    st->st_blksize = 1024;
 
-    if(md == S_IFDIR) {
-        buf->st_size = -1;
-        buf->st_blocks = 0;
-    }
-    else {
-        buf->st_size = ntohl_32(&fhdr->size);
-        buf->st_blocks = buf->st_size >> 10;
+    if(md == S_IFREG) {
+        fhdr = (const romdisk_file_t *)(mnt->image + filehdr);
+        st->st_size = ntohl_32(&fhdr->size);
+        st->st_nlink = 1;
+        st->st_blocks = st->st_size >> 10;
 
         /* Add one more block if there's a remainder */
-        if (buf->st_size & 0x3ff)
-            ++buf->st_blocks;
+        if (st->st_size & 0x3ff)
+            ++st->st_blocks;
     }
 
     return 0;
@@ -525,17 +525,11 @@ static int romdisk_fstat(void *h, struct stat *st) {
     }
 
     memset(st, 0, sizeof(struct stat));
-
-    if(fh[fd].dir)
-        st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP |
-            S_IROTH | S_IXOTH;
-    else
-        st->st_mode = S_IFREG | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP |
-            S_IROTH | S_IXOTH;
-
     st->st_dev = (dev_t)((ptr_t)fh[fd].mnt);
+    st->st_mode = S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+    st->st_mode |= (fh[fd].dir) ? S_IFDIR : S_IFREG;
     st->st_size = fh[fd].size;
-    st->st_nlink = 1;
+    st->st_nlink = (fh[fd].dir) ? 2 : 1;
     st->st_blksize = 1024;
     st->st_blocks = fh[fd].size >> 10;
 
@@ -572,7 +566,7 @@ static vfs_handler_t vh = {
     NULL,                       /* unlink */
     romdisk_mmap,
     NULL,                       /* complete */
-    romdisk_stat,               /* stat */
+    romdisk_stat,
     NULL,                       /* mkdir */
     NULL,                       /* rmdir */
     romdisk_fcntl,

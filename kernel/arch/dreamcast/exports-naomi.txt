@@ -55,6 +55,20 @@ scif_spi_write_byte
 scif_spi_read_byte
 scif_spi_read_data
 
+# Filesystem
+fs_fcntl
+fs_seek64
+fs_tell64
+fs_total64
+fs_link
+fs_symlink
+fs_readlink
+fs_rewinddir
+fs_stat
+fs_fstat
+fs_path_append
+fs_normalize_path
+
 # Timers
 timer_prime
 timer_start

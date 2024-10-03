@@ -573,19 +573,22 @@ static int vmu_unlink(vfs_handler_t * vfs, const char *path) {
     return vmufs_delete(dev, path + 4);
 }
 
-static int vmu_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
+static int vmu_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
                     int flag) {
-    maple_device_t * dev;
-    size_t len = strlen(fn);
+    maple_device_t *dev;
+    size_t len = strlen(path);
 
     (void)vfs;
     (void)flag;
 
     /* Root directory '/vmu' */
-    if(len == 0) {
-        memset(rv, 0, sizeof(struct stat));
-        rv->st_mode = S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO;
-        rv->st_size = -1;
+    if(len == 0 || (len == 1 && *path == '/')) {
+        memset(st, 0, sizeof(struct stat));
+        st->st_dev = (dev_t)('v' | ('m' << 8) | ('u' << 16));
+        st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | 
+            S_IXGRP | S_IROTH | S_IXOTH;
+        st->st_size = -1;
+        st->st_nlink = 2;
 
         return 0;
     }
@@ -598,7 +601,7 @@ static int vmu_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
         return -1;
     }
 
-    dev = vmu_path_to_addr(fn);
+    dev = vmu_path_to_addr(path);
 
     if(!dev) {
         errno = ENOENT;
@@ -606,12 +609,13 @@ static int vmu_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
     }
 
     /* Get the number of free blocks */
-    memset(rv, 0, sizeof(struct stat));
-    rv->st_size = vmufs_free_blocks(dev);
-    rv->st_dev = (dev_t)((ptr_t)dev);
-    rv->st_mode = S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO;
-    rv->st_nlink = 1;
-    rv->st_blksize = 512;
+    memset(st, 0, sizeof(struct stat));
+    st->st_dev = (dev_t)((ptr_t)dev);
+    st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | 
+        S_IXGRP | S_IROTH | S_IXOTH;
+    st->st_size = vmufs_free_blocks(dev);
+    st->st_nlink = 1;
+    st->st_blksize = 512;
 
     return 0;
 }
@@ -674,7 +678,6 @@ static int vmu_rewinddir(void * fd) {
 
 static int vmu_fstat(void *fd, struct stat *st) {
     vmu_fh_t *fh;
-    vmu_dh_t *dh;
 
     /* Check the handle */
     if(!vmu_verify_hnd(fd, VMU_ANY)) {
@@ -684,23 +687,13 @@ static int vmu_fstat(void *fd, struct stat *st) {
 
     fh = (vmu_fh_t *)fd;
     memset(st, 0, sizeof(struct stat));
-
-    if(fh->strtype == VMU_DIR) {
-        dh = (vmu_dh_t *)fh;
-
-        st->st_size = vmufs_free_blocks(dh->dev);
-        st->st_dev = (dev_t)((ptr_t)dh->dev);
-        st->st_mode = S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO;
-        st->st_nlink = 1;
-        st->st_blksize = 512;
-    }
-    else {
-        st->st_dev = (dev_t)((ptr_t)fh->dev);
-        st->st_mode = S_IFREG | S_IRWXU | S_IRWXG | S_IRWXO;
-        st->st_nlink = 1;
-        st->st_blksize = 512;
-        st->st_size = fh->filesize * 512;
-    }
+    st->st_dev = (dev_t)((ptr_t)fh->dev);
+    st->st_mode =  S_IRWXU | S_IRWXG | S_IRWXO;
+    st->st_mode |= (fh->strtype == VMU_DIR) ? S_IFDIR : S_IFREG;
+    st->st_size = (fh->strtype == VMU_DIR) ? 
+        vmufs_free_blocks(((vmu_dh_t *)fh)->dev) : (int)(fh->filesize * 512);
+    st->st_nlink = (fh->strtype == VMU_DIR) ? 2 : 1;
+    st->st_blksize = 512;
 
     return 0;
 }
@@ -731,7 +724,7 @@ static vfs_handler_t vh = {
     vmu_unlink,
     vmu_mmap,
     NULL,               /* complete */
-    vmu_stat,           /* stat */
+    vmu_stat,
     NULL,               /* mkdir */
     NULL,               /* rmdir */
     vmu_fcntl,
