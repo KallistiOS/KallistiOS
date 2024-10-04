@@ -118,7 +118,7 @@ int fegetround(void) {
 
 int fesetround(int round) {
     if(round & ~0x1)
-        return 1;
+        return fegetround();
 
     int fpscr = FPSCR;
     fpscr &= ~FENV_RM_MASK;

@@ -50,6 +50,102 @@ typedef uint8_t fenv_t;
 /** Type representing all FP status flags collectively. */
 typedef uint8_t fexcept_t;
 
+/** Clears the given floating-point exception flags.
+ * 
+ *  \param  excepts     Bitwise OR'd list of FP exception flags
+ *  \retval 0           Success
+ */
+int feclearexcept(int excepts);
+
+/** Determines which of a subset of the FP exceptions are set.
+ *  
+ *  \param  excepts     Bitwise OR'd list of FP exception flags to test
+ *  \returns            Bitwise OR of the FP exception macros that are both
+ *                      in \p excepts and are currently set.
+ */
+int fetestexcept(int excepts);
+
+/** Raises the specified floating-point exceptions.
+ * 
+ *  \param   excepts     Bitwise OR'd list of FP exception flags to raise
+ *  \retval  0           Success   
+ */
+int feraiseexcept(int excepts);
+
+/** Copies the state of the given FP flags from the environment.
+ * 
+ *  \param  flagp   Structure to store the FP state status within
+ *  \param  excepts Bitwise OR'd list of FP exception flags to store
+ *  \retval 0       Success
+ * 
+ *  \sa fesetexceptflag()
+ */
+int fegetexceptflag(fexcept_t *flagp, int excepts);
+
+/** Copies the state of the given FP flags to the environment.
+ * 
+ *  \param  flagp   Structure to copy the FP state status from
+ *  \param  excepts Bitwise OR'd list of FP exception flags to set
+ *  \retval 0       Success
+ * 
+ *  \sa fegetexceptflag()
+ */
+int fesetexceptflag(const fexcept_t* flagp, int excepts);
+
+/** Sets the floating-point rounding mode.
+ * 
+ *  \param  round   New rounding mode to set
+ *  \retval 0       Success
+ *  \retval Other   Failure; returns current rounding mode
+ * 
+ *  \sa fegetround()
+ */
+int fesetround(int round);
+
+/** Gets the floating-point rounding mode.
+ * 
+ *  \returns    Value corresponding to current rounding mode 
+ *  
+ *  \sa fesetround() 
+ */
+int fegetround(void);
+
+/** Stores the status of the FP environment.
+ * 
+ *  \param  envp    Structure to store FP status within
+ *  \retval 0       Success
+ *
+ *  \sa fesetenv()
+ */
+int fegetenv(fenv_t *envp);
+
+/** Restores the status of the FP environment.
+ * 
+ *  \note
+ *  Does not raise any exceptions, only modifies the flags.
+ * 
+ *  \param  envp    Structure containing previous FP status
+ *  \retval 0       Success
+ * 
+ *  \sa fegetenv()
+ */
+int fesetenv(const fenv_t* envp);
+
+/** Saves the FP env, clears status flags, prevents exceptions from trapping.
+ * 
+ *  \param  envp    Structure where the FP environment will be stored
+ * 
+ *  \retval 0       Success  
+ */
+int feholdexcept(fenv_t *envp);
+
+/** Restores FP environment and raises previously raised exceptions.
+ * 
+ *  \param  envp    FP environment to be restored
+ *  \retval 0       Success
+ */
+int feupdateenv(const fenv_t *envp);
+
 /** \name  POSIX Extensions
  *  \brief Extended functionality for POSIX compliance.
  *  @{
