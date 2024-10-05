@@ -52,7 +52,7 @@ extern uint32 _arch_mem_top;
 /** \brief  Base address of available physical pages. */
 #define page_phys_base  0x8c010000
 
-#ifndef HZ
+#ifndef THD_SCHED_HZ
 /** \brief Scheduler interrupt frequency
 
     Timer interrupt frequency for the KOS thread scheduler.
@@ -63,8 +63,14 @@ extern uint32 _arch_mem_top;
 
     \sa thd_get_hz(), thd_set_hz()
 */
-#define HZ              100
+#define THD_SCHED_HZ    100
 #endif
+
+/** Legacy symbol for scheduler frequency.
+ *  \deprecated
+ *  \sa THD_SCHED_HZ
+ */
+const unsigned HZ __depr("Please use the new THD_SCHED_HZ macro.") = THD_SCHED_HZ;
 
 #ifndef THD_STACK_SIZE
 /** \brief  Default thread stack size. */
