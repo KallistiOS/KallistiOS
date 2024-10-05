@@ -52,6 +52,7 @@ extern uint32 _arch_mem_top;
 /** \brief  Base address of available physical pages. */
 #define page_phys_base  0x8c010000
 
+#ifndef HZ
 /** \brief Scheduler interrupt frequency
 
     Timer interrupt frequency for the KOS thread scheduler.
@@ -63,12 +64,17 @@ extern uint32 _arch_mem_top;
     \sa thd_get_hz(), thd_set_hz()
 */
 #define HZ              100
+#endif
 
+#ifndef THD_STACK_SIZE
 /** \brief  Default thread stack size. */
 #define THD_STACK_SIZE  32768
+#endif
 
+#ifndef THD_KERNEL_STACK_SIZE
 /** \brief Main/kernel thread's stack size. */
 #define THD_KERNEL_STACK_SIZE (64 * 1024)
+#endif
 
 /** \brief  Default video mode. */
 #define DEFAULT_VID_MODE    DM_640x480
