@@ -70,7 +70,8 @@ extern uint32 _arch_mem_top;
  *  \deprecated
  *  \sa THD_SCHED_HZ
  */
-const unsigned HZ __depr("Please use the new THD_SCHED_HZ macro.") = THD_SCHED_HZ;
+static const
+unsigned HZ __depr("Please use the new THD_SCHED_HZ macro.") = THD_SCHED_HZ;
 
 #ifndef THD_STACK_SIZE
 /** \brief  Default thread stack size. */
