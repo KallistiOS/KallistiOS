@@ -84,6 +84,13 @@ export KOS_CMAKE_TOOLCHAIN="${KOS_BASE}/utils/cmake/dreamcast.toolchain.cmake"
 #
 export KOS_GENROMFS="${KOS_BASE}/utils/genromfs/genromfs"
 
+# Mkdcdisc Utility Path
+#
+# Specifies the path to the utility which is used by KOS
+# to create cdi images.
+#
+export KOS_MKDCDISC="${DC_TOOLS_BASE}/mkdcdisc"
+
 # Make Utility
 #
 # Configures the tool to be used as the main "make" utility

@@ -53,3 +53,4 @@ utils/dc-chain/gcc-*
 utils/dc-chain/newlib-*
 utils/dc-chain/gdb-*
 utils/dc-chain/insight-*
+utils/mkdcdisc/mkdcdisc

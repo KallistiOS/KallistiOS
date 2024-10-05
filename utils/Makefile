@@ -4,7 +4,8 @@
 # Copyright (C) 2001 Megan Potter
 #
 
-DIRS = bin2c bincnv dcbumpgen genromfs kmgenc makeip scramble vqenc wav2adpcm pvrtex
+DIRS = bin2c bincnv dcbumpgen genromfs kmgenc makeip scramble vqenc wav2adpcm pvrtex \
+		mkdcdisc
 
 ifeq ($(KOS_SUBARCH), naomi)
 	DIRS += naomibintool naominetboot
