@@ -73,7 +73,7 @@ void sq_lock(void *dest) {
 
     mutex_lock(&sq_mutex);
 
-    assert_msg(sq_mutex.count >= SQ_STATE_CACHE_SIZE, "You've overrun the SQ_STATE_CACHE.");
+    assert_msg(sq_mutex.count < SQ_STATE_CACHE_SIZE, "You've overrun the SQ_STATE_CACHE.");
 
     new_state = &sq_state_cache[sq_mutex.count - 1];
 
