@@ -5,11 +5,10 @@
    Copyright (C) 2023 Falco Girgis
    Copyright (C) 2023 Andy Barajas
    Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2024 Donald Haase
 */
 
 #include <assert.h>
-#include <stdlib.h>
-#include <sys/queue.h>
 
 #include <arch/cache.h>
 #include <arch/mmu.h>
