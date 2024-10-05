@@ -136,6 +136,14 @@ vmufb_print_string(vmufb_t *fb, const vmufb_font_t *font, const char *str) {
     vmufb_print_string_into(fb, font, 0, 0, 48, 32, 0, str);
 }
 
+/** \brief Built-in VMU framebuffer font.
+ *
+ *  Linux 4x6 font: lib/fonts/font_mino_4x6.c
+ *
+ *  \author Kenneth Albanowski
+ */
+extern const vmufb_font_t vmufb_font4x6;
+
 /** \brief  Render a string to attached VMUs using the built-in font
 
     Uses the built-in VMU font to render a string to all VMUs connected to the

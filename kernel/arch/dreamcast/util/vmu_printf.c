@@ -115,7 +115,7 @@ static const char fontdata_4x6[] = {
 	0xee, 0xe0, 0x00, 0x66, 0x00, 0xee, 0xee, 0xe0,
 };
 
-static const vmufb_font_t vmufb_font4x6 = {
+const vmufb_font_t vmufb_font4x6 = {
 	.w = 4,
 	.h = 6,
 	.stride = 3,
