@@ -136,8 +136,8 @@ static void irq_dump_regs(int code, int evt) {
     arch_stk_trace_at(fp, 0);
     
     if(code == 1) {
-        dbglog(DBG_DEAD, "Encountered %s. Use this terminal command to help"
-            " diagnose:\n\n\t$KOS_ADDR2LINE -e your_program.elf %08lx %08lx", 
+        dbglog(DBG_DEAD, "\nEncountered %s. Use this terminal command to help"
+            " diagnose:\n\n\t$KOS_ADDR2LINE -e prog.elf %08lx %08lx", 
             irq_exception_string(evt), irq_srt_addr->pc, irq_srt_addr->pr);
 
 #ifdef FRAME_POINTERS

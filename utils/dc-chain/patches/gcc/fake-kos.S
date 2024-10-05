@@ -8,6 +8,9 @@
     ! crt1.S required symbols
     .weak   ___kos_init_flags
     .weak   _arch_main
+    .weak   __monstartup
+    .weak   __executable_start
+    .weak   __etext
 
     ! Things needed by emutls
     .weak   _free
@@ -49,6 +52,7 @@ ___kos_init_flags:
     .long   0
 
 _arch_main:
+__monstartup:
 _free:
 _abort:
 _malloc:

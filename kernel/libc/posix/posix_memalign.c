@@ -26,7 +26,7 @@ static inline size_t aligned_size(size_t size, size_t alignment) {
     return new_size;
 }
 
-int posix_memalign(void **memptr, size_t alignment, size_t size) {
+__used int posix_memalign(void **memptr, size_t alignment, size_t size) {
     if(!memptr) {
         return EFAULT;
     }
