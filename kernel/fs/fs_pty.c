@@ -756,11 +756,11 @@ static int pty_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
 
     /* Fill in the stat structure */
     memset(st, 0, sizeof(struct stat));
-    st->st_dev = (dev_t)('p' | ('t' << 8) | ('y' << 16));  // Unique device ID for PTYs
-    st->st_mode = S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;  // Character device with standard permissions
-    st->st_nlink = 1;  // PTY has only one link
-    st->st_size = ph->cnt;  // Current buffer size (number of bytes in the PTY buffer)
-    st->st_blksize = PTY_BUFFER_SIZE;  // Block size matches PTY buffer
+    st->st_dev = (dev_t)('p' | ('t' << 8) | ('y' << 16));
+    st->st_mode = S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
+    st->st_nlink = 1
+    st->st_size = ph->cnt;
+    st->st_blksize = PTY_BUFFER_SIZE;
 
     return 0;
 }

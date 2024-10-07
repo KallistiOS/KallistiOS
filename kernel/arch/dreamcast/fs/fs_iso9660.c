@@ -980,7 +980,7 @@ static int iso_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
     /* Root directory of cd */
     if(len == 0 || (len == 1 && *path == '/')) {
         memset(st, 0, sizeof(struct stat));
-        st->st_dev = 'c' | ('d' << 8);
+        st->st_dev = (dev_t)('c' | ('d' << 8));
         st->st_mode = S_IFDIR | S_IRUSR | S_IRGRP | S_IROTH | S_IXUSR | 
             S_IXGRP | S_IXOTH;
         st->st_size = -1;
@@ -1006,7 +1006,7 @@ static int iso_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
     }
        
     memset(st, 0, sizeof(struct stat));
-    st->st_dev = 'c' | ('d' << 8);
+    st->st_dev = (dev_t)('c' | ('d' << 8));
     st->st_mode = md | S_IRUSR | S_IRGRP | S_IROTH | S_IXUSR | S_IXGRP | S_IXOTH;
     st->st_size = (md == S_IFDIR) ? -1 : (int)iso_733(de->size);
     st->st_nlink = (md == S_IFDIR) ? 2 : 1;
