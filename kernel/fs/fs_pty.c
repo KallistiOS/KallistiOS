@@ -758,7 +758,7 @@ static int pty_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
     memset(st, 0, sizeof(struct stat));
     st->st_dev = (dev_t)('p' | ('t' << 8) | ('y' << 16));
     st->st_mode = S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
-    st->st_nlink = 1
+    st->st_nlink = 1;
     st->st_size = ph->cnt;
     st->st_blksize = PTY_BUFFER_SIZE;
 
