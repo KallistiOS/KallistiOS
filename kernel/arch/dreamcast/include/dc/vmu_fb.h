@@ -26,7 +26,7 @@
 
     \headerfile dc/vmu_fb.h
  */
-typedef struct {
+typedef struct vmufb {
     uint32_t data[48];
 } vmufb_t;
 
@@ -34,7 +34,7 @@ typedef struct {
 
     \headerfile dc/vmu_fb.h
  */
-typedef struct {
+typedef struct vmufb_font {
     unsigned int w;         /**< \brief Character width in pixels */
     unsigned int h;         /**< \brief Character height in pixels */
     unsigned int stride;    /**< \brief Size of one character in bytes */
@@ -115,11 +115,11 @@ void vmufb_present(const vmufb_t *fb, maple_device_t *dev);
     \param  str             The text to render
  */
 void vmufb_print_string_into(vmufb_t *fb,
-			     const vmufb_font_t *font,
-			     unsigned int x, unsigned int y,
-			     unsigned int w, unsigned int h,
-			     unsigned int line_spacing,
-			     const char *str);
+            			     const vmufb_font_t *font,
+            			     unsigned int x, unsigned int y,
+            			     unsigned int w, unsigned int h,
+            			     unsigned int line_spacing,
+            			     const char *str);
 
 /** \brief  Render a string into the VMU framebuffer
 

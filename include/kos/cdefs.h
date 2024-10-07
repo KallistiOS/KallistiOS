@@ -29,7 +29,7 @@
 /** \defgroup system_macros     Macros
     \brief                      Various common macros used throughout the codebase
     \ingroup                    system
-    
+
     @{
 */
 
@@ -105,7 +105,8 @@
 #ifndef __deprecated
 /** \brief  Mark something as deprecated.
     This should be used to warn users that a function/type/etc will be removed
-    in a future version of KOS. */
+    in a future version of KOS.
+*/
 #define __deprecated    __attribute__((deprecated))
 #endif
 
@@ -115,7 +116,8 @@
     in a future version of KOS and to suggest an alternative that they can use
     instead.
     \param  m       A string literal that is included with the warning message
-                    at compile time. */
+                    at compile time.
+*/
 #define __depr(m) __attribute__((deprecated(m)))
 #endif
 
@@ -162,7 +164,34 @@
 #ifndef __no_inline
 /** \brief Ask the compiler to \a never inline a given function. */
 #define __no_inline __attribute__((__noinline__))
+
 #endif
+
+/* Utility Macros */
+#ifndef STATIC_ASSERT
+/** \brief Fail to compile based on condition
+    This macro is used to verify some condition, \p cond, at compile-time,
+    failing to compile if it resolves to `0`. \p msg is just to add some extra
+    context information to the error.
+
+    \note
+    This macro is for C99 and prior. C11 and onward introduced
+    _Static_assert() and static_assert().
+*/
+#define STATIC_ASSERT(cond, msg) typedef char static_assertion_##MSG[(cond) ? 1 : -1]
+#endif
+
+#ifndef COUNT_OF
+/** \brief Returns the number of elements within an array
+
+    This macro is used to safely count the number of elements
+    within a statically-sized array.
+
+    \warning
+    Only ever use this macro for statically-sized arrays!
+    Does not work with arrays which have been decayed into pointers!
+*/
+#define COUNT_OF(array) (sizeof(array) / sizeof(array[0]))
 
 /* GCC macros for special cases */
 /* #if __GNUC__ ==  */

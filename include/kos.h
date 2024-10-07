@@ -50,6 +50,7 @@ __BEGIN_DECLS
 #include <kos/library.h>
 #include <kos/net.h>
 #include <kos/nmmgr.h>
+#include <kos/numeric.h>
 #include <kos/exports.h>
 #include <kos/dbgio.h>
 #include <kos/blockdev.h>

@@ -398,16 +398,21 @@ int vmu_draw_lcd_xbm(maple_device_t *dev, const char *vmu_icon) {
 
 /* Utility function which sets the icon on all available VMUs
    from an Xwindows XBM. Imported from libdcutils. */
-void vmu_set_icon(const char *vmu_icon) {
+int vmu_set_icon(const char *vmu_icon) {
     int            i = 0;
     maple_device_t *dev;
     uint8_t        bitmap[VMU_SCREEN_WIDTH * VMU_SCREEN_HEIGHT / 8];
+    int            retval = MAPLE_EOK, temp;
 
     vmu_xbm_to_bitmap(bitmap, vmu_icon);
 
     while((dev = maple_enum_type(i++, MAPLE_FUNC_LCD))) {
-        vmu_draw_lcd(dev, bitmap);
+        if((temp = vmu_draw_lcd(dev, bitmap)) != 0) {
+            retval = temp;
+        }
     }
+
+    return retval;
 }
 
 /* Read the data in block blocknum into buffer, return a -1
