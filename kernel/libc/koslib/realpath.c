@@ -42,7 +42,8 @@ char *realpath(const char *__restrict path, char *__restrict resolved) {
     if(path[0] == '/') {
         strncpy(temp_path, path, len);
         temp_path[len] = '\0';
-    } else {
+    } 
+    else {
         /* Handle relative path: prepend current working directory. */
         if(!getcwd(temp_path, PATH_MAX))
             return NULL;
@@ -73,7 +74,8 @@ char *realpath(const char *__restrict path, char *__restrict resolved) {
 
         if(strcmp(token, ".") == 0) {
             /* Ignore "." */
-        } else if(strcmp(token, "..") == 0) {
+        } 
+        else if(strcmp(token, "..") == 0) {
             /* Remove the last component from resolved path. */
             last_slash = strrchr(resolved, '/');
 
@@ -82,9 +84,10 @@ char *realpath(const char *__restrict path, char *__restrict resolved) {
             else
                 /* If there's no previous component, we stay at root. */
                 resolved[1] = '\0';
-        } else {
+        }
+        else {
             /* Append a '/' if we don't already have one. */
-            if (resolved[strlen(resolved) - 1] != '/')
+            if(resolved[strlen(resolved) - 1] != '/')
                 strcat(resolved, "/");
 
             /* Append the token to the resolved path. */

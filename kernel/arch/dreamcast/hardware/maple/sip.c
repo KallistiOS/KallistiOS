@@ -299,6 +299,7 @@ static maple_driver_t sip_drv = {
     .functions = MAPLE_FUNC_MICROPHONE,
     .name = "Sound Input Peripheral",
     .periodic = sip_periodic,
+    .status_size = sizeof(sip_state_t),
     .attach = sip_attach,
     .detach = NULL
 };

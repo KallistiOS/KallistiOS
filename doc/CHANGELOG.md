@@ -3,10 +3,11 @@
 Platform-specific changes are prefixed with the platform name, otherwise the change is platform-independent. The name/initials of the person who is responsible for the change are listed in [square brackets] for most versions (where they are missing from early versions, assume that they should be attributed to Megan Potter).
 
 ## KallistiOS version 2.2.0
-- Added pvrtex utility by TapamN to utils [DF == Daniel Fairchild]
+- Added pvrtex utility by TapamN to utils [Daniel Fairchild == DF]
 - Added . & .. directories to filesystems that lack it [AB]
 - Replaced previous implementation of realpath() to remove license from AUTHORS [AB]
-- Enabled hybrid PVR DR/DMA vertex submission in driver + sped up pvr_prim() [FG]
+- Enabled hybrid PVR DR/DMA vertex submission in driver + sped up pvr_prim() [Falco Girgis == FG]
+- Add thread priority boosting system [Paul Cercueil == PC]
 - Refactored, cleaned up, and broke PVR API into multiple header files [FG]
 
 ## KallistiOS version 2.1.0
