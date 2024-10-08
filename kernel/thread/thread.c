@@ -60,7 +60,7 @@ static alignas(8) uint8_t thd_idle_stack[64];
 /* Thread scheduler data */
 
 /* Scheduler timer interrupt frequency (Hertz) */
-static unsigned int thd_sched_ms = 1000 / HZ;
+static unsigned int thd_sched_ms = 1000 / THD_SCHED_HZ;
 
 /* Thread list. This includes all threads except dead ones. */
 static struct ktlist thd_list;
@@ -516,6 +516,7 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
             /* Set Thread Pointer */
             nt->context.gbr = (uint32_t)nt->tcbhead;
             nt->tid = tid;
+            nt->real_prio = real_attr.prio;
             nt->prio = real_attr.prio;
             nt->state = STATE_READY;
 
@@ -627,6 +628,7 @@ int thd_set_prio(kthread_t *thd, prio_t prio) {
 
     /* Set the new priority */
     thd->prio = prio;
+    thd->real_prio = prio;
     return 0;
 }
 

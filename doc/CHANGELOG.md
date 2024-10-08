@@ -7,6 +7,8 @@ Platform-specific changes are prefixed with the platform name, otherwise the cha
 - Added . & .. directories to filesystems that lack it [AB]
 - Replaced previous implementation of realpath() to remove license from AUTHORS [AB]
 - Enabled hybrid PVR DR/DMA vertex submission in driver + sped up pvr_prim() [FG]
+- Add thread priority boosting system [Paul Cercueil = PC]
+- Add performance monitor API [PC]
 - Redid IRQ API, added handler chaining, preliminary nesting support [FG]
 
 ## KallistiOS version 2.1.0

@@ -215,7 +215,7 @@ static int rnd_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
     (void)flag;
 
     memset(rv, 0, sizeof(struct stat));
-    rv->st_mode = S_IFCHR | S_IRUSR;
+    rv->st_mode = S_IFCHR | S_IRUSR | S_IRGRP | S_IROTH;
     rv->st_nlink = 1;
 
     return 0;
@@ -259,7 +259,7 @@ static int rnd_fstat(void *fd, struct stat *st) {
     }
 
     memset(st, 0, sizeof(struct stat));
-    st->st_mode = S_IFCHR | S_IRUSR;
+    st->st_mode = S_IFCHR | S_IRUSR | S_IRGRP | S_IROTH;
     st->st_nlink = 1;
 
     return 0;
@@ -291,7 +291,7 @@ static vfs_handler_t vh = {
     rnd_unlink,
     NULL,
     NULL,               /* complete */
-    rnd_stat,           /* stat */
+    rnd_stat,
     NULL,               /* mkdir */
     NULL,               /* rmdir */
     rnd_fcntl,

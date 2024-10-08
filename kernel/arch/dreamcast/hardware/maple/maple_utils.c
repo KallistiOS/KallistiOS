@@ -147,7 +147,7 @@ const char * maple_perror(int response) {
 
 /* Determine if a given device is valid */
 int maple_dev_valid(int p, int u) {
-    return maple_state.ports[p].units[u].valid;
+    return !!maple_enum_dev(p, u);
 }
 
 int maple_gun_enable(int port) {
