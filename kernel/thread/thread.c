@@ -60,7 +60,7 @@ static alignas(8) uint8_t thd_idle_stack[64];
 /* Thread scheduler data */
 
 /* Scheduler timer interrupt frequency (Hertz) */
-static unsigned int thd_sched_ms = 1000 / HZ;
+static unsigned int thd_sched_ms = 1000 / THD_SCHED_HZ;
 
 /* Thread list. This includes all threads except dead ones. */
 static struct ktlist thd_list;
