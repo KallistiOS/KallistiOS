@@ -16,7 +16,7 @@ else
 	CXXFLAGS += -O3
 endif
 
-CFLAGS := $(CXXFLAGS) -Wno-pointer-sign
+CFLAGS := $(CXXFLAGS) -Wno-pointer-sign -std=gnu17
 
 define textSegment2Header
 	mkdir -p info
