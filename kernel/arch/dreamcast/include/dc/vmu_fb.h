@@ -146,8 +146,9 @@ void vmufb_print_string_into(vmufb_t *fb,
                             painting the text (or NULL to use the default)
     \param  str             The text to render
  */
-inline void vmufb_print_string(vmufb_t *fb, const vmufb_font_t *fnt,
-                               const char *str) {
+static __inline__
+void vmufb_print_string(vmufb_t *fb, const vmufb_font_t *fnt,
+                        const char *str) {
     vmufb_print_string_into(fb, fnt, 0, 0,
                             VMU_SCREEN_WIDTH, VMU_SCREEN_HEIGHT, 0, str);
 }
