@@ -2,6 +2,7 @@
 
    util/vmu_fb.c
    Copyright (C) 2023 Paul Cercueil
+   Copyright (C) 2024 Falco Girgis
 
 */
 
@@ -13,6 +14,8 @@
 
 #define GENMASK(h, l) \
     (((unsigned int)-1 << (l)) & ((unsigned int)-1 >> (31 - (h))))
+
+static const vmufb_font_t *default_font = &vmufb_font4x6;
 
 static uint64_t extract_bits(const uint8_t *data,
                              unsigned int offt, unsigned int w) {
@@ -81,7 +84,7 @@ void vmufb_paint_area(vmufb_t *fb,
 
     for (i = 0; i < h; i++) {
         bits = extract_bits((const uint8_t *)data, i * w, w);
-        insert_bits((uint8_t *)fb->data, (y + i) * 48 + x, w, bits);
+        insert_bits((uint8_t *)fb->data, (y + i) * VMU_SCREEN_WIDTH + x, w, bits);
     }
 }
 
@@ -92,7 +95,7 @@ void vmufb_clear(vmufb_t *fb) {
 void vmufb_clear_area(vmufb_t *fb,
                       unsigned int x, unsigned int y,
                       unsigned int w, unsigned int h) {
-    uint32_t tmp[48] = {};
+    uint32_t tmp[VMU_SCREEN_WIDTH] = {};
 
     vmufb_paint_area(fb, x, y, w, h, (const char *) tmp);
 }
@@ -120,6 +123,7 @@ void vmufb_print_string_into(vmufb_t *fb,
                              unsigned int line_spacing,
                              const char *str) {
     unsigned int xorig = x, yorig = y;
+    font = font? font : default_font;
 
     for (; *str; str++) {
         switch (*str) {
@@ -147,4 +151,14 @@ void vmufb_print_string_into(vmufb_t *fb,
 
         x += font->w;
     }
+}
+
+const vmufb_font_t *vmu_set_font(const vmufb_font_t *font) {
+    const vmufb_font_t *temp = default_font;
+    default_font = font;
+    return temp;
+}
+
+const vmufb_font_t *vmu_get_font(void) {
+    return default_font;
 }

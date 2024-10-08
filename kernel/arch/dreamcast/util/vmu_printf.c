@@ -122,8 +122,7 @@ const vmufb_font_t vmufb_font4x6 = {
 	.fontdata = fontdata_4x6,
 };
 
-void vmu_printf(const char *fmt, ...)
-{
+void vmu_printf(const char *fmt, ...) {
 	maple_device_t *dev;
 	unsigned int vmu;
 	char buf[256];
@@ -135,7 +134,8 @@ void vmu_printf(const char *fmt, ...)
 	vsnprintf(buf, sizeof(buf), fmt, va);
 	va_end(va);
 
-	vmufb_print_string(&vmufb, &vmufb_font4x6, buf);
+	vmufb_clear(&vmufb);
+	vmufb_print_string(&vmufb, vmu_get_font(), buf);
 
 	for (vmu = 0; ; vmu++) {
 		dev = maple_enum_type(vmu, MAPLE_FUNC_LCD);
