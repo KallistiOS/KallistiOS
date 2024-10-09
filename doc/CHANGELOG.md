@@ -8,6 +8,7 @@ Platform-specific changes are prefixed with the platform name, otherwise the cha
 - Replaced previous implementation of realpath() to remove license from AUTHORS [AB]
 - Enabled hybrid PVR DR/DMA vertex submission in driver + sped up pvr_prim() [Falco Girgis == FG]
 - Add thread priority boosting system [Paul Cercueil == PC]
+- Add performance monitor API [PC]
 - Refactored, cleaned up, and broke PVR API into multiple header files [FG]
 
 ## KallistiOS version 2.1.0
