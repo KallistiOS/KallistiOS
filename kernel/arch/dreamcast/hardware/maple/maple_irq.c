@@ -74,7 +74,7 @@ static void vbl_chk_next_subdev(maple_state_t *state, maple_frame_t *frm, int p)
     }
 }
 
-static void vbl_dev_probed(maple_state_t *state, int p, int u) {
+static void vbl_dev_probed(int p, int u) {
     maple_device_t *dev = maple_enum_dev(p, 0);
 
     if (dev)
@@ -173,7 +173,7 @@ static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm) {
         if(u == 0)
             vbl_chk_subdevs(state, p, resp->src_addr);
         else
-            vbl_dev_probed(state, p, u);
+            vbl_dev_probed(p, u);
 
         maple_frame_unlock(frm);
 

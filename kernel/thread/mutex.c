@@ -139,7 +139,7 @@ int mutex_lock_timed(mutex_t *m, int timeout) {
                 /* Thread list is sorted by priority, update the position
                  * of the thread holding the lock */
                 thd_remove_from_runnable(m->holder);
-                thd_add_to_runnable(m->holder, 0);
+                thd_add_to_runnable(m->holder, true);
             }
 
             rv = genwait_wait(m, timeout ? "mutex_lock_timed" : "mutex_lock",
