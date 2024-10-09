@@ -7,6 +7,9 @@
 
 # Global KallistiOS Makefile include
 
+# Default build archs
+KOS_BUILD_SUBARCHS ?= naomi pristine
+
 # Build rules
 ifndef KOS_DEPDIR
 
@@ -45,6 +48,12 @@ else
 -include $(wildcard $(KOS_DEPDIR)/*.md)
 
 endif
+
+.PHONY: all_naomi all_pristine
+
+all_naomi: $(if $(filter $(KOS_BUILD_SUBARCHS),naomi),all)
+
+all_pristine: $(if $(filter $(KOS_BUILD_SUBARCHS),pristine),all)
 
 %.o: %.s
 	kos-as $< -o $@

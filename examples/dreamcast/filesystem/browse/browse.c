@@ -268,7 +268,7 @@ static int browse_directory(char *directory, directory_file_t *directory_content
 
     /* Open the directory */
     if (!(d = opendir(directory))) {
-        fprintf(stderr, "browse_directory: opendir failed\n");
+        fprintf(stderr, "browse_directory: opendir failed for %s\n", directory);
         return 0;
     }
 

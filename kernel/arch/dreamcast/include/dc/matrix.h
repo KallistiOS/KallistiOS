@@ -93,9 +93,9 @@ void mat_apply(matrix_t *src);
     \param  invecs          The list of input vectors.
     \param  outvecs         The list of output vectors.
     \param  veccnt          How many vectors are in the list.
-    \param  vecskip         Number of empty bytes between vectors.
+    \param  stride          Number of bytes between vectors.
 */
-void mat_transform(vector_t *invecs, vector_t *outvecs, int veccnt, int vecskip);
+void mat_transform(vector_t *invecs, vector_t *outvecs, int veccnt, int stride);
 
 /** \brief  Transform vectors by the internal matrix into the store queues.
 

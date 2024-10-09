@@ -5,7 +5,10 @@
    Copyright (C) 2023 Falco Girgis
    Copyright (C) 2023 Andy Barajas
    Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2024 Donald Haase
 */
+
+#include <assert.h>
 
 #include <arch/cache.h>
 #include <arch/mmu.h>
@@ -30,31 +33,77 @@
 */
 #define QACR1 (*(volatile uint32_t *)(void *)0xff00003c)
 
+/** \brief   Shift and filter bits needed for the QACR registers
+    \ingroup store_queues
+*/
+#define QACR_EXTERN_BITS(dest) ((((uintptr_t)(dest)) >> 24) & 0x1c)
+
+/** \brief   Set Store Queue QACR* registers from EXTERN_BITS
+    \ingroup store_queues
+*/
+#define SET_QACR_REGS_INNER(dest0, dest1) \
+    do { \
+        QACR0 = (dest0); \
+        QACR1 = (dest1); \
+    } while(0)
+
 /** \brief   Set Store Queue QACR* registers
     \ingroup store_queues
 */
 #define SET_QACR_REGS(dest0, dest1) \
-    do { \
-        QACR0 = (((uintptr_t)(dest0)) >> 24) & 0x1c; \
-        QACR1 = (((uintptr_t)(dest1)) >> 24) & 0x1c; \
-    } while(0)
+    SET_QACR_REGS_INNER(QACR_EXTERN_BITS(dest0), QACR_EXTERN_BITS(dest1))
 
-static mutex_t sq_mutex = MUTEX_INITIALIZER;
+static mutex_t sq_mutex = RECURSIVE_MUTEX_INITIALIZER;
 
-static mmu_token_t mmu_token;
+typedef struct sq_state {
+    uint8_t dest0;
+    uint8_t dest1;
+    mmu_token_t mmu_token;
+} sq_state_t;
+
+#ifndef SQ_STATE_CACHE_SIZE
+#define SQ_STATE_CACHE_SIZE 8
+#endif
+
+static sq_state_t sq_state_cache[SQ_STATE_CACHE_SIZE] = {0};
 
 void sq_lock(void *dest) {
+    sq_state_t *new_state;
+
     mutex_lock(&sq_mutex);
+
+    assert_msg(sq_mutex.count < SQ_STATE_CACHE_SIZE, "You've overrun the SQ_STATE_CACHE.");
+
+    new_state = &sq_state_cache[sq_mutex.count - 1];
 
     /* Disable MMU, because SQs work differently when it's enabled, and we
      * don't support it. */
-    mmu_token = mmu_disable();
+    new_state->mmu_token = mmu_disable();
 
-    SET_QACR_REGS(dest, dest);
+    new_state->dest0 = new_state->dest1 = QACR_EXTERN_BITS(dest);
+
+    SET_QACR_REGS_INNER(new_state->dest0, new_state->dest1);
 }
 
 void sq_unlock(void) {
-    mmu_restore(mmu_token);
+    sq_state_t *tmp_state;
+
+    if(sq_mutex.count == 0) {
+        dbglog(DBG_WARNING, "sq_unlock: Called without any lock\n");
+        return;
+    }
+
+    tmp_state = &sq_state_cache[sq_mutex.count - 1];
+
+    /* Restore the mmu state that we had started with */
+    mmu_restore(tmp_state->mmu_token);
+
+    /* If we aren't the last entry, set the regs back where they belong */
+    if(sq_mutex.count - 1) {
+        tmp_state = &sq_state_cache[sq_mutex.count - 2];
+        SET_QACR_REGS_INNER(tmp_state->dest0, tmp_state->dest1);
+    }
+
     mutex_unlock(&sq_mutex);
 }
 

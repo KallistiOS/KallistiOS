@@ -583,41 +583,46 @@ static void * ramdisk_mmap(void * h) {
     return NULL;
 }
 
-static int ramdisk_stat(vfs_handler_t *vfs, const char *path, struct stat *buf,
+static int ramdisk_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
                         int flag) {
     rd_file_t *f;
+    size_t len = strlen(path);
 
     (void)vfs;
     (void)flag;
+
+    /* Root directory of ramdisk */
+    if(len == 0 || (len == 1 && *path == '/')) {
+        memset(st, 0, sizeof(struct stat));
+        st->st_dev = (dev_t)('r' | ('a' << 8) | ('m' << 16));
+        st->st_mode = S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO;
+        st->st_size = -1;
+        st->st_nlink = 2;
+
+        return 0;
+    }
 
     mutex_lock_scoped(&rd_mutex);
 
     /* Find the file */
     f = ramdisk_find_path(rootdir, path, 0);
-
-    if(f) {
-        memset(buf, 0, sizeof(struct stat));
-        buf->st_dev = (dev_t)('r' | ('a' << 8) | ('m' << 16));
-        buf->st_mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH |
-            S_IWOTH;
-
-        if(f->type == STAT_TYPE_DIR)
-            buf->st_mode |= S_IFDIR;
-        else
-            buf->st_mode |= S_IFREG;
-
-        buf->st_nlink = 1;
-        buf->st_size = f->datasize;
-        buf->st_blksize = 1024;
-        buf->st_blocks = f->datasize >> 10;
-
-        if(f->datasize & 0x3ff)
-            ++buf->st_blocks;
-    }
-    else {
+    if(!f) {
         errno = ENOENT;
         return -1;
     }
+
+    memset(st, 0, sizeof(struct stat));
+    st->st_dev = (dev_t)('r' | ('a' << 8) | ('m' << 16));
+    st->st_mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
+    st->st_mode |= (f->type == STAT_TYPE_DIR) ? 
+        (S_IFDIR | S_IXUSR | S_IXGRP | S_IXOTH) : S_IFREG;
+    st->st_size = (f->type == STAT_TYPE_DIR) ? -1 : (int)f->datasize;
+    st->st_nlink = (f->type == STAT_TYPE_DIR) ? 2 : 1;
+    st->st_blksize = 1024;
+    st->st_blocks = f->datasize >> 10;
+
+    if(f->datasize & 0x3ff)
+        ++st->st_blocks;
 
     return -1;
 }
@@ -665,7 +670,7 @@ static int ramdisk_rewinddir(void * h) {
     return 0;
 }
 
-static int ramdisk_fstat(void *h, struct stat *buf) {
+static int ramdisk_fstat(void *h, struct stat *st) {
     file_t fd = (file_t)h;
     rd_file_t *f;
 
@@ -680,22 +685,17 @@ static int ramdisk_fstat(void *h, struct stat *buf) {
     f = fh[fd].file;
 
     /* Fill in the structure. */
-    memset(buf, 0, sizeof(struct stat));
-    buf->st_dev = (dev_t)('r' | ('a' << 8) | ('m' << 16));
-    buf->st_mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
-
-    if(f->type == STAT_TYPE_DIR)
-        buf->st_mode |= S_IFDIR;
-    else
-        buf->st_mode |= S_IFREG;
-
-    buf->st_nlink = 1;
-    buf->st_size = f->datasize;
-    buf->st_blksize = 1024;
-    buf->st_blocks = f->datasize >> 10;
+    memset(st, 0, sizeof(struct stat));
+    st->st_dev = (dev_t)('r' | ('a' << 8) | ('m' << 16));
+    st->st_mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
+    st->st_mode |= (f->type == STAT_TYPE_DIR) ? S_IFDIR : S_IFREG;
+    st->st_size = (f->type == STAT_TYPE_DIR) ? -1 : (int)f->datasize;
+    st->st_nlink = (f->type == STAT_TYPE_DIR) ? 2 : 1;
+    st->st_blksize = 1024;
+    st->st_blocks = f->datasize >> 10;
 
     if(f->datasize & 0x3ff)
-        ++buf->st_blocks;
+        ++st->st_blocks;
 
     return 0;
 }

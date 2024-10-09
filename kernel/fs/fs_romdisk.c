@@ -412,6 +412,65 @@ static void *romdisk_mmap(void * h) {
     return (void *)(fh[fd].mnt->image + fh[fd].index);
 }
 
+static int romdisk_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
+                        int flag) {
+    mode_t md;
+    uint32_t filehdr;
+    const romdisk_file_t *fhdr;
+    rd_image_t *mnt = (rd_image_t *)vfs->privdata;
+    size_t len = strlen(path);
+
+    (void)flag;
+
+    /* Root directory of romdisk */
+    if(len == 0 || (len == 1 && *path == '/')) {
+        memset(st, 0, sizeof(struct stat));
+        st->st_dev = (dev_t)((ptr_t)mnt);
+        st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP |
+            S_IROTH | S_IXOTH;
+        st->st_size = -1;
+        st->st_nlink = 2;
+
+        return 0;
+    }
+
+    /* First try opening as a file */
+    filehdr = romdisk_find(mnt, path + 1, 0);
+    md = S_IFREG;
+
+    /* If we couldn't get it as a file, try as a directory */
+    if(filehdr == 0) {
+        filehdr = romdisk_find(mnt, path + 1, 1);
+        md = S_IFDIR;
+    }
+
+    /* If we still don't have it, then we're not going to get it. */
+    if(filehdr == 0) {
+        errno = ENOENT;
+        return -1;
+    }
+       
+    memset(st, 0, sizeof(struct stat));
+    st->st_dev = (dev_t)((ptr_t)mnt);
+    st->st_mode = md | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+    st->st_size = -1;
+    st->st_nlink = 2;
+    st->st_blksize = 1024;
+
+    if(md == S_IFREG) {
+        fhdr = (const romdisk_file_t *)(mnt->image + filehdr);
+        st->st_size = ntohl_32(&fhdr->size);
+        st->st_nlink = 1;
+        st->st_blocks = st->st_size >> 10;
+
+        /* Add one more block if there's a remainder */
+        if (st->st_size & 0x3ff)
+            ++st->st_blocks;
+    }
+
+    return 0;
+}
+
 static int romdisk_fcntl(void *h, int cmd, va_list ap) {
     file_t fd = (file_t)h;
     int rv = -1;
@@ -466,17 +525,11 @@ static int romdisk_fstat(void *h, struct stat *st) {
     }
 
     memset(st, 0, sizeof(struct stat));
-
-    if(fh[fd].dir)
-        st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP |
-            S_IROTH | S_IXOTH;
-    else
-        st->st_mode = S_IFREG | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP |
-            S_IROTH | S_IXOTH;
-
     st->st_dev = (dev_t)((ptr_t)fh[fd].mnt);
+    st->st_mode = S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+    st->st_mode |= (fh[fd].dir) ? S_IFDIR : S_IFREG;
     st->st_size = fh[fd].size;
-    st->st_nlink = 1;
+    st->st_nlink = (fh[fd].dir) ? 2 : 1;
     st->st_blksize = 1024;
     st->st_blocks = fh[fd].size >> 10;
 
@@ -513,7 +566,7 @@ static vfs_handler_t vh = {
     NULL,                       /* unlink */
     romdisk_mmap,
     NULL,                       /* complete */
-    NULL,                       /* stat */
+    romdisk_stat,
     NULL,                       /* mkdir */
     NULL,                       /* rmdir */
     romdisk_fcntl,

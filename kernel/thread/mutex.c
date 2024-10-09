@@ -133,6 +133,15 @@ int mutex_lock_timed(mutex_t *m, int timeout) {
             deadline = timer_ms_gettime64() + timeout;
 
         for(;;) {
+            if (m->holder->prio >= thd_current->prio) {
+                m->holder->prio = thd_current->prio;
+
+                /* Thread list is sorted by priority, update the position
+                 * of the thread holding the lock */
+                thd_remove_from_runnable(m->holder);
+                thd_add_to_runnable(m->holder, true);
+            }
+
             rv = genwait_wait(m, timeout ? "mutex_lock_timed" : "mutex_lock",
                               timeout, NULL);
             if(rv < 0) {
@@ -252,6 +261,9 @@ static int mutex_unlock_common(mutex_t *m, kthread_t *thd) {
             errno = EINVAL;
             return -1;
     }
+
+    if (thd != (kthread_t *)0xffffffff)
+        thd->prio = thd->real_prio;
 
     /* If we need to wake up a thread, do so. */
     if(wakeup)
