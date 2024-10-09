@@ -9,6 +9,7 @@ Platform-specific changes are prefixed with the platform name, otherwise the cha
 - Enabled hybrid PVR DR/DMA vertex submission in driver + sped up pvr_prim() [FG]
 - Add thread priority boosting system [Paul Cercueil = PC]
 - Add performance monitor API [PC]
+- Redid IRQ API, added handler chaining, preliminary nesting support [FG]
 
 ## KallistiOS version 2.1.0
 - Cleaned up generated stubs files on a make clean [Lawrence Sebald == LS]
