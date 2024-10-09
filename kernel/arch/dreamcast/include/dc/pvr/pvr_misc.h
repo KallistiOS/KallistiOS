@@ -41,10 +41,10 @@ __BEGIN_DECLS
     \return                 The packed color value
 */
 #define PVR_PACK_COLOR(a, r, g, b) ( \
-                                     ( ((uint8_t)( a * 255 ) ) << 24 ) | \
-                                     ( ((uint8_t)( r * 255 ) ) << 16 ) | \
-                                     ( ((uint8_t)( g * 255 ) ) << 8 ) | \
-                                     ( ((uint8_t)( b * 255 ) ) << 0 ) )
+                                     ( ((uint8_t)( (a) * 255 ) ) << 24 ) | \
+                                     ( ((uint8_t)( (r) * 255 ) ) << 16 ) | \
+                                     ( ((uint8_t)( (g) * 255 ) ) << 8 ) | \
+                                     ( ((uint8_t)( (b) * 255 ) ) << 0 ) )
 
 /** \brief   Pack two floating point coordinates into one 32-bit value,
              truncating them to 16-bits each.
