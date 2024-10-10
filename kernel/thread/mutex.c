@@ -138,7 +138,7 @@ int mutex_lock_timed(mutex_t *m, int timeout) {
 
         for(;;) {
             /* Check whether we should boost priority. */
-            if (m->holder->prio < thd_current->prio) {
+            if (m->holder->prio > thd_current->prio) {
                 m->holder->prio = thd_current->prio;
 
                 /* Thread list is sorted by priority, update the position
