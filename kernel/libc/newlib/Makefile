@@ -19,6 +19,8 @@ OBJS = lock_common.o newlib_close.o newlib_env_lock.o newlib_environ.o \
 	newlib_lseek.o newlib_malloc.o newlib_open.o \
 	newlib_read.o newlib_sbrk.o newlib_stat.o newlib_times.o \
 	newlib_unlink.o newlib_wait.o newlib_write.o newlib_fcntl.o \
-	newlib_tcgetattr.o verify_newlib.o
+	newlib_tcgetattr.o newlib_tcsetattr.o newlib_tcsendbreak.o \
+	newlib_cfsetispeed.o newlib_cfsetospeed.o newlib_cfgetispeed.o \
+	newlib_cfgetospeed.o verify_newlib.o
 
 include $(KOS_BASE)/Makefile.prefab
