@@ -22,11 +22,17 @@ struct irq_cb {
     void *data;
 };
 
+/* TRAPA handler closure */
+struct trapa_cb {
+    trapa_handler hdl;
+    void         *data;
+};
+
 /* Exception table -- this table matches (EXPEVT>>4) to a function pointer.
    If the pointer is null, then nothing happens. Otherwise, the function will
    handle the exception. */
 static struct irq_cb irq_handlers[0x100];
-static struct irq_cb trapa_handlers[0x100];
+static struct trapa_cb trapa_handlers[0x100];
 
 /* Global exception handler -- hook this if you want to get each and every
    exception; you might get more than you bargained for, but it can be useful. */
@@ -75,12 +81,17 @@ irq_handler irq_get_global_handler(void) {
 }
 
 /* Set or remove a trapa handler */
-int trapa_set_handler(irq_t code, irq_handler hnd, void *data) {
-    if(code > 0xff) return -1;
-
-    trapa_handlers[code] = (struct irq_cb){ hnd, data };
-
+int trapa_set_handler(trapa_t code, trapa_handler hnd, void *data) {
+    trapa_handlers[code] = (struct trapa_cb){ hnd, data };
     return 0;
+}
+
+/* Get a particular trapa handler */
+trapa_handler trapa_get_handler(trapa_t code, void **data) {
+    if(data)
+        *data = trapa_handlers[code].data;
+
+    return trapa_handlers[code].hdl;
 }
 
 /* Get a string description of the exception */
