@@ -573,11 +573,11 @@ static iso_dirent_t *find_object_path(const char *fn, int dir, iso_dirent_t *sta
    too lazy right now. =) */
 static struct {
     uint32      first_extent;   /* First sector */
-    int     dir;        /* >0 if a directory */
-    uint32      ptr;        /* Current read position in bytes */
-    uint32      size;       /* Length of file in bytes */
-    dirent_t    dirent;     /* A static dirent to pass back to clients */
-    int     broken;     /* >0 if the CD has been swapped out since open */
+    bool        dir;            /* True if a directory */
+    uint32      ptr;            /* Current read position in bytes */
+    uint32      size;           /* Length of file in bytes */
+    dirent_t    dirent;         /* A static dirent to pass back to clients */
+    bool        broken;         /* True if the CD has been swapped out since open */
 } fh[FS_CD_MAX_FILES];
 
 /* Mutex for file handles */
@@ -593,7 +593,7 @@ static void iso_break_all(void) {
     mutex_lock(&fh_mutex);
 
     for(i = 0; i < FS_CD_MAX_FILES; i++)
-        fh[i].broken = 1;
+        fh[i].broken = true;
 
     mutex_unlock(&fh_mutex);
 }
@@ -645,10 +645,10 @@ static void * iso_open(vfs_handler_t * vfs, const char *fn, int mode) {
 
     /* Fill in the file handle and return the fd */
     fh[fd].first_extent = iso_733(de->extent);
-    fh[fd].dir = (mode & O_DIR) ? 1 : 0;
+    fh[fd].dir = ((mode & O_DIR) != 0);
     fh[fd].ptr = 0;
     fh[fd].size = iso_733(de->size);
-    fh[fd].broken = 0;
+    fh[fd].broken = false;
 
     return (void *)fd;
 }
