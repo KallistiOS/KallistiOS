@@ -54,7 +54,7 @@ int maple_driver_attach(maple_frame_t *det) {
     maple_response_t    *resp;
     maple_devinfo_t     *devinfo;
     maple_device_t      *dev = maple_state.ports[det->dst_port].units[det->dst_unit];
-    bool attached = false;
+    bool                attached = false;
 
     /* Resolve some pointers first */
     resp = (maple_response_t *)det->recv_buf;
@@ -100,10 +100,9 @@ int maple_driver_attach(maple_frame_t *det) {
 
     /* Did we get any hits? */
     if(!attached) {
-        if(dev->status) {
-            free(dev->status);
-            dev->status = NULL;
-        }
+        free(dev->status);
+        dev->status = NULL;
+
         return -1;
     }
 
@@ -128,10 +127,11 @@ int maple_driver_detach(int p, int u) {
     if(!dev)
         return -1;
 
+    dev->valid = false;
+
     if(dev->drv && dev->drv->detach)
         dev->drv->detach(dev->drv, dev);
 
-    dev->valid = false;
     dev->status_valid = 0;
 
     if(!(detach_callback_functions) || (dev->info.functions & detach_callback_functions)) {

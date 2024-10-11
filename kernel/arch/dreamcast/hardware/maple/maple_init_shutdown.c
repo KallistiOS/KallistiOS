@@ -130,11 +130,9 @@ void maple_hw_shutdown(void) {
             cnt += !!maple_driver_detach(p, u);
 
             dev = maple_state.ports[p].units[u];
-            if(dev) {
-                if(dev->status)
-                    free(dev->status);
-                free(dev);
-            }
+            if(dev)
+                free(dev->status);
+            free(dev);
         }
     }
 
