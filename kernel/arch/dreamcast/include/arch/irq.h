@@ -27,6 +27,9 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 
+/* Included for legacy compatibility with these two APIs being one. */
+#include <arch/trap.h>
+
 /** \defgroup irqs  Interrupts
     \brief          IRQs and ISRs for the SH4's CPU
     \ingroup        system
@@ -316,18 +319,6 @@ int irq_set_handler(irq_t source, irq_handler hnd, void *data);
     \return                 A pointer to the procedure to handle the exception.
 */
 irq_handler irq_get_handler(irq_t source);
-
-/** \brief   Set or remove a handler for a trapa code.
-    \ingroup irqs
-    
-    \param  code            The value passed to the trapa opcode.
-    \param  hnd             A pointer to the procedure to handle the trap.
-    \param  data            A pointer that will be passed along to the callback.
-
-    \retval 0               On success.
-    \retval -1              If the code is invalid (greater than 0xFF).
-*/
-int trapa_set_handler(irq_t code, irq_handler hnd, void *data);
 
 /** \brief   Set a global exception handler.
     \ingroup irqs
