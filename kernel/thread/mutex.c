@@ -138,13 +138,16 @@ int mutex_lock_timed(mutex_t *m, int timeout) {
 
         for(;;) {
             /* Check whether we should boost priority. */
-            if (m->holder->prio > thd_current->prio) {
+            if (m->holder->prio >= thd_current->prio) {
                 m->holder->prio = thd_current->prio;
 
-                /* Thread list is sorted by priority, update the position
-                 * of the thread holding the lock */
-                thd_remove_from_runnable(m->holder);
-                thd_add_to_runnable(m->holder, true);
+                /* Reschedule if currently scheduled. */
+                if(m->holder->state == STATE_READY) {
+                    /* Thread list is sorted by priority, update the position
+                     * of the thread holding the lock */
+                    thd_remove_from_runnable(m->holder);
+                    thd_add_to_runnable(m->holder, true);
+                }
             }
 
             rv = genwait_wait(m, timeout ? "mutex_lock_timed" : "mutex_lock",
@@ -267,13 +270,14 @@ static int mutex_unlock_common(mutex_t *m, kthread_t *thd) {
             return -1;
     }
 
-    /* Restore real priority in case we were dynamically boosted. */
-    if (thd != IRQ_THREAD)
-        thd->prio = thd->real_prio;
-
     /* If we need to wake up a thread, do so. */
-    if(wakeup)
+    if(wakeup) {
+        /* Restore real priority in case we were dynamically boosted. */
+        if (thd != IRQ_THREAD)
+            thd->prio = thd->real_prio;
+
         genwait_wake_one(m);
+    }
 
     return 0;
 }
