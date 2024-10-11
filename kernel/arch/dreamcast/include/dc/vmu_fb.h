@@ -50,6 +50,7 @@ typedef struct vmufb {
     layout, and a pointer to the raw font data.
  */
 typedef struct vmufb_font {
+    unsigned int id;        /**< Font id */
     unsigned int w;         /**< Character width in pixels */
     unsigned int h;         /**< Character height in pixels */
     size_t       stride;    /**< Size of one character in bytes */
@@ -189,17 +190,6 @@ const vmufb_font_t *vmu_set_font(const vmufb_font_t *font);
  *  \sa vmu_set_font()
  */
 const vmufb_font_t *vmu_get_font(void);
-
-/** \brief Built-in VMU framebuffer font.
- *
- *  \note
- *  This is the font that is currently used as the default.
- *
- *  Linux 4x6 font: lib/fonts/font_mino_4x6.c
- *
- *  \author Kenneth Albanowski
- */
-extern const vmufb_font_t vmufb_font4x6;
 
 /** @} */
 
