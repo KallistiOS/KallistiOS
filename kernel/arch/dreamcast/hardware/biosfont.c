@@ -44,7 +44,7 @@ static uint8_t bfont_code_mode = BFONT_CODE_ISO8859_1;
    been forever. */
 static uint32_t bfont_fgcolor = 0xFFFFFFFF;
 static uint32_t bfont_bgcolor = 0x00000000;
-static int bfont_32bit = 0;
+static bool bfont_32bit = false;
 
 static uint8_t *font_address = NULL;
 
@@ -80,7 +80,7 @@ uint32_t bfont_set_background_color(uint32_t c) {
 /* Set the font to draw in 32 or 16 bit mode.
     Deprecated: This will only impact compat functions for now.
     Moving forward, the compat will be 16bit only. */
-int bfont_set_32bit_mode(bool on) {
+bool bfont_set_32bit_mode(bool on) {
     int rv = bfont_32bit;
     bfont_32bit = !!on;
     return rv;
@@ -371,11 +371,9 @@ void bfont_draw_str_ex_vfmt(void *b, uint32_t width, uint32_t fg, uint32_t bg,
 /* Draw string of full-width (wide) and half-width (thin) characters
    Note that this handles the case of mixed encodings unless Japanese
    support is disabled (BFONT_CODE_ISO8859_1).
-   XXX: Seems like this can be shrunk to use uint8_t for nChr/Mask/Flag and
-    getting rid of nMask.
-   */
+*/
 void bfont_draw_str_ex_fmt(void *b, uint32_t width, uint32_t fg, uint32_t bg, uint8_t bpp,
-                       bool opaque, const char *fmt, ...) {
+                           bool opaque, const char *fmt, ...) {
     va_list var_args;
     va_start(var_args, fmt);
 

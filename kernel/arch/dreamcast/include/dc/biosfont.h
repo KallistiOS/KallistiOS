@@ -47,10 +47,13 @@ __BEGIN_DECLS
     \brief    Sizes for of the BIOS font's dimensions
     @{
 */
-#define BFONT_THIN_WIDTH                        12   /**< \brief Width of Thin Font (ISO8859_1, half-JP) */
-#define BFONT_WIDE_WIDTH      BFONT_THIN_WIDTH * 2   /**< \brief Width of Wide Font (full-JP) */
-#define BFONT_HEIGHT                            24   /**< \brief Height of All Fonts */
+#define BFONT_THIN_WIDTH                        12  /**< \brief Width of Thin Font (ISO8859_1, half-JP) */
+#define BFONT_WIDE_WIDTH    (BFONT_THIN_WIDTH * 2)  /**< \brief Width of Wide Font (full-JP) */
+#define BFONT_HEIGHT                            24  /**< \brief Height of All Fonts */
 /** @} */
+
+/** \brief Number of bytes to represent a single character within the BIOS font. */
+#define BFONT_BYTES_PER_CHAR        (BFONT_THIN_WIDTH * BFONT_HEIGHT / 8)
 
 /** \defgroup bfont_indicies Structure
     \brief                   Structure of the Bios Font
@@ -59,28 +62,27 @@ __BEGIN_DECLS
 /** \brief Start of Narrow Characters in Font Block */
 #define BFONT_NARROW_START          0   
 #define BFONT_OVERBAR               BFONT_NARROW_START
-#define BFONT_ISO_8859_1_33_126     BFONT_NARROW_START + ( 1 * BFONT_THIN_WIDTH * BFONT_HEIGHT / 8)
-#define BFONT_YEN                   BFONT_NARROW_START + (95 * BFONT_THIN_WIDTH * BFONT_HEIGHT / 8)
-#define BFONT_ISO_8859_1_160_255    BFONT_NARROW_START + (96 * BFONT_THIN_WIDTH * BFONT_HEIGHT / 8)
-
+#define BFONT_ISO_8859_1_33_126     (BFONT_NARROW_START + ( 1 * BFONT_BYTES_PER_CHAR))
+#define BFONT_YEN                   (BFONT_NARROW_START + (95 * BFONT_BYTES_PER_CHAR))
+#define BFONT_ISO_8859_1_160_255    (BFONT_NARROW_START + (96 * BFONT_BYTES_PER_CHAR))
 
 /* JISX-0208 Rows 1-7 and 16-84 are encoded between BFONT_WIDE_START and BFONT_DREAMCAST_SPECIFIC.
     Only the box-drawing characters (row 8) are missing. */
 /** \brief Size of a row for JISX-0208 characters */
 #define JISX_0208_ROW_SIZE          94
 /** \brief Start of Wide Characters in Font Block */
-#define BFONT_WIDE_START            (288 * BFONT_THIN_WIDTH * BFONT_HEIGHT / 8)
+#define BFONT_WIDE_START            (288 * BFONT_BYTES_PER_CHAR)
 /** \brief Start of JISX-0208 Rows 1-7 in Font Block */   
 #define BFONT_JISX_0208_ROW1        BFONT_WIDE_START
 /** \brief Start of JISX-0208 Row 16-47 (Start of Level 1) in Font Block */   
-#define BFONT_JISX_0208_ROW16       BFONT_WIDE_START + (658 * BFONT_WIDE_WIDTH * BFONT_HEIGHT / 8)  
+#define BFONT_JISX_0208_ROW16       (BFONT_WIDE_START + (658 * BFONT_BYTES_PER_CHAR))
 /** \brief JISX-0208 Row 48-84 (Start of Level 2) in Font Block */
-#define BFONT_JISX_0208_ROW48       BFONT_JISX_0208_ROW16 + ((32 * JISX_0208_ROW_SIZE) * BFONT_WIDE_WIDTH * BFONT_HEIGHT / 8) 
+#define BFONT_JISX_0208_ROW48       (BFONT_JISX_0208_ROW16 + ((32 * JISX_0208_ROW_SIZE) * BFONT_BYTES_PER_CHAR))
 
 /** \brief Start of DC Specific Characters in Font Block */
-#define BFONT_DREAMCAST_SPECIFIC    BFONT_WIDE_START + (7056 * BFONT_WIDE_WIDTH * BFONT_HEIGHT / 8) 
+#define BFONT_DREAMCAST_SPECIFIC    (BFONT_WIDE_START + (7056 * BFONT_BYTES_PER_CHAR))
 /** \brief Takes a DC-specific icon index and returns a character offset. */
-#define BFONT_DC_ICON(offset)       BFONT_DREAMCAST_SPECIFIC + ( (offset) * BFONT_WIDE_WIDTH * BFONT_HEIGHT / 8)
+#define BFONT_DC_ICON(offset)       (BFONT_DREAMCAST_SPECIFIC + ((offset) * BFONT_BYTES_PER_CHAR))
 
 /** \defgroup bfont_dc_indices Dreamcast-Specific 
     \brief    Dreamcast-specific BIOS icon offsets.
@@ -111,7 +113,7 @@ __BEGIN_DECLS
 /** @} */
 
 #define BFONT_ICON_DIMEN                 32    /**< \brief Dimension of vmu icons */
-#define BFONT_VMU_DREAMCAST_SPECIFIC     BFONT_DREAMCAST_SPECIFIC+(22*BFONT_WIDE_WIDTH*BFONT_HEIGHT/8)
+#define BFONT_VMU_DREAMCAST_SPECIFIC     (BFONT_DREAMCAST_SPECIFIC+(22 * BFONT_BYTES_PER_CHAR))
 /** @} */
 
 /** \brief Builtin VMU Icons
@@ -293,7 +295,7 @@ uint32_t bfont_set_background_color(uint32_t c);
     \param  on              Set to 0 to use 16-bit color, 32-bit otherwise.
     \return                 The old state (1 = 32-bit, 0 = 16-bit).
 */
-int bfont_set_32bit_mode(bool on)
+bool bfont_set_32bit_mode(bool on)
     __depr("Please use the bpp function of the the bfont_draw_ex functions");
 
 /** @} */
@@ -454,9 +456,9 @@ size_t bfont_draw_wide(void *buffer, uint32_t bufwidth, bool opaque,
     @{
 */
 
-/** \brief   Draw a full decorated string to any sort of buffer.
+/** \brief   Draw a full string of any sort to any sort of buffer.
 
-    This function draws a NULL-terminated string in the set encoding to the given
+    This function draws a NUL-terminated string in the set encoding to the given
     buffer. This will automatically handle mixed half and full-width characters
     if the encoding is set to one of the Japanese encodings. Colors and bitdepth
     can be set.
@@ -475,7 +477,7 @@ size_t bfont_draw_wide(void *buffer, uint32_t bufwidth, bool opaque,
 void bfont_draw_str_ex(void *b, uint32_t width, uint32_t fg, uint32_t bg,
                        uint8_t bpp, bool opaque, const char *str);
 
-/** \brief   Draw a full decorated and formatted string to any sort of buffer.
+/** \brief   Draw a full formatted string of any sort to any sort of buffer.
 
     This function is equivalent to bfont_draw_str_ex(), except that the string
     is formatted as with the `printf()` function.
@@ -496,7 +498,7 @@ void bfont_draw_str_ex_fmt(void *b, uint32_t width, uint32_t fg, uint32_t bg,
                            uint8_t bpp, bool opaque, const char *fmt, ...)
                            __printflike(7, 8);
 
-/** \brief   Draw decorated and formatted string to buffer (with va_args).
+/** \brief   Draw formatted string of any sort to buffer (with va_args).
 
     This function is equivalent to bfont_draw_str_ex_fmt(), except that the
     variadic argument list is passed via a pointer to a va_list.
@@ -519,7 +521,7 @@ void bfont_draw_str_ex_vfmt(void *b, uint32_t width, uint32_t fg, uint32_t bg,
 
 /** \brief   Draw a full string to a buffer.
 
-    This function draws a NULL-terminated string in the set encoding to the given
+    This function draws a NUL-terminated string in the set encoding to the given
     buffer. This will automatically handle mixed half and full-width characters
     if the encoding is set to one of the Japanese encodings. Draws pre-set
     16-bit colors.
@@ -546,8 +548,6 @@ void bfont_draw_str(void *b, uint32_t width, bool opaque, const char *str);
 */
 void bfont_draw_str_fmt(void *b, uint32_t width, bool opaque, const char *fmt,
                         ...) __printflike(4, 5);
-
-
 
 /** @} */
 
