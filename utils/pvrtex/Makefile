@@ -7,16 +7,16 @@ OBJS = elbg.o mem.o log.o bprint.o avstring.o lfg.o crc.o md5.o stb_image_impl.o
 	dither.o tddither.o vqcompress.o mycommon.o file_common.o \
 	file_pvr.o file_tex.o file_dctex.o pvr_texture_encoder.o main.o
 
+CPPFLAGS = -Ilibavutil -I. -DCONFIG_MEMORY_POISONING=0 -DHAVE_FAST_UNALIGNED=0
+CXXFLAGS = -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare
+
 ifdef $(DEBUGBUILD)
-	OPTMODE= -Og -pg -g
+	CXXFLAGS += -Og -pg -g
 else
-	OPTMODE= -O3 -flto
+	CXXFLAGS += -O3
 endif
 
-MYFLAGS=-flto=auto -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -Ilibavutil -I. -DCONFIG_MEMORY_POISONING=0 -DHAVE_FAST_UNALIGNED=0 -I${KOS_INC_PATHS}
-MYCPPFLAGS=$(MYFLAGS)
-MYCFLAGS=$(MYFLAGS) -Wno-pointer-sign
-
+CFLAGS := $(CXXFLAGS) -Wno-pointer-sign -std=gnu17
 
 define textSegment2Header
 	mkdir -p info
@@ -27,26 +27,18 @@ endef
 
 .PHONY: all clean
 
+all: $(TARGET) README
+
 $(TARGET): $(OBJS)
-	gcc $(OPTMODE) -o $(TARGET) \
-		$(OBJS) $(PROGMAIN) -lm -lstdc++
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
 main.o: main.c info/options.h info/examples.h
-	gcc $(CFLAGS) $(MYCFLAGS) $(OPTMODE) -c $< -o $@
-
-%.o: %.c
-	gcc $(CFLAGS) $(MYCFLAGS) $(OPTMODE) -c $< -o $@
-
-%.o: %.cpp
-	gcc $(CFLAGS) $(MYCPPFLAGS) $(CXXFLAGS) $(OPTMODE) -c $< -o $@
 
 clean:
 	rm -f $(TARGET) $(OBJS) README
 
 README: readme_unformatted.txt
 	fmt -s readme_unformatted.txt > README
-
-all: $(TARGET) README
 
 install: all
 	install -m 755 $(TARGET) $(DC_TOOLS_BASE)/

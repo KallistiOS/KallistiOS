@@ -183,7 +183,7 @@ static int null_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
     (void)flag;
 
     memset(rv, 0, sizeof(struct stat));
-    rv->st_mode = S_IFCHR | S_IRUSR;
+    rv->st_mode = S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
     rv->st_nlink = 1;
 
     return 0;
@@ -198,7 +198,7 @@ static int null_fstat(void *fd, struct stat *st) {
     }
 
     memset(st, 0, sizeof(struct stat));
-    st->st_mode = S_IFCHR | S_IRUSR;
+    st->st_mode =  S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
     st->st_nlink = 1;
 
     return 0;

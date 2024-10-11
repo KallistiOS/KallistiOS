@@ -37,23 +37,8 @@
 /* Initialize Hardware (call after driver inits) */
 static void maple_hw_init(void) {
     maple_driver_t *drv;
-    int p, u;
 
     dbglog(DBG_INFO, "maple: active drivers:\n");
-
-    /* Reset structures */
-    for(p = 0; p < MAPLE_PORT_COUNT; p++) {
-        maple_state.ports[p].port = p;
-
-        for(u = 0; u < MAPLE_UNIT_COUNT; u++) {
-            maple_state.ports[p].units[u].port = p;
-            maple_state.ports[p].units[u].unit = u;
-            maple_state.ports[p].units[u].valid = 0;
-            maple_state.ports[p].units[u].dev_mask = 0;
-            maple_state.ports[p].units[u].frame.queued = 0;
-            maple_state.ports[p].units[u].frame.state = MAPLE_FRAME_VACANT;
-        }
-    }
 
     TAILQ_INIT(&maple_state.frame_queue);
 
@@ -83,8 +68,7 @@ static void maple_hw_init(void) {
     /* Initialize other misc stuff */
     maple_state.vbl_cntr = maple_state.dma_cntr = 0;
     maple_state.detect_port_next = 0;
-    maple_state.detect_unit_next = 0;
-    maple_state.detect_wrapped = 0;
+    maple_state.scan_ready_mask = 0;
     maple_state.gun_port = -1;
     maple_state.gun_x = maple_state.gun_y = -1;
 
@@ -133,10 +117,7 @@ void maple_hw_shutdown(void) {
     /* Free any attached devices */
     for(cnt = 0, p = 0; p < MAPLE_PORT_COUNT; p++) {
         for(u = 0; u < MAPLE_UNIT_COUNT; u++) {
-            if(maple_state.ports[p].units[u].valid) {
-                maple_state.ports[p].units[u].valid = 0;
-                cnt++;
-            }
+            cnt += !!maple_driver_detach(p, u);
         }
     }
 
@@ -150,7 +131,7 @@ void maple_wait_scan(void) {
     maple_device_t  *dev;
 
     /* Wait for it to finish */
-    while(maple_state.detect_wrapped < 1)
+    while(maple_state.scan_ready_mask != 0xf)
         thd_pass();
 
     /* Enumerate everything */
@@ -158,9 +139,9 @@ void maple_wait_scan(void) {
 
     for(p = 0; p < MAPLE_PORT_COUNT; p++) {
         for(u = 0; u < MAPLE_UNIT_COUNT; u++) {
-            dev = &maple_state.ports[p].units[u];
+            dev = maple_enum_dev(p, u);
 
-            if(dev->valid) {
+            if(dev) {
                 dbglog(DBG_INFO, "  %c%c: %.30s (%08lx: %s)\n",
                        'A' + p, '0' + u,
                        dev->info.product_name,

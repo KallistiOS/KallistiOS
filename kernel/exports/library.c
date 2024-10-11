@@ -107,11 +107,10 @@ klibrary_t *library_by_libid(libid_t libid) {
 /* Library shell creation and deletion */
 
 klibrary_t * library_create(int flags) {
-    int     oldirq = 0;
     klibrary_t  * np;
     libid_t     libid;
 
-    oldirq = irq_disable();
+    irq_disable_scoped();
     np = NULL;
 
     /* Get a new library id */
@@ -135,7 +134,6 @@ klibrary_t * library_create(int flags) {
         }
     }
 
-    irq_restore(oldirq);
     return np;
 }
 
@@ -200,17 +198,14 @@ uint32 library_get_version(klibrary_t * lib) {
 
 /*****************************************************************************/
 klibrary_t * library_lookup(const char * name) {
-    int     old;
     klibrary_t  * lib;
 
-    old = irq_disable();
+    irq_disable_scoped();
 
     LIST_FOREACH(lib, &library_list, list) {
         if(!strcasecmp(lib->lib_get_name(), name))
             break;
     }
-
-    irq_restore(old);
 
     if(!lib)
         errno = ENOENT;

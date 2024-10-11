@@ -106,7 +106,7 @@ static fs_hnd_t * fs_hnd_open(const char *fn, int mode) {
     fs_hnd_t    *hnd;
     char        rfn[PATH_MAX];
 
-    if(!realpath(fn, rfn))
+    if(!fs_normalize_path(fn, rfn))
         return NULL;
 
     /* Are they trying to open the root? */
@@ -609,7 +609,7 @@ int fs_rename(const char *fn1, const char *fn2) {
     vfs_handler_t   *fh1, *fh2;
     char        rfn1[PATH_MAX], rfn2[PATH_MAX];
 
-    if(!realpath(fn1, rfn1) || !realpath(fn2, rfn2))
+    if(!fs_normalize_path(fn1, rfn1) || !fs_normalize_path(fn2, rfn2))
         return -1;
 
     /* Look for handlers */
@@ -645,7 +645,7 @@ int fs_unlink(const char *fn) {
     vfs_handler_t   *cur;
     char        rfn[PATH_MAX];
 
-    if(!realpath(fn, rfn))
+    if(!fs_normalize_path(fn, rfn))
         return -1;
 
     /* Look for a handler */
@@ -664,7 +664,7 @@ int fs_unlink(const char *fn) {
 int fs_chdir(const char *fn) {
     char        rfn[PATH_MAX];
 
-    if(!realpath(fn, rfn))
+    if(!fs_normalize_path(fn, rfn))
         return -1;
 
     thd_set_pwd(thd_get_current(), rfn);
@@ -705,7 +705,7 @@ int fs_mkdir(const char * fn) {
     vfs_handler_t   *cur;
     char        rfn[PATH_MAX];
 
-    if(!realpath(fn, rfn))
+    if(!fs_normalize_path(fn, rfn))
         return -1;
 
     /* Look for a handler */
@@ -725,7 +725,7 @@ int fs_rmdir(const char * fn) {
     vfs_handler_t   *cur;
     char        rfn[PATH_MAX];
 
-    if(!realpath(fn, rfn))
+    if(!fs_normalize_path(fn, rfn))
         return -1;
 
     /* Look for a handler */
@@ -774,7 +774,7 @@ int fs_link(const char *path1, const char *path2) {
     vfs_handler_t *fh1, *fh2;
     char rfn1[PATH_MAX], rfn2[PATH_MAX];
 
-    if(!realpath(path1, rfn1) || !realpath(path2, rfn2))
+    if(!fs_normalize_path(path1, rfn1) || !fs_normalize_path(path2, rfn2))
         return -1;
 
     /* Look for handlers */
@@ -811,7 +811,7 @@ int fs_symlink(const char *path1, const char *path2) {
     vfs_handler_t *vfs;
     char rfn[PATH_MAX];
 
-    if(!realpath(path2, rfn))
+    if(!fs_normalize_path(path2, rfn))
         return -1;
 
     /* Look for the handler */
