@@ -68,7 +68,7 @@ int maple_driver_attach(maple_frame_t *det) {
             /* Driver matches. Alloc a device if needed. */
             if(!dev) {
                 dev = calloc(1, sizeof(*dev));
-                if (!dev)
+                if(!dev)
                     return 1;
 
                 maple_state.ports[det->dst_port].units[det->dst_unit] = dev;
