@@ -50,6 +50,7 @@ typedef struct vmufb {
     layout, and a pointer to the raw font data.
  */
 typedef struct vmufb_font {
+    unsigned int id;        /**< Font id */
     unsigned int w;         /**< Character width in pixels */
     unsigned int h;         /**< Character height in pixels */
     size_t       stride;    /**< Size of one character in bytes */
@@ -147,9 +148,9 @@ void vmufb_print_string_into(vmufb_t *fb,
     \param  str             The text to render
  */
 static __inline__
-void vmufb_print_string(vmufb_t *fb, const vmufb_font_t *fnt,
+void vmufb_print_string(vmufb_t *fb, const vmufb_font_t *font,
                         const char *str) {
-    vmufb_print_string_into(fb, fnt, 0, 0,
+    vmufb_print_string_into(fb, font, 0, 0,
                             VMU_SCREEN_WIDTH, VMU_SCREEN_HEIGHT, 0, str);
 }
 
@@ -169,37 +170,30 @@ void vmufb_print_string(vmufb_t *fb, const vmufb_font_t *fnt,
 void vmu_printf(const char *fmt, ...) __printflike(1, 2);
 
 /** \brief Sets the default font for drawing text to the VMU.
- *
- *  \warning
- *  The API does not take ownership of or copy \p font, so
- *  the given pointer must remain valid as long as it is set
- *  as the default!
- *
- *  \param  font    Pointer to the font to set as default
- *  \returns        Pointer to the previous default font
- *
- *  \sa vmu_get_font()
+ 
+    This function allows you to set a custom font for drawing text
+    to the VMU screen. If the \p font parameter is set to `NULL`,
+    the built-in VMU font will be used as the default.
+
+    \warning
+    The API does not take ownership of or copy \p font, so
+    the given pointer must remain valid as long as it is set
+    as the default!
+
+    \param  font    Pointer to the font to set as default
+    \returns        Pointer to the previous default font
+
+    \sa vmu_get_font()
  */
 const vmufb_font_t *vmu_set_font(const vmufb_font_t *font);
 
 /** \brief Returns the default font used to draw text to the VMU.
- *
- *  \returns    Pointer to the font currently set as the default
- *
- *  \sa vmu_set_font()
+
+    \returns    Pointer to the font currently set as the default
+
+    \sa vmu_set_font()
  */
 const vmufb_font_t *vmu_get_font(void);
-
-/** \brief Built-in VMU framebuffer font.
- *
- *  \note
- *  This is the font that is currently used as the default.
- *
- *  Linux 4x6 font: lib/fonts/font_mino_4x6.c
- *
- *  \author Kenneth Albanowski
- */
-extern const vmufb_font_t vmufb_font4x6;
 
 /** @} */
 

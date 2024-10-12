@@ -16,7 +16,6 @@
 
 int main(int argc, char **argv) {
     unsigned short x, y, mb;
-    char text_buff [20];
 
     /* Press all buttons to exit */
     cont_btn_callback(0, CONT_START | CONT_A | CONT_B | CONT_X | CONT_Y,
@@ -39,8 +38,8 @@ int main(int argc, char **argv) {
             }
         }
 
-        snprintf(text_buff, 20, "This is FB %u", (mb + 1) % vid_mode->fb_count);
-        bfont_draw_str(vram_s + (640 * BFONT_HEIGHT) + (BFONT_THIN_WIDTH * 2), 640, 1, text_buff);
+        bfont_draw_str_fmt(vram_s + (640 * BFONT_HEIGHT) + (BFONT_THIN_WIDTH * 2), 640, 1,
+                       "This is FB %u", (mb + 1) % vid_mode->fb_count);
 
         /* This tells the pvr to move to the framebuffer we've been drawing to, 
             then adjusts the vram_* pointers to the next one. */

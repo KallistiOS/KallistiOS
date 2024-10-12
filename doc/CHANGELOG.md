@@ -11,6 +11,7 @@ Platform-specific changes are prefixed with the platform name, otherwise the cha
 - Add performance monitor API [PC]
 - Add/Fixed stat() implementations for all filesystems [AB]
 - **Dreamcast**: Add network speedtest and pvr palette examples [AB]
+- **Dreamcast**: Cleaned up, documented, and enhanced BIOS font API [FG]
 - Refactored, cleaned up, and broke PVR API into multiple header files [FG]
 
 ## KallistiOS version 2.1.0
