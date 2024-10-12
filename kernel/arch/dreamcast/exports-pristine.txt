@@ -93,11 +93,24 @@ vmu_pkg_build
 vmu_pkg_parse
 
 # Bios Font
+bfont_set_foreground_color
+bfont_set_background_color
 bfont_set_encoding
+bfont_find_char
+bfont_find_char_jp
+bfont_find_char_jp_half
+bfont_find_icon
+bfont_draw_ex
+bfont_draw
 bfont_draw_thin
 bfont_draw_wide
-bfont_draw
+bfont_draw_str_ex
+bfont_draw_str_ex_fmt
+bfont_draw_str_ex_vfmt
 bfont_draw_str
+bfont_draw_str_fmt
+bfont_draw_str_vram_vfmt
+bfont_draw_str_vram_fmt
 
 # CD-Rom
 cdrom_reinit
