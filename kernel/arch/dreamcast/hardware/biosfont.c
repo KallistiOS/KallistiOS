@@ -81,8 +81,8 @@ uint32_t bfont_set_background_color(uint32_t c) {
     Deprecated: This will only impact compat functions for now.
     Moving forward, the compat will be 16bit only. */
 bool bfont_set_32bit_mode(bool on) {
-    int rv = bfont_32bit;
-    bfont_32bit = !!on;
+    bool rv = bfont_32bit;
+    bfont_32bit = on;
     return rv;
 }
 
