@@ -1,7 +1,8 @@
 /* KallistiOS ##version##
 
    include/kos/library.h
-   Copyright (C)2003 Megan Potter
+   Copyright (C) 2003 Megan Potter
+   Copyright (C) 2024 Ruslan Rostovtsev
 
 */
 
@@ -79,7 +80,7 @@ typedef struct klibrary {
     libid_t libid;
 
     /** \brief  Library flags. */
-    uint32  flags;
+    uint32_t  flags;
 
     /** \brief  ELF image for this library.
 
@@ -106,7 +107,7 @@ typedef struct klibrary {
 
         \return             The library's symbolic name
     */
-    const char * (*lib_get_name)(void);
+    const char *(*lib_get_name)(void);
 
     /** \brief  Retrieve the library's version.
 
@@ -116,7 +117,7 @@ typedef struct klibrary {
 
         \return             The library's version number
     */
-    uint32(*lib_get_version)(void);
+    uint32_t(*lib_get_version)(void);
 
     /** \brief  Open a library.
 
@@ -129,7 +130,7 @@ typedef struct klibrary {
                             A failure on the first lib_open is indicative that
                             the library should be removed from memory.
     */
-    int (*lib_open)(struct klibrary * lib);
+    int (*lib_open)(struct klibrary *lib);
 
     /** \brief  Close an opened library.
 
@@ -141,7 +142,7 @@ typedef struct klibrary {
         \param  lib         The library structure
         \return             Values >= 0 indicate success, < 0 indicates failure
     */
-    int (*lib_close)(struct klibrary * lib);
+    int (*lib_close)(struct klibrary *lib);
 } klibrary_t;
 
 /* Library flag values */
@@ -200,7 +201,7 @@ int library_destroy(klibrary_t *lib);
     \em     ENOMEM - out of memory \n
     \em     ENOENT - library not found and no filename given
 */
-klibrary_t * library_open(const char * name, const char * fn);
+klibrary_t * library_open(const char *name, const char *fn);
 
 /** \brief  Look up a library by name.
 
@@ -215,7 +216,22 @@ klibrary_t * library_open(const char * name, const char * fn);
     \par    Error Conditions:
     \em     ENOENT - the library was not found
 */
-klibrary_t * library_lookup(const char * name);
+klibrary_t *library_lookup(const char *name);
+
+/** \brief  Look up a library by file name.
+
+    This function looks up a library by its file name without trying to
+    actually load or open it. This is useful if you want to open a library but
+    not keep around a handle to it (which isn't necessarily encouraged).
+
+    \param  name            The name of the library to search for
+    \return                 The library, if found. NULL if not found, errno set
+                            as appropriate.
+
+    \par    Error Conditions:
+    \em     ENOENT - the library was not found
+*/
+klibrary_t *library_lookup_fn(const char *fn);
 
 /** \brief  Close a previously opened library.
 
@@ -231,7 +247,7 @@ klibrary_t * library_lookup(const char * name);
     \par    Error Conditions:
     \em     EINVAL - the library is not valid
 */
-int library_close(klibrary_t * lib);
+int library_close(klibrary_t *lib);
 
 /** \brief  Retrieve the specified library's runtime-assigned ID.
     \param  lib             The library to examine
@@ -240,7 +256,7 @@ int library_close(klibrary_t * lib);
     \par    Error Conditions:
     \em     EINVAL - the library is not valid
 */
-libid_t library_get_libid(klibrary_t * lib);
+libid_t library_get_libid(klibrary_t *lib);
 
 /** \brief  Retrieve the specified library's reference count.
     \param  lib             The library to examine
@@ -249,7 +265,7 @@ libid_t library_get_libid(klibrary_t * lib);
     \par    Error Conditions:
     \em     EINVAL - the library is not valid
 */
-int library_get_refcnt(klibrary_t * lib);
+int library_get_refcnt(klibrary_t *lib);
 
 /** \brief  Retrieve the specified library's name.
     \param  lib             The library to examine
@@ -258,7 +274,7 @@ int library_get_refcnt(klibrary_t * lib);
     \par    Error Conditions:
     \em     EINVAL - the library is not valid
 */
-const char * library_get_name(klibrary_t * lib);
+const char *library_get_name(klibrary_t *lib);
 
 /** \brief  Retrieve the specified library's version.
     \param  lib             The library to examine
@@ -267,7 +283,7 @@ const char * library_get_name(klibrary_t * lib);
     \par    Error Conditions
     \em     EINVAL - the library is not valid
 */
-uint32 library_get_version(klibrary_t * lib);
+uint32 library_get_version(klibrary_t *lib);
 
 /** \cond */
 /* Init */
@@ -282,4 +298,3 @@ void library_shutdown(void);
 __END_DECLS
 
 #endif  /* __KOS_LIBRARY_H */
-
