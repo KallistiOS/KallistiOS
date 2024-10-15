@@ -22,6 +22,7 @@
     this.
 
     \author Megan Potter
+    \author Ruslan Rostovtsev
 */
 
 #ifndef __KOS_LIBRARY_H
@@ -188,7 +189,8 @@ int library_destroy(klibrary_t *lib);
 /** \brief  Try to open a library by name.
 
     This function attempts to open a library by its name. If it cannot be found
-    by name, this function will attempt to load the library from the specified
+    by name, this function will attempt to open by filename. If it cannot be found
+    by filename, this function will attempt to load the library from the specified
     filename.
 
     \param  name            The symbolic name of the library
@@ -201,13 +203,12 @@ int library_destroy(klibrary_t *lib);
     \em     ENOMEM - out of memory \n
     \em     ENOENT - library not found and no filename given
 */
-klibrary_t * library_open(const char *name, const char *fn);
+klibrary_t *library_open(const char *name, const char *fn);
 
 /** \brief  Look up a library by name.
 
-    This function looks up a library by its symbolic name without trying to
-    actually load or open it. This is useful if you want to open a library but
-    not keep around a handle to it (which isn't necessarily encouraged).
+    This is useful if you want to reuse opened library and
+    this is used for library_open().
 
     \param  name            The name of the library to search for
     \return                 The library, if found. NULL if not found, errno set
@@ -218,13 +219,12 @@ klibrary_t * library_open(const char *name, const char *fn);
 */
 klibrary_t *library_lookup(const char *name);
 
-/** \brief  Look up a library by file name.
+/** \brief  Look up a library by filename.
 
-    This function looks up a library by its file name without trying to
-    actually load or open it. This is useful if you want to open a library but
-    not keep around a handle to it (which isn't necessarily encouraged).
+    This is useful if you want to reuse opened library and
+    this is used for library_open().
 
-    \param  name            The name of the library to search for
+    \param  fn              The filename of the library to search for
     \return                 The library, if found. NULL if not found, errno set
                             as appropriate.
 
@@ -283,7 +283,7 @@ const char *library_get_name(klibrary_t *lib);
     \par    Error Conditions
     \em     EINVAL - the library is not valid
 */
-uint32 library_get_version(klibrary_t *lib);
+uint32_t library_get_version(klibrary_t *lib);
 
 /** \cond */
 /* Init */
