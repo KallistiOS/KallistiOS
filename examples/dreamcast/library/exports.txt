@@ -1,0 +1,7 @@
+include kos/exports.h
+include string.h
+
+# Additional newlib functions to export
+# Some part of it already exported by kernel/exports.txt
+strcmp
+strncmp
