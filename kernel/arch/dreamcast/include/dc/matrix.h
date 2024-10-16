@@ -60,10 +60,10 @@ void mat_store(matrix_t *out);
     \note 
     For best performance, 32-byte alignment of \p out is recommended.
 
-    \param  out             A pointer to where to load the matrix from (must be
+    \param  src             A pointer to where to load the matrix from (must be
                             at least 8-byte aligned, should be 32-byte aligned).
 */
-void mat_load(matrix_t *out);
+void mat_load(const matrix_t *src);
 
 /** \brief  Clear the internal matrix to identity.
 
@@ -83,7 +83,7 @@ void mat_identity(void);
 
     \param  src             A pointer to the matrix to multiply.
 */
-void mat_apply(matrix_t *src);
+void mat_apply(const matrix_t *src);
 
 /** \brief  Transform vectors by the internal matrix.
 
@@ -93,9 +93,10 @@ void mat_apply(matrix_t *src);
     \param  invecs          The list of input vectors.
     \param  outvecs         The list of output vectors.
     \param  veccnt          How many vectors are in the list.
-    \param  vecskip         Number of empty bytes between vectors.
+    \param  stride          Number of bytes between vectors.
 */
-void mat_transform(vector_t *invecs, vector_t *outvecs, int veccnt, int vecskip);
+void mat_transform(const vector_t *invecs, vector_t *outvecs,
+                   int veccnt, int stride);
 
 /** \brief  Transform vectors by the internal matrix into the store queues.
 

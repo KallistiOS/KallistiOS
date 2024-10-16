@@ -9,6 +9,9 @@ TARGET = httpd.elf
 # List all of your C files here, but change the extension to ".o"
 OBJS = simhost.o httpd.o romdisk.o
 
+# Only build for pristine subarch (aka. "dreamcast")
+KOS_BUILD_SUBARCHS = pristine
+
 KOS_ROMDISK_DIR = romdisk
 
 all: rm-elf $(TARGET)

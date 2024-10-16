@@ -2,7 +2,7 @@
 
    dc/sound/sfxmgr.h
    Copyright (C) 2002 Megan Potter
-   Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024 Ruslan Rostovtsev
    Copyright (C) 2023 Andy Barajas
 
 */
@@ -30,6 +30,7 @@
 __BEGIN_DECLS
 
 #include <arch/types.h>
+#include <kos/fs.h>
 #include <stdint.h>
 
 /** \defgroup audio_sfx     Sound Effects
@@ -67,6 +68,43 @@ typedef uint32_t sfxhnd_t;
                             SFXHND_INVALID is returned.
 */
 sfxhnd_t snd_sfx_load(const char *fn);
+
+/** \brief  Load a sound effect without wav header.
+
+    This function loads a sound effect from a RAW file and returns a handle to
+    it. The sound effect can be either stereo or mono, and must either be 8-bit
+    or 16-bit uncompressed PCM samples, or 4-bit Yamaha ADPCM.
+
+    \warning The sound effect you are loading must be at most 65534 samples 
+    in length and multiple by 32 bytes for each channel.
+
+    \param  fn              The file to load.
+    \param  rate            The frequency of the sound.
+    \param  bitsize         The sample size (bits per sample).
+    \param  channels        Number of channels.
+    \return                 A handle to the sound effect on success. On error,
+                            SFXHND_INVALID is returned.
+*/
+sfxhnd_t snd_sfx_load_ex(const char *fn, uint32_t rate, uint16_t bitsize, uint16_t channels);
+
+/** \brief  Load a sound effect without wav header by file handler.
+
+    This function loads a sound effect from a RAW file and returns a handle to
+    it. The sound effect can be either stereo or mono, and must either be 8-bit
+    or 16-bit uncompressed PCM samples, or 4-bit Yamaha ADPCM.
+
+    \warning The sound effect you are loading must be at most 65534 samples 
+    in length and multiple by 32 bytes for each channel.
+
+    \param  fd              The file handler.
+    \param  len             The file length.
+    \param  rate            The frequency of the sound.
+    \param  bitsize         The sample size (bits per sample).
+    \param  channels        Number of channels.
+    \return                 A handle to the sound effect on success. On error,
+                            SFXHND_INVALID is returned.
+*/
+sfxhnd_t snd_sfx_load_fd(file_t fd, size_t len, uint32_t rate, uint16_t bitsize, uint16_t channels);
 
 /** \brief  Unload a sound effect.
 

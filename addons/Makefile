@@ -23,10 +23,12 @@
 
 # Get our list of dirs to build/clean. You must have sed installed for this
 # to work (GNU textutils).
-BUILD_LIST := `ls */kos/$(KOS_ARCH).cnf | sed -e "s%/kos/$(KOS_ARCH).cnf%%g"`
+get_subdirs=$(foreach each,$(wildcard $(1)/*),$(if $(wildcard $(each)/kos/$(KOS_ARCH).cnf),$(each),) $(call get_subdirs,$(each)))
 
-all:
-	for i in $(BUILD_LIST); do $(KOS_MAKE) -C $$i || exit -1; done
+SUBDIRS := $(call get_subdirs, $(shell pwd))
 
-clean:
-	for i in $(BUILD_LIST); do $(KOS_MAKE) -C $$i clean || exit -1; done
+all: subdirs
+
+clean: clean_subdirs
+
+include $(KOS_BASE)/Makefile.rules

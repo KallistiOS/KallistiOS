@@ -8,15 +8,15 @@ OBJS = elbg.o mem.o log.o bprint.o avstring.o lfg.o crc.o md5.o stb_image_impl.o
 	file_pvr.o file_tex.o file_dctex.o pvr_texture_encoder.o main.o
 
 CPPFLAGS = -Ilibavutil -I. -DCONFIG_MEMORY_POISONING=0 -DHAVE_FAST_UNALIGNED=0
-CXXFLAGS = -flto=auto -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare
+CXXFLAGS = -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare
 
 ifdef $(DEBUGBUILD)
 	CXXFLAGS += -Og -pg -g
 else
-	CXXFLAGS += -O3 -flto
+	CXXFLAGS += -O3
 endif
 
-CFLAGS := $(CXXFLAGS) -Wno-pointer-sign
+CFLAGS := $(CXXFLAGS) -Wno-pointer-sign -std=gnu17
 
 define textSegment2Header
 	mkdir -p info

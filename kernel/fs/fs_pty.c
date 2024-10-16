@@ -706,6 +706,65 @@ static int pty_ioctl(void *h, int cmd, va_list ap) {
     }
 }
 
+static int pty_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
+                    int flag) {
+    ptyhalf_t *ph;
+    int id;
+    int master;
+    size_t len = strlen(path);
+
+    (void)vfs;
+    (void)flag;
+
+    /* Root directory '/pty' */
+    if(len == 0 || (len == 1 && *path == '/')) {
+        memset(st, 0, sizeof(struct stat));
+        st->st_dev = (dev_t)('p' | ('t' << 8) | ('y' << 16));
+        st->st_mode = S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO;
+        st->st_size = -1;
+        st->st_nlink = 2;
+
+        return 0;
+    }
+
+    /* Handle paths that start directly with '/maXX' or '/slXX' */
+    if(sscanf(path, "/%2c%02x", (char[3]){}, &id) != 2) {
+        errno = ENOENT;
+        return -1;
+    }
+
+    /* Check if it's a master (ma) or slave (sl) */
+    master = (path[0] == 'm' && path[1] == 'a');
+
+    /* Find the corresponding PTY half */
+    mutex_lock(&list_mutex);
+    LIST_FOREACH(ph, &ptys, list) {
+        if(ph->id == id) break;
+    }
+    mutex_unlock(&list_mutex);
+
+    /* If PTY is not found, return error */
+    if(!ph) {
+        errno = ENOENT;
+        return -1;
+    }
+
+    /* If the file requested doesn't match the master/slave role, switch */
+    if(master != ph->master) {
+        ph = ph->other;
+    }
+
+    /* Fill in the stat structure */
+    memset(st, 0, sizeof(struct stat));
+    st->st_dev = (dev_t)('p' | ('t' << 8) | ('y' << 16));
+    st->st_mode = S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
+    st->st_nlink = 1;
+    st->st_size = ph->cnt;
+    st->st_blksize = PTY_BUFFER_SIZE;
+
+    return 0;
+}
+
 static int pty_fcntl(void *h, int cmd, va_list ap) {
     pipefd_t *fd = (pipefd_t *)h;
     int rv = -1;
@@ -769,18 +828,12 @@ static int pty_fstat(void *h, struct stat *st) {
     }
 
     memset(st, 0, sizeof(struct stat));
-
     st->st_dev = (dev_t)('p' | ('t' << 8) | ('y' << 16));
-
-    if(fd->mode & O_DIR) {
-        st->st_mode = S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO;
-    }
-    else {
-        st->st_mode = S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP |
-            S_IROTH | S_IWOTH;
-        st->st_size = (off_t)fd->d.p->cnt;
-        st->st_blksize = 1;
-    }
+    st->st_mode = (fd->mode & O_DIR) ? 
+        (S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO) : 
+        (S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+    st->st_size = (fd->mode & O_DIR) ? -1 : (off_t)fd->d.p->cnt;
+    st->st_blksize = (fd->mode & O_DIR) ? 0 : 1;
 
     return 0;
 }
@@ -811,7 +864,7 @@ static vfs_handler_t vh = {
     NULL,
     NULL,
     NULL,
-    NULL,
+    pty_stat,
     NULL,
     NULL,
     pty_fcntl,
