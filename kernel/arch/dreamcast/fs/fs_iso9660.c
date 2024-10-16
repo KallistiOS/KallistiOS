@@ -40,6 +40,7 @@ ISO9660 systems, as these were used as references as well.
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdalign.h>
 #include <ctype.h>
 #include <string.h>
 #include <strings.h>
@@ -577,14 +578,14 @@ static iso_dirent_t *find_object_path(const char *fn, int dir, iso_dirent_t *sta
 /* File handles.. I could probably do this with a linked list, but I'm just
    too lazy right now. =) */
 static struct {
-    uint32      first_extent;   /* First sector */
-    int     dir;        /* >0 if a directory */
-    uint32      ptr;        /* Current read position in bytes */
-    uint32      size;       /* Length of file in bytes */
-    dirent_t    dirent;     /* A static dirent to pass back to clients */
-    int     broken;     /* >0 if the CD has been swapped out since open */
-    size_t     stream_part;     /* Stream DMA part of 32 bytes */
-    uint8_t stream_data[32] __attribute__((aligned(32)));
+    uint32_t first_extent;   /* First sector */
+    int dir;                 /* >0 if a directory */
+    uint32_t ptr;            /* Current read position in bytes */
+    uint32_t size;           /* Length of file in bytes */
+    dirent_t dirent;         /* A static dirent to pass back to clients */
+    int broken;              /* >0 if the CD has been swapped out since open */
+    size_t stream_part;      /* Stream DMA part of 32 bytes */
+    uint8_t alignas(32) stream_data[32];
 } fh[FS_CD_MAX_FILES];
 
 /* Mutex for file handles */
@@ -1058,7 +1059,10 @@ static int iso_ioctl(void *h, int cmd, va_list ap) {
             if(arg != NULL) {
                 *(uint32_t *)arg = 32;
             }
-            return (fh[fd].ptr & 2047) && stream_fd != fd ? -1 : 0;
+            if(stream_fd == fd) {
+                return (fh[fd].ptr & 31) ? -1 : 0;
+            }
+            return (fh[fd].ptr & 2047) ? -1 : 0;
         default:
             errno = EINVAL;
             return -1;
