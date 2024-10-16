@@ -113,7 +113,7 @@ void draw_one_textured_poly(polyplace_t *p) {
 
 int to_texture = 1;
 pvr_ptr_t d_texture;
-uint32 tx_x = 1024, tx_y = 512;
+size_t tx_x = 1024, tx_y = 512;
 
 void draw_frame(void) {
     pvr_poly_cxt_t  cxt;

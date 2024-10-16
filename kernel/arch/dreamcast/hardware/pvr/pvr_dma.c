@@ -96,7 +96,7 @@ static uintptr_t pvr_dest_addr(uintptr_t dest, pvr_dma_type_t type) {
 }
 
 int pvr_dma_transfer(const void *src, uintptr_t dest, size_t count,
-                     pvr_dma_type_t type, int block,
+                     pvr_dma_type_t type, bool block,
                      pvr_dma_callback_t callback, void *cbdata) {
     uintptr_t src_addr = ((uintptr_t)src);
 
@@ -146,23 +146,23 @@ int pvr_dma_transfer(const void *src, uintptr_t dest, size_t count,
 }
 
 /* Count is in bytes. */
-int pvr_txr_load_dma(void *src, pvr_ptr_t dest, size_t count, int block,
+int pvr_txr_load_dma(const void *src, pvr_ptr_t dest, size_t count, bool block,
                     pvr_dma_callback_t callback, void *cbdata) {
     return pvr_dma_transfer(src, (uintptr_t)dest, count, PVR_DMA_VRAM64, block, 
                             callback, cbdata);
 }
 
-int pvr_dma_load_ta(void *src, size_t count, int block, 
+int pvr_dma_load_ta(const void *src, size_t count, bool block, 
                     pvr_dma_callback_t callback, void *cbdata) {
     return pvr_dma_transfer(src, (uintptr_t)0, count, PVR_DMA_TA, block, callback, cbdata);
 }
 
-int pvr_dma_yuv_conv(void *src, size_t count, int block,
+int pvr_dma_yuv_conv(const void *src, size_t count, bool block,
                     pvr_dma_callback_t callback, void *cbdata) {
     return pvr_dma_transfer(src, (uintptr_t)0, count, PVR_DMA_YUV, block, callback, cbdata);
 }
 
-int pvr_dma_ready(void) {
+bool pvr_dma_ready(void) {
     return pvr_dma[PVR_DST] == 0;
 }
 
