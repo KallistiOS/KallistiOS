@@ -2006,6 +2006,17 @@ void pvr_dr_init(pvr_dr_state_t *vtx_buf_ptr);
 */
 void pvr_dr_finish(void);
 
+/** \brief  Upload a 32-byte payload to the Tile Accelerator
+
+    Upload the given payload to the Tile Accelerator. The difference with the
+    Direct Rendering approach above is that the Store Queues are not used, and
+    therefore can be used for anything else.
+
+    \param  data            A pointer to the 32-byte payload.
+                            The pointer must be aligned to 8 bytes.
+*/
+void pvr_send_to_ta(void *data);
+
 /** @} */
 
 /** \brief   Submit a primitive of the given list type.
