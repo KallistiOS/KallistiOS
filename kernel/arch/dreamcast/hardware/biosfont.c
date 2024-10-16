@@ -6,9 +6,12 @@
    Japanese code Copyright (C) Kazuaki Matsumoto
    Copyright (C) 2017, 2024 Donald Haase
    Copyright (C) 2024 Andy Barajas
+   Copyright (C) 2024 Falco Girgis
 */
 
 #include <assert.h>
+#include <string.h>
+#include <stdio.h>
 
 #include <dc/biosfont.h>
 #include <dc/syscalls.h>
@@ -34,17 +37,26 @@ Expansion to 4 and 8 bpp by Donald Haase.
 */
 
 /* Our current conversion mode */
-static uint8 bfont_code_mode = BFONT_CODE_ISO8859_1;
+static uint8_t bfont_code_mode = BFONT_CODE_ISO8859_1;
 
 /* Current colors/pixel format. Default to white foreground, black background
    and 16-bit drawing, so the default behavior doesn't change from what it has
    been forever. */
-static uint32 bfont_fgcolor = 0xFFFFFFFF;
-static uint32 bfont_bgcolor = 0x00000000;
-static int bfont_32bit = 0;
+static uint32_t bfont_fgcolor = 0xFFFFFFFF;
+static uint32_t bfont_bgcolor = 0x00000000;
+static bool bfont_32bit = false;
+
+static uint8_t *font_address = NULL;
+
+static uint8_t *get_font_address(void) {
+    if(!font_address)
+        font_address = syscall_font_address();
+
+    return font_address;
+}
 
 /* Select an encoding for Japanese (or disable) */
-void bfont_set_encoding(uint8 enc) {
+void bfont_set_encoding(bfont_code_t enc) {
     if(enc <= BFONT_CODE_RAW)
         bfont_code_mode = enc;
     else
@@ -52,15 +64,15 @@ void bfont_set_encoding(uint8 enc) {
 }
 
 /* Set the foreground color and return the old color */
-uint32 bfont_set_foreground_color(uint32 c) {
-    uint32 rv = bfont_fgcolor;
+uint32_t bfont_set_foreground_color(uint32_t c) {
+    uint32_t rv = bfont_fgcolor;
     bfont_fgcolor = c;
     return rv;
 }
 
 /* Set the background color and return the old color */
-uint32 bfont_set_background_color(uint32 c) {
-    uint32 rv = bfont_bgcolor;
+uint32_t bfont_set_background_color(uint32_t c) {
+    uint32_t rv = bfont_bgcolor;
     bfont_bgcolor = c;
     return rv;
 }
@@ -68,9 +80,9 @@ uint32 bfont_set_background_color(uint32 c) {
 /* Set the font to draw in 32 or 16 bit mode.
     Deprecated: This will only impact compat functions for now.
     Moving forward, the compat will be 16bit only. */
-int bfont_set_32bit_mode(int on) {
-    int rv = bfont_32bit;
-    bfont_32bit = !!on;
+bool bfont_set_32bit_mode(bool on) {
+    bool rv = bfont_32bit;
+    bfont_32bit = on;
     return rv;
 }
 
@@ -89,7 +101,7 @@ int unlock_bfont(void) {
 }
 
 /* Shift-JIS -> JIS conversion */
-uint32 sjis2jis(uint32 sjis) {
+static uint32_t sjis2jis(uint32_t sjis) {
     unsigned int hib, lob;
 
     hib = (sjis >> 8) & 0xff;
@@ -111,15 +123,15 @@ uint32 sjis2jis(uint32 sjis) {
 
 
 /* EUC -> JIS conversion */
-uint32 euc2jis(uint32 euc) {
+static uint32_t euc2jis(uint32_t euc) {
     return euc & ~0x8080;
 }
 
 /* Given an ASCII character, find it in the BIOS font if possible */
-uint8 *bfont_find_char(uint32 ch) {
-    uint8   *fa = syscall_font_address();
+uint8_t *bfont_find_char(uint32_t ch) {
+    uint8_t   *fa = get_font_address();
     /* By default, map to a space */
-    uint32 index = 72 << 2;
+    uint32_t index = 72 << 2;
 
     /* 33-126 in ASCII are 1-94 in the font */
     if(ch >= 33 && ch <= 126)
@@ -133,9 +145,9 @@ uint8 *bfont_find_char(uint32 ch) {
 }
 
 /* JIS -> (kuten) -> address conversion */
-uint8 *bfont_find_char_jp(uint32 ch) {
-    uint8   *fa = syscall_font_address();
-    uint32 ku, ten, kuten = 0;
+uint8_t *bfont_find_char_jp(uint32_t ch) {
+    uint8_t   *fa = get_font_address();
+    uint32_t ku, ten, kuten = 0;
 
     /* Do the requested code conversion */
     switch(bfont_code_mode) {
@@ -166,22 +178,22 @@ uint8 *bfont_find_char_jp(uint32 ch) {
 
 
 /* Half-width kana -> address conversion */
-uint8 *bfont_find_char_jp_half(uint32 ch) {
-    uint8 *fa = syscall_font_address();
+uint8_t *bfont_find_char_jp_half(uint32_t ch) {
+    uint8_t *fa = get_font_address();
     return fa + (32 + ch) * (BFONT_THIN_WIDTH*BFONT_HEIGHT/8);
 }
 
 /* Draws one half-width row of a character to an output buffer of bit depth in bits per pixel */
-uint16 *bfont_draw_one_row(uint16 *b, uint16 word, uint8 opaque, uint32 fg, uint32 bg, uint8 bpp) {
-    uint8 x;
-    uint32 color = 0x0000;
-    uint16 write16 = 0x0000;
-    uint16 oldcolor = *b;
+static uint16_t *bfont_draw_one_row(uint16_t *b, uint16_t word, bool opaque, uint32_t fg, uint32_t bg, uint8_t bpp) {
+    uint8_t x;
+    uint32_t color = 0x0000;
+    uint16_t write16 = 0x0000;
+    uint16_t oldcolor = *b;
 
     if((bpp == 4)||(bpp == 8)) {
         /* For 4 or 8bpp we have to go 2 or 4 pixels at a time to properly write out in all cases. */
-        uint8 bMask = (bpp==4) ? 0xf : 0xff;
-        uint8 pix = 16/bpp;
+        uint8_t bMask = (bpp==4) ? 0xf : 0xff;
+        uint8_t pix = 16/bpp;
         for(x = 0; x < BFONT_THIN_WIDTH; x++) {
             if(x%pix == 0) {
                 oldcolor = *b;
@@ -206,17 +218,19 @@ uint16 *bfont_draw_one_row(uint16 *b, uint16 word, uint8 opaque, uint32 fg, uint
                 else                 continue;
             }
             if(bpp==16) *b = color & 0xffff;
-            else if(bpp == 32) {*(uint32 *)b = color; b++;}
+            else if(bpp == 32) {*(uint32_t *)b = color; b++;}
         }
     }
 
     return b;
 }
 
-unsigned char bfont_draw_ex(uint8 *buffer, uint32 bufwidth, uint32 fg, uint32 bg, uint8 bpp, uint8 opaque, uint32 c, uint8 wide, uint8 iskana) {
-    uint8 *ch;
-    uint16 word;
-    uint8 y;
+size_t bfont_draw_ex(void *buf, uint32_t bufwidth, uint32_t fg, uint32_t bg, 
+                     uint8_t bpp, bool opaque, uint32_t c, bool wide, bool iskana) {
+    uint8_t *ch;
+    uint16_t word;
+    uint8_t y;
+    uint8_t *buffer = (uint8_t *)buf;
 
     /* If they're requesting a wide char and in the wrong format, kick this out */
     if(wide && (bfont_code_mode == BFONT_CODE_ISO8859_1)) {
@@ -225,7 +239,7 @@ unsigned char bfont_draw_ex(uint8 *buffer, uint32 bufwidth, uint32 fg, uint32 bg
     }
 
     /* Just making sure we can draw the character we want to */
-    if(bufwidth < (uint32)(BFONT_THIN_WIDTH*(wide+1))) {
+    if(bufwidth < (uint32_t)(BFONT_THIN_WIDTH*(wide+1))) {
         dbglog(DBG_ERROR, "bfont_draw_ex: buffer is too small to draw into\n");
         return 0;
     }
@@ -237,7 +251,7 @@ unsigned char bfont_draw_ex(uint8 *buffer, uint32 bufwidth, uint32 fg, uint32 bg
 
     /* Translate the character */
     if(bfont_code_mode == BFONT_CODE_RAW)
-        ch = syscall_font_address() + c;
+        ch = get_font_address() + c;
     else if(wide && ((bfont_code_mode == BFONT_CODE_EUC) || (bfont_code_mode == BFONT_CODE_SJIS)))
         ch = bfont_find_char_jp(c);
     else {
@@ -250,16 +264,16 @@ unsigned char bfont_draw_ex(uint8 *buffer, uint32 bufwidth, uint32 fg, uint32 bg
     /* Increment over the height of the font. 3bytes at a time (2 thin or 1 wide row) */
     for(y = 0; y < BFONT_HEIGHT; y+= (2-wide),ch+=((BFONT_THIN_WIDTH*2)/8)) {
         /* Do the first row, or half row */
-        word = (((uint16)ch[0]) << 4) | ((ch[1] >> 4) & 0x0f);
-        buffer = (uint8*)bfont_draw_one_row((uint16*)buffer, word, opaque, fg, bg, bpp);
+        word = (((uint16_t)ch[0]) << 4) | ((ch[1] >> 4) & 0x0f);
+        buffer = (uint8_t *)bfont_draw_one_row((uint16_t *)buffer, word, opaque, fg, bg, bpp);
 
         /* If we're thin, increment to next row, otherwise continue the row */
         if(!wide) buffer += ((bufwidth - BFONT_THIN_WIDTH)*bpp)/8;
 
         /* Do the second row, or second half */
-        word = ((((uint16)ch[1]) << 8) & 0xf00) | ch[2];
+        word = ((((uint16_t)ch[1]) << 8) & 0xf00) | ch[2];
 
-        buffer = (uint8*)bfont_draw_one_row((uint16*)buffer, word, opaque, fg, bg, bpp);
+        buffer = (uint8_t *)bfont_draw_one_row((uint16_t *)buffer, word, opaque, fg, bg, bpp);
 
         /* Increment to the next row. */
         if(!wide) buffer += ((bufwidth - BFONT_THIN_WIDTH)*bpp)/8;
@@ -277,29 +291,27 @@ unsigned char bfont_draw_ex(uint8 *buffer, uint32 bufwidth, uint32 fg, uint32 bg
 }
 
 /* Draw half-width kana */
-unsigned char bfont_draw_thin(void *b, uint32 bufwidth, uint8 opaque, uint32 c, uint8 iskana) {
-    return bfont_draw_ex((uint8 *)b, bufwidth, bfont_fgcolor, bfont_bgcolor, (bfont_32bit ? (sizeof (uint32)) : (sizeof (uint16))) << 3, opaque, c, 0, iskana);
+size_t bfont_draw_thin(void *b, uint32_t bufwidth, bool opaque, uint32_t c, bool iskana) {
+    return bfont_draw_ex(b, bufwidth, bfont_fgcolor, bfont_bgcolor, 
+                         (bfont_32bit ? (sizeof (uint32_t)) : (sizeof (uint16_t))) << 3, opaque, c, 0, iskana);
 }
 
 /* Compat function */
-unsigned char bfont_draw(void *buffer, uint32 bufwidth, uint8 opaque, uint32 c) {
-    return bfont_draw_ex((uint8 *)buffer, bufwidth, bfont_fgcolor, bfont_bgcolor, (bfont_32bit ? (sizeof (uint32)) : (sizeof (uint16))) << 3, opaque, c, 0, 0);
+size_t bfont_draw(void *buffer, uint32_t bufwidth, bool opaque, uint32_t c) {
+    return bfont_draw_ex(buffer, bufwidth, bfont_fgcolor, bfont_bgcolor, 
+                        (bfont_32bit ? (sizeof (uint32_t)) : (sizeof (uint16_t))) << 3, opaque, c, 0, 0);
 }
 
 /* Draw wide character */
-unsigned char bfont_draw_wide(void *b, uint32 bufwidth, uint8 opaque, uint32 c) {
-    return bfont_draw_ex((uint8 *)b, bufwidth, bfont_fgcolor, bfont_bgcolor, (bfont_32bit ? (sizeof (uint32)) : (sizeof (uint16))) << 3, opaque, c, 1, 0);
+size_t bfont_draw_wide(void *b, uint32_t bufwidth, bool opaque, uint32_t c) {
+    return bfont_draw_ex(b, bufwidth, bfont_fgcolor, bfont_bgcolor, 
+                         (bfont_32bit ? (sizeof (uint32_t)) : (sizeof (uint16_t))) << 3, opaque, c, 1, 0);
 }
 
-/* Draw string of full-width (wide) and half-width (thin) characters
-   Note that this handles the case of mixed encodings unless Japanese
-   support is disabled (BFONT_CODE_ISO8859_1).
-   XXX: Seems like this can be shrunk to use uint8 for nChr/Mask/Flag and
-    getting rid of nMask.
-   */
-void bfont_draw_str_ex(void *b, uint32 width, uint32 fg, uint32 bg, uint8 bpp, uint8 opaque, const char *str) {
-    uint16 nChr, nMask, nFlag;
-    uint8 *buffer = (uint8 *)b;
+void bfont_draw_str_ex(void *b, uint32_t width, uint32_t fg, uint32_t bg, uint8_t bpp, bool opaque,
+                       const char *str) {
+    uint16_t nChr, nMask, nFlag;
+    uint8_t *buffer = (uint8_t *)b;
 
     while(*str) {
         nFlag = 0;
@@ -346,16 +358,54 @@ void bfont_draw_str_ex(void *b, uint32 width, uint32 fg, uint32 bg, uint8 bpp, u
     }
 }
 
-void bfont_draw_str(void *b, uint32 width, uint8 opaque, const char *str) {
-    bfont_draw_str_ex(b, width, bfont_fgcolor, bfont_bgcolor, (bfont_32bit ? (sizeof (uint32)) : (sizeof (uint16))) << 3, opaque, str);
+void bfont_draw_str_ex_vfmt(void *b, uint32_t width, uint32_t fg, uint32_t bg,
+                            uint8_t bpp, bool opaque, const char *fmt,
+                            va_list *var_args) {
+    /* Maximum of 1060 thin characters onscreen, plus padding for multiple of 32. */
+    char string[1088];
+
+    vsnprintf(string, sizeof(string), fmt, *var_args);
+    bfont_draw_str_ex(b, width, fg, bg, bpp, opaque, string);
 }
 
-uint8 *bfont_find_icon(uint8 icon) {
+/* Draw string of full-width (wide) and half-width (thin) characters
+   Note that this handles the case of mixed encodings unless Japanese
+   support is disabled (BFONT_CODE_ISO8859_1).
+*/
+void bfont_draw_str_ex_fmt(void *b, uint32_t width, uint32_t fg, uint32_t bg, uint8_t bpp,
+                           bool opaque, const char *fmt, ...) {
+    va_list var_args;
+    va_start(var_args, fmt);
+
+    bfont_draw_str_ex_vfmt(b, width, fg, bg, bpp, opaque, fmt, &var_args);
+
+    va_end(var_args);
+}
+
+void bfont_draw_str(void *b, uint32_t width, bool opaque, const char *str) {
+    bfont_draw_str_ex(b, width, bfont_fgcolor, bfont_bgcolor,
+                     (bfont_32bit ? (sizeof (uint32_t)) : (sizeof (uint16_t))) << 3,
+                     opaque, str);
+}
+
+void bfont_draw_str_fmt(void *b, uint32_t width, bool opaque, const char *fmt,
+                        ...) {
+    va_list var_args;
+    va_start(var_args, fmt);
+
+    bfont_draw_str_ex_vfmt(b, width, bfont_fgcolor, bfont_bgcolor,
+                           (bfont_32bit ? (sizeof (uint32_t)) : (sizeof (uint16_t))) << 3,
+                           opaque, fmt, &var_args);
+
+    va_end(var_args);
+}
+
+uint8_t *bfont_find_icon(bfont_vmu_icon_t icon) {
     if(icon > BFONT_ICON_EMBROIDERY)
         return NULL;
 
     int icon_offset = BFONT_VMU_DREAMCAST_SPECIFIC +
-        (icon * BFONT_ICON_DIMEN * BFONT_ICON_DIMEN/8);
-    uint8 *fa = syscall_font_address();
+        (icon * BFONT_ICON_DIMEN * BFONT_ICON_DIMEN / 8);
+    uint8_t *fa = get_font_address();
     return fa + icon_offset;
 }

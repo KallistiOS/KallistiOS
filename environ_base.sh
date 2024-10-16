@@ -48,7 +48,7 @@ export KOS_LD="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-ld"
 export KOS_RANLIB="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-gcc-ranlib"
 export KOS_STRIP="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-strip"
 export KOS_CFLAGS="${KOS_CFLAGS} ${KOS_INC_PATHS} -D_arch_${KOS_ARCH} -D_arch_sub_${KOS_SUBARCH} -Wall -g"
-export KOS_CPPFLAGS="${KOS_CPPFLAGS} ${KOS_INC_PATHS_CPP} -fno-operator-names"
+export KOS_CPPFLAGS="${KOS_CPPFLAGS} ${KOS_INC_PATHS_CPP}"
 
 # Which standards modes we want to compile for
 # Note that this only covers KOS itself, not necessarily anything else compiled

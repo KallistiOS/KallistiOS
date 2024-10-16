@@ -99,7 +99,7 @@ int maple_queue_frame(maple_frame_t *frame) {
         save = irq_disable();
 
     /* Assign it a device, if applicable */
-    frame->dev = &maple_state.ports[frame->dst_port].units[frame->dst_unit];
+    frame->dev = maple_enum_dev(frame->dst_port, frame->dst_unit);
 
     /* Put it on the queue */
     TAILQ_INSERT_TAIL(&maple_state.frame_queue, frame, frameq);

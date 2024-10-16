@@ -2,6 +2,7 @@
 
    mutex.c
    Copyright (C) 2012, 2015 Lawrence Sebald
+   Copyright (C) 2024 Paul Cercueil
 
 */
 
@@ -15,6 +16,9 @@
 
 #include <arch/irq.h>
 #include <arch/timer.h>
+
+/* Thread pseudo-ptr representing an active IRQ context. */
+#define IRQ_THREAD  ((kthread_t *)0xFFFFFFFF)
 
 mutex_t *mutex_create(void) {
     mutex_t *rv;
@@ -133,6 +137,19 @@ int mutex_lock_timed(mutex_t *m, int timeout) {
             deadline = timer_ms_gettime64() + timeout;
 
         for(;;) {
+            /* Check whether we should boost priority. */
+            if (m->holder->prio >= thd_current->prio) {
+                m->holder->prio = thd_current->prio;
+
+                /* Reschedule if currently scheduled. */
+                if(m->holder->state == STATE_READY) {
+                    /* Thread list is sorted by priority, update the position
+                     * of the thread holding the lock */
+                    thd_remove_from_runnable(m->holder);
+                    thd_add_to_runnable(m->holder, true);
+                }
+            }
+
             rv = genwait_wait(m, timeout ? "mutex_lock_timed" : "mutex_lock",
                               timeout, NULL);
             if(rv < 0) {
@@ -172,7 +189,7 @@ int mutex_trylock(mutex_t *m) {
     /* If we're inside of an interrupt, pick a special value for the thread that
        would otherwise be impossible... */
     if(irq_inside_int())
-        thd = (kthread_t *)0xFFFFFFFF;
+        thd = IRQ_THREAD;
 
     if(m->type < MUTEX_TYPE_NORMAL || m->type > MUTEX_TYPE_RECURSIVE) {
         errno = EINVAL;
@@ -254,8 +271,13 @@ static int mutex_unlock_common(mutex_t *m, kthread_t *thd) {
     }
 
     /* If we need to wake up a thread, do so. */
-    if(wakeup)
+    if(wakeup) {
+        /* Restore real priority in case we were dynamically boosted. */
+        if (thd != IRQ_THREAD)
+            thd->prio = thd->real_prio;
+
         genwait_wake_one(m);
+    }
 
     return 0;
 }
@@ -266,7 +288,7 @@ int mutex_unlock(mutex_t *m) {
     /* If we're inside of an interrupt, use the special value for the thread
        from mutex_trylock(). */
     if(irq_inside_int())
-        thd = (kthread_t *)0xFFFFFFFF;
+        thd = IRQ_THREAD;
 
     return mutex_unlock_common(m, thd);
 }
