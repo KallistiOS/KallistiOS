@@ -140,6 +140,29 @@ void snd_sfx_unload_all(void);
 */
 int snd_sfx_play(sfxhnd_t idx, int vol, int pan);
 
+/** \brief  Play a sound effect.
+
+    This function plays a loaded sound effect with the specified volume (for
+    both stereo or mono) and panning values (for mono sounds only).
+
+    \param  idx             The handle to the sound effect to play.
+    \param  vol             The volume to play at (between 0 and 255).
+    \param  pan             The panning value of the sound effect. 0 is all the
+                            way to the left, 128 is center, 255 is all the way
+                            to the right.
+    \param  freq            Override playback frequency, or set to 0 to use sample default frequency
+    \param  is_loop         If set, this sound effect will continue to loop until explicitly stopped
+                            If not set, this sound effect will play once and terminate
+    \param  loop_start      Index of first sample when looping
+    \param  loop_end        Index of last sample when looping. Pass 0 to loop at the end of the effect
+
+    \return                 The channel used to play the sound effect (or the
+                            left channel in the case of a stereo sound, the
+                            right channel will be the next one) on success, or
+                            -1 on failure.
+*/
+int snd_sfx_play_ex(sfxhnd_t idx, int vol, int pan, uint32_t freq, bool is_loop, uint32_t loop_start, uint32_t loop_end );
+
 /** \brief  Play a sound effect on a specific channel.
 
     This function works similar to snd_sfx_play(), but allows you to specify the
@@ -157,6 +180,67 @@ int snd_sfx_play(sfxhnd_t idx, int vol, int pan);
     \return                 chn
 */
 int snd_sfx_play_chn(int chn, sfxhnd_t idx, int vol, int pan);
+
+/** \brief  Play a sound effect on a specific channel.
+
+    This function works similar to snd_sfx_play(), but allows you to specify the
+    channel to play on. No error checking is done with regard to the channel, so
+    be sure its safe to play on that channel before trying.
+
+    \param  chn             The channel to play on (or in the case of stereo,
+                            the left channel).
+    \param  idx             The handle to the sound effect to play.
+    \param  vol             The volume to play at (between 0 and 255).
+    \param  pan             The panning value of the sound effect. 0 is all the
+                            way to the left, 128 is center, 255 is all the way
+                            to the right.
+    \param  freq            Override playback frequency, or set to 0 to use sample default frequency
+    \param  is_loop         If set, this sound effect will continue to loop until explicitly stopped
+                            If not set, this sound effect will play once and terminate
+    \param  loop_start      Index of first sample when looping
+    \param  loop_end        Index of last sample when looping. Pass 0 to loop at the end of the effect
+
+    \return                 chn
+*/
+int snd_sfx_play_chn_ex(int chn, sfxhnd_t idx, int vol, int pan, uint32_t freq, bool is_loop, uint32_t loop_start, uint32_t loop_end);
+
+/** \brief  Change the volume of a playing sound channel.
+
+    This function updates the volume of the specified channel of sound. 
+    It does no checking to make sure that a sound effect is playing on the channel
+    specified, and thus can be used even if you're using the channel for some
+    other purpose than sound effects.
+
+    \param  chn             The channel to affect.
+    \param  vol             The volume to play at (between 0 and 255).
+*/
+void snd_sfx_volume( int chn, int vol );
+
+/** \brief  Change the volume of a playing sound channel.
+
+    This function updates the volume of the specified channel of sound. 
+    It does no checking to make sure that a sound effect is playing on the channel
+    specified, and thus can be used even if you're using the channel for some
+    other purpose than sound effects.
+
+    \param  chn             The channel to affect.
+    \param  pan             The panning value of the sound effect. 0 is all the
+                            way to the left, 128 is center, 255 is all the way
+                            to the right.
+*/
+void snd_sfx_pan( int chn, int pan );
+
+/** \brief  Change the frequency of a playing sound channel.
+
+    This function updates the playback frequency of the specified channel of sound. 
+    It does no checking to make sure that a sound effect is playing on the channel
+    specified, and thus can be used even if you're using the channel for some
+    other purpose than sound effects.
+
+    \param  chn             The channel to affect.
+    \param  freq            The new frequency of the sound.
+*/
+void snd_sfx_freq( int chn, int freq );
 
 /** \brief  Stop a single channel of sound.
 
@@ -194,6 +278,7 @@ int snd_sfx_chn_alloc(void);
     \param  chn             The channel to free.
 */
 void snd_sfx_chn_free(int chn);
+
 
 /** @} */
 
