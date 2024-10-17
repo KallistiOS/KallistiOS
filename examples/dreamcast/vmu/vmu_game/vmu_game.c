@@ -12,15 +12,14 @@
 
 void draw_findings(void) {
     file_t      d;
-    int     y = 88;
 
     d = fs_open("/vmu/a1", O_RDONLY | O_DIR);
 
     if(!d) {
-        bfont_draw_str(vram_s + y * 640 + 10, 640, 0, "Can't read VMU");
+        bfont_draw_str_vram_fmt(10, 88, false, "Can't read VMU");
     }
     else {
-        bfont_draw_str(vram_s + y * 640 + 10, 640, 0, "VMU found. Press Start.");
+        bfont_draw_str_vram_fmt(10, 88, false, "VMU found. Press Start.");
     }
 }
 
@@ -33,7 +32,7 @@ void new_vmu(void) {
     if(dev == NULL) {
         if(dev_checked) {
             memset4(vram_s + 88 * 640, 0, 640 * (480 - 64) * 2);
-            bfont_draw_str(vram_s + 88 * 640 + 10, 640, 0, "No VMU");
+            bfont_draw_str_vram_fmt(10, 88, false, "No VMU");
             dev_checked = 0;
         }
     }
@@ -88,18 +87,13 @@ void write_game_entry(void) {
 
     dev = maple_enum_type(0, MAPLE_FUNC_MEMCARD);
     
-    if (dev)
-    {
+    if(dev)
         vmufs_write(dev, "Tetris", data, data_size, VMUFS_VMUGAME);
-    }
 }
 
 int main(int argc, char **argv) {
-    bfont_draw_str(vram_s + 20 * 640 + 20, 640, 0,
-                   "Put a VMU you don't care too much about");
-    bfont_draw_str(vram_s + 42 * 640 + 20, 640, 0,
-                   "in slot A1 and press START");
-    bfont_draw_str(vram_s + 88 * 640 + 10, 640, 0, "No VMU");
+    bfont_draw_str_vram_fmt(20, 20, false,
+        "Put a VMU you don't care too much about\nin slot A1 and press START\n\nNo VMU");
 
     if(wait_start() < 0) return 0;
 

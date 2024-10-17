@@ -30,7 +30,7 @@
 
 #include <kos/thread.h>
 
-#define SHOW_BLACK_BG 1
+#define SHOW_BLACK_BG  true
 
 /* Keeps track of the amount of screenshots you have taken */
 static int counter = 0;
@@ -38,7 +38,6 @@ static int counter = 0;
 int main(int argc, char **argv) {
     uint8_t r, g, b;
     uint32_t t = 0;
-    int font_height_offset = 0;
     char filename[256];
 
     /* Adjust frequency for faster or slower transitions */
@@ -48,7 +47,7 @@ int main(int argc, char **argv) {
     cont_state_t *state;
 
     /* Set the video mode */
-    vid_set_mode(DM_640x480, PM_RGB565);   
+    vid_set_mode(DM_640x480, PM_RGB565);
 
     while(1) {
         if((cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER)) != NULL) {
@@ -82,13 +81,8 @@ int main(int argc, char **argv) {
         vid_clear(r, g, b);
 
         /* Draw Foreground */
-        font_height_offset = (640 * (480 - (BFONT_HEIGHT * 6))) + (BFONT_THIN_WIDTH * 2);
-        bfont_draw_str(vram_s + font_height_offset, 640, SHOW_BLACK_BG, 
-            "Press Start to exit");
-            
-        font_height_offset += 640 * BFONT_HEIGHT * 2;
-        bfont_draw_str(vram_s + font_height_offset, 640, SHOW_BLACK_BG, 
-            "Press A to take a screen shot");
+        bfont_draw_str_vram_fmt(24, 336, SHOW_BLACK_BG, 
+            "Press Start to exit\n\nPress A to take a screen shot");
 
         vid_flip(-1);
     }
