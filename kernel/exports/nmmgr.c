@@ -34,12 +34,18 @@ static nmmgr_list_t nmmgr_handlers;
 
 /* Locate a name handler for a given path name */
 nmmgr_handler_t * nmmgr_lookup(const char *fn) {
-    nmmgr_handler_t *cur;
+    nmmgr_handler_t *cur = NULL, *tmp;
+    size_t          cur_len = 0, tmp_len;
 
-    /* Scan the handler table and look for a path match */
-    LIST_FOREACH(cur, &nmmgr_handlers, list_ent) {
-        if(!strncasecmp(cur->pathname, fn, strlen(cur->pathname)))
-            break;
+    /* Scan the handler table and look for the best path match */
+    LIST_FOREACH(tmp, &nmmgr_handlers, list_ent) {
+        tmp_len = strlen(tmp->pathname);
+        if(!strncasecmp(tmp->pathname, fn, tmp_len)) {
+            if(cur_len < tmp_len) {
+                cur_len = tmp_len;
+                cur = tmp;
+            }
+        }
     }
 
     if(cur == NULL) {
