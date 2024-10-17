@@ -480,7 +480,7 @@ static void net_dhcp_bind(dhcp_pkt_t *pkt, int len) {
 }
 
 static void net_dhcp_thd(void *obj) {
-    struct dhcp_pkt_out *qpkt;
+    struct dhcp_pkt_out *qpkt, *q_tmp;
     uint64 now;
     struct sockaddr_in addr;
     uint8 buf[1500];
@@ -499,7 +499,7 @@ static void net_dhcp_thd(void *obj) {
     /* Make sure we don't need to renew our lease */
     if(lease_expires <= now && (state == DHCP_STATE_BOUND ||
                                 state == DHCP_STATE_RENEWING || state == DHCP_STATE_REBINDING)) {
-        STAILQ_FOREACH(qpkt, &dhcp_pkts, pkt_queue) {
+        STAILQ_FOREACH_SAFE(qpkt, &dhcp_pkts, pkt_queue, q_tmp) {
             STAILQ_REMOVE(&dhcp_pkts, qpkt, dhcp_pkt_out, pkt_queue);
             free(qpkt->buf);
             free(qpkt);
@@ -513,7 +513,7 @@ static void net_dhcp_thd(void *obj) {
     else if(rebind_time <= now &&
             (state == DHCP_STATE_BOUND || state == DHCP_STATE_RENEWING)) {
         /* Clear out any existing packets. */
-        STAILQ_FOREACH(qpkt, &dhcp_pkts, pkt_queue) {
+        STAILQ_FOREACH_SAFE(qpkt, &dhcp_pkts, pkt_queue, q_tmp) {
             STAILQ_REMOVE(&dhcp_pkts, qpkt, dhcp_pkt_out, pkt_queue);
             free(qpkt->buf);
             free(qpkt);
