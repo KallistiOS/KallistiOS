@@ -23,8 +23,8 @@
 
 */
 
-void * pvr_set_vertbuf(pvr_list_t list, void * buffer, int len) {
-    void * oldbuf;
+void *pvr_set_vertbuf(pvr_list_t list, void *buffer, size_t len) {
+    void *oldbuf;
 
     // Make sure we have global DMA usage enabled. The DMA can still
     // be used in other situations, but the user must take care of
@@ -57,8 +57,8 @@ void * pvr_set_vertbuf(pvr_list_t list, void * buffer, int len) {
     return oldbuf;
 }
 
-void * pvr_vertbuf_tail(pvr_list_t list) {
-    uint8 * bufbase;
+void *pvr_vertbuf_tail(pvr_list_t list) {
+    uint8 *bufbase;
 
     // Check the validity of the request.
     assert(list < PVR_OPB_COUNT);
@@ -72,8 +72,8 @@ void * pvr_vertbuf_tail(pvr_list_t list) {
     return bufbase + pvr_state.dma_buffers[pvr_state.ram_target].ptr[list];
 }
 
-void pvr_vertbuf_written(pvr_list_t list, uint32 amt) {
-    uint32 val;
+void pvr_vertbuf_written(pvr_list_t list, size_t amt) {
+    uint32_t val;
 
     // Check the validity of the request.
     assert(list < PVR_OPB_COUNT);
@@ -118,7 +118,7 @@ void pvr_scene_begin(void) {
 /* Currently the resize functionality is not implemented, so make sure that
    rx and ry are appropriate (i.e. *rx = 1024 and *ry = 512 for 640x480).
    Also, note that this probably won't work with DMA mode for now... */
-void pvr_scene_begin_txr(pvr_ptr_t txr, uint32 *rx, uint32 *ry) {
+void pvr_scene_begin_txr(pvr_ptr_t txr, size_t *rx, size_t *ry) {
     int buf = pvr_state.view_target ^ 1;
     (void)ry;
 
@@ -218,7 +218,7 @@ int pvr_list_finish(void) {
     return 0;
 }
 
-int pvr_prim(void * data, int size) {
+int pvr_prim(const void *data, size_t size) {
     /* Check to make sure we can do this */
 #ifndef NDEBUG
     if(pvr_state.list_reg_open == -1) {
@@ -245,7 +245,7 @@ int pvr_prim(void * data, int size) {
     return 0;
 }
 
-int pvr_list_prim(pvr_list_t list, void * data, int size) {
+int pvr_list_prim(pvr_list_t list, const void *data, size_t size) {
     volatile pvr_dma_buffers_t * b;
 
     b = pvr_state.dma_buffers + pvr_state.ram_target;
