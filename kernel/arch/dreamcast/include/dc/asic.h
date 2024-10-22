@@ -187,6 +187,14 @@ __BEGIN_DECLS
 */
 typedef void (*asic_evt_handler)(uint32_t code, void *data);
 
+/** \brief   ASIC event handler table entry.
+    \ingroup asic
+ */
+typedef struct {
+    asic_evt_handler hdl;
+    void *data;
+} asic_evt_handler_entry_t;
+
 /** \brief   Set or remove an ASIC handler.
     \ingroup asic
 
@@ -197,8 +205,9 @@ typedef void (*asic_evt_handler)(uint32_t code, void *data);
     \param  handler         The function to call when the event happens.
     \param  data            A user pointer that will be passed to the callback.
 
+    \return                 Old handler function
 */
-void asic_evt_set_handler(uint16_t code, asic_evt_handler handler, void *data);
+asic_evt_handler_entry_t asic_evt_set_handler(uint16_t code, asic_evt_handler handler, void *data);
 
 /** \brief   Register a threaded handler with the given ASIC event.
     \ingroup asic

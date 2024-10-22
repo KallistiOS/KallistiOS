@@ -35,22 +35,9 @@ gets everything situated. After that it will read raw sectors from
 the data track on a standard DC bootable CDR (one audio track plus
 one data track in xa1 format).
 
-Most of the information/algorithms in this file are thanks to
+Initial information/algorithms in this file are thanks to
 Marcus Comstedt. Thanks to Maiwe for the verbose command names and
 also for the CDDA playback routines.
-
-Note that these functions may be affected by changing compiler options...
-they require their parameters to be in certain registers, which is
-normally the case with the default options. If in doubt, decompile the
-output and look to make sure.
-
-XXX: This could all be done in a non-blocking way by taking advantage of
-command queuing. Every call to syscall_gdrom_send_command returns a 
-'request id' which just needs to eventually be checked by cmd_stat. A 
-non-blocking version of all functions would simply require manual calls 
-to check the status. Doing this would probably allow data reading while 
-cdda is playing without hiccups (by severely reducing the number of gd 
-commands being sent).
 */
 
 /* Protection register. */
@@ -76,6 +63,7 @@ static int dma_in_progress = 0;
 static int dma_blocking = 0;
 static kthread_t *dma_thd = NULL;
 static semaphore_t dma_done = SEM_INITIALIZER(0);
+asic_evt_handler_entry_t old_dma_irq;
 
 static int cur_sector_size = 2048;
 
@@ -765,7 +753,6 @@ static void g1_dma_irq_hnd(uint32_t code, void *data) {
     (void)data;
 
     if(dma_in_progress) {
-        syscall_gdrom_dma_callback((uintptr_t)stream_cb, stream_cb_param);
         dma_in_progress = 0;
 
         if(dma_blocking) {
@@ -778,8 +765,12 @@ static void g1_dma_irq_hnd(uint32_t code, void *data) {
             dma_thd = NULL;
         }
     }
-    else if(cmd_hnd > 0) {
-        syscall_gdrom_dma_callback(0, NULL);
+    if(cmd_hnd > 0) {
+        syscall_gdrom_dma_callback((uintptr_t)stream_cb, stream_cb_param);
+    }
+
+    if(old_dma_irq.hdl) {
+        old_dma_irq.hdl(code, old_dma_irq.data);
     }
 }
 
@@ -837,12 +828,15 @@ void cdrom_init(void) {
     mutex_unlock(&_g1_ata_mutex);
 
     /* Hook all the DMA related events. */
-    asic_evt_set_handler(ASIC_EVT_GD_DMA, g1_dma_irq_hnd, NULL);
-    asic_evt_enable(ASIC_EVT_GD_DMA, ASIC_IRQB);
+    old_dma_irq = asic_evt_set_handler(ASIC_EVT_GD_DMA, g1_dma_irq_hnd, NULL);
     asic_evt_set_handler(ASIC_EVT_GD_DMA_OVERRUN, g1_dma_irq_hnd, NULL);
-    asic_evt_enable(ASIC_EVT_GD_DMA_OVERRUN, ASIC_IRQB);
     asic_evt_set_handler(ASIC_EVT_GD_DMA_ILLADDR, g1_dma_irq_hnd, NULL);
-    asic_evt_enable(ASIC_EVT_GD_DMA_ILLADDR, ASIC_IRQB);
+
+    if(old_dma_irq.hdl == NULL) {
+        asic_evt_enable(ASIC_EVT_GD_DMA, ASIC_IRQB);
+        asic_evt_enable(ASIC_EVT_GD_DMA_OVERRUN, ASIC_IRQB);
+        asic_evt_enable(ASIC_EVT_GD_DMA_ILLADDR, ASIC_IRQB);
+    }
 
     cdrom_reinit();
 }
@@ -850,10 +844,23 @@ void cdrom_init(void) {
 void cdrom_shutdown(void) {
 
     /* Unhook the events and disable the IRQs. */
-    asic_evt_disable(ASIC_EVT_GD_DMA, ASIC_IRQB);
-    asic_evt_remove_handler(ASIC_EVT_GD_DMA);
-    asic_evt_disable(ASIC_EVT_GD_DMA_OVERRUN, ASIC_IRQB);
-    asic_evt_remove_handler(ASIC_EVT_GD_DMA_OVERRUN);
-    asic_evt_disable(ASIC_EVT_GD_DMA_ILLADDR, ASIC_IRQB);
-    asic_evt_remove_handler(ASIC_EVT_GD_DMA_ILLADDR);
+    if(old_dma_irq.hdl) {
+        /* G1-ATA driver uses the same handler for 3 events. */
+        asic_evt_set_handler(ASIC_EVT_GD_DMA,
+            old_dma_irq.hdl, old_dma_irq.data);
+        asic_evt_set_handler(ASIC_EVT_GD_DMA_OVERRUN,
+            old_dma_irq.hdl, old_dma_irq.data);
+        asic_evt_set_handler(ASIC_EVT_GD_DMA_ILLADDR,
+            old_dma_irq.hdl, old_dma_irq.data);
+
+        old_dma_irq.hdl = NULL;
+    }
+    else {
+        asic_evt_disable(ASIC_EVT_GD_DMA, ASIC_IRQB);
+        asic_evt_remove_handler(ASIC_EVT_GD_DMA);
+        asic_evt_disable(ASIC_EVT_GD_DMA_OVERRUN, ASIC_IRQB);
+        asic_evt_remove_handler(ASIC_EVT_GD_DMA_OVERRUN);
+        asic_evt_disable(ASIC_EVT_GD_DMA_ILLADDR, ASIC_IRQB);
+        asic_evt_remove_handler(ASIC_EVT_GD_DMA_ILLADDR);
+    }
 }
