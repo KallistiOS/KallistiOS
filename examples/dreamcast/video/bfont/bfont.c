@@ -9,7 +9,7 @@
 #include <unistd.h>
 
 int main(int argc, char **argv) {
-    int x, y, o;
+    int x, y;
 
     for(y = 0; y < 480; y++)
         for(x = 0; x < 640; x++) {
@@ -21,45 +21,45 @@ int main(int argc, char **argv) {
 
     /* Set our starting offset to one letter height away from the 
        top of the screen and two widths from the left */
-    o = (640 * BFONT_HEIGHT) + (BFONT_THIN_WIDTH * 2);
+    x = BFONT_WIDE_WIDTH;
+    y = BFONT_HEIGHT;
 
     /* Test with ISO8859-1 encoding */
     bfont_set_encoding(BFONT_CODE_ISO8859_1);
-    bfont_draw_str(vram_s + o, 640, 1, "Test of basic ASCII");  
-    /* After each string, we'll increment the offset down by one row */
-    o += 640 * BFONT_HEIGHT;
-    bfont_draw_str(vram_s + o, 640, 1, "Parlez-vous français?");
-    o += 640 * BFONT_HEIGHT;
-
+    bfont_draw_str_vram_fmt(x, y, true, 
+        "Test of basic ASCII\nParlez-vous franï¿½ais?");
+    y += 2 * BFONT_HEIGHT;
     /* Do a second set drawn transparently */
-    bfont_draw_str(vram_s + o, 640, 0, "Test of basic ASCII");
-    o += 640 * BFONT_HEIGHT;
-    bfont_draw_str(vram_s + o, 640, 0, "Parlez-vous français?");
-    o += 640 * BFONT_HEIGHT;
+    bfont_draw_str_vram_fmt(x, y, false,
+        "Test of basic ASCII\nParlez-vous franï¿½ais?");
+
+    y += 2 * BFONT_HEIGHT;
 
     /* Test with EUC encoding */
     bfont_set_encoding(BFONT_CODE_EUC);
-    bfont_draw_str(vram_s + o, 640, 1, "¤³¤ó¤Ë¤Á¤Ï EUC!");
-    o += 640 * BFONT_HEIGHT;
-    bfont_draw_str(vram_s + o, 640, 0, "¤³¤ó¤Ë¤Á¤Ï EUC!");
-    o += 640 * BFONT_HEIGHT;
+    bfont_draw_str_vram_fmt(x, y, true, "ï¿½ï¿½ï¿½ï¿½Ë¤ï¿½ï¿½ï¿½ EUC!");
+    y += BFONT_HEIGHT;
+    bfont_draw_str_vram_fmt(x, y, false, "ï¿½ï¿½ï¿½ï¿½Ë¤ï¿½ï¿½ï¿½ EUC!");
+
+    y += BFONT_HEIGHT;
 
     /* Test with Shift-JIS encoding */
     bfont_set_encoding(BFONT_CODE_SJIS);
-    bfont_draw_str(vram_s + o, 640, 1, "ƒAƒhƒŒƒX•ÏŠ· SJIS");
-    o += 640 * BFONT_HEIGHT;
-    bfont_draw_str(vram_s + o, 640, 0, "ƒAƒhƒŒƒX•ÏŠ· SJIS");
-    o += 640 * BFONT_HEIGHT;
+    bfont_draw_str_vram_fmt(x, y, true, "ï¿½Aï¿½hï¿½ï¿½ï¿½Xï¿½ÏŠï¿½ SJIS");
+    y += BFONT_HEIGHT;
+    bfont_draw_str_vram_fmt(x, y, false, "ï¿½Aï¿½hï¿½ï¿½ï¿½Xï¿½ÏŠï¿½ SJIS");
 
-    /* Drawing the special symbols is a bit convoluted. First we'll draw some
-       standard text as above. */
+    y += 2 * BFONT_HEIGHT;
+
     bfont_set_encoding(BFONT_CODE_ISO8859_1);
-    bfont_draw_str(vram_s + o, 640, 1, "To exit, press ");
-
-    /* Then we set the mode to raw to draw the special character. */
-    bfont_set_encoding(BFONT_CODE_RAW);
-    /* Adjust the writing to start after "To exit, press " and draw the one char */
-    bfont_draw_wide(vram_s + o + (BFONT_THIN_WIDTH * 15), 640, 1, BFONT_STARTBUTTON);
+    bfont_draw_str_vram_fmt(x, y, true, 
+        "We now support DC/VMU icons in printf statements!\n"
+        "Use diXX for DC icons and viXX for VMU icons in your\n"
+        "strings. Enhance your text with visual icons like \n" 
+        "\\di03\\di04\\di05\\di06 for navigation, and make your UI more\n"
+        "intuitive. You can display buttons like \\di0B\\di0C\\di0F\\di10\n"
+        "\\di12\\di13 and icons like \\vi01\\vi05\\vi21\\vi18\\vi1C effortlessly.\n\n"
+        "\tTo exit, press \\di14");
 
     /* If Start is pressed, exit the app */
     cont_btn_callback(0, CONT_START, (cont_btn_callback_t)arch_exit);

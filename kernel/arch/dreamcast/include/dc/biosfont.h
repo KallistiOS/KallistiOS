@@ -51,13 +51,23 @@ __BEGIN_DECLS
 #define BFONT_THIN_WIDTH                        12  /**< \brief Width of Thin Font (ISO8859_1, half-JP) */
 #define BFONT_WIDE_WIDTH    (BFONT_THIN_WIDTH * 2)  /**< \brief Width of Wide Font (full-JP) */
 #define BFONT_HEIGHT                            24  /**< \brief Height of All Fonts */
+#define BFONT_ICON_DIMEN                        32  /**< \brief Dimension of vmu icons */
 /** @} */
 
+/** \defgroup bfont_size  Byte Sizes
+    \brief    Byte size definitions for the BIOS fonts.
+    @{
+*/
 /** \brief Number of bytes to represent a single thin character within the BIOS font. */
 #define BFONT_BYTES_PER_CHAR        (BFONT_THIN_WIDTH * BFONT_HEIGHT / 8)
 
 /** \brief Number of bytes to represent a single wide character within the BIOS font. */
 #define BFONT_BYTES_PER_WIDE_CHAR   (BFONT_WIDE_WIDTH * BFONT_HEIGHT / 8)
+
+/** \brief Number of bytes to represent a vmu icon within the BIOS font. */
+#define BFONT_BYTES_PER_VMU_ICON    (BFONT_ICON_DIMEN * BFONT_ICON_DIMEN / 8)
+
+/** @} */
 
 /** \defgroup bfont_indicies Structure
     \brief                   Structure of the Bios Font
@@ -73,58 +83,60 @@ __BEGIN_DECLS
 /* JISX-0208 Rows 1-7 and 16-84 are encoded between BFONT_WIDE_START and BFONT_DREAMCAST_SPECIFIC.
     Only the box-drawing characters (row 8) are missing. */
 /** \brief Size of a row for JISX-0208 characters */
-#define JISX_0208_ROW_SIZE          94
+#define JISX_0208_ROW_SIZE            94
 /** \brief Start of Wide Characters in Font Block */
-#define BFONT_WIDE_START            (288 * BFONT_BYTES_PER_CHAR)
+#define BFONT_WIDE_START              (288 * BFONT_BYTES_PER_CHAR)
 /** \brief Start of JISX-0208 Rows 1-7 in Font Block */   
-#define BFONT_JISX_0208_ROW1        BFONT_WIDE_START
+#define BFONT_JISX_0208_ROW1          BFONT_WIDE_START
 /** \brief Start of JISX-0208 Row 16-47 (Start of Level 1) in Font Block */   
-#define BFONT_JISX_0208_ROW16       (BFONT_WIDE_START + (658 * BFONT_BYTES_PER_CHAR))
+#define BFONT_JISX_0208_ROW16         (BFONT_WIDE_START + (658 * BFONT_BYTES_PER_WIDE_CHAR))
 /** \brief JISX-0208 Row 48-84 (Start of Level 2) in Font Block */
-#define BFONT_JISX_0208_ROW48       (BFONT_JISX_0208_ROW16 + ((32 * JISX_0208_ROW_SIZE) * BFONT_BYTES_PER_CHAR))
+#define BFONT_JISX_0208_ROW48         (BFONT_JISX_0208_ROW16 + ((32 * JISX_0208_ROW_SIZE) * BFONT_BYTES_PER_WIDE_CHAR))
 
-/** \brief Start of DC Specific Characters in Font Block */
-#define BFONT_DREAMCAST_SPECIFIC    (BFONT_WIDE_START + (7056 * BFONT_BYTES_PER_CHAR))
-/** \brief Takes a DC-specific icon index and returns a character offset. */
-#define BFONT_DC_ICON(offset)       (BFONT_DREAMCAST_SPECIFIC + ((offset) * BFONT_BYTES_PER_CHAR))
+/** \brief Start of DC Specific Icons in Font Block */
+#define BFONT_DREAMCAST_SPECIFIC      (BFONT_WIDE_START + (7056 * BFONT_BYTES_PER_WIDE_CHAR))
 
-/** \defgroup bfont_dc_indices Dreamcast-Specific 
-    \brief    Dreamcast-specific BIOS icon offsets.
-    @{
-*/
-#define BFONT_CIRCLECOPYRIGHT       BFONT_DC_ICON(0)    /**< \brief Circle copyright */
-#define BFONT_CIRCLER               BFONT_DC_ICON(1)    /**< \brief Circle restricted */
-#define BFONT_TRADEMARK             BFONT_DC_ICON(2)    /**< \brief Trademark */
-#define BFONT_UPARROW               BFONT_DC_ICON(3)    /**< \brief Up arrow */
-#define BFONT_DOWNARROW             BFONT_DC_ICON(4)    /**< \brief Down arrow */
-#define BFONT_LEFTARROW             BFONT_DC_ICON(5)    /**< \brief Left arrow */
-#define BFONT_RIGHTARROW            BFONT_DC_ICON(6)    /**< \brief Right arrow */
-#define BFONT_UPRIGHTARROW          BFONT_DC_ICON(7)    /**< \brief Up right arrow */
-#define BFONT_DOWNRIGHTARROW        BFONT_DC_ICON(8)    /**< \brief Down right arrow */
-#define BFONT_DOWNLEFTARROW         BFONT_DC_ICON(9)    /**< \brief Down left arrow */
-#define BFONT_UPLEFTARROW           BFONT_DC_ICON(10)   /**< \brief Up left arrow */
-#define BFONT_ABUTTON               BFONT_DC_ICON(11)   /**< \brief A button */
-#define BFONT_BBUTTON               BFONT_DC_ICON(12)   /**< \brief B button */
-#define BFONT_CBUTTON               BFONT_DC_ICON(13)   /**< \brief C button */
-#define BFONT_DBUTTON               BFONT_DC_ICON(14)   /**< \brief D button */
-#define BFONT_XBUTTON               BFONT_DC_ICON(15)   /**< \brief X button */
-#define BFONT_YBUTTON               BFONT_DC_ICON(16)   /**< \brief Y button */
-#define BFONT_ZBUTTON               BFONT_DC_ICON(17)   /**< \brief Z button */
-#define BFONT_LTRIGGER              BFONT_DC_ICON(18)   /**< \brief L trigger */
-#define BFONT_RTRIGGER              BFONT_DC_ICON(19)   /**< \brief R trigger */
-#define BFONT_STARTBUTTON           BFONT_DC_ICON(20)   /**< \brief Start button */
-#define BFONT_VMUICON               BFONT_DC_ICON(21)   /**< \brief VMU icon */
+/** \brief Start of VMU Specific Icons in Font Block */
+#define BFONT_VMU_DREAMCAST_SPECIFIC  (BFONT_DREAMCAST_SPECIFIC+(22 * BFONT_BYTES_PER_WIDE_CHAR))
+
 /** @} */
 
-#define BFONT_ICON_DIMEN                 32    /**< \brief Dimension of vmu icons */
-#define BFONT_VMU_DREAMCAST_SPECIFIC     (BFONT_DREAMCAST_SPECIFIC+(22 * BFONT_BYTES_PER_CHAR))
+/** \brief Builtin DC Icons
+    \ingroup  bfont_indicies
+
+    Builtin DC user icons.
+*/
+typedef enum bfont_dc_icon {
+    BFONT_ICON_CIRCLECOPYRIGHT = 0x00,   /**< \brief Circle copyright */
+    BFONT_CIRCLER              = 0x01,   /**< \brief Circle restricted */
+    BFONT_ICON_TRADEMARK       = 0x02,   /**< \brief Trademark */
+    BFONT_ICON_UPARROW         = 0x03,   /**< \brief Up arrow */
+    BFONT_ICON_DOWNARROW       = 0x04,   /**< \brief Down arrow */
+    BFONT_ICON_LEFTARROW       = 0x05,   /**< \brief Left arrow */
+    BFONT_ICON_RIGHTARROW      = 0x06,   /**< \brief Right arrow */
+    BFONT_ICON_UPRIGHTARROW    = 0x07,   /**< \brief Up right arrow */
+    BFONT_ICON_DOWNRIGHTARROW  = 0x08,   /**< \brief Down right arrow */
+    BFONT_ICON_DOWNLEFTARROW   = 0x09,   /**< \brief Down left arrow */
+    BFONT_ICON_UPLEFTARROW     = 0x0A,   /**< \brief Up left arrow */
+    BFONT_ICON_ABUTTON         = 0x0B,   /**< \brief A button */
+    BFONT_ICON_BBUTTON         = 0x0C,   /**< \brief B button */
+    BFONT_ICON_CBUTTON         = 0x0D,   /**< \brief C button */
+    BFONT_ICON_DBUTTON         = 0x0E,   /**< \brief D button */
+    BFONT_ICON_XBUTTON         = 0x0F,   /**< \brief X button */
+    BFONT_ICON_YBUTTON         = 0x10,   /**< \brief Y button */
+    BFONT_ICON_ZBUTTON         = 0x11,   /**< \brief Z button */
+    BFONT_ICON_LTRIGGER        = 0x12,   /**< \brief L trigger */
+    BFONT_ICON_RTRIGGER        = 0x13,   /**< \brief R trigger */
+    BFONT_ICON_STARTBUTTON     = 0x14,   /**< \brief Start button */
+    BFONT_ICON_VMU             = 0x15    /**< \brief VMU icon */
+} bfont_dc_icon_t;
 /** @} */
 
 /** \brief Builtin VMU Icons
     \ingroup  bfont_indicies
 
-    Builtin VMU volume user icons. The Dreamcast's
-    BIOS allows the user to set these when formatting the VMU.
+    Builtin VMU volume user icons. The Dreamcast's BIOS allows the 
+    user to set these when formatting the VMU.
 */
 typedef enum bfont_vmu_icon {
     BFONT_ICON_INVALID_VMU     = 0x00, /**< \brief Invalid */
@@ -364,6 +376,18 @@ uint8_t *bfont_find_char_jp_half(uint32_t ch);
 */
 uint8_t *bfont_find_icon(bfont_vmu_icon_t icon);
 
+/** \brief   Find a DC icon.
+
+    This function retrieves a pointer to the icon data for the specified DC
+    icon in the bios, if its available. Each dc icon has dimensions 24x24 pixels 
+    and is 72 bytes long.
+
+    \param  icon            The DC icon index to look up.
+    \return                 A pointer to the raw icon data or NULL if icon value
+                            is incorrect.
+*/
+uint8_t *bfont_find_dc_icon(bfont_dc_icon_t icon);
+
 /** @} */
 
 /** \name  Character Drawing 
@@ -371,24 +395,24 @@ uint8_t *bfont_find_icon(bfont_vmu_icon_t icon);
     @{
 */
 
-/** \brief   Draw a single character of any sort to the buffer.
+/** \brief   Draw a single character of any sort to a buffer.
 
     This function draws a single character in the set encoding to the given
     buffer. This function sits under draw, draw_thin, and draw_wide, while
     exposing the colors and bitdepths desired. This will allow the writing
     of bfont characters to paletted textures.
 
-    \param buffer       The buffer to draw to.
-    \param bufwidth     The width of the buffer in pixels.
-    \param fg           The foreground color to use.
-    \param bg           The background color to use.
-    \param bpp          The number of bits per pixel in the buffer.
-    \param opaque       If true, overwrite background areas with black,
-                            otherwise do not change them from what they are.
-    \param c            The character to draw.
-    \param wide         Draw a wide character.
-    \param iskana       Draw a half-width kana character.
-    \return             Amount of width covered in bytes.
+    \param  buffer          The buffer to draw to
+    \param  bufwidth        The width of the buffer in pixels
+    \param  fg              The foreground color to use
+    \param  bg              The background color to use
+    \param  bpp             The number of bits per pixel in the buffer
+    \param  opaque          If true, overwrite background areas with black,
+                            otherwise do not change them from what they are
+    \param  c               The character to draw
+    \param  wide            Draw a wide character
+    \param  iskana          Draw a half-width kana character
+    \return                 Amount of width covered in bytes
 */
 size_t bfont_draw_ex(void *buffer, uint32_t bufwidth, uint32_t fg,
                      uint32_t bg, uint8_t bpp, bool opaque, uint32_t c,
@@ -439,6 +463,72 @@ size_t bfont_draw_thin(void *buffer, uint32_t bufwidth, bool opaque,
 */
 size_t bfont_draw_wide(void *buffer, uint32_t bufwidth, bool opaque, 
                        uint32_t c);
+
+/** \brief   Draw a VMU icon to the buffer.
+
+    This function draws a 32x32 VMU icon to the given buffer, supporting 
+    multiple color depths (4, 8, 16, and 32 bits per pixel).
+
+    \param  buffer          The buffer to draw to (at least 32 x 32 pixels)
+    \param  bufwidth        The width of the buffer in pixels
+    \param  fg              The foreground color to use
+    \param  bg              The background color to use
+    \param  bpp             The number of bits per pixel in the buffer
+    \param  opaque          If true, overwrite background areas with black,
+                            otherwise do not change them from what they are
+    \param  icon            The VMU icon to draw
+    \return                 Amount of width covered in bytes
+*/
+size_t bfont_draw_vmu_icon_ex(void *buffer, uint32_t bufwidth, uint32_t fg,
+                              uint32_t bg, uint8_t bpp, bool opaque, 
+                              bfont_vmu_icon_t icon);
+
+/** \brief   Draw a VMU icon to a buffer.
+
+    This function draws a 32x32 VMU icon to the given buffer.
+
+    \param  buffer          The buffer to draw to (at least 32 x 32 pixels)
+    \param  bufwidth        The width of the buffer in pixels
+    \param  opaque          If true, overwrite blank areas with black,
+                            otherwise do not change them from what they are
+    \param  icon            The VMU icon to draw
+    \return                 Amount of width covered in bytes.
+*/
+size_t bfont_draw_vmu_icon(void *buffer, uint32_t bufwidth, bool opaque, 
+                           bfont_vmu_icon_t icon);
+
+/** \brief   Draw a DC icon to the buffer.
+
+    This function draws a 24x24 DC icon to the given buffer, supporting 
+    multiple color depths (4, 8, 16, and 32 bits per pixel).
+
+    \param  buffer          The buffer to draw to (at least 24 x 24 pixels)
+    \param  bufwidth        The width of the buffer in pixels
+    \param  fg              The foreground color to use
+    \param  bg              The background color to use
+    \param  bpp             The number of bits per pixel in the buffer
+    \param  opaque          If true, overwrite background areas with black,
+                            otherwise do not change them from what they are
+    \param  icon            The DC icon to draw
+    \return                 Amount of width covered in bytes
+*/
+size_t bfont_draw_dc_icon_ex(void *buffer, uint32_t bufwidth, uint32_t fg,
+                             uint32_t bg, uint8_t bpp, bool opaque, 
+                             bfont_dc_icon_t icon);
+
+/** \brief   Draw a DC icon to a buffer.
+
+    This function draws a 24x24 DC icon to the given buffer.
+
+    \param  buffer          The buffer to draw to (at least 24 x 24 pixels)
+    \param  bufwidth        The width of the buffer in pixels
+    \param  opaque          If true, overwrite blank areas with black,
+                            otherwise do not change them from what they are
+    \param  icon            The DC icon to draw
+    \return                 Amount of width covered in bytes.
+*/
+size_t bfont_draw_dc_icon(void *buffer, uint32_t bufwidth, bool opaque, 
+                          bfont_dc_icon_t icon);
 
 /** @} */
 
