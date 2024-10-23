@@ -1,5 +1,8 @@
 *.o
+*.a
 *.elf
+*.bin
+*.klf
 *.exe
 *.dll
 *.map
@@ -15,8 +18,6 @@ kernel/exports/kernel_exports.c
 kernel/arch/dreamcast/kernel/arch_exports.c
 kernel/arch/dreamcast/kernel/banner.h
 kernel/arch/dreamcast/sound/arm/stream.drv
-lib/dreamcast/*.a
-addons/lib/dreamcast/*.a
 utils/bincnv/bincnv
 utils/genromfs/genromfs
 utils/vqenc/vqenc
@@ -45,6 +46,10 @@ examples/dreamcast/pvr/bumpmap/romdisk/bumpmap.raw
 examples/dreamcast/pvr/modifier_volume_tex/romdisk/fruit.kmg
 examples/dreamcast/pvr/texture_render/texture_render.bin
 examples/dreamcast/video/screenshot/screenshot*.ppm
+examples/dreamcast/library/exports.c
+examples/dreamcast/library/exports_stubs.c
+examples/dreamcast/library/*/exports.c
+examples/dreamcast/library/*/exports_stubs.c
 utils/dc-chain/logs
 utils/dc-chain/*.tar.bz2
 utils/dc-chain/*.tar.gz

@@ -3,6 +3,7 @@
 # Makefile.rules
 # Copyright (c) 2000, 2001 Megan Potter
 # Copyright (c) 2024 Eric Fradella
+# Copyright (C) 2024 Ruslan Rostovtsev
 #
 
 # Global KallistiOS Makefile include
@@ -104,3 +105,20 @@ endef
 define KOS_GCCVER_MIN_WARNING
 @echo "Skipping $(TARGET) build as current GCC version ($(KOS_GCCVER)) is less than $(KOS_GCCVER_MIN)."
 endef
+
+ifdef EXPORTS_FILE
+
+OBJS += exports.o
+
+exports.o: exports.c
+exports.c: $(EXPORTS_FILE)
+	$(KOS_BASE)/utils/genexports/genexports.sh $(EXPORTS_FILE) exports.c $(EXPORTS_SYMBOL)
+
+exports_stubs.o: exports_stubs.c
+exports_stubs.c: $(EXPORTS_FILE)
+	$(KOS_BASE)/utils/genexports/genexportstubs.sh $(EXPORTS_FILE) exports_stubs.c
+
+$(TARGET_LIB): exports_stubs.o
+	$(KOS_AR) rcs $(TARGET_LIB) exports_stubs.o
+
+endif

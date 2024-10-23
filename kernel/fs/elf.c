@@ -79,7 +79,7 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
     sz = fs_total(fd);
     DBG(("Loading ELF file of size %d\n", sz));
 
-    img = malloc(sz);
+    img = memalign(32, sz);
 
     if(img == NULL) {
         dbglog(DBG_ERROR, "elf_load: can't allocate %d bytes for ELF load\n", sz);

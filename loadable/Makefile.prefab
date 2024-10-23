@@ -1,30 +1,33 @@
 # KallistiOS ##version##
 #
-# Makefile_dll.prefab
-# Copyright (C)2000,2003 Megan Potter
+# loadable/Makefile.prefab
+# Copyright (C) 2000, 2003 Megan Potter
+# Copyright (C) 2024 Ruslan Rostovtsev
 #
 
-all: $(TARGET)
-
 include $(KOS_BASE)/Makefile.rules
+
+ifdef DBG_LIBS
+DBG_LIBS += -lkallisti_exports
+else
+DBG_LIBS = -lkallisti_exports
+endif
+
+ifdef TARGET_LIB
+all: rm-elf $(TARGET) $(TARGET_LIB)
+else
+all: rm-elf $(TARGET)
+endif
 
 # First one checks for missing symbols (and fully links with an offset
 # of zero so we can do tracebacks later), second one makes the real file.
 $(TARGET): $(OBJS)
-	$(KOS_CC) -g -ml -m4-single-only -O2 -g -Wl,-Ttext=0x00000000 -e _start -nostartfiles -nostdlib -o dbg-$(TARGET) $(OBJS) $(KOS_LIB_PATHS) -Wl,--start-group $(LIBS) -lkallisti_exports -lgcc -Wl,--end-group
-	$(KOS_CC) -g -ml -m4-single-only -O2 -Wl,-d -Wl,-r -Wl,-S -Wl,-x -nostartfiles -nostdlib -o $(TARGET) -Wl,-T $(KOS_BASE)/loadable/shlelf_dc.xr $(OBJS) $(KOS_LIB_PATHS) -Wl,--start-group $(LIBS) -lgcc -Wl,--end-group
-	-chmod +x $(TARGET)
+	$(KOS_CC) -g -ml -m4-single-only -O2 -g -Wl,-Ttext=0x00000000 -e _start -nostartfiles -nodefaultlibs -o dbg-$(TARGET) $(OBJS) $(KOS_LIB_PATHS) -Wl,--start-group $(LIBS) $(DBG_LIBS) -lgcc -Wl,--end-group
+	$(KOS_CC) -g -ml -m4-single-only -O2 -Wl,-d -Wl,-r -Wl,-S -Wl,-x -nostartfiles -nodefaultlibs -o $(TARGET) -Wl,-T $(KOS_BASE)/loadable/shlelf_dc.xr $(OBJS) $(KOS_LIB_PATHS) -Wl,--start-group $(LIBS) -lgcc -Wl,--end-group
+	$(KOS_SIZE) $(TARGET)
 
 clean:
-	-rm -f $(OBJS) $(TARGET) dbg-$(TARGET) romdisk.o romdisk.img
+	-rm -f $(OBJS) $(TARGET) dbg-$(TARGET) $(TARGET_LIB) romdisk.* exports.c exports_stubs.*
 
-copy:
-	cp $(TARGET) $(KOS_BASE)/kernel/romdisk/
-
-# If they want an exports table, we'll set that up too.
-ifdef EXPORTS_SYMBOL
-exports.o: exports.c
-
-exports.c: $(EXPORTS_FILE)
-	$(KOS_BASE)/utils/genexports/genexports.sh $(EXPORTS_FILE) exports.c $(EXPORTS_SYMBOL)
-endif
+rm-elf:
+	-rm -f $(TARGET) dbg-$(TARGET) $(TARGET_LIB)
