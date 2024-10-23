@@ -9,12 +9,25 @@
 /** \file   dc/flashrom.h
     \brief  Dreamcast flashrom read/write support.
 
-    This file implements wrappers for the BIOS flashrom syscalls, and some
-    utilities to make it easier to use the flashrom info. Note that because the
-    flash writing can be such a dangerous thing potentially (I haven't deleted
-    my flash to see what happens, but given the info stored here it sounds like
-    a Bad Idea(tm)), extreme care should be taken if you choose to use these
-    functions!
+    This file provides wrappers for the BIOS flashrom syscalls and utilities to
+    facilitate the use of flashrom data. Since writing to the flashrom can be
+    risky and potentially destructive, extreme caution is advised when using
+    these functions.
+
+    The Dreamcast flashrom stores important system data including user settings,
+    ISP configurations, and game-specific settings. This file contains functions
+    to read, write, and manage this data.
+
+    Writing to the flashrom should be done with caution:
+    - Always back up existing data before making changes.
+    - Verify the data you are writing is correct.
+    - Avoid frequent writes to minimize wear on the flashrom memory cells.
+
+    Flashrom Structure
+
+    The flashrom is divided into several partitions and logical blocks:
+    - **Partitions**: Defined sections of the flashrom used for different types of data.
+    - **Logical Blocks**: Subsections within partitions that store specific settings.
 
     \author Megan Potter
     \author Lawrence Sebald
@@ -100,16 +113,17 @@ __BEGIN_DECLS
     \ingroup flashrom
 
     This function implements the FLASHROM_INFO syscall; given a partition ID,
-    return two ints specifying the beginning and the size of the partition
-    (respectively) inside the flashrom.
+    it returns the offset from the start of the flashrom and the size of the 
+    partition in bytes.
 
-    \param  part            The partition ID in question.
-    \param  start_out       Buffer for storing the start address.
-    \param  size_out        Buffer for storing the size of the partition.
+    \param  part_id         The partition ID in question.
+    \param  start_offset    Buffer for storing the partition's start offset, in bytes, 
+                            from the beginning of the flashrom.
+    \param  size_out        Buffer for storing the size of the partition in bytes.
     \retval 0               On success.
     \retval -1              On error.
 */
-int flashrom_info(int part, int * start_out, int * size_out);
+int flashrom_info(uint32_t part_id, uint32_t *start_offset, size_t *size_out);
 
 /** \brief   Read data from the flashrom.
     \ingroup flashrom
@@ -123,7 +137,7 @@ int flashrom_info(int part, int * start_out, int * size_out);
     \return                 The number of bytes read if successful, or -1
                             otherwise.
 */
-int flashrom_read(int offset, void * buffer_out, int bytes);
+int flashrom_read(uint32_t offset, void *buffer_out, size_t bytes);
 
 /** \brief   Write data to the flashrom.
     \ingroup flashrom
@@ -141,7 +155,7 @@ int flashrom_read(int offset, void * buffer_out, int bytes);
     \return                 The number of bytes written if successful, -1
                             otherwise.
 */
-int flashrom_write(int offset, void * buffer, int bytes);
+int flashrom_write(uint32_t offset, const void *buffer, size_t bytes);
 
 /** \brief   Delete data from the flashrom.
     \ingroup flashrom
@@ -157,23 +171,24 @@ int flashrom_write(int offset, void * buffer, int bytes);
     \retval 0               On success.
     \retval -1              On error.
 */
-int flashrom_delete(int offset);
+int flashrom_delete(uint32_t offset);
 
 
 /* Medium-level functions */
+
 /** \brief   Get a logical block from the specified partition.
     \ingroup flashrom
 
     This function retrieves the specified block ID from the given partition. The
     newest version of the data is returned.
 
-    \param  partid          The partition ID to look in.
-    \param  blockid         The logical block ID to look for.
+    \param  part_id         The partition ID to look in.
+    \param  block_id        The logical block ID to look for.
     \param  buffer_out      Space to store the data. Must be at least 60 bytes.
     \return                 0 on success, <0 on error.
     \see    fr_errs
 */
-int flashrom_get_block(int partid, int blockid, uint8 * buffer_out);
+int flashrom_get_block(uint32_t part_id, uint32_t block_id, uint8_t *buffer_out);
 
 
 /* Higher level functions */
@@ -204,10 +219,10 @@ int flashrom_get_block(int partid, int blockid, uint8 * buffer_out);
     \headerfile dc/flashrom.h
 */
 typedef struct flashrom_syscfg {
-    int language;   /**< \brief Language setting.
-                         \see fr_langs */
-    int audio;      /**< \brief Stereo/mono setting. 0 == mono, 1 == stereo */
-    int autostart;  /**< \brief Autostart discs? 0 == off, 1 == on */
+    uint32_t language;   /**< \brief Language setting.
+                              \see fr_langs */
+    uint32_t audio;      /**< \brief Stereo/mono setting. 0 == mono, 1 == stereo */
+    uint32_t autostart;  /**< \brief Autostart discs? 0 == off, 1 == on */
 } flashrom_syscfg_t;
 
 /** \brief   Retrieve the current system configuration settings.
@@ -217,7 +232,7 @@ typedef struct flashrom_syscfg {
     \return                 0 on success, <0 on error.
     \see    fr_errs
 */
-int flashrom_get_syscfg(flashrom_syscfg_t * out);
+int flashrom_get_syscfg(flashrom_syscfg_t *out);
 
 
 /** \defgroup fr_region Region Settings
@@ -321,38 +336,38 @@ int flashrom_get_region(void);
     \headerfile dc/flashrom.h
 */
 typedef struct flashrom_ispcfg {
-    int     method;         /**< \brief DHCP, Static, dialup(?), PPPoE
+    int      method;         /**< \brief DHCP, Static, dialup(?), PPPoE
                                  \see   fr_method */
-    uint32  valid_fields;   /**< \brief Which fields are valid?
+    uint32_t valid_fields;   /**< \brief Which fields are valid?
                                  \see   fr_fields */
-    uint32  flags;          /**< \brief Various flags that can be set in options
+    uint32_t flags;          /**< \brief Various flags that can be set in options
                                  \see   fr_flags */
 
-    uint8   ip[4];          /**< \brief Host IP address */
-    uint8   nm[4];          /**< \brief Netmask */
-    uint8   bc[4];          /**< \brief Broadcast address */
-    uint8   gw[4];          /**< \brief Gateway address */
-    uint8   dns[2][4];      /**< \brief DNS servers (2) */
-    int     proxy_port;     /**< \brief Proxy server port */
-    char    hostname[24];   /**< \brief DHCP/Host name */
-    char    email[64];      /**< \brief Email address */
-    char    smtp[31];       /**< \brief SMTP server */
-    char    pop3[31];       /**< \brief POP3 server */
-    char    pop3_login[20]; /**< \brief POP3 login */
-    char    pop3_passwd[32];/**< \brief POP3 passwd */
-    char    proxy_host[31]; /**< \brief Proxy server hostname */
-    char    ppp_login[29];  /**< \brief PPP login */
-    char    ppp_passwd[20]; /**< \brief PPP password */
-    char    out_prefix[9];  /**< \brief Outside dial prefix */
-    char    cw_prefix[9];   /**< \brief Call waiting prefix */
-    char    real_name[31];  /**< \brief The "Real Name" field of PlanetWeb */
-    char    modem_init[33]; /**< \brief The modem init string to use */
-    char    area_code[4];   /**< \brief The area code the user is in */
-    char    ld_prefix[21];  /**< \brief The long-distance dial prefix */
-    char    p1_areacode[4]; /**< \brief Phone number 1's area code */
-    char    phone1[26];     /**< \brief Phone number 1 */
-    char    p2_areacode[4]; /**< \brief Phone number 2's area code */
-    char    phone2[26];     /**< \brief Phone number 2 */
+    uint8_t  ip[4];          /**< \brief Host IP address */
+    uint8_t  nm[4];          /**< \brief Netmask */
+    uint8_t  bc[4];          /**< \brief Broadcast address */
+    uint8_t  gw[4];          /**< \brief Gateway address */
+    uint8_t  dns[2][4];      /**< \brief DNS servers (2) */
+    int      proxy_port;     /**< \brief Proxy server port */
+    char     hostname[24];   /**< \brief DHCP/Host name */
+    char     email[64];      /**< \brief Email address */
+    char     smtp[31];       /**< \brief SMTP server */
+    char     pop3[31];       /**< \brief POP3 server */
+    char     pop3_login[20]; /**< \brief POP3 login */
+    char     pop3_passwd[32];/**< \brief POP3 passwd */
+    char     proxy_host[31]; /**< \brief Proxy server hostname */
+    char     ppp_login[29];  /**< \brief PPP login */
+    char     ppp_passwd[20]; /**< \brief PPP password */
+    char     out_prefix[9];  /**< \brief Outside dial prefix */
+    char     cw_prefix[9];   /**< \brief Call waiting prefix */
+    char     real_name[31];  /**< \brief The "Real Name" field of PlanetWeb */
+    char     modem_init[33]; /**< \brief The modem init string to use */
+    char     area_code[4];   /**< \brief The area code the user is in */
+    char     ld_prefix[21];  /**< \brief The long-distance dial prefix */
+    char     p1_areacode[4]; /**< \brief Phone number 1's area code */
+    char     phone1[26];     /**< \brief Phone number 1 */
+    char     p2_areacode[4]; /**< \brief Phone number 2's area code */
+    char     phone2[26];     /**< \brief Phone number 2 */
 } flashrom_ispcfg_t;
 
 /** \brief   Retrieve DreamPassport's ISP configuration.
@@ -366,7 +381,7 @@ typedef struct flashrom_ispcfg {
     \retval 0               On success.
     \retval -1              On error (no settings found, or other errors).
 */
-int flashrom_get_ispcfg(flashrom_ispcfg_t * out);
+int flashrom_get_ispcfg(flashrom_ispcfg_t *out);
 
 /** \brief   Retrieve PlanetWeb's ISP configuration.
     \ingroup flashrom
