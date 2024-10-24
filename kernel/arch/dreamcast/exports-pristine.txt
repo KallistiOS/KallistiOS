@@ -100,6 +100,7 @@ bfont_find_char
 bfont_find_char_jp
 bfont_find_char_jp_half
 bfont_find_icon
+bfont_find_dc_icon
 bfont_draw_ex
 bfont_draw
 bfont_draw_thin
@@ -111,6 +112,10 @@ bfont_draw_str
 bfont_draw_str_fmt
 bfont_draw_str_vram_vfmt
 bfont_draw_str_vram_fmt
+bfont_draw_vmu_icon_ex
+bfont_draw_vmu_icon
+bfont_draw_dc_icon_ex
+bfont_draw_dc_icon
 
 # CD-Rom
 cdrom_reinit
