@@ -5,15 +5,18 @@
    Copyright (C) 2000 Megan Potter
    Copyright (C) 2014 Lawrence Sebald
    Copyright (C) 2014 Donald Haase
-   Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024 Ruslan Rostovtsev
    Copyright (C) 2024 Andy Barajas
 
  */
 #include <assert.h>
 
+#include <arch/cache.h>
+#include <arch/irq.h>
 #include <arch/timer.h>
 #include <arch/memory.h>
 
+#include <dc/asic.h>
 #include <dc/cdrom.h>
 #include <dc/g1ata.h>
 #include <dc/syscalls.h>
@@ -32,28 +35,37 @@ gets everything situated. After that it will read raw sectors from
 the data track on a standard DC bootable CDR (one audio track plus
 one data track in xa1 format).
 
-Most of the information/algorithms in this file are thanks to
+Initial information/algorithms in this file are thanks to
 Marcus Comstedt. Thanks to Maiwe for the verbose command names and
 also for the CDDA playback routines.
-
-Note that these functions may be affected by changing compiler options...
-they require their parameters to be in certain registers, which is
-normally the case with the default options. If in doubt, decompile the
-output and look to make sure.
-
-XXX: This could all be done in a non-blocking way by taking advantage of
-command queuing. Every call to syscall_gdrom_send_command returns a 
-'request id' which just needs to eventually be checked by cmd_stat. A 
-non-blocking version of all functions would simply require manual calls 
-to check the status. Doing this would probably allow data reading while 
-cdda is playing without hiccups (by severely reducing the number of gd 
-commands being sent).
 */
+
+/* Protection register. */
+#define G1_ATA_DMA_PROTECTION   0x005F74B8
+/* Protection register code. */
+#define G1_DMA_UNLOCK_CODE      0x8843
+/* System memory protection unlock value. */
+#define G1_DMA_UNLOCK_SYSMEM    (G1_DMA_UNLOCK_CODE << 16 | 0x407F)
+/* All memory protection unlock value. */
+#define G1_DMA_UNLOCK_ALLMEM    (G1_DMA_UNLOCK_CODE << 16 | 0x007F)
 
 typedef int gdc_cmd_hnd_t;
 
 /* The G1 ATA access mutex */
 mutex_t _g1_ata_mutex = MUTEX_INITIALIZER;
+
+static gdc_cmd_hnd_t cmd_hnd = 0;
+static int stream_mode = -1;
+static cdrom_stream_callback_t stream_cb = NULL;
+static void *stream_cb_param = NULL;
+
+static int dma_in_progress = 0;
+static int dma_blocking = 0;
+static kthread_t *dma_thd = NULL;
+static semaphore_t dma_done = SEM_INITIALIZER(0);
+asic_evt_handler_entry_t old_dma_irq;
+
+static int cur_sector_size = 2048;
 
 /* Shortcut to cdrom_reinit_ex. Typically this is the only thing changed. */
 int cdrom_set_sector_size(int size) {
@@ -63,6 +75,22 @@ int cdrom_set_sector_size(int size) {
 /* Command execution sequence */
 int cdrom_exec_cmd(int cmd, void *param) {
     return cdrom_exec_cmd_timed(cmd, param, 0);
+}
+
+static inline gdc_cmd_hnd_t cdrom_req_cmd(int cmd, void *param) {
+    gdc_cmd_hnd_t hnd = 0;
+    assert(cmd > 0 && cmd < CMD_MAX);
+
+    /* Submit the command */
+    for(int n = 0; n < 10; ++n) {
+        hnd = syscall_gdrom_send_command(cmd, param);
+        if(hnd != 0) {
+            break;
+        }
+        syscall_gdrom_exec_server();
+        thd_pass();
+    }
+    return hnd;
 }
 
 int cdrom_exec_cmd_timed(int cmd, void *param, int timeout) {
@@ -76,18 +104,8 @@ int cdrom_exec_cmd_timed(int cmd, void *param, int timeout) {
     int n, rv = ERR_OK;
     uint64_t begin;
 
-    assert(cmd > 0 && cmd < CMD_MAX);
     mutex_lock_scoped(&_g1_ata_mutex);
-
-    /* Submit the command */
-    for(n = 0; n < 10; ++n) {
-        hnd = syscall_gdrom_send_command(cmd, param);
-        if (hnd != 0) {
-            break;
-        }
-        syscall_gdrom_exec_server();
-        thd_pass();
-    }
+    hnd = cdrom_req_cmd(cmd, param);
 
     if(hnd <= 0)
         return ERR_SYS;
@@ -105,15 +123,15 @@ int cdrom_exec_cmd_timed(int cmd, void *param, int timeout) {
         }
         if(timeout) {
             if((timer_ms_gettime64() - begin) >= (unsigned)timeout) {
-                syscall_gdrom_abort_command(hnd);
-                syscall_gdrom_exec_server();
-                rv = ERR_TIMEOUT;
+                cdrom_abort_cmd(500);
                 dbglog(DBG_ERROR, "cdrom_exec_cmd_timed: Timeout exceeded\n");
-                break;
+                return ERR_TIMEOUT;
             }
         }
         thd_pass();
     } while(1);
+
+    cmd_hnd = (n == STREAMING ? hnd : 0);
 
     if(rv != ERR_OK)
         return rv;
@@ -133,6 +151,55 @@ int cdrom_exec_cmd_timed(int cmd, void *param, int timeout) {
         if(status[1] != 0)
             return ERR_SYS;
     }
+}
+
+int cdrom_abort_cmd(uint32_t timeout) {
+    int32_t status[4] = {
+        0, /* Error code 1 */
+        0, /* Error code 2 */
+        0, /* Transferred size */
+        0  /* ATA status waiting */
+    };
+    int rs, rv = ERR_OK;
+    uint64_t begin;
+
+    if(cmd_hnd <= 0) {
+        return ERR_NO_ACTIVE;
+    }
+
+    mutex_lock(&_g1_ata_mutex);
+    syscall_gdrom_abort_command(cmd_hnd);
+
+    if(timeout) {
+        begin = timer_ms_gettime64();
+    }
+    do {
+        syscall_gdrom_exec_server();
+        rs = syscall_gdrom_check_command(cmd_hnd, status);
+
+        if(rs == NO_ACTIVE || rs == COMPLETED) {
+            break;
+        }
+        if(timeout) {
+            if((timer_ms_gettime64() - begin) >= (unsigned)timeout) {
+                dbglog(DBG_ERROR, "cdrom_abort_cmd: Timeout exceeded, resetting.\n");
+                rv = ERR_TIMEOUT;
+                syscall_gdrom_reset();
+                syscall_gdrom_init();
+                break;
+            }
+        }
+        thd_pass();
+    } while(1);
+
+    cmd_hnd = 0;
+    stream_mode = -1;
+    mutex_unlock(&_g1_ata_mutex);
+
+    if(stream_cb) {
+        cdrom_stream_set_callback(0, NULL);
+    }
+    return rv;
 }
 
 /* Return the status of the drive as two integers (see constants) */
@@ -215,6 +282,7 @@ int cdrom_change_datatype(int sector_part, int cdxa, int sector_size) {
     params[2] = cdxa;           /* CD-XA mode 1/2 */
     params[3] = sector_size;    /* sector size */
 
+    cur_sector_size = sector_size;
     return syscall_gdrom_sector_mode(params);
 }
 
@@ -257,6 +325,63 @@ int cdrom_read_toc(CDROM_TOC *toc_buffer, int session) {
     return rv;
 }
 
+static int cdrom_read_sectors_dma_irq(void *params) {
+
+    int rs;
+    gdc_cmd_hnd_t hnd;
+    int32_t status[4] = {
+        0, /* Error code 1 */
+        0, /* Error code 2 */
+        0, /* Transferred size */
+        0  /* ATA status waiting */
+    };
+
+    mutex_lock(&_g1_ata_mutex);
+    dma_in_progress = 1;
+    dma_blocking = 1;
+
+    hnd = cdrom_req_cmd(CMD_DMAREAD, params);
+
+    if(hnd <= 0) {
+        dma_in_progress = 0;
+        dma_blocking = 0;
+        mutex_unlock(&_g1_ata_mutex);
+        return ERR_SYS;
+    }
+    cmd_hnd = hnd;
+
+    do {
+        syscall_gdrom_exec_server();
+        rs = syscall_gdrom_check_command(hnd, status);
+
+        if(rs == PROCESSING) {
+            sem_wait(&dma_done);
+            continue;
+        }
+        if(rs != BUSY) {
+            break;
+        }
+
+        thd_pass();
+    } while(1);
+
+    cmd_hnd = 0;
+    mutex_unlock(&_g1_ata_mutex);
+
+    if(rs == NO_ACTIVE || rs == COMPLETED) {
+        return ERR_OK;
+    }
+
+    switch(status[0]) {
+        case 2:
+            return ERR_NO_DISC;
+        case 6:
+            return ERR_DISC_CHG;
+        default:
+            return ERR_SYS;
+    }
+}
+
 /* Enhanced Sector reading: Choose mode to read in. */
 int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode) {
     struct {
@@ -265,22 +390,43 @@ int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode) {
         int is_test;
     } params;
     int rv = ERR_OK;
+    uintptr_t buf_addr = ((uintptr_t)buffer);
 
     params.sec = sector;    /* Starting sector */
     params.num = cnt;       /* Number of sectors */
-    params.buffer = buffer; /* Output buffer */
     params.is_test = 0;     /* Enable test mode */
 
     /* The DMA mode blocks the thread it is called in by the way we execute
        gd syscalls. It does however allow for other threads to run. */
-    /* XXX: DMA Mode may conflict with using a second G1ATA device. More 
-       testing is needed from someone with such a device.
-    */
-    if(mode == CDROM_READ_DMA)
-        rv = cdrom_exec_cmd(CMD_DMAREAD, &params);
-    else if(mode == CDROM_READ_PIO)
-        rv = cdrom_exec_cmd(CMD_PIOREAD, &params);
+    if(mode >= CDROM_READ_DMA) {
 
+        params.buffer = (void *)(buf_addr & MEM_AREA_CACHE_MASK);
+
+        if(buf_addr & 0x1f) {
+            dbglog(DBG_ERROR, "cdrom_read_sectors_ex: Unaligned memory for DMA (32-byte).\n");
+            return ERR_SYS;
+        }
+        if((((uintptr_t)params.buffer) >> 24) == 0x0c) {
+            dcache_inval_range(buf_addr, cnt * cur_sector_size);
+        }
+
+        if(mode == CDROM_READ_DMA_IRQ) {
+            rv = cdrom_read_sectors_dma_irq(&params);
+        }
+        else {
+            rv = cdrom_exec_cmd(CMD_DMAREAD, &params);
+        }
+    }
+    else if(mode == CDROM_READ_PIO) {
+
+        params.buffer = buffer;
+
+        if(buf_addr & 0x01) {
+            dbglog(DBG_ERROR, "cdrom_read_sectors_ex: Unaligned memory for PIO (2-byte).\n");
+            return ERR_SYS;
+        }
+        rv = cdrom_exec_cmd(CMD_PIOREAD, &params);
+    }
     return rv;
 }
 
@@ -289,6 +435,228 @@ int cdrom_read_sectors(void *buffer, int sector, int cnt) {
     return cdrom_read_sectors_ex(buffer, sector, cnt, CDROM_READ_PIO);
 }
 
+int cdrom_stream_start(int sector, int cnt, int mode) {
+    struct {
+        int sec;
+        int num;
+    } params;
+    int rv = ERR_SYS;
+
+    params.sec = sector;
+    params.num = cnt;
+
+    if(cmd_hnd > 0) {
+        cdrom_stream_stop();
+    }
+
+    if(mode >= CDROM_READ_DMA) {
+        rv = cdrom_exec_cmd(CMD_DMAREAD_STREAM, &params);
+    }
+    else if(mode == CDROM_READ_PIO) {
+        rv = cdrom_exec_cmd(CMD_PIOREAD_STREAM, &params);
+    }
+
+    if(rv == ERR_OK) {
+        stream_mode = mode;
+    }
+    return rv;
+}
+
+int cdrom_stream_stop(void) {
+    int rv = ERR_OK;
+    int rs;
+    int32_t status[4] = {
+        0, /* Error code 1 */
+        0, /* Error code 2 */
+        0, /* Transferred size */
+        0  /* ATA status waiting */
+    };
+
+    if(cmd_hnd <= 0) {
+        return rv;
+    }
+    mutex_lock(&_g1_ata_mutex);
+
+    do {
+        syscall_gdrom_exec_server();
+        rs = syscall_gdrom_check_command(cmd_hnd, status);
+
+        if(rs < 0) {
+            rv = ERR_SYS;
+            break;
+        }
+        else if(rs == COMPLETED || rs == NO_ACTIVE) {
+            break;
+        }
+        else if(rs == STREAMING) {
+            mutex_unlock(&_g1_ata_mutex);
+            return cdrom_abort_cmd(1000);
+        }
+        thd_pass();
+    } while(1);
+
+    cmd_hnd = 0;
+    stream_mode = -1;
+    mutex_unlock(&_g1_ata_mutex);
+
+    if(stream_cb) {
+        cdrom_stream_set_callback(0, NULL);
+    }
+    return rv;
+}
+
+int cdrom_stream_request(void *buffer, size_t size, int block) {
+    int rs, rv = ERR_OK;
+    int32_t params[2];
+    size_t check_size = -1;
+    int32_t status[4] = {
+        0, /* Error code 1 */
+        0, /* Error code 2 */
+        0, /* Transferred size */
+        0  /* ATA status waiting */
+    };
+
+    if(cmd_hnd <= 0) {
+        return ERR_NO_ACTIVE;
+    }
+    if(dma_in_progress) {
+        dbglog(DBG_ERROR, "cdrom_stream_request: Previous DMA request is in progress.\n");
+        return ERR_SYS;
+    }
+
+    if(stream_mode >= CDROM_READ_DMA) {
+        params[0] = ((uintptr_t)buffer) & MEM_AREA_CACHE_MASK;
+        if(params[0] & 0x1f) {
+            dbglog(DBG_ERROR, "cdrom_stream_request: Unaligned memory for DMA (32-byte).\n");
+            return ERR_SYS;
+        }
+        if((params[0] >> 24) == 0x0c) {
+            dcache_inval_range((uintptr_t)buffer, size);
+        }
+    }
+    else if(stream_mode == CDROM_READ_PIO) {
+        params[0] = (uintptr_t)buffer;
+        if(params[0] & 0x01) {
+            dbglog(DBG_ERROR, "cdrom_stream_request: Unaligned memory for PIO (2-byte).\n");
+            return ERR_SYS;
+        }
+    }
+
+    params[1] = size;
+    mutex_lock(&_g1_ata_mutex);
+
+    if(stream_mode >= CDROM_READ_DMA) {
+
+        dma_in_progress = 1;
+        dma_blocking = block;
+
+        if(block == 0) {
+            dma_thd = thd_current;
+            if(irq_inside_int()) {
+                dma_thd = (kthread_t *)0xFFFFFFFF;
+            }
+        }
+        rs = syscall_gdrom_dma_transfer(cmd_hnd, params);
+
+        if(rs < 0) {
+            dma_in_progress = 0;
+            dma_blocking = 0;
+            dma_thd = NULL;
+            mutex_unlock(&_g1_ata_mutex);
+            return ERR_SYS;
+        }
+        if(block == 0) {
+            return rv;
+        }
+        if(stream_mode == CDROM_READ_DMA_IRQ) {
+            sem_wait(&dma_done);
+        }
+
+        do {
+            syscall_gdrom_exec_server();
+            rs = syscall_gdrom_check_command(cmd_hnd, status);
+
+            if(rs < 0) {
+                rv = ERR_SYS;
+                break;
+            }
+            else if(rs == COMPLETED || rs == NO_ACTIVE) {
+                cmd_hnd = 0;
+                break;
+            }
+            else if(syscall_gdrom_dma_check(cmd_hnd, &check_size) == 0) {
+                break;
+            }
+            thd_pass();
+
+        } while(1);
+    }
+    else if(stream_mode == CDROM_READ_PIO) {
+
+        rs = syscall_gdrom_pio_transfer(cmd_hnd, params);
+
+        if(rs < 0) {
+            mutex_unlock(&_g1_ata_mutex);
+            return ERR_SYS;
+        }
+        do {
+            syscall_gdrom_exec_server();
+            rs = syscall_gdrom_check_command(cmd_hnd, status);
+
+            if(rs < 0) {
+                rv = ERR_SYS;
+                break;
+            }
+            else if(rs == COMPLETED || rs == NO_ACTIVE) {
+                cmd_hnd = 0;
+                break;
+            }
+            else if(syscall_gdrom_pio_check(cmd_hnd, &check_size) == 0) {
+                if(check_size == 0 && stream_cb) {
+                    stream_cb(stream_cb_param);
+                }
+                break;
+            }
+            thd_pass();
+        } while(1);
+    }
+
+    mutex_unlock(&_g1_ata_mutex);
+    return rv;
+}
+
+int cdrom_stream_progress(size_t *size) {
+    int rv = 0;
+    size_t check_size = 0;
+
+    if(cmd_hnd <= 0) {
+        if(size) {
+            *size = check_size;
+        }
+        return rv;
+    }
+
+    if(stream_mode >= CDROM_READ_DMA) {
+        rv = syscall_gdrom_dma_check(cmd_hnd, &check_size);
+    }
+    else if(stream_mode == CDROM_READ_PIO) {
+        rv = syscall_gdrom_pio_check(cmd_hnd, &check_size);
+    }
+
+    if(size) {
+        *size = check_size;
+    }
+    return rv;
+}
+
+void cdrom_stream_set_callback(cdrom_stream_callback_t callback, void *param) {
+    stream_cb = callback;
+    stream_cb_param = param;
+
+    if(stream_mode == CDROM_READ_PIO) {
+        syscall_gdrom_pio_callback((uintptr_t)stream_cb, stream_cb_param);
+    }
+}
 
 /* Read a piece of or all of the Q byte of the subcode of the last sector read.
    If you need the subcode from every sector, you cannot read more than one at 
@@ -380,6 +748,52 @@ int cdrom_spin_down(void) {
     return rv;
 }
 
+static void g1_dma_irq_hnd(uint32_t code, void *data) {
+    (void)code;
+    (void)data;
+
+    if(dma_in_progress) {
+        dma_in_progress = 0;
+
+        if(dma_blocking) {
+            dma_blocking = 0;
+            sem_signal(&dma_done);
+            thd_schedule(1, 0);
+        }
+        else if(dma_thd) {
+            mutex_unlock_as_thread(&_g1_ata_mutex, dma_thd);
+            dma_thd = NULL;
+        }
+    }
+    if(cmd_hnd > 0) {
+        syscall_gdrom_dma_callback((uintptr_t)stream_cb, stream_cb_param);
+    }
+
+    if(old_dma_irq.hdl) {
+        old_dma_irq.hdl(code, old_dma_irq.data);
+    }
+}
+
+static void unlock_dma_memory(void) {
+    volatile uint32_t *prot_reg = (uint32_t *)(G1_ATA_DMA_PROTECTION | MEM_AREA_P2_BASE);
+    const size_t size_loc = 16 << 10;
+    uintptr_t start_loc = (0x0c000000 | MEM_AREA_P2_BASE);
+    uint32_t end_loc = start_loc + size_loc;
+    uintptr_t cur_loc;
+    int count = 0;
+
+    for(cur_loc = start_loc; cur_loc <= end_loc; cur_loc += sizeof(uint32_t)) {
+        if(*(uint32_t *)cur_loc == (uint32_t)G1_DMA_UNLOCK_SYSMEM) {
+            *(uint32_t *)cur_loc = G1_DMA_UNLOCK_ALLMEM;
+            ++count;
+        }
+    }
+    if(count) {
+        icache_flush_range(0x0c000000 | MEM_AREA_P1_BASE, size_loc);
+    }
+    *prot_reg = G1_DMA_UNLOCK_ALLMEM;
+}
+
 /* Initialize: assume no threading issues */
 void cdrom_init(void) {
     uint32_t p;
@@ -409,12 +823,44 @@ void cdrom_init(void) {
     /* Reset system functions */
     syscall_gdrom_reset();
     syscall_gdrom_init();
+
+    unlock_dma_memory();
     mutex_unlock(&_g1_ata_mutex);
+
+    /* Hook all the DMA related events. */
+    old_dma_irq = asic_evt_set_handler(ASIC_EVT_GD_DMA, g1_dma_irq_hnd, NULL);
+    asic_evt_set_handler(ASIC_EVT_GD_DMA_OVERRUN, g1_dma_irq_hnd, NULL);
+    asic_evt_set_handler(ASIC_EVT_GD_DMA_ILLADDR, g1_dma_irq_hnd, NULL);
+
+    if(old_dma_irq.hdl == NULL) {
+        asic_evt_enable(ASIC_EVT_GD_DMA, ASIC_IRQB);
+        asic_evt_enable(ASIC_EVT_GD_DMA_OVERRUN, ASIC_IRQB);
+        asic_evt_enable(ASIC_EVT_GD_DMA_ILLADDR, ASIC_IRQB);
+    }
 
     cdrom_reinit();
 }
 
 void cdrom_shutdown(void) {
 
-    /* What would you want done here? */
+    /* Unhook the events and disable the IRQs. */
+    if(old_dma_irq.hdl) {
+        /* G1-ATA driver uses the same handler for 3 events. */
+        asic_evt_set_handler(ASIC_EVT_GD_DMA,
+            old_dma_irq.hdl, old_dma_irq.data);
+        asic_evt_set_handler(ASIC_EVT_GD_DMA_OVERRUN,
+            old_dma_irq.hdl, old_dma_irq.data);
+        asic_evt_set_handler(ASIC_EVT_GD_DMA_ILLADDR,
+            old_dma_irq.hdl, old_dma_irq.data);
+
+        old_dma_irq.hdl = NULL;
+    }
+    else {
+        asic_evt_disable(ASIC_EVT_GD_DMA, ASIC_IRQB);
+        asic_evt_remove_handler(ASIC_EVT_GD_DMA);
+        asic_evt_disable(ASIC_EVT_GD_DMA_OVERRUN, ASIC_IRQB);
+        asic_evt_remove_handler(ASIC_EVT_GD_DMA_OVERRUN);
+        asic_evt_disable(ASIC_EVT_GD_DMA_ILLADDR, ASIC_IRQB);
+        asic_evt_remove_handler(ASIC_EVT_GD_DMA_ILLADDR);
+    }
 }
