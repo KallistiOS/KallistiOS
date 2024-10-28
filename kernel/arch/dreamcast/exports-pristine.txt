@@ -119,6 +119,7 @@ cdrom_set_sector_size
 cdrom_change_datatype
 cdrom_exec_cmd
 cdrom_exec_cmd_timed
+cdrom_exec_cmd_ex
 cdrom_abort_cmd
 cdrom_get_status
 cdrom_get_subcode

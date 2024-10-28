@@ -14,6 +14,7 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 /** \file    dc/cdrom.h
     \brief   CD access to the GD-ROM drive.
@@ -188,15 +189,18 @@ __BEGIN_DECLS
     cdrom_read_sectors_ex.
     @{
 */
-/**< \brief Read sector(s) in PIO mode with polling syscalls */
+/**< \brief Read sector(s) in PIO mode with polling syscalls in current thread */
 #define CDROM_READ_PIO 0
-/**< \brief Read sector(s) in DMA mode with polling syscalls */
+/**< \brief Read sector(s) in DMA mode with polling syscalls in current thread */
 #define CDROM_READ_DMA 1
 /**< \brief Read sector(s) in DMA mode, but instead of polling syscalls
- * and passing the current thread, a DMA IRQ with a semaphore wait is used.
- * This very usable for a DMA stream transfers and DMA multi-sector readings.
+ * and passing the current thread, a vblank and DMA IRQs with a semaphores are used.
  */
 #define CDROM_READ_DMA_IRQ 2
+/**< \brief Read sector(s) in PIO mode, but instead of polling syscalls
+ * and passing the current thread, a vblank IRQ with a semaphore are used.
+ */
+#define CDROM_READ_PIO_IRQ 3
 /** @} */
 
 /** \defgroup cd_status_values      Status Values
@@ -328,10 +332,26 @@ int cdrom_exec_cmd(int cmd, void *param);
 */
 int cdrom_exec_cmd_timed(int cmd, void *param, int timeout);
 
+
+/** \brief    Execute a CD-ROM command with timeout.
+    \ingroup  gdrom
+
+    This function executes the specified command using the BIOS syscall for
+    executing GD-ROM commands with timeout and IRQ usage.
+
+    \param  cmd             The command number to execute.
+    \param  param           Data to pass to the syscall.
+    \param  timeout         Timeout in milliseconds.
+    \param  use_irq         Polling syscalls in vblank interrupt.
+
+    \return                 \ref cd_cmd_response
+*/
+int cdrom_exec_cmd_ex(int cmd, void *param, int timeout, bool use_irq);
+
 /** \brief    Abort last CD-ROM command.
     \ingroup  gdrom
 
-    This function aborts the specified command using the BIOS syscall for
+    This function aborts current command using the BIOS syscall for
     aborting GD-ROM commands.
 
     \param  timeout         Timeout in milliseconds.
@@ -479,11 +499,11 @@ int cdrom_stream_stop(void);
 
     \param  buffer          Space to store the read sectors (DMA aligned to 32, PIO to 2).
     \param  size            The size in bytes to read (DMA min 32, PIO min 2).
-    \param  block           Non-zero to block until DMA transfer completes.
+    \param  block           True to block until DMA transfer completes.
     \return                 \ref cd_cmd_response
     \see    cdrom_pre_read_sectors
 */
-int cdrom_stream_request(void *buffer, size_t size, int block);
+int cdrom_stream_request(void *buffer, size_t size, bool block);
 
 /** \brief    Check requested stream transfer.
     \ingroup  gdrom
