@@ -188,7 +188,7 @@ int cdrom_abort_cmd(uint32_t timeout) {
         return ERR_NO_ACTIVE;
     }
 
-    mutex_lock(&_g1_ata_mutex);
+    mutex_lock_scoped(&_g1_ata_mutex);
     syscall_gdrom_abort_command(cmd_hnd);
 
     if(timeout) {
@@ -215,7 +215,6 @@ int cdrom_abort_cmd(uint32_t timeout) {
 
     cmd_hnd = 0;
     stream_mode = -1;
-    mutex_unlock(&_g1_ata_mutex);
 
     if(stream_cb) {
         cdrom_stream_set_callback(0, NULL);
@@ -348,7 +347,7 @@ int cdrom_read_toc(CDROM_TOC *toc_buffer, int session) {
 
 static int cdrom_read_sectors_dma_irq(void *params) {
 
-    mutex_lock(&_g1_ata_mutex);
+    mutex_lock_scoped(&_g1_ata_mutex);
     dma_in_progress = true;
     dma_blocking = true;
 
@@ -359,7 +358,6 @@ static int cdrom_read_sectors_dma_irq(void *params) {
     if(cmd_hnd <= 0) {
         dma_in_progress = false;
         dma_blocking = false;
-        mutex_unlock(&_g1_ata_mutex);
         return ERR_SYS;
     }
 
@@ -379,7 +377,6 @@ static int cdrom_read_sectors_dma_irq(void *params) {
     } while(1);
 
     cmd_hnd = 0;
-    mutex_unlock(&_g1_ata_mutex);
 
     if(cmd_response == COMPLETED || cmd_response == NO_ACTIVE) {
         return ERR_OK;
@@ -559,7 +556,7 @@ int cdrom_stream_request(void *buffer, size_t size, bool block) {
     }
 
     params[1] = size;
-    mutex_lock(&_g1_ata_mutex);
+    mutex_lock_scoped(&_g1_ata_mutex);
 
     if(stream_mode == CDROM_READ_DMA || stream_mode == CDROM_READ_DMA_IRQ) {
 
@@ -578,7 +575,6 @@ int cdrom_stream_request(void *buffer, size_t size, bool block) {
             dma_in_progress = false;
             dma_blocking = false;
             dma_thd = NULL;
-            mutex_unlock(&_g1_ata_mutex);
             return ERR_SYS;
         }
         if(!block) {
@@ -612,7 +608,6 @@ int cdrom_stream_request(void *buffer, size_t size, bool block) {
         rs = syscall_gdrom_pio_transfer(cmd_hnd, params);
 
         if(rs < 0) {
-            mutex_unlock(&_g1_ata_mutex);
             return ERR_SYS;
         }
         do {
@@ -628,6 +623,8 @@ int cdrom_stream_request(void *buffer, size_t size, bool block) {
                 break;
             }
             else if(syscall_gdrom_pio_check(cmd_hnd, &check_size) == 0) {
+                /* Syscalls doesn't call it on last reading in PIO mode.
+                   Looks like a bug, fixing it. */
                 if(check_size == 0 && stream_cb) {
                     stream_cb(stream_cb_param);
                 }
@@ -637,7 +634,6 @@ int cdrom_stream_request(void *buffer, size_t size, bool block) {
         } while(1);
     }
 
-    mutex_unlock(&_g1_ata_mutex);
     return rv;
 }
 

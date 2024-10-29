@@ -333,7 +333,7 @@ int cdrom_exec_cmd(int cmd, void *param);
 int cdrom_exec_cmd_timed(int cmd, void *param, int timeout);
 
 
-/** \brief    Execute a CD-ROM command with timeout.
+/** \brief    Execute a CD-ROM command with timeout and IRQ usage.
     \ingroup  gdrom
 
     This function executes the specified command using the BIOS syscall for
@@ -342,17 +342,18 @@ int cdrom_exec_cmd_timed(int cmd, void *param, int timeout);
     \param  cmd             The command number to execute.
     \param  param           Data to pass to the syscall.
     \param  timeout         Timeout in milliseconds.
-    \param  use_irq         Polling syscalls in vblank interrupt.
+    \param  use_irq         True for polling syscalls in vblank IRQ.
 
     \return                 \ref cd_cmd_response
 */
 int cdrom_exec_cmd_ex(int cmd, void *param, int timeout, bool use_irq);
 
-/** \brief    Abort last CD-ROM command.
+/** \brief    Abort currently executed CD-ROM command.
     \ingroup  gdrom
 
     This function aborts current command using the BIOS syscall for
-    aborting GD-ROM commands.
+    aborting GD-ROM commands. They can also abort non-blocked DMA transfers,
+    but it impossible for now because G1-ATA mutex are used.
 
     \param  timeout         Timeout in milliseconds.
 
@@ -501,7 +502,7 @@ int cdrom_stream_stop(void);
     \param  size            The size in bytes to read (DMA min 32, PIO min 2).
     \param  block           True to block until DMA transfer completes.
     \return                 \ref cd_cmd_response
-    \see    cdrom_pre_read_sectors
+    \see    cdrom_stream_start
 */
 int cdrom_stream_request(void *buffer, size_t size, bool block);
 
