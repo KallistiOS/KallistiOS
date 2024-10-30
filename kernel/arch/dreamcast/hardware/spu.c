@@ -65,6 +65,7 @@ void spu_memload(uintptr_t dst, void *src_void, size_t length) {
 void spu_memload_sq(uintptr_t dst, void *src_void, size_t length) {
     uint8_t *src = (uint8_t *)src_void;
     size_t aligned_len;
+    g2_ctx_t ctx;
 
     if(length < 32) {
         spu_memload(dst, src_void, length);
@@ -83,10 +84,24 @@ void spu_memload_sq(uintptr_t dst, void *src_void, size_t length) {
     /* Add in the SPU RAM base (cached area) */
     dst |= SPU_RAM_BASE;
 
+    /* First lock SQs because there is a mutex there. */
+    sq_lock(NULL);
+
     /* Make sure the FIFOs are empty */
     g2_fifo_wait();
 
+    /* Lock G2 bus because we can't suspend SQs from
+     * another thread with PIO access to G2 bus. */
+    ctx = g2_lock();
+
     sq_cpy((void *)dst, src, aligned_len);
+
+    /* We have some free time here to finish up the SQs work
+       before we unlock G2 and enable IRQ. So we'll unlock it first. */
+    sq_unlock();
+    sq_wait();
+
+    g2_unlock(ctx);
 
     if(length > 0) {
         /* Make sure the destination is in a non-cached area */
@@ -197,6 +212,7 @@ void spu_memset(uintptr_t dst, uint32_t what, size_t length) {
 
 void spu_memset_sq(uintptr_t dst, uint32_t what, size_t length) {
     int aligned_len;
+    g2_ctx_t ctx;
 
     /* Round up to the nearest multiple of 4 */
     if(length & 3) {
@@ -210,10 +226,24 @@ void spu_memset_sq(uintptr_t dst, uint32_t what, size_t length) {
     /* Add in the SPU RAM base (cached area) */
     dst |= SPU_RAM_BASE;
 
+    /* First lock SQs because there is a mutex there. */
+    sq_lock(NULL);
+
     /* Make sure the FIFOs are empty */
     g2_fifo_wait();
 
+    /* Lock G2 bus because we can't suspend SQs from
+     * another thread with PIO access to G2 bus. */
+    ctx = g2_lock();
+
     sq_set32((void *)dst, what, aligned_len);
+
+    /* We have some free time here to finish up the SQs work
+       before we unlock G2 and enable IRQ. So we'll unlock it first. */
+    sq_unlock();
+    sq_wait();
+
+    g2_unlock(ctx);
 
     if(length > 0) {
         /* Make sure the destination is in a non-cached area */
@@ -226,17 +256,19 @@ void spu_memset_sq(uintptr_t dst, uint32_t what, size_t length) {
 void spu_reset_chans(void) {
     int i;
     g2_fifo_wait();
-    g2_write_32(SNDREGADDR(0x2800), 0);
+    g2_ctx_t ctx = g2_lock();
+    g2_write_32_raw(SNDREGADDR(0x2800), 0);
 
     for(i = 0; i < 64; i++) {
-        if(!(i % 4)) g2_fifo_wait();
+        if((i & 3) == 0) g2_fifo_wait();
 
-        g2_write_32(CHNREGADDR(i, 0), 0x8000);
-        g2_write_32(CHNREGADDR(i, 20), 0x1f);
+        g2_write_32_raw(CHNREGADDR(i, 0), 0x8000);
+        g2_write_32_raw(CHNREGADDR(i, 20), 0x1f);
     }
 
     g2_fifo_wait();
-    g2_write_32(SNDREGADDR(0x2800), 0x000f);
+    g2_write_32_raw(SNDREGADDR(0x2800), 0x000f);
+    g2_unlock(ctx);
 }
 
 /* Enable/disable the SPU; note that disable implies reset of the
