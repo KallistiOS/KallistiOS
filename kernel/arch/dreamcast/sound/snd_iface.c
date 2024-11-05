@@ -211,3 +211,11 @@ void snd_poll_resp(void) {
     if(rv < 0)
         dbglog(DBG_ERROR, "snd_poll_resp(): snd_aica_to_sh4 failed, giving up\n");
 }
+
+uint16_t snd_get_pos(uint32_t ch) {
+    return (g2_read_32(SPU_RAM_UNCACHED_BASE + AICA_CHANNEL(ch) + offsetof(aica_channel_t, pos)) & 0xffff);
+}
+
+bool snd_is_playing(uint32_t ch) {
+    return g2_read_32(MEM_AREA_P2_BASE + 0x00700000 + 0x80 * ch) & 0x4000;
+}
