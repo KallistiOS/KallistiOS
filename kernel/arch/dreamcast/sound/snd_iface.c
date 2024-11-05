@@ -14,6 +14,7 @@
 
 #include <kos/sem.h>
 #include <arch/timer.h>
+#include <arch/spinlock.h>
 #include <dc/g2bus.h>
 #include <dc/spu.h>
 #include <dc/sound/sound.h>
@@ -26,6 +27,11 @@ static int initted = 0;
 /* This will come from a separately linked object file */
 extern uint8_t snd_stream_drv[];
 extern uint8_t snd_stream_drv_end[];
+
+/* The queue processing mutex for snd_sh4_to_aica_start and snd_sh4_to_aica_stop.
+   There are rare case, start stream + sfx control at the same time in separate threads,
+   so we just use fast spinlock for it. */
+static spinlock_t queue_proc_mutex = SPINLOCK_INITIALIZER;
 
 /* Initialize driver; note that this replaces the AICA program so that
    if you had anything else going on, it's gone now! */
@@ -114,10 +120,12 @@ int snd_sh4_to_aica(void *packet, uint32_t size) {
 /* Start processing requests in the queue */
 void snd_sh4_to_aica_start(void) {
     g2_write_32(SPU_RAM_UNCACHED_BASE + AICA_MEM_CMD_QUEUE + offsetof(aica_queue_t, process_ok), 1);
+    spinlock_unlock(&queue_proc_mutex);
 }
 
 /* Stop processing requests in the queue */
 void snd_sh4_to_aica_stop(void) {
+    spinlock_lock(&queue_proc_mutex);
     g2_write_32(SPU_RAM_UNCACHED_BASE + AICA_MEM_CMD_QUEUE + offsetof(aica_queue_t, process_ok), 0);
 }
 
