@@ -342,10 +342,11 @@ int snd_stream_init(void) {
 int snd_stream_init_ex(int channels, size_t buffer_size) {
     max_channels = channels;
 
-    if(channels == 2 && buffer_size > 0) {
+    if(buffer_size > 0) {
         /* Create stereo separation buffers. This buffer size for each channel.
            But half size of streams buffer is enough, because stream
            polling doesn't read more than half buffer at time.
+           This can also be used for mono streams on unaligned data.
         */
         sep_buffer[0] = memalign(32, buffer_size);
         sep_buffer[1] = sep_buffer[0] + (buffer_size / 8);
@@ -615,9 +616,6 @@ void snd_stream_stop(snd_stream_hnd_t hnd) {
         /* Channel 1 */
         cmd->cmd_id = streams[hnd].ch[1];
         snd_sh4_to_aica(tmp, cmd->size);
-    }
-
-    if(streams[hnd].channels == 2) {
         snd_sh4_to_aica_start();
     }
 }
@@ -638,7 +636,7 @@ static inline void dma_chain(void *data) {
 }
 
 static void snd_stream_transfer(strchan_t *stream, void *first_buf,
-    uint32_t offset, size_t size) {
+                                uint32_t offset, size_t size) {
     int rs;
 
     dcache_purge_range((uintptr_t)first_buf, size);
@@ -677,7 +675,7 @@ static size_t snd_stream_fill(snd_stream_hnd_t hnd, uint32_t offset, size_t size
     if(stream->req_data) {
         got_bytes = stream->req_data(hnd,
             (left | SPU_RAM_UNCACHED_BASE),
-            (stream->channels == 2 ? (right | SPU_RAM_UNCACHED_BASE) : 0),
+            (chans == 2 ? (right | SPU_RAM_UNCACHED_BASE) : 0),
             needed_bytes);
     }
     if(got_bytes > 0) {
@@ -688,7 +686,8 @@ static size_t snd_stream_fill(snd_stream_hnd_t hnd, uint32_t offset, size_t size
     }
 
     if(data == NULL || got_bytes == 0) {
-        /* sep_buffer isn't allocated if all streams are mono */
+        /* sep_buffer isn't allocated if all streams are mono
+           or direct streams are used. */
         if(sep_buffer[0] == NULL) {
             spu_memset_sq(left, 0, needed_bytes);
         }
@@ -811,7 +810,7 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
     write_pos = samples_to_bytes(hnd, stream->last_write_pos);
     got_bytes = snd_stream_fill(hnd, write_pos, needed_bytes);
 
-    if(got_bytes <= 0) {
+    if(got_bytes == 0) {
         return -3;
     }
 
