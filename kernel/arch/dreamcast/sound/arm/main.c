@@ -213,11 +213,8 @@ int arm_main(void) {
     /* Wait for a command */
     for(; ;) {
         /* Update channel position counters */
-        for(i = 0; i < 64; i++) {
-            /* If channel is playing */
-            if(CHNREG32(i, 0) & 0x4000)
-                aica_get_pos(i);
-        }
+        for(i = 0; i < 64; i++)
+            aica_get_pos(i);
 
         /* Check for a command */
         if(q_cmd->process_ok)

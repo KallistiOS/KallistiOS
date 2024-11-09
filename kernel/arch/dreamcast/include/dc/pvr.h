@@ -46,6 +46,7 @@ __BEGIN_DECLS
 #include <arch/cache.h>
 #include <dc/sq.h>
 #include <kos/img.h>
+#include <kos/regfield.h>
 
 /** \defgroup pvr   PowerVR API
     \brief          Low-level PowerVR GPU Driver.
@@ -1026,15 +1027,9 @@ Striplength set to 2 */
 #define PVR_CMD_SPRITE      0xA0000000  /**< \brief PVR sprite header */
 /** @} */
 
-/** \defgroup pvr_bitmasks          Constants and Masks
-    \brief                          Polygon header constants and masks
-    \ingroup                        pvr_primitives_headers
-
-    Note that thanks to the arrangement of constants, this is mainly a matter of
-    bit shifting to compile headers...
-
-    @{
-*/
+/** \cond
+    Deprecated macros, replaced by the pvr_bitmasks macros below.
+ */
 #define PVR_TA_CMD_TYPE_SHIFT       24
 #define PVR_TA_CMD_TYPE_MASK        (7 << PVR_TA_CMD_TYPE_SHIFT)
 
@@ -1124,6 +1119,48 @@ Striplength set to 2 */
 
 #define PVR_TA_PM3_TXRFMT_SHIFT     0
 #define PVR_TA_PM3_TXRFMT_MASK      0xffffffff
+/** \endcond */
+
+/** \defgroup pvr_bitmasks          Constants and Masks
+    \brief                          Polygon header constants and masks
+    \ingroup                        pvr_primitives_headers
+
+    Note that thanks to the arrangement of constants, this is mainly a matter of
+    bit shifting to compile headers...
+
+    @{
+*/
+#define PVR_TA_CMD_TYPE            GENMASK(26, 24)
+#define PVR_TA_CMD_USERCLIP        GENMASK(17, 16)
+#define PVR_TA_CMD_MODIFIER        BIT(7)
+#define PVR_TA_CMD_MODIFIERMODE    BIT(6)
+#define PVR_TA_CMD_CLRFMT          GENMASK(5, 4)
+#define PVR_TA_CMD_TXRENABLE       BIT(3)
+#define PVR_TA_CMD_SPECULAR        BIT(2)
+#define PVR_TA_CMD_SHADE           BIT(1)
+#define PVR_TA_CMD_UVFMT           BIT(0)
+#define PVR_TA_PM1_DEPTHCMP        GENMASK(31, 29)
+#define PVR_TA_PM1_CULLING         GENMASK(28, 27)
+#define PVR_TA_PM1_DEPTHWRITE      BIT(26)
+#define PVR_TA_PM1_TXRENABLE       BIT(25)
+#define PVR_TA_PM1_MODIFIERINST    GENMASK(30, 29)
+#define PVR_TA_PM2_SRCBLEND        GENMASK(31, 29)
+#define PVR_TA_PM2_DSTBLEND        GENMASK(28, 26)
+#define PVR_TA_PM2_SRCENABLE       BIT(25)
+#define PVR_TA_PM2_DSTENABLE       BIT(24)
+#define PVR_TA_PM2_FOG             GENMASK(23, 22)
+#define PVR_TA_PM2_CLAMP           BIT(21)
+#define PVR_TA_PM2_ALPHA           BIT(20)
+#define PVR_TA_PM2_TXRALPHA        BIT(19)
+#define PVR_TA_PM2_UVFLIP          GENMASK(18, 17)
+#define PVR_TA_PM2_UVCLAMP         GENMASK(16, 15)
+#define PVR_TA_PM2_FILTER          GENMASK(14, 12)
+#define PVR_TA_PM2_MIPBIAS         GENMASK(11, 8)
+#define PVR_TA_PM2_TXRENV          GENMASK(7, 6)
+#define PVR_TA_PM2_USIZE           GENMASK(5, 3)
+#define PVR_TA_PM2_VSIZE           GENMASK(2, 0)
+#define PVR_TA_PM3_MIPMAP          BIT(31)
+#define PVR_TA_PM3_TXRFMT          GENMASK(30, 21)
 /** @} */
 
 /**** Register macros ***************************************************/
