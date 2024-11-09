@@ -84,7 +84,7 @@ void spu_memload_sq(uintptr_t dst, void *src_void, size_t length) {
     /* Add in the SPU RAM base (cached area) */
     dst |= SPU_RAM_BASE;
 
-    /* First lock SQs because there is a mutex there. */
+    /* Lock the SQs before disabling the interrupts. */
     sq_lock(NULL);
 
     /* Make sure the FIFOs are empty */
@@ -226,7 +226,7 @@ void spu_memset_sq(uintptr_t dst, uint32_t what, size_t length) {
     /* Add in the SPU RAM base (cached area) */
     dst |= SPU_RAM_BASE;
 
-    /* First lock SQs because there is a mutex there. */
+    /* Lock the SQs before disabling the interrupts. */
     sq_lock(NULL);
 
     /* Make sure the FIFOs are empty */

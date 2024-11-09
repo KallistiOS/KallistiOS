@@ -12,9 +12,8 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include <kos/sem.h>
+#include <kos/mutex.h>
 #include <arch/timer.h>
-#include <arch/spinlock.h>
 #include <dc/g2bus.h>
 #include <dc/spu.h>
 #include <dc/sound/sound.h>
@@ -29,9 +28,9 @@ extern uint8_t snd_stream_drv[];
 extern uint8_t snd_stream_drv_end[];
 
 /* The queue processing mutex for snd_sh4_to_aica_start and snd_sh4_to_aica_stop.
-   There are rare case, start stream + sfx control at the same time in separate threads,
-   so we just use fast spinlock for it. */
-static spinlock_t queue_proc_mutex = SPINLOCK_INITIALIZER;
+   There are some cases like stereo stream control + stereo sfx control
+   at the same time in separate threads. */
+static mutex_t queue_proc_mutex = MUTEX_INITIALIZER;
 
 /* Initialize driver; note that this replaces the AICA program so that
    if you had anything else going on, it's gone now! */
@@ -75,9 +74,10 @@ void snd_shutdown(void) {
 /* Submit a request to the SH4->AICA queue; size is in uint32's */
 int snd_sh4_to_aica(void *packet, uint32_t size) {
     uint32_t qa, bot, start, top, *pkt32, cnt;
+    g2_ctx_t ctx;
     assert_msg(size < AICA_CMD_MAX_SIZE, "SH4->AICA packets may not be >256 uint32's long");
 
-    g2_ctx_t ctx = g2_lock();
+    ctx = g2_lock();
 
     /* Set these up for reference */
     qa = SPU_RAM_UNCACHED_BASE + AICA_MEM_CMD_QUEUE;
@@ -120,12 +120,12 @@ int snd_sh4_to_aica(void *packet, uint32_t size) {
 /* Start processing requests in the queue */
 void snd_sh4_to_aica_start(void) {
     g2_write_32(SPU_RAM_UNCACHED_BASE + AICA_MEM_CMD_QUEUE + offsetof(aica_queue_t, process_ok), 1);
-    spinlock_unlock(&queue_proc_mutex);
+    mutex_unlock(&queue_proc_mutex);
 }
 
 /* Stop processing requests in the queue */
 void snd_sh4_to_aica_stop(void) {
-    spinlock_lock(&queue_proc_mutex);
+    mutex_lock(&queue_proc_mutex);
     g2_write_32(SPU_RAM_UNCACHED_BASE + AICA_MEM_CMD_QUEUE + offsetof(aica_queue_t, process_ok), 0);
 }
 
@@ -213,7 +213,7 @@ void snd_poll_resp(void) {
 }
 
 uint16_t snd_get_pos(uint32_t ch) {
-    return (g2_read_32(SPU_RAM_UNCACHED_BASE + AICA_CHANNEL(ch) + offsetof(aica_channel_t, pos)) & 0xffff);
+    return g2_read_32(SPU_RAM_UNCACHED_BASE + AICA_CHANNEL(ch) + offsetof(aica_channel_t, pos)) & 0xffff;
 }
 
 bool snd_is_playing(uint32_t ch) {
