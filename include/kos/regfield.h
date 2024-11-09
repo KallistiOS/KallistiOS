@@ -1,6 +1,6 @@
 /* KallistiOS ##version##
 
-   kos/compiler.h
+   kos/regfield.h
    Copyright (C) 2024 Paul Cercueil
 
    Macros to extract / insert bit fields
@@ -8,7 +8,7 @@
 
 /** \file    kos/regfield.h
     \brief   Macros to help dealing with register fields.
-    \ingroup kernel
+    \ingroup register_macros
 
     \author Paul Cercueil
 */
@@ -18,6 +18,13 @@
 
 #include <sys/cdefs.h>
 __BEGIN_DECLS
+
+/** \defgroup register_macros  Register Macros
+    \brief                     Various macros used throughout the codebase
+    \ingroup                   system
+    
+    @{
+*/
 
 /** \brief  Create a mask with a bit set
 
@@ -50,6 +57,8 @@ __BEGIN_DECLS
  */
 #define FIELD_PREP(field, value) \
 	(((value) << __builtin_ctz(field)) & (field))
+
+/** @} */
 
 __END_DECLS
 #endif /* __KOS_REGFIELD_H */

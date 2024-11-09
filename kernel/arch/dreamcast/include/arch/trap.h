@@ -83,7 +83,7 @@ int trapa_set_handler(trapa_t trap, trapa_handler hnd, void *data);
 
 /** Get an existing TRAPA handler.
 
-    \param code             The value passed to the trapa opcode.
+    \param trap             The value passed to the trapa opcode.
     \param data             A pointer to a void* which will be filled in with
                             the handler's userdata, or NULL if not interested.
 
