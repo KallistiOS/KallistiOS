@@ -334,15 +334,14 @@ int fs_rnd_init(void) {
 int fs_rnd_shutdown(void) {
     rnd_fh_t * c, * n;
 
-    /* First, clean up any open files */
-    c = TAILQ_FIRST(&rnd_fh);
+    mutex_lock(&fh_mutex);
 
-    while(c) {
-        n = TAILQ_NEXT(c, listent);
+    /* First, clean up any open files */
+    TAILQ_FOREACH_SAFE(c, &rnd_fh, listent, n) {
         free(c);
-        c = n;
     }
 
+    mutex_unlock(&fh_mutex);
     mutex_destroy(&fh_mutex);
 
     nmmgr_handler_remove(&vh.nmmgr);

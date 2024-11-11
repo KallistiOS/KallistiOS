@@ -49,11 +49,12 @@ void perf_monitor_exit(void) {
 void perf_monitor_print(FILE *f) {
     struct perf_monitor *monitor;
 
-    fprintf(f, "Performance monitors:\n");
+    if((uintptr_t)&_monitors_end != (uintptr_t)&_monitors_start)
+        fprintf(f, "Performance monitors:\n");
 
-    for (monitor = &_monitors_start; monitor < &_monitors_end; monitor++) {
-        fprintf(f, "\t%s: %llu calls\n\t\t%llu ns (%f ns/call)\n\t\tevent 0: %llu (%f event/call)\n\t\tevent 1: %llu (%f event/call)\n",
-                monitor->fn, monitor->calls, monitor->time_ns,
+    for(monitor = &_monitors_end - 1; monitor >= &_monitors_start; monitor--) {
+        fprintf(f, "\t%s L%u: %llu calls\n\t\t%llu ns (%f ns/call)\n\t\tevent 0: %llu (%f event/call)\n\t\tevent 1: %llu (%f event/call)\n",
+                monitor->fn, monitor->line, monitor->calls, monitor->time_ns,
                 monitor->calls ? (float)monitor->time_ns / (float)monitor->calls : 0.0f,
                 monitor->event0,
                 monitor->event0 ? (float)monitor->event0 / (float)monitor->calls : 0.0f,

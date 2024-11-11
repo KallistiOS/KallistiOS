@@ -140,7 +140,7 @@ int pvr_init(pvr_init_params_t *params) {
     }
 
     /* Hook the PVR interrupt events on G2 */
-    pvr_state.vbl_handle = vblank_handler_add(pvr_int_handler, NULL);
+    pvr_state.vbl_handle = vblank_handler_add(pvr_vblank_handler, NULL);
     
     asic_evt_set_handler(ASIC_EVT_PVR_OPAQUEDONE, pvr_int_handler, NULL);
     asic_evt_enable(ASIC_EVT_PVR_OPAQUEDONE, ASIC_IRQ_DEFAULT);
@@ -194,9 +194,6 @@ int pvr_init(pvr_init_params_t *params) {
     mutex_init((mutex_t *)&pvr_state.dma_lock, MUTEX_TYPE_NORMAL);
     pvr_dma_init();
 
-    /* Setup our wait-ready semaphore */
-    sem_init((semaphore_t *)&pvr_state.ready_sem, 0);
-
     /* Set us as valid and return success */
     pvr_state.valid = 1;
 
@@ -245,8 +242,7 @@ int pvr_shutdown(void) {
     /* Invalidate our memory pool */
     pvr_mem_reset();
 
-    /* Destroy the semaphore */
-    sem_destroy((semaphore_t *)&pvr_state.ready_sem);
+    /* Destroy the mutex */
     mutex_destroy((mutex_t *)&pvr_state.dma_lock);
 
     /* Clear video memory */

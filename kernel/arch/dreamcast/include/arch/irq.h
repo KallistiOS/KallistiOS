@@ -36,6 +36,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdalign.h>
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
@@ -91,7 +92,7 @@ __BEGIN_DECLS
 
     This should include all general CPU registers, FP registers, and status regs
     (even if not all of these are actually used).
-    
+
     \note
     On the Dreamcast, we need `228` bytes for all of that, but we round it up to a
     nicer number for sanity.
@@ -101,13 +102,14 @@ __BEGIN_DECLS
 /** Architecture-specific structure for holding the processor state.
 
     This structure should hold register values and other important parts of the
-    processor state. 
-    
+    processor state.
+
     \note
-    The size of this structure should be less than or equal to the 
+    The size of this structure should be less than or equal to the
     \ref REG_BYTE_CNT value.
 */
-typedef __attribute__((aligned(32))) struct irq_context {
+typedef struct irq_context {
+alignas(32)
     uint32_t  pc;         /**< Program counter */
     uint32_t  pr;         /**< Procedure register (aka return address) */
     uint32_t  gbr;        /**< Global base register (TLS segment ptr) */
@@ -152,9 +154,6 @@ typedef __attribute__((aligned(32))) struct irq_context {
 /** @} */
 
 /** Switch out contexts (for interrupt return).
-
-    This function will set the processor state that will be restored when the
-    exception returns.
 
     \param  regbank         The values of all registers to be restored.
 
@@ -407,6 +406,14 @@ void irq_enable(void);
 */
 void irq_restore(irq_mask_t v);
 
+/** \brief  Disable interrupts with scope management.s
+
+    This macro will disable interrupts, similarly to irq_disable(), with the
+    difference that the interrupt state will automatically be restored once the
+    execution exits the functional block in which the macro was called.
+*/
+#define irq_disable_scoped() __irq_disable_scoped(__LINE__)
+
 /** @} */
 
 /** \defgroup irq_ctrl Control Flow 
@@ -647,15 +654,8 @@ static inline void __irq_scoped_cleanup(int *state) {
     int __scoped_irq_##l __attribute__((cleanup(__irq_scoped_cleanup))) = irq_disable()
 
 #define __irq_disable_scoped(l) ___irq_disable_scoped(l)
+
 /** \endcond */
-
-/** \brief  Disable interrupts with scope management.s
-
-    This macro will disable interrupts, similarly to irq_disable(), with the
-    difference that the interrupt state will automatically be restored once the
-    execution exits the functional block in which the macro was called.
-*/
-#define irq_disable_scoped() __irq_disable_scoped(__LINE__)
 
 /** @} */
 

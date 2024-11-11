@@ -59,6 +59,7 @@ __BEGIN_DECLS
 #include <kos/string.h>
 #include <kos/init.h>
 #include <kos/oneshot_timer.h>
+#include <kos/regfield.h>
 
 #include <arch/arch.h>
 #include <arch/cache.h>

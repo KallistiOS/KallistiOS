@@ -748,10 +748,9 @@ int fs_vmu_init(void) {
 int fs_vmu_shutdown(void) {
     vmu_fh_t * c, * n;
 
-    c = TAILQ_FIRST(&vmu_fh);
+    mutex_lock(&fh_mutex);
 
-    while(c) {
-        n = TAILQ_NEXT(c, listent);
+    TAILQ_FOREACH_SAFE(c, &vmu_fh, listent, n) {
 
         switch(c->strtype) {
             case VMU_DIR: {
@@ -772,9 +771,9 @@ int fs_vmu_shutdown(void) {
         }
 
         free(c);
-        c = n;
     }
 
+    mutex_unlock(&fh_mutex);
     mutex_destroy(&fh_mutex);
 
     return nmmgr_handler_remove(&vh.nmmgr);

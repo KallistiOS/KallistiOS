@@ -9,6 +9,10 @@ Platform-specific changes are prefixed with the platform name, otherwise the cha
 - Enabled hybrid PVR DR/DMA vertex submission in driver + sped up pvr_prim() [FG]
 - Add thread priority boosting system [Paul Cercueil = PC]
 - Add performance monitor API [PC]
+- Add/Fixed stat() implementations for all filesystems [AB]
+- **Dreamcast**: Add network speedtest and pvr palette examples [AB]
+- **Dreamcast**: Cleaned up, documented, and enhanced BIOS font API [FG]
+- Rework PVR hybrid mode + IRQ handling [PC]
 - Redid IRQ API, added handler chaining, preliminary nesting support [FG]
 
 ## KallistiOS version 2.1.0

@@ -94,6 +94,7 @@ This page serves as an index for all KallistiOS examples.
   - pvrmark_strips_direct
   - texture_render
   - yuv_converter
+  - palette
 - [**random**](random/): Demonstrates generating random numbers using /dev/urandom
 - [**rumble**](rumble/): Demonstrates sending raw commands to the purupuru/jump pack
 - sd

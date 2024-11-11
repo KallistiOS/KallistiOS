@@ -59,6 +59,15 @@ struct perf_monitor *__start_perf_monitor(struct perf_monitor *monitor);
         __start_perf_monitor(&__perf_monitor_##l)
 
 #define _perf_monitor(f, l) __perf_monitor(f, l)
+
+#define __perf_monitor_if(f, l, tst) ({ \
+    static struct perf_monitor __perf_monitor_##l \
+        __attribute__((section(".monitors"))) = { f, l, }; \
+    __perf_monitor_##l.calls++; \
+    (tst) ? (__perf_monitor_##l.event1++,1) : (__perf_monitor_##l.event0++,0); \
+})
+
+#define _perf_monitor_if(f, l, tst) __perf_monitor_if(f, l, tst)
 /** /endcond */
 
 /** \brief  Register a performance monitor in the current functional block
@@ -67,6 +76,20 @@ struct perf_monitor *__start_perf_monitor(struct perf_monitor *monitor);
     the end of the functional block.
 */
 #define perf_monitor() _perf_monitor(__func__, __LINE__)
+
+/** \brief  Register a performance monitor for branch likeliness analysis
+
+    This macro is designed to be used inside an "if" expression, for instance:
+    if (perf_monitor_if(!strcmp("test", str))) { ... }
+
+    The resulting performance monitor will measure the number of calls, and
+    the number of times the branch was taken (in event1) and the number of
+    time it was not (in event0).
+
+    \param  tst             The boolean expression that is normally used inside
+                            the "if" check
+*/
+#define perf_monitor_if(tst) _perf_monitor_if(__func__, __LINE__, tst)
 
 /** \brief  Initialize the performance monitor system
 

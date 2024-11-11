@@ -308,9 +308,7 @@ static mrb_value clear_score(mrb_state *mrb, mrb_value self) {
 static mrb_value render_score(mrb_state *mrb, mrb_value self) {
   struct mrb_value score;
   mrb_get_args(mrb, "i", &score);
-  char buf[20];
-  snprintf(buf, 20, "Score: %8" PRId32, mrb_fixnum(score));
-  bfont_draw_str(vram_s + 640 * 100 + 16, 640, 1, buf);
+  bfont_draw_str_fmt(vram_s + 640 * 100 + 16, 640, 1, "Score: %8" PRId32, mrb_fixnum(score));
 
   return mrb_nil_value();
 }
