@@ -99,7 +99,8 @@ __BEGIN_DECLS
 #define PVR_TA_PM2_TXRALPHA        BIT(19)
 #define PVR_TA_PM2_UVFLIP          GENMASK(18, 17)
 #define PVR_TA_PM2_UVCLAMP         GENMASK(16, 15)
-#define PVR_TA_PM2_FILTER          GENMASK(14, 12)
+#define PVR_TA_PM2_FILTER          GENMASK(14, 13)
+#define PVR_TA_PM2_SUPERSAMPLING   BIT(12)
 #define PVR_TA_PM2_MIPBIAS         GENMASK(11, 8)
 #define PVR_TA_PM2_TXRENV          GENMASK(7, 6)
 #define PVR_TA_PM2_USIZE           GENMASK(5, 3)
@@ -114,7 +115,7 @@ __BEGIN_DECLS
     these from your pvr_poly_cxt_t and use it for submission to the hardware.
 */
 typedef struct pvr_poly_hdr {
-alignas(32)
+    alignas(32)
     uint32_t cmd;                /**< \brief TA command */
     uint32_t mode1;              /**< \brief Parameter word 1 */
     uint32_t mode2;              /**< \brief Parameter word 2 */
@@ -130,7 +131,7 @@ alignas(32)
     This is the equivalent of pvr_poly_hdr_t, but for use with intensity color.
 */
 typedef struct pvr_poly_ic_hdr {
-alignas(32)
+    alignas(32)
     uint32_t cmd;                /**< \brief TA command */
     uint32_t mode1;              /**< \brief Parameter word 1 */
     uint32_t mode2;              /**< \brief Parameter word 2 */
@@ -147,7 +148,7 @@ alignas(32)
     used with modifier volumes.
 */
 typedef struct pvr_poly_mod_hdr {
-alignas(32)
+    alignas(32)
     uint32_t cmd;                /**< \brief TA command */
     uint32_t mode1;              /**< \brief Parameter word 1 */
     uint32_t mode2_0;            /**< \brief Parameter word 2 (outside volume) */
@@ -164,7 +165,7 @@ alignas(32)
     be rendered. Note that the color data is here, not in the vertices.
 */
 typedef struct pvr_sprite_hdr {
-alignas(32)
+    alignas(32)
     uint32_t cmd;                /**< \brief TA command */
     uint32_t mode1;              /**< \brief Parameter word 1 */
     uint32_t mode2;              /**< \brief Parameter word 2 */
@@ -181,7 +182,7 @@ alignas(32)
     modifier volume.
 */
 typedef struct pvr_mod_hdr {
-alignas(32)
+    alignas(32)
     uint32_t cmd;                /**< \brief TA command */
     uint32_t mode1;              /**< \brief Parameter word 1 */
     uint32_t d1;                 /**< \brief Dummy value */
@@ -210,7 +211,7 @@ alignas(32)
     \sa pvr_vertex_pcm, pvr_vertex_tpcm
 */
 typedef struct pvr_vertex {
-alignas(32)
+    alignas(32)
     uint32_t flags;              /**< \brief TA command (vertex flags) */
     float   x;                   /**< \brief X coordinate */
     float   y;                   /**< \brief Y coordinate */
@@ -229,7 +230,7 @@ alignas(32)
     \sa pvr_vertex, pvr_vertex_tpcm
 */
 typedef struct pvr_vertex_pcm {
-alignas(32)
+    alignas(32)
     uint32_t flags;              /**< \brief TA command (vertex flags) */
     float   x;                   /**< \brief X coordinate */
     float   y;                   /**< \brief Y coordinate */
@@ -249,7 +250,7 @@ alignas(32)
     \sa pvr_vertex, pvr_vertex_pcm
 */
 typedef struct pvr_vertex_tpcm {
-alignas(32)
+    alignas(32)
     uint32_t flags;             /**< \brief TA command (vertex flags) */
     float   x;                  /**< \brief X coordinate */
     float   y;                  /**< \brief Y coordinate */
@@ -281,7 +282,7 @@ alignas(32)
     \sa pvr_sprite_col
 */
 typedef struct pvr_sprite_txr {
-alignas(32)
+    alignas(32)
     uint32_t flags;               /**< \brief TA command (vertex flags) */
     float   ax;                   /**< \brief First X coordinate */
     float   ay;                   /**< \brief First Y coordinate */
@@ -308,7 +309,7 @@ alignas(32)
     \sa pvr_sprite_txr
 */
 typedef struct pvr_sprite_col {
-alignas(32)
+    alignas(32)
     uint32_t flags;              /**< \brief TA command (vertex flags) */
     float   ax;                  /**< \brief First X coordinate */
     float   ay;                  /**< \brief First Y coordinate */
@@ -333,7 +334,7 @@ alignas(32)
     triangular modifier areas.
 */
 typedef struct pvr_modifier_vol {
-alignas(32)
+    alignas(32)
     uint32_t flags;              /**< \brief TA command (vertex flags) */
     float   ax;                  /**< \brief First X coordinate */
     float   ay;                  /**< \brief First Y coordinate */

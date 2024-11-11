@@ -23,7 +23,7 @@
     management to actual primitive rendering.
 
     \todo 
-        - Auxiliary accumulation buffer
+        - Auxiliary accumulation buffer example/documentation
         - RTT texture sizes
         - Multipass rendering
         - pvr_poly_ctx_t::specular2
@@ -273,8 +273,7 @@ int pvr_shutdown(void);
 
 /** Is PVR vertex DMA enabled?
     
-    \retval  true       Vertex DMA was enabled at init time
-    \retval  false      Vertex DMA was not enabled at init time
+    \return `true` if vertex DMA was enabled at init time, `false` otherwise
 */
 bool pvr_vertex_dma_enabled(void);
 
@@ -462,8 +461,9 @@ void pvr_dr_init(pvr_dr_state_t *vtx_buf_ptr);
                             TA in DR mode.
 */
 #define pvr_dr_target(vtx_buf_ptr) \
-    ({ (vtx_buf_ptr) ^= 32; \
-        (pvr_vertex_t *)(MEM_AREA_SQ_BASE | (vtx_buf_ptr)); \
+    ({ \
+        (vtx_buf_ptr) ^= 32; \
+        (void *)(MEM_AREA_SQ_BASE | (vtx_buf_ptr)); \
     })
 
 /** Commit a primitive written into the Direct Rendering target address.
@@ -491,7 +491,7 @@ void pvr_dr_finish(void);
     \param  data            A pointer to the 32-byte payload.
                             The pointer must be aligned to 8 bytes.
 */
-void pvr_send_to_ta(void *data);
+void pvr_send_to_ta(const void *data);
 
 /** @} */
 

@@ -196,9 +196,9 @@ typedef enum __packed pvr_uv_clamp {
 typedef enum __packed pvr_filter {
     PVR_FILTER_NONE       = 0,   /**< \brief No filtering (point sample) */
     PVR_FILTER_NEAREST    = 0,   /**< \brief No filtering (point sample) */
-    PVR_FILTER_BILINEAR   = 2,   /**< \brief Bilinear interpolation */
-    PVR_FILTER_TRILINEAR1 = 4,   /**< \brief Trilinear interpolation pass 1 */
-    PVR_FILTER_TRILINEAR2 = 6    /**< \brief Trilinear interpolation pass 2 */
+    PVR_FILTER_BILINEAR   = 1,   /**< \brief Bilinear interpolation */
+    PVR_FILTER_TRILINEAR1 = 2,   /**< \brief Trilinear interpolation pass 1 */
+    PVR_FILTER_TRILINEAR2 = 3    /**< \brief Trilinear interpolation pass 2 */
 } pvr_filter_t;
 
 /** \brief    Mipmap bias modes for PowerVR primitive contexts
@@ -271,7 +271,7 @@ typedef enum __packed pvr_txr_env {
 #define PVR_TXRFMT_4BPP_PAL(x)  ((x) << 21)
 /** @} */
 
-/** Packed bitfield describing a texture format. 
+/** Bit-packed fields describing a texture format. 
 
     \sa pvr_txr_fmts
 */
