@@ -851,10 +851,9 @@ int thd_join(kthread_t *thd, void **value_ptr) {
     if(thd == thd_current)
         return -4;
 
-    if((rv = irq_inside_int())) {
+    if(irq_inside_int()) {
         dbglog(DBG_WARNING, "thd_join(%p) called inside an interrupt with "
-               "code: %x evt: %.4x\n", (void *)thd, ((rv >> 16) & 0xf),
-               (rv & 0xffff));
+               "code: [%x]\n", (void *)thd, irq_active_int(0));
         return -1;
     }
 
