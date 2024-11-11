@@ -10,10 +10,7 @@
 /* This module contains low-level handling for IRQs and related exceptions. */
 
 #include <string.h>
-<<<<<<< HEAD
 #include <strings.h>
-=======
->>>>>>> master
 #include <assert.h>
 #include <stdio.h>
 #include <arch/arch.h>
@@ -41,7 +38,6 @@ struct trapa_cb {
     trapa_handler hdl;
     void         *data;
 };
-<<<<<<< HEAD
 
 /* Linked list of IRQ states, one is pushed onto the stack
    every time the top-level ISR is entered. */
@@ -52,17 +48,6 @@ struct irq_state {            // SIZE
     volatile struct
         irq_state *previous;  // 4 bytes
 };                            // 8 BYTES TOTAL
-=======
-
-/* Individual exception handlers */
-static struct irq_cb   irq_handlers[0x100];
-/* TRAPA exception handlers */
-static struct trapa_cb trapa_handlers[0x100];
-
-/* Global exception handler -- hook this if you want to get each and every
-   exception; you might get more than you bargained for, but it can be useful. */
-static struct irq_cb   global_irq_handler;
->>>>>>> master
 
 /* Individual exception handlers */
 static struct irq_cb   irq_handlers[0x100];
@@ -71,7 +56,6 @@ static struct trapa_cb trapa_handlers[0x100];
 /* Global exception handler */
 static struct irq_cb   global_irq_handler;
 /* Default IRQ context location */
-<<<<<<< HEAD
 static irq_context_t   irq_context_default;
 /* Current IRQ state linked list pointer */
 static volatile struct irq_state *        /* Points to most recent IRQ state */
@@ -117,9 +101,6 @@ size_t irq_int_depth(void) {
 
     return depth;
 }
-=======
-static irq_context_t    irq_context_default;
->>>>>>> master
 
 /* Are we inside an interrupt? */
 bool irq_inside_int(void) {
@@ -158,11 +139,7 @@ void irq_handle_int(bool handled) {
 /* Set a handler, or remove a handler */
 int irq_set_handler(irq_t code, irq_handler hnd, void *data) {
     /* Make sure they don't do something crackheaded */
-<<<<<<< HEAD
-    if(code >= 0x1000 || (code & 0x000f)) 
-=======
     if(code >= 0x1000 || (code & 0x000f))
->>>>>>> master
         return -1;
 
     code >>= 4;
@@ -176,16 +153,11 @@ irq_handler irq_get_handler(irq_t code, void **data) {
     /* Make sure they don't do something crackheaded */
     if(code >= 0x1000 || (code & 0x000f))
         return NULL;
-<<<<<<< HEAD
     
     code >>= 4;
 
     if(data)
         *data = irq_handlers[code].data;
-=======
-
-    code >>= 4;
->>>>>>> master
 
     return irq_handlers[code].hdl;
 }
@@ -198,14 +170,10 @@ int irq_set_global_handler(irq_handler hnd, void *data) {
 }
 
 /* Get the global exception handler */
-<<<<<<< HEAD
 irq_handler irq_get_global_handler(void **data) {
     if(data)
         *data = global_irq_handler.data;
 
-=======
-irq_handler irq_get_global_handler(void) {
->>>>>>> master
     return global_irq_handler.hdl;
 }
 
