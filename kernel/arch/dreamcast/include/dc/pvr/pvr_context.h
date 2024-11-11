@@ -271,9 +271,16 @@ typedef enum __packed pvr_txr_env {
 #define PVR_TXRFMT_4BPP_PAL(x)  ((x) << 21)
 /** @} */
 
-typedef uint32_t pvr_txr_fmt_t;
-typedef uint32_t pvr_txr_word_t;
+/** Packed bitfield describing a texture format. 
 
+    \sa pvr_txr_fmts
+*/
+typedef uint32_t pvr_txr_fmt_t;
+
+/** Different types of pixel formats supported by the PVR.
+
+    \sa pvr_txr_fmts
+ */
 typedef enum pvr_pix_fmt {
     PVR_PIXFMT_ARGB1555 = 0,
     PVR_PIXFMT_RGB565   = 1,
@@ -283,33 +290,6 @@ typedef enum pvr_pix_fmt {
     PVR_PIXFMT_PAL4BPP  = 5,
     PVR_PIXFMT_PAL8BPP  = 6
 } pvr_pix_fmt_t;
-
-typedef union pvr_txr_ctrl {
-    pvr_txr_fmt_t      fmt;
-    struct {                              /*  BITS   */
-        pvr_txr_word_t texture_word : 21; /*  0 - 20 */
-        uint32_t       strided      : 1;  /* 21      */
-        uint32_t                    : 4;  /* 22 - 25 */
-        uint32_t       nontwiddled  : 1;  /* 26      */
-        pvr_pix_fmt_t  pixel_fmt    : 3;  /* 27 - 29 */
-        uint32_t       vq_encoded   : 1;  /* 30      */
-        uint32_t       mipmapped    : 1;  /* 31      */
-    };
-    struct {
-        uint32_t                    : 21; /*  0 - 20 */
-        uint32_t       pal_idx_4bpp : 6;  /* 21 - 26 */
-        uint32_t                    : 5;  /* 27 - 31 */
-    };
-    struct {
-        uint32_t                    : 25; /*  0 - 24 */
-        uint32_t       pal_idx_8bpp : 2;  /* 25 - 26 */
-        uint32_t                    : 5;  /* 27 - 31 */
-    };
-} pvr_txr_ctrl_t;
-
-inline static pvr_txr_word_t pvr_texture_word(pvr_ptr_t texture_address) {
-    return ((uintptr_t)texture_address & 0x00fffff8) >> 3;
-}
 
 /** \brief                          Color formats for PowerVR vertices
     \ingroup                        pvr_ctx_color

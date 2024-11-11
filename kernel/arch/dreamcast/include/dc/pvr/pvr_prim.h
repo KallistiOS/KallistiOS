@@ -29,6 +29,7 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
+#include <kos/regfield.h>
 
 /** \defgroup pvr_geometry Geometry
     \brief                 PVR API for managing scene geometry
@@ -68,100 +69,43 @@ __BEGIN_DECLS
     \brief                          Polygon header constants and masks
     \ingroup                        pvr_primitives_headers
 
-    Note that thanks to the arrangement of constants, this is mainly a matter of
+    \note 
+    Thanks to the arrangement of constants, this is mainly a matter of
     bit shifting to compile headers...
 
     @{
 */
-#define PVR_TA_CMD_TYPE_SHIFT           24
-#define PVR_TA_CMD_TYPE_MASK            (7 << PVR_TA_CMD_TYPE_SHIFT)
-
-#define PVR_TA_CMD_USERCLIP_SHIFT       16
-#define PVR_TA_CMD_USERCLIP_MASK        (3 << PVR_TA_CMD_USERCLIP_SHIFT)
-
-#define PVR_TA_CMD_CLRFMT_SHIFT         4
-#define PVR_TA_CMD_CLRFMT_MASK          (7 << PVR_TA_CMD_CLRFMT_SHIFT)
-
-#define PVR_TA_CMD_SPECULAR_SHIFT       2
-#define PVR_TA_CMD_SPECULAR_MASK        (1 << PVR_TA_CMD_SPECULAR_SHIFT)
-
-#define PVR_TA_CMD_SHADE_SHIFT          1
-#define PVR_TA_CMD_SHADE_MASK           (1 << PVR_TA_CMD_SHADE_SHIFT)
-
-#define PVR_TA_CMD_UVFMT_SHIFT          0
-#define PVR_TA_CMD_UVFMT_MASK           (1 << PVR_TA_CMD_UVFMT_SHIFT)
-
-#define PVR_TA_CMD_MODIFIER_SHIFT       7
-#define PVR_TA_CMD_MODIFIER_MASK        (1 <<  PVR_TA_CMD_MODIFIER_SHIFT)
-
-#define PVR_TA_CMD_MODIFIERMODE_SHIFT   6
-#define PVR_TA_CMD_MODIFIERMODE_MASK    (1 <<  PVR_TA_CMD_MODIFIERMODE_SHIFT)
-
-#define PVR_TA_PM1_DEPTHCMP_SHIFT       29
-#define PVR_TA_PM1_DEPTHCMP_MASK        (7 << PVR_TA_PM1_DEPTHCMP_SHIFT)
-
-#define PVR_TA_PM1_CULLING_SHIFT        27
-#define PVR_TA_PM1_CULLING_MASK         (3 << PVR_TA_PM1_CULLING_SHIFT)
-
-#define PVR_TA_PM1_DEPTHWRITE_SHIFT     26
-#define PVR_TA_PM1_DEPTHWRITE_MASK      (1 << PVR_TA_PM1_DEPTHWRITE_SHIFT)
-
-#define PVR_TA_PM1_TXRENABLE_SHIFT      25
-#define PVR_TA_PM1_TXRENABLE_MASK       (1 << PVR_TA_PM1_TXRENABLE_SHIFT)
-
-#define PVR_TA_PM1_MODIFIERINST_SHIFT   29
-#define PVR_TA_PM1_MODIFIERINST_MASK    (3 <<  PVR_TA_PM1_MODIFIERINST_SHIFT)
-
-#define PVR_TA_PM2_SRCBLEND_SHIFT       29
-#define PVR_TA_PM2_SRCBLEND_MASK        (7 << PVR_TA_PM2_SRCBLEND_SHIFT)
-
-#define PVR_TA_PM2_DSTBLEND_SHIFT       26
-#define PVR_TA_PM2_DSTBLEND_MASK        (7 << PVR_TA_PM2_DSTBLEND_SHIFT)
-
-#define PVR_TA_PM2_SRCENABLE_SHIFT      25
-#define PVR_TA_PM2_SRCENABLE_MASK       (1 << PVR_TA_PM2_SRCENABLE_SHIFT)
-
-#define PVR_TA_PM2_DSTENABLE_SHIFT      24
-#define PVR_TA_PM2_DSTENABLE_MASK       (1 << PVR_TA_PM2_DSTENABLE_SHIFT)
-
-#define PVR_TA_PM2_FOG_SHIFT            22
-#define PVR_TA_PM2_FOG_MASK             (3 << PVR_TA_PM2_FOG_SHIFT)
-
-#define PVR_TA_PM2_CLAMP_SHIFT          21
-#define PVR_TA_PM2_CLAMP_MASK           (1 << PVR_TA_PM2_CLAMP_SHIFT)
-
-#define PVR_TA_PM2_ALPHA_SHIFT          20
-#define PVR_TA_PM2_ALPHA_MASK           (1 << PVR_TA_PM2_ALPHA_SHIFT)
-
-#define PVR_TA_PM2_TXRALPHA_SHIFT       19
-#define PVR_TA_PM2_TXRALPHA_MASK        (1 << PVR_TA_PM2_TXRALPHA_SHIFT)
-
-#define PVR_TA_PM2_UVFLIP_SHIFT         17
-#define PVR_TA_PM2_UVFLIP_MASK          (3 << PVR_TA_PM2_UVFLIP_SHIFT)
-
-#define PVR_TA_PM2_UVCLAMP_SHIFT        15
-#define PVR_TA_PM2_UVCLAMP_MASK         (3 << PVR_TA_PM2_UVCLAMP_SHIFT)
-
-#define PVR_TA_PM2_FILTER_SHIFT         12
-#define PVR_TA_PM2_FILTER_MASK          (7 << PVR_TA_PM2_FILTER_SHIFT)
-
-#define PVR_TA_PM2_MIPBIAS_SHIFT        8
-#define PVR_TA_PM2_MIPBIAS_MASK         (15 << PVR_TA_PM2_MIPBIAS_SHIFT)
-
-#define PVR_TA_PM2_TXRENV_SHIFT         6
-#define PVR_TA_PM2_TXRENV_MASK          (3 << PVR_TA_PM2_TXRENV_SHIFT)
-
-#define PVR_TA_PM2_USIZE_SHIFT          3
-#define PVR_TA_PM2_USIZE_MASK           (7 << PVR_TA_PM2_USIZE_SHIFT)
-
-#define PVR_TA_PM2_VSIZE_SHIFT          0
-#define PVR_TA_PM2_VSIZE_MASK           (7 << PVR_TA_PM2_VSIZE_SHIFT)
-
-#define PVR_TA_PM3_MIPMAP_SHIFT         31
-#define PVR_TA_PM3_MIPMAP_MASK          (1 << PVR_TA_PM3_MIPMAP_SHIFT)
-
-#define PVR_TA_PM3_TXRFMT_SHIFT         0
-#define PVR_TA_PM3_TXRFMT_MASK          0xffffffff
+#define PVR_TA_CMD_TYPE            GENMASK(26, 24)
+#define PVR_TA_CMD_USERCLIP        GENMASK(17, 16)
+#define PVR_TA_CMD_MODIFIER        BIT(7)
+#define PVR_TA_CMD_MODIFIERMODE    BIT(6)
+#define PVR_TA_CMD_CLRFMT          GENMASK(5, 4)
+#define PVR_TA_CMD_TXRENABLE       BIT(3)
+#define PVR_TA_CMD_SPECULAR        BIT(2)
+#define PVR_TA_CMD_SHADE           BIT(1)
+#define PVR_TA_CMD_UVFMT           BIT(0)
+#define PVR_TA_PM1_DEPTHCMP        GENMASK(31, 29)
+#define PVR_TA_PM1_CULLING         GENMASK(28, 27)
+#define PVR_TA_PM1_DEPTHWRITE      BIT(26)
+#define PVR_TA_PM1_TXRENABLE       BIT(25)
+#define PVR_TA_PM1_MODIFIERINST    GENMASK(30, 29)
+#define PVR_TA_PM2_SRCBLEND        GENMASK(31, 29)
+#define PVR_TA_PM2_DSTBLEND        GENMASK(28, 26)
+#define PVR_TA_PM2_SRCENABLE       BIT(25)
+#define PVR_TA_PM2_DSTENABLE       BIT(24)
+#define PVR_TA_PM2_FOG             GENMASK(23, 22)
+#define PVR_TA_PM2_CLAMP           BIT(21)
+#define PVR_TA_PM2_ALPHA           BIT(20)
+#define PVR_TA_PM2_TXRALPHA        BIT(19)
+#define PVR_TA_PM2_UVFLIP          GENMASK(18, 17)
+#define PVR_TA_PM2_UVCLAMP         GENMASK(16, 15)
+#define PVR_TA_PM2_FILTER          GENMASK(14, 12)
+#define PVR_TA_PM2_MIPBIAS         GENMASK(11, 8)
+#define PVR_TA_PM2_TXRENV          GENMASK(7, 6)
+#define PVR_TA_PM2_USIZE           GENMASK(5, 3)
+#define PVR_TA_PM2_VSIZE           GENMASK(2, 0)
+#define PVR_TA_PM3_MIPMAP          BIT(31)
+#define PVR_TA_PM3_TXRFMT          GENMASK(30, 21)
 /** @} */
 
 /** PVR polygon header.
@@ -170,7 +114,7 @@ __BEGIN_DECLS
     these from your pvr_poly_cxt_t and use it for submission to the hardware.
 */
 typedef struct pvr_poly_hdr {
-    alignas(32)
+alignas(32)
     uint32_t cmd;                /**< \brief TA command */
     uint32_t mode1;              /**< \brief Parameter word 1 */
     uint32_t mode2;              /**< \brief Parameter word 2 */
@@ -186,7 +130,7 @@ typedef struct pvr_poly_hdr {
     This is the equivalent of pvr_poly_hdr_t, but for use with intensity color.
 */
 typedef struct pvr_poly_ic_hdr {
-    alignas(32)
+alignas(32)
     uint32_t cmd;                /**< \brief TA command */
     uint32_t mode1;              /**< \brief Parameter word 1 */
     uint32_t mode2;              /**< \brief Parameter word 2 */
@@ -203,7 +147,7 @@ typedef struct pvr_poly_ic_hdr {
     used with modifier volumes.
 */
 typedef struct pvr_poly_mod_hdr {
-    alignas(32)
+alignas(32)
     uint32_t cmd;                /**< \brief TA command */
     uint32_t mode1;              /**< \brief Parameter word 1 */
     uint32_t mode2_0;            /**< \brief Parameter word 2 (outside volume) */
@@ -220,7 +164,7 @@ typedef struct pvr_poly_mod_hdr {
     be rendered. Note that the color data is here, not in the vertices.
 */
 typedef struct pvr_sprite_hdr {
-    alignas(32)
+alignas(32)
     uint32_t cmd;                /**< \brief TA command */
     uint32_t mode1;              /**< \brief Parameter word 1 */
     uint32_t mode2;              /**< \brief Parameter word 2 */
@@ -237,7 +181,7 @@ typedef struct pvr_sprite_hdr {
     modifier volume.
 */
 typedef struct pvr_mod_hdr {
-    alignas(32)
+alignas(32)
     uint32_t cmd;                /**< \brief TA command */
     uint32_t mode1;              /**< \brief Parameter word 1 */
     uint32_t d1;                 /**< \brief Dummy value */
@@ -266,7 +210,7 @@ typedef struct pvr_mod_hdr {
     \sa pvr_vertex_pcm, pvr_vertex_tpcm
 */
 typedef struct pvr_vertex {
-    alignas(32)
+alignas(32)
     uint32_t flags;              /**< \brief TA command (vertex flags) */
     float   x;                   /**< \brief X coordinate */
     float   y;                   /**< \brief Y coordinate */
@@ -285,7 +229,7 @@ typedef struct pvr_vertex {
     \sa pvr_vertex, pvr_vertex_tpcm
 */
 typedef struct pvr_vertex_pcm {
-    alignas(32)
+alignas(32)
     uint32_t flags;              /**< \brief TA command (vertex flags) */
     float   x;                   /**< \brief X coordinate */
     float   y;                   /**< \brief Y coordinate */
@@ -305,7 +249,7 @@ typedef struct pvr_vertex_pcm {
     \sa pvr_vertex, pvr_vertex_pcm
 */
 typedef struct pvr_vertex_tpcm {
-    alignas(32)
+alignas(32)
     uint32_t flags;             /**< \brief TA command (vertex flags) */
     float   x;                  /**< \brief X coordinate */
     float   y;                  /**< \brief Y coordinate */
@@ -337,7 +281,7 @@ typedef struct pvr_vertex_tpcm {
     \sa pvr_sprite_col
 */
 typedef struct pvr_sprite_txr {
-    alignas(32)
+alignas(32)
     uint32_t flags;               /**< \brief TA command (vertex flags) */
     float   ax;                   /**< \brief First X coordinate */
     float   ay;                   /**< \brief First Y coordinate */
@@ -364,7 +308,7 @@ typedef struct pvr_sprite_txr {
     \sa pvr_sprite_txr
 */
 typedef struct pvr_sprite_col {
-    alignas(32)
+alignas(32)
     uint32_t flags;              /**< \brief TA command (vertex flags) */
     float   ax;                  /**< \brief First X coordinate */
     float   ay;                  /**< \brief First Y coordinate */
@@ -389,7 +333,7 @@ typedef struct pvr_sprite_col {
     triangular modifier areas.
 */
 typedef struct pvr_modifier_vol {
-    alignas(32)
+alignas(32)
     uint32_t flags;              /**< \brief TA command (vertex flags) */
     float   ax;                  /**< \brief First X coordinate */
     float   ay;                  /**< \brief First Y coordinate */

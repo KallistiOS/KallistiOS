@@ -263,7 +263,7 @@ void pvr_blank_polyhdr_buf(int type, pvr_poly_hdr_t * poly) {
     memset(poly, 0, sizeof(pvr_poly_hdr_t));
 
     /* Put in the list type */
-    poly->cmd = (type << PVR_TA_CMD_TYPE_SHIFT) | 0x80840012;
+    poly->cmd = FIELD_PREP(PVR_TA_CMD_TYPE, type) | 0x80840012;
 
     /* Fill in dummy values */
     poly->d1 = poly->d2 = poly->d3 = poly->d4 = 0xffffffff;

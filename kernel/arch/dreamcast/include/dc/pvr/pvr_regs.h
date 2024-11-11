@@ -30,7 +30,6 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-
 /**** Register macros ***************************************************/
 
 /** \defgroup pvr_registers         Registers
