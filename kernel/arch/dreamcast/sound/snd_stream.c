@@ -509,17 +509,23 @@ static void snd_stream_start_type(snd_stream_hnd_t hnd, uint32_t type, uint32_t 
 
     if(streams[hnd].type == AICA_SM_16BIT) {
         streams[hnd].bitsize = 16;
+
+        if(streams[hnd].buffer_size > SND_STREAM_BUFFER_MAX_PCM16) {
+            streams[hnd].buffer_size = SND_STREAM_BUFFER_MAX_PCM16;
+        }
     }
     else if(streams[hnd].type == AICA_SM_8BIT) {
         streams[hnd].bitsize = 8;
+
+        if(streams[hnd].buffer_size > SND_STREAM_BUFFER_MAX_PCM8) {
+            streams[hnd].buffer_size = SND_STREAM_BUFFER_MAX_PCM8;
+        }
     }
     else if(streams[hnd].type == AICA_SM_ADPCM_LS) {
         streams[hnd].bitsize = 4;
 
-        if(streams[hnd].buffer_size > (32 << 10)) {
-            /* The channel position data size is 16-bits.
-                Need to make sure that we don't go beyond these limits */
-            streams[hnd].buffer_size = (32 << 10);
+        if(streams[hnd].buffer_size > SND_STREAM_BUFFER_MAX_ADPCM) {
+            streams[hnd].buffer_size = SND_STREAM_BUFFER_MAX_ADPCM;
         }
     }
 
