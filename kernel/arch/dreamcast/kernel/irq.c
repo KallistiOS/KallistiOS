@@ -10,7 +10,6 @@
 /* This module contains low-level handling for IRQs and related exceptions. */
 
 #include <string.h>
-#include <strings.h>
 #include <assert.h>
 #include <stdio.h>
 #include <arch/arch.h>
@@ -55,6 +54,7 @@ static struct irq_cb   irq_handlers[0x100];
 static struct trapa_cb trapa_handlers[0x100];
 /* Global exception handler */
 static struct irq_cb   global_irq_handler;
+
 /* Default IRQ context location */
 static irq_context_t   irq_context_default;
 /* Current IRQ state linked list pointer */
@@ -153,7 +153,7 @@ irq_handler irq_get_handler(irq_t code, void **data) {
     /* Make sure they don't do something crackheaded */
     if(code >= 0x1000 || (code & 0x000f))
         return NULL;
-    
+
     code >>= 4;
 
     if(data)
@@ -403,7 +403,7 @@ irq_context_t *irq_get_context(void) {
 void irq_create_context(irq_context_t *context, uint32_t stkpntr,
                         uint32_t routine, const uint32_t *args, bool usermode) {
     /* Clear out all registers. */
-    bzero(context, sizeof(irq_context_t));
+    memset(context, 0, sizeof(irq_context_t));
 
     /* Setup the program frame */
     context->pc = (uint32_t)routine;
@@ -459,9 +459,9 @@ int irq_init(void) {
     irq_disable();
 
     /* Blank the exception handler tables */
-    bzero(irq_handlers,        sizeof(irq_handlers));
-    bzero(trapa_handlers,      sizeof(trapa_handlers));
-    bzero(&global_irq_handler, sizeof(global_irq_handler));
+    memset(irq_handlers,        0, sizeof(irq_handlers));
+    memset(trapa_handlers,      0, sizeof(trapa_handlers));
+    memset(&global_irq_handler, 0, sizeof(global_irq_handler));
 
     /* Default to not in an interrupt */
     irq_state_current = NULL;

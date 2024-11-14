@@ -192,16 +192,16 @@ void irq_create_context(irq_context_t *context, uint32_t stack_pointer,
 /** @} */
 
 /** Interrupt exception codes
-   
-   Dreamcast-specific exception codes. Used to identify the source or type of
-   an interrupt. Each exception code is of a certain "type" which dictates how the interrupt
-   is generated and handled.
 
-    List of exception types:
+   SH-specific exception codes. Used to identify the source or type of an
+   interrupt.Each exception code is of a certain "type" which dictates how the
+   interrupt is generated and handled.
+
+   List of exception types:
 
    |Type    | Description
    |--------|------------
-   |`RESET` | Caused by system reset. Uncatchable and fatal. Automatically branch to address `0xA0000000`. 
+   |`RESET` | Caused by system reset. Uncatchable and fatal. Automatically branch to address `0xA0000000`.
    |`REEXEC`| Restarts current instruction after interrupt processing. Context PC is the triggering instruction.
    |`POST`  | Continues with next instruciton after interrupt processing. Context PC is the next instruction.
    |`SOFT`  | Software-driven exceptions for triggering interrupts upon special events.
@@ -559,7 +559,7 @@ typedef void (*irq_handler)(irq_t code, irq_context_t *context, void *data);
     \param  data            A pointer that will be passed along to the callback.
     
     \retval 0               On success.
-    \retval -1              If the source is invalid.
+    \retval -1              If the code is invalid.
 
     \sa irq_get_handler()
 */
@@ -575,7 +575,7 @@ int irq_set_handler(irq_t code, irq_handler hnd, void *data);
 
     \sa irq_set_handler()
 */
-irq_handler irq_get_handler(irq_t source, void **data);
+irq_handler irq_get_handler(irq_t code, void **data);
 
 /** @} */
 

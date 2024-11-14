@@ -76,7 +76,6 @@ typedef void (*trapa_handler)(trapa_t trap, irq_context_t *context, void *data);
     \param  data            A pointer that will be passed along to the callback.
 
     \retval 0               On success.
-    \retval -1              If the code is invalid (greater than 0xFF).
 
     \sa trapa_get_handler()
 */
