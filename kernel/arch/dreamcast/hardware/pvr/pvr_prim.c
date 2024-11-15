@@ -2,6 +2,7 @@
 
    pvr_prim.c
    Copyright (C) 2002 Megan Potter
+   Copyright (C) 2024 Falco Girgis
 
  */
 
@@ -142,8 +143,8 @@ void pvr_poly_cxt_col(pvr_poly_cxt_t *dst, pvr_list_t list) {
 /* Create a textured polygon context with parameters similar to
    the old "ta" function `ta_poly_hdr_txr' */
 void pvr_poly_cxt_txr(pvr_poly_cxt_t *dst, pvr_list_t list,
-                      int textureformat, int tw, int th, pvr_ptr_t textureaddr,
-                      int filtering) {
+                      pvr_txr_fmt_t textureformat, size_t tw, size_t th, pvr_ptr_t textureaddr,
+                      pvr_filter_t filtering) {
     int alpha;
 
     /* Start off blank */
@@ -223,8 +224,8 @@ void pvr_sprite_cxt_col(pvr_sprite_cxt_t *dst, pvr_list_t list) {
 
 /* Create a textured sprite context. */
 void pvr_sprite_cxt_txr(pvr_sprite_cxt_t *dst, pvr_list_t list,
-                        int textureformat, int tw, int th, pvr_ptr_t textureaddr,
-                        int filtering) {
+                        pvr_txr_fmt_t textureformat, size_t tw, size_t th, pvr_ptr_t textureaddr,
+                        pvr_filter_t filtering) {
     int alpha;
 
     /* Start off blank */
@@ -331,8 +332,8 @@ void pvr_sprite_compile(pvr_sprite_hdr_t *dst, const pvr_sprite_cxt_t *src) {
     dst->oargb = 0x00000000;
 }
 
-void pvr_mod_compile(pvr_mod_hdr_t *dst, pvr_list_t list, uint32 mode,
-                     uint32 cull) {
+void pvr_mod_compile(pvr_mod_hdr_t *dst, pvr_list_t list, pvr_mod_t mode,
+                     pvr_cull_t cull) {
     dst->cmd = PVR_CMD_MODIFIER
         | FIELD_PREP(PVR_TA_CMD_TYPE, list);
     dst->mode1 = FIELD_PREP(PVR_TA_PM1_MODIFIERINST, mode)
@@ -503,10 +504,10 @@ void pvr_poly_cxt_col_mod(pvr_poly_cxt_t *dst, pvr_list_t list) {
 /* Create a textured polygon context for polygons affected by modifier
    volumes */
 void pvr_poly_cxt_txr_mod(pvr_poly_cxt_t *dst, pvr_list_t list,
-                          int textureformat, int tw, int th,
-                          pvr_ptr_t textureaddr, int filtering,
-                          int textureformat2, int tw2, int th2,
-                          pvr_ptr_t textureaddr2, int filtering2) {
+                          pvr_txr_fmt_t textureformat, size_t tw, size_t th,
+                          pvr_ptr_t textureaddr, pvr_filter_t filtering,
+                          pvr_txr_fmt_t textureformat2, size_t tw2, size_t th2,
+                          pvr_ptr_t textureaddr2, pvr_filter_t filtering2) {
     int alpha;
 
     /* Start off blank */
