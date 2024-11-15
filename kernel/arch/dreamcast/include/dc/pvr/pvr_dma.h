@@ -44,12 +44,12 @@ __BEGIN_DECLS
     \ingroup  pvr_dma
 */
 typedef enum pvr_dma_type {
-    PVR_DMA_VRAM64    = 0, /**< Transfer to VRAM using TA bus */
-    PVR_DMA_VRAM32    = 1, /**< Transfer to VRAM using TA bus */
-    PVR_DMA_TA        = 2, /**< Transfer to the tile accelerator */
-    PVR_DMA_YUV       = 3, /**< Transfer to the YUV converter (TA) */
-    PVR_DMA_VRAM32_SB = 4, /**< Transfer to/from VRAM using PVR i/f */
-    PVR_DMA_VRAM64_SB = 5  /**< Transfer to/from VRAM using PVR i/f */
+    PVR_DMA_VRAM64,    /**< Transfer to VRAM using TA bus */
+    PVR_DMA_VRAM32,    /**< Transfer to VRAM using TA bus */
+    PVR_DMA_TA,        /**< Transfer to the tile accelerator */
+    PVR_DMA_YUV,       /**< Transfer to the YUV converter (TA) */
+    PVR_DMA_VRAM32_SB, /**< Transfer to/from VRAM using PVR i/f */
+    PVR_DMA_VRAM64_SB  /**< Transfer to/from VRAM using PVR i/f */
 } pvr_dma_type_t;
 
 /** \brief   PVR DMA interrupt callback type.

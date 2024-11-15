@@ -58,8 +58,8 @@ __BEGIN_DECLS
     pvr_poly_cxt_t.
 */
 typedef enum __packed pvr_shade {
-    PVR_SHADE_FLAT    = 0, /**< \brief Use flat shading */
-    PVR_SHADE_GOURAUD = 1  /**< \brief Use Gouraud shading */
+    PVR_SHADE_FLAT,   /**< Use flat shading */
+    PVR_SHADE_GOURAUD /**< Use Gouraud shading */
 } pvr_shade_t;
 
 /** \defgroup pvr_ctx_depth     Depth
@@ -73,14 +73,14 @@ typedef enum __packed pvr_shade {
     These set the depth function used for comparisons.
 */
 typedef enum __packed pvr_depth {
-    PVR_DEPTHCMP_NEVER    = 0,   /**< \brief Never pass */
-    PVR_DEPTHCMP_LESS     = 1,   /**< \brief Less than */
-    PVR_DEPTHCMP_EQUAL    = 2,   /**< \brief Equal to */
-    PVR_DEPTHCMP_LEQUAL   = 3,   /**< \brief Less than or equal to */
-    PVR_DEPTHCMP_GREATER  = 4,   /**< \brief Greater than */
-    PVR_DEPTHCMP_NOTEQUAL = 5,   /**< \brief Not equal to */
-    PVR_DEPTHCMP_GEQUAL   = 6,   /**< \brief Greater than or equal to */
-    PVR_DEPTHCMP_ALWAYS   = 7    /**< \brief Always pass */
+    PVR_DEPTHCMP_NEVER,    /**< Never pass */
+    PVR_DEPTHCMP_LESS,     /**< Less than */
+    PVR_DEPTHCMP_EQUAL,    /**< Equal to */
+    PVR_DEPTHCMP_LEQUAL,   /**< Less than or equal to */
+    PVR_DEPTHCMP_GREATER,  /**< Greater than */
+    PVR_DEPTHCMP_NOTEQUAL, /**< Not equal to */
+    PVR_DEPTHCMP_GEQUAL,   /**< Greater than or equal to */
+    PVR_DEPTHCMP_ALWAYS    /**< Always pass */
 } pvr_depth_t;
 
 /** \brief      PowerVR primitive context culling modes
@@ -91,10 +91,10 @@ typedef enum __packed pvr_depth {
     any 3D hardware before.
 */
 typedef enum __packed pvr_cull {
-    PVR_CULLING_NONE  = 0,   /**< \brief Disable culling */
-    PVR_CULLING_SMALL = 1,   /**< \brief Cull if small */
-    PVR_CULLING_CCW   = 2,   /**< \brief Cull if counterclockwise */
-    PVR_CULLING_CW    = 3    /**< \brief Cull if clockwise */
+    PVR_CULLING_NONE,  /**< Disable culling */
+    PVR_CULLING_SMALL, /**< Cull if small */
+    PVR_CULLING_CCW,   /**< Cull if counterclockwise */
+    PVR_CULLING_CW     /**< Cull if clockwise */
 } pvr_cull_t;
 
 /** \defgroup pvr_ctx_texture Texture
@@ -114,14 +114,14 @@ typedef enum __packed pvr_cull {
     blending on the PVR.
 */
 typedef enum __packed pvr_blend {
-    PVR_BLEND_ZERO         = 0,   /**< \brief None of this color */
-    PVR_BLEND_ONE          = 1,   /**< \brief All of this color */
-    PVR_BLEND_DESTCOLOR    = 2,   /**< \brief Destination color */
-    PVR_BLEND_INVDESTCOLOR = 3,   /**< \brief Inverse of destination color */
-    PVR_BLEND_SRCALPHA     = 4,   /**< \brief Blend with source alpha */
-    PVR_BLEND_INVSRCALPHA  = 5,   /**< \brief Blend with inverse source alpha */
-    PVR_BLEND_DESTALPHA    = 6,   /**< \brief Blend with destination alpha */
-    PVR_BLEND_INVDESTALPHA = 7    /**< \brief Blend with inverse destination alpha */
+    PVR_BLEND_ZERO,         /**< None of this color */
+    PVR_BLEND_ONE,          /**< All of this color */
+    PVR_BLEND_DESTCOLOR,    /**< Destination color */
+    PVR_BLEND_INVDESTCOLOR, /**< Inverse of destination color */
+    PVR_BLEND_SRCALPHA,     /**< Blend with source alpha */
+    PVR_BLEND_INVSRCALPHA,  /**< Blend with inverse source alpha */
+    PVR_BLEND_DESTALPHA,    /**< Blend with destination alpha */
+    PVR_BLEND_INVDESTALPHA  /**< Blend with inverse destination alpha */
 } pvr_blend_t;
 
 /** \brief                          PowerVR primitive context fog modes
@@ -131,10 +131,10 @@ typedef enum __packed pvr_blend {
     constants in its pvr_poly_cxt_t.
 */
 typedef enum __packed pvr_fog {
-    PVR_FOG_TABLE   = 0,   /**< \brief Table fog */
-    PVR_FOG_VERTEX  = 1,   /**< \brief Vertex fog */
-    PVR_FOG_DISABLE = 2,   /**< \brief Disable fog */
-    PVR_FOG_TABLE2  = 3    /**< \brief Table fog mode 2 */
+    PVR_FOG_TABLE,    /**< Table fog */
+    PVR_FOG_VERTEX,   /**< Vertex fog */
+    PVR_FOG_DISABLE,  /**< Disable fog */
+    PVR_FOG_TABLE2    /**< Table fog mode 2 */
 } pvr_fog_t;
 
 /** \brief                          PowerVR primitive context clipping modes
@@ -143,9 +143,9 @@ typedef enum __packed pvr_fog {
     These control how primitives are clipped against the user clipping area.
 */
 typedef enum __packed pvr_clip {
-    PVR_USERCLIP_DISABLE = 0,   /**< \brief Disable clipping */
-    PVR_USERCLIP_INSIDE  = 2,   /**< \brief Enable clipping inside area */
-    PVR_USERCLIP_OUTSIDE = 3    /**< \brief Enable clipping outside area */
+    PVR_USERCLIP_DISABLE,  /**< Disable clipping */
+    PVR_USERCLIP_INSIDE,   /**< Enable clipping inside area */
+    PVR_USERCLIP_OUTSIDE   /**< Enable clipping outside area */
 } pvr_clip_t;
 
 /** \defgroup pvr_ctx_color     Color
@@ -169,10 +169,10 @@ typedef enum __packed pvr_clip {
     the mirroring behavior.
 */
 typedef enum __packed pvr_uv_flip {
-    PVR_UVFLIP_NONE = 0,  /**< \brief No flipped coordinates */
-    PVR_UVFLIP_V    = 1,  /**< \brief Flip V only */
-    PVR_UVFLIP_U    = 2,  /**< \brief Flip U only */
-    PVR_UVFLIP_UV   = 3   /**< \brief Flip U and V */
+    PVR_UVFLIP_NONE, /**< No flipped coordinates */
+    PVR_UVFLIP_V,    /**< Flip V only */
+    PVR_UVFLIP_U,    /**< Flip U only */
+    PVR_UVFLIP_UV    /**< Flip U and V */
 } pvr_uv_flip_t;
 
 /** \brief   Enable or disable clamping of U/V on the PVR
@@ -184,21 +184,21 @@ typedef enum __packed pvr_uv_flip {
     will instead ensure that the coordinate(s) in question never exceed 1.0.
 */
 typedef enum __packed pvr_uv_clamp {
-    PVR_UVCLAMP_NONE = 0,  /**< \brief Disable clamping */
-    PVR_UVCLAMP_V    = 1,  /**< \brief Clamp V only */
-    PVR_UVCLAMP_U    = 2,  /**< \brief Clamp U only */
-    PVR_UVCLAMP_UV   = 3   /**< \brief Clamp U and V */
+    PVR_UVCLAMP_NONE, /**< Disable clamping */
+    PVR_UVCLAMP_V,    /**< Clamp V only */
+    PVR_UVCLAMP_U,    /**< Clamp U only */
+    PVR_UVCLAMP_UV    /**< Clamp U and V */
 } pvr_uv_clamp_t;
 
 /** \brief    PowerVR texture sampling modes
     \ingroup  pvr_ctx_texture
 */
 typedef enum __packed pvr_filter {
-    PVR_FILTER_NONE       = 0,   /**< \brief No filtering (point sample) */
-    PVR_FILTER_NEAREST    = 0,   /**< \brief No filtering (point sample) */
-    PVR_FILTER_BILINEAR   = 1,   /**< \brief Bilinear interpolation */
-    PVR_FILTER_TRILINEAR1 = 2,   /**< \brief Trilinear interpolation pass 1 */
-    PVR_FILTER_TRILINEAR2 = 3    /**< \brief Trilinear interpolation pass 2 */
+    PVR_FILTER_NONE,        /**< No filtering (point sample) */
+    PVR_FILTER_NEAREST = 0, /**< No filtering (point sample) */
+    PVR_FILTER_BILINEAR,    /**< Bilinear interpolation */
+    PVR_FILTER_TRILINEAR1,  /**< Trilinear interpolation pass 1 */
+    PVR_FILTER_TRILINEAR2   /**< Trilinear interpolation pass 2 */
 } pvr_filter_t;
 
 /** \brief    Mipmap bias modes for PowerVR primitive contexts
@@ -227,10 +227,10 @@ typedef enum __packed pvr_mip_bias {
     \ingroup   pvr_ctx_texture
 */
 typedef enum __packed pvr_txr_env {
-    PVR_TXRENV_REPLACE       = 0,   /**< \brief C = Ct, A = At */
-    PVR_TXRENV_MODULATE      = 1,   /**< \brief C = Cs * Ct, A = At */
-    PVR_TXRENV_DECAL         = 2,   /**< \brief C = (Cs * At) + (Cs * (1-At)), A = As */
-    PVR_TXRENV_MODULATEALPHA = 3    /**< \brief C = Cs * Ct, A = As * At */
+    PVR_TXRENV_REPLACE,      /**< C = Ct, A = At */
+    PVR_TXRENV_MODULATE,     /**< C = Cs * Ct, A = At */
+    PVR_TXRENV_DECAL,        /**< C = (Cs * At) + (Cs * (1-At)), A = As */
+    PVR_TXRENV_MODULATEALPHA /**< C = Cs * Ct, A = As * At */
 } pvr_txr_env_t;
 
 /** \defgroup pvr_txr_fmts          Formats
@@ -282,13 +282,13 @@ typedef uint32_t pvr_txr_fmt_t;
     \sa pvr_txr_fmts
  */
 typedef enum pvr_pix_fmt {
-    PVR_PIXFMT_ARGB1555 = 0,
-    PVR_PIXFMT_RGB565   = 1,
-    PVR_PIXFMT_ARGB4444 = 2,
-    PVR_PIXFMT_YUV422   = 3,
-    PVR_PIXFMT_BUMP     = 4,
-    PVR_PIXFMT_PAL4BPP  = 5,
-    PVR_PIXFMT_PAL8BPP  = 6
+    PVR_PIXFMT_ARGB1555,
+    PVR_PIXFMT_RGB565,
+    PVR_PIXFMT_ARGB4444,
+    PVR_PIXFMT_YUV422,
+    PVR_PIXFMT_BUMP,
+    PVR_PIXFMT_PAL4BPP,
+    PVR_PIXFMT_PAL8BPP
 } pvr_pix_fmt_t;
 
 /** \brief                          Color formats for PowerVR vertices
@@ -297,18 +297,18 @@ typedef enum pvr_pix_fmt {
     These control how colors are represented in polygon data.
 */
 typedef enum __packed pvr_color {
-    PVR_CLRFMT_ARGBPACKED     = 0,  /**< \brief 32-bit integer ARGB */
-    PVR_CLRFMT_4FLOATS        = 1,  /**< \brief 4 floating point values */
-    PVR_CLRFMT_INTENSITY      = 2,  /**< \brief Intensity color */
-    PVR_CLRFMT_INTENSITY_PREV = 3   /**< \brief Use last intensity */
+    PVR_CLRFMT_ARGBPACKED,    /**< 32-bit integer ARGB */
+    PVR_CLRFMT_4FLOATS,       /**< 4 floating point values */
+    PVR_CLRFMT_INTENSITY,     /**< Intensity color */
+    PVR_CLRFMT_INTENSITY_PREV /**< Use last intensity */
 } pvr_color_t;
 
 /** \brief                          U/V data format for PVR textures
     \ingroup                        pvr_ctx_texture
 */
 typedef enum __packed pvr_uv {
-    PVR_UVFMT_32BIT = 0,  /**< \brief 32-bit floating point U/V */
-    PVR_UVFMT_16BIT = 1   /**< \brief 16-bit floating point U/V */
+    PVR_UVFMT_32BIT, /**< 32-bit floating point U/V */
+    PVR_UVFMT_16BIT  /**< 16-bit floating point U/V */
 } pvr_uv_t;
 
 /** \defgroup pvr_ctx_modvol        Modifier Volumes
@@ -324,9 +324,9 @@ typedef enum __packed pvr_uv {
     depending on whether you want an inclusion or exclusion volume.
 */
 typedef enum __packed pvr_mod {
-    PVR_MODIFIER_OTHER_POLY        = 0,  /**< \brief Not the last polygon in the volume */
-    PVR_MODIFIER_INCLUDE_LAST_POLY = 1,  /**< \brief Last polygon, inclusion volume */
-    PVR_MODIFIER_EXCLUDE_LAST_POLY = 2   /**< \brief Last polygon, exclusion volume */
+    PVR_MODIFIER_OTHER_POLY,        /**< Not the last polygon in the volume */
+    PVR_MODIFIER_INCLUDE_LAST_POLY, /**< Last polygon, inclusion volume */
+    PVR_MODIFIER_EXCLUDE_LAST_POLY  /**< Last polygon, exclusion volume */
 } pvr_mod_t;
 
 /** \brief   PVR polygon context.

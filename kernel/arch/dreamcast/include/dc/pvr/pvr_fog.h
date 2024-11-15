@@ -121,11 +121,11 @@ void pvr_fog_table_linear(float start, float end);
     have `129` entries, where the `0`th entry is farthest from the eye and the last
     entry is nearest. Higher values = heavier fog.
 
-    \param  tbl1            The table of fog values to set
+    \param  table            The table of fog values to set
 
     \sa pvr_fog_table_exp2(), pvr_fog_table_exp(), pvr_fog_table_linear()
 */
-void pvr_fog_table_custom(const float tbl1[]);
+void pvr_fog_table_custom(const float *table);
 
 /** @} */
 

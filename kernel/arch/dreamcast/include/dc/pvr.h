@@ -80,12 +80,12 @@ __BEGIN_DECLS
     both primitives (polygons or sprites) and modifier volumes. 
 */
 typedef enum pvr_list {
-    PVR_LIST_OP_POLY = 0,  /**< Opaque polygon list */
-    PVR_LIST_OP_MOD  = 1,  /**< Opaque modifier list */
-    PVR_LIST_TR_POLY = 2,  /**< Translucent polygon list */
-    PVR_LIST_TR_MOD  = 3,  /**< Translucent modifier list*/
-    PVR_LIST_PT_POLY = 4,  /**< Punch-thru polygon list */
-    PVR_LIST_COUNT   = 5   /**< Number of list types */
+    PVR_LIST_OP_POLY, /**< Opaque polygon list */
+    PVR_LIST_OP_MOD,  /**< Opaque modifier list */
+    PVR_LIST_TR_POLY, /**< Translucent polygon list */
+    PVR_LIST_TR_MOD,  /**< Translucent modifier list*/
+    PVR_LIST_PT_POLY, /**< Punch-thru polygon list */
+    PVR_LIST_COUNT    /**< Number of list types */
 } pvr_list_t;
 
 #include "pvr/pvr_regs.h"
@@ -358,7 +358,6 @@ void pvr_scene_begin(void);
     \sa pvr_scene_begin(), pvr_scene_end()
 */
 void pvr_scene_begin_txr(pvr_ptr_t txr, size_t *rx, size_t *ry);
-
 
 /** \defgroup pvr_list_mgmt Polygon Lists
     \brief                  PVR API for managing list submission

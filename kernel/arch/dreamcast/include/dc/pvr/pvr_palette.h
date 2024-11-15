@@ -51,10 +51,10 @@ __BEGIN_DECLS
     can only have one format active at a time.
 */
 typedef enum pvr_palfmt {
-    PVR_PAL_ARGB1555 = 0, /**< \brief 16-bit ARGB1555 palette format */
-    PVR_PAL_RGB565   = 1, /**< \brief 16-bit RGB565 palette format */
-    PVR_PAL_ARGB4444 = 2, /**< \brief 16-bit ARGB4444 palette format */
-    PVR_PAL_ARGB8888 = 3  /**< \brief 32-bit ARGB8888 palette format */
+    PVR_PAL_ARGB1555, /**< 16-bit ARGB1555 palette format */
+    PVR_PAL_RGB565,   /**< 16-bit RGB565 palette format */
+    PVR_PAL_ARGB4444, /**< 16-bit ARGB4444 palette format */
+    PVR_PAL_ARGB8888  /**< 32-bit ARGB8888 palette format */
 } pvr_palfmt_t;
 
 /** \brief   Set the palette format.
