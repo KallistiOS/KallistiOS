@@ -6,7 +6,7 @@
 
 # Dreamcast-specific file systems
 
-OBJS  = fs_iso9660.o fs_vmu.o fs_dcload.o dcload-syscall.o vmufs.o \
+OBJS  = dev_fb.o fs_iso9660.o fs_vmu.o fs_dcload.o dcload-syscall.o vmufs.o \
  fs_dclsocket.o
 SUBDIRS =
 
