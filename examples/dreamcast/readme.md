@@ -12,6 +12,8 @@ This page serves as an index for all KallistiOS examples.
   - stacktrace
   - threading
   - watchdog
+- cd
+  - stream
 - conio
   - adventure
   - basic
