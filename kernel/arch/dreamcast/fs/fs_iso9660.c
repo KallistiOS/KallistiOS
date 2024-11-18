@@ -277,7 +277,7 @@ static int bread_cache(cache_block_t **cache, uint32 sector) {
     iso_abort_stream(cache == icache);
 
     /* Load the requested block */
-    j = cdrom_read_sectors_ex(cache[i]->data, sector + 150, 1, CDROM_READ_DMA);
+    j = cdrom_read_sectors_ex(cache[i]->data, sector + 150, 1, CDROM_READ_DMA_IRQ);
 
     if(j < 0) {
         //dbglog(DBG_ERROR, "fs_iso9660: can't read_sectors for %d: %d\n",
@@ -703,7 +703,6 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
     uint8 * outbuf;
     file_t fd = (file_t)h;
     size_t remain_size = 0, req_size;
-    int read_mode = 0;
     uint32_t sector;
 
     /* Check that the fd is valid */
@@ -730,12 +729,11 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
 
         if((thissect & 31) == 0 && toread >= 32 && (((uintptr_t)outbuf) & 31) == 0) {
 
-            toread &= ~31;
-
             if(stream_fd == fd) {
+                toread &= ~31;
                 c = cdrom_stream_request(outbuf, toread, 1);
 
-                if(c < 0) {
+                if(c) {
                     goto read_error;
                 }
                 cdrom_stream_progress(&remain_size);
@@ -755,8 +753,7 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
                 }
                 c = cdrom_stream_start(sector + 150, req_size / 2048, CDROM_READ_DMA_IRQ);
 
-                if(c < 0) {
-                    read_mode = (thissect == 2048 && toread >= 2048) ? 1 : 0;
+                if(c) {
                     goto read_loop;
                 }
                 fh[fd].stream_part = 0;
@@ -764,9 +761,10 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
                 // dbglog(DBG_DEBUG, "Stream start: lba=%ld cnt=%d fd=%d\n",
                 //     sector + 150, req_size / 2048, fd);
 
+                toread &= ~31;
                 c = cdrom_stream_request(outbuf, toread, 1);
 
-                if(c < 0) {
+                if(c) {
                     goto read_error;
                 }
                 cdrom_stream_progress(&remain_size);
@@ -794,7 +792,7 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
             }
             else {
                 c = cdrom_stream_request(fh[fd].stream_data, 32, 0);
-                if(c < 0) {
+                if(c) {
                     goto read_error;
                 }
                 fh[fd].stream_part = toread;
@@ -815,17 +813,17 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
         }
 
 read_loop:
-        if(read_mode == 1) {
+        if(thissect == 2048 && toread >= 2048 && (((uintptr_t)outbuf) & 31) == 0) {
             // Round it off to an even sector count
             thissect = toread / 2048;
             toread = thissect * 2048;
-            c = cdrom_read_sectors_ex(outbuf, sector + 150, thissect, CDROM_READ_DMA);
+            c = cdrom_read_sectors_ex(outbuf, sector + 150, thissect, CDROM_READ_DMA_IRQ);
 
-            if(c < 0) {
+            if(c) {
                 goto read_error;
             }
         }
-        else if(read_mode == 0) {
+        else {
             toread = (toread > thissect) ? thissect : toread;
             c = bdread(sector);
 
@@ -1086,6 +1084,7 @@ static int iso_rewinddir(void * h) {
 int iso_reset(void) {
     iso_break_all();
     bclear();
+    iso_abort_stream(0);
     percd_done = 0;
     return 0;
 }
