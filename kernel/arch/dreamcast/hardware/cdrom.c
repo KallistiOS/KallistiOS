@@ -133,10 +133,6 @@ static int cdrom_poll_cmd(gdc_cmd_hnd_t hnd, int timeout) {
         thd_pass();
     } while(1);
 
-    if(cmd_response == STREAMING) {
-        cmd_hnd = hnd;
-    }
-
     return ERR_OK;
 }
 
@@ -159,6 +155,10 @@ int cdrom_exec_cmd_ex(int cmd, void *param, int timeout, bool use_irq) {
     }
     else {
         rv = cdrom_poll_cmd(cmd_hnd, timeout);
+    }
+
+    if(cmd_response != STREAMING) {
+        cmd_hnd = 0;
     }
 
     if(rv != ERR_OK) {
@@ -348,27 +348,19 @@ int cdrom_read_toc(CDROM_TOC *toc_buffer, int session) {
 static int cdrom_read_sectors_dma_irq(void *params) {
 
     mutex_lock_scoped(&_g1_ata_mutex);
-    dma_in_progress = true;
-    dma_blocking = true;
-
-    /* There is no need to use the vblank scheme here.
-       We can just wait for the DMA IRQ. It will work faster. */
     cmd_hnd = cdrom_req_cmd(CMD_DMAREAD, params);
 
     if(cmd_hnd <= 0) {
-        dma_in_progress = false;
-        dma_blocking = false;
         return ERR_SYS;
     }
+    dma_in_progress = true;
+    dma_blocking = true;
 
+    /* Start the process of executing the command. */
     do {
         syscall_gdrom_exec_server();
         cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
 
-        if(cmd_response == PROCESSING) {
-            sem_wait(&dma_done);
-            continue;
-        }
         if(cmd_response != BUSY) {
             break;
         }
@@ -376,13 +368,41 @@ static int cdrom_read_sectors_dma_irq(void *params) {
         thd_pass();
     } while(1);
 
+    if(cmd_response == PROCESSING) {
+        /* Poll syscalls in vblank IRQ in case an unexpected error occurs
+            while we wait DMA IRQ. */
+        cmd_in_progress = true;
+
+        /* Wait DMA is finished or command failed. */
+        sem_wait(&dma_done);
+
+        /* Just to make sure the command is finished properly.
+           Usually we are already done here. */
+        if(cmd_response == PROCESSING || cmd_response == BUSY) {
+            do {
+                syscall_gdrom_exec_server();
+                cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
+
+                if(cmd_response != PROCESSING && cmd_response != BUSY) {
+                    break;
+                }
+                thd_pass();
+            } while(1);
+        }
+    }
+    else {
+        /* The command can complete or fails immediately,
+           in this case we just countdown the semaphore if needed.
+        */
+        if(sem_count(&dma_done) > 0) {
+            sem_wait(&dma_done);
+        }
+    }
+
     cmd_hnd = 0;
 
     if(cmd_response == COMPLETED || cmd_response == NO_ACTIVE) {
         return ERR_OK;
-    }
-    else if(cmd_response == NO_ACTIVE) {
-        return ERR_NO_ACTIVE;
     }
     else if(cmd_status[0] == 2) {
         return ERR_NO_DISC;
@@ -772,11 +792,19 @@ static void cdrom_vblank(uint32 evt, void *data) {
     cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
 
     if(cmd_response != PROCESSING && cmd_response != BUSY) {
-        if(cmd_response != STREAMING) {
-            cmd_hnd = 0;
-        }
         cmd_in_progress = false;
-        sem_signal(&cmd_done);
+
+        if(dma_in_progress) {
+            dma_in_progress = false;
+
+            if(dma_blocking) {
+                dma_blocking = false;
+                sem_signal(&dma_done);
+            }
+        }
+        else {
+            sem_signal(&cmd_done);
+        }
         thd_schedule(1, 0);
     }
 }
@@ -788,6 +816,11 @@ static void g1_dma_irq_hnd(uint32_t code, void *data) {
     if(dma_in_progress) {
         dma_in_progress = false;
 
+        if(cmd_in_progress) {
+            cmd_in_progress = false;
+            syscall_gdrom_exec_server();
+            cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
+        }
         if(dma_blocking) {
             dma_blocking = false;
             sem_signal(&dma_done);
