@@ -22,7 +22,7 @@ int minifont_draw(uint16 *buffer, uint32 bufwidth, uint32 c) {
     if(c < 33 || c > 126)
         return CHAR_WIDTH;
 
-    pos = (c - 33) * BYTES_PER_CHAR;
+    pos = (c - 32) * BYTES_PER_CHAR;
 
     for(i = 0; i < CHAR_HEIGHT; ++i) {
         cur = buffer;
