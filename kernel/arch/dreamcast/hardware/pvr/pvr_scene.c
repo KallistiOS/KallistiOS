@@ -91,6 +91,12 @@ static void pvr_start_ta_rendering(void) {
     // Make sure to wait until the TA is ready to start rendering a new scene
     if(!pvr_state.ta_ready) {
         pvr_wait_ready();
+
+        // If using a single vertex buffer, we have to wait until the PVR is
+        // done rendering to use the TA again.
+        if(!pvr_state.vbuf_doublebuf)
+            pvr_wait_render_done();
+
         pvr_state.ta_ready = 1;
     }
 
@@ -422,4 +428,15 @@ int pvr_check_ready(void) {
         return 0;
     else
         return -1;
+}
+
+int pvr_wait_render_done(void) {
+    int t = 0;
+
+    irq_disable_scoped();
+
+    if(pvr_state.render_busy)
+        t = genwait_wait((void *)&pvr_state.render_busy, "PVR wait render done", 100, NULL);
+
+    return t;
 }

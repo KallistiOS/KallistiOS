@@ -210,6 +210,9 @@ typedef struct {
     // Non-zero if FSAA was enabled at init time.
     int     fsaa;
 
+    // Non-zero if using double-buffering for the vertex buffer.
+    int     vbuf_doublebuf;
+
     // Non-zero if we are rendering to a texture
     int     to_texture[2];
 

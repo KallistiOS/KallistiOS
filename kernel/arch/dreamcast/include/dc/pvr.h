@@ -1416,6 +1416,13 @@ typedef struct {
 
     int     opb_overflow_count;
 
+    /** \brief  Disable vertex buffer double-buffering.
+
+        Use only one single vertex buffer. This means that the PVR must finish
+        rendering before the Tile Accelerator is used to prepare a new frame;
+        but it allows using much smaller vertex buffers. */
+    int     vbuf_doublebuf_disabled;
+
 } pvr_init_params_t;
 
 /** \brief   Initialize the PVR chip to ready status.
@@ -2123,6 +2130,19 @@ int pvr_wait_ready(void);
 */
 int pvr_check_ready(void);
 
+/** \brief   Block the caller until the PVR has finished rendering the previous
+             frame.
+    \ingroup pvr_scene_mgmt
+
+    This function can be used to wait until the PVR is done rendering a previous
+    scene. This can be useful for instance to make sure that the PVR is done
+    using textures that have to be updated, before updating those.
+
+    \retval 0               On success.
+    \retval -1              On error. Something is probably very wrong...
+*/
+int pvr_wait_render_done(void);
+
 
 /* Primitive handling ************************************************/
 
@@ -2400,6 +2420,20 @@ void pvr_txr_load_ex(const void *src, pvr_ptr_t dst,
 */
 void pvr_txr_load_kimg(const kos_img_t *img, pvr_ptr_t dst, uint32_t flags);
 
+/** \brief   Get a pointer to the front buffer.
+    \ingroup pvr_txr_mgmt
+
+    This function can be used to retrieve a pointer to the front buffer, aka.
+    the last fully rendered buffer that is either being displayed right now,
+    or is queued to be displayed.
+
+    Note that the frame buffers lie in 32-bit memory, while textures lie in
+    64-bit memory. The address returned will point to 64-bit memory, but the
+    front buffer cannot be used directly as a regular texture.
+
+    \return                 A pointer to the front buffer.
+*/
+pvr_ptr_t pvr_get_front_buffer(void);
 
 /* PVR DMA ***********************************************************/
 /** \defgroup pvr_dma   DMA
