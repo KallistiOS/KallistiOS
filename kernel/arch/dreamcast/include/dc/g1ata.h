@@ -2,7 +2,7 @@
 
    dc/g1ata.h
    Copyright (C) 2013, 2014 Lawrence Sebald
-   Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024 Ruslan Rostovtsev
 */
 
 /** \file    dc/g1ata.h
@@ -281,6 +281,10 @@ int g1_ata_read_lba(uint64_t sector, size_t count, void *buf);
                             a PIO transfer function like g1_ata_read_lba()
                             instead.
 
+    \note                   If the buffer address points to the P2 memory area,
+                            the caller function will be responsible for ensuring
+                            memory coherency.
+
     \par    Error Conditions:
     \em     EIO - an I/O error occurred in reading data \n
     \em     ENXIO - ATA support not initialized or no device attached \n
@@ -343,6 +347,10 @@ int g1_ata_write_lba(uint64_t sector, size_t count, const void *buf);
                             function, DMA mode is not supported. You should use
                             a PIO transfer function like g1_ata_write_lba()
                             instead.
+
+    \note                   If the buffer address points to the P2 memory area,
+                            the caller function will be responsible for ensuring
+                            memory coherency.
 
     \par    Error Conditions:
     \em     ENXIO - ATA support not initialized or no device attached \n
