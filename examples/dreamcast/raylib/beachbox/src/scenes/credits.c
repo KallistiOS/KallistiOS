@@ -72,12 +72,11 @@ void draw_credits_scene(void) {
 
     DrawRectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, get_background_color());
 
-    // TODO: add actual credits
-
     const char *credits_text  = "Made by Psyop Studios";
     const char *credits_text2 = "Music and SFX by Creepypastorius";
     const char *credits_text3 = "Credits song by mickschen";
     const char *credits_text4 = "Thanks to KallistiOS and raylib";
+    
     DrawText(credits_text, (int)(SCREEN_WIDTH / 2) - MeasureText(credits_text, 24) / 2, (int)(SCREEN_HEIGHT / 4) + 20, 24, RAYWHITE);
     DrawText(credits_text2, (int)(SCREEN_WIDTH / 2) - MeasureText(credits_text2, 24) / 2, (int)(SCREEN_HEIGHT / 4) + 65, 24, RAYWHITE);
     DrawText(credits_text3, (int)(SCREEN_WIDTH / 2) - MeasureText(credits_text3, 24) / 2, (int)(SCREEN_HEIGHT / 4) + 95, 24, RAYWHITE);
