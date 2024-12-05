@@ -20,8 +20,9 @@ SRCS = main.c \
        src/vmu.c
 OBJS = $(SRCS:.c=.o) romdisk.o
 KOS_ROMDISK_DIR = romdisk
-KOS_CFLAGS += -std=c23
+KOS_CFLAGS += -std=gnu2x
 KOS_CFLAGS += -I${KOS_PORTS}/include/raylib
+KOS_GCCVER_MIN = 13.0.0
 
 all: $(TARGET)
 
