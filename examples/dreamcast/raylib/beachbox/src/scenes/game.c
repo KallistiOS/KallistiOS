@@ -4,6 +4,7 @@
    Copyright (C) 2024 Cypress
 */
 
+#include <raylib.h>
 #include <raymath.h>
 
 #include "game.h"
