@@ -380,6 +380,10 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
         return NULL;
     }
 
+    /* Init threading if it hasn't already been. */
+    if(!thd_initialized())
+        thd_init();
+
     if(!real_attr.stack_size)
         real_attr.stack_size = THD_STACK_SIZE;
 
@@ -621,6 +625,11 @@ static inline void thd_schedule_inner(kthread_t *thd) {
 void thd_schedule(bool front_of_line, uint64_t now) {
     kthread_t *thd;
 
+    /* XXX: This works around some manual calls to thd_schedule paired with
+        sem_signal. They should likely be removed/woven into sem_signal. */
+    if(!thd_initialized())
+        return;
+
     if(now == 0)
         now = timer_ms_gettime64();
 
@@ -739,8 +748,7 @@ static void thd_timer_hnd(irq_context_t *context) {
    sleep because it eases the load on the system for the other
    threads. */
 void thd_sleep(unsigned int ms) {
-    /* This should never happen. This should, perhaps, assert. */
-    if(thd_mode == THD_MODE_NONE) {
+    if(!thd_initialized()) {
         dbglog(DBG_WARNING, "thd_sleep called when threading not "
                "initialized.\n");
         timer_spin_sleep(ms);
@@ -767,6 +775,9 @@ __used
 void thd_pass(void) {
     /* Makes no sense inside int */
     if(irq_inside_int()) return;
+
+    /* Ignore if no threading */
+    if(!thd_initialized()) return;
 
     /* Pass off control manually */
     thd_block_now(&thd_current->context);
@@ -999,6 +1010,10 @@ int kthread_key_delete(kthread_key_t key) {
 /*****************************************************************************/
 /* Init/shutdown */
 
+bool thd_initialized(void) {
+    return (thd_mode != THD_MODE_NONE);
+}
+
 /* Init */
 int thd_init(void) {
     const kthread_attr_t kern_attr = {
@@ -1024,7 +1039,7 @@ int thd_init(void) {
     kthread_t *kern;
 
     /* Make sure we're not already running */
-    if(thd_mode != THD_MODE_NONE)
+    if(thd_initialized())
         return -1;
 
     /* Setup our mode as appropriate */
@@ -1087,6 +1102,10 @@ int thd_init(void) {
 /* Shutdown */
 void thd_shutdown(void) {
     kthread_t *cur, *tmp;
+
+    /* Only shutdown if we've started up */
+    if(!thd_initialized())
+        return;
 
     /* Remove our pre-emption handler */
     timer_primary_set_callback(NULL);
