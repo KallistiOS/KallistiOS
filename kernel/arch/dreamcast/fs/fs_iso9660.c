@@ -246,7 +246,8 @@ static void bgrad_cache(cache_block_t **cache, int block) {
    cache, in which case it just returns the containing block. */
 static void iso_break_all(void);
 static int bread_cache(cache_block_t **cache, uint32 sector) {
-    int i, j, rv;
+    int i, rv;
+    cd_cmd_ret_t j;
 
     rv = -1;
     mutex_lock(&cache_mutex);
@@ -276,7 +277,7 @@ static int bread_cache(cache_block_t **cache, uint32 sector) {
     if(j < 0) {
         //dbglog(DBG_ERROR, "fs_iso9660: can't read_sectors for %d: %d\n",
         //  sector+150, j);
-        if(j == ERR_DISC_CHG || j == ERR_NO_DISC) {
+        if(j == CD_ERR_DISC_CHG || j == CD_ERR_NO_DISC) {
             init_percd();
         }
 
@@ -329,7 +330,8 @@ static iso_dirent_t root_dirent;
    a new CD has been inserted. */
 static int init_percd(void) {
     int     i, blk;
-    CDROM_TOC   toc;
+    cd_toc_t   toc;
+    cd_cmd_ret_t j;
 
     dbglog(DBG_NOTICE, "fs_iso9660: disc change detected\n");
 
@@ -337,13 +339,15 @@ static int init_percd(void) {
     iso_reset();
 
     /* Locate the root session */
-    if((i = cdrom_reinit()) != 0) {
-        dbglog(DBG_ERROR, "fs_iso9660:init_percd: cdrom_reinit returned %d\n", i);
+    if((j = cdrom_reinit()) != CD_ERR_OK) {
+        dbglog(DBG_ERROR, "fs_iso9660:init_percd: cdrom_reinit returned %d\n", j);
         return -1;
     }
 
-    if((i = cdrom_read_toc(&toc, 0)) != 0)
-        return i;
+    if((j = cdrom_read_toc(&toc, CD_AREA_LOW)) != CD_ERR_OK) {
+        dbglog(DBG_ERROR, "fs_iso9660:init_percd: cdrom_read_toc returned %d\n", j);
+        return -1;
+    }
 
     if(!(session_base = cdrom_locate_data_track(&toc)))
         return -1;
