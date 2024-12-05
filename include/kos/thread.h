@@ -302,7 +302,7 @@ typedef struct kthread_attr {
     represents either pre-emptive scheduling or an un-initialized state.
 */
 typedef enum kthread_mode {
-    THD_MODE_NONE    = -1,  /**< \brief Threads not running */
+    THD_MODE_NONE    = -1,  /**< \brief Threading not initialized */
     THD_MODE_COOP    =  0,  /**< \brief Cooperative mode \deprecated */
     THD_MODE_PREEMPT =  1   /**< \brief Preemptive threading mode */
 } kthread_mode_t;
@@ -775,6 +775,12 @@ int thd_pslist(int (*pf)(const char *fmt, ...));
     \sa thd_pslist
 */
 int thd_pslist_queue(int (*pf)(const char *fmt, ...));
+
+/** \brief  Fetch the current state of threading
+
+    \retval                 True if threading initialized false otherwise.
+*/
+bool thd_initialized(void);
 
 /** \cond INTERNAL */
 

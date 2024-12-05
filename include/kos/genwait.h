@@ -152,6 +152,9 @@ int genwait_init(void);
 
 /* Shut down the genwait system */
 void genwait_shutdown(void);
+
+/* Initialize the threadless genwait system */
+void genwait_threadless_init(void);
 /** \endcond */
 
 

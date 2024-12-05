@@ -13,6 +13,7 @@
 #include <kos/banner.h>
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>
+#include <kos/genwait.h>
 #include <kos/init.h>
 #include <kos/platform.h>
 #include <arch/arch.h>
@@ -183,7 +184,7 @@ int  __weak_symbol arch_auto_init(void) {
         dbgio_write_str(kos_get_banner());
     }
 
-    timer_init();           /* Timers */
+    timer_init();               /* Timers */
     hardware_sys_init();        /* DC low-level hardware init */
 
     if (!KOS_PLATFORM_IS_NAOMI)
@@ -194,7 +195,7 @@ int  __weak_symbol arch_auto_init(void) {
     timer_ms_enable();
     rtc_init();
 
-    thd_init();
+    genwait_threadless_init();  /* With timers ready, set up basic genwait */
 
     nmmgr_init();
 

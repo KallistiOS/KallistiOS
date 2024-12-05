@@ -22,6 +22,8 @@
 
 #include <arch/timer.h>
 #include <kos/dbglog.h>
+#include <arch/spinlock.h>
+#include <kos/dbgio.h>
 #include <kos/genwait.h>
 #include <kos/sem.h>
 
@@ -38,6 +40,63 @@ static TAILQ_HEAD(slpquehead, kthread) slpque[TABLESIZE];
    specifically blocked for a timed event (thd_sleep, genwait_wait, etc).
    This queue is sorted by remaining time (smallest at the front). */
 static struct ktqueue timer_queue;
+
+static spinlock_t threadless_lock   = SPINLOCK_INITIALIZER;
+static void (*threadless_wait_callback)(void *obj)  = NULL;
+static void *threadless_wait_obj                    = NULL;
+
+
+static int genwait_threadless_wake(void *obj) {
+    irq_disable_scoped();
+
+    /* XXX: there is something that spams genwait_wake with nothing waiting */
+    if(obj != threadless_wait_obj)
+        return 0;
+
+    threadless_wait_obj = NULL;
+    if(threadless_wait_callback)
+        threadless_wait_callback = NULL;
+
+
+    spinlock_unlock(&threadless_lock);
+    return 1;
+}
+
+static void genwait_threadless_wait(void *obj, int timeout, void (*callback)(void *)) {
+    irq_disable_scoped();
+
+    /* The lock should always be locked when we get here */
+    assert(spinlock_is_locked(&threadless_lock));
+
+    /* If this is a timed genwait, have the primary timer wake us up after timeout */
+    if(timeout)
+        timer_primary_wakeup(timeout);
+
+    threadless_wait_obj = obj;
+    if(callback)
+        threadless_wait_callback = callback;
+}
+
+static void genwait_threadless_hnd(irq_context_t *context) {
+    (void)context;
+
+    /* The lock should always be locked when we get here */
+    assert(spinlock_is_locked(&threadless_lock));
+
+    if(threadless_wait_callback) {
+        threadless_wait_callback(threadless_wait_obj);
+        threadless_wait_callback = NULL;
+    }
+    threadless_wait_obj = NULL;
+
+    spinlock_unlock(&threadless_lock);
+}
+
+void genwait_threadless_init(void) {
+    /* Lets lock the spinlock so that genwait can block */
+    spinlock_lock(&threadless_lock);
+    timer_primary_set_callback(genwait_threadless_hnd);
+}
 
 /* Internal function to insert a thread on the timer queue. Maintains
    sorting order by wait time. */
@@ -75,6 +134,13 @@ int genwait_wait(void *obj, const char *mesg, int timeout, void (*callback)(void
     if(irq_inside_int()) {
         dbglog(DBG_WARNING, "genwait_wait: called inside interrupt\n");
         return -1;
+    }
+
+    /* XXX: this will race if you initialize threading in an interrupt */
+    if(!thd_initialized()) {
+        genwait_threadless_wait(obj, timeout, callback);
+        spinlock_lock(&threadless_lock);
+        return 0;
     }
 
     irq_disable_scoped();
@@ -140,6 +206,9 @@ static int genwait_wake_thd_cnt(const void *obj, int cntmax, kthread_t *thd, int
 
     /* Twiddle interrupt state */
     irq_disable_scoped();
+
+    if(!thd_initialized())
+        return genwait_threadless_wake(obj);
 
     /* Find the queue */
     qp = &slpque[LOOKUP(obj)];
@@ -248,5 +317,3 @@ int genwait_init(void) {
 void genwait_shutdown(void) {
     /* XXX Do something about queued up procs */
 }
-
-
