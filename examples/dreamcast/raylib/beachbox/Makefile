@@ -21,6 +21,7 @@ SRCS = main.c \
 OBJS = $(SRCS:.c=.o) romdisk.o
 KOS_ROMDISK_DIR = romdisk
 KOS_CFLAGS += -std=c23
+KOS_CFLAGS += -I${KOS_PORTS}/include/raylib
 
 all: $(TARGET)
 
