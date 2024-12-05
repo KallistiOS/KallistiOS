@@ -114,11 +114,6 @@
 #define ASIC_EVT_REGS 3
 #define ASIC_EVT_REG_HNDS 32
 
-typedef struct {
-    asic_evt_handler hdl;
-    void *data;
-} asic_evt_handler_entry_t;
-
 struct asic_thdata {
     asic_evt_handler hdl;
     uint32_t source;
@@ -135,15 +130,18 @@ static asic_evt_handler_entry_t
 asic_evt_handlers[ASIC_EVT_REGS][ASIC_EVT_REG_HNDS];
 
 /* Set a handler, or remove a handler */
-void asic_evt_set_handler(uint16_t code, asic_evt_handler hnd, void *data) {
+asic_evt_handler_entry_t asic_evt_set_handler(uint16_t code, asic_evt_handler hnd, void *data) {
     uint8_t evtreg, evt;
+    asic_evt_handler_entry_t old;
 
     evtreg = (code >> 8) & 0xff;
     evt = code & 0xff;
 
     assert((evtreg < ASIC_EVT_REGS) && (evt < ASIC_EVT_REG_HNDS));
 
+    old = asic_evt_handlers[evtreg][evt];
     asic_evt_handlers[evtreg][evt] = (asic_evt_handler_entry_t){ hnd, data };
+    return old;
 }
 
 /* The ASIC event handler; this is called from the global IRQ handler
