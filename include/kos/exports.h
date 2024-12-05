@@ -1,7 +1,8 @@
 /* KallistiOS ##version##
 
    kos/exports.h
-   Copyright (C)2003 Megan Potter
+   Copyright (C) 2003 Megan Potter
+   Copyright (C) 2024 Ruslan Rostovtsev
 
 */
 
@@ -14,6 +15,7 @@
     be looked through using the functionality in this file.
 
     \author Megan Potter
+    \author Ruslan Rostovtsev
 */
 
 #ifndef __KOS_EXPORTS_H
@@ -23,6 +25,7 @@
 __BEGIN_DECLS
 
 #include <arch/types.h>
+#include <stdint.h>
 
 /** \addtogroup system_libraries
     @{
@@ -36,8 +39,8 @@ __BEGIN_DECLS
     \headerfile kos/exports.h
 */
 typedef struct export_sym {
-    const char  * name;     /**< \brief The name of the symbol. */
-    ptr_t       ptr;        /**< \brief A pointer to the symbol. */
+    const char *name;     /**< \brief The name of the symbol. */
+    uintptr_t ptr;        /**< \brief A pointer to the symbol. */
 } export_sym_t;
 
 /** \cond */
@@ -55,8 +58,8 @@ extern export_sym_t arch_symtab[];
     \headerfile kos/exports.h
 */
 typedef struct symtab_handler {
-    struct nmmgr_handler nmmgr;     /**< \brief Name manager handler header */
-    export_sym_t         * table;   /**< \brief Location of the first entry */
+    struct nmmgr_handler nmmgr;   /**< \brief Name manager handler header */
+    export_sym_t *table;          /**< \brief Location of the first entry */
 } symtab_handler_t;
 #endif
 
@@ -67,11 +70,24 @@ void export_init(void);
     \param  name            The symbol to look up
     \return                 The export structure, or NULL on failure
 */
-export_sym_t * export_lookup(const char * name);
+export_sym_t *export_lookup(const char *name);
+
+/** \brief  Look up a symbol by name and Name Manager path.
+    \param  name            The symbol to look up
+    \param  path            The Name Manager path to look up
+    \return                 The export structure, or NULL on failure
+*/
+export_sym_t *export_lookup_path(const char *name, const char *path);
+
+/** \brief  Look up a symbol by approx addr.
+            It can be useful for unhandled exceptions messages.
+    \param  addr            The symbol to look up
+    \return                 The export structure, or NULL on failure
+*/
+export_sym_t *export_lookup_addr(uintptr_t addr);
 
 /** @} */
 
 __END_DECLS
 
 #endif  /* __KOS_EXPORTS_H */
-

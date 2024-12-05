@@ -48,7 +48,7 @@ static int push_back(struct dirent ***list, int *size, int *capacity,
         *list = realloc(*list, *capacity * sizeof(struct dirent*));
 
         /* Handle out-of-memory in case realloc() failed. */
-        if(!list)
+        if(!*list)
             goto out_of_memory;
         else
             list_tmp = list;

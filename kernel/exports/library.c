@@ -2,6 +2,7 @@
 
    kernel/library.c
    Copyright (C) 2003 Megan Potter
+   Copyright (C) 2024 Ruslan Rostovtsev
 */
 
 #include <assert.h>
@@ -127,7 +128,7 @@ klibrary_t * library_create(int flags) {
             /* Populate the context */
             np->libid = libid;
             np->flags = flags;
-            np->refcnt = 0;
+            np->refcnt = 1;
 
             /* Insert it into the library list */
             LIST_INSERT_HEAD(&library_list, np, list);
@@ -137,8 +138,8 @@ klibrary_t * library_create(int flags) {
     return np;
 }
 
-int library_destroy(klibrary_t * lib) {
-    int     oldirq = 0;
+int library_destroy(klibrary_t *lib) {
+    int oldirq = 0;
 
     oldirq = irq_disable();
 
@@ -160,7 +161,7 @@ int library_destroy(klibrary_t * lib) {
 /*****************************************************************************/
 /* Library attribute functions -- all read-only */
 
-libid_t library_get_libid(klibrary_t * lib) {
+libid_t library_get_libid(klibrary_t *lib) {
     if(lib == NULL) {
         errno = EINVAL;
         return -1;
@@ -169,7 +170,7 @@ libid_t library_get_libid(klibrary_t * lib) {
         return lib->libid;
 }
 
-int library_get_refcnt(klibrary_t * lib) {
+int library_get_refcnt(klibrary_t *lib) {
     if(lib == NULL) {
         errno = EINVAL;
         return -1;
@@ -178,7 +179,7 @@ int library_get_refcnt(klibrary_t * lib) {
         return lib->refcnt;
 }
 
-const char * library_get_name(klibrary_t * lib) {
+const char *library_get_name(klibrary_t *lib) {
     if(lib == NULL || lib->lib_get_name == NULL) {
         errno = EINVAL;
         return NULL;
@@ -187,7 +188,7 @@ const char * library_get_name(klibrary_t * lib) {
         return lib->lib_get_name();
 }
 
-uint32 library_get_version(klibrary_t * lib) {
+uint32_t library_get_version(klibrary_t *lib) {
     if(lib == NULL || lib->lib_get_version == NULL) {
         errno = EINVAL;
         return 0;
@@ -197,8 +198,8 @@ uint32 library_get_version(klibrary_t * lib) {
 }
 
 /*****************************************************************************/
-klibrary_t * library_lookup(const char * name) {
-    klibrary_t  * lib;
+klibrary_t *library_lookup(const char *name) {
+    klibrary_t *lib;
 
     irq_disable_scoped();
 
@@ -213,28 +214,36 @@ klibrary_t * library_lookup(const char * name) {
     return lib;
 }
 
-klibrary_t * library_open(const char * name, const char * fn) {
-    klibrary_t * lib;
+klibrary_t *library_lookup_fn(const char *fn) {
+    klibrary_t *lib;
+
+    irq_disable_scoped();
+
+    LIST_FOREACH(lib, &library_list, list) {
+        if(!strncmp(lib->image.fn, fn, NAME_MAX))
+            break;
+    }
+
+    if(!lib)
+        errno = ENOENT;
+
+    return lib;
+}
+
+klibrary_t *library_open(const char *name, const char *fn) {
+    klibrary_t *lib = NULL;
 
     // If they passed us a valid name, try that first.
     if(name) {
         lib = library_lookup(name);
+    }
+    else {
+        lib = library_lookup_fn(fn);
+    }
 
-        if(lib) {
-            // Make sure lib_open is valid. Note that since we
-            // _have_ found something, any inconsistencies here
-            // are errors and not a signal to load another copy.
-            if(!lib->lib_open) {
-                errno = EINVAL;
-                return NULL;
-            }
-
-            // Open the lib.
-            if(lib->lib_open(lib) < 0)
-                return NULL;
-
-            return lib;
-        }
+    if(lib) {
+        ++lib->refcnt;
+        return lib;
     }
 
     // Ok, we need to load. Make sure we have a valid filename.
@@ -259,7 +268,7 @@ klibrary_t * library_open(const char * name, const char * fn) {
 
     // Pull out the image pointers
     lib->lib_get_name = (const char * (*)())lib->image.lib_get_name;
-    lib->lib_get_version = (uint32(*)())lib->image.lib_get_version;
+    lib->lib_get_version = (uint32_t(*)())lib->image.lib_get_version;
     lib->lib_open = (int (*)(klibrary_t *))lib->image.lib_open;
     lib->lib_close = (int (*)(klibrary_t *))lib->image.lib_close;
 
@@ -281,20 +290,24 @@ klibrary_t * library_open(const char * name, const char * fn) {
     return lib;
 }
 
-int library_close(klibrary_t * lib) {
+int library_close(klibrary_t *lib) {
     // Make sure it's valid.
     if(lib == NULL || lib->lib_close == NULL) {
         errno = EINVAL;
         return -1;
     }
 
+    // Check for reference
+    if(--lib->refcnt > 0) {
+        return 0;
+    }
+
     // Call down and "close" the lib.
     if(lib->lib_close(lib) < 0)
         return -1;
 
-    // If the refcount is down to zero, unload this lib.
-    if(lib->refcnt <= 0)
-        library_destroy(lib);
+    // Unload this lib.
+    library_destroy(lib);
 
     // It's all good.
     return 0;
@@ -330,5 +343,3 @@ void library_shutdown(void) {
 
     LIST_INIT(&library_list);
 }
-
-

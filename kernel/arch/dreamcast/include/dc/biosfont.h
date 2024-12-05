@@ -55,6 +55,7 @@ __BEGIN_DECLS
 
 /** \brief Number of bytes to represent a single character within the BIOS font. */
 #define BFONT_BYTES_PER_CHAR        (BFONT_THIN_WIDTH * BFONT_HEIGHT / 8)
+#define BFONT_BYTES_PER_WIDE_CHAR   (BFONT_WIDE_WIDTH * BFONT_HEIGHT / 8)
 
 /** \defgroup bfont_indicies Structure
     \brief                   Structure of the Bios Font
@@ -76,14 +77,15 @@ __BEGIN_DECLS
 /** \brief Start of JISX-0208 Rows 1-7 in Font Block */   
 #define BFONT_JISX_0208_ROW1        BFONT_WIDE_START
 /** \brief Start of JISX-0208 Row 16-47 (Start of Level 1) in Font Block */   
-#define BFONT_JISX_0208_ROW16       (BFONT_WIDE_START + (658 * BFONT_BYTES_PER_CHAR))
+#define BFONT_JISX_0208_ROW16       (BFONT_WIDE_START + (658 * BFONT_BYTES_PER_WIDE_CHAR))
 /** \brief JISX-0208 Row 48-84 (Start of Level 2) in Font Block */
-#define BFONT_JISX_0208_ROW48       (BFONT_JISX_0208_ROW16 + ((32 * JISX_0208_ROW_SIZE) * BFONT_BYTES_PER_CHAR))
+#define BFONT_JISX_0208_ROW48       (BFONT_JISX_0208_ROW16 + ((32 * JISX_0208_ROW_SIZE) * BFONT_BYTES_PER_WIDE_CHAR))
 
 /** \brief Start of DC Specific Characters in Font Block */
-#define BFONT_DREAMCAST_SPECIFIC    (BFONT_WIDE_START + (7056 * BFONT_BYTES_PER_CHAR))
+#define BFONT_DREAMCAST_SPECIFIC    (BFONT_WIDE_START + (7056 * BFONT_BYTES_PER_WIDE_CHAR))
+
 /** \brief Takes a DC-specific icon index and returns a character offset. */
-#define BFONT_DC_ICON(offset)       (BFONT_DREAMCAST_SPECIFIC + ((offset) * BFONT_BYTES_PER_CHAR))
+#define BFONT_DC_ICON(offset)       (BFONT_DREAMCAST_SPECIFIC + ((offset) * BFONT_BYTES_PER_WIDE_CHAR))
 
 /** \defgroup bfont_dc_indices Dreamcast-Specific 
     \brief    Dreamcast-specific BIOS icon offsets.
@@ -114,7 +116,7 @@ __BEGIN_DECLS
 /** @} */
 
 #define BFONT_ICON_DIMEN                 32    /**< \brief Dimension of vmu icons */
-#define BFONT_VMU_DREAMCAST_SPECIFIC     (BFONT_DREAMCAST_SPECIFIC+(22 * BFONT_BYTES_PER_CHAR))
+#define BFONT_VMU_DREAMCAST_SPECIFIC     (BFONT_DREAMCAST_SPECIFIC+(22 * BFONT_BYTES_PER_WIDE_CHAR))
 /** @} */
 
 /** \brief Builtin VMU Icons
