@@ -90,7 +90,7 @@ typedef struct aica_channel {
     \param CHANR    aica_channel_t pointer name
 */
 #define AICA_CMDSTR_CHANNEL(T, CMDR, CHANR) \
-    uint8   T[sizeof(aica_cmd_t) + sizeof(aica_channel_t)]; \
+    uint32   T[(sizeof(aica_cmd_t) + sizeof(aica_channel_t)) / 4]; \
     aica_cmd_t  * CMDR = (aica_cmd_t *)T; \
     aica_channel_t  * CHANR = (aica_channel_t *)(CMDR->cmd_data);
 
