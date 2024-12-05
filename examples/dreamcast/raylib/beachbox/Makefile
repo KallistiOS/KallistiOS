@@ -37,7 +37,7 @@ rm-elf:
 	-rm -f $(TARGET) romdisk.*
 
 $(TARGET): $(OBJS)
-	kos-cc -o $(TARGET) $(OBJS) -lraylib -lGL -lm -lkosutils -lADX
+	kos-cc -o $(TARGET) $(OBJS) -lraylib -lGL -lm -lwav
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)

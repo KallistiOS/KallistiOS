@@ -4,9 +4,6 @@
    Copyright (C) 2024 Cypress
 */
 
-#include <adx/snddrv.h>
-#include <adx/adx.h>
-
 #include "options.h"
 #include "../scene.h"
 #include "../ui.h"
@@ -16,7 +13,7 @@
 #include "../audio.h"
 
 static const uibutton_t music_volume_button_ = {
-    .pos    = { .x = 40,  .y = 60 },
+    .pos    = { .x = 40,  .y = 70 },
     .size   = { .x = 150, .y = 40 },
     .column = 0,
     .row    = 0,
@@ -25,7 +22,7 @@ static const uibutton_t music_volume_button_ = {
 };
 
 static const uibutton_t sfx_volume_button_ = {
-    .pos    = { .x = 40,  .y = 180 },
+    .pos    = { .x = 40,  .y = 170 },
     .size   = { .x = 150, .y = 40  },
     .column = 0,
     .row    = 1,
@@ -34,7 +31,7 @@ static const uibutton_t sfx_volume_button_ = {
 };
 
 static const uibutton_t new_save_button_ = {
-    .pos    = { .x = 40,  .y = 300 },
+    .pos    = { .x = 40,  .y = 270 },
     .size   = { .x = 150, .y = 40  },
     .column = 0,
     .row    = 2,
@@ -43,7 +40,7 @@ static const uibutton_t new_save_button_ = {
 };
 
 static const uibutton_t exit_button_ = {
-    .pos    = { .x = 40,  .y = 420 },
+    .pos    = { .x = 40,  .y = 370 },
     .size   = { .x = 150, .y = 40  },
     .column = 0,
     .row    = 3,
@@ -72,18 +69,17 @@ static void new_game_callback(int option, void *user_data) {
     }
 }
 
-static void DrawRectangleBars(int count, int posX, int posY) {
-    constexpr int bar_width   = 10;
-    constexpr int spacing     = 15;
-    constexpr int base_height = 40;
+static void DrawRectangleBars(int volume, int pos_y) {
+    constexpr int num_bars    = 15;
+    constexpr int bar_width   = 14;
+    constexpr int spacing     = 22;
+    constexpr int base_height = 50;
+    constexpr int pos_x       = 260;
 
-    for (int i = 0; i < 24; i++) {
-
-        DrawRectangle(posX + i * spacing, posY, bar_width, base_height, SKYBLUE);
-    }
-    for (int i = 0; i < count; i++) {
-
-        DrawRectangle(posX + i * spacing, posY, bar_width, base_height, BLUE);
+    for (int i = 0; i < num_bars; i++) {
+        Color color = i < volume / 17 ? BLUE : SKYBLUE;
+        DrawRectangle(pos_x + i * spacing, pos_y, bar_width, base_height, color);
+        DrawRectangleLines(pos_x + i * spacing, pos_y, bar_width, base_height, BLACK);
     }
 }
 
@@ -94,8 +90,8 @@ void draw_options_scene(void) {
 
     static void (*callback)(int option, void *user_data) = nullptr;
 
-    DrawRectangleBars(get_music_volume(), 230, 60);
-    DrawRectangleBars(get_sfx_volume(), 230, 180);
+    DrawRectangleBars(get_music_volume(), music_volume_button_.pos.y - 7);
+    DrawRectangleBars(get_sfx_volume(), sfx_volume_button_.pos.y - 7);
 
     // Music volume
     const Vector2    arrows_size_         = (Vector2){ .x = 24, .y = 24 };
@@ -103,8 +99,8 @@ void draw_options_scene(void) {
         .column    = 0,
         .row       = 0,
         .layer     = 0,
-        .pos_left  = { 18,  65 },
-        .pos_right = { 187, 65 },
+        .pos_left  = { 18,  music_volume_button_.pos.y + 8 },
+        .pos_right = { 187, music_volume_button_.pos.y + 8 },
         .size      = arrows_size_,
     };
 
@@ -122,8 +118,8 @@ void draw_options_scene(void) {
         .column    = 0,
         .row       = 1,
         .layer     = 0,
-        .pos_left  = { 18,  185 },
-        .pos_right = { 187, 185 },
+        .pos_left  = { 18,  sfx_volume_button_.pos.y + 8 },
+        .pos_right = { 187, sfx_volume_button_.pos.y + 8 },
         .size      = arrows_size_,
     };
 
