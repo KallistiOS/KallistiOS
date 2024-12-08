@@ -1,9 +1,11 @@
 #include <kos.h>
 
-void kb_test(void) {
+static int x = 20, y = 20 + 24;
+
+static void kb_test(void) {
     maple_device_t *cont, *kbd;
     cont_state_t *state;
-    int k, x = 20, y = 20 + 24;
+    int k;
 
     printf("Now doing keyboard test\n");
 
@@ -28,16 +30,8 @@ void kb_test(void) {
             return;
         }
 
-        thd_sleep(10);
-
-        /* Check for keyboard input */
-        /* if (kbd_poll(mkb)) {
-            printf("Error checking keyboard status\n");
-            return;
-        } */
-
         /* Get queued keys */
-        while((k = kbd_queue_pop(kbd, 1)) != -1) {
+        while((k = kbd_queue_pop(kbd, 1)) != KBD_QUEUE_END) {
             if(k == 27) {
                 printf("ESC pressed\n");
                 return;
@@ -46,25 +40,40 @@ void kb_test(void) {
             if(k > 0xff)
                 printf("Special key %04x\n", k);
 
-            if(k != 13) {
+            if(k != 10) {
                 bfont_draw(vram_s + y * 640 + x, 640, 0, k);
                 x += 12;
-            }
-            else {
-                x = 20;
-                y += 24;
+                if(x >= 620) {
+                    x = 20;
+                    y += 24;
+                }
             }
         }
-
-        thd_sleep(10);
     }
 }
 
-int main(int argc, char **argv) {
-    int x, y;
+static void on_key_event(maple_device_t *dev, kbd_key_t key,
+                         key_state_t state, kbd_mods_t mods,
+                         kbd_leds_t leds, void *user_data) {
+    kbd_state_t *kbd_state = (kbd_state_t *)dev->status;
 
-    for(y = 0; y < 480; y++)
-        for(x = 0; x < 640; x++) {
+    printf("[%c%u] %c: %s\n",
+           'A' + dev->port, dev->unit,
+           kbd_key_to_ascii(key, kbd_state->region, mods, leds),
+           state.value == KEY_STATE_CHANGED_DOWN? "PRESSED" : "RELEASED");
+
+    if(key == KBD_KEY_ENTER && state.value == KEY_STATE_CHANGED_DOWN) {
+        x = 20;
+        y += 24;
+    }
+
+}
+
+int main(int argc, char **argv) {
+    kbd_set_event_handler(on_key_event, NULL);
+
+    for(int y = 0; y < 480; y++)
+        for(int x = 0; x < 640; x++) {
             int c = (x ^ y) & 255;
             vram_s[y * 640 + x] = ((c >> 3) << 12)
                                   | ((c >> 2) << 5)
