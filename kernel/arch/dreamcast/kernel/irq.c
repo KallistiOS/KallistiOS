@@ -38,22 +38,102 @@ struct trapa_cb {
     void         *data;
 };
 
+/* Linked list of IRQ states, one is pushed onto the stack
+   every time the top-level ISR is entered. */
+struct irq_state {            // SIZE
+    bool           handled;   // 1 byte  /* mov.b only has 15-byte displacement */
+    uint8_t        code;      // 1 byte
+    uint16_t       evt;       // 2 bytes
+    volatile struct
+        irq_state *previous;  // 4 bytes
+};                            // 8 BYTES TOTAL
+
 /* Individual exception handlers */
 static struct irq_cb   irq_handlers[0x100];
-/* TRAPA exception handlers */
+/* TRAPA exception handlers. */
 static struct trapa_cb trapa_handlers[0x100];
-
-/* Global exception handler -- hook this if you want to get each and every
-   exception; you might get more than you bargained for, but it can be useful. */
+/* Global exception handler */
 static struct irq_cb   global_irq_handler;
 
 /* Default IRQ context location */
-static irq_context_t    irq_context_default;
+static irq_context_t   irq_context_default;
+/* Current IRQ state linked list pointer */
+static volatile struct irq_state *        /* Points to most recent IRQ state */
+       volatile        irq_state_current; /* Volatile pointer to volatile struct */
+
+/* Called when entiringan IRQ to push its state onto the stack as current. */
+inline static void irq_state_push(struct irq_state *current) {
+    current->previous = irq_state_current;
+    irq_state_current = current;
+}
+
+/* Called when exiting an IRQ to pop its state from the stack. */
+inline static void irq_state_pop(void) {
+    assert(irq_state_current);
+    irq_state_current = irq_state_current->previous;
+}
+
+/* Called to grab the IRQ state at a particular stack level. */
+inline static volatile struct irq_state *irq_state_n(size_t level) {
+    volatile struct irq_state *state = irq_state_current;
+    
+    for(size_t depth = 0; depth < level; ++depth) {
+        if(!state) break;
+        state = state->previous;
+    }
+
+    return state;
+}
+
+/* How deeply nested in IRQ calls are we? */
+size_t irq_int_depth(void) {
+    size_t depth = 0;
+    const irq_mask_t imask = irq_disable();
+
+    const volatile struct irq_state *state = irq_state_current;
+    
+    while(state) {
+        ++depth;
+        state = state->previous;
+    }
+
+    irq_restore(imask);
+
+    return depth;
+}
 
 /* Are we inside an interrupt? */
-static int inside_int;
-int irq_inside_int(void) {
-    return inside_int;
+bool irq_inside_int(void) {
+    return !!irq_state_current;
+}
+
+/* What's the active IRQ at the given level? */
+irq_t irq_active_int(size_t level) {
+    const irq_mask_t imask = irq_disable();
+
+    const volatile struct irq_state *state = irq_state_n(level);
+    const irq_t irq = state? state->evt : 0;
+
+    irq_restore(imask);
+    return irq;
+}
+
+/* Have we handled the active interrupt at the given level? */
+bool irq_handled_int(size_t level) {
+    const irq_mask_t imask = irq_disable();
+
+    const volatile struct irq_state *state = irq_state_n(level);
+    assert(state);
+    const bool handled = state->handled;
+    
+    irq_restore(imask);
+    return handled;
+}
+
+/* Set whether we've handled the top-most active interrupt or not. */
+void irq_handle_int(bool handled) {
+    assert(irq_state_current);
+    irq_state_current->handled = handled;
 }
 
 /* Set a handler, or remove a handler */
@@ -69,12 +149,15 @@ int irq_set_handler(irq_t code, irq_handler hnd, void *data) {
 }
 
 /* Get the address of the current handler */
-irq_handler irq_get_handler(irq_t code) {
+irq_handler irq_get_handler(irq_t code, void **data) {
     /* Make sure they don't do something crackheaded */
     if(code >= 0x1000 || (code & 0x000f))
         return NULL;
 
     code >>= 4;
+
+    if(data)
+        *data = irq_handlers[code].data;
 
     return irq_handlers[code].hdl;
 }
@@ -87,7 +170,10 @@ int irq_set_global_handler(irq_handler hnd, void *data) {
 }
 
 /* Get the global exception handler */
-irq_handler irq_get_global_handler(void) {
+irq_handler irq_get_global_handler(void **data) {
+    if(data)
+        *data = global_irq_handler.data;
+
     return global_irq_handler.hdl;
 }
 
@@ -201,90 +287,81 @@ static void irq_dump_regs(int code, irq_t evt) {
 /* The C-level routine that processes context switching and other
    types of interrupts. NOTE: We are running on the stack of the process
    that was interrupted! */
-volatile uint32_t jiffies = 0;
 void irq_handle_exception(int code) {
+    struct irq_state irq_state = {
+        .code = code
+    };
     const struct irq_cb *hnd;
-    uint32_t evt = 0;
-    int handled = 0;
 
+    irq_state_push(&irq_state);
+    
     switch(code) {
-        /* If it's a code 0, well, we shouldn't be here. */
+        /* If it's a code 0 (or anything else), well, we shouldn't be here. */
         case 0:
-            arch_panic("spurious RESET exception");
+        default:
+            arch_panic("Spurious RESET exception!");
             break;
 
         /* If it's a code 1 or 2, grab the event from expevt. */
         case 1:
         case 2:
-            evt = EXPEVT;
+            irq_state.evt = EXPEVT;
             break;
 
         /* If it's a code 3, grab the event from intevt. */
         case 3:
-            evt = INTEVT;
+            irq_state.evt = INTEVT;
             break;
     }
 
-    if(inside_int) {
+    /* Check for double exception fault: special case since we do not
+       currently support nesting of exceptions. */
+    if(__unlikely(irq_state.previous)) {
         hnd = &irq_handlers[EXC_DOUBLE_FAULT >> 4];
-        if(hnd->hdl != NULL)
+
+        if(hnd->hdl)
             hnd->hdl(EXC_DOUBLE_FAULT, irq_srt_addr, hnd->data);
-        else
-            irq_dump_regs(code, evt);
-
-        thd_pslist(dbgio_printf);
-        // library_print_list(dbgio_printf);
-        arch_panic("double fault");
-    }
-
-    /* Reveal this info about the int to inside_int for better 
-       diagnostics returns if we try to do something in the int. */
-    inside_int = ((code&0xf)<<16) | (evt&0xffff);
-
-    /* If there's a global handler, call it */
-    if(global_irq_handler.hdl) {
-        global_irq_handler.hdl(evt, irq_srt_addr, global_irq_handler.data);
-        handled = 1;
-    }
-
-    /* dbgio_printf("got int %04x %04x\n", code, evt); */
-
-    /* If it's a timer interrupt, clear the status */
-    if(evt >= EXC_TMU0_TUNI0 && evt <= EXC_TMU2_TUNI2) {
-        if(evt == EXC_TMU0_TUNI0) {
-            timer_clear(TMU0);
-        }
-        else if(evt == EXC_TMU1_TUNI1) {
-            timer_clear(TMU1);
-        }
-        else {
-            timer_clear(TMU2);
-        }
-
-        handled = 1;
-    }
-
-    /* If there's a handler, call it */
-    {
-        hnd = &irq_handlers[evt >> 4];
-        if(hnd->hdl != NULL) {
-            hnd->hdl(evt, irq_srt_addr, hnd->data);
-            handled = 1;
+        
+        /* Panic if it went unhandled. */
+        if(!irq_state.handled) {
+            irq_dump_regs(code, irq_state.evt);
+            arch_panic("unhandled double fault");
         }
     }
 
-    if(!handled) {
+    /* If there's a global handler, it goes first */
+    if(__unlikely(global_irq_handler.hdl))
+        global_irq_handler.hdl(irq_state.evt, irq_srt_addr, global_irq_handler.data);
+
+    /* If the global handler didn't handle the exception, pass
+       it on to the individual handlers */
+    if(__likely(!irq_state.handled)) {
+        hnd = &irq_handlers[irq_state.evt >> 4];
+        
+        if(__likely(hnd->hdl)) {
+            /* Individual handlers accept by default. */
+            irq_state.handled = true;
+            hnd->hdl(irq_state.evt, irq_srt_addr, hnd->data);
+        }
+    }
+
+    /* If an individual handler didn't handle the exception,
+       pass it on to the unhandled exception handler. */
+    if(__unlikely(!irq_state.handled)) {
         hnd = &irq_handlers[EXC_UNHANDLED_EXC >> 4];
-        if(hnd->hdl != NULL)
-            hnd->hdl(evt, irq_srt_addr, hnd->data);
-        else
-            irq_dump_regs(code, evt);
 
-        arch_panic("unhandled IRQ/Exception");
+        if(hnd->hdl)
+            hnd->hdl(irq_state.evt, irq_srt_addr, hnd->data);
+        
+        /* Panic if nothing handled it. */
+        if(!irq_state.handled) {
+            irq_dump_regs(code, irq_state.evt);
+            arch_panic("unhandled IRQ/Exception");
+        }
     }
 
     irq_disable();
-    inside_int = 0;
+    irq_state_pop();
 }
 
 void irq_handle_trapa(irq_t code, irq_context_t *context, void *data) {
@@ -351,7 +428,7 @@ void irq_create_context(irq_context_t *context, uint32_t stkpntr,
 static void irq_def_timer(irq_t src, irq_context_t *context, void *data) {
     (void)src;
     (void)context;
-    (void)data;
+    timer_clear((int)data);
 }
 
 /* Default FPU exception handler (can't seem to turn these off) */
@@ -381,15 +458,17 @@ int irq_init(void) {
     irq_disable();
 
     /* Blank the exception handler tables */
-    memset(irq_handlers, 0, sizeof(irq_handlers));
-    memset(trapa_handlers, 0, sizeof(trapa_handlers));
+    memset(irq_handlers,        0, sizeof(irq_handlers));
+    memset(trapa_handlers,      0, sizeof(trapa_handlers));
     memset(&global_irq_handler, 0, sizeof(global_irq_handler));
 
     /* Default to not in an interrupt */
-    inside_int = 0;
+    irq_state_current = NULL;
 
-    /* Set a default timer handler */
-    irq_set_handler(EXC_TMU0_TUNI0, irq_def_timer, (void *)0);
+    /* Set default timer handlers */
+    irq_set_handler(EXC_TMU0_TUNI0, irq_def_timer, (void *)TMU0);
+    irq_set_handler(EXC_TMU1_TUNI1, irq_def_timer, (void *)TMU1);
+    irq_set_handler(EXC_TMU2_TUNI2, irq_def_timer, (void *)TMU2);
 
     /* Set a trapa handler */
     irq_set_handler(EXC_TRAPA, irq_handle_trapa, trapa_handlers);
