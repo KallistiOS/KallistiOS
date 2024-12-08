@@ -351,8 +351,8 @@ bool irq_handled_int(size_t level);
     \brief                  Accessors and modifiers of the IMASK state.
 
     This API is provided for managing and querying information regarding the
-    interrupt mask, a series of bitflags representing whether each type of 
-    interrupt has been enabled or not. 
+    interrupt mask, a series of bitflags representing whether each type of
+    interrupt has been enabled or not.
 
     @{
 */
@@ -406,7 +406,7 @@ void irq_enable(void);
 */
 void irq_restore(irq_mask_t v);
 
-/** \brief  Disable interrupts with scope management.s
+/** \brief  Disable interrupts with scope management.
 
     This macro will disable interrupts, similarly to irq_disable(), with the
     difference that the interrupt state will automatically be restored once the
@@ -416,7 +416,7 @@ void irq_restore(irq_mask_t v);
 
 /** @} */
 
-/** \defgroup irq_ctrl Control Flow 
+/** \defgroup irq_ctrl Control Flow
     \brief Methods for managing control flow within an irq_handler.
 
     This API provides methods for controlling program flow from within an
@@ -520,7 +520,7 @@ void irq_handle_int(bool handled);
 */
 typedef void (*irq_handler)(irq_t code, irq_context_t *context, void *data);
 
-/** \defgroup irq_handlers_ind  Individual 
+/** \defgroup irq_handlers_ind  Individual
     \brief                      API for managing individual IRQ handlers.
 
     This API is for managing handlers installed to handle individual IRQ codes.
