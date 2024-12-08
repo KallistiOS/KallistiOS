@@ -74,6 +74,15 @@ __BEGIN_DECLS
     to override individual interrupt handlers which have been used by the
     system.
 
+    \note
+    The naming convention used by this API differs from that of the actual SH4
+    manual for historical reasons (it wasn't platform-specific). The SH4 manual
+    refers to the most general type of CPU events which result in a SW
+    callback as "exceptions," with "interrupts" and "general exceptions" being
+    subtypes of exceptions. This API uses the term "interrupt" and "exception"
+    interchangeably, except where it is explicitly noted that "SH4 interrupts"
+    or "SH4 general exceptions" are being referred to, more specifically.
+
     @{
 */
 
@@ -194,7 +203,7 @@ void irq_create_context(irq_context_t *context, uint32_t stack_pointer,
 /** Interrupt exception codes
 
    SH-specific exception codes. Used to identify the source or type of an
-   interrupt.Each exception code is of a certain "type" which dictates how the
+   interrupt. Each exception code is of a certain "type" which dictates how the
    interrupt is generated and handled.
 
    List of exception types:
@@ -376,11 +385,12 @@ irq_mask_t irq_get_sr(void);
 
 /** Disable interrupts.
 
-    This function will disable interrupts, but will leave exceptions enabled.
+    This function will disable SH4 interrupts, but will leave SH4 general
+    exceptions enabled.
 
-    \return                 The state of IRQs before calling the function. This
-                            can be used to restore this state later on with
-                            irq_restore().
+    \return                 The state of the SH4 interrupts before calling the
+                            function. This can be used to restore this state
+                            later on with irq_restore().
 
     \sa irq_restore(), irq_enable()
 */
@@ -498,7 +508,7 @@ void irq_handle_int(bool handled);
         - <b>Multiple Exception Handling</b>: Using either global or unhandled
           exception handlers or by installing the same handler on multiple
           specific handlers, a single handler is free to implement logic
-          for servicing multiple interrupts.
+          for servicing multiple exceptions.
 
     \note
     The only exception to this rule is the \ref EXC_DOUBLE_FAULT software

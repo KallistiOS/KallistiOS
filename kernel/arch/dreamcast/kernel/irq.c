@@ -107,7 +107,7 @@ bool irq_inside_int(void) {
     return !!irq_state_current;
 }
 
-/* What's the active IRQ? */
+/* What's the active IRQ at the given level? */
 irq_t irq_active_int(size_t level) {
     const irq_mask_t imask = irq_disable();
 
@@ -118,7 +118,7 @@ irq_t irq_active_int(size_t level) {
     return irq;
 }
 
-/* Have we handled the active interrupt? */
+/* Have we handled the active interrupt at the given level? */
 bool irq_handled_int(size_t level) {
     const irq_mask_t imask = irq_disable();
 
@@ -130,7 +130,7 @@ bool irq_handled_int(size_t level) {
     return handled;
 }
 
-/* Set whether we've handled the active interrupt or not. */
+/* Set whether we've handled the top-most active interrupt or not. */
 void irq_handle_int(bool handled) {
     assert(irq_state_current);
     irq_state_current->handled = handled;
@@ -325,7 +325,7 @@ void irq_handle_exception(int code) {
         /* Panic if it went unhandled. */
         if(!irq_state.handled) {
             irq_dump_regs(code, irq_state.evt);
-            arch_panic("double fault");
+            arch_panic("unhandled double fault");
         }
     }
 
@@ -428,7 +428,6 @@ void irq_create_context(irq_context_t *context, uint32_t stkpntr,
 static void irq_def_timer(irq_t src, irq_context_t *context, void *data) {
     (void)src;
     (void)context;
-    (void)data;
     timer_clear((int)data);
 }
 
@@ -467,9 +466,9 @@ int irq_init(void) {
     irq_state_current = NULL;
 
     /* Set default timer handlers */
-    irq_set_handler(EXC_TMU0_TUNI0, irq_def_timer, (void *)0);
-    irq_set_handler(EXC_TMU1_TUNI1, irq_def_timer, (void *)1);
-    irq_set_handler(EXC_TMU2_TUNI2, irq_def_timer, (void *)2);
+    irq_set_handler(EXC_TMU0_TUNI0, irq_def_timer, (void *)TMU0);
+    irq_set_handler(EXC_TMU1_TUNI1, irq_def_timer, (void *)TMU1);
+    irq_set_handler(EXC_TMU2_TUNI2, irq_def_timer, (void *)TMU2);
 
     /* Set a trapa handler */
     irq_set_handler(EXC_TRAPA, irq_handle_trapa, trapa_handlers);
