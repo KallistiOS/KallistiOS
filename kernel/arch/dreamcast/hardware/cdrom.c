@@ -429,14 +429,20 @@ int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode) {
     params.is_test = 0;     /* Enable test mode */
 
     if(mode == CDROM_READ_DMA || mode == CDROM_READ_DMA_IRQ) {
-
-        params.buffer = (void *)(buf_addr & MEM_AREA_CACHE_MASK);
-
         if(buf_addr & 0x1f) {
             dbglog(DBG_ERROR, "cdrom_read_sectors_ex: Unaligned memory for DMA (32-byte).\n");
             return ERR_SYS;
         }
-        if((((uintptr_t)params.buffer) >> 24) == 0x0c) {
+        /* Use the physical memory address. */
+        params.buffer = (void *)(buf_addr & MEM_AREA_CACHE_MASK);
+
+        /* Invalidate the CPU cache only for cacheable memory areas.
+           Otherwise, it is assumed that either this operation is unnecessary
+           (another DMA is being used) or that the caller is responsible
+           for managing the CPU data cache.
+        */
+        if((buf_addr & MEM_AREA_P2_BASE) != MEM_AREA_P2_BASE) {
+            /* Invalidate the dcache over the range of the data. */
             dcache_inval_range(buf_addr, cnt * cur_sector_size);
         }
 
