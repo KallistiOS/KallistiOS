@@ -612,7 +612,7 @@ static void iso_abort_stream(int lock) {
         if(lock) {
             mutex_lock(&fh_mutex);
         }
-        cdrom_stream_stop();
+        cdrom_stream_stop(false);
         stream_fd = -1;
 
         if(lock) {
@@ -689,7 +689,7 @@ static int iso_close(void * h) {
 
     if(fd == stream_fd) {
         mutex_lock(&fh_mutex);
-        cdrom_stream_stop();
+        cdrom_stream_stop(false);
         stream_fd = -1;
         mutex_unlock(&fh_mutex);
         // dbglog(DBG_DEBUG, "Stream stop on close, fd=%d\n", fd);
@@ -747,7 +747,7 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
                     req_size = (req_size + 2048) & ~2047;
                 }
                 if(stream_fd >= 0) {
-                    cdrom_stream_stop();
+                    cdrom_stream_stop(false);
                     // dbglog(DBG_DEBUG, "Stream stop for file fd: %d -> %d\n", stream_fd, fd);
                     stream_fd = -1;
                 }
@@ -776,7 +776,7 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
             }
 
             if(remain_size == 0) {
-                cdrom_stream_stop();
+                cdrom_stream_stop(false);
                 stream_fd = -1;
                 // dbglog(DBG_DEBUG, "Stream stop on end, fd=%d\n", fd);
             }
@@ -805,7 +805,7 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
             //         toread, remain_size, fh[fd].stream_part, outbuf, fd);
 
             if(remain_size == 0) {
-                cdrom_stream_stop();
+                cdrom_stream_stop(false);
                 stream_fd = -1;
                 // dbglog(DBG_DEBUG, "Stream stop on end, fd=%d\n", fd);
             }
@@ -902,7 +902,7 @@ static off_t iso_seek(void * h, off_t offset, int whence) {
 
     if(fd == stream_fd && old_ptr != fh[fd].ptr) {
         mutex_lock(&fh_mutex);
-        cdrom_stream_stop();
+        cdrom_stream_stop(false);
         stream_fd = -1;
         mutex_unlock(&fh_mutex);
         // dbglog(DBG_DEBUG, "Stream stop on seek: %ld != %ld\n", old_ptr, fh[fd].ptr);
