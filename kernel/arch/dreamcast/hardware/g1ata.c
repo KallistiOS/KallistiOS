@@ -20,6 +20,7 @@
 #include <arch/timer.h>
 #include <arch/cache.h>
 #include <arch/irq.h>
+#include <arch/memory.h>
 
 /*
    This file implements support for accessing devices over the G1 bus by the
@@ -179,6 +180,7 @@ static size_t dma_nb_sectors = 0;
 static uint64_t dma_sector = 0;
 static semaphore_t dma_done = SEM_INITIALIZER(0);
 static kthread_t *dma_thd = NULL;
+static asic_evt_handler_entry_t old_dma_irq;
 
 /* From cdrom.c */
 extern mutex_t _g1_ata_mutex;
@@ -272,6 +274,10 @@ static void g1_dma_irq_hnd(uint32 code, void *data) {
         /* Make sure to select the GD-ROM drive back. */
         g1_ata_select_device(G1_ATA_MASTER);
         mutex_unlock_as_thread(&_g1_ata_mutex, dma_thd);
+    }
+
+    if(old_dma_irq.hdl) {
+        old_dma_irq.hdl(code, old_dma_irq.data);
     }
 }
 
@@ -618,7 +624,7 @@ out:
 int g1_ata_read_lba_dma(uint64_t sector, size_t count, void *buf,
                         int block) {
     int lba28, old, can_lba48 = CAN_USE_LBA48();
-    uint32_t addr;
+    uintptr_t addr;
     uint8_t cmd;
 
     /* Make sure we're actually being asked to do work... */
@@ -661,7 +667,7 @@ int g1_ata_read_lba_dma(uint64_t sector, size_t count, void *buf,
     }
 
     /* Check the alignment of the address. */
-    addr = ((uint32_t)buf) & 0x0FFFFFFF;
+    addr = (uintptr_t)buf;
 
     if(addr & 0x1F) {
         dbglog(DBG_ERROR, "g1_ata_read_lba_dma: Unaligned output address\n");
@@ -669,10 +675,18 @@ int g1_ata_read_lba_dma(uint64_t sector, size_t count, void *buf,
         return -1;
     }
 
-    if((addr >> 24) == 0x0C) {
+    /* Invalidate the CPU cache only for cacheable memory areas.
+       Otherwise, it is assumed that either this operation is unnecessary
+       (another DMA is being used) or that the caller is responsible
+       for managing the CPU data cache.
+    */
+    if((addr & MEM_AREA_P2_BASE) != MEM_AREA_P2_BASE) {
         /* Invalidate the dcache over the range of the data. */
-        dcache_inval_range((uint32)buf, count * 512);
+        dcache_inval_range(addr, count * 512);
     }
+
+    /* Use the physical memory address. */
+    addr &= MEM_AREA_CACHE_MASK;
 
     /* Lock the mutex. It will be unlocked later in the IRQ handler. */
     if(g1_ata_mutex_lock())
@@ -801,7 +815,7 @@ int g1_ata_write_lba(uint64_t sector, size_t count, const void *buf) {
 int g1_ata_write_lba_dma(uint64_t sector, size_t count, const void *buf,
                          int block) {
     int cmd, lba28, old, can_lba48 = CAN_USE_LBA48();
-    uint32_t addr;
+    uintptr_t addr;
 
     /* Make sure we're actually being asked to do work... */
     if(!count)
@@ -843,7 +857,7 @@ int g1_ata_write_lba_dma(uint64_t sector, size_t count, const void *buf,
     }
 
     /* Check the alignment of the address. */
-    addr = ((uint32_t)buf) & 0x0FFFFFFF;
+    addr = (uintptr_t)buf;
 
     if(addr & 0x1F) {
         dbglog(DBG_ERROR, "g1_ata_write_lba_dma: Unaligned input address\n");
@@ -851,10 +865,18 @@ int g1_ata_write_lba_dma(uint64_t sector, size_t count, const void *buf,
         return -1;
     }
 
-    if((addr >> 24) == 0x0C) {
+    /* Flush the CPU cache only for cacheable memory areas.
+       Otherwise, it is assumed that either this operation is unnecessary
+       (another DMA is being used) or that the caller is responsible
+       for managing the CPU data cache.
+    */
+    if((addr & MEM_AREA_P2_BASE) != MEM_AREA_P2_BASE) {
         /* Flush the dcache over the range of the data. */
-        dcache_flush_range((uint32)buf, count * 512);
+        dcache_flush_range(addr, count * 512);
     }
+
+    /* Use the physical memory address. */
+    addr &= MEM_AREA_CACHE_MASK;
 
     /* Lock the mutex. It will be unlocked in the IRQ handler later. */
     if(g1_ata_mutex_lock())
@@ -1370,12 +1392,15 @@ int g1_ata_init(void) {
     }
 
     /* Hook all the DMA related events. */
-    asic_evt_set_handler(ASIC_EVT_GD_DMA, g1_dma_irq_hnd, NULL);
-    asic_evt_enable(ASIC_EVT_GD_DMA, ASIC_IRQB);
+    old_dma_irq = asic_evt_set_handler(ASIC_EVT_GD_DMA, g1_dma_irq_hnd, NULL);
     asic_evt_set_handler(ASIC_EVT_GD_DMA_OVERRUN, g1_dma_irq_hnd, NULL);
-    asic_evt_enable(ASIC_EVT_GD_DMA_OVERRUN, ASIC_IRQB);
     asic_evt_set_handler(ASIC_EVT_GD_DMA_ILLADDR, g1_dma_irq_hnd, NULL);
-    asic_evt_enable(ASIC_EVT_GD_DMA_ILLADDR, ASIC_IRQB);
+
+    if(old_dma_irq.hdl == NULL) {
+        asic_evt_enable(ASIC_EVT_GD_DMA, ASIC_IRQB);
+        asic_evt_enable(ASIC_EVT_GD_DMA_OVERRUN, ASIC_IRQB);
+        asic_evt_enable(ASIC_EVT_GD_DMA_ILLADDR, ASIC_IRQB);
+    }
 
     initted = 1;
 
@@ -1396,10 +1421,24 @@ void g1_ata_shutdown(void) {
     memset(&device, 0, sizeof(device));
 
     /* Unhook the events and disable the IRQs. */
-    asic_evt_disable(ASIC_EVT_GD_DMA, ASIC_IRQB);
-    asic_evt_remove_handler(ASIC_EVT_GD_DMA);
-    asic_evt_disable(ASIC_EVT_GD_DMA_OVERRUN, ASIC_IRQB);
-    asic_evt_remove_handler(ASIC_EVT_GD_DMA_OVERRUN);
-    asic_evt_disable(ASIC_EVT_GD_DMA_ILLADDR, ASIC_IRQB);
-    asic_evt_remove_handler(ASIC_EVT_GD_DMA_ILLADDR);
+    if(old_dma_irq.hdl) {
+        /* CDROM driver uses the same handler for 3 events. */
+        asic_evt_set_handler(ASIC_EVT_GD_DMA,
+            old_dma_irq.hdl, old_dma_irq.data);
+        asic_evt_set_handler(ASIC_EVT_GD_DMA_OVERRUN,
+            old_dma_irq.hdl, old_dma_irq.data);
+        asic_evt_set_handler(ASIC_EVT_GD_DMA_ILLADDR,
+            old_dma_irq.hdl, old_dma_irq.data);
+
+        old_dma_irq.hdl = NULL;
+    }
+    else {
+        asic_evt_disable(ASIC_EVT_GD_DMA, ASIC_IRQB);
+        asic_evt_remove_handler(ASIC_EVT_GD_DMA);
+        asic_evt_disable(ASIC_EVT_GD_DMA_OVERRUN, ASIC_IRQB);
+        asic_evt_remove_handler(ASIC_EVT_GD_DMA_OVERRUN);
+        asic_evt_disable(ASIC_EVT_GD_DMA_ILLADDR, ASIC_IRQB);
+        asic_evt_remove_handler(ASIC_EVT_GD_DMA_ILLADDR);
+    }
+
 }
