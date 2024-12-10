@@ -641,7 +641,7 @@ static inline void dma_chain(void *data) {
     }
 }
 
-static void snd_stream_transfer(strchan_t *stream, void *first_buf,
+static int snd_stream_transfer(strchan_t *stream, void *first_buf,
                                 uint32_t offset, size_t size) {
     int rs;
 
@@ -665,8 +665,14 @@ static void snd_stream_transfer(strchan_t *stream, void *first_buf,
         if(rs == 0) {
             break;
         }
+        if(errno != EINPROGRESS) {
+            mutex_unlock(&stream_mutex);
+            return -1;
+        }
         thd_pass();
     } while(1);
+
+    return 0;
 }
 
 static size_t snd_stream_fill(snd_stream_hnd_t hnd, uint32_t offset, size_t size) {
@@ -728,7 +734,9 @@ static size_t snd_stream_fill(snd_stream_hnd_t hnd, uint32_t offset, size_t size
             memcpy(sep_buffer[0], data, got_bytes);
             data = sep_buffer[0];
         }
-        snd_stream_transfer(stream, data, offset, got_bytes);
+        if(snd_stream_transfer(stream, data, offset, got_bytes) < 0) {
+            return 0;
+        }
         return got_bytes;
     }
 
@@ -753,7 +761,9 @@ static size_t snd_stream_fill(snd_stream_hnd_t hnd, uint32_t offset, size_t size
         snd_adpcm_split(data, sep_buffer[0], sep_buffer[1], got_bytes);
     }
 
-    snd_stream_transfer(stream, sep_buffer[0], offset, got_bytes / chans);
+    if(snd_stream_transfer(stream, sep_buffer[0], offset, got_bytes / chans) < 0) {
+        return 0;
+    }
     return got_bytes;
 }
 
