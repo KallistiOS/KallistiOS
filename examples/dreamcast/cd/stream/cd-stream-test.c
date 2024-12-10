@@ -99,7 +99,7 @@ static int cd_stream_test(uint32_t lba, uint8_t *buffer, size_t size, int mode) 
         return -1;
     }
 
-    rs = cdrom_stream_stop();
+    rs = cdrom_stream_stop(false);
 
     if (rs != ERR_OK) {
         dbglog(DBG_ERROR, "Failed to stop %s stream.\n", stream_name);
@@ -225,7 +225,7 @@ int main(int argc, char *argv[]) {
 
 exit:
     dbglog(DBG_INFO, "\n");
-    cdrom_abort_cmd(10000);
+    cdrom_abort_cmd(10000, false);
     wait_exit();
     return 0;
 }

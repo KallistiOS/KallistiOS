@@ -125,7 +125,7 @@ static int cdrom_poll_cmd(gdc_cmd_hnd_t hnd, int timeout) {
         }
         if(timeout) {
             if((timer_ms_gettime64() - begin) >= (unsigned)timeout) {
-                cdrom_abort_cmd(500);
+                cdrom_abort_cmd(500, false);
                 dbglog(DBG_ERROR, "cdrom_exec_cmd_timed: Timeout exceeded\n");
                 return ERR_TIMEOUT;
             }
@@ -180,7 +180,7 @@ int cdrom_exec_cmd_ex(int cmd, void *param, int timeout, bool use_irq) {
     return ERR_SYS;
 }
 
-int cdrom_abort_cmd(uint32_t timeout) {
+int cdrom_abort_cmd(uint32_t timeout, bool abort_dma) {
     int rv = ERR_OK;
     uint64_t begin;
 
@@ -188,7 +188,19 @@ int cdrom_abort_cmd(uint32_t timeout) {
         return ERR_NO_ACTIVE;
     }
 
-    mutex_lock_scoped(&_g1_ata_mutex);
+    if(abort_dma && dma_in_progress) {
+        if(dma_blocking) {
+            syscall_gdrom_abort_command(cmd_hnd);
+            return rv;
+        }
+        dma_in_progress = false;
+        cmd_in_progress = false;
+        dma_thd = NULL;
+        /* G1 ATA mutex already locked */
+    }
+    else {
+        mutex_lock(&_g1_ata_mutex);
+    }
     syscall_gdrom_abort_command(cmd_hnd);
 
     if(timeout) {
@@ -219,6 +231,8 @@ int cdrom_abort_cmd(uint32_t timeout) {
     if(stream_cb) {
         cdrom_stream_set_callback(0, NULL);
     }
+
+    mutex_unlock(&_g1_ata_mutex);
     return rv;
 }
 
@@ -488,7 +502,7 @@ int cdrom_stream_start(int sector, int cnt, int mode) {
     params.num = cnt;
 
     if(stream_mode != -1) {
-        cdrom_stream_stop();
+        cdrom_stream_stop(false);
     }
     stream_mode = mode;
 
@@ -514,11 +528,14 @@ int cdrom_stream_start(int sector, int cnt, int mode) {
     return rv;
 }
 
-int cdrom_stream_stop(void) {
+int cdrom_stream_stop(bool abort_dma) {
     int rv = ERR_OK;
 
     if(cmd_hnd <= 0) {
         return rv;
+    }
+    if(abort_dma && dma_in_progress) {
+        return cdrom_abort_cmd(1000, true);
     }
     mutex_lock(&_g1_ata_mutex);
 
@@ -535,7 +552,7 @@ int cdrom_stream_stop(void) {
         }
         else if(cmd_response == STREAMING) {
             mutex_unlock(&_g1_ata_mutex);
-            return cdrom_abort_cmd(1000);
+            return cdrom_abort_cmd(1000, false);
         }
         thd_pass();
     } while(1);
