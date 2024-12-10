@@ -772,7 +772,7 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
     uint32_t write_pos;
     uint16_t current_play_pos;
     int needed_samples = 0;
-    int needed_bytes = 0;
+    size_t needed_bytes = 0;
     int got_bytes = 0;
     strchan_t *stream;
 
@@ -788,9 +788,16 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
                         AICA_CHANNEL(stream->ch[0]) +
                         offsetof(aica_channel_t, pos)) & 0xffff;
 
-    if(samples_to_bytes(hnd, current_play_pos) >= stream->buffer_size) {
+    needed_bytes = samples_to_bytes(hnd, current_play_pos);
+
+    if(needed_bytes >= stream->buffer_size) {
         dbglog(DBG_ERROR, "snd_stream_poll: chan0(%d).pos = %d\n", stream->ch[0], current_play_pos);
         return -1;
+    }
+
+    if(needed_bytes & 31) {
+        /* Aligning for DMA. */
+        current_play_pos &= ~(bytes_to_samples(hnd, 32) - 1);
     }
 
     /* Count just till the end of the buffer, so we don't have to
@@ -801,7 +808,7 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
         needed_samples &= ~(bytes_to_samples(hnd, 2048 / stream->channels) - 1);
         needed_bytes = samples_to_bytes(hnd, needed_samples);
         /* Reduce data requests */
-        if((uint32_t)needed_bytes < (stream->buffer_size / 2)) {
+        if(needed_bytes < (stream->buffer_size / 2)) {
             return 0;
         }
     }
@@ -815,7 +822,7 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
         return 0;
     }
 
-    if((uint32_t)needed_bytes > stream->buffer_size / 2) {
+    if(needed_bytes > stream->buffer_size / 2) {
         needed_bytes = (int)stream->buffer_size / 2;
     }
 
