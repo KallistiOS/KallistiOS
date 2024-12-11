@@ -54,7 +54,8 @@ static void calculate_object_cooldowns(void) {
 }
 
 void init_objects(void) {
-    active_objects_bitfield_ = 0;
+    active_objects_bitfield_  = 0;
+    shifted_objects_bitfield_ = 0;
     current_object_speed_ = base_object_speed = 5;
     start_timer(&coin_spawn_timer_, 1);
     start_timer(&pillar_spawn_timer_, 2);
@@ -89,7 +90,7 @@ static void spawn_pillar(void) {
     objects_.size[index] = (Vector2){ .x = GetRandomValue(30, 50), .y = GetRandomValue(80, 120) };
     objects_.pos[index]  = (Vector2){ .x = SCREEN_WIDTH + 100, .y = FLOOR_HEIGHT - objects_.size[index].y };
 
-    bool is_upside_down = GetRandomValue(0, 1);
+    const bool is_upside_down = GetRandomValue(0, 1);
     if (is_upside_down) {
         objects_.size[index].y = GetRandomValue(270, 300);
         objects_.pos[index].y  = -5;
@@ -142,23 +143,21 @@ void update_objects(void) {
         if (!(active_objects_bitfield_ & (1 << index))) continue; // Skip if the object is not active
         objects_.pos[index].x -= current_object_speed_;           // Move objects
 
+        const bool is_pillar = index >= pillars_fist_bit_ && index <= pillars_last_bit_;
+        const bool is_coin   = index >= coins_first_bit_ && index <= coins_last_bit_;
+
         // Remove objects that are off the screen
-        if (index >= coins_first_bit_ && index <= coins_last_bit_) {
-            if (objects_.pos[index].x < -coin_size_) {
-                active_objects_bitfield_ &= ~(1 << index);
-                continue;
-            }
-        } else {
-            if (objects_.pos[index].x < -objects_.size[index].x) {
-                active_objects_bitfield_ &= ~(1 << index);
-                continue;
-            }
+        const float threshold = (is_coin) ? -coin_size_ : -objects_.size[index].x;
+        if (objects_.pos[index].x < threshold) {
+            active_objects_bitfield_  &= ~(1 << index);
+            shifted_objects_bitfield_ &= ~(1 << index);
+            continue;
         }
 
         // Check for collisions with the player
 
         // Coins
-        if (index >= coins_first_bit_ && index <= coins_last_bit_) {
+        if (is_coin) {
             if ((shifted_objects_bitfield_ & (1 << index)) != is_player_shifted() && !is_player_teleporting())
                 continue; // If the player and the coin's "dimension" do not match, skip
                           // If the player is teleporting, we grab the coin no matter what
@@ -174,12 +173,12 @@ void update_objects(void) {
         }
 
         // Pillars
-        if (index >= pillars_fist_bit_ && index <= pillars_last_bit_) {
+        if (is_pillar) {
             if (is_player_teleporting() || (!is_giant_pillar(objects_.size[index]) && (shifted_objects_bitfield_ & (1 << index)) != is_player_shifted()))
                 continue; // If the player and the pillar's "dimension" do not match, skip
                           // If the player is teleporting, we do not check for collisions
 
-            const Vector2 player_pos  = (Vector2){ player_rect.x, player_rect.y };
+            const Vector2 player_pos = (Vector2){ player_rect.x, player_rect.y };
             // Checking against a smaller hitbox when colliding with pillars makes the game feel more fair
             const Vector2 player_size = (Vector2){ player_rect.width * 0.8, player_rect.height * 0.8 };
 
