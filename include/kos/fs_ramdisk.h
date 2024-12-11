@@ -37,8 +37,8 @@ __BEGIN_DECLS
 */
 
 /** \cond */
-int fs_ramdisk_init(void);
-int fs_ramdisk_shutdown(void);
+void fs_ramdisk_init(void);
+void fs_ramdisk_shutdown(void);
 /** \endcond */
 
 /** \brief  Attach a block of memory as a file in the ramdisk.
