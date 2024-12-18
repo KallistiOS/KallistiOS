@@ -51,7 +51,7 @@ const char * dbgio_dev_get(void) {
         return dbgio->name;
 }
 
-static int dbgio_enabled = 1;
+static int dbgio_enabled = 0;
 void dbgio_enable(void) {
     dbgio_enabled = 1;
 }
@@ -72,6 +72,7 @@ int dbgio_init(void) {
             // next one anyway.
             if(!dbgio->init()) {
                 // Worked.
+                dbgio_enable();
                 return 0;
             }
 

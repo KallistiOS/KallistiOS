@@ -11,6 +11,8 @@
 #include <arch/cache.h>
 #include "pvr_internal.h"
 
+#include <kos/genwait.h>
+
 #ifdef PVR_RENDER_DBG
 #include <stdio.h>
 #endif
@@ -40,6 +42,15 @@ static void dma_next_list(void *data) {
             // Get the buffers for this frame.
             b = pvr_state.dma_buffers + (pvr_state.ram_target ^ 1);
 
+            /* If we are in PVR DMA mode, yet we haven't associated a
+               RAM-residing vertex buffer with the current list
+               (because we submitted it directly, for example),
+               mark it as complete, so we skip trying to DMA it. */
+            if(!b->base[i]) {
+                pvr_state.lists_dmaed       |= 1 << i;
+                continue;
+            }
+
             // Flush the last 32 bytes out of dcache, just in case.
             // dcache_flush_range((ptr_t)(b->base[i] + b->ptr[i] - 32), 32);
             dcache_flush_range((ptr_t)(b->base[i]), b->ptr[i] + 32);
@@ -64,22 +75,96 @@ static void dma_next_list(void *data) {
     if(!did) {
         //DBG(("dma_complete(buf %d)\n", pvr_state.ram_target ^ 1));
 
+        // If that was the last one, then free up the DMA channel.
+        pvr_state.lists_dmaed = 0;
+
         // Unlock
         mutex_unlock((mutex_t *)&pvr_state.dma_lock);
-        pvr_state.lists_dmaed = 0;
 
         // Buffers are now empty again
         pvr_state.dma_buffers[pvr_state.ram_target ^ 1].ready = 0;
+    }
+}
+
+void pvr_start_dma(void) {
+    pvr_sync_stats(PVR_SYNC_REGSTART);
+
+    mutex_lock((mutex_t *)&pvr_state.dma_lock);
+
+    // Begin DMAing the first list.
+    dma_next_list(0);
+}
+
+static void pvr_render_lists(void) {
+    int bufn = pvr_state.view_target ^ 1;
+
+    if(pvr_state.ta_busy
+       && !pvr_state.render_busy
+       && (!pvr_state.render_completed || pvr_state.to_texture[bufn])
+       && pvr_state.lists_transferred == pvr_state.lists_enabled) {
+
+        /* XXX Note:
+           For some reason, the render must be started _before_ we sync
+           to the new reg buffers. The only reasons I can think of for this
+           are that there may be something in the reg sync that messes up
+           the render in progress, or we are misusing some bits somewhere. */
+
+        // Begin rendering from the dirty TA buffer into the clean
+        // frame buffer.
+        //DBG(("start_render(%d -> %d)\n", pvr_state.ta_target, pvr_state.view_target ^ 1));
+        pvr_state.ta_target ^= 1;
+        pvr_begin_queued_render();
+        pvr_state.render_busy = 1;
+        pvr_sync_stats(PVR_SYNC_RNDSTART);
+
+        // Clear the texture render flag if we had it set.
+        pvr_state.to_texture[bufn] = 0;
+
+        // Switch to the clean TA buffer.
+        pvr_state.lists_transferred = 0;
+        pvr_sync_reg_buffer();
+
+        // The TA is no longer busy.
+        pvr_state.ta_busy = 0;
 
         // Signal the client code to continue onwards.
-        sem_signal((semaphore_t *)&pvr_state.ready_sem);
+        genwait_wake_all((void *)&pvr_state.ta_busy);
         thd_schedule(1, 0);
     }
 }
 
-void pvr_int_handler(uint32 code, void *data) {
-    int bufn = pvr_state.view_target;
+void pvr_vblank_handler(uint32 code, void *data) {
+    (void)code;
+    (void)data;
 
+    pvr_sync_stats(PVR_SYNC_VBLANK);
+
+    // If the render-done interrupt has fired then we are ready to flip to the
+    // new frame buffer.
+    if(pvr_state.render_completed) {
+        int bufn = pvr_state.view_target;
+
+        //DBG(("view(%d)\n", pvr_state.view_target ^ 1));
+
+        // Handle PVR stats
+        pvr_sync_stats(PVR_SYNC_PAGEFLIP);
+
+        // Switch view address to the "good" buffer
+        pvr_state.view_target ^= 1;
+
+        if(!pvr_state.to_texture[bufn])
+            pvr_sync_view();
+
+        // Clear the render completed flag.
+        pvr_state.render_completed = 0;
+    }
+
+    // We may have a pending render, that couldn't be done as the previous
+    // render wasn't flipped yet; do it now.
+    pvr_render_lists();
+}
+
+void pvr_int_handler(uint32 code, void *data) {
     (void)data;
 
     // What kind of event did we get?
@@ -106,9 +191,6 @@ void pvr_int_handler(uint32 code, void *data) {
             pvr_state.render_busy = 0;
             pvr_state.render_completed = 1;
             pvr_sync_stats(PVR_SYNC_RNDDONE);
-            break;
-        case ASIC_EVT_PVR_VBLANK_BEGIN:
-            pvr_sync_stats(PVR_SYNC_VBLANK);
             break;
     }
 
@@ -149,91 +231,14 @@ void pvr_int_handler(uint32 code, void *data) {
         case ASIC_EVT_PVR_TRANSMODDONE:
         case ASIC_EVT_PVR_PTDONE:
 
-            if(pvr_state.lists_transferred == pvr_state.lists_enabled) {
-                pvr_sync_stats(PVR_SYNC_REGDONE);
-            }
+            if(pvr_state.lists_transferred != pvr_state.lists_enabled)
+                return;
 
-            return;
-    }
-
-    if(!pvr_state.to_texture[bufn]) {
-        // If it's not a vblank, ignore the rest of this for now.
-        if(code != ASIC_EVT_PVR_VBLANK_BEGIN)
-            return;
-    }
-    else {
-        // We don't need to wait for a vblank for rendering to a texture, but
-        // we really don't care about anything else unless we've actually gotten
-        // all the data submitted to the TA.
-        if(pvr_state.lists_transferred != pvr_state.lists_enabled &&
-           !pvr_state.render_completed)
-            return;
-    }
-
-    // If the render-done interrupt has fired then we are ready to flip to the
-    // new frame buffer.
-    if(pvr_state.render_completed) {
-        //DBG(("view(%d)\n", pvr_state.view_target ^ 1));
-
-        // Handle PVR stats
-        pvr_sync_stats(PVR_SYNC_PAGEFLIP);
-
-        // Switch view address to the "good" buffer
-        pvr_state.view_target ^= 1;
-
-        if(!pvr_state.to_texture[bufn])
-            pvr_sync_view();
-
-        // Clear the render completed flag.
-        pvr_state.render_completed = 0;
+            pvr_sync_stats(PVR_SYNC_REGDONE);
+            break;
     }
 
     // If all lists are fully transferred and a render is not in progress,
     // we are ready to start rendering.
-    if(!pvr_state.render_busy
-            && pvr_state.lists_transferred == pvr_state.lists_enabled) {
-        /* XXX Note:
-           For some reason, the render must be started _before_ we sync
-           to the new reg buffers. The only reasons I can think of for this
-           are that there may be something in the reg sync that messes up
-           the render in progress, or we are misusing some bits somewhere. */
-
-        // Begin rendering from the dirty TA buffer into the clean
-        // frame buffer.
-        //DBG(("start_render(%d -> %d)\n", pvr_state.ta_target, pvr_state.view_target ^ 1));
-        pvr_state.ta_target ^= 1;
-        pvr_begin_queued_render();
-        pvr_state.render_busy = 1;
-        pvr_sync_stats(PVR_SYNC_RNDSTART);
-
-        // Clear the texture render flag if we had it set.
-        pvr_state.to_texture[bufn] = 0;
-
-        // If we're not in DMA mode, then signal the client code
-        // to continue onwards.
-        if(!pvr_state.dma_mode) {
-            sem_signal((semaphore_t *)&pvr_state.ready_sem);
-            thd_schedule(1, 0);
-        }
-
-        // Switch to the clean TA buffer.
-        pvr_state.lists_transferred = 0;
-        pvr_sync_reg_buffer();
-
-        // The TA is no longer busy.
-        pvr_state.ta_busy = 0;
-    }
-
-    // If we're in DMA mode, the DMA source buffers are ready, and a DMA
-    // is not in progress, then we are ready to start DMAing.
-    if(pvr_state.dma_mode
-            && !pvr_state.ta_busy
-            && pvr_state.dma_buffers[pvr_state.ram_target ^ 1].ready
-            && mutex_trylock((mutex_t *)&pvr_state.dma_lock) >= 0) {
-        pvr_sync_stats(PVR_SYNC_REGSTART);
-
-        // Begin DMAing the first list.
-        pvr_state.ta_busy = 1;
-        dma_next_list(0);
-    }
+    pvr_render_lists();
 }

@@ -16,7 +16,6 @@
    code. If something is needed from this, an external interface should
    be added to dc/pvr.h. */
 
-#include <kos/sem.h>
 #include <kos/mutex.h>
 
 /**** State stuff ***************************************************/
@@ -169,7 +168,8 @@ typedef struct {
     uint32  lists_dmaed;                // (1 << idx) for each list which has been DMA'd (DMA mode only)
 
     mutex_t dma_lock;                   // Locked if a DMA is in progress (vertex or texture)
-    int     ta_busy;                    // >0 if a DMA is in progress and the TA hasn't signaled completion
+    int     ta_ready;                   // >0 if the TA is ready for the new scene
+    int     ta_busy;                    // >0 if a scene is ongoing and the TA hasn't signaled completion
     int     render_busy;                // >0 if a render is in progress
     int     render_completed;           // >1 if a render has recently finished
 
@@ -204,10 +204,6 @@ typedef struct {
     size_t   vtx_buf_used;               // Vertex buffer used size for the last frame
     size_t   vtx_buf_used_max;           // Maximum used vertex buffer size
 
-    /* Wait-ready semaphore: this will be signaled whenever the pvr_wait_ready()
-       call should be ready to return. */
-    semaphore_t ready_sem;
-
     // Handle for the vblank interrupt
     int     vbl_handle;
 
@@ -223,6 +219,7 @@ typedef struct {
     // Output address for to-texture mode
     uint32  to_txr_addr[2];
 
+    // Whether direct rendering is active or not
     uint32  dr_used;
 } pvr_state_t;
 
@@ -291,8 +288,10 @@ void pvr_blank_polyhdr_buf(int type, pvr_poly_hdr_t * buf);
 
 /**** pvr_irq.c *******************************************************/
 
-/* Interrupt handler for PVR events */
+/* Interrupt handlers for PVR events */
 void pvr_int_handler(uint32 code, void *data);
+void pvr_vblank_handler(uint32 code, void *data);
 
+void pvr_start_dma(void);
 
 #endif

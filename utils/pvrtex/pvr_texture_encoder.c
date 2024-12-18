@@ -837,7 +837,7 @@ void pteAutoSelectPixelFormat(PvrTexEncoder *pte) {
 	assert(pte);
 	assert(pte->src_img_cnt);
 
-	unsigned clearpix = 0, halfpix = 0, opaquepix = 0;
+	unsigned clearpix = 0, halfpix = 0;
 
 	for(int j = 0; j < pte->src_img_cnt; j++) {
 		pteImage *img = pte->src_imgs + j;
@@ -846,9 +846,7 @@ void pteAutoSelectPixelFormat(PvrTexEncoder *pte) {
 			int a = img->pixels[i].a;
 			if (a == 0)
 				clearpix++;
-			else if (a == 0xff)
-				opaquepix++;
-			else
+			else if (a != 0xff)
 				halfpix++;
 		}
 	}

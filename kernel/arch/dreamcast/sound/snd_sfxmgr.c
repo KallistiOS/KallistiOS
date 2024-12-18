@@ -2,7 +2,7 @@
 
    snd_sfxmgr.c
    Copyright (C) 2000, 2001, 2002, 2003, 2004 Megan Potter
-   Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024 Ruslan Rostovtsev
    Copyright (C) 2023 Andy Barajas
    Copyright (C) 2024 Stefanos Kornilios Mitsis Poiitidis
 
@@ -17,6 +17,7 @@
 #include <malloc.h>
 
 #include <sys/queue.h>
+#include <sys/ioctl.h>
 #include <kos/fs.h>
 #include <arch/irq.h>
 #include <dc/spu.h>
@@ -205,40 +206,42 @@ static snd_effect_t *create_snd_effect(wavhdr_t *wavhdr, uint8_t *wav_data) {
 
     effect->rate = rate;
     effect->stereo = channels > 1;
+    effect->locl = snd_mem_malloc(len / channels);
+
+    if(!effect->locl) {
+        goto err_occurred;
+    }
+    if(channels > 1) {
+        effect->locr = snd_mem_malloc(len / channels);
+        if(!effect->locr) {
+            snd_mem_free(effect->locl);
+            goto err_occurred;
+        }
+    }
+
+    if(fmt == WAVE_FMT_YAMAHA_ADPCM_ITU_G723 || fmt == WAVE_FMT_YAMAHA_ADPCM) {
+        effect->fmt = AICA_SM_ADPCM;
+        effect->len = (len * 2) / channels; /* 4-bit packed samples */
+    }
+    else if(fmt == WAVE_FMT_PCM && bitsize == 8) {
+        effect->fmt = AICA_SM_8BIT;
+        effect->len = len / channels;
+    }
+    else if(fmt == WAVE_FMT_PCM && bitsize == 16) {
+        effect->fmt = AICA_SM_16BIT;
+        effect->len = (len / 2) / channels;
+    }
+    else {
+        goto err_occurred;
+    }
 
     if(channels == 1) {
         /* Mono PCM/ADPCM */
-        if(fmt == WAVE_FMT_YAMAHA_ADPCM_ITU_G723 || fmt == WAVE_FMT_YAMAHA_ADPCM) {
-            effect->fmt = AICA_SM_ADPCM;
-            effect->len = len * 2; /* 4-bit packed samples */
-        }
-        else if(fmt == WAVE_FMT_PCM && bitsize == 8) {
-            effect->fmt = AICA_SM_8BIT;
-            effect->len = len;
-        }
-        else if(fmt == WAVE_FMT_PCM && bitsize == 16) {
-            effect->fmt = AICA_SM_16BIT;
-            effect->len = len / 2;
-        }
-        else {
-            goto err_occurred;
-        }
-
-        effect->locl = snd_mem_malloc(len);
-        if(effect->locl)
-            spu_memload_sq(effect->locl, wav_data, len);
-
-        effect->locr = 0;
+        spu_memload_sq(effect->locl, wav_data, len);
     }
     else if(channels == 2 && fmt == WAVE_FMT_PCM && bitsize == 16) {
         /* Stereo 16-bit PCM */
-        effect->len = len / 4; /* Two stereo, 16-bit samples */
-        effect->fmt = AICA_SM_16BIT;
-        effect->locl = snd_mem_malloc(len / 2);
-        effect->locr = snd_mem_malloc(len / 2);
-
-        if(effect->locl && effect->locr)
-            snd_pcm16_split_sq((uint32_t *)wav_data, effect->locl, effect->locr, len);
+        snd_pcm16_split_sq((uint32_t *)wav_data, effect->locl, effect->locr, len);
     }
     else if(channels == 2 && fmt == WAVE_FMT_PCM && bitsize == 8) {
         /* Stereo 8-bit PCM */
@@ -254,17 +257,8 @@ static snd_effect_t *create_snd_effect(wavhdr_t *wavhdr, uint8_t *wav_data) {
         }
 
         snd_pcm8_split((uint32_t *)wav_data, left_buf, right_buf, len);
-
-        effect->fmt = AICA_SM_8BIT;
-        effect->len = len / 2;
-        effect->locl = snd_mem_malloc(len / 2);
-        effect->locr = snd_mem_malloc(len / 2);
-
-        if(effect->locl)
-            spu_memload_sq(effect->locl, left_buf, len / 2);
-
-        if(effect->locr)
-            spu_memload_sq(effect->locr, right_buf, len / 2);
+        spu_memload_sq(effect->locl, left_buf, len / 2);
+        spu_memload_sq(effect->locr, right_buf, len / 2);
 
         free(left_buf);
         free(right_buf);
@@ -284,16 +278,8 @@ static snd_effect_t *create_snd_effect(wavhdr_t *wavhdr, uint8_t *wav_data) {
             memcpy(right_buf, wav_data + (len / 2), len / 2);
         }
 
-        effect->len = len;   /* Two stereo, 4-bit samples */
-        effect->fmt = AICA_SM_ADPCM;
-        effect->locl = snd_mem_malloc(len / 2);
-        effect->locr = snd_mem_malloc(len / 2);
-
-        if(effect->locl)
-            spu_memload_sq(effect->locl, wav_data, len / 2);
-
-        if(effect->locr)
-            spu_memload_sq(effect->locr, right_buf, len / 2);
+        spu_memload_sq(effect->locl, wav_data, len / 2);
+        spu_memload_sq(effect->locr, right_buf, len / 2);
 
         if(ownmem)
             free(right_buf);
@@ -305,7 +291,6 @@ static snd_effect_t *create_snd_effect(wavhdr_t *wavhdr, uint8_t *wav_data) {
         if(left_buf == NULL)
             goto err_occurred;
 
-
         right_buf = (uint32_t *)memalign(32, len / 2);
 
         if(right_buf == NULL) {
@@ -314,23 +299,18 @@ static snd_effect_t *create_snd_effect(wavhdr_t *wavhdr, uint8_t *wav_data) {
         }
 
         snd_adpcm_split((uint32_t *)wav_data, left_buf, right_buf, len);
-
-        effect->len = len; /* Two stereo, 4-bit samples */
-        effect->fmt = AICA_SM_ADPCM;
-        effect->locl = snd_mem_malloc(len / 2);
-        effect->locr = snd_mem_malloc(len / 2);
-
-        if(effect->locl)
-            spu_memload_sq(effect->locl, left_buf, len / 2);
-
-        if(effect->locr)
-            spu_memload_sq(effect->locr, right_buf, len / 2);
+        spu_memload_sq(effect->locl, left_buf, len / 2);
+        spu_memload_sq(effect->locr, right_buf, len / 2);
 
         free(left_buf);
         free(right_buf);
     }
     else {
 err_occurred:
+        if(effect->locl)
+            snd_mem_free(effect->locl);
+        if(effect->locr)
+            snd_mem_free(effect->locr);
         free(effect);
         effect = SFXHND_INVALID;
     }
@@ -346,21 +326,20 @@ sfxhnd_t snd_sfx_load(const char *fn) {
     uint8_t *wav_data;
     uint32_t sample_count;
 
-    dbglog(DBG_DEBUG, "snd_sfx: loading effect %s\n", fn);
-
     /* Open the sound effect file */
     fd = fs_open(fn, O_RDONLY);
     if(fd <= FILEHND_INVALID) {
-        dbglog(DBG_WARNING, "snd_sfx: can't open sfx %s\n", fn);
+        dbglog(DBG_ERROR, "snd_sfx_load: can't open %s\n", fn);
         return SFXHND_INVALID;
     }
 
     /* Read WAV header */
     if(read_wav_header(fd, &wavhdr) < 0) {
         fs_close(fd);
+        dbglog(DBG_ERROR, "snd_sfx_load: can't read wav header %s\n", fn);
         return SFXHND_INVALID;
     }
-
+    /*
     dbglog(DBG_DEBUG, "WAVE file is %s, %luHZ, %d bits/sample, "
         "%u bytes total, format %d\n", 
            wavhdr.fmt.channels == 1 ? "mono" : "stereo", 
@@ -368,13 +347,13 @@ sfxhnd_t snd_sfx_load(const char *fn) {
            wavhdr.fmt.sample_size, 
            wavhdr.chunk.size, 
            wavhdr.fmt.format);
-
+    */
     sample_count = wavhdr.fmt.sample_size >= 8 
         ? wavhdr.chunk.size / ((wavhdr.fmt.sample_size / 8) * wavhdr.fmt.channels) 
-        : wavhdr.chunk.size / (0.5 * wavhdr.fmt.channels);
+        : (wavhdr.chunk.size * 2) / wavhdr.fmt.channels;
 
     if(sample_count > 65534) {
-        dbglog(DBG_WARNING, "WAVE file is over 65534 samples\n");
+        dbglog(DBG_WARNING, "snd_sfx_load: WAVE file is over 65534 samples\n");
     }
 
     /* Read WAV data */
@@ -395,6 +374,132 @@ sfxhnd_t snd_sfx_load(const char *fn) {
     LIST_INSERT_HEAD(&snd_effects, effect, list);
 
     return (sfxhnd_t)effect;
+}
+
+sfxhnd_t snd_sfx_load_ex(const char *fn, uint32_t rate, uint16_t bitsize, uint16_t channels) {
+    sfxhnd_t effect;
+    file_t fd = fs_open(fn, O_RDONLY);
+
+    if(fd <= FILEHND_INVALID) {
+        dbglog(DBG_ERROR, "snd_sfx_load_ex: can't open sfx %s\n", fn);
+        return SFXHND_INVALID;
+    }
+    effect = snd_sfx_load_fd(fd, fs_total(fd), rate, bitsize, channels);
+    fs_close(fd);
+    return effect;
+}
+
+sfxhnd_t snd_sfx_load_fd(file_t fd, size_t len, uint32_t rate, uint16_t bitsize, uint16_t channels) {
+    snd_effect_t *effect;
+    size_t chan_len, read_len;
+    // uint32_t fs_rootbus_dma_ready = 0;
+    // uint32_t fs_dma_len = 0;
+    uint8_t *tmp_buff = NULL;
+
+    chan_len = len / channels;
+    effect = malloc(sizeof(snd_effect_t));
+
+    if(effect == NULL) {
+        return SFXHND_INVALID;
+    }
+
+    memset(effect, 0, sizeof(snd_effect_t));
+
+    effect->rate = rate;
+    effect->stereo = channels > 1;
+
+    switch(bitsize) {
+        case 4:
+            effect->fmt = AICA_SM_ADPCM;
+            effect->len = (len * 2) / channels;
+            break;
+        case 8:
+            effect->fmt = AICA_SM_8BIT;
+            effect->len = len / channels;
+            break;
+        case 16:
+            effect->fmt = AICA_SM_16BIT;
+            effect->len = (len / 2) / channels;
+            break;
+        default:
+            goto err_occurred;
+    }
+
+    if(effect->len > 65534) {
+        dbglog(DBG_WARNING, "snd_sfx_load_ex: PCM file is over 65534 samples\n");
+    }
+
+    effect->locl = snd_mem_malloc(chan_len);
+
+    if(!effect->locl) {
+        goto err_occurred;
+    }
+    read_len = chan_len;
+    /* Uncomment when implementation is merged.
+    if(fs_ioctl(fd, IOCTL_FS_ROOTBUS_DMA_READY, &fs_dma_len) == 0) {
+        if(chan_len >= fs_dma_len) {
+            fs_rootbus_dma_ready = 1;
+        }
+    }
+    if(fs_rootbus_dma_ready) {
+        read_len = chan_len & ~(fs_dma_len - 1);
+
+        if(fs_read(fd, (void *)(effect->locl | SPU_RAM_UNCACHED_BASE), read_len) <= 0) {
+            goto err_occurred;
+        }
+        read_len = chan_len - read_len;
+    }
+    */
+    if(read_len > 0) {
+        tmp_buff = memalign(32, read_len);
+
+        if(fs_read(fd, tmp_buff, read_len) <= 0) {
+            goto err_occurred;
+        }
+        spu_memload_sq(effect->locl, tmp_buff, read_len);
+    }
+
+    if(channels > 1) {
+        effect->locr = snd_mem_malloc(chan_len);
+
+        if(!effect->locr) {
+            goto err_occurred;
+        }
+        read_len = chan_len;
+        /* Uncomment when implementation is merged.
+        if(fs_rootbus_dma_ready) {
+            read_len = chan_len & ~(fs_dma_len - 1);
+
+            if(fs_read(fd, (void *)(effect->locr | SPU_RAM_UNCACHED_BASE), chan_len) <= 0) {
+                goto err_occurred;
+            }
+            read_len = chan_len - read_len;
+        }
+        */
+        if(read_len > 0) {
+            if(fs_read(fd, tmp_buff, read_len) <= 0) {
+                goto err_occurred;
+            }
+            spu_memload_sq(effect->locr, tmp_buff, read_len);
+        }
+    }
+
+    if(tmp_buff) {
+        free(tmp_buff);
+    }
+    LIST_INSERT_HEAD(&snd_effects, effect, list);
+    return (sfxhnd_t)effect;
+
+err_occurred:
+    if(effect->locl)
+        snd_mem_free(effect->locl);
+    if(effect->locr)
+        snd_mem_free(effect->locr);
+    if(tmp_buff)
+        free(tmp_buff);
+
+    free(effect);
+    return SFXHND_INVALID;
 }
 
 int snd_sfx_play_chn(int chn, sfxhnd_t idx, int vol, int pan) {

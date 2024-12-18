@@ -88,15 +88,29 @@ arch_reboot
 arch_menu
 trapa_set_handler
 vid_screen_shot
+vid_screen_shot_data
 vmu_pkg_build
 vmu_pkg_parse
 
 # Bios Font
+bfont_set_foreground_color
+bfont_set_background_color
 bfont_set_encoding
+bfont_find_char
+bfont_find_char_jp
+bfont_find_char_jp_half
+bfont_find_icon
+bfont_draw_ex
+bfont_draw
 bfont_draw_thin
 bfont_draw_wide
-bfont_draw
+bfont_draw_str_ex
+bfont_draw_str_ex_fmt
+bfont_draw_str_ex_vfmt
 bfont_draw_str
+bfont_draw_str_fmt
+bfont_draw_str_vram_vfmt
+bfont_draw_str_vram_fmt
 
 # CD-Rom
 cdrom_reinit
@@ -119,6 +133,7 @@ flashrom_get_region
 # SPU
 spu_memload
 spu_memload_sq
+spu_memload_dma
 spu_memread
 spu_memset
 spu_memset_sq
@@ -154,6 +169,8 @@ snd_poll_resp
 snd_sfx_unload_all
 snd_sfx_unload
 snd_sfx_load
+snd_sfx_load_ex
+snd_sfx_load_fd
 snd_sfx_play
 snd_sfx_stop_all
 snd_sfx_play_chn
@@ -161,9 +178,11 @@ snd_sfx_stop
 snd_sfx_chn_alloc
 snd_sfx_chn_free
 snd_stream_set_callback
+snd_stream_set_callback_direct
 snd_stream_filter_add
 snd_stream_filter_remove
 snd_stream_init
+snd_stream_init_ex
 snd_stream_shutdown
 snd_stream_queue_enable
 snd_stream_queue_disable
@@ -174,6 +193,7 @@ snd_stream_queue_go
 snd_stream_stop
 snd_stream_poll
 snd_stream_volume
+snd_stream_pan
 snd_stream_alloc
 snd_stream_destroy
 snd_stream_reinit

@@ -1,5 +1,6 @@
 TARGET = isp-settings.elf
 OBJS = isp-settings.o
+KOS_BUILD_SUBARCHS = pristine
 
 all: rm-elf $(TARGET)
 

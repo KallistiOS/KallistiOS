@@ -325,16 +325,33 @@ typedef struct fs_socket_proto {
         Currently all options (regardless of level) are passed onto the
         protocol handler.
 
-        \param  s               The socket to get the name of.
-        \param  name            Pointer to a sockaddr structure which will hold
-                                the resulting address information.
-        \param  name_len        The amount of space pointed to by name, in
-                                bytes. On return, this is set to the actual size
-                                of the returned address information.
-        \retval -1              On error (set errno appropriately).
-        \retval 0               On success.
+        \param  s           The socket to get the name of.
+        \param  name        Pointer to a sockaddr structure which will hold
+                            the resulting address information.
+        \param  name_len    The amount of space pointed to by name, in
+                            bytes. On return, this is set to the actual size
+                            of the returned address information.
+        \retval -1          On error (with errno set appropriately).
+        \retval 0           On success.
     */
     int (*getsockname)(net_socket_t *s, struct sockaddr *name, socklen_t *name_len);
+
+        /** \brief  Get the name of the peer connected to a socket created with the 
+                    protocol.
+
+        This function should implement the ::getpeername() system call for the
+        protocol. The semantics are exactly as expected for that function.
+
+        \param  s           The socket from which to get the peer address.
+        \param  name        Pointer to a sockaddr structure which will hold
+                            the resulting address information.
+        \param  name_len    The amount of space pointed to by name, in
+                            bytes. On return, this is set to the actual size
+                            of the returned address information.
+        \retval -1          On error (with errno set appropriately).
+        \retval 0           On success.
+    */
+    int (*getpeername)(net_socket_t *s, struct sockaddr *name, socklen_t *name_len);
 
     /** \brief  Manipulate file options.
 

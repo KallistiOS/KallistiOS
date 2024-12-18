@@ -1,25 +1,34 @@
 /* KallistiOS ##version##
 
    pvrmark_strips_direct.c
-   (c)2002 Megan Potter
+   Copyright (C) 2002 Megan Potter
+   Copyright (C) 2024 Falco Girgis
+*/
+
+/*
+   This file serves as both an example of and benchmark for KOS's
+   rendering fast path: the PVR direct rendering API. 
 */
 
 #include <kos.h>
 #include <stdlib.h>
 #include <time.h>
+#include <limits.h>
 
-pvr_init_params_t pvr_params = {
+enum { PHASE_HALVE, PHASE_INCR, PHASE_DECR, PHASE_FINAL };
+
+static pvr_init_params_t pvr_params = {
     { PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_0, PVR_BINSIZE_0, PVR_BINSIZE_0 },
     512 * 1024
 };
 
-enum { PHASE_HALVE, PHASE_INCR, PHASE_DECR, PHASE_FINAL };
+static int polycnt;
+static int phase = PHASE_HALVE;
+static float avgfps = -1;
+static pvr_poly_hdr_t hdr;
+static time_t begin;
 
-int polycnt;
-int phase = PHASE_HALVE;
-float avgfps = -1;
-
-void running_stats(void) {
+static void running_stats(void) {
     pvr_stats_t stats;
     pvr_get_stats(&stats);
 
@@ -29,7 +38,7 @@ void running_stats(void) {
         avgfps = (avgfps + stats.frame_rate) / 2.0f;
 }
 
-void stats(void) {
+static void stats(void) {
     pvr_stats_t stats;
 
     pvr_get_stats(&stats);
@@ -38,7 +47,7 @@ void stats(void) {
 }
 
 
-int check_start(void) {
+static int check_start(void) {
     maple_device_t *cont;
     cont_state_t *state;
 
@@ -56,9 +65,7 @@ int check_start(void) {
         return 0;
 }
 
-pvr_poly_hdr_t hdr;
-
-void setup(void) {
+static void setup(void) {
     pvr_poly_cxt_t cxt;
 
     pvr_init(&pvr_params);
@@ -69,16 +76,25 @@ void setup(void) {
     pvr_poly_compile(&hdr, &cxt);
 }
 
-int oldseed = 0xdeadbeef;
-void do_frame(void) {
-    pvr_vertex_t * vert;
-    int x, y, z;
-    int i, col;
+inline static int getnum(int *seed, int mn) {
+    int num = (*seed & ((mn) - 1));
+    *seed = *seed * 1164525 + 1013904223;
+    return num;
+}
+
+inline static void get_vert(int *seed, int *x, int *y, int *col) {
+    *x = (*x + ((getnum(seed, 64)) - 32)) & 1023;
+    *y = (*y + ((getnum(seed, 64)) - 32)) & 511;
+    *col = getnum(seed, INT32_MAX);
+}
+
+static void do_frame(void) {
+    pvr_vertex_t *vert;
+    int x=0, y=0, z=0, col=0;
+    int i;
+    static int oldseed = 0xdeadbeef;
     int seed = oldseed;
     pvr_dr_state_t dr_state;
-
-#define nextnum() seed = seed * 1164525 + 1013904223;
-#define getnum(mn) (seed & ((mn) - 1))
 
     vid_border_color(0, 0, 0);
     pvr_wait_ready();
@@ -89,46 +105,38 @@ void do_frame(void) {
 
     pvr_dr_init(&dr_state);
 
-    x = getnum(1024);
-    nextnum();
-    y = getnum(512);
-    nextnum();
-    z = getnum(128) + 1;
-    nextnum();
-    col = getnum(256);
-    nextnum();
+    get_vert(&seed, &x, &y, &col);
+    z = getnum(&seed, 128) + 1;
 
     vert = pvr_dr_target(dr_state);
     vert->flags = PVR_CMD_VERTEX;
     vert->x = x;
     vert->y = y;
     vert->z = z;
-    vert->u = vert->v = 0.0f;
-    vert->argb = col | (col << 8) | (col << 16) | 0xff000000;
-    vert->oargb = 0;
+    vert->argb = 0xff000000 | col;
     pvr_dr_commit(vert);
 
     for(i = 0; i < polycnt; i++) {
-        x = (x + ((getnum(64)) - 32)) & 1023;
-        nextnum();
-        y = (y + ((getnum(64)) - 32)) % 511;
-        nextnum();
-        col = getnum(256);
-        nextnum();
+        get_vert(&seed, &x, &y, &col);
+
         vert = pvr_dr_target(dr_state);
         vert->flags = PVR_CMD_VERTEX;
         vert->x = x;
         vert->y = y;
         vert->z = z;
-        vert->u = vert->v = 0.0f;
-        vert->argb = col | (col << 8) | (col << 16) | 0xff000000;
-        vert->oargb = 0;
-
-        if(i == (polycnt - 1))
-            vert->flags = PVR_CMD_VERTEX_EOL;
-
+        vert->argb = 0xff000000 | col;
         pvr_dr_commit(vert);
     }
+
+    get_vert(&seed, &x, &y, &col);
+
+    vert = pvr_dr_target(dr_state);
+    vert->flags = PVR_CMD_VERTEX_EOL;
+    vert->x = x;
+    vert->y = y;
+    vert->z = z;
+    vert->argb = 0xff000000 | col;
+    pvr_dr_commit(vert);
 
     pvr_list_finish();
     pvr_scene_finish();
@@ -136,7 +144,6 @@ void do_frame(void) {
     oldseed = seed;
 }
 
-time_t begin;
 void switch_tests(int ppf) {
     printf("Beginning new test: %d polys per frame (%d per second at 60fps)\n",
            ppf, ppf * 60);
@@ -146,50 +153,58 @@ void switch_tests(int ppf) {
 
 void check_switch(void) {
     time_t now;
+    int new_polycnt = polycnt;
 
     now = time(NULL);
 
     if(now >= (begin + 5)) {
-        begin = time(NULL);
         printf("  Average Frame Rate: ~%f fps (%d pps)\n", (double)avgfps, (int)(polycnt * avgfps));
 
         switch(phase) {
             case PHASE_HALVE:
 
                 if(avgfps < 55) {
-                    switch_tests(polycnt / 2);
+                    new_polycnt = polycnt / 2;
                 }
                 else {
                     printf("  Entering PHASE_INCR\n");
                     phase = PHASE_INCR;
+                    break;
                 }
 
                 break;
             case PHASE_INCR:
 
                 if(avgfps >= 55) {
-                    switch_tests(polycnt + 500);
+                    new_polycnt = polycnt + 2500;
                 }
                 else {
                     printf("  Entering PHASE_DECR\n");
                     phase = PHASE_DECR;
+                    break;
                 }
 
                 break;
             case PHASE_DECR:
 
                 if(avgfps < 55) {
-                    switch_tests(polycnt - 200);
+                    new_polycnt = polycnt - 200;
                 }
                 else {
                     printf("  Entering PHASE_FINAL\n");
                     phase = PHASE_FINAL;
+                    break;
                 }
 
                 break;
             case PHASE_FINAL:
                 break;
         }
+
+        begin = time(NULL);
+
+        if(new_polycnt != polycnt)
+            switch_tests(new_polycnt);
     }
 }
 

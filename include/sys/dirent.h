@@ -33,7 +33,7 @@ __BEGIN_DECLS
 */
 
 /** \name  Directory File Types
-    \brief POSIX file types for dirent::d_name
+    \brief POSIX file types for dirent::d_type
 
     \remark
     These directory entry types are not part of the POSIX specifican per-se,

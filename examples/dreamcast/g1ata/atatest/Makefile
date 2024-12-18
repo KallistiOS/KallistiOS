@@ -5,6 +5,7 @@
 
 TARGET = atatest.elf
 OBJS = atatest.o
+KOS_BUILD_SUBARCHS = pristine
 
 all: rm-elf $(TARGET)
 

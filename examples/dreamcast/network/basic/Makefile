@@ -9,6 +9,9 @@ TARGET = basic.elf
 # List all of your C files here, but change the extension to ".o"
 OBJS = basic.o
 
+# Only build for pristine subarch (aka. "dreamcast")
+KOS_BUILD_SUBARCHS = pristine
+
 all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules

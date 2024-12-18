@@ -2,7 +2,7 @@
 
    dc/spu.h
    Copyright (C) 2000, 2001 Megan Potter
-   Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024 Ruslan Rostovtsev
 
 */
 
@@ -47,7 +47,7 @@ __BEGIN_DECLS
 void spu_memload(uintptr_t to, void *from, size_t length);
 
 
-/** \brief  Copy a block of data to sound RAM.
+/** \brief  Copy a block of data to sound RAM by using the Store Queues.
 
     This function acts much like memcpy() but copies to the sound RAM area
     by using the Store Queues.
@@ -59,6 +59,18 @@ void spu_memload(uintptr_t to, void *from, size_t length);
                             up to be a multiple of 4.
 */
 void spu_memload_sq(uintptr_t to, void *from, size_t length);
+
+/** \brief  Copy a block of data to sound RAM by using DMA (or SQ on fails).
+
+    This function acts much like memcpy() but copies to the sound RAM area
+    by using the DMA. If DMA fails, then will be used the Store Queues.
+
+    \param  to              The offset in sound RAM to copy to. Do not include
+                            the 0xA0800000 part, it is implied.
+    \param  from            A pointer to copy from.
+    \param  length          The number of bytes to copy. Must be a multiple of 32.
+*/
+void spu_memload_dma(uintptr_t to, void *from, size_t length);
 
 /** \brief  Copy a block of data from sound RAM.
 

@@ -20,12 +20,12 @@
 */
 
 /* Load raw texture data from an SH-4 buffer into PVR RAM */
-void pvr_txr_load(void * src, pvr_ptr_t dst, uint32 count) {
+void pvr_txr_load(const void *src, pvr_ptr_t dst, uint32 count) {
     if(count & 3) {
         count = (count + 4) & ~3;
     }
 
-    pvr_sq_load((uint32 *)dst, (uint32 *)src, count, PVR_DMA_VRAM64);
+    pvr_sq_load((uint32 *)dst, (const uint32 *)src, count, PVR_DMA_VRAM64);
 }
 
 /* Linear/iterative twiddling algorithm from Marcus' tatest */
@@ -52,7 +52,7 @@ void pvr_txr_load(void * src, pvr_ptr_t dst, uint32 count) {
        PVR_TXRLOAD_INVERT
 
 */
-void pvr_txr_load_ex(void * src, pvr_ptr_t dst, uint32 w, uint32 h,
+void pvr_txr_load_ex(const void *src, pvr_ptr_t dst, uint32 w, uint32 h,
                      uint32 flags) {
     uint32 x, y, yout, min, mask, bpp, invert;
 
@@ -143,7 +143,7 @@ void pvr_txr_load_ex(void * src, pvr_ptr_t dst, uint32 w, uint32 h,
 }
 
 /* Load a KOS Platform Independent Image (subject to restraint checking) */
-void pvr_txr_load_kimg(kos_img_t *img, pvr_ptr_t dst, uint32 flags) {
+void pvr_txr_load_kimg(const kos_img_t *img, pvr_ptr_t dst, uint32 flags) {
     uint32 fmt, w, h;
 
     /* First check and make sure it's a format we can use */

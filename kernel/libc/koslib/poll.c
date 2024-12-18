@@ -32,14 +32,9 @@ void __poll_event_trigger(int fd, short event) {
     int gotone = 0;
     short mask;
 
-    if(irq_inside_int()) {
-        if(mutex_trylock(&mutex))
-            /* XXXX: Uhh... this is bad... */
-            return;
-    }
-    else {
-        mutex_lock(&mutex);
-    }
+    if(mutex_lock_irqsafe(&mutex))
+        /* XXXX: Uhh... this is bad... */
+        return;
 
     /* Look through the list of poll fds for any that match */
     LIST_FOREACH(i, &poll_list, entry) {
@@ -71,15 +66,8 @@ int poll(struct pollfd fds[], nfds_t nfds, int timeout) {
     vfs_handler_t *hndl;
     void *hnd;
 
-    if(irq_inside_int()) {
-        if(mutex_trylock(&mutex)) {
-            errno = EAGAIN;
-            return -1;
-        }
-    }
-    else {
-        mutex_lock(&mutex);
-    }
+    if(mutex_lock_irqsafe(&mutex))
+        return -1;
 
     /* Check if any of the fds already match */
     for(i = 0; i < nfds; ++i) {

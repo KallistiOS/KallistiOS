@@ -433,6 +433,7 @@ static maple_driver_t dreameye_drv = {
     .functions = MAPLE_FUNC_CAMERA,
     .name = "Dreameye (Camera)",
     .periodic = dreameye_periodic,
+    .status_size = sizeof(dreameye_state_t),
     .attach = dreameye_attach,
     .detach = NULL
 };

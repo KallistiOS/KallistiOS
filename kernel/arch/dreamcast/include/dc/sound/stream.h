@@ -3,7 +3,7 @@
    dc/sound/stream.h
    Copyright (C) 2002, 2004 Megan Potter
    Copyright (C) 2020 Lawrence Sebald
-   Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024 Ruslan Rostovtsev
 
 */
 
@@ -71,6 +71,21 @@ typedef int snd_stream_hnd_t;
 typedef void *(*snd_stream_callback_t)(snd_stream_hnd_t hnd, int smp_req,
                                        int *smp_recv);
 
+/** \brief  Direct stream data transfer callback type.
+
+    Functions for providing stream data will be of this type, and can be
+    registered with snd_stream_set_callback_direct().
+
+    \param  hnd             The stream handle being referred to.
+    \param  left            Left channel buffer address on AICA side.
+    \param  right           Right channel buffer address on AICA side.
+    \param  size_req        Requested size for each channel.
+    \retval -1              On failure.
+    \retval size_recv       On success, received size.
+*/
+typedef size_t (*snd_stream_callback_direct_t)(snd_stream_hnd_t hnd,
+    uintptr_t left,  uintptr_t right,  size_t size_req);
+
 /** \brief  Set the callback for a given stream.
 
     This function sets the get data callback function for a given stream,
@@ -80,6 +95,16 @@ typedef void *(*snd_stream_callback_t)(snd_stream_hnd_t hnd, int smp_req,
     \param  cb              A pointer to the callback function.
 */
 void snd_stream_set_callback(snd_stream_hnd_t hnd, snd_stream_callback_t cb);
+
+/** \brief  Set the callback for a given stream with direct transfer.
+
+    This function sets the get data callback function for a given stream,
+    overwriting any old callback that may have been in place.
+
+    \param  hnd             The stream handle for the callback.
+    \param  cb              A pointer to the callback function.
+*/
+void snd_stream_set_callback_direct(snd_stream_hnd_t hnd, snd_stream_callback_direct_t cb);
 
 /** \brief  Set the user data for a given stream.
 
@@ -177,6 +202,19 @@ void snd_stream_prefill(snd_stream_hnd_t hnd);
 */
 int snd_stream_init(void);
 
+/** \brief  Initialize the stream system with limits.
+
+    The same as \ref snd_stream_init but it can either reduce or not allocate
+    the buffer for splitting the stereo stream at all.
+
+    \param  channels        Max channels for any streams.
+    \param  buffer_size     Max channel buffer size for any streams.
+
+    \retval -1              On failure.
+    \retval 0               On success.
+*/
+int snd_stream_init_ex(int channels, size_t buffer_size);
+
 /** \brief  Shut down the stream system.
 
     This function shuts down the stream system and frees the memory associated
@@ -189,7 +227,7 @@ void snd_stream_shutdown(void);
     This function allocates a stream and sets its parameters.
 
     \param  cb              The get data callback for the stream.
-    \param  bufsize         The size of the buffer for the stream.
+    \param  bufsize         The size of the buffer for each channel of the stream.
     \return                 A handle to the new stream on success,
                             SND_STREAM_INVALID on failure.
 */
@@ -308,6 +346,16 @@ int snd_stream_poll(snd_stream_hnd_t hnd);
     \param  vol             The volume to set. Valid values are 0-255.
 */
 void snd_stream_volume(snd_stream_hnd_t hnd, int vol);
+
+/** \brief  Set the panning on the stream.
+
+    This function sets the panning of the specified stream.
+
+    \param  hnd             The stream to set volume on.
+    \param  left_pan        The left panning to set. Valid values are 0-255.
+    \param  right_pan       The right panning to set. Valid values are 0-255.
+*/
+void snd_stream_pan(snd_stream_hnd_t hnd, int left_pan, int right_pan);
 
 /** @} */
 

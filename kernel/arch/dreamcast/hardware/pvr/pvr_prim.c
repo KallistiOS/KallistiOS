@@ -20,141 +20,87 @@
 */
 
 /* Compile a polygon context into a polygon header */
-void pvr_poly_compile(pvr_poly_hdr_t *dst, pvr_poly_cxt_t *src) {
-    int u, v;
-    uint32  txr_base;
+void pvr_poly_compile(pvr_poly_hdr_t *dst, const pvr_poly_cxt_t *src) {
+    uint32_t txr_base;
+    /* Temporary variables we can read-write-modify, since we cannot do so from
+       within the SQs, and we want to be able to compile this header from a PVR
+       DR API submission target. */
+    uint32_t mode2, mode3;
 
     /* Basically we just take each parameter, clip it, shift it
        into place, and OR it into the final result. */
 
     /* The base values for CMD */
-    dst->cmd = PVR_CMD_POLYHDR;
-
-    if(src->txr.enable == PVR_TEXTURE_ENABLE)
-        dst->cmd |= 8;
-
-    /* Or in the list type, shading type, color and UV formats */
-    dst->cmd |= (src->list_type << PVR_TA_CMD_TYPE_SHIFT) & PVR_TA_CMD_TYPE_MASK;
-    dst->cmd |= (src->fmt.color << PVR_TA_CMD_CLRFMT_SHIFT) & PVR_TA_CMD_CLRFMT_MASK;
-    dst->cmd |= (src->gen.shading << PVR_TA_CMD_SHADE_SHIFT) & PVR_TA_CMD_SHADE_MASK;
-    dst->cmd |= (src->fmt.uv << PVR_TA_CMD_UVFMT_SHIFT) & PVR_TA_CMD_UVFMT_MASK;
-    dst->cmd |= (src->gen.clip_mode << PVR_TA_CMD_USERCLIP_SHIFT) & PVR_TA_CMD_USERCLIP_MASK;
-    dst->cmd |= (src->fmt.modifier << PVR_TA_CMD_MODIFIER_SHIFT) & PVR_TA_CMD_MODIFIER_MASK;
-    dst->cmd |= (src->gen.modifier_mode << PVR_TA_CMD_MODIFIERMODE_SHIFT) & PVR_TA_CMD_MODIFIERMODE_MASK;
-    dst->cmd |= (src->gen.specular << PVR_TA_CMD_SPECULAR_SHIFT) & PVR_TA_CMD_SPECULAR_MASK;
+    dst->cmd = PVR_CMD_POLYHDR
+        | FIELD_PREP(PVR_TA_CMD_TXRENABLE, src->txr.enable)
+        | FIELD_PREP(PVR_TA_CMD_TYPE, src->list_type)
+        | FIELD_PREP(PVR_TA_CMD_CLRFMT, src->fmt.color)
+        | FIELD_PREP(PVR_TA_CMD_SHADE, src->gen.shading)
+        | FIELD_PREP(PVR_TA_CMD_UVFMT, src->fmt.uv)
+        | FIELD_PREP(PVR_TA_CMD_USERCLIP, src->gen.clip_mode)
+        | FIELD_PREP(PVR_TA_CMD_MODIFIER, src->fmt.modifier)
+        | FIELD_PREP(PVR_TA_CMD_MODIFIERMODE, src->gen.modifier_mode)
+        | FIELD_PREP(PVR_TA_CMD_SPECULAR, src->gen.specular);
 
     /* Polygon mode 1 */
-    dst->mode1  = (src->depth.comparison << PVR_TA_PM1_DEPTHCMP_SHIFT) & PVR_TA_PM1_DEPTHCMP_MASK;
-    dst->mode1 |= (src->gen.culling << PVR_TA_PM1_CULLING_SHIFT) & PVR_TA_PM1_CULLING_MASK;
-    dst->mode1 |= (src->depth.write << PVR_TA_PM1_DEPTHWRITE_SHIFT) & PVR_TA_PM1_DEPTHWRITE_MASK;
-    dst->mode1 |= (src->txr.enable << PVR_TA_PM1_TXRENABLE_SHIFT) & PVR_TA_PM1_TXRENABLE_MASK;
+    dst->mode1 = FIELD_PREP(PVR_TA_PM1_DEPTHCMP, src->depth.comparison)
+        | FIELD_PREP(PVR_TA_PM1_CULLING, src->gen.culling)
+        | FIELD_PREP(PVR_TA_PM1_DEPTHWRITE, src->depth.write)
+        | FIELD_PREP(PVR_TA_PM1_TXRENABLE, src->txr.enable);
 
     /* Polygon mode 2 */
-    dst->mode2  = (src->blend.src << PVR_TA_PM2_SRCBLEND_SHIFT) & PVR_TA_PM2_SRCBLEND_MASK;
-    dst->mode2 |= (src->blend.dst << PVR_TA_PM2_DSTBLEND_SHIFT) & PVR_TA_PM2_DSTBLEND_MASK;
-    dst->mode2 |= (src->blend.src_enable << PVR_TA_PM2_SRCENABLE_SHIFT) & PVR_TA_PM2_SRCENABLE_MASK;
-    dst->mode2 |= (src->blend.dst_enable << PVR_TA_PM2_DSTENABLE_SHIFT) & PVR_TA_PM2_DSTENABLE_MASK;
-    dst->mode2 |= (src->gen.fog_type << PVR_TA_PM2_FOG_SHIFT) & PVR_TA_PM2_FOG_MASK;
-    dst->mode2 |= (src->gen.color_clamp << PVR_TA_PM2_CLAMP_SHIFT) & PVR_TA_PM2_CLAMP_MASK;
-    dst->mode2 |= (src->gen.alpha << PVR_TA_PM2_ALPHA_SHIFT) & PVR_TA_PM2_ALPHA_MASK;
+    mode2 = FIELD_PREP(PVR_TA_PM2_SRCBLEND, src->blend.src)
+        | FIELD_PREP(PVR_TA_PM2_DSTBLEND, src->blend.dst)
+        | FIELD_PREP(PVR_TA_PM2_SRCENABLE, src->blend.src_enable)
+        | FIELD_PREP(PVR_TA_PM2_DSTENABLE, src->blend.dst_enable)
+        | FIELD_PREP(PVR_TA_PM2_FOG, src->gen.fog_type)
+        | FIELD_PREP(PVR_TA_PM2_CLAMP, src->gen.color_clamp)
+        | FIELD_PREP(PVR_TA_PM2_ALPHA, src->gen.alpha);
 
     if(src->txr.enable == PVR_TEXTURE_DISABLE) {
-        dst->mode3 = 0;
+        mode3 = 0;
     }
     else {
-        dst->mode2 |= (src->txr.alpha << PVR_TA_PM2_TXRALPHA_SHIFT) & PVR_TA_PM2_TXRALPHA_MASK;
-        dst->mode2 |= (src->txr.uv_flip << PVR_TA_PM2_UVFLIP_SHIFT) & PVR_TA_PM2_UVFLIP_MASK;
-        dst->mode2 |= (src->txr.uv_clamp << PVR_TA_PM2_UVCLAMP_SHIFT) & PVR_TA_PM2_UVCLAMP_MASK;
-        dst->mode2 |= (src->txr.filter << PVR_TA_PM2_FILTER_SHIFT) & PVR_TA_PM2_FILTER_MASK;
-        dst->mode2 |= (src->txr.mipmap_bias << PVR_TA_PM2_MIPBIAS_SHIFT) & PVR_TA_PM2_MIPBIAS_MASK;
-        dst->mode2 |= (src->txr.env << PVR_TA_PM2_TXRENV_SHIFT) & PVR_TA_PM2_TXRENV_MASK;
+        assert_msg(__builtin_popcount(src->txr.width) == 1
+		   && src->txr.width <= 1024, "Invalid texture U size");
+        assert_msg(__builtin_popcount(src->txr.height) == 1
+		   && src->txr.height <= 1024, "Invalid texture V size");
 
-        switch(src->txr.width) {
-            case 8:
-                u = 0;
-                break;
-            case 16:
-                u = 1;
-                break;
-            case 32:
-                u = 2;
-                break;
-            case 64:
-                u = 3;
-                break;
-            case 128:
-                u = 4;
-                break;
-            case 256:
-                u = 5;
-                break;
-            case 512:
-                u = 6;
-                break;
-            case 1024:
-                u = 7;
-                break;
-            default:
-                assert_msg(0, "Invalid texture U size");
-                u = 0;
-                break;
-        }
-
-        switch(src->txr.height) {
-            case 8:
-                v = 0;
-                break;
-            case 16:
-                v = 1;
-                break;
-            case 32:
-                v = 2;
-                break;
-            case 64:
-                v = 3;
-                break;
-            case 128:
-                v = 4;
-                break;
-            case 256:
-                v = 5;
-                break;
-            case 512:
-                v = 6;
-                break;
-            case 1024:
-                v = 7;
-                break;
-            default:
-                assert_msg(0, "Invalid texture V size");
-                v = 0;
-                break;
-        }
-
-        dst->mode2 |= (u << PVR_TA_PM2_USIZE_SHIFT) & PVR_TA_PM2_USIZE_MASK;
-        dst->mode2 |= (v << PVR_TA_PM2_VSIZE_SHIFT) & PVR_TA_PM2_VSIZE_MASK;
-
-        /* Polygon mode 3 */
-        dst->mode3  = (src->txr.mipmap << PVR_TA_PM3_MIPMAP_SHIFT) & PVR_TA_PM3_MIPMAP_MASK;
-        dst->mode3 |= (src->txr.format << PVR_TA_PM3_TXRFMT_SHIFT) & PVR_TA_PM3_TXRFMT_MASK;
+        mode2 |= FIELD_PREP(PVR_TA_PM2_TXRALPHA, src->txr.alpha)
+            | FIELD_PREP(PVR_TA_PM2_UVFLIP, src->txr.uv_flip)
+            | FIELD_PREP(PVR_TA_PM2_UVCLAMP, src->txr.uv_clamp)
+            | FIELD_PREP(PVR_TA_PM2_FILTER, src->txr.filter)
+            | FIELD_PREP(PVR_TA_PM2_MIPBIAS, src->txr.mipmap_bias)
+            | FIELD_PREP(PVR_TA_PM2_TXRENV, src->txr.env)
+            | FIELD_PREP(PVR_TA_PM2_USIZE, __builtin_ctz(src->txr.width) - 3)
+            | FIELD_PREP(PVR_TA_PM2_VSIZE, __builtin_ctz(src->txr.height) - 3);
 
         /* Convert the texture address */
-        txr_base = (uint32)src->txr.base;
+        txr_base = (uint32_t)src->txr.base;
         txr_base = (txr_base & 0x00fffff8) >> 3;
-        dst->mode3 |= txr_base;
+
+        /* Polygon mode 3 */
+        mode3 = FIELD_PREP(PVR_TA_PM3_MIPMAP, src->txr.mipmap)
+            | src->txr.format
+            | txr_base;
     }
+
+    dst->mode2 = mode2;
+    dst->mode3 = mode3;
 
     if(src->fmt.modifier && src->gen.modifier_mode) {
         /* If we're affected by a modifier volume, silently promote the header
            to the one that is affected by a modifier volume. */
-        dst->d1 = dst->mode2;
-        dst->d2 = dst->mode3;
+        dst->d1 = mode2;
+        dst->d2 = mode3;
     }
     else {
-        dst->d1 = dst->d2 = 0xffffffff;
+        dst->d1 = 0xffffffff;
+        dst->d2 = 0xffffffff;
     }
 
-    dst->d3 = dst->d4 = 0xffffffff;
+    dst->d3 = 0xffffffff;
+    dst->d4 = 0xffffffff;
 }
 
 /* Create a colored polygon context with parameters similar to
@@ -321,124 +267,65 @@ void pvr_sprite_cxt_txr(pvr_sprite_cxt_t *dst, pvr_list_t list,
     dst->txr.format = textureformat;
 }
 
-void pvr_sprite_compile(pvr_sprite_hdr_t *dst, pvr_sprite_cxt_t *src) {
-    int u, v;
-    uint32 txr_base;
+void pvr_sprite_compile(pvr_sprite_hdr_t *dst, const pvr_sprite_cxt_t *src) {
+    uint32_t txr_base, mode2, mode3;
 
     /* Basically we just take each parameter, clip it, shift it
        into place, and OR it into the final result. */
 
     /* The base values for CMD */
-    dst->cmd = PVR_CMD_SPRITE;
-
-    if(src->txr.enable == PVR_TEXTURE_ENABLE)
-        dst->cmd |= 8;
-
-    /* Or in the list type, clipping mode, and UV formats */
-    dst->cmd |= (src->list_type << PVR_TA_CMD_TYPE_SHIFT) & PVR_TA_CMD_TYPE_MASK;
-    dst->cmd |= (PVR_UVFMT_16BIT << PVR_TA_CMD_UVFMT_SHIFT) & PVR_TA_CMD_UVFMT_MASK;
-    dst->cmd |= (src->gen.clip_mode << PVR_TA_CMD_USERCLIP_SHIFT) & PVR_TA_CMD_USERCLIP_MASK;
-    dst->cmd |= (src->gen.specular << PVR_TA_CMD_SPECULAR_SHIFT) & PVR_TA_CMD_SPECULAR_MASK;
+    dst->cmd = PVR_CMD_SPRITE
+        | FIELD_PREP(PVR_TA_CMD_TXRENABLE, src->txr.enable)
+        | FIELD_PREP(PVR_TA_CMD_TYPE, src->list_type)
+        | FIELD_PREP(PVR_TA_CMD_UVFMT, PVR_UVFMT_16BIT)
+        | FIELD_PREP(PVR_TA_CMD_USERCLIP, src->gen.clip_mode)
+        | FIELD_PREP(PVR_TA_CMD_SPECULAR, src->gen.specular);
 
     /* Polygon mode 1 */
-    dst->mode1  = (src->depth.comparison << PVR_TA_PM1_DEPTHCMP_SHIFT) & PVR_TA_PM1_DEPTHCMP_MASK;
-    dst->mode1 |= (src->gen.culling << PVR_TA_PM1_CULLING_SHIFT) & PVR_TA_PM1_CULLING_MASK;
-    dst->mode1 |= (src->depth.write << PVR_TA_PM1_DEPTHWRITE_SHIFT) & PVR_TA_PM1_DEPTHWRITE_MASK;
-    dst->mode1 |= (src->txr.enable << PVR_TA_PM1_TXRENABLE_SHIFT) & PVR_TA_PM1_TXRENABLE_MASK;
+    dst->mode1 = FIELD_PREP(PVR_TA_PM1_DEPTHCMP, src->depth.comparison)
+        | FIELD_PREP(PVR_TA_PM1_CULLING, src->gen.culling)
+        | FIELD_PREP(PVR_TA_PM1_DEPTHWRITE, src->depth.write)
+        | FIELD_PREP(PVR_TA_PM1_TXRENABLE, src->txr.enable);
 
     /* Polygon mode 2 */
-    dst->mode2  = (src->blend.src << PVR_TA_PM2_SRCBLEND_SHIFT) & PVR_TA_PM2_SRCBLEND_MASK;
-    dst->mode2 |= (src->blend.dst << PVR_TA_PM2_DSTBLEND_SHIFT) & PVR_TA_PM2_DSTBLEND_MASK;
-    dst->mode2 |= (src->blend.src_enable << PVR_TA_PM2_SRCENABLE_SHIFT) & PVR_TA_PM2_SRCENABLE_MASK;
-    dst->mode2 |= (src->blend.dst_enable << PVR_TA_PM2_DSTENABLE_SHIFT) & PVR_TA_PM2_DSTENABLE_MASK;
-    dst->mode2 |= (src->gen.fog_type << PVR_TA_PM2_FOG_SHIFT) & PVR_TA_PM2_FOG_MASK;
-    dst->mode2 |= (src->gen.color_clamp << PVR_TA_PM2_CLAMP_SHIFT) & PVR_TA_PM2_CLAMP_MASK;
-    dst->mode2 |= (src->gen.alpha << PVR_TA_PM2_ALPHA_SHIFT) & PVR_TA_PM2_ALPHA_MASK;
+    mode2 = FIELD_PREP(PVR_TA_PM2_SRCBLEND, src->blend.src)
+        | FIELD_PREP(PVR_TA_PM2_DSTBLEND, src->blend.dst)
+        | FIELD_PREP(PVR_TA_PM2_SRCENABLE, src->blend.src_enable)
+        | FIELD_PREP(PVR_TA_PM2_DSTENABLE, src->blend.dst_enable)
+        | FIELD_PREP(PVR_TA_PM2_FOG, src->gen.fog_type)
+        | FIELD_PREP(PVR_TA_PM2_CLAMP, src->gen.color_clamp)
+        | FIELD_PREP(PVR_TA_PM2_ALPHA, src->gen.alpha);
 
     if(src->txr.enable == PVR_TEXTURE_DISABLE) {
-        dst->mode3 = 0;
+        mode3 = 0;
     }
-    else    {
-        dst->mode2 |= (src->txr.alpha << PVR_TA_PM2_TXRALPHA_SHIFT) & PVR_TA_PM2_TXRALPHA_MASK;
-        dst->mode2 |= (src->txr.uv_flip << PVR_TA_PM2_UVFLIP_SHIFT) & PVR_TA_PM2_UVFLIP_MASK;
-        dst->mode2 |= (src->txr.uv_clamp << PVR_TA_PM2_UVCLAMP_SHIFT) & PVR_TA_PM2_UVCLAMP_MASK;
-        dst->mode2 |= (src->txr.filter << PVR_TA_PM2_FILTER_SHIFT) & PVR_TA_PM2_FILTER_MASK;
-        dst->mode2 |= (src->txr.mipmap_bias << PVR_TA_PM2_MIPBIAS_SHIFT) & PVR_TA_PM2_MIPBIAS_MASK;
-        dst->mode2 |= (src->txr.env << PVR_TA_PM2_TXRENV_SHIFT) & PVR_TA_PM2_TXRENV_MASK;
+    else {
+        assert_msg(__builtin_popcount(src->txr.width) == 1
+		   && src->txr.width <= 1024, "Invalid texture U size");
+        assert_msg(__builtin_popcount(src->txr.height) == 1
+		   && src->txr.height <= 1024, "Invalid texture V size");
 
-        switch(src->txr.width) {
-            case 8:
-                u = 0;
-                break;
-            case 16:
-                u = 1;
-                break;
-            case 32:
-                u = 2;
-                break;
-            case 64:
-                u = 3;
-                break;
-            case 128:
-                u = 4;
-                break;
-            case 256:
-                u = 5;
-                break;
-            case 512:
-                u = 6;
-                break;
-            case 1024:
-                u = 7;
-                break;
-            default:
-                assert_msg(0, "Invalid texture U size");
-                u = 0;
-                break;
-        }
+        mode2 |= FIELD_PREP(PVR_TA_PM2_TXRALPHA, src->txr.alpha)
+            | FIELD_PREP(PVR_TA_PM2_UVFLIP, src->txr.uv_flip)
+            | FIELD_PREP(PVR_TA_PM2_UVCLAMP, src->txr.uv_clamp)
+            | FIELD_PREP(PVR_TA_PM2_FILTER, src->txr.filter)
+            | FIELD_PREP(PVR_TA_PM2_MIPBIAS, src->txr.mipmap_bias)
+            | FIELD_PREP(PVR_TA_PM2_TXRENV, src->txr.env)
+            | FIELD_PREP(PVR_TA_PM2_USIZE, __builtin_ctz(src->txr.width) - 3)
+            | FIELD_PREP(PVR_TA_PM2_VSIZE, __builtin_ctz(src->txr.height) - 3);
 
-        switch(src->txr.height) {
-            case 8:
-                v = 0;
-                break;
-            case 16:
-                v = 1;
-                break;
-            case 32:
-                v = 2;
-                break;
-            case 64:
-                v = 3;
-                break;
-            case 128:
-                v = 4;
-                break;
-            case 256:
-                v = 5;
-                break;
-            case 512:
-                v = 6;
-                break;
-            case 1024:
-                v = 7;
-                break;
-            default:
-                assert_msg(0, "Invalid texture V size");
-                v = 0;
-                break;
-        }
-
-        dst->mode2 |= (u << PVR_TA_PM2_USIZE_SHIFT) & PVR_TA_PM2_USIZE_MASK;
-        dst->mode2 |= (v << PVR_TA_PM2_VSIZE_SHIFT) & PVR_TA_PM2_VSIZE_MASK;
+        /* Convert the texture address */
+        txr_base = (uint32_t)src->txr.base;
+        txr_base = (txr_base & 0x00fffff8) >> 3;
 
         /* Polygon mode 3 */
-        dst->mode3  = (src->txr.mipmap << PVR_TA_PM3_MIPMAP_SHIFT) & PVR_TA_PM3_MIPMAP_MASK;
-        dst->mode3 |= (src->txr.format << PVR_TA_PM3_TXRFMT_SHIFT) & PVR_TA_PM3_TXRFMT_MASK;
-
-        txr_base = (uint32)src->txr.base;
-        txr_base = (txr_base & 0x00fffff8) >> 3;
-        dst->mode3 |= txr_base;
+        mode3 = FIELD_PREP(PVR_TA_PM3_MIPMAP, src->txr.mipmap)
+            | src->txr.format
+            | txr_base;
     }
+
+    dst->mode2 = mode2;
+    dst->mode3 = mode3;
 
     dst->argb = 0xFFFFFFFF;
     dst->oargb = 0x00000000;
@@ -446,237 +333,123 @@ void pvr_sprite_compile(pvr_sprite_hdr_t *dst, pvr_sprite_cxt_t *src) {
 
 void pvr_mod_compile(pvr_mod_hdr_t *dst, pvr_list_t list, uint32 mode,
                      uint32 cull) {
-    dst->cmd = PVR_CMD_MODIFIER;
-    dst->cmd |= (list << PVR_TA_CMD_TYPE_SHIFT) & PVR_TA_CMD_TYPE_MASK;
-
-    dst->mode1 = (mode << PVR_TA_PM1_MODIFIERINST_SHIFT) & PVR_TA_PM1_MODIFIERINST_MASK;
-    dst->mode1 |= (cull << PVR_TA_PM1_CULLING_SHIFT) & PVR_TA_PM1_CULLING_MASK;
+    dst->cmd = PVR_CMD_MODIFIER
+        | FIELD_PREP(PVR_TA_CMD_TYPE, list);
+    dst->mode1 = FIELD_PREP(PVR_TA_PM1_MODIFIERINST, mode)
+        | FIELD_PREP(PVR_TA_PM1_CULLING, cull);
 
     dst->d1 = dst->d2 = dst->d3 = dst->d4 = dst->d5 = dst->d6 = 0;
 }
 
 /* Compile a polygon context into a polygon header that is affected by
    modifier volumes */
-void pvr_poly_mod_compile(pvr_poly_mod_hdr_t *dst, pvr_poly_cxt_t *src) {
-    int u, v;
-    uint32  txr_base;
+void pvr_poly_mod_compile(pvr_poly_mod_hdr_t *dst, const pvr_poly_cxt_t *src) {
+    uint32_t txr_base;
+    uint32_t mode2, mode3;
 
     /* Basically we just take each parameter, clip it, shift it
        into place, and OR it into the final result. */
 
     /* The base values for CMD */
-    dst->cmd = PVR_CMD_POLYHDR;
-
-    if(src->txr.enable == PVR_TEXTURE_ENABLE)
-        dst->cmd |= 8;
-
-    /* Or in the list type, shading type, color and UV formats */
-    dst->cmd |= (src->list_type << PVR_TA_CMD_TYPE_SHIFT) & PVR_TA_CMD_TYPE_MASK;
-    dst->cmd |= (src->fmt.color << PVR_TA_CMD_CLRFMT_SHIFT) & PVR_TA_CMD_CLRFMT_MASK;
-    dst->cmd |= (src->gen.shading << PVR_TA_CMD_SHADE_SHIFT) & PVR_TA_CMD_SHADE_MASK;
-    dst->cmd |= (src->fmt.uv << PVR_TA_CMD_UVFMT_SHIFT) & PVR_TA_CMD_UVFMT_MASK;
-    dst->cmd |= (src->gen.clip_mode << PVR_TA_CMD_USERCLIP_SHIFT) & PVR_TA_CMD_USERCLIP_MASK;
-    dst->cmd |= (src->fmt.modifier << PVR_TA_CMD_MODIFIER_SHIFT) & PVR_TA_CMD_MODIFIER_MASK;
-    dst->cmd |= (src->gen.modifier_mode << PVR_TA_CMD_MODIFIERMODE_SHIFT) & PVR_TA_CMD_MODIFIERMODE_MASK;
-    dst->cmd |= (src->gen.specular << PVR_TA_CMD_SPECULAR_SHIFT) & PVR_TA_CMD_SPECULAR_MASK;
+    dst->cmd = PVR_CMD_POLYHDR
+        | FIELD_PREP(PVR_TA_CMD_TXRENABLE, src->txr.enable)
+        | FIELD_PREP(PVR_TA_CMD_TYPE, src->list_type)
+        | FIELD_PREP(PVR_TA_CMD_CLRFMT, src->fmt.color)
+        | FIELD_PREP(PVR_TA_CMD_SHADE, src->gen.shading)
+        | FIELD_PREP(PVR_TA_CMD_UVFMT, src->fmt.uv)
+        | FIELD_PREP(PVR_TA_CMD_USERCLIP, src->gen.clip_mode)
+        | FIELD_PREP(PVR_TA_CMD_MODIFIER, src->fmt.modifier)
+        | FIELD_PREP(PVR_TA_CMD_MODIFIERMODE, src->gen.modifier_mode)
+        | FIELD_PREP(PVR_TA_CMD_SPECULAR, src->gen.specular);
 
     /* Polygon mode 1 */
-    dst->mode1  = (src->depth.comparison << PVR_TA_PM1_DEPTHCMP_SHIFT) & PVR_TA_PM1_DEPTHCMP_MASK;
-    dst->mode1 |= (src->gen.culling << PVR_TA_PM1_CULLING_SHIFT) & PVR_TA_PM1_CULLING_MASK;
-    dst->mode1 |= (src->depth.write << PVR_TA_PM1_DEPTHWRITE_SHIFT) & PVR_TA_PM1_DEPTHWRITE_MASK;
-    dst->mode1 |= (src->txr.enable << PVR_TA_PM1_TXRENABLE_SHIFT) & PVR_TA_PM1_TXRENABLE_MASK;
+    dst->mode1 = FIELD_PREP(PVR_TA_PM1_DEPTHCMP, src->depth.comparison)
+        | FIELD_PREP(PVR_TA_PM1_CULLING, src->gen.culling)
+        | FIELD_PREP(PVR_TA_PM1_DEPTHWRITE, src->depth.write)
+        | FIELD_PREP(PVR_TA_PM1_TXRENABLE, src->txr.enable);
 
     /* Polygon mode 2 (outside volume) */
-    dst->mode2_0  = (src->blend.src << PVR_TA_PM2_SRCBLEND_SHIFT) & PVR_TA_PM2_SRCBLEND_MASK;
-    dst->mode2_0 |= (src->blend.dst << PVR_TA_PM2_DSTBLEND_SHIFT) & PVR_TA_PM2_DSTBLEND_MASK;
-    dst->mode2_0 |= (src->blend.src_enable << PVR_TA_PM2_SRCENABLE_SHIFT) & PVR_TA_PM2_SRCENABLE_MASK;
-    dst->mode2_0 |= (src->blend.dst_enable << PVR_TA_PM2_DSTENABLE_SHIFT) & PVR_TA_PM2_DSTENABLE_MASK;
-    dst->mode2_0 |= (src->gen.fog_type << PVR_TA_PM2_FOG_SHIFT) & PVR_TA_PM2_FOG_MASK;
-    dst->mode2_0 |= (src->gen.color_clamp << PVR_TA_PM2_CLAMP_SHIFT) & PVR_TA_PM2_CLAMP_MASK;
-    dst->mode2_0 |= (src->gen.alpha << PVR_TA_PM2_ALPHA_SHIFT) & PVR_TA_PM2_ALPHA_MASK;
+    mode2 = FIELD_PREP(PVR_TA_PM2_SRCBLEND, src->blend.src)
+        | FIELD_PREP(PVR_TA_PM2_DSTBLEND, src->blend.dst)
+        | FIELD_PREP(PVR_TA_PM2_SRCENABLE, src->blend.src_enable)
+        | FIELD_PREP(PVR_TA_PM2_DSTENABLE, src->blend.dst_enable)
+        | FIELD_PREP(PVR_TA_PM2_FOG, src->gen.fog_type)
+        | FIELD_PREP(PVR_TA_PM2_CLAMP, src->gen.color_clamp)
+        | FIELD_PREP(PVR_TA_PM2_ALPHA, src->gen.alpha);
 
     if(src->txr.enable == PVR_TEXTURE_DISABLE) {
-        dst->mode3_0 = 0;
+        mode3 = 0;
     }
     else {
-        dst->mode2_0 |= (src->txr.alpha << PVR_TA_PM2_TXRALPHA_SHIFT) & PVR_TA_PM2_TXRALPHA_MASK;
-        dst->mode2_0 |= (src->txr.uv_flip << PVR_TA_PM2_UVFLIP_SHIFT) & PVR_TA_PM2_UVFLIP_MASK;
-        dst->mode2_0 |= (src->txr.uv_clamp << PVR_TA_PM2_UVCLAMP_SHIFT) & PVR_TA_PM2_UVCLAMP_MASK;
-        dst->mode2_0 |= (src->txr.filter << PVR_TA_PM2_FILTER_SHIFT) & PVR_TA_PM2_FILTER_MASK;
-        dst->mode2_0 |= (src->txr.mipmap_bias << PVR_TA_PM2_MIPBIAS_SHIFT) & PVR_TA_PM2_MIPBIAS_MASK;
-        dst->mode2_0 |= (src->txr.env << PVR_TA_PM2_TXRENV_SHIFT) & PVR_TA_PM2_TXRENV_MASK;
+        assert_msg(__builtin_popcount(src->txr.width) == 1
+		   && src->txr.width <= 1024, "Invalid texture U size");
+        assert_msg(__builtin_popcount(src->txr.height) == 1
+		   && src->txr.height <= 1024, "Invalid texture V size");
 
-        switch(src->txr.width) {
-            case 8:
-                u = 0;
-                break;
-            case 16:
-                u = 1;
-                break;
-            case 32:
-                u = 2;
-                break;
-            case 64:
-                u = 3;
-                break;
-            case 128:
-                u = 4;
-                break;
-            case 256:
-                u = 5;
-                break;
-            case 512:
-                u = 6;
-                break;
-            case 1024:
-                u = 7;
-                break;
-            default:
-                assert_msg(0, "Invalid texture U size");
-                u = 0;
-                break;
-        }
-
-        switch(src->txr.height) {
-            case 8:
-                v = 0;
-                break;
-            case 16:
-                v = 1;
-                break;
-            case 32:
-                v = 2;
-                break;
-            case 64:
-                v = 3;
-                break;
-            case 128:
-                v = 4;
-                break;
-            case 256:
-                v = 5;
-                break;
-            case 512:
-                v = 6;
-                break;
-            case 1024:
-                v = 7;
-                break;
-            default:
-                assert_msg(0, "Invalid texture V size");
-                v = 0;
-                break;
-        }
-
-        dst->mode2_0 |= (u << PVR_TA_PM2_USIZE_SHIFT) & PVR_TA_PM2_USIZE_MASK;
-        dst->mode2_0 |= (v << PVR_TA_PM2_VSIZE_SHIFT) & PVR_TA_PM2_VSIZE_MASK;
-
-        /* Polygon mode 3 (outside volume) */
-        dst->mode3_0  = (src->txr.mipmap << PVR_TA_PM3_MIPMAP_SHIFT) & PVR_TA_PM3_MIPMAP_MASK;
-        dst->mode3_0 |= (src->txr.format << PVR_TA_PM3_TXRFMT_SHIFT) & PVR_TA_PM3_TXRFMT_MASK;
+        mode2 |= FIELD_PREP(PVR_TA_PM2_TXRALPHA, src->txr.alpha)
+            | FIELD_PREP(PVR_TA_PM2_UVFLIP, src->txr.uv_flip)
+            | FIELD_PREP(PVR_TA_PM2_UVCLAMP, src->txr.uv_clamp)
+            | FIELD_PREP(PVR_TA_PM2_FILTER, src->txr.filter)
+            | FIELD_PREP(PVR_TA_PM2_MIPBIAS, src->txr.mipmap_bias)
+            | FIELD_PREP(PVR_TA_PM2_TXRENV, src->txr.env)
+            | FIELD_PREP(PVR_TA_PM2_USIZE, __builtin_ctz(src->txr.width) - 3)
+            | FIELD_PREP(PVR_TA_PM2_VSIZE, __builtin_ctz(src->txr.height) - 3);
 
         /* Convert the texture address */
-        txr_base = (uint32)src->txr.base;
+        txr_base = (uint32_t)src->txr.base;
         txr_base = (txr_base & 0x00fffff8) >> 3;
-        dst->mode3_0 |= txr_base;
+
+        /* Polygon mode 3 */
+        mode3 = FIELD_PREP(PVR_TA_PM3_MIPMAP, src->txr.mipmap)
+            | src->txr.format
+            | txr_base;
     }
+
+    dst->mode2_0 = mode2;
+    dst->mode3_0 = mode3;
 
     /* Polygon mode 2 (within volume) */
-    dst->mode2_1  = (src->blend.src2 << PVR_TA_PM2_SRCBLEND_SHIFT) & PVR_TA_PM2_SRCBLEND_MASK;
-    dst->mode2_1 |= (src->blend.dst2 << PVR_TA_PM2_DSTBLEND_SHIFT) & PVR_TA_PM2_DSTBLEND_MASK;
-    dst->mode2_1 |= (src->blend.src_enable2 << PVR_TA_PM2_SRCENABLE_SHIFT) & PVR_TA_PM2_SRCENABLE_MASK;
-    dst->mode2_1 |= (src->blend.dst_enable2 << PVR_TA_PM2_DSTENABLE_SHIFT) & PVR_TA_PM2_DSTENABLE_MASK;
-    dst->mode2_1 |= (src->gen.fog_type2 << PVR_TA_PM2_FOG_SHIFT) & PVR_TA_PM2_FOG_MASK;
-    dst->mode2_1 |= (src->gen.color_clamp2 << PVR_TA_PM2_CLAMP_SHIFT) & PVR_TA_PM2_CLAMP_MASK;
-    dst->mode2_1 |= (src->gen.alpha2 << PVR_TA_PM2_ALPHA_SHIFT) & PVR_TA_PM2_ALPHA_MASK;
+    mode2 = FIELD_PREP(PVR_TA_PM2_SRCBLEND, src->blend.src2)
+        | FIELD_PREP(PVR_TA_PM2_DSTBLEND, src->blend.dst2)
+        | FIELD_PREP(PVR_TA_PM2_SRCENABLE, src->blend.src_enable2)
+        | FIELD_PREP(PVR_TA_PM2_DSTENABLE, src->blend.dst_enable2)
+        | FIELD_PREP(PVR_TA_PM2_FOG, src->gen.fog_type2)
+        | FIELD_PREP(PVR_TA_PM2_CLAMP, src->gen.color_clamp2)
+        | FIELD_PREP(PVR_TA_PM2_ALPHA, src->gen.alpha2);
 
     if(src->txr2.enable == PVR_TEXTURE_DISABLE) {
-        dst->mode3_1 = 0;
+        mode3 = 0;
     }
     else {
-        dst->mode2_1 |= (src->txr2.alpha << PVR_TA_PM2_TXRALPHA_SHIFT) & PVR_TA_PM2_TXRALPHA_MASK;
-        dst->mode2_1 |= (src->txr2.uv_flip << PVR_TA_PM2_UVFLIP_SHIFT) & PVR_TA_PM2_UVFLIP_MASK;
-        dst->mode2_1 |= (src->txr2.uv_clamp << PVR_TA_PM2_UVCLAMP_SHIFT) & PVR_TA_PM2_UVCLAMP_MASK;
-        dst->mode2_1 |= (src->txr2.filter << PVR_TA_PM2_FILTER_SHIFT) & PVR_TA_PM2_FILTER_MASK;
-        dst->mode2_1 |= (src->txr2.mipmap_bias << PVR_TA_PM2_MIPBIAS_SHIFT) & PVR_TA_PM2_MIPBIAS_MASK;
-        dst->mode2_1 |= (src->txr2.env << PVR_TA_PM2_TXRENV_SHIFT) & PVR_TA_PM2_TXRENV_MASK;
+        assert_msg(__builtin_popcount(src->txr2.width) == 1
+		   && src->txr2.width <= 1024, "Invalid texture U size");
+        assert_msg(__builtin_popcount(src->txr2.height) == 1
+		   && src->txr2.height <= 1024, "Invalid texture V size");
 
-        switch(src->txr2.width) {
-            case 8:
-                u = 0;
-                break;
-            case 16:
-                u = 1;
-                break;
-            case 32:
-                u = 2;
-                break;
-            case 64:
-                u = 3;
-                break;
-            case 128:
-                u = 4;
-                break;
-            case 256:
-                u = 5;
-                break;
-            case 512:
-                u = 6;
-                break;
-            case 1024:
-                u = 7;
-                break;
-            default:
-                assert_msg(0, "Invalid texture U size");
-                u = 0;
-                break;
-        }
-
-        switch(src->txr2.height) {
-            case 8:
-                v = 0;
-                break;
-            case 16:
-                v = 1;
-                break;
-            case 32:
-                v = 2;
-                break;
-            case 64:
-                v = 3;
-                break;
-            case 128:
-                v = 4;
-                break;
-            case 256:
-                v = 5;
-                break;
-            case 512:
-                v = 6;
-                break;
-            case 1024:
-                v = 7;
-                break;
-            default:
-                assert_msg(0, "Invalid texture V size");
-                v = 0;
-                break;
-        }
-
-        dst->mode2_1 |= (u << PVR_TA_PM2_USIZE_SHIFT) & PVR_TA_PM2_USIZE_MASK;
-        dst->mode2_1 |= (v << PVR_TA_PM2_VSIZE_SHIFT) & PVR_TA_PM2_VSIZE_MASK;
-
-        /* Polygon mode 3 (within volume) */
-        dst->mode3_1  = (src->txr2.mipmap << PVR_TA_PM3_MIPMAP_SHIFT) & PVR_TA_PM3_MIPMAP_MASK;
-        dst->mode3_1 |= (src->txr2.format << PVR_TA_PM3_TXRFMT_SHIFT) & PVR_TA_PM3_TXRFMT_MASK;
+        mode2 |= FIELD_PREP(PVR_TA_PM2_TXRALPHA, src->txr2.alpha)
+            | FIELD_PREP(PVR_TA_PM2_UVFLIP, src->txr2.uv_flip)
+            | FIELD_PREP(PVR_TA_PM2_UVCLAMP, src->txr2.uv_clamp)
+            | FIELD_PREP(PVR_TA_PM2_FILTER, src->txr2.filter)
+            | FIELD_PREP(PVR_TA_PM2_MIPBIAS, src->txr2.mipmap_bias)
+            | FIELD_PREP(PVR_TA_PM2_TXRENV, src->txr2.env)
+            | FIELD_PREP(PVR_TA_PM2_USIZE, __builtin_ctz(src->txr2.width) - 3)
+            | FIELD_PREP(PVR_TA_PM2_VSIZE, __builtin_ctz(src->txr2.height) - 3);
 
         /* Convert the texture address */
-        txr_base = (uint32)src->txr2.base;
+        txr_base = (uint32_t)src->txr2.base;
         txr_base = (txr_base & 0x00fffff8) >> 3;
-        dst->mode3_1 |= txr_base;
+
+        /* Polygon mode 3 */
+        mode3 = FIELD_PREP(PVR_TA_PM3_MIPMAP, src->txr2.mipmap)
+            | src->txr2.format
+            | txr_base;
     }
 
-    dst->d1 = dst->d2 = 0xffffffff;
+    dst->mode2_1 = mode2;
+    dst->mode3_1 = mode3;
+
+    dst->d1 = 0xffffffff;
+    dst->d2 = 0xffffffff;
 }
 
 /* Create a colored polygon context for polygons affected by modifier volumes */

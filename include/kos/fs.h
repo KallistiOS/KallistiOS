@@ -735,6 +735,23 @@ ssize_t fs_load(const char *src, void **out_ptr);
 */
 ssize_t fs_path_append(char *dst, const char *src, size_t len);
 
+/** \brief   Normalize the specified path. 
+    This function acts mostly like the function realpath() but it only simplifies
+    a path by resolving . and .. components and removing redundant slashes.  It 
+    doesn't check if the path exists or resolve symbolic links.
+    \param  path            The path to normalize.
+    \param  resolved        The buffer to store resolved normalized path. It has 
+                            to be PATH_MAX bytes in size.
+    
+    \return                 A pointer to the normalized path on success, 
+                            or NULL on failure, in which case the path which 
+                            caused trouble is left in resolved.
+    \par    Error Conditions:
+    \em     EINVAL - path or resolved is a NULL pointer \n
+    \em     ENAMETOOLONG - the resulting path would be longer than PATH_MAX bytes \n
+*/
+char *fs_normalize_path(const char *__RESTRICT path, char *__RESTRICT resolved);
+
 /** \brief   Initialize the virtual filesystem.
 
     This is normally done for you by default when KOS starts. In general, there

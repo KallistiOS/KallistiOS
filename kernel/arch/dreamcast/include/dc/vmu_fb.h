@@ -10,35 +10,51 @@
 
 /** \file    dc/vmu_fb.h
     \brief   VMU framebuffer.
-    \ingroup vmu
+    \ingroup vmu_fb
 
     This file provides an API that can be used to compose a 48x32 image that can
     then be displayed on the VMUs connected to the system.
+
+    \author Paul Cercueil
 */
 
-#include <dc/maple.h>
-#include <stdint.h>
+#include <sys/cdefs.h>
+__BEGIN_DECLS
 
-/** \brief  VMU framebuffer.
+#include <dc/maple.h>
+#include <dc/maple/vmu.h>
+#include <stdint.h>
+#include <stdarg.h>
+
+/** \defgroup vmu_fb Framebuffer
+ *  \ingroup  vmu
+ *
+ *  This API provides a virtual framebuffer abstraction for the VMU with a
+ *  series of convenient methods for drawing complex and dynamic content.
+ *
+ *  @{
+*/
+
+/** \brief Virtual framebuffer for the VMU
 
     This object contains a 48x32 monochrome framebuffer. It can be painted to,
-    or displayed one the VMUs connected to the system, using the API below.
-
-    \headerfile dc/vmu_fb.h
+    or displayed on one the VMUs connected to the system, using the API below.
  */
-typedef struct {
-    uint32_t data[48];
+typedef struct vmufb {
+    uint32_t data[VMU_SCREEN_WIDTH]; /**< Private framebuffer pixel data */
 } vmufb_t;
 
 /** \brief  VMU framebuffer font meta-data.
 
-    \headerfile dc/vmu_fb.h
+    This structure describes a font, including character sizes,
+    layout, and a pointer to the raw font data.
  */
-typedef struct {
-    unsigned int w;         /**< \brief Character width in pixels */
-    unsigned int h;         /**< \brief Character height in pixels */
-    unsigned int stride;    /**< \brief Size of one character in bytes */
-    const char *fontdata;   /**< \brief Pointer to the font data */
+typedef struct vmufb_font {
+    unsigned int id;        /**< Font id */
+    unsigned int w;         /**< Character width in pixels */
+    unsigned int h;         /**< Character height in pixels */
+    size_t       stride;    /**< Size of one character in bytes */
+    const char  *fontdata;  /**< Pointer to the font data */
 } vmufb_font_t;
 
 /** \brief  Render into the VMU framebuffer
@@ -103,7 +119,7 @@ void vmufb_present(const vmufb_t *fb, maple_device_t *dev);
 
     \param  fb              A pointer to the vmufb_t to paint to.
     \param  font            A pointer to the vmufb_font_t that will be used for
-                            painting the text
+                            painting the text (or NULL to use the default)
     \param  x               The horizontal position of the top-left corner of
                             the drawing area, in pixels
     \param  y               The vertical position of the top-left corner of the
@@ -115,11 +131,11 @@ void vmufb_present(const vmufb_t *fb, maple_device_t *dev);
     \param  str             The text to render
  */
 void vmufb_print_string_into(vmufb_t *fb,
-			     const vmufb_font_t *font,
-			     unsigned int x, unsigned int y,
-			     unsigned int w, unsigned int h,
-			     unsigned int line_spacing,
-			     const char *str);
+                             const vmufb_font_t *font,
+                             unsigned int x, unsigned int y,
+                             unsigned int w, unsigned int h,
+                             unsigned int line_spacing,
+                             const char *str);
 
 /** \brief  Render a string into the VMU framebuffer
 
@@ -128,12 +144,14 @@ void vmufb_print_string_into(vmufb_t *fb,
 
     \param  fb              A pointer to the vmufb_t to paint to.
     \param  font            A pointer to the vmufb_font_t that will be used for
-                            painting the text
+                            painting the text (or NULL to use the default)
     \param  str             The text to render
  */
-static __inline__ void
-vmufb_print_string(vmufb_t *fb, const vmufb_font_t *font, const char *str) {
-    vmufb_print_string_into(fb, font, 0, 0, 48, 32, 0, str);
+static __inline__
+void vmufb_print_string(vmufb_t *fb, const vmufb_font_t *font,
+                        const char *str) {
+    vmufb_print_string_into(fb, font, 0, 0,
+                            VMU_SCREEN_WIDTH, VMU_SCREEN_HEIGHT, 0, str);
 }
 
 /** \brief  Render a string to attached VMUs using the built-in font
@@ -141,10 +159,44 @@ vmufb_print_string(vmufb_t *fb, const vmufb_font_t *font, const char *str) {
     Uses the built-in VMU font to render a string to all VMUs connected to the
     system.
 
+    \note
+    The font currently set as the default font will be used.
+
     \param  fmt             The format string, optionally followed by extra
                             arguments.
+
+    \sa vmu_set_font()
  */
-__attribute__ ((format (printf, 1, 2)))
-void vmu_printf(const char *fmt, ...);
+void vmu_printf(const char *fmt, ...) __printflike(1, 2);
+
+/** \brief Sets the default font for drawing text to the VMU.
+ 
+    This function allows you to set a custom font for drawing text
+    to the VMU screen. If the \p font parameter is set to `NULL`,
+    the built-in VMU font will be used as the default.
+
+    \warning
+    The API does not take ownership of or copy \p font, so
+    the given pointer must remain valid as long as it is set
+    as the default!
+
+    \param  font    Pointer to the font to set as default
+    \returns        Pointer to the previous default font
+
+    \sa vmu_get_font()
+ */
+const vmufb_font_t *vmu_set_font(const vmufb_font_t *font);
+
+/** \brief Returns the default font used to draw text to the VMU.
+
+    \returns    Pointer to the font currently set as the default
+
+    \sa vmu_set_font()
+ */
+const vmufb_font_t *vmu_get_font(void);
+
+/** @} */
+
+__END_DECLS
 
 #endif /* __DC_VMU_FB_H */

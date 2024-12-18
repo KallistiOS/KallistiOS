@@ -1,165 +1,146 @@
+/* KallistiOS ##version##
+
+   realpath.c
+
+   Copyright (C) 2024 Andress Barajas
+*/
+
 /*
- * Copyright (c) 2003 Constantin S. Svintsoff <kostik@iclub.nsu.ru>
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. The names of the authors may not be used to endorse or promote
- *    products derived from this software without specific prior written
- *    permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- */
+    The support for handling removing symlink components in this function is 
+    currently disabled because readlink implementations don't exist for all 
+    but one file system (ext2fs).
+*/
 
-#include <kos/limits.h>
-#include <sys/cdefs.h>
-#include <sys/param.h>
-#include <sys/stat.h>
-#include <kos/fs.h>
-
-#include <errno.h>
-#include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
-#include <unistd.h>
+#include <errno.h>
 #include <limits.h>
+#include <sys/stat.h>
 
-#ifdef __STRICT_ANSI__
-/* Newlib doesn't prototype these two functions in strict standards compliant
-   mode, so we'll do it here. They're still provided either way, but they're
-   not prototyped if we use -std=c99 (or any other non-gnuXX value). */
-size_t strlcat(char *, const char *, size_t);
-size_t strlcpy(char *, const char *, size_t);
-#endif
+char *realpath(const char *__restrict path, char *__restrict resolved) {
+    char temp_path[PATH_MAX];
+    //char link_target[PATH_MAX];
+    char *token;
+    char *last_slash;
+    ssize_t len;
+    struct stat statbuf;
 
-/*
- * char *realpath(const char *path, char resolved[PATH_MAX]);
- *
- * Find the real name of path, by removing all ".", ".." and symlink
- * components.  Returns (resolved) on success, or (NULL) on failure,
- * in which case the path which caused trouble is left in (resolved).
- */
-char *
-realpath(const char *__restrict path, char *__restrict resolved) {
-    char *p, *q, *s;
-    size_t left_len, resolved_len;
-    char left[PATH_MAX], next_token[PATH_MAX];
-
-    if(path == NULL) {
+    /* Check for invalid params. */
+    if(path == NULL || resolved == NULL) {
         errno = EINVAL;
         return NULL;
     }
 
-    if(path[0] == '/') {
-        resolved[0] = '/';
-        resolved[1] = '\0';
-
-        if(path[1] == '\0')
-            return (resolved);
-
-        resolved_len = 1;
-        left_len = strlcpy(left, path + 1, sizeof(left));
-    }
-    else {
-        /* if(getcwd(resolved, PATH_MAX) == NULL) {
-            strlcpy(resolved, ".", PATH_MAX);
-            return (NULL);
-        } */
-        strcpy(resolved, fs_getwd());
-        resolved_len = strlen(resolved);
-        left_len = strlcpy(left, path, sizeof(left));
-    }
-
-    if(left_len >= sizeof(left) || resolved_len >= PATH_MAX) {
+    /* Too big of a path? */
+    len = strlen(path);
+    if(len >= PATH_MAX) {
         errno = ENAMETOOLONG;
-        return (NULL);
+        return NULL;
     }
 
-    /*
-     * Iterate over path components in `left'.
-     */
-    while(left_len != 0) {
-        /*
-         * Extract the next path component and adjust `left'
-         * and its length.
-         */
-        p = strchr(left, '/');
-        s = p ? p : left + left_len;
+    /* Handle absolute path. */
+    if(path[0] == '/') {
+        strncpy(temp_path, path, len);
+        temp_path[len] = '\0';
+    } 
+    else {
+        /* Handle relative path: prepend current working directory. */
+        if(!getcwd(temp_path, PATH_MAX))
+            return NULL;
 
-        if((unsigned)(s - left) >= sizeof(next_token)) {
+        /* Check if appending will send us over. */
+        if(strlen(temp_path) + len + 1 >= PATH_MAX) {
             errno = ENAMETOOLONG;
-            return (NULL);
+            return NULL;
         }
 
-        memcpy(next_token, left, s - left);
-        next_token[s - left] = '\0';
-        left_len -= s - left;
-
-        if(p != NULL)
-            memmove(left, s + 1, left_len + 1);
-
-        if(resolved[resolved_len - 1] != '/') {
-            if(resolved_len + 1 >= PATH_MAX) {
-                errno = ENAMETOOLONG;
-                return (NULL);
-            }
-
-            resolved[resolved_len++] = '/';
-            resolved[resolved_len] = '\0';
-        }
-
-        if(next_token[0] == '\0')
-            continue;
-        else if(strcmp(next_token, ".") == 0)
-            continue;
-        else if(strcmp(next_token, "..") == 0) {
-            /*
-             * Strip the last path component except when we have
-             * single "/"
-             */
-            if(resolved_len > 1) {
-                resolved[resolved_len - 1] = '\0';
-                q = strrchr(resolved, '/') + 1;
-                *q = '\0';
-                resolved_len = q - resolved;
-            }
-
-            continue;
-        }
-
-        /*
-         * Append the next path component and lstat() it. If
-         * lstat() fails we still can return successfully if
-         * there are no more path components left.
-         */
-        resolved_len = strlcat(resolved, next_token, PATH_MAX);
-
-        if(resolved_len >= PATH_MAX) {
-            errno = ENAMETOOLONG;
-            return (NULL);
-        }
+        /* Now append relative path. */
+        strcat(temp_path, "/");
+        strcat(temp_path, path);
     }
 
-    /*
-     * Remove trailing slash except when the resolved pathname
-     * is a single "/".
-     */
-    if(resolved_len > 1 && resolved[resolved_len - 1] == '/')
-        resolved[resolved_len - 1] = '\0';
+    /* Initialize the resolved path. */
+    resolved[0] = '/';
+    resolved[1] = '\0';
 
-    return (resolved);
+    /* Tokenize and look at each token. temp_path has the unprocessed path. */
+    token = strtok(temp_path, "/");
+    while(token != NULL) {
+        /* Check for overlong path */
+        if(strlen(resolved) + strlen(token) + 1 >= PATH_MAX) {
+            errno = ENAMETOOLONG;
+            return NULL;
+        }
+
+        if(strcmp(token, ".") == 0) {
+            /* Ignore "." */
+        } 
+        else if(strcmp(token, "..") == 0) {
+            /* Remove the last component from resolved path. */
+            last_slash = strrchr(resolved, '/');
+
+            if(last_slash != NULL && last_slash != resolved)
+                *last_slash = '\0';
+            else
+                /* If there's no previous component, we stay at root. */
+                resolved[1] = '\0';
+        }
+        else {
+            /* Append a '/' if we don't already have one. */
+            if(resolved[strlen(resolved) - 1] != '/')
+                strcat(resolved, "/");
+
+            /* Append the token to the resolved path. */
+            strcat(resolved, token);
+
+            /* Check if the current resolved path exists or is a symlink. */
+            if(lstat(resolved, &statbuf) == -1)
+                return NULL;
+
+            // if(S_ISLNK(statbuf.st_mode)) {
+            //     len = readlink(resolved, link_target, PATH_MAX - 1);
+            //     if(len == -1)
+            //         return NULL;
+
+            //     /* Handle readlink silently truncating. */
+            //     if(len == PATH_MAX - 1) {
+            //         errno = ENAMETOOLONG;
+            //         return NULL;
+            //     }
+
+            //     /* NULL terminate */
+            //     link_target[len] = '\0';
+
+            //     /* Handle replacing symlink with an absolute path. */
+            //     if(link_target[0] == '/') {
+            //         strncpy(resolved, link_target, len);
+            //         resolved[len] = '\0';
+            //     } else {
+            //         /* Handle symlink that points to a relative path. */
+            //         last_slash = strrchr(resolved, '/');
+            //         if(last_slash != NULL) {
+            //             /* Remove the last component from resolved path. */
+            //             *(last_slash + 1) = '\0';
+
+            //             if(strlen(resolved) + strlen(link_target) >= PATH_MAX) {
+            //                 errno = ENAMETOOLONG;
+            //                 return NULL;
+            //             }
+
+            //             strcat(resolved, link_target);
+            //         } else {
+            //             /* We got here because the initial path is a symbolic 
+            //               link pointing to a relative path or the link target 
+            //               itself does not contain any directory separators and 
+            //               resolves to a path with no slashes. */
+            //             return NULL;
+            //         }
+            //     }
+            // }
+        }
+
+        token = strtok(NULL, "/");
+    }
+
+    return resolved;
 }

@@ -66,7 +66,7 @@ static void pvr_dma_irq_hnd(uint32_t code, void *data) {
     }
 }
 
-static uintptr_t pvr_dest_addr(uintptr_t dest, int type) {
+static uintptr_t pvr_dest_addr(uintptr_t dest, pvr_dma_type_t type) {
     uintptr_t dest_addr;
 
     /* Send the data to the right place */
@@ -95,8 +95,9 @@ static uintptr_t pvr_dest_addr(uintptr_t dest, int type) {
     return dest_addr;
 }
 
-int pvr_dma_transfer(void *src, uintptr_t dest, size_t count, int type,
-                     int block, pvr_dma_callback_t callback, void *cbdata) {
+int pvr_dma_transfer(const void *src, uintptr_t dest, size_t count,
+                     pvr_dma_type_t type, int block,
+                     pvr_dma_callback_t callback, void *cbdata) {
     uintptr_t src_addr = ((uintptr_t)src);
 
     /* Check for 32-byte alignment */
@@ -196,7 +197,7 @@ void pvr_dma_shutdown(void) {
 }
 
 /* Copies n bytes from src to PVR dest, dest must be 32-byte aligned */
-void *pvr_sq_load(void *dest, const void *src, size_t n, int type) {
+void *pvr_sq_load(void *dest, const void *src, size_t n, pvr_dma_type_t type) {
     void *dma_area_ptr;
 
     if(pvr_dma[PVR_DST] != 0) {
@@ -212,7 +213,7 @@ void *pvr_sq_load(void *dest, const void *src, size_t n, int type) {
 }
 
 /* Fills n bytes at PVR dest with 16-bit c, dest must be 32-byte aligned */
-void *pvr_sq_set16(void *dest, uint32_t c, size_t n, int type) {
+void *pvr_sq_set16(void *dest, uint32_t c, size_t n, pvr_dma_type_t type) {
     void *dma_area_ptr;
 
     if(pvr_dma[PVR_DST] != 0) {
@@ -228,7 +229,7 @@ void *pvr_sq_set16(void *dest, uint32_t c, size_t n, int type) {
 }
 
 /* Fills n bytes at PVR dest with 32-bit c, dest must be 32-byte aligned */
-void *pvr_sq_set32(void *dest, uint32_t c, size_t n, int type) {
+void *pvr_sq_set32(void *dest, uint32_t c, size_t n, pvr_dma_type_t type) {
     void *dma_area_ptr;
 
     if(pvr_dma[PVR_DST] != 0) {

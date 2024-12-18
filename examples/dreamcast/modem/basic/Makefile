@@ -6,6 +6,8 @@
 TARGET = basic.elf
 OBJS = basic.o
 
+KOS_BUILD_SUBARCHS = pristine
+
 all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules

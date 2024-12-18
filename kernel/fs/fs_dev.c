@@ -55,7 +55,7 @@ static dirent_t *dev_root_readdir(dev_hnd_t * handle) {
 }
 
 
-dirent_t *dev_readdir(void *f) {
+static dirent_t *dev_readdir(void *f) {
     dev_hnd_t * hnd = (dev_hnd_t *)f;
 
     if((!hnd) || (hnd != &dev_root_hnd)
@@ -67,7 +67,7 @@ dirent_t *dev_readdir(void *f) {
     return dev_root_readdir(hnd);
 }
 
-int dev_rewinddir(void *f) {
+static int dev_rewinddir(void *f) {
     dev_hnd_t * hnd = (dev_hnd_t *)f;
 
     if((!hnd) || (hnd != &dev_root_hnd)
@@ -82,7 +82,7 @@ int dev_rewinddir(void *f) {
     return 0;
 }
 
-static void * dev_open(vfs_handler_t *vfs, const char *fn, int mode) {
+static void *dev_open(vfs_handler_t *vfs, const char *fn, int mode) {
     (void)vfs;        
     
     if(!strcmp(fn, "/") || !strcmp(fn, "")) {
@@ -103,7 +103,7 @@ static void * dev_open(vfs_handler_t *vfs, const char *fn, int mode) {
 }
 
 /* Close a file and clean up the handle */
-int dev_close(void *f) {
+static int dev_close(void *f) {
     dev_hnd_t * hnd = (dev_hnd_t *)f;
 
     if((hnd != &dev_root_hnd)
@@ -121,11 +121,27 @@ int dev_close(void *f) {
     return 0;
 }
 
+static int dev_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
+                    int flag) {
+    (void)vfs;
+    (void)path;
+    (void)flag;
+
+    memset(st, 0, sizeof(struct stat));
+    st->st_dev = (dev_t)('d' | ('e' << 8) | ('v' << 16));
+    st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | 
+        S_IXGRP | S_IROTH | S_IXOTH;
+    st->st_size = -1;
+    st->st_nlink = 2 + 3; /* 2 + (number of subdirectories) */
+
+    return 0;
+}
+
 /* handler interface */
 static vfs_handler_t vh = {
     /* Name handler */
     {
-        "/dev", /* name */
+        "/dev",         /* name */
         0,              /* tbfi */
         0x00010000,     /* Version 1.0 */
         0,              /* flags */
@@ -147,7 +163,7 @@ static vfs_handler_t vh = {
     NULL,               /* unlink */
     NULL,               /* mmap */
     NULL,               /* complete */
-    NULL,               /* stat */
+    dev_stat,
     NULL,               /* mkdir */
     NULL,               /* rmdir */
     NULL,               /* fcntl */

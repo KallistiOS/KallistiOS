@@ -184,6 +184,14 @@ SECTIONS
     *(.sdata .sdata.* .gnu.linkonce.s.*)
   }
   _edata = .; PROVIDE (edata = .);
+  . = ALIGN(8);
+  __monitors_start = .;
+  .monitors       :
+  {
+    *(.monitors)
+  }
+  __monitors_end = .;
+  . = ALIGN(8);
   __bss_start = .;
   .sbss           :
   {

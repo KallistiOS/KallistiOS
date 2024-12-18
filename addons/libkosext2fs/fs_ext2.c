@@ -1685,20 +1685,32 @@ static ssize_t fs_ext2_readlink(vfs_handler_t *vfs, const char *path, char *buf,
     return len;
 }
 
-int fs_ext2_stat(vfs_handler_t *vfs, const char *path, struct stat *buf,
+int fs_ext2_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
                  int flag) {
-
     fs_ext2_fs_t *fs = (fs_ext2_fs_t *)vfs->privdata;
     int irv;
     ext2_inode_t *inode;
     uint32_t inode_num;
     int rl = 1;
     uint64_t sz;
+    size_t len = strlen(path);
 
     /* Do we want the status of a symlink or of the thing it points at if we end
        up with a symlink at the end of path resolution? */
     if(flag & AT_SYMLINK_NOFOLLOW)
         rl = 2;
+
+    /* Root directory ext2 device */
+    if(len == 0 || (len == 1 && *path == '/')) {
+        memset(st, 0, sizeof(struct stat));
+        st->st_dev = (dev_t)((ptr_t)vfs);
+        st->st_mode = S_IFDIR | S_IRUSR | S_IRGRP | S_IROTH | S_IXUSR |
+            S_IXGRP | S_IXOTH | S_IWUSR | S_IWGRP | S_IWOTH;
+        st->st_size = -1;
+        st->st_nlink = 2;
+
+        return 0;
+    }
 
     mutex_lock(&ext2_mutex);
 
@@ -1710,29 +1722,29 @@ int fs_ext2_stat(vfs_handler_t *vfs, const char *path, struct stat *buf,
     }
 
     /* Fill in the structure */
-    memset(buf, 0, sizeof(struct stat));
-    buf->st_dev = (dev_t)((ptr_t)vfs);
-    buf->st_ino = inode_num;
-    buf->st_mode = inode->i_mode & 0x0FFF;
-    buf->st_nlink = inode->i_links_count;
-    buf->st_uid = inode->i_uid;
-    buf->st_gid = inode->i_gid;
+    memset(st, 0, sizeof(struct stat));
+    st->st_dev = (dev_t)((ptr_t)vfs);
+    st->st_ino = inode_num;
+    st->st_mode = inode->i_mode & 0x0FFF;
+    st->st_nlink = inode->i_links_count;
+    st->st_uid = inode->i_uid;
+    st->st_gid = inode->i_gid;
 
-    buf->st_atime = inode->i_atime;
-    buf->st_mtime = inode->i_mtime;
-    buf->st_ctime = inode->i_ctime;
-    buf->st_blksize = 512;
-    buf->st_blocks = inode->i_blocks;
+    st->st_atime = inode->i_atime;
+    st->st_mtime = inode->i_mtime;
+    st->st_ctime = inode->i_ctime;
+    st->st_blksize = 512;
+    st->st_blocks = inode->i_blocks;
 
     /* The rest depends on what type of inode this is... */
     switch(inode->i_mode & 0xF000) {
         case EXT2_S_IFLNK:
-            buf->st_mode |= S_IFLNK;
-            buf->st_size = inode->i_size;
+            st->st_mode |= S_IFLNK;
+            st->st_size = inode->i_size;
             break;
 
         case EXT2_S_IFREG:
-            buf->st_mode |= S_IFREG;
+            st->st_mode |= S_IFREG;
             sz = ext2_inode_size(inode);
 
             if(sz > LONG_MAX) {
@@ -1740,28 +1752,28 @@ int fs_ext2_stat(vfs_handler_t *vfs, const char *path, struct stat *buf,
                 irv = -1;
             }
 
-            buf->st_size = sz;
+            st->st_size = sz;
             break;
 
         case EXT2_S_IFDIR:
-            buf->st_mode |= S_IFDIR;
-            buf->st_size = inode->i_size;
+            st->st_mode |= S_IFDIR;
+            st->st_size = inode->i_size;
             break;
 
         case EXT2_S_IFSOCK:
-            buf->st_mode |= S_IFSOCK;
+            st->st_mode |= S_IFSOCK;
             break;
 
         case EXT2_S_IFIFO:
-            buf->st_mode |= S_IFIFO;
+            st->st_mode |= S_IFIFO;
             break;
 
         case EXT2_S_IFBLK:
-            buf->st_mode |= S_IFBLK;
+            st->st_mode |= S_IFBLK;
             break;
 
         case EXT2_S_IFCHR:
-            buf->st_mode |= S_IFCHR;
+            st->st_mode |= S_IFCHR;
             break;
     }
 
@@ -1790,7 +1802,7 @@ static int fs_ext2_rewinddir(void *h) {
     return 0;
 }
 
-static int fs_ext2_fstat(void *h, struct stat *buf) {
+static int fs_ext2_fstat(void *h, struct stat *st) {
     fs_ext2_fs_t *fs;
     ext2_inode_t *inode;
     uint64_t sz;
@@ -1810,29 +1822,29 @@ static int fs_ext2_fstat(void *h, struct stat *buf) {
     fs = fh[fd].fs;
 
     /* Fill in the structure */
-    memset(buf, 0, sizeof(struct stat));
-    buf->st_dev = (dev_t)((ptr_t)fs->vfsh);
-    buf->st_ino = fh[fd].inode_num;
-    buf->st_mode = inode->i_mode & 0x0FFF;
-    buf->st_nlink = inode->i_links_count;
-    buf->st_uid = inode->i_uid;
-    buf->st_gid = inode->i_gid;
+    memset(st, 0, sizeof(struct stat));
+    st->st_dev = (dev_t)((ptr_t)fs->vfsh);
+    st->st_ino = fh[fd].inode_num;
+    st->st_mode = inode->i_mode & 0x0FFF;
+    st->st_nlink = inode->i_links_count;
+    st->st_uid = inode->i_uid;
+    st->st_gid = inode->i_gid;
 
-    buf->st_atime = inode->i_atime;
-    buf->st_mtime = inode->i_mtime;
-    buf->st_ctime = inode->i_ctime;
-    buf->st_blksize = 512;
-    buf->st_blocks = inode->i_blocks;
+    st->st_atime = inode->i_atime;
+    st->st_mtime = inode->i_mtime;
+    st->st_ctime = inode->i_ctime;
+    st->st_blksize = 512;
+    st->st_blocks = inode->i_blocks;
 
     /* The rest depends on what type of inode this is... */
     switch(inode->i_mode & 0xF000) {
         case EXT2_S_IFLNK:
-            buf->st_mode |= S_IFLNK;
-            buf->st_size = inode->i_size;
+            st->st_mode |= S_IFLNK;
+            st->st_size = inode->i_size;
             break;
 
         case EXT2_S_IFREG:
-            buf->st_mode |= S_IFREG;
+            st->st_mode |= S_IFREG;
             sz = ext2_inode_size(inode);
 
             if(sz > LONG_MAX) {
@@ -1840,28 +1852,28 @@ static int fs_ext2_fstat(void *h, struct stat *buf) {
                 irv = -1;
             }
 
-            buf->st_size = sz;
+            st->st_size = sz;
             break;
 
         case EXT2_S_IFDIR:
-            buf->st_mode |= S_IFDIR;
-            buf->st_size = inode->i_size;
+            st->st_mode |= S_IFDIR;
+            st->st_size = inode->i_size;
             break;
 
         case EXT2_S_IFSOCK:
-            buf->st_mode |= S_IFSOCK;
+            st->st_mode |= S_IFSOCK;
             break;
 
         case EXT2_S_IFIFO:
-            buf->st_mode |= S_IFIFO;
+            st->st_mode |= S_IFIFO;
             break;
 
         case EXT2_S_IFBLK:
-            buf->st_mode |= S_IFBLK;
+            st->st_mode |= S_IFBLK;
             break;
 
         case EXT2_S_IFCHR:
-            buf->st_mode |= S_IFCHR;
+            st->st_mode |= S_IFCHR;
             break;
     }
 

@@ -10,7 +10,7 @@
 # that minimum set must be present.
 
 COPYOBJS = banner.o cache.o entry.o irq.o init.o mm.o panic.o
-COPYOBJS += rtc.o timer.o wdt.o perfctr.o
+COPYOBJS += rtc.o timer.o wdt.o perfctr.o perf_monitor.o
 COPYOBJS += init_flags_default.o
 COPYOBJS += mmu.o itlb.o
 COPYOBJS += exec.o execasm.o stack.o gdb_stub.o thdswitch.o arch_exports.o

@@ -40,6 +40,10 @@ extern uint32 _arch_mem_top;
 #define _arch_mem_top   ((uint32) 0x8d000000)
 #endif
 
+/** \brief  Start and End address for .text portion of program. */
+extern char _executable_start;
+extern char _etext; 
+
 #define PAGESIZE        4096            /**< \brief Page size (for MMU) */
 #define PAGESIZE_BITS   12              /**< \brief Bits for page size */
 #define PAGEMASK        (PAGESIZE - 1)  /**< \brief Mask for page offset */
@@ -52,6 +56,7 @@ extern uint32 _arch_mem_top;
 /** \brief  Base address of available physical pages. */
 #define page_phys_base  0x8c010000
 
+#ifndef THD_SCHED_HZ
 /** \brief Scheduler interrupt frequency
 
     Timer interrupt frequency for the KOS thread scheduler.
@@ -62,13 +67,25 @@ extern uint32 _arch_mem_top;
 
     \sa thd_get_hz(), thd_set_hz()
 */
-#define HZ              100
+#define THD_SCHED_HZ    100
+#endif
 
+/** Legacy symbol for scheduler frequency.
+ *  \deprecated
+ *  \sa THD_SCHED_HZ
+ */
+static const
+unsigned HZ __depr("Please use the new THD_SCHED_HZ macro.") = THD_SCHED_HZ;
+
+#ifndef THD_STACK_SIZE
 /** \brief  Default thread stack size. */
 #define THD_STACK_SIZE  32768
+#endif
 
+#ifndef THD_KERNEL_STACK_SIZE
 /** \brief Main/kernel thread's stack size. */
 #define THD_KERNEL_STACK_SIZE (64 * 1024)
+#endif
 
 /** \brief  Default video mode. */
 #define DEFAULT_VID_MODE    DM_640x480
@@ -401,6 +418,16 @@ const char *kos_get_authors(void);
                             memory access.
 */
 #define arch_valid_address(ptr) ((ptr_t)(ptr) >= 0x8c010000 && (ptr_t)(ptr) < _arch_mem_top)
+
+/** \brief   Returns true if the passed address is in the text section of your
+             program.
+    \ingroup arch
+
+    \return                 Whether the address is valid or not for text
+                            memory access.
+*/
+#define arch_valid_text_address(ptr) \
+    ((uintptr_t)(ptr) >= (uintptr_t)&_executable_start && (uintptr_t)(ptr) < (uintptr_t)&_etext)
 
 __END_DECLS
 

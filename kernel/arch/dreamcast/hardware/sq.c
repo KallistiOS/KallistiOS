@@ -5,7 +5,10 @@
    Copyright (C) 2023 Falco Girgis
    Copyright (C) 2023 Andy Barajas
    Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2024 Donald Haase
 */
+
+#include <assert.h>
 
 #include <arch/cache.h>
 #include <arch/mmu.h>
@@ -30,31 +33,84 @@
 */
 #define QACR1 (*(volatile uint32_t *)(void *)0xff00003c)
 
+/** \brief   Shift and filter bits needed for the QACR registers
+    \ingroup store_queues
+*/
+#define QACR_EXTERN_BITS(dest) ((((uintptr_t)(dest)) >> 24) & 0x1c)
+
+/** \brief   Set Store Queue QACR* registers from EXTERN_BITS
+    \ingroup store_queues
+*/
+#define SET_QACR_REGS_INNER(dest0, dest1) \
+    do { \
+        QACR0 = (dest0); \
+        QACR1 = (dest1); \
+    } while(0)
+
 /** \brief   Set Store Queue QACR* registers
     \ingroup store_queues
 */
 #define SET_QACR_REGS(dest0, dest1) \
-    do { \
-        QACR0 = (((uintptr_t)(dest0)) >> 24) & 0x1c; \
-        QACR1 = (((uintptr_t)(dest1)) >> 24) & 0x1c; \
-    } while(0)
+    SET_QACR_REGS_INNER(QACR_EXTERN_BITS(dest0), QACR_EXTERN_BITS(dest1))
 
-static mutex_t sq_mutex = MUTEX_INITIALIZER;
+static mutex_t sq_mutex = RECURSIVE_MUTEX_INITIALIZER;
 
-static mmu_token_t mmu_token;
+typedef struct sq_state {
+    uint32_t dest;
+} sq_state_t;
 
-void sq_lock(void *dest) {
+#ifndef SQ_STATE_CACHE_SIZE
+#define SQ_STATE_CACHE_SIZE 8
+#endif
+
+static sq_state_t sq_state_cache[SQ_STATE_CACHE_SIZE] = {0};
+
+uint32_t *sq_lock(void *dest) {
+    sq_state_t *new_state;
+    bool with_mmu;
+    uint32_t mask;
+
     mutex_lock(&sq_mutex);
 
-    /* Disable MMU, because SQs work differently when it's enabled, and we
-     * don't support it. */
-    mmu_token = mmu_disable();
+    assert_msg(sq_mutex.count < SQ_STATE_CACHE_SIZE, "You've overrun the SQ_STATE_CACHE.");
 
-    SET_QACR_REGS(dest, dest);
+    new_state = &sq_state_cache[sq_mutex.count - 1];
+
+    new_state->dest = (uint32_t)dest;
+
+    with_mmu = mmu_enabled();
+    mask = with_mmu ? 0x000fffe0 : 0x03ffffe0;
+
+    if (with_mmu)
+        mmu_set_sq_addr(dest);
+    else
+        SET_QACR_REGS(dest, dest);
+
+    return (uint32_t *)(MEM_AREA_SQ_BASE | ((uintptr_t)dest & mask));
 }
 
 void sq_unlock(void) {
-    mmu_restore(mmu_token);
+    sq_state_t *tmp_state;
+    bool with_mmu;
+
+    if(sq_mutex.count == 0) {
+        dbglog(DBG_WARNING, "sq_unlock: Called without any lock\n");
+        return;
+    }
+
+    tmp_state = &sq_state_cache[sq_mutex.count - 1];
+
+    /* If we aren't the last entry, set the regs back where they belong */
+    if(sq_mutex.count - 1) {
+        tmp_state = &sq_state_cache[sq_mutex.count - 2];
+        with_mmu = mmu_enabled();
+
+        if (with_mmu)
+            mmu_set_sq_addr((void *)tmp_state->dest);
+        else
+            SET_QACR_REGS(tmp_state->dest, tmp_state->dest);
+    }
+
     mutex_unlock(&sq_mutex);
 }
 
@@ -66,38 +122,48 @@ void sq_wait(void) {
 
 /* Copies n bytes from src to dest, dest must be 32-byte aligned */
 __attribute__((noinline)) void *sq_cpy(void *dest, const void *src, size_t n) {
-    uint32_t *d = SQ_MASK_DEST(dest);
     const uint32_t *s = src;
+    void *curr_dest = dest;
+    uint32_t *d;
+    size_t nb;
 
     /* Fill/write queues as many times necessary */
     n >>= 5;
 
-    /* Exit early if we dont have enough data to copy */
-    if(n == 0)
-        return dest;
+    while (n > 0) {
+        /* Transfer maximum 1 MiB at once. This is because when using the
+         * MMU the SQ area is 2 MiB, and the destination address may
+         * not be on a page boundary. */
+        nb = n > 0x8000 ? 0x8000 : n;
 
-    sq_lock(dest);
+        d = sq_lock(curr_dest);
 
-    /* If src is not 8-byte aligned, slow path */
-    if ((uintptr_t)src & 7) {
-        while(n--) {
-            dcache_pref_block(s + 8); /* Prefetch 32 bytes for next loop */
-            d[0] = *(s++);
-            d[1] = *(s++);
-            d[2] = *(s++);
-            d[3] = *(s++);
-            d[4] = *(s++);
-            d[5] = *(s++);
-            d[6] = *(s++);
-            d[7] = *(s++);
-            sq_flush(d);
-            d += 8;
+        curr_dest += nb * 32;
+        n -= nb;
+
+        /* If src is not 8-byte aligned, slow path */
+        if ((uintptr_t)src & 7) {
+            while(nb--) {
+                dcache_pref_block(s + 8); /* Prefetch 32 bytes for next loop */
+                d[0] = *(s++);
+                d[1] = *(s++);
+                d[2] = *(s++);
+                d[3] = *(s++);
+                d[4] = *(s++);
+                d[5] = *(s++);
+                d[6] = *(s++);
+                d[7] = *(s++);
+                sq_flush(d);
+                d += 8;
+            }
+        } else { /* If src is 8-byte aligned, fast path */
+            sq_fast_cpy(d, s, nb);
+	    s += nb * 32;
         }
-    } else { /* If src is 8-byte aligned, fast path */
-        sq_fast_cpy(d, s, n);
+
+        sq_unlock();
     }
 
-    sq_unlock();
     return dest;
 }
 
@@ -121,25 +187,34 @@ void *sq_set16(void *dest, uint32_t c, size_t n) {
 
 /* Fills n bytes at dest with int c, dest must be 32-byte aligned */
 void *sq_set32(void *dest, uint32_t c, size_t n) {
-    uint32_t *d = SQ_MASK_DEST(dest);
+    void *curr_dest = dest;
+    uint32_t *d;
+    size_t nb;
 
     /* Write them as many times necessary */
     n >>= 5;
 
-    /* Exit early if we dont have enough data to set */
-    if(n == 0)
-        return dest;
+    while (n > 0) {
+        /* Transfer maximum 1 MiB at once. This is because when using the
+         * MMU the SQ area is 2 MiB, and the destination address may
+         * not be on a page boundary. */
+        nb = n > 0x8000 ? 0x8000 : n;
 
-    sq_lock(dest);
+        d = sq_lock(curr_dest);
 
-    while(n--) {
-        /* Fill both store queues with c */
-        d[0] = d[1] = d[2] = d[3] = d[4] = d[5] = d[6] = d[7] = c;
-        sq_flush(d);
-        d += 8;
+        curr_dest += nb * 32;
+        n -= nb;
+
+        while(nb--) {
+            /* Fill both store queues with c */
+            d[0] = d[1] = d[2] = d[3] = d[4] = d[5] = d[6] = d[7] = c;
+            sq_flush(d);
+            d += 8;
+        }
+
+        sq_unlock();
     }
 
-    sq_unlock();
     return dest;
 }
 

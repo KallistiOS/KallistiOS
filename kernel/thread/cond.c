@@ -58,7 +58,7 @@ int cond_destroy(condvar_t *cv) {
 }
 
 int cond_wait_timed(condvar_t *cv, mutex_t *m, int timeout) {
-    int old, rv;
+    int rv;
 
     if(irq_inside_int()) {
         dbglog(DBG_WARNING, "cond_wait: called inside interrupt\n");
@@ -66,12 +66,11 @@ int cond_wait_timed(condvar_t *cv, mutex_t *m, int timeout) {
         return -1;
     }
 
-    old = irq_disable();
+    irq_disable_scoped();
 
     if(m->type < MUTEX_TYPE_NORMAL || m->type > MUTEX_TYPE_RECURSIVE ||
        !mutex_is_locked(m)) {
         errno = EINVAL;
-        irq_restore(old);
         return -1;
     }
 
@@ -88,9 +87,6 @@ int cond_wait_timed(condvar_t *cv, mutex_t *m, int timeout) {
     /* Re-lock our mutex */
     mutex_lock(m);
 
-    /* Ok, ready to return */
-    irq_restore(old);
-
     return rv;
 }
 
@@ -99,27 +95,19 @@ int cond_wait(condvar_t *cv, mutex_t *m) {
 }
 
 int cond_signal(condvar_t *cv) {
-    int old, rv = 0;
-
-    old = irq_disable();
+    irq_disable_scoped();
 
     /* Wake one thread who's waiting, if any */
     genwait_wake_one(cv);
 
-    irq_restore(old);
-
-    return rv;
+    return 0;
 }
 
 int cond_broadcast(condvar_t *cv) {
-    int old, rv = 0;
-
-    old = irq_disable();
+    irq_disable_scoped();
 
     /* Wake all threads who are waiting */
     genwait_wake_all(cv);
 
-    irq_restore(old);
-
-    return rv;
+    return 0;
 }

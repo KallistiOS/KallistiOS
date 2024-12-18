@@ -25,8 +25,6 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-#include <sys/_types.h>
-
 #ifdef BYTE_ORDER
 /* If we've included <arch/types.h>, this might already be defined... */
 #undef BYTE_ORDER
@@ -52,7 +50,7 @@ __BEGIN_DECLS
     \return             The swapped value.
 */
 #define arch_swap16(x) ({ \
-    uint16 __x = (x); \
+    uint16_t __x = (x); \
     __asm__ __volatile__("swap.b %0, %0" : "=r" (__x) : "0" (__x)); \
     __x; \
 })
@@ -67,7 +65,7 @@ __BEGIN_DECLS
     \return             The swapped value.
 */
 #define arch_swap32(x) ({ \
-    uint32 __x = (x); \
+    uint32_t __x = (x); \
     __asm__ __volatile__("swap.b %0, %0\n\t" \
                          "swap.w %0, %0\n\t" \
                          "swap.b %0, %0\n\t" : "=r"(__x) : "0" (__x)); \

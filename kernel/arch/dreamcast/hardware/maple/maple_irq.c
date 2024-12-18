@@ -8,6 +8,7 @@
 
 #include <malloc.h>
 #include <string.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <assert.h>
 #include <dc/maple.h>
@@ -18,72 +19,84 @@
 /*********************************************************************/
 /* VBlank IRQ handler */
 
+/* Maple frame used for attach/detach detection. */
+static maple_frame_t detect_frame;
+
 /* Fwd declare */
 static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm);
 
 /* Send a DEVINFO command for the given port/unit */
-static void vbl_send_devinfo(maple_state_t *state, int p, int u) {
-    maple_device_t * dev;
-
-    dev = &state->ports[p].units[u];
-
+static bool vbl_send_devinfo(maple_frame_t *frame, int p, int u) {
     /* Reserve access; if we don't get it, forget about it */
-    if(maple_frame_lock(&dev->frame) < 0)
-        return;
+    if(maple_frame_lock(frame) < 0)
+        return false;
 
     /* Setup our autodetect frame to probe at a new device */
-    maple_frame_init(&dev->frame);
-    dev->frame.cmd = MAPLE_COMMAND_DEVINFO;
-    dev->frame.dst_port = p;
-    dev->frame.dst_unit = u;
-    dev->frame.callback = vbl_autodet_callback;
-    maple_queue_frame(&dev->frame);
+    maple_frame_init(frame);
+    frame->cmd = MAPLE_COMMAND_DEVINFO;
+    frame->dst_port = p;
+    frame->dst_unit = u;
+    frame->callback = vbl_autodet_callback;
+    maple_queue_frame(frame);
+
+    return true;
 }
 
 /* Do a potential disconnect on the named device (check to make sure it
    was connected first) */
 static void vbl_chk_disconnect(maple_state_t *state, int p, int u) {
-    if(state->ports[p].units[u].valid) {
+    (void)state;
+
+    if(maple_dev_valid(p, u)) {
 #if MAPLE_IRQ_DEBUG
         dbglog(DBG_KDEBUG, "maple: detach on device %c%c\n",
                'A' + p, '0' + u);
 #endif
 
         if(maple_driver_detach(p, u) >= 0) {
-            assert(!state->ports[p].units[u].valid);
+            assert(!maple_dev_valid(p, u));
         }
     }
 }
 
+static void vbl_chk_next_subdev(maple_state_t *state, maple_frame_t *frm, int p) {
+    maple_device_t *dev = maple_enum_dev(p, 0);
+    int u;
+
+    if (dev && dev->probe_mask) {
+        u = __builtin_ffs(dev->probe_mask);
+        dev->probe_mask &= ~(1 << (u - 1));
+
+        vbl_send_devinfo(frm, p, u);
+    } else {
+        /* Nothing else to probe on this port */
+        state->scan_ready_mask |= 1 << p;
+    }
+}
+
+static void vbl_dev_probed(int p, int u) {
+    maple_device_t *dev = maple_enum_dev(p, 0);
+
+    if (dev)
+        dev->dev_mask |= 1 << (u - 1);
+}
+
 /* Check the sub-devices for a top-level port */
 static void vbl_chk_subdevs(maple_state_t *state, int p, uint8 newmask) {
-    int oldmask, chkmask, u;
+    maple_device_t *dev = maple_enum_dev(p, 0);
+    unsigned int u;
 
-    /* Get the old mask */
-    oldmask = state->ports[p].units[0].dev_mask;
+    newmask &= (1 << (MAPLE_UNIT_COUNT - 1)) - 1;
 
-    /* Is it different from the new mask? */
-    if(oldmask != newmask) {
-        /* Yep -- go through and check the status of each sub-dev */
-        for(u = 1; u < MAPLE_UNIT_COUNT; u++) {
-            chkmask = 1 << (u - 1);
-
-            /* Wasn't set but is set now == newly attached device. Send it a
-               sub-query. Was set but isn't set now == newly detached
-               device. Do a driver detach on it. */
-            if(!(oldmask & chkmask) && (newmask & chkmask)) {
-                /* Send a further query */
-                vbl_send_devinfo(state, p, u);
-            }
-            else if((oldmask & chkmask) && !(newmask & chkmask)) {
-                /* Do a disconnect */
-                vbl_chk_disconnect(state, p, u);
-            }
+    /* Disconnect any device that disappeared */
+    for(u = 1; u < MAPLE_UNIT_COUNT; u++) {
+        if (dev->dev_mask & ~newmask & (1 << (u - 1))) {
+            vbl_chk_disconnect(state, p, u);
         }
-
-        /* Update with the new sub-dev mask */
-        state->ports[p].units[0].dev_mask = newmask;
     }
+
+    dev->dev_mask &= newmask;
+    dev->probe_mask = newmask & ~dev->dev_mask;
 }
 
 /* Handles autodetection of hotswapping; basically every periodic
@@ -98,12 +111,21 @@ static void vbl_chk_subdevs(maple_state_t *state, int p, uint8 newmask) {
    special case instead. */
 static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm) {
     maple_response_t    *resp;
+    maple_device_t      *dev;
     int         p, u;
+
+    if (irq_inside_int() && !malloc_irq_safe()) {
+        /* We can't create or remove a device now. Fail silently as the device
+         * will be re-probed in the next loop of the periodic IRQ. */
+        maple_frame_unlock(frm);
+        return;
+    }
 
     /* So.. did we get a response? */
     resp = (maple_response_t *)frm->recv_buf;
     p = frm->dst_port;
     u = frm->dst_unit;
+    dev = maple_enum_dev(p, u);
 
     if(resp->response == MAPLE_RESPONSE_NONE) {
         /* No device, or not functioning properly; check for removal */
@@ -113,31 +135,34 @@ static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm) {
                 vbl_chk_disconnect(state, p, u);
             }
 
-            state->ports[p].units[0].dev_mask = 0;
+            if(dev)
+                dev->dev_mask = 0;
+
+            state->scan_ready_mask |= 1 << p;
         }
         else {
             /* Not a top-level device -- only detach this device */
             vbl_chk_disconnect(state, p, u);
         }
+
+        maple_frame_unlock(frm);
     }
     else if(resp->response == MAPLE_RESPONSE_DEVINFO) {
         /* Device is present, check for connections */
-        if(!state->ports[p].units[u].valid) {
+        if(!dev) {
 #if MAPLE_IRQ_DEBUG
             dbglog(DBG_KDEBUG, "maple: attach on device %c%c\n",
                    'A' + p, '0' + u);
 #endif
 
             if(maple_driver_attach(frm) >= 0) {
-                assert(state->ports[p].units[u].valid);
+                assert(maple_dev_valid(p, u));
             }
         }
         else {
             maple_devinfo_t     *devinfo;
-            maple_device_t      *dev;
             /* Device already connected, update function data (caps) */
             devinfo = (maple_devinfo_t *)resp->data;
-            dev = &state->ports[p].units[u];
             dev->info.function_data[0] = devinfo->function_data[0];
             dev->info.function_data[1] = devinfo->function_data[1];
             dev->info.function_data[2] = devinfo->function_data[2];
@@ -147,35 +172,35 @@ static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm) {
            sub-devices that claim to be attached */
         if(u == 0)
             vbl_chk_subdevs(state, p, resp->src_addr);
+        else
+            vbl_dev_probed(p, u);
+
+        maple_frame_unlock(frm);
+
+        /* Probe the next sub-device */
+        vbl_chk_next_subdev(state, frm, p);
     }
     else {
         /* dbglog(DBG_KDEBUG, "maple: unknown response %d on device %c%c\n",
             resp->response, 'A'+p, '0'+u); */
-    }
-
-    maple_frame_unlock(frm);
-}
-
-/* Move on to the next device for next time */
-static void vbl_ad_advance(maple_state_t *state) {
-    state->detect_port_next++;
-
-    if(state->detect_port_next >= MAPLE_PORT_COUNT) {
-        state->detect_port_next = 0;
-        state->detect_wrapped++;
+        maple_frame_unlock(frm);
     }
 }
 
 static void vbl_autodetect(maple_state_t *state) {
-    int p, u;
+    bool queued;
 
     /* Queue a detection on the next device */
-    p = state->detect_port_next;
-    u = state->detect_unit_next;
-    vbl_send_devinfo(state, p, u);
+    queued = vbl_send_devinfo(&detect_frame,
+                              state->detect_port_next, 0);
 
     /* Move to the next device */
-    vbl_ad_advance(state);
+    if (queued) {
+        state->detect_port_next++;
+
+        if(state->detect_port_next >= MAPLE_PORT_COUNT)
+            state->detect_port_next = 0;
+    }
 }
 
 /* Called on every VBL (~60fps) */

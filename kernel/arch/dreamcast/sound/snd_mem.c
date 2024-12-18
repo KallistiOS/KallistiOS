@@ -294,7 +294,8 @@ uint32 snd_mem_available(void) {
     snd_block_t *e;
     size_t largest = 0;
 
-    assert_msg(initted, "Use of snd_mem_available before snd_mem_init");
+    if(!initted)
+        return 0;
 
     if(irq_inside_int()) {
         if(!spinlock_trylock(&snd_mem_mutex)) {

@@ -910,14 +910,14 @@ static void handle_exception(irq_t code, irq_context_t *context, void *data) {
     gdb_handle_exception(code);
 }
 
-static void handle_user_trapa(irq_t code, irq_context_t *context, void *data) {
+static void handle_user_trapa(trapa_t code, irq_context_t *context, void *data) {
     (void)code;
     (void)data;
     irq_ctx = context;
     gdb_handle_exception(EXC_TRAPA);
 }
 
-static void handle_gdb_trapa(irq_t code, irq_context_t *context, void *data) {
+static void handle_gdb_trapa(trapa_t code, irq_context_t *context, void *data) {
     /*
     * trapa 0x20 indicates a software trap inserted in
     * place of code ... so back up PC by one

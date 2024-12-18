@@ -1,13 +1,16 @@
 /* KallistiOS ##version##
 
    pvr_scene.c
-   Copyright (C)2002,2004 Megan Potter
+   Copyright (C) 2002,2004 Megan Potter
+   Copyright (C) 2024 Falco Girgis
 
  */
 
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <kos/genwait.h>
+#include <kos/string.h>
 #include <kos/thread.h>
 #include <dc/pvr.h>
 #include <dc/sq.h>
@@ -84,10 +87,24 @@ void pvr_vertbuf_written(pvr_list_t list, uint32 amt) {
     pvr_state.dma_buffers[pvr_state.ram_target].ptr[list] = val;
 }
 
+static void pvr_start_ta_rendering(void) {
+    // Make sure to wait until the TA is ready to start rendering a new scene
+    if(!pvr_state.ta_ready) {
+        pvr_wait_ready();
+        pvr_state.ta_ready = 1;
+    }
+
+    // Starting from that point, we consider that the Tile Accelerator
+    // might be busy.
+    pvr_state.ta_busy = 1;
+}
+
 /* Begin collecting data for a frame of 3D output to the off-screen
    frame buffer */
 void pvr_scene_begin(void) {
     int i;
+
+    pvr_state.ta_ready = 0;
 
     // Get general stuff ready.
     pvr_state.list_reg_open = -1;
@@ -135,6 +152,13 @@ void pvr_scene_begin_txr(pvr_ptr_t txr, uint32 *rx, uint32 *ry) {
     pvr_scene_begin();
 }
 
+static bool pvr_list_dma;
+
+inline static bool pvr_list_uses_dma(pvr_list_t list) {
+    return pvr_state.dma_mode &&
+           pvr_state.dma_buffers[pvr_state.ram_target].base[list];
+}
+
 /* Begin collecting data for the given list type. Lists do not have to be
    submitted in any particular order, but all types of a list must be
    submitted at once. If the given list has already been closed, then an
@@ -152,6 +176,13 @@ int pvr_list_begin(pvr_list_t list) {
     /* If we already had a list open, close it first */
     if(pvr_state.list_reg_open != -1 && pvr_state.list_reg_open != (int)list)
         pvr_list_finish();
+
+    pvr_list_dma = pvr_list_uses_dma(list);
+
+    if(!pvr_list_dma) {
+        pvr_start_ta_rendering();
+        sq_lock((void *)PVR_TA_INPUT);
+    }
 
     /* Ok, set the flag */
     pvr_state.list_reg_open = list;
@@ -175,7 +206,13 @@ int pvr_list_finish(void) {
 
 #endif  /* !NDEBUG */
 
-    if(!pvr_state.dma_mode) {
+    /* Check for immediate submission:
+       A. If we are not in DMA mode, we must be submitting polygons
+          immediately.
+       B. If we are in DMA mode, yet there's no vertex buffer associated
+          with the list type, assume we're doing hybrid drawing and
+          are directly submitting this list type. */
+    if(!pvr_list_dma) {
         /* Release Store Queues if they are used */
         if(pvr_state.dr_used) {
             pvr_dr_finish();
@@ -183,6 +220,8 @@ int pvr_list_finish(void) {
 
         /* In case we haven't sent anything in this list, send a dummy */
         pvr_blank_polyhdr(pvr_state.list_reg_open);
+
+        sq_unlock();
 
         /* Set the flags */
         pvr_state.lists_closed |= (1 << pvr_state.list_reg_open);
@@ -203,16 +242,22 @@ int pvr_prim(void * data, int size) {
         dbglog(DBG_WARNING, "pvr_prim: attempt to submit to unopened list\n");
         return -1;
     }
-
 #endif  /* !NDEBUG */
 
-    if(!pvr_state.dma_mode) {
-        /* Send the data */
-        pvr_sq_load((void *)0, data, size, PVR_DMA_TA);
+    if(!pvr_list_dma) {
+#ifndef NDEBUG
+        if((uintptr_t)data & 0x7) {
+            dbglog(DBG_WARNING, "pvr_prim: attempt to submit data unaligned "
+                                "to 8 bytes.\n");
+            return -1;
+        }
+#endif  /* !NDEBUG */
+
+        /* Immediately send data via SQs. */
+        sq_fast_cpy(SQ_MASK_DEST(PVR_TA_INPUT), data, size >> 5);
     }
-    else {
-        return pvr_list_prim(pvr_state.list_reg_open, data, size);
-    }
+    /* Defer data to RAM buffer for DMA-ing later. */
+    else return pvr_list_prim(pvr_state.list_reg_open, data, size);
 
     return 0;
 }
@@ -221,12 +266,19 @@ int pvr_list_prim(pvr_list_t list, void * data, int size) {
     volatile pvr_dma_buffers_t * b;
 
     b = pvr_state.dma_buffers + pvr_state.ram_target;
+
+    /* Ensure we associated a DMA vertex buffer with this list type. */
     assert(b->base[list]);
 
+    /* Ensure data size is multiple of 32-bytes. */
     assert(!(size & 31));
+    /* Ensure at least 4-byte alignment. */
+    assert(!((uintptr_t)data & 0x3));
 
     memcpy(b->base[list] + b->ptr[list], data, size);
     b->ptr[list] += size;
+
+    /* Ensure we didn't overflow the vertex buffer. */
     assert(b->ptr[list] <= b->size[list]);
 
     return 0;
@@ -234,13 +286,11 @@ int pvr_list_prim(pvr_list_t list, void * data, int size) {
 
 void pvr_dr_init(pvr_dr_state_t *vtx_buf_ptr) {
     *vtx_buf_ptr = 0;
-    sq_lock((void *)PVR_TA_INPUT);
     pvr_state.dr_used = 1;
 }
 
 void pvr_dr_finish(void) {
     pvr_state.dr_used = 0;
-    sq_unlock();
 }
 
 int pvr_list_flush(pvr_list_t list) {
@@ -271,8 +321,21 @@ int pvr_scene_finish(void) {
         b = pvr_state.dma_buffers + pvr_state.ram_target;
 
         for(i = 0; i < PVR_OPB_COUNT; i++) {
-            // Not enabled -> skip
+            /* We never enabled the list globally with pvr_init() - skip it */
             if(!(pvr_state.lists_enabled & (1 << i)))
+                continue;
+
+            /* If any lists weren't used in this scene, submit blank ones now */
+            if(!(pvr_state.lists_closed & (1 << i))) {
+                pvr_list_begin(i);
+                pvr_blank_polyhdr(i);
+                pvr_list_finish();
+            }
+
+            /* We never associated an in-RAM DMA vertex buffer with the given
+               list type, because we're using hybrid rendering and submitted
+               that list type directly - skip it */
+            if(!b->base[i])
                 continue;
 
             // Make sure there's at least one primitive in each.
@@ -282,12 +345,14 @@ int pvr_scene_finish(void) {
             }
 
             // Put a zero-marker on the end.
-            memset(b->base[i] + b->ptr[i], 0, 32);
+            memset4(b->base[i] + b->ptr[i], 0, 32);
             b->ptr[i] += 32;
 
             // Verify that there is no overrun.
             assert(b->ptr[i] <= b->size[i]);
         }
+
+        pvr_start_ta_rendering();
 
         // Flip buffers and mark them complete.
         o = irq_disable();
@@ -296,6 +361,8 @@ int pvr_scene_finish(void) {
         irq_restore(o);
 
         pvr_sync_stats(PVR_SYNC_BUFDONE);
+
+        pvr_start_dma();
     }
     else {
         /* If a list was open, close it */
@@ -318,11 +385,16 @@ int pvr_scene_finish(void) {
 }
 
 int pvr_wait_ready(void) {
-    int t;
+    int flags, t = 0;
 
     assert(pvr_state.valid);
 
-    t = sem_wait_timed((semaphore_t *)&pvr_state.ready_sem, 100);
+    flags = irq_disable();
+
+    if(pvr_state.ta_busy)
+        t = genwait_wait((void *)&pvr_state.ta_busy, "PVR wait ready", 100, NULL);
+
+    irq_restore(flags);
 
     if(t < 0) {
 #if 0
@@ -346,7 +418,7 @@ int pvr_wait_ready(void) {
 int pvr_check_ready(void) {
     assert(pvr_state.valid);
 
-    if(sem_count((semaphore_t *)&pvr_state.ready_sem) > 0)
+    if(!pvr_state.ta_busy)
         return 0;
     else
         return -1;

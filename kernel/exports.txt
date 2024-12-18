@@ -78,10 +78,15 @@ fs_close
 fs_read
 fs_write
 fs_seek
+fs_seek64
 fs_tell
+fs_tell64
 fs_total
+fs_total64
 fs_readdir
+fs_rewinddir
 fs_ioctl
+fs_fcntl
 fs_rename
 fs_unlink
 fs_chdir
@@ -89,8 +94,12 @@ fs_getwd
 fs_mmap
 fs_complete
 fs_stat
+fs_fstat
 fs_mkdir
 fs_rmdir
+fs_link
+fs_symlink
+fs_readlink
 fs_dup
 fs_dup2
 fs_open_handle
@@ -98,6 +107,8 @@ fs_get_handler
 fs_get_handle
 fs_copy
 fs_load
+fs_path_append
+fs_normalize_path
 
 # FS helpers
 fs_pty_create

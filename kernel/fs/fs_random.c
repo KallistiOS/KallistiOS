@@ -215,7 +215,7 @@ static int rnd_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
     (void)flag;
 
     memset(rv, 0, sizeof(struct stat));
-    rv->st_mode = S_IFCHR | S_IRUSR;
+    rv->st_mode = S_IFCHR | S_IRUSR | S_IRGRP | S_IROTH;
     rv->st_nlink = 1;
 
     return 0;
@@ -259,7 +259,7 @@ static int rnd_fstat(void *fd, struct stat *st) {
     }
 
     memset(st, 0, sizeof(struct stat));
-    st->st_mode = S_IFCHR | S_IRUSR;
+    st->st_mode = S_IFCHR | S_IRUSR | S_IRGRP | S_IROTH;
     st->st_nlink = 1;
 
     return 0;
@@ -291,7 +291,7 @@ static vfs_handler_t vh = {
     rnd_unlink,
     NULL,
     NULL,               /* complete */
-    rnd_stat,           /* stat */
+    rnd_stat,
     NULL,               /* mkdir */
     NULL,               /* rmdir */
     rnd_fcntl,
@@ -334,15 +334,14 @@ int fs_rnd_init(void) {
 int fs_rnd_shutdown(void) {
     rnd_fh_t * c, * n;
 
-    /* First, clean up any open files */
-    c = TAILQ_FIRST(&rnd_fh);
+    mutex_lock(&fh_mutex);
 
-    while(c) {
-        n = TAILQ_NEXT(c, listent);
+    /* First, clean up any open files */
+    TAILQ_FOREACH_SAFE(c, &rnd_fh, listent, n) {
         free(c);
-        c = n;
     }
 
+    mutex_unlock(&fh_mutex);
     mutex_destroy(&fh_mutex);
 
     nmmgr_handler_remove(&vh.nmmgr);

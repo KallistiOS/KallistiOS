@@ -265,7 +265,7 @@ static uint16 pack(fcolor_t *c) {
         return PACK565(r, g, b);
 }
 
-static int INLINE le16(int x) {
+static int inline le16(int x) {
     /* Endian test added by Megan. This is probably not too efficient
        but it's portable and will get the job done. */
     unsigned long test = 0x12345678;

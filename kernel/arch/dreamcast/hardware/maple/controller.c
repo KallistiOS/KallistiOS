@@ -221,6 +221,7 @@ static maple_driver_t controller_drv = {
     .functions = MAPLE_FUNC_CONTROLLER,
     .name = "Controller Driver",
     .periodic = cont_periodic,
+    .status_size = sizeof(cont_state_t),
     .attach = NULL,
     .detach = NULL
 };
