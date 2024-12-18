@@ -364,9 +364,10 @@ int dcload_unlink(vfs_handler_t * vfs, const char *fn) {
     return ret;
 }
 
-static int dcload_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
+static int dcload_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
                        int flag) {
     dcload_stat_t filestat;
+    size_t len = strlen(path);
     int retval;
 
     (void)flag;
@@ -374,25 +375,36 @@ static int dcload_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
     if(lwip_dclsc && irq_inside_int())
         return 0;
 
+    /* Root directory '/pc' */
+    if(len == 0 || (len == 1 && *path == '/')) {
+        memset(st, 0, sizeof(struct stat));
+        st->st_dev = (dev_t)((ptr_t)vfs);
+        st->st_mode = S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO;
+        st->st_size = -1;
+        st->st_nlink = 2;
+
+        return 0;
+    }
+
     spinlock_lock(&mutex);
-    retval = dclsc(DCLOAD_STAT, fn, &filestat);
+    retval = dclsc(DCLOAD_STAT, path, &filestat);
     spinlock_unlock(&mutex);
 
     if(!retval) {
-        memset(rv, 0, sizeof(struct stat));
-        rv->st_dev = (dev_t)((ptr_t)vfs);
-        rv->st_ino = filestat.st_ino;
-        rv->st_mode = filestat.st_mode;
-        rv->st_nlink = filestat.st_nlink;
-        rv->st_uid = filestat.st_uid;
-        rv->st_gid = filestat.st_gid;
-        rv->st_rdev = filestat.st_rdev;
-        rv->st_size = filestat.st_size;
-        rv->st_atime = filestat.atime;
-        rv->st_mtime = filestat.mtime;
-        rv->st_ctime = filestat.ctime;
-        rv->st_blksize = filestat.st_blksize;
-        rv->st_blocks = filestat.st_blocks;
+        memset(st, 0, sizeof(struct stat));
+        st->st_dev = (dev_t)((ptr_t)vfs);
+        st->st_ino = filestat.st_ino;
+        st->st_mode = filestat.st_mode;
+        st->st_nlink = filestat.st_nlink;
+        st->st_uid = filestat.st_uid;
+        st->st_gid = filestat.st_gid;
+        st->st_rdev = filestat.st_rdev;
+        st->st_size = filestat.st_size;
+        st->st_atime = filestat.atime;
+        st->st_mtime = filestat.mtime;
+        st->st_ctime = filestat.ctime;
+        st->st_blksize = filestat.st_blksize;
+        st->st_blocks = filestat.st_blocks;
 
         return 0;
     }

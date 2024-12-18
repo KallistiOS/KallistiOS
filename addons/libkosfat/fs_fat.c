@@ -1038,15 +1038,28 @@ static int fs_fat_unlink(vfs_handler_t *vfs, const char *fn) {
     return irv;
 }
 
-static int fs_fat_stat(vfs_handler_t *vfs, const char *path, struct stat *buf,
+static int fs_fat_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
                        int flag) {
     fs_fat_fs_t *fs = (fs_fat_fs_t *)vfs->privdata;
     uint32_t sz, bs;
     int irv = 0;
     fat_dentry_t ent;
     uint32_t cl, off, lcl, loff;
+    size_t len = strlen(path);
 
     (void)flag;
+
+    /* Root directory fat device */
+    if(len == 0 || (len == 1 && *path == '/')) {
+        memset(st, 0, sizeof(struct stat));
+        st->st_dev = (dev_t)((ptr_t)fs->vfsh);
+        st->st_mode = S_IFDIR | S_IRUSR | S_IRGRP | S_IROTH | S_IXUSR |
+            S_IXGRP | S_IXOTH | S_IWUSR | S_IWGRP | S_IWOTH;
+        st->st_size = -1;
+        st->st_nlink = 2;
+
+        return 0;
+    }
 
     mutex_lock(&fat_mutex);
 
@@ -1059,32 +1072,32 @@ static int fs_fat_stat(vfs_handler_t *vfs, const char *path, struct stat *buf,
     }
 
     /* Fill in the structure */
-    memset(buf, 0, sizeof(struct stat));
+    memset(st, 0, sizeof(struct stat));
     irv = 0;
-    buf->st_dev = (dev_t)((ptr_t)fs->vfsh);
-    buf->st_ino = ent.cluster_low | (ent.cluster_high << 16);
-    buf->st_nlink = 1;
-    buf->st_uid = 0;
-    buf->st_gid = 0;
-    buf->st_blksize = fat_cluster_size(fs->fs);
+    st->st_dev = (dev_t)((ptr_t)fs->vfsh);
+    st->st_ino = ent.cluster_low | (ent.cluster_high << 16);
+    st->st_nlink = 1;
+    st->st_uid = 0;
+    st->st_gid = 0;
+    st->st_blksize = fat_cluster_size(fs->fs);
 
     /* Read the mode bits... */
-    buf->st_mode = S_IRUSR | S_IRGRP | S_IROTH | S_IXUSR | S_IXGRP | S_IXOTH;
+    st->st_mode = S_IRUSR | S_IRGRP | S_IROTH | S_IXUSR | S_IXGRP | S_IXOTH;
     if(!(ent.attr & FAT_ATTR_READ_ONLY)) {
-        buf->st_mode |= S_IWUSR | S_IWGRP | S_IWOTH;
+        st->st_mode |= S_IWUSR | S_IWGRP | S_IWOTH;
     }
 
     /* Fill in the timestamps... */
-    fill_stat_timestamps(&ent, buf);
+    fill_stat_timestamps(&ent, st);
 
     /* The rest depends on what type of object this is... */
     if(ent.attr & FAT_ATTR_DIRECTORY) {
-        buf->st_mode |= S_IFDIR;
-        buf->st_size = 0;
-        buf->st_blocks = 0;
+        st->st_mode |= S_IFDIR;
+        st->st_size = 0;
+        st->st_blocks = 0;
     }
     else {
-        buf->st_mode |= S_IFREG;
+        st->st_mode |= S_IFREG;
         sz = ent.size;
 
         if(sz > LONG_MAX) {
@@ -1092,12 +1105,12 @@ static int fs_fat_stat(vfs_handler_t *vfs, const char *path, struct stat *buf,
             irv = -1;
         }
 
-        buf->st_size = sz;
+        st->st_size = sz;
         bs = fat_cluster_size(fs->fs);
-        buf->st_blocks = sz / bs;
+        st->st_blocks = sz / bs;
 
         if(sz & (bs - 1))
-            ++buf->st_blocks;
+            ++st->st_blocks;
     }
 
     mutex_unlock(&fat_mutex);

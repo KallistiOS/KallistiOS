@@ -44,9 +44,9 @@ int rwsem_init(rw_semaphore_t *s) {
 
 /* Destroy a reader/writer semaphore */
 int rwsem_destroy(rw_semaphore_t *s) {
-    int rv = 0, old;
+    int rv = 0;
 
-    old = irq_disable();
+    irq_disable_scoped();
 
     if(s->read_count || s->write_lock) {
         errno = EBUSY;
@@ -56,13 +56,12 @@ int rwsem_destroy(rw_semaphore_t *s) {
         free(s);
     }
 
-    irq_restore(old);
     return rv;
 }
 
 /* Lock a reader/writer semaphore for reading */
 int rwsem_read_lock_timed(rw_semaphore_t *s, int timeout) {
-    int old, rv = 0;
+    int rv = 0;
 
     if((rv = irq_inside_int())) {
         dbglog(DBG_WARNING, "%s: called inside an interrupt with code: "
@@ -78,7 +77,7 @@ int rwsem_read_lock_timed(rw_semaphore_t *s, int timeout) {
         return -1;
     }
 
-    old = irq_disable();
+    irq_disable_scoped();
 
     /* If the write lock is not held, let the thread proceed */
     if(!s->write_lock) {
@@ -99,7 +98,6 @@ int rwsem_read_lock_timed(rw_semaphore_t *s, int timeout) {
         }
     }
 
-    irq_restore(old);
     return rv;
 }
 
@@ -107,9 +105,16 @@ int rwsem_read_lock(rw_semaphore_t *s) {
     return rwsem_read_lock_timed(s, 0);
 }
 
+int rwsem_read_lock_irqsafe(rw_semaphore_t *s) {
+    if(irq_inside_int())
+        return rwsem_read_trylock(s);
+    else
+        return rwsem_read_lock(s);
+}
+
 /* Lock a reader/writer semaphore for writing */
 int rwsem_write_lock_timed(rw_semaphore_t *s, int timeout) {
-    int old, rv = 0;
+    int rv = 0;
 
     if(irq_inside_int()) {
         dbglog(DBG_WARNING, "rwsem_write_lock_timed: called inside "
@@ -123,7 +128,7 @@ int rwsem_write_lock_timed(rw_semaphore_t *s, int timeout) {
         return -1;
     }
 
-    old = irq_disable();
+    irq_disable_scoped();
 
     /* If the write lock is not held and there are no readers in their critical
        sections, let the thread proceed. */
@@ -146,7 +151,6 @@ int rwsem_write_lock_timed(rw_semaphore_t *s, int timeout) {
         }
     }
 
-    irq_restore(old);
     return rv;
 }
 
@@ -154,14 +158,18 @@ int rwsem_write_lock(rw_semaphore_t *s) {
     return rwsem_write_lock_timed(s, 0);
 }
 
+int rwsem_write_lock_irqsafe(rw_semaphore_t *s) {
+    if(irq_inside_int())
+        return rwsem_write_trylock(s);
+    else
+        return rwsem_write_lock(s);
+}
+
 /* Unlock a reader/writer semaphore from a read lock. */
 int rwsem_read_unlock(rw_semaphore_t *s) {
-    int old;
-
-    old = irq_disable();
+    irq_disable_scoped();
 
     if(!s->read_count) {
-        irq_restore(old);
         errno = EPERM;
         return -1;
     }
@@ -179,19 +187,16 @@ int rwsem_read_unlock(rw_semaphore_t *s) {
         }
     }
 
-    irq_restore(old);
-
     return 0;
 }
 
 /* Unlock a reader/writer semaphore from a write lock. */
 int rwsem_write_unlock(rw_semaphore_t *s) {
-    int old, woken;
+    int woken;
 
-    old = irq_disable();
+    irq_disable_scoped();
 
     if(s->write_lock != thd_current) {
-        irq_restore(old);
         errno = EPERM;
         return -1;
     }
@@ -206,77 +211,57 @@ int rwsem_write_unlock(rw_semaphore_t *s) {
         genwait_wake_all(s);
     }
 
-    irq_restore(old);
-
     return 0;
 }
 
 int rwsem_unlock(rw_semaphore_t *s) {
-    int old, rv;
-
-    old = irq_disable();
+    irq_disable_scoped();
 
     if(!s->write_lock && !s->read_count) {
         errno = EPERM;
-        rv = -1;
-    }
-    /* Is this thread holding the write lock? */
-    else if(s->write_lock == thd_current) {
-        rv = rwsem_write_unlock(s);
-    }
-    /* Not holding the write lock, assume its holding the read lock... */
-    else {
-        rv = rwsem_read_unlock(s);
+        return -1;
     }
 
-    irq_restore(old);
-    return rv;
+    /* Is this thread holding the write lock? */
+    if(s->write_lock == thd_current)
+        return rwsem_write_unlock(s);
+
+    /* Not holding the write lock, assume its holding the read lock... */
+    return rwsem_read_unlock(s);
 }
 
 /* Attempt to lock a reader/writer semaphore for reading, but do not block. */
 int rwsem_read_trylock(rw_semaphore_t *s) {
-    int old, rv;
-
-    old = irq_disable();
+    irq_disable_scoped();
 
     /* Is the write lock held? */
     if(s->write_lock) {
-        rv = -1;
         errno = EWOULDBLOCK;
-    }
-    else {
-        rv = 0;
-        ++s->read_count;
+        return -1;
     }
 
-    irq_restore(old);
-    return rv;
+    ++s->read_count;
+    return 0;
 }
 
 /* Attempt to lock a reader/writer semaphore for writing, but do not block. */
 int rwsem_write_trylock(rw_semaphore_t *s) {
-    int old, rv;
-
-    old = irq_disable();
+    irq_disable_scoped();
 
     /* Are there any readers in their critical sections, or is the write lock
        already held, if so we can't do anything about that now. */
     if(s->read_count || s->write_lock) {
-        rv = -1;
         errno = EWOULDBLOCK;
-    }
-    else {
-        rv = 0;
-        s->write_lock = thd_current;
+        return -1;
     }
 
-    irq_restore(old);
-    return rv;
+    s->write_lock = thd_current;
+    return 0;
 }
 
 /* "Upgrade" a read lock to a write lock. */
 int rwsem_read_upgrade_timed(rw_semaphore_t *s, int timeout) {
-    int old, rv = 0;
+    int rv;
 
     if(irq_inside_int()) {
         dbglog(DBG_WARNING, "rwsem_read_upgrade_timed: called inside "
@@ -290,7 +275,7 @@ int rwsem_read_upgrade_timed(rw_semaphore_t *s, int timeout) {
         return -1;
     }
 
-    old = irq_disable();
+    irq_disable_scoped();
 
     /* If there are still other readers, see if any other readers have tried to
        upgrade or not... */
@@ -298,37 +283,35 @@ int rwsem_read_upgrade_timed(rw_semaphore_t *s, int timeout) {
         if(s->reader_waiting) {
             /* We've got someone ahead of us, so there's really not anything
                that can be done at this point... */
-            rv = -1;
             errno = EBUSY;
+            return -1;
         }
-        else {
-            --s->read_count;
-            s->reader_waiting = thd_current;
-            rv = genwait_wait(&s->write_lock, timeout ?
-                              "rwsem_read_upgrade_timed" : "rwsem_read_upgrade",
-                              timeout, NULL);
 
-            if(rv < 0) {
-                /* The only way we can error out is if there are still readers
-                   with the lock, so we can safely re-grab the lock here. */
-                ++s->read_count;
-                rv = -1;
+        --s->read_count;
+        s->reader_waiting = thd_current;
+        rv = genwait_wait(&s->write_lock, timeout ?
+                          "rwsem_read_upgrade_timed" : "rwsem_read_upgrade",
+                          timeout, NULL);
 
-                if(errno == EAGAIN)
-                    errno = ETIMEDOUT;
-            }
-            else {
-                s->write_lock = thd_current;
-            }
+        if(rv < 0) {
+            /* The only way we can error out is if there are still readers
+               with the lock, so we can safely re-grab the lock here. */
+            ++s->read_count;
+
+            if(errno == EAGAIN)
+                errno = ETIMEDOUT;
+
+            return -1;
         }
+
+        s->write_lock = thd_current;
     }
     else {
         s->read_count = 0;
         s->write_lock = thd_current;
     }
 
-    irq_restore(old);
-    return rv;
+    return 0;
 }
 
 int rwsem_read_upgrade(rw_semaphore_t *s) {
@@ -337,26 +320,22 @@ int rwsem_read_upgrade(rw_semaphore_t *s) {
 
 /* Attempt to upgrade a read lock to a write lock, but do not block. */
 int rwsem_read_tryupgrade(rw_semaphore_t *s) {
-    int old, rv;
-
-    old = irq_disable();
+    irq_disable_scoped();
 
     if(s->reader_waiting) {
-        rv = -1;
         errno = EBUSY;
-    }
-    else if(s->read_count != 1) {
-        rv = -1;
-        errno = EWOULDBLOCK;
-    }
-    else {
-        rv = 0;
-        s->read_count = 0;
-        s->write_lock = thd_current;
+        return -1;
     }
 
-    irq_restore(old);
-    return rv;
+    if(s->read_count != 1) {
+        errno = EWOULDBLOCK;
+        return -1;
+    }
+
+    s->read_count = 0;
+    s->write_lock = thd_current;
+
+    return 0;
 }
 
 /* Return the current reader count */

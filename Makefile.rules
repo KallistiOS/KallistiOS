@@ -3,48 +3,58 @@
 # Makefile.rules
 # Copyright (c) 2000, 2001 Megan Potter
 # Copyright (c) 2024 Eric Fradella
+# Copyright (C) 2024 Ruslan Rostovtsev
 #
 
 # Global KallistiOS Makefile include
+
+# Default build archs
+KOS_BUILD_SUBARCHS ?= naomi pristine
 
 # Build rules
 ifndef KOS_DEPDIR
 
 %.o: %.c
-	kos-cc $(CFLAGS) -c $< -o $@
+	kos-cc $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 %.o: %.cc
-	kos-c++ $(CFLAGS) $(CXXFLAGS) -c $< -o $@
+	kos-c++ $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 %.o: %.cpp
-	kos-c++ $(CFLAGS) $(CXXFLAGS) -c $< -o $@
+	kos-c++ $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 %.o: %.m
-	kos-cc $(CFLAGS) -c $< -o $@
+	kos-cc $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 %.o: %.mm
-	kos-c++ $(CFLAGS) $(CXXFLAGS) -c $< -o $@
+	kos-c++ $(CFLAGS) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 else
 
 %.o: %.c
-	kos-cc $(CFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.c,%.md,$(subst /,__,$(subst ..,,$<)))
+	kos-cc $(CFLAGS) $(CPPFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.c,%.md,$(subst /,__,$(subst ..,,$<)))
 
 %.o: %.cc
-	kos-c++ $(CFLAGS) $(CXXFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.c,%.md,$(subst /,__,$(subst ..,,$<)))
+	kos-c++ $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.c,%.md,$(subst /,__,$(subst ..,,$<)))
 
 %.o: %.cpp
-	kos-c++ $(CFLAGS) $(CXXFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.c,%.md,$(subst /,__,$(subst ..,,$<)))
+	kos-c++ $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.c,%.md,$(subst /,__,$(subst ..,,$<)))
 
 %.o: %.m
-	kos-cc $(CFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.m,%.md,$(subst /,__,$(subst ..,,$<)))
+	kos-cc $(CFLAGS) $(CPPFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.m,%.md,$(subst /,__,$(subst ..,,$<)))
 
 %.o: %.mm
-	kos-c++ $(CFLAGS) $(CXXFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.mm,%.md,$(subst /,__,$(subst ..,,$<)))
+	kos-c++ $(CFLAGS) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.mm,%.md,$(subst /,__,$(subst ..,,$<)))
 
 -include $(wildcard $(KOS_DEPDIR)/*.md)
 
 endif
+
+.PHONY: all_naomi all_pristine
+
+all_naomi: $(if $(filter $(KOS_BUILD_SUBARCHS),naomi),all)
+
+all_pristine: $(if $(filter $(KOS_BUILD_SUBARCHS),pristine),all)
 
 %.o: %.s
 	kos-as $< -o $@
@@ -68,7 +78,7 @@ $(patsubst %, _clean_dir_%, $(SUBDIRS)):
 # Define KOS_ROMDISK_DIR in your Makefile if you want these two handy rules.
 ifdef KOS_ROMDISK_DIR
 romdisk.img:
-	$(KOS_GENROMFS) -f romdisk.img -d $(KOS_ROMDISK_DIR) -v -x .svn -x .keepme
+	$(KOS_GENROMFS) -f romdisk.img -d $(KOS_ROMDISK_DIR) -v -x .keepme -x .DS_Store -x Thumbs.db
 
 romdisk.o: romdisk.img
 	$(KOS_BASE)/utils/bin2c/bin2c romdisk.img romdisk_tmp.c romdisk
@@ -95,3 +105,20 @@ endef
 define KOS_GCCVER_MIN_WARNING
 @echo "Skipping $(TARGET) build as current GCC version ($(KOS_GCCVER)) is less than $(KOS_GCCVER_MIN)."
 endef
+
+ifdef EXPORTS_FILE
+
+OBJS += exports.o
+
+exports.o: exports.c
+exports.c: $(EXPORTS_FILE)
+	$(KOS_BASE)/utils/genexports/genexports.sh $(EXPORTS_FILE) exports.c $(EXPORTS_SYMBOL)
+
+exports_stubs.o: exports_stubs.c
+exports_stubs.c: $(EXPORTS_FILE)
+	$(KOS_BASE)/utils/genexports/genexportstubs.sh $(EXPORTS_FILE) exports_stubs.c
+
+$(TARGET_LIB): exports_stubs.o
+	$(KOS_AR) rcs $(TARGET_LIB) exports_stubs.o
+
+endif

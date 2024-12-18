@@ -1,6 +1,8 @@
 TARGET = ppp.elf
 OBJS = ppp.o
 
+KOS_BUILD_SUBARCHS = pristine
+
 all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules

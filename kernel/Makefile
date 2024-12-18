@@ -26,7 +26,7 @@ stubs/arch_export_stubs.c: arch/$(KOS_ARCH)/exports-$(KOS_SUBARCH).txt
 
 include $(KOS_BASE)/Makefile.prefab
 
-clean: clean_subdirs
+clean: defaultclean
 	rm -f build/*.o
 	rm -f build/libc/*.o
 	rm -f romdisk/*.o

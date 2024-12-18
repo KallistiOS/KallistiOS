@@ -48,6 +48,8 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
+#include <stdbool.h>
+
 #include <arch/types.h>
 #include <sys/uio.h>
 
@@ -195,9 +197,6 @@ typedef struct mmucontext {
     to do so.
 */
 extern mmucontext_t *mmu_cxt_current;
-
-struct mmu_token;
-typedef struct mmu_token *mmu_token_t;
 /** \endcond */
 
 /** \brief   Set the "current" page tables for TLB handling.
@@ -373,19 +372,18 @@ void mmu_shutdown(void);
  */
 void mmu_reset_itlb(void);
 
-/** \brief   Temporarily disable MMU address translation.
+/** \brief   Check if MMU translation is enabled.
     \ingroup mmu
 
-    \return                 An opaque token to be passed to mmu_restore()
+    \return                 True if MMU translation is enabled, false otherwise.
  */
-mmu_token_t mmu_disable(void);
+bool mmu_enabled(void);
 
-/** \brief   Restore MMU address translation.
-    \ingroup mmu
-
-    \param  token           The opaque token obtained from mmu_disable()
- */
-void mmu_restore(mmu_token_t token);
+/** \brief   Reset the base target address for store queues.
+ *  \ingroup mmu
+ *
+ *  \param  addr            The base address to reset to */
+void mmu_set_sq_addr(void *addr);
 
 __END_DECLS
 

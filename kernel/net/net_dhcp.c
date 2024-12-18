@@ -215,14 +215,8 @@ int net_dhcp_request(uint32 required_address) {
         return -1;
     }
 
-    if(!irq_inside_int()) {
-        mutex_lock(&dhcp_lock);
-    }
-    else {
-        if(mutex_trylock(&dhcp_lock)) {
-            return -1;
-        }
-    }
+    if(mutex_lock_irqsafe(&dhcp_lock))
+        return -1;
 
     /* Fill in the initial DHCPDISCOVER packet */
     req->op = DHCP_OP_BOOTREQUEST;
@@ -398,7 +392,8 @@ static void net_dhcp_renew(void) {
 
 static void net_dhcp_bind(dhcp_pkt_t *pkt, int len) {
     uint32 tmp = ntohl(pkt->yiaddr);
-    uint32 old = irq_disable();
+
+    irq_disable_scoped();
 
     /* Bind the IP address first */
     net_default_dev->ip_addr[0] = (tmp >> 24) & 0xFF;
@@ -482,12 +477,10 @@ static void net_dhcp_bind(dhcp_pkt_t *pkt, int len) {
     }
 
     state = DHCP_STATE_BOUND;
-
-    irq_restore(old);
 }
 
 static void net_dhcp_thd(void *obj) {
-    struct dhcp_pkt_out *qpkt;
+    struct dhcp_pkt_out *qpkt, *q_tmp;
     uint64 now;
     struct sockaddr_in addr;
     uint8 buf[1500];
@@ -501,12 +494,12 @@ static void net_dhcp_thd(void *obj) {
     now = timer_ms_gettime64();
     len = 0;
 
-    mutex_lock(&dhcp_lock);
+    mutex_lock_scoped(&dhcp_lock);
 
     /* Make sure we don't need to renew our lease */
     if(lease_expires <= now && (state == DHCP_STATE_BOUND ||
                                 state == DHCP_STATE_RENEWING || state == DHCP_STATE_REBINDING)) {
-        STAILQ_FOREACH(qpkt, &dhcp_pkts, pkt_queue) {
+        STAILQ_FOREACH_SAFE(qpkt, &dhcp_pkts, pkt_queue, q_tmp) {
             STAILQ_REMOVE(&dhcp_pkts, qpkt, dhcp_pkt_out, pkt_queue);
             free(qpkt->buf);
             free(qpkt);
@@ -520,7 +513,7 @@ static void net_dhcp_thd(void *obj) {
     else if(rebind_time <= now &&
             (state == DHCP_STATE_BOUND || state == DHCP_STATE_RENEWING)) {
         /* Clear out any existing packets. */
-        STAILQ_FOREACH(qpkt, &dhcp_pkts, pkt_queue) {
+        STAILQ_FOREACH_SAFE(qpkt, &dhcp_pkts, pkt_queue, q_tmp) {
             STAILQ_REMOVE(&dhcp_pkts, qpkt, dhcp_pkt_out, pkt_queue);
             free(qpkt->buf);
             free(qpkt);
@@ -623,8 +616,6 @@ static void net_dhcp_thd(void *obj) {
             qpkt->next_delay <<= 1;
         }
     }
-
-    mutex_unlock(&dhcp_lock);
 }
 
 int net_dhcp_init(void) {

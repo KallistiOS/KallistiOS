@@ -55,7 +55,6 @@ static void *net_thd_thd(void *data) {
 }
 
 int net_thd_add_callback(void (*cb)(void *), void *data, uint64 timeout) {
-    int old;
     struct thd_cb *newcb;
 
     /* Allocate space for the new callback and set it up. */
@@ -73,33 +72,30 @@ int net_thd_add_callback(void (*cb)(void *), void *data, uint64 timeout) {
     newcb->nextrun = timer_ms_gettime64() + timeout;
 
     /* Disable interrupts, insert, and re-enable interrupts */
-    old = irq_disable();
+    irq_disable_scoped();
+
     TAILQ_INSERT_TAIL(&cbs, newcb, thds);
-    irq_restore(old);
 
     return newcb->cbid;
 }
 
 int net_thd_del_callback(int cbid) {
-    int old;
     struct thd_cb *cb;
 
     /* Disable interrupts so we can search without fear of anything changing
        underneath us. */
-    old = irq_disable();
+    irq_disable_scoped();
 
     /* See if we can find the callback requested. */
     TAILQ_FOREACH(cb, &cbs, thds) {
         if(cb->cbid == cbid) {
             TAILQ_REMOVE(&cbs, cb, thds);
             free(cb);
-            irq_restore(old);
             return 0;
         }
     }
 
     /* We didn't find it, punt. */
-    irq_restore(old);
     return -1;
 }
 

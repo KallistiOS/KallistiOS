@@ -2,13 +2,15 @@
 
    spu.c
    Copyright (C) 2000, 2001 Megan Potter
-   Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024 Ruslan Rostovtsev
  */
 
+#include <kos/thread.h>
 #include <dc/spu.h>
 #include <dc/g2bus.h>
 #include <dc/sq.h>
 #include <arch/timer.h>
+#include <errno.h>
 
 /*
 
@@ -62,7 +64,12 @@ void spu_memload(uintptr_t dst, void *src_void, size_t length) {
 
 void spu_memload_sq(uintptr_t dst, void *src_void, size_t length) {
     uint8_t *src = (uint8_t *)src_void;
-    int aligned_len;
+    size_t aligned_len;
+
+    if(length < 32) {
+        spu_memload(dst, src_void, length);
+        return;
+    }
 
     /* Round up to the nearest multiple of 4 */
     if(length & 3) {
@@ -84,6 +91,49 @@ void spu_memload_sq(uintptr_t dst, void *src_void, size_t length) {
     if(length > 0) {
         /* Make sure the destination is in a non-cached area */
         dst |= MEM_AREA_P2_BASE;
+        dst += aligned_len;
+        src += aligned_len;
+        g2_fifo_wait();
+        g2_write_block_32((uint32_t *)src, dst, length >> 2);
+    }
+}
+
+void spu_memload_dma(uintptr_t dst, void *src_void, size_t length) {
+    uint8_t *src = (uint8_t *)src_void;
+    size_t aligned_len;
+
+    if(length < 32) {
+        spu_memload(dst, src_void, length);
+        return;
+    }
+    if(((uintptr_t)src_void) & 31) {
+        spu_memload_sq(dst, src_void, length);
+        return;
+    }
+
+    /* Round up to the nearest multiple of 4 */
+    if(length & 3) {
+        length = (length + 4) & ~3;
+    }
+
+    /* Using DMA (or SQ's on fail) for all that is divisible by 32 */
+    aligned_len = length & ~31;
+    length &= 31;
+
+    do {
+        if(spu_dma_transfer(src_void, dst, aligned_len, 1, NULL, NULL) < 0) {
+            if(errno == EINPROGRESS) {
+                thd_pass();
+                continue;
+            }
+            spu_memload_sq(dst, src_void, aligned_len);
+        }
+        break;
+    } while (1);
+
+    if(length > 0) {
+        /* Make sure the destination is in a non-cached area */
+        dst |= (MEM_AREA_P2_BASE | SPU_RAM_BASE);
         dst += aligned_len;
         src += aligned_len;
         g2_fifo_wait();
