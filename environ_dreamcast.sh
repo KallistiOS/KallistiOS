@@ -7,7 +7,7 @@ if [ -z "${DC_TOOLS_BASE}" ] ; then
 fi
 
 # Add the external DC tools dir to the path if it is not already.
-if [[ ":$PATH:" != *":${DC_TOOLS_BASE}:"* ]]; then
+if ! expr ":$PATH:" : ".*:${DC_TOOLS_BASE}:.*" > /dev/null ; then
   export PATH="${PATH}:${DC_TOOLS_BASE}"
 fi
 
