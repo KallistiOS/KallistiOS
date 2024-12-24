@@ -77,7 +77,7 @@ int cdrom_exec_cmd_timed(int cmd, void *param, int timeout) {
     uint64_t begin;
 
     assert(cmd > 0 && cmd < CMD_MAX);
-    mutex_lock(&_g1_ata_mutex);
+    mutex_lock_scoped(&_g1_ata_mutex);
 
     /* Submit the command */
     for(n = 0; n < 10; ++n) {
@@ -89,10 +89,8 @@ int cdrom_exec_cmd_timed(int cmd, void *param, int timeout) {
         thd_pass();
     }
 
-    if(hnd <= 0) {
-        mutex_unlock(&_g1_ata_mutex);
+    if(hnd <= 0)
         return ERR_SYS;
-    }
 
     /* Wait command to finish */
     if(timeout) {
@@ -116,8 +114,6 @@ int cdrom_exec_cmd_timed(int cmd, void *param, int timeout) {
         }
         thd_pass();
     } while(1);
-
-    mutex_unlock(&_g1_ata_mutex);
 
     if(rv != ERR_OK)
         return rv;
@@ -147,14 +143,9 @@ int cdrom_get_status(int *status, int *disc_type) {
     /* We might be called in an interrupt to check for ISO cache
        flushing, so make sure we're not interrupting something
        already in progress. */
-    if(irq_inside_int()) {
-        if(mutex_trylock(&_g1_ata_mutex))
-            /* DH: Figure out a better return to signal error */
-            return -1;
-    }
-    else {
-        mutex_lock(&_g1_ata_mutex);
-    }
+    if(mutex_lock_irqsafe(&_g1_ata_mutex))
+        /* DH: Figure out a better return to signal error */
+        return -1;
 
     do {
         rv = syscall_gdrom_check_drive(params);
@@ -192,10 +183,9 @@ int cdrom_change_dataype(int sector_part, int cdxa, int sector_size) {
 
 /* Wrapper for the change datatype syscall */
 int cdrom_change_datatype(int sector_part, int cdxa, int sector_size) {
-    int rv = ERR_OK;
     uint32_t params[4];
 
-    mutex_lock(&_g1_ata_mutex);
+    mutex_lock_scoped(&_g1_ata_mutex);
 
     /* Check if we are using default params */
     if(sector_size == 2352) {
@@ -224,9 +214,8 @@ int cdrom_change_datatype(int sector_part, int cdxa, int sector_size) {
     params[1] = sector_part;    /* Get Data or Full Sector */
     params[2] = cdxa;           /* CD-XA mode 1/2 */
     params[3] = sector_size;    /* sector size */
-    rv = syscall_gdrom_sector_mode(params);
-    mutex_unlock(&_g1_ata_mutex);
-    return rv;
+
+    return syscall_gdrom_sector_mode(params);
 }
 
 /* Re-init the drive, e.g., after a disc change, etc */

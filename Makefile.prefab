@@ -15,8 +15,10 @@ endif
 defaultall: $(OBJS) subdirs
 	-cp $(OBJS) $(KOS_BASE)/$(BUILD_TARGET)/build/
 
-clean: clean_subdirs
+defaultclean: clean_subdirs
 	-rm -f $(OBJS) *.bck
+
+clean: defaultclean
 
 include $(KOS_BASE)/Makefile.rules
 

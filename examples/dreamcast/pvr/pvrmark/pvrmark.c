@@ -10,7 +10,7 @@
 
 pvr_init_params_t pvr_params = {
     { PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_0, PVR_BINSIZE_0, PVR_BINSIZE_0 },
-    512 * 1024
+    1024 * 1024
 };
 
 enum { PHASE_HALVE, PHASE_INCR, PHASE_DECR, PHASE_FINAL };
@@ -69,11 +69,16 @@ void setup(void) {
     pvr_poly_compile(&hdr, &cxt);
 }
 
+int oldseed = 0xdeadbeef;
 void do_frame(void) {
     pvr_vertex_t vert;
     int x, y, z;
     int size;
     int i, col;
+    int seed = oldseed;
+
+#define nextnum() seed = seed * 1164525 + 1013904223;
+#define getnum(mn) (seed & ((mn) - 1))
 
     vid_border_color(0, 0, 0);
     pvr_wait_ready();
@@ -82,20 +87,32 @@ void do_frame(void) {
     pvr_list_begin(PVR_LIST_OP_POLY);
     pvr_prim(&hdr, sizeof(hdr));
 
+    x = getnum(1024);
+    nextnum();
+    y = getnum(512);
+    nextnum();
+    z = getnum(128) + 1;
+    nextnum();
+    size = getnum(64) + 1;
+    nextnum();
+    col = getnum(256);
+    nextnum();
+
     for(i = 0; i < polycnt; i++) {
-        x = rand() % 640;
-        y = rand() % 480;
-        z = rand() % 100 + 1;
-        size = rand() % 50;
-        col = rand() % 256;
+        x = (x + ((getnum(128)) - 64)) & 1023;
+        nextnum();
+        y = (y + ((getnum(128)) - 64)) % 511;
+        nextnum();
+        size = getnum(64) + 1;
+        nextnum();
+        col = getnum(256);
+        nextnum();
 
         vert.flags = PVR_CMD_VERTEX;
         vert.x = x - size;
         vert.y = y + size;
         vert.z = z;
-        vert.u = vert.v = 0.0f;
         vert.argb = col | (col << 8) | (col << 16) | 0xff000000;
-        vert.oargb = 0;
         pvr_prim(&vert, sizeof(vert));
 
         vert.y = y - size;
@@ -110,6 +127,7 @@ void do_frame(void) {
     pvr_list_finish();
     pvr_scene_finish();
     vid_border_color(0, 255, 0);
+    oldseed = seed;
 }
 
 time_t begin;
@@ -126,9 +144,9 @@ void check_switch(void) {
     now = time(NULL);
 
     if(now >= (begin + 5)) {
-        begin = time(NULL);
         printf("  Average Frame Rate: ~%f fps (%d pps)\n", (double)avgfps, (int)(polycnt * avgfps));
-
+        begin = time(NULL);
+        
         switch(phase) {
             case PHASE_HALVE:
 

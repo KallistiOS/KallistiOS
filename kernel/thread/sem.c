@@ -82,7 +82,7 @@ int sem_destroy(semaphore_t *sm) {
 
 /* Wait on a semaphore, with timeout (in milliseconds) */
 int sem_wait_timed(semaphore_t *sem, int timeout) {
-    int old, rv = 0;
+    int rv = 0;
 
     /* Make sure we're not inside an interrupt */
     if((rv = irq_inside_int())) {
@@ -100,7 +100,7 @@ int sem_wait_timed(semaphore_t *sem, int timeout) {
     }
 
     /* Disable interrupts */
-    old = irq_disable();
+    irq_disable_scoped();
 
     if(sem->initialized != 1 && sem->initialized != 2) {
         errno = EINVAL;
@@ -126,8 +126,6 @@ int sem_wait_timed(semaphore_t *sem, int timeout) {
         }
     }
 
-    irq_restore(old);
-
     return rv;
 }
 
@@ -138,9 +136,9 @@ int sem_wait(semaphore_t *sm) {
 /* Attempt to wait on a semaphore. If the semaphore would block,
    then return an error instead of actually blocking. */
 int sem_trywait(semaphore_t *sm) {
-    int old, rv = 0;
+    int rv = 0;
 
-    old = irq_disable();
+    irq_disable_scoped();
 
     if(sm->initialized != 1 && sm->initialized != 2) {
         errno = EINVAL;
@@ -155,17 +153,14 @@ int sem_trywait(semaphore_t *sm) {
         errno = EWOULDBLOCK;
     }
 
-    /* Restore interrupts */
-    irq_restore(old);
-
     return rv;
 }
 
 /* Signal a semaphore */
 int sem_signal(semaphore_t *sm) {
-    int old, woken, rv = 0;
+    int woken, rv = 0;
 
-    old = irq_disable();
+    irq_disable_scoped();
 
     if(sm->initialized != 1 && sm->initialized != 2) {
         errno = EINVAL;
@@ -182,8 +177,6 @@ int sem_signal(semaphore_t *sm) {
         /* No one is waiting, so just add another tick */
         sm->count++;
     }
-
-    irq_restore(old);
 
     return rv;
 }

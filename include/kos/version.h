@@ -98,7 +98,7 @@
 */
 
 #define KOS_VERSION_MAJOR   2   /**< KOS's current major revision number. */
-#define KOS_VERSION_MINOR   0   /**< KOS's current minor revision number. */
+#define KOS_VERSION_MINOR   1   /**< KOS's current minor revision number. */
 #define KOS_VERSION_PATCH   0   /**< KOS's current patch revision number. */
 
 /** KOS's current version as an integer ID. */
@@ -249,7 +249,7 @@
     \returns        Packed version identifier.
 */
 #define KOS_VERSION_MAKE(major, minor, patch) \
-    ((kos_version_t)((major) << 16) | ((minor) << 8) | (patch))
+    (((major) << 16) | ((minor) << 8) | (patch))
 
 /** Creates a version string from its constituents. 
 
@@ -305,7 +305,7 @@
     \retval false   The given version is at or below \p version.
 */
 #define KOS_VERSION_MAKE_ABOVE(major, minor, patch, version) \
-    (KOS_VERSION_MAKE_COMPARISON(major, minor, patch, >, version))
+    (KOS_VERSION_MAKE_COMPARISON(major, minor, patch, <, version))
 
 /** Creates a minimum version check. 
 
@@ -323,7 +323,7 @@
     \retval false   The given version is below \p version.
 */
 #define KOS_VERSION_MAKE_MIN(major, minor, patch, version) \
-    (KOS_VERSION_MAKE_COMPARISON(major, minor, patch, >=, version))
+    (KOS_VERSION_MAKE_COMPARISON(major, minor, patch, <=, version))
 
 /** Creates an exact version check. 
 
@@ -360,7 +360,7 @@
 
 */
 #define KOS_VERSION_MAKE_MAX(major, minor, patch, version) \
-    (KOS_VERSION_MAKE_COMPARISON(major, minor, patch, <=, version))
+    (KOS_VERSION_MAKE_COMPARISON(major, minor, patch, >=, version))
 
 /** Creates a check for being below a given version.
 
@@ -378,7 +378,7 @@
     \retval false   The given version is at or above \p version.
 */
 #define KOS_VERSION_MAKE_BELOW(major, minor, patch, version) \
-    (KOS_VERSION_MAKE_COMPARISON(major, minor, patch, <, version))
+    (KOS_VERSION_MAKE_COMPARISON(major, minor, patch, >, version))
 /** @} */
 
 /** \cond INTERNAL */

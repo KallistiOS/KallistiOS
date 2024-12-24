@@ -573,11 +573,11 @@ static iso_dirent_t *find_object_path(const char *fn, int dir, iso_dirent_t *sta
    too lazy right now. =) */
 static struct {
     uint32      first_extent;   /* First sector */
-    int     dir;        /* >0 if a directory */
-    uint32      ptr;        /* Current read position in bytes */
-    uint32      size;       /* Length of file in bytes */
-    dirent_t    dirent;     /* A static dirent to pass back to clients */
-    int     broken;     /* >0 if the CD has been swapped out since open */
+    bool        dir;            /* True if a directory */
+    uint32      ptr;            /* Current read position in bytes */
+    uint32      size;           /* Length of file in bytes */
+    dirent_t    dirent;         /* A static dirent to pass back to clients */
+    bool        broken;         /* True if the CD has been swapped out since open */
 } fh[FS_CD_MAX_FILES];
 
 /* Mutex for file handles */
@@ -593,7 +593,7 @@ static void iso_break_all(void) {
     mutex_lock(&fh_mutex);
 
     for(i = 0; i < FS_CD_MAX_FILES; i++)
-        fh[i].broken = 1;
+        fh[i].broken = true;
 
     mutex_unlock(&fh_mutex);
 }
@@ -645,10 +645,10 @@ static void * iso_open(vfs_handler_t * vfs, const char *fn, int mode) {
 
     /* Fill in the file handle and return the fd */
     fh[fd].first_extent = iso_733(de->extent);
-    fh[fd].dir = (mode & O_DIR) ? 1 : 0;
+    fh[fd].dir = ((mode & O_DIR) != 0);
     fh[fd].ptr = 0;
     fh[fd].size = iso_733(de->size);
-    fh[fd].broken = 0;
+    fh[fd].broken = false;
 
     return (void *)fd;
 }
@@ -968,6 +968,53 @@ static void iso_vblank(uint32 evt, void *data) {
     }
 }
 
+static int iso_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
+                    int flag) {
+    mode_t md;
+    iso_dirent_t *de;
+    size_t len = strlen(path);
+    
+    (void)vfs;
+    (void)flag;
+
+    /* Root directory of cd */
+    if(len == 0 || (len == 1 && *path == '/')) {
+        memset(st, 0, sizeof(struct stat));
+        st->st_dev = (dev_t)('c' | ('d' << 8));
+        st->st_mode = S_IFDIR | S_IRUSR | S_IRGRP | S_IROTH | S_IXUSR | 
+            S_IXGRP | S_IXOTH;
+        st->st_size = -1;
+        st->st_nlink = 2;
+
+        return 0;
+    }
+
+    /* First try opening as a file */
+    de = find_object_path(path, 0, &root_dirent);
+    md = S_IFREG;
+
+    /* If we couldn't get it as a file, try as a directory */
+    if(!de) {
+        de = find_object_path(path, 1, &root_dirent);
+        md = S_IFDIR;
+    }
+
+    /* If we still don't have it, then we're not going to get it. */
+    if(!de) {
+        errno = ENOENT;
+        return -1;
+    }
+       
+    memset(st, 0, sizeof(struct stat));
+    st->st_dev = (dev_t)('c' | ('d' << 8));
+    st->st_mode = md | S_IRUSR | S_IRGRP | S_IROTH | S_IXUSR | S_IXGRP | S_IXOTH;
+    st->st_size = (md == S_IFDIR) ? -1 : (int)iso_733(de->size);
+    st->st_nlink = (md == S_IFDIR) ? 2 : 1;
+    st->st_blksize = 512;
+
+    return 0;
+}
+
 static int iso_fcntl(void *h, int cmd, va_list ap) {
     file_t fd = (file_t)h;
     int rv = -1;
@@ -1010,23 +1057,12 @@ static int iso_fstat(void *h, struct stat *st) {
     }
 
     memset(st, 0, sizeof(struct stat));
-
-    if(fh[fd].dir) {
-        st->st_size = 0;
-        st->st_dev = 'c' | ('d' << 8);
-        st->st_mode = S_IFDIR | S_IRUSR | S_IRGRP | S_IROTH | S_IXUSR |
-            S_IXGRP | S_IXOTH;
-        st->st_nlink = 1;
-        st->st_blksize = 512;
-    }
-    else {
-        st->st_size = fh[fd].size;
-        st->st_dev = 'c' | ('d' << 8);
-        st->st_mode = S_IFREG | S_IRUSR | S_IRGRP | S_IROTH | S_IXUSR |
-            S_IXGRP | S_IXOTH;
-        st->st_nlink = 1;
-        st->st_blksize = 512;
-    }
+    st->st_dev = 'c' | ('d' << 8);
+    st->st_mode = S_IRUSR | S_IRGRP | S_IROTH | S_IXUSR | S_IXGRP | S_IXOTH;
+    st->st_mode |= fh[fd].dir ? S_IFDIR : S_IFREG;
+    st->st_size = fh[fd].dir ? -1 : (int)fh[fd].size;
+    st->st_nlink = fh[fd].dir ? 2 : 1;
+    st->st_blksize = 512;
 
     return 0;
 }
@@ -1058,7 +1094,7 @@ static vfs_handler_t vh = {
     NULL,
     NULL,
     NULL,
-    NULL,
+    iso_stat,
     NULL,
     NULL,
     iso_fcntl,

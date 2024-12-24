@@ -179,7 +179,8 @@ static uint32 pvr_mem_available_int(void) {
 }
 
 uint32 pvr_mem_available(void) {
-    CHECK_MEM_BASE;
+    if(!pvr_mem_base)
+        return 0;
 
     return pvr_mem_available_int() + 
         (PVR_RAM_INT_TOP - (uint32)pvr_mem_base);

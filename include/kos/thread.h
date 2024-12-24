@@ -182,8 +182,11 @@ typedef __attribute__((aligned(32))) struct kthread {
     /** \brief  Kernel thread id. */
     tid_t tid;
 
-    /** \brief  Static priority: 0..PRIO_MAX (higher means lower priority). */
+    /** \brief  Dynamic priority */
     prio_t prio;
+
+    /** \brief  Static priority: 0..PRIO_MAX (higher means lower priority). */
+    prio_t real_prio;
 
     /** \brief  Thread flags. */
     kthread_flags_t flags;

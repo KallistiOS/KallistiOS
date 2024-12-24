@@ -45,15 +45,15 @@ static void tq_insert(kthread_t * thd) {
 
     /* Search for its place; note that new threads will be placed at
        the end of a group with the same timeout. */
-    TAILQ_FOREACH(t, &timer_queue, timerq) {
-        if(thd->wait_timeout < t->wait_timeout) {
-            TAILQ_INSERT_BEFORE(t, thd, timerq);
+    TAILQ_FOREACH_REVERSE(t, &timer_queue, slpquehead, timerq) {
+        if(thd->wait_timeout >= t->wait_timeout) {
+            TAILQ_INSERT_AFTER(&timer_queue, t, thd, timerq);
             return;
         }
     }
 
-    /* Couldn't find anything scheduled later, put this at the end. */
-    TAILQ_INSERT_TAIL(&timer_queue, thd, timerq);
+    /* Couldn't find anything scheduled earlier, put this at the start. */
+    TAILQ_INSERT_HEAD(&timer_queue, thd, timerq);
 }
 
 /* Internal function to remove a thread from the timer queue. */
@@ -68,7 +68,6 @@ static kthread_t * tq_next(void) {
 }
 
 int genwait_wait(void * obj, const char * mesg, int timeout, void (*callback)(void *)) {
-    int     old, rv;
     kthread_t   * me;
 
     /* Twiddle interrupt state */
@@ -77,7 +76,7 @@ int genwait_wait(void * obj, const char * mesg, int timeout, void (*callback)(vo
         return -1;
     }
 
-    old = irq_disable();
+    irq_disable_scoped();
 
     /* Prepare us for sleep */
     me = thd_current;
@@ -99,11 +98,7 @@ int genwait_wait(void * obj, const char * mesg, int timeout, void (*callback)(vo
     TAILQ_INSERT_TAIL(&slpque[LOOKUP(obj)], me, thdq);
 
     /* Block us until we're signaled */
-    rv = thd_block_now(&me->context);
-
-    irq_restore(old);
-
-    return rv;
+    return thd_block_now(&me->context);
 }
 
 /* Removes a thread from its wait queue; assumes ints are disabled. */
@@ -131,10 +126,10 @@ static void genwait_unqueue(kthread_t * thd) {
 int genwait_wake_cnt(void * obj, int cntmax, int err) {
     kthread_t       * t, * nt;
     struct slpquehead   * qp;
-    int         cnt, old;
+    int         cnt;
 
     /* Twiddle interrupt state */
-    old = irq_disable();
+    irq_disable_scoped();
 
     /* Find the queue */
     qp = &slpque[LOOKUP(obj)];
@@ -168,9 +163,6 @@ int genwait_wake_cnt(void * obj, int cntmax, int err) {
         }
     }
 
-    /* Re-fix IRQs */
-    irq_restore(old);
-
     return cnt;
 }
 
@@ -193,10 +185,9 @@ void genwait_wake_all_err(void *obj, int err) {
 int genwait_wake_thd(void *obj, kthread_t *thd, int err) {
     kthread_t *t, *nt;
     struct slpquehead *qp;
-    int old, rv = 0;
 
     /* Twiddle interrupt state */
-    old = irq_disable();
+    irq_disable_scoped();
 
     /* Find the queue */
     qp = &slpque[LOOKUP(obj)];
@@ -221,15 +212,11 @@ int genwait_wake_thd(void *obj, kthread_t *thd, int err) {
             }
 
             /* We found it, so we're done... */
-            rv = 1;
-            break;
+	    return 1;
         }
     }
 
-    /* Re-fix IRQs */
-    irq_restore(old);
-
-    return rv;
+    return 0;
 }
 
 void genwait_check_timeouts(uint64 tm) {
