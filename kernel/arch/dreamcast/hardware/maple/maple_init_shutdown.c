@@ -37,8 +37,17 @@
 /* Initialize Hardware (call after driver inits) */
 static void maple_hw_init(void) {
     maple_driver_t *drv;
+    int p, u;
 
     dbglog(DBG_INFO, "maple: active drivers:\n");
+
+    /* Reset structures */
+    for(p = 0; p < MAPLE_PORT_COUNT; p++) {
+        maple_state.ports[p].port = p;
+
+        for(u = 0; u < MAPLE_UNIT_COUNT; u++)
+            maple_state.ports[p].units[u] = NULL;
+    }
 
     TAILQ_INIT(&maple_state.frame_queue);
 
@@ -89,6 +98,7 @@ static void maple_hw_init(void) {
 void maple_hw_shutdown(void) {
     int p, u, cnt;
     uint32  ptr;
+    maple_device_t *dev;
 
     /* Unhook interrupts */
     vblank_handler_remove(maple_state.vbl_handle);
@@ -118,6 +128,11 @@ void maple_hw_shutdown(void) {
     for(cnt = 0, p = 0; p < MAPLE_PORT_COUNT; p++) {
         for(u = 0; u < MAPLE_UNIT_COUNT; u++) {
             cnt += !!maple_driver_detach(p, u);
+
+            dev = maple_state.ports[p].units[u];
+            if(dev)
+                free(dev->status);
+            free(dev);
         }
     }
 
