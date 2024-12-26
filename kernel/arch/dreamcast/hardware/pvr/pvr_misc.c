@@ -187,7 +187,7 @@ void pvr_begin_queued_render(void) {
     } zclip;
 
     /* Get the appropriate buffer */
-    tbuf = pvr_state.ta_buffers + (pvr_state.ta_target ^ 1);
+    tbuf = pvr_state.ta_buffers + (pvr_state.ta_target ^ pvr_state.vbuf_doublebuf);
     rbuf = pvr_state.frame_buffers + (bufn ^ 1);
 
     /* Calculate background value for below */
@@ -268,4 +268,22 @@ void pvr_blank_polyhdr_buf(int type, pvr_poly_hdr_t * poly) {
     /* Fill in dummy values */
     poly->d1 = poly->d2 = poly->d3 = poly->d4 = 0xffffffff;
 
+}
+
+pvr_ptr_t pvr_get_front_buffer(void) {
+    unsigned int idx;
+    uint32_t addr;
+
+    irq_disable_scoped();
+
+    /* The front buffer may not have been fully rendered or submitted to the
+       video hardware yet. In case this has yet to happen, we want the second
+       view target, aka. the one not currently being displayed. */
+    idx = pvr_state.view_target ^ pvr_state.render_completed;
+
+    addr = pvr_state.frame_buffers[idx].frame;
+
+    /* The front buffer is in 32-bit memory, convert its address to make it
+       addressable from the 64-bit memory */
+    return (pvr_ptr_t)(((addr << 1) & (PVR_RAM_SIZE - 1)) + PVR_RAM_BASE);
 }

@@ -42,7 +42,10 @@ int pvr_init_defaults(void) {
         0,
 
         /* Extra OPBs */
-        3
+        3,
+
+        /* Vertex buffer double-buffering enabled */
+        0
     };
 
     return pvr_init(&params);
@@ -88,6 +91,8 @@ int pvr_init(pvr_init_params_t *params) {
 
     // Copy over FSAA setting.
     pvr_state.fsaa = params->fsaa_enabled;
+
+    pvr_state.vbuf_doublebuf = !params->vbuf_doublebuf_disabled;
 
     /* Everything's clear, do the initial buffer pointer setup */
     pvr_allocate_buffers(params);
