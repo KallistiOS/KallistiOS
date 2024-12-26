@@ -2,7 +2,7 @@
 
    dc/sound/sound.h
    Copyright (C) 2002 Megan Potter
-   Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024 Ruslan Rostovtsev
 
 */
 
@@ -27,6 +27,7 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 /** \defgroup audio_driver  Driver
     \brief                  Low-level driver for SPU and audio management
@@ -216,7 +217,28 @@ void snd_adpcm_split(uint32_t *data, uint32_t *left, uint32_t *right, size_t siz
 
 /** @} */
 
+/** \brief  Get AICA channel position.
+
+    This function returns actual the channel position
+    that stores in SPU memory and updated by the SPU firmware.
+
+    \param  chn             The channel to retrieve position.
+
+    \return                 Last channel position in samples.
+*/
+uint16_t snd_get_pos(uint32_t ch);
+
+/** \brief  Get AICA channel playback state.
+
+    This function returns actual the channel playback state
+    that stores in AICA registers directly.
+
+    \param  chn             The channel to check.
+
+    \return                 True if the channel is playing.
+*/
+bool snd_is_playing(uint32_t ch);
+
 __END_DECLS
 
 #endif  /* __DC_SOUND_SOUND_H */
-
