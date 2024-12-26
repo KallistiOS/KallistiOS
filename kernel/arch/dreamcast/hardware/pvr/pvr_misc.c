@@ -35,10 +35,10 @@ void pvr_set_bg_color(float r, float g, float b) {
 }
 
 /* Enable/disable cheap shadow mode and set the cheap shadow scale register. */
-void pvr_set_shadow_scale(int enable, float scale_value) {
+void pvr_set_shadow_scale(bool enable, float scale_value) {
     int s = (int)(scale_value * 255);
 
-    PVR_SET(PVR_CHEAP_SHADOW, ((!!enable) << 8) | (s & 0xFF));
+    PVR_SET(PVR_CHEAP_SHADOW, (enable << 8) | (s & 0xFF));
 }
 
 /* Set the Z-Clip value (that is to say the depth of the background layer). */

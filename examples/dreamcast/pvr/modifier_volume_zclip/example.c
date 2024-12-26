@@ -252,7 +252,7 @@ int main(int argc, char* argv[])
     pvr_init(&params);
     pvr_set_bg_color(0, 0.5f, 1.0f);
     /* Enable cheap shadow */
-    pvr_set_shadow_scale(1, 0.5f);
+    pvr_set_shadow_scale(true, 0.5f);
 
     /* init plane */
     box_tex = pvr_mem_malloc(256 * 256 * 2);

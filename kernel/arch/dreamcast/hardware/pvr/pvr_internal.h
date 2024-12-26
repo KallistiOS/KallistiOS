@@ -16,6 +16,7 @@
    code. If something is needed from this, an external interface should
    be added to dc/pvr.h. */
 
+#include <stdbool.h>
 #include <kos/mutex.h>
 
 /**** State stuff ***************************************************/
@@ -248,10 +249,10 @@ typedef struct pvr_bkg_poly {
 /**** pvr_buffers.c ***************************************************/
 
 /* Initialize buffers for TA/ISP/TSP usage */
-void pvr_allocate_buffers(pvr_init_params_t *params);
+void pvr_allocate_buffers(const pvr_init_params_t *params);
 
 /* Fill the tile matrices (after it's initialized) */
-void pvr_init_tile_matrices(int presort);
+void pvr_init_tile_matrices(bool presort);
 
 
 /**** pvr_misc.c ******************************************************/

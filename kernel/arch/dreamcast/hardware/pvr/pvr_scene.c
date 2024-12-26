@@ -24,8 +24,8 @@
 
 */
 
-void * pvr_set_vertbuf(pvr_list_t list, void * buffer, int len) {
-    void * oldbuf;
+void *pvr_set_vertbuf(pvr_list_t list, void *buffer, size_t len) {
+    void *oldbuf;
 
     // Make sure we have global DMA usage enabled. The DMA can still
     // be used in other situations, but the user must take care of
@@ -58,8 +58,8 @@ void * pvr_set_vertbuf(pvr_list_t list, void * buffer, int len) {
     return oldbuf;
 }
 
-void * pvr_vertbuf_tail(pvr_list_t list) {
-    uint8 * bufbase;
+void *pvr_vertbuf_tail(pvr_list_t list) {
+    uint8 *bufbase;
 
     // Check the validity of the request.
     assert(list < PVR_OPB_COUNT);
@@ -73,7 +73,7 @@ void * pvr_vertbuf_tail(pvr_list_t list) {
     return bufbase + pvr_state.dma_buffers[pvr_state.ram_target].ptr[list];
 }
 
-void pvr_vertbuf_written(pvr_list_t list, uint32 amt) {
+void pvr_vertbuf_written(pvr_list_t list, size_t amt) {
     uint32 val;
 
     // Check the validity of the request.
@@ -235,7 +235,7 @@ int pvr_list_finish(void) {
     return 0;
 }
 
-int pvr_prim(void * data, int size) {
+int pvr_prim(const void *data, size_t size) {
     /* Check to make sure we can do this */
 #ifndef NDEBUG
     if(pvr_state.list_reg_open == -1) {
@@ -262,7 +262,7 @@ int pvr_prim(void * data, int size) {
     return 0;
 }
 
-int pvr_list_prim(pvr_list_t list, void * data, int size) {
+int pvr_list_prim(pvr_list_t list, const void *data, size_t size) {
     volatile pvr_dma_buffers_t * b;
 
     b = pvr_state.dma_buffers + pvr_state.ram_target;

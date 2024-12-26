@@ -34,7 +34,7 @@
 /* Fill Tile Matrix buffers. This function takes a base address and sets up
    the rendering structures there. Each tile of the screen (32x32) receives
    a small buffer space. */
-static void pvr_init_tile_matrix(int which, int presort) {
+static void pvr_init_tile_matrix(int which, bool presort) {
     volatile pvr_ta_buffers_t   *buf;
     int     x, y, tn;
     uint32      *vr;  /* Note: We're working in 4-byte pointer maths in this function */
@@ -125,14 +125,14 @@ static void pvr_init_tile_matrix(int which, int presort) {
 }
 
 /* Fill all tile matrices */
-void pvr_init_tile_matrices(int presort) {
+void pvr_init_tile_matrices(bool presort) {
     int i;
 
     for(i = 0; i < 2; i++)
         pvr_init_tile_matrix(i, presort);
 }
 
-void pvr_set_presort_mode(int presort) {
+void pvr_set_presort_mode(bool presort) {
     pvr_init_tile_matrix(pvr_state.ta_target, presort);
 }
 
@@ -151,7 +151,7 @@ up and placed at 0x000000 and 0x400000.
 #define BUF_ALIGN_MASK (BUF_ALIGN - 1)
 #define APPLY_ALIGNMENT(addr) (((addr) + BUF_ALIGN_MASK) & ~BUF_ALIGN_MASK)
 
-void pvr_allocate_buffers(pvr_init_params_t *params) {
+void pvr_allocate_buffers(const pvr_init_params_t *params) {
     volatile pvr_ta_buffers_t   *buf;
     volatile pvr_frame_buffers_t    *fbuf;
     int i, j;
