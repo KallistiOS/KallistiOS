@@ -33,8 +33,8 @@ __BEGIN_DECLS
 
 /* \cond */
 /* Initialization */
-int fs_dev_init(void);
-int fs_dev_shutdown(void);
+void fs_dev_init(void);
+void fs_dev_shutdown(void);
 /* \endcond */
 
 /** @} */
