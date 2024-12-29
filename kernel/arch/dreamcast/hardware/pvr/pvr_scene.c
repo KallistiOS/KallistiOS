@@ -105,6 +105,7 @@ void pvr_scene_begin(void) {
     int i;
 
     pvr_state.ta_ready = 0;
+    pvr_state.lists_closed = 0;
 
     // Get general stuff ready.
     pvr_state.list_reg_open = -1;
@@ -119,8 +120,6 @@ void pvr_scene_begin(void) {
         // DBG(("pvr_scene_begin(dma -> %d)\n", pvr_state.ram_target));
     }
     else {
-        pvr_state.lists_closed = 0;
-
         // We assume registration is starting immediately
         pvr_sync_stats(PVR_SYNC_REGSTART);
     }
