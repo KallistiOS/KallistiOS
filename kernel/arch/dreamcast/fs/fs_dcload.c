@@ -124,12 +124,21 @@ void *dcload_open(vfs_handler_t * vfs, const char *fn, int mode) {
 
             if(fn[strlen(fn) - 1] == '/') {
                 dcload_path = malloc(strlen(fn) + 1);
-                strcpy(dcload_path, fn);
+                if(dcload_path)
+                    strcpy(dcload_path, fn);
             }
             else {
                 dcload_path = malloc(strlen(fn) + 2);
-                strcpy(dcload_path, fn);
-                strcat(dcload_path, "/");
+                if(dcload_path) {
+                    strcpy(dcload_path, fn);
+                    strcat(dcload_path, "/");
+                }
+            }
+
+            /* We weren't able to allocate the path */
+            if(!dcload_path) {
+                errno = ENOMEM;
+                hnd = 0;
             }
         }
     }
@@ -305,6 +314,13 @@ dirent_t *dcload_readdir(void * h) {
         rv->attr = 0; /* what the hell is attr supposed to be anyways? */
 
         fn = malloc(strlen(dcload_path) + strlen(dcld->d_name) + 1);
+
+        if(!fn) {
+            spinlock_unlock(&mutex);
+            errno = ENOMEM;
+            return NULL;
+        }
+
         strcpy(fn, dcload_path);
         strcat(fn, dcld->d_name);
 
