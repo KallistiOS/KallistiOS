@@ -115,11 +115,12 @@ int vmu_pkg_build(vmu_pkg_t *src, uint8 ** dst, int * dst_size);
     files read in.
 
     \param  data            The buffer to parse.
+    \param  data_size       The size of the buffer, in bytes.
     \param  pkg             Where to store the vmu_pkg_t.
     \retval -1              On invalid CRC in the data.
     \retval 0               On success.
 */
-int vmu_pkg_parse(uint8 *data, vmu_pkg_t *pkg);
+int vmu_pkg_parse(uint8 *data, int data_size, vmu_pkg_t *pkg);
 
 
 __END_DECLS
