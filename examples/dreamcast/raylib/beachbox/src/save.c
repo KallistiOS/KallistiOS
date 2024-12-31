@@ -369,17 +369,16 @@ uint16_t get_total_coins(void) {
     return save.total_coins;
 }
 
-void add_coins(uint16_t n) {
-    uint16_t n_ = n;
+void add_coins(int n) {
+    const int total_coins = get_total_coins();
+    
     // Check for overflow
-    const int total_coins_ = get_total_coins();
-    if (total_coins_ + n > UINT16_MAX) {
-        n_ = UINT16_MAX - total_coins_;
+    if (total_coins + n > UINT16_MAX) {
+        n = UINT16_MAX;
     }
 
-    assert_msg(n_ >= 0, "Tried to spend more coins than available");
-
-    save.total_coins += n_;
+    assert_msg(total_coins + n >= 0, "Tried to spend more coins than available");
+    save.total_coins += n;
 }
 
 uint16_t get_total_runs(void) {

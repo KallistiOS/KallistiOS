@@ -42,7 +42,7 @@ bool is_load_in_progress(void);
 uint16_t get_total_coins(void);
 
 // Add n coins to the player's total
-void add_coins(uint16_t n);
+void add_coins(int n);
 
 // Returns the number of runs the player has played
 uint16_t get_total_runs(void);
