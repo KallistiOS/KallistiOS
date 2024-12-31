@@ -52,8 +52,8 @@ typedef struct vmu_pkg {
     int         eyecatch_type;      /**< \brief "Eyecatch" type */
     int         data_len;           /**< \brief Number of data (payload) bytes */
     uint16      icon_pal[16];       /**< \brief Icon palette (ARGB4444) */
-    const uint8 *icon_data;         /**< \brief 512*n bytes of icon data */
-    const uint8 *eyecatch_data;     /**< \brief Eyecatch data */
+    uint8       *icon_data;         /**< \brief 512*n bytes of icon data */
+    uint8       *eyecatch_data;     /**< \brief Eyecatch data */
     const uint8 *data;              /**< \brief Payload data */
 } vmu_pkg_t;
 
