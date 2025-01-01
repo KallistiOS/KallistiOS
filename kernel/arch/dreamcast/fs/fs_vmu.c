@@ -64,6 +64,7 @@ typedef struct vmu_fh_str {
     uint32 filesize;                    /* file length from dirent (in 512-byte blks) */
     uint8 *data;                        /* copy of the whole file */
     vmu_pkg_t *header;                  /* VMU file header */
+    bool raw;                           /* file opened as raw */
 } vmu_fh_t;
 
 /* Directory handles */
@@ -245,6 +246,7 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
     fd->start = 0;
     fd->dev = dev;
     fd->header = NULL;
+    fd->raw = mode & O_META;
 
     /* What mode are we opening in? If we're reading or writing without O_TRUNC
        then we need to read the old file if there is one. */
@@ -279,7 +281,7 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
         }
         datasize = 512;
         memset(data, 0, 512);
-    } else if(!vmu_pkg_parse(data, datasize, &vmu_pkg)) {
+    } else if(!fd->raw && !vmu_pkg_parse(data, datasize, &vmu_pkg)) {
         fd->header = vmu_pkg_dup(&vmu_pkg);
         fd->start = (unsigned int)vmu_pkg.data - (unsigned int)data;
         fd->loc = fd->start;
@@ -368,15 +370,17 @@ static int vmu_write_close(void * hnd) {
     int         ret, data_len = fh->filesize * 512;
     vmu_pkg_t   *hdr = fh->header ?: dft_header;
 
-    if(!hdr) {
-        dbglog(DBG_WARNING, "VMUFS: file written without header\n");
-    } else {
-        hdr->data_len = data_len;
-        hdr->data = data;
+    if(!fh->raw) {
+        if(!hdr) {
+            dbglog(DBG_WARNING, "VMUFS: file written without header\n");
+        } else {
+            hdr->data_len = data_len;
+            hdr->data = data;
 
-        ret = vmu_pkg_build(hdr, &data, &data_len);
-        if(ret < 0)
-            return ret;
+            ret = vmu_pkg_build(hdr, &data, &data_len);
+            if(ret < 0)
+                return ret;
+        }
     }
 
     ret = vmufs_write(fh->dev, fh->name, data, data_len, VMUFS_OVERWRITE);
