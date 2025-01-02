@@ -22,6 +22,8 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
+#include <stdbool.h>
+
 #include <arch/types.h>
 
 /** \defgroup arch  Architecture
@@ -352,12 +354,12 @@ const char *kos_get_license(void);
 */
 const char *kos_get_authors(void);
 
-/** \brief   Dreamcast specific sleep mode "function". 
-    \ingroup arch 
+/** \brief   Dreamcast specific sleep mode function.
+    \ingroup arch
 */
-#define arch_sleep() do { \
-        __asm__ __volatile__("sleep"); \
-    } while(0)
+static inline void arch_sleep(void) {
+    __asm__ __volatile__("sleep\n");
+}
 
 /** \brief   DC specific "function" to get the return address from the current
              function.
@@ -365,13 +367,16 @@ const char *kos_get_authors(void);
 
     \return                 The return address of the current function.
 */
-#define arch_get_ret_addr() ({ \
-        uint32 pr; \
-        __asm__ __volatile__("sts	pr,%0\n" \
-                             : "=&z" (pr) \
-                             : /* no inputs */ \
-                             : "memory" ); \
-        pr; })
+static inline uintptr_t arch_get_ret_addr(void) {
+    uintptr_t pr;
+
+    __asm__ __volatile__("sts pr,%0\n"
+                         : "=&z"(pr)
+                         : /* no inputs */ \
+                         : "memory" ); \
+
+    return pr;
+}
 
 /* Please note that all of the following frame pointer macros are ONLY
    valid if you have compiled your code WITHOUT -fomit-frame-pointer. These
@@ -384,13 +389,16 @@ const char *kos_get_authors(void);
     \return                 The frame pointer from the current function.
     \note                   This only works if you don't disable frame pointers.
 */
-#define arch_get_fptr() ({ \
-        uint32 fp; \
-        __asm__ __volatile__("mov	r14,%0\n" \
-                             : "=&z" (fp) \
-                             : /* no inputs */ \
-                             : "memory" ); \
-        fp; })
+static inline uintptr_t arch_get_fptr(void) {
+    uintptr_t fp;
+
+    __asm__ __volatile__("mov	r14,%0\n"
+                         : "=&z" (fp)
+                         : /* no inputs */
+                         : "memory" );
+
+    return fp;
+}
 
 /** \brief   Pass in a frame pointer value to get the return address for the
              given frame.
@@ -399,7 +407,9 @@ const char *kos_get_authors(void);
     \param  fptr            The frame pointer to look at.
     \return                 The return address of the pointer.
 */
-#define arch_fptr_ret_addr(fptr) (*((uint32*)(fptr)))
+static inline uintptr_t arch_fptr_ret_addr(uintptr_t fptr) {
+    return *(uintptr_t *)fptr;
+}
 
 /** \brief   Pass in a frame pointer value to get the previous frame pointer for
              the given frame.
@@ -408,7 +418,9 @@ const char *kos_get_authors(void);
     \param  fptr            The frame pointer to look at.
     \return                 The previous frame pointer.
 */
-#define arch_fptr_next(fptr) (*((uint32*)((fptr)+4)))
+static inline uintptr_t arch_fptr_next(uintptr_t fptr) {
+    return arch_fptr_ret_addr(fptr + 4);
+}
 
 /** \brief   Returns true if the passed address is likely to be valid. Doesn't
              have to be exact, just a sort of general idea.
@@ -417,7 +429,9 @@ const char *kos_get_authors(void);
     \return                 Whether the address is valid or not for normal
                             memory access.
 */
-#define arch_valid_address(ptr) ((ptr_t)(ptr) >= 0x8c010000 && (ptr_t)(ptr) < _arch_mem_top)
+static inline bool arch_valid_address(uintptr_t ptr) {
+    return ptr >= 0x8c010000 && ptr < _arch_mem_top;
+}
 
 /** \brief   Returns true if the passed address is in the text section of your
              program.
@@ -426,8 +440,9 @@ const char *kos_get_authors(void);
     \return                 Whether the address is valid or not for text
                             memory access.
 */
-#define arch_valid_text_address(ptr) \
-    ((uintptr_t)(ptr) >= (uintptr_t)&_executable_start && (uintptr_t)(ptr) < (uintptr_t)&_etext)
+static inline bool arch_valid_text_address(uintptr_t ptr) {
+    return ptr >= (uintptr_t)&_executable_start && ptr < (uintptr_t)&_etext;
+}
 
 __END_DECLS
 
