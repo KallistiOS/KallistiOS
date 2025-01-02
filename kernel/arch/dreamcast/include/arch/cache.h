@@ -139,9 +139,9 @@ void dcache_purge_all_with_buffer(uintptr_t start, size_t count);
 */
 static __always_inline void dcache_pref_block(const void *src) {
     __asm__ __volatile__("pref @%0\n"
-                         :
+                         : /* No outputs */
                          : "r" (src)
-                         : "memory"
+                         : /* No clobbers */
     );
 }
 
