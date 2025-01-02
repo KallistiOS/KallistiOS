@@ -91,11 +91,17 @@ static void new_game_callback(const int option, void *user_data) {
     }
 }
 
+static void no_save_callback(const int option, void *user_data) {
+    if (option == 1) { // yes pressed
+        change_scene(MAINMENU);
+    }
+}
+
 void draw_loading_scene(void) {
     draw_background();
 
     static void (*callback)(int option, void *user_data) = nullptr;
-    static char message[50];
+    static char message[43];
 
     if (do_button(load_button_, true) && !error_popup_timer.is_running) {
         callback = load_game_callback;
@@ -104,9 +110,18 @@ void draw_loading_scene(void) {
     }
 
     if (do_button(new_game_button_, true) && !error_popup_timer.is_running) {
-        callback = new_game_callback;
+        maple_device_t *vmu = maple_enum_type(0, MAPLE_FUNC_MEMCARD);
+        if (!vmu) {
+            snprintf(message, sizeof(message), "No VMU found, continue without saving?");
+            callback = no_save_callback;
+        } else if (!vmu_has_enough_space(vmu)) {
+            snprintf(message, sizeof(message), "Not enough space, continue without saving?");
+            callback = no_save_callback;
+        } else {
+            snprintf(message, sizeof(message), "Start a new game?");
+            callback = new_game_callback;
+        }
         set_selected_layer(1);
-        snprintf(message, sizeof(message), "Start a new game?");
     }
 
     draw_confirmation_window(callback, nullptr, message);

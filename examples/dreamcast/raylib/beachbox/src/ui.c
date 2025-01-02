@@ -185,7 +185,7 @@ int do_arrows(uiarrows_t arrows) {
 void draw_confirmation_window(void (*callback)(int option, void *user_data), void *user_data, const char *message) {
     if (ui_state_.selected.layer == 0) return;
 
-    const Vector2 conf_window_size = { SCREEN_WIDTH * 0.6f, SCREEN_HEIGHT * 0.5f };
+    const Vector2 conf_window_size = { SCREEN_WIDTH * 0.85f, SCREEN_HEIGHT * 0.5f };
     const Vector2 conf_window_pos  = { (SCREEN_WIDTH - conf_window_size.x) / 2.0f, (SCREEN_HEIGHT - conf_window_size.y) / 2.0f };
 
     DrawRectangleV(conf_window_pos, conf_window_size, ui_background_color_);

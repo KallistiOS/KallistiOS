@@ -8,6 +8,8 @@
 #define BBOX_SAVE_H
 
 #include <stdint.h>
+#include <dc/maple.h>
+
 #include "hats.h"
 #include "upgrades.h"
 
@@ -27,6 +29,9 @@ void save_game_async(void);
 
 // Updates the save game timer used for saving asynchronously
 void update_save_game_timer(void);
+
+// Returns true if the VMU has enough space for a save
+bool vmu_has_enough_space(maple_device_t *vmu);
 
 // Draws a save status window on the bottom right corner
 // NOTE: This is only drawn if needed

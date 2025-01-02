@@ -6,7 +6,6 @@
 
 #include <assert.h>
 #include <kos.h>
-#include <dc/maple.h>
 #include <dc/vmufs.h>
 #include <stdatomic.h>
 
@@ -243,6 +242,11 @@ static save_t       save;
 static bbox_timer_t save_popup_timer;
 static char         save_popup_text[20];
 
+bool vmu_has_enough_space(maple_device_t *vmu) {
+    if (!vmu) return false;
+    return vmufs_free_blocks(vmu) * 512 >= sizeof(save);
+}
+
 void draw_save_popup(void) {
     if (!save_popup_timer.is_running) return;
     DrawRectangle(SCREEN_WIDTH * 0.7, SCREEN_HEIGHT * 0.85, SCREEN_WIDTH * 0.3, SCREEN_HEIGHT * 0.15, (Color){ 1, 17, 34, 220 });
@@ -285,9 +289,7 @@ int save_game(void) {
     save.music_volume = get_music_volume();
     save.sfx_volume   = get_sfx_volume();
 
-    const int free_blocks = vmufs_free_blocks(vmu);
-
-    if (free_blocks * 512 < save_size) {
+    if (!vmu_has_enough_space(vmu)) {
         snprintf(save_popup_text, sizeof(save_popup_text), "Not enough space!");
         save_in_progress_ = false;
         return 0;
@@ -371,7 +373,7 @@ uint16_t get_total_coins(void) {
 
 void add_coins(int n) {
     const int total_coins = get_total_coins();
-    
+
     // Check for overflow
     if (total_coins + n > UINT16_MAX) {
         n = UINT16_MAX;
