@@ -35,16 +35,10 @@ printf goes to the dc-tool console
 static spinlock_t mutex = SPINLOCK_INITIALIZER;
 
 #define plain_dclsc(...) ({ \
-        int old = 0, rv; \
-        if(!irq_inside_int()) { \
-            old = irq_disable(); \
-        } \
+        irq_disable_scoped(); \
         while(FIFO_STATUS & FIFO_SH4) \
             ; \
-        rv = dcloadsyscall(__VA_ARGS__); \
-        if(!irq_inside_int()) \
-            irq_restore(old); \
-        rv; \
+        dcloadsyscall(__VA_ARGS__); \
     })
 
 // #define plain_dclsc(...) dcloadsyscall(__VA_ARGS__)
@@ -70,9 +64,8 @@ int dcload_write_buffer(const uint8 *data, int len, int xlat) {
         return -1;
     }
 
-    spinlock_lock(&mutex);
+    spinlock_lock_scoped(&mutex);
     dclsc(DCLOAD_WRITE, 1, data, len);
-    spinlock_unlock(&mutex);
 
     return len;
 }
@@ -82,25 +75,19 @@ int dcload_read_cons(void) {
 }
 
 size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_t out_size) {
-    size_t ret = -1;
-
     if(lwip_dclsc && irq_inside_int())
         return 0;
 
-    spinlock_lock(&mutex);
+    spinlock_lock_scoped(&mutex);
 
     /* we have to pack the sizes together because the dcloadsyscall handler
        can only take 4 parameters */
-    ret = dclsc(DCLOAD_GDBPACKET, in_buf, (in_size << 16) | (out_size & 0xffff), out_buf);
-
-    spinlock_unlock(&mutex);
-    return ret;
+    return dclsc(DCLOAD_GDBPACKET, in_buf, (in_size << 16) | (out_size & 0xffff), out_buf);
 }
 
 static char *dcload_path = NULL;
 void *dcload_open(vfs_handler_t * vfs, const char *fn, int mode) {
     int hnd = 0;
-    uint32 h;
     int dcload_mode = 0;
     int mm = (mode & O_MODE_MASK);
 
@@ -109,7 +96,7 @@ void *dcload_open(vfs_handler_t * vfs, const char *fn, int mode) {
     if(lwip_dclsc && irq_inside_int())
         return (void *)0;
 
-    spinlock_lock(&mutex);
+    spinlock_lock_scoped(&mutex);
 
     if(mode & O_DIR) {
         if(fn[0] == '\0') {
@@ -151,11 +138,7 @@ void *dcload_open(vfs_handler_t * vfs, const char *fn, int mode) {
         hnd++; /* KOS uses 0 for error, not -1 */
     }
 
-    h = hnd;
-
-    spinlock_unlock(&mutex);
-
-    return (void *)h;
+    return (void *)hnd;
 }
 
 int dcload_close(void * h) {
@@ -166,7 +149,7 @@ int dcload_close(void * h) {
         return -1;
     }
 
-    spinlock_lock(&mutex);
+    spinlock_lock_scoped(&mutex);
 
     if(hnd) {
         if(hnd > 100)  /* hack */
@@ -177,7 +160,6 @@ int dcload_close(void * h) {
         }
     }
 
-    spinlock_unlock(&mutex);
     return 0;
 }
 
@@ -188,14 +170,13 @@ ssize_t dcload_read(void * h, void *buf, size_t cnt) {
     if(lwip_dclsc && irq_inside_int())
         return 0;
 
-    spinlock_lock(&mutex);
+    spinlock_lock_scoped(&mutex);
 
     if(hnd) {
         hnd--; /* KOS uses 0 for error, not -1 */
         ret = dclsc(DCLOAD_READ, hnd, buf, cnt);
     }
 
-    spinlock_unlock(&mutex);
     return ret;
 }
 
@@ -206,14 +187,13 @@ ssize_t dcload_write(void * h, const void *buf, size_t cnt) {
     if(lwip_dclsc && irq_inside_int())
         return 0;
 
-    spinlock_lock(&mutex);
+    spinlock_lock_scoped(&mutex);
 
     if(hnd) {
         hnd--; /* KOS uses 0 for error, not -1 */
         ret = dclsc(DCLOAD_WRITE, hnd, buf, cnt);
     }
 
-    spinlock_unlock(&mutex);
     return ret;
 }
 
@@ -224,14 +204,13 @@ off_t dcload_seek(void * h, off_t offset, int whence) {
     if(lwip_dclsc && irq_inside_int())
         return 0;
 
-    spinlock_lock(&mutex);
+    spinlock_lock_scoped(&mutex);
 
     if(hnd) {
         hnd--; /* KOS uses 0 for error, not -1 */
         ret = dclsc(DCLOAD_LSEEK, hnd, offset, whence);
     }
 
-    spinlock_unlock(&mutex);
     return ret;
 }
 
@@ -242,14 +221,13 @@ off_t dcload_tell(void * h) {
     if(lwip_dclsc && irq_inside_int())
         return 0;
 
-    spinlock_lock(&mutex);
+    spinlock_lock_scoped(&mutex);
 
     if(hnd) {
         hnd--; /* KOS uses 0 for error, not -1 */
         ret = dclsc(DCLOAD_LSEEK, hnd, 0, SEEK_CUR);
     }
 
-    spinlock_unlock(&mutex);
     return ret;
 }
 
@@ -261,7 +239,7 @@ size_t dcload_total(void * h) {
     if(lwip_dclsc && irq_inside_int())
         return 0;
 
-    spinlock_lock(&mutex);
+    spinlock_lock_scoped(&mutex);
 
     if(hnd) {
         hnd--; /* KOS uses 0 for error, not -1 */
@@ -270,7 +248,6 @@ size_t dcload_total(void * h) {
         dclsc(DCLOAD_LSEEK, hnd, cur, SEEK_SET);
     }
 
-    spinlock_unlock(&mutex);
     return ret;
 }
 
@@ -293,7 +270,7 @@ dirent_t *dcload_readdir(void * h) {
         return NULL;
     }
 
-    spinlock_lock(&mutex);
+    spinlock_lock_scoped(&mutex);
 
     dcld = (dcload_dirent_t *)dclsc(DCLOAD_READDIR, hnd);
 
@@ -323,7 +300,6 @@ dirent_t *dcload_readdir(void * h) {
         free(fn);
     }
 
-    spinlock_unlock(&mutex);
     return rv;
 }
 
@@ -335,7 +311,7 @@ int dcload_rename(vfs_handler_t * vfs, const char *fn1, const char *fn2) {
     if(lwip_dclsc && irq_inside_int())
         return 0;
 
-    spinlock_lock(&mutex);
+    spinlock_lock_scoped(&mutex);
 
     /* really stupid hack, since I didn't put rename() in dcload */
 
@@ -344,24 +320,18 @@ int dcload_rename(vfs_handler_t * vfs, const char *fn1, const char *fn2) {
     if(!ret)
         ret = dclsc(DCLOAD_UNLINK, fn1);
 
-    spinlock_unlock(&mutex);
     return ret;
 }
 
 int dcload_unlink(vfs_handler_t * vfs, const char *fn) {
-    int ret;
-
     (void)vfs;
 
     if(lwip_dclsc && irq_inside_int())
         return 0;
 
-    spinlock_lock(&mutex);
+    spinlock_lock_scoped(&mutex);
 
-    ret = dclsc(DCLOAD_UNLINK, fn);
-
-    spinlock_unlock(&mutex);
-    return ret;
+    return dclsc(DCLOAD_UNLINK, fn);
 }
 
 static int dcload_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
