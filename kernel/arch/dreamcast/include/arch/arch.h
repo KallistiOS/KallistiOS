@@ -370,10 +370,7 @@ static inline void arch_sleep(void) {
 static inline uintptr_t arch_get_ret_addr(void) {
     uintptr_t pr;
 
-    __asm__ __volatile__("sts pr,%0\n"
-                         : "=&z"(pr)
-                         : /* no inputs */ \
-                         : "memory" ); \
+    __asm__ __volatile__("sts pr,%0\n" : "=r"(pr));
 
     return pr;
 }
@@ -390,12 +387,7 @@ static inline uintptr_t arch_get_ret_addr(void) {
     \note                   This only works if you don't disable frame pointers.
 */
 static inline uintptr_t arch_get_fptr(void) {
-    uintptr_t fp;
-
-    __asm__ __volatile__("mov	r14,%0\n"
-                         : "=&z" (fp)
-                         : /* no inputs */
-                         : "memory" );
+    register uintptr_t fp asm("r14");
 
     return fp;
 }
