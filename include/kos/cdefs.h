@@ -3,7 +3,7 @@
    kos/cdefs.h
    Copyright (C) 2002, 2004 Megan Potter
    Copyright (C) 2020, 2023 Lawrence Sebald
-   Copyright (C) 2023 Falco Girgis
+   Copyright (C) 2023, 2024 Falco Girgis
 
    Based loosely around some stuff in BSD's sys/cdefs.h
 */
@@ -64,6 +64,11 @@
 #ifndef __weak
 /** \brief  Identify a function or variable that may be overridden by another symbol. */
 #define __weak      __attribute__((weak))
+#endif
+
+#ifndef __packed
+/** \brief  Force a structure, enum, or other type to be packed as small as possible. */
+#define __packed    __attribute__((packed))
 #endif
 
 #ifndef __dead2
