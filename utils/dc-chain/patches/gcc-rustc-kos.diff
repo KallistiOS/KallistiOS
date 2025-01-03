@@ -16,7 +16,7 @@ diff --color -ruN gcc-rustc/gcc/config/sh/sh-c.cc gcc-rustc-kos/gcc/config/sh/sh
 diff --color -ruN gcc-rustc/gcc/configure gcc-rustc-kos/gcc/configure
 --- gcc-rustc/gcc/configure	2024-02-02 23:52:38.301387207 -0600
 +++ gcc-rustc-kos/gcc/configure	2024-02-02 23:52:57.786480571 -0600
-@@ -13217,7 +13217,7 @@
+@@ -13108,7 +13108,7 @@
      target_thread_file='single'
      ;;
    aix | dce | lynx | mipssde | posix | rtems | \
@@ -40,7 +40,7 @@ diff --color -ruN gcc-rustc/libgcc/config/sh/t-sh gcc-rustc-kos/libgcc/config/sh
 diff --color -ruN gcc-rustc/libgcc/configure gcc-rustc-kos/libgcc/configure
 --- gcc-rustc/libgcc/configure	2024-02-02 23:52:41.146400839 -0600
 +++ gcc-rustc-kos/libgcc/configure	2024-02-02 23:52:57.787480576 -0600
-@@ -5763,6 +5763,7 @@
+@@ -5732,6 +5732,7 @@
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;
      win32)	thread_header=config/i386/gthr-win32.h ;;

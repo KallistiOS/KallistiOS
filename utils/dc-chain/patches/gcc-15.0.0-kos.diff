@@ -16,7 +16,7 @@ diff -ruN gcc-15.0.0/gcc/config/sh/sh-c.cc gcc-15.0.0-kos/gcc/config/sh/sh-c.cc
 diff -ruN gcc-15.0.0/gcc/configure gcc-15.0.0-kos/gcc/configure
 --- gcc-15.0.0/gcc/configure	2024-01-04 16:01:33.801051764 -0600
 +++ gcc-15.0.0-kos/gcc/configure	2024-01-04 16:01:42.913094480 -0600
-@@ -13051,7 +13051,7 @@
+@@ -13122,7 +13122,7 @@
      target_thread_file='single'
      ;;
    aix | dce | lynx | mipssde | posix | rtems | \
@@ -40,7 +40,7 @@ diff -ruN gcc-15.0.0/libgcc/config/sh/t-sh gcc-15.0.0-kos/libgcc/config/sh/t-sh
 diff -ruN gcc-15.0.0/libgcc/configure gcc-15.0.0-kos/libgcc/configure
 --- gcc-15.0.0/libgcc/configure	2024-01-04 16:01:37.139067412 -0600
 +++ gcc-15.0.0-kos/libgcc/configure	2024-01-04 16:01:42.914094485 -0600
-@@ -5731,6 +5731,7 @@
+@@ -5733,6 +5733,7 @@
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;
      win32)	thread_header=config/i386/gthr-win32.h ;;
