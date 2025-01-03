@@ -96,7 +96,10 @@ static void spawn_pillar(void) {
         objects_.pos[index].y  = -5;
     }
 
-    shifted_objects_bitfield_ |= (1 << index) & GetRandomValue(0, 1);
+    if (GetRandomValue(0, 1)) {
+        shifted_objects_bitfield_ |= (1 << index);
+    }
+
     start_timer(&pillar_spawn_timer_, pillar_spawn_cooldown_);
     return;
 }
@@ -112,9 +115,11 @@ static void spawn_coin(void) {
     }
 
     active_objects_bitfield_ |= (1 << index);
+    if (GetRandomValue(0, 1)) {
+        shifted_objects_bitfield_ |= (1 << index);
+    }
 
-    objects_.pos[index]        = (Vector2){ .x = SCREEN_WIDTH + 100, .y = GetRandomValue(190, FLOOR_HEIGHT - 100) };
-    shifted_objects_bitfield_ |= (1 << index) & GetRandomValue(0, 1);
+    objects_.pos[index] = (Vector2){ .x = SCREEN_WIDTH + 100, .y = GetRandomValue(190, FLOOR_HEIGHT - 100) };
 
     base_object_speed = BBOX_MIN(base_object_speed + 0.08, max_object_speed_);
     calculate_object_cooldowns();
@@ -158,14 +163,16 @@ void update_objects(void) {
 
         // Coins
         if (is_coin) {
-            if ((shifted_objects_bitfield_ & (1 << index)) != is_player_shifted() && !is_player_teleporting())
+            if ((!!(shifted_objects_bitfield_ & (1 << index)) != is_player_shifted()) && !is_player_teleporting()) {
                 continue; // If the player and the coin's "dimension" do not match, skip
                           // If the player is teleporting, we grab the coin no matter what
+            }
 
             // Checking against a bigger hitbox when grabbing coins makes the game feel more fair
             const Rectangle player_rect_coins = (Rectangle){ player_rect.x, player_rect.y, player_rect.width * 1.2, player_rect.height * 1.2 };
             if (CheckCollisionCircleRec(objects_.pos[index], coin_size_, player_rect_coins)) {
-                active_objects_bitfield_ &= ~(1 << index);
+                active_objects_bitfield_  &= ~(1 << index);
+                shifted_objects_bitfield_ &= ~(1 << index);
                 play_sfx_coin();
                 add_coin();
                 refill_player_meter(20);
