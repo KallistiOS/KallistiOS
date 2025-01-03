@@ -200,12 +200,6 @@ void pvr_dma_shutdown(void) {
 void *pvr_sq_load(void *dest, const void *src, size_t n, pvr_dma_type_t type) {
     void *dma_area_ptr;
 
-    if(pvr_dma[PVR_DST] != 0) {
-        dbglog(DBG_ERROR, "pvr_sq_load: PVR DMA has not finished\n");
-        errno = EINPROGRESS;
-        return NULL;
-    }
-
     dma_area_ptr = (void *)pvr_dest_addr((uintptr_t)dest, type);
     sq_cpy(dma_area_ptr, src, n);
 
@@ -216,12 +210,6 @@ void *pvr_sq_load(void *dest, const void *src, size_t n, pvr_dma_type_t type) {
 void *pvr_sq_set16(void *dest, uint32_t c, size_t n, pvr_dma_type_t type) {
     void *dma_area_ptr;
 
-    if(pvr_dma[PVR_DST] != 0) {
-        dbglog(DBG_ERROR, "pvr_sq_set16: PVR DMA has not finished\n");
-        errno = EINPROGRESS;
-        return NULL;
-    }
-
     dma_area_ptr = (void *)pvr_dest_addr((uintptr_t)dest, type);
     sq_set16(dma_area_ptr, c, n);
 
@@ -231,12 +219,6 @@ void *pvr_sq_set16(void *dest, uint32_t c, size_t n, pvr_dma_type_t type) {
 /* Fills n bytes at PVR dest with 32-bit c, dest must be 32-byte aligned */
 void *pvr_sq_set32(void *dest, uint32_t c, size_t n, pvr_dma_type_t type) {
     void *dma_area_ptr;
-
-    if(pvr_dma[PVR_DST] != 0) {
-        dbglog(DBG_ERROR, "pvr_sq_set32: PVR DMA has not finished\n");
-        errno = EINPROGRESS;
-        return NULL;
-    }
 
     dma_area_ptr = (void *)pvr_dest_addr((uintptr_t)dest, type);
     sq_set32(dma_area_ptr, c, n);
