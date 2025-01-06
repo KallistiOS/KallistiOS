@@ -5,6 +5,7 @@
    Japanese Functions Copyright (C) 2002 Kazuaki Matsumoto
    Copyright (C) 2017 Donald Haase
    Copyright (C) 2024 Falco Girgis
+   Copyright (C) 2024 Andress Barajas
 
 */
 
@@ -54,6 +55,7 @@ __BEGIN_DECLS
 
 /** \brief Number of bytes to represent a single character within the BIOS font. */
 #define BFONT_BYTES_PER_CHAR        (BFONT_THIN_WIDTH * BFONT_HEIGHT / 8)
+#define BFONT_BYTES_PER_WIDE_CHAR   (BFONT_WIDE_WIDTH * BFONT_HEIGHT / 8)
 
 /** \defgroup bfont_indicies Structure
     \brief                   Structure of the Bios Font
@@ -75,14 +77,15 @@ __BEGIN_DECLS
 /** \brief Start of JISX-0208 Rows 1-7 in Font Block */   
 #define BFONT_JISX_0208_ROW1        BFONT_WIDE_START
 /** \brief Start of JISX-0208 Row 16-47 (Start of Level 1) in Font Block */   
-#define BFONT_JISX_0208_ROW16       (BFONT_WIDE_START + (658 * BFONT_BYTES_PER_CHAR))
+#define BFONT_JISX_0208_ROW16       (BFONT_WIDE_START + (658 * BFONT_BYTES_PER_WIDE_CHAR))
 /** \brief JISX-0208 Row 48-84 (Start of Level 2) in Font Block */
-#define BFONT_JISX_0208_ROW48       (BFONT_JISX_0208_ROW16 + ((32 * JISX_0208_ROW_SIZE) * BFONT_BYTES_PER_CHAR))
+#define BFONT_JISX_0208_ROW48       (BFONT_JISX_0208_ROW16 + ((32 * JISX_0208_ROW_SIZE) * BFONT_BYTES_PER_WIDE_CHAR))
 
 /** \brief Start of DC Specific Characters in Font Block */
-#define BFONT_DREAMCAST_SPECIFIC    (BFONT_WIDE_START + (7056 * BFONT_BYTES_PER_CHAR))
+#define BFONT_DREAMCAST_SPECIFIC    (BFONT_WIDE_START + (7056 * BFONT_BYTES_PER_WIDE_CHAR))
+
 /** \brief Takes a DC-specific icon index and returns a character offset. */
-#define BFONT_DC_ICON(offset)       (BFONT_DREAMCAST_SPECIFIC + ((offset) * BFONT_BYTES_PER_CHAR))
+#define BFONT_DC_ICON(offset)       (BFONT_DREAMCAST_SPECIFIC + ((offset) * BFONT_BYTES_PER_WIDE_CHAR))
 
 /** \defgroup bfont_dc_indices Dreamcast-Specific 
     \brief    Dreamcast-specific BIOS icon offsets.
@@ -113,7 +116,7 @@ __BEGIN_DECLS
 /** @} */
 
 #define BFONT_ICON_DIMEN                 32    /**< \brief Dimension of vmu icons */
-#define BFONT_VMU_DREAMCAST_SPECIFIC     (BFONT_DREAMCAST_SPECIFIC+(22 * BFONT_BYTES_PER_CHAR))
+#define BFONT_VMU_DREAMCAST_SPECIFIC     (BFONT_DREAMCAST_SPECIFIC+(22 * BFONT_BYTES_PER_WIDE_CHAR))
 /** @} */
 
 /** \brief Builtin VMU Icons
@@ -286,18 +289,6 @@ uint32_t bfont_set_foreground_color(uint32_t c);
 */
 uint32_t bfont_set_background_color(uint32_t c);
 
-/** \brief      Set the font to draw 32-bit color.
-    \deprecated Use the bpp parameter of the bfont_draw_ex() functions.
-
-    This function changes whether the font draws colors as 32-bit or 16-bit. The
-    default is to use 16-bit.
-
-    \param  on              Set to 0 to use 16-bit color, 32-bit otherwise.
-    \return                 The old state (1 = 32-bit, 0 = 16-bit).
-*/
-bool bfont_set_32bit_mode(bool on)
-    __depr("Please use the bpp function of the the bfont_draw_ex functions");
-
 /** @} */
 
 /* Constants for the function below */
@@ -391,7 +382,7 @@ uint8_t *bfont_find_icon(bfont_vmu_icon_t icon);
     \param fg           The foreground color to use.
     \param bg           The background color to use.
     \param bpp          The number of bits per pixel in the buffer.
-    \param opaque       If non-zero, overwrite background areas with black,
+    \param opaque       If true, overwrite background areas with black,
                             otherwise do not change them from what they are.
     \param c            The character to draw.
     \param wide         Draw a wide character.
@@ -410,7 +401,7 @@ size_t bfont_draw_ex(void *buffer, uint32_t bufwidth, uint32_t fg,
 
     \param  buffer          The buffer to draw to (at least 12 x 24 pixels)
     \param  bufwidth        The width of the buffer in pixels
-    \param  opaque          If non-zero, overwrite blank areas with black,
+    \param  opaque          If true, overwrite blank areas with black,
                             otherwise do not change them from what they are
     \param  c               The character to draw
     \return                 Amount of width covered in bytes.
@@ -424,7 +415,7 @@ size_t bfont_draw(void *buffer, uint32_t bufwidth, bool opaque, uint32_t c);
 
     \param  buffer          The buffer to draw to (at least 12 x 24 pixels)
     \param  bufwidth        The width of the buffer in pixels
-    \param  opaque          If non-zero, overwrite blank areas with black,
+    \param  opaque          If true, overwrite blank areas with black,
                             otherwise do not change them from what they are
     \param  c               The character to draw
     \param  iskana          Set to 1 if the character is a kana, 0 if ISO-8859-1
@@ -440,7 +431,7 @@ size_t bfont_draw_thin(void *buffer, uint32_t bufwidth, bool opaque,
 
     \param  buffer          The buffer to draw to (at least 24 x 24 pixels)
     \param  bufwidth        The width of the buffer in pixels
-    \param  opaque          If non-zero, overwrite blank areas with black,
+    \param  opaque          If true, overwrite blank areas with black,
                             otherwise do not change them from what they are
     \param  c               The character to draw
     \return                 Amount of width covered in bytes.
@@ -463,12 +454,12 @@ size_t bfont_draw_wide(void *buffer, uint32_t bufwidth, bool opaque,
     if the encoding is set to one of the Japanese encodings. Colors and bitdepth
     can be set.
 
-    \param b                The buffer to draw to.
-    \param width            The width of the buffer in pixels.
-    \param fg               The foreground color to use.
-    \param bg               The background color to use.
-    \param bpp              The number of bits per pixel in the buffer.
-    \param opaque           If non-zero, overwrite background areas with black,
+    \param  b               The buffer to draw to.
+    \param  width           The width of the buffer in pixels.
+    \param  fg              The foreground color to use.
+    \param  bg              The background color to use.
+    \param  bpp             The number of bits per pixel in the buffer.
+    \param  opaque          If true, overwrite background areas with black,
                             otherwise do not change them from what they are.
     \param str              The string to draw.
 
@@ -482,15 +473,15 @@ void bfont_draw_str_ex(void *b, uint32_t width, uint32_t fg, uint32_t bg,
     This function is equivalent to bfont_draw_str_ex(), except that the string
     is formatted as with the `printf()` function.
 
-    \param b                The buffer to draw to.
-    \param width            The width of the buffer in pixels.
-    \param fg               The foreground color to use.
-    \param bg               The background color to use.
-    \param bpp              The number of bits per pixel in the buffer.
-    \param opaque           If non-zero, overwrite background areas with black,
+    \param  b               The buffer to draw to.
+    \param  width           The width of the buffer in pixels.
+    \param  fg              The foreground color to use.
+    \param  bg              The background color to use.
+    \param  bpp             The number of bits per pixel in the buffer.
+    \param  opaque          If true, overwrite background areas with black,
                             otherwise do not change them from what they are.
-    \param fmt              The printf-style format string to draw.
-    \param ...              Additional printf-style variadic arguments
+    \param  fmt             The printf-style format string to draw.
+    \param  ...             Additional printf-style variadic arguments
 
     \sa bfont_draw_str_ex_vfmt()
 */
@@ -503,15 +494,15 @@ void bfont_draw_str_ex_fmt(void *b, uint32_t width, uint32_t fg, uint32_t bg,
     This function is equivalent to bfont_draw_str_ex_fmt(), except that the
     variadic argument list is passed via a pointer to a va_list.
 
-    \param b                The buffer to draw to.
-    \param width            The width of the buffer in pixels.
-    \param fg               The foreground color to use.
-    \param bg               The background color to use.
-    \param bpp              The number of bits per pixel in the buffer.
-    \param opaque           If non-zero, overwrite background areas with black,
+    \param  b               The buffer to draw to.
+    \param  width           The width of the buffer in pixels.
+    \param  fg              The foreground color to use.
+    \param  bg              The background color to use.
+    \param  bpp             The number of bits per pixel in the buffer.
+    \param  opaque          If true, overwrite background areas with black,
                             otherwise do not change them from what they are.
-    \param fmt              The printf-style format string to draw.
-    \param var_args         Additional printf-style variadic arguments
+    \param  fmt             The printf-style format string to draw.
+    \param  var_args        Additional printf-style variadic arguments
 
     \sa bfont_draw_str_ex_fmt()
 */
@@ -528,7 +519,7 @@ void bfont_draw_str_ex_vfmt(void *b, uint32_t width, uint32_t fg, uint32_t bg,
 
     \param  b               The buffer to draw to.
     \param  width           The width of the buffer in pixels.
-    \param  opaque          If one, overwrite blank areas with bfont_bgcolor,
+    \param  opaque          If true, overwrite blank areas with bfont_bgcolor,
                             otherwise do not change them from what they are.
     \param  str             The string to draw.
 */
@@ -541,15 +532,50 @@ void bfont_draw_str(void *b, uint32_t width, bool opaque, const char *str);
 
     \param  b               The buffer to draw to.
     \param  width           The width of the buffer in pixels.
-    \param  opaque          If one, overwrite blank areas with bfont_bgcolor,
+    \param  opaque          If true, overwrite blank areas with bfont_bgcolor,
                             otherwise do not change them from what they are.
     \param  fmt             The printf-style format string to draw.
     \param  ...             Additional printf-style variadic arguments.
 */
 void bfont_draw_str_fmt(void *b, uint32_t width, bool opaque, const char *fmt,
                         ...) __printflike(4, 5);
+                        
+/** \brief   Draw a full formatted string to video ram (with va_args).
+ 
+    This function is equivalent to bfont_draw_str_ex_vfmt(), except that 
+    the variadic argument list is passed via a pointer to a va_list.
 
-/** @} */
+    \param  x               The x position to start drawing at.
+    \param  y               The y position to start drawing at.
+    \param  fg              The foreground color to use.
+    \param  bg              The background color to use.
+    \param  opaque          If true, overwrite background areas with black,
+                            otherwise do not change them from what they are.
+    \param  fmt             The printf-style format string to draw.
+    \param  var_args        Additional printf-style variadic arguments
+
+    \sa bfont_draw_str_ex()
+*/
+void bfont_draw_str_vram_vfmt(uint32_t x, uint32_t y, uint32_t fg, uint32_t bg, 
+                              bool opaque, const char *fmt, 
+                              va_list *var_args);
+
+/** \brief   Draw a full string to video ram.
+
+    This function draws a NUL-terminated string in the set encoding to video
+    ram. This will automatically handle mixed half and full-width characters
+    if the encoding is set to one of the Japanese encodings. Draws pre-set
+    16-bit colors.
+
+    \param  x               The x position to start drawing at.
+    \param  y               The y position to start drawing at.
+    \param  opaque          If true, overwrite blank areas with bfont_bgcolor,
+                            otherwise do not change them from what they are.
+    \param  fmt             The printf-style format string to draw.
+    \param  ...             Additional printf-style variadic arguments.
+*/
+void bfont_draw_str_vram_fmt(uint32_t x, uint32_t y, bool opaque, const char *fmt, 
+                             ...) __printflike(4, 5);
 
 /** @} */
 

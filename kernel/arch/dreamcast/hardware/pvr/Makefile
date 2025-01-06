@@ -13,6 +13,9 @@ OBJS += pvr_buffers.o pvr_irq.o
 # Init / Shutdown / Globals / Misc
 OBJS += pvr_init_shutdown.o pvr_globals.o pvr_misc.o
 
+# Fast Tile Accelerator upload function
+OBJS += pvr_send_to_ta.o
+
 # Fog
 OBJS += pvr_fog.o
 

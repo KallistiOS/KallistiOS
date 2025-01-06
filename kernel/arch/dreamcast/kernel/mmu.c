@@ -738,9 +738,15 @@ int mmu_init(void) {
     irq_set_handler(EXC_DTLB_PV_WRITE, dtlb_pv_write, NULL);
     irq_set_handler(EXC_INITIAL_PAGE_WRITE, initial_page_write, NULL);
 
-    /* Turn on MMU */
-    /* URB=0x3f, URC=0, SQMD=1, SV=0, TI=1, AT=1 */
-    SET_MMUCR(0x3f, 0, 1, 0, 1, 1);
+    /* Reserve TLB entries 62-63 for SQ translation. Register them as read-write
+     * (since there's no write-only flag) with a 1 MiB page. */
+    SET_MMUCR(0x3e, 0x3e, 1, 0, 1, 1);
+    mmu_ldtlb(0, 0xe0000000, 0, 3, 1, 0, 0, 0, 0);
+    SET_MMUCR(0x3f, 0x3f, 1, 0, 1, 1);
+    mmu_ldtlb(0, 0xe0100000, 0, 3, 1, 0, 0, 0, 0);
+
+    /* Set URB to 0x3d to not overwrite the SQ config, reset URC, enable MMU */
+    SET_MMUCR(0x3d, 0, 1, 0, 1, 1);
 
     /* Clear the ITLB */
     mmu_reset_itlb();
@@ -767,14 +773,15 @@ void mmu_shutdown(void) {
     irq_set_handler(EXC_INITIAL_PAGE_WRITE, NULL, NULL);
 }
 
-mmu_token_t mmu_disable(void) {
-    mmu_token_t token = (mmu_token_t)*mmucr;
-
-    *mmucr &= ~0x1;
-
-    return token;
+bool mmu_enabled(void) {
+    return *mmucr & 0x1;
 }
 
-void mmu_restore(mmu_token_t token) {
-    *mmucr = (uint32)token;
+void mmu_set_sq_addr(void *addr) {
+    uint32_t ppn1 = (uint32_t)addr & 0x1ff00000;
+    uint32_t ppn2 = ppn1 + 0x00100000;
+
+    /* Reset the base target address for the SQs */
+    *(uint32_t *)(MEM_AREA_UTLB_DATA_ARRAY1_BASE + (0x3e << 8)) = ppn1 | 0x1fc;
+    *(uint32_t *)(MEM_AREA_UTLB_DATA_ARRAY1_BASE + (0x3f << 8)) = ppn2 | 0x1fc;
 }

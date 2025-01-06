@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <kos/genwait.h>
 #include <kos/string.h>
 #include <kos/thread.h>
 #include <dc/pvr.h>
@@ -23,8 +24,8 @@
 
 */
 
-void * pvr_set_vertbuf(pvr_list_t list, void * buffer, int len) {
-    void * oldbuf;
+void *pvr_set_vertbuf(pvr_list_t list, void *buffer, size_t len) {
+    void *oldbuf;
 
     // Make sure we have global DMA usage enabled. The DMA can still
     // be used in other situations, but the user must take care of
@@ -57,8 +58,8 @@ void * pvr_set_vertbuf(pvr_list_t list, void * buffer, int len) {
     return oldbuf;
 }
 
-void * pvr_vertbuf_tail(pvr_list_t list) {
-    uint8 * bufbase;
+void *pvr_vertbuf_tail(pvr_list_t list) {
+    uint8 *bufbase;
 
     // Check the validity of the request.
     assert(list < PVR_OPB_COUNT);
@@ -72,7 +73,7 @@ void * pvr_vertbuf_tail(pvr_list_t list) {
     return bufbase + pvr_state.dma_buffers[pvr_state.ram_target].ptr[list];
 }
 
-void pvr_vertbuf_written(pvr_list_t list, uint32 amt) {
+void pvr_vertbuf_written(pvr_list_t list, size_t amt) {
     uint32 val;
 
     // Check the validity of the request.
@@ -86,10 +87,31 @@ void pvr_vertbuf_written(pvr_list_t list, uint32 amt) {
     pvr_state.dma_buffers[pvr_state.ram_target].ptr[list] = val;
 }
 
+static void pvr_start_ta_rendering(void) {
+    // Make sure to wait until the TA is ready to start rendering a new scene
+    if(!pvr_state.ta_ready) {
+        pvr_wait_ready();
+
+        // If using a single vertex buffer, we have to wait until the PVR is
+        // done rendering to use the TA again.
+        if(!pvr_state.vbuf_doublebuf)
+            pvr_wait_render_done();
+
+        pvr_state.ta_ready = 1;
+    }
+
+    // Starting from that point, we consider that the Tile Accelerator
+    // might be busy.
+    pvr_state.ta_busy = 1;
+}
+
 /* Begin collecting data for a frame of 3D output to the off-screen
    frame buffer */
 void pvr_scene_begin(void) {
     int i;
+
+    pvr_state.ta_ready = 0;
+    pvr_state.lists_closed = 0;
 
     // Get general stuff ready.
     pvr_state.list_reg_open = -1;
@@ -104,8 +126,6 @@ void pvr_scene_begin(void) {
         // DBG(("pvr_scene_begin(dma -> %d)\n", pvr_state.ram_target));
     }
     else {
-        pvr_state.lists_closed = 0;
-
         // We assume registration is starting immediately
         pvr_sync_stats(PVR_SYNC_REGSTART);
     }
@@ -164,8 +184,10 @@ int pvr_list_begin(pvr_list_t list) {
 
     pvr_list_dma = pvr_list_uses_dma(list);
 
-    if(!pvr_list_dma)
+    if(!pvr_list_dma) {
+        pvr_start_ta_rendering();
         sq_lock((void *)PVR_TA_INPUT);
+    }
 
     /* Ok, set the flag */
     pvr_state.list_reg_open = list;
@@ -218,7 +240,7 @@ int pvr_list_finish(void) {
     return 0;
 }
 
-int pvr_prim(void * data, int size) {
+int pvr_prim(const void *data, size_t size) {
     /* Check to make sure we can do this */
 #ifndef NDEBUG
     if(pvr_state.list_reg_open == -1) {
@@ -245,7 +267,7 @@ int pvr_prim(void * data, int size) {
     return 0;
 }
 
-int pvr_list_prim(pvr_list_t list, void * data, int size) {
+int pvr_list_prim(pvr_list_t list, const void *data, size_t size) {
     volatile pvr_dma_buffers_t * b;
 
     b = pvr_state.dma_buffers + pvr_state.ram_target;
@@ -304,12 +326,21 @@ int pvr_scene_finish(void) {
         b = pvr_state.dma_buffers + pvr_state.ram_target;
 
         for(i = 0; i < PVR_OPB_COUNT; i++) {
-            /* Check whether the current list type should be skipped:
-               A. We never enabled the list globally with pvr_init().
-               B. We never associated an in-RAM DMA vertex buffer with
-                  the given list type, because we're using hybrid
-                  rendering and submitted that list type directly. */
-            if(!(pvr_state.lists_enabled & (1 << i)) || !b->base[i])
+            /* We never enabled the list globally with pvr_init() - skip it */
+            if(!(pvr_state.lists_enabled & (1 << i)))
+                continue;
+
+            /* If any lists weren't used in this scene, submit blank ones now */
+            if(!(pvr_state.lists_closed & (1 << i))) {
+                pvr_list_begin(i);
+                pvr_blank_polyhdr(i);
+                pvr_list_finish();
+            }
+
+            /* We never associated an in-RAM DMA vertex buffer with the given
+               list type, because we're using hybrid rendering and submitted
+               that list type directly - skip it */
+            if(!b->base[i])
                 continue;
 
             // Make sure there's at least one primitive in each.
@@ -326,6 +357,8 @@ int pvr_scene_finish(void) {
             assert(b->ptr[i] <= b->size[i]);
         }
 
+        pvr_start_ta_rendering();
+
         // Flip buffers and mark them complete.
         o = irq_disable();
         pvr_state.dma_buffers[pvr_state.ram_target].ready = 1;
@@ -333,6 +366,8 @@ int pvr_scene_finish(void) {
         irq_restore(o);
 
         pvr_sync_stats(PVR_SYNC_BUFDONE);
+
+        pvr_start_dma();
     }
     else {
         /* If a list was open, close it */
@@ -355,11 +390,16 @@ int pvr_scene_finish(void) {
 }
 
 int pvr_wait_ready(void) {
-    int t;
+    int flags, t = 0;
 
     assert(pvr_state.valid);
 
-    t = sem_wait_timed((semaphore_t *)&pvr_state.ready_sem, 100);
+    flags = irq_disable();
+
+    if(pvr_state.ta_busy)
+        t = genwait_wait((void *)&pvr_state.ta_busy, "PVR wait ready", 100, NULL);
+
+    irq_restore(flags);
 
     if(t < 0) {
 #if 0
@@ -383,8 +423,19 @@ int pvr_wait_ready(void) {
 int pvr_check_ready(void) {
     assert(pvr_state.valid);
 
-    if(sem_count((semaphore_t *)&pvr_state.ready_sem) > 0)
+    if(!pvr_state.ta_busy)
         return 0;
     else
         return -1;
+}
+
+int pvr_wait_render_done(void) {
+    int t = 0;
+
+    irq_disable_scoped();
+
+    if(pvr_state.render_busy)
+        t = genwait_wait((void *)&pvr_state.render_busy, "PVR wait render done", 100, NULL);
+
+    return t;
 }

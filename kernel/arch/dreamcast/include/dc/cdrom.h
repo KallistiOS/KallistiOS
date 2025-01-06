@@ -3,7 +3,7 @@
    dc/cdrom.h
    Copyright (C) 2000-2001 Megan Potter
    Copyright (C) 2014 Donald Haase
-   Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024 Ruslan Rostovtsev
 */
 
 #ifndef __DC_CDROM_H
@@ -401,13 +401,18 @@ int cdrom_read_toc(CDROM_TOC *toc_buffer, int session);
     This function reads the specified number of sectors from the disc, starting
     where requested. This will respect the size of the sectors set with
     cdrom_change_datatype(). The buffer must have enough space to store the
-    specified number of sectors.
+    specified number of sectors and size must be a multiple of 32 for DMA.
 
     \param  buffer          Space to store the read sectors.
     \param  sector          The sector to start reading from.
     \param  cnt             The number of sectors to read.
-    \param  mode            DMA or PIO
+    \param  mode            \ref cd_read_sector_mode
     \return                 \ref cd_cmd_response
+
+    \note                   If the buffer address points to the P2 memory area,
+                            the caller function will be responsible for ensuring
+                            memory coherency.
+
     \see    cd_read_sector_mode
 */
 int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode);

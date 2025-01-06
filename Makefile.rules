@@ -3,6 +3,7 @@
 # Makefile.rules
 # Copyright (c) 2000, 2001 Megan Potter
 # Copyright (c) 2024 Eric Fradella
+# Copyright (C) 2024 Ruslan Rostovtsev
 #
 
 # Global KallistiOS Makefile include
@@ -77,7 +78,7 @@ $(patsubst %, _clean_dir_%, $(SUBDIRS)):
 # Define KOS_ROMDISK_DIR in your Makefile if you want these two handy rules.
 ifdef KOS_ROMDISK_DIR
 romdisk.img:
-	$(KOS_GENROMFS) -f romdisk.img -d $(KOS_ROMDISK_DIR) -v -x .svn -x .keepme
+	$(KOS_GENROMFS) -f romdisk.img -d $(KOS_ROMDISK_DIR) -v -x .keepme -x .DS_Store -x Thumbs.db
 
 romdisk.o: romdisk.img
 	$(KOS_BASE)/utils/bin2c/bin2c romdisk.img romdisk_tmp.c romdisk
@@ -104,3 +105,20 @@ endef
 define KOS_GCCVER_MIN_WARNING
 @echo "Skipping $(TARGET) build as current GCC version ($(KOS_GCCVER)) is less than $(KOS_GCCVER_MIN)."
 endef
+
+ifdef EXPORTS_FILE
+
+OBJS += exports.o
+
+exports.o: exports.c
+exports.c: $(EXPORTS_FILE)
+	$(KOS_BASE)/utils/genexports/genexports.sh $(EXPORTS_FILE) exports.c $(EXPORTS_SYMBOL)
+
+exports_stubs.o: exports_stubs.c
+exports_stubs.c: $(EXPORTS_FILE)
+	$(KOS_BASE)/utils/genexports/genexportstubs.sh $(EXPORTS_FILE) exports_stubs.c
+
+$(TARGET_LIB): exports_stubs.o
+	$(KOS_AR) rcs $(TARGET_LIB) exports_stubs.o
+
+endif

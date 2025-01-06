@@ -11,7 +11,7 @@ ifneq ($(force_downloader),)
   web_downloader = $(if $(filter $(downloaders),$(force_downloader)),$(force_downloader))
 else
 # If no downloader specified, check to see if any are detected
-  web_downloader = $(if $(shell command -v curl),curl,$(if $(shell command -v wget),wget))
+  web_downloader = $(if $(shell which curl),curl,$(if $(shell which wget),wget))
 endif
 
 # Make sure valid downloader was found

@@ -170,6 +170,54 @@ static int read_wav_header(file_t fd, wavhdr_t *wavhdr) {
     return 0;
 }
 
+static int read_wav_header_buf(char *buf, wavhdr_t *wavhdr, size_t *bufidx) {
+    /* maintain buffer index during function */
+    size_t tmp_bufidx = *bufidx;
+
+    memcpy(&(wavhdr->magic), buf, sizeof(wavhdr->magic));
+    tmp_bufidx += sizeof(wavhdr->magic);
+
+    if(strncmp((const char*)wavhdr->magic.riff, "RIFF", 4)) {
+        dbglog(DBG_WARNING, "snd_sfx: sfx buffer is not RIFF\n");
+        return -1;
+    }
+
+    /* Check file magic */
+    if(strncmp((const char*)wavhdr->magic.riff_format, "WAVE", 4)) {
+        dbglog(DBG_WARNING, "snd_sfx: sfx buffer is not RIFF WAVE\n");
+        return -1;
+    }
+
+    do {
+        /* Read the chunk header */
+        memcpy(&(wavhdr->chunk), buf + tmp_bufidx, sizeof(wavhdr->chunk));
+        tmp_bufidx += sizeof(wavhdr->chunk);
+
+        /* If it is the fmt chunk, grab the fields we care about and skip the 
+           rest of the section if there is more */
+        if(strncmp((const char *)wavhdr->chunk.id, "fmt ", 4) == 0) {
+            memcpy(&(wavhdr->fmt), buf + tmp_bufidx, sizeof(wavhdr->fmt));
+            tmp_bufidx += sizeof(wavhdr->fmt);
+
+            /* Skip the rest of the fmt chunk */ 
+            tmp_bufidx += wavhdr->chunk.size - sizeof(wavhdr->fmt);
+        }
+        /* If we found the data chunk, we are done */
+        else if(strncmp((const char *)wavhdr->chunk.id, "data", 4) == 0) {
+            break;
+        }
+        /* Skip meta data */
+        else { 
+            tmp_bufidx += wavhdr->chunk.size;
+        }
+    } while(1);
+
+    /* update buffer index for caller */
+    *bufidx = tmp_bufidx;
+
+    return 0;
+}
+
 static uint8_t *read_wav_data(file_t fd, wavhdr_t *wavhdr) {
     /* Allocate memory for WAV data */
     uint8_t *wav_data = memalign(32, wavhdr->chunk.size);
@@ -183,6 +231,26 @@ static uint8_t *read_wav_data(file_t fd, wavhdr_t *wavhdr) {
         free(wav_data);
         return NULL;
     }
+
+    return wav_data;
+}
+
+static uint8_t *read_wav_data_buf(char *buf, wavhdr_t *wavhdr, size_t *bufidx) {
+    /* maintain buffer index during function */
+    size_t tmp_bufidx = *bufidx;
+
+    /* Allocate memory for WAV data */
+    uint8_t *wav_data = memalign(32, wavhdr->chunk.size);
+
+    if(wav_data == NULL)
+        return NULL;
+
+    /* Read WAV data */
+    memcpy(wav_data, buf + tmp_bufidx, wavhdr->chunk.size);
+    tmp_bufidx += wavhdr->chunk.size;
+
+    /* update buffer index for caller */
+    *bufidx = tmp_bufidx;
 
     return wav_data;
 }
@@ -487,6 +555,154 @@ sfxhnd_t snd_sfx_load_fd(file_t fd, size_t len, uint32_t rate, uint16_t bitsize,
     if(tmp_buff) {
         free(tmp_buff);
     }
+    LIST_INSERT_HEAD(&snd_effects, effect, list);
+    return (sfxhnd_t)effect;
+
+err_occurred:
+    if(effect->locl)
+        snd_mem_free(effect->locl);
+    if(effect->locr)
+        snd_mem_free(effect->locr);
+    if(tmp_buff)
+        free(tmp_buff);
+
+    free(effect);
+    return SFXHND_INVALID;
+}
+
+/* Load a sound effect from a WAV file and return a handle to it */
+sfxhnd_t snd_sfx_load_buf(char *buf) {
+    wavhdr_t wavhdr;
+    snd_effect_t *effect;
+    uint8_t *wav_data;
+    uint32_t sample_count;
+    size_t bufidx = 0;
+
+    if(!buf) {
+        dbglog(DBG_ERROR, "snd_sfx_load_buf: can't read wav data from NULL");
+        return SFXHND_INVALID;
+    }
+
+    /* Read WAV header */
+    if(read_wav_header_buf(buf, &wavhdr, &bufidx) < 0) {
+        dbglog(DBG_ERROR, "snd_sfx_load_buf: error reading wav header from buffer %08x\n", (uintptr_t)buf);
+        return SFXHND_INVALID;
+    }
+    /*
+    dbglog(DBG_DEBUG, "WAVE file is %s, %luHZ, %d bits/sample, "
+        "%u bytes total, format %d\n", 
+           wavhdr.fmt.channels == 1 ? "mono" : "stereo", 
+           wavhdr.fmt.sample_rate, 
+           wavhdr.fmt.sample_size, 
+           wavhdr.chunk.size, 
+           wavhdr.fmt.format);
+    */
+    sample_count = wavhdr.fmt.sample_size >= 8 ?
+        wavhdr.chunk.size / ((wavhdr.fmt.sample_size / 8) * wavhdr.fmt.channels) :
+        (wavhdr.chunk.size * 2) / wavhdr.fmt.channels;
+
+    if(sample_count > 65534) {
+        dbglog(DBG_WARNING, "snd_sfx_load: WAVE file is over 65534 samples\n");
+    }
+
+    /* Read WAV data */
+    wav_data = read_wav_data_buf(buf, &wavhdr, &bufidx);
+    /* Caller manages buffer, don't free here */
+    if(!wav_data)
+        return SFXHND_INVALID;
+
+    /* Create and initialize sound effect */
+    effect = create_snd_effect(&wavhdr, wav_data);
+    if(!effect) {
+        free(wav_data);
+        return SFXHND_INVALID;
+    }
+
+    /* Finish up and return the sound effect handle */
+    free(wav_data);
+    LIST_INSERT_HEAD(&snd_effects, effect, list);
+
+    return (sfxhnd_t)effect;
+}
+
+sfxhnd_t snd_sfx_load_raw_buf(char *buf, size_t len, uint32_t rate, uint16_t bitsize, uint16_t channels) {
+    snd_effect_t *effect;
+    size_t chan_len, read_len;
+    uint8_t *tmp_buff = NULL;
+    size_t bufidx = 0;
+
+    if(!buf) {
+        dbglog(DBG_ERROR, "snd_sfx_load_raw_buf: can't read PCM buffer from NULL");
+        return SFXHND_INVALID;
+    }
+
+    chan_len = len / channels;
+    effect = malloc(sizeof(snd_effect_t));
+
+    if(effect == NULL) {
+        return SFXHND_INVALID;
+    }
+
+    memset(effect, 0, sizeof(snd_effect_t));
+
+    effect->rate = rate;
+    effect->stereo = channels > 1;
+
+    switch(bitsize) {
+        case 4:
+            effect->fmt = AICA_SM_ADPCM;
+            effect->len = (len * 2) / channels;
+            break;
+        case 8:
+            effect->fmt = AICA_SM_8BIT;
+            effect->len = len / channels;
+            break;
+        case 16:
+            effect->fmt = AICA_SM_16BIT;
+            effect->len = (len / 2) / channels;
+            break;
+        default:
+            goto err_occurred;
+    }
+
+    if(effect->len > 65534) {
+        dbglog(DBG_WARNING, "snd_sfx_load_raw_buf: PCM buffer is over 65534 samples\n");
+    }
+
+    effect->locl = snd_mem_malloc(chan_len);
+
+    if(!effect->locl) {
+        goto err_occurred;
+    }
+
+    read_len = chan_len;
+    if(read_len > 0) {
+        tmp_buff = memalign(32, read_len);
+        memcpy(tmp_buff, buf, read_len);
+        bufidx += read_len;
+
+        spu_memload_sq(effect->locl, tmp_buff, read_len);
+    }
+
+    if(channels > 1) {
+        effect->locr = snd_mem_malloc(chan_len);
+
+        if(!effect->locr) {
+            goto err_occurred;
+        }
+
+        read_len = chan_len;
+        if(read_len > 0) {
+            memcpy(tmp_buff, buf + bufidx, read_len);
+            bufidx += read_len;
+            spu_memload_sq(effect->locr, tmp_buff, read_len);
+        }
+    }
+
+    if(tmp_buff) {
+        free(tmp_buff);
+    }
+
     LIST_INSERT_HEAD(&snd_effects, effect, list);
     return (sfxhnd_t)effect;
 

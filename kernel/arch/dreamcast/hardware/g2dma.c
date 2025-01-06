@@ -3,6 +3,7 @@
    g2dma.c
    Copyright (C) 2001, 2002, 2004 Megan Potter
    Copyright (C) 2023 Andy Barajas
+   Copyright (C) 2024 Ruslan Rostovtsev
 */
 
 #include <assert.h>
@@ -38,6 +39,7 @@ typedef struct {
 
 /* Signaling semaphore */
 static semaphore_t dma_done[4];
+static int dma_progress[4];
 static int dma_blocking[4];
 static g2_dma_callback_t dma_callback[4];
 static void *dma_cbdata[4];
@@ -140,16 +142,20 @@ static void g2_dma_irq_hnd(uint32_t code, void *data) {
 
     /* VP : changed the order of things so that we can chain dma calls */
 
-    /* Signal the calling thread to continue, if any. */
-    if(dma_blocking[chn]) {
-        sem_signal(&dma_done[chn]);
-        thd_schedule(1, 0);
-        dma_blocking[chn] = 0;
-    }
+    if(dma_progress[chn]) {
+        dma_progress[chn] = 0;
 
-    /* Call the callback, if any. */
-    if(dma_callback[chn]) {
-        dma_callback[chn](dma_cbdata[chn]);
+        /* Signal the calling thread to continue, if any. */
+        if(dma_blocking[chn]) {
+            dma_blocking[chn] = 0;
+            sem_signal(&dma_done[chn]);
+            thd_schedule(1, 0);
+        }
+
+        /* Call the callback, if any. */
+        if(dma_callback[chn]) {
+            dma_callback[chn](dma_cbdata[chn]);
+        }
     }
 }
 
@@ -178,19 +184,19 @@ int g2_dma_transfer(void *sh4, void *g2bus, size_t length, uint32_t block,
         return -1;
     }
 
+    /* Make sure we're not already DMA'ing */
+    if(dma_progress[g2chn] != 0) {
+        errno = EINPROGRESS;
+        return -1;
+    }
+    dma_progress[g2chn] = 1;
+
     /* Make sure length is a multiple of 32 */
     length = (length + 0x1f) & ~0x1f;
 
     dma_blocking[g2chn] = block;
     dma_callback[g2chn] = callback;
     dma_cbdata[g2chn] = cbdata;
-
-    /* Make sure we're not already DMA'ing */
-    if(g2_dma->dma[g2chn].start != 0) {
-        dbglog(DBG_ERROR, "g2_dma: Already DMA'ing for channel %ld\n", g2chn);
-        errno = EINPROGRESS;
-        return -1;
-    }
 
     /* Set needed registers */
     g2_dma->dma[g2chn].g2_addr = ((uint32_t)g2bus) & MASK_ADDRESS;
@@ -228,6 +234,7 @@ int g2_dma_init(void) {
     for(i = 0; i < 4; i++) {
         /* Create an initially blocked semaphore */
         sem_init(&dma_done[i], 0);
+        dma_progress[i] = 0;
         dma_blocking[i] = 0;
         dma_callback[i] = NULL;
         dma_cbdata[i] = 0;
