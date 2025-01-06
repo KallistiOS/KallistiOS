@@ -35,10 +35,10 @@ void pvr_set_bg_color(float r, float g, float b) {
 }
 
 /* Enable/disable cheap shadow mode and set the cheap shadow scale register. */
-void pvr_set_shadow_scale(int enable, float scale_value) {
+void pvr_set_shadow_scale(bool enable, float scale_value) {
     int s = (int)(scale_value * 255);
 
-    PVR_SET(PVR_CHEAP_SHADOW, ((!!enable) << 8) | (s & 0xFF));
+    PVR_SET(PVR_CHEAP_SHADOW, (enable << 8) | (s & 0xFF));
 }
 
 /* Set the Z-Clip value (that is to say the depth of the background layer). */
@@ -187,7 +187,7 @@ void pvr_begin_queued_render(void) {
     } zclip;
 
     /* Get the appropriate buffer */
-    tbuf = pvr_state.ta_buffers + (pvr_state.ta_target ^ 1);
+    tbuf = pvr_state.ta_buffers + (pvr_state.ta_target ^ pvr_state.vbuf_doublebuf);
     rbuf = pvr_state.frame_buffers + (bufn ^ 1);
 
     /* Calculate background value for below */
@@ -263,9 +263,27 @@ void pvr_blank_polyhdr_buf(int type, pvr_poly_hdr_t * poly) {
     memset(poly, 0, sizeof(pvr_poly_hdr_t));
 
     /* Put in the list type */
-    poly->cmd = (type << PVR_TA_CMD_TYPE_SHIFT) | 0x80840012;
+    poly->cmd = FIELD_PREP(PVR_TA_CMD_TYPE, type) | 0x80840012;
 
     /* Fill in dummy values */
     poly->d1 = poly->d2 = poly->d3 = poly->d4 = 0xffffffff;
 
+}
+
+pvr_ptr_t pvr_get_front_buffer(void) {
+    unsigned int idx;
+    uint32_t addr;
+
+    irq_disable_scoped();
+
+    /* The front buffer may not have been fully rendered or submitted to the
+       video hardware yet. In case this has yet to happen, we want the second
+       view target, aka. the one not currently being displayed. */
+    idx = pvr_state.view_target ^ pvr_state.render_completed;
+
+    addr = pvr_state.frame_buffers[idx].frame;
+
+    /* The front buffer is in 32-bit memory, convert its address to make it
+       addressable from the 64-bit memory */
+    return (pvr_ptr_t)(((addr << 1) & (PVR_RAM_SIZE - 1)) + PVR_RAM_BASE);
 }

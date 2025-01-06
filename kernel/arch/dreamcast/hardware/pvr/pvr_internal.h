@@ -16,7 +16,7 @@
    code. If something is needed from this, an external interface should
    be added to dc/pvr.h. */
 
-#include <kos/sem.h>
+#include <stdbool.h>
 #include <kos/mutex.h>
 
 /**** State stuff ***************************************************/
@@ -169,7 +169,8 @@ typedef struct {
     uint32  lists_dmaed;                // (1 << idx) for each list which has been DMA'd (DMA mode only)
 
     mutex_t dma_lock;                   // Locked if a DMA is in progress (vertex or texture)
-    int     ta_busy;                    // >0 if a DMA is in progress and the TA hasn't signaled completion
+    int     ta_ready;                   // >0 if the TA is ready for the new scene
+    int     ta_busy;                    // >0 if a scene is ongoing and the TA hasn't signaled completion
     int     render_busy;                // >0 if a render is in progress
     int     render_completed;           // >1 if a render has recently finished
 
@@ -204,15 +205,14 @@ typedef struct {
     size_t   vtx_buf_used;               // Vertex buffer used size for the last frame
     size_t   vtx_buf_used_max;           // Maximum used vertex buffer size
 
-    /* Wait-ready semaphore: this will be signaled whenever the pvr_wait_ready()
-       call should be ready to return. */
-    semaphore_t ready_sem;
-
     // Handle for the vblank interrupt
     int     vbl_handle;
 
     // Non-zero if FSAA was enabled at init time.
     int     fsaa;
+
+    // Non-zero if using double-buffering for the vertex buffer.
+    int     vbuf_doublebuf;
 
     // Non-zero if we are rendering to a texture
     int     to_texture[2];
@@ -252,10 +252,10 @@ typedef struct pvr_bkg_poly {
 /**** pvr_buffers.c ***************************************************/
 
 /* Initialize buffers for TA/ISP/TSP usage */
-void pvr_allocate_buffers(pvr_init_params_t *params);
+void pvr_allocate_buffers(const pvr_init_params_t *params);
 
 /* Fill the tile matrices (after it's initialized) */
-void pvr_init_tile_matrices(int presort);
+void pvr_init_tile_matrices(bool presort);
 
 
 /**** pvr_misc.c ******************************************************/
@@ -292,8 +292,10 @@ void pvr_blank_polyhdr_buf(int type, pvr_poly_hdr_t * buf);
 
 /**** pvr_irq.c *******************************************************/
 
-/* Interrupt handler for PVR events */
+/* Interrupt handlers for PVR events */
 void pvr_int_handler(uint32 code, void *data);
+void pvr_vblank_handler(uint32 code, void *data);
 
+void pvr_start_dma(void);
 
 #endif

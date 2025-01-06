@@ -25,7 +25,7 @@
    and translucent lists, and 0's for everything else; 512k of vertex
    buffer. This is equivalent to the old ta_init_defaults() for now. */
 int pvr_init_defaults(void) {
-    pvr_init_params_t params = {
+    const pvr_init_params_t params = {
         /* Enable opaque and translucent polygons with size 16 */
         { PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_0 },
 
@@ -42,7 +42,10 @@ int pvr_init_defaults(void) {
         0,
 
         /* Extra OPBs */
-        3
+        3,
+
+        /* Vertex buffer double-buffering enabled */
+        0
     };
 
     return pvr_init(&params);
@@ -52,7 +55,7 @@ int pvr_init_defaults(void) {
    and using the specified parameters; note that bins and vertex buffers
    come from the texture memory pool! Expects that a 2D mode was
    initialized already using the vid_* API. */
-int pvr_init(pvr_init_params_t *params) {
+int pvr_init(const pvr_init_params_t *params) {
     /* If we're already initialized, fail */
     if(pvr_state.valid == 1) {
         dbglog(DBG_WARNING, "pvr: pvr_init called twice!\n");
@@ -88,6 +91,8 @@ int pvr_init(pvr_init_params_t *params) {
 
     // Copy over FSAA setting.
     pvr_state.fsaa = params->fsaa_enabled;
+
+    pvr_state.vbuf_doublebuf = !params->vbuf_doublebuf_disabled;
 
     /* Everything's clear, do the initial buffer pointer setup */
     pvr_allocate_buffers(params);
@@ -140,7 +145,7 @@ int pvr_init(pvr_init_params_t *params) {
     }
 
     /* Hook the PVR interrupt events on G2 */
-    pvr_state.vbl_handle = vblank_handler_add(pvr_int_handler, NULL);
+    pvr_state.vbl_handle = vblank_handler_add(pvr_vblank_handler, NULL);
     
     asic_evt_set_handler(ASIC_EVT_PVR_OPAQUEDONE, pvr_int_handler, NULL);
     asic_evt_enable(ASIC_EVT_PVR_OPAQUEDONE, ASIC_IRQ_DEFAULT);
@@ -194,9 +199,6 @@ int pvr_init(pvr_init_params_t *params) {
     mutex_init((mutex_t *)&pvr_state.dma_lock, MUTEX_TYPE_NORMAL);
     pvr_dma_init();
 
-    /* Setup our wait-ready semaphore */
-    sem_init((semaphore_t *)&pvr_state.ready_sem, 0);
-
     /* Set us as valid and return success */
     pvr_state.valid = 1;
 
@@ -245,8 +247,7 @@ int pvr_shutdown(void) {
     /* Invalidate our memory pool */
     pvr_mem_reset();
 
-    /* Destroy the semaphore */
-    sem_destroy((semaphore_t *)&pvr_state.ready_sem);
+    /* Destroy the mutex */
     mutex_destroy((mutex_t *)&pvr_state.dma_lock);
 
     /* Clear video memory */

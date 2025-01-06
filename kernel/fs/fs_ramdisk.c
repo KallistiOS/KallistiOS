@@ -624,7 +624,7 @@ static int ramdisk_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
     if(f->datasize & 0x3ff)
         ++st->st_blocks;
 
-    return -1;
+    return 0;
 }
 
 static int ramdisk_fcntl(void *h, int cmd, va_list ap) {

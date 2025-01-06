@@ -45,15 +45,15 @@ static void tq_insert(kthread_t * thd) {
 
     /* Search for its place; note that new threads will be placed at
        the end of a group with the same timeout. */
-    TAILQ_FOREACH(t, &timer_queue, timerq) {
-        if(thd->wait_timeout < t->wait_timeout) {
-            TAILQ_INSERT_BEFORE(t, thd, timerq);
+    TAILQ_FOREACH_REVERSE(t, &timer_queue, slpquehead, timerq) {
+        if(thd->wait_timeout >= t->wait_timeout) {
+            TAILQ_INSERT_AFTER(&timer_queue, t, thd, timerq);
             return;
         }
     }
 
-    /* Couldn't find anything scheduled later, put this at the end. */
-    TAILQ_INSERT_TAIL(&timer_queue, thd, timerq);
+    /* Couldn't find anything scheduled earlier, put this at the start. */
+    TAILQ_INSERT_HEAD(&timer_queue, thd, timerq);
 }
 
 /* Internal function to remove a thread from the timer queue. */
