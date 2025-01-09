@@ -24,8 +24,8 @@
 
 */
 
-void * pvr_set_vertbuf(pvr_list_t list, void * buffer, int len) {
-    void * oldbuf;
+void *pvr_set_vertbuf(pvr_list_t list, void *buffer, size_t len) {
+    void *oldbuf;
 
     // Make sure we have global DMA usage enabled. The DMA can still
     // be used in other situations, but the user must take care of
@@ -58,8 +58,8 @@ void * pvr_set_vertbuf(pvr_list_t list, void * buffer, int len) {
     return oldbuf;
 }
 
-void * pvr_vertbuf_tail(pvr_list_t list) {
-    uint8 * bufbase;
+void *pvr_vertbuf_tail(pvr_list_t list) {
+    uint8 *bufbase;
 
     // Check the validity of the request.
     assert(list < PVR_OPB_COUNT);
@@ -73,7 +73,7 @@ void * pvr_vertbuf_tail(pvr_list_t list) {
     return bufbase + pvr_state.dma_buffers[pvr_state.ram_target].ptr[list];
 }
 
-void pvr_vertbuf_written(pvr_list_t list, uint32 amt) {
+void pvr_vertbuf_written(pvr_list_t list, size_t amt) {
     uint32 val;
 
     // Check the validity of the request.
@@ -91,6 +91,12 @@ static void pvr_start_ta_rendering(void) {
     // Make sure to wait until the TA is ready to start rendering a new scene
     if(!pvr_state.ta_ready) {
         pvr_wait_ready();
+
+        // If using a single vertex buffer, we have to wait until the PVR is
+        // done rendering to use the TA again.
+        if(!pvr_state.vbuf_doublebuf)
+            pvr_wait_render_done();
+
         pvr_state.ta_ready = 1;
     }
 
@@ -105,6 +111,7 @@ void pvr_scene_begin(void) {
     int i;
 
     pvr_state.ta_ready = 0;
+    pvr_state.lists_closed = 0;
 
     // Get general stuff ready.
     pvr_state.list_reg_open = -1;
@@ -119,8 +126,6 @@ void pvr_scene_begin(void) {
         // DBG(("pvr_scene_begin(dma -> %d)\n", pvr_state.ram_target));
     }
     else {
-        pvr_state.lists_closed = 0;
-
         // We assume registration is starting immediately
         pvr_sync_stats(PVR_SYNC_REGSTART);
     }
@@ -235,7 +240,7 @@ int pvr_list_finish(void) {
     return 0;
 }
 
-int pvr_prim(void * data, int size) {
+int pvr_prim(const void *data, size_t size) {
     /* Check to make sure we can do this */
 #ifndef NDEBUG
     if(pvr_state.list_reg_open == -1) {
@@ -262,7 +267,7 @@ int pvr_prim(void * data, int size) {
     return 0;
 }
 
-int pvr_list_prim(pvr_list_t list, void * data, int size) {
+int pvr_list_prim(pvr_list_t list, const void *data, size_t size) {
     volatile pvr_dma_buffers_t * b;
 
     b = pvr_state.dma_buffers + pvr_state.ram_target;
@@ -422,4 +427,15 @@ int pvr_check_ready(void) {
         return 0;
     else
         return -1;
+}
+
+int pvr_wait_render_done(void) {
+    int t = 0;
+
+    irq_disable_scoped();
+
+    if(pvr_state.render_busy)
+        t = genwait_wait((void *)&pvr_state.render_busy, "PVR wait render done", 100, NULL);
+
+    return t;
 }

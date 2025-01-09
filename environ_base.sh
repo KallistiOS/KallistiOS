@@ -18,12 +18,12 @@ export KOS_ARCH_DIR="${KOS_BASE}/kernel/arch/${KOS_ARCH}"
 . ${KOS_BASE}/environ_${KOS_ARCH}.sh
 
 # Add the compiler bins dir to the path if it is not already.
-if [[ ":$PATH:" != *":${KOS_CC_BASE}/bin:"* ]]; then
+if ! expr ":$PATH:" : ".*:${KOS_CC_BASE}/bin:.*" > /dev/null ; then
   export PATH="${PATH}:${KOS_CC_BASE}/bin"
 fi
 
 # Add the build wrappers dir to the path if it is not already.
-if [[ ":$PATH:" != *":${KOS_BASE}/utils/build_wrappers:"* ]]; then
+if ! expr ":$PATH:" : ".*:${KOS_BASE}/utils/build_wrappers:.*" > /dev/null ; then
   export PATH="${PATH}:${KOS_BASE}/utils/build_wrappers"
 fi
 

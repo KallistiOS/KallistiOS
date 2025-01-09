@@ -158,7 +158,7 @@ union ieee32_t {
 /* A fast negative argument only exp function - That is it treats any
  * argument as a negative number
  */
-float neg_exp(float arg) {
+static float neg_exp(float arg) {
 
     float result, f;
     int k;
@@ -206,7 +206,7 @@ float neg_exp(float arg) {
      The special values for infinity and NaN are not dealt with at all.
 
  */
-uint32 float16(float f) {
+static uint32 float16(float f) {
     union ieee32_t float32;
     uint32 float16;
     uint32 sign, exponent, mantissa;
@@ -343,14 +343,14 @@ void pvr_fog_table_linear(float start, float end) {
  * 0th entry is farthest from eye. Last entry is nearest to eye.
  * The larger the value the heavier the fog.
  */
-void pvr_fog_table_custom(float tbl1[]) {
+void pvr_fog_table_custom(float *table) {
     uint32 idx, i;
     uint32 value, valh, vall;
 
-    valh = (uint32)(fog_alpha * 255.0f * CLAMP01(tbl1[0])) & 0xff;
+    valh = (uint32)(fog_alpha * 255.0f * CLAMP01(table[0])) & 0xff;
 
     for(idx = PVR_FOG_TABLE_BASE, i = 1; idx < TABLE_LEN; idx += 4, i++) {
-        vall = (uint32)(fog_alpha * 255.0f * CLAMP01(tbl1[i])) & 0xff;
+        vall = (uint32)(fog_alpha * 255.0f * CLAMP01(table[i])) & 0xff;
         value = (((valh) << 8 & 0xff00) + vall);
         PVR_SET(idx, value);
         valh = vall;

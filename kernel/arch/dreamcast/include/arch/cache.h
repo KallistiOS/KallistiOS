@@ -139,9 +139,9 @@ void dcache_purge_all_with_buffer(uintptr_t start, size_t count);
 */
 static __always_inline void dcache_pref_block(const void *src) {
     __asm__ __volatile__("pref @%0\n"
-                         :
+                         : /* No outputs */
                          : "r" (src)
-                         : "memory"
+                         : /* No clobbers */
     );
 }
 
@@ -157,14 +157,22 @@ static __always_inline void dcache_pref_block(const void *src) {
 
     This function allocate a block of the data/operand cache.
 
-    \param  src             The physical address to allocate.
+    \param  src             The address to allocate (32-byte aligned)
     \param  value           The value written to first 4-byte.
 */
-static __always_inline void dcache_alloc_block(const void *src, uint32_t value) {
-    __asm__ __volatile__ ("movca.l r0, @%0\n\t"
-                         :
-                         : "r" (src), "z" (value)
-                         : "memory"
+static __always_inline void dcache_alloc_block(void *src, uint32_t value) {
+    uint32_t *src32 = (uint32_t *)src;
+
+    __asm__ ("movca.l r0, @%8\n\t"
+             : "=m"(src32[0]),
+               "=m"(src32[1]),
+               "=m"(src32[2]),
+               "=m"(src32[3]),
+               "=m"(src32[4]),
+               "=m"(src32[5]),
+               "=m"(src32[6]),
+               "=m"(src32[7])
+             : "r" (src32), "z" (value)
     );
 }
 

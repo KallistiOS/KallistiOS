@@ -5,12 +5,13 @@
    Copyright (C) 2000 Megan Potter
    Copyright (C) 2014 Lawrence Sebald
    Copyright (C) 2014 Donald Haase
-   Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024 Ruslan Rostovtsev
    Copyright (C) 2024 Andy Barajas
 
  */
 #include <assert.h>
 
+#include <arch/cache.h>
 #include <arch/timer.h>
 #include <arch/memory.h>
 
@@ -54,6 +55,8 @@ typedef int gdc_cmd_hnd_t;
 
 /* The G1 ATA access mutex */
 mutex_t _g1_ata_mutex = MUTEX_INITIALIZER;
+
+static int cur_sector_size = 2048;
 
 /* Shortcut to cdrom_reinit_ex. Typically this is the only thing changed. */
 int cdrom_set_sector_size(int size) {
@@ -215,6 +218,7 @@ int cdrom_change_datatype(int sector_part, int cdxa, int sector_size) {
     params[2] = cdxa;           /* CD-XA mode 1/2 */
     params[3] = sector_size;    /* sector size */
 
+    cur_sector_size = sector_size;
     return syscall_gdrom_sector_mode(params);
 }
 
@@ -265,10 +269,10 @@ int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode) {
         int is_test;
     } params;
     int rv = ERR_OK;
+    uintptr_t buf_addr = ((uintptr_t)buffer);
 
     params.sec = sector;    /* Starting sector */
     params.num = cnt;       /* Number of sectors */
-    params.buffer = buffer; /* Output buffer */
     params.is_test = 0;     /* Enable test mode */
 
     /* The DMA mode blocks the thread it is called in by the way we execute
@@ -276,10 +280,34 @@ int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode) {
     /* XXX: DMA Mode may conflict with using a second G1ATA device. More 
        testing is needed from someone with such a device.
     */
-    if(mode == CDROM_READ_DMA)
+    if(mode == CDROM_READ_DMA) {
+        if(buf_addr & 0x1f) {
+            dbglog(DBG_ERROR, "cdrom_read_sectors_ex: Unaligned memory for DMA (32-byte).\n");
+            return ERR_SYS;
+        }
+        /* Use the physical memory address. */
+        params.buffer = (void *)(buf_addr & MEM_AREA_CACHE_MASK);
+
+        /* Invalidate the CPU cache only for cacheable memory areas.
+           Otherwise, it is assumed that either this operation is unnecessary
+           (another DMA is being used) or that the caller is responsible
+           for managing the CPU data cache.
+        */
+        if((buf_addr & MEM_AREA_P2_BASE) != MEM_AREA_P2_BASE) {
+            /* Invalidate the dcache over the range of the data. */
+            dcache_inval_range(buf_addr, cnt * cur_sector_size);
+        }
         rv = cdrom_exec_cmd(CMD_DMAREAD, &params);
-    else if(mode == CDROM_READ_PIO)
+    }
+    else if(mode == CDROM_READ_PIO) {
+        params.buffer = buffer;
+
+        if(buf_addr & 0x01) {
+            dbglog(DBG_ERROR, "cdrom_read_sectors_ex: Unaligned memory for PIO (2-byte).\n");
+            return ERR_SYS;
+        }
         rv = cdrom_exec_cmd(CMD_PIOREAD, &params);
+    }
 
     return rv;
 }

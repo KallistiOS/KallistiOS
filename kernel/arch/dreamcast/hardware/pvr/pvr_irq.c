@@ -112,7 +112,7 @@ static void pvr_render_lists(void) {
         // Begin rendering from the dirty TA buffer into the clean
         // frame buffer.
         //DBG(("start_render(%d -> %d)\n", pvr_state.ta_target, pvr_state.view_target ^ 1));
-        pvr_state.ta_target ^= 1;
+        pvr_state.ta_target ^= pvr_state.vbuf_doublebuf;
         pvr_begin_queued_render();
         pvr_state.render_busy = 1;
         pvr_sync_stats(PVR_SYNC_RNDSTART);
@@ -191,6 +191,8 @@ void pvr_int_handler(uint32 code, void *data) {
             pvr_state.render_busy = 0;
             pvr_state.render_completed = 1;
             pvr_sync_stats(PVR_SYNC_RNDDONE);
+
+            genwait_wake_all((void *)&pvr_state.render_busy);
             break;
     }
 

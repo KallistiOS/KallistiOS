@@ -40,6 +40,7 @@
 __BEGIN_DECLS
 
 #include <stdalign.h>
+#include <stdbool.h>
 
 #include <arch/memory.h>
 #include <arch/types.h>
@@ -1416,6 +1417,13 @@ typedef struct {
 
     int     opb_overflow_count;
 
+    /** \brief  Disable vertex buffer double-buffering.
+
+        Use only one single vertex buffer. This means that the PVR must finish
+        rendering before the Tile Accelerator is used to prepare a new frame;
+        but it allows using much smaller vertex buffers. */
+    int     vbuf_doublebuf_disabled;
+
 } pvr_init_params_t;
 
 /** \brief   Initialize the PVR chip to ready status.
@@ -1431,7 +1439,7 @@ typedef struct {
     \retval -1              If the PVR has already been initialized or the video
                             mode active is not suitable for 3D
 */
-int pvr_init(pvr_init_params_t *params);
+int pvr_init(const pvr_init_params_t *params);
 
 /** \brief   Simple PVR initialization.
     \ingroup pvr_init
@@ -1492,12 +1500,12 @@ void pvr_set_bg_color(float r, float g, float b);
     their final color by the scale value set here when shadows are enabled and
     the polygon is inside the modifier (or outside for exclusion volumes).
 
-    \param  enable          Set to non-zero to enable cheap shadow mode.
+    \param  enable          Set to true to enable cheap shadow mode.
     \param  scale_value     Floating point value (between 0 and 1) representing
                             how colors of polygons affected by and inside the
                             volume will be modified by the shadow volume.
 */
-void pvr_set_shadow_scale(int enable, float scale_value);
+void pvr_set_shadow_scale(bool enable, float scale_value);
 
 /** \brief   Set Z clipping depth.
     \ingroup pvr_global
@@ -1710,9 +1718,9 @@ void pvr_fog_table_linear(float start, float end);
     have 129 entries, where the 0th entry is farthest from the eye and the last
     entry is nearest. Higher values = heavier fog.
 
-    \param  tbl1            The table of fog values to set
+    \param  table           The table of fog values to set
 */
-void pvr_fog_table_custom(float tbl1[]);
+void pvr_fog_table_custom(float *table);
 
 
 /* Memory management *************************************************/
@@ -1758,7 +1766,7 @@ void pvr_mem_free(pvr_ptr_t chunk);
 
     \return                 The number of bytes available
 */
-uint32_t pvr_mem_available(void);
+size_t pvr_mem_available(void);
 
 /** \brief   Reset the PVR RAM pool.
     \ingroup pvr_mem_mgmt
@@ -1863,7 +1871,7 @@ int pvr_vertex_dma_enabled(void);
     
     \return                 The old buffer location (if any)
 */
-void *pvr_set_vertbuf(pvr_list_t list, void *buffer, int len);
+void *pvr_set_vertbuf(pvr_list_t list, void *buffer, size_t len);
 
 /** \brief   Retrieve a pointer to the current output location in the DMA buffer
              for the requested list.
@@ -1889,7 +1897,7 @@ void *pvr_vertbuf_tail(pvr_list_t list);
     \param  list            The primitive list that was modified.
     \param  amt             Number of bytes written. Must be a multiple of 32.
 */
-void pvr_vertbuf_written(pvr_list_t list, uint32_t amt);
+void pvr_vertbuf_written(pvr_list_t list, size_t amt);
 
 /** \brief   Set the translucent polygon sort mode for the next frame.
     \ingroup pvr_scene_mgmt
@@ -1903,10 +1911,10 @@ void pvr_vertbuf_written(pvr_list_t list, uint32_t amt);
     function to change the mode that you should set it each frame to ensure that
     the mode is set properly.
 
-    \param  presort         Set to 1 to set the presort mode for translucent
-                            polygons, set to 0 to use autosort mode.
+    \param  presort         Set to true to set the presort mode for translucent
+                            polygons, set to false to use autosort mode.
 */
-void pvr_set_presort_mode(int presort);
+void pvr_set_presort_mode(bool presort);
 
 /** \brief   Begin collecting data for a frame of 3D output to the off-screen
              frame buffer.
@@ -1993,7 +2001,7 @@ int pvr_list_finish(void);
     \retval 0               On success.
     \retval -1              On error.
 */
-int pvr_prim(void *data, int size);
+int pvr_prim(const void *data, size_t size);
 
 /** \defgroup pvr_direct  Direct Rendering
     \brief                API for using direct rendering with the PVR
@@ -2070,7 +2078,7 @@ void pvr_send_to_ta(void *data);
     \retval 0               On success.
     \retval -1              On error.
 */
-int pvr_list_prim(pvr_list_t list, void *data, int size);
+int pvr_list_prim(pvr_list_t list, const void *data, size_t size);
 
 /** \brief   Flush the buffered data of the given list type to the TA.
     \ingroup pvr_list_mgmt
@@ -2122,6 +2130,19 @@ int pvr_wait_ready(void);
     \retval -1              If the PVR is not ready for a new scene yet.
 */
 int pvr_check_ready(void);
+
+/** \brief   Block the caller until the PVR has finished rendering the previous
+             frame.
+    \ingroup pvr_scene_mgmt
+
+    This function can be used to wait until the PVR is done rendering a previous
+    scene. This can be useful for instance to make sure that the PVR is done
+    using textures that have to be updated, before updating those.
+
+    \retval 0               On success.
+    \retval -1              On error. Something is probably very wrong...
+*/
+int pvr_wait_render_done(void);
 
 
 /* Primitive handling ************************************************/
@@ -2400,6 +2421,20 @@ void pvr_txr_load_ex(const void *src, pvr_ptr_t dst,
 */
 void pvr_txr_load_kimg(const kos_img_t *img, pvr_ptr_t dst, uint32_t flags);
 
+/** \brief   Get a pointer to the front buffer.
+    \ingroup pvr_txr_mgmt
+
+    This function can be used to retrieve a pointer to the front buffer, aka.
+    the last fully rendered buffer that is either being displayed right now,
+    or is queued to be displayed.
+
+    Note that the frame buffers lie in 32-bit memory, while textures lie in
+    64-bit memory. The address returned will point to 64-bit memory, but the
+    front buffer cannot be used directly as a regular texture.
+
+    \return                 A pointer to the front buffer.
+*/
+pvr_ptr_t pvr_get_front_buffer(void);
 
 /* PVR DMA ***********************************************************/
 /** \defgroup pvr_dma   DMA
@@ -2450,7 +2485,7 @@ typedef enum pvr_dma_type {
     \param  count           The number of bytes to copy. Must be a multiple of
                             32.
     \param  type            The type of DMA transfer to do (see list of modes).
-    \param  block           Non-zero if you want the function to block until the
+    \param  block           True if you want the function to block until the
                             DMA completes.
     \param  callback        A function to call upon completion of the DMA.
     \param  cbdata          Data to pass to the callback function.
@@ -2465,7 +2500,7 @@ typedef enum pvr_dma_type {
     \see    pvr_dma_type_t
 */
 int pvr_dma_transfer(const void *src, uintptr_t dest, size_t count,
-                     pvr_dma_type_t type, int block,
+                     pvr_dma_type_t type, bool block,
                      pvr_dma_callback_t callback, void *cbdata);
 
 /** \brief   Load a texture using TA DMA.
@@ -2478,7 +2513,7 @@ int pvr_dma_transfer(const void *src, uintptr_t dest, size_t count,
     \param  dest            Where to copy to. Must be 32-byte aligned.
     \param  count           The number of bytes to copy. Must be a multiple of
                             32.
-    \param  block           Non-zero if you want the function to block until the
+    \param  block           True if you want the function to block until the
                             DMA completes.
     \param  callback        A function to call upon completion of the DMA.
     \param  cbdata          Data to pass to the callback function.
@@ -2490,7 +2525,7 @@ int pvr_dma_transfer(const void *src, uintptr_t dest, size_t count,
     \em     EFAULT - dest is not 32-byte aligned \n
     \em     EIO - I/O error
 */
-int pvr_txr_load_dma(void *src, pvr_ptr_t dest, size_t count, int block,
+int pvr_txr_load_dma(const void *src, pvr_ptr_t dest, size_t count, bool block,
                      pvr_dma_callback_t callback, void *cbdata);
 
 /** \brief   Load vertex data to the TA using TA DMA.
@@ -2502,7 +2537,7 @@ int pvr_txr_load_dma(void *src, pvr_ptr_t dest, size_t count, int block,
     \param  src             Where to copy from. Must be 32-byte aligned.
     \param  count           The number of bytes to copy. Must be a multiple of
                             32.
-    \param  block           Non-zero if you want the function to block until the
+    \param  block           True if you want the function to block until the
                             DMA completes.
     \param  callback        A function to call upon completion of the DMA.
     \param  cbdata          Data to pass to the callback function.
@@ -2514,7 +2549,7 @@ int pvr_txr_load_dma(void *src, pvr_ptr_t dest, size_t count, int block,
     \em     EFAULT - dest is not 32-byte aligned \n
     \em     EIO - I/O error
  */
-int pvr_dma_load_ta(void *src, size_t count, int block,
+int pvr_dma_load_ta(const void *src, size_t count, bool block,
                     pvr_dma_callback_t callback, void *cbdata);
 
 /** \brief   Load yuv data to the YUV converter using TA DMA.
@@ -2526,7 +2561,7 @@ int pvr_dma_load_ta(void *src, size_t count, int block,
     \param  src             Where to copy from. Must be 32-byte aligned.
     \param  count           The number of bytes to copy. Must be a multiple of
                             32.
-    \param  block           Non-zero if you want the function to block until the
+    \param  block           True if you want the function to block until the
                             DMA completes.
     \param  callback        A function to call upon completion of the DMA.
     \param  cbdata          Data to pass to the callback function.
@@ -2538,15 +2573,15 @@ int pvr_dma_load_ta(void *src, size_t count, int block,
     \em     EFAULT - dest is not 32-byte aligned \n
     \em     EIO - I/O error
 */
-int pvr_dma_yuv_conv(void *src, size_t count, int block,
+int pvr_dma_yuv_conv(const void *src, size_t count, bool block,
                      pvr_dma_callback_t callback, void *cbdata);
 
 /** \brief   Is PVR DMA is inactive?
     \ingroup pvr_dma
-    \return                 Non-zero if there is no PVR DMA active, thus a DMA
-                            can begin or 0 if there is an active DMA.
+    \return                 True if there is no PVR DMA active, thus a DMA
+                            can begin or false if there is an active DMA.
 */
-int pvr_dma_ready(void);
+bool pvr_dma_ready(void);
 
 /** \brief   Initialize TA/PVR DMA. 
     \ingroup pvr_dma

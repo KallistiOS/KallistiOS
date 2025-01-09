@@ -15,6 +15,20 @@ much more complete and standard-compliant than it was before. It still isn't
 no guarantee that this will work with GCC's `--enable-threads=posix`, as that
 configuration is not tested/supported any longer in dc-chain.
 
+RELEASE NOTES for 2.1.1
+-----------------------
+
+This minor patch version is primarily aimed at fixing the versioning system
+which simply didn't work as implemented in v2.1.0. Alongside that another few
+dozen PRs were included that containing minor bugfixes and documentation updates.
+
+Also included is a new host-side util pvrtex which converts standard images
+to formats used directly by the Dreamcast's PowerVR (utils/pvrtex), a significant
+rewrite of wav2adpcm which converts standard sound data into the smaller ADPCM
+format used by the Dreamcast's AICA (utils/wav2adpcm), an example that
+demonstrates how to draw lines with quads via the pvr (pvr/pvrline), one for
+testing network speed (network/speedtest) and another on how to use libADX
+from kos-ports for audio playback (sound/libADX).
 
 RELEASE NOTES for 2.1.0
 -----------------------

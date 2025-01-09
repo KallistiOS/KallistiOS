@@ -1,0 +1,266 @@
+diff --color -ruN newlib-4.5.0.20241231/newlib/configure.host newlib-4.5.0.20241231-kos/newlib/configure.host
+--- newlib-4.5.0.20241231/newlib/configure.host	2024-02-10 09:30:58.772247624 -0600
++++ newlib-4.5.0.20241231-kos/newlib/configure.host	2024-02-10 09:31:16.329331366 -0600
+@@ -325,6 +325,7 @@
+ 	;;
+   sh | sh64)
+ 	machine_dir=sh
++	newlib_cflags="${newlib_cflags} -DREENTRANT_SYSCALLS_PROVIDED -DMALLOC_PROVIDED -DABORT_PROVIDED -DHAVE_FCNTL -ffunction-sections -fdata-sections"
+ 	;;
+   sparc*)
+ 	libm_machine_dir=sparc
+diff --color -ruN newlib-4.5.0.20241231/newlib/libc/include/assert.h newlib-4.5.0.20241231-kos/newlib/libc/include/assert.h
+--- newlib-4.5.0.20241231/newlib/libc/include/assert.h	2024-02-10 09:30:58.781247667 -0600
++++ newlib-4.5.0.20241231-kos/newlib/libc/include/assert.h	2024-02-10 09:31:16.329331366 -0600
+@@ -13,8 +13,8 @@
+ #ifdef NDEBUG           /* required by ANSI standard */
+ # define assert(__e) ((void)0)
+ #else
+-# define assert(__e) ((__e) ? (void)0 : __assert_func (__FILE__, __LINE__, \
+-						       __ASSERT_FUNC, #__e))
++# define assert(__e) ((__e) ? (void)0 : __assert (__FILE__, __LINE__, \
++                              #__e, (char *)0, __ASSERT_FUNC))
+ 
+ # ifndef __ASSERT_FUNC
+   /* Use g++'s demangled names in C++.  */
+@@ -36,10 +36,10 @@
+ # endif /* !__ASSERT_FUNC */
+ #endif /* !NDEBUG */
+ 
+-void __assert (const char *, int, const char *)
+-	    _ATTRIBUTE ((__noreturn__));
+-void __assert_func (const char *, int, const char *, const char *)
+-	    _ATTRIBUTE ((__noreturn__));
++void __assert(const char *, int, const char *, const char *,
++              const char *) _ATTRIBUTE ((__noreturn__));
++void __assert_func(const char *, int, const char *, const char *)
++             _ATTRIBUTE ((__noreturn__));
+ 
+ #if __STDC_VERSION__ >= 201112L && !defined __cplusplus
+ # define static_assert _Static_assert
+diff --color -ruN newlib-4.5.0.20241231/newlib/libc/include/sys/stat.h newlib-4.5.0.20241231-kos/newlib/libc/include/sys/stat.h
+--- newlib-4.5.0.20241231/newlib/libc/include/sys/stat.h	2024-04-28 15:07:54.520453819 -0400
++++ newlib-4.5.0.20241231-kos/newlib/libc/include/sys/stat.h	2023-12-31 12:00:18.000000000 -0500
+@@ -142,8 +142,8 @@
+ int	stat (const char *__restrict __path, struct stat *__restrict __sbuf );
+ mode_t	umask (mode_t __mask );
+ 
++int	lstat (const char *__restrict __path, struct stat *__restrict __buf );
+ #if defined (__SPU__) || defined(__rtems__) || defined(__CYGWIN__)
+-int	lstat (const char *__restrict __path, struct stat *__restrict __buf );
+ int	mknod (const char *__path, mode_t __mode, dev_t __dev );
+ #endif
+ 
+diff --color -ruN newlib-4.5.0.20241231/newlib/libc/include/sys/_pthreadtypes.h newlib-4.5.0.20241231-kos/newlib/libc/include/sys/_pthreadtypes.h
+--- newlib-4.5.0.20241231/newlib/libc/include/sys/_pthreadtypes.h	2024-02-10 09:30:58.783247676 -0600
++++ newlib-4.5.0.20241231-kos/newlib/libc/include/sys/_pthreadtypes.h	2024-02-10 09:31:16.329331366 -0600
+@@ -22,16 +22,6 @@
+ 
+ #include <sys/sched.h>
+ 
+-/*
+- *  2.5 Primitive System Data Types,  P1003.1c/D10, p. 19.
+- */
+-
+-#if defined(__XMK__)
+-typedef unsigned int pthread_t;          /* identify a thread */
+-#else
+-typedef __uint32_t pthread_t;            /* identify a thread */
+-#endif
+-
+ /* P1003.1c/D10, p. 118-119 */
+ #define PTHREAD_SCOPE_PROCESS 0
+ #define PTHREAD_SCOPE_SYSTEM  1
+@@ -46,36 +36,6 @@
+ #define PTHREAD_CREATE_DETACHED 0
+ #define PTHREAD_CREATE_JOINABLE  1
+ 
+-#if defined(__XMK__)
+-typedef struct pthread_attr_s {
+-  int contentionscope;
+-  struct sched_param schedparam;
+-  int  detachstate;
+-  void *stackaddr;
+-  size_t stacksize;
+-} pthread_attr_t;
+-
+-#define PTHREAD_STACK_MIN       200
+-
+-#else /* !defined(__XMK__) */
+-typedef struct {
+-  int is_initialized;
+-  void *stackaddr;
+-  int stacksize;
+-  int contentionscope;
+-  int inheritsched;
+-  int schedpolicy;
+-  struct sched_param schedparam;
+-
+-  /* P1003.4b/D8, p. 54 adds cputime_clock_allowed attribute.  */
+-#if defined(_POSIX_THREAD_CPUTIME)
+-  int  cputime_clock_allowed;  /* see time.h */
+-#endif
+-  int  detachstate;
+-} pthread_attr_t;
+-
+-#endif /* !defined(__XMK__) */
+-
+ #if defined(_POSIX_THREAD_PROCESS_SHARED)
+ /* NOTE: P1003.1c/D10, p. 81 defines following values for process_shared.  */
+ 
+@@ -143,91 +103,6 @@
+ 
+ #endif /* !defined(_UNIX98_THREAD_MUTEX_ATTRIBUTES) */
+ 
+-#if defined(__XMK__)
+-typedef unsigned int pthread_mutex_t;    /* identify a mutex */
+-
+-typedef struct {
+-  int type;
+-} pthread_mutexattr_t;
+-
+-#else /* !defined(__XMK__) */
+-typedef __uint32_t pthread_mutex_t;      /* identify a mutex */
+-
+-typedef struct {
+-  int   is_initialized;
+-#if defined(_POSIX_THREAD_PROCESS_SHARED)
+-  int   process_shared;  /* allow mutex to be shared amongst processes */
+-#endif
+-#if defined(_POSIX_THREAD_PRIO_PROTECT)
+-  int   prio_ceiling;
+-  int   protocol;
+-#endif
+-#if defined(_UNIX98_THREAD_MUTEX_ATTRIBUTES)
+-  int type;
+-#endif
+-  int   recursive;
+-} pthread_mutexattr_t;
+-#endif /* !defined(__XMK__) */
+-
+-#define _PTHREAD_MUTEX_INITIALIZER ((pthread_mutex_t) 0xFFFFFFFF)
+-
+-/* Condition Variables */
+-
+-typedef __uint32_t pthread_cond_t;       /* identify a condition variable */
+-
+-#define _PTHREAD_COND_INITIALIZER ((pthread_cond_t) 0xFFFFFFFF)
+-
+-typedef struct {
+-  int      is_initialized;
+-  clock_t  clock;             /* specifiy clock for timeouts */
+-#if defined(_POSIX_THREAD_PROCESS_SHARED)
+-  int      process_shared;    /* allow this to be shared amongst processes */
+-#endif
+-} pthread_condattr_t;         /* a condition attribute object */
+-
+-/* Keys */
+-
+-typedef __uint32_t pthread_key_t;        /* thread-specific data keys */
+-
+-typedef struct {
+-  int   is_initialized;  /* is this structure initialized? */
+-  int   init_executed;   /* has the initialization routine been run? */
+-} pthread_once_t;       /* dynamic package initialization */
+-
+-#define _PTHREAD_ONCE_INIT  { 1, 0 }  /* is initialized and not run */
+ #endif /* defined(_POSIX_THREADS) || __POSIX_VISIBLE >= 199506 */
+ 
+-/* POSIX Barrier Types */
+-
+-#if defined(_POSIX_BARRIERS)
+-typedef __uint32_t pthread_barrier_t;        /* POSIX Barrier Object */
+-typedef struct {
+-  int   is_initialized;  /* is this structure initialized? */
+-#if defined(_POSIX_THREAD_PROCESS_SHARED)
+-  int   process_shared;       /* allow this to be shared amongst processes */
+-#endif
+-} pthread_barrierattr_t;
+-#endif /* defined(_POSIX_BARRIERS) */
+-
+-/* POSIX Spin Lock Types */
+-
+-#if defined(_POSIX_SPIN_LOCKS)
+-typedef __uint32_t pthread_spinlock_t;        /* POSIX Spin Lock Object */
+-#endif /* defined(_POSIX_SPIN_LOCKS) */
+-
+-/* POSIX Reader/Writer Lock Types */
+-
+-#if defined(_POSIX_READER_WRITER_LOCKS)
+-typedef __uint32_t pthread_rwlock_t;         /* POSIX RWLock Object */
+-
+-#define _PTHREAD_RWLOCK_INITIALIZER ((pthread_rwlock_t) 0xFFFFFFFF)
+-
+-typedef struct {
+-  int   is_initialized;       /* is this structure initialized? */
+-#if defined(_POSIX_THREAD_PROCESS_SHARED)
+-  int   process_shared;       /* allow this to be shared amongst processes */
+-#endif
+-} pthread_rwlockattr_t;
+-#endif /* defined(_POSIX_READER_WRITER_LOCKS) */
+-
+ #endif /* ! _SYS__PTHREADTYPES_H_ */
+diff --color -ruN newlib-4.5.0.20241231/newlib/libc/include/sys/signal.h newlib-4.5.0.20241231-kos/newlib/libc/include/sys/signal.h
+--- newlib-4.5.0.20241231/newlib/libc/include/sys/signal.h	2024-02-10 09:30:58.783247676 -0600
++++ newlib-4.5.0.20241231-kos/newlib/libc/include/sys/signal.h	2024-02-10 09:31:16.329331366 -0600
+@@ -223,9 +223,11 @@
+ int sigaltstack (const stack_t *__restrict, stack_t *__restrict);
+ #endif
+ 
++#if 0
+ #if __POSIX_VISIBLE >= 199506
+ int pthread_kill (pthread_t, int);
+ #endif
++#endif
+ 
+ #if __POSIX_VISIBLE >= 199309
+ 
+diff --color -ruN newlib-4.5.0.20241231/newlib/libc/include/sys/_types.h newlib-4.5.0.20241231-kos/newlib/libc/include/sys/_types.h
+--- newlib-4.5.0.20241231/newlib/libc/include/sys/_types.h	2024-02-10 09:30:58.783247676 -0600
++++ newlib-4.5.0.20241231-kos/newlib/libc/include/sys/_types.h	2024-02-10 09:31:16.329331366 -0600
+@@ -69,7 +69,7 @@
+ 
+ #ifndef __machine_ino_t_defined
+ #if (defined(__i386__) && (defined(GO32) || defined(__MSDOS__))) || \
+-    defined(__sparc__) || defined(__SPU__)
++    defined(__sparc__) || defined(__SPU__) || defined(__sh__)
+ typedef unsigned long __ino_t;
+ #else
+ typedef unsigned short __ino_t;
+diff --color -ruN newlib-4.5.0.20241231/newlib/libc/ssp/stack_protector.c newlib-4.5.0.20241231-kos/newlib/libc/ssp/stack_protector.c
+--- newlib-4.5.0.20241231/newlib/libc/ssp/stack_protector.c	2024-02-10 09:30:58.832247910 -0600
++++ newlib-4.5.0.20241231-kos/newlib/libc/ssp/stack_protector.c	2024-02-10 09:31:16.329331366 -0600
+@@ -32,12 +32,11 @@
+ #endif
+ 
+ void
+-__attribute__((__noreturn__))
++__attribute__((__noreturn__, weak))
+ __stack_chk_fail (void)
+ {
+   char msg[] = "*** stack smashing detected ***: terminated\n";
+   write (2, msg, strlen (msg));
+-  raise (SIGABRT);
+   _exit (127);
+ }
+ 
+diff --color -ruN newlib-4.5.0.20241231/newlib/libc/stdlib/assert.c newlib-4.5.0.20241231-kos/newlib/libc/stdlib/assert.c
+--- newlib-4.5.0.20241231/newlib/libc/stdlib/assert.c	2024-02-10 09:30:58.811247810 -0600
++++ newlib-4.5.0.20241231-kos/newlib/libc/stdlib/assert.c	2024-02-10 09:31:16.329331366 -0600
+@@ -47,6 +47,8 @@
+ #include <stdlib.h>
+ #include <stdio.h>
+ 
++#if 0
++
+ #ifndef HAVE_ASSERT_FUNC
+ /* func can be NULL, in which case no function information is given.  */
+ void
+@@ -72,3 +74,7 @@
+    __assert_func (file, line, NULL, failedexpr);
+   /* NOTREACHED */
+ }
++#endif
++// This is put in here to cause link errors if a proper newlib isn't present.
++int __newlib_kos_patch = 1;
++
