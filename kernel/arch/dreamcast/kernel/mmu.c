@@ -28,20 +28,11 @@ static volatile uint32 * const ttb = (uint32 *)(SH4_REG_MMU_TTB);
 static volatile uint32 * const tea = (uint32 *)(SH4_REG_MMU_TEA);
 static volatile uint32 * const mmucr = (uint32 *)(SH4_REG_MMU_CR);
 
-#define SET_PTEH(VA, ASID) \
-    do { *pteh = ((VA) & 0xfffffc00) | ((ASID) & 0xff); } while(0)
-
 #define BUILD_PTEH(VA, ASID) \
     ( ((VA) & 0xfffffc00) | ((ASID) & 0xff) )
 
-#define SET_PTEL(PA, V, SZ, PR, C, D, SH, WT) \
-    do { *ptel = ((PA) & 0x1ffffc00) | ((V) << 8) \
-                     | ( ((SZ) & 2) << 6 ) | ( ((SZ) & 1) << 4 ) \
-                     | ( (PR) << 5 ) \
-                     | ( (C) << 3 ) \
-                     | ( (D) << 2 ) \
-                     | ( (SH) << 1 ) \
-                     | ( (WT) << 0 ); } while(0)
+#define SET_PTEH(VA, ASID) \
+    do { *pteh = BUILD_PTEH(VA, ASID); } while(0)
 
 #define BUILD_PTEL(PA, V, SZ, PR, C, D, SH, WT) \
     ( ((PA) & 0x1ffffc00) | ((V) << 8) \
@@ -91,17 +82,17 @@ static mmu_mapfunc_t map_func;
 /********************************************************************************/
 /* Physical hardware management */
 
-static inline void mmu_ldtlb(int asid, uint32 virt, uint32 phys, int sz, int pr, int c, int d,
-                             int sh, int wt) {
-    SET_PTEH(virt, asid);
-    SET_PTEL(phys, 1, sz, pr, c, d, sh, wt);
-    __asm__("ldtlb");
-}
 static inline void mmu_ldtlb_quick(uint32 ptehv, uint32 ptelv) {
     *pteh = ptehv;
     *ptel = ptelv;
     __asm__("ldtlb");
 }
+
+static inline void mmu_ldtlb(int asid, uint32 virt, uint32 phys, int sz, int pr, int c, int d,
+                             int sh, int wt) {
+    mmu_ldtlb_quick(BUILD_PTEH(virt, asid), BUILD_PTEL(phys, 1, sz, pr, c, d, sh, wt));
+}
+
 static inline void mmu_ldtlb_wait(void) {
     __asm__("nop");
     __asm__("nop");
