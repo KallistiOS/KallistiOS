@@ -26,12 +26,12 @@
 /********************************************************************************/
 /* Register definitions */
 
-static volatile uint32 * const pteh = (uint32 *)(SH4_REG_MMU_PTEH);
-static volatile uint32 * const ptel = (uint32 *)(SH4_REG_MMU_PTEL);
-//static volatile uint32 * const ptea = (uint32 *)(SH4_REG_MMU_PTEA);
-static volatile uint32 * const ttb = (uint32 *)(SH4_REG_MMU_TTB);
-static volatile uint32 * const tea = (uint32 *)(SH4_REG_MMU_TEA);
-static volatile uint32 * const mmucr = (uint32 *)(SH4_REG_MMU_CR);
+static volatile uint32_t * const pteh = (uint32_t *)(SH4_REG_MMU_PTEH);
+static volatile uint32_t * const ptel = (uint32_t *)(SH4_REG_MMU_PTEL);
+//static volatile uint32_t * const ptea = (uint32_t *)(SH4_REG_MMU_PTEA);
+static volatile uint32_t * const ttb = (uint32_t *)(SH4_REG_MMU_TTB);
+static volatile uint32_t * const tea = (uint32_t *)(SH4_REG_MMU_TEA);
+static volatile uint32_t * const mmucr = (uint32_t *)(SH4_REG_MMU_CR);
 
 #define BUILD_PTEH(VA, ASID) \
     ( ((VA) & 0xfffffc00) | ((ASID) & 0xff) )
@@ -87,13 +87,13 @@ static mmu_mapfunc_t map_func;
 /********************************************************************************/
 /* Physical hardware management */
 
-static inline void mmu_ldtlb_quick(uint32 ptehv, uint32 ptelv) {
+static inline void mmu_ldtlb_quick(uint32_t ptehv, uint32_t ptelv) {
     *pteh = ptehv;
     *ptel = ptelv;
     __asm__("ldtlb");
 }
 
-static inline void mmu_ldtlb(int asid, uint32 virt, uint32 phys, int sz, int pr, int c, int d,
+static inline void mmu_ldtlb(int asid, uint32_t virt, uint32_t phys, int sz, int pr, int c, int d,
                              int sh, int wt) {
     mmu_ldtlb_quick(BUILD_PTEH(virt, asid), BUILD_PTEL(phys, 1, sz, pr, c, d, sh, wt));
 }
@@ -292,7 +292,7 @@ void mmu_page_map(mmucontext_t *context,
    even page boundaries; if src is NULL, anonymous pages are mapped
    (allocated from the heap pool); if src is non-NULL, the address
    is considered to be a physical address. Use munmap to free them. */
-void sc_mmu_mmap(uint32 dst, size_t len, uint32 src) {
+void sc_mmu_mmap(uint32_t dst, size_t len, uint32_t src) {
     int anon = 0;
 
     /* Adjust length to page boundary */
@@ -303,7 +303,7 @@ void sc_mmu_mmap(uint32 dst, size_t len, uint32 src) {
 
     /* If no src pointer, then allocate anonymous pages */
     if(!src) {
-        src = (uint32)mm_palloc(len, proc_current->pid);
+        src = (uint32_t)mm_palloc(len, proc_current->pid);
 
         if(src == 0)
             RETURN(0);
@@ -331,15 +331,15 @@ void sc_mmu_mmap(uint32 dst, size_t len, uint32 src) {
    This routine is pretty nasty.. this is completely platform
    generic but should probably be replaced by a nice assembly
    routine for each platform as appropriate. */
-int mmu_copyin(mmucontext_t *context, uint32 srcaddr, uint32 srccnt, void *buffer) {
+int mmu_copyin(mmucontext_t *context, uint32_t srcaddr, uint32_t srccnt, void *buffer) {
     mmupage_t *srcpage;
-    uint32 srcptr;
-    uint32 src, run;
+    uint32_t srcptr;
+    uint32_t src, run;
     int copied, srckrn;
-    uint8 *dst;
+    uint8_t *dst;
 
     /* Setup source pointers */
-    srcptr = (uint32)srcaddr;
+    srcptr = (uint32_t)srcaddr;
 
     if(!(srcptr & 0x8000000)) {
         srcpage = map_virt(context, srcptr >> PAGESIZE_BITS);
@@ -356,7 +356,7 @@ int mmu_copyin(mmucontext_t *context, uint32 srcaddr, uint32 srccnt, void *buffe
     }
 
     /* Setup destination pointers */
-    dst = (uint8*)buffer;
+    dst = (uint8_t*)buffer;
 
     /* Do the actual copy */
     copied = 0;
@@ -408,9 +408,9 @@ int mmu_copyv(mmucontext_t *context1, struct iovec *iov1, int iovcnt1,
               mmucontext_t *context2, struct iovec *iov2, int iovcnt2) {
     mmupage_t *srcpage, *dstpage;
     int srciov, dstiov;
-    uint32 srccnt, dstcnt;
-    uint32 srcptr, dstptr;
-    uint32 src, dst, run;
+    uint32_t srccnt, dstcnt;
+    uint32_t srcptr, dstptr;
+    uint32_t src, dst, run;
     int copied;
     int srckrn, dstkrn;
     /* static int   sproket = 0; */
@@ -421,7 +421,7 @@ int mmu_copyv(mmucontext_t *context1, struct iovec *iov1, int iovcnt1,
     /* Setup source pointers */
     srciov = 0;
     srccnt = iov1[srciov].iov_len;
-    srcptr = (uint32)iov1[srciov].iov_base;
+    srcptr = (uint32_t)iov1[srciov].iov_base;
 
     if(!(srcptr & 0x80000000)) {
         srcpage = map_virt(context1, srcptr >> PAGESIZE_BITS);
@@ -440,7 +440,7 @@ int mmu_copyv(mmucontext_t *context1, struct iovec *iov1, int iovcnt1,
     /* Setup destination pointers */
     dstiov = 0;
     dstcnt = iov2[dstiov].iov_len;
-    dstptr = (uint32)iov2[dstiov].iov_base;
+    dstptr = (uint32_t)iov2[dstiov].iov_base;
 
     if(!(dstptr & 0x80000000)) {
         dstpage = map_virt(context2, dstptr >> PAGESIZE_BITS);
@@ -509,7 +509,7 @@ int mmu_copyv(mmucontext_t *context1, struct iovec *iov1, int iovcnt1,
             if(srciov >= iovcnt1) break;
 
             srccnt = iov1[srciov].iov_len;
-            srcptr = (uint32)iov1[srciov].iov_base;
+            srcptr = (uint32_t)iov1[srciov].iov_base;
 
             if(!srckrn) {
                 srcpage = map_virt(context1, srcptr >> PAGESIZE_BITS);
@@ -543,7 +543,7 @@ int mmu_copyv(mmucontext_t *context1, struct iovec *iov1, int iovcnt1,
             if(dstiov >= iovcnt2) break;
 
             dstcnt = iov2[dstiov].iov_len;
-            dstptr = (uint32)iov2[dstiov].iov_base;
+            dstptr = (uint32_t)iov2[dstiov].iov_base;
 
             if(!dstkrn) {
                 dstpage = map_virt(context2, dstptr >> PAGESIZE_BITS);
@@ -615,7 +615,7 @@ static void unhandled_mmu(irq_t source, irq_context_t *context) {
    appropriate entry into the UTLB. */
 void mmu_gen_tlb_miss(const char *what, irq_t source, irq_context_t *context) {
     mmupage_t *page;
-    uint32 addr, ptehv, ptelv;
+    uint32_t addr, ptehv, ptelv;
 
     /* Get the offending reference */
     addr = *tea;

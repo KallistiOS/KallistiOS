@@ -124,20 +124,20 @@ __BEGIN_DECLS
 */
 typedef struct mmupage {
     /* Explicit pieces, used for reference */
-    /*uint32    virtual; */ /* implicit */
-    uint32  physical: 18;   /**< \brief Physical page ID -- 18 bits */
-    uint32  prkey: 2;       /**< \brief Protection key data -- 2 bits */
-    uint32  valid: 1;       /**< \brief Valid mapping -- 1 bit */
-    uint32  shared: 1;      /**< \brief Shared between procs -- 1 bit */
-    uint32  cache: 1;       /**< \brief Cacheable -- 1 bit */
-    uint32  dirty: 1;       /**< \brief Dirty -- 1 bit */
-    uint32  wthru: 1;       /**< \brief Write-thru enable -- 1 bit */
-    uint32  blank: 7;       /**< \brief Reserved -- 7 bits */
+    /*uint32_t   virtual; */ /* implicit */
+    uint32_t physical: 18;   /**< \brief Physical page ID -- 18 bits */
+    uint32_t prkey: 2;       /**< \brief Protection key data -- 2 bits */
+    uint32_t valid: 1;       /**< \brief Valid mapping -- 1 bit */
+    uint32_t shared: 1;      /**< \brief Shared between procs -- 1 bit */
+    uint32_t cache: 1;       /**< \brief Cacheable -- 1 bit */
+    uint32_t dirty: 1;       /**< \brief Dirty -- 1 bit */
+    uint32_t wthru: 1;       /**< \brief Write-thru enable -- 1 bit */
+    uint32_t blank: 7;       /**< \brief Reserved -- 7 bits */
 
     /* Pre-compiled pieces. These waste a bit of ram, but they also
        speed loading immensely at runtime. */
-    uint32  pteh;           /**< \brief Pre-built PTEH value */
-    uint32  ptel;           /**< \brief Pre-built PTEL value */
+    uint32_t pteh;           /**< \brief Pre-built PTEH value */
+    uint32_t ptel;           /**< \brief Pre-built PTEL value */
 } mmupage_t;
 
 /** \brief   The number of pages in a sub-context.
@@ -279,7 +279,7 @@ void mmu_page_map(mmucontext_t *context, int virtpage, int physpage,
     \param  buffer          The kernel buffer to copy into (should be in P1).
     \return                 The number of bytes copied (failure causes arch_panic).
 */
-int mmu_copyin(mmucontext_t *context, uint32 srcaddr, uint32 srccnt,
+int mmu_copyin(mmucontext_t *context, uint32_t srcaddr, uint32_t srccnt,
                void *buffer);
 
 /** \brief   Copy a chunk of data from one process' address space to another
