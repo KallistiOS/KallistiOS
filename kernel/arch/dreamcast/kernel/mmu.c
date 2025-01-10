@@ -711,6 +711,21 @@ static void initial_page_write(irq_t source, irq_context_t *context, void *data)
     unhandled_mmu(source, context);
 }
 
+void mmu_init_basic(void) {
+    /* Reserve TLB entries 62-63 for SQ translation. Register them as read-write
+     * (since there's no write-only flag) with a 1 MiB page. */
+    SET_MMUCR(0x3e, 0x3e, 1, 0, 1, 1);
+    mmu_ldtlb(0, 0xe0000000, 0, 3, 1, 0, 0, 0, 0);
+    SET_MMUCR(0x3f, 0x3f, 1, 0, 1, 1);
+    mmu_ldtlb(0, 0xe0100000, 0, 3, 1, 0, 0, 0, 0);
+
+    /* Set URB to 0x3d to not overwrite the SQ config, reset URC, enable MMU */
+    SET_MMUCR(0x3d, 0, 1, 0, 1, 1);
+
+    /* Clear the ITLB */
+    mmu_reset_itlb();
+}
+
 /********************************************************************************/
 /* Init routine */
 void mmu_init(void) {
@@ -736,18 +751,7 @@ void mmu_init(void) {
     irq_set_handler(EXC_DTLB_PV_WRITE, dtlb_pv_write, NULL);
     irq_set_handler(EXC_INITIAL_PAGE_WRITE, initial_page_write, NULL);
 
-    /* Reserve TLB entries 62-63 for SQ translation. Register them as read-write
-     * (since there's no write-only flag) with a 1 MiB page. */
-    SET_MMUCR(0x3e, 0x3e, 1, 0, 1, 1);
-    mmu_ldtlb(0, 0xe0000000, 0, 3, 1, 0, 0, 0, 0);
-    SET_MMUCR(0x3f, 0x3f, 1, 0, 1, 1);
-    mmu_ldtlb(0, 0xe0100000, 0, 3, 1, 0, 0, 0, 0);
-
-    /* Set URB to 0x3d to not overwrite the SQ config, reset URC, enable MMU */
-    SET_MMUCR(0x3d, 0, 1, 0, 1, 1);
-
-    /* Clear the ITLB */
-    mmu_reset_itlb();
+    mmu_init_basic();
 }
 
 /* Shutdown */

@@ -337,8 +337,19 @@ mmu_mapfunc_t mmu_map_set_callback(mmu_mapfunc_t newfunc);
 
     Unlike most things in KOS, the MMU is not initialized by a normal startup.
     This is because for most homebrew, its not needed.
+
+    This implies mmu_init_basic().
 */
 void mmu_init(void);
+
+/** \brief   Initialize basic MMU support.
+    \ingroup mmu
+
+    This function can be used to initialize the very minimum for MMU to work
+    with static mappings. Dynamic mapping (and mmu_page_map()) will not work.
+    If you need dynamic mapping, use mmu_init() instead.
+*/
+void mmu_init_basic(void);
 
 /** \brief   Shutdown MMU support.
     \ingroup mmu
