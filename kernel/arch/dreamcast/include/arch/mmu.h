@@ -94,10 +94,12 @@ __BEGIN_DECLS
 
     @{
 */
-#define MMU_KERNEL_RDONLY   0   /**< \brief No user access, kernel read-only */
-#define MMU_KERNEL_RDWR     1   /**< \brief No user access, kernel full */
-#define MMU_ALL_RDONLY      2   /**< \brief Read-only user and kernel */
-#define MMU_ALL_RDWR        3   /**< \brief Full access, user and kernel */
+typedef enum page_prot {
+    MMU_KERNEL_RDONLY,      /**< \brief No user access, kernel read-only */
+    MMU_KERNEL_RDWR,        /**< \brief No user access, kernel full */
+    MMU_ALL_RDONLY,         /**< \brief Read-only user and kernel */
+    MMU_ALL_RDWR,           /**< \brief Full access, user and kernel */
+} page_prot_t;
 /** @} */
 
 /** \defgroup mmu_cache_values      Cacheability Settings
@@ -108,10 +110,12 @@ __BEGIN_DECLS
 
     @{
 */
-#define MMU_NO_CACHE    1               /**< \brief Cache disabled */
-#define MMU_CACHE_BACK  2               /**< \brief Write-back caching */
-#define MMU_CACHE_WT    3               /**< \brief Write-through caching */
-#define MMU_CACHEABLE   MMU_CACHE_BACK  /**< \brief Default caching */
+typedef enum page_cache {
+    MMU_NO_CACHE,                   /**< \brief Cache disabled */
+    MMU_CACHE_BACK,                 /**< \brief Write-back caching */
+    MMU_CACHE_WT,                   /**< \brief Write-through caching */
+    MMU_CACHEABLE = MMU_CACHE_BACK, /**< \brief Default caching */
+} page_cache_t;
 /** @} */
 
 /** \brief   MMU TLB entry for a single page.
@@ -261,13 +265,12 @@ void mmu_switch_context(mmucontext_t *context);
     \param  prot            Memory protection for page (see
                             \ref mmu_prot_values).
     \param  cache           Cache scheme for page (see \ref mmu_cache_values).
-    \param  share           Set to 1 to share between processes (meaningless),
-                            otherwise set to 0.
-    \param  dirty           Set to 1 to mark the page as dirty, otherwise set to
-                            0.
+    \param  share           Set to share between processes (meaningless).
+    \param  dirty           Set to mark the page as dirty.
 */
 void mmu_page_map(mmucontext_t *context, int virtpage, int physpage,
-                  int count, int prot, int cache, int share, int dirty);
+                  int count, page_prot_t prot, page_cache_t cache,
+                  bool share, bool dirty);
 
 /** \brief   Copy a chunk of data from a process' address space into a kernel
              buffer, taking into account page mappings.

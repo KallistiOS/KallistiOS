@@ -212,7 +212,8 @@ void mmu_switch_context(mmucontext_t *context) {
    turning on the "valid" bit. */
 static void mmu_page_map_single(mmucontext_t *context,
                                 int virtpage, int physpage,
-                                int prot, int cache, int share, int dirty) {
+                                page_prot_t prot, page_cache_t cache,
+                                bool share, bool dirty) {
     mmusubcontext_t *sub;
     mmupage_t   *page;
     int     top, bot, i;
@@ -276,7 +277,8 @@ static void mmu_page_map_single(mmucontext_t *context,
 /* Map N pages sequentially */
 void mmu_page_map(mmucontext_t *context,
                   int virtpage, int physpage, int count,
-                  int prot, int cache, int share, int dirty) {
+                  page_prot_t prot, page_cache_t cache,
+                  bool share, bool dirty) {
     while(count > 0) {
         mmu_page_map_single(context,
                             virtpage, physpage,
