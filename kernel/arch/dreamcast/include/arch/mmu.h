@@ -85,25 +85,6 @@ __BEGIN_DECLS
 
 */
 
-/** \defgroup mmu_bit_macros        Address Bits
-    \brief                          Definitions and masks for address pages
-    \ingroup                        mmu
-
-    The MMU code uses these to determine the page of a request.
-
-    @{
-*/
-#define MMU_TOP_SHIFT 21                        /**< \brief Top-level shift */
-#define MMU_TOP_BITS 10                         /**< \brief Top-level bits */
-#define MMU_TOP_MASK ((1 << MMU_TOP_BITS) - 1)  /**< \brief Top-level mask */
-#define MMU_BOT_SHIFT 12                        /**< \brief Bottom shift */
-#define MMU_BOT_BITS 9                          /**< \brief Bottom bits */
-#define MMU_BOT_MASK ((1 << MMU_BOT_BITS) - 1)  /**< \brief Bottom mask */
-#define MMU_IND_SHIFT 0                         /**< \brief Index shift */
-#define MMU_IND_BITS 12                         /**< \brief Index bits */
-#define MMU_IND_MASK ((1 << MMU_IND_BITS) - 1)  /**< \brief Index mask */
-/** @} */
-
 /** \defgroup mmu_prot_values       Protection Settings
     \brief                          SH4 MMU page protection settings values
     \ingroup                        mmu

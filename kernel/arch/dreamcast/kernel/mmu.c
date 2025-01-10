@@ -16,7 +16,12 @@
 #include <arch/memory.h>
 #include <arch/mmu.h>
 #include <kos/dbgio.h>
+#include <kos/regfield.h>
 #include <arch/cache.h>
+
+#define MMU_TOP_MASK GENMASK(30, 21)            /**< \brief Top-level mask */
+#define MMU_BOT_MASK GENMASK(20, 12)            /**< \brief Bottom mask */
+#define MMU_IND_BITS 12                         /**< \brief Index bits */
 
 /********************************************************************************/
 /* Register definitions */
@@ -166,8 +171,8 @@ static mmupage_t *map_virt(mmucontext_t *context, int virtpage) {
     virtpage = virtpage << MMU_IND_BITS;
 
     /* Mask out and grab the top and bottom indices */
-    top = (virtpage >> MMU_TOP_SHIFT) & MMU_TOP_MASK;
-    bot = (virtpage >> MMU_BOT_SHIFT) & MMU_BOT_MASK;
+    top = FIELD_GET(virtpage, MMU_TOP_MASK);
+    bot = FIELD_GET(virtpage, MMU_BOT_MASK);
 
     /* Look up the top-level sub-context */
     sub = context->sub[top];
@@ -218,8 +223,8 @@ static void mmu_page_map_single(mmucontext_t *context,
     virtpage = virtpage << MMU_IND_BITS;
 
     /* Mask out and grab the top and bottom indices */
-    top = (virtpage >> MMU_TOP_SHIFT) & MMU_TOP_MASK;
-    bot = (virtpage >> MMU_BOT_SHIFT) & MMU_BOT_MASK;
+    top = FIELD_GET(virtpage, MMU_TOP_MASK);
+    bot = FIELD_GET(virtpage, MMU_BOT_MASK);
 
     /* Look up the top-level sub-context; if there isn't one, create one. */
     sub = context->sub[top];
