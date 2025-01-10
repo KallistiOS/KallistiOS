@@ -118,6 +118,20 @@ typedef enum page_cache {
 } page_cache_t;
 /** @} */
 
+/** \defgroup mmu_page_size         Page size settings
+    \brief                          SH4 MMU page sizes
+    \ingroup                        mmu
+
+    @{
+*/
+typedef enum page_size {
+    PAGE_SIZE_1K,
+    PAGE_SIZE_4K,
+    PAGE_SIZE_64K,
+    PAGE_SIZE_1M,
+} page_size_t;
+/** @} */
+
 /** \brief   MMU TLB entry for a single page.
     \ingroup mmu
 
@@ -331,6 +345,32 @@ mmu_mapfunc_t mmu_map_get_callback(void);
     \return                 The old function that did mapping.
 */
 mmu_mapfunc_t mmu_map_set_callback(mmu_mapfunc_t newfunc);
+
+/** \brief   Create a static virtual memory maping.
+    \ingroup mmu
+
+    This function reserves one TLB entry to create a static mapping from a
+    virtual memory address to a physical memory address. Static mappings are
+    never flushed out of the TLB, and are sometimes useful when the whole MMU
+    function is not necesary. Static memory mappings can also use different page
+    sizes.
+
+    Note that the only way to undo static mappings is to call mmu_shutdown().
+
+    \param  virt            The virtual address for the memory mapping.
+    \param  phys            The physical address for the memory mapping.
+    \param  page_size       The size of the memory page used.
+    \param  page_prot       The memory protection usef for that mapping.
+    \param  cached          True if the mapped memory area is cached,
+                            false otherwise.
+    \retval 0               On success.
+    \retval -1              When the virtual or physical addresses are not
+                            aligned to the page size.
+*/
+int mmu_page_map_static(uintptr_t virt, uintptr_t phys,
+                        page_size_t page_size,
+                        page_prot_t page_prot,
+                        bool cached);
 
 /** \brief   Initialize MMU support.
     \ingroup mmu

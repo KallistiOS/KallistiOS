@@ -83,6 +83,8 @@ static int last_urc;
 /* Our TLB mapping function */
 static mmu_mapfunc_t map_func;
 
+/* Number of static allocations */
+static unsigned int tlb_nb_static;
 
 /********************************************************************************/
 /* Physical hardware management */
@@ -711,16 +713,41 @@ static void initial_page_write(irq_t source, irq_context_t *context, void *data)
     unhandled_mmu(source, context);
 }
 
-void mmu_init_basic(void) {
-    /* Reserve TLB entries 62-63 for SQ translation. Register them as read-write
-     * (since there's no write-only flag) with a 1 MiB page. */
-    SET_MMUCR(0x3e, 0x3e, 1, 0, 1, 1);
-    mmu_ldtlb(0, 0xe0000000, 0, 3, 1, 0, 0, 0, 0);
-    SET_MMUCR(0x3f, 0x3f, 1, 0, 1, 1);
-    mmu_ldtlb(0, 0xe0100000, 0, 3, 1, 0, 0, 0, 0);
+static const unsigned int page_mask[] = { 0x3ff, 0xfff, 0xffff, 0xfffff };
 
-    /* Set URB to 0x3d to not overwrite the SQ config, reset URC, enable MMU */
-    SET_MMUCR(0x3d, 0, 1, 0, 1, 1);
+int mmu_page_map_static(uintptr_t virt, uintptr_t phys,
+                        page_size_t page_size,
+                        page_prot_t page_prot,
+                        bool cached)
+{
+    unsigned int head;
+
+    if(virt & phys & page_mask[page_size])
+        return -1;
+
+    irq_disable_scoped();
+
+    head = 0x3f - tlb_nb_static;
+
+    SET_MMUCR(head, head, 1, 0, 0, 1);
+    mmu_ldtlb(0, virt, phys, page_size, page_prot, cached, 1, 0, 0);
+    SET_MMUCR(head - 1, 0, 1, 0, 0, 1);
+
+    tlb_nb_static++;
+
+    return 0;
+}
+
+void mmu_init_basic(void) {
+    /* Reset number of static mappings */
+    tlb_nb_static = 0;
+
+    /* Reserve TLB entries 62-63 for SQ translation. Register them as read-write
+     * (since there's no write-only flag) with a 1 MiB page.
+     * Note that mmu_page_map_static() will enable MMU so we don't have to do it
+     * later. */
+    mmu_page_map_static(0xe0100000, 0, PAGE_SIZE_1M, MMU_KERNEL_RDWR, false);
+    mmu_page_map_static(0xe0000000, 0, PAGE_SIZE_1M, MMU_KERNEL_RDWR, false);
 
     /* Clear the ITLB */
     mmu_reset_itlb();
