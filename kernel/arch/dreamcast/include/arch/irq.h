@@ -251,8 +251,8 @@ typedef enum irq_exception {
     EXC_SCIF_RXI           = 0x0720, /**< `[POST  ]` SCIF Receive ready */
     EXC_SCIF_BRI           = 0x0740, /**< `[POST  ]` SCIF break */
     EXC_SCIF_TXI           = 0x0760, /**< `[POST  ]` SCIF Transmit ready */
-    EXC_DOUBLE_FAULT       = 0x0ff0, /**< `[SOFT  ]` Exception happened in an ISR */
-    EXC_UNHANDLED_EXC      = 0x0fe0  /**< `[SOFT  ]` Exception went unhandled */
+    EXC_DOUBLE_FAULT       = 0x0780, /**< `[SOFT  ]` Exception happened in an ISR */
+    EXC_UNHANDLED_EXC      = 0x07e0  /**< `[SOFT  ]` Exception went unhandled */
 } irq_t;
 
 

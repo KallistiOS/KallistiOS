@@ -39,7 +39,7 @@ struct trapa_cb {
 };
 
 /* Individual exception handlers */
-static struct irq_cb   irq_handlers[0x100];
+static struct irq_cb   irq_handlers[0x40];
 /* TRAPA exception handlers */
 static struct trapa_cb trapa_handlers[0x100];
 
@@ -62,7 +62,7 @@ int irq_set_handler(irq_t code, irq_handler hnd, void *data) {
     if(code >= 0x1000 || (code & 0x000f))
         return -1;
 
-    code >>= 4;
+    code >>= 5;
     irq_handlers[code] = (struct irq_cb){ hnd, data };
 
     return 0;
@@ -74,7 +74,7 @@ irq_handler irq_get_handler(irq_t code) {
     if(code >= 0x1000 || (code & 0x000f))
         return NULL;
 
-    code >>= 4;
+    code >>= 5;
 
     return irq_handlers[code].hdl;
 }
@@ -226,7 +226,7 @@ void irq_handle_exception(int code) {
     }
 
     if(inside_int) {
-        hnd = &irq_handlers[EXC_DOUBLE_FAULT >> 4];
+        hnd = &irq_handlers[EXC_DOUBLE_FAULT >> 5];
         if(hnd->hdl != NULL)
             hnd->hdl(EXC_DOUBLE_FAULT, irq_srt_addr, hnd->data);
         else
@@ -266,7 +266,7 @@ void irq_handle_exception(int code) {
 
     /* If there's a handler, call it */
     {
-        hnd = &irq_handlers[evt >> 4];
+        hnd = &irq_handlers[evt >> 5];
         if(hnd->hdl != NULL) {
             hnd->hdl(evt, irq_srt_addr, hnd->data);
             handled = 1;
@@ -274,7 +274,7 @@ void irq_handle_exception(int code) {
     }
 
     if(!handled) {
-        hnd = &irq_handlers[EXC_UNHANDLED_EXC >> 4];
+        hnd = &irq_handlers[EXC_UNHANDLED_EXC >> 5];
         if(hnd->hdl != NULL)
             hnd->hdl(evt, irq_srt_addr, hnd->data);
         else

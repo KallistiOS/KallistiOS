@@ -387,7 +387,7 @@ static inline uintptr_t arch_get_ret_addr(void) {
     \note                   This only works if you don't disable frame pointers.
 */
 static inline uintptr_t arch_get_fptr(void) {
-    register uintptr_t fp asm("r14");
+    register uintptr_t fp __asm__("r14");
 
     return fp;
 }
