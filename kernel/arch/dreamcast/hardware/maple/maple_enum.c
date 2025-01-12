@@ -6,6 +6,7 @@
  */
 
 #include <dc/maple.h>
+#include <kos/dbgio.h>
 #include <kos/thread.h>
 
 /* Return the number of connected devices */
@@ -21,12 +22,30 @@ int maple_enum_count(void) {
     return cnt;
 }
 
-/* Return a raw device info struct for the given device */
-maple_device_t * maple_enum_dev(int p, int u) {
+static inline void increment_refcnt(maple_device_t *dev) {
+    /* If we're going to overflow, don't */
+    if(dev && (dev->refcnt != 0xff))
+        dev->refcnt++;
+}
+
+/* Return a raw device info struct for the given device
+   for internal use. */
+static maple_device_t * maple_enum_dev_inner(int p, int u) {
     maple_device_t *rv = maple_state.ports[p].units[u];
     if(rv && rv->valid)
         return rv;
     return NULL;
+}
+
+/* Return a raw device info struct for the given device
+   for use by user software. */
+maple_device_t * maple_enum_dev(int p, int u) {
+    maple_device_t *rv = maple_enum_dev_inner(p, u);
+
+    /* Mark that we've handed out a dev_t * */
+    increment_refcnt(rv);
+
+    return rv;
 }
 
 /* Return the Nth device of the requested type (where N is zero-indexed) */
@@ -39,7 +58,10 @@ maple_device_t * maple_enum_type(int n, uint32 func) {
             dev = maple_enum_dev(p, u);
 
             if(dev != NULL && dev->info.functions & func) {
-                if(!n) return dev;
+                if(!n) {
+                    increment_refcnt(dev);
+                    return dev;
+                }
 
                 n--;
             }
@@ -87,8 +109,10 @@ maple_device_t * maple_enum_type_ex(int n, uint32 func, uint32 cap) {
                       ((cap & 0xFF00) << 8) | ((cap & 0xFF) << 24);
 
                 if((dev->info.function_data[d] & cap) == cap) {
-                    if(!n)
+                    if(!n) {
+                        increment_refcnt(dev);
                         return dev;
+                    }
 
                     --n;
                 }

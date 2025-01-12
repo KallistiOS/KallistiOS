@@ -279,6 +279,8 @@ typedef struct maple_device {
     maple_frame_t           frame;          /**< \brief One rx/tx frame */
     struct maple_driver     *drv;           /**< \brief Driver which handles this device */
 
+    uint8                   refcnt;         /**< \brief Number of references being held */
+
     uint8                   probe_mask;     /**< \brief Mask of sub-devices left to probe */
     uint8                   dev_mask;       /**< \brief Device-present mask for unit 0's */
 

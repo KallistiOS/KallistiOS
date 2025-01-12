@@ -148,6 +148,12 @@ int maple_driver_detach(int p, int u) {
     dev->probe_mask = 0;
     dev->dev_mask = 0;
 
+    /* If the device struct is unreferenced, free it */
+    if(!dev->refcnt) {
+        maple_state.ports[p].units[u] = NULL;
+        free(dev);
+    }
+
     return 0;
 }
 
