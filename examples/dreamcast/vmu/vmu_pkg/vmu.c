@@ -91,8 +91,6 @@ void write_entry(void) {
     pkg.icon_cnt = 0;
     pkg.icon_anim_speed = 0;
     pkg.eyecatch_type = VMUPKG_EC_NONE;
-    pkg.data_len = 4096;
-    pkg.data = data;
 
     for(i = 0; i < 4096; i++)
         data[i] = i & 255;
@@ -107,7 +105,8 @@ void write_entry(void) {
         return;
     }
 
-    fs_write(f, pkg_out, pkg_size);
+    fs_write(f, data, sizeof(data));
+    fs_vmu_set_header(f, &pkg);
     fs_close(f);
 }
 
