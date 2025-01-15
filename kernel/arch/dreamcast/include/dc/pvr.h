@@ -2023,6 +2023,32 @@ void pvr_dr_init(pvr_dr_state_t *vtx_buf_ptr);
 
 /** \brief   Obtain the target address for Direct Rendering.
 
+    This function returns a pointer which maps directly into the alternate
+    32-byte \ref store_queues "store queue" from the one which was mapped from
+    the previous call to pvr_dr_target(). This is where vertex information
+    should be written into for it later be submitted to the TA via
+    pvr_dr_commit().
+
+    The return value is of `volatile void*` type, so it should be casted to the
+    desired vertex structure or whatever type is meant to be written.
+
+    \warning
+    The store queues are WRITE-ONLY. Any attempt to read from this address will
+    return all 0s.
+
+    \note
+    Since each store queue is only 32-bytes large, while certain PVR formats
+    such as pvr_sprite_t are 64-bytes in size, they should be written in pairs,
+    with two calls to `pvr_dr_target()` and `pvr_dr_commit()`, one for each
+    half of the vertex data.
+
+    \warning
+    The pointer returned here is to `volatile` memory, so that the compiler
+    doesn't keep things in registers rather than writing to the SQs or optimize
+    away SQ writes due to never seeing written values get used (since they're
+    read-only). It is very important that when casting the return value to its
+    proper type, the pointer remains pointing to `volatile` memory.
+
     \param  vtx_buf_ptr     State variable for Direct Rendering. Should be of
                             type pvr_dr_state_t, and must have been initialized
                             previously in the scene with pvr_dr_init().
@@ -2030,18 +2056,27 @@ void pvr_dr_init(pvr_dr_state_t *vtx_buf_ptr);
     \return                 A write-only destination address where a primitive
                             should be written to get ready to submit it to the
                             TA in DR mode.
+
+    \sa pvr_dr_commit(), store_queues
 */
 #define pvr_dr_target(vtx_buf_ptr) \
     ({ (vtx_buf_ptr) ^= 32; \
-        (pvr_vertex_t *)(MEM_AREA_SQ_BASE | (vtx_buf_ptr)); \
+        (volatile void *)(MEM_AREA_SQ_BASE | (vtx_buf_ptr)); \
     })
 
 /** \brief   Commit a primitive written into the Direct Rendering target address.
 
+    Flushes the \ref store_queues "store queue" pointed to by \p addr, which
+    was returned from a previous call to pvr_dr_target(). The flush is done by
+    issuing a prefetch command on the store queue, causing its data to be
+    submitted to the TA's vertex input address.
+
     \param  addr            The address returned by pvr_dr_target(), after you
                             have written the primitive to it.
+
+    \sa pvr_dr_target(), store_queues
 */
-#define pvr_dr_commit(addr) sq_flush(addr)
+#define pvr_dr_commit(addr) sq_flush((const void *)addr)
 
 /** \brief  Finish work with Direct Rendering.
 
@@ -2060,7 +2095,7 @@ void pvr_dr_finish(void);
     \param  data            A pointer to the 32-byte payload.
                             The pointer must be aligned to 8 bytes.
 */
-void pvr_send_to_ta(void *data);
+void pvr_send_to_ta(const void *data);
 
 /** @} */
 
