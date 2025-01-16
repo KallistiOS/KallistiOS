@@ -202,6 +202,8 @@ snd_pcm16_split
 snd_pcm16_split_sq
 snd_pcm8_split
 snd_adpcm_split
+snd_get_pos
+snd_is_playing
 
 # Video
 vid_mode

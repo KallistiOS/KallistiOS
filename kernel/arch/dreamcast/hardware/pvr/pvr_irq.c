@@ -28,11 +28,9 @@
 
 // Find the next list to DMA out. If we have none left to do, then do
 // nothing. Otherwise, start the DMA and chain back to us upon completion.
-static void dma_next_list(void *data) {
+static void dma_next_list(void *thread) {
     int i, did = 0;
     volatile pvr_dma_buffers_t * b;
-
-    (void)data;
 
     // DBG(("dma_next_list\n"));
 
@@ -61,7 +59,7 @@ static void dma_next_list(void *data) {
             //DBG(("dma_begin(buf %d, list %d, base %p, len %d)\n",
             //  pvr_state.ram_target ^ 1, i,
             //  b->base[i], b->ptr[i]));
-            pvr_dma_load_ta(b->base[i], b->ptr[i], 0, dma_next_list, 0);
+            pvr_dma_load_ta(b->base[i], b->ptr[i], 0, dma_next_list, thread);
 
             // Mark this list as done, and break out for now.
             pvr_state.lists_dmaed |= 1 << i;
@@ -79,7 +77,10 @@ static void dma_next_list(void *data) {
         pvr_state.lists_dmaed = 0;
 
         // Unlock
-        mutex_unlock((mutex_t *)&pvr_state.dma_lock);
+        if(irq_inside_int())
+            mutex_unlock_as_thread((mutex_t *)&pvr_state.dma_lock, thread);
+        else
+            mutex_unlock((mutex_t *)&pvr_state.dma_lock);
 
         // Buffers are now empty again
         pvr_state.dma_buffers[pvr_state.ram_target ^ 1].ready = 0;
@@ -92,7 +93,7 @@ void pvr_start_dma(void) {
     mutex_lock((mutex_t *)&pvr_state.dma_lock);
 
     // Begin DMAing the first list.
-    dma_next_list(0);
+    dma_next_list(thd_get_current());
 }
 
 static void pvr_render_lists(void) {
