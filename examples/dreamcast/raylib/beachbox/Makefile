@@ -1,0 +1,54 @@
+TARGET = beachbox.elf
+SRCS = main.c \
+       src/scenes/credits.c \
+       src/scenes/game.c \
+       src/scenes/loading.c \
+       src/scenes/mainmenu.c \
+       src/scenes/options.c \
+       src/scenes/raylogo.c \
+       src/scenes/shop.c \
+       src/scenes/unlockables.c \
+       src/audio.c \
+       src/background.c \
+       src/controller.c \
+       src/hats.c \
+       src/objects.c \
+       src/player.c \
+       src/save.c \
+       src/ui.c \
+       src/scene.c \
+       src/vmu.c
+OBJS = $(SRCS:.c=.o) romdisk.o
+KOS_ROMDISK_DIR = romdisk
+KOS_CFLAGS += -std=gnu2x
+KOS_CFLAGS += -I${KOS_PORTS}/include/raylib
+KOS_GCCVER_MIN = 13.0.0
+
+all: $(TARGET)
+
+include $(KOS_BASE)/Makefile.rules
+
+ifeq ($(call KOS_GCCVER_MIN_CHECK,$(KOS_GCCVER_MIN)),1)
+
+clean: rm-elf
+	-rm -f $(OBJS)
+
+rm-elf:
+	-rm -f $(TARGET) romdisk.*
+
+$(TARGET): $(OBJS)
+	kos-cc -o $(TARGET) $(OBJS) -lraylib -lGL -lm -lwav
+
+run: $(TARGET)
+	$(KOS_LOADER) $(TARGET)
+
+dist: $(TARGET)
+	-rm -f $(OBJS) romdisk.img
+	$(KOS_STRIP) $(TARGET)
+
+else
+  all $(TARGET) clean rm-elf run dist:
+	$(KOS_GCCVER_MIN_WARNING)
+endif
+
+.PHONY: all clean rm-elf run dist
