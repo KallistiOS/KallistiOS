@@ -16,7 +16,7 @@ if [ -z "${KOS_SH4_PRECISION}" ] ; then
     export KOS_SH4_PRECISION="-m4-single-only"
 fi
 
-export KOS_CFLAGS="${KOS_CFLAGS} ${KOS_SH4_PRECISION} -ml -ffunction-sections -fdata-sections -matomic-model=soft-imask -ftls-model=local-exec"
+export KOS_CFLAGS="${KOS_CFLAGS} ${KOS_SH4_PRECISION} -ml -mfsrra -mfsca -ffunction-sections -fdata-sections -matomic-model=soft-imask -ftls-model=local-exec"
 export KOS_AFLAGS="${KOS_AFLAGS} -little"
 
 if [ x${KOS_SUBARCH} = xnaomi ]; then
