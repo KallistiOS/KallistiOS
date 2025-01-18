@@ -52,7 +52,7 @@ typedef struct vmu_pkg {
     int         eyecatch_type;      /**< \brief "Eyecatch" type */
     int         data_len;           /**< \brief Number of data (payload) bytes */
     uint16      icon_pal[16];       /**< \brief Icon palette (ARGB4444) */
-    const uint8 *icon_data;         /**< \brief 512*n bytes of icon data */
+    uint8       *icon_data;         /**< \brief 512*n bytes of icon data */
     const uint8 *eyecatch_data;     /**< \brief Eyecatch data */
     const uint8 *data;              /**< \brief Payload data */
 } vmu_pkg_t;
@@ -121,6 +121,29 @@ int vmu_pkg_build(vmu_pkg_t *src, uint8 ** dst, int * dst_size);
 */
 int vmu_pkg_parse(uint8 *data, vmu_pkg_t *pkg);
 
+/** \brief   Load a .ico file to use as a VMU file's icon.
+    \ingroup vmu_package
+
+    Icon files must be in the ICO file format, be 32x32 in size, contain a
+    bitmap (no PNG or compressed BMP), and use paletted 4bpp.
+    They can contain more than one frame, and they can use up to 16 colors
+    if transparency is not used, or 15 colors otherwise. Finally, all frames
+    must use the same palette.
+
+    This function assumes that the vmu_pkg_t has been properly initialized;
+    in particular, the .icon_cnt must be set, and the .icon_data must point to
+    a valid buffer (of 512 bytes per frame).
+
+    If the .ico file contains more frames than requested, only the first ones
+    are loaded. If it contains less frames than requested, the .icon_cnt field
+    will be updated to the new frame count.
+
+    \param  pkg             A pointer a pre-initialized vmu_pkg_t
+    \param  icon_fn         The file path to the .ico file
+    \retval -1              If the .ico file cannot be loaded.
+    \retval 0               On success.
+*/
+int vmu_pkg_load_icon(vmu_pkg_t *pkg, const char *icon_fn);
 
 __END_DECLS
 
