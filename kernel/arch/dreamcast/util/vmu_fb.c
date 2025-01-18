@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include <dc/math.h>
 #include <dc/maple/vmu.h>
 #include <dc/vmu_fb.h>
 
@@ -187,17 +188,37 @@ static void insert_bits(uint8_t *data,
     }
 }
 
-void vmufb_paint_area(vmufb_t *fb,
-                      unsigned int x, unsigned int y,
-                      unsigned int w, unsigned int h,
-                      const char *data) {
+static void vmufb_paint_area_strided(vmufb_t *fb,
+                                     unsigned int x, unsigned int y,
+                                     unsigned int w, unsigned int h,
+                                     unsigned int stride, const uint8_t *data) {
     unsigned int i;
     uint64_t bits;
 
     for(i = 0; i < h; i++) {
-        bits = extract_bits((const uint8_t *)data, i * w, w);
+        bits = extract_bits(data, i * stride, w);
         insert_bits((uint8_t *)fb->data, (y + i) * VMU_SCREEN_WIDTH + x, w, bits);
     }
+}
+
+void vmufb_paint_area(vmufb_t *fb,
+                      unsigned int x, unsigned int y,
+                      unsigned int w, unsigned int h,
+                      const char *data) {
+    vmufb_paint_area_strided(fb, x, y, w, h, w, (const uint8_t *)data);
+}
+
+void vmufb_paint_xbm(vmufb_t *fb,
+                     unsigned int x, unsigned int y,
+                     unsigned int w, unsigned int h,
+                     const uint8_t *xbm_data) {
+    uint8_t buf[48 * 32];
+    unsigned int i, wb = (w + 7) / 8;
+
+    for(i = 0; i < h * wb; i++)
+        buf[i] = bit_reverse(xbm_data[i]) >> 24;
+
+    vmufb_paint_area_strided(fb, x, y, w, h, wb * 8, buf);
 }
 
 void vmufb_clear(vmufb_t *fb) {

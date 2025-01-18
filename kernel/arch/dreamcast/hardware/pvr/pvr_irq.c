@@ -49,12 +49,6 @@ static void dma_next_list(void *thread) {
                 continue;
             }
 
-            // Flush the last 32 bytes out of dcache, just in case.
-            // dcache_flush_range((ptr_t)(b->base[i] + b->ptr[i] - 32), 32);
-            dcache_flush_range((ptr_t)(b->base[i]), b->ptr[i] + 32);
-            //amt = b->ptr[i] > 16384 ? 16384 : b->ptr[i];
-            //dcache_flush_range((ptr_t)(b->base[i] + b->ptr[i] - amt), amt);
-
             // Start the DMA transfer, chaining to ourselves.
             //DBG(("dma_begin(buf %d, list %d, base %p, len %d)\n",
             //  pvr_state.ram_target ^ 1, i,

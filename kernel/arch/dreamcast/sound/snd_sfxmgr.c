@@ -719,49 +719,15 @@ err_occurred:
 }
 
 int snd_sfx_play_chn(int chn, sfxhnd_t idx, int vol, int pan) {
-    int size;
-    snd_effect_t *t = (snd_effect_t *)idx;
-    AICA_CMDSTR_CHANNEL(tmp, cmd, chan);
-
-    size = t->len;
-
-    if(size >= 65535) size = 65534;
-
-    cmd->cmd = AICA_CMD_CHAN;
-    cmd->timestamp = 0;
-    cmd->size = AICA_CMDSTR_CHANNEL_SIZE;
-    cmd->cmd_id = chn;
-    chan->cmd = AICA_CH_CMD_START;
-    chan->base = t->locl;
-    chan->type = t->fmt;
-    chan->length = size;
-    chan->loop = 0;
-    chan->loopstart = 0;
-    chan->loopend = size;
-    chan->freq = t->rate;
-    chan->vol = vol;
-
-    if(!t->stereo) {
-        chan->pan = pan;
-        snd_sh4_to_aica(tmp, cmd->size);
-    }
-    else {
-        chan->pan = 0;
-
-        snd_sh4_to_aica_stop();
-        snd_sh4_to_aica(tmp, cmd->size);
-
-        cmd->cmd_id = chn + 1;
-        chan->base = t->locr;
-        chan->pan = 255;
-        snd_sh4_to_aica(tmp, cmd->size);
-        snd_sh4_to_aica_start();
-    }
-
-    return chn;
+    sfx_play_data_t data = {0};
+    data.chn = chn;
+    data.idx = idx;
+    data.vol = vol;
+    data.pan = pan;
+    return snd_sfx_play_ex(&data);
 }
 
-int snd_sfx_play(sfxhnd_t idx, int vol, int pan) {
+int find_free_channel(void) {
     int chn, moved, old;
 
     /* This isn't perfect.. but it should be good enough. */
@@ -783,10 +749,68 @@ int snd_sfx_play(sfxhnd_t idx, int vol, int pan) {
     if(moved && chn == sfx_nextchan) {
         return -1;
     }
-    else {
-        sfx_nextchan = (chn + 2) % 64;  /* in case of stereo */
-        return snd_sfx_play_chn(chn, idx, vol, pan);
+
+    sfx_nextchan = (chn + 2) % 64;  /* in case of stereo */
+    return chn;
+}
+
+int snd_sfx_play(sfxhnd_t idx, int vol, int pan) {
+    sfx_play_data_t data = {0};
+    data.chn = -1;
+    data.idx = idx;
+    data.vol = vol;
+    data.pan = pan;
+    return snd_sfx_play_ex(&data);
+}
+
+int snd_sfx_play_ex(sfx_play_data_t *data) {
+    if (data->chn < 0) {
+        data->chn = find_free_channel();
+        if (data->chn < 0) {
+            return -1;
+        }
     }
+
+    int size;
+    snd_effect_t *t = (snd_effect_t *)data->idx;
+    AICA_CMDSTR_CHANNEL(tmp, cmd, chan);
+
+    size = t->len;
+
+    if(size >= 65535) size = 65534;
+
+    cmd->cmd = AICA_CMD_CHAN;
+    cmd->timestamp = 0;
+    cmd->size = AICA_CMDSTR_CHANNEL_SIZE;
+    cmd->cmd_id = data->chn;
+    chan->cmd = AICA_CH_CMD_START;
+    chan->base = t->locl;
+    chan->type = t->fmt;
+    chan->length = size;
+    chan->loop = data->loop;
+    chan->loopstart = 0;
+    chan->loopend = size;
+    chan->freq = data->freq > 0 ? data->freq : t->rate;
+    chan->vol = data->vol;
+
+    if(!t->stereo) {
+        chan->pan = data->pan;
+        snd_sh4_to_aica(tmp, cmd->size);
+    }
+    else {
+        chan->pan = 0;
+
+        snd_sh4_to_aica_stop();
+        snd_sh4_to_aica(tmp, cmd->size);
+
+        cmd->cmd_id = data->chn + 1;
+        chan->base = t->locr;
+        chan->pan = 255;
+        snd_sh4_to_aica(tmp, cmd->size);
+        snd_sh4_to_aica_start();
+    }
+
+    return data->chn;
 }
 
 void snd_sfx_stop(int chn) {

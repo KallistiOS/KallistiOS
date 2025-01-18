@@ -20,11 +20,15 @@
 #include <kos/dbgio.h>
 #include <kos/thread.h>
 #include <kos/library.h>
+#include <kos/regfield.h>
 
 /* Macros for accessing related registers. */
 #define TRA    ( *((volatile uint32_t *)(0xff000020)) ) /* TRAPA Exception Register */
 #define EXPEVT ( *((volatile uint32_t *)(0xff000024)) ) /* Exception Event Register */
 #define INTEVT ( *((volatile uint32_t *)(0xff000028)) ) /* Interrupt Event Register */
+
+/* Interrupt priority registers */
+#define REG_IPR(x) ( *((volatile uint16_t *)(0xffd00004 + (x) * 4)) )
 
 /* IRQ handler closure */
 struct irq_cb {
@@ -397,6 +401,9 @@ int irq_init(void) {
     /* Set a default FPU exception handler */
     irq_set_handler(EXC_FPU, irq_def_fpu, NULL);
 
+    /* Unmask DMA IRQs, set priority of 3 */
+    irq_set_priority(IRQ_SRC_DMAC, 3);
+
     /* Set a default context (will be superseded if threads are
        enabled later) */
     irq_set_context(&irq_context_default);
@@ -422,6 +429,9 @@ void irq_shutdown(void) {
     if(!initted)
         return;
 
+    /* Disable DMA IRQs */
+    irq_set_priority(IRQ_SRC_DMAC, IRQ_PRIO_MASKED);
+
     /* Restore SR and VBR */
     __asm__("mov.l  %0,r0\n"
             "ldc    r0,sr" : : "m"(pre_sr));
@@ -429,4 +439,22 @@ void irq_shutdown(void) {
             "ldc    r0,vbr" : : "m"(pre_vbr));
 
     initted = false;
+}
+
+void irq_set_priority(irq_src_t src, unsigned int prio) {
+    uint16_t ipr;
+
+    if (prio > IRQ_PRIO_MAX)
+        prio = IRQ_PRIO_MAX;
+
+    irq_disable_scoped();
+
+    ipr = REG_IPR(src / 4);
+    ipr &= ~(0xf << (src % 4) * 4);
+    ipr |= prio << (src % 4) * 4;
+    REG_IPR(src / 4) = ipr;
+}
+
+unsigned int irq_get_priority(irq_src_t src) {
+    return (REG_IPR(src / 4) >> (src % 4) * 4) & 0xf;
 }

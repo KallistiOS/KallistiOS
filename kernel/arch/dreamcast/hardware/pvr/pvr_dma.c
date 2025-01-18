@@ -11,9 +11,9 @@
 
 #include <stdio.h>
 #include <errno.h>
+#include <arch/dmac.h>
 #include <dc/pvr.h>
 #include <dc/asic.h>
-#include <dc/dmac.h>
 #include <dc/sq.h>
 #include <kos/thread.h>
 #include <kos/sem.h>
@@ -42,7 +42,7 @@ static void pvr_dma_irq_hnd(uint32_t code, void *data) {
     (void)code;
     (void)data;
 
-    if(DMAC_DMATCR2 != 0)
+    if(dma_transfer_get_remaining(DMA_CHANNEL_2) != 0)
         dbglog(DBG_INFO, "pvr_dma: The dma did not complete successfully\n");
 
     /* Call the callback, if any. */
@@ -95,10 +95,18 @@ static uintptr_t pvr_dest_addr(uintptr_t dest, pvr_dma_type_t type) {
     return dest_addr;
 }
 
+static const dma_config_t pvr_dma_config = {
+    .channel = DMA_CHANNEL_2,
+    .request = DMA_REQUEST_EXTERNAL_MEM_TO_DEV,
+    .unit_size = DMA_UNITSIZE_32BYTE,
+    .src_mode = DMA_ADDRMODE_INCREMENT,
+    .transmit_mode = DMA_TRANSMITMODE_BURST,
+};
+
 int pvr_dma_transfer(const void *src, uintptr_t dest, size_t count,
                      pvr_dma_type_t type, bool block,
                      pvr_dma_callback_t callback, void *cbdata) {
-    uintptr_t src_addr = ((uintptr_t)src);
+    dma_addr_t src_addr = dma_map_src(src, count);
 
     /* Check for 32-byte alignment */
     if(src_addr & 0x1F) {
@@ -118,21 +126,8 @@ int pvr_dma_transfer(const void *src, uintptr_t dest, size_t count,
         return -1;
     }
 
-    if(DMAC_CHCR2 & 0x1)  /* DE bit set so we must clear it */
-        DMAC_CHCR2 &= ~0x1;
-
-    if(DMAC_CHCR2 & 0x2)  /* TE bit set so we must clear it */
-        DMAC_CHCR2 &= ~0x2;
-
-    DMAC_SAR2 = src_addr;
-    DMAC_DMATCR2 = count / 32;
-    DMAC_CHCR2 = 0x12c1;
-
-    if((DMAC_DMAOR & DMAOR_STATUS_MASK) != DMAOR_NORMAL_OPERATION) {
-        dbglog(DBG_ERROR, "pvr_dma: Failed DMAOR check\n");
-        errno = EIO;
+    if(dma_transfer(&pvr_dma_config, 0, src_addr, count, NULL))
         return -1;
-    }
 
     pvr_dma[PVR_STATE] = pvr_dest_addr(dest, type);
     pvr_dma[PVR_LEN] = count;

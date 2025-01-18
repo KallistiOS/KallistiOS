@@ -486,6 +486,58 @@ static inline void __irq_scoped_cleanup(int *state) {
 */
 #define irq_disable_scoped() __irq_disable_scoped(__LINE__)
 
+/** \brief  Minimum/maximum values for IRQ priorities
+
+    A priority of zero means the interrupt is masked.
+    The maximum priority that can be set is 15.
+ */
+#define IRQ_PRIO_MAX    15
+#define IRQ_PRIO_MIN    1
+#define IRQ_PRIO_MASKED 0
+
+/** \brief  Interrupt sources
+
+   Interrupt sources at the SH4 level.
+ */
+typedef enum irq_src {
+    IRQ_SRC_RTC,
+    IRQ_SRC_TMU2,
+    IRQ_SRC_TMU1,
+    IRQ_SRC_TMU0,
+    _IRQ_SRC_RESV,
+    IRQ_SRC_SCI1,
+    IRQ_SRC_REF,
+    IRQ_SRC_WDT,
+    IRQ_SRC_HUDI,
+    IRQ_SRC_SCIF,
+    IRQ_SRC_DMAC,
+    IRQ_SRC_GPIO,
+    IRQ_SRC_IRL3,
+    IRQ_SRC_IRL2,
+    IRQ_SRC_IRL1,
+    IRQ_SRC_IRL0,
+} irq_src_t;
+
+/** \brief  Set the priority of a given IRQ source
+
+    This function can be used to set the priority of a given IRQ source.
+
+    \param  src             The interrupt source whose priority should be set
+    \param  prio            The priority to set, in the range [0..15],
+                            0 meaning the IRQs from that source are masked.
+*/
+void irq_set_priority(irq_src_t src, unsigned int prio);
+
+/** \brief  Get the priority of a given IRQ source
+
+    This function returns the priority of a given IRQ source.
+
+    \param  src             The interrupt source whose priority should be set
+    \return                 The priority of the IRQ source.
+                            A value of 0 means the IRQs are masked.
+*/
+unsigned int irq_get_priority(irq_src_t src);
+
 /** @} */
 
 __END_DECLS

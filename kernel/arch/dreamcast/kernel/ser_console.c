@@ -23,7 +23,6 @@ static char buffer[256];
 static semaphore_t *chr_ready;
 
 static vuint16 * const SCSCR2 = (vuint16*)0xffe80008;
-static vuint16 * const iprc = (vuint16*)0xffd0000c;
 
 int thd_pslist();
 
@@ -118,14 +117,14 @@ static void real_start(void *param) {
     /* Hook the serial IRQ */
     /* irq_set_handler(EXC_SCIF_RXI, ser_irq);
     *SCSCR2 |= 1 << 6;
-    *iprc |= 0x000e << 4; */
+    irq_set_priority(IRQ_SRC_SCIF, 14); */
 
     /* Do the shell */
     interact();
     dbgio_write_str("shell exiting\n");
 
     /* Unhook serial IRQ */
-    /* *iprc &= ~(0x000e << 4);
+    /* irq_set_priority(IRQ_SRC_SCIF, IRQ_PRIO_MASKED);
     *SCSCR2 &= ~(1 << 6);
     irq_set_handler(EXC_SCIF_RXI, NULL); */
 

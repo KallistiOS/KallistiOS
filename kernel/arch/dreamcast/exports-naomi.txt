@@ -118,6 +118,7 @@ snd_sfx_load_fd
 snd_sfx_play
 snd_sfx_stop_all
 snd_sfx_play_chn
+snd_sfx_play_ex
 snd_sfx_stop
 snd_sfx_chn_alloc
 snd_sfx_chn_free

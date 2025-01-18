@@ -99,7 +99,7 @@ typedef struct strchan {
 
     uint32_t dma_length;
     uintptr_t dma_dest;
-    kthread_t *poll_thd;
+    kthread_t *mutex_thd;
 } strchan_t;
 
 /* Our stream structs */
@@ -117,6 +117,8 @@ static int max_channels = 2;
         assert( (x) >= 0 && (x) < SND_STREAM_MAX ); \
         assert( streams[(x)].initted ); \
     } while(0)
+
+static size_t snd_stream_fill(snd_stream_hnd_t hnd, uint32_t offset, size_t size);
 
 static inline size_t samples_to_bytes(snd_stream_hnd_t hnd, size_t samples) {
     switch(streams[hnd].bitsize) {
@@ -188,7 +190,7 @@ void snd_stream_filter_remove(snd_stream_hnd_t hnd, snd_stream_filter_t filtfunc
     }
 }
 
-static void process_filters(snd_stream_hnd_t hnd, void **buffer, int *samplecnt) {
+static inline void process_filters(snd_stream_hnd_t hnd, void **buffer, int *samplecnt) {
     filter_t *f;
 
     TAILQ_FOREACH(f, &streams[hnd].filters, lent) {
@@ -314,54 +316,9 @@ void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t 
     g2_unlock(ctx);
 }
 
-static void snd_stream_prefill_part(snd_stream_hnd_t hnd, uint32_t offset) {
-    const size_t buffer_size = streams[hnd].buffer_size;
-    const int chans = streams[hnd].channels;
-    const uintptr_t left = streams[hnd].spu_ram_sch[0] + offset;
-    const uintptr_t right = streams[hnd].spu_ram_sch[1] + offset;
-    const int max_got = (buffer_size / 2) * chans;
-    int got = max_got;
-    void *buf = streams[hnd].get_data(hnd, max_got, &got);
-
-    if(buf == NULL) {
-        dbglog(DBG_ERROR, "snd_stream_prefill_part(): get_data() failed\n");
-        return;
-    }
-
-    if(got > max_got) {
-        got = max_got;
-    }
-
-    process_filters(hnd, &buf, &got);
-
-    if(chans == 1) {
-        spu_memload_sq(left, buf, got);
-        return;
-    }
-
-    if(streams[hnd].bitsize == 16) {
-        if((uintptr_t)buf & 31) {
-            snd_pcm16_split_unaligned(buf, sep_buffer[0], sep_buffer[1], got);
-        }
-        else {
-            snd_pcm16_split_sq((uint32_t *)buf, left, right, got);
-            return;
-        }
-    }
-    else if(streams[hnd].bitsize == 8) {
-        snd_pcm8_split(buf, sep_buffer[0], sep_buffer[1], got);
-    }
-    else if(streams[hnd].bitsize == 4) {
-        snd_adpcm_split(buf, sep_buffer[0], sep_buffer[1], got);
-    }
-
-    spu_memload_sq(left, sep_buffer[0], got / 2);
-    spu_memload_sq(right, sep_buffer[1], got / 2);
-}
 
 /* Prefill buffers -- implicitly called by snd_stream_start() */
 void snd_stream_prefill(snd_stream_hnd_t hnd) {
-    size_t filled = 0;
     strchan_t *stream;
 
     CHECK_HND(hnd);
@@ -370,22 +327,12 @@ void snd_stream_prefill(snd_stream_hnd_t hnd) {
     if(!stream->get_data && !stream->req_data) {
         return;
     }
-    mutex_lock(&stream_mutex);
 
-    if(stream->req_data) {
-        filled = stream->req_data(hnd,
-            stream->spu_ram_sch[0] | SPU_RAM_UNCACHED_BASE,
-            stream->spu_ram_sch[1] | SPU_RAM_UNCACHED_BASE,
-            stream->buffer_size);
-    }
-    if(filled <= 0 && stream->get_data) {
-        snd_stream_prefill_part(hnd, 0);
-        snd_stream_prefill_part(hnd, stream->buffer_size / 2);
-    }
+    snd_stream_fill(hnd, 0, stream->buffer_size / 2);
+    snd_stream_fill(hnd, stream->buffer_size / 2, stream->buffer_size / 2);
 
     /* Start playing from the beginning */
     stream->last_write_pos = 0;
-    mutex_unlock(&stream_mutex);
 }
 
 /* Initialize stream system */
@@ -396,10 +343,23 @@ int snd_stream_init(void) {
 int snd_stream_init_ex(int channels, size_t buffer_size) {
     max_channels = channels;
 
-    if(channels == 2 && buffer_size > 0) {
-        /* Create stereo separation buffers */
-        sep_buffer[0] = memalign(32, buffer_size * channels);
-        sep_buffer[1] = sep_buffer[0] + ((buffer_size * channels) / 8);
+    if(buffer_size > 0) {
+        /* Create stereo separation buffers. This buffer size for each channel.
+           But half size of streams buffer is enough, because stream
+           polling doesn't read more than half buffer at time.
+           This can also be used for mono streams on unaligned data.
+        */
+        sep_buffer[0] = memalign(32, buffer_size);
+
+        if(sep_buffer[0] == NULL) {
+            dbglog(DBG_ERROR, "snd_stream_init_ex(): memory allocation failed\n");
+            return -1;
+        }
+        sep_buffer[1] = sep_buffer[0] + (buffer_size / 8);
+    }
+    else {
+        sep_buffer[0] = NULL;
+        sep_buffer[1] = NULL;
     }
 
     /* Finish loading the stream driver */
@@ -555,25 +515,31 @@ static void snd_stream_start_type(snd_stream_hnd_t hnd, uint32_t type, uint32_t 
 
     if(streams[hnd].type == AICA_SM_16BIT) {
         streams[hnd].bitsize = 16;
+
+        if(streams[hnd].buffer_size > SND_STREAM_BUFFER_MAX_PCM16) {
+            streams[hnd].buffer_size = SND_STREAM_BUFFER_MAX_PCM16;
+        }
     }
     else if(streams[hnd].type == AICA_SM_8BIT) {
         streams[hnd].bitsize = 8;
+
+        if(streams[hnd].buffer_size > SND_STREAM_BUFFER_MAX_PCM8) {
+            streams[hnd].buffer_size = SND_STREAM_BUFFER_MAX_PCM8;
+        }
     }
     else if(streams[hnd].type == AICA_SM_ADPCM_LS) {
         streams[hnd].bitsize = 4;
 
-        if(streams[hnd].buffer_size > (32 << 10)) {
-            /* The channel position data size is 16-bits.
-                Need to make sure that we don't go beyond these limits */
-            streams[hnd].buffer_size = (32 << 10);
+        if(streams[hnd].buffer_size > SND_STREAM_BUFFER_MAX_ADPCM) {
+            streams[hnd].buffer_size = SND_STREAM_BUFFER_MAX_ADPCM;
         }
     }
 
-    /* Make sure these are sync'd (and/or delayed) */
-    snd_sh4_to_aica_stop();
-
     /* Prefill buffers */
     snd_stream_prefill(hnd);
+
+    /* Make sure these are sync'd (and/or delayed) */
+    snd_sh4_to_aica_stop();
 
     /* Channel 0 */
     cmd->cmd = AICA_CMD_CHAN;
@@ -645,6 +611,10 @@ void snd_stream_stop(snd_stream_hnd_t hnd) {
         return;
     }
 
+    if(streams[hnd].channels == 2) {
+        snd_sh4_to_aica_stop();
+    }
+
     /* Stop stream */
     /* Channel 0 */
     cmd->cmd = AICA_CMD_CHAN;
@@ -658,13 +628,14 @@ void snd_stream_stop(snd_stream_hnd_t hnd) {
         /* Channel 1 */
         cmd->cmd_id = streams[hnd].ch[1];
         snd_sh4_to_aica(tmp, cmd->size);
+        snd_sh4_to_aica_start();
     }
 }
 
 /* The DMA will chain to this to start the second DMA. */
 static inline void dma_done(void *data) {
     strchan_t *stream = (strchan_t *)data;
-    mutex_unlock_as_thread(&stream_mutex, stream->poll_thd);
+    mutex_unlock_as_thread(&stream_mutex, stream->mutex_thd);
 }
 
 static inline void dma_chain(void *data) {
@@ -676,16 +647,139 @@ static inline void dma_chain(void *data) {
     }
 }
 
+static int snd_stream_transfer(strchan_t *stream, void *first_buf,
+                                uint32_t offset, size_t size) {
+    int rs;
+
+    dcache_purge_range((uintptr_t)first_buf, size);
+    stream->mutex_thd = thd_current;
+
+    if(stream->channels == 2) {
+        dcache_purge_range((uintptr_t)sep_buffer[1], size);
+        stream->dma_dest = stream->spu_ram_sch[1] + offset;
+        stream->dma_length = size;
+    }
+
+    do {
+        rs = spu_dma_transfer(first_buf,
+            stream->spu_ram_sch[0] + offset,
+            size,
+            0,
+            (stream->channels == 1 ? dma_done : dma_chain),
+            (void *)stream);
+
+        if(rs == 0) {
+            break;
+        }
+        if(errno != EINPROGRESS) {
+            mutex_unlock(&stream_mutex);
+            return -1;
+        }
+        thd_pass();
+    } while(1);
+
+    return 0;
+}
+
+static size_t snd_stream_fill(snd_stream_hnd_t hnd, uint32_t offset, size_t size) {
+    strchan_t *stream = &streams[hnd];
+    const int chans = stream->channels;
+    const uintptr_t left = stream->spu_ram_sch[0] + offset;
+    const uintptr_t right = stream->spu_ram_sch[1] + offset;
+    const int needed_bytes = size * chans;
+    int got_bytes = 0;
+    void *data = NULL;
+
+    if(stream->req_data) {
+        got_bytes = stream->req_data(hnd,
+            (left | SPU_RAM_UNCACHED_BASE),
+            (chans == 2 ? (right | SPU_RAM_UNCACHED_BASE) : 0),
+            needed_bytes);
+    }
+    if(got_bytes > 0) {
+        return got_bytes;
+    }
+    if(stream->get_data) {
+        data = stream->get_data(hnd, needed_bytes, &got_bytes);
+    }
+
+    if(data == NULL || got_bytes == 0) {
+        /* sep_buffer isn't allocated if all streams are mono
+           or direct streams are used. */
+        if(sep_buffer[0] == NULL) {
+            spu_memset_sq(left, 0, needed_bytes);
+        }
+        else {
+            mutex_lock(&stream_mutex);
+            memset(sep_buffer[0], 0, needed_bytes / chans);
+            if(chans == 2) {
+                memset(sep_buffer[1], 0, needed_bytes / chans);
+            }
+            snd_stream_transfer(stream, sep_buffer[0], offset, needed_bytes / chans);
+        }
+        return 0;
+    }
+
+    if(got_bytes > needed_bytes) {
+        got_bytes = needed_bytes;
+    }
+
+    process_filters(hnd, &data, &got_bytes);
+
+    if(chans == 1) {
+        if(got_bytes & 3) {
+            got_bytes = (got_bytes + 4) & ~3;
+        }
+        if(((uintptr_t)data & 31) && sep_buffer[0] == NULL) {
+            spu_memload_sq(left, data, got_bytes);
+            return got_bytes;
+        }
+        mutex_lock(&stream_mutex);
+
+        if((uintptr_t)data & 31) {
+            memcpy(sep_buffer[0], data, got_bytes);
+            data = sep_buffer[0];
+        }
+        if(snd_stream_transfer(stream, data, offset, got_bytes) < 0) {
+            return 0;
+        }
+        return got_bytes;
+    }
+
+    if(got_bytes & 7) {
+        got_bytes = (got_bytes + 8) & ~7;
+    }
+
+    mutex_lock(&stream_mutex);
+
+    if(stream->bitsize == 16) {
+        if((uintptr_t)data & 31) {
+            snd_pcm16_split_unaligned(data, sep_buffer[0], sep_buffer[1], got_bytes);
+        }
+        else {
+            snd_pcm16_split((uint32_t *)data, sep_buffer[0], sep_buffer[1], got_bytes);
+        }
+    }
+    else if(stream->bitsize == 8) {
+        snd_pcm8_split(data, sep_buffer[0], sep_buffer[1], got_bytes);
+    }
+    else if(stream->bitsize == 4) {
+        snd_adpcm_split(data, sep_buffer[0], sep_buffer[1], got_bytes);
+    }
+
+    if(snd_stream_transfer(stream, sep_buffer[0], offset, got_bytes / chans) < 0) {
+        return 0;
+    }
+    return got_bytes;
+}
+
 /* Poll streamer to load more data if necessary */
 int snd_stream_poll(snd_stream_hnd_t hnd) {
-    uint32_t ch0pos, ch1pos, write_pos;
+    uint32_t write_pos;
     uint16_t current_play_pos;
     int needed_samples = 0;
-    int needed_bytes = 0;
+    size_t needed_bytes = 0;
     int got_bytes = 0;
-    int rs;
-    void *data;
-    void *first_dma_buf = sep_buffer[0];
     strchan_t *stream;
 
     assert(hnd >= 0 && hnd < SND_STREAM_MAX);
@@ -696,24 +790,20 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
     }
 
     /* Get channels position */
-    ch0pos = g2_read_32(SPU_RAM_UNCACHED_BASE +
+    current_play_pos = g2_read_32(SPU_RAM_UNCACHED_BASE +
                         AICA_CHANNEL(stream->ch[0]) +
-                        offsetof(aica_channel_t, pos));
+                        offsetof(aica_channel_t, pos)) & 0xffff;
 
-    if(stream->channels == 2) {
-        ch1pos = g2_read_32(SPU_RAM_UNCACHED_BASE +
-                    AICA_CHANNEL(stream->ch[1]) +
-                    offsetof(aica_channel_t, pos));
-        /* The channel position register is 16-bit on AICA side, keep it in mind */
-        current_play_pos = (ch0pos < ch1pos ? ch0pos : ch1pos) & 0xffff;
-    }
-    else {
-        current_play_pos = (ch0pos & 0xffff);
-    }
+    needed_bytes = samples_to_bytes(hnd, current_play_pos);
 
-    if(samples_to_bytes(hnd, current_play_pos) >= stream->buffer_size) {
-        dbglog(DBG_ERROR, "snd_stream_poll: chan0(%d).pos = %ld\n", stream->ch[0], ch0pos);
+    if(needed_bytes >= stream->buffer_size) {
+        dbglog(DBG_ERROR, "snd_stream_poll: chan0(%d).pos = %d\n", stream->ch[0], current_play_pos);
         return -1;
+    }
+
+    if(needed_bytes & 31) {
+        /* Aligning for DMA. */
+        current_play_pos &= ~(bytes_to_samples(hnd, 32) - 1);
     }
 
     /* Count just till the end of the buffer, so we don't have to
@@ -724,7 +814,7 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
         needed_samples &= ~(bytes_to_samples(hnd, 2048 / stream->channels) - 1);
         needed_bytes = samples_to_bytes(hnd, needed_samples);
         /* Reduce data requests */
-        if((uint32_t)needed_bytes < (stream->buffer_size / 2)) {
+        if(needed_bytes < (stream->buffer_size / 2)) {
             return 0;
         }
     }
@@ -738,7 +828,7 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
         return 0;
     }
 
-    if((uint32_t)needed_bytes > stream->buffer_size / 2) {
+    if(needed_bytes > stream->buffer_size / 2) {
         needed_bytes = (int)stream->buffer_size / 2;
     }
 
@@ -747,116 +837,14 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
     }
 
     write_pos = samples_to_bytes(hnd, stream->last_write_pos);
+    got_bytes = snd_stream_fill(hnd, write_pos, needed_bytes);
 
-    if(stream->req_data) {
-        got_bytes = stream->req_data(hnd,
-            (stream->spu_ram_sch[0] | SPU_RAM_UNCACHED_BASE) + write_pos,
-            (stream->channels == 2 ?
-                ((stream->spu_ram_sch[1] | SPU_RAM_UNCACHED_BASE) + write_pos) : 0),
-            needed_bytes);
-
-        if(got_bytes) {
-            if(got_bytes < needed_bytes) {
-                needed_bytes = got_bytes;
-            }
-            needed_samples = bytes_to_samples(hnd, needed_bytes);
-            goto stream_poll_exit;
-        }
-    }
-    if(!stream->get_data) {
+    if(got_bytes == 0) {
         return -3;
     }
 
-    data = stream->get_data(hnd, needed_bytes * stream->channels, &got_bytes);
-    process_filters(hnd, &data, &got_bytes);
+    needed_samples = bytes_to_samples(hnd, got_bytes / stream->channels);
 
-    if(got_bytes < needed_bytes * stream->channels) {
-        needed_bytes = got_bytes / stream->channels;
-    }
-
-    /* Round it a bit */
-    if(needed_bytes & 3) {
-        needed_bytes = (needed_bytes + 4) & ~3;
-    }
-
-    needed_samples = bytes_to_samples(hnd, needed_bytes);
-
-    if(data == NULL) {
-        /* Fill with zeros */
-        spu_memset_sq(stream->spu_ram_sch[0] + write_pos, 0, needed_bytes);
-
-        if(stream->channels == 2) {
-            spu_memset_sq(stream->spu_ram_sch[1] + write_pos, 0, needed_bytes);
-        }
-        return -3;
-    }
-
-    if(stream->channels == 2) {
-        mutex_lock(&stream_mutex);
-
-        if(streams[hnd].bitsize == 16) {
-            if((uintptr_t)data & 31) {
-                snd_pcm16_split_unaligned(data,
-                    sep_buffer[0], sep_buffer[1], needed_bytes * 2);
-            }
-            else {
-                snd_pcm16_split((uint32_t *)data,
-                    sep_buffer[0], sep_buffer[1], needed_bytes * 2);
-            }
-        }
-        else if(streams[hnd].bitsize == 8) {
-            snd_pcm8_split(data, sep_buffer[0], sep_buffer[1], needed_bytes * 2);
-        }
-        else if(streams[hnd].bitsize == 4) {
-            snd_adpcm_split(data, sep_buffer[0], sep_buffer[1], needed_bytes * 2);
-        }
-
-        dcache_purge_range((uintptr_t)sep_buffer[0], needed_bytes);
-        dcache_purge_range((uintptr_t)sep_buffer[1], needed_bytes);
-
-        stream->dma_dest = stream->spu_ram_sch[1] + write_pos;
-        stream->dma_length = needed_bytes;
-        stream->poll_thd = thd_current;
-    }
-    else {
-        if((uintptr_t)data & 31) {
-            memcpy(sep_buffer[0], data, needed_bytes);
-        }
-        else {
-            first_dma_buf = data;
-        }
-        dcache_purge_range((uintptr_t)first_dma_buf, needed_bytes);
-
-        mutex_lock(&stream_mutex);
-        stream->poll_thd = thd_current;
-    }
-
-    do {
-        rs = spu_dma_transfer(first_dma_buf,
-            stream->spu_ram_sch[0] + write_pos,
-            needed_bytes,
-            0,
-            (stream->channels == 1 ? dma_done : dma_chain),
-            (void *)stream);
-
-        if(rs < 0) {
-            if(errno == EINPROGRESS) {
-                thd_pass();
-                continue;
-            }
-            spu_memload_sq(stream->spu_ram_sch[0] + write_pos,
-                first_dma_buf, needed_bytes);
-
-            if(stream->channels == 2) {
-                spu_memload_sq(stream->spu_ram_sch[1] + write_pos,
-                    sep_buffer[1], needed_bytes);
-            }
-            mutex_unlock(&stream_mutex);
-        }
-        break;
-    } while(1);
-
-stream_poll_exit:
     stream->last_write_pos += needed_samples;
     write_pos = (uint32_t)bytes_to_samples(hnd, stream->buffer_size);
 
@@ -873,6 +861,10 @@ void snd_stream_volume(snd_stream_hnd_t hnd, int vol) {
 
     CHECK_HND(hnd);
 
+    if(streams[hnd].channels == 2) {
+        snd_sh4_to_aica_stop();
+    }
+
     cmd->cmd = AICA_CMD_CHAN;
     cmd->timestamp = 0;
     cmd->size = AICA_CMDSTR_CHANNEL_SIZE;
@@ -884,6 +876,7 @@ void snd_stream_volume(snd_stream_hnd_t hnd, int vol) {
     if(streams[hnd].channels == 2) {
         cmd->cmd_id = streams[hnd].ch[1];
         snd_sh4_to_aica(tmp, cmd->size);
+        snd_sh4_to_aica_start();
     }
 }
 
@@ -892,6 +885,10 @@ void snd_stream_pan(snd_stream_hnd_t hnd, int left_pan, int right_pan) {
     AICA_CMDSTR_CHANNEL(tmp, cmd, chan);
 
     CHECK_HND(hnd);
+
+    if(streams[hnd].channels == 2) {
+        snd_sh4_to_aica_stop();
+    }
 
     cmd->cmd = AICA_CMD_CHAN;
     cmd->timestamp = 0;
@@ -905,5 +902,6 @@ void snd_stream_pan(snd_stream_hnd_t hnd, int left_pan, int right_pan) {
         cmd->cmd_id = streams[hnd].ch[1];
         chan->pan = right_pan;
         snd_sh4_to_aica(tmp, cmd->size);
+        snd_sh4_to_aica_start();
     }
 }
