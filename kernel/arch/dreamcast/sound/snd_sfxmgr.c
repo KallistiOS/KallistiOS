@@ -760,6 +760,8 @@ int snd_sfx_play(sfxhnd_t idx, int vol, int pan) {
     data.idx = idx;
     data.vol = vol;
     data.pan = pan;
+    data.loopstart = -1;
+    data.loopend = -1;
     return snd_sfx_play_ex(&data);
 }
 
@@ -788,8 +790,8 @@ int snd_sfx_play_ex(sfx_play_data_t *data) {
     chan->type = t->fmt;
     chan->length = size;
     chan->loop = data->loop;
-    chan->loopstart = 0;
-    chan->loopend = size;
+    chan->loopstart = data->loopstart < 0 ? 0 : data->loopstart;
+    chan->loopend = data->loopend < 0 ? size : data->loopend;
     chan->freq = data->freq > 0 ? data->freq : t->rate;
     chan->vol = data->vol;
 
