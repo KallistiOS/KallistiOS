@@ -788,8 +788,8 @@ int snd_sfx_play_ex(sfx_play_data_t *data) {
     chan->type = t->fmt;
     chan->length = size;
     chan->loop = data->loop;
-    chan->loopstart = data->loopstart < 1 ? 0 : data->loopstart;
-    chan->loopend = data->loopend < 1 ? size : data->loopend;
+    chan->loopstart = data->loopstart ? data->loopstart : 0;
+    chan->loopend = data->loopend ? data->loopend : size;
     chan->freq = data->freq > 0 ? data->freq : t->rate;
     chan->vol = data->vol;
 
