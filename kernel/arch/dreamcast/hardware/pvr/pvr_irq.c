@@ -96,7 +96,7 @@ static void pvr_render_lists(void) {
     if(pvr_state.ta_busy
        && !pvr_state.render_busy
        && (!pvr_state.render_completed || pvr_state.to_texture[bufn])
-       && pvr_state.lists_transferred == pvr_state.lists_enabled) {
+       && pvr_state.lists_transferred) {
 
         /* XXX Note:
            For some reason, the render must be started _before_ we sync
@@ -165,21 +165,13 @@ void pvr_int_handler(uint32 code, void *data) {
     // What kind of event did we get?
     switch(code) {
         case ASIC_EVT_PVR_OPAQUEDONE:
-            //DBG(("irq_opaquedone\n"));
-            pvr_state.lists_transferred |= 1 << PVR_OPB_OP;
-            break;
         case ASIC_EVT_PVR_TRANSDONE:
-            //DBG(("irq_transdone\n"));
-            pvr_state.lists_transferred |= 1 << PVR_OPB_TP;
-            break;
         case ASIC_EVT_PVR_OPAQUEMODDONE:
-            pvr_state.lists_transferred |= 1 << PVR_OPB_OM;
-            break;
         case ASIC_EVT_PVR_TRANSMODDONE:
-            pvr_state.lists_transferred |= 1 << PVR_OPB_TM;
-            break;
         case ASIC_EVT_PVR_PTDONE:
-            pvr_state.lists_transferred |= 1 << PVR_OPB_PT;
+            asic_evt_disable(code, ASIC_IRQ_DEFAULT);
+            pvr_sync_stats(PVR_SYNC_REGDONE);
+            pvr_state.lists_transferred = 1;
             break;
         case ASIC_EVT_PVR_RENDERDONE_TSP:
             //DBG(("irq_renderdone\n"));
@@ -219,21 +211,6 @@ void pvr_int_handler(uint32 code, void *data) {
             break;
     }
 #endif
-
-    /* Update our stats if we finished all registration */
-    switch(code) {
-        case ASIC_EVT_PVR_OPAQUEDONE:
-        case ASIC_EVT_PVR_TRANSDONE:
-        case ASIC_EVT_PVR_OPAQUEMODDONE:
-        case ASIC_EVT_PVR_TRANSMODDONE:
-        case ASIC_EVT_PVR_PTDONE:
-
-            if(pvr_state.lists_transferred != pvr_state.lists_enabled)
-                return;
-
-            pvr_sync_stats(PVR_SYNC_REGDONE);
-            break;
-    }
 
     // If all lists are fully transferred and a render is not in progress,
     // we are ready to start rendering.

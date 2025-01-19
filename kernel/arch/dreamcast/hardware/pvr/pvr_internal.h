@@ -164,8 +164,9 @@ typedef struct {
                                         // (^1 == frame buffer we're rendering to)
 
     int     list_reg_open;              // Which list is open for registration, if any? (non-DMA only)
+    int     last_list_used;             // Index of the last list that was opened
     uint32  lists_closed;               // (1 << idx) for each list which the SH4 has lost interest in
-    uint32  lists_transferred;          // (1 << idx) for each list which has completely transferred to the TA
+    int     lists_transferred;          // 1 when all lists were processed by the TA
     uint32  lists_dmaed;                // (1 << idx) for each list which has been DMA'd (DMA mode only)
 
     mutex_t dma_lock;                   // Locked if a DMA is in progress (vertex or texture)
