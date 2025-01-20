@@ -229,6 +229,17 @@ int snd_sfx_play_chn(int chn, sfxhnd_t idx, int vol, int pan);
 */
 int snd_sfx_play_ex(sfx_play_data_t *data);
 
+/** \brief  Update the parameters of a sound channel.
+
+    Update a specified channel's vol, pan, or freq.
+
+    \param  data            The data structure containing the information needed
+                            to play the sound effect.
+
+    \return                 -1 if data or data->chn were invalid, 0 otherwise.
+*/
+int snd_sfx_update(sfx_play_data_t *data);
+
 /** \brief  Stop a single channel of sound.
 
     This function stops the specified channel of sound from playing. It does no
