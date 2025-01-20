@@ -9,26 +9,22 @@
 #include <dc/minifont.h>
 #include "minifont.h"
 
-#define CHAR_WIDTH 8
-#define CHAR_HEIGHT 16
+int minifont_draw(uint16_t *buffer, uint32_t bufwidth, char c) {
+    uint16_t pos;
+    uint8_t byte, i, j, k;
+    uint16_t *cur;
 
-#define BYTES_PER_CHAR ((CHAR_WIDTH / 8) * CHAR_HEIGHT)
+    /* Treat other characters as a space */
+    if(c <= ' ' || c > '~')
+        return char_width;
 
-int minifont_draw(uint16 *buffer, uint32 bufwidth, uint32 c) {
-    int pos, i, j, k;
-    uint8 byte;
-    uint16 *cur;
+    pos = (c - char_start) * ((char_width / 8) * char_height);
 
-    if(c < 33 || c > 126)
-        return CHAR_WIDTH;
-
-    pos = (c - 33) * BYTES_PER_CHAR;
-
-    for(i = 0; i < CHAR_HEIGHT; ++i) {
+    for(i = 0; i < char_height; ++i) {
         cur = buffer;
 
-        for(j = 0; j < CHAR_WIDTH / 8; ++j) {
-            byte = minifont_data[pos + (i * (CHAR_WIDTH / 8)) + j];
+        for(j = 0; j < char_width / 8; ++j) {
+            byte = minifont_data[pos + (i * (char_width / 8)) + j];
 
             for(k = 0; k < 8; ++k) {
                 if(byte & (1 << (7 - k)))
@@ -41,10 +37,10 @@ int minifont_draw(uint16 *buffer, uint32 bufwidth, uint32 c) {
         buffer += bufwidth;
     }
 
-    return CHAR_WIDTH;
+    return char_width;
 }
 
-int minifont_draw_str(uint16 *buffer, uint32 bufwidth, const char *str) {
+int minifont_draw_str(uint16_t *buffer, uint32_t bufwidth, const char *str) {
     char c;
     int adv = 0;
 
