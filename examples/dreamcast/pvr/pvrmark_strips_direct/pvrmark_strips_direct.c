@@ -89,8 +89,9 @@ inline static void get_vert(int *seed, int *x, int *y, int *col) {
 }
 
 static void do_frame(void) {
-    pvr_vertex_t *vert;
-    int x=0, y=0, z=0, col=0;
+    volatile pvr_vertex_t *vert;
+    int x=0, y=0, col=0;
+    float z = 0.0f;
     int i;
     static int oldseed = 0xdeadbeef;
     int seed = oldseed;
