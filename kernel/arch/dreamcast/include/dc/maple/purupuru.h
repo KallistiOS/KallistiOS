@@ -167,7 +167,6 @@ typedef struct purupuru_effect  {
     \param  effect          The effect to send.
     \retval MAPLE_EOK       On success.
     \retval MAPLE_EAGAIN    If the command couldn't be sent. Try again later.
-    \retval MAPLE_ETIMEOUT  If the command timed out while blocking.
 */
 int purupuru_rumble(maple_device_t *dev, purupuru_effect_t *effect);
 
@@ -181,7 +180,6 @@ int purupuru_rumble(maple_device_t *dev, purupuru_effect_t *effect);
     \param  effect          The effect to send.
     \retval MAPLE_EOK       On success.
     \retval MAPLE_EAGAIN    If the command couldn't be sent. Try again later.
-    \retval MAPLE_ETIMEOUT  If the command timed out while blocking.
 */
 int purupuru_rumble_raw(maple_device_t *dev, uint32 effect);
 
