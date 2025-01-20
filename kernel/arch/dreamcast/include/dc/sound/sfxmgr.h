@@ -60,17 +60,17 @@ typedef uint32_t sfxhnd_t;
     playback functions.
 */
 typedef struct sfx_play_data {
-    int chn;        /**< \brief The channel to play on. If chn == -1, the next
+    int chn;            /**< \brief The channel to play on. If chn == -1, the next
                             available channel will be used automatically. */
-    sfxhnd_t idx;   /**< \brief The handle to the sound effect to play. */
-    int vol;        /**< \brief The volume to play at (between 0 and 255). */
-    int pan;        /**< \brief The panning value of the sound effect. 0 is all
+    sfxhnd_t idx;       /**< \brief The handle to the sound effect to play. */
+    int vol;            /**< \brief The volume to play at (between 0 and 255). */
+    int pan;            /**< \brief The panning value of the sound effect. 0 is all
                             the way to the left, 128 is center, 255 is all the way
                             to the right. */
-    int loop;       /**< \brief Whether to loop the sound effect or not. */
-    int freq;       /**< \brief Frequency */
-    unsigned int loopstart;  /**< \brief Loop start index (in samples). */
-    unsigned int loopend;    /**< \brief Loop end index (in samples). If loopend == 0, 
+    int loop;           /**< \brief Whether to loop the sound effect or not. */
+    uint32_t freq;      /**< \brief Frequency */
+    uint32_t loopstart; /**< \brief Loop start index (in samples). */
+    uint32_t loopend;   /**< \brief Loop end index (in samples). If loopend == 0, 
                             the loop end will default to sfx size in samples. */
 } sfx_play_data_t;
 
