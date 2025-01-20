@@ -14,16 +14,6 @@
 /* Be warned, not all purus are created equal, in fact, most of
    them act different for just about everything you feed to them. */
 
-static void purupuru_rumble_cb(maple_state_t *st, maple_frame_t *frame) {
-    (void)st;
-
-    /* Unlock the frame */
-    maple_frame_unlock(frame);
-
-    /* Wake up! */
-    genwait_wake_all(frame);
-}
-
 int purupuru_rumble_raw(maple_device_t *dev, uint32 effect) {
     uint32 *send_buf;
 
@@ -42,20 +32,9 @@ int purupuru_rumble_raw(maple_device_t *dev, uint32 effect) {
     dev->frame.dst_port = dev->port;
     dev->frame.dst_unit = dev->unit;
     dev->frame.length = 2;
-    dev->frame.callback = purupuru_rumble_cb;
+    dev->frame.callback = NULL;
     dev->frame.send_buf = send_buf;
     maple_queue_frame(&dev->frame);
-
-    /* Wait for the purupuru to accept it */
-    if(genwait_wait(&dev->frame, "purupuru_rumble", 500, NULL) < 0) {
-        if(dev->frame.state != MAPLE_FRAME_VACANT) {
-            /* Something went wrong.... */
-            dev->frame.state = MAPLE_FRAME_VACANT;
-            dbglog(DBG_ERROR, "purupuru_rumble: timeout to unit %c%c\n",
-                   dev->port + 'A', dev->unit + '0');
-            return MAPLE_ETIMEOUT;
-        }
-    }
 
     return MAPLE_EOK;
 }

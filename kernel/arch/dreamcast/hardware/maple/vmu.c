@@ -305,20 +305,9 @@ int vmu_beep_raw(maple_device_t *dev, uint32_t beep) {
     dev->frame.dst_port = dev->port;
     dev->frame.dst_unit = dev->unit;
     dev->frame.length = 2;
-    dev->frame.callback = vmu_gen_callback;
+    dev->frame.callback = NULL;
     dev->frame.send_buf = send_buf;
     maple_queue_frame(&dev->frame);
-
-    /* Wait for the timer to accept it */
-    if(genwait_wait(&dev->frame, "vmu_beep_raw", 500, NULL) < 0) {
-        if(dev->frame.state != MAPLE_FRAME_VACANT) {
-            /* Something went wrong.... */
-            dev->frame.state = MAPLE_FRAME_VACANT;
-            dbglog(DBG_ERROR, "vmu_beep_raw: timeout to unit %c%c, beep: %lu\n",
-                   dev->port + 'A', dev->unit + '0', beep);
-            return MAPLE_ETIMEOUT;
-        }
-    }
 
     return MAPLE_EOK;
 }
@@ -351,20 +340,9 @@ int vmu_draw_lcd(maple_device_t *dev, const void *bitmap) {
     dev->frame.dst_port = dev->port;
     dev->frame.dst_unit = dev->unit;
     dev->frame.length = 2 + VMU_SCREEN_WIDTH;
-    dev->frame.callback = vmu_gen_callback;
+    dev->frame.callback = NULL;
     dev->frame.send_buf = send_buf;
     maple_queue_frame(&dev->frame);
-
-    /* Wait for the LCD to accept it */
-    if(genwait_wait(&dev->frame, "vmu_draw_lcd", 500, NULL) < 0) {
-        if(dev->frame.state != MAPLE_FRAME_VACANT) {
-            /* It's probably never coming back, so just unlock the frame */
-            dev->frame.state = MAPLE_FRAME_VACANT;
-            dbglog(DBG_ERROR, "vmu_draw_lcd: timeout to unit %c%c\n",
-                   dev->port + 'A', dev->unit + '0');
-            return MAPLE_ETIMEOUT;
-        }
-    }
 
     return MAPLE_EOK;
 }
