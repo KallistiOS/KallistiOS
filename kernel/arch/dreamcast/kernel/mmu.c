@@ -16,32 +16,28 @@
 #include <arch/memory.h>
 #include <arch/mmu.h>
 #include <kos/dbgio.h>
+#include <kos/regfield.h>
 #include <arch/cache.h>
+
+#define MMU_TOP_MASK GENMASK(30, 21)            /**< \brief Top-level mask */
+#define MMU_BOT_MASK GENMASK(20, 12)            /**< \brief Bottom mask */
+#define MMU_IND_BITS 12                         /**< \brief Index bits */
 
 /********************************************************************************/
 /* Register definitions */
 
-static volatile uint32 * const pteh = (uint32 *)(SH4_REG_MMU_PTEH);
-static volatile uint32 * const ptel = (uint32 *)(SH4_REG_MMU_PTEL);
-//static volatile uint32 * const ptea = (uint32 *)(SH4_REG_MMU_PTEA);
-static volatile uint32 * const ttb = (uint32 *)(SH4_REG_MMU_TTB);
-static volatile uint32 * const tea = (uint32 *)(SH4_REG_MMU_TEA);
-static volatile uint32 * const mmucr = (uint32 *)(SH4_REG_MMU_CR);
-
-#define SET_PTEH(VA, ASID) \
-    do { *pteh = ((VA) & 0xfffffc00) | ((ASID) & 0xff); } while(0)
+static volatile uint32_t * const pteh = (uint32_t *)(SH4_REG_MMU_PTEH);
+static volatile uint32_t * const ptel = (uint32_t *)(SH4_REG_MMU_PTEL);
+//static volatile uint32_t * const ptea = (uint32_t *)(SH4_REG_MMU_PTEA);
+static volatile uint32_t * const ttb = (uint32_t *)(SH4_REG_MMU_TTB);
+static volatile uint32_t * const tea = (uint32_t *)(SH4_REG_MMU_TEA);
+static volatile uint32_t * const mmucr = (uint32_t *)(SH4_REG_MMU_CR);
 
 #define BUILD_PTEH(VA, ASID) \
     ( ((VA) & 0xfffffc00) | ((ASID) & 0xff) )
 
-#define SET_PTEL(PA, V, SZ, PR, C, D, SH, WT) \
-    do { *ptel = ((PA) & 0x1ffffc00) | ((V) << 8) \
-                     | ( ((SZ) & 2) << 6 ) | ( ((SZ) & 1) << 4 ) \
-                     | ( (PR) << 5 ) \
-                     | ( (C) << 3 ) \
-                     | ( (D) << 2 ) \
-                     | ( (SH) << 1 ) \
-                     | ( (WT) << 0 ); } while(0)
+#define SET_PTEH(VA, ASID) \
+    do { *pteh = BUILD_PTEH(VA, ASID); } while(0)
 
 #define BUILD_PTEL(PA, V, SZ, PR, C, D, SH, WT) \
     ( ((PA) & 0x1ffffc00) | ((V) << 8) \
@@ -87,21 +83,23 @@ static int last_urc;
 /* Our TLB mapping function */
 static mmu_mapfunc_t map_func;
 
+/* Number of static allocations */
+static unsigned int tlb_nb_static;
 
 /********************************************************************************/
 /* Physical hardware management */
 
-static inline void mmu_ldtlb(int asid, uint32 virt, uint32 phys, int sz, int pr, int c, int d,
-                             int sh, int wt) {
-    SET_PTEH(virt, asid);
-    SET_PTEL(phys, 1, sz, pr, c, d, sh, wt);
-    __asm__("ldtlb");
-}
-static inline void mmu_ldtlb_quick(uint32 ptehv, uint32 ptelv) {
+static inline void mmu_ldtlb_quick(uint32_t ptehv, uint32_t ptelv) {
     *pteh = ptehv;
     *ptel = ptelv;
     __asm__("ldtlb");
 }
+
+static inline void mmu_ldtlb(int asid, uint32_t virt, uint32_t phys, int sz, int pr, int c, int d,
+                             int sh, int wt) {
+    mmu_ldtlb_quick(BUILD_PTEH(virt, asid), BUILD_PTEL(phys, 1, sz, pr, c, d, sh, wt));
+}
+
 static inline void mmu_ldtlb_wait(void) {
     __asm__("nop");
     __asm__("nop");
@@ -175,8 +173,8 @@ static mmupage_t *map_virt(mmucontext_t *context, int virtpage) {
     virtpage = virtpage << MMU_IND_BITS;
 
     /* Mask out and grab the top and bottom indices */
-    top = (virtpage >> MMU_TOP_SHIFT) & MMU_TOP_MASK;
-    bot = (virtpage >> MMU_BOT_SHIFT) & MMU_BOT_MASK;
+    top = FIELD_GET(virtpage, MMU_TOP_MASK);
+    bot = FIELD_GET(virtpage, MMU_BOT_MASK);
 
     /* Look up the top-level sub-context */
     sub = context->sub[top];
@@ -216,7 +214,8 @@ void mmu_switch_context(mmucontext_t *context) {
    turning on the "valid" bit. */
 static void mmu_page_map_single(mmucontext_t *context,
                                 int virtpage, int physpage,
-                                int prot, int cache, int share, int dirty) {
+                                page_prot_t prot, page_cache_t cache,
+                                bool share, bool dirty) {
     mmusubcontext_t *sub;
     mmupage_t   *page;
     int     top, bot, i;
@@ -227,8 +226,8 @@ static void mmu_page_map_single(mmucontext_t *context,
     virtpage = virtpage << MMU_IND_BITS;
 
     /* Mask out and grab the top and bottom indices */
-    top = (virtpage >> MMU_TOP_SHIFT) & MMU_TOP_MASK;
-    bot = (virtpage >> MMU_BOT_SHIFT) & MMU_BOT_MASK;
+    top = FIELD_GET(virtpage, MMU_TOP_MASK);
+    bot = FIELD_GET(virtpage, MMU_BOT_MASK);
 
     /* Look up the top-level sub-context; if there isn't one, create one. */
     sub = context->sub[top];
@@ -280,7 +279,8 @@ static void mmu_page_map_single(mmucontext_t *context,
 /* Map N pages sequentially */
 void mmu_page_map(mmucontext_t *context,
                   int virtpage, int physpage, int count,
-                  int prot, int cache, int share, int dirty) {
+                  page_prot_t prot, page_cache_t cache,
+                  bool share, bool dirty) {
     while(count > 0) {
         mmu_page_map_single(context,
                             virtpage, physpage,
@@ -296,7 +296,7 @@ void mmu_page_map(mmucontext_t *context,
    even page boundaries; if src is NULL, anonymous pages are mapped
    (allocated from the heap pool); if src is non-NULL, the address
    is considered to be a physical address. Use munmap to free them. */
-void sc_mmu_mmap(uint32 dst, size_t len, uint32 src) {
+void sc_mmu_mmap(uint32_t dst, size_t len, uint32_t src) {
     int anon = 0;
 
     /* Adjust length to page boundary */
@@ -307,7 +307,7 @@ void sc_mmu_mmap(uint32 dst, size_t len, uint32 src) {
 
     /* If no src pointer, then allocate anonymous pages */
     if(!src) {
-        src = (uint32)mm_palloc(len, proc_current->pid);
+        src = (uint32_t)mm_palloc(len, proc_current->pid);
 
         if(src == 0)
             RETURN(0);
@@ -335,15 +335,15 @@ void sc_mmu_mmap(uint32 dst, size_t len, uint32 src) {
    This routine is pretty nasty.. this is completely platform
    generic but should probably be replaced by a nice assembly
    routine for each platform as appropriate. */
-int mmu_copyin(mmucontext_t *context, uint32 srcaddr, uint32 srccnt, void *buffer) {
+int mmu_copyin(mmucontext_t *context, uint32_t srcaddr, uint32_t srccnt, void *buffer) {
     mmupage_t *srcpage;
-    uint32 srcptr;
-    uint32 src, run;
+    uint32_t srcptr;
+    uint32_t src, run;
     int copied, srckrn;
-    uint8 *dst;
+    uint8_t *dst;
 
     /* Setup source pointers */
-    srcptr = (uint32)srcaddr;
+    srcptr = (uint32_t)srcaddr;
 
     if(!(srcptr & 0x8000000)) {
         srcpage = map_virt(context, srcptr >> PAGESIZE_BITS);
@@ -360,7 +360,7 @@ int mmu_copyin(mmucontext_t *context, uint32 srcaddr, uint32 srccnt, void *buffe
     }
 
     /* Setup destination pointers */
-    dst = (uint8*)buffer;
+    dst = (uint8_t*)buffer;
 
     /* Do the actual copy */
     copied = 0;
@@ -412,9 +412,9 @@ int mmu_copyv(mmucontext_t *context1, struct iovec *iov1, int iovcnt1,
               mmucontext_t *context2, struct iovec *iov2, int iovcnt2) {
     mmupage_t *srcpage, *dstpage;
     int srciov, dstiov;
-    uint32 srccnt, dstcnt;
-    uint32 srcptr, dstptr;
-    uint32 src, dst, run;
+    uint32_t srccnt, dstcnt;
+    uint32_t srcptr, dstptr;
+    uint32_t src, dst, run;
     int copied;
     int srckrn, dstkrn;
     /* static int   sproket = 0; */
@@ -425,7 +425,7 @@ int mmu_copyv(mmucontext_t *context1, struct iovec *iov1, int iovcnt1,
     /* Setup source pointers */
     srciov = 0;
     srccnt = iov1[srciov].iov_len;
-    srcptr = (uint32)iov1[srciov].iov_base;
+    srcptr = (uint32_t)iov1[srciov].iov_base;
 
     if(!(srcptr & 0x80000000)) {
         srcpage = map_virt(context1, srcptr >> PAGESIZE_BITS);
@@ -444,7 +444,7 @@ int mmu_copyv(mmucontext_t *context1, struct iovec *iov1, int iovcnt1,
     /* Setup destination pointers */
     dstiov = 0;
     dstcnt = iov2[dstiov].iov_len;
-    dstptr = (uint32)iov2[dstiov].iov_base;
+    dstptr = (uint32_t)iov2[dstiov].iov_base;
 
     if(!(dstptr & 0x80000000)) {
         dstpage = map_virt(context2, dstptr >> PAGESIZE_BITS);
@@ -513,7 +513,7 @@ int mmu_copyv(mmucontext_t *context1, struct iovec *iov1, int iovcnt1,
             if(srciov >= iovcnt1) break;
 
             srccnt = iov1[srciov].iov_len;
-            srcptr = (uint32)iov1[srciov].iov_base;
+            srcptr = (uint32_t)iov1[srciov].iov_base;
 
             if(!srckrn) {
                 srcpage = map_virt(context1, srcptr >> PAGESIZE_BITS);
@@ -547,7 +547,7 @@ int mmu_copyv(mmucontext_t *context1, struct iovec *iov1, int iovcnt1,
             if(dstiov >= iovcnt2) break;
 
             dstcnt = iov2[dstiov].iov_len;
-            dstptr = (uint32)iov2[dstiov].iov_base;
+            dstptr = (uint32_t)iov2[dstiov].iov_base;
 
             if(!dstkrn) {
                 dstpage = map_virt(context2, dstptr >> PAGESIZE_BITS);
@@ -619,7 +619,7 @@ static void unhandled_mmu(irq_t source, irq_context_t *context) {
    appropriate entry into the UTLB. */
 void mmu_gen_tlb_miss(const char *what, irq_t source, irq_context_t *context) {
     mmupage_t *page;
-    uint32 addr, ptehv, ptelv;
+    uint32_t addr, ptehv, ptelv;
 
     /* Get the offending reference */
     addr = *tea;
@@ -713,9 +713,49 @@ static void initial_page_write(irq_t source, irq_context_t *context, void *data)
     unhandled_mmu(source, context);
 }
 
+static const unsigned int page_mask[] = { 0x3ff, 0xfff, 0xffff, 0xfffff };
+
+int mmu_page_map_static(uintptr_t virt, uintptr_t phys,
+                        page_size_t page_size,
+                        page_prot_t page_prot,
+                        bool cached)
+{
+    unsigned int head;
+
+    if(virt & phys & page_mask[page_size])
+        return -1;
+
+    irq_disable_scoped();
+
+    head = 0x3f - tlb_nb_static;
+
+    SET_MMUCR(head, head, 1, 0, 0, 1);
+    mmu_ldtlb(0, virt, phys, page_size, page_prot, cached, 1, 0, 0);
+    SET_MMUCR(head - 1, 0, 1, 0, 0, 1);
+
+    tlb_nb_static++;
+
+    return 0;
+}
+
+void mmu_init_basic(void) {
+    /* Reset number of static mappings */
+    tlb_nb_static = 0;
+
+    /* Reserve TLB entries 62-63 for SQ translation. Register them as read-write
+     * (since there's no write-only flag) with a 1 MiB page.
+     * Note that mmu_page_map_static() will enable MMU so we don't have to do it
+     * later. */
+    mmu_page_map_static(0xe0100000, 0, PAGE_SIZE_1M, MMU_KERNEL_RDWR, false);
+    mmu_page_map_static(0xe0000000, 0, PAGE_SIZE_1M, MMU_KERNEL_RDWR, false);
+
+    /* Clear the ITLB */
+    mmu_reset_itlb();
+}
+
 /********************************************************************************/
 /* Init routine */
-int mmu_init(void) {
+void mmu_init(void) {
     /* Setup last URC counter (to make sure we don't thrash the
        TLB caches accidentally) */
     last_urc = 0;
@@ -738,27 +778,17 @@ int mmu_init(void) {
     irq_set_handler(EXC_DTLB_PV_WRITE, dtlb_pv_write, NULL);
     irq_set_handler(EXC_INITIAL_PAGE_WRITE, initial_page_write, NULL);
 
-    /* Reserve TLB entries 62-63 for SQ translation. Register them as read-write
-     * (since there's no write-only flag) with a 1 MiB page. */
-    SET_MMUCR(0x3e, 0x3e, 1, 0, 1, 1);
-    mmu_ldtlb(0, 0xe0000000, 0, 3, 1, 0, 0, 0, 0);
-    SET_MMUCR(0x3f, 0x3f, 1, 0, 1, 1);
-    mmu_ldtlb(0, 0xe0100000, 0, 3, 1, 0, 0, 0, 0);
+    mmu_init_basic();
+}
 
-    /* Set URB to 0x3d to not overwrite the SQ config, reset URC, enable MMU */
-    SET_MMUCR(0x3d, 0, 1, 0, 1, 1);
-
-    /* Clear the ITLB */
-    mmu_reset_itlb();
-
-    /* All done */
-    return 0;
+void mmu_shutdown_basic(void) {
+    /* Turn off MMU */
+    *mmucr = 0x00000204;
 }
 
 /* Shutdown */
 void mmu_shutdown(void) {
-    /* Turn off MMU */
-    *mmucr = 0x00000204;
+    mmu_shutdown_basic();
 
     /* No more shortcuts */
     mmu_shortcut_ok = 0;
