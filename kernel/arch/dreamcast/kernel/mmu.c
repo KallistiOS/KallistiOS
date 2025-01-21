@@ -781,10 +781,14 @@ void mmu_init(void) {
     mmu_init_basic();
 }
 
-/* Shutdown */
-void mmu_shutdown(void) {
+void mmu_shutdown_basic(void) {
     /* Turn off MMU */
     *mmucr = 0x00000204;
+}
+
+/* Shutdown */
+void mmu_shutdown(void) {
+    mmu_shutdown_basic();
 
     /* No more shortcuts */
     mmu_shortcut_ok = 0;

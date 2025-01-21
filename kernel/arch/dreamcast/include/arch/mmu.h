@@ -355,7 +355,8 @@ mmu_mapfunc_t mmu_map_set_callback(mmu_mapfunc_t newfunc);
     function is not necesary. Static memory mappings can also use different page
     sizes.
 
-    Note that the only way to undo static mappings is to call mmu_shutdown().
+    Note that the only way to undo static mappings is to call
+    mmu_shutdown_basic().
 
     \param  virt            The virtual address for the memory mapping.
     \param  phys            The physical address for the memory mapping.
@@ -394,11 +395,22 @@ void mmu_init_basic(void);
 /** \brief   Shutdown MMU support.
     \ingroup mmu
 
-    Turn off the MMU after it was initialized. You should try to make sure this
-    gets done if you initialize the MMU in your program, so as to play nice with
-    loaders and the like (that will not expect that its on, in general).
+    Turn off MMU support after it was initialized with mmu_init().
+    You should try to make sure this gets done if you initialize the MMU in your
+    program, so as to play nice with loaders and the like (that will not expect
+    that its on, in general).
 */
 void mmu_shutdown(void);
+
+/** \brief   Shutdown basic MMU support.
+    \ingroup mmu
+
+    Turn off basic MMU support after it was initialized with mmu_init_basic().
+    You should try to make sure this gets done if you initialize the MMU in your
+    program, so as to play nice with loaders and the like (that will not expect
+    that its on, in general).
+*/
+void mmu_shutdown_basic(void);
 
 /** \brief   Reset ITLB.
     \ingroup mmu
