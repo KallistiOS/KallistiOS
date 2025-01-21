@@ -183,19 +183,22 @@ export KOS_CFLAGS="${KOS_CFLAGS} -fno-builtin"
 #
 #export KOS_CFLAGS="${KOS_CFLAGS} -fbuiltin -ffast-math -ffp-contract=fast -mfsrra -mfsca"
 
-# SH4 Floating Point Arithmetic Precision
+# SH4 Floating-Point Arithmetic Precision
 #
-# KallistiOS only officially supports the single-precision-only floating-point
-# arithmetic mode (-m4-single-only), but double precision, single default
-# (-m4-single) or double precision default (-m4) modes can be enabled here by
-# adjusting KOS_SH4_PRECISION.
-# WARNING: Adjusting this setting has a high likelihood of breaking KallistiOS,
-#          kos-ports, and existing codebases which assume -m4-single-only.
-#          Do not touch this setting unless you know what you are doing!
-# NOTE: Altering this setting also requires your toolchain to have been built
-#       with support for these modes, which is not the case by default!
+# KallistiOS supports both the single-precision-default ABI (m4-single) and the
+# single-precision-only ABI (m4-single-only). When using m4-single, the SH4 will
+# be in single-precision mode upon function entry but will switch to double-
+# precision mode if 64-bit doubles are used. When using m4-single-only, the SH4
+# will always be in single-precision mode and 64-bit doubles will be truncated to
+# 32-bit floats. Historically, m4-single-only was used in both official and
+# homebrew Dreamcast software, but m4-single is the default as of KOS 2.2.0 to
+# increase compatibility with newer libraries which require 64-bit doubles.
 #
-export KOS_SH4_PRECISION="-m4-single-only"
+# WARNING: When adjusting this setting, make sure all software, including
+#          kos-ports and linked external libraries, are rebuilt using the same
+#          floating-point precision ABI setting!
+#
+export KOS_SH4_PRECISION="-m4-single"
 
 # Use LRA (Local Register Allocator) Pass
 #
