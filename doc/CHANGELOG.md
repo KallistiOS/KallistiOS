@@ -13,6 +13,7 @@ Platform-specific changes are prefixed with the platform name, otherwise the cha
 - **Dreamcast**: Cleaned up, documented, and enhanced BIOS font API [FG]
 - Rework PVR hybrid mode + IRQ handling [PC]
 - **Dreamcast**: Add support and update toolchain profiles for Newlib 4.5.0, Binutils 2.43.1, and GDB 15.2 [EF]
+- **Dreamcast**: Make m4-single the default floating-point ABI [EF]
 - Added implementation of thread barriers [LS]
 - Removed old pthreads implementation from kernel/libc [LS]
 - Added new (more complete/compliant) pthreads implementation in addons/libpthread [LS]

@@ -69,6 +69,9 @@ typedef struct sfx_play_data {
                             to the right. */
     int loop;       /**< \brief Whether to loop the sound effect or not. */
     int freq;       /**< \brief Frequency */
+    unsigned int loopstart;  /**< \brief Loop start index (in samples). */
+    unsigned int loopend;    /**< \brief Loop end index (in samples). If loopend == 0, 
+                            the loop end will default to sfx size in samples. */
 } sfx_play_data_t;
 
 /** \brief  Load a sound effect.

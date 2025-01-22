@@ -175,7 +175,7 @@ static int dcload_close(void * h) {
         i = hnd_is_dir(hnd);
 
         /* We found it in the list, so it's a dir */
-        if(!i) {
+        if(i) {
             dclsc(DCLOAD_CLOSEDIR, hnd);
             LIST_REMOVE(i, fhlist);
             free(i->path);

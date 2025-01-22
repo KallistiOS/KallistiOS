@@ -518,7 +518,7 @@ dirent_t *fs_readdir(file_t fd) {
             h->idx++;
 
             /* Does fs provide its own . directory? */
-            if(strcmp(temp_dirent->name, ".") == 0) {
+            if(temp_dirent && (strcmp(temp_dirent->name, ".") == 0)) {
                 return temp_dirent;
             } else {
                 /* Send . directory first */
@@ -532,13 +532,13 @@ dirent_t *fs_readdir(file_t fd) {
             h->idx++;
 
             /* Did fs provide its own . directory? */
-            if(strcmp(temp_dirent->name, ".") == 0) {
+            if(temp_dirent && (strcmp(temp_dirent->name, ".") == 0)) {
                 /* Read a new entry */
                 temp_dirent = h->handler->readdir(h->hnd);
             }
 
             /* Does fs provide its own .. directory? */
-            if(strcmp(temp_dirent->name, "..") == 0) {
+            if(temp_dirent && (strcmp(temp_dirent->name, "..") == 0)) {
                 h->idx++;
                 return temp_dirent;
             } else {

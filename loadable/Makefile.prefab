@@ -22,8 +22,8 @@ endif
 # First one checks for missing symbols (and fully links with an offset
 # of zero so we can do tracebacks later), second one makes the real file.
 $(TARGET): $(OBJS)
-	$(KOS_CC) -g -ml -m4-single-only -O2 -g -Wl,-Ttext=0x00000000 -e _start -nostartfiles -nodefaultlibs -o dbg-$(TARGET) $(OBJS) $(KOS_LIB_PATHS) -Wl,--start-group $(LIBS) $(DBG_LIBS) -lgcc -Wl,--end-group
-	$(KOS_CC) -g -ml -m4-single-only -O2 -Wl,-d -Wl,-r -Wl,-S -Wl,-x -nostartfiles -nodefaultlibs -o $(TARGET) -Wl,-T $(KOS_BASE)/loadable/shlelf_dc.xr $(OBJS) $(KOS_LIB_PATHS) -Wl,--start-group $(LIBS) -lgcc -Wl,--end-group
+	$(KOS_CC) -g -ml $(KOS_SH4_PRECISION) -O2 -g -Wl,-Ttext=0x00000000 -e _start -nostartfiles -nodefaultlibs -o dbg-$(TARGET) $(OBJS) $(KOS_LIB_PATHS) -Wl,--start-group $(LIBS) $(DBG_LIBS) -lgcc -Wl,--end-group
+	$(KOS_CC) -g -ml $(KOS_SH4_PRECISION) -O2 -Wl,-d -Wl,-r -Wl,-S -Wl,-x -nostartfiles -nodefaultlibs -o $(TARGET) -Wl,-T $(KOS_BASE)/loadable/shlelf_dc.xr $(OBJS) $(KOS_LIB_PATHS) -Wl,--start-group $(LIBS) -lgcc -Wl,--end-group
 	$(KOS_SIZE) $(TARGET)
 
 clean:
