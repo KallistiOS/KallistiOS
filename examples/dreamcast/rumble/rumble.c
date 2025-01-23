@@ -346,10 +346,6 @@ int main(int argc, char *argv[]) {
         pvr_scene_finish();
     }
 
-    /* Stop rumbling before exiting, if it still exists. */
-    if((purudev != NULL) && (maple_dev_valid(purudev->port, purudev->unit) != 0))
-        purupuru_rumble_raw(purudev, 0x00000000);
-
     plx_font_destroy(fnt);
     plx_fcxt_destroy(cxt);
 
