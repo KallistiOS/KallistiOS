@@ -11,6 +11,7 @@
 
 #include <stdio.h> 
 #include <stdlib.h>
+#include <string.h>
 #include <stdbool.h>
 #include <dirent.h>
 #include <libgen.h>
@@ -18,7 +19,6 @@
 
 #include <dc/video.h>
 #include <fat/fs_fat.h>
-#include <kos/string.h>
 
 #include <kos/fs_romdisk.h>
 #include <kos/fs_ramdisk.h>

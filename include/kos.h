@@ -56,7 +56,6 @@ __BEGIN_DECLS
 #include <kos/dbglog.h>
 #include <kos/elf.h>
 #include <kos/fs_socket.h>
-#include <kos/string.h>
 #include <kos/init.h>
 #include <kos/oneshot_timer.h>
 #include <kos/regfield.h>

@@ -8,7 +8,6 @@
 #include <string.h>
 #include <errno.h>
 #include <kos/dbgio.h>
-#include <kos/string.h>
 #include <dc/fb_console.h>
 #include <dc/biosfont.h>
 #include <dc/video.h>
@@ -76,10 +75,10 @@ static int fb_write(int c) {
         /* If going down a line put us over the edge of the screen, move
            everything up a line, fixing the problem. */
         if(cur_y + FONT_CHAR_HEIGHT > max_y) {
-            memcpy4(t + min_y * fb_w, t + (min_y + FONT_CHAR_HEIGHT) * fb_w,
+            memcpy(t + min_y * fb_w, t + (min_y + FONT_CHAR_HEIGHT) * fb_w,
                     (cur_y - min_y - FONT_CHAR_HEIGHT) * fb_w * 2);
             cur_y -= FONT_CHAR_HEIGHT;
-            memset4(t + cur_y * fb_w, 0, FONT_CHAR_HEIGHT * fb_w * 2);
+            memset(t + cur_y * fb_w, 0, FONT_CHAR_HEIGHT * fb_w * 2);
         }
     }
 

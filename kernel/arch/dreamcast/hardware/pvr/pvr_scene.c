@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <kos/genwait.h>
-#include <kos/string.h>
 #include <kos/thread.h>
 #include <dc/pvr.h>
 #include <dc/sq.h>
@@ -350,7 +349,7 @@ int pvr_scene_finish(void) {
             }
 
             // Put a zero-marker on the end.
-            memset4(b->base[i] + b->ptr[i], 0, 32);
+            memset(b->base[i] + b->ptr[i], 0, 32);
             b->ptr[i] += 32;
 
             // Verify that there is no overrun.
