@@ -771,7 +771,7 @@ int snd_sfx_play_ex(sfx_play_data_t *data) {
         }
     }
 
-    int size;
+    uint32_t size;
     snd_effect_t *t = (snd_effect_t *)data->idx;
     AICA_CMDSTR_CHANNEL(tmp, cmd, chan);
 
