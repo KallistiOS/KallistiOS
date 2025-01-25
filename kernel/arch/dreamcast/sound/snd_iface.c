@@ -24,8 +24,8 @@
 static int initted = 0;
 
 /* This will come from a separately linked object file */
-extern uint8_t snd_stream_drv[];
-extern uint8_t snd_stream_drv_end[];
+extern uintptr_t snd_stream_drv;
+extern uintptr_t snd_stream_drv_end;
 
 /* The queue processing mutex for snd_sh4_to_aica_start and snd_sh4_to_aica_stop.
    There are some cases like stereo stream control + stereo sfx control
@@ -35,7 +35,7 @@ static mutex_t queue_proc_mutex = MUTEX_INITIALIZER;
 /* Initialize driver; note that this replaces the AICA program so that
    if you had anything else going on, it's gone now! */
 int snd_init(void) {
-    int amt;
+    size_t amt;
 
     /* Finish loading the stream driver */
     if(!initted) {
@@ -46,8 +46,8 @@ int snd_init(void) {
         if(amt % 4)
             amt = (amt + 4) & ~3;
 
-        dbglog(DBG_DEBUG, "snd_init(): loading %d bytes into SPU RAM\n", amt);
-        spu_memload_sq(0, snd_stream_drv, amt);
+        dbglog(DBG_DEBUG, "snd_init(): loading %u bytes into SPU RAM\n", amt);
+        spu_memload_sq(0, (void* )snd_stream_drv, amt);
 
         /* Enable the AICA and give it a few ms to start up */
         spu_enable();
