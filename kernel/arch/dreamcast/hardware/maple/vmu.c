@@ -95,8 +95,10 @@ static void vmu_poll_reply(maple_state_t *st, maple_frame_t *frm) {
 
     /* Fill the "nice" struct from the raw data */
     cooked = (vmu_state_t *)(frm->dev->status);
+    /* Copy over current button states to previous states. */
+    cooked->buttons.previous = cooked->buttons.current;
     /* Invert raw struct as nice struct */
-    cooked->buttons = ~(raw->raw_buttons);
+    cooked->buttons.current.raw = ~(raw->raw_buttons);
 
     /* Check to see if the VMU is upside-down in the controller and readjust
        its directional buttons accordingly. */
@@ -104,12 +106,12 @@ static void vmu_poll_reply(maple_state_t *st, maple_frame_t *frm) {
 
     if(cont && (cont->info.functions & MAPLE_FUNC_CONTROLLER) &&
        (frm->dev->info.connector_direction == cont->info.connector_direction)) {
-        cooked->buttons = (cooked->buttons & 0xf0)  |
-                          (cooked->dpad_up    << 1) | /* down */
-                          (cooked->dpad_down  << 0) | /* up */
-                          (cooked->dpad_left  << 3) | /* right */
-                          (cooked->dpad_right << 2);  /* left */
-
+        cooked->buttons.current.raw =
+            (cooked->buttons.current.raw & 0xf0)      |
+            (cooked->buttons.current.dpad_up    << 1) | /* down */
+            (cooked->buttons.current.dpad_down  << 0) | /* up */
+            (cooked->buttons.current.dpad_left  << 3) | /* right */
+            (cooked->buttons.current.dpad_right << 2);  /* left */
     }
 
     frm->dev->status_valid = 1;
