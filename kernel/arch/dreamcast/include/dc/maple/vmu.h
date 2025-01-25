@@ -537,14 +537,14 @@ int vmu_get_datetime(maple_device_t *dev, time_t *unix);
     @{
 */
 
-#define VMU_DPAD_UP    (0<<1)   /**< \brief Up Dpad button on the VMU */
-#define VMU_DPAD_DOWN  (1<<1)   /**< \brief Down Dpad button on the VMU */
-#define VMU_DPAD_LEFT  (2<<1)   /**< \brief Left Dpad button on the VMU */
-#define VMU_DPAD_RIGHT (3<<1)   /**< \brief Right Dpad button on the VMU */
-#define VMU_A          (4<<1)   /**< \brief 'A' button on the VMU */
-#define VMU_B          (5<<1)   /**< \brief 'B' button on the VMU */
-#define VMU_MODE       (6<<1)   /**< \brief Mode button on the VMU */
-#define VMU_SLEEP      (7<<1)   /**< \brief Sleep button on the VMU */
+#define VMU_DPAD_UP    (1 << 0)   /**< Up Dpad button on the VMU */
+#define VMU_DPAD_DOWN  (1 << 1)   /**< Down Dpad button on the VMU */
+#define VMU_DPAD_LEFT  (1 << 2)   /**< Left Dpad button on the VMU */
+#define VMU_DPAD_RIGHT (1 << 3)   /**< Right Dpad button on the VMU */
+#define VMU_A          (1 << 4)   /**< 'A' button on the VMU */
+#define VMU_B          (1 << 5)   /**< 'B' button on the VMU */
+#define VMU_MODE       (1 << 6)   /**< Mode button on the VMU */
+#define VMU_SLEEP      (1 << 7)   /**< Sleep button on the VMU */
 
 /** \brief VMU's raw condition data: 0 = PRESSED, 1 = RELEASED */
 typedef struct vmu_cond {
