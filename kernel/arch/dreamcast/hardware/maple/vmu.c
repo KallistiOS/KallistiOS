@@ -3,7 +3,7 @@
    vmu.c
    Copyright (C) 2002, 2003 Megan Potter
    Copyright (C) 2008 Donald Haase
-   Copyright (C) 2023 Falco Girgis
+   Copyright (C) 2023, 2025 Falco Girgis
  */
 
 /*
@@ -27,6 +27,12 @@
 #include <arch/timer.h>
 
 #define VMU_BLOCK_WRITE_RETRY_TIME  100     /* time to sleep until retrying a failed write */
+
+/* VMU's raw condition data: 0 = PRESSED, 1 = RELEASED */
+typedef struct vmu_cond {
+    uint8_t raw_buttons;
+    uint8_t dummy[3];
+} vmu_cond_t;
 
 typedef struct vmu_datetime {
     uint16_t year;    /* 0 - 9999 */

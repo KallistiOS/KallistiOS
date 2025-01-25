@@ -3,7 +3,8 @@
    dc/maple/vmu.h
    Copyright (C) 2000-2002 Jordan DeLong, Megan Potter
    Copyright (C) 2008 Donald Haase
-   Copyright (C) 2023 Falco Girgis, Andy Barajas
+   Copyright (C) 2023 Andy Barajas
+   Copyright (C) 2023, 2025 Falco Girgis
 
 */
 
@@ -546,14 +547,6 @@ int vmu_get_datetime(maple_device_t *dev, time_t *unix);
 #define VMU_MODE       (1 << 6)   /**< Mode button on the VMU */
 #define VMU_SLEEP      (1 << 7)   /**< Sleep button on the VMU */
 
-/** \brief VMU's raw condition data: 0 = PRESSED, 1 = RELEASED 
-    \sa vmu_state_t
-*/
-typedef struct vmu_cond {
-    uint8_t raw_buttons;        /**< \brief Combined button mask */
-    uint8_t dummy[3];           /**< \brief Unused response data */
-} vmu_cond_t;
-
 /** \brief Represents the combined state of all VMU buttons.
 
     Button states values:
@@ -579,13 +572,16 @@ typedef union vmu_buttons {
 } vmu_buttons_t;
 
 /** "Civilized" structure containing VMU's current state.
- * 
+
+    \note
+    Don't forget that if you want valid button state information, you must
+    enable polling for it in the driver with vmu_set_buttons_enabled()!
 */
 typedef struct vmu_state {
     struct {
-        vmu_buttons_t current;
-        vmu_buttons_t previous;
-    } buttons;
+        vmu_buttons_t current;  /**< Button states from the current frame */
+        vmu_buttons_t previous; /**< Button states from the previous frame */
+    } buttons;                  /**< Latest two frames of button state data */
 } vmu_state_t;
 
 /** @} */
