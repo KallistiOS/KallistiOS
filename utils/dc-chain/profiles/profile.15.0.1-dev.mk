@@ -4,13 +4,13 @@
 ###############################################################################
 ###############################################################################
 ### THIS CONFIG IS FOR AN EXPERIMENTAL VERSION OF GCC!
-## THERE ARE NO KNOWN ISSUES BUILDING THIS VERSION as of 2025-01-02.
+## THERE ARE NO KNOWN ISSUES BUILDING THIS VERSION as of 2025-01-24.
 ###############################################################################
 ###############################################################################
 
 # Toolchain versions for SH
 sh_binutils_ver=2.43.1
-sh_gcc_ver=15.0.0
+sh_gcc_ver=15.0.1
 newlib_ver=4.5.0.20241231
 gdb_ver=15.2
 
