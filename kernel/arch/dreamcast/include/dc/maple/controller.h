@@ -3,7 +3,7 @@
    dc/maple/controller.h
    Copyright (C) 2000-2002 Jordan DeLong
    Copyright (C) 2000-2002 Megan Potter
-   Copyright (C) 2023 Falco Girgis
+   Copyright (C) 2023, 2025 Falco Girgis
 
    Thanks to Marcus Comstedt for information on the controller.
 */
