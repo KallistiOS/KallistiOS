@@ -750,7 +750,10 @@ void thd_schedule_next(kthread_t *thd) {
         return;
 
     /* Unfortunately we have to take care of this here */
-    if(thd_current->state == STATE_ZOMBIE) {
+    if(!thd_current) {
+        /* During init */
+    }
+    else if(thd_current->state == STATE_ZOMBIE) {
         sem_signal(&thd_reap_sem);
     }
     else if(thd_current->state == STATE_RUNNING) {
@@ -1093,28 +1096,18 @@ int thd_init(void) {
 
     /* Setup a kernel task for the currently running "main" thread */
     kern = thd_create_ex(&kern_attr, NULL, NULL);
-    kern->state = STATE_RUNNING;
+    thd_schedule_next(kern);
 
     /* Initialize GBR register for Main Thread */
     __builtin_set_thread_pointer((void*)kern->context.gbr);
 
-    /* De-scehdule the thread (it's STATE_RUNNING) */
-    thd_remove_from_runnable(kern);
-
     /* Setup an idle task that is always ready to run, in case everyone
        else is blocked on something. */
     thd_idle_thd = thd_create_ex(&idle_attr, thd_idle_task, NULL);
-    thd_idle_thd->state = STATE_READY;
 
     /* Set up a thread to reap old zombies */
     sem_init(&thd_reap_sem, 0);
     thd_create_ex(&reaper_attr, thd_reaper, NULL);
-
-    /* Main thread -- the kern thread */
-    thd_current = kern;
-    irq_set_context(&kern->context);
-
-    thd_update_cpu_time(thd_current);
 
     /* Initialize thread sync primitives */
     genwait_init();
