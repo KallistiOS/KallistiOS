@@ -36,6 +36,11 @@ size_t vid_screen_shot_data(uint8_t **buffer) {
     /* Allocate buffer to store the 24bpp image data */
     numpix = vid_mode->width * vid_mode->height;
     buffer_size = numpix * BYTES_PER_PIXEL;
+    if(!buffer_size) {
+        dbglog(DBG_ERROR, "vid_screen_shot_data: invalid video mode.\n");
+        return 0;
+    }
+
     *buffer = (uint8_t *)malloc(buffer_size);
     if(*buffer == NULL) {
         dbglog(DBG_ERROR, "vid_screen_shot_data: can't allocate memory\n"); 
