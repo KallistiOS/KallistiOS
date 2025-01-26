@@ -41,17 +41,14 @@ static int push_back(struct dirent ***list, int *size, int *capacity,
         else
             *capacity = 1;
 
-        /* Save the previous list pointer in case realloc() fails. */
-        list_tmp = list;
-
         /* Resize our list */
-        *list = realloc(*list, *capacity * sizeof(struct dirent*));
+        *list_tmp = realloc(*list, *capacity * sizeof(struct dirent*));
 
         /* Handle out-of-memory in case realloc() failed. */
-        if(!*list)
+        if(!*list_tmp)
             goto out_of_memory;
         else
-            list_tmp = list;
+            list = list_tmp;
     }
 
     /* Allocate space for the new directory entry on the heap.
@@ -76,17 +73,19 @@ static int push_back(struct dirent ***list, int *size, int *capacity,
 
 /* Handle out-of-memory failure: */
 out_of_memory:
+    /* If this is our first loop and we're OOM, just bail. */
+    if(!*list)
+        return 0;
+
     /* Free each individual directory entry. */
     for(int e = 0; e < *size; ++e)
-        free((*list_tmp)[e]);
+        free((*list)[e]);
 
     /* Free the overall directory entry list */
-    free(*list_tmp);
+    free(*list);
 
     /* Reset our list variables */
     *list = NULL;
-    *size = 0;
-    *capacity = 0;
 
     return 0;
 }
@@ -101,11 +100,11 @@ int scandir(const char *dirname, struct dirent ***namelist,
     struct stat stat;
     int size = 0, capacity = 0;
 
-    /* Initialize namelist to its initial value */
-    *namelist = NULL;
-
     /* There's no standard way to validate these, so we'll assert(). */
     assert(dirname && namelist);
+
+    /* Initialize namelist to its initial value */
+    *namelist = NULL;
 
     /* First we simply attempt to open the directory using the POSIX API. */
     if(!(dir = opendir(dirname))) {
