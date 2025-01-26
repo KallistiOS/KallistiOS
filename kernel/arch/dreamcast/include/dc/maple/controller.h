@@ -471,6 +471,14 @@ int cont_has_capabilities(const struct maple_device *cont, uint32_t capabilities
                                              CONT_CAPABILITIES_EXTENDED_BUTTONS | \
                                              CONT_CAPABILITY_D | \
                                              CONT_CAPABILITIES_DPAD)
+
+/** \brief Madcatz PantherDC "Flight Stick + Trackball" controller type */
+#define CONT_TYPE_PANTHERDC                 (CONT_CAPABILITIES_STANDARD_BUTTONS | \
+                                             CONT_CAPABILITIES_EXTENDED_BUTTONS | \
+                                             CONT_CAPABILITY_D | \
+                                             CONT_CAPABILITIES_TRIGGERS | \
+                                             CONT_CAPABILITIES_DPAD | \
+                                             CONT_CAPABILITIES_DUAL_ANALOG)
 /** @} */
 
 /** \brief   Check for controller type
