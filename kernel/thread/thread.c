@@ -1096,6 +1096,11 @@ int thd_init(void) {
 
     /* Setup a kernel task for the currently running "main" thread */
     kern = thd_create_ex(&kern_attr, NULL, NULL);
+    if(!kern) {
+        dbglog(DBG_DEAD, "thd: failed to create kernel thread\n");
+        return -1;
+    }
+
     thd_schedule_next(kern);
 
     /* Initialize GBR register for Main Thread */
