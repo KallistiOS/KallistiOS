@@ -148,15 +148,10 @@ int pvr_init(const pvr_init_params_t *params) {
     pvr_state.vbl_handle = vblank_handler_add(pvr_vblank_handler, NULL);
     
     asic_evt_set_handler(ASIC_EVT_PVR_OPAQUEDONE, pvr_int_handler, NULL);
-    asic_evt_enable(ASIC_EVT_PVR_OPAQUEDONE, ASIC_IRQ_DEFAULT);
     asic_evt_set_handler(ASIC_EVT_PVR_OPAQUEMODDONE, pvr_int_handler, NULL);
-    asic_evt_enable(ASIC_EVT_PVR_OPAQUEMODDONE, ASIC_IRQ_DEFAULT);
     asic_evt_set_handler(ASIC_EVT_PVR_TRANSDONE, pvr_int_handler, NULL);
-    asic_evt_enable(ASIC_EVT_PVR_TRANSDONE, ASIC_IRQ_DEFAULT);
     asic_evt_set_handler(ASIC_EVT_PVR_TRANSMODDONE, pvr_int_handler, NULL);
-    asic_evt_enable(ASIC_EVT_PVR_TRANSMODDONE, ASIC_IRQ_DEFAULT);
     asic_evt_set_handler(ASIC_EVT_PVR_PTDONE, pvr_int_handler, NULL);
-    asic_evt_enable(ASIC_EVT_PVR_PTDONE, ASIC_IRQ_DEFAULT);
     asic_evt_set_handler(ASIC_EVT_PVR_RENDERDONE_TSP, pvr_int_handler, NULL);
     asic_evt_enable(ASIC_EVT_PVR_RENDERDONE_TSP, ASIC_IRQ_DEFAULT);
 

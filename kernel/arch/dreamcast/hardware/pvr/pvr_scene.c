@@ -12,6 +12,7 @@
 #include <kos/genwait.h>
 #include <kos/string.h>
 #include <kos/thread.h>
+#include <dc/asic.h>
 #include <dc/pvr.h>
 #include <dc/sq.h>
 #include "pvr_internal.h"
@@ -235,6 +236,7 @@ int pvr_list_finish(void) {
         pvr_sq_set32((void *)0, 0, 32, PVR_DMA_TA);
     }
 
+    pvr_state.last_list_used = pvr_state.list_reg_open;
     pvr_state.list_reg_open = -1;
 
     return 0;
@@ -304,6 +306,14 @@ int pvr_list_flush(pvr_list_t list) {
     assert_msg(0, "not implemented yet");
     return -1;
 }
+
+static unsigned char list_to_asic_evt[] = {
+    [PVR_LIST_OP_POLY] = ASIC_EVT_PVR_OPAQUEDONE,
+    [PVR_LIST_OP_MOD] = ASIC_EVT_PVR_OPAQUEMODDONE,
+    [PVR_LIST_TR_POLY] = ASIC_EVT_PVR_TRANSDONE,
+    [PVR_LIST_TR_MOD] = ASIC_EVT_PVR_TRANSMODDONE,
+    [PVR_LIST_PT_POLY] = ASIC_EVT_PVR_PTDONE,
+};
 
 /* Call this after you have finished submitting all data for a frame; once
    this has been called, you can not submit any more data until one of the
@@ -384,6 +394,9 @@ int pvr_scene_finish(void) {
             }
         }
     }
+
+    asic_evt_enable(list_to_asic_evt[pvr_state.last_list_used],
+                    ASIC_IRQ_DEFAULT);
 
     /* Ok, now it's just a matter of waiting for the interrupt... */
     return 0;
