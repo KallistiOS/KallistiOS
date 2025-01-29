@@ -32,6 +32,7 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 #include <dc/maple.h>
+#include <kos/regfield.h>
 
 #include <stdint.h>
 #include <time.h>
@@ -538,14 +539,14 @@ int vmu_get_datetime(maple_device_t *dev, time_t *unix);
     @{
 */
 
-#define VMU_DPAD_UP    (1 << 0)   /**< Up Dpad button on the VMU */
-#define VMU_DPAD_DOWN  (1 << 1)   /**< Down Dpad button on the VMU */
-#define VMU_DPAD_LEFT  (1 << 2)   /**< Left Dpad button on the VMU */
-#define VMU_DPAD_RIGHT (1 << 3)   /**< Right Dpad button on the VMU */
-#define VMU_A          (1 << 4)   /**< 'A' button on the VMU */
-#define VMU_B          (1 << 5)   /**< 'B' button on the VMU */
-#define VMU_MODE       (1 << 6)   /**< Mode button on the VMU */
-#define VMU_SLEEP      (1 << 7)   /**< Sleep button on the VMU */
+#define VMU_DPAD_UP    BIT(0)   /**< Up Dpad button on the VMU */
+#define VMU_DPAD_DOWN  BIT(1)   /**< Down Dpad button on the VMU */
+#define VMU_DPAD_LEFT  BIT(2)   /**< Left Dpad button on the VMU */
+#define VMU_DPAD_RIGHT BIT(3)   /**< Right Dpad button on the VMU */
+#define VMU_A          BIT(4)   /**< 'A' button on the VMU */
+#define VMU_B          BIT(5)   /**< 'B' button on the VMU */
+#define VMU_MODE       BIT(6)   /**< Mode button on the VMU */
+#define VMU_SLEEP      BIT(7)   /**< Sleep button on the VMU */
 
 /** \brief Represents the combined state of all VMU buttons.
 

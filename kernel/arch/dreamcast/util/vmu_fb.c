@@ -13,9 +13,6 @@
 #include <dc/maple/vmu.h>
 #include <dc/vmu_fb.h>
 
-#define GENMASK(h, l) \
-    (((unsigned int)-1 << (l)) & ((unsigned int)-1 >> (31 - (h))))
-
 /* Linux 4x6 font: lib/fonts/font_mini_4x6.c
  *
  * Created by Kenneth Albanowski.
