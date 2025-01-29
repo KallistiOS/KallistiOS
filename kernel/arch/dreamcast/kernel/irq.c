@@ -70,7 +70,7 @@ int irq_set_handler(irq_t code, irq_handler hnd, void *data) {
 irq_cb_t irq_get_handler(irq_t code) {
     /* Make sure they don't do something crackheaded */
     if(code >= 0x1000 || (code & 0x000f))
-        return NULL;
+        return (irq_cb_t){ NULL, NULL };
 
     code >>= 5;
 

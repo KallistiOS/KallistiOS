@@ -14,7 +14,9 @@ Platform-specific changes are prefixed with the platform name, otherwise the cha
 - Rework PVR hybrid mode + IRQ handling [PC]
 - **Dreamcast**: Add support and update toolchain profiles for Newlib 4.5.0, Binutils 2.43.1, and GDB 15.2 [EF]
 - **Dreamcast**: Make m4-single the default floating-point ABI [EF]
+- **Dreamcast**: Add DMAC API [PC]
 - **Dreamcast**: Add basic MMU functionality [PC]
+- **Dreamcast**: Added Raytris raylib example by Niisoks [FG]
 
 ## KallistiOS version 2.1.1
 - Added pvrtex utility by TapamN to utils [Daniel Fairchild == DF]
