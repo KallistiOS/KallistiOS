@@ -115,9 +115,7 @@ int pvr_dma_transfer(const void *src, uintptr_t dest, size_t count,
         return -1;
     }
 
-    dma_blocking = block;
-    dma_callback = callback;
-    dma_cbdata = cbdata;
+    irq_disable_scoped();
 
     /* Make sure we're not already DMA'ing */
     if(pvr_dma[PVR_DST] != 0) {
@@ -128,6 +126,10 @@ int pvr_dma_transfer(const void *src, uintptr_t dest, size_t count,
 
     if(dma_transfer(&pvr_dma_config, 0, src_addr, count, NULL))
         return -1;
+
+    dma_blocking = block;
+    dma_callback = callback;
+    dma_cbdata = cbdata;
 
     pvr_dma[PVR_STATE] = pvr_dest_addr(dest, type);
     pvr_dma[PVR_LEN] = count;
