@@ -165,18 +165,23 @@ export KOS_CFLAGS="${KOS_CFLAGS} -fomit-frame-pointer"
 
 # GCC Builtin Functions
 #
-# Uncomment this line to prevent GCC from using its own builtin implementations
-# of certain standard library functions.
-#export KOS_CFLAGS="${KOS_CFLAGS} -fno-builtin"
+# Comment out this line to enable GCC to use its own builtin implementations of
+# certain standard library functions. Under certain conditions, this can allow
+# compiler-optimized implementations to replace standard function invocations.
+# The downside of this is that it COULD interfere with Newlib or KOS implementations
+# of these functions, and it has not been tested thoroughly to ensure compatibility.
+#
+export KOS_CFLAGS="${KOS_CFLAGS} -fno-builtin"
 
 # Fast Math Instructions
 #
-# Comment this line to disable the use of optimized fast-math instructions (FSSRA,
-# FSCA) for calculating sin/cos and inverse square root, and any math optimization
-# that does not guarantee compliance with the IEEE floating-point standard.
+# Uncomment this line to enable the optimized fast-math instructions (FSSRA,
+# FSCA, and FSQRT) for calculating sin/cos, inverse square root, and square roots.
+# These can result in substantial performance gains for these kinds of operations;
+# however, they do so at the price of accuracy and are not IEEE compliant.
 # NOTE: Enabling this option will also override -fno-builtin!
 #
-export KOS_CFLAGS="${KOS_CFLAGS} -fbuiltin -ffast-math -ffp-contract=fast"
+#export KOS_CFLAGS="${KOS_CFLAGS} -fbuiltin -ffast-math -ffp-contract=fast"
 
 # SH4 Floating-Point Arithmetic Precision
 #

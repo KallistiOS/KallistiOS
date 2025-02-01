@@ -1,3 +1,9 @@
+/* KallistiOS ##version##
+
+   dmac.c
+
+   Copyright (C) 2025 Paul Cercueil
+*/
 #include <arch/cache.h>
 #include <arch/dmac.h>
 #include <arch/irq.h>

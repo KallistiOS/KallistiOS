@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <kos/genwait.h>
+#include <kos/regfield.h>
 #include <kos/string.h>
 #include <kos/thread.h>
 #include <dc/pvr.h>
@@ -36,7 +37,7 @@ void *pvr_set_vertbuf(pvr_list_t list, void *buffer, size_t len) {
     assert(list < PVR_OPB_COUNT);
 
     // Make sure it's an _enabled_ list.
-    assert(pvr_state.lists_enabled & (1 << list));
+    assert(pvr_state.lists_enabled & BIT(list));
 
     // Make sure the buffer parameters are valid.
     assert(!(((ptr_t)buffer) & 31));
@@ -171,7 +172,7 @@ inline static bool pvr_list_uses_dma(pvr_list_t list) {
 int pvr_list_begin(pvr_list_t list) {
     /* Check to make sure we can do this */
 #ifndef NDEBUG
-    if(!pvr_state.dma_mode && pvr_state.lists_closed & (1 << list)) {
+    if(!pvr_state.dma_mode && pvr_state.lists_closed & BIT(list)) {
         dbglog(DBG_WARNING, "pvr_list_begin: attempt to open already closed list\n");
         return -1;
     }
@@ -229,7 +230,7 @@ int pvr_list_finish(void) {
         sq_unlock();
 
         /* Set the flags */
-        pvr_state.lists_closed |= (1 << pvr_state.list_reg_open);
+        pvr_state.lists_closed |= BIT(pvr_state.list_reg_open);
 
         /* Send an EOL marker */
         pvr_sq_set32((void *)0, 0, 32, PVR_DMA_TA);
@@ -327,11 +328,11 @@ int pvr_scene_finish(void) {
 
         for(i = 0; i < PVR_OPB_COUNT; i++) {
             /* We never enabled the list globally with pvr_init() - skip it */
-            if(!(pvr_state.lists_enabled & (1 << i)))
+            if(!(pvr_state.lists_enabled & BIT(i)))
                 continue;
 
             /* If any lists weren't used in this scene, submit blank ones now */
-            if(!(pvr_state.lists_closed & (1 << i))) {
+            if(!(pvr_state.lists_closed & BIT(i))) {
                 pvr_list_begin(i);
                 pvr_blank_polyhdr(i);
                 pvr_list_finish();
@@ -376,8 +377,8 @@ int pvr_scene_finish(void) {
 
         /* If any lists weren't submitted, then submit blank ones now */
         for(i = 0; i < PVR_OPB_COUNT; i++) {
-            if((pvr_state.lists_enabled & (1 << i))
-                    && (!(pvr_state.lists_closed & (1 << i)))) {
+            if((pvr_state.lists_enabled & BIT(i))
+                    && (!(pvr_state.lists_closed & BIT(i)))) {
                 pvr_list_begin(i);
                 pvr_blank_polyhdr(i);
                 pvr_list_finish();

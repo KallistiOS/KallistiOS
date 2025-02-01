@@ -4,16 +4,22 @@
 
 /* Thanks to Marcus Comstedt for this VMU format info. */
 
-#include <kos.h>
+#include <stdio.h>
+#include <string.h>
+
+#include <dc/biosfont.h>
+#include <dc/video.h>
+
+#include <dc/maple/vmu.h>
 
 
 /* Draws one file entry, along with its "description" in the
    boot rom file manager. */
-static int y1 = 20 + 36;
+static int off1 = 20 + 36;
 
 void draw_one(maple_device_t *addr, char *fn, uint16 hdrblock) {
-    bfont_draw_str(vram_s + y1 * 640 + 10, 640, 0, "File ");
-    bfont_draw_str(vram_s + y1 * 640 + 10 + 5 * 12, 640, 0, fn);
+    bfont_draw_str(vram_s + off1 * 640 + 10, 640, 0, "File ");
+    bfont_draw_str(vram_s + off1 * 640 + 10 + 5 * 12, 640, 0, fn);
 
     if(hdrblock) {
         uint8 buf[1024];
@@ -24,11 +30,11 @@ void draw_one(maple_device_t *addr, char *fn, uint16 hdrblock) {
         }
 
         buf[0x10 + 32] = 0;
-        bfont_draw_str(vram_s + y1 * 640 + 10 + (6 + strlen(fn)) * 12, 640, 0,
+        bfont_draw_str(vram_s + off1 * 640 + 10 + (6 + strlen(fn)) * 12, 640, 0,
                        (char *)(buf + 0x10));
     }
 
-    y1 += 24;
+    off1 += 24;
 }
 
 /* We only do the monochrome one here to avoid having to

@@ -13,6 +13,7 @@
 #include <arch/timer.h>
 #include <dc/pvr.h>
 #include <dc/video.h>
+#include <kos/regfield.h>
 #include <kos/string.h>
 
 #include "pvr_internal.h"
@@ -228,8 +229,8 @@ void pvr_begin_queued_render(void) {
     if(!pvr_state.to_texture[bufn])
         PVR_SET(PVR_RENDER_ADDR, rbuf->frame);
     else {
-        PVR_SET(PVR_RENDER_ADDR, pvr_state.to_txr_addr[bufn] | (1 << 24));
-        PVR_SET(PVR_RENDER_ADDR_2, pvr_state.to_txr_addr[bufn] | (1 << 24));
+        PVR_SET(PVR_RENDER_ADDR, pvr_state.to_txr_addr[bufn] | BIT(24));
+        PVR_SET(PVR_RENDER_ADDR_2, pvr_state.to_txr_addr[bufn] | BIT(24));
     }
 
     PVR_SET(PVR_BGPLANE_CFG, vert_end); /* Bkg plane location */
