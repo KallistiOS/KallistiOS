@@ -6,7 +6,7 @@ programming.
 
 This script was adapted from earlier `dc-chain` scripts created by James
 Sumners and Jim Ursetto in the early days of the Dreamcast homebrew scene, but
-the utility has been [largely expanded and reworked](doc/changelog.txt) by many
+the utility has been [largely expanded and reworked](doc/CHANGELOG.md) by many
 [contributors](doc/CONTRIBUTORS.md) since then, and it is now included as part
 of **KallistiOS** (**KOS**).
 
@@ -88,13 +88,13 @@ options for building the toolchain(s). The normal, stable defaults have already
 been set up for you in [`Makefile.default.cfg`](Makefile.default.cfg), so most
 users can skip this step. If you'd like to make changes, copy
 [`Makefile.default.cfg`](Makefile.default.cfg) to `Makefile.cfg`; then open and
-read the options in [`Makefile.cfg`](Makefile.cfg) in your text editor. When
-building, the customizations in `Makefile.cfg` will override the defaults.
+read the options in `Makefile.cfg` in your text editor. When building, the
+customizations in `Makefile.cfg` will override the defaults.
 
 ### Toolchain profiles
 
 The following toolchain profiles are available for users to select in
-[`Makefile.cfg`](Makefile.cfg):
+`Makefile.cfg`:
 
 | Profile Name | SH4 GCC | Newlib | SH4 Binutils | ARM GCC | ARM Binutils | Notes |
 |---------:|:-------:|:----------:|:------------:|:-------:|:----------------:|:------|
@@ -132,8 +132,8 @@ on your platform.
 
 ## Building the toolchain
 
-With prerequisites installed (and optionally a [`Makefile.cfg`](Makefile.cfg)
-set up with desired custom options), the toolchains are ready to be built.
+With prerequisites installed (and optionally a `Makefile.cfg` set up with
+desired custom options), the toolchains are ready to be built.
 
 In the `dc-chain` directory, you may run (for **BSD**, please use `gmake`
 instead):
@@ -161,7 +161,7 @@ make distclean
 ## Finished
 
 Once the toolchains have been compiled, you are ready to build KallistiOS
-itself. See the [KallistiOS documentation](../../doc/README) for further
+itself. See the [KallistiOS documentation](../../doc/README.md) for further
 instructions. If you installed `gdb` with your toolchain, you will also want to
 build the `dcload/dc-tool` debug link utilities to perform remote debugging of
 **Dreamcast** programs. Further details can be found in the documentation for

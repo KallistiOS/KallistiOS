@@ -7,7 +7,8 @@ your environment:
   [MinGW-w64.org](https://mingw-w64.org/), please open
   [`mingw-w64.md`](mingw-w64.md).
 * If you are using the legacy **MinGW/MSYS** environment provided by
-  [MinGW.org](http://www.mingw.org), please open [`mingw.md`](mingw.md).
+  [MinGW - Minimalist GNU for Windows](https://sourceforge.net/projects/mingw/),
+  please open [`mingw.md`](mingw.md).
 
 Even if the name of the environment sounds identical, they are very different!
 Please be sure to use the correct documentation!
