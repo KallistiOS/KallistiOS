@@ -172,7 +172,7 @@ void maple_gun_read_pos(int *x, int *y) {
 /* Debugging help */
 void maple_sentinel_setup(void * buffer, int bufsize) {
     assert(bufsize % 4 == 0);
-    memset4(buffer, 0xdeadbeef, bufsize);
+    memset(buffer, 0xdeadbeef, bufsize);
 }
 
 void maple_sentinel_verify(const char * bufname, void * buffer, int bufsize) {

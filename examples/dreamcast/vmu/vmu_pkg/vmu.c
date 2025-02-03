@@ -9,7 +9,6 @@
    any other VMU file from the BIOS menus. */
 
 #include <kos.h>
-#include <kos/string.h>
 
 void draw_dir(void) {
     file_t      d;
@@ -42,7 +41,7 @@ void new_vmu(void) {
 
     if(dev == NULL) {
         if(dev_checked) {
-            memset4(vram_s + 88 * 640, 0, 640 * (480 - 64) * 2);
+            memset(vram_s + 88 * 640, 0, 640 * (480 - 64) * 2);
             bfont_draw_str(vram_s + 88 * 640 + 10, 640, 0, "No VMU");
             dev_checked = 0;
         }
@@ -50,7 +49,7 @@ void new_vmu(void) {
     else if(dev_checked) {
     }
     else {
-        memset4(vram_s + 88 * 640, 0, 640 * (480 - 88));
+        memset(vram_s + 88 * 640, 0, 640 * (480 - 88));
         draw_dir();
         dev_checked = 1;
     }

@@ -14,7 +14,6 @@
 #include <dc/pvr.h>
 #include <dc/video.h>
 #include <kos/regfield.h>
-#include <kos/string.h>
 
 #include "pvr_internal.h"
 
@@ -216,7 +215,7 @@ void pvr_begin_queued_render(void) {
     bkg.argb3  = pvr_state.bg_color;
     vrl = (uint32_t *)(PVR_RAM_BASE | PVR_GET(PVR_TA_VERTBUF_POS));
 
-    memcpy4(vrl, &bkg, sizeof(bkg));
+    memcpy(vrl, &bkg, sizeof(bkg));
 
     /* Reset the ISP/TSP, just in case */
     //PVR_SET(PVR_RESET, PVR_RESET_ISPTSP);
