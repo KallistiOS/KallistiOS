@@ -157,9 +157,10 @@ void wait_for_dev_attach(maple_device_t **dev_ptr, unsigned int func) {
     point_t w = {40.0f, 200.0f, 10.0f, 0.0f};
 
     /* If we already have it, and it's still valid, leave */
-    /* dev->valid is set to 0 by the driver if the device
+    /* dev->valid is set to false by the driver if the device
        is detached, but dev will stay not-null */
-    if((dev != NULL) && (maple_dev_valid(dev->port, dev->unit) != 0)) return;
+    if((dev != NULL) && dev->valid)
+        return;
 
     /* Draw up a screen */
     pvr_wait_ready();
@@ -178,7 +179,7 @@ void wait_for_dev_attach(maple_device_t **dev_ptr, unsigned int func) {
     pvr_scene_finish();
 
     /* Repeatedly check until we find one and it's valid */
-    while((dev == NULL) || (maple_dev_valid(dev->port, dev->unit) == 0)) {
+    while((dev == NULL) || !dev->valid) {
         *dev_ptr = maple_enum_type(0, func);
         dev = *dev_ptr;
         usleep(50);
@@ -269,6 +270,11 @@ int main(int argc, char *argv[]) {
 
         /* Store current button states + buttons which have been released. */
         state = (cont_state_t *)maple_dev_status(contdev);
+
+        /* Make sure we can rely on the state, otherwise loop. */
+        if(state == NULL)
+            continue;
+
         rel_buttons = (old_buttons ^ state->buttons);
 
         if((state->buttons & CONT_DPAD_LEFT) && (rel_buttons & CONT_DPAD_LEFT)) {
@@ -347,7 +353,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* Stop rumbling before exiting, if it still exists. */
-    if((purudev != NULL) && (maple_dev_valid(purudev->port, purudev->unit) != 0))
+    if((purudev != NULL) && purudev->valid)
         purupuru_rumble_raw(purudev, 0x00000000);
 
     plx_font_destroy(fnt);

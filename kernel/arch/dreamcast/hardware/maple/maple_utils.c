@@ -96,7 +96,7 @@ static const char *maple_cap_names[] = {
 #define maple_cap_name_cnt (sizeof(maple_cap_names)/sizeof(char *))
 
 /* Print the capabilities of a given driver to dbglog; NOT THREAD SAFE */
-static char caps_buffer[1024];
+static char caps_buffer[64];
 const char * maple_pcaps(uint32 functions) {
     unsigned int i, o;
 

@@ -652,7 +652,7 @@ cave_init() {
      * make it easier on the intrepid adventurer.
      */
     for(i = 1; i <= room_num; ++i)
-        qsort(cave[i].tunnel, (u_int)link_num,
+        qsort(cave[i].tunnel, link_num,
               sizeof(cave[i].tunnel[0]), int_compare);
 
 #ifdef DEBUG
