@@ -14,7 +14,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <malloc.h>
 #include <errno.h>
 #include <sys/queue.h>
 
@@ -349,7 +348,7 @@ int snd_stream_init_ex(int channels, size_t buffer_size) {
            polling doesn't read more than half buffer at time.
            This can also be used for mono streams on unaligned data.
         */
-        sep_buffer[0] = memalign(32, buffer_size);
+        sep_buffer[0] = aligned_alloc(32, buffer_size);
 
         if(sep_buffer[0] == NULL) {
             dbglog(DBG_ERROR, "snd_stream_init_ex(): memory allocation failed\n");
