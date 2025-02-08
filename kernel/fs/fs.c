@@ -28,12 +28,12 @@ something like this:
 */
 
 #include <stdio.h>
-#include <malloc.h>
 #include <string.h>
 #include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <limits.h>
+
 #include <kos/fs.h>
 #include <kos/thread.h>
 #include <kos/mutex.h>

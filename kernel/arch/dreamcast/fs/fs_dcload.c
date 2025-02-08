@@ -27,8 +27,8 @@ printf goes to the dc-tool console
 
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <malloc.h>
 #include <sys/queue.h>
 
 /* A linked list of dir entries. */

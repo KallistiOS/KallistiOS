@@ -21,7 +21,7 @@ on sunsite.unc.edu in /pub/Linux/system/recovery/, or as a package under Debian 
 #include <kos/mutex.h>
 #include <kos/fs_romdisk.h>
 #include <kos/opts.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 #include <strings.h>

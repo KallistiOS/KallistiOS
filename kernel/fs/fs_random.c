@@ -8,14 +8,13 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <malloc.h>
 #include <errno.h>
 #include <time.h>
+
 #include <arch/types.h>
 #include <kos/mutex.h>
 #include <kos/fs_random.h>
 #include <sys/queue.h>
-#include <errno.h>
 #include <sys/time.h>
 
 /* This function is declared in <stdlib.h> but behind an if __BSD_VISIBLE

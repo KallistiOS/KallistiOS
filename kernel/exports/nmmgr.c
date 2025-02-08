@@ -17,9 +17,10 @@ interface at the front of their struct.
 
 #include <stdbool.h>
 #include <stdio.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+
 #include <kos/init_base.h>
 #include <kos/nmmgr.h>
 #include <kos/mutex.h>
