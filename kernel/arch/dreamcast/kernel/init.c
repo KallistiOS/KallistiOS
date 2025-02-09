@@ -28,7 +28,7 @@
 
 #include "initall_hdrs.h"
 
-extern int _bss_start, end;
+extern uintptr_t _bss_start, end;
 
 /* ctor/dtor stuff from libgcc. */
 #if __GNUC__ == 4
@@ -262,7 +262,6 @@ void  __weak arch_auto_shutdown(void) {
 /* This is the entry point inside the C program */
 void arch_main(void) {
     uint8 *bss_start = (uint8 *)(&_bss_start);
-    uint8 *bss_end = (uint8 *)(&end);
     int rv;
 
     if (KOS_PLATFORM_IS_NAOMI) {
@@ -284,7 +283,7 @@ void arch_main(void) {
         __kos_init_early_fn();
 
     /* Clear out the BSS area */
-    memset(bss_start, 0, bss_end - bss_start);
+    memset(bss_start, 0, (uintptr_t)(&end) - (uintptr_t)bss_start);
 
     /* Do auto-init stuff */
     arch_auto_init();
