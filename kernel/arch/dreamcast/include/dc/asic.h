@@ -205,6 +205,7 @@ typedef struct {
     \param  handler         The function to call when the event happens.
     \param  data            A user pointer that will be passed to the callback.
 
+    \return                 Old handler function
 */
 asic_evt_handler_entry_t asic_evt_set_handler(uint16_t code, asic_evt_handler handler, void *data);
 
