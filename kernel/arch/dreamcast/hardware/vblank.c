@@ -4,7 +4,7 @@
    Copyright (C)2003 Megan Potter
 */
 
-#include <malloc.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <sys/queue.h>
 

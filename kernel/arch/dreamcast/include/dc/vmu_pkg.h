@@ -23,7 +23,7 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
+#include <stdint.h>
 
 /** \defgroup   vmu_package     Header Package
     \brief                      API for Managing VMU File Headers
@@ -44,17 +44,17 @@ __BEGIN_DECLS
     \headerfile dc/vmu_pkg.h
 */
 typedef struct vmu_pkg {
-    char        desc_short[20];     /**< \brief Short file description */
-    char        desc_long[36];      /**< \brief Long file description */
-    char        app_id[20];         /**< \brief Application ID */
-    int         icon_cnt;           /**< \brief Number of icons */
-    int         icon_anim_speed;    /**< \brief Icon animation speed */
-    int         eyecatch_type;      /**< \brief "Eyecatch" type */
-    int         data_len;           /**< \brief Number of data (payload) bytes */
-    uint16      icon_pal[16];       /**< \brief Icon palette (ARGB4444) */
-    uint8       *icon_data;         /**< \brief 512*n bytes of icon data */
-    const uint8 *eyecatch_data;     /**< \brief Eyecatch data */
-    const uint8 *data;              /**< \brief Payload data */
+    char            desc_short[20];     /**< \brief Short file description */
+    char            desc_long[36];      /**< \brief Long file description */
+    char            app_id[20];         /**< \brief Application ID */
+    int             icon_cnt;           /**< \brief Number of icons */
+    int             icon_anim_speed;    /**< \brief Icon animation speed */
+    int             eyecatch_type;      /**< \brief "Eyecatch" type */
+    int             data_len;           /**< \brief Number of data (payload) bytes */
+    uint16_t        icon_pal[16];       /**< \brief Icon palette (ARGB4444) */
+    uint8_t         *icon_data;         /**< \brief 512*n bytes of icon data */
+    const uint8_t   *eyecatch_data;     /**< \brief Eyecatch data */
+    const uint8_t   *data;              /**< \brief Payload data */
 } vmu_pkg_t;
 
 /** \brief   Final VMU package type.
@@ -65,16 +65,16 @@ typedef struct vmu_pkg {
     \headerfile dc/vmu_pkg.h
 */
 typedef struct vmu_hdr {
-    char    desc_short[16];     /**< \brief Space-padded short description */
-    char    desc_long[32];      /**< \brief Space-padded long description*/
-    char    app_id[16];         /**< \brief Null-padded application ID */
-    uint16  icon_cnt;           /**< \brief Number of icons */
-    uint16  icon_anim_speed;    /**< \brief Icon animation speed */
-    uint16  eyecatch_type;      /**< \brief Eyecatch type */
-    uint16  crc;                /**< \brief CRC of the file */
-    uint32  data_len;           /**< \brief Payload size */
-    uint8   reserved[20];       /**< \brief Reserved (all zero) */
-    uint16  icon_pal[16];       /**< \brief Icon palette (ARGB4444) */
+    char        desc_short[16];     /**< \brief Space-padded short description */
+    char        desc_long[32];      /**< \brief Space-padded long description*/
+    char        app_id[16];         /**< \brief Null-padded application ID */
+    uint16_t    icon_cnt;           /**< \brief Number of icons */
+    uint16_t    icon_anim_speed;    /**< \brief Icon animation speed */
+    uint16_t    eyecatch_type;      /**< \brief Eyecatch type */
+    uint16_t    crc;                /**< \brief CRC of the file */
+    uint32_t    data_len;           /**< \brief Payload size */
+    uint8_t     reserved[20];       /**< \brief Reserved (all zero) */
+    uint16_t    icon_pal[16];       /**< \brief Icon palette (ARGB4444) */
     /* 512*n Icon Bitmaps */
     /* Eyecatch palette + bitmap */
 } vmu_hdr_t;
@@ -106,7 +106,7 @@ typedef struct vmu_hdr {
     \param  dst_size        The size of the output.
     \return                 0 on success, <0 on failure.
 */
-int vmu_pkg_build(vmu_pkg_t *src, uint8 ** dst, int * dst_size);
+int vmu_pkg_build(vmu_pkg_t *src, uint8_t ** dst, int * dst_size);
 
 /** \brief   Parse an array of uint8s into a vmu_pkg_t.
     \ingroup vmu_package
@@ -119,7 +119,7 @@ int vmu_pkg_build(vmu_pkg_t *src, uint8 ** dst, int * dst_size);
     \retval -1              On invalid CRC in the data.
     \retval 0               On success.
 */
-int vmu_pkg_parse(uint8 *data, vmu_pkg_t *pkg);
+int vmu_pkg_parse(uint8_t *data, vmu_pkg_t *pkg);
 
 /** \brief   Load a .ico file to use as a VMU file's icon.
     \ingroup vmu_package
@@ -148,4 +148,3 @@ int vmu_pkg_load_icon(vmu_pkg_t *pkg, const char *icon_fn);
 __END_DECLS
 
 #endif  /* __DC_VMU_PKG_H */
-

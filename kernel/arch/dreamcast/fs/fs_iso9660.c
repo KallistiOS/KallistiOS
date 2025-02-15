@@ -42,7 +42,6 @@ ISO9660 systems, as these were used as references as well.
 #include <ctype.h>
 #include <string.h>
 #include <strings.h>
-#include <malloc.h>
 #include <errno.h>
 
 static int init_percd(void);
@@ -1124,7 +1123,7 @@ void fs_iso9660_init(void) {
     mutex_init(&fh_mutex, MUTEX_TYPE_NORMAL);
 
     /* Allocate cache block space, properly aligned for DMA access */
-    cache_data = memalign(32, 2 * NUM_CACHE_BLOCKS * 2048);
+    cache_data = aligned_alloc(32, 2 * NUM_CACHE_BLOCKS * 2048);
     caches = malloc(2 * NUM_CACHE_BLOCKS * sizeof(cache_block_t));
 
     for(i = 0; i < NUM_CACHE_BLOCKS; i++) {

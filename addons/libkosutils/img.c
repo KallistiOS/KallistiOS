@@ -6,8 +6,8 @@
    Platform independent image handling
 */
 
-#include <malloc.h>
 #include <assert.h>
+#include <stdlib.h>
 #include <kos/img.h>
 
 /* Free a kos_img_t which was created by an image loader; set struct_also to non-zero

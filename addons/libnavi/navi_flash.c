@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <navi/flash.h>
+#include <kos/thread.h>
 
 /*
 
@@ -105,7 +106,7 @@ static int nvflash_wait_ready(uint32 addr, int timeout) {
 
     while(timeout-- && nvflash_busy(addr)) {
         if(wait)
-            usleep(1000);
+            thd_sleep(1);
     }
 
     if(timeout <= 0) {
