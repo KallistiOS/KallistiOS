@@ -272,7 +272,7 @@ static int bread_cache(cache_block_t **cache, uint32 sector) {
     /* Load the requested block */
     j = cdrom_read_sectors_ex(cache[i]->data, sector + 150, 1, CDROM_READ_DMA);
 
-    if(j < 0) {
+    if(j != ERR_OK) {
         //dbglog(DBG_ERROR, "fs_iso9660: can't read_sectors for %d: %d\n",
         //  sector+150, j);
         if(j == ERR_DISC_CHG || j == ERR_NO_DISC) {
@@ -692,41 +692,35 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
 
         /* If we're on a sector boundary and we have more than one
            full sector to read, then short-circuit the cache here
-           and use the multi-sector reads from the CD unit (this
-           should theoretically be a lot faster) */
-        /* XXX This code isn't actually faster, but I'm leaving it
-           here commented out in case we could find a better use
-           for it later than speed (i.e., preventing thread context
-           switches). */
-        /* if(thissect == 2048 && toread >= 2048) {
-            // Round it off to an even sector count
+           and use the multi-sector reads from the CD unit. */
+        if(thissect == 2048 && toread >= 2048 && (((uintptr_t)outbuf) & 31) == 0) {
+            /* Round it off to an even sector count. */
             thissect = toread / 2048;
             toread = thissect * 2048;
 
-            printf("cdrom: short-circuit read for %d sectors\n",
-                thissect);
+            /* Do the read */
+            c = cdrom_read_sectors_ex(outbuf,
+                fh[fd].first_extent + (fh[fd].ptr / 2048) + 150,
+                thissect,
+                CDROM_READ_DMA);
 
-            // Do the read
-            if(cdrom_read_sectors(outbuf,
-                fh[fd].first_extent + fh[fd].ptr/2048 + 150,
-                thissect) < 0)
-            {
-                // Something went wrong...
+            if(c != ERR_OK) {
                 return -1;
             }
-        } else { */
-        toread = (toread > thissect) ? thissect : toread;
-
-        /* Do the read */
-        c = bdread(fh[fd].first_extent + fh[fd].ptr / 2048);
-
-        if(c < 0) {
-            errno = EIO;
-            return -1;
         }
+        else {
+            toread = (toread > thissect) ? thissect : toread;
 
-        memcpy(outbuf, dcache[c]->data + (fh[fd].ptr % 2048), toread);
-        /* } */
+            /* Do the read */
+            c = bdread(fh[fd].first_extent + fh[fd].ptr / 2048);
+
+            if(c < 0) {
+                errno = EIO;
+                return -1;
+            }
+
+            memcpy(outbuf, dcache[c]->data + (fh[fd].ptr % 2048), toread);
+        }
 
         /* Adjust pointers */
         outbuf += toread;
