@@ -5,13 +5,12 @@
    Copyright (C) 2012 Lawrence Sebald
    Copyright (C) 2018 Donald Haase
    Copyright (C) 2024 Paul Cercueil
-   Copyright (C) 2024 Falco Girgis
+   Copyright (C) 2024, 2025 Falco Girgis
 */
 
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
-#include <stdatomic.h>
 
 #include <arch/timer.h>
 #include <dc/maple.h>
@@ -482,7 +481,7 @@ static int kbd_enqueue(kbd_state_t *state, uint8_t keycode, uint32_t mods) {
         /*53*/  0, '/', '*', '-', '+', 13, '1', '2', '3', '4', '5', '6',
         /*5f*/  '7', '8', '9', '0', '.', 0
     };
-    uint16_t ascii = 0;
+    uint16_t ascii;
 
     kbd_state_private_t *state_private = (kbd_state_private_t *)state;
 
@@ -588,8 +587,8 @@ int kbd_queue_pop(maple_device_t *dev, bool to_ascii) {
     if(!to_ascii)
         return (int)rv;
 
-    mods.raw = (rv >> 8) & 0xff;
-    leds.raw = (rv >> 16) & 0xff;
+    mods.raw = FIELD_GET(rv, 0xff00);
+    leds.raw = FIELD_GET(rv, 0xff0000);
     rv &= 0xff;
 
     if((ascii = kbd_key_to_ascii(rv, state_private->base.region, mods, leds))) {
@@ -619,12 +618,12 @@ static void kbd_check_poll(maple_frame_t *frm, kbd_cond_t *cond) {
     const uint32_t mods = cond->modifiers.raw | (cond->leds.raw << 8);
 
     /* Update all key states */
-    for(unsigned k = 0; k < KBD_MAX_KEYS; ++k) {
+    for(unsigned int k = 0; k < KBD_MAX_KEYS; ++k) {
         state->key_states[k].raw = (state->key_states[k].raw << 1) & KEY_STATE_MASK;
     }
 
     /* Process all pressed keys */
-    for(unsigned p = 0; p < KBD_MAX_PRESSED_KEYS; ++p) {
+    for(unsigned int p = 0; p < KBD_MAX_PRESSED_KEYS; ++p) {
 
         /* Once we get to a 'none', the rest will be 'none' */
         if(cond->keys[p] == KBD_KEY_NONE) {

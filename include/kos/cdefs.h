@@ -3,7 +3,7 @@
    kos/cdefs.h
    Copyright (C) 2002, 2004 Megan Potter
    Copyright (C) 2020, 2023 Lawrence Sebald
-   Copyright (C) 2023, 2024 Falco Girgis
+   Copyright (C) 2023, 2024, 2025 Falco Girgis
 
    Based loosely around some stuff in BSD's sys/cdefs.h
 */

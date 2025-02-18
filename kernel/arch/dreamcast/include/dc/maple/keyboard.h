@@ -39,6 +39,7 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 #include <dc/maple.h>
+#include <kos/regfield.h>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -93,14 +94,14 @@ __BEGIN_DECLS
     @{
 */
 /* Single-Key Modifiers */
-#define KBD_MOD_LCTRL       (1 << 0)    /**< \brief Left Control key */
-#define KBD_MOD_LSHIFT      (1 << 1)    /**< \brief Left Shift key */
-#define KBD_MOD_LALT        (1 << 2)    /**< \brief Left alternate key */
-#define KBD_MOD_S1          (1 << 3)    /**< \brief S1 key */
-#define KBD_MOD_RCTRL       (1 << 4)    /**< \brief Right Control key */
-#define KBD_MOD_RSHIFT      (1 << 5)    /**< \brief Right Shift key */
-#define KBD_MOD_RALT        (1 << 6)    /**< \brief Right Alternate key */
-#define KBD_MOD_S2          (1 << 7)    /**< \brief S2 key */
+#define KBD_MOD_LCTRL       BIT(0)    /**< \brief Left Control key */
+#define KBD_MOD_LSHIFT      BIT(1)    /**< \brief Left Shift key */
+#define KBD_MOD_LALT        BIT(2)    /**< \brief Left alternate key */
+#define KBD_MOD_S1          BIT(3)    /**< \brief S1 key */
+#define KBD_MOD_RCTRL       BIT(4)    /**< \brief Right Control key */
+#define KBD_MOD_RSHIFT      BIT(5)    /**< \brief Right Shift key */
+#define KBD_MOD_RALT        BIT(6)    /**< \brief Right Alternate key */
+#define KBD_MOD_S2          BIT(7)    /**< \brief S2 key */
 
 /* Multi-Key Modifiers */
 /** \brief Either Control key */
@@ -157,14 +158,14 @@ typedef union kbd_mods {
 
     @{
 */
-#define KBD_LED_NUMLOCK     (1 << 0)    /**< \brief Num Lock LED */
-#define KBD_LED_CAPSLOCK    (1 << 1)    /**< \brief Caps Lock LED */
-#define KBD_LED_SCRLOCK     (1 << 2)    /**< \brief Scroll Lock LED */
-#define KBD_LED_UNKNOWN1    (1 << 3)    /**< \brief Unknown LED 1 */
-#define KBD_LED_UNKNOWN2    (1 << 4)    /**< \brief Unknown LED 2 */
-#define KBD_LED_KANA        (1 << 5)    /**< \brief Kana LED */
-#define KBD_LED_POWER       (1 << 6)    /**< \brief Power LED */
-#define KBD_LED_SHIFT       (1 << 7)    /**< \brief Shift LED */
+#define KBD_LED_NUMLOCK     BIT(0)    /**< \brief Num Lock LED */
+#define KBD_LED_CAPSLOCK    BIT(1)    /**< \brief Caps Lock LED */
+#define KBD_LED_SCRLOCK     BIT(2)    /**< \brief Scroll Lock LED */
+#define KBD_LED_UNKNOWN1    BIT(3)    /**< \brief Unknown LED 1 */
+#define KBD_LED_UNKNOWN2    BIT(4)    /**< \brief Unknown LED 2 */
+#define KBD_LED_KANA        BIT(5)    /**< \brief Kana LED */
+#define KBD_LED_POWER       BIT(6)    /**< \brief Power LED */
+#define KBD_LED_SHIFT       BIT(7)    /**< \brief Shift LED */
 /** @} */
 
 /** \brief Keyboard LEDs
@@ -220,8 +221,8 @@ typedef union kbd_leds {
 
     @{
 */
-#define KEY_STATE_IS_DOWN    (1 << 0) /**< \brief If key is currenty down */
-#define KEY_STATE_WAS_DOWN   (1 << 1) /**< \brief If key was previously down */
+#define KEY_STATE_IS_DOWN    BIT(0) /**< \brief If key is currenty down */
+#define KEY_STATE_WAS_DOWN   BIT(1) /**< \brief If key was previously down */
 /** \brief Mask of all key state flags */
 #define KEY_STATE_MASK      (KEY_STATE_IS_DOWN | KEY_STATE_WAS_DOWN)
 /** @} */
