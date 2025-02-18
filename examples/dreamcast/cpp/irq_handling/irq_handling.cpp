@@ -2,7 +2,7 @@
 
    examples/dreamcast/cpp/irq_handling/irq_handling.cpp
 
-   Copyright (C) 2024 Falco Girgis
+   Copyright (C) 2024, 2025 Falco Girgis
 
 */
 
@@ -42,8 +42,14 @@ struct std::formatter<irq_t>: formatter<const char *> {
                 return formatter<const char *>::format("EXC_GENERAL_FPU", ctx);
             case EXC_SLOT_FPU:
                 return formatter<const char *>::format("EXC_SLOT_FPU",    ctx);
+            case EXC_TMU0_TUNI0:
+                return formatter<const char *>::format("EXC_TMU0_TUNI0",  ctx);
+            case EXC_TMU1_TUNI1:
+                return formatter<const char *>::format("EXC_TMU1_TUNI1",  ctx);
+            case EXC_TMU2_TUNI2:
+                return formatter<const char *>::format("EXC_TMU2_TUNI2",  ctx);
             default:
-                return formatter<const char *>::format("UNKNOWN",         ctx);
+                return std::format_to(ctx.out(), "UNKNOWN {}", code);
         }
     }
 };
@@ -102,6 +108,12 @@ namespace irq {
         // values into a single value.
         return (irq_set_handler(codes, cpp_handler_adapter, erased) & ...);
     }
+    
+    // Function template for clearing out any number of single IRQ handlers.
+    template<irq_t... codes>
+    bool set_handler(std::nullptr_t) {
+        return (irq_set_handler(codes, nullptr, nullptr) & ...);
+    }
 
     // Function for installing a handler as the global IRQ handler using the
     // same mechanism described above for individual IRQ codes.
@@ -109,6 +121,11 @@ namespace irq {
         auto* erased = 
             new erased_handler(std::forward<decltype(callback)>(callback));
         return irq_set_global_handler(cpp_handler_adapter, erased);
+    }
+
+    // Function template for clearing out the global IRQ handler
+    bool set_global_handler(std::nullptr_t) {
+        return irq_set_global_handler(nullptr, nullptr);
     }
 }
 
@@ -131,15 +148,18 @@ auto meta_handler(std::string name, handler_ctrl& ctrl, auto &&handler)
     return ([&ctrl, name=std::move(name), &handler]
             (irq_t code, irq::context *ctx) 
     {
+        // Whether the current IRQ has been handled
+        bool handled = false;
         // Increment our counter for the number of times the IRQ was called.
         ++ctrl.called_count;
         // Log the exception code and which handler received it.
         std::println("Caught exception: {} from {}!", code, name);
-        // Proxy the call to our inner handler which performs the real logic.
-        std::invoke(std::forward<decltype(handler)>(handler), code, ctx);
-        // Use hanler_ctrl::should_handle as our return value, which determines
-        // whether to handle and accept or ignore and reject the interrupt.
-        return static_cast<bool>(ctrl.should_handle);
+        // Check whether the call should even be handled.
+        if(ctrl.should_handle)
+            // Proxy the call to our inner handler which performs the real logic.
+            handled = std::invoke_r<bool>(std::forward<decltype(handler)>(handler), code, ctx);
+        // Return whether it was handled or not.
+        return handled;
     });
 }
 
@@ -165,23 +185,30 @@ int main(int argc, char* argv[]) {
 
     // Install a global IRQ handler which will catch everything.
     irq::set_global_handler(
-        meta_handler("Global Handler", global_ctrl, [](irq_t, irq::context *ctx)
-            {
-                        // Advance to the next instruction to not infinite loop.
-                        ctx->pc += 2;
-                    }));
+        meta_handler("Global Handler", global_ctrl, [](irq_t code, irq::context *ctx) {
+            switch(code) {
+            case EXC_FPU:
+            case EXC_GENERAL_FPU:
+            case EXC_SLOT_FPU:
+                ctx->pc += 2;   // Advance to the next instruction to not infinite loop.
+                return true;
+            default:            // Other types of IRQs such as Timer0 interrupts for the thread scheduler.
+                return false;
+            }
+        }));
 
     // Install a single handler for EXC_FPU, EXC_GENERAL_FPU, and EXC_SLOT_FPU
     irq::set_handler<EXC_FPU, EXC_GENERAL_FPU, EXC_SLOT_FPU>(
-        meta_handler("Single Handler", fpu_ctrl, 
-                [](irq_t, irq::context *ctx) {
-                ctx->pc += 2;   // Advance to the next instruction.
-            }));
+        meta_handler("Single Handler", fpu_ctrl, [](irq_t, irq::context *ctx) {
+            ctx->pc += 2;   // Advance to the next instruction.
+            return true;
+        }));
 
     // Install an unhandled exception handler at the end of the chain.
     irq::set_handler<EXC_UNHANDLED_EXC>(
         meta_handler("Unhandled Handler", unhandled_ctrl, [](irq_t, irq::context *ctx) {
             ctx->pc += 2;   // Advance to the next instruction.
+            return true;
         }));
     
     std::println("Testing accepting the exception in GLOBAL handler...");
@@ -193,7 +220,7 @@ int main(int argc, char* argv[]) {
     divide_by_zero_exception();
 
     // Verify only the global handler got the IRQ and then it terminated.
-    if(global_ctrl.called_count    != 1 ||
+    if(global_ctrl.called_count    <  1 ||
        fpu_ctrl.called_count       != 0 ||
        unhandled_ctrl.called_count != 0)
     {
@@ -211,7 +238,7 @@ int main(int argc, char* argv[]) {
     divide_by_zero_exception();
 
     // Verify the IRQ propagated global -> single/FPU but terminated after.
-    if(global_ctrl.called_count    != 2 ||
+    if(global_ctrl.called_count    <  2 ||
        fpu_ctrl.called_count       != 1 ||
        unhandled_ctrl.called_count != 0)
     {
@@ -231,14 +258,20 @@ int main(int argc, char* argv[]) {
 
     // Verify the IRQ propagated global -> single/FPU -> unhandled and then
     // terminated before we caused a kernel panic and aborted the program.
-    if(global_ctrl.called_count    != 3 ||
+    if(global_ctrl.called_count    <  3 ||
        fpu_ctrl.called_count       != 2 ||
        unhandled_ctrl.called_count != 1)
     {
         std::println("UNHANDLED handler failed to accept exception!");
         success = false;
     }
-    
+
+    // Clear out global IRQ handler.
+    irq::set_global_handler(nullptr);
+
+    // Clear out all individual + unhandled IRQ handlers.
+    irq::set_handler<EXC_FPU, EXC_GENERAL_FPU, EXC_SLOT_FPU, EXC_UNHANDLED_EXC>(nullptr);
+
     // Print out our results and return with a standard exit code.
     if(success) { 
         std::println(stdout, 
