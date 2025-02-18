@@ -23,6 +23,6 @@ building them can take hours and the process doesn't change often.
 Of course, the Docker image produced here can also be used for CI/CD pipelines!
 
 This Dockerfile builds the `stable` toolchain by default, but can be used to
-build the other toolchains like `9.3.0-legacy`, `15.0.0-dev`, etc., as long as
+build the other toolchains like `9.3.0-legacy`, `15.0.1-dev`, etc., as long as
 you pass the `dc_chain` argument in the docker command line (see the Dockerfile
 for an example of the syntax).

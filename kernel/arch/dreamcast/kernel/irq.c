@@ -3,7 +3,7 @@
    arch/dreamcast/kernel/irq.c
    Copyright (C) 2000-2001 Megan Potter
    Copyright (C) 2024 Paul Cercueil
-   Copyright (C) 2024 Falco Girgis
+   Copyright (C) 2024, 2025 Falco Girgis
    Copyright (C) 2024 Andy Barajas
 */
 
@@ -20,17 +20,15 @@
 #include <kos/dbgio.h>
 #include <kos/thread.h>
 #include <kos/library.h>
+#include <kos/regfield.h>
 
 /* Macros for accessing related registers. */
 #define TRA    ( *((volatile uint32_t *)(0xff000020)) ) /* TRAPA Exception Register */
 #define EXPEVT ( *((volatile uint32_t *)(0xff000024)) ) /* Exception Event Register */
 #define INTEVT ( *((volatile uint32_t *)(0xff000028)) ) /* Interrupt Event Register */
 
-/* IRQ handler closure */
-struct irq_cb {
-    irq_handler hdl;
-    void       *data;
-};
+/* Interrupt priority registers */
+#define REG_IPR(x) ( *((volatile uint16_t *)(0xffd00004 + (x) * 4)) )
 
 /* TRAPA handler closure */
 struct trapa_cb {
@@ -49,7 +47,7 @@ struct irq_state {            // SIZE
 };                            // 8 BYTES TOTAL
 
 /* Individual exception handlers */
-static struct irq_cb   irq_handlers[0x100];
+static struct irq_cb   irq_handlers[0x40];
 /* TRAPA exception handlers. */
 static struct trapa_cb trapa_handlers[0x100];
 /* Global exception handler */
@@ -142,24 +140,21 @@ int irq_set_handler(irq_t code, irq_handler hnd, void *data) {
     if(code >= 0x1000 || (code & 0x000f))
         return -1;
 
-    code >>= 4;
+    code >>= 5;
     irq_handlers[code] = (struct irq_cb){ hnd, data };
 
     return 0;
 }
 
 /* Get the address of the current handler */
-irq_handler irq_get_handler(irq_t code, void **data) {
+irq_cb_t irq_get_handler(irq_t code) {
     /* Make sure they don't do something crackheaded */
     if(code >= 0x1000 || (code & 0x000f))
-        return NULL;
+        return (irq_cb_t){ NULL, NULL };
 
-    code >>= 4;
+    code >>= 5;
 
-    if(data)
-        *data = irq_handlers[code].data;
-
-    return irq_handlers[code].hdl;
+    return irq_handlers[code];
 }
 
 /* Set a global handler */
@@ -170,11 +165,8 @@ int irq_set_global_handler(irq_handler hnd, void *data) {
 }
 
 /* Get the global exception handler */
-irq_handler irq_get_global_handler(void **data) {
-    if(data)
-        *data = global_irq_handler.data;
-
-    return global_irq_handler.hdl;
+irq_cb_t irq_get_global_handler(void) {
+    return global_irq_handler;
 }
 
 /* Set or remove a trapa handler */
@@ -287,7 +279,7 @@ static void irq_dump_regs(int code, irq_t evt) {
 /* The C-level routine that processes context switching and other
    types of interrupts. NOTE: We are running on the stack of the process
    that was interrupted! */
-void irq_handle_exception(int code) {
+__cold void irq_handle_exception(int code) {
     struct irq_state irq_state = {
         .code = code
     };
@@ -296,28 +288,28 @@ void irq_handle_exception(int code) {
     irq_state_push(&irq_state);
     
     switch(code) {
-        /* If it's a code 0 (or anything else), well, we shouldn't be here. */
-        case 0:
-        default:
-            arch_panic("Spurious RESET exception!");
+        /* If it's a code 3, grab the event from intevt. */
+        case 3:
+            irq_state.evt = INTEVT;
             break;
-
+        
         /* If it's a code 1 or 2, grab the event from expevt. */
         case 1:
         case 2:
             irq_state.evt = EXPEVT;
             break;
-
-        /* If it's a code 3, grab the event from intevt. */
-        case 3:
-            irq_state.evt = INTEVT;
+        
+        /* If it's a code 0 (or anything else), well, we shouldn't be here. */
+        case 0:
+        default:
+            arch_panic("Spurious RESET exception!");
             break;
     }
 
     /* Check for double exception fault: special case since we do not
        currently support nesting of exceptions. */
     if(__unlikely(irq_state.previous)) {
-        hnd = &irq_handlers[EXC_DOUBLE_FAULT >> 4];
+        hnd = &irq_handlers[EXC_DOUBLE_FAULT >> 5];
 
         if(hnd->hdl)
             hnd->hdl(EXC_DOUBLE_FAULT, irq_srt_addr, hnd->data);
@@ -336,7 +328,7 @@ void irq_handle_exception(int code) {
     /* If the global handler didn't handle the exception, pass
        it on to the individual handlers */
     if(__likely(!irq_state.handled)) {
-        hnd = &irq_handlers[irq_state.evt >> 4];
+        hnd = &irq_handlers[irq_state.evt >> 5];
         
         if(__likely(hnd->hdl)) {
             /* Individual handlers accept by default. */
@@ -348,7 +340,7 @@ void irq_handle_exception(int code) {
     /* If an individual handler didn't handle the exception,
        pass it on to the unhandled exception handler. */
     if(__unlikely(!irq_state.handled)) {
-        hnd = &irq_handlers[EXC_UNHANDLED_EXC >> 4];
+        hnd = &irq_handlers[EXC_UNHANDLED_EXC >> 5];
 
         if(hnd->hdl)
             hnd->hdl(irq_state.evt, irq_srt_addr, hnd->data);
@@ -476,6 +468,9 @@ int irq_init(void) {
     /* Set a default FPU exception handler */
     irq_set_handler(EXC_FPU, irq_def_fpu, NULL);
 
+    /* Unmask DMA IRQs, set priority of 3 */
+    irq_set_priority(IRQ_SRC_DMAC, 3);
+
     /* Set a default context (will be superseded if threads are
        enabled later) */
     irq_set_context(&irq_context_default);
@@ -501,6 +496,9 @@ void irq_shutdown(void) {
     if(!initted)
         return;
 
+    /* Disable DMA IRQs */
+    irq_set_priority(IRQ_SRC_DMAC, IRQ_PRIO_MASKED);
+
     /* Restore SR and VBR */
     __asm__("mov.l  %0,r0\n"
             "ldc    r0,sr" : : "m"(pre_sr));
@@ -508,4 +506,22 @@ void irq_shutdown(void) {
             "ldc    r0,vbr" : : "m"(pre_vbr));
 
     initted = false;
+}
+
+void irq_set_priority(irq_src_t src, unsigned int prio) {
+    uint16_t ipr;
+
+    if (prio > IRQ_PRIO_MAX)
+        prio = IRQ_PRIO_MAX;
+
+    irq_disable_scoped();
+
+    ipr = REG_IPR(src / 4);
+    ipr &= ~(0xf << (src % 4) * 4);
+    ipr |= prio << (src % 4) * 4;
+    REG_IPR(src / 4) = ipr;
+}
+
+unsigned int irq_get_priority(irq_src_t src) {
+    return (REG_IPR(src / 4) >> (src % 4) * 4) & 0xf;
 }

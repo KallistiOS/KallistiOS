@@ -3,6 +3,7 @@
    g2bus.h
    Copyright (C) 2002 Megan Potter
    Copyright (C) 2023 Andy Barajas
+   Copyright (C) 2024 Ruslan Rostovtsev
 
 */
 
@@ -245,6 +246,18 @@ void g2_write_16(uintptr_t address, uint16_t value);
 */
 uint32_t g2_read_32(uintptr_t address);
 
+/** \brief  Non-blocked read one 32-bit dword from G2.
+
+    This function reads a single dword from the specified address, without all
+    necessary precautions that are required for accessing G2.
+
+    \param  address         The address in memory to read.
+    \return                 The dword read from the address specified.
+*/
+static inline uint32_t g2_read_32_raw(uintptr_t address) {
+    return *((volatile uint32_t *)address);
+}
+
 /** \brief  Write a 32-bit dword to G2.
 
     This function writes one dword to the specified address, taking all the
@@ -254,6 +267,18 @@ uint32_t g2_read_32(uintptr_t address);
     \param  value           The value to write to that address.
 */
 void g2_write_32(uintptr_t address, uint32_t value);
+
+/** \brief  Non-blocked write a 32-bit dword to G2.
+
+    This function writes one dword to the specified address, without all the
+    necessary precautions to ensure your write actually succeeds.
+
+    \param  address         The address in memory to write to.
+    \param  value           The value to write to that address.
+*/
+static inline void g2_write_32_raw(uintptr_t address, uint32_t value) {
+    *((volatile uint32_t *)address) = value;
+}
 
 /** \brief  Read a block of bytes from G2.
 

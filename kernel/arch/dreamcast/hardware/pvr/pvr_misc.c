@@ -13,7 +13,7 @@
 #include <arch/timer.h>
 #include <dc/pvr.h>
 #include <dc/video.h>
-#include <kos/string.h>
+#include <kos/regfield.h>
 
 #include "pvr_internal.h"
 
@@ -35,10 +35,10 @@ void pvr_set_bg_color(float r, float g, float b) {
 }
 
 /* Enable/disable cheap shadow mode and set the cheap shadow scale register. */
-void pvr_set_shadow_scale(int enable, float scale_value) {
+void pvr_set_shadow_scale(bool enable, float scale_value) {
     int s = (int)(scale_value * 255);
 
-    PVR_SET(PVR_CHEAP_SHADOW, ((!!enable) << 8) | (s & 0xFF));
+    PVR_SET(PVR_CHEAP_SHADOW, (enable << 8) | (s & 0xFF));
 }
 
 /* Set the Z-Clip value (that is to say the depth of the background layer). */
@@ -187,7 +187,7 @@ void pvr_begin_queued_render(void) {
     } zclip;
 
     /* Get the appropriate buffer */
-    tbuf = pvr_state.ta_buffers + (pvr_state.ta_target ^ 1);
+    tbuf = pvr_state.ta_buffers + (pvr_state.ta_target ^ pvr_state.vbuf_doublebuf);
     rbuf = pvr_state.frame_buffers + (bufn ^ 1);
 
     /* Calculate background value for below */
@@ -215,7 +215,7 @@ void pvr_begin_queued_render(void) {
     bkg.argb3  = pvr_state.bg_color;
     vrl = (uint32_t *)(PVR_RAM_BASE | PVR_GET(PVR_TA_VERTBUF_POS));
 
-    memcpy4(vrl, &bkg, sizeof(bkg));
+    memcpy(vrl, &bkg, sizeof(bkg));
 
     /* Reset the ISP/TSP, just in case */
     //PVR_SET(PVR_RESET, PVR_RESET_ISPTSP);
@@ -228,8 +228,8 @@ void pvr_begin_queued_render(void) {
     if(!pvr_state.to_texture[bufn])
         PVR_SET(PVR_RENDER_ADDR, rbuf->frame);
     else {
-        PVR_SET(PVR_RENDER_ADDR, pvr_state.to_txr_addr[bufn] | (1 << 24));
-        PVR_SET(PVR_RENDER_ADDR_2, pvr_state.to_txr_addr[bufn] | (1 << 24));
+        PVR_SET(PVR_RENDER_ADDR, pvr_state.to_txr_addr[bufn] | BIT(24));
+        PVR_SET(PVR_RENDER_ADDR_2, pvr_state.to_txr_addr[bufn] | BIT(24));
     }
 
     PVR_SET(PVR_BGPLANE_CFG, vert_end); /* Bkg plane location */
@@ -268,4 +268,22 @@ void pvr_blank_polyhdr_buf(int type, pvr_poly_hdr_t * poly) {
     /* Fill in dummy values */
     poly->d1 = poly->d2 = poly->d3 = poly->d4 = 0xffffffff;
 
+}
+
+pvr_ptr_t pvr_get_front_buffer(void) {
+    unsigned int idx;
+    uint32_t addr;
+
+    irq_disable_scoped();
+
+    /* The front buffer may not have been fully rendered or submitted to the
+       video hardware yet. In case this has yet to happen, we want the second
+       view target, aka. the one not currently being displayed. */
+    idx = pvr_state.view_target ^ pvr_state.render_completed;
+
+    addr = pvr_state.frame_buffers[idx].frame;
+
+    /* The front buffer is in 32-bit memory, convert its address to make it
+       addressable from the 64-bit memory */
+    return (pvr_ptr_t)(((addr << 1) & (PVR_RAM_SIZE - 1)) + PVR_RAM_BASE);
 }

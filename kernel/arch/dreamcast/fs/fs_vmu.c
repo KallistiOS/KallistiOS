@@ -9,9 +9,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <malloc.h>
 #include <errno.h>
 #include <time.h>
+
 #include <arch/types.h>
 #include <kos/mutex.h>
 #include <dc/fs_vmu.h>
@@ -19,7 +19,6 @@
 #include <dc/maple.h>
 #include <dc/maple/vmu.h>
 #include <sys/queue.h>
-#include <errno.h>
 
 /*
 

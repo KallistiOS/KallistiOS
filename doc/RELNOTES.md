@@ -2,15 +2,68 @@ KallistiOS ##version##
 Copyright (C) 2002, 2003 Megan Potter
 Copyright (C) 2012-2019 Lawrence Sebald
 Copyright (C) 2024 Donald Haase
+Copyright (C) 2025 Eric Fradella
+
+RELEASE NOTES for 2.2.0
+-----------------------
+A significant change has been made regarding the default floating-point ABI used
+by KallistiOS. In previous KOS releases, and even in commercial games released
+during the Dreamcast's lifetime, the `m4-single-only` floating-point ABI was
+used. With the `m4-single-only` ABI, the SH4 CPU is always in single-precision
+mode and all uses of 64-bit `double` values are truncated to 32-bit `float`
+values by the compiler, allowing the compiler to use twice the number of
+floating-point registers at the expense of precision. Going forward, KOS now
+uses the `m4-single` floating-point ABI by default. With the `m4-single` ABI,
+the SH4 CPU is in single-precision mode upon function entry, but the compiler
+can change the mode and use true 64-bit `double` values within functions. For
+most projects, there are no implications from this change other than gaining
+the ability to use 64-bit `double` values. There are, however, two possibilities
+for negative effects:
+
+- In older projects using `double` values (which were actually being truncated
+  to 32-bit `float` values upon compilation anyway), the code should be changed
+  to explicitly use `float` values instead. If not changed, fewer floating-point
+  registers may be available to the compiler, in exchange for a needless bonus
+  doubling of floating-point precision.
+
+- The order of floating-point register names is changed. When using
+  `m4-single-only`, register names are ordered fr4, fr5, fr6, fr7, etc., but in
+  `m4-single`, register names are ordered fr5, fr4, fr7, fr6, etc. In order to
+  account for this difference and still have inline assembly functions using
+  floating-point registers work properly regardless of the ABI used, the
+  KOS_FPARG(n) macro has been provided in `arch/args.h`.
+
+Despite the change to `m4-single` by default, KOS is still committed to full
+support for `m4-single-only` in addition to offering new support for
+`m4-single`. This is selectable using the `KOS_SH4_PRECISION` environment
+variable within environ.sh. It is highly recommended to compile KOS, all
+kos-ports, and all libraries with the same uniform setting as your projects.
+Other ABIs, such as `m4` or `m4-nofpu`, are not supported at this time.
+
+
+RELEASE NOTES for 2.1.1
+-----------------------
+
+This minor patch version is primarily aimed at fixing the versioning system
+which simply didn't work as implemented in v2.1.0. Alongside that another few
+dozen PRs were included that containing minor bugfixes and documentation updates.
+
+Also included is a new host-side util pvrtex which converts standard images
+to formats used directly by the Dreamcast's PowerVR (utils/pvrtex), a significant
+rewrite of wav2adpcm which converts standard sound data into the smaller ADPCM
+format used by the Dreamcast's AICA (utils/wav2adpcm), an example that
+demonstrates how to draw lines with quads via the pvr (pvr/pvrline), one for
+testing network speed (network/speedtest) and another on how to use libADX
+from kos-ports for audio playback (sound/libADX).
 
 RELEASE NOTES for 2.1.0
 -----------------------
 
 # What's New in Version 2.1.0
 
-KOS v2.1.0 has been a long time in the making. As such, it seemed prudent to 
-provide an overview of the new functionality since v2.0.0 in 2013. We intend 
-to have more frequent versioned releases moving forward, so this kind of 
+KOS v2.1.0 has been a long time in the making. As such, it seemed prudent to
+provide an overview of the new functionality since v2.0.0 in 2013. We intend
+to have more frequent versioned releases moving forward, so this kind of
 information should be easily seen in the changelog.
 
 # Core Functionality

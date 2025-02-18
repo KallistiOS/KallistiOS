@@ -5,12 +5,13 @@
    Copyright (C) 2000 Megan Potter
    Copyright (C) 2014 Lawrence Sebald
    Copyright (C) 2014 Donald Haase
-   Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024, 2025 Ruslan Rostovtsev
    Copyright (C) 2024 Andy Barajas
 
  */
 #include <assert.h>
 
+#include <arch/cache.h>
 #include <arch/timer.h>
 #include <arch/memory.h>
 
@@ -54,6 +55,8 @@ typedef int gdc_cmd_hnd_t;
 
 /* The G1 ATA access mutex */
 mutex_t _g1_ata_mutex = MUTEX_INITIALIZER;
+
+static int cur_sector_size = 2048;
 
 /* Shortcut to cdrom_reinit_ex. Typically this is the only thing changed. */
 int cdrom_set_sector_size(int size) {
@@ -215,6 +218,7 @@ int cdrom_change_datatype(int sector_part, int cdxa, int sector_size) {
     params[2] = cdxa;           /* CD-XA mode 1/2 */
     params[3] = sector_size;    /* sector size */
 
+    cur_sector_size = sector_size;
     return syscall_gdrom_sector_mode(params);
 }
 
@@ -265,10 +269,10 @@ int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode) {
         int is_test;
     } params;
     int rv = ERR_OK;
+    uintptr_t buf_addr = ((uintptr_t)buffer);
 
     params.sec = sector;    /* Starting sector */
     params.num = cnt;       /* Number of sectors */
-    params.buffer = buffer; /* Output buffer */
     params.is_test = 0;     /* Enable test mode */
 
     /* The DMA mode blocks the thread it is called in by the way we execute
@@ -276,10 +280,34 @@ int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode) {
     /* XXX: DMA Mode may conflict with using a second G1ATA device. More 
        testing is needed from someone with such a device.
     */
-    if(mode == CDROM_READ_DMA)
+    if(mode == CDROM_READ_DMA) {
+        if(buf_addr & 0x1f) {
+            dbglog(DBG_ERROR, "cdrom_read_sectors_ex: Unaligned memory for DMA (32-byte).\n");
+            return ERR_SYS;
+        }
+        /* Use the physical memory address. */
+        params.buffer = (void *)(buf_addr & MEM_AREA_CACHE_MASK);
+
+        /* Invalidate the CPU cache only for cacheable memory areas.
+           Otherwise, it is assumed that either this operation is unnecessary
+           (another DMA is being used) or that the caller is responsible
+           for managing the CPU data cache.
+        */
+        if((buf_addr & MEM_AREA_P2_BASE) != MEM_AREA_P2_BASE) {
+            /* Invalidate the dcache over the range of the data. */
+            dcache_inval_range(buf_addr, cnt * cur_sector_size);
+        }
         rv = cdrom_exec_cmd(CMD_DMAREAD, &params);
-    else if(mode == CDROM_READ_PIO)
+    }
+    else if(mode == CDROM_READ_PIO) {
+        params.buffer = buffer;
+
+        if(buf_addr & 0x01) {
+            dbglog(DBG_ERROR, "cdrom_read_sectors_ex: Unaligned memory for PIO (2-byte).\n");
+            return ERR_SYS;
+        }
         rv = cdrom_exec_cmd(CMD_PIOREAD, &params);
+    }
 
     return rv;
 }
@@ -380,35 +408,69 @@ int cdrom_spin_down(void) {
     return rv;
 }
 
+/*
+    Unlocks G1 ATA DMA access to all memory on the root bus, not just system memory.
+    Patches syscall region where the DMA protection register is set,
+    ensuring it allows broader memory access, and updates the register accordingly.
+ */
+static void unlock_dma_memory(void) {
+    uint32_t i, patched = 0;
+    size_t flush_size;
+    volatile uint32_t *prot_reg = (uint32_t *)(G1_ATA_DMA_PROTECTION | MEM_AREA_P2_BASE);
+    uintptr_t patch_addr[2] = {0x0c001c20, 0x0c0023fc};
+
+    for(i = 0; i < sizeof(patch_addr) / sizeof(uintptr_t); ++i) {
+        if(*(uint32_t *)(patch_addr[i] | MEM_AREA_P2_BASE) == (uint32_t)G1_ATA_DMA_UNLOCK_SYSMEM) {
+            *(uint32_t *)(patch_addr[i] | MEM_AREA_P2_BASE) = G1_ATA_DMA_UNLOCK_ALLMEM;
+            ++patched;
+        }
+    }
+    if(patched) {
+        flush_size = (patch_addr[1] - patch_addr[0]) + CPU_CACHE_BLOCK_SIZE;
+        flush_size &= ~(CPU_CACHE_BLOCK_SIZE - 1);
+        icache_flush_range(patch_addr[0] | MEM_AREA_P1_BASE, flush_size);
+    }
+    *prot_reg = G1_ATA_DMA_UNLOCK_ALLMEM;
+}
+
 /* Initialize: assume no threading issues */
 void cdrom_init(void) {
     uint32_t p;
-    volatile uint32_t *react = (uint32_t *)(0x005f74e4 | MEM_AREA_P2_BASE);
+    volatile uint32_t *react = (uint32_t *)(G1_ATA_BUS_PROTECTION | MEM_AREA_P2_BASE);
+    volatile uint32_t *state = (uint32_t *)(G1_ATA_BUS_PROTECTION_STATUS | MEM_AREA_P2_BASE);
     volatile uint32_t *bios = (uint32_t *)MEM_AREA_P2_BASE;
 
     mutex_lock(&_g1_ata_mutex);
 
-    /* Reactivate drive: send the BIOS size and then read each
-       word across the bus so the controller can verify it.
-       If first bytes are 0xe6ff instead of usual 0xe3ff, then
-       hardware is fitted with custom BIOS using magic bootstrap
-       which can and must pass controller verification with only
-       the first 1024 bytes */
-    if((*(uint16_t *)MEM_AREA_P2_BASE) == 0xe6ff) {
-        *react = 0x3ff;
-        for(p = 0; p < 0x400 / sizeof(bios[0]); p++) {
-            (void)bios[p];
-        }
-    } else {
-        *react = 0x1fffff;
-        for(p = 0; p < 0x200000 / sizeof(bios[0]); p++) {
-            (void)bios[p];
+    /*
+        First, check the protection status to determine if it's necessary 
+        to pass check the entire BIOS again.
+    */
+    if (*state != G1_ATA_BUS_PROTECTION_STATUS_PASSED) {
+        /* Reactivate drive: send the BIOS size and then read each
+        word across the bus so the controller can verify it.
+        If first bytes are 0xe6ff instead of usual 0xe3ff, then
+        hardware is fitted with custom BIOS using magic bootstrap
+        which can and must pass controller verification with only
+        the first 1024 bytes */
+        if((*(uint16_t *)MEM_AREA_P2_BASE) == 0xe6ff) {
+            *react = 0x3ff;
+            for(p = 0; p < 0x400 / sizeof(bios[0]); p++) {
+                (void)bios[p];
+            }
+        } else {
+            *react = 0x1fffff;
+            for(p = 0; p < 0x200000 / sizeof(bios[0]); p++) {
+                (void)bios[p];
+            }
         }
     }
 
     /* Reset system functions */
     syscall_gdrom_reset();
     syscall_gdrom_init();
+
+    unlock_dma_memory();
     mutex_unlock(&_g1_ata_mutex);
 
     cdrom_reinit();

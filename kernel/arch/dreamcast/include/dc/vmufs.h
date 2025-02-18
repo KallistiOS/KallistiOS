@@ -34,10 +34,6 @@ __BEGIN_DECLS
     @{
 */
 
-/* \cond */
-#define __packed__ __attribute__((packed))
-/* \endcond */
-
 /** \brief  BCD timestamp, used several places in the vmufs.
     \headerfile dc/vmufs.h
 */
@@ -50,7 +46,7 @@ typedef struct {
     uint8   min;    /**< \brief Minutes */
     uint8   sec;    /**< \brief Seconds */
     uint8   dow;    /**< \brief Day of week (0 = monday, etc) */
-} __packed__ vmu_timestamp_t;
+} vmu_timestamp_t;
 
 /** \brief  VMU FS Root block layout.
     \headerfile dc/vmufs.h
@@ -70,7 +66,7 @@ typedef struct {
     uint16          icon_shape;     /**< \brief Icon shape for this VMS */
     uint16          blk_cnt;        /**< \brief Number of user blocks */
     uint8           unk2[430];      /**< \brief ??? */
-} __packed__ vmu_root_t;
+} vmu_root_t;
 
 /** \brief  VMU FS Directory entries, 32 bytes each.
     \headerfile dc/vmufs.h
@@ -85,8 +81,7 @@ typedef struct {
     uint16          hdroff;         /**< \brief Offset of header, in blocks from start of file */
     uint8           dirty;          /**< \brief See header notes */
     uint8           pad1[3];        /**< \brief All zeros */
-} __packed__ vmu_dir_t;
-#undef __packed__
+} vmu_dir_t;
 
 /* Notes about the "dirty" field on vmu_dir_t :)
 

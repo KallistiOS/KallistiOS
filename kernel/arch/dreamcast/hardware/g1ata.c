@@ -20,6 +20,7 @@
 #include <arch/timer.h>
 #include <arch/cache.h>
 #include <arch/irq.h>
+#include <arch/memory.h>
 
 /*
    This file implements support for accessing devices over the G1 bus by the
@@ -618,7 +619,7 @@ out:
 int g1_ata_read_lba_dma(uint64_t sector, size_t count, void *buf,
                         int block) {
     int lba28, old, can_lba48 = CAN_USE_LBA48();
-    uint32_t addr;
+    uintptr_t addr;
     uint8_t cmd;
 
     /* Make sure we're actually being asked to do work... */
@@ -661,7 +662,7 @@ int g1_ata_read_lba_dma(uint64_t sector, size_t count, void *buf,
     }
 
     /* Check the alignment of the address. */
-    addr = ((uint32_t)buf) & 0x0FFFFFFF;
+    addr = (uintptr_t)buf;
 
     if(addr & 0x1F) {
         dbglog(DBG_ERROR, "g1_ata_read_lba_dma: Unaligned output address\n");
@@ -669,10 +670,18 @@ int g1_ata_read_lba_dma(uint64_t sector, size_t count, void *buf,
         return -1;
     }
 
-    if((addr >> 24) == 0x0C) {
+    /* Invalidate the CPU cache only for cacheable memory areas.
+       Otherwise, it is assumed that either this operation is unnecessary
+       (another DMA is being used) or that the caller is responsible
+       for managing the CPU data cache.
+    */
+    if((addr & MEM_AREA_P2_BASE) != MEM_AREA_P2_BASE) {
         /* Invalidate the dcache over the range of the data. */
-        dcache_inval_range((uint32)buf, count * 512);
+        dcache_inval_range(addr, count * 512);
     }
+
+    /* Use the physical memory address. */
+    addr &= MEM_AREA_CACHE_MASK;
 
     /* Lock the mutex. It will be unlocked later in the IRQ handler. */
     if(g1_ata_mutex_lock())
@@ -801,7 +810,7 @@ int g1_ata_write_lba(uint64_t sector, size_t count, const void *buf) {
 int g1_ata_write_lba_dma(uint64_t sector, size_t count, const void *buf,
                          int block) {
     int cmd, lba28, old, can_lba48 = CAN_USE_LBA48();
-    uint32_t addr;
+    uintptr_t addr;
 
     /* Make sure we're actually being asked to do work... */
     if(!count)
@@ -843,7 +852,7 @@ int g1_ata_write_lba_dma(uint64_t sector, size_t count, const void *buf,
     }
 
     /* Check the alignment of the address. */
-    addr = ((uint32_t)buf) & 0x0FFFFFFF;
+    addr = (uintptr_t)buf;
 
     if(addr & 0x1F) {
         dbglog(DBG_ERROR, "g1_ata_write_lba_dma: Unaligned input address\n");
@@ -851,10 +860,18 @@ int g1_ata_write_lba_dma(uint64_t sector, size_t count, const void *buf,
         return -1;
     }
 
-    if((addr >> 24) == 0x0C) {
+    /* Flush the CPU cache only for cacheable memory areas.
+       Otherwise, it is assumed that either this operation is unnecessary
+       (another DMA is being used) or that the caller is responsible
+       for managing the CPU data cache.
+    */
+    if((addr & MEM_AREA_P2_BASE) != MEM_AREA_P2_BASE) {
         /* Flush the dcache over the range of the data. */
-        dcache_flush_range((uint32)buf, count * 512);
+        dcache_flush_range(addr, count * 512);
     }
+
+    /* Use the physical memory address. */
+    addr &= MEM_AREA_CACHE_MASK;
 
     /* Lock the mutex. It will be unlocked in the IRQ handler later. */
     if(g1_ata_mutex_lock())

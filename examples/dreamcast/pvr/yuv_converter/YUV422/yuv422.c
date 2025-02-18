@@ -35,7 +35,7 @@
 */
 
 #include <stdio.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <arch/arch.h>
 #include <arch/cache.h>
 
@@ -71,9 +71,9 @@ static int load_image(void) {
         goto error;
     }
 
-    y_plane = memalign(32, FRAME_TEXTURE_WIDTH * FRAME_TEXTURE_HEIGHT);
-    u_plane = memalign(32, FRAME_TEXTURE_WIDTH * FRAME_TEXTURE_HEIGHT / 2);
-    v_plane = memalign(32, FRAME_TEXTURE_WIDTH * FRAME_TEXTURE_HEIGHT / 2);
+    y_plane = aligned_alloc(32, FRAME_TEXTURE_WIDTH * FRAME_TEXTURE_HEIGHT);
+    u_plane = aligned_alloc(32, FRAME_TEXTURE_WIDTH * FRAME_TEXTURE_HEIGHT / 2);
+    v_plane = aligned_alloc(32, FRAME_TEXTURE_WIDTH * FRAME_TEXTURE_HEIGHT / 2);
 
     if(!y_plane || !u_plane || !v_plane) {
         printf("Could not allocate memory for y,u, or v plane\n");

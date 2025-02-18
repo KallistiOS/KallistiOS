@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <navi/ide.h>
 #include <dc/g2bus.h>
+#include <kos/thread.h>
 
 /*
    A *very* simple port-level ATA-IDE device driver. This was ported up
@@ -36,7 +37,7 @@ static void ide_outp(int port, uint16 value, int size) {
             return;
     }
 
-    //printf("ide_outp %02x -> %04x(%08x)\n", value, port, addr);
+    /* printf("ide_outp %02x -> %04x(%08x)\n", value, port, addr); */
     g2_write_16(addr, value);
 }
 
@@ -76,7 +77,7 @@ static void wait_controller(void) {
     int timeout = 1000;
 
     while((inp(0x1f7) & 0x80) && timeout) {
-        usleep(1 * 1000);
+        thd_sleep(1);
         timeout--;
     }
 
@@ -90,7 +91,7 @@ static void wait_data(void) {
     int timeout = 1000;
 
     while(!(inp(0x1f7) & 0x08) && timeout) {
-        usleep(1 * 1000);
+        thd_sleep(1);
         timeout--;
     }
 
@@ -112,7 +113,7 @@ static char *get_ascii(uint16 *in_data, uint32 off_start, uint32 off_end) {
         ret_val [loop1++] = (char)(in_data [loop] % 256);   /* Get Low byte */
     }
 
-    // Now, go back and eliminate the blank spaces
+    /* Now, go back and eliminate the blank spaces */
     for(; (ret_val[loop1] < 'A' || ret_val[loop1] > 'z') && loop1 >= 0 ; loop1--)
         ret_val[loop1] = '\0';
 
@@ -124,8 +125,8 @@ static int ide_read_chs(uint32 cyl, uint32 head, uint32 sector, uint32 numsects,
     int o;
     uint16  *bufptr16 = (uint16*)bufptr;
 
-    //printf("reading C/H/S/Cnt %d/%d/%d/%d\n",
-    //  cyl, head, sector, numsects);
+    /** printf("reading C/H/S/Cnt %d/%d/%d/%d\n",
+        cyl, head, sector, numsects); */
 
     wait_controller();      /* wait for controller to be not busy */
 
@@ -158,8 +159,8 @@ static int ide_write_chs(uint32 cyl, uint32 head, uint32 sector, uint32 numsects
     int o;
     uint16  *bufptr16 = (uint16*)bufptr;
 
-    //printf("writing C/H/S/Cnt %d/%d/%d/%d\n",
-    //  cyl, head, sector, numsects);
+    /** printf("writing C/H/S/Cnt %d/%d/%d/%d\n",
+        cyl, head, sector, numsects); */
 
     wait_controller();      /* wait for controller to be not busy */
 
@@ -248,9 +249,9 @@ int ide_init(void) {
 
     /* Reset */
     outp(0x3f6, 0x0e);
-    usleep(10 * 1000);
+    thd_sleep(10);
     outp(0x3f6, 0x0a);
-    usleep(10 * 1000);
+    thd_sleep(10);
 
     wait_controller();
     outp(0x1f6, 0xa0);  /* get info on first drive. 0xb0 == 2nd */

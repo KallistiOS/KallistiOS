@@ -14,7 +14,7 @@ int maple_enum_count(void) {
 
     for(cnt = 0, p = 0; p < MAPLE_PORT_COUNT; p++)
         for(u = 0; u < MAPLE_UNIT_COUNT; u++) {
-            if(maple_state.ports[p].units[u])
+            if(maple_dev_valid(p,u))
                 cnt++;
         }
 
@@ -23,7 +23,10 @@ int maple_enum_count(void) {
 
 /* Return a raw device info struct for the given device */
 maple_device_t * maple_enum_dev(int p, int u) {
-    return maple_state.ports[p].units[u];
+    maple_device_t *rv = maple_state.ports[p].units[u];
+    if(rv && rv->valid)
+        return rv;
+    return NULL;
 }
 
 /* Return the Nth device of the requested type (where N is zero-indexed) */
@@ -100,7 +103,7 @@ maple_device_t * maple_enum_type_ex(int n, uint32 func, uint32 cap) {
    valid before returning. Cast to the appropriate type you're expecting. */
 void * maple_dev_status(maple_device_t *dev) {
     /* The device must be valid, and must get periodic updates. */
-    if(!dev || !dev->drv || !dev->drv->periodic)
+    if(!dev || !dev->valid || !dev->drv || !dev->drv->periodic)
         return NULL;
 
     /* Waits until the first DMA happens: crude but effective (replace me later) */
@@ -108,6 +111,6 @@ void * maple_dev_status(maple_device_t *dev) {
         thd_pass();
 
     /* Cast and return the status buffer */
-    return (void *)(dev->status);
+    return dev->status;
 }
 

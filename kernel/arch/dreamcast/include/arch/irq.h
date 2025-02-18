@@ -3,7 +3,7 @@
    arch/dreamcast/include/irq.h
    Copyright (C) 2000-2001 Megan Potter
    Copyright (C) 2024 Paul Cercueil
-   Copyright (C) 2024 Falco Girgis
+   Copyright (C) 2024, 2025 Falco Girgis
 
 */
 
@@ -34,9 +34,9 @@
 #ifndef __ARCH_IRQ_H
 #define __ARCH_IRQ_H
 
+#include <stdalign.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdalign.h>
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
@@ -73,6 +73,15 @@ __BEGIN_DECLS
     install a global filter to observe interrupt events passively than it is
     to override individual interrupt handlers which have been used by the
     system.
+
+    \note
+    The naming convention used by this API differs from that of the actual SH4
+    manual for historical reasons (it wasn't platform-specific). The SH4 manual
+    refers to the most general type of CPU events which result in a SW
+    callback as "exceptions," with "interrupts" and "general exceptions" being
+    subtypes of exceptions. This API uses the term "interrupt" and "exception"
+    interchangeably, except where it is explicitly noted that "SH4 interrupts"
+    or "SH4 general exceptions" are being referred to, more specifically.
 
     \note
     The naming convention used by this API differs from that of the actual SH4
@@ -283,8 +292,8 @@ typedef enum irq_exception {
     EXC_SCIF_RXI           = 0x0720, /**< `[POST  ]` SCIF Receive ready */
     EXC_SCIF_BRI           = 0x0740, /**< `[POST  ]` SCIF break */
     EXC_SCIF_TXI           = 0x0760, /**< `[POST  ]` SCIF Transmit ready */
-    EXC_DOUBLE_FAULT       = 0x0ff0, /**< `[SOFT  ]` Exception happened in an ISR */
-    EXC_UNHANDLED_EXC      = 0x0fe0  /**< `[SOFT  ]` Exception went unhandled */
+    EXC_DOUBLE_FAULT       = 0x0780, /**< `[SOFT  ]` Exception happened in an ISR */
+    EXC_UNHANDLED_EXC      = 0x07e0  /**< `[SOFT  ]` Exception went unhandled */
 } irq_t;
 
 /** \defgroup irq_state     State
@@ -371,8 +380,8 @@ typedef uint32_t irq_mask_t;
 
 /** Get status register contents.
 
-    Returns the current value of the status register, as is returned when
-    calling irq_disable().
+    Returns the current value of the status register, as irq_disable() does.
+    The function can be found in arch\dreamcast\kernel\entry.s
 
     \note
     This is the entire status register word, not just the `IMASK` field.
@@ -530,6 +539,16 @@ void irq_handle_int(bool handled);
 */
 typedef void (*irq_handler)(irq_t code, irq_context_t *context, void *data);
 
+
+/** The type of a full callback of an IRQ handler and userdata.
+
+    This type is used to set or get IRQ handlers and their data.
+*/
+typedef struct irq_cb {
+    irq_handler hdl;    /**< A pointer to a procedure to handle an exception. */
+    void       *data;   /**< A pointer that will be passed along to the callback. */
+} irq_cb_t;
+
 /** \defgroup irq_handlers_ind  Individual
     \brief                      API for managing individual IRQ handlers.
 
@@ -578,14 +597,13 @@ int irq_set_handler(irq_t code, irq_handler hnd, void *data);
 /** Get the address of the current handler for the IRQ type.
 
     \param  code            The IRQ type to look up.
-    \param  data            A pointer to a void* which will be filled in with
-                            the handler's userdata, or NULL if not interested.
-    
-    \return                 A pointer to the procedure to handle the exception.
+
+    \return                 The current handler for the IRQ type and
+                            its userdata.
 
     \sa irq_set_handler()
 */
-irq_handler irq_get_handler(irq_t code, void **data);
+irq_cb_t irq_get_handler(irq_t code);
 
 /** @} */
 
@@ -624,16 +642,12 @@ int irq_set_global_handler(irq_handler handler, void *data);
 
 /** Get the global exception handler.
 
-    \param data             A pointer to a void* which will be filled in with
-                            the handler's userdata, or NULL if not interested.
-
-    \return                 The global exception handler set with
+    \return                 The global exception handler and userdata set with
                             irq_set_global_handler(), or NULL if none is set.
 
     \sa irq_set_global_filter(), irq_filter
 */
-irq_handler irq_get_global_handler(void **data);
-
+irq_cb_t irq_get_global_handler(void);
 /** @} */
 
 /** @} */
@@ -666,6 +680,58 @@ static inline void __irq_scoped_cleanup(int *state) {
 #define __irq_disable_scoped(l) ___irq_disable_scoped(l)
 
 /** \endcond */
+
+/** \brief  Minimum/maximum values for IRQ priorities
+
+    A priority of zero means the interrupt is masked.
+    The maximum priority that can be set is 15.
+ */
+#define IRQ_PRIO_MAX    15
+#define IRQ_PRIO_MIN    1
+#define IRQ_PRIO_MASKED 0
+
+/** \brief  Interrupt sources
+
+   Interrupt sources at the SH4 level.
+ */
+typedef enum irq_src {
+    IRQ_SRC_RTC,
+    IRQ_SRC_TMU2,
+    IRQ_SRC_TMU1,
+    IRQ_SRC_TMU0,
+    _IRQ_SRC_RESV,
+    IRQ_SRC_SCI1,
+    IRQ_SRC_REF,
+    IRQ_SRC_WDT,
+    IRQ_SRC_HUDI,
+    IRQ_SRC_SCIF,
+    IRQ_SRC_DMAC,
+    IRQ_SRC_GPIO,
+    IRQ_SRC_IRL3,
+    IRQ_SRC_IRL2,
+    IRQ_SRC_IRL1,
+    IRQ_SRC_IRL0,
+} irq_src_t;
+
+/** \brief  Set the priority of a given IRQ source
+
+    This function can be used to set the priority of a given IRQ source.
+
+    \param  src             The interrupt source whose priority should be set
+    \param  prio            The priority to set, in the range [0..15],
+                            0 meaning the IRQs from that source are masked.
+*/
+void irq_set_priority(irq_src_t src, unsigned int prio);
+
+/** \brief  Get the priority of a given IRQ source
+
+    This function returns the priority of a given IRQ source.
+
+    \param  src             The interrupt source whose priority should be set
+    \return                 The priority of the IRQ source.
+                            A value of 0 means the IRQs are masked.
+*/
+unsigned int irq_get_priority(irq_src_t src);
 
 /** @} */
 

@@ -52,7 +52,6 @@ static void vbl_chk_disconnect(maple_state_t *state, int p, int u) {
         dbglog(DBG_KDEBUG, "maple: detach on device %c%c\n",
                'A' + p, '0' + u);
 #endif
-
         if(maple_driver_detach(p, u) >= 0) {
             assert(!maple_dev_valid(p, u));
         }
@@ -130,13 +129,14 @@ static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm) {
     if(resp->response == MAPLE_RESPONSE_NONE) {
         /* No device, or not functioning properly; check for removal */
         if(u == 0) {
-            /* Top-level device -- detach all sub-devices as well */
-            for(u = 0; u < MAPLE_UNIT_COUNT; u++) {
-                vbl_chk_disconnect(state, p, u);
-            }
+            if(dev) {
+                /* Top-level device -- detach all sub-devices as well */
+                for(u = 0; u < MAPLE_UNIT_COUNT; u++) {
+                    vbl_chk_disconnect(state, p, u);
+                }
 
-            if(dev)
                 dev->dev_mask = 0;
+            }
 
             state->scan_ready_mask |= 1 << p;
         }
@@ -154,8 +154,7 @@ static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm) {
             dbglog(DBG_KDEBUG, "maple: attach on device %c%c\n",
                    'A' + p, '0' + u);
 #endif
-
-            if(maple_driver_attach(frm) >= 0) {
+            if(maple_driver_attach(frm) == 0) {
                 assert(maple_dev_valid(p, u));
             }
         }
@@ -189,9 +188,11 @@ static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm) {
 
 static void vbl_autodetect(maple_state_t *state) {
     bool queued;
+    maple_device_t  *dev = maple_state.ports[state->detect_port_next].units[0];
+    maple_frame_t   *frm = (dev != NULL) ? &dev->frame : &detect_frame;
 
     /* Queue a detection on the next device */
-    queued = vbl_send_devinfo(&detect_frame,
+    queued = vbl_send_devinfo(frm,
                               state->detect_port_next, 0);
 
     /* Move to the next device */

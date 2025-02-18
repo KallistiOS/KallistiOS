@@ -9,7 +9,11 @@
    any other VMU file from the BIOS menus. */
 
 #include <kos.h>
-#include <kos/string.h>
+
+/* An icon is always 32x32 4bpp */
+#define ICON_SIZE (32 * 32 / 2)
+
+#define NB_ICONS_MAX 3
 
 void draw_dir(void) {
     file_t      d;
@@ -42,7 +46,7 @@ void new_vmu(void) {
 
     if(dev == NULL) {
         if(dev_checked) {
-            memset4(vram_s + 88 * 640, 0, 640 * (480 - 64) * 2);
+            memset(vram_s + 88 * 640, 0, 640 * (480 - 64) * 2);
             bfont_draw_str(vram_s + 88 * 640 + 10, 640, 0, "No VMU");
             dev_checked = 0;
         }
@@ -50,7 +54,7 @@ void new_vmu(void) {
     else if(dev_checked) {
     }
     else {
-        memset4(vram_s + 88 * 640, 0, 640 * (480 - 88));
+        memset(vram_s + 88 * 640, 0, 640 * (480 - 88));
         draw_dir();
         dev_checked = 1;
     }
@@ -77,6 +81,8 @@ int wait_start(void) {
     }
 }
 
+static unsigned char vmu_icon[ICON_SIZE * NB_ICONS_MAX];
+
 /* Here's the actual meat of it */
 void write_entry(void) {
     vmu_pkg_t   pkg;
@@ -88,8 +94,9 @@ void write_entry(void) {
     strcpy(pkg.desc_short, "VMU Test");
     strcpy(pkg.desc_long, "This is a test VMU file");
     strcpy(pkg.app_id, "KOS");
-    pkg.icon_cnt = 0;
-    pkg.icon_anim_speed = 0;
+    pkg.icon_cnt = NB_ICONS_MAX;
+    pkg.icon_data = vmu_icon;
+    pkg.icon_anim_speed = 8;
     pkg.eyecatch_type = VMUPKG_EC_NONE;
     pkg.data_len = 4096;
     pkg.data = data;
@@ -97,6 +104,7 @@ void write_entry(void) {
     for(i = 0; i < 4096; i++)
         data[i] = i & 255;
 
+    vmu_pkg_load_icon(&pkg, "/rd/ebook.ico");
     vmu_pkg_build(&pkg, &pkg_out, &pkg_size);
 
     fs_unlink("/vmu/a1/TESTFILE");

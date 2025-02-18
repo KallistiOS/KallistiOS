@@ -20,7 +20,7 @@ __BEGIN_DECLS
     @{
 */
 
-// This part copied from newlib's sys/_types.h.
+/* This part copied from newlib's sys/_types.h. */
 #ifndef __off_t_defined
 /** \brief  File offset type. */
 typedef long _off_t;

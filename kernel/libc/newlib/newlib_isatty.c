@@ -8,13 +8,14 @@
 */
 
 #include <unistd.h>
+#include <string.h>
 #include <errno.h>
 
 #include <sys/reent.h>
-#include <sys/termios.h>
+#include <kos/fs.h>
 
 int isatty(int fd) {
-    struct termios term;
+    vfs_handler_t *vh;
 
     if(fd < 0) {
         errno = EBADF;
@@ -26,7 +27,18 @@ int isatty(int fd) {
     if(fd == STDIN_FILENO)
         return 1;
 
-    return tcgetattr(fd, &term) == 0;
+    vh = fs_get_handler(fd);
+
+    if(vh == NULL)
+        return 0;
+
+    /* pty is the only tty we support */
+    if(!strcmp(vh->nmmgr.pathname,"/pty"))
+        return 1;
+    else {
+        errno = ENOTTY;
+        return 0;
+    }
 }
 
 int _isatty_r(struct _reent *reent, int fd) {

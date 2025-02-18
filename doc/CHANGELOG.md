@@ -3,17 +3,27 @@
 Platform-specific changes are prefixed with the platform name, otherwise the change is platform-independent. The name/initials of the person who is responsible for the change are listed in [square brackets] for most versions (where they are missing from early versions, assume that they should be attributed to Megan Potter).
 
 ## KallistiOS version 2.2.0
-- Added pvrtex utility by TapamN to utils [DF == Daniel Fairchild]
-- Added . & .. directories to filesystems that lack it [AB]
+- Added . & .. directories to filesystems that lack it [Andress Barajas == AB]
 - Replaced previous implementation of realpath() to remove license from AUTHORS [AB]
-- Enabled hybrid PVR DR/DMA vertex submission in driver + sped up pvr_prim() [FG]
-- Add thread priority boosting system [Paul Cercueil = PC]
+- Enabled hybrid PVR DR/DMA vertex submission in driver + sped up pvr_prim() [Falco Girgis == FG]
+- Add thread priority boosting system [Paul Cercueil == PC]
 - Add performance monitor API [PC]
 - Add/Fixed stat() implementations for all filesystems [AB]
-- **Dreamcast**: Add network speedtest and pvr palette examples [AB]
+- **Dreamcast**: Add pvr palette example [AB]
 - **Dreamcast**: Cleaned up, documented, and enhanced BIOS font API [FG]
 - Rework PVR hybrid mode + IRQ handling [PC]
+- **Dreamcast**: Add support and update toolchain profiles for Newlib 4.5.0, Binutils 2.43.1, and GDB 15.2 [EF]
+- **Dreamcast**: Make m4-single the default floating-point ABI [EF]
+- **Dreamcast**: Add DMAC API [PC]
+- **Dreamcast**: Add basic MMU functionality [PC]
+- **Dreamcast**: Added Raytris raylib example by Niisoks [FG]
 - Redid IRQ API, added handler chaining, preliminary nesting support [FG]
+
+## KallistiOS version 2.1.1
+- Added pvrtex utility by TapamN to utils [Daniel Fairchild == DF]
+- **Dreamcast**: Added a set of known working purupuru bit patterns and a browsing mechanism to the rumble example [DF]
+- **Dreamcast**: Added new example to demonstrate the use of the PVR to draw lines with quads (pvr/pvrline) [Jason Martin == JM]
+- **Dreamcast**: Add network speedtest example [Andress Barajas == AB]
 
 ## KallistiOS version 2.1.0
 - Cleaned up generated stubs files on a make clean [Lawrence Sebald == LS]
@@ -236,7 +246,6 @@ Platform-specific changes are prefixed with the platform name, otherwise the cha
 - **Dreamcast**: Update GCC 14.x toolchain profile to 14.2 [EF]
 - **Dreamcast**: Update GCC 11.x toolchain profile to 11.5, update Binutils to 2.43 [EF]
 - **Dreamcast**: Fix ARM toolchain build error when JIT is enabled for SH toolchain [EF]
-- **Dreamcast**: Added a set of known working purupuru bit patterns and a browsing mechanism to the rumble example [DF == Daniel Fairchild]
 - Added full support for <time.h> additions from C23 standard. [FG]
 - Fixes mutexes not working properly [PC]
 - **Dreamcast**: fs_dcload: Set errno on error in dcload_stat() [PC]

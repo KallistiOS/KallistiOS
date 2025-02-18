@@ -5,7 +5,7 @@
 
 */
 
-/** \file    sys/uio.h
+/** \file    sys/ioctl.h
     \brief   Header for terminal control operations.
     \ingroup vfs_posix
 
@@ -19,21 +19,11 @@
 #ifndef __SYS_IOCTL_H
 #define __SYS_IOCTL_H
 
-#include <sys/termios.h>
-
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
 
 #include <kos/fs.h>
-
-#ifndef TCGETS
-#define TCGETS 0x5401
-#endif
-
-#ifndef TIOCGETA
-#define TIOCGETA TCGETS
-#endif
 
 /* Define ioctl as an alias for fs_ioctl */
 #define ioctl fs_ioctl

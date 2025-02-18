@@ -7,7 +7,7 @@
 #ifndef __SYS__PTHREAD_H
 #define __SYS__PTHREAD_H
 
-// Make sure pthreads compile ok.
+/* Make sure pthreads compile ok. */
 /** \brief  POSIX threads supported (sorta) */
 #define _POSIX_THREADS
 

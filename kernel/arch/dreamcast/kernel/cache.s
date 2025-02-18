@@ -262,7 +262,7 @@ ifr_addr:
 
 ! D-cache (Data cache)
 dca_addr:
-    .long    0xf4000000    ! dcache array address
+    .long    0xf4000008    ! dcache array address
 dc_ubit_mask:
     .long    0xfffffffd    ! Mask to zero out U bit
 

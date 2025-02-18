@@ -121,7 +121,7 @@ void sq_wait(void) {
 }
 
 /* Copies n bytes from src to dest, dest must be 32-byte aligned */
-__attribute__((noinline)) void *sq_cpy(void *dest, const void *src, size_t n) {
+__no_inline void *sq_cpy(void *dest, const void *src, size_t n) {
     const uint32_t *s = src;
     void *curr_dest = dest;
     uint32_t *d;

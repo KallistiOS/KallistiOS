@@ -49,11 +49,9 @@ __BEGIN_DECLS
                         or equivalent.
     \return             The swapped value.
 */
-#define arch_swap16(x) ({ \
-    uint16_t __x = (x); \
-    __asm__ __volatile__("swap.b %0, %0" : "=r" (__x) : "0" (__x)); \
-    __x; \
-})
+static inline uint16_t arch_swap16(uint16_t x) {
+    return __builtin_bswap16(x);
+}
 
 /** \brief  Swap the byte order of a 32-bit integer.
 
@@ -64,13 +62,9 @@ __BEGIN_DECLS
                         or equivalent.
     \return             The swapped value.
 */
-#define arch_swap32(x) ({ \
-    uint32_t __x = (x); \
-    __asm__ __volatile__("swap.b %0, %0\n\t" \
-                         "swap.w %0, %0\n\t" \
-                         "swap.b %0, %0\n\t" : "=r"(__x) : "0" (__x)); \
-    __x; \
-})
+static inline uint32_t arch_swap32(uint32_t x) {
+    return __builtin_bswap32(x);
+}
 
 /** \brief  Convert network-to-host short.
 
@@ -83,7 +77,9 @@ __BEGIN_DECLS
                         or equivalent.
     \return             The converted value.
 */
-#define arch_ntohs(x) arch_swap16(x)
+static inline uint16_t arch_ntohs(uint16_t x) {
+    return __builtin_bswap16(x);
+}
 
 /** \brief  Convert network-to-host long.
 
@@ -96,7 +92,9 @@ __BEGIN_DECLS
                         or equivalent.
     \return             The converted value.
 */
-#define arch_ntohl(x) arch_swap32(x)
+static inline uint32_t arch_ntohl(uint32_t x) {
+    return __builtin_bswap32(x);
+}
 
 /** \brief  Convert host-to-network short.
 
@@ -109,7 +107,9 @@ __BEGIN_DECLS
                         or equivalent.
     \return             The converted value.
 */
-#define arch_htons(x) arch_swap16(x)
+static inline uint16_t arch_htons(uint16_t x) {
+    return __builtin_bswap16(x);
+}
 
 /** \brief  Convert host-to-network long.
 
@@ -122,7 +122,9 @@ __BEGIN_DECLS
                         or equivalent.
     \return             The converted value.
 */
-#define arch_htonl(x) arch_swap32(x)
+static inline uint32_t arch_htonl(uint32_t x) {
+    return __builtin_bswap32(x);
+}
 
 /** @} */
 

@@ -15,7 +15,7 @@ XXX This probably belongs in something like libc...
 
 #include <kos/fs.h>
 #include <stdio.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 #include <errno.h>
