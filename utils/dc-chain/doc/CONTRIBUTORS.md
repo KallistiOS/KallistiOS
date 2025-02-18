@@ -14,10 +14,10 @@
 | [Donald Haase](https://github.com/QuzarDC) | 2012 |
 | [Christian Groessler](https://github.com/groessler) | 2014 |
 | [Luke Benstead](https://simulant.dev/) | 2016, 2017, 2018, 2019, 2020 |
-| [Mickaël Cardoso](http://sizious.com/) | 2018, 2019, 2020, 2021, 2022, 2023, 2024 |
+| [Mickaël Cardoso](http://sizious.com/) | 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025 |
 | [Ellen Marie Dash](https://gitlab.com/duckinator) | 2019 |
 | [Ben Baron](https://github.com/einsteinx2) | 2020 |
 | [Jon Daniel](https://github.com/jopadan) | 2020 |
 | [Colton Pawielski](https://github.com/cepawiel) | 2023 |
-| [Eric Fradella](https://github.com/darcagn) | 2023, 2024 |
+| [Eric Fradella](https://github.com/darcagn) | 2023, 2024, 2025 |
 | [Falco Girgis](https://github.com/gyrovorbis) | 2023, 2024 |

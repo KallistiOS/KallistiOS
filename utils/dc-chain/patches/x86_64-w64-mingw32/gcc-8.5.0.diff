@@ -1,0 +1,420 @@
+diff --color -ruN gcc-8.5.0/gcc/ada/adaint.c gcc-8.5.0-mingw/gcc/ada/adaint.c
+--- gcc-8.5.0/gcc/ada/adaint.c	2023-04-19 18:12:01.525502663 -0500
++++ gcc-8.5.0-mingw/gcc/ada/adaint.c	2023-04-19 18:11:31.291427166 -0500
+@@ -190,6 +190,7 @@
+ 
+ #elif defined (_WIN32)
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #include <accctrl.h>
+ #include <aclapi.h>
+diff --color -ruN gcc-8.5.0/gcc/ada/cio.c gcc-8.5.0-mingw/gcc/ada/cio.c
+--- gcc-8.5.0/gcc/ada/cio.c	2023-04-19 18:12:01.529502673 -0500
++++ gcc-8.5.0-mingw/gcc/ada/cio.c	2023-04-19 18:11:31.292427168 -0500
+@@ -68,6 +68,7 @@
+ #endif
+ 
+ #ifdef RTX
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #include <Rtapi.h>
+ #endif
+diff --color -ruN gcc-8.5.0/gcc/ada/ctrl_c.c gcc-8.5.0-mingw/gcc/ada/ctrl_c.c
+--- gcc-8.5.0/gcc/ada/ctrl_c.c	2023-04-19 18:12:01.517502643 -0500
++++ gcc-8.5.0-mingw/gcc/ada/ctrl_c.c	2023-04-19 18:11:31.292427168 -0500
+@@ -131,6 +131,7 @@
+ #elif defined (__MINGW32__)
+ 
+ #include "mingw32.h"
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ void (*sigint_intercepted) (void) = NULL;
+diff --color -ruN gcc-8.5.0/gcc/ada/expect.c gcc-8.5.0-mingw/gcc/ada/expect.c
+--- gcc-8.5.0/gcc/ada/expect.c	2023-04-19 18:12:01.536502690 -0500
++++ gcc-8.5.0-mingw/gcc/ada/expect.c	2023-04-19 18:11:31.292427168 -0500
+@@ -77,6 +77,7 @@
+ 
+ #ifdef _WIN32
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #include <process.h>
+ #include <signal.h>
+diff --color -ruN gcc-8.5.0/gcc/ada/gsocket.h gcc-8.5.0-mingw/gcc/ada/gsocket.h
+--- gcc-8.5.0/gcc/ada/gsocket.h	2023-04-19 18:12:01.531502677 -0500
++++ gcc-8.5.0-mingw/gcc/ada/gsocket.h	2023-04-19 18:11:31.292427168 -0500
+@@ -157,6 +157,7 @@
+ 
+ #endif
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ #elif defined(VMS)
+diff --color -ruN gcc-8.5.0/gcc/ada/mingw32.h gcc-8.5.0-mingw/gcc/ada/mingw32.h
+--- gcc-8.5.0/gcc/ada/mingw32.h	2023-04-19 18:12:01.529502673 -0500
++++ gcc-8.5.0-mingw/gcc/ada/mingw32.h	2023-04-19 18:11:31.292427168 -0500
+@@ -58,6 +58,7 @@
+ #define _X86INTRIN_H_INCLUDED
+ #define _EMMINTRIN_H_INCLUDED
+ #endif
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ /* After including this file it is possible to use the character t as prefix
+diff --color -ruN gcc-8.5.0/gcc/ada/mkdir.c gcc-8.5.0-mingw/gcc/ada/mkdir.c
+--- gcc-8.5.0/gcc/ada/mkdir.c	2023-04-19 18:12:01.516502640 -0500
++++ gcc-8.5.0-mingw/gcc/ada/mkdir.c	2023-04-19 18:11:31.292427168 -0500
+@@ -45,6 +45,7 @@
+ 
+ #ifdef __MINGW32__
+ #include "mingw32.h"
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #ifdef MAXPATHLEN
+ #define GNAT_MAX_PATH_LEN MAXPATHLEN
+diff --color -ruN gcc-8.5.0/gcc/ada/rtfinal.c gcc-8.5.0-mingw/gcc/ada/rtfinal.c
+--- gcc-8.5.0/gcc/ada/rtfinal.c	2023-04-19 18:12:01.535502687 -0500
++++ gcc-8.5.0-mingw/gcc/ada/rtfinal.c	2023-04-19 18:11:31.292427168 -0500
+@@ -47,6 +47,7 @@
+ 
+ #if defined (__MINGW32__)
+ #include "mingw32.h"
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ extern CRITICAL_SECTION ProcListCS;
+diff --color -ruN gcc-8.5.0/gcc/ada/rtinit.c gcc-8.5.0-mingw/gcc/ada/rtinit.c
+--- gcc-8.5.0/gcc/ada/rtinit.c	2023-04-19 18:12:01.537502693 -0500
++++ gcc-8.5.0-mingw/gcc/ada/rtinit.c	2023-04-19 18:11:31.292427168 -0500
+@@ -73,6 +73,7 @@
+ 
+ #if defined (__MINGW32__)
+ #include "mingw32.h"
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ extern void __gnat_init_float (void);
+diff --color -ruN gcc-8.5.0/gcc/ada/seh_init.c gcc-8.5.0-mingw/gcc/ada/seh_init.c
+--- gcc-8.5.0/gcc/ada/seh_init.c	2023-04-19 18:12:01.479502548 -0500
++++ gcc-8.5.0-mingw/gcc/ada/seh_init.c	2023-04-19 18:11:31.292427168 -0500
+@@ -34,6 +34,7 @@
+ 
+ #if defined (_WIN32) || (defined (__CYGWIN__) && defined (__SEH__))
+ /* Include system headers, before system.h poisons malloc.  */
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #include <excpt.h>
+ #endif
+diff --color -ruN gcc-8.5.0/gcc/ada/sysdep.c gcc-8.5.0-mingw/gcc/ada/sysdep.c
+--- gcc-8.5.0/gcc/ada/sysdep.c	2023-04-19 18:12:01.537502693 -0500
++++ gcc-8.5.0-mingw/gcc/ada/sysdep.c	2023-04-19 18:11:31.293427171 -0500
+@@ -215,6 +215,7 @@
+ #endif /* __CYGWIN__ */
+ 
+ #if defined (__CYGWIN__) || defined (__MINGW32__)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ int __gnat_is_windows_xp (void);
+@@ -591,6 +592,7 @@
+    Ada programs.  */
+ 
+ #ifdef WINNT
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ /* Provide functions to echo the values passed to WinMain (windows bindings
+diff --color -ruN gcc-8.5.0/gcc/ada/terminals.c gcc-8.5.0-mingw/gcc/ada/terminals.c
+--- gcc-8.5.0/gcc/ada/terminals.c	2023-04-19 18:12:01.517502643 -0500
++++ gcc-8.5.0-mingw/gcc/ada/terminals.c	2023-04-19 18:11:31.293427171 -0500
+@@ -151,6 +151,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ #define MAXPATHLEN 1024
+diff --color -ruN gcc-8.5.0/gcc/ada/tracebak.c gcc-8.5.0-mingw/gcc/ada/tracebak.c
+--- gcc-8.5.0/gcc/ada/tracebak.c	2023-04-19 18:12:01.525502663 -0500
++++ gcc-8.5.0-mingw/gcc/ada/tracebak.c	2023-04-19 18:11:31.293427171 -0500
+@@ -97,6 +97,7 @@
+ 
+ #if defined (_WIN64) && defined (__SEH__)
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ #define IS_BAD_PTR(ptr) (IsBadCodePtr((FARPROC)ptr))
+@@ -444,6 +445,7 @@
+ #elif defined (__i386__) || defined (__x86_64__)
+ 
+ #if defined (__WIN32)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #define IS_BAD_PTR(ptr) (IsBadCodePtr((FARPROC)ptr))
+ #elif defined (__sun__)
+diff --color -ruN gcc-8.5.0/gcc/diagnostic-color.c gcc-8.5.0-mingw/gcc/diagnostic-color.c
+--- gcc-8.5.0/gcc/diagnostic-color.c	2023-04-19 18:12:01.539502698 -0500
++++ gcc-8.5.0-mingw/gcc/diagnostic-color.c	2023-04-19 18:11:31.293427171 -0500
+@@ -21,6 +21,7 @@
+ #include "diagnostic-color.h"
+ 
+ #ifdef __MINGW32__
++#  define WIN32_LEAN_AND_MEAN
+ #  include <windows.h>
+ #endif
+ 
+diff --color -ruN gcc-8.5.0/gcc/plugin.c gcc-8.5.0-mingw/gcc/plugin.c
+--- gcc-8.5.0/gcc/plugin.c	2023-04-19 18:12:01.619502897 -0500
++++ gcc-8.5.0-mingw/gcc/plugin.c	2023-04-19 18:11:31.293427171 -0500
+@@ -41,6 +41,7 @@
+ #ifndef NOMINMAX
+ #define NOMINMAX
+ #endif
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #endif
+ 
+diff --color -ruN gcc-8.5.0/gcc/prefix.c gcc-8.5.0-mingw/gcc/prefix.c
+--- gcc-8.5.0/gcc/prefix.c	2023-04-19 18:12:01.546502715 -0500
++++ gcc-8.5.0-mingw/gcc/prefix.c	2023-04-19 18:11:31.293427171 -0500
+@@ -67,6 +67,7 @@
+ #include "system.h"
+ #include "coretypes.h"
+ #if defined(_WIN32) && defined(ENABLE_WIN32_REGISTRY)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #endif
+ #include "prefix.h"
+diff --color -ruN gcc-8.5.0/libatomic/config/mingw/lock.c gcc-8.5.0-mingw/libatomic/config/mingw/lock.c
+--- gcc-8.5.0/libatomic/config/mingw/lock.c	2023-04-19 18:12:01.474502535 -0500
++++ gcc-8.5.0-mingw/libatomic/config/mingw/lock.c	2023-04-19 18:11:31.293427171 -0500
+@@ -23,6 +23,7 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #define UWORD __shadow_UWORD
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #undef UWORD
+ #include "libatomic_i.h"
+diff --color -ruN gcc-8.5.0/libffi/src/x86/darwin_c.c gcc-8.5.0-mingw/libffi/src/x86/darwin_c.c
+--- gcc-8.5.0/libffi/src/x86/darwin_c.c	2023-04-19 18:12:03.210506870 -0500
++++ gcc-8.5.0-mingw/libffi/src/x86/darwin_c.c	2023-04-19 18:11:31.293427171 -0500
+@@ -31,6 +31,7 @@
+ #if !defined(__x86_64__) || defined(_WIN64) || defined(__CYGWIN__)
+ 
+ #ifdef _WIN64
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #endif
+ 
+diff --color -ruN gcc-8.5.0/libgcc/config/i386/enable-execute-stack-mingw32.c gcc-8.5.0-mingw/libgcc/config/i386/enable-execute-stack-mingw32.c
+--- gcc-8.5.0/libgcc/config/i386/enable-execute-stack-mingw32.c	2023-04-19 18:12:01.004501362 -0500
++++ gcc-8.5.0-mingw/libgcc/config/i386/enable-execute-stack-mingw32.c	2023-04-19 18:11:31.294427173 -0500
+@@ -22,6 +22,7 @@
+    see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+    <http://www.gnu.org/licenses/>.  */
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ extern void __enable_execute_stack (void *);
+diff --color -ruN gcc-8.5.0/libgcc/config/i386/gthr-win32.c gcc-8.5.0-mingw/libgcc/config/i386/gthr-win32.c
+--- gcc-8.5.0/libgcc/config/i386/gthr-win32.c	2023-04-19 18:12:01.003501359 -0500
++++ gcc-8.5.0-mingw/libgcc/config/i386/gthr-win32.c	2023-04-19 18:11:31.294427173 -0500
+@@ -27,6 +27,7 @@
+ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+ <http://www.gnu.org/licenses/>.  */
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #ifndef __GTHREAD_HIDE_WIN32API
+ # define __GTHREAD_HIDE_WIN32API 1
+diff --color -ruN gcc-8.5.0/libgcc/config/i386/gthr-win32.h gcc-8.5.0-mingw/libgcc/config/i386/gthr-win32.h
+--- gcc-8.5.0/libgcc/config/i386/gthr-win32.h	2023-04-19 18:12:01.004501362 -0500
++++ gcc-8.5.0-mingw/libgcc/config/i386/gthr-win32.h	2023-04-19 18:11:31.294427173 -0500
+@@ -82,6 +82,7 @@
+ #ifndef __OBJC__
+ #define __OBJC__
+ #endif
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ /* Now undef the windows BOOL.  */
+ #undef BOOL
+@@ -546,6 +547,7 @@
+ #else /* ! __GTHREAD_HIDE_WIN32API */
+ 
+ #define NOGDI
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #include <errno.h>
+ 
+diff --color -ruN gcc-8.5.0/libgcc/libgcc2.c gcc-8.5.0-mingw/libgcc/libgcc2.c
+--- gcc-8.5.0/libgcc/libgcc2.c	2023-04-19 18:12:00.998501346 -0500
++++ gcc-8.5.0-mingw/libgcc/libgcc2.c	2023-04-19 18:11:31.294427173 -0500
+@@ -2183,6 +2183,7 @@
+ /* Jump to a trampoline, loading the static chain address.  */
+ 
+ #if defined(WINNT) && ! defined(__CYGWIN__)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ int getpagesize (void);
+ int mprotect (char *,int, int);
+diff --color -ruN gcc-8.5.0/libgcc/unwind-generic.h gcc-8.5.0-mingw/libgcc/unwind-generic.h
+--- gcc-8.5.0/libgcc/unwind-generic.h	2023-04-19 18:12:01.002501357 -0500
++++ gcc-8.5.0-mingw/libgcc/unwind-generic.h	2023-04-19 18:11:31.294427173 -0500
+@@ -30,6 +30,7 @@
+ 
+ #if defined (__SEH__) && !defined (__USING_SJLJ_EXCEPTIONS__)
+ /* Only for _GCC_specific_handler.  */
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #endif
+ 
+diff --color -ruN gcc-8.5.0/libgfortran/intrinsics/sleep.c gcc-8.5.0-mingw/libgfortran/intrinsics/sleep.c
+--- gcc-8.5.0/libgfortran/intrinsics/sleep.c	2023-04-19 18:12:03.182506800 -0500
++++ gcc-8.5.0-mingw/libgfortran/intrinsics/sleep.c	2023-04-19 18:11:31.294427173 -0500
+@@ -30,6 +30,7 @@
+ #endif
+ 
+ #ifdef __MINGW32__
++# define WIN32_LEAN_AND_MEAN
+ # include <windows.h>
+ # undef sleep
+ # define sleep(x) Sleep(1000*(x))
+diff --color -ruN gcc-8.5.0/libgo/misc/cgo/test/callback_c.c gcc-8.5.0-mingw/libgo/misc/cgo/test/callback_c.c
+--- gcc-8.5.0/libgo/misc/cgo/test/callback_c.c	2023-04-19 18:12:03.332507175 -0500
++++ gcc-8.5.0-mingw/libgo/misc/cgo/test/callback_c.c	2023-04-19 18:11:31.294427173 -0500
+@@ -32,6 +32,7 @@
+ }
+ 
+ #ifdef WIN32
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ long long
+ mysleep(int seconds) {
+diff --color -ruN gcc-8.5.0/libgomp/config/mingw32/proc.c gcc-8.5.0-mingw/libgomp/config/mingw32/proc.c
+--- gcc-8.5.0/libgomp/config/mingw32/proc.c	2023-04-19 18:12:01.100501601 -0500
++++ gcc-8.5.0-mingw/libgomp/config/mingw32/proc.c	2023-04-19 18:11:31.294427173 -0500
+@@ -30,6 +30,7 @@
+    The following implementation uses win32 API routines.  */
+ 
+ #include "libgomp.h"
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ /* Count the CPU's currently available to this process.  */
+diff --color -ruN gcc-8.5.0/libiberty/make-temp-file.c gcc-8.5.0-mingw/libiberty/make-temp-file.c
+--- gcc-8.5.0/libiberty/make-temp-file.c	2023-04-19 18:12:03.185506808 -0500
++++ gcc-8.5.0-mingw/libiberty/make-temp-file.c	2023-04-19 18:11:31.294427173 -0500
+@@ -37,6 +37,7 @@
+ #include <sys/file.h>   /* May get R_OK, etc. on some systems.  */
+ #endif
+ #if defined(_WIN32) && !defined(__CYGWIN__)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #endif
+ 
+diff --color -ruN gcc-8.5.0/libiberty/pex-win32.c gcc-8.5.0-mingw/libiberty/pex-win32.c
+--- gcc-8.5.0/libiberty/pex-win32.c	2023-04-19 18:12:03.186506810 -0500
++++ gcc-8.5.0-mingw/libiberty/pex-win32.c	2023-04-19 18:11:31.295427176 -0500
+@@ -20,6 +20,7 @@
+ 
+ #include "pex-common.h"
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ #ifdef HAVE_STDLIB_H
+diff --color -ruN gcc-8.5.0/liboffloadmic/runtime/offload_util.h gcc-8.5.0-mingw/liboffloadmic/runtime/offload_util.h
+--- gcc-8.5.0/liboffloadmic/runtime/offload_util.h	2023-04-19 18:12:00.979501299 -0500
++++ gcc-8.5.0-mingw/liboffloadmic/runtime/offload_util.h	2023-04-19 18:11:31.295427176 -0500
+@@ -44,6 +44,7 @@
+ // incompatible with STL library of versions older than VS2010.
+ typedef unsigned long long int  uint64_t;
+ typedef signed long long int    int64_t;
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #include <process.h>
+ #else // TARGET_WINNT
+diff --color -ruN gcc-8.5.0/liboffloadmic/runtime/orsl-lite/lib/orsl-lite.c gcc-8.5.0-mingw/liboffloadmic/runtime/orsl-lite/lib/orsl-lite.c
+--- gcc-8.5.0/liboffloadmic/runtime/orsl-lite/lib/orsl-lite.c	2023-04-19 18:12:00.981501304 -0500
++++ gcc-8.5.0-mingw/liboffloadmic/runtime/orsl-lite/lib/orsl-lite.c	2023-04-19 18:11:31.295427176 -0500
+@@ -57,6 +57,7 @@
+ #endif
+ 
+ #ifdef _WIN32
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #pragma intrinsic(_ReadWriteBarrier)
+ static SRWLOCK global_mutex = SRWLOCK_INIT;
+diff --color -ruN gcc-8.5.0/libssp/ssp.c gcc-8.5.0-mingw/libssp/ssp.c
+--- gcc-8.5.0/libssp/ssp.c	2023-04-19 18:12:01.470502525 -0500
++++ gcc-8.5.0-mingw/libssp/ssp.c	2023-04-19 18:11:31.295427176 -0500
+@@ -55,6 +55,7 @@
+ /* Native win32 apps don't know about /dev/tty but can print directly
+    to the console using  "CONOUT$"   */
+ #if defined (_WIN32) && !defined (__CYGWIN__)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #include <wincrypt.h>
+ # define _PATH_TTY "CONOUT$"
+diff --color -ruN gcc-8.5.0/libstdc++-v3/src/c++11/thread.cc gcc-8.5.0-mingw/libstdc++-v3/src/c++11/thread.cc
+--- gcc-8.5.0/libstdc++-v3/src/c++11/thread.cc	2023-04-19 18:12:01.411502378 -0500
++++ gcc-8.5.0-mingw/libstdc++-v3/src/c++11/thread.cc	2023-04-19 18:11:31.295427176 -0500
+@@ -63,6 +63,7 @@
+ # ifdef _GLIBCXX_HAVE_SLEEP
+ #  include <unistd.h>
+ # elif defined(_GLIBCXX_HAVE_WIN32_SLEEP)
++#  define WIN32_LEAN_AND_MEAN
+ #  include <windows.h>
+ # else
+ #  error "No sleep function known for this target"
+diff --color -ruN gcc-8.5.0/libvtv/vtv_malloc.cc gcc-8.5.0-mingw/libvtv/vtv_malloc.cc
+--- gcc-8.5.0/libvtv/vtv_malloc.cc	2023-04-19 18:12:01.462502505 -0500
++++ gcc-8.5.0-mingw/libvtv/vtv_malloc.cc	2023-04-19 18:11:31.295427176 -0500
+@@ -33,6 +33,7 @@
+ #include <stdlib.h>
+ #include <unistd.h>
+ #if defined (__CYGWIN__) || defined (__MINGW32__)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #else
+ #include <sys/mman.h>
+diff --color -ruN gcc-8.5.0/libvtv/vtv_rts.cc gcc-8.5.0-mingw/libvtv/vtv_rts.cc
+--- gcc-8.5.0/libvtv/vtv_rts.cc	2023-04-19 18:12:01.462502505 -0500
++++ gcc-8.5.0-mingw/libvtv/vtv_rts.cc	2023-04-19 18:11:31.295427176 -0500
+@@ -121,6 +121,7 @@
+ #include <stdio.h>
+ #include <string.h>
+ #if defined (__CYGWIN__) || defined (__MINGW32__)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #include <winternl.h>
+ #include <psapi.h>
+diff --color -ruN gcc-8.5.0/libvtv/vtv_utils.cc gcc-8.5.0-mingw/libvtv/vtv_utils.cc
+--- gcc-8.5.0/libvtv/vtv_utils.cc	2023-04-19 18:12:01.460502500 -0500
++++ gcc-8.5.0-mingw/libvtv/vtv_utils.cc	2023-04-19 18:11:31.295427176 -0500
+@@ -33,6 +33,7 @@
+ #include <stdlib.h>
+ #include <string.h>
+ #if defined (__CYGWIN__) || defined (__MINGW32__)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #else
+ #include <execinfo.h>
+diff --color -ruN gcc-8.5.0/zlib/minigzip.c gcc-8.5.0-mingw/zlib/minigzip.c
+--- gcc-8.5.0/zlib/minigzip.c	2023-04-19 18:12:01.451502478 -0500
++++ gcc-8.5.0-mingw/zlib/minigzip.c	2023-04-19 18:11:31.296427178 -0500
+@@ -60,6 +60,7 @@
+ #endif
+ 
+ #if defined(UNDER_CE)
++#  define WIN32_LEAN_AND_MEAN
+ #  include <windows.h>
+ #  define perror(s) pwinerror(s)
+ 

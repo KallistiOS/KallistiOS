@@ -40,4 +40,8 @@
 /* Quick access to the AICA channels */
 #define AICA_CHANNEL(x)     (AICA_MEM_CHANNELS + (x) * sizeof(aica_channel_t))
 
+/* Channels status register bits */
+#define AICA_CHANNEL_KEYONEX   0x8000
+#define AICA_CHANNEL_KEYONB    0x4000
+
 #endif  /* __ARM_AICA_CMD_IFACE_H */

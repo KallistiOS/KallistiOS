@@ -51,7 +51,7 @@ git clone git://git.code.sf.net/p/cadcdev/kos-ports
 
 The **dc-chain** system may be customized by setting up a
 [`Makefile.cfg`] file in the root of the `dc-chain` directory tree. If this is
-desired, read the main [README.md](../README.md) for more information on
+desired, read the main [`README`](../README.md) for more information on
 setting up custom options for the toolchain; however, in most circumstances,
 the stable defaults already present in
 [`Makefile.default.cfg`](../Makefile.default.cfg) will be fine.
@@ -87,4 +87,4 @@ After following this guide, the toolchains should be ready.
 
 Now it's time to compile **KallistiOS**.
 
-You may consult the [`README`](../../../doc/README) file from KallistiOS now.
+You may consult the [`README`](../../../doc/README.md) file from KallistiOS now.

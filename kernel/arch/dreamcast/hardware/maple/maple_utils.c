@@ -96,7 +96,7 @@ static const char *maple_cap_names[] = {
 #define maple_cap_name_cnt (sizeof(maple_cap_names)/sizeof(char *))
 
 /* Print the capabilities of a given driver to dbglog; NOT THREAD SAFE */
-static char caps_buffer[1024];
+static char caps_buffer[64];
 const char * maple_pcaps(uint32 functions) {
     unsigned int i, o;
 
@@ -172,7 +172,7 @@ void maple_gun_read_pos(int *x, int *y) {
 /* Debugging help */
 void maple_sentinel_setup(void * buffer, int bufsize) {
     assert(bufsize % 4 == 0);
-    memset4(buffer, 0xdeadbeef, bufsize);
+    memset(buffer, 0xdeadbeef, bufsize);
 }
 
 void maple_sentinel_verify(const char * bufname, void * buffer, int bufsize) {

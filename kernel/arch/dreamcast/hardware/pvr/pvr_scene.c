@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <kos/genwait.h>
-#include <kos/string.h>
+#include <kos/regfield.h>
 #include <kos/thread.h>
 #include <dc/pvr.h>
 #include <dc/sq.h>
@@ -24,8 +24,8 @@
 
 */
 
-void * pvr_set_vertbuf(pvr_list_t list, void * buffer, int len) {
-    void * oldbuf;
+void *pvr_set_vertbuf(pvr_list_t list, void *buffer, size_t len) {
+    void *oldbuf;
 
     // Make sure we have global DMA usage enabled. The DMA can still
     // be used in other situations, but the user must take care of
@@ -36,7 +36,7 @@ void * pvr_set_vertbuf(pvr_list_t list, void * buffer, int len) {
     assert(list < PVR_OPB_COUNT);
 
     // Make sure it's an _enabled_ list.
-    assert(pvr_state.lists_enabled & (1 << list));
+    assert(pvr_state.lists_enabled & BIT(list));
 
     // Make sure the buffer parameters are valid.
     assert(!(((ptr_t)buffer) & 31));
@@ -58,8 +58,8 @@ void * pvr_set_vertbuf(pvr_list_t list, void * buffer, int len) {
     return oldbuf;
 }
 
-void * pvr_vertbuf_tail(pvr_list_t list) {
-    uint8 * bufbase;
+void *pvr_vertbuf_tail(pvr_list_t list) {
+    uint8 *bufbase;
 
     // Check the validity of the request.
     assert(list < PVR_OPB_COUNT);
@@ -73,7 +73,7 @@ void * pvr_vertbuf_tail(pvr_list_t list) {
     return bufbase + pvr_state.dma_buffers[pvr_state.ram_target].ptr[list];
 }
 
-void pvr_vertbuf_written(pvr_list_t list, uint32 amt) {
+void pvr_vertbuf_written(pvr_list_t list, size_t amt) {
     uint32 val;
 
     // Check the validity of the request.
@@ -91,6 +91,12 @@ static void pvr_start_ta_rendering(void) {
     // Make sure to wait until the TA is ready to start rendering a new scene
     if(!pvr_state.ta_ready) {
         pvr_wait_ready();
+
+        // If using a single vertex buffer, we have to wait until the PVR is
+        // done rendering to use the TA again.
+        if(!pvr_state.vbuf_doublebuf)
+            pvr_wait_render_done();
+
         pvr_state.ta_ready = 1;
     }
 
@@ -105,6 +111,7 @@ void pvr_scene_begin(void) {
     int i;
 
     pvr_state.ta_ready = 0;
+    pvr_state.lists_closed = 0;
 
     // Get general stuff ready.
     pvr_state.list_reg_open = -1;
@@ -119,8 +126,6 @@ void pvr_scene_begin(void) {
         // DBG(("pvr_scene_begin(dma -> %d)\n", pvr_state.ram_target));
     }
     else {
-        pvr_state.lists_closed = 0;
-
         // We assume registration is starting immediately
         pvr_sync_stats(PVR_SYNC_REGSTART);
     }
@@ -166,7 +171,7 @@ inline static bool pvr_list_uses_dma(pvr_list_t list) {
 int pvr_list_begin(pvr_list_t list) {
     /* Check to make sure we can do this */
 #ifndef NDEBUG
-    if(!pvr_state.dma_mode && pvr_state.lists_closed & (1 << list)) {
+    if(!pvr_state.dma_mode && pvr_state.lists_closed & BIT(list)) {
         dbglog(DBG_WARNING, "pvr_list_begin: attempt to open already closed list\n");
         return -1;
     }
@@ -224,7 +229,7 @@ int pvr_list_finish(void) {
         sq_unlock();
 
         /* Set the flags */
-        pvr_state.lists_closed |= (1 << pvr_state.list_reg_open);
+        pvr_state.lists_closed |= BIT(pvr_state.list_reg_open);
 
         /* Send an EOL marker */
         pvr_sq_set32((void *)0, 0, 32, PVR_DMA_TA);
@@ -235,7 +240,7 @@ int pvr_list_finish(void) {
     return 0;
 }
 
-int pvr_prim(void * data, int size) {
+int pvr_prim(const void *data, size_t size) {
     /* Check to make sure we can do this */
 #ifndef NDEBUG
     if(pvr_state.list_reg_open == -1) {
@@ -262,7 +267,7 @@ int pvr_prim(void * data, int size) {
     return 0;
 }
 
-int pvr_list_prim(pvr_list_t list, void * data, int size) {
+int pvr_list_prim(pvr_list_t list, const void *data, size_t size) {
     volatile pvr_dma_buffers_t * b;
 
     b = pvr_state.dma_buffers + pvr_state.ram_target;
@@ -322,11 +327,11 @@ int pvr_scene_finish(void) {
 
         for(i = 0; i < PVR_OPB_COUNT; i++) {
             /* We never enabled the list globally with pvr_init() - skip it */
-            if(!(pvr_state.lists_enabled & (1 << i)))
+            if(!(pvr_state.lists_enabled & BIT(i)))
                 continue;
 
             /* If any lists weren't used in this scene, submit blank ones now */
-            if(!(pvr_state.lists_closed & (1 << i))) {
+            if(!(pvr_state.lists_closed & BIT(i))) {
                 pvr_list_begin(i);
                 pvr_blank_polyhdr(i);
                 pvr_list_finish();
@@ -345,7 +350,7 @@ int pvr_scene_finish(void) {
             }
 
             // Put a zero-marker on the end.
-            memset4(b->base[i] + b->ptr[i], 0, 32);
+            memset(b->base[i] + b->ptr[i], 0, 32);
             b->ptr[i] += 32;
 
             // Verify that there is no overrun.
@@ -371,8 +376,8 @@ int pvr_scene_finish(void) {
 
         /* If any lists weren't submitted, then submit blank ones now */
         for(i = 0; i < PVR_OPB_COUNT; i++) {
-            if((pvr_state.lists_enabled & (1 << i))
-                    && (!(pvr_state.lists_closed & (1 << i)))) {
+            if((pvr_state.lists_enabled & BIT(i))
+                    && (!(pvr_state.lists_closed & BIT(i)))) {
                 pvr_list_begin(i);
                 pvr_blank_polyhdr(i);
                 pvr_list_finish();
@@ -422,4 +427,15 @@ int pvr_check_ready(void) {
         return 0;
     else
         return -1;
+}
+
+int pvr_wait_render_done(void) {
+    int t = 0;
+
+    irq_disable_scoped();
+
+    if(pvr_state.render_busy)
+        t = genwait_wait((void *)&pvr_state.render_busy, "PVR wait render done", 100, NULL);
+
+    return t;
 }

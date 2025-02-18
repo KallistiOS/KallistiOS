@@ -11,9 +11,9 @@
 
 #include <stdio.h>
 #include <errno.h>
+#include <arch/dmac.h>
 #include <dc/pvr.h>
 #include <dc/asic.h>
-#include <dc/dmac.h>
 #include <dc/sq.h>
 #include <kos/thread.h>
 #include <kos/sem.h>
@@ -24,7 +24,7 @@
 
 /* Signaling semaphore */
 static semaphore_t dma_done;
-static int32_t dma_blocking;
+static bool dma_blocking;
 static pvr_dma_callback_t dma_callback;
 static void *dma_cbdata;
 
@@ -42,7 +42,7 @@ static void pvr_dma_irq_hnd(uint32_t code, void *data) {
     (void)code;
     (void)data;
 
-    if(DMAC_DMATCR2 != 0)
+    if(dma_transfer_get_remaining(DMA_CHANNEL_2) != 0)
         dbglog(DBG_INFO, "pvr_dma: The dma did not complete successfully\n");
 
     /* Call the callback, if any. */
@@ -62,7 +62,7 @@ static void pvr_dma_irq_hnd(uint32_t code, void *data) {
     if(dma_blocking) {
         sem_signal(&dma_done);
         thd_schedule(1, 0);
-        dma_blocking = 0;
+        dma_blocking = false;
     }
 }
 
@@ -95,10 +95,18 @@ static uintptr_t pvr_dest_addr(uintptr_t dest, pvr_dma_type_t type) {
     return dest_addr;
 }
 
+static const dma_config_t pvr_dma_config = {
+    .channel = DMA_CHANNEL_2,
+    .request = DMA_REQUEST_EXTERNAL_MEM_TO_DEV,
+    .unit_size = DMA_UNITSIZE_32BYTE,
+    .src_mode = DMA_ADDRMODE_INCREMENT,
+    .transmit_mode = DMA_TRANSMITMODE_BURST,
+};
+
 int pvr_dma_transfer(const void *src, uintptr_t dest, size_t count,
-                     pvr_dma_type_t type, int block,
+                     pvr_dma_type_t type, bool block,
                      pvr_dma_callback_t callback, void *cbdata) {
-    uintptr_t src_addr = ((uintptr_t)src);
+    dma_addr_t src_addr = dma_map_src(src, count);
 
     /* Check for 32-byte alignment */
     if(src_addr & 0x1F) {
@@ -107,9 +115,7 @@ int pvr_dma_transfer(const void *src, uintptr_t dest, size_t count,
         return -1;
     }
 
-    dma_blocking = block;
-    dma_callback = callback;
-    dma_cbdata = cbdata;
+    irq_disable_scoped();
 
     /* Make sure we're not already DMA'ing */
     if(pvr_dma[PVR_DST] != 0) {
@@ -118,21 +124,12 @@ int pvr_dma_transfer(const void *src, uintptr_t dest, size_t count,
         return -1;
     }
 
-    if(DMAC_CHCR2 & 0x1)  /* DE bit set so we must clear it */
-        DMAC_CHCR2 &= ~0x1;
-
-    if(DMAC_CHCR2 & 0x2)  /* TE bit set so we must clear it */
-        DMAC_CHCR2 &= ~0x2;
-
-    DMAC_SAR2 = src_addr;
-    DMAC_DMATCR2 = count / 32;
-    DMAC_CHCR2 = 0x12c1;
-
-    if((DMAC_DMAOR & DMAOR_STATUS_MASK) != DMAOR_NORMAL_OPERATION) {
-        dbglog(DBG_ERROR, "pvr_dma: Failed DMAOR check\n");
-        errno = EIO;
+    if(dma_transfer(&pvr_dma_config, 0, src_addr, count, NULL))
         return -1;
-    }
+
+    dma_blocking = block;
+    dma_callback = callback;
+    dma_cbdata = cbdata;
 
     pvr_dma[PVR_STATE] = pvr_dest_addr(dest, type);
     pvr_dma[PVR_LEN] = count;
@@ -146,30 +143,30 @@ int pvr_dma_transfer(const void *src, uintptr_t dest, size_t count,
 }
 
 /* Count is in bytes. */
-int pvr_txr_load_dma(void *src, pvr_ptr_t dest, size_t count, int block,
+int pvr_txr_load_dma(const void *src, pvr_ptr_t dest, size_t count, bool block,
                     pvr_dma_callback_t callback, void *cbdata) {
     return pvr_dma_transfer(src, (uintptr_t)dest, count, PVR_DMA_VRAM64, block, 
                             callback, cbdata);
 }
 
-int pvr_dma_load_ta(void *src, size_t count, int block, 
+int pvr_dma_load_ta(const void *src, size_t count, bool block,
                     pvr_dma_callback_t callback, void *cbdata) {
     return pvr_dma_transfer(src, (uintptr_t)0, count, PVR_DMA_TA, block, callback, cbdata);
 }
 
-int pvr_dma_yuv_conv(void *src, size_t count, int block,
+int pvr_dma_yuv_conv(const void *src, size_t count, bool block,
                     pvr_dma_callback_t callback, void *cbdata) {
     return pvr_dma_transfer(src, (uintptr_t)0, count, PVR_DMA_YUV, block, callback, cbdata);
 }
 
-int pvr_dma_ready(void) {
+bool pvr_dma_ready(void) {
     return pvr_dma[PVR_DST] == 0;
 }
 
 void pvr_dma_init(void) {
     /* Create an initially blocked semaphore */
     sem_init(&dma_done, 0);
-    dma_blocking = 0;
+    dma_blocking = false;
     dma_callback = NULL;
     dma_cbdata = 0;
 
@@ -200,12 +197,6 @@ void pvr_dma_shutdown(void) {
 void *pvr_sq_load(void *dest, const void *src, size_t n, pvr_dma_type_t type) {
     void *dma_area_ptr;
 
-    if(pvr_dma[PVR_DST] != 0) {
-        dbglog(DBG_ERROR, "pvr_sq_load: PVR DMA has not finished\n");
-        errno = EINPROGRESS;
-        return NULL;
-    }
-
     dma_area_ptr = (void *)pvr_dest_addr((uintptr_t)dest, type);
     sq_cpy(dma_area_ptr, src, n);
 
@@ -216,12 +207,6 @@ void *pvr_sq_load(void *dest, const void *src, size_t n, pvr_dma_type_t type) {
 void *pvr_sq_set16(void *dest, uint32_t c, size_t n, pvr_dma_type_t type) {
     void *dma_area_ptr;
 
-    if(pvr_dma[PVR_DST] != 0) {
-        dbglog(DBG_ERROR, "pvr_sq_set16: PVR DMA has not finished\n");
-        errno = EINPROGRESS;
-        return NULL;
-    }
-
     dma_area_ptr = (void *)pvr_dest_addr((uintptr_t)dest, type);
     sq_set16(dma_area_ptr, c, n);
 
@@ -231,12 +216,6 @@ void *pvr_sq_set16(void *dest, uint32_t c, size_t n, pvr_dma_type_t type) {
 /* Fills n bytes at PVR dest with 32-bit c, dest must be 32-byte aligned */
 void *pvr_sq_set32(void *dest, uint32_t c, size_t n, pvr_dma_type_t type) {
     void *dma_area_ptr;
-
-    if(pvr_dma[PVR_DST] != 0) {
-        dbglog(DBG_ERROR, "pvr_sq_set32: PVR DMA has not finished\n");
-        errno = EINPROGRESS;
-        return NULL;
-    }
 
     dma_area_ptr = (void *)pvr_dest_addr((uintptr_t)dest, type);
     sq_set32(dma_area_ptr, c, n);

@@ -12,6 +12,7 @@
 #include "pvr_internal.h"
 
 #include <kos/genwait.h>
+#include <kos/regfield.h>
 
 #ifdef PVR_RENDER_DBG
 #include <stdio.h>
@@ -28,62 +29,46 @@
 
 // Find the next list to DMA out. If we have none left to do, then do
 // nothing. Otherwise, start the DMA and chain back to us upon completion.
-static void dma_next_list(void *data) {
-    int i, did = 0;
+static void dma_next_list(void *thread) {
     volatile pvr_dma_buffers_t * b;
+    unsigned int i;
 
-    (void)data;
-
-    // DBG(("dma_next_list\n"));
+    // Get the buffers for this frame.
+    b = pvr_state.dma_buffers + (pvr_state.ram_target ^ 1);
 
     for(i = 0; i < PVR_OPB_COUNT; i++) {
-        if((pvr_state.lists_enabled & (1 << i))
-                && !(pvr_state.lists_dmaed & (1 << i))) {
-            // Get the buffers for this frame.
-            b = pvr_state.dma_buffers + (pvr_state.ram_target ^ 1);
+        if((pvr_state.lists_enabled & BIT(i))
+                && !(pvr_state.lists_dmaed & BIT(i))) {
 
             /* If we are in PVR DMA mode, yet we haven't associated a
                RAM-residing vertex buffer with the current list
                (because we submitted it directly, for example),
                mark it as complete, so we skip trying to DMA it. */
             if(!b->base[i]) {
-                pvr_state.lists_dmaed       |= 1 << i;
+                pvr_state.lists_dmaed |= BIT(i);
                 continue;
             }
 
-            // Flush the last 32 bytes out of dcache, just in case.
-            // dcache_flush_range((ptr_t)(b->base[i] + b->ptr[i] - 32), 32);
-            dcache_flush_range((ptr_t)(b->base[i]), b->ptr[i] + 32);
-            //amt = b->ptr[i] > 16384 ? 16384 : b->ptr[i];
-            //dcache_flush_range((ptr_t)(b->base[i] + b->ptr[i] - amt), amt);
+            // Mark this list as processed.
+            pvr_state.lists_dmaed |= BIT(i);
 
             // Start the DMA transfer, chaining to ourselves.
-            //DBG(("dma_begin(buf %d, list %d, base %p, len %d)\n",
-            //  pvr_state.ram_target ^ 1, i,
-            //  b->base[i], b->ptr[i]));
-            pvr_dma_load_ta(b->base[i], b->ptr[i], 0, dma_next_list, 0);
-
-            // Mark this list as done, and break out for now.
-            pvr_state.lists_dmaed |= 1 << i;
-            did++;
-
-            break;
+            pvr_dma_load_ta(b->base[i], b->ptr[i], 0, dma_next_list, thread);
+            return;
         }
     }
 
     // If that was the last one, then free up the DMA channel.
-    if(!did) {
-        //DBG(("dma_complete(buf %d)\n", pvr_state.ram_target ^ 1));
+    pvr_state.lists_dmaed = 0;
 
-        // If that was the last one, then free up the DMA channel.
-        pvr_state.lists_dmaed = 0;
-
-        // Unlock
+    // Unlock
+    if(irq_inside_int())
+        mutex_unlock_as_thread((mutex_t *)&pvr_state.dma_lock, thread);
+    else
         mutex_unlock((mutex_t *)&pvr_state.dma_lock);
 
-        // Buffers are now empty again
-        pvr_state.dma_buffers[pvr_state.ram_target ^ 1].ready = 0;
-    }
+    // Buffers are now empty again
+    pvr_state.dma_buffers[pvr_state.ram_target ^ 1].ready = 0;
 }
 
 void pvr_start_dma(void) {
@@ -92,7 +77,7 @@ void pvr_start_dma(void) {
     mutex_lock((mutex_t *)&pvr_state.dma_lock);
 
     // Begin DMAing the first list.
-    dma_next_list(0);
+    dma_next_list(thd_get_current());
 }
 
 static void pvr_render_lists(void) {
@@ -112,7 +97,7 @@ static void pvr_render_lists(void) {
         // Begin rendering from the dirty TA buffer into the clean
         // frame buffer.
         //DBG(("start_render(%d -> %d)\n", pvr_state.ta_target, pvr_state.view_target ^ 1));
-        pvr_state.ta_target ^= 1;
+        pvr_state.ta_target ^= pvr_state.vbuf_doublebuf;
         pvr_begin_queued_render();
         pvr_state.render_busy = 1;
         pvr_sync_stats(PVR_SYNC_RNDSTART);
@@ -171,26 +156,28 @@ void pvr_int_handler(uint32 code, void *data) {
     switch(code) {
         case ASIC_EVT_PVR_OPAQUEDONE:
             //DBG(("irq_opaquedone\n"));
-            pvr_state.lists_transferred |= 1 << PVR_OPB_OP;
+            pvr_state.lists_transferred |= BIT(PVR_OPB_OP);
             break;
         case ASIC_EVT_PVR_TRANSDONE:
             //DBG(("irq_transdone\n"));
-            pvr_state.lists_transferred |= 1 << PVR_OPB_TP;
+            pvr_state.lists_transferred |= BIT(PVR_OPB_TP);
             break;
         case ASIC_EVT_PVR_OPAQUEMODDONE:
-            pvr_state.lists_transferred |= 1 << PVR_OPB_OM;
+            pvr_state.lists_transferred |= BIT(PVR_OPB_OM);
             break;
         case ASIC_EVT_PVR_TRANSMODDONE:
-            pvr_state.lists_transferred |= 1 << PVR_OPB_TM;
+            pvr_state.lists_transferred |= BIT(PVR_OPB_TM);
             break;
         case ASIC_EVT_PVR_PTDONE:
-            pvr_state.lists_transferred |= 1 << PVR_OPB_PT;
+            pvr_state.lists_transferred |= BIT(PVR_OPB_PT);
             break;
         case ASIC_EVT_PVR_RENDERDONE_TSP:
             //DBG(("irq_renderdone\n"));
             pvr_state.render_busy = 0;
             pvr_state.render_completed = 1;
             pvr_sync_stats(PVR_SYNC_RNDDONE);
+
+            genwait_wake_all((void *)&pvr_state.render_busy);
             break;
     }
 

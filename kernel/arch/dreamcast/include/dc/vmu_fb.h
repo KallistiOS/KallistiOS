@@ -102,6 +102,28 @@ void vmufb_clear_area(vmufb_t *fb,
  */
 void vmufb_clear(vmufb_t *fb);
 
+/** \brief  Render a XBM image into the VMU framebuffer
+
+    This function will paint the provided XBM data into the VMU framebuffer,
+    into the rectangle provided by the x, y, w and h values.
+
+    \param  fb              A pointer to the vmufb_t to paint to.
+    \param  x               The horizontal position of the top-left corner of
+                            the drawing area, in pixels
+    \param  y               The vertical position of the top-left corner of the
+                            drawing area, in pixels
+    \param  w               The width of the drawing area, in pixels. It must
+                            correspond to the width of the XBM image.
+    \param  h               The height of the drawing area, in pixels. It must
+                            correspond to the height of the XBM image.
+    \param  xbm_data        A pointer to the pixel data in XBM format that will
+                            be painted
+ */
+void vmufb_paint_xbm(vmufb_t *fb,
+                     unsigned int x, unsigned int y,
+                     unsigned int w, unsigned int h,
+                     const uint8_t *xbm_data);
+
 /** \brief  Present the VMU framebuffer to a VMU
 
     This function presents the previously rendered VMU framebuffer to the

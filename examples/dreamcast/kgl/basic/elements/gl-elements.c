@@ -9,7 +9,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <malloc.h>
 
 #include <KGL/gl.h>
 #include <KGL/glu.h>

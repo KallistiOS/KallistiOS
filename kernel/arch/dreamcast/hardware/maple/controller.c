@@ -2,6 +2,7 @@
 
    controller.c
    Copyright (C) 2002 Megan Potter
+   Copyright (C) 2025 Falco Girgis
 
  */
 
@@ -17,6 +18,10 @@
 
 /* Location of controller capabilities within function_data array */
 #define CONT_FUNCTION_DATA_INDEX  0
+
+#ifndef CONT_BTN_CALLBACK_THD_STACK_SIZE
+#define CONT_BTN_CALLBACK_THD_STACK_SIZE (8 * 1024)
+#endif
 
 /* Raw controller condition structure */
 typedef struct cont_cond {
@@ -110,8 +115,14 @@ int cont_btn_callback(uint8_t addr, uint32_t btns, cont_btn_callback_t cb) {
         return 0;
     }
 
+    const kthread_attr_t thd_attr = {
+        .stack_size = CONT_BTN_CALLBACK_THD_STACK_SIZE,
+        .prio = PRIO_DEFAULT,
+        .label = "cont_btn_callback"
+    };
+
     params->worker =
-        thd_worker_create_ex(NULL, &cont_btn_cb_thread, params);
+        thd_worker_create_ex(&thd_attr, &cont_btn_cb_thread, params);
 
     if(!params->worker) {
         free(params);

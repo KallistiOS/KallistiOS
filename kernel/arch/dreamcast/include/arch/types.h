@@ -51,31 +51,6 @@ typedef volatile int8 vint8;        /**< \brief 8-bit volatile signed type */
 /* Pointer arithmetic types */
 typedef uint32 ptr_t;               /**< \brief Pointer arithmetic type */
 
-/* another format for type names */
-#ifndef _BSDTYPES_DEFINED
-
-/* \cond */
-#define __u_char_defined
-#define __u_short_defined
-#define __u_int_defined
-#define __u_long_defined
-#define __ushort_defined
-#define __uint_defined
-/* \endcond */
-
-typedef unsigned char   u_char;     /**< \brief BSD-style unsigned char */
-typedef unsigned short  u_short;    /**< \brief BSD-style unsigned short */
-typedef unsigned int    u_int;      /**< \brief BSD-style unsigned integer */
-typedef unsigned long   u_long;     /**< \brief BSD-style unsigned long */
-typedef unsigned short  ushort;     /**< \brief BSD-style unsigned short */
-typedef unsigned int    uint;       /**< \brief BSD-style unsigned integer */
-
-/* \cond */
-#define _BSDTYPES_DEFINED
-/* \endcond */
-
-#endif  /* _BSDTYPES_DEFINED */
-
 /* This type may be used for any generic handle type that is allowed
    to be negative (for errors) and has no specific bit count
    restraints. */

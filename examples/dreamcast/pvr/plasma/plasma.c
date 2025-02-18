@@ -125,7 +125,7 @@ void pvr_setup(void) {
     for(i = 0; i < 2; i++) {
         txr[i] = pvr_mem_malloc(64 * 64 * 2);
         memset(txr[i], 0, 64 * 64 * 2);
-        txr_buf[i] = memalign(32, 64 * 64 * 2);
+        txr_buf[i] = aligned_alloc(32, 64 * 64 * 2);
 
         pvr_poly_cxt_txr(&cxt, PVR_LIST_OP_POLY, PVR_TXRFMT_RGB565, 64, 64, txr[i], PVR_FILTER_BILINEAR);
         pvr_poly_compile(&hdr[i], &cxt);

@@ -54,6 +54,26 @@ typedef uint32_t sfxhnd_t;
 */
 #define SFXHND_INVALID 0
 
+/** \brief  Data structure for sound effect playback.
+
+    This structure is used to pass data to the extended version of sound effect
+    playback functions.
+*/
+typedef struct sfx_play_data {
+    int chn;        /**< \brief The channel to play on. If chn == -1, the next
+                            available channel will be used automatically. */
+    sfxhnd_t idx;   /**< \brief The handle to the sound effect to play. */
+    int vol;        /**< \brief The volume to play at (between 0 and 255). */
+    int pan;        /**< \brief The panning value of the sound effect. 0 is all
+                            the way to the left, 128 is center, 255 is all the way
+                            to the right. */
+    int loop;       /**< \brief Whether to loop the sound effect or not. */
+    int freq;       /**< \brief Frequency */
+    unsigned int loopstart;  /**< \brief Loop start index (in samples). */
+    unsigned int loopend;    /**< \brief Loop end index (in samples). If loopend == 0, 
+                            the loop end will default to sfx size in samples. */
+} sfx_play_data_t;
+
 /** \brief  Load a sound effect.
 
     This function loads a sound effect from a WAV file and returns a handle to
@@ -106,6 +126,42 @@ sfxhnd_t snd_sfx_load_ex(const char *fn, uint32_t rate, uint16_t bitsize, uint16
 */
 sfxhnd_t snd_sfx_load_fd(file_t fd, size_t len, uint32_t rate, uint16_t bitsize, uint16_t channels);
 
+/** \brief  Load a sound effect.
+
+    This function loads a sound effect from a WAV file contained in memory and
+    returns a handle to it. The sound effect can be either stereo or mono, and
+    must either be 8-bit or 16-bit uncompressed PCM samples, or 4-bit Yamaha
+    ADPCM.
+
+    \warning The sound effect you are loading must be at most 65534 samples 
+    in length.
+
+    \param  buf             The buffer to load.
+    \return                 A handle to the sound effect on success. On error,
+                            SFXHND_INVALID is returned.
+*/
+sfxhnd_t snd_sfx_load_buf(char *buf);
+
+/** \brief  Load a sound effect without wav header from buffer.
+
+    This function loads a sound effect from raw data contained in memory and
+    returns a handle to it. The sound effect can be either stereo or mono, and
+    must either be 8-bit or 16-bit uncompressed PCM samples, or 4-bit Yamaha
+    ADPCM.
+
+    \warning The sound effect you are loading must be at most 65534 samples 
+    in length and multiple by 32 bytes for each channel.
+
+    \param  buf             The buffer.
+    \param  len             The file length.
+    \param  rate            The frequency of the sound.
+    \param  bitsize         The sample size (bits per sample).
+    \param  channels        Number of channels.
+    \return                 A handle to the sound effect on success. On error,
+                            SFXHND_INVALID is returned.
+*/
+sfxhnd_t snd_sfx_load_raw_buf(char *buf, size_t len, uint32_t rate, uint16_t bitsize, uint16_t channels);
+
 /** \brief  Unload a sound effect.
 
     This function unloads a previously loaded sound effect, and frees the memory
@@ -157,6 +213,21 @@ int snd_sfx_play(sfxhnd_t idx, int vol, int pan);
     \return                 chn
 */
 int snd_sfx_play_chn(int chn, sfxhnd_t idx, int vol, int pan);
+
+/** \brief  Extended sound effect playback function.
+
+    This function plays a sound effect with the specified parameters. This is
+    the extended version of the sound effect playback functions, and is used to
+    pass a structure containing the parameters to the function. With this
+    function, you can additionally specify extra parameters such as frequency
+    and looping (see sfx_play_data_t structure).
+
+    \param  data            The data structure containing the information needed
+                            to play the sound effect.
+
+    \return                 chn
+*/
+int snd_sfx_play_ex(sfx_play_data_t *data);
 
 /** \brief  Stop a single channel of sound.
 
