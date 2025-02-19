@@ -2,6 +2,7 @@
 
 | Date<br/>_____________ | Author(s)<br/>_____________ | Changes<br/>_____________ |
 |:-----------------------|:----------------------------|---------------------------|
+| 2025-02-19 | Eric Fradella | Remove profiles and patches for older toolchains (9.3.0, 10.5.0, 11.5.0, 12.4.0) and Rust dev toolchains. Support for Newlib versions prior to 4.x now deprecated. |
 | 2025-01-26 | Mickaël Cardoso | Update documentations. |
 | 2025-01-05 | Eric Fradella | Add support and update toolchain profiles for Newlib 4.5.0, Binutils 2.43.1, and GDB 15.2. |
 | 2024-08-11 | Eric Fradella | Fix ARM toolchain build error when JIT is enabled for SH toolchain. |

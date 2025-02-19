@@ -98,19 +98,13 @@ The following toolchain profiles are available for users to select in
 
 | Profile Name | SH4 GCC | Newlib | SH4 Binutils | ARM GCC | ARM Binutils | Notes |
 |---------:|:-------:|:----------:|:------------:|:-------:|:----------------:|:------|
-| 9.3.0-legacy | 9.3.0 | 3.3.0 | 2.34 | 8.4.0 | 2.34 | Former 'stable' option, based on GCC 9<br />GCC 9 series support ended upstream |
 | 9.5.0-winxp | 9.5.0 | 4.3.0 | 2.34 | 8.5.0 | 2.34 | Most recent versions of tools which run on Windows XP<br />GCC 9 series support ended upstream |
-| 10.5.0 | 10.5.0 | 4.3.0 | 2.43 | 8.5.0 | 2.43 | Latest release in the GCC 10 series, released 2023-07-07<br />GCC 10 series support ended upstream |
-| 11.5.0 | 11.5.0 | 4.3.0 | 2.43 | 8.5.0 | 2.43 | Latest release in the GCC 11 series, released 2024-07-19<br />GCC 11 series support ended upstream |
-| 12.3.0 | 12.3.0 | 4.3.0 | 2.43 | 8.5.0 | 2.43 | Latest release in the GCC 12 series, released 2023-05-08 |
 | **stable** | **13.2.0** | **4.3.0** | **2.43** | **8.5.0** | **2.43** | **Tested stable; based on GCC 13.2.0, released 2023-07-27** |
 | 13.3.0 | 13.3.0 | 4.5.0 | 2.43.1 | 8.5.0 | 2.43.1 | Latest release in the GCC 13 series, released 2024-05-21 |
 | 14.2.0 | 14.2.0 | 4.5.0 | 2.43.1 | 8.5.0 | 2.43.1 | Latest release in the GCC 14 series, released 2024-08-01 |
 | 13.3.1-dev | 13.3.1 (git) | 4.5.0 | 2.43.1 | 8.5.0 | 2.43.1 | Bleeding edge GCC 13 series from git |
 | 14.2.1-dev | 14.2.1 (git) | 4.5.0 | 2.43.1 | 8.5.0 | 2.43.1 | Bleeding edge GCC 14 series from git |
 | 15.0.1-dev | 15.0.1 (git) | 4.5.0 | 2.43.1 | 8.5.0 | 2.43.1 | Bleeding edge GCC 15 series from git |
-| gccrs-dev | 14.x | 4.5.0 | 2.43.1 | 8.5.0 | 2.43.1 | GCC fork for development of the GCCRS Rust compiler |
-| rustc-dev | 14.x | 4.5.0 | 2.43.1 | 8.5.0 | 2.43.1 | GCC fork for development of the libgccjit rustc GCC codegen |
 
 The **stable** profile is the primary, widely tested target for KallistiOS, and
 is the most recent toolchain profile known to work with all example programs.
