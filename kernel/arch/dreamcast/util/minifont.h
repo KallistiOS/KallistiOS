@@ -10,11 +10,17 @@
     Naomi because, well, it was specifically put to use there first of all for
     my early debugging with it.
 
-    Only ASCII characters 33-126 are present here. Each one taking up 16 bytes
+    Only ASCII characters 32-126 are present here. Each one taking up 16 bytes
     of the data. Each character is 8x16 pixels in size. */
 
-static const int minifont_size = 1504;
-static const unsigned char minifont_data[1504] = {
+static const uint8_t char_width = 8;    /**< \brief Width of each character. */
+static const uint8_t char_height = 16;  /**< \brief Height of each character. */
+static const uint8_t char_start = 32;   /**< \brief First ASCII character encoded. */
+
+static const int minifont_size = 1520;
+static const unsigned char minifont_data[1520] = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18,
     0x18, 0x00, 0x00, 0x18, 0x18, 0x00, 0x00, 0x00,
     0x00, 0x36, 0x36, 0x12, 0x24, 0x00, 0x00, 0x00,
