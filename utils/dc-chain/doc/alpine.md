@@ -24,7 +24,7 @@ build the whole toolchains.
 
 The packages below need to be installed:
 ```
-apk --update add build-base patch bash texinfo gmp-dev libjpeg-turbo-dev libpng-dev elfutils-dev curl wget python3 git subversion
+apk --update add build-base patch bash coreutils-fmt texinfo gmp-dev mpfr-dev libjpeg-turbo-dev libpng-dev elfutils-dev curl wget python3 git subversion
 ```	
 
 ## Preparing the environment installation ##
@@ -59,7 +59,7 @@ To build the toolchain, do the following:
 
 3. Enter the following to start downloading and building toolchain:
 	```
-	make
+	make use_custom_dependencies=1
 	```
 
 Now it's time to have a coffee as this process can be long: several minutes to
