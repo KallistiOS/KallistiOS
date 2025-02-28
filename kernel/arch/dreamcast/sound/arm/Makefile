@@ -1,7 +1,7 @@
 TARGET = stream.drv
 OBJS = crt0.o main.o aica.o
 
-.PHONY: all clean
+.PHONY: all clean aicaos
 
 CC = $(DC_ARM_CC)
 AS = $(DC_ARM_AS)
@@ -12,6 +12,9 @@ LDFLAGS = $(DC_ARM_LDFLAGS) $(DC_ARM_LIB_PATHS) -Wl,-Map,prog.map
 LDLIBS = $(DC_ARM_LIBS)
 
 all: $(TARGET)
+
+aicaos:
+	$(MAKE) -C aicaos
 
 ARM_CC_IS_AVAILABLE=0
 ifdef DC_ARM_CC
@@ -33,5 +36,10 @@ endif
 prog.elf: $(OBJS)
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-clean:
+$(OBJS): aicaos
+
+clean-aicaos:
+	$(MAKE) -C aicaos clean
+
+clean: clean-aicaos
 	-rm -f $(OBJS) prog.elf prog.map $(TARGET)
