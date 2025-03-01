@@ -15,7 +15,6 @@ __BEGIN_DECLS
 #include <kos/net.h>
 #include "net_ipv4.h"
 
-#define packed __attribute__((packed))
 typedef struct {
     uint8 type;
     uint8 code;
@@ -25,8 +24,7 @@ typedef struct {
         uint16 m16[2];
         uint32 m32;
     } misc;
-} packed icmp_hdr_t;
-#undef packed
+} icmp_hdr_t;
 
 #define ICMP_MESSAGE_ECHO_REPLY         0
 #define ICMP_MESSAGE_DEST_UNREACHABLE   3

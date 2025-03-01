@@ -87,18 +87,18 @@ void snd_sfx_unload(sfxhnd_t idx) {
     free(t);
 }
 
-typedef struct __attribute__((__packed__)) {
+typedef struct {
     uint8_t riff[4];
     int32_t totalsize;
     uint8_t riff_format[4];
 } wavmagic_t;
 
-typedef struct __attribute__((__packed__)) {
+typedef struct {
     uint8_t id[4];
     size_t size;
 } chunkhdr_t;
 
-typedef struct __attribute__((__packed__)) {
+typedef struct {
     int16_t format;
     int16_t channels;
     int32_t sample_rate;
@@ -108,7 +108,7 @@ typedef struct __attribute__((__packed__)) {
 } fmthdr_t;
 
 /* WAV header */
-typedef struct __attribute__((__packed__)) {
+typedef struct {
     wavmagic_t magic;
 
     chunkhdr_t chunk;

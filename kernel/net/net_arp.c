@@ -23,7 +23,6 @@
 */
 
 /* ARP Packet Structure */
-#define packed __attribute__((packed))
 typedef struct {
     uint8 hw_type[2];
     uint8 pr_type[2];
@@ -34,8 +33,7 @@ typedef struct {
     uint8 pr_send[4];
     uint8 hw_recv[6];
     uint8 pr_recv[6];
-} packed arp_pkt_t;
-#undef packed
+} arp_pkt_t;
 
 /* Structure describing an ARP entry; each entry contains a MAC address,
    an IP address, and a timestamp from 'jiffies'. The timestamp allows

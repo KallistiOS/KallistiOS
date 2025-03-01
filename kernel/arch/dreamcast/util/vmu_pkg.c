@@ -108,6 +108,10 @@ int vmu_pkg_build(vmu_pkg_t *src, uint8_t **dst, int *dst_size) {
 
     if(!out) return -1;
 
+    /* We're done so write outputs */
+    *dst_size = out_size;
+    *dst = out;
+
     /* Setup some defaults */
     memset(out, 0, out_size);
     hdr = (vmu_hdr_t *)out;
@@ -141,10 +145,6 @@ int vmu_pkg_build(vmu_pkg_t *src, uint8_t **dst, int *dst_size) {
 
     /* Calculate CRC */
     hdr->crc = vmu_pkg_crc(out, out_size);
-
-    /* We're done so write outputs */
-    *dst_size = out_size;
-    *dst = out;
 
     return 0;
 }
