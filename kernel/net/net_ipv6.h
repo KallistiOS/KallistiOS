@@ -12,17 +12,11 @@
 
 #include "net_ipv4.h"
 
-#ifdef PACKED
-#undef PACKED
-#endif
-
-#define PACKED __attribute__((packed))
-
 typedef struct ipv6_ext_hdr_s {
     uint8       next_header;
     uint8       ext_length;
     uint8       data[];
-} PACKED ipv6_ext_hdr_t;
+} ipv6_ext_hdr_t;
 
 typedef struct ipv6_pseudo_hdr_s {
     struct in6_addr src_addr;
@@ -30,9 +24,7 @@ typedef struct ipv6_pseudo_hdr_s {
     uint32          upper_layer_len;
     uint8           zero[3];
     uint8           next_header;
-} PACKED ipv6_pseudo_hdr_t;
-
-#undef PACKED
+} ipv6_pseudo_hdr_t;
 
 #define IPV6_HDR_EXT_HOP_BY_HOP     0
 #define IPV6_HDR_EXT_ROUTING        43

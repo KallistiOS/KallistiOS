@@ -323,7 +323,7 @@ typedef struct kbd_state {
                             keyboard layouts and is deprecated. Please use the
                             individual queues instead for future code.
 */
-void kbd_set_queue(int active) __attribute__((deprecated));
+void kbd_set_queue(int active) __deprecated;
 
 /** \brief   Pop a key off the global keyboard queue.
     \ingroup kbd
@@ -345,7 +345,7 @@ void kbd_set_queue(int active) __attribute__((deprecated));
                             keyboards.
     \see                    kbd_queue_pop()
 */
-int kbd_get_key(void) __attribute__((deprecated));
+int kbd_get_key(void) __deprecated;
 
 /** \brief   Pop a key off a specific keyboard's queue.
     \ingroup kbd

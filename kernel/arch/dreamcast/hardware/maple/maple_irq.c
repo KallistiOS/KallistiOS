@@ -182,6 +182,7 @@ static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm) {
     else {
         /* dbglog(DBG_KDEBUG, "maple: unknown response %d on device %c%c\n",
             resp->response, 'A'+p, '0'+u); */
+        state->scan_ready_mask |= 1 << p;
         maple_frame_unlock(frm);
     }
 }

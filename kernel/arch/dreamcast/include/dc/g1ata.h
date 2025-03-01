@@ -2,7 +2,7 @@
 
    dc/g1ata.h
    Copyright (C) 2013, 2014 Lawrence Sebald
-   Copyright (C) 2023, 2024 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024, 2025 Ruslan Rostovtsev
 */
 
 /** \file    dc/g1ata.h
@@ -106,6 +106,61 @@ __BEGIN_DECLS
     about this one at all. This bit is irrelevant for packet devices.
 */
 #define G1_ATA_LBA_MODE     0x40
+/** @} */
+
+/** \defgroup g1ata_protect   G1 ATA protection
+    \brief                 G1 Bus and DMA protection
+    \ingroup                g1ata
+    @{
+*/
+/** \brief   G1 ATA bus protection register.
+    \ingroup g1ata
+
+    Used to check BIOS contents in the Holly.
+*/
+#define G1_ATA_BUS_PROTECTION       0x005F74E4
+
+/** \brief   G1 ATA bus protection status register.
+    \ingroup g1ata
+
+    Used to determine the status of the check in the Holly.
+*/
+#define G1_ATA_BUS_PROTECTION_STATUS 0x005F74EC
+
+/** \brief   G1 ATA bus protection in progress state.
+    \ingroup g1ata
+*/
+#define G1_ATA_BUS_PROTECTION_STATUS_IN_PROGRESS 0x00
+
+/** \brief   G1 ATA bus protection failed state.
+    \ingroup g1ata
+*/
+#define G1_ATA_BUS_PROTECTION_STATUS_FAILED      0x02
+
+/** \brief   G1 ATA bus protection passed state.
+    \ingroup g1ata
+*/
+#define G1_ATA_BUS_PROTECTION_STATUS_PASSED      0x03
+
+/** \brief   G1 ATA DMA protection register.
+    \ingroup g1ata
+*/
+#define G1_ATA_DMA_PROTECTION    0x005F74B8
+
+/** \brief   G1 ATA DMA protection register code.
+    \ingroup g1ata
+*/
+#define G1_ATA_DMA_UNLOCK_CODE   0x8843
+
+/** \brief   System memory DMA protection unlock value.
+    \ingroup g1ata
+*/
+#define G1_ATA_DMA_UNLOCK_SYSMEM (G1_ATA_DMA_UNLOCK_CODE << 16 | 0x407F)
+
+/** \brief   All memory DMA protection unlock value.
+    \ingroup g1ata
+*/
+#define G1_ATA_DMA_UNLOCK_ALLMEM (G1_ATA_DMA_UNLOCK_CODE << 16 | 0x007F)
 /** @} */
 
 /** \brief   Is there a G1 DMA in progress currently?
