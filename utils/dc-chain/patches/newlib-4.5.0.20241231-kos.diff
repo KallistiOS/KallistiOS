@@ -1,7 +1,16 @@
-diff --color -ruN newlib-4.5.0.20241231/newlib/configure.host newlib-4.5.0.20241231-kos/newlib/configure.host
---- newlib-4.5.0.20241231/newlib/configure.host	2024-02-10 09:30:58.772247624 -0600
-+++ newlib-4.5.0.20241231-kos/newlib/configure.host	2024-02-10 09:31:16.329331366 -0600
-@@ -325,6 +325,7 @@
+diff --git a/newlib/configure.host b/newlib/configure.host
+index ff2e512..ef54d3c 100644
+--- a/newlib/configure.host
++++ b/newlib/configure.host
+@@ -131,6 +131,7 @@ case "${host_cpu}" in
+   arm*)
+ 	machine_dir=arm
+ 	libm_machine_dir=arm
++	newlib_cflags="${newlib_cflags} -DREENTRANT_SYSCALLS_PROVIDED -DMISSING_SYSCALL_NAMES -DMALLOC_PROVIDED -DABORT_PROVIDED -ffunction-sections -fdata-sections"
+ 	;;
+   avr*)
+ 	newlib_cflags="${newlib_cflags} -DPREFER_SIZE_OVER_SPEED -mcall-prologues"
+@@ -325,6 +326,7 @@ case "${host_cpu}" in
  	;;
    sh | sh64)
  	machine_dir=sh
@@ -9,10 +18,11 @@ diff --color -ruN newlib-4.5.0.20241231/newlib/configure.host newlib-4.5.0.20241
  	;;
    sparc*)
  	libm_machine_dir=sparc
-diff --color -ruN newlib-4.5.0.20241231/newlib/libc/include/assert.h newlib-4.5.0.20241231-kos/newlib/libc/include/assert.h
---- newlib-4.5.0.20241231/newlib/libc/include/assert.h	2024-02-10 09:30:58.781247667 -0600
-+++ newlib-4.5.0.20241231-kos/newlib/libc/include/assert.h	2024-02-10 09:31:16.329331366 -0600
-@@ -13,8 +13,8 @@
+diff --git a/newlib/libc/include/assert.h b/newlib/libc/include/assert.h
+index b9e5e9b..cb06562 100644
+--- a/newlib/libc/include/assert.h
++++ b/newlib/libc/include/assert.h
+@@ -13,8 +13,8 @@ extern "C" {
  #ifdef NDEBUG           /* required by ANSI standard */
  # define assert(__e) ((void)0)
  #else
@@ -23,7 +33,7 @@ diff --color -ruN newlib-4.5.0.20241231/newlib/libc/include/assert.h newlib-4.5.
  
  # ifndef __ASSERT_FUNC
    /* Use g++'s demangled names in C++.  */
-@@ -36,10 +36,10 @@
+@@ -36,10 +36,10 @@ extern "C" {
  # endif /* !__ASSERT_FUNC */
  #endif /* !NDEBUG */
  
@@ -38,22 +48,10 @@ diff --color -ruN newlib-4.5.0.20241231/newlib/libc/include/assert.h newlib-4.5.
  
  #if __STDC_VERSION__ >= 201112L && !defined __cplusplus
  # define static_assert _Static_assert
-diff --color -ruN newlib-4.5.0.20241231/newlib/libc/include/sys/stat.h newlib-4.5.0.20241231-kos/newlib/libc/include/sys/stat.h
---- newlib-4.5.0.20241231/newlib/libc/include/sys/stat.h	2024-04-28 15:07:54.520453819 -0400
-+++ newlib-4.5.0.20241231-kos/newlib/libc/include/sys/stat.h	2023-12-31 12:00:18.000000000 -0500
-@@ -142,8 +142,8 @@
- int	stat (const char *__restrict __path, struct stat *__restrict __sbuf );
- mode_t	umask (mode_t __mask );
- 
-+int	lstat (const char *__restrict __path, struct stat *__restrict __buf );
- #if defined (__SPU__) || defined(__rtems__) || defined(__CYGWIN__)
--int	lstat (const char *__restrict __path, struct stat *__restrict __buf );
- int	mknod (const char *__path, mode_t __mode, dev_t __dev );
- #endif
- 
-diff --color -ruN newlib-4.5.0.20241231/newlib/libc/include/sys/_pthreadtypes.h newlib-4.5.0.20241231-kos/newlib/libc/include/sys/_pthreadtypes.h
---- newlib-4.5.0.20241231/newlib/libc/include/sys/_pthreadtypes.h	2024-02-10 09:30:58.783247676 -0600
-+++ newlib-4.5.0.20241231-kos/newlib/libc/include/sys/_pthreadtypes.h	2024-02-10 09:31:16.329331366 -0600
+diff --git a/newlib/libc/include/sys/_pthreadtypes.h b/newlib/libc/include/sys/_pthreadtypes.h
+index 75e9e1c..b9a1f07 100644
+--- a/newlib/libc/include/sys/_pthreadtypes.h
++++ b/newlib/libc/include/sys/_pthreadtypes.h
 @@ -22,16 +22,6 @@
  
  #include <sys/sched.h>
@@ -71,7 +69,7 @@ diff --color -ruN newlib-4.5.0.20241231/newlib/libc/include/sys/_pthreadtypes.h 
  /* P1003.1c/D10, p. 118-119 */
  #define PTHREAD_SCOPE_PROCESS 0
  #define PTHREAD_SCOPE_SYSTEM  1
-@@ -46,36 +36,6 @@
+@@ -46,36 +36,6 @@ typedef __uint32_t pthread_t;            /* identify a thread */
  #define PTHREAD_CREATE_DETACHED 0
  #define PTHREAD_CREATE_JOINABLE  1
  
@@ -108,7 +106,7 @@ diff --color -ruN newlib-4.5.0.20241231/newlib/libc/include/sys/_pthreadtypes.h 
  #if defined(_POSIX_THREAD_PROCESS_SHARED)
  /* NOTE: P1003.1c/D10, p. 81 defines following values for process_shared.  */
  
-@@ -143,91 +103,6 @@
+@@ -143,91 +103,6 @@ typedef struct {
  
  #endif /* !defined(_UNIX98_THREAD_MUTEX_ATTRIBUTES) */
  
@@ -200,10 +198,24 @@ diff --color -ruN newlib-4.5.0.20241231/newlib/libc/include/sys/_pthreadtypes.h 
 -#endif /* defined(_POSIX_READER_WRITER_LOCKS) */
 -
  #endif /* ! _SYS__PTHREADTYPES_H_ */
-diff --color -ruN newlib-4.5.0.20241231/newlib/libc/include/sys/signal.h newlib-4.5.0.20241231-kos/newlib/libc/include/sys/signal.h
---- newlib-4.5.0.20241231/newlib/libc/include/sys/signal.h	2024-02-10 09:30:58.783247676 -0600
-+++ newlib-4.5.0.20241231-kos/newlib/libc/include/sys/signal.h	2024-02-10 09:31:16.329331366 -0600
-@@ -223,9 +223,11 @@
+diff --git a/newlib/libc/include/sys/_types.h b/newlib/libc/include/sys/_types.h
+index d1112d5..dfde2b0 100644
+--- a/newlib/libc/include/sys/_types.h
++++ b/newlib/libc/include/sys/_types.h
+@@ -69,7 +69,7 @@ typedef __uint32_t __id_t;
+ 
+ #ifndef __machine_ino_t_defined
+ #if (defined(__i386__) && (defined(GO32) || defined(__MSDOS__))) || \
+-    defined(__sparc__) || defined(__SPU__)
++    defined(__sparc__) || defined(__SPU__) || defined(__sh__)
+ typedef unsigned long __ino_t;
+ #else
+ typedef unsigned short __ino_t;
+diff --git a/newlib/libc/include/sys/signal.h b/newlib/libc/include/sys/signal.h
+index 96bf978..a05ee24 100644
+--- a/newlib/libc/include/sys/signal.h
++++ b/newlib/libc/include/sys/signal.h
+@@ -223,9 +223,11 @@ int sigpause (int);
  int sigaltstack (const stack_t *__restrict, stack_t *__restrict);
  #endif
  
@@ -215,22 +227,25 @@ diff --color -ruN newlib-4.5.0.20241231/newlib/libc/include/sys/signal.h newlib-
  
  #if __POSIX_VISIBLE >= 199309
  
-diff --color -ruN newlib-4.5.0.20241231/newlib/libc/include/sys/_types.h newlib-4.5.0.20241231-kos/newlib/libc/include/sys/_types.h
---- newlib-4.5.0.20241231/newlib/libc/include/sys/_types.h	2024-02-10 09:30:58.783247676 -0600
-+++ newlib-4.5.0.20241231-kos/newlib/libc/include/sys/_types.h	2024-02-10 09:31:16.329331366 -0600
-@@ -69,7 +69,7 @@
+diff --git a/newlib/libc/include/sys/stat.h b/newlib/libc/include/sys/stat.h
+index b4e27f2..60165b2 100644
+--- a/newlib/libc/include/sys/stat.h
++++ b/newlib/libc/include/sys/stat.h
+@@ -142,8 +142,8 @@ int	mkfifo (const char *__path, mode_t __mode );
+ int	stat (const char *__restrict __path, struct stat *__restrict __sbuf );
+ mode_t	umask (mode_t __mask );
  
- #ifndef __machine_ino_t_defined
- #if (defined(__i386__) && (defined(GO32) || defined(__MSDOS__))) || \
--    defined(__sparc__) || defined(__SPU__)
-+    defined(__sparc__) || defined(__SPU__) || defined(__sh__)
- typedef unsigned long __ino_t;
- #else
- typedef unsigned short __ino_t;
-diff --color -ruN newlib-4.5.0.20241231/newlib/libc/ssp/stack_protector.c newlib-4.5.0.20241231-kos/newlib/libc/ssp/stack_protector.c
---- newlib-4.5.0.20241231/newlib/libc/ssp/stack_protector.c	2024-02-10 09:30:58.832247910 -0600
-+++ newlib-4.5.0.20241231-kos/newlib/libc/ssp/stack_protector.c	2024-02-10 09:31:16.329331366 -0600
-@@ -32,12 +32,11 @@
+-#if defined (__SPU__) || defined(__rtems__) || defined(__CYGWIN__)
+ int	lstat (const char *__restrict __path, struct stat *__restrict __buf );
++#if defined (__SPU__) || defined(__rtems__) || defined(__CYGWIN__)
+ int	mknod (const char *__path, mode_t __mode, dev_t __dev );
+ #endif
+ 
+diff --git a/newlib/libc/ssp/stack_protector.c b/newlib/libc/ssp/stack_protector.c
+index 5e9d75f..c86a7c4 100644
+--- a/newlib/libc/ssp/stack_protector.c
++++ b/newlib/libc/ssp/stack_protector.c
+@@ -32,12 +32,11 @@ __stack_chk_init (void)
  #endif
  
  void
@@ -244,10 +259,11 @@ diff --color -ruN newlib-4.5.0.20241231/newlib/libc/ssp/stack_protector.c newlib
    _exit (127);
  }
  
-diff --color -ruN newlib-4.5.0.20241231/newlib/libc/stdlib/assert.c newlib-4.5.0.20241231-kos/newlib/libc/stdlib/assert.c
---- newlib-4.5.0.20241231/newlib/libc/stdlib/assert.c	2024-02-10 09:30:58.811247810 -0600
-+++ newlib-4.5.0.20241231-kos/newlib/libc/stdlib/assert.c	2024-02-10 09:31:16.329331366 -0600
-@@ -47,6 +47,8 @@
+diff --git a/newlib/libc/stdlib/assert.c b/newlib/libc/stdlib/assert.c
+index 46ac92b..33cd765 100644
+--- a/newlib/libc/stdlib/assert.c
++++ b/newlib/libc/stdlib/assert.c
+@@ -47,6 +47,8 @@ Supporting OS subroutines required (only if enabled): <<close>>, <<fstat>>,
  #include <stdlib.h>
  #include <stdio.h>
  
@@ -256,7 +272,7 @@ diff --color -ruN newlib-4.5.0.20241231/newlib/libc/stdlib/assert.c newlib-4.5.0
  #ifndef HAVE_ASSERT_FUNC
  /* func can be NULL, in which case no function information is given.  */
  void
-@@ -72,3 +74,7 @@
+@@ -72,3 +74,7 @@ __assert (const char *file,
     __assert_func (file, line, NULL, failedexpr);
    /* NOTREACHED */
  }

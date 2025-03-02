@@ -3,11 +3,11 @@
 
 patch: patch-sh4
 patch-sh4: patch-sh4-binutils patch-sh4-gcc patch-sh4-newlib
-patch-arm: patch-arm-binutils patch-arm-gcc
+patch-arm: patch-arm-binutils patch-arm-gcc patch-arm-newlib
 
 # Ensure that, no matter where we enter, prefix and target are set correctly.
 patch_sh4_targets = patch-sh4-binutils patch-sh4-gcc patch-sh4-newlib
-patch_arm_targets = patch-arm-binutils patch-arm-gcc
+patch_arm_targets = patch-arm-binutils patch-arm-gcc patch-arm-newlib
 
 # Available targets for SH
 $(patch_sh4_targets): target = $(sh_target)
@@ -25,7 +25,7 @@ $(patch_arm_targets): binutils_ver = $(arm_binutils_ver)
 # targets.
 patch_binutils      = patch-sh4-binutils patch-arm-binutils
 patch_gcc           = patch-sh4-gcc patch-arm-gcc
-patch_newlib        = patch-sh4-newlib
+patch_newlib        = patch-sh4-newlib patch-arm-newlib
 
 # Patch
 # Apply sh4 newlib fixups (default is yes and this should be always the case!)
@@ -37,7 +37,8 @@ ifeq (1,$(do_kos_patching))
 
 # Add Build Pre-Requisites for ARM Steps
   build-arm-binutils: patch-arm-binutils
-  build-arm-gcc-pass1: patch-arm-gcc
+  build-arm-gcc-pass1 build-arm-gcc-pass2: patch-arm-gcc
+  build-arm-newlib-only: patch-arm-newlib
 
 # Add Patching Pre-Reqs for GDB
   build_gdb: patch_gdb
@@ -51,6 +52,7 @@ patch-sh4-newlib: fetch-newlib
 # Require ARM downloads before patching
 patch-arm-binutils: fetch-arm-binutils
 patch-arm-gcc: fetch-arm-gcc
+patch-arm-newlib: fetch-newlib
 
 # Copy over required KOS files to SH4 GCC directory before patching
 patch-sh4-gcc: sh-gcc-fixup
@@ -61,8 +63,8 @@ sh-gcc-fixup: fetch-sh-gcc
 	cp $(patches)/gcc/fake-kos.S $(src_dir)/libgcc/config/sh/fake-kos.S
 
 # Copy over required KOS files to newlib directory before patching
-patch-sh4-newlib: sh-newlib-fixup
-sh-newlib-fixup: fetch-newlib
+patch-sh4-newlib patch-arm-newlib: newlib-fixup
+newlib-fixup: fetch-newlib
 	@echo "+++ Copying required KOS files into newlib directory..."
 	cp $(kos_base)/include/sys/lock.h $(src_dir)/newlib/libc/sys/sh/sys
 

@@ -13,49 +13,18 @@
 #include "aica_cmd_iface.h"
 #include "aica.h"
 
-/****************** Timer *******************************************/
+#include <stddef.h>
+#include <string.h>
 
-#define timer (*((volatile uint32 *)AICA_MEM_CLOCK))
+extern volatile unsigned int timer;
+
+/****************** Timer *******************************************/
 
 void timer_wait(uint32 jiffies) {
     uint32 fin = timer + jiffies;
 
     while(timer <= fin)
         ;
-}
-
-/****************** Tiny Libc ***************************************/
-
-#include <stddef.h>
-
-void *memcpy(void *dest, const void *src, size_t count) {
-    uint8 *dest8 = (uint8 *)dest;
-    const uint8 *src8 = (const uint8 *)src;
-    uint32 *dest32;
-    const uint32 *src32;
-
-    /* If both src and dest are 4-byte aligned */
-    if(((uint32)dest & 3) == 0 && ((uint32)src & 3) == 0) {
-        dest32 = (uint32 *)dest;
-        src32 = (const uint32 *)src;
-
-        /* Copy 4-byte chunks */
-        while(count >= 4) {
-            *dest32++ = *src32++;
-            count -= 4;
-        }
-
-        /* Handle remaining bytes (if count was not divisible by 4) */
-        dest8 = (uint8 *)dest32;
-        src8 = (const uint8 *)src32;
-    }
-
-    /* Handle unaligned or remaining bytes */
-    while(count--) {
-        *dest8++ = *src8++;
-    }
-
-    return dest;
 }
 
 /****************** Main Program ************************************/
@@ -135,17 +104,8 @@ uint32 process_one(uint32 tail) {
 
     /* Figure out what type of packet it is */
     switch(pkt->cmd) {
-        case AICA_CMD_NONE:
-            break;
-        case AICA_CMD_PING:
-            /* Not implemented yet */
-            break;
         case AICA_CMD_CHAN:
             process_chn(pkt->cmd_id, (aica_channel_t *)pkt->cmd_data);
-            break;
-        case AICA_CMD_SYNC_CLOCK:
-            /* Reset our timer clock to zero */
-            timer = 0;
             break;
         default:
             /* error */

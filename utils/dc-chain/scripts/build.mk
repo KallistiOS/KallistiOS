@@ -5,8 +5,9 @@ build: build-sh4-done
 build-sh4: build-sh4-gcc
 build-arm: build-arm-gcc
 build-sh4-gcc: build-sh4-gcc-pass2
-build-arm-gcc: build-arm-gcc-pass1
+build-arm-gcc: build-arm-gcc-pass2
 build-sh4-newlib: build-sh4-newlib-only fixup-sh4-newlib
+build-arm-newlib: build-arm-newlib-only
 
 fixup_sh4_newlib_stamp = fixup-sh4-newlib.stamp
 build-sh4-done: build-sh4
@@ -26,11 +27,13 @@ build-sh4-done: build-sh4
 # Ensure that, no matter where we enter, prefix and target are set correctly.
 build_sh4_targets = build-sh4-binutils build-sh4-gcc build-sh4-gcc-pass1 \
                     build-sh4-newlib build-sh4-newlib-only build-sh4-gcc-pass2
-build_arm_targets = build-arm-binutils build-arm-gcc build-arm-gcc-pass1
+build_arm_targets = build-arm-binutils build-arm-gcc build-arm-gcc-pass1 \
+		    build-arm-newlib build-arm-newlib-only build-arm-gcc-pass2
 
 # Available targets for SH
 $(build_sh4_targets): prefix = $(sh_toolchain_path)
 $(build_sh4_targets): target = $(sh_target)
+$(build_sh4_targets): cc_for_target = $(SH_CC_FOR_TARGET)
 $(build_sh4_targets): cpu_configure_args = --with-multilib-list=$(precision_modes) --with-endian=little --with-cpu=$(default_precision)
 $(build_sh4_targets): gcc_ver = $(sh_gcc_ver)
 $(build_sh4_targets): binutils_ver = $(sh_binutils_ver)
@@ -42,6 +45,8 @@ build-sh4-gcc-pass2: fixup-sh4-newlib
 
 # ARM Build Dependencies
 build-arm-gcc-pass1: build-arm-binutils
+build-arm-newlib-only: build-arm-gcc-pass1
+build-arm-gcc-pass2: build-arm-newlib
 
 # SH4 Download Dependencies
 build-sh4-binutils: fetch-sh-binutils
@@ -50,7 +55,8 @@ build-sh4-newlib-only: fetch-newlib
 
 # ARM Download Dependencies
 build-arm-binutils: fetch-arm-binutils
-build-arm-gcc-pass1: fetch-arm-gcc
+build-arm-gcc-pass1 build-arm-gcc-pass2: fetch-arm-gcc
+build-arm-newlib-only: fetch-newlib
 
 # GDB Patch Dependency
 build_gdb: patch_gdb
@@ -71,9 +77,14 @@ endif
 # Available targets for ARM
 $(build_arm_targets): prefix = $(arm_toolchain_path)
 $(build_arm_targets): target = $(arm_target)
+$(build_arm_targets): cc_for_target = $(arm_target)-$(GCC)
 $(build_arm_targets): cpu_configure_args = --with-arch=armv4 --with-mode=arm --disable-multilib
 $(build_arm_targets): gcc_ver = $(arm_gcc_ver)
 $(build_arm_targets): binutils_ver = $(arm_binutils_ver)
+
+# Override languages list and threads model for ARM
+build-arm-gcc-pass2: pass2_languages = c
+build-arm-gcc-pass2: thread_model = no
 
 # To avoid code repetition, we use the same commands for both architectures.
 # But we can't create a single target called 'build-binutils' for both sh4 and
@@ -81,5 +92,5 @@ $(build_arm_targets): binutils_ver = $(arm_binutils_ver)
 # targets.
 build_binutils      = build-sh4-binutils  build-arm-binutils
 build_gcc_pass1     = build-sh4-gcc-pass1 build-arm-gcc-pass1
-build_newlib        = build-sh4-newlib-only
-build_gcc_pass2     = build-sh4-gcc-pass2
+build_newlib        = build-sh4-newlib-only build-arm-newlib-only
+build_gcc_pass2     = build-sh4-gcc-pass2 build-arm-gcc-pass2

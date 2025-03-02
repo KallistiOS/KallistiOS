@@ -7,8 +7,11 @@
 #  Adapted from Marcus' AICA example among a few other sources =)
 
 .text
+.section .text.init
+
 .globl	arm_main
 .globl	jps
+.globl  timer
 
 # Meaningless but makes the linker shut up
 .globl	reset
@@ -62,7 +65,7 @@ fiq_busreq_loop:
 fiq_timer:
 	# Type 2 is timer interrupt. Increment timer variable.
 	# Update the next line to AICA_MEM_CLOCK if you change AICA_CMD_IFACE
-	mov	r8,#0x21000
+	ldr	r8,=timer
 	ldr	r9,[r8]
 	add	r9,r9,#1
 	str	r9,[r8]
@@ -92,6 +95,8 @@ fiq_done:
 	#ldmdb	sp!, {r0-r14}
 	subs	pc,r14,#4
 
+timer:
+	.long	0x00000000
 intreq:
 	.long	0x00802d00
 intclr:
@@ -107,11 +112,22 @@ jps:
 
 start:
 	# Setup a basic stack, disable IRQ, enable FIQ
-	mov	sp,#0xb000
+	ldr	sp,=__stack
+
 	mrs	r10,CPSR
 	orr	r10,r10,#0x80
 	bic	r10,r10,#0x40
 	msr	CPSR_all,r10
+
+	# Clear BSS section
+	ldr     r2,=__bss_end
+	ldr     r1,=__bss_start
+	mov     r0,#0
+
+clear_bss_loop:
+	str	r0,[r2,#-4]!
+	cmp	r2,r1
+	bhi	clear_bss_loop
 
 	# Call the main for the SPU
 	bl	arm_main
