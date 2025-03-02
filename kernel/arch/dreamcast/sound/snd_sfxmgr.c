@@ -20,10 +20,9 @@
 #include <kos/fs.h>
 #include <arch/irq.h>
 #include <dc/spu.h>
+#include <dc/sound/cmd_iface.h>
 #include <dc/sound/sound.h>
 #include <dc/sound/sfxmgr.h>
-
-#include "arm/aica_cmd_iface.h"
 
 struct snd_effect;
 LIST_HEAD(selist, snd_effect);

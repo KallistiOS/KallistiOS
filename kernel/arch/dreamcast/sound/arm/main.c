@@ -10,7 +10,7 @@
 
 */
 
-#include "aica_cmd_iface.h"
+#include <cmd_iface.h>
 #include "aica.h"
 
 /****************** Timer *******************************************/

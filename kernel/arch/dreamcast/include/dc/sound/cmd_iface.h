@@ -12,6 +12,16 @@
 
 #include "aica_comm.h"
 
+struct aica_header {
+    struct aica_queue   *cmd_queue;
+    struct aica_queue   *resp_queue;
+    struct aica_channel *channels;
+    void                *buffer;
+    unsigned int        buffer_size;
+};
+
+extern struct aica_header aica_header;
+
 /* This is where our SH-4/AICA comm variables go... */
 
 /* 0x000000 - 0x010000 are reserved for the program */
@@ -39,9 +49,5 @@
 
 /* Quick access to the AICA channels */
 #define AICA_CHANNEL(x)     (AICA_MEM_CHANNELS + (x) * sizeof(aica_channel_t))
-
-/* Channels status register bits */
-#define AICA_CHANNEL_KEYONEX   0x8000
-#define AICA_CHANNEL_KEYONB    0x4000
 
 #endif  /* __ARM_AICA_CMD_IFACE_H */
