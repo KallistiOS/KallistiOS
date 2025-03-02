@@ -236,7 +236,6 @@ static void snd_pcm16_split_unaligned(void *buffer, void *left, void *right, siz
 }
 
 void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t size) {
-    g2_ctx_t ctx;
     uint32_t i;
     uint16_t *s = (uint16_t *)data;
     size_t remain = size;
@@ -253,7 +252,7 @@ void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t 
     sq_lock((void *)left);
     dcache_pref_block(s);
 
-    ctx = g2_lock();
+    g2_lock_scoped();
 
     /* Make sure the FIFOs are empty */
     g2_fifo_wait();
@@ -315,7 +314,6 @@ void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t 
             right += 2;
         }
     }
-    g2_unlock(ctx);
 }
 
 /* Initialize stream system */
