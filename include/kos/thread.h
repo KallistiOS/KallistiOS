@@ -608,25 +608,27 @@ int *thd_get_errno(kthread_t *thd);
 */
 struct _reent *thd_get_reent(kthread_t *thd);
 
-
 /** \brief       Retrieves the thread's elapsed CPU time
     \relatesalso kthread_t
 
     Returns the amount of active CPU time the thread has consumed in
     nanoseconds.
 
-    \warning
-    The implementation uses perf_cntr_timer_ns() internally when maintaining
-    this CPU time, so disabling or clearing the nanosecond timer will
-    interfere with this time keeping.
+    \param thd          The thead to retrieve the CPU time for.
 
-    \param thd          The thead to retrieve the CPU time for
-
-    \retval             Total utilized CPU time in nanoseconds OR
-                        0 if the nanosecond timer of the performance
-                        counters has been disturbed.
+    \retval             Total utilized CPU time in nanoseconds.
 */
 uint64_t thd_get_cpu_time(kthread_t *thd);
+
+/** \brief       Retrieves all thread's elapsed CPU time
+    \relatesalso kthread_t
+
+    Returns the amount of active CPU time all threads have consumed in
+    nanoseconds.
+
+    \retval             Total utilized CPU time in nanoseconds.
+*/
+uint64_t thd_get_total_cpu_time(void);
 
 /** \brief   Change threading modes.
 
@@ -728,6 +730,14 @@ int thd_detach(kthread_t *thd);
 int thd_each(int (*cb)(kthread_t *thd, void *user_data), void *data);
 
 /** \brief   Print a list of all threads using the given print function.
+
+    Each thread is printed with its address, tid, priority level, flags,
+    it's wait timeout (if sleeping) the amount of cpu time usage in ns
+    (this includes time in IRQs), state, and name.
+
+    In addition a '[system]' item is provided that represents time since
+    initialization not spent in a thread (context switching, updating
+    wait timeouts, etc).
 
     \param  pf              The printf-like function to print with.
 

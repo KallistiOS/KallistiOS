@@ -12,18 +12,14 @@
 #include <sys/reent.h>
 #include <sys/times.h>
 #include <arch/timer.h>
-#include <dc/perfctr.h>
 
 int _times_r(struct _reent *re, struct tms *tmsbuf) {
     (void)re;
 
     if(tmsbuf) {
-        /*  User CPU Time:
-            Use performance counters when available. */
+        /*  User CPU Time: */
         const uint64_t precise_clock =
-            (perf_cntr_timer_enabled())?
-                (perf_cntr_timer_ns() / 1000) : 
-                 timer_us_gettime64();
+                  timer_us_gettime64();
 
         /* We have to protect against overflow. */
         tmsbuf->tms_utime =
