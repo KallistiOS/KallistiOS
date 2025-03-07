@@ -10,96 +10,70 @@
 
 */
 
-#include "aica_cmd_iface.h"
-#include "aica.h"
-
-/****************** Timer *******************************************/
-
-#define timer (*((volatile uint32 *)AICA_MEM_CLOCK))
-
-void timer_wait(uint32 jiffies) {
-    uint32 fin = timer + jiffies;
-
-    while(timer <= fin)
-        ;
-}
-
-/****************** Tiny Libc ***************************************/
+#include <aicaos/aica.h>
+#include <aicaos/task.h>
 
 #include <stddef.h>
+#include <string.h>
 
-void *memcpy(void *dest, const void *src, size_t count) {
-    uint8 *dest8 = (uint8 *)dest;
-    const uint8 *src8 = (const uint8 *)src;
-    uint32 *dest32;
-    const uint32 *src32;
+#include "aica_cmd_iface.h"
 
-    /* If both src and dest are 4-byte aligned */
-    if(((uint32)dest & 3) == 0 && ((uint32)src & 3) == 0) {
-        dest32 = (uint32 *)dest;
-        src32 = (const uint32 *)src;
-
-        /* Copy 4-byte chunks */
-        while(count >= 4) {
-            *dest32++ = *src32++;
-            count -= 4;
-        }
-
-        /* Handle remaining bytes (if count was not divisible by 4) */
-        dest8 = (uint8 *)dest32;
-        src8 = (const uint8 *)src32;
-    }
-
-    /* Handle unaligned or remaining bytes */
-    while(count--) {
-        *dest8++ = *src8++;
-    }
-
-    return dest;
-}
+extern volatile unsigned int timer;
 
 /****************** Main Program ************************************/
 
 /* Our SH-4 interface (statically placed memory structures) */
 volatile aica_queue_t   *q_cmd = (volatile aica_queue_t *)AICA_MEM_CMD_QUEUE;
 volatile aica_queue_t   *q_resp = (volatile aica_queue_t *)AICA_MEM_RESP_QUEUE;
-volatile aica_channel_t *chans = (volatile aica_channel_t *)AICA_MEM_CHANNELS;
 
 /* Process a CHAN command */
-void process_chn(uint32 chn, aica_channel_t *chndat) {
+void process_chn(aica_cmd_t *pkt, aica_channel_t *chndat) {
+    uint32_t cmd_id = pkt->cmd_id;
+    struct aica_channel *chn = (aica_channel_t *)AICA_CHANNEL(cmd_id);
+    unsigned int flags;
+
     switch(chndat->cmd & AICA_CH_CMD_MASK) {
         case AICA_CH_CMD_NONE:
             break;
         case AICA_CH_CMD_START:
 
             if(chndat->cmd & AICA_CH_START_SYNC) {
-                aica_sync_play(chn);
+                aica_sync_play(cmd_id);
             }
             else {
-                memcpy((void*)(chans + chn), chndat, sizeof(aica_channel_t));
-                chans[chn].pos = 0;
-                aica_play(chn, chndat->cmd & AICA_CH_START_DELAY);
+                memcpy(chn, chndat, sizeof(aica_channel_t));
+                chn->pos = 0;
+                flags = 0;
+
+                if (chn->loop)
+                    flags |= AICA_PLAY_LOOP;
+                if (chndat->cmd & AICA_CH_START_DELAY)
+                    flags |= AICA_PLAY_DELAY;
+
+                aica_play(cmd_id, (void *)chn->base, chn->type,
+                          chn->loopstart, chn->loopend, chn->freq,
+                          chn->vol, chn->pan, flags);
             }
 
             break;
         case AICA_CH_CMD_STOP:
-            aica_stop(chn);
+            aica_stop(cmd_id);
             break;
         case AICA_CH_CMD_UPDATE:
 
             if(chndat->cmd & AICA_CH_UPDATE_SET_FREQ) {
-                chans[chn].freq = chndat->freq;
-                aica_freq(chn);
+                chn->freq = chndat->freq;
+                aica_freq(cmd_id, chn->freq);
             }
 
             if(chndat->cmd & AICA_CH_UPDATE_SET_VOL) {
-                chans[chn].vol = chndat->vol;
-                aica_vol(chn);
+                chn->vol = chndat->vol;
+                aica_vol(cmd_id, chn->vol);
             }
 
             if(chndat->cmd & AICA_CH_UPDATE_SET_PAN) {
-                chans[chn].pan = chndat->pan;
-                aica_pan(chn);
+                chn->pan = chndat->pan;
+                aica_pan(cmd_id, chn->pan);
             }
 
             break;
@@ -110,12 +84,12 @@ void process_chn(uint32 chn, aica_channel_t *chndat) {
 }
 
 /* Process one packet of queue data */
-uint32 process_one(uint32 tail) {
-    uint32      pktdata[AICA_CMD_MAX_SIZE], *pdptr, size, i;
-    volatile uint32 * src;
+uint32_t process_one(uint32_t tail) {
+    uint32_t pktdata[AICA_CMD_MAX_SIZE], *pdptr, size, i;
+    volatile uint32_t *src;
     aica_cmd_t  * pkt;
 
-    src = (volatile uint32 *)(q_cmd->data + tail);
+    src = (volatile uint32_t *)(q_cmd->data + tail);
     pkt = (aica_cmd_t *)pktdata;
     pdptr = pktdata;
 
@@ -129,23 +103,14 @@ uint32 process_one(uint32 tail) {
     for(i = 0; i < size; i++) {
         *pdptr++ = *src++;
 
-        if((uint32)src >= (q_cmd->data + q_cmd->size))
-            src = (volatile uint32 *)q_cmd->data;
+        if((uint32_t)src >= (q_cmd->data + q_cmd->size))
+            src = (volatile uint32_t *)q_cmd->data;
     }
 
     /* Figure out what type of packet it is */
     switch(pkt->cmd) {
-        case AICA_CMD_NONE:
-            break;
-        case AICA_CMD_PING:
-            /* Not implemented yet */
-            break;
         case AICA_CMD_CHAN:
-            process_chn(pkt->cmd_id, (aica_channel_t *)pkt->cmd_data);
-            break;
-        case AICA_CMD_SYNC_CLOCK:
-            /* Reset our timer clock to zero */
-            timer = 0;
+            process_chn(pkt, (aica_channel_t *)pkt->cmd_data);
             break;
         default:
             /* error */
@@ -158,7 +123,7 @@ uint32 process_one(uint32 tail) {
 /* Look for an available request in the command queue; if one is there
    then process it and move the tail pointer. */
 void process_cmd_queue(void) {
-    uint32      head, tail, tsloc, ts;
+    uint32_t head, tail, tsloc, ts;
 
     /* Grab these values up front in case SH-4 changes head */
     head = q_cmd->head;
@@ -173,7 +138,7 @@ void process_cmd_queue(void) {
         if(tsloc >= q_cmd->size)
             tsloc -= q_cmd->size;
 
-        ts = *((volatile uint32*)(q_cmd->data + tsloc));
+        ts = *((volatile uint32_t *)(q_cmd->data + tsloc));
 
         if(ts > 0 && ts >= timer)
             return;
@@ -191,7 +156,7 @@ void process_cmd_queue(void) {
     }
 }
 
-int arm_main(void) {
+int main(int argc, char **argv) {
     int i;
 
     /* Setup our queues */
@@ -207,20 +172,17 @@ int arm_main(void) {
     q_resp->process_ok = 1;
     q_resp->valid = 1;
 
-    /* Initialize the AICA part of the SPU */
-    aica_init();
-
     /* Wait for a command */
     for(; ;) {
         /* Update channel position counters */
         for(i = 0; i < 64; i++)
-            aica_get_pos(i);
+            ((aica_channel_t *)AICA_CHANNEL(i))->pos = aica_get_pos(i);
 
         /* Check for a command */
         if(q_cmd->process_ok)
             process_cmd_queue();
 
         /* Little delay to prevent memory lock */
-        timer_wait(10);
+        task_sleep(ms_to_ticks(10));
     }
 }
