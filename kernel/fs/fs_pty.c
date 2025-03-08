@@ -850,19 +850,19 @@ static vfs_handler_t vh = {
 static int initted = 0;
 
 /* Initialize the file system */
-int fs_pty_init(void) {
+void fs_pty_init(void) {
     int cm, cs;
     int tm, ts;
 
     if(initted)
-        return 0;
+        return;
 
     /* Init our list of ptys */
     LIST_INIT(&ptys);
     pty_id_highest = -1;
 
     if(nmmgr_handler_add(&vh.nmmgr) < 0)
-        return -1;
+        return;
 
     mutex_init(&list_mutex, MUTEX_TYPE_NORMAL);
     initted = 1;
@@ -876,16 +876,14 @@ int fs_pty_init(void) {
     fs_pty_create(NULL, 0, &tm, &ts);
     fs_close(tm);
     fs_close(ts);
-
-    return 0;
 }
 
 /* De-init the file system */
-int fs_pty_shutdown(void) {
+void fs_pty_shutdown(void) {
     ptyhalf_t *n, *c;
 
     if(!initted)
-        return 0;
+        return;
 
     mutex_lock_irqsafe(&list_mutex);
 
@@ -908,6 +906,4 @@ int fs_pty_shutdown(void) {
     mutex_destroy(&list_mutex);
 
     initted = 0;
-
-    return 0;
 }

@@ -804,26 +804,26 @@ int fs_ramdisk_detach(const char * fn, void ** obj, size_t * size) {
 }
 
 /* Initialize the file system */
-int fs_ramdisk_init(void) {
+void fs_ramdisk_init(void) {
     /* Test if initted */
     if(rootdir != NULL)
-        return -1;
+        return;
 
     /* Create an empty root dir */
     if(!(rootdir = (rd_dir_t *)malloc(sizeof(rd_dir_t))))
-        return -1;
+        return;
 
     root = (rd_file_t *)malloc(sizeof(rd_file_t));
     if(root == NULL) {
         free(rootdir);
-        return -1;
+        return;
     }
 
     root->name = strdup("/");
     if(root->name == NULL) {
         free(root);
         free(rootdir);
-        return -1;
+        return;
     }
 
     root->size = 0;
@@ -842,16 +842,16 @@ int fs_ramdisk_init(void) {
     mutex_init(&rd_mutex, MUTEX_TYPE_NORMAL);
 
     /* Register with VFS */
-    return nmmgr_handler_add(&vh.nmmgr);
+    nmmgr_handler_add(&vh.nmmgr);
 }
 
 /* De-init the file system */
-int fs_ramdisk_shutdown(void) {
+void fs_ramdisk_shutdown(void) {
     rd_file_t *f1, *f2;
 
     /* Test if initted */
     if(rootdir == NULL)
-        return -1;
+        return;
 
     /* For now assume there's only the root dir, since mkdir and
        rmdir aren't even implemented... */
@@ -870,5 +870,5 @@ int fs_ramdisk_shutdown(void) {
     free(root);
 
     mutex_destroy(&rd_mutex);
-    return nmmgr_handler_remove(&vh.nmmgr);
+    nmmgr_handler_remove(&vh.nmmgr);
 }
