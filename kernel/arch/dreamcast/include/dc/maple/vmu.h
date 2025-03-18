@@ -254,7 +254,6 @@ int vmu_get_icon_shape(maple_device_t *dev, uint8_t *icon_shape);
 
     \retval MAPLE_EOK       On success.
     \retval MAPLE_EAGAIN    If the command couldn't be sent. Try again later.
-    \retval MAPLE_ETIMEOUT  If the command timed out while blocking.
 
     \sa vmu_draw_lcd_rotated, vmu_draw_lcd_xbm, vmu_set_icon
 */
@@ -276,7 +275,6 @@ int vmu_draw_lcd(maple_device_t *dev, const void *bitmap);
     \param  bitmap          The bitmap to show.
     \retval MAPLE_EOK       On success.
     \retval MAPLE_EAGAIN    If the command couldn't be sent. Try again later.
-    \retval MAPLE_ETIMEOUT  If the command timed out while blocking.
 
     \sa vmu_draw_lcd, vmu_draw_lcd_xbm, vmu_set_icon
 */
@@ -293,7 +291,6 @@ int vmu_draw_lcd_rotated(maple_device_t *dev, const void *bitmap);
 
     \retval MAPLE_EOK       On success.
     \retval MAPLE_EAGAIN    If the command couldn't be sent. Try again later.
-    \retval MAPLE_ETIMEOUT  If the command timed out while blocking.
 
     \sa vmu_draw_lcd, vmu_set_icon
 */
@@ -414,7 +411,6 @@ int vmu_block_write(maple_device_t *dev, uint16_t blocknum, const uint8_t *buffe
 
     \retval MAPLE_EOK       On success.
     \retval MAPLE_EAGAIN    If the command couldn't be sent. Try again later.
-    \retval MAPLE_ETIMEOUT  If the command timed out while blocking.
 
     \sa vmu_beep_waveform
 */
@@ -476,7 +472,6 @@ int vmu_beep_raw(maple_device_t *dev, uint32_t beep);
 
     \retval MAPLE_EOK           On success.
     \retval MAPLE_EAGAIN        If the command couldn't be sent. Try again later.
-    \retval MAPLE_ETIMEOUT      If the command timed out while blocking.
 */
 int vmu_beep_waveform(maple_device_t *dev, uint8_t period1, uint8_t duty_cycle1, uint8_t period2, uint8_t duty_cycle2);
 
