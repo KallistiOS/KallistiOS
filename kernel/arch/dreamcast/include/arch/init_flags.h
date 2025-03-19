@@ -90,15 +90,19 @@ __BEGIN_DECLS
 /** \brief Default init flags for the Dreamcast. */
 #define INIT_DEFAULT_ARCH   (INIT_MAPLE_ALL | INIT_CDROM)
 
-#define INIT_CONTROLLER     0x00001000  /**< \brief Enable Controller maple driver */
-#define INIT_KEYBOARD       0x00002000  /**< \brief Enable Keyboard maple driver */
-#define INIT_MOUSE          0x00004000  /**< \brief Enable Mouse maple driver */
-#define INIT_LIGHTGUN       0x00008000  /**< \brief Enable Lightgun maple driver */
-#define INIT_VMU            0x00010000  /**< \brief Enable VMU maple driver */
-#define INIT_PURUPURU       0x00020000  /**< \brief Enable Puru Puru maple driver */
-#define INIT_SIP            0x00040000  /**< \brief Enable Sound input maple driver */
-#define INIT_DREAMEYE       0x00080000  /**< \brief Enable DreamEye maple driver */
-#define INIT_MAPLE_ALL      0x000ff000  /**< \brief Enable all Maple drivers */
+/** \brief Enable all Maple peripheral drivers. */
+#define INIT_MAPLE_ALL      (INIT_CONTROLLER | INIT_KEYBOARD | INIT_MOUSE    | \
+                             INIT_LIGHTGUN   | INIT_VMU      | INIT_PURUPURU | \
+                             INIT_SIP        | INIT_DREAMEYE)
+
+#define INIT_CONTROLLER     0x00004000  /**< \brief Enable Controller maple driver */
+#define INIT_KEYBOARD       0x00008000  /**< \brief Enable Keyboard maple driver */
+#define INIT_MOUSE          0x00010000  /**< \brief Enable Mouse maple driver */
+#define INIT_LIGHTGUN       0x00020000  /**< \brief Enable Lightgun maple driver */
+#define INIT_VMU            0x00040000  /**< \brief Enable VMU maple driver */
+#define INIT_PURUPURU       0x00080000  /**< \brief Enable Puru Puru maple driver */
+#define INIT_SIP            0x00100000  /**< \brief Enable Sound input maple driver */
+#define INIT_DREAMEYE       0x00200000  /**< \brief Enable DreamEye maple driver */
 
 #define INIT_CDROM          0x00100000  /**< \brief Enable CD-ROM support */
 
