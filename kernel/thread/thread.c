@@ -372,10 +372,10 @@ int thd_remove_from_runnable(kthread_t *thd) {
    followed by .TBSS, very carefully ensuring alignment of each
    subchunk. 
 */
-static void *thd_create_tls_data(void) {
+static bool thd_create_tls_data(kthread_t *nt) {
     size_t align, tdata_offset, tdata_end, tbss_offset, 
         tbss_end, align_rem, tls_size;
-    
+
     tcbhead_t *tcbhead;
     void *tdata_segment, *tbss_segment;
 
@@ -415,9 +415,12 @@ static void *thd_create_tls_data(void) {
     if(align_rem)
         tls_size += (align - align_rem);
 
-    /* Allocate combined chunk with calculated size and alignment.  */
+    /* Allocate combined chunk with calculated size and alignment. */
     tcbhead = aligned_alloc(align, tls_size);
-    assert(tcbhead);    
+
+    if(!tcbhead)
+        return false;
+
     assert(!((uintptr_t)tcbhead % 8)); 
 
     /* Since we aren't using either member within it, zero out tcbhead. */
@@ -427,7 +430,7 @@ static void *thd_create_tls_data(void) {
     if(tdata_size) { 
         tdata_segment = (uint8_t *)tcbhead + tdata_offset;
 
-        /* Verify proper alignment. */   
+        /* Verify proper alignment. */
         assert(!((uintptr_t)tdata_segment % tdata_align));
 
         /* Initialize tdata_segment with .tdata bytes from ELF. */
@@ -440,13 +443,16 @@ static void *thd_create_tls_data(void) {
 
         /* Verify proper alignment. */
         assert(!((uintptr_t)tbss_segment % tbss_align));
-           
+
         /* Zero-initialize tbss_segment. */
         memset(tbss_segment, 0, tbss_size);
     }
 
-    /* Return segment head: this is what GBR points to. */
-    return tcbhead;
+    /* Set Thread Pointer and store starting value. */
+    nt->context.gbr = tcbhead;
+    nt->tcbhead = tcbhead;
+
+    return true;
 }
 
 /* New thread function; given a routine address, it will create a
@@ -509,9 +515,6 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
 
             nt->stack_size = real_attr.stack_size;
 
-            /* Create static TLS data */
-            nt->tcbhead = thd_create_tls_data();
-
             /* Populate the context */
             params[0] = (uint32_t)routine;
             params[1] = (uint32_t)param;
@@ -521,8 +524,14 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
                                ((uint32_t)nt->stack) + nt->stack_size,
                                (uint32_t)thd_birth, params, 0);
 
-            /* Set Thread Pointer */
-            nt->context.gbr = (uint32_t)nt->tcbhead;
+            /* Create static TLS data */
+            if(!thd_create_tls_data(nt)) {
+                if(nt->flags & THD_OWNS_STACK)
+                    free(nt->stack);
+                free(nt);
+                return NULL;
+            }
+
             nt->tid = tid;
             nt->real_prio = real_attr.prio;
             nt->prio = real_attr.prio;
