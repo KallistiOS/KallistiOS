@@ -10,53 +10,15 @@
 
 */
 
-#include "aica_cmd_iface.h"
-#include "aica.h"
-
-/****************** Timer *******************************************/
-
-#define timer (*((volatile uint32 *)AICA_MEM_CLOCK))
-
-void timer_wait(uint32 jiffies) {
-    uint32 fin = timer + jiffies;
-
-    while(timer <= fin)
-        ;
-}
-
-/****************** Tiny Libc ***************************************/
+#include <aicaos/aica.h>
+#include <aicaos/task.h>
 
 #include <stddef.h>
+#include <string.h>
 
-void *memcpy(void *dest, const void *src, size_t count) {
-    uint8 *dest8 = (uint8 *)dest;
-    const uint8 *src8 = (const uint8 *)src;
-    uint32 *dest32;
-    const uint32 *src32;
+#include "aica_cmd_iface.h"
 
-    /* If both src and dest are 4-byte aligned */
-    if(((uint32)dest & 3) == 0 && ((uint32)src & 3) == 0) {
-        dest32 = (uint32 *)dest;
-        src32 = (const uint32 *)src;
-
-        /* Copy 4-byte chunks */
-        while(count >= 4) {
-            *dest32++ = *src32++;
-            count -= 4;
-        }
-
-        /* Handle remaining bytes (if count was not divisible by 4) */
-        dest8 = (uint8 *)dest32;
-        src8 = (const uint8 *)src32;
-    }
-
-    /* Handle unaligned or remaining bytes */
-    while(count--) {
-        *dest8++ = *src8++;
-    }
-
-    return dest;
-}
+extern volatile unsigned int timer;
 
 /****************** Main Program ************************************/
 
@@ -191,7 +153,7 @@ void process_cmd_queue(void) {
     }
 }
 
-int arm_main(void) {
+int main(int argc, char **argv) {
     int i;
 
     /* Setup our queues */
@@ -207,20 +169,17 @@ int arm_main(void) {
     q_resp->process_ok = 1;
     q_resp->valid = 1;
 
-    /* Initialize the AICA part of the SPU */
-    aica_init();
-
     /* Wait for a command */
     for(; ;) {
         /* Update channel position counters */
         for(i = 0; i < 64; i++)
-            aica_get_pos(i);
+            chans[i].pos = aica_get_pos(i);
 
         /* Check for a command */
         if(q_cmd->process_ok)
             process_cmd_queue();
 
         /* Little delay to prevent memory lock */
-        timer_wait(10);
+        task_sleep(ms_to_ticks(10));
     }
 }
