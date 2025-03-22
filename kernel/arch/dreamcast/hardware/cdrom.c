@@ -439,6 +439,7 @@ void cdrom_init(void) {
     volatile uint32_t *react = (uint32_t *)(G1_ATA_BUS_PROTECTION | MEM_AREA_P2_BASE);
     volatile uint32_t *state = (uint32_t *)(G1_ATA_BUS_PROTECTION_STATUS | MEM_AREA_P2_BASE);
     volatile uint32_t *bios = (uint32_t *)MEM_AREA_P2_BASE;
+    int status, disc_type;
 
     mutex_lock(&_g1_ata_mutex);
 
@@ -472,6 +473,14 @@ void cdrom_init(void) {
 
     unlock_dma_memory();
     mutex_unlock(&_g1_ata_mutex);
+
+    /* Wait for drive to no longer be busy before continuing with
+       reinit (GDEMU clones require this). On a real GDROM drive,
+       this check adds ~33us to init time. */
+    do {
+        cdrom_get_status(&status, &disc_type);
+        thd_pass();
+    } while(status == CD_STATUS_BUSY);
 
     cdrom_reinit();
 }
