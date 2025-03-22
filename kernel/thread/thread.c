@@ -565,6 +565,28 @@ static void thd_update_cpu_time(kthread_t *thd) {
     thd->cpu_time.scheduled = ns;
 }
 
+/* Helper function that sets a thread being scheduled */
+static inline void thd_schedule_inner(kthread_t *thd) {
+    thd_remove_from_runnable(thd);
+
+    thd_update_cpu_time(thd);
+
+    thd_current = thd;
+    _impure_ptr = &thd->thd_reent;
+    thd->state = STATE_RUNNING;
+
+    /* Make sure the thread hasn't underrun its stack */
+    if(thd_current->stack && thd_current->stack_size) {
+        if(CONTEXT_SP(thd_current->context) < (ptr_t)(thd_current->stack)) {
+            thd_pslist(printf);
+            thd_pslist_queue(printf);
+            assert_msg(0, "Thread stack underrun");
+        }
+    }
+
+    irq_set_context(&thd_current->context);
+}
+
 /* Thread scheduler; this function will find a new thread to run when a
    context switch is requested. No work is done in here except to change
    out the thd_current variable contents. Assumed that we are in an
@@ -633,24 +655,7 @@ void thd_schedule(bool front_of_line, uint64_t now) {
 
     /* We should now have a runnable thread, so remove it from the
        run queue and switch to it. */
-    thd_remove_from_runnable(thd);
-
-    thd_update_cpu_time(thd);
-
-    thd_current = thd;
-    _impure_ptr = &thd->thd_reent;
-    thd->state = STATE_RUNNING;
-
-    /* Make sure the thread hasn't underrun its stack */
-    if(thd_current->stack && thd_current->stack_size) {
-        if(CONTEXT_SP(thd_current->context) < (ptr_t)(thd_current->stack)) {
-            thd_pslist(printf);
-            thd_pslist_queue(printf);
-            assert_msg(0, "Thread stack underrun");
-        }
-    }
-
-    irq_set_context(&thd_current->context);
+    thd_schedule_inner(thd);
 }
 
 /* Temporary priority boosting function: call this from within an interrupt
@@ -679,14 +684,7 @@ void thd_schedule_next(kthread_t *thd) {
         thd_add_to_runnable(thd_current, 0);
     }
 
-    thd_remove_from_runnable(thd);
-
-    thd_update_cpu_time(thd);
-
-    thd_current = thd;
-    _impure_ptr = &thd->thd_reent;
-    thd_current->state = STATE_RUNNING;
-    irq_set_context(&thd_current->context);
+    thd_schedule_inner(thd);
 }
 
 /* See kos/thread.h for description */
@@ -1030,28 +1028,20 @@ int thd_init(void) {
         return -1;
     }
 
-    kern->state = STATE_RUNNING;
-
-    /* De-scehdule the thread (it's STATE_RUNNING) */
-    thd_remove_from_runnable(kern);
-
-    /* Setup an idle task that is always ready to run, in case everyone
-       else is blocked on something. */
-    thd_idle_thd = thd_create_ex(&idle_attr, thd_idle_task, NULL);
-    thd_idle_thd->state = STATE_READY;
-
-    /* Set up a thread to reap old zombies */
-    sem_init(&thd_reap_sem, 0);
-    thd_create_ex(&reaper_attr, thd_reaper, NULL);
-
     /* Main thread -- the kern thread */
     thd_current = kern;
-    irq_set_context(&kern->context);
+    thd_schedule_inner(kern);
 
     /* Initialize tls */
     arch_tls_init();
 
-    thd_update_cpu_time(thd_current);
+    /* Setup an idle task that is always ready to run, in case everyone
+       else is blocked on something. */
+    thd_idle_thd = thd_create_ex(&idle_attr, thd_idle_task, NULL);
+
+    /* Set up a thread to reap old zombies */
+    sem_init(&thd_reap_sem, 0);
+    thd_create_ex(&reaper_attr, thd_reaper, NULL);
 
     /* Initialize thread sync primitives */
     genwait_init();
