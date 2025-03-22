@@ -149,16 +149,7 @@ typedef enum kthread_state {
     STATE_FINISHED = 0x0004   /**< \brief Finished execution */
 } kthread_state_t;
 
-/** \brief   Thread Control Block Header
 
-    Header preceding the static TLS data segments as defined by
-    the SH-ELF TLS ABI (version 1). This is what the thread pointer 
-    (GBR) points to for compiler access to thread-local data. 
-*/
-typedef struct tcbhead {
-    void *dtv;               /**< \brief Dynamic TLS vector (unused) */
-    uintptr_t pointer_guard; /**< \brief Pointer guard (unused) */
-} tcbhead_t;
 
 /** \brief   Structure describing one running thread.
 
@@ -260,7 +251,7 @@ typedef __attribute__((aligned(32))) struct kthread {
     struct kthread_tls_kv_list tls_list;
 
     /** \brief Compiler-level thread-local storage. */
-    tcbhead_t* tcbhead;
+    void *tls_hnd;
 
     /** \brief  Return value of the thread function.
 
