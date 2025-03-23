@@ -466,8 +466,6 @@ void cdrom_init(void) {
         }
     }
 
-    /* Reset system functions */
-    syscall_gdrom_reset();
     syscall_gdrom_init();
 
     unlock_dma_memory();
