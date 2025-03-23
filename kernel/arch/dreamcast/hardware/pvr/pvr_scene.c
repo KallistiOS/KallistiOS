@@ -280,11 +280,11 @@ int pvr_list_prim(pvr_list_t list, const void *data, size_t size) {
     /* Ensure at least 4-byte alignment. */
     assert(!((uintptr_t)data & 0x3));
 
+    /* Ensure we won't overflow the vertex buffer. */
+    assert(b->ptr[list] + size <= b->size[list]);
+
     memcpy(b->base[list] + b->ptr[list], data, size);
     b->ptr[list] += size;
-
-    /* Ensure we didn't overflow the vertex buffer. */
-    assert(b->ptr[list] <= b->size[list]);
 
     return 0;
 }
