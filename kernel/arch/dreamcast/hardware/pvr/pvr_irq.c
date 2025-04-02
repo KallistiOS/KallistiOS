@@ -81,11 +81,9 @@ void pvr_start_dma(void) {
 }
 
 static void pvr_render_lists(void) {
-    int bufn = pvr_state.view_target ^ 1;
-
     if(pvr_state.ta_busy
        && !pvr_state.render_busy
-       && (!pvr_state.render_completed || pvr_state.to_texture[bufn])
+       && (!pvr_state.render_completed || pvr_state.curr_to_texture)
        && pvr_state.lists_transferred == pvr_state.lists_enabled) {
 
         /* XXX Note:
@@ -102,15 +100,14 @@ static void pvr_render_lists(void) {
         pvr_state.render_busy = 1;
         pvr_sync_stats(PVR_SYNC_RNDSTART);
 
-        // Clear the texture render flag if we had it set.
-        pvr_state.to_texture[bufn] = 0;
-
         // Switch to the clean TA buffer.
         pvr_state.lists_transferred = 0;
         pvr_sync_reg_buffer();
 
         // The TA is no longer busy.
         pvr_state.ta_busy = 0;
+
+        pvr_state.was_to_texture = pvr_state.curr_to_texture;
 
         // Signal the client code to continue onwards.
         genwait_wake_all((void *)&pvr_state.ta_busy);
@@ -127,8 +124,6 @@ void pvr_vblank_handler(uint32 code, void *data) {
     // If the render-done interrupt has fired then we are ready to flip to the
     // new frame buffer.
     if(pvr_state.render_completed) {
-        int bufn = pvr_state.view_target;
-
         //DBG(("view(%d)\n", pvr_state.view_target ^ 1));
 
         // Handle PVR stats
@@ -137,8 +132,7 @@ void pvr_vblank_handler(uint32 code, void *data) {
         // Switch view address to the "good" buffer
         pvr_state.view_target ^= 1;
 
-        if(!pvr_state.to_texture[bufn])
-            pvr_sync_view();
+        pvr_sync_view();
 
         // Clear the render completed flag.
         pvr_state.render_completed = 0;
@@ -174,7 +168,8 @@ void pvr_int_handler(uint32 code, void *data) {
         case ASIC_EVT_PVR_RENDERDONE_TSP:
             //DBG(("irq_renderdone\n"));
             pvr_state.render_busy = 0;
-            pvr_state.render_completed = 1;
+            if (!pvr_state.was_to_texture)
+                pvr_state.render_completed = 1;
             pvr_sync_stats(PVR_SYNC_RNDDONE);
 
             genwait_wake_all((void *)&pvr_state.render_busy);
