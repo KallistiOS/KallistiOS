@@ -28,7 +28,7 @@ repeat handling.
     It seems unreasonable that one might want different repeat
     timings set on each keyboard.
     The values are arbitrary based off a survey of common values. */
-uint16 kbd_repeat_start = 600, kbd_repeat_interval = 20;
+uint16_t kbd_repeat_start = 600, kbd_repeat_interval = 20;
 
 /* Built-in keymaps. */
 #define KBD_NUM_KEYMAPS 8
@@ -364,7 +364,7 @@ static kbd_keymap_t keymaps[KBD_NUM_KEYMAPS] = {
 /* The keyboard queue (global for now) */
 static volatile int kbd_queue_active = 1;
 static volatile int kbd_queue_tail = 0, kbd_queue_head = 0;
-static volatile uint16  kbd_queue[KBD_QUEUE_SIZE];
+static volatile uint16_t  kbd_queue[KBD_QUEUE_SIZE];
 
 /* Turn keyboard queueing on or off. This is mainly useful if you want
    to use the keys for a game where individual keypresses don't mean
@@ -383,7 +383,7 @@ void kbd_set_queue(int active) {
 
     NOTE: We are only calling this within an IRQ context, so operations on
           kbd_state::queue_size are essentially atomic. */
-static int kbd_enqueue(kbd_state_t *state, uint8 keycode, int mods) {
+static int kbd_enqueue(kbd_state_t *state, uint8_t keycode, int mods) {
     static char keymap_noshift[] = {
         /*0*/   0, 0, 0, 0, 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
         'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
@@ -406,7 +406,7 @@ static int kbd_enqueue(kbd_state_t *state, uint8 keycode, int mods) {
         /*53*/  0, '/', '*', '-', '+', 13, '1', '2', '3', '4', '5', '6',
         /*5f*/  '7', '8', '9', '0', '.', 0
     };
-    uint16 ascii = 0;
+    uint16_t ascii = 0;
 
     /* Don't bother with bad keycodes. */
     if(keycode <= 1)
@@ -432,7 +432,7 @@ static int kbd_enqueue(kbd_state_t *state, uint8 keycode, int mods) {
     }
 
     if(ascii == 0)
-        ascii = ((uint16)keycode) << 8;
+        ascii = ((uint16_t)keycode) << 8;
 
     /* Ok... now do the enqueue to the global queue */
     kbd_queue[kbd_queue_head] = ascii;
@@ -463,8 +463,8 @@ int kbd_get_key(void) {
 /* Take a key off of a specific key queue. */
 int kbd_queue_pop(maple_device_t *dev, int xlat) {
     kbd_state_t *state = (kbd_state_t *)dev->status;
-    uint32 rv, mods;
-    uint8 ascii;
+    uint32_t rv, mods;
+    uint8_t ascii;
 
     const int irqs = irq_disable();
 
@@ -488,11 +488,11 @@ int kbd_queue_pop(maple_device_t *dev, int xlat) {
     mods = rv >> 8;
 
     if((mods & KBD_MOD_RALT) || (mods & (KBD_MOD_LCTRL | KBD_MOD_LALT)) == (KBD_MOD_LCTRL | KBD_MOD_LALT))
-        ascii = keymaps[state->region - 1].alt[(uint8)rv];
+        ascii = keymaps[state->region - 1].alt[(uint8_t)rv];
     else if(mods & (KBD_MOD_LSHIFT | KBD_MOD_RSHIFT | (1 << 9)))
-        ascii = keymaps[state->region - 1].shifted[(uint8)rv];
+        ascii = keymaps[state->region - 1].shifted[(uint8_t)rv];
     else
-        ascii = keymaps[state->region - 1].base[(uint8)rv];
+        ascii = keymaps[state->region - 1].base[(uint8_t)rv];
 
     if(ascii)
         return (int)ascii;
@@ -551,7 +551,7 @@ static void kbd_check_poll(maple_frame_t *frm) {
             else if(state->matrix[cond->keys[i]] == KEY_STATE_WAS_PRESSED) {
                 state->matrix[cond->keys[i]] = KEY_STATE_PRESSED;
                 if(state->kbd_repeat_key == cond->keys[i]) {
-                    uint64 time = timer_ms_gettime64();
+                    uint64_t time = timer_ms_gettime64();
                     /* We have passed the prescribed amount of time, and will repeat the key */
                     if(time >= (state->kbd_repeat_timer)) {
                         kbd_enqueue(state, cond->keys[i], mods);
@@ -584,7 +584,7 @@ static void kbd_reply(maple_state_t *st, maple_frame_t *frm) {
     (void)st;
 
     maple_response_t *resp;
-    uint32 *respbuf;
+    uint32_t *respbuf;
     kbd_state_t *state;
     kbd_cond_t *cond;
 
@@ -597,7 +597,7 @@ static void kbd_reply(maple_state_t *st, maple_frame_t *frm) {
     if(resp->response != MAPLE_RESPONSE_DATATRF)
         return;
 
-    respbuf = (uint32 *)resp->data;
+    respbuf = (uint32_t *)resp->data;
 
     if(respbuf[0] != MAPLE_FUNC_KEYBOARD)
         return;
@@ -617,13 +617,13 @@ static void kbd_reply(maple_state_t *st, maple_frame_t *frm) {
 }
 
 static int kbd_poll_intern(maple_device_t *dev) {
-    uint32 * send_buf;
+    uint32_t *send_buf;
 
     if(maple_frame_lock(&dev->frame) < 0)
         return 0;
 
     maple_frame_init(&dev->frame);
-    send_buf = (uint32 *)dev->frame.recv_buf;
+    send_buf = (uint32_t *)dev->frame.recv_buf;
     send_buf[0] = MAPLE_FUNC_KEYBOARD;
     dev->frame.cmd = MAPLE_COMMAND_GETCOND;
     dev->frame.dst_port = dev->port;

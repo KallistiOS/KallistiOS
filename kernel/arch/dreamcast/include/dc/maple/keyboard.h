@@ -291,9 +291,9 @@ static const int MAX_KBD_KEYS   __depr("Please use KBD_MAX_KEYS.") = KBD_MAX_KEY
     \headerfile dc/maple/keyboard.h
 */
 typedef struct kbd_keymap {
-    uint8 base[KBD_MAX_KEYS];
-    uint8 shifted[KBD_MAX_KEYS];
-    uint8 alt[KBD_MAX_KEYS];
+    uint8_t base[KBD_MAX_KEYS];
+    uint8_t shifted[KBD_MAX_KEYS];
+    uint8_t alt[KBD_MAX_KEYS];
 } kbd_keymap_t;
 
 /** \brief   Keyboard raw condition structure.
@@ -304,9 +304,9 @@ typedef struct kbd_keymap {
     \headerfile dc/maple/keyboard.h
 */
 typedef struct {
-    uint8 modifiers;    /**< \brief Bitmask of set modifiers. */
-    uint8 leds;         /**< \brief Bitmask of set LEDs */
-    uint8 keys[MAX_PRESSED_KEYS];      /**< \brief Key codes for currently pressed keys. */
+    uint8_t modifiers;    /**< \brief Bitmask of set modifiers. */
+    uint8_t leds;         /**< \brief Bitmask of set LEDs */
+    uint8_t keys[MAX_PRESSED_KEYS];      /**< \brief Key codes for currently pressed keys. */
 } kbd_cond_t;
 
 /** \brief   Keyboard status structure.
@@ -329,7 +329,7 @@ typedef struct kbd_state {
 
         \see    kbd_keys
     */
-    uint8 matrix[KBD_MAX_KEYS];
+    uint8_t matrix[KBD_MAX_KEYS];
 
     /** \brief  Modifier key status. */
     int shift_keys;
@@ -340,13 +340,13 @@ typedef struct kbd_state {
     /** \brief  Individual keyboard queue.
         You should not access this variable directly. Please use the appropriate
         function to access it. */
-    uint32 key_queue[KBD_QUEUE_SIZE];
+    uint32_t key_queue[KBD_QUEUE_SIZE];
     int queue_tail;                     /**< \brief Key queue tail. */
     int queue_head;                     /**< \brief Key queue head. */
     volatile int queue_len;             /**< \brief Current length of queue. */
 
-    uint8 kbd_repeat_key;           /**< \brief Key that is repeating. */
-    uint64 kbd_repeat_timer;        /**< \brief Time that the next repeat will trigger. */
+    uint8_t kbd_repeat_key;           /**< \brief Key that is repeating. */
+    uint64_t kbd_repeat_timer;        /**< \brief Time that the next repeat will trigger. */
 } kbd_state_t;
 
 /** \brief   Activate or deactivate global key queueing.
