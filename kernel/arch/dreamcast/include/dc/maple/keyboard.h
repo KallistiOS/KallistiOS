@@ -27,6 +27,9 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 #include <dc/maple.h>
+#include <kos/regfield.h>
+
+#include <stdint.h>
 
 /** \defgroup kbd   Keyboard
     \brief          Driver for the Dreamcast's Keyboard Input Device
@@ -51,18 +54,60 @@ __BEGIN_DECLS
 #define KBD_MOD_S2          (1<<7)
 /** @} */
 
-/** \defgroup   kbd_leds    LEDs
-    \brief                  Values for the different keyboard LEDs
-    \ingroup                kbd
+/** \defgroup   kbd_leds_grp    LEDs
+    \brief                      Types associated with keyboard LEDs
+    \ingroup                    kbd
 
-    This is the LEDs that can be turned on and off on the keyboard. This list
-    may not be exhaustive. Think of these sorta like an extension of the
-    modifiers list.
+    LEDs are represented by the kbd_leds_t union type. Each individual LED
+    can be accessed by:
+        1. Directly using a convenience bit field.
+        2. Bitwise `AND` of kbd_leds_t::raw with one of the \ref kbd_led_flags.
+
     @{
 */
-#define KBD_LED_NUMLOCK     (1<<0)
-#define KBD_LED_CAPSLOCK    (1<<1)
-#define KBD_LED_SCRLOCK     (1<<2)
+
+/** \defgroup   kbd_led_flags   Flags
+    \brief                      Keyboard LED flags
+
+    These are the LEDs that can be turned on and off on the keyboard. This list
+    may not be exhaustive. Think of these sort of like an extension of the
+    modifiers list.
+
+    \sa kbd_leds_t::raw
+
+    @{
+*/
+#define KBD_LED_NUMLOCK     BIT(0)    /**< \brief Num Lock LED */
+#define KBD_LED_CAPSLOCK    BIT(1)    /**< \brief Caps Lock LED */
+#define KBD_LED_SCRLOCK     BIT(2)    /**< \brief Scroll Lock LED */
+#define KBD_LED_UNKNOWN1    BIT(3)    /**< \brief Unknown LED 1 */
+#define KBD_LED_UNKNOWN2    BIT(4)    /**< \brief Unknown LED 2 */
+#define KBD_LED_KANA        BIT(5)    /**< \brief Kana LED */
+#define KBD_LED_POWER       BIT(6)    /**< \brief Power LED */
+#define KBD_LED_SHIFT       BIT(7)    /**< \brief Shift LED */
+/** @} */
+
+/** \brief Keyboard LEDs
+
+    Union containing the state of all keyboard LEDs.
+
+    \sa kbd_led_flags, kbd_state_t::leds
+*/
+typedef union kbd_leds {
+    /** \brief Convenience Bitfields */
+    struct {
+        uint8_t num_lock    : 1;    /**< \brief Num Lock LED */
+        uint8_t caps_lock   : 1;    /**< \brief Caps Lock LED */
+        uint8_t scroll_lock : 1;    /**< \brief Scroll Lock LED */
+        uint8_t unknown1    : 1;    /**< \brief Unknown LED 1 */
+        uint8_t unknown2    : 1;    /**< \brief Unknown LED 2 */
+        uint8_t kana        : 1;    /**< \brief Kana LED */
+        uint8_t power       : 1;    /**< \brief Power LED */
+        uint8_t shift       : 1;    /**< \brief Shift LED */
+    };
+    uint8_t raw;    /**< \brief Packed 8-bit unsigned integer of bitflags */
+} kbd_leds_t;
+
 /** @} */
 
 /** \defgroup   kbd_keys    Keys
@@ -361,8 +406,8 @@ int kbd_get_key(void) __deprecated;
 
     If the xlat parameter is zero, the lower 8 bits of the returned value will
     be the raw key code. The next 8 bits will be the modifier keys that were
-    down when the key was pressed (a bitfield of KBD_MOD_* values). The next 3
-    bits will be the lock key status (a bitfield of KBD_LED_* values).
+    down when the key was pressed (a bitfield of KBD_MOD_* values). The next 8
+    bits will be the lock key/LED statuses (kbd_leds_t).
 
     \param  dev             The keyboard device to read from.
     \param  xlat            Set to non-zero to do key translation. Otherwise,
