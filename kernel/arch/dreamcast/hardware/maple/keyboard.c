@@ -566,10 +566,10 @@ static void kbd_check_poll(maple_frame_t *frm) {
     /* Now normalize the key matrix */
     /* If it was determined no keys are pressed, wipe the matrix */
     if(state->matrix[KBD_KEY_NONE] == KEY_STATE_PRESSED)
-        memset (state->matrix, KEY_STATE_NONE, MAX_KBD_KEYS);
+        memset (state->matrix, KEY_STATE_NONE, KBD_MAX_KEYS);
     /* Otherwise, walk through the whole matrix */
     else    {
-        for(i = 0; i < MAX_KBD_KEYS; i++) {
+        for(i = 0; i < KBD_MAX_KEYS; i++) {
             if(state->matrix[i] == KEY_STATE_NONE) continue;
 
             else if(state->matrix[i] == KEY_STATE_WAS_PRESSED) state->matrix[i] = KEY_STATE_NONE;

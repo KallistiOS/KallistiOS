@@ -222,7 +222,10 @@ __BEGIN_DECLS
     \ingroup kbd
     This is a hardware constant. The define prevents the magic number '256' from appearing.
 **/
-#define MAX_KBD_KEYS 256
+#define KBD_MAX_KEYS 256
+
+/* Short-term compatibility helper. */
+static const int MAX_KBD_KEYS   __depr("Please use KBD_MAX_KEYS.") = KBD_MAX_KEYS;
 
 /** \brief   Size of a keyboard queue.
     \ingroup kbd
@@ -245,9 +248,9 @@ __BEGIN_DECLS
     \headerfile dc/maple/keyboard.h
 */
 typedef struct kbd_keymap {
-    uint8 base[MAX_KBD_KEYS];
-    uint8 shifted[MAX_KBD_KEYS];
-    uint8 alt[MAX_KBD_KEYS];
+    uint8 base[KBD_MAX_KEYS];
+    uint8 shifted[KBD_MAX_KEYS];
+    uint8 alt[KBD_MAX_KEYS];
 } kbd_keymap_t;
 
 /** \brief   Keyboard raw condition structure.
@@ -283,7 +286,7 @@ typedef struct kbd_state {
 
         \see    kbd_keys
     */
-    uint8 matrix[MAX_KBD_KEYS];
+    uint8 matrix[KBD_MAX_KEYS];
 
     /** \brief  Modifier key status. */
     int shift_keys;
