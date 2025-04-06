@@ -178,22 +178,20 @@ __BEGIN_DECLS
 #define KBD_KEY_S3              0x65
 /** @} */
 
-/** \defgroup   kbd_regions Region Codes
-    \brief                  Region codes for the Dreamcast keyboard
-    \ingroup                kbd
+/** \brief      Region Codes for the Dreamcast keyboard
+    \ingroup    kbd
 
-    This is the list of possible values for the "region" field in the
-    kbd_state_t structure.
-    @{
+    This is the list of possible values for kbd_state_t::region.
 */
-#define KBD_REGION_JP       1           /**< \brief Japanese keyboard */
-#define KBD_REGION_US       2           /**< \brief US keyboard */
-#define KBD_REGION_UK       3           /**< \brief UK keyboard */
-#define KBD_REGION_DE       4           /**< \brief German keyboard */
-#define KBD_REGION_FR       5           /**< \brief French keyboard */
-#define KBD_REGION_IT       6           /**< \brief Italian keyboard (not supported yet) */
-#define KBD_REGION_ES       7           /**< \brief Spanish keyboard */
-/** @} */
+typedef enum kbd_region {
+    KBD_REGION_JP = 1, /**< \brief Japanese keyboard */
+    KBD_REGION_US = 2, /**< \brief US keyboard */
+    KBD_REGION_UK = 3, /**< \brief UK keyboard */
+    KBD_REGION_DE = 4, /**< \brief German keyboard */
+    KBD_REGION_FR = 5, /**< \brief French keyboard */
+    KBD_REGION_IT = 6, /**< \brief Italian keyboard (not supported yet) */
+    KBD_REGION_ES = 7  /**< \brief Spanish keyboard */
+} kbd_region_t;
 
 /** \defgroup   key_states  Key States
     \brief                  States each key can be in.
@@ -292,7 +290,7 @@ typedef struct kbd_state {
     int shift_keys;
 
     /** \brief  Keyboard type/region. */
-    int region;
+    kbd_region_t region;
 
     /** \brief  Individual keyboard queue.
         You should not access this variable directly. Please use the appropriate
