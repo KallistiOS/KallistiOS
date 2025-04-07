@@ -1,13 +1,18 @@
 #include <kos.h>
+#include <stdlib.h>
+
+/* Display constants */
+#define SCREEN_WIDTH        640
+#define SCREEN_HEIGHT       480
 
 void kb_test(void) {
     maple_device_t *cont, *kbd;
     cont_state_t *state;
-    int k, x = 20, y = 20 + 24;
+    int k, x = 20, y = 20 + BFONT_HEIGHT;
 
     printf("Now doing keyboard test\n");
 
-    while(1) {
+    while(true) {
         /* Query for the first detected controller */
         if((cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER))) {
             /* Fetch controller button state structure. */
@@ -32,23 +37,29 @@ void kb_test(void) {
             return;
         } */
 
-        /* Get queued keys */
-        while((k = kbd_queue_pop(kbd, 1)) != -1) {
-            if(k == 27) {
+        /* Keep popping keys while there are more enqueued. */
+        while((k = kbd_queue_pop(kbd, true)) != KBD_QUEUE_END) {
+            /* Quit if ESC key is pressed. */
+            if(k == '\e') {
                 printf("ESC pressed\n");
                 return;
             }
 
+            /* Log when special keys are pressed. */
             if(k > 0xff)
                 printf("Special key %04x\n", k);
 
-            if(k != 13) {
-                bfont_draw(vram_s + y * 640 + x, 640, 0, k);
-                x += 12;
+            /* Handle every key that isn't the RETURN key. */
+            if(k != '\r') {
+                /* Draw the key we just pressed. */
+                bfont_draw(vram_s + y * SCREEN_WIDTH + x, SCREEN_WIDTH, 0, k);
+
+                /* Advance the cursor horizontally. */
+                x += BFONT_THIN_WIDTH;
             }
             else {
                 x = 20;
-                y += 24;
+                y += BFONT_HEIGHT;
             }
         }
 
@@ -59,15 +70,15 @@ void kb_test(void) {
 int main(int argc, char **argv) {
     int x, y;
 
-    for(y = 0; y < 480; y++)
-        for(x = 0; x < 640; x++) {
+    for(y = 0; y < SCREEN_HEIGHT; y++)
+        for(x = 0; x < SCREEN_WIDTH; x++) {
             int c = (x ^ y) & 255;
-            vram_s[y * 640 + x] = ((c >> 3) << 12)
-                                  | ((c >> 2) << 5)
-                                  | ((c >> 3) << 0);
+            vram_s[y * SCREEN_WIDTH + x] = ((c >> 3) << 12)
+                                         | ((c >> 2) << 5)
+                                         | ((c >> 3) << 0);
         }
 
     kb_test();
 
-    return 0;
+    return EXIT_SUCCESS;
 }
