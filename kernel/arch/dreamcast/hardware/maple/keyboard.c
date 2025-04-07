@@ -10,6 +10,9 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+
+#include <kos/dbglog.h>
+
 #include <arch/timer.h>
 #include <dc/maple.h>
 #include <dc/maple/keyboard.h>
@@ -661,14 +664,17 @@ static int kbd_attach(maple_driver_t *drv, maple_device_t *dev) {
     /* Maple functions are enumerated, from MSB, to determine which functions
        are on each device. The only one above the keyboard function is lightgun.
        Only if it is ALSO a lightgun, will the keyboard function be second. */
-    if(dev->info.functions&MAPLE_FUNC_LIGHTGUN) d = 1;
+    if(dev->info.functions & MAPLE_FUNC_LIGHTGUN)
+        d = 1;
 
     /* Retrieve the region data */
     state->region = dev->info.function_data[d] & 0xFF;
 
     /* Unrecognized keyboards will appear as US keyboards... */
-    if(state->region > KBD_NUM_KEYMAPS)
+    if(!state->region || state->region > KBD_NUM_KEYMAPS) {
+        dbglog(DBG_ERROR, "Unknown Keyboard region %u\n", state->region);
         state->region = KBD_REGION_US;
+    }
 
     /* Make sure all the queue variables are set up properly... */
     state->queue_tail = state->queue_head = state->queue_len = 0;
