@@ -3,6 +3,7 @@
    dc/maple/keyboard.h
    Copyright (C) 2000-2002 Jordan DeLong and Megan Potter
    Copyright (C) 2012 Lawrence Sebald
+   Copyright (C) 2025 Falco Girgis
 
 */
 
@@ -17,6 +18,7 @@
     \author Jordan DeLong
     \author Megan Potter
     \author Lawrence Sebald
+    \author Falco Girgis
 */
 
 #ifndef __DC_MAPLE_KEYBOARD_H
@@ -348,6 +350,59 @@ typedef struct kbd_state {
     uint8_t kbd_repeat_key;           /**< \brief Key that is repeating. */
     uint64_t kbd_repeat_timer;        /**< \brief Time that the next repeat will trigger. */
 } kbd_state_t;
+
+/** \defgroup kbd_polling   State Polling
+    \brief                  Frame-based polling for keyboard input
+    \ingroup                kbd
+
+    One method of checking for key input is to simply poll
+    kbd_state_t::matrix for the desired key states each frame.
+
+    First, lets grab a pointer to the kbd_state_t:
+
+        kbd_state_t *kbd = kbd_get_state(device);
+
+    Then let's "move" every frame an arrow key is held down:
+
+        if(kbd->matrix[KBD_KEY_LEFT] == KEY_STATE_PRESSED)
+            printf("Moving left!\n");
+        if(kbd->matrix[KBD_KEY_RIGHT] == KEY_STATE_PRESSED)
+            printf("Moving right!\n");
+        if(kbd->matrix[KBD_KEY_UP] == KEY_STATE_PRESSED)
+            printf("Moving up!\n");
+        if(kbd->matrix[KBD_KEY_DOWN] == KEY_STATE_PRESSED)
+            printf("Moving down!\n");
+
+    Finally, let's charge an "attack" incrementing the charge for each
+    frame that the key is held and resetting when the key is released:
+
+        if(kbd->matrix[KBD_KEY_SPACE] == KEY_STATE_PRESSED)
+            charge++;
+        if(kbd->matrix[KBD_KEY_SPACE] == KEY_STATE_WAS_PRESSED) {
+            printf("Releasing a charged attack of %i!\n", charge);
+            charge = 0;
+        }
+
+    @{
+*/
+
+/** \brief Retrieves the keyboard state from a maple device
+
+    Accessor method for safely retrieving a kbd_state_t from a maple_device_t
+    of a `MAPLE_FUNC_KEYBOARD` type. This function also checks for whether
+    the given device is actually a keyboard and for whether it is currently
+    valid.
+
+    \param  device          Handle corresponding to a `MAPLE_FUNC_KEYBOARD`
+                            device.
+
+    \retval kbd_state_t*    A pointer to the internal keyboard state on success.
+    \retval NULL            On failure.
+
+*/
+kbd_state_t *kbd_get_state(maple_device_t *device);
+
+/** @} */
 
 /** \brief   Pop a key off a specific keyboard's queue.
     \ingroup kbd

@@ -460,6 +460,19 @@ int kbd_get_key(void) {
     return rv;
 }
 
+kbd_state_t *kbd_get_state(maple_device_t *device) {
+    if(!device)
+        return NULL;
+
+    if(!device->status_valid)
+        return NULL;
+
+    if(!(device->info.functions & MAPLE_FUNC_KEYBOARD))
+        return NULL;
+
+    return (kbd_state_t *)device->status;
+}
+
 /* Take a key off of a specific key queue. */
 int kbd_queue_pop(maple_device_t *dev, int xlat) {
     kbd_state_t *state = (kbd_state_t *)dev->status;
