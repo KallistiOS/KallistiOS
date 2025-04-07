@@ -93,7 +93,7 @@ __BEGIN_DECLS
 
     Union containing the state of all keyboard LEDs.
 
-    \sa kbd_led_flags, kbd_state_t::leds
+    \sa kbd_led_flags, kbd_cond_t::leds
 */
 typedef union kbd_leds {
     /** \brief Convenience Bitfields */
@@ -257,6 +257,178 @@ typedef enum kbd_region {
 #define KEY_STATE_PRESSED     2
 /** @} */
 
+/** \defgroup kbd_input     Querying for Input
+    \brief                  Various methods for checking keyboard input
+
+    There are 2 different ways to check for input with the keyboard API:
+
+    Mechanism             | Description
+    ----------------------|--------------------------------------------
+    \ref kbd_polling      |Manual checks each key state every frame
+    \ref kbd_queue        |Monitor for new key press events every frame
+
+    @{
+*/
+
+/** \defgroup kbd_polling   State Polling
+    \brief                  Frame-based polling for keyboard input
+
+    One method of checking for key input is to simply poll
+    kbd_state_t::matrix for the desired key states each frame.
+
+    First, lets grab a pointer to the kbd_state_t:
+
+        kbd_state_t *kbd = kbd_get_state(device);
+
+    Then let's "move" every frame an arrow key is held down:
+
+        if(kbd->matrix[KBD_KEY_LEFT] == KEY_STATE_PRESSED)
+            printf("Moving left!\n");
+        if(kbd->matrix[KBD_KEY_RIGHT] == KEY_STATE_PRESSED)
+            printf("Moving right!\n");
+        if(kbd->matrix[KBD_KEY_UP] == KEY_STATE_PRESSED)
+            printf("Moving up!\n");
+        if(kbd->matrix[KBD_KEY_DOWN] == KEY_STATE_PRESSED)
+            printf("Moving down!\n");
+
+    Finally, let's charge an "attack" incrementing the charge for each
+    frame that the key is held and resetting when the key is released:
+
+        if(kbd->matrix[KBD_KEY_SPACE] == KEY_STATE_PRESSED)
+            charge++;
+        if(kbd->matrix[KBD_KEY_SPACE] == KEY_STATE_WAS_PRESSED) {
+            printf("Releasing a charged attack of %i!\n", charge);
+            charge = 0;
+        }
+
+    @{
+*/
+
+/** \brief Retrieves the keyboard state from a maple device
+
+    Accessor method for safely retrieving a kbd_state_t from a maple_device_t
+    of a `MAPLE_FUNC_KEYBOARD` type. This function also checks for whether
+    the given device is actually a keyboard and for whether it is currently
+    valid.
+
+    \param  device          Handle corresponding to a `MAPLE_FUNC_KEYBOARD`
+                            device.
+
+    \retval kbd_state_t*    A pointer to the internal keyboard state on success.
+    \retval NULL            On failure.
+
+*/
+kbd_state_t *kbd_get_state(maple_device_t *device);
+
+/** @} */
+
+/** \defgroup kbd_queue    Queue Monitoring
+    \brief                 Monitor queue for key press events.
+
+    \par Popping from the Queue
+    One method of checking for key input is to use the internal key press
+    queue. This is most frequently used when keyboard input is used within
+    a text processing context, which is only concerned with individual key
+    press events, rather than the frame-by-frame state.
+
+    \par
+    We simply pop keys off of the queue in a loop, until the queue is empty:
+
+        int k;
+
+        while((k = kbd_queue_pop(device, 1)) != -1)
+            printf("Key pressed: %c!\n", (char)k);
+
+    \par Repeated Presses
+    As with a text processor, a key which has been held down for a duration of
+    time will generate periodic key press events which will be pushed onto the
+    queue.
+
+    @{
+*/
+
+/** \brief   Size of a keyboard queue.
+
+    Each keyboard queue will hold this many elements. Once the queue fills, no
+    new elements will be placed on the queue. As long as you check the queue
+    relatively frequently, the default of 16 should be plenty.
+
+    \note   This <strong>MUST</strong> be a power of two.
+*/
+#define KBD_QUEUE_SIZE 16
+
+/** \brief   Pop a key off a specific keyboard's queue.
+
+    This function pops the front element off of the specified keyboard queue,
+    and returns the value of that key to the caller.
+
+    If the xlat parameter is non-zero and the key represents an ISO-8859-1
+    character, that is the value that will be returned from this function.
+    Otherwise if xlat is non-zero, it will be the raw key code, shifted up by 8
+    bits.
+
+    If the xlat parameter is zero, the lower 8 bits of the returned value will
+    be the raw key code. The next 8 bits will be the modifier keys that were
+    down when the key was pressed (a bitfield of KBD_MOD_* values). The next 8
+    bits will be the lock key/LED statuses (kbd_leds_t).
+
+    \param  dev             The keyboard device to read from.
+    \param  xlat            Set to non-zero to do key translation. Otherwise,
+                            you'll simply get the raw key value. Raw key values
+                            are not mapped at all, so you are responsible for
+                            figuring out what it is by the region.
+
+    \return                 The value at the front of the queue, or -1 if there
+                            are no keys in the queue.
+*/
+int kbd_queue_pop(maple_device_t *dev, int xlat);
+
+/** \brief   Activate or deactivate global key queueing.
+    \deprecated
+
+    This function will turn the internal keyboard queueing on or off. Note that
+    there is only one queue for the whole system, no matter how many keyboards
+    are attached, and the queue is of fairly limited length. Turning queueing
+    off is useful (for instance) in a game where individual keypresses don't
+    mean as much as having the keys up or down does.
+
+    You can clear the queue (without popping all the keys off) by setting the
+    active value to a different value than it was.
+
+    The queue is by default on, unless you turn it off.
+
+    \param  active          Set to non-zero to activate the queue.
+    \note                   The global queue does not account for non-US
+                            keyboard layouts and is deprecated. Please use the
+                            individual queues instead for future code.
+*/
+void kbd_set_queue(int active) __deprecated;
+
+/** \brief   Pop a key off the global keyboard queue.
+    \deprecated
+
+    This function pops the front off of the keyboard queue, and returns the
+    value to the caller. The value returned will be the ASCII value of the key
+    pressed (accounting for the shift keys being pressed).
+
+    If a key does not have an ASCII value associated with it, the raw key code
+    will be returned, shifted up by 8 bits.
+
+    \return                 The value at the front of the queue, or -1 if there
+                            are no keys in the queue or queueing is off.
+    \note                   This function does not account for non-US keyboard
+                            layouts properly (for compatibility with old code),
+                            and is deprecated. Use the individual keyboard
+                            queues instead to properly account for non-US
+                            keyboards.
+    \see                    kbd_queue_pop()
+*/
+int kbd_get_key(void) __deprecated;
+
+/** @} */
+
+/** @} */
+
 /** \brief   Maximum number of keys the DC can read simultaneously.
     \ingroup kbd
     This is a hardware constant. The define prevents the magic number '6' from appearing.
@@ -271,17 +443,6 @@ typedef enum kbd_region {
 
 /* Short-term compatibility helper. */
 static const int MAX_KBD_KEYS   __depr("Please use KBD_MAX_KEYS.") = KBD_MAX_KEYS;
-
-/** \brief   Size of a keyboard queue.
-    \ingroup kbd
-
-    Each keyboard queue will hold this many elements. Once the queue fills, no
-    new elements will be placed on the queue. As long as you check the queue
-    relatively frequently, the default of 16 should be plenty.
-
-    \note   This <strong>MUST</strong> be a power of two.
-*/
-#define KBD_QUEUE_SIZE 16
 
 /** \brief   Keyboard keymap.
     \ingroup kbd
@@ -350,130 +511,6 @@ typedef struct kbd_state {
     uint8_t kbd_repeat_key;           /**< \brief Key that is repeating. */
     uint64_t kbd_repeat_timer;        /**< \brief Time that the next repeat will trigger. */
 } kbd_state_t;
-
-/** \defgroup kbd_polling   State Polling
-    \brief                  Frame-based polling for keyboard input
-    \ingroup                kbd
-
-    One method of checking for key input is to simply poll
-    kbd_state_t::matrix for the desired key states each frame.
-
-    First, lets grab a pointer to the kbd_state_t:
-
-        kbd_state_t *kbd = kbd_get_state(device);
-
-    Then let's "move" every frame an arrow key is held down:
-
-        if(kbd->matrix[KBD_KEY_LEFT] == KEY_STATE_PRESSED)
-            printf("Moving left!\n");
-        if(kbd->matrix[KBD_KEY_RIGHT] == KEY_STATE_PRESSED)
-            printf("Moving right!\n");
-        if(kbd->matrix[KBD_KEY_UP] == KEY_STATE_PRESSED)
-            printf("Moving up!\n");
-        if(kbd->matrix[KBD_KEY_DOWN] == KEY_STATE_PRESSED)
-            printf("Moving down!\n");
-
-    Finally, let's charge an "attack" incrementing the charge for each
-    frame that the key is held and resetting when the key is released:
-
-        if(kbd->matrix[KBD_KEY_SPACE] == KEY_STATE_PRESSED)
-            charge++;
-        if(kbd->matrix[KBD_KEY_SPACE] == KEY_STATE_WAS_PRESSED) {
-            printf("Releasing a charged attack of %i!\n", charge);
-            charge = 0;
-        }
-
-    @{
-*/
-
-/** \brief Retrieves the keyboard state from a maple device
-
-    Accessor method for safely retrieving a kbd_state_t from a maple_device_t
-    of a `MAPLE_FUNC_KEYBOARD` type. This function also checks for whether
-    the given device is actually a keyboard and for whether it is currently
-    valid.
-
-    \param  device          Handle corresponding to a `MAPLE_FUNC_KEYBOARD`
-                            device.
-
-    \retval kbd_state_t*    A pointer to the internal keyboard state on success.
-    \retval NULL            On failure.
-
-*/
-kbd_state_t *kbd_get_state(maple_device_t *device);
-
-/** @} */
-
-/** \brief   Pop a key off a specific keyboard's queue.
-    \ingroup kbd
-
-    This function pops the front element off of the specified keyboard queue,
-    and returns the value of that key to the caller.
-
-    If the xlat parameter is non-zero and the key represents an ISO-8859-1
-    character, that is the value that will be returned from this function.
-    Otherwise if xlat is non-zero, it will be the raw key code, shifted up by 8
-    bits.
-
-    If the xlat parameter is zero, the lower 8 bits of the returned value will
-    be the raw key code. The next 8 bits will be the modifier keys that were
-    down when the key was pressed (a bitfield of KBD_MOD_* values). The next 8
-    bits will be the lock key/LED statuses (kbd_leds_t).
-
-    \param  dev             The keyboard device to read from.
-    \param  xlat            Set to non-zero to do key translation. Otherwise,
-                            you'll simply get the raw key value. Raw key values
-                            are not mapped at all, so you are responsible for
-                            figuring out what it is by the region.
-
-    \return                 The value at the front of the queue, or -1 if there
-                            are no keys in the queue.
-*/
-int kbd_queue_pop(maple_device_t *dev, int xlat);
-
-/** \brief   Activate or deactivate global key queueing.
-    \ingroup kbd
-    \deprecated
-
-    This function will turn the internal keyboard queueing on or off. Note that
-    there is only one queue for the whole system, no matter how many keyboards
-    are attached, and the queue is of fairly limited length. Turning queueing
-    off is useful (for instance) in a game where individual keypresses don't
-    mean as much as having the keys up or down does.
-
-    You can clear the queue (without popping all the keys off) by setting the
-    active value to a different value than it was.
-
-    The queue is by default on, unless you turn it off.
-
-    \param  active          Set to non-zero to activate the queue.
-    \note                   The global queue does not account for non-US
-                            keyboard layouts and is deprecated. Please use the
-                            individual queues instead for future code.
-*/
-void kbd_set_queue(int active) __deprecated;
-
-/** \brief   Pop a key off the global keyboard queue.
-    \ingroup kbd
-    \deprecated
-
-    This function pops the front off of the keyboard queue, and returns the
-    value to the caller. The value returned will be the ASCII value of the key
-    pressed (accounting for the shift keys being pressed).
-
-    If a key does not have an ASCII value associated with it, the raw key code
-    will be returned, shifted up by 8 bits.
-
-    \return                 The value at the front of the queue, or -1 if there
-                            are no keys in the queue or queueing is off.
-    \note                   This function does not account for non-US keyboard
-                            layouts properly (for compatibility with old code),
-                            and is deprecated. Use the individual keyboard
-                            queues instead to properly account for non-US
-                            keyboards.
-    \see                    kbd_queue_pop()
-*/
-int kbd_get_key(void) __deprecated;
 
 /* \cond */
 /* Init / Shutdown */
