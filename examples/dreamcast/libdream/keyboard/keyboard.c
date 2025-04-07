@@ -8,25 +8,21 @@ void kb_test(void) {
     printf("Now doing keyboard test\n");
 
     while(1) {
-        cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
+        /* Query for the first detected controller */
+        if((cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER))) {
+            /* Fetch controller button state structure. */
+            state = maple_dev_status(cont);
 
-        if(!cont) continue;
+            /* Quit if start is pressed on the controller. */
+            if(state->start) {
+                printf("Pressed start!\n");
+                return;
+            }
+        }
 
         kbd = maple_enum_type(0, MAPLE_FUNC_KEYBOARD);
 
         if(!kbd) continue;
-
-        /* Check for start on the controller */
-        state = (cont_state_t *)maple_dev_status(cont);
-
-        if(!state) {
-            return;
-        }
-
-        if(state->buttons & CONT_START) {
-            printf("Pressed start\n");
-            return;
-        }
 
         thd_sleep(10);
 
