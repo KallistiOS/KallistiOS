@@ -112,118 +112,118 @@ typedef union kbd_leds {
 
 /** @} */
 
-/** \defgroup   kbd_keys    Keys
-    \brief                  Values representing the various keyboard keys
+/** \brief Raw Keyboard Key Identifiers
     \ingroup                kbd
 
     This is the list of keys that are on the keyboard that may be pressed. The
     keyboard returns keys in this format.
 
+    \note
     These are the raw keycodes returned by the US keyboard, and thus only cover
-    the keys on US keyboards.
-    @{
+    the keys on US keyboards (even though they can be used with other keyboards).
 */
-#define KBD_KEY_NONE            0x00
-#define KBD_KEY_ERROR           0x01
-#define KBD_KEY_ERR2            0x02
-#define KBD_KEY_ERR3            0x03
-#define KBD_KEY_A               0x04
-#define KBD_KEY_B               0x05
-#define KBD_KEY_C               0x06
-#define KBD_KEY_D               0x07
-#define KBD_KEY_E               0x08
-#define KBD_KEY_F               0x09
-#define KBD_KEY_G               0x0a
-#define KBD_KEY_H               0x0b
-#define KBD_KEY_I               0x0c
-#define KBD_KEY_J               0x0d
-#define KBD_KEY_K               0x0e
-#define KBD_KEY_L               0x0f
-#define KBD_KEY_M               0x10
-#define KBD_KEY_N               0x11
-#define KBD_KEY_O               0x12
-#define KBD_KEY_P               0x13
-#define KBD_KEY_Q               0x14
-#define KBD_KEY_R               0x15
-#define KBD_KEY_S               0x16
-#define KBD_KEY_T               0x17
-#define KBD_KEY_U               0x18
-#define KBD_KEY_V               0x19
-#define KBD_KEY_W               0x1a
-#define KBD_KEY_X               0x1b
-#define KBD_KEY_Y               0x1c
-#define KBD_KEY_Z               0x1d
-#define KBD_KEY_1               0x1e
-#define KBD_KEY_2               0x1f
-#define KBD_KEY_3               0x20
-#define KBD_KEY_4               0x21
-#define KBD_KEY_5               0x22
-#define KBD_KEY_6               0x23
-#define KBD_KEY_7               0x24
-#define KBD_KEY_8               0x25
-#define KBD_KEY_9               0x26
-#define KBD_KEY_0               0x27
-#define KBD_KEY_ENTER           0x28
-#define KBD_KEY_ESCAPE          0x29
-#define KBD_KEY_BACKSPACE       0x2a
-#define KBD_KEY_TAB             0x2b
-#define KBD_KEY_SPACE           0x2c
-#define KBD_KEY_MINUS           0x2d
-#define KBD_KEY_PLUS            0x2e
-#define KBD_KEY_LBRACKET        0x2f
-#define KBD_KEY_RBRACKET        0x30
-#define KBD_KEY_BACKSLASH       0x31
-#define KBD_KEY_SEMICOLON       0x33
-#define KBD_KEY_QUOTE           0x34
-#define KBD_KEY_TILDE           0x35
-#define KBD_KEY_COMMA           0x36
-#define KBD_KEY_PERIOD          0x37
-#define KBD_KEY_SLASH           0x38
-#define KBD_KEY_CAPSLOCK        0x39
-#define KBD_KEY_F1              0x3a
-#define KBD_KEY_F2              0x3b
-#define KBD_KEY_F3              0x3c
-#define KBD_KEY_F4              0x3d
-#define KBD_KEY_F5              0x3e
-#define KBD_KEY_F6              0x3f
-#define KBD_KEY_F7              0x40
-#define KBD_KEY_F8              0x41
-#define KBD_KEY_F9              0x42
-#define KBD_KEY_F10             0x43
-#define KBD_KEY_F11             0x44
-#define KBD_KEY_F12             0x45
-#define KBD_KEY_PRINT           0x46
-#define KBD_KEY_SCRLOCK         0x47
-#define KBD_KEY_PAUSE           0x48
-#define KBD_KEY_INSERT          0x49
-#define KBD_KEY_HOME            0x4a
-#define KBD_KEY_PGUP            0x4b
-#define KBD_KEY_DEL             0x4c
-#define KBD_KEY_END             0x4d
-#define KBD_KEY_PGDOWN          0x4e
-#define KBD_KEY_RIGHT           0x4f
-#define KBD_KEY_LEFT            0x50
-#define KBD_KEY_DOWN            0x51
-#define KBD_KEY_UP              0x52
-#define KBD_KEY_PAD_NUMLOCK     0x53
-#define KBD_KEY_PAD_DIVIDE      0x54
-#define KBD_KEY_PAD_MULTIPLY    0x55
-#define KBD_KEY_PAD_MINUS       0x56
-#define KBD_KEY_PAD_PLUS        0x57
-#define KBD_KEY_PAD_ENTER       0x58
-#define KBD_KEY_PAD_1           0x59
-#define KBD_KEY_PAD_2           0x5a
-#define KBD_KEY_PAD_3           0x5b
-#define KBD_KEY_PAD_4           0x5c
-#define KBD_KEY_PAD_5           0x5d
-#define KBD_KEY_PAD_6           0x5e
-#define KBD_KEY_PAD_7           0x5f
-#define KBD_KEY_PAD_8           0x60
-#define KBD_KEY_PAD_9           0x61
-#define KBD_KEY_PAD_0           0x62
-#define KBD_KEY_PAD_PERIOD      0x63
-#define KBD_KEY_S3              0x65
-/** @} */
+typedef enum __packed kbd_key {
+    KBD_KEY_NONE         = 0x00, /**< \brief No key */
+    KBD_KEY_ERROR        = 0x01, /**< \brief ERROR_ROLLOVER */
+    KBD_KEY_ERR2         = 0x02, /**< \brief Unknown error */
+    KBD_KEY_ERR3         = 0x03, /**< \brief Unknown error */
+    KBD_KEY_A            = 0x04, /**< \brief A key */
+    KBD_KEY_B            = 0x05, /**< \brief B key */
+    KBD_KEY_C            = 0x06, /**< \brief C key */
+    KBD_KEY_D            = 0x07, /**< \brief D key */
+    KBD_KEY_E            = 0x08, /**< \brief E key */
+    KBD_KEY_F            = 0x09, /**< \brief F key */
+    KBD_KEY_G            = 0x0a, /**< \brief G key */
+    KBD_KEY_H            = 0x0b, /**< \brief H key */
+    KBD_KEY_I            = 0x0c, /**< \brief I key */
+    KBD_KEY_J            = 0x0d, /**< \brief J key */
+    KBD_KEY_K            = 0x0e, /**< \brief K key */
+    KBD_KEY_L            = 0x0f, /**< \brief L key */
+    KBD_KEY_M            = 0x10, /**< \brief M key */
+    KBD_KEY_N            = 0x11, /**< \brief N key */
+    KBD_KEY_O            = 0x12, /**< \brief O key */
+    KBD_KEY_P            = 0x13, /**< \brief P key */
+    KBD_KEY_Q            = 0x14, /**< \brief Q key */
+    KBD_KEY_R            = 0x15, /**< \brief R key */
+    KBD_KEY_S            = 0x16, /**< \brief S key */
+    KBD_KEY_T            = 0x17, /**< \brief T key */
+    KBD_KEY_U            = 0x18, /**< \brief U key */
+    KBD_KEY_V            = 0x19, /**< \brief V key */
+    KBD_KEY_W            = 0x1a, /**< \brief W key */
+    KBD_KEY_X            = 0x1b, /**< \brief X key */
+    KBD_KEY_Y            = 0x1c, /**< \brief Y key */
+    KBD_KEY_Z            = 0x1d, /**< \brief Z key */
+    KBD_KEY_1            = 0x1e, /**< \brief 1 key */
+    KBD_KEY_2            = 0x1f, /**< \brief 2 key */
+    KBD_KEY_3            = 0x20, /**< \brief 3 key */
+    KBD_KEY_4            = 0x21, /**< \brief 4 key */
+    KBD_KEY_5            = 0x22, /**< \brief 5 key */
+    KBD_KEY_6            = 0x23, /**< \brief 6 key */
+    KBD_KEY_7            = 0x24, /**< \brief 7 key */
+    KBD_KEY_8            = 0x25, /**< \brief 8 key */
+    KBD_KEY_9            = 0x26, /**< \brief 9 key */
+    KBD_KEY_0            = 0x27, /**< \brief 0 key */
+    KBD_KEY_ENTER        = 0x28, /**< \brief Enter key */
+    KBD_KEY_ESCAPE       = 0x29, /**< \brief Escape key */
+    KBD_KEY_BACKSPACE    = 0x2a, /**< \brief Backspace key */
+    KBD_KEY_TAB          = 0x2b, /**< \brief Tab key */
+    KBD_KEY_SPACE        = 0x2c, /**< \brief Space key */
+    KBD_KEY_MINUS        = 0x2d, /**< \brief Minus key */
+    KBD_KEY_PLUS         = 0x2e, /**< \brief Plus key */
+    KBD_KEY_LBRACKET     = 0x2f, /**< \brief [ key */
+    KBD_KEY_RBRACKET     = 0x30, /**< \brief ] key */
+    KBD_KEY_BACKSLASH    = 0x31, /**< \brief \ key */
+    KBD_KEY_SEMICOLON    = 0x33, /**< \brief ; key */
+    KBD_KEY_QUOTE        = 0x34, /**< \brief " key */
+    KBD_KEY_TILDE        = 0x35, /**< \brief ~ key */
+    KBD_KEY_COMMA        = 0x36, /**< \brief , key */
+    KBD_KEY_PERIOD       = 0x37, /**< \brief . key */
+    KBD_KEY_SLASH        = 0x38, /**< \brief Slash key */
+    KBD_KEY_CAPSLOCK     = 0x39, /**< \brief Caps Lock key */
+    KBD_KEY_F1           = 0x3a, /**< \brief F1 key */
+    KBD_KEY_F2           = 0x3b, /**< \brief F2 key */
+    KBD_KEY_F3           = 0x3c, /**< \brief F3 key */
+    KBD_KEY_F4           = 0x3d, /**< \brief F4 key */
+    KBD_KEY_F5           = 0x3e, /**< \brief F5 key */
+    KBD_KEY_F6           = 0x3f, /**< \brief F6 key */
+    KBD_KEY_F7           = 0x40, /**< \brief F7 key */
+    KBD_KEY_F8           = 0x41, /**< \brief F8 key */
+    KBD_KEY_F9           = 0x42, /**< \brief F9 key */
+    KBD_KEY_F10          = 0x43, /**< \brief F10 key */
+    KBD_KEY_F11          = 0x44, /**< \brief F11 key */
+    KBD_KEY_F12          = 0x45, /**< \brief F12 key */
+    KBD_KEY_PRINT        = 0x46, /**< \brief Print Screen key */
+    KBD_KEY_SCRLOCK      = 0x47, /**< \brief Scroll Lock key */
+    KBD_KEY_PAUSE        = 0x48, /**< \brief Pause key */
+    KBD_KEY_INSERT       = 0x49, /**< \brief Insert key */
+    KBD_KEY_HOME         = 0x4a, /**< \brief Home key */
+    KBD_KEY_PGUP         = 0x4b, /**< \brief Page Up key */
+    KBD_KEY_DEL          = 0x4c, /**< \brief Delete key */
+    KBD_KEY_END          = 0x4d, /**< \brief End key */
+    KBD_KEY_PGDOWN       = 0x4e, /**< \brief Page Down key */
+    KBD_KEY_RIGHT        = 0x4f, /**< \brief Right Arrow key */
+    KBD_KEY_LEFT         = 0x50, /**< \brief Left Arrow key */
+    KBD_KEY_DOWN         = 0x51, /**< \brief Down Arrow key */
+    KBD_KEY_UP           = 0x52, /**< \brief Up Arrow key */
+    KBD_KEY_PAD_NUMLOCK  = 0x53, /**< \brief Keypad Numlock key */
+    KBD_KEY_PAD_DIVIDE   = 0x54, /**< \brief Keypad Divide key */
+    KBD_KEY_PAD_MULTIPLY = 0x55, /**< \brief Keypad Multiply key */
+    KBD_KEY_PAD_MINUS    = 0x56, /**< \brief Keypad Minus key */
+    KBD_KEY_PAD_PLUS     = 0x57, /**< \brief Keypad Plus key */
+    KBD_KEY_PAD_ENTER    = 0x58, /**< \brief Keypad Enter key */
+    KBD_KEY_PAD_1        = 0x59, /**< \brief Keypad 1 key */
+    KBD_KEY_PAD_2        = 0x5a, /**< \brief Keypad 2 key */
+    KBD_KEY_PAD_3        = 0x5b, /**< \brief Keypad 3 key */
+    KBD_KEY_PAD_4        = 0x5c, /**< \brief Keypad 4 key */
+    KBD_KEY_PAD_5        = 0x5d, /**< \brief Keypad 5 key */
+    KBD_KEY_PAD_6        = 0x5e, /**< \brief Keypad 6 key */
+    KBD_KEY_PAD_7        = 0x5f, /**< \brief Keypad 7 key */
+    KBD_KEY_PAD_8        = 0x60, /**< \brief Keypad 8 key */
+    KBD_KEY_PAD_9        = 0x61, /**< \brief Keypad 9 key */
+    KBD_KEY_PAD_0        = 0x62, /**< \brief Keypad 0 key */
+    KBD_KEY_PAD_PERIOD   = 0x63, /**< \brief Keypad Period key */
+    KBD_KEY_S3           = 0x65  /**< \brief S3 key */
+} kbd_key_t;
 
 /** \brief      Region Codes for the Dreamcast keyboard
     \ingroup    kbd

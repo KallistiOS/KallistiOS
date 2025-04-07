@@ -66,6 +66,11 @@
 #define __weak      __attribute__((weak))
 #endif
 
+#ifndef __packed
+/** \brief  Force a structure, enum, or other type to be packed as small as possible. */
+#define __packed    __attribute__((packed))
+#endif
+
 #ifndef __dead2
 /** \brief  Alias for \ref __noreturn. For BSD compatibility. */
 #define __dead2     __noreturn  /* BSD compat */
