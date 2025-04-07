@@ -38,22 +38,78 @@ __BEGIN_DECLS
     \ingroup        peripherals
 */
 
-/** \defgroup   kbd_mods    Modifier Keys
-    \brief                  Masks for the various keyboard modifier keys
-    \ingroup                kbd
+/** \defgroup kbd_status_grp    Device Status
+    \brief                      Types relating to overall keyboard state
 
-    These are the various modifiers that can be pressed on the keyboard, and are
-    reflected in the modifiers field of kbd_cond_t.
+    Types and API functions revolving around individual constituents of
+    the overall keyboard state. These values can either be retrieved manually
+    with \ref kbd_polling.
+
     @{
 */
-#define KBD_MOD_LCTRL       (1<<0)
-#define KBD_MOD_LSHIFT      (1<<1)
-#define KBD_MOD_LALT        (1<<2)
-#define KBD_MOD_S1          (1<<3)
-#define KBD_MOD_RCTRL       (1<<4)
-#define KBD_MOD_RSHIFT      (1<<5)
-#define KBD_MOD_RALT        (1<<6)
-#define KBD_MOD_S2          (1<<7)
+
+/** \defgroup   kbd_mods_grp    Modifier Keys
+    \brief                      Types associated with keyboard modifier keys
+    \ingroup                    kbd_status_grp
+
+    Modifier keys are represented by the kbd_mods_t union type. Each key state
+    can be accessed by:
+        1. Directly using a convenience bit field.
+        2. Bitwise `AND` of kbd_mods_t::raw with one of the \ref kbd_mods_flags.
+
+    @{
+*/
+
+/** \defgroup   kbd_mods_flags  Flags
+    \brief                      Keyboard modifier key flags
+
+    These are the various modifiers that can be pressed on the keyboard. Their
+    current state is stored within kbd_cond_t::modifiers.
+
+    \sa kbd_mods_t::raw
+
+    @{
+*/
+/* Single-Key Modifiers */
+#define KBD_MOD_LCTRL       BIT(0)    /**< \brief Left Control key */
+#define KBD_MOD_LSHIFT      BIT(1)    /**< \brief Left Shift key */
+#define KBD_MOD_LALT        BIT(2)    /**< \brief Left alternate key */
+#define KBD_MOD_S1          BIT(3)    /**< \brief S1 key */
+#define KBD_MOD_RCTRL       BIT(4)    /**< \brief Right Control key */
+#define KBD_MOD_RSHIFT      BIT(5)    /**< \brief Right Shift key */
+#define KBD_MOD_RALT        BIT(6)    /**< \brief Right Alternate key */
+#define KBD_MOD_S2          BIT(7)    /**< \brief S2 key */
+
+/* Multi-Key Modifiers */
+/** \brief Either Control key */
+#define KBD_MOD_CTRL        (KBD_MOD_LCTRL | KBD_MOD_RCTRL)
+/** \brief Either Shift key */
+#define KBD_MOD_SHIFT       (KBD_MOD_LSHIFT | KBD_MOD_RSHIFT)
+/** \brief Either Alternate key */
+#define KBD_MOD_ALT         (KBD_MOD_LALT | KBD_MOD_RALT)
+/** @} */
+
+/** \brief Modifier Keys
+
+    Convenience union containing the state of all keyboard modifier keys.
+
+    \sa kbd_mods_flags, kbd_state_t::modifiers
+*/
+typedef union kbd_mods {
+    /** \brief Convenience Bitfields */
+    struct {
+        uint8_t lctrl   : 1;    /**< \brief Left Control key */
+        uint8_t lshift  : 1;    /**< \brief Left Shift key */
+        uint8_t lalt    : 1;    /**< \brief Left Alternate key */
+        uint8_t s1      : 1;    /**< \brief S1 key */
+        uint8_t rctrl   : 1;    /**< \brief Right Control key */
+        uint8_t rshift  : 1;    /**< \brief Right Shift key */
+        uint8_t ralt    : 1;    /**< \brief Right Alternate key */
+        uint8_t s2      : 1;    /**< \brief S2 key */
+    };
+    uint8_t raw;    /**< \brief Packed 8-bit unsigned integer of bitflags */
+} kbd_mods_t;
+
 /** @} */
 
 /** \defgroup   kbd_leds_grp    LEDs
@@ -378,8 +434,8 @@ kbd_state_t *kbd_get_state(maple_device_t *device);
 
     If the xlat parameter is zero, the lower 8 bits of the returned value will
     be the raw key code. The next 8 bits will be the modifier keys that were
-    down when the key was pressed (a bitfield of KBD_MOD_* values). The next 8
-    bits will be the lock key/LED statuses (kbd_leds_t).
+    down when the key was pressed (kbd_mods_t). The next 8b its will
+    be the lock key/LED statuses (kbd_leds_t).
 
     \param  dev             The keyboard device to read from.
     \param  xlat            Set to non-zero to do key translation. Otherwise,
