@@ -329,20 +329,7 @@ typedef enum kbd_region {
 /* Short-term compatibility helper. */
 static const int MAX_KBD_KEYS   __depr("Please use KBD_MAX_KEYS.") = KBD_MAX_KEYS;
 
-/** \brief   Keyboard keymap.
-    \ingroup kbd
-
-    This structure represents a mapping from raw key values to ASCII values, if
-    appropriate. This handles base values as well as shifted ("shift" and "Alt"
-    keys) values.
-
-    \headerfile dc/maple/keyboard.h
-*/
-typedef struct kbd_keymap {
-    uint8_t base[KBD_MAX_KEYS];
-    uint8_t shifted[KBD_MAX_KEYS];
-    uint8_t alt[KBD_MAX_KEYS];
-} kbd_keymap_t;
+typedef void kbd_keymap_t __depr("Please open an issue, there should be no reason for external code to have used this.");
 
 /** \brief   Keyboard raw condition structure.
     \ingroup kbd

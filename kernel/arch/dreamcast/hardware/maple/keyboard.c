@@ -66,9 +66,22 @@ void kbd_set_repeat_timing(uint16_t start, uint16_t interval) {
     repeat_timing.interval = interval;
 }
 
+/*  Keyboard keymap.
+
+    This structure represents a mapping from raw key values to ASCII values, if
+    appropriate. This handles base values as well as shifted ("shift" and "Alt"
+    keys) values.
+
+*/
+typedef struct kbd_keymap {
+    uint8_t base[KBD_MAX_KEYS];
+    uint8_t shifted[KBD_MAX_KEYS];
+    uint8_t alt[KBD_MAX_KEYS];
+} kbd_keymap_internal_t;
+
 /* Built-in keymaps. */
 #define KBD_NUM_KEYMAPS (sizeof(keymaps) / sizeof(keymaps[0]))
-static const kbd_keymap_t keymaps[] = {
+static const kbd_keymap_internal_t keymaps[] = {
     {
         /* Japanese keyboard */
         {
