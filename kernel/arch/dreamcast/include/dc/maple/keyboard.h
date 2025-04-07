@@ -352,9 +352,9 @@ typedef struct kbd_keymap {
     \headerfile dc/maple/keyboard.h
 */
 typedef struct {
-    uint8_t modifiers;    /**< \brief Bitmask of set modifiers. */
-    uint8_t leds;         /**< \brief Bitmask of set LEDs */
-    uint8_t keys[MAX_PRESSED_KEYS];      /**< \brief Key codes for currently pressed keys. */
+    kbd_mods_t modifiers;    /**< \brief Bitmask of set modifiers. */
+    kbd_leds_t leds;         /**< \brief Bitmask of set LEDs */
+    kbd_key_t keys[MAX_PRESSED_KEYS];      /**< \brief Key codes for currently pressed keys. */
 } kbd_cond_t;
 
 /** \brief   Keyboard status structure.
@@ -379,8 +379,11 @@ typedef struct kbd_state {
     */
     uint8_t matrix[KBD_MAX_KEYS];
 
-    /** \brief  Modifier key status. */
-    int shift_keys;
+    /** \brief  Modifier key status. Stored to track changes. */
+    union {
+        int shift_keys __depr("Please see kbd_mods_t and use last_modifiers.raw to access this.");
+        kbd_mods_t last_modifiers;
+    };
 
     /** \brief  Keyboard type/region. */
     kbd_region_t region;
