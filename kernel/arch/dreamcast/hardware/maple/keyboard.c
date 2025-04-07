@@ -523,9 +523,6 @@ int kbd_queue_pop(maple_device_t *dev, bool xlat) {
     if(!xlat)
         return (int)rv;
 
-    if(region < KBD_REGION_JP || region > KBD_NUM_KEYMAPS)
-        return (int)(rv & 0xFF) << 8;
-
     mods = rv >> 8;
 
     if((mods & KBD_MOD_RALT) || (mods & (KBD_MOD_LCTRL | KBD_MOD_LALT)) == (KBD_MOD_LCTRL | KBD_MOD_LALT))
