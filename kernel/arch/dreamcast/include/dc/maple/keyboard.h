@@ -349,6 +349,33 @@ typedef struct kbd_state {
     uint64_t kbd_repeat_timer;        /**< \brief Time that the next repeat will trigger. */
 } kbd_state_t;
 
+/** \brief   Pop a key off a specific keyboard's queue.
+    \ingroup kbd
+
+    This function pops the front element off of the specified keyboard queue,
+    and returns the value of that key to the caller.
+
+    If the xlat parameter is non-zero and the key represents an ISO-8859-1
+    character, that is the value that will be returned from this function.
+    Otherwise if xlat is non-zero, it will be the raw key code, shifted up by 8
+    bits.
+
+    If the xlat parameter is zero, the lower 8 bits of the returned value will
+    be the raw key code. The next 8 bits will be the modifier keys that were
+    down when the key was pressed (a bitfield of KBD_MOD_* values). The next 8
+    bits will be the lock key/LED statuses (kbd_leds_t).
+
+    \param  dev             The keyboard device to read from.
+    \param  xlat            Set to non-zero to do key translation. Otherwise,
+                            you'll simply get the raw key value. Raw key values
+                            are not mapped at all, so you are responsible for
+                            figuring out what it is by the region.
+
+    \return                 The value at the front of the queue, or -1 if there
+                            are no keys in the queue.
+*/
+int kbd_queue_pop(maple_device_t *dev, int xlat);
+
 /** \brief   Activate or deactivate global key queueing.
     \ingroup kbd
     \deprecated
@@ -392,33 +419,6 @@ void kbd_set_queue(int active) __deprecated;
     \see                    kbd_queue_pop()
 */
 int kbd_get_key(void) __deprecated;
-
-/** \brief   Pop a key off a specific keyboard's queue.
-    \ingroup kbd
-
-    This function pops the front element off of the specified keyboard queue,
-    and returns the value of that key to the caller.
-
-    If the xlat parameter is non-zero and the key represents an ISO-8859-1
-    character, that is the value that will be returned from this function.
-    Otherwise if xlat is non-zero, it will be the raw key code, shifted up by 8
-    bits.
-
-    If the xlat parameter is zero, the lower 8 bits of the returned value will
-    be the raw key code. The next 8 bits will be the modifier keys that were
-    down when the key was pressed (a bitfield of KBD_MOD_* values). The next 8
-    bits will be the lock key/LED statuses (kbd_leds_t).
-
-    \param  dev             The keyboard device to read from.
-    \param  xlat            Set to non-zero to do key translation. Otherwise,
-                            you'll simply get the raw key value. Raw key values
-                            are not mapped at all, so you are responsible for
-                            figuring out what it is by the region.
-
-    \return                 The value at the front of the queue, or -1 if there
-                            are no keys in the queue.
-*/
-int kbd_queue_pop(maple_device_t *dev, int xlat);
 
 /* \cond */
 /* Init / Shutdown */
