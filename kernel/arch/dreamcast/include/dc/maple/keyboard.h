@@ -31,6 +31,7 @@ __BEGIN_DECLS
 #include <dc/maple.h>
 #include <kos/regfield.h>
 
+#include <stdbool.h>
 #include <stdint.h>
 
 /** \defgroup kbd   Keyboard
@@ -451,18 +452,18 @@ void kbd_set_repeat_timing(uint16_t start, uint16_t interval);
     This function pops the front element off of the specified keyboard queue,
     and returns the value of that key to the caller.
 
-    If the xlat parameter is non-zero and the key represents an ISO-8859-1
+    If the \p xlat parameter is true and the key represents an ISO-8859-1
     character, that is the value that will be returned from this function.
-    Otherwise if xlat is non-zero, it will be the raw key code, shifted up by 8
-    bits.
+    If the key cannot be converted into a valid ISO-8859-1 character the
+    raw key code, shifted up by 8 bits, will be returned.
 
-    If the xlat parameter is zero, the lower 8 bits of the returned value will
-    be the raw key code. The next 8 bits will be the modifier keys that were
-    down when the key was pressed (kbd_mods_t). The next 8b its will
-    be the lock key/LED statuses (kbd_leds_t).
+    If the \p xlat parameter is false, the lower 8 bits of the returned
+    value will be the raw key code. The next 8 bits will be the modifier
+    keys that were down when the key was pressed (kbd_mods_t). The next
+    8 bits will be the lock key/LED statuses (kbd_leds_t).
 
     \param  dev             The keyboard device to read from.
-    \param  xlat            Set to non-zero to do key translation. Otherwise,
+    \param  xlat            Set to true to do key translation. Otherwise,
                             you'll simply get the raw key value. Raw key values
                             are not mapped at all, so you are responsible for
                             figuring out what it is by the region.
@@ -470,7 +471,7 @@ void kbd_set_repeat_timing(uint16_t start, uint16_t interval);
     \return                 The value at the front of the queue, or KBD_QUEUE_END
                             if there are no keys in the queue.
 */
-int kbd_queue_pop(maple_device_t *dev, int xlat);
+int kbd_queue_pop(maple_device_t *dev, bool xlat);
 
 /** \brief   Activate or deactivate global key queueing.
     \deprecated

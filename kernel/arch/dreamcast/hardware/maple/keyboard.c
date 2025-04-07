@@ -487,7 +487,7 @@ kbd_state_t *kbd_get_state(maple_device_t *device) {
 }
 
 /* Take a key off of a specific key queue. */
-int kbd_queue_pop(maple_device_t *dev, int xlat) {
+int kbd_queue_pop(maple_device_t *dev, bool xlat) {
     kbd_state_t *state = (kbd_state_t *)dev->status;
     uint32_t rv, mods;
     uint8_t ascii;
