@@ -169,6 +169,21 @@ typedef union kbd_leds {
 
 /** @} */
 
+/** \brief      Region Codes for the Dreamcast keyboard
+    \ingroup    kbd
+
+    This is the list of possible values for kbd_state_t::region.
+*/
+typedef enum kbd_region {
+    KBD_REGION_JP = 1, /**< \brief Japanese keyboard */
+    KBD_REGION_US = 2, /**< \brief US keyboard */
+    KBD_REGION_UK = 3, /**< \brief UK keyboard */
+    KBD_REGION_DE = 4, /**< \brief German keyboard */
+    KBD_REGION_FR = 5, /**< \brief French keyboard */
+    KBD_REGION_IT = 6, /**< \brief Italian keyboard (not supported yet) */
+    KBD_REGION_ES = 7  /**< \brief Spanish keyboard */
+} kbd_region_t;
+
 /** \brief Raw Keyboard Key Identifiers
     \ingroup                kbd
 
@@ -282,20 +297,23 @@ typedef enum __packed kbd_key {
     KBD_KEY_S3           = 0x65  /**< \brief S3 key */
 } kbd_key_t;
 
-/** \brief      Region Codes for the Dreamcast keyboard
-    \ingroup    kbd
+/** \brief Converts a kbd_key_t value into its corresponding ASCII value
 
-    This is the list of possible values for kbd_state_t::region.
+    This function attempts to convert \p key to its ASCII representation
+    using an internal translation table and additional keyboard state context.
+    To note, this is actually ISO-8859-15 where applicable for non-English
+    regions.
+
+    \param  key         The raw key type to convert to ASCII.
+    \param  region      The region type of the keyboard containing the key.
+    \param  mods        The modifier flags impacting the key.
+    \param  leds        The LED state flags impacting the key.
+
+    \returns            The ASCII value corresponding to \p key or NULL if
+                        the translation was unsuccessful.
 */
-typedef enum kbd_region {
-    KBD_REGION_JP = 1, /**< \brief Japanese keyboard */
-    KBD_REGION_US = 2, /**< \brief US keyboard */
-    KBD_REGION_UK = 3, /**< \brief UK keyboard */
-    KBD_REGION_DE = 4, /**< \brief German keyboard */
-    KBD_REGION_FR = 5, /**< \brief French keyboard */
-    KBD_REGION_IT = 6, /**< \brief Italian keyboard (not supported yet) */
-    KBD_REGION_ES = 7  /**< \brief Spanish keyboard */
-} kbd_region_t;
+char kbd_key_to_ascii(kbd_key_t key, kbd_region_t region,
+                      kbd_mods_t mods, kbd_leds_t leds);
 
 /** \defgroup   key_states  Key States
     \brief                  States each key can be in.

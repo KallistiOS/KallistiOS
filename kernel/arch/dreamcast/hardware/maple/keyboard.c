@@ -522,12 +522,21 @@ kbd_state_t *kbd_get_state(maple_device_t *device) {
     return (kbd_state_t *)device->status;
 }
 
+char kbd_key_to_ascii(kbd_key_t key, kbd_region_t region, kbd_mods_t mods, kbd_leds_t leds) {
+
+    if(mods.ralt || (mods.lctrl && mods.lalt))
+        return keymaps[region - 1].alt[key];
+    else if((mods.raw & KBD_MOD_SHIFT) || leds.caps_lock)
+        return keymaps[region - 1].shifted[key];
+    else
+        return keymaps[region - 1].base[key];
+}
+
 /* Take a key off of a specific key queue. */
 int kbd_queue_pop(maple_device_t *dev, bool xlat) {
     kbd_state_private_t *state = (kbd_state_private_t *)dev->status;
     kbd_q_key_t rv;
-    uint8_t ascii;
-    kbd_region_t region = state->base.region;
+    char ascii;
 
     const int irqs = irq_disable();
 
@@ -545,14 +554,7 @@ int kbd_queue_pop(maple_device_t *dev, bool xlat) {
     if(!xlat)
         return (int)(rv.key & (rv.mods.raw << 8) & (rv.leds.raw << 16));
 
-    if(rv.mods.ralt || (rv.mods.lctrl && rv.mods.lalt))
-        ascii = keymaps[region - 1].alt[rv.key];
-    else if((rv.mods.raw & KBD_MOD_SHIFT) || rv.leds.caps_lock)
-        ascii = keymaps[region - 1].shifted[rv.key];
-    else
-        ascii = keymaps[region - 1].base[rv.key];
-
-    if(ascii)
+    if((ascii = kbd_key_to_ascii(rv.key, state->base.region, rv.mods, rv.leds)))
         return (int)ascii;
     else
         return (int)(rv.key << 8);
