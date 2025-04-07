@@ -445,17 +445,17 @@ static int kbd_enqueue(kbd_state_t *state, uint8_t keycode, int mods) {
     return 0;
 }
 
-/* Take a key off the key queue, or return -1 if there is none waiting */
+/* Take a key off the key queue, or return KBD_QUEUE_END if there is none waiting */
 int kbd_get_key(void) {
     int rv;
 
     /* If queueing isn't active, there won't be anything to get */
     if(!kbd_queue_active)
-        return -1;
+        return KBD_QUEUE_END;
 
     /* Check available */
     if(kbd_queue_head == kbd_queue_tail)
-        return -1;
+        return KBD_QUEUE_END;
 
     rv = kbd_queue[kbd_queue_tail];
     kbd_queue_tail = (kbd_queue_tail + 1) & (KBD_QUEUE_SIZE - 1);
@@ -486,7 +486,7 @@ int kbd_queue_pop(maple_device_t *dev, int xlat) {
 
     if(!state->queue_len) {
         irq_restore(irqs);
-        return -1;
+        return KBD_QUEUE_END;
     }
 
     rv = state->key_queue[state->queue_tail];

@@ -336,7 +336,7 @@ kbd_state_t *kbd_get_state(maple_device_t *device);
 
         int k;
 
-        while((k = kbd_queue_pop(device, 1)) != -1)
+        while((k = kbd_queue_pop(device, 1)) != KBD_QUEUE_END)
             printf("Key pressed: %c!\n", (char)k);
 
     \par Repeated Presses
@@ -356,6 +356,15 @@ kbd_state_t *kbd_get_state(maple_device_t *device);
     \note   This <strong>MUST</strong> be a power of two.
 */
 #define KBD_QUEUE_SIZE 16
+
+/** \brief Delimiter value for kbd_queue_pop()
+
+    Value returned from kbd_queue_pop() when there are no more keys in the
+    queue.
+
+    \sa kbd_queue_pop()
+*/
+#define KBD_QUEUE_END     -1
 
 /** \brief   Pop a key off a specific keyboard's queue.
 
@@ -378,8 +387,8 @@ kbd_state_t *kbd_get_state(maple_device_t *device);
                             are not mapped at all, so you are responsible for
                             figuring out what it is by the region.
 
-    \return                 The value at the front of the queue, or -1 if there
-                            are no keys in the queue.
+    \return                 The value at the front of the queue, or KBD_QUEUE_END
+                            if there are no keys in the queue.
 */
 int kbd_queue_pop(maple_device_t *dev, int xlat);
 
@@ -414,8 +423,8 @@ void kbd_set_queue(int active) __deprecated;
     If a key does not have an ASCII value associated with it, the raw key code
     will be returned, shifted up by 8 bits.
 
-    \return                 The value at the front of the queue, or -1 if there
-                            are no keys in the queue or queueing is off.
+    \return                 The value at the front of the queue, or KBD_QUEUE_END
+                            if there are no keys in the queue or queueing is off.
     \note                   This function does not account for non-US keyboard
                             layouts properly (for compatibility with old code),
                             and is deprecated. Use the individual keyboard
