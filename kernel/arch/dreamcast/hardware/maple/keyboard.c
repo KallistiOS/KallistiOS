@@ -3,8 +3,9 @@
    keyboard.c
    Copyright (C) 2002 Megan Potter
    Copyright (C) 2012 Lawrence Sebald
-   Copyright (C) 2018 Donald Haase
+   Copyright (C) 2018, 2025 Donald Haase
    Copyright (C) 2024 Paul Cercueil
+   Copyright (C) 2025 Falco Girgis
 */
 
 #include <assert.h>
@@ -21,10 +22,25 @@
 
 This module is an (almost) complete keyboard system. It handles key
 debouncing and queueing so you don't miss any pressed keys as long
-as you poll often enough. The only thing missing currently is key
-repeat handling.
+as you poll often enough.
 
 */
+
+/* Private data stored in the keyboard state. */
+typedef struct kbd_state_private {
+    kbd_state_t base;
+
+    /** \brief  Individual keyboard queue.
+        You should not access this variable directly. Please use the appropriate
+        function to access it. */
+    uint32_t key_queue[KBD_QUEUE_SIZE];
+    int queue_tail;                     /**< \brief Key queue tail. */
+    int queue_head;                     /**< \brief Key queue head. */
+    volatile int queue_len;             /**< \brief Current length of queue. */
+
+    uint8_t kbd_repeat_key;           /**< \brief Key that is repeating. */
+    uint64_t kbd_repeat_timer;        /**< \brief Time that the next repeat will trigger. */
+} kbd_state_private_t;
 
 /* These are global timings for key repeat. It would be possible to put
     them in the state, but I don't see a reason to.
@@ -44,8 +60,8 @@ void kbd_set_repeat_timing(uint16_t start, uint16_t interval) {
 }
 
 /* Built-in keymaps. */
-#define KBD_NUM_KEYMAPS 8
-static kbd_keymap_t keymaps[KBD_NUM_KEYMAPS] = {
+#define KBD_NUM_KEYMAPS (sizeof(keymaps) / sizeof(keymaps[0]))
+static const kbd_keymap_t keymaps[] = {
     {
         /* Japanese keyboard */
         {
@@ -373,7 +389,6 @@ static kbd_keymap_t keymaps[KBD_NUM_KEYMAPS] = {
     }
 };
 
-
 /* The keyboard queue (global for now) */
 static volatile int kbd_queue_active = 1;
 static volatile int kbd_queue_tail = 0, kbd_queue_head = 0;
@@ -396,8 +411,8 @@ void kbd_set_queue(int active) {
 
     NOTE: We are only calling this within an IRQ context, so operations on
           kbd_state::queue_size are essentially atomic. */
-static int kbd_enqueue(kbd_state_t *state, uint8_t keycode, int mods) {
-    static char keymap_noshift[] = {
+static int kbd_enqueue(kbd_state_private_t *state, uint8_t keycode, int mods) {
+    static const char keymap_noshift[] = {
         /*0*/   0, 0, 0, 0, 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
         'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
         'u', 'v', 'w', 'x', 'y', 'z',
@@ -408,7 +423,7 @@ static int kbd_enqueue(kbd_state_t *state, uint8_t keycode, int mods) {
         /*53*/  0, '/', '*', '-', '+', 13, '1', '2', '3', '4', '5', '6',
         /*5f*/  '7', '8', '9', '0', '.', 0
     };
-    static char keymap_shift[] = {
+    static const char keymap_shift[] = {
         /*0*/   0, 0, 0, 0, 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
         'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
         'U', 'V', 'W', 'X', 'Y', 'Z',
@@ -438,7 +453,7 @@ static int kbd_enqueue(kbd_state_t *state, uint8_t keycode, int mods) {
 
     /* Figure out its key queue value */
     if(keycode <= 0x64) {
-        if(state->shift_keys & (KBD_MOD_LSHIFT | KBD_MOD_RSHIFT))
+        if(state->base.shift_keys & KBD_MOD_SHIFT)
             ascii = keymap_shift[keycode];
         else
             ascii = keymap_noshift[keycode];
@@ -450,7 +465,6 @@ static int kbd_enqueue(kbd_state_t *state, uint8_t keycode, int mods) {
     /* Ok... now do the enqueue to the global queue */
     kbd_queue[kbd_queue_head] = ascii;
     kbd_queue_head = (kbd_queue_head + 1) & (KBD_QUEUE_SIZE - 1);
-
 
     return 0;
 }
@@ -488,9 +502,10 @@ kbd_state_t *kbd_get_state(maple_device_t *device) {
 
 /* Take a key off of a specific key queue. */
 int kbd_queue_pop(maple_device_t *dev, bool xlat) {
-    kbd_state_t *state = (kbd_state_t *)dev->status;
+    kbd_state_private_t *state = (kbd_state_private_t *)dev->status;
     uint32_t rv, mods;
     uint8_t ascii;
+    kbd_region_t region = state->base.region;
 
     const int irqs = irq_disable();
 
@@ -508,17 +523,17 @@ int kbd_queue_pop(maple_device_t *dev, bool xlat) {
     if(!xlat)
         return (int)rv;
 
-    if(state->region < KBD_REGION_JP || state->region > KBD_NUM_KEYMAPS)
+    if(region < KBD_REGION_JP || region > KBD_NUM_KEYMAPS)
         return (int)(rv & 0xFF) << 8;
 
     mods = rv >> 8;
 
     if((mods & KBD_MOD_RALT) || (mods & (KBD_MOD_LCTRL | KBD_MOD_LALT)) == (KBD_MOD_LCTRL | KBD_MOD_LALT))
-        ascii = keymaps[state->region - 1].alt[(uint8_t)rv];
-    else if(mods & (KBD_MOD_LSHIFT | KBD_MOD_RSHIFT | (1 << 9)))
-        ascii = keymaps[state->region - 1].shifted[(uint8_t)rv];
+        ascii = keymaps[region - 1].alt[(uint8_t)rv];
+    else if(mods & (KBD_MOD_SHIFT | (1 << 9)))
+        ascii = keymaps[region - 1].shifted[(uint8_t)rv];
     else
-        ascii = keymaps[state->region - 1].base[(uint8_t)rv];
+        ascii = keymaps[region - 1].base[(uint8_t)rv];
 
     if(ascii)
         return (int)ascii;
@@ -530,18 +545,16 @@ int kbd_queue_pop(maple_device_t *dev, bool xlat) {
    queueing keypresses for later usage. The key press queue uses 16-bit
    words so that we can store "special" keys as such. */
 static void kbd_check_poll(maple_frame_t *frm) {
-    kbd_state_t *state;
-    kbd_cond_t *cond;
+    kbd_state_private_t *pstate = (kbd_state_private_t *)frm->dev->status;
+    kbd_state_t         *state = &pstate->base;
+    kbd_cond_t          *cond = (kbd_cond_t *)&state->cond;
     int i;
     int mods;
 
-    state = (kbd_state_t *)frm->dev->status;
-    cond = (kbd_cond_t *)&state->cond;
-
     /* If the modifier keys have changed, end the key repeating. */
-    if( state->shift_keys != cond->modifiers ) {
-        state->kbd_repeat_key = KBD_KEY_NONE;
-        state->kbd_repeat_timer = 0;
+    if( state->shift_keys != cond->modifiers) {
+        pstate->kbd_repeat_key = KBD_KEY_NONE;
+        pstate->kbd_repeat_timer = 0;
     }
 
     /* Update modifiers and LEDs */
@@ -553,7 +566,7 @@ static void kbd_check_poll(maple_frame_t *frm) {
 
         /* Once we get to a 'none', the rest will be 'none' */
         if(cond->keys[i] == KBD_KEY_NONE) {
-            /* This could be used to indicate how many keys are pressed by setting it to ~i or i+1 
+            /* This could be used to indicate how many keys are pressed by setting it to ~i or i+1
                 or similar. This could be useful, but would make it a weird exception. */
             /* If the first key in the key array is none, there are no non-modifer keys pressed at all. */
             if(i==0) state->matrix[KBD_KEY_NONE] = KEY_STATE_PRESSED;
@@ -569,25 +582,25 @@ static void kbd_check_poll(maple_frame_t *frm) {
             /* If the key hadn't been pressed. */
             if(state->matrix[cond->keys[i]] == KEY_STATE_NONE) {
                 state->matrix[cond->keys[i]] = KEY_STATE_PRESSED;
-                kbd_enqueue(state, cond->keys[i], mods);
-                state->kbd_repeat_key = cond->keys[i];
+                kbd_enqueue(pstate, cond->keys[i], mods);
+                pstate->kbd_repeat_key = cond->keys[i];
                 if(repeat_timing.start)
-                    state->kbd_repeat_timer = timer_ms_gettime64() + repeat_timing.start;
+                    pstate->kbd_repeat_timer = timer_ms_gettime64() + repeat_timing.start;
             }
             /* If the key was already being pressed and was our one allowed repeating key, then... */
             else if(state->matrix[cond->keys[i]] == KEY_STATE_WAS_PRESSED) {
                 state->matrix[cond->keys[i]] = KEY_STATE_PRESSED;
-                if(state->kbd_repeat_key == cond->keys[i]) {
+                if(pstate->kbd_repeat_key == cond->keys[i]) {
                     /* If repeat timing is enabled, bail if under interval */
                     if(repeat_timing.start) {
                         uint64_t time = timer_ms_gettime64();
-                        if(time >= (state->kbd_repeat_timer))
-                            state->kbd_repeat_timer = time + repeat_timing.interval;
+                        if(time >= (pstate->kbd_repeat_timer))
+                            pstate->kbd_repeat_timer = time + repeat_timing.interval;
                         else
                             continue;
                     }
 
-                    kbd_enqueue(state, cond->keys[i], mods);
+                    kbd_enqueue(pstate, cond->keys[i], mods);
                 }
             }
             else assert_msg(0, "invalid key matrix array detected");
@@ -691,12 +704,9 @@ static int kbd_attach(maple_driver_t *drv, maple_device_t *dev) {
         state->region = KBD_REGION_US;
     }
 
-    /* Make sure all the queue variables are set up properly... */
-    state->queue_tail = state->queue_head = state->queue_len = 0;
-
-    /* Make sure all the key repeat variables are set up properly too */
-    state->kbd_repeat_key = KBD_KEY_NONE;
-    state->kbd_repeat_timer = 0;
+    /* Zero out private state data */
+    memset(state + sizeof(kbd_state_t), 0,
+            sizeof(kbd_state_private_t) - sizeof(kbd_state_t));
 
     return 0;
 }
@@ -706,7 +716,7 @@ static maple_driver_t kbd_drv = {
     .functions =  MAPLE_FUNC_KEYBOARD,
     .name = "Keyboard Driver",
     .periodic = kbd_periodic,
-    .status_size = sizeof(kbd_state_t),
+    .status_size = sizeof(kbd_state_private_t),
     .attach = kbd_attach,
     .detach = NULL
 };

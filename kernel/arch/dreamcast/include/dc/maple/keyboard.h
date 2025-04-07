@@ -314,6 +314,78 @@ typedef enum kbd_region {
 #define KEY_STATE_PRESSED     2
 /** @} */
 
+/** \brief   Maximum number of keys the DC can read simultaneously.
+    \ingroup kbd
+    This is a hardware constant. The define prevents the magic number '6' from appearing.
+**/
+#define MAX_PRESSED_KEYS 6
+
+/** \brief   Maximum number of keys a DC keyboard can have.
+    \ingroup kbd
+    This is a hardware constant. The define prevents the magic number '256' from appearing.
+**/
+#define KBD_MAX_KEYS 256
+
+/* Short-term compatibility helper. */
+static const int MAX_KBD_KEYS   __depr("Please use KBD_MAX_KEYS.") = KBD_MAX_KEYS;
+
+/** \brief   Keyboard keymap.
+    \ingroup kbd
+
+    This structure represents a mapping from raw key values to ASCII values, if
+    appropriate. This handles base values as well as shifted ("shift" and "Alt"
+    keys) values.
+
+    \headerfile dc/maple/keyboard.h
+*/
+typedef struct kbd_keymap {
+    uint8_t base[KBD_MAX_KEYS];
+    uint8_t shifted[KBD_MAX_KEYS];
+    uint8_t alt[KBD_MAX_KEYS];
+} kbd_keymap_t;
+
+/** \brief   Keyboard raw condition structure.
+    \ingroup kbd
+
+    This structure is what the keyboard responds with as its current status.
+
+    \headerfile dc/maple/keyboard.h
+*/
+typedef struct {
+    uint8_t modifiers;    /**< \brief Bitmask of set modifiers. */
+    uint8_t leds;         /**< \brief Bitmask of set LEDs */
+    uint8_t keys[MAX_PRESSED_KEYS];      /**< \brief Key codes for currently pressed keys. */
+} kbd_cond_t;
+
+/** \brief   Keyboard status structure.
+    \ingroup kbd
+
+    This structure holds information about the current status of the keyboard
+    device. This is what maple_dev_status() will return.
+
+    \headerfile dc/maple/keyboard.h
+*/
+typedef struct kbd_state {
+    /** \brief  The latest raw condition of the keyboard. */
+    kbd_cond_t cond;
+
+    /** \brief  Key array.
+
+        This array lists the state of all possible keys on the keyboard. It can
+        be used for key repeat and debouncing. This will be non-zero if the key
+        is currently being pressed.
+
+        \see    kbd_keys
+    */
+    uint8_t matrix[KBD_MAX_KEYS];
+
+    /** \brief  Modifier key status. */
+    int shift_keys;
+
+    /** \brief  Keyboard type/region. */
+    kbd_region_t region;
+} kbd_state_t;
+
 /** \defgroup kbd_input     Querying for Input
     \brief                  Various methods for checking keyboard input
 
@@ -518,89 +590,6 @@ int kbd_get_key(void) __deprecated;
 /** @} */
 
 /** @} */
-
-/** \brief   Maximum number of keys the DC can read simultaneously.
-    \ingroup kbd
-    This is a hardware constant. The define prevents the magic number '6' from appearing.
-**/
-#define MAX_PRESSED_KEYS 6
-
-/** \brief   Maximum number of keys a DC keyboard can have.
-    \ingroup kbd
-    This is a hardware constant. The define prevents the magic number '256' from appearing.
-**/
-#define KBD_MAX_KEYS 256
-
-/* Short-term compatibility helper. */
-static const int MAX_KBD_KEYS   __depr("Please use KBD_MAX_KEYS.") = KBD_MAX_KEYS;
-
-/** \brief   Keyboard keymap.
-    \ingroup kbd
-
-    This structure represents a mapping from raw key values to ASCII values, if
-    appropriate. This handles base values as well as shifted ("shift" and "Alt"
-    keys) values.
-
-    \headerfile dc/maple/keyboard.h
-*/
-typedef struct kbd_keymap {
-    uint8_t base[KBD_MAX_KEYS];
-    uint8_t shifted[KBD_MAX_KEYS];
-    uint8_t alt[KBD_MAX_KEYS];
-} kbd_keymap_t;
-
-/** \brief   Keyboard raw condition structure.
-    \ingroup kbd
-
-    This structure is what the keyboard responds with as its current status.
-
-    \headerfile dc/maple/keyboard.h
-*/
-typedef struct {
-    uint8_t modifiers;    /**< \brief Bitmask of set modifiers. */
-    uint8_t leds;         /**< \brief Bitmask of set LEDs */
-    uint8_t keys[MAX_PRESSED_KEYS];      /**< \brief Key codes for currently pressed keys. */
-} kbd_cond_t;
-
-/** \brief   Keyboard status structure.
-    \ingroup kbd
-
-    This structure holds information about the current status of the keyboard
-    device. This is what maple_dev_status() will return.
-
-    \headerfile dc/maple/keyboard.h
-*/
-typedef struct kbd_state {
-    /** \brief  The latest raw condition of the keyboard. */
-    kbd_cond_t cond;
-
-    /** \brief  Key array.
-
-        This array lists the state of all possible keys on the keyboard. It can
-        be used for key repeat and debouncing. This will be non-zero if the key
-        is currently being pressed.
-
-        \see    kbd_keys
-    */
-    uint8_t matrix[KBD_MAX_KEYS];
-
-    /** \brief  Modifier key status. */
-    int shift_keys;
-
-    /** \brief  Keyboard type/region. */
-    kbd_region_t region;
-
-    /** \brief  Individual keyboard queue.
-        You should not access this variable directly. Please use the appropriate
-        function to access it. */
-    uint32_t key_queue[KBD_QUEUE_SIZE];
-    int queue_tail;                     /**< \brief Key queue tail. */
-    int queue_head;                     /**< \brief Key queue head. */
-    volatile int queue_len;             /**< \brief Current length of queue. */
-
-    uint8_t kbd_repeat_key;           /**< \brief Key that is repeating. */
-    uint64_t kbd_repeat_timer;        /**< \brief Time that the next repeat will trigger. */
-} kbd_state_t;
 
 /* \cond */
 /* Init / Shutdown */
