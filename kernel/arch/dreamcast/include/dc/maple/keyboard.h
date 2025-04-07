@@ -41,6 +41,7 @@ __BEGIN_DECLS
 
 /** \defgroup kbd_status_grp    Device Status
     \brief                      Types relating to overall keyboard state
+    \ingroup  kbd
 
     Types and API functions revolving around individual constituents of
     the overall keyboard state. These values can either be retrieved manually
@@ -170,7 +171,6 @@ typedef union kbd_leds {
 /** @} */
 
 /** \brief      Region Codes for the Dreamcast keyboard
-    \ingroup    kbd
 
     This is the list of possible values for kbd_state_t::region.
 */
@@ -185,7 +185,6 @@ typedef enum kbd_region {
 } kbd_region_t;
 
 /** \brief Raw Keyboard Key Identifiers
-    \ingroup                kbd
 
     This is the list of keys that are on the keyboard that may be pressed. The
     keyboard returns keys in this format.
@@ -317,7 +316,6 @@ char kbd_key_to_ascii(kbd_key_t key, kbd_region_t region,
 
 /** \defgroup   key_states  Key States
     \brief                  States each key can be in.
-    \ingroup                kbd
 
     These are the different 'states' each key can be in. They are stored in
     kbd_state_t->matrix, and manipulated/checked by kbd_check_poll.
@@ -333,13 +331,13 @@ char kbd_key_to_ascii(kbd_key_t key, kbd_region_t region,
 /** @} */
 
 /** \brief   Maximum number of keys the DC can read simultaneously.
-    \ingroup kbd
+
     This is a hardware constant. The define prevents the magic number '6' from appearing.
 **/
 #define MAX_PRESSED_KEYS 6
 
 /** \brief   Maximum number of keys a DC keyboard can have.
-    \ingroup kbd
+
     This is a hardware constant. The define prevents the magic number '256' from appearing.
 **/
 #define KBD_MAX_KEYS 256
@@ -350,7 +348,6 @@ static const int MAX_KBD_KEYS   __depr("Please use KBD_MAX_KEYS.") = KBD_MAX_KEY
 typedef void kbd_keymap_t __depr("Please open an issue, there should be no reason for external code to have used this.");
 
 /** \brief   Keyboard raw condition structure.
-    \ingroup kbd
 
     This structure is what the keyboard responds with as its current status.
 
@@ -363,7 +360,6 @@ typedef struct {
 } kbd_cond_t;
 
 /** \brief   Keyboard status structure.
-    \ingroup kbd
 
     This structure holds information about the current status of the keyboard
     device. This is what maple_dev_status() will return.
@@ -394,8 +390,11 @@ typedef struct kbd_state {
     kbd_region_t region;
 } kbd_state_t;
 
+/** @} */
+
 /** \defgroup kbd_input     Querying for Input
     \brief                  Various methods for checking keyboard input
+    \ingroup kbd
 
     There are 2 different ways to check for input with the keyboard API:
 
