@@ -422,6 +422,30 @@ kbd_state_t *kbd_get_state(maple_device_t *device);
 */
 #define KBD_QUEUE_END     -1
 
+/** \brief Configures held key auto-repeat intervals
+
+    This function is used to configure the specific timing behavior for how the
+    internal queue treats a key which is being held down. Giving non-zero values
+    for both parameters will cause the held key to be re-enqueued every
+    \p interval milliseconds after it has been held for the initial \p start time
+    in milliseconds.
+
+    Specifying a value of zero for the two parameters disables this repeating key
+    behavior.
+
+    \note
+    By default, the \p start time is 600ms while the repeating \p interval is 20ms.
+
+    \param  start       The duration after which the held key starts to
+                        register as repeated key presses (or zero to disable
+                        this behavior).
+    \param  interval    The duration between subsequent key repeats after the
+                        initial \p start time has elapsed.
+
+    \sa kbd_queue_pop()
+*/
+void kbd_set_repeat_timing(uint16_t start, uint16_t interval);
+
 /** \brief   Pop a key off a specific keyboard's queue.
 
     This function pops the front element off of the specified keyboard queue,

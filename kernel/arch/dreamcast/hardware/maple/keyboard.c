@@ -31,7 +31,17 @@ repeat handling.
     It seems unreasonable that one might want different repeat
     timings set on each keyboard.
     The values are arbitrary based off a survey of common values. */
-uint16_t kbd_repeat_start = 600, kbd_repeat_interval = 20;
+static struct {
+    uint16_t start;
+    uint16_t interval;
+} repeat_timing = {
+    600, 20
+};
+
+void kbd_set_repeat_timing(uint16_t start, uint16_t interval) {
+    repeat_timing.start    = start;
+    repeat_timing.interval = interval;
+}
 
 /* Built-in keymaps. */
 #define KBD_NUM_KEYMAPS 8
@@ -561,18 +571,23 @@ static void kbd_check_poll(maple_frame_t *frm) {
                 state->matrix[cond->keys[i]] = KEY_STATE_PRESSED;
                 kbd_enqueue(state, cond->keys[i], mods);
                 state->kbd_repeat_key = cond->keys[i];
-                state->kbd_repeat_timer = timer_ms_gettime64() + kbd_repeat_start;
+                if(repeat_timing.start)
+                    state->kbd_repeat_timer = timer_ms_gettime64() + repeat_timing.start;
             }
             /* If the key was already being pressed and was our one allowed repeating key, then... */
             else if(state->matrix[cond->keys[i]] == KEY_STATE_WAS_PRESSED) {
                 state->matrix[cond->keys[i]] = KEY_STATE_PRESSED;
                 if(state->kbd_repeat_key == cond->keys[i]) {
-                    uint64_t time = timer_ms_gettime64();
-                    /* We have passed the prescribed amount of time, and will repeat the key */
-                    if(time >= (state->kbd_repeat_timer)) {
-                        kbd_enqueue(state, cond->keys[i], mods);
-                        state->kbd_repeat_timer = time + kbd_repeat_interval;
+                    /* If repeat timing is enabled, bail if under interval */
+                    if(repeat_timing.start) {
+                        uint64_t time = timer_ms_gettime64();
+                        if(time >= (state->kbd_repeat_timer))
+                            state->kbd_repeat_timer = time + repeat_timing.interval;
+                        else
+                            continue;
                     }
+
+                    kbd_enqueue(state, cond->keys[i], mods);
                 }
             }
             else assert_msg(0, "invalid key matrix array detected");
