@@ -3,7 +3,7 @@
    kos/cdefs.h
    Copyright (C) 2002, 2004 Megan Potter
    Copyright (C) 2020, 2023 Lawrence Sebald
-   Copyright (C) 2023 Falco Girgis
+   Copyright (C) 2023, 2025 Falco Girgis
 
    Based loosely around some stuff in BSD's sys/cdefs.h
 */
@@ -87,6 +87,28 @@
     \sa __unlikely()
 */
 #define __likely(exp)   __builtin_expect(!!(exp), 1)
+#endif
+
+#ifndef __hot
+/** \brief Directive to inform the compiler the function is in the hot path
+
+    This can be used to tell the compiler to spend more time optimizing a
+    function or label which will be called frequenhtly.
+
+    \sa __cold
+ */
+#define __hot __attribute__((hot))
+#endif
+
+#ifndef __cold
+/** \brief Directive to inform the compiler the function is not in the hot path
+
+    This can be used to tell the compiler that a function or label is not
+    utilized frequently, which serves as an optimization hint.
+
+    \sa __hot
+ */
+#define __cold __attribute__((cold))
 #endif
 
 #ifndef __unlikely
