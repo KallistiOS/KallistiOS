@@ -131,22 +131,22 @@ static char *irq_exception_string(irq_t evt) {
         case EXC_DATA_ADDRESS_WRITE:
             return "Data address error (write)";
         case EXC_DTLB_MISS_READ:  /* or EXC_ITLB_MISS */
-            return "Instruction or Data(read) TLB miss";  
-        case EXC_DTLB_MISS_WRITE:  
+            return "Instruction or Data(read) TLB miss";
+        case EXC_DTLB_MISS_WRITE:
             return "Data(write) TLB miss";
         case EXC_DTLB_PV_READ:  /* or EXC_ITLB_PV */
-            return "Instruction or Data(read) TLB protection violation";  
+            return "Instruction or Data(read) TLB protection violation";
         case EXC_DTLB_PV_WRITE:
             return "Data TLB protection violation (write)";
         case EXC_FPU:
             return "FPU exception";
-        case EXC_INITIAL_PAGE_WRITE:  
-            return "Initial page write exception";  
-        case EXC_TRAPA:  
-            return "Unconditional trap (trapa)"; 
+        case EXC_INITIAL_PAGE_WRITE:
+            return "Initial page write exception";
+        case EXC_TRAPA:
+            return "Unconditional trap (trapa)";
         case EXC_USER_BREAK_POST:  /* or EXC_USER_BREAK_PRE */
-            return "User break";  
-        default:  
+            return "User break";
+        default:
             return "Unknown exception";
     }
 }
@@ -169,17 +169,17 @@ void irq_dump_regs(int code, irq_t evt) {
     dbglog(DBG_DEAD, " SR %08lx PR %08lx\n", irq_srt_addr->sr, irq_srt_addr->pr);
     fp = regs[14];
     arch_stk_trace_at(fp, 0);
-    
+
     if(code == 1) {
-        dbglog(DBG_DEAD, "\nEncountered %s. ", irq_exception_string(evt)); 
-        
+        dbglog(DBG_DEAD, "\nEncountered %s. ", irq_exception_string(evt));
+
         valid_pc = arch_valid_text_address(irq_srt_addr->pc);
         valid_pr = arch_valid_text_address(irq_srt_addr->pr);
         /* Construct template message only if either PC/PR address is valid */
         if(valid_pc || valid_pr) {
             dbglog(DBG_DEAD, "Use this template terminal command to help"
                 " diagnose:\n\n\t$KOS_ADDR2LINE -f -C -i -e prog.elf");
-            
+
             if(valid_pc)
                 dbglog(DBG_DEAD, " %08lx", irq_srt_addr->pc);
 
@@ -246,7 +246,7 @@ void irq_handle_exception(int code) {
         arch_panic("double fault");
     }
 
-    /* Reveal this info about the int to inside_int for better 
+    /* Reveal this info about the int to inside_int for better
        diagnostics returns if we try to do something in the int. */
     inside_int = ((code&0xf)<<16) | (evt&0xffff);
 
@@ -380,7 +380,7 @@ int irq_init(void) {
     /* Default to not in an interrupt */
     inside_int = 0;
 
-    /* Set a default timer handlers */
+    /* Set default timer handlers */
     irq_set_handler(EXC_TMU0_TUNI0, irq_def_timer, (void *)TMU0);
     irq_set_handler(EXC_TMU1_TUNI1, irq_def_timer, (void *)TMU1);
     irq_set_handler(EXC_TMU2_TUNI2, irq_def_timer, (void *)TMU2);
