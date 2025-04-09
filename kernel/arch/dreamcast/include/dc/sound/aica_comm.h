@@ -80,6 +80,33 @@ typedef struct aica_channel {
     uint32      pad[5];     /**< \brief Padding */
 } aica_channel_t;
 
+/** \brief AICA firmware header
+
+    This structure contains all the information about the firmware that
+    both sides need to know: the addresses of the command and response
+    queues, the sample buffer address and size, and the channels array
+    address.
+
+    On the ARM side, the fields are valid pointers and can be deferred directly.
+    On the SH4 side, the fields are ARM addresses (aka. aram_addr_t) and should
+    exclusively be manipulated with the ARAM API.
+*/
+typedef struct aica_header {
+    aica_queue_t   *cmd_queue;  /**< Address of the command queue */
+    aica_queue_t   *resp_queue; /**< Address of the response queue */
+    aica_channel_t *channels;   /**< Address of the channels array */
+    void           *buffer;     /**< Address of the sample buffer */
+    unsigned int   buffer_size; /**< Sample buffer size in bytes */
+} aica_header_t;
+
+/** \brief Cached AICA firmware header
+
+    This structure is directly accessible from both ARM and SH4 sides.
+    Note that on the SH4 side the pointers are ARM addresses (aka. aram_addr_t)
+    and should exclusively be manipulated with the ARAM API.
+*/
+extern aica_header_t aica_header;
+
 /** \brief Macro for declaring an aica channel command
 
     Declare an aica_cmd_t big enough to hold an aica_channel_t

@@ -21,6 +21,9 @@ OBJS += g2dma.o
 # Sound
 OBJS += spu.o
 
+# Sound RAM
+OBJS += aram.o
+
 # Bus support
 OBJS += asic.o g2bus.o
 
