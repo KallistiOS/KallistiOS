@@ -95,11 +95,10 @@ int mutex_lock_timed(mutex_t *m, int timeout) {
     uint64_t deadline = 0;
     int rv = 0;
 
-    if((rv = irq_inside_int())) {
-        dbglog(DBG_WARNING, "%s: called inside an interrupt with code: "
-               "%x evt: %.4x\n",
+    if(irq_inside_int()) {
+        dbglog(DBG_WARNING, "%s: called inside an interrupt with code: [%x]\n",
                timeout ? "mutex_lock_timed" : "mutex_lock",
-               ((rv >> 16) & 0xf), (rv & 0xffff));
+               irq_active_int(0));
         errno = EPERM;
         return -1;
     }
