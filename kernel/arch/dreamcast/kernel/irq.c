@@ -217,20 +217,21 @@ void irq_handle_exception(int code) {
     int handled = 0;
 
     switch(code) {
-        /* If it's a code 0, well, we shouldn't be here. */
-        case 0:
-            arch_panic("spurious RESET exception");
-            break;
-
-        /* If it's a code 1 or 2, grab the event from expevt. */
-        case 1:
-        case 2:
-            evt = EXPEVT;
-            break;
-
         /* If it's a code 3, grab the event from intevt. */
         case 3:
             evt = INTEVT;
+            break;
+
+        /* If it's a code 1 or 2, grab the event from expevt. */
+        case 2:
+        case 1:
+            evt = EXPEVT;
+            break;
+
+        /* If it's a code 0, well, we shouldn't be here. */
+        case 0:
+        default:
+            arch_panic("spurious RESET exception");
             break;
     }
 
