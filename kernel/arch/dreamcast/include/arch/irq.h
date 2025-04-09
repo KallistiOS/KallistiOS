@@ -263,27 +263,6 @@ typedef enum irq_exception {
     EXC_UNHANDLED_EXC      = 0x07e0  /**< `[SOFT  ]` Exception went unhandled */
 } irq_t;
 
-
-/** \defgroup  irq_type_offsets        Exception type offsets
-    \brief                             Offsets within exception types
-    \ingroup                           irqs
-
-    The following are a table of "type offsets" (see the Hitachi PDF). These are
-    the 0x000, 0x100, 0x400, and 0x600 offsets.
-
-    @{
-*/
-#define EXC_OFFSET_000  0   /**< \brief Offset 0x000 */
-#define EXC_OFFSET_100  1   /**< \brief Offset 0x100 */
-#define EXC_OFFSET_400  2   /**< \brief Offset 0x400 */
-#define EXC_OFFSET_600  3   /**< \brief Offset 0x600 */
-/** @} */
-
-/** \brief   The value of the timer IRQ
-    \ingroup irqs
-*/
-#define TIMER_IRQ       EXC_TMU0_TUNI0
-
 /** \defgroup irq_state     State
     \brief                  Methods for querying active IRQ information.
 
