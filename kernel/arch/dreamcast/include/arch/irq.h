@@ -412,14 +412,14 @@ typedef struct irq_cb {
 */
 
 /** Set or remove an IRQ handler.
-    
+
     Passing a NULL value for hnd will remove the current handler, if any.
 
     \param  code            The IRQ type to set the handler for
                             (see #irq_t).
     \param  hnd             A pointer to a procedure to handle the exception.
     \param  data            A pointer that will be passed along to the callback.
-    
+
     \retval 0               On success.
     \retval -1              If the code is invalid.
 
