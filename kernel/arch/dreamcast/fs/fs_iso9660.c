@@ -5,6 +5,7 @@
    Copyright (C) 2001 Andrew Kieschnick
    Copyright (C) 2002 Bero
    Copyright (C) 2012, 2013, 2014, 2016 Lawrence Sebald
+   Copyright (C) 2025 Donald Haase
 
 */
 
@@ -43,6 +44,7 @@ ISO9660 systems, as these were used as references as well.
 #include <string.h>
 #include <strings.h>
 #include <errno.h>
+#include <assert.h>
 
 static int init_percd(void);
 static int percd_done;
@@ -570,14 +572,19 @@ static iso_dirent_t *find_object_path(const char *fn, int dir, iso_dirent_t *sta
 
 /* File handles.. I could probably do this with a linked list, but I'm just
    too lazy right now. =) */
-static struct {
+typedef struct {
     uint32      first_extent;   /* First sector */
     bool        dir;            /* True if a directory */
     uint32      ptr;            /* Current read position in bytes */
     uint32      size;           /* Length of file in bytes */
     dirent_t    dirent;         /* A static dirent to pass back to clients */
     bool        broken;         /* True if the CD has been swapped out since open */
-} fh[FS_CD_MAX_FILES];
+} iso_fh_t;
+
+static iso_fh_t *fh;
+
+/* Size of the fh table, initialized to the old default of 8 if no max */
+static ssize_t iso_fh_size = (FS_CD_MAX_FILES != 0) ? FS_CD_MAX_FILES : 8;
 
 /* Mutex for file handles */
 static mutex_t fh_mutex;
@@ -591,7 +598,7 @@ static void iso_break_all(void) {
 
     mutex_lock(&fh_mutex);
 
-    for(i = 0; i < FS_CD_MAX_FILES; i++)
+    for(i = 0; i < iso_fh_size; i++)
         fh[i].broken = true;
 
     mutex_unlock(&fh_mutex);
@@ -599,8 +606,9 @@ static void iso_break_all(void) {
 
 /* Open a file or directory */
 static void * iso_open(vfs_handler_t * vfs, const char *fn, int mode) {
-    file_t      fd;
+    file_t          fd;
     iso_dirent_t    *de;
+    iso_fh_t        *new_fh;
 
     (void)vfs;
 
@@ -629,18 +637,34 @@ static void * iso_open(vfs_handler_t * vfs, const char *fn, int mode) {
     /* Find a free file handle */
     mutex_lock(&fh_mutex);
 
-    for(fd = 0; fd < FS_CD_MAX_FILES; fd++)
+    for(fd = 0; fd < iso_fh_size; fd++) {
         if(fh[fd].first_extent == 0) {
             fh[fd].first_extent = -1;
             break;
         }
+    }
+
+    /* If we don't have an open slot, try to expand the table */
+    if(fd >= iso_fh_size) {
+
+        if(FS_CD_MAX_FILES != 0) {
+            errno = ENFILE;
+            return 0;
+        }
+
+        new_fh = realloc(fh, iso_fh_size * 2);
+
+        /* If we can't expand, then we've hit our max */
+        if(!new_fh) {
+            errno = ENFILE;
+            return 0;
+        }
+
+        fh = new_fh;
+        iso_fh_size *= 2;
+    }
 
     mutex_unlock(&fh_mutex);
-
-    if(fd >= FS_CD_MAX_FILES) {
-        errno = ENFILE;
-        return 0;
-    }
 
     /* Fill in the file handle and return the fd */
     fh[fd].first_extent = iso_733(de->extent);
@@ -657,7 +681,7 @@ static int iso_close(void * h) {
     file_t fd = (file_t)h;
 
     /* Check that the fd is valid */
-    if(fd < FS_CD_MAX_FILES) {
+    if(fd < iso_fh_size) {
         /* No need to lock the mutex: this is an atomic op */
         fh[fd].first_extent = 0;
     }
@@ -671,7 +695,7 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
     file_t fd = (file_t)h;
 
     /* Check that the fd is valid */
-    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || fh[fd].broken) {
+    if(fd >= iso_fh_size || fh[fd].first_extent == 0 || fh[fd].broken) {
         errno = EBADF;
         return -1;
     }
@@ -737,7 +761,7 @@ static off_t iso_seek(void * h, off_t offset, int whence) {
     file_t fd = (file_t)h;
 
     /* Check that the fd is valid */
-    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || fh[fd].broken) {
+    if(fd >= iso_fh_size || fh[fd].first_extent == 0 || fh[fd].broken) {
         errno = EBADF;
         return -1;
     }
@@ -786,7 +810,7 @@ static off_t iso_seek(void * h, off_t offset, int whence) {
 static off_t iso_tell(void * h) {
     file_t fd = (file_t)h;
 
-    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || fh[fd].broken) {
+    if(fd >= iso_fh_size || fh[fd].first_extent == 0 || fh[fd].broken) {
         errno = EBADF;
         return -1;
     }
@@ -798,7 +822,7 @@ static off_t iso_tell(void * h) {
 static size_t iso_total(void * h) {
     file_t fd = (file_t)h;
 
-    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || fh[fd].broken) {
+    if(fd >= iso_fh_size || fh[fd].first_extent == 0 || fh[fd].broken) {
         errno = EBADF;
         return -1;
     }
@@ -835,7 +859,7 @@ static dirent_t *iso_readdir(void * h) {
 
     file_t fd = (file_t)h;
 
-    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || !fh[fd].dir ||
+    if(fd >= iso_fh_size || fh[fd].first_extent == 0 || !fh[fd].dir ||
        fh[fd].broken) {
         errno = EBADF;
         return NULL;
@@ -918,7 +942,7 @@ static dirent_t *iso_readdir(void * h) {
 static int iso_rewinddir(void * h) {
     file_t fd = (file_t)h;
 
-    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || !fh[fd].dir ||
+    if(fd >= iso_fh_size || fh[fd].first_extent == 0 || !fh[fd].dir ||
        fh[fd].broken) {
         errno = EBADF;
         return -1;
@@ -1014,7 +1038,7 @@ static int iso_fcntl(void *h, int cmd, va_list ap) {
 
     (void)ap;
 
-    if(fd >= FS_CD_MAX_FILES || !fh[fd].first_extent || fh[fd].broken) {
+    if(fd >= iso_fh_size || !fh[fd].first_extent || fh[fd].broken) {
         errno = EBADF;
         return -1;
     }
@@ -1044,7 +1068,7 @@ static int iso_fcntl(void *h, int cmd, va_list ap) {
 static int iso_fstat(void *h, struct stat *st) {
     file_t fd = (file_t)h;
 
-    if(fd >= FS_CD_MAX_FILES || !fh[fd].first_extent || fh[fd].broken) {
+    if(fd >= iso_fh_size || !fh[fd].first_extent || fh[fd].broken) {
         errno = EBADF;
         return -1;
     }
@@ -1106,8 +1130,12 @@ static vfs_handler_t vh = {
 void fs_iso9660_init(void) {
     int i;
 
-    /* Reset fd's */
-    memset(fh, 0, sizeof(fh));
+    assert_msg(fh == NULL, "fs_iso9660: double init\n");
+
+    /* Build the initial fh table */
+    fh = calloc(iso_fh_size, sizeof(fh));
+
+    assert_msg(fh != NULL, "fs_iso9660: failed to create file table, out of memory\n");
 
     /* Mark the first as active so we can have an error FD of zero */
     fh[0].first_extent = -1;
@@ -1147,6 +1175,10 @@ void fs_iso9660_shutdown(void) {
     /* Dealloc cache block space */
     free(cache_data);
     free(caches);
+
+    mutex_lock(&fh_mutex);
+    free(fh);
+    mutex_unlock(&fh_mutex);
 
     /* Free muteces */
     mutex_destroy(&cache_mutex);
