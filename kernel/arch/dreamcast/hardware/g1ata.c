@@ -249,9 +249,16 @@ static void g1_dma_irq_hnd(uint32 code, void *data) {
         nb_sectors = dma_nb_sectors <= 256 ? dma_nb_sectors : 256;
 
         /* Set the DMA parameters for the next transfer. */
+        g1_ata_select_device(G1_ATA_SLAVE | G1_ATA_LBA_MODE |
+            ((dma_sector >> 24) & 0x0F));
         g1_ata_set_sector_and_count(dma_sector, nb_sectors, 1);
         OUT32(G1_ATA_DMA_ADDRESS, IN32(G1_ATA_DMA_ADDRESS) + 256 * 512);
         OUT32(G1_ATA_DMA_LENGTH, nb_sectors * 512);
+
+        if(dma_cmd == ATA_CMD_WRITE_DMA)
+            OUT8(G1_ATA_DMA_DIRECTION, G1_DMA_TO_DEVICE);
+        else
+            OUT8(G1_ATA_DMA_DIRECTION, G1_DMA_TO_MEMORY);
 
         /* Write out the command to the device. */
         OUT8(G1_ATA_COMMAND_REG, dma_cmd);
@@ -839,8 +846,8 @@ int g1_ata_write_lba_dma(uint64_t sector, size_t count, const void *buf,
         return -1;
     }
 
-    /* Chaining isn't done yet, so make sure we don't need to. */
-    if(count > 65536 || (!can_lba48 && count > 256)) {
+    /* Make sure we don't exceed maximum sector count */
+    if(count > 65536) {
         errno = EOVERFLOW;
         return -1;
     }
@@ -905,6 +912,9 @@ int g1_ata_write_lba_dma(uint64_t sector, size_t count, const void *buf,
         g1_ata_select_device(G1_ATA_SLAVE | G1_ATA_LBA_MODE |
                              ((sector >> 24) & 0x0F));
         cmd = ATA_CMD_WRITE_DMA;
+        if(count > 256) {
+            count = 256;
+        }
     }
     else {
         g1_ata_select_device(G1_ATA_SLAVE | G1_ATA_LBA_MODE);
