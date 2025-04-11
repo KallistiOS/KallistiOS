@@ -2,7 +2,7 @@
 
    hardware/g1ata.c
    Copyright (C) 2013, 2014, 2015 Lawrence Sebald
-   Copyright (C) 2015, 2023, 2024 Ruslan Rostovtsev
+   Copyright (C) 2015, 2023, 2024, 2025 Ruslan Rostovtsev
 */
 
 #include <errno.h>
@@ -108,7 +108,6 @@ typedef struct ata_devdata {
 #define G1_ATA_DMA_DIRECTION    0xA05F740C      /* Read/Write */
 #define G1_ATA_DMA_ENABLE       0xA05F7414      /* Read/Write */
 #define G1_ATA_DMA_STATUS       0xA05F7418      /* Read/Write */
-#define G1_ATA_DMA_PROTECTION   0xA05F74B8      /* Write-only */
 
 /* Protection register code. */
 #define G1_DMA_UNLOCK_CODE      0x8843
@@ -229,7 +228,7 @@ static void g1_ata_set_sector_and_count(uint64_t sector, uint32_t count, int lba
 
     /* Write out the number of sectors we want and the lower 24-bits of
        the LBA we're looking for. Note that putting 0 into the sector count
-       register returns 256 sectors. */
+       register returns max count of sectors. */
     OUT8(G1_ATA_SECTOR_COUNT, (uint8_t)count);
     OUT8(G1_ATA_LBA_LOW, (uint8_t)((sector >> 0) & 0xFF));
     OUT8(G1_ATA_LBA_MID, (uint8_t)((sector >> 8) & 0xFF));
@@ -250,9 +249,16 @@ static void g1_dma_irq_hnd(uint32 code, void *data) {
         nb_sectors = dma_nb_sectors <= 256 ? dma_nb_sectors : 256;
 
         /* Set the DMA parameters for the next transfer. */
+        g1_ata_select_device(G1_ATA_SLAVE | G1_ATA_LBA_MODE |
+            ((dma_sector >> 24) & 0x0F));
         g1_ata_set_sector_and_count(dma_sector, nb_sectors, 1);
         OUT32(G1_ATA_DMA_ADDRESS, IN32(G1_ATA_DMA_ADDRESS) + 256 * 512);
         OUT32(G1_ATA_DMA_LENGTH, nb_sectors * 512);
+
+        if(dma_cmd == ATA_CMD_WRITE_DMA)
+            OUT8(G1_ATA_DMA_DIRECTION, G1_DMA_TO_DEVICE);
+        else
+            OUT8(G1_ATA_DMA_DIRECTION, G1_DMA_TO_MEMORY);
 
         /* Write out the command to the device. */
         OUT8(G1_ATA_COMMAND_REG, dma_cmd);
@@ -376,7 +382,7 @@ int g1_ata_read_chs(uint16_t c, uint8_t h, uint8_t s, size_t count,
                     void *buf) {
     int rv = 0;
     unsigned int i, j;
-    uint8_t nsects = (uint8_t)count;
+    uint16_t nsects;
     uint16_t word;
     uint8_t *ptr = (uint8_t *)buf;
 
@@ -394,7 +400,7 @@ int g1_ata_read_chs(uint16_t c, uint8_t h, uint8_t s, size_t count,
     g1_ata_wait_bsydrq();
 
     while(count) {
-        nsects = count > 255 ? 255 : (uint8_t)count;
+        nsects = count > 256 ? 256 : (uint16_t)count;
         count -= nsects;
 
         g1_ata_select_device(G1_ATA_SLAVE | (h & 0x0F));
@@ -457,7 +463,7 @@ int g1_ata_write_chs(uint16_t c, uint8_t h, uint8_t s, size_t count,
                      const void *buf) {
     int rv = 0;
     unsigned int i, j;
-    uint8_t nsects = (uint8_t)count;
+    uint16_t nsects;
     uint16_t word;
     uint8_t *ptr = (uint8_t *)buf;
 
@@ -475,7 +481,7 @@ int g1_ata_write_chs(uint16_t c, uint8_t h, uint8_t s, size_t count,
     g1_ata_wait_bsydrq();
 
     while(count) {
-        nsects = count > 255 ? 255 : (uint8_t)count;
+        nsects = count > 256 ? 256 : (uint16_t)count;
         count -= nsects;
 
         g1_ata_select_device(G1_ATA_SLAVE | (h & 0x0F));
@@ -532,7 +538,7 @@ int g1_ata_write_chs(uint16_t c, uint8_t h, uint8_t s, size_t count,
 int g1_ata_read_lba(uint64_t sector, size_t count, void *buf) {
     int rv = 0;
     unsigned int i, j;
-    uint8_t nsects = (uint8_t)count;
+    uint16_t nsects;
     uint16_t word;
     uint8_t *ptr = (uint8_t *)buf;
     int lba28, cmd;
@@ -563,7 +569,7 @@ int g1_ata_read_lba(uint64_t sector, size_t count, void *buf) {
     g1_ata_wait_bsydrq();
 
     while(count) {
-        nsects = count > 255 ? 255 : (uint8_t)count;
+        nsects = count > 256 ? 256 : (uint16_t)count;
         count -= nsects;
 
         /* Which mode are we using: LBA28 or LBA48? */
@@ -733,10 +739,11 @@ int g1_ata_read_lba_dma(uint64_t sector, size_t count, void *buf,
 
 int g1_ata_write_lba(uint64_t sector, size_t count, const void *buf) {
     unsigned int i, j;
-    uint8_t nsects = (uint8_t)count;
+    uint32_t nsects;
     uint16_t word;
     uint8_t *ptr = (uint8_t *)buf;
     int cmd, lba28;
+    const size_t max_sectors = CAN_USE_LBA48() ? 65536 : 256;
 
     /* Make sure that we've been initialized and there's a disk attached. */
     if(!devices) {
@@ -764,7 +771,7 @@ int g1_ata_write_lba(uint64_t sector, size_t count, const void *buf) {
     g1_ata_wait_bsydrq();
 
     while(count) {
-        nsects = count > 255 ? 255 : (uint8_t)count;
+        nsects = count > max_sectors ? max_sectors : count;
         count -= nsects;
 
         /* Which mode are we using: LBA28 or LBA48? */
@@ -839,8 +846,8 @@ int g1_ata_write_lba_dma(uint64_t sector, size_t count, const void *buf,
         return -1;
     }
 
-    /* Chaining isn't done yet, so make sure we don't need to. */
-    if(count > 65536 || (!can_lba48 && count > 256)) {
+    /* Make sure we don't exceed maximum sector count */
+    if(count > 65536) {
         errno = EOVERFLOW;
         return -1;
     }
@@ -905,6 +912,9 @@ int g1_ata_write_lba_dma(uint64_t sector, size_t count, const void *buf,
         g1_ata_select_device(G1_ATA_SLAVE | G1_ATA_LBA_MODE |
                              ((sector >> 24) & 0x0F));
         cmd = ATA_CMD_WRITE_DMA;
+        if(count > 256) {
+            count = 256;
+        }
     }
     else {
         g1_ata_select_device(G1_ATA_SLAVE | G1_ATA_LBA_MODE);
