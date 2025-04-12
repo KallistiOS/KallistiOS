@@ -9,12 +9,11 @@
 */
 
 /** \file    kos/cdefs.h
-    \brief   Definitions for builtin attributes and compiler directives
-    \ingroup system_macros
+    \brief   Various common macros used throughout the codebase
+    \ingroup system
 
-    This file contains definitions of various __attribute__ directives in
-    shorter forms for use in programs. These typically aid  in optimizations
-    or provide the compiler with extra information about a symbol.
+    This file contains various convenience macros. Mostly compiler
+    __attribute__ directives, as well as other language defines.
 
     \author Megan Potter
     \author Lawrence Sebald
@@ -26,19 +25,21 @@
 
 #include <sys/cdefs.h>
 
-/** \defgroup system_macros     Macros
-    \brief                      Various common macros used throughout the codebase
-    \ingroup                    system
-    
-    @{
-*/
-
 /* Check GCC version */
 #if __GNUC__ <= 3
 #   warning Your GCC is too old. This will probably not work right.
 #endif
 
-/* Special function/variable attributes */
+/** \defgroup system_attributes
+    \brief                      Definitions for builtin attributes and compiler directives
+    \ingroup                    system
+
+    This group contains definitions of various __attribute__ directives in
+    shorter forms for use in programs. These typically aid  in optimizations
+    or provide the compiler with extra information about a symbol.
+
+    @{
+*/
 
 #ifndef __noreturn
 /** \brief  Identify a function that will never return. */
@@ -169,6 +170,18 @@
 #define __no_inline __attribute__((__noinline__))
 #endif
 
+/** @} */
+
+/** \defgroup system_compat
+    \brief                      Definitions for language features
+    \ingroup                    system
+
+    This group contains definitions to help retain some older language
+    backwards compatibility for external software linking into KOS.
+
+    @{
+*/
+
 /* GCC macros for special cases */
 /* #if __GNUC__ ==  */
 
@@ -191,5 +204,6 @@
 #endif
 
 /** @} */
+
 
 #endif  /* __KOS_CDEFS_H */
