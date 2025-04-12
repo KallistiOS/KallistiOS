@@ -53,7 +53,7 @@ dbgio_handler_t * dbgio_handlers[] = {
     &dbgio_null,
     &dbgio_fb
 };
-int dbgio_handler_cnt = sizeof(dbgio_handlers) / sizeof(dbgio_handler_t *);
+const size_t dbgio_handler_cnt = __array_size(dbgio_handlers);
 
 void arch_init_net_dcload_ip(void) {
     union {

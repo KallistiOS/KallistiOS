@@ -25,7 +25,7 @@
 static dbgio_handler_t * dbgio = NULL;
 
 int dbgio_dev_select(const char * name) {
-    int i;
+    size_t i;
 
     for(i = 0; i < dbgio_handler_cnt; i++) {
         if(!strcmp(dbgio_handlers[i]->name, name)) {
@@ -60,7 +60,7 @@ void dbgio_disable(void) {
 }
 
 int dbgio_init(void) {
-    int i;
+    size_t i;
 
     // Look for a valid interface.
     for(i = 0; i < dbgio_handler_cnt; i++) {

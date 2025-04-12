@@ -107,7 +107,7 @@ typedef struct dbgio_handler {
 /** \cond */
 /* These two should be initialized in arch. */
 extern dbgio_handler_t * dbgio_handlers[];
-extern int dbgio_handler_cnt;
+extern const size_t dbgio_handler_cnt;
 
 /* This is defined by the shared code, in case there's no valid handler. */
 extern dbgio_handler_t dbgio_null;

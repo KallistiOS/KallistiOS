@@ -93,7 +93,6 @@ static const char *maple_cap_names[] = {
     "Mouse",
     "JumpPack"
 };
-#define maple_cap_name_cnt (sizeof(maple_cap_names)/sizeof(char *))
 
 /* Print the capabilities of a given driver to dbglog; NOT THREAD SAFE */
 static char caps_buffer[64];
@@ -102,7 +101,7 @@ const char * maple_pcaps(uint32 functions) {
 
     for(o = 0, i = 0; i < 32; i++) {
         if(functions & (0x80000000 >> i)) {
-            if(i > maple_cap_name_cnt || maple_cap_names[i] == NULL) {
+            if(i > __array_size(maple_cap_names) || maple_cap_names[i] == NULL) {
                 sprintf(caps_buffer + o, "UNKNOWN(%08x), ", (0x80000000 >> i));
                 o += strlen(caps_buffer + o);
             }
@@ -133,13 +132,12 @@ static const char *maple_resp_names[] = {
     "OK",
     "DATATRF"
 };
-#define maple_resp_name_cnt ((int)(sizeof(maple_resp_names)/sizeof(char *)))
 
 /* Return a string representing the maple response code */
 const char * maple_perror(int response) {
     response += 5;
 
-    if(response < 0 || response >= maple_resp_name_cnt)
+    if(response < 0 || (size_t)response >= __array_size(maple_resp_names))
         return "UNKNOWN";
     else
         return maple_resp_names[response];

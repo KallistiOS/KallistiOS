@@ -80,7 +80,7 @@ typedef struct kbd_keymap {
 } kbd_keymap_internal_t;
 
 /* Built-in keymaps. */
-#define KBD_NUM_KEYMAPS (sizeof(keymaps) / sizeof(keymaps[0]))
+#define KBD_NUM_KEYMAPS __array_size(keymaps)
 static const kbd_keymap_internal_t keymaps[] = {
     {
         /* Japanese keyboard */
