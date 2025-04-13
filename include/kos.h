@@ -64,6 +64,7 @@ __BEGIN_DECLS
 #include <arch/arch.h>
 #include <arch/cache.h>
 #include <arch/irq.h>
+#include <arch/trap.h>
 #include <arch/spinlock.h>
 #include <arch/timer.h>
 #include <arch/types.h>
