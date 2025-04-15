@@ -333,7 +333,10 @@ char kbd_key_to_ascii(kbd_key_t key, kbd_region_t region,
 
     This is a hardware constant. The define prevents the magic number '6' from appearing.
 **/
-#define MAX_PRESSED_KEYS 6
+#define KBD_MAX_PRESSED_KEYS 6
+
+/* Short-term compatibility helper. */
+static const int MAX_PRESSED_KEYS   __depr("Please use KBD_MAX_PRESSED_KEYS.") = KBD_MAX_PRESSED_KEYS;
 
 /** \brief   Maximum number of keys a DC keyboard can have.
 
@@ -355,7 +358,7 @@ typedef void kbd_keymap_t __depr("Please open an issue, there should be no reaso
 typedef struct {
     kbd_mods_t modifiers;    /**< \brief Bitmask of set modifiers. */
     kbd_leds_t leds;         /**< \brief Bitmask of set LEDs */
-    kbd_key_t keys[MAX_PRESSED_KEYS];      /**< \brief Key codes for currently pressed keys. */
+    kbd_key_t keys[KBD_MAX_PRESSED_KEYS];      /**< \brief Key codes for currently pressed keys. */
 } kbd_cond_t;
 
 /** \brief   Keyboard status structure.
