@@ -473,11 +473,12 @@ typedef struct kbd_state {
     \brief                  Various methods for checking keyboard input
     \ingroup kbd
 
-    There are 2 different ways to check for input with the keyboard API:
+    There are 3 different ways to check for input with the keyboard API:
 
     Mechanism             | Description
     ----------------------|--------------------------------------------
     \ref kbd_polling      |Manual checks each key state every frame
+    \ref kbd_event_handler|Automatic callbacks upon key state changes
     \ref kbd_queue        |Monitor for new key press events every frame
 
     @{
@@ -529,6 +530,90 @@ typedef struct kbd_state {
 
 */
 kbd_state_t *kbd_get_state(maple_device_t *device);
+
+/** @} */
+
+/** \defgroup kbd_event_handler     Event Handling
+    \brief                          Event-driven keyboard input mechanism
+
+    One method of checking for key input is to register an event handler,
+    which will be notified every time a key changes state.
+
+    We first create a simple handler to print `ENTER` key events:
+
+        static void on_key_event(maple_device_t *dev, kbd_key_t key,
+                                 key_state_t state, kbd_mods_t mods,
+                                 kbd_leds_t leds, void *user_data) {
+
+            if(key == KBD_KEY_ENTER) {
+                if(state.value == KEY_STATE_CHANGED_DOWN)
+                    printf("Enter pressed!\n");
+                else if(state.value == KEY_STATE_CHANGED_UP)
+                    printf("Enter released!\n");
+            }
+        }
+
+    We then register our callback as the keyboard event handler:
+
+        kbd_set_event_handler(on_key_event, NULL);
+
+    @{
+*/
+
+/** \brief Keyboard Event Handler Callback
+
+    Function type which can be registered to listen to keyboard key events.
+
+    \param  dev     The maple device the event originated from.
+    \param  key     The raw key ID whose state change triggered the event.
+    \param  state   The new (transition) state of the key in question:
+                        1. KEY_STATE_CHANGED_DOWN: key pressed event
+                        2. KEY_STATE_CHANGED_UP: key released event
+    \param  mods    Flags containing the states of all modifier keys.
+    \param  leds    Flags containing the states of all LEDs.
+    \param  ud      Arbitrary user-pointer which was registered with this handler.
+
+    \sa kbd_set_event_handler
+*/
+typedef void (*kbd_event_handler_t)(maple_device_t *dev, kbd_key_t key,
+                                    key_state_t state, kbd_mods_t mods,
+                                    kbd_leds_t leds, void *ud);
+
+/** \brief Registers an Event Handler
+
+    This function registers a function pointer as the keyboard event callback
+    handler, also taking a generic user data pointer which gets passed back
+    to the handler upon invocation.
+
+    The callback will be invoked any time a key state transition occurs on any
+    connected keyboard. That is a key has either gone from released to pressed
+    or from pressed to released.
+
+    \param  callback    Pointer to the function to be called upon key
+                        transition events.
+    \param  user_data   Generic pointer which is stored internally and gets
+                        passed back to \p callback upon an event firing.
+
+    \sa kbd_get_event_handler(), kbd_event_handler_t
+*/
+void kbd_set_event_handler(kbd_event_handler_t callback, void *user_data);
+
+/** \brief Returns the Registered Event Handler
+
+    This function returns the handler that has currently been registered to be
+    notified upon keyboard events. The handler is returned in the form of its
+    callback function and associated userdata.
+
+    \param  callback    Pointer-to-pointer which will be modifed to point to
+                        the address of the currently installed callback.
+    \param  user_data   Pointer-to-pointer which will be modified to point to
+                        the address of the userdata associated with the
+                        currently installed callback.
+
+    \sa kbd_set_event_handler(), kbd_event_handler_t
+
+*/
+void kbd_get_event_handler(kbd_event_handler_t *callback, void **user_data);
 
 /** @} */
 

@@ -68,6 +68,23 @@ void kbd_set_repeat_timing(uint16_t start, uint16_t interval) {
     repeat_timing.interval = interval;
 }
 
+static struct {
+    kbd_event_handler_t cb;
+    void               *ud;
+} event_handler = {
+    NULL, NULL
+};
+
+void kbd_set_event_handler(kbd_event_handler_t callback, void *user_data) {
+    event_handler.cb = callback;
+    event_handler.ud = user_data;
+}
+
+void kbd_get_event_handler(kbd_event_handler_t *callback, void **user_data) {
+    *callback = event_handler.cb;
+    *user_data = event_handler.ud;
+}
+
 /*  Keyboard keymap.
 
     This structure represents a mapping from raw key values to ASCII values, if
@@ -629,6 +646,27 @@ static void kbd_check_poll(maple_frame_t *frm) {
                 }
             }
             else assert_msg(0, "invalid key_states array detected");
+        }
+    }
+
+    /* If we are using the event callback, check if any need called. */
+    if(!event_handler.cb) return;
+
+    for(i = KBD_KEY_A; i < KBD_MAX_KEYS; i++) {
+        switch(state->key_states[i].value) {
+            case KEY_STATE_CHANGED_DOWN:
+            case KEY_STATE_CHANGED_UP:
+                event_handler.cb(frm->dev, i, state->key_states[i],
+                                 cond->modifiers, cond->leds, event_handler.ud);
+                break;
+
+            case KEY_STATE_HELD_DOWN:
+            case KEY_STATE_HELD_UP:
+                break;
+
+            default:
+                assert_msg(0, "Invalid key state found during callback check loop.");
+                break;
         }
     }
 }
