@@ -581,7 +581,7 @@ static void kbd_check_poll(maple_frame_t *frm) {
     state->last_modifiers = cond->modifiers;
 
     /* Process all pressed keys */
-    for(i = 0; i < MAX_PRESSED_KEYS; i++) {
+    for(i = 0; i < KBD_MAX_PRESSED_KEYS; i++) {
 
         /* Once we get to a 'none', the rest will be 'none' */
         if(cond->keys[i] == KBD_KEY_NONE) {
