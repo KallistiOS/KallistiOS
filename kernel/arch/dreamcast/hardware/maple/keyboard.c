@@ -41,12 +41,14 @@ typedef struct kbd_state_private {
         You should not access this variable directly. Please use the appropriate
         function to access it. */
     kbd_q_key_t key_queue[KBD_QUEUE_SIZE];
-    int queue_tail;                     /**< \brief Key queue tail. */
-    int queue_head;                     /**< \brief Key queue head. */
-    volatile int queue_len;             /**< \brief Current length of queue. */
+    size_t queue_tail;                     /**< \brief Key queue tail. */
+    size_t queue_head;                     /**< \brief Key queue head. */
+    volatile size_t queue_len;             /**< \brief Current length of queue. */
 
-    kbd_key_t kbd_repeat_key;           /**< \brief Key that is repeating. */
-    uint64_t kbd_repeat_timer;          /**< \brief Time that the next repeat will trigger. */
+    struct {
+	kbd_key_t key;          /**< \brief Key that is repeating. */
+        uint64_t timeout;       /**< \brief Time that the next repeat will trigger. */
+    } repeater;
 } kbd_state_private_t;
 
 /* These are global timings for key repeat. It would be possible to put
@@ -571,8 +573,8 @@ static void kbd_check_poll(maple_frame_t *frm) {
 
     /* If the modifier keys have changed, end the key repeating. */
     if(state->last_modifiers.raw != cond->modifiers.raw) {
-        pstate->kbd_repeat_key = KBD_KEY_NONE;
-        pstate->kbd_repeat_timer = 0;
+        pstate->repeater.key = KBD_KEY_NONE;
+        pstate->repeater.timeout = 0;
     }
 
     /* Update modifiers. */
@@ -600,19 +602,19 @@ static void kbd_check_poll(maple_frame_t *frm) {
             if(state->matrix[cond->keys[i]] == KEY_STATE_NONE) {
                 state->matrix[cond->keys[i]] = KEY_STATE_PRESSED;
                 kbd_enqueue(pstate, cond->keys[i]);
-                pstate->kbd_repeat_key = cond->keys[i];
+                pstate->repeater.key = cond->keys[i];
                 if(repeat_timing.start)
-                    pstate->kbd_repeat_timer = timer_ms_gettime64() + repeat_timing.start;
+                    pstate->repeater.timeout = timer_ms_gettime64() + repeat_timing.start;
             }
             /* If the key was already being pressed and was our one allowed repeating key, then... */
             else if(state->matrix[cond->keys[i]] == KEY_STATE_WAS_PRESSED) {
                 state->matrix[cond->keys[i]] = KEY_STATE_PRESSED;
-                if(pstate->kbd_repeat_key == cond->keys[i]) {
+                if(pstate->repeater.key == cond->keys[i]) {
                     /* If repeat timing is enabled, bail if under interval */
                     if(repeat_timing.start) {
                         uint64_t time = timer_ms_gettime64();
-                        if(time >= (pstate->kbd_repeat_timer))
-                            pstate->kbd_repeat_timer = time + repeat_timing.interval;
+                        if(time >= (pstate->repeater.timeout))
+                            pstate->repeater.timeout = time + repeat_timing.interval;
                         else
                             continue;
                     }
