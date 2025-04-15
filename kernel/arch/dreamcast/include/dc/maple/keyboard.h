@@ -313,20 +313,99 @@ typedef enum __packed kbd_key {
 char kbd_key_to_ascii(kbd_key_t key, kbd_region_t region,
                       kbd_mods_t mods, kbd_leds_t leds);
 
-/** \defgroup   key_states  Key States
-    \brief                  States each key can be in.
+/** \defgroup key_state_grp     Key States
+    \brief                      Types associated with key states
+    \ingroup                    kbd_status_grp
 
-    These are the different 'states' each key can be in. They are stored in
-    kbd_state_t->matrix, and manipulated/checked by kbd_check_poll.
+    Key states are represented by the kbd_state_t union type. The state may be
+    accessed by:
+        1. Directly comparing key_state_t::value to a \ref key_state_value_t.
+        2. Directly using a convenience bit field.
+        3. Bitwise `AND` of key_state_t::raw with one of the
+           \ref key_state_flags.
 
-    none-> pressed or none
-    was pressed-> pressed or none
-    pressed-> was_pressed
     @{
 */
-#define KEY_STATE_NONE        0
-#define KEY_STATE_WAS_PRESSED 1
-#define KEY_STATE_PRESSED     2
+
+/** \defgroup   key_state_flags Flags
+    \brief                      Keyboard key state bit flags
+
+    A key_state_t is a combination of two flags:
+        1. `KEY_STATE_IS_DOWN`: whether the key is currently pressed
+                                this frame.
+        2. `KEY_STATE_WAS_DOWN`: whether the key was previously pressed
+                                 last frame.
+
+    Between these two flags, you can know whether a key state transition
+    event has occurred (when the two flags have different values).
+
+    \sa key_state_t::raw, key_state_value_t
+
+    @{
+*/
+#define KEY_STATE_IS_DOWN    BIT(0) /**< \brief If key is currenty down */
+#define KEY_STATE_WAS_DOWN   BIT(1) /**< \brief If key was previously down */
+/** \brief Mask of all key state flags */
+#define KEY_STATE_MASK      (KEY_STATE_IS_DOWN | KEY_STATE_WAS_DOWN)
+/** @} */
+
+/** \brief Creates a packed key_state_t
+
+    This macro is used to pack two frames worth of key state information
+    into a key_state_t, one bit per frame.
+*/
+#define KEY_STATE_PACK(is_down, was_down) \
+    (((!!(is_down))?  KEY_STATE_IS_DOWN  : 0) | \
+     ((!!(was_down))? KEY_STATE_WAS_DOWN : 0))
+
+/** \brief Valid values for key_state_t::value
+
+    Enumerates each of the 4 different states a key can be in,
+    by combining two frames worth of key down information
+    into two bits.
+
+    \note
+    Two of the values are for `HELD` states, meaning the same state has been
+    observed for both the current and the previous frame, while the other two
+    values are for `CHANGE` states, meaning the current frame has a different
+    state from the previous frame.
+
+    \sa key_state_flags, key_state_t::value
+*/
+typedef enum __packed key_state_value {
+    /** \brief Key has been in an up state for at least the last two frames */
+    KEY_STATE_HELD_UP      = KEY_STATE_PACK(false, false),
+    /** \brief Key transitioned from up to pressed this frame */
+    KEY_STATE_CHANGED_DOWN = KEY_STATE_PACK(true, false),
+    /** \brief Key transitioned from down to released this frame */
+    KEY_STATE_CHANGED_UP   = KEY_STATE_PACK(false, true),
+    /** \brief Key has been held down for at least the last two frames */
+    KEY_STATE_HELD_DOWN    = KEY_STATE_PACK(true, true),
+} key_state_value_t;
+
+/* Short-term compatibility helpers. */
+static const uint8_t KEY_STATE_NONE   __depr("Please use KEY_STATE_HELD_UP.") = KEY_STATE_HELD_UP;
+static const uint8_t KEY_STATE_WAS_PRESSED   __depr("Please use KEY_STATE_CHANGED_UP.") = KEY_STATE_CHANGED_UP;
+static const uint8_t KEY_STATE_PRESSED   __depr("Please see key_state_value_t.") = KEY_STATE_HELD_DOWN;
+
+/** \brief Keyboard Key State
+
+    Union containing the the previous and current frames' state information for
+    a keyboard key.
+
+    \sa key_state_flags, key_state_value_t, kbd_state::key_states
+*/
+typedef union key_state {
+    /** \brief Convenience Bitfields */
+    struct {
+        bool is_down  : 1; /**< \brief Whether down the current frame */
+        bool was_down : 1; /**< \brief Whether down the previous frame */
+        uint8_t       : 6;
+    };
+    key_state_value_t value;  /**< \brief Enum for specific state */
+    uint8_t           raw;    /**< \brief Packed 8-bit unsigned integer of bitflags */
+} key_state_t;
+
 /** @} */
 
 /** \brief   Maximum number of keys the DC can read simultaneously.
@@ -372,15 +451,11 @@ typedef struct kbd_state {
     /** \brief  The latest raw condition of the keyboard. */
     kbd_cond_t cond;
 
-    /** \brief  Key array.
-
-        This array lists the state of all possible keys on the keyboard. It can
-        be used for key repeat and debouncing. This will be non-zero if the key
-        is currently being pressed.
-
-        \see    kbd_keys
-    */
-    uint8_t matrix[KBD_MAX_KEYS];
+    /** \brief Current (and previous) state of all keys in kbd_keys_t */
+    union {
+        uint8_t matrix[KBD_MAX_KEYS] __depr("Please see key_state_t and use key_states to access this.");
+        key_state_t key_states[KBD_MAX_KEYS];
+    };
 
     /** \brief  Modifier key status. Stored to track changes. */
     union {
@@ -412,7 +487,7 @@ typedef struct kbd_state {
     \brief                  Frame-based polling for keyboard input
 
     One method of checking for key input is to simply poll
-    kbd_state_t::matrix for the desired key states each frame.
+    kbd_state_t::key_states for the desired key states each frame.
 
     First, lets grab a pointer to the kbd_state_t:
 
@@ -420,24 +495,21 @@ typedef struct kbd_state {
 
     Then let's "move" every frame an arrow key is held down:
 
-        if(kbd->matrix[KBD_KEY_LEFT] == KEY_STATE_PRESSED)
+        if(kbd->key_states[KBD_KEY_LEFT].is_down)
             printf("Moving left!\n");
-        if(kbd->matrix[KBD_KEY_RIGHT] == KEY_STATE_PRESSED)
+        if(kbd->key_states[KBD_KEY_RIGHT].is_down)
             printf("Moving right!\n");
-        if(kbd->matrix[KBD_KEY_UP] == KEY_STATE_PRESSED)
+        if(kbd->key_states[KBD_KEY_UP].is_down)
             printf("Moving up!\n");
-        if(kbd->matrix[KBD_KEY_DOWN] == KEY_STATE_PRESSED)
+        if(kbd->key_states[KBD_KEY_DOWN].is_down)
             printf("Moving down!\n");
 
-    Finally, let's charge an "attack" incrementing the charge for each
-    frame that the key is held and resetting when the key is released:
+    Finally, let's "attack" for only a single frame each time the button is
+    pressed, requiring it to be released and pressed again to start the next
+    attack:
 
-        if(kbd->matrix[KBD_KEY_SPACE] == KEY_STATE_PRESSED)
-            charge++;
-        if(kbd->matrix[KBD_KEY_SPACE] == KEY_STATE_WAS_PRESSED) {
-            printf("Releasing a charged attack of %i!\n", charge);
-            charge = 0;
-        }
+        if(kbd->key_states[KBD_KEY_SPACE].value == KEY_STATE_CHANGED_DOWN)
+            printf("Attacking!\n");
 
     @{
 */

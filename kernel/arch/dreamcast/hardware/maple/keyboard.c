@@ -569,7 +569,7 @@ static void kbd_check_poll(maple_frame_t *frm) {
     kbd_state_private_t *pstate = (kbd_state_private_t *)frm->dev->status;
     kbd_state_t         *state = &pstate->base;
     kbd_cond_t          *cond = (kbd_cond_t *)&state->cond;
-    int i;
+    size_t i;
 
     /* If the modifier keys have changed, end the key repeating. */
     if(state->last_modifiers.raw != cond->modifiers.raw) {
@@ -580,6 +580,11 @@ static void kbd_check_poll(maple_frame_t *frm) {
     /* Update modifiers. */
     state->last_modifiers = cond->modifiers;
 
+    /* Update all key states */
+    for(i = 0; i < KBD_MAX_KEYS; ++i) {
+        state->key_states[i].raw = (state->key_states[i].raw << 1) & KEY_STATE_MASK;
+    }
+
     /* Process all pressed keys */
     for(i = 0; i < KBD_MAX_PRESSED_KEYS; i++) {
 
@@ -588,27 +593,28 @@ static void kbd_check_poll(maple_frame_t *frm) {
             /* This could be used to indicate how many keys are pressed by setting it to ~i or i+1
                 or similar. This could be useful, but would make it a weird exception. */
             /* If the first key in the key array is none, there are no non-modifer keys pressed at all. */
-            if(i==0) state->matrix[KBD_KEY_NONE] = KEY_STATE_PRESSED;
+            if(!i) state->key_states[KBD_KEY_NONE].is_down = true;
             break;
         }
         /* Between None and A are error indicators. This would be a good place to do... something. If an error occurs the whole array will be error.*/
         else if(cond->keys[i]>KBD_KEY_NONE && cond->keys[i]<KBD_KEY_A) {
-            state->matrix[cond->keys[i]] = KEY_STATE_PRESSED;
+            state->key_states[cond->keys[i]].is_down = true;
             break;
         }
         /* The rest of the keys are treated normally */
         else {
+            /* Update key state */
+            state->key_states[cond->keys[i]].is_down = true;
+
             /* If the key hadn't been pressed. */
-            if(state->matrix[cond->keys[i]] == KEY_STATE_NONE) {
-                state->matrix[cond->keys[i]] = KEY_STATE_PRESSED;
+            if(state->key_states[cond->keys[i]].value == KEY_STATE_CHANGED_DOWN) {
                 kbd_enqueue(pstate, cond->keys[i]);
                 pstate->repeater.key = cond->keys[i];
                 if(repeat_timing.start)
                     pstate->repeater.timeout = timer_ms_gettime64() + repeat_timing.start;
             }
             /* If the key was already being pressed and was our one allowed repeating key, then... */
-            else if(state->matrix[cond->keys[i]] == KEY_STATE_WAS_PRESSED) {
-                state->matrix[cond->keys[i]] = KEY_STATE_PRESSED;
+            else if(state->key_states[cond->keys[i]].value == KEY_STATE_HELD_DOWN) {
                 if(pstate->repeater.key == cond->keys[i]) {
                     /* If repeat timing is enabled, bail if under interval */
                     if(repeat_timing.start) {
@@ -622,23 +628,7 @@ static void kbd_check_poll(maple_frame_t *frm) {
                     kbd_enqueue(pstate, cond->keys[i]);
                 }
             }
-            else assert_msg(0, "invalid key matrix array detected");
-        }
-    }
-
-    /* Now normalize the key matrix */
-    /* If it was determined no keys are pressed, wipe the matrix */
-    if(state->matrix[KBD_KEY_NONE] == KEY_STATE_PRESSED)
-        memset (state->matrix, KEY_STATE_NONE, KBD_MAX_KEYS);
-    /* Otherwise, walk through the whole matrix */
-    else    {
-        for(i = 0; i < KBD_MAX_KEYS; i++) {
-            if(state->matrix[i] == KEY_STATE_NONE) continue;
-
-            else if(state->matrix[i] == KEY_STATE_WAS_PRESSED) state->matrix[i] = KEY_STATE_NONE;
-
-            else if(state->matrix[i] == KEY_STATE_PRESSED) state->matrix[i] = KEY_STATE_WAS_PRESSED;
-            else assert_msg(0, "invalid key matrix array detected");
+            else assert_msg(0, "invalid key_states array detected");
         }
     }
 }
