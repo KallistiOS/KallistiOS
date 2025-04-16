@@ -191,6 +191,25 @@ static inline void g2_unlock(g2_ctx_t ctx) {
     irq_restore(ctx.irq_state);
 }
 
+/** \cond */
+static inline void __g2_scoped_cleanup(g2_ctx_t *state) {
+    g2_unlock(*state);
+}
+
+#define ___g2_lock_scoped(l) \
+    g2_ctx_t __scoped_g2_lock_##l __attribute__((cleanup(__g2_scoped_cleanup))) = g2_lock()
+
+#define __g2_lock_scoped(l) ___g2_lock_scoped(l)
+/** \endcond */
+
+/** \brief  Disable IRQs and G2 DMA with scope management
+
+    This function makes the following g2_read_*()/g2_write_*() functions atomic
+    by disabling IRQs and G2 DMA and storing their states. The state will
+    automatically be restored once the execution exits the functional block in
+    which the macro was called.
+*/
+#define g2_lock_scoped() __g2_lock_scoped(__LINE__)
 
 #undef G2_DMA_SUSPEND_SPU
 #undef G2_DMA_SUSPEND_BBA

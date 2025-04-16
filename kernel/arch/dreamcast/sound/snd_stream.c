@@ -789,10 +789,7 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
     }
 
     /* Get channels position */
-    current_play_pos = g2_read_32(SPU_RAM_UNCACHED_BASE +
-                        AICA_CHANNEL(stream->ch[0]) +
-                        offsetof(aica_channel_t, pos)) & 0xffff;
-
+    current_play_pos = snd_get_pos(stream->ch[0]);
     needed_bytes = samples_to_bytes(hnd, current_play_pos);
 
     if(needed_bytes >= stream->buffer_size) {
