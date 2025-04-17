@@ -182,6 +182,7 @@ static size_t dma_nb_sectors = 0;
 static uint64_t dma_sector = 0;
 static semaphore_t dma_done = SEM_INITIALIZER(0);
 static kthread_t *dma_thd = NULL;
+static asic_evt_handler_entry_t old_dma_irq;
 
 /* From cdrom.c */
 extern mutex_t _g1_ata_mutex;
@@ -259,7 +260,6 @@ static void g1_dma_irq_hnd(uint32 code, void *data) {
     uint8_t status;
 
     /* XXXX: Probably should look at the code to make sure it isn't an error. */
-    (void)code;
     (void)data;
 
     if(dma_in_progress && !can_lba48 && dma_nb_sectors > ATA_MAX_SECTORS_LBA28) {
@@ -297,6 +297,11 @@ static void g1_dma_irq_hnd(uint32 code, void *data) {
     }
     else if(dma_in_progress) {
         g1_dma_done();
+    }
+    else {
+        if(old_dma_irq.hdl) {
+            old_dma_irq.hdl(code, old_dma_irq.data);
+        }
     }
 }
 
@@ -1416,12 +1421,15 @@ int g1_ata_init(void) {
     }
 
     /* Hook all the DMA related events. */
-    asic_evt_set_handler(ASIC_EVT_GD_DMA, g1_dma_irq_hnd, NULL);
-    asic_evt_enable(ASIC_EVT_GD_DMA, ASIC_IRQB);
+    old_dma_irq = asic_evt_set_handler(ASIC_EVT_GD_DMA, g1_dma_irq_hnd, NULL);
     asic_evt_set_handler(ASIC_EVT_GD_DMA_OVERRUN, g1_dma_irq_hnd, NULL);
-    asic_evt_enable(ASIC_EVT_GD_DMA_OVERRUN, ASIC_IRQB);
     asic_evt_set_handler(ASIC_EVT_GD_DMA_ILLADDR, g1_dma_irq_hnd, NULL);
-    asic_evt_enable(ASIC_EVT_GD_DMA_ILLADDR, ASIC_IRQB);
+
+    if(old_dma_irq.hdl == NULL) {
+        asic_evt_enable(ASIC_EVT_GD_DMA, ASIC_IRQB);
+        asic_evt_enable(ASIC_EVT_GD_DMA_OVERRUN, ASIC_IRQB);
+        asic_evt_enable(ASIC_EVT_GD_DMA_ILLADDR, ASIC_IRQB);
+    }
 
     initted = 1;
 
@@ -1442,10 +1450,24 @@ void g1_ata_shutdown(void) {
     memset(&device, 0, sizeof(device));
 
     /* Unhook the events and disable the IRQs. */
-    asic_evt_disable(ASIC_EVT_GD_DMA, ASIC_IRQB);
-    asic_evt_remove_handler(ASIC_EVT_GD_DMA);
-    asic_evt_disable(ASIC_EVT_GD_DMA_OVERRUN, ASIC_IRQB);
-    asic_evt_remove_handler(ASIC_EVT_GD_DMA_OVERRUN);
-    asic_evt_disable(ASIC_EVT_GD_DMA_ILLADDR, ASIC_IRQB);
-    asic_evt_remove_handler(ASIC_EVT_GD_DMA_ILLADDR);
+    if(old_dma_irq.hdl) {
+        /* CDROM driver uses the same handler for 3 events. */
+        asic_evt_set_handler(ASIC_EVT_GD_DMA,
+            old_dma_irq.hdl, old_dma_irq.data);
+        asic_evt_set_handler(ASIC_EVT_GD_DMA_OVERRUN,
+            old_dma_irq.hdl, old_dma_irq.data);
+        asic_evt_set_handler(ASIC_EVT_GD_DMA_ILLADDR,
+            old_dma_irq.hdl, old_dma_irq.data);
+
+        old_dma_irq.hdl = NULL;
+    }
+    else {
+        asic_evt_disable(ASIC_EVT_GD_DMA, ASIC_IRQB);
+        asic_evt_remove_handler(ASIC_EVT_GD_DMA);
+        asic_evt_disable(ASIC_EVT_GD_DMA_OVERRUN, ASIC_IRQB);
+        asic_evt_remove_handler(ASIC_EVT_GD_DMA_OVERRUN);
+        asic_evt_disable(ASIC_EVT_GD_DMA_ILLADDR, ASIC_IRQB);
+        asic_evt_remove_handler(ASIC_EVT_GD_DMA_ILLADDR);
+    }
+
 }
