@@ -4,20 +4,20 @@
 ###############################################################################
 ###############################################################################
 ### THIS CONFIG IS FOR AN EXPERIMENTAL VERSION OF GCC!
-## THERE ARE NO KNOWN ISSUES BUILDING THIS VERSION as of 2025-04-18.
+## THERE ARE NO KNOWN ISSUES BUILDING THIS VERSION as of 2025-04-17.
 ###############################################################################
 ###############################################################################
 
 # Toolchain versions for SH
 sh_binutils_ver=2.44
-sh_gcc_ver=13.3.1
+sh_gcc_ver=16.0.0
 newlib_ver=4.5.0.20241231
 gdb_ver=16.2
 
 # Overide SH toolchain download type
 sh_gcc_download_type=git
 sh_gcc_git_repo=git://gcc.gnu.org/git/gcc.git
-sh_gcc_git_branch=releases/gcc-13
+sh_gcc_git_branch=master
 
 # Toolchain for ARM
 # The ARM version of gcc/binutils is separated as support for the ARM7DI core
