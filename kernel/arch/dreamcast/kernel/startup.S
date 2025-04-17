@@ -109,6 +109,7 @@ memchk_done:
 	stc	vbr,r1
 	mov.l	r1,@r0
 
+#ifndef __SH4_NOFPU__
 	! Save FPSCR
 	mov.l	old_fpscr_addr,r0
 	sts	fpscr,r1
@@ -119,6 +120,7 @@ memchk_done:
 	mov.l	fpscr_addr,r0
 	jsr	@r0
 	shll16	r4
+#endif
 
 	! Setup a sentinel value for frame pointer in case we're using
 	! FRAME_POINTERS for stack tracing.
