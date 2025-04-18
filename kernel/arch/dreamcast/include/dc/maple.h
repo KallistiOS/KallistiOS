@@ -354,6 +354,28 @@ typedef struct maple_driver {
         \param  dev         The device that was detached.
     */
     void (*detach)(struct maple_driver *drv, maple_device_t *dev);
+
+    /** \brief  User-specified device attached callback.
+
+        This callback will be called when a new device of this driver is
+        connected to the system. It should be set by applications using
+        maple_attach_callback().
+
+        \param  dev         The device that was connected.
+        \return             0 on success, <0 on error.
+    */
+    void (*user_attach)(maple_device_t *dev);
+
+    /** \brief  User-specified device detached callback.
+
+        This callback will be called when a new device of this driver is
+        connected to the system. It should be set by applications using
+        maple_detach_callback().
+
+        \param  dev         The device that was connected.
+        \return             0 on success, <0 on error.
+    */
+    void (*user_detach)(maple_device_t *dev);
 } maple_driver_t;
 
 /** \brief   Maple state structure.
