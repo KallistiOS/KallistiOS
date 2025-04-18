@@ -3,7 +3,7 @@
    dc/cdrom.h
    Copyright (C) 2000-2001 Megan Potter
    Copyright (C) 2014 Donald Haase
-   Copyright (C) 2023, 2024 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024, 2025 Ruslan Rostovtsev
 */
 
 #ifndef __DC_CDROM_H
@@ -13,6 +13,7 @@
 __BEGIN_DECLS
 
 #include <arch/types.h>
+#include <stdint.h>
 
 /** \file    dc/cdrom.h
     \brief   CD access to the GD-ROM drive.
@@ -314,7 +315,7 @@ int cdrom_exec_cmd(int cmd, void *param);
 
     \return                 \ref cd_cmd_response
 */
-int cdrom_exec_cmd_timed(int cmd, void *param, int timeout);
+int cdrom_exec_cmd_timed(int cmd, void *param, uint32_t timeout);
 
 /** \brief    Get the status of the GD-ROM drive.
     \ingroup  gdrom

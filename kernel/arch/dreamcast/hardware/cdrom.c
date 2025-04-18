@@ -14,13 +14,17 @@
 #include <arch/cache.h>
 #include <arch/timer.h>
 #include <arch/memory.h>
+#include <arch/irq.h>
 
+#include <dc/asic.h>
 #include <dc/cdrom.h>
 #include <dc/g1ata.h>
 #include <dc/syscalls.h>
+#include <dc/vblank.h>
 
 #include <kos/thread.h>
 #include <kos/mutex.h>
+#include <kos/sem.h>
 #include <kos/dbglog.h>
 
 /*
@@ -33,22 +37,10 @@ gets everything situated. After that it will read raw sectors from
 the data track on a standard DC bootable CDR (one audio track plus
 one data track in xa1 format).
 
-Most of the information/algorithms in this file are thanks to
+Initial information/algorithms in this file are thanks to
 Marcus Comstedt. Thanks to Maiwe for the verbose command names and
 also for the CDDA playback routines.
 
-Note that these functions may be affected by changing compiler options...
-they require their parameters to be in certain registers, which is
-normally the case with the default options. If in doubt, decompile the
-output and look to make sure.
-
-XXX: This could all be done in a non-blocking way by taking advantage of
-command queuing. Every call to syscall_gdrom_send_command returns a 
-'request id' which just needs to eventually be checked by cmd_stat. A 
-non-blocking version of all functions would simply require manual calls 
-to check the status. Doing this would probably allow data reading while 
-cdda is playing without hiccups (by severely reducing the number of gd 
-commands being sent).
 */
 
 typedef int gdc_cmd_hnd_t;
@@ -56,6 +48,29 @@ typedef int gdc_cmd_hnd_t;
 /* The G1 ATA access mutex */
 mutex_t _g1_ata_mutex = MUTEX_INITIALIZER;
 
+/* Command handling */
+static gdc_cmd_hnd_t cmd_hnd = 0;
+static semaphore_t cmd_done = SEM_INITIALIZER(0);
+static bool cmd_in_progress = false;
+static uint64_t cmd_begin_time = 0;
+static uint32_t cmd_timeout = 0;
+static int cmd_response = NO_ACTIVE;
+static int32_t cmd_status[4] = {
+    0, /* Error code 1 */
+    0, /* Error code 2 */
+    0, /* Transferred size */
+    0  /* ATA status waiting */
+};
+
+/* DMA and IRQ handling */
+static bool dma_in_progress = false;
+static bool dma_blocking = false;
+static kthread_t *dma_thd = NULL;
+static semaphore_t dma_done = SEM_INITIALIZER(0);
+static asic_evt_handler_entry_t old_dma_irq = {NULL, NULL};
+static int vblank_hnd = -1;
+
+static bool inited = false;
 static int cur_sector_size = 2048;
 
 /* Shortcut to cdrom_reinit_ex. Typically this is the only thing changed. */
@@ -63,79 +78,88 @@ int cdrom_set_sector_size(int size) {
     return cdrom_reinit_ex(-1, -1, size);
 }
 
+static inline gdc_cmd_hnd_t cdrom_req_cmd(int cmd, void *param) {
+    gdc_cmd_hnd_t hnd = 0;
+    int n;
+    assert(cmd > 0 && cmd < CMD_MAX);
+
+    /* Submit the command */
+    for(n = 0; n < 10; ++n) {
+        hnd = syscall_gdrom_send_command(cmd, param);
+        if(hnd != 0) {
+            break;
+        }
+        syscall_gdrom_exec_server();
+        thd_pass();
+    }
+    return hnd;
+}
+
 /* Command execution sequence */
 int cdrom_exec_cmd(int cmd, void *param) {
     return cdrom_exec_cmd_timed(cmd, param, 0);
 }
 
-int cdrom_exec_cmd_timed(int cmd, void *param, int timeout) {
-    int32_t status[4] = {
-        0, /* Error code 1 */
-        0, /* Error code 2 */
-        0, /* Transferred size */
-        0  /* ATA status waiting */
-    };
-    gdc_cmd_hnd_t hnd;
-    int n, rv = ERR_OK;
-    uint64_t begin;
+int cdrom_exec_cmd_timed(int cmd, void *param, uint32_t timeout) {
+    int rv = ERR_OK;
 
-    assert(cmd > 0 && cmd < CMD_MAX);
     mutex_lock_scoped(&_g1_ata_mutex);
+    cmd_hnd = cdrom_req_cmd(cmd, param);
 
-    /* Submit the command */
-    for(n = 0; n < 10; ++n) {
-        hnd = syscall_gdrom_send_command(cmd, param);
-        if (hnd != 0) {
-            break;
-        }
-        syscall_gdrom_exec_server();
-        thd_pass();
-    }
-
-    if(hnd <= 0)
+    if(cmd_hnd <= 0) {
         return ERR_SYS;
-
-    /* Wait command to finish */
-    if(timeout) {
-        begin = timer_ms_gettime64();
     }
+
+    /* Start the process of executing the command. */
     do {
         syscall_gdrom_exec_server();
-        n = syscall_gdrom_check_command(hnd, status);
+        cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
 
-        if(n != PROCESSING && n != BUSY) {
+        if(cmd_response != BUSY) {
             break;
-        }
-        if(timeout) {
-            if((timer_ms_gettime64() - begin) >= (unsigned)timeout) {
-                syscall_gdrom_abort_command(hnd);
-                syscall_gdrom_exec_server();
-                rv = ERR_TIMEOUT;
-                dbglog(DBG_ERROR, "cdrom_exec_cmd_timed: Timeout exceeded\n");
-                break;
-            }
         }
         thd_pass();
     } while(1);
 
-    if(rv != ERR_OK)
-        return rv;
-    else if(n == COMPLETED || n == STREAMING)
-        return ERR_OK;
-    else if(n == NO_ACTIVE)
-        return ERR_NO_ACTIVE;
-    else {
-        switch(status[0]) {
-            case 2:
-                return ERR_NO_DISC;
-            case 6:
-                return ERR_DISC_CHG;
-            default:
-                return ERR_SYS;
+    if(cmd_response == PROCESSING) {
+        cmd_timeout = timeout;
+
+        if(cmd_timeout) {
+            cmd_begin_time = timer_ms_gettime64();
         }
-        if(status[1] != 0)
-            return ERR_SYS;
+        cmd_in_progress = true;
+        sem_wait(&cmd_done);
+
+        /* If the command is still in progress, it timed out. */
+        if(cmd_in_progress) {
+            cmd_in_progress = false;
+            syscall_gdrom_reset();
+            syscall_gdrom_init();
+            return ERR_TIMEOUT;
+        }
     }
+
+    if(cmd_response != STREAMING) {
+        cmd_hnd = 0;
+    }
+
+    if(rv != ERR_OK) {
+        return rv;
+    }
+    else if(cmd_response == COMPLETED || cmd_response == STREAMING) {
+        return ERR_OK;
+    }
+    else if(cmd_response == NO_ACTIVE) {
+        return ERR_NO_ACTIVE;
+    }
+    else if(cmd_status[0] == 2) {
+        return ERR_NO_DISC;
+    }
+    else if(cmd_status[0] == 6) {
+        return ERR_DISC_CHG;
+    }
+
+    return ERR_SYS;
 }
 
 /* Return the status of the drive as two integers (see constants) */
@@ -261,6 +285,75 @@ int cdrom_read_toc(CDROM_TOC *toc_buffer, int session) {
     return rv;
 }
 
+static int cdrom_read_sectors_dma_irq(void *params) {
+
+    mutex_lock_scoped(&_g1_ata_mutex);
+    cmd_hnd = cdrom_req_cmd(CMD_DMAREAD, params);
+
+    if(cmd_hnd <= 0) {
+        return ERR_SYS;
+    }
+    dma_in_progress = true;
+    dma_blocking = true;
+
+    /* Start the process of executing the command. */
+    do {
+        syscall_gdrom_exec_server();
+        cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
+
+        if(cmd_response != BUSY) {
+            break;
+        }
+        thd_pass();
+    } while(1);
+
+    if(cmd_response == PROCESSING) {
+        cmd_timeout = 0;
+        /* Poll syscalls in vblank IRQ in case an unexpected error occurs
+            while we wait DMA IRQ. */
+        cmd_in_progress = true;
+
+        /* Wait DMA is finished or command failed. */
+        sem_wait(&dma_done);
+
+        /* Just to make sure the command is finished properly.
+           Usually we are already done here. */
+        if(cmd_response == PROCESSING || cmd_response == BUSY) {
+            do {
+                syscall_gdrom_exec_server();
+                cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
+
+                if(cmd_response != PROCESSING && cmd_response != BUSY) {
+                    break;
+                }
+                thd_pass();
+            } while(1);
+        }
+    }
+    else {
+        /* The command can complete or fails immediately,
+           in this case we just countdown the semaphore if needed.
+        */
+        if(sem_count(&dma_done) > 0) {
+            sem_wait(&dma_done);
+        }
+    }
+
+    cmd_hnd = 0;
+
+    if(cmd_response == COMPLETED || cmd_response == NO_ACTIVE) {
+        return ERR_OK;
+    }
+    else if(cmd_status[0] == 2) {
+        return ERR_NO_DISC;
+    }
+    else if(cmd_status[0] == 6) {
+        return ERR_DISC_CHG;
+    }
+
+    return ERR_SYS;
+}
+
 /* Enhanced Sector reading: Choose mode to read in. */
 int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode) {
     struct {
@@ -297,7 +390,7 @@ int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode) {
             /* Invalidate the dcache over the range of the data. */
             dcache_inval_range(buf_addr, cnt * cur_sector_size);
         }
-        rv = cdrom_exec_cmd(CMD_DMAREAD, &params);
+        rv = cdrom_read_sectors_dma_irq(&params);
     }
     else if(mode == CDROM_READ_PIO) {
         params.buffer = buffer;
@@ -408,6 +501,65 @@ int cdrom_spin_down(void) {
     return rv;
 }
 
+static void cdrom_vblank(uint32 evt, void *data) {
+    (void)evt;
+    (void)data;
+
+    if(!cmd_in_progress) {
+        return;
+    }
+
+    syscall_gdrom_exec_server();
+    cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
+
+    if(cmd_response != PROCESSING && cmd_response != BUSY) {
+        cmd_in_progress = false;
+
+        if(dma_in_progress) {
+            dma_in_progress = false;
+
+            if(dma_blocking) {
+                dma_blocking = false;
+                sem_signal(&dma_done);
+            }
+        }
+        else {
+            sem_signal(&cmd_done);
+        }
+        thd_schedule(1, 0);
+    }
+    else if(cmd_timeout && (timer_ms_gettime64() - cmd_begin_time) >= cmd_timeout) {
+        sem_signal(&cmd_done);
+        thd_schedule(1, 0);
+    }
+}
+
+static void g1_dma_irq_hnd(uint32_t code, void *data) {
+    (void)data;
+
+    if(dma_in_progress) {
+        dma_in_progress = false;
+
+        if(cmd_in_progress) {
+            cmd_in_progress = false;
+            syscall_gdrom_exec_server();
+            cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
+        }
+        if(dma_blocking) {
+            dma_blocking = false;
+            sem_signal(&dma_done);
+            thd_schedule(1, 0);
+        }
+        else if(dma_thd) {
+            mutex_unlock_as_thread(&_g1_ata_mutex, dma_thd);
+            dma_thd = NULL;
+        }
+    }
+    else if(old_dma_irq.hdl) {
+        old_dma_irq.hdl(code, old_dma_irq.data);
+    }
+}
+
 /*
     Unlocks G1 ATA DMA access to all memory on the root bus, not just system memory.
     Patches syscall region where the DMA protection register is set,
@@ -471,10 +623,50 @@ void cdrom_init(void) {
     unlock_dma_memory();
     mutex_unlock(&_g1_ata_mutex);
 
+    /* Hook all the DMA related events. */
+    old_dma_irq = asic_evt_set_handler(ASIC_EVT_GD_DMA, g1_dma_irq_hnd, NULL);
+    asic_evt_set_handler(ASIC_EVT_GD_DMA_OVERRUN, g1_dma_irq_hnd, NULL);
+    asic_evt_set_handler(ASIC_EVT_GD_DMA_ILLADDR, g1_dma_irq_hnd, NULL);
+
+    if(old_dma_irq.hdl == NULL) {
+        asic_evt_enable(ASIC_EVT_GD_DMA, ASIC_IRQB);
+        asic_evt_enable(ASIC_EVT_GD_DMA_OVERRUN, ASIC_IRQB);
+        asic_evt_enable(ASIC_EVT_GD_DMA_ILLADDR, ASIC_IRQB);
+    }
+
+    vblank_hnd = vblank_handler_add(cdrom_vblank, NULL);
+    inited = true;
+
     cdrom_reinit();
 }
 
 void cdrom_shutdown(void) {
 
-    /* What would you want done here? */
+    if(!inited) {
+        return;
+    }
+
+    vblank_handler_remove(vblank_hnd);
+
+    /* Unhook the events and disable the IRQs. */
+    if(old_dma_irq.hdl) {
+        /* G1-ATA driver uses the same handler for 3 events. */
+        asic_evt_set_handler(ASIC_EVT_GD_DMA,
+            old_dma_irq.hdl, old_dma_irq.data);
+        asic_evt_set_handler(ASIC_EVT_GD_DMA_OVERRUN,
+            old_dma_irq.hdl, old_dma_irq.data);
+        asic_evt_set_handler(ASIC_EVT_GD_DMA_ILLADDR,
+            old_dma_irq.hdl, old_dma_irq.data);
+
+        old_dma_irq.hdl = NULL;
+    }
+    else {
+        asic_evt_disable(ASIC_EVT_GD_DMA, ASIC_IRQB);
+        asic_evt_remove_handler(ASIC_EVT_GD_DMA);
+        asic_evt_disable(ASIC_EVT_GD_DMA_OVERRUN, ASIC_IRQB);
+        asic_evt_remove_handler(ASIC_EVT_GD_DMA_OVERRUN);
+        asic_evt_disable(ASIC_EVT_GD_DMA_ILLADDR, ASIC_IRQB);
+        asic_evt_remove_handler(ASIC_EVT_GD_DMA_ILLADDR);
+    }
+    inited = false;
 }
