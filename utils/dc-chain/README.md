@@ -102,9 +102,11 @@ The following toolchain profiles are available for users to select in
 | **stable** | **13.2.0** | **4.3.0** | **2.43** | **8.5.0** | **2.43** | **Tested stable; based on GCC 13.2.0, released 2023-07-27** |
 | 13.3.0 | 13.3.0 | 4.5.0 | 2.43.1 | 8.5.0 | 2.43.1 | Latest release in the GCC 13 series, released 2024-05-21 |
 | 14.2.0 | 14.2.0 | 4.5.0 | 2.43.1 | 8.5.0 | 2.43.1 | Latest release in the GCC 14 series, released 2024-08-01 |
-| 13.3.1-dev | 13.3.1 (git) | 4.5.0 | 2.43.1 | 8.5.0 | 2.43.1 | Bleeding edge GCC 13 series from git |
-| 14.2.1-dev | 14.2.1 (git) | 4.5.0 | 2.43.1 | 8.5.0 | 2.43.1 | Bleeding edge GCC 14 series from git |
-| 15.0.1-dev | 15.0.1 (git) | 4.5.0 | 2.43.1 | 8.5.0 | 2.43.1 | Bleeding edge GCC 15 series from git |
+| 15.1.0 | 15.1.0 | 4.5.0 | 2.44 | 8.5.0 | 2.44 | Latest release in the GCC 15 series, released 2025-04-25 |
+| 13.3.1-dev | 13.3.1 (git) | 4.5.0 | 2.44 | 8.5.0 | 2.44 | Bleeding edge GCC 13 series from git |
+| 14.2.1-dev | 14.2.1 (git) | 4.5.0 | 2.44 | 8.5.0 | 2.44 | Bleeding edge GCC 14 series from git |
+| 15.1.1-dev | 15.1.1 (git) | 4.5.0 | 2.44 | 8.5.0 | 2.44 | Bleeding edge GCC 15 series from git |
+| 16.0.0-dev | 16.0.0 (git) | 4.5.0 | 2.44 | 8.5.0 | 2.44 | Bleeding edge GCC 16 series from git |
 
 The **stable** profile is the primary, widely tested target for KallistiOS, and
 is the most recent toolchain profile known to work with all example programs.
@@ -113,7 +115,7 @@ useful in compiling older software. The alternative and development profiles are
 maintained at a lower priority and are not guaranteed to build, but feel free
 to open a bug report if issues are encountered building one of these profiles.
 
-As of 2024, the use of any versions of GCC prior to 9.3.0 is deprecated for the
+As of 2025, the use of any versions of GCC prior to 9.5.0 is deprecated for the
 SH4 toolchain, and only GCC 8 series is supported for use with the ARM
 toolchain.
 
