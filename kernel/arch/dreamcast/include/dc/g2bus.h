@@ -140,7 +140,7 @@ void g2_dma_shutdown(void);
     is used in with g2_lock() and g2_unlock().
 */
 typedef struct { 
-    int irq_state;    /** \brief IRQ state when entering a G2 critical block */
+    irq_mask_t irq_state;    /** \brief IRQ state when entering a G2 critical block */
 } g2_ctx_t;
 
 /* Internal constants to access suspend registers for G2 DMA. They are not meant for

@@ -510,12 +510,12 @@ int irq_init(void);
 */
 void irq_shutdown(void);
 
-static inline void __irq_scoped_cleanup(int *state) {
+static inline void __irq_scoped_cleanup(irq_mask_t *state) {
     irq_restore(*state);
 }
 
 #define ___irq_disable_scoped(l) \
-    int __scoped_irq_##l __attribute__((cleanup(__irq_scoped_cleanup))) = irq_disable()
+    irq_mask_t __scoped_irq_##l __attribute__((cleanup(__irq_scoped_cleanup))) = irq_disable()
 
 #define __irq_disable_scoped(l) ___irq_disable_scoped(l)
 /** \endcond */
