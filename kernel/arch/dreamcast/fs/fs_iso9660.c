@@ -42,6 +42,7 @@ ISO9660 systems, as these were used as references as well.
 #include <ctype.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/queue.h>
 #include <errno.h>
 
 static int init_percd(void);
@@ -570,16 +571,19 @@ static iso_dirent_t *find_object_path(const char *fn, int dir, iso_dirent_t *sta
 
 /* File handles.. I could probably do this with a linked list, but I'm just
    too lazy right now. =) */
-static struct {
+typedef struct iso_fd {
     uint32      first_extent;   /* First sector */
     bool        dir;            /* True if a directory */
     uint32      ptr;            /* Current read position in bytes */
     uint32      size;           /* Length of file in bytes */
     dirent_t    dirent;         /* A static dirent to pass back to clients */
     bool        broken;         /* True if the CD has been swapped out since open */
-} fh[FS_CD_MAX_FILES];
+    TAILQ_ENTRY(iso_fd) next;   /* Next handle in the linked list */
+} iso_fd_t;
 
-/* Mutex for file handles */
+static TAILQ_HEAD(iso_fd_queue, iso_fd) iso_fd_queue;
+
+/* Mutex for protecting access to the iso_fd_queue */
 static mutex_t fh_mutex;
 
 /* Break all of our open file descriptor. This is necessary when the disc
@@ -587,20 +591,19 @@ static mutex_t fh_mutex;
    with the old info. As files are closed and re-opened, the broken flag
    will be cleared. */
 static void iso_break_all(void) {
-    int i;
+    iso_fd_t *fd;
 
-    mutex_lock(&fh_mutex);
+    mutex_lock_scoped(&fh_mutex);
 
-    for(i = 0; i < FS_CD_MAX_FILES; i++)
-        fh[i].broken = true;
-
-    mutex_unlock(&fh_mutex);
+    TAILQ_FOREACH(fd, &iso_fd_queue, next) {
+        fd->broken = true;
+    }
 }
 
 /* Open a file or directory */
 static void * iso_open(vfs_handler_t * vfs, const char *fn, int mode) {
-    file_t      fd;
     iso_dirent_t    *de;
+    iso_fd_t *fd;
 
     (void)vfs;
 
@@ -626,41 +629,35 @@ static void * iso_open(vfs_handler_t * vfs, const char *fn, int mode) {
         return 0;
     }
 
-    /* Find a free file handle */
-    mutex_lock(&fh_mutex);
-
-    for(fd = 0; fd < FS_CD_MAX_FILES; fd++)
-        if(fh[fd].first_extent == 0) {
-            fh[fd].first_extent = -1;
-            break;
-        }
-
-    mutex_unlock(&fh_mutex);
-
-    if(fd >= FS_CD_MAX_FILES) {
-        errno = ENFILE;
+    fd = malloc(sizeof(*fd));
+    if(!fd) {
+        errno = ENOMEM;
         return 0;
     }
 
     /* Fill in the file handle and return the fd */
-    fh[fd].first_extent = iso_733(de->extent);
-    fh[fd].dir = ((mode & O_DIR) != 0);
-    fh[fd].ptr = 0;
-    fh[fd].size = iso_733(de->size);
-    fh[fd].broken = false;
+    *fd = (iso_fd_t){
+        .first_extent = iso_733(de->extent),
+        .dir = (mode & O_DIR) != 0,
+        .size = iso_733(de->size),
+    };
 
-    return (void *)fd;
+    mutex_lock_scoped(&fh_mutex);
+
+    TAILQ_INSERT_TAIL(&iso_fd_queue, fd, next);
+
+    return fd;
 }
 
 /* Close a file or directory */
 static int iso_close(void * h) {
-    file_t fd = (file_t)h;
+    iso_fd_t *fd = (iso_fd_t *)h;
 
-    /* Check that the fd is valid */
-    if(fd < FS_CD_MAX_FILES) {
-        /* No need to lock the mutex: this is an atomic op */
-        fh[fd].first_extent = 0;
-    }
+    mutex_lock_scoped(&fh_mutex);
+
+    TAILQ_REMOVE(&iso_fd_queue, fd, next);
+    free(fd);
+
     return 0;
 }
 
@@ -668,10 +665,10 @@ static int iso_close(void * h) {
 static ssize_t iso_read(void * h, void *buf, size_t bytes) {
     int rv, toread, thissect, c;
     uint8 * outbuf;
-    file_t fd = (file_t)h;
+    iso_fd_t *fd = (iso_fd_t *)h;
 
     /* Check that the fd is valid */
-    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || fh[fd].broken) {
+    if(fd->first_extent == 0 || fd->broken) {
         errno = EBADF;
         return -1;
     }
@@ -682,13 +679,12 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
     /* Read zero or more sectors into the buffer from the current pos */
     while(bytes > 0) {
         /* Figure out how much we still need to read */
-        toread = (bytes > (fh[fd].size - fh[fd].ptr)) ?
-                 fh[fd].size - fh[fd].ptr : bytes;
+        toread = (bytes > (fd->size - fd->ptr)) ? fd->size - fd->ptr : bytes;
 
         if(toread == 0) break;
 
         /* How much more can we read in the current sector? */
-        thissect = 2048 - (fh[fd].ptr % 2048);
+        thissect = 2048 - (fd->ptr % 2048);
 
         /* If we're on a sector boundary and we have more than one
            full sector to read, then short-circuit the cache here
@@ -700,7 +696,7 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
 
             /* Do the read */
             c = cdrom_read_sectors_ex(outbuf,
-                fh[fd].first_extent + (fh[fd].ptr / 2048) + 150,
+                fd->first_extent + (fd->ptr / 2048) + 150,
                 thissect,
                 CDROM_READ_DMA);
 
@@ -712,19 +708,19 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
             toread = (toread > thissect) ? thissect : toread;
 
             /* Do the read */
-            c = bdread(fh[fd].first_extent + fh[fd].ptr / 2048);
+            c = bdread(fd->first_extent + fd->ptr / 2048);
 
             if(c < 0) {
                 errno = EIO;
                 return -1;
             }
 
-            memcpy(outbuf, dcache[c]->data + (fh[fd].ptr % 2048), toread);
+            memcpy(outbuf, dcache[c]->data + (fd->ptr % 2048), toread);
         }
 
         /* Adjust pointers */
         outbuf += toread;
-        fh[fd].ptr += toread;
+        fd->ptr += toread;
         bytes -= toread;
         rv += toread;
     }
@@ -734,10 +730,10 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
 
 /* Seek elsewhere in a file */
 static off_t iso_seek(void * h, off_t offset, int whence) {
-    file_t fd = (file_t)h;
+    iso_fd_t *fd = (iso_fd_t *)h;
 
     /* Check that the fd is valid */
-    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || fh[fd].broken) {
+    if(fd->first_extent == 0 || fd->broken) {
         errno = EBADF;
         return -1;
     }
@@ -750,25 +746,25 @@ static off_t iso_seek(void * h, off_t offset, int whence) {
                 return -1;
             }
 
-            fh[fd].ptr = offset;
+            fd->ptr = offset;
             break;
 
         case SEEK_CUR:
-            if(offset < 0 && ((uint32)-offset) > fh[fd].ptr) {
+            if(offset < 0 && ((uint32)-offset) > fd->ptr) {
                 errno = EINVAL;
                 return -1;
             }
 
-            fh[fd].ptr += offset;
+            fd->ptr += offset;
             break;
 
         case SEEK_END:
-            if(offset < 0 && ((uint32)-offset) > fh[fd].size) {
+            if(offset < 0 && ((uint32)-offset) > fd->size) {
                 errno = EINVAL;
                 return -1;
             }
 
-            fh[fd].ptr = fh[fd].size + offset;
+            fd->ptr = fd->size + offset;
             break;
 
         default:
@@ -777,33 +773,33 @@ static off_t iso_seek(void * h, off_t offset, int whence) {
     }
 
     /* Check bounds */
-    if(fh[fd].ptr > fh[fd].size) fh[fd].ptr = fh[fd].size;
+    if(fd->ptr > fd->size) fd->ptr = fd->size;
 
-    return fh[fd].ptr;
+    return fd->ptr;
 }
 
 /* Tell where in the file we are */
 static off_t iso_tell(void * h) {
-    file_t fd = (file_t)h;
+    iso_fd_t *fd = (iso_fd_t *)h;
 
-    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || fh[fd].broken) {
+    if(fd->first_extent == 0 || fd->broken) {
         errno = EBADF;
         return -1;
     }
 
-    return fh[fd].ptr;
+    return fd->ptr;
 }
 
 /* Tell how big the file is */
 static size_t iso_total(void * h) {
-    file_t fd = (file_t)h;
+    iso_fd_t *fd = (iso_fd_t *)h;
 
-    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || fh[fd].broken) {
+    if(fd->first_extent == 0 || fd->broken) {
         errno = EBADF;
         return -1;
     }
 
-    return fh[fd].size;
+    return fd->size;
 }
 
 /* Helper function for readdir: post-processes an ISO filename to make
@@ -833,10 +829,9 @@ static dirent_t *iso_readdir(void * h) {
     int     len;
     uint8       *pnt;
 
-    file_t fd = (file_t)h;
+    iso_fd_t *fd = (iso_fd_t *)h;
 
-    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || !fh[fd].dir ||
-       fh[fd].broken) {
+    if(fd->first_extent == 0 || !fd->dir || fd->broken) {
         errno = EBADF;
         return NULL;
     }
@@ -846,40 +841,40 @@ static dirent_t *iso_readdir(void * h) {
     c = -1;
     de = NULL;
 
-    while(fh[fd].ptr < fh[fd].size) {
+    while(fd->ptr < fd->size) {
         /* Get the current dirent block */
-        c = biread(fh[fd].first_extent + fh[fd].ptr / 2048);
+        c = biread(fd->first_extent + fd->ptr / 2048);
 
         if(c < 0) return NULL;
 
-        de = (iso_dirent_t *)(icache[c]->data + (fh[fd].ptr % 2048));
+        de = (iso_dirent_t *)(icache[c]->data + (fd->ptr % 2048));
 
         if(de->length) break;
 
         /* Skip to the next sector */
-        fh[fd].ptr += 2048 - (fh[fd].ptr % 2048);
+        fd->ptr += 2048 - (fd->ptr % 2048);
     }
 
-    if(fh[fd].ptr >= fh[fd].size) return NULL;
+    if(fd->ptr >= fd->size) return NULL;
 
     /* If we're at the first, skip the two blank entries */
     if(!de->name[0] && de->name_len == 1) {
-        fh[fd].ptr += de->length;
-        de = (iso_dirent_t *)(icache[c]->data + (fh[fd].ptr % 2048));
-        fh[fd].ptr += de->length;
-        de = (iso_dirent_t *)(icache[c]->data + (fh[fd].ptr % 2048));
+        fd->ptr += de->length;
+        de = (iso_dirent_t *)(icache[c]->data + (fd->ptr % 2048));
+        fd->ptr += de->length;
+        de = (iso_dirent_t *)(icache[c]->data + (fd->ptr % 2048));
 
         if(!de->length) return NULL;
     }
 
     if(joliet) {
-        ucs2utfn((uint8 *)fh[fd].dirent.name, (uint8 *)de->name, de->name_len);
+        ucs2utfn((uint8 *)fd->dirent.name, (uint8 *)de->name, de->name_len);
     }
     else {
         /* Fill out the VFS dirent */
-        strncpy(fh[fd].dirent.name, de->name, de->name_len);
-        fh[fd].dirent.name[de->name_len] = 0;
-        fn_postprocess(fh[fd].dirent.name);
+        strncpy(fd->dirent.name, de->name, de->name_len);
+        fd->dirent.name[de->name_len] = 0;
+        fn_postprocess(fd->dirent.name);
 
         /* Check for Rock Ridge NM extension */
         len = de->length - sizeof(iso_dirent_t) + sizeof(de->name) - de->name_len;
@@ -892,8 +887,8 @@ static dirent_t *iso_readdir(void * h) {
 
         while((len >= 4) && ((pnt[3] == 1) || (pnt[3] == 2))) {
             if(strncmp((char *)pnt, "NM", 2) == 0) {
-                strncpy(fh[fd].dirent.name, (char *)(pnt + 5), pnt[2] - 5);
-                fh[fd].dirent.name[pnt[2] - 5] = 0;
+                strncpy(fd->dirent.name, (char *)(pnt + 5), pnt[2] - 5);
+                fd->dirent.name[pnt[2] - 5] = 0;
             }
 
             len -= pnt[2];
@@ -902,30 +897,29 @@ static dirent_t *iso_readdir(void * h) {
     }
 
     if(de->flags & 2) {
-        fh[fd].dirent.size = -1;
-        fh[fd].dirent.attr = O_DIR;
+        fd->dirent.size = -1;
+        fd->dirent.attr = O_DIR;
     }
     else {
-        fh[fd].dirent.size = iso_733(de->size);
-        fh[fd].dirent.attr = 0;
+        fd->dirent.size = iso_733(de->size);
+        fd->dirent.attr = 0;
     }
 
-    fh[fd].ptr += de->length;
+    fd->ptr += de->length;
 
-    return &fh[fd].dirent;
+    return &fd->dirent;
 }
 
 static int iso_rewinddir(void * h) {
-    file_t fd = (file_t)h;
+    iso_fd_t *fd = (iso_fd_t *)h;
 
-    if(fd >= FS_CD_MAX_FILES || fh[fd].first_extent == 0 || !fh[fd].dir ||
-       fh[fd].broken) {
+    if(fd->first_extent == 0 || !fd->dir || fd->broken) {
         errno = EBADF;
         return -1;
     }
 
     /* Rewind to the beginning of the directory. */
-    fh[fd].ptr = 0;
+    fd->ptr = 0;
     return 0;
 }
 
@@ -1009,12 +1003,12 @@ static int iso_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
 }
 
 static int iso_fcntl(void *h, int cmd, va_list ap) {
-    file_t fd = (file_t)h;
+    iso_fd_t *fd = (iso_fd_t *)h;
     int rv = -1;
 
     (void)ap;
 
-    if(fd >= FS_CD_MAX_FILES || !fh[fd].first_extent || fh[fd].broken) {
+    if(!fd->first_extent || fd->broken) {
         errno = EBADF;
         return -1;
     }
@@ -1023,7 +1017,7 @@ static int iso_fcntl(void *h, int cmd, va_list ap) {
         case F_GETFL:
             rv = O_RDONLY;
 
-            if(fh[fd].dir)
+            if(fd->dir)
                 rv |= O_DIR;
 
             break;
@@ -1042,9 +1036,9 @@ static int iso_fcntl(void *h, int cmd, va_list ap) {
 }
 
 static int iso_fstat(void *h, struct stat *st) {
-    file_t fd = (file_t)h;
+    iso_fd_t *fd = (iso_fd_t *)h;
 
-    if(fd >= FS_CD_MAX_FILES || !fh[fd].first_extent || fh[fd].broken) {
+    if(!fd->first_extent || fd->broken) {
         errno = EBADF;
         return -1;
     }
@@ -1052,9 +1046,9 @@ static int iso_fstat(void *h, struct stat *st) {
     memset(st, 0, sizeof(struct stat));
     st->st_dev = 'c' | ('d' << 8);
     st->st_mode = S_IRUSR | S_IRGRP | S_IROTH | S_IXUSR | S_IXGRP | S_IXOTH;
-    st->st_mode |= fh[fd].dir ? S_IFDIR : S_IFREG;
-    st->st_size = fh[fd].dir ? -1 : (int)fh[fd].size;
-    st->st_nlink = fh[fd].dir ? 2 : 1;
+    st->st_mode |= fd->dir ? S_IFDIR : S_IFREG;
+    st->st_size = fd->dir ? -1 : (int)fd->size;
+    st->st_nlink = fd->dir ? 2 : 1;
     st->st_blksize = 512;
 
     return 0;
@@ -1106,11 +1100,8 @@ static vfs_handler_t vh = {
 void fs_iso9660_init(void) {
     int i;
 
-    /* Reset fd's */
-    memset(fh, 0, sizeof(fh));
-
-    /* Mark the first as active so we can have an error FD of zero */
-    fh[0].first_extent = -1;
+    /* Init the linked list */
+    TAILQ_INIT(&iso_fd_queue);
 
     /* Init thread mutexes */
     mutex_init(&cache_mutex, MUTEX_TYPE_NORMAL);

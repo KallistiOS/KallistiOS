@@ -66,7 +66,6 @@ __BEGIN_DECLS
 #include <arch/irq.h>
 #include <arch/spinlock.h>
 #include <arch/timer.h>
-#include <arch/wdt.h>
 #include <arch/types.h>
 #include <arch/exec.h>
 #include <arch/stack.h>
@@ -77,6 +76,7 @@ __BEGIN_DECLS
 #   include <arch/gdb.h>
 #   include <arch/mmu.h>
 #   include <arch/memory.h>
+#   include <arch/wdt.h>
 
 #   include <dc/asic.h>
 #   include <dc/biosfont.h>

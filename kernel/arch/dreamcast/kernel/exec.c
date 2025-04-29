@@ -4,36 +4,37 @@
    Copyright (C) 2002 Megan Potter
 */
 
+#include <assert.h>
+
 #include <arch/arch.h>
+#include <arch/cache.h>
 #include <arch/exec.h>
 #include <arch/irq.h>
-#include <arch/cache.h>
-#include <assert.h>
-#include <string.h>
-#include <stdio.h>
+#include <arch/memory.h>
 
-/* Pull the shutdown function in from main.c */
+/* Pull the shutdown function in from init.c */
 void arch_shutdown();
 
 /* Pull these in from execasm.s */
-extern uint32 _arch_exec_template[];
-extern uint32 _arch_exec_template_values[];
-extern uint32 _arch_exec_template_end[];
+extern uint32_t _arch_exec_template[];
+extern uint32_t _arch_exec_template_values[];
+extern uint32_t _arch_exec_template_end[];
 
 /* Pull this in from startup.s */
-extern uint32 _arch_old_sr, _arch_old_vbr, _arch_old_stack, _arch_old_fpscr;
+extern uint32_t _arch_old_sr, _arch_old_vbr, _arch_old_stack, _arch_old_fpscr;
 
 /* Replace the currently running image with whatever is at
    the pointer; note that this call will never return. */
-void arch_exec_at(const void *image, uint32 length, uint32 address) {
+void arch_exec_at(const void *image, uint32_t length, uint32_t address) {
     /* Find the start/end of the trampoline template and make a stack
        buffer of that size */
-    uint32  tstart = (uint32)_arch_exec_template,
-            tend = (uint32)_arch_exec_template_end;
-    uint32  tcount = (tend - tstart) / 4;
-    uint32  buffer[tcount];
-    uint32  * values;
-    uint32 i;
+    uintptr_t   tstart = (uintptr_t)_arch_exec_template,
+                tend   = (uintptr_t)_arch_exec_template_end,
+                tvals  = (uintptr_t)_arch_exec_template_values;
+    size_t      tcount = (tend - tstart) / 4;
+    uint32_t    buffer[tcount];
+    uint32_t    *values = buffer + (tvals - tstart);
+    size_t      i;
 
     assert((tend - tstart) % 4 == 0);
 
@@ -41,27 +42,21 @@ void arch_exec_at(const void *image, uint32 length, uint32 address) {
     irq_disable();
 
     /* Flush the data cache for the source area */
-    dcache_flush_range((uint32)image, length);
+    dcache_flush_range((uintptr_t)image, length);
 
     /* Copy over the trampoline */
     for(i = 0; i < tcount; i++)
         buffer[i] = _arch_exec_template[i];
 
     /* Plug in values */
-    values = buffer + (_arch_exec_template_values - _arch_exec_template);
-    values[0] = (uint32)image;  /* Source */
-    values[1] = address;        /* Destination */
-    values[2] = length / 4;     /* Length in uint32's */
+    values[0] = (uintptr_t)image;   /* Source */
+    values[1] = address;            /* Destination */
+    values[2] = length / 4;         /* Length in uint32's */
     values[3] = _arch_old_stack;    /* Patch in old R15 */
 
     /* Flush both caches for the trampoline area */
-    dcache_flush_range((uint32)buffer, tcount * 4);
-    icache_flush_range((uint32)buffer, tcount * 4);
-
-    /* printf("Finished trampoline:\n");
-    for(i=0; i<tcount; i++) {
-        printf("%08x: %08x\n", (uint32)(buffer + i), buffer[i]);
-    } */
+    dcache_flush_range((uintptr_t)buffer, tcount * 4);
+    icache_flush_range((uintptr_t)buffer, tcount * 4);
 
     /* Shut us down */
     arch_shutdown();
@@ -82,13 +77,13 @@ void arch_exec_at(const void *image, uint32 length, uint32 address) {
 
     /* Jump to the trampoline */
     {
-        typedef void (*trampoline_func)() __noreturn;
+        typedef void (*trampoline_func)(void) __noreturn;
         trampoline_func trampoline = (trampoline_func)buffer;
 
         trampoline();
     }
 }
 
-void arch_exec(const void *image, uint32 length) {
-    arch_exec_at(image, length, 0xac010000);
+void arch_exec(const void *image, uint32_t length) {
+    arch_exec_at(image, length, MEM_AREA_P2_BASE | 0x0c010000);
 }

@@ -89,7 +89,7 @@ void pvr_vertbuf_written(pvr_list_t list, size_t amt) {
 
 static void pvr_start_ta_rendering(void) {
     // Make sure to wait until the TA is ready to start rendering a new scene
-    if(!pvr_state.ta_ready) {
+    if(!pvr_state.ta_checked_ready) {
         pvr_wait_ready();
 
         // If using a single vertex buffer, we have to wait until the PVR is
@@ -97,12 +97,15 @@ static void pvr_start_ta_rendering(void) {
         if(!pvr_state.vbuf_doublebuf)
             pvr_wait_render_done();
 
-        pvr_state.ta_ready = 1;
-    }
+        pvr_state.ta_checked_ready = 1;
+        pvr_state.curr_to_texture = pvr_state.next_to_texture;
+        pvr_state.to_txr_rp = pvr_state.next_to_txr_rp;
+        pvr_state.to_txr_addr = pvr_state.next_to_txr_addr;
 
-    // Starting from that point, we consider that the Tile Accelerator
-    // might be busy.
-    pvr_state.ta_busy = 1;
+        // Starting from that point, we consider that the Tile Accelerator
+        // might be busy.
+        pvr_state.ta_busy = 1;
+    }
 }
 
 /* Begin collecting data for a frame of 3D output to the off-screen
@@ -110,7 +113,8 @@ static void pvr_start_ta_rendering(void) {
 void pvr_scene_begin(void) {
     int i;
 
-    pvr_state.ta_ready = 0;
+    pvr_state.next_to_texture = 0;
+    pvr_state.ta_checked_ready = 0;
     pvr_state.lists_closed = 0;
 
     // Get general stuff ready.
@@ -139,22 +143,22 @@ void pvr_scene_begin(void) {
    rx and ry are appropriate (i.e. *rx = 1024 and *ry = 512 for 640x480).
    Also, note that this probably won't work with DMA mode for now... */
 void pvr_scene_begin_txr(pvr_ptr_t txr, uint32 *rx, uint32 *ry) {
-    int buf = pvr_state.view_target ^ 1;
     (void)ry;
 
     /* For the most part, this isn't very much different than the normal render setup.
        And, yes, if you remember KOS 1.1.6, this pretty much looks similar to what was
        there. I'm quite uncreative with my variable naming ;) */
-    // Mark us as rendering to a texture
-    pvr_state.to_texture[buf] = 1;
 
     // Set the render pitch up
-    pvr_state.to_txr_rp[buf] = (*rx) * 2 / 8;
+    pvr_state.next_to_txr_rp = (*rx) * 2 / 8;
 
     // Set the output address
-    pvr_state.to_txr_addr[buf] = (uint32)(txr) - PVR_RAM_INT_BASE;
+    pvr_state.next_to_txr_addr = (uint32)(txr) - PVR_RAM_INT_BASE;
 
     pvr_scene_begin();
+
+    // Mark us as rendering to a texture
+    pvr_state.next_to_texture = 1;
 }
 
 static bool pvr_list_dma;
@@ -280,11 +284,11 @@ int pvr_list_prim(pvr_list_t list, const void *data, size_t size) {
     /* Ensure at least 4-byte alignment. */
     assert(!((uintptr_t)data & 0x3));
 
+    /* Ensure we won't overflow the vertex buffer. */
+    assert(b->ptr[list] + size <= b->size[list]);
+
     memcpy(b->base[list] + b->ptr[list], data, size);
     b->ptr[list] += size;
-
-    /* Ensure we didn't overflow the vertex buffer. */
-    assert(b->ptr[list] <= b->size[list]);
 
     return 0;
 }

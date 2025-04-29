@@ -217,6 +217,17 @@ const vmufb_font_t *vmu_set_font(const vmufb_font_t *font);
  */
 const vmufb_font_t *vmu_get_font(void);
 
+/** \brief   Take a screenshot.
+
+    This function takes the current VMU framebuffer and saves it
+    to a PBM file.
+
+    \param  fb              The vmufb_t that will be captured.
+    \param  destfn          The filename to save to.
+    \return                 0 on success, <0 on failure.
+*/
+int vmufb_screen_shot(vmufb_t *fb, const char *destfn);
+
 /** @} */
 
 __END_DECLS

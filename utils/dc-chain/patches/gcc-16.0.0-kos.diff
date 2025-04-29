@@ -1,6 +1,6 @@
-diff -ruN gcc-14.2.1/gcc/config/sh/sh-c.cc gcc-14.2.1-kos/gcc/config/sh/sh-c.cc
---- gcc-14.2.1/gcc/config/sh/sh-c.cc	2025-04-18 16:01:33.790051712 -0600
-+++ gcc-14.2.1-kos/gcc/config/sh/sh-c.cc	2025-04-18 16:01:42.910094466 -0600
+diff -ruN gcc-16.0.0/gcc/config/sh/sh-c.cc gcc-16.0.0-kos/gcc/config/sh/sh-c.cc
+--- gcc-16.0.0/gcc/config/sh/sh-c.cc	2025-04-17 16:01:33.790051712 -0600
++++ gcc-16.0.0-kos/gcc/config/sh/sh-c.cc	2025-04-17 16:01:42.910094466 -0600
 @@ -141,4 +141,11 @@
  
    cpp_define_formatted (pfile, "__SH_ATOMIC_MODEL_%s__",
@@ -13,10 +13,10 @@ diff -ruN gcc-14.2.1/gcc/config/sh/sh-c.cc gcc-14.2.1-kos/gcc/config/sh/sh-c.cc
 +  /* Toolchain supports setting up stack for 32MB */
 +  builtin_define ("__KOS_GCC_32MB__");
  }
-diff -ruN gcc-14.2.1/gcc/configure gcc-14.2.1-kos/gcc/configure
---- gcc-14.2.1/gcc/configure	2025-04-18 16:01:33.801051764 -0600
-+++ gcc-14.2.1-kos/gcc/configure	2025-04-18 16:01:42.913094480 -0600
-@@ -13220,7 +13220,7 @@
+diff -ruN gcc-16.0.0/gcc/configure gcc-16.0.0-kos/gcc/configure
+--- gcc-16.0.0/gcc/configure	2025-04-17 16:01:33.801051764 -0600
++++ gcc-16.0.0-kos/gcc/configure	2025-04-17 16:01:42.913094480 -0600
+@@ -13165,7 +13165,7 @@
      target_thread_file='single'
      ;;
    aix | dce | lynx | mipssde | posix | rtems | \
@@ -25,9 +25,9 @@ diff -ruN gcc-14.2.1/gcc/configure gcc-14.2.1-kos/gcc/configure
      target_thread_file=${enable_threads}
      ;;
    *)
-diff -ruN gcc-14.2.1/libgcc/config/sh/t-sh gcc-14.2.1-kos/libgcc/config/sh/t-sh
---- gcc-14.2.1/libgcc/config/sh/t-sh	2025-04-18 16:01:37.134067388 -0600
-+++ gcc-14.2.1-kos/libgcc/config/sh/t-sh	2025-04-18 16:01:42.914094485 -0600
+diff -ruN gcc-16.0.0/libgcc/config/sh/t-sh gcc-16.0.0-kos/libgcc/config/sh/t-sh
+--- gcc-16.0.0/libgcc/config/sh/t-sh	2025-04-17 16:01:37.134067388 -0600
++++ gcc-16.0.0-kos/libgcc/config/sh/t-sh	2025-04-17 16:01:42.914094485 -0600
 @@ -23,6 +23,8 @@
    $(LIB1ASMFUNCS_CACHE)
  LIB1ASMFUNCS_CACHE = _ic_invalidate _ic_invalidate_array
@@ -37,10 +37,10 @@ diff -ruN gcc-14.2.1/libgcc/config/sh/t-sh gcc-14.2.1-kos/libgcc/config/sh/t-sh
  crt1.o: $(srcdir)/config/sh/crt1.S
  	$(gcc_compile) -c $<
  
-diff -ruN gcc-14.2.1/libgcc/configure gcc-14.2.1-kos/libgcc/configure
---- gcc-14.2.1/libgcc/configure	2025-04-18 16:01:37.139067412 -0600
-+++ gcc-14.2.1-kos/libgcc/configure	2025-04-18 16:01:42.914094485 -0600
-@@ -5764,6 +5764,7 @@
+diff -ruN gcc-16.0.0/libgcc/configure gcc-16.0.0-kos/libgcc/configure
+--- gcc-16.0.0/libgcc/configure	2025-04-17 16:01:37.139067412 -0600
++++ gcc-16.0.0-kos/libgcc/configure	2025-04-17 16:01:42.914094485 -0600
+@@ -5733,6 +5733,7 @@
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;
      win32)	thread_header=config/i386/gthr-win32.h ;;
@@ -48,9 +48,9 @@ diff -ruN gcc-14.2.1/libgcc/configure gcc-14.2.1-kos/libgcc/configure
      mcf)	thread_header=config/i386/gthr-mcf.h ;;
  esac
  
-diff -ruN gcc-14.2.1/libobjc/configure gcc-14.2.1-kos/libobjc/configure
---- gcc-14.2.1/libobjc/configure	2025-04-18 16:01:37.499069099 -0600
-+++ gcc-14.2.1-kos/libobjc/configure	2025-04-18 16:01:42.915094489 -0600
+diff -ruN gcc-16.0.0/libobjc/configure gcc-16.0.0-kos/libobjc/configure
+--- gcc-16.0.0/libobjc/configure	2025-04-17 16:01:37.499069099 -0600
++++ gcc-16.0.0-kos/libobjc/configure	2025-04-17 16:01:42.915094489 -0600
 @@ -2924,11 +2924,9 @@
  
  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
@@ -63,9 +63,9 @@ diff -ruN gcc-14.2.1/libobjc/configure gcc-14.2.1-kos/libobjc/configure
    ;
    return 0;
  }
-diff -ruN gcc-14.2.1/libobjc/Makefile.in gcc-14.2.1-kos/libobjc/Makefile.in
---- gcc-14.2.1/libobjc/Makefile.in	2025-04-18 16:01:37.499069099 -0600
-+++ gcc-14.2.1-kos/libobjc/Makefile.in	2025-04-18 16:01:42.915094489 -0600
+diff -ruN gcc-16.0.0/libobjc/Makefile.in gcc-16.0.0-kos/libobjc/Makefile.in
+--- gcc-16.0.0/libobjc/Makefile.in	2025-04-17 16:01:37.499069099 -0600
++++ gcc-16.0.0-kos/libobjc/Makefile.in	2025-04-17 16:01:42.915094489 -0600
 @@ -308,14 +308,16 @@
  $(srcdir)/aclocal.m4: @MAINT@ $(aclocal_deps)
  	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
@@ -96,9 +96,9 @@ diff -ruN gcc-14.2.1/libobjc/Makefile.in gcc-14.2.1-kos/libobjc/Makefile.in
  
  mostlyclean:
  	-$(LIBTOOL_CLEAN) rm -f libobjc$(libsuffix).la libobjc_gc$(libsuffix).la *.lo
-diff -ruN gcc-14.2.1/libstdc++-v3/config/cpu/sh/atomicity.h gcc-14.2.1-kos/libstdc++-v3/config/cpu/sh/atomicity.h
---- gcc-14.2.1/libstdc++-v3/config/cpu/sh/atomicity.h	2025-04-18 16:01:37.608069611 -0600
-+++ gcc-14.2.1-kos/libstdc++-v3/config/cpu/sh/atomicity.h	2025-04-18 16:01:42.916094494 -0600
+diff -ruN gcc-16.0.0/libstdc++-v3/config/cpu/sh/atomicity.h gcc-16.0.0-kos/libstdc++-v3/config/cpu/sh/atomicity.h
+--- gcc-16.0.0/libstdc++-v3/config/cpu/sh/atomicity.h	2025-04-17 16:01:37.608069611 -0600
++++ gcc-16.0.0-kos/libstdc++-v3/config/cpu/sh/atomicity.h	2025-04-17 16:01:42.916094494 -0600
 @@ -22,14 +22,40 @@
  // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
  // <http://www.gnu.org/licenses/>.
@@ -149,9 +149,9 @@ diff -ruN gcc-14.2.1/libstdc++-v3/config/cpu/sh/atomicity.h gcc-14.2.1-kos/libst
 +
 +_GLIBCXX_END_NAMESPACE_VERSION
 +} // namespace
-diff -ruN gcc-14.2.1/libstdc++-v3/configure gcc-14.2.1-kos/libstdc++-v3/configure
---- gcc-14.2.1/libstdc++-v3/configure	2025-04-18 16:01:37.616069648 -0600
-+++ gcc-14.2.1-kos/libstdc++-v3/configure	2025-04-18 16:01:42.919094508 -0600
+diff -ruN gcc-16.0.0/libstdc++-v3/configure gcc-16.0.0-kos/libstdc++-v3/configure
+--- gcc-16.0.0/libstdc++-v3/configure	2025-04-17 16:01:37.616069648 -0600
++++ gcc-16.0.0-kos/libstdc++-v3/configure	2025-04-17 16:01:42.919094508 -0600
 @@ -15974,6 +15974,7 @@
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;

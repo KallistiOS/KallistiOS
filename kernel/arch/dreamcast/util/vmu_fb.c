@@ -13,6 +13,9 @@
 #include <dc/maple/vmu.h>
 #include <dc/vmu_fb.h>
 
+#include <kos/dbglog.h>
+#include <kos/fs.h>
+
 /* Linux 4x6 font: lib/fonts/font_mini_4x6.c
  *
  * Created by Kenneth Albanowski.
@@ -292,4 +295,25 @@ const vmufb_font_t *vmu_set_font(const vmufb_font_t *font) {
 
 const vmufb_font_t *vmu_get_font(void) {
     return default_font;
+}
+
+int vmufb_screen_shot(vmufb_t *fb, const char *destfn) {
+    static const char header[] = "P4\n#KallistiOS VMU Screen Shot\n48 32\n";
+    file_t f;
+
+    /* Open output file */
+    f = fs_open(destfn, O_WRONLY | O_TRUNC);
+    if(!f) {
+        dbglog(DBG_ERROR, "vmufb_screen_shot: can't open output file '%s'\n", destfn);
+        return -1;
+    }
+
+    fs_write(f, header, sizeof(header) - 1);
+    fs_write(f, fb->data, sizeof(fb->data));
+
+    fs_close(f);
+
+    dbglog(DBG_INFO, "vmufb_screen_shot: written to output file '%s'\n", destfn);
+
+    return 0;
 }
