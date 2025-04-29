@@ -1,0 +1,2810 @@
+diff -ruN gcc-9.5.0/gcc/ada/adaint.c gcc-9.5.0-patched/gcc/ada/adaint.c
+--- gcc-9.5.0/gcc/ada/adaint.c	2022-05-27 09:21:10.583377700 +0200
++++ gcc-9.5.0-patched/gcc/ada/adaint.c	2025-04-28 14:41:55.127009100 +0200
+@@ -192,6 +192,7 @@
+ 
+ #elif defined (_WIN32)
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #include <accctrl.h>
+ #include <aclapi.h>
+diff -ruN gcc-9.5.0/gcc/ada/cio.c gcc-9.5.0-patched/gcc/ada/cio.c
+--- gcc-9.5.0/gcc/ada/cio.c	2022-05-27 09:21:10.595377700 +0200
++++ gcc-9.5.0-patched/gcc/ada/cio.c	2025-04-28 14:41:55.131917000 +0200
+@@ -68,6 +68,7 @@
+ #endif
+ 
+ #ifdef RTX
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #include <Rtapi.h>
+ #endif
+diff -ruN gcc-9.5.0/gcc/ada/ctrl_c.c gcc-9.5.0-patched/gcc/ada/ctrl_c.c
+--- gcc-9.5.0/gcc/ada/ctrl_c.c	2022-05-27 09:21:10.595377700 +0200
++++ gcc-9.5.0-patched/gcc/ada/ctrl_c.c	2025-04-28 14:41:55.136067500 +0200
+@@ -131,6 +131,7 @@
+ #elif defined (__MINGW32__)
+ 
+ #include "mingw32.h"
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ void (*sigint_intercepted) (void) = NULL;
+diff -ruN gcc-9.5.0/gcc/ada/expect.c gcc-9.5.0-patched/gcc/ada/expect.c
+--- gcc-9.5.0/gcc/ada/expect.c	2022-05-27 09:21:10.651378000 +0200
++++ gcc-9.5.0-patched/gcc/ada/expect.c	2025-04-28 14:41:55.140700100 +0200
+@@ -77,6 +77,7 @@
+ 
+ #ifdef _WIN32
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #include <process.h>
+ #include <signal.h>
+diff -ruN gcc-9.5.0/gcc/ada/gsocket.h gcc-9.5.0-patched/gcc/ada/gsocket.h
+--- gcc-9.5.0/gcc/ada/gsocket.h	2022-05-27 09:21:10.683378200 +0200
++++ gcc-9.5.0-patched/gcc/ada/gsocket.h	2025-04-28 14:41:55.145733600 +0200
+@@ -166,6 +166,7 @@
+ 
+ #endif
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ #elif defined(VMS)
+diff -ruN gcc-9.5.0/gcc/ada/mingw32.h gcc-9.5.0-patched/gcc/ada/mingw32.h
+--- gcc-9.5.0/gcc/ada/mingw32.h	2022-05-27 09:21:10.759378500 +0200
++++ gcc-9.5.0-patched/gcc/ada/mingw32.h	2025-04-28 14:41:55.148804700 +0200
+@@ -58,6 +58,7 @@
+ #define _X86INTRIN_H_INCLUDED
+ #define _EMMINTRIN_H_INCLUDED
+ #endif
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ /* After including this file it is possible to use the character t as prefix
+diff -ruN gcc-9.5.0/gcc/ada/mkdir.c gcc-9.5.0-patched/gcc/ada/mkdir.c
+--- gcc-9.5.0/gcc/ada/mkdir.c	2022-05-27 09:21:10.759378500 +0200
++++ gcc-9.5.0-patched/gcc/ada/mkdir.c	2025-04-28 14:41:55.153885500 +0200
+@@ -45,6 +45,7 @@
+ 
+ #ifdef __MINGW32__
+ #include "mingw32.h"
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #ifdef MAXPATHLEN
+ #define GNAT_MAX_PATH_LEN MAXPATHLEN
+diff -ruN gcc-9.5.0/gcc/ada/rtfinal.c gcc-9.5.0-patched/gcc/ada/rtfinal.c
+--- gcc-9.5.0/gcc/ada/rtfinal.c	2022-05-27 09:21:10.771378600 +0200
++++ gcc-9.5.0-patched/gcc/ada/rtfinal.c	2025-04-28 14:41:55.166223600 +0200
+@@ -47,6 +47,7 @@
+ 
+ #if defined (__MINGW32__)
+ #include "mingw32.h"
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ extern CRITICAL_SECTION ProcListCS;
+diff -ruN gcc-9.5.0/gcc/ada/rtinit.c gcc-9.5.0-patched/gcc/ada/rtinit.c
+--- gcc-9.5.0/gcc/ada/rtinit.c	2022-05-27 09:21:10.771378600 +0200
++++ gcc-9.5.0-patched/gcc/ada/rtinit.c	2025-04-28 14:41:55.172726400 +0200
+@@ -73,6 +73,7 @@
+ 
+ #if defined (__MINGW32__)
+ #include "mingw32.h"
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ extern void __gnat_init_float (void);
+diff -ruN gcc-9.5.0/gcc/ada/seh_init.c gcc-9.5.0-patched/gcc/ada/seh_init.c
+--- gcc-9.5.0/gcc/ada/seh_init.c	2022-05-27 09:21:10.775378600 +0200
++++ gcc-9.5.0-patched/gcc/ada/seh_init.c	2025-04-28 14:41:55.177886600 +0200
+@@ -34,6 +34,7 @@
+ 
+ #if defined (_WIN32) || (defined (__CYGWIN__) && defined (__SEH__))
+ /* Include system headers, before system.h poisons malloc.  */
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #include <excpt.h>
+ #endif
+diff -ruN gcc-9.5.0/gcc/ada/sysdep.c gcc-9.5.0-patched/gcc/ada/sysdep.c
+--- gcc-9.5.0/gcc/ada/sysdep.c	2022-05-27 09:21:10.843378900 +0200
++++ gcc-9.5.0-patched/gcc/ada/sysdep.c	2025-04-28 14:41:55.183945700 +0200
+@@ -215,6 +215,7 @@
+ #endif /* __CYGWIN__ */
+ 
+ #if defined (__CYGWIN__) || defined (__MINGW32__)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ int __gnat_is_windows_xp (void);
+@@ -591,6 +592,7 @@
+    Ada programs.  */
+ 
+ #ifdef WINNT
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ /* Provide functions to echo the values passed to WinMain (windows bindings
+diff -ruN gcc-9.5.0/gcc/ada/terminals.c gcc-9.5.0-patched/gcc/ada/terminals.c
+--- gcc-9.5.0/gcc/ada/terminals.c	2022-05-27 09:21:10.843378900 +0200
++++ gcc-9.5.0-patched/gcc/ada/terminals.c	2025-04-28 14:41:55.191540000 +0200
+@@ -151,6 +151,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ #define MAXPATHLEN 1024
+diff -ruN gcc-9.5.0/gcc/ada/tracebak.c gcc-9.5.0-patched/gcc/ada/tracebak.c
+--- gcc-9.5.0/gcc/ada/tracebak.c	2022-05-27 09:21:10.843378900 +0200
++++ gcc-9.5.0-patched/gcc/ada/tracebak.c	2025-04-28 14:41:55.197690500 +0200
+@@ -97,6 +97,7 @@
+ 
+ #if defined (_WIN64) && defined (__SEH__)
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ #define IS_BAD_PTR(ptr) (IsBadCodePtr((FARPROC)ptr))
+@@ -444,6 +445,7 @@
+ #elif defined (__i386__) || defined (__x86_64__)
+ 
+ #if defined (__WIN32)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #define IS_BAD_PTR(ptr) (IsBadCodePtr((FARPROC)ptr))
+ #elif defined (__sun__)
+diff -ruN gcc-9.5.0/gcc/d/dmd/root/file.c gcc-9.5.0-patched/gcc/d/dmd/root/file.c
+--- gcc-9.5.0/gcc/d/dmd/root/file.c	2022-05-27 09:21:11.147380400 +0200
++++ gcc-9.5.0-patched/gcc/d/dmd/root/file.c	2025-04-28 14:41:55.254807300 +0200
+@@ -10,6 +10,7 @@
+ #include "file.h"
+ 
+ #if _WIN32
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #endif
+ 
+diff -ruN gcc-9.5.0/gcc/d/dmd/root/filename.c gcc-9.5.0-patched/gcc/d/dmd/root/filename.c
+--- gcc-9.5.0/gcc/d/dmd/root/filename.c	2022-05-27 09:21:11.147380400 +0200
++++ gcc-9.5.0-patched/gcc/d/dmd/root/filename.c	2025-04-28 14:41:55.261719800 +0200
+@@ -15,6 +15,7 @@
+ #include "rmem.h"
+ 
+ #if _WIN32
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #endif
+ 
+diff -ruN gcc-9.5.0/gcc/diagnostic-color.c gcc-9.5.0-patched/gcc/diagnostic-color.c
+--- gcc-9.5.0/gcc/diagnostic-color.c	2022-05-27 09:21:11.155380500 +0200
++++ gcc-9.5.0-patched/gcc/diagnostic-color.c	2025-04-28 14:41:55.268542100 +0200
+@@ -21,6 +21,7 @@
+ #include "diagnostic-color.h"
+ 
+ #ifdef __MINGW32__
++#  define WIN32_LEAN_AND_MEAN
+ #  include <windows.h>
+ #endif
+ 
+diff -ruN gcc-9.5.0/gcc/prefix.c gcc-9.5.0-patched/gcc/prefix.c
+--- gcc-9.5.0/gcc/prefix.c	2022-05-27 09:21:11.703383200 +0200
++++ gcc-9.5.0-patched/gcc/prefix.c	2025-04-28 14:41:55.290110200 +0200
+@@ -67,6 +67,7 @@
+ #include "system.h"
+ #include "coretypes.h"
+ #if defined(_WIN32) && defined(ENABLE_WIN32_REGISTRY)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #endif
+ #include "prefix.h"
+diff -ruN gcc-9.5.0/gcc/testsuite/g++.dg/asan/sanitizer_test_utils.h gcc-9.5.0-patched/gcc/testsuite/g++.dg/asan/sanitizer_test_utils.h
+--- gcc-9.5.0/gcc/testsuite/g++.dg/asan/sanitizer_test_utils.h	2022-05-27 09:21:11.851383900 +0200
++++ gcc-9.5.0-patched/gcc/testsuite/g++.dg/asan/sanitizer_test_utils.h	2025-04-28 14:41:55.307048000 +0200
+@@ -15,6 +15,7 @@
+ 
+ #if defined(_WIN32)
+ // <windows.h> should always be the first include on Windows.
++# define WIN32_LEAN_AND_MEAN
+ # include <windows.h>
+ // MSVS headers define max/min as macros, so std::max/min gets crazy.
+ # undef max
+diff -ruN gcc-9.5.0/gcc/testsuite/gcc.dg/di-sync-multithread.c gcc-9.5.0-patched/gcc/testsuite/gcc.dg/di-sync-multithread.c
+--- gcc-9.5.0/gcc/testsuite/gcc.dg/di-sync-multithread.c	2022-05-27 09:21:12.151385400 +0200
++++ gcc-9.5.0-patched/gcc/testsuite/gcc.dg/di-sync-multithread.c	2025-04-28 14:41:55.313904000 +0200
+@@ -11,6 +11,7 @@
+ #include <pthread.h>
+ #include <unistd.h>
+ #ifdef _WIN32
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #endif
+ 
+diff -ruN gcc-9.5.0/gcc/testsuite/gcc.dg/format/ms-format3.c gcc-9.5.0-patched/gcc/testsuite/gcc.dg/format/ms-format3.c
+--- gcc-9.5.0/gcc/testsuite/gcc.dg/format/ms-format3.c	2022-05-27 09:21:12.155385400 +0200
++++ gcc-9.5.0-patched/gcc/testsuite/gcc.dg/format/ms-format3.c	2025-04-28 14:41:55.321098100 +0200
+@@ -8,6 +8,7 @@
+ #define USE_SYSTEM_FORMATS
+ #define WIN32_LEAN_AND_MEAN
+ #include "format.h"
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ void foo (LONG_PTR l, ULONG_PTR u, DWORD_PTR d, UINT_PTR p, SIZE_T s)
+diff -ruN gcc-9.5.0/gcc/testsuite/objc-obj-c++-shared/GNUStep/GNUstepBase/GSConfig.h gcc-9.5.0-patched/gcc/testsuite/objc-obj-c++-shared/GNUStep/GNUstepBase/GSConfig.h
+--- gcc-9.5.0/gcc/testsuite/objc-obj-c++-shared/GNUStep/GNUstepBase/GSConfig.h	2022-05-27 09:21:12.711388100 +0200
++++ gcc-9.5.0-patched/gcc/testsuite/objc-obj-c++-shared/GNUStep/GNUstepBase/GSConfig.h	2025-04-28 21:56:15.339515200 +0200
+@@ -307,6 +307,7 @@
+ #define WINVER Windows2000
+ #endif
+ 
++#define WIN32_LEAN_AND_MEAN
+ #if defined(__WIN64__)
+ #include <winsock2.h>
+ #include <windows.h>
+diff -ruN gcc-9.5.0/libatomic/config/mingw/lock.c gcc-9.5.0-patched/libatomic/config/mingw/lock.c
+--- gcc-9.5.0/libatomic/config/mingw/lock.c	2022-05-27 09:21:12.803388500 +0200
++++ gcc-9.5.0-patched/libatomic/config/mingw/lock.c	2025-04-28 14:41:55.353547500 +0200
+@@ -23,6 +23,7 @@
+    <http://www.gnu.org/licenses/>.  */
+ 
+ #define UWORD __shadow_UWORD
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #undef UWORD
+ #include "libatomic_i.h"
+diff -ruN gcc-9.5.0/libcpp/system.h gcc-9.5.0-patched/libcpp/system.h
+--- gcc-9.5.0/libcpp/system.h	2022-05-27 09:21:12.835388700 +0200
++++ gcc-9.5.0-patched/libcpp/system.h	2025-04-28 21:58:28.654156400 +0200
+@@ -272,7 +272,9 @@
+ #endif
+ 
+ #ifndef HAVE_SETLOCALE
+-# define setlocale(category, locale) (locale)
++# ifndef ENABLE_NLS
++#  define setlocale(category, locale) (locale)
++# endif
+ #endif
+ 
+ #ifdef ENABLE_NLS
+diff -ruN gcc-9.5.0/libffi/src/x86/darwin_c.c gcc-9.5.0-patched/libffi/src/x86/darwin_c.c
+--- gcc-9.5.0/libffi/src/x86/darwin_c.c	2022-05-27 09:21:12.851388800 +0200
++++ gcc-9.5.0-patched/libffi/src/x86/darwin_c.c	2025-04-28 14:41:55.366580200 +0200
+@@ -31,6 +31,7 @@
+ #if !defined(__x86_64__) || defined(_WIN64) || defined(__CYGWIN__)
+ 
+ #ifdef _WIN64
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #endif
+ 
+diff -ruN gcc-9.5.0/libgcc/config/i386/enable-execute-stack-mingw32.c gcc-9.5.0-patched/libgcc/config/i386/enable-execute-stack-mingw32.c
+--- gcc-9.5.0/libgcc/config/i386/enable-execute-stack-mingw32.c	2022-05-27 09:21:12.867388900 +0200
++++ gcc-9.5.0-patched/libgcc/config/i386/enable-execute-stack-mingw32.c	2025-04-28 14:41:55.380079700 +0200
+@@ -22,6 +22,7 @@
+    see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+    <http://www.gnu.org/licenses/>.  */
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ extern void __enable_execute_stack (void *);
+diff -ruN gcc-9.5.0/libgcc/config/i386/gthr-win32.c gcc-9.5.0-patched/libgcc/config/i386/gthr-win32.c
+--- gcc-9.5.0/libgcc/config/i386/gthr-win32.c	2022-05-27 09:21:12.867388900 +0200
++++ gcc-9.5.0-patched/libgcc/config/i386/gthr-win32.c	2025-04-28 14:41:55.384272800 +0200
+@@ -27,6 +27,7 @@
+ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+ <http://www.gnu.org/licenses/>.  */
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #ifndef __GTHREAD_HIDE_WIN32API
+ # define __GTHREAD_HIDE_WIN32API 1
+diff -ruN gcc-9.5.0/libgcc/config/i386/gthr-win32.h gcc-9.5.0-patched/libgcc/config/i386/gthr-win32.h
+--- gcc-9.5.0/libgcc/config/i386/gthr-win32.h	2022-05-27 09:21:12.867388900 +0200
++++ gcc-9.5.0-patched/libgcc/config/i386/gthr-win32.h	2025-04-28 14:41:55.390564800 +0200
+@@ -82,6 +82,7 @@
+ #ifndef __OBJC__
+ #define __OBJC__
+ #endif
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ /* Now undef the windows BOOL.  */
+ #undef BOOL
+@@ -546,6 +547,7 @@
+ #else /* ! __GTHREAD_HIDE_WIN32API */
+ 
+ #define NOGDI
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #include <errno.h>
+ 
+diff -ruN gcc-9.5.0/libgcc/config/sh/crt1.S gcc-9.5.0-patched/libgcc/config/sh/crt1.S
+--- gcc-9.5.0/libgcc/config/sh/crt1.S	2022-05-27 09:21:12.907389100 +0200
++++ gcc-9.5.0-patched/libgcc/config/sh/crt1.S	2025-04-28 22:00:31.971574600 +0200
+@@ -1,724 +1,724 @@
+-/* Copyright (C) 2000-2019 Free Software Foundation, Inc.
+-   This file was pretty much copied from newlib.
+-
+-This file is part of GCC.
+-
+-GCC is free software; you can redistribute it and/or modify it
+-under the terms of the GNU General Public License as published by the
+-Free Software Foundation; either version 3, or (at your option) any
+-later version.
+-
+-GCC is distributed in the hope that it will be useful,
+-but WITHOUT ANY WARRANTY; without even the implied warranty of
+-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-General Public License for more details.
+-
+-Under Section 7 of GPL version 3, you are granted additional
+-permissions described in the GCC Runtime Library Exception, version
+-3.1, as published by the Free Software Foundation.
+-
+-You should have received a copy of the GNU General Public License and
+-a copy of the GCC Runtime Library Exception along with this program;
+-see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+-<http://www.gnu.org/licenses/>.  */
+-
+-#include "crt.h"
+-
+-#ifdef MMU_SUPPORT
+-	/* Section used for exception/timer interrupt stack area */
+-	.section .data.vbr.stack,"aw"
+-	.align 4
+-	.global __ST_VBR
+-__ST_VBR:
+-	.zero 1024 * 2          /* ; 2k for VBR handlers */
+-/* Label at the highest stack address where the stack grows from */
+-__timer_stack:
+-#endif /* MMU_SUPPORT */
+-	
+-	/* ;----------------------------------------
+-	Normal newlib crt1.S */
+-
+-	! make a place to keep any previous value of the vbr register
+-	! this will only have a value if it has been set by redboot (for example)
+-	.section .bss
+-old_vbr:
+-	.long 0
+-#ifdef PROFILE
+-profiling_enabled:
+-	.long 0
+-#endif
+-
+-
+-	.section .text
+-	.global	start
+-	.import ___rtos_profiler_start_timer
+-	.weak   ___rtos_profiler_start_timer
+-start:
+-	mov.l	stack_k,r15
+-
+-#if defined (__SH3__) || (defined (__SH_FPU_ANY__) && ! defined (__SH2E__) && ! defined (__SH2A__)) || defined (__SH4_NOFPU__)
+-#define VBR_SETUP
+-	! before zeroing the bss ...
+-	! if the vbr is already set to vbr_start then the program has been restarted
+-	! (i.e. it is not the first time the program has been run since reset)
+-	! reset the vbr to its old value before old_vbr (in bss) is wiped
+-	! this ensures that the later code does not create a circular vbr chain
+-	stc	vbr, r1
+-	mov.l	vbr_start_k, r2
+-	cmp/eq	r1, r2
+-	bf	0f
+-	! reset the old vbr value
+-	mov.l	old_vbr_k, r1
+-	mov.l	@r1, r2
+-	ldc	r2, vbr
+-0:	
+-#endif /* VBR_SETUP */
+-	
+-	! zero out bss
+-	mov.l	edata_k,r0
+-	mov.l	end_k,r1
+-	mov	#0,r2
+-start_l:
+-	mov.l	r2,@r0
+-	add	#4,r0
+-	cmp/ge	r0,r1
+-	bt	start_l
+-
+-#if defined (__SH_FPU_ANY__)
+-	mov.l set_fpscr_k, r1
+-	mov #4,r4
+-	jsr @r1
+-	shll16 r4	! Set DN bit (flush denormal inputs to zero)
+-	lds r3,fpscr	! Switch to default precision
+-#endif /* defined (__SH_FPU_ANY__) */
+-
+-#ifdef VBR_SETUP
+-	! save the existing contents of the vbr
+-	! there will only be a prior value when using something like redboot
+-	! otherwise it will be zero
+-	stc	vbr, r1
+-	mov.l	old_vbr_k, r2
+-	mov.l	r1, @r2
+-	! setup vbr
+-	mov.l	vbr_start_k, r1
+-	ldc	r1,vbr
+-#endif /* VBR_SETUP */
+-
+-	! if an rtos is exporting a timer start fn,
+-	! then pick up an SR which does not enable ints
+-	! (the rtos will take care of this)
+-	mov.l rtos_start_fn, r0
+-	mov.l sr_initial_bare, r1
+-	tst	r0, r0
+-	bt	set_sr
+-
+-	mov.l sr_initial_rtos, r1
+-
+-set_sr:
+-	! Set status register (sr)
+-	ldc	r1, sr
+-
+-	! arrange for exit to call fini
+-	mov.l	atexit_k,r0
+-	mov.l	fini_k,r4
+-	jsr	@r0
+-	nop
+-
+-#ifdef PROFILE
+-	! arrange for exit to call _mcleanup (via stop_profiling)
+-	mova    stop_profiling,r0
+-	mov.l   atexit_k,r1
+-	jsr     @r1
+-	mov	r0, r4
+-
+-	! Call profiler startup code
+-	mov.l monstartup_k, r0
+-	mov.l start_k, r4
+-	mov.l etext_k, r5
+-	jsr @r0
+-	nop
+-
+-	! enable profiling trap
+-	! until now any trap 33s will have been ignored
+-	! This means that all library functions called before this point
+-	! (directly or indirectly) may have the profiling trap at the start.
+-	! Therefore, only mcount itself may not have the extra header.
+-	mov.l	profiling_enabled_k2, r0
+-	mov	#1, r1
+-	mov.l	r1, @r0
+-#endif /* PROFILE */
+-
+-	! call init
+-	mov.l	init_k,r0
+-	jsr	@r0
+-	nop
+-
+-	! call the mainline	
+-	mov.l	main_k,r0
+-	jsr	@r0
+-	nop
+-
+-	! call exit
+-	mov	r0,r4
+-	mov.l	exit_k,r0
+-	jsr	@r0
+-	nop
+-	
+-		.balign 4
+-#ifdef PROFILE
+-stop_profiling:
+-	# stop mcount counting
+-	mov.l	profiling_enabled_k2, r0
+-	mov	#0, r1
+-	mov.l	r1, @r0
+-
+-	# call mcleanup
+-	mov.l	mcleanup_k, r0
+-	jmp	@r0
+-	nop
+-		
+-		.balign 4
+-mcleanup_k:
+-	.long __mcleanup
+-monstartup_k:
+-	.long ___monstartup
+-profiling_enabled_k2:
+-	.long profiling_enabled
+-start_k:
+-	.long _start
+-etext_k:
+-	.long __etext
+-#endif /* PROFILE */
+-
+-	.align 2
+-#if defined (__SH_FPU_ANY__)
+-set_fpscr_k:
+-	.long	___set_fpscr
+-#endif /*  defined (__SH_FPU_ANY__) */
+-
+-stack_k:
+-	.long	_stack	
+-edata_k:
+-	.long	_edata
+-end_k:
+-	.long	_end
+-main_k:
+-	.long	___setup_argv_and_call_main
+-exit_k:
+-	.long	_exit
+-atexit_k:
+-	.long	_atexit
+-init_k:
+-	.long	GLOBAL(_init)
+-fini_k:
+-	.long	GLOBAL(_fini)
+-#ifdef VBR_SETUP
+-old_vbr_k:
+-	.long	old_vbr
+-vbr_start_k:
+-	.long	vbr_start
+-#endif /* VBR_SETUP */
+-	
+-sr_initial_rtos:
+-	! Privileged mode RB 1 BL 0. Keep BL 0 to allow default trap handlers to work.
+-	! Whether profiling or not, keep interrupts masked,
+-	! the RTOS will enable these if required.
+-	.long 0x600000f1 
+-
+-rtos_start_fn:
+-	.long ___rtos_profiler_start_timer
+-	
+-#ifdef PROFILE
+-sr_initial_bare:
+-	! Privileged mode RB 1 BL 0. Keep BL 0 to allow default trap handlers to work.
+-	! For bare machine, we need to enable interrupts to get profiling working
+-	.long 0x60000001
+-#else
+-
+-sr_initial_bare:
+-	! Privileged mode RB 1 BL 0. Keep BL 0 to allow default trap handlers to work.
+-	! Keep interrupts disabled - the application will enable as required.
+-	.long 0x600000f1
+-#endif
+-
+-	! supplied for backward compatibility only, in case of linking
+-	! code whose main() was compiled with an older version of GCC.
+-	.global ___main
+-___main:
+-	rts
+-	nop
+-#ifdef VBR_SETUP
+-! Exception handlers	
+-	.section .text.vbr, "ax"
+-vbr_start:
+-
+-	.org 0x100
+-vbr_100:
+-#ifdef PROFILE
+-	! Note on register usage.
+-	! we use r0..r3 as scratch in this code. If we are here due to a trapa for profiling
+-	! then this is OK as we are just before executing any function code.
+-	! The other r4..r7 we save explicityl on the stack
+-	! Remaining registers are saved by normal ABI conventions and we assert we do not
+-	! use floating point registers.
+-	mov.l expevt_k1, r1
+-	mov.l @r1, r1
+-	mov.l event_mask, r0
+-	and r0,r1
+-	mov.l trapcode_k, r2
+-	cmp/eq r1,r2
+-	bt 1f
+-	bra handler_100   ! if not a trapa, go to default handler
+-	nop
+-1:	
+-	mov.l trapa_k, r0
+-	mov.l @r0, r0
+-	shlr2 r0      ! trapa code is shifted by 2.
+-	cmp/eq #33, r0
+-	bt 2f
+-	bra handler_100
+-	nop
+-2:	
+-	
+-	! If here then it looks like we have trap #33
+-	! Now we need to call mcount with the following convention
+-	! Save and restore r4..r7
+-	mov.l	r4,@-r15
+-	mov.l	r5,@-r15
+-	mov.l	r6,@-r15
+-	mov.l	r7,@-r15
+-	sts.l	pr,@-r15
+-
+-	! r4 is frompc.
+-	! r5 is selfpc
+-	! r0 is the branch back address.
+-	! The code sequence emitted by gcc for the profiling trap is
+-	! .align 2
+-	! trapa #33
+-	! .align 2
+-	! .long lab Where lab is planted by the compiler. This is the address
+-	! of a datum that needs to be incremented. 
+-	sts pr,  r4     ! frompc
+-	stc spc, r5	! selfpc
+-	mov #2, r2
+-	not r2, r2      ! pattern to align to 4
+-	and r2, r5      ! r5 now has aligned address
+-!	add #4, r5      ! r5 now has address of address
+-	mov r5, r2      ! Remember it.
+-!	mov.l @r5, r5   ! r5 has value of lable (lab in above example)
+-	add #8, r2
+-	ldc r2, spc     ! our return address avoiding address word
+-
+-	! only call mcount if profiling is enabled
+-	mov.l profiling_enabled_k, r0
+-	mov.l @r0, r0
+-	cmp/eq #0, r0
+-	bt 3f
+-	! call mcount
+-	mov.l mcount_k, r2
+-	jsr @r2
+-	nop
+-3:
+-	lds.l @r15+,pr
+-	mov.l @r15+,r7
+-	mov.l @r15+,r6
+-	mov.l @r15+,r5
+-	mov.l @r15+,r4
+-	rte
+-	nop
+-	.balign 4
+-event_mask:
+-	.long 0xfff
+-trapcode_k:	
+-	.long 0x160
+-expevt_k1:
+-	.long 0xff000024 ! Address of expevt
+-trapa_k:	
+-	.long 0xff000020
+-mcount_k:
+-	.long __call_mcount
+-profiling_enabled_k:
+-	.long profiling_enabled
+-#endif
+-	! Non profiling case.
+-handler_100:
+-	mov.l 2f, r0     ! load the old vbr setting (if any)
+-	mov.l @r0, r0
+-	cmp/eq #0, r0
+-	bf 1f
+-	! no previous vbr - jump to own generic handler
+-	bra handler
+-	nop	
+-1:	! there was a previous handler - chain them
+-	add #0x7f, r0	 ! 0x7f
+-	add #0x7f, r0	 ! 0xfe
+-	add #0x2, r0     ! add 0x100 without corrupting another register
+-	jmp @r0
+-	nop
+-	.balign 4
+-2:	
+-	.long old_vbr
+-
+-	.org 0x400
+-vbr_400:	! Should be at vbr+0x400
+-	mov.l 2f, r0     ! load the old vbr setting (if any)
+-	mov.l @r0, r0
+-	cmp/eq #0, r0
+-	! no previous vbr - jump to own generic handler
+-	bt handler
+-	! there was a previous handler - chain them
+-	rotcr r0
+-	rotcr r0
+-	add #0x7f, r0	 ! 0x1fc
+-	add #0x7f, r0	 ! 0x3f8
+-	add #0x02, r0	 ! 0x400
+-	rotcl r0
+-	rotcl r0	 ! Add 0x400 without corrupting another register
+-	jmp @r0
+-	nop
+-	.balign 4
+-2:
+-	.long old_vbr
+-handler:
+-	/* If the trap handler is there call it */
+-	mov.l	superh_trap_handler_k, r0
+-	cmp/eq	#0, r0       ! True if zero.
+-	bf 3f
+-	bra   chandler
+-	nop
+-3:	
+-	! Here handler available, call it. 
+-	/* Now call the trap handler with as much of the context unchanged as possible.
+-	   Move trapping address into PR to make it look like the trap point */
+-	stc spc, r1
+-	lds r1, pr
+-	mov.l expevt_k, r4
+-	mov.l @r4, r4 ! r4 is value of expevt, first parameter.
+-	mov r1, r5   ! Remember trapping pc.
+-	mov r1, r6   ! Remember trapping pc.
+-	mov.l chandler_k, r1
+-	mov.l superh_trap_handler_k, r2
+-	! jmp to trap handler to avoid disturbing pr. 
+-	jmp @r2
+-	nop
+-
+-	.org 0x600
+-vbr_600:
+-#ifdef PROFILE	
+-	! Should be at vbr+0x600
+-	! Now we are in the land of interrupts so need to save more state. 
+-	! Save register state
+-	mov.l interrupt_stack_k, r15 ! r15 has been saved to sgr.
+-	mov.l	r0,@-r15	
+-	mov.l	r1,@-r15
+-	mov.l	r2,@-r15
+-	mov.l	r3,@-r15
+-	mov.l	r4,@-r15
+-	mov.l	r5,@-r15
+-	mov.l	r6,@-r15
+-	mov.l	r7,@-r15
+-	sts.l	pr,@-r15
+-	sts.l	mach,@-r15
+-	sts.l	macl,@-r15
+-#if defined(__SH_FPU_ANY__)
+-	! Save fpul and fpscr, save fr0-fr7 in 64 bit mode
+-	! and set the pervading precision for the timer_handler
+-	mov	#0,r0
+-	sts.l	fpul,@-r15
+-	sts.l	fpscr,@-r15
+-	lds	r0,fpscr	! Clear fpscr
+-	fmov	fr0,@-r15
+-	fmov	fr1,@-r15
+-	fmov	fr2,@-r15
+-	fmov	fr3,@-r15
+-	mov.l	pervading_precision_k,r0
+-	fmov	fr4,@-r15
+-	fmov	fr5,@-r15
+-	mov.l	@r0,r0
+-	fmov	fr6,@-r15
+-	fmov	fr7,@-r15
+-	lds	r0,fpscr
+-#endif /* __SH_FPU_ANY__ */
+-	! Pass interrupted pc to timer_handler as first parameter (r4).
+-	stc    spc, r4
+-	mov.l timer_handler_k, r0
+-	jsr @r0
+-	nop
+-#if defined(__SH_FPU_ANY__)
+-	mov	#0,r0
+-	lds	r0,fpscr	! Clear the fpscr
+-	fmov	@r15+,fr7
+-	fmov	@r15+,fr6
+-	fmov	@r15+,fr5
+-	fmov	@r15+,fr4
+-	fmov	@r15+,fr3
+-	fmov	@r15+,fr2
+-	fmov	@r15+,fr1
+-	fmov	@r15+,fr0
+-	lds.l	@r15+,fpscr
+-	lds.l	@r15+,fpul
+-#endif /* __SH_FPU_ANY__ */
+-	lds.l @r15+,macl
+-	lds.l @r15+,mach
+-	lds.l @r15+,pr
+-	mov.l @r15+,r7
+-	mov.l @r15+,r6
+-	mov.l @r15+,r5
+-	mov.l @r15+,r4
+-	mov.l @r15+,r3
+-	mov.l @r15+,r2
+-	mov.l @r15+,r1
+-	mov.l @r15+,r0
+-	stc sgr, r15    ! Restore r15, destroyed by this sequence. 
+-	rte
+-	nop
+-#if defined(__SH_FPU_ANY__)
+-	.balign 4
+-pervading_precision_k:
+-	.long GLOBAL(__fpscr_values)+4
+-#endif
+-#else
+-	mov.l 2f, r0     ! Load the old vbr setting (if any).
+-	mov.l @r0, r0
+-	cmp/eq #0, r0
+-	! no previous vbr - jump to own handler
+-	bt chandler
+-	! there was a previous handler - chain them
+-	rotcr r0
+-	rotcr r0
+-	add #0x7f, r0	 ! 0x1fc
+-	add #0x7f, r0	 ! 0x3f8
+-	add #0x7f, r0	 ! 0x5f4
+-	add #0x03, r0	 ! 0x600
+-	rotcl r0
+-	rotcl r0	 ! Add 0x600 without corrupting another register
+-	jmp @r0
+-	nop
+-	.balign 4
+-2:
+-	.long old_vbr
+-#endif	 /* PROFILE code */
+-chandler:
+-	mov.l expevt_k, r4
+-	mov.l @r4, r4 ! r4 is value of expevt hence making this the return code
+-	mov.l handler_exit_k,r0
+-	jsr   @r0
+-	nop
+-	! We should never return from _exit but in case we do we would enter the
+-	! the following tight loop
+-limbo:
+-	bra limbo
+-	nop
+-	.balign 4
+-#ifdef PROFILE
+-interrupt_stack_k:
+-	.long __timer_stack	! The high end of the stack
+-timer_handler_k:
+-	.long __profil_counter
+-#endif
+-expevt_k:
+-	.long 0xff000024 ! Address of expevt
+-chandler_k:	
+-	.long chandler	
+-superh_trap_handler_k:
+-	.long	__superh_trap_handler
+-handler_exit_k:
+-	.long _exit
+-	.align 2
+-! Simulated compile of trap handler.
+-	.section	.debug_abbrev,"",@progbits
+-.Ldebug_abbrev0:
+-	.section	.debug_info,"",@progbits
+-.Ldebug_info0:
+-	.section	.debug_line,"",@progbits
+-.Ldebug_line0:
+-	.text
+-.Ltext0:
+-	.align 5
+-	.type	__superh_trap_handler,@function
+-__superh_trap_handler:
+-.LFB1:
+-	mov.l	r14,@-r15
+-.LCFI0:
+-	add	#-4,r15
+-.LCFI1:
+-	mov	r15,r14
+-.LCFI2:
+-	mov.l	r4,@r14
+-	lds	r1, pr
+-	add	#4,r14
+-	mov	r14,r15
+-	mov.l	@r15+,r14
+-	rts	
+-	nop
+-.LFE1:
+-.Lfe1:
+-	.size	__superh_trap_handler,.Lfe1-__superh_trap_handler
+-	.section	.debug_frame,"",@progbits
+-.Lframe0:
+-	.ualong	.LECIE0-.LSCIE0
+-.LSCIE0:
+-	.ualong	0xffffffff
+-	.byte	0x1
+-	.string	""
+-	.uleb128 0x1
+-	.sleb128 -4
+-	.byte	0x11
+-	.byte	0xc
+-	.uleb128 0xf
+-	.uleb128 0x0
+-	.align 2
+-.LECIE0:
+-.LSFDE0:
+-	.ualong	.LEFDE0-.LASFDE0
+-.LASFDE0:
+-	.ualong	.Lframe0
+-	.ualong	.LFB1
+-	.ualong	.LFE1-.LFB1
+-	.byte	0x4
+-	.ualong	.LCFI0-.LFB1
+-	.byte	0xe
+-	.uleb128 0x4
+-	.byte	0x4
+-	.ualong	.LCFI1-.LCFI0
+-	.byte	0xe
+-	.uleb128 0x8
+-	.byte	0x8e
+-	.uleb128 0x1
+-	.byte	0x4
+-	.ualong	.LCFI2-.LCFI1
+-	.byte	0xd
+-	.uleb128 0xe
+-	.align 2
+-.LEFDE0:
+-	.text
+-.Letext0:
+-	.section	.debug_info
+-	.ualong	0xb3
+-	.uaword	0x2
+-	.ualong	.Ldebug_abbrev0
+-	.byte	0x4
+-	.uleb128 0x1
+-	.ualong	.Ldebug_line0
+-	.ualong	.Letext0
+-	.ualong	.Ltext0
+-	.string	"trap_handler.c"
+-	.string	"xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+-	.string	"GNU C 3.2 20020529 (experimental)"
+-	.byte	0x1
+-	.uleb128 0x2
+-	.ualong	0xa6
+-	.byte	0x1
+-	.string	"_superh_trap_handler"
+-	.byte	0x1
+-	.byte	0x2
+-	.byte	0x1
+-	.ualong	.LFB1
+-	.ualong	.LFE1
+-	.byte	0x1
+-	.byte	0x5e
+-	.uleb128 0x3
+-	.string	"trap_reason"
+-	.byte	0x1
+-	.byte	0x1
+-	.ualong	0xa6
+-	.byte	0x2
+-	.byte	0x91
+-	.sleb128 0
+-	.byte	0x0
+-	.uleb128 0x4
+-	.string	"unsigned int"
+-	.byte	0x4
+-	.byte	0x7
+-	.byte	0x0
+-	.section	.debug_abbrev
+-	.uleb128 0x1
+-	.uleb128 0x11
+-	.byte	0x1
+-	.uleb128 0x10
+-	.uleb128 0x6
+-	.uleb128 0x12
+-	.uleb128 0x1
+-	.uleb128 0x11
+-	.uleb128 0x1
+-	.uleb128 0x3
+-	.uleb128 0x8
+-	.uleb128 0x1b
+-	.uleb128 0x8
+-	.uleb128 0x25
+-	.uleb128 0x8
+-	.uleb128 0x13
+-	.uleb128 0xb
+-	.byte	0x0
+-	.byte	0x0
+-	.uleb128 0x2
+-	.uleb128 0x2e
+-	.byte	0x1
+-	.uleb128 0x1
+-	.uleb128 0x13
+-	.uleb128 0x3f
+-	.uleb128 0xc
+-	.uleb128 0x3
+-	.uleb128 0x8
+-	.uleb128 0x3a
+-	.uleb128 0xb
+-	.uleb128 0x3b
+-	.uleb128 0xb
+-	.uleb128 0x27
+-	.uleb128 0xc
+-	.uleb128 0x11
+-	.uleb128 0x1
+-	.uleb128 0x12
+-	.uleb128 0x1
+-	.uleb128 0x40
+-	.uleb128 0xa
+-	.byte	0x0
+-	.byte	0x0
+-	.uleb128 0x3
+-	.uleb128 0x5
+-	.byte	0x0
+-	.uleb128 0x3
+-	.uleb128 0x8
+-	.uleb128 0x3a
+-	.uleb128 0xb
+-	.uleb128 0x3b
+-	.uleb128 0xb
+-	.uleb128 0x49
+-	.uleb128 0x13
+-	.uleb128 0x2
+-	.uleb128 0xa
+-	.byte	0x0
+-	.byte	0x0
+-	.uleb128 0x4
+-	.uleb128 0x24
+-	.byte	0x0
+-	.uleb128 0x3
+-	.uleb128 0x8
+-	.uleb128 0xb
+-	.uleb128 0xb
+-	.uleb128 0x3e
+-	.uleb128 0xb
+-	.byte	0x0
+-	.byte	0x0
+-	.byte	0x0
+-	.section	.debug_pubnames,"",@progbits
+-	.ualong	0x27
+-	.uaword	0x2
+-	.ualong	.Ldebug_info0
+-	.ualong	0xb7
+-	.ualong	0x67
+-	.string	"_superh_trap_handler"
+-	.ualong	0x0
+-	.section	.debug_aranges,"",@progbits
+-	.ualong	0x1c
+-	.uaword	0x2
+-	.ualong	.Ldebug_info0
+-	.byte	0x4
+-	.byte	0x0
+-	.uaword	0x0
+-	.uaword	0x0
+-	.ualong	.Ltext0
+-	.ualong	.Letext0-.Ltext0
+-	.ualong	0x0
+-	.ualong	0x0
+-#endif /* VBR_SETUP */
++/* Copyright (C) 2000-2019 Free Software Foundation, Inc.
++   This file was pretty much copied from newlib.
++
++This file is part of GCC.
++
++GCC is free software; you can redistribute it and/or modify it
++under the terms of the GNU General Public License as published by the
++Free Software Foundation; either version 3, or (at your option) any
++later version.
++
++GCC is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++General Public License for more details.
++
++Under Section 7 of GPL version 3, you are granted additional
++permissions described in the GCC Runtime Library Exception, version
++3.1, as published by the Free Software Foundation.
++
++You should have received a copy of the GNU General Public License and
++a copy of the GCC Runtime Library Exception along with this program;
++see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
++<http://www.gnu.org/licenses/>.  */
++
++#include "crt.h"
++
++#ifdef MMU_SUPPORT
++	/* Section used for exception/timer interrupt stack area */
++	.section .data.vbr.stack,"aw"
++	.align 4
++	.global __ST_VBR
++__ST_VBR:
++	.zero 1024 * 2          /* ; 2k for VBR handlers */
++/* Label at the highest stack address where the stack grows from */
++__timer_stack:
++#endif /* MMU_SUPPORT */
++	
++	/* ;----------------------------------------
++	Normal newlib crt1.S */
++
++	! make a place to keep any previous value of the vbr register
++	! this will only have a value if it has been set by redboot (for example)
++	.section .bss
++old_vbr:
++	.long 0
++#ifdef PROFILE
++profiling_enabled:
++	.long 0
++#endif
++
++
++	.section .text
++	.global	start
++	.import ___rtos_profiler_start_timer
++	.weak   ___rtos_profiler_start_timer
++start:
++	mov.l	stack_k,r15
++
++#if defined (__SH3__) || (defined (__SH_FPU_ANY__) && ! defined (__SH2E__) && ! defined (__SH2A__)) || defined (__SH4_NOFPU__)
++#define VBR_SETUP
++	! before zeroing the bss ...
++	! if the vbr is already set to vbr_start then the program has been restarted
++	! (i.e. it is not the first time the program has been run since reset)
++	! reset the vbr to its old value before old_vbr (in bss) is wiped
++	! this ensures that the later code does not create a circular vbr chain
++	stc	vbr, r1
++	mov.l	vbr_start_k, r2
++	cmp/eq	r1, r2
++	bf	0f
++	! reset the old vbr value
++	mov.l	old_vbr_k, r1
++	mov.l	@r1, r2
++	ldc	r2, vbr
++0:	
++#endif /* VBR_SETUP */
++	
++	! zero out bss
++	mov.l	edata_k,r0
++	mov.l	end_k,r1
++	mov	#0,r2
++start_l:
++	mov.l	r2,@r0
++	add	#4,r0
++	cmp/ge	r0,r1
++	bt	start_l
++
++#if defined (__SH_FPU_ANY__)
++	mov.l set_fpscr_k, r1
++	mov #4,r4
++	jsr @r1
++	shll16 r4	! Set DN bit (flush denormal inputs to zero)
++	lds r3,fpscr	! Switch to default precision
++#endif /* defined (__SH_FPU_ANY__) */
++
++#ifdef VBR_SETUP
++	! save the existing contents of the vbr
++	! there will only be a prior value when using something like redboot
++	! otherwise it will be zero
++	stc	vbr, r1
++	mov.l	old_vbr_k, r2
++	mov.l	r1, @r2
++	! setup vbr
++	mov.l	vbr_start_k, r1
++	ldc	r1,vbr
++#endif /* VBR_SETUP */
++
++	! if an rtos is exporting a timer start fn,
++	! then pick up an SR which does not enable ints
++	! (the rtos will take care of this)
++	mov.l rtos_start_fn, r0
++	mov.l sr_initial_bare, r1
++	tst	r0, r0
++	bt	set_sr
++
++	mov.l sr_initial_rtos, r1
++
++set_sr:
++	! Set status register (sr)
++	ldc	r1, sr
++
++	! arrange for exit to call fini
++	mov.l	atexit_k,r0
++	mov.l	fini_k,r4
++	jsr	@r0
++	nop
++
++#ifdef PROFILE
++	! arrange for exit to call _mcleanup (via stop_profiling)
++	mova    stop_profiling,r0
++	mov.l   atexit_k,r1
++	jsr     @r1
++	mov	r0, r4
++
++	! Call profiler startup code
++	mov.l monstartup_k, r0
++	mov.l start_k, r4
++	mov.l etext_k, r5
++	jsr @r0
++	nop
++
++	! enable profiling trap
++	! until now any trap 33s will have been ignored
++	! This means that all library functions called before this point
++	! (directly or indirectly) may have the profiling trap at the start.
++	! Therefore, only mcount itself may not have the extra header.
++	mov.l	profiling_enabled_k2, r0
++	mov	#1, r1
++	mov.l	r1, @r0
++#endif /* PROFILE */
++
++	! call init
++	mov.l	init_k,r0
++	jsr	@r0
++	nop
++
++	! call the mainline	
++	mov.l	main_k,r0
++	jsr	@r0
++	nop
++
++	! call exit
++	mov	r0,r4
++	mov.l	exit_k,r0
++	jsr	@r0
++	nop
++	
++		.balign 4
++#ifdef PROFILE
++stop_profiling:
++	# stop mcount counting
++	mov.l	profiling_enabled_k2, r0
++	mov	#0, r1
++	mov.l	r1, @r0
++
++	# call mcleanup
++	mov.l	mcleanup_k, r0
++	jmp	@r0
++	nop
++		
++		.balign 4
++mcleanup_k:
++	.long __mcleanup
++monstartup_k:
++	.long ___monstartup
++profiling_enabled_k2:
++	.long profiling_enabled
++start_k:
++	.long _start
++etext_k:
++	.long __etext
++#endif /* PROFILE */
++
++	.align 2
++#if defined (__SH_FPU_ANY__)
++set_fpscr_k:
++	.long	___set_fpscr
++#endif /*  defined (__SH_FPU_ANY__) */
++
++stack_k:
++	.long	_stack	
++edata_k:
++	.long	_edata
++end_k:
++	.long	_end
++main_k:
++	.long	___setup_argv_and_call_main
++exit_k:
++	.long	_exit
++atexit_k:
++	.long	_atexit
++init_k:
++	.long	GLOBAL(_init)
++fini_k:
++	.long	GLOBAL(_fini)
++#ifdef VBR_SETUP
++old_vbr_k:
++	.long	old_vbr
++vbr_start_k:
++	.long	vbr_start
++#endif /* VBR_SETUP */
++	
++sr_initial_rtos:
++	! Privileged mode RB 1 BL 0. Keep BL 0 to allow default trap handlers to work.
++	! Whether profiling or not, keep interrupts masked,
++	! the RTOS will enable these if required.
++	.long 0x600000f1 
++
++rtos_start_fn:
++	.long ___rtos_profiler_start_timer
++	
++#ifdef PROFILE
++sr_initial_bare:
++	! Privileged mode RB 1 BL 0. Keep BL 0 to allow default trap handlers to work.
++	! For bare machine, we need to enable interrupts to get profiling working
++	.long 0x60000001
++#else
++
++sr_initial_bare:
++	! Privileged mode RB 1 BL 0. Keep BL 0 to allow default trap handlers to work.
++	! Keep interrupts disabled - the application will enable as required.
++	.long 0x600000f1
++#endif
++
++	! supplied for backward compatibility only, in case of linking
++	! code whose main() was compiled with an older version of GCC.
++	.global ___main
++___main:
++	rts
++	nop
++#ifdef VBR_SETUP
++! Exception handlers	
++	.section .text.vbr, "ax"
++vbr_start:
++
++	.org 0x100
++vbr_100:
++#ifdef PROFILE
++	! Note on register usage.
++	! we use r0..r3 as scratch in this code. If we are here due to a trapa for profiling
++	! then this is OK as we are just before executing any function code.
++	! The other r4..r7 we save explicityl on the stack
++	! Remaining registers are saved by normal ABI conventions and we assert we do not
++	! use floating point registers.
++	mov.l expevt_k1, r1
++	mov.l @r1, r1
++	mov.l event_mask, r0
++	and r0,r1
++	mov.l trapcode_k, r2
++	cmp/eq r1,r2
++	bt 1f
++	bra handler_100   ! if not a trapa, go to default handler
++	nop
++1:	
++	mov.l trapa_k, r0
++	mov.l @r0, r0
++	shlr2 r0      ! trapa code is shifted by 2.
++	cmp/eq #33, r0
++	bt 2f
++	bra handler_100
++	nop
++2:	
++	
++	! If here then it looks like we have trap #33
++	! Now we need to call mcount with the following convention
++	! Save and restore r4..r7
++	mov.l	r4,@-r15
++	mov.l	r5,@-r15
++	mov.l	r6,@-r15
++	mov.l	r7,@-r15
++	sts.l	pr,@-r15
++
++	! r4 is frompc.
++	! r5 is selfpc
++	! r0 is the branch back address.
++	! The code sequence emitted by gcc for the profiling trap is
++	! .align 2
++	! trapa #33
++	! .align 2
++	! .long lab Where lab is planted by the compiler. This is the address
++	! of a datum that needs to be incremented. 
++	sts pr,  r4     ! frompc
++	stc spc, r5	! selfpc
++	mov #2, r2
++	not r2, r2      ! pattern to align to 4
++	and r2, r5      ! r5 now has aligned address
++!	add #4, r5      ! r5 now has address of address
++	mov r5, r2      ! Remember it.
++!	mov.l @r5, r5   ! r5 has value of lable (lab in above example)
++	add #8, r2
++	ldc r2, spc     ! our return address avoiding address word
++
++	! only call mcount if profiling is enabled
++	mov.l profiling_enabled_k, r0
++	mov.l @r0, r0
++	cmp/eq #0, r0
++	bt 3f
++	! call mcount
++	mov.l mcount_k, r2
++	jsr @r2
++	nop
++3:
++	lds.l @r15+,pr
++	mov.l @r15+,r7
++	mov.l @r15+,r6
++	mov.l @r15+,r5
++	mov.l @r15+,r4
++	rte
++	nop
++	.balign 4
++event_mask:
++	.long 0xfff
++trapcode_k:	
++	.long 0x160
++expevt_k1:
++	.long 0xff000024 ! Address of expevt
++trapa_k:	
++	.long 0xff000020
++mcount_k:
++	.long __call_mcount
++profiling_enabled_k:
++	.long profiling_enabled
++#endif
++	! Non profiling case.
++handler_100:
++	mov.l 2f, r0     ! load the old vbr setting (if any)
++	mov.l @r0, r0
++	cmp/eq #0, r0
++	bf 1f
++	! no previous vbr - jump to own generic handler
++	bra handler
++	nop	
++1:	! there was a previous handler - chain them
++	add #0x7f, r0	 ! 0x7f
++	add #0x7f, r0	 ! 0xfe
++	add #0x2, r0     ! add 0x100 without corrupting another register
++	jmp @r0
++	nop
++	.balign 4
++2:	
++	.long old_vbr
++
++	.org 0x400
++vbr_400:	! Should be at vbr+0x400
++	mov.l 2f, r0     ! load the old vbr setting (if any)
++	mov.l @r0, r0
++	cmp/eq #0, r0
++	! no previous vbr - jump to own generic handler
++	bt handler
++	! there was a previous handler - chain them
++	rotcr r0
++	rotcr r0
++	add #0x7f, r0	 ! 0x1fc
++	add #0x7f, r0	 ! 0x3f8
++	add #0x02, r0	 ! 0x400
++	rotcl r0
++	rotcl r0	 ! Add 0x400 without corrupting another register
++	jmp @r0
++	nop
++	.balign 4
++2:
++	.long old_vbr
++handler:
++	/* If the trap handler is there call it */
++	mov.l	superh_trap_handler_k, r0
++	cmp/eq	#0, r0       ! True if zero.
++	bf 3f
++	bra   chandler
++	nop
++3:	
++	! Here handler available, call it. 
++	/* Now call the trap handler with as much of the context unchanged as possible.
++	   Move trapping address into PR to make it look like the trap point */
++	stc spc, r1
++	lds r1, pr
++	mov.l expevt_k, r4
++	mov.l @r4, r4 ! r4 is value of expevt, first parameter.
++	mov r1, r5   ! Remember trapping pc.
++	mov r1, r6   ! Remember trapping pc.
++	mov.l chandler_k, r1
++	mov.l superh_trap_handler_k, r2
++	! jmp to trap handler to avoid disturbing pr. 
++	jmp @r2
++	nop
++
++	.org 0x600
++vbr_600:
++#ifdef PROFILE	
++	! Should be at vbr+0x600
++	! Now we are in the land of interrupts so need to save more state. 
++	! Save register state
++	mov.l interrupt_stack_k, r15 ! r15 has been saved to sgr.
++	mov.l	r0,@-r15	
++	mov.l	r1,@-r15
++	mov.l	r2,@-r15
++	mov.l	r3,@-r15
++	mov.l	r4,@-r15
++	mov.l	r5,@-r15
++	mov.l	r6,@-r15
++	mov.l	r7,@-r15
++	sts.l	pr,@-r15
++	sts.l	mach,@-r15
++	sts.l	macl,@-r15
++#if defined(__SH_FPU_ANY__)
++	! Save fpul and fpscr, save fr0-fr7 in 64 bit mode
++	! and set the pervading precision for the timer_handler
++	mov	#0,r0
++	sts.l	fpul,@-r15
++	sts.l	fpscr,@-r15
++	lds	r0,fpscr	! Clear fpscr
++	fmov	fr0,@-r15
++	fmov	fr1,@-r15
++	fmov	fr2,@-r15
++	fmov	fr3,@-r15
++	mov.l	pervading_precision_k,r0
++	fmov	fr4,@-r15
++	fmov	fr5,@-r15
++	mov.l	@r0,r0
++	fmov	fr6,@-r15
++	fmov	fr7,@-r15
++	lds	r0,fpscr
++#endif /* __SH_FPU_ANY__ */
++	! Pass interrupted pc to timer_handler as first parameter (r4).
++	stc    spc, r4
++	mov.l timer_handler_k, r0
++	jsr @r0
++	nop
++#if defined(__SH_FPU_ANY__)
++	mov	#0,r0
++	lds	r0,fpscr	! Clear the fpscr
++	fmov	@r15+,fr7
++	fmov	@r15+,fr6
++	fmov	@r15+,fr5
++	fmov	@r15+,fr4
++	fmov	@r15+,fr3
++	fmov	@r15+,fr2
++	fmov	@r15+,fr1
++	fmov	@r15+,fr0
++	lds.l	@r15+,fpscr
++	lds.l	@r15+,fpul
++#endif /* __SH_FPU_ANY__ */
++	lds.l @r15+,macl
++	lds.l @r15+,mach
++	lds.l @r15+,pr
++	mov.l @r15+,r7
++	mov.l @r15+,r6
++	mov.l @r15+,r5
++	mov.l @r15+,r4
++	mov.l @r15+,r3
++	mov.l @r15+,r2
++	mov.l @r15+,r1
++	mov.l @r15+,r0
++	stc sgr, r15    ! Restore r15, destroyed by this sequence. 
++	rte
++	nop
++#if defined(__SH_FPU_ANY__)
++	.balign 4
++pervading_precision_k:
++	.long GLOBAL(__fpscr_values)+4
++#endif
++#else
++	mov.l 2f, r0     ! Load the old vbr setting (if any).
++	mov.l @r0, r0
++	cmp/eq #0, r0
++	! no previous vbr - jump to own handler
++	bt chandler
++	! there was a previous handler - chain them
++	rotcr r0
++	rotcr r0
++	add #0x7f, r0	 ! 0x1fc
++	add #0x7f, r0	 ! 0x3f8
++	add #0x7f, r0	 ! 0x5f4
++	add #0x03, r0	 ! 0x600
++	rotcl r0
++	rotcl r0	 ! Add 0x600 without corrupting another register
++	jmp @r0
++	nop
++	.balign 4
++2:
++	.long old_vbr
++#endif	 /* PROFILE code */
++chandler:
++	mov.l expevt_k, r4
++	mov.l @r4, r4 ! r4 is value of expevt hence making this the return code
++	mov.l handler_exit_k,r0
++	jsr   @r0
++	nop
++	! We should never return from _exit but in case we do we would enter the
++	! the following tight loop
++limbo:
++	bra limbo
++	nop
++	.balign 4
++#ifdef PROFILE
++interrupt_stack_k:
++	.long __timer_stack	! The high end of the stack
++timer_handler_k:
++	.long __profil_counter
++#endif
++expevt_k:
++	.long 0xff000024 ! Address of expevt
++chandler_k:	
++	.long chandler	
++superh_trap_handler_k:
++	.long	__superh_trap_handler
++handler_exit_k:
++	.long _exit
++	.align 2
++! Simulated compile of trap handler.
++	.section	.debug_abbrev,"",@progbits
++.Ldebug_abbrev0:
++	.section	.debug_info,"",@progbits
++.Ldebug_info0:
++	.section	.debug_line,"",@progbits
++.Ldebug_line0:
++	.text
++.Ltext0:
++	.align 5
++	.type	__superh_trap_handler,@function
++__superh_trap_handler:
++.LFB1:
++	mov.l	r14,@-r15
++.LCFI0:
++	add	#-4,r15
++.LCFI1:
++	mov	r15,r14
++.LCFI2:
++	mov.l	r4,@r14
++	lds	r1, pr
++	add	#4,r14
++	mov	r14,r15
++	mov.l	@r15+,r14
++	rts	
++	nop
++.LFE1:
++.Lfe1:
++	.size	__superh_trap_handler,.Lfe1-__superh_trap_handler
++	.section	.debug_frame,"",@progbits
++.Lframe0:
++	.ualong	.LECIE0-.LSCIE0
++.LSCIE0:
++	.ualong	0xffffffff
++	.byte	0x1
++	.string	""
++	.uleb128 0x1
++	.sleb128 -4
++	.byte	0x11
++	.byte	0xc
++	.uleb128 0xf
++	.uleb128 0x0
++	.align 2
++.LECIE0:
++.LSFDE0:
++	.ualong	.LEFDE0-.LASFDE0
++.LASFDE0:
++	.ualong	.Lframe0
++	.ualong	.LFB1
++	.ualong	.LFE1-.LFB1
++	.byte	0x4
++	.ualong	.LCFI0-.LFB1
++	.byte	0xe
++	.uleb128 0x4
++	.byte	0x4
++	.ualong	.LCFI1-.LCFI0
++	.byte	0xe
++	.uleb128 0x8
++	.byte	0x8e
++	.uleb128 0x1
++	.byte	0x4
++	.ualong	.LCFI2-.LCFI1
++	.byte	0xd
++	.uleb128 0xe
++	.align 2
++.LEFDE0:
++	.text
++.Letext0:
++	.section	.debug_info
++	.ualong	0xb3
++	.uaword	0x2
++	.ualong	.Ldebug_abbrev0
++	.byte	0x4
++	.uleb128 0x1
++	.ualong	.Ldebug_line0
++	.ualong	.Letext0
++	.ualong	.Ltext0
++	.string	"trap_handler.c"
++	.string	"xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
++	.string	"GNU C 3.2 20020529 (experimental)"
++	.byte	0x1
++	.uleb128 0x2
++	.ualong	0xa6
++	.byte	0x1
++	.string	"_superh_trap_handler"
++	.byte	0x1
++	.byte	0x2
++	.byte	0x1
++	.ualong	.LFB1
++	.ualong	.LFE1
++	.byte	0x1
++	.byte	0x5e
++	.uleb128 0x3
++	.string	"trap_reason"
++	.byte	0x1
++	.byte	0x1
++	.ualong	0xa6
++	.byte	0x2
++	.byte	0x91
++	.sleb128 0
++	.byte	0x0
++	.uleb128 0x4
++	.string	"unsigned int"
++	.byte	0x4
++	.byte	0x7
++	.byte	0x0
++	.section	.debug_abbrev
++	.uleb128 0x1
++	.uleb128 0x11
++	.byte	0x1
++	.uleb128 0x10
++	.uleb128 0x6
++	.uleb128 0x12
++	.uleb128 0x1
++	.uleb128 0x11
++	.uleb128 0x1
++	.uleb128 0x3
++	.uleb128 0x8
++	.uleb128 0x1b
++	.uleb128 0x8
++	.uleb128 0x25
++	.uleb128 0x8
++	.uleb128 0x13
++	.uleb128 0xb
++	.byte	0x0
++	.byte	0x0
++	.uleb128 0x2
++	.uleb128 0x2e
++	.byte	0x1
++	.uleb128 0x1
++	.uleb128 0x13
++	.uleb128 0x3f
++	.uleb128 0xc
++	.uleb128 0x3
++	.uleb128 0x8
++	.uleb128 0x3a
++	.uleb128 0xb
++	.uleb128 0x3b
++	.uleb128 0xb
++	.uleb128 0x27
++	.uleb128 0xc
++	.uleb128 0x11
++	.uleb128 0x1
++	.uleb128 0x12
++	.uleb128 0x1
++	.uleb128 0x40
++	.uleb128 0xa
++	.byte	0x0
++	.byte	0x0
++	.uleb128 0x3
++	.uleb128 0x5
++	.byte	0x0
++	.uleb128 0x3
++	.uleb128 0x8
++	.uleb128 0x3a
++	.uleb128 0xb
++	.uleb128 0x3b
++	.uleb128 0xb
++	.uleb128 0x49
++	.uleb128 0x13
++	.uleb128 0x2
++	.uleb128 0xa
++	.byte	0x0
++	.byte	0x0
++	.uleb128 0x4
++	.uleb128 0x24
++	.byte	0x0
++	.uleb128 0x3
++	.uleb128 0x8
++	.uleb128 0xb
++	.uleb128 0xb
++	.uleb128 0x3e
++	.uleb128 0xb
++	.byte	0x0
++	.byte	0x0
++	.byte	0x0
++	.section	.debug_pubnames,"",@progbits
++	.ualong	0x27
++	.uaword	0x2
++	.ualong	.Ldebug_info0
++	.ualong	0xb7
++	.ualong	0x67
++	.string	"_superh_trap_handler"
++	.ualong	0x0
++	.section	.debug_aranges,"",@progbits
++	.ualong	0x1c
++	.uaword	0x2
++	.ualong	.Ldebug_info0
++	.byte	0x4
++	.byte	0x0
++	.uaword	0x0
++	.uaword	0x0
++	.ualong	.Ltext0
++	.ualong	.Letext0-.Ltext0
++	.ualong	0x0
++	.ualong	0x0
++#endif /* VBR_SETUP */
+diff -ruN gcc-9.5.0/libgcc/libgcc2.c gcc-9.5.0-patched/libgcc/libgcc2.c
+--- gcc-9.5.0/libgcc/libgcc2.c	2022-05-27 09:21:12.915389100 +0200
++++ gcc-9.5.0-patched/libgcc/libgcc2.c	2025-04-28 14:41:55.403516700 +0200
+@@ -2180,6 +2180,7 @@
+ /* Jump to a trampoline, loading the static chain address.  */
+ 
+ #if defined(WINNT) && ! defined(__CYGWIN__)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ int getpagesize (void);
+ int mprotect (char *,int, int);
+diff -ruN gcc-9.5.0/libgcc/unwind-generic.h gcc-9.5.0-patched/libgcc/unwind-generic.h
+--- gcc-9.5.0/libgcc/unwind-generic.h	2022-05-27 09:21:12.919389100 +0200
++++ gcc-9.5.0-patched/libgcc/unwind-generic.h	2025-04-28 14:41:55.408666600 +0200
+@@ -30,6 +30,7 @@
+ 
+ #if defined (__SEH__) && !defined (__USING_SJLJ_EXCEPTIONS__)
+ /* Only for _GCC_specific_handler.  */
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #endif
+ 
+diff -ruN gcc-9.5.0/libgfortran/intrinsics/sleep.c gcc-9.5.0-patched/libgfortran/intrinsics/sleep.c
+--- gcc-9.5.0/libgfortran/intrinsics/sleep.c	2022-05-27 09:21:12.951389300 +0200
++++ gcc-9.5.0-patched/libgfortran/intrinsics/sleep.c	2025-04-28 14:41:55.425316300 +0200
+@@ -30,6 +30,7 @@
+ #endif
+ 
+ #ifdef __MINGW32__
++# define WIN32_LEAN_AND_MEAN
+ # include <windows.h>
+ # undef sleep
+ # define sleep(x) Sleep(1000*(x))
+diff -ruN gcc-9.5.0/libgo/misc/cgo/test/callback_c.c gcc-9.5.0-patched/libgo/misc/cgo/test/callback_c.c
+--- gcc-9.5.0/libgo/misc/cgo/test/callback_c.c	2022-05-27 09:21:13.135390200 +0200
++++ gcc-9.5.0-patched/libgo/misc/cgo/test/callback_c.c	2025-04-28 14:41:55.454651200 +0200
+@@ -32,6 +32,7 @@
+ }
+ 
+ #ifdef WIN32
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ long long
+ mysleep(int seconds) {
+diff -ruN gcc-9.5.0/libgomp/config/mingw32/proc.c gcc-9.5.0-patched/libgomp/config/mingw32/proc.c
+--- gcc-9.5.0/libgomp/config/mingw32/proc.c	2022-05-27 09:21:13.147390200 +0200
++++ gcc-9.5.0-patched/libgomp/config/mingw32/proc.c	2025-04-28 14:41:55.472809600 +0200
+@@ -30,6 +30,7 @@
+    The following implementation uses win32 API routines.  */
+ 
+ #include "libgomp.h"
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ /* Count the CPU's currently available to this process.  */
+diff -ruN gcc-9.5.0/libiberty/make-temp-file.c gcc-9.5.0-patched/libiberty/make-temp-file.c
+--- gcc-9.5.0/libiberty/make-temp-file.c	2022-05-27 09:21:13.187390400 +0200
++++ gcc-9.5.0-patched/libiberty/make-temp-file.c	2025-04-28 14:41:55.495473800 +0200
+@@ -37,6 +37,7 @@
+ #include <sys/file.h>   /* May get R_OK, etc. on some systems.  */
+ #endif
+ #if defined(_WIN32) && !defined(__CYGWIN__)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #endif
+ 
+diff -ruN gcc-9.5.0/libiberty/pex-win32.c gcc-9.5.0-patched/libiberty/pex-win32.c
+--- gcc-9.5.0/libiberty/pex-win32.c	2022-05-27 09:21:13.191390400 +0200
++++ gcc-9.5.0-patched/libiberty/pex-win32.c	2025-04-28 14:41:55.499088600 +0200
+@@ -20,6 +20,7 @@
+ 
+ #include "pex-common.h"
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ #ifdef HAVE_STDLIB_H
+diff -ruN gcc-9.5.0/liboffloadmic/runtime/offload_util.h gcc-9.5.0-patched/liboffloadmic/runtime/offload_util.h
+--- gcc-9.5.0/liboffloadmic/runtime/offload_util.h	2022-05-27 09:21:13.207390500 +0200
++++ gcc-9.5.0-patched/liboffloadmic/runtime/offload_util.h	2025-04-28 14:41:55.512046700 +0200
+@@ -44,6 +44,7 @@
+ // incompatible with STL library of versions older than VS2010.
+ typedef unsigned long long int  uint64_t;
+ typedef signed long long int    int64_t;
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #include <process.h>
+ #else // TARGET_WINNT
+diff -ruN gcc-9.5.0/liboffloadmic/runtime/orsl-lite/lib/orsl-lite.c gcc-9.5.0-patched/liboffloadmic/runtime/orsl-lite/lib/orsl-lite.c
+--- gcc-9.5.0/liboffloadmic/runtime/orsl-lite/lib/orsl-lite.c	2022-05-27 09:21:13.207390500 +0200
++++ gcc-9.5.0-patched/liboffloadmic/runtime/orsl-lite/lib/orsl-lite.c	2025-04-28 14:41:55.516712600 +0200
+@@ -57,6 +57,7 @@
+ #endif
+ 
+ #ifdef _WIN32
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #pragma intrinsic(_ReadWriteBarrier)
+ static SRWLOCK global_mutex = SRWLOCK_INIT;
+diff -ruN gcc-9.5.0/libssp/ssp.c gcc-9.5.0-patched/libssp/ssp.c
+--- gcc-9.5.0/libssp/ssp.c	2022-05-27 09:21:13.295391000 +0200
++++ gcc-9.5.0-patched/libssp/ssp.c	2025-04-28 14:41:55.576989500 +0200
+@@ -55,6 +55,7 @@
+ /* Native win32 apps don't know about /dev/tty but can print directly
+    to the console using  "CONOUT$"   */
+ #if defined (_WIN32) && !defined (__CYGWIN__)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #include <wincrypt.h>
+ # define _PATH_TTY "CONOUT$"
+diff -ruN gcc-9.5.0/libstdc++-v3/configure gcc-9.5.0-patched/libstdc++-v3/configure
+--- gcc-9.5.0/libstdc++-v3/configure	2022-05-27 09:21:13.335391200 +0200
++++ gcc-9.5.0-patched/libstdc++-v3/configure	2025-04-28 22:06:21.569491300 +0200
+@@ -21068,6 +21068,7 @@
+ $as_echo_n "checking for Sleep... " >&6; }
+       cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ int
+ main ()
+diff -ruN gcc-9.5.0/libstdc++-v3/src/c++11/thread.cc gcc-9.5.0-patched/libstdc++-v3/src/c++11/thread.cc
+--- gcc-9.5.0/libstdc++-v3/src/c++11/thread.cc	2022-05-27 09:21:13.447391700 +0200
++++ gcc-9.5.0-patched/libstdc++-v3/src/c++11/thread.cc	2025-04-28 14:41:55.660710900 +0200
+@@ -63,6 +63,7 @@
+ # ifdef _GLIBCXX_HAVE_SLEEP
+ #  include <unistd.h>
+ # elif defined(_GLIBCXX_HAVE_WIN32_SLEEP)
++#  define WIN32_LEAN_AND_MEAN
+ #  include <windows.h>
+ # else
+ #  error "No sleep function known for this target"
+diff -ruN gcc-9.5.0/libstdc++-v3/src/c++17/fs_ops.cc gcc-9.5.0-patched/libstdc++-v3/src/c++17/fs_ops.cc
+--- gcc-9.5.0/libstdc++-v3/src/c++17/fs_ops.cc	2022-05-27 09:21:13.447391700 +0200
++++ gcc-9.5.0-patched/libstdc++-v3/src/c++17/fs_ops.cc	2025-04-28 14:41:55.665257100 +0200
+@@ -50,6 +50,7 @@
+ # include <utime.h> // utime
+ #endif
+ #ifdef _GLIBCXX_FILESYSTEM_IS_WINDOWS
++# define WIN32_LEAN_AND_MEAN
+ # include <windows.h>
+ #endif
+ 
+diff -ruN gcc-9.5.0/libstdc++-v3/src/filesystem/ops.cc gcc-9.5.0-patched/libstdc++-v3/src/filesystem/ops.cc
+--- gcc-9.5.0/libstdc++-v3/src/filesystem/ops.cc	2022-05-27 09:21:13.451391700 +0200
++++ gcc-9.5.0-patched/libstdc++-v3/src/filesystem/ops.cc	2025-04-28 14:41:55.668305300 +0200
+@@ -51,6 +51,7 @@
+ # include <utime.h> // utime
+ #endif
+ #ifdef _GLIBCXX_FILESYSTEM_IS_WINDOWS
++# define WIN32_LEAN_AND_MEAN
+ # include <windows.h>
+ #endif
+ 
+diff -ruN gcc-9.5.0/libvtv/vtv_malloc.cc gcc-9.5.0-patched/libvtv/vtv_malloc.cc
+--- gcc-9.5.0/libvtv/vtv_malloc.cc	2022-05-27 09:21:13.619392500 +0200
++++ gcc-9.5.0-patched/libvtv/vtv_malloc.cc	2025-04-28 14:41:55.673639300 +0200
+@@ -33,6 +33,7 @@
+ #include <stdlib.h>
+ #include <unistd.h>
+ #if defined (__CYGWIN__) || defined (__MINGW32__)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #else
+ #include <sys/mman.h>
+diff -ruN gcc-9.5.0/libvtv/vtv_rts.cc gcc-9.5.0-patched/libvtv/vtv_rts.cc
+--- gcc-9.5.0/libvtv/vtv_rts.cc	2022-05-27 09:21:13.619392500 +0200
++++ gcc-9.5.0-patched/libvtv/vtv_rts.cc	2025-04-28 14:41:55.678695000 +0200
+@@ -121,6 +121,7 @@
+ #include <stdio.h>
+ #include <string.h>
+ #if defined (__CYGWIN__) || defined (__MINGW32__)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #include <winternl.h>
+ #include <psapi.h>
+diff -ruN gcc-9.5.0/libvtv/vtv_utils.cc gcc-9.5.0-patched/libvtv/vtv_utils.cc
+--- gcc-9.5.0/libvtv/vtv_utils.cc	2022-05-27 09:21:13.619392500 +0200
++++ gcc-9.5.0-patched/libvtv/vtv_utils.cc	2025-04-28 14:41:55.683199600 +0200
+@@ -33,6 +33,7 @@
+ #include <stdlib.h>
+ #include <string.h>
+ #if defined (__CYGWIN__) || defined (__MINGW32__)
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #else
+ #include <execinfo.h>
+diff -ruN gcc-9.5.0/zlib/contrib/minizip/iowin32.h gcc-9.5.0-patched/zlib/contrib/minizip/iowin32.h
+--- gcc-9.5.0/zlib/contrib/minizip/iowin32.h	2022-05-27 09:21:13.631392600 +0200
++++ gcc-9.5.0-patched/zlib/contrib/minizip/iowin32.h	2025-04-28 14:41:55.687142700 +0200
+@@ -11,6 +11,7 @@
+ 
+ */
+ 
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ 
+diff -ruN gcc-9.5.0/zlib/contrib/testzlib/testzlib.c gcc-9.5.0-patched/zlib/contrib/testzlib/testzlib.c
+--- gcc-9.5.0/zlib/contrib/testzlib/testzlib.c	2022-05-27 09:21:13.635392600 +0200
++++ gcc-9.5.0-patched/zlib/contrib/testzlib/testzlib.c	2025-04-28 14:41:55.691966400 +0200
+@@ -1,275 +1,276 @@
+-#include <stdio.h>
+-#include <stdlib.h>
+-#include <windows.h>
+-
+-#include "zlib.h"
+-
+-
+-void MyDoMinus64(LARGE_INTEGER *R,LARGE_INTEGER A,LARGE_INTEGER B)
+-{
+-    R->HighPart = A.HighPart - B.HighPart;
+-    if (A.LowPart >= B.LowPart)
+-        R->LowPart = A.LowPart - B.LowPart;
+-    else
+-    {
+-        R->LowPart = A.LowPart - B.LowPart;
+-        R->HighPart --;
+-    }
+-}
+-
+-#ifdef _M_X64
+-// see http://msdn2.microsoft.com/library/twchhe95(en-us,vs.80).aspx for __rdtsc
+-unsigned __int64 __rdtsc(void);
+-void BeginCountRdtsc(LARGE_INTEGER * pbeginTime64)
+-{
+- //   printf("rdtsc = %I64x\n",__rdtsc());
+-   pbeginTime64->QuadPart=__rdtsc();
+-}
+-
+-LARGE_INTEGER GetResRdtsc(LARGE_INTEGER beginTime64,BOOL fComputeTimeQueryPerf)
+-{
+-    LARGE_INTEGER LIres;
+-    unsigned _int64 res=__rdtsc()-((unsigned _int64)(beginTime64.QuadPart));
+-    LIres.QuadPart=res;
+-   // printf("rdtsc = %I64x\n",__rdtsc());
+-    return LIres;
+-}
+-#else
+-#ifdef _M_IX86
+-void myGetRDTSC32(LARGE_INTEGER * pbeginTime64)
+-{
+-    DWORD dwEdx,dwEax;
+-    _asm
+-    {
+-        rdtsc
+-        mov dwEax,eax
+-        mov dwEdx,edx
+-    }
+-    pbeginTime64->LowPart=dwEax;
+-    pbeginTime64->HighPart=dwEdx;
+-}
+-
+-void BeginCountRdtsc(LARGE_INTEGER * pbeginTime64)
+-{
+-    myGetRDTSC32(pbeginTime64);
+-}
+-
+-LARGE_INTEGER GetResRdtsc(LARGE_INTEGER beginTime64,BOOL fComputeTimeQueryPerf)
+-{
+-    LARGE_INTEGER LIres,endTime64;
+-    myGetRDTSC32(&endTime64);
+-
+-    LIres.LowPart=LIres.HighPart=0;
+-    MyDoMinus64(&LIres,endTime64,beginTime64);
+-    return LIres;
+-}
+-#else
+-void myGetRDTSC32(LARGE_INTEGER * pbeginTime64)
+-{
+-}
+-
+-void BeginCountRdtsc(LARGE_INTEGER * pbeginTime64)
+-{
+-}
+-
+-LARGE_INTEGER GetResRdtsc(LARGE_INTEGER beginTime64,BOOL fComputeTimeQueryPerf)
+-{
+-    LARGE_INTEGER lr;
+-    lr.QuadPart=0;
+-    return lr;
+-}
+-#endif
+-#endif
+-
+-void BeginCountPerfCounter(LARGE_INTEGER * pbeginTime64,BOOL fComputeTimeQueryPerf)
+-{
+-    if ((!fComputeTimeQueryPerf) || (!QueryPerformanceCounter(pbeginTime64)))
+-    {
+-        pbeginTime64->LowPart = GetTickCount();
+-        pbeginTime64->HighPart = 0;
+-    }
+-}
+-
+-DWORD GetMsecSincePerfCounter(LARGE_INTEGER beginTime64,BOOL fComputeTimeQueryPerf)
+-{
+-    LARGE_INTEGER endTime64,ticksPerSecond,ticks;
+-    DWORDLONG ticksShifted,tickSecShifted;
+-    DWORD dwLog=16+0;
+-    DWORD dwRet;
+-    if ((!fComputeTimeQueryPerf) || (!QueryPerformanceCounter(&endTime64)))
+-        dwRet = (GetTickCount() - beginTime64.LowPart)*1;
+-    else
+-    {
+-        MyDoMinus64(&ticks,endTime64,beginTime64);
+-        QueryPerformanceFrequency(&ticksPerSecond);
+-
+-
+-        {
+-            ticksShifted = Int64ShrlMod32(*(DWORDLONG*)&ticks,dwLog);
+-            tickSecShifted = Int64ShrlMod32(*(DWORDLONG*)&ticksPerSecond,dwLog);
+-
+-        }
+-
+-        dwRet = (DWORD)((((DWORD)ticksShifted)*1000)/(DWORD)(tickSecShifted));
+-        dwRet *=1;
+-    }
+-    return dwRet;
+-}
+-
+-int ReadFileMemory(const char* filename,long* plFileSize,unsigned char** pFilePtr)
+-{
+-    FILE* stream;
+-    unsigned char* ptr;
+-    int retVal=1;
+-    stream=fopen(filename, "rb");
+-    if (stream==NULL)
+-        return 0;
+-
+-    fseek(stream,0,SEEK_END);
+-
+-    *plFileSize=ftell(stream);
+-    fseek(stream,0,SEEK_SET);
+-    ptr=malloc((*plFileSize)+1);
+-    if (ptr==NULL)
+-        retVal=0;
+-    else
+-    {
+-        if (fread(ptr, 1, *plFileSize,stream) != (*plFileSize))
+-            retVal=0;
+-    }
+-    fclose(stream);
+-    *pFilePtr=ptr;
+-    return retVal;
+-}
+-
+-int main(int argc, char *argv[])
+-{
+-    int BlockSizeCompress=0x8000;
+-    int BlockSizeUncompress=0x8000;
+-    int cprLevel=Z_DEFAULT_COMPRESSION ;
+-    long lFileSize;
+-    unsigned char* FilePtr;
+-    long lBufferSizeCpr;
+-    long lBufferSizeUncpr;
+-    long lCompressedSize=0;
+-    unsigned char* CprPtr;
+-    unsigned char* UncprPtr;
+-    long lSizeCpr,lSizeUncpr;
+-    DWORD dwGetTick,dwMsecQP;
+-    LARGE_INTEGER li_qp,li_rdtsc,dwResRdtsc;
+-
+-    if (argc<=1)
+-    {
+-        printf("run TestZlib <File> [BlockSizeCompress] [BlockSizeUncompress] [compres. level]\n");
+-        return 0;
+-    }
+-
+-    if (ReadFileMemory(argv[1],&lFileSize,&FilePtr)==0)
+-    {
+-        printf("error reading %s\n",argv[1]);
+-        return 1;
+-    }
+-    else printf("file %s read, %u bytes\n",argv[1],lFileSize);
+-
+-    if (argc>=3)
+-        BlockSizeCompress=atol(argv[2]);
+-
+-    if (argc>=4)
+-        BlockSizeUncompress=atol(argv[3]);
+-
+-    if (argc>=5)
+-        cprLevel=(int)atol(argv[4]);
+-
+-    lBufferSizeCpr = lFileSize + (lFileSize/0x10) + 0x200;
+-    lBufferSizeUncpr = lBufferSizeCpr;
+-
+-    CprPtr=(unsigned char*)malloc(lBufferSizeCpr + BlockSizeCompress);
+-
+-    BeginCountPerfCounter(&li_qp,TRUE);
+-    dwGetTick=GetTickCount();
+-    BeginCountRdtsc(&li_rdtsc);
+-    {
+-        z_stream zcpr;
+-        int ret=Z_OK;
+-        long lOrigToDo = lFileSize;
+-        long lOrigDone = 0;
+-        int step=0;
+-        memset(&zcpr,0,sizeof(z_stream));
+-        deflateInit(&zcpr,cprLevel);
+-
+-        zcpr.next_in = FilePtr;
+-        zcpr.next_out = CprPtr;
+-
+-
+-        do
+-        {
+-            long all_read_before = zcpr.total_in;
+-            zcpr.avail_in = min(lOrigToDo,BlockSizeCompress);
+-            zcpr.avail_out = BlockSizeCompress;
+-            ret=deflate(&zcpr,(zcpr.avail_in==lOrigToDo) ? Z_FINISH : Z_SYNC_FLUSH);
+-            lOrigDone += (zcpr.total_in-all_read_before);
+-            lOrigToDo -= (zcpr.total_in-all_read_before);
+-            step++;
+-        } while (ret==Z_OK);
+-
+-        lSizeCpr=zcpr.total_out;
+-        deflateEnd(&zcpr);
+-        dwGetTick=GetTickCount()-dwGetTick;
+-        dwMsecQP=GetMsecSincePerfCounter(li_qp,TRUE);
+-        dwResRdtsc=GetResRdtsc(li_rdtsc,TRUE);
+-        printf("total compress size = %u, in %u step\n",lSizeCpr,step);
+-        printf("time = %u msec = %f sec\n",dwGetTick,dwGetTick/(double)1000.);
+-        printf("defcpr time QP = %u msec = %f sec\n",dwMsecQP,dwMsecQP/(double)1000.);
+-        printf("defcpr result rdtsc = %I64x\n\n",dwResRdtsc.QuadPart);
+-    }
+-
+-    CprPtr=(unsigned char*)realloc(CprPtr,lSizeCpr);
+-    UncprPtr=(unsigned char*)malloc(lBufferSizeUncpr + BlockSizeUncompress);
+-
+-    BeginCountPerfCounter(&li_qp,TRUE);
+-    dwGetTick=GetTickCount();
+-    BeginCountRdtsc(&li_rdtsc);
+-    {
+-        z_stream zcpr;
+-        int ret=Z_OK;
+-        long lOrigToDo = lSizeCpr;
+-        long lOrigDone = 0;
+-        int step=0;
+-        memset(&zcpr,0,sizeof(z_stream));
+-        inflateInit(&zcpr);
+-
+-        zcpr.next_in = CprPtr;
+-        zcpr.next_out = UncprPtr;
+-
+-
+-        do
+-        {
+-            long all_read_before = zcpr.total_in;
+-            zcpr.avail_in = min(lOrigToDo,BlockSizeUncompress);
+-            zcpr.avail_out = BlockSizeUncompress;
+-            ret=inflate(&zcpr,Z_SYNC_FLUSH);
+-            lOrigDone += (zcpr.total_in-all_read_before);
+-            lOrigToDo -= (zcpr.total_in-all_read_before);
+-            step++;
+-        } while (ret==Z_OK);
+-
+-        lSizeUncpr=zcpr.total_out;
+-        inflateEnd(&zcpr);
+-        dwGetTick=GetTickCount()-dwGetTick;
+-        dwMsecQP=GetMsecSincePerfCounter(li_qp,TRUE);
+-        dwResRdtsc=GetResRdtsc(li_rdtsc,TRUE);
+-        printf("total uncompress size = %u, in %u step\n",lSizeUncpr,step);
+-        printf("time = %u msec = %f sec\n",dwGetTick,dwGetTick/(double)1000.);
+-        printf("uncpr  time QP = %u msec = %f sec\n",dwMsecQP,dwMsecQP/(double)1000.);
+-        printf("uncpr  result rdtsc = %I64x\n\n",dwResRdtsc.QuadPart);
+-    }
+-
+-    if (lSizeUncpr==lFileSize)
+-    {
+-        if (memcmp(FilePtr,UncprPtr,lFileSize)==0)
+-            printf("compare ok\n");
+-
+-    }
+-
+-    return 0;
+-}
++#include <stdio.h>
++#include <stdlib.h>
++#define WIN32_LEAN_AND_MEAN
++#include <windows.h>
++
++#include "zlib.h"
++
++
++void MyDoMinus64(LARGE_INTEGER *R,LARGE_INTEGER A,LARGE_INTEGER B)
++{
++    R->HighPart = A.HighPart - B.HighPart;
++    if (A.LowPart >= B.LowPart)
++        R->LowPart = A.LowPart - B.LowPart;
++    else
++    {
++        R->LowPart = A.LowPart - B.LowPart;
++        R->HighPart --;
++    }
++}
++
++#ifdef _M_X64
++// see http://msdn2.microsoft.com/library/twchhe95(en-us,vs.80).aspx for __rdtsc
++unsigned __int64 __rdtsc(void);
++void BeginCountRdtsc(LARGE_INTEGER * pbeginTime64)
++{
++ //   printf("rdtsc = %I64x\n",__rdtsc());
++   pbeginTime64->QuadPart=__rdtsc();
++}
++
++LARGE_INTEGER GetResRdtsc(LARGE_INTEGER beginTime64,BOOL fComputeTimeQueryPerf)
++{
++    LARGE_INTEGER LIres;
++    unsigned _int64 res=__rdtsc()-((unsigned _int64)(beginTime64.QuadPart));
++    LIres.QuadPart=res;
++   // printf("rdtsc = %I64x\n",__rdtsc());
++    return LIres;
++}
++#else
++#ifdef _M_IX86
++void myGetRDTSC32(LARGE_INTEGER * pbeginTime64)
++{
++    DWORD dwEdx,dwEax;
++    _asm
++    {
++        rdtsc
++        mov dwEax,eax
++        mov dwEdx,edx
++    }
++    pbeginTime64->LowPart=dwEax;
++    pbeginTime64->HighPart=dwEdx;
++}
++
++void BeginCountRdtsc(LARGE_INTEGER * pbeginTime64)
++{
++    myGetRDTSC32(pbeginTime64);
++}
++
++LARGE_INTEGER GetResRdtsc(LARGE_INTEGER beginTime64,BOOL fComputeTimeQueryPerf)
++{
++    LARGE_INTEGER LIres,endTime64;
++    myGetRDTSC32(&endTime64);
++
++    LIres.LowPart=LIres.HighPart=0;
++    MyDoMinus64(&LIres,endTime64,beginTime64);
++    return LIres;
++}
++#else
++void myGetRDTSC32(LARGE_INTEGER * pbeginTime64)
++{
++}
++
++void BeginCountRdtsc(LARGE_INTEGER * pbeginTime64)
++{
++}
++
++LARGE_INTEGER GetResRdtsc(LARGE_INTEGER beginTime64,BOOL fComputeTimeQueryPerf)
++{
++    LARGE_INTEGER lr;
++    lr.QuadPart=0;
++    return lr;
++}
++#endif
++#endif
++
++void BeginCountPerfCounter(LARGE_INTEGER * pbeginTime64,BOOL fComputeTimeQueryPerf)
++{
++    if ((!fComputeTimeQueryPerf) || (!QueryPerformanceCounter(pbeginTime64)))
++    {
++        pbeginTime64->LowPart = GetTickCount();
++        pbeginTime64->HighPart = 0;
++    }
++}
++
++DWORD GetMsecSincePerfCounter(LARGE_INTEGER beginTime64,BOOL fComputeTimeQueryPerf)
++{
++    LARGE_INTEGER endTime64,ticksPerSecond,ticks;
++    DWORDLONG ticksShifted,tickSecShifted;
++    DWORD dwLog=16+0;
++    DWORD dwRet;
++    if ((!fComputeTimeQueryPerf) || (!QueryPerformanceCounter(&endTime64)))
++        dwRet = (GetTickCount() - beginTime64.LowPart)*1;
++    else
++    {
++        MyDoMinus64(&ticks,endTime64,beginTime64);
++        QueryPerformanceFrequency(&ticksPerSecond);
++
++
++        {
++            ticksShifted = Int64ShrlMod32(*(DWORDLONG*)&ticks,dwLog);
++            tickSecShifted = Int64ShrlMod32(*(DWORDLONG*)&ticksPerSecond,dwLog);
++
++        }
++
++        dwRet = (DWORD)((((DWORD)ticksShifted)*1000)/(DWORD)(tickSecShifted));
++        dwRet *=1;
++    }
++    return dwRet;
++}
++
++int ReadFileMemory(const char* filename,long* plFileSize,unsigned char** pFilePtr)
++{
++    FILE* stream;
++    unsigned char* ptr;
++    int retVal=1;
++    stream=fopen(filename, "rb");
++    if (stream==NULL)
++        return 0;
++
++    fseek(stream,0,SEEK_END);
++
++    *plFileSize=ftell(stream);
++    fseek(stream,0,SEEK_SET);
++    ptr=malloc((*plFileSize)+1);
++    if (ptr==NULL)
++        retVal=0;
++    else
++    {
++        if (fread(ptr, 1, *plFileSize,stream) != (*plFileSize))
++            retVal=0;
++    }
++    fclose(stream);
++    *pFilePtr=ptr;
++    return retVal;
++}
++
++int main(int argc, char *argv[])
++{
++    int BlockSizeCompress=0x8000;
++    int BlockSizeUncompress=0x8000;
++    int cprLevel=Z_DEFAULT_COMPRESSION ;
++    long lFileSize;
++    unsigned char* FilePtr;
++    long lBufferSizeCpr;
++    long lBufferSizeUncpr;
++    long lCompressedSize=0;
++    unsigned char* CprPtr;
++    unsigned char* UncprPtr;
++    long lSizeCpr,lSizeUncpr;
++    DWORD dwGetTick,dwMsecQP;
++    LARGE_INTEGER li_qp,li_rdtsc,dwResRdtsc;
++
++    if (argc<=1)
++    {
++        printf("run TestZlib <File> [BlockSizeCompress] [BlockSizeUncompress] [compres. level]\n");
++        return 0;
++    }
++
++    if (ReadFileMemory(argv[1],&lFileSize,&FilePtr)==0)
++    {
++        printf("error reading %s\n",argv[1]);
++        return 1;
++    }
++    else printf("file %s read, %u bytes\n",argv[1],lFileSize);
++
++    if (argc>=3)
++        BlockSizeCompress=atol(argv[2]);
++
++    if (argc>=4)
++        BlockSizeUncompress=atol(argv[3]);
++
++    if (argc>=5)
++        cprLevel=(int)atol(argv[4]);
++
++    lBufferSizeCpr = lFileSize + (lFileSize/0x10) + 0x200;
++    lBufferSizeUncpr = lBufferSizeCpr;
++
++    CprPtr=(unsigned char*)malloc(lBufferSizeCpr + BlockSizeCompress);
++
++    BeginCountPerfCounter(&li_qp,TRUE);
++    dwGetTick=GetTickCount();
++    BeginCountRdtsc(&li_rdtsc);
++    {
++        z_stream zcpr;
++        int ret=Z_OK;
++        long lOrigToDo = lFileSize;
++        long lOrigDone = 0;
++        int step=0;
++        memset(&zcpr,0,sizeof(z_stream));
++        deflateInit(&zcpr,cprLevel);
++
++        zcpr.next_in = FilePtr;
++        zcpr.next_out = CprPtr;
++
++
++        do
++        {
++            long all_read_before = zcpr.total_in;
++            zcpr.avail_in = min(lOrigToDo,BlockSizeCompress);
++            zcpr.avail_out = BlockSizeCompress;
++            ret=deflate(&zcpr,(zcpr.avail_in==lOrigToDo) ? Z_FINISH : Z_SYNC_FLUSH);
++            lOrigDone += (zcpr.total_in-all_read_before);
++            lOrigToDo -= (zcpr.total_in-all_read_before);
++            step++;
++        } while (ret==Z_OK);
++
++        lSizeCpr=zcpr.total_out;
++        deflateEnd(&zcpr);
++        dwGetTick=GetTickCount()-dwGetTick;
++        dwMsecQP=GetMsecSincePerfCounter(li_qp,TRUE);
++        dwResRdtsc=GetResRdtsc(li_rdtsc,TRUE);
++        printf("total compress size = %u, in %u step\n",lSizeCpr,step);
++        printf("time = %u msec = %f sec\n",dwGetTick,dwGetTick/(double)1000.);
++        printf("defcpr time QP = %u msec = %f sec\n",dwMsecQP,dwMsecQP/(double)1000.);
++        printf("defcpr result rdtsc = %I64x\n\n",dwResRdtsc.QuadPart);
++    }
++
++    CprPtr=(unsigned char*)realloc(CprPtr,lSizeCpr);
++    UncprPtr=(unsigned char*)malloc(lBufferSizeUncpr + BlockSizeUncompress);
++
++    BeginCountPerfCounter(&li_qp,TRUE);
++    dwGetTick=GetTickCount();
++    BeginCountRdtsc(&li_rdtsc);
++    {
++        z_stream zcpr;
++        int ret=Z_OK;
++        long lOrigToDo = lSizeCpr;
++        long lOrigDone = 0;
++        int step=0;
++        memset(&zcpr,0,sizeof(z_stream));
++        inflateInit(&zcpr);
++
++        zcpr.next_in = CprPtr;
++        zcpr.next_out = UncprPtr;
++
++
++        do
++        {
++            long all_read_before = zcpr.total_in;
++            zcpr.avail_in = min(lOrigToDo,BlockSizeUncompress);
++            zcpr.avail_out = BlockSizeUncompress;
++            ret=inflate(&zcpr,Z_SYNC_FLUSH);
++            lOrigDone += (zcpr.total_in-all_read_before);
++            lOrigToDo -= (zcpr.total_in-all_read_before);
++            step++;
++        } while (ret==Z_OK);
++
++        lSizeUncpr=zcpr.total_out;
++        inflateEnd(&zcpr);
++        dwGetTick=GetTickCount()-dwGetTick;
++        dwMsecQP=GetMsecSincePerfCounter(li_qp,TRUE);
++        dwResRdtsc=GetResRdtsc(li_rdtsc,TRUE);
++        printf("total uncompress size = %u, in %u step\n",lSizeUncpr,step);
++        printf("time = %u msec = %f sec\n",dwGetTick,dwGetTick/(double)1000.);
++        printf("uncpr  time QP = %u msec = %f sec\n",dwMsecQP,dwMsecQP/(double)1000.);
++        printf("uncpr  result rdtsc = %I64x\n\n",dwResRdtsc.QuadPart);
++    }
++
++    if (lSizeUncpr==lFileSize)
++    {
++        if (memcmp(FilePtr,UncprPtr,lFileSize)==0)
++            printf("compare ok\n");
++
++    }
++
++    return 0;
++}
+diff -ruN gcc-9.5.0/zlib/contrib/untgz/untgz.c gcc-9.5.0-patched/zlib/contrib/untgz/untgz.c
+--- gcc-9.5.0/zlib/contrib/untgz/untgz.c	2022-05-27 09:21:13.635392600 +0200
++++ gcc-9.5.0-patched/zlib/contrib/untgz/untgz.c	2025-04-28 14:41:55.696459000 +0200
+@@ -22,6 +22,7 @@
+ #endif
+ 
+ #ifdef WIN32
++#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ #  ifndef F_OK
+ #    define F_OK  0
+diff -ruN gcc-9.5.0/zlib/contrib/vstudio/vc10/zlib.rc gcc-9.5.0-patched/zlib/contrib/vstudio/vc10/zlib.rc
+--- gcc-9.5.0/zlib/contrib/vstudio/vc10/zlib.rc	2022-05-27 09:21:13.635392600 +0200
++++ gcc-9.5.0-patched/zlib/contrib/vstudio/vc10/zlib.rc	2025-04-28 22:19:49.142241100 +0200
+@@ -1,32 +1,32 @@
+-#include <windows.h>
+-
+-#define IDR_VERSION1  1
+-IDR_VERSION1	VERSIONINFO	MOVEABLE IMPURE LOADONCALL DISCARDABLE
+-  FILEVERSION	 1, 2, 11, 0
+-  PRODUCTVERSION 1, 2, 11, 0
+-  FILEFLAGSMASK	VS_FFI_FILEFLAGSMASK
+-  FILEFLAGS	0
+-  FILEOS	VOS_DOS_WINDOWS32
+-  FILETYPE	VFT_DLL
+-  FILESUBTYPE	0	// not used
+-BEGIN
+-  BLOCK "StringFileInfo"
+-  BEGIN
+-    BLOCK "040904E4"
+-    //language ID = U.S. English, char set = Windows, Multilingual
+-
+-    BEGIN
+-      VALUE "FileDescription", "zlib data compression and ZIP file I/O library\0"
+-      VALUE "FileVersion",	"1.2.11\0"
+-      VALUE "InternalName",	"zlib\0"
+-      VALUE "OriginalFilename",	"zlibwapi.dll\0"
+-      VALUE "ProductName",	"ZLib.DLL\0"
+-      VALUE "Comments","DLL support by Alessandro Iacopetti & Gilles Vollant\0"
+-      VALUE "LegalCopyright", "(C) 1995-2017 Jean-loup Gailly & Mark Adler\0"
+-    END
+-  END
+-  BLOCK "VarFileInfo"
+-  BEGIN
+-    VALUE "Translation", 0x0409, 1252
+-  END
+-END
++#include <windows.h>
++
++#define IDR_VERSION1  1
++IDR_VERSION1	VERSIONINFO	MOVEABLE IMPURE LOADONCALL DISCARDABLE
++  FILEVERSION	 1, 2, 11, 0
++  PRODUCTVERSION 1, 2, 11, 0
++  FILEFLAGSMASK	VS_FFI_FILEFLAGSMASK
++  FILEFLAGS	0
++  FILEOS	VOS_DOS_WINDOWS32
++  FILETYPE	VFT_DLL
++  FILESUBTYPE	0	// not used
++BEGIN
++  BLOCK "StringFileInfo"
++  BEGIN
++    BLOCK "040904E4"
++    //language ID = U.S. English, char set = Windows, Multilingual
++
++    BEGIN
++      VALUE "FileDescription", "zlib data compression and ZIP file I/O library\0"
++      VALUE "FileVersion",	"1.2.11\0"
++      VALUE "InternalName",	"zlib\0"
++      VALUE "OriginalFilename",	"zlibwapi.dll\0"
++      VALUE "ProductName",	"ZLib.DLL\0"
++      VALUE "Comments","DLL support by Alessandro Iacopetti & Gilles Vollant\0"
++      VALUE "LegalCopyright", "(C) 1995-2017 Jean-loup Gailly & Mark Adler\0"
++    END
++  END
++  BLOCK "VarFileInfo"
++  BEGIN
++    VALUE "Translation", 0x0409, 1252
++  END
++END
+diff -ruN gcc-9.5.0/zlib/contrib/vstudio/vc11/zlib.rc gcc-9.5.0-patched/zlib/contrib/vstudio/vc11/zlib.rc
+--- gcc-9.5.0/zlib/contrib/vstudio/vc11/zlib.rc	2022-05-27 09:21:13.635392600 +0200
++++ gcc-9.5.0-patched/zlib/contrib/vstudio/vc11/zlib.rc	2025-04-28 22:19:54.652022400 +0200
+@@ -1,32 +1,32 @@
+-#include <windows.h>
+-
+-#define IDR_VERSION1  1
+-IDR_VERSION1	VERSIONINFO	MOVEABLE IMPURE LOADONCALL DISCARDABLE
+-  FILEVERSION	 1, 2, 11, 0
+-  PRODUCTVERSION 1, 2, 11, 0
+-  FILEFLAGSMASK	VS_FFI_FILEFLAGSMASK
+-  FILEFLAGS	0
+-  FILEOS	VOS_DOS_WINDOWS32
+-  FILETYPE	VFT_DLL
+-  FILESUBTYPE	0	// not used
+-BEGIN
+-  BLOCK "StringFileInfo"
+-  BEGIN
+-    BLOCK "040904E4"
+-    //language ID = U.S. English, char set = Windows, Multilingual
+-
+-    BEGIN
+-      VALUE "FileDescription", "zlib data compression and ZIP file I/O library\0"
+-      VALUE "FileVersion",	"1.2.11\0"
+-      VALUE "InternalName",	"zlib\0"
+-      VALUE "OriginalFilename",	"zlibwapi.dll\0"
+-      VALUE "ProductName",	"ZLib.DLL\0"
+-      VALUE "Comments","DLL support by Alessandro Iacopetti & Gilles Vollant\0"
+-      VALUE "LegalCopyright", "(C) 1995-2017 Jean-loup Gailly & Mark Adler\0"
+-    END
+-  END
+-  BLOCK "VarFileInfo"
+-  BEGIN
+-    VALUE "Translation", 0x0409, 1252
+-  END
+-END
++#include <windows.h>
++
++#define IDR_VERSION1  1
++IDR_VERSION1	VERSIONINFO	MOVEABLE IMPURE LOADONCALL DISCARDABLE
++  FILEVERSION	 1, 2, 11, 0
++  PRODUCTVERSION 1, 2, 11, 0
++  FILEFLAGSMASK	VS_FFI_FILEFLAGSMASK
++  FILEFLAGS	0
++  FILEOS	VOS_DOS_WINDOWS32
++  FILETYPE	VFT_DLL
++  FILESUBTYPE	0	// not used
++BEGIN
++  BLOCK "StringFileInfo"
++  BEGIN
++    BLOCK "040904E4"
++    //language ID = U.S. English, char set = Windows, Multilingual
++
++    BEGIN
++      VALUE "FileDescription", "zlib data compression and ZIP file I/O library\0"
++      VALUE "FileVersion",	"1.2.11\0"
++      VALUE "InternalName",	"zlib\0"
++      VALUE "OriginalFilename",	"zlibwapi.dll\0"
++      VALUE "ProductName",	"ZLib.DLL\0"
++      VALUE "Comments","DLL support by Alessandro Iacopetti & Gilles Vollant\0"
++      VALUE "LegalCopyright", "(C) 1995-2017 Jean-loup Gailly & Mark Adler\0"
++    END
++  END
++  BLOCK "VarFileInfo"
++  BEGIN
++    VALUE "Translation", 0x0409, 1252
++  END
++END
+diff -ruN gcc-9.5.0/zlib/contrib/vstudio/vc9/zlib.rc gcc-9.5.0-patched/zlib/contrib/vstudio/vc9/zlib.rc
+--- gcc-9.5.0/zlib/contrib/vstudio/vc9/zlib.rc	2022-05-27 09:21:13.639392600 +0200
++++ gcc-9.5.0-patched/zlib/contrib/vstudio/vc9/zlib.rc	2025-04-28 22:19:44.004684300 +0200
+@@ -1,32 +1,32 @@
+-#include <windows.h>
+-
+-#define IDR_VERSION1  1
+-IDR_VERSION1	VERSIONINFO	MOVEABLE IMPURE LOADONCALL DISCARDABLE
+-  FILEVERSION	 1, 2, 11, 0
+-  PRODUCTVERSION 1, 2, 11, 0
+-  FILEFLAGSMASK	VS_FFI_FILEFLAGSMASK
+-  FILEFLAGS	0
+-  FILEOS	VOS_DOS_WINDOWS32
+-  FILETYPE	VFT_DLL
+-  FILESUBTYPE	0	// not used
+-BEGIN
+-  BLOCK "StringFileInfo"
+-  BEGIN
+-    BLOCK "040904E4"
+-    //language ID = U.S. English, char set = Windows, Multilingual
+-
+-    BEGIN
+-      VALUE "FileDescription", "zlib data compression and ZIP file I/O library\0"
+-      VALUE "FileVersion",	"1.2.11\0"
+-      VALUE "InternalName",	"zlib\0"
+-      VALUE "OriginalFilename",	"zlibwapi.dll\0"
+-      VALUE "ProductName",	"ZLib.DLL\0"
+-      VALUE "Comments","DLL support by Alessandro Iacopetti & Gilles Vollant\0"
+-      VALUE "LegalCopyright", "(C) 1995-2017 Jean-loup Gailly & Mark Adler\0"
+-    END
+-  END
+-  BLOCK "VarFileInfo"
+-  BEGIN
+-    VALUE "Translation", 0x0409, 1252
+-  END
+-END
++#include <windows.h>
++
++#define IDR_VERSION1  1
++IDR_VERSION1	VERSIONINFO	MOVEABLE IMPURE LOADONCALL DISCARDABLE
++  FILEVERSION	 1, 2, 11, 0
++  PRODUCTVERSION 1, 2, 11, 0
++  FILEFLAGSMASK	VS_FFI_FILEFLAGSMASK
++  FILEFLAGS	0
++  FILEOS	VOS_DOS_WINDOWS32
++  FILETYPE	VFT_DLL
++  FILESUBTYPE	0	// not used
++BEGIN
++  BLOCK "StringFileInfo"
++  BEGIN
++    BLOCK "040904E4"
++    //language ID = U.S. English, char set = Windows, Multilingual
++
++    BEGIN
++      VALUE "FileDescription", "zlib data compression and ZIP file I/O library\0"
++      VALUE "FileVersion",	"1.2.11\0"
++      VALUE "InternalName",	"zlib\0"
++      VALUE "OriginalFilename",	"zlibwapi.dll\0"
++      VALUE "ProductName",	"ZLib.DLL\0"
++      VALUE "Comments","DLL support by Alessandro Iacopetti & Gilles Vollant\0"
++      VALUE "LegalCopyright", "(C) 1995-2017 Jean-loup Gailly & Mark Adler\0"
++    END
++  END
++  BLOCK "VarFileInfo"
++  BEGIN
++    VALUE "Translation", 0x0409, 1252
++  END
++END
+diff -ruN gcc-9.5.0/zlib/gzguts.h gcc-9.5.0-patched/zlib/gzguts.h
+--- gcc-9.5.0/zlib/gzguts.h	2022-05-27 09:21:13.639392600 +0200
++++ gcc-9.5.0-patched/zlib/gzguts.h	2025-04-28 14:41:55.721750300 +0200
+@@ -125,6 +125,7 @@
+ 
+ /* get errno and strerror definition */
+ #if defined UNDER_CE
++#  define WIN32_LEAN_AND_MEAN
+ #  include <windows.h>
+ #  define zstrerror() gz_strwinerror((DWORD)GetLastError())
+ #else
+diff -ruN gcc-9.5.0/zlib/minigzip.c gcc-9.5.0-patched/zlib/minigzip.c
+--- gcc-9.5.0/zlib/minigzip.c	2022-05-27 09:21:13.643392700 +0200
++++ gcc-9.5.0-patched/zlib/minigzip.c	2025-04-28 14:41:55.725924500 +0200
+@@ -60,6 +60,7 @@
+ #endif
+ 
+ #if defined(UNDER_CE)
++#  define WIN32_LEAN_AND_MEAN
+ #  include <windows.h>
+ #  define perror(s) pwinerror(s)
+ 
+diff -ruN gcc-9.5.0/zlib/test/minigzip.c gcc-9.5.0-patched/zlib/test/minigzip.c
+--- gcc-9.5.0/zlib/test/minigzip.c	2022-05-27 09:21:13.643392700 +0200
++++ gcc-9.5.0-patched/zlib/test/minigzip.c	2025-04-28 14:41:55.730268400 +0200
+@@ -64,6 +64,7 @@
+ #endif
+ 
+ #if defined(UNDER_CE)
++#  define WIN32_LEAN_AND_MEAN
+ #  include <windows.h>
+ #  define perror(s) pwinerror(s)
+ 
+diff -ruN gcc-9.5.0/zlib/zconf.h gcc-9.5.0-patched/zlib/zconf.h
+--- gcc-9.5.0/zlib/zconf.h	2022-05-27 09:21:13.643392700 +0200
++++ gcc-9.5.0-patched/zlib/zconf.h	2025-04-28 14:41:55.737464900 +0200
+@@ -349,6 +349,7 @@
+ #    ifdef FAR
+ #      undef FAR
+ #    endif
++#    define WIN32_LEAN_AND_MEAN
+ #    include <windows.h>
+      /* No need for _export, use ZLIB.DEF instead. */
+      /* For complete Windows compatibility, use WINAPI, not __stdcall. */
+diff -ruN gcc-9.5.0/zlib/zconf.h.cmakein gcc-9.5.0-patched/zlib/zconf.h.cmakein
+--- gcc-9.5.0/zlib/zconf.h.cmakein	2022-05-27 09:21:13.643392700 +0200
++++ gcc-9.5.0-patched/zlib/zconf.h.cmakein	2025-04-28 14:41:55.742189500 +0200
+@@ -351,6 +351,7 @@
+ #    ifdef FAR
+ #      undef FAR
+ #    endif
++#    define WIN32_LEAN_AND_MEAN
+ #    include <windows.h>
+      /* No need for _export, use ZLIB.DEF instead. */
+      /* For complete Windows compatibility, use WINAPI, not __stdcall. */
+diff -ruN gcc-9.5.0/zlib/zconf.h.in gcc-9.5.0-patched/zlib/zconf.h.in
+--- gcc-9.5.0/zlib/zconf.h.in	2022-05-27 09:21:13.643392700 +0200
++++ gcc-9.5.0-patched/zlib/zconf.h.in	2025-04-28 14:41:55.746174000 +0200
+@@ -349,6 +349,7 @@
+ #    ifdef FAR
+ #      undef FAR
+ #    endif
++#    define WIN32_LEAN_AND_MEAN
+ #    include <windows.h>
+      /* No need for _export, use ZLIB.DEF instead. */
+      /* For complete Windows compatibility, use WINAPI, not __stdcall. */
