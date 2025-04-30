@@ -7,8 +7,8 @@
    DC Font Render Routine using GL and KOS (C) Josh PH3NOM Pearson 2013
 */
 
-#include <malloc.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <KGL/gl.h>
 

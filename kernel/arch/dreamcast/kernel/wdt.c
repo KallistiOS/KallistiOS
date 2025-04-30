@@ -37,13 +37,6 @@
 #define WDT_CLK_DEFAULT WDT_CLK_DIV_32  /* Interval timer mode clock divider */
 #define WDT_INT_DEFAULT 41              /* Interval timer mode period (us) */
 
-/* Interrupt Priority Register access */
-#define IPR(o)          (*((volatile uint16_t *)(IPR_BASE + o)))
-#define IPR_BASE        0xffd00004  /* Base Address */
-#define IPRB            0x4         /* Interrupt Priority Register B offset */
-#define IPRB_WDT        12          /* IRB WDT IRQ priority field (3 bits) */
-#define IPRB_WDT_MASK   0x7         /* Mask for IRB WDT IRQ priority field */
-
 /* Interval timer state data */
 static void *user_data = NULL;
 static wdt_callback callback = NULL;
@@ -91,7 +84,7 @@ void wdt_enable_timer(uint8_t initial_count,
     irq_set_handler(EXC_WDT_ITI, wdt_isr, NULL);
 
     /* Unmask the WDTIT interrupt, giving it a new priority */
-    IPR(IPRB) = IPR(IPRB) | ((irq_prio & IPRB_WDT_MASK) << IPRB_WDT);
+    irq_set_priority(IRQ_SRC_WDT, irq_prio);
 
     /* Initialize WDT counter to starting value */
     WDT_WRITE(WTCNT, initial_count);
@@ -140,7 +133,7 @@ void wdt_disable(void) {
     WDT_WRITE(WTCSR, WDT_READ(WTCSR) & ~(1 << WTCSR_TME));
 
     /* Mask the WDTIT interrupt */
-    IPR(IPRB) = IPR(IPRB) & ~(IPRB_WDT_MASK << IPRB_WDT);
+    irq_set_priority(IRQ_SRC_WDT, IRQ_PRIO_MASKED);
 
     /* Unregister our interrupt handler */
     irq_set_handler(EXC_WDT_ITI, NULL, NULL);

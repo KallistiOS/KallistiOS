@@ -7,16 +7,22 @@ if [ -z "${DC_TOOLS_BASE}" ] ; then
 fi
 
 # Add the external DC tools dir to the path if it is not already.
-if [[ ":$PATH:" != *":${DC_TOOLS_BASE}:"* ]]; then
+if ! expr ":$PATH:" : ".*:${DC_TOOLS_BASE}:.*" > /dev/null ; then
   export PATH="${PATH}:${DC_TOOLS_BASE}"
 fi
 
-# Default the SH4 floating point precision if it isn't already set.
+# Default the SH4 floating-point precision if it isn't already set.
+# m4-single is used if supported by the current toolchain, otherwise
+# m4-single-only is used as a fallback option.
 if [ -z "${KOS_SH4_PRECISION}" ] ; then
-    export KOS_SH4_PRECISION="-m4-single-only"
+    if echo 'int main(){}' | ${KOS_CC} -x c -c -o /dev/null - -m4-single 2>/dev/null; then
+        export KOS_SH4_PRECISION="-m4-single"
+    else
+        export KOS_SH4_PRECISION="-m4-single-only"
+    fi
 fi
 
-export KOS_CFLAGS="${KOS_CFLAGS} ${KOS_SH4_PRECISION} -ml -ffunction-sections -fdata-sections -matomic-model=soft-imask -ftls-model=local-exec"
+export KOS_CFLAGS="${KOS_CFLAGS} ${KOS_SH4_PRECISION} -ml -mfsrra -mfsca -ffunction-sections -fdata-sections -matomic-model=soft-imask -ftls-model=local-exec"
 export KOS_AFLAGS="${KOS_AFLAGS} -little"
 
 if [ x${KOS_SUBARCH} = xnaomi ]; then

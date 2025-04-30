@@ -85,25 +85,6 @@ __BEGIN_DECLS
 
 */
 
-/** \defgroup mmu_bit_macros        Address Bits
-    \brief                          Definitions and masks for address pages
-    \ingroup                        mmu
-
-    The MMU code uses these to determine the page of a request.
-
-    @{
-*/
-#define MMU_TOP_SHIFT 21                        /**< \brief Top-level shift */
-#define MMU_TOP_BITS 10                         /**< \brief Top-level bits */
-#define MMU_TOP_MASK ((1 << MMU_TOP_BITS) - 1)  /**< \brief Top-level mask */
-#define MMU_BOT_SHIFT 12                        /**< \brief Bottom shift */
-#define MMU_BOT_BITS 9                          /**< \brief Bottom bits */
-#define MMU_BOT_MASK ((1 << MMU_BOT_BITS) - 1)  /**< \brief Bottom mask */
-#define MMU_IND_SHIFT 0                         /**< \brief Index shift */
-#define MMU_IND_BITS 12                         /**< \brief Index bits */
-#define MMU_IND_MASK ((1 << MMU_IND_BITS) - 1)  /**< \brief Index mask */
-/** @} */
-
 /** \defgroup mmu_prot_values       Protection Settings
     \brief                          SH4 MMU page protection settings values
     \ingroup                        mmu
@@ -113,10 +94,12 @@ __BEGIN_DECLS
 
     @{
 */
-#define MMU_KERNEL_RDONLY   0   /**< \brief No user access, kernel read-only */
-#define MMU_KERNEL_RDWR     1   /**< \brief No user access, kernel full */
-#define MMU_ALL_RDONLY      2   /**< \brief Read-only user and kernel */
-#define MMU_ALL_RDWR        3   /**< \brief Full access, user and kernel */
+typedef enum page_prot {
+    MMU_KERNEL_RDONLY,      /**< \brief No user access, kernel read-only */
+    MMU_KERNEL_RDWR,        /**< \brief No user access, kernel full */
+    MMU_ALL_RDONLY,         /**< \brief Read-only user and kernel */
+    MMU_ALL_RDWR,           /**< \brief Full access, user and kernel */
+} page_prot_t;
 /** @} */
 
 /** \defgroup mmu_cache_values      Cacheability Settings
@@ -127,10 +110,26 @@ __BEGIN_DECLS
 
     @{
 */
-#define MMU_NO_CACHE    1               /**< \brief Cache disabled */
-#define MMU_CACHE_BACK  2               /**< \brief Write-back caching */
-#define MMU_CACHE_WT    3               /**< \brief Write-through caching */
-#define MMU_CACHEABLE   MMU_CACHE_BACK  /**< \brief Default caching */
+typedef enum page_cache {
+    MMU_NO_CACHE,                   /**< \brief Cache disabled */
+    MMU_CACHE_BACK,                 /**< \brief Write-back caching */
+    MMU_CACHE_WT,                   /**< \brief Write-through caching */
+    MMU_CACHEABLE = MMU_CACHE_BACK, /**< \brief Default caching */
+} page_cache_t;
+/** @} */
+
+/** \defgroup mmu_page_size         Page size settings
+    \brief                          SH4 MMU page sizes
+    \ingroup                        mmu
+
+    @{
+*/
+typedef enum page_size {
+    PAGE_SIZE_1K,
+    PAGE_SIZE_4K,
+    PAGE_SIZE_64K,
+    PAGE_SIZE_1M,
+} page_size_t;
 /** @} */
 
 /** \brief   MMU TLB entry for a single page.
@@ -143,20 +142,20 @@ __BEGIN_DECLS
 */
 typedef struct mmupage {
     /* Explicit pieces, used for reference */
-    /*uint32    virtual; */ /* implicit */
-    uint32  physical: 18;   /**< \brief Physical page ID -- 18 bits */
-    uint32  prkey: 2;       /**< \brief Protection key data -- 2 bits */
-    uint32  valid: 1;       /**< \brief Valid mapping -- 1 bit */
-    uint32  shared: 1;      /**< \brief Shared between procs -- 1 bit */
-    uint32  cache: 1;       /**< \brief Cacheable -- 1 bit */
-    uint32  dirty: 1;       /**< \brief Dirty -- 1 bit */
-    uint32  wthru: 1;       /**< \brief Write-thru enable -- 1 bit */
-    uint32  blank: 7;       /**< \brief Reserved -- 7 bits */
+    /*uint32_t   virtual; */ /* implicit */
+    uint32_t physical: 18;   /**< \brief Physical page ID -- 18 bits */
+    uint32_t prkey: 2;       /**< \brief Protection key data -- 2 bits */
+    uint32_t valid: 1;       /**< \brief Valid mapping -- 1 bit */
+    uint32_t shared: 1;      /**< \brief Shared between procs -- 1 bit */
+    uint32_t cache: 1;       /**< \brief Cacheable -- 1 bit */
+    uint32_t dirty: 1;       /**< \brief Dirty -- 1 bit */
+    uint32_t wthru: 1;       /**< \brief Write-thru enable -- 1 bit */
+    uint32_t blank: 7;       /**< \brief Reserved -- 7 bits */
 
     /* Pre-compiled pieces. These waste a bit of ram, but they also
        speed loading immensely at runtime. */
-    uint32  pteh;           /**< \brief Pre-built PTEH value */
-    uint32  ptel;           /**< \brief Pre-built PTEL value */
+    uint32_t pteh;           /**< \brief Pre-built PTEH value */
+    uint32_t ptel;           /**< \brief Pre-built PTEL value */
 } mmupage_t;
 
 /** \brief   The number of pages in a sub-context.
@@ -280,13 +279,12 @@ void mmu_switch_context(mmucontext_t *context);
     \param  prot            Memory protection for page (see
                             \ref mmu_prot_values).
     \param  cache           Cache scheme for page (see \ref mmu_cache_values).
-    \param  share           Set to 1 to share between processes (meaningless),
-                            otherwise set to 0.
-    \param  dirty           Set to 1 to mark the page as dirty, otherwise set to
-                            0.
+    \param  share           Set to share between processes (meaningless).
+    \param  dirty           Set to mark the page as dirty.
 */
 void mmu_page_map(mmucontext_t *context, int virtpage, int physpage,
-                  int count, int prot, int cache, int share, int dirty);
+                  int count, page_prot_t prot, page_cache_t cache,
+                  bool share, bool dirty);
 
 /** \brief   Copy a chunk of data from a process' address space into a kernel
              buffer, taking into account page mappings.
@@ -298,7 +296,7 @@ void mmu_page_map(mmucontext_t *context, int virtpage, int physpage,
     \param  buffer          The kernel buffer to copy into (should be in P1).
     \return                 The number of bytes copied (failure causes arch_panic).
 */
-int mmu_copyin(mmucontext_t *context, uint32 srcaddr, uint32 srccnt,
+int mmu_copyin(mmucontext_t *context, uint32_t srcaddr, uint32_t srccnt,
                void *buffer);
 
 /** \brief   Copy a chunk of data from one process' address space to another
@@ -348,24 +346,71 @@ mmu_mapfunc_t mmu_map_get_callback(void);
 */
 mmu_mapfunc_t mmu_map_set_callback(mmu_mapfunc_t newfunc);
 
+/** \brief   Create a static virtual memory maping.
+    \ingroup mmu
+
+    This function reserves one TLB entry to create a static mapping from a
+    virtual memory address to a physical memory address. Static mappings are
+    never flushed out of the TLB, and are sometimes useful when the whole MMU
+    function is not necesary. Static memory mappings can also use different page
+    sizes.
+
+    Note that the only way to undo static mappings is to call
+    mmu_shutdown_basic().
+
+    \param  virt            The virtual address for the memory mapping.
+    \param  phys            The physical address for the memory mapping.
+    \param  page_size       The size of the memory page used.
+    \param  page_prot       The memory protection usef for that mapping.
+    \param  cached          True if the mapped memory area is cached,
+                            false otherwise.
+    \retval 0               On success.
+    \retval -1              When the virtual or physical addresses are not
+                            aligned to the page size.
+*/
+int mmu_page_map_static(uintptr_t virt, uintptr_t phys,
+                        page_size_t page_size,
+                        page_prot_t page_prot,
+                        bool cached);
+
 /** \brief   Initialize MMU support.
     \ingroup mmu
 
     Unlike most things in KOS, the MMU is not initialized by a normal startup.
     This is because for most homebrew, its not needed.
 
-    \retval 0               On success (no error conditions defined).
+    This implies mmu_init_basic().
 */
-int mmu_init(void);
+void mmu_init(void);
+
+/** \brief   Initialize basic MMU support.
+    \ingroup mmu
+
+    This function can be used to initialize the very minimum for MMU to work
+    with static mappings. Dynamic mapping (and mmu_page_map()) will not work.
+    If you need dynamic mapping, use mmu_init() instead.
+*/
+void mmu_init_basic(void);
 
 /** \brief   Shutdown MMU support.
     \ingroup mmu
 
-    Turn off the MMU after it was initialized. You should try to make sure this
-    gets done if you initialize the MMU in your program, so as to play nice with
-    loaders and the like (that will not expect that its on, in general).
+    Turn off MMU support after it was initialized with mmu_init().
+    You should try to make sure this gets done if you initialize the MMU in your
+    program, so as to play nice with loaders and the like (that will not expect
+    that its on, in general).
 */
 void mmu_shutdown(void);
+
+/** \brief   Shutdown basic MMU support.
+    \ingroup mmu
+
+    Turn off basic MMU support after it was initialized with mmu_init_basic().
+    You should try to make sure this gets done if you initialize the MMU in your
+    program, so as to play nice with loaders and the like (that will not expect
+    that its on, in general).
+*/
+void mmu_shutdown_basic(void);
 
 /** \brief   Reset ITLB.
     \ingroup mmu

@@ -8,7 +8,7 @@
 #include <assert.h>
 #include <string.h>
 #include <strings.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
 

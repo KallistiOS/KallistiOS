@@ -165,7 +165,7 @@ int scif_set_irq_usage(int on) {
         irq_set_handler(EXC_SCIF_ERI, scif_err_irq, NULL);
         irq_set_handler(EXC_SCIF_BRI, scif_err_irq, NULL);
         irq_set_handler(EXC_SCIF_RXI, scif_data_irq, NULL);
-        *((vuint16*)0xffd0000c) |= 0x000e << 4;
+        irq_set_priority(IRQ_SRC_SCIF, 14);
 
         /* Enable transmit/receive, recv/recv error ints */
         SCSCR2 |= 0x48;
@@ -175,7 +175,7 @@ int scif_set_irq_usage(int on) {
         SCSCR2 &= ~0x48;
 
         /* Unhook the SCIF interrupt */
-        *((vuint16*)0xffd0000c) &= ~(0x000e << 4);
+        irq_set_priority(IRQ_SRC_SCIF, IRQ_PRIO_MASKED);
         irq_set_handler(EXC_SCIF_ERI, NULL, NULL);
         irq_set_handler(EXC_SCIF_BRI, NULL, NULL);
         irq_set_handler(EXC_SCIF_RXI, NULL, NULL);

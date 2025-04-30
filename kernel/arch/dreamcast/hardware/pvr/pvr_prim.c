@@ -7,6 +7,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <arch/cache.h>
 #include <dc/pvr.h>
 #include "pvr_internal.h"
 
@@ -21,7 +22,7 @@
 
 /* Compile a polygon context into a polygon header */
 void pvr_poly_compile(pvr_poly_hdr_t *dst, const pvr_poly_cxt_t *src) {
-    uint32_t txr_base;
+    uint32_t txr_base, cmd;
     /* Temporary variables we can read-write-modify, since we cannot do so from
        within the SQs, and we want to be able to compile this header from a PVR
        DR API submission target. */
@@ -31,7 +32,7 @@ void pvr_poly_compile(pvr_poly_hdr_t *dst, const pvr_poly_cxt_t *src) {
        into place, and OR it into the final result. */
 
     /* The base values for CMD */
-    dst->cmd = PVR_CMD_POLYHDR
+    cmd = PVR_CMD_POLYHDR
         | FIELD_PREP(PVR_TA_CMD_TXRENABLE, src->txr.enable)
         | FIELD_PREP(PVR_TA_CMD_TYPE, src->list_type)
         | FIELD_PREP(PVR_TA_CMD_CLRFMT, src->fmt.color)
@@ -41,6 +42,10 @@ void pvr_poly_compile(pvr_poly_hdr_t *dst, const pvr_poly_cxt_t *src) {
         | FIELD_PREP(PVR_TA_CMD_MODIFIER, src->fmt.modifier)
         | FIELD_PREP(PVR_TA_CMD_MODIFIERMODE, src->gen.modifier_mode)
         | FIELD_PREP(PVR_TA_CMD_SPECULAR, src->gen.specular);
+
+    /* pvr_poly_hdr_t is cacheline-aligned and we're writing all 32 bytes:
+     * we can allocate a dirty cache line */
+    dcache_alloc_block(dst, cmd);
 
     /* Polygon mode 1 */
     dst->mode1 = FIELD_PREP(PVR_TA_PM1_DEPTHCMP, src->depth.comparison)
@@ -268,18 +273,22 @@ void pvr_sprite_cxt_txr(pvr_sprite_cxt_t *dst, pvr_list_t list,
 }
 
 void pvr_sprite_compile(pvr_sprite_hdr_t *dst, const pvr_sprite_cxt_t *src) {
-    uint32_t txr_base, mode2, mode3;
+    uint32_t txr_base, cmd, mode2, mode3;
 
     /* Basically we just take each parameter, clip it, shift it
        into place, and OR it into the final result. */
 
     /* The base values for CMD */
-    dst->cmd = PVR_CMD_SPRITE
+    cmd = PVR_CMD_SPRITE
         | FIELD_PREP(PVR_TA_CMD_TXRENABLE, src->txr.enable)
         | FIELD_PREP(PVR_TA_CMD_TYPE, src->list_type)
         | FIELD_PREP(PVR_TA_CMD_UVFMT, PVR_UVFMT_16BIT)
         | FIELD_PREP(PVR_TA_CMD_USERCLIP, src->gen.clip_mode)
         | FIELD_PREP(PVR_TA_CMD_SPECULAR, src->gen.specular);
+
+    /* pvr_sprite_hdr_t is cacheline-aligned and we're writing all 32 bytes:
+     * we can allocate a dirty cache line */
+    dcache_alloc_block(dst, cmd);
 
     /* Polygon mode 1 */
     dst->mode1 = FIELD_PREP(PVR_TA_PM1_DEPTHCMP, src->depth.comparison)
@@ -333,8 +342,15 @@ void pvr_sprite_compile(pvr_sprite_hdr_t *dst, const pvr_sprite_cxt_t *src) {
 
 void pvr_mod_compile(pvr_mod_hdr_t *dst, pvr_list_t list, uint32 mode,
                      uint32 cull) {
-    dst->cmd = PVR_CMD_MODIFIER
+    uint32_t cmd;
+
+    cmd = PVR_CMD_MODIFIER
         | FIELD_PREP(PVR_TA_CMD_TYPE, list);
+
+    /* pvr_mod_hdr_t is cacheline-aligned and we're writing all 32 bytes:
+     * we can allocate a dirty cache line */
+    dcache_alloc_block(dst, cmd);
+
     dst->mode1 = FIELD_PREP(PVR_TA_PM1_MODIFIERINST, mode)
         | FIELD_PREP(PVR_TA_PM1_CULLING, cull);
 
@@ -344,14 +360,14 @@ void pvr_mod_compile(pvr_mod_hdr_t *dst, pvr_list_t list, uint32 mode,
 /* Compile a polygon context into a polygon header that is affected by
    modifier volumes */
 void pvr_poly_mod_compile(pvr_poly_mod_hdr_t *dst, const pvr_poly_cxt_t *src) {
-    uint32_t txr_base;
+    uint32_t txr_base, cmd;
     uint32_t mode2, mode3;
 
     /* Basically we just take each parameter, clip it, shift it
        into place, and OR it into the final result. */
 
     /* The base values for CMD */
-    dst->cmd = PVR_CMD_POLYHDR
+    cmd = PVR_CMD_POLYHDR
         | FIELD_PREP(PVR_TA_CMD_TXRENABLE, src->txr.enable)
         | FIELD_PREP(PVR_TA_CMD_TYPE, src->list_type)
         | FIELD_PREP(PVR_TA_CMD_CLRFMT, src->fmt.color)
@@ -361,6 +377,10 @@ void pvr_poly_mod_compile(pvr_poly_mod_hdr_t *dst, const pvr_poly_cxt_t *src) {
         | FIELD_PREP(PVR_TA_CMD_MODIFIER, src->fmt.modifier)
         | FIELD_PREP(PVR_TA_CMD_MODIFIERMODE, src->gen.modifier_mode)
         | FIELD_PREP(PVR_TA_CMD_SPECULAR, src->gen.specular);
+
+    /* pvr_poly_mod_hdr_t is cacheline-aligned and we're writing all 32 bytes:
+     * we can allocate a dirty cache line */
+    dcache_alloc_block(dst, cmd);
 
     /* Polygon mode 1 */
     dst->mode1 = FIELD_PREP(PVR_TA_PM1_DEPTHCMP, src->depth.comparison)

@@ -39,26 +39,24 @@
 #define DCLOAD_PORT 31313
 #define NAME "dcload-ip over KOS sockets"
 
-#define PACKED __attribute__((packed))
 typedef struct {
     unsigned char id[4];
     unsigned int address;
     unsigned int size;
     unsigned char data[];
-} PACKED command_t;
+} command_t;
 
 typedef struct {
     unsigned char id[4];
     unsigned int value0;
-} PACKED command_int_t;
+} command_int_t;
 
 typedef struct {
     unsigned char id[4];
     unsigned int value0;
     unsigned int value1;
     unsigned int value2;
-} PACKED command_3int_t;
-#undef PACKED
+} command_3int_t;
 
 static struct {
     unsigned int addr;

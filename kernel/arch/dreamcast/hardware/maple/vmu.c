@@ -3,7 +3,7 @@
    vmu.c
    Copyright (C) 2002, 2003 Megan Potter
    Copyright (C) 2008 Donald Haase
-   Copyright (C) 2023 Falco Girgis
+   Copyright (C) 2023, 2025 Falco Girgis
  */
 
 /*
@@ -27,6 +27,12 @@
 #include <arch/timer.h>
 
 #define VMU_BLOCK_WRITE_RETRY_TIME  100     /* time to sleep until retrying a failed write */
+
+/* VMU's raw condition data: 0 = PRESSED, 1 = RELEASED */
+typedef struct vmu_cond {
+    uint8_t raw_buttons;
+    uint8_t dummy[3];
+} vmu_cond_t;
 
 typedef struct vmu_datetime {
     uint16_t year;    /* 0 - 9999 */
@@ -95,8 +101,10 @@ static void vmu_poll_reply(maple_state_t *st, maple_frame_t *frm) {
 
     /* Fill the "nice" struct from the raw data */
     cooked = (vmu_state_t *)(frm->dev->status);
+    /* Copy over current button states to previous states. */
+    cooked->buttons.previous = cooked->buttons.current;
     /* Invert raw struct as nice struct */
-    cooked->buttons = ~(raw->raw_buttons);
+    cooked->buttons.current.raw = ~(raw->raw_buttons);
 
     /* Check to see if the VMU is upside-down in the controller and readjust
        its directional buttons accordingly. */
@@ -104,12 +112,12 @@ static void vmu_poll_reply(maple_state_t *st, maple_frame_t *frm) {
 
     if(cont && (cont->info.functions & MAPLE_FUNC_CONTROLLER) &&
        (frm->dev->info.connector_direction == cont->info.connector_direction)) {
-        cooked->buttons = (cooked->buttons & 0xf0)  |
-                          (cooked->dpad_up    << 1) | /* down */
-                          (cooked->dpad_down  << 0) | /* up */
-                          (cooked->dpad_left  << 3) | /* right */
-                          (cooked->dpad_right << 2);  /* left */
-
+        cooked->buttons.current.raw =
+            (cooked->buttons.current.raw & 0xf0)      |
+            (cooked->buttons.current.dpad_up    << 1) | /* down */
+            (cooked->buttons.current.dpad_down  << 0) | /* up */
+            (cooked->buttons.current.dpad_left  << 3) | /* right */
+            (cooked->buttons.current.dpad_right << 2);  /* left */
     }
 
     frm->dev->status_valid = 1;

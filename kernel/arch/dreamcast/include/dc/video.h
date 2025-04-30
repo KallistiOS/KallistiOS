@@ -107,15 +107,15 @@ typedef enum vid_display_mode_generic {
 */
 #define DM_MULTIBUFFER  0x2000
 
-//-----------------------------------------------------------------------------
-// More specific modes (and actual indices into the mode table)
+/* ------------------------------------------------------------------------- */
+/* More specific modes (and actual indices into the mode table) */
 
 /** \brief   Specific Display Modes 
     \ingroup video_modes_display
 */
 typedef enum vid_display_mode {
     DM_INVALID = 0,                 /**< \brief Invalid display mode */
-    // Valid modes below
+    /* Valid modes below */
     DM_320x240_VGA = 1,             /**< \brief 320x240 VGA 60Hz */
     DM_320x240_NTSC,                /**< \brief 320x240 NTSC 60Hz */
     DM_640x480_VGA,                 /**< \brief 640x480 VGA 60Hz */
@@ -126,12 +126,11 @@ typedef enum vid_display_mode {
     DM_768x576_PAL_IL,              /**< \brief 768x576 PAL Interlaced 50Hz */
     DM_768x480_PAL_IL,              /**< \brief 768x480 PAL Interlaced 50Hz */
     DM_320x240_PAL,                 /**< \brief 320x240 PAL 50Hz */
-    // The below is only for counting..
+    /* The below is only for counting.. */
     DM_SENTINEL,                    /**< \brief Sentinel value, for counting */
     DM_MODE_COUNT                   /**< \brief Number of modes */
 } vid_display_mode_t;
 
-// These are for the "flags" field of "vid_mode_t"
 /** \defgroup vid_flags Flags
     \brief              vid_mode_t Field Flags
     \ingroup            video_modes
@@ -191,12 +190,13 @@ extern vid_mode_t vid_builtin[DM_MODE_COUNT];
 */
 extern vid_mode_t *vid_mode;
 
-// These point to the current drawing area. If you're not using a multi-buffered
-// mode, that means they do what KOS always used to do (they'll point at the
-// start of VRAM). If you're using a multi-buffered mode, they'll point at the
-// next framebuffer to be displayed. You must use vid_flip for this to work
-// though (if you use vid_set_start, they'll point at the display base, for
-// compatibility's sake).
+/*  These point to the current drawing area. If you're not using a multi-buffered
+    mode, that means they do what KOS always used to do (they'll point at the
+    start of VRAM). If you're using a multi-buffered mode, they'll point at the
+    next framebuffer to be displayed. You must use vid_flip for this to work
+    though (if you use vid_set_start, they'll point at the display base, for
+    compatibility's sake).
+*/
 
 /** \defgroup video_fb Framebuffer
     \brief             API for framebuffer management
@@ -435,5 +435,5 @@ size_t vid_screen_shot_data(uint8_t **buffer);
 
 __END_DECLS
 
-#endif  // __DC_VIDEO_H
+#endif  /* __DC_VIDEO_H */
 

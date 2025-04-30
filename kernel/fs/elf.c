@@ -4,9 +4,10 @@
    Copyright (C)2000,2001,2003 Megan Potter
 */
 
-#include <malloc.h>
 #include <string.h>
+#include <stdlib.h>
 #include <stdio.h>
+
 #include <arch/cache.h>
 #include <arch/arch.h>
 #include <kos/fs.h>
@@ -79,7 +80,7 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
     sz = fs_total(fd);
     DBG(("Loading ELF file of size %d\n", sz));
 
-    img = memalign(32, sz);
+    img = aligned_alloc(32, sz);
 
     if(img == NULL) {
         dbglog(DBG_ERROR, "elf_load: can't allocate %d bytes for ELF load\n", sz);

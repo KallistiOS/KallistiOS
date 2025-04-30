@@ -70,8 +70,19 @@ void perf_cntr_clear(perf_cntr_t counter) {
 
 /* Returns the count value of a counter */
 uint64_t perf_cntr_count(perf_cntr_t counter) {
-    return (uint64_t)(PMCTR_HIGH(counter) & 0xffff) << 32 | 
-                      PMCTR_LOW(counter);
+    uint32_t lo, hi, hi2;
+
+    do {
+        /* Read the high part twice, before and after reading the high part,
+         * to make sure that the low counter didn't overflow. We can detect an
+         * overflow by the two reads of the high part returning different
+         * values. */
+        hi = PMCTR_HIGH(counter);
+        lo = PMCTR_LOW(counter);
+        hi2 = PMCTR_HIGH(counter);
+    } while (__unlikely(hi != hi2));
+
+    return (uint64_t)hi << 32 | lo;
 }
 
 void perf_cntr_timer_enable(void) {
@@ -95,12 +106,9 @@ void perf_cntr_timer_disable(void) {
 }
 
 uint64_t perf_cntr_timer_ns(void) {
-    /* Grab value first, before checking, to not record overhead. */
-    const uint64_t count = perf_cntr_count(PRFC0);
-
     /* If timer is configured and is running, use perf counters. */
-    if(perf_cntr_timer_enabled()) 
-        return count * NS_PER_CYCLE;
+    if(perf_cntr_timer_enabled())
+        return perf_cntr_count(PRFC0) * NS_PER_CYCLE;
     else /* Otherwise fall-through to TMU2. */
         return timer_ns_gettime64();
 }

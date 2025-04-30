@@ -78,7 +78,7 @@ int kthread_key_create(kthread_key_t *key, void (*destructor)(void *)) {
         return -1;
     }
 
-    spinlock_lock(&mutex);
+    spinlock_lock_scoped(&mutex);
 
     /* Store the destructor if need be. */
     if(destructor) {
@@ -86,7 +86,6 @@ int kthread_key_create(kthread_key_t *key, void (*destructor)(void *)) {
 
         if(!dest) {
             errno = ENOMEM;
-            spinlock_unlock(&mutex);
             return -1;
         }
 
@@ -96,7 +95,6 @@ int kthread_key_create(kthread_key_t *key, void (*destructor)(void *)) {
     }
 
     *key = next_key++;
-    spinlock_unlock(&mutex);
 
     return 0;
 }
@@ -129,16 +127,15 @@ int kthread_setspecific(kthread_key_t key, const void *value) {
         return -1;
     }
 
-    spinlock_lock(&mutex);
-
     /* Make sure the key is valid. */
-    if(key >= next_key || key < 1) {
-        errno = EINVAL;
-        spinlock_unlock(&mutex);
-        return -1;
-    }
+    {
+        spinlock_lock_scoped(&mutex);
 
-    spinlock_unlock(&mutex);
+        if(key >= next_key || key < 1) {
+            errno = EINVAL;
+            return -1;
+        }
+    }
 
     /* Check if we already have an entry for this key. */
     LIST_FOREACH(i, &cur->tls_list, kv_list) {

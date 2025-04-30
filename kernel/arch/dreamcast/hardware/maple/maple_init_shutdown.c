@@ -4,9 +4,9 @@
    Copyright (C) 2002 Megan Potter
  */
 
-#include <malloc.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <assert.h>
 #include <arch/memory.h>
 #include <dc/maple.h>
@@ -37,8 +37,17 @@
 /* Initialize Hardware (call after driver inits) */
 static void maple_hw_init(void) {
     maple_driver_t *drv;
+    int p, u;
 
     dbglog(DBG_INFO, "maple: active drivers:\n");
+
+    /* Reset structures */
+    for(p = 0; p < MAPLE_PORT_COUNT; p++) {
+        maple_state.ports[p].port = p;
+
+        for(u = 0; u < MAPLE_UNIT_COUNT; u++)
+            maple_state.ports[p].units[u] = NULL;
+    }
 
     TAILQ_INIT(&maple_state.frame_queue);
 
@@ -49,9 +58,9 @@ static void maple_hw_init(void) {
 
     /* Allocate the DMA send buffer */
 #if MAPLE_DMA_DEBUG
-    maple_state.dma_buffer = memalign(32, MAPLE_DMA_SIZE + 1024);
+    maple_state.dma_buffer = aligned_alloc(32, MAPLE_DMA_SIZE + 1024);
 #else
-    maple_state.dma_buffer = memalign(32, MAPLE_DMA_SIZE);
+    maple_state.dma_buffer = aligned_alloc(32, MAPLE_DMA_SIZE);
 #endif
     assert_msg(maple_state.dma_buffer != NULL, "Couldn't allocate maple DMA buffer");
     assert_msg((((uint32)maple_state.dma_buffer) & 0x1f) == 0, "DMA buffer was unaligned; bug in dlmalloc; please report!");
@@ -89,6 +98,7 @@ static void maple_hw_init(void) {
 void maple_hw_shutdown(void) {
     int p, u, cnt;
     uint32  ptr;
+    maple_device_t *dev;
 
     /* Unhook interrupts */
     vblank_handler_remove(maple_state.vbl_handle);
@@ -118,6 +128,11 @@ void maple_hw_shutdown(void) {
     for(cnt = 0, p = 0; p < MAPLE_PORT_COUNT; p++) {
         for(u = 0; u < MAPLE_UNIT_COUNT; u++) {
             cnt += !!maple_driver_detach(p, u);
+
+            dev = maple_state.ports[p].units[u];
+            if(dev)
+                free(dev->status);
+            free(dev);
         }
     }
 

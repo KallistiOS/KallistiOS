@@ -9,11 +9,12 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include <dc/math.h>
 #include <dc/maple/vmu.h>
 #include <dc/vmu_fb.h>
 
-#define GENMASK(h, l) \
-    (((unsigned int)-1 << (l)) & ((unsigned int)-1 >> (31 - (h))))
+#include <kos/dbglog.h>
+#include <kos/fs.h>
 
 /* Linux 4x6 font: lib/fonts/font_mini_4x6.c
  *
@@ -187,17 +188,37 @@ static void insert_bits(uint8_t *data,
     }
 }
 
-void vmufb_paint_area(vmufb_t *fb,
-                      unsigned int x, unsigned int y,
-                      unsigned int w, unsigned int h,
-                      const char *data) {
+static void vmufb_paint_area_strided(vmufb_t *fb,
+                                     unsigned int x, unsigned int y,
+                                     unsigned int w, unsigned int h,
+                                     unsigned int stride, const uint8_t *data) {
     unsigned int i;
     uint64_t bits;
 
     for(i = 0; i < h; i++) {
-        bits = extract_bits((const uint8_t *)data, i * w, w);
+        bits = extract_bits(data, i * stride, w);
         insert_bits((uint8_t *)fb->data, (y + i) * VMU_SCREEN_WIDTH + x, w, bits);
     }
+}
+
+void vmufb_paint_area(vmufb_t *fb,
+                      unsigned int x, unsigned int y,
+                      unsigned int w, unsigned int h,
+                      const char *data) {
+    vmufb_paint_area_strided(fb, x, y, w, h, w, (const uint8_t *)data);
+}
+
+void vmufb_paint_xbm(vmufb_t *fb,
+                     unsigned int x, unsigned int y,
+                     unsigned int w, unsigned int h,
+                     const uint8_t *xbm_data) {
+    uint8_t buf[48 * 32];
+    unsigned int i, wb = (w + 7) / 8;
+
+    for(i = 0; i < h * wb; i++)
+        buf[i] = bit_reverse(xbm_data[i]) >> 24;
+
+    vmufb_paint_area_strided(fb, x, y, w, h, wb * 8, buf);
 }
 
 void vmufb_clear(vmufb_t *fb) {
@@ -274,4 +295,25 @@ const vmufb_font_t *vmu_set_font(const vmufb_font_t *font) {
 
 const vmufb_font_t *vmu_get_font(void) {
     return default_font;
+}
+
+int vmufb_screen_shot(vmufb_t *fb, const char *destfn) {
+    static const char header[] = "P4\n#KallistiOS VMU Screen Shot\n48 32\n";
+    file_t f;
+
+    /* Open output file */
+    f = fs_open(destfn, O_WRONLY | O_TRUNC);
+    if(!f) {
+        dbglog(DBG_ERROR, "vmufb_screen_shot: can't open output file '%s'\n", destfn);
+        return -1;
+    }
+
+    fs_write(f, header, sizeof(header) - 1);
+    fs_write(f, fb->data, sizeof(fb->data));
+
+    fs_close(f);
+
+    dbglog(DBG_INFO, "vmufb_screen_shot: written to output file '%s'\n", destfn);
+
+    return 0;
 }

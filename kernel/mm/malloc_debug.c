@@ -63,7 +63,7 @@ void *malloc(size_t amt) {
     uint32 pr = arch_get_ret_addr();
     int i;
 
-    spinlock_lock(&mutex);
+    spinlock_lock_scoped(&mutex);
 
     /* Get a control block space */
     ctl = sbrk(1024);
@@ -107,8 +107,6 @@ void *malloc(size_t amt) {
     ctl->next = NULL;
     ctl->type = "malloc";
     last = ctl;
-
-    spinlock_unlock(&mutex);
 
     printf("Thread %d/%08lx allocated %ld bytes at %08lx; %08lx left\n",
            ctl->thread, ctl->addr, ctl->size, space, _arch_mem_top - (uint32)sbrk(0));
@@ -176,7 +174,7 @@ void free(void *block) {
     uint32 *nt1, *nt2, pr = arch_get_ret_addr();
     int i;
 
-    spinlock_lock(&mutex);
+    spinlock_lock_scoped(&mutex);
 
     printf("Thread %d/%08lx freeing block @ %08lx\n",
            thd_current->tid, pr, (uint32)block);
@@ -221,7 +219,6 @@ void free(void *block) {
     }
 
     ctl->inuse = 0;
-    spinlock_unlock(&mutex);
 }
 
 void malloc_stats(void) {

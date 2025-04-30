@@ -24,7 +24,7 @@ build the whole toolchains.
 
 The packages below need to be installed:
 ```
-apk --update add build-base patch bash texinfo gmp-dev libjpeg-turbo-dev libpng-dev elfutils-dev curl wget python3 git subversion
+apk --update add build-base patch bash coreutils-fmt texinfo gmp-dev mpfr-dev libjpeg-turbo-dev libpng-dev elfutils-dev curl wget python3 git subversion
 ```	
 
 ## Preparing the environment installation ##
@@ -41,7 +41,7 @@ git clone git://git.code.sf.net/p/cadcdev/kos-ports
 
 The **dc-chain** system may be customized by setting up a
 [`Makefile.cfg`] file in the root of the `dc-chain` directory tree. If this is
-desired, read the main [README.md](../README.md) for more information on
+desired, read the main [`README`](../README.md) for more information on
 setting up custom options for the toolchain; however, in most circumstances,
 the stable defaults already present in
 [`Makefile.default.cfg`](../Makefile.default.cfg) will be fine.
@@ -59,7 +59,7 @@ To build the toolchain, do the following:
 
 3. Enter the following to start downloading and building toolchain:
 	```
-	make
+	make use_custom_dependencies=1
 	```
 
 Now it's time to have a coffee as this process can be long: several minutes to
@@ -78,4 +78,4 @@ After following this guide, the toolchains should be ready.
 
 Now it's time to compile **KallistiOS**.
 
-You may consult the [`README`](../../../doc/README) file from KallistiOS now.
+You may consult the [`README`](../../../doc/README.md) file from KallistiOS now.

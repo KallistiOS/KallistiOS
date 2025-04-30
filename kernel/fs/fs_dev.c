@@ -8,8 +8,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <malloc.h>
 #include <errno.h>
+
 #include <arch/types.h>
 #include <kos/fs_dev.h>
 #include <sys/queue.h>

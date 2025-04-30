@@ -39,6 +39,7 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
+#include <stdbool.h>
 #include <arch/types.h>
 #include <sys/queue.h>
 
@@ -269,6 +270,7 @@ typedef struct maple_response {
 */
 typedef struct maple_device {
     /* Public */
+    bool            valid;  /**< \brief Is this a valid device? */
     int             port;   /**< \brief Maple bus port connected to */
     int             unit;   /**< \brief Unit number, off of the port */
     maple_devinfo_t info;   /**< \brief Device info struct */
@@ -282,7 +284,7 @@ typedef struct maple_device {
 
     volatile uint8          status_valid;   /**< \brief Have we got our first status update? */
 
-    uint32                  status[];       /**< \brief Status buffer (for pollable devices) */
+    void                    *status;        /**< \brief Status buffer (for pollable devices) */
 } maple_device_t;
 
 #define MAPLE_PORT_COUNT    4   /**< \brief Number of ports on the bus */
@@ -685,6 +687,7 @@ int maple_driver_unreg(maple_driver_t *driver);
     \ingroup maple
 
     \param  det             The detection frame.
+    \retval 1               Couldn't allocate buffers.
     \retval 0               On success.
     \retval -1              If no driver is available.
 */

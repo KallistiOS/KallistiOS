@@ -4,8 +4,8 @@ This document contains all the instructions to create a fully working
 toolchain targeting the **Sega Dreamcast** system under **MinGW/MSYS**.
 
 This document applies only on the legacy **MinGW/MSYS** environment provided
-by [MinGW.org](http://www.mingw.org). For **MinGW-w64/MSYS2** environment, read
-the `mingw-w64.md` file.
+by [MinGW - Minimalist GNU for Windows](https://sourceforge.net/projects/mingw/).
+For **MinGW-w64/MSYS2** environment, read the `mingw-w64.md` file.
 
 ## Introduction ##
 
@@ -39,8 +39,8 @@ component.
 
 ## Installation of MinGW/MSYS ##
 
-1. Open your browser to [**MinGW.org**](http://www.mingw.org) and download
-`mingw-get-setup.exe` from the
+1. Open your browser to [**MinGW - Minimalist GNU for Windows**](https://sourceforge.net/projects/mingw/)
+and download `mingw-get-setup.exe` from the
 [**MinGW** repository](https://osdn.net/projects/mingw/releases/).
 
 2. Run `mingw-get-setup.exe` in **Administrator mode** (if using **Microsoft
@@ -168,7 +168,7 @@ Basically, if you just plan to use the **MinGW/MSYS** environment through the
 
 The **dc-chain** system may be customized by setting up a
 [`Makefile.cfg`] file in the root of the `dc-chain` directory tree. If this is
-desired, read the main [README.md](../../README.md) for more information on
+desired, read the main [`README`](../../README.md) for more information on
 setting up custom options for the toolchain; however, in most circumstances,
 the stable defaults already present in
 [`Makefile.default.cfg`](../../Makefile.default.cfg) will be fine.

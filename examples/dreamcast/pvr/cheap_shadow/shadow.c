@@ -96,11 +96,11 @@ int check_start(void) {
 
         if(state->joyy > 64) {
             shadow = CLAMP(0.0f, 1.0f, shadow + 0.01f);
-            pvr_set_shadow_scale(1, shadow);
+            pvr_set_shadow_scale(true, shadow);
         }
         else if(state->joyy < -64) {
             shadow = CLAMP(0.0f, 1.0f, shadow - 0.01f);
-            pvr_set_shadow_scale(1, shadow);
+            pvr_set_shadow_scale(true, shadow);
         }
 
         if(state->buttons & CONT_START)
@@ -212,7 +212,7 @@ int main(int argc, char *argv[]) {
 
     /* Enable Cheap Shadow mode and set affected polygons to be at half of their
        normal intensity. */
-    pvr_set_shadow_scale(1, shadow);
+    pvr_set_shadow_scale(true, shadow);
 
     setup();
 

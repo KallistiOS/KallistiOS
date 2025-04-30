@@ -25,7 +25,6 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
 #include <kos/fs.h>
 #include <kos/dbgio.h>
 
@@ -59,27 +58,28 @@ extern int dcload_type;
 /* \cond */
 /* Available dcload console commands */
 
-#define DCLOAD_READ 0
-#define DCLOAD_WRITE 1
-#define DCLOAD_OPEN 2
-#define DCLOAD_CLOSE 3
-#define DCLOAD_CREAT 4
-#define DCLOAD_LINK 5
-#define DCLOAD_UNLINK 6
-#define DCLOAD_CHDIR 7
-#define DCLOAD_CHMOD 8
-#define DCLOAD_LSEEK 9
-#define DCLOAD_FSTAT 10
-#define DCLOAD_TIME 11
-#define DCLOAD_STAT 12
-#define DCLOAD_UTIME 13
+#define DCLOAD_READ         0
+#define DCLOAD_WRITE        1
+#define DCLOAD_OPEN         2
+#define DCLOAD_CLOSE        3
+#define DCLOAD_CREAT        4
+#define DCLOAD_LINK         5
+#define DCLOAD_UNLINK       6
+#define DCLOAD_CHDIR        7
+#define DCLOAD_CHMOD        8
+#define DCLOAD_LSEEK        9
+#define DCLOAD_FSTAT        10
+#define DCLOAD_TIME         11
+#define DCLOAD_STAT         12
+#define DCLOAD_UTIME        13
 #define DCLOAD_ASSIGNWRKMEM 14
-#define DCLOAD_EXIT 15
-#define DCLOAD_OPENDIR 16
-#define DCLOAD_CLOSEDIR 17
-#define DCLOAD_READDIR 18
-#define DCLOAD_GETHOSTINFO 19
-#define DCLOAD_GDBPACKET 20
+#define DCLOAD_EXIT         15
+#define DCLOAD_OPENDIR      16
+#define DCLOAD_CLOSEDIR     17
+#define DCLOAD_READDIR      18
+#define DCLOAD_GETHOSTINFO  19
+#define DCLOAD_GDBPACKET    20
+#define DCLOAD_REWINDDIR    21
 
 /* dcload syscall function */
 
@@ -127,24 +127,10 @@ void dcload_printk(const char *str);
 /* GDB tunnel */
 size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_t out_size);
 
-/* File functions */
-void*   dcload_open(vfs_handler_t * vfs, const char *fn, int mode);
-int     dcload_close(void * hnd);
-ssize_t dcload_read(void * hnd, void *buf, size_t cnt);
-off_t   dcload_seek(void * hnd, off_t offset, int whence);
-off_t   dcload_tell(void * hnd);
-size_t  dcload_total(void * hnd);
-dirent_t* dcload_readdir(void * hnd);
-int     dcload_rename(vfs_handler_t * vfs, const char *fn1, const char *fn2);
-int     dcload_unlink(vfs_handler_t * vfs, const char *fn);
-
 /* Init func */
 void fs_dcload_init_console(void);
 void fs_dcload_init(void);
 void fs_dcload_shutdown(void);
-
-/* Init func for dcload-ip + lwIP */
-int fs_dcload_init_lwip(void *p);
 
 /* \endcond */
 

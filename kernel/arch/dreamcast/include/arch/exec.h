@@ -39,7 +39,7 @@ __BEGIN_DECLS
     \param  length          The length of the binary.
     \param  address         The address of the binary's starting point.
 */
-void arch_exec_at(const void *image, uint32 length, uint32 address) __noreturn;
+void arch_exec_at(const void *image, uint32_t length, uint32_t address) __noreturn;
 
 /** \brief  Replace the currently running binary at the default address.
 
@@ -50,7 +50,7 @@ void arch_exec_at(const void *image, uint32 length, uint32 address) __noreturn;
     \param  image           The binary to run (already loaded into RAM).
     \param  length          The length of the binary.
 */
-void arch_exec(const void *image, uint32 length) __noreturn;
+void arch_exec(const void *image, uint32_t length) __noreturn;
 
 /** @} */
 

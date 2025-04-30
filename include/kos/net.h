@@ -220,12 +220,6 @@ typedef struct knetif {
 /** \cond */
 /* Define the list type */
 LIST_HEAD(netif_list, knetif);
-
-#ifdef PACKED
-#undef PACKED
-#endif
-
-#define PACKED __attribute__((packed))
 /** \endcond */
 
 /** \defgroup networking_ip     IP
@@ -253,7 +247,7 @@ typedef struct ip_hdr_s {
     uint16  checksum;           /**< \brief IP checksum */
     uint32  src;                /**< \brief Source IP address */
     uint32  dest;               /**< \brief Destination IP address */
-} PACKED ip_hdr_t;
+} ip_hdr_t;
 
 /** \defgroup networking_ipv6   IPv6
     \brief                      IPv6 Network Stack
@@ -275,10 +269,7 @@ typedef struct ipv6_hdr_s {
     uint8           hop_limit;      /**< \brief Hop limit */
     struct in6_addr src_addr;       /**< \brief Source IP address */
     struct in6_addr dst_addr;       /**< \brief Destination IP address */
-} PACKED ipv6_hdr_t;
-
-#undef PACKED
-
+} ipv6_hdr_t;
 
 /***** net_arp.c **********************************************************/
 

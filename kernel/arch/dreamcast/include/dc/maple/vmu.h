@@ -3,7 +3,8 @@
    dc/maple/vmu.h
    Copyright (C) 2000-2002 Jordan DeLong, Megan Potter
    Copyright (C) 2008 Donald Haase
-   Copyright (C) 2023 Falco Girgis, Andy Barajas
+   Copyright (C) 2023 Andy Barajas
+   Copyright (C) 2023, 2025 Falco Girgis
 
 */
 
@@ -31,6 +32,7 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 #include <dc/maple.h>
+#include <kos/regfield.h>
 
 #include <stdint.h>
 #include <time.h>
@@ -537,39 +539,50 @@ int vmu_get_datetime(maple_device_t *dev, time_t *unix);
     @{
 */
 
-#define VMU_DPAD_UP    (0<<1)   /**< \brief Up Dpad button on the VMU */
-#define VMU_DPAD_DOWN  (1<<1)   /**< \brief Down Dpad button on the VMU */
-#define VMU_DPAD_LEFT  (2<<1)   /**< \brief Left Dpad button on the VMU */
-#define VMU_DPAD_RIGHT (3<<1)   /**< \brief Right Dpad button on the VMU */
-#define VMU_A          (4<<1)   /**< \brief 'A' button on the VMU */
-#define VMU_B          (5<<1)   /**< \brief 'B' button on the VMU */
-#define VMU_MODE       (6<<1)   /**< \brief Mode button on the VMU */
-#define VMU_SLEEP      (7<<1)   /**< \brief Sleep button on the VMU */
+#define VMU_DPAD_UP    BIT(0)   /**< Up Dpad button on the VMU */
+#define VMU_DPAD_DOWN  BIT(1)   /**< Down Dpad button on the VMU */
+#define VMU_DPAD_LEFT  BIT(2)   /**< Left Dpad button on the VMU */
+#define VMU_DPAD_RIGHT BIT(3)   /**< Right Dpad button on the VMU */
+#define VMU_A          BIT(4)   /**< 'A' button on the VMU */
+#define VMU_B          BIT(5)   /**< 'B' button on the VMU */
+#define VMU_MODE       BIT(6)   /**< Mode button on the VMU */
+#define VMU_SLEEP      BIT(7)   /**< Sleep button on the VMU */
 
-/** \brief VMU's raw condition data: 0 = PRESSED, 1 = RELEASED */
-typedef struct vmu_cond {
-    uint8_t raw_buttons;        /**< \brief Combined button mask */
-    uint8_t dummy[3];           /**< \brief Unused response data */
-} vmu_cond_t;
+/** \brief Represents the combined state of all VMU buttons.
 
-/** \brief  VMU's "civilized" state data: 0 = RELEASED, 1 = PRESSED
+    Button states values:
+    - `0`: Released
+    - `1`: Pressed
 
     \note
     The Dpad buttons are automatically reoriented for you depending on
     which direction the VMU is facing in a particular type of controller.
  */
-typedef union vmu_state {
-    uint8_t buttons;            /**< \brief Combined button state mask */
+typedef union vmu_buttons {
+    uint8_t raw;                /**< Combined button state mask */
     struct {
-        uint8_t dpad_up:    1;  /**< \brief Dpad Up button state */
-        uint8_t dpad_down:  1;  /**< \brief Dpad Down button state */
-        uint8_t dpad_left:  1;  /**< \brief Dpad Left button state */
-        uint8_t dpad_right: 1;  /**< \brief Dpad Right button state */
-        uint8_t a:          1;  /**< \brief 'A' button state */
-        uint8_t b:          1;  /**< \brief 'B' button state */
-        uint8_t mode:       1;  /**< \brief Mode button state */
-        uint8_t sleep:      1;  /**< \brief Sleep button state */
+        uint8_t dpad_up:    1;  /**< Dpad Up button state */
+        uint8_t dpad_down:  1;  /**< Dpad Down button state */
+        uint8_t dpad_left:  1;  /**< Dpad Left button state */
+        uint8_t dpad_right: 1;  /**< Dpad Right button state */
+        uint8_t a:          1;  /**< 'A' button state */
+        uint8_t b:          1;  /**< 'B' button state */
+        uint8_t mode:       1;  /**< Mode button state */
+        uint8_t sleep:      1;  /**< Sleep button state */
     };
+} vmu_buttons_t;
+
+/** "Civilized" structure containing VMU's current state.
+
+    \note
+    Don't forget that if you want valid button state information, you must
+    enable polling for it in the driver with vmu_set_buttons_enabled()!
+*/
+typedef struct vmu_state {
+    struct {
+        vmu_buttons_t current;  /**< Button states from the current frame */
+        vmu_buttons_t previous; /**< Button states from the previous frame */
+    } buttons;                  /**< Latest two frames of button state data */
 } vmu_state_t;
 
 /** @} */

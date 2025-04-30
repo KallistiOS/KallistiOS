@@ -63,5 +63,4 @@ void __newlib_lock_release_recursive(__newlib_recursive_lock_t*);
 
 /** \endcond */
 
-#endif // __NEWLIB_LOCK_COMMON_H
-
+#endif /* __SYS_LOCK_H__ */

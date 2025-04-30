@@ -72,14 +72,9 @@ int snd_mem_init(uint32 reserve) {
     if(initted)
         snd_mem_shutdown();
 
-    if(irq_inside_int()) {
-        if(!spinlock_trylock(&snd_mem_mutex)) {
-            errno = EAGAIN;
-            return -1;
-        }
-    }
-    else {
-        spinlock_lock(&snd_mem_mutex);
+    if(!spinlock_lock_irqsafe(&snd_mem_mutex)) {
+        errno = EAGAIN;
+        return -1;
     }
 
     // Make sure our base is 32-byte aligned
@@ -118,15 +113,8 @@ void snd_mem_shutdown(void) {
 
     if(!initted) return;
 
-    if(irq_inside_int()) {
-        if(!spinlock_trylock(&snd_mem_mutex)) {
-            errno = EAGAIN;
-            return;
-        }
-    }
-    else {
-        spinlock_lock(&snd_mem_mutex);
-    }
+    if(!spinlock_lock_irqsafe(&snd_mem_mutex))
+        return;
 
     e = TAILQ_FIRST(&pool);
 
@@ -158,14 +146,9 @@ uint32 snd_mem_malloc(size_t size) {
     if(size == 0)
         return 0;
 
-    if(irq_inside_int()) {
-        if(!spinlock_trylock(&snd_mem_mutex)) {
-            errno = EAGAIN;
-            return 0;
-        }
-    }
-    else {
-        spinlock_lock(&snd_mem_mutex);
+    if(!spinlock_lock_irqsafe(&snd_mem_mutex)) {
+        errno = EAGAIN;
+        return 0;
     }
 
     // Make sure the size is a multiple of 32 bytes to maintain alignment
@@ -232,15 +215,8 @@ void snd_mem_free(uint32 addr) {
     if(addr == 0)
         return;
 
-    if(irq_inside_int()) {
-        if(!spinlock_trylock(&snd_mem_mutex)) {
-            errno = EAGAIN;
-            return;
-        }
-    }
-    else {
-        spinlock_lock(&snd_mem_mutex);
-    }
+    if(!spinlock_lock_irqsafe(&snd_mem_mutex))
+        return;
 
     /* Look for the block */
     TAILQ_FOREACH(e, &pool, qent) {
@@ -297,14 +273,9 @@ uint32 snd_mem_available(void) {
     if(!initted)
         return 0;
 
-    if(irq_inside_int()) {
-        if(!spinlock_trylock(&snd_mem_mutex)) {
-            errno = EAGAIN;
-            return 0;
-        }
-    }
-    else {
-        spinlock_lock(&snd_mem_mutex);
+    if(!spinlock_lock_irqsafe(&snd_mem_mutex)) {
+        errno = EAGAIN;
+        return 0;
     }
 
     TAILQ_FOREACH(e, &pool, qent) {

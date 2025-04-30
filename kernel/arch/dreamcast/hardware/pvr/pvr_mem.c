@@ -171,19 +171,19 @@ void pvr_mem_print_list(void) {
 }
 
 /* Return the number of bytes available still in the memory pool */
-static uint32 pvr_mem_available_int(void) {
+static size_t pvr_mem_available_int(void) {
     struct mallinfo mi = pvr_int_mallinfo();
 
     /* This magic formula is modeled after mstats() */
     return mi.arena - mi.uordblks;
 }
 
-uint32 pvr_mem_available(void) {
+size_t pvr_mem_available(void) {
     if(!pvr_mem_base)
         return 0;
 
     return pvr_mem_available_int() + 
-        (PVR_RAM_INT_TOP - (uint32)pvr_mem_base);
+        (PVR_RAM_INT_TOP - (size_t)pvr_mem_base);
 }
 
 /* Reset the memory pool, equivalent to freeing all textures currently

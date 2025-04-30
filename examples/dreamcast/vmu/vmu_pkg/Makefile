@@ -7,14 +7,16 @@
 TARGET = vmu.elf
 
 # List all of your C files here, but change the extension to ".o"
-OBJS = vmu.o
+OBJS = vmu.o romdisk.o
+
+KOS_ROMDISK_DIR = romdisk
 
 all: rm-elf $(TARGET)
 
 include $(KOS_BASE)/Makefile.rules
 
 clean: rm-elf
-	-rm -f $(OBJS)
+	-rm -f $(OBJS) romdisk.img
 
 rm-elf:
 	-rm -f $(TARGET)

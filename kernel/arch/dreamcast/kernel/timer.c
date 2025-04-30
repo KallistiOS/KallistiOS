@@ -189,20 +189,17 @@ void timer_spin_delay_us(unsigned short us) {
 
 /* Enable timer interrupts; needs to move to irq.c sometime. */
 void timer_enable_ints(int which) {
-    volatile uint16_t *ipra = (uint16_t *)0xffd00004;
-    *ipra |= (TIMER_PRIO << (12 - 4 * which));
+    irq_set_priority(IRQ_SRC_TMU0 - which, TIMER_PRIO);
 }
 
 /* Disable timer interrupts; needs to move to irq.c sometime. */
 void timer_disable_ints(int which) {
-    volatile uint16_t *ipra = (uint16_t *)0xffd00004;
-    *ipra &= ~(TIMER_PRIO << (12 - 4 * which));
+    irq_set_priority(IRQ_SRC_TMU0 - which, IRQ_PRIO_MASKED);
 }
 
 /* Check whether ints are enabled */
 int timer_ints_enabled(int which) {
-    volatile uint16_t *ipra = (uint16_t *)0xffd00004;
-    return (*ipra & (TIMER_PRIO << (12 - 4 * which))) != 0;
+    return irq_get_priority(IRQ_SRC_TMU0 - which) > 0;
 }
 
 /* Seconds elapsed (since KOS startup), updated from the TMU2 underflow ISR */
@@ -277,7 +274,7 @@ static timer_val_t timer_getticks(const uint32_t *tns, uint32_t shift) {
         counter2 = TIMER32(tcnts[TMU2]);
         tmu2 = TIMER16(tcrs[TMU2]);
         unf2 = !!(tmu2 & UNF);
-    } while (unf1 != unf2 || counter1 < counter2);
+    } while (__unlikely(unf1 != unf2 || counter1 < counter2));
 
     delta = timer_ms_countdown - counter2;
 

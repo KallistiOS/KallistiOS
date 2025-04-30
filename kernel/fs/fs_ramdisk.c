@@ -35,7 +35,7 @@ cache data from disk rather than as a general purpose file system.
 #include <kos/mutex.h>
 #include <kos/fs_ramdisk.h>
 #include <kos/opts.h>
-#include <malloc.h>
+
 #include <string.h>
 #include <strings.h>
 #include <stdio.h>

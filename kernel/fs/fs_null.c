@@ -8,13 +8,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <malloc.h>
 #include <errno.h>
+
 #include <arch/types.h>
 #include <kos/mutex.h>
 #include <kos/fs_null.h>
 #include <sys/queue.h>
-#include <errno.h>
 
 /* File handles */
 typedef struct null_fh_str {

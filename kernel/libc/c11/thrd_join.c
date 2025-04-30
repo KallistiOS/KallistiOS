@@ -12,6 +12,8 @@ int thrd_join(thrd_t thr, int *res) {
     if(thd_join(thr, &rv))
         return thrd_error;
 
-    *res = (int)rv;
+    if (res)
+        *res = (int)rv;
+
     return thrd_success;
 }
