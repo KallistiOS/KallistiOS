@@ -51,7 +51,7 @@ g2_fifo_wait
 vblank_handler_add
 vblank_handler_remove
 
-# Debug I/O
+# SCIF
 scif_set_parameters
 scif_set_irq_usage
 scif_detected
@@ -72,6 +72,23 @@ scif_spi_slow_rw_byte
 scif_spi_write_byte
 scif_spi_read_byte
 scif_spi_read_data
+
+# SCI UART/SPI
+sci_init
+sci_configure_uart
+sci_configure_spi
+sci_shutdown
+sci_read_byte
+sci_write_byte
+sci_write_data
+sci_read_data
+sci_spi_set_cs
+sci_spi_rw_byte
+sci_spi_rw_data
+sci_spi_write_byte
+sci_spi_read_byte
+sci_spi_write_data
+sci_spi_read_data
 
 # Timers
 timer_prime

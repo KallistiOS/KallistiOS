@@ -106,6 +106,7 @@ __BEGIN_DECLS
 #   include <dc/perfctr.h>
 #   include <dc/pvr.h>
 #   include <dc/scif.h>
+#   include <dc/sci.h>
 #   include <dc/sd.h>
 #   include <dc/sound/stream.h>
 #   include <dc/sound/sfxmgr.h>
