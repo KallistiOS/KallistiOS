@@ -23,6 +23,7 @@
 #include <dc/ubc.h>
 #include <dc/pvr.h>
 #include <dc/vmufs.h>
+#include <dc/dev_fb.h>
 #include <dc/syscalls.h>
 #include <dc/dmac.h>
 
@@ -211,6 +212,8 @@ int  __weak arch_auto_init(void) {
 
     KOS_INIT_FLAG_CALL(vmu_fs_init);
 
+    fs_fb_init();
+
     /* Initialize library handling */
     library_init();
 
@@ -242,6 +245,7 @@ void  __weak arch_auto_shutdown(void) {
     timer_shutdown();
     pvr_shutdown();
     library_shutdown();
+    fs_fb_shutdown();
     KOS_INIT_FLAG_CALL(fs_dcload_shutdown);
     KOS_INIT_FLAG_CALL(vmu_fs_shutdown);
     if (!KOS_PLATFORM_IS_NAOMI)
