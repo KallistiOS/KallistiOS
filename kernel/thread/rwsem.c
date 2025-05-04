@@ -63,11 +63,10 @@ int rwsem_destroy(rw_semaphore_t *s) {
 int rwsem_read_lock_timed(rw_semaphore_t *s, int timeout) {
     int rv = 0;
 
-    if((rv = irq_inside_int())) {
-        dbglog(DBG_WARNING, "%s: called inside an interrupt with code: "
-               "%x evt: %.4x\n",
+    if(irq_inside_int()) {
+        dbglog(DBG_WARNING, "%s: called inside an interrupt with code: [%x]\n",
                timeout ? "rwsem_read_lock_timed" : "rwsem_read_lock",
-               ((rv >> 16) & 0xf), (rv & 0xffff));
+               irq_active_int(0));
         errno = EPERM;
         return -1;
     }

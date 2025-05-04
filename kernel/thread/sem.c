@@ -85,10 +85,10 @@ int sem_wait_timed(semaphore_t *sem, int timeout) {
     int rv = 0;
 
     /* Make sure we're not inside an interrupt */
-    if((rv = irq_inside_int())) {
-        dbglog(DBG_WARNING, "%s: called inside an interrupt with code: %x evt: %.4x\n",
+    if(irq_inside_int()) {
+        dbglog(DBG_WARNING, "%s: called inside an interrupt with code: [%x]\n",
                timeout ? "sem_wait_timed" : "sem_wait",
-               ((rv>>16) & 0xf), (rv & 0xffff));
+               irq_active_int(0));
         errno = EPERM;
         return -1;
     }

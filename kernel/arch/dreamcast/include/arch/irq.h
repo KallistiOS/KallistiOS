@@ -3,7 +3,7 @@
    arch/dreamcast/include/irq.h
    Copyright (C) 2000-2001 Megan Potter
    Copyright (C) 2024 Paul Cercueil
-   Copyright (C) 2024 Falco Girgis
+   Copyright (C) 2024, 2025 Falco Girgis
 
 */
 
@@ -21,6 +21,14 @@
     \author Falco Girgis
 
     \see    dc/asic.h, arch/trap.h
+
+    \todo
+        - Save and restore SH4 DBR register in irq_context_t.
+        - Add support for `EXPMASK` (assuming DC's SH4 supports it).
+        - Stop including trap.h from irq.h.
+        - Explicitly label unimplemented interrupts for DC with separate type
+        - Truly support nested interrupts and exceptions
+            - irq_context_t needs to not be static, ASM adjustment.
 */
 
 #ifndef __ARCH_IRQ_H
@@ -44,11 +52,36 @@ __BEGIN_DECLS
     This is an API for managing interrupts, their masks, and their
     handler routines along with thread context information.
 
+    ## IRQ Handler Propagation
+    Interrupt processing routes an interrupt request through a configurable
+    chain of handlers, propagating the requeset down the chain. See \ref
+    irq_handlers for more details.
+
+    ## Nested IRQ Handlers
+    While the mechanism is in place for the future, KOS currently only
+    gracefully handles one level of interrupts or a maximum depth of 1.
+    The exception to this rule is when another one fires, and the
+    `EXC_DOUBLE_FAULT` handler is called. From within this handler,
+    there will be a depth of 2 right before the system must terminate,
+    as there is no graceful way to recover from this state.
+
     \warning
     This is a low-level, internal kernel API. Many of these
     interrupts are utilized by various KOS drivers and have higher-level APIs
     for hooking into them. Care must be taken to not interfere with the IRQ
-    handling which is being done by in-use KOS drivers.
+    handling which is being done by in-use KOS drivers. It is often better to
+    install a global filter to observe interrupt events passively than it is
+    to override individual interrupt handlers which have been used by the
+    system.
+
+    \note
+    The naming convention used by this API differs from that of the actual SH4
+    manual for historical reasons (it wasn't platform-specific). The SH4 manual
+    refers to the most general type of CPU events which result in a SW
+    callback as "exceptions," with "interrupts" and "general exceptions" being
+    subtypes of exceptions. This API uses the term "interrupt" and "exception"
+    interchangeably, except where it is explicitly noted that "SH4 interrupts"
+    or "SH4 general exceptions" are being referred to, more specifically.
 
     \note
     The naming convention used by this API differs from that of the actual SH4
@@ -93,7 +126,8 @@ __BEGIN_DECLS
     The size of this structure should be less than or equal to the
     \ref REG_BYTE_CNT value.
 */
-typedef __attribute__((aligned(32))) struct irq_context {
+typedef struct irq_context {
+alignas(32)
     uint32_t  pc;         /**< Program counter */
     uint32_t  pr;         /**< Procedure register (aka return address) */
     uint32_t  gbr;        /**< Global base register (TLS segment ptr) */
@@ -138,9 +172,6 @@ typedef __attribute__((aligned(32))) struct irq_context {
 /** @} */
 
 /** Switch out contexts (for interrupt return).
-
-    This function will set the processor state that will be restored when the
-    exception returns.
 
     \param  regbank         The values of all registers to be restored.
 
@@ -265,27 +296,6 @@ typedef enum irq_exception {
     EXC_UNHANDLED_EXC      = 0x07e0  /**< `[SOFT  ]` Exception went unhandled */
 } irq_t;
 
-
-/** \defgroup  irq_type_offsets        Exception type offsets
-    \brief                             Offsets within exception types
-    \ingroup                           irqs
-
-    The following are a table of "type offsets" (see the Hitachi PDF). These are
-    the 0x000, 0x100, 0x400, and 0x600 offsets.
-
-    @{
-*/
-#define EXC_OFFSET_000  0   /**< \brief Offset 0x000 */
-#define EXC_OFFSET_100  1   /**< \brief Offset 0x100 */
-#define EXC_OFFSET_400  2   /**< \brief Offset 0x400 */
-#define EXC_OFFSET_600  3   /**< \brief Offset 0x600 */
-/** @} */
-
-/** \brief   The value of the timer IRQ
-    \ingroup irqs
-*/
-#define TIMER_IRQ       EXC_TMU0_TUNI0
-
 /** \defgroup irq_state     State
     \brief                  Methods for querying active IRQ information.
 
@@ -295,15 +305,63 @@ typedef enum irq_exception {
     @{
 */
 
+/** Returns current interrupt depth.
+
+    Checks how deeply neested the caller is within interrupt handlers.
+
+    \note
+    See \ref irqs for more information on nested interrupts.
+
+    \retval 0                   There is no interrupt active.
+    \retval >0                  Caller is N interrupts deep.
+    
+    \sa irq_inside_int(), irq_active_int()
+*/
+size_t irq_int_depth(void);
 
 /** Returns whether inside of an interrupt context.
 
-    \retval non-zero        If interrupt handling is in progress.
-                            ((code&0xf)<<16) | (evt&0xffff)
-    \retval 0               If normal processing is in progress.
+    \retval true               If interrupt handling is in progress.
+    \retval false              If normal processing is in progress.
 
+    \sa irq_int_depth(), irq_active_int()
 */
-int irq_inside_int(void);
+bool irq_inside_int(void);
+
+/** Returns the active IRQ source N levels deep.
+
+    \note
+    See \ref irqs for more information on nested interrupts.
+
+    \param  level           0-based index for depth of the active IRQ
+                            (0 is the current IRQ, depth-1 is first IRQ).
+
+    \retval >0              Exception code for Nth IRQ context.
+    \retval 0               No IRQ context is active.
+
+    \sa irq_inside_int(), irq_int_depth()
+*/
+irq_t irq_active_int(size_t level);
+
+/** Returns whether the current IRQ has been handled.
+
+    Used to determine whether the active interrupt has been accepted by a
+    handler callback or whether the next handler in the chain should be
+    called.
+
+    \note
+    See \ref irqs for more information on nested interrupts.
+
+    \param  level           0-based index for depth of the active IRQ
+                            (0 is the current IRQ, depth-1 is first IRQ).
+
+    \retval false           The active interrupt has not been handled OR
+                            there is no currently active interrupt.
+    \retval true            The active interrupt has been handled.
+
+    \sa irq_handle_int()                            
+*/
+bool irq_handled_int(size_t level);
 
 /** @} */
 
@@ -329,6 +387,7 @@ typedef uint32_t irq_mask_t;
     This is the entire status register word, not just the `IMASK` field.
 
     \retval                 Status register word
+
     \sa irq_disable()
 */
 irq_mask_t irq_get_sr(void);
@@ -397,6 +456,32 @@ void irq_restore(irq_mask_t v);
 */
 void irq_force_return(void);
 
+/** Accepts or declines to handle the active interrupt. 
+  
+    Used to signal back to top-level ISR dispatcher that the current IRQ has
+    or hasn't been handled by the current handler.
+
+    \note
+    Regular IRQ handlers installed via irq_set_handler() automatically accept
+    their interrupts, so this can be called with `false` to signal for them to
+    be ignored.
+
+    \note
+    The special IRQ handlers for \ref EXC_UNHANDLED_EXC and
+    \ref EXC_DOUBLE_FAULT are expected to ignore their exceptions by default,
+    so this can be called with `true` for the interrupt to be accepted.
+
+    \note
+    The global handler does not accept its interrupts by default, so this
+    can be called with `true` to signal for the interrupt to be accepted.
+
+    \param handled          `true` to accept and handle the interrupt.
+                            `false` to ignore and reject the interrupt.
+
+    \sa irq_handled_int()
+*/
+void irq_handle_int(bool handled);
+
 /** @} */
 
 /** \defgroup irq_handlers  Handlers
@@ -404,6 +489,44 @@ void irq_force_return(void);
 
     This API provides a series of methods for registering and retrieving
     different types of exception handlers.
+
+    KOS's low-level IRQ dispatcher provides an extremely flexible interrupt
+    handler chain with multiple ways to filter, accept, or reject a particular
+    exception event.
+
+    The interrupt handler chain provided by the dispatcher propagates
+    unhandled exceptions to handlers in the following order:
+
+        global handler -> specific handler -> unhandled exception handler
+
+    Each step in the chain is free to either accept and terminate the
+    exception, or ignore and reject it, causing the dispatcher to propagate
+    it on to the next handler in the chain. Finally, the kernel will panic
+    and abort if the exception made it through the chain without ever being
+    handled.
+
+    This exception propagation and handler dispatch mechanism provides for
+    the following features:
+        - <b>Conditional Exception Handling</b>: Any handler is free to
+          determine whether to accept or ignore the exception at runtime.
+        - <b>Exception Filtering</b>: Any handler is free to intercept an
+          exception and mark it as handled before it propagates onwards.
+        - <b>Exception Observing</b>: Any handler is free to simply "observe"
+          the exception to log an event or do passive processing by not
+          handling it and allowing it to propagate onwards.
+        - <b>Multiple Exception Handling</b>: Using either global or unhandled
+          exception handlers or by installing the same handler on multiple
+          specific handlers, a single handler is free to implement logic
+          for servicing multiple exceptions.
+
+    \note
+    The only exception to this rule is the \ref EXC_DOUBLE_FAULT software
+    exception which is the only handler that fires in the case of an exception
+    being raised while already in an interrupt handling an exception. If this
+    handler does not handle the exception, the kernel panics and aborts. This
+    is what is expected to happen by default, as KOS currently does not handle
+    IRQs-within-IRQs getting separate contexts, so it's almost impossible to
+    recover from such an event.
 
     @{
 */
@@ -430,6 +553,27 @@ typedef struct irq_cb {
     \brief                      API for managing individual IRQ handlers.
 
     This API is for managing handlers installed to handle individual IRQ codes.
+
+    With the exception of \ref EXC_DOUBLE_FAULT, which is always called first,
+    these individual exception handlers will be called \i after the global
+    handler runs, assuming it does not accept the IRQ event. Finally, assuming
+    an individual handler doesn't handle the event, the handler for
+    \ref EXC_UNHANDLED_EXC will be called as a last effort to handle the
+    exception.
+
+    \note
+    Any handler installed to handle any IRQ code type other than the
+    `SOFT` type (\ref EXC_DOUBLE_FAULT and \ref EXC_UNHANDLED_EXC codes) is
+    expected to have handled the given exception by default. If you wish to
+    reject the exception or tell the dispatcher that it should remain
+    unhandled, use irq_handle_int() with `FALSE`.
+
+    \note
+    The two `SOFT` type IRQs (\ref EXC_DOUBLE_FAULT and \ref EXC_UNHANDLED_EXC
+    codes) are expected not to handle their exceptions by default, causing the
+    system to panic and abort. If you wish to signal to the dispatcher that
+    your handler has gracefully recovered from these exceptions, use
+    irq_handle_int() with `TRUE` to signal that the exception was handled.
 
     @{
 */
@@ -472,15 +616,27 @@ irq_cb_t irq_get_handler(irq_t code);
 
     This function sets a global catch-all filter for all exception types.
 
-    \note                   The specific handler will still be called for the
-                            exception if one is set. If not, setting one of
-                            these will stop the unhandled exception error.
+    The global exception handler is called first for normal exception
+    scenarios, giving it a chance to handle the exception request before it
+    arrives at an individual-level handler. The exception to the rule is for
+    when an exception is raised while already in an exception handler, in which
+    case only the individual handler installed for \ref EXC_DOUBLE_FAULT will
+    be called.
+
+    \note
+    By default the global exception handler is expected to reject or ignore the
+    IRQ rather than handle it, causing it to continue propagating onwards to
+    the individual/single interrupt handlers. If you wish to accept and handle
+    the IRQ, terminating it, and preventing it from propagating onward, you
+    must explicitly call irq_handle_int() with `TRUE`.
+
 
     \param  hnd             A pointer to the procedure to handle the exception.
     \param  data            A pointer that will be passed along to the callback.
 
     \retval 0               On success (no error conditions defined).
 
+    \sa irq_get_global_filter(), irq_filter
 */
 int irq_set_global_handler(irq_handler handler, void *data);
 
@@ -488,6 +644,8 @@ int irq_set_global_handler(irq_handler handler, void *data);
 
     \return                 The global exception handler and userdata set with
                             irq_set_global_handler(), or NULL if none is set.
+
+    \sa irq_set_global_filter(), irq_filter
 */
 irq_cb_t irq_get_global_handler(void);
 /** @} */
@@ -520,6 +678,7 @@ static inline void __irq_scoped_cleanup(int *state) {
     int __scoped_irq_##l __attribute__((cleanup(__irq_scoped_cleanup))) = irq_disable()
 
 #define __irq_disable_scoped(l) ___irq_disable_scoped(l)
+
 /** \endcond */
 
 /** \brief  Minimum/maximum values for IRQ priorities
