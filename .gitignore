@@ -17,6 +17,7 @@ kernel/stubs/*.c
 kernel/exports/kernel_exports.c
 kernel/arch/dreamcast/kernel/arch_exports.c
 kernel/arch/dreamcast/kernel/banner.h
+kernel/arch/dreamcast/sound/snd_stream_drv.c
 kernel/arch/dreamcast/sound/arm/stream.drv
 utils/bincnv/bincnv
 utils/genromfs/genromfs
