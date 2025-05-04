@@ -167,6 +167,7 @@ __BEGIN_DECLS
 #define MAPLE_FUNC_ARGUN        0x20000000  /**< \brief AR gun? */
 #define MAPLE_FUNC_KEYBOARD     0x40000000  /**< \brief Keyboard */
 #define MAPLE_FUNC_LIGHTGUN     0x80000000  /**< \brief Lightgun */
+#define MAPLE_FUNC_ALL          0xffffffff  /**< \brief All */
 /** @} */
 
 /* \cond */
@@ -721,8 +722,12 @@ int maple_driver_foreach(maple_driver_t *drv, int (*callback)(maple_device_t *))
     Functions of this type can be set with maple_attach_callback() to respond
     automatically to the attachment of a maple device that supports specified
     functions.
+
+    \param dev          The handle of the newly attached device.
+    \param user_data    Arbitrary user-data pointer provided to
+                        maple_attach_callback().
 */
-typedef void (*maple_attach_callback_t)(maple_device_t *dev);
+typedef void (*maple_attach_callback_t)(maple_device_t *dev, void *user_data);
 
 /** \brief   Set an automatic maple attach callback.
     \ingroup maple
@@ -730,11 +735,21 @@ typedef void (*maple_attach_callback_t)(maple_device_t *dev);
     This function sets a callback function to be called when the specified
     maple device that supports functions has been attached.
 
+    \note
+    Your function will not be called for devices which have already been
+    detected on the maple bus. This is only for newly detected devices.
+
+    \warning
+    \p cb will be invoked from within an IRQ context! Do not perform any logic
+    which requires additional interrupt processing!
+
     \param  functions       The functions maple device must support. Set to
                             0 to support all maple devices.
     \param  cb              The callback to call when the maple is attached.
+    \param  user_data       Arbitrary pointer to be passed back to \p cb.
 */
-void maple_attach_callback(uint32 functions, maple_attach_callback_t cb);
+void maple_attach_callback(uint32 functions, maple_attach_callback_t cb,
+                           void *user_data);
 
 /** \brief   Maple detach callback type.
     \ingroup maple
@@ -742,8 +757,12 @@ void maple_attach_callback(uint32 functions, maple_attach_callback_t cb);
     Functions of this type can be set with maple_detach_callback() to respond
     automatically to the detachment of a maple device that supports specified
     functions.
+
+    \param dev          The handle of the newly detached device.
+    \param user_data    Arbitrary user-data pointer provided to
+                        maple_detach_callback().
 */
-typedef void (*maple_detach_callback_t)(maple_device_t *dev);
+typedef void (*maple_detach_callback_t)(maple_device_t *dev, void *user_data);
 
 /** \brief   Set an automatic maple detach callback.
     \ingroup maple
@@ -751,11 +770,17 @@ typedef void (*maple_detach_callback_t)(maple_device_t *dev);
     This function sets a callback function to be called when the specified
     maple device that supports functions has been detached.
 
+    \warning
+    \p cb will be invoked from within an IRQ context! Do not perform any logic
+    which requires additional interrupt processing!
+
     \param  functions       The functions maple device must support. Set to
                             0 to support all maple devices.
     \param  cb              The callback to call when the maple is detached.
+    \param  user_data       Arbitrary pointer to be passed back to \p cb.
 */
-void maple_detach_callback(uint32 functions, maple_detach_callback_t cb);
+void maple_detach_callback(uint32 functions, maple_detach_callback_t cb,
+                           void *user_data);
 
 /**************************************************************************/
 /* maple_irq.c */
