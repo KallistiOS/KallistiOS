@@ -428,6 +428,16 @@ static const kbd_keymap_internal_t keymaps[] = {
     }
 };
 
+char kbd_key_to_ascii(kbd_key_t key, kbd_region_t region, kbd_mods_t mods, kbd_leds_t leds) {
+
+    if(mods.ralt || (mods.lctrl && mods.lalt))
+        return keymaps[region - 1].alt[key];
+    else if((mods.raw & KBD_MOD_SHIFT) || leds.caps_lock)
+        return keymaps[region - 1].shifted[key];
+    else
+        return keymaps[region - 1].base[key];
+}
+
 /* The keyboard queue (global for now) */
 static volatile int kbd_queue_active = 1;
 static volatile int kbd_queue_tail = 0, kbd_queue_head = 0;
@@ -451,28 +461,6 @@ void kbd_set_queue(int active) {
     NOTE: We are only calling this within an IRQ context, so operations on
           kbd_state::queue_size are essentially atomic. */
 static int kbd_enqueue(kbd_state_private_t *state, kbd_key_t keycode) {
-    static const char keymap_noshift[] = {
-        /*0*/   0, 0, 0, 0, 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
-        'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-        'u', 'v', 'w', 'x', 'y', 'z',
-        /*1e*/  '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
-        /*28*/  13, 27, 8, 9, 32, '-', '=', '[', ']', '\\', 0, ';', '\'',
-        /*35*/  '`', ',', '.', '/', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        /*46*/  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        /*53*/  0, '/', '*', '-', '+', 13, '1', '2', '3', '4', '5', '6',
-        /*5f*/  '7', '8', '9', '0', '.', 0
-    };
-    static const char keymap_shift[] = {
-        /*0*/   0, 0, 0, 0, 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
-        'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-        'U', 'V', 'W', 'X', 'Y', 'Z',
-        /*1e*/  '!', '@', '#', '$', '%', '^', '&', '*', '(', ')',
-        /*28*/  13, 27, 8, 9, 32, '_', '+', '{', '}', '|', 0, ':', '"',
-        /*35*/  '~', '<', '>', '?', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        /*46*/  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        /*53*/  0, '/', '*', '-', '+', 13, '1', '2', '3', '4', '5', '6',
-        /*5f*/  '7', '8', '9', '0', '.', 0
-    };
     uint16_t ascii = 0;
 
     /* Don't bother with bad keycodes. */
@@ -492,13 +480,9 @@ static int kbd_enqueue(kbd_state_private_t *state, kbd_key_t keycode) {
     if(!kbd_queue_active)
         return 0;
 
-    /* Figure out its key queue value */
-    if(keycode < sizeof(keymap_noshift)) {
-        if(state->base.cond.modifiers.raw & KBD_MOD_SHIFT)
-            ascii = keymap_shift[keycode];
-        else
-            ascii = keymap_noshift[keycode];
-    }
+    /* Figure out its key queue value. */
+    ascii = (uint16_t)kbd_key_to_ascii(keycode, KBD_REGION_US,
+                             state->base.cond.modifiers, state->base.cond.leds);
 
     if(ascii == 0)
         ascii = ((uint16_t)keycode) << 8;
@@ -539,16 +523,6 @@ kbd_state_t *kbd_get_state(maple_device_t *device) {
         return NULL;
 
     return (kbd_state_t *)device->status;
-}
-
-char kbd_key_to_ascii(kbd_key_t key, kbd_region_t region, kbd_mods_t mods, kbd_leds_t leds) {
-
-    if(mods.ralt || (mods.lctrl && mods.lalt))
-        return keymaps[region - 1].alt[key];
-    else if((mods.raw & KBD_MOD_SHIFT) || leds.caps_lock)
-        return keymaps[region - 1].shifted[key];
-    else
-        return keymaps[region - 1].base[key];
 }
 
 /* Take a key off of a specific key queue. */
