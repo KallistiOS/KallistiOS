@@ -23,9 +23,14 @@ static spinlock_t mutex = SPINLOCK_INITIALIZER;
    DBG_KDEBUG to see everything. DBG_INFO is generally a decent level. */
 int dbglog_level = DBG_KDEBUG;
 
-/* Set debug level */
+/* Set debug level if DBG_DYNLOG is enabled */
 void dbglog_set_level(int level) {
+#ifdef DBG_DYNLOG
     dbglog_level = level;
+#else
+    dbgio_write_str("dbglog: Define DBG_DYNLOG to change log level.\n \
+                     \t\t See kos/opts.h for more information.\n");
+#endif
 }
 
 /* Kernel debug logging facility */

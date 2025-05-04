@@ -94,25 +94,62 @@ __BEGIN_DECLS
    malloc, as well as everything in level 2. */
 /* #define KOS_DEBUG 3 */
 
+#ifdef NDEBUG
+#define KOS_DEBUG 0
+#define DBG_LOGLEVEL = DBG_DEAD
+#endif
+
 #ifndef KOS_DEBUG 
 #define KOS_DEBUG 0
+#ifndef DBG_LOGLEVEL
+    #define DBG_LOGLEVEL = DBG_WARNING
+#endif
 #endif
 
 #if KOS_DEBUG >= 1
 #define MALLOC_DEBUG 1
 #define KM_DBG 1
+#ifndef DBG_LOGLEVEL
+    #define DBG_LOGLEVEL = DBG_DEBUG
+#endif
 #endif
 
 #if KOS_DEBUG >= 2
 #define KM_DBG_VERBOSE 1
 #define PVR_MALLOC_DEBUG 1
 #define PVR_KM_DBG 1
+#ifndef DBG_LOGLEVEL
+    #define DBG_LOGLEVEL = DBG_DEBUG
+#endif
 #endif
 
 #if KOS_DEBUG >= 3
 #define PVR_KM_DBG_VERBOSE 1
 #define VMUFS_DEBUG 1
+#ifndef DBG_LOGLEVEL
+    #define DBG_LOGLEVEL = DBG_KDEBUG
 #endif
+#define DBG_DYNLOG 1
+#endif
+
+/** \defgroup   dbglog_levels   Log Levels
+    \brief                      dbglog severity levels
+    \ingroup                    logging
+
+    This is the list of levels that are allowed to be passed into the dbglog()
+    function, representing different levels of importance.
+
+    @{
+*/
+#define DBG_DEAD        0       /**< \brief The system is dead */
+#define DBG_CRITICAL    1       /**< \brief A critical error message */
+#define DBG_ERROR       2       /**< \brief A normal error message */
+#define DBG_WARNING     3       /**< \brief Potential problem */
+#define DBG_NOTICE      4       /**< \brief Normal but significant */
+#define DBG_INFO        5       /**< \brief Informational messages */
+#define DBG_DEBUG       6       /**< \brief User debug messages */
+#define DBG_KDEBUG      7       /**< \brief Kernel debug messages */
+/** @} */
 
 /** \brief  The maximum number of cd files that can be open at a time. */
 #ifndef FS_CD_MAX_FILES
