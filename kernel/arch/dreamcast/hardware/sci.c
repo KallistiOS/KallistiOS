@@ -5,21 +5,26 @@
 */
 
 #include <dc/sci.h>
+#include <arch/cache.h>
+#include <arch/dmac.h>
 #include <arch/timer.h>
 #include <arch/types.h>
 #include <kos/dbglog.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #define SCIREG08(x) *((volatile uint8_t *)(x))
 #define SCIREG16(x) *((volatile uint16_t *)(x))
 
 /* SCI Registers */
+#define SCTDR1_ADDR 0xFFE0000C        /* Physical address of transmit register */
+#define SCRDR1_ADDR 0xFFE00014        /* Physical address of receive register */
 #define SCSMR1  SCIREG08(0xFFE00000)  /* Serial mode register */
 #define SCBRR1  SCIREG08(0xFFE00004)  /* Bit rate register */
 #define SCSCR1  SCIREG08(0xFFE00008)  /* Serial control register */
-#define SCTDR1  SCIREG08(0xFFE0000C)  /* Transmit data register */
+#define SCTDR1  SCIREG08(SCTDR1_ADDR) /* Transmit data register */
 #define SCSSR1  SCIREG08(0xFFE00010)  /* Serial status register */
-#define SCRDR1  SCIREG08(0xFFE00014)  /* Receive data register */
+#define SCRDR1  SCIREG08(SCRDR1_ADDR) /* Receive data register */
 #define SCSPTR1 SCIREG08(0xFFE00018)  /* Serial port register */
 
 /* SCIF Registers */
@@ -46,8 +51,11 @@
 #define TEND    0x04  /* Transmit end */
 
 /* Serial control register bits */
+#define TIE     0x80  /* Transmit interrupt enable */
+#define RIE     0x40  /* Receive interrupt enable */
 #define TE      0x20  /* Transmit enable */
 #define RE      0x10  /* Receive enable */
+#define TEIE    0x04  /* Transmit-End interrupt Enable */
 
 /* Serial port register bits */
 #define SPB2DT  0x01  /* Serial port break data */
@@ -91,7 +99,46 @@ static sci_mode_t sci_mode = SCI_MODE_NONE;
 static sci_spi_cs_mode_t cs_mode = SCI_SPI_CS_NONE;
 static uint8_t transfer_mode = 0;
 
+static uint8_t *spi_dma_buffer = NULL;
+static size_t spi_buffer_size = 0;
+
+/* 
+ * For DMA transmission, we use BURST mode since it's a one-sided transfer where
+ * DMA can monopolize the bus without releasing it until the entire transfer
+ * is complete. This provides maximum throughput for transmit operations.
+ */
+static dma_config_t sci_dma_tx_config = {
+    .channel = DMA_CHANNEL_1,
+    .request = DMA_REQUEST_SCI_TRANSMIT,
+    .unit_size = DMA_UNITSIZE_8BIT,
+    .src_mode = DMA_ADDRMODE_INCREMENT,
+    .dst_mode = DMA_ADDRMODE_FIXED,
+    .transmit_mode = DMA_TRANSMITMODE_BURST,
+    .callback = NULL
+};
+
+/* 
+ * For DMA reception, we use CYCLE_STEAL mode to use the hybrid approach in SPI.
+ * While DMA handles data reception, the CPU simultaneously transmits dummy bytes
+ * to generate clock signals. This mode ensures the bus is shared properly
+ * between DMA and CPU operations.
+ */
+static dma_config_t sci_dma_rx_config = {
+    .channel = DMA_CHANNEL_1,
+    .request = DMA_REQUEST_SCI_RECEIVE,
+    .unit_size = DMA_UNITSIZE_8BIT,
+    .src_mode = DMA_ADDRMODE_FIXED,
+    .dst_mode = DMA_ADDRMODE_INCREMENT,
+    .transmit_mode = DMA_TRANSMITMODE_CYCLE_STEAL,
+    .callback = NULL
+};
+
+/* Bit reversal function for SPI data (MSB-LSB) */
 uint8_t reverse_bits(uint8_t b);
+
+static void sci_dma_dummy_callback(void *data) {
+    (void)data;
+}
 
 static inline void clear_sci_errors() {
     SCSSR1 &= ~(ORER | FER | PER);
@@ -119,13 +166,6 @@ static inline sci_result_t check_sci_errors() {
     return SCI_OK;
 }
 
-static inline void spi_delay(int count) {
-    int i;
-    for(i = 0; i < count; i++) {
-        __asm__("nop");
-    }
-}
-
 static inline void sci_set_transfer_mode(uint8_t mode) {
     uint8_t reg;
 
@@ -140,7 +180,7 @@ static inline void sci_set_transfer_mode(uint8_t mode) {
         if(transfer_mode) {
             reg &= ~(TE | RE);
             SCSCR1 = reg;
-            spi_delay(50);
+            timer_spin_delay_ns(1500);
         }
         reg |= mode;
         SCSCR1 = reg;
@@ -254,7 +294,7 @@ sci_result_t sci_init(uint32_t baud_rate, sci_mode_t mode, sci_clock_t clock_src
     if(STBCR & STBCR_SCI_STP) {
         STBCR &= ~STBCR_SCI_STP;
         /* Delay to allow the module to power up */
-        spi_delay(10000);
+        thd_sleep(1);
     }
 
     /* Disable transmit and receive */
@@ -280,13 +320,15 @@ sci_result_t sci_init(uint32_t baud_rate, sci_mode_t mode, sci_clock_t clock_src
         sci_configure_uart(SCI_UART_8N1, &scsmr1);
     }
     else if(mode == SCI_MODE_SPI) {
+        /* Use 512 bytes DMA buffer for SPI operations by default,
+            because it's sector size of SD cards. */
 #ifdef __DREAMCAST__
         /* On Dreamcast, we use GPIO for CS (anyway need soldering all pins),
            because RTS can be used for VS-link cable */
-        sci_configure_spi(SCI_SPI_CS_GPIO);
+        sci_configure_spi(SCI_SPI_CS_GPIO, 512);
 #else
         /* On Naomi, we use SCIF RTS for CS, because no GPIO pins on CN1 connector */
-        sci_configure_spi(SCI_SPI_CS_RTS);
+        sci_configure_spi(SCI_SPI_CS_RTS, 512);
 #endif
         /* Set CA bit for 8-bit synchronous mode */
         scsmr1 |= 0x80;
@@ -300,7 +342,7 @@ sci_result_t sci_init(uint32_t baud_rate, sci_mode_t mode, sci_clock_t clock_src
     SCBRR1 = scbrr1;
 
     /* Allow time for the changes to take effect */
-    spi_delay(10000);
+    thd_sleep(1);
 
     if(mode == SCI_MODE_UART) {
         /* Enable transmit and receive */
@@ -356,7 +398,7 @@ void sci_configure_uart(sci_uart_config_t config, uint8_t *scsmr1) {
 
     if(scsmr1 == NULL) {
         SCSMR1 = smr;
-        spi_delay(10000);
+        thd_sleep(1);
         SCSCR1 |= transfer_mode;
     }
     else {
@@ -374,7 +416,7 @@ static void sci_shutdown_spi_cs() {
     else if(cs_mode == SCI_SPI_CS_RTS) {
         fcr = SCFCR2;
         fcr &= ~SCFCR_MCE;
-        SCFCR2 &= ~SCFCR_MCE;
+        SCFCR2 = fcr;
 
         sptr = SCSPTR2;
         sptr &= ~(RTSIO | RTSDT);
@@ -383,11 +425,28 @@ static void sci_shutdown_spi_cs() {
     cs_mode = SCI_SPI_CS_NONE;
 }
 
-void sci_configure_spi(sci_spi_cs_mode_t cs) {
+void sci_configure_spi(sci_spi_cs_mode_t cs, size_t buffer_size) {
     uint16_t sptr;
     uint16_t fcr;
 
     sci_shutdown_spi_cs();
+
+    /* Allocate a single aligned buffer for both TX and RX DMA operations */
+    if (buffer_size > 0) {
+        if (spi_dma_buffer != NULL && spi_buffer_size != buffer_size) {
+            free(spi_dma_buffer);
+            spi_dma_buffer = NULL;
+        }
+        
+        if (spi_dma_buffer == NULL) {
+            spi_dma_buffer = aligned_alloc(32, buffer_size);
+            if (spi_dma_buffer == NULL) {
+                dbglog(DBG_ERROR, "SCI: Failed to allocate DMA buffer\n");
+                return;
+            }
+            spi_buffer_size = buffer_size;
+        }
+    }
 
     if(cs == SCI_SPI_CS_GPIO) {
         /* Configure PA7 as output */
@@ -425,6 +484,13 @@ void sci_shutdown() {
     STBCR |= STBCR_SCI_STP;
 
     sci_shutdown_spi_cs();
+
+    /* Free the DMA buffer if allocated */
+    if (spi_dma_buffer != NULL) {
+        free(spi_dma_buffer);
+        spi_dma_buffer = NULL;
+        spi_buffer_size = 0;
+    }
 
     initialized = false;
     sci_mode = SCI_MODE_NONE;
@@ -563,6 +629,68 @@ sci_result_t sci_read_data(uint8_t *data, size_t len) {
     }
 
     return SCI_OK;
+}
+
+sci_result_t sci_dma_write_data(const uint8_t *data, size_t len, dma_callback_t callback, void *cb_data) {
+    if(!initialized) {
+        return SCI_ERR_NOT_INITIALIZED;
+    }
+
+    if(data == NULL || len == 0) {
+        return SCI_ERR_PARAM;
+    }
+
+    /* Configure DMA */
+    dma_config_t config = sci_dma_tx_config;
+    config.callback = callback ? callback : sci_dma_dummy_callback;
+
+    /* Prepare DMA source and destination */
+    dma_addr_t src = dma_map_src(data, len);
+    dma_addr_t dst = hw_to_dma_addr(SCTDR1_ADDR);
+
+    /* Start the DMA transfer */
+    if(dma_transfer(&config, dst, src, len, cb_data) != 0) {
+        dbglog(DBG_ERROR, "SCI: Failed to start DMA transfer\n");
+        return SCI_ERR_DMA;
+    }
+
+    /* If no callback was provided, wait for completion */
+    if (callback == NULL) {
+        return sci_dma_wait_complete();
+    }
+
+    return check_sci_errors();
+}
+
+sci_result_t sci_dma_read_data(uint8_t *data, size_t len, dma_callback_t callback, void *cb_data) {
+    if(!initialized) {
+        return SCI_ERR_NOT_INITIALIZED;
+    }
+
+    if(data == NULL || len == 0) {
+        return SCI_ERR_PARAM;
+    }
+
+    /* Configure DMA */
+    dma_config_t config = sci_dma_rx_config;
+    config.callback = callback ? callback : sci_dma_dummy_callback;
+
+    /* Prepare DMA source and destination */
+    dma_addr_t src = hw_to_dma_addr(SCRDR1_ADDR);
+    dma_addr_t dst = dma_map_dst(data, len);
+
+    /* Start the DMA transfer */
+    if(dma_transfer(&config, dst, src, len, cb_data) != 0) {
+        dbglog(DBG_ERROR, "SCI: Failed to start DMA transfer\n");
+        return SCI_ERR_DMA;
+    }
+
+    /* If no callback was provided, wait for completion */
+    if (callback == NULL) {
+        return sci_dma_wait_complete();
+    }
+
+    return check_sci_errors();
 }
 
 void sci_spi_set_cs(bool enabled) {
@@ -897,4 +1025,141 @@ sci_result_t sci_spi_read_data(uint8_t *rx_data, size_t len) {
     }
 
     return SCI_OK;
+}
+
+sci_result_t sci_spi_dma_write_data(const uint8_t *data, size_t len, dma_callback_t callback, void *cb_data) {
+    size_t i;
+    sci_result_t result;
+    uint32_t timeout_cnt = 0;
+
+    if(!initialized || sci_mode != SCI_MODE_SPI) {
+        return SCI_ERR_NOT_INITIALIZED;
+    }
+
+    if(data == NULL || len == 0 || spi_dma_buffer == NULL || len > spi_buffer_size) {
+        return SCI_ERR_PARAM;
+    }
+
+    /* Reverse each byte */
+    for (i = 0; i < len; i++) {
+        spi_dma_buffer[i] = reverse_bits(data[i]);
+    }
+
+    /* Configure DMA */
+    dma_config_t config = sci_dma_tx_config;
+    config.callback = callback ? callback : sci_dma_dummy_callback;
+
+    /* Prepare DMA */
+    dma_addr_t src = dma_map_src(spi_dma_buffer, len);
+    dma_addr_t dst = hw_to_dma_addr(SCTDR1_ADDR);
+
+    /* Enable transmission */
+    sci_set_transfer_mode(TE);
+
+    /* Start DMA */
+    if(dma_transfer(&config, dst, src, len, cb_data) != 0) {
+        dbglog(DBG_ERROR, "SCI: Failed to start SPI DMA write\n");
+        return SCI_ERR_DMA;
+    }
+
+    /* If no callback was provided, wait for completion */
+    if (callback == NULL) {
+
+        result = sci_dma_wait_complete();
+        if (result != SCI_OK) {
+            return result;
+        }
+
+        while (!(SCSSR1 & TEND)) {
+            if(++timeout_cnt > SCI_MAX_WAIT_CYCLES) {
+                sci_set_transfer_mode(0);
+                dbglog(DBG_ERROR, "SCI: Timeout waiting for TEND in SPI read data\n");
+                return SCI_ERR_TIMEOUT;
+            }
+        }
+
+        return result;
+    }
+
+    return check_sci_errors();
+}
+
+sci_result_t sci_spi_dma_read_data(uint8_t *data, size_t len, dma_callback_t callback, void *cb_data) {
+    size_t i;
+    sci_result_t result;
+    uint32_t timeout_cnt;
+    uint8_t *buffer = spi_dma_buffer;
+
+    if(!initialized || sci_mode != SCI_MODE_SPI) {
+        return SCI_ERR_NOT_INITIALIZED;
+    }
+
+    if(data == NULL || len == 0 || spi_dma_buffer == NULL || len > spi_buffer_size) {
+        return SCI_ERR_PARAM;
+    }
+
+    /* Prepare DMA */
+    dma_addr_t src = hw_to_dma_addr(SCRDR1_ADDR);
+    dma_addr_t dst = dma_map_dst(spi_dma_buffer, len);
+
+    /* Enable full-duplex mode */
+    sci_set_transfer_mode(RE | TE);
+
+    /* Start DMA for receiving data */
+    if(dma_transfer(&sci_dma_rx_config, dst, src, len, NULL) != 0) {
+        dbglog(DBG_ERROR, "SCI: Failed to start SPI DMA read\n");
+        return SCI_ERR_DMA;
+    }
+
+    /* Clock in the received bytes by transmitting the dummy bytes */
+    for (i = 0; i < len; i++) {
+        /* Wait for transmit register to be empty */
+        timeout_cnt = 0;
+        while (!(SCSSR1 & TDRE)) {
+            if(++timeout_cnt > SCI_MAX_WAIT_CYCLES) {
+                sci_set_transfer_mode(0);
+                dbglog(DBG_ERROR, "SCI: Timeout waiting for TDRE in SPI read data\n");
+                return SCI_ERR_TIMEOUT;
+            }
+        }
+        /* Send dummy byte to clock in the received byte */
+        SCTDR1 = 0xFF;
+        SCSSR1 &= ~TDRE;
+
+        /* Perform bit reversal while waiting for TDRE flag */
+        if(i > 32) {
+            *data++ = reverse_bits(*buffer++);
+        }
+    }
+
+    timeout_cnt = 0;
+    while (!(SCSSR1 & TEND)) {
+        if(++timeout_cnt > SCI_MAX_WAIT_CYCLES) {
+            sci_set_transfer_mode(0);
+            dbglog(DBG_ERROR, "SCI: Timeout waiting for TEND in SPI read data\n");
+            return SCI_ERR_TIMEOUT;
+        }
+    }
+
+    result = sci_dma_wait_complete();
+
+    if (result != SCI_OK) {
+        return result;
+    }
+
+    /* Perform bit reversal after DMA completes for the last 33 bytes */
+    for (i = 0; i < 33; i++) {
+        *data++ = reverse_bits(*buffer++);
+    }
+
+    if(callback) {
+        callback(cb_data);
+    }
+
+    return result;
+}
+
+sci_result_t sci_dma_wait_complete(void) {
+    dma_wait_complete(DMA_CHANNEL_1);
+    return check_sci_errors();
 }

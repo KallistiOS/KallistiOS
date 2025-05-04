@@ -22,6 +22,7 @@
 __BEGIN_DECLS
 
 #include <arch/types.h>
+#include <arch/dmac.h>
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -120,6 +121,7 @@ typedef enum {
     SCI_ERR_OVERRUN = -4,           /**< Overrun error */
     SCI_ERR_FRAMING = -5,           /**< Framing error */
     SCI_ERR_PARITY = -6,            /**< Parity error */
+    SCI_ERR_DMA = -7                /**< DMA error */
 } sci_result_t;
 
 /** \brief  Initialize the SCI port with specified parameters.
@@ -138,8 +140,10 @@ void sci_configure_uart(sci_uart_config_t config, uint8_t *scsmr1);
 
 /** \brief  Configure SPI parameters.
     \param  cs              Chip select mode for SPI.
+    \param  buffer_size     Size of DMA buffer to allocate,
+                            0 for no DMA support, default is 512 bytes.
 */
-void sci_configure_spi(sci_spi_cs_mode_t cs);
+void sci_configure_spi(sci_spi_cs_mode_t cs, size_t buffer_size);
 
 /** \brief  Shutdown the SCI port.
 */
@@ -170,6 +174,33 @@ sci_result_t sci_write_data(uint8_t *data, size_t len);
     \return                 SCI_OK on success, error code otherwise.
 */
 sci_result_t sci_read_data(uint8_t *data, size_t len);
+
+/** \brief  Transfer data using DMA from the UART.
+    \param  data            Buffer containing data to write.
+    \param  len             Number of bytes to write.
+    \param  callback        Optional callback function for completion notification.
+    \param  cb_data         Data to pass to callback function.
+    \return                 SCI_OK on success, error code otherwise.
+
+    \note If callback is NULL, the function will wait for the DMA transfer to complete.
+*/
+sci_result_t sci_dma_write_data(const uint8_t *data, size_t len, dma_callback_t callback, void *cb_data);
+
+/** \brief  Receive data using DMA from the UART.
+    \param  data            Buffer to store received data.
+    \param  len             Number of bytes to read.
+    \param  callback        Optional callback function for completion notification.
+    \param  cb_data         Data to pass to callback function.
+    \return                 SCI_OK on success, error code otherwise.
+
+    \note If callback is NULL, the function will wait for the DMA transfer to complete.
+*/
+sci_result_t sci_dma_read_data(uint8_t *data, size_t len, dma_callback_t callback, void *cb_data);
+
+/** \brief  Wait for DMA transfer to complete in both UART and SPI modes.
+    \return                 SCI_OK on success, error code otherwise.
+*/
+sci_result_t sci_dma_wait_complete(void);
 
 /** \brief  Set or clear the SPI chip select line.
     \param  enabled         true to assert CS (active low), false to deassert.
@@ -216,6 +247,28 @@ sci_result_t sci_spi_write_data(const uint8_t *tx_data, size_t len);
     \return                 SCI_OK on success, error code otherwise.
 */
 sci_result_t sci_spi_read_data(uint8_t *rx_data, size_t len);
+
+/** \brief  Write multiple bytes to the SPI device using DMA.
+    \param  tx_data         Buffer containing data to write.
+    \param  len             Number of bytes to transfer.
+    \param  callback        Optional callback function for completion notification.
+    \param  cb_data         Data to pass to callback function.
+    \return                 SCI_OK on success, error code otherwise.
+
+    \note If callback is NULL, the function will wait for the DMA transfer to complete.
+*/
+sci_result_t sci_spi_dma_write_data(const uint8_t *tx_data, size_t len, dma_callback_t callback, void *cb_data);
+
+/** \brief  Read multiple bytes from the SPI device using DMA.
+    \param  rx_data         Buffer to store received data.
+    \param  len             Number of bytes to transfer.
+    \param  callback        Optional callback function for completion notification.
+    \param  cb_data         Data to pass to callback function.
+    \return                 SCI_OK on success, error code otherwise.
+
+    \note If callback is NULL, the function will wait for the DMA transfer to complete.
+*/
+sci_result_t sci_spi_dma_read_data(uint8_t *rx_data, size_t len, dma_callback_t callback, void *cb_data);
 
 /** @} */
 

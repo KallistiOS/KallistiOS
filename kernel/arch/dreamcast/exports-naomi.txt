@@ -64,6 +64,9 @@ sci_read_byte
 sci_write_byte
 sci_write_data
 sci_read_data
+sci_dma_write_data
+sci_dma_read_data
+sci_dma_wait_complete
 sci_spi_set_cs
 sci_spi_rw_byte
 sci_spi_rw_data
@@ -71,6 +74,8 @@ sci_spi_write_byte
 sci_spi_read_byte
 sci_spi_write_data
 sci_spi_read_data
+sci_spi_dma_write_data
+sci_spi_dma_read_data
 
 # Timers
 timer_prime
