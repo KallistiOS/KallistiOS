@@ -10,6 +10,7 @@
 #include <arch/timer.h>
 #include <arch/types.h>
 #include <kos/dbglog.h>
+#include <kos/regfield.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -40,39 +41,54 @@
 #define SCLSR2  SCIREG16(0xFFE80024)  /* Serial line status register */
 
 /* SCFCR (FIFO Control) Register Bits */
-#define SCFCR_MCE    0x08             /* Modem Control Enable */
+#define SCFCR_MCE    BIT(3)  /* Modem Control Enable */
 
 /* Status register bits */
-#define TDRE    0x80  /* Transmit data register empty */
-#define RDRF    0x40  /* Receive data register full */
-#define ORER    0x20  /* Overrun error */
-#define FER     0x10  /* Framing error */
-#define PER     0x08  /* Parity error */
-#define TEND    0x04  /* Transmit end */
+#define TDRE    BIT(7)  /* Transmit data register empty */
+#define RDRF    BIT(6)  /* Receive data register full */
+#define ORER    BIT(5)  /* Overrun error */
+#define FER     BIT(4)  /* Framing error */
+#define PER     BIT(3)  /* Parity error */
+#define TEND    BIT(2)  /* Transmit end */
 
 /* Serial control register bits */
-#define TIE     0x80  /* Transmit interrupt enable */
-#define RIE     0x40  /* Receive interrupt enable */
-#define TE      0x20  /* Transmit enable */
-#define RE      0x10  /* Receive enable */
-#define TEIE    0x04  /* Transmit-End interrupt Enable */
+#define TIE     BIT(7)  /* Transmit interrupt enable */
+#define RIE     BIT(6)  /* Receive interrupt enable */
+#define TE      BIT(5)  /* Transmit enable */
+#define RE      BIT(4)  /* Receive enable */
+#define TEIE    BIT(2)  /* Transmit-End interrupt Enable */
+#define CKE1    BIT(1)  /* Clock enable bit 1 for external clock selection */
+#define CKE0    BIT(0)  /* Clock enable bit 0 */
+
+/* Common clock settings */
+#define CKE_INT_CLK   0     /* Internal clock, SCK pin used as I/O port */
+#define CKE_EXT_CLK   CKE1  /* External clock, SCK pin as clock input */
 
 /* Serial port register bits */
-#define SPB2DT  0x01  /* Serial port break data */
-#define SPB2IO  0x02  /* Serial port break IO */
-#define SCKDT   0x04  /* Clock data */
-#define SCKIO   0x08  /* Clock IO */
-#define CTSDT   0x10  /* CTS data */
-#define CTSIO   0x20  /* CTS IO */
-#define RTSDT   0x40  /* RTS data */
-#define RTSIO   0x80  /* RTS IO */
+#define SPB2DT  BIT(0)  /* Serial port break data */
+#define SPB2IO  BIT(1)  /* Serial port break IO */
+#define SCKDT   BIT(2)  /* Clock data */
+#define SCKIO   BIT(3)  /* Clock IO */
+#define CTSDT   BIT(4)  /* CTS data */
+#define CTSIO   BIT(5)  /* CTS IO */
+#define RTSDT   BIT(6)  /* RTS data */
+#define RTSIO   BIT(7)  /* RTS IO */
+
+/* Serial mode register bits */
+#define SCSMR_CA      BIT(7)  /* Communication mode: 0=Async, 1=Sync (8-bit) */
+#define SCSMR_CHR     BIT(6)  /* Character length: 0=8bit, 1=7bit */
+#define SCSMR_PE      BIT(5)  /* Parity enable */
+#define SCSMR_PM      BIT(4)  /* Parity mode: 0=even, 1=odd */
+#define SCSMR_STOP    BIT(3)  /* Stop bit length: 0=1 stop bit, 1=2 stop bits */
+#define SCSMR_CKS1    BIT(1)  /* Clock select bit 1 */
+#define SCSMR_CKS0    BIT(0)  /* Clock select bit 0 */
 
 /* Clock settings */
 #define PERIPHERAL_CLOCK 50000000  /* 50 MHz peripheral clock */
 
 /* Standby control register */
 #define STBCR         *((volatile uint8_t *)(0xFFC00004))
-#define STBCR_SCI_STP 0x01  /* SCI module standby (1=stopped, 0=active) */
+#define STBCR_SCI_STP BIT(0)  /* SCI module standby (1=stopped, 0=active) */
 
 /* GPIO registers */
 #define PCTRA    *((volatile uint32_t *)(0xFF80002C))
@@ -84,11 +100,11 @@
 #define SCI_SPI_CS_PIN_POS    (SCI_SPI_CS_PIN_BIT * 2)
 
 /* Bit masks for PCTRA */
-#define SCI_SPI_CS_PIN_MASK   (0x03 << SCI_SPI_CS_PIN_POS)
-#define SCI_SPI_CS_PIN_CFG    (0x01 << SCI_SPI_CS_PIN_POS)  /* Configure as output */
+#define SCI_SPI_CS_PIN_MASK   GENMASK(SCI_SPI_CS_PIN_POS + 1, SCI_SPI_CS_PIN_POS)  /* 2 bits */
+#define SCI_SPI_CS_PIN_CFG    BIT(SCI_SPI_CS_PIN_POS)  /* Configure as output */
 
 /* Bit masks for PDTRA */
-#define SCI_SPI_CS_PDTRA_BIT  (1 << SCI_SPI_CS_PIN_BIT)
+#define SCI_SPI_CS_PDTRA_BIT  BIT(SCI_SPI_CS_PIN_BIT)
 
 /* Timeout */
 #define SCI_MAX_WAIT_CYCLES 500000
@@ -304,11 +320,11 @@ sci_result_t sci_init(uint32_t baud_rate, sci_mode_t mode, sci_clock_t clock_src
     /* Set CKE bits for clock */
     if(clock_src == SCI_CLK_EXT) {
         /* Set CKE bits for external clock */
-        scscr1 = 0x02;
+        scscr1 = CKE_EXT_CLK;
         SCSCR1 = scscr1;
     }
     else {
-        scscr1 = 0;
+        scscr1 = CKE_INT_CLK;
     }
 
     if(calculate_baud_rate(baud_rate, mode, &scsmr1, &scbrr1) < 0) {
@@ -331,7 +347,7 @@ sci_result_t sci_init(uint32_t baud_rate, sci_mode_t mode, sci_clock_t clock_src
         sci_configure_spi(SCI_SPI_CS_RTS, 512);
 #endif
         /* Set CA bit for 8-bit synchronous mode */
-        scsmr1 |= 0x80;
+        scsmr1 |= SCSMR_CA;
     }
     else {
         dbglog(DBG_ERROR, "SCI: Invalid mode\n");
