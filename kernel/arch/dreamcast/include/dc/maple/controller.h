@@ -184,6 +184,8 @@ typedef struct cont_state {
     int joyy;     /**< \brief Main joystick y-axis value. */
     int joy2x;    /**< \brief Secondary joystick x-axis value. */
     int joy2y;    /**< \brief Secondary joystick y-axis value. */
+
+    uint64_t last_press;    /**< \brief Timestamp of last button press in ms. */
 } cont_state_t;
 
 /** \brief   Controller automatic callback type.
@@ -239,7 +241,8 @@ int cont_btn_callback(uint8_t addr, uint32_t btns, cont_btn_callback_t cb);
 
     @{
 */
-#define CONT_CB_ANY BIT(16)      /**< \brief Match if any passed button pressed. */
+#define CONT_CB_ANY         BIT(16)      /**< \brief Match if any passed button pressed. */
+#define CONT_CB_TIMEOUT(x)  ((CONT_ALL & x) | BIT(17))  /**< \brief Match if no button pressed in x ms. */
 /** @} */
 
 /** \defgroup controller_query_caps Querying Capabilities
