@@ -27,6 +27,7 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
+#include <kos/regfield.h>
 #include <stdint.h>
 #include <kos/regfield.h>
 
