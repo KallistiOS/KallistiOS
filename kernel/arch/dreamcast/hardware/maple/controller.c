@@ -7,6 +7,7 @@
  */
 
 #include <arch/arch.h>
+#include <arch/timer.h>
 #include <dc/maple.h>
 #include <dc/maple/controller.h>
 #include <kos/mutex.h>
@@ -183,6 +184,10 @@ static void cont_reply(maple_state_t *st, maple_frame_t *frm) {
     cooked->joy2y = ((int)raw->joy2y) - 128;
     frm->dev->status_valid = 1;
 
+    /* If any button pressed, reset the last pressed timer */
+    if(cooked->buttons)
+       cooked->last_press = timer_ms_gettime64();
+
     /* If someone is in the middle of modifying the list, don't process callbacks */
     if(mutex_trylock(&btn_cbs_mtx))
         return;
@@ -192,7 +197,18 @@ static void cont_reply(maple_state_t *st, maple_frame_t *frm) {
         if(!c->addr ||
                 (c->addr &&
                  c->addr == maple_addr(frm->dev->port, frm->dev->unit))) {
-            if(((cooked->buttons & c->btns) == c->btns) ||
+            /* Check for timeout trigger */
+            if(((c->btns) & CONT_CB_TIMEOUT(0)) &&
+            ((timer_ms_gettime64() - cooked->last_press) >= ((c->btns) & CONT_CB_ANY))) {
+                /* Reset last_press timeout after trigger */
+                cooked->last_press = timer_ms_gettime64();
+
+                c->cur_btns = 0;
+                c->cur_addr = maple_addr(frm->dev->port, frm->dev->unit);
+                thd_worker_wakeup(c->worker);
+            }
+            /* Check for specific button combo OR press of a subset of buttons */
+            else if(((cooked->buttons & c->btns) == c->btns) ||
                ((cooked->buttons & c->btns) && ((c->btns) & CONT_CB_ANY)))
             {
                 c->cur_btns = cooked->buttons;
@@ -229,13 +245,21 @@ static void cont_periodic(maple_driver_t *drv) {
     maple_driver_foreach(drv, cont_poll);
 }
 
+static int cont_attach(maple_driver_t *drv, maple_device_t *dev) {
+    (void)drv;
+
+    cont_state_t *state = (cont_state_t *)(dev->status);
+    state->last_press = timer_ms_gettime64();
+    return 0;
+}
+
 /* Device Driver Struct */
 static maple_driver_t controller_drv = {
     .functions = MAPLE_FUNC_CONTROLLER,
     .name = "Controller Driver",
     .periodic = cont_periodic,
     .status_size = sizeof(cont_state_t),
-    .attach = NULL,
+    .attach = cont_attach,
     .detach = NULL
 };
 
