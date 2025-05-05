@@ -44,7 +44,7 @@ void netcfg_vmuify(const char *filename_in, const char *filename_out) {
     pkg.icon_cnt = 1;
     pkg.icon_anim_speed = 1;
     memcpy(&pkg.icon_pal[0], netcfg_icon, 32);
-    pkg.icon_data = netcfg_icon + 32;
+    pkg.icon_data = (uint8_t *)(netcfg_icon + 32);
     pkg.eyecatch_type = VMUPKG_EC_NONE;
     pkg.data_len = fs_total(fd);
     pkg.data = buf;

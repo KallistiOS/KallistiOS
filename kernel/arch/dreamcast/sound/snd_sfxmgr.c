@@ -771,7 +771,7 @@ int snd_sfx_play_ex(sfx_play_data_t *data) {
         }
     }
 
-    int size;
+    uint32_t size;
     snd_effect_t *t = (snd_effect_t *)data->idx;
     AICA_CMDSTR_CHANNEL(tmp, cmd, chan);
 
@@ -790,7 +790,7 @@ int snd_sfx_play_ex(sfx_play_data_t *data) {
     chan->loop = data->loop;
     chan->loopstart = data->loopstart;
     chan->loopend = data->loopend ? data->loopend : size;
-    chan->freq = data->freq > 0 ? data->freq : t->rate;
+    chan->freq = data->freq > 0 ? (uint32_t)data->freq : t->rate;
     chan->vol = data->vol;
 
     if(!t->stereo) {
