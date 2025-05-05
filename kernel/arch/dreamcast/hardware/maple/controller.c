@@ -192,7 +192,9 @@ static void cont_reply(maple_state_t *st, maple_frame_t *frm) {
         if(!c->addr ||
                 (c->addr &&
                  c->addr == maple_addr(frm->dev->port, frm->dev->unit))) {
-            if((cooked->buttons & c->btns) == c->btns) {
+            if(((cooked->buttons & c->btns) == c->btns) ||
+               ((cooked->buttons & c->btns) && ((c->btns) & CONT_CB_ANY)))
+            {
                 c->cur_btns = cooked->buttons;
                 c->cur_addr = maple_addr(frm->dev->port, frm->dev->unit);
                 thd_worker_wakeup(c->worker);
