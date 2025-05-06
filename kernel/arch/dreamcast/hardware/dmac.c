@@ -101,8 +101,11 @@ static void dma_irq_handler(irq_t code, irq_context_t *context, void *d) {
     /* ACK the IRQ by clearing CHCR */
     dmac_write(channel, DMA_REG_CHCR, 0);
 
-    genwait_wake_all((void *)&channels_cfg[channel]->callback);
-    channels_cfg[channel]->callback(d);
+    genwait_wake_all((void *)&channels_cfg[channel]);
+
+    if(channels_cfg[channel]->callback) {
+        channels_cfg[channel]->callback(d);
+    }
 }
 
 static bool dma_is_running(dma_channel_t channel) {
@@ -116,10 +119,7 @@ void dma_wait_complete(dma_channel_t channel) {
 
     while(dma_is_running(channel)) {
         if(!irq_inside_int()) {
-            if(channels_cfg[channel]->callback)
-                genwait_wait(channels_cfg[channel]->callback, "DMA complete wait", 0, NULL);
-            else
-                thd_pass();
+            genwait_wait(&channels_cfg[channel], "DMA complete wait", 0, NULL);
         }
     }
 }
