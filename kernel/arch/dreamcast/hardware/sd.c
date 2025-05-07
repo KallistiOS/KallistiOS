@@ -305,8 +305,6 @@ int sd_shutdown(void) {
 }
 
 static int read_data(size_t bytes, uint8 *buf) {
-    uint8 *ptr = buf;
-    size_t cnt = bytes;
     uint8 byte;
     uint16 crc;
     int i = 0;
@@ -321,12 +319,10 @@ static int read_data(size_t bytes, uint8 *buf) {
         return -1;
 
     /* Read in the data */
-    while(cnt--) {
-        *ptr++ = scif_spi_rw_byte(0xFF);
-    }
+    scif_spi_read_data(buf, bytes);
 
     /* Read in the trailing CRC */
-    crc = (scif_spi_rw_byte(0xFF) << 8) | scif_spi_rw_byte(0xFF);
+    crc = (scif_spi_read_byte() << 8) | scif_spi_read_byte();
 
     /* Return success if the CRC matches */
     return crc != net_crc16ccitt(buf, bytes, 0);
@@ -406,20 +402,20 @@ static int write_data(uint8 tag, size_t bytes, const uint8 *buf) {
     if(rv != 0xFF)
         return -1;
 
-    scif_spi_rw_byte(tag);
+    scif_spi_write_byte(tag);
 
     /* Send the data. */
     crc = net_crc16ccitt(buf, bytes, 0);
     while(bytes--) {
-        scif_spi_rw_byte(*ptr++);
+        scif_spi_write_byte(*ptr++);
     }
 
     /* Write out the block's crc */
-    scif_spi_rw_byte((uint8)(crc >> 8));
-    scif_spi_rw_byte((uint8)crc);
+    scif_spi_write_byte((uint8)(crc >> 8));
+    scif_spi_write_byte((uint8)crc);
 
     /* Make sure the card accepted the block */
-    rv = scif_spi_rw_byte(0xFF);
+    rv = scif_spi_read_byte();
     if((rv & 0x1F) != 0x05)
         return -1;
 
