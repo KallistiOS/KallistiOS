@@ -2,15 +2,19 @@
 
    dc/sd.h
    Copyright (C) 2012 Lawrence Sebald
+   Copyright (C) 2025 Ruslan Rostovtsev
 */
 
 /** \file    dc/sd.h
-    \brief   Block-level access to an SD card attached to the SCIF port.
+    \brief   Block-level access to an SD card attached to the SCI or SCIF port.
     \ingroup vfs_sd
 
-    This file contains the interface to working with the SD card reader that was
-    designed by jj1odm. The SD card reader itself connects to the SCIF port and
-    uses it basically as a simple SPI bus.
+    This file contains the interface to working with SD card readers.
+    The original SD card reader designed by jj1odm connects to the SCIF port,
+    while the SCI port implementation was developed by SWAT (Ruslan Rostovtsev). 
+    The SCIF implementation uses bit-banging technique to emulate SPI protocol,
+    while the SCI implementation utilizes the synchronous mode of this interface,
+    which is very similar to SPI.
 
     For reference, all I/O through this code should be done in the order of SD
     card blocks (which are 512 bytes a piece). Also, this should adequately
@@ -42,13 +46,26 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 #include <kos/blockdev.h>
+#include <stdbool.h>
 
 /** \defgroup vfs_sd    SD Card
-    \brief              VFS driver for accessing SD cards over the SCIF port
+    \brief              VFS driver for accessing SD cards over the SCIF or SCI port
     \ingroup            vfs
 
     @{
 */
+
+/** \brief  SD card interface type */
+typedef enum {
+    SD_IF_SCIF = 0,    /**< Use SCIF interface */
+    SD_IF_SCI = 1      /**< Use SCI interface */
+} sd_interface_t;
+
+/** \brief  SD card initialization parameters */
+typedef struct {
+    sd_interface_t interface;  /**< Interface to use (SCIF or SCI) */
+    bool check_crc;           /**< Enable CRC checking (true) or disable (false) */
+} sd_init_params_t;
 
 /** \brief  Calculate a SD/MMC-style CRC over a block of data.
 
@@ -64,13 +81,24 @@ __BEGIN_DECLS
 */
 uint8 sd_crc7(const uint8 *data, int size, uint8 crc);
 
+/** \brief  Initialize the SD card with extended parameters.
+
+    This function initializes the SD card with specified parameters. This includes
+    all steps of the basic initialization sequence for SPI mode, as documented in
+    the SD card spec and at http://elm-chan.org/docs/mmc/mmc_e.html.
+
+    \param  params          Pointer to initialization parameters.
+    \retval 0               On success.
+    \retval -1              On failure. This could indicate any number of
+                            problems, but probably means that no SD card was
+                            detected.
+*/
+int sd_init_ex(const sd_init_params_t *params);
+
 /** \brief  Initialize the SD card for use.
 
-    This function initializes the SD card for first use. This includes all steps
-    of the basic initialization sequence for SPI mode, as documented in the SD
-    card spec and at http://elm-chan.org/docs/mmc/mmc_e.html . This also will
-    call scif_sd_init() for you, so you don't have to worry about that ahead of
-    time.
+    This function initializes the SD card for first use using default parameters
+    (SCIF interface and CRC checking enabled).
 
     \retval 0               On success.
     \retval -1              On failure. This could indicate any number of

@@ -2,6 +2,7 @@
 
    sd.c
    Copyright (C) 2012, 2013 Lawrence Sebald
+   Copyright (C) 2025 Ruslan Rostovtsev
 */
 
 /* The code contained herein is basically directly implementing what is
@@ -9,10 +10,12 @@
 
 #include <arch/types.h>
 #include <dc/scif.h>
+#include <dc/sci.h>
 #include <dc/sd.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 /* For CRC16-CCITT */
 #include <kos/net.h>
@@ -26,9 +29,21 @@
 
 #define CMD(n) ((n) | 0x40)
 
-static int byte_mode = 0;
-static int is_mmc = 0;
-static int initted = 0;
+static bool byte_mode = false;
+static bool is_mmc = false;
+static bool initted = false;
+static bool check_crc = true;
+static sd_interface_t current_interface = SD_IF_SCIF;
+
+/* Unified function pointers for both interfaces */
+static uint8_t (*spi_rw_byte)(uint8_t data) = NULL;
+static void (*spi_set_cs)(bool enabled) = NULL;
+static int (*spi_init)(bool fast) = NULL;
+static void (*spi_shutdown)(void) = NULL;
+static void (*spi_read_data)(uint8_t *data, size_t len) = NULL;
+static void (*spi_write_data)(const uint8_t *data, size_t len) = NULL;
+static uint8_t (*spi_read_byte)(void) = NULL;
+static void (*spi_write_byte)(uint8_t data) = NULL;
 
 /* The type of the dev_data in the block device structure */
 typedef struct sd_devdata {
@@ -86,19 +101,77 @@ uint8 sd_crc7(const uint8 *data, int size, uint8 crc) {
     return crc & (0x7f << 1);
 }
 
-static int sd_send_cmd(uint8 cmd, uint32 arg, int slow) {
-    uint8 (*dfunc)(uint8 data) = &scif_spi_rw_byte;
+/* Unified wrappers for different interfaces */
+static uint8_t sci_rw_byte(uint8_t data) {
+    uint8_t rx;
+    sci_spi_rw_byte(data, &rx);
+    return rx;
+}
+
+static bool current_speed = false; /* false = slow, true = fast */
+
+static uint8_t scif_rw_byte_wrapper(uint8_t data) {
+    if(current_speed)
+        return scif_spi_rw_byte(data);
+    else
+        return scif_spi_slow_rw_byte(data);
+}
+
+static void scif_write_data_wrapper(const uint8_t *data, size_t len) {
+    while(len--) {
+        scif_spi_write_byte(*data++);
+    }
+}
+
+static uint8_t sci_read_byte_wrapper(void) {
+    uint8_t rx;
+    sci_spi_read_byte(&rx);
+    return rx;
+}
+
+static void sci_write_byte_wrapper(uint8_t data) {
+    sci_spi_write_byte(data);
+}
+
+static void sci_read_data_wrapper(uint8_t *data, size_t len) {
+    sci_spi_dma_read_data(data, len, NULL, NULL);
+}
+
+static void sci_write_data_wrapper(const uint8_t *data, size_t len) {
+    sci_spi_write_data(data, len);
+}
+
+static void scif_shutdown_wrapper(void) {
+    scif_spi_shutdown();
+}
+
+static void sci_shutdown_wrapper(void) {
+    sci_shutdown();
+}
+
+static int scif_init_wrapper(bool fast) {
+    current_speed = fast;
+    return scif_spi_init();
+}
+
+static void scif_set_cs_wrapper(bool enabled) {
+    scif_spi_set_cs(enabled ? 0 : 1);
+}
+
+static int sci_init_wrapper(bool fast) {
+    uint32_t baud = fast ? SCI_SPI_BAUD_MAX : SCI_SPI_BAUD_INIT;
+    return sci_init(baud, SCI_MODE_SPI, SCI_CLK_INT);
+}
+
+static int sd_send_cmd(uint8_t cmd, uint32 arg) {
     uint8 rv;
     int i = 0;
     uint8 pkt[6];
 
-    if(slow)
-        dfunc = &scif_spi_slow_rw_byte;
-
     /* Wait for the SD card to be ready to accept our command... */
-    dfunc(0xFF);
+    spi_rw_byte(0xFF);
     do {
-        rv = dfunc(0xFF);
+        rv = spi_rw_byte(0xFF);
         ++i;
     } while(rv != 0xFF && i < MAX_RETRIES);
 
@@ -115,21 +188,21 @@ static int sd_send_cmd(uint8 cmd, uint32 arg, int slow) {
     pkt[5] = sd_crc7(pkt, 5, 0) | 0x01;
 
     /* Write out the packet to the device */
-    dfunc(pkt[0]);
-    dfunc(pkt[1]);
-    dfunc(pkt[2]);
-    dfunc(pkt[3]);
-    dfunc(pkt[4]);
-    dfunc(pkt[5]);
+    spi_rw_byte(pkt[0]);
+    spi_rw_byte(pkt[1]);
+    spi_rw_byte(pkt[2]);
+    spi_rw_byte(pkt[3]);
+    spi_rw_byte(pkt[4]);
+    spi_rw_byte(pkt[5]);
 
     /* Ignore the first byte after sending a CMD12 */
     if(cmd == CMD(12))
-        dfunc(0xFF);
+        spi_rw_byte(0xFF);
 
     /* Wait for a response */
     i = 0;
     do {
-        rv = dfunc(0xFF);
+        rv = spi_rw_byte(0xFF);
         ++i;
     } while((rv & 0x80) && i < 20);
 
@@ -145,10 +218,10 @@ static int acmd41_loop(uint32 arg) {
     /* Try to send ACMD41 for a while. It could take up to 1 second to come
        back to us, but will likely take much less. */
     while(i++ < MAX_RETRIES) {
-        if(sd_send_cmd(CMD(55), 0, 1) > 1)
+        if(sd_send_cmd(CMD(55), 0) > 1)
             return -1;
 
-        if((rv = sd_send_cmd(CMD(41), arg, 1)) > 1)
+        if((rv = sd_send_cmd(CMD(41), arg)) > 1)
             return -1;
 
         if(rv == 0)
@@ -168,7 +241,7 @@ static int cmd1_loop(void) {
     /* Try to send CMD1 for a while. It could take up to 1 second to come
        back to us, but will likely take much less. */
     while(i++ < MAX_RETRIES) {
-        if((rv = sd_send_cmd(CMD(1), 0, 1)) > 1)
+        if((rv = sd_send_cmd(CMD(1), 0)) > 1)
             return -1;
 
         if(rv == 0)
@@ -183,15 +256,52 @@ static int cmd1_loop(void) {
 }
 
 int sd_init(void) {
+    sd_init_params_t params = {
+        .interface = SD_IF_SCIF,
+        .check_crc = true
+    };
+    return sd_init_ex(&params);
+}
+
+int sd_init_ex(const sd_init_params_t *params) {
     int i;
     uint8 buf[4];
 
     if(initted)
         return 0;
 
-    byte_mode = is_mmc = 0;
+    if(!params) {
+        errno = EINVAL;
+        return -1;
+    }
 
-    if(scif_spi_init())
+    byte_mode = is_mmc = false;
+    check_crc = params->check_crc;
+    current_interface = params->interface;
+
+    if(current_interface == SD_IF_SCIF) {
+        spi_rw_byte = &scif_rw_byte_wrapper;
+        spi_set_cs = &scif_set_cs_wrapper;
+        spi_init = &scif_init_wrapper;
+        spi_shutdown = &scif_shutdown_wrapper;
+        spi_read_data = &scif_spi_read_data;
+        spi_write_data = &scif_write_data_wrapper;
+        spi_read_byte = &scif_spi_read_byte;
+        spi_write_byte = &scif_spi_write_byte;
+    }
+    else {
+        spi_rw_byte = &sci_rw_byte;
+        spi_set_cs = &sci_spi_set_cs;
+        spi_init = &sci_init_wrapper;
+        spi_shutdown = &sci_shutdown_wrapper;
+        spi_read_data = &sci_read_data_wrapper;
+        spi_write_data = &sci_write_data_wrapper;
+        spi_read_byte = &sci_read_byte_wrapper;
+        spi_write_byte = &sci_write_byte_wrapper;
+    }
+
+    /* Initialize interface with low speed for reliability */
+    if(spi_init(false))
         return -1;
 
     /* Send 10 idle bytes so as to delay the required number of clock cycles
@@ -199,82 +309,87 @@ int sd_init(void) {
        and sending 10 idle bytes is 80 cycles). Once that is done, deassert the
        /CS line. */
     for(i = 0; i < 10; ++i) {
-        scif_spi_slow_rw_byte(0xFF);
+        spi_rw_byte(0xFF);
     }
 
-    scif_spi_set_cs(0);
+    spi_set_cs(true);
 
     /* Reset the card, putting it in its idle state. */
-    if(sd_send_cmd(CMD(0), 0, 1) != 1) {
-        scif_spi_set_cs(1);
+    if(sd_send_cmd(CMD(0), 0) != 1) {
+        spi_set_cs(false);
         return -1;
     }
 
     /* Detect if we're using a v2 SD card. */
-    if(sd_send_cmd(CMD(8), 0x000001AA, 1) == 1) {
-        buf[0] = scif_spi_slow_rw_byte(0xFF);
-        buf[1] = scif_spi_slow_rw_byte(0xFF);
-        buf[2] = scif_spi_slow_rw_byte(0xFF);
-        buf[3] = scif_spi_slow_rw_byte(0xFF);
+    if(sd_send_cmd(CMD(8), 0x000001AA) == 1) {
+        buf[0] = spi_rw_byte(0xFF);
+        buf[1] = spi_rw_byte(0xFF);
+        buf[2] = spi_rw_byte(0xFF);
+        buf[3] = spi_rw_byte(0xFF);
 
         if((buf[2] & 0x0F) != 0x01 || buf[3] != 0xAA) {
-            scif_spi_set_cs(1);
+            spi_set_cs(false);
             return -2;
         }
 
         /* ACMD41 until we're ready */
         if(acmd41_loop(0x40000000)) {
-            scif_spi_set_cs(1);
+            spi_set_cs(false);
             return -1;
         }
 
         /* Detect if we do byte addressing or block addressing with CMD58 */
-        if(sd_send_cmd(CMD(58), 0, 1)) {
-            scif_spi_set_cs(1);
+        if(sd_send_cmd(CMD(58), 0)) {
+            spi_set_cs(false);
             return -1;
         }
 
-        buf[0] = scif_spi_slow_rw_byte(0xFF);
-        buf[1] = scif_spi_slow_rw_byte(0xFF);
-        buf[2] = scif_spi_slow_rw_byte(0xFF);
-        buf[3] = scif_spi_slow_rw_byte(0xFF);
+        buf[0] = spi_rw_byte(0xFF);
+        buf[1] = spi_rw_byte(0xFF);
+        buf[2] = spi_rw_byte(0xFF);
+        buf[3] = spi_rw_byte(0xFF);
 
         if(!(buf[0] & 0x40))
-            byte_mode = 1;
+            byte_mode = true;
     }
     else {
         /* ACMD41 (SDv1) or CMD1 (MMC) until we're ready */
         if(acmd41_loop(0)) {
             /* Try with CMD1 instead then... */
             if(cmd1_loop()) {
-                scif_spi_set_cs(1);
+                spi_set_cs(false);
                 return -1;
             }
 
             /* If ACMD41 failed but CMD1 succeeded, we have a MMC card. */
-            is_mmc = 1;
+            is_mmc = true;
         }
 
         /* Set the block length to 512 with CMD16 */
-        if(sd_send_cmd(CMD(16), 512, 1)) {
-            scif_spi_set_cs(1);
+        if(sd_send_cmd(CMD(16), 512)) {
+            spi_set_cs(false);
             return -1;
         }
 
         /* v1 cards always use byte addressing. */
-        byte_mode = 1;
+        byte_mode = true;
     }
 
     /* Re-enable CRC checking. */
-    if(sd_send_cmd(CMD(59), 1, 1)) {
-        scif_spi_set_cs(1);
+    if(sd_send_cmd(CMD(59), 1)) {
+        spi_set_cs(false);
         return -1;
     }
 
     /* Make sure that the card releases the data line */
-    scif_spi_set_cs(1);
-    scif_spi_slow_rw_byte(0xFF);
-    initted = 1;
+    spi_set_cs(false);
+    spi_rw_byte(0xFF);
+
+    /* Switch to maximum speed after successful initialization */
+    if(spi_init(true))
+        return -1;
+
+    initted = true;
 
     return 0;
 }
@@ -288,18 +403,18 @@ int sd_shutdown(void) {
 
     /* Select, wait for ready, deselect, and make sure it releases the data
        line. */
-    scif_spi_set_cs(0);
+    spi_set_cs(true);
 
-    scif_spi_slow_rw_byte(0xFF);
+    spi_rw_byte(0xFF);
     do {
-        rv = scif_spi_slow_rw_byte(0xFF);
+        rv = spi_rw_byte(0xFF);
         ++i;
     } while(rv != 0xFF && i < MAX_RETRIES);
 
-    scif_spi_set_cs(1);
-    scif_spi_slow_rw_byte(0xFF);
-    scif_spi_shutdown();
-    initted = 0;
+    spi_set_cs(false);
+    spi_rw_byte(0xFF);
+    spi_shutdown();
+    initted = false;
 
     return 0;
 }
@@ -311,7 +426,7 @@ static int read_data(size_t bytes, uint8 *buf) {
 
     /* This should come back in 100ms at worst... */
     do {
-        byte = scif_spi_rw_byte(0xFF);
+        byte = spi_rw_byte(0xFF);
         ++i;
     } while(byte == 0xFF && i < READ_RETRIES);
 
@@ -319,13 +434,18 @@ static int read_data(size_t bytes, uint8 *buf) {
         return -1;
 
     /* Read in the data */
-    scif_spi_read_data(buf, bytes);
+    spi_read_data(buf, bytes);
 
     /* Read in the trailing CRC */
-    crc = (scif_spi_read_byte() << 8) | scif_spi_read_byte();
-
-    /* Return success if the CRC matches */
-    return crc != net_crc16ccitt(buf, bytes, 0);
+    if(check_crc) {
+        crc = (spi_read_byte() << 8) | spi_read_byte();
+        return crc != net_crc16ccitt(buf, bytes, 0);
+    }
+    else {
+        (void)spi_read_byte();
+        (void)spi_read_byte();
+        return 0;
+    }
 }
 
 int sd_read_blocks(uint32 block, size_t count, uint8 *buf) {
@@ -340,11 +460,11 @@ int sd_read_blocks(uint32 block, size_t count, uint8 *buf) {
     if(byte_mode)
         block <<= 9;
 
-    scif_spi_set_cs(0);
+    spi_set_cs(true);
 
     if(count == 1) {
         /* Ask the card for the block */
-        if(sd_send_cmd(CMD(17), block, 0)) {
+        if(sd_send_cmd(CMD(17), block)) {
             rv = -1;
             errno = EIO;
             goto out;
@@ -359,7 +479,7 @@ int sd_read_blocks(uint32 block, size_t count, uint8 *buf) {
     }
     else {
         /* Set up the multi-block read */
-        if(sd_send_cmd(CMD(18), block, 0)) {
+        if(sd_send_cmd(CMD(18), block)) {
             rv = -1;
             errno = EIO;
             goto out;
@@ -376,12 +496,12 @@ int sd_read_blocks(uint32 block, size_t count, uint8 *buf) {
         }
 
         /* Stop the data transfer */
-        sd_send_cmd(CMD(12), 0, 0);
+        sd_send_cmd(CMD(12), 0);
     }
 
 out:
-    scif_spi_set_cs(1);
-    scif_spi_rw_byte(0xFF);
+    spi_set_cs(false);
+    spi_rw_byte(0xFF);
 
     return rv;
 }
@@ -393,29 +513,29 @@ static int write_data(uint8 tag, size_t bytes, const uint8 *buf) {
     const uint8 *ptr = buf;
 
     /* Wait for the card to be ready for our data */
-    scif_spi_rw_byte(0xFF);
+    spi_rw_byte(0xFF);
     do {
-        rv = scif_spi_rw_byte(0xFF);
+        rv = spi_rw_byte(0xFF);
         ++i;
     } while(rv != 0xFF && i < WRITE_RETRIES);
 
     if(rv != 0xFF)
         return -1;
 
-    scif_spi_write_byte(tag);
+    spi_write_byte(tag);
 
     /* Send the data. */
     crc = net_crc16ccitt(buf, bytes, 0);
     while(bytes--) {
-        scif_spi_write_byte(*ptr++);
+        spi_write_byte(*ptr++);
     }
 
     /* Write out the block's crc */
-    scif_spi_write_byte((uint8)(crc >> 8));
-    scif_spi_write_byte((uint8)crc);
+    spi_write_byte((uint8)(crc >> 8));
+    spi_write_byte((uint8)crc);
 
     /* Make sure the card accepted the block */
-    rv = scif_spi_read_byte();
+    rv = spi_read_byte();
     if((rv & 0x1F) != 0x05)
         return -1;
 
@@ -435,11 +555,11 @@ int sd_write_blocks(uint32 block, size_t count, const uint8 *buf) {
     if(byte_mode)
         block <<= 9;
 
-    scif_spi_set_cs(0);
+    spi_set_cs(true);
 
     if(count == 1) {
         /* Prepare the card for the block */
-        if(sd_send_cmd(CMD(24), block, 0)) {
+        if(sd_send_cmd(CMD(24), block)) {
             rv = -1;
             errno = EIO;
             goto out;
@@ -456,12 +576,12 @@ int sd_write_blocks(uint32 block, size_t count, const uint8 *buf) {
         /* If we're on a SD card, inform the card ahead of time how many blocks
            we intend to write. */
         if(!is_mmc) {
-            sd_send_cmd(CMD(55), 0, 0);
-            sd_send_cmd(CMD(23), count, 0);
+            sd_send_cmd(CMD(55), 0);
+            sd_send_cmd(CMD(23), count);
         }
 
         /* Set up the multi-block write */
-        if(sd_send_cmd(CMD(25), block, 0)) {
+        if(sd_send_cmd(CMD(25), block)) {
             rv = -1;
             errno = EIO;
             goto out;
@@ -479,9 +599,9 @@ int sd_write_blocks(uint32 block, size_t count, const uint8 *buf) {
         }
 
         /* Write the end data token. */
-        scif_spi_rw_byte(0xFF);
+        spi_rw_byte(0xFF);
         do {
-            byte = scif_spi_rw_byte(0xFF);
+            byte = spi_rw_byte(0xFF);
             ++i;
         } while(byte != 0xFF && i < WRITE_RETRIES);
 
@@ -491,12 +611,12 @@ int sd_write_blocks(uint32 block, size_t count, const uint8 *buf) {
             goto out;
         }
 
-        scif_spi_rw_byte(0xFD);
+        spi_rw_byte(0xFD);
     }
 
 out:
-    scif_spi_set_cs(1);
-    scif_spi_rw_byte(0xFF);
+    spi_set_cs(false);
+    spi_rw_byte(0xFF);
 
     return rv;
 }
@@ -519,8 +639,8 @@ uint64 sd_get_size(void) {
        Layer Simplified Specification v3.01. */
 
     /* Prepare the CSD send */
-    scif_spi_set_cs(0);
-    if(sd_send_cmd(CMD(9), 0, 0)) {
+    spi_set_cs(true);
+    if(sd_send_cmd(CMD(9), 0)) {
         rv = (uint64)-1;
         errno = EIO;
         goto out;
@@ -563,8 +683,8 @@ uint64 sd_get_size(void) {
     }
 
 out:
-    scif_spi_set_cs(1);
-    scif_spi_rw_byte(0xFF);
+    spi_set_cs(false);
+    spi_rw_byte(0xFF);
 
     return rv;
 }
@@ -686,3 +806,4 @@ int sd_blockdev_for_partition(int partition, kos_blockdev_t *rv,
 
     return 0;
 }
+
