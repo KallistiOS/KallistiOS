@@ -33,6 +33,20 @@ typedef enum dma_register {
 #define REG_CHCR_TRANSFER_END   BIT(1)
 #define REG_CHCR_DMAC_EN        BIT(0)
 
+#define REG_DMAOR_DDT           BIT(15)
+#define REG_DMAOR_PR            GENMASK(9, 8)
+#define REG_DMAOR_COD           BIT(4)
+#define REG_DMAOR_AE            BIT(2)
+#define REG_DMAOR_NMIF          BIT(1)
+#define REG_DMAOR_DME           BIT(0)
+
+enum dmaor_pr_mode {
+    DMAOR_PR_CH0123,
+    DMAOR_PR_CH0231,
+    DMAOR_PR_CH2013,
+    DMAOR_PR_ROUND_ROBIN,
+};
+
 static const dma_config_t *channels_cfg[4];
 
 static const irq_t channel_to_irq[] = {
@@ -165,4 +179,21 @@ size_t dma_transfer_get_remaining(dma_channel_t channel) {
     uint32_t tcr = dmac_read(channel, DMA_REG_TCR);
 
     return tcr * dma_unit_size[unit_size];
+}
+
+static const dma_config_t channel2_config = {
+    .channel = 2,
+    .request = DMA_REQUEST_EXTERNAL_MEM_TO_DEV,
+    .src_mode = DMA_ADDRMODE_INCREMENT,
+};
+
+void dma_init(void) {
+    /* Set default settings for DMA #2.
+     * These are set by the bios on Dreamcast, but should be set by the OS
+     * on Naomi. */
+    dma_transfer(&channel2_config, 0, 0, 0, NULL);
+
+    dmac_write(0, DMA_REG_DMAOR, REG_DMAOR_DDT
+               | FIELD_PREP(REG_DMAOR_PR, DMAOR_PR_CH2013)
+               | REG_DMAOR_DME);
 }
