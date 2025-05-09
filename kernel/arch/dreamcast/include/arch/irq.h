@@ -34,9 +34,6 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 
-/* Included for legacy compatibility with these two APIs being one. */
-#include <arch/trap.h>
-
 /** \defgroup irqs  Interrupts
     \brief          IRQs and ISRs for the SH4's CPU
     \ingroup        system
@@ -107,6 +104,9 @@ typedef __attribute__((aligned(32))) struct irq_context {
     uint32_t  r[16];      /**< 16 general purpose (integer) registers */
     uint32_t  fpscr;      /**< Floating-point status/control register */
 } irq_context_t;
+
+/* Included for legacy compatibility with these two APIs being one. */
+#include <arch/trap.h>
 
 /** \name Register Accessors
     \brief Convenience macros for accessing context registers

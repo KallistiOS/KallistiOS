@@ -5,8 +5,9 @@
 
 */
 
-/** \file   pthread.h
-    \brief  POSIX threading support.
+/** \file    pthread.h
+    \brief   POSIX threading support.
+    \ingroup threading_posix
 
     This file contains functions and declarations related to POSIX threading
     support. Please note that this support is not exactly actually POSIX-
@@ -25,6 +26,8 @@
 
     \author Lawrence Sebald
 */
+
+/** \cond **/
 
 #ifndef __PTHREAD_H
 #define __PTHREAD_H
@@ -242,5 +245,7 @@ int pthread_yield(void);
 #endif /* __GNU_VISIBLE || __BSD_VISIBLE */
 
 __END_DECLS
+
+/** \endcond */
 
 #endif /* !__PTHREAD_H */

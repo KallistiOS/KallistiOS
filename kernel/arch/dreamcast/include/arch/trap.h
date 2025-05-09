@@ -27,13 +27,9 @@
 
 #include <stdint.h>
 
+#include <arch/irq.h>
 #include <sys/cdefs.h>
 __BEGIN_DECLS
-
-/** \cond */ /* Forward declarations */
-struct irq_context;
-typedef struct irq_context irq_context_t;
-/** \endcond */
 
 /** \defgroup traps  Traps
     \brief    API for managing TRAPA events and handlers.
