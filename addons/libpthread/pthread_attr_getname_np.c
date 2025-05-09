@@ -19,8 +19,8 @@ extern int pthread_attr_getname_np(const pthread_attr_t *__RESTRICT attr,
 
     memset(buf, 0, buflen);
 
-    if(attr->attr.label) {
-        if(buflen < strlen(attr->attr.label)) {
+    if(attr->attr.label && buflen) {
+        if(buflen > strlen(attr->attr.label)) {
             strcpy(buf, attr->attr.label);
         }
         else {
