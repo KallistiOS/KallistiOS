@@ -52,13 +52,13 @@ typedef __newlib_recursive_lock_t _LOCK_RECURSIVE_T;
 void __newlib_lock_init(__newlib_lock_t*);
 void __newlib_lock_close(__newlib_lock_t*);
 void __newlib_lock_acquire(__newlib_lock_t*);
-void __newlib_lock_try_acquire(__newlib_lock_t*);
+int __newlib_lock_try_acquire(__newlib_lock_t*);
 void __newlib_lock_release(__newlib_lock_t*);
 
 void __newlib_lock_init_recursive(__newlib_recursive_lock_t*);
 void __newlib_lock_close_recursive(__newlib_recursive_lock_t*);
 void __newlib_lock_acquire_recursive(__newlib_recursive_lock_t*);
-void __newlib_lock_try_acquire_recursive(__newlib_recursive_lock_t*);
+int __newlib_lock_try_acquire_recursive(__newlib_recursive_lock_t*);
 void __newlib_lock_release_recursive(__newlib_recursive_lock_t*);
 
 /** \endcond */
