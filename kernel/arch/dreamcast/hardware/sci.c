@@ -12,6 +12,7 @@
 #include <arch/types.h>
 #include <kos/dbglog.h>
 #include <kos/regfield.h>
+#include <kos/thread.h>
 #include <stdint.h>
 #include <stdlib.h>
 
