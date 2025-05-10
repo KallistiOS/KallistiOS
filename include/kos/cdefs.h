@@ -47,12 +47,6 @@
 #define __noreturn  __attribute__((__noreturn__))
 #endif
 
-#ifndef __pure
-/** \brief  Identify a function that has no side effects other than its return,
-            and only uses its arguments for any work. */
-#define __pure      __attribute__((__const__))
-#endif
-
 #ifndef __unused
 /** \brief  Identify a function or variable that may be unused. */
 #define __unused    __attribute__((__unused__))
@@ -76,11 +70,6 @@
 #ifndef __dead2
 /** \brief  Alias for \ref __noreturn. For BSD compatibility. */
 #define __dead2     __noreturn  /* BSD compat */
-#endif
-
-#ifndef __pure2
-/** \brief  Alias for \ref __pure. For BSD compatibility. */
-#define __pure2     __pure      /* ditto */
 #endif
 
 #ifndef __likely
