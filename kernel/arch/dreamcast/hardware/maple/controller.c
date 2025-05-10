@@ -51,13 +51,13 @@ static TAILQ_HEAD(cont_btn_callback_list, cont_callback_params) btn_cbs;
 static mutex_t btn_cbs_mtx = MUTEX_INITIALIZER;
 
 /* Check whether the controller has EXACTLY the given capabilities. */
-int cont_is_type(const maple_device_t *cont, uint32_t type) {
+int __pure cont_is_type(const maple_device_t *cont, uint32_t type) {
     return cont ? cont->info.function_data[CONT_FUNCTION_DATA_INDEX] == type :
                   -1;
 }
 
 /* Check whether the controller has at LEAST the given capabilities. */
-int cont_has_capabilities(const maple_device_t *cont, uint32_t capabilities) {
+int __pure cont_has_capabilities(const maple_device_t *cont, uint32_t capabilities) {
     return cont ? ((cont->info.function_data[CONT_FUNCTION_DATA_INDEX] 
                    & capabilities) == capabilities) : -1;
 }
