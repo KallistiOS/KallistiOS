@@ -46,7 +46,7 @@ __BEGIN_DECLS
     \brief  Floating point inner product.
     \return v1 dot v2 (inner product)
 */
-__FMINLINE float fipr(float x, float y, float z, float w,
+__FMINLINE float __pure fipr(float x, float y, float z, float w,
                       float a, float b, float c, float d) {
     return __fipr(x, y, z, w, a, b, c, d);
 }
@@ -55,7 +55,7 @@ __FMINLINE float fipr(float x, float y, float z, float w,
     \brief  Floating point inner product w/self (square of vector magnitude)
     \return v1 dot v1 (square of magnitude)
 */
-__FMINLINE float fipr_magnitude_sqr(float x, float y, float z, float w) {
+__FMINLINE float __pure fipr_magnitude_sqr(float x, float y, float z, float w) {
     return __fipr_magnitude_sqr(x, y, z, w);
 }
 
@@ -64,7 +64,7 @@ __FMINLINE float fipr_magnitude_sqr(float x, float y, float z, float w) {
     \param r a floating point number between 0 and 2*PI
     \return sin(r), where r is [0..2*PI]
 */
-__FMINLINE float fsin(float r) {
+__FMINLINE float __pure fsin(float r) {
     return __fsin(r);
 }
 
@@ -73,7 +73,7 @@ __FMINLINE float fsin(float r) {
     \param r a floating point number between 0 and 2*PI
     \return cos(r), where r is [0..2*PI]
 */
-__FMINLINE float fcos(float r) {
+__FMINLINE __pure float fcos(float r) {
     return __fcos(r);
 }
 
@@ -82,7 +82,7 @@ __FMINLINE float fcos(float r) {
     \param r a floating point number between 0 and 2*PI
     \return tan(r), where r is [0..2*PI]
 */
-__FMINLINE float ftan(float r) {
+__FMINLINE __pure float ftan(float r) {
     return __ftan(r);
 }
 
@@ -91,7 +91,7 @@ __FMINLINE float ftan(float r) {
     \param d an integer between 0 and 65535
     \return sin(d), where d is [0..65535]
 */
-__FMINLINE float fisin(int d) {
+__FMINLINE __pure float fisin(int d) {
     return __fisin(d);
 }
 
@@ -100,7 +100,7 @@ __FMINLINE float fisin(int d) {
     \param d an integer between 0 and 65535
     \return cos(d), where d is [0..65535]
 */
-__FMINLINE float ficos(int d) {
+__FMINLINE __pure float ficos(int d) {
     return __ficos(d);
 }
 
@@ -109,7 +109,7 @@ __FMINLINE float ficos(int d) {
     \param d an integer between 0 and 65535
     \return tan(d), where d is [0..65535]
 */
-__FMINLINE float fitan(int d) {
+__FMINLINE float __pure fitan(int d) {
     return __fitan(d);
 }
 
@@ -117,14 +117,14 @@ __FMINLINE float fitan(int d) {
     \brief Floating point square root
     \return sqrt(f)
 */
-__FMINLINE float fsqrt(float f) {
+__FMINLINE float __pure fsqrt(float f) {
     return __fsqrt(f);
 }
 
 /**
     \return 1.0f / sqrt(f)
 */
-__FMINLINE float frsqrt(float f) {
+__FMINLINE float __pure frsqrt(float f) {
     return __frsqrt(f);
 }
 
@@ -178,13 +178,12 @@ __FMINLINE void fsincosr(float f, float *s, float *c) {
     \note   Thanks to Fredrik Ehnbom for figuring this stuff out and posting it
             to the mailing list back in 2005!
 */
-__FMINLINE uint32_t pvr_pack_bump(float h, float t, float q) {
+__FMINLINE uint32_t __pure pvr_pack_bump(float h, float t, float q) {
     uint8_t hp = (uint8_t)(h * 255.0f);
     uint8_t k1 = ~hp;
     uint8_t k2 = (uint8_t)(hp * __fsin(t));
     uint8_t k3 = (uint8_t)(hp * __fcos(t));
     uint8_t qp = (uint8_t)((q / (2 * F_PI)) * 255.0f);
-
 
     return (k1 << 24) | (k2 << 16) | (k3 << 8) | qp;
 }
