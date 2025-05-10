@@ -340,7 +340,7 @@ int hardware_sys_mode(int *region);
 
     \return                 A pointer to the banner string.
 */
-const char *kos_get_banner(void);
+const char * __pure kos_get_banner(void);
 
 /** \brief   Retrieve the license information for the compiled copy of KOS.
     \ingroup attribution
@@ -351,7 +351,7 @@ const char *kos_get_banner(void);
 
     \return                 A pointer to the license terms.
 */
-const char *kos_get_license(void);
+const char * __pure kos_get_license(void);
 
 /** \brief   Retrieve a list of authors and the dates of their contributions.
     \ingroup attribution
@@ -367,7 +367,7 @@ const char *kos_get_license(void);
 
     \return                 A pointer to the authors' copyright information.
 */
-const char *kos_get_authors(void);
+const char *__pure kos_get_authors(void);
 
 /** \brief   Dreamcast specific sleep mode function.
     \ingroup arch

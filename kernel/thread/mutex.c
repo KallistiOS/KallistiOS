@@ -152,7 +152,7 @@ int mutex_lock_timed(mutex_t *m, int timeout) {
     return rv;
 }
 
-int mutex_is_locked(const mutex_t *m) {
+int __pure mutex_is_locked(const mutex_t *m) {
     return !!m->count;
 }
 

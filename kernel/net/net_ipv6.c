@@ -42,7 +42,7 @@ const struct in6_addr in6addr_linklocal_allrouters = {
     }
 };
 
-static int is_in_network(netif_t *net, const struct in6_addr *ip) {
+static int __pure is_in_network(netif_t *net, const struct in6_addr *ip) {
     int i;
 
     /* Make sure its not trivially link-local */

@@ -130,7 +130,7 @@ static const vmufb_font_t vmufb_font4x6 = {
 
 static const vmufb_font_t *default_font = &vmufb_font4x6;
 
-static uint64_t extract_bits(const uint8_t *data,
+static uint64_t __pure extract_bits(const uint8_t *data,
                              unsigned int offt, unsigned int w) {
     uint32_t tmp, lsb, nb_bits;
     uint64_t bits = 0;
