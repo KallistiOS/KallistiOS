@@ -77,6 +77,15 @@ sci_spi_read_data
 sci_spi_dma_write_data
 sci_spi_dma_read_data
 
+# SD Card
+sd_init
+sd_init_ex
+sd_shutdown
+sd_read_blocks
+sd_write_blocks
+sd_get_size
+sd_blockdev_for_partition
+
 # Timers
 timer_prime
 timer_start
