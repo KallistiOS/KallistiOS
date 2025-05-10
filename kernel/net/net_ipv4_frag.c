@@ -105,7 +105,7 @@ static inline void set_bits(uint8 *bitfield, int start, int end) {
 }
 
 /* Check if all bits in the bitfield that should be set are set. */
-static inline int all_bits_set(const uint8 *bitfield, int end) {
+static inline int __pure all_bits_set(const uint8 *bitfield, int end) {
     int i;
 
     /* Make sure each of the beginning bytes are fully set. */
