@@ -134,7 +134,10 @@ static void sci_write_byte_wrapper(uint8_t data) {
 }
 
 static void sci_read_data_wrapper(uint8_t *data, size_t len) {
-    sci_spi_dma_read_data(data, len, NULL, NULL);
+    if(len & 31)
+        sci_spi_read_data(data, len);
+    else
+        sci_spi_dma_read_data(data, len, NULL, NULL);
 }
 
 static void sci_write_data_wrapper(const uint8_t *data, size_t len) {
