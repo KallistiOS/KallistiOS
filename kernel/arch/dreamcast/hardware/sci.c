@@ -5,6 +5,7 @@
 */
 
 #include <dc/sci.h>
+#include <dc/math.h>
 #include <arch/cache.h>
 #include <arch/dmac.h>
 #include <arch/timer.h>
@@ -148,9 +149,6 @@ static dma_config_t sci_dma_rx_config = {
     .transmit_mode = DMA_TRANSMITMODE_CYCLE_STEAL,
     .callback = NULL
 };
-
-/* Bit reversal function for SPI data (MSB-LSB) */
-uint8_t reverse_bits(uint8_t b);
 
 static __always_inline void clear_sci_errors() {
     SCSSR1 &= ~(ORER | FER | PER);
@@ -749,7 +747,7 @@ sci_result_t sci_spi_rw_byte(uint8_t b, uint8_t *data) {
     sci_set_transfer_mode(TE | RE);
 
     /* Prepare byte to send with correct bit order */
-    byte = reverse_bits(b);
+    byte = bit_reverse8(b);
 
     /* Wait until transmit buffer is empty */
     timeout_cnt = 0;
@@ -765,7 +763,6 @@ sci_result_t sci_spi_rw_byte(uint8_t b, uint8_t *data) {
     SCTDR1 = byte;
     SCSSR1 &= ~TDRE;
 
-    timeout_cnt = 0;
     do {
         status = SCSSR1;
 
@@ -781,7 +778,7 @@ sci_result_t sci_spi_rw_byte(uint8_t b, uint8_t *data) {
     byte = SCRDR1;
     SCSSR1 &= ~RDRF;
 
-    *data = reverse_bits(byte);
+    *data = bit_reverse8(byte);
 
     return SCI_OK;
 }
@@ -804,7 +801,7 @@ sci_result_t sci_spi_rw_data(const uint8_t *tx_data, uint8_t *rx_data, size_t le
     while(len--) {
 
         /* Prepare byte to send with correct bit order */
-        byte = reverse_bits(*tx_data++);
+        byte = bit_reverse8(*tx_data++);
 
         /* Wait for transmit register to be empty */
         timeout_cnt = 0;
@@ -823,7 +820,6 @@ sci_result_t sci_spi_rw_data(const uint8_t *tx_data, uint8_t *rx_data, size_t le
         SCSSR1 &= ~TDRE;
 
         /* Wait for receive register to be full */
-        timeout_cnt = 0;
         do {
             status = SCSSR1;
 
@@ -839,7 +835,7 @@ sci_result_t sci_spi_rw_data(const uint8_t *tx_data, uint8_t *rx_data, size_t le
         byte = SCRDR1;
         SCSSR1 &= ~RDRF;
 
-        *rx_data++ = reverse_bits(byte);
+        *rx_data++ = bit_reverse8(byte);
     }
 
     return SCI_OK;
@@ -857,7 +853,7 @@ sci_result_t sci_spi_write_byte(uint8_t b) {
     sci_set_transfer_mode(TE);
 
     /* Prepare byte with correct bit order */
-    byte = reverse_bits(b);
+    byte = bit_reverse8(b);
 
     /* Wait until transmit buffer is empty */
     timeout_cnt = 0;
@@ -932,7 +928,7 @@ sci_result_t sci_spi_read_byte(uint8_t *data) {
     byte = SCRDR1;
     SCSSR1 &= ~RDRF;
 
-    *data = reverse_bits(byte);
+    *data = bit_reverse8(byte);
 
     return SCI_OK;
 }
@@ -955,7 +951,7 @@ sci_result_t sci_spi_write_data(const uint8_t *tx_data, size_t len) {
     while(len--) {
 
         /* Prepare byte with correct bit order */
-        byte = reverse_bits(*tx_data++);
+        byte = bit_reverse8(*tx_data++);
 
         /* Wait for transmit register to be empty */
         timeout_cnt = 0;
@@ -1033,7 +1029,7 @@ sci_result_t sci_spi_read_data(uint8_t *rx_data, size_t len) {
         byte = SCRDR1;
         SCSSR1 &= ~RDRF;
 
-        *rx_data++ = reverse_bits(byte);
+        *rx_data++ = bit_reverse8(byte);
     }
 
     return SCI_OK;
@@ -1054,7 +1050,7 @@ sci_result_t sci_spi_dma_write_data(const uint8_t *data, size_t len, dma_callbac
 
     /* Reverse each byte */
     for(i = 0; i < len; i++) {
-        spi_dma_buffer[i] = reverse_bits(data[i]);
+        spi_dma_buffer[i] = bit_reverse8(data[i]);
     }
 
     /* Configure DMA */
@@ -1144,7 +1140,7 @@ sci_result_t sci_spi_dma_read_data(uint8_t *data, size_t len, dma_callback_t cal
 
         /* Perform bit reversal while waiting for TDRE flag */
         if(i > 32) {
-            *data++ = reverse_bits(*buffer++);
+            *data++ = bit_reverse8(*buffer++);
         }
     }
 
@@ -1165,7 +1161,7 @@ sci_result_t sci_spi_dma_read_data(uint8_t *data, size_t len, dma_callback_t cal
 
     /* Perform bit reversal after DMA completes for the last 33 bytes */
     for(i = 0; i < 33; i++) {
-        *data++ = reverse_bits(*buffer++);
+        *data++ = bit_reverse8(*buffer++);
     }
 
     if(callback) {
