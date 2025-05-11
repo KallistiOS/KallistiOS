@@ -11,6 +11,7 @@
 #include <stddef.h>
 #include <errno.h>
 #include <limits.h>
+#include <kos/limits.h>
 #include <assert.h>
 #include <sys/queue.h>
 #include <inttypes.h>
