@@ -8,7 +8,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <assert.h>
+#include <kos/fs.h>
 #include <kos/netcfg.h>
 #include <dc/flashrom.h>
 #include <dc/vmu_pkg.h>
