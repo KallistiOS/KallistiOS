@@ -22,10 +22,6 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <unistd.h>
-#include <stdarg.h>
-#include <kos/fs.h>
-
 /** \defgroup logging   Logging
     \brief              KOS's Logging API 
     \ingroup            debugging
