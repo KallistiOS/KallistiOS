@@ -136,8 +136,17 @@ bfont_draw_str_vram_fmt
 
 # CD-Rom
 cdrom_reinit
+cdrom_reinit_ex
+cdrom_set_sector_size
+cdrom_change_datatype
+cdrom_exec_cmd
+cdrom_exec_cmd_timed
+cdrom_abort_cmd
+cdrom_get_status
+cdrom_get_subcode
 cdrom_read_toc
 cdrom_read_sectors
+cdrom_read_sectors_ex
 cdrom_locate_data_track
 cdrom_cdda_play
 cdrom_cdda_pause

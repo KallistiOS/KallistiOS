@@ -133,8 +133,7 @@ int cdrom_exec_cmd_timed(int cmd, void *param, uint32_t timeout) {
         /* If the command is still in progress, it timed out. */
         if(cmd_in_progress) {
             cmd_in_progress = false;
-            syscall_gdrom_reset();
-            syscall_gdrom_init();
+            cdrom_abort_cmd(1000, true);
             return ERR_TIMEOUT;
         }
     }
@@ -160,6 +159,58 @@ int cdrom_exec_cmd_timed(int cmd, void *param, uint32_t timeout) {
     }
 
     return ERR_SYS;
+}
+
+int cdrom_abort_cmd(uint32_t timeout, bool abort_dma) {
+    int rv = ERR_OK;
+    uint64_t begin;
+    int old = irq_disable();
+
+    if(cmd_hnd <= 0) {
+        irq_restore(old);
+        return ERR_NO_ACTIVE;
+    }
+    cmd_in_progress = false;
+
+    if(abort_dma && dma_in_progress) {
+        dma_in_progress = false;
+        dma_blocking = false;
+        dma_thd = NULL;
+        /* G1 ATA mutex already locked */
+    }
+    else {
+        mutex_lock(&_g1_ata_mutex);
+    }
+
+    irq_restore(old);
+    syscall_gdrom_abort_command(cmd_hnd);
+
+    if(timeout) {
+        begin = timer_ms_gettime64();
+    }
+    do {
+        syscall_gdrom_exec_server();
+        cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
+
+        if(cmd_response == NO_ACTIVE || cmd_response == COMPLETED) {
+            break;
+        }
+        if(timeout) {
+            if((timer_ms_gettime64() - begin) >= timeout) {
+                dbglog(DBG_ERROR, "cdrom_abort_cmd: Timeout exceeded, resetting.\n");
+                rv = ERR_TIMEOUT;
+                syscall_gdrom_reset();
+                syscall_gdrom_init();
+                break;
+            }
+        }
+        thd_pass();
+    } while(1);
+
+    cmd_hnd = 0;
+
+    mutex_unlock(&_g1_ata_mutex);
+    return rv;
 }
 
 /* Return the status of the drive as two integers (see constants) */
@@ -368,11 +419,6 @@ int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode) {
     params.num = cnt;       /* Number of sectors */
     params.is_test = 0;     /* Enable test mode */
 
-    /* The DMA mode blocks the thread it is called in by the way we execute
-       gd syscalls. It does however allow for other threads to run. */
-    /* XXX: DMA Mode may conflict with using a second G1ATA device. More 
-       testing is needed from someone with such a device.
-    */
     if(mode == CDROM_READ_DMA) {
         if(buf_addr & 0x1f) {
             dbglog(DBG_ERROR, "cdrom_read_sectors_ex: Unaligned memory for DMA (32-byte).\n");
@@ -591,6 +637,10 @@ void cdrom_init(void) {
     volatile uint32_t *react = (uint32_t *)(G1_ATA_BUS_PROTECTION | MEM_AREA_P2_BASE);
     volatile uint32_t *state = (uint32_t *)(G1_ATA_BUS_PROTECTION_STATUS | MEM_AREA_P2_BASE);
     volatile uint32_t *bios = (uint32_t *)MEM_AREA_P2_BASE;
+
+    if(inited) {
+        return;
+    }
 
     mutex_lock(&_g1_ata_mutex);
 

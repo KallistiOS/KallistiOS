@@ -14,6 +14,7 @@ __BEGIN_DECLS
 
 #include <arch/types.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 /** \file    dc/cdrom.h
     \brief   CD access to the GD-ROM drive.
@@ -316,6 +317,19 @@ int cdrom_exec_cmd(int cmd, void *param);
     \return                 \ref cd_cmd_response
 */
 int cdrom_exec_cmd_timed(int cmd, void *param, uint32_t timeout);
+
+/** \brief    Abort a CD-ROM command with timeout.
+    \ingroup  gdrom
+
+    This function aborts current command using the BIOS syscall for
+    aborting GD-ROM commands. They can also abort DMA transfers.
+
+    \param  timeout         Timeout in milliseconds.
+    \param  abort_dma       Whether to abort the DMA transfer.
+
+    \return                 \ref cd_cmd_response
+*/
+int cdrom_abort_cmd(uint32_t timeout, bool abort_dma);
 
 /** \brief    Get the status of the GD-ROM drive.
     \ingroup  gdrom
