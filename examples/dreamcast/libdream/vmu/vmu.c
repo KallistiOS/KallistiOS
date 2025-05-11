@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <kos/thread.h>
+
 #include <dc/biosfont.h>
 #include <dc/video.h>
 
