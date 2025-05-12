@@ -22,7 +22,7 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
+#include <stdint.h>
 #include <kos/limits.h>
 #include <sys/queue.h>
 
@@ -60,10 +60,10 @@ typedef LIST_HEAD(nmmgr_list, nmmgr_handler) nmmgr_list_t;
 */
 typedef struct nmmgr_handler {
     char    pathname[NAME_MAX];   /* Path name */
-    int pid;                /* Process table ID for handler (0 == static) */
-    uint32  version;        /* Version code */
-    uint32  flags;          /* Bitmask of flags */
-    uint32  type;           /* Type of handler */
+    int pid;                  /* Process table ID for handler (0 == static) */
+    uint32_t  version;        /* Version code */
+    uint32_t  flags;          /* Bitmask of flags */
+    uint32_t  type;           /* Type of handler */
     LIST_ENTRY(nmmgr_handler)   list_ent;   /* Linked list entry */
 } nmmgr_handler_t;
 
