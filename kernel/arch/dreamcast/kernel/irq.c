@@ -18,6 +18,7 @@
 #include <arch/timer.h>
 #include <arch/stack.h>
 #include <kos/dbgio.h>
+#include <kos/dbglog.h>
 #include <kos/thread.h>
 #include <kos/library.h>
 #include <kos/regfield.h>

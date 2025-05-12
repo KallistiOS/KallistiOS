@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <kos/dbgio.h>
+#include <kos/dbglog.h>
 #include <kos/init.h>
 #include <kos/platform.h>
 #include <arch/arch.h>

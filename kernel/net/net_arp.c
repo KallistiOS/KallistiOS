@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <kos/dbglog.h>
 #include <kos/net.h>
 #include <kos/thread.h>
 #include <arch/timer.h>

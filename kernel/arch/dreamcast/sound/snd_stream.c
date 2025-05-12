@@ -17,6 +17,7 @@
 #include <errno.h>
 #include <sys/queue.h>
 
+#include <kos/dbglog.h>
 #include <kos/mutex.h>
 #include <arch/cache.h>
 #include <arch/timer.h>

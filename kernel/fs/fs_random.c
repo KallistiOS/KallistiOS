@@ -14,6 +14,7 @@
 #include <arch/types.h>
 #include <kos/mutex.h>
 #include <kos/fs_random.h>
+#include <kos/dbglog.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 

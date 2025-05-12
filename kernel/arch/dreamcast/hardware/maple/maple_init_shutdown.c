@@ -14,6 +14,7 @@
 #include <dc/vblank.h>
 #include <kos/thread.h>
 #include <kos/init.h>
+#include <kos/dbglog.h>
 
 #include <dc/maple/controller.h>
 #include <dc/maple/keyboard.h>

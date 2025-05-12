@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <navi/ide.h>
 #include <dc/g2bus.h>
+#include <kos/dbglog.h>
 #include <kos/thread.h>
 
 /*

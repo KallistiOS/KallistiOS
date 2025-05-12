@@ -17,6 +17,7 @@
 #include <arch/types.h>
 #include <arch/arch.h>
 #include <arch/irq.h>
+#include <kos/dbglog.h>
 #include <errno.h>
 #include <stdio.h>
 

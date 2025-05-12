@@ -33,6 +33,7 @@
 
 #include "pvr_mem_core.h"
 
+#include <kos/dbglog.h>
 #include <kos/opts.h>
 
 #undef DEBUG

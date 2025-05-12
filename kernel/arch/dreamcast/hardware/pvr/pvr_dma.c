@@ -17,6 +17,7 @@
 #include <dc/sq.h>
 #include <kos/thread.h>
 #include <kos/sem.h>
+#include <kos/dbglog.h>
 
 #include "pvr_internal.h"
 

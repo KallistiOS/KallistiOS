@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dc/video.h>
+#include <kos/dbglog.h>
 #include <kos/fs.h>
 #include <arch/irq.h>
 

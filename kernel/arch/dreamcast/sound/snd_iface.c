@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <stdio.h>
 
+#include <kos/dbglog.h>
 #include <kos/mutex.h>
 #include <arch/timer.h>
 #include <dc/g2bus.h>

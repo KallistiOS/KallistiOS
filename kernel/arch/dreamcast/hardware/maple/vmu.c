@@ -19,6 +19,7 @@
 #include <kos/thread.h>
 #include <kos/genwait.h>
 #include <kos/platform.h>
+#include <kos/dbglog.h>
 #include <dc/maple.h>
 #include <dc/maple/vmu.h>
 #include <dc/math.h>

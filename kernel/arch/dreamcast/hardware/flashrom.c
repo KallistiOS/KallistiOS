@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <dc/flashrom.h>
 #include <dc/syscalls.h>
+#include <kos/dbglog.h>
 #include <arch/irq.h>
 
 static void strcpy_no_term(char *dest, const char *src, size_t destsize) {

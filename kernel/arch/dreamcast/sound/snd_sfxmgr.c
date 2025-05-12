@@ -17,6 +17,7 @@
 
 #include <sys/queue.h>
 #include <sys/ioctl.h>
+#include <kos/dbglog.h>
 #include <kos/fs.h>
 #include <arch/irq.h>
 #include <dc/spu.h>

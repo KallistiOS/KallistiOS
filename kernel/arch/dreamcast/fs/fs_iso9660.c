@@ -36,6 +36,7 @@ ISO9660 systems, as these were used as references as well.
 #include <kos/mutex.h>
 #include <kos/fs.h>
 #include <kos/opts.h>
+#include <kos/dbglog.h>
 
 #include <stdlib.h>
 #include <stdio.h>

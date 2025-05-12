@@ -23,6 +23,7 @@
 #include <arch/spinlock.h>
 #include <arch/arch.h>
 
+#include <kos/dbglog.h>
 #include <kos/opts.h>
 
 #undef DEBUG
