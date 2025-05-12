@@ -21,7 +21,6 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
 #include <arch/dmac.h>
 #include <stdint.h>
 #include <stdbool.h>

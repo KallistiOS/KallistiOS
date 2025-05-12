@@ -50,7 +50,6 @@ __BEGIN_DECLS
 
 #include <stdbool.h>
 
-#include <arch/types.h>
 #include <sys/uio.h>
 
 /** \defgroup mmu   MMU

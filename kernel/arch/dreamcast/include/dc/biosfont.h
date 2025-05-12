@@ -36,8 +36,6 @@ __BEGIN_DECLS
 #include <stdbool.h>
 #include <stdarg.h>
 
-#include <arch/types.h>
-
 /** \defgroup bfont     BIOS
     \brief              API for the Dreamcast's built-in BIOS font
     \ingroup            video_fonts

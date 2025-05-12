@@ -27,7 +27,6 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
 #include <dc/maple.h>
 #include <kos/regfield.h>
 

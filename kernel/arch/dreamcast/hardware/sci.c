@@ -9,7 +9,7 @@
 #include <arch/cache.h>
 #include <arch/dmac.h>
 #include <arch/timer.h>
-#include <arch/types.h>
+
 #include <kos/dbglog.h>
 #include <kos/regfield.h>
 #include <kos/thread.h>

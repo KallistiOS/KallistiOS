@@ -26,7 +26,6 @@
 __BEGIN_DECLS
 
 #include <stdint.h>
-#include <arch/types.h>
 
 /** \defgroup system_cache Cache
     \brief                 Driver and API for managing the SH4's cache

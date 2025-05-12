@@ -37,7 +37,6 @@ __BEGIN_DECLS
 
 #include <stdint.h>
 #include <arch/irq.h>
-#include <arch/types.h>
 
 #include <dc/fifo.h>
 

@@ -32,8 +32,6 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
-
 /** \defgroup irqs  Interrupts
     \brief          IRQs and ISRs for the SH4's CPU
     \ingroup        system

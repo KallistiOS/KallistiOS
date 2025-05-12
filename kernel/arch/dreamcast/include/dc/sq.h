@@ -42,7 +42,6 @@
 __BEGIN_DECLS
 
 #include <stdint.h>
-#include <arch/types.h>
 #include <arch/memory.h>
 #include <arch/cache.h>
 

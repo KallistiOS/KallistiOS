@@ -26,7 +26,6 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
 #include <kos/fs.h>
 
 /** \defgroup vfs_pty   PTY
