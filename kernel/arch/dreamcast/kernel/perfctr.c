@@ -7,6 +7,7 @@
 
 #include <dc/perfctr.h>
 #include <arch/timer.h>
+#include <kos/cdefs.h>
 
 /* Control Registers */
 #define PMCR_CTRL(o)  ( *((volatile uint16_t *)(0xff000084) + (o << 1)) )
