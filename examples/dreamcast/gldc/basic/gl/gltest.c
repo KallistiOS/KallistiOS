@@ -243,7 +243,7 @@ int main(int argc, char **argv) {
     }
 
     pvr_get_stats(&stats);
-    printf("VBL Count: %ld, last_time: %d, frame rate: %f fps\n",
+    printf("VBL Count: %d, last_time: %lld, frame rate: %f fps\n",
            stats.vbl_count, stats.frame_last_time, stats.frame_rate);
 
     return 0;
