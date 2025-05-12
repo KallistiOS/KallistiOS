@@ -26,6 +26,7 @@ __BEGIN_DECLS
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <arch/irq.h>
 
 /** \defgroup ubc   User Break Controller
     \brief          Driver for the SH4's UBC
@@ -54,10 +55,6 @@ __BEGIN_DECLS
 
     @{
 */
-
-/** \cond Forward declarations */
-struct irq_context;
-/** \endcond */
 
 /** \brief UBC address mask specifier
 
@@ -298,7 +295,7 @@ typedef struct ubc_breakpoint {
     \sa ubc_add_breakpoint()
 */
 typedef bool (*ubc_break_func_t)(const ubc_breakpoint_t   *bp, 
-                                 const struct irq_context *ctx, 
+                                 const irq_context_t *ctx,
                                  void                     *user_data);
 
 /** \brief Enables a breakpoint

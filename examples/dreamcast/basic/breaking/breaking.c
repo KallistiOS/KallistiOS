@@ -48,6 +48,9 @@ static atomic_bool handled = false;
 static bool on_break(const ubc_breakpoint_t *bp,
                      const irq_context_t *ctx,
                      void *ud) {
+    /* Don't warn about unused bp */
+    (void)bp;
+
     /* Signal to the outside that the breakpoint has been handled. */
     handled = true;
 
