@@ -26,7 +26,9 @@
 #  define _funlockfile(fp)
 #endif
 
-// Added for old KOS source compatibility
-#include <kos/dbglog.h>
+/* Keep compat with old dbglog.h inclusion */
+#include <unistd.h>
+#include <stdarg.h>
+#include <kos/fs.h>
 
 #endif /* _NEWLIB_STDIO_H */
