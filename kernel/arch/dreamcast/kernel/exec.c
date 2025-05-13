@@ -33,7 +33,7 @@ void arch_exec_at(const void *image, uint32_t length, uint32_t address) {
                 tvals  = (uintptr_t)_arch_exec_template_values;
     size_t      tcount = (tend - tstart) / 4;
     uint32_t    buffer[tcount];
-    uint32_t    *values = buffer + (tvals - tstart);
+    uint32_t    *values = buffer + (_arch_exec_template_values - _arch_exec_template);
     size_t      i;
 
     assert((tend - tstart) % 4 == 0);
