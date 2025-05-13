@@ -323,7 +323,9 @@ void snd_stream_prefill(snd_stream_hnd_t hnd) {
     CHECK_HND(hnd);
     stream = &streams[hnd];
 
-    if(!stream->get_data && !stream->req_data) {
+    /* No way to request data, or not yet allocated. */
+    if((!stream->get_data && !stream->req_data) ||
+                            (!stream->channels)) {
         return;
     }
 
@@ -688,6 +690,12 @@ static size_t snd_stream_fill(snd_stream_hnd_t hnd, uint32_t offset, size_t size
     const int needed_bytes = size * chans;
     int got_bytes = 0;
     void *data = NULL;
+
+    /* The stream hasn't been initted or is invalid. */
+    CHECK_HND(hnd);
+
+    /* The stream has been initted but not allocated. */
+    assert(chans != 0);
 
     if(stream->req_data) {
         got_bytes = stream->req_data(hnd,
