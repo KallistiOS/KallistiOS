@@ -21,6 +21,7 @@
 __BEGIN_DECLS
 
 #include <stdint.h>
+#include <stdbool.h>
 
 /** \defgroup dmac  DMA Controller API
     \brief          API to use the SH4's DMA Controller
@@ -227,6 +228,17 @@ int dma_transfer(const dma_config_t *cfg, dma_addr_t dst, dma_addr_t src,
 */
 void dma_wait_complete(dma_channel_t channel);
 
+/** \brief   Check if a DMA transfer is running
+    \ingroup dmac
+
+    This function will return true if a DMA transfer is running for the given
+    DMA channel.
+
+    \param  channel         The DMA channel to check.
+    \return                 True if a DMA transfer is running, false otherwise.
+*/
+bool dma_is_running(dma_channel_t channel);
+
 /** \brief   Get the remaining size of a DMA transfer
     \ingroup dmac
 
@@ -238,6 +250,15 @@ void dma_wait_complete(dma_channel_t channel);
                             if the previous transfer completed.
 */
 size_t dma_transfer_get_remaining(dma_channel_t channel);
+
+/** \brief   Abort a DMA transfer
+    \ingroup dmac
+
+    This function will abort a DMA transfer for the given DMA channel.
+
+    \param  channel         The DMA channel to abort.
+*/
+void dma_transfer_abort(dma_channel_t channel);
 
 /** @} */
 
