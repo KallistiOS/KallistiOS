@@ -202,6 +202,22 @@ uint64 sd_get_size(void);
 int sd_blockdev_for_partition(int partition, kos_blockdev_t *rv,
                               uint8 *partition_type);
 
+/** \brief  Get a block device for the SD card.
+
+    This function creates a block device descriptor for the attached SD card.
+    This block device is used to interface with various filesystems on the device.
+
+    \param  rv              Used to return the block device. Must be non-NULL.
+    \retval 0               On success.
+    \retval -1              On error, errno will be set as appropriate.
+
+    \par    Error Conditions:
+    \em     ENXIO - SD card support was not initialized
+    \em     EFAULT - rv was NULL
+    \em     ENOMEM - out of memory
+*/
+int sd_blockdev_for_device(kos_blockdev_t *rv);
+
 /** @} */
 
 __END_DECLS

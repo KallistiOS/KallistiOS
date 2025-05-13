@@ -141,7 +141,10 @@ static void sci_read_data_wrapper(uint8_t *data, size_t len) {
 }
 
 static void sci_write_data_wrapper(const uint8_t *data, size_t len) {
-    sci_spi_write_data(data, len);
+    if(len & 31)
+        sci_spi_write_data(data, len);
+    else
+        sci_spi_dma_write_data(data, len, NULL, NULL);
 }
 
 static void scif_shutdown_wrapper(void) {
@@ -810,3 +813,28 @@ int sd_blockdev_for_partition(int partition, kos_blockdev_t *rv,
     return 0;
 }
 
+int sd_blockdev_for_device(kos_blockdev_t *rv) {
+    sd_devdata_t *ddata;
+
+    if (!initted) {
+        errno = ENXIO;
+        return -1;
+    }
+
+    if (!rv) {
+        errno = EFAULT;
+        return -1;
+    }
+
+    /* Allocate the device data */
+    if (!(ddata = (sd_devdata_t *)malloc(sizeof(sd_devdata_t)))) {
+        errno = ENOMEM;
+        return -1;
+    }
+
+    ddata->start_block = 0;
+    ddata->block_count = (sd_get_size() / 512);
+    rv->dev_data = ddata;
+
+    return 0;
+}
