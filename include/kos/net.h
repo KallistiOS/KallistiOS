@@ -247,7 +247,7 @@ typedef struct ip_hdr_s {
     uint16  checksum;           /**< \brief IP checksum */
     uint32  src;                /**< \brief Source IP address */
     uint32  dest;               /**< \brief Destination IP address */
-} ip_hdr_t;
+} __packed ip_hdr_t;
 
 /** \defgroup networking_ipv6   IPv6
     \brief                      IPv6 Network Stack
@@ -269,7 +269,7 @@ typedef struct ipv6_hdr_s {
     uint8           hop_limit;      /**< \brief Hop limit */
     struct in6_addr src_addr;       /**< \brief Source IP address */
     struct in6_addr dst_addr;       /**< \brief Destination IP address */
-} ipv6_hdr_t;
+} __packed ipv6_hdr_t;
 
 /***** net_arp.c **********************************************************/
 

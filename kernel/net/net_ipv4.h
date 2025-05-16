@@ -15,7 +15,7 @@ typedef struct {
     uint8   dest[6];
     uint8   src[6];
     uint8   type[2];
-} eth_hdr_t;
+} __packed eth_hdr_t;
 
 typedef struct {
     uint32 src_addr;
@@ -23,7 +23,7 @@ typedef struct {
     uint8 zero;
     uint8 proto;
     uint16 length;
-} ipv4_pseudo_hdr_t;
+} __packed ipv4_pseudo_hdr_t;
 
 uint16 net_ipv4_checksum(const uint8 *data, size_t bytes, uint16 start);
 int net_ipv4_send_packet(netif_t *net, ip_hdr_t *hdr, const uint8 *data,

@@ -141,7 +141,7 @@ typedef struct dhcp_pkt {
     char    sname[64];
     char    file[128];
     uint8   options[];
-} dhcp_pkt_t;
+} __packed dhcp_pkt_t;
 
 int net_dhcp_init(void);
 

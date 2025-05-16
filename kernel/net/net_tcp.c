@@ -101,7 +101,7 @@ typedef struct tcp_hdr {
     uint16_t checksum;
     uint16_t urg;
     uint8_t options[];
-} tcp_hdr_t;
+} __packed tcp_hdr_t;
 
 /* Listening socket. Each one of these is an incoming connection from a socket
    that is in the listen state */

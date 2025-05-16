@@ -34,10 +34,10 @@
 #define UDP_DEFAULT_HOPS    64
 
 typedef struct {
-    uint16 src_port;
-    uint16 dst_port;
-    uint16 length;
-    uint16 checksum;
+    uint16 src_port __packed;
+    uint16 dst_port __packed;
+    uint16 length __packed;
+    uint16 checksum __packed;
 } udp_hdr_t;
 
 struct udp_pkt {
