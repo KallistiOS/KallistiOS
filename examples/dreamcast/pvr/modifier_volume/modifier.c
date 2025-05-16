@@ -27,7 +27,7 @@ void setup(void) {
     pvr_poly_cxt_t cxt;
     int i;
     float x, y, z;
-    uint32 argb = list == PVR_LIST_OP_POLY ? 0xFF0000FF : 0x80FF00FF;
+    uint32_t argb = list == PVR_LIST_OP_POLY ? 0xFF0000FF : 0x80FF00FF;
 
     pvr_poly_cxt_col_mod(&cxt, list);
     pvr_poly_mod_compile(&phdr, &cxt);

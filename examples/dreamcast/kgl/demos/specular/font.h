@@ -25,11 +25,11 @@ typedef struct {
 
 Font *FontInit(float TexW, float TexH,
                unsigned char RowStride, unsigned char ColStride,
-               uint32 Color);
+               uint32_t Color);
 
 void FontPrintString(Font *font, char *str, float xpos, float ypos,
                      float width, float height);
 
-void FontSetColor(Font *font, uint32 color);
+void FontSetColor(Font *font, uint32_t color);
 
 #endif

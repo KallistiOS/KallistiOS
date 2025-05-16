@@ -39,7 +39,7 @@ volatile unsigned long *snd_dbg = (unsigned long*)0xa080ffc0;
 
 void play_s3m(char *fn) {
     int idx, r;
-    uint32 fd;
+    uint32_t fd;
     unsigned char buffer[2048];
 
     spu_disable();
@@ -370,25 +370,25 @@ void cubes_one_frame(void) {
    a few more support bits in there before this will work fully. */
 
 struct pcx_hdr {
-    char   Mfg;               // manufacturer, always 0xa0
-    char   Ver;               // encoder version number (5)
-    char   Enc;               // encoding code, always 1
-    char   Bpp;               // bits per pixel, 8 in mode 0x13
-    uint16 Xmin, Ymin;        // image origin, usually 0,0
-    uint16 Xmax, Ymax;        // image dimensions
-    uint16 Hres;              // horizontal resolution value
-    uint16 Vres;              // vertical resolution value
-    char   Pal[48];           // palette (not in mode 0x13)
-    char   Reserved;          // who knows?
-    char   ClrPlanes;         // number of planes, 1 in mode 0x13
-    uint16 Bpl;               // bytes per line, 80 in mode 0x13
-    uint16 plType;            // Grey or Color palette flag
-    char   Filler[58];        // Zsoft wanted a 128 byte header
+    char        Mfg;        // manufacturer, always 0xa0
+    char        Ver;        // encoder version number (5)
+    char        Enc;        // encoding code, always 1
+    char        Bpp;        // bits per pixel, 8 in mode 0x13
+    uint16_t    Xmin, Ymin; // image origin, usually 0,0
+    uint16_t    Xmax, Ymax; // image dimensions
+    uint16_t    Hres;       // horizontal resolution value
+    uint16_t    Vres;       // vertical resolution value
+    char        Pal[48];    // palette (not in mode 0x13)
+    char        Reserved;   // who knows?
+    char        ClrPlanes;  // number of planes, 1 in mode 0x13
+    uint16_t    Bpl;        // bytes per line, 80 in mode 0x13
+    uint16_t    plType;     // Grey or Color palette flag
+    char        Filler[58]; // Zsoft wanted a 128 byte header
 };
 
 short   imageWidth, imageHeight;
-uint8   *image;         /* Allocate this first */
-uint8   *pcxpal;
+uint8_t *image;         /* Allocate this first */
+uint8_t *pcxpal;
 char    *charmap;
 
 int load_pcx(char *pcxdata) {
@@ -732,13 +732,13 @@ void font_one_frame(void) {
 
 void font_init(void) {
     size_t x, y, c;
-    uint8 pcxpall[768];
-    volatile uint16 *vtex;
-    uint16 val;
+    uint8_t pcxpall[768];
+    volatile uint16_t *vtex;
+    uint16_t val;
     pvr_poly_cxt_t tmp;
 
     txr_font = pvr_mem_malloc(256 * 256 * 2);
-    vtex = (vuint16*)txr_font;
+    vtex = (volatile uint16_t *)txr_font;
 
     charmap = malloc(256);
     image = malloc(FONT_PIC_WIDTH * FONT_PIC_HEIGHT);
@@ -749,7 +749,7 @@ void font_init(void) {
         return;
     }
 
-    printf("Drawing into 0x%08lx\r\n", (uint32)vtex);
+    printf("Drawing into 0x%08lx\r\n", (uint32_t)vtex);
 
     for(y = 0; y < FONT_PIC_HEIGHT; y++) {
         for(x = 0; x < FONT_PIC_WIDTH; x++) {
@@ -874,5 +874,4 @@ int main(int argc, const char *argv[]) {
     printf("Done, returning\n");
     return 0;
 }
-
 

@@ -19,12 +19,12 @@
    boot rom file manager. */
 static int off1 = 20 + 36;
 
-void draw_one(maple_device_t *addr, char *fn, uint16 hdrblock) {
+void draw_one(maple_device_t *addr, char *fn, uint16_t hdrblock) {
     bfont_draw_str(vram_s + off1 * 640 + 10, 640, 0, "File ");
     bfont_draw_str(vram_s + off1 * 640 + 10 + 5 * 12, 640, 0, fn);
 
     if(hdrblock) {
-        uint8 buf[1024];
+        uint8_t buf[1024];
 
         if(vmu_block_read(addr, hdrblock, buf)) {
             printf("Can't read file header at %d\n", hdrblock);
@@ -41,10 +41,10 @@ void draw_one(maple_device_t *addr, char *fn, uint16 hdrblock) {
 
 /* We only do the monochrome one here to avoid having to
    parse through the FAT. */
-void draw_icondata(maple_device_t *addr, uint16 block) {
-    uint8 buf[512], *icon;
-    uint16 *buf16 = (uint16*)buf, *vr = vram_s + 20 * 640 + 20;
-    uint16 monoicon;
+void draw_icondata(maple_device_t *addr, uint16_t block) {
+    uint8_t buf[512], *icon;
+    uint16_t *buf16 = (uint16_t *)buf, *vr = vram_s + 20 * 640 + 20;
+    uint16_t monoicon;
     int x, y;
 
     if(vmu_block_read(addr, block, buf)) {
@@ -74,12 +74,12 @@ void draw_icondata(maple_device_t *addr, uint16 block) {
 void vmu_read_test(void) {
     int i, n, drawn = 0;
     maple_device_t *addr = maple_enum_type(0, MAPLE_FUNC_MEMCARD);
-    uint8 *ent;
-    uint8 buf[512];
+    uint8_t *ent;
+    uint8_t buf[512];
 
-    uint16 *buf16 = (uint16*)buf, dirblock, dirlength, *ent16;
+    uint16_t *buf16 = (uint16_t *)buf, dirblock, dirlength, *ent16;
 
-    uint16 icondata = 0;
+    uint16_t icondata = 0;
 
     /* Make sure we have a VMU */
     if(!addr) {
@@ -112,7 +112,7 @@ void vmu_read_test(void) {
             /* Check the filename; for normal files, draw an
                entry on the screen. If it's ICONDATA_VMS then
                just keep track of the block. */
-            ent16 = (uint16*)ent;
+            ent16 = (uint16_t*)ent;
             ent[4 + 12] = 0;
 
             if(!strcmp((char *)(ent + 4), "ICONDATA_VMS"))

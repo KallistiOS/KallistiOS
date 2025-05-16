@@ -16,7 +16,7 @@
 
 Font *FontInit(float TexW, float TexH,
                unsigned char RowStride, unsigned char ColStride,
-               uint32 Color) {
+               uint32_t Color) {
     Font *font = malloc(sizeof(Font));
 
     font->TexW      = TexW;

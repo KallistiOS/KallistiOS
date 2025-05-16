@@ -297,7 +297,7 @@ void draw_gl(void) {
 int main(int argc, char **argv) {
     maple_device_t *cont;
     cont_state_t *state;
-    uint16  last = CONT_A;
+    uint16_t  last = CONT_A;
 
     xrot = yrot = zrot = 0.0f;
     xspeed = yspeed = zspeed = 0.0f;

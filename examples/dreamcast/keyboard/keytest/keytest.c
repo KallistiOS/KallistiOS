@@ -26,15 +26,15 @@ Room has been explicitly left open for further tests. It might be useful to incl
 #include <kos.h>
 
 KOS_INIT_FLAGS(INIT_DEFAULT);
-extern uint16		*vram_s;
+extern uint16_t *vram_s;
 
 cont_state_t* first_kbd_state;
 maple_device_t* first_kbd_dev = NULL;
 
 /* Track how many times we try to find a keyboard before just quitting. */
-uint8 no_kbd_loop = 0;
+uint8_t no_kbd_loop = 0;
 /* This is set up to have multiple tests in the future. */
-uint8 test_phase = 0;
+uint8_t test_phase = 0;
 
 
 void basic_typing (void)
@@ -42,7 +42,7 @@ void basic_typing (void)
     int charcount = 0;
     int rv;
     int lines = 0;
-    uint32 offset = ((STARTLINE+(lines*BFONT_HEIGHT)) * WIDTH);
+    uint32_t offset = ((STARTLINE+(lines*BFONT_HEIGHT)) * WIDTH);
     bfont_draw_str(vram_s + offset, WIDTH, 1, "Test of basic typing. Enter 120 characters: ");
     offset = ((STARTLINE+((++lines)*BFONT_HEIGHT)) * WIDTH);
 

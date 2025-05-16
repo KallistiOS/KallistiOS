@@ -34,7 +34,7 @@
 
 int main(int argc, char *argv[]) {
     kos_blockdev_t sd_dev;
-    uint8 partition_type;
+    uint8_t partition_type;
     DIR *d;
     struct dirent *entry;
 #ifdef ENABLE_WRITE
