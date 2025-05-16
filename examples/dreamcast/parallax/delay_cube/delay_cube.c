@@ -57,7 +57,7 @@ void makecube(void) {
 
 // Draw a single point in 3D space. Uses the currently loaded matrix.
 void drawpnt(float x, float y, float z, float a, float r, float g, float b) {
-    uint32 col = plx_pack_color(a, r, g, b);
+    uint32_t col = plx_pack_color(a, r, g, b);
 
     // Transform the point, clip the Z plane to avoid artifacts.
     plx_mat_tfip_3d(x, y, z);

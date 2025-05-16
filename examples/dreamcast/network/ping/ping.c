@@ -23,8 +23,8 @@ KOS_INIT_FLAGS(INIT_DEFAULT | INIT_NET);
 
 int main(int argc, char *argv[]) {
     /* The address to ping... */
-    uint8 addr[4] = { 192, 168, 1, 1 };
-    uint8 data[DATA_SIZE];
+    uint8_t addr[4] = { 192, 168, 1, 1 };
+    uint8_t data[DATA_SIZE];
     int i;
 
     dbgio_dev_select("fb");
@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
     /* Fill in the data for the ping packet... this is pretty simple and doesn't
        really have any real meaning... */
     for(i = 0; i < DATA_SIZE; ++i) {
-        data[i] = (uint8)i;
+        data[i] = (uint8_t)i;
     }
 
     /* Send out 10 pings, waiting 250ms between attempts. */

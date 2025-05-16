@@ -39,7 +39,7 @@ static plx_dr_state_t dr;
 
 // Draws the full cube at the current position.
 void drawcube(void) {
-    uint32 color = 0xff808080;
+    uint32_t color = 0xff808080;
 
     plx_dr_init(&dr);
 
@@ -84,7 +84,7 @@ void drawcube(void) {
 
 // Draws the wave in the background (2D)
 void drawwave(int theta) {
-    uint32 color = 0xffa0a0a0;
+    uint32_t color = 0xffa0a0a0;
     int i, divs = 320;
     float x, y, t;
 
@@ -183,5 +183,3 @@ int main(int argc, char **argv) {
 
     return 0;
 }
-
-

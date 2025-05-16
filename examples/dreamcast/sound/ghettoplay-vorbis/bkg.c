@@ -14,10 +14,10 @@ static float horizon = 340.0f;
 /* Make a nice (now familiar =) XOR pattern texture */
 void bkg_setup(void) {
     int x, y;
-    uint16 *texture;
+    uint16_t *texture;
 
     chktexture = pvr_mem_malloc(64 * 64 * 2);
-    texture = (uint16*)chktexture;
+    texture = (uint16_t *)chktexture;
 
     for(y = 0; y < 64; y++)
         for(x = 0; x < 64; x++) {

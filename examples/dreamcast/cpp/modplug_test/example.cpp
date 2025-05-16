@@ -2,7 +2,7 @@
 #include <modplug/stdafx.h>
 #include <modplug/sndfile.h>
 
-uint16 sound_buffer[65536] = {0};
+uint16_t sound_buffer[65536] = {0};
 CSoundFile *soundfile;
 
 void *mod_callback(snd_stream_hnd_t hnd, int len, int * actual) {
@@ -24,8 +24,8 @@ void *mod_callback(snd_stream_hnd_t hnd, int len, int * actual) {
 int main(int argc, char **argv) {
     maple_device_t *cont;
     cont_state_t *state;
-    uint8 *mod_buffer;
-    uint32 hnd;
+    uint8_t *mod_buffer;
+    uint32_t hnd;
     char filename[] = "/rd/test.s3m";
 
     printf("modplug_test beginning\n");
@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
     }
 
     printf("Filesize: %i\n", fs_total(hnd));
-    mod_buffer = (uint8 *)malloc(fs_total(hnd));
+    mod_buffer = (uint8_t *)malloc(fs_total(hnd));
 
     if(!mod_buffer) {
         printf("Not enough memory\n");

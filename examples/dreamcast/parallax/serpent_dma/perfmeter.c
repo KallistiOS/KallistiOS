@@ -27,7 +27,7 @@ void pm_init(void) {
 }
 
 void pm_drawbar(float pct, float posx, float posy, float posz,
-                uint32 c1, uint32 c2) {
+                uint32_t c1, uint32_t c2) {
     const float len = 200.0f;
 
     plx_vert_inp(PLX_VERT, posx, posy + 6.0f, posz, c1);
