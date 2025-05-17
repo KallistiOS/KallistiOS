@@ -37,13 +37,97 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 #define __GTHREADS_CXX0X 1
 #define __GTHREAD_HAS_COND 1
 
+/* Needed for bool, `NULL`, and std types */
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
+/* Needed for timespec */
+#include <time.h>
+
+/* The forward declarations below come from these includes */
+/*
 #include <kos/thread.h>
 #include <kos/tls.h>
 #include <kos/mutex.h>
 #include <kos/once.h>
 #include <kos/cond.h>
 #include <arch/irq.h>
-#include <time.h>
+*/
+
+/* Minimal forwards from kos/thread.h */
+typedef __attribute__((aligned(32))) struct kthread kthread_t;
+
+kthread_t *thd_create(bool detach, void *(*routine)(void *param), void *param);
+int thd_join(kthread_t *thd, void **value_ptr);
+int thd_detach(kthread_t *thd);
+void thd_pass(void);
+kthread_t *thd_get_current(void);
+void thd_exit(void *rv) __attribute__((__noreturn__));
+
+/* Minimal forwards from kos/tls.h */
+typedef int kthread_key_t;
+int kthread_key_create(kthread_key_t *key, void (*destructor)(void *));
+void *kthread_getspecific(kthread_key_t key);
+int kthread_setspecific(kthread_key_t key, const void *value);
+int kthread_key_delete(kthread_key_t key);
+
+/* Minimal forwards from kos/once.h */
+typedef volatile int kthread_once_t;
+#define KTHREAD_ONCE_INIT   0
+int kthread_once(kthread_once_t *once_control, void (*init_routine)(void));
+
+/* Minimal forwards from kos/once.h */
+
+/* For OBJ-C we have to actually provide the full struct as we are defining
+   actual wrapper functions for the low-level objc mutex and condvar. */
+#ifdef _LIBOBJC
+    typedef struct kos_mutex {
+        int type;
+        int dynamic;
+        kthread_t *holder;
+        int count;
+    } mutex_t;
+#else
+    typedef struct kos_mutex mutex_t;
+#endif
+
+#define MUTEX_TYPE_NORMAL       0   /**< \brief Normal mutex type */
+#define MUTEX_TYPE_RECURSIVE    3   /**< \brief Recursive mutex type */
+#define MUTEX_INITIALIZER               { MUTEX_TYPE_NORMAL, 0, NULL, 0 }
+#define RECURSIVE_MUTEX_INITIALIZER     { MUTEX_TYPE_RECURSIVE, 0, NULL, 0 }
+int mutex_init(mutex_t *m, int mtype);
+int mutex_destroy(mutex_t *m);
+int mutex_lock(mutex_t *m);
+int mutex_lock_timed(mutex_t *m, int timeout);
+int mutex_is_locked(mutex_t *m);
+int mutex_trylock(mutex_t *m);
+int mutex_unlock(mutex_t *m);
+
+/* Minimal forwards from kos/cond.h */
+#ifdef _LIBOBJC
+    typedef struct condvar {
+        int dummy;
+        int dynamic;
+    } condvar_t;
+#else
+    typedef struct condvar condvar_t;
+#endif
+
+#define COND_INITIALIZER    { 0, 0 }
+int cond_init(condvar_t *cv);
+int cond_destroy(condvar_t *cv);
+int cond_wait(condvar_t *cv, mutex_t * m);
+int cond_wait_timed(condvar_t *cv, mutex_t * m, int timeout);
+int cond_signal(condvar_t *cv);
+int cond_broadcast(condvar_t *cv);
+
+#ifdef _LIBOBJC
+/* Minimal forwards from kos/irq.h */
+typedef uint32_t irq_mask_t;
+irq_mask_t irq_disable(void);
+void irq_restore(irq_mask_t v);
+#endif
 
 /* 9.5.0 somehow requires this. Remove when no longer supported */
 #include <pthread.h>
@@ -176,7 +260,7 @@ static inline int __gthread_objc_mutex_allocate(objc_mutex_t mutex) {
 /* Deallocate a mutex. */
 static inline int __gthread_objc_mutex_deallocate(objc_mutex_t mutex) {
     mutex_t *m = (mutex_t *)mutex->backend;
-    uint32 old;
+    irq_mask_t old;
 
     old = irq_disable();
 
@@ -291,7 +375,7 @@ static inline int __gthread_key_create(__gthread_key_t *__key,
     return kthread_key_create(__key, __func);
 }
 
-static int __gthread_key_delete(__gthread_key_t __key) {
+__attribute__((unused)) static int __gthread_key_delete(__gthread_key_t __key) {
     return kthread_key_delete(__key);
 }
 
