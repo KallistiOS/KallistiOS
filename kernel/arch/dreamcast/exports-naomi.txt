@@ -174,7 +174,6 @@ snd_stream_pan
 snd_stream_alloc
 snd_stream_destroy
 snd_stream_reinit
-snd_stream_prefill
 snd_pcm16_split
 snd_pcm16_split_sq
 snd_pcm8_split
