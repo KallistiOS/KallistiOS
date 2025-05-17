@@ -230,7 +230,7 @@ static pvr_init_params_t pvr_params = {
         PVR_BINSIZE_16, PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_0,
         PVR_BINSIZE_0
     },
-    512 * 1024
+    512 * 1024, 0, 0, 0, 0, 0
 };
 
 int main(int argc, char *argv[]) {

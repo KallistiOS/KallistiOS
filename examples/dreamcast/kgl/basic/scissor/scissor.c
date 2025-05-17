@@ -209,7 +209,10 @@ pvr_init_params_t params = {
     { PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_0 },
 
     /* Vertex buffer size 512K */
-    512 * 1024
+    512 * 1024,
+
+    /* Defaults for the rest */
+    0, 0, 0, 0, 0
 };
 
 int main(int argc, char **argv) {

@@ -256,11 +256,14 @@ pvr_init_params_t params = {
     /* No FSAA */
     0,
 
-    /* Translucent Autosort enabled. */
+    /* Translucent Autosort enabled */
     0,
 
     /* Extra OPBs */
-    3
+    3,
+
+    /* Vertex buffer double-buffering enabled */
+    0
 };
 
 // DMA buffers. This should ideally be in separate memory banks to take
