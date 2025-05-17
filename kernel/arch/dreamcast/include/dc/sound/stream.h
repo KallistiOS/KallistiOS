@@ -191,13 +191,13 @@ void snd_stream_filter_remove(snd_stream_hnd_t hnd,
 
 /** \brief  Prefill the stream buffers.
 
-    This function prefills the stream buffers before starting it. This is
-    implicitly called by snd_stream_start(), so there's probably no good reason
-    to call this yourself.
+    This function has no effect. The stream is prefilled on start.
+    This is deprecated and should be removed if used.
 
-    \param  hnd             The stream to prefill buffers on.
+    \param  hnd             Param.
 */
-void snd_stream_prefill(snd_stream_hnd_t hnd);
+static const int __snd_stream_prefill   __depr("snd_stream_prefill has no effect and should be removed") = 0;
+#define snd_stream_prefill(x)  ((void)__snd_stream_prefill)
 
 /** \brief  Initialize the stream system.
 

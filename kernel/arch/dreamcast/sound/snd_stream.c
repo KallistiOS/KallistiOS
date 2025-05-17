@@ -315,25 +315,6 @@ void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t 
     g2_unlock(ctx);
 }
 
-
-/* Prefill buffers -- implicitly called by snd_stream_start() */
-void snd_stream_prefill(snd_stream_hnd_t hnd) {
-    strchan_t *stream;
-
-    CHECK_HND(hnd);
-    stream = &streams[hnd];
-
-    if(!stream->get_data && !stream->req_data) {
-        return;
-    }
-
-    snd_stream_fill(hnd, 0, stream->buffer_size / 2);
-    snd_stream_fill(hnd, stream->buffer_size / 2, stream->buffer_size / 2);
-
-    /* Start playing from the beginning */
-    stream->last_write_pos = 0;
-}
-
 /* Initialize stream system */
 int snd_stream_init(void) {
     return snd_stream_init_ex(2, SND_STREAM_BUFFER_MAX);
@@ -534,8 +515,12 @@ static void snd_stream_start_type(snd_stream_hnd_t hnd, uint32_t type, uint32_t 
         }
     }
 
-    /* Prefill buffers */
-    snd_stream_prefill(hnd);
+    /* As long as there's a way to get/request data, prefill buffers */
+    snd_stream_fill(hnd, 0, streams[hnd].buffer_size / 2);
+    snd_stream_fill(hnd, streams[hnd].buffer_size / 2, streams[hnd].buffer_size / 2);
+
+    /* Start playing from the beginning */
+    streams[hnd].last_write_pos = 0;
 
     /* Make sure these are sync'd (and/or delayed) */
     snd_sh4_to_aica_stop();
@@ -688,6 +673,12 @@ static size_t snd_stream_fill(snd_stream_hnd_t hnd, uint32_t offset, size_t size
     const int needed_bytes = size * chans;
     int got_bytes = 0;
     void *data = NULL;
+
+    /* The stream hasn't been initted or is invalid. */
+    CHECK_HND(hnd);
+
+    /* The stream has been initted but not allocated. */
+    assert(chans != 0);
 
     if(stream->req_data) {
         got_bytes = stream->req_data(hnd,
