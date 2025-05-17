@@ -1,0 +1,150 @@
+From 4af93a8d9830244003a627f133677b641fde6901 Mon Sep 17 00:00:00 2001
+From: Kaz Kojima <kkojima@rr.iij4u.or.jp>
+Date: Tue, 24 Sep 2024 18:35:46 +0900
+Subject: [PATCH 12/13] SH: Try to workaround fp-reg related move insns pt.2
+
+The current movsf logic for LRA doesn't work well for reg from/to
+multiword subreg.  Use a separate pattern movsf_ie_rffr for that case.
+Also movsf_ie_ra should be disabled for reg from/to subreg of SImode.
+If not, it's recognizable as such move when subreg1 pass tries to split
+multiword because the constraints aren't effective in that stage.
+
+gcc/ChangeLog:
+	PR target/55212
+	* config/sh/sh-protos.h (sh_movsf_ie_subreg_multiword_p):
+	New proto.
+	* config/sh/sh.cc (sh_movsf_ie_subreg_multiword_p): New function.
+	* config/sh/sh.md (movsf_ie_rffr): New insn_and_split.
+	(movsf): Use movsf_ie_rffr when sh_movsf_ie_subreg_multiword_p is true.
+	(movsf_ie_ra): Disable when sh_movsf_ie_y_split_p is true.
+---
+ gcc/config/sh/sh-protos.h |  1 +
+ gcc/config/sh/sh.cc       | 20 +++++++++++++++++
+ gcc/config/sh/sh.md       | 47 ++++++++++++++++++++++++++++++++++++++-
+ 3 files changed, 67 insertions(+), 1 deletion(-)
+
+diff --git a/gcc/config/sh/sh-protos.h b/gcc/config/sh/sh-protos.h
+index 3f0133ccd38..dc37b22837b 100644
+--- a/gcc/config/sh/sh-protos.h
++++ b/gcc/config/sh/sh-protos.h
+@@ -103,6 +103,7 @@ extern int sh_eval_treg_value (rtx op);
+ extern HOST_WIDE_INT sh_disp_addr_displacement (rtx mem_op);
+ extern int sh_max_mov_insn_displacement (machine_mode mode, bool consider_sh2a);
+ extern bool sh_movsf_ie_y_split_p (rtx, rtx);
++extern bool sh_movsf_ie_subreg_multiword_p (rtx, rtx);
+ extern void sh_expand_sym_label2reg (rtx, rtx, rtx, bool);
+ 
+ /* Result value of sh_find_set_of_reg.  */
+diff --git a/gcc/config/sh/sh.cc b/gcc/config/sh/sh.cc
+index a783cea2704..d6c70ef9409 100644
+--- a/gcc/config/sh/sh.cc
++++ b/gcc/config/sh/sh.cc
+@@ -11486,6 +11486,26 @@ sh_movsf_ie_y_split_p (rtx op0, rtx op1)
+   return false;
+ }
+ 
++/* Return true if it moves reg from/to subreg of multiword mode.  */
++bool
++sh_movsf_ie_subreg_multiword_p (rtx op0, rtx op1)
++{
++  if (REG_P (op0)
++      && (SUBREG_P (op1)
++	  && (GET_MODE (SUBREG_REG (op1)) == SCmode
++	      || GET_MODE (SUBREG_REG (op1)) == DImode
++	      || GET_MODE (SUBREG_REG (op1)) == TImode)))
++    return true;
++  if (REG_P (op1)
++      && (SUBREG_P (op0)
++	  && (GET_MODE (SUBREG_REG (op0)) == SCmode
++	      || GET_MODE (SUBREG_REG (op0)) == DImode
++	      || GET_MODE (SUBREG_REG (op0)) == TImode)))
++    return true;
++
++  return false;
++}
++
+ static void
+ sh_conditional_register_usage (void)
+ {
+diff --git a/gcc/config/sh/sh.md b/gcc/config/sh/sh.md
+index c77fe067741..d8eedd2618f 100644
+--- a/gcc/config/sh/sh.md
++++ b/gcc/config/sh/sh.md
+@@ -6200,6 +6200,7 @@
+ 				" f,r,G,H,m,f,FQ,m,r,y,f,>,y,r,y,>,y"))
+    (use (reg:SI FPSCR_MODES_REG))]
+   "TARGET_SH2E && sh_lra_p ()
++   && ! sh_movsf_ie_y_split_p (operands[0], operands[1])
+    && (arith_reg_operand (operands[0], SFmode)
+        || fpul_operand (operands[0], SFmode)
+        || arith_reg_operand (operands[1], SFmode)
+@@ -6269,6 +6270,35 @@
+       (const_string "none")
+       (const_string "none")])])
+ 
++(define_insn_and_split "movsf_ie_rffr"
++  [(set (match_operand:SF 0 "arith_reg_dest" "=f,r,rf")
++	(match_operand:SF 1 "arith_reg_operand" "f,r,fr"))
++   (use (reg:SI FPSCR_MODES_REG))
++   (clobber (match_scratch:SF 2 "=X,X,y"))]
++  "TARGET_SH2E && sh_lra_p ()"
++  "@
++	fmov	%1,%0
++	mov	%1,%0
++	#"
++  "reload_completed
++   && (FP_REGISTER_P (REGNO (operands[0]))
++       != FP_REGISTER_P (REGNO (operands[1])))"
++  [(const_int 0)]
++{
++  emit_insn (gen_movsf_ie_ra (operands[2], operands[1]));
++  emit_insn (gen_movsf_ie_ra (operands[0], operands[2]));
++}
++  [(set_attr "type" "fmove,move,*")
++   (set_attr_alternative "length"
++     [(const_int 2)
++      (const_int 2)
++      (const_int 4)])
++   (set_attr_alternative "fp_mode"
++     [(if_then_else (eq_attr "fmovd" "yes")
++		    (const_string "single") (const_string "none"))
++      (const_string "none")
++      (const_string "none")])])
++
+ (define_insn "movsf_ie_F_z"
+   [(set (match_operand:SF 0 "fp_arith_reg_operand" "=f")
+ 	(match_operand:SF 1 "const_double_operand" "F"))
+@@ -6327,6 +6357,16 @@
+ 	{
+ 	  if (GET_CODE (operands[0]) == SCRATCH)
+ 	    DONE;
++	  /* reg from/to multiword subreg may be splitted to several reg from/to
++	     subreg of SImode by subreg1 pass.  This confuses our splitted
++	     movsf logic for LRA and will end up in bad code or ICE.  Use a special
++	     pattern so that LRA can optimize this case.  */
++	  if (! lra_in_progress && ! reload_completed
++	      && sh_movsf_ie_subreg_multiword_p (operands[0], operands[1]))
++	    {
++	      emit_insn (gen_movsf_ie_rffr (operands[0], operands[1]));
++	      DONE;
++	    }
+ 	  if (GET_CODE (operands[1]) == CONST_DOUBLE
+ 	      &&  ! satisfies_constraint_G (operands[1])
+ 	      &&  ! satisfies_constraint_H (operands[1])
+@@ -6336,7 +6376,12 @@
+ 		   && satisfies_constraint_Q (operands[1]))
+ 	    emit_insn (gen_movsf_ie_Q_z (operands[0], operands[1]));
+ 	  else if (sh_movsf_ie_y_split_p (operands[0], operands[1]))
+-	    emit_insn (gen_movsf_ie_y (operands[0], operands[1]));
++	    {
++	      if (lra_in_progress)
++		emit_insn (gen_movsf_ie (operands[0], operands[1]));
++	      else
++		emit_insn (gen_movsf_ie_y (operands[0], operands[1]));
++	    }
+ 	  else
+ 	    emit_insn (gen_movsf_ie_ra (operands[0], operands[1]));
+ 	  DONE;
+-- 
+2.47.2
+

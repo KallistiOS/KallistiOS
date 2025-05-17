@@ -1,0 +1,55 @@
+From 059d6c79f4f055aef8e2cdf670ce799a278f09a5 Mon Sep 17 00:00:00 2001
+From: Kaz Kojima <kkojima@rr.iij4u.or.jp>
+Date: Fri, 20 Sep 2024 18:36:22 +0900
+Subject: [PATCH 05/13] SH: A test case for wrong-code with -mlra PR55212 c#192
+ / c#248 / att. 59102
+
+gcc/testsuite/ChangeLog:
+
+	PR target/55212
+	* gcc.target/sh/pr55212-c248.c: New test.
+---
+ gcc/testsuite/gcc.target/sh/pr55212-c248.c | 31 ++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
+ create mode 100644 gcc/testsuite/gcc.target/sh/pr55212-c248.c
+
+diff --git a/gcc/testsuite/gcc.target/sh/pr55212-c248.c b/gcc/testsuite/gcc.target/sh/pr55212-c248.c
+new file mode 100644
+index 00000000000..94fd6afaab3
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/sh/pr55212-c248.c
+@@ -0,0 +1,31 @@
++/* { dg-do run }  */
++/* { dg-options "-O2 -m4 -mlra -ffixed-r7 -ffixed-r8 -ffixed-r9 -ffixed-r10 -ffixed-r11 -ffixed-r12 -ffixed-r13" } */
++#include <stdlib.h>
++#include <string.h>
++
++typedef struct { int c[64]; } obj;
++obj obj0;
++obj obj1;
++
++void __attribute__ ((noinline))
++bar (int a, int b, int c, int d, obj *q)
++{
++  if (q->c[0] != 0x12345678 || q->c[1] != 0xdeadbeef) 
++    abort ();
++}
++
++void foo (obj *p)
++{
++  obj bobj;
++  bobj = *p;
++  bar (0, 0, 0, 0, &bobj);
++}
++
++int
++main ()
++{
++  obj0.c[0] = 0x12345678;
++  obj0.c[1] = 0xdeadbeef;
++  foo (&obj0);
++  exit (0);
++}
+-- 
+2.47.2
+
