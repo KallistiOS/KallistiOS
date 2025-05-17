@@ -52,7 +52,7 @@ struct InputBuf {
 static mrb_value btn_mrb_buffer;
 
 // buf has to be BUFSIZE elements at least
-void *read_buttons() {
+void *read_buttons(void*) {
   while(1) {
     input_buf.index = (input_buf.index + 1) % BUFSIZE;
     //printf("index: %" PRIu32 "\n", buf_index);
