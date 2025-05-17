@@ -25,7 +25,7 @@
 static net_ipv4_stats_t ipv4_stats = { 0 };
 
 /* Perform an IP-style checksum on a block of data */
-uint16 net_ipv4_checksum(const uint8 *data, size_t bytes, uint16 start) {
+uint16 __pure net_ipv4_checksum(const uint8 *data, size_t bytes, uint16 start) {
     uint32 sum = start;
     size_t i = bytes;
 
@@ -66,7 +66,7 @@ uint16 net_ipv4_checksum(const uint8 *data, size_t bytes, uint16 start) {
 }
 
 /* Determine if a given IP is in the current network */
-static int is_in_network(const uint8 src[4], const uint8 dest[4],
+static int __pure is_in_network(const uint8 src[4], const uint8 dest[4],
                          const uint8 netmask[4]) {
     int i;
 
@@ -79,7 +79,7 @@ static int is_in_network(const uint8 src[4], const uint8 dest[4],
 }
 
 /* Determine if a given IP is the adapter's broadcast address. */
-static int is_broadcast(const uint8 dest[4], const uint8 bc[4]) {
+static int __pure is_broadcast(const uint8 dest[4], const uint8 bc[4]) {
     int i;
 
     for(i = 0; i < 4; ++i) {
@@ -280,7 +280,7 @@ int net_ipv4_input_proto(netif_t *src, const ip_hdr_t *ip, const uint8 *data) {
     return -1;
 }
 
-uint32 net_ipv4_address(const uint8 addr[4]) {
+uint32 __pure net_ipv4_address(const uint8 addr[4]) {
     return (addr[0] << 24) | (addr[1] << 16) | (addr[2] << 8) | (addr[3]);
 }
 
@@ -291,7 +291,7 @@ void net_ipv4_parse_address(uint32 addr, uint8 out[4]) {
     out[3] = (uint8)(addr & 0xFF);
 }
 
-uint16 net_ipv4_checksum_pseudo(in_addr_t src, in_addr_t dst, uint8 proto,
+uint16 __pure net_ipv4_checksum_pseudo(in_addr_t src, in_addr_t dst, uint8 proto,
                                 uint16 len) {
     ipv4_pseudo_hdr_t ps = { src, dst, 0, proto, htons(len) };
 
