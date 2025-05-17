@@ -70,6 +70,12 @@ static semaphore_t dma_done = SEM_INITIALIZER(0);
 static asic_evt_handler_entry_t old_dma_irq = {NULL, NULL};
 static int vblank_hnd = -1;
 
+/* Streaming */
+static int stream_mode = -1;
+static cdrom_stream_callback_t stream_cb = NULL;
+static void *stream_cb_param = NULL;
+
+/* Initialization */
 static bool inited = false;
 static int cur_sector_size = 2048;
 
@@ -208,6 +214,11 @@ int cdrom_abort_cmd(uint32_t timeout, bool abort_dma) {
     } while(1);
 
     cmd_hnd = 0;
+    stream_mode = -1;
+
+    if(stream_cb) {
+        cdrom_stream_set_callback(0, NULL);
+    }
 
     mutex_unlock(&_g1_ata_mutex);
     return rv;
@@ -456,6 +467,216 @@ int cdrom_read_sectors(void *buffer, int sector, int cnt) {
     return cdrom_read_sectors_ex(buffer, sector, cnt, CDROM_READ_PIO);
 }
 
+int cdrom_stream_start(int sector, int cnt, int mode) {
+    struct {
+        int sec;
+        int num;
+    } params;
+    int rv = ERR_SYS;
+
+    params.sec = sector;
+    params.num = cnt;
+
+    if(stream_mode != -1) {
+        cdrom_stream_stop(false);
+    }
+    stream_mode = mode;
+
+    if(mode == CDROM_READ_DMA) {
+        rv = cdrom_exec_cmd_timed(CMD_DMAREAD_STREAM, &params, 0);
+    }
+    else if(mode == CDROM_READ_PIO) {
+        rv = cdrom_exec_cmd_timed(CMD_PIOREAD_STREAM, &params, 0);
+    }
+
+    if(rv != ERR_OK) {
+        stream_mode = -1;
+    }
+    return rv;
+}
+
+int cdrom_stream_stop(bool abort_dma) {
+    int rv = ERR_OK;
+
+    if(cmd_hnd <= 0) {
+        return rv;
+    }
+    if(abort_dma && dma_in_progress) {
+        return cdrom_abort_cmd(1000, true);
+    }
+    mutex_lock(&_g1_ata_mutex);
+
+    do {
+        syscall_gdrom_exec_server();
+        cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
+
+        if(cmd_response < 0) {
+            rv = ERR_SYS;
+            break;
+        }
+        else if(cmd_response == COMPLETED || cmd_response == NO_ACTIVE) {
+            break;
+        }
+        else if(cmd_response == STREAMING) {
+            mutex_unlock(&_g1_ata_mutex);
+            return cdrom_abort_cmd(1000, false);
+        }
+        thd_pass();
+    } while(1);
+
+    cmd_hnd = 0;
+    stream_mode = -1;
+    mutex_unlock(&_g1_ata_mutex);
+
+    if(stream_cb) {
+        cdrom_stream_set_callback(0, NULL);
+    }
+    return rv;
+}
+
+int cdrom_stream_request(void *buffer, size_t size, bool block) {
+    int rs, rv = ERR_OK;
+    int32_t params[2];
+    size_t check_size = -1;
+
+    if(cmd_hnd <= 0) {
+        return ERR_NO_ACTIVE;
+    }
+    if(dma_in_progress) {
+        dbglog(DBG_ERROR, "cdrom_stream_request: Previous DMA request is in progress.\n");
+        return ERR_SYS;
+    }
+
+    if(stream_mode == CDROM_READ_DMA) {
+        params[0] = ((uintptr_t)buffer) & MEM_AREA_CACHE_MASK;
+        if(params[0] & 0x1f) {
+            dbglog(DBG_ERROR, "cdrom_stream_request: Unaligned memory for DMA (32-byte).\n");
+            return ERR_SYS;
+        }
+        if((params[0] >> 24) == 0x0c) {
+            dcache_inval_range((uintptr_t)buffer, size);
+        }
+    }
+    else {
+        params[0] = (uintptr_t)buffer;
+        if(params[0] & 0x01) {
+            dbglog(DBG_ERROR, "cdrom_stream_request: Unaligned memory for PIO (2-byte).\n");
+            return ERR_SYS;
+        }
+    }
+
+    params[1] = size;
+    mutex_lock_scoped(&_g1_ata_mutex);
+
+    if(stream_mode == CDROM_READ_DMA) {
+
+        dma_in_progress = true;
+        dma_blocking = block;
+
+        if(!block) {
+            dma_thd = thd_current;
+            if(irq_inside_int()) {
+                dma_thd = (kthread_t *)0xFFFFFFFF;
+            }
+        }
+        rs = syscall_gdrom_dma_transfer(cmd_hnd, params);
+
+        if(rs < 0) {
+            dma_in_progress = false;
+            dma_blocking = false;
+            dma_thd = NULL;
+            return ERR_SYS;
+        }
+        if(!block) {
+            return rv;
+        }
+        sem_wait(&dma_done);
+
+        do {
+            syscall_gdrom_exec_server();
+            cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
+
+            if(cmd_response < 0) {
+                rv = ERR_SYS;
+                break;
+            }
+            else if(cmd_response == COMPLETED || cmd_response == NO_ACTIVE) {
+                cmd_hnd = 0;
+                break;
+            }
+            else if(syscall_gdrom_dma_check(cmd_hnd, &check_size) == 0) {
+                break;
+            }
+            thd_pass();
+
+        } while(1);
+    }
+    else if(stream_mode == CDROM_READ_PIO) {
+
+        rs = syscall_gdrom_pio_transfer(cmd_hnd, params);
+
+        if(rs < 0) {
+            return ERR_SYS;
+        }
+        do {
+            syscall_gdrom_exec_server();
+            cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
+
+            if(cmd_response < 0) {
+                rv = ERR_SYS;
+                break;
+            }
+            else if(cmd_response == COMPLETED || cmd_response == NO_ACTIVE) {
+                cmd_hnd = 0;
+                break;
+            }
+            else if(syscall_gdrom_pio_check(cmd_hnd, &check_size) == 0) {
+                /* Syscalls doesn't call it on last reading in PIO mode.
+                   Looks like a bug, fixing it. */
+                if(check_size == 0 && stream_cb) {
+                    stream_cb(stream_cb_param);
+                }
+                break;
+            }
+            thd_pass();
+        } while(1);
+    }
+
+    return rv;
+}
+
+int cdrom_stream_progress(size_t *size) {
+    int rv = 0;
+    size_t check_size = 0;
+
+    if(cmd_hnd <= 0) {
+        if(size) {
+            *size = check_size;
+        }
+        return rv;
+    }
+
+    if(stream_mode == CDROM_READ_DMA) {
+        rv = syscall_gdrom_dma_check(cmd_hnd, &check_size);
+    }
+    else {
+        rv = syscall_gdrom_pio_check(cmd_hnd, &check_size);
+    }
+
+    if(size) {
+        *size = check_size;
+    }
+    return rv;
+}
+
+void cdrom_stream_set_callback(cdrom_stream_callback_t callback, void *param) {
+    stream_cb = callback;
+    stream_cb_param = param;
+
+    if(stream_mode == CDROM_READ_PIO) {
+        syscall_gdrom_pio_callback((uintptr_t)stream_cb, stream_cb_param);
+    }
+}
 
 /* Read a piece of or all of the Q byte of the subcode of the last sector read.
    If you need the subcode from every sector, you cannot read more than one at 
@@ -599,6 +820,9 @@ static void g1_dma_irq_hnd(uint32_t code, void *data) {
         else if(dma_thd) {
             mutex_unlock_as_thread(&_g1_ata_mutex, dma_thd);
             dma_thd = NULL;
+        }
+        if(stream_mode != -1) {
+            syscall_gdrom_dma_callback((uintptr_t)stream_cb, stream_cb_param);
         }
     }
     else if(old_dma_irq.hdl) {

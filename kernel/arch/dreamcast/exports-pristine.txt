@@ -157,6 +157,11 @@ cdrom_get_subcode
 cdrom_read_toc
 cdrom_read_sectors
 cdrom_read_sectors_ex
+cdrom_stream_start
+cdrom_stream_stop
+cdrom_stream_request
+cdrom_stream_progress
+cdrom_stream_set_callback
 cdrom_locate_data_track
 cdrom_cdda_play
 cdrom_cdda_pause
