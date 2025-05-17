@@ -242,8 +242,8 @@ int scif_init(void) {
     for(i = 0; i < 800000; i++)
         __asm__("nop");
 
-    /* Unreset, enable hardware flow control, triggers on 8 bytes */
-    SCFCR2 = 0x48;
+    /* Unreset, disable hardware flow control, triggers on 8 bytes */
+    SCFCR2 = 0x40;
 
     /* Disable manual pin control */
     SCSPTR2 = 0;
