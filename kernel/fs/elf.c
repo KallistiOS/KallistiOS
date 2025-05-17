@@ -15,6 +15,7 @@
 #include <kos/exports.h>
 #include <kos/thread.h>
 #include <kos/library.h>
+#include <kos/dbglog.h>
 
 /* What's our architecture code we're expecting? */
 #if defined(_arch_dreamcast)

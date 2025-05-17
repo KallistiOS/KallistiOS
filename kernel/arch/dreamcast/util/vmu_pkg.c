@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <dc/vmu_pkg.h>
+#include <kos/dbglog.h>
 #include <kos/fs.h>
 #include <kos/regfield.h>
 

@@ -12,6 +12,7 @@
 #include <dc/video.h>
 #include <dc/asic.h>
 #include <dc/vblank.h>
+#include <kos/dbglog.h>
 #include "pvr_internal.h"
 
 /*

@@ -19,6 +19,7 @@
 #include <arch/irq.h>
 #include <arch/cache.h>
 #include <arch/memory.h>
+#include <kos/dbglog.h>
 #include <kos/net.h>
 #include <kos/thread.h>
 #include <kos/sem.h>

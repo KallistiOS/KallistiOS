@@ -12,6 +12,7 @@
 
 #include <kos/rwsem.h>
 #include <kos/genwait.h>
+#include <kos/dbglog.h>
 
 /* Allocate a new reader/writer semaphore */
 rw_semaphore_t *rwsem_create(void) {

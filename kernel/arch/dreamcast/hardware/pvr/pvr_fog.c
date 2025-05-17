@@ -8,6 +8,8 @@
 #include <assert.h>
 #include <stdio.h>
 #include <dc/pvr.h>
+#include <kos/dbglog.h>
+
 #include "pvr_internal.h"
 #include "pvr_fog_tables.h"
 

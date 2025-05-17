@@ -14,6 +14,7 @@
 #include <sys/queue.h>
 #include <dc/sound/sound.h>
 #include <arch/spinlock.h>
+#include <kos/dbglog.h>
 
 /*
 

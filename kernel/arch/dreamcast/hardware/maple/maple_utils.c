@@ -10,6 +10,7 @@
 #include <string.h>
 #include <arch/memory.h>
 #include <dc/maple.h>
+#include <kos/dbglog.h>
 
 /* Enable / Disable the bus */
 void maple_bus_enable(void) {

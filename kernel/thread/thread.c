@@ -20,6 +20,7 @@
 
 #include <kos/thread.h>
 #include <kos/dbgio.h>
+#include <kos/dbglog.h>
 #include <kos/sem.h>
 #include <kos/rwsem.h>
 #include <kos/cond.h>

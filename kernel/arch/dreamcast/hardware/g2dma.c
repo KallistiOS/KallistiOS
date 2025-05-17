@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <dc/asic.h>
 #include <dc/g2bus.h>
+#include <kos/dbglog.h>
 #include <kos/sem.h>
 #include <kos/thread.h>
 

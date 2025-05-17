@@ -10,6 +10,7 @@
 #include <dc/video.h>
 #include <dc/pvr.h>
 #include <dc/sq.h>
+#include <kos/dbglog.h>
 #include <kos/platform.h>
 #include <string.h>
 #include <stdio.h>

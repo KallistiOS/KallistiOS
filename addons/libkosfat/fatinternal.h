@@ -39,13 +39,15 @@ struct fatfs_struct {
 #define FAT_FS_FLAG_SB_DIRTY   1
 
 #ifdef FAT_NOT_IN_KOS
-#include <stdio.h>
-#define DBG_DEBUG 0
-#define DBG_KDEBUG 0
-#define DBG_WARNING 0
-#define DBG_ERROR 0
+    #include <stdio.h>
+    #define DBG_DEBUG 0
+    #define DBG_KDEBUG 0
+    #define DBG_WARNING 0
+    #define DBG_ERROR 0
 
-#define dbglog(lvl, ...) printf(__VA_ARGS__)
+    #define dbglog(lvl, ...) printf(__VA_ARGS__)
+#else
+    #include <kos/dbglog.h>
 #endif
 
 #endif /* !__FAT_FATINTERNAL_H */

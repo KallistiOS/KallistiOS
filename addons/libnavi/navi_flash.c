@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <navi/flash.h>
+#include <kos/dbglog.h>
 #include <kos/thread.h>
 
 /*

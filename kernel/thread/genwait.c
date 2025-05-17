@@ -20,6 +20,7 @@
 #include <errno.h>
 
 #include <arch/timer.h>
+#include <kos/dbglog.h>
 #include <kos/genwait.h>
 #include <kos/sem.h>
 

@@ -11,6 +11,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <arch/timer.h>
+#include <kos/dbglog.h>
 
 #include "net_icmp6.h"
 #include "net_ipv6.h"

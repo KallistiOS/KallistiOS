@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <arch/irq.h>
+#include <kos/dbglog.h>
 #include <kos/genwait.h>
 #include <dc/maple.h>
 #include <dc/maple/sip.h>
