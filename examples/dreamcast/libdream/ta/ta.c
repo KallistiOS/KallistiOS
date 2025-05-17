@@ -108,7 +108,7 @@ void draw_one_poly(polyplace_t *p) {
     pvr_prim(&vert, sizeof(vert));
 }
 
-uint32 color = 0;
+uint32_t color = 0;
 int dcolor = 5;
 void draw_frame(void) {
     pvr_poly_cxt_t  cxt;

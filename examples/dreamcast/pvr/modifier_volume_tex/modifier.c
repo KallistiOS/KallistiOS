@@ -34,7 +34,7 @@ void setup(void) {
     int i;
     float x, y, z;
     int w1, h1, w2, h2;
-    uint32 fmt1, fmt2;
+    uint32_t fmt1, fmt2;
     kos_img_t img;
 
     if(pcx_to_img("/rd/crate.pcx", &img)) {

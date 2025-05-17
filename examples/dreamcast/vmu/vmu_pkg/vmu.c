@@ -86,7 +86,7 @@ static unsigned char vmu_icon[ICON_SIZE * NB_ICONS_MAX];
 /* Here's the actual meat of it */
 void write_entry(void) {
     vmu_pkg_t   pkg;
-    uint8       data[4096], *pkg_out;
+    uint8_t     data[4096], *pkg_out;
     int     pkg_size;
     int     i;
     file_t      f;

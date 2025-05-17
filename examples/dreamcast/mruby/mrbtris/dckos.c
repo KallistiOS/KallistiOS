@@ -46,8 +46,8 @@ struct InputBuf {
 } input_buf;
 
 // Globals for cntroller input
-//static uint32 *btn_buffer;
-//static uint32 *buf_index;
+//static uint32_t *btn_buffer;
+//static uint32_t *buf_index;
 
 static mrb_value btn_mrb_buffer;
 

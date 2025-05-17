@@ -28,7 +28,7 @@
 #include <dc/maple/keyboard.h>
 #include <dc/maple/controller.h>
 
-void cont_cb(uint8 addr, uint32 btns) {
+void cont_cb(uint8_t addr, uint32_t btns) {
 	(void)addr;
 	(void)btns;
 
