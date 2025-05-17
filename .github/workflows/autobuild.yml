@@ -1,0 +1,23 @@
+name: Linux build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: install-dependencies
+      run: |
+        sudo apt install -y libjpeg-dev libpng-dev
+
+    - name: build
+      run: |
+        cp $GITHUB_WORKSPACE/utils/dc-chain/Makefile.default.cfg $GITHUB_WORKSPACE/utils/dc-chain/Makefile.cfg
+        cp $GITHUB_WORKSPACE/doc/environ.sh.sample $GITHUB_WORKSPACE/environ.sh
+        sed -i 's/KOS_BASE=.*$/KOS_BASE=$GITHUB_WORKSPACE/' $GITHUB_WORKSPACE/environ.sh
+        make -C $GITHUB_WORKSPACE/utils/dc-chain build-sh4 build-arm >/dev/null
+        . $GITHUB_WORKSPACE/environ.sh
+        make -C $GITHUB_WORKSPACE
