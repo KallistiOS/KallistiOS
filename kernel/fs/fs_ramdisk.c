@@ -36,10 +36,9 @@ cache data from disk rather than as a general purpose file system.
 #include <kos/fs_ramdisk.h>
 #include <kos/opts.h>
 
-#include <arch/types.h>
-
 #include <string.h>
 #include <strings.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -55,7 +54,7 @@ char *strdup(const char *);
 /* File definition */
 typedef struct rd_file {
     char    * name;     /* File name -- allocated */
-    uint32  size;       /* Actual file size */
+    uint32_t  size;     /* Actual file size */
     int type;       /* File type */
     int openfor;    /* Lock constant */
     int usage;      /* Usage count (unopened is 0) */
@@ -70,7 +69,7 @@ typedef struct rd_file {
         which is defined below. datasize has no meaning for a
         directory. */
     void    * data;     /* Data block pointer */
-    uint32  datasize;   /* Size of data block pointer */
+    uint32_t  datasize; /* Size of data block pointer */
 
     LIST_ENTRY(rd_file) dirlist;    /* Directory list entry */
 } rd_file_t;
@@ -95,7 +94,7 @@ static rd_dir_t  *rootdir = NULL;
 static struct {
     rd_file_t   *file;      /* ramdisk file struct */
     int         dir;        /* >0 if a directory */
-    uint32      ptr;        /* Current read position in bytes */
+    uint32_t    ptr;        /* Current read position in bytes */
     dirent_t    dirent;     /* A static dirent to pass back to clients */
     int         omode;      /* Open mode */
 } fh[FS_RAMDISK_MAX_FILES];
@@ -334,7 +333,7 @@ static void * ramdisk_open(vfs_handler_t * vfs, const char *fn, int mode) {
     /* If we opened a dir, then ptr is actually a pointer to the first
        file entry. */
     if(mode & O_DIR) {
-        fh[fd].ptr = (uint32)LIST_FIRST((rd_dir_t *)f->data);
+        fh[fd].ptr = (uint32_t)LIST_FIRST((rd_dir_t *)f->data);
     }
 
     /* Increase the usage count */
@@ -390,7 +389,7 @@ static ssize_t ramdisk_read(void * h, void *buf, size_t bytes) {
             bytes = fh[fd].file->size - fh[fd].ptr;
 
         /* Copy out the requested amount */
-        memcpy(buf, ((uint8 *)fh[fd].file->data) + fh[fd].ptr, bytes);
+        memcpy(buf, ((uint8_t *)fh[fd].file->data) + fh[fd].ptr, bytes);
         fh[fd].ptr += bytes;
 
         rv = bytes;
@@ -421,7 +420,7 @@ static ssize_t ramdisk_write(void * h, const void *buf, size_t bytes) {
         }
 
         /* Copy out the requested amount */
-        memcpy(((uint8 *)fh[fd].file->data) + fh[fd].ptr, buf, bytes);
+        memcpy(((uint8_t *)fh[fd].file->data) + fh[fd].ptr, buf, bytes);
         fh[fd].ptr += bytes;
 
         if(fh[fd].file->size < fh[fd].ptr) {
@@ -458,7 +457,7 @@ static off_t ramdisk_seek(void * h, off_t offset, int whence) {
             break;
 
         case SEEK_CUR:
-            if(offset < 0 && ((uint32)-offset) > fh[fd].ptr) {
+            if(offset < 0 && ((uint32_t)-offset) > fh[fd].ptr) {
                 errno = EINVAL;
                 return -1;
             }
@@ -467,7 +466,7 @@ static off_t ramdisk_seek(void * h, off_t offset, int whence) {
             break;
 
         case SEEK_END:
-            if(offset < 0 && ((uint32)-offset) > fh[fd].file->size) {
+            if(offset < 0 && ((uint32_t)-offset) > fh[fd].file->size) {
                 errno = EINVAL;
                 return -1;
             }
@@ -521,7 +520,7 @@ static dirent_t *ramdisk_readdir(void * h) {
     if(fd < FS_RAMDISK_MAX_FILES && fh[fd].file != NULL && fh[fd].ptr != 0 && fh[fd].dir) {
         /* Find the current file and advance to the next */
         f = (rd_file_t *)fh[fd].ptr;
-        fh[fd].ptr = (uint32)LIST_NEXT(f, dirlist);
+        fh[fd].ptr = (uint32_t)LIST_NEXT(f, dirlist);
 
         /* Copy out the requested data */
         strcpy(fh[fd].dirent.name, f->name);
@@ -667,7 +666,7 @@ static int ramdisk_rewinddir(void * h) {
     }
 
     /* Rewind to the first file. */
-    fh[fd].ptr = (uint32)LIST_FIRST((rd_dir_t *)fh[fd].file->data);
+    fh[fd].ptr = (uint32_t)LIST_FIRST((rd_dir_t *)fh[fd].file->data);
 
     return 0;
 }
