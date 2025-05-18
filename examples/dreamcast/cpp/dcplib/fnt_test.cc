@@ -205,7 +205,11 @@ int read_input() {
 }
 
 int main(int argc, char **argv) {
-    pvr_init_params_t pvrInit = { {PVR_BINSIZE_0, PVR_BINSIZE_0, PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_0}, 512 * 1024};
+    pvr_init_params_t pvrInit = {
+        {PVR_BINSIZE_0, PVR_BINSIZE_0, PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_0},
+        512 * 1024, 0, 0, 0, 0, 0
+    };
+
     pvr_init(&pvrInit);
 
     text = new fntRenderer();

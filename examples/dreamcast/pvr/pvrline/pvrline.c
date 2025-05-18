@@ -23,7 +23,7 @@ KOS_INIT_FLAGS(INIT_DEFAULT);
 
 /* enable OP and TR lists */
 pvr_init_params_t pvr_params = {
-{ PVR_BINSIZE_16, 0, PVR_BINSIZE_16, 0, 0 }, VERTBUF_SIZE, 1, 0, 0, 3
+{ PVR_BINSIZE_16, 0, PVR_BINSIZE_16, 0, 0 }, VERTBUF_SIZE, 1, 0, 0, 3, 0
 };
 
 uint8_t __attribute__((aligned(32))) op_buf[VERTBUF_SIZE];

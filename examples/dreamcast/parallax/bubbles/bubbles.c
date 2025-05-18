@@ -249,7 +249,10 @@ pvr_init_params_t params = {
     0,
 
     /* Extra OPBs */
-    3
+    3,
+
+    /* Vertex buffer double-buffering enabled */
+    0
 };
 
 int main(int argc, char **argv) {
