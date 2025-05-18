@@ -175,6 +175,10 @@ static int ramdisk_get_parent(rd_dir_t * parent, const char * fn, rd_dir_t ** do
     }
     else {
         pname = (char *)malloc((p - fn) + 1);
+
+        if(!pname)
+            return -2;
+
         strncpy(pname, fn, p - fn);
         pname[p - fn] = 0;
 
