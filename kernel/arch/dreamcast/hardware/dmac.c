@@ -108,7 +108,7 @@ static void dma_irq_handler(irq_t code, irq_context_t *context, void *d) {
     }
 }
 
-static bool dma_is_running(dma_channel_t channel) {
+bool dma_is_running(dma_channel_t channel) {
     uint32_t chcr = dmac_read(channel, DMA_REG_CHCR);
 
     return (chcr & (REG_CHCR_TRANSFER_END | REG_CHCR_DMAC_EN)) == REG_CHCR_DMAC_EN;
@@ -165,4 +165,11 @@ size_t dma_transfer_get_remaining(dma_channel_t channel) {
     uint32_t tcr = dmac_read(channel, DMA_REG_TCR);
 
     return tcr * dma_unit_size[unit_size];
+}
+
+void dma_transfer_abort(dma_channel_t channel) {
+    irq_disable_scoped();
+
+    dmac_write(channel, DMA_REG_CHCR, 0);
+    genwait_wake_all((void *)&channels_cfg[channel]);
 }
