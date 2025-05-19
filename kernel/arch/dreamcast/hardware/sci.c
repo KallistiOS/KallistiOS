@@ -1021,7 +1021,7 @@ sci_result_t sci_spi_read_data(uint8_t *rx_data, size_t len) {
             if(status & ORER) {
                 SCSSR1 &= ~ORER;
                 sci_set_transfer_mode(0);
-                dbglog(DBG_ERROR, "SCI: Overrun error\n");
+                dbglog(DBG_ERROR, "SCI: Overrun error in SPI read data\n");
                 return SCI_ERR_OVERRUN;
             }
         } while(!(status & RDRF));
@@ -1082,7 +1082,7 @@ sci_result_t sci_spi_dma_write_data(const uint8_t *data, size_t len, dma_callbac
         while(!(SCSSR1 & TEND)) {
             if(++timeout_cnt > SCI_MAX_WAIT_CYCLES) {
                 sci_set_transfer_mode(0);
-                dbglog(DBG_ERROR, "SCI: Timeout waiting for TEND in SPI read data\n");
+                dbglog(DBG_ERROR, "SCI: Timeout waiting for TEND in SPI DMA write\n");
                 return SCI_ERR_TIMEOUT;
             }
         }
@@ -1109,7 +1109,6 @@ sci_result_t sci_spi_dma_read_data(uint8_t *data, size_t len, dma_callback_t cal
 
     /* Configure DMA */
     dma_config_t config = sci_dma_rx_config;
-    config.callback = callback;
 
     /* Prepare DMA */
     dma_addr_t src = hw_to_dma_addr(SCRDR1_ADDR);
@@ -1131,7 +1130,8 @@ sci_result_t sci_spi_dma_read_data(uint8_t *data, size_t len, dma_callback_t cal
         while(!(SCSSR1 & TDRE)) {
             if(++timeout_cnt > SCI_MAX_WAIT_CYCLES) {
                 sci_set_transfer_mode(0);
-                dbglog(DBG_ERROR, "SCI: Timeout waiting for TDRE in SPI read data\n");
+                dma_transfer_abort(sci_dma_rx_config.channel);
+                dbglog(DBG_ERROR, "SCI: Timeout waiting for TDRE in SPI DMA read\n");
                 return SCI_ERR_TIMEOUT;
             }
         }
@@ -1149,7 +1149,8 @@ sci_result_t sci_spi_dma_read_data(uint8_t *data, size_t len, dma_callback_t cal
     while(!(SCSSR1 & TEND)) {
         if(++timeout_cnt > SCI_MAX_WAIT_CYCLES) {
             sci_set_transfer_mode(0);
-            dbglog(DBG_ERROR, "SCI: Timeout waiting for TEND in SPI read data\n");
+            dma_transfer_abort(sci_dma_rx_config.channel);
+            dbglog(DBG_ERROR, "SCI: Timeout waiting for TEND in SPI DMA read\n");
             return SCI_ERR_TIMEOUT;
         }
     }
@@ -1173,6 +1174,6 @@ sci_result_t sci_spi_dma_read_data(uint8_t *data, size_t len, dma_callback_t cal
 }
 
 sci_result_t sci_dma_wait_complete(void) {
-    dma_wait_complete(DMA_CHANNEL_1);
+    dma_wait_complete(sci_dma_rx_config.channel);
     return check_sci_errors();
 }
