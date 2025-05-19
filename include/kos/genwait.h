@@ -27,6 +27,7 @@
 __BEGIN_DECLS
 
 #include <kos/thread.h>
+#include <stdint.h>
 
 /** \brief  Sleep on an object.
 
@@ -132,7 +133,7 @@ int genwait_wake_thd(void *obj, kthread_t *thd, int err);
 
     \param  now             The current system time, in milliseconds since boot
 */
-void genwait_check_timeouts(uint64 now);
+void genwait_check_timeouts(uint64_t now);
 
 /** \brief  Look for the next timeout event time.
 
@@ -143,7 +144,7 @@ void genwait_check_timeouts(uint64 now);
     \return                 The next timeout time in milliseconds since boot, or
                             0 if there are no pending genwait_wait() calls
 */
-uint64 genwait_next_timeout(void);
+uint64_t genwait_next_timeout(void);
 
 /** \cond */
 /* Initialize the genwait system */

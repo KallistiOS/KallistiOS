@@ -6,6 +6,7 @@
 
 */
 
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -729,7 +730,7 @@ static int vmu_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
 
     /* Get the number of free blocks */
     memset(st, 0, sizeof(struct stat));
-    st->st_dev = (dev_t)((ptr_t)dev);
+    st->st_dev = (dev_t)((uintptr_t)dev);
     st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | 
         S_IXGRP | S_IROTH | S_IXOTH;
     st->st_size = vmufs_free_blocks(dev);
@@ -806,7 +807,7 @@ static int vmu_fstat(void *fd, struct stat *st) {
 
     fh = (vmu_fh_t *)fd;
     memset(st, 0, sizeof(struct stat));
-    st->st_dev = (dev_t)((ptr_t)fh->dev);
+    st->st_dev = (dev_t)((uintptr_t)fh->dev);
     st->st_mode =  S_IRWXU | S_IRWXG | S_IRWXO;
     st->st_mode |= (fh->strtype == VMU_DIR) ? S_IFDIR : S_IFREG;
     st->st_size = (fh->strtype == VMU_DIR) ? 

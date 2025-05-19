@@ -1052,7 +1052,7 @@ static int fs_fat_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
     /* Root directory fat device */
     if(len == 0 || (len == 1 && *path == '/')) {
         memset(st, 0, sizeof(struct stat));
-        st->st_dev = (dev_t)((ptr_t)fs->vfsh);
+        st->st_dev = (dev_t)((uintptr_t)fs->vfsh);
         st->st_mode = S_IFDIR | S_IRUSR | S_IRGRP | S_IROTH | S_IXUSR |
             S_IXGRP | S_IXOTH | S_IWUSR | S_IWGRP | S_IWOTH;
         st->st_size = -1;
@@ -1074,7 +1074,7 @@ static int fs_fat_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
     /* Fill in the structure */
     memset(st, 0, sizeof(struct stat));
     irv = 0;
-    st->st_dev = (dev_t)((ptr_t)fs->vfsh);
+    st->st_dev = (dev_t)((uintptr_t)fs->vfsh);
     st->st_ino = ent.cluster_low | (ent.cluster_high << 16);
     st->st_nlink = 1;
     st->st_uid = 0;
@@ -1266,7 +1266,7 @@ static int fs_fat_fstat(void *h, struct stat *buf) {
 
     /* Fill in the structure */
     memset(buf, 0, sizeof(struct stat));
-    buf->st_dev = (dev_t)((ptr_t)fs->vfsh);
+    buf->st_dev = (dev_t)((uintptr_t)fs->vfsh);
     buf->st_ino = ent->cluster_low | (ent->cluster_high << 16);
     buf->st_nlink = 1;
     buf->st_uid = 0;

@@ -7,10 +7,10 @@
    Copyright (C) 2023, 2024 Falco Girgis
 */
 
-#include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 #include <malloc.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -591,7 +591,7 @@ static inline void thd_schedule_inner(kthread_t *thd) {
 
     /* Make sure the thread hasn't underrun its stack */
     if(thd_current->stack && thd_current->stack_size) {
-        if(CONTEXT_SP(thd_current->context) < (ptr_t)(thd_current->stack)) {
+        if(CONTEXT_SP(thd_current->context) < (uintptr_t)(thd_current->stack)) {
             thd_pslist(printf);
             thd_pslist_queue(printf);
             assert_msg(0, "Thread stack underrun");

@@ -23,6 +23,7 @@ on sunsite.unc.edu in /pub/Linux/system/recovery/, or as a package under Debian 
 #include <kos/opts.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 #include <strings.h>
 #include <stdio.h>
@@ -462,7 +463,7 @@ static int romdisk_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
     /* Root directory of romdisk */
     if(len == 0 || (len == 1 && *path == '/')) {
         memset(st, 0, sizeof(struct stat));
-        st->st_dev = (dev_t)((ptr_t)mnt);
+        st->st_dev = (dev_t)((uintptr_t)mnt);
         st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP |
             S_IROTH | S_IXOTH;
         st->st_size = -1;
@@ -488,7 +489,7 @@ static int romdisk_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
     }
        
     memset(st, 0, sizeof(struct stat));
-    st->st_dev = (dev_t)((ptr_t)mnt);
+    st->st_dev = (dev_t)((uintptr_t)mnt);
     st->st_mode = md | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
     st->st_size = -1;
     st->st_nlink = 2;
@@ -562,7 +563,7 @@ static int romdisk_fstat(void *h, struct stat *st) {
     }
 
     memset(st, 0, sizeof(struct stat));
-    st->st_dev = (dev_t)((ptr_t)fh[fd].mnt);
+    st->st_dev = (dev_t)((uintptr_t)fh[fd].mnt);
     st->st_mode = S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
     st->st_mode |= (fh[fd].dir) ? S_IFDIR : S_IFREG;
     st->st_size = fh[fd].size;

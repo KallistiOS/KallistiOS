@@ -7,6 +7,7 @@
  */
 
 #include <assert.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <kos/genwait.h>
@@ -39,7 +40,7 @@ void *pvr_set_vertbuf(pvr_list_t list, void *buffer, size_t len) {
     assert(pvr_state.lists_enabled & BIT(list));
 
     // Make sure the buffer parameters are valid.
-    assert(!(((ptr_t)buffer) & 31));
+    assert(!(((uintptr_t)buffer) & 31));
     assert(!(len & 63));
 
     // Save the old value.

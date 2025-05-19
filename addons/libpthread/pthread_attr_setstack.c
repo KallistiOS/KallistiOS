@@ -7,10 +7,11 @@
 #include "pthread-internal.h"
 #include <pthread.h>
 #include <errno.h>
+#include <stdint.h>
 
 int pthread_attr_setstack(pthread_attr_t *restrict attr,
                           void *restrict stackaddr, size_t stacksize) {
-    ptr_t addr = (ptr_t)stackaddr;
+    uintptr_t addr = (uintptr_t)stackaddr;
 
     if(!attr)
         return EINVAL;
