@@ -48,9 +48,6 @@ typedef volatile int32 vint32;      /**< \brief 32-bit volatile signed type */
 typedef volatile int16 vint16;      /**< \brief 16-bit volatile signed type */
 typedef volatile int8 vint8;        /**< \brief 8-bit volatile signed type */
 
-/* Pointer arithmetic types */
-typedef uint32 ptr_t;               /**< \brief Pointer arithmetic type */
-
 /* This type may be used for any generic handle type that is allowed
    to be negative (for errors) and has no specific bit count
    restraints. */
