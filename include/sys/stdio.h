@@ -8,6 +8,9 @@
 #ifndef _NEWLIB_STDIO_H
 #define _NEWLIB_STDIO_H
 
+#include <sys/cdefs.h>
+__BEGIN_DECLS
+
 // Cribbed from newlib sys/stdio.h
 
 /* Internal locking macros, used to protect stdio functions.  In the
@@ -30,5 +33,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <kos/fs.h>
+
+__END_DECLS
 
 #endif /* _NEWLIB_STDIO_H */

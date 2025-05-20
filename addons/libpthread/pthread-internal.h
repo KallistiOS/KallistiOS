@@ -7,6 +7,9 @@
 #ifndef __PTHREAD_INTERNAL_H
 #define __PTHREAD_INTERNAL_H
 
+#include <sys/cdefs.h>
+__BEGIN_DECLS
+
 #define __PTHREAD_HAVE_ATTR_TYPE        1
 #define __PTHREAD_HAVE_MUTEX_TYPE       1
 #define __PTHREAD_HAVE_COND_TYPE        1
@@ -80,5 +83,7 @@ STATIC_ASSERT(sizeof(pthread_barrier_t) == __PTHREAD_BARRIER_SIZE)
 STATIC_ASSERT(__PTHREAD_BARRIER_SIZE == THD_BARRIER_SIZE)
 
 #undef STATIC_ASSERT
+
+__END_DECLS
 
 #endif /* !__PTHREAD_INTERNAL_H */

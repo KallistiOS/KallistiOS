@@ -19,6 +19,9 @@
 #ifndef __SYS_LOCK_H__
 #define __SYS_LOCK_H__
 
+#include <sys/cdefs.h>
+__BEGIN_DECLS
+
 /** \cond */
 
 typedef struct {
@@ -62,5 +65,7 @@ int __newlib_lock_try_acquire_recursive(__newlib_recursive_lock_t*);
 void __newlib_lock_release_recursive(__newlib_recursive_lock_t*);
 
 /** \endcond */
+
+__END_DECLS
 
 #endif /* __SYS_LOCK_H__ */
