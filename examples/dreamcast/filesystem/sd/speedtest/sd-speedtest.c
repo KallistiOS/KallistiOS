@@ -25,6 +25,7 @@
 
 #include <kos/init.h>
 #include <kos/dbgio.h>
+#include <kos/dbglog.h>
 #include <kos/blockdev.h>
 
 KOS_INIT_FLAGS(INIT_DEFAULT);
