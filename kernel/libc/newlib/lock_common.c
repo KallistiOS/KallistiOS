@@ -45,17 +45,7 @@ void __newlib_lock_close_recursive(__newlib_recursive_lock_t *lock) {
 }
 
 void __newlib_lock_acquire_recursive(__newlib_recursive_lock_t *lock) {
-    int old;
-    int iscur;
-
-    // Check to see if we already own it. If so, everything is clear
-    // to incr nest. Otherwise, we can safely go on to do a normal
-    // spinlock wait.
-    old = irq_disable();
-    iscur = lock->owner == thd_current;
-    irq_restore(old);
-
-    if(iscur) {
+    if(lock->owner == thd_get_current()) {
         lock->nest++;
         return;
     }
@@ -64,7 +54,7 @@ void __newlib_lock_acquire_recursive(__newlib_recursive_lock_t *lock) {
     spinlock_lock(&lock->lock);
 
     // We own it now, so it's safe to init the rest of this.
-    lock->owner = thd_current;
+    lock->owner = thd_get_current();
     lock->nest = 1;
 }
 
