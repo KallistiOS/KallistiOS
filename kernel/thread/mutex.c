@@ -6,6 +6,7 @@
 
 */
 
+#include <assert.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <limits.h>
@@ -70,6 +71,8 @@ int mutex_lock_timed(mutex_t *m, int timeout) {
     uint64_t deadline = 0;
     int rv = 0;
 
+    assert(m->type <= MUTEX_TYPE_RECURSIVE);
+
     if((rv = irq_inside_int())) {
         dbglog(DBG_WARNING, "%s: called inside an interrupt with code: "
                "%x evt: %.4x\n",
@@ -86,11 +89,7 @@ int mutex_lock_timed(mutex_t *m, int timeout) {
 
     irq_disable_scoped();
 
-    if(m->type > MUTEX_TYPE_RECURSIVE) {
-        errno = EINVAL;
-        rv = -1;
-    }
-    else if(!m->count) {
+    if(!m->count) {
         m->count = 1;
         m->holder = thd_current;
     }
@@ -159,17 +158,14 @@ int __pure mutex_is_locked(const mutex_t *m) {
 int mutex_trylock(mutex_t *m) {
     kthread_t *thd = thd_current;
 
+    assert(m->type <= MUTEX_TYPE_RECURSIVE);
+
     irq_disable_scoped();
 
     /* If we're inside of an interrupt, pick a special value for the thread that
        would otherwise be impossible... */
     if(irq_inside_int())
         thd = IRQ_THREAD;
-
-    if(m->type > MUTEX_TYPE_RECURSIVE) {
-        errno = EINVAL;
-        return -1;
-    }
 
     /* Check if the lock is held by some other thread already */
     if(m->count && m->holder != thd) {
@@ -207,9 +203,12 @@ int mutex_trylock(mutex_t *m) {
 static int __nonnull_all mutex_unlock_common(mutex_t *m, kthread_t *thd) {
     int wakeup = 0;
 
+    assert(m->type <= MUTEX_TYPE_RECURSIVE);
+
     irq_disable_scoped();
 
     switch(m->type) {
+        default:
         case MUTEX_TYPE_NORMAL:
         case MUTEX_TYPE_OLDNORMAL:
             m->count = 0;
@@ -239,10 +238,6 @@ static int __nonnull_all mutex_unlock_common(mutex_t *m, kthread_t *thd) {
                 wakeup = 1;
             }
             break;
-
-        default:
-            errno = EINVAL;
-            return -1;
     }
 
     /* If we need to wake up a thread, do so. */
