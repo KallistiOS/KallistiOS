@@ -7,6 +7,7 @@
 */
 
 #include <assert.h>
+#include <stdatomic.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <limits.h>
@@ -91,7 +92,7 @@ int mutex_lock_timed(mutex_t *m, int timeout) {
 
     irq_disable_scoped();
 
-    if(!m->count) {
+    if(!m->holder) {
         m->count = 1;
         m->holder = thd_current;
         rv = 0;
@@ -142,11 +143,11 @@ int mutex_lock_timed(mutex_t *m, int timeout) {
 }
 
 int __pure mutex_is_locked(const mutex_t *m) {
-    return !!m->count;
+    return !!m->holder;
 }
 
 int mutex_trylock(mutex_t *m) {
-    kthread_t *thd = thd_current;
+    kthread_t *thd = thd_current, *thd_none = NULL;
 
     assert(m->type <= MUTEX_TYPE_RECURSIVE);
 
@@ -172,11 +173,8 @@ int mutex_trylock(mutex_t *m) {
         }
     }
 
-    irq_disable_scoped();
-
-    if(!m->count) {
+    if(atomic_compare_exchange_strong(&m->holder, &thd_none, thd)) {
         m->count = 1;
-        m->holder = thd;
         return 0;
     }
 
