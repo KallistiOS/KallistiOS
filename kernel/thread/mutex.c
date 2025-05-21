@@ -71,8 +71,6 @@ int mutex_lock_timed(mutex_t *m, int timeout) {
     uint64_t deadline = 0;
     int rv = 0;
 
-    assert(m->type <= MUTEX_TYPE_RECURSIVE);
-
     if((rv = irq_inside_int())) {
         dbglog(DBG_WARNING, "%s: called inside an interrupt with code: "
                "%x evt: %.4x\n",
@@ -87,24 +85,16 @@ int mutex_lock_timed(mutex_t *m, int timeout) {
         return -1;
     }
 
+    rv = mutex_trylock(m);
+    if(!rv || errno != EBUSY)
+        return rv;
+
     irq_disable_scoped();
 
     if(!m->count) {
         m->count = 1;
         m->holder = thd_current;
-    }
-    else if(m->type == MUTEX_TYPE_RECURSIVE && m->holder == thd_current) {
-        if(m->count == INT_MAX) {
-            errno = EAGAIN;
-            rv = -1;
-        }
-        else {
-            ++m->count;
-        }
-    }
-    else if(m->type == MUTEX_TYPE_ERRORCHECK && m->holder == thd_current) {
-        errno = EDEADLK;
-        rv = -1;
+        rv = 0;
     }
     else {
         if(timeout)
@@ -160,44 +150,39 @@ int mutex_trylock(mutex_t *m) {
 
     assert(m->type <= MUTEX_TYPE_RECURSIVE);
 
-    irq_disable_scoped();
-
     /* If we're inside of an interrupt, pick a special value for the thread that
        would otherwise be impossible... */
     if(irq_inside_int())
         thd = IRQ_THREAD;
 
-    /* Check if the lock is held by some other thread already */
-    if(m->count && m->holder != thd) {
-        errno = EBUSY;
-        return -1;
-    }
+    if(m->holder == thd) {
+        if(m->type == MUTEX_TYPE_ERRORCHECK) {
+            errno = EDEADLK;
+            return -1;
+        }
 
-    m->holder = thd;
-
-    switch(m->type) {
-        case MUTEX_TYPE_NORMAL:
-        case MUTEX_TYPE_OLDNORMAL:
-        case MUTEX_TYPE_ERRORCHECK:
-            if(m->count) {
-                errno = EDEADLK;
-                return -1;
-            }
-
-            m->count = 1;
-            break;
-
-        case MUTEX_TYPE_RECURSIVE:
+        if(m->type == MUTEX_TYPE_RECURSIVE) {
             if(m->count == INT_MAX) {
                 errno = EAGAIN;
                 return -1;
             }
 
             ++m->count;
-            break;
+            return 0;
+        }
     }
 
-    return 0;
+    irq_disable_scoped();
+
+    if(!m->count) {
+        m->count = 1;
+        m->holder = thd;
+        return 0;
+    }
+
+    /* We did not get the lock */
+    errno = EBUSY;
+    return -1;
 }
 
 static int __nonnull_all mutex_unlock_common(mutex_t *m, kthread_t *thd) {
