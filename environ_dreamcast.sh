@@ -14,10 +14,12 @@ fi
 # Default the SH4 floating-point precision if it isn't already set.
 # m4-single is used if supported by the current toolchain, otherwise
 # m4-single-only is used as a fallback option.
-if [ -z "${KOS_SH4_PRECISION}" ] ; then
+if [ -z "${KOS_SH4_PRECISION}" ] || [ "${KOS_SH4_PRECISION}" = "-m4-single" ]; then
     if echo 'int main(){}' | ${KOS_CC} -x c -c -o /dev/null - -m4-single 2>/dev/null; then
         export KOS_SH4_PRECISION="-m4-single"
     else
+        echo "WARNING: Toolchain does not support m4-single ABI -- falling back to m4-single-only ABI." >&2
+        echo "Please recompile the toolchain to enable support for the m4-single ABI." >&2
         export KOS_SH4_PRECISION="-m4-single-only"
     fi
 fi
