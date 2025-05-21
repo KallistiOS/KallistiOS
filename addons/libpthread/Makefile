@@ -66,6 +66,7 @@ OBJS += pthread_barrierattr_init.o pthread_barrierattr_destroy.o \
 
 # Misc.
 OBJS += pthread_atfork.o pthread_getsetconcurrency.o pthread_yield.o \
-        pthread_setprio.o pthread_getprio.o
+        pthread_setprio.o pthread_getprio.o \
+        pthread_setschedparam.o pthread_getschedparam.o
 
 include $(KOS_BASE)/addons/Makefile.prefab
