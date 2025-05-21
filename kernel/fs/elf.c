@@ -194,12 +194,12 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
     for(i = 0; i < hdr->shnum; i++) {
         if(shdrs[i].flags & SHF_ALLOC) {
             if(shdrs[i].type == SHT_NOBITS) {
-                DBG(("  setting %d bytes of zeros at %08x\n",
+                DBG(("  setting %ld bytes of zeros at %08lx\n",
                      shdrs[i].size, shdrs[i].addr));
                 memset(imgout + shdrs[i].addr, 0, shdrs[i].size);
             }
             else {
-                DBG(("  copying %d bytes from %08x to %08x\n",
+                DBG(("  copying %ld bytes from %08lx to %08lx\n",
                      shdrs[i].size, shdrs[i].offset, shdrs[i].addr));
                 memcpy(imgout + shdrs[i].addr,
                        img + shdrs[i].offset,
@@ -232,7 +232,7 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
         }
 
         /* Patch it in */
-        DBG((" symbol '%s' patched to 0x%lx\n",
+        DBG((" symbol '%s' patched to 0x%x\n",
              (const char *)(symtab[i].name),
              sym->ptr));
         symtab[i].value = sym->ptr;
@@ -266,7 +266,7 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
                     sym = ELF32_R_SYM(relatab[j].info);
 
                     if(symtab[sym].shndx == SHN_UNDEF) {
-                        DBG(("  Writing undefined RELA %08x(%08lx+%08lx) -> %08x\n",
+                        DBG(("  Writing undefined RELA %08lx(%08lx+%08lx) -> %08lx\n",
                              symtab[sym].value + relatab[j].addend,
                              symtab[sym].value,
                              relatab[j].addend,
@@ -278,7 +278,7 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
                               + relatab[j].addend;
                     }
                     else {
-                        DBG(("  Writing RELA %08x(%08x+%08x+%08x+%08x) -> %08x\n",
+                        DBG(("  Writing RELA %08lx(%08lx+%08lx+%08lx+%08lx) -> %08lx\n",
                              vma + shdrs[symtab[sym].shndx].addr + symtab[sym].value + relatab[j].addend,
                              vma, shdrs[symtab[sym].shndx].addr, symtab[sym].value, relatab[j].addend,
                              vma + shdrs[sect].addr + relatab[j].offset));
@@ -317,7 +317,7 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
                         uint32 value = symtab[sym].value;
 
                         if(sect == 1 && j < 5) {
-                            DBG(("  Writing undefined %s %08x -> %08x",
+                            DBG(("  Writing undefined %s %08lx -> %08lx",
                                  pcrel ? "PCREL" : "ABSREL",
                                  value,
                                  vma + shdrs[sect].addr + reltab[j].offset));
@@ -332,7 +332,7 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
                         += value;
 
                         if(sect == 1 && j < 5) {
-                            DBG(("(%08x)\n", *((uint32 *)(imgout + shdrs[sect].addr + reltab[j].offset))));
+                            DBG(("(%08lx)\n", *((uint32 *)(imgout + shdrs[sect].addr + reltab[j].offset))));
                         }
                     }
                     else {
@@ -340,7 +340,7 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
                                        + symtab[sym].value;
 
                         if(sect == 1 && j < 5) {
-                            DBG(("  Writing %s %08x(%08x+%08x+%08x) -> %08x",
+                            DBG(("  Writing %s %08lx(%08lx+%08lx+%08lx) -> %08lx",
                                  pcrel ? "PCREL" : "ABSREL",
                                  value,
                                  vma, shdrs[symtab[sym].shndx].addr, symtab[sym].value,
@@ -356,7 +356,7 @@ int elf_load(const char * fn, klibrary_t * shell, elf_prog_t * out) {
                         += value;
 
                         if(sect == 1 && j < 5) {
-                            DBG(("(%08x)\n", *((uint32 *)(imgout + shdrs[sect].addr + reltab[j].offset))));
+                            DBG(("(%08lx)\n", *((uint32 *)(imgout + shdrs[sect].addr + reltab[j].offset))));
                         }
                     }
                 }

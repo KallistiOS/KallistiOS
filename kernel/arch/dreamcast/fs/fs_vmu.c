@@ -520,7 +520,7 @@ static ssize_t vmu_write(void * hnd, const void *buffer, size_t cnt) {
 
     /* insert the data in buffer into fh->data at fh->loc */
     if(__is_defined(VMUFS_DEBUG)) {
-        dbglog(DBG_KDEBUG, "VMUFS: adding %d bytes of data at loc %d (%d avail)\n",
+        dbglog(DBG_KDEBUG, "VMUFS: adding %d bytes of data at loc %ld (%ld avail)\n",
                cnt, fh->loc, fh->filesize * 512);
     }
 
