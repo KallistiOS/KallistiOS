@@ -184,28 +184,18 @@ int mutex_trylock(mutex_t *m) {
 }
 
 static int __nonnull_all mutex_unlock_common(mutex_t *m, kthread_t *thd) {
-    int wakeup = 0;
-
-    irq_disable_scoped();
-
     switch(m->type) {
-        default:
-        case MUTEX_TYPE_NORMAL:
-        case MUTEX_TYPE_OLDNORMAL:
-            m->count = 0;
-            m->holder = NULL;
-            wakeup = 1;
-            break;
-
         case MUTEX_TYPE_ERRORCHECK:
             if(m->holder != thd) {
                 errno = EPERM;
                 return -1;
             }
-
+            __fallthrough;
+        default:
+        case MUTEX_TYPE_NORMAL:
+        case MUTEX_TYPE_OLDNORMAL:
             m->count = 0;
             m->holder = NULL;
-            wakeup = 1;
             break;
 
         case MUTEX_TYPE_RECURSIVE:
@@ -214,21 +204,19 @@ static int __nonnull_all mutex_unlock_common(mutex_t *m, kthread_t *thd) {
                 return -1;
             }
 
-            if(!--m->count) {
-                m->holder = NULL;
-                wakeup = 1;
-            }
+            if(--m->count)
+                return 0;
+
+            m->holder = NULL;
             break;
     }
 
-    /* If we need to wake up a thread, do so. */
-    if(wakeup) {
-        /* Restore real priority in case we were dynamically boosted. */
-        if (thd != IRQ_THREAD)
-            thd->prio = thd->real_prio;
+    /* Restore real priority in case we were dynamically boosted. */
+    if (thd != IRQ_THREAD)
+        thd->prio = thd->real_prio;
 
-        genwait_wake_one(m);
-    }
+    /* If we need to wake up a thread, do so. */
+    genwait_wake_one(m);
 
     return 0;
 }
