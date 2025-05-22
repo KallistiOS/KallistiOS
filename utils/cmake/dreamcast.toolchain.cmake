@@ -77,4 +77,8 @@ add_compile_options(
 set(CMAKE_ASM_FLAGS "")
 set(CMAKE_ASM_FLAGS_RELEASE "")
 
+# Default CMake installations to install to kos-ports
+set(CMAKE_INSTALL_INCLUDEDIR ${KOS_PORTS}/include)
+set(CMAKE_INSTALL_LIBDIR     ${KOS_PORTS}/lib)
+
 include("${KOS_BASE}/utils/cmake/dreamcast.cmake")
