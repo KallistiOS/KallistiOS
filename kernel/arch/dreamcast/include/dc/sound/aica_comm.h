@@ -19,6 +19,8 @@
 #ifndef __DC_SOUND_AICA_COMM_H
 #define __DC_SOUND_AICA_COMM_H
 
+#include <stdint.h>
+
 #ifndef __ARCH_TYPES_H
 typedef unsigned long uint8;
 typedef unsigned long uint32;
@@ -79,6 +81,32 @@ typedef struct aica_channel {
     uint32      pos;        /**< \brief Sample playback pos */
     uint32      pad[5];     /**< \brief Padding */
 } aica_channel_t;
+
+typedef enum aica_sample_type {
+    AICA_SAMPLE_16BIT,
+    AICA_SAMPLE_8BIT,
+    AICA_SAMPLE_ADPCM,
+    AICA_SAMPLE_ADPCM_LS,
+} aica_smtype_t;
+
+/* Flags for aica_chn_data_t.flags */
+#define AICA_CHN_DATA_LOOP  (1 << 0)
+
+typedef struct aica_channel_data {
+    union {
+        struct {
+            uint32_t    addr;       /**< Sample address in ARM memory space */
+            uint32_t    freq;       /**< Playback sample rate */
+            uint16_t    loopstart;  /**< Sample loop start */
+            uint16_t    loopend;    /**< Sample loop end */
+            aica_smtype_t type :8;  /**< Sample type (8/16-bit PCM or 4-bit ADPCM) */
+            uint8_t     vol;        /**< Volume */
+            uint8_t     pan;        /**< Panning */
+            uint8_t     flags;      /**< Misc flags */
+        };
+        uint32_t raw[4];
+    };
+} aica_chn_data_t;
 
 /** \brief Macro for declaring an aica channel command
 
