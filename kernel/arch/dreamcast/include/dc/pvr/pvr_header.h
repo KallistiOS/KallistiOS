@@ -351,5 +351,8 @@ typedef __attribute__((aligned(32))) struct pvr_poly_hdr {
 
 _Static_assert(sizeof(pvr_poly_hdr_t) == 32, "Invalid header size");
 
+/** @} */
+
 __END_DECLS
+
 #endif /* __DC_PVR_PVR_HEADER_H */

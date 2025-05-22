@@ -31,7 +31,7 @@
 #   warning Your GCC is too old. This will probably not work right.
 #endif
 
-/** \defgroup system_attributes
+/** \defgroup system_attributes Function Attribute Defines
     \brief                      Definitions for builtin attributes and compiler directives
     \ingroup                    system
 
@@ -173,7 +173,7 @@
 
 /** @} */
 
-/** \defgroup system_compat
+/** \defgroup system_compat Language Compatibility Defines
     \brief                      Definitions for language features
     \ingroup                    system
 
@@ -206,7 +206,7 @@
 
 /** @} */
 
-/** \defgroup system_helpers
+/** \defgroup system_helpers Helper Macros
     \brief                      General useful language macros
     \ingroup                    system
 
@@ -222,7 +222,7 @@
     by the compiler. This can only be used within a function.
 
     Example:
-    #include <stddef.h>
+    \#include <stddef.h>
     ...
     static char *foo_to_char(struct foo *foo)
     {
@@ -244,7 +244,7 @@
     by the compiler. This can be used in an expression: its value is "0".
 
     Example:
-    #define foo_to_char(foo)                \
+    \#define foo_to_char(foo)                \
         ((char *)(foo)                      \
         + __build_assert_or_zero(offsetof(struct foo, string) == 0))
 

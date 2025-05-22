@@ -194,7 +194,6 @@ void snd_stream_filter_remove(snd_stream_hnd_t hnd,
     This function has no effect. The stream is prefilled on start.
     This is deprecated and should be removed if used.
 
-    \param  hnd             Param.
 */
 static const int __snd_stream_prefill   __depr("snd_stream_prefill has no effect and should be removed") = 0;
 #define snd_stream_prefill(x)  ((void)__snd_stream_prefill)
