@@ -23,7 +23,7 @@
 #define UNUSED __attribute__((unused))
 
 rw_semaphore_t s = RWSEM_INITIALIZER;
-uint32 number = 0;
+uint32_t number = 0;
 
 void *writer0(void *param UNUSED) {
     int i;

@@ -8,7 +8,7 @@
 #include <kos.h>
 #include "s3mplay.h"    /* Player ARM code */
 
-uint8 *song;
+uint8_t *song;
 
 /* This is sort of an unorthodox way of using the SPU ^_^;; but it's
    how the S3M player works right now. */
