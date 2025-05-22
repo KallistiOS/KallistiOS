@@ -4,7 +4,7 @@
    Copyright (C) 2000, 2001, 2002, 2003 Megan Potter
    Copyright (C) 2010, 2016, 2023 Lawrence Sebald
    Copyright (C) 2023 Colton Pawielski
-   Copyright (C) 2023, 2024 Falco Girgis
+   Copyright (C) 2023, 2024, 2025 Falco Girgis
 */
 
 #include <assert.h>
