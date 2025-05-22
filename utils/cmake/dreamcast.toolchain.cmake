@@ -1,6 +1,6 @@
 # CMake Toolchain file for targeting the Dreamcast or NAOMI with CMake.
 #  Copyright (C) 2023 Luke Benstead
-#  Copyright (C) 2023, 2024 Falco Girgis
+#  Copyright (C) 2023, 2024, 2025 Falco Girgis
 #  Copyright (C) 2024 Donald Haase
 #  Copyright (C) 2024 Paul Cercueil
 #
@@ -29,14 +29,17 @@ cmake_minimum_required(VERSION 3.13)
 #### Set Configuration Variables From Environment ####
 if(NOT DEFINED ENV{KOS_BASE}
    OR NOT DEFINED ENV{KOS_CC_BASE}
+   OR NOT DEFINED ENV{KOS_ARCH}
    OR NOT DEFINED ENV{KOS_SUBARCH}
    OR NOT DEFINED ENV{KOS_PORTS})
     message(FATAL_ERROR "KallistiOS environment variables not found")
 else()
-    set(KOS_BASE $ENV{KOS_BASE})
+    set(KOS_BASE    $ENV{KOS_BASE})
     set(KOS_CC_BASE $ENV{KOS_CC_BASE})
+    set(KOS_ARCH    $ENV{KOS_ARCH})
     set(KOS_SUBARCH $ENV{KOS_SUBARCH})
-    set(KOS_PORTS $ENV{KOS_PORTS})
+    set(KOS_PORTS   $ENV{KOS_PORTS})
+    set(KOS_ADDONS  ${KOS_BASE}/addons)
 endif()
 
 list(APPEND CMAKE_MODULE_PATH $ENV{KOS_BASE}/utils/cmake)
@@ -77,8 +80,8 @@ add_compile_options(
 set(CMAKE_ASM_FLAGS "")
 set(CMAKE_ASM_FLAGS_RELEASE "")
 
-# Default CMake installations to install to kos-ports
-set(CMAKE_INSTALL_INCLUDEDIR ${KOS_PORTS}/include)
-set(CMAKE_INSTALL_LIBDIR     ${KOS_PORTS}/lib)
+# Default CMake installations to install to kos-addons
+set(CMAKE_INSTALL_INCLUDEDIR ${KOS_ADDONS}/include/${KOS_ARCH})
+set(CMAKE_INSTALL_LIBDIR     ${KOS_ADDONS}/lib/${KOS_ARCH})
 
 include("${KOS_BASE}/utils/cmake/dreamcast.cmake")
