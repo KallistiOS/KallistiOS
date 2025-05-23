@@ -14,28 +14,7 @@
 #include <kos/genwait.h>
 #include <kos/dbglog.h>
 
-/* Allocate a new reader/writer semaphore */
-rw_semaphore_t *rwsem_create(void) {
-    rw_semaphore_t *s;
-
-    dbglog(DBG_WARNING, "Creating reader/writer semaphore with deprecated "
-           "rwsem_create(). Please update your code!\n");
-
-    if(!(s = (rw_semaphore_t *)malloc(sizeof(rw_semaphore_t)))) {
-        errno = ENOMEM;
-        return NULL;
-    }
-
-    s->dynamic = 1;
-    s->read_count = 0;
-    s->write_lock = NULL;
-    s->reader_waiting = NULL;
-
-    return s;
-}
-
 int rwsem_init(rw_semaphore_t *s) {
-    s->dynamic = 0;
     s->read_count = 0;
     s->write_lock = NULL;
     s->reader_waiting = NULL;
@@ -52,9 +31,6 @@ int rwsem_destroy(rw_semaphore_t *s) {
     if(s->read_count || s->write_lock) {
         errno = EBUSY;
         rv = -1;
-    }
-    else if(s->dynamic) {
-        free(s);
     }
 
     return rv;

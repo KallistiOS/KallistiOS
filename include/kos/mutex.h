@@ -67,7 +67,6 @@ __BEGIN_DECLS
 */
 typedef struct kos_mutex {
     int type;
-    int dynamic;
     kthread_t *holder;
     int count;
 } mutex_t;
@@ -90,28 +89,13 @@ typedef struct kos_mutex {
 /** @} */
 
 /** \brief  Initializer for a transient mutex. */
-#define MUTEX_INITIALIZER               { MUTEX_TYPE_NORMAL, 0, NULL, 0 }
+#define MUTEX_INITIALIZER               { MUTEX_TYPE_NORMAL, NULL, 0 }
 
 /** \brief  Initializer for a transient error-checking mutex. */
-#define ERRORCHECK_MUTEX_INITIALIZER    { MUTEX_TYPE_ERRORCHECK, 0, NULL, 0 }
+#define ERRORCHECK_MUTEX_INITIALIZER    { MUTEX_TYPE_ERRORCHECK, NULL, 0 }
 
 /** \brief  Initializer for a transient recursive mutex. */
-#define RECURSIVE_MUTEX_INITIALIZER     { MUTEX_TYPE_RECURSIVE, 0, NULL, 0 }
-
-/** \brief  Allocate a new mutex.
-
-    \deprecated
-    This function allocates and initializes a new mutex for use. This function
-    will always create mutexes of the type MUTEX_TYPE_NORMAL.
-
-    \return                 The newly created mutex on success, or NULL on
-                            failure (errno will be set as appropriate).
-
-    \note                   This function is formally deprecated. It should not
-                            be used in any future code, and may be removed in
-                            the future. You should instead use mutex_init().
-*/
-mutex_t *mutex_create(void) __depr("Use mutex_init or an initializer.");
+#define RECURSIVE_MUTEX_INITIALIZER     { MUTEX_TYPE_RECURSIVE, NULL, 0 }
 
 /** \brief  Initialize a new mutex.
 
