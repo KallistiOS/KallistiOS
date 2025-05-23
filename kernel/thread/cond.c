@@ -21,27 +21,8 @@
 
 /**************************************/
 
-/* Allocate a new condvar */
-condvar_t *cond_create(void) {
-    condvar_t *cv;
-
-    dbglog(DBG_WARNING, "Creating condvar with deprecated cond_create(). "
-           "Please update your code!\n");
-
-    /* Create a condvar structure */
-    if(!(cv = (condvar_t *)malloc(sizeof(condvar_t)))) {
-        errno = ENOMEM;
-        return NULL;
-    }
-
-    cv->dynamic = 1;
-
-    return cv;
-}
-
 int cond_init(condvar_t *cv) {
     cv->dummy = 0;
-    cv->dynamic = 0;
     return 0;
 }
 
@@ -49,10 +30,6 @@ int cond_init(condvar_t *cv) {
 int cond_destroy(condvar_t *cv) {
     /* Give all sleeping threads a timed out error */
     genwait_wake_all_err(cv, ENOTRECOVERABLE);
-
-    /* Free the memory */
-    if(cv->dynamic)
-        free(cv);
 
     return 0;
 }
