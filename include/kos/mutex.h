@@ -112,7 +112,7 @@ typedef struct kos_mutex {
 
     \sa     mutex_types
 */
-int mutex_init(mutex_t *m, int mtype);
+int mutex_init(mutex_t *m, int mtype) __nonnull_all;
 
 /** \brief  Destroy a mutex.
 
@@ -123,13 +123,15 @@ int mutex_init(mutex_t *m, int mtype);
     This function can be called on statically initialized as well as dynamically
     initialized mutexes.
 
+    \param m                The mutex to destroy
+
     \retval 0               On success
     \retval -1              On error, errno will be set as appropriate
 
     \par    Error Conditions:
     \em     EBUSY - the mutex is currently locked
 */
-int mutex_destroy(mutex_t *m);
+int mutex_destroy(mutex_t *m) __nonnull_all;
 
 /** \brief  Lock a mutex.
 
@@ -149,7 +151,7 @@ int mutex_destroy(mutex_t *m);
     \em     EAGAIN - lock has been acquired too many times (recursive) \n
     \em     EDEADLK - would deadlock (error-checking)
 */
-int mutex_lock(mutex_t *m);
+int mutex_lock(mutex_t *m) __nonnull_all;
 
 /** \brief  Lock a mutex.
 
@@ -172,7 +174,7 @@ int mutex_lock(mutex_t *m);
                      already locked \n
     \em     EDEADLK - would deadlock (error-checking)
 */
-int mutex_lock_irqsafe(mutex_t *m);
+int mutex_lock_irqsafe(mutex_t *m) __nonnull_all;
 
 /** \brief  Lock a mutex (with a timeout).
 
@@ -195,7 +197,7 @@ int mutex_lock_irqsafe(mutex_t *m);
     \em     EAGAIN - lock has been acquired too many times (recursive) \n
     \em     EDEADLK - would deadlock (error-checking)
 */
-int mutex_lock_timed(mutex_t *m, int timeout);
+int mutex_lock_timed(mutex_t *m, int timeout) __nonnull_all;
 
 /** \brief  Check if a mutex is locked.
 
@@ -208,7 +210,7 @@ int mutex_lock_timed(mutex_t *m, int timeout);
     \retval 0               If the mutex is not currently locked
     \retval 1               If the mutex is currently locked
 */
-int mutex_is_locked(mutex_t *m);
+int mutex_is_locked(mutex_t *m) __nonnull_all;
 
 /** \brief  Attempt to lock a mutex.
 
@@ -228,7 +230,7 @@ int mutex_is_locked(mutex_t *m);
     \em     EAGAIN - lock has been acquired too many times (recursive) \n
     \em     EDEADLK - would deadlock (error-checking)
 */
-int mutex_trylock(mutex_t *m);
+int mutex_trylock(mutex_t *m) __nonnull_all;
 
 /** \brief  Unlock a mutex.
 
@@ -243,7 +245,7 @@ int mutex_trylock(mutex_t *m);
     \em     EPERM - the current thread does not own the mutex (error-checking or
                     recursive)
 */
-int mutex_unlock(mutex_t *m);
+int mutex_unlock(mutex_t *m) __nonnull_all;
 
 /** \brief  Unlock a mutex under another thread's authority.
 
@@ -260,7 +262,7 @@ int mutex_unlock(mutex_t *m);
     \em     EPERM - the specified thread does not own the mutex \n
     \em     EACCES - called outside an IRQ handler
 */
-int mutex_unlock_as_thread(mutex_t *m, kthread_t *thd);
+int mutex_unlock_as_thread(mutex_t *m, kthread_t *thd) __nonnull_all;
 
 /** \cond */
 static inline void __mutex_scoped_cleanup(mutex_t **m) {
