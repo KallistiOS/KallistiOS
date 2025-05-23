@@ -8,26 +8,14 @@ TARGET = nehe26.elf
 OBJS = nehe26.o romdisk.o
 KOS_ROMDISK_DIR = romdisk
 RD_DATA = romdisk/sphere.bin romdisk/torus.bin romdisk/tube.bin
-
-all: rm-elf $(TARGET)
+LDLIBS = -lGL
 
 include $(KOS_BASE)/Makefile.rules
 
-clean: rm-elf
-	-rm -f $(OBJS) $(RD_DATA) data/txt2bin
+clean_rd:
+	-rm -f $(RD_DATA) data/txt2bin
 
-rm-elf:
-	-rm -f $(TARGET) romdisk.*
-
-$(TARGET): $(OBJS)
-	kos-cc -o $(TARGET) $(OBJS) -L$(KOS_BASE)/lib -lGL
-
-run: $(TARGET)
-	$(KOS_LOADER) $(TARGET)
-
-dist: $(TARGET)
-	-rm -f $(OBJS) romdisk.img
-	$(KOS_STRIP) $(TARGET)
+clean: clean_rd
 
 data/txt2bin: data/txt2bin.c
 	$(CC) -o $@ $<

@@ -9,26 +9,6 @@ TARGET = random.elf
 # List all of your C files here, but change the extension to ".o"
 OBJS = random.o
 
-KOS_CFLAGS += -std=c99
-
-# The rm-elf step is to remove the target before building, to force the
-# re-creation of the rom disk.
-all: rm-elf $(TARGET)
+CFLAGS = -std=c99
 
 include $(KOS_BASE)/Makefile.rules
-
-clean: rm-elf
-	-rm -f $(OBJS)
-
-rm-elf:
-	-rm -f $(TARGET)
-
-$(TARGET): $(OBJS)
-	kos-cc -o $(TARGET) $(OBJS)
-
-run: $(TARGET)
-	$(KOS_LOADER) $(TARGET)
-
-dist: $(TARGET)
-	-rm -f $(OBJS)
-	$(KOS_STRIP) $(TARGET)

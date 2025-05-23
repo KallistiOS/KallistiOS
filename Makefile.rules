@@ -50,11 +50,42 @@ else
 
 endif
 
-.PHONY: all_naomi all_pristine
+define KOS_GCCVER_MIN_CHECK
+$(shell \
+	awk 'BEGIN { \
+		split("$(1)", min, "."); \
+		split("$(KOS_GCCVER)", cur, "."); \
+		if (cur[1] > min[1] || \
+			(cur[1] == min[1] && cur[2] > min[2]) || \
+			(cur[1] == min[1] && cur[2] == min[2] && cur[3] >= min[3])) { \
+			print 1; \
+		} \
+	}')
+endef
+
+.PHONY: all_naomi all_pristine clean all err_kos_gccver_min_warning
+
+all: $(if $(KOS_GCCVER_MIN),$(if $(call KOS_GCCVER_MIN_CHECK,$(KOS_GCCVER_MIN)),$(TARGET),err_kos_gccver_min_warning),$(TARGET))
+
+err_kos_gccver_min_warning:
+	@echo "Skipping $(TARGET) build as current GCC version ($(KOS_GCCVER)) is less than $(KOS_GCCVER_MIN)."
 
 all_naomi: $(if $(filter $(KOS_BUILD_SUBARCHS),naomi),all)
 
 all_pristine: $(if $(filter $(KOS_BUILD_SUBARCHS),pristine),all)
+
+clean:
+	-rm -f $(OBJS) $(TARGET) romdisk.img
+
+$(TARGET): $(OBJS)
+	kos-cc -o $@ $^ $(LDFLAGS) -Wl,--start-group $(LDLIBS) -Wl,--end-group
+
+run: $(TARGET)
+	$(KOS_LOADER) $(TARGET) $(KOS_LOADER_FLAGS)
+
+dist: $(TARGET)
+	-rm -f $(OBJS) romdisk.img
+	$(KOS_STRIP) $(TARGET)
 
 %.o: %.s
 	kos-as $< -o $@
@@ -77,38 +108,23 @@ $(patsubst %, _clean_dir_%, $(SUBDIRS)):
 
 # Define KOS_ROMDISK_DIR in your Makefile if you want these two handy rules.
 ifdef KOS_ROMDISK_DIR
-romdisk.img:
+romdisk.img: $(wildcard $(KOS_ROMDISK_DIR)/*)
 	$(KOS_GENROMFS) -f romdisk.img -d $(KOS_ROMDISK_DIR) -v -x .keepme -x .DS_Store -x Thumbs.db
 
-romdisk.o: romdisk.img
+romdisk.o: romdisk.img $(KOS_BASE)/utils/bin2c/bin2c
 	$(KOS_BASE)/utils/bin2c/bin2c romdisk.img romdisk_tmp.c romdisk
 	$(KOS_CC) $(KOS_CFLAGS) -o romdisk_tmp.o -c romdisk_tmp.c
 	$(KOS_CC) -o romdisk.o -r romdisk_tmp.o $(KOS_LIB_PATHS) -Wl,--whole-archive -lromdiskbase
 	rm romdisk_tmp.c romdisk_tmp.o
+
+clean_romdisk:
+	-rm -f romdisk.img
+
+clean: clean_romdisk
+
 endif
 
-define KOS_GCCVER_MIN_CHECK
-$(shell \
-	awk 'BEGIN { \
-		split("$(1)", min, "."); \
-		split("$(KOS_GCCVER)", cur, "."); \
-		if (cur[1] > min[1] || \
-			(cur[1] == min[1] && cur[2] > min[2]) || \
-			(cur[1] == min[1] && cur[2] == min[2] && cur[3] >= min[3])) { \
-			print 1; \
-		} else { \
-			print 0; \
-		} \
-	}')
-endef
-
-define KOS_GCCVER_MIN_WARNING
-@echo "Skipping $(TARGET) build as current GCC version ($(KOS_GCCVER)) is less than $(KOS_GCCVER_MIN)."
-endef
-
 ifdef EXPORTS_FILE
-
-OBJS += exports.o
 
 exports.o: exports.c
 exports.c: $(EXPORTS_FILE)
@@ -120,5 +136,10 @@ exports_stubs.c: $(EXPORTS_FILE)
 
 $(TARGET_LIB): exports_stubs.o
 	$(KOS_AR) rcs $(TARGET_LIB) exports_stubs.o
+
+clean_exports:
+	-rm -f exports.c exports_stubs.c exports_stubs.o $(TARGET_LIB)
+
+clean: clean_exports
 
 endif

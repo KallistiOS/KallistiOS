@@ -7,6 +7,7 @@
 # Program binary
 TARGET = adventure.elf
 OBJS = porthelper.o crc.o done.o init.o io.o adventure.o save.o subr.o vocab.o wizard.o data.o globalvars.o
+LDLIBS = -lconio
 
 # Script data files
 DATA_SOURCE = glorkz
@@ -26,26 +27,13 @@ SETUP_CFLAGS = -DSETUP
 # Additional configuration
 HOST_CC = gcc
 
-all: rm-elf $(TARGET)
-
 include $(KOS_BASE)/Makefile.rules
 
 $(DATA_TARGET):
 	$(HOST_CC) -o $(SETUP_TARGET) $(SETUP_SOURCE) $(SETUP_CFLAGS)
 	./$(SETUP_TARGET) $(DATA_SOURCE) > $(DATA_TARGET)
 
-clean: rm-elf
-	-rm -f $(OBJS) $(DATA_TARGET) $(SETUP_TARGET)
+clean_data:
+	-rm -f $(DATA_TARGET) $(SETUP_TARGET)
 
-rm-elf:
-	-rm -f $(TARGET)
-
-$(TARGET): $(OBJS) 
-	kos-cc -o $(TARGET) $(OBJS) -lconio
-
-run: $(TARGET)
-	$(KOS_LOADER) $(TARGET)
-
-dist: $(TARGET)
-	-rm -f $(OBJS) $(DATA_TARGET) $(SETUP_TARGET)
-	$(KOS_STRIP) $(TARGET)
+clean: clean_data
