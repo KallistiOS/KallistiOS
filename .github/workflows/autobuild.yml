@@ -1,0 +1,34 @@
+name: Linux build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        toolchain_profile:
+          - stable
+          - 13.3.0
+          - 14.2.0
+          - 15.1.0
+          - 13.3.1-dev
+          - 14.2.1-dev
+          - 15.1.1-dev
+          - 16.0.0-dev
+
+    runs-on: ubuntu-latest
+    container: pcercuei/kallistios-toolchain:${{ matrix.toolchain_profile }}
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: install-dependencies
+      run: |
+        apk --update add --no-cache coreutils
+
+    - name: build
+      run: |
+        cp $GITHUB_WORKSPACE/doc/environ.sh.sample $GITHUB_WORKSPACE/environ.sh
+        sed -i 's/KOS_BASE=.*$/KOS_BASE=$GITHUB_WORKSPACE/' $GITHUB_WORKSPACE/environ.sh
+        . $GITHUB_WORKSPACE/environ.sh
+        make -C $GITHUB_WORKSPACE
