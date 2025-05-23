@@ -140,7 +140,6 @@ mutex_lock_timed
 mutex_trylock
 mutex_is_locked
 mutex_unlock
-sem_create
 sem_destroy
 sem_wait
 sem_wait_timed
