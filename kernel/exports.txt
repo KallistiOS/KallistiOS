@@ -133,7 +133,6 @@ genwait_wait
 genwait_wake_cnt
 genwait_wake_all
 genwait_wake_one
-mutex_create
 mutex_destroy
 mutex_lock
 mutex_lock_timed
