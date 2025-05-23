@@ -60,44 +60,25 @@ __BEGIN_DECLS
 */
 typedef struct condvar {
     int dummy;
-    int dynamic;
 } condvar_t;
 
 /** \brief  Initializer for a transient condvar. */
-#define COND_INITIALIZER    { 0, 0 }
-
-/** \brief  Allocate a new condition variable.
-
-    This function allocates and initializes a new condition variable for use.
-
-    \deprecated
-    This function is formally deprecated and should not be used in new code.
-    Instead you should use either the static initializer or the cond_init()
-    function.
-
-    \return                 The created condvar on success. NULL is returned on
-                            failure and errno is set as appropriate.
-
-    \par    Error Conditions:
-    \em     ENOMEM - out of memory
-*/
-condvar_t *cond_create(void) __depr("Use cond_init or COND_INITIALIZER.");
+#define COND_INITIALIZER    { 0 }
 
 /** \brief  Initialize a condition variable.
 
     This function initializes a new condition variable for use.
 
     \param  cv              The condition variable to initialize
-    \retval 0               On success
-    \retval -1              On error, sets errno as appropriate
+    \retval 0               On success (no error conditions currently defined)
 */
 int cond_init(condvar_t *cv);
 
 /** \brief  Free a condition variable.
 
-    This function frees a condition variable, releasing all memory associated
-    with it (but not with the mutex that is associated with it). This will also
-    wake all threads waiting on the condition.
+    This function destroys a condition variable (but not the mutex
+    that is associated with it). This will also wake all threads waiting
+    on the condition.
 
     \retval 0               On success (no error conditions currently defined)
 */

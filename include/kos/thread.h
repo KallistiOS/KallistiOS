@@ -19,7 +19,6 @@
     \see    kos/genwait.h
     \see    kos/mutex.h
     \see    kos/once.h
-    \see    kos/recursive_lock.h
     \see    kos/rwsem.h
     \see    kos/sem.h
     \see    kos/tls.h

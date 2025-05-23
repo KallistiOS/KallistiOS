@@ -43,26 +43,6 @@ typedef struct semaphore {
     \param  value           The initial count of the semaphore. */
 #define SEM_INITIALIZER(value) { 1, value }
 
-/** \brief  Allocate a new semaphore.
-
-    This function allocates and initializes a new semaphore for use.
-
-    \deprecated
-    This function is formally deprecated. Please update your code to use
-    sem_init() or static initialization with SEM_INITIALIZER instead.
-
-    \param  value           The initial count of the semaphore (the number of
-                            threads to allow in the critical section at a time)
-
-    \return                 The created semaphore on success. NULL is returned
-                            on failure and errno is set as appropriate.
-
-    \par    Error Conditions:
-    \em     ENOMEM - out of memory \n
-    \em     EINVAL - the semaphore's value is invalid (less than 0)
-*/
-semaphore_t *sem_create(int value) __depr("Use sem_init or SEM_INITIALIZER.");
-
 /** \brief  Initialize a semaphore for use.
 
     This function initializes the semaphore passed in with the starting count
@@ -80,8 +60,8 @@ int sem_init(semaphore_t *sm, int count);
 
 /** \brief  Destroy a semaphore.
 
-    This function frees a semaphore, releasing any memory associated with it. If
-    there are any threads currently waiting on the semaphore, they will be woken
+    This function destroys a semaphore, leaving it uninitialized. If there
+    are any threads currently waiting on the semaphore, they will be woken
     with an ENOTRECOVERABLE error.
 
     \param  sm              The semaphore to destroy

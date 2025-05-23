@@ -20,25 +20,6 @@
 /* Thread pseudo-ptr representing an active IRQ context. */
 #define IRQ_THREAD  ((kthread_t *)0xFFFFFFFF)
 
-mutex_t *mutex_create(void) {
-    mutex_t *rv;
-
-    dbglog(DBG_WARNING, "Creating mutex with deprecated mutex_create(). Please "
-           "update your code!\n");
-
-    if(!(rv = (mutex_t *)malloc(sizeof(mutex_t)))) {
-        errno = ENOMEM;
-        return NULL;
-    }
-
-    rv->type = MUTEX_TYPE_NORMAL;
-    rv->dynamic = 1;
-    rv->holder = NULL;
-    rv->count = 0;
-
-    return rv;
-}
-
 int mutex_init(mutex_t *m, int mtype) {
     /* Check the type */
     if(mtype < MUTEX_TYPE_NORMAL || mtype > MUTEX_TYPE_RECURSIVE) {
@@ -48,7 +29,6 @@ int mutex_init(mutex_t *m, int mtype) {
 
     /* Set it up */
     m->type = mtype;
-    m->dynamic = 0;
     m->holder = NULL;
     m->count = 0;
 
@@ -71,11 +51,6 @@ int mutex_destroy(mutex_t *m) {
 
     /* Set it to an invalid type of mutex */
     m->type = -1;
-
-    /* If the mutex was created with the deprecated mutex_create(), free it. */
-    if(m->dynamic) {
-        free(m);
-    }
 
     return 0;
 }
