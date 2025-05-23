@@ -322,6 +322,12 @@ int snd_stream_init(void) {
 }
 
 int snd_stream_init_ex(int channels, size_t buffer_size) {
+
+    if(!sep_buffer[0]) {
+        dbglog(DBG_ERROR, "snd_stream_init_ex(): already initialized\n");
+        return -1;
+    }
+
     max_channels = channels;
 
     if(buffer_size > 0) {
