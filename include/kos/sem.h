@@ -67,7 +67,7 @@ int sem_init(semaphore_t *sm, int count);
     \param  sm              The semaphore to destroy
     \retval 0               On success (no error conditions currently defined)
 */
-int sem_destroy(semaphore_t *sm);
+int sem_destroy(semaphore_t *sm) __nonnull_all;
 
 /** \brief  Wait on a semaphore.
 
@@ -87,7 +87,7 @@ int sem_destroy(semaphore_t *sm);
     \em     EPERM - called inside an interrupt \n
     \em     EINVAL - the semaphore was not initialized
 */
-int sem_wait(semaphore_t *sm);
+int sem_wait(semaphore_t *sm) __nonnull_all;
 
 /** \brief  Wait on a semaphore (with a timeout).
 
@@ -111,7 +111,7 @@ int sem_wait(semaphore_t *sm);
     \em     EINVAL - the timeout value was invalid (less than 0) \n
     \em     ETIMEDOUT - timed out while blocking
  */
-int sem_wait_timed(semaphore_t *sm, int timeout);
+int sem_wait_timed(semaphore_t *sm, int timeout) __nonnull_all;
 
 /** \brief  "Wait" on a semaphore without blocking.
 
@@ -130,7 +130,7 @@ int sem_wait_timed(semaphore_t *sm, int timeout);
     \em     EWOULDBLOCK - a call to sem_wait() would block \n
     \em     EINVAL - the semaphore was not initialized
 */
-int sem_trywait(semaphore_t *sm);
+int sem_trywait(semaphore_t *sm) __nonnull_all;
 
 /** \brief  Signal a semaphore.
 
@@ -145,7 +145,7 @@ int sem_trywait(semaphore_t *sm);
     \par    Error Conditions:
     \em     EINVAL - the semaphore was not initialized
 */
-int sem_signal(semaphore_t *sm);
+int sem_signal(semaphore_t *sm) __nonnull_all;
 
 /** \brief  Retrieve the number of available resources.
 
@@ -157,7 +157,7 @@ int sem_signal(semaphore_t *sm);
     \return                 The count of the semaphore (the number of resources
                             currently available)
 */
-int sem_count(semaphore_t *sm);
+int sem_count(semaphore_t *sm) __nonnull_all;
 
 __END_DECLS
 

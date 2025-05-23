@@ -72,7 +72,7 @@ typedef struct condvar {
     \param  cv              The condition variable to initialize
     \retval 0               On success (no error conditions currently defined)
 */
-int cond_init(condvar_t *cv);
+int cond_init(condvar_t *cv) __nonnull_all;
 
 /** \brief  Free a condition variable.
 
@@ -80,9 +80,10 @@ int cond_init(condvar_t *cv);
     that is associated with it). This will also wake all threads waiting
     on the condition.
 
+    \param cv               The condition variable to destroy
     \retval 0               On success (no error conditions currently defined)
 */
-int cond_destroy(condvar_t *cv);
+int cond_destroy(condvar_t *cv) __nonnull_all;
 
 /** \brief  Wait on a condition variable.
 
@@ -105,7 +106,7 @@ int cond_destroy(condvar_t *cv);
     \em     EINVAL - the mutex is not initialized or not locked \n
     \em     ENOTRECOVERABLE - the condvar was destroyed while waiting
 */
-int cond_wait(condvar_t *cv, mutex_t * m);
+int cond_wait(condvar_t *cv, mutex_t * m) __nonnull_all;
 
 /** \brief  Wait on a condition variable with a timeout.
 
@@ -131,7 +132,7 @@ int cond_wait(condvar_t *cv, mutex_t * m);
     \em     EINVAL - the mutex is not initialized or not locked \n
     \em     ENOTRECOVERABLE - the condvar was destroyed while waiting
 */
-int cond_wait_timed(condvar_t *cv, mutex_t * m, int timeout);
+int cond_wait_timed(condvar_t *cv, mutex_t * m, int timeout) __nonnull_all;
 
 /** \brief  Signal a single thread waiting on the condition variable.
 
@@ -146,7 +147,7 @@ int cond_wait_timed(condvar_t *cv, mutex_t * m, int timeout);
     \par    Error Conditions:
     \em     EINVAL - the condvar was not initialized
 */
-int cond_signal(condvar_t *cv);
+int cond_signal(condvar_t *cv) __nonnull_all;
 
 /** \brief  Signal all threads waiting on the condition variable.
 
@@ -161,7 +162,7 @@ int cond_signal(condvar_t *cv);
     \par    Error Conditions:
     \em     EINVAL - the condvar was not initialized
 */
-int cond_broadcast(condvar_t *cv);
+int cond_broadcast(condvar_t *cv) __nonnull_all;
 
 __END_DECLS
 

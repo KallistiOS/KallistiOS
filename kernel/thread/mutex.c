@@ -204,7 +204,7 @@ int mutex_trylock(mutex_t *m) {
     return 0;
 }
 
-static int mutex_unlock_common(mutex_t *m, kthread_t *thd) {
+static int __nonnull_all mutex_unlock_common(mutex_t *m, kthread_t *thd) {
     int wakeup = 0;
 
     irq_disable_scoped();

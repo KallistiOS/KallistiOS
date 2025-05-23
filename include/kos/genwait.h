@@ -113,7 +113,7 @@ void genwait_wake_one_err(void *obj, int err);
     specified object.
 
     \param  obj             The object to wake the thread from
-    \param  thd             The specific thread to wake
+    \param  thd             The specific thread to wake (non-null).
     \param  err             The errno code to set as the errno value on the
                             woken thread. If this is 0 (EOK), then the thread's
                             errno will not be changed, and the thread will get a
@@ -124,7 +124,7 @@ void genwait_wake_one_err(void *obj, int err);
     \return                 The number of threads woken, which should be 1 on
                             success.
 */
-int genwait_wake_thd(void *obj, kthread_t *thd, int err);
+int genwait_wake_thd(void *obj, kthread_t *thd, int err) __nonnull((2));
 
 /** \brief  Look for timed out genwait_wait() calls.
 
