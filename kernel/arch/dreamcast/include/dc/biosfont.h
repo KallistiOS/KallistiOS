@@ -291,10 +291,11 @@ uint32_t bfont_set_background_color(uint32_t c);
 
 /* Constants for the function below */
 typedef enum bfont_code {
-    BFONT_CODE_ISO8859_1 = 0,   /**< \brief ISO-8859-1 (western) charset */
-    BFONT_CODE_EUC       = 1,   /**< \brief EUC-JP charset */
-    BFONT_CODE_SJIS      = 2,   /**< \brief Shift-JIS charset */
-    BFONT_CODE_RAW       = 3   /**< \brief Raw indexing to the BFONT */
+    BFONT_CODE_ASCII     = 0,
+    BFONT_CODE_ISO8859_1 = 1,   /**< \brief ISO-8859-1 (western) charset */
+    BFONT_CODE_EUC       = 2,   /**< \brief EUC-JP charset */
+    BFONT_CODE_SJIS      = 3,   /**< \brief Shift-JIS charset */
+    BFONT_CODE_RAW       = 4    /**< \brief Raw indexing to the BFONT */
 } bfont_code_t;
 
 /** \brief   Set the font encoding.
