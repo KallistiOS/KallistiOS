@@ -222,7 +222,7 @@ void snd_adpcm_split(uint32_t *data, uint32_t *left, uint32_t *right, size_t siz
     This function returns actual the channel position
     that stores in SPU memory and updated by the SPU firmware.
 
-    \param  chn             The channel to retrieve position.
+    \param  ch              The channel to retrieve position.
 
     \return                 Last channel position in samples.
 */
@@ -233,7 +233,7 @@ uint16_t snd_get_pos(unsigned int ch);
     This function returns actual the channel playback state
     that stores in AICA registers directly.
 
-    \param  chn             The channel to check.
+    \param  ch              The channel to check.
 
     \return                 True if the channel is playing.
 */

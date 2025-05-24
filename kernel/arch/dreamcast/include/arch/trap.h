@@ -5,7 +5,7 @@
 
 */
 
-/** \file    
+/** \file    arch/trap.h
     \brief   Interrupt and exception handling.
     \ingroup traps
 
@@ -59,15 +59,15 @@ typedef uint8_t trapa_t;
 
 /** The type of a TRAPA handler
 
-    \param  trap            The IRQ that caused the handler to be called.
+    \param  code            The IRQ that caused the handler to be called.
     \param  context         The CPU's context.
     \param  data            Arbitrary userdata associated with the handler.
 */
-typedef void (*trapa_handler)(trapa_t trap, irq_context_t *context, void *data);
+typedef void (*trapa_handler)(trapa_t code, irq_context_t *context, void *data);
 
 /** Set or remove a handler for a trapa code.
     
-    \param  trap            The value passed to the trapa opcode.
+    \param  code            The value passed to the trapa opcode.
     \param  hnd             A pointer to the procedure to handle the trap.
     \param  data            A pointer that will be passed along to the callback.
 
@@ -75,7 +75,7 @@ typedef void (*trapa_handler)(trapa_t trap, irq_context_t *context, void *data);
 
     \sa trapa_get_handler()
 */
-int trapa_set_handler(trapa_t trap, trapa_handler hnd, void *data);
+int trapa_set_handler(trapa_t code, trapa_handler hnd, void *data);
 
 /** Get an existing TRAPA handler.
 
@@ -87,7 +87,7 @@ int trapa_set_handler(trapa_t trap, trapa_handler hnd, void *data);
 
     \sa trapa_set_handler()
 */
-trapa_handler trapa_get_handler(trapa_t trap, void **data);
+trapa_handler trapa_get_handler(trapa_t code, void **data);
 
 /** @} */
 

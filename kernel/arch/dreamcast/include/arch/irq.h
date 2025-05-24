@@ -1,13 +1,13 @@
 /* KallistiOS ##version##
 
-   arch/dreamcast/include/irq.h
+   arch/dreamcast/include/arch/irq.h
    Copyright (C) 2000-2001 Megan Potter
    Copyright (C) 2024 Paul Cercueil
    Copyright (C) 2024 Falco Girgis
 
 */
 
-/** \file
+/** \file    arch/irq.h
     \brief   Interrupt and exception handling.
     \ingroup irqs
 
@@ -57,7 +57,7 @@ __BEGIN_DECLS
     @{
 */
 
-/** \defgroup Context
+/** \defgroup irq_context Context
     \brief Thread execution state and accessors
 
     This API includes the structure and accessors for a
@@ -437,7 +437,7 @@ typedef struct irq_cb {
     Passing a NULL value for hnd will remove the current handler, if any.
 
     \param  code            The IRQ type to set the handler for
-                            (see \ref irq_exception_codes).
+                            (see #irq_t).
     \param  hnd             A pointer to a procedure to handle the exception.
     \param  data            A pointer that will be passed along to the callback.
     
@@ -480,7 +480,7 @@ irq_cb_t irq_get_handler(irq_t code);
     \retval 0               On success (no error conditions defined).
 
 */
-int irq_set_global_handler(irq_handler handler, void *data);
+int irq_set_global_handler(irq_handler hnd, void *data);
 
 /** Get the global exception handler.
 

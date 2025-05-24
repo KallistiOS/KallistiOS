@@ -247,7 +247,7 @@ typedef enum __packed kbd_key {
     KBD_KEY_QUOTE        = 0x34, /**< \brief " key */
     KBD_KEY_TILDE        = 0x35, /**< \brief ~ key */
     KBD_KEY_COMMA        = 0x36, /**< \brief , key */
-    KBD_KEY_PERIOD       = 0x37, /**< \brief . key */
+    KBD_KEY_PERIOD       = 0x37, /**< \brief \. key */
     KBD_KEY_SLASH        = 0x38, /**< \brief Slash key */
     KBD_KEY_CAPSLOCK     = 0x39, /**< \brief Caps Lock key */
     KBD_KEY_F1           = 0x3a, /**< \brief F1 key */
