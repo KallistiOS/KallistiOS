@@ -203,7 +203,7 @@ typedef enum pvr_hdr_type {
     This type represents an address of a texture in VRAM,
     pre-processed to be used in headers.
 */
-typedef uintptr_t pvr_txr_ptr_t;
+typedef uint32_t pvr_txr_ptr_t;
 
 /** \brief   Get texture address from VRAM address
 
@@ -214,7 +214,7 @@ typedef uintptr_t pvr_txr_ptr_t;
     \return                 The pre-processed texture address
 */
 static inline pvr_txr_ptr_t to_pvr_txr_ptr(pvr_ptr_t addr) {
-    return ((uintptr_t)addr & 0x00fffff8) >> 3;
+    return ((uint32_t)addr & 0x00fffff8) >> 3;
 }
 
 /** \brief Get texture address form VRAM address
@@ -341,7 +341,7 @@ typedef __attribute__((aligned(32))) struct pvr_poly_hdr {
                 struct {
                     pvr_poly_hdr_mode2_t m2;       /**< mode2 parameters (modifiers: inside volume) */
                     pvr_poly_hdr_mode3_t m3;       /**< mode3 parameters (modifiers: inside volume) */
-                } modifier;
+                } modifier;                        /**< Modifier volume parameters */
             };
         };
         struct {
@@ -351,10 +351,10 @@ typedef __attribute__((aligned(32))) struct pvr_poly_hdr {
         };
         struct {
             /* User clip area */
-            uint32_t start_x;                      /**< Left (inclusive) corner of user clip area */
-            uint32_t start_y;                      /**< Top (inclusive) corner of user clip area */
-            uint32_t end_x;                        /**< Right (inclusive) corner of user clip area */
-            uint32_t end_y;                        /**< Bottom (inclusive) corner of user clip area */
+            uint32_t start_x;                      /**< Left (inclusive) border of user clip area */
+            uint32_t start_y;                      /**< Top (inclusive) border of user clip area */
+            uint32_t end_x;                        /**< Right (inclusive) border of user clip area */
+            uint32_t end_y;                        /**< Bottom (inclusive) border of user clip area */
         };
     };
 } pvr_poly_hdr_t;
