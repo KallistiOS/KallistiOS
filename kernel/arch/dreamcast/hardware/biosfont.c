@@ -38,7 +38,7 @@ Expansion to 4 and 8 bpp by Donald Haase.
 
 */
 
-/* Our current conversion mode */
+/* Our current encoding mode */
 static uint8_t bfont_code_mode = BFONT_CODE_ISO8859_1;
 
 /* Current colors/pixel format. Default to white foreground, black background
@@ -60,7 +60,7 @@ static inline uint8_t bits_per_pixel() {
     return ((vid_mode->pm == PM_RGB0888) ? sizeof(uint32_t) : sizeof(uint16_t)) << 3;
 }
 
-/* Select an encoding for Japanese (or disable) */
+/* Select a character encoding mode */
 void bfont_set_encoding(bfont_code_t enc) {
     if(enc <= BFONT_CODE_RAW)
         bfont_code_mode = enc;
@@ -123,18 +123,19 @@ static uint32_t euc2jis(uint32_t euc) {
     return euc & ~0x8080;
 }
 
-/* Given an ASCII character, find it in the BIOS font if possible */
+/* Given an ASCII or ISO-8859-1 character,
+    find it in the font if possible */
 uint8_t *bfont_find_char(uint32_t ch) {
     uint8_t *fa = get_font_address();
-    /* By default, map to a space */
-    uint32_t index = 72 << 2;
+    /* Default to glyph 96 which is ISO-8859-1 code 160 (a space) */
+    uint32_t index = 96;
 
-    /* 33-126 in ASCII are 1-94 in the font */
+    /* 33-126 in ASCII/ISO-8859-1 are 1-94 in the font */
     if(ch >= 33 && ch <= 126)
         index = ch - 32;
 
-    /* 160-255 in ASCII are 96-161 in the font */
-    else if(ch >= 160 && ch <= 255)
+    /* 160-255 in ISO-8859-1 are 96-161 in the font */
+    else if((ch >= 160 && ch <= 255) && (bfont_code_mode != BFONT_CODE_ASCII))
         index = ch - (160 - 96);
 
     return fa + index * (BFONT_THIN_WIDTH*BFONT_HEIGHT/8);
@@ -229,7 +230,7 @@ size_t bfont_draw_ex(void *buf, uint32_t bufwidth, uint32_t fg, uint32_t bg,
     uint8_t *buffer = (uint8_t *)buf;
 
     /* If they're requesting a wide char and in the wrong format, kick this out */
-    if(wide && (bfont_code_mode == BFONT_CODE_ISO8859_1)) {
+    if(wide && (bfont_code_mode <= BFONT_CODE_ISO8859_1)) {
         dbglog(DBG_ERROR, "bfont_draw_ex: can't draw wide in bfont mode %d\n", bfont_code_mode);
         return 0;
     }
@@ -251,7 +252,7 @@ size_t bfont_draw_ex(void *buf, uint32_t bufwidth, uint32_t fg, uint32_t bg,
     else if(wide && ((bfont_code_mode == BFONT_CODE_EUC) || (bfont_code_mode == BFONT_CODE_SJIS)))
         ch = bfont_find_char_jp(c);
     else {
-        if(iskana)
+        if(iskana && (bfont_code_mode != BFONT_CODE_ASCII))
             ch = bfont_find_char_jp_half(c);
         else
             ch = bfont_find_char(c);
@@ -325,7 +326,8 @@ void bfont_draw_str_ex(void *b, uint32_t width, uint32_t fg, uint32_t bg,
         else if(nChr == '\t') {
             /* Draw four spaces on the current line */
             if(opaque) {
-                nChr = bfont_code_mode == BFONT_CODE_ISO8859_1 ? 0x20 : 0xa0;
+                /* Set nChr to ' ' a space */
+                nChr = 0x20;
                 buffer += bfont_draw_ex(buffer, width, fg, bg, bpp, opaque, nChr, false, false);
                 buffer += bfont_draw_ex(buffer, width, fg, bg, bpp, opaque, nChr, false, false);
                 buffer += bfont_draw_ex(buffer, width, fg, bg, bpp, opaque, nChr, false, false);
@@ -339,7 +341,8 @@ void bfont_draw_str_ex(void *b, uint32_t width, uint32_t fg, uint32_t bg,
         }
 
         /* Non-western, non-ASCII character */
-        if(bfont_code_mode != BFONT_CODE_ISO8859_1 && (nChr & 0x80)) {
+        if( (bfont_code_mode != BFONT_CODE_ISO8859_1) &&
+            (bfont_code_mode != BFONT_CODE_ASCII)     && (nChr & 0x80)) {
             switch(bfont_code_mode) {
                 case BFONT_CODE_EUC:
 

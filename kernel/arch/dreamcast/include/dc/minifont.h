@@ -28,7 +28,7 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
+#include <stdint.h>
 
 /** \defgroup video_fonts_mini Mini
     \brief                     Extra mini-font provided for Dreamcast and NAOMI
@@ -41,13 +41,13 @@ __BEGIN_DECLS
 
     This function draws a single character to the given buffer.
 
-    \param  buffer          The buffer to draw to (at least 8 x 16 pixels)
-    \param  bufwidth        The width of the buffer in pixels
-    \param  c               The character to draw
+    \param  buffer          The buffer to draw to (at least 8 x 16 pixels).
+    \param  bufwidth        The width of the buffer in pixels.
+    \param  c               The character to draw.
     
-    \return                 Amount of width covered in 16-bit increments.
+    \return                 Amount of width covered in pixels.
 */
-int minifont_draw(uint16 *buffer, uint32 bufwidth, uint32 c);
+int minifont_draw(uint16_t *buffer, uint32_t bufwidth, char c);
 
 /** \brief  Draw a full string to any sort of buffer.
 
@@ -56,12 +56,12 @@ int minifont_draw(uint16 *buffer, uint32 bufwidth, uint32 c);
     Unicode, JIS, EUC, etc).
 
     \param  b               The buffer to draw to.
-    \param  bufwidth           The width of the buffer in pixels.
+    \param  bufwidth        The width of the buffer in pixels.
     \param  str             The string to draw.
     
-    \return                 Amount of width covered in 16-bit increments.
+    \return                 Amount of width covered in pixels.
 */
-int minifont_draw_str(uint16 *b, uint32 bufwidth, const char *str);
+int minifont_draw_str(uint16_t *b, uint32_t bufwidth, const char *str);
 
 /** @} */
 
