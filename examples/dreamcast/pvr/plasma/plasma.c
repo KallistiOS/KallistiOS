@@ -55,7 +55,7 @@ float hsv;
 
 pvr_poly_hdr_t hdr[2];
 pvr_ptr_t txr[2];
-uint16 * txr_buf[2];
+uint16_t * txr_buf[2];
 int txr_cur;
 
 void plasma_init(void) {
@@ -72,7 +72,7 @@ void plasma_init(void) {
 }
 
 void plasma_drawtex(void) {
-    uint16  *vrout = (uint16 *)(txr_buf[txr_cur]);
+    uint16_t  *vrout = (uint16_t *)(txr_buf[txr_cur]);
     int x, y, p, q, r;
 
     xang++;
@@ -101,7 +101,7 @@ void plasma_drawtex(void) {
 
     // Switch these around to try out texture DMA
     pvr_txr_load(txr_buf[txr_cur], txr[txr_cur], 64 * 64 * 2);
-    // dcache_flush_range((uint32)txr_buf[txr_cur], 64*64*2);   // dcache flush is needed when using DMA
+    // dcache_flush_range((uint32_t)txr_buf[txr_cur], 64*64*2);   // dcache flush is needed when using DMA
     // pvr_txr_load_dma(txr_buf[txr_cur], txr[txr_cur], 64*64*2, 1, NULL, 0);
 }
 

@@ -41,7 +41,7 @@ KOS_INIT_FLAGS(INIT_DEFAULT | INIT_NET);
 
 int main(int argc, char *argv[]) {
     /* The address to ping... */
-    uint8 data[DATA_SIZE];
+    uint8_t data[DATA_SIZE];
     char str1[INET6_ADDRSTRLEN];
     int i, sock;
     struct sockaddr_in6 addr;
