@@ -1,0 +1,93 @@
+name: Linux build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+env:
+  dockerhub_user: pcercuei
+
+jobs:
+  matrix:
+    if: github.repository == 'KallistiOS/KallistiOS'
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.setup-matrix.outputs.matrix }}
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup matrix
+      id: setup-matrix
+      run: |
+        echo "matrix=$($GITHUB_WORKSPACE/.github/list-profiles.sh)" >> $GITHUB_OUTPUT
+
+  build:
+    needs: matrix
+    if: github.repository == 'KallistiOS/KallistiOS'
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: ${{ fromJSON(needs.matrix.outputs.matrix) }}
+
+    runs-on: ubuntu-latest
+
+    env:
+      platform: ${{ fromJSON(matrix.toolchain).platform }}
+      profile: ${{ fromJSON(matrix.toolchain).profile }}
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        filters: |
+          paths:
+            - .github/workflows/autobuild.yml
+            - .github/workflows/build-kos.sh
+            - .github/workflows/list-profiles.sh
+            - utils/dc-chain/**
+            - '!**/*.md'
+
+    - name: build-toolchain
+      if: steps.filter.outputs.paths == 'true'
+      run: >
+        sudo docker build
+        -t $dockerhub_user/$platform-toolchain:$profile
+        --build-arg platform=$platform
+        --build-arg profile=$profile
+        -f $GITHUB_WORKSPACE/utils/dc-chain/docker/Dockerfile
+        $GITHUB_WORKSPACE
+
+    - name: publish
+      if: steps.filter.outputs.paths == 'true' && github.event_name == 'push'
+      run: |
+        echo "${{ secrets.DOCKER_HUB_KEY }}" | sudo docker login -u $dockerhub_user --password-stdin
+        sudo docker push $dockerhub_user/$platform-toolchain:$profile
+        sudo docker logout
+
+    - name: build-kos-check
+      run: |
+        if [ -d $GITHUB_WORKSPACE/kernel/arch/$platform ] ; then
+          echo "BUILD_KOS=true" >> $GITHUB_ENV
+        else
+          echo "BUILD_KOS=false" >> $GITHUB_ENV
+        fi
+
+    - name: build-kos
+      if: env.BUILD_KOS == 'true'
+      run: >
+        # Login to Docker before building to get the usage limits of an authenticated user
+        echo "${{ secrets.DOCKER_HUB_KEY }}" | sudo docker login -u $dockerhub_user --password-stdin
+
+        sudo docker run --rm --name kallistios
+        -v $GITHUB_WORKSPACE:/workspace -w /workspace
+        $dockerhub_user/$platform-toolchain:$profile
+        .github/build-kos.sh $platform
+
+        sudo docker logout
