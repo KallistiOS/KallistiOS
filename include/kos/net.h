@@ -526,7 +526,7 @@ net_ipv4_stats_t net_ipv4_get_stats(void);
     
     \return                 The address, in host byte order.
 */
-uint32 net_ipv4_address(const uint8 addr[4]);
+uint32 __pure net_ipv4_address(const uint8 addr[4]);
 
 /** \brief   Parse an IP address that is packet into a uint32 into an array of
              the individual bytes.
@@ -844,7 +844,7 @@ void net_tcp_shutdown(void);
     
     \return                 The calculated CRC-32.
 */
-uint32 net_crc32le(const uint8 *data, int size);
+uint32 __pure net_crc32le(const uint8 *data, int size);
 
 /** \brief  Calculate a "big-endian" CRC-32 over a block of data.
     
@@ -853,7 +853,7 @@ uint32 net_crc32le(const uint8 *data, int size);
     
     \return                 The calculated CRC-32.
 */
-uint32 net_crc32be(const uint8 *data, int size);
+uint32 __pure net_crc32be(const uint8 *data, int size);
 
 /** \brief  Calculate a CRC16-CCITT over a block of data.
     
@@ -869,7 +869,7 @@ uint32 net_crc32be(const uint8 *data, int size);
     
     \return                 The calculated CRC16-CCITT.
 */
-uint16 net_crc16ccitt(const uint8 *data, int size, uint16 start);
+uint16 __pure net_crc16ccitt(const uint8 *data, int size, uint16 start);
 
 /** @} */
 
