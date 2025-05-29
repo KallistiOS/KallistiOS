@@ -14,6 +14,7 @@ MAINTAINER KallistiOS <cadcdev-kallistios@lists.sourceforge.net>
 
 # Installing prerequisites
 RUN apk --update add --no-cache \
+        bison \
         build-base \
         gmp-dev \
         mpfr-dev \
