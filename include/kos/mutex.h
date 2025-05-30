@@ -210,7 +210,7 @@ int mutex_lock_timed(mutex_t *m, int timeout) __nonnull_all;
     \retval 0               If the mutex is not currently locked
     \retval 1               If the mutex is currently locked
 */
-int mutex_is_locked(mutex_t *m) __nonnull_all;
+int mutex_is_locked(const mutex_t *m) __nonnull_all;
 
 /** \brief  Attempt to lock a mutex.
 
