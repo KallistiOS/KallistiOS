@@ -239,7 +239,7 @@ int mutex_is_locked(mutex_t *m);
     \retval -1              If the mutex cannot be acquired without blocking
 
     \par    Error Conditions:
-    \em     EAGAIN - the mutex is already locked (mutex_lock() would block) \n
+    \em     EBUSY  - the mutex is already locked (mutex_lock() would block) \n
     \em     EINVAL - the mutex has not been initialized properly \n
     \em     EAGAIN - lock has been acquired too many times (recursive) \n
     \em     EDEADLK - would deadlock (error-checking)

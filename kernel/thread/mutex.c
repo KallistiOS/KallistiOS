@@ -198,7 +198,7 @@ int mutex_trylock(mutex_t *m) {
 
     /* Check if the lock is held by some other thread already */
     if(m->count && m->holder != thd) {
-        errno = EAGAIN;
+        errno = EBUSY;
         return -1;
     }
 
