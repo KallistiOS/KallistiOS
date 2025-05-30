@@ -41,8 +41,8 @@ static struct ktqueue timer_queue;
 
 /* Internal function to insert a thread on the timer queue. Maintains
    sorting order by wait time. */
-static void __nonnull_all tq_insert(kthread_t * thd) {
-    kthread_t * t;
+static void __nonnull_all tq_insert(kthread_t *thd) {
+    kthread_t *t;
 
     /* Search for its place; note that new threads will be placed at
        the end of a group with the same timeout. */
@@ -58,18 +58,18 @@ static void __nonnull_all tq_insert(kthread_t * thd) {
 }
 
 /* Internal function to remove a thread from the timer queue. */
-static void __nonnull_all tq_remove(kthread_t * thd) {
+static void __nonnull_all tq_remove(kthread_t *thd) {
     TAILQ_REMOVE(&timer_queue, thd, timerq);
 }
 
 /* Returns the top thread on the timer queue (next event). If nothing is
    queued, we'll return NULL. */
-static kthread_t * tq_next(void) {
+static kthread_t *tq_next(void) {
     return TAILQ_FIRST(&timer_queue);
 }
 
-int genwait_wait(void * obj, const char * mesg, int timeout, void (*callback)(void *)) {
-    kthread_t   * me;
+int genwait_wait(void *obj, const char *mesg, int timeout, void (*callback)(void *)) {
+    kthread_t   *me;
 
     /* Twiddle interrupt state */
     if(irq_inside_int()) {
@@ -103,7 +103,7 @@ int genwait_wait(void * obj, const char * mesg, int timeout, void (*callback)(vo
 }
 
 /* Removes a thread from its wait queue; assumes ints are disabled. */
-static void __nonnull_all genwait_unqueue(kthread_t * thd) {
+static void __nonnull_all genwait_unqueue(kthread_t *thd) {
     if(thd->wait_obj) {
         /* Remove it from the queue */
         TAILQ_REMOVE(&slpque[LOOKUP(thd->wait_obj)], thd, thdq);
@@ -124,7 +124,7 @@ static void __nonnull_all genwait_unqueue(kthread_t * thd) {
     }
 }
 
-static int genwait_wake_thd_cnt(void *obj, int cntmax, kthread_t *thd, int err) {
+static int genwait_wake_thd_cnt(const void *obj, int cntmax, kthread_t *thd, int err) {
     kthread_t       * t, * nt;
     struct slpquehead   * qp;
     int         cnt = 0;
@@ -164,27 +164,27 @@ static int genwait_wake_thd_cnt(void *obj, int cntmax, kthread_t *thd, int err) 
     return cnt;
 }
 
-int genwait_wake_cnt(void * obj, int cntmax, int err) {
+int genwait_wake_cnt(const void *obj, int cntmax, int err) {
     return genwait_wake_thd_cnt(obj, cntmax, NULL, err);
 }
 
-void genwait_wake_all(void * obj) {
+void genwait_wake_all(const void *obj) {
     genwait_wake_cnt(obj, -1, 0);
 }
 
-void genwait_wake_one(void * obj) {
+void genwait_wake_one(const void *obj) {
     genwait_wake_cnt(obj, 1, 0);
 }
 
-void genwait_wake_one_err(void *obj, int err) {
+void genwait_wake_one_err(const void *obj, int err) {
     genwait_wake_cnt(obj, 1, err);
 }
 
-void genwait_wake_all_err(void *obj, int err) {
+void genwait_wake_all_err(const void *obj, int err) {
     genwait_wake_cnt(obj, -1, err);
 }
 
-int genwait_wake_thd(void *obj, kthread_t *thd, int err) {
+int genwait_wake_thd(const void *obj, kthread_t *thd, int err) {
     return genwait_wake_thd_cnt(obj, 1, thd, err);
 }
 
@@ -216,7 +216,7 @@ void genwait_check_timeouts(uint64_t tm) {
 }
 
 uint64_t genwait_next_timeout(void) {
-    kthread_t * t;
+    kthread_t *t;
 
     t = tq_next();
 

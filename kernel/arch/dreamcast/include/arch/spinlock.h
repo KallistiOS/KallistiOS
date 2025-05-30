@@ -127,7 +127,7 @@ static inline void spinlock_unlock(spinlock_t *lock) {
     \param  lock            A pointer to the spinlock to be checked.
     \return                 True if the spinlock is locked, false otherwise.
 */
-static inline bool spinlock_is_locked(spinlock_t *lock) {
+static inline bool spinlock_is_locked(const spinlock_t *lock) {
     return *lock != 0;
 }
 

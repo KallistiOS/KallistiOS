@@ -47,7 +47,7 @@ __BEGIN_DECLS
     \par    Error Conditions:
     \em     EAGAIN - on timeout
 */
-int genwait_wait(void * obj, const char * mesg, int timeout, void (*callback)(void *));
+int genwait_wait(void *obj, const char *mesg, int timeout, void (*callback)(void *));
 
 /* Wake up N threads waiting on the given object. If cnt is <=0, then we
    wake all threads. Returns the number of threads actually woken. */
@@ -67,7 +67,7 @@ int genwait_wait(void * obj, const char * mesg, int timeout, void (*callback)(vo
                             threads.
     \return                 The number of threads woken
 */
-int genwait_wake_cnt(void * obj, int cnt, int err);
+int genwait_wake_cnt(const void *obj, int cnt, int err);
 
 /** \brief  Wake up all threads sleeping on an object.
 
@@ -76,7 +76,7 @@ int genwait_wake_cnt(void * obj, int cnt, int err);
     \param  obj             The object to wake threads that are sleeping on it
     \see    genwait_wake_cnt()
 */
-void genwait_wake_all(void * obj);
+void genwait_wake_all(const void *obj);
 
 /** \brief  Wake up one thread sleeping on an object.
 
@@ -85,7 +85,7 @@ void genwait_wake_all(void * obj);
     \param  obj             The object to wake threads that are sleeping on it
     \see    genwait_wake_cnt()
 */
-void genwait_wake_one(void * obj);
+void genwait_wake_one(const void *obj);
 
 /** \brief  Wake up all threads sleeping on an object, with an error.
 
@@ -95,7 +95,7 @@ void genwait_wake_one(void * obj);
     \param  err             The value to set in the threads' errno values
     \see    genwait_wake_cnt()
 */
-void genwait_wake_all_err(void *obj, int err);
+void genwait_wake_all_err(const void *obj, int err);
 
 /** \brief  Wake up one thread sleeping on an object, with an error.
  
@@ -105,7 +105,7 @@ void genwait_wake_all_err(void *obj, int err);
     \param  err             The value to set in the threads' errno values
     \see    genwait_wake_cnt()
 */
-void genwait_wake_one_err(void *obj, int err);
+void genwait_wake_one_err(const void *obj, int err);
 
 /** \brief  Wake up a specific thread that is sleeping on an object.
 
@@ -124,7 +124,7 @@ void genwait_wake_one_err(void *obj, int err);
     \return                 The number of threads woken, which should be 1 on
                             success.
 */
-int genwait_wake_thd(void *obj, kthread_t *thd, int err) __nonnull((2));
+int genwait_wake_thd(const void *obj, kthread_t *thd, int err) __nonnull((2));
 
 /** \brief  Look for timed out genwait_wait() calls.
 

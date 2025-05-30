@@ -347,7 +347,7 @@ int rwsem_read_tryupgrade(rw_semaphore_t *s) __nonnull_all;
     \param  s       The r/w semaphore to count the readers on.
     \return The number of readers holding the r/w semaphore.
 */
-int rwsem_read_count(rw_semaphore_t *s) __nonnull_all;
+int rwsem_read_count(const rw_semaphore_t *s) __nonnull_all;
 
 /** \brief  Read the state of the writer lock on the reader/writer semaphore.
 
@@ -358,7 +358,7 @@ int rwsem_read_count(rw_semaphore_t *s) __nonnull_all;
     \param  s       The r/w semaphore to check the writer status on.
     \return The status of the writer lock of the r/w semaphore.
 */
-int rwsem_write_locked(rw_semaphore_t *s) __nonnull_all;
+int rwsem_write_locked(const rw_semaphore_t *s) __nonnull_all;
 
 __END_DECLS
 
