@@ -157,7 +157,7 @@ int sem_signal(semaphore_t *sm) __nonnull_all;
     \return                 The count of the semaphore (the number of resources
                             currently available)
 */
-int sem_count(semaphore_t *sm) __nonnull_all;
+int sem_count(const semaphore_t *sm) __nonnull_all;
 
 __END_DECLS
 

@@ -316,11 +316,11 @@ int rwsem_read_tryupgrade(rw_semaphore_t *s) {
 }
 
 /* Return the current reader count */
-int rwsem_read_count(rw_semaphore_t *s) {
+int rwsem_read_count(const rw_semaphore_t *s) {
     return s->read_count;
 }
 
 /* Return the current status of the write lock */
-int rwsem_write_locked(rw_semaphore_t *s) {
+int rwsem_write_locked(const rw_semaphore_t *s) {
     return !!s->write_lock;
 }
