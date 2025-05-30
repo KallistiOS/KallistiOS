@@ -20,9 +20,9 @@
 /* Thread pseudo-ptr representing an active IRQ context. */
 #define IRQ_THREAD  ((kthread_t *)0xFFFFFFFF)
 
-int mutex_init(mutex_t *m, int mtype) {
+int mutex_init(mutex_t *m, unsigned int mtype) {
     /* Check the type */
-    if(mtype < MUTEX_TYPE_NORMAL || mtype > MUTEX_TYPE_RECURSIVE) {
+    if(mtype > MUTEX_TYPE_RECURSIVE) {
         errno = EINVAL;
         return -1;
     }
@@ -38,7 +38,7 @@ int mutex_init(mutex_t *m, int mtype) {
 int mutex_destroy(mutex_t *m) {
     irq_disable_scoped();
 
-    if(m->type < MUTEX_TYPE_NORMAL || m->type > MUTEX_TYPE_RECURSIVE) {
+    if(m->type > MUTEX_TYPE_RECURSIVE) {
         errno = EINVAL;
         return -1;
     }
@@ -50,7 +50,7 @@ int mutex_destroy(mutex_t *m) {
     }
 
     /* Set it to an invalid type of mutex */
-    m->type = -1;
+    m->type = MUTEX_TYPE_DESTROYED;
 
     return 0;
 }
@@ -86,7 +86,7 @@ int mutex_lock_timed(mutex_t *m, int timeout) {
 
     irq_disable_scoped();
 
-    if(m->type < MUTEX_TYPE_NORMAL || m->type > MUTEX_TYPE_RECURSIVE) {
+    if(m->type > MUTEX_TYPE_RECURSIVE) {
         errno = EINVAL;
         rv = -1;
     }
@@ -166,7 +166,7 @@ int mutex_trylock(mutex_t *m) {
     if(irq_inside_int())
         thd = IRQ_THREAD;
 
-    if(m->type < MUTEX_TYPE_NORMAL || m->type > MUTEX_TYPE_RECURSIVE) {
+    if(m->type > MUTEX_TYPE_RECURSIVE) {
         errno = EINVAL;
         return -1;
     }

@@ -45,7 +45,7 @@ int cond_wait_timed(condvar_t *cv, mutex_t *m, int timeout) {
 
     irq_disable_scoped();
 
-    if(m->type < MUTEX_TYPE_NORMAL || m->type > MUTEX_TYPE_RECURSIVE ||
+    if(m->type > MUTEX_TYPE_RECURSIVE ||
        !mutex_is_locked(m)) {
         errno = EINVAL;
         return -1;
