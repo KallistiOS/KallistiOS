@@ -151,7 +151,7 @@ int sem_signal(semaphore_t *sm) {
 }
 
 /* Return the semaphore count */
-int sem_count(semaphore_t *sm) {
+int sem_count(const semaphore_t *sm) {
     /* Look for the semaphore */
     return sm->count;
 }
