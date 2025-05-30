@@ -331,7 +331,7 @@ int snd_stream_init_ex(int channels, size_t buffer_size) {
                 max_channels, channels);
             return -1;
         }
-        else if(buffer_size > max_buffer_size) {
+        else if(max_buffer_size && buffer_size > max_buffer_size) {
             dbglog(DBG_ERROR, "snd_stream_init_ex(): already initialized"
                 " with %d buffer size, but %d requested\n",
                 max_buffer_size, buffer_size);
@@ -481,6 +481,9 @@ void snd_stream_shutdown(void) {
         sep_buffer[0] = NULL;
         sep_buffer[1] = NULL;
     }
+
+    max_channels = 0;
+    max_buffer_size = 0;
 }
 
 /* Enable / disable stream queueing */
