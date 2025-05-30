@@ -79,6 +79,11 @@ extern char _etext;
 static const
 unsigned HZ __depr("Please use the new THD_SCHED_HZ macro.") = THD_SCHED_HZ;
 
+#ifndef THD_STACK_ALIGNMENT
+/** \brief  Required alignment for stack. */
+#define THD_STACK_ALIGNMENT 8
+#endif
+
 #ifndef THD_STACK_SIZE
 /** \brief  Default thread stack size. */
 #define THD_STACK_SIZE  32768
