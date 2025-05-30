@@ -66,7 +66,7 @@ __BEGIN_DECLS
     \headerfile kos/mutex.h
 */
 typedef struct kos_mutex {
-    int type;
+    unsigned int type;
     kthread_t *holder;
     int count;
 } mutex_t;
@@ -83,6 +83,7 @@ typedef struct kos_mutex {
 #define MUTEX_TYPE_OLDNORMAL    1   /**< \brief Alias for MUTEX_TYPE_NORMAL */
 #define MUTEX_TYPE_ERRORCHECK   2   /**< \brief Error-checking mutex type */
 #define MUTEX_TYPE_RECURSIVE    3   /**< \brief Recursive mutex type */
+#define MUTEX_TYPE_DESTROYED    4   /**< \brief Mutex that has been destroyed */
 
 /** \brief Default mutex type */
 #define MUTEX_TYPE_DEFAULT      MUTEX_TYPE_NORMAL
@@ -112,7 +113,7 @@ typedef struct kos_mutex {
 
     \sa     mutex_types
 */
-int mutex_init(mutex_t *m, int mtype) __nonnull_all;
+int mutex_init(mutex_t *m, unsigned int mtype) __nonnull_all;
 
 /** \brief  Destroy a mutex.
 
