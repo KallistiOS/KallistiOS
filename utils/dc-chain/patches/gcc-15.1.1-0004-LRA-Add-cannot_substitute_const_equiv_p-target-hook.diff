@@ -1,0 +1,160 @@
+From 9b7d03bddb47ca60283eabe7c1983b183cf5790f Mon Sep 17 00:00:00 2001
+From: Kaz Kojima <kkojima@rr.iij4u.or.jp>
+Date: Fri, 18 Oct 2024 11:09:37 +0900
+Subject: [PATCH 04/13] LRA: Add cannot_substitute_const_equiv_p target hook
+
+On SH fp constant load special instructions 'fldi0' and 'fldi1' are only valid
+for single-precision fp mode and thus depend on mode-switiching.  Since LRA is
+not aware of that it would emit such constant loads in the wrong mode.  The new
+target hook allows rejecting such potentially unsafe substitutions.
+
+gcc/ChangeLog:
+	PR target/117182
+	* target.def (cannot_substitute_const_equiv_p): New target hook.
+	* doc/tm.texi.in: Add it.
+	* lra-constraints.cc (get_equiv): Use it.
+	* config/sh/sh.cc (sh_cannot_substitute_const_equiv_p): Override it.
+	* doc/tm.texi: Re-generate.
+---
+ gcc/config/sh/sh.cc    | 17 +++++++++++++++++
+ gcc/doc/tm.texi        | 17 ++++++++++++++---
+ gcc/doc/tm.texi.in     |  2 ++
+ gcc/lra-constraints.cc |  6 +++++-
+ gcc/target.def         | 21 ++++++++++++++++++---
+ 5 files changed, 56 insertions(+), 7 deletions(-)
+
+diff --git a/gcc/config/sh/sh.cc b/gcc/config/sh/sh.cc
+index 1bc34e0a3e3..db66e1fc416 100644
+--- a/gcc/config/sh/sh.cc
++++ b/gcc/config/sh/sh.cc
+@@ -271,6 +271,7 @@ static bool sh_legitimate_address_p (machine_mode, rtx, bool,
+ static rtx sh_legitimize_address (rtx, rtx, machine_mode);
+ static rtx sh_delegitimize_address (rtx);
+ static bool sh_cannot_substitute_mem_equiv_p (rtx);
++static bool sh_cannot_substitute_const_equiv_p (rtx);
+ static bool sh_legitimize_address_displacement (rtx *, rtx *,
+ 						poly_int64, machine_mode);
+ static int scavenge_reg (HARD_REG_SET *s);
+@@ -612,6 +613,9 @@ TARGET_GNU_ATTRIBUTES (sh_attribute_table,
+ #undef TARGET_CANNOT_SUBSTITUTE_MEM_EQUIV_P
+ #define TARGET_CANNOT_SUBSTITUTE_MEM_EQUIV_P sh_cannot_substitute_mem_equiv_p
+ 
++#undef TARGET_CANNOT_SUBSTITUTE_CONST_EQUIV_P
++#define TARGET_CANNOT_SUBSTITUTE_CONST_EQUIV_P sh_cannot_substitute_const_equiv_p
++
+ #undef TARGET_LEGITIMIZE_ADDRESS_DISPLACEMENT
+ #define TARGET_LEGITIMIZE_ADDRESS_DISPLACEMENT \
+   sh_legitimize_address_displacement
+@@ -11431,6 +11435,19 @@ sh_cannot_substitute_mem_equiv_p (rtx)
+   return true;
+ }
+ 
++static bool
++sh_cannot_substitute_const_equiv_p (rtx subst)
++{
++  /* If SUBST is SFmode const_double 0 or 1, the move insn may be
++     transformed into fldi0/1.  This is unsafe for fp mode switching
++     because fldi0/1 are single mode only instructions.  */
++  if (GET_MODE (subst) == SFmode
++      && (real_equal (CONST_DOUBLE_REAL_VALUE (subst), &dconst1)
++	  || real_equal (CONST_DOUBLE_REAL_VALUE (subst), &dconst0)))
++    return true;
++  return false;
++}
++
+ /* Implement TARGET_LEGITIMIZE_ADDRESS_DISPLACEMENT.  */
+ static bool
+ sh_legitimize_address_displacement (rtx *offset1, rtx *offset2,
+diff --git a/gcc/doc/tm.texi b/gcc/doc/tm.texi
+index a96700c0d38..64f4efdc452 100644
+--- a/gcc/doc/tm.texi
++++ b/gcc/doc/tm.texi
+@@ -3093,9 +3093,20 @@ A target hook which returns @code{true} if @var{subst} can't
+ substitute safely pseudos with equivalent memory values during
+ register allocation.
+ The default version of this target hook returns @code{false}.
+-On most machines, this default should be used.  For generally
+-machines with non orthogonal register usage for addressing, such
+-as SH, this hook can be used to avoid excessive spilling.
++On most machines, this default should be used.  For machines with
++non-orthogonal register usage for addressing, such as SH,
++this hook can be used to avoid excessive spilling.
++@end deftypefn
++
++@deftypefn {Target Hook} bool TARGET_CANNOT_SUBSTITUTE_CONST_EQUIV_P (rtx @var{subst})
++A target hook which returns @code{true} if @var{subst} can't
++substitute safely pseudos with equivalent constant values during
++register allocation.
++The default version of this target hook returns @code{false}.
++On most machines, this default should be used.  For machines with
++special constant load instructions that have additional constraints
++or being dependent on mode-switching, such as SH, this hook can be
++used to avoid unsafe substitution.
+ @end deftypefn
+ 
+ @deftypefn {Target Hook} bool TARGET_LEGITIMIZE_ADDRESS_DISPLACEMENT (rtx *@var{offset1}, rtx *@var{offset2}, poly_int64 @var{orig_offset}, machine_mode @var{mode})
+diff --git a/gcc/doc/tm.texi.in b/gcc/doc/tm.texi.in
+index eccc4d88493..1673ca727e5 100644
+--- a/gcc/doc/tm.texi.in
++++ b/gcc/doc/tm.texi.in
+@@ -2398,6 +2398,8 @@ in the reload pass.
+ 
+ @hook TARGET_CANNOT_SUBSTITUTE_MEM_EQUIV_P
+ 
++@hook TARGET_CANNOT_SUBSTITUTE_CONST_EQUIV_P
++
+ @hook TARGET_LEGITIMIZE_ADDRESS_DISPLACEMENT
+ 
+ @hook TARGET_SPILL_CLASS
+diff --git a/gcc/lra-constraints.cc b/gcc/lra-constraints.cc
+index 2146bb8fa56..832db82426f 100644
+--- a/gcc/lra-constraints.cc
++++ b/gcc/lra-constraints.cc
+@@ -552,7 +552,11 @@ get_equiv (rtx x)
+       return res;
+     }
+   if ((res = ira_reg_equiv[regno].constant) != NULL_RTX)
+-    return res;
++    {
++      if (targetm.cannot_substitute_const_equiv_p (res))
++	return x;
++      return res;
++    }
+   if ((res = ira_reg_equiv[regno].invariant) != NULL_RTX)
+     return res;
+   gcc_unreachable ();
+diff --git a/gcc/target.def b/gcc/target.def
+index 6c7cdc8126b..f69f1db7532 100644
+--- a/gcc/target.def
++++ b/gcc/target.def
+@@ -6167,9 +6167,24 @@ DEFHOOK
+ substitute safely pseudos with equivalent memory values during\n\
+ register allocation.\n\
+ The default version of this target hook returns @code{false}.\n\
+-On most machines, this default should be used.  For generally\n\
+-machines with non orthogonal register usage for addressing, such\n\
+-as SH, this hook can be used to avoid excessive spilling.",
++On most machines, this default should be used.  For machines with\n\
++non-orthogonal register usage for addressing, such as SH,\n\
++this hook can be used to avoid excessive spilling.",
++ bool, (rtx subst),
++ hook_bool_rtx_false)
++
++/* This target hook allows the backend to avoid unsafe substitution
++   during register allocation.  */
++DEFHOOK
++(cannot_substitute_const_equiv_p,
++ "A target hook which returns @code{true} if @var{subst} can't\n\
++substitute safely pseudos with equivalent constant values during\n\
++register allocation.\n\
++The default version of this target hook returns @code{false}.\n\
++On most machines, this default should be used.  For machines with\n\
++special constant load instructions that have additional constraints\n\
++or being dependent on mode-switching, such as SH, this hook can be\n\
++used to avoid unsafe substitution.",
+  bool, (rtx subst),
+  hook_bool_rtx_false)
+ 
+-- 
+2.47.2
+

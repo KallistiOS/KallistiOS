@@ -1,0 +1,62 @@
+From 09b7429936350b438bf5eafb661f9a4e34f6a33f Mon Sep 17 00:00:00 2001
+From: Alexandre Oliva <oliva@gnu.org>
+Date: Fri, 20 Sep 2024 18:22:12 +0900
+Subject: [PATCH 03/13] LRA: Take scratch as implicit unused output reloads
+
+gcc/ChangeLog:
+	* lra-constraints.cc (match_reload, process_alt_operands,
+	curr_insn_transform): Take scratch as implicit unused
+	output reloads.
+---
+ gcc/lra-constraints.cc | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/gcc/lra-constraints.cc b/gcc/lra-constraints.cc
+index 7dbc7fe1e00..2146bb8fa56 100644
+--- a/gcc/lra-constraints.cc
++++ b/gcc/lra-constraints.cc
+@@ -1223,7 +1223,9 @@ match_reload (signed char out, signed char *ins, signed char *outs,
+     return;
+   /* See a comment for the input operand above.  */
+   narrow_reload_pseudo_class (out_rtx, goal_class);
+-  if (find_reg_note (curr_insn, REG_UNUSED, out_rtx) == NULL_RTX)
++  if (find_reg_note (curr_insn, REG_UNUSED, out_rtx) == NULL_RTX
++      && !ira_former_scratch_p (REGNO (SUBREG_P (out_rtx)
++				       ? SUBREG_REG (out_rtx) : out_rtx)))
+     {
+       reg = SUBREG_P (out_rtx) ? SUBREG_REG (out_rtx) : out_rtx;
+       start_sequence ();
+@@ -2972,7 +2974,8 @@ process_alt_operands (int only_alternative)
+ 		 objects with a REG_UNUSED note.  */
+ 	      if ((curr_static_id->operand[nop].type != OP_IN
+ 		   && no_output_reloads_p
+-		   && ! find_reg_note (curr_insn, REG_UNUSED, op))
++		   && ! find_reg_note (curr_insn, REG_UNUSED, op)
++		   && ! ira_former_scratch_p (REGNO (operand_reg[nop])))
+ 		  || (curr_static_id->operand[nop].type != OP_OUT
+ 		      && no_input_reloads_p && ! const_to_mem)
+ 		  || (this_alternative_matches >= 0
+@@ -2982,7 +2985,9 @@ process_alt_operands (int only_alternative)
+ 				  [this_alternative_matches].type != OP_IN)
+ 			      && ! find_reg_note (curr_insn, REG_UNUSED,
+ 						  no_subreg_reg_operand
+-						  [this_alternative_matches])))))
++						  [this_alternative_matches])
++			      && ! (ira_former_scratch_p
++				    (REGNO (operand_reg[nop])))))))
+ 		{
+ 		  if (lra_dump_file != NULL)
+ 		    fprintf
+@@ -4820,7 +4825,8 @@ curr_insn_transform (bool check_only_p)
+ 	  if (type != OP_IN
+ 	      && find_reg_note (curr_insn, REG_UNUSED, old) == NULL_RTX
+ 	      /* OLD can be an equivalent constant here.  */
+-	      && !CONSTANT_P (old))
++	      && !CONSTANT_P (old)
++	      && !ira_former_scratch_p (REGNO (old)))
+ 	    {
+ 	      start_sequence ();
+ 	      lra_emit_move (type == OP_INOUT ? copy_rtx (old) : old, new_reg);
+-- 
+2.47.2
+
