@@ -4,7 +4,7 @@
    Copyright (C) 2000, 2001, 2002, 2003, 2004 Megan Potter
    Copyright (C) 2002 Florian Schulze
    Copyright (C) 2020 Lawrence Sebald
-   Copyright (C) 2023, 2024 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024, 2025 Ruslan Rostovtsev
    Copyright (C) 2024 Stefanos Kornilios Mitsis Poiitidis
 
    SH-4 support routines for SPU streaming sound driver
@@ -110,7 +110,8 @@ static uint32_t *sep_buffer[2] = {NULL, NULL};
 
 static mutex_t stream_mutex = MUTEX_INITIALIZER;
 
-static int max_channels = 2;
+static int max_channels = 0;
+static size_t max_buffer_size = 0;
 
 /* Check an incoming handle */
 #define CHECK_HND(x) do { \
@@ -323,12 +324,24 @@ int snd_stream_init(void) {
 
 int snd_stream_init_ex(int channels, size_t buffer_size) {
 
-    if(sep_buffer[0]) {
-        dbglog(DBG_ERROR, "snd_stream_init_ex(): already initialized\n");
-        return -1;
+    if(max_channels) {
+        if(channels > max_channels) {
+            dbglog(DBG_ERROR, "snd_stream_init_ex(): already initialized"
+                " with %d channels, but %d requested\n",
+                max_channels, channels);
+            return -1;
+        }
+        else if(buffer_size > max_buffer_size) {
+            dbglog(DBG_ERROR, "snd_stream_init_ex(): already initialized"
+                " with %d buffer size, but %d requested\n",
+                max_buffer_size, buffer_size);
+            return -1;
+        }
+        return 0;
     }
 
     max_channels = channels;
+    max_buffer_size = buffer_size;
 
     if(buffer_size > 0) {
         /* Create stereo separation buffers. This buffer size for each channel.
