@@ -15,8 +15,6 @@ mpfr_base_url = $(download_protocol)://$(gcc_deps_url)
 mpc_base_url = $(download_protocol)://$(gcc_deps_url)
 isl_base_url = $(download_protocol)://$(gcc_deps_url)
 
-gdb_base_url  = $(download_protocol)://$(gnu_mirror)/gnu/gdb
-
 # used to add additional blank lines so eval works properly
 define blank_line
 
@@ -27,7 +25,7 @@ STAMP_TYPES = download patch build install
 
 # Function to Generate Variables from Config Options
 # Args:
-# 1 - Package (binutils,gcc,newlib,gdb,gmp,mpfr,mpc,isl)
+# 1 - Package (binutils,gcc,newlib,gmp,mpfr,mpc,isl)
 # 2 - Arch Prefixed with underscore (Optional) (sh_,arm_,)
 # 3 - Dest Folder after Extraction (Optional) (used to move gcc deps inside gcc folder)
 define gen_download_vars
@@ -60,11 +58,9 @@ $(eval $(call gen_download_vars,binutils,arm_))
 $(eval $(call gen_download_vars,gcc,arm_))
 $(eval $(call gen_dep_download_vars,arm))
 
-$(eval $(call gen_download_vars,gdb))
-
 # Setup Targets for Downloading & Unpacking Archives
 # Args:
-# 1 - Package Name (gdb, newlib, sh_gcc, arm_binutils, etc)
+# 1 - Package Name (newlib, sh_gcc, arm_binutils, etc)
 define setup_archive_targets
 # set file & url for target archive
 $(stamp_$(1)_download): name = $($(1)_name)
@@ -78,7 +74,7 @@ endef
 
 # Setup Targets for Downloading Git Repos
 # Args:
-# 1 - Package Name (gdb, newlib, sh_gcc, arm_binutils, etc)
+# 1 - Package Name (newlib, sh_gcc, arm_binutils, etc)
 define setup_git_targets
 $(stamp_$(1)_download): name = $($(1)_name)
 $(stamp_$(1)_download): git_repo = $($(1)_git_repo)
@@ -87,7 +83,6 @@ $(stamp_$(1)_download): additional_git_args = $(if $($(1)_git_branch),-b $($(1)_
 $(stamp_$(1)_download): dest = $($(1)_dest)
 endef
 
-SOURCE_DOWNLOADS := gdb
 SOURCE_DOWNLOADS += sh_binutils sh_gcc newlib arm_binutils arm_gcc
 SOURCE_DOWNLOADS += sh_gmp sh_mpfr sh_mpc sh_isl arm_gmp arm_mpfr arm_mpc arm_isl
 
@@ -146,10 +141,7 @@ fetch-newlib: $(stamp_newlib_download)
 fetch-arm-binutils: $(stamp_arm_binutils_download)
 fetch-arm-gcc: $(stamp_arm_gcc_download) $(if $(filter 1,$(use_custom_dependencies)),$(fetch_arm_gcc_deps_source))
 
-fetch-gdb: $(stamp_gdb_download)
-
 fetch-sh4: fetch-sh-binutils fetch-sh-gcc fetch-newlib
 fetch-arm: fetch-arm-binutils fetch-arm-gcc
 
 fetch: fetch-sh4
-fetch: fetch-gdb
