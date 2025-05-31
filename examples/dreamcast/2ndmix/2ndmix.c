@@ -731,7 +731,7 @@ void font_one_frame(void) {
 }
 
 void font_init(void) {
-    int x, y, c;
+    size_t x, y, c;
     uint8 pcxpall[768];
     volatile uint16 *vtex;
     uint16 val;

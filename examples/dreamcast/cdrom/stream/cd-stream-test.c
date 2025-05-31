@@ -116,8 +116,8 @@ static int cd_stream_test(uint32_t lba, uint8_t *buffer, size_t size, int mode) 
     return 0;
 }
 
-int print_diff(uint8_t *pio_buf, uint8_t *dma_buf, size_t size) {
-    int i, j, rv = 0;
+size_t print_diff(uint8_t *pio_buf, uint8_t *dma_buf, size_t size) {
+    size_t i, j, rv = 0;
 
     for(i = 0; i < size; ++i) {
         if (dma_buf[i] != pio_buf[i]) {
@@ -143,7 +143,8 @@ int print_diff(uint8_t *pio_buf, uint8_t *dma_buf, size_t size) {
 }
 
 int main(int argc, char *argv[]) {
-    int rs, i;
+    int rs;
+    size_t i;
     uint32_t lba;
     CDROM_TOC toc;
 
