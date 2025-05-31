@@ -39,6 +39,25 @@ __BEGIN_DECLS
 #include <arch/types.h>
 #include <dc/maple.h>
 
+/**
+ * The following macros are retained for backwards compatibility.
+ *  
+ * Their original documentation can be found in the corresponding bitfields
+ * in the purupuru_effect_t structure.
+ * 
+ *  */
+#define PURUPURU_EFFECT2_UINTENSITY(x) (x << 4)
+#define PURUPURU_EFFECT2_LINTENSITY(x) (x)
+#define PURUPURU_EFFECT2_DECAY         (8 << 4)
+#define PURUPURU_EFFECT2_PULSE         (8)
+#define PURUPURU_EFFECT1_INTENSITY(x)  (x << 4)
+#define PURUPURU_EFFECT1_PULSE         (8 << 4)
+#define PURUPURU_EFFECT1_POWERSAVE     (15)
+#define PURUPURU_SPECIAL_MOTOR1        (1 << 4)
+#define PURUPURU_SPECIAL_MOTOR2        (1 << 7)
+#define PURUPURU_SPECIAL_PULSE         (1)
+
+
 /** \defgroup peripherals_rumble    Rumble Pack
     \brief                          Maple driver for vibration pack peripherals
     \ingroup                        peripherals
@@ -52,111 +71,115 @@ __BEGIN_DECLS
     This, along with the various macros in this file can give a slightly better
     idea of the effect being generated than using the raw values.
 */
-typedef struct purupuru_effect  {
-    /** \brief  The duration of the effect. No idea on units... */
-    uint8 duration;
+typedef union purupuru_effect  {
+    uint32_t raw;
+    struct {
+        /** \brief  Special effects field. */
+        uint8 special;
 
-    /** \brief  2nd effect field. */
-    uint8 effect2;
+        /** \brief  1st effect field. */
+        uint8 effect1;
+        
+        /** \brief  2nd effect field. */
+        uint8 effect2;
+        
+        /** \brief  The duration of the effect. No idea on units... */
+        uint8 duration;
+    };
+      struct {
+    /* Special Effects and motor select. The normal purupuru packs will
+only have one motor. Selecting MOTOR2 for these is probably not
+a good idea. The PULSE setting here supposably creates a sharp
+pulse effect, when ORed with the special field. */
 
-    /** \brief  1st effect field. */
-    uint8 effect1;
+    /** \brief  Yet another pulse effect.
+        This supposedly creates a sharp pulse effect.
+    */
+    uint32_t special_pulse : 1;
+    uint32_t : 3; // unused
 
-    /** \brief  Special effects field. */
-    uint8 special;
+    /** \brief  Select motor #1.
+
+        Most jump packs only have one motor, but on things that do have more
+       than one motor (like PS1->Dreamcast controller adapters that support
+       rumble), this selects the first motor.
+    */
+    uint32_t special_motor1 : 1;
+    uint32_t : 2; // unused
+
+    /** \brief  Select motor #2.
+
+        Most jump packs only have one motor, but on things that do have more
+       than one motor (like PS1->Dreamcast controller adapters that support
+       rumble), this selects the second motor.
+    */
+    uint32_t special_motor2 : 1;
+
+    /** \brief  Ignore this command.
+
+        Valid value 15 (0xF).
+
+        Most jump packs will ignore commands with this set in effect1,
+       apparently.
+    */
+    uint32_t fx1_powersave : 4;
+
+    /** \brief  Upper nibble of effect1.
+
+        This value works with the lower nibble of the effect2 field to
+        increase the intensity of the rumble effect.
+        Valid values are 0-7.
+
+        \see    rumble_fields_t.fx2_lintensity
+    */
+    uint32_t fx1_intensity : 3;
+
+    /** \brief  Give a pulse effect to the rumble.
+
+        This probably should be used with rumble_fields_t.fx1_pulse as well.
+
+        \see    rumble_fields_t.fx2_pulse
+    */
+    uint32_t fx1_pulse : 1;
+
+    /** \brief  Lower-nibble of effect2.
+
+        This value works with the upper nibble of the effect1
+        field to increase the intensity of the rumble effect.
+        Valid values are 0-7.
+
+        \see    rumble_fields_t.fx1_intensity
+    */
+    uint32_t fx2_lintensity : 3;
+
+    /** \brief  Give a pulse effect to the rumble.
+
+        This probably should be used with rumble_fields_t.fx1_pulse as well.
+
+        \see    rumble_fields_t.fx1_intensity
+    */
+    uint32_t fx2_pulse : 1;
+
+    /** \brief  Upper-nibble of effect2.
+
+        This apparently lowers the rumble's intensity somewhat.
+        Valid values are 0-7.
+    */
+    uint32_t fx2_uintensity : 3;
+
+    /* OR these in with your effect2 value if you feel so inclined.
+       if you or the PULSE effect in here, you probably should also
+       do so with the effect1 one below. */
+
+    /** \brief  Give a decay effect to the rumble on some packs. */
+    uint32_t fx2_decay : 1;
+
+    /* these last bits are covered by duration in the first anonymous struct,
+       so not named here */
+    uint32_t :8;  
+  };
 } purupuru_effect_t;
 
-/* Set one of each of the following in the effect2 field of the
-   purupuru_effect_t. Valid values for each are 0-7. The LINTENSITY
-   value works with the INTENSITY of effect1 to increase the intensity
-   of the rumble, where UINTENSITY apparently lowers the rumble's
-   intensity somewhat. */
-
-/** \brief  Upper-nibble of effect2 convenience macro.
-
-    This macro is for setting the upper nibble of the effect2 field of the
-    purupuru_effect_t. This apparently lowers the rumble's intensity somewhat.
-    Valid values are 0-7.
-*/
-#define PURUPURU_EFFECT2_UINTENSITY(x) (x << 4)
-
-/** \brief  Lower-nibble of effect2 convenience macro.
-
-    This macro is for setting the lower nibble of the effect2 field of the
-    purupuru_effect_t. This value works with the upper nibble of the effect1
-    field to increase the intensity of the rumble effect. Valid values are 0-7.
-
-    \see    PURUPURU_EFFECT1_INTENSITY
-*/
-#define PURUPURU_EFFECT2_LINTENSITY(x) (x)
-
-/* OR these in with your effect2 value if you feel so inclined.
-   if you or the PULSE effect in here, you probably should also
-   do so with the effect1 one below. */
-/** \brief  Give a decay effect to the rumble on some packs. */
-#define PURUPURU_EFFECT2_DECAY         (8 << 4)
-
-/** \brief  Give a pulse effect to the rumble.
-
-    This probably should be used with PURUPURU_EFFECT1_PULSE as well.
-
-    \see    PURUPURU_EFFECT1_PULSE
-*/
-#define PURUPURU_EFFECT2_PULSE         (8)
-
-/* Set one value for this in the effect1 field of the effect structure. */
-/** \brief  Upper nibble of effect1 convenience macro.
-
-    This macro is for setting the upper nibble of the effect1 field of the
-    purupuru_effect_t. This value works with the lower nibble of the effect2
-    field to increase the intensity of the rumble effect. Valid values are 0-7.
-
-    \see    PURUPURU_EFFECT2_LINTENSITY
-*/
-#define PURUPURU_EFFECT1_INTENSITY(x)  (x << 4)
-
-/* OR these in with your effect1 value, if you need them. PULSE
-   should probably be used with the PULSE in effect2, as well.
-   POWERSAVE will probably make your purupuru ignore that command. */
-/** \brief  Give a pulse effect to the rumble.
-
-    This probably should be used with PURUPURU_EFFECT2_PULSE as well.
-
-    \see    PURUPURU_EFFECT2_PULSE
-*/
-#define PURUPURU_EFFECT1_PULSE         (8 << 4)
-
-/** \brief  Ignore this command.
-
-    Most jump packs will ignore commands with this set in effect1, apparently.
-*/
-#define PURUPURU_EFFECT1_POWERSAVE     (15)
-
-/* Special Effects and motor select. The normal purupuru packs will
-   only have one motor. Selecting MOTOR2 for these is probably not
-   a good idea. The PULSE setting here supposably creates a sharp
-   pulse effect, when ORed with the special field. */
-/** \brief  Select motor #1.
-
-    Most jump packs only have one motor, but on things that do have more than
-    one motor (like PS1->Dreamcast controller adapters that support rumble),
-    this selects the first motor.
-*/
-#define PURUPURU_SPECIAL_MOTOR1        (1 << 4)
-
-/** \brief  Select motor #2.
-
-    Most jump packs only have one motor, but on things that do have more than
-    one motor (like PS1->Dreamcast controller adapters that support rumble),
-    this selects the second motor.
-*/
-#define PURUPURU_SPECIAL_MOTOR2        (1 << 7)
-
-/** \brief  Yet another pulse effect.
-
-    This supposedly creates a sharp pulse effect.
-*/
-#define PURUPURU_SPECIAL_PULSE         (1)
 
 /** \brief  Send an effect to a jump pack.
 

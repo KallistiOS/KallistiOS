@@ -61,17 +61,9 @@ int purupuru_rumble_raw(maple_device_t *dev, uint32 effect) {
 }
 
 int purupuru_rumble(maple_device_t *dev, purupuru_effect_t *effect) {
-    uint32 comp_effect;
-
     assert(dev != NULL);
-
-    /* "Compile" the effect */
-    comp_effect = (effect->duration << 24) | (effect->effect2 << 16) |
-                  (effect->effect1 << 8) | (effect->special);
-
-    return purupuru_rumble_raw(dev, comp_effect);
+    return purupuru_rumble_raw(dev, effect->raw);
 }
-
 
 /* Device Driver Struct */
 static maple_driver_t purupuru_drv = {
