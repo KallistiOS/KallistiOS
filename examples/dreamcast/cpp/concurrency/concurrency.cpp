@@ -147,7 +147,7 @@ static void test_semaphore() {
 struct LatchJob {
     const std::string name;
     std::string product{"not worked"};
-    std::thread action;
+    std::thread action{std::thread()};
 };
  
 static void test_latch() {

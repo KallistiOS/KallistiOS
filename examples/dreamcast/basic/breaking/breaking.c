@@ -251,7 +251,7 @@ static bool break_on_sized_operand_region_access_value_range(void) {
     VERIFY(!handled);
 
     /* Read from the region-of-interest as the wrong data size. */
-    volatile uint16_t tmp16; (void)tmp16;
+    volatile uint16_t tmp16 = 0; (void)tmp16;
     tmp16 = ((uint16_t *)vars)[1023 / sizeof(uint16_t)];
     VERIFY(!handled);
 

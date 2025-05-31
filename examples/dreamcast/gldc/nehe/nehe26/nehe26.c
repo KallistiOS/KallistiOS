@@ -49,28 +49,32 @@ int key = 1;                     /* Make sure same morph key not pressed     */
 int step = 0, steps = 200;       /* Step counter and maximum number of steps */
 bool morph = false;              /* Default morph to false (not morphing)    */
 
-int maxver;                            /* Holds the max number of vertices   */
+size_t maxver;                         /* Holds the max number of vertices   */
 object morph1, morph2, morph3, morph4, /* Our 4 morphable objects            */
        helper, *sour, *dest;           /* Helper, source, destination object */
 
 #define MORPHS 4
 
 /* Function to allocate memory for an object */
-void objallocate(object *k, int n) {
+bool objallocate(object *k, size_t n) {
 
     /* Sets points equal to vertex * number of vertices */
-    k->points = (vertex *)malloc(sizeof(vertex) * n);
+    k->points = (vertex *)calloc(n, sizeof(vertex));
+
+    /* Check if we actually got memory back */
+    if(k->points)
+        return true;
+
+    return false;
 }
 
 /* Function deallocate memory for an object */
 void objfree(object *k) {
-
     free(k->points);
 }
 
-
 /* Function to release/destroy our resources and restoring the old desktop */
-void Quit(int returnCode) {
+void Quit(void) {
 
     /* Deallocate the objects' memory */
     objfree(&morph1);
@@ -81,42 +85,51 @@ void Quit(int returnCode) {
 }
 
 /* function Loads Object From File (name) */
-void objload(char *name, object *k) {
+bool objload(char *name, object *k) {
 
-    int ver;           /* Will hold vertex count                 */
+    size_t ver;        /* Will hold vertex count                 */
     float rx, ry, rz;  /* Hold vertex X, Y & Z position          */
     FILE *filein;      /* Filename to open                       */
-    int i;             /* Simple loop variable                   */
+    size_t i;          /* Simple loop variable                   */
+    bool rv = false;   /* return value                           */
 
     printf("  [objload] file: %s\n", name);
 
     /* Opens the file for reading */
     filein = fopen(name, "r");
+
+    if(!filein)
+        return rv;
+
     /* Reads the number of verts in the file */
     fread(&ver, sizeof(int), 1, filein);
     /* Sets objects verts variable to equal the value of ver */
     k->verts = ver;
     /* Jumps to code that allocates RAM to hold the object */
-    objallocate(k, ver);
+    if(objallocate(k, ver)) {
+        /* Loops through the vertices */
+        for(i = 0; i < ver; i++) {
+            /* Reads the next three verts */
+            fread(&rx, sizeof(float), 1, filein);
+            fread(&ry, sizeof(float), 1, filein);
+            fread(&rz, sizeof(float), 1, filein);
+            /* Set our object's x, y, z points */
+            k->points[i].x = rx;
+            k->points[i].y = ry;
+            k->points[i].z = rz;
+        }
 
-    /* Loops through the vertices */
-    for(i = 0; i < ver; i++) {
-        /* Reads the next three verts */
-        fread(&rx, sizeof(float), 1, filein);
-        fread(&ry, sizeof(float), 1, filein);
-        fread(&rz, sizeof(float), 1, filein);
-        /* Set our object's x, y, z points */
-        k->points[i].x = rx;
-        k->points[i].y = ry;
-        k->points[i].z = rz;
+        /* If ver is greater than maxver set maxver equal to ver */
+        if(ver > maxver)
+            maxver = ver;
+
+        rv = true;
     }
 
     /* Close the file */
     fclose(filein);
 
-    /* If ver is greater than maxver set maxver equal to ver */
-    if(ver > maxver)
-        maxver = ver;
+    return rv;
 }
 
 /* Function to calculate movement of points during morphing */
@@ -133,7 +146,7 @@ vertex calculate(int i) {
 }
 
 /* General OpenGL initialization function */
-int initGL(GLvoid) {
+bool initGL(GLvoid) {
 
     int i; /* Simple looping variable */
 
@@ -199,7 +212,7 @@ int initGL(GLvoid) {
     /* Source & destination are set to equal first object (morph1) */
     sour = dest = &morph1;
 
-    return(true);
+    return true;
 }
 
 void draw_gl(void) {
@@ -317,7 +330,8 @@ int main(int argc, char **argv) {
 
     /* Get basic stuff initialized */
     glKosInit();
-    initGL();
+    if(!initGL())
+        return EXIT_FAILURE;
 
     printf("Entering main loop\n");
 
@@ -383,7 +397,7 @@ int main(int argc, char **argv) {
         glKosSwapBuffers();
     }
 
-    Quit(0);
-    return 0;
+    Quit();
+    return EXIT_SUCCESS;
 }
 
