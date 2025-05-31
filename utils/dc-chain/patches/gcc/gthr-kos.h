@@ -45,6 +45,10 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 #include <arch/irq.h>
 #include <time.h>
 
+/* Technically not needed - we don't use any pthread stuff here - but it will
+ * fix the build of GCC 9.5.0. */
+#include <pthread.h>
+
 /* These should work just fine. */
 typedef kthread_key_t __gthread_key_t;
 typedef kthread_once_t __gthread_once_t;

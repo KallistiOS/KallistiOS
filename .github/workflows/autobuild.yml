@@ -1,0 +1,84 @@
+name: Linux build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  matrix:
+    if: github.repository == 'KallistiOS/KallistiOS'
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: "${{ steps.setup-matrix.outputs.matrix }}"
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup matrix
+      id: setup-matrix
+      run: |
+        cd $GITHUB_WORKSPACE/utils/dc-chain/profiles
+        echo "matrix=$(ls -1 profile.*.mk |sed 's/profile\.//g;s/\.mk//g' | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
+
+  build-toolchain:
+    needs: matrix
+    if: github.repository == 'KallistiOS/KallistiOS'
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain_profile: "${{ fromJson(needs.matrix.outputs.matrix) }}"
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        filters: |
+          paths:
+            - .github/workflows/autobuild.yml
+            - utils/dc-chain/profiles/*.mk
+            - utils/dc-chain/docker/Dockerfile
+
+    - name: build
+      if: steps.filter.outputs.paths == 'true'
+      run: |
+        sudo docker build -t pcercuei/kallistios-toolchain:${{ matrix.toolchain_profile }} --build-arg dc_chain=${{ matrix.toolchain_profile }} --build-arg makejobs=4 -f $GITHUB_WORKSPACE/utils/dc-chain/docker/Dockerfile $GITHUB_WORKSPACE
+
+    - name: publish
+      if: steps.filter.outputs.paths == 'true' && ${{ github.event_name == 'push' }}
+      run: |
+        echo "${{ secrets.DOCKER_HUB_KEY }}" | sudo docker login -u pcercuei --password-stdin
+        sudo docker push pcercuei/kallistios-toolchain:${{ matrix.toolchain_profile }}
+        sudo docker logout
+
+  build:
+    needs: [matrix, build-toolchain]
+    if: ${{ always() }} && github.repository == 'KallistiOS/KallistiOS'
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain_profile: "${{ fromJson(needs.matrix.outputs.matrix) }}"
+
+    runs-on: ubuntu-latest
+    container: pcercuei/kallistios-toolchain:${{ matrix.toolchain_profile }}
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: install-dependencies
+      run: |
+        apk --update add --no-cache coreutils
+
+    - name: build
+      run: |
+        cp $GITHUB_WORKSPACE/doc/environ.sh.sample $GITHUB_WORKSPACE/environ.sh
+        sed -i 's/KOS_BASE=.*$/KOS_BASE=$GITHUB_WORKSPACE/' $GITHUB_WORKSPACE/environ.sh
+        . $GITHUB_WORKSPACE/environ.sh
+        make -C $GITHUB_WORKSPACE
