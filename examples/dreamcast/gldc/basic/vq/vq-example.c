@@ -42,7 +42,7 @@ static int loadtxr(void) {
                            512,           /* Texture Width */
                            512,           /* Texture Height */
                            0,             /* This bit must be set to 0 */
-                           fruit_end - fruit, /* Compressed Texture Size*/
+                           (uintptr_t)fruit_end - (uintptr_t)fruit, /* Compressed Texture Size*/
                            fruit);       /* Address of texture data in RAM: OpenGL will load the texture into VRAM for you.
                                             Because of this, make sure to call glDeleteTextures() as needed, as that will
                                             free the VRAM allocated for the texture. */
