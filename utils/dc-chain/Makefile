@@ -42,9 +42,9 @@ include scripts/init.mk
 # Makefile variables
 include scripts/variables.mk
 
-default: build gdb
+default: build
 
-all: build build-arm gdb
+all: build build-arm
 
 # ---- download {{{
 
@@ -66,12 +66,6 @@ include scripts/binutils.mk
 include scripts/gcc-pass1.mk
 include scripts/newlib.mk
 include scripts/gcc-pass2.mk
-
-# ---- }}}}
-
-# ---- optional components {{{
-
-include scripts/gdb.mk
 
 # ---- }}}}
 

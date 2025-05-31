@@ -52,9 +52,6 @@ build-sh4-newlib-only: fetch-newlib
 build-arm-binutils: fetch-arm-binutils
 build-arm-gcc-pass1: fetch-arm-gcc
 
-# GDB Patch Dependency
-build_gdb: patch_gdb
-
 # MinGW/MSYS or 'sh_force_libbfd_installation=1': install BFD if required.
 # To compile dc-tool, we need to install libbfd for sh-elf.
 # This is done when making build-sh4-binutils.
