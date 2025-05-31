@@ -10,8 +10,6 @@ clean_patches_stamp:
 	if ! test -d "$${tmpdir}"; then \
 		mkdir "$${tmpdir}"; \
 	fi; \
-	mv $(stamp_gdb_download) $${tmpdir} 2>/dev/null; \
-	mv $(stamp_gdb_patch) $${tmpdir} 2>/dev/null; \
 	rm -f *.stamp; \
 	mv $${tmpdir}/*.stamp . 2>/dev/null; \
 	rm -rf $${tmpdir}
@@ -24,12 +22,8 @@ clean-builds: clean_patches_stamp
 	-rm -rf build-gcc-$(arm_target)-$(arm_gcc_ver)
 	-rm -rf build-binutils-$(sh_target)-$(sh_binutils_ver)
 	-rm -rf build-binutils-$(arm_target)-$(arm_binutils_ver)
-	-rm -rf build-$(gdb_name)
 
-clean-downloads: clean-gdb-sources clean-arm-sources clean-sh-sources
-
-clean-gdb-sources:
-	-rm -rf $(gdb_name)
+clean-downloads: clean-arm-sources clean-sh-sources
 
 clean-arm-sources:
 	-rm -rf $(arm_binutils_name)
@@ -40,10 +34,7 @@ clean-sh-sources:
 	-rm -rf $(sh_gcc_name)
 	-rm -rf $(newlib_name)
 
-clean-archives: clean-gdb-archives clean-arm-archives clean-sh-archives
-
-clean-gdb-archives:
-	-rm -f $(gdb_file)
+clean-archives: clean-arm-archives clean-sh-archives
 
 clean-arm-archives:
 	-rm -f $(config_guess)

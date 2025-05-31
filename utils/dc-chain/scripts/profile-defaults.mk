@@ -8,7 +8,6 @@
 sh_binutils_download_type=xz
 sh_gcc_download_type=xz
 newlib_download_type=gz
-gdb_download_type=xz
 
 # Tarball extensions to download for ARM
 arm_binutils_download_type=xz

@@ -38,9 +38,6 @@ ifeq (1,$(do_kos_patching))
 # Add Build Pre-Requisites for ARM Steps
   build-arm-binutils: patch-arm-binutils
   build-arm-gcc-pass1: patch-arm-gcc
-
-# Add Patching Pre-Reqs for GDB
-  build_gdb: patch_gdb
 endif
 
 # Require SH downloads before patching

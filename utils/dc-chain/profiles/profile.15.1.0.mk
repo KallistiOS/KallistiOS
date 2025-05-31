@@ -5,7 +5,6 @@
 sh_binutils_ver=2.44
 sh_gcc_ver=15.1.0
 newlib_ver=4.5.0.20241231
-gdb_ver=16.2
 
 # Toolchain for ARM
 # The ARM version of gcc/binutils is separated as support for the ARM7DI core
