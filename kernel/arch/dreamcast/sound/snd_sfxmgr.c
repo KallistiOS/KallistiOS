@@ -813,6 +813,30 @@ int snd_sfx_play_ex(sfx_play_data_t *data) {
     return data->chn;
 }
 
+int snd_sfx_update(sfx_play_data_t *data) {
+
+    if(!data || (data->chn < 0))
+        return -1;
+
+    AICA_CMDSTR_CHANNEL(tmp, cmd, chan);
+
+    cmd->cmd = AICA_CMD_CHAN;
+    cmd->timestamp = 0;
+    cmd->size = AICA_CMDSTR_CHANNEL_SIZE;
+    cmd->cmd_id = data->chn;
+    chan->cmd = AICA_CH_CMD_UPDATE |
+                AICA_CH_UPDATE_SET_VOL |
+                AICA_CH_UPDATE_SET_PAN |
+                AICA_CH_UPDATE_SET_FREQ;
+    chan->freq = data->freq;
+    chan->vol = data->vol;
+    chan->pan = data->pan;
+
+    snd_sh4_to_aica(tmp, cmd->size);
+
+    return 0;
+}
+
 void snd_sfx_stop(int chn) {
     AICA_CMDSTR_CHANNEL(tmp, cmd, chan);
     cmd->cmd = AICA_CMD_CHAN;
