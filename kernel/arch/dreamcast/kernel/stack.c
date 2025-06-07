@@ -25,13 +25,13 @@ extern uintptr_t arch_stack_32m __attribute__((weak,alias("arch_stack_32m_dft"))
 
 /* Do a stack trace from the current function; leave off the first n frames
    (i.e., in assert()). */
-void arch_stk_trace(int n) {
+__noinline void arch_stk_trace(int n) {
     arch_stk_trace_at(arch_get_fptr(), n + 1);
 }
 
 /* Do a stack trace from the given frame pointer (useful for things like
    tracing from an ISR); leave off the first n frames. */
-void arch_stk_trace_at(uint32_t fp, size_t n) {
+__noinline void arch_stk_trace_at(uint32_t fp, size_t n) {
     uint32_t ret_addr;
     if(!__is_defined(FRAME_POINTERS)) {
         dbgio_printf("Stack Trace: frame pointers not enabled!\n");
