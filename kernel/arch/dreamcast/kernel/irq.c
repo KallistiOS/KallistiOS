@@ -153,8 +153,9 @@ static char *irq_exception_string(irq_t evt) {
 
 /* Print a kernel panic reg dump */
 extern irq_context_t *irq_srt_addr;
-static void irq_dump_regs(int code, irq_t evt) {
+void irq_dump_regs(int code, irq_t evt) {
     uint32_t fp;
+    uint32_t ret_addr;
     uint32_t *regs = irq_srt_addr->r;
     bool valid_pc;
     bool valid_pr;
@@ -191,13 +192,13 @@ static void irq_dump_regs(int code, irq_t evt) {
                     break;
 
                 /* Get the return address from the function pointer */
-                fp = arch_fptr_ret_addr(fp);
+                ret_addr = arch_fptr_ret_addr(fp);
 
                 /* Validate the return address */
-                if(!arch_valid_text_address(fp))
+                if(!arch_valid_text_address(ret_addr))
                     break;
 
-                dbglog(DBG_DEAD, " %08lx", fp);
+                dbglog(DBG_DEAD, " %08lx", ret_addr);
                 fp = arch_fptr_next(fp);
             }
         }
