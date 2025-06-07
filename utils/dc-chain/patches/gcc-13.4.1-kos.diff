@@ -1,6 +1,6 @@
-diff --color -ruN gcc-13.3.0/gcc/config/sh/sh-c.cc gcc-13.3.0-kos/gcc/config/sh/sh-c.cc
---- gcc-13.3.0/gcc/config/sh/sh-c.cc	2023-06-04 20:48:46.612552162 -0500
-+++ gcc-13.3.0-kos/gcc/config/sh/sh-c.cc	2023-06-04 20:49:03.486606055 -0500
+diff --color -ruN gcc-13.4.1/gcc/config/sh/sh-c.cc gcc-13.4.1-kos/gcc/config/sh/sh-c.cc
+--- gcc-13.4.1/gcc/config/sh/sh-c.cc	2023-06-04 20:48:46.612552162 -0500
++++ gcc-13.4.1-kos/gcc/config/sh/sh-c.cc	2023-06-04 20:49:03.486606055 -0500
 @@ -141,4 +141,11 @@
  
    cpp_define_formatted (pfile, "__SH_ATOMIC_MODEL_%s__",
@@ -13,10 +13,10 @@ diff --color -ruN gcc-13.3.0/gcc/config/sh/sh-c.cc gcc-13.3.0-kos/gcc/config/sh/
 +  /* Toolchain supports setting up stack for 32MB */
 +  builtin_define ("__KOS_GCC_32MB__");
  }
-diff --color -ruN gcc-13.3.0/gcc/configure gcc-13.3.0-kos/gcc/configure
---- gcc-13.3.0/gcc/configure	2023-06-04 20:48:49.679561957 -0500
-+++ gcc-13.3.0-kos/gcc/configure	2023-06-04 20:49:03.488606061 -0500
-@@ -13058,7 +13058,7 @@
+diff --color -ruN gcc-13.4.1/gcc/configure gcc-13.4.1-kos/gcc/configure
+--- gcc-13.4.1/gcc/configure	2023-06-04 20:48:49.679561957 -0500
++++ gcc-13.4.1-kos/gcc/configure	2023-06-04 20:49:03.488606061 -0500
+@@ -13094,7 +13094,7 @@
      target_thread_file='single'
      ;;
    aix | dce | lynx | mipssde | posix | rtems | \
@@ -25,9 +25,9 @@ diff --color -ruN gcc-13.3.0/gcc/configure gcc-13.3.0-kos/gcc/configure
      target_thread_file=${enable_threads}
      ;;
    *)
-diff --color -ruN gcc-13.3.0/libgcc/config/sh/t-sh gcc-13.3.0-kos/libgcc/config/sh/t-sh
---- gcc-13.3.0/libgcc/config/sh/t-sh	2023-06-04 20:48:45.741549380 -0500
-+++ gcc-13.3.0-kos/libgcc/config/sh/t-sh	2023-06-04 20:49:03.488606061 -0500
+diff --color -ruN gcc-13.4.1/libgcc/config/sh/t-sh gcc-13.4.1-kos/libgcc/config/sh/t-sh
+--- gcc-13.4.1/libgcc/config/sh/t-sh	2023-06-04 20:48:45.741549380 -0500
++++ gcc-13.4.1-kos/libgcc/config/sh/t-sh	2023-06-04 20:49:03.488606061 -0500
 @@ -23,6 +23,8 @@
    $(LIB1ASMFUNCS_CACHE)
  LIB1ASMFUNCS_CACHE = _ic_invalidate _ic_invalidate_array
@@ -37,9 +37,9 @@ diff --color -ruN gcc-13.3.0/libgcc/config/sh/t-sh gcc-13.3.0-kos/libgcc/config/
  crt1.o: $(srcdir)/config/sh/crt1.S
  	$(gcc_compile) -c $<
  
-diff --color -ruN gcc-13.3.0/libgcc/configure gcc-13.3.0-kos/libgcc/configure
---- gcc-13.3.0/libgcc/configure	2023-06-04 20:48:45.787549527 -0500
-+++ gcc-13.3.0-kos/libgcc/configure	2023-06-04 20:49:03.489606065 -0500
+diff --color -ruN gcc-13.4.1/libgcc/configure gcc-13.4.1-kos/libgcc/configure
+--- gcc-13.4.1/libgcc/configure	2023-06-04 20:48:45.787549527 -0500
++++ gcc-13.4.1-kos/libgcc/configure	2023-06-04 20:49:03.489606065 -0500
 @@ -5699,6 +5699,7 @@
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;
@@ -48,9 +48,9 @@ diff --color -ruN gcc-13.3.0/libgcc/configure gcc-13.3.0-kos/libgcc/configure
      mcf)	thread_header=config/i386/gthr-mcf.h ;;
  esac
  
-diff --color -ruN gcc-13.3.0/libobjc/configure gcc-13.3.0-kos/libobjc/configure
---- gcc-13.3.0/libobjc/configure	2023-06-04 20:48:49.902562670 -0500
-+++ gcc-13.3.0-kos/libobjc/configure	2023-06-04 20:49:03.489606065 -0500
+diff --color -ruN gcc-13.4.1/libobjc/configure gcc-13.4.1-kos/libobjc/configure
+--- gcc-13.4.1/libobjc/configure	2023-06-04 20:48:49.902562670 -0500
++++ gcc-13.4.1-kos/libobjc/configure	2023-06-04 20:49:03.489606065 -0500
 @@ -2918,11 +2918,9 @@
  
  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
@@ -63,9 +63,9 @@ diff --color -ruN gcc-13.3.0/libobjc/configure gcc-13.3.0-kos/libobjc/configure
    ;
    return 0;
  }
-diff --color -ruN gcc-13.3.0/libobjc/Makefile.in gcc-13.3.0-kos/libobjc/Makefile.in
---- gcc-13.3.0/libobjc/Makefile.in	2023-06-04 20:48:49.901562666 -0500
-+++ gcc-13.3.0-kos/libobjc/Makefile.in	2023-06-04 20:49:03.490606068 -0500
+diff --color -ruN gcc-13.4.1/libobjc/Makefile.in gcc-13.4.1-kos/libobjc/Makefile.in
+--- gcc-13.4.1/libobjc/Makefile.in	2023-06-04 20:48:49.901562666 -0500
++++ gcc-13.4.1-kos/libobjc/Makefile.in	2023-06-04 20:49:03.490606068 -0500
 @@ -308,14 +308,16 @@
  $(srcdir)/aclocal.m4: @MAINT@ $(aclocal_deps)
  	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
@@ -96,9 +96,9 @@ diff --color -ruN gcc-13.3.0/libobjc/Makefile.in gcc-13.3.0-kos/libobjc/Makefile
  
  mostlyclean:
  	-$(LIBTOOL_CLEAN) rm -f libobjc$(libsuffix).la libobjc_gc$(libsuffix).la *.lo
-diff --color -ruN gcc-13.3.0/libstdc++-v3/config/cpu/sh/atomicity.h gcc-13.3.0-kos/libstdc++-v3/config/cpu/sh/atomicity.h
---- gcc-13.3.0/libstdc++-v3/config/cpu/sh/atomicity.h	2023-06-04 20:48:46.047550357 -0500
-+++ gcc-13.3.0-kos/libstdc++-v3/config/cpu/sh/atomicity.h	2023-06-04 20:49:03.490606068 -0500
+diff --color -ruN gcc-13.4.1/libstdc++-v3/config/cpu/sh/atomicity.h gcc-13.4.1-kos/libstdc++-v3/config/cpu/sh/atomicity.h
+--- gcc-13.4.1/libstdc++-v3/config/cpu/sh/atomicity.h	2023-06-04 20:48:46.047550357 -0500
++++ gcc-13.4.1-kos/libstdc++-v3/config/cpu/sh/atomicity.h	2023-06-04 20:49:03.490606068 -0500
 @@ -22,14 +22,40 @@
  // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
  // <http://www.gnu.org/licenses/>.
@@ -149,9 +149,9 @@ diff --color -ruN gcc-13.3.0/libstdc++-v3/config/cpu/sh/atomicity.h gcc-13.3.0-k
 +
 +_GLIBCXX_END_NAMESPACE_VERSION
 +} // namespace
-diff --color -ruN gcc-13.3.0/libstdc++-v3/configure gcc-13.3.0-kos/libstdc++-v3/configure
---- gcc-13.3.0/libstdc++-v3/configure	2023-06-04 20:48:46.398551478 -0500
-+++ gcc-13.3.0-kos/libstdc++-v3/configure	2023-06-04 20:49:03.493606077 -0500
+diff --color -ruN gcc-13.4.1/libstdc++-v3/configure gcc-13.4.1-kos/libstdc++-v3/configure
+--- gcc-13.4.1/libstdc++-v3/configure	2023-06-04 20:48:46.398551478 -0500
++++ gcc-13.4.1-kos/libstdc++-v3/configure	2023-06-04 20:49:03.493606077 -0500
 @@ -15825,6 +15825,7 @@
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;

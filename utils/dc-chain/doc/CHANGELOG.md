@@ -2,6 +2,7 @@
 
 | Date<br/>_____________ | Author(s)<br/>_____________ | Changes<br/>_____________ |
 |:-----------------------|:----------------------------|---------------------------|
+| 2025-06-07 | Eric Fradella | Upgrade 13.x series profiles to 13.4.0 and 13.4.1. |
 | 2025-05-23 | Eric Fradella | Upgrade 14.x series profiles to 14.3.0 and 14.3.1. |
 | 2025-04-18 | Eric Fradella | Add 15.1.0 release profile and 15.1.1/16.0.0 dev profiles. All dev profiles upgraded to Binutils 2.44 and GDB 16.2 |
 | 2025-02-19 | Eric Fradella | Remove profiles and patches for older toolchains (9.3.0, 10.5.0, 11.5.0, 12.4.0) and Rust dev toolchains. Support for Newlib versions prior to 4.x now deprecated. |
