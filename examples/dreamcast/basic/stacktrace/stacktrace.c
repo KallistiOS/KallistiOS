@@ -6,7 +6,11 @@
 
 #include <kos.h>
 
-void func(void) {
+/*  This is marked as __noinline to ensure the compiler
+    doesn't try to get smart and inline it which would
+    defeat the purpose of the example.
+*/
+__noinline void func(void) {
     arch_stk_trace(0);
 }
 

@@ -25,7 +25,7 @@ extern uintptr_t arch_stack_32m __attribute__((weak,alias("arch_stack_32m_dft"))
 
 /* Do a stack trace from the current function; leave off the first n frames
    (i.e., in assert()). */
-void arch_stk_trace(int n) {
+__noinline void arch_stk_trace(int n) {
     arch_stk_trace_at(arch_get_fptr(), n + 1);
 }
 
@@ -46,7 +46,7 @@ void arch_stk_trace_at(uint32_t fp, size_t n) {
             dbgio_printf("   %08lx   (invalid frame pointer)\n", fp);
             break;
         }
-        
+
         if(n == 0) {
             /* Get the return address from the function pointer */
             ret_addr = arch_fptr_ret_addr(fp);
