@@ -404,7 +404,8 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
 
             /* Create a new thread stack */
             if(!real_attr.stack_ptr) {
-                nt->stack = (uint32_t*)malloc(real_attr.stack_size);
+                nt->stack = (uint32_t*)aligned_alloc(THD_STACK_ALIGNMENT,
+                                                     real_attr.stack_size);
 
                 if(!nt->stack) {
                     free(nt);
