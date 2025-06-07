@@ -32,6 +32,7 @@ void arch_stk_trace(int n) {
 /* Do a stack trace from the given frame pointer (useful for things like
    tracing from an ISR); leave off the first n frames. */
 void arch_stk_trace_at(uint32_t fp, size_t n) {
+    uint32_t ret_addr;
     if(!__is_defined(FRAME_POINTERS)) {
         dbgio_printf("Stack Trace: frame pointers not enabled!\n");
         return;
@@ -42,20 +43,20 @@ void arch_stk_trace_at(uint32_t fp, size_t n) {
     while(fp != 0xffffffff) {
         /* Validate the function pointer (fp) */
         if((fp & 3) || (fp < 0x8c000000) || (fp > _arch_mem_top)) {
-            dbgio_printf("   (invalid frame pointer)\n");
+            dbgio_printf("   %08lx   (invalid frame pointer)\n", fp);
             break;
         }
         
         if(n == 0) {
             /* Get the return address from the function pointer */
-            fp = arch_fptr_ret_addr(fp);
+            ret_addr = arch_fptr_ret_addr(fp);
 
             /* Validate the return address */
-            if(!arch_valid_address(fp)) {
-                dbgio_printf("   %08lx   (invalid return address)\n", fp);
+            if(!arch_valid_address(ret_addr)) {
+                dbgio_printf("   %08lx   (invalid return address)\n", ret_addr);
                 break;
             } else
-                dbgio_printf("   %08lx\n", fp);
+                dbgio_printf("   %08lx\n", ret_addr);
         }
         else n--;
 
