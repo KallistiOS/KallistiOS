@@ -3,7 +3,7 @@
    arch/dreamcast/kernel/irq.c
    Copyright (C) 2000-2001 Megan Potter
    Copyright (C) 2024 Paul Cercueil
-   Copyright (C) 2024 Falco Girgis
+   Copyright (C) 2024, 2025 Falco Girgis
    Copyright (C) 2024 Andy Barajas
 */
 
@@ -62,6 +62,8 @@ int irq_set_handler(irq_t code, irq_handler hnd, void *data) {
         return -1;
 
     code >>= 5;
+
+    irq_disable_scoped();
     irq_handlers[code] = (struct irq_cb){ hnd, data };
 
     return 0;
@@ -75,11 +77,14 @@ irq_cb_t irq_get_handler(irq_t code) {
 
     code >>= 5;
 
+    irq_disable_scoped();
     return irq_handlers[code];
 }
 
 /* Set a global handler */
 int irq_set_global_handler(irq_handler hnd, void *data) {
+    irq_disable_scoped();
+
     global_irq_handler.hdl = hnd;
     global_irq_handler.data = data;
     return 0;
@@ -87,17 +92,23 @@ int irq_set_global_handler(irq_handler hnd, void *data) {
 
 /* Get the global exception handler */
 irq_cb_t irq_get_global_handler(void) {
+    irq_disable_scoped();
+
     return global_irq_handler;
 }
 
 /* Set or remove a trapa handler */
 int trapa_set_handler(trapa_t code, trapa_handler hnd, void *data) {
+    irq_disable_scoped();
+
     trapa_handlers[code] = (struct trapa_cb){ hnd, data };
     return 0;
 }
 
 /* Get a particular trapa handler */
 trapa_handler trapa_get_handler(trapa_t code, void **data) {
+    irq_disable_scoped();
+
     if(data)
         *data = trapa_handlers[code].data;
 
