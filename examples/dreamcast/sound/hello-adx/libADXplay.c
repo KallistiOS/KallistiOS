@@ -56,7 +56,7 @@ int check_cont()
 	return ret;
 }
 
-int main(int argc, const char* argv[])
+int main(int argc, const char *argv[])
 {
     /* Print some text to the screen */
 	int o = 20*640+20;
