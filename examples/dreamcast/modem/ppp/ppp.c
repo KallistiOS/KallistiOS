@@ -18,7 +18,7 @@
 KOS_INIT_FLAGS(INIT_DEFAULT | INIT_NET);
 
 
-int main() {
+int main(int argc, const char* argv[]) {
     char buffer[1024];
 
     int err;

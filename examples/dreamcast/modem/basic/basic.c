@@ -29,7 +29,7 @@ int buttonPressed(int button) {
     return 0;
 }
 
-int main() {
+int main(int argc, const char* argv[]) {
     int           answerMode = 0;
     unsigned char data[DATA_BUFFER_LENGTH];
     int           i;

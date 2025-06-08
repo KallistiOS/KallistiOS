@@ -998,7 +998,7 @@ int InputCb(void) {
     return 1;
 }
 
-int main() {
+int main(int argc, const char* argv[]) {
     /* Get basic stuff initialized */
     glKosInit();
 
