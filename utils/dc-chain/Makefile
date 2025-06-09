@@ -44,7 +44,7 @@ include scripts/variables.mk
 
 default: build
 
-all: build build-arm
+all: build
 
 # ---- download {{{
 
