@@ -24,10 +24,10 @@ endif
 
 # Toolchain profiles
 include scripts/profile-defaults.mk
-ifneq ("$(wildcard profiles/profile.$(toolchain_profile).mk)","")
-  include profiles/profile.$(toolchain_profile).mk
+ifneq ("$(wildcard profiles/$(platform)/$(toolchain_profile).mk)","")
+  include profiles/$(platform)/$(toolchain_profile).mk
 else
-  $(error No toolchain profile file found at profiles/profile.$(toolchain_profile).mk)
+  $(error No toolchain profile file found at profiles/$(platform)/$(toolchain_profile).mk)
 endif
 
 # Download functions
