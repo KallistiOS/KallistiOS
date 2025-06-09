@@ -44,7 +44,7 @@ include scripts/variables.mk
 
 default: build gdb
 
-all: build build-arm gdb
+all: build gdb
 
 # ---- download {{{
 
