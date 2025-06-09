@@ -44,7 +44,7 @@ int rwsem_init(rw_semaphore_t *s) {
 }
 
 /* Destroy a reader/writer semaphore */
-int rwsem_destroy(rw_semaphore_t *s) {
+__no_inline int rwsem_destroy(rw_semaphore_t *s) {
     int rv = 0;
 
     irq_disable_scoped();

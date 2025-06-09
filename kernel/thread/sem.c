@@ -65,7 +65,7 @@ int sem_init(semaphore_t *sm, int count) {
 }
 
 /* Take care of destroying a semaphore */
-int sem_destroy(semaphore_t *sm) {
+__no_inline int sem_destroy(semaphore_t *sm) {
     /* Wake up any queued threads with an error */
     genwait_wake_all_err(sm, ENOTRECOVERABLE);
 

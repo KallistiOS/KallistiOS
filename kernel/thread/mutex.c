@@ -55,7 +55,7 @@ int mutex_init(mutex_t *m, int mtype) {
     return 0;
 }
 
-int mutex_destroy(mutex_t *m) {
+__no_inline int mutex_destroy(mutex_t *m) {
     irq_disable_scoped();
 
     if(m->type < MUTEX_TYPE_NORMAL || m->type > MUTEX_TYPE_RECURSIVE) {
