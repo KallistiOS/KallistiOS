@@ -1,0 +1,3 @@
+#!/bin/sh
+
+exec gdb-multiarch -iex "set architecture $KOS_GDB_CPU" -iex "set sysroot $KOS_PORTS" -iex "target remote 127.0.0.1:2159" $*
