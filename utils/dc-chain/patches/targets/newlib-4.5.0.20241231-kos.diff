@@ -9,6 +9,19 @@ diff --color -ruN newlib-4.5.0.20241231/newlib/configure.host newlib-4.5.0.20241
  	;;
    sparc*)
  	libm_machine_dir=sparc
+@@ -818,7 +818,11 @@
+ 	default_newlib_io_long_long="yes"
+ 	newlib_cflags="${newlib_cflags} -DMISSING_SYSCALL_NAMES"
+ 	;;
+-  powerpc*-*-eabi* | \
++  powerpc*-*-eabi*)
++	default_newlib_io_long_long="yes"
++	newlib_cflags="${newlib_cflags} -DREENTRANT_SYSCALLS_PROVIDED -DMALLOC_PROVIDED -DABORT_PROVIDED -DHAVE_FCNTL -meabi -ffunction-sections -fdata-sections"
++	syscall_dir=syscalls
++	;;
+   powerpc*-*-elf* | \
+   powerpc*-*-linux* | \
+   powerpc*-*-rtem* | \
 diff --color -ruN newlib-4.5.0.20241231/newlib/libc/include/assert.h newlib-4.5.0.20241231-kos/newlib/libc/include/assert.h
 --- newlib-4.5.0.20241231/newlib/libc/include/assert.h	2024-02-10 09:30:58.781247667 -0600
 +++ newlib-4.5.0.20241231-kos/newlib/libc/include/assert.h	2024-02-10 09:31:16.329331366 -0600
@@ -38,19 +51,6 @@ diff --color -ruN newlib-4.5.0.20241231/newlib/libc/include/assert.h newlib-4.5.
  
  #if __STDC_VERSION__ >= 201112L && !defined __cplusplus
  # define static_assert _Static_assert
-diff --color -ruN newlib-4.5.0.20241231/newlib/libc/include/sys/stat.h newlib-4.5.0.20241231-kos/newlib/libc/include/sys/stat.h
---- newlib-4.5.0.20241231/newlib/libc/include/sys/stat.h	2024-04-28 15:07:54.520453819 -0400
-+++ newlib-4.5.0.20241231-kos/newlib/libc/include/sys/stat.h	2023-12-31 12:00:18.000000000 -0500
-@@ -142,8 +142,8 @@
- int	stat (const char *__restrict __path, struct stat *__restrict __sbuf );
- mode_t	umask (mode_t __mask );
- 
-+int	lstat (const char *__restrict __path, struct stat *__restrict __buf );
- #if defined (__SPU__) || defined(__rtems__) || defined(__CYGWIN__)
--int	lstat (const char *__restrict __path, struct stat *__restrict __buf );
- int	mknod (const char *__path, mode_t __mode, dev_t __dev );
- #endif
- 
 diff --color -ruN newlib-4.5.0.20241231/newlib/libc/include/sys/_pthreadtypes.h newlib-4.5.0.20241231-kos/newlib/libc/include/sys/_pthreadtypes.h
 --- newlib-4.5.0.20241231/newlib/libc/include/sys/_pthreadtypes.h	2024-02-10 09:30:58.783247676 -0600
 +++ newlib-4.5.0.20241231-kos/newlib/libc/include/sys/_pthreadtypes.h	2024-02-10 09:31:16.329331366 -0600
@@ -214,7 +214,20 @@ diff --color -ruN newlib-4.5.0.20241231/newlib/libc/include/sys/signal.h newlib-
 +#endif
  
  #if __POSIX_VISIBLE >= 199309
- 
+
+diff --color -ruN newlib-4.5.0.20241231/newlib/libc/include/sys/stat.h newlib-4.5.0.20241231-kos/newlib/libc/include/sys/stat.h
+--- newlib-4.5.0.20241231/newlib/libc/include/sys/stat.h	2025-03-18 17:54:52.217013623 -0500
++++ newlib-4.5.0.20241231-kos/newlib/libc/include/sys/stat.h	2025-03-18 17:54:59.003048247 -0500
+@@ -142,8 +142,8 @@
+ int	stat (const char *__restrict __path, struct stat *__restrict __sbuf );
+ mode_t	umask (mode_t __mask );
+
+-#if defined (__SPU__) || defined(__rtems__) || defined(__CYGWIN__)
+ int	lstat (const char *__restrict __path, struct stat *__restrict __buf );
++#if defined (__SPU__) || defined(__rtems__) || defined(__CYGWIN__)
+ int	mknod (const char *__path, mode_t __mode, dev_t __dev );
+ #endif
+
 diff --color -ruN newlib-4.5.0.20241231/newlib/libc/include/sys/_types.h newlib-4.5.0.20241231-kos/newlib/libc/include/sys/_types.h
 --- newlib-4.5.0.20241231/newlib/libc/include/sys/_types.h	2024-02-10 09:30:58.783247676 -0600
 +++ newlib-4.5.0.20241231-kos/newlib/libc/include/sys/_types.h	2024-02-10 09:31:16.329331366 -0600
@@ -223,7 +236,7 @@ diff --color -ruN newlib-4.5.0.20241231/newlib/libc/include/sys/_types.h newlib-
  #ifndef __machine_ino_t_defined
  #if (defined(__i386__) && (defined(GO32) || defined(__MSDOS__))) || \
 -    defined(__sparc__) || defined(__SPU__)
-+    defined(__sparc__) || defined(__SPU__) || defined(__sh__)
++    defined(__sparc__) || defined(__SPU__) || defined(__sh__) || defined(__PPC__)
  typedef unsigned long __ino_t;
  #else
  typedef unsigned short __ino_t;

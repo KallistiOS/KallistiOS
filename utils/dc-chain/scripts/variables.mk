@@ -14,4 +14,4 @@ logdir       := $(pwd)/logs
 PATH         := $(toolchain_path)/bin:$(PATH)
 
 arch         := $(word 1,$(subst -, ,$(target)))
-gcc_arch     := $(arch)
+gcc_arch     := $(subst powerpc,rs6000,$(arch))
