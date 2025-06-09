@@ -14,11 +14,11 @@ ifneq ("$(wildcard $(config_file))","")
   $(info +++ Using configuration from $(config_file))
   include $(config_file)
 else
-  ifneq ("$(wildcard Makefile.default.cfg)","")
-    $(info +++ Using configuration from Makefile.default.cfg)
-    include Makefile.default.cfg
+  ifneq ("$(platform)","")
+    $(info +++ Using configuration from Makefile.$(platform).cfg)
+    include Makefile.$(platform).cfg
   else
-    $(error No configuration file found at $(config_file) or Makefile.default.cfg)
+    $(error No configuration file found at $(config_file))
   endif
 endif
 
