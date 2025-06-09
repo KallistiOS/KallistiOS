@@ -3,6 +3,7 @@
    mutex.c
    Copyright (C) 2012, 2015 Lawrence Sebald
    Copyright (C) 2024 Paul Cercueil
+   Copyright (C) 2025 Falco Girgis
 
 */
 
@@ -19,6 +20,10 @@
 
 /* Thread pseudo-ptr representing an active IRQ context. */
 #define IRQ_THREAD  ((kthread_t *)0xFFFFFFFF)
+
+static inline bool is_valid_type(int type) {
+    return (type >= MUTEX_TYPE_NORMAL && type <= MUTEX_TYPE_RECURSIVE);
+}
 
 mutex_t *mutex_create(void) {
     mutex_t *rv;
@@ -41,7 +46,8 @@ mutex_t *mutex_create(void) {
 
 int mutex_init(mutex_t *m, int mtype) {
     /* Check the type */
-    if(mtype < MUTEX_TYPE_NORMAL || mtype > MUTEX_TYPE_RECURSIVE) {
+    if(!is_valid_type(mtype)) {
+        m->type = MUTEX_TYPE_INVALID;
         errno = EINVAL;
         return -1;
     }
@@ -58,7 +64,7 @@ int mutex_init(mutex_t *m, int mtype) {
 int mutex_destroy(mutex_t *m) {
     irq_disable_scoped();
 
-    if(m->type < MUTEX_TYPE_NORMAL || m->type > MUTEX_TYPE_RECURSIVE) {
+    if(!is_valid_type(m->type)) {
         errno = EINVAL;
         return -1;
     }
@@ -111,7 +117,7 @@ int mutex_lock_timed(mutex_t *m, int timeout) {
 
     irq_disable_scoped();
 
-    if(m->type < MUTEX_TYPE_NORMAL || m->type > MUTEX_TYPE_RECURSIVE) {
+    if(!is_valid_type(m->type)) {
         errno = EINVAL;
         rv = -1;
     }
@@ -177,7 +183,7 @@ int mutex_lock_timed(mutex_t *m, int timeout) {
     return rv;
 }
 
-int mutex_is_locked(mutex_t *m) {
+int mutex_is_locked(const mutex_t *m) {
     return !!m->count;
 }
 
@@ -191,7 +197,7 @@ int mutex_trylock(mutex_t *m) {
     if(irq_inside_int())
         thd = IRQ_THREAD;
 
-    if(m->type < MUTEX_TYPE_NORMAL || m->type > MUTEX_TYPE_RECURSIVE) {
+    if(!is_valid_type(m->type)) {
         errno = EINVAL;
         return -1;
     }
@@ -223,6 +229,8 @@ int mutex_trylock(mutex_t *m) {
             }
 
             ++m->count;
+            break;
+        default:
             break;
     }
 
