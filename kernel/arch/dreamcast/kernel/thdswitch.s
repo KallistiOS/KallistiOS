@@ -1,8 +1,9 @@
 ! KallistiOS ##version##
 !
 !   arch/dreamcast/kernel/thdswitch.s
-!   Copyright (c)2003 Megan Potter
+!   Copyright (C) 2003 Megan Potter
 !   Copyright (C) 2023 Paul Cercueil <paul@crapouillou.net>
+!   Copyright (C) 2025 Falco Girgis
 !
 ! Assembler code for swapping out running threads
 !
@@ -33,12 +34,13 @@ _thd_block_now:
 	! and start at R8.
 
 	! Save SR and disable interrupts
-	sts.l		pr,@-r15
-	mov.l		idaddr,r0
-	jsr		@r0
-	nop
+	mov.l	irqd_and,r1
+	mov.l	irqd_or,r2
+	stc	sr,r0
+	and	r0,r1
+	or	r2,r1
+	ldc	r1,sr
 
-	lds.l		@r15+,pr
 	add		#0x72,r4
 
 	mov		r0,r1
@@ -122,9 +124,13 @@ _thd_block_now:
 	jmp		@r1
 	mov		r0,r4
 
+	.align 2
+irqd_and:
+	.long	0xefffff0f
+irqd_or:
+	.long	0x000000f0
+
 	.balign	4
-idaddr:
-	.long	_irq_disable
 ifraddr:
 	.long	_irq_force_return
 tcnaddr:

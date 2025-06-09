@@ -1,9 +1,9 @@
 /* KallistiOS ##version##
 
    arch/dreamcast/include/arch/irq.h
-   Copyright (C) 2000-2001 Megan Potter
+   Copyright (C) 2000, 2001 Megan Potter
    Copyright (C) 2024 Paul Cercueil
-   Copyright (C) 2024 Falco Girgis
+   Copyright (C) 2024, 2025 Falco Girgis
 
 */
 
@@ -329,7 +329,25 @@ typedef uint32_t irq_mask_t;
     \retval                 Status register word
     \sa irq_disable()
 */
-irq_mask_t irq_get_sr(void);
+static inline irq_mask_t irq_get_sr(void) {
+    irq_mask_t value;
+    __asm__ volatile("stc sr, %0" : "=r" (value));
+    return value;
+}
+
+/** Restore IRQ state.
+
+    This function will restore the interrupt state to the value specified. This
+    should correspond to a value returned by irq_disable().
+
+    \param  v               The IRQ state to restore. This should be a value
+                            returned by irq_disable().
+
+    \sa irq_disable()
+*/
+inline static void irq_restore(irq_mask_t old) {
+    __asm__ volatile("ldc %0, sr" : : "r" (old));
+}
 
 /** Disable interrupts.
 
@@ -342,7 +360,11 @@ irq_mask_t irq_get_sr(void);
 
     \sa irq_restore(), irq_enable()
 */
-irq_mask_t irq_disable(void);
+inline static irq_mask_t irq_disable(void) {
+    uint32_t mask = (uint32_t)irq_get_sr();
+    irq_restore((mask & 0xefffff0f) | 0x000000f0);
+    return mask;
+}
 
 /** Enable all interrupts.
 
@@ -350,19 +372,10 @@ irq_mask_t irq_disable(void);
 
     \sa irq_disable()
 */
-void irq_enable(void);
-
-/** Restore IRQ state.
-
-    This function will restore the interrupt state to the value specified. This
-    should correspond to a value returned by irq_disable().
-
-    \param  v               The IRQ state to restore. This should be a value
-                            returned by irq_disable().
-
-    \sa irq_disable()
-*/
-void irq_restore(irq_mask_t v);
+inline static void irq_enable(void) {
+    uint32_t mask = ((uint32_t)irq_get_sr() & 0xefffff0f);
+    irq_restore(mask);
+}
 
 /** \brief  Disable interrupts with scope management.
 
