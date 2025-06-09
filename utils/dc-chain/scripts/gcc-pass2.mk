@@ -9,7 +9,7 @@ $(build_gcc_pass2): logdir
 	cd $(build); \
         ../$(src_dir)/configure \
           --target=$(target) \
-          --prefix=$(prefix) \
+          --prefix=$(toolchain_path) \
           --with-gnu-as \
           --with-gnu-ld \
           --with-newlib \
