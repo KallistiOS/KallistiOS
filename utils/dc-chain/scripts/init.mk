@@ -48,13 +48,8 @@ ifdef MINGW
   endif
 endif
 
-# SH toolchain
-sh_target = sh-elf
-SH_CC_FOR_TARGET = $(sh_target)-$(GCC)
-SH_CXX_FOR_TARGET = $(sh_target)-$(GXX)
-
-# ARM toolchain
-arm_target = arm-eabi
+CC_FOR_TARGET = $(target)-$(GCC)
+CXX_FOR_TARGET = $(target)-$(GXX)
 
 # Handle macOS
 ifdef MACOS
@@ -64,8 +59,8 @@ ifdef MACOS
     macos_extra_args = -isysroot $(sdkroot)
     CC += -Wno-nullability-completeness -Wno-missing-braces $(macos_extra_args)
     CXX += -stdlib=libc++ -mmacosx-version-min=10.14 $(macos_extra_args)
-    SH_CC_FOR_TARGET += $(macos_extra_args)
-    SH_CXX_FOR_TARGET += $(macos_extra_args)
+    CC_FOR_TARGET += $(macos_extra_args)
+    CXX_FOR_TARGET += $(macos_extra_args)
     macos_gcc_configure_args = --with-sysroot --with-native-system-header=/usr/include
     macos_gdb_configure_args = --with-sysroot=$(sdkroot)
     # Detect if CC is Apple Clang and get major version, skip if using gcc.
@@ -122,11 +117,11 @@ ifdef MINGW
 endif
 
 # Determine if we want to apply fixup sh4 newlib
-do_auto_fixup_sh4_newlib := 1
-ifdef auto_fixup_sh4_newlib
-  ifeq (0,$(auto_fixup_sh4_newlib))
+do_auto_fixup_newlib := 1
+ifdef auto_fixup_newlib
+  ifeq (0,$(auto_fixup_newlib))
     $(warning 'Disabling Newlib Auto Fixup)
-    do_auto_fixup_sh4_newlib := 0
+    do_auto_fixup_newlib := 0
   endif
 endif
 
@@ -141,7 +136,7 @@ endif
 
 # Report an error if KOS threading is enabled when patching or fixup is disabled
 ifeq (kos,$(thread_model))
-  ifeq (0,$(do_auto_fixup_sh4_newlib))
+  ifeq (0,$(do_auto_fixup_newlib))
     $(error kos thread model is unsupported when Newlib fixup is disabled)
   endif
   ifeq (0,$(do_kos_patching))

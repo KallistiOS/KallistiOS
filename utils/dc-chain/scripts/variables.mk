@@ -5,10 +5,13 @@
 kos_base = $(CURDIR)/../..
 
 # Various directories
-install       = $(prefix)/bin
+install       = $(toolchain_path)/bin
 pwd          := $(shell pwd)
 patches      := $(pwd)/patches
 logdir       := $(pwd)/logs
 
 # Handling PATH environment variable
-PATH         := $(sh_toolchain_path)/bin:$(arm_toolchain_path)/bin:$(PATH)
+PATH         := $(toolchain_path)/bin:$(PATH)
+
+arch         := $(word 1,$(subst -, ,$(target)))
+gcc_arch     := $(arch)

@@ -45,8 +45,8 @@ $(stamp_gdb_build): patch_gdb
 	cd $(build); \
         ../$(gdb_name)/configure \
           --disable-werror \
-          --prefix=$(sh_toolchain_path) \
-          --target=$(sh_target) \
+          --prefix=$(toolchain_path) \
+          --target=$(target) \
           CC="$(CC)" \
           CXX="$(CXX)" \
           $(macos_gdb_configure_args) \
@@ -58,7 +58,7 @@ $(stamp_gdb_build): patch_gdb
 # This step runs post install to sign the sh-elf-gdb binary on MacOS
 macos_codesign_gdb: $(stamp_gdb_install)
 	@echo "+++ Codesigning GDB..."
-	codesign --sign "-" $(sh_toolchain_path)/bin/sh-elf-gdb
+	codesign --sign "-" $(toolchain_path)/bin/$(target)-gdb
 
 # If Host is MacOS then place Codesign step into dependency chain
 ifeq ($(MACOS), 1)
@@ -81,7 +81,7 @@ $(stamp_gdb_install): build_gdb
 	$(MAKE) -C $(build) install DESTDIR=$(DESTDIR) $(to_log)
 	@if test "$(install_mode)" = "install-strip"; then \
 		$(MAKE) -C $(build)/gdb $(install_mode) DESTDIR=$(DESTDIR) $(to_log); \
-		gdb_run=$(sh_toolchain_path)/bin/$(sh_target)-run$(executable_extension); \
+		gdb_run=$(toolchain_path)/bin/$(target)-run$(executable_extension); \
 		if test -f $${gdb_run}; then \
 			strip $${gdb_run}; \
 		fi; \

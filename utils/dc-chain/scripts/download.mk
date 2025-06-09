@@ -51,8 +51,8 @@ $(foreach dep,$(GCC_DEPS),$(call gen_download_vars,$(dep),$(1)_,$($(1)_gcc_name)
 $(foreach dep,$(GCC_DEPS),$(blank_line)$$(stamp_$(1)_$(dep)_download): $$(stamp_$(1)_gcc_download))
 endef
 
-$(eval $(call gen_download_vars,binutils,sh_))
-$(eval $(call gen_download_vars,gcc,sh_))
+$(eval $(call gen_download_vars,binutils))
+$(eval $(call gen_download_vars,gcc))
 $(eval $(call gen_download_vars,newlib))
 $(eval $(call gen_dep_download_vars,sh))
 
@@ -87,9 +87,7 @@ $(stamp_$(1)_download): additional_git_args = $(if $($(1)_git_branch),-b $($(1)_
 $(stamp_$(1)_download): dest = $($(1)_dest)
 endef
 
-SOURCE_DOWNLOADS := gdb
-SOURCE_DOWNLOADS += sh_binutils sh_gcc newlib arm_binutils arm_gcc
-SOURCE_DOWNLOADS += sh_gmp sh_mpfr sh_mpc sh_isl arm_gmp arm_mpfr arm_mpc arm_isl
+SOURCE_DOWNLOADS += binutils gcc gdb newlib gmp mpfr mpc isl
 
 ARCHIVES_TYPES = xz gz bz2
 # Get items from SOURCE_DOWNLOADS that are archive downloads
@@ -126,30 +124,17 @@ $(GIT_TARGETS):
 	touch $@
 
 
-fetch_sh_gcc_deps_source = $(stamp_sh_gmp_download) $(stamp_sh_mpfr_download) $(stamp_sh_mpc_download)
-fetch_arm_gcc_deps_source = $(stamp_arm_gmp_download) $(stamp_arm_mpfr_download) $(stamp_arm_mpc_download)
+fetch_gcc_deps_source = $(stamp_gmp_download) $(stamp_mpfr_download) $(stamp_mpc_download)
 
 # Some older versions of GCC (including 4.7) don't require ISL so we skip adding a dependency
 # if a version number is not provided
-ifdef sh_isl_ver
-  fetch_sh_gcc_deps_source += $(stamp_sh_isl_download) 
+ifdef isl_ver
+  fetch_gcc_deps_source += $(stamp_isl_download) 
 endif
 
-ifdef sh_isl_ver
-  fetch_arm_gcc_deps_source += $(stamp_arm_isl_download)
-endif
-
-fetch-sh-binutils: $(stamp_sh_binutils_download)
-fetch-sh-gcc: $(stamp_sh_gcc_download) $(if $(filter 1,$(use_custom_dependencies)),$(fetch_sh_gcc_deps_source))
+fetch-binutils: $(stamp_binutils_download)
+fetch-gcc: $(stamp_gcc_download) $(if $(filter 1,$(use_custom_dependencies)),$(fetch_gcc_deps_source))
 fetch-newlib: $(stamp_newlib_download)
-
-fetch-arm-binutils: $(stamp_arm_binutils_download)
-fetch-arm-gcc: $(stamp_arm_gcc_download) $(if $(filter 1,$(use_custom_dependencies)),$(fetch_arm_gcc_deps_source))
-
 fetch-gdb: $(stamp_gdb_download)
 
-fetch-sh4: fetch-sh-binutils fetch-sh-gcc fetch-newlib
-fetch-arm: fetch-arm-binutils fetch-arm-gcc
-
-fetch: fetch-sh4
-fetch: fetch-gdb
+fetch: fetch-binutils fetch-gcc fetch-newlib fetch-gdb

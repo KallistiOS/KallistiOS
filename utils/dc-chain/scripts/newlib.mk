@@ -12,30 +12,30 @@ $(build_newlib): logdir
 	  ../$(src_dir)/configure \
 	    --disable-newlib-supplied-syscalls \
 	    --target=$(target) \
-	    --prefix=$(prefix) \
+	    --prefix=$(toolchain_path) \
 	    $(cpu_configure_args) \
 	    $(newlib_extra_configure_args) \
-	    CC_FOR_TARGET="$(SH_CC_FOR_TARGET)" \
+	    CC_FOR_TARGET="$(CC_FOR_TARGET)" \
 	    $(to_log)
 	$(MAKE) $(jobs_arg) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
 	$(MAKE) -C $(build) install DESTDIR=$(DESTDIR) $(to_log)
 	$(clean_up)
 
-fixup-sh4-newlib: newlib_inc = $(sh_toolchain_path)/$(sh_target)/include
-fixup-sh4-newlib: fixup-sh4-newlib-init
+fixup-newlib: newlib_inc = $(toolchain_path)/$(target)/include
+fixup-newlib: fixup-newlib-init
 
-# Apply sh4 newlib fixups (default is yes and this should be always the case!)
-ifeq (1,$(do_auto_fixup_sh4_newlib))
-  fixup-sh4-newlib: fixup-sh4-newlib-apply
+# Apply newlib fixups (default is yes and this should be always the case!)
+ifeq (1,$(do_auto_fixup_newlib))
+  fixup-newlib: fixup-newlib-apply
 endif
 
 # Prepare the fixup (always applied)
-fixup-sh4-newlib-init: $(build_newlib)
+fixup-newlib-init: $(build_newlib)
 	-mkdir -p $(newlib_inc)
 	-mkdir -p $(newlib_inc)/sys
 
-fixup-sh4-newlib-apply: fixup-sh4-newlib-init
-	@echo "+++ Fixing up sh4 newlib includes..."
+fixup-newlib-apply: fixup-newlib-init
+	@echo "+++ Fixing up newlib includes..."
 # KOS pthread.h is modified
 # to define _POSIX_THREADS
 # pthreads to kthreads mapping
@@ -47,12 +47,12 @@ fixup-sh4-newlib-apply: fixup-sh4-newlib-init
 	cp $(kos_base)/include/sys/sched.h $(newlib_inc)/sys
 ifndef MINGW32
 	ln -nsf $(kos_base)/include/kos $(newlib_inc)
-	ln -nsf $(kos_base)/kernel/arch/dreamcast/include/arch $(newlib_inc)
+	ln -nsf $(kos_base)/kernel/arch/$(platform)/include/arch $(newlib_inc)
 else
 # Under MinGW/MSYS or MinGW-w64/MSYS2, the ln tool is not efficient, so it's
 # better to do a simple copy. Please keep that in mind when upgrading
 # KallistiOS or your toolchain!
 	cp -r $(kos_base)/include/kos $(newlib_inc)
-	cp -r $(kos_base)/kernel/arch/dreamcast/include/arch $(newlib_inc)
-	touch $(fixup_sh4_newlib_stamp)
+	cp -r $(kos_base)/kernel/arch/$(platform)/include/arch $(newlib_inc)
+	touch $(fixup_newlib_stamp)
 endif
