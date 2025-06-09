@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# If $KOS_GDB is not overriden, default to sh-elf-gdb if found;
+# otherwise default to gdb-multiarch; in last resort, try to use gdb.
+[ ! -x "$KOS_GDB" ] && KOS_GDB=$(which $KOS_CC_PREFIX-gdb)
+[ ! -x "$KOS_GDB" ] && KOS_GDB=$(which gdb-multiarch)
+[ ! -x "$KOS_GDB" ] && KOS_GDB=$(which gdb)
+[ ! -x "$KOS_GDB" ] && echo "GDB program not found; please set $$KOS_GDB." && exit 1
+
+# Detect if GDB actually supports the target architecture.
+RESULT=$($KOS_GDB -iex "set architecture $KOS_GDB_CPU" -iex quit 2>&1 >/dev/null)
+[ -n "$RESULT" ] && echo "GDB program does not support $KOS_GDB_CPU." && exit 1
+
+exec $KOS_GDB -iex "set architecture $KOS_GDB_CPU" -iex "set sysroot $KOS_PORTS" -iex "target remote 127.0.0.1:2159" $*
