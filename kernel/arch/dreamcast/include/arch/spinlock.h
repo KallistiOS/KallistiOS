@@ -11,15 +11,13 @@
 
     This file contains definitions for very simple locks. Most of the time, you
     will probably not use such low-level locking, but will opt for something
-    more fully featured like mutexes, semaphores, reader-writer semaphores, or
-    recursive locks.
+    more fully featured like mutexes, semaphores, or reader-writer semaphores.
 
     \author Megan Potter
 
     \see    kos/sem.h
     \see    kos/mutex.h
     \see    kos/rwsem.h
-    \see    kos/recursive_lock.h
 */
 
 #ifndef __ARCH_SPINLOCK_H
