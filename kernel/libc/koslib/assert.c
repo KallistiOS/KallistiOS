@@ -16,7 +16,7 @@
 #include <arch/stack.h>
 
 /* The default assert handler */
-static void __noreturn assert_handler_default(const char *file, int line,
+__noinline static void __noreturn assert_handler_default(const char *file, int line,
                             const char *expr, const char *msg, const char *func) {
     dbglog(DBG_CRITICAL, "\n*** ASSERTION FAILURE ***\n");
 
