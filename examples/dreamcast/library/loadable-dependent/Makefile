@@ -10,9 +10,10 @@ OBJS = $(TARGET_NAME).o
 
 # Dependence library and host stubs for link test
 DBG_LIBS = -llibrary-dependence -llibrary-test
-KOS_LIB_PATHS += -L../loadable-dependence -L../
+
+LDFLAGS = -L../loadable-dependence -L..
 
 # Dependence include
-KOS_CFLAGS += -I../loadable-dependence
+CPPFLAGS = -I../loadable-dependence
 
 include $(KOS_BASE)/loadable/Makefile.prefab

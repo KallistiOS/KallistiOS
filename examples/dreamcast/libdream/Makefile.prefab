@@ -5,23 +5,9 @@
 
 TARGET = $(BIN).elf
 
-all: $(TARGET)
-
 include $(KOS_BASE)/Makefile.rules
 
-clean:
-	-rm -f $(TARGET) $(OBJS) $(EXTRA_CLEAN)
+clean_extra:
+	$(if $(EXTRA_CLEAN),-rm -f $(EXTRA_CLEAN))
 
-rm-elf:
-	-rm -f $(TARGET)
-
-$(TARGET): $(OBJS)
-	kos-cc -o $(TARGET) $(OBJS)
-
-run: $(TARGET)
-	$(KOS_LOADER) $(TARGET)
-
-dist: $(TARGET)
-	-rm -f $(OBJS) $(EXTRA_CLEAN)
-	$(KOS_STRIP) $(TARGET)
-
+clean: clean_extra

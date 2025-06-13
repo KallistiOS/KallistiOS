@@ -9,31 +9,19 @@ TARGET = modifier.elf
 # List all of your C files here, but change the extension to ".o"
 OBJS = modifier.o romdisk.o
 
-KOS_ROMDISK_DIR = romdisk
+LDLIBS = -lkmg -lpcx -lkosutils
 
-all: rm-elf $(TARGET)
+KOS_ROMDISK_DIR = romdisk
 
 include $(KOS_BASE)/Makefile.rules
 
-clean: rm-elf
-	-rm -f $(OBJS) romdisk/fruit.kmg
+clean_extra:
+	-rm -f romdisk/fruit.kmg
 
-rm-elf:
-	-rm -f $(TARGET) romdisk.*
+clean: clean_extra
 
-$(TARGET): $(OBJS)
-	kos-cc -o $(TARGET) $(OBJS) -lkmg -lpcx -lkosutils
-
-romdisk.img: romdisk/fruit.kmg romdisk/crate.pcx
+romdisk.img: romdisk/fruit.kmg
 
 romdisk/fruit.kmg: fruit.jpg
 	$(KOS_BASE)/utils/vqenc/vqenc -t -v -q -k fruit.jpg
 	mv fruit.kmg romdisk/
-
-run: $(TARGET)
-	$(KOS_LOADER) $(TARGET)
-
-dist: $(TARGET)
-	-rm -f $(OBJS) romdisk.img romdisk/fruit.kmg
-	$(KOS_STRIP) $(TARGET)
-
