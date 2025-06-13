@@ -27,7 +27,7 @@ static unsigned char tmp[512] __attribute__((aligned(32)));
 
 int main(int argc, char *argv[]) {
     kos_blockdev_t bd_pio, bd_dma;
-    uint64 spio, epio, sdma, edma, timer;
+    uint64_t spio, epio, sdma, edma, timer;
     uint8_t pt;
 
     dbglog(DBG_DEBUG, "Starting G1 ATA test program...\n");
