@@ -50,7 +50,7 @@
 #ifndef __pure
 /** \brief  Identify a function that has no side effects other than its return,
             and only uses its arguments for any work. */
-#define __pure      __attribute__((__const__))
+#define __pure      __attribute__((pure))
 #endif
 
 #ifndef __unused

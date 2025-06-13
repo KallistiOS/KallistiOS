@@ -76,7 +76,7 @@ static struct ubc_channel_state {
 } channel_state[ubc_channel_count] = { 0 };
 
 /* Translates ubc_access_t to BBR.ID field format. */
-inline static uint8_t get_access_mask(ubc_access_t access) {
+inline static uint8_t __pure get_access_mask(ubc_access_t access) {
     switch(access) {
     case ubc_access_either:
         return 0x3;
@@ -86,7 +86,7 @@ inline static uint8_t get_access_mask(ubc_access_t access) {
 }
 
 /* Translates ubc_rw_t to BBR.RW field format. */
-inline static uint8_t get_rw_mask(ubc_rw_t rw) {
+inline static uint8_t __pure get_rw_mask(ubc_rw_t rw) {
     switch(rw) {
     case ubc_rw_either:
         return 0x3;
@@ -96,7 +96,7 @@ inline static uint8_t get_rw_mask(ubc_rw_t rw) {
 }
 
 /* Translates ubc_address_mask_t to BASR.BAM field format. */
-inline static uint8_t get_address_mask(ubc_address_mask_t addr_mask) {
+inline static uint8_t __pure get_address_mask(ubc_address_mask_t addr_mask) {
     switch(addr_mask) {
         case ubc_address_mask_all:
             return 3;

@@ -273,11 +273,11 @@ static char remcomInBuffer[BUFMAX], remcomOutBuffer[BUFMAX];
 static char in_dcl_buf[BUFMAX], out_dcl_buf[BUFMAX];
 static int using_dcl = 0, in_dcl_pos = 0, out_dcl_pos = 0, in_dcl_size = 0;
 
-static char highhex(int  x) {
+static char __pure highhex(int  x) {
     return hexchars[(x >> 4) & 0xf];
 }
 
-static char lowhex(int  x) {
+static char __pure lowhex(int  x) {
     return hexchars[x & 0xf];
 }
 
@@ -292,7 +292,7 @@ static char lowhex(int  x) {
  * Routines to handle hex data
  */
 
-static int hex(char ch) {
+static int __pure hex(char ch) {
     if((ch >= 'a') && (ch <= 'f'))
         return (ch - 'a' + 10);
 
@@ -486,7 +486,7 @@ static void putpacket(register char *buffer) {
  * this function takes the SH-1 exception number and attempts to
  * translate this number into a unix compatible signal value
  */
-static int computeSignal(int exceptionVector) {
+static int __pure computeSignal(int exceptionVector) {
     int sigval;
 
     switch(exceptionVector) {
