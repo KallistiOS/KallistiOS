@@ -343,7 +343,7 @@ static int init_percd(void) {
         return -1;
     }
 
-    if((i = cdrom_read_toc(&toc, 0)) != 0)
+    if((i = cdrom_read_toc(&toc, false)) != 0)
         return i;
 
     if(!(session_base = cdrom_locate_data_track(&toc)))
