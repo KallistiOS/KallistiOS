@@ -406,13 +406,14 @@ int cdrom_reinit_ex(int sector_part, int cdxa, int sector_size);
 /** \brief    Read the table of contents from the disc.
     \ingroup  gdrom
 
-    This function reads the TOC from the specified session of the disc.
+    This function reads the TOC from the specified area of the disc.
+    On regular CD-ROMs, there are only low density area.
 
     \param  toc_buffer      Space to store the returned TOC in.
-    \param  session         The session of the disc to read.
+    \param  high_density    Whether to read from the high density area.
     \return                 \ref cd_cmd_response
 */
-int cdrom_read_toc(CDROM_TOC *toc_buffer, int session);
+int cdrom_read_toc(CDROM_TOC *toc_buffer, bool high_density);
 
 /** \brief    Read one or more sector from a CD-ROM.
     \ingroup  gdrom
