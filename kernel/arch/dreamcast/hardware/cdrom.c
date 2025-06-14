@@ -332,14 +332,14 @@ int cdrom_reinit_ex(int sector_part, int cdxa, int sector_size) {
 }
 
 /* Read the table of contents */
-int cdrom_read_toc(CDROM_TOC *toc_buffer, int session) {
+int cdrom_read_toc(CDROM_TOC *toc_buffer, bool high_density) {
     struct {
-        int session;
+        int area;
         void *buffer;
     } params;
     int rv;
 
-    params.session = session;
+    params.area = high_density ? 1 : 0;
     params.buffer = toc_buffer;
 
     rv = cdrom_exec_cmd(CMD_GETTOC2, &params);
