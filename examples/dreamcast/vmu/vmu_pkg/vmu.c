@@ -13,24 +13,33 @@
 /* An icon is always 32x32 4bpp */
 #define ICON_SIZE (32 * 32 / 2)
 
+#define SCREEN_W 640
+#define SCREEN_H 480
+
+/* The Y indentation for the VMU Info text on screen */
+#define INFO_Y 88
+
+/* The amount of space from the top of one row of text to the next */
+#define ROW_SPACER 24
+
 #define NB_ICONS_MAX 3
 
 void draw_dir(void) {
     file_t      d;
-    int     y = 88;
+    int     y = INFO_Y;
     dirent_t    *de;
 
     d = fs_open("/vmu/a1", O_RDONLY | O_DIR);
 
     if(!d) {
-        bfont_draw_str(vram_s + y * 640 + 10, 640, 0, "Can't read VMU");
+        bfont_draw_str(vram_s + y * SCREEN_W + 10, SCREEN_W, 0, "Can't read VMU");
     }
     else {
         while((de = fs_readdir(d))) {
-            bfont_draw_str(vram_s + y * 640 + 10, 640, 0, de->name);
-            y += 24;
+            bfont_draw_str(vram_s + y * SCREEN_W + 10, SCREEN_W, 0, de->name);
+            y += ROW_SPACER;
 
-            if(y >= (480 - 24))
+            if(y >= (SCREEN_H - ROW_SPACER))
                 break;
         }
 
@@ -46,15 +55,15 @@ void new_vmu(void) {
 
     if(dev == NULL) {
         if(dev_checked) {
-            memset(vram_s + 88 * 640, 0, 640 * (480 - 64) * 2);
-            bfont_draw_str(vram_s + 88 * 640 + 10, 640, 0, "No VMU");
+            memset(vram_s + INFO_Y * SCREEN_W, 0, SCREEN_W * (SCREEN_H - 64) * 2);
+            bfont_draw_str(vram_s + INFO_Y * SCREEN_W + 10, SCREEN_W, 0, "No VMU");
             dev_checked = 0;
         }
     }
     else if(dev_checked) {
     }
     else {
-        memset(vram_s + 88 * 640, 0, 640 * (480 - 88));
+        memset(vram_s + INFO_Y * SCREEN_W, 0, SCREEN_W * (SCREEN_H - INFO_Y));
         draw_dir();
         dev_checked = 1;
     }
@@ -119,11 +128,11 @@ void write_entry(void) {
 }
 
 int main(int argc, char **argv) {
-    bfont_draw_str(vram_s + 20 * 640 + 20, 640, 0,
+    bfont_draw_str(vram_s + 20 * SCREEN_W + 20, SCREEN_W, 0,
                    "Put a VMU you don't care too much about");
-    bfont_draw_str(vram_s + 42 * 640 + 20, 640, 0,
+    bfont_draw_str(vram_s + 42 * SCREEN_W + 20, SCREEN_W, 0,
                    "in slot A1 and press START");
-    bfont_draw_str(vram_s + 88 * 640 + 10, 640, 0, "No VMU");
+    bfont_draw_str(vram_s + INFO_Y * SCREEN_W + 10, SCREEN_W, 0, "No VMU");
 
     if(wait_start() < 0) return 0;
 
