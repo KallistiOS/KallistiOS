@@ -1,12 +1,19 @@
 /* KallistiOS ##version##
 
    atomics.c
-   Copyright (C) 2023 Falco Girgis
+   Copyright (C) 2023, 2025 Falco Girgis
 */
 
 /* This file provides the additional symbols required to provide
    support for C11 atomics with the "-matomic-model=soft-imask"
-   build flag.
+   build flag. These symbols should be importable by using "-latomic,"
+   which KOS is adding now automatically for you by default.
+
+   NOTE:
+   There is currently an issue with GCC where these atomics symbols
+   will never get resolved properly by the linker when they are built
+   with LTO enabled, so build this translation unit without LTO for
+   atomics to work properly!
 */
 
 #include <arch/arch.h>
@@ -16,14 +23,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
-//#include <stdatomic.h>
 
 /* Create a set of macros to codegen atomic symbols for primitive types.
    For these types, we simply disable interrupts then re-enable them
    around accesses to our atomics to ensure their atomicity.
 */
 #define ATOMIC_LOAD_N_(type, n) \
-    __used type \
+    type \
     __atomic_load_##n(const volatile void *ptr, int model) { \
         (void)model; \
         irq_disable_scoped(); \
@@ -31,7 +37,7 @@
     }
 
 #define ATOMIC_STORE_N_(type, n) \
-    __used void \
+    void \
     __atomic_store_##n(volatile void *ptr, type val, int model) { \
         (void)model; \
         irq_disable_scoped(); \
@@ -39,7 +45,7 @@
     }
 
 #define ATOMIC_EXCHANGE_N_(type, n) \
-    __used type \
+    type \
     __atomic_exchange_##n(volatile void* ptr, type val, int model) { \
         irq_disable_scoped(); \
         const type ret = *(type *)ptr; \
@@ -49,7 +55,7 @@
     }
 
 #define ATOMIC_COMPARE_EXCHANGE_N_(type, n) \
-    __used bool \
+    bool \
     __atomic_compare_exchange_##n(volatile void *ptr, \
                                   void *expected, \
                                   type desired, \
@@ -70,7 +76,7 @@
     }
 
 #define ATOMIC_FETCH_N_(type, n, opname, op) \
-    __used type \
+    type \
     __atomic_fetch_##opname##_##n(volatile void* ptr, \
                                   type val, \
                                   int memorder) { \
@@ -82,7 +88,7 @@
     }
 
 #define ATOMIC_FETCH_NAND_N_(type, n) \
-    __used type \
+    type \
     __atomic_fetch_nand_##n(volatile void* ptr, \
                             type val, \
                             int memorder) { \
