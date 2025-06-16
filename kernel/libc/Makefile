@@ -4,7 +4,7 @@
 # Copyright (C) 2004 Megan Potter
 #
 
-SUBDIRS = koslib newlib c11 posix
+SUBDIRS = koslib newlib c11 posix atomics
 
 all: subdirs
 clean: clean_subdirs
