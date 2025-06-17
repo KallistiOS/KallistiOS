@@ -45,6 +45,11 @@ also for the CDDA playback routines.
 
 typedef int gdc_cmd_hnd_t;
 
+struct cmd_req_data {
+    int cmd;
+    void *data;
+};
+
 /* The G1 ATA access mutex */
 mutex_t _g1_ata_mutex = MUTEX_INITIALIZER;
 
@@ -84,21 +89,44 @@ int cdrom_set_sector_size(int size) {
     return cdrom_reinit_ex(-1, -1, size);
 }
 
+static int cdrom_poll(void *d, uint32_t timeout, int (*cb)(void *))
+{
+    uint64_t start_time;
+    int ret;
+
+    if(timeout)
+        start_time = timer_ms_gettime64();
+
+    do {
+        ret = (*cb)(d);
+        if(ret)
+            return ret;
+
+        if(!irq_inside_int())
+            thd_pass();
+    } while(!timeout || (timer_ms_gettime64() - start_time) < timeout);
+
+    return ERR_TIMEOUT;
+}
+
+static int cdrom_submit_cmd(void *d) {
+    struct cmd_req_data *req = d;
+    int ret;
+
+    ret = syscall_gdrom_send_command(req->cmd, req->data);
+
+    syscall_gdrom_exec_server();
+
+    return ret;
+}
+
 static inline gdc_cmd_hnd_t cdrom_req_cmd(int cmd, void *param) {
-    gdc_cmd_hnd_t hnd = 0;
-    int n;
+    struct cmd_req_data req = { cmd, param };
+
     assert(cmd > 0 && cmd < CMD_MAX);
 
-    /* Submit the command */
-    for(n = 0; n < 10; ++n) {
-        hnd = syscall_gdrom_send_command(cmd, param);
-        if(hnd != 0) {
-            break;
-        }
-        syscall_gdrom_exec_server();
-        thd_pass();
-    }
-    return hnd;
+    /* Submit the command, retry if needed for 10ms */
+    return cdrom_poll(&req, 10, cdrom_submit_cmd);
 }
 
 /* Command execution sequence */
