@@ -129,6 +129,16 @@ static inline gdc_cmd_hnd_t cdrom_req_cmd(int cmd, void *param) {
     return cdrom_poll(&req, 10, cdrom_submit_cmd);
 }
 
+static int cdrom_check_ready(void *d) {
+    syscall_gdrom_exec_server();
+
+    cmd_response = syscall_gdrom_check_command(*(int *)d, cmd_status);
+    if(cmd_response < 0)
+        return ERR_SYS;
+
+    return cmd_response != BUSY;
+}
+
 static int cdrom_check_cmd_done(void *d) {
     syscall_gdrom_exec_server();
 
@@ -369,15 +379,7 @@ static int cdrom_read_sectors_dma_irq(void *params) {
     dma_blocking = true;
 
     /* Start the process of executing the command. */
-    do {
-        syscall_gdrom_exec_server();
-        cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
-
-        if(cmd_response != BUSY) {
-            break;
-        }
-        thd_pass();
-    } while(1);
+    cdrom_poll(&cmd_hnd, 0, cdrom_check_ready);
 
     if(cmd_response == PROCESSING) {
         cmd_timeout = 0;
@@ -390,17 +392,7 @@ static int cdrom_read_sectors_dma_irq(void *params) {
 
         /* Just to make sure the command is finished properly.
            Usually we are already done here. */
-        if(cmd_response == PROCESSING || cmd_response == BUSY) {
-            do {
-                syscall_gdrom_exec_server();
-                cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
-
-                if(cmd_response != PROCESSING && cmd_response != BUSY) {
-                    break;
-                }
-                thd_pass();
-            } while(1);
-        }
+        cdrom_poll(&cmd_hnd, 0, cdrom_check_cmd_done);
     }
     else {
         /* The command can complete or fails immediately,
