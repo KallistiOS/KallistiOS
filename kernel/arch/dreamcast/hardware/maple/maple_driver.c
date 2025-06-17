@@ -116,6 +116,9 @@ int maple_driver_attach(maple_frame_t *det) {
         }
     }
 
+    if(!dev)
+        return -1;
+
     /* Did we get any hits? */
     if(!attached) {
         free(dev->status);
