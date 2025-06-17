@@ -50,6 +50,11 @@ struct cmd_req_data {
     void *data;
 };
 
+struct cmd_transfer_data {
+    gdc_cmd_hnd_t hnd;
+    size_t size;
+};
+
 /* The G1 ATA access mutex */
 mutex_t _g1_ata_mutex = MUTEX_INITIALIZER;
 
@@ -173,6 +178,21 @@ static int cdrom_check_abort_streaming(void *d) {
 
     return cmd_response == NO_ACTIVE || cmd_response == COMPLETED
         || cmd_response == STREAMING;
+}
+
+static int cdrom_check_transfer(void *d) {
+    struct cmd_transfer_data *data = d;
+
+    syscall_gdrom_exec_server();
+
+    cmd_response = syscall_gdrom_check_command(data->hnd, cmd_status);
+    if(cmd_response < 0)
+        return ERR_SYS;
+
+    if(cmd_response == NO_ACTIVE || cmd_response == COMPLETED)
+        return ERR_NO_ACTIVE;
+
+    return cdrom_stream_progress(&data->size) == 0;
 }
 
 /* Command execution sequence */
@@ -539,7 +559,7 @@ int cdrom_stream_stop(bool abort_dma) {
 int cdrom_stream_request(void *buffer, size_t size, bool block) {
     int rs, rv = ERR_OK;
     int32_t params[2];
-    size_t check_size = -1;
+    struct cmd_transfer_data data;
 
     if(cmd_hnd <= 0) {
         return ERR_NO_ACTIVE;
@@ -571,7 +591,6 @@ int cdrom_stream_request(void *buffer, size_t size, bool block) {
     mutex_lock_scoped(&_g1_ata_mutex);
 
     if(stream_mode == CDROM_READ_DMA) {
-
         dma_in_progress = true;
         dma_blocking = block;
 
@@ -593,55 +612,23 @@ int cdrom_stream_request(void *buffer, size_t size, bool block) {
             return rv;
         }
         sem_wait(&dma_done);
+    }
+    else {
+        rs = syscall_gdrom_pio_transfer(cmd_hnd, params);
+        if(rs < 0)
+            return ERR_SYS;
+    }
 
-        do {
-            syscall_gdrom_exec_server();
-            cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
+    data = (struct cmd_transfer_data){ cmd_hnd, 0 };
 
-            if(cmd_response < 0) {
-                rv = ERR_SYS;
-                break;
-            }
-            else if(cmd_response == COMPLETED || cmd_response == NO_ACTIVE) {
-                cmd_hnd = 0;
-                break;
-            }
-            else if(syscall_gdrom_dma_check(cmd_hnd, &check_size) == 0) {
-                break;
-            }
-            thd_pass();
-
-        } while(1);
+    if(cdrom_poll(&data, 0, cdrom_check_transfer) == ERR_NO_ACTIVE) {
+        cmd_hnd = 0;
     }
     else if(stream_mode == CDROM_READ_PIO) {
-
-        rs = syscall_gdrom_pio_transfer(cmd_hnd, params);
-
-        if(rs < 0) {
-            return ERR_SYS;
-        }
-        do {
-            syscall_gdrom_exec_server();
-            cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
-
-            if(cmd_response < 0) {
-                rv = ERR_SYS;
-                break;
-            }
-            else if(cmd_response == COMPLETED || cmd_response == NO_ACTIVE) {
-                cmd_hnd = 0;
-                break;
-            }
-            else if(syscall_gdrom_pio_check(cmd_hnd, &check_size) == 0) {
-                /* Syscalls doesn't call it on last reading in PIO mode.
-                   Looks like a bug, fixing it. */
-                if(check_size == 0 && stream_cb) {
-                    stream_cb(stream_cb_param);
-                }
-                break;
-            }
-            thd_pass();
-        } while(1);
+        /* Syscalls doesn't call it on last reading in PIO mode.
+           Looks like a bug, fixing it. */
+        if(data.size == 0 && stream_cb)
+            stream_cb(stream_cb_param);
     }
 
     return rv;
