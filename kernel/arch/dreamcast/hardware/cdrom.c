@@ -139,6 +139,11 @@ static int cdrom_check_cmd_done(void *d) {
     return cmd_response != BUSY && cmd_response != PROCESSING;
 }
 
+static int cdrom_check_drive_ready(void *d) {
+    int rv = syscall_gdrom_check_drive(d);
+    return rv != BUSY;
+}
+
 static int cdrom_check_abort_done(void *d) {
     syscall_gdrom_exec_server();
 
@@ -236,8 +241,8 @@ int cdrom_abort_cmd(uint32_t timeout, bool abort_dma) {
 
 /* Return the status of the drive as two integers (see constants) */
 int cdrom_get_status(int *status, int *disc_type) {
-    int rv = ERR_OK;
     uint32_t params[2];
+    int rv;
 
     /* We might be called in an interrupt to check for ISO cache
        flushing, so make sure we're not interrupting something
@@ -246,18 +251,13 @@ int cdrom_get_status(int *status, int *disc_type) {
         /* DH: Figure out a better return to signal error */
         return -1;
 
-    do {
-        rv = syscall_gdrom_check_drive(params);
-
-        if(rv != BUSY) {
-            break;
-        }
-        thd_pass();
-    } while(1);
+    rv = cdrom_poll(params, 0, cdrom_check_drive_ready);
 
     mutex_unlock(&_g1_ata_mutex);
 
     if(rv >= 0) {
+        rv = ERR_OK;
+
         if(status != NULL)
             *status = params[0];
 
