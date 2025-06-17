@@ -164,6 +164,17 @@ static int cdrom_check_abort_done(void *d) {
     return cmd_response == NO_ACTIVE || cmd_response == COMPLETED;
 }
 
+static int cdrom_check_abort_streaming(void *d) {
+    syscall_gdrom_exec_server();
+
+    cmd_response = syscall_gdrom_check_command(*(gdc_cmd_hnd_t *)d, cmd_status);
+    if(cmd_response < 0)
+        return ERR_SYS;
+
+    return cmd_response == NO_ACTIVE || cmd_response == COMPLETED
+        || cmd_response == STREAMING;
+}
+
 /* Command execution sequence */
 int cdrom_exec_cmd(int cmd, void *param) {
     return cdrom_exec_cmd_timed(cmd, param, 0);
@@ -508,23 +519,12 @@ int cdrom_stream_stop(bool abort_dma) {
     }
     mutex_lock(&_g1_ata_mutex);
 
-    do {
-        syscall_gdrom_exec_server();
-        cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
+    cdrom_poll(&cmd_hnd, 0, cdrom_check_abort_streaming);
 
-        if(cmd_response < 0) {
-            rv = ERR_SYS;
-            break;
-        }
-        else if(cmd_response == COMPLETED || cmd_response == NO_ACTIVE) {
-            break;
-        }
-        else if(cmd_response == STREAMING) {
-            mutex_unlock(&_g1_ata_mutex);
-            return cdrom_abort_cmd(1000, false);
-        }
-        thd_pass();
-    } while(1);
+    if(cmd_response == STREAMING) {
+        mutex_unlock(&_g1_ata_mutex);
+        return cdrom_abort_cmd(1000, false);
+    }
 
     cmd_hnd = 0;
     stream_mode = -1;
