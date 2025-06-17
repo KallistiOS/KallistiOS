@@ -139,6 +139,16 @@ static int cdrom_check_cmd_done(void *d) {
     return cmd_response != BUSY && cmd_response != PROCESSING;
 }
 
+static int cdrom_check_abort_done(void *d) {
+    syscall_gdrom_exec_server();
+
+    cmd_response = syscall_gdrom_check_command(*(gdc_cmd_hnd_t *)d, cmd_status);
+    if(cmd_response < 0)
+        return ERR_SYS;
+
+    return cmd_response == NO_ACTIVE || cmd_response == COMPLETED;
+}
+
 /* Command execution sequence */
 int cdrom_exec_cmd(int cmd, void *param) {
     return cdrom_exec_cmd_timed(cmd, param, 0);
@@ -185,7 +195,6 @@ int cdrom_exec_cmd_timed(int cmd, void *param, uint32_t timeout) {
 
 int cdrom_abort_cmd(uint32_t timeout, bool abort_dma) {
     int rv = ERR_OK;
-    uint64_t begin;
     int old = irq_disable();
 
     if(cmd_hnd <= 0) {
@@ -207,27 +216,12 @@ int cdrom_abort_cmd(uint32_t timeout, bool abort_dma) {
     irq_restore(old);
     syscall_gdrom_abort_command(cmd_hnd);
 
-    if(timeout) {
-        begin = timer_ms_gettime64();
+    if(cdrom_poll(&cmd_hnd, timeout, cdrom_check_abort_done) == ERR_TIMEOUT) {
+        dbglog(DBG_ERROR, "cdrom_abort_cmd: Timeout exceeded, resetting.\n");
+        rv = ERR_TIMEOUT;
+        syscall_gdrom_reset();
+        syscall_gdrom_init();
     }
-    do {
-        syscall_gdrom_exec_server();
-        cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
-
-        if(cmd_response == NO_ACTIVE || cmd_response == COMPLETED) {
-            break;
-        }
-        if(timeout) {
-            if((timer_ms_gettime64() - begin) >= timeout) {
-                dbglog(DBG_ERROR, "cdrom_abort_cmd: Timeout exceeded, resetting.\n");
-                rv = ERR_TIMEOUT;
-                syscall_gdrom_reset();
-                syscall_gdrom_init();
-                break;
-            }
-        }
-        thd_pass();
-    } while(1);
 
     cmd_hnd = 0;
     stream_mode = -1;
