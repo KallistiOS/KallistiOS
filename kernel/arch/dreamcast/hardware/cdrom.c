@@ -60,10 +60,6 @@ mutex_t _g1_ata_mutex = MUTEX_INITIALIZER;
 
 /* Command handling */
 static gdc_cmd_hnd_t cmd_hnd = 0;
-static semaphore_t cmd_done = SEM_INITIALIZER(0);
-static bool cmd_in_progress = false;
-static uint64_t cmd_begin_time = 0;
-static uint32_t cmd_timeout = 0;
 static int cmd_response = NO_ACTIVE;
 static int32_t cmd_status[4] = {
     0, /* Error code 1 */
@@ -247,7 +243,6 @@ int cdrom_abort_cmd(uint32_t timeout, bool abort_dma) {
         irq_restore(old);
         return ERR_NO_ACTIVE;
     }
-    cmd_in_progress = false;
 
     if(abort_dma && dma_in_progress) {
         dma_in_progress = false;
@@ -413,11 +408,6 @@ static int cdrom_read_sectors_dma_irq(void *params) {
     cdrom_poll(&cmd_hnd, 0, cdrom_check_ready);
 
     if(cmd_response == PROCESSING) {
-        cmd_timeout = 0;
-        /* Poll syscalls in vblank IRQ in case an unexpected error occurs
-            while we wait DMA IRQ. */
-        cmd_in_progress = true;
-
         /* Wait DMA is finished or command failed. */
         sem_wait(&dma_done);
 
@@ -761,32 +751,19 @@ static void cdrom_vblank(uint32 evt, void *data) {
     (void)evt;
     (void)data;
 
-    if(!cmd_in_progress) {
-        return;
-    }
+    if(dma_in_progress) {
+        syscall_gdrom_exec_server();
+        cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
 
-    syscall_gdrom_exec_server();
-    cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
-
-    if(cmd_response != PROCESSING && cmd_response != BUSY) {
-        cmd_in_progress = false;
-
-        if(dma_in_progress) {
+        if(cmd_response != PROCESSING && cmd_response != BUSY && cmd_response != STREAMING) {
             dma_in_progress = false;
 
             if(dma_blocking) {
                 dma_blocking = false;
                 sem_signal(&dma_done);
+                thd_schedule(1, 0);
             }
         }
-        else {
-            sem_signal(&cmd_done);
-        }
-        thd_schedule(1, 0);
-    }
-    else if(cmd_timeout && (timer_ms_gettime64() - cmd_begin_time) >= cmd_timeout) {
-        sem_signal(&cmd_done);
-        thd_schedule(1, 0);
     }
 }
 
@@ -796,11 +773,9 @@ static void g1_dma_irq_hnd(uint32_t code, void *data) {
     if(dma_in_progress) {
         dma_in_progress = false;
 
-        if(cmd_in_progress) {
-            cmd_in_progress = false;
-            syscall_gdrom_exec_server();
-            cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
-        }
+        syscall_gdrom_exec_server();
+        cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
+
         if(dma_blocking) {
             dma_blocking = false;
             sem_signal(&dma_done);
