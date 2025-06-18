@@ -15,6 +15,9 @@
 
 #define NB_ICONS_MAX 3
 
+/* How many bytes of data to write */
+#define DATA_LEN 4096
+
 #define SCREEN_W 640
 #define SCREEN_H 480
 
@@ -110,7 +113,7 @@ static unsigned char vmu_icon[ICON_SIZE * NB_ICONS_MAX];
 /* Here's the actual meat of it */
 void write_entry(void) {
     vmu_pkg_t   pkg;
-    uint8_t       data[4096], *pkg_out;
+    uint8_t       data[DATA_LEN], *pkg_out;
     int     pkg_size;
     int     i;
     file_t      f;
@@ -122,8 +125,10 @@ void write_entry(void) {
     pkg.icon_data = vmu_icon;
     pkg.icon_anim_speed = 8;
     pkg.eyecatch_type = VMUPKG_EC_NONE;
+    pkg.data_len = DATA_LEN;
+    pkg.data = data;
 
-    for(i = 0; i < 4096; i++)
+    for(i = 0; i < DATA_LEN; i++)
         data[i] = i & 255;
 
     vmu_pkg_load_icon(&pkg, "/rd/ebook.ico");
