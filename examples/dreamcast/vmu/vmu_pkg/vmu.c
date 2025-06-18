@@ -13,6 +13,8 @@
 /* An icon is always 32x32 4bpp */
 #define ICON_SIZE (32 * 32 / 2)
 
+#define NB_ICONS_MAX 3
+
 #define SCREEN_W 640
 #define SCREEN_H 480
 
@@ -22,51 +24,52 @@
 /* The amount of space from the top of one row of text to the next */
 #define ROW_SPACER 24
 
-#define NB_ICONS_MAX 3
-
 void draw_dir(void) {
     file_t      d;
-    int     y = INFO_Y;
+    size_t      y = INFO_Y;
     dirent_t    *de;
 
     d = fs_open("/vmu/a1", O_RDONLY | O_DIR);
 
-    if(!d) {
+    /* If fs_open returned an error */
+    if(d == FILEHND_INVALID) {
         bfont_draw_str(vram_s + y * SCREEN_W + 10, SCREEN_W, 0, "Can't read VMU");
+        return;
     }
-    else {
-        while((de = fs_readdir(d))) {
-            bfont_draw_str(vram_s + y * SCREEN_W + 10, SCREEN_W, 0, de->name);
-            y += ROW_SPACER;
 
-            if(y >= (SCREEN_H - ROW_SPACER))
-                break;
-        }
+    /* Since there was no error, read through the files */
+    while((de = fs_readdir(d))) {
+        bfont_draw_str(vram_s + y * SCREEN_W + 10, SCREEN_W, 0, de->name);
+        y += ROW_SPACER;
 
-        fs_close(d);
+        /* If we would go off the screen, stop! */
+        if(y >= (SCREEN_H - ROW_SPACER))
+            break;
     }
+
+    fs_close(d);
 }
 
-int dev_checked = 0;
+bool dev_found = false;
 void new_vmu(void) {
-    maple_device_t * dev;
+    maple_device_t *dev;
 
     dev = maple_enum_dev(0, 1);
 
-    if(dev == NULL) {
-        if(dev_checked) {
-            memset(vram_s + INFO_Y * SCREEN_W, 0, SCREEN_W * (SCREEN_H - 64) * 2);
-            bfont_draw_str(vram_s + INFO_Y * SCREEN_W + 10, SCREEN_W, 0, "No VMU");
-            dev_checked = 0;
-        }
+    /* Device was not found and we haven't written that to the screen yet */
+    if(!dev && dev_found) {
+        memset(vram_s + INFO_Y * SCREEN_W, 0, SCREEN_W * (SCREEN_H - 64) * 2);
+        bfont_draw_str(vram_s + INFO_Y * SCREEN_W + 10, SCREEN_W, 0, "No VMU");
+        dev_found = false;
     }
-    else if(dev_checked) {
-    }
-    else {
-        memset(vram_s + INFO_Y * SCREEN_W, 0, SCREEN_W * (SCREEN_H - INFO_Y));
+    /* Device was found and screen currently says 'No VMU' */
+    else if(dev && !dev_found) {
+        memset(vram_s + INFO_Y * SCREEN_W, 0, SCREEN_W * (SCREEN_H - 64) * 2);
         draw_dir();
-        dev_checked = 1;
+        dev_found = true;
     }
+
+    /* In the other two conditions it's not necessary to update the screen */
 }
 
 int wait_start(void) {
@@ -95,7 +98,7 @@ static unsigned char vmu_icon[ICON_SIZE * NB_ICONS_MAX];
 /* Here's the actual meat of it */
 void write_entry(void) {
     vmu_pkg_t   pkg;
-    uint8       data[4096], *pkg_out;
+    uint8_t       data[4096], *pkg_out;
     int     pkg_size;
     int     i;
     file_t      f;
