@@ -50,6 +50,11 @@ void draw_dir(void) {
     fs_close(d);
 }
 
+/* Clears out the portion of the screen we use to write info to */
+void clear_screen_info(void) {
+    memset(vram_s + INFO_Y * SCREEN_W, 0, SCREEN_W * (SCREEN_H - 64) * 2);
+}
+
 bool dev_found = false;
 void new_vmu(void) {
     maple_device_t *dev;
@@ -58,13 +63,13 @@ void new_vmu(void) {
 
     /* Device was not found and we haven't written that to the screen yet */
     if(!dev && dev_found) {
-        memset(vram_s + INFO_Y * SCREEN_W, 0, SCREEN_W * (SCREEN_H - 64) * 2);
+        clear_screen_info();
         bfont_draw_str(vram_s + INFO_Y * SCREEN_W + 10, SCREEN_W, 0, "No VMU");
         dev_found = false;
     }
     /* Device was found and screen currently says 'No VMU' */
     else if(dev && !dev_found) {
-        memset(vram_s + INFO_Y * SCREEN_W, 0, SCREEN_W * (SCREEN_H - 64) * 2);
+        clear_screen_info();
         draw_dir();
         dev_found = true;
     }
@@ -75,18 +80,25 @@ void new_vmu(void) {
 int wait_start(void) {
     maple_device_t *cont;
     cont_state_t *state;
+    bool cont_warning_displayed = false;
 
     for(;;) {
-        new_vmu();
-
         cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
 
-        if(!cont) continue;
+        if(!cont) {
+            if(!cont_warning_displayed) {
+                clear_screen_info();
+                bfont_draw_str(vram_s + INFO_Y * SCREEN_W + 10, SCREEN_W, 0, "No Controller");
+                cont_warning_displayed = true;
+            }
+            continue;
+        }
 
         state = (cont_state_t *)maple_dev_status(cont);
 
-        if(!state)
-            continue;
+        if(!state) continue;
+
+        new_vmu();
 
         if(state->buttons & CONT_START)
             return 0;
@@ -139,7 +151,8 @@ int main(int argc, char **argv) {
 
     if(wait_start() < 0) return 0;
 
-    write_entry();
+    /* If there was a vmu found, write to it */
+    if(dev_found) write_entry();
 
     return 0;
 }
