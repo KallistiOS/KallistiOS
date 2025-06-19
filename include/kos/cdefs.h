@@ -9,12 +9,12 @@
 */
 
 /** \file    kos/cdefs.h
-    \brief   Definitions for builtin attributes and compiler directives
-    \ingroup system_macros
+    \brief   Various common macros used throughout the codebase
+    \ingroup system
 
-    This file contains definitions of various __attribute__ directives in
-    shorter forms for use in programs. These typically aid  in optimizations
-    or provide the compiler with extra information about a symbol.
+    This file contains various convenience macros. Mostly compiler
+    __attribute__ directives, as well as other language defines, and
+    useful language extensions.
 
     \author Megan Potter
     \author Lawrence Sebald
@@ -26,19 +26,21 @@
 
 #include <sys/cdefs.h>
 
-/** \defgroup system_macros     Macros
-    \brief                      Various common macros used throughout the codebase
-    \ingroup                    system
-    
-    @{
-*/
-
 /* Check GCC version */
 #if __GNUC__ <= 3
 #   warning Your GCC is too old. This will probably not work right.
 #endif
 
-/* Special function/variable attributes */
+/** \defgroup system_attributes Function Attribute Defines
+    \brief                      Definitions for builtin attributes and compiler directives
+    \ingroup                    system
+
+    This group contains definitions of various __attribute__ directives in
+    shorter forms for use in programs. These typically aid  in optimizations
+    or provide the compiler with extra information about a symbol.
+
+    @{
+*/
 
 #ifndef __noreturn
 /** \brief  Identify a function that will never return. */
@@ -64,6 +66,11 @@
 #ifndef __weak
 /** \brief  Identify a function or variable that may be overridden by another symbol. */
 #define __weak      __attribute__((weak))
+#endif
+
+#ifndef __packed
+/** \brief  Force a structure, enum, or other type to be packed as small as possible. */
+#define __packed    __attribute__((packed))
 #endif
 
 #ifndef __dead2
@@ -164,6 +171,18 @@
 #define __no_inline __attribute__((__noinline__))
 #endif
 
+/** @} */
+
+/** \defgroup system_compat Language Compatibility Defines
+    \brief                      Definitions for language features
+    \ingroup                    system
+
+    This group contains definitions to help retain some older language
+    backwards compatibility for external software linking into KOS.
+
+    @{
+*/
+
 /* GCC macros for special cases */
 /* #if __GNUC__ ==  */
 
@@ -184,6 +203,92 @@
 #ifndef __GNUC_STDC_INLINE__
 #define inline __inline__
 #endif
+
+/** @} */
+
+/** \defgroup system_helpers Helper Macros
+    \brief                      General useful language macros
+    \ingroup                    system
+
+    This group contains definitions to help give robust solutions
+    to common code patterns.
+
+    @{
+*/
+
+/** \brief Assert a build-time dependency.
+
+    Your compiler will fail if the condition isn't true, or can't be evaluated
+    by the compiler. This can only be used within a function.
+
+    Example:
+    \#include <stddef.h>
+    ...
+    static char *foo_to_char(struct foo *foo)
+    {
+        // This code needs string to be at start of foo.
+        __build_assert(offsetof(struct foo, string) == 0);
+        return (char *)foo;
+    }
+
+    \param cond     The compile-time condition which must be true.
+
+    \sa __build_assert_or_zero
+ */
+#define __build_assert(cond) \
+    do { (void) sizeof(char [1 - 2*!(cond)]); } while(0)
+
+/** \brief Assert a build-time dependency.
+
+    Your compiler will fail if the condition isn't true, or can't be evaluated
+    by the compiler. This can be used in an expression: its value is "0".
+
+    Example:
+    \#define foo_to_char(foo)                \
+        ((char *)(foo)                      \
+        + __build_assert_or_zero(offsetof(struct foo, string) == 0))
+
+    \param cond     The compile-time condition which must be true.
+
+    \sa __build_assert
+ */
+#define __build_assert_or_zero(cond) \
+    (sizeof(char [1 - 2*!(cond)]) - 1)
+
+/** \brief Get the number of elements in a visible array.
+
+    This does not work on pointers, or arrays declared as [], or
+    function parameters. With correct compiler support, such usage
+    will cause a build error (\see __build_assert).
+
+    \param arr      The array whose size you want.
+
+ */
+#define __array_size(arr) (sizeof(arr) / sizeof((arr)[0]) + _array_size_chk(arr))
+
+/* Helper for __array_size's type check */
+#if HAVE_BUILTIN_TYPES_COMPATIBLE_P && HAVE_TYPEOF
+/* Two gcc extensions.
+ * &a[0] degrades to a pointer: a different type from an array */
+#define _array_size_chk(arr)                        \
+    __build_assert_or_zero(!__builtin_types_compatible_p(typeof(arr),   \
+                            typeof(&(arr)[0])))
+#else
+#define _array_size_chk(arr) 0
+#endif
+
+/** \brief Create a string from the argument.
+
+    \param arg      The text to stringify.
+ */
+#define __stringify(arg) ""#arg
+
+/** \brief Check if a macro is defined to 1.
+
+    \param macro    The macro to check
+    \return         1 if the macro is defined to 1, 0 otherwise.
+ */
+#define __is_defined(macro) !__builtin_strcmp(__stringify(macro), "1")
 
 /** @} */
 

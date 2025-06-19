@@ -4,6 +4,7 @@
    Copyright (C) 2002 Andrew Kieschnick
    Copyright (C) 2004 Megan Potter
    Copyright (C) 2012 Lawrence Sebald
+   Copyright (C) 2025 Donald Haase
 
 */
 
@@ -19,45 +20,51 @@ printf goes to the dc-tool console
 
 #include <dc/fifo.h>
 #include <dc/fs_dcload.h>
-#include <kos/thread.h>
 #include <arch/spinlock.h>
-#include <arch/arch.h>
 #include <kos/dbgio.h>
+#include <kos/dbglog.h>
 #include <kos/fs.h>
+#include <kos/init.h>
 
 #include <errno.h>
+#include <stdint.h>
 #include <stdio.h>
-#include <ctype.h>
+#include <stdlib.h>
 #include <string.h>
-#include <malloc.h>
-#include <errno.h>
+#include <sys/queue.h>
+
+/* A linked list of dir entries. */
+typedef struct dcl_dir {
+    LIST_ENTRY(dcl_dir) fhlist;
+    int hnd;
+    char *path;
+    dirent_t dirent;
+} dcl_dir_t;
+
+LIST_HEAD(dcl_de, dcl_dir);
+
+static struct dcl_de dir_head = LIST_HEAD_INITIALIZER(0);
+
+static dcl_dir_t *hnd_is_dir(int hnd) {
+    dcl_dir_t *i;
+
+    if(!hnd) return NULL;
+
+    LIST_FOREACH(i, &dir_head, fhlist) {
+        if(i->hnd == (int)hnd)
+            break;
+    }
+
+    return i;
+}
 
 static spinlock_t mutex = SPINLOCK_INITIALIZER;
 
-#define plain_dclsc(...) ({ \
-        int old = 0, rv; \
-        if(!irq_inside_int()) { \
-            old = irq_disable(); \
-        } \
+#define dclsc(...) ({ \
+        irq_disable_scoped(); \
         while(FIFO_STATUS & FIFO_SH4) \
             ; \
-        rv = dcloadsyscall(__VA_ARGS__); \
-        if(!irq_inside_int()) \
-            irq_restore(old); \
-        rv; \
-    })
-
-// #define plain_dclsc(...) dcloadsyscall(__VA_ARGS__)
-
-static void * lwip_dclsc = 0;
-
-#define dclsc(...) ({ \
-        int rv; \
-        if(lwip_dclsc) \
-            rv = (*(int (*)()) lwip_dclsc)(__VA_ARGS__); \
-        else \
-            rv = plain_dclsc(__VA_ARGS__); \
-        rv; \
+        dcloadsyscall(__VA_ARGS__); \
     })
 
 /* Printk replacement */
@@ -65,14 +72,8 @@ static void * lwip_dclsc = 0;
 int dcload_write_buffer(const uint8 *data, int len, int xlat) {
     (void)xlat;
 
-    if(lwip_dclsc && irq_inside_int()) {
-        errno = EAGAIN;
-        return -1;
-    }
-
-    spinlock_lock(&mutex);
+    spinlock_lock_scoped(&mutex);
     dclsc(DCLOAD_WRITE, 1, data, len);
-    spinlock_unlock(&mutex);
 
     return len;
 }
@@ -82,34 +83,25 @@ int dcload_read_cons(void) {
 }
 
 size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_t out_size) {
-    size_t ret = -1;
 
-    if(lwip_dclsc && irq_inside_int())
-        return 0;
-
-    spinlock_lock(&mutex);
+    spinlock_lock_scoped(&mutex);
 
     /* we have to pack the sizes together because the dcloadsyscall handler
        can only take 4 parameters */
-    ret = dclsc(DCLOAD_GDBPACKET, in_buf, (in_size << 16) | (out_size & 0xffff), out_buf);
-
-    spinlock_unlock(&mutex);
-    return ret;
+    return dclsc(DCLOAD_GDBPACKET, in_buf, (in_size << 16) | (out_size & 0xffff), out_buf);
 }
 
-static char *dcload_path = NULL;
-void *dcload_open(vfs_handler_t * vfs, const char *fn, int mode) {
+static void *dcload_open(vfs_handler_t * vfs, const char *fn, int mode) {
+    char *dcload_path = NULL;
+    dcl_dir_t *entry;
     int hnd = 0;
-    uint32 h;
     int dcload_mode = 0;
     int mm = (mode & O_MODE_MASK);
+    size_t fn_len = 0;
 
     (void)vfs;
 
-    if(lwip_dclsc && irq_inside_int())
-        return (void *)0;
-
-    spinlock_lock(&mutex);
+    spinlock_lock_scoped(&mutex);
 
     if(mode & O_DIR) {
         if(fn[0] == '\0') {
@@ -118,22 +110,42 @@ void *dcload_open(vfs_handler_t * vfs, const char *fn, int mode) {
 
         hnd = dclsc(DCLOAD_OPENDIR, fn);
 
-        if(hnd) {
-            if(dcload_path)
-                free(dcload_path);
-
-            if(fn[strlen(fn) - 1] == '/') {
-                dcload_path = malloc(strlen(fn) + 1);
-                strcpy(dcload_path, fn);
-            }
-            else {
-                dcload_path = malloc(strlen(fn) + 2);
-                strcpy(dcload_path, fn);
-                strcat(dcload_path, "/");
-            }
+        if(!hnd) {
+            /* It could be caused by other issues, such as
+            pathname being too long or symlink loops, but
+            ENOTDIR seems to be the best generic and we should
+            set something */
+            errno = ENOTDIR;
+            return (void *)NULL;
         }
+
+        /* We got something back so create an dir list entry for it */
+        entry = malloc(sizeof(dcl_dir_t));
+        if(!entry) {
+            errno = ENOMEM;
+            return (void *)NULL;
+        }
+
+        fn_len = strlen(fn);
+        if(fn[fn_len - 1] == '/') fn_len--;
+
+        dcload_path = malloc(fn_len + 2);
+        if(!dcload_path) {
+            errno = ENOMEM;
+            free(entry);
+            return (void *)NULL;
+        }
+
+        memcpy(dcload_path, fn, fn_len);
+        dcload_path[fn_len]   = '/';
+        dcload_path[fn_len+1] = '\0';
+
+        /* Now that everything is ready, add to list */
+        entry->hnd = hnd;
+        entry->path = dcload_path;
+        LIST_INSERT_HEAD(&dir_head, entry, fhlist);
     }
-    else {   /* hack */
+    else {
         if(mm == O_RDONLY)
             dcload_mode = 0;
         else if((mm & O_RDWR) == O_RDWR)
@@ -151,117 +163,97 @@ void *dcload_open(vfs_handler_t * vfs, const char *fn, int mode) {
         hnd++; /* KOS uses 0 for error, not -1 */
     }
 
-    h = hnd;
-
-    spinlock_unlock(&mutex);
-
-    return (void *)h;
+    return (void *)hnd;
 }
 
-int dcload_close(void * h) {
+static int dcload_close(void * h) {
     uint32 hnd = (uint32)h;
+    dcl_dir_t *i;
 
-    if(lwip_dclsc && irq_inside_int()) {
-        errno = EINTR;
-        return -1;
-    }
-
-    spinlock_lock(&mutex);
+    spinlock_lock_scoped(&mutex);
 
     if(hnd) {
-        if(hnd > 100)  /* hack */
+        /* Check if it's a dir */
+        i = hnd_is_dir(hnd);
+
+        /* We found it in the list, so it's a dir */
+        if(i) {
             dclsc(DCLOAD_CLOSEDIR, hnd);
+            LIST_REMOVE(i, fhlist);
+            free(i->path);
+            free(i);
+        }
         else {
             hnd--; /* KOS uses 0 for error, not -1 */
             dclsc(DCLOAD_CLOSE, hnd);
         }
     }
 
-    spinlock_unlock(&mutex);
     return 0;
 }
 
-ssize_t dcload_read(void * h, void *buf, size_t cnt) {
+static ssize_t dcload_read(void * h, void *buf, size_t cnt) {
     ssize_t ret = -1;
     uint32 hnd = (uint32)h;
 
-    if(lwip_dclsc && irq_inside_int())
-        return 0;
-
-    spinlock_lock(&mutex);
+    spinlock_lock_scoped(&mutex);
 
     if(hnd) {
         hnd--; /* KOS uses 0 for error, not -1 */
         ret = dclsc(DCLOAD_READ, hnd, buf, cnt);
     }
 
-    spinlock_unlock(&mutex);
     return ret;
 }
 
-ssize_t dcload_write(void * h, const void *buf, size_t cnt) {
+static ssize_t dcload_write(void * h, const void *buf, size_t cnt) {
     ssize_t ret = -1;
     uint32 hnd = (uint32)h;
 
-    if(lwip_dclsc && irq_inside_int())
-        return 0;
-
-    spinlock_lock(&mutex);
+    spinlock_lock_scoped(&mutex);
 
     if(hnd) {
         hnd--; /* KOS uses 0 for error, not -1 */
         ret = dclsc(DCLOAD_WRITE, hnd, buf, cnt);
     }
 
-    spinlock_unlock(&mutex);
     return ret;
 }
 
-off_t dcload_seek(void * h, off_t offset, int whence) {
+static off_t dcload_seek(void * h, off_t offset, int whence) {
     off_t ret = -1;
     uint32 hnd = (uint32)h;
 
-    if(lwip_dclsc && irq_inside_int())
-        return 0;
-
-    spinlock_lock(&mutex);
+    spinlock_lock_scoped(&mutex);
 
     if(hnd) {
         hnd--; /* KOS uses 0 for error, not -1 */
         ret = dclsc(DCLOAD_LSEEK, hnd, offset, whence);
     }
 
-    spinlock_unlock(&mutex);
     return ret;
 }
 
-off_t dcload_tell(void * h) {
+static off_t dcload_tell(void * h) {
     off_t ret = -1;
     uint32 hnd = (uint32)h;
 
-    if(lwip_dclsc && irq_inside_int())
-        return 0;
-
-    spinlock_lock(&mutex);
+    spinlock_lock_scoped(&mutex);
 
     if(hnd) {
         hnd--; /* KOS uses 0 for error, not -1 */
         ret = dclsc(DCLOAD_LSEEK, hnd, 0, SEEK_CUR);
     }
 
-    spinlock_unlock(&mutex);
     return ret;
 }
 
-size_t dcload_total(void * h) {
+static size_t dcload_total(void * h) {
     size_t ret = -1;
     size_t cur;
     uint32 hnd = (uint32)h;
 
-    if(lwip_dclsc && irq_inside_int())
-        return 0;
-
-    spinlock_lock(&mutex);
+    spinlock_lock_scoped(&mutex);
 
     if(hnd) {
         hnd--; /* KOS uses 0 for error, not -1 */
@@ -270,42 +262,41 @@ size_t dcload_total(void * h) {
         dclsc(DCLOAD_LSEEK, hnd, cur, SEEK_SET);
     }
 
-    spinlock_unlock(&mutex);
     return ret;
 }
 
-/* Not thread-safe, but that's ok because neither is the FS */
-static dirent_t dirent;
-dirent_t *dcload_readdir(void * h) {
+static dirent_t *dcload_readdir(void * h) {
     dirent_t *rv = NULL;
     dcload_dirent_t *dcld;
     dcload_stat_t filestat;
     char *fn;
     uint32 hnd = (uint32)h;
+    dcl_dir_t *entry;
 
-    if(lwip_dclsc && irq_inside_int()) {
-        errno = EAGAIN;
-        return NULL;
-    }
+    spinlock_lock_scoped(&mutex);
 
-    if(hnd < 100) {
+    if(!(entry = hnd_is_dir(hnd))) {
         errno = EBADF;
         return NULL;
     }
 
-    spinlock_lock(&mutex);
-
     dcld = (dcload_dirent_t *)dclsc(DCLOAD_READDIR, hnd);
 
     if(dcld) {
-        rv = &dirent;
+        rv = &(entry->dirent);
         strcpy(rv->name, dcld->d_name);
         rv->size = 0;
         rv->time = 0;
         rv->attr = 0; /* what the hell is attr supposed to be anyways? */
 
-        fn = malloc(strlen(dcload_path) + strlen(dcld->d_name) + 1);
-        strcpy(fn, dcload_path);
+        fn = malloc(strlen(entry->path) + strlen(dcld->d_name) + 1);
+
+        if(!fn) {
+            errno = ENOMEM;
+            return NULL;
+        }
+
+        strcpy(fn, entry->path);
         strcat(fn, dcld->d_name);
 
         if(!dclsc(DCLOAD_STAT, fn, &filestat)) {
@@ -323,19 +314,15 @@ dirent_t *dcload_readdir(void * h) {
         free(fn);
     }
 
-    spinlock_unlock(&mutex);
     return rv;
 }
 
-int dcload_rename(vfs_handler_t * vfs, const char *fn1, const char *fn2) {
+static int dcload_rename(vfs_handler_t * vfs, const char *fn1, const char *fn2) {
     int ret;
 
     (void)vfs;
 
-    if(lwip_dclsc && irq_inside_int())
-        return 0;
-
-    spinlock_lock(&mutex);
+    spinlock_lock_scoped(&mutex);
 
     /* really stupid hack, since I didn't put rename() in dcload */
 
@@ -344,24 +331,15 @@ int dcload_rename(vfs_handler_t * vfs, const char *fn1, const char *fn2) {
     if(!ret)
         ret = dclsc(DCLOAD_UNLINK, fn1);
 
-    spinlock_unlock(&mutex);
     return ret;
 }
 
-int dcload_unlink(vfs_handler_t * vfs, const char *fn) {
-    int ret;
-
+static int dcload_unlink(vfs_handler_t * vfs, const char *fn) {
     (void)vfs;
 
-    if(lwip_dclsc && irq_inside_int())
-        return 0;
+    spinlock_lock_scoped(&mutex);
 
-    spinlock_lock(&mutex);
-
-    ret = dclsc(DCLOAD_UNLINK, fn);
-
-    spinlock_unlock(&mutex);
-    return ret;
+    return dclsc(DCLOAD_UNLINK, fn);
 }
 
 static int dcload_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
@@ -372,13 +350,10 @@ static int dcload_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
 
     (void)flag;
 
-    if(lwip_dclsc && irq_inside_int())
-        return 0;
-
     /* Root directory '/pc' */
     if(len == 0 || (len == 1 && *path == '/')) {
         memset(st, 0, sizeof(struct stat));
-        st->st_dev = (dev_t)((ptr_t)vfs);
+        st->st_dev = (dev_t)((uintptr_t)vfs);
         st->st_mode = S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO;
         st->st_size = -1;
         st->st_nlink = 2;
@@ -392,7 +367,7 @@ static int dcload_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
 
     if(!retval) {
         memset(st, 0, sizeof(struct stat));
-        st->st_dev = (dev_t)((ptr_t)vfs);
+        st->st_dev = (dev_t)((uintptr_t)vfs);
         st->st_ino = filestat.st_ino;
         st->st_mode = filestat.st_mode;
         st->st_nlink = filestat.st_nlink;
@@ -438,6 +413,17 @@ static int dcload_fcntl(void *h, int cmd, va_list ap) {
     return rv;
 }
 
+static int dcload_rewinddir(void *h) {
+    uint32_t hnd = (uint32_t)h;
+
+    spinlock_lock_scoped(&mutex);
+
+    if(!hnd_is_dir(hnd))
+        return -1;
+
+    return dclsc(DCLOAD_REWINDDIR, hnd);
+}
+
 /* Pull all that together */
 static vfs_handler_t vh = {
     /* Name handler */
@@ -476,12 +462,12 @@ static vfs_handler_t vh = {
     NULL,               /* tell64 */
     NULL,               /* total64 */
     NULL,               /* readlink */
-    NULL,               /* rewinddir */
+    dcload_rewinddir,
     NULL                /* fstat */
 };
 
-// We have to provide a minimal interface in case dcload usage is
-// disabled through init flags.
+/* We have to provide a minimal interface in case dcload usage is
+   disabled through init flags. */
 static int never_detected(void) {
     return 0;
 }
@@ -521,8 +507,8 @@ void fs_dcload_init_console(void) {
     dbgio_dcload.write_buffer = dcload_write_buffer;
     // dbgio_dcload.read = dcload_read_cons;
 
-    // We actually need to detect here to make sure we're not on
-    // dcload-serial, or scif_init must not proceed.
+    /* We actually need to detect here to make sure we're not on
+       dcload-serial, or scif_init must not proceed. */
     if(*DCLOADMAGICADDR != DCLOADMAGICVALUE)
         return;
 
@@ -546,19 +532,14 @@ void fs_dcload_init_console(void) {
 
 /* Call fs_dcload_init_console() before calling fs_dcload_init() */
 void fs_dcload_init(void) {
-    // This was already done in init_console.
+    /* This was already done in init_console. */
     if(dcload_type == DCLOAD_TYPE_NONE)
         return;
 
     /* Check for combination of KOS networking and dcload-ip */
     if((dcload_type == DCLOAD_TYPE_IP) && (__kos_init_flags & INIT_NET)) {
-        dbglog(DBG_INFO, "dc-load console+kosnet, will switch to internal ethernet\n");
+        dbglog(DBG_INFO, "dc-load console+kosnet, fs_dcload unavailable.\n");
         return;
-        /* if(old_printk) {
-            dbgio_set_printk(old_printk);
-            old_printk = 0;
-        }
-        return -1; */
     }
 
     /* Register with VFS */
@@ -576,28 +557,5 @@ void fs_dcload_shutdown(void) {
         free(dcload_wrkmem);
     }
 
-    /* If we're not on lwIP, we can continue using the debug channel */
-    if(lwip_dclsc) {
-        dcload_type = DCLOAD_TYPE_NONE;
-        dbgio_dev_select("scif");
-    }
-
     nmmgr_handler_remove(&vh.nmmgr);
-}
-
-/* used for dcload-ip + lwIP
- * assumes fs_dcload_init() was previously called
- */
-int fs_dcload_init_lwip(void *p) {
-    /* Check for combination of KOS networking and dcload-ip */
-    if((dcload_type == DCLOAD_TYPE_IP) && (__kos_init_flags & INIT_NET)) {
-        lwip_dclsc = p;
-
-        dbglog(DBG_INFO, "dc-load console support enabled (lwIP)\n");
-    }
-    else
-        return -1;
-
-    /* Register with VFS */
-    return nmmgr_handler_add(&vh.nmmgr);
 }

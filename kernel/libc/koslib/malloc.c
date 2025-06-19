@@ -23,6 +23,7 @@
 #include <arch/spinlock.h>
 #include <arch/arch.h>
 
+#include <kos/dbglog.h>
 #include <kos/opts.h>
 
 #undef DEBUG
@@ -1037,6 +1038,7 @@ extern "C" {
 
       Overreliance on memalign is a sure way to fragment space.
     */
+    __used
 #if __STD_C
     Void_t*  public_mEMALIGn(size_t, size_t);
 #else

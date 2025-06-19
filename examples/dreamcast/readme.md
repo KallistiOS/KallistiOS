@@ -88,13 +88,13 @@ This page serves as an index for all KallistiOS examples.
   - cheap_shadow
   - modifier_volume
   - modifier_volume_tex
+  - palette
   - plasma
   - pvrmark
   - pvrmark_strips
   - pvrmark_strips_direct
   - texture_render
   - yuv_converter
-  - palette
 - [**random**](random/): Demonstrates generating random numbers using /dev/urandom
 - [**rumble**](rumble/): Demonstrates sending raw commands to the purupuru/jump pack
 - sd
@@ -108,6 +108,8 @@ This page serves as an index for all KallistiOS examples.
   - hello-opus
   - multi-stream
   - sfx
+- raylib
+  - raytris
 - tsunami
   - banner
   - font

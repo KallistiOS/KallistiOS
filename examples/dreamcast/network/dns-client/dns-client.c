@@ -21,6 +21,7 @@
 
 #include <kos/net.h>
 #include <kos/dbgio.h>
+#include <kos/thread.h>
 #include <arch/arch.h>
 
 KOS_INIT_FLAGS(INIT_DEFAULT | INIT_NET);

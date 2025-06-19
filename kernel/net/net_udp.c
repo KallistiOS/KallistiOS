@@ -33,14 +33,12 @@
 /* Default hop limit (or ttl for IPv4) for new sockets */
 #define UDP_DEFAULT_HOPS    64
 
-#define packed __attribute__((packed))
 typedef struct {
-    uint16 src_port    packed;
-    uint16 dst_port    packed;
-    uint16 length      packed;
-    uint16 checksum    packed;
+    uint16 src_port __packed;
+    uint16 dst_port __packed;
+    uint16 length __packed;
+    uint16 checksum __packed;
 } udp_hdr_t;
-#undef packed
 
 struct udp_pkt {
     TAILQ_ENTRY(udp_pkt) pkt_queue;

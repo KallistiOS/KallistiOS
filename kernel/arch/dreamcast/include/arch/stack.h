@@ -23,7 +23,7 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
+#include <stdint.h>
 
 /** \defgroup debugging_stacktrace  Stack Traces
     \brief                          API for managing stack backtracing

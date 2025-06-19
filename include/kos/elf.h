@@ -24,6 +24,7 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
+#include <stdint.h>
 #include <arch/types.h>
 #include <sys/queue.h>
 
@@ -306,10 +307,10 @@ typedef struct elf_prog {
     uint32 size;            /**< \brief Memory image size (rounded up to page size) */
 
     /* Library exports */
-    ptr_t lib_get_name;     /**< \brief Pointer to get_name() function */
-    ptr_t lib_get_version;  /**< \brief Pointer to get_version() function */
-    ptr_t lib_open;         /**< \brief Pointer to library's open function */
-    ptr_t lib_close;        /**< \brief Pointer to library's close function */
+    uintptr_t lib_get_name;     /**< \brief Pointer to get_name() function */
+    uintptr_t lib_get_version;  /**< \brief Pointer to get_version() function */
+    uintptr_t lib_open;         /**< \brief Pointer to library's open function */
+    uintptr_t lib_close;        /**< \brief Pointer to library's close function */
 
     char fn[256];           /**< \brief Filename of library */
 } elf_prog_t;

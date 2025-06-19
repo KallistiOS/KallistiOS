@@ -6,9 +6,11 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <malloc.h>
 #include <time.h>
+
+#include <kos/dbglog.h>
 #include <kos/mutex.h>
 #include <dc/vmufs.h>
 #include <dc/maple.h>

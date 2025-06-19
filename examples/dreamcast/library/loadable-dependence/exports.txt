@@ -1,0 +1,10 @@
+include kos/exports.h
+include kos/md5.h
+include library-dependence.h
+
+# Loadable library exported functions
+library_test_func
+library_test_func2
+
+# Linked library exported functions
+kos_md5

@@ -10,6 +10,7 @@
 #include <string.h>
 #include <arch/memory.h>
 #include <dc/maple.h>
+#include <kos/dbglog.h>
 
 /* Enable / Disable the bus */
 void maple_bus_enable(void) {
@@ -93,16 +94,15 @@ static const char *maple_cap_names[] = {
     "Mouse",
     "JumpPack"
 };
-#define maple_cap_name_cnt (sizeof(maple_cap_names)/sizeof(char *))
 
 /* Print the capabilities of a given driver to dbglog; NOT THREAD SAFE */
-static char caps_buffer[1024];
+static char caps_buffer[64];
 const char * maple_pcaps(uint32 functions) {
     unsigned int i, o;
 
     for(o = 0, i = 0; i < 32; i++) {
         if(functions & (0x80000000 >> i)) {
-            if(i > maple_cap_name_cnt || maple_cap_names[i] == NULL) {
+            if(i > __array_size(maple_cap_names) || maple_cap_names[i] == NULL) {
                 sprintf(caps_buffer + o, "UNKNOWN(%08x), ", (0x80000000 >> i));
                 o += strlen(caps_buffer + o);
             }
@@ -133,13 +133,12 @@ static const char *maple_resp_names[] = {
     "OK",
     "DATATRF"
 };
-#define maple_resp_name_cnt ((int)(sizeof(maple_resp_names)/sizeof(char *)))
 
 /* Return a string representing the maple response code */
 const char * maple_perror(int response) {
     response += 5;
 
-    if(response < 0 || response >= maple_resp_name_cnt)
+    if(response < 0 || (size_t)response >= __array_size(maple_resp_names))
         return "UNKNOWN";
     else
         return maple_resp_names[response];
@@ -168,17 +167,18 @@ void maple_gun_read_pos(int *x, int *y) {
     *y = maple_state.gun_y;
 }
 
-#if MAPLE_DMA_DEBUG
 /* Debugging help */
 void maple_sentinel_setup(void * buffer, int bufsize) {
+    assert(__is_defined(MAPLE_DMA_DEBUG));
     assert(bufsize % 4 == 0);
-    memset4(buffer, 0xdeadbeef, bufsize);
+    memset(buffer, 0xdeadbeef, bufsize);
 }
 
 void maple_sentinel_verify(const char * bufname, void * buffer, int bufsize) {
     int i;
     uint32 *b32;
 
+    assert(__is_defined(MAPLE_DMA_DEBUG));
     assert(bufsize % 4 == 0);
 
     b32 = ((uint32 *)buffer) - 512 / 4;
@@ -201,4 +201,3 @@ void maple_sentinel_verify(const char * bufname, void * buffer, int bufsize) {
         }
     }
 }
-#endif

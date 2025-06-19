@@ -28,17 +28,18 @@ something like this:
 */
 
 #include <stdio.h>
-#include <malloc.h>
 #include <string.h>
 #include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <limits.h>
+
 #include <kos/fs.h>
 #include <kos/thread.h>
 #include <kos/mutex.h>
 #include <kos/nmmgr.h>
 #include <kos/dbgio.h>
+#include <kos/dbglog.h>
 
 /* File handle structure; this is an entirely internal structure so it does
    not go in a header file. */
@@ -340,10 +341,6 @@ int fs_close(file_t fd) {
     /* Deref it and remove it from our table */
     retval = fs_hnd_unref(h);
 
-    /* Reset our position */
-    if(h->refcnt == 0)
-        h->idx = 0;
-
     fd_table[fd] = NULL;
     return retval ? -1 : 0;
 }
@@ -518,7 +515,7 @@ dirent_t *fs_readdir(file_t fd) {
             h->idx++;
 
             /* Does fs provide its own . directory? */
-            if(strcmp(temp_dirent->name, ".") == 0) {
+            if(temp_dirent && (strcmp(temp_dirent->name, ".") == 0)) {
                 return temp_dirent;
             } else {
                 /* Send . directory first */
@@ -532,13 +529,13 @@ dirent_t *fs_readdir(file_t fd) {
             h->idx++;
 
             /* Did fs provide its own . directory? */
-            if(strcmp(temp_dirent->name, ".") == 0) {
+            if(temp_dirent && (strcmp(temp_dirent->name, ".") == 0)) {
                 /* Read a new entry */
                 temp_dirent = h->handler->readdir(h->hnd);
             }
 
             /* Does fs provide its own .. directory? */
-            if(strcmp(temp_dirent->name, "..") == 0) {
+            if(temp_dirent && (strcmp(temp_dirent->name, "..") == 0)) {
                 h->idx++;
                 return temp_dirent;
             } else {

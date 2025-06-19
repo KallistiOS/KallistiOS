@@ -12,6 +12,7 @@
 #include <kos/dbglog.h>
 #include <kos/thread.h>
 #include <kos/dbgio.h>
+#include <kos/fs.h>
 #include <arch/spinlock.h>
 
 /* Not re-entrant */

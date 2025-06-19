@@ -10,6 +10,13 @@
 #include <string.h>
 #include <kos/fs.h>
 
+#ifdef __STRICT_ANSI__
+/* Newlib doesn't prototype this function in strict standards compliant mode, so
+   we'll do it here. It is still provided either way, but it isn't prototyped if
+   we use -std=c17 (or any other non-gnuXX value). */
+size_t strnlen(const char *, size_t);
+#endif
+
 struct dirent *readdir(DIR *dir) {
     dirent_t *d;
     size_t len;

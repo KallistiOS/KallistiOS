@@ -12,41 +12,45 @@ environment, check the [`mingw.md`](mingw.md) file.
 On **MinGW-w64/MSYS2** system, the package manager is the `pacman` tool.
 All preliminary operations will be done through this tool.
 
-The **MinGW-w64/MSYS2** environment exists in two flavors:
+The **MinGW-w64/MSYS2** environment exists in several different flavors.
+Everything has been tested using the **Microsoft Visual C++ Runtime**,
+also known as `MSVCRT`. The newer **UCRT (Universal C Runtime)** hasn't
+been tested. `MSVCRT` packages are accessible using the `mingw-w64`
+prefix, as shown below in the document.
+
+We are now using **64-bit** packages, but `MSVCRT` packages also exists
+in **32-bit**. For this reason, the `${arch}` keyword will be used in
+the document. As soon as you see this `${arch}` keyword, you will have to
+replace it:
 
 - **32-bit**: `i686`
 - **64-bit**: `x86_64`
 
-This document was written when using the `i686` version, so if you are using
-the `x86_64` version, you should replace all `i686` keywords in the packages
-name with `x86_64`.
+For example, if you see `mingw-w64-${arch}-toolchain` and you are working
+with **64-bit** packages, you will have to read as: `mingw-w64-x86_64-toolchain`.
 
-We don't know if the `x86_64` version is stable in this context. For your 
-information, in the past some problems happened with the `x86_64` **Cygwin** 
-version. Feel free to try it out if you want.
-
-Please note also, the **Microsoft Windows XP** support was dropped on this
-environment. If you need support for this old OS, you need to use the 
+Please note also, all versions prior to **Windows 10** were dropped on this
+environment. If you need support for older OS, you need to use the
 **MinGW/MSYS** environment instead.
 
 ## Installation of MinGW-w64/MSYS2 ##
 
 1. Open your browser to [**MinGW-w64.org**](https://mingw-w64.org/) and choose
    the [download **MSYS2** distribution](http://www.msys2.org/). Download the
-   installer file `msys2-${arch}-${date}.exe` (e.g.`msys2-i686-20180531.exe`)
+   installer file `msys2-${arch}-${date}.exe` (e.g.`msys2-x86_64-20241208.exe`)
    from the [**MSYS2** repository](http://www.msys2.org/).
 
-2. Run `msys2-${arch}-${date}.exe` in **Administrator mode** (if using
-   **Microsoft Windows Vista** or later) then click on the `Next` button. In the
-   `Installation Directory` text box, input `C:\dcsdk\`. The `Installation
-   Directory` will be called `${MINGW_ROOT}` later in the document. Click on the
-   `Next` button to continue.
+2. Run `msys2-${arch}-${date}.exe` then click on the `Next` button. In the
+   `Installation Directory` text box, input `C:\dcsdk\` or something else, but
+   the directory don't accept spaces. The `Installation Directory` will be
+   called `${MINGW_ROOT}` later in the document. Click on the `Next` button
+   to continue.
 
 3. Click on the `Next` button again, then click on the `Finish` button to start
    the **MSYS2 Shell**.
 
-The **MinGW-w64/MSYS2** base environment is now ready. It's time to setup the 
-rest of the environment to build the toolchains.
+The **MinGW-w64/MSYS2** base environment is now ready. It's time to setup the
+environment to build the Dreamcast toolchains.
 
 ### Update of your local installation ###
 
@@ -71,25 +75,27 @@ This should update all the packages of the **MinGW-w64/MSYS2** environment.
 The packages below need to be installed to build the toolchains, so open the
 **MSYS2 Shell** and input:
 ```
-pacman -Sy --needed base-devel mingw-w64-i686-toolchains mingw-w64-i686-libpng mingw-w64-i686-libjpeg mingw-w64-i686-libelf
+pacman -Sy --needed base-devel patch diffutils mingw-w64-${arch}-toolchain mingw-w64-${arch}-autotools mingw-w64-${arch}-texinfo mingw-w64-${arch}-libpng mingw-w64-${arch}-libjpeg-turbo mingw-w64-${arch}-libelf mingw-w64-${arch}-freetype mingw-w64-${arch}-freeglut
 ```
 ### Installation of additional packages ###
 
-Additional packages are needed:
+Additional packages are needed, if you don't have them installed in your
+system already:
 ```
-pacman -Sy git subversion python2
+pacman -Sy git python
 ```
-**Git** is needed right now, as **Subversion Client** and **Python 2** will be
-needed only when building `kos-ports`, but it's better to install these now.
+**Git** is needed right now, as **Python** will be needed only when building `kos-ports`,
+but it's better to install these now.
 
 By the way you can check the installation success by entering something like
 `git --version`. This should returns something like `git version X.Y.Z`.
+Same applies for **Python**, using `python --version`.
 
 ## Preparing the environment installation ##
 
 1. Open the **MSYS2 Shell** by double-clicking the shortcut on your start menu 
    (or alternatively, double-click on the `${MINGW_ROOT}\mingw${arch}.exe` file,
-   e.g. `${MINGW_ROOT}\mingw32.exe`).
+   e.g. `${MINGW_ROOT}\mingw64.exe`).
 
 2. Enter the following to prepare **KallistiOS**:
 
@@ -103,8 +109,8 @@ Everything is ready, now it's time to make the toolchains.
 ## Compilation ##
 
 The **dc-chain** system may be customized by setting up a
-[`Makefile.cfg`] file in the root of the `dc-chain` directory tree. If this is
-desired, read the main [README.md](../../README.md) for more information on
+`Makefile.cfg` file in the root of the `dc-chain` directory tree. If this is
+desired, read the main [`README`](../../README.md) for more information on
 setting up custom options for the toolchain; however, in most circumstances,
 the stable defaults already present in
 [`Makefile.default.cfg`](../../Makefile.default.cfg) will be fine.

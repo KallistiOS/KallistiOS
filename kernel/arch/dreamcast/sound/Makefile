@@ -18,5 +18,12 @@ SUBDIRS = arm
 
 include $(KOS_BASE)/Makefile.prefab
 
-snd_stream_drv.o: subdirs arm/stream.drv
-	$(KOS_BASE)/utils/bin2o/bin2o arm/stream.drv snd_stream_drv snd_stream_drv.o
+arm/stream.drv: subdirs
+
+snd_iface.c: snd_stream_drv.c
+
+snd_stream_drv.c: arm/stream.drv $(KOS_BASE)/utils/bin2c/bin2c
+	$(KOS_BASE)/utils/bin2c/bin2c $< $@ snd_stream_drv
+
+clean:
+	-rm -f snd_stream_drv.c

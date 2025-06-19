@@ -10,7 +10,7 @@
 /**************************************/
 
 #include <string.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
 #include <errno.h>
@@ -18,6 +18,7 @@
 #include <kos/thread.h>
 #include <kos/sem.h>
 #include <kos/genwait.h>
+#include <kos/dbglog.h>
 
 /**************************************/
 

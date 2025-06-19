@@ -7,10 +7,12 @@
 */
 
 #include <string.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <stdio.h>
+
 #include <kos/net.h>
 #include <kos/fs_socket.h>
+#include <kos/dbglog.h>
 
 #include "net_dhcp.h"
 #include "net_thd.h"

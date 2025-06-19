@@ -1,7 +1,8 @@
 /* KallistiOS ##version##
 
    exports.c
-   Copyright (C)2003 Megan Potter
+   Copyright (C) 2003 Megan Potter
+   Copyright (C) 2024 Ruslan Rostovtsev
 
 */
 
@@ -49,11 +50,11 @@ void export_init(void) {
     nmmgr_handler_add(&st_arch.nmmgr);
 }
 
-export_sym_t * export_lookup(const char * name) {
+export_sym_t *export_lookup(const char *name) {
     nmmgr_handler_t *nmmgr;
-    nmmgr_list_t    *nmmgrs;
-    int     i;
-    symtab_handler_t    * sth;
+    nmmgr_list_t *nmmgrs;
+    int i;
+    symtab_handler_t *sth;
 
     /* Get the name manager list */
     nmmgrs = nmmgr_get_list();
@@ -77,4 +78,57 @@ export_sym_t * export_lookup(const char * name) {
     }
 
     return NULL;
+}
+
+export_sym_t *export_lookup_path(const char *name, const char *path) {
+    nmmgr_handler_t *nmmgr;
+    symtab_handler_t *sth;
+    int i;
+
+    /* Get the name manager list */
+    nmmgr = nmmgr_lookup(path);
+
+    if(nmmgr == NULL) {
+        return NULL;
+    }
+    sth = (symtab_handler_t *)nmmgr;
+
+    for(i = 0; sth->table[i].name; i++) {
+        if(!strcmp(name, sth->table[i].name))
+            return sth->table + i;
+    }
+
+    return NULL;
+}
+
+export_sym_t *export_lookup_addr(uintptr_t addr) {
+    nmmgr_handler_t *nmmgr;
+    nmmgr_list_t *nmmgrs;
+    int	i;
+    symtab_handler_t *sth;
+
+    uintptr_t dist = ~0;
+    export_sym_t *best = NULL;
+
+    /* Get the name manager list */
+    nmmgrs = nmmgr_get_list();
+
+    /* Go through and look at each symtab entry */
+    LIST_FOREACH(nmmgr, nmmgrs, list_ent) {
+        /* Not a symtab -> ignore */
+        if(nmmgr->type != NMMGR_TYPE_SYMTAB)
+            continue;
+
+        sth = (symtab_handler_t *)nmmgr;
+
+        /* First look through the kernel table */
+        for(i = 0; sth->table[i].name; i++) {
+            if(addr - sth->table[i].ptr < dist) {
+                dist = addr - sth->table[i].ptr;
+                best = sth->table + i;
+            }
+        }
+    }
+
+    return best;
 }

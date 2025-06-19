@@ -85,6 +85,22 @@ void mat_identity(void);
 */
 void mat_apply(const matrix_t *src);
 
+/** \brief  Multiply a matrix.
+
+    This function multiplies a matrix in memory with the internal matrix
+    and stores the result into a new matrix.
+
+    \warning
+    \p src and dst MUST be at least 8-byte aligned!
+
+    \note
+    For best performance, 32-byte alignment of \p src and \p dst is recommended.
+
+    \param  dst             A pointer to the destination matrix.
+    \param  src             A pointer to the matrix to multiply.
+*/
+void mat_multiply(matrix_t *dst, const matrix_t *src);
+
 /** \brief  Transform vectors by the internal matrix.
 
     This function transforms zero or more sets of vectors by the current

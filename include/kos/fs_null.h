@@ -32,8 +32,8 @@ __BEGIN_DECLS
 
 /* \cond */
 /* Initialization */
-int fs_null_init(void);
-int fs_null_shutdown(void);
+void fs_null_init(void);
+void fs_null_shutdown(void);
 /* \endcond */
 
 /** @} */

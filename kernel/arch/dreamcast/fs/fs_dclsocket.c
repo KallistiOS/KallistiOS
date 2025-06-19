@@ -24,6 +24,7 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <errno.h>
 #include <dirent.h>
@@ -39,26 +40,24 @@
 #define DCLOAD_PORT 31313
 #define NAME "dcload-ip over KOS sockets"
 
-#define PACKED __attribute__((packed))
 typedef struct {
     unsigned char id[4];
     unsigned int address;
     unsigned int size;
     unsigned char data[];
-} PACKED command_t;
+} command_t;
 
 typedef struct {
     unsigned char id[4];
     unsigned int value0;
-} PACKED command_int_t;
+} command_int_t;
 
 typedef struct {
     unsigned char id[4];
     unsigned int value0;
     unsigned int value1;
     unsigned int value2;
-} PACKED command_3int_t;
-#undef PACKED
+} command_3int_t;
 
 static struct {
     unsigned int addr;
@@ -530,7 +529,7 @@ static int dcls_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
 
     if(!retval) {
         memset(rv, 0, sizeof(struct stat));
-        rv->st_dev = (dev_t)((ptr_t)vfs);
+        rv->st_dev = (dev_t)((uintptr_t)vfs);
         rv->st_ino = filestat.st_ino;
         rv->st_mode = filestat.st_mode;
         rv->st_nlink = filestat.st_nlink;

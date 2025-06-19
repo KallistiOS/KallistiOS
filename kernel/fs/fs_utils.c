@@ -15,9 +15,10 @@ XXX This probably belongs in something like libc...
 
 #include <kos/fs.h>
 #include <stdio.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include <unistd.h>
 #include <errno.h>
 
 /* Copies a file from 'src' to 'dst'. The amount of the file

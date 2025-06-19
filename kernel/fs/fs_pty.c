@@ -28,14 +28,18 @@ or space present.
 #include <kos/mutex.h>
 #include <kos/cond.h>
 #include <kos/fs_pty.h>
-#include <sys/queue.h>
-#include <malloc.h>
+
+#include <arch/types.h>
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <assert.h>
 #include <errno.h>
+
 #include <sys/ioctl.h>
+#include <sys/queue.h>
 
 /* pty buffer size */
 #define PTY_BUFFER_SIZE 1024
@@ -62,8 +66,6 @@ typedef struct ptyhalf {
 
     mutex_t     mutex;
     condvar_t   ready_read, ready_write;
-
-    struct termios termios;
 } ptyhalf_t;
 
 /* Our global pty list */
@@ -154,10 +156,6 @@ int fs_pty_create(char *buffer, int maxbuflen, file_t *master_out, file_t *slave
 
     /* Reset their refcnts (these will get increased in a minute) */
     master->refcnt = slave->refcnt = 0;
-
-    /* Initialize the termios structures with default values */
-    memset(&master->termios, 0, sizeof(struct termios));
-    memset(&slave->termios, 0, sizeof(struct termios));
 
     /* Allocate a mutex for each for multiple readers or writers */
     mutex_init(&master->mutex, MUTEX_TYPE_NORMAL);
@@ -679,33 +677,6 @@ static dirent_t * pty_readdir(void * h) {
     return &dl->dirent;
 }
 
-static int pty_ioctl(void *h, int cmd, va_list ap) {
-    pipefd_t *fd = (pipefd_t *)h;
-    ptyhalf_t *ph = fd->d.p;
-    void *arg = va_arg(ap, void*);
-
-    if (!fd || fd->type != PF_PTY) {
-        errno = EBADF;
-        return -1;
-    }
-
-    switch (cmd) {
-        case TIOCGETA:
-            if(arg == NULL) {
-                errno = EINVAL;
-                return -1;
-            }
-            memcpy(arg, &ph->termios, sizeof(struct termios));
-            return 0;
-
-        /* Add other ioctl cases here */
-
-        default:
-            errno = ENOTTY;
-            return -1;
-    }
-}
-
 static int pty_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
                     int flag) {
     ptyhalf_t *ph;
@@ -859,7 +830,7 @@ static vfs_handler_t vh = {
     NULL,
     pty_total,
     pty_readdir,
-    pty_ioctl,
+    NULL,
     NULL,
     NULL,
     NULL,
@@ -883,19 +854,19 @@ static vfs_handler_t vh = {
 static int initted = 0;
 
 /* Initialize the file system */
-int fs_pty_init(void) {
+void fs_pty_init(void) {
     int cm, cs;
     int tm, ts;
 
     if(initted)
-        return 0;
+        return;
 
     /* Init our list of ptys */
     LIST_INIT(&ptys);
     pty_id_highest = -1;
 
     if(nmmgr_handler_add(&vh.nmmgr) < 0)
-        return -1;
+        return;
 
     mutex_init(&list_mutex, MUTEX_TYPE_NORMAL);
     initted = 1;
@@ -909,16 +880,14 @@ int fs_pty_init(void) {
     fs_pty_create(NULL, 0, &tm, &ts);
     fs_close(tm);
     fs_close(ts);
-
-    return 0;
 }
 
 /* De-init the file system */
-int fs_pty_shutdown(void) {
+void fs_pty_shutdown(void) {
     ptyhalf_t *n, *c;
 
     if(!initted)
-        return 0;
+        return;
 
     mutex_lock_irqsafe(&list_mutex);
 
@@ -941,6 +910,4 @@ int fs_pty_shutdown(void) {
     mutex_destroy(&list_mutex);
 
     initted = 0;
-
-    return 0;
 }

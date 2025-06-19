@@ -54,7 +54,7 @@ static void sphere(sphere_t *s) { /* {{{ */
     float   yaw;
     pvr_vertex_t *v;
 
-    s->data = (pvr_vertex_t *)memalign(32, s->stacks * (s->slices + 2) * sizeof(pvr_vertex_t));
+    s->data = (pvr_vertex_t *)aligned_alloc(32, s->stacks * (s->slices + 2) * sizeof(pvr_vertex_t));
     if(s->data == NULL) return;
 
     v = s->data;
@@ -256,11 +256,14 @@ pvr_init_params_t params = {
     /* No FSAA */
     0,
 
-    /* Translucent Autosort enabled. */
+    /* Translucent Autosort enabled */
     0,
 
     /* Extra OPBs */
-    3
+    3,
+
+    /* Vertex buffer double-buffering enabled */
+    0
 };
 
 // DMA buffers. This should ideally be in separate memory banks to take

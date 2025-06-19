@@ -19,6 +19,7 @@
 #include <arch/irq.h>
 #include <arch/cache.h>
 #include <arch/memory.h>
+#include <kos/dbglog.h>
 #include <kos/net.h>
 #include <kos/thread.h>
 #include <kos/sem.h>
@@ -484,9 +485,7 @@ static semaphore_t bba_rx_sema2;
 
 static void bba_rx(void);
 
-#ifdef TX_SEMA
 static semaphore_t tx_sema;
-#endif
 
 static uint8 * next_dst;
 static uint8 * next_src;
@@ -542,10 +541,9 @@ static int bba_copy_dma(uint8 * dst, uint32 s, int len) {
         src -= add;
         dst -= add;
 
-#ifndef USE_P2_AREA
         /* Invalidate the dcache over the range of the data. */
-        dcache_inval_range((uint32) dst, len);
-#endif
+        if(!__is_defined(USE_P2_AREA))
+            dcache_inval_range((uint32) dst, len);
 
         if(!dma_used) {
             dma_used = 1;
@@ -573,13 +571,9 @@ static int bba_copy_dma(uint8 * dst, uint32 s, int len) {
 /* XXX Could probably use a memcpy8 here, even */
 static int  bba_copy_packet(uint8 * dst, uint32 src, int len) {
 
-#if !RX_NOWRAP
-
-    if((src + len) < RX_BUFFER_LEN) {
-#endif
+    if(__is_defined(RX_NOWRAP) || (src + len) < RX_BUFFER_LEN) {
         /* Straight copy is ok */
         return bba_copy_dma(dst, rtl_mem + src, len);
-#if !RX_NOWRAP
     }
     else {
         /* Have to copy around the ring end */
@@ -588,8 +582,6 @@ static int  bba_copy_packet(uint8 * dst, uint32 src, int len) {
         return bba_copy_dma(dst + (RX_BUFFER_LEN - src),
                             rtl_mem, len - (RX_BUFFER_LEN - src));
     }
-
-#endif
 }
 
 static int rx_enq(int ring_offset, size_t pkt_size) {
@@ -602,12 +594,10 @@ static int rx_enq(int ring_offset, size_t pkt_size) {
 
         /* Receive buffer: temporary space to copy out received data */
 
-#ifdef USE_P2_AREA
-        rx_pkt[rxin].rxbuff = rxbuff + 32 + (rxbuff_pos | MEM_AREA_P2_BASE) + (ring_offset & 31);
-#else
-        rx_pkt[rxin].rxbuff = rxbuff + 32 + rxbuff_pos + (ring_offset & 31);
-#endif
-
+        if(__is_defined(USE_P2_AREA))
+            rx_pkt[rxin].rxbuff = rxbuff + 32 + (rxbuff_pos | MEM_AREA_P2_BASE) + (ring_offset & 31);
+        else
+            rx_pkt[rxin].rxbuff = rxbuff + 32 + rxbuff_pos + (ring_offset & 31);
 
         rxbuff_pos = (rxbuff_pos + pkt_size + 63) & (RXBSZ - 32);
 
@@ -619,11 +609,7 @@ static int rx_enq(int ring_offset, size_t pkt_size) {
 }
 
 /* Transmit a single packet */
-#ifdef TX_SEMA
 static int bba_rtx(const uint8 * pkt, int len, int wait)
-#else
-static int bba_tx(const uint8 * pkt, int len, int wait)
-#endif
 {
     if(!link_stable) {
         if(wait == BBA_TX_WAIT) {
@@ -682,9 +668,11 @@ static int bba_tx(const uint8 * pkt, int len, int wait)
     return BBA_TX_OK;
 }
 
-#ifdef TX_SEMA
 int bba_tx(const uint8 * pkt, int len, int wait) {
     int res;
+
+    if(!__is_defined(TX_SEMA))
+        return bba_rtx(pkt, len, wait);
 
     if(irq_inside_int()) {
         if(sem_trywait(&tx_sema)) {
@@ -700,7 +688,6 @@ int bba_tx(const uint8 * pkt, int len, int wait) {
 
     return res;
 }
-#endif
 
 void bba_lock(void) {
     //sem_wait(&bba_rx_sema2);
@@ -1108,9 +1095,8 @@ int bba_init(void) {
     /* Use the netcore callback */
     bba_set_rx_callback(bba_if_netinput);
 
-#ifdef TX_SEMA
-    sem_init(&tx_sema, 1);
-#endif
+    if(__is_defined(TX_SEMA))
+        sem_init(&tx_sema, 1);
 
     /* VP : Initialize rx thread */
     // Note: The thread itself is not created here, but when we actually
@@ -1185,9 +1171,8 @@ int bba_shutdown(void) {
     if(bba_if.flags & NETIF_INITIALIZED)
         bba_if.if_shutdown(&bba_if);
 
-#ifdef TX_SEMA
-    sem_destroy(&tx_sema);
-#endif
+    if(__is_defined(TX_SEMA))
+        sem_destroy(&tx_sema);
 
     return 0;
 }

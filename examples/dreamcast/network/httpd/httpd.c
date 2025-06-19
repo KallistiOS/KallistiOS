@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
 #include <sys/queue.h>
 #include <sys/stat.h>
 
@@ -14,6 +16,7 @@
 #include <sys/select.h>
 #include <netinet/in.h>
 
+#include <kos/fs.h>
 #include <kos/thread.h>
 #include <kos/mutex.h>
 

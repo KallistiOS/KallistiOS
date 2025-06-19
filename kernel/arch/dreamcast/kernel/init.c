@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <kos/dbgio.h>
+#include <kos/dbglog.h>
 #include <kos/init.h>
 #include <kos/platform.h>
 #include <arch/arch.h>
@@ -28,7 +29,7 @@
 
 #include "initall_hdrs.h"
 
-extern int _bss_start, end;
+extern uintptr_t _bss_start, end;
 
 /* ctor/dtor stuff from libgcc. */
 #if __GNUC__ == 4
@@ -53,7 +54,7 @@ dbgio_handler_t * dbgio_handlers[] = {
     &dbgio_null,
     &dbgio_fb
 };
-int dbgio_handler_cnt = sizeof(dbgio_handlers) / sizeof(dbgio_handler_t *);
+const size_t dbgio_handler_cnt = __array_size(dbgio_handlers);
 
 void arch_init_net_dcload_ip(void) {
     union {
@@ -136,6 +137,18 @@ KOS_INIT_FLAG_WEAK(dcload_init, true);
 KOS_INIT_FLAG_WEAK(fs_dcload_init_console, true);
 KOS_INIT_FLAG_WEAK(fs_dcload_shutdown, true);
 KOS_INIT_FLAG_WEAK(fs_dclsocket_shutdown, true);
+KOS_INIT_FLAG_WEAK(fs_dev_init, true);
+KOS_INIT_FLAG_WEAK(fs_dev_shutdown, true);
+KOS_INIT_FLAG_WEAK(fs_null_init, true);
+KOS_INIT_FLAG_WEAK(fs_null_shutdown, true);
+KOS_INIT_FLAG_WEAK(fs_pty_init, true);
+KOS_INIT_FLAG_WEAK(fs_pty_shutdown, true);
+KOS_INIT_FLAG_WEAK(fs_ramdisk_init, true);
+KOS_INIT_FLAG_WEAK(fs_ramdisk_shutdown, true);
+KOS_INIT_FLAG_WEAK(fs_rnd_init, true);
+KOS_INIT_FLAG_WEAK(fs_rnd_shutdown, true);
+KOS_INIT_FLAG_WEAK(library_init, true);
+KOS_INIT_FLAG_WEAK(library_shutdown, true);
 
 /* Auto-init stuff: override with a non-weak symbol if you don't want all of
    this to be linked into your code (and do the same with the
@@ -172,7 +185,8 @@ int  __weak arch_auto_init(void) {
     timer_init();           /* Timers */
     hardware_sys_init();        /* DC low-level hardware init */
 
-    syscall_sysinfo_init();
+    if (!KOS_PLATFORM_IS_NAOMI)
+        syscall_sysinfo_init();
 
     /* Initialize our timer */
     perf_cntr_timer_enable();
@@ -183,20 +197,15 @@ int  __weak arch_auto_init(void) {
 
     nmmgr_init();
 
-    fs_init();          /* VFS */
-    fs_dev_init();
-    fs_null_init();
-    fs_pty_init();          /* Pty */
-    fs_ramdisk_init();      /* Ramdisk */
-    KOS_INIT_FLAG_CALL(fs_romdisk_init);    /* Romdisk */
+    if(__kos_init_flags & INIT_FS_ALL)
+        fs_init();                        /* VFS */
 
-/* The arc4random_buf() function used for random & urandom is only
-   available in newlib starting with version 2.4.0 */
-#if defined(__NEWLIB__) && !(__NEWLIB__ < 2 && __NEWLIB_MINOR__ < 4)
-    fs_rnd_init();          /* /dev/urandom etc. */
-#else
-#warning "/dev filesystem is not supported with Newlib < 2.4.0"
-#endif
+    KOS_INIT_FLAG_CALL(fs_dev_init);      /* /dev */
+    KOS_INIT_FLAG_CALL(fs_null_init);     /* /dev/null */
+    KOS_INIT_FLAG_CALL(fs_pty_init);      /* Pty */
+    KOS_INIT_FLAG_CALL(fs_ramdisk_init);  /* Ramdisk */
+    KOS_INIT_FLAG_CALL(fs_romdisk_init);  /* Romdisk */
+    KOS_INIT_FLAG_CALL(fs_rnd_init);      /* /dev/urandom etc. */
 
     hardware_periph_init();     /* DC peripheral init */
 
@@ -211,7 +220,7 @@ int  __weak arch_auto_init(void) {
     KOS_INIT_FLAG_CALL(vmu_fs_init);
 
     /* Initialize library handling */
-    library_init();
+    KOS_INIT_FLAG_CALL(library_init);
 
     /* Now comes the optional stuff */
     if(__kos_init_flags & INIT_IRQ) {
@@ -240,20 +249,28 @@ void  __weak arch_auto_shutdown(void) {
     irq_disable();
     timer_shutdown();
     pvr_shutdown();
-    library_shutdown();
+
+    KOS_INIT_FLAG_CALL(library_shutdown);
+
     KOS_INIT_FLAG_CALL(fs_dcload_shutdown);
     KOS_INIT_FLAG_CALL(vmu_fs_shutdown);
     if (!KOS_PLATFORM_IS_NAOMI)
         KOS_INIT_FLAG_CALL(fs_iso9660_shutdown);
-#if defined(__NEWLIB__) && !(__NEWLIB__ < 2 && __NEWLIB_MINOR__ < 4)
-    fs_rnd_shutdown();
-#endif
-    fs_shutdown();
-    fs_ramdisk_shutdown();
+
+    KOS_INIT_FLAG_CALL(fs_rnd_shutdown);
+
+    KOS_INIT_FLAG_CALL(fs_ramdisk_shutdown);
     KOS_INIT_FLAG_CALL(fs_romdisk_shutdown);
-    fs_pty_shutdown();
-    fs_null_shutdown();
-    fs_dev_shutdown();
+    KOS_INIT_FLAG_CALL(fs_null_shutdown);
+    KOS_INIT_FLAG_CALL(fs_dev_shutdown);
+
+    /* As a workaround, shut down the base FS before fs_pty
+       to avoid triggering bugs. */
+    if(__kos_init_flags & INIT_FS_ALL)
+        fs_shutdown();
+
+    KOS_INIT_FLAG_CALL(fs_pty_shutdown);
+
     thd_shutdown();
     rtc_shutdown();
 }
@@ -261,7 +278,6 @@ void  __weak arch_auto_shutdown(void) {
 /* This is the entry point inside the C program */
 void arch_main(void) {
     uint8 *bss_start = (uint8 *)(&_bss_start);
-    uint8 *bss_end = (uint8 *)(&end);
     int rv;
 
     if (KOS_PLATFORM_IS_NAOMI) {
@@ -283,7 +299,7 @@ void arch_main(void) {
         __kos_init_early_fn();
 
     /* Clear out the BSS area */
-    memset(bss_start, 0, bss_end - bss_start);
+    memset(bss_start, 0, (uintptr_t)(&end) - (uintptr_t)bss_start);
 
     /* Do auto-init stuff */
     arch_auto_init();

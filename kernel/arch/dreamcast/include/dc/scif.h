@@ -40,7 +40,7 @@ __BEGIN_DECLS
 */
 void scif_set_parameters(int baud, int fifo);
 
-// The rest of these are the standard dbgio interface.
+/* The rest of these are the standard dbgio interface. */
 
 /** \brief  Enable or disable SCIF IRQ usage.
     \param  on              1 to enable IRQ usage, 0 for polled I/O.

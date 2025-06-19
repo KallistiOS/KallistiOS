@@ -8,20 +8,38 @@
 #include <stdlib.h>
 #include <dc/maple.h>
 
-static maple_attach_callback_t attach_callback = NULL;
-static uint32 attach_callback_functions = 0;
-
-static maple_detach_callback_t detach_callback = NULL;
-static uint32 detach_callback_functions = 0;
-
 void maple_attach_callback(uint32 functions, maple_attach_callback_t cb) {
-    attach_callback_functions = functions;
-    attach_callback = cb;
+    maple_driver_t *i;
+
+    if(!functions)
+        functions = 0xffffffff;
+
+    LIST_FOREACH(i, &maple_state.driver_list, drv_list) {
+        if(i->functions & functions) {
+            i->user_attach = cb;
+            functions &= ~i->functions;
+
+            if(!functions)
+                break;
+        }
+    }
 }
 
 void maple_detach_callback(uint32 functions, maple_detach_callback_t cb) {
-    detach_callback_functions = functions;
-    detach_callback = cb;
+    maple_driver_t *i;
+
+    if(!functions)
+        functions = 0xffffffff;
+
+    LIST_FOREACH(i, &maple_state.driver_list, drv_list) {
+        if(i->functions & functions) {
+            i->user_detach = cb;
+            functions &= ~i->functions;
+
+            if(!functions)
+                break;
+        }
+    }
 }
 
 /* Register a maple device driver; do this before maple_init() */
@@ -53,7 +71,8 @@ int maple_driver_attach(maple_frame_t *det) {
     maple_driver_t      *i;
     maple_response_t    *resp;
     maple_devinfo_t     *devinfo;
-    maple_device_t      *dev = NULL;
+    maple_device_t      *dev = maple_state.ports[det->dst_port].units[det->dst_unit];
+    bool                attached = false;
 
     /* Resolve some pointers first */
     resp = (maple_response_t *)det->recv_buf;
@@ -63,58 +82,60 @@ int maple_driver_attach(maple_frame_t *det) {
     LIST_FOREACH(i, &maple_state.driver_list, drv_list) {
         /* For now we just pick the first matching driver */
         if(i->functions & devinfo->functions) {
-            /* Driver matches. Alloc a device. */
-            dev = calloc(1, sizeof(*dev) + i->status_size);
-            if (!dev)
-                return 1;
+
+            /* Driver matches. Alloc a device if needed. */
+            if(!dev) {
+                dev = calloc(1, sizeof(*dev));
+                if(!dev)
+                    return 1;
+
+                maple_state.ports[det->dst_port].units[det->dst_unit] = dev;
+
+                /* Add the basics for the initial version of the struct */
+                dev->port = det->dst_port;
+                dev->unit = det->dst_unit;
+                dev->frame.state = MAPLE_FRAME_VACANT;
+            }
 
             memcpy(&dev->info, devinfo, sizeof(maple_devinfo_t));
-            dev->info.product_name[29] = 0;
-            dev->info.product_license[59] = 0;
-            dev->port = det->dst_port;
-            dev->unit = det->dst_unit;
-            dev->frame.state = MAPLE_FRAME_VACANT;
 
-            /* Try to attach if we need to */
-            if(!(i->attach) || (i->attach(i, dev) >= 0))
-                break;
+            /* Now lets allocate a new status buffer */
+            if(i->status_size && !dev->status) {
+                dev->status = calloc(1, i->status_size);
+                if(!dev->status)
+                    return 1;
+            }
 
-            /* Attach failed, free the device */
-            free(dev);
-            dev = NULL;
+            if(!i->status_size || dev->status) {
+                /* Try to attach if we need to then break out. */
+                if(!(i->attach) || (i->attach(i, dev) >= 0)) {
+                    attached = true;
+                    break;
+                }
+            }
         }
     }
 
-    /* Did we get any hits? */
     if(!dev)
         return -1;
 
-    maple_state.ports[det->dst_port].units[det->dst_unit] = dev;
+    /* Did we get any hits? */
+    if(!attached) {
+        free(dev->status);
+        dev->status = NULL;
+
+        return -1;
+    }
 
     /* Finish setting stuff up */
     dev->drv = i;
     dev->status_valid = 0;
+    dev->valid = true;
 
-    if(!(attach_callback_functions) || (dev->info.functions & attach_callback_functions)) {
-        if(attach_callback) {
-            attach_callback(dev);
-        }
-    }
+    if(i->user_attach)
+        i->user_attach(dev);
 
     return 0;
-}
-
-static void maple_detach(maple_device_t *dev) {
-    if(dev->drv && dev->drv->detach)
-        dev->drv->detach(dev->drv, dev);
-
-    dev->status_valid = 0;
-
-    if(!(detach_callback_functions) || (dev->info.functions & detach_callback_functions)) {
-        if(detach_callback) {
-            detach_callback(dev);
-        }
-    }
 }
 
 /* Detach an attached maple device */
@@ -124,9 +145,25 @@ int maple_driver_detach(int p, int u) {
     if(!dev)
         return -1;
 
-    maple_state.ports[p].units[u] = NULL;
-    maple_detach(dev);
-    free(dev);
+    dev->valid = false;
+
+    if(dev->drv) {
+        if(dev->drv->user_detach)
+            dev->drv->user_detach(dev);
+        if(dev->drv->detach)
+            dev->drv->detach(dev->drv, dev);
+    }
+
+    dev->status_valid = 0;
+
+    if(dev->drv->status_size) {
+        free(dev->status);
+        dev->status = NULL;
+    }
+
+    dev->probe_mask = 0;
+    dev->dev_mask = 0;
+
     return 0;
 }
 
@@ -137,7 +174,7 @@ int maple_driver_foreach(maple_driver_t *drv, int (*callback)(maple_device_t *))
 
     for(p = 0; p < MAPLE_PORT_COUNT; p++) {
         for(u = 0; u < MAPLE_UNIT_COUNT; u++) {
-            dev = maple_state.ports[p].units[u];
+            dev = maple_enum_dev(p, u);
 
             if(dev && dev->drv == drv && !dev->frame.queued)
                 if(callback(dev) < 0)

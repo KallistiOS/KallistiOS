@@ -33,7 +33,7 @@ g2_fifo_wait
 vblank_handler_add
 vblank_handler_remove
 
-# Debug I/O
+# SCIF
 scif_set_parameters
 scif_set_irq_usage
 scif_detected
@@ -54,6 +54,38 @@ scif_spi_slow_rw_byte
 scif_spi_write_byte
 scif_spi_read_byte
 scif_spi_read_data
+
+# SCI UART/SPI
+sci_init
+sci_configure_uart
+sci_configure_spi
+sci_shutdown
+sci_read_byte
+sci_write_byte
+sci_write_data
+sci_read_data
+sci_dma_write_data
+sci_dma_read_data
+sci_dma_wait_complete
+sci_spi_set_cs
+sci_spi_rw_byte
+sci_spi_rw_data
+sci_spi_write_byte
+sci_spi_read_byte
+sci_spi_write_data
+sci_spi_read_data
+sci_spi_dma_write_data
+sci_spi_dma_read_data
+
+# SD Card
+sd_init
+sd_init_ex
+sd_shutdown
+sd_read_blocks
+sd_write_blocks
+sd_get_size
+sd_blockdev_for_partition
+sd_blockdev_for_device
 
 # Timers
 timer_prime
@@ -118,6 +150,7 @@ snd_sfx_load_fd
 snd_sfx_play
 snd_sfx_stop_all
 snd_sfx_play_chn
+snd_sfx_play_ex
 snd_sfx_stop
 snd_sfx_chn_alloc
 snd_sfx_chn_free
@@ -141,11 +174,12 @@ snd_stream_pan
 snd_stream_alloc
 snd_stream_destroy
 snd_stream_reinit
-snd_stream_prefill
 snd_pcm16_split
 snd_pcm16_split_sq
 snd_pcm8_split
 snd_adpcm_split
+snd_get_pos
+snd_is_playing
 
 # Video
 vid_mode

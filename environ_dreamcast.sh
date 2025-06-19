@@ -7,26 +7,33 @@ if [ -z "${DC_TOOLS_BASE}" ] ; then
 fi
 
 # Add the external DC tools dir to the path if it is not already.
-if [[ ":$PATH:" != *":${DC_TOOLS_BASE}:"* ]]; then
+if ! expr ":$PATH:" : ".*:${DC_TOOLS_BASE}:.*" > /dev/null ; then
   export PATH="${PATH}:${DC_TOOLS_BASE}"
 fi
 
-# Default the SH4 floating point precision if it isn't already set.
-if [ -z "${KOS_SH4_PRECISION}" ] ; then
-    export KOS_SH4_PRECISION="-m4-single-only"
+# Default the SH4 floating-point precision if it isn't already set.
+# m4-single is used if supported by the current toolchain, otherwise
+# m4-single-only is used as a fallback option.
+if [ -z "${KOS_SH4_PRECISION}" ] || [ "${KOS_SH4_PRECISION}" = "-m4-single" ]; then
+    if echo 'int main(){}' | ${KOS_CC} -x c -c -o /dev/null - -m4-single 2>/dev/null; then
+        export KOS_SH4_PRECISION="-m4-single"
+    else
+        echo "WARNING: Toolchain does not support m4-single ABI -- falling back to m4-single-only ABI." >&2
+        echo "Please recompile the toolchain to enable support for the m4-single ABI." >&2
+        export KOS_SH4_PRECISION="-m4-single-only"
+    fi
 fi
 
-export KOS_CFLAGS="${KOS_CFLAGS} ${KOS_SH4_PRECISION} -ml -ffunction-sections -fdata-sections -matomic-model=soft-imask -ftls-model=local-exec"
+export KOS_CFLAGS="${KOS_CFLAGS} ${KOS_SH4_PRECISION} -ml -mfsrra -mfsca -ffunction-sections -fdata-sections -matomic-model=soft-imask -ftls-model=local-exec"
 export KOS_AFLAGS="${KOS_AFLAGS} -little"
+export KOS_LDFLAGS="${KOS_LDFLAGS} ${KOS_SH4_PRECISION} -ml -Wl,--gc-sections"
+export KOS_LD_SCRIPT="-T${KOS_BASE}/utils/ldscripts/shlelf.xc"
 
 if [ x${KOS_SUBARCH} = xnaomi ]; then
 	export KOS_CFLAGS="${KOS_CFLAGS} -D__NAOMI__"
-	export KOS_LDFLAGS="${KOS_LDFLAGS} ${KOS_SH4_PRECISION} -ml -Wl,-Ttext=0x8c020000 -Wl,--gc-sections"
-	export KOS_LD_SCRIPT="-T${KOS_BASE}/utils/ldscripts/shlelf-naomi.xc"
+	export KOS_LDFLAGS="${KOS_LDFLAGS} -Wl,--defsym=LOAD_OFFSET=0x8c020000"
 else
 	export KOS_CFLAGS="${KOS_CFLAGS} -D__DREAMCAST__"
-	export KOS_LDFLAGS="${KOS_LDFLAGS} ${KOS_SH4_PRECISION} -ml -Wl,-Ttext=0x8c010000 -Wl,--gc-sections"
-	export KOS_LD_SCRIPT="-T${KOS_BASE}/utils/ldscripts/shlelf.xc"
 fi
 
 # If we're building for DC, we need the ARM compiler paths as well.

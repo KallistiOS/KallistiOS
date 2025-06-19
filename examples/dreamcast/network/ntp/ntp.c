@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <netdb.h>
 
@@ -18,6 +19,7 @@
 #include <arch/rtc.h>
 #include <kos/dbgio.h>
 #include <kos/net.h>
+#include <kos/thread.h>
 
 #define NTP_PORT    "123"
 #define NTP_SERVER  "us.pool.ntp.org"

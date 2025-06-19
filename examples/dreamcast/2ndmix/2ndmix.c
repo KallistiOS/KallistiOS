@@ -823,13 +823,16 @@ pvr_init_params_t params = {
     { PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_0 },
 
     /* Vertex buffer size 512K */
-    512 * 1024
+    512 * 1024,
+
+    /* Defaults for the rest */
+    0, 0, 0, 0, 0
 };
 
 KOS_INIT_FLAGS(INIT_DEFAULT);
 
 /* Main program: init and loop drawing polygons */
-int main() {
+int main(int argc, const char *argv[]) {
     maple_device_t *cont;
     cont_state_t *state;
 

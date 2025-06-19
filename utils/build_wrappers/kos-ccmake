@@ -13,6 +13,6 @@ if [ -z "$(which ccmake)" ]; then
 fi
 
 ccmake \
-  -DCMAKE_TOOLCHAIN_FILE="${KOS_BASE}/utils/cmake/dreamcast.toolchain.cmake" \
+  -DCMAKE_TOOLCHAIN_FILE="${KOS_BASE}/utils/cmake/${KOS_ARCH}.toolchain.cmake" \
   "$@"
 

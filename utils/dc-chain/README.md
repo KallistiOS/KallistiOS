@@ -6,7 +6,7 @@ programming.
 
 This script was adapted from earlier `dc-chain` scripts created by James
 Sumners and Jim Ursetto in the early days of the Dreamcast homebrew scene, but
-the utility has been [largely expanded and reworked](doc/changelog.txt) by many
+the utility has been [largely expanded and reworked](doc/CHANGELOG.md) by many
 [contributors](doc/CONTRIBUTORS.md) since then, and it is now included as part
 of **KallistiOS** (**KOS**).
 
@@ -88,29 +88,25 @@ options for building the toolchain(s). The normal, stable defaults have already
 been set up for you in [`Makefile.default.cfg`](Makefile.default.cfg), so most
 users can skip this step. If you'd like to make changes, copy
 [`Makefile.default.cfg`](Makefile.default.cfg) to `Makefile.cfg`; then open and
-read the options in [`Makefile.cfg`](Makefile.cfg) in your text editor. When
-building, the customizations in `Makefile.cfg` will override the defaults.
+read the options in `Makefile.cfg` in your text editor. When building, the
+customizations in `Makefile.cfg` will override the defaults.
 
 ### Toolchain profiles
 
 The following toolchain profiles are available for users to select in
-[`Makefile.cfg`](Makefile.cfg):
+`Makefile.cfg`:
 
 | Profile Name | SH4 GCC | Newlib | SH4 Binutils | ARM GCC | ARM Binutils | Notes |
 |---------:|:-------:|:----------:|:------------:|:-------:|:----------------:|:------|
-| 9.3.0-legacy | 9.3.0 | 3.3.0 | 2.34 | 8.4.0 | 2.34 | Former 'stable' option, based on GCC 9<br />GCC 9 series support ended upstream |
 | 9.5.0-winxp | 9.5.0 | 4.3.0 | 2.34 | 8.5.0 | 2.34 | Most recent versions of tools which run on Windows XP<br />GCC 9 series support ended upstream |
-| 10.5.0 | 10.5.0 | 4.3.0 | 2.43 | 8.5.0 | 2.43 | Latest release in the GCC 10 series, released 2023-07-07<br />GCC 10 series support ended upstream |
-| 11.5.0 | 11.5.0 | 4.3.0 | 2.43 | 8.5.0 | 2.43 | Latest release in the GCC 11 series, released 2024-07-19<br />GCC 11 series support ended upstream |
-| 12.3.0 | 12.3.0 | 4.3.0 | 2.43 | 8.5.0 | 2.43 | Latest release in the GCC 12 series, released 2023-05-08 |
 | **stable** | **13.2.0** | **4.3.0** | **2.43** | **8.5.0** | **2.43** | **Tested stable; based on GCC 13.2.0, released 2023-07-27** |
-| 13.3.0 | 13.3.0 | 4.4.0 | 2.43 | 8.5.0 | 2.43 | Latest release in the GCC 13 series, released 2024-05-21 |
-| 14.2.0 | 14.2.0 | 4.4.0 | 2.43 | 8.5.0 | 2.43 | Latest release in the GCC 14 series, released 2024-08-01 |
-| 13.3.1-dev | 13.3.1 (git) | 4.4.0 | 2.43 | 8.5.0 | 2.43 | Bleeding edge GCC 13 series from git |
-| 14.2.1-dev | 14.2.1 (git) | 4.4.0 | 2.43 | 8.5.0 | 2.43 | Bleeding edge GCC 14 series from git |
-| 15.0.0-dev | 15.0.0 (git) | 4.4.0 | 2.43 | 8.5.0 | 2.43 | Bleeding edge GCC 15 series from git |
-| gccrs-dev | 14.x | 4.4.0 | 2.43 | 8.5.0 | 2.43 | GCC fork for development of the GCCRS Rust compiler |
-| rustc-dev | 14.x | 4.4.0 | 2.43 | 8.5.0 | 2.43 | GCC fork for development of the libgccjit rustc GCC codegen |
+| 13.4.0 | 13.4.0 | 4.5.0 | 2.44 | 8.5.0 | 2.44 | Latest release in the GCC 13 series, released 2025-06-05 |
+| 14.3.0 | 14.3.0 | 4.5.0 | 2.44 | 8.5.0 | 2.44 | Latest release in the GCC 14 series, released 2025-05-23 |
+| 15.1.0 | 15.1.0 | 4.5.0 | 2.44 | 8.5.0 | 2.44 | Latest release in the GCC 15 series, released 2025-04-25 |
+| 13.4.1-dev | 13.3.1 (git) | 4.5.0 | 2.44 | 8.5.0 | 2.44 | Bleeding edge GCC 13 series from git |
+| 14.3.1-dev | 14.3.1 (git) | 4.5.0 | 2.44 | 8.5.0 | 2.44 | Bleeding edge GCC 14 series from git |
+| 15.1.1-dev | 15.1.1 (git) | 4.5.0 | 2.44 | 8.5.0 | 2.44 | Bleeding edge GCC 15 series from git |
+| 16.0.0-dev | 16.0.0 (git) | 4.5.0 | 2.44 | 8.5.0 | 2.44 | Bleeding edge GCC 16 series from git |
 
 The **stable** profile is the primary, widely tested target for KallistiOS, and
 is the most recent toolchain profile known to work with all example programs.
@@ -119,7 +115,7 @@ useful in compiling older software. The alternative and development profiles are
 maintained at a lower priority and are not guaranteed to build, but feel free
 to open a bug report if issues are encountered building one of these profiles.
 
-As of 2024, the use of any versions of GCC prior to 9.3.0 is deprecated for the
+As of 2025, the use of any versions of GCC prior to 9.5.0 is deprecated for the
 SH4 toolchain, and only GCC 8 series is supported for use with the ARM
 toolchain.
 
@@ -132,8 +128,8 @@ on your platform.
 
 ## Building the toolchain
 
-With prerequisites installed (and optionally a [`Makefile.cfg`](Makefile.cfg)
-set up with desired custom options), the toolchains are ready to be built.
+With prerequisites installed (and optionally a `Makefile.cfg` set up with
+desired custom options), the toolchains are ready to be built.
 
 In the `dc-chain` directory, you may run (for **BSD**, please use `gmake`
 instead):
@@ -161,7 +157,7 @@ make distclean
 ## Finished
 
 Once the toolchains have been compiled, you are ready to build KallistiOS
-itself. See the [KallistiOS documentation](../../doc/README) for further
+itself. See the [KallistiOS documentation](../../doc/README.md) for further
 instructions. If you installed `gdb` with your toolchain, you will also want to
 build the `dcload/dc-tool` debug link utilities to perform remote debugging of
 **Dreamcast** programs. Further details can be found in the documentation for

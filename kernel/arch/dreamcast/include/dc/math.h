@@ -2,7 +2,7 @@
 
    dc/math.h
    Copyright (C) 2023 Paul Cercueil
-
+   Copyright (C) 2025 Ruslan Rostovtsev
 */
 
 /**
@@ -26,12 +26,20 @@ __BEGIN_DECLS
 */
 
 /**
-    \brief  Returns the bit-reverse value of the argument (where MSB
+    \brief  Returns the bit-reverse of a 32-bit value (where MSB
             becomes LSB and vice-versa).
 
     \return the bit-reverse value of the argument.
 */
 unsigned int bit_reverse(unsigned int value);
+
+/**
+    \brief  Returns the bit-reverse of an 8-bit value (where MSB
+            becomes LSB and vice-versa).
+
+    \return the bit-reverse value of the argument.
+*/
+unsigned char bit_reverse8(unsigned char value);
 
 /** @} */
 

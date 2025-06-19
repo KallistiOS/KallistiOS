@@ -2,7 +2,7 @@
 
    dc/g1ata.h
    Copyright (C) 2013, 2014 Lawrence Sebald
-   Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024, 2025 Ruslan Rostovtsev
 */
 
 /** \file    dc/g1ata.h
@@ -106,6 +106,61 @@ __BEGIN_DECLS
     about this one at all. This bit is irrelevant for packet devices.
 */
 #define G1_ATA_LBA_MODE     0x40
+/** @} */
+
+/** \defgroup g1ata_protect   G1 ATA protection
+    \brief                 G1 Bus and DMA protection
+    \ingroup                g1ata
+    @{
+*/
+/** \brief   G1 ATA bus protection register.
+    \ingroup g1ata
+
+    Used to check BIOS contents in the Holly.
+*/
+#define G1_ATA_BUS_PROTECTION       0x005F74E4
+
+/** \brief   G1 ATA bus protection status register.
+    \ingroup g1ata
+
+    Used to determine the status of the check in the Holly.
+*/
+#define G1_ATA_BUS_PROTECTION_STATUS 0x005F74EC
+
+/** \brief   G1 ATA bus protection in progress state.
+    \ingroup g1ata
+*/
+#define G1_ATA_BUS_PROTECTION_STATUS_IN_PROGRESS 0x00
+
+/** \brief   G1 ATA bus protection failed state.
+    \ingroup g1ata
+*/
+#define G1_ATA_BUS_PROTECTION_STATUS_FAILED      0x02
+
+/** \brief   G1 ATA bus protection passed state.
+    \ingroup g1ata
+*/
+#define G1_ATA_BUS_PROTECTION_STATUS_PASSED      0x03
+
+/** \brief   G1 ATA DMA protection register.
+    \ingroup g1ata
+*/
+#define G1_ATA_DMA_PROTECTION    0x005F74B8
+
+/** \brief   G1 ATA DMA protection register code.
+    \ingroup g1ata
+*/
+#define G1_ATA_DMA_UNLOCK_CODE   0x8843
+
+/** \brief   System memory DMA protection unlock value.
+    \ingroup g1ata
+*/
+#define G1_ATA_DMA_UNLOCK_SYSMEM (G1_ATA_DMA_UNLOCK_CODE << 16 | 0x407F)
+
+/** \brief   All memory DMA protection unlock value.
+    \ingroup g1ata
+*/
+#define G1_ATA_DMA_UNLOCK_ALLMEM (G1_ATA_DMA_UNLOCK_CODE << 16 | 0x007F)
 /** @} */
 
 /** \brief   Is there a G1 DMA in progress currently?
@@ -281,6 +336,10 @@ int g1_ata_read_lba(uint64_t sector, size_t count, void *buf);
                             a PIO transfer function like g1_ata_read_lba()
                             instead.
 
+    \note                   If the buffer address points to the P2 memory area,
+                            the caller function will be responsible for ensuring
+                            memory coherency.
+
     \par    Error Conditions:
     \em     EIO - an I/O error occurred in reading data \n
     \em     ENXIO - ATA support not initialized or no device attached \n
@@ -343,6 +402,10 @@ int g1_ata_write_lba(uint64_t sector, size_t count, const void *buf);
                             function, DMA mode is not supported. You should use
                             a PIO transfer function like g1_ata_write_lba()
                             instead.
+
+    \note                   If the buffer address points to the P2 memory area,
+                            the caller function will be responsible for ensuring
+                            memory coherency.
 
     \par    Error Conditions:
     \em     ENXIO - ATA support not initialized or no device attached \n

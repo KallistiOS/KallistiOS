@@ -1,283 +1,251 @@
-/*  pthread.h
- *
- *  Written by Joel Sherrill <joel@OARcorp.com>.
- *
- *  COPYRIGHT (c) 1989-2000.
- *  On-Line Applications Research Corporation (OAR).
- *
- *  Permission to use, copy, modify, and distribute this software for any
- *  purpose without fee is hereby granted, provided that this entire notice
- *  is included in all copies of any software which is or includes a copy
- *  or modification of this software.
- *
- *  THIS SOFTWARE IS BEING PROVIDED "AS IS", WITHOUT ANY EXPRESS OR IMPLIED
- *  WARRANTY.  IN PARTICULAR,  THE AUTHOR MAKES NO REPRESENTATION
- *  OR WARRANTY OF ANY KIND CONCERNING THE MERCHANTABILITY OF THIS
- *  SOFTWARE OR ITS FITNESS FOR ANY PARTICULAR PURPOSE.
- *
- */
+/* KallistiOS ##version##
 
-// Need a local copy of this because the default one is buggy.
+   pthread.h
+   Copyright (C) 2023, 2024 Lawrence Sebald
 
-/** \file   pthread.h
-    \brief  POSIX-compatibile (sorta) threading support.
-    \ingroup threading_posix
-
-    This file was imported (with a few changes) from Newlib. If you really want
-    to know about the functions in here, you should probably consult the Single
-    Unix Specification and the POSIX specification. Here's a link to that:
-    http://pubs.opengroup.org/onlinepubs/007904875/basedefs/pthread.h.html
-
-    The rest of this file will remain undocumented, as it isn't really a part of
-    KOS proper... Also, doxygen tends to mangle this whole thing anyway...
 */
 
-/** \cond */
+/** \file    pthread.h
+    \brief   POSIX threading support.
+    \ingroup threading_posix
 
-#ifndef __PTHREAD_h
-#define __PTHREAD_h
+    This file contains functions and declarations related to POSIX threading
+    support. Please note that this support is not exactly actually POSIX-
+    compliant, but it provides much of the functionality that is useful in
+    porting code to KOS.
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+    It is not recommended to use this POSIX threading support in code designed
+    specifically for KOS -- instead it is recommended to use the built-in
+    threading support provided in-kernel. Most of the support defined in this
+    file is just wrapper functions around the in-kernel functionality.
 
-#include <unistd.h>
-#include <sys/_pthread.h>
+    In-depth documentation of POSIX threading can be found in IEEE Std
+    1003.1-2017. An online version of the documentation for this header in that
+    specification can be found at the following URL:
+    https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/pthread.h.html
 
-#if defined(_POSIX_THREADS)
+    \author Lawrence Sebald
+*/
 
-#include <sys/types.h>
+/** \cond **/
+
+#ifndef __PTHREAD_H
+#define __PTHREAD_H
+
+#include <sys/cdefs.h>
+#include <sys/features.h>
+#include <sys/_pthreadtypes.h>
+
+#include <sched.h>
 #include <time.h>
-#include <sys/sched.h>
 
-    /* Register Fork Handlers, P1003.1c/Draft 10, P1003.1c/Draft 10, p. 27
+__BEGIN_DECLS
 
-        If an OS does not support processes, then it falls under this provision
-        and may not provide pthread_atfork():
+/* Process shared/private flag. Since we don't support multiple processes, these
+   don't actually do anything different. */
+#define PTHREAD_PROCESS_PRIVATE     0
+#define PTHREAD_PROCESS_SHARED      1
 
-        "Either the implementation shall support the pthread_atfork() function
-         as described above or the pthread_atfork() function shall not be
-         provided."
+/* Scope handling. We only support PTHREAD_SCOPE_SYSTEM (although, we don't
+   actually support processes, so maybe they should be the same?) */
+#define PTHREAD_SCOPE_PROCESS       0
+#define PTHREAD_SCOPE_SYSTEM        1
 
-        NOTE: RTEMS does not provide pthread_atfork().  */
+#define PTHREAD_CANCEL_DISABLE      0
+#define PTHREAD_CANCEL_ENABLE       1
 
-#if !defined(__rtems__)
-    int pthread_atfork(void (*prepare)(void), void (*parent)(void),
-                    void (*child)(void));
-#endif
-
-    /* Mutex Initialization Attributes, P1003.1c/Draft 10, p. 81 */
-
-    int pthread_mutexattr_init(pthread_mutexattr_t *attr);
-    int pthread_mutexattr_destroy(pthread_mutexattr_t *attr);
-    int pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr, int  *pshared);
-    int pthread_mutexattr_setpshared(pthread_mutexattr_t *attr, int pshared);
-
-    /* Initializing and Destroying a Mutex, P1003.1c/Draft 10, p. 87 */
-
-    int pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr);
-    int pthread_mutex_destroy(pthread_mutex_t *mutex);
-
-    /* This is used to statically initialize a pthread_mutex_t. Example:
-
-        pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-     */
-
-#define PTHREAD_MUTEX_INITIALIZER  MUTEX_INITIALIZER
-
-    /*  Locking and Unlocking a Mutex, P1003.1c/Draft 10, p. 93
-        NOTE: P1003.4b/D8 adds pthread_mutex_timedlock(), p. 29 */
-
-    int pthread_mutex_lock(pthread_mutex_t *mutex);
-    int pthread_mutex_trylock(pthread_mutex_t *mutex);
-    int pthread_mutex_unlock(pthread_mutex_t *mutex);
-
-#if defined(_POSIX_TIMEOUTS)
-
-    int pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec *timeout);
-
-#endif /* _POSIX_TIMEOUTS */
-
-    /* Condition Variable Initialization Attributes, P1003.1c/Draft 10, p. 96 */
-
-    int pthread_condattr_init(pthread_condattr_t *attr);
-    int pthread_condattr_destroy(pthread_condattr_t *attr);
-    int pthread_condattr_getpshared(const pthread_condattr_t *attr, int *pshared);
-    int pthread_condattr_setpshared(pthread_condattr_t *attr, int pshared);
-
-    /* Initializing and Destroying a Condition Variable, P1003.1c/Draft 10, p. 87 */
-
-    int pthread_cond_init(pthread_cond_t *cond, const pthread_condattr_t *attr);
-    int pthread_cond_destroy(pthread_cond_t *cond);
-
-    /* This is used to statically initialize a pthread_cond_t. Example:
-
-        pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
-     */
-
-#define PTHREAD_COND_INITIALIZER  COND_INITIALIZER
-
-    /* Broadcasting and Signaling a Condition, P1003.1c/Draft 10, p. 101 */
-
-    int pthread_cond_signal(pthread_cond_t *cond);
-    int pthread_cond_broadcast(pthread_cond_t *cond);
-
-    /* Waiting on a Condition, P1003.1c/Draft 10, p. 105 */
-
-    int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex);
-
-    int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex,
-                const struct timespec *abstime);
-
-#if defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
-
-    /* Thread Creation Scheduling Attributes, P1003.1c/Draft 10, p. 120 */
-
-    int pthread_attr_setscope(pthread_attr_t *attr, int contentionscope);
-    int pthread_attr_getscope(const pthread_attr_t *attr, int *contentionscope);
-    int pthread_attr_setinheritsched(pthread_attr_t *attr, int inheritsched);
-    int pthread_attr_getinheritsched(const pthread_attr_t *attr, int *inheritsched);
-    int pthread_attr_setschedpolicy(pthread_attr_t *attr, int policy);
-    int pthread_attr_getschedpolicy(const pthread_attr_t *attr, int *policy);
-
-#endif /* defined(_POSIX_THREAD_PRIORITY_SCHEDULING) */
-
-    int pthread_attr_setschedparam(pthread_attr_t *attr, const struct sched_param *param);
-    int pthread_attr_getschedparam(const pthread_attr_t *attr, struct sched_param *param);
-
-#if defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
-
-    /* Dynamic Thread Scheduling Parameters Access, P1003.1c/Draft 10, p. 124 */
-
-    int pthread_getschedparam(pthread_t thread, int *policy, struct sched_param *param);
-    int pthread_setschedparam(pthread_t thread, int policy, struct sched_param *param);
-
-#endif /* defined(_POSIX_THREAD_PRIORITY_SCHEDULING) */
-
-#if defined(_POSIX_THREAD_PRIO_INHERIT) || defined(_POSIX_THREAD_PRIO_PROTECT)
-
-    /* Mutex Initialization Scheduling Attributes, P1003.1c/Draft 10, p. 128 */
-
-    int pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr, int protocol);
-    int pthread_mutexattr_getprotocol(const pthread_mutexattr_t *attr, int *protocol);
-    int pthread_mutexattr_setprioceiling(pthread_mutexattr_t *attr, int prioceiling);
-    int pthread_mutexattr_getprioceiling(const pthread_mutexattr_t *attr, int *prioceiling);
-
-#endif /* _POSIX_THREAD_PRIO_INHERIT || _POSIX_THREAD_PRIO_PROTECT */
-
-#if defined(_POSIX_THREAD_PRIO_PROTECT)
-
-    /* Change the Priority Ceiling of a Mutex, P1003.1c/Draft 10, p. 131 */
-
-    int pthread_mutex_setprioceiling(pthread_mutex_t *mutex, int prioceiling, int *old_ceiling);
-    int pthread_mutex_getprioceiling(pthread_mutex_t *mutex, int *prioceiling);
-
-#endif /* _POSIX_THREAD_PRIO_PROTECT */
-
-    /* Thread Creation Attributes, P1003.1c/Draft 10, p, 140 */
-
-    int pthread_attr_init(pthread_attr_t *attr);
-    int pthread_attr_destroy(pthread_attr_t *attr);
-    int pthread_attr_getstacksize(const pthread_attr_t *attr, size_t *stacksize);
-    int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize);
-    int pthread_attr_getstackaddr(const pthread_attr_t *attr, void **stackaddr);
-    int pthread_attr_setstackaddr(pthread_attr_t  *attr, void *stackaddr);
-    int pthread_attr_getdetachstate(const pthread_attr_t *attr, int *detachstate);
-    int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate);
-
-    /* Thread Creation, P1003.1c/Draft 10, p. 144 */
-
-    int pthread_create(pthread_t *thread, const pthread_attr_t  *attr,
-                void * (*start_routine)(void *), void *arg);
-
-    /* Wait for Thread Termination, P1003.1c/Draft 10, p. 147 */
-
-    int pthread_join(pthread_t thread, void **value_ptr);
-
-    /* Detaching a Thread, P1003.1c/Draft 10, p. 149 */
-
-    int pthread_detach(pthread_t thread);
-
-    /* Thread Termination, p1003.1c/Draft 10, p. 150 */
-
-    void pthread_exit(void *value_ptr);
-
-    /* Get Calling Thread's ID, p1003.1c/Draft 10, p. XXX */
-
-    pthread_t pthread_self(void);
-
-    /* Compare Thread IDs, p1003.1c/Draft 10, p. 153 */
-
-    int pthread_equal(pthread_t t1, pthread_t t2);
-
-    /* Dynamic Package Initialization */
-
-    /* This is used to statically initialize a pthread_once_t. Example:
-
-        pthread_once_t once = PTHREAD_ONCE_INIT;
-
-        NOTE:  This is named inconsistently -- it should be INITIALIZER.  */
-
-#define PTHREAD_ONCE_INIT  { 1, 0 }  /* is initialized and not run */
-
-    int pthread_once(pthread_once_t *once_control, void (*init_routine)(void));
-
-    /* Thread-Specific Data Key Create, P1003.1c/Draft 10, p. 163 */
-
-    int pthread_key_create(pthread_key_t *key, void (*destructor)(void *));
-
-    /* Thread-Specific Data Management, P1003.1c/Draft 10, p. 165 */
-
-    int pthread_setspecific(pthread_key_t key, const void *value);
-    void *pthread_getspecific(pthread_key_t key);
-
-    /* Thread-Specific Data Key Deletion, P1003.1c/Draft 10, p. 167 */
-
-    int pthread_key_delete(pthread_key_t key);
-
-    /* Execution of a Thread, P1003.1c/Draft 10, p. 181 */
-
-#define PTHREAD_CANCEL_ENABLE  0
-#define PTHREAD_CANCEL_DISABLE 1
-
-#define PTHREAD_CANCEL_DEFERRED 0
+#define PTHREAD_CANCEL_DEFERRED     0
 #define PTHREAD_CANCEL_ASYNCHRONOUS 1
 
-#define PTHREAD_CANCELED ((void *) -1)
+#define PTHREAD_CREATE_DETACHED     0
+#define PTHREAD_CREATE_JOINABLE     1
 
-    int pthread_cancel(pthread_t thread);
+#define PTHREAD_STACK_MIN           256
+#define PTHREAD_STACK_MIN_ALIGNMENT 32
 
-    /* Setting Cancelability State, P1003.1c/Draft 10, p. 183 */
+/* Threads */
+int pthread_create(pthread_t *__RESTRICT thread,
+                   const pthread_attr_t *__RESTRICT attr,
+                   void *(*start_routine)(void *), void *__RESTRICT arg);
+int pthread_detach(pthread_t thread);
+int pthread_equal(pthread_t t1, pthread_t t2);
+void pthread_exit(void *value_ptr);
+int pthread_join(pthread_t thread, void **value_ptr);
+pthread_t pthread_self(void);
+int pthread_setschedprio(pthread_t thread, int prio);
 
-    int pthread_setcancelstate(int state, int *oldstate);
-    int pthread_setcanceltype(int type, int *oldtype);
-    void pthread_testcancel(void);
+#if __GNU_VISIBLE || __BSD_VISIBLE
+int pthread_getname_np(pthread_t thread, char *buf, size_t buflen);
+int pthread_setname_np(pthread_t thread, const char *buf);
+#endif /* __GNU_VISIBLE || __BSD_VISIBLE */
 
-    /* Establishing Cancellation Handlers, P1003.1c/Draft 10, p. 184 */
+#if __BSD_VISIBLE
+int pthread_getprio(pthread_t thread);
+int pthread_setprio(pthread_t thread, int prio);
+#endif /* __BSD_VISIBLE */
 
-    void pthread_cleanup_push(void (*routine)(void *), void *arg);
-    void pthread_cleanup_pop(int execute);
+/* Thread attributes */
+int pthread_attr_init(pthread_attr_t *attr);
+int pthread_attr_destroy(pthread_attr_t *attr);
 
-#if defined(_POSIX_THREAD_CPUTIME)
+int pthread_attr_getdetachstate(const pthread_attr_t *attr,
+                                int *detachstate);
+int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate);
 
-    /* Accessing a Thread CPU-time Clock, P1003.4b/D8, p. 58 */
+int pthread_attr_getguardsize(const pthread_attr_t *__RESTRICT attr,
+                              size_t *__RESTRICT guardsize);
+int pthread_attr_setguardsize(pthread_attr_t *attr, size_t guardsize);
 
-    int pthread_getcpuclockid(pthread_t thread_id, clockid_t *clock_id);
+int pthread_attr_getschedparam(const pthread_attr_t *__RESTRICT attr,
+                               struct sched_param *__RESTRICT param);
+int pthread_attr_setschedparam(pthread_attr_t *__RESTRICT attr,
+                               const struct sched_param *__RESTRICT par);
+int pthread_attr_getstack(const pthread_attr_t *__RESTRICT attr,
+                          void **__RESTRICT stackaddr,
+                          size_t *__RESTRICT stacksize);
+int pthread_attr_setstack(pthread_attr_t *__RESTRICT attr,
+                          void *__RESTRICT stackaddr, size_t stacksize);
+int pthread_attr_getstacksize(const pthread_attr_t *__RESTRICT attr,
+                              size_t *__RESTRICT stacksize);
+int pthread_attr_setstacksize(pthread_attr_t *attr,
+                              size_t stacksize);
+int pthread_attr_getscope(const pthread_attr_t *__RESTRICT attr,
+                          int *__RESTRICT contentionscope);
+int pthread_attr_setscope(pthread_attr_t *attr, int contentionscope);
+int pthread_attr_getname_np(const pthread_attr_t *__RESTRICT attr,
+                            char *__RESTRICT buf, size_t buflen);
+int pthread_attr_setname_np(pthread_attr_t *__RESTRICT attr,
+                            const char *__RESTRICT name);
 
-    /* CPU-time Clock Thread Creation Attribute, P1003.4b/D8, p. 59 */
+/* Thread cancellation (Not supported) */
+int pthread_cancel(pthread_t thd);
+void pthread_testcancel(void);
+int pthread_setcancelstate(int state, int *oldstate);
+int pthread_setcanceltype(int type, int *oldtype);
 
-    int pthread_attr_setcputime(pthread_attr_t *attr, int clock_allowed);
+/* Condition variables */
+int pthread_cond_init(pthread_cond_t *__RESTRICT cond,
+                      const pthread_condattr_t *__RESTRICT attr);
+int pthread_cond_destroy(pthread_cond_t *cond);
 
-    int pthread_attr_getcputime(pthread_attr_t *attr, int *clock_allowed);
+#define PTHREAD_COND_INITIALIZER    { .__data = { 0 } }
 
-#endif /* defined(_POSIX_THREAD_CPUTIME) */
+int pthread_cond_broadcast(pthread_cond_t *cond);
+int pthread_cond_signal(pthread_cond_t *cond);
+int pthread_cond_wait(pthread_cond_t *__RESTRICT cond,
+                      pthread_mutex_t *__RESTRICT mutex);
+int pthread_cond_timedwait(pthread_cond_t *__RESTRICT cond,
+                           pthread_mutex_t *__RESTRICT mutex,
+                           const struct timespec *__RESTRICT abstime);
 
-#endif /* defined(_POSIX_THREADS) */
+int pthread_condattr_init(pthread_condattr_t *attr);
+int pthread_condattr_destroy(pthread_condattr_t *attr);
 
-#ifdef __cplusplus
-}
-#endif
+int pthread_condattr_getclock(const pthread_condattr_t *__RESTRICT attr,
+                              clockid_t *__RESTRICT clock_id);
+int pthread_condattr_setclock(pthread_condattr_t *attr,
+                              clockid_t clock_id);
 
-#endif
+/* Thread-specific data */
+typedef int pthread_key_t;
+int pthread_key_create(pthread_key_t *key, void (*destructor)(void *));
+int pthread_key_delete(pthread_key_t key);
+void *pthread_getspecific(pthread_key_t key);
+int pthread_setspecific(pthread_key_t key, const void *value);
+
+/* Mutexes */
+int pthread_mutex_init(pthread_mutex_t *__RESTRICT mutex,
+                       const pthread_mutexattr_t *__RESTRICT attr);
+int pthread_mutex_destroy(pthread_mutex_t *mutex);
+
+#define PTHREAD_MUTEX_INITIALIZER   { .__data = { 0 } }
+#define PTHREAD_MUTEX_NORMAL        0
+#define PTHREAD_MUTEX_DEFAULT       PTHREAD_MUTEX_NORMAL
+#define PTHREAD_MUTEX_ERRORCHECK    2
+#define PTHREAD_MUTEX_RECURSIVE     3
+
+#define PTHREAD_MUTEX_ROBUST        0
+#define PTHREAD_MUTEX_STALLED       1
+
+int pthread_mutex_lock(pthread_mutex_t *mutex);
+int pthread_mutex_trylock(pthread_mutex_t *mutex);
+int pthread_mutex_timedlock(pthread_mutex_t *__RESTRICT mutex,
+                            const struct timespec *__RESTRICT abstime);
+int pthread_mutex_unlock(pthread_mutex_t *mutex);
+int pthread_mutex_consistent(pthread_mutex_t *mutex);
+
+int pthread_mutexattr_init(pthread_mutexattr_t *attr);
+int pthread_mutexattr_destroy(pthread_mutexattr_t *attr);
+
+int pthread_mutexattr_getrobust(const pthread_mutexattr_t *__RESTRICT at,
+                                int *__RESTRICT robust);
+int pthread_mutexattr_setrobust(pthread_mutexattr_t *attr, int robust);
+
+int pthread_mutexattr_gettype(const pthread_mutexattr_t *__RESTRICT attr,
+                              int *__RESTRICT type);
+int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type);
+
+/* Dynamic package initialization */
+typedef volatile int pthread_once_t;
+#define PTHREAD_ONCE_INIT           0
+
+int pthread_once(pthread_once_t *once_control, void (*init_routine)(void));
+
+/* Reader/writer locks */
+int pthread_rwlock_init(pthread_rwlock_t *__RESTRICT rwlock,
+                        const pthread_rwlockattr_t *__RESTRICT attr);
+int pthread_rwlock_destroy(pthread_rwlock_t *rwlock);
+
+#define PTHREAD_RWLOCK_INITIALIZER  { .__data = { 0 } }
+
+int pthread_rwlock_rdlock(pthread_rwlock_t *rwlock);
+int pthread_rwlock_timedrdlock(pthread_rwlock_t *__RESTRICT rwlock,
+                               const struct timespec *__RESTRICT abstm);
+int pthread_rwlock_tryrdlock(pthread_rwlock_t *rwlock);
+int pthread_rwlock_wrlock(pthread_rwlock_t *rwlock);
+int pthread_rwlock_timedwrlock(pthread_rwlock_t *__RESTRICT rwlock,
+                               const struct timespec *__RESTRICT abstm);
+int pthread_rwlock_trywrlock(pthread_rwlock_t *rwlock);
+int pthread_rwlock_unlock(pthread_rwlock_t *rwlock);
+
+int pthread_rwlockattr_init(pthread_rwlockattr_t *attr);
+int pthread_rwlockattr_destroy(pthread_rwlockattr_t *attr);
+
+/* Spin locks */
+typedef volatile int pthread_spinlock_t;
+
+int pthread_spin_init(pthread_spinlock_t *lock, int pshared);
+int pthread_spin_destroy(pthread_spinlock_t *lock);
+int pthread_spin_lock(pthread_spinlock_t *lock);
+int pthread_spin_trylock(pthread_spinlock_t *lock);
+int pthread_spin_unlock(pthread_spinlock_t *lock);
+
+/* Barriers */
+#define PTHREAD_BARRIER_SERIAL_THREAD  0x7fffffff
+
+int pthread_barrier_init(pthread_barrier_t *__RESTRICT barrier,
+                         const pthread_barrierattr_t *__RESTRICT attr,
+                         unsigned count);
+int pthread_barrier_destroy(pthread_barrier_t *barrier);
+int pthread_barrier_wait(pthread_barrier_t *barrier);
+
+int pthread_barrierattr_init(pthread_barrierattr_t *attr);
+int pthread_barrierattr_destroy(pthread_barrierattr_t *attr);
+
+/* Misc. */
+int pthread_getconcurrency(void);
+int pthread_setconcurrency(int new_level);
+int pthread_atfork(void (*prepare)(void), void (*parent)(void),
+                   void (*child)(void));
+
+#if __GNU_VISIBLE || __BSD_VISIBLE
+/* Technically, the BSD prototype for this is to return void, not int.
+   Oh well... It always returns 0 anyway. */
+int pthread_yield(void);
+#endif /* __GNU_VISIBLE || __BSD_VISIBLE */
+
+__END_DECLS
+
 /** \endcond */
-/* end of include file */
+
+#endif /* !__PTHREAD_H */

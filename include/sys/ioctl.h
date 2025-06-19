@@ -6,7 +6,7 @@
 
 */
 
-/** \file    sys/uio.h
+/** \file    sys/ioctl.h
     \brief   Header for terminal control operations.
     \ingroup vfs_posix
 
@@ -19,8 +19,6 @@
 
 #ifndef __SYS_IOCTL_H
 #define __SYS_IOCTL_H
-
-#include <sys/termios.h>
 
 #include <sys/cdefs.h>
 

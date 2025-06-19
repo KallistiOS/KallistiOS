@@ -39,8 +39,18 @@ __BEGIN_DECLS
 /** \brief  The maximum number of streams that can be allocated at once. */
 #define SND_STREAM_MAX 4
 
-/** \brief  The maximum buffer size for a stream. */
-#define SND_STREAM_BUFFER_MAX 0x10000
+/** \brief  The maximum buffer size for each channel of PCM 16-bit stream. */
+#define SND_STREAM_BUFFER_MAX_PCM16 (128 << 10)
+
+/** \brief  The maximum buffer size for each channel of PCM 8-bit stream. */
+#define SND_STREAM_BUFFER_MAX_PCM8  (64 << 10)
+
+/** \brief  The maximum buffer size for each channel of ADPCM stream. */
+#define SND_STREAM_BUFFER_MAX_ADPCM (32 << 10)
+
+/** \brief  The maximum buffer size for each channel of streams by default
+            and for backward compatibility. */
+#define SND_STREAM_BUFFER_MAX       (64 << 10)
 
 /** \brief  Stream handle type.
 
@@ -181,13 +191,12 @@ void snd_stream_filter_remove(snd_stream_hnd_t hnd,
 
 /** \brief  Prefill the stream buffers.
 
-    This function prefills the stream buffers before starting it. This is
-    implicitly called by snd_stream_start(), so there's probably no good reason
-    to call this yourself.
+    This function has no effect. The stream is prefilled on start.
+    This is deprecated and should be removed if used.
 
-    \param  hnd             The stream to prefill buffers on.
 */
-void snd_stream_prefill(snd_stream_hnd_t hnd);
+static const int __snd_stream_prefill   __depr("snd_stream_prefill has no effect and should be removed") = 0;
+#define snd_stream_prefill(x)  ((void)__snd_stream_prefill)
 
 /** \brief  Initialize the stream system.
 

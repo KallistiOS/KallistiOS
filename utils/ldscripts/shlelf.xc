@@ -3,17 +3,51 @@ OUTPUT_FORMAT("elf32-shl", "elf32-shl",
 	      "elf32-shl")
 OUTPUT_ARCH(sh)
 ENTRY(start)
-SEARCH_DIR("/usr/local/dc-new/sh-elf/sh-elf/lib");
+LOAD_OFFSET = DEFINED(LOAD_OFFSET) ? LOAD_OFFSET : 0x8c010000 ;
+
 SECTIONS
 {
   /* Read-only sections, merged into text segment: */
-  PROVIDE (__executable_start = 0x8c010000); . = 0x8c010000;
+  PROVIDE (__executable_start = LOAD_OFFSET); . = LOAD_OFFSET;
   .text           :
   {
     *(.text .stub .text.* .gnu.linkonce.t.*)
     /* .gnu.warning sections are handled specially by elf32.em.  */
     *(.gnu.warning)
   } =0
+
+  /* Custom sections, aligned to the icache size */
+  .sub0 : ALIGN(8192) {
+    *(.sub0*)
+  }
+  .sub1 : ALIGN(8192) {
+    *(.sub1*)
+  }
+  .sub2 : ALIGN(8192) {
+    *(.sub2*)
+  }
+  .sub3 : ALIGN(8192) {
+    *(.sub3*)
+  }
+  .sub4 : ALIGN(8192) {
+    *(.sub4*)
+  }
+  .sub5 : ALIGN(8192) {
+    *(.sub5*)
+  }
+  .sub6 : ALIGN(8192) {
+    *(.sub6*)
+  }
+  .sub7 : ALIGN(8192) {
+    *(.sub7*)
+  }
+  .sub8 : ALIGN(8192) {
+    *(.sub8*)
+  }
+  .sub9 : ALIGN(8192) {
+    *(.sub9*)
+  }
+
   .init           :
   {
     KEEP (*(.init))

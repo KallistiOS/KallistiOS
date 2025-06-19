@@ -6,7 +6,6 @@
 
 #include <dc/ubc.h>
 
-#include <arch/types.h>
 #include <arch/memory.h>
 #include <arch/irq.h>
 

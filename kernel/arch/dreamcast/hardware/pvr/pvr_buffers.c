@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <dc/pvr.h>
 #include <dc/video.h>
+#include <kos/regfield.h>
+
 #include "pvr_internal.h"
 
 /*
@@ -28,13 +30,13 @@
 
 #define IS_ALIGNED(x, m) ((x) % (m) == 0)
 
-#define LIST_ENABLED(i) (pvr_state.lists_enabled & (1 << (i)))
+#define LIST_ENABLED(i) (pvr_state.lists_enabled & BIT(i))
 
 
 /* Fill Tile Matrix buffers. This function takes a base address and sets up
    the rendering structures there. Each tile of the screen (32x32) receives
    a small buffer space. */
-static void pvr_init_tile_matrix(int which, int presort) {
+static void pvr_init_tile_matrix(int which, bool presort) {
     volatile pvr_ta_buffers_t   *buf;
     int     x, y, tn;
     uint32      *vr;  /* Note: We're working in 4-byte pointer maths in this function */
@@ -121,18 +123,18 @@ static void pvr_init_tile_matrix(int which, int presort) {
         }
     }
 
-    vr[-6] |= 1 << 31;
+    vr[-6] |= BIT(31);
 }
 
 /* Fill all tile matrices */
-void pvr_init_tile_matrices(int presort) {
+void pvr_init_tile_matrices(bool presort) {
     int i;
 
     for(i = 0; i < 2; i++)
         pvr_init_tile_matrix(i, presort);
 }
 
-void pvr_set_presort_mode(int presort) {
+void pvr_set_presort_mode(bool presort) {
     pvr_init_tile_matrix(pvr_state.ta_target, presort);
 }
 
@@ -151,7 +153,7 @@ up and placed at 0x000000 and 0x400000.
 #define BUF_ALIGN_MASK (BUF_ALIGN - 1)
 #define APPLY_ALIGNMENT(addr) (((addr) + BUF_ALIGN_MASK) & ~BUF_ALIGN_MASK)
 
-void pvr_allocate_buffers(pvr_init_params_t *params) {
+void pvr_allocate_buffers(const pvr_init_params_t *params) {
     volatile pvr_ta_buffers_t   *buf;
     volatile pvr_frame_buffers_t    *fbuf;
     int i, j;
@@ -192,12 +194,12 @@ void pvr_allocate_buffers(pvr_init_params_t *params) {
        for each poly type */
     opb_total_size = 0;
 
-    /* Previously, we specified 1 << 20 to say that the OPB grows "down" when
+    /* Previously, we specified BIT(20) to say that the OPB grows "down" when
        the TA needs more than one. To make it grow "up" instead (increasing addresses),
        we set 0 as the default value.
      */
 #if 0
-    pvr_state.list_reg_mask = 1 << 20;
+    pvr_state.list_reg_mask = BIT(20);
 #else
     pvr_state.list_reg_mask = 0;
 #endif
@@ -228,7 +230,7 @@ void pvr_allocate_buffers(pvr_init_params_t *params) {
         }
 
         if(sconst > 0) {
-            pvr_state.lists_enabled |= (1 << i);
+            pvr_state.lists_enabled |= BIT(i);
             pvr_state.list_reg_mask |= sconst << (4 * i);
         }
     }

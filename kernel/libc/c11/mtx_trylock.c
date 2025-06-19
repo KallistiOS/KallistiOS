@@ -9,7 +9,7 @@
 
 int mtx_trylock(mtx_t *mtx) {
     if(mutex_trylock(mtx)) {
-        if(errno == EAGAIN)
+        if(errno == EBUSY)
             return thrd_busy;
 
         return thrd_error;

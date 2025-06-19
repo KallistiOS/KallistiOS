@@ -48,7 +48,6 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
 #include <kos/thread.h>
 #include <kos/mutex.h>
 
@@ -82,7 +81,7 @@ typedef struct condvar {
     \par    Error Conditions:
     \em     ENOMEM - out of memory
 */
-condvar_t *cond_create() __depr("Use cond_init or COND_INITIALIZER.");
+condvar_t *cond_create(void) __depr("Use cond_init or COND_INITIALIZER.");
 
 /** \brief  Initialize a condition variable.
 

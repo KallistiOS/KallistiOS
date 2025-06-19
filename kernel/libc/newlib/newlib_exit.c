@@ -7,7 +7,7 @@
 
 #include <arch/arch.h>
 #include <kos/dbglog.h>
-#include <stdbool.h>
+#include <kos/init_base.h>
 
 extern void arch_exit_handler(int ret_code) __noreturn;
 

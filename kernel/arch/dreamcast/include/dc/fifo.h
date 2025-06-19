@@ -32,7 +32,7 @@ __BEGIN_DECLS
     Accessing this value provides the current status of all FIFOs.
 
 */
-#define FIFO_STATUS     (*(vuint32 const *)0xa05f688c)
+#define FIFO_STATUS     (*(volatile uint32_t const *)0xa05f688c)
 
 /** \name        FIFO Status Indicators
  

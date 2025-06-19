@@ -1703,7 +1703,7 @@ int fs_ext2_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
     /* Root directory ext2 device */
     if(len == 0 || (len == 1 && *path == '/')) {
         memset(st, 0, sizeof(struct stat));
-        st->st_dev = (dev_t)((ptr_t)vfs);
+        st->st_dev = (dev_t)((uintptr_t)vfs);
         st->st_mode = S_IFDIR | S_IRUSR | S_IRGRP | S_IROTH | S_IXUSR |
             S_IXGRP | S_IXOTH | S_IWUSR | S_IWGRP | S_IWOTH;
         st->st_size = -1;
@@ -1723,7 +1723,7 @@ int fs_ext2_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
 
     /* Fill in the structure */
     memset(st, 0, sizeof(struct stat));
-    st->st_dev = (dev_t)((ptr_t)vfs);
+    st->st_dev = (dev_t)((uintptr_t)vfs);
     st->st_ino = inode_num;
     st->st_mode = inode->i_mode & 0x0FFF;
     st->st_nlink = inode->i_links_count;
@@ -1823,7 +1823,7 @@ static int fs_ext2_fstat(void *h, struct stat *st) {
 
     /* Fill in the structure */
     memset(st, 0, sizeof(struct stat));
-    st->st_dev = (dev_t)((ptr_t)fs->vfsh);
+    st->st_dev = (dev_t)((uintptr_t)fs->vfsh);
     st->st_ino = fh[fd].inode_num;
     st->st_mode = inode->i_mode & 0x0FFF;
     st->st_nlink = inode->i_links_count;

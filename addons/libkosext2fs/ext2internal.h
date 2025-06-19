@@ -45,13 +45,15 @@ struct ext2fs_struct {
 #define EXT2_FS_FLAG_SB_DIRTY   1
 
 #ifdef EXT2_NOT_IN_KOS
-#include <stdio.h>
-#define DBG_DEBUG 0
-#define DBG_KDEBUG 0
-#define DBG_WARNING 0
-#define DBG_ERROR 0
+    #include <stdio.h>
+    #define DBG_DEBUG 0
+    #define DBG_KDEBUG 0
+    #define DBG_WARNING 0
+    #define DBG_ERROR 0
 
-#define dbglog(lvl, ...) printf(__VA_ARGS__)
+    #define dbglog(lvl, ...) printf(__VA_ARGS__)
+#else
+    #include <kos/dbglog.h>
 #endif
 
 #endif /* !__EXT2_EXT2INTERNAL_H */

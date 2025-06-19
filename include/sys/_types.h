@@ -15,12 +15,13 @@ __BEGIN_DECLS
 
 #include <sys/lock.h>
 #include <newlib.h>
+#include <sys/_pthreadtypes.h>
 
 /** \addtogroup system_types
     @{
 */
 
-// This part copied from newlib's sys/_types.h.
+/* This part copied from newlib's sys/_types.h. */
 #ifndef __off_t_defined
 /** \brief  File offset type. */
 typedef long _off_t;
@@ -200,9 +201,6 @@ typedef _CLOCK_T_   __clock_t;
 
 /* This is for old KOS source compatibility. */
 #include <arch/types.h>
-
-/* Include stuff to make pthreads work as well. */
-#include <sys/_pthread.h>
 
 #if __GNUC_MINOR__ > 95 || __GNUC__ >= 3
 typedef __builtin_va_list   __va_list;

@@ -1,13 +1,13 @@
 /* KallistiOS ##version##
 
-   arch/dreamcast/include/irq.h
+   arch/dreamcast/include/arch/irq.h
    Copyright (C) 2000-2001 Megan Potter
    Copyright (C) 2024 Paul Cercueil
    Copyright (C) 2024 Falco Girgis
 
 */
 
-/** \file
+/** \file    arch/irq.h
     \brief   Interrupt and exception handling.
     \ingroup irqs
 
@@ -26,15 +26,11 @@
 #ifndef __ARCH_IRQ_H
 #define __ARCH_IRQ_H
 
+#include <stdalign.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <sys/cdefs.h>
 __BEGIN_DECLS
-
-#include <arch/types.h>
-
-/* Included for legacy compatibility with these two APIs being one. */
-#include <arch/trap.h>
 
 /** \defgroup irqs  Interrupts
     \brief          IRQs and ISRs for the SH4's CPU
@@ -49,10 +45,19 @@ __BEGIN_DECLS
     for hooking into them. Care must be taken to not interfere with the IRQ
     handling which is being done by in-use KOS drivers.
 
+    \note
+    The naming convention used by this API differs from that of the actual SH4
+    manual for historical reasons (it wasn't platform-specific). The SH4 manual
+    refers to the most general type of CPU events which result in a SW
+    callback as "exceptions," with "interrupts" and "general exceptions" being
+    subtypes of exceptions. This API uses the term "interrupt" and "exception"
+    interchangeably, except where it is explicitly noted that "SH4 interrupts"
+    or "SH4 general exceptions" are being referred to, more specifically.
+
     @{
 */
 
-/** \defgroup Context
+/** \defgroup irq_context Context
     \brief Thread execution state and accessors
 
     This API includes the structure and accessors for a
@@ -97,6 +102,9 @@ typedef __attribute__((aligned(32))) struct irq_context {
     uint32_t  r[16];      /**< 16 general purpose (integer) registers */
     uint32_t  fpscr;      /**< Floating-point status/control register */
 } irq_context_t;
+
+/* Included for legacy compatibility with these two APIs being one. */
+#include <arch/trap.h>
 
 /** \name Register Accessors
     \brief Convenience macros for accessing context registers
@@ -170,11 +178,11 @@ void irq_create_context(irq_context_t *context, uint32_t stack_pointer,
 
 /** Interrupt exception codes
 
-   Dreamcast-specific exception codes. Used to identify the source or type of
-   an interrupt. Each exception code is of a certain "type" which dictates how the interrupt
-   is generated and handled.
+   SH-specific exception codes. Used to identify the source or type of an
+   interrupt. Each exception code is of a certain "type" which dictates how the
+   interrupt is generated and handled.
 
-    List of exception types:
+   List of exception types:
 
    |Type    | Description
    |--------|------------
@@ -251,8 +259,8 @@ typedef enum irq_exception {
     EXC_SCIF_RXI           = 0x0720, /**< `[POST  ]` SCIF Receive ready */
     EXC_SCIF_BRI           = 0x0740, /**< `[POST  ]` SCIF break */
     EXC_SCIF_TXI           = 0x0760, /**< `[POST  ]` SCIF Transmit ready */
-    EXC_DOUBLE_FAULT       = 0x0ff0, /**< `[SOFT  ]` Exception happened in an ISR */
-    EXC_UNHANDLED_EXC      = 0x0fe0  /**< `[SOFT  ]` Exception went unhandled */
+    EXC_DOUBLE_FAULT       = 0x0780, /**< `[SOFT  ]` Exception happened in an ISR */
+    EXC_UNHANDLED_EXC      = 0x07e0  /**< `[SOFT  ]` Exception went unhandled */
 } irq_t;
 
 
@@ -309,13 +317,28 @@ int irq_inside_int(void);
 
 /** Type representing an interrupt mask state. */
 typedef uint32_t irq_mask_t;
+
+/** Get status register contents.
+
+    Returns the current value of the status register, as irq_disable() does.
+    The function can be found in arch\dreamcast\kernel\entry.s
+
+    \note
+    This is the entire status register word, not just the `IMASK` field.
+
+    \retval                 Status register word
+    \sa irq_disable()
+*/
+irq_mask_t irq_get_sr(void);
+
 /** Disable interrupts.
 
-    This function will disable interrupts, but will leave exceptions enabled.
+    This function will disable SH4 interrupts, but will leave SH4 general
+    exceptions enabled.
 
-    \return                 The state of IRQs before calling the function. This
-                            can be used to restore this state later on with
-                            irq_restore().
+    \return                 The state of the SH4 interrupts before calling the
+                            function. This can be used to restore this state
+                            later on with irq_restore().
 
     \sa irq_restore(), irq_enable()
 */
@@ -340,6 +363,14 @@ void irq_enable(void);
     \sa irq_disable()
 */
 void irq_restore(irq_mask_t v);
+
+/** \brief  Disable interrupts with scope management.
+
+    This macro will disable interrupts, similarly to irq_disable(), with the
+    difference that the interrupt state will automatically be restored once the
+    execution exits the functional block in which the macro was called.
+*/
+#define irq_disable_scoped() __irq_disable_scoped(__LINE__)
 
 /** @} */
 
@@ -383,6 +414,16 @@ void irq_force_return(void);
 */
 typedef void (*irq_handler)(irq_t code, irq_context_t *context, void *data);
 
+
+/** The type of a full callback of an IRQ handler and userdata.
+
+    This type is used to set or get IRQ handlers and their data.
+*/
+typedef struct irq_cb {
+    irq_handler hdl;    /**< A pointer to a procedure to handle an exception. */
+    void       *data;   /**< A pointer that will be passed along to the callback. */
+} irq_cb_t;
+
 /** \defgroup irq_handlers_ind  Individual
     \brief                      API for managing individual IRQ handlers.
 
@@ -396,7 +437,7 @@ typedef void (*irq_handler)(irq_t code, irq_context_t *context, void *data);
     Passing a NULL value for hnd will remove the current handler, if any.
 
     \param  code            The IRQ type to set the handler for
-                            (see \ref irq_exception_codes).
+                            (see #irq_t).
     \param  hnd             A pointer to a procedure to handle the exception.
     \param  data            A pointer that will be passed along to the callback.
     
@@ -410,12 +451,13 @@ int irq_set_handler(irq_t code, irq_handler hnd, void *data);
 /** Get the address of the current handler for the IRQ type.
 
     \param  code            The IRQ type to look up.
-    
-    \return                 A pointer to the procedure to handle the exception.
+
+    \return                 The current handler for the IRQ type and
+                            its userdata.
 
     \sa irq_set_handler()
 */
-irq_handler irq_get_handler(irq_t code);
+irq_cb_t irq_get_handler(irq_t code);
 
 /** @} */
 
@@ -438,14 +480,14 @@ irq_handler irq_get_handler(irq_t code);
     \retval 0               On success (no error conditions defined).
 
 */
-int irq_set_global_handler(irq_handler handler, void *data);
+int irq_set_global_handler(irq_handler hnd, void *data);
 
 /** Get the global exception handler.
 
-    \return                 The global exception handler set with
+    \return                 The global exception handler and userdata set with
                             irq_set_global_handler(), or NULL if none is set.
 */
-irq_handler irq_get_global_handler(void);
+irq_cb_t irq_get_global_handler(void);
 /** @} */
 
 /** @} */
@@ -468,23 +510,67 @@ int irq_init(void);
 */
 void irq_shutdown(void);
 
-static inline void __irq_scoped_cleanup(int *state) {
+static inline void __irq_scoped_cleanup(irq_mask_t *state) {
     irq_restore(*state);
 }
 
 #define ___irq_disable_scoped(l) \
-    int __scoped_irq_##l __attribute__((cleanup(__irq_scoped_cleanup))) = irq_disable()
+    irq_mask_t __scoped_irq_##l __attribute__((cleanup(__irq_scoped_cleanup))) = irq_disable()
 
 #define __irq_disable_scoped(l) ___irq_disable_scoped(l)
 /** \endcond */
 
-/** \brief  Disable interrupts with scope management.
+/** \brief  Minimum/maximum values for IRQ priorities
 
-    This macro will disable interrupts, similarly to irq_disable(), with the
-    difference that the interrupt state will automatically be restored once the
-    execution exits the functional block in which the macro was called.
+    A priority of zero means the interrupt is masked.
+    The maximum priority that can be set is 15.
+ */
+#define IRQ_PRIO_MAX    15
+#define IRQ_PRIO_MIN    1
+#define IRQ_PRIO_MASKED 0
+
+/** \brief  Interrupt sources
+
+   Interrupt sources at the SH4 level.
+ */
+typedef enum irq_src {
+    IRQ_SRC_RTC,
+    IRQ_SRC_TMU2,
+    IRQ_SRC_TMU1,
+    IRQ_SRC_TMU0,
+    _IRQ_SRC_RESV,
+    IRQ_SRC_SCI1,
+    IRQ_SRC_REF,
+    IRQ_SRC_WDT,
+    IRQ_SRC_HUDI,
+    IRQ_SRC_SCIF,
+    IRQ_SRC_DMAC,
+    IRQ_SRC_GPIO,
+    IRQ_SRC_IRL3,
+    IRQ_SRC_IRL2,
+    IRQ_SRC_IRL1,
+    IRQ_SRC_IRL0,
+} irq_src_t;
+
+/** \brief  Set the priority of a given IRQ source
+
+    This function can be used to set the priority of a given IRQ source.
+
+    \param  src             The interrupt source whose priority should be set
+    \param  prio            The priority to set, in the range [0..15],
+                            0 meaning the IRQs from that source are masked.
 */
-#define irq_disable_scoped() __irq_disable_scoped(__LINE__)
+void irq_set_priority(irq_src_t src, unsigned int prio);
+
+/** \brief  Get the priority of a given IRQ source
+
+    This function returns the priority of a given IRQ source.
+
+    \param  src             The interrupt source whose priority should be set
+    \return                 The priority of the IRQ source.
+                            A value of 0 means the IRQs are masked.
+*/
+unsigned int irq_get_priority(irq_src_t src);
 
 /** @} */
 

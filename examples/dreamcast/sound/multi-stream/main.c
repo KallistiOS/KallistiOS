@@ -28,7 +28,6 @@ int main(int argc, char **argv) {
 
     vid_set_mode(DM_640x480, PM_RGB555);
     // Initialize sound system and WAV
-    snd_stream_init();
     wav_init();
 
     wav_stream_hnd_t faucet = wav_create("/rd/faucet.wav", LOOP);

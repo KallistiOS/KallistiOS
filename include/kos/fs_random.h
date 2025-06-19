@@ -39,8 +39,8 @@ __BEGIN_DECLS
 
 /* \cond */
 /* Initialization */
-int fs_rnd_init(void);
-int fs_rnd_shutdown(void);
+void fs_rnd_init(void);
+void fs_rnd_shutdown(void);
 /* \endcond */
 
 /** @} */

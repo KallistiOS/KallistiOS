@@ -22,7 +22,6 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
 #include <arch/memory.h>
 #include <dc/g2bus.h>
 

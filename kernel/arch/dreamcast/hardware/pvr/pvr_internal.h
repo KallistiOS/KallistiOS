@@ -16,7 +16,7 @@
    code. If something is needed from this, an external interface should
    be added to dc/pvr.h. */
 
-#include <kos/sem.h>
+#include <stdbool.h>
 #include <kos/mutex.h>
 
 /**** State stuff ***************************************************/
@@ -169,7 +169,8 @@ typedef struct {
     uint32  lists_dmaed;                // (1 << idx) for each list which has been DMA'd (DMA mode only)
 
     mutex_t dma_lock;                   // Locked if a DMA is in progress (vertex or texture)
-    int     ta_busy;                    // >0 if a DMA is in progress and the TA hasn't signaled completion
+    int     ta_checked_ready;           // >0 if the TA has been checked to be ready for the new scene
+    int     ta_busy;                    // >0 if a scene is ongoing and the TA hasn't signaled completion
     int     render_busy;                // >0 if a render is in progress
     int     render_completed;           // >1 if a render has recently finished
 
@@ -204,24 +205,35 @@ typedef struct {
     size_t   vtx_buf_used;               // Vertex buffer used size for the last frame
     size_t   vtx_buf_used_max;           // Maximum used vertex buffer size
 
-    /* Wait-ready semaphore: this will be signaled whenever the pvr_wait_ready()
-       call should be ready to return. */
-    semaphore_t ready_sem;
-
     // Handle for the vblank interrupt
     int     vbl_handle;
 
     // Non-zero if FSAA was enabled at init time.
     int     fsaa;
 
-    // Non-zero if we are rendering to a texture
-    int     to_texture[2];
+    // Non-zero if using double-buffering for the vertex buffer.
+    int     vbuf_doublebuf;
 
-    // Render pitch for to-texture mode
-    int     to_txr_rp[2];
+    // True if the next frame is rendered to a texture
+    bool    next_to_texture;
 
-    // Output address for to-texture mode
-    uint32  to_txr_addr[2];
+    // True if the frame processed by the TA is rendered to a texture
+    bool    curr_to_texture;
+
+    // True if the frame processed by the CORE is rendered to a texture
+    bool    was_to_texture;
+
+    // Render pitch for to-texture mode for the current frame
+    int     to_txr_rp;
+
+    // Render pitch for to-texture mode for the next frame
+    int     next_to_txr_rp;
+
+    // Output address for to-texture mode for the current frame
+    uint32  to_txr_addr;
+
+    // Output address for to-texture mode for the next frame
+    uint32  next_to_txr_addr;
 
     // Whether direct rendering is active or not
     uint32  dr_used;
@@ -252,10 +264,10 @@ typedef struct pvr_bkg_poly {
 /**** pvr_buffers.c ***************************************************/
 
 /* Initialize buffers for TA/ISP/TSP usage */
-void pvr_allocate_buffers(pvr_init_params_t *params);
+void pvr_allocate_buffers(const pvr_init_params_t *params);
 
 /* Fill the tile matrices (after it's initialized) */
-void pvr_init_tile_matrices(int presort);
+void pvr_init_tile_matrices(bool presort);
 
 
 /**** pvr_misc.c ******************************************************/
@@ -292,8 +304,10 @@ void pvr_blank_polyhdr_buf(int type, pvr_poly_hdr_t * buf);
 
 /**** pvr_irq.c *******************************************************/
 
-/* Interrupt handler for PVR events */
+/* Interrupt handlers for PVR events */
 void pvr_int_handler(uint32 code, void *data);
+void pvr_vblank_handler(uint32 code, void *data);
 
+void pvr_start_dma(void);
 
 #endif

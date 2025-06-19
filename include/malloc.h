@@ -22,8 +22,6 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
-
 /** \defgroup system_allocator  Allocator
     \brief                      Dynamic memory heap management and allocation
     \ingroup                    system

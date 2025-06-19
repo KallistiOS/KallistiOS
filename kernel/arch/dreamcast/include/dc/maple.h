@@ -39,6 +39,7 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
+#include <stdbool.h>
 #include <arch/types.h>
 #include <sys/queue.h>
 
@@ -269,6 +270,7 @@ typedef struct maple_response {
 */
 typedef struct maple_device {
     /* Public */
+    bool            valid;  /**< \brief Is this a valid device? */
     int             port;   /**< \brief Maple bus port connected to */
     int             unit;   /**< \brief Unit number, off of the port */
     maple_devinfo_t info;   /**< \brief Device info struct */
@@ -282,7 +284,7 @@ typedef struct maple_device {
 
     volatile uint8          status_valid;   /**< \brief Have we got our first status update? */
 
-    uint32                  status[];       /**< \brief Status buffer (for pollable devices) */
+    void                    *status;        /**< \brief Status buffer (for pollable devices) */
 } maple_device_t;
 
 #define MAPLE_PORT_COUNT    4   /**< \brief Number of ports on the bus */
@@ -352,6 +354,28 @@ typedef struct maple_driver {
         \param  dev         The device that was detached.
     */
     void (*detach)(struct maple_driver *drv, maple_device_t *dev);
+
+    /** \brief  User-specified device attached callback.
+
+        This callback will be called when a new device of this driver is
+        connected to the system. It should be set by applications using
+        maple_attach_callback().
+
+        \param  dev         The device that was connected.
+        \return             0 on success, <0 on error.
+    */
+    void (*user_attach)(maple_device_t *dev);
+
+    /** \brief  User-specified device detached callback.
+
+        This callback will be called when a new device of this driver is
+        connected to the system. It should be set by applications using
+        maple_detach_callback().
+
+        \param  dev         The device that was connected.
+        \return             0 on success, <0 on error.
+    */
+    void (*user_detach)(maple_device_t *dev);
 } maple_driver_t;
 
 /** \brief   Maple state structure.
@@ -585,7 +609,6 @@ void maple_gun_disable(void);
 */
 void maple_gun_read_pos(int *x, int *y);
 
-#if MAPLE_DMA_DEBUG
 /* Debugging help */
 
 /** \brief   Setup a sentinel for debugging DMA issues.
@@ -604,7 +627,6 @@ void maple_sentinel_setup(void * buffer, int bufsize);
     \param  bufsize         The size of the buffer.
 */
 void maple_sentinel_verify(const char * bufname, void * buffer, int bufsize);
-#endif
 
 /**************************************************************************/
 /* maple_queue.c */
@@ -685,6 +707,7 @@ int maple_driver_unreg(maple_driver_t *driver);
     \ingroup maple
 
     \param  det             The detection frame.
+    \retval 1               Couldn't allocate buffers.
     \retval 0               On success.
     \retval -1              If no driver is available.
 */

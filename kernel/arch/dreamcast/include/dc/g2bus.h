@@ -3,6 +3,7 @@
    g2bus.h
    Copyright (C) 2002 Megan Potter
    Copyright (C) 2023 Andy Barajas
+   Copyright (C) 2024 Ruslan Rostovtsev
 
 */
 
@@ -36,7 +37,6 @@ __BEGIN_DECLS
 
 #include <stdint.h>
 #include <arch/irq.h>
-#include <arch/types.h>
 
 #include <dc/fifo.h>
 
@@ -140,15 +140,15 @@ void g2_dma_shutdown(void);
     is used in with g2_lock() and g2_unlock().
 */
 typedef struct { 
-    int irq_state;    /** \brief IRQ state when entering a G2 critical block */
+    irq_mask_t irq_state;    /** \brief IRQ state when entering a G2 critical block */
 } g2_ctx_t;
 
 /* Internal constants to access suspend registers for G2 DMA. They are not meant for
    user-code use. */
 /** \cond */ 
-#define G2_DMA_SUSPEND_SPU     (*((vuint32 *)0xa05f781C))
-#define G2_DMA_SUSPEND_BBA     (*((vuint32 *)0xa05f783C))
-#define G2_DMA_SUSPEND_CH2     (*((vuint32 *)0xa05f785C))
+#define G2_DMA_SUSPEND_SPU     (*((volatile uint32_t *)0xa05f781C))
+#define G2_DMA_SUSPEND_BBA     (*((volatile uint32_t *)0xa05f783C))
+#define G2_DMA_SUSPEND_CH2     (*((volatile uint32_t *)0xa05f785C))
 /** \endcond */
 
 /** \brief  Disable IRQs and G2 DMA
@@ -223,7 +223,7 @@ void g2_write_8(uintptr_t address, uint8_t value);
     \param  address         The address in memory to read.
     \return                 The word read from the address specified.
 */
-uint16 g2_read_16(uintptr_t address);
+uint16_t g2_read_16(uintptr_t address);
 
 /** \brief  Write a 16-bit word to G2.
 
@@ -245,6 +245,18 @@ void g2_write_16(uintptr_t address, uint16_t value);
 */
 uint32_t g2_read_32(uintptr_t address);
 
+/** \brief  Non-blocked read one 32-bit dword from G2.
+
+    This function reads a single dword from the specified address, without all
+    necessary precautions that are required for accessing G2.
+
+    \param  address         The address in memory to read.
+    \return                 The dword read from the address specified.
+*/
+static inline uint32_t g2_read_32_raw(uintptr_t address) {
+    return *((volatile uint32_t *)address);
+}
+
 /** \brief  Write a 32-bit dword to G2.
 
     This function writes one dword to the specified address, taking all the
@@ -254,6 +266,18 @@ uint32_t g2_read_32(uintptr_t address);
     \param  value           The value to write to that address.
 */
 void g2_write_32(uintptr_t address, uint32_t value);
+
+/** \brief  Non-blocked write a 32-bit dword to G2.
+
+    This function writes one dword to the specified address, without all the
+    necessary precautions to ensure your write actually succeeds.
+
+    \param  address         The address in memory to write to.
+    \param  value           The value to write to that address.
+*/
+static inline void g2_write_32_raw(uintptr_t address, uint32_t value) {
+    *((volatile uint32_t *)address) = value;
+}
 
 /** \brief  Read a block of bytes from G2.
 

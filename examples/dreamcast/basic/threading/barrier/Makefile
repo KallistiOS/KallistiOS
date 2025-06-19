@@ -1,0 +1,29 @@
+# KallistiOS ##version##
+#
+# basic/threading/barrier/Makefile
+#
+# Copyright (C) 2023 Falco Girgis
+#
+
+TARGET = barrier.elf
+OBJS = barrier.o
+
+all: rm-elf $(TARGET)
+
+include $(KOS_BASE)/Makefile.rules
+
+clean: rm-elf
+	-rm -f $(OBJS)
+
+rm-elf:
+	-rm -f $(TARGET)
+
+$(TARGET): $(OBJS) 
+	kos-cc -o $(TARGET) $(OBJS)
+
+run: $(TARGET)
+	$(KOS_LOADER) $(TARGET)
+
+dist: $(TARGET)
+	-rm -f $(OBJS)
+	$(KOS_STRIP) $(TARGET)

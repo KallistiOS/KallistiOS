@@ -42,7 +42,6 @@
 __BEGIN_DECLS
 
 #include <stdint.h>
-#include <arch/types.h>
 #include <arch/memory.h>
 #include <arch/cache.h>
 
@@ -69,9 +68,12 @@ __BEGIN_DECLS
     however, it must be called manually when driving the SQs directly from outside 
     of this API. 
 
+    \param  dest            The destination address.
+    \return                 The translated address that can be directly written to.
+
     \sa sq_unlock()
 */
-void sq_lock(void *dest);
+uint32_t *sq_lock(void *dest);
 
 /** \brief  Unlock Store Queues
     \ingroup store_queues
