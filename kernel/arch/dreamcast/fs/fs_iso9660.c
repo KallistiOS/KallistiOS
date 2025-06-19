@@ -5,7 +5,7 @@
    Copyright (C) 2001 Andrew Kieschnick
    Copyright (C) 2002 Bero
    Copyright (C) 2012, 2013, 2014, 2016 Lawrence Sebald
-   Copyright (C) 2024 Ruslan Rostovtsev
+   Copyright (C) 2025 Ruslan Rostovtsev
 
 */
 

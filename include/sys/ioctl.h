@@ -2,7 +2,7 @@
 
    sys/ioctl.h
    Copyright (C) 2024 Andress Barajas
-   Copyright (C) 2024 Ruslan Rostovtsev
+   Copyright (C) 2025 Ruslan Rostovtsev
 
 */
 
@@ -25,14 +25,6 @@
 __BEGIN_DECLS
 
 #include <kos/fs.h>
-
-#ifndef TCGETS
-#define TCGETS 0x5401
-#endif
-
-#ifndef TIOCGETA
-#define TIOCGETA TCGETS
-#endif
 
 #ifndef IOCTL_FS_ROOTBUS_DMA_READY
 /** \brief This operation can determine that file system 
