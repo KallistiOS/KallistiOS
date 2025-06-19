@@ -41,7 +41,7 @@
 
     ## Version Types
     The versioning information is split into two different groups:
-        
+
     |Version Type|Description
     |------------|-----------
     |\ref version_comptime|The version of KOS your code is being compiled against.
@@ -78,7 +78,7 @@
     @{
 */
 
-/** \defgroup version_comptime  Compile-Time 
+/** \defgroup version_comptime  Compile-Time
     \brief    API providing compile-time KOS version and utilties.
 
     This API is is specifically for the compile-time versioning. As such,
@@ -92,13 +92,13 @@
     \brief    Current compile-time version of KOS
 
     These macros provide information about the current version of KOS at
-    compile-time. 
+    compile-time.
 
     @{
 */
 
 #define KOS_VERSION_MAJOR   2   /**< KOS's current major revision number. */
-#define KOS_VERSION_MINOR   1   /**< KOS's current minor revision number. */
+#define KOS_VERSION_MINOR   2   /**< KOS's current minor revision number. */
 #define KOS_VERSION_PATCH   0   /**< KOS's current patch revision number. */
 
 /** KOS's current version as an integer ID. */
@@ -116,8 +116,8 @@
     \brief    Compile-time checks against KOS's current version.
 
     This API provides several utility macros to check for a particular
-    exact, min, or max compile-time version for KOS. 
-    
+    exact, min, or max compile-time version for KOS.
+
     They are meant to be used with the preprocessor like so:
 
     \code{.c}
@@ -150,7 +150,7 @@
     KOS_VERSION_MAKE_ABOVE(major, minor, patch, KOS_VERSION)
 
 /** Compile-time check for a minimum KOS version.
-    
+
     Checks to see whether the current KOS version is the same or higher than
     the given version.
 
@@ -238,7 +238,7 @@
     \brief Utilities for encoding a version from its components.
     @{
 */
-/** Creates a version identifier from its constituents. 
+/** Creates a version identifier from its constituents.
 
     Used to create a version identifier at compile-time from its components.
 
@@ -251,7 +251,7 @@
 #define KOS_VERSION_MAKE(major, minor, patch) \
     (((major) << 16) | ((minor) << 8) | (patch))
 
-/** Creates a version string from its constituents. 
+/** Creates a version string from its constituents.
 
     Used to create a compile-time string literal from version components.
 
@@ -307,7 +307,7 @@
 #define KOS_VERSION_MAKE_ABOVE(major, minor, patch, version) \
     (KOS_VERSION_MAKE_COMPARISON(major, minor, patch, <, version))
 
-/** Creates a minimum version check. 
+/** Creates a minimum version check.
 
     Used to create a compile-time minimum version check.
 
@@ -325,7 +325,7 @@
 #define KOS_VERSION_MAKE_MIN(major, minor, patch, version) \
     (KOS_VERSION_MAKE_COMPARISON(major, minor, patch, <=, version))
 
-/** Creates an exact version check. 
+/** Creates an exact version check.
 
     Used to create a compile-time exact version check.
 
@@ -343,7 +343,7 @@
 #define KOS_VERSION_MAKE_IS(major, minor, patch, version) \
     (KOS_VERSION_MAKE_COMPARISON(major, minor, patch, ==, version))
 
-/** Creates a maximum version check. 
+/** Creates a maximum version check.
 
     Used to create a compile-time maximum version check.
 
@@ -389,7 +389,7 @@ __BEGIN_DECLS
 #include <stdint.h>
 #include <stdbool.h>
 
-/** \defgroup version_runtime  Run-Time 
+/** \defgroup version_runtime  Run-Time
     \brief    API providing run-time KOS version and utilties.
 
     This API is is specifically for the run-time versioning. As such this
@@ -399,7 +399,7 @@ __BEGIN_DECLS
     @{
 */
 
-/** Type of a KOS version identifier. 
+/** Type of a KOS version identifier.
 
     This identifier packs the 3 version components into a single opaque ID.
 
@@ -447,8 +447,8 @@ const char* kos_version_string(void);
     \brief    Run-time checks against KOS's current version.
 
     This API provides several utility functions to check for a particular
-    exact, min, or max run-time version for KOS. 
-    
+    exact, min, or max run-time version for KOS.
+
     They are meant to be used as conditional expressions as such:
 
     \code{.c}
@@ -492,7 +492,7 @@ bool kos_version_above(uint8_t major, uint16_t minor, uint8_t patch);
 bool kos_version_min(uint8_t major, uint16_t minor, uint8_t patch);
 
 /** Exact version run-time check for KOS
-   
+
     Checks whether the current run-time version of KOS matches the given
     version.
 
@@ -501,7 +501,7 @@ bool kos_version_min(uint8_t major, uint16_t minor, uint8_t patch);
     \param patch    Patch version component.
 
     \retval true    The version matches exactly.
-    \retval false   The version does not match. 
+    \retval false   The version does not match.
 */
 bool kos_version_is(uint8_t major, uint16_t minor, uint8_t patch);
 
