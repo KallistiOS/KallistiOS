@@ -279,7 +279,7 @@ static int bread_cache(cache_block_t **cache, uint32 sector) {
     // dbglog(DBG_DEBUG, "Stream stop for %s read\n", cache == icache ? "cached" : "inode");
 
     /* Load the requested block */
-    j = cdrom_read_sectors_ex(cache[i]->data, sector + 150, 1, CDROM_READ_DMA);
+    j = cdrom_read_sectors_ex(cache[i]->data, sector + 150, 1, true);
 
     if(j != ERR_OK) {
         //dbglog(DBG_ERROR, "fs_iso9660: can't read_sectors for %d: %d\n",
@@ -763,7 +763,7 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
                     iso_abort_stream(false);
                     // dbglog(DBG_DEBUG, "Stream stop for file fd: %p -> %p\n", stream_fd, fd);
                 }
-                c = cdrom_stream_start(sector + 150, req_size / 2048, CDROM_READ_DMA);
+                c = cdrom_stream_start(sector + 150, req_size / 2048, true);
 
                 if(c) {
                     goto read_loop;
@@ -827,7 +827,7 @@ read_loop:
             /* Round it off to an even sector count. */
             thissect = toread / 2048;
             toread = thissect * 2048;
-            c = cdrom_read_sectors_ex(outbuf, sector + 150, thissect, CDROM_READ_DMA);
+            c = cdrom_read_sectors_ex(outbuf, sector + 150, thissect, true);
 
             if(c) {
                 goto read_error;
