@@ -343,6 +343,20 @@ typedef struct cd_cmd_play_params {
     uint32_t repeat;    /**< \brief Times to repeat (0-15, 15=infinite) */
 } cd_cmd_play_params_t;
 
+/** \brief      Types of data to read from sector subcode
+    \ingroup    gdrom_syscalls
+
+    Types of data available to read from the sector subcode. These are
+    possible values for the first parameter sent to the GETSCD syscall.
+*/
+typedef enum cd_sub_type {
+    CD_SUB_Q_ALL          = 0,    /**< \brief Read all Subcode Data */
+    CD_SUB_Q_CHANNEL      = 1,    /**< \brief Read Q Channel Subcode Data */
+    CD_SUB_MEDIA_CATALOG  = 2,    /**< \brief Read the Media Catalog Subcode Data */
+    CD_SUB_TRACK_ISRC     = 3,    /**< \brief Read the ISRC Subcode Data */
+    CD_SUB_RESERVED       = 4     /**< \brief Reserved */
+} cd_sub_type_t;
+
 /** \brief   Initialize the GDROM drive.
 
     This function initializes the GDROM drive. Should be called before any 
