@@ -337,7 +337,7 @@ static iso_dirent_t root_dirent;
    a new CD has been inserted. */
 static int init_percd(void) {
     int     i, blk;
-    CDROM_TOC   toc;
+    cd_toc_t   toc;
 
     dbglog(DBG_NOTICE, "fs_iso9660: disc change detected\n");
 

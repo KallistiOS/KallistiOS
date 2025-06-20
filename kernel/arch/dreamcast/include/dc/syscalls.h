@@ -281,6 +281,43 @@ typedef enum cd_cmd_code {
     CD_CMD_MAX               = 47,  /**< \brief Max of GD syscall commands */
 } cd_cmd_code_t;
 
+/** \brief      Disc area to read TOC from.
+    \ingroup    gdrom_syscalls
+
+    This is the allowed values for the first param of the GETTOC commands,
+    defining which disc area to read the TOC from.
+
+*/
+typedef enum cd_area {
+    CD_AREA_LOW     = 0,
+    CD_AREA_HIGH    = 1
+} cd_area_t;
+
+/** \brief      TOC structure returned by the BIOS.
+    \ingroup    gdrom_syscalls
+
+    This is the structure that the CD_CMD_GETTOC2 syscall command will return for
+    the TOC. Note the data is in FAD, not LBA/LSN.
+
+*/
+typedef struct cd_toc {
+    uint32_t  entry[99];          /**< \brief TOC space for 99 tracks */
+    uint32_t  first;              /**< \brief Point A0 information (1st track) */
+    uint32_t  last;               /**< \brief Point A1 information (last track) */
+    uint32_t  leadout_sector;     /**< \brief Point A2 information (leadout) */
+} cd_toc_t;
+
+/** \brief      Params for GETTOC commands
+    \ingroup    gdrom_syscalls
+
+    Params for CD_CMD_GETTOC and CD_CMD_GETTOC2.
+
+*/
+typedef struct cd_cmd_toc_params {
+    cd_area_t  area;
+    cd_toc_t   *buffer;
+} cd_cmd_toc_params_t;
+
 /** \brief   Initialize the GDROM drive.
 
     This function initializes the GDROM drive. Should be called before any 

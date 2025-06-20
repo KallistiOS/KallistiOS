@@ -372,14 +372,11 @@ int cdrom_reinit_ex(int sector_part, int cdxa, int sector_size) {
 }
 
 /* Read the table of contents */
-int cdrom_read_toc(CDROM_TOC *toc_buffer, bool high_density) {
-    struct {
-        int area;
-        void *buffer;
-    } params;
+int cdrom_read_toc(cd_toc_t *toc_buffer, bool high_density) {
+    cd_cmd_toc_params_t params;
     int rv;
 
-    params.area = high_density ? 1 : 0;
+    params.area = high_density ? CD_AREA_HIGH : CD_AREA_LOW;
     params.buffer = toc_buffer;
 
     rv = cdrom_exec_cmd(CD_CMD_GETTOC2, &params);
@@ -667,7 +664,7 @@ int cdrom_get_subcode(void *buffer, int buflen, int which) {
 }
 
 /* Locate the LBA sector of the data track; use after reading TOC */
-uint32 cdrom_locate_data_track(CDROM_TOC *toc) {
+uint32 cdrom_locate_data_track(cd_toc_t *toc) {
     int i, first, last;
 
     first = TOC_TRACK(toc->first);
