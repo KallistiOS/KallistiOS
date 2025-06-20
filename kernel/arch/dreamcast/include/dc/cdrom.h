@@ -367,7 +367,7 @@ int cdrom_read_toc(cd_toc_t *toc_buffer, bool high_density);
 
     \see    cd_read_sector_mode
 */
-int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode);
+int cdrom_read_sectors_ex(void *buffer, uint32_t sector, size_t cnt, int mode);
 
 /** \brief    Read one or more sector from a CD-ROM in PIO mode.
     \ingroup  gdrom
@@ -380,7 +380,7 @@ int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode);
     \return                 \ref cd_cmd_response
     \see    cdrom_read_sectors_ex
 */
-int cdrom_read_sectors(void *buffer, int sector, int cnt);
+int cdrom_read_sectors(void *buffer, uint32_t sector, size_t cnt);
 
 /** \brief    Start streaming from a CD-ROM.
     \ingroup  gdrom
