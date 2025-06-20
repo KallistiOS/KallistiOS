@@ -480,7 +480,7 @@ uint32 cdrom_locate_data_track(cd_toc_t *toc);
     \param  mode            The mode to play (see \ref cdda_read_modes).
     \return                 \ref cd_cmd_response
 */
-int cdrom_cdda_play(uint32 start, uint32 end, uint32 loops, int mode);
+int cdrom_cdda_play(uint32_t start, uint32_t end, uint32_t loops, int mode);
 
 /** \brief    Pause CDDA audio playback.
     \ingroup  gdrom

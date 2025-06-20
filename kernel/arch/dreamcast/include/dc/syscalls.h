@@ -331,6 +331,18 @@ typedef struct cd_cmd_toc_params {
     cd_toc_t   *buffer;
 } cd_cmd_toc_params_t;
 
+/** \brief      Params for PLAY command
+    \ingroup    gdrom_syscalls
+
+    Params for CD_CMD_PLAY_TRACKS and CD_CMD_PLAY_SECTORS.
+
+*/
+typedef struct cd_cmd_play_params {
+    uint32_t start;     /**< \brief Track to play from */
+    uint32_t end;       /**< \brief Track to play to */
+    uint32_t repeat;    /**< \brief Times to repeat (0-15, 15=infinite) */
+} cd_cmd_play_params_t;
+
 /** \brief   Initialize the GDROM drive.
 
     This function initializes the GDROM drive. Should be called before any 
