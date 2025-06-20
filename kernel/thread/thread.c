@@ -762,6 +762,18 @@ void thd_sleep(unsigned int ms) {
     genwait_wait((void *)0xffffffff, "thd_sleep", ms, NULL);
 }
 
+static bool thd_should_pass(void) {
+    kthread_t *thd;
+
+    /* Look up the queue to find if there are more threads waiting to run */
+    TAILQ_FOREACH(thd, &run_queue, thdq) {
+        if(thd != thd_current && thd->state == STATE_READY)
+            break;
+    }
+
+    return thd != thd_idle_thd;
+}
+
 /* Manually cause a re-schedule */
 __used
 void thd_pass(void) {
@@ -769,7 +781,8 @@ void thd_pass(void) {
     if(irq_inside_int()) return;
 
     /* Pass off control manually */
-    thd_block_now(&thd_current->context);
+    if(thd_should_pass())
+        thd_block_now(&thd_current->context);
 }
 
 /* Wait for a thread to exit */
