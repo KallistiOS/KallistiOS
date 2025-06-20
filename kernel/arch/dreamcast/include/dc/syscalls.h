@@ -357,6 +357,30 @@ typedef enum cd_sub_type {
     CD_SUB_RESERVED       = 4     /**< \brief Reserved */
 } cd_sub_type_t;
 
+/** \brief      Params for GETSCD command
+    \ingroup    gdrom_syscalls
+*/
+typedef struct cd_cmd_getscd_params {
+    cd_sub_type_t   which;    /**< \brief The type of subcode read to perform */
+    size_t          buflen;   /**< \brief The size of the buffer we provide */
+    void            *buffer;  /**< \brief The buffer to put the subcode data in */
+} cd_cmd_getscd_params_t;
+
+/** \brief      Subcode Audio Statuses
+    \ingroup    gdrom_syscalls
+
+    Information about CDDA playback returned by the GETSCD syscall command.
+    This is returned in the second byte of the buffer.
+*/
+typedef enum cd_sub_audio {
+    CD_SUB_AUDIO_STATUS_INVALID    = 0x00,
+    CD_SUB_AUDIO_STATUS_PLAYING    = 0x11,
+    CD_SUB_AUDIO_STATUS_PAUSED     = 0x12,
+    CD_SUB_AUDIO_STATUS_ENDED      = 0x13,
+    CD_SUB_AUDIO_STATUS_ERROR      = 0x14,
+    CD_SUB_AUDIO_STATUS_NO_INFO    = 0x15
+} cd_sub_audio_t;
+
 /** \brief   Initialize the GDROM drive.
 
     This function initializes the GDROM drive. Should be called before any 

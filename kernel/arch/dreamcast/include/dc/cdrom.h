@@ -142,21 +142,6 @@ static const uint8_t  CMD_MAX                __depr("Please use the new CD_ pref
 #define CDROM_READ_DATA_AREA    0x2000    /**< \brief Read the data area */
 /** @} */
 
-/** \defgroup cd_subcode_audio    Subcode Audio Status
-    \brief                        GETSCD syscall response codes
-    \ingroup  gdrom
-
-    Information about CDDA playback from GETSCD syscall.
-    @{
-*/
-#define CD_SUB_AUDIO_STATUS_INVALID    0x00
-#define CD_SUB_AUDIO_STATUS_PLAYING    0x11
-#define CD_SUB_AUDIO_STATUS_PAUSED     0x12
-#define CD_SUB_AUDIO_STATUS_ENDED      0x13
-#define CD_SUB_AUDIO_STATUS_ERROR      0x14
-#define CD_SUB_AUDIO_STATUS_NO_INFO    0x15
-/** @} */
-
 /* Compat. These got converted to a plain bool. */
 static const bool  CDROM_READ_PIO   __depr("Please just use false to not use dma.") = false;
 static const bool  CDROM_READ_DMA   __depr("Please just use true to use dma.") = true;

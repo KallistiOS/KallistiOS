@@ -642,15 +642,7 @@ void cdrom_stream_set_callback(cdrom_stream_callback_t callback, void *param) {
 /* XXX: Use some CD-Gs and other stuff to test if you get more than just the 
    Q byte */
 int cdrom_get_subcode(void *buffer, size_t buflen, cd_sub_type_t which) {
-    struct {
-        cd_sub_type_t which;
-        size_t buflen;
-        void *buffer;
-    } params;
-
-    params.which = which;
-    params.buflen = buflen;
-    params.buffer = buffer;
+    cd_cmd_getscd_params_t params = { .which = which, .buflen = buflen, .buffer = buffer };
     return cdrom_exec_cmd(CD_CMD_GETSCD, &params);
 }
 
