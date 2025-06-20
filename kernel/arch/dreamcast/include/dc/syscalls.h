@@ -192,6 +192,14 @@ int syscall_flashrom_delete(uint32_t pos);
     as well as data types for their returns and parameters.
 */
 
+/** \brief      Handle for a requested command
+    \ingroup    gdrom_syscalls
+
+    This is returned by syscall_gdrom_send_command and then is passed
+    to other syscalls to specify which command to act on.
+*/
+typedef int32_t gdc_cmd_hnd_t;
+
 /** \brief      Command codes for GDROM syscalls
     \ingroup    gdrom_syscalls
 
@@ -273,13 +281,13 @@ int syscall_gdrom_check_drive(uint32_t status[2]);
 
     \sa syscall_gdrom_check_command(), syscall_gdrom_exec_server()
 */
-uint32_t syscall_gdrom_send_command(cd_cmd_code_t cmd, void *params);
+gdc_cmd_hnd_t syscall_gdrom_send_command(cd_cmd_code_t cmd, void *params);
 
 /** \brief   Check status of queued command for the GDROM.
 
     This function checks if a queued command has completed.
 
-    \param  id              The request id (>=1).
+    \param  hnd             The request to check.
     \param  status          The pointer to four 32-bit integers to 
                             receive status information.
 
@@ -292,7 +300,7 @@ uint32_t syscall_gdrom_send_command(cd_cmd_code_t cmd, void *params);
 
     \sa syscall_gdrom_send_command(), syscall_gdrom_exec_server()
 */
-int syscall_gdrom_check_command(uint32_t id, int32_t status[4]);
+int syscall_gdrom_check_command(gdc_cmd_hnd_t hnd, int32_t status[4]);
 
 /** \brief   Process queued GDROM commands.
 
@@ -308,12 +316,12 @@ void syscall_gdrom_exec_server(void);
 
     This function tries to abort a previously queued command.
 
-    \param  id              The request id (>=1) to abort.
+    \param  hnd             The request to abort.
 
     \return                 0 on success, or non-zero on
                             failure.
 */
-int syscall_gdrom_abort_command(uint32_t id);
+int syscall_gdrom_abort_command(gdc_cmd_hnd_t hnd);
 
 /** \brief   Sets/gets the sector mode for read commands.
 
@@ -343,7 +351,7 @@ void syscall_gdrom_dma_callback(uintptr_t callback, void *param);
     This function initiates a DMA transfer for 
     \ref CMD_DMAREAD_STREAM_EX (\ref dc/cdrom.h).
 
-    \param  id              The request id (>=1).
+    \param  hnd             The stream request to start transferring.
     \param  params          The pointer to two 32-bit integers. The first 
                             element indicates the destination address, and 
                             the second element identifies how many bytes to 
@@ -352,21 +360,21 @@ void syscall_gdrom_dma_callback(uintptr_t callback, void *param);
     \return                 0 on success, or non-zero on
                             failure.
 */
-int syscall_gdrom_dma_transfer(uint32_t id, const int32_t params[2]);
+int syscall_gdrom_dma_transfer(gdc_cmd_hnd_t hnd, const int32_t params[2]);
 
 /** \brief   Checks a GDROM DMA transfer.
 
     This function checks the progress of a DMA transfer for 
     \ref CMD_DMAREAD_STREAM_EX (see \ref dc/cdrom.h).
 
-    \param  id              The request id (>=1).
+    \param  hnd             The stream request to check.
     \param  size            The pointer to receive the remaining amount of
                             bytes to transfer.
 
     \retval 0               On success.
     \retval -1              On failure.
 */
-int syscall_gdrom_dma_check(uint32_t id, size_t *size);
+int syscall_gdrom_dma_check(gdc_cmd_hnd_t hnd, size_t *size);
 
 /** \brief   Setup GDROM PIO callback.
 
@@ -384,7 +392,7 @@ void syscall_gdrom_pio_callback(uintptr_t callback, void *param);
     This function initiates a PIO transfer for 
     \ref CMD_PIOREAD_STREAM_EX (see \ref dc/cdrom.h).
 
-    \param  id              The request id (>=1).
+    \param  hnd             The stream request to start transferring.
     \param  params          The pointer to two 32-bit integers. The first 
                             element indicates the destination address, and 
                             the second element identifies how many bytes to 
@@ -393,21 +401,21 @@ void syscall_gdrom_pio_callback(uintptr_t callback, void *param);
     \return                 0 on success, or non-zero on
                             failure.
 */
-int syscall_gdrom_pio_transfer(uint32_t id, const int32_t params[2]);
+int syscall_gdrom_pio_transfer(gdc_cmd_hnd_t hnd, const int32_t params[2]);
 
 /** \brief   Checks a GDROM PIO transfer.
 
     This function checks the progress of a PIO transfer for 
     \ref CMD_PIOREAD_STREAM_EX (see \ref dc/cdrom.h).
 
-    \param  id              The request id (>=1).
+    \param  hnd             The stream request to check.
     \param  size            The pointer to receive the remaining amount of
                             bytes to transfer.
 
     \retval 0               On success.
     \retval -1              On failure.
 */
-int syscall_gdrom_pio_check(uint32_t id, size_t *size);
+int syscall_gdrom_pio_check(gdc_cmd_hnd_t hnd, size_t *size);
 
 /** \brief   Initializes all the syscall vectors.
 
