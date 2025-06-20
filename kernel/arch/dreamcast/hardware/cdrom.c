@@ -442,7 +442,7 @@ int cdrom_read_sectors_ex(void *buffer, uint32_t sector, size_t cnt, bool dma) {
     params.is_test = 0;         /* Enable test mode */
 
     if(dma) {
-        if(buf_addr & 0x1f) {
+        if(!__builtin_is_aligned(buf_addr, 32)) {
             dbglog(DBG_ERROR, "cdrom_read_sectors_ex: Unaligned memory for DMA (32-byte).\n");
             return ERR_SYS;
         }
@@ -463,7 +463,7 @@ int cdrom_read_sectors_ex(void *buffer, uint32_t sector, size_t cnt, bool dma) {
     else {
         params.buffer = buffer;
 
-        if(buf_addr & 0x01) {
+        if(!__builtin_is_aligned(buf_addr, 2)) {
             dbglog(DBG_ERROR, "cdrom_read_sectors_ex: Unaligned memory for PIO (2-byte).\n");
             return ERR_SYS;
         }
@@ -536,7 +536,8 @@ int cdrom_stream_stop(bool abort_dma) {
 
 int cdrom_stream_request(void *buffer, size_t size, bool block) {
     int rs, rv = ERR_OK;
-    int32_t params[2];
+    uintptr_t buf_addr = ((uintptr_t)buffer);
+    cd_transfer_params_t params;
     struct cmd_transfer_data data;
 
     if(cmd_hnd <= 0) {
@@ -548,24 +549,33 @@ int cdrom_stream_request(void *buffer, size_t size, bool block) {
     }
 
     if(stream_dma) {
-        params[0] = ((uintptr_t)buffer) & MEM_AREA_CACHE_MASK;
-        if(params[0] & 0x1f) {
+        if(!__builtin_is_aligned(buf_addr, 32)) {
             dbglog(DBG_ERROR, "cdrom_stream_request: Unaligned memory for DMA (32-byte).\n");
             return ERR_SYS;
         }
-        if((params[0] >> 24) == 0x0c) {
-            dcache_inval_range((uintptr_t)buffer, size);
+        /* Use the physical memory address. */
+        params.addr = (void *)(buf_addr & MEM_AREA_CACHE_MASK);
+
+        /* Invalidate the CPU cache only for cacheable memory areas.
+           Otherwise, it is assumed that either this operation is unnecessary
+           (another DMA is being used) or that the caller is responsible
+           for managing the CPU data cache.
+        */
+        if((buf_addr & MEM_AREA_P2_BASE) != MEM_AREA_P2_BASE) {
+            /* Invalidate the dcache over the range of the data. */
+            dcache_inval_range(buf_addr, size);
         }
     }
     else {
-        params[0] = (uintptr_t)buffer;
-        if(params[0] & 0x01) {
+        params.addr = buffer;
+
+        if(!__builtin_is_aligned(buf_addr, 2)) {
             dbglog(DBG_ERROR, "cdrom_stream_request: Unaligned memory for PIO (2-byte).\n");
             return ERR_SYS;
         }
     }
 
-    params[1] = size;
+    params.size = size;
     sem_wait_scoped(&_g1_ata_sem);
 
     if(stream_dma) {
@@ -573,7 +583,7 @@ int cdrom_stream_request(void *buffer, size_t size, bool block) {
         dma_blocking = block;
         dma_auto_unlock = !block;
 
-        rs = syscall_gdrom_dma_transfer(cmd_hnd, params);
+        rs = syscall_gdrom_dma_transfer(cmd_hnd, &params);
 
         if(rs < 0) {
             dma_in_progress = false;
@@ -587,7 +597,7 @@ int cdrom_stream_request(void *buffer, size_t size, bool block) {
         sem_wait(&dma_done);
     }
     else {
-        rs = syscall_gdrom_pio_transfer(cmd_hnd, params);
+        rs = syscall_gdrom_pio_transfer(cmd_hnd, &params);
         if(rs < 0)
             return ERR_SYS;
     }

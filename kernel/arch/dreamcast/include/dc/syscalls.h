@@ -466,21 +466,28 @@ int syscall_gdrom_sector_mode(uint32_t mode[4]);
 */
 void syscall_gdrom_dma_callback(uintptr_t callback, void *param);
 
+/** \brief      Parameters for transfer
+    \ingroup    gdrom_syscalls
+
+    These are parameters passed to the syscall_gdrom_*_transfer syscalls.
+*/
+typedef struct cd_transfer_params {
+    void    *addr;      /**< \brief Destination address of transfer */
+    size_t  size;       /**< \brief How many bytes to transfer */
+} cd_transfer_params_t;
+
 /** \brief   Initiates a GDROM DMA transfer.
 
     This function initiates a DMA transfer for 
     \ref CMD_DMAREAD_STREAM_EX (\ref dc/cdrom.h).
 
     \param  hnd             The stream request to start transferring.
-    \param  params          The pointer to two 32-bit integers. The first 
-                            element indicates the destination address, and 
-                            the second element identifies how many bytes to 
-                            transfer.
+    \param  params          The pointer to a cd_transfer_params_t.
 
     \return                 0 on success, or non-zero on
                             failure.
 */
-int syscall_gdrom_dma_transfer(gdc_cmd_hnd_t hnd, const int32_t params[2]);
+int syscall_gdrom_dma_transfer(gdc_cmd_hnd_t hnd, const cd_transfer_params_t *params);
 
 /** \brief   Checks a GDROM DMA transfer.
 
@@ -513,15 +520,12 @@ void syscall_gdrom_pio_callback(uintptr_t callback, void *param);
     \ref CMD_PIOREAD_STREAM_EX (see \ref dc/cdrom.h).
 
     \param  hnd             The stream request to start transferring.
-    \param  params          The pointer to two 32-bit integers. The first 
-                            element indicates the destination address, and 
-                            the second element identifies how many bytes to 
-                            transfer.
+    \param  params          The pointer to a cd_transfer_params_t.
 
     \return                 0 on success, or non-zero on
                             failure.
 */
-int syscall_gdrom_pio_transfer(gdc_cmd_hnd_t hnd, const int32_t params[2]);
+int syscall_gdrom_pio_transfer(gdc_cmd_hnd_t hnd, const cd_transfer_params_t *params);
 
 /** \brief   Checks a GDROM PIO transfer.
 
