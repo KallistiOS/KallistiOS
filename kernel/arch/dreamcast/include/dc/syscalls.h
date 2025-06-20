@@ -427,13 +427,42 @@ int syscall_gdrom_check_drive(cd_check_drive_status_t *status);
 */
 gdc_cmd_hnd_t syscall_gdrom_send_command(cd_cmd_code_t cmd, void *params);
 
+/** \brief    ATA Statuses
+    \ingroup  gdrom_syscalls
+
+    These are the different statuses that can be returned in
+    the 4th field of cd_cmd_chk_status by syscall_gdrom_check_command.
+
+*/
+typedef enum cd_cmd_chk_ata_status {
+    ATA_STAT_INTERNAL   = 0x00,
+    ATA_STAT_IRQ        = 0x01,
+    ATA_STAT_DRQ_0      = 0x02,
+    ATA_STAT_DRQ_1      = 0x03,
+    ATA_STAT_BUSY       = 0x04
+} cd_cmd_chk_ata_status_t;
+
+/** \brief      GDROM Command Extra Status
+    \ingroup    gdrom_syscalls
+
+    This represents the data filled in by syscall_gdrom_check_command.
+    It provides more detailled data on the possible reasons a command
+    may have failed or have not yet been processed to supplement the
+    return value of the syscall.
+*/
+typedef struct cd_cmd_chk_status {
+    int32_t                 err1; /**< \brief Error code 1 */
+    int32_t                 err2; /**< \brief Error code 2 */
+    size_t                  size; /**< \brief Transferred size */
+    cd_cmd_chk_ata_status_t ata;  /**< \brief ATA status */
+} cd_cmd_chk_status_t;
+
 /** \brief   Check status of queued command for the GDROM.
 
     This function checks if a queued command has completed.
 
     \param  hnd             The request to check.
-    \param  status          The pointer to four 32-bit integers to 
-                            receive status information.
+    \param  status          cd_cmd_chk_status_t that will receive the status.
 
     \retval -1              Request has failed.
     \retval 0               Request not found.
@@ -444,7 +473,7 @@ gdc_cmd_hnd_t syscall_gdrom_send_command(cd_cmd_code_t cmd, void *params);
 
     \sa syscall_gdrom_send_command(), syscall_gdrom_exec_server()
 */
-int syscall_gdrom_check_command(gdc_cmd_hnd_t hnd, int32_t status[4]);
+int syscall_gdrom_check_command(gdc_cmd_hnd_t hnd, cd_cmd_chk_status_t *status);
 
 /** \brief   Process queued GDROM commands.
 
