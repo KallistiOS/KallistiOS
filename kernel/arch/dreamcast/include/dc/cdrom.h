@@ -185,20 +185,8 @@ static const uint8_t  CMD_MAX                __depr("Please use the new CD_ pref
 #define CDROM_READ_DMA 1    /**< \brief Read sector(s) in DMA mode */
 /** @} */
 
-/** \brief  TOC structure returned by the BIOS.
-    \ingroup gdrom
-
-    This is the structure that the CMD_GETTOC2 syscall command will return for
-    the TOC. Note the data is in FAD, not LBA/LSN.
-
-    \headerfile dc/cdrom.h
-*/
-typedef struct {
-    uint32  entry[99];          /**< \brief TOC space for 99 tracks */
-    uint32  first;              /**< \brief Point A0 information (1st track) */
-    uint32  last;               /**< \brief Point A1 information (last track) */
-    uint32  leadout_sector;     /**< \brief Point A2 information (leadout) */
-} CDROM_TOC;
+/* Compat. This can now be found in dc/syscalls.h */
+#define CDROM_TOC __depr("Use the type cd_toc_t rather than CDROM_TOC.") cd_toc_t
 
 /** \defgroup cd_toc_access         TOC Access Macros
     \brief                          Macros used to access the TOC
@@ -206,6 +194,7 @@ typedef struct {
 
     @{
 */
+
 /** \brief  Get the FAD address of a TOC entry.
     \param  n               The actual entry from the TOC to look at.
     \return                 The FAD of the entry.
@@ -356,7 +345,7 @@ int cdrom_reinit_ex(int sector_part, int cdxa, int sector_size);
     \param  high_density    Whether to read from the high density area.
     \return                 \ref cd_cmd_response
 */
-int cdrom_read_toc(CDROM_TOC *toc_buffer, bool high_density);
+int cdrom_read_toc(cd_toc_t *toc_buffer, bool high_density);
 
 /** \brief    Read one or more sector from a CD-ROM.
     \ingroup  gdrom
@@ -478,7 +467,7 @@ int cdrom_get_subcode(void *buffer, int buflen, int which);
     \param  toc             The TOC to search through.
     \return                 The FAD of the track, or 0 if none is found.
 */
-uint32 cdrom_locate_data_track(CDROM_TOC *toc);
+uint32 cdrom_locate_data_track(cd_toc_t *toc);
 
 /** \brief    Play CDDA audio tracks or sectors.
     \ingroup  gdrom
