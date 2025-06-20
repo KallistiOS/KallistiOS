@@ -281,6 +281,19 @@ typedef enum cd_cmd_code {
     CD_CMD_MAX               = 47,  /**< \brief Max of GD syscall commands */
 } cd_cmd_code_t;
 
+/** \brief      Params for READ commands.
+    \ingroup    gdrom_syscalls
+
+    These are the parameters for the CMD_PIOREAD and CMD_DMAREAD commands.
+
+*/
+typedef struct cd_read_params {
+    uint32_t    start_sec;  /* Starting sector */
+    size_t      num_sec;    /* Number of sectors */
+    void        *buffer;    /* Output buffer */
+    uint32_t    is_test;    /* Enable test mode */
+} cd_read_params_t;
+
 /** \brief      Disc area to read TOC from.
     \ingroup    gdrom_syscalls
 
