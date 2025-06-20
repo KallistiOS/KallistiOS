@@ -804,8 +804,11 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
         }
 
 read_loop:
+        /* If we're on a sector boundary and we have more than one
+           full sector to read, then short-circuit the cache here
+           and use the multi-sector reads from the CD unit. */
         if(thissect == 2048 && toread >= 2048 && (((uintptr_t)outbuf) & 31) == 0) {
-            // Round it off to an even sector count
+            /* Round it off to an even sector count. */
             thissect = toread / 2048;
             toread = thissect * 2048;
             c = cdrom_read_sectors_ex(outbuf, sector + 150, thissect, CDROM_READ_DMA);
