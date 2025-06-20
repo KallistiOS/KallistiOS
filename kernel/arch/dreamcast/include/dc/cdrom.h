@@ -2,7 +2,7 @@
 
    dc/cdrom.h
    Copyright (C) 2000-2001 Megan Potter
-   Copyright (C) 2014 Donald Haase
+   Copyright (C) 2014, 2025 Donald Haase
    Copyright (C) 2023, 2024, 2025 Ruslan Rostovtsev
 */
 
@@ -12,10 +12,10 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <dc/syscalls.h>
+#include <kos/regfield.h>
 
 /** \file    dc/cdrom.h
     \brief   CD access to the GD-ROM drive.
@@ -175,25 +175,25 @@ static const bool  CDROM_READ_DMA   __depr("Please just use true to use dma.") =
     \param  n               The actual entry from the TOC to look at.
     \return                 The FAD of the entry.
 */
-#define TOC_LBA(n) ((n) & 0x00ffffff)
+#define TOC_LBA(n) FIELD_GET(n, 0x00ffffff)
 
 /** \brief  Get the address of a TOC entry.
     \param  n               The entry from the TOC to look at.
     \return                 The entry's address.
 */
-#define TOC_ADR(n) ( ((n) & 0x0f000000) >> 24 )
+#define TOC_ADR(n) FIELD_GET(n, 0x0f000000)
 
 /** \brief  Get the control data of a TOC entry.
     \param  n               The entry from the TOC to look at.
     \return                 The entry's control value.
 */
-#define TOC_CTRL(n) ( ((n) & 0xf0000000) >> 28 )
+#define TOC_CTRL(n) FIELD_GET(n, 0xf0000000)
 
 /** \brief  Get the track number of a TOC entry.
     \param  n               The entry from the TOC to look at.
     \return                 The entry's track.
 */
-#define TOC_TRACK(n) ( ((n) & 0x00ff0000) >> 16 )
+#define TOC_TRACK(n) FIELD_GET(n, 0x00ff0000)
 /** @} */
 
 /** \brief  CD-ROM streams callback
@@ -442,7 +442,7 @@ int cdrom_get_subcode(void *buffer, size_t buflen, cd_sub_type_t which);
     \param  toc             The TOC to search through.
     \return                 The FAD of the track, or 0 if none is found.
 */
-uint32 cdrom_locate_data_track(cd_toc_t *toc);
+uint32_t cdrom_locate_data_track(cd_toc_t *toc);
 
 /** \brief    Play CDDA audio tracks or sectors.
     \ingroup  gdrom
