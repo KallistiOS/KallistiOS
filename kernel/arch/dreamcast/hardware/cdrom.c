@@ -59,12 +59,7 @@ semaphore_t _g1_ata_sem = SEM_INITIALIZER(1);
 /* Command handling */
 static gdc_cmd_hnd_t cmd_hnd = 0;
 static int cmd_response = NO_ACTIVE;
-static int32_t cmd_status[4] = {
-    0, /* Error code 1 */
-    0, /* Error code 2 */
-    0, /* Transferred size */
-    0  /* ATA status waiting */
-};
+static cd_cmd_chk_status_t cmd_status = { 0 };
 
 /* DMA and IRQ handling */
 static bool dma_in_progress = false;
@@ -131,7 +126,7 @@ static inline gdc_cmd_hnd_t cdrom_req_cmd(cd_cmd_code_t cmd, void *param) {
 static int cdrom_check_ready(void *d) {
     syscall_gdrom_exec_server();
 
-    cmd_response = syscall_gdrom_check_command(*(int *)d, cmd_status);
+    cmd_response = syscall_gdrom_check_command(*(int *)d, &cmd_status);
     if(cmd_response < 0)
         return ERR_SYS;
 
@@ -141,7 +136,7 @@ static int cdrom_check_ready(void *d) {
 static int cdrom_check_cmd_done(void *d) {
     syscall_gdrom_exec_server();
 
-    cmd_response = syscall_gdrom_check_command(*(int *)d, cmd_status);
+    cmd_response = syscall_gdrom_check_command(*(int *)d, &cmd_status);
     if(cmd_response < 0)
         return ERR_SYS;
 
@@ -155,7 +150,7 @@ static int cdrom_check_drive_ready(cd_check_drive_status_t *d) {
 static int cdrom_check_abort_done(void *d) {
     syscall_gdrom_exec_server();
 
-    cmd_response = syscall_gdrom_check_command(*(gdc_cmd_hnd_t *)d, cmd_status);
+    cmd_response = syscall_gdrom_check_command(*(gdc_cmd_hnd_t *)d, &cmd_status);
     if(cmd_response < 0)
         return ERR_SYS;
 
@@ -165,7 +160,7 @@ static int cdrom_check_abort_done(void *d) {
 static int cdrom_check_abort_streaming(void *d) {
     syscall_gdrom_exec_server();
 
-    cmd_response = syscall_gdrom_check_command(*(gdc_cmd_hnd_t *)d, cmd_status);
+    cmd_response = syscall_gdrom_check_command(*(gdc_cmd_hnd_t *)d, &cmd_status);
     if(cmd_response < 0)
         return ERR_SYS;
 
@@ -178,7 +173,7 @@ static int cdrom_check_transfer(void *d) {
 
     syscall_gdrom_exec_server();
 
-    cmd_response = syscall_gdrom_check_command(data->hnd, cmd_status);
+    cmd_response = syscall_gdrom_check_command(data->hnd, &cmd_status);
     if(cmd_response < 0)
         return ERR_SYS;
 
@@ -218,10 +213,10 @@ int cdrom_exec_cmd_timed(cd_cmd_code_t cmd, void *param, uint32_t timeout) {
     else if(cmd_response == NO_ACTIVE) {
         return ERR_NO_ACTIVE;
     }
-    else if(cmd_status[0] == 2) {
+    else if(cmd_status.err1 == 2) {
         return ERR_NO_DISC;
     }
-    else if(cmd_status[0] == 6) {
+    else if(cmd_status.err1 == 6) {
         return ERR_DISC_CHG;
     }
 
@@ -410,10 +405,10 @@ static int cdrom_read_sectors_dma_irq(cd_read_params_t *params) {
     if(cmd_response == COMPLETED || cmd_response == NO_ACTIVE) {
         return ERR_OK;
     }
-    else if(cmd_status[0] == 2) {
+    else if(cmd_status.err1 == 2) {
         return ERR_NO_DISC;
     }
-    else if(cmd_status[0] == 6) {
+    else if(cmd_status.err1 == 6) {
         return ERR_DISC_CHG;
     }
 
@@ -711,7 +706,7 @@ static void cdrom_vblank(uint32_t evt, void *data) {
 
     if(dma_in_progress) {
         syscall_gdrom_exec_server();
-        cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
+        cmd_response = syscall_gdrom_check_command(cmd_hnd, &cmd_status);
 
         if(cmd_response != PROCESSING && cmd_response != BUSY && cmd_response != STREAMING) {
             dma_in_progress = false;
@@ -732,7 +727,7 @@ static void g1_dma_irq_hnd(uint32_t code, void *data) {
         dma_in_progress = false;
 
         syscall_gdrom_exec_server();
-        cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
+        cmd_response = syscall_gdrom_check_command(cmd_hnd, &cmd_status);
 
         if(dma_blocking) {
             dma_blocking = false;
