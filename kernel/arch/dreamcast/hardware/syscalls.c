@@ -170,7 +170,7 @@ int syscall_gdrom_check_drive(uint32_t status[2]) {
         status, PARAM_NA, SUPER_FUNC_GDROM);
 }
 
-uint32_t syscall_gdrom_send_command(uint32_t cmd, void *params) {
+uint32_t syscall_gdrom_send_command(cd_cmd_code_t cmd, void *params) {
     uint32_t request_id = 0;
 
     MAKE_SYSCALL_SET(VEC_MISC_GDROM, FUNC_GDROM_SEND_COMMAND, 
