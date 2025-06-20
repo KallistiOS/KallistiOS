@@ -97,6 +97,8 @@ int vmu_pkg_build(vmu_pkg_t *src, uint8_t **dst, int *dst_size) {
 
     assert(src && dst);
 
+    if(src->data_len < 0) return -2;
+
     /* First off, figure out how big it will be */
     out_size = sizeof(vmu_hdr_t) + 512 * src->icon_cnt + src->data_len;
     ec_size = vmu_eyecatch_size(src->eyecatch_type);
@@ -138,7 +140,9 @@ int vmu_pkg_build(vmu_pkg_t *src, uint8_t **dst, int *dst_size) {
     memcpy(out, src->eyecatch_data, ec_size);
     out += ec_size;
 
-    memcpy(out, src->data, src->data_len);
+    if(src->data)
+        memcpy(out, src->data, src->data_len);
+
     out += src->data_len;
 
     /* Verify the size */

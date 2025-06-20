@@ -45,15 +45,21 @@ also for the CDDA playback routines.
 
 typedef int gdc_cmd_hnd_t;
 
+struct cmd_req_data {
+    int cmd;
+    void *data;
+};
+
+struct cmd_transfer_data {
+    gdc_cmd_hnd_t hnd;
+    size_t size;
+};
+
 /* The G1 ATA access mutex */
 mutex_t _g1_ata_mutex = MUTEX_INITIALIZER;
 
 /* Command handling */
 static gdc_cmd_hnd_t cmd_hnd = 0;
-static semaphore_t cmd_done = SEM_INITIALIZER(0);
-static bool cmd_in_progress = false;
-static uint64_t cmd_begin_time = 0;
-static uint32_t cmd_timeout = 0;
 static int cmd_response = NO_ACTIVE;
 static int32_t cmd_status[4] = {
     0, /* Error code 1 */
@@ -84,21 +90,105 @@ int cdrom_set_sector_size(int size) {
     return cdrom_reinit_ex(-1, -1, size);
 }
 
+static int cdrom_poll(void *d, uint32_t timeout, int (*cb)(void *))
+{
+    uint64_t start_time;
+    int ret;
+
+    if(timeout)
+        start_time = timer_ms_gettime64();
+
+    do {
+        ret = (*cb)(d);
+        if(ret)
+            return ret;
+
+        if(!irq_inside_int())
+            thd_pass();
+    } while(!timeout || (timer_ms_gettime64() - start_time) < timeout);
+
+    return ERR_TIMEOUT;
+}
+
+static int cdrom_submit_cmd(void *d) {
+    struct cmd_req_data *req = d;
+    int ret;
+
+    ret = syscall_gdrom_send_command(req->cmd, req->data);
+
+    syscall_gdrom_exec_server();
+
+    return ret;
+}
+
 static inline gdc_cmd_hnd_t cdrom_req_cmd(int cmd, void *param) {
-    gdc_cmd_hnd_t hnd = 0;
-    int n;
+    struct cmd_req_data req = { cmd, param };
+
     assert(cmd > 0 && cmd < CMD_MAX);
 
-    /* Submit the command */
-    for(n = 0; n < 10; ++n) {
-        hnd = syscall_gdrom_send_command(cmd, param);
-        if(hnd != 0) {
-            break;
-        }
-        syscall_gdrom_exec_server();
-        thd_pass();
-    }
-    return hnd;
+    /* Submit the command, retry if needed for 10ms */
+    return cdrom_poll(&req, 10, cdrom_submit_cmd);
+}
+
+static int cdrom_check_ready(void *d) {
+    syscall_gdrom_exec_server();
+
+    cmd_response = syscall_gdrom_check_command(*(int *)d, cmd_status);
+    if(cmd_response < 0)
+        return ERR_SYS;
+
+    return cmd_response != BUSY;
+}
+
+static int cdrom_check_cmd_done(void *d) {
+    syscall_gdrom_exec_server();
+
+    cmd_response = syscall_gdrom_check_command(*(int *)d, cmd_status);
+    if(cmd_response < 0)
+        return ERR_SYS;
+
+    return cmd_response != BUSY && cmd_response != PROCESSING;
+}
+
+static int cdrom_check_drive_ready(void *d) {
+    int rv = syscall_gdrom_check_drive(d);
+    return rv != BUSY;
+}
+
+static int cdrom_check_abort_done(void *d) {
+    syscall_gdrom_exec_server();
+
+    cmd_response = syscall_gdrom_check_command(*(gdc_cmd_hnd_t *)d, cmd_status);
+    if(cmd_response < 0)
+        return ERR_SYS;
+
+    return cmd_response == NO_ACTIVE || cmd_response == COMPLETED;
+}
+
+static int cdrom_check_abort_streaming(void *d) {
+    syscall_gdrom_exec_server();
+
+    cmd_response = syscall_gdrom_check_command(*(gdc_cmd_hnd_t *)d, cmd_status);
+    if(cmd_response < 0)
+        return ERR_SYS;
+
+    return cmd_response == NO_ACTIVE || cmd_response == COMPLETED
+        || cmd_response == STREAMING;
+}
+
+static int cdrom_check_transfer(void *d) {
+    struct cmd_transfer_data *data = d;
+
+    syscall_gdrom_exec_server();
+
+    cmd_response = syscall_gdrom_check_command(data->hnd, cmd_status);
+    if(cmd_response < 0)
+        return ERR_SYS;
+
+    if(cmd_response == NO_ACTIVE || cmd_response == COMPLETED)
+        return ERR_NO_ACTIVE;
+
+    return cdrom_stream_progress(&data->size) == 0;
 }
 
 /* Command execution sequence */
@@ -117,31 +207,9 @@ int cdrom_exec_cmd_timed(int cmd, void *param, uint32_t timeout) {
     }
 
     /* Start the process of executing the command. */
-    do {
-        syscall_gdrom_exec_server();
-        cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
-
-        if(cmd_response != BUSY) {
-            break;
-        }
-        thd_pass();
-    } while(1);
-
-    if(cmd_response == PROCESSING) {
-        cmd_timeout = timeout;
-
-        if(cmd_timeout) {
-            cmd_begin_time = timer_ms_gettime64();
-        }
-        cmd_in_progress = true;
-        sem_wait(&cmd_done);
-
-        /* If the command is still in progress, it timed out. */
-        if(cmd_in_progress) {
-            cmd_in_progress = false;
-            cdrom_abort_cmd(1000, true);
-            return ERR_TIMEOUT;
-        }
+    if(cdrom_poll(&cmd_hnd, timeout, cdrom_check_cmd_done) == ERR_TIMEOUT) {
+        cdrom_abort_cmd(1000, true);
+        return ERR_TIMEOUT;
     }
 
     if(cmd_response != STREAMING) {
@@ -169,14 +237,12 @@ int cdrom_exec_cmd_timed(int cmd, void *param, uint32_t timeout) {
 
 int cdrom_abort_cmd(uint32_t timeout, bool abort_dma) {
     int rv = ERR_OK;
-    uint64_t begin;
     int old = irq_disable();
 
     if(cmd_hnd <= 0) {
         irq_restore(old);
         return ERR_NO_ACTIVE;
     }
-    cmd_in_progress = false;
 
     if(abort_dma && dma_in_progress) {
         dma_in_progress = false;
@@ -191,27 +257,12 @@ int cdrom_abort_cmd(uint32_t timeout, bool abort_dma) {
     irq_restore(old);
     syscall_gdrom_abort_command(cmd_hnd);
 
-    if(timeout) {
-        begin = timer_ms_gettime64();
+    if(cdrom_poll(&cmd_hnd, timeout, cdrom_check_abort_done) == ERR_TIMEOUT) {
+        dbglog(DBG_ERROR, "cdrom_abort_cmd: Timeout exceeded, resetting.\n");
+        rv = ERR_TIMEOUT;
+        syscall_gdrom_reset();
+        syscall_gdrom_init();
     }
-    do {
-        syscall_gdrom_exec_server();
-        cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
-
-        if(cmd_response == NO_ACTIVE || cmd_response == COMPLETED) {
-            break;
-        }
-        if(timeout) {
-            if((timer_ms_gettime64() - begin) >= timeout) {
-                dbglog(DBG_ERROR, "cdrom_abort_cmd: Timeout exceeded, resetting.\n");
-                rv = ERR_TIMEOUT;
-                syscall_gdrom_reset();
-                syscall_gdrom_init();
-                break;
-            }
-        }
-        thd_pass();
-    } while(1);
 
     cmd_hnd = 0;
     stream_mode = -1;
@@ -226,8 +277,8 @@ int cdrom_abort_cmd(uint32_t timeout, bool abort_dma) {
 
 /* Return the status of the drive as two integers (see constants) */
 int cdrom_get_status(int *status, int *disc_type) {
-    int rv = ERR_OK;
     uint32_t params[2];
+    int rv;
 
     /* We might be called in an interrupt to check for ISO cache
        flushing, so make sure we're not interrupting something
@@ -236,18 +287,13 @@ int cdrom_get_status(int *status, int *disc_type) {
         /* DH: Figure out a better return to signal error */
         return -1;
 
-    do {
-        rv = syscall_gdrom_check_drive(params);
-
-        if(rv != BUSY) {
-            break;
-        }
-        thd_pass();
-    } while(1);
+    rv = cdrom_poll(params, 0, cdrom_check_drive_ready);
 
     mutex_unlock(&_g1_ata_mutex);
 
     if(rv >= 0) {
+        rv = ERR_OK;
+
         if(status != NULL)
             *status = params[0];
 
@@ -359,38 +405,15 @@ static int cdrom_read_sectors_dma_irq(void *params) {
     dma_blocking = true;
 
     /* Start the process of executing the command. */
-    do {
-        syscall_gdrom_exec_server();
-        cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
-
-        if(cmd_response != BUSY) {
-            break;
-        }
-        thd_pass();
-    } while(1);
+    cdrom_poll(&cmd_hnd, 0, cdrom_check_ready);
 
     if(cmd_response == PROCESSING) {
-        cmd_timeout = 0;
-        /* Poll syscalls in vblank IRQ in case an unexpected error occurs
-            while we wait DMA IRQ. */
-        cmd_in_progress = true;
-
         /* Wait DMA is finished or command failed. */
         sem_wait(&dma_done);
 
         /* Just to make sure the command is finished properly.
            Usually we are already done here. */
-        if(cmd_response == PROCESSING || cmd_response == BUSY) {
-            do {
-                syscall_gdrom_exec_server();
-                cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
-
-                if(cmd_response != PROCESSING && cmd_response != BUSY) {
-                    break;
-                }
-                thd_pass();
-            } while(1);
-        }
+        cdrom_poll(&cmd_hnd, 0, cdrom_check_cmd_done);
     }
     else {
         /* The command can complete or fails immediately,
@@ -506,23 +529,12 @@ int cdrom_stream_stop(bool abort_dma) {
     }
     mutex_lock(&_g1_ata_mutex);
 
-    do {
-        syscall_gdrom_exec_server();
-        cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
+    cdrom_poll(&cmd_hnd, 0, cdrom_check_abort_streaming);
 
-        if(cmd_response < 0) {
-            rv = ERR_SYS;
-            break;
-        }
-        else if(cmd_response == COMPLETED || cmd_response == NO_ACTIVE) {
-            break;
-        }
-        else if(cmd_response == STREAMING) {
-            mutex_unlock(&_g1_ata_mutex);
-            return cdrom_abort_cmd(1000, false);
-        }
-        thd_pass();
-    } while(1);
+    if(cmd_response == STREAMING) {
+        mutex_unlock(&_g1_ata_mutex);
+        return cdrom_abort_cmd(1000, false);
+    }
 
     cmd_hnd = 0;
     stream_mode = -1;
@@ -537,7 +549,7 @@ int cdrom_stream_stop(bool abort_dma) {
 int cdrom_stream_request(void *buffer, size_t size, bool block) {
     int rs, rv = ERR_OK;
     int32_t params[2];
-    size_t check_size = -1;
+    struct cmd_transfer_data data;
 
     if(cmd_hnd <= 0) {
         return ERR_NO_ACTIVE;
@@ -569,7 +581,6 @@ int cdrom_stream_request(void *buffer, size_t size, bool block) {
     mutex_lock_scoped(&_g1_ata_mutex);
 
     if(stream_mode == CDROM_READ_DMA) {
-
         dma_in_progress = true;
         dma_blocking = block;
 
@@ -591,55 +602,23 @@ int cdrom_stream_request(void *buffer, size_t size, bool block) {
             return rv;
         }
         sem_wait(&dma_done);
+    }
+    else {
+        rs = syscall_gdrom_pio_transfer(cmd_hnd, params);
+        if(rs < 0)
+            return ERR_SYS;
+    }
 
-        do {
-            syscall_gdrom_exec_server();
-            cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
+    data = (struct cmd_transfer_data){ cmd_hnd, 0 };
 
-            if(cmd_response < 0) {
-                rv = ERR_SYS;
-                break;
-            }
-            else if(cmd_response == COMPLETED || cmd_response == NO_ACTIVE) {
-                cmd_hnd = 0;
-                break;
-            }
-            else if(syscall_gdrom_dma_check(cmd_hnd, &check_size) == 0) {
-                break;
-            }
-            thd_pass();
-
-        } while(1);
+    if(cdrom_poll(&data, 0, cdrom_check_transfer) == ERR_NO_ACTIVE) {
+        cmd_hnd = 0;
     }
     else if(stream_mode == CDROM_READ_PIO) {
-
-        rs = syscall_gdrom_pio_transfer(cmd_hnd, params);
-
-        if(rs < 0) {
-            return ERR_SYS;
-        }
-        do {
-            syscall_gdrom_exec_server();
-            cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
-
-            if(cmd_response < 0) {
-                rv = ERR_SYS;
-                break;
-            }
-            else if(cmd_response == COMPLETED || cmd_response == NO_ACTIVE) {
-                cmd_hnd = 0;
-                break;
-            }
-            else if(syscall_gdrom_pio_check(cmd_hnd, &check_size) == 0) {
-                /* Syscalls doesn't call it on last reading in PIO mode.
-                   Looks like a bug, fixing it. */
-                if(check_size == 0 && stream_cb) {
-                    stream_cb(stream_cb_param);
-                }
-                break;
-            }
-            thd_pass();
-        } while(1);
+        /* Syscalls doesn't call it on last reading in PIO mode.
+           Looks like a bug, fixing it. */
+        if(data.size == 0 && stream_cb)
+            stream_cb(stream_cb_param);
     }
 
     return rv;
@@ -772,32 +751,19 @@ static void cdrom_vblank(uint32 evt, void *data) {
     (void)evt;
     (void)data;
 
-    if(!cmd_in_progress) {
-        return;
-    }
+    if(dma_in_progress) {
+        syscall_gdrom_exec_server();
+        cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
 
-    syscall_gdrom_exec_server();
-    cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
-
-    if(cmd_response != PROCESSING && cmd_response != BUSY) {
-        cmd_in_progress = false;
-
-        if(dma_in_progress) {
+        if(cmd_response != PROCESSING && cmd_response != BUSY && cmd_response != STREAMING) {
             dma_in_progress = false;
 
             if(dma_blocking) {
                 dma_blocking = false;
                 sem_signal(&dma_done);
+                thd_schedule(1, 0);
             }
         }
-        else {
-            sem_signal(&cmd_done);
-        }
-        thd_schedule(1, 0);
-    }
-    else if(cmd_timeout && (timer_ms_gettime64() - cmd_begin_time) >= cmd_timeout) {
-        sem_signal(&cmd_done);
-        thd_schedule(1, 0);
     }
 }
 
@@ -807,11 +773,9 @@ static void g1_dma_irq_hnd(uint32_t code, void *data) {
     if(dma_in_progress) {
         dma_in_progress = false;
 
-        if(cmd_in_progress) {
-            cmd_in_progress = false;
-            syscall_gdrom_exec_server();
-            cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
-        }
+        syscall_gdrom_exec_server();
+        cmd_response = syscall_gdrom_check_command(cmd_hnd, cmd_status);
+
         if(dma_blocking) {
             dma_blocking = false;
             sem_signal(&dma_done);

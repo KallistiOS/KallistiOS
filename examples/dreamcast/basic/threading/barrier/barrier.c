@@ -134,8 +134,8 @@ int main(int argc, char* argv[]) {
 
     printf("Joining threads...\n");
     for(unsigned  t = 0; t < THREAD_COUNT - 1; ++t) {
-        bool thread_ret;
-        const int ret = thd_join(threads[t], (void**)&thread_ret);
+        void *thread_ret;
+        const int ret = thd_join(threads[t], &thread_ret);
 
         if(ret) {
             fprintf(stderr, "Failed to join thread %u with code: %d!\n", 

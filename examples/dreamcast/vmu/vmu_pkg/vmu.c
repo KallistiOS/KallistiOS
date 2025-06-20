@@ -15,66 +15,93 @@
 
 #define NB_ICONS_MAX 3
 
+/* How many bytes of data to write */
+#define DATA_LEN 4096
+
+#define SCREEN_W 640
+#define SCREEN_H 480
+
+/* The Y indentation for the VMU Info text on screen */
+#define INFO_Y 88
+
+/* The amount of space from the top of one row of text to the next */
+#define ROW_SPACER 24
+
 void draw_dir(void) {
     file_t      d;
-    int     y = 88;
+    size_t      y = INFO_Y;
     dirent_t    *de;
 
     d = fs_open("/vmu/a1", O_RDONLY | O_DIR);
 
-    if(!d) {
-        bfont_draw_str(vram_s + y * 640 + 10, 640, 0, "Can't read VMU");
+    /* If fs_open returned an error */
+    if(d == FILEHND_INVALID) {
+        bfont_draw_str(vram_s + y * SCREEN_W + 10, SCREEN_W, 0, "Can't read VMU");
+        return;
     }
-    else {
-        while((de = fs_readdir(d))) {
-            bfont_draw_str(vram_s + y * 640 + 10, 640, 0, de->name);
-            y += 24;
 
-            if(y >= (480 - 24))
-                break;
-        }
+    /* Since there was no error, read through the files */
+    while((de = fs_readdir(d))) {
+        bfont_draw_str(vram_s + y * SCREEN_W + 10, SCREEN_W, 0, de->name);
+        y += ROW_SPACER;
 
-        fs_close(d);
+        /* If we would go off the screen, stop! */
+        if(y >= (SCREEN_H - ROW_SPACER))
+            break;
     }
+
+    fs_close(d);
 }
 
-int dev_checked = 0;
+/* Clears out the portion of the screen we use to write info to */
+void clear_screen_info(void) {
+    memset(vram_s + INFO_Y * SCREEN_W, 0, SCREEN_W * (SCREEN_H - 64) * 2);
+}
+
+bool dev_found = false;
 void new_vmu(void) {
-    maple_device_t * dev;
+    maple_device_t *dev;
 
     dev = maple_enum_dev(0, 1);
 
-    if(dev == NULL) {
-        if(dev_checked) {
-            memset(vram_s + 88 * 640, 0, 640 * (480 - 64) * 2);
-            bfont_draw_str(vram_s + 88 * 640 + 10, 640, 0, "No VMU");
-            dev_checked = 0;
-        }
+    /* Device was not found and we haven't written that to the screen yet */
+    if(!dev && dev_found) {
+        clear_screen_info();
+        bfont_draw_str(vram_s + INFO_Y * SCREEN_W + 10, SCREEN_W, 0, "No VMU");
+        dev_found = false;
     }
-    else if(dev_checked) {
-    }
-    else {
-        memset(vram_s + 88 * 640, 0, 640 * (480 - 88));
+    /* Device was found and screen currently says 'No VMU' */
+    else if(dev && !dev_found) {
+        clear_screen_info();
         draw_dir();
-        dev_checked = 1;
+        dev_found = true;
     }
+
+    /* In the other two conditions it's not necessary to update the screen */
 }
 
 int wait_start(void) {
     maple_device_t *cont;
     cont_state_t *state;
+    bool cont_warning_displayed = false;
 
     for(;;) {
-        new_vmu();
-
         cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
 
-        if(!cont) continue;
+        if(!cont) {
+            if(!cont_warning_displayed) {
+                clear_screen_info();
+                bfont_draw_str(vram_s + INFO_Y * SCREEN_W + 10, SCREEN_W, 0, "No Controller");
+                cont_warning_displayed = true;
+            }
+            continue;
+        }
 
         state = (cont_state_t *)maple_dev_status(cont);
 
-        if(!state)
-            continue;
+        if(!state) continue;
+
+        new_vmu();
 
         if(state->buttons & CONT_START)
             return 0;
@@ -86,7 +113,7 @@ static unsigned char vmu_icon[ICON_SIZE * NB_ICONS_MAX];
 /* Here's the actual meat of it */
 void write_entry(void) {
     vmu_pkg_t   pkg;
-    uint8       data[4096], *pkg_out;
+    uint8_t       data[DATA_LEN], *pkg_out;
     int     pkg_size;
     int     i;
     file_t      f;
@@ -98,8 +125,10 @@ void write_entry(void) {
     pkg.icon_data = vmu_icon;
     pkg.icon_anim_speed = 8;
     pkg.eyecatch_type = VMUPKG_EC_NONE;
+    pkg.data_len = DATA_LEN;
+    pkg.data = data;
 
-    for(i = 0; i < 4096; i++)
+    for(i = 0; i < DATA_LEN; i++)
         data[i] = i & 255;
 
     vmu_pkg_load_icon(&pkg, "/rd/ebook.ico");
@@ -119,15 +148,16 @@ void write_entry(void) {
 }
 
 int main(int argc, char **argv) {
-    bfont_draw_str(vram_s + 20 * 640 + 20, 640, 0,
+    bfont_draw_str(vram_s + 20 * SCREEN_W + 20, SCREEN_W, 0,
                    "Put a VMU you don't care too much about");
-    bfont_draw_str(vram_s + 42 * 640 + 20, 640, 0,
+    bfont_draw_str(vram_s + 42 * SCREEN_W + 20, SCREEN_W, 0,
                    "in slot A1 and press START");
-    bfont_draw_str(vram_s + 88 * 640 + 10, 640, 0, "No VMU");
+    bfont_draw_str(vram_s + INFO_Y * SCREEN_W + 10, SCREEN_W, 0, "No VMU");
 
     if(wait_start() < 0) return 0;
 
-    write_entry();
+    /* If there was a vmu found, write to it */
+    if(dev_found) write_entry();
 
     return 0;
 }
