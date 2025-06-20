@@ -88,8 +88,7 @@ int cdrom_set_sector_size(int size) {
     return cdrom_reinit_ex(-1, -1, size);
 }
 
-static int cdrom_poll(void *d, uint32_t timeout, int (*cb)(void *))
-{
+static int cdrom_poll(void *d, uint32_t timeout, int (*cb)(void *)) {
     uint64_t start_time;
     int ret;
 
@@ -149,8 +148,7 @@ static int cdrom_check_cmd_done(void *d) {
 }
 
 static int cdrom_check_drive_ready(cd_check_drive_status_t *d) {
-    int rv = syscall_gdrom_check_drive(d);
-    return rv != BUSY;
+    return (syscall_gdrom_check_drive(d) != BUSY);
 }
 
 static int cdrom_check_abort_done(void *d) {
@@ -195,8 +193,6 @@ int cdrom_exec_cmd(cd_cmd_code_t cmd, void *param) {
 }
 
 int cdrom_exec_cmd_timed(cd_cmd_code_t cmd, void *param, uint32_t timeout) {
-    int rv = ERR_OK;
-
     mutex_lock_scoped(&_g1_ata_mutex);
     cmd_hnd = cdrom_req_cmd(cmd, param);
 
@@ -214,9 +210,6 @@ int cdrom_exec_cmd_timed(cd_cmd_code_t cmd, void *param, uint32_t timeout) {
         cmd_hnd = 0;
     }
 
-    if(rv != ERR_OK) {
-        return rv;
-    }
     else if(cmd_response == COMPLETED || cmd_response == STREAMING) {
         return ERR_OK;
     }
@@ -235,7 +228,7 @@ int cdrom_exec_cmd_timed(cd_cmd_code_t cmd, void *param, uint32_t timeout) {
 
 int cdrom_abort_cmd(uint32_t timeout, bool abort_dma) {
     int rv = ERR_OK;
-    int old = irq_disable();
+    irq_mask_t old = irq_disable();
 
     if(cmd_hnd <= 0) {
         irq_restore(old);
@@ -371,26 +364,20 @@ int cdrom_reinit_ex(int sector_part, int cdxa, int sector_size) {
         return r;
     }
 
-    r = cdrom_change_datatype(sector_part, cdxa, sector_size);
-
-    return r;
+    return cdrom_change_datatype(sector_part, cdxa, sector_size);
 }
 
 /* Read the table of contents */
 int cdrom_read_toc(cd_toc_t *toc_buffer, bool high_density) {
     cd_cmd_toc_params_t params;
-    int rv;
 
     params.area = high_density ? CD_AREA_HIGH : CD_AREA_LOW;
     params.buffer = toc_buffer;
 
-    rv = cdrom_exec_cmd(CD_CMD_GETTOC2, &params);
-
-    return rv;
+    return cdrom_exec_cmd(CD_CMD_GETTOC2, &params);
 }
 
 static int cdrom_read_sectors_dma_irq(cd_read_params_t *params) {
-
     mutex_lock_scoped(&_g1_ata_mutex);
     cmd_hnd = cdrom_req_cmd(CD_CMD_DMAREAD, params);
 
@@ -438,7 +425,6 @@ static int cdrom_read_sectors_dma_irq(cd_read_params_t *params) {
 /* Enhanced Sector reading: Choose mode to read in. */
 int cdrom_read_sectors_ex(void *buffer, uint32_t sector, size_t cnt, cd_read_mode_t mode) {
     cd_read_params_t params;
-    int rv = ERR_OK;
     uintptr_t buf_addr = ((uintptr_t)buffer);
 
     params.start_sec = sector;  /* Starting sector */
@@ -462,7 +448,7 @@ int cdrom_read_sectors_ex(void *buffer, uint32_t sector, size_t cnt, cd_read_mod
             /* Invalidate the dcache over the range of the data. */
             dcache_inval_range(buf_addr, cnt * cur_sector_size);
         }
-        rv = cdrom_read_sectors_dma_irq(&params);
+        return cdrom_read_sectors_dma_irq(&params);
     }
     else if(mode == CDROM_READ_PIO) {
         params.buffer = buffer;
@@ -471,10 +457,10 @@ int cdrom_read_sectors_ex(void *buffer, uint32_t sector, size_t cnt, cd_read_mod
             dbglog(DBG_ERROR, "cdrom_read_sectors_ex: Unaligned memory for PIO (2-byte).\n");
             return ERR_SYS;
         }
-        rv = cdrom_exec_cmd(CD_CMD_PIOREAD, &params);
+        return cdrom_exec_cmd(CD_CMD_PIOREAD, &params);
     }
 
-    return rv;
+    return ERR_OK;
 }
 
 /* Basic old sector read */
@@ -511,10 +497,8 @@ int cdrom_stream_start(int sector, int cnt, int mode) {
 }
 
 int cdrom_stream_stop(bool abort_dma) {
-    int rv = ERR_OK;
-
     if(cmd_hnd <= 0) {
-        return rv;
+        return ERR_OK;
     }
     if(abort_dma && dma_in_progress) {
         return cdrom_abort_cmd(1000, true);
@@ -535,11 +519,11 @@ int cdrom_stream_stop(bool abort_dma) {
     if(stream_cb) {
         cdrom_stream_set_callback(0, NULL);
     }
-    return rv;
+    return ERR_OK;
 }
 
 int cdrom_stream_request(void *buffer, size_t size, bool block) {
-    int rs, rv = ERR_OK;
+    int rs;
     uintptr_t buf_addr = ((uintptr_t)buffer);
     cd_transfer_params_t params;
     struct cmd_transfer_data data;
@@ -601,7 +585,7 @@ int cdrom_stream_request(void *buffer, size_t size, bool block) {
             return ERR_SYS;
         }
         if(!block) {
-            return rv;
+            return ERR_OK;
         }
         sem_wait(&dma_done);
     }
@@ -623,7 +607,7 @@ int cdrom_stream_request(void *buffer, size_t size, bool block) {
             stream_cb(stream_cb_param);
     }
 
-    return rv;
+    return ERR_OK;
 }
 
 int cdrom_stream_progress(size_t *size) {
@@ -670,17 +654,15 @@ int cdrom_get_subcode(void *buffer, size_t buflen, cd_sub_type_t which) {
         size_t buflen;
         void *buffer;
     } params;
-    int rv;
 
     params.which = which;
     params.buflen = buflen;
     params.buffer = buffer;
-    rv = cdrom_exec_cmd(CD_CMD_GETSCD, &params);
-    return rv;
+    return cdrom_exec_cmd(CD_CMD_GETSCD, &params);
 }
 
 /* Locate the LBA sector of the data track; use after reading TOC */
-uint32 cdrom_locate_data_track(cd_toc_t *toc) {
+uint32_t cdrom_locate_data_track(cd_toc_t *toc) {
     int i, first, last;
 
     first = TOC_TRACK(toc->first);
@@ -706,7 +688,6 @@ uint32 cdrom_locate_data_track(cd_toc_t *toc) {
  */
 int cdrom_cdda_play(uint32_t start, uint32_t end, uint32_t repeat, int mode) {
     cd_cmd_play_params_t params;
-    int rv = ERR_OK;
 
     /* Limit to 0-15 */
     if(repeat > 15)
@@ -717,35 +698,29 @@ int cdrom_cdda_play(uint32_t start, uint32_t end, uint32_t repeat, int mode) {
     params.repeat = repeat;
 
     if(mode == CDDA_TRACKS)
-        rv = cdrom_exec_cmd(CD_CMD_PLAY, &params);
+        return cdrom_exec_cmd(CD_CMD_PLAY, &params);
     else if(mode == CDDA_SECTORS)
-        rv = cdrom_exec_cmd(CD_CMD_PLAY2, &params);
-
-    return rv;
+        return cdrom_exec_cmd(CD_CMD_PLAY2, &params);
+    else
+        return ERR_OK;
 }
 
 /* Pause CDDA audio playback */
 int cdrom_cdda_pause(void) {
-    int rv;
-    rv = cdrom_exec_cmd(CD_CMD_PAUSE, NULL);
-    return rv;
+    return cdrom_exec_cmd(CD_CMD_PAUSE, NULL);
 }
 
 /* Resume CDDA audio playback */
 int cdrom_cdda_resume(void) {
-    int rv;
-    rv = cdrom_exec_cmd(CD_CMD_RELEASE, NULL);
-    return rv;
+    return cdrom_exec_cmd(CD_CMD_RELEASE, NULL);
 }
 
 /* Spin down the CD */
 int cdrom_spin_down(void) {
-    int rv;
-    rv = cdrom_exec_cmd(CD_CMD_STOP, NULL);
-    return rv;
+    return cdrom_exec_cmd(CD_CMD_STOP, NULL);
 }
 
-static void cdrom_vblank(uint32 evt, void *data) {
+static void cdrom_vblank(uint32_t evt, void *data) {
     (void)evt;
     (void)data;
 
