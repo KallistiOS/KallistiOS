@@ -142,22 +142,6 @@ static const uint8_t  CMD_MAX                __depr("Please use the new CD_ pref
 #define CDROM_READ_DATA_AREA    0x2000    /**< \brief Read the data area */
 /** @} */
 
-/** \defgroup cd_read_subcode_type    Read Subcode Type
-    \brief                            Types of data to read from sector subcode
-    \ingroup  gdrom
-
-    Types of data available to read from the sector subcode. These are 
-    possible values for the first parameter sent to the GETSCD syscall.
-    @{
-*/
-#define CD_SUB_Q_ALL            0    /**< \brief Read all Subcode Data */
-#define CD_SUB_Q_CHANNEL        1    /**< \brief Read Q Channel Subcode Data */
-#define CD_SUB_MEDIA_CATALOG    2    /**< \brief Read the Media Catalog 
-                                                 Subcode Data */
-#define CD_SUB_TRACK_ISRC       3    /**< \brief Read the ISRC Subcode Data */
-#define CD_SUB_RESERVED         4    /**< \brief Reserved */
-/** @} */
-
 /** \defgroup cd_subcode_audio    Subcode Audio Status
     \brief                        GETSCD syscall response codes
     \ingroup  gdrom
@@ -445,9 +429,9 @@ void cdrom_stream_set_callback(cdrom_stream_callback_t callback, void *param);
     \param  which           Which subcode type do you wish to get.
 
     \return                 \ref cd_cmd_response
-    \see    cd_read_subcode_type
+    \see    cd_sub_type_t
 */
-int cdrom_get_subcode(void *buffer, int buflen, int which);
+int cdrom_get_subcode(void *buffer, size_t buflen, cd_sub_type_t which);
 
 /** \brief    Locate the sector of the data track.
     \ingroup  gdrom
