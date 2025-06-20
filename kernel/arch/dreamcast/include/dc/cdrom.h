@@ -130,18 +130,6 @@ static const uint8_t  CMD_MAX                __depr("Please use the new CD_ pref
 #define CDDA_SECTORS    2   /**< \brief Play by sector number */
 /** @} */
 
-/** \defgroup cd_read_sector_part    Read Sector Part
-    \brief                           Whether to read data or whole sector
-    \ingroup  gdrom
-
-    Parts of the a CD-ROM sector to read. These are possible values for the
-    third parameter word sent with the change data type syscall. 
-    @{
-*/
-#define CDROM_READ_WHOLE_SECTOR 0x1000    /**< \brief Read the whole sector */
-#define CDROM_READ_DATA_AREA    0x2000    /**< \brief Read the data area */
-/** @} */
-
 /** \brief      Mode to use when reading sectors
     \ingroup    gdrom
 
@@ -261,17 +249,6 @@ int cdrom_get_status(int *status, int *disc_type);
 /** \brief    Change the datatype of disc.
     \ingroup  gdrom
 
-    \note                   This function is formally deprecated. It should not
-                            be used in any future code, and may be removed in
-                            the future. You should instead use
-                            cdrom_change_datatype.
-*/
-int cdrom_change_dataype(int sector_part, int cdxa, int sector_size)
-                        __depr("Use cdrom_change_datatype instead.");
-
-/** \brief    Change the datatype of disc.
-    \ingroup  gdrom
-
     This function will take in all parameters to pass to the change_datatype 
     syscall. This allows these parameters to be modified without a reinit. 
     Each parameter allows -1 as a default, which is tied to the former static 
@@ -284,7 +261,7 @@ int cdrom_change_dataype(int sector_part, int cdxa, int sector_size)
     \return                 \ref cd_cmd_response
     \see    cd_read_sector_part
 */
-int cdrom_change_datatype(int sector_part, int cdxa, int sector_size);
+int cdrom_change_datatype(cd_read_sec_part_t sector_part, int cdxa, int sector_size);
 
 /** \brief    Re-initialize the GD-ROM drive.
     \ingroup  gdrom
@@ -309,10 +286,10 @@ int cdrom_reinit(void);
     \param sector_size      What sector size to read (eg. - 2048, 2532).
 
     \return                 \ref cd_cmd_response
-    \see    cd_read_sector_part
+    \see    cd_read_sec_part_t
     \see    cdrom_change_datatype
 */
-int cdrom_reinit_ex(int sector_part, int cdxa, int sector_size);
+int cdrom_reinit_ex(cd_read_sec_part_t sector_part, int cdxa, int sector_size);
 
 /** \brief    Read the table of contents from the disc.
     \ingroup  gdrom
