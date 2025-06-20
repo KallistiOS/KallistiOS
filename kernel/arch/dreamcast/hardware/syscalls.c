@@ -204,7 +204,7 @@ void syscall_gdrom_dma_callback(uintptr_t callback, void *param) {
         callback, param, SUPER_FUNC_GDROM);
 }
 
-int syscall_gdrom_dma_transfer(gdc_cmd_hnd_t hnd, const int32_t params[2]) {
+int syscall_gdrom_dma_transfer(gdc_cmd_hnd_t hnd, const cd_transfer_params_t *params) {
     MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_DMA_TRANSFER, 
         hnd, params, SUPER_FUNC_GDROM);
 }
@@ -219,7 +219,7 @@ void syscall_gdrom_pio_callback(uintptr_t callback, void *param) {
         callback, param, SUPER_FUNC_GDROM);
 }
 
-int syscall_gdrom_pio_transfer(gdc_cmd_hnd_t hnd, const int32_t params[2]) {
+int syscall_gdrom_pio_transfer(gdc_cmd_hnd_t hnd, const cd_transfer_params_t *params) {
     MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_PIO_TRANSFER, 
         hnd, params, SUPER_FUNC_GDROM);
 }
