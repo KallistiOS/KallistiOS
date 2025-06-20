@@ -25,7 +25,6 @@
 #include <dc/pvr.h>
 #include <dc/vmufs.h>
 #include <dc/syscalls.h>
-#include <dc/dmac.h>
 
 #include "initall_hdrs.h"
 
@@ -40,6 +39,7 @@ extern uintptr_t _bss_start, end;
 extern void _init(void);
 extern void _fini(void);
 extern void __verify_newlib_patch();
+extern void dma_init(void);
 
 void (*__kos_init_early_fn)(void) __attribute__((weak,section(".data"))) = NULL;
 
@@ -280,13 +280,7 @@ void arch_main(void) {
     uint8 *bss_start = (uint8 *)(&_bss_start);
     int rv;
 
-    if (KOS_PLATFORM_IS_NAOMI) {
-        /* Ugh. I'm really not sure why we have to set up these DMA registers this
-           way on boot, but failing to do so breaks maple... */
-        DMAC_SAR2 = 0;
-        DMAC_CHCR2 = 0x1201;
-        DMAC_DMAOR = 0x8201;
-    }
+    dma_init();
 
     /* Ensure the WDT is not enabled from a previous session */
     wdt_disable();
