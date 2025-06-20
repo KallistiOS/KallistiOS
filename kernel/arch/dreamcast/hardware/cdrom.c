@@ -43,8 +43,6 @@ also for the CDDA playback routines.
 
 */
 
-typedef int gdc_cmd_hnd_t;
-
 struct cmd_req_data {
     int cmd;
     void *data;
@@ -110,9 +108,9 @@ static int cdrom_poll(void *d, uint32_t timeout, int (*cb)(void *))
     return ERR_TIMEOUT;
 }
 
-static int cdrom_submit_cmd(void *d) {
+static gdc_cmd_hnd_t cdrom_submit_cmd(void *d) {
     struct cmd_req_data *req = d;
-    int ret;
+    gdc_cmd_hnd_t ret;
 
     ret = syscall_gdrom_send_command(req->cmd, req->data);
 
@@ -127,7 +125,7 @@ static inline gdc_cmd_hnd_t cdrom_req_cmd(cd_cmd_code_t cmd, void *param) {
     assert(cmd > 0 && cmd < CD_CMD_MAX);
 
     /* Submit the command, retry if needed for 10ms */
-    return cdrom_poll(&req, 10, cdrom_submit_cmd);
+    return (gdc_cmd_hnd_t)cdrom_poll(&req, 10, (int (*)(void *))cdrom_submit_cmd);
 }
 
 static int cdrom_check_ready(void *d) {
