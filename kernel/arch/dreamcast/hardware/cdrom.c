@@ -436,7 +436,7 @@ static int cdrom_read_sectors_dma_irq(cd_read_params_t *params) {
 }
 
 /* Enhanced Sector reading: Choose mode to read in. */
-int cdrom_read_sectors_ex(void *buffer, uint32_t sector, size_t cnt, int mode) {
+int cdrom_read_sectors_ex(void *buffer, uint32_t sector, size_t cnt, cd_read_mode_t mode) {
     cd_read_params_t params;
     int rv = ERR_OK;
     uintptr_t buf_addr = ((uintptr_t)buffer);
