@@ -192,6 +192,50 @@ int syscall_flashrom_delete(uint32_t pos);
     as well as data types for their returns and parameters.
 */
 
+/** \brief      Status of GDROM drive
+    \ingroup    gdrom_syscalls
+
+    These are the values that can be returned as the first param of
+    syscall_gdrom_check_drive.
+*/
+typedef enum cd_stat {
+    CD_STATUS_READ_FAIL = -1,   /**< \brief Can't read status */
+    CD_STATUS_BUSY      =  0,   /**< \brief Drive is busy */
+    CD_STATUS_PAUSED    =  1,   /**< \brief Disc is paused */
+    CD_STATUS_STANDBY   =  2,   /**< \brief Drive is in standby */
+    CD_STATUS_PLAYING   =  3,   /**< \brief Drive is currently playing */
+    CD_STATUS_SEEKING   =  4,   /**< \brief Drive is currently seeking */
+    CD_STATUS_SCANNING  =  5,   /**< \brief Drive is scanning */
+    CD_STATUS_OPEN      =  6,   /**< \brief Disc tray is open */
+    CD_STATUS_NO_DISC   =  7,   /**< \brief No disc inserted */
+    CD_STATUS_RETRY     =  8,   /**< \brief Retry is needed */
+    CD_STATUS_ERROR     =  9,   /**< \brief System error */
+    CD_STATUS_FATAL     =  12,  /**< \brief Need reset syscalls */
+} cd_stat_t;
+
+/** \brief      Disc types the GDROM can identify
+    \ingroup    gdrom_syscalls
+
+    These are the values that can be returned as the second param of
+    syscall_gdrom_check_drive.
+*/
+typedef enum cd_disc_types {
+    CD_CDDA     = 0x00,    /**< \brief Audio CD (Red book) or no disc */
+    CD_CDROM    = 0x10,    /**< \brief CD-ROM or CD-R (Yellow book) */
+    CD_CDROM_XA = 0x20,    /**< \brief CD-ROM XA (Yellow book extension) */
+    CD_CDI      = 0x30,    /**< \brief CD-i (Green book) */
+    CD_GDROM    = 0x80,    /**< \brief GD-ROM */
+    CD_FAIL     = 0xf0     /**< \brief Need reset syscalls */
+} cd_disc_types_t;
+
+/** \brief      Status filled by Check Drive syscall
+    \ingroup    gdrom_syscalls
+*/
+typedef struct cd_check_drive_status {
+    cd_stat_t       status;
+    cd_disc_types_t disc_type;
+} cd_check_drive_status_t;
+
 /** \brief      Handle for a requested command
     \ingroup    gdrom_syscalls
 
@@ -254,16 +298,16 @@ void syscall_gdrom_reset(void);
 
     This function retrieves the general condition of the GDROM drive. It 
     populates a provided array with two elements. The first element 
-    indicates the current drive status, and the second element identifies 
-    the type of disk inserted (if any).
+    indicates the current drive status (cd_stat_t), and the second
+    element identifies the type of disc inserted if any (cd_disc_types_t).
 
-    \param  status          The pointer to two 32-bit unsigned integers to 
-                            receive extended status information.
+    \param  status          A cd_check_drive_status_t filled with drive
+                            status information.
 
     \return                 0 on success, or non-zero on
                             failure.
 */
-int syscall_gdrom_check_drive(uint32_t status[2]);
+int syscall_gdrom_check_drive(cd_check_drive_status_t *status);
 
 /** \brief   Send a command to the GDROM command queue.
 

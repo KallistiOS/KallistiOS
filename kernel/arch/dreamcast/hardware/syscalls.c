@@ -165,7 +165,7 @@ void syscall_gdrom_reset(void) {
         PARAM_NA, PARAM_NA, SUPER_FUNC_GDROM);
 }
 
-int syscall_gdrom_check_drive(uint32_t status[2]) {
+int syscall_gdrom_check_drive(cd_check_drive_status_t *status) {
     MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_DRIVE_STATUS, 
         status, PARAM_NA, SUPER_FUNC_GDROM);
 }

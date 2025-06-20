@@ -148,7 +148,7 @@ static int cdrom_check_cmd_done(void *d) {
     return cmd_response != BUSY && cmd_response != PROCESSING;
 }
 
-static int cdrom_check_drive_ready(void *d) {
+static int cdrom_check_drive_ready(cd_check_drive_status_t *d) {
     int rv = syscall_gdrom_check_drive(d);
     return rv != BUSY;
 }
@@ -275,7 +275,7 @@ int cdrom_abort_cmd(uint32_t timeout, bool abort_dma) {
 
 /* Return the status of the drive as two integers (see constants) */
 int cdrom_get_status(int *status, int *disc_type) {
-    uint32_t params[2];
+    uint32_t params[2] = {0};
     int rv;
 
     /* We might be called in an interrupt to check for ISO cache
@@ -285,7 +285,7 @@ int cdrom_get_status(int *status, int *disc_type) {
         /* DH: Figure out a better return to signal error */
         return -1;
 
-    rv = cdrom_poll(params, 0, cdrom_check_drive_ready);
+    rv = cdrom_poll(params, 0, (int (*)(void *))cdrom_check_drive_ready);
 
     sem_signal(&_g1_ata_sem);
 
@@ -311,6 +311,7 @@ int cdrom_get_status(int *status, int *disc_type) {
 
 /* Wrapper for the change datatype syscall */
 int cdrom_change_datatype(int sector_part, int cdxa, int sector_size) {
+    cd_check_drive_status_t status;
     uint32_t params[4];
 
     sem_wait_scoped(&_g1_ata_sem);
@@ -327,8 +328,8 @@ int cdrom_change_datatype(int sector_part, int cdxa, int sector_size) {
         if(cdxa == -1) {
             /* If not overriding cdxa, check what the drive thinks we should 
                use */
-            syscall_gdrom_check_drive(params);
-            cdxa = (params[1] == 32 ? 2048 : 1024);
+            syscall_gdrom_check_drive(&status);
+            cdxa = (status.disc_type == CD_CDROM_XA ? 2048 : 1024);
         }
 
         if(sector_part == -1)

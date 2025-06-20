@@ -185,44 +185,6 @@ static const uint8_t  CMD_MAX                __depr("Please use the new CD_ pref
 #define CDROM_READ_DMA 1    /**< \brief Read sector(s) in DMA mode */
 /** @} */
 
-/** \defgroup cd_status_values      Status Values
-    \brief                          Status values for GD-ROM drive
-    \ingroup  gdrom
-
-    These are the values that can be returned as the status parameter from the
-    cdrom_get_status() function.
-    @{
-*/
-#define CD_STATUS_READ_FAIL -1  /**< \brief Can't read status */
-#define CD_STATUS_BUSY      0   /**< \brief Drive is busy */
-#define CD_STATUS_PAUSED    1   /**< \brief Disc is paused */
-#define CD_STATUS_STANDBY   2   /**< \brief Drive is in standby */
-#define CD_STATUS_PLAYING   3   /**< \brief Drive is currently playing */
-#define CD_STATUS_SEEKING   4   /**< \brief Drive is currently seeking */
-#define CD_STATUS_SCANNING  5   /**< \brief Drive is scanning */
-#define CD_STATUS_OPEN      6   /**< \brief Disc tray is open */
-#define CD_STATUS_NO_DISC   7   /**< \brief No disc inserted */
-#define CD_STATUS_RETRY     8   /**< \brief Retry is needed */
-#define CD_STATUS_ERROR     9   /**< \brief System error */
-#define CD_STATUS_FATAL     12  /**< \brief Need reset syscalls */
-/** @} */
-
-/** \defgroup cd_disc_types         Drive Disc Types
-    \brief                          Disc types within GD-ROM drive
-    \ingroup  gdrom
-
-    These are the values that can be returned as the disc_type parameter from
-    the cdrom_get_status() function.
-    @{
-*/
-#define CD_CDDA     0x00    /**< \brief Audio CD (Red book) or no disc */
-#define CD_CDROM    0x10    /**< \brief CD-ROM or CD-R (Yellow book) */
-#define CD_CDROM_XA 0x20    /**< \brief CD-ROM XA (Yellow book extension) */
-#define CD_CDI      0x30    /**< \brief CD-i (Green book) */
-#define CD_GDROM    0x80    /**< \brief GD-ROM */
-#define CD_FAIL     0xf0    /**< \brief Need reset syscalls */
-/** @} */
-
 /** \brief  TOC structure returned by the BIOS.
     \ingroup gdrom
 
