@@ -75,7 +75,8 @@ static asic_evt_handler_entry_t old_dma_irq = {NULL, NULL};
 static int vblank_hnd = -1;
 
 /* Streaming */
-static int stream_mode = -1;
+static bool stream_enabled = false;
+static bool stream_dma = false;
 static cdrom_stream_callback_t stream_cb = NULL;
 static void *stream_cb_param = NULL;
 
@@ -263,7 +264,7 @@ int cdrom_abort_cmd(uint32_t timeout, bool abort_dma) {
     }
 
     cmd_hnd = 0;
-    stream_mode = -1;
+    stream_enabled = false;
 
     if(stream_cb) {
         cdrom_stream_set_callback(0, NULL);
@@ -431,7 +432,7 @@ static int cdrom_read_sectors_dma_irq(cd_read_params_t *params) {
 }
 
 /* Enhanced Sector reading: Choose mode to read in. */
-int cdrom_read_sectors_ex(void *buffer, uint32_t sector, size_t cnt, int mode) {
+int cdrom_read_sectors_ex(void *buffer, uint32_t sector, size_t cnt, bool dma) {
     cd_read_params_t params;
     int rv = ERR_OK;
     uintptr_t buf_addr = ((uintptr_t)buffer);
@@ -440,7 +441,7 @@ int cdrom_read_sectors_ex(void *buffer, uint32_t sector, size_t cnt, int mode) {
     params.num_sec = cnt;       /* Number of sectors */
     params.is_test = 0;         /* Enable test mode */
 
-    if(mode == CDROM_READ_DMA) {
+    if(dma) {
         if(buf_addr & 0x1f) {
             dbglog(DBG_ERROR, "cdrom_read_sectors_ex: Unaligned memory for DMA (32-byte).\n");
             return ERR_SYS;
@@ -459,7 +460,7 @@ int cdrom_read_sectors_ex(void *buffer, uint32_t sector, size_t cnt, int mode) {
         }
         rv = cdrom_read_sectors_dma_irq(&params);
     }
-    else if(mode == CDROM_READ_PIO) {
+    else {
         params.buffer = buffer;
 
         if(buf_addr & 0x01) {
@@ -474,10 +475,10 @@ int cdrom_read_sectors_ex(void *buffer, uint32_t sector, size_t cnt, int mode) {
 
 /* Basic old sector read */
 int cdrom_read_sectors(void *buffer, uint32_t sector, size_t cnt) {
-    return cdrom_read_sectors_ex(buffer, sector, cnt, CDROM_READ_PIO);
+    return cdrom_read_sectors_ex(buffer, sector, cnt, false);
 }
 
-int cdrom_stream_start(int sector, int cnt, int mode) {
+int cdrom_stream_start(int sector, int cnt, bool dma) {
     struct {
         int sec;
         int num;
@@ -487,20 +488,20 @@ int cdrom_stream_start(int sector, int cnt, int mode) {
     params.sec = sector;
     params.num = cnt;
 
-    if(stream_mode != -1) {
+    if(stream_enabled) {
         cdrom_stream_stop(false);
     }
-    stream_mode = mode;
+    stream_dma = dma;
 
-    if(mode == CDROM_READ_DMA) {
+    if(stream_dma) {
         rv = cdrom_exec_cmd_timed(CD_CMD_DMAREAD_STREAM, &params, 0);
     }
-    else if(mode == CDROM_READ_PIO) {
+    else {
         rv = cdrom_exec_cmd_timed(CD_CMD_PIOREAD_STREAM, &params, 0);
     }
 
     if(rv != ERR_OK) {
-        stream_mode = -1;
+        stream_enabled = false;
     }
     return rv;
 }
@@ -524,7 +525,7 @@ int cdrom_stream_stop(bool abort_dma) {
     }
 
     cmd_hnd = 0;
-    stream_mode = -1;
+    stream_enabled = false;
     sem_signal(&_g1_ata_sem);
 
     if(stream_cb) {
@@ -546,7 +547,7 @@ int cdrom_stream_request(void *buffer, size_t size, bool block) {
         return ERR_SYS;
     }
 
-    if(stream_mode == CDROM_READ_DMA) {
+    if(stream_dma) {
         params[0] = ((uintptr_t)buffer) & MEM_AREA_CACHE_MASK;
         if(params[0] & 0x1f) {
             dbglog(DBG_ERROR, "cdrom_stream_request: Unaligned memory for DMA (32-byte).\n");
@@ -567,7 +568,7 @@ int cdrom_stream_request(void *buffer, size_t size, bool block) {
     params[1] = size;
     sem_wait_scoped(&_g1_ata_sem);
 
-    if(stream_mode == CDROM_READ_DMA) {
+    if(stream_dma) {
         dma_in_progress = true;
         dma_blocking = block;
         dma_auto_unlock = !block;
@@ -596,7 +597,7 @@ int cdrom_stream_request(void *buffer, size_t size, bool block) {
     if(cdrom_poll(&data, 0, cdrom_check_transfer) == ERR_NO_ACTIVE) {
         cmd_hnd = 0;
     }
-    else if(stream_mode == CDROM_READ_PIO) {
+    else if(!stream_dma) {
         /* Syscalls doesn't call it on last reading in PIO mode.
            Looks like a bug, fixing it. */
         if(data.size == 0 && stream_cb)
@@ -617,7 +618,7 @@ int cdrom_stream_progress(size_t *size) {
         return rv;
     }
 
-    if(stream_mode == CDROM_READ_DMA) {
+    if(stream_dma) {
         rv = syscall_gdrom_dma_check(cmd_hnd, &check_size);
     }
     else {
@@ -634,7 +635,7 @@ void cdrom_stream_set_callback(cdrom_stream_callback_t callback, void *param) {
     stream_cb = callback;
     stream_cb_param = param;
 
-    if(stream_mode == CDROM_READ_PIO) {
+    if(!stream_dma) {
         syscall_gdrom_pio_callback((uintptr_t)stream_cb, stream_cb_param);
     }
 }
@@ -763,7 +764,7 @@ static void g1_dma_irq_hnd(uint32_t code, void *data) {
             sem_signal(&_g1_ata_sem);
             dma_auto_unlock = false;
         }
-        if(stream_mode != -1) {
+        if(stream_enabled) {
             syscall_gdrom_dma_callback((uintptr_t)stream_cb, stream_cb_param);
         }
     }

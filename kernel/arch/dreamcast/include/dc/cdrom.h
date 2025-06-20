@@ -173,17 +173,9 @@ static const uint8_t  CMD_MAX                __depr("Please use the new CD_ pref
 #define CD_SUB_AUDIO_STATUS_NO_INFO    0x15
 /** @} */
 
-/** \defgroup cd_read_sector_mode    Read Sector Mode
-    \brief                           Mode to use when reading sectors
-    \ingroup  gdrom
-
-    How to read the sectors of a CD, via PIO or DMA. 4th parameter of 
-    cdrom_read_sectors_ex.
-    @{
-*/
-#define CDROM_READ_PIO 0    /**< \brief Read sector(s) in PIO mode */
-#define CDROM_READ_DMA 1    /**< \brief Read sector(s) in DMA mode */
-/** @} */
+/* Compat. These got converted to a plain bool. */
+static const bool  CDROM_READ_PIO   __depr("Please just use false to not use dma.") = false;
+static const bool  CDROM_READ_DMA   __depr("Please just use true to use dma.") = true;
 
 /* Compat. This can now be found in dc/syscalls.h */
 #define CDROM_TOC __depr("Use the type cd_toc_t rather than CDROM_TOC.") cd_toc_t
@@ -358,16 +350,15 @@ int cdrom_read_toc(cd_toc_t *toc_buffer, bool high_density);
     \param  buffer          Space to store the read sectors.
     \param  sector          The sector to start reading from.
     \param  cnt             The number of sectors to read.
-    \param  mode            \ref cd_read_sector_mode
+    \param  dma             True for read using dma, false for pio.
     \return                 \ref cd_cmd_response
 
     \note                   If the buffer address points to the P2 memory area,
                             the caller function will be responsible for ensuring
                             memory coherency.
 
-    \see    cd_read_sector_mode
 */
-int cdrom_read_sectors_ex(void *buffer, uint32_t sector, size_t cnt, int mode);
+int cdrom_read_sectors_ex(void *buffer, uint32_t sector, size_t cnt, bool dma);
 
 /** \brief    Read one or more sector from a CD-ROM in PIO mode.
     \ingroup  gdrom
@@ -389,11 +380,11 @@ int cdrom_read_sectors(void *buffer, uint32_t sector, size_t cnt);
 
     \param  sector          The sector to start reading from.
     \param  cnt             The number of sectors to read, 0x1ff means until end of disc.
-    \param  mode            \ref cd_read_sector_mode
+    \param  dma             True for read using dma, false for pio.
     \return                 \ref cd_cmd_response
     \see    cdrom_transfer_request
 */
-int cdrom_stream_start(int sector, int cnt, int mode);
+int cdrom_stream_start(int sector, int cnt, bool dma);
 
 /** \brief    Stop streaming from a CD-ROM.
     \ingroup  gdrom
