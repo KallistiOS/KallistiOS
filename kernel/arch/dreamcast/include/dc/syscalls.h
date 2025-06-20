@@ -467,6 +467,21 @@ void syscall_gdrom_exec_server(void);
 */
 int syscall_gdrom_abort_command(gdc_cmd_hnd_t hnd);
 
+/** \brief      Read Sector Part
+    \ingroup    gdrom_syscalls
+
+    Parts of the a disc sector to read. These are possible values for the
+    second parameter word sent with syscall_gdrom_sector_mode.
+
+    \note CD_READ_DEFAULT not supported by the syscall and is provided
+    for compatibility in cdrom_reinit_ex
+*/
+typedef enum cd_read_sec_part {
+    CDROM_READ_WHOLE_SECTOR = 0x1000,    /**< \brief Read the whole sector */
+    CDROM_READ_DATA_AREA    = 0x2000,    /**< \brief Read the data area */
+    CDROM_READ_DEFAULT      = -1         /**< \brief cdrom_reinit default */
+} cd_read_sec_part_t;
+
 /** \brief   Sets/gets the sector mode for read commands.
 
     This function sets/gets the sector mode for read commands.

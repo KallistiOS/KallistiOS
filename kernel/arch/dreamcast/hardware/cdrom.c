@@ -305,7 +305,7 @@ int cdrom_get_status(int *status, int *disc_type) {
 }
 
 /* Wrapper for the change datatype syscall */
-int cdrom_change_datatype(int sector_part, int cdxa, int sector_size) {
+int cdrom_change_datatype(cd_read_sec_part_t sector_part, int cdxa, int sector_size) {
     cd_check_drive_status_t status;
     uint32_t params[4];
 
@@ -316,7 +316,7 @@ int cdrom_change_datatype(int sector_part, int cdxa, int sector_size) {
         if(cdxa == -1)
             cdxa = 0;
 
-        if(sector_part == -1)
+        if(sector_part == CDROM_READ_DEFAULT)
             sector_part = CDROM_READ_WHOLE_SECTOR;
     }
     else {
@@ -327,7 +327,7 @@ int cdrom_change_datatype(int sector_part, int cdxa, int sector_size) {
             cdxa = (status.disc_type == CD_CDROM_XA ? 2048 : 1024);
         }
 
-        if(sector_part == -1)
+        if(sector_part == CDROM_READ_DEFAULT)
             sector_part = CDROM_READ_DATA_AREA;
 
         if(sector_size == -1)
@@ -346,11 +346,11 @@ int cdrom_change_datatype(int sector_part, int cdxa, int sector_size) {
 /* Re-init the drive, e.g., after a disc change, etc */
 int cdrom_reinit(void) {
     /* By setting -1 to each parameter, they fall to the old defaults */
-    return cdrom_reinit_ex(-1, -1, -1);
+    return cdrom_reinit_ex(CDROM_READ_DEFAULT, -1, -1);
 }
 
 /* Enhanced cdrom_reinit, takes the place of the old 'sector_size' function */
-int cdrom_reinit_ex(int sector_part, int cdxa, int sector_size) {
+int cdrom_reinit_ex(cd_read_sec_part_t sector_part, int cdxa, int sector_size) {
     int r;
 
     do {
