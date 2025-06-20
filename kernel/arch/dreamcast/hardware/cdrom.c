@@ -684,12 +684,8 @@ uint32 cdrom_locate_data_track(cd_toc_t *toc) {
    repeat -- number of times to repeat (0-15, 15=infinite)
    mode   -- CDDA_TRACKS or CDDA_SECTORS
  */
-int cdrom_cdda_play(uint32 start, uint32 end, uint32 repeat, int mode) {
-    struct {
-        int start;
-        int end;
-        int repeat;
-    } params;
+int cdrom_cdda_play(uint32_t start, uint32_t end, uint32_t repeat, int mode) {
+    cd_cmd_play_params_t params;
     int rv = ERR_OK;
 
     /* Limit to 0-15 */
