@@ -121,10 +121,10 @@ static int cdrom_submit_cmd(void *d) {
     return ret;
 }
 
-static inline gdc_cmd_hnd_t cdrom_req_cmd(int cmd, void *param) {
+static inline gdc_cmd_hnd_t cdrom_req_cmd(cd_cmd_code_t cmd, void *param) {
     struct cmd_req_data req = { cmd, param };
 
-    assert(cmd > 0 && cmd < CMD_MAX);
+    assert(cmd > 0 && cmd < CD_CMD_MAX);
 
     /* Submit the command, retry if needed for 10ms */
     return cdrom_poll(&req, 10, cdrom_submit_cmd);
@@ -192,11 +192,11 @@ static int cdrom_check_transfer(void *d) {
 }
 
 /* Command execution sequence */
-int cdrom_exec_cmd(int cmd, void *param) {
+int cdrom_exec_cmd(cd_cmd_code_t cmd, void *param) {
     return cdrom_exec_cmd_timed(cmd, param, 0);
 }
 
-int cdrom_exec_cmd_timed(int cmd, void *param, uint32_t timeout) {
+int cdrom_exec_cmd_timed(cd_cmd_code_t cmd, void *param, uint32_t timeout) {
     int rv = ERR_OK;
 
     sem_wait_scoped(&_g1_ata_sem);
@@ -360,7 +360,7 @@ int cdrom_reinit_ex(int sector_part, int cdxa, int sector_size) {
     int r;
 
     do {
-        r = cdrom_exec_cmd_timed(CMD_INIT, NULL, 10000);
+        r = cdrom_exec_cmd_timed(CD_CMD_INIT, NULL, 10000);
     } while(r == ERR_DISC_CHG);
 
     if(r == ERR_NO_DISC || r == ERR_SYS || r == ERR_TIMEOUT) {
@@ -383,7 +383,7 @@ int cdrom_read_toc(CDROM_TOC *toc_buffer, bool high_density) {
     params.area = high_density ? 1 : 0;
     params.buffer = toc_buffer;
 
-    rv = cdrom_exec_cmd(CMD_GETTOC2, &params);
+    rv = cdrom_exec_cmd(CD_CMD_GETTOC2, &params);
 
     return rv;
 }
@@ -391,7 +391,7 @@ int cdrom_read_toc(CDROM_TOC *toc_buffer, bool high_density) {
 static int cdrom_read_sectors_dma_irq(void *params) {
 
     sem_wait_scoped(&_g1_ata_sem);
-    cmd_hnd = cdrom_req_cmd(CMD_DMAREAD, params);
+    cmd_hnd = cdrom_req_cmd(CD_CMD_DMAREAD, params);
 
     if(cmd_hnd <= 0) {
         return ERR_SYS;
@@ -474,7 +474,7 @@ int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode) {
             dbglog(DBG_ERROR, "cdrom_read_sectors_ex: Unaligned memory for PIO (2-byte).\n");
             return ERR_SYS;
         }
-        rv = cdrom_exec_cmd(CMD_PIOREAD, &params);
+        rv = cdrom_exec_cmd(CD_CMD_PIOREAD, &params);
     }
 
     return rv;
@@ -501,10 +501,10 @@ int cdrom_stream_start(int sector, int cnt, int mode) {
     stream_mode = mode;
 
     if(mode == CDROM_READ_DMA) {
-        rv = cdrom_exec_cmd_timed(CMD_DMAREAD_STREAM, &params, 0);
+        rv = cdrom_exec_cmd_timed(CD_CMD_DMAREAD_STREAM, &params, 0);
     }
     else if(mode == CDROM_READ_PIO) {
-        rv = cdrom_exec_cmd_timed(CMD_PIOREAD_STREAM, &params, 0);
+        rv = cdrom_exec_cmd_timed(CD_CMD_PIOREAD_STREAM, &params, 0);
     }
 
     if(rv != ERR_OK) {
@@ -663,7 +663,7 @@ int cdrom_get_subcode(void *buffer, int buflen, int which) {
     params.which = which;
     params.buflen = buflen;
     params.buffer = buffer;
-    rv = cdrom_exec_cmd(CMD_GETSCD, &params);
+    rv = cdrom_exec_cmd(CD_CMD_GETSCD, &params);
     return rv;
 }
 
@@ -709,9 +709,9 @@ int cdrom_cdda_play(uint32 start, uint32 end, uint32 repeat, int mode) {
     params.repeat = repeat;
 
     if(mode == CDDA_TRACKS)
-        rv = cdrom_exec_cmd(CMD_PLAY, &params);
+        rv = cdrom_exec_cmd(CD_CMD_PLAY_TRACKS, &params);
     else if(mode == CDDA_SECTORS)
-        rv = cdrom_exec_cmd(CMD_PLAY2, &params);
+        rv = cdrom_exec_cmd(CD_CMD_PLAY_SECTORS, &params);
 
     return rv;
 }
@@ -719,21 +719,21 @@ int cdrom_cdda_play(uint32 start, uint32 end, uint32 repeat, int mode) {
 /* Pause CDDA audio playback */
 int cdrom_cdda_pause(void) {
     int rv;
-    rv = cdrom_exec_cmd(CMD_PAUSE, NULL);
+    rv = cdrom_exec_cmd(CD_CMD_PAUSE, NULL);
     return rv;
 }
 
 /* Resume CDDA audio playback */
 int cdrom_cdda_resume(void) {
     int rv;
-    rv = cdrom_exec_cmd(CMD_RELEASE, NULL);
+    rv = cdrom_exec_cmd(CD_CMD_RELEASE, NULL);
     return rv;
 }
 
 /* Spin down the CD */
 int cdrom_spin_down(void) {
     int rv;
-    rv = cdrom_exec_cmd(CMD_STOP, NULL);
+    rv = cdrom_exec_cmd(CD_CMD_STOP, NULL);
     return rv;
 }
 

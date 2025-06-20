@@ -15,6 +15,7 @@ __BEGIN_DECLS
 #include <arch/types.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <dc/syscalls.h>
 
 /** \file    dc/cdrom.h
     \brief   CD access to the GD-ROM drive.
@@ -43,44 +44,35 @@ __BEGIN_DECLS
     \ingroup            vfs
 */
 
-/** \defgroup cd_cmd_codes          Syscall Command Codes
-    \brief                          Command codes for GD-ROM syscalsl
-    \ingroup  gdrom
-
-    These are the syscall command codes used to actually do stuff with the
-    GD-ROM drive. These were originally provided by maiwe.
-
-    @{
-*/
-#define CMD_CHECK_LICENSE       2  /**< \brief Check license */
-#define CMD_REQ_SPI_CMD         4  /**< \brief Request to Sega Packet Interface */
-#define CMD_PIOREAD            16  /**< \brief Read via PIO */
-#define CMD_DMAREAD            17  /**< \brief Read via DMA */
-#define CMD_GETTOC             18  /**< \brief Read TOC */
-#define CMD_GETTOC2            19  /**< \brief Read TOC */
-#define CMD_PLAY               20  /**< \brief Play track */
-#define CMD_PLAY2              21  /**< \brief Play sectors */
-#define CMD_PAUSE              22  /**< \brief Pause playback */
-#define CMD_RELEASE            23  /**< \brief Resume from pause */
-#define CMD_INIT               24  /**< \brief Initialize the drive */
-#define CMD_DMA_ABORT          25  /**< \brief Abort DMA transfer */
-#define CMD_OPEN_TRAY          26  /**< \brief Open CD tray (on DevBox?) */
-#define CMD_SEEK               27  /**< \brief Seek to a new position */
-#define CMD_DMAREAD_STREAM     28  /**< \brief Stream DMA until end/abort */
-#define CMD_NOP                29  /**< \brief No operation */
-#define CMD_REQ_MODE           30  /**< \brief Request mode */
-#define CMD_SET_MODE           31  /**< \brief Setup mode */
-#define CMD_SCAN_CD            32  /**< \brief Scan CD */
-#define CMD_STOP               33  /**< \brief Stop the disc from spinning */
-#define CMD_GETSCD             34  /**< \brief Get subcode data */
-#define CMD_GETSES             35  /**< \brief Get session */
-#define CMD_REQ_STAT           36  /**< \brief Request stat */
-#define CMD_PIOREAD_STREAM     37  /**< \brief Stream PIO until end/abort */
-#define CMD_DMAREAD_STREAM_EX  38  /**< \brief Stream DMA transfer */
-#define CMD_PIOREAD_STREAM_EX  39  /**< \brief Stream PIO transfer */
-#define CMD_GET_VERS           40  /**< \brief Get syscall driver version */
-#define CMD_MAX                47  /**< \brief Max of GD syscall commands */
-/** @} */
+/* These are defines provided for compatibility. These defines are now part of `cd_cmd_code_t` in dc/syscalls.h */
+static const uint8_t  CMD_CHECK_LICENSE      __depr("Please use the new CD_ prefixed versions.") = CD_CMD_CHECK_LICENSE;
+static const uint8_t  CMD_REQ_SPI_CMD        __depr("Please use the new CD_ prefixed versions.") = CD_CMD_REQ_SPI_CMD;
+static const uint8_t  CMD_PIOREAD            __depr("Please use the new CD_ prefixed versions.") = CD_CMD_PIOREAD;
+static const uint8_t  CMD_DMAREAD            __depr("Please use the new CD_ prefixed versions.") = CD_CMD_DMAREAD;
+static const uint8_t  CMD_GETTOC             __depr("Please use the new CD_ prefixed versions.") = CD_CMD_GETTOC;
+static const uint8_t  CMD_GETTOC2            __depr("Please use the new CD_ prefixed versions.") = CD_CMD_GETTOC2;
+static const uint8_t  CMD_PLAY               __depr("Please use the new CD_ prefixed versions.") = CD_CMD_PLAY_TRACKS;
+static const uint8_t  CMD_PLAY2              __depr("Please use the new CD_ prefixed versions.") = CD_CMD_PLAY_SECTORS;
+static const uint8_t  CMD_PAUSE              __depr("Please use the new CD_ prefixed versions.") = CD_CMD_PAUSE;
+static const uint8_t  CMD_RELEASE            __depr("Please use the new CD_ prefixed versions.") = CD_CMD_RELEASE;
+static const uint8_t  CMD_INIT               __depr("Please use the new CD_ prefixed versions.") = CD_CMD_INIT;
+static const uint8_t  CMD_DMA_ABORT          __depr("Please use the new CD_ prefixed versions.") = CD_CMD_DMA_ABORT;
+static const uint8_t  CMD_OPEN_TRAY          __depr("Please use the new CD_ prefixed versions.") = CD_CMD_OPEN_TRAY;
+static const uint8_t  CMD_SEEK               __depr("Please use the new CD_ prefixed versions.") = CD_CMD_SEEK;
+static const uint8_t  CMD_DMAREAD_STREAM     __depr("Please use the new CD_ prefixed versions.") = CD_CMD_DMAREAD_STREAM;
+static const uint8_t  CMD_NOP                __depr("Please use the new CD_ prefixed versions.") = CD_CMD_NOP;
+static const uint8_t  CMD_REQ_MODE           __depr("Please use the new CD_ prefixed versions.") = CD_CMD_REQ_MODE;
+static const uint8_t  CMD_SET_MODE           __depr("Please use the new CD_ prefixed versions.") = CD_CMD_SET_MODE;
+static const uint8_t  CMD_SCAN_CD            __depr("Please use the new CD_ prefixed versions.") = CD_CMD_SCAN_CD;
+static const uint8_t  CMD_STOP               __depr("Please use the new CD_ prefixed versions.") = CD_CMD_STOP;
+static const uint8_t  CMD_GETSCD             __depr("Please use the new CD_ prefixed versions.") = CD_CMD_GETSCD;
+static const uint8_t  CMD_GETSES             __depr("Please use the new CD_ prefixed versions.") = CD_CMD_GETSES;
+static const uint8_t  CMD_REQ_STAT           __depr("Please use the new CD_ prefixed versions.") = CD_CMD_REQ_STAT;
+static const uint8_t  CMD_PIOREAD_STREAM     __depr("Please use the new CD_ prefixed versions.") = CD_CMD_PIOREAD_STREAM;
+static const uint8_t  CMD_DMAREAD_STREAM_EX  __depr("Please use the new CD_ prefixed versions.") = CD_CMD_DMAREAD_STREAM_EX;
+static const uint8_t  CMD_PIOREAD_STREAM_EX  __depr("Please use the new CD_ prefixed versions.") = CD_CMD_PIOREAD_STREAM_EX;
+static const uint8_t  CMD_GET_VERS           __depr("Please use the new CD_ prefixed versions.") = CD_CMD_GET_VERS;
+static const uint8_t  CMD_MAX                __depr("Please use the new CD_ prefixed versions.") = CD_CMD_MAX;
 
 /** \defgroup cd_cmd_response       Command Responses
     \brief                          Responses from GD-ROM syscalls
@@ -301,12 +293,12 @@ int cdrom_set_sector_size(int size);
     This function executes the specified command using the BIOS syscall for
     executing GD-ROM commands.
 
-    \param  cmd             The command number to execute.
+    \param  cmd             The command to execute.
     \param  param           Data to pass to the syscall.
 
     \return                 \ref cd_cmd_response
 */
-int cdrom_exec_cmd(int cmd, void *param);
+int cdrom_exec_cmd(cd_cmd_code_t cmd, void *param);
 
 /** \brief    Execute a CD-ROM command with timeout.
     \ingroup  gdrom
@@ -314,13 +306,13 @@ int cdrom_exec_cmd(int cmd, void *param);
     This function executes the specified command using the BIOS syscall for
     executing GD-ROM commands with timeout.
 
-    \param  cmd             The command number to execute.
+    \param  cmd             The command to execute.
     \param  param           Data to pass to the syscall.
     \param  timeout         Timeout in milliseconds.
 
     \return                 \ref cd_cmd_response
 */
-int cdrom_exec_cmd_timed(int cmd, void *param, uint32_t timeout);
+int cdrom_exec_cmd_timed(cd_cmd_code_t cmd, void *param, uint32_t timeout);
 
 /** \brief    Abort a CD-ROM command with timeout.
     \ingroup  gdrom

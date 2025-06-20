@@ -183,6 +183,52 @@ int syscall_flashrom_write(uint32_t pos, const void *src, size_t n);
 */
 int syscall_flashrom_delete(uint32_t pos);
 
+/** \defgroup   gdrom_syscalls
+    \brief      GDROM Syscalls and Data Types
+    \ingroup    system_calls
+    \ingroup    gdrom
+
+    These are the syscalls that allow operation of the GDROM drive
+    as well as data types for their returns and parameters.
+*/
+
+/** \brief      Command codes for GDROM syscalls
+    \ingroup    gdrom_syscalls
+
+    These are the syscall command codes used to actually do stuff with the
+    GDROM drive. These were originally provided by maiwe.
+*/
+typedef enum cd_cmd_code {
+    CD_CMD_CHECK_LICENSE     =  2,  /**< \brief Check license */
+    CD_CMD_REQ_SPI_CMD       =  4,  /**< \brief Request to Sega Packet Interface */
+    CD_CMD_PIOREAD           = 16,  /**< \brief Read via PIO */
+    CD_CMD_DMAREAD           = 17,  /**< \brief Read via DMA */
+    CD_CMD_GETTOC            = 18,  /**< \brief Read TOC */
+    CD_CMD_GETTOC2           = 19,  /**< \brief Read TOC */
+    CD_CMD_PLAY_TRACKS       = 20,  /**< \brief Play track */
+    CD_CMD_PLAY_SECTORS      = 21,  /**< \brief Play sectors */
+    CD_CMD_PAUSE             = 22,  /**< \brief Pause playback */
+    CD_CMD_RELEASE           = 23,  /**< \brief Resume from pause */
+    CD_CMD_INIT              = 24,  /**< \brief Initialize the drive */
+    CD_CMD_DMA_ABORT         = 25,  /**< \brief Abort DMA transfer */
+    CD_CMD_OPEN_TRAY         = 26,  /**< \brief Open CD tray (on DevBox?) */
+    CD_CMD_SEEK              = 27,  /**< \brief Seek to a new position */
+    CD_CMD_DMAREAD_STREAM    = 28,  /**< \brief Stream DMA until end/abort */
+    CD_CMD_NOP               = 29,  /**< \brief No operation */
+    CD_CMD_REQ_MODE          = 30,  /**< \brief Request mode */
+    CD_CMD_SET_MODE          = 31,  /**< \brief Setup mode */
+    CD_CMD_SCAN_CD           = 32,  /**< \brief Scan CD */
+    CD_CMD_STOP              = 33,  /**< \brief Stop the disc from spinning */
+    CD_CMD_GETSCD            = 34,  /**< \brief Get subcode data */
+    CD_CMD_GETSES            = 35,  /**< \brief Get session */
+    CD_CMD_REQ_STAT          = 36,  /**< \brief Request stat */
+    CD_CMD_PIOREAD_STREAM    = 37,  /**< \brief Stream PIO until end/abort */
+    CD_CMD_DMAREAD_STREAM_EX = 38,  /**< \brief Stream DMA transfer */
+    CD_CMD_PIOREAD_STREAM_EX = 39,  /**< \brief Stream PIO transfer */
+    CD_CMD_GET_VERS          = 40,  /**< \brief Get syscall driver version */
+    CD_CMD_MAX               = 47,  /**< \brief Max of GD syscall commands */
+} cd_cmd_code_t;
+
 /** \brief   Initialize the GDROM drive.
 
     This function initializes the GDROM drive. Should be called before any 
@@ -218,7 +264,7 @@ int syscall_gdrom_check_drive(uint32_t status[2]);
     \note
     Call syscall_gdrom_exec_server() to run queued commands.
 
-    \param  cmd             The command code (see CMD_* in \ref dc/cdrom.h).
+    \param  cmd             The command code (see cd_cmd_code_t above).
     \param  params          The pointer to parameter block for the command, 
                             can be NULL if the command does not take 
                             parameters.
@@ -227,7 +273,7 @@ int syscall_gdrom_check_drive(uint32_t status[2]);
 
     \sa syscall_gdrom_check_command(), syscall_gdrom_exec_server()
 */
-uint32_t syscall_gdrom_send_command(uint32_t cmd, void *params);
+uint32_t syscall_gdrom_send_command(cd_cmd_code_t cmd, void *params);
 
 /** \brief   Check status of queued command for the GDROM.
 
