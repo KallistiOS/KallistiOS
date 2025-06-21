@@ -511,6 +511,19 @@ typedef enum cd_read_sec_part {
     CDROM_READ_DEFAULT      = -1         /**< \brief cdrom_reinit default */
 } cd_read_sec_part_t;
 
+/** \brief      Sector mode params
+    \ingroup    gdrom_syscalls
+
+    These are the parameters sent to syscall_gdrom_sector_mode.
+
+*/
+typedef struct cd_sec_mode_params {
+    uint32_t            rw;             /* 0 = set, 1 = get */
+    cd_read_sec_part_t  sector_part;    /* Get Data or Full Sector */
+    int                 track_type;     /* CD-XA mode 1/2 */
+    int                 sector_size;    /* sector size */
+} cd_sec_mode_params_t;
+
 /** \brief   Sets/gets the sector mode for read commands.
 
     This function sets/gets the sector mode for read commands.
@@ -522,7 +535,7 @@ typedef enum cd_read_sec_part {
     \retval 0               On success.
     \retval -1              On failure.
 */
-int syscall_gdrom_sector_mode(uint32_t mode[4]);
+int syscall_gdrom_sector_mode(cd_sec_mode_params_t *mode);
 
 /** \brief   Setup GDROM DMA callback.
 
