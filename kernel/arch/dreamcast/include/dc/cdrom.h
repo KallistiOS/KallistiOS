@@ -90,20 +90,13 @@ static const uint8_t  CMD_MAX                __depr("Please use the new CD_ pref
 #define ERR_TIMEOUT     6   /**< \brief Aborted due to timeout */
 /** @} */
 
-/** \defgroup cd_cmd_status         Command Status Responses
-    \brief                          GD-ROM status responses
-    \ingroup  gdrom
-
-    These are the raw values the status syscall returns.
-    @{
-*/
-#define FAILED      -1  /**< \brief Command failed */
-#define NO_ACTIVE   0   /**< \brief System inactive? */
-#define PROCESSING  1   /**< \brief Processing command */
-#define COMPLETED   2   /**< \brief Command completed successfully */
-#define STREAMING   3   /**< \brief Stream type command is in progress */
-#define BUSY        4   /**< \brief GD syscalls is busy */
-/** @} */
+/* These are defines provided for compatibility. These defines are now part of `cd_cmd_chk_t` in dc/syscalls.h */
+static const uint8_t  FAILED      __depr("Please use the new CD_CMD_ prefixed versions.") = CD_CMD_FAILED;
+static const uint8_t  NO_ACTIVE   __depr("Please use the new CD_CMD_ prefixed versions.") = CD_CMD_NOT_FOUND;
+static const uint8_t  PROCESSING  __depr("Please use the new CD_CMD_ prefixed versions.") = CD_CMD_PROCESSING;
+static const uint8_t  COMPLETED   __depr("Please use the new CD_CMD_ prefixed versions.") = CD_CMD_COMPLETED;
+static const uint8_t  STREAMING   __depr("Please use the new CD_CMD_ prefixed versions.") = CD_CMD_STREAMING;
+static const uint8_t  BUSY        __depr("Please use the new CD_CMD_ prefixed versions.") = CD_CMD_BUSY;
 
 /** \defgroup cdda_read_modes       CDDA Read Modes
     \brief                          Read modes for CDDA

@@ -58,7 +58,7 @@ semaphore_t _g1_ata_sem = SEM_INITIALIZER(1);
 
 /* Command handling */
 static gdc_cmd_hnd_t cmd_hnd = 0;
-static int cmd_response = NO_ACTIVE;
+static cd_cmd_chk_t cmd_response = CD_CMD_NOT_FOUND;
 static cd_cmd_chk_status_t cmd_status = { 0 };
 
 /* DMA and IRQ handling */
@@ -127,45 +127,45 @@ static int cdrom_check_ready(void *d) {
     syscall_gdrom_exec_server();
 
     cmd_response = syscall_gdrom_check_command(*(int *)d, &cmd_status);
-    if(cmd_response < 0)
+    if(cmd_response <= CD_CMD_FAILED)
         return ERR_SYS;
 
-    return cmd_response != BUSY;
+    return cmd_response != CD_CMD_BUSY;
 }
 
 static int cdrom_check_cmd_done(void *d) {
     syscall_gdrom_exec_server();
 
     cmd_response = syscall_gdrom_check_command(*(int *)d, &cmd_status);
-    if(cmd_response < 0)
+    if(cmd_response <= CD_CMD_FAILED)
         return ERR_SYS;
 
-    return cmd_response != BUSY && cmd_response != PROCESSING;
+    return cmd_response != CD_CMD_BUSY && cmd_response != CD_CMD_PROCESSING;
 }
 
 static int cdrom_check_drive_ready(cd_check_drive_status_t *d) {
-    return (syscall_gdrom_check_drive(d) != BUSY);
+    return (syscall_gdrom_check_drive(d) != CD_CMD_BUSY);
 }
 
 static int cdrom_check_abort_done(void *d) {
     syscall_gdrom_exec_server();
 
     cmd_response = syscall_gdrom_check_command(*(gdc_cmd_hnd_t *)d, &cmd_status);
-    if(cmd_response < 0)
+    if(cmd_response <= CD_CMD_FAILED)
         return ERR_SYS;
 
-    return cmd_response == NO_ACTIVE || cmd_response == COMPLETED;
+    return cmd_response == CD_CMD_NOT_FOUND || cmd_response == CD_CMD_COMPLETED;
 }
 
 static int cdrom_check_abort_streaming(void *d) {
     syscall_gdrom_exec_server();
 
     cmd_response = syscall_gdrom_check_command(*(gdc_cmd_hnd_t *)d, &cmd_status);
-    if(cmd_response < 0)
+    if(cmd_response <= CD_CMD_FAILED)
         return ERR_SYS;
 
-    return cmd_response == NO_ACTIVE || cmd_response == COMPLETED
-        || cmd_response == STREAMING;
+    return cmd_response == CD_CMD_NOT_FOUND || cmd_response == CD_CMD_COMPLETED
+        || cmd_response == CD_CMD_STREAMING;
 }
 
 static int cdrom_check_transfer(void *d) {
@@ -174,10 +174,10 @@ static int cdrom_check_transfer(void *d) {
     syscall_gdrom_exec_server();
 
     cmd_response = syscall_gdrom_check_command(data->hnd, &cmd_status);
-    if(cmd_response < 0)
+    if(cmd_response <= CD_CMD_FAILED)
         return ERR_SYS;
 
-    if(cmd_response == NO_ACTIVE || cmd_response == COMPLETED)
+    if(cmd_response == CD_CMD_NOT_FOUND || cmd_response == CD_CMD_COMPLETED)
         return ERR_NO_ACTIVE;
 
     return cdrom_stream_progress(&data->size) == 0;
@@ -203,14 +203,14 @@ int cdrom_exec_cmd_timed(cd_cmd_code_t cmd, void *param, uint32_t timeout) {
         return ERR_TIMEOUT;
     }
 
-    if(cmd_response != STREAMING) {
+    if(cmd_response != CD_CMD_STREAMING) {
         cmd_hnd = 0;
     }
 
-    if(cmd_response == COMPLETED || cmd_response == STREAMING) {
+    if(cmd_response == CD_CMD_COMPLETED || cmd_response == CD_CMD_STREAMING) {
         return ERR_OK;
     }
-    else if(cmd_response == NO_ACTIVE) {
+    else if(cmd_response == CD_CMD_NOT_FOUND) {
         return ERR_NO_ACTIVE;
     }
     else if(cmd_status.err1 == 2) {
@@ -383,7 +383,7 @@ static int cdrom_read_sectors_dma_irq(cd_read_params_t *params) {
     /* Start the process of executing the command. */
     cdrom_poll(&cmd_hnd, 0, cdrom_check_ready);
 
-    if(cmd_response == PROCESSING) {
+    if(cmd_response == CD_CMD_PROCESSING) {
         /* Wait DMA is finished or command failed. */
         sem_wait(&dma_done);
 
@@ -402,7 +402,7 @@ static int cdrom_read_sectors_dma_irq(cd_read_params_t *params) {
 
     cmd_hnd = 0;
 
-    if(cmd_response == COMPLETED || cmd_response == NO_ACTIVE) {
+    if(cmd_response == CD_CMD_COMPLETED || cmd_response == CD_CMD_NOT_FOUND) {
         return ERR_OK;
     }
     else if(cmd_status.err1 == 2) {
@@ -500,7 +500,7 @@ int cdrom_stream_stop(bool abort_dma) {
 
     cdrom_poll(&cmd_hnd, 0, cdrom_check_abort_streaming);
 
-    if(cmd_response == STREAMING) {
+    if(cmd_response == CD_CMD_STREAMING) {
         sem_signal(&_g1_ata_sem);
         return cdrom_abort_cmd(1000, false);
     }
@@ -708,7 +708,7 @@ static void cdrom_vblank(uint32_t evt, void *data) {
         syscall_gdrom_exec_server();
         cmd_response = syscall_gdrom_check_command(cmd_hnd, &cmd_status);
 
-        if(cmd_response != PROCESSING && cmd_response != BUSY && cmd_response != STREAMING) {
+        if(cmd_response != CD_CMD_PROCESSING && cmd_response != CD_CMD_BUSY && cmd_response != CD_CMD_STREAMING) {
             dma_in_progress = false;
 
             if(dma_blocking) {

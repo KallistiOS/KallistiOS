@@ -426,6 +426,19 @@ int syscall_gdrom_check_drive(cd_check_drive_status_t *status);
     \sa syscall_gdrom_check_command(), syscall_gdrom_exec_server()
 */
 gdc_cmd_hnd_t syscall_gdrom_send_command(cd_cmd_code_t cmd, void *params);
+/** \brief      Responses from GDROM check command syscall
+    \ingroup    gdrom_syscalls
+
+    These are return values of syscall_gdrom_check_command.
+*/
+typedef enum cd_cmd_chk {
+    CD_CMD_FAILED     = -1,   /**< \brief Command failed */
+    CD_CMD_NOT_FOUND  =  0,   /**< \brief Command requested not found */
+    CD_CMD_PROCESSING =  1,   /**< \brief Processing command */
+    CD_CMD_COMPLETED  =  2,   /**< \brief Command completed successfully */
+    CD_CMD_STREAMING  =  3,   /**< \brief Stream type command is in progress */
+    CD_CMD_BUSY       =  4,   /**< \brief GD syscalls is busy */
+} cd_cmd_chk_t;
 
 /** \brief    ATA Statuses
     \ingroup  gdrom_syscalls
@@ -461,19 +474,19 @@ typedef struct cd_cmd_chk_status {
 
     This function checks if a queued command has completed.
 
-    \param  hnd             The request to check.
-    \param  status          cd_cmd_chk_status_t that will receive the status.
+    \param  hnd                 The request to check.
+    \param  status              cd_cmd_chk_status_t that will receive the status.
 
-    \retval -1              Request has failed.
-    \retval 0               Request not found.
-    \retval 1               Request is still being processed.
-    \retval 2               Request completed successfully.
-    \retval 3               Stream type command is in progress.
-    \retval 4               GD syscalls are busy.
+    \retval CD_CMD_FAILED       Request has failed.
+    \retval CD_CMD_NOT_FOUND    Request not found.
+    \retval CD_CMD_PROCESSING   Request is still being processed.
+    \retval CD_CMD_COMPLETED    Request completed successfully.
+    \retval CD_CMD_STREAMING    Stream type command is in progress.
+    \retval CD_CMD_BUSY         GD syscalls are busy.
 
     \sa syscall_gdrom_send_command(), syscall_gdrom_exec_server()
 */
-int syscall_gdrom_check_command(gdc_cmd_hnd_t hnd, cd_cmd_chk_status_t *status);
+cd_cmd_chk_t syscall_gdrom_check_command(gdc_cmd_hnd_t hnd, cd_cmd_chk_status_t *status);
 
 /** \brief   Process queued GDROM commands.
 
