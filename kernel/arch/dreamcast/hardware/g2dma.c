@@ -173,13 +173,13 @@ int g2_dma_transfer(void *sh4, void *g2bus, size_t length, uint32_t block,
     }
 
     /* Check alignments */
-    if(((uint32_t)sh4) & 31) {
+    if(!__is_aligned(sh4, 32)) {
         dbglog(DBG_ERROR, "g2_dma: Unaligned sh4 DMA %p\n", sh4);
         errno = EFAULT;
         return -1;
     }
 
-    if(((uint32_t)g2bus) & 31) {
+    if(!__is_aligned(g2bus, 32)) {
         dbglog(DBG_ERROR, "g2_dma: Unaligned g2bus DMA %p\n", g2bus);
         errno = EFAULT;
         return -1;
@@ -193,7 +193,7 @@ int g2_dma_transfer(void *sh4, void *g2bus, size_t length, uint32_t block,
     dma_progress[g2chn] = 1;
 
     /* Make sure length is a multiple of 32 */
-    length = (length + 0x1f) & ~0x1f;
+    length = __align_up(length, 32);
 
     dma_blocking[g2chn] = block;
     dma_callback[g2chn] = callback;

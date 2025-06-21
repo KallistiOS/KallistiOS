@@ -218,7 +218,7 @@ static void snd_pcm16_split_unaligned(void *buffer, void *left, void *right, siz
         left_val |= (data & 0xffff0000);
         right_val |= (data & 0xffff) << 16;
 
-        if(((uintptr_t)left_ptr & 31) == 0) {
+        if(__is_aligned(left_ptr, 32)) {
             dcache_alloc_block(left_ptr++, left_val);
             dcache_alloc_block(right_ptr++, right_val);
         }
@@ -743,13 +743,13 @@ static size_t snd_stream_fill(snd_stream_hnd_t hnd, uint32_t offset, size_t size
         if(got_bytes & 3) {
             got_bytes = (got_bytes + 4) & ~3;
         }
-        if(((uintptr_t)data & 31) && sep_buffer[0] == NULL) {
+        if(!__is_aligned(data, 32) && sep_buffer[0] == NULL) {
             spu_memload_sq(left, data, got_bytes);
             return got_bytes;
         }
         mutex_lock(&stream_mutex);
 
-        if((uintptr_t)data & 31) {
+        if(!__is_aligned(data, 32)) {
             memcpy(sep_buffer[0], data, got_bytes);
             data = sep_buffer[0];
         }
@@ -766,7 +766,7 @@ static size_t snd_stream_fill(snd_stream_hnd_t hnd, uint32_t offset, size_t size
     mutex_lock(&stream_mutex);
 
     if(stream->bitsize == 16) {
-        if((uintptr_t)data & 31) {
+        if(!__is_aligned(data, 32)) {
             snd_pcm16_split_unaligned(data, sep_buffer[0], sep_buffer[1], got_bytes);
         }
         else {

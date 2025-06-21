@@ -121,7 +121,7 @@ void spu_memload_dma(uintptr_t dst, void *src_void, size_t length) {
         spu_memload(dst, src_void, length);
         return;
     }
-    if(((uintptr_t)src_void) & 31) {
+    if(!__is_aligned(src_void, 32)) {
         spu_memload_sq(dst, src_void, length);
         return;
     }

@@ -149,9 +149,7 @@ available texture RAM, the PVR structures for the two frames are broken
 up and placed at 0x000000 and 0x400000.
 
 */
-#define BUF_ALIGN 128
-#define BUF_ALIGN_MASK (BUF_ALIGN - 1)
-#define APPLY_ALIGNMENT(addr) (((addr) + BUF_ALIGN_MASK) & ~BUF_ALIGN_MASK)
+#define APPLY_ALIGNMENT(addr) __align_up(addr, 128)
 
 void pvr_allocate_buffers(const pvr_init_params_t *params) {
     volatile pvr_ta_buffers_t   *buf;
