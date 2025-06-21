@@ -34,6 +34,7 @@ __BEGIN_DECLS
     normal file reading, consult with the stuff for the fs and for fs_iso9660.
 
     \author Megan Potter
+    \author Donald Haase
     \author Ruslan Rostovtsev
     \see    kos/fs.h
     \see    dc/fs_iso9660.h
@@ -324,7 +325,7 @@ int cdrom_read_sectors(void *buffer, uint32_t sector, size_t cnt);
 
     \param  sector          The sector to start reading from.
     \param  cnt             The number of sectors to read, 0x1ff means until end of disc.
-    \param  mode            \ref cd_read_sector_mode
+    \param  mode            \ref cd_read_mode_t
     \return                 \ref cd_cmd_response
     \see    cdrom_transfer_request
 */
