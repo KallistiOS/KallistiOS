@@ -300,26 +300,26 @@ int cdrom_get_status(int *status, int *disc_type) {
 }
 
 /* Wrapper for the change datatype syscall */
-int cdrom_change_datatype(cd_read_sec_part_t sector_part, int cdxa, int sector_size) {
+int cdrom_change_datatype(cd_read_sec_part_t sector_part, int track_type, int sector_size) {
     cd_check_drive_status_t status;
-    uint32_t params[4];
+    cd_sec_mode_params_t params;
 
     sem_wait_scoped(&_g1_ata_sem);
 
     /* Check if we are using default params */
     if(sector_size == 2352) {
-        if(cdxa == -1)
-            cdxa = 0;
+        if(track_type == -1)
+            track_type = 0;
 
         if(sector_part == CDROM_READ_DEFAULT)
             sector_part = CDROM_READ_WHOLE_SECTOR;
     }
     else {
-        if(cdxa == -1) {
+        if(track_type == -1) {
             /* If not overriding cdxa, check what the drive thinks we should 
                use */
             syscall_gdrom_check_drive(&status);
-            cdxa = (status.disc_type == CD_CDROM_XA ? 2048 : 1024);
+            track_type = (status.disc_type == CD_CDROM_XA ? 2048 : 1024);
         }
 
         if(sector_part == CDROM_READ_DEFAULT)
@@ -329,13 +329,13 @@ int cdrom_change_datatype(cd_read_sec_part_t sector_part, int cdxa, int sector_s
             sector_size = 2048;
     }
 
-    params[0] = 0;              /* 0 = set, 1 = get */
-    params[1] = sector_part;    /* Get Data or Full Sector */
-    params[2] = cdxa;           /* CD-XA mode 1/2 */
-    params[3] = sector_size;    /* sector size */
+    params.rw = 0;                      /* 0 = set, 1 = get */
+    params.sector_part = sector_part;   /* Get Data or Full Sector */
+    params.track_type  = track_type;    /* CD-XA mode 1/2 */
+    params.sector_size = sector_size;   /* sector size */
 
     cur_sector_size = sector_size;
-    return syscall_gdrom_sector_mode(params);
+    return syscall_gdrom_sector_mode(&params);
 }
 
 /* Re-init the drive, e.g., after a disc change, etc */

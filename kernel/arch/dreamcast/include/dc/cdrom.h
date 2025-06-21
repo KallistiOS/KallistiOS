@@ -235,13 +235,13 @@ int cdrom_get_status(int *status, int *disc_type);
     values provided by cdrom_reinit and cdrom_set_sector_size.
 
     \param sector_part      How much of each sector to return.
-    \param cdxa             What CDXA mode to read as (if applicable).
+    \param track_type       What CDXA mode to read as (if applicable).
     \param sector_size      What sector size to read (eg. - 2048, 2532).
 
     \return                 \ref cd_cmd_response
     \see    cd_read_sector_part
 */
-int cdrom_change_datatype(cd_read_sec_part_t sector_part, int cdxa, int sector_size);
+int cdrom_change_datatype(cd_read_sec_part_t sector_part, int track_type, int sector_size);
 
 /** \brief    Re-initialize the GD-ROM drive.
     \ingroup  gdrom
