@@ -194,7 +194,7 @@ int syscall_gdrom_abort_command(gdc_cmd_hnd_t hnd) {
         hnd, PARAM_NA, SUPER_FUNC_GDROM);
 }
 
-int syscall_gdrom_sector_mode(uint32_t mode[4]) {
+int syscall_gdrom_sector_mode(cd_sec_mode_params_t *mode) {
     MAKE_SYSCALL_INT(VEC_MISC_GDROM, FUNC_GDROM_SECTOR_MODE, 
         mode, PARAM_NA, SUPER_FUNC_GDROM);
 }
