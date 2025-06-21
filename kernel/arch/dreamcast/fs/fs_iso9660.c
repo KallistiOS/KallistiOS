@@ -690,7 +690,7 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
         /* If we're on a sector boundary and we have more than one
            full sector to read, then short-circuit the cache here
            and use the multi-sector reads from the CD unit. */
-        if(thissect == 2048 && toread >= 2048 && (((uintptr_t)outbuf) & 31) == 0) {
+        if(thissect == 2048 && toread >= 2048 && __is_aligned(outbuf, 32)) {
             /* Round it off to an even sector count. */
             thissect = toread / 2048;
             toread = thissect * 2048;
