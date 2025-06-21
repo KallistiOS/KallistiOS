@@ -33,10 +33,17 @@ __BEGIN_DECLS
     level things with CDs. If you're looking for higher-level stuff, like 
     normal file reading, consult with the stuff for the fs and for fs_iso9660.
 
+    If you're looking for *even lower* level things with CDs, see the gdrom
+    related syscalls or g1ata.
+
     \author Megan Potter
+    \author Donald Haase
     \author Ruslan Rostovtsev
+
     \see    kos/fs.h
     \see    dc/fs_iso9660.h
+    \see    dc/syscalls.h
+    \see    dc/g1ata.h
 */
 
 /** \defgroup gdrom     GD-ROM 
@@ -318,6 +325,7 @@ int cdrom_read_sectors(void *buffer, uint32_t sector, size_t cnt);
     \param  sector          The sector to start reading from.
     \param  cnt             The number of sectors to read, 0x1ff means until end of disc.
     \param  dma             True for read using dma, false for pio.
+
     \return                 \ref cd_cmd_response
     \see    cdrom_transfer_request
 */

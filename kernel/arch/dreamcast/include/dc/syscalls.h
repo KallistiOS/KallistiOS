@@ -183,7 +183,7 @@ int syscall_flashrom_write(uint32_t pos, const void *src, size_t n);
 */
 int syscall_flashrom_delete(uint32_t pos);
 
-/** \defgroup   gdrom_syscalls
+/** \defgroup   gdrom_syscalls GDROM System Calls
     \brief      GDROM Syscalls and Data Types
     \ingroup    system_calls
     \ingroup    gdrom
@@ -381,20 +381,23 @@ typedef enum cd_sub_audio {
     CD_SUB_AUDIO_STATUS_NO_INFO    = 0x15
 } cd_sub_audio_t;
 
-/** \brief   Initialize the GDROM drive.
+/** \brief      Initialize the GDROM drive.
+    \ingroup    gdrom_syscalls
 
     This function initializes the GDROM drive. Should be called before any 
     commands are sent.
 */
 void syscall_gdrom_init(void);
 
-/** \brief   Reset the GDROM drive.
+/** \brief      Reset the GDROM drive.
+    \ingroup    gdrom_syscalls
 
     This function resets the GDROM drive.
 */
 void syscall_gdrom_reset(void);
 
-/** \brief   Checks the GDROM drive status.
+/** \brief      Checks the GDROM drive status.
+    \ingroup    gdrom_syscalls
 
     This function retrieves the general condition of the GDROM drive. It 
     populates a provided array with two elements. The first element 
@@ -409,7 +412,8 @@ void syscall_gdrom_reset(void);
 */
 int syscall_gdrom_check_drive(cd_check_drive_status_t *status);
 
-/** \brief   Send a command to the GDROM command queue.
+/** \brief      Send a command to the GDROM command queue.
+    \ingroup    gdrom_syscalls
 
     This function sends a command to the GDROM queue.
 
@@ -470,7 +474,8 @@ typedef struct cd_cmd_chk_status {
     cd_cmd_chk_ata_status_t ata;  /**< \brief ATA status */
 } cd_cmd_chk_status_t;
 
-/** \brief   Check status of queued command for the GDROM.
+/** \brief      Check status of queued command for the GDROM.
+    \ingroup    gdrom_syscalls
 
     This function checks if a queued command has completed.
 
@@ -488,7 +493,8 @@ typedef struct cd_cmd_chk_status {
 */
 cd_cmd_chk_t syscall_gdrom_check_command(gdc_cmd_hnd_t hnd, cd_cmd_chk_status_t *status);
 
-/** \brief   Process queued GDROM commands.
+/** \brief      Process queued GDROM commands.
+    \ingroup    gdrom_syscalls
 
     This function starts processing queued commands. This must be 
     called a few times to process all commands. An example of it in 
@@ -498,7 +504,8 @@ cd_cmd_chk_t syscall_gdrom_check_command(gdc_cmd_hnd_t hnd, cd_cmd_chk_status_t 
 */
 void syscall_gdrom_exec_server(void);
 
-/** \brief   Abort a queued GDROM command.
+/** \brief      Abort a queued GDROM command.
+    \ingroup    gdrom_syscalls
 
     This function tries to abort a previously queued command.
 
@@ -537,7 +544,8 @@ typedef struct cd_sec_mode_params {
     int                 sector_size;    /* sector size */
 } cd_sec_mode_params_t;
 
-/** \brief   Sets/gets the sector mode for read commands.
+/** \brief      Sets/gets the sector mode for read commands.
+    \ingroup    gdrom_syscalls
 
     This function sets/gets the sector mode for read commands.
 
@@ -550,7 +558,8 @@ typedef struct cd_sec_mode_params {
 */
 int syscall_gdrom_sector_mode(cd_sec_mode_params_t *mode);
 
-/** \brief   Setup GDROM DMA callback.
+/** \brief      Setup GDROM DMA callback.
+    \ingroup    gdrom_syscalls
 
     This function sets up DMA transfer end callback for 
     \ref CMD_DMAREAD_STREAM_EX (\ref dc/cdrom.h).
@@ -570,7 +579,8 @@ typedef struct cd_transfer_params {
     size_t  size;       /**< \brief How many bytes to transfer */
 } cd_transfer_params_t;
 
-/** \brief   Initiates a GDROM DMA transfer.
+/** \brief      Initiates a GDROM DMA transfer.
+    \ingroup    gdrom_syscalls
 
     This function initiates a DMA transfer for 
     \ref CMD_DMAREAD_STREAM_EX (\ref dc/cdrom.h).
@@ -583,7 +593,8 @@ typedef struct cd_transfer_params {
 */
 int syscall_gdrom_dma_transfer(gdc_cmd_hnd_t hnd, const cd_transfer_params_t *params);
 
-/** \brief   Checks a GDROM DMA transfer.
+/** \brief      Checks a GDROM DMA transfer.
+    \ingroup    gdrom_syscalls
 
     This function checks the progress of a DMA transfer for 
     \ref CMD_DMAREAD_STREAM_EX (see \ref dc/cdrom.h).
@@ -597,7 +608,8 @@ int syscall_gdrom_dma_transfer(gdc_cmd_hnd_t hnd, const cd_transfer_params_t *pa
 */
 int syscall_gdrom_dma_check(gdc_cmd_hnd_t hnd, size_t *size);
 
-/** \brief   Setup GDROM PIO callback.
+/** \brief      Setup GDROM PIO callback.
+    \ingroup    gdrom_syscalls
 
     This function sets up PIO transfer end callback for 
     \ref CMD_PIOREAD_STREAM_EX (see \ref dc/cdrom.h).
@@ -608,7 +620,8 @@ int syscall_gdrom_dma_check(gdc_cmd_hnd_t hnd, size_t *size);
 */
 void syscall_gdrom_pio_callback(uintptr_t callback, void *param);
 
-/** \brief   Initiates a GDROM PIO transfer.
+/** \brief      Initiates a GDROM PIO transfer.
+    \ingroup    gdrom_syscalls
 
     This function initiates a PIO transfer for 
     \ref CMD_PIOREAD_STREAM_EX (see \ref dc/cdrom.h).
@@ -621,7 +634,8 @@ void syscall_gdrom_pio_callback(uintptr_t callback, void *param);
 */
 int syscall_gdrom_pio_transfer(gdc_cmd_hnd_t hnd, const cd_transfer_params_t *params);
 
-/** \brief   Checks a GDROM PIO transfer.
+/** \brief      Checks a GDROM PIO transfer.
+    \ingroup    gdrom_syscalls
 
     This function checks the progress of a PIO transfer for 
     \ref CMD_PIOREAD_STREAM_EX (see \ref dc/cdrom.h).
