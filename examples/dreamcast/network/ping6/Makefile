@@ -1,7 +1,7 @@
 #
 # Basic KallistiOS skeleton / test program
 # (c)2001 Megan Potter
-#   
+#
 
 # Put the filename of the output binary here
 TARGET = ping.elf
@@ -26,7 +26,7 @@ $(TARGET): $(OBJS)
 	kos-cc -o $(TARGET) $(OBJS)
 
 run: $(TARGET)
-	$(KOS_LOADER) $(TARGET) -n
+	$(KOS_LOADER) $(TARGET)
 
 dist: $(TARGET)
 	-rm -f $(OBJS)
