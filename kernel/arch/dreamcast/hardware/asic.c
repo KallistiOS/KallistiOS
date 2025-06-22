@@ -102,6 +102,7 @@
 #include <dc/asic.h>
 #include <arch/spinlock.h>
 #include <kos/genwait.h>
+#include <kos/regfield.h>
 #include <kos/worker_thread.h>
 
 /* XXX These based on g1ata.c and pvr.h and should be replaced by a standardized method */
@@ -167,7 +168,7 @@ static void handler_irq9(irq_t source, irq_context_t *context, void *data) {
         for(i = 0; i < ASIC_EVT_REG_HNDS; i++) {
             entry = &handlers[reg][i];
 
-            if((mask & (1 << i)) && entry->hdl != NULL)
+            if((mask & BIT(i)) && entry->hdl != NULL)
                 entry->hdl((reg << 8) | i, entry->data);
         }
     }
@@ -195,7 +196,7 @@ void asic_evt_disable(uint16_t code, uint8_t irqlevel) {
 
     uint32_t addr = ASIC_EVT_REG_ADDR(irqlevel, evtreg);
     uint32_t val = IN32(addr);
-    OUT32(addr, val & ~(1 << evt));
+    OUT32(addr, val & ~BIT(evt));
 }
 
 /* Enable a particular G2 event */
@@ -209,7 +210,7 @@ void asic_evt_enable(uint16_t code, uint8_t irqlevel) {
 
     uint32_t addr = ASIC_EVT_REG_ADDR(irqlevel, evtreg);
     uint32_t val = IN32(addr);
-    OUT32(addr, val | (1 << evt));
+    OUT32(addr, val | BIT(evt));
 }
 
 /* Initialize events */

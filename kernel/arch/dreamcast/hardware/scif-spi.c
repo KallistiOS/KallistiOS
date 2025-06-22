@@ -10,6 +10,7 @@
 #include <dc/fs_dcload.h>
 #include <arch/timer.h>
 #include <kos/dbglog.h>
+#include <kos/regfield.h>
 
 /* SCIF registers */
 #define SCIFREG08(x) *((volatile uint8 *)(x))
@@ -26,12 +27,12 @@
 #define SCLSR2  SCIFREG16(0xffe80024)
 
 /* Values for the SCSPTR2 register */
-#define PTR2_RTSIO  (1 << 7)
-#define PTR2_RTSDT  (1 << 6)
-#define PTR2_CTSIO  (1 << 5)
-#define PTR2_CTSDT  (1 << 4)
-#define PTR2_SPB2IO (1 << 1)
-#define PTR2_SPB2DT (1 << 0)
+#define PTR2_RTSIO  BIT(7)
+#define PTR2_RTSDT  BIT(6)
+#define PTR2_CTSIO  BIT(5)
+#define PTR2_CTSDT  BIT(4)
+#define PTR2_SPB2IO BIT(1)
+#define PTR2_SPB2DT BIT(0)
 
 /* This doesn't seem to actually be necessary on any of the SD cards I've tried,
    but I'm keeping it around, just in case... */

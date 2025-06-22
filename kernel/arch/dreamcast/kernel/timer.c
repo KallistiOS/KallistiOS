@@ -12,6 +12,7 @@
 #include <arch/arch.h>
 #include <arch/timer.h>
 #include <arch/irq.h>
+#include <kos/regfield.h>
 
 /* Register access macros */
 #define TIMER8(o)   ( *((volatile uint8_t  *)(TIMER_BASE + (o))) )
@@ -41,12 +42,12 @@
 #define STR0    0   /* TCNT0 Counter Start */
 
 /* Timer Control Register fields */
-#define ICPF    (1 << 9)   /* Input Capture Interrupt Flag (TMU2 only) */
-#define UNF     (1 << 8)   /* Underflow Flag */
-#define ICPE    (3 << 6)   /* Input Capture Control (TMU2 only) */
-#define UNIE    (1 << 5)   /* Underflow Interrupt Control */
-#define CKEG    (3 << 3)   /* Clock Edge */
-#define TPSC    (7 << 0)   /* Timer Prescalar */
+#define ICPF    BIT(9)          /* Input Capture Interrupt Flag (TMU2 only) */
+#define UNF     BIT(8)          /* Underflow Flag */
+#define ICPE    GENMASK(7, 6)   /* Input Capture Control (TMU2 only) */
+#define UNIE    BIT(5)          /* Underflow Interrupt Control */
+#define CKEG    GENMASK(4, 3)   /* Clock Edge */
+#define TPSC    GENMASK(2, 0)   /* Timer Prescalar */
 
 /* Clock divisor value for each TPSC value. */
 #define TDIV(div)   (4 << (2 * div))
@@ -113,7 +114,7 @@ static int timer_prime_wait(int which, uint32_t millis, int interrupts) {
 int timer_start(int which) {
     assert(which <= TMU2);
 
-    TIMER8(TSTR) |= (1 << which);
+    TIMER8(TSTR) |= BIT(which);
     return 0;
 }
 
@@ -124,7 +125,7 @@ int timer_stop(int which) {
     timer_disable_ints(which);
 
     /* Stop timer */
-    TIMER8(TSTR) &= ~(1 << which);
+    TIMER8(TSTR) &= ~BIT(which);
 
     return 0;
 }
@@ -132,7 +133,7 @@ int timer_stop(int which) {
 int timer_running(int which) {
     assert(which <= TMU2);
 
-    return !!(TIMER8(TSTR) & (1 << which));
+    return !!(TIMER8(TSTR) & BIT(which));
 }
 
 /* Returns the count value of a timer */

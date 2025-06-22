@@ -23,6 +23,7 @@
 __BEGIN_DECLS
 
 #include <stdint.h>
+#include <kos/regfield.h>
 
 /** \defgroup   mouse   Mouse
     \brief              Driver for the Dreamcast's Mouse Input Device
@@ -37,9 +38,9 @@ __BEGIN_DECLS
 
     @{
 */
-#define MOUSE_RIGHTBUTTON   (1<<1)  /**< \brief Right mouse button */
-#define MOUSE_LEFTBUTTON    (1<<2)  /**< \brief Left mouse button */
-#define MOUSE_SIDEBUTTON    (1<<3)  /**< \brief Side mouse button */
+#define MOUSE_RIGHTBUTTON   BIT(1)  /**< \brief Right mouse button */
+#define MOUSE_LEFTBUTTON    BIT(2)  /**< \brief Left mouse button */
+#define MOUSE_SIDEBUTTON    BIT(3)  /**< \brief Side mouse button */
 /** @} */
 
 /** \brief   Mouse center value in the raw condition structure. 
