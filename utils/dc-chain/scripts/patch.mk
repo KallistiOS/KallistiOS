@@ -57,7 +57,7 @@ patch-sh4-gcc: sh-gcc-fixup
 sh-gcc-fixup: fetch-sh-gcc
 	@echo "+++ Copying required KOS files into GCC directory..."
 	cp $(kos_base)/kernel/arch/dreamcast/kernel/startup.S $(src_dir)/libgcc/config/sh/crt1.S
-	cp $(patches)/gcc/gthr-kos.h $(src_dir)/libgcc/config/sh/gthr-kos.h
+	cp $(patches)/gcc/gthr-kos.h $(src_dir)/libgcc/gthr-kos.h
 	cp $(patches)/gcc/fake-kos.S $(src_dir)/libgcc/config/sh/fake-kos.S
 
 # Copy over required KOS files to newlib directory before patching
