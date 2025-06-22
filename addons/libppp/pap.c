@@ -23,20 +23,12 @@ static int resend_cnt;
 #define PAP_AUTHENTICATE_ACK    2
 #define PAP_AUTHENTICATE_NAK    3
 
-#ifdef PACKED
-#undef PACKED
-#endif
-
-#define PACKED __attribute__((packed))
-
 typedef struct pap_packet {
     uint8_t code;
     uint8_t id;
     uint16_t len;
     uint8_t data[];
-} PACKED pap_pkt_t;
-
-#undef PACKED
+} __packed pap_pkt_t;
 
 static int pap_send_auth_req(ppp_protocol_t *self, int resend) {
     int nl = strlen(ppp_state->username);
