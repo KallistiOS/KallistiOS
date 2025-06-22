@@ -44,7 +44,7 @@ diff --color -ruN gcc-13.4.1/libgcc/configure gcc-13.4.1-kos/libgcc/configure
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;
      win32)	thread_header=config/i386/gthr-win32.h ;;
-+    kos)	thread_header=config/sh/gthr-kos.h ;;
++    kos)	thread_header=gthr-kos.h ;;
      mcf)	thread_header=config/i386/gthr-mcf.h ;;
  esac
  
@@ -156,7 +156,7 @@ diff --color -ruN gcc-13.4.1/libstdc++-v3/configure gcc-13.4.1-kos/libstdc++-v3/
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;
      win32)	thread_header=config/i386/gthr-win32.h ;;
-+    kos)	thread_header=config/sh/gthr-kos.h ;;
++    kos)	thread_header=gthr-kos.h ;;
      mcf)	thread_header=config/i386/gthr-mcf.h ;;
  esac
  
