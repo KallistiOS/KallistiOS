@@ -28,6 +28,7 @@
 __BEGIN_DECLS
 
 #include <stdint.h>
+#include <kos/regfield.h>
 
 /** \defgroup controller Controller
     \brief    Controller Maple Device API
@@ -99,22 +100,22 @@ __BEGIN_DECLS
 
     @{
 */
-#define CONT_C              (1<<0)      /**< \brief C button Mask. */
-#define CONT_B              (1<<1)      /**< \brief B button Mask. */
-#define CONT_A              (1<<2)      /**< \brief A button Mask. */
-#define CONT_START          (1<<3)      /**< \brief Start button Mask. */
-#define CONT_DPAD_UP        (1<<4)      /**< \brief Main Dpad Up button Mask. */
-#define CONT_DPAD_DOWN      (1<<5)      /**< \brief Main Dpad Down button Mask. */
-#define CONT_DPAD_LEFT      (1<<6)      /**< \brief Main Dpad Left button Mask. */
-#define CONT_DPAD_RIGHT     (1<<7)      /**< \brief Main Dpad right button Mask. */
-#define CONT_Z              (1<<8)      /**< \brief Z button Mask. */
-#define CONT_Y              (1<<9)      /**< \brief Y button Mask. */
-#define CONT_X              (1<<10)     /**< \brief X button Mask. */
-#define CONT_D              (1<<11)     /**< \brief D button Mask. */
-#define CONT_DPAD2_UP       (1<<12)     /**< \brief Secondary Dpad Up button Mask. */
-#define CONT_DPAD2_DOWN     (1<<13)     /**< \brief Secondary Dpad Down button Mask. */
-#define CONT_DPAD2_LEFT     (1<<14)     /**< \brief Secondary Dpad Left button Mask. */
-#define CONT_DPAD2_RIGHT    (1<<15)     /**< \brief Secondary Dpad Right button Mask. */
+#define CONT_C              BIT(0)      /**< \brief C button Mask. */
+#define CONT_B              BIT(1)      /**< \brief B button Mask. */
+#define CONT_A              BIT(2)      /**< \brief A button Mask. */
+#define CONT_START          BIT(3)      /**< \brief Start button Mask. */
+#define CONT_DPAD_UP        BIT(4)      /**< \brief Main Dpad Up button Mask. */
+#define CONT_DPAD_DOWN      BIT(5)      /**< \brief Main Dpad Down button Mask. */
+#define CONT_DPAD_LEFT      BIT(6)      /**< \brief Main Dpad Left button Mask. */
+#define CONT_DPAD_RIGHT     BIT(7)      /**< \brief Main Dpad right button Mask. */
+#define CONT_Z              BIT(8)      /**< \brief Z button Mask. */
+#define CONT_Y              BIT(9)      /**< \brief Y button Mask. */
+#define CONT_X              BIT(10)     /**< \brief X button Mask. */
+#define CONT_D              BIT(11)     /**< \brief D button Mask. */
+#define CONT_DPAD2_UP       BIT(12)     /**< \brief Secondary Dpad Up button Mask. */
+#define CONT_DPAD2_DOWN     BIT(13)     /**< \brief Secondary Dpad Down button Mask. */
+#define CONT_DPAD2_LEFT     BIT(14)     /**< \brief Secondary Dpad Left button Mask. */
+#define CONT_DPAD2_RIGHT    BIT(15)     /**< \brief Secondary Dpad Right button Mask. */
 /** @} */
 
 /** \brief   Controller buttons for standard reset action
@@ -238,28 +239,28 @@ int cont_btn_callback(uint8_t addr, uint32_t btns, cont_btn_callback_t cb);
 
     @{
 */
-#define CONT_CAPABILITY_C               (1<<24)     /**< \brief C button capability mask. */
-#define CONT_CAPABILITY_B               (1<<25)     /**< \brief B button capability mask. */
-#define CONT_CAPABILITY_A               (1<<26)     /**< \brief A button capability mask. */
-#define CONT_CAPABILITY_START           (1<<27)     /**< \brief Start button capability mask. */
-#define CONT_CAPABILITY_DPAD_UP         (1<<28)     /**< \brief First Dpad up capability mask. */
-#define CONT_CAPABILITY_DPAD_DOWN       (1<<29)     /**< \brief First Dpad down capability mask. */
-#define CONT_CAPABILITY_DPAD_LEFT       (1<<30)     /**< \brief First Dpad left capability mask. */
-#define CONT_CAPABILITY_DPAD_RIGHT      (1<<31)     /**< \brief First Dpad right capability mask. */
-#define CONT_CAPABILITY_Z               (1<<16)     /**< \brief Z button capability mask. */
-#define CONT_CAPABILITY_Y               (1<<17)     /**< \brief Y button capability mask. */
-#define CONT_CAPABILITY_X               (1<<18)     /**< \brief X button capability mask. */
-#define CONT_CAPABILITY_D               (1<<19)     /**< \brief D button capability mask. */
-#define CONT_CAPABILITY_DPAD2_UP        (1<<20)     /**< \brief Second Dpad up capability mask. */
-#define CONT_CAPABILITY_DPAD2_DOWN      (1<<21)     /**< \brief Second Dpad down capability mask. */
-#define CONT_CAPABILITY_DPAD2_LEFT      (1<<22)     /**< \brief Second Dpad left capability mask. */
-#define CONT_CAPABILITY_DPAD2_RIGHT     (1<<23)     /**< \brief Second Dpad right capability mask. */
-#define CONT_CAPABILITY_RTRIG           (1<<8)      /**< \brief Right trigger capability mask. */
-#define CONT_CAPABILITY_LTRIG           (1<<9)      /**< \brief Left trigger capability mask. */
-#define CONT_CAPABILITY_ANALOG_X        (1<<10)     /**< \brief First analog X axis capability mask. */
-#define CONT_CAPABILITY_ANALOG_Y        (1<<11)     /**< \brief First analog Y axis capability mask. */
-#define CONT_CAPABILITY_ANALOG2_X       (1<<12)     /**< \brief Second analog X axis capability mask. */
-#define CONT_CAPABILITY_ANALOG2_Y       (1<<13)     /**< \brief Second analog Y axis capability mask. */
+#define CONT_CAPABILITY_C               BIT(24)     /**< \brief C button capability mask. */
+#define CONT_CAPABILITY_B               BIT(25)     /**< \brief B button capability mask. */
+#define CONT_CAPABILITY_A               BIT(26)     /**< \brief A button capability mask. */
+#define CONT_CAPABILITY_START           BIT(27)     /**< \brief Start button capability mask. */
+#define CONT_CAPABILITY_DPAD_UP         BIT(28)     /**< \brief First Dpad up capability mask. */
+#define CONT_CAPABILITY_DPAD_DOWN       BIT(29)     /**< \brief First Dpad down capability mask. */
+#define CONT_CAPABILITY_DPAD_LEFT       BIT(30)     /**< \brief First Dpad left capability mask. */
+#define CONT_CAPABILITY_DPAD_RIGHT      BIT(31)     /**< \brief First Dpad right capability mask. */
+#define CONT_CAPABILITY_Z               BIT(16)     /**< \brief Z button capability mask. */
+#define CONT_CAPABILITY_Y               BIT(17)     /**< \brief Y button capability mask. */
+#define CONT_CAPABILITY_X               BIT(18)     /**< \brief X button capability mask. */
+#define CONT_CAPABILITY_D               BIT(19)     /**< \brief D button capability mask. */
+#define CONT_CAPABILITY_DPAD2_UP        BIT(20)     /**< \brief Second Dpad up capability mask. */
+#define CONT_CAPABILITY_DPAD2_DOWN      BIT(21)     /**< \brief Second Dpad down capability mask. */
+#define CONT_CAPABILITY_DPAD2_LEFT      BIT(22)     /**< \brief Second Dpad left capability mask. */
+#define CONT_CAPABILITY_DPAD2_RIGHT     BIT(23)     /**< \brief Second Dpad right capability mask. */
+#define CONT_CAPABILITY_RTRIG           BIT(8)      /**< \brief Right trigger capability mask. */
+#define CONT_CAPABILITY_LTRIG           BIT(9)      /**< \brief Left trigger capability mask. */
+#define CONT_CAPABILITY_ANALOG_X        BIT(10)     /**< \brief First analog X axis capability mask. */
+#define CONT_CAPABILITY_ANALOG_Y        BIT(11)     /**< \brief First analog Y axis capability mask. */
+#define CONT_CAPABILITY_ANALOG2_X       BIT(12)     /**< \brief Second analog X axis capability mask. */
+#define CONT_CAPABILITY_ANALOG2_Y       BIT(13)     /**< \brief Second analog Y axis capability mask. */
 /** @} */
 
 /** \defgroup controller_caps_groups Capability Groups
