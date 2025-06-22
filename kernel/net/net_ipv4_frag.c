@@ -15,10 +15,12 @@
 #include <kos/mutex.h>
 #include <kos/timer.h>
 
+#include "net_core.h"
 #include "net_ipv4.h"
-#include "net_thd.h"
 
 #define MAX(a, b) a > b ? a : b;
+
+#define IP_FRAG_POLL_PERIOD_MS 2000
 
 struct ip_frag {
     TAILQ_ENTRY(ip_frag) listhnd;
@@ -40,17 +42,14 @@ TAILQ_HEAD(ip_frag_list, ip_frag);
 
 static struct ip_frag_list frags;
 static mutex_t frag_mutex = MUTEX_INITIALIZER;
-static int cbid = -1;
 static int initted = 0;
 
 /* IP fragment "thread" -- this thread is set up to delete fragments for which
    the "death_time" has passed. This is run approximately once every two
    seconds (since death_time is always on the order of seconds). */
-static void frag_thd_cb(void *data) {
+static void net_ipv4_frag_job(workqueue_t *wq, workqueue_job_t *job) {
     struct ip_frag *f, *n;
     uint64_t now = timer_ms_gettime64();
-
-    (void)data;
 
     mutex_lock_scoped(&frag_mutex);
 
@@ -69,6 +68,9 @@ static void frag_thd_cb(void *data) {
 
         f = n;
     }
+
+    job->time_ms = now + IP_FRAG_POLL_PERIOD_MS;
+    workqueue_enqueue(wq, job);
 }
 
 /* Set the bits in the bitfield for the given set of fragment blocks. */
@@ -290,10 +292,15 @@ int net_ipv4_reassemble(netif_t *src, const ip_hdr_t *hdr, const uint8_t *data,
     return frag_import(src, hdr, data, size, flags, f);
 }
 
+static workqueue_job_t net_ipv4_frag_wq_job = {
+    .cb = net_ipv4_frag_job,
+};
+
 int net_ipv4_frag_init(void) {
     if(!initted) {
-        cbid = net_thd_add_callback(&frag_thd_cb, NULL, 2000);
         TAILQ_INIT(&frags);
+        net_ipv4_frag_wq_job.time_ms = timer_ms_gettime64() + IP_FRAG_POLL_PERIOD_MS;
+        workqueue_enqueue(net_wq, &net_ipv4_frag_wq_job);
     }
 
     initted = 1;
@@ -304,8 +311,7 @@ void net_ipv4_frag_shutdown(void) {
     struct ip_frag *c, *n;
 
     if(initted) {
-        if(cbid != -1)
-            net_thd_del_callback(cbid);
+        workqueue_cancel(net_wq, &net_ipv4_frag_wq_job);
 
         c = TAILQ_FIRST(&frags);
 
@@ -317,7 +323,6 @@ void net_ipv4_frag_shutdown(void) {
         }
     }
 
-    cbid = -1;
     initted = 0;
     TAILQ_INIT(&frags);
 }
