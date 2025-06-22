@@ -27,7 +27,7 @@ typedef struct fat_dentry {
     uint16_t mdate;
     uint16_t cluster_low;
     uint32_t size;
-} __attribute__((packed)) fat_dentry_t;
+} __packed fat_dentry_t;
 
 #define FAT_ENTRY_EOD           0x00
 #define FAT_ENTRY_FREE          0xE5
@@ -54,7 +54,7 @@ typedef struct fat_longname {
     uint8_t name2[12];
     uint16_t cluster_low;
     uint8_t name3[4];
-} __attribute__((packed)) fat_longname_t;
+} __packed fat_longname_t;
 
 #define FAT_ORDER_LAST  0x40
 

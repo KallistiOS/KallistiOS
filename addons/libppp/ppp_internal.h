@@ -69,23 +69,15 @@ typedef struct ppp_state {
 #define PPP_PROTOCOL_PAP        0xc023    /* RFC 1334 */
 #define PPP_PROTOCOL_CHAP       0xc223    /* RFC 1994 */
 
-#ifdef PACKED
-#undef PACKED
-#endif
-
-#define PACKED __attribute__((packed))
-
 /* LCP packet structure - RFC 1661 Section 5 */
 typedef struct lcp_packet {
     uint8_t code;
     uint8_t id;
     uint16_t len;
     uint8_t data[];
-} PACKED lcp_pkt_t;
+} __packed lcp_pkt_t;
 
 typedef struct lcp_packet ipcp_pkt_t;
-
-#undef PACKED
 
 /* LCP Packet codes - RFC 1661 Section 5
    Note: These also apply (in part) to network control protocols like IPCP. */
