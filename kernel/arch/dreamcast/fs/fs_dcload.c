@@ -61,7 +61,7 @@ static spinlock_t mutex = SPINLOCK_INITIALIZER;
 
 /* Printk replacement */
 
-int dcload_write_buffer(const uint8 *data, int len, int xlat) {
+int dcload_write_buffer(const uint8_t *data, int len, int xlat) {
     (void)xlat;
 
     spinlock_lock_scoped(&mutex);
@@ -159,7 +159,7 @@ static void *dcload_open(vfs_handler_t * vfs, const char *fn, int mode) {
 }
 
 static int dcload_close(void * h) {
-    uint32 hnd = (uint32)h;
+    uint32_t hnd = (uint32_t)h;
     dcl_dir_t *i;
 
     spinlock_lock_scoped(&mutex);
@@ -186,7 +186,7 @@ static int dcload_close(void * h) {
 
 static ssize_t dcload_read(void * h, void *buf, size_t cnt) {
     ssize_t ret = -1;
-    uint32 hnd = (uint32)h;
+    uint32_t hnd = (uint32_t)h;
 
     spinlock_lock_scoped(&mutex);
 
@@ -200,7 +200,7 @@ static ssize_t dcload_read(void * h, void *buf, size_t cnt) {
 
 static ssize_t dcload_write(void * h, const void *buf, size_t cnt) {
     ssize_t ret = -1;
-    uint32 hnd = (uint32)h;
+    uint32_t hnd = (uint32_t)h;
 
     spinlock_lock_scoped(&mutex);
 
@@ -214,7 +214,7 @@ static ssize_t dcload_write(void * h, const void *buf, size_t cnt) {
 
 static off_t dcload_seek(void * h, off_t offset, int whence) {
     off_t ret = -1;
-    uint32 hnd = (uint32)h;
+    uint32_t hnd = (uint32_t)h;
 
     spinlock_lock_scoped(&mutex);
 
@@ -228,7 +228,7 @@ static off_t dcload_seek(void * h, off_t offset, int whence) {
 
 static off_t dcload_tell(void * h) {
     off_t ret = -1;
-    uint32 hnd = (uint32)h;
+    uint32_t hnd = (uint32_t)h;
 
     spinlock_lock_scoped(&mutex);
 
@@ -243,7 +243,7 @@ static off_t dcload_tell(void * h) {
 static size_t dcload_total(void * h) {
     size_t ret = -1;
     size_t cur;
-    uint32 hnd = (uint32)h;
+    uint32_t hnd = (uint32_t)h;
 
     spinlock_lock_scoped(&mutex);
 
@@ -262,7 +262,7 @@ static dirent_t *dcload_readdir(void * h) {
     dcload_dirent_t *dcld;
     dcload_stat_t filestat;
     char *fn;
-    uint32 hnd = (uint32)h;
+    uint32_t hnd = (uint32_t)h;
     dcl_dir_t *entry;
 
     spinlock_lock_scoped(&mutex);
