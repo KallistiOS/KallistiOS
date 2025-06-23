@@ -36,6 +36,7 @@
 #include <kos/dbglog.h>
 
 #include <dc/fs_dclsocket.h>
+#include <dc/syscalls.h>
 
 #define DCLOAD_PORT 31313
 #define NAME "dcload-ip over KOS sockets"
@@ -689,7 +690,7 @@ void fs_dclsocket_init_console(void) {
 uint32 _fs_dclsocket_get_ip(void) {
     uint32 ip, port;
 
-    return dcloadsyscall(DCLOAD_GETHOSTINFO, &ip, &port);
+    return syscall_dcload(DCLOAD_GETHOSTINFO, &ip, &port, NULL);
 }
 
 int fs_dclsocket_init(void) {
@@ -707,7 +708,7 @@ int fs_dclsocket_init(void) {
         return -1;
 
     /* Determine where dctool is running, and set up our variables for that */
-    dcloadsyscall(DCLOAD_GETHOSTINFO, &ip, &port);
+    syscall_dcload(DCLOAD_GETHOSTINFO, &ip, &port, NULL);
 
     /* Put dc-tool's info into our ARP cache */
     net_ipv4_parse_address(ip, ipaddr);

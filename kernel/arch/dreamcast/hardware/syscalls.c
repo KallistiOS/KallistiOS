@@ -7,7 +7,9 @@
 
 #include <stdio.h>
 
+#include <dc/fifo.h>
 #include <dc/syscalls.h>
+#include <arch/irq.h>
 #include <arch/memory.h>
 
 /*
@@ -26,6 +28,7 @@
 #define VEC_MISC_GDROM    (MEM_AREA_P1_BASE | 0x0C0000BC)
 #define VEC_GDROM2        (MEM_AREA_P1_BASE | 0x0C0000C0)
 #define VEC_SYSTEM        (MEM_AREA_P1_BASE | 0x0C0000E0)
+#define VEC_DCLOAD        (MEM_AREA_P1_BASE | 0x0C004008)
 
 /*
     For each indirect vector there is a number of different functions (FUNC_*) 
@@ -257,3 +260,8 @@ void syscall_system_cd_menu(void) {
     system(FUNC_SYSTEM_CD_MENU);
 }
 
+int syscall_dcload(dcload_cmd_t cmd, void *param1, void *param2, void *param3) {
+    irq_disable_scoped();
+    while(FIFO_STATUS & FIFO_SH4)            ;
+    MAKE_SYSCALL_INT(VEC_DCLOAD, param3, cmd, param1, param2);
+}
