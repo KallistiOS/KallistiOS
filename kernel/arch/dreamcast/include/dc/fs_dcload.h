@@ -25,6 +25,8 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
+#include <stdbool.h>
+#include <dc/syscalls.h>
 #include <kos/fs.h>
 #include <kos/dbgio.h>
 
@@ -56,34 +58,6 @@ extern dbgio_handler_t dbgio_dcload;
 extern int dcload_type;
 
 /* \cond */
-/* Available dcload console commands */
-
-#define DCLOAD_READ         0
-#define DCLOAD_WRITE        1
-#define DCLOAD_OPEN         2
-#define DCLOAD_CLOSE        3
-#define DCLOAD_CREAT        4
-#define DCLOAD_LINK         5
-#define DCLOAD_UNLINK       6
-#define DCLOAD_CHDIR        7
-#define DCLOAD_CHMOD        8
-#define DCLOAD_LSEEK        9
-#define DCLOAD_FSTAT        10
-#define DCLOAD_TIME         11
-#define DCLOAD_STAT         12
-#define DCLOAD_UTIME        13
-#define DCLOAD_ASSIGNWRKMEM 14
-#define DCLOAD_EXIT         15
-#define DCLOAD_OPENDIR      16
-#define DCLOAD_CLOSEDIR     17
-#define DCLOAD_READDIR      18
-#define DCLOAD_GETHOSTINFO  19
-#define DCLOAD_GDBPACKET    20
-#define DCLOAD_REWINDDIR    21
-
-/* dcload syscall function */
-
-int dcloadsyscall(unsigned int syscall, ...);
 
 /* dcload dirent */
 
