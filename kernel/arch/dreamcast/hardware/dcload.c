@@ -21,7 +21,7 @@
     parameter.
 */
 
-int dcload_syscall(dcload_cmd_t cmd, void *param1, void *param2, void *param3) {
+static int dcload_syscall(dcload_cmd_t cmd, void *param1, void *param2, void *param3) {
     uintptr_t *syscall_ptr = (uintptr_t *)VEC_DCLOAD;
     int (*syscall)() = (int (*)())(*syscall_ptr);
 
@@ -66,6 +66,10 @@ off_t dcload_lseek(uint32_t hnd, off_t offset, int whence) {
 
 int dcload_stat(const char *restrict path, dcload_stat_t *restrict buf) {
     return dcload_syscall(DCLOAD_STAT, (void *)path, (void *)buf, NULL);
+}
+
+int dcload_assignwrkmem(int *buf) {
+    return dcload_syscall(DCLOAD_ASSIGNWRKMEM, (void *)buf, NULL, NULL);
 }
 
 int dcload_opendir(const char *fn) {
