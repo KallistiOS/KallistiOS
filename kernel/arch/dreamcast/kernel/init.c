@@ -25,6 +25,7 @@
 #include <dc/pvr.h>
 #include <dc/vmufs.h>
 #include <dc/syscalls.h>
+#include <dc/dcload.h>
 
 #include "initall_hdrs.h"
 
