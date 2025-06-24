@@ -61,8 +61,6 @@ static dcl_dir_t *hnd_is_dir(int hnd) {
 
 static mutex_t mutex = MUTEX_INITIALIZER;
 
-/* Printk replacement */
-
 int dcload_write_buffer(const uint8_t *data, int len, int xlat) {
     (void)xlat;
 
@@ -75,7 +73,7 @@ int dcload_read_cons(void) {
     return -1;
 }
 
-static void *fs_dcload_open(vfs_handler_t * vfs, const char *fn, int mode) {
+static void *fs_dcload_open(vfs_handler_t *vfs, const char *fn, int mode) {
     char *dcload_path = NULL;
     dcl_dir_t *entry;
     int hnd = 0;
@@ -152,7 +150,7 @@ static void *fs_dcload_open(vfs_handler_t * vfs, const char *fn, int mode) {
     return (void *)hnd;
 }
 
-static int fs_dcload_close(void * h) {
+static int fs_dcload_close(void *h) {
     uint32_t hnd = (uint32_t)h;
     dcl_dir_t *i;
 
@@ -186,7 +184,7 @@ static int fs_dcload_close(void * h) {
     return 0;
 }
 
-static ssize_t fs_dcload_read(void * h, void *buf, size_t cnt) {
+static ssize_t fs_dcload_read(void *h, void *buf, size_t cnt) {
     ssize_t ret = -1;
     uint32_t hnd = (uint32_t)h;
 
@@ -198,7 +196,7 @@ static ssize_t fs_dcload_read(void * h, void *buf, size_t cnt) {
     return ret;
 }
 
-static ssize_t fs_dcload_write(void * h, const void *buf, size_t cnt) {
+static ssize_t fs_dcload_write(void *h, const void *buf, size_t cnt) {
     ssize_t ret = -1;
     uint32_t hnd = (uint32_t)h;
 
@@ -210,7 +208,7 @@ static ssize_t fs_dcload_write(void * h, const void *buf, size_t cnt) {
     return ret;
 }
 
-static off_t fs_dcload_seek(void * h, off_t offset, int whence) {
+static off_t fs_dcload_seek(void *h, off_t offset, int whence) {
     off_t ret = -1;
     uint32_t hnd = (uint32_t)h;
 
@@ -222,7 +220,7 @@ static off_t fs_dcload_seek(void * h, off_t offset, int whence) {
     return ret;
 }
 
-static off_t fs_dcload_tell(void * h) {
+static off_t fs_dcload_tell(void *h) {
     off_t ret = -1;
     uint32_t hnd = (uint32_t)h;
 
@@ -234,7 +232,7 @@ static off_t fs_dcload_tell(void * h) {
     return ret;
 }
 
-static size_t fs_dcload_total(void * h) {
+static size_t fs_dcload_total(void *h) {
     size_t ret = -1;
     off_t cur;
     uint32_t hnd = (uint32_t)h;
@@ -252,7 +250,7 @@ static size_t fs_dcload_total(void * h) {
     return ret;
 }
 
-static dirent_t *fs_dcload_readdir(void * h) {
+static dirent_t *fs_dcload_readdir(void *h) {
     dirent_t *rv = NULL;
     dcload_dirent_t *dcld;
     dcload_stat_t filestat;
@@ -313,7 +311,7 @@ static dirent_t *fs_dcload_readdir(void * h) {
     return rv;
 }
 
-static int fs_dcload_rename(vfs_handler_t * vfs, const char *fn1, const char *fn2) {
+static int fs_dcload_rename(vfs_handler_t *vfs, const char *fn1, const char *fn2) {
     int ret;
 
     (void)vfs;
@@ -331,7 +329,7 @@ static int fs_dcload_rename(vfs_handler_t * vfs, const char *fn1, const char *fn
     return ret;
 }
 
-static int fs_dcload_unlink(vfs_handler_t * vfs, const char *fn) {
+static int fs_dcload_unlink(vfs_handler_t *vfs, const char *fn) {
     (void)vfs;
 
     return dcload_unlink(fn);
