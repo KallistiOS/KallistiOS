@@ -76,12 +76,6 @@ int dcload_read_cons(void) {
     return -1;
 }
 
-size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_t out_size) {
-    /* we have to pack the sizes together because the dcloadsyscall handler
-       can only take 4 parameters */
-    return syscall_dcload(DCLOAD_GDBPACKET, (void *)in_buf, (void *)((in_size << 16) | (out_size & 0xffff)), (void *)out_buf);
-}
-
 static void *fs_dcload_open(vfs_handler_t * vfs, const char *fn, int mode) {
     char *dcload_path = NULL;
     dcl_dir_t *entry;

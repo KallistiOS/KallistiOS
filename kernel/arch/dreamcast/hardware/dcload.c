@@ -35,3 +35,9 @@ int dcload_syscall(dcload_cmd_t cmd, void *param1, void *param2, void *param3) {
     /* Make the call */
     return syscall(cmd, param1, param2, param3);
 }
+
+size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_t out_size) {
+    /* we have to pack the sizes together because the dcloadsyscall handler
+       can only take 4 parameters */
+    return dcload_syscall(DCLOAD_GDBPACKET, (void *)in_buf, (void *)((in_size << 16) | (out_size & 0xffff)), (void *)out_buf);
+}

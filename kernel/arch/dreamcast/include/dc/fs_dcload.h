@@ -97,9 +97,6 @@ typedef struct dcload_stat dcload_stat_t;
 /* Printk replacement */
 void dcload_printk(const char *str);
 
-/* GDB tunnel */
-size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_t out_size);
-
 /* Tests for the dcload syscall being present. */
 int syscall_dcload_detected(void);
 
