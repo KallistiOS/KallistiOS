@@ -19,11 +19,12 @@ printf goes to the dc-tool console
 */
 
 #include <dc/fs_dcload.h>
-#include <arch/spinlock.h>
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>
 #include <kos/fs.h>
 #include <kos/init.h>
+#include <kos/mutex.h>
+#include <kos/rwsem.h>
 
 #include <errno.h>
 #include <stdint.h>
@@ -43,6 +44,7 @@ typedef struct dcl_dir {
 LIST_HEAD(dcl_de, dcl_dir);
 
 static struct dcl_de dir_head = LIST_HEAD_INITIALIZER(0);
+static rw_semaphore_t dirlist_rw = RWSEM_INITIALIZER;
 
 static dcl_dir_t *hnd_is_dir(int hnd) {
     dcl_dir_t *i;
@@ -57,14 +59,13 @@ static dcl_dir_t *hnd_is_dir(int hnd) {
     return i;
 }
 
-static spinlock_t mutex = SPINLOCK_INITIALIZER;
+static mutex_t mutex = MUTEX_INITIALIZER;
 
 /* Printk replacement */
 
 int dcload_write_buffer(const uint8_t *data, int len, int xlat) {
     (void)xlat;
 
-    spinlock_lock_scoped(&mutex);
     syscall_dcload(DCLOAD_WRITE, (void *)1, (void *)data, (void *)len);
 
     return len;
@@ -75,9 +76,6 @@ int dcload_read_cons(void) {
 }
 
 size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_t out_size) {
-
-    spinlock_lock_scoped(&mutex);
-
     /* we have to pack the sizes together because the dcloadsyscall handler
        can only take 4 parameters */
     return syscall_dcload(DCLOAD_GDBPACKET, (void *)in_buf, (void *)((in_size << 16) | (out_size & 0xffff)), (void *)out_buf);
@@ -92,8 +90,6 @@ static void *dcload_open(vfs_handler_t * vfs, const char *fn, int mode) {
     size_t fn_len = 0;
 
     (void)vfs;
-
-    spinlock_lock_scoped(&mutex);
 
     if(mode & O_DIR) {
         if(fn[0] == '\0') {
@@ -133,9 +129,13 @@ static void *dcload_open(vfs_handler_t * vfs, const char *fn, int mode) {
         dcload_path[fn_len+1] = '\0';
 
         /* Now that everything is ready, add to list */
+        rwsem_write_lock(&dirlist_rw);
+
         entry->hnd = hnd;
         entry->path = dcload_path;
         LIST_INSERT_HEAD(&dir_head, entry, fhlist);
+
+        rwsem_write_unlock(&dirlist_rw);
     }
     else {
         if(mm == O_RDONLY)
@@ -162,20 +162,28 @@ static int dcload_close(void * h) {
     uint32_t hnd = (uint32_t)h;
     dcl_dir_t *i;
 
-    spinlock_lock_scoped(&mutex);
-
     if(hnd) {
-        /* Check if it's a dir */
+        /* Lock for reading and check if it's a dir */
+        rwsem_read_lock(&dirlist_rw);
         i = hnd_is_dir(hnd);
 
         /* We found it in the list, so it's a dir */
         if(i) {
             syscall_dcload(DCLOAD_CLOSEDIR, (void *)hnd, NULL, NULL);
+
+            /* Promote the lock since we need to modify the dir table */
+            rwsem_read_upgrade(&dirlist_rw);
+
             LIST_REMOVE(i, fhlist);
             free(i->path);
             free(i);
+
+            rwsem_write_unlock(&dirlist_rw);
         }
         else {
+            /* Since the entry isn't a dir, we can let go of the read lock */
+            rwsem_read_unlock(&dirlist_rw);
+
             hnd--; /* KOS uses 0 for error, not -1 */
             syscall_dcload(DCLOAD_CLOSE, (void *)hnd, NULL, NULL);
         }
@@ -187,8 +195,6 @@ static int dcload_close(void * h) {
 static ssize_t dcload_read(void * h, void *buf, size_t cnt) {
     ssize_t ret = -1;
     uint32_t hnd = (uint32_t)h;
-
-    spinlock_lock_scoped(&mutex);
 
     if(hnd) {
         hnd--; /* KOS uses 0 for error, not -1 */
@@ -202,8 +208,6 @@ static ssize_t dcload_write(void * h, const void *buf, size_t cnt) {
     ssize_t ret = -1;
     uint32_t hnd = (uint32_t)h;
 
-    spinlock_lock_scoped(&mutex);
-
     if(hnd) {
         hnd--; /* KOS uses 0 for error, not -1 */
         ret = syscall_dcload(DCLOAD_WRITE, (void *)hnd, (void *)buf, (void *)cnt);
@@ -216,8 +220,6 @@ static off_t dcload_seek(void * h, off_t offset, int whence) {
     off_t ret = -1;
     uint32_t hnd = (uint32_t)h;
 
-    spinlock_lock_scoped(&mutex);
-
     if(hnd) {
         hnd--; /* KOS uses 0 for error, not -1 */
         ret = syscall_dcload(DCLOAD_LSEEK, (void *)hnd, (void *)offset, (void *)whence);
@@ -229,8 +231,6 @@ static off_t dcload_seek(void * h, off_t offset, int whence) {
 static off_t dcload_tell(void * h) {
     off_t ret = -1;
     uint32_t hnd = (uint32_t)h;
-
-    spinlock_lock_scoped(&mutex);
 
     if(hnd) {
         hnd--; /* KOS uses 0 for error, not -1 */
@@ -245,9 +245,10 @@ static size_t dcload_total(void * h) {
     size_t cur;
     uint32_t hnd = (uint32_t)h;
 
-    spinlock_lock_scoped(&mutex);
-
     if(hnd) {
+        /* Lock to ensure commands are sent sequentially. */
+        mutex_lock_scoped(&mutex);
+
         hnd--; /* KOS uses 0 for error, not -1 */
         cur = syscall_dcload(DCLOAD_LSEEK, (void *)hnd, (void *)0, (void *)SEEK_CUR);
         ret = syscall_dcload(DCLOAD_LSEEK, (void *)hnd, (void *)0, (void *)SEEK_END);
@@ -265,9 +266,13 @@ static dirent_t *dcload_readdir(void * h) {
     uint32_t hnd = (uint32_t)h;
     dcl_dir_t *entry;
 
-    spinlock_lock_scoped(&mutex);
+    /* Lock to ensure commands are sent sequentially. */
+    mutex_lock_scoped(&mutex);
 
+    /* Lock for reading and check if it's a dir */
+    rwsem_read_lock(&dirlist_rw);
     if(!(entry = hnd_is_dir(hnd))) {
+        rwsem_read_unlock(&dirlist_rw);
         errno = EBADF;
         return NULL;
     }
@@ -275,6 +280,9 @@ static dirent_t *dcload_readdir(void * h) {
     dcld = (dcload_dirent_t *)syscall_dcload(DCLOAD_READDIR, (void *)hnd, NULL, NULL);
 
     if(dcld) {
+        /* Promote the lock since we need to modify the dir table */
+        rwsem_read_upgrade(&dirlist_rw);
+
         rv = &(entry->dirent);
         strcpy(rv->name, dcld->d_name);
         rv->size = 0;
@@ -284,6 +292,7 @@ static dirent_t *dcload_readdir(void * h) {
         fn = malloc(strlen(entry->path) + strlen(dcld->d_name) + 1);
 
         if(!fn) {
+            rwsem_write_unlock(&dirlist_rw);
             errno = ENOMEM;
             return NULL;
         }
@@ -306,6 +315,7 @@ static dirent_t *dcload_readdir(void * h) {
         free(fn);
     }
 
+    rwsem_unlock(&dirlist_rw);
     return rv;
 }
 
@@ -314,7 +324,8 @@ static int dcload_rename(vfs_handler_t * vfs, const char *fn1, const char *fn2) 
 
     (void)vfs;
 
-    spinlock_lock_scoped(&mutex);
+    /* Lock to ensure commands are sent sequentially. */
+    mutex_lock_scoped(&mutex);
 
     /* really stupid hack, since I didn't put rename() in dcload */
 
@@ -328,8 +339,6 @@ static int dcload_rename(vfs_handler_t * vfs, const char *fn1, const char *fn2) 
 
 static int dcload_unlink(vfs_handler_t * vfs, const char *fn) {
     (void)vfs;
-
-    spinlock_lock_scoped(&mutex);
 
     return syscall_dcload(DCLOAD_UNLINK, (void *)fn, NULL, NULL);
 }
@@ -353,9 +362,7 @@ static int dcload_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
         return 0;
     }
 
-    spinlock_lock(&mutex);
     retval = syscall_dcload(DCLOAD_STAT, (void *)path, &filestat, NULL);
-    spinlock_unlock(&mutex);
 
     if(!retval) {
         memset(st, 0, sizeof(struct stat));
@@ -407,13 +414,20 @@ static int dcload_fcntl(void *h, int cmd, va_list ap) {
 
 static int dcload_rewinddir(void *h) {
     uint32_t hnd = (uint32_t)h;
+    int rv;
 
-    spinlock_lock_scoped(&mutex);
-
-    if(!hnd_is_dir(hnd))
+    /* Lock for reading and check if it's a dir */
+    rwsem_read_lock(&dirlist_rw);
+    if(!hnd_is_dir(hnd)) {
+        rwsem_read_unlock(&dirlist_rw);
         return -1;
+    }
 
-    return syscall_dcload(DCLOAD_REWINDDIR, (void *)hnd, NULL, NULL);
+    rv = syscall_dcload(DCLOAD_REWINDDIR, (void *)hnd, NULL, NULL);
+
+    rwsem_read_unlock(&dirlist_rw);
+
+    return rv;
 }
 
 /* Pull all that together */
