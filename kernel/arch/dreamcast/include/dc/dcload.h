@@ -94,8 +94,23 @@ typedef struct dcload_stat {
 int dcload_stat(const char *restrict path, dcload_stat_t *restrict buf);
 /* UTIME */
 
+/* EXIT */
+int dcload_opendir(const char *fn);
+int dcload_closedir(uint32_t hnd);
+
+/* dcload dirent */
+typedef struct dcload_dirent {
+    long            d_ino;  /* inode number */
+    off_t           d_off;  /* offset to the next dirent */
+    unsigned short  d_reclen;/* length of this record */
+    unsigned char   d_type;         /* type of file */
+    char            d_name[256];    /* filename */
+} dcload_dirent_t;
+
+dcload_dirent_t *dcload_readdir(uint32_t hnd);
 uint32_t dcload_gethostinfo(uint32_t *ip, uint32_t *port);
 size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_t out_size);
+int dcload_rewinddir(uint32_t hnd);
 /** @} */
 
 __END_DECLS
