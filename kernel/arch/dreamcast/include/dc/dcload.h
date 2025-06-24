@@ -67,6 +67,32 @@ int dcload_unlink(const char *fn);
 /* CHDIR */
 /* CHMOD */
 off_t dcload_lseek(uint32_t hnd, off_t offset, int whence);
+/* FSTAT */
+/* TIME */
+
+/* dcload stat */
+typedef struct dcload_stat {
+    unsigned short st_dev;
+    unsigned short st_ino;
+    int st_mode;
+    unsigned short st_nlink;
+    unsigned short st_uid;
+    unsigned short st_gid;
+    unsigned short st_rdev;
+    long st_size;
+    long atime;
+    long st_spare1;
+    long mtime;
+    long st_spare2;
+    long ctime;
+    long st_spare3;
+    long st_blksize;
+    long st_blocks;
+    long st_spare4[2];
+} dcload_stat_t;
+
+int dcload_stat(const char *restrict path, dcload_stat_t *restrict buf);
+/* UTIME */
 
 uint32_t dcload_gethostinfo(uint32_t *ip, uint32_t *port);
 size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_t out_size);

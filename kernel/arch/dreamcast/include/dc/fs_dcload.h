@@ -70,30 +70,6 @@ struct dcload_dirent {
 
 typedef struct dcload_dirent dcload_dirent_t;
 
-/* dcload stat */
-
-struct  dcload_stat {
-    unsigned short st_dev;
-    unsigned short st_ino;
-    int st_mode;
-    unsigned short st_nlink;
-    unsigned short st_uid;
-    unsigned short st_gid;
-    unsigned short st_rdev;
-    long st_size;
-    long atime;
-    long st_spare1;
-    long mtime;
-    long st_spare2;
-    long ctime;
-    long st_spare3;
-    long st_blksize;
-    long st_blocks;
-    long st_spare4[2];
-};
-
-typedef struct dcload_stat dcload_stat_t;
-
 /* Printk replacement */
 void dcload_printk(const char *str);
 
