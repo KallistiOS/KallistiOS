@@ -68,6 +68,18 @@ int dcload_stat(const char *restrict path, dcload_stat_t *restrict buf) {
     return dcload_syscall(DCLOAD_STAT, (void *)path, (void *)buf, NULL);
 }
 
+int dcload_opendir(const char *fn) {
+    return dcload_syscall(DCLOAD_OPENDIR, (void *)fn, NULL, NULL);
+}
+
+int dcload_closedir(uint32_t hnd) {
+    return dcload_syscall(DCLOAD_CLOSEDIR, (void *)hnd, NULL, NULL);
+}
+
+dcload_dirent_t *dcload_readdir(uint32_t hnd) {
+    return (dcload_dirent_t *)dcload_syscall(DCLOAD_READDIR, (void *)hnd, NULL, NULL);
+}
+
 size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_t out_size) {
     /* we have to pack the sizes together because the dcloadsyscall handler
        can only take 4 parameters */
@@ -76,4 +88,8 @@ size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_
 
 uint32_t dcload_gethostinfo(uint32_t *ip, uint32_t *port) {
     return dcload_syscall(DCLOAD_GETHOSTINFO, (void *)ip, (void *)port, NULL);
+}
+
+int dcload_rewinddir(uint32_t hnd) {
+    return dcload_syscall(DCLOAD_REWINDDIR, (void *)hnd, NULL, NULL);
 }

@@ -58,18 +58,6 @@ extern int dcload_type;
 
 /* \cond */
 
-/* dcload dirent */
-
-struct dcload_dirent {
-    long            d_ino;  /* inode number */
-    off_t           d_off;  /* offset to the next dirent */
-    unsigned short  d_reclen;/* length of this record */
-    unsigned char   d_type;         /* type of file */
-    char            d_name[256];    /* filename */
-};
-
-typedef struct dcload_dirent dcload_dirent_t;
-
 /* Printk replacement */
 void dcload_printk(const char *str);
 
