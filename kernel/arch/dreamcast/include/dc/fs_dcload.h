@@ -26,7 +26,6 @@
 __BEGIN_DECLS
 
 #include <stdbool.h>
-#include <dc/syscalls.h>
 #include <kos/fs.h>
 #include <kos/dbgio.h>
 

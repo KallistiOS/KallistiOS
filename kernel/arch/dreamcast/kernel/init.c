@@ -26,6 +26,7 @@
 #include <dc/vmufs.h>
 #include <dc/syscalls.h>
 #include <dc/wdt.h>
+#include <dc/dcload.h>
 
 #include "initall_hdrs.h"
 

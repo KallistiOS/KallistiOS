@@ -36,7 +36,7 @@
 #include <kos/dbglog.h>
 
 #include <dc/fs_dclsocket.h>
-#include <dc/syscalls.h>
+#include <dc/dcload.h>
 
 #define DCLOAD_PORT 31313
 #define NAME "dcload-ip over KOS sockets"
