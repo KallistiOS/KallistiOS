@@ -32,6 +32,7 @@ __BEGIN_DECLS
 #include <time.h>
 #include <unistd.h>
 #include <utime.h>
+#include <sys/dirent.h>
 #include <sys/types.h>
 
 typedef enum {
@@ -101,17 +102,7 @@ int dcload_assignwrkmem(int *buf);
 void dcload_exit(void);
 int dcload_opendir(const char *fn);
 int dcload_closedir(uint32_t hnd);
-
-/* dcload dirent */
-typedef struct dcload_dirent {
-    long            d_ino;          /* inode number */
-    off_t           d_off;          /* offset to the next dirent */
-    unsigned short  d_reclen;       /* length of this record */
-    unsigned char   d_type;         /* type of file */
-    char            d_name[256];    /* filename */
-} dcload_dirent_t;
-
-dcload_dirent_t *dcload_readdir(uint32_t hnd);
+struct dirent *dcload_readdir(uint32_t hnd);
 uint32_t dcload_gethostinfo(uint32_t *ip, uint32_t *port);
 size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_t out_size);
 int dcload_rewinddir(uint32_t hnd);
