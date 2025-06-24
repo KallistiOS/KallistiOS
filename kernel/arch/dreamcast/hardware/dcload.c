@@ -41,3 +41,7 @@ size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_
        can only take 4 parameters */
     return dcload_syscall(DCLOAD_GDBPACKET, (void *)in_buf, (void *)((in_size << 16) | (out_size & 0xffff)), (void *)out_buf);
 }
+
+uint32_t dcload_gethostinfo(uint32_t *ip, uint32_t *port) {
+    return dcload_syscall(DCLOAD_GETHOSTINFO, (void *)ip, (void *)port, NULL);
+}
