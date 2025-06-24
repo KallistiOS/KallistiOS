@@ -57,6 +57,7 @@ typedef enum {
 
 int syscall_dcload(dcload_cmd_t cmd, void *param1, void *param2, void *param3);
 
+size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_t out_size);
 /** @} */
 
 __END_DECLS
