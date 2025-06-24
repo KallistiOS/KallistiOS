@@ -690,7 +690,7 @@ void fs_dclsocket_init_console(void) {
 uint32 _fs_dclsocket_get_ip(void) {
     uint32 ip, port;
 
-    return syscall_dcload(DCLOAD_GETHOSTINFO, &ip, &port, NULL);
+    return dcload_gethostinfo(&ip, &port);
 }
 
 int fs_dclsocket_init(void) {
@@ -708,7 +708,7 @@ int fs_dclsocket_init(void) {
         return -1;
 
     /* Determine where dctool is running, and set up our variables for that */
-    syscall_dcload(DCLOAD_GETHOSTINFO, &ip, &port, NULL);
+    dcload_gethostinfo(&ip, &port);
 
     /* Put dc-tool's info into our ARP cache */
     net_ipv4_parse_address(ip, ipaddr);
