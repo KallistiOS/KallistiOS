@@ -56,6 +56,10 @@ typedef enum {
 } dcload_cmd_t;
 
 int syscall_dcload(dcload_cmd_t cmd, void *param1, void *param2, void *param3);
+ssize_t dcload_read(uint32_t hnd, uint8_t *data, size_t len);
+ssize_t dcload_write(uint32_t hnd, const uint8_t *data, size_t len);
+int dcload_open(const char *fn, int oflags, int mode);
+int dcload_close(uint32_t hnd);
 
 uint32_t dcload_gethostinfo(uint32_t *ip, uint32_t *port);
 size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_t out_size);
