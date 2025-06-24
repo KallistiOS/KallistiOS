@@ -26,13 +26,13 @@ build_gdb: $(stamp_gdb_build)
 ifeq ($(MACOS), 1)
   ifeq ($(uname_m),arm64)
     $(info Fixing up MacOS arm64 environment variables)
-    $(stamp_gdb_build): export CPATH := /opt/homebrew/include
-    $(stamp_gdb_build): export LIBRARY_PATH := /opt/homebrew/lib
+    $(stamp_gdb_build): export CPATH ?= /opt/homebrew/include
+    $(stamp_gdb_build): export LIBRARY_PATH ?= /opt/homebrew/lib
   endif
   ifeq ($(uname_m),x86_64)
     $(info Fixing up MacOS x86_64 environment variables)
-    $(stamp_gdb_build): export CPATH := /usr/local/include
-    $(stamp_gdb_build): export LIBRARY_PATH := /usr/local/lib
+    $(stamp_gdb_build): export CPATH ?= /usr/local/include
+    $(stamp_gdb_build): export LIBRARY_PATH ?= /usr/local/lib
   endif
 endif
 
