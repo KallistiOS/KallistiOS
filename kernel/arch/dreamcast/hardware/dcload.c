@@ -36,6 +36,22 @@ int dcload_syscall(dcload_cmd_t cmd, void *param1, void *param2, void *param3) {
     return syscall(cmd, param1, param2, param3);
 }
 
+ssize_t dcload_read(uint32_t hnd, uint8_t *data, size_t len) {
+    return dcload_syscall(DCLOAD_READ, (void *)hnd, (void *)data, (void *)len);
+}
+
+ssize_t dcload_write(uint32_t hnd, const uint8_t *data, size_t len) {
+    return dcload_syscall(DCLOAD_WRITE, (void *)hnd, (void *)data, (void *)len);
+}
+
+int dcload_open(const char *fn, int oflags, int mode) {
+    return dcload_syscall(DCLOAD_OPEN, (void *)fn, (void *)oflags, (void *)mode);
+}
+
+int dcload_close(uint32_t hnd) {
+    return dcload_syscall(DCLOAD_CLOSE, (void *)hnd, NULL, NULL);
+}
+
 size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_t out_size) {
     /* we have to pack the sizes together because the dcloadsyscall handler
        can only take 4 parameters */

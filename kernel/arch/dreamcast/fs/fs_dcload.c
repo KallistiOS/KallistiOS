@@ -67,7 +67,7 @@ static mutex_t mutex = MUTEX_INITIALIZER;
 int dcload_write_buffer(const uint8_t *data, int len, int xlat) {
     (void)xlat;
 
-    syscall_dcload(DCLOAD_WRITE, (void *)1, (void *)data, (void *)len);
+    dcload_write(STDOUT_FILENO, data, len);
 
     return len;
 }
@@ -146,7 +146,7 @@ static void *fs_dcload_open(vfs_handler_t * vfs, const char *fn, int mode) {
         if(mode & O_TRUNC)
             dcload_mode |= 0x0400;
 
-        hnd = syscall_dcload(DCLOAD_OPEN, (void *)fn, (void *)dcload_mode, (void *)0644);
+        hnd = dcload_open(fn, dcload_mode, 0644);
         hnd++; /* KOS uses 0 for error, not -1 */
     }
 
@@ -180,7 +180,7 @@ static int fs_dcload_close(void * h) {
             rwsem_read_unlock(&dirlist_rw);
 
             hnd--; /* KOS uses 0 for error, not -1 */
-            syscall_dcload(DCLOAD_CLOSE, (void *)hnd, NULL, NULL);
+            dcload_close(hnd);
         }
     }
 
@@ -193,7 +193,7 @@ static ssize_t fs_dcload_read(void * h, void *buf, size_t cnt) {
 
     if(hnd) {
         hnd--; /* KOS uses 0 for error, not -1 */
-        ret = syscall_dcload(DCLOAD_READ, (void *)hnd, buf, (void *)cnt);
+        ret = dcload_read(hnd, buf, cnt);
     }
 
     return ret;
@@ -205,7 +205,7 @@ static ssize_t fs_dcload_write(void * h, const void *buf, size_t cnt) {
 
     if(hnd) {
         hnd--; /* KOS uses 0 for error, not -1 */
-        ret = syscall_dcload(DCLOAD_WRITE, (void *)hnd, (void *)buf, (void *)cnt);
+        ret = dcload_write(hnd, buf, cnt);
     }
 
     return ret;
