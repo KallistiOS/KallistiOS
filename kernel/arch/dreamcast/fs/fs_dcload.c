@@ -90,7 +90,7 @@ static void *fs_dcload_open(vfs_handler_t * vfs, const char *fn, int mode) {
             fn = "/";
         }
 
-        hnd = syscall_dcload(DCLOAD_OPENDIR, fn, NULL, NULL);
+        hnd = dcload_opendir(fn);
 
         if(!hnd) {
             /* It could be caused by other issues, such as
@@ -163,7 +163,7 @@ static int fs_dcload_close(void * h) {
 
         /* We found it in the list, so it's a dir */
         if(i) {
-            syscall_dcload(DCLOAD_CLOSEDIR, hnd, NULL, NULL);
+            dcload_closedir(hnd);
 
             /* Promote the lock since we need to modify the dir table */
             rwsem_read_upgrade(&dirlist_rw);
@@ -271,7 +271,7 @@ static dirent_t *fs_dcload_readdir(void * h) {
         return NULL;
     }
 
-    dcld = (dcload_dirent_t *)syscall_dcload(DCLOAD_READDIR, hnd, NULL, NULL);
+    dcld = dcload_readdir(hnd);
 
     if(dcld) {
         /* Promote the lock since we need to modify the dir table */
@@ -417,7 +417,7 @@ static int fs_dcload_rewinddir(void *h) {
         return -1;
     }
 
-    rv = syscall_dcload(DCLOAD_REWINDDIR, hnd, NULL, NULL);
+    rv = dcload_rewinddir(hnd);
 
     rwsem_read_unlock(&dirlist_rw);
 
@@ -515,7 +515,7 @@ void fs_dcload_init_console(void) {
 
     /* dcload IP will always return -1 here. Serial will return 0 and make
       no change since it already holds 0 as 'no mem assigned */
-    if(syscall_dcload(DCLOAD_ASSIGNWRKMEM, 0, NULL, NULL) == -1) {
+    if(dcload_assignwrkmem(0) == -1) {
         dcload_type = DCLOAD_TYPE_IP;
     }
     else {
@@ -524,7 +524,7 @@ void fs_dcload_init_console(void) {
         /* Give dcload the 64k it needs to compress data (if on serial) */
         dcload_wrkmem = malloc(65536);
         if(dcload_wrkmem) {
-            if(syscall_dcload(DCLOAD_ASSIGNWRKMEM, dcload_wrkmem, NULL, NULL) == -1)
+            if(dcload_assignwrkmem(dcload_wrkmem) == -1)
                 free(dcload_wrkmem);
         }
     }
@@ -553,7 +553,7 @@ void fs_dcload_shutdown(void) {
 
     /* Free dcload wrkram */
     if(dcload_wrkmem) {
-        syscall_dcload(DCLOAD_ASSIGNWRKMEM, 0, NULL, NULL);
+        dcload_assignwrkmem(0);
         free(dcload_wrkmem);
     }
 

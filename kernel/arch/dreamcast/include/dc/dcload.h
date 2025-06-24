@@ -57,6 +57,7 @@ typedef enum {
 } dcload_cmd_t;
 
 int syscall_dcload(dcload_cmd_t cmd, void *param1, void *param2, void *param3);
+
 ssize_t dcload_read(uint32_t hnd, uint8_t *data, size_t len);
 ssize_t dcload_write(uint32_t hnd, const uint8_t *data, size_t len);
 int dcload_open(const char *fn, int oflags, int mode);
@@ -93,7 +94,7 @@ typedef struct dcload_stat {
 
 int dcload_stat(const char *restrict path, dcload_stat_t *restrict buf);
 /* UTIME */
-
+int dcload_assignwrkmem(int *buf);
 /* EXIT */
 int dcload_opendir(const char *fn);
 int dcload_closedir(uint32_t hnd);
@@ -111,6 +112,7 @@ dcload_dirent_t *dcload_readdir(uint32_t hnd);
 uint32_t dcload_gethostinfo(uint32_t *ip, uint32_t *port);
 size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_t out_size);
 int dcload_rewinddir(uint32_t hnd);
+
 /** @} */
 
 __END_DECLS
