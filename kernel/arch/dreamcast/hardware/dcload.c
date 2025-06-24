@@ -64,6 +64,10 @@ off_t dcload_lseek(uint32_t hnd, off_t offset, int whence) {
     return (off_t)dcload_syscall(DCLOAD_READ, (void *)hnd, (void *)offset, (void *)whence);
 }
 
+int dcload_stat(const char *restrict path, dcload_stat_t *restrict buf) {
+    return dcload_syscall(DCLOAD_STAT, (void *)path, (void *)buf, NULL);
+}
+
 size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_t out_size) {
     /* we have to pack the sizes together because the dcloadsyscall handler
        can only take 4 parameters */

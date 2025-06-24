@@ -294,7 +294,7 @@ static dirent_t *fs_dcload_readdir(void * h) {
         strcpy(fn, entry->path);
         strcat(fn, dcld->d_name);
 
-        if(!syscall_dcload(DCLOAD_STAT, fn, &filestat, NULL)) {
+        if(!dcload_stat(fn, &filestat)) {
             if(filestat.st_mode & S_IFDIR) {
                 rv->size = -1;
                 rv->attr = O_DIR;
@@ -356,7 +356,7 @@ static int fs_dcload_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
         return 0;
     }
 
-    retval = syscall_dcload(DCLOAD_STAT, path, &filestat, NULL);
+    retval = dcload_stat(path, &filestat);
 
     if(!retval) {
         memset(st, 0, sizeof(struct stat));
