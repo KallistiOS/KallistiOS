@@ -27,8 +27,11 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
+#include <fcntl.h>
 #include <stdint.h>
+#include <time.h>
 #include <unistd.h>
+#include <utime.h>
 #include <sys/types.h>
 
 typedef enum {
@@ -62,14 +65,12 @@ ssize_t dcload_read(uint32_t hnd, uint8_t *data, size_t len);
 ssize_t dcload_write(uint32_t hnd, const uint8_t *data, size_t len);
 int dcload_open(const char *fn, int oflags, int mode);
 int dcload_close(uint32_t hnd);
-/* CREAT */
+int dcload_creat(const char *path, mode_t mode);
 int dcload_link(const char *fn1, const char *fn2);
 int dcload_unlink(const char *fn);
-/* CHDIR */
-/* CHMOD */
+int dcload_chdir(const char *path);
+int dcload_chmod(const char *path, mode_t mode);
 off_t dcload_lseek(uint32_t hnd, off_t offset, int whence);
-/* FSTAT */
-/* TIME */
 
 /* dcload stat */
 typedef struct dcload_stat {
@@ -92,10 +93,12 @@ typedef struct dcload_stat {
     long st_spare4[2];
 } dcload_stat_t;
 
+int dcload_fstat(int fildes, dcload_stat_t *buf);
+time_t dcload_time(void);
 int dcload_stat(const char *restrict path, dcload_stat_t *restrict buf);
-/* UTIME */
+/* int dcload_utime(const char *path, const struct utimbuf *times); */
 int dcload_assignwrkmem(int *buf);
-/* EXIT */
+void dcload_exit(void);
 int dcload_opendir(const char *fn);
 int dcload_closedir(uint32_t hnd);
 

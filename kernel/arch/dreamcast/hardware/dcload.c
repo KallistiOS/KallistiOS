@@ -52,6 +52,10 @@ int dcload_close(uint32_t hnd) {
     return dcload_syscall(DCLOAD_CLOSE, (void *)hnd, NULL, NULL);
 }
 
+int dcload_creat(const char *path, mode_t mode) {
+    return dcload_syscall(DCLOAD_CREAT, (void *)path, (void *)mode, NULL);
+}
+
 int dcload_link(const char *fn1, const char *fn2) {
     return dcload_syscall(DCLOAD_LINK, (void *)fn1, (void *)fn2, NULL);
 }
@@ -60,16 +64,47 @@ int dcload_unlink(const char *fn) {
     return dcload_syscall(DCLOAD_UNLINK, (void *)fn, NULL, NULL);
 }
 
+int dcload_chdir(const char *path) {
+    return dcload_syscall(DCLOAD_CHDIR, (void *)path, NULL, NULL);
+}
+
+int dcload_chmod(const char *path, mode_t mode) {
+    return dcload_syscall(DCLOAD_CHMOD, (void *)path, (void *)mode, NULL);
+}
+
 off_t dcload_lseek(uint32_t hnd, off_t offset, int whence) {
     return (off_t)dcload_syscall(DCLOAD_READ, (void *)hnd, (void *)offset, (void *)whence);
+}
+
+int dcload_fstat(int fildes, dcload_stat_t *buf) {
+    return dcload_syscall(DCLOAD_FSTAT, (void *)fildes, (void *)buf, NULL);
+}
+
+time_t dcload_time(void) {
+    return (time_t)dcload_syscall(DCLOAD_TIME, NULL, NULL, NULL);
 }
 
 int dcload_stat(const char *restrict path, dcload_stat_t *restrict buf) {
     return dcload_syscall(DCLOAD_STAT, (void *)path, (void *)buf, NULL);
 }
 
+/* Leaving this disabled for now as dcload was written when these values would
+    have been 32bit but they are now each 64 bits so they can't be sent
+    transparently.
+*/
+/*
+int dcload_utime(const char *path, const struct utimbuf *times) {
+    return dcload_syscall(DCLOAD_UTIME, (void *)path,
+        (void *) (times ? times->actime : 0), (void *) (times ? times->modtime : 0));
+}
+*/
+
 int dcload_assignwrkmem(int *buf) {
     return dcload_syscall(DCLOAD_ASSIGNWRKMEM, (void *)buf, NULL, NULL);
+}
+
+void dcload_exit(void) {
+    dcload_syscall(DCLOAD_EXIT, NULL, NULL, NULL);
 }
 
 int dcload_opendir(const char *fn) {
