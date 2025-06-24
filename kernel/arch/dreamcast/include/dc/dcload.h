@@ -101,9 +101,9 @@ int dcload_closedir(uint32_t hnd);
 
 /* dcload dirent */
 typedef struct dcload_dirent {
-    long            d_ino;  /* inode number */
-    off_t           d_off;  /* offset to the next dirent */
-    unsigned short  d_reclen;/* length of this record */
+    long            d_ino;          /* inode number */
+    off_t           d_off;          /* offset to the next dirent */
+    unsigned short  d_reclen;       /* length of this record */
     unsigned char   d_type;         /* type of file */
     char            d_name[256];    /* filename */
 } dcload_dirent_t;
