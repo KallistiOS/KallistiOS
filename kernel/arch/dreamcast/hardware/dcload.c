@@ -52,6 +52,18 @@ int dcload_close(uint32_t hnd) {
     return dcload_syscall(DCLOAD_CLOSE, (void *)hnd, NULL, NULL);
 }
 
+int dcload_link(const char *fn1, const char *fn2) {
+    return dcload_syscall(DCLOAD_LINK, (void *)fn1, (void *)fn2, NULL);
+}
+
+int dcload_unlink(const char *fn) {
+    return dcload_syscall(DCLOAD_UNLINK, (void *)fn, NULL, NULL);
+}
+
+off_t dcload_lseek(uint32_t hnd, off_t offset, int whence) {
+    return (off_t)dcload_syscall(DCLOAD_READ, (void *)hnd, (void *)offset, (void *)whence);
+}
+
 size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_t out_size) {
     /* we have to pack the sizes together because the dcloadsyscall handler
        can only take 4 parameters */

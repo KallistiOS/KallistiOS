@@ -217,7 +217,7 @@ static off_t fs_dcload_seek(void * h, off_t offset, int whence) {
 
     if(hnd) {
         hnd--; /* KOS uses 0 for error, not -1 */
-        ret = syscall_dcload(DCLOAD_LSEEK, (void *)hnd, (void *)offset, (void *)whence);
+        ret = dcload_lseek(hnd, offset, whence);
     }
 
     return ret;
@@ -229,7 +229,7 @@ static off_t fs_dcload_tell(void * h) {
 
     if(hnd) {
         hnd--; /* KOS uses 0 for error, not -1 */
-        ret = syscall_dcload(DCLOAD_LSEEK, (void *)hnd, 0, (void *)SEEK_CUR);
+        ret = dcload_lseek(hnd, 0, SEEK_CUR);
     }
 
     return ret;
@@ -237,7 +237,7 @@ static off_t fs_dcload_tell(void * h) {
 
 static size_t fs_dcload_total(void * h) {
     size_t ret = -1;
-    size_t cur;
+    off_t cur;
     uint32_t hnd = (uint32_t)h;
 
     if(hnd) {
@@ -245,9 +245,9 @@ static size_t fs_dcload_total(void * h) {
         mutex_lock_scoped(&mutex);
 
         hnd--; /* KOS uses 0 for error, not -1 */
-        cur = syscall_dcload(DCLOAD_LSEEK, (void *)hnd, (void *)0, (void *)SEEK_CUR);
-        ret = syscall_dcload(DCLOAD_LSEEK, (void *)hnd, (void *)0, (void *)SEEK_END);
-        syscall_dcload(DCLOAD_LSEEK, (void *)hnd, (void *)cur, (void *)SEEK_SET);
+        cur = dcload_lseek(hnd, 0, SEEK_CUR);
+        ret = dcload_lseek(hnd, 0, SEEK_END);
+        dcload_lseek(hnd, cur, SEEK_SET);
     }
 
     return ret;
@@ -324,10 +324,10 @@ static int fs_dcload_rename(vfs_handler_t * vfs, const char *fn1, const char *fn
 
     /* really stupid hack, since I didn't put rename() in dcload */
 
-    ret = syscall_dcload(DCLOAD_LINK, (void *)fn1, (void *)fn2, NULL);
+    ret = dcload_link(fn1, fn2);
 
     if(!ret)
-        ret = syscall_dcload(DCLOAD_UNLINK, (void *)fn1, NULL, NULL);
+        ret = dcload_unlink(fn1);
 
     return ret;
 }
@@ -335,7 +335,7 @@ static int fs_dcload_rename(vfs_handler_t * vfs, const char *fn1, const char *fn
 static int fs_dcload_unlink(vfs_handler_t * vfs, const char *fn) {
     (void)vfs;
 
-    return syscall_dcload(DCLOAD_UNLINK, (void *)fn, NULL, NULL);
+    return dcload_unlink(fn);
 }
 
 static int fs_dcload_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
