@@ -32,6 +32,7 @@ printf goes to the dc-tool console
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/dirent.h>
 #include <sys/queue.h>
 
 /* A linked list of dir entries. */
@@ -253,7 +254,7 @@ static size_t fs_dcload_total(void *h) {
 
 static dirent_t *fs_dcload_readdir(void *h) {
     dirent_t *rv = NULL;
-    dcload_dirent_t *dcld;
+    struct dirent *dcld;
     dcload_stat_t filestat;
     char *fn;
     uint32_t hnd = (uint32_t)h;

@@ -115,8 +115,8 @@ int dcload_closedir(uint32_t hnd) {
     return dcload_syscall(DCLOAD_CLOSEDIR, (void *)hnd, NULL, NULL);
 }
 
-dcload_dirent_t *dcload_readdir(uint32_t hnd) {
-    return (dcload_dirent_t *)dcload_syscall(DCLOAD_READDIR, (void *)hnd, NULL, NULL);
+struct dirent *dcload_readdir(uint32_t hnd) {
+    return (struct dirent *)dcload_syscall(DCLOAD_READDIR, (void *)hnd, NULL, NULL);
 }
 
 size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_t out_size) {

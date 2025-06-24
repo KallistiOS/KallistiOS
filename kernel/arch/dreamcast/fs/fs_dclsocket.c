@@ -395,7 +395,7 @@ static size_t dcls_total(void *hnd) {
 }
 
 static dirent_t their_dir;
-static dcload_dirent_t our_dir;
+static dirent_t our_dir;
 
 static dirent_t *dcls_readdir(void *hnd) {
     uint32 fd = (uint32) hnd;
@@ -412,24 +412,24 @@ static dirent_t *dcls_readdir(void *hnd) {
     memcpy(cmd->id, "DC18", 4);
     cmd->value0 = htonl(fd);
     cmd->value1 = htonl((uint32)(&our_dir));
-    cmd->value2 = htonl(sizeof(dcload_dirent_t));
+    cmd->value2 = htonl(sizeof(dirent_t));
 
     send(dcls_socket, cmd, sizeof(command_3int_t), 0);
 
     dcls_recv_loop();
 
     if(retval) {
-        char fn[strlen(dcload_path) + strlen(our_dir.d_name) + 1];
+        char fn[strlen(dcload_path) + strlen(our_dir.name) + 1];
         command_t *cmd2 = (command_t *)pktbuf;
         dcload_stat_t filestat;
 
-        strcpy(their_dir.name, our_dir.d_name);
+        strcpy(their_dir.name, our_dir.name);
         their_dir.size = 0;
         their_dir.time = 0;
         their_dir.attr = 0;
 
         strcpy(fn, dcload_path);
-        strcat(fn, our_dir.d_name);
+        strcat(fn, our_dir.name);
 
         memcpy(cmd2->id, "DC13", 4);
         cmd2->address = htonl((uint32) &filestat);
