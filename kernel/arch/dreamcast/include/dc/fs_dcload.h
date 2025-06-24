@@ -58,9 +58,6 @@ extern int dcload_type;
 
 /* \cond */
 
-/* Printk replacement */
-void dcload_printk(const char *str);
-
 /* Tests for the dcload syscall being present. */
 int syscall_dcload_detected(void);
 
