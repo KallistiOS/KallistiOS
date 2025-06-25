@@ -25,18 +25,23 @@ diff --color -ruN gcc-13.4.1/gcc/configure gcc-13.4.1-kos/gcc/configure
      target_thread_file=${enable_threads}
      ;;
    *)
-diff --color -ruN gcc-13.4.1/libgcc/config/sh/t-sh gcc-13.4.1-kos/libgcc/config/sh/t-sh
---- gcc-13.4.1/libgcc/config/sh/t-sh	2023-06-04 20:48:45.741549380 -0500
-+++ gcc-13.4.1-kos/libgcc/config/sh/t-sh	2023-06-04 20:49:03.488606061 -0500
-@@ -23,6 +23,8 @@
-   $(LIB1ASMFUNCS_CACHE)
- LIB1ASMFUNCS_CACHE = _ic_invalidate _ic_invalidate_array
- 
-+LIB2ADD = $(srcdir)/config/sh/fake-kos.S
-+
- crt1.o: $(srcdir)/config/sh/crt1.S
- 	$(gcc_compile) -c $<
- 
+diff --color -ruN gcc-13.4.1/libgcc/config.host gcc-13.4.1-kos/libgcc/config.host
+--- gcc-13.4.1/libgcc/config.host	2025-04-27 14:45:09.695053718 -0600
++++ gcc-13.4.1-kos/libgcc/config.host	2025-04-27 15:10:10.267714917 -0600
+@@ -71,7 +71,7 @@
+ asm_hidden_op=.hidden
+ enable_execute_stack=
+ extra_parts=
+-tmake_file=
++tmake_file="t-kos"
+ tm_file=
+ tm_define=
+ md_unwind_def_header=no-unwind.h
+diff -ruN /dev/null gcc-13.4.1-kos/libgcc/config/t-kos
+--- /dev/null	2025-04-27 14:45:09.695053718 -0600
++++ gcc-13.4.1-kos/libgcc/config/t-kos	2025-04-27 15:10:10.267714917 -0600
+@@ -0,0 +1 @@
++LIB2ADD = $(srcdir)/config/fake-kos.c
 diff --color -ruN gcc-13.4.1/libgcc/configure gcc-13.4.1-kos/libgcc/configure
 --- gcc-13.4.1/libgcc/configure	2023-06-04 20:48:45.787549527 -0500
 +++ gcc-13.4.1-kos/libgcc/configure	2023-06-04 20:49:03.489606065 -0500
