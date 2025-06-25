@@ -4,8 +4,8 @@
 
 gdb_log = $(logdir)/build-$(gdb_name).log
 
-gdb_patches := $(wildcard $(patches)/$(gdb_name)*.diff)
-gdb_patches += $(wildcard $(patches)/$(host_triplet)/$(gdb_name)*.diff)
+gdb_patches := $(wildcard $(patches)/targets/$(gdb_name)*.diff)
+gdb_patches += $(wildcard $(patches)/hosts/$(host_triplet)/$(gdb_name)*.diff)
 
 patch_gdb: $(stamp_gdb_patch)
 
