@@ -451,16 +451,18 @@ typedef struct kbd_state {
     /** \brief  The latest raw condition of the keyboard. */
     kbd_cond_t cond;
 
-    /** \brief Current (and previous) state of all keys in kbd_keys_t */
     union {
+        /* \cond */
         uint8_t matrix[KBD_MAX_KEYS] __depr("Please see key_state_t and use key_states to access this.");
-        key_state_t key_states[KBD_MAX_KEYS];
+        /* \endcond */
+        key_state_t key_states[KBD_MAX_KEYS];   /** \brief Current (and previous) state of all keys in kbd_keys_t */
     };
 
-    /** \brief  Modifier key status. Stored to track changes. */
     union {
+        /* \cond */
         int shift_keys __depr("Please see kbd_mods_t and use last_modifiers.raw to access this.");
-        kbd_mods_t last_modifiers;
+        /* \endcond */
+        kbd_mods_t last_modifiers;  /** \brief  Modifier key status. Stored to track changes. */
     };
 
     /** \brief  Keyboard type/region. */
