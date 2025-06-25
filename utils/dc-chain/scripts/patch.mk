@@ -77,8 +77,9 @@ endef
 patch-binutils: patch_target_name = Binutils
 patch-binutils: src_dir = binutils-$(binutils_ver)
 patch-binutils: stamp_radical_name = $(src_dir)
-patch-binutils: diff_patches := $(wildcard $(patches)/$(src_dir)*.diff)
-patch-binutils: diff_patches += $(wildcard $(patches)/$(host_triplet)/$(src_dir)*.diff)
+patch-binutils: diff_patches := $(wildcard $(patches)/targets/$(src_dir)*.diff)
+patch-binutils: diff_patches += $(wildcard $(patches)/targets/$(target)/$(src_dir)*.diff)
+patch-binutils: diff_patches += $(wildcard $(patches)/hosts/$(host_triplet)/$(src_dir)*.diff)
 patch-binutils:
 	$(call patch_apply)
 	$(call update_config_guess_sub)
@@ -87,11 +88,12 @@ patch-binutils:
 patch-gcc: patch_target_name = GCC
 patch-gcc: src_dir = gcc-$(gcc_ver)
 patch-gcc: stamp_radical_name = $(src_dir)
-patch-gcc: diff_patches := $(wildcard $(patches)/$(src_dir)*.diff)
-patch-gcc: diff_patches += $(wildcard $(patches)/$(host_triplet)/$(src_dir)*.diff)
+patch-gcc: diff_patches := $(wildcard $(patches)/targets/$(src_dir)*.diff)
+patch-gcc: diff_patches += $(wildcard $(patches)/targets/$(target)/$(src_dir)*.diff)
+patch-gcc: diff_patches += $(wildcard $(patches)/hosts/$(host_triplet)/$(src_dir)*.diff)
 ifeq ($(uname_s), Darwin)
 ifeq ($(uname_p), arm)
-patch-gcc: diff_patches += $(wildcard $(patches)/$(uname_p)-$(uname_s)/$(src_dir)*.diff)
+patch-gcc: diff_patches += $(wildcard $(patches)/hosts/arm-Darwin/$(src_dir)*.diff)
 endif
 endif
 patch-gcc:
@@ -102,8 +104,9 @@ patch-gcc:
 patch-newlib: patch_target_name = Newlib
 patch-newlib: src_dir = newlib-$(newlib_ver)
 patch-newlib: stamp_radical_name = $(src_dir)
-patch-newlib: diff_patches := $(wildcard $(patches)/$(src_dir)*.diff)
-patch-newlib: diff_patches += $(wildcard $(patches)/$(host_triplet)/$(src_dir)*.diff)
+patch-newlib: diff_patches := $(wildcard $(patches)/targets/$(src_dir)*.diff)
+patch-newlib: diff_patches += $(wildcard $(patches)/targets/$(target)/$(src_dir)*.diff)
+patch-newlib: diff_patches += $(wildcard $(patches)/hosts/$(host_triplet)/$(src_dir)*.diff)
 patch-newlib:
 	$(call patch_apply)
 	$(call update_config_guess_sub)
