@@ -4,7 +4,7 @@
    Copyright (C) 2000, 2001, 2002, 2003 Megan Potter
    Copyright (C) 2009, 2010, 2016, 2023 Lawrence Sebald
    Copyright (C) 2023 Colton Pawielski
-   Copyright (C) 2023, 2024 Falco Girgis
+   Copyright (C) 2023, 2024, 2025 Falco Girgis
 
 */
 
@@ -128,11 +128,12 @@ LIST_HEAD(ktlist, kthread);
 
     @{
 */
-#define THD_DEFAULTS    0  /**< \brief Defaults: no flags */
-#define THD_USER        1  /**< \brief Thread runs in user mode */
-#define THD_QUEUED      2  /**< \brief Thread is in the run queue */
-#define THD_DETACHED    4  /**< \brief Thread is detached */
-#define THD_OWNS_STACK  8  /**< \brief Thread manages stack lifetime */
+#define THD_DEFAULTS    0x0  /**< \brief Defaults: no flags */
+#define THD_USER        0x1  /**< \brief Thread runs in user mode */
+#define THD_QUEUED      0x2  /**< \brief Thread is in the run queue */
+#define THD_DETACHED    0x4  /**< \brief Thread is detached */
+#define THD_OWNS_STACK  0x8  /**< \brief Thread manages stack lifetime */
+#define THD_DISABLE_TLS 0x10 /**< \brief Thread does not use TLS variables */
 /** @} */
 
 /** \brief Kernel thread flags type */
@@ -149,8 +150,6 @@ typedef enum kthread_state {
     STATE_WAIT     = 0x0003,  /**< \brief Blocked on a genwait */
     STATE_FINISHED = 0x0004   /**< \brief Finished execution */
 } kthread_state_t;
-
-
 
 /** \brief   Structure describing one running thread.
 
@@ -289,6 +288,9 @@ typedef struct kthread_attr {
 
     /** \brief  Thread label. */
     const char *label;
+
+    /** \brief 1 if the thread doesn't use thread_local variables. */
+    bool disable_tls;
 } kthread_attr_t;
 
 /** \brief  kthread mode values
