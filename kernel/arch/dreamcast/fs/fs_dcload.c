@@ -278,6 +278,14 @@ static dirent_t *fs_dcload_readdir(void *h) {
         rwsem_read_upgrade(&dirlist_rw);
 
         rv = &(entry->dirent);
+
+        /* Verify dcload won't overflow us */
+        if(strlen(dcld->d_name) + 1 > NAME_MAX) {
+            rwsem_write_unlock(&dirlist_rw);
+            errno = EOVERFLOW;
+            return NULL;
+        }
+
         strcpy(rv->name, dcld->d_name);
         rv->size = 0;
         rv->time = 0;
