@@ -51,91 +51,125 @@
 
    <data> is as follows:
    All values are encoded in ascii hex digits.
-
-    Request     Packet
-
-    read registers  g
+**********************************************************************
+    REQUEST     PACKET
+**********************************************************************
+    read regs   g
+    
     reply       XX....X     Each byte of register data
-                    is described by two hex digits.
-                    Registers are in the internal order
-                    for GDB, and the bytes in a register
-                    are in the same order the machine uses.
-            or ENN      for an error.
-
+                            is described by two hex digits.
+                            Registers are in the internal order
+                            for GDB, and the bytes in a register
+                            are in the same order the machine uses.
+                or ENN      for an error.
+**********************************************************************
     write regs  GXX..XX     Each byte of register data
-                    is described by two hex digits.
-    reply       OK      for success
-            ENN     for an error
-
-        write reg   Pn...=r...  Write register n... with value r...,
-                    which contains two hex digits for each
-                    byte in the register (target byte
-                    order).
-    reply       OK      for success
-            ENN     for an error
+                            is described by two hex digits.
+    
+    reply       OK          for success
+                ENN         for an error
+**********************************************************************
+    write reg   Pn...=r...  Write register n... with value r...,
+                            which contains two hex digits for each
+                            byte in the register (target byte
+                            order).
+    
+    reply       OK          for success
+                ENN         for an error
     (not supported by all stubs).
-
-    read mem    mAA..AA,LLLL    AA..AA is address, LLLL is length.
+**********************************************************************
+    read mem    mAA..AA,LLLL    
+                            AA..AA is address, LLLL is length.
     reply       XX..XX      XX..XX is mem contents
-                    Can be fewer bytes than requested
-                    if able to read only part of the data.
-            or ENN      NN is errno
 
+                            Can be fewer bytes than requested
+                            if able to read only part of the data.
+                or ENN      NN is errno
+**********************************************************************
     write mem   MAA..AA,LLLL:XX..XX
-                    AA..AA is address,
-                    LLLL is number of bytes,
-                    XX..XX is data
-    reply       OK      for success
-            ENN     for an error (this includes the case
-                    where only part of the data was
-                    written).
+                            AA..AA is address,
+                            LLLL is number of bytes,
+                            XX..XX is data
 
+    reply       OK          for success
+                ENN         for an error (this includes the case
+                            where only part of the data was
+                            written).
+**********************************************************************
     cont        cAA..AA     AA..AA is address to resume
-                    If AA..AA is omitted,
-                    resume at same address.
-
+                            If AA..AA is omitted,
+                            resume at same address.
+**********************************************************************
     step        sAA..AA     AA..AA is address to resume
-                    If AA..AA is omitted,
-                    resume at same address.
-
-    last signal     ?               Reply the current reason for stopping.
-                                        This is the same reply as is generated
-                    for step or cont : SAA where AA is the
-                    signal number.
+                            If AA..AA is omitted,
+                            resume at same address.
+**********************************************************************
+    last signal ?           Reply the current reason for stopping.
+                            This is the same reply as is generated
+                            for step or cont : SAA where AA is the
+                            signal number.
 
     There is no immediate reply to step or cont.
     The reply comes when the machine stops.
     It is       SAA     AA is the "signal number"
 
     or...       TAAn...:r...;n:r...;n...:r...;
-                    AA = signal number
-                    n... = register number
-                    r... = register contents
-    or...       WAA     The process exited, and AA is
-                    the exit status.  This is only
-                    applicable for certains sorts of
-                    targets.
-    kill request    k
-
-    toggle debug    d       toggle debug flag (see 386 & 68k stubs)
-    reset       r       reset -- see sparc stub.
+                            AA = signal number
+                            n... = register number
+                            r... = register contents
+    or...       WAA         The process exited, and AA is
+                            the exit status.  This is only
+                            applicable for certains sorts of
+                            targets.
+**********************************************************************
+    kill        k           Kill request.
+**********************************************************************
+    debug       d           toggle debug flag (see 386 & 68k stubs)
+**********************************************************************
+    reset       r           reset -- see sparc stub.
+**********************************************************************
     reserved    <other>     On other requests, the stub should
-                    ignore the request and send an empty
-                    response ($#<checksum>).  This way
-                    we can extend the protocol and GDB
-                    can tell whether the stub it is
-                    talking to uses the old or the new.
+                            ignore the request and send an empty
+                            response ($#<checksum>).  This way
+                            we can extend the protocol and GDB
+                            can tell whether the stub it is
+                            talking to uses the old or the new.
+**********************************************************************
     search      tAA:PP,MM   Search backwards starting at address
-                    AA for a match with pattern PP and
-                    mask MM.  PP and MM are 4 bytes.
-                    Not supported by all stubs.
-
-    general query   qXXXX       Request info about XXXX.
+                            AA for a match with pattern PP and
+                            mask MM.  PP and MM are 4 bytes.
+                            Not supported by all stubs.
+**********************************************************************
+    general query   
+                qXXXX       Request info about XXXX.
+**********************************************************************
     general set QXXXX=yyyy  Set value of XXXX to yyyy.
-    query sect offs qOffsets    Get section offsets.  Reply is
-                    Text=xxx;Data=yyy;Bss=zzz
-    console output  Otext       Send text to stdout.  Only comes from
-                    remote target.
+**********************************************************************
+    query sect offs 
+                qOffsets    Get section offsets.  
+    reply       Text=xxx;Data=yyy;Bss=zzz
+**********************************************************************
+    console output  
+                Otext       Send text to stdout.  Only comes from
+                            remote target.
+**********************************************************************
+    set command-line args
+                Aarglen,argnum,arg,…
+                            Initialized `argv[]' array passed into 
+                            program. arglen specifies the number of 
+                            bytes in the hex encoded byte stream arg. 
+                            See `gdbserver' for more details.
+
+    reply       OK 
+    reply       ENN
+**********************************************************************
+    Current thread 
+                qC      Return the current thread ID
+
+    reply       QCpid   pid is HEX encoded 16-bit process iD
+    reply       *       implies old process ID
+
+**********************************************************************
 
     Responses can be run-length encoded to save space.  A '*' means that
     the next character is an ASCII encoding giving a repeat count which
@@ -153,9 +187,12 @@
 #include <arch/irq.h>
 #include <arch/arch.h>
 #include <arch/cache.h>
+#include <kos/thread.h>
 
 #include <stddef.h>
 #include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 /* Hitachi SH architecture instruction encoding masks */
 
@@ -273,11 +310,11 @@ static char remcomInBuffer[BUFMAX], remcomOutBuffer[BUFMAX];
 static char in_dcl_buf[BUFMAX], out_dcl_buf[BUFMAX];
 static int using_dcl = 0, in_dcl_pos = 0, out_dcl_pos = 0, in_dcl_size = 0;
 
-static char highhex(int  x) {
+static char highhex(int x) {
     return hexchars[(x >> 4) & 0xf];
 }
 
-static char lowhex(int  x) {
+static char lowhex(int x) {
     return hexchars[x & 0xf];
 }
 
@@ -688,6 +725,23 @@ static void hardBreakpoint(int set, int brktype, uint32 addr, int length, char* 
 #undef LREG
 #undef WREG
 
+
+static int qfThreadInfo(kthread_t *thd, void *ud) {
+    const size_t *idx = ud;
+
+    if(!idx)
+        remcomOutBuffer[*(idx)++] = ',';
+    else if(idx >= sizeof(remcomOutBuffer) - 3)
+        return -1;
+
+    remcomOutBuffer[*(idx)++] = highhex(thd->tid);
+    remcomOutBuffer[*(idx)++] = lowhex(thd->tid);
+
+    printf("qfThreadInfo: %lu", thd->tid);
+
+    return 0;
+}
+
 /*
 This function does all exception handling.  It only does two things -
 it figures out why it was called and tells gdb, and then it reacts
@@ -814,7 +868,7 @@ static void gdb_handle_exception(int exceptionVector) {
 
             /* kill the program */
             case 'k':       /* reboot */
-                arch_reboot();
+                arch_abort();
                 break;
 
                 /* set or remove a breakpoint */
@@ -835,13 +889,62 @@ static void gdb_handle_exception(int exceptionVector) {
                     strcpy(remcomOutBuffer, "E02");
             }
             break;
+        case 'q': /* threading */
+            if(*(ptr++) == 'C') {
+                kthread_t* thd = thd_get_current();
+                printf("TID: %lu\n", thd->tid);
+                remcomOutBuffer[0] = 'Q';
+                remcomOutBuffer[1] = 'C';
+                remcomOutBuffer[2] = highhex(thd->tid);
+                remcomOutBuffer[3] = lowhex(thd->tid);
+                remcomOutBuffer[4] = '\0';
+            } else {
+                
+                if(strncmp(ptr, "fThreadInfo", 11) == 0) {
+                    size_t idx = 0;
+                    remcomOutBuffer[idx++] = 'm';
+                    remcomOutBuffer[idx++] = ' ';
+                    thd_each(qfThreadInfo, &idx);
+                    remcomOutBuffer[idx] = '\0';
+                } else if(strncmp(ptr, "sThreadInfo", 11) == 0) {
+                    strcpy(remcomOutBuffer, "l");
+                } else if(strncmp(ptr, "ThreadExtraInfo", 15) == 0) { 
+                    ptr += 16;
+                    uint32_t tid = 0;
+                    if(hexToInt(&ptr, &tid)) {
+                        kthread_t* thr = thd_by_tid(tid);
+                        strcpy(remcomOutBuffer, thd_get_label(thr));
+                    } else{
+                        fprintf(stderr, "Failed to get TID for ThreadExtraInfo\n");
+                    }
+                }
+            }
+
+            break;
+        case 'T': {
+            uint32_t tid = 0;
+            if(hexToInt(&ptr, &tid)) {
+                kthread_t* thr = thd_by_tid(tid);
+                if(thr) {
+                    printf("Thd %lu is alive!\n", tid);
+                    strcpy(remcomOutBuffer, "OK");
+                }
+                else {
+                    printf("Thd %lu is dead!\n", tid);
+                    strcpy(remcomOutBuffer, "E00");
+                }
+
+            }
+
+        }
+        break;
         }           /* switch */
+
 
         /* reply to the request */
         putpacket(remcomOutBuffer);
     }
 }
-
 
 /* This function will generate a breakpoint exception.  It is used at the
    beginning of a program to sync up with a debugger and can be used
