@@ -1,0 +1,153 @@
+diff -ruN gcc-8.5.0/gcc/config/elfos.h gcc-8.5.0-kos/gcc/config/elfos.h
+--- gcc-8.5.0/gcc/config/elfos.h	2025-04-17 16:01:33.790051712 -0600
++++ gcc-8.5.0-kos/gcc/config/elfos.h	2025-04-17 16:01:42.910094466 -0600
+@@ -486,3 +486,6 @@
+ 
+ #undef TARGET_LIBC_HAS_FUNCTION
+ #define TARGET_LIBC_HAS_FUNCTION no_c99_libc_has_function
++
++#define TARGET_OS_CPP_BUILTINS()			\
++  builtin_define ("__KOS_GCC_PATCHLEVEL__=2025062800")
+diff --git a/gcc/configure b/gcc/configure
+index 16965953f..5d8d51a98 100755
+--- a/gcc/configure
++++ b/gcc/configure
+@@ -13165,7 +13165,7 @@ case ${enable_threads} in
+     target_thread_file='single'
+     ;;
+   aix | dce | lynx | mipssde | posix | rtems | \
+-  single | tpf | vxworks | win32)
++  single | tpf | vxworks | win32 | kos)
+     target_thread_file=${enable_threads}
+     ;;
+   *)
+diff --git a/libgcc/config.host b/libgcc/config.host
+index 6a88ee5a2..df575f48e 100644
+--- a/libgcc/config.host
++++ b/libgcc/config.host
+@@ -71,7 +71,7 @@
+ asm_hidden_op=.hidden
+ enable_execute_stack=
+ extra_parts=
+-tmake_file=
++tmake_file="t-kos"
+ tm_file=
+ tm_define=
+ md_unwind_def_header=no-unwind.h
+diff --git a/libgcc/config/t-kos b/libgcc/config/t-kos
+new file mode 100644
+index 000000000..f9847a78d
+--- /dev/null
++++ b/libgcc/config/t-kos
+@@ -0,0 +1 @@
++LIB2ADD = $(srcdir)/config/fake-kos.c
+diff --git a/libgcc/configure b/libgcc/configure
+index 18418336c..39ec96416 100755
+--- a/libgcc/configure
++++ b/libgcc/configure
+@@ -5733,5 +5733,6 @@ case $target_thread_file in
+     tpf)	thread_header=config/s390/gthr-tpf.h ;;
+     vxworks)	thread_header=config/gthr-vxworks.h ;;
+     win32)	thread_header=config/i386/gthr-win32.h ;;
++    kos)	thread_header=gthr-kos.h ;;
+ esac
+ 
+diff --git a/libobjc/Makefile.in b/libobjc/Makefile.in
+index 3f4186dee..e516072ef 100644
+--- a/libobjc/Makefile.in
++++ b/libobjc/Makefile.in
+@@ -308,14 +308,16 @@ $(srcdir)/configure: @MAINT@ configure.ac $(srcdir)/aclocal.m4
+ $(srcdir)/aclocal.m4: @MAINT@ $(aclocal_deps)
+ 	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
+ 
+-install: install-libs install-headers
++install-strip: INSTALL_STRIP_FLAG = -s
++install install-strip: install-libs install-headers
+ 
+ install-libs: installdirs
+ 	$(SHELL) $(multi_basedir)/mkinstalldirs $(DESTDIR)$(toolexeclibdir)
+-	$(LIBTOOL_INSTALL) $(INSTALL) libobjc$(libsuffix).la $(DESTDIR)$(toolexeclibdir);
++	$(LIBTOOL_INSTALL) $(INSTALL) $(INSTALL_STRIP_FLAG) \
++	  libobjc$(libsuffix).la $(DESTDIR)$(toolexeclibdir);
+ 	if [ "$(OBJC_BOEHM_GC)" ]; then \
+-	  $(LIBTOOL_INSTALL) $(INSTALL) libobjc_gc$(libsuffix).la \
+-				$(DESTDIR)$(toolexeclibdir);\
++	  $(LIBTOOL_INSTALL) $(INSTALL) $(INSTALL_STRIP_FLAG) \
++	    libobjc_gc$(libsuffix).la $(DESTDIR)$(toolexeclibdir);\
+ 	fi
+ 	$(MULTIDO) $(FLAGS_TO_PASS) multi-do DO="$@"
+ 	@-$(LIBTOOL) --mode=finish $(DESTDIR)$(toolexeclibdir)
+@@ -328,7 +330,7 @@ install-headers:
+ 	  $(INSTALL_DATA) $${realfile} $(DESTDIR)$(libsubdir)/$(includedirname)/objc; \
+ 	done
+ 
+-check uninstall install-strip dist installcheck installdirs:
++check uninstall dist installcheck installdirs:
+ 
+ mostlyclean:
+ 	-$(LIBTOOL_CLEAN) rm -f libobjc$(libsuffix).la libobjc_gc$(libsuffix).la *.lo
+diff --git a/libstdc++-v3/config/cpu/sh/atomicity.h b/libstdc++-v3/config/cpu/sh/atomicity.h
+index 327bd0e45..aeb95d33b 100644
+--- a/libstdc++-v3/config/cpu/sh/atomicity.h
++++ b/libstdc++-v3/config/cpu/sh/atomicity.h
+@@ -22,14 +22,40 @@
+ // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+ // <http://www.gnu.org/licenses/>.
+ 
+-// Use the default atomicity stuff, which will use __atomic* builtins
+-// if threads are available, or the *_single functions on single-thread
+-// configurations.
+-// Actually we wouldn't need this header at all, but because of PR 53579
+-// libstdc++'s configury will not pickup the -matomic-model= option when
+-// set in the environment.  This makes it impossible to enable the proper
+-// atomic model on SH without modifying GCC itself, because libstdc++ always
+-// thinks the target doesn't do any atomics and uses the default mutex based
+-// implementation from cpu/generic/atomicity_mutex.
++/* This is generic/atomicity.h */
+ 
+ #include <ext/atomicity.h>
++#include <ext/concurrence.h>
++
++namespace 
++{
++  __gnu_cxx::__mutex&
++  get_atomic_mutex()
++  {
++    static __gnu_cxx::__mutex atomic_mutex;
++    return atomic_mutex;
++  }
++} // anonymous namespace
++
++namespace __gnu_cxx _GLIBCXX_VISIBILITY(default)
++{
++_GLIBCXX_BEGIN_NAMESPACE_VERSION
++
++  _Atomic_word
++  __attribute__ ((__unused__))
++  __exchange_and_add(volatile _Atomic_word* __mem, int __val) throw ()
++  {
++    __gnu_cxx::__scoped_lock sentry(get_atomic_mutex());
++    _Atomic_word __result;
++    __result = *__mem;
++    *__mem += __val;
++    return __result;
++  }
++
++  void
++  __attribute__ ((__unused__))
++  __atomic_add(volatile _Atomic_word* __mem, int __val) throw ()
++  { __exchange_and_add(__mem, __val); }
++
++_GLIBCXX_END_NAMESPACE_VERSION
++} // namespace
+diff --git a/libstdc++-v3/configure b/libstdc++-v3/configure
+index 819a1d828..1d7b817d8 100755
+--- a/libstdc++-v3/configure
++++ b/libstdc++-v3/configure
+@@ -15974,5 +15974,6 @@ case $target_thread_file in
+     tpf)	thread_header=config/s390/gthr-tpf.h ;;
+     vxworks)	thread_header=config/gthr-vxworks.h ;;
+     win32)	thread_header=config/i386/gthr-win32.h ;;
++    kos)	thread_header=gthr-kos.h ;;
+ esac
+ 
