@@ -1,18 +1,13 @@
-diff --color -ruN gcc-9.5.0/gcc/config/sh/sh-c.c gcc-9.5.0-kos/gcc/config/sh/sh-c.c
---- gcc-9.5.0/gcc/config/sh/sh-c.c	2023-06-05 16:31:29.396332076 -0500
-+++ gcc-9.5.0-kos/gcc/config/sh/sh-c.c	2023-06-05 16:31:31.707339829 -0500
-@@ -141,4 +141,11 @@
+diff -ruN gcc-9.5.0/gcc/config/elfos.h gcc-9.5.0-kos/gcc/config/elfos.h
+--- gcc-9.5.0/gcc/config/elfos.h	2025-04-17 16:01:33.790051712 -0600
++++ gcc-9.5.0-kos/gcc/config/elfos.h	2025-04-17 16:01:42.910094466 -0600
+@@ -486,3 +486,6 @@
  
-   cpp_define_formatted (pfile, "__SH_ATOMIC_MODEL_%s__",
- 			selected_atomic_model ().cdef_name);
+ #undef TARGET_LIBC_HAS_FUNCTION
+ #define TARGET_LIBC_HAS_FUNCTION no_c99_libc_has_function
 +
-+  /* Custom built-in defines for KallistiOS */
-+  builtin_define ("__KOS_GCC_PATCHED__");
-+  cpp_define_formatted (pfile, "__KOS_GCC_PATCHLEVEL__=%d",
-+			2023010200);
-+  /* Toolchain supports setting up stack for 32MB */
-+  builtin_define ("__KOS_GCC_32MB__");
- }
++#define TARGET_OS_CPP_BUILTINS()			\
++  builtin_define ("__KOS_GCC_PATCHLEVEL__=2025062800")
 diff --color -ruN gcc-9.5.0/gcc/configure gcc-9.5.0-kos/gcc/configure
 --- gcc-9.5.0/gcc/configure	2023-06-05 16:31:31.219338192 -0500
 +++ gcc-9.5.0-kos/gcc/configure	2023-06-05 16:31:31.712339846 -0500

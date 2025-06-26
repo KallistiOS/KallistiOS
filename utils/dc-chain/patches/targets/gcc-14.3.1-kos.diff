@@ -1,18 +1,13 @@
-diff -ruN gcc-14.3.1/gcc/config/sh/sh-c.cc gcc-14.3.1-kos/gcc/config/sh/sh-c.cc
---- gcc-14.3.1/gcc/config/sh/sh-c.cc	2025-04-18 16:01:33.790051712 -0600
-+++ gcc-14.3.1-kos/gcc/config/sh/sh-c.cc	2025-04-18 16:01:42.910094466 -0600
-@@ -141,4 +141,11 @@
+diff -ruN gcc-14.3.1/gcc/config/elfos.h gcc-14.3.1-kos/gcc/config/elfos.h
+--- gcc-14.3.1/gcc/config/elfos.h	2025-04-17 16:01:33.790051712 -0600
++++ gcc-14.3.1-kos/gcc/config/elfos.h	2025-04-17 16:01:42.910094466 -0600
+@@ -486,3 +486,6 @@
  
-   cpp_define_formatted (pfile, "__SH_ATOMIC_MODEL_%s__",
- 			selected_atomic_model ().cdef_name);
+ #undef TARGET_LIBC_HAS_FUNCTION
+ #define TARGET_LIBC_HAS_FUNCTION no_c99_libc_has_function
 +
-+  /* Custom built-in defines for KallistiOS */
-+  builtin_define ("__KOS_GCC_PATCHED__");
-+  cpp_define_formatted (pfile, "__KOS_GCC_PATCHLEVEL__=%d",
-+			2023010200);
-+  /* Toolchain supports setting up stack for 32MB */
-+  builtin_define ("__KOS_GCC_32MB__");
- }
++#define TARGET_OS_CPP_BUILTINS()			\
++  builtin_define ("__KOS_GCC_PATCHLEVEL__=2025062800")
 diff -ruN gcc-14.3.1/gcc/configure gcc-14.3.1-kos/gcc/configure
 --- gcc-14.3.1/gcc/configure	2025-04-18 16:01:33.801051764 -0600
 +++ gcc-14.3.1-kos/gcc/configure	2025-04-18 16:01:42.913094480 -0600
