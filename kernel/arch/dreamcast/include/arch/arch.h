@@ -33,7 +33,7 @@ __BEGIN_DECLS
 */
 
 /** \brief  Top of memory available, depending on memory size. */
-#ifdef __KOS_GCC_32MB__
+#if defined(__KOS_GCC_32MB__) || __KOS_GCC_PATCHLEVEL__ >= 2025062800
 extern uint32 _arch_mem_top;
 #else
 #pragma message "Outdated toolchain: not patched for 32MB support, limiting "\
