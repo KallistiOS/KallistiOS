@@ -67,11 +67,3 @@ case $KOS_GCCVER in
   *)
     export KOS_LDFLAGS="${KOS_CFLAGS} ${KOS_LDFLAGS} ${KOS_LD_SCRIPT} -nodefaultlibs ${KOS_LIB_PATHS}" ;;
 esac
-
-# Some extra vars based on architecture.
-case $KOS_GCCVER in
-  2* | 3*)
-    export KOS_START="${KOS_ARCH_DIR}/kernel/startup.o" ;;
-  *)
-    export KOS_START="" ;;
-esac
