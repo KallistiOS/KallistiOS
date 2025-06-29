@@ -60,10 +60,4 @@ export KOS_CPPSTD="-std=gnu++17"
 
 export KOS_GCCVER="`kos-cc -dumpversion`"
 
-case $KOS_GCCVER in
-  2* | 3*)
-    echo "Your GCC version is too old. You probably will run into major problems!"
-    export KOS_LDFLAGS="${KOS_CFLAGS} ${KOS_LDFLAGS} -nostartfiles -nostdlib ${KOS_LIB_PATHS}" ;;
-  *)
-    export KOS_LDFLAGS="${KOS_CFLAGS} ${KOS_LDFLAGS} ${KOS_LD_SCRIPT} -nodefaultlibs ${KOS_LIB_PATHS}" ;;
-esac
+export KOS_LDFLAGS="${KOS_CFLAGS} ${KOS_LDFLAGS} ${KOS_LD_SCRIPT} -nostdlib ${KOS_LIB_PATHS}"
