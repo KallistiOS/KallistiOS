@@ -45,8 +45,8 @@ also using their queue library verbatim (sys/queue.h).
 */
 
 /* Builtin background thread data */
-static alignas(8) uint8_t thd_reaper_stack[512];
-static alignas(8) uint8_t thd_idle_stack[64];
+static alignas(THD_STACK_ALIGNMENT) uint8_t thd_reaper_stack[512];
+static alignas(THD_STACK_ALIGNMENT) uint8_t thd_idle_stack[64];
 
 /*****************************************************************************/
 /* Thread scheduler data */
@@ -404,7 +404,8 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
 
             /* Create a new thread stack */
             if(!real_attr.stack_ptr) {
-                nt->stack = (uint32_t*)malloc(real_attr.stack_size);
+                nt->stack = (uint32_t*)aligned_alloc(THD_STACK_ALIGNMENT,
+                                                     real_attr.stack_size);
 
                 if(!nt->stack) {
                     free(nt);
