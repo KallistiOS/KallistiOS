@@ -20,12 +20,12 @@
     \brief     API for the Dreamcast's system calls
     \ingroup   system
 
-    This module encapsulates all the system calls available in the Dreamcast 
-    BIOS, allowing direct interaction with system hardware 
-    components such as the GDROM drive, flash ROM, and bios fonts. These 
+    This module encapsulates all the system calls available in the Dreamcast
+    BIOS, allowing direct interaction with system hardware
+    components such as the GDROM drive, flash ROM, and bios fonts. These
     functions are essential for performing low-level operations that are not
     handled by standard user-space APIs.
-    
+
     @{
 */
 
@@ -40,21 +40,21 @@ __BEGIN_DECLS
 
 /** \brief   Inits data needed by sysinfo id/icon
     \note This is called automatically by KOS during initialization.
-    This function prepares syscall_sysinfo_icon and syscall_sysinfo_id 
-    calls for use by copying the relevant data from the system flashrom 
+    This function prepares syscall_sysinfo_icon and syscall_sysinfo_id
+    calls for use by copying the relevant data from the system flashrom
     into 8C000068-8C00007F.
 */
 void syscall_sysinfo_init(void);
 
 /** \brief   Reads an icon from the flashrom.
 
-    This function reads an icon from the flashrom into a destination 
+    This function reads an icon from the flashrom into a destination
     buffer.
 
     \note
     The format of these icons is not known.
 
-    \param  icon            The icon number (0-9, 5-9 seems to really 
+    \param  icon            The icon number (0-9, 5-9 seems to really
                             be icons).
     \param  dest            The destination buffer (704 bytes in size).
 
@@ -90,8 +90,8 @@ uint8_t *syscall_font_address(void);
 
 /** \brief   Locks access to ROM font.
 
-    This function tries to lock a mutex for exclusive access to the ROM 
-    font. This is needed because you can't access the BIOS font during 
+    This function tries to lock a mutex for exclusive access to the ROM
+    font. This is needed because you can't access the BIOS font during
     G1 DMA.
 
     \note
@@ -130,7 +130,7 @@ int syscall_flashrom_info(uint32_t part, void *info);
 
 /** \brief   Read data from the flashrom.
 
-    This function reads data from an offset into the flashrom to the 
+    This function reads data from an offset into the flashrom to the
     destination buffer.
 
     \param  pos             The read start position into the flashrom.
@@ -146,12 +146,12 @@ int syscall_flashrom_read(uint32_t pos, void *dest, size_t n);
 
 /** \brief   Write data to the flashrom.
 
-    This function writes data to an offset into the flashrom from the 
+    This function writes data to an offset into the flashrom from the
     source buffer.
 
     \warning
-    It is only possible to overwrite 1's with 0's. 0's can not be written 
-    back to 1's so general overwriting is therefore not possible.  You 
+    It is only possible to overwrite 1's with 0's. 0's can not be written
+    back to 1's so general overwriting is therefore not possible. You
     would need to delete a whole partition to overwrite it.
 
     \param  pos             The start position to write into the flashrom.
@@ -167,13 +167,13 @@ int syscall_flashrom_write(uint32_t pos, const void *src, size_t n);
 
 /** \brief   Delete a partition of the flashrom.
 
-    This function returns a flashrom partition to all 1's, so that it may 
+    This function returns a flashrom partition to all 1's, so that it may
     be rewritten.
 
     \warning
     ALL data in the entire partition will be lost.
 
-    \param  pos             The offset from the start of the flashrom you 
+    \param  pos             The offset from the start of the flashrom you
                             want to delete.
 
     \retval 0               On success.
@@ -183,108 +183,385 @@ int syscall_flashrom_write(uint32_t pos, const void *src, size_t n);
 */
 int syscall_flashrom_delete(uint32_t pos);
 
-/** \brief   Initialize the GDROM drive.
+/** \defgroup   gdrom_syscalls GDROM System Calls
+    \brief      GDROM Syscalls and Data Types
+    \ingroup    system_calls
+    \ingroup    gdrom
 
-    This function initializes the GDROM drive. Should be called before any 
+    These are the syscalls that allow operation of the GDROM drive
+    as well as data types for their returns and parameters.
+*/
+
+/** \brief      Status of GDROM drive
+    \ingroup    gdrom_syscalls
+
+    These are the values that can be returned as the first param of
+    syscall_gdrom_check_drive.
+*/
+typedef enum cd_stat {
+    CD_STATUS_READ_FAIL = -1,   /**< \brief Can't read status */
+    CD_STATUS_BUSY      =  0,   /**< \brief Drive is busy */
+    CD_STATUS_PAUSED    =  1,   /**< \brief Disc is paused */
+    CD_STATUS_STANDBY   =  2,   /**< \brief Drive is in standby */
+    CD_STATUS_PLAYING   =  3,   /**< \brief Drive is currently playing */
+    CD_STATUS_SEEKING   =  4,   /**< \brief Drive is currently seeking */
+    CD_STATUS_SCANNING  =  5,   /**< \brief Drive is scanning */
+    CD_STATUS_OPEN      =  6,   /**< \brief Disc tray is open */
+    CD_STATUS_NO_DISC   =  7,   /**< \brief No disc inserted */
+    CD_STATUS_RETRY     =  8,   /**< \brief Retry is needed */
+    CD_STATUS_ERROR     =  9,   /**< \brief System error */
+    CD_STATUS_FATAL     =  12,  /**< \brief Need reset syscalls */
+} cd_stat_t;
+
+/** \brief      Disc types the GDROM can identify
+    \ingroup    gdrom_syscalls
+
+    These are the values that can be returned as the second param of
+    syscall_gdrom_check_drive.
+*/
+typedef enum cd_disc_types {
+    CD_CDDA     = 0x00,    /**< \brief Audio CD (Red book) or no disc */
+    CD_CDROM    = 0x10,    /**< \brief CD-ROM or CD-R (Yellow book) */
+    CD_CDROM_XA = 0x20,    /**< \brief CD-ROM XA (Yellow book extension) */
+    CD_CDI      = 0x30,    /**< \brief CD-i (Green book) */
+    CD_GDROM    = 0x80,    /**< \brief GD-ROM */
+    CD_FAIL     = 0xf0     /**< \brief Need reset syscalls */
+} cd_disc_types_t;
+
+/** \brief      Status filled by Check Drive syscall
+    \ingroup    gdrom_syscalls
+*/
+typedef struct cd_check_drive_status {
+    cd_stat_t       status;
+    cd_disc_types_t disc_type;
+} cd_check_drive_status_t;
+
+/** \brief      Handle for a requested command
+    \ingroup    gdrom_syscalls
+
+    This is returned by syscall_gdrom_send_command and then is passed
+    to other syscalls to specify which command to act on.
+*/
+typedef int32_t gdc_cmd_hnd_t;
+
+/** \brief      Command codes for GDROM syscalls
+    \ingroup    gdrom_syscalls
+
+    These are the syscall command codes used to actually do stuff with the
+    GDROM drive. These were originally provided by maiwe.
+*/
+typedef enum cd_cmd_code {
+    CD_CMD_CHECK_LICENSE     =  2,  /**< \brief Check license */
+    CD_CMD_REQ_SPI_CMD       =  4,  /**< \brief Request to Sega Packet Interface */
+    CD_CMD_PIOREAD           = 16,  /**< \brief Read via PIO */
+    CD_CMD_DMAREAD           = 17,  /**< \brief Read via DMA */
+    CD_CMD_GETTOC            = 18,  /**< \brief Read TOC */
+    CD_CMD_GETTOC2           = 19,  /**< \brief Read TOC */
+    CD_CMD_PLAY_TRACKS       = 20,  /**< \brief Play track */
+    CD_CMD_PLAY_SECTORS      = 21,  /**< \brief Play sectors */
+    CD_CMD_PAUSE             = 22,  /**< \brief Pause playback */
+    CD_CMD_RELEASE           = 23,  /**< \brief Resume from pause */
+    CD_CMD_INIT              = 24,  /**< \brief Initialize the drive */
+    CD_CMD_DMA_ABORT         = 25,  /**< \brief Abort DMA transfer */
+    CD_CMD_OPEN_TRAY         = 26,  /**< \brief Open CD tray (on DevBox?) */
+    CD_CMD_SEEK              = 27,  /**< \brief Seek to a new position */
+    CD_CMD_DMAREAD_STREAM    = 28,  /**< \brief Stream DMA until end/abort */
+    CD_CMD_NOP               = 29,  /**< \brief No operation */
+    CD_CMD_REQ_MODE          = 30,  /**< \brief Request mode */
+    CD_CMD_SET_MODE          = 31,  /**< \brief Setup mode */
+    CD_CMD_SCAN_CD           = 32,  /**< \brief Scan CD */
+    CD_CMD_STOP              = 33,  /**< \brief Stop the disc from spinning */
+    CD_CMD_GETSCD            = 34,  /**< \brief Get subcode data */
+    CD_CMD_GETSES            = 35,  /**< \brief Get session */
+    CD_CMD_REQ_STAT          = 36,  /**< \brief Request stat */
+    CD_CMD_PIOREAD_STREAM    = 37,  /**< \brief Stream PIO until end/abort */
+    CD_CMD_DMAREAD_STREAM_EX = 38,  /**< \brief Stream DMA transfer */
+    CD_CMD_PIOREAD_STREAM_EX = 39,  /**< \brief Stream PIO transfer */
+    CD_CMD_GET_VERS          = 40,  /**< \brief Get syscall driver version */
+    CD_CMD_MAX               = 47,  /**< \brief Max of GD syscall commands */
+} cd_cmd_code_t;
+
+/** \brief      Params for READ commands.
+    \ingroup    gdrom_syscalls
+
+    These are the parameters for the CMD_PIOREAD and CMD_DMAREAD commands.
+
+*/
+typedef struct cd_read_params {
+    uint32_t    start_sec;  /* Starting sector */
+    size_t      num_sec;    /* Number of sectors */
+    void        *buffer;    /* Output buffer */
+    uint32_t    is_test;    /* Enable test mode */
+} cd_read_params_t;
+
+/** \brief      Disc area to read TOC from.
+    \ingroup    gdrom_syscalls
+
+    This is the allowed values for the first param of the GETTOC commands,
+    defining which disc area to read the TOC from.
+
+*/
+typedef enum cd_area {
+    CD_AREA_LOW     = 0,
+    CD_AREA_HIGH    = 1
+} cd_area_t;
+
+/** \brief      TOC structure returned by the BIOS.
+    \ingroup    gdrom_syscalls
+
+    This is the structure that the CD_CMD_GETTOC2 syscall command will return for
+    the TOC. Note the data is in FAD, not LBA/LSN.
+
+*/
+typedef struct cd_toc {
+    uint32_t  entry[99];          /**< \brief TOC space for 99 tracks */
+    uint32_t  first;              /**< \brief Point A0 information (1st track) */
+    uint32_t  last;               /**< \brief Point A1 information (last track) */
+    uint32_t  leadout_sector;     /**< \brief Point A2 information (leadout) */
+} cd_toc_t;
+
+/** \brief      Params for GETTOC commands
+    \ingroup    gdrom_syscalls
+
+    Params for CD_CMD_GETTOC and CD_CMD_GETTOC2.
+
+*/
+typedef struct cd_cmd_toc_params {
+    cd_area_t  area;
+    cd_toc_t   *buffer;
+} cd_cmd_toc_params_t;
+
+/** \brief      Params for PLAY command
+    \ingroup    gdrom_syscalls
+
+    Params for CD_CMD_PLAY_TRACKS and CD_CMD_PLAY_SECTORS.
+
+*/
+typedef struct cd_cmd_play_params {
+    uint32_t start;     /**< \brief Track to play from */
+    uint32_t end;       /**< \brief Track to play to */
+    uint32_t repeat;    /**< \brief Times to repeat (0-15, 15=infinite) */
+} cd_cmd_play_params_t;
+
+/** \brief      Types of data to read from sector subcode
+    \ingroup    gdrom_syscalls
+
+    Types of data available to read from the sector subcode. These are
+    possible values for the first parameter sent to the GETSCD syscall.
+*/
+typedef enum cd_sub_type {
+    CD_SUB_Q_ALL          = 0,    /**< \brief Read all Subcode Data */
+    CD_SUB_Q_CHANNEL      = 1,    /**< \brief Read Q Channel Subcode Data */
+    CD_SUB_MEDIA_CATALOG  = 2,    /**< \brief Read the Media Catalog Subcode Data */
+    CD_SUB_TRACK_ISRC     = 3,    /**< \brief Read the ISRC Subcode Data */
+    CD_SUB_RESERVED       = 4     /**< \brief Reserved */
+} cd_sub_type_t;
+
+/** \brief      Params for GETSCD command
+    \ingroup    gdrom_syscalls
+*/
+typedef struct cd_cmd_getscd_params {
+    cd_sub_type_t   which;    /**< \brief The type of subcode read to perform */
+    size_t          buflen;   /**< \brief The size of the buffer we provide */
+    void            *buffer;  /**< \brief The buffer to put the subcode data in */
+} cd_cmd_getscd_params_t;
+
+/** \brief      Subcode Audio Statuses
+    \ingroup    gdrom_syscalls
+
+    Information about CDDA playback returned by the GETSCD syscall command.
+    This is returned in the second byte of the buffer.
+*/
+typedef enum cd_sub_audio {
+    CD_SUB_AUDIO_STATUS_INVALID    = 0x00,
+    CD_SUB_AUDIO_STATUS_PLAYING    = 0x11,
+    CD_SUB_AUDIO_STATUS_PAUSED     = 0x12,
+    CD_SUB_AUDIO_STATUS_ENDED      = 0x13,
+    CD_SUB_AUDIO_STATUS_ERROR      = 0x14,
+    CD_SUB_AUDIO_STATUS_NO_INFO    = 0x15
+} cd_sub_audio_t;
+
+/** \brief      Initialize the GDROM drive.
+    \ingroup    gdrom_syscalls
+
+    This function initializes the GDROM drive. Should be called before any
     commands are sent.
 */
 void syscall_gdrom_init(void);
 
-/** \brief   Reset the GDROM drive.
+/** \brief      Reset the GDROM drive.
+    \ingroup    gdrom_syscalls
 
     This function resets the GDROM drive.
 */
 void syscall_gdrom_reset(void);
 
-/** \brief   Checks the GDROM drive status.
+/** \brief      Checks the GDROM drive status.
+    \ingroup    gdrom_syscalls
 
-    This function retrieves the general condition of the GDROM drive. It 
-    populates a provided array with two elements. The first element 
-    indicates the current drive status, and the second element identifies 
-    the type of disk inserted (if any).
+    This function retrieves the general condition of the GDROM drive. It
+    populates a provided array with two elements. The first element
+    indicates the current drive status (cd_stat_t), and the second
+    element identifies the type of disc inserted if any (cd_disc_types_t).
 
-    \param  status          The pointer to two 32-bit unsigned integers to 
-                            receive extended status information.
+    \param  status          A cd_check_drive_status_t filled with drive
+                            status information.
 
     \return                 0 on success, or non-zero on
                             failure.
 */
-int syscall_gdrom_check_drive(uint32_t status[2]);
+int syscall_gdrom_check_drive(cd_check_drive_status_t *status);
 
-/** \brief   Send a command to the GDROM command queue.
+/** \brief      Send a command to the GDROM command queue.
+    \ingroup    gdrom_syscalls
 
     This function sends a command to the GDROM queue.
 
     \note
     Call syscall_gdrom_exec_server() to run queued commands.
 
-    \param  cmd             The command code (see CMD_* in \ref dc/cdrom.h).
-    \param  params          The pointer to parameter block for the command, 
-                            can be NULL if the command does not take 
+    \param  cmd             The command code (see cd_cmd_code_t above).
+    \param  params          The pointer to parameter block for the command,
+                            can be NULL if the command does not take
                             parameters.
 
     \return                 The request id (>=1) on success, or 0 on failure.
 
     \sa syscall_gdrom_check_command(), syscall_gdrom_exec_server()
 */
-uint32_t syscall_gdrom_send_command(uint32_t cmd, void *params);
+gdc_cmd_hnd_t syscall_gdrom_send_command(cd_cmd_code_t cmd, void *params);
+/** \brief      Responses from GDROM check command syscall
+    \ingroup    gdrom_syscalls
 
-/** \brief   Check status of queued command for the GDROM.
+    These are return values of syscall_gdrom_check_command.
+*/
+typedef enum cd_cmd_chk {
+    CD_CMD_FAILED     = -1,   /**< \brief Command failed */
+    CD_CMD_NOT_FOUND  =  0,   /**< \brief Command requested not found */
+    CD_CMD_PROCESSING =  1,   /**< \brief Processing command */
+    CD_CMD_COMPLETED  =  2,   /**< \brief Command completed successfully */
+    CD_CMD_STREAMING  =  3,   /**< \brief Stream type command is in progress */
+    CD_CMD_BUSY       =  4,   /**< \brief GD syscalls is busy */
+} cd_cmd_chk_t;
+
+/** \brief    ATA Statuses
+    \ingroup  gdrom_syscalls
+
+    These are the different statuses that can be returned in
+    the 4th field of cd_cmd_chk_status by syscall_gdrom_check_command.
+
+*/
+typedef enum cd_cmd_chk_ata_status {
+    ATA_STAT_INTERNAL   = 0x00,
+    ATA_STAT_IRQ        = 0x01,
+    ATA_STAT_DRQ_0      = 0x02,
+    ATA_STAT_DRQ_1      = 0x03,
+    ATA_STAT_BUSY       = 0x04
+} cd_cmd_chk_ata_status_t;
+
+/** \brief      GDROM Command Extra Status
+    \ingroup    gdrom_syscalls
+
+    This represents the data filled in by syscall_gdrom_check_command.
+    It provides more detailled data on the possible reasons a command
+    may have failed or have not yet been processed to supplement the
+    return value of the syscall.
+*/
+typedef struct cd_cmd_chk_status {
+    int32_t                 err1; /**< \brief Error code 1 */
+    int32_t                 err2; /**< \brief Error code 2 */
+    size_t                  size; /**< \brief Transferred size */
+    cd_cmd_chk_ata_status_t ata;  /**< \brief ATA status */
+} cd_cmd_chk_status_t;
+
+/** \brief      Check status of queued command for the GDROM.
+    \ingroup    gdrom_syscalls
 
     This function checks if a queued command has completed.
 
-    \param  id              The request id (>=1).
-    \param  status          The pointer to four 32-bit integers to 
-                            receive status information.
+    \param  hnd                 The request to check.
+    \param  status              cd_cmd_chk_status_t that will receive the status.
 
-    \retval -1              Request has failed.
-    \retval 0               Request not found.
-    \retval 1               Request is still being processed.
-    \retval 2               Request completed successfully.
-    \retval 3               Stream type command is in progress.
-    \retval 4               GD syscalls are busy.
+    \retval CD_CMD_FAILED       Request has failed.
+    \retval CD_CMD_NOT_FOUND    Request not found.
+    \retval CD_CMD_PROCESSING   Request is still being processed.
+    \retval CD_CMD_COMPLETED    Request completed successfully.
+    \retval CD_CMD_STREAMING    Stream type command is in progress.
+    \retval CD_CMD_BUSY         GD syscalls are busy.
 
     \sa syscall_gdrom_send_command(), syscall_gdrom_exec_server()
 */
-int syscall_gdrom_check_command(uint32_t id, int32_t status[4]);
+cd_cmd_chk_t syscall_gdrom_check_command(gdc_cmd_hnd_t hnd, cd_cmd_chk_status_t *status);
 
-/** \brief   Process queued GDROM commands.
+/** \brief      Process queued GDROM commands.
+    \ingroup    gdrom_syscalls
 
-    This function starts processing queued commands. This must be 
-    called a few times to process all commands. An example of it in 
+    This function starts processing queued commands. This must be
+    called a few times to process all commands. An example of it in
     use can be seen in \sa cdrom_exec_cmd_timed() (see hardware/cdrom.c).
 
     \sa syscall_gdrom_send_command(), syscall_gdrom_check_command()
 */
 void syscall_gdrom_exec_server(void);
 
-/** \brief   Abort a queued GDROM command.
+/** \brief      Abort a queued GDROM command.
+    \ingroup    gdrom_syscalls
 
     This function tries to abort a previously queued command.
 
-    \param  id              The request id (>=1) to abort.
+    \param  hnd             The request to abort.
 
     \return                 0 on success, or non-zero on
                             failure.
 */
-int syscall_gdrom_abort_command(uint32_t id);
+int syscall_gdrom_abort_command(gdc_cmd_hnd_t hnd);
 
-/** \brief   Sets/gets the sector mode for read commands.
+/** \brief      Read Sector Part
+    \ingroup    gdrom_syscalls
+
+    Parts of the a disc sector to read. These are possible values for the
+    second parameter word sent with syscall_gdrom_sector_mode.
+
+    \note CD_READ_DEFAULT not supported by the syscall and is provided
+    for compatibility in cdrom_reinit_ex
+*/
+typedef enum cd_read_sec_part {
+    CDROM_READ_WHOLE_SECTOR = 0x1000,    /**< \brief Read the whole sector */
+    CDROM_READ_DATA_AREA    = 0x2000,    /**< \brief Read the data area */
+    CDROM_READ_DEFAULT      = -1         /**< \brief cdrom_reinit default */
+} cd_read_sec_part_t;
+
+/** \brief      Sector mode params
+    \ingroup    gdrom_syscalls
+
+    These are the parameters sent to syscall_gdrom_sector_mode.
+
+*/
+typedef struct cd_sec_mode_params {
+    uint32_t            rw;             /* 0 = set, 1 = get */
+    cd_read_sec_part_t  sector_part;    /* Get Data or Full Sector */
+    int                 track_type;     /* CD-XA mode 1/2 */
+    int                 sector_size;    /* sector size */
+} cd_sec_mode_params_t;
+
+/** \brief      Sets/gets the sector mode for read commands.
+    \ingroup    gdrom_syscalls
 
     This function sets/gets the sector mode for read commands.
 
-    \param  mode            The pointer to a struct of four 32 bit integers 
-                            containing new values, or to receive the old 
+    \param  mode            The pointer to a struct of four 32 bit integers
+                            containing new values, or to receive the old
                             values.
 
     \retval 0               On success.
     \retval -1              On failure.
 */
-int syscall_gdrom_sector_mode(uint32_t mode[4]);
+int syscall_gdrom_sector_mode(cd_sec_mode_params_t *mode);
 
-/** \brief   Setup GDROM DMA callback.
+/** \brief      Setup GDROM DMA callback.
+    \ingroup    gdrom_syscalls
 
-    This function sets up DMA transfer end callback for 
+    This function sets up DMA transfer end callback for
     \ref CMD_DMAREAD_STREAM_EX (\ref dc/cdrom.h).
 
     \param  callback        The function to call upon completion of the DM.
@@ -292,39 +569,49 @@ int syscall_gdrom_sector_mode(uint32_t mode[4]);
 */
 void syscall_gdrom_dma_callback(uintptr_t callback, void *param);
 
-/** \brief   Initiates a GDROM DMA transfer.
+/** \brief      Parameters for transfer
+    \ingroup    gdrom_syscalls
 
-    This function initiates a DMA transfer for 
+    These are parameters passed to the syscall_gdrom_*_transfer syscalls.
+*/
+typedef struct cd_transfer_params {
+    void    *addr;      /**< \brief Destination address of transfer */
+    size_t  size;       /**< \brief How many bytes to transfer */
+} cd_transfer_params_t;
+
+/** \brief      Initiates a GDROM DMA transfer.
+    \ingroup    gdrom_syscalls
+
+    This function initiates a DMA transfer for
     \ref CMD_DMAREAD_STREAM_EX (\ref dc/cdrom.h).
 
-    \param  id              The request id (>=1).
-    \param  params          The pointer to two 32-bit integers. The first 
-                            element indicates the destination address, and 
-                            the second element identifies how many bytes to 
-                            transfer.
+    \param  hnd             The stream request to start transferring.
+    \param  params          The pointer to a cd_transfer_params_t.
 
     \return                 0 on success, or non-zero on
                             failure.
 */
-int syscall_gdrom_dma_transfer(uint32_t id, const int32_t params[2]);
+int syscall_gdrom_dma_transfer(gdc_cmd_hnd_t hnd, const cd_transfer_params_t *params);
 
-/** \brief   Checks a GDROM DMA transfer.
+/** \brief      Checks a GDROM DMA transfer.
+    \ingroup    gdrom_syscalls
 
-    This function checks the progress of a DMA transfer for 
+    This function checks the progress of a DMA transfer for
     \ref CMD_DMAREAD_STREAM_EX (see \ref dc/cdrom.h).
 
-    \param  id              The request id (>=1).
+    \param  hnd             The stream request to check.
     \param  size            The pointer to receive the remaining amount of
                             bytes to transfer.
 
     \retval 0               On success.
     \retval -1              On failure.
 */
-int syscall_gdrom_dma_check(uint32_t id, size_t *size);
+int syscall_gdrom_dma_check(gdc_cmd_hnd_t hnd, size_t *size);
 
-/** \brief   Setup GDROM PIO callback.
+/** \brief      Setup GDROM PIO callback.
+    \ingroup    gdrom_syscalls
 
-    This function sets up PIO transfer end callback for 
+    This function sets up PIO transfer end callback for
     \ref CMD_PIOREAD_STREAM_EX (see \ref dc/cdrom.h).
 
     \param  callback        The function to call upon completion of the
@@ -333,35 +620,34 @@ int syscall_gdrom_dma_check(uint32_t id, size_t *size);
 */
 void syscall_gdrom_pio_callback(uintptr_t callback, void *param);
 
-/** \brief   Initiates a GDROM PIO transfer.
+/** \brief      Initiates a GDROM PIO transfer.
+    \ingroup    gdrom_syscalls
 
-    This function initiates a PIO transfer for 
+    This function initiates a PIO transfer for
     \ref CMD_PIOREAD_STREAM_EX (see \ref dc/cdrom.h).
 
-    \param  id              The request id (>=1).
-    \param  params          The pointer to two 32-bit integers. The first 
-                            element indicates the destination address, and 
-                            the second element identifies how many bytes to 
-                            transfer.
+    \param  hnd             The stream request to start transferring.
+    \param  params          The pointer to a cd_transfer_params_t.
 
     \return                 0 on success, or non-zero on
                             failure.
 */
-int syscall_gdrom_pio_transfer(uint32_t id, const int32_t params[2]);
+int syscall_gdrom_pio_transfer(gdc_cmd_hnd_t hnd, const cd_transfer_params_t *params);
 
-/** \brief   Checks a GDROM PIO transfer.
+/** \brief      Checks a GDROM PIO transfer.
+    \ingroup    gdrom_syscalls
 
-    This function checks the progress of a PIO transfer for 
+    This function checks the progress of a PIO transfer for
     \ref CMD_PIOREAD_STREAM_EX (see \ref dc/cdrom.h).
 
-    \param  id              The request id (>=1).
+    \param  hnd             The stream request to check.
     \param  size            The pointer to receive the remaining amount of
                             bytes to transfer.
 
     \retval 0               On success.
     \retval -1              On failure.
 */
-int syscall_gdrom_pio_check(uint32_t id, size_t *size);
+int syscall_gdrom_pio_check(gdc_cmd_hnd_t hnd, size_t *size);
 
 /** \brief   Initializes all the syscall vectors.
 
@@ -403,7 +689,7 @@ void syscall_system_bios_menu(void) __noreturn;
 */
 void syscall_system_cd_menu(void) __noreturn;
 
-/** @} */ 
+/** @} */
 
 __END_DECLS
 
