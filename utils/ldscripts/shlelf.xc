@@ -2,7 +2,11 @@
 OUTPUT_FORMAT("elf32-shl", "elf32-shl",
 	      "elf32-shl")
 OUTPUT_ARCH(sh)
-ENTRY(start)
+STARTUP(_kos_startup.o)
+INPUT(crti.o)
+INPUT(crtbegin.o)
+INPUT(crtn.o)
+INPUT(crtend.o)
 LOAD_OFFSET = DEFINED(LOAD_OFFSET) ? LOAD_OFFSET : 0x8c010000 ;
 
 SECTIONS
