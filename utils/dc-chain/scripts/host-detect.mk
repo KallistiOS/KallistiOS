@@ -8,9 +8,9 @@
 # Download ./config.guess if necessary
 # This will help a lot to execute conditional steps depending on the host.
 config_guess = config.guess
-config_guess_url = http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=${config_guess};hb=HEAD
+config_guess_url = https://gcc.gnu.org/git/gitweb.cgi?p=gcc.git;a=blob_plain;f=${config_guess};hb=HEAD
 config_sub = config.sub
-config_sub_url = http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=${config_sub};hb=HEAD
+config_sub_url = https://gcc.gnu.org/git/gitweb.cgi?p=gcc.git;a=blob_plain;f=${config_sub};hb=HEAD
 
 is_clean_target=$(findstring clean,$(MAKECMDGOALS))
 config_guess_check=$(shell test -f ./config.guess || echo 0)
