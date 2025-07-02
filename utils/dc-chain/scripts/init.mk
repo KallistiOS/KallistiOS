@@ -99,20 +99,19 @@ ifdef WINDOWS
   executable_extension=.exe
 endif
 
-# Set up the argument for jobs to be used if specified
-ifdef makejobs
-  ifneq (1,$(makejobs))
-    jobs_arg = -j$(makejobs)
-  endif
-endif
-
 # MinGW/MSYS
 # Disable makejobs possibility in legacy MinGW/MSYS environment as this breaks
 # the build
 ifdef MINGW
-  ifneq ($(jobs_arg),)
+  ifneq ($(makejobs),)
     $(warning 'makejobs' is unsupported in this environment.  Ignoring.)
+  endif
     jobs_arg=
+else
+  ifdef makejobs
+    jobs_arg = -j$(makejobs)
+  else
+    jobs_arg := -j$(shell getconf _NPROCESSORS_ONLN)
   endif
 endif
 
