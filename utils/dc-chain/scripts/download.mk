@@ -120,7 +120,7 @@ GIT_TARGETS = $(foreach target,$(FROM_GIT_REPOS), $(stamp_$(target)_download))
 $(GIT_TARGETS):
 	@echo "+++ Cloning $(git_repo)..."
 	rm -rf $(name)
-	git clone --filter=tree:0 $(git_repo) $(additional_git_args) $(if $(dest),$(dest),$(name))
+	git clone --depth=1 --filter=tree:0 $(git_repo) $(additional_git_args) $(if $(dest),$(dest),$(name))
 	touch $@
 
 
