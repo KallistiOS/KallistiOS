@@ -27,7 +27,6 @@ patch-newlib: fetch-newlib
 patch-gcc: gcc-fixup
 gcc-fixup: fetch-gcc
 	@echo "+++ Copying required KOS files into GCC directory..."
-	cp $(kos_base)/kernel/arch/$(platform)/kernel/startup.S $(src_dir)/libgcc/config/$(gcc_arch)/crt1.S
 	cp $(patches)/gcc/gthr-kos.h $(src_dir)/libgcc/gthr-kos.h
 	cp $(patches)/gcc/fake-kos.c $(src_dir)/libgcc/config/fake-kos.c
 
