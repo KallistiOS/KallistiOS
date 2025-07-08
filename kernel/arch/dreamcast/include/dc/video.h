@@ -433,6 +433,16 @@ int vid_screen_shot(const char *destfn);
 */
 size_t vid_screen_shot_data(uint8_t **buffer);
 
+/** \brief   Enable or disable dithering.
+    \ingroup video_fb
+
+    This function can be used to enable or disable dithering when a 15-bit or
+    16-bit video mode is used.
+
+    \param  enable          Whether or not dithering should be enabled.
+*/
+void vid_set_dithering(bool enable);
+
 __END_DECLS
 
 #endif  /* __DC_VIDEO_H */
