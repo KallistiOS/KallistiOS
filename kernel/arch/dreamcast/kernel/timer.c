@@ -65,8 +65,11 @@ typedef enum PCK_DIV {
 #define TIMER_TPSC      PCK_DIV_4
 /* Timer IRQ priority levels (0-15) */
 #define TIMER_PRIO      15
-/* Peripheral clock rate (50Mhz) */
-#define TIMER_PCK       50000000
+
+/* Peripheral clock rate (~49.9 Mhz).
+ * The main clock is not exactly 200 MHz, and has been measured at
+ * 199499520 Hz. The peripheral clock is a quarter of that. */
+#define TIMER_PCK       (199499520 / 4)
 
 /* Timer registers, indexed by Timer ID. */
 static const unsigned tcors[] = { TCOR0, TCOR1, TCOR2 };
