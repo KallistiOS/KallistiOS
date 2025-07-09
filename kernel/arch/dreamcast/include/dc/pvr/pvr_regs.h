@@ -30,6 +30,8 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
+#include <kos/platform.h>
+
 /**** Register macros ***************************************************/
 
 /** \defgroup pvr_registers         Registers
@@ -173,7 +175,8 @@ __BEGIN_DECLS
 #define PVR_RAM_BASE        0xa5000000  /**< \brief VRAM 32-bit, P2 area, PVR->VRAM */
 #define PVR_RAM_INT_BASE    0xa4000000  /**< \brief VRAM 64-bit, P2 area, PVR->VRAM */
 
-#define PVR_RAM_SIZE        (8*1024*1024)   /**< \brief RAM size in bytes */
+#define PVR_RAM_SIZE_MB     (KOS_PLATFORM_IS_NAOMI ? 16 : 8)    /**< \brief RAM size in MiB */
+#define PVR_RAM_SIZE        (PVR_RAM_SIZE_MB*1024*1024)         /**< \brief RAM size in bytes */
 
 #define PVR_RAM_TOP         (PVR_RAM_BASE + PVR_RAM_SIZE)       /**< \brief Top of raw PVR RAM */
 #define PVR_RAM_INT_TOP     (PVR_RAM_INT_BASE + PVR_RAM_SIZE)   /**< \brief Top of int PVR RAM */
