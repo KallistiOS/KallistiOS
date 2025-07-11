@@ -277,9 +277,9 @@ pvr_ptr_t pvr_get_front_buffer(void) {
        view target, aka. the one not currently being displayed. */
     idx = pvr_state.view_target ^ pvr_state.render_completed;
 
-    addr = pvr_state.frame_buffers[idx].frame;
+    addr = pvr_state.frame_buffers[idx].frame & (PVR_RAM_SIZE - 1);
 
     /* The front buffer is in 32-bit memory, convert its address to make it
        addressable from the 64-bit memory */
-    return (pvr_ptr_t)(((addr << 1) & (PVR_RAM_SIZE - 1)) + PVR_RAM_BASE);
+    return (pvr_ptr_t)(addr * 2 + PVR_RAM_BASE);
 }

@@ -82,7 +82,7 @@ void pvr_poly_compile(pvr_poly_hdr_t *dst, const pvr_poly_cxt_t *src) {
 
         /* Convert the texture address */
         txr_base = (uint32_t)src->txr.base;
-        txr_base = (txr_base & 0x00fffff8) >> 3;
+        txr_base = (txr_base & (PVR_RAM_SIZE - 1)) >> 3;
 
         /* Polygon mode 3 */
         mode3 = FIELD_PREP(PVR_TA_PM3_MIPMAP, src->txr.mipmap)
@@ -318,7 +318,7 @@ void pvr_sprite_compile(pvr_sprite_hdr_t *dst, const pvr_sprite_cxt_t *src) {
 
         /* Convert the texture address */
         txr_base = (uint32_t)src->txr.base;
-        txr_base = (txr_base & 0x00fffff8) >> 3;
+        txr_base = (txr_base & (PVR_RAM_SIZE - 1)) >> 3;
 
         /* Polygon mode 3 */
         mode3 = FIELD_PREP(PVR_TA_PM3_MIPMAP, src->txr.mipmap)
@@ -408,7 +408,7 @@ void pvr_poly_mod_compile(pvr_poly_mod_hdr_t *dst, const pvr_poly_cxt_t *src) {
 
         /* Convert the texture address */
         txr_base = (uint32_t)src->txr.base;
-        txr_base = (txr_base & 0x00fffff8) >> 3;
+        txr_base = (txr_base & (PVR_RAM_SIZE - 1)) >> 3;
 
         /* Polygon mode 3 */
         mode3 = FIELD_PREP(PVR_TA_PM3_MIPMAP, src->txr.mipmap)
@@ -448,7 +448,7 @@ void pvr_poly_mod_compile(pvr_poly_mod_hdr_t *dst, const pvr_poly_cxt_t *src) {
 
         /* Convert the texture address */
         txr_base = (uint32_t)src->txr2.base;
-        txr_base = (txr_base & 0x00fffff8) >> 3;
+        txr_base = (txr_base & (PVR_RAM_SIZE - 1)) >> 3;
 
         /* Polygon mode 3 */
         mode3 = FIELD_PREP(PVR_TA_PM3_MIPMAP, src->txr2.mipmap)
