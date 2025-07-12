@@ -5,6 +5,7 @@
    Copyright (C) 2001 Andrew Kieschnick
    Copyright (C) 2002 Bero
    Copyright (C) 2012, 2013, 2014, 2016 Lawrence Sebald
+   Copyright (C) 2025 Ruslan Rostovtsev
 
 */
 
@@ -40,11 +41,13 @@ ISO9660 systems, as these were used as references as well.
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdalign.h>
 #include <ctype.h>
 #include <string.h>
 #include <strings.h>
 #include <sys/queue.h>
 #include <errno.h>
+#include <sys/ioctl.h>
 
 static int init_percd(void);
 static int percd_done;
@@ -246,6 +249,7 @@ static void bgrad_cache(cache_block_t **cache, int block) {
    block index. Note that the sector in question may already be in the
    cache, in which case it just returns the containing block. */
 static void iso_break_all(void);
+static void iso_abort_stream(bool lock);
 static int bread_cache(cache_block_t **cache, uint32 sector) {
     int i, j, rv;
 
@@ -270,6 +274,9 @@ static int bread_cache(cache_block_t **cache, uint32 sector) {
     if(i >= NUM_CACHE_BLOCKS) {
         i = 0;
     }
+
+    iso_abort_stream(cache == icache);
+    // dbglog(DBG_DEBUG, "Stream stop for %s read\n", cache == icache ? "cached" : "inode");
 
     /* Load the requested block */
     j = cdrom_read_sectors_ex(cache[i]->data, sector + 150, 1, CDROM_READ_DMA);
@@ -298,17 +305,17 @@ bread_exit:
 }
 
 /* read data block */
-static int bdread(uint32 sector) {
+static inline int bdread(uint32_t sector) {
     return bread_cache(dcache, sector);
 }
 
 /* read inode block */
-static int biread(uint32 sector) {
+static inline int biread(uint32_t sector) {
     return bread_cache(icache, sector);
 }
 
 /* Clear both caches */
-static void bclear(void) {
+static inline void bclear(void) {
     bclear_cache(dcache);
     bclear_cache(icache);
 }
@@ -570,34 +577,49 @@ static iso_dirent_t *find_object_path(const char *fn, int dir, iso_dirent_t *sta
 /********************************************************************************/
 /* File primitives */
 
-/* File handles.. I could probably do this with a linked list, but I'm just
-   too lazy right now. =) */
 typedef struct iso_fd {
-    uint32      first_extent;   /* First sector */
-    bool        dir;            /* True if a directory */
-    uint32      ptr;            /* Current read position in bytes */
-    uint32      size;           /* Length of file in bytes */
-    dirent_t    dirent;         /* A static dirent to pass back to clients */
-    bool        broken;         /* True if the CD has been swapped out since open */
     TAILQ_ENTRY(iso_fd) next;   /* Next handle in the linked list */
+    uint32_t first_extent;      /* First sector */
+    bool dir;                   /* True if a directory */
+    uint32_t ptr;               /* Current read position in bytes */
+    uint32_t size;              /* Length of file in bytes */
+    dirent_t dirent;            /* A static dirent to pass back to clients */
+    bool broken;                /* True if the CD has been swapped out since open */
+    size_t stream_part;         /* Stream DMA part of 32 bytes */
+    uint8_t alignas(32) stream_data[32];
 } iso_fd_t;
 
 static TAILQ_HEAD(iso_fd_queue, iso_fd) iso_fd_queue;
 
 /* Mutex for protecting access to the iso_fd_queue */
 static mutex_t fh_mutex;
+static iso_fd_t *stream_fd = NULL;
 
 /* Break all of our open file descriptor. This is necessary when the disc
    is changed so that we don't accidentally try to keep on doing stuff
    with the old info. As files are closed and re-opened, the broken flag
    will be cleared. */
-static void iso_break_all(void) {
+static inline void iso_break_all(void) {
     iso_fd_t *fd;
 
     mutex_lock_scoped(&fh_mutex);
 
     TAILQ_FOREACH(fd, &iso_fd_queue, next) {
         fd->broken = true;
+    }
+}
+
+/* Abort the current stream. */
+static inline void iso_abort_stream(bool lock) {
+    if(stream_fd) {
+        if(lock)
+            mutex_lock(&fh_mutex);
+
+        cdrom_stream_stop(false);
+        stream_fd = NULL;
+
+        if(lock)
+            mutex_unlock(&fh_mutex);
     }
 }
 
@@ -641,6 +663,9 @@ static void * iso_open(vfs_handler_t * vfs, const char *fn, int mode) {
         .first_extent = iso_733(de->extent),
         .dir = (mode & O_DIR) != 0,
         .size = iso_733(de->size),
+        .broken = false,
+        .stream_part = 0,
+        .stream_data = {0},
     };
 
     mutex_lock_scoped(&fh_mutex);
@@ -656,6 +681,11 @@ static int iso_close(void * h) {
 
     mutex_lock_scoped(&fh_mutex);
 
+    if(fd == stream_fd) {
+        iso_abort_stream(false);
+        // dbglog(DBG_DEBUG, "Stream stop on close, fd=%p\n", fd);
+    }
+
     TAILQ_REMOVE(&iso_fd_queue, fd, next);
     free(fd);
 
@@ -666,6 +696,8 @@ static int iso_close(void * h) {
 static ssize_t iso_read(void * h, void *buf, size_t bytes) {
     int rv, toread, thissect, c;
     uint8 * outbuf;
+    size_t remain_size = 0, req_size;
+    uint32_t sector;
     iso_fd_t *fd = (iso_fd_t *)h;
 
     /* Check that the fd is valid */
@@ -676,6 +708,7 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
 
     rv = 0;
     outbuf = (uint8 *)buf;
+    mutex_lock(&fh_mutex);
 
     /* Read zero or more sectors into the buffer from the current pos */
     while(bytes > 0) {
@@ -686,7 +719,91 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
 
         /* How much more can we read in the current sector? */
         thissect = 2048 - (fd->ptr % 2048);
+        sector = fd->first_extent + (fd->ptr / 2048);
 
+        if((thissect & 31) == 0 && toread >= 32 && (((uintptr_t)outbuf) & 31) == 0) {
+
+            if(stream_fd == fd) {
+                toread &= ~31;
+                c = cdrom_stream_request(outbuf, toread, 1);
+
+                if(c) {
+                    goto read_error;
+                }
+                cdrom_stream_progress(&remain_size);
+                // dbglog(DBG_DEBUG, "Stream request: read=%d remain=%d out=%p fd=%p\n",
+                //         toread, remain_size, outbuf, fd);
+            }
+            else if(thissect == 2048) {
+                req_size = (fd->size - fd->ptr);
+
+                if(req_size & 2047) {
+                    req_size = (req_size + 2048) & ~2047;
+                }
+                if(stream_fd) {
+                    iso_abort_stream(false);
+                    // dbglog(DBG_DEBUG, "Stream stop for file fd: %p -> %p\n", stream_fd, fd);
+                }
+                c = cdrom_stream_start(sector + 150, req_size / 2048, CDROM_READ_DMA);
+
+                if(c) {
+                    goto read_loop;
+                }
+                fd->stream_part = 0;
+                stream_fd = fd;
+                // dbglog(DBG_DEBUG, "Stream start: lba=%ld cnt=%d fd=%p\n",
+                //     sector + 150, req_size / 2048, fd);
+
+                toread &= ~31;
+                c = cdrom_stream_request(outbuf, toread, 1);
+
+                if(c) {
+                    goto read_error;
+                }
+                cdrom_stream_progress(&remain_size);
+                // dbglog(DBG_DEBUG, "Stream request: read=%d remain=%d out=%p fd=%p\n",
+                //         toread, remain_size, outbuf, fd);
+            }
+            else {
+                goto read_loop;
+            }
+
+            if(remain_size == 0) {
+                iso_abort_stream(false);
+                // dbglog(DBG_DEBUG, "Stream stop on end, fd=%p\n", fd);
+            }
+            goto end_loop;
+        }
+        else if(stream_fd == fd && toread < 32) {
+
+            toread = (toread > thissect) ? thissect : toread;
+
+            if(fd->stream_part > 0) {
+                memcpy(outbuf, &fd->stream_data[fd->stream_part - 1], toread);
+                fd->stream_part = 0;
+            }
+            else {
+                c = cdrom_stream_request(fd->stream_data, 32, 0);
+                if(c) {
+                    goto read_error;
+                }
+                fd->stream_part = toread;
+                while(cdrom_stream_progress(&remain_size) == 1) {
+                    thd_pass();
+                }
+                memcpy(outbuf, fd->stream_data, toread);
+            }
+            // dbglog(DBG_DEBUG, "Stream request: read=%d remain=%d part=%d out=%p fd=%p\n",
+            //         toread, remain_size, fd->stream_part, outbuf, fd);
+
+            if(remain_size == 0) {
+                iso_abort_stream(false);
+                // dbglog(DBG_DEBUG, "Stream stop on end, fd=%p\n", fd);
+            }
+            goto end_loop;
+        }
+
+read_loop:
         /* If we're on a sector boundary and we have more than one
            full sector to read, then short-circuit the cache here
            and use the multi-sector reads from the CD unit. */
@@ -694,31 +811,23 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
             /* Round it off to an even sector count. */
             thissect = toread / 2048;
             toread = thissect * 2048;
+            c = cdrom_read_sectors_ex(outbuf, sector + 150, thissect, CDROM_READ_DMA);
 
-            /* Do the read */
-            c = cdrom_read_sectors_ex(outbuf,
-                fd->first_extent + (fd->ptr / 2048) + 150,
-                thissect,
-                CDROM_READ_DMA);
-
-            if(c != ERR_OK) {
-                return -1;
+            if(c) {
+                goto read_error;
             }
         }
         else {
             toread = (toread > thissect) ? thissect : toread;
-
-            /* Do the read */
-            c = bdread(fd->first_extent + fd->ptr / 2048);
+            c = bdread(sector);
 
             if(c < 0) {
-                errno = EIO;
-                return -1;
+                goto read_error;
             }
-
             memcpy(outbuf, dcache[c]->data + (fd->ptr % 2048), toread);
         }
 
+end_loop:
         /* Adjust pointers */
         outbuf += toread;
         fd->ptr += toread;
@@ -726,11 +835,18 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
         rv += toread;
     }
 
+    mutex_unlock(&fh_mutex);
     return rv;
+
+read_error:
+    errno = EIO;
+    mutex_unlock(&fh_mutex);
+    return -1;
 }
 
 /* Seek elsewhere in a file */
 static off_t iso_seek(void * h, off_t offset, int whence) {
+    uint32_t old_ptr;
     iso_fd_t *fd = (iso_fd_t *)h;
 
     /* Check that the fd is valid */
@@ -738,6 +854,7 @@ static off_t iso_seek(void * h, off_t offset, int whence) {
         errno = EBADF;
         return -1;
     }
+    old_ptr = fd->ptr;
 
     /* Update current position according to arguments */
     switch(whence) {
@@ -775,6 +892,11 @@ static off_t iso_seek(void * h, off_t offset, int whence) {
 
     /* Check bounds */
     if(fd->ptr > fd->size) fd->ptr = fd->size;
+
+    if(fd == stream_fd && old_ptr != fd->ptr) {
+        iso_abort_stream(true);
+        // dbglog(DBG_DEBUG, "Stream stop on seek: %ld != %ld\n", old_ptr, fd->ptr);
+    }
 
     return fd->ptr;
 }
@@ -911,6 +1033,25 @@ static dirent_t *iso_readdir(void * h) {
     return &fd->dirent;
 }
 
+static int iso_ioctl(void *h, int cmd, va_list ap) {
+    iso_fd_t *fd = (iso_fd_t *)h;
+    void *arg = va_arg(ap, void*);
+
+    switch(cmd) {
+        case IOCTL_FS_ROOTBUS_DMA_READY:
+            if(arg != NULL) {
+                *(uint32_t *)arg = 32;
+            }
+            if(stream_fd == fd) {
+                return (fd->ptr & 31) ? -1 : 0;
+            }
+            return (fd->ptr & 2047) ? -1 : 0;
+        default:
+            errno = EINVAL;
+            return -1;
+    }
+}
+
 static int iso_rewinddir(void * h) {
     iso_fd_t *fd = (iso_fd_t *)h;
 
@@ -927,6 +1068,7 @@ static int iso_rewinddir(void * h) {
 int iso_reset(void) {
     iso_break_all();
     bclear();
+    iso_abort_stream(false);
     percd_done = 0;
     return 0;
 }
@@ -1077,7 +1219,7 @@ static vfs_handler_t vh = {
     iso_tell,
     iso_total,
     iso_readdir,
-    NULL,
+    iso_ioctl,
     NULL,
     NULL,
     NULL,
