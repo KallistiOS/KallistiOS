@@ -15,8 +15,6 @@ mpfr_base_url = $(download_protocol)://$(gcc_deps_url)
 mpc_base_url = $(download_protocol)://$(gcc_deps_url)
 isl_base_url = $(download_protocol)://$(gcc_deps_url)
 
-gdb_base_url  = $(download_protocol)://$(gnu_mirror)/gnu/gdb
-
 # used to add additional blank lines so eval works properly
 define blank_line
 
@@ -27,7 +25,7 @@ STAMP_TYPES = download patch build install
 
 # Function to Generate Variables from Config Options
 # Args:
-# 1 - Package (binutils,gcc,newlib,gdb,gmp,mpfr,mpc,isl)
+# 1 - Package (binutils,gcc,newlib,gmp,mpfr,mpc,isl)
 # 2 - Arch Prefixed with underscore (Optional) (sh_,arm_,)
 # 3 - Dest Folder after Extraction (Optional) (used to move gcc deps inside gcc folder)
 define gen_download_vars
@@ -51,8 +49,8 @@ $(foreach dep,$(GCC_DEPS),$(call gen_download_vars,$(dep),$(1)_,$($(1)_gcc_name)
 $(foreach dep,$(GCC_DEPS),$(blank_line)$$(stamp_$(1)_$(dep)_download): $$(stamp_$(1)_gcc_download))
 endef
 
-$(eval $(call gen_download_vars,binutils,sh_))
-$(eval $(call gen_download_vars,gcc,sh_))
+$(eval $(call gen_download_vars,binutils))
+$(eval $(call gen_download_vars,gcc))
 $(eval $(call gen_download_vars,newlib))
 $(eval $(call gen_dep_download_vars,sh))
 
@@ -60,11 +58,9 @@ $(eval $(call gen_download_vars,binutils,arm_))
 $(eval $(call gen_download_vars,gcc,arm_))
 $(eval $(call gen_dep_download_vars,arm))
 
-$(eval $(call gen_download_vars,gdb))
-
 # Setup Targets for Downloading & Unpacking Archives
 # Args:
-# 1 - Package Name (gdb, newlib, sh_gcc, arm_binutils, etc)
+# 1 - Package Name (newlib, sh_gcc, arm_binutils, etc)
 define setup_archive_targets
 # set file & url for target archive
 $(stamp_$(1)_download): name = $($(1)_name)
@@ -78,7 +74,7 @@ endef
 
 # Setup Targets for Downloading Git Repos
 # Args:
-# 1 - Package Name (gdb, newlib, sh_gcc, arm_binutils, etc)
+# 1 - Package Name (newlib, sh_gcc, arm_binutils, etc)
 define setup_git_targets
 $(stamp_$(1)_download): name = $($(1)_name)
 $(stamp_$(1)_download): git_repo = $($(1)_git_repo)
@@ -87,9 +83,7 @@ $(stamp_$(1)_download): additional_git_args = $(if $($(1)_git_branch),-b $($(1)_
 $(stamp_$(1)_download): dest = $($(1)_dest)
 endef
 
-SOURCE_DOWNLOADS := gdb
-SOURCE_DOWNLOADS += sh_binutils sh_gcc newlib arm_binutils arm_gcc
-SOURCE_DOWNLOADS += sh_gmp sh_mpfr sh_mpc sh_isl arm_gmp arm_mpfr arm_mpc arm_isl
+SOURCE_DOWNLOADS += binutils gcc newlib gmp mpfr mpc isl
 
 ARCHIVES_TYPES = xz gz bz2
 # Get items from SOURCE_DOWNLOADS that are archive downloads
@@ -122,34 +116,20 @@ GIT_TARGETS = $(foreach target,$(FROM_GIT_REPOS), $(stamp_$(target)_download))
 $(GIT_TARGETS):
 	@echo "+++ Cloning $(git_repo)..."
 	rm -rf $(name)
-	git clone --filter=tree:0 $(git_repo) $(additional_git_args) $(if $(dest),$(dest),$(name))
+	git clone --depth=1 --filter=tree:0 $(git_repo) $(additional_git_args) $(if $(dest),$(dest),$(name))
 	touch $@
 
 
-fetch_sh_gcc_deps_source = $(stamp_sh_gmp_download) $(stamp_sh_mpfr_download) $(stamp_sh_mpc_download)
-fetch_arm_gcc_deps_source = $(stamp_arm_gmp_download) $(stamp_arm_mpfr_download) $(stamp_arm_mpc_download)
+fetch_gcc_deps_source = $(stamp_gmp_download) $(stamp_mpfr_download) $(stamp_mpc_download)
 
 # Some older versions of GCC (including 4.7) don't require ISL so we skip adding a dependency
 # if a version number is not provided
-ifdef sh_isl_ver
-  fetch_sh_gcc_deps_source += $(stamp_sh_isl_download) 
+ifdef isl_ver
+  fetch_gcc_deps_source += $(stamp_isl_download) 
 endif
 
-ifdef sh_isl_ver
-  fetch_arm_gcc_deps_source += $(stamp_arm_isl_download)
-endif
-
-fetch-sh-binutils: $(stamp_sh_binutils_download)
-fetch-sh-gcc: $(stamp_sh_gcc_download) $(if $(filter 1,$(use_custom_dependencies)),$(fetch_sh_gcc_deps_source))
+fetch-binutils: $(stamp_binutils_download)
+fetch-gcc: $(stamp_gcc_download) $(if $(filter 1,$(use_custom_dependencies)),$(fetch_gcc_deps_source))
 fetch-newlib: $(stamp_newlib_download)
 
-fetch-arm-binutils: $(stamp_arm_binutils_download)
-fetch-arm-gcc: $(stamp_arm_gcc_download) $(if $(filter 1,$(use_custom_dependencies)),$(fetch_arm_gcc_deps_source))
-
-fetch-gdb: $(stamp_gdb_download)
-
-fetch-sh4: fetch-sh-binutils fetch-sh-gcc fetch-newlib
-fetch-arm: fetch-arm-binutils fetch-arm-gcc
-
-fetch: fetch-sh4
-fetch: fetch-gdb
+fetch: fetch-binutils fetch-gcc fetch-newlib
