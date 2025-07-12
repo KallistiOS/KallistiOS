@@ -48,7 +48,7 @@ void *pvr_set_vertbuf(pvr_list_t list, void *buffer, size_t len) {
     assert(pvr_state.lists_enabled & BIT(list));
 
     // Make sure the buffer parameters are valid.
-    assert(!(((uintptr_t)buffer) & 31));
+    assert(__is_aligned(buffer, 32));
     assert(!(len & 63));
 
     // Save the old value.

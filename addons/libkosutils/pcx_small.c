@@ -27,7 +27,7 @@ typedef struct {
     uint16 bpl;               /* bytes per line, 80 in mode 0x13    */
     uint16 pltype;            /* Grey or Color palette flag     */
     char   filler[58];        /* Zsoft wanted a 128 byte header */
-} __attribute__((packed)) pcx_hdr;
+} __packed pcx_hdr;
 
 /* This version converts directly into 16-bit BGR data */
 int pcx_load_flat(const char *fn, int *w_out, int *h_out, void *pic_out) {

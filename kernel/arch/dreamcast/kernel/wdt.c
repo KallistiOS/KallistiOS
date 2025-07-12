@@ -8,6 +8,7 @@
 
 #include <arch/wdt.h>
 #include <arch/irq.h>
+#include <kos/regfield.h>
 
 /* Macros for accessing WDT registers */
 #define WDT(o, t)       (*((volatile t *)(WDT_BASE + (o))))
@@ -59,7 +60,7 @@ static void wdt_isr(irq_t src, irq_context_t *cxt, void *data) {
     }
 
     /* Reset interval timer overflow flag */
-    WDT_WRITE(WTCSR, WDT_READ(WTCSR) & ~(1 << WTCSR_IOVF));
+    WDT_WRITE(WTCSR, WDT_READ(WTCSR) & ~BIT(WTCSR_IOVF));
 }
 
 /* Enables the WDT in interval timer mode */
@@ -90,7 +91,7 @@ void wdt_enable_timer(uint8_t initial_count,
     WDT_WRITE(WTCNT, initial_count);
 
     /* Write same configuration plus the enable bit to start the WDT */
-    WDT_WRITE(WTCSR, wtcsr | (1 << WTCSR_TME));
+    WDT_WRITE(WTCSR, wtcsr | BIT(WTCSR_TME));
 }
 
 /* Enables the WDT in watchdog mode */
@@ -98,7 +99,7 @@ void wdt_enable_watchdog(uint8_t initial_count,
                          WDT_CLK_DIV clk_config,
                          WDT_RST reset_select) {
     /* Initial WTCSR register configuration */
-    const uint8_t wtcsr = (1 << WTCSR_WTIT) | 
+    const uint8_t wtcsr = BIT(WTCSR_WTIT) |
                           (reset_select << WTCSR_RSTS) | 
                           clk_config;
 
@@ -109,7 +110,7 @@ void wdt_enable_watchdog(uint8_t initial_count,
     WDT_WRITE(WTCNT, initial_count);
     
     /* Write same configuration plus the enable bit to start the WDT */
-    WDT_WRITE(WTCSR, wtcsr | (1 << WTCSR_TME));
+    WDT_WRITE(WTCSR, wtcsr | BIT(WTCSR_TME));
 }
 
 /* Set the value of the WTCNT register */
@@ -130,7 +131,7 @@ void wdt_pet(void) {
 /* Disables the WDT */
 void wdt_disable(void) {
     /* Stop the WDT */
-    WDT_WRITE(WTCSR, WDT_READ(WTCSR) & ~(1 << WTCSR_TME));
+    WDT_WRITE(WTCSR, WDT_READ(WTCSR) & ~BIT(WTCSR_TME));
 
     /* Mask the WDTIT interrupt */
     irq_set_priority(IRQ_SRC_WDT, IRQ_PRIO_MASKED);
@@ -144,5 +145,5 @@ void wdt_disable(void) {
 
 /* Returns whether the WDT is enabled */
 int wdt_is_enabled(void) {
-    return WDT_READ(WTCSR) & (1 << WTCSR_TME);
+    return WDT_READ(WTCSR) & BIT(WTCSR_TME);
 }

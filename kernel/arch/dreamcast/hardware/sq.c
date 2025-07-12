@@ -142,7 +142,7 @@ __no_inline void *sq_cpy(void *dest, const void *src, size_t n) {
         n -= nb;
 
         /* If src is not 8-byte aligned, slow path */
-        if ((uintptr_t)src & 7) {
+        if (!__is_aligned(src, 8)) {
             while(nb--) {
                 dcache_pref_block(s + 8); /* Prefetch 32 bytes for next loop */
                 d[0] = *(s++);

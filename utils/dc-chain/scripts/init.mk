@@ -68,6 +68,18 @@ ifdef MACOS
     SH_CXX_FOR_TARGET += $(macos_extra_args)
     macos_gcc_configure_args = --with-sysroot --with-native-system-header=/usr/include
     macos_gdb_configure_args = --with-sysroot=$(sdkroot)
+    # Detect if CC is Apple Clang and get major version, skip if using gcc.
+    APPLE_CLANG_MAJOR := $(shell $(CC) --version 2>&1 | \
+      grep -i "Apple clang" | cut -f 4 -d " " | cut -f 1 -d ".")
+    ifdef APPLE_CLANG_MAJOR
+      # When using Apple Clang 17 or above, use system zlib.
+      ifeq ($(shell [ "$(APPLE_CLANG_MAJOR)" -gt 16 ] && echo "yes"), yes)
+        $(info Apple clang $(APPLE_CLANG_MAJOR) detected, using system zlib)
+        macos_gcc_configure_args += --with-system-zlib
+        macos_gdb_configure_args += --with-system-zlib
+        binutils_extra_configure_args += --with-system-zlib
+      endif
+    endif
   endif
 endif
 

@@ -21,6 +21,8 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
+#include <kos/regfield.h>
+
 /** \defgroup system_fifo   FIFO
     \brief                  API for checking FIFO statuses
     \ingroup                system
@@ -46,12 +48,12 @@ __BEGIN_DECLS
     @{
 */
 
-#define FIFO_AICA   (1 << 0)   /** \brief AICA FIFO status mask. */
-#define FIFO_BBA    (1 << 1)   /** \brief BBA FIFO status mask. */
-#define FIFO_EXT2   (1 << 2)   /** \brief EXT2 FIFO status mask. */
-#define FIFO_EXTDEV (1 << 3)   /** \brief EXTDEV FIFO status mask. */
-#define FIFO_G2     (1 << 4)   /** \brief G2 FIFO status mask. */
-#define FIFO_SH4    (1 << 5)   /** \brief SH4 FIFO status mask. */
+#define FIFO_AICA   BIT(0)   /** \brief AICA FIFO status mask. */
+#define FIFO_BBA    BIT(1)   /** \brief BBA FIFO status mask. */
+#define FIFO_EXT2   BIT(2)   /** \brief EXT2 FIFO status mask. */
+#define FIFO_EXTDEV BIT(3)   /** \brief EXTDEV FIFO status mask. */
+#define FIFO_G2     BIT(4)   /** \brief G2 FIFO status mask. */
+#define FIFO_SH4    BIT(5)   /** \brief SH4 FIFO status mask. */
 
 /** @} */
 

@@ -367,7 +367,7 @@ static inline void arch_sleep(void) {
 
     \return                 The return address of the current function.
 */
-static inline uintptr_t arch_get_ret_addr(void) {
+static __always_inline uintptr_t arch_get_ret_addr(void) {
     uintptr_t pr;
 
     __asm__ __volatile__("sts pr,%0\n" : "=r"(pr));
@@ -386,7 +386,7 @@ static inline uintptr_t arch_get_ret_addr(void) {
     \return                 The frame pointer from the current function.
     \note                   This only works if you don't disable frame pointers.
 */
-static inline uintptr_t arch_get_fptr(void) {
+static __always_inline uintptr_t arch_get_fptr(void) {
     register uintptr_t fp __asm__("r14");
 
     return fp;

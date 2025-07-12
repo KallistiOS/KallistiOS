@@ -14,6 +14,12 @@
     \author Paul Cercueil
 */
 
+#ifndef __ARCH_ARGS_H
+#define __ARCH_ARGS_H
+
+#include <kos/cdefs.h>
+__BEGIN_DECLS
+
 #ifdef __SH4_SINGLE_ONLY__
 #define KOS_SH4_SINGLE_ONLY 1
 #else
@@ -46,3 +52,7 @@
  *  floating-point argument of a function (starting from n=0).
  */
 #define KOS_FPARG(n) _KOS_FPARG(n, KOS_SH4_SINGLE_ONLY)
+
+__END_DECLS
+
+#endif /* __ARCH_ARGS_H */

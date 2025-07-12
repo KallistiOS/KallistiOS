@@ -1,11 +1,63 @@
-KallistiOS ##version##
-Copyright (C) 2002, 2003 Megan Potter
-Copyright (C) 2012-2019 Lawrence Sebald
-Copyright (C) 2024 Donald Haase
-Copyright (C) 2025 Eric Fradella
+KallistiOS ##version##  
+Copyright (C) 2002, 2003 Megan Potter  
+Copyright (C) 2012-2019 Lawrence Sebald  
+Copyright (C) 2024-2025 Donald Haase  
+Copyright (C) 2025 Eric Fradella  
 
 RELEASE NOTES for 2.2.0
 -----------------------
+
+# What's New in Version 2.2.0
+
+There are three major changes in v2.2.0 compared to prior releases. The first
+is that it didn't take 10 years! Other than that, we have a new implementation
+of [POSIX threading](./RELNOTES.md#libpthreads) and have updated the default
+[Floating-point ABI](./RELNOTES.md#floating-point-ABI) to `m4-single`. A more 
+thorough explanation of each can be found below the rest of the high-level
+changes.
+
+# Core Functionality
+* FS: `.` and `..` handling and `stat` for all vfs.
+* Expanded `KOS_INIT_FLAG` options for vfs support.
+* New Priority Boosting scheme for threads.
+* Fixed library loading functionality.
+* Added `getpeername()`, `settimeofday()`, and expanded `sysconf()` support.
+* Entirely new libpthreads providing enhanced support for POSIX threading.
+
+# Dreamcast Functionality
+* Support for CD IRQ-based DMA, and DMA Streaming.
+* Reworked APIs with strong typing for: IRQ, DMAC, bfont, Keyboard, and PVR.
+* Support for SQs when using MMU.
+* New Performance counter based performance monitor API.
+* VMU metadata is now excluded from standard file reading and managed by API.
+* [Driver for the SCI interface. Accessible on DC via mod or NAOMI via CN1.](https://github.com/KallistiOS/KallistiOS/pull/978)
+
+# API Breaking Changes
+
+## Strict types breaks
+
+In an effort to improve the reliability of our API overall, we have been moving
+to using enum types and other defined types in place of standard types. This has
+been done notably in the bfont, Keyboard, and PVR API reworks. These should
+all remain compatible with previous implementations, but gcc 14+ will mark many
+as errors rather than warnings. In every case, the error should clearly show
+how simply changing the types of parameters will correct them.
+
+## VMU file headers
+
+Reads and writes to `/vmu/` will no longer need to be manually adjusted to avoid
+writing into the file header or managing it specifically with file operations.
+Instead `fs_vmu_set_header()` can be used to set the header to be used for a file
+and `fs_vmu_default_header()` can be used to set a header to be used by default
+for all files written to vmus. The file header contains metadata used by the
+Dreamcast's BIOS in its memory manager and contain text and images.
+
+Prior to this change, files created by KOS on memory cards would either show
+garbage in the Dreamcast's BIOS or the header would need to be manually compiled
+and written to files prior to writing other data. This old behavior can still
+be accessed by opening a `/vmu/` file with the `O_META` flag in `fs_open()`.
+
+# libpthreads
 
 POSIX threading (pthreads) support has been moved out of the kernel and into
 its own addon library (libpthread). This support has been vastly improved and is
@@ -13,6 +65,8 @@ much more complete and standard-compliant than it was before. It still isn't
 100% POSIX-compliant by any means, but it's a lot closer than it was. There is
 no guarantee that this will work with GCC's `--enable-threads=posix`, as that
 configuration is not tested/supported any longer in dc-chain.
+
+# Floating-point ABI
 
 A significant change has been made regarding the default floating-point ABI used
 by KallistiOS. In previous KOS releases, and even in commercial games released
