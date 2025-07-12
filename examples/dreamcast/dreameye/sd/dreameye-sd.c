@@ -23,13 +23,13 @@
 int main(int argc, char *argv[]) {
     maple_device_t *dreameye;
     dreameye_state_t *state;
-    uint8 *buf = NULL;
+    uint8_t *buf = NULL;
     int size, err;
     FILE *fp;
     int img_count, i;
     char fn[64];
     kos_blockdev_t sd_dev;
-    uint8 partition_type;
+    uint8_t partition_type;
 
     /* We're not using these, obviously... */
     (void)argc;
