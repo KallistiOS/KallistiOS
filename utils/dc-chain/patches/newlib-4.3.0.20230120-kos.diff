@@ -1,7 +1,15 @@
 diff --color -ruN newlib-4.3.0.20230120/newlib/configure.host newlib-4.3.0.20230120-kos/newlib/configure.host
---- newlib-4.3.0.20230120/newlib/configure.host	2023-02-02 15:26:13.620093007 -0600
-+++ newlib-4.3.0.20230120-kos/newlib/configure.host	2023-02-02 15:26:28.805127895 -0600
-@@ -322,6 +322,7 @@
+--- newlib-4.3.0.20230120/newlib/configure.host	2025-03-10 15:53:11.776629683 +0100
++++ newlib-4.3.0.20230120-kos/newlib/configure.host	2025-03-10 15:54:10.404630050 +0100
+@@ -128,6 +128,7 @@
+   arm*)
+ 	machine_dir=arm
+ 	libm_machine_dir=arm
++	newlib_cflags="${newlib_cflags} -DREENTRANT_SYSCALLS_PROVIDED -DMISSING_SYSCALL_NAMES -DMALLOC_PROVIDED -DABORT_PROVIDED -ffunction-sections -fdata-sections"
+ 	;;
+   avr*)
+ 	newlib_cflags="${newlib_cflags} -DPREFER_SIZE_OVER_SPEED -mcall-prologues"
+@@ -322,6 +323,7 @@
  	;;
    sh | sh64)
  	machine_dir=sh
@@ -10,8 +18,8 @@ diff --color -ruN newlib-4.3.0.20230120/newlib/configure.host newlib-4.3.0.20230
    sparc*)
  	libm_machine_dir=sparc
 diff --color -ruN newlib-4.3.0.20230120/newlib/libc/include/assert.h newlib-4.3.0.20230120-kos/newlib/libc/include/assert.h
---- newlib-4.3.0.20230120/newlib/libc/include/assert.h	2023-02-02 15:26:13.629093028 -0600
-+++ newlib-4.3.0.20230120-kos/newlib/libc/include/assert.h	2023-02-02 15:26:28.805127895 -0600
+--- newlib-4.3.0.20230120/newlib/libc/include/assert.h	2025-03-10 15:53:11.808629683 +0100
++++ newlib-4.3.0.20230120-kos/newlib/libc/include/assert.h	2025-03-10 15:53:18.256629723 +0100
 @@ -13,8 +13,8 @@
  #ifdef NDEBUG           /* required by ANSI standard */
  # define assert(__e) ((void)0)
@@ -38,22 +46,9 @@ diff --color -ruN newlib-4.3.0.20230120/newlib/libc/include/assert.h newlib-4.3.
  
  #if __STDC_VERSION__ >= 201112L && !defined __cplusplus
  # define static_assert _Static_assert
-diff --color -ruN newlib-4.3.0.20230120/newlib/libc/include/sys/stat.h newlib-4.3.0.20230120-kos/newlib/libc/include/sys/stat.h
---- newlib-4.3.0.20230120/newlib/libc/include/sys/stat.h	2024-04-28 15:07:54.520453819 -0400
-+++ newlib-4.3.0.20230120-kos/newlib/libc/include/sys/stat.h	2023-12-31 12:00:18.000000000 -0500
-@@ -142,8 +142,8 @@
- int	stat (const char *__restrict __path, struct stat *__restrict __sbuf );
- mode_t	umask (mode_t __mask );
- 
-+int	lstat (const char *__restrict __path, struct stat *__restrict __buf );
- #if defined (__SPU__) || defined(__rtems__) || defined(__CYGWIN__)
--int	lstat (const char *__restrict __path, struct stat *__restrict __buf );
- int	mknod (const char *__path, mode_t __mode, dev_t __dev );
- #endif
- 
 diff --color -ruN newlib-4.3.0.20230120/newlib/libc/include/sys/_pthreadtypes.h newlib-4.3.0.20230120-kos/newlib/libc/include/sys/_pthreadtypes.h
---- newlib-4.3.0.20230120/newlib/libc/include/sys/_pthreadtypes.h	2023-02-02 15:26:13.632093035 -0600
-+++ newlib-4.3.0.20230120-kos/newlib/libc/include/sys/_pthreadtypes.h	2023-02-02 15:26:28.805127895 -0600
+--- newlib-4.3.0.20230120/newlib/libc/include/sys/_pthreadtypes.h	2025-03-10 15:53:11.816629683 +0100
++++ newlib-4.3.0.20230120-kos/newlib/libc/include/sys/_pthreadtypes.h	2025-03-10 15:53:18.256629723 +0100
 @@ -22,16 +22,6 @@
  
  #include <sys/sched.h>
@@ -201,8 +196,8 @@ diff --color -ruN newlib-4.3.0.20230120/newlib/libc/include/sys/_pthreadtypes.h 
 -
  #endif /* ! _SYS__PTHREADTYPES_H_ */
 diff --color -ruN newlib-4.3.0.20230120/newlib/libc/include/sys/signal.h newlib-4.3.0.20230120-kos/newlib/libc/include/sys/signal.h
---- newlib-4.3.0.20230120/newlib/libc/include/sys/signal.h	2023-02-02 15:26:13.633093038 -0600
-+++ newlib-4.3.0.20230120-kos/newlib/libc/include/sys/signal.h	2023-02-02 15:26:28.805127895 -0600
+--- newlib-4.3.0.20230120/newlib/libc/include/sys/signal.h	2025-03-10 15:53:11.816629683 +0100
++++ newlib-4.3.0.20230120-kos/newlib/libc/include/sys/signal.h	2025-03-10 15:53:18.256629723 +0100
 @@ -223,9 +223,11 @@
  int sigaltstack (const stack_t *__restrict, stack_t *__restrict);
  #endif
@@ -215,9 +210,22 @@ diff --color -ruN newlib-4.3.0.20230120/newlib/libc/include/sys/signal.h newlib-
  
  #if __POSIX_VISIBLE >= 199309
  
+diff --color -ruN newlib-4.3.0.20230120/newlib/libc/include/sys/stat.h newlib-4.3.0.20230120-kos/newlib/libc/include/sys/stat.h
+--- newlib-4.3.0.20230120/newlib/libc/include/sys/stat.h	2025-03-10 15:53:11.816629683 +0100
++++ newlib-4.3.0.20230120-kos/newlib/libc/include/sys/stat.h	2025-03-10 15:53:18.256629723 +0100
+@@ -142,8 +142,8 @@
+ int	stat (const char *__restrict __path, struct stat *__restrict __sbuf );
+ mode_t	umask (mode_t __mask );
+ 
+-#if defined (__SPU__) || defined(__rtems__) || defined(__CYGWIN__)
+ int	lstat (const char *__restrict __path, struct stat *__restrict __buf );
++#if defined (__SPU__) || defined(__rtems__) || defined(__CYGWIN__)
+ int	mknod (const char *__path, mode_t __mode, dev_t __dev );
+ #endif
+ 
 diff --color -ruN newlib-4.3.0.20230120/newlib/libc/include/sys/_types.h newlib-4.3.0.20230120-kos/newlib/libc/include/sys/_types.h
---- newlib-4.3.0.20230120/newlib/libc/include/sys/_types.h	2023-02-02 15:26:13.632093035 -0600
-+++ newlib-4.3.0.20230120-kos/newlib/libc/include/sys/_types.h	2023-02-02 15:26:28.806127897 -0600
+--- newlib-4.3.0.20230120/newlib/libc/include/sys/_types.h	2025-03-10 15:53:11.816629683 +0100
++++ newlib-4.3.0.20230120-kos/newlib/libc/include/sys/_types.h	2025-03-10 15:53:18.256629723 +0100
 @@ -69,7 +69,7 @@
  
  #ifndef __machine_ino_t_defined
@@ -228,8 +236,8 @@ diff --color -ruN newlib-4.3.0.20230120/newlib/libc/include/sys/_types.h newlib-
  #else
  typedef unsigned short __ino_t;
 diff --color -ruN newlib-4.3.0.20230120/newlib/libc/ssp/stack_protector.c newlib-4.3.0.20230120-kos/newlib/libc/ssp/stack_protector.c
---- newlib-4.3.0.20230120/newlib/libc/ssp/stack_protector.c	2023-02-02 15:26:13.656093090 -0600
-+++ newlib-4.3.0.20230120-kos/newlib/libc/ssp/stack_protector.c	2023-02-02 15:26:28.806127897 -0600
+--- newlib-4.3.0.20230120/newlib/libc/ssp/stack_protector.c	2025-03-10 15:53:11.876629683 +0100
++++ newlib-4.3.0.20230120-kos/newlib/libc/ssp/stack_protector.c	2025-03-10 15:53:18.256629723 +0100
 @@ -32,12 +32,11 @@
  #endif
  
@@ -245,8 +253,8 @@ diff --color -ruN newlib-4.3.0.20230120/newlib/libc/ssp/stack_protector.c newlib
  }
  
 diff --color -ruN newlib-4.3.0.20230120/newlib/libc/stdlib/assert.c newlib-4.3.0.20230120-kos/newlib/libc/stdlib/assert.c
---- newlib-4.3.0.20230120/newlib/libc/stdlib/assert.c	2023-02-02 15:26:13.661093102 -0600
-+++ newlib-4.3.0.20230120-kos/newlib/libc/stdlib/assert.c	2023-02-02 15:26:28.806127897 -0600
+--- newlib-4.3.0.20230120/newlib/libc/stdlib/assert.c	2025-03-10 15:53:11.892629683 +0100
++++ newlib-4.3.0.20230120-kos/newlib/libc/stdlib/assert.c	2025-03-10 15:53:18.256629723 +0100
 @@ -47,6 +47,8 @@
  #include <stdlib.h>
  #include <stdio.h>
