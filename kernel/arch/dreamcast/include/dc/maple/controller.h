@@ -479,6 +479,10 @@ int __pure cont_has_capabilities(const struct maple_device *cont, uint32_t capab
                                              CONT_CAPABILITIES_TRIGGERS | \
                                              CONT_CAPABILITIES_DPAD | \
                                              CONT_CAPABILITIES_DUAL_ANALOG)
+
+/** \brief Dreameye controller type */
+#define CONT_TYPE_DREAMEYE                  (CONT_CAPABILITY_D)
+
 /** @} */
 
 /** \brief   Check for controller type
