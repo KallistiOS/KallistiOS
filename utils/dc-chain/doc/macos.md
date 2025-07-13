@@ -90,7 +90,7 @@ The **dc-chain** system may be customized by setting up a
 desired, read the main [`README`](../README.md) for more information on
 setting up custom options for the toolchain; however, in most circumstances,
 the stable defaults already present in
-[`Makefile.default.cfg`](../Makefile.default.cfg) will be fine.
+[`Makefile.dreamcast.cfg`](../Makefile.dreamcast.cfg) will be fine.
 
 ### Building the toolchain ###
 
