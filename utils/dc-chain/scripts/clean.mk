@@ -17,26 +17,23 @@ clean_patches_stamp:
 	rm -rf $${tmpdir}
 
 clean-builds: clean_patches_stamp
-	-rm -rf build-newlib-$(target)-$(newlib_ver)
-	-rm -rf build-gcc-$(target)-$(gcc_ver)-pass1
-	-rm -rf build-gcc-$(target)-$(gcc_ver)-pass2
-	-rm -rf build-binutils-$(target)-$(binutils_ver)
-	-rm -rf build-$(gdb_name)
+	-rm -rf build-newlib-$(target)-$(newlib_ver) \
+		build-gcc-$(target)-$(gcc_ver)-pass1 \
+		build-gcc-$(target)-$(gcc_ver)-pass2 \
+		build-binutils-$(target)-$(binutils_ver) \
+		build-$(gdb_name)
 
 clean-downloads:
-	-rm -rf $(binutils_name)
-	-rm -rf $(gcc_name)
-	-rm -rf $(newlib_name)
-	-rm -rf $(gdb_name)
+	-rm -rf $(binutils_name) $(gcc_name) $(newlib_name) $(gdb_name)
 
 clean-archives:
-	-rm -f $(config_guess)
-	-rm -f $(config_sub)
-	-rm -f $(binutils_file)
-	-rm -f $(gcc_file)
-	-rm -f $(newlib_file)
-	-rm -f $(gmp_file)
-	-rm -f $(mpfr_file)
-	-rm -f $(mpc_file)
-	-rm -f $(isl_file)
-	-rm -f $(gdb_file)
+	-rm -f $(config_guess) \
+		$(config_sub) \
+		$(binutils_file) \
+		$(gcc_file) \
+		$(newlib_file) \
+		$(gmp_file) \
+		$(mpfr_file) \
+		$(mpc_file) \
+		$(isl_file) \
+		$(gdb_file)
