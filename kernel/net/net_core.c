@@ -138,7 +138,10 @@ int net_dev_init(void) {
 
     dbglog(DBG_DEBUG, "net_dev_init: detected %d usable network device(s)\n", detected);
 
-    return 0;
+    if(detected)
+        return 0;
+    else
+        return -1;
 }
 
 /* Init */
