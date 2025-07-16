@@ -802,6 +802,9 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
         return -1;
     }
 
+    /* The stream has been initted but not started, so we don't know stereo/mono. */
+    assert(stream->channels != 0);
+
     /* Get channels position */
     current_play_pos = g2_read_32(SPU_RAM_UNCACHED_BASE +
                         AICA_CHANNEL(stream->ch[0]) +
