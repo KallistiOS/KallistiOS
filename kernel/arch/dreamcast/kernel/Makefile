@@ -18,12 +18,10 @@ COPYOBJS += uname.o
 OBJS = $(COPYOBJS) startup.o
 SUBDIRS =
 
-CRT1_PATH = $(shell $(KOS_CC) $(KOS_CFLAGS) -print-file-name=crt1.o)
-
 myall: $(OBJS)
 	-cp $(COPYOBJS) $(KOS_BASE)/kernel/build/
+	-cp startup.o $(KOS_BASE)/lib/$(KOS_ARCH)/_kos_startup.o
 	-rm banner.h authors.h banner.o uname.o
-	-cp startup.o $(CRT1_PATH)
 
 include $(KOS_BASE)/Makefile.prefab
 
