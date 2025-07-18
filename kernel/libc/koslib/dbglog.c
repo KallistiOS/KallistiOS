@@ -15,6 +15,19 @@
 #include <kos/fs.h>
 #include <arch/spinlock.h>
 
+#ifdef NDEBUG
+
+/* Don't set the debug level, since we have no debug. */
+void dbglog_set_level(int) {
+    return;
+}
+
+void dbglog(int, const char *, ...) {
+    return;
+}
+
+#else   /* NDEBUG */
+
 /* Not re-entrant */
 static char printf_buf[1024];
 static spinlock_t mutex = SPINLOCK_INITIALIZER;
@@ -22,7 +35,7 @@ static spinlock_t mutex = SPINLOCK_INITIALIZER;
 /* Default kernel debug log level: if a message has a level higher than this,
    it won't be shown. Set to DBG_DEAD to see basically nothing, and set to
    DBG_KDEBUG to see everything. DBG_INFO is generally a decent level. */
-int dbglog_level = DBG_KDEBUG;
+int dbglog_level = DBG_INFO;
 
 /* Set debug level */
 void dbglog_set_level(int level) {
@@ -55,3 +68,5 @@ void dbglog(int level, const char *fmt, ...) {
     if(level >= DBG_ERROR && !irq_inside_int())
         spinlock_unlock(&mutex);
 }
+
+#endif  /* NDEBUG */
