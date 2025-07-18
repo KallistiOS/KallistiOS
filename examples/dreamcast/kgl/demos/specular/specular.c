@@ -61,7 +61,7 @@ void glSetCameraPosition(vector3f campos, vector3f camdst) {
     glhLookAtf2(campos, camdst, up);
 }
 
-void draw_gl_cube(float x, float y, float z, uint32 color) {
+void draw_gl_cube(float x, float y, float z, uint32_t color) {
     glPushMatrix();
 
     glDisable(GL_LIGHTING);
