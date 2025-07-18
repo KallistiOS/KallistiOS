@@ -50,11 +50,11 @@ typedef struct vmufb {
     layout, and a pointer to the raw font data.
  */
 typedef struct vmufb_font {
-    unsigned int id;        /**< Font id */
-    unsigned int w;         /**< Character width in pixels */
-    unsigned int h;         /**< Character height in pixels */
-    size_t       stride;    /**< Size of one character in bytes */
-    const char  *fontdata;  /**< Pointer to the font data */
+    unsigned int    id;        /**< Font id */
+    unsigned int    w;         /**< Character width in pixels */
+    unsigned int    h;         /**< Character height in pixels */
+    size_t          stride;    /**< Size of one character in bytes */
+    const uint8_t  *fontdata;  /**< Pointer to the font data */
 } vmufb_font_t;
 
 /** \brief  Render into the VMU framebuffer
@@ -75,7 +75,7 @@ typedef struct vmufb_font {
 void vmufb_paint_area(vmufb_t *fb,
                       unsigned int x, unsigned int y,
                       unsigned int w, unsigned int h,
-                      const char *data);
+                      const uint8_t *data);
 
 /** \brief  Clear a specific area of the VMU framebuffer
 

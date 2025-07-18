@@ -30,7 +30,7 @@
 
 #include <arch/arch.h>
 
-static const char smiley[] = {
+static const uint8_t smiley[] = {
     0b00111100,
     0b01000010,
     0b10100101,
