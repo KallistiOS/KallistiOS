@@ -21,7 +21,7 @@
  * Created by Kenneth Albanowski.
  * No rights reserved, released to the public domain.
  */
-static const char fontdata_4x6[] = {
+static const uint8_t fontdata_4x6[] = {
     0xee, 0xee, 0xe0, 0xee, 0xee, 0xe0, 0xee, 0xee,
     0xe0, 0xee, 0xee, 0xe0, 0xee, 0xee, 0xe0, 0xee,
     0xee, 0xe0, 0xee, 0xee, 0xe0, 0xee, 0xee, 0xe0,
@@ -204,8 +204,8 @@ static void vmufb_paint_area_strided(vmufb_t *fb,
 void vmufb_paint_area(vmufb_t *fb,
                       unsigned int x, unsigned int y,
                       unsigned int w, unsigned int h,
-                      const char *data) {
-    vmufb_paint_area_strided(fb, x, y, w, h, w, (const uint8_t *)data);
+                      const uint8_t *data) {
+    vmufb_paint_area_strided(fb, x, y, w, h, w, data);
 }
 
 void vmufb_paint_xbm(vmufb_t *fb,
@@ -230,7 +230,7 @@ void vmufb_clear_area(vmufb_t *fb,
                       unsigned int w, unsigned int h) {
     uint32_t tmp[VMU_SCREEN_WIDTH] = {};
 
-    vmufb_paint_area(fb, x, y, w, h, (const char *) tmp);
+    vmufb_paint_area(fb, x, y, w, h, (const uint8_t *) tmp);
 }
 
 void vmufb_present(const vmufb_t *fb, maple_device_t *dev) {
