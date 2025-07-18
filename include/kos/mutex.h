@@ -3,6 +3,7 @@
    include/kos/mutex.h
    Copyright (C) 2001, 2003 Megan Potter
    Copyright (C) 2012, 2015 Lawrence Sebald
+   Copyright (C) 2025 Falco Girgis
 
 */
 
@@ -42,6 +43,10 @@
     recursive_lock_t type that was available in KallistiOS for a while (before
     it was basically merged back into a normal mutex).
 
+    An invalid mutex (MUTEX_TYPE_INVALID) is simply used to denote a mutex
+    which failed to initialize properly. Any subsequent operations on such a
+    mutex will fail.
+
     There is a fourth type of mutex defined (MUTEX_TYPE_DEFAULT), which maps to
     the MUTEX_TYPE_NORMAL type. This is simply for alignment with POSIX.
 
@@ -58,7 +63,23 @@ __BEGIN_DECLS
 
 #include <kos/thread.h>
 
-/** \brief  Mutual exclusion lock type.
+/** \brief Types of Mutexes supported by KOS
+
+    The values defined in here are the various types of mutexes that KallistiOS
+    supports.
+*/
+typedef enum mutex_type {
+    MUTEX_TYPE_INVALID    = -1, /**< \brief Invalid mutex type */
+    MUTEX_TYPE_NORMAL     = 0,  /**< \brief Normal mutex type */
+    MUTEX_TYPE_OLDNORMAL  = 1,  /**< \brief Alias for MUTEX_TYPE_NORMAL */
+    MUTEX_TYPE_ERRORCHECK = 2,  /**< \brief Error-checking mutex type */
+    MUTEX_TYPE_RECURSIVE  = 3   /**< \brief Recursive mutex type */
+} mutex_type_t;
+
+/** \brief Default mutex type */
+#define MUTEX_TYPE_DEFAULT      MUTEX_TYPE_NORMAL
+
+/** \brief  Mutual exclusion lock structure.
 
     All members of this structure should be considered to be private. It is
     unsafe to change anything in here yourself.
@@ -66,28 +87,11 @@ __BEGIN_DECLS
     \headerfile kos/mutex.h
 */
 typedef struct kos_mutex {
-    int type;
+    mutex_type_t type;
     int dynamic;
     kthread_t *holder;
     int count;
 } mutex_t;
-
-/** \name  Mutex types
-    \brief Types of Mutexes supported by KOS
-
-    The values defined in here are the various types of mutexes that KallistiOS
-    supports.
-
-    @{
-*/
-#define MUTEX_TYPE_NORMAL       0   /**< \brief Normal mutex type */
-#define MUTEX_TYPE_OLDNORMAL    1   /**< \brief Alias for MUTEX_TYPE_NORMAL */
-#define MUTEX_TYPE_ERRORCHECK   2   /**< \brief Error-checking mutex type */
-#define MUTEX_TYPE_RECURSIVE    3   /**< \brief Recursive mutex type */
-
-/** \brief Default mutex type */
-#define MUTEX_TYPE_DEFAULT      MUTEX_TYPE_NORMAL
-/** @} */
 
 /** \brief  Initializer for a transient mutex. */
 #define MUTEX_INITIALIZER               { MUTEX_TYPE_NORMAL, 0, NULL, 0 }
@@ -224,7 +228,7 @@ int mutex_lock_timed(mutex_t *m, int timeout);
     \retval 0               If the mutex is not currently locked
     \retval 1               If the mutex is currently locked
 */
-int mutex_is_locked(mutex_t *m);
+int mutex_is_locked(const mutex_t *m);
 
 /** \brief  Attempt to lock a mutex.
 
@@ -278,6 +282,16 @@ int mutex_unlock(mutex_t *m);
 */
 int mutex_unlock_as_thread(mutex_t *m, kthread_t *thd);
 
+/** \brief  Lock a mutex with scope management
+
+    This macro will lock a mutex, similarly to mutex_lock, with the difference
+    that the mutex will automatically be unlocked once the execution exits the
+    functional block in which the macro was called.
+
+    \param  m               The mutex to acquire
+*/
+#define mutex_lock_scoped(m) __mutex_lock_scoped((m), __LINE__)
+
 /** \cond */
 static inline void __mutex_scoped_cleanup(mutex_t **m) {
     if(*m)
@@ -289,16 +303,6 @@ static inline void __mutex_scoped_cleanup(mutex_t **m) {
 
 #define __mutex_lock_scoped(m, l) ___mutex_lock_scoped(m, l)
 /** \endcond */
-
-/** \brief  Lock a mutex with scope management
-
-    This macro will lock a mutex, similarly to mutex_lock, with the difference
-    that the mutex will automatically be unlocked once the execution exits the
-    functional block in which the macro was called.
-
-    \param  m               The mutex to acquire
-*/
-#define mutex_lock_scoped(m) __mutex_lock_scoped((m), __LINE__)
 
 __END_DECLS
 
