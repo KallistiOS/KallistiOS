@@ -601,3 +601,14 @@ void vid_shutdown(void) {
     /* Reset back to default mode, in case we're going back to a loader. */
     vid_init(DM_640x480, PM_RGB565);
 }
+
+void vid_set_dithering(bool enable) {
+    uint32_t cfg = vid_bpp_to_pvr_cfg2[currmode.pm];
+
+    if(enable)
+        cfg |= PVR_PM_DITHER;
+    else
+        cfg &= ~PVR_PM_DITHER;
+
+    PVR_SET(PVR_FB_CFG_2, cfg);
+}
