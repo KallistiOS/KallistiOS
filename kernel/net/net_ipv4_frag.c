@@ -24,17 +24,17 @@
 struct ip_frag {
     TAILQ_ENTRY(ip_frag) listhnd;
 
-    uint32 src;
-    uint32 dst;
-    uint16 ident;
-    uint8 proto;
+    uint32_t src;
+    uint32_t dst;
+    uint16_t ident;
+    uint8_t proto;
 
     ip_hdr_t hdr;
-    uint8 *data;
-    uint8 bitfield[8192];
+    uint8_t *data;
+    uint8_t bitfield[8192];
     int cur_length;
     int total_length;
-    uint64 death_time;
+    uint64_t death_time;
 };
 
 TAILQ_HEAD(ip_frag_list, ip_frag);
@@ -49,7 +49,7 @@ static int initted = 0;
    seconds (since death_time is always on the order of seconds). */
 static void frag_thd_cb(void *data) {
     struct ip_frag *f, *n;
-    uint64 now = timer_ms_gettime64();
+    uint64_t now = timer_ms_gettime64();
 
     (void)data;
 
@@ -73,7 +73,7 @@ static void frag_thd_cb(void *data) {
 }
 
 /* Set the bits in the bitfield for the given set of fragment blocks. */
-static inline void set_bits(uint8 *bitfield, int start, int end) {
+static inline void set_bits(uint8_t *bitfield, int start, int end) {
     /* Use a slightly more efficient method when dealing with an end that is not
        in the same byte as the start. */
     if((end >> 3) > (start >> 3)) {
@@ -105,7 +105,7 @@ static inline void set_bits(uint8 *bitfield, int start, int end) {
 }
 
 /* Check if all bits in the bitfield that should be set are set. */
-static inline int all_bits_set(const uint8 *bitfield, int end) {
+static inline int all_bits_set(const uint8_t *bitfield, int end) {
     int i;
 
     /* Make sure each of the beginning bytes are fully set. */
@@ -125,8 +125,8 @@ static inline int all_bits_set(const uint8 *bitfield, int end) {
 
 /* Import the data for a fragment, potentially passing it onward in processing,
    if the whole datagram has arrived. */
-static int frag_import(netif_t *src, const ip_hdr_t *hdr, const uint8 *data,
-                       size_t size, uint16 flags, struct ip_frag *frag) {
+static int frag_import(netif_t *src, const ip_hdr_t *hdr, const uint8_t *data,
+                       size_t size, uint16_t flags, struct ip_frag *frag) {
     void *tmp;
     int fo = flags & 0x1FFF;
     int tl = ntohs(hdr->length);
@@ -134,7 +134,7 @@ static int frag_import(netif_t *src, const ip_hdr_t *hdr, const uint8 *data,
     int ihl = (hdr->version_ihl & 0x0F) << 2;
     int end = start + tl - ihl;
     int rv = 0;
-    uint64 now = timer_ms_gettime64();
+    uint64_t now = timer_ms_gettime64();
 
     (void)size;
 
@@ -193,11 +193,11 @@ out:
 
 /* IPv4 fragmentation procedure. This is basically a direct implementation of
    the example IP fragmentation procedure on pages 26-27 of RFC 791. */
-int net_ipv4_frag_send(netif_t *net, ip_hdr_t *hdr, const uint8 *data,
+int net_ipv4_frag_send(netif_t *net, ip_hdr_t *hdr, const uint8_t *data,
                        size_t size) {
     int ihl = (hdr->version_ihl & 0x0f) << 2;
     int total = size + ihl;
-    uint16 flags = ntohs(hdr->flags_frag_offs);
+    uint16_t flags = ntohs(hdr->flags_frag_offs);
     ip_hdr_t newhdr;
     int nfb, ds;
 
@@ -243,9 +243,9 @@ int net_ipv4_frag_send(netif_t *net, ip_hdr_t *hdr, const uint8 *data,
 /* IPv4 fragment reassembly procedure. This (along with the frag_import function
    above are basically a direct implementation of the example IP reassembly
    routine on pages 27-29 of RFC 791. */
-int net_ipv4_reassemble(netif_t *src, const ip_hdr_t *hdr, const uint8 *data,
+int net_ipv4_reassemble(netif_t *src, const ip_hdr_t *hdr, const uint8_t *data,
                         size_t size) {
-    uint16 flags = ntohs(hdr->flags_frag_offs);
+    uint16_t flags = ntohs(hdr->flags_frag_offs);
     struct ip_frag *f;
 
     /* If the fragment offset is zero and the MF flag is 0, this is the whole

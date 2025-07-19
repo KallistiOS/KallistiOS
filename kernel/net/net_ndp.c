@@ -5,6 +5,7 @@
 
 */
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -26,11 +27,11 @@
 typedef struct ndp_entry {
     LIST_ENTRY(ndp_entry)   entry;
     struct in6_addr         ip;
-    uint64                  last_reachable;
+    uint64_t                last_reachable;
     int                     state;
-    uint8                   mac[6];
+    uint8_t                 mac[6];
     ipv6_hdr_t              *pkt;
-    uint8                   *data;
+    uint8_t                 *data;
     int                     data_size;
 } ndp_entry_t;
 
@@ -46,7 +47,7 @@ static struct ndp_list ndp_cache = LIST_HEAD_INITIALIZER(0);
 
 void net_ndp_gc(void) {
     ndp_entry_t *i, *tmp;
-    uint64 now = timer_ms_gettime64();
+    uint64_t now = timer_ms_gettime64();
 
     i = LIST_FIRST(&ndp_cache);
 
@@ -73,10 +74,10 @@ void net_ndp_gc(void) {
     }
 }
 
-int net_ndp_insert(netif_t *net, const uint8 mac[6], const struct in6_addr *ip,
+int net_ndp_insert(netif_t *net, const uint8_t mac[6], const struct in6_addr *ip,
                    int unsol) {
     ndp_entry_t *i;
-    uint64 now = timer_ms_gettime64();
+    uint64_t now = timer_ms_gettime64();
 
     /* Don't allow any multicast or unspecified addresses to end up in the NDP
        cache... */
@@ -156,10 +157,10 @@ static void net_ndp_send_sol(netif_t *net, const struct in6_addr *ip) {
     net_icmp6_send_nsol(net, &dst, ip, 0);
 }
 
-int net_ndp_lookup(netif_t *net, const struct in6_addr *ip, uint8 mac_out[6],
-                   const ipv6_hdr_t *pkt, const uint8 *data, int data_size) {
+int net_ndp_lookup(netif_t *net, const struct in6_addr *ip, uint8_t mac_out[6],
+                   const ipv6_hdr_t *pkt, const uint8_t *data, int data_size) {
     ndp_entry_t *i;
-    uint64 now = timer_ms_gettime64();
+    uint64_t now = timer_ms_gettime64();
 
     /* Garbage collect, so we don't end up returning really stale entries */
     net_ndp_gc();

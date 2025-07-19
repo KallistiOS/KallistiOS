@@ -9,12 +9,11 @@
 #define __LOCAL_NET_THD_H
 
 #include <sys/cdefs.h>
+#include <stdint.h>
 
 __BEGIN_DECLS
 
-#include <arch/types.h>
-
-int net_thd_add_callback(void (*cb)(void *), void *data, uint64 timeout);
+int net_thd_add_callback(void (*cb)(void *), void *data, uint64_t timeout);
 int net_thd_del_callback(int cbid);
 
 int net_thd_is_current(void);
