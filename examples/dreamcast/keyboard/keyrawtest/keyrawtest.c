@@ -1,7 +1,8 @@
 /* KallistiOS ##version##
 
    keyrawtest.c
-   Copyright (C) 2025 Donald Haase, Troy Davis
+   Copyright (C) 2018 Donald Haase
+   Copyright (C) 2025 Troy Davis
 
    This example demonstrates raw keyboard event handling on the Dreamcast,
    expanding on the original keytest example.
@@ -32,19 +33,18 @@
 #include <assert.h>
 #include <kos.h>
 
-KOS_INIT_FLAGS(INIT_DEFAULT);
-extern uint16		*vram_s;
+extern uint16 *vram_s;
 
-cont_state_t* first_kbd_state;
-maple_device_t* first_kbd_dev = NULL;
+static cont_state_t *first_kbd_state;
+static maple_device_t *first_kbd_dev = NULL;
 
 /* Track how many times we try to find a keyboard before just quitting. */
-uint8 no_kbd_loop = 0;
+static uint8 no_kbd_loop = 0;
 /* This is set up to have multiple tests in the future. */
-uint8 test_phase = 0;
+static uint8 test_phase = 0;
 
 // Add this helper function above basic_typing()
-const char* kbd_key_name(kbd_key_t key) {
+static const char *kbd_key_name(kbd_key_t key) {
     switch (key) {
         case KBD_KEY_NONE: return "NONE";
         case KBD_KEY_ERROR: return "ERROR";
@@ -103,24 +103,23 @@ const char* kbd_key_name(kbd_key_t key) {
     }
 }
 
-// Replace your existing function with this full version
-void basic_typing(void)
+static void basic_typing(void)
 {
     int charcount = 0;
     int lines = 0;
-    uint32 offset = ((STARTLINE + (lines * BFONT_HEIGHT)) * WIDTH);
+    uint32_t offset = ((STARTLINE + (lines * BFONT_HEIGHT)) * WIDTH);
     bfont_draw_str(vram_s + offset, WIDTH, 1, "Test of raw typing. Enter 120 keys: ");
     offset = ((STARTLINE + ((++lines) * BFONT_HEIGHT)) * WIDTH);
 
     while (charcount < CHARSPERTEST) {
         int raw = kbd_queue_pop(first_kbd_dev, 0);
-        if (raw < 0) continue;
+        if(raw == KBD_QUEUE_END) continue;
 
         kbd_key_t key = raw & 0xFF;
         kbd_mods_t mods = { .raw = (raw >> 8) & 0xFF };
 
         kbd_state_t *kbd = maple_dev_status(first_kbd_dev);
-        if (!kbd) continue;
+        if(!kbd) continue;
 
         kbd_leds_t leds = kbd->cond.leds;
 
@@ -129,11 +128,11 @@ void basic_typing(void)
         char ascii = kbd_key_to_ascii(key, kbd->region, mods, leds);
 
         // Show printable characters to the screen
-        if (ascii >= 32 && ascii <= 126) {
+        if(ascii >= 32 && ascii <= 126) {
             bfont_draw(vram_s + offset, WIDTH, 1, ascii);
             offset += BFONT_THIN_WIDTH;
             charcount++;
-            if (!(charcount % CHARSPERLINE)) {
+            if(!(charcount % CHARSPERLINE)) {
                 offset = ((STARTLINE + ((++lines) * BFONT_HEIGHT)) * WIDTH);
             }
         }
@@ -142,32 +141,38 @@ void basic_typing(void)
         char debug[128];
         const char *keyname = kbd_key_name(key);
 
-        if (ascii >= 32 && ascii <= 126) {
+        if(ascii >= 32 && ascii <= 126) {
             snprintf(debug, sizeof(debug),
-                "RAW 0x%02X | ascii: %c | shift:%d caps:%d ctrl:%d alt:%d",
+                "RAW 0x%02X | ascii: %c | shift:%d caps:%d ctrl:%d alt:%d s1:%d s2:%d",
                 key, ascii,
                 mods.lshift || mods.rshift,
                 leds.caps_lock,
                 mods.lctrl || mods.rctrl,
-                mods.lalt || mods.ralt
+                mods.lalt || mods.ralt,
+                mods.s1,
+                mods.s2
             );
-        } else if (keyname) {
+        } else if(keyname) {
             snprintf(debug, sizeof(debug),
-                "RAW 0x%02X | key: %s | shift:%d caps:%d ctrl:%d alt:%d",
+                "RAW 0x%02X | key: %s | shift:%d caps:%d ctrl:%d alt:%d s1:%d s2:%d",
                 key, keyname,
                 mods.lshift || mods.rshift,
                 leds.caps_lock,
                 mods.lctrl || mods.rctrl,
-                mods.lalt || mods.ralt
+                mods.lalt || mods.ralt,
+                mods.s1,
+                mods.s2
             );
         } else {
             snprintf(debug, sizeof(debug),
-                "RAW 0x%02X | ascii: . | shift:%d caps:%d ctrl:%d alt:%d",
+                "RAW 0x%02X | ascii: . | shift:%d caps:%d ctrl:%d alt:%d s1:%d s2:%d",
                 key,
                 mods.lshift || mods.rshift,
                 leds.caps_lock,
                 mods.lctrl || mods.rctrl,
-                mods.lalt || mods.ralt
+                mods.lalt || mods.ralt,
+                mods.s1,
+                mods.s2
             );
         }
 

@@ -1,5 +1,7 @@
 # KallistiOS ##version##
 #
+# Copyright (C) 2025 Troy Davis
+#
 # examples/dreamcast/keyboard/keytest/Makefile
 #
 

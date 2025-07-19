@@ -6,6 +6,7 @@
    Copyright (C) 2018, 2025 Donald Haase
    Copyright (C) 2024 Paul Cercueil
    Copyright (C) 2025 Falco Girgis
+   Copyright (C) 2025 Troy Davis
 */
 
 #include <assert.h>
@@ -436,22 +437,22 @@ char kbd_key_to_ascii(kbd_key_t key, kbd_region_t region, kbd_mods_t mods, kbd_l
     bool is_letter = (key >= KBD_KEY_A && key <= KBD_KEY_Z);
     bool shift_effect = (mods.raw & KBD_MOD_SHIFT);
 
-    if (is_letter && leds.caps_lock) {
+    if(is_letter && leds.caps_lock) {
         shift_effect = !shift_effect;  // Caps Lock toggles Shift effect
     }
 
     // Handle keypad keys when Num Lock is involved
-    if (key >= KBD_KEY_PAD_1 && key <= KBD_KEY_PAD_PERIOD) {
-        if (leds.num_lock) {
+    if(key >= KBD_KEY_PAD_1 && key <= KBD_KEY_PAD_PERIOD) {
+        if(leds.num_lock) {
             return keymaps[region - 1].base[key];  // Treat like number/punctuation
         } else {
             return 0;  // No ASCII when Num Lock is off (acts as navigation)
         }
     }
 
-    if (mods.ralt || (mods.lctrl && mods.lalt)) {
+    if(mods.ralt || (mods.lctrl && mods.lalt)) {
         return keymaps[region - 1].alt[key];
-    } else if (shift_effect) {
+    } else if(shift_effect) {
         return keymaps[region - 1].shifted[key];
     } else {
         return keymaps[region - 1].base[key];
@@ -563,11 +564,11 @@ int kbd_queue_pop(maple_device_t *dev, bool xlat) {
 
     irq_restore(irqs);
 
-    if (!xlat)
+    if(!xlat)
         return (int)(rv.key | (rv.mods.raw << 8) | (rv.leds.raw << 16));
 
     ascii = kbd_key_to_ascii(rv.key, state->base.region, rv.mods, rv.leds);
-    if (ascii != 0)
+    if(ascii != 0)
         return (int)ascii;
     else
         return KBD_QUEUE_END;  
@@ -620,19 +621,19 @@ static void kbd_check_poll(maple_frame_t *frm) {
             kbd_key_t key = cond->keys[i];
 
             // Handle toggle keys by modifying persistent LED state
-            if (key == KBD_KEY_CAPSLOCK && state->key_states[key].value == KEY_STATE_CHANGED_DOWN) {
+            if(key == KBD_KEY_CAPSLOCK && state->key_states[key].value == KEY_STATE_CHANGED_DOWN) {
                 leds->caps_lock ^= 1;
-            } else if (key == KBD_KEY_PAD_NUMLOCK && state->key_states[key].value == KEY_STATE_CHANGED_DOWN) {
+            } else if(key == KBD_KEY_PAD_NUMLOCK && state->key_states[key].value == KEY_STATE_CHANGED_DOWN) {
                 leds->num_lock ^= 1;
-            } else if (key == KBD_KEY_SCRLOCK && state->key_states[key].value == KEY_STATE_CHANGED_DOWN) {
+            } else if(key == KBD_KEY_SCRLOCK && state->key_states[key].value == KEY_STATE_CHANGED_DOWN) {
                 leds->scroll_lock ^= 1;
             }
 
             // Sync persistent LEDs into the state used by enqueue and event handlers
-            state->cond.leds = *leds;
+            pstate->leds = *leds;
 
             // Substitute navigation keys if Num Lock is OFF
-            if (!leds->num_lock) {
+            if(!leds->num_lock) {
                 switch (key) {
                     case KBD_KEY_PAD_8: key = KBD_KEY_UP; break;
                     case KBD_KEY_PAD_2: key = KBD_KEY_DOWN; break;
@@ -647,10 +648,13 @@ static void kbd_check_poll(maple_frame_t *frm) {
                     case KBD_KEY_PAD_PERIOD: key = KBD_KEY_DEL; break;
                     default: break;
                 }
-            }            
+            }
+
+            // Sync persistent LED state to cond
+            state->cond.leds = pstate->leds;            
             /* If the key hadn't been pressed. */
             if(state->key_states[cond->keys[i]].value == KEY_STATE_CHANGED_DOWN) {
-                if (key != KBD_KEY_NONE) {
+                if(key != KBD_KEY_NONE) {
                     kbd_enqueue(pstate, key);
                     pstate->repeater.key = cond->keys[i];
                     if(repeat_timing.start)
@@ -662,7 +666,7 @@ static void kbd_check_poll(maple_frame_t *frm) {
                 kbd_key_t held_key = cond->keys[i];
 
                 // Apply the same substitution again for held keys
-                if (!leds->num_lock) {
+                if(!leds->num_lock) {
                     switch (held_key) {
                         case KBD_KEY_PAD_8: held_key = KBD_KEY_UP; break;
                         case KBD_KEY_PAD_2: held_key = KBD_KEY_DOWN; break;
@@ -679,16 +683,16 @@ static void kbd_check_poll(maple_frame_t *frm) {
                     }
                 }
 
-                if (pstate->repeater.key == cond->keys[i]) {
-                    if (repeat_timing.start) {
+                if(pstate->repeater.key == cond->keys[i]) {
+                    if(repeat_timing.start) {
                         uint64_t time = timer_ms_gettime64();
-                        if (time >= pstate->repeater.timeout)
+                        if(time >= pstate->repeater.timeout)
                             pstate->repeater.timeout = time + repeat_timing.interval;
                         else
                             continue;
                     }
 
-                    if (held_key != KBD_KEY_NONE) {
+                    if(held_key != KBD_KEY_NONE) {
                         kbd_enqueue(pstate, held_key);
                     }
                 }
