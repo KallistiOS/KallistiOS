@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #include <sys/queue.h>
 #include <kos/dbglog.h>
@@ -54,11 +55,11 @@ Message types that are not implemented yet (if ever):
    Any other numbers not listed in the earlier list...
 */
 
-static void icmp_default_echo_cb(const uint8 *ip, uint16 seq, uint64 delta_us,
-                                 uint8 ttl, const uint8* data, size_t data_sz) {
+static void icmp_default_echo_cb(const uint8_t *ip, uint16_t seq, uint64_t delta_us,
+                                 uint8_t ttl, const uint8_t* data, size_t data_sz) {
     (void)data;
 
-    if(delta_us != (uint64) - 1) {
+    if(delta_us != (uint64_t) - 1) {
         printf("%d bytes from %d.%d.%d.%d: icmp_seq=%d ttl=%d time=%.3f ms\n",
                data_sz, ip[0], ip[1], ip[2], ip[3], seq, ttl,
                delta_us / 1000.0);
@@ -74,9 +75,9 @@ net_echo_cb net_icmp_echo_cb = icmp_default_echo_cb;
 
 /* Handle Echo Reply (ICMP type 0) packets */
 static void net_icmp_input_0(netif_t *src, const ip_hdr_t *ip, icmp_hdr_t *icmp,
-                             const uint8 *d, size_t s) {
-    uint64 tmr, otmr;
-    uint16 seq;
+                             const uint8_t *d, size_t s) {
+    uint64_t tmr, otmr;
+    uint16_t seq;
 
     (void)src;
     (void)icmp;
@@ -86,25 +87,25 @@ static void net_icmp_input_0(netif_t *src, const ip_hdr_t *ip, icmp_hdr_t *icmp,
 
     /* Read back the time if we have it */
     if(s >= sizeof(icmp_hdr_t) + 8) {
-        otmr = ((uint64)d[8] << 56) | ((uint64)d[9] << 48) |
-               ((uint64)d[10] << 40) | ((uint64)d[11] << 32) |
+        otmr = ((uint64_t)d[8] << 56) | ((uint64_t)d[9] << 48) |
+               ((uint64_t)d[10] << 40) | ((uint64_t)d[11] << 32) |
                (d[12] << 24) | (d[13] << 16) | (d[14] << 8) | (d[15]);
-        net_icmp_echo_cb((uint8 *)&ip->src, seq, tmr - otmr, ip->ttl, d, s);
+        net_icmp_echo_cb((uint8_t *)&ip->src, seq, tmr - otmr, ip->ttl, d, s);
     }
     else {
-        net_icmp_echo_cb((uint8 *)&ip->src, seq, -1, ip->ttl, d, s);
+        net_icmp_echo_cb((uint8_t *)&ip->src, seq, -1, ip->ttl, d, s);
     }
 }
 
 /* Handle Echo (ICMP type 8) packets */
 static void net_icmp_input_8(netif_t *src, const ip_hdr_t *ip, icmp_hdr_t *icmp,
-                             const uint8 *d, size_t s) {
+                             const uint8_t *d, size_t s) {
     /* Set type to echo reply */
     icmp->type = ICMP_MESSAGE_ECHO_REPLY;
 
     /* Recompute the ICMP header checksum */
     icmp->checksum = 0;
-    icmp->checksum = net_ipv4_checksum((uint8 *)icmp, ntohs(ip->length) -
+    icmp->checksum = net_ipv4_checksum((uint8_t *)icmp, ntohs(ip->length) -
                                        4 * (ip->version_ihl & 0x0f), 0);
 
     /* Set the destination to the original source, and substitute in our IP
@@ -113,7 +114,7 @@ static void net_icmp_input_8(netif_t *src, const ip_hdr_t *ip, icmp_hdr_t *icmp,
     net_ipv4_send(src, d, s, ip->packet_id, 255, 1, ip->dest, ip->src);
 }
 
-int net_icmp_input(netif_t *src, const ip_hdr_t *ip, const uint8 *d, size_t s) {
+int net_icmp_input(netif_t *src, const ip_hdr_t *ip, const uint8_t *d, size_t s) {
     icmp_hdr_t *icmp;
     int i;
 
@@ -156,14 +157,14 @@ int net_icmp_input(netif_t *src, const ip_hdr_t *ip, const uint8 *d, size_t s) {
 }
 
 /* Send an ICMP Echo (PING) packet to the specified device */
-int net_icmp_send_echo(netif_t *net, const uint8 ipaddr[4], uint16 ident,
-                       uint16 seq, const uint8 *data, size_t size) {
+int net_icmp_send_echo(netif_t *net, const uint8_t ipaddr[4], uint16_t ident,
+                       uint16_t seq, const uint8_t *data, size_t size) {
     icmp_hdr_t *icmp;
     int r = -1;
-    uint16 sz = sizeof(icmp_hdr_t) + size + 8;
-    uint8 databuf[sz];
-    uint32 src;
-    uint64 t;
+    uint16_t sz = sizeof(icmp_hdr_t) + size + 8;
+    uint8_t databuf[sz];
+    uint32_t src;
+    uint64_t t;
 
     icmp = (icmp_hdr_t *)databuf;
 
@@ -205,12 +206,12 @@ int net_icmp_send_echo(netif_t *net, const uint8 ipaddr[4], uint16 ident,
 }
 
 /* Send an ICMP Destination Unreachable packet in reply to the given message */
-int net_icmp_send_dest_unreach(netif_t *net, uint8 code, const uint8 *msg) {
+int net_icmp_send_dest_unreach(netif_t *net, uint8_t code, const uint8_t *msg) {
     icmp_hdr_t *icmp;
     const ip_hdr_t *orig_msg = (ip_hdr_t *)msg;
     int hdrsz = (orig_msg->version_ihl & 0x0F) << 2;
     int sz = ((hdrsz + 8) > orig_msg->length) ? orig_msg->length : (hdrsz + 8);
-    uint8 databuf[sizeof(icmp_hdr_t) + sz];
+    uint8_t databuf[sizeof(icmp_hdr_t) + sz];
 
     icmp = (icmp_hdr_t *)databuf;
 
@@ -230,12 +231,12 @@ int net_icmp_send_dest_unreach(netif_t *net, uint8 code, const uint8 *msg) {
 }
 
 /* Send an ICMP Time Exceeded packet in reply to the given message */
-int net_icmp_send_time_exceeded(netif_t *net, uint8 code, const uint8 *msg) {
+int net_icmp_send_time_exceeded(netif_t *net, uint8_t code, const uint8_t *msg) {
     icmp_hdr_t *icmp;
     const ip_hdr_t *orig_msg = (ip_hdr_t *)msg;
     int hdrsz = (orig_msg->version_ihl & 0x0F) << 2;
     int sz = ((hdrsz + 8) > orig_msg->length) ? orig_msg->length : (hdrsz + 8);
-    uint8 databuf[sizeof(icmp_hdr_t) + sz];
+    uint8_t databuf[sizeof(icmp_hdr_t) + sz];
 
     icmp = (icmp_hdr_t *)databuf;
 

@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 
 #include <kos/net.h>
 #include <kos/fs_socket.h>
@@ -145,7 +146,7 @@ int net_dev_init(void) {
 }
 
 /* Init */
-int net_init(uint32 ip) {
+int net_init(uint32_t ip) {
     int rv = 0;
 
     /* Make sure we haven't already done this */

@@ -13,17 +13,17 @@
 #include "net_ipv4.h"
 
 typedef struct ipv6_ext_hdr_s {
-    uint8       next_header;
-    uint8       ext_length;
-    uint8       data[];
+    uint8_t       next_header;
+    uint8_t       ext_length;
+    uint8_t       data[];
 } __packed ipv6_ext_hdr_t;
 
 typedef struct ipv6_pseudo_hdr_s {
     struct in6_addr src_addr;
     struct in6_addr dst_addr;
-    uint32          upper_layer_len;
-    uint8           zero[3];
-    uint8           next_header;
+    uint32_t          upper_layer_len;
+    uint8_t           zero[3];
+    uint8_t           next_header;
 } __packed ipv6_pseudo_hdr_t;
 
 #define IPV6_HDR_EXT_HOP_BY_HOP     0
@@ -35,16 +35,16 @@ typedef struct ipv6_pseudo_hdr_s {
 #define IPV6_HDR_NONE               59
 #define IPV6_HDR_EXT_DESTINATION    60
 
-int net_ipv6_send_packet(netif_t *net, ipv6_hdr_t *hdr, const uint8 *data,
+int net_ipv6_send_packet(netif_t *net, ipv6_hdr_t *hdr, const uint8_t *data,
                          size_t data_size);
-int net_ipv6_send(netif_t *net, const uint8 *data, size_t data_size,
+int net_ipv6_send(netif_t *net, const uint8_t *data, size_t data_size,
                   int hop_limit, int proto, const struct in6_addr *src,
                   const struct in6_addr *dst);
-int net_ipv6_input(netif_t *src, const uint8 *pkt, size_t pktsize,
+int net_ipv6_input(netif_t *src, const uint8_t *pkt, size_t pktsize,
                    const eth_hdr_t *eth);
 uint16 net_ipv6_checksum_pseudo(const struct in6_addr *src,
                                 const struct in6_addr *dst,
-                                uint32 upper_len, uint8 next_hdr);
+                                uint32_t upper_len, uint8_t next_hdr);
 
 extern const struct in6_addr in6addr_linklocal_allnodes;
 extern const struct in6_addr in6addr_linklocal_allrouters;

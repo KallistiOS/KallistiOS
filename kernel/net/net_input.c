@@ -5,6 +5,7 @@
    Copyright (C) 2005, 2012 Lawrence Sebald
 */
 
+#include <stdint.h>
 #include <stdio.h>
 #include <kos/net.h>
 #include "net_ipv4.h"
@@ -16,8 +17,8 @@
 
 */
 
-static int net_default_input(netif_t *nif, const uint8 *data, int len) {
-    uint16 proto = (uint16)((data[12] << 8) | (data[13]));
+static int net_default_input(netif_t *nif, const uint8_t *data, int len) {
+    uint16_t proto = (uint16_t)((data[12] << 8) | (data[13]));
 
     /* If this is bound for a multicast address, make sure we actually care
        about the one that it gets sent to. */
@@ -51,7 +52,7 @@ static int net_default_input(netif_t *nif, const uint8 *data, int len) {
 net_input_func net_input_target = net_default_input;
 
 /* Process an incoming packet */
-int net_input(netif_t *device, const uint8 *data, int len) {
+int net_input(netif_t *device, const uint8_t *data, int len) {
     if(net_input_target != NULL)
         return net_input_target(device, data, len);
     else

@@ -9,9 +9,9 @@
 
 /* Calculate a CRC-32 checksum over a given block of data. Somewhat inspired by
    the CRC32 function in Figure 14-6 of http://www.hackersdelight.org/crc.pdf */
-uint32 net_crc32le(const uint8 *data, int size) {
+uint32_t net_crc32le(const uint8_t *data, int size) {
     int i;
-    uint32 rv = 0xFFFFFFFF;
+    uint32_t rv = 0xFFFFFFFF;
 
     for(i = 0; i < size; ++i) {
         rv ^= data[i];
@@ -29,9 +29,9 @@ uint32 net_crc32le(const uint8 *data, int size) {
 }
 
 /* This one isn't quite as nice as the one above for little-endian... */
-uint32 net_crc32be(const uint8 *data, int size) {
+uint32_t net_crc32be(const uint8_t *data, int size) {
     int i, j;
-    uint32 rv = 0xFFFFFFFF, b, c;
+    uint32_t rv = 0xFFFFFFFF, b, c;
 
     for(i = 0; i < size; ++i) {
         b = data[i];
@@ -49,8 +49,8 @@ uint32 net_crc32be(const uint8 *data, int size) {
 }
 
 /* Based on code found at: http://www.ccsinfo.com/forum/viewtopic.php?t=24977 */
-uint16 net_crc16ccitt(const uint8 *data, int size, uint16 start) {
-    uint16 rv = start, tmp;
+uint16_t net_crc16ccitt(const uint8_t *data, int size, uint16_t start) {
+    uint16_t rv = start, tmp;
 
     while(size--) {
         tmp = (rv >> 8) ^ *data++;

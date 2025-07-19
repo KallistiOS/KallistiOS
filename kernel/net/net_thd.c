@@ -8,6 +8,7 @@
 #include <sys/queue.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #include <kos/thread.h>
 #include <arch/timer.h>
@@ -19,8 +20,8 @@ struct thd_cb {
     int cbid;
     void (*cb)(void *);
     void *data;
-    uint64 timeout;
-    uint64 nextrun;
+    uint64_t timeout;
+    uint64_t nextrun;
 };
 
 TAILQ_HEAD(thd_cb_queue, thd_cb);
@@ -32,7 +33,7 @@ static int cbid_top;
 
 static void *net_thd_thd(void *data) {
     struct thd_cb *cb;
-    uint64 now;
+    uint64_t now;
 
     (void)data;
 
@@ -54,7 +55,7 @@ static void *net_thd_thd(void *data) {
     return NULL;
 }
 
-int net_thd_add_callback(void (*cb)(void *), void *data, uint64 timeout) {
+int net_thd_add_callback(void (*cb)(void *), void *data, uint64_t timeout) {
     struct thd_cb *newcb;
 
     /* Allocate space for the new callback and set it up. */
