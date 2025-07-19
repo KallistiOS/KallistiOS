@@ -10,6 +10,7 @@
 
 */
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,13 +26,13 @@
 static net_ipv4_stats_t ipv4_stats = { 0 };
 
 /* Perform an IP-style checksum on a block of data */
-uint16 net_ipv4_checksum(const uint8 *data, size_t bytes, uint16 start) {
-    uint32 sum = start;
+uint16_t net_ipv4_checksum(const uint8_t *data, size_t bytes, uint16_t start) {
+    uint32_t sum = start;
     size_t i = bytes;
 
     /* Make sure we don't do any unaligned memory accesses */
-    if(((uint32)data) & 0x01) {
-        const uint8 *ptr = data;
+    if(((uint32_t)data) & 0x01) {
+        const uint8_t *ptr = data;
 
         while(i > 1) {
             sum += *ptr | ((*ptr + 1) << 8);
@@ -43,7 +44,7 @@ uint16 net_ipv4_checksum(const uint8 *data, size_t bytes, uint16 start) {
         }
     }
     else {
-        const uint16 *ptr = (const uint16 *)data;
+        const uint16_t *ptr = (const uint16_t *)data;
 
         while(i > 1) {
             sum += *ptr++;
@@ -66,8 +67,8 @@ uint16 net_ipv4_checksum(const uint8 *data, size_t bytes, uint16 start) {
 }
 
 /* Determine if a given IP is in the current network */
-static int is_in_network(const uint8 src[4], const uint8 dest[4],
-                         const uint8 netmask[4]) {
+static int is_in_network(const uint8_t src[4], const uint8_t dest[4],
+                         const uint8_t netmask[4]) {
     int i;
 
     for(i = 0; i < 4; i++) {
@@ -79,7 +80,7 @@ static int is_in_network(const uint8 src[4], const uint8 dest[4],
 }
 
 /* Determine if a given IP is the adapter's broadcast address. */
-static int is_broadcast(const uint8 dest[4], const uint8 bc[4]) {
+static int is_broadcast(const uint8_t dest[4], const uint8_t bc[4]) {
     int i;
 
     for(i = 0; i < 4; ++i) {
@@ -91,11 +92,11 @@ static int is_broadcast(const uint8 dest[4], const uint8 bc[4]) {
 }
 
 /* Send a packet on the specified network adapter */
-int net_ipv4_send_packet(netif_t *net, ip_hdr_t *hdr, const uint8 *data,
+int net_ipv4_send_packet(netif_t *net, ip_hdr_t *hdr, const uint8_t *data,
                          size_t size) {
-    uint8 dest_ip[4];
-    uint8 dest_mac[6];
-    uint8 pkt[size + sizeof(ip_hdr_t) + sizeof(eth_hdr_t)];
+    uint8_t dest_ip[4];
+    uint8_t dest_mac[6];
+    uint8_t pkt[size + sizeof(ip_hdr_t) + sizeof(eth_hdr_t)];
     eth_hdr_t *ehdr;
     int err;
 
@@ -184,8 +185,8 @@ int net_ipv4_send_packet(netif_t *net, ip_hdr_t *hdr, const uint8 *data,
     return 0;
 }
 
-int net_ipv4_send(netif_t *net, const uint8 *data, size_t size, int id, int ttl,
-                  int proto, uint32 src, uint32 dst) {
+int net_ipv4_send(netif_t *net, const uint8_t *data, size_t size, int id, int ttl,
+                  int proto, uint32_t src, uint32_t dst) {
     ip_hdr_t hdr;
 
     /* If the ID is -1, generate a random ID value that can be used in case the
@@ -206,17 +207,17 @@ int net_ipv4_send(netif_t *net, const uint8 *data, size_t size, int id, int ttl,
     hdr.src = src;
     hdr.dest = dst;
 
-    hdr.checksum = net_ipv4_checksum((uint8 *)&hdr, sizeof(ip_hdr_t), 0);
+    hdr.checksum = net_ipv4_checksum((uint8_t *)&hdr, sizeof(ip_hdr_t), 0);
 
     return net_ipv4_frag_send(net, &hdr, data, size);
 }
 
-int net_ipv4_input(netif_t *src, const uint8 *pkt, size_t pktsize,
+int net_ipv4_input(netif_t *src, const uint8_t *pkt, size_t pktsize,
                    const eth_hdr_t *eth) {
     const ip_hdr_t *ip;
-    const uint8 *data;
+    const uint8_t *data;
     size_t hdrlen;
-    uint8 ipa[4];
+    uint8_t ipa[4];
 
     if(pktsize < sizeof(ip_hdr_t)) {
         /* This is obviously a bad packet, drop it */
@@ -234,13 +235,13 @@ int net_ipv4_input(netif_t *src, const uint8 *pkt, size_t pktsize,
     }
 
     /* Check ip header checksum */
-    if(net_ipv4_checksum((uint8 *)ip, hdrlen, 0)) {
+    if(net_ipv4_checksum((uint8_t *)ip, hdrlen, 0)) {
         /* The checksums don't match, bail */
         ++ipv4_stats.pkt_recv_bad_chksum;
         return -1;
     }
 
-    data = (const uint8 *)(pkt + hdrlen);
+    data = (const uint8_t *)(pkt + hdrlen);
 
     /* Add the sender to the ARP cache, if they're not already there. */
     if(eth) {
@@ -252,7 +253,7 @@ int net_ipv4_input(netif_t *src, const uint8 *pkt, size_t pktsize,
     return net_ipv4_reassemble(src, ip, data, ntohs(ip->length) - hdrlen);
 }
 
-int net_ipv4_input_proto(netif_t *src, const ip_hdr_t *ip, const uint8 *data) {
+int net_ipv4_input_proto(netif_t *src, const ip_hdr_t *ip, const uint8_t *data) {
     size_t hdrlen = (ip->version_ihl & 0x0F) << 2;
     size_t datalen = ntohs(ip->length) - hdrlen;
     int rv;
@@ -275,24 +276,24 @@ int net_ipv4_input_proto(netif_t *src, const ip_hdr_t *ip, const uint8 *data) {
     /* There's no handler for this packet type, send an ICMP Destination
        Unreachable, and log the unknown protocol. */
     ++ipv4_stats.pkt_recv_bad_proto;
-    net_icmp_send_dest_unreach(src, ICMP_PROTOCOL_UNREACHABLE, (uint8 *)ip);
+    net_icmp_send_dest_unreach(src, ICMP_PROTOCOL_UNREACHABLE, (uint8_t *)ip);
 
     return -1;
 }
 
-uint32 net_ipv4_address(const uint8 addr[4]) {
+uint32_t net_ipv4_address(const uint8_t addr[4]) {
     return (addr[0] << 24) | (addr[1] << 16) | (addr[2] << 8) | (addr[3]);
 }
 
-void net_ipv4_parse_address(uint32 addr, uint8 out[4]) {
-    out[0] = (uint8)((addr >> 24) & 0xFF);
-    out[1] = (uint8)((addr >> 16) & 0xFF);
-    out[2] = (uint8)((addr >> 8) & 0xFF);
-    out[3] = (uint8)(addr & 0xFF);
+void net_ipv4_parse_address(uint32_t addr, uint8_t out[4]) {
+    out[0] = (uint8_t)((addr >> 24) & 0xFF);
+    out[1] = (uint8_t)((addr >> 16) & 0xFF);
+    out[2] = (uint8_t)((addr >> 8) & 0xFF);
+    out[3] = (uint8_t)(addr & 0xFF);
 }
 
-uint16 net_ipv4_checksum_pseudo(in_addr_t src, in_addr_t dst, uint8 proto,
-                                uint16 len) {
+uint16_t net_ipv4_checksum_pseudo(in_addr_t src, in_addr_t dst, uint8_t proto,
+                                uint16_t len) {
     ipv4_pseudo_hdr_t ps = { src, dst, 0, proto, htons(len) };
 
     return ~net_ipv4_checksum((uint8 *)&ps, sizeof(ipv4_pseudo_hdr_t), 0);

@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 
 #include <kos/dbglog.h>
 #include <kos/net.h>
@@ -25,15 +26,15 @@
 
 /* ARP Packet Structure */
 typedef struct {
-    uint8 hw_type[2];
-    uint8 pr_type[2];
-    uint8 hw_size;
-    uint8 pr_size;
-    uint8 opcode[2];
-    uint8 hw_send[6];
-    uint8 pr_send[4];
-    uint8 hw_recv[6];
-    uint8 pr_recv[6];
+    uint8_t hw_type[2];
+    uint8_t pr_type[2];
+    uint8_t hw_size;
+    uint8_t pr_size;
+    uint8_t opcode[2];
+    uint8_t hw_send[6];
+    uint8_t pr_send[4];
+    uint8_t hw_recv[6];
+    uint8_t pr_recv[6];
 } __packed arp_pkt_t;
 
 /* Structure describing an ARP entry; each entry contains a MAC address,
@@ -44,19 +45,19 @@ typedef struct netarp {
     LIST_ENTRY(netarp)  ac_list;
 
     /* Mac address */
-    uint8               mac[6];
+    uint8_t             mac[6];
 
     /* Associated IP address */
-    uint8               ip[4];
+    uint8_t             ip[4];
 
     /* Cache entry time; if zero, this entry won't expire */
-    uint64              timestamp;
+    uint64_t            timestamp;
 
     /* Optional packet to send when the entry is filled in */
     ip_hdr_t            *pkt;
 
     /* Additional data for that packet, if any */
-    uint8               *data;
+    uint8_t             *data;
 
     /* Size of the additional data for the packet */
     int                 data_size;
@@ -77,7 +78,7 @@ struct netarp_list net_arp_cache = LIST_HEAD_INITIALIZER(0);
 /* Garbage collect timed out entries */
 static int net_arp_gc(netif_t *nif) {
     netarp_t *a1, *a2;
-    uint64 now = timer_ms_gettime64();
+    uint64_t now = timer_ms_gettime64();
 
     a1 = LIST_FIRST(&net_arp_cache);
 
@@ -114,8 +115,8 @@ static int net_arp_gc(netif_t *nif) {
 }
 
 /* Add an entry to the ARP cache manually */
-int net_arp_insert(netif_t *nif, const uint8 mac[6], const uint8 ip[4],
-                   uint64 timestamp) {
+int net_arp_insert(netif_t *nif, const uint8_t mac[6], const uint8_t ip[4],
+                   uint64_t timestamp) {
     netarp_t *cur;
 
     /* First make sure the entry isn't already there */
@@ -163,8 +164,8 @@ int net_arp_insert(netif_t *nif, const uint8 mac[6], const uint8 ip[4],
    query will be sent and an error will be returned. Thus your packet send
    should also fail. Later when the transmit retries, hopefully the answer
    will have arrived. */
-int net_arp_lookup(netif_t *nif, const uint8 ip_in[4], uint8 mac_out[6],
-                   const ip_hdr_t *pkt, const uint8 *data, int data_size) {
+int net_arp_lookup(netif_t *nif, const uint8_t ip_in[4], uint8_t mac_out[6],
+                   const ip_hdr_t *pkt, const uint8_t *data, int data_size) {
     netarp_t *cur;
 
     /* Garbage collect expired entries */
@@ -200,7 +201,7 @@ int net_arp_lookup(netif_t *nif, const uint8 ip_in[4], uint8 mac_out[6],
 
     /* Copy our packet if we have one to copy. */
     if(pkt && data && data_size) {
-        cur->data = (uint8 *)malloc(data_size);
+        cur->data = (uint8_t *)malloc(data_size);
 
         if(cur->data) {
             cur->pkt = (ip_hdr_t *)malloc(sizeof(ip_hdr_t));
@@ -229,7 +230,7 @@ int net_arp_lookup(netif_t *nif, const uint8 ip_in[4], uint8 mac_out[6],
 
 /* Do a reverse ARP lookup: look for an IP for a given mac address; note
    that if this fails, you have no recourse. */
-int net_arp_revlookup(netif_t *nif, uint8 ip_out[4], const uint8 mac_in[6]) {
+int net_arp_revlookup(netif_t *nif, uint8_t ip_out[4], const uint8_t mac_in[6]) {
     netarp_t *cur;
 
     (void)nif;
@@ -253,7 +254,7 @@ int net_arp_revlookup(netif_t *nif, uint8 ip_out[4], const uint8 mac_in[6]) {
 static int net_arp_send(netif_t *nif, arp_pkt_t *pkt) {
     arp_pkt_t pkt_out;
     eth_hdr_t eth_hdr;
-    uint8 buf[sizeof(arp_pkt_t) + sizeof(eth_hdr_t)];
+    uint8_t buf[sizeof(arp_pkt_t) + sizeof(eth_hdr_t)];
 
     /* First, fill in the ARP packet. */
     pkt_out.hw_type[0] = 0;
@@ -285,7 +286,7 @@ static int net_arp_send(netif_t *nif, arp_pkt_t *pkt) {
 }
 
 /* Receive an ARP packet and process it (called by net_input) */
-int net_arp_input(netif_t *nif, const uint8 *pkt_in, int len) {
+int net_arp_input(netif_t *nif, const uint8_t *pkt_in, int len) {
     //eth_hdr_t *eth_hdr = (eth_hdr_t *)pkt_in;
     arp_pkt_t *pkt;
 
@@ -314,10 +315,10 @@ int net_arp_input(netif_t *nif, const uint8 *pkt_in, int len) {
 }
 
 /* Generate an ARP who-has query on the given device */
-int net_arp_query(netif_t *nif, const uint8 ip[4]) {
+int net_arp_query(netif_t *nif, const uint8_t ip[4]) {
     arp_pkt_t pkt_out;
     eth_hdr_t eth_hdr;
-    uint8 buf[sizeof(arp_pkt_t) + sizeof(eth_hdr_t)];
+    uint8_t buf[sizeof(arp_pkt_t) + sizeof(eth_hdr_t)];
 
     /* First, fill in the ARP packet. */
     pkt_out.hw_type[0] = 0;
