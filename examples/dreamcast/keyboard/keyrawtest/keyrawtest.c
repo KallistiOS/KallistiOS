@@ -115,19 +115,19 @@ static void basic_typing(void)
         int raw = kbd_queue_pop(first_kbd_dev, 0);
         if(raw == KBD_QUEUE_END) continue;
 
-        kbd_key_t key = raw & 0xFF;
+        // Decode raw: 0x00FF = key, 0xFF00 = modifiers, 0xFF0000 = LEDs
+        kbd_key_t key = (kbd_key_t)(raw & 0xFF);
         kbd_mods_t mods = { .raw = (raw >> 8) & 0xFF };
+        kbd_leds_t leds = { .raw = (raw >> 16) & 0xFF };
 
         kbd_state_t *kbd = maple_dev_status(first_kbd_dev);
         if(!kbd) continue;
 
-        kbd_leds_t leds = kbd->cond.leds;
+        char ascii = kbd_key_to_ascii(key, kbd->region, mods, leds);
 
         printf("LEDs: caps=%d num=%d scroll=%d\n", leds.caps_lock, leds.num_lock, leds.scroll_lock);
 
-        char ascii = kbd_key_to_ascii(key, kbd->region, mods, leds);
-
-        // Show printable characters to the screen
+        // Show printable ASCII characters on screen
         if(ascii >= 32 && ascii <= 126) {
             bfont_draw(vram_s + offset, WIDTH, 1, ascii);
             offset += BFONT_THIN_WIDTH;
@@ -165,8 +165,8 @@ static void basic_typing(void)
             );
         } else {
             snprintf(debug, sizeof(debug),
-                "RAW 0x%02X | ascii: . | shift:%d caps:%d ctrl:%d alt:%d s1:%d s2:%d",
-                key,
+                "RAW 0x%02X | key: 0x%02X | shift:%d caps:%d ctrl:%d alt:%d s1:%d s2:%d",
+                key, key,
                 mods.lshift || mods.rshift,
                 leds.caps_lock,
                 mods.lctrl || mods.rctrl,

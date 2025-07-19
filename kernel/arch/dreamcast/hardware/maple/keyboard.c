@@ -571,7 +571,7 @@ int kbd_queue_pop(maple_device_t *dev, bool xlat) {
     if(ascii != 0)
         return (int)ascii;
     else
-        return KBD_QUEUE_END;  
+        return (int)(rv.key | (rv.mods.raw << 8) | (rv.leds.raw << 16));
 }
 
 /* Update the keyboard status; this will handle debounce handling as well as
