@@ -144,8 +144,9 @@ int dma_transfer(const dma_config_t *cfg, dma_addr_t dst, dma_addr_t src,
     unsigned int transfer_size = dma_unit_size[cfg->unit_size];
     uint32_t chcr;
 
-    if(!__is_aligned(len | dst | src, transfer_size)) {
-        dbglog(DBG_ERROR, "dmac: src/dst/len not aligned to the bus width\n");
+    if(!__is_aligned((src|dst|len), transfer_size)) {
+        dbglog(DBG_ERROR, "dmac: src=0x%08x dst=0x%08x len=%u not aligned to %u bytes\n",
+               (uintptr_t)src, (uintptr_t)dst, (uintptr_t)len, transfer_size);
         errno = EFAULT;
         return -1;
     }
