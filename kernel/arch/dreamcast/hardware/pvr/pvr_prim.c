@@ -22,7 +22,8 @@
 
 /* Compile a polygon context into a polygon header */
 void pvr_poly_compile(pvr_poly_hdr_t *dst, const pvr_poly_cxt_t *src) {
-    uint32_t txr_base, cmd;
+    pvr_txr_ptr_t txr_base;
+    uint32_t cmd;
     /* Temporary variables we can read-write-modify, since we cannot do so from
        within the SQs, and we want to be able to compile this header from a PVR
        DR API submission target. */
@@ -81,13 +82,12 @@ void pvr_poly_compile(pvr_poly_hdr_t *dst, const pvr_poly_cxt_t *src) {
             | FIELD_PREP(PVR_TA_PM2_VSIZE, __builtin_ctz(src->txr.height) - 3);
 
         /* Convert the texture address */
-        txr_base = (uint32_t)src->txr.base;
-        txr_base = (txr_base & (PVR_RAM_SIZE - 1)) >> 3;
+        txr_base = to_pvr_txr_ptr(src->txr.base);
 
         /* Polygon mode 3 */
         mode3 = FIELD_PREP(PVR_TA_PM3_MIPMAP, src->txr.mipmap)
             | src->txr.format
-            | txr_base;
+            | (uint32_t)txr_base;
     }
 
     dst->mode2 = mode2;
@@ -266,7 +266,8 @@ void pvr_sprite_cxt_txr(pvr_sprite_cxt_t *dst, pvr_list_t list,
 }
 
 void pvr_sprite_compile(pvr_sprite_hdr_t *dst, const pvr_sprite_cxt_t *src) {
-    uint32_t txr_base, cmd, mode2, mode3;
+    uint32_t cmd, mode2, mode3;
+    pvr_txr_ptr_t txr_base;
 
     /* Basically we just take each parameter, clip it, shift it
        into place, and OR it into the final result. */
@@ -317,13 +318,12 @@ void pvr_sprite_compile(pvr_sprite_hdr_t *dst, const pvr_sprite_cxt_t *src) {
             | FIELD_PREP(PVR_TA_PM2_VSIZE, __builtin_ctz(src->txr.height) - 3);
 
         /* Convert the texture address */
-        txr_base = (uint32_t)src->txr.base;
-        txr_base = (txr_base & (PVR_RAM_SIZE - 1)) >> 3;
+        txr_base = to_pvr_txr_ptr(src->txr.base);
 
         /* Polygon mode 3 */
         mode3 = FIELD_PREP(PVR_TA_PM3_MIPMAP, src->txr.mipmap)
             | src->txr.format
-            | txr_base;
+            | (uint32_t)txr_base;
     }
 
     dst->mode2 = mode2;
@@ -351,8 +351,8 @@ void pvr_mod_compile(pvr_mod_hdr_t *dst, pvr_list_t list, uint32 mode,
 /* Compile a polygon context into a polygon header that is affected by
    modifier volumes */
 void pvr_poly_mod_compile(pvr_poly_mod_hdr_t *dst, const pvr_poly_cxt_t *src) {
-    uint32_t txr_base, cmd;
-    uint32_t mode2, mode3;
+    uint32_t mode2, mode3, cmd;
+    pvr_txr_ptr_t txr_base;
 
     /* Basically we just take each parameter, clip it, shift it
        into place, and OR it into the final result. */
@@ -407,13 +407,12 @@ void pvr_poly_mod_compile(pvr_poly_mod_hdr_t *dst, const pvr_poly_cxt_t *src) {
             | FIELD_PREP(PVR_TA_PM2_VSIZE, __builtin_ctz(src->txr.height) - 3);
 
         /* Convert the texture address */
-        txr_base = (uint32_t)src->txr.base;
-        txr_base = (txr_base & (PVR_RAM_SIZE - 1)) >> 3;
+        txr_base = to_pvr_txr_ptr(src->txr.base);
 
         /* Polygon mode 3 */
         mode3 = FIELD_PREP(PVR_TA_PM3_MIPMAP, src->txr.mipmap)
             | src->txr.format
-            | txr_base;
+            | (uint32_t)txr_base;
     }
 
     dst->mode2_0 = mode2;
@@ -447,13 +446,12 @@ void pvr_poly_mod_compile(pvr_poly_mod_hdr_t *dst, const pvr_poly_cxt_t *src) {
             | FIELD_PREP(PVR_TA_PM2_VSIZE, __builtin_ctz(src->txr2.height) - 3);
 
         /* Convert the texture address */
-        txr_base = (uint32_t)src->txr2.base;
-        txr_base = (txr_base & (PVR_RAM_SIZE - 1)) >> 3;
+        txr_base = to_pvr_txr_ptr(src->txr.base);
 
         /* Polygon mode 3 */
         mode3 = FIELD_PREP(PVR_TA_PM3_MIPMAP, src->txr2.mipmap)
             | src->txr2.format
-            | txr_base;
+            | (uint32_t)txr_base;
     }
 
     dst->mode2_1 = mode2;
