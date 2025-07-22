@@ -131,7 +131,7 @@ export DC_ARM_LDFLAGS=""
 # Controls the baseline optimization level to use when building.
 # Typically this is -Og (debugging), -O0, -O1, -O2, or -O3.
 # NOTE: For our target, -O4 is a valid optimization level that has
-# been seen to have some performance impact as well.
+#       been seen to have some performance impact as well.
 #
 export KOS_CFLAGS="${KOS_CFLAGS} -O2"
 
@@ -140,17 +140,19 @@ export KOS_CFLAGS="${KOS_CFLAGS} -O2"
 # Uncomment this to enable LTO, which can substantially improve performance
 # of the generated code by enabling the linker to perform inlining, at the
 # cost of longer build times and fatter object files.
-# NOTE: Certain features such as atomics REQUIRE fat LTO objects to work!
+# NOTE: Certain ports and examples require fat LTO objects to work with LTO,
+#       and LTO itself is known to cause issues in code with undefined behavior.
 #
 #export KOS_CFLAGS="${KOS_CFLAGS} -flto=auto -ffat-lto-objects"
 
 # Additional Optimizations
 #
-# Uncomment this to enable what has been found empirically to be a decent
+# Uncomment these to enable what have been found empirically to be a decent
 # set of additional flags for optimal release build performance with the
 # current stable toolchain.
 #
-#export KOS_CFLAGS="${KOS_CFLAGS} -freorder-blocks-algorithm=simple -fipa-pta"
+#export KOS_CFLAGS="${KOS_CFLAGS} -freorder-blocks-algorithm=simple"
+#export KOS_CFLAGS="${KOS_CFLAGS} -fipa-pta"
 
 # Position-Independent Code
 #
