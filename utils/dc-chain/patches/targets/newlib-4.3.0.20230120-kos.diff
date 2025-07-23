@@ -264,3 +264,16 @@ diff --color -ruN newlib-4.3.0.20230120/newlib/libc/stdlib/assert.c newlib-4.3.0
 +// This is put in here to cause link errors if a proper newlib isn't present.
 +int __newlib_kos_patch = 1;
 +
+diff --color -ruN newlib-4.3.0.20230120/newlib/libc/include/sys/cdefs.h newlib-4.3.0.20230120-kos/newlib/libc/include/sys/cdefs.h
+diff --git a/newlib/libc/include/sys/cdefs.h b/newlib/libc/include/sys/cdefs.h
+--- newlib-4.3.0.20230120/newlib/libc/include/sys/cdefs.h	2023-02-02 15:26:13.661093102 -0600
++++ newlib-4.3.0.20230120-kos/newlib/libc/include/sys/cdefs.h	2023-02-02 15:26:28.806127897 -0600
+@@ -736,7 +736,7 @@
+ /* Provide fallback versions for other compilers (GCC/Clang < 10): */
+ #if !__has_builtin(__builtin_is_aligned)
+ #define __builtin_is_aligned(x, align)	\
+-	(((__uintptr_t)x & ((align) - 1)) == 0)
++	(((__uintptr_t)(x) & ((align) - 1)) == 0)
+ #endif
+ #if !__has_builtin(__builtin_align_up)
+ #define __builtin_align_up(x, align)	\
