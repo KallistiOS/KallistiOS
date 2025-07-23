@@ -12,8 +12,6 @@
 
 __BEGIN_DECLS
 
-#include <arch/types.h>
-
 /* Available values for the op fields of dhcp_pkt_t */
 #define DHCP_OP_BOOTREQUEST             1
 #define DHCP_OP_BOOTREPLY               2
@@ -126,28 +124,28 @@ __BEGIN_DECLS
 #define DHCP_STATE_REBOOTING    7
 
 typedef struct dhcp_pkt {
-    uint8   op;
-    uint8   htype;
-    uint8   hlen;
-    uint8   hops;
-    uint32  xid;
-    uint16  secs;
-    uint16  flags;
-    uint32  ciaddr;
-    uint32  yiaddr;
-    uint32  siaddr;
-    uint32  giaddr;
-    uint8   chaddr[16];
-    char    sname[64];
-    char    file[128];
-    uint8   options[];
+    uint8_t   op;
+    uint8_t   htype;
+    uint8_t   hlen;
+    uint8_t   hops;
+    uint32_t  xid;
+    uint16_t  secs;
+    uint16_t  flags;
+    uint32_t  ciaddr;
+    uint32_t  yiaddr;
+    uint32_t  siaddr;
+    uint32_t  giaddr;
+    uint8_t   chaddr[16];
+    char      sname[64];
+    char      file[128];
+    uint8_t   options[];
 } __packed dhcp_pkt_t;
 
 int net_dhcp_init(void);
 
 void net_dhcp_shutdown(void);
 
-int net_dhcp_request(uint32 required_address);
+int net_dhcp_request(uint32_t required_address);
 
 __END_DECLS
 
