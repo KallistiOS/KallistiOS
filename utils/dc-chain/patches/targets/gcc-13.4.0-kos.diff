@@ -48,21 +48,6 @@ diff --color -ruN gcc-13.4.0/libgcc/configure gcc-13.4.0-kos/libgcc/configure
      mcf)	thread_header=config/i386/gthr-mcf.h ;;
  esac
  
-diff --color -ruN gcc-13.4.0/libobjc/configure gcc-13.4.0-kos/libobjc/configure
---- gcc-13.4.0/libobjc/configure	2023-06-04 20:48:49.902562670 -0500
-+++ gcc-13.4.0-kos/libobjc/configure	2023-06-04 20:49:03.489606065 -0500
-@@ -2918,11 +2918,9 @@
- 
- cat confdefs.h - <<_ACEOF >conftest.$ac_ext
- /* end confdefs.h.  */
--#include <stdio.h>
- int
- main ()
- {
--printf ("hello world\n");
-   ;
-   return 0;
- }
 diff --color -ruN gcc-13.4.0/libobjc/Makefile.in gcc-13.4.0-kos/libobjc/Makefile.in
 --- gcc-13.4.0/libobjc/Makefile.in	2023-06-04 20:48:49.901562666 -0500
 +++ gcc-13.4.0-kos/libobjc/Makefile.in	2023-06-04 20:49:03.490606068 -0500
