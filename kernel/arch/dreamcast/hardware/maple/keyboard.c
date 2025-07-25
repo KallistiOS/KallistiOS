@@ -6,6 +6,7 @@
    Copyright (C) 2018, 2025 Donald Haase
    Copyright (C) 2024 Paul Cercueil
    Copyright (C) 2025 Falco Girgis
+   Copyright (C) 2025 Troy Davis
 */
 
 #include <assert.h>
@@ -45,11 +46,14 @@ typedef struct kbd_state_private {
     size_t queue_head;                     /**< \brief Key queue head. */
     volatile size_t queue_len;             /**< \brief Current length of queue. */
 
+    kbd_leds_t leds;                       /**< \brief Persistent LED state for toggles */
+
     struct {
 	kbd_key_t key;          /**< \brief Key that is repeating. */
         uint64_t timeout;       /**< \brief Time that the next repeat will trigger. */
     } repeater;
 } kbd_state_private_t;
+
 
 /* These are global timings for key repeat. It would be possible to put
     them in the state, but I don't see a reason to.
@@ -429,15 +433,31 @@ static const kbd_keymap_internal_t keymaps[] = {
 };
 
 char kbd_key_to_ascii(kbd_key_t key, kbd_region_t region, kbd_mods_t mods, kbd_leds_t leds) {
+    // Only apply Caps Lock logic to A–Z keys
+    bool is_letter = (key >= KBD_KEY_A && key <= KBD_KEY_Z);
+    bool shift_effect = (mods.raw & KBD_MOD_SHIFT);
 
-    if(mods.ralt || (mods.lctrl && mods.lalt))
+    if(is_letter && leds.caps_lock) {
+        shift_effect = !shift_effect;  // Caps Lock toggles Shift effect
+    }
+
+    // Handle keypad keys when Num Lock is involved
+    if(key >= KBD_KEY_PAD_1 && key <= KBD_KEY_PAD_PERIOD) {
+        if(leds.num_lock) {
+            return keymaps[region - 1].base[key];  // Treat like number/punctuation
+        } else {
+            return 0;  // No ASCII when Num Lock is off (acts as navigation)
+        }
+    }
+
+    if(mods.ralt || (mods.lctrl && mods.lalt)) {
         return keymaps[region - 1].alt[key];
-    else if((mods.raw & KBD_MOD_SHIFT) || leds.caps_lock)
+    } else if(shift_effect) {
         return keymaps[region - 1].shifted[key];
-    else
+    } else {
         return keymaps[region - 1].base[key];
+    }
 }
-
 /* The keyboard queue (global for now) */
 static volatile int kbd_queue_active = 1;
 static volatile int kbd_queue_tail = 0, kbd_queue_head = 0;
@@ -482,7 +502,7 @@ static int kbd_enqueue(kbd_state_private_t *state, kbd_key_t keycode) {
 
     /* Figure out its key queue value. */
     ascii = (uint16_t)kbd_key_to_ascii(keycode, KBD_REGION_US,
-                             state->base.cond.modifiers, state->base.cond.leds);
+                                   state->base.cond.modifiers, state->leds);
 
     if(ascii == 0)
         ascii = ((uint16_t)keycode) << 8;
@@ -545,12 +565,13 @@ int kbd_queue_pop(maple_device_t *dev, bool xlat) {
     irq_restore(irqs);
 
     if(!xlat)
-        return (int)(rv.key & (rv.mods.raw << 8) & (rv.leds.raw << 16));
+        return (int)(rv.key | (rv.mods.raw << 8) | (rv.leds.raw << 16));
 
-    if((ascii = kbd_key_to_ascii(rv.key, state->base.region, rv.mods, rv.leds)))
+    ascii = kbd_key_to_ascii(rv.key, state->base.region, rv.mods, rv.leds);
+    if(ascii != 0)
         return (int)ascii;
     else
-        return (int)(rv.key << 8);
+        return (int)(rv.key | (rv.mods.raw << 8) | (rv.leds.raw << 16));
 }
 
 /* Update the keyboard status; this will handle debounce handling as well as
@@ -558,8 +579,9 @@ int kbd_queue_pop(maple_device_t *dev, bool xlat) {
    words so that we can store "special" keys as such. */
 static void kbd_check_poll(maple_frame_t *frm) {
     kbd_state_private_t *pstate = (kbd_state_private_t *)frm->dev->status;
-    kbd_state_t         *state = &pstate->base;
-    kbd_cond_t          *cond = (kbd_cond_t *)&state->cond;
+    kbd_leds_t *leds = &pstate->leds;  // persistent LED state
+    kbd_state_t *state = &pstate->base;
+    kbd_cond_t *cond = (kbd_cond_t *)&state->cond;
     size_t i;
 
     /* If the modifier keys have changed, end the key repeating. */
@@ -596,27 +618,83 @@ static void kbd_check_poll(maple_frame_t *frm) {
         else {
             /* Update key state */
             state->key_states[cond->keys[i]].is_down = true;
+            kbd_key_t key = cond->keys[i];
 
+            // Handle toggle keys by modifying persistent LED state
+            if(key == KBD_KEY_CAPSLOCK && state->key_states[key].value == KEY_STATE_CHANGED_DOWN) {
+                leds->caps_lock ^= 1;
+            } else if(key == KBD_KEY_PAD_NUMLOCK && state->key_states[key].value == KEY_STATE_CHANGED_DOWN) {
+                leds->num_lock ^= 1;
+            } else if(key == KBD_KEY_SCRLOCK && state->key_states[key].value == KEY_STATE_CHANGED_DOWN) {
+                leds->scroll_lock ^= 1;
+            }
+
+            // Sync persistent LEDs into the state used by enqueue and event handlers
+            pstate->leds = *leds;
+
+            // Substitute navigation keys if Num Lock is OFF
+                if(!leds->num_lock) {
+                    switch (key) {
+                        case KBD_KEY_PAD_8: key = KBD_KEY_UP; break;
+                        case KBD_KEY_PAD_2: key = KBD_KEY_DOWN; break;
+                        case KBD_KEY_PAD_4: key = KBD_KEY_LEFT; break;
+                        case KBD_KEY_PAD_6: key = KBD_KEY_RIGHT; break;
+                        case KBD_KEY_PAD_7: key = KBD_KEY_HOME; break;
+                        case KBD_KEY_PAD_1: key = KBD_KEY_END; break;
+                        case KBD_KEY_PAD_9: key = KBD_KEY_PGUP; break;
+                        case KBD_KEY_PAD_3: key = KBD_KEY_PGDOWN; break;
+                        case KBD_KEY_PAD_5: key = KBD_KEY_NONE; break;
+                        case KBD_KEY_PAD_0: key = KBD_KEY_INSERT; break;
+                        case KBD_KEY_PAD_PERIOD: key = KBD_KEY_DEL; break;
+                        default: break;
+                    }
+                }
+
+            // Sync persistent LED state to cond
+            state->cond.leds = pstate->leds;            
             /* If the key hadn't been pressed. */
             if(state->key_states[cond->keys[i]].value == KEY_STATE_CHANGED_DOWN) {
-                kbd_enqueue(pstate, cond->keys[i]);
-                pstate->repeater.key = cond->keys[i];
-                if(repeat_timing.start)
-                    pstate->repeater.timeout = timer_ms_gettime64() + repeat_timing.start;
+                if(key != KBD_KEY_NONE) {
+                    kbd_enqueue(pstate, key);
+                    pstate->repeater.key = cond->keys[i];
+                    if(repeat_timing.start)
+                        pstate->repeater.timeout = timer_ms_gettime64() + repeat_timing.start;
+                }
             }
             /* If the key was already being pressed and was our one allowed repeating key, then... */
             else if(state->key_states[cond->keys[i]].value == KEY_STATE_HELD_DOWN) {
+                kbd_key_t held_key = cond->keys[i];
+
+                // Apply the same substitution again for held keys
+                if(!leds->num_lock) {
+                    switch (held_key) {
+                        case KBD_KEY_PAD_8: held_key = KBD_KEY_UP; break;
+                        case KBD_KEY_PAD_2: held_key = KBD_KEY_DOWN; break;
+                        case KBD_KEY_PAD_4: held_key = KBD_KEY_LEFT; break;
+                        case KBD_KEY_PAD_6: held_key = KBD_KEY_RIGHT; break;
+                        case KBD_KEY_PAD_7: held_key = KBD_KEY_HOME; break;
+                        case KBD_KEY_PAD_1: held_key = KBD_KEY_END; break;
+                        case KBD_KEY_PAD_9: held_key = KBD_KEY_PGUP; break;
+                        case KBD_KEY_PAD_3: held_key = KBD_KEY_PGDOWN; break;
+                        case KBD_KEY_PAD_5: held_key = KBD_KEY_NONE; break;
+                        case KBD_KEY_PAD_0: held_key = KBD_KEY_INSERT; break;
+                        case KBD_KEY_PAD_PERIOD: held_key = KBD_KEY_DEL; break;
+                        default: break;
+                    }
+                }
+
                 if(pstate->repeater.key == cond->keys[i]) {
-                    /* If repeat timing is enabled, bail if under interval */
                     if(repeat_timing.start) {
                         uint64_t time = timer_ms_gettime64();
-                        if(time >= (pstate->repeater.timeout))
+                        if(time >= pstate->repeater.timeout)
                             pstate->repeater.timeout = time + repeat_timing.interval;
                         else
                             continue;
                     }
 
-                    kbd_enqueue(pstate, cond->keys[i]);
+                    if(held_key != KBD_KEY_NONE) {
+                        kbd_enqueue(pstate, held_key);
+                    }
                 }
             }
             else assert_msg(0, "invalid key_states array detected");
