@@ -55,7 +55,7 @@ struct bmp_dib_header {
 };
 
 /* CRC calculation: calculates the CRC on a VMU file to be written out */
-static uint16_t vmu_pkg_crc(const uint8_t *buf, size_t size) {
+static uint16_t __pure vmu_pkg_crc(const uint8_t *buf, size_t size) {
     size_t i;
     uint16_t c, n;
 
@@ -73,7 +73,7 @@ static uint16_t vmu_pkg_crc(const uint8_t *buf, size_t size) {
     return n;
 }
 
-static int vmu_eyecatch_size(int eyecatch_type) {
+static int __pure vmu_eyecatch_size(int eyecatch_type) {
     switch(eyecatch_type) {
         case VMUPKG_EC_NONE:
             return 0;
@@ -240,7 +240,7 @@ static unsigned int pal_get_map(uint32_t *pal, const uint32_t *curr_pal,
     return nb_colors;
 }
 
-static uint16_t argb8888_to_argb4444(uint32_t px) {
+static uint16_t __pure argb8888_to_argb4444(uint32_t px) {
     return 0xf000 |
         ((px >> 12) & 0x0f00) |
         ((px >> 8) & 0x00f0) |

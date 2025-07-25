@@ -299,7 +299,7 @@ void net_arp_shutdown(void);
     \param  timestamp       The entry's timestamp. Set to 0 for a permanent
                             entry, otherwise set to the current number of
                             milliseconds since boot (i.e, timer_ms_gettime64()).
-    
+
     \retval 0               On success.
     \retval -1              Error allocating memory.
 */
@@ -320,7 +320,7 @@ int net_arp_insert(netif_t *nif, const uint8_t mac[6], const uint8_t ip[4],
                             response comes in (if not found immediately).
     \param  data            Packet data to go with the header.
     \param  data_size       The size of data.
-    
+
     \retval 0               On success.
     \retval -1              A query is outstanding for that address.
     \retval -2              Address not found, query generated.
@@ -338,7 +338,7 @@ int net_arp_lookup(netif_t *nif, const uint8_t ip_in[4], uint8_t mac_out[6],
     \param  nif             The network device in use.
     \param  ip_out          Storage for the IPv4 address.
     \param  mac_in          The MAC address to look up.
-    
+
     \retval 0               On success.
     \retval -1              On failure.
 */
@@ -350,7 +350,7 @@ int net_arp_revlookup(netif_t *nif, uint8_t ip_out[4], const uint8_t mac_in[6]);
     \param  nif             The network device in use.
     \param  pkt             The packet received.
     \param  len             The length of the packet.
-    
+
     \retval 0               On success (no error conditions defined).
 */
 int net_arp_input(netif_t *nif, const uint8_t *pkt, int len);
@@ -360,7 +360,7 @@ int net_arp_input(netif_t *nif, const uint8_t *pkt, int len);
 
     \param  nif             The network device to use.
     \param  ip              The IP to query.
-    
+
     \retval 0               On success (no error conditions defined).
 */
 int net_arp_query(netif_t *nif, const uint8_t ip[4]);
@@ -374,12 +374,12 @@ int net_arp_query(netif_t *nif, const uint8_t ip[4]);
     \param  nif             The network device in use.
     \param  pkt             The packet received.
     \param  len             The length of the packet, in bytes.
-    
+
     \return                 0 on success, <0 on failure.
 */
 typedef int (*net_input_func)(netif_t *nif, const uint8_t *pkt, int len);
 
-/** \brief   Where will input packets be routed? 
+/** \brief   Where will input packets be routed?
     \ingroup networking_drivers
  */
 extern net_input_func net_input_target;
@@ -394,7 +394,7 @@ extern net_input_func net_input_target;
     \param  device          The network device submitting packets.
     \param  data            The packet to submit.
     \param  len             The length of the packet, in bytes.
-    
+
     \return                 0 on success, <0 on failure.
 */
 int net_input(netif_t *device, const uint8_t *data, int len);
@@ -403,7 +403,7 @@ int net_input(netif_t *device, const uint8_t *data, int len);
     \ingroup networking_drivers
 
     \param  t               The new target callback.
-    
+
     \return                 The old target.
 */
 net_input_func net_input_set_target(net_input_func t);
@@ -448,13 +448,13 @@ extern net_echo_cb net_icmp_echo_cb;
     \param  seq             A packet sequence number.
     \param  data            Data to send with the packet.
     \param  size            The size of the data to send.
-    
+
     \return                 0 on success, <0 on failure.
 */
 int net_icmp_send_echo(netif_t *net, const uint8_t ipaddr[4], uint16_t ident,
                        uint16_t seq, const uint8_t *data, size_t size);
 
-/** \defgroup networking_icmp_unreach Unreachable Values 
+/** \defgroup networking_icmp_unreach Unreachable Values
     \brief    Valid values for net_icmp_send_dest_unreach().
     \ingroup  networking_icmpv4
     @{
@@ -470,7 +470,7 @@ int net_icmp_send_echo(netif_t *net, const uint8_t ipaddr[4], uint16_t ident,
     \param  net             The network device to use.
     \param  code            The type of message this is.
     \param  msg             The message that caused this error.
-    
+
     \return                 0 on success, <0 on failure.
 */
 int net_icmp_send_dest_unreach(netif_t *net, uint8_t code, const uint8_t *msg);
@@ -483,11 +483,11 @@ int net_icmp_send_dest_unreach(netif_t *net, uint8_t code, const uint8_t *msg);
 
 /** \brief   Send an ICMP Time Exceeded packet in reply to the given message.
     \ingroup networking_icmp
-    
+
     \param  net             The network device to use.
     \param  code            The type of message this is.
     \param  msg             The message that caused this error.
-    
+
     \return                 0 on success, <0 on failure.
 */
 int net_icmp_send_time_exceeded(netif_t *net, uint8_t code, const uint8_t *msg);
@@ -523,15 +523,15 @@ net_ipv4_stats_t net_ipv4_get_stats(void);
     \ingroup networking_ipv4
 
     \param  addr            Array of IP address octets.
-    
+
     \return                 The address, in host byte order.
 */
-uint32_t net_ipv4_address(const uint8_t addr[4]);
+uint32_t __pure net_ipv4_address(const uint8_t addr[4]);
 
 /** \brief   Parse an IP address that is packet into a uint32 into an array of
              the individual bytes.
     \ingroup networking_ipv4
-    
+
     \param  addr            The full address, in host byte order.
     \param  out             The output buffer.
 */
@@ -547,7 +547,7 @@ void net_ipv4_parse_address(uint32_t addr, uint8_t out[4]);
 
 /** \brief   ICMPv6 echo reply callback type.
     \ingroup networking_icmpv6
-    
+
     \param  ip              The IPv6 address the reply is from.
     \param  seq             The sequence number of the packet.
     \param  delta_us        The time difference, in microseconds.
@@ -566,14 +566,14 @@ extern net6_echo_cb net_icmp6_echo_cb;
 
 /** \brief   Send an ICMPv6 Echo (PING6) packet to the specified device.
     \ingroup networking_icmpv6
-    
+
     \param  net             The network device to use.
     \param  dst             The address to send to.
     \param  ident           A packet identifier.
     \param  seq             A packet sequence number.
     \param  data            Data to send with the packet.
     \param  size            Length of the data, in bytes.
-    
+
     \return                 0 on success, <0 on failure.
 */
 int net_icmp6_send_echo(netif_t *net, const struct in6_addr *dst, uint16_t ident,
@@ -581,12 +581,12 @@ int net_icmp6_send_echo(netif_t *net, const struct in6_addr *dst, uint16_t ident
 
 /** \brief   Send a Neighbor Solicitation packet on the specified device.
     \ingroup networking_icmpv6
-    
+
     \param  net             The network device to use.
     \param  dst             The destination address.
     \param  target          The target address.
     \param  dupdet          1 if this is for duplicate detection.
-    
+
     \return                 0 on success, <0 on failure.
 */
 int net_icmp6_send_nsol(netif_t *net, const struct in6_addr *dst,
@@ -594,12 +594,12 @@ int net_icmp6_send_nsol(netif_t *net, const struct in6_addr *dst,
 
 /** \brief   Send a Neighbor Advertisement packet on the specified device.
     \ingroup networking_icmpv6
-    
+
     \param  net             The network device to use.
     \param  dst             The destination address.
     \param  target          The target address.
     \param  sol             1 if solicited, 0 otherwise.
-    
+
     \return                 0 on success, <0 on failure.
 */
 int net_icmp6_send_nadv(netif_t *net, const struct in6_addr *dst,
@@ -607,9 +607,9 @@ int net_icmp6_send_nadv(netif_t *net, const struct in6_addr *dst,
 
 /** \brief   Send a Router Solicitation request on the specified interface.
     \ingroup networking_icmpv6
-    
+
     \param  net             The network device to use.
-    
+
     \return                 0 on success, <0 on failure.
 */
 int net_icmp6_send_rsol(netif_t *net);
@@ -638,7 +638,7 @@ int net_icmp6_send_rsol(netif_t *net);
     \param  code            The type of message this is.
     \param  ppkt            The message that caused this error.
     \param  psz             Size of the original message.
-    
+
     \return                 0 on success, <0 on failure.
 */
 int net_icmp6_send_dest_unreach(netif_t *net, uint8_t code, const uint8_t *ppkt,
@@ -648,7 +648,7 @@ int net_icmp6_send_dest_unreach(netif_t *net, uint8_t code, const uint8_t *ppkt,
     \brief                                    Time exceeded codes for ICMPv6
     \ingroup                                  networking_icmpv6
 
-    Only fragment reassembly time exceeded makes sense 
+    Only fragment reassembly time exceeded makes sense
 
     @{
 */
@@ -658,12 +658,12 @@ int net_icmp6_send_dest_unreach(netif_t *net, uint8_t code, const uint8_t *ppkt,
 
 /** \brief   Send a time exceeded message on the specified interface.
     \ingroup networking_icmpv6
-    
+
     \param  net             The network device to use.
     \param  code            The error code.
     \param  ppkt            The message that caused this error.
     \param  psz             Size of the original packet.
-    
+
     \return                 0 on success, <0 on failure.
 */
 int net_icmp6_send_time_exceeded(netif_t *net, uint8_t code, const uint8_t *ppkt,
@@ -681,13 +681,13 @@ int net_icmp6_send_time_exceeded(netif_t *net, uint8_t code, const uint8_t *ppkt
 
 /** \brief   Send an ICMPv6 Parameter Problem about the given packet.
     \ingroup networking_icmpv6
-    
+
     \param  net             The network device to use.
     \param  code            The error code.
     \param  ptr             Where in the packet is the error?
     \param  ppkt            The message that caused the error.
     \param  psz             Size of the original packet.
-    
+
     \return                 0 on success, <0 on failure.
 */
 int net_icmp6_send_param_prob(netif_t *net, uint8_t code, uint32_t ptr,
@@ -795,13 +795,13 @@ typedef struct net_udp_stats {
 } net_udp_stats_t;
 
 /** \brief  Retrieve statistics from the UDP layer.
-    
+
     \return                 The global UDP stats struct.
 */
 net_udp_stats_t net_udp_get_stats(void);
 
 /** \brief  Init UDP.
-    
+
     \retval 0               On success (no error conditions defined).
 */
 int net_udp_init(void);
@@ -838,25 +838,25 @@ void net_tcp_shutdown(void);
 */
 
 /** \brief  Calculate a "little-endian" CRC-32 over a block of data.
-    
+
     \param  data            The data to calculate over.
     \param  size            The size of the data, in bytes.
-    
+
     \return                 The calculated CRC-32.
 */
-uint32_t net_crc32le(const uint8_t *data, int size);
+uint32_t __pure net_crc32le(const uint8_t *data, int size);
 
 /** \brief  Calculate a "big-endian" CRC-32 over a block of data.
-    
+
     \param  data            The data to calculate over.
     \param  size            The size of the data, in bytes.
-    
+
     \return                 The calculated CRC-32.
 */
-uint32_t net_crc32be(const uint8_t *data, int size);
+uint32_t __pure net_crc32be(const uint8_t *data, int size);
 
 /** \brief  Calculate a CRC16-CCITT over a block of data.
-    
+
     \note                   Based on code found online at
                             http://www.ccsinfo.com/forum/viewtopic.php?t=24977
 
@@ -866,10 +866,10 @@ uint32_t net_crc32be(const uint8_t *data, int size);
                             return value from this function (if continuing a
                             previous calculation) or some initial seed value
                             (typically 0xFFFF or 0x0000).
-    
+
     \return                 The calculated CRC16-CCITT.
 */
-uint16_t net_crc16ccitt(const uint8_t *data, int size, uint16_t start);
+uint16_t __pure net_crc16ccitt(const uint8_t *data, int size, uint16_t start);
 
 /** @} */
 
@@ -921,14 +921,14 @@ void net_multicast_shutdown(void);
 
 /***** net_core.c *********************************************************/
 
-/** \brief   Interface list; note: do not manipulate directly! 
+/** \brief   Interface list; note: do not manipulate directly!
     \ingroup networking_drivers
  */
 extern struct netif_list net_if_list;
 
 /** \brief   Function to retrieve the interface list.
     \ingroup networking_drivers
-    
+
     \warning
     Do not manipulate what this returns to you!
 
@@ -936,8 +936,8 @@ extern struct netif_list net_if_list;
 */
 struct netif_list * net_get_if_list(void);
 
-/** \brief   The default network device, used with sockets (read-only). 
-    \ingroup networking_drivers    
+/** \brief   The default network device, used with sockets (read-only).
+    \ingroup networking_drivers
 */
 extern netif_t *net_default_dev;
 
@@ -945,7 +945,7 @@ extern netif_t *net_default_dev;
     \ingroup networking_drivers
 
     \param  n               The device to set as default.
-    
+
     \return                 The old default device.
 */
 netif_t *net_set_default(netif_t *n);
@@ -963,14 +963,14 @@ int net_reg_device(netif_t *device);
     \ingroup networking_drivers
 
     \param  device          The device to unregister.
-    
+
     \return                 0 on success, <0 on failure.
 */
 int net_unreg_device(netif_t *device);
 
 /** \brief   Init network support.
     \ingroup networking_drivers
-    
+
     \note                   To auto-detect the IP address to assign to the
                             default device (i.e, over DHCP or from the flashrom
                             on the Dreamcast), pass 0 as the IP parameter.
@@ -982,7 +982,7 @@ int net_unreg_device(netif_t *device);
 */
 int net_init(uint32_t ip);
 
-/** \brief   Shutdown network support. 
+/** \brief   Shutdown network support.
     \ingroup networking_drivers
 */
 void net_shutdown(void);

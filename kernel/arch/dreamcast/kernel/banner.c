@@ -4,6 +4,7 @@
    Copyright (C) 2013 Lawrence Sebald
 */
 
+#include <kos/cdefs.h>
 #include "banner.h"
 #include "authors.h"
 
@@ -34,15 +35,15 @@ static const char license[] =
 "OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF\n"
 "SUCH DAMAGE.";
 
-const char *kos_get_banner(void) {
+const char * __pure kos_get_banner(void) {
     __asm__ __volatile__("nop" : : "r"(license), "r"(authors));
     return banner;
 }
 
-const char *kos_get_license(void) {
+const char * __pure kos_get_license(void) {
     return license;
 }
 
-const char *kos_get_authors(void) {
+const char * __pure kos_get_authors(void) {
     return authors;
 }

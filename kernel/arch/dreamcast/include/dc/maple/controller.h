@@ -343,7 +343,7 @@ struct maple_device;
 
     \sa cont_is_type
 */
-int cont_has_capabilities(const struct maple_device *cont, uint32_t capabilities);
+int __pure cont_has_capabilities(const struct maple_device *cont, uint32_t capabilities);
 /** @} */
 
 /** \defgroup controller_query_types Querying Types
@@ -507,7 +507,7 @@ int cont_has_capabilities(const struct maple_device *cont, uint32_t capabilities
 
     \sa cont_has_capabilities
 */
-int cont_is_type(const struct maple_device *cont, uint32_t type);
+int __pure cont_is_type(const struct maple_device *cont, uint32_t type);
 
 /* \cond */
 /* Init / Shutdown */
