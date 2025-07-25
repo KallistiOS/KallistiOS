@@ -13,7 +13,7 @@ $(build_binutils): logdir
 	cd $(build); \
       ../$(src_dir)/configure \
         --target=$(target) \
-        --prefix=$(prefix) \
+        --prefix=$(toolchain_path) \
         --disable-werror \
         $(libbfd_install_flag) \
         $(binutils_extra_configure_args) \
@@ -30,20 +30,20 @@ $(build_binutils): logdir
 # See: https://www.sourceware.org/ml/binutils/2004-03/msg00337.html
 # Also, install zlib at the same time as we need it to use libbfd.
 # Note: BFD for sh-elf is used for compiling dc-tool. Others platforms uses libelf.
-	@if test "$(target)" = "$(sh_target)" && ! test -z "$(libbfd_src_bin_dir)"; then \
+	@if test "$(target)" = "sh-elf" && ! test -z "$(libbfd_src_bin_dir)"; then \
 		echo "+++ Installing Binary File Descriptor library (libbfd) for $(target)..."; \
 		$(MAKE) -C $(build)/zlib install DESTDIR=$(DESTDIR) $(to_log); \
-		if ! test -d "$(sh_toolchain_path)/include/"; then \
-			mkdir $(sh_toolchain_path)/include/; \
+		if ! test -d "$(toolchain_path)/include/"; then \
+			mkdir $(toolchain_path)/include/; \
 		fi; \
-		mv $(libbfd_src_bin_dir)/include/* $(sh_toolchain_path)/include/; \
-		if ! test -d "$(sh_toolchain_path)/lib/"; then \
-			mkdir $(sh_toolchain_path)/lib/; \
+		mv $(libbfd_src_bin_dir)/include/* $(toolchain_path)/include/; \
+		if ! test -d "$(toolchain_path)/lib/"; then \
+			mkdir $(toolchain_path)/lib/; \
 		fi; \
-		mv $(libbfd_src_bin_dir)/lib/* $(sh_toolchain_path)/lib/; \
+		mv $(libbfd_src_bin_dir)/lib/* $(toolchain_path)/lib/; \
 		rmdir $(libbfd_src_bin_dir)/include/; \
 		rmdir $(libbfd_src_bin_dir)/lib/; \
 		rmdir $(libbfd_src_bin_dir)/; \
-		rmdir $(sh_toolchain_path)/$(host_triplet)/; \
+		rmdir $(toolchain_path)/$(host_triplet)/; \
 	fi;
 	$(clean_up)

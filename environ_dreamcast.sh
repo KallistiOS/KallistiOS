@@ -29,6 +29,8 @@ export KOS_AFLAGS="${KOS_AFLAGS} -little"
 export KOS_LDFLAGS="${KOS_LDFLAGS} ${KOS_SH4_PRECISION} -ml -Wl,--gc-sections"
 export KOS_LD_SCRIPT="-T${KOS_BASE}/utils/ldscripts/shlelf.xc"
 
+export KOS_GDB_CPU=sh4
+
 if [ x${KOS_SUBARCH} = xnaomi ]; then
 	export KOS_CFLAGS="${KOS_CFLAGS} -D__NAOMI__"
 	export KOS_LDFLAGS="${KOS_LDFLAGS} -Wl,--defsym=LOAD_OFFSET=0x8c020000"
