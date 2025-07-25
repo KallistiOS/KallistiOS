@@ -84,7 +84,10 @@ set(CMAKE_ASM_FLAGS_RELEASE "")
 
 # Default CMake installations to install to kos-addons
 set(CMAKE_INSTALL_BINDIR     ${DC_TOOLS_BASE})
-set(CMAKE_INSTALL_INCLUDEDIR ${KOS_ADDONS}/include/${KOS_ARCH})
-set(CMAKE_INSTALL_LIBDIR     ${KOS_ADDONS}/lib/${KOS_ARCH})
-
+if(NOT DEFINED CMAKE_INSTALL_INCLUDEDIR)
+    set(CMAKE_INSTALL_INCLUDEDIR ${KOS_ADDONS}/include/${KOS_ARCH})
+endif()
+if(NOT DEFINED CMAKE_INSTALL_LIBDIR)
+    set(CMAKE_INSTALL_LIBDIR ${KOS_ADDONS}/lib/${KOS_ARCH})
+endif()
 include("${KOS_BASE}/utils/cmake/dreamcast.cmake")
