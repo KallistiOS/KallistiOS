@@ -10,6 +10,7 @@
 #include <arch/memory.h>
 #include <kos/dbglog.h>
 #include <kos/genwait.h>
+#include <kos/platform.h>
 #include <kos/regfield.h>
 
 #include <errno.h>
@@ -192,17 +193,19 @@ void dma_init(void) {
     /* Set default settings for DMA #2.
      * These are set by the bios on Dreamcast, but should be set by the OS
      * on Naomi. */
-    uint32_t chcr, dmaor;
+    if(KOS_PLATFORM_IS_NAOMI) {
+        uint32_t chcr, dmaor;
 
-    dmac_write(2, DMA_REG_SAR, 0);
+        dmac_write(2, DMA_REG_SAR, 0);
 
-    chcr = FIELD_PREP(REG_CHCR_SRC_ADDRMODE, DMA_ADDRMODE_INCREMENT)
-        | FIELD_PREP(REG_CHCR_REQUEST, DMA_REQUEST_EXTERNAL_MEM_TO_DEV)
-        | FIELD_PREP(REG_CHCR_DMAC_EN, 1);
-    dmac_write(2, DMA_REG_CHCR, chcr);
+        chcr = FIELD_PREP(REG_CHCR_SRC_ADDRMODE, DMA_ADDRMODE_INCREMENT)
+            | FIELD_PREP(REG_CHCR_REQUEST, DMA_REQUEST_EXTERNAL_MEM_TO_DEV)
+            | FIELD_PREP(REG_CHCR_DMAC_EN, 1);
+        dmac_write(2, DMA_REG_CHCR, chcr);
 
-    dmaor = REG_DMAOR_DDT
-        | FIELD_PREP(REG_DMAOR_PR, DMAOR_PR_CH2013)
-        | REG_DMAOR_DME;
-    dmac_write(0, DMA_REG_DMAOR, dmaor);
+        dmaor = REG_DMAOR_DDT
+            | FIELD_PREP(REG_DMAOR_PR, DMAOR_PR_CH2013)
+            | REG_DMAOR_DME;
+        dmac_write(0, DMA_REG_DMAOR, dmaor);
+    }
 }
