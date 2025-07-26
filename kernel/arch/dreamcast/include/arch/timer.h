@@ -33,6 +33,7 @@
 __BEGIN_DECLS
 
 #include <arch/irq.h>
+#include <kos/timer.h>
 
 /** \defgroup timers    Timer Unit
     \brief              SH4 CPU peripheral providing timers and counters
@@ -247,85 +248,6 @@ void timer_ms_enable(void);
     \ref TMU2 for something else.
 */
 void timer_ms_disable(void);
-
-/** \brief   Get the current uptime of the system (in secs and millisecs).
-    \ingroup tmu_uptime
-
-    This function retrieves the number of seconds and milliseconds since KOS was
-    started.
-
-    \param  secs            A pointer to store the number of seconds since boot
-                            into.
-    \param  msecs           A pointer to store the number of milliseconds past
-                            a second since boot.
-    \note                   To get the total number of milliseconds since boot,
-                            calculate (*secs * 1000) + *msecs, or use the
-                            timer_ms_gettime64() function.
-*/
-void timer_ms_gettime(uint32_t *secs, uint32_t *msecs);
-
-/** \brief   Get the current uptime of the system (in milliseconds).
-    \ingroup tmu_uptime
-
-    This function retrieves the number of milliseconds since KOS was started. It
-    is equivalent to calling timer_ms_gettime() and combining the number of
-    seconds and milliseconds into one 64-bit value.
-
-    \return                 The number of milliseconds since KOS started.
-*/
-uint64_t timer_ms_gettime64(void);
-
-/** \brief   Get the current uptime of the system (in secs and microsecs).
-    \ingroup tmu_uptime
-
-    This function retrieves the number of seconds and microseconds since KOS was
-    started.
-
-    \note                   To get the total number of microseconds since boot,
-                            calculate (*secs * 1000000) + *usecs, or use the
-                            timer_us_gettime64() function.
-
-    \param  secs            A pointer to store the number of seconds since boot
-                            into.
-    \param  usecs           A pointer to store the number of microseconds past
-                            a second since boot.
-*/
-void timer_us_gettime(uint32_t *secs, uint32_t *usecs);
-
-/** \brief   Get the current uptime of the system (in microseconds).
-    \ingroup tmu_uptime
-
-    This function retrieves the number of microseconds since KOS was started.
-
-    \return                 The number of microseconds since KOS started.
-*/
-uint64_t timer_us_gettime64(void);
-
-/** \brief   Get the current uptime of the system (in secs and nanosecs).
-    \ingroup tmu_uptime
-
-    This function retrieves the number of seconds and nanoseconds since KOS was
-    started.
-
-    \note                   To get the total number of nanoseconds since boot,
-                            calculate (*secs * 1000000000) + *nsecs, or use the
-                            timer_ns_gettime64() function.
-
-    \param  secs            A pointer to store the number of seconds since boot
-                            into.
-    \param  nsecs           A pointer to store the number of nanoseconds past
-                            a second since boot.
-*/
-void timer_ns_gettime(uint32_t *secs, uint32_t *nsecs);
-
-/** \brief   Get the current uptime of the system (in nanoseconds).
-    \ingroup tmu_uptime
-
-    This function retrieves the number of nanoseconds since KOS was started. 
-
-    \return                 The number of nanoseconds since KOS started.
-*/
-uint64_t timer_ns_gettime64(void);
 
 /** \defgroup tmu_sleep     Sleeping
     \brief                  Low-level thread sleeping
