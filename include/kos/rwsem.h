@@ -41,9 +41,6 @@ __BEGIN_DECLS
     \headerfile kos/rwsem.h
 */
 typedef struct rw_semaphore {
-    /** \brief  Was this structure created with rwsem_create()? */
-    int dynamic;
-
     /** \brief  The number of readers that are currently holding the lock. */
     int read_count;
 
@@ -55,24 +52,7 @@ typedef struct rw_semaphore {
 } rw_semaphore_t;
 
 /** \brief  Initializer for a transient reader/writer semaphore */
-#define RWSEM_INITIALIZER   { 0, 0, NULL, NULL }
-
-/** \brief  Allocate a reader/writer semaphore.
-
-    This function allocates a new reader/writer lock that is initially not
-    locked either for reading or writing.
-
-    \deprecated
-    This function is formally deprecated, and should not be used in newly
-    written code. Instead, please use rwsem_init().
-
-    \return The created semaphore, or NULL on failure (errno will be set as
-            appropriate).
-
-    \par    Error Conditions:
-    \em     ENOMEM - out of memory
-*/
-rw_semaphore_t *rwsem_create(void) __depr("Use rwsem_init or RWSEM_INITIALIZER.");
+#define RWSEM_INITIALIZER   { 0, NULL, NULL }
 
 /** \brief  Initialize a reader/writer semaphore.
 
@@ -80,7 +60,7 @@ rw_semaphore_t *rwsem_create(void) __depr("Use rwsem_init or RWSEM_INITIALIZER."
 
     \retval 0       On success (no error conditions currently defined).
 */
-int rwsem_init(rw_semaphore_t *s);
+int rwsem_init(rw_semaphore_t *s) __nonnull_all;
 
 /** \brief  Destroy a reader/writer semaphore.
 
@@ -94,7 +74,7 @@ int rwsem_init(rw_semaphore_t *s);
     \par    Error Conditions:
     \em     EBUSY - the semaphore is still locked
 */
-int rwsem_destroy(rw_semaphore_t *s);
+int rwsem_destroy(rw_semaphore_t *s) __nonnull_all;
 
 /** \brief  Lock a reader/writer semaphore for reading (with a timeout).
 
@@ -114,7 +94,7 @@ int rwsem_destroy(rw_semaphore_t *s);
     \em     EINVAL - the timeout value is invalid \n
     \em     EINVAL - the semaphore is not initialized
 */
-int rwsem_read_lock_timed(rw_semaphore_t *s, int timeout);
+int rwsem_read_lock_timed(rw_semaphore_t *s, int timeout) __nonnull_all;
 
 /** \brief  Lock a reader/writer semaphore for reading.
 
@@ -131,7 +111,7 @@ int rwsem_read_lock_timed(rw_semaphore_t *s, int timeout);
     \em     EPERM - called inside an interrupt \n
     \em     EINVAL - the semaphore is not initialized
 */
-int rwsem_read_lock(rw_semaphore_t *s);
+int rwsem_read_lock(rw_semaphore_t *s) __nonnull_all;
 
 /** \brief  Lock a reader/writer semaphore for reading.
 
@@ -150,7 +130,7 @@ int rwsem_read_lock(rw_semaphore_t *s);
     \em     EWOULDBLOCK - called inside an interrupt and the semaphore was
                           already locked
 */
-int rwsem_read_lock_irqsafe(rw_semaphore_t *s);
+int rwsem_read_lock_irqsafe(rw_semaphore_t *s) __nonnull_all;
 
 /** \brief  Lock a reader/writer semaphore for writing (with a timeout).
 
@@ -170,7 +150,7 @@ int rwsem_read_lock_irqsafe(rw_semaphore_t *s);
     \em     EINVAL - the timeout value is invalid \n
     \em     EINVAL - the semaphore is not initialized
 */
-int rwsem_write_lock_timed(rw_semaphore_t *s, int timeout);
+int rwsem_write_lock_timed(rw_semaphore_t *s, int timeout) __nonnull_all;
 
 /** \brief  Lock a reader/writer semaphore for writing.
 
@@ -187,7 +167,7 @@ int rwsem_write_lock_timed(rw_semaphore_t *s, int timeout);
     \em     EPERM - called inside an interrupt \n
     \em     EINVAL - the semaphore is not initialized
 */
-int rwsem_write_lock(rw_semaphore_t *s);
+int rwsem_write_lock(rw_semaphore_t *s) __nonnull_all;
 
 /** \brief  Lock a reader/writer semaphore for writing.
 
@@ -206,7 +186,7 @@ int rwsem_write_lock(rw_semaphore_t *s);
     \em     EWOULDBLOCK - called inside an interrupt and the semaphore was
                           already locked
 */
-int rwsem_write_lock_irqsafe(rw_semaphore_t *s);
+int rwsem_write_lock_irqsafe(rw_semaphore_t *s) __nonnull_all;
 
 /** \brief  Unlock a reader/writer semaphore from a read lock.
 
@@ -220,7 +200,7 @@ int rwsem_write_lock_irqsafe(rw_semaphore_t *s);
     \em     EPERM - the read lock is not currently held \n
     \em     EINVAL - the semaphore is not initialized
 */
-int rwsem_read_unlock(rw_semaphore_t *s);
+int rwsem_read_unlock(rw_semaphore_t *s) __nonnull_all;
 
 /** \brief  Unlock a reader/writer semaphore from a write lock.
 
@@ -235,7 +215,7 @@ int rwsem_read_unlock(rw_semaphore_t *s);
                     thread \n
     \em     EINVAL - the semaphore is not initialized
 */
-int rwsem_write_unlock(rw_semaphore_t *s);
+int rwsem_write_unlock(rw_semaphore_t *s) __nonnull_all;
 
 /** \brief  Unlock a reader/writer semaphore.
 
@@ -254,7 +234,7 @@ int rwsem_write_unlock(rw_semaphore_t *s);
     \em     EPERM - the lock is not currently held by the calling thread \n
     \em     EINVAL - the semaphore is not initialized
 */
-int rwsem_unlock(rw_semaphore_t *s);
+int rwsem_unlock(rw_semaphore_t *s) __nonnull_all;
 
 /** \brief  Attempt to lock a reader/writer semaphore for reading.
 
@@ -270,7 +250,7 @@ int rwsem_unlock(rw_semaphore_t *s);
     \em     EWOULDBLOCK - a call to rwsem_read_lock would block \n
     \em     EINVAL - the semaphore is not initialized
 */
-int rwsem_read_trylock(rw_semaphore_t *s);
+int rwsem_read_trylock(rw_semaphore_t *s) __nonnull_all;
 
 /** \brief  Attempt to lock a reader/writer semaphore for writing.
 
@@ -286,7 +266,7 @@ int rwsem_read_trylock(rw_semaphore_t *s);
     \em     EWOULDBLOCK - a call to rwsem_write_lock would block \n
     \em     EINVAL - the semaphore is not initialized
 */
-int rwsem_write_trylock(rw_semaphore_t *s);
+int rwsem_write_trylock(rw_semaphore_t *s) __nonnull_all;
 
 /** \brief  Upgrade a thread from reader status to writer status (with a
             timeout).
@@ -315,7 +295,7 @@ int rwsem_write_trylock(rw_semaphore_t *s);
     \em     ETIMEDOUT - the timeout expired before the write lock could be
                         acquired
 */
-int rwsem_read_upgrade_timed(rw_semaphore_t *s, int timeout);
+int rwsem_read_upgrade_timed(rw_semaphore_t *s, int timeout) __nonnull_all;
 
 /** \brief  Upgrade a thread from reader status to writer status.
 
@@ -339,7 +319,7 @@ int rwsem_read_upgrade_timed(rw_semaphore_t *s, int timeout);
     \em     EINVAL - the semaphore is not initialized \n
     \em     EBUSY - another reader has already requested an upgrade
 */
-int rwsem_read_upgrade(rw_semaphore_t *s);
+int rwsem_read_upgrade(rw_semaphore_t *s) __nonnull_all;
 
 /** \brief  Attempt to upgrade a thread from reader status to writer status.
 
@@ -357,7 +337,7 @@ int rwsem_read_upgrade(rw_semaphore_t *s);
     \em     EBUSY - another reader has already requested an upgrade \n
     \em     EINVAL - the semaphore is not initialized
 */
-int rwsem_read_tryupgrade(rw_semaphore_t *s);
+int rwsem_read_tryupgrade(rw_semaphore_t *s) __nonnull_all;
 
 /** \brief  Read the reader count on the reader/writer semaphore.
 
@@ -367,7 +347,7 @@ int rwsem_read_tryupgrade(rw_semaphore_t *s);
     \param  s       The r/w semaphore to count the readers on.
     \return The number of readers holding the r/w semaphore.
 */
-int rwsem_read_count(rw_semaphore_t *s);
+int rwsem_read_count(const rw_semaphore_t *s) __nonnull_all;
 
 /** \brief  Read the state of the writer lock on the reader/writer semaphore.
 
@@ -378,7 +358,7 @@ int rwsem_read_count(rw_semaphore_t *s);
     \param  s       The r/w semaphore to check the writer status on.
     \return The status of the writer lock of the r/w semaphore.
 */
-int rwsem_write_locked(rw_semaphore_t *s);
+int rwsem_write_locked(const rw_semaphore_t *s) __nonnull_all;
 
 __END_DECLS
 
