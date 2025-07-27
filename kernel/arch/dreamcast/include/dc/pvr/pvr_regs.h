@@ -210,6 +210,13 @@ __BEGIN_DECLS
 #define PVR_TA_INIT_GO      0x80000000  /**< \brief Write to the PVR_TA_INIT register to confirm settings */
 /** @} */
 
+/** \defgroup pvr_tex_mod   PVR_TEXTURE_MODULO Values
+    \brief                  Definitions for the contents of the PVR_TEXTURE_MODULO register.
+    \ingroup                pvr_registers
+    @{
+*/
+#define PVR_TXR_STRIDE_MULT GENMASK(4, 0)   /**< \brief Bottom 5 bits contain the size when using PVR_TXRFMT_X32_STRIDE */
+/** @} */
 
 __END_DECLS
 

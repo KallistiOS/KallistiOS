@@ -2,12 +2,15 @@
 
    pvr_texture.c
    Copyright (C) 2002, 2004 Megan Potter
+   Copyright (C) 2024 Andress Barajas
 
  */
 
 #include <assert.h>
 #include <dc/pvr.h>
 #include <dc/sq.h>
+#include <kos/dbglog.h>
+#include <kos/regfield.h>
 #include <string.h>
 #include "pvr_internal.h"
 
@@ -18,6 +21,26 @@
    Helper functions for handling texture tasks of various kinds.
 
 */
+
+void pvr_txr_set_stride(size_t texture_width) {
+    uint32_t temp = texture_width / 32;
+
+    /* The width must be a non-zero multiple of 32 that fits in the 5 bits
+    of the register field. */
+    assert(temp && __is_aligned(texture_width, 32) && !(temp & ~PVR_TXR_STRIDE_MULT));
+
+    /* Pull the reg, mask out current stride, and rewrite with new */
+    temp = FIELD_PREP(PVR_TXR_STRIDE_MULT, temp);
+    temp |= PVR_GET(PVR_TEXTURE_MODULO) & ~PVR_TXR_STRIDE_MULT;
+    PVR_SET(PVR_TEXTURE_MODULO, temp);
+
+    return;
+}
+
+size_t pvr_txr_get_stride(void) {
+    uint32_t reg = PVR_GET(PVR_TEXTURE_MODULO);
+    return FIELD_GET(reg, PVR_TXR_STRIDE_MULT) * 32;
+}
 
 /* Load raw texture data from an SH-4 buffer into PVR RAM */
 void pvr_txr_load(const void *src, pvr_ptr_t dst, uint32 count) {

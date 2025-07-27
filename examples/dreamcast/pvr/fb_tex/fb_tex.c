@@ -200,9 +200,8 @@ int main(int argc, char **argv) {
 
     pvr_init_defaults();
 
-    /* Set the stride length for strided textures.
-     * Unit is a set of 32 pixels, hence the /32. */
-    PVR_SET(PVR_TEXTURE_MODULO, 640 / 32);
+    /* Set the stride length for strided textures. */
+    pvr_txr_set_stride(640);
 
     fake_tex = pvr_mem_malloc(sizeof(fake_tex_data));
     pvr_txr_load(fake_tex_data, fake_tex, sizeof(fake_tex_data));
