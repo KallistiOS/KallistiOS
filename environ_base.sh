@@ -26,7 +26,7 @@ fi
 
 # Our includes.
 export KOS_INC_PATHS="${KOS_INC_PATHS} -I${KOS_BASE}/include \
--I${KOS_BASE}/kernel/arch/${KOS_ARCH}/include -I${KOS_BASE}/addons/include \
+-I${KOS_BASE}/kernel/arch/${KOS_ARCH}/include -I${KOS_BASE}/addons/include/ -I${KOS_BASE}/addons/include/${KOS_ARCH} \
 -I${KOS_PORTS}/include"
 
 # "System" libraries.
