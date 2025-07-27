@@ -147,7 +147,7 @@
     "0* " means the same as "0000".  */
 
 #include <dc/scif.h>
-#include <dc/fs_dcload.h>
+#include <dc/dcload.h>
 #include <arch/gdb.h>
 #include <arch/types.h>
 #include <arch/irq.h>
