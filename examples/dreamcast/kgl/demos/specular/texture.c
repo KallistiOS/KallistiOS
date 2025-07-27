@@ -82,7 +82,7 @@ GLuint glTextureLoadPVR(char *fname, unsigned char UseMipMap) {
             break;//RECTANGLE
 
         case 0x0B:
-            texFormat = PVR_TXRFMT_STRIDE | PVR_TXRFMT_NONTWIDDLED;
+            texFormat = PVR_TXRFMT_X32_STRIDE | PVR_TXRFMT_NONTWIDDLED;
             break;//RECTANGULAR STRIDE
 
         case 0x0D:

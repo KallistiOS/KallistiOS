@@ -134,7 +134,7 @@ static GLuint PVR_TextureFormat(unsigned char *HDR) {
             return PVR_TXRFMT_NONTWIDDLED;                        //RECTANGLE
 
         case 0x0B:
-            return PVR_TXRFMT_STRIDE | PVR_TXRFMT_NONTWIDDLED;    //RECTANGULAR STRIDE
+            return PVR_TXRFMT_X32_STRIDE | PVR_TXRFMT_NONTWIDDLED;    //RECTANGULAR STRIDE
 
         case 0x0D:
             return PVR_TXRFMT_TWIDDLED;                           //RECTANGULAR TWIDDLED

@@ -508,8 +508,12 @@ typedef struct {
 #define PVR_TXRFMT_PAL8BPP      (6 << 27)   /**< \brief 8BPP paletted format */
 #define PVR_TXRFMT_TWIDDLED     (0 << 26)   /**< \brief Texture is twiddled */
 #define PVR_TXRFMT_NONTWIDDLED  (1 << 26)   /**< \brief Texture is not twiddled */
-#define PVR_TXRFMT_NOSTRIDE     (0 << 21)   /**< \brief Texture is not strided */
-#define PVR_TXRFMT_STRIDE       (1 << 21)   /**< \brief Texture is strided */
+#define PVR_TXRFMT_POW2_STRIDE  (0 << 25)   /**< \brief Stride is a power-of-two */
+#define PVR_TXRFMT_X32_STRIDE   (1 << 25)   /**< \brief Stride is multiple of 32 */
+
+/* Compat. */
+static const uint32_t PVR_TXRFMT_NOSTRIDE   __depr("Please use PVR_TXRFMT_POW2_STRIDE.") = PVR_TXRFMT_POW2_STRIDE;
+static const uint32_t PVR_TXRFMT_STRIDE     __depr("Please use PVR_TXRFMT_X32_STRIDE. Note this may cause breakage as PVR_TXRFMT_STRIDE was never working correctly." ) = PVR_TXRFMT_X32_STRIDE;
 
 /* OR one of these into your texture format if you need it. Note that
    these coincide with the twiddled/stride bits, so you can't have a
