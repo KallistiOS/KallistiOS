@@ -93,7 +93,7 @@ size_t pvr_txr_get_stride(void);
     \param  count           The size of the texture in bytes (must be a multiple
                             of 32).
 */
-void pvr_txr_load(const void *src, pvr_ptr_t dst, uint32_t count);
+void pvr_txr_load(const void *src, pvr_ptr_t dst, size_t count);
 
 /** \defgroup pvr_txrload_constants     Flags
     \brief                              Texture loading constants
