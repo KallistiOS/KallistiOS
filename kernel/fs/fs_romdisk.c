@@ -85,7 +85,6 @@ typedef struct rd_image {
 
     bool                own_buffer; /* Do we own the memory? */
     const uint8_t       *image;     /* The actual image */
-    const romdisk_hdr_t *hdr;       /* Pointer to the header */
     uint32_t            files;      /* Offset in the image to the files area */
     vfs_handler_t       *vfsh;      /* Our VFS mount struct */
 } rd_image_t;
@@ -685,7 +684,7 @@ void fs_romdisk_shutdown(void) {
    also free it after the unmount. If own_buffer is true, then
    we free the buffer when it is unmounted. */
 int fs_romdisk_mount(const char *mountpoint, const uint8_t *img, bool own_buffer) {
-    const romdisk_hdr_t *hdr;
+    const romdisk_hdr_t *hdr = (const romdisk_hdr_t *)img;
     rd_image_t          *mnt;
     vfs_handler_t       *vfsh;
 
@@ -694,10 +693,8 @@ int fs_romdisk_mount(const char *mountpoint, const uint8_t *img, bool own_buffer
         return -1;
 
     /* Check the image and print some info about it */
-    hdr = (const romdisk_hdr_t *)img;
-
-    if(strncmp((char *)img, "-rom1fs-", 8)) {
-        dbglog(DBG_ERROR, "Rom disk image at %p is not a ROMFS image\n", img);
+    if(strncmp(hdr->magic, "-rom1fs-", sizeof(hdr->magic))) {
+        dbglog(DBG_ERROR, "fs_romdisk: image at %p is not a ROMFS image\n", img);
         return -2;
     }
     else {
@@ -713,7 +710,6 @@ int fs_romdisk_mount(const char *mountpoint, const uint8_t *img, bool own_buffer
     }
     mnt->own_buffer = own_buffer;
     mnt->image = img;
-    mnt->hdr = hdr;
     mnt->files = sizeof(romdisk_hdr_t)
                  + (strlen(hdr->volume_name) / RD_VN_MAX) * RD_VN_MAX;
 
