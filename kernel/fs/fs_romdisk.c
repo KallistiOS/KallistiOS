@@ -621,6 +621,32 @@ static vfs_handler_t vh = {
 /* Are we initialized? */
 static int initted = 0;
 
+/* Internal helper for unmount/shutdown to deduplicate this behavior.
+    Presumes that the romdisk list has been locked by the caller and
+    we aren't in an unsafe `LIST_FOREACH`
+*/
+static void fs_romdisk_list_remove(rd_image_t *n) {
+    /* Remove it from the mount list */
+    LIST_REMOVE(n, list_ent);
+
+    dbglog(DBG_DEBUG, "fs_romdisk: unmounting image at %p from %s\n",
+           n->image, n->vfsh->nmmgr.pathname);
+
+    /* Unmount it */
+    assert((void *)&n->vfsh->nmmgr == (void *)n->vfsh);
+    nmmgr_handler_remove(&n->vfsh->nmmgr);
+
+    /* If we own the buffer, free it */
+    if(n->own_buffer) {
+        dbglog(DBG_DEBUG, "   (and also freeing its image buffer)\n");
+        free((void *)n->image);
+    }
+
+    /* Free the structs */
+    free(n->vfsh);
+    free(n);
+}
+
 /* Initialize the file system */
 void fs_romdisk_init(void) {
     if(initted)
@@ -648,29 +674,14 @@ void fs_romdisk_shutdown(void) {
     if(!initted)
         return;
 
+    mutex_lock(&fh_mutex);
+
     /* Go through and free all the romdisk mount entries */
-    c = LIST_FIRST(&romdisks);
-
-    while(c != NULL) {
-        n = LIST_NEXT(c, list_ent);
-
-        dbglog(DBG_DEBUG, "fs_romdisk: unmounting image at %p from %s\n",
-               c->image, c->vfsh->nmmgr.pathname);
-
-        if(c->own_buffer)
-            dbglog(DBG_DEBUG, "   (and also freeing its image buffer)\n");
-
-        assert((void *)&c->vfsh->nmmgr == (void *)c->vfsh);
-
-        if(c->own_buffer)
-            free((void *)c->image);
-
-        nmmgr_handler_remove(&c->vfsh->nmmgr);
-        free(c->vfsh);
-        free(c);
-
-        c = n;
+    LIST_FOREACH_SAFE(c, &romdisks, list_ent, n) {
+        fs_romdisk_list_remove(c);
     }
+
+    mutex_unlock(&fh_mutex);
 
     /* Free mutex */
     mutex_destroy(&fh_mutex);
@@ -755,25 +766,7 @@ int fs_romdisk_unmount(const char *mountpoint) {
         return -1;
     }
 
-    /* Remove it from the mount list */
-    LIST_REMOVE(n, list_ent);
-
-    dbglog(DBG_DEBUG, "fs_romdisk: unmounting image at %p from %s\n",
-           n->image, n->vfsh->nmmgr.pathname);
-
-    /* Unmount it */
-    assert((void *)&n->vfsh->nmmgr == (void *)n->vfsh);
-    nmmgr_handler_remove(&n->vfsh->nmmgr);
-
-    /* If we own the buffer, free it */
-    if(n->own_buffer) {
-        dbglog(DBG_DEBUG, "   (and also freeing its image buffer)\n");
-        free((void *)n->image);
-    }
-
-    /* Free the structs */
-    free(n->vfsh);
-    free(n);
+    fs_romdisk_list_remove(n);
 
     return 0;
 }
