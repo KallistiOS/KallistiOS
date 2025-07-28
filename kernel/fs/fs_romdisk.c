@@ -740,9 +740,8 @@ int fs_romdisk_mount(const char *mountpoint, const uint8_t *img, bool own_buffer
 /* Unmount a romdisk image */
 int fs_romdisk_unmount(const char *mountpoint) {
     rd_image_t  *n;
-    int     rv = 0;
 
-    mutex_lock(&fh_mutex);
+    mutex_lock_scoped(&fh_mutex);
 
     LIST_FOREACH(n, &romdisks, list_ent) {
         if(!strcmp(mountpoint, n->vfsh->nmmgr.pathname)) {
@@ -750,34 +749,31 @@ int fs_romdisk_unmount(const char *mountpoint) {
         }
     }
 
-    /* If the LIST_FOREACH goes to the end n will be NULL */
-    if(n != NULL) {
-        /* Remove it from the mount list */
-        LIST_REMOVE(n, list_ent);
-
-        dbglog(DBG_DEBUG, "fs_romdisk: unmounting image at %p from %s\n",
-               n->image, n->vfsh->nmmgr.pathname);
-
-        if(n->own_buffer)
-            dbglog(DBG_DEBUG, "   (and also freeing its image buffer)\n");
-
-        /* Unmount it */
-        assert((void *)&n->vfsh->nmmgr == (void *)n->vfsh);
-        nmmgr_handler_remove(&n->vfsh->nmmgr);
-
-        /* If we own the buffer, free it */
-        if(n->own_buffer)
-            free((void *)n->image);
-
-        /* Free the structs */
-        free(n->vfsh);
-        free(n);
-    }
-    else {
+    /* The LIST_FOREACH got to the end and didn't find anything */
+    if(!n) {
         errno = ENOENT;
-        rv = -1;
+        return -1;
     }
 
-    mutex_unlock(&fh_mutex);
-    return rv;
+    /* Remove it from the mount list */
+    LIST_REMOVE(n, list_ent);
+
+    dbglog(DBG_DEBUG, "fs_romdisk: unmounting image at %p from %s\n",
+           n->image, n->vfsh->nmmgr.pathname);
+
+    /* Unmount it */
+    assert((void *)&n->vfsh->nmmgr == (void *)n->vfsh);
+    nmmgr_handler_remove(&n->vfsh->nmmgr);
+
+    /* If we own the buffer, free it */
+    if(n->own_buffer) {
+        dbglog(DBG_DEBUG, "   (and also freeing its image buffer)\n");
+        free((void *)n->image);
+    }
+
+    /* Free the structs */
+    free(n->vfsh);
+    free(n);
+
+    return 0;
 }
