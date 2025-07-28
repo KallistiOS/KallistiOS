@@ -109,6 +109,11 @@ static struct {
 #define FH_INDEX_FREE 0
 #define FH_INDEX_RESERVED -1
 
+/* Test if an fd is invalid */
+static inline bool romdisk_fd_invalid(file_t fd) {
+    return (fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == FH_INDEX_FREE);
+}
+
 /* File type */
 #define ROMFH_DIR   1
 
@@ -244,7 +249,7 @@ static void * romdisk_open(vfs_handler_t *vfs, const char *fn, int mode) {
 
     mutex_unlock(&fh_mutex);
 
-    if(fd >= FS_ROMDISK_MAX_FILES) {
+    if(romdisk_fd_invalid(fd)) {
         errno = ENFILE;
         return NULL;
     }
@@ -265,7 +270,7 @@ static int romdisk_close(void *h) {
     file_t fd = (file_t)h;
 
     /* Check that the fd is valid */
-    if(fd < FS_ROMDISK_MAX_FILES) {
+    if(!romdisk_fd_invalid(fd)) {
         /* No need to lock the mutex: this is an atomic op */
         fh[fd].index = FH_INDEX_FREE;
     }
@@ -277,7 +282,7 @@ static ssize_t romdisk_read(void *h, void *buf, size_t bytes) {
     file_t fd = (file_t)h;
 
     /* Check that the fd is valid */
-    if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == FH_INDEX_FREE || fh[fd].dir) {
+    if(romdisk_fd_invalid(fd) || fh[fd].dir) {
         errno = EINVAL;
         return -1;
     }
@@ -308,7 +313,7 @@ static off_t romdisk_seek(void *h, off_t offset, int whence) {
     file_t fd = (file_t)h;
 
     /* Check that the fd is valid */
-    if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == FH_INDEX_FREE || fh[fd].dir) {
+    if(romdisk_fd_invalid(fd) || fh[fd].dir) {
         errno = EBADF;
         return -1;
     }
@@ -357,7 +362,7 @@ static off_t romdisk_seek(void *h, off_t offset, int whence) {
 static off_t romdisk_tell(void *h) {
     file_t fd = (file_t)h;
 
-    if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == FH_INDEX_FREE || fh[fd].dir) {
+    if(romdisk_fd_invalid(fd) || fh[fd].dir) {
         errno = EINVAL;
         return -1;
     }
@@ -369,7 +374,7 @@ static off_t romdisk_tell(void *h) {
 static size_t romdisk_total(void *h) {
     file_t fd = (file_t)h;
 
-    if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == FH_INDEX_FREE || fh[fd].dir) {
+    if(romdisk_fd_invalid(fd) || fh[fd].dir) {
         errno = EINVAL;
         return -1;
     }
@@ -383,7 +388,7 @@ static dirent_t *romdisk_readdir(void *h) {
     int type;
     file_t fd = (file_t)h;
 
-    if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == FH_INDEX_FREE || !fh[fd].dir) {
+    if(romdisk_fd_invalid(fd) || !fh[fd].dir) {
         errno = EBADF;
         return NULL;
     }
@@ -436,7 +441,7 @@ static int romdisk_unlink(vfs_handler_t *vfs, const char *fn) {
 static void *romdisk_mmap(void *h) {
     file_t fd = (file_t)h;
 
-    if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == FH_INDEX_FREE) {
+    if(romdisk_fd_invalid(fd)) {
         errno = EINVAL;
         return NULL;
     }
@@ -510,7 +515,7 @@ static int romdisk_fcntl(void *h, int cmd, va_list ap) {
 
     (void)ap;
 
-    if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == FH_INDEX_FREE) {
+    if(romdisk_fd_invalid(fd)) {
         errno = EBADF;
         return -1;
     }
@@ -540,7 +545,7 @@ static int romdisk_fcntl(void *h, int cmd, va_list ap) {
 static int romdisk_rewinddir(void *h) {
     file_t fd = (file_t)h;
 
-    if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == FH_INDEX_FREE || !fh[fd].dir) {
+    if(romdisk_fd_invalid(fd) || !fh[fd].dir) {
         errno = EBADF;
         return -1;
     }
@@ -552,7 +557,7 @@ static int romdisk_rewinddir(void *h) {
 static int romdisk_fstat(void *h, struct stat *st) {
     file_t fd = (file_t)h;
 
-    if(fd >= FS_ROMDISK_MAX_FILES || !fh[fd].index) {
+    if(romdisk_fd_invalid(fd)) {
         errno = EBADF;
         return -1;
     }
