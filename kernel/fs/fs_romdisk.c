@@ -200,16 +200,12 @@ static uint32_t romdisk_find(rd_image_t *mnt, const char *fn, bool dir) {
     }
 
     /* Locate the file in the resulting directory */
-    if(*fn) {
-        i = romdisk_find_object(mnt, fn, strlen(fn), dir, i);
+    if(*fn)
+        return romdisk_find_object(mnt, fn, strlen(fn), dir, i);
+    else if(!dir)
+        return 0;
+    else
         return i;
-    }
-    else {
-        if(!dir)
-            return 0;
-        else
-            return i;
-    }
 }
 
 /* Open a file or directory */
