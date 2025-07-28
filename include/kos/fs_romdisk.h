@@ -50,9 +50,9 @@
 #define __KOS_FS_ROMDISK_H
 
 #include <sys/cdefs.h>
+#include <stdint.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
 #include <kos/fs.h>
 
 /** \defgroup vfs_romdisk   Romdisk
@@ -89,7 +89,7 @@ void fs_romdisk_shutdown(void);
     \retval -2              If img is invalid
     \retval -3              If a malloc fails
 */
-int fs_romdisk_mount(const char * mountpoint, const uint8 *img, int own_buffer);
+int fs_romdisk_mount(const char * mountpoint, const uint8_t *img, int own_buffer);
 
 /** \brief  Unmount a ROMFS image.
 

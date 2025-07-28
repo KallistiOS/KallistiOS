@@ -16,7 +16,6 @@ on sunsite.unc.edu in /pub/Linux/system/recovery/, or as a package under Debian 
 
 */
 
-#include <arch/types.h>
 #include <kos/thread.h>
 #include <kos/mutex.h>
 #include <kos/fs_romdisk.h>
@@ -50,26 +49,26 @@ on sunsite.unc.edu in /pub/Linux/system/recovery/, or as a package under Debian 
    clever and made this header a variable length depending on the size of
    the volume name *groan*. Its size will be a multiple of 16 bytes though. */
 typedef struct {
-    char    magic[8];               /* Should be "-rom1fs-" */
-    uint32  full_size;              /* Full size of the file system */
-    uint32  checksum;               /* Checksum */
-    char    volume_name[RD_VN_MAX]; /* Volume name (zero-terminated) */
+    char        magic[8];               /* Should be "-rom1fs-" */
+    uint32_t    full_size;              /* Full size of the file system */
+    uint32_t    checksum;               /* Checksum */
+    char        volume_name[RD_VN_MAX]; /* Volume name (zero-terminated) */
 } romdisk_hdr_t;
 
 /* File header info; note that this header plus filename must be a multiple of
    16 bytes, and the following file data must also be a multiple of 16 bytes. */
 typedef struct {
-    uint32  next_header;            /* Offset of next header */
-    uint32  spec_info;              /* Spec info */
-    uint32  size;                   /* Data size */
-    uint32  checksum;               /* File checksum */
-    char    filename[RD_FN_MAX];    /* File name (zero-terminated) */
+    uint32_t  next_header;            /* Offset of next header */
+    uint32_t  spec_info;              /* Spec info */
+    uint32_t  size;                   /* Data size */
+    uint32_t  checksum;               /* File checksum */
+    char      filename[RD_FN_MAX];    /* File name (zero-terminated) */
 } romdisk_file_t;
 
 
-/* Util function to reverse the byte order of a uint32 */
-static uint32 ntohl_32(const void *data) {
-    const uint8 *d = (const uint8*)data;
+/* Util function to reverse the byte order of a uint32_t */
+static uint32_t ntohl_32(const void *data) {
+    const uint8_t *d = (const uint8_t *)data;
     return (d[0] << 24) | (d[1] << 16) | (d[2] << 8) | (d[3] << 0);
 }
 
@@ -84,11 +83,11 @@ typedef LIST_HEAD(rdi_list, rd_image) rdi_list_t;
 typedef struct rd_image {
     LIST_ENTRY(rd_image) list_ent;  /* List entry */
 
-    int         own_buffer; /* Do we own the memory? */
-    const uint8     * image;    /* The actual image */
-    const romdisk_hdr_t * hdr;      /* Pointer to the header */
-    uint32          files;      /* Offset in the image to the files area */
-    vfs_handler_t       * vfsh;     /* Our VFS mount struct */
+    int                 own_buffer; /* Do we own the memory? */
+    const uint8_t       *image;     /* The actual image */
+    const romdisk_hdr_t *hdr;       /* Pointer to the header */
+    uint32_t            files;      /* Offset in the image to the files area */
+    vfs_handler_t       *vfsh;      /* Our VFS mount struct */
 } rd_image_t;
 
 /* Global list of mounted romdisks */
@@ -100,12 +99,12 @@ static rdi_list_t romdisks;
 /* File handles.. I could probably do this with a linked list, but I'm just
    too lazy right now. =) */
 static struct {
-    uint32      index;      /* romfs image index */
+    uint32_t    index;      /* romfs image index */
     bool        dir;        /* true if a directory */
-    uint32      ptr;        /* Current read position in bytes */
-    uint32      size;       /* Length of file in bytes */
+    uint32_t    ptr;        /* Current read position in bytes */
+    uint32_t    size;       /* Length of file in bytes */
     dirent_t    dirent;     /* A static dirent to pass back to clients */
-    rd_image_t  * mnt;      /* Which mount instance are we using? */
+    rd_image_t  *mnt;       /* Which mount instance are we using? */
 } fh[FS_ROMDISK_MAX_FILES];
 
 #define FH_INDEX_FREE 0
@@ -123,7 +122,7 @@ static mutex_t fh_mutex;
    search for the entry in the directory and return the byte offset to its
    entry. */
 static uint32_t romdisk_find_object(rd_image_t *mnt, const char *fn, size_t fnlen, bool dir, uint32_t offset) {
-    uint32          i, ni, type;
+    uint32_t          i, ni, type;
     const romdisk_file_t    *fhdr;
 
     i = offset;
@@ -181,7 +180,7 @@ static uint32_t romdisk_find_object(rd_image_t *mnt, const char *fn, size_t fnle
    It will return an offset in the romdisk image for the object. */
 static uint32_t romdisk_find(rd_image_t *mnt, const char *fn, bool dir) {
     const char      *cur;
-    uint32          i;
+    uint32_t        i;
     const romdisk_file_t    *fhdr;
 
     /* If the object is in a sub-tree, traverse the trees looking
@@ -215,9 +214,9 @@ static uint32_t romdisk_find(rd_image_t *mnt, const char *fn, bool dir) {
 }
 
 /* Open a file or directory */
-static void * romdisk_open(vfs_handler_t * vfs, const char *fn, int mode) {
+static void * romdisk_open(vfs_handler_t *vfs, const char *fn, int mode) {
     file_t          fd;
-    uint32          filehdr;
+    uint32_t        filehdr;
     const romdisk_file_t    *fhdr;
     rd_image_t      *mnt = (rd_image_t *)vfs->privdata;
 
@@ -267,7 +266,7 @@ static void * romdisk_open(vfs_handler_t * vfs, const char *fn, int mode) {
 }
 
 /* Close a file or directory */
-static int romdisk_close(void * h) {
+static int romdisk_close(void *h) {
     file_t fd = (file_t)h;
 
     /* Check that the fd is valid */
@@ -279,7 +278,7 @@ static int romdisk_close(void * h) {
 }
 
 /* Read from a file */
-static ssize_t romdisk_read(void * h, void *buf, size_t bytes) {
+static ssize_t romdisk_read(void *h, void *buf, size_t bytes) {
     file_t fd = (file_t)h;
 
     /* Check that the fd is valid */
@@ -310,7 +309,7 @@ static ssize_t romdisk_write(void *h, const void *buf, size_t bytes) {
 }
 
 /* Seek elsewhere in a file */
-static off_t romdisk_seek(void * h, off_t offset, int whence) {
+static off_t romdisk_seek(void *h, off_t offset, int whence) {
     file_t fd = (file_t)h;
 
     /* Check that the fd is valid */
@@ -331,7 +330,7 @@ static off_t romdisk_seek(void * h, off_t offset, int whence) {
             break;
 
         case SEEK_CUR:
-            if(offset < 0 && ((uint32)-offset) > fh[fd].ptr) {
+            if(offset < 0 && ((uint32_t)-offset) > fh[fd].ptr) {
                 errno = EINVAL;
                 return -1;
             }
@@ -340,7 +339,7 @@ static off_t romdisk_seek(void * h, off_t offset, int whence) {
             break;
 
         case SEEK_END:
-            if(offset < 0 && ((uint32)-offset) > fh[fd].size) {
+            if(offset < 0 && ((uint32_t)-offset) > fh[fd].size) {
                 errno = EINVAL;
                 return -1;
             }
@@ -360,7 +359,7 @@ static off_t romdisk_seek(void * h, off_t offset, int whence) {
 }
 
 /* Tell where in the file we are */
-static off_t romdisk_tell(void * h) {
+static off_t romdisk_tell(void *h) {
     file_t fd = (file_t)h;
 
     if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == FH_INDEX_FREE || fh[fd].dir) {
@@ -372,7 +371,7 @@ static off_t romdisk_tell(void * h) {
 }
 
 /* Tell how big the file is */
-static size_t romdisk_total(void * h) {
+static size_t romdisk_total(void *h) {
     file_t fd = (file_t)h;
 
     if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == FH_INDEX_FREE || fh[fd].dir) {
@@ -384,7 +383,7 @@ static size_t romdisk_total(void * h) {
 }
 
 /* Read a directory entry */
-static dirent_t *romdisk_readdir(void * h) {
+static dirent_t *romdisk_readdir(void *h) {
     romdisk_file_t *fhdr;
     int type;
     file_t fd = (file_t)h;
@@ -396,7 +395,7 @@ static dirent_t *romdisk_readdir(void * h) {
 
     /* This happens if we hit the end of the directory on advancing the pointer
        last time through. */
-    if(fh[fd].ptr == (uint32)-1)
+    if(fh[fd].ptr == (uint32_t)-1)
         return NULL;
 
     /* Get the current file header */
@@ -410,7 +409,7 @@ static dirent_t *romdisk_readdir(void * h) {
     if(fh[fd].ptr != 0)
         fh[fd].ptr = fh[fd].ptr - fh[fd].index;
     else
-        fh[fd].ptr = (uint32)-1;
+        fh[fd].ptr = (uint32_t)-1;
 
     /* Copy out the requested data */
     strcpy(fh[fd].dirent.name, fhdr->filename);
@@ -439,7 +438,7 @@ static int romdisk_unlink(vfs_handler_t *vfs, const char *fn) {
     return -1;
 }
 
-static void *romdisk_mmap(void * h) {
+static void *romdisk_mmap(void *h) {
     file_t fd = (file_t)h;
 
     if(fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == FH_INDEX_FREE) {
@@ -685,10 +684,10 @@ void fs_romdisk_shutdown(void) {
    own_buffer is 0, so if you malloc'd that buffer, you must
    also free it after the unmount. If own_buffer is non-zero, then
    we free the buffer when it is unmounted. */
-int fs_romdisk_mount(const char * mountpoint, const uint8 *img, int own_buffer) {
-    const romdisk_hdr_t * hdr;
-    rd_image_t      * mnt;
-    vfs_handler_t       * vfsh;
+int fs_romdisk_mount(const char *mountpoint, const uint8_t *img, int own_buffer) {
+    const romdisk_hdr_t *hdr;
+    rd_image_t          *mnt;
+    vfs_handler_t       *vfsh;
 
     /* Are we initted? */
     if(!initted)
@@ -743,8 +742,8 @@ int fs_romdisk_mount(const char * mountpoint, const uint8 *img, int own_buffer) 
 }
 
 /* Unmount a romdisk image */
-int fs_romdisk_unmount(const char * mountpoint) {
-    rd_image_t  * n;
+int fs_romdisk_unmount(const char *mountpoint) {
+    rd_image_t  *n;
     int     rv = 0;
 
     mutex_lock(&fh_mutex);
