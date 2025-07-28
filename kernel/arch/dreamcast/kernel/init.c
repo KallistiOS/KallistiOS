@@ -107,7 +107,7 @@ void vmu_fs_shutdown(void) {
 
 /* Mount the built-in romdisk to /rd. */
 void fs_romdisk_mount_builtin(void) {
-    fs_romdisk_mount("/rd", __kos_romdisk, 0);
+    fs_romdisk_mount("/rd", __kos_romdisk, false);
 }
 
 void fs_romdisk_mount_builtin_legacy(void) {

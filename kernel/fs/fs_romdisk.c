@@ -83,7 +83,7 @@ typedef LIST_HEAD(rdi_list, rd_image) rdi_list_t;
 typedef struct rd_image {
     LIST_ENTRY(rd_image) list_ent;  /* List entry */
 
-    int                 own_buffer; /* Do we own the memory? */
+    bool                own_buffer; /* Do we own the memory? */
     const uint8_t       *image;     /* The actual image */
     const romdisk_hdr_t *hdr;       /* Pointer to the header */
     uint32_t            files;      /* Offset in the image to the files area */
@@ -681,10 +681,10 @@ void fs_romdisk_shutdown(void) {
 
 /* Mount a romdisk image; must have called fs_romdisk_init() earlier.
    Also note that we do _not_ take ownership of the image data if
-   own_buffer is 0, so if you malloc'd that buffer, you must
-   also free it after the unmount. If own_buffer is non-zero, then
+   own_buffer is false, so if you malloc'd that buffer, you must
+   also free it after the unmount. If own_buffer is true, then
    we free the buffer when it is unmounted. */
-int fs_romdisk_mount(const char *mountpoint, const uint8_t *img, int own_buffer) {
+int fs_romdisk_mount(const char *mountpoint, const uint8_t *img, bool own_buffer) {
     const romdisk_hdr_t *hdr;
     rd_image_t          *mnt;
     vfs_handler_t       *vfsh;

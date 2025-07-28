@@ -50,6 +50,7 @@
 #define __KOS_FS_ROMDISK_H
 
 #include <sys/cdefs.h>
+#include <stdbool.h>
 #include <stdint.h>
 __BEGIN_DECLS
 
@@ -81,22 +82,22 @@ void fs_romdisk_shutdown(void);
 
     \param  mountpoint      The directory to mount this romdisk on
     \param  img             The ROMFS image
-    \param  own_buffer      If 0, you are still responsible for img, and must
-                            free it if appropriate. If non-zero, img will be
+    \param  own_buffer      If false, you are still responsible for img, and
+                            must free it if appropriate. If true, img will be
                             freed when it is unmounted
     \retval 0               On success
     \retval -1              If fs_romdisk_init not called
     \retval -2              If img is invalid
     \retval -3              If a malloc fails
 */
-int fs_romdisk_mount(const char * mountpoint, const uint8_t *img, int own_buffer);
+int fs_romdisk_mount(const char * mountpoint, const uint8_t *img, bool own_buffer);
 
 /** \brief  Unmount a ROMFS image.
 
     This function unmounts a ROMFS image that has been previously mounted with
     fs_romdisk_mount(). This function does not check for open files on the fs,
     so make sure that all files have been closed before calling it. If the VFS
-    owns the buffer (own_buffer was non-zero when you called the mount function)
+    owns the buffer (own_buffer was true when you called the mount function)
     then this function will also free the buffer.
 
     \param  mountpoint      The ROMFS to unmount
