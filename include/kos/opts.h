@@ -114,16 +114,6 @@ __BEGIN_DECLS
 #define VMUFS_DEBUG 1
 #endif
 
-/** \brief  The maximum number of cd files that can be open at a time. */
-#ifndef FS_CD_MAX_FILES
-#define FS_CD_MAX_FILES 8
-#endif
-
-/** \brief  The maximum number of romdisk files that can be open at a time. */
-#ifndef FS_ROMDISK_MAX_FILES
-#define FS_ROMDISK_MAX_FILES 16
-#endif
-
 /** \brief  The maximum number of ramdisk files that can be open at a time. */
 #ifndef FS_RAMDISK_MAX_FILES
 #define FS_RAMDISK_MAX_FILES 8

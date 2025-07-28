@@ -95,23 +95,25 @@ static rdi_list_t romdisks;
 /********************************************************************************/
 /* File primitives */
 
-/* File handles.. I could probably do this with a linked list, but I'm just
-   too lazy right now. =) */
-static struct {
-    uint32_t    index;      /* romfs image index */
-    bool        dir;        /* true if a directory */
-    uint32_t    ptr;        /* Current read position in bytes */
-    uint32_t    size;       /* Length of file in bytes */
-    dirent_t    dirent;     /* A static dirent to pass back to clients */
-    rd_image_t  *mnt;       /* Which mount instance are we using? */
-} fh[FS_ROMDISK_MAX_FILES];
+/* Entries in the fd list. Pointers of this type are passed out to ref files. */
+typedef struct rd_fd {
+    uint32_t            index;  /* romfs image index */
+    bool                dir;    /* true if a directory */
+    uint32_t            ptr;    /* Current read position in bytes */
+    uint32_t            size;   /* Length of file in bytes */
+    dirent_t            dirent; /* A static dirent to pass back to clients */
+    rd_image_t          *mnt;   /* Which mount instance are we using? */
+    TAILQ_ENTRY(rd_fd)  next;   /* Next handle in the linked list */
+} rd_fd_t;
+
+static TAILQ_HEAD(rd_fd_queue, rd_fd) rd_fd_queue;
 
 #define FH_INDEX_FREE 0
 #define FH_INDEX_RESERVED -1
 
 /* Test if an fd is invalid */
-static inline bool romdisk_fd_invalid(file_t fd) {
-    return (fd >= FS_ROMDISK_MAX_FILES || fh[fd].index == FH_INDEX_FREE);
+static inline bool romdisk_fd_invalid(rd_fd_t *fd) {
+    return (!fd || (fd->index == FH_INDEX_FREE));
 }
 
 /* File type */
@@ -120,6 +122,7 @@ static inline bool romdisk_fd_invalid(file_t fd) {
 #define ROMFH_MASK  3
 
 /* Mutex for file handles */
+/* We use it for both the files list and the images list. */
 static mutex_t fh_mutex;
 
 /* Given a filename and a starting romdisk directory listing (byte offset),
@@ -215,7 +218,7 @@ static uint32_t romdisk_find(rd_image_t *mnt, const char *fn, bool dir) {
 
 /* Open a file or directory */
 static void * romdisk_open(vfs_handler_t *vfs, const char *fn, int mode) {
-    file_t          fd;
+    rd_fd_t         *fd;
     uint32_t        filehdr;
     const romdisk_file_t    *fhdr;
     rd_image_t      *mnt = (rd_image_t *)vfs->privdata;
@@ -238,62 +241,58 @@ static void * romdisk_open(vfs_handler_t *vfs, const char *fn, int mode) {
         return NULL;
     }
 
-    /* Find a free file handle */
-    mutex_lock(&fh_mutex);
-
-    for(fd = 0; fd < FS_ROMDISK_MAX_FILES; fd++)
-        if(fh[fd].index == FH_INDEX_FREE) {
-            fh[fd].index = FH_INDEX_RESERVED;
-            break;
-        }
-
-    mutex_unlock(&fh_mutex);
-
-    if(romdisk_fd_invalid(fd)) {
-        errno = ENFILE;
+    /* Allocate the fd */
+    fd = malloc(sizeof(rd_fd_t));
+    if(!fd) {
+        errno = ENOMEM;
         return NULL;
     }
 
     /* Fill the fd structure */
     fhdr = (const romdisk_file_t *)(mnt->image + filehdr);
-    fh[fd].index = filehdr + sizeof(romdisk_file_t) + (strlen(fhdr->filename) / RD_FN_MAX) * RD_FN_MAX;
-    fh[fd].dir = ((mode & O_DIR) != 0);
-    fh[fd].ptr = 0;
-    fh[fd].size = ntohl_32(&fhdr->size);
-    fh[fd].mnt = mnt;
+    fd->index = filehdr + sizeof(romdisk_file_t) + (strlen(fhdr->filename) / RD_FN_MAX) * RD_FN_MAX;
+    fd->dir = ((mode & O_DIR) != 0);
+    fd->ptr = 0;
+    fd->size = ntohl_32(&fhdr->size);
+    fd->mnt = mnt;
+
+    /* Lock before modifying the queue. */
+    mutex_lock_scoped(&fh_mutex);
+
+    TAILQ_INSERT_TAIL(&rd_fd_queue, fd, next);
 
     return (void *)fd;
 }
 
 /* Close a file or directory */
 static int romdisk_close(void *h) {
-    file_t fd = (file_t)h;
+    rd_fd_t *fd = (rd_fd_t *)h;
 
-    /* Check that the fd is valid */
-    if(!romdisk_fd_invalid(fd)) {
-        /* No need to lock the mutex: this is an atomic op */
-        fh[fd].index = FH_INDEX_FREE;
-    }
+    /* Lock before modifying the queue. */
+    mutex_lock_scoped(&fh_mutex);
+    TAILQ_REMOVE(&rd_fd_queue, fd, next);
+    free(fd);
+
     return 0;
 }
 
 /* Read from a file */
 static ssize_t romdisk_read(void *h, void *buf, size_t bytes) {
-    file_t fd = (file_t)h;
+    rd_fd_t *fd = (rd_fd_t *)h;
 
     /* Check that the fd is valid */
-    if(romdisk_fd_invalid(fd) || fh[fd].dir) {
+    if(romdisk_fd_invalid(fd) || fd->dir) {
         errno = EINVAL;
         return -1;
     }
 
     /* Is there enough left? */
-    if((fh[fd].ptr + bytes) > fh[fd].size)
-        bytes = fh[fd].size - fh[fd].ptr;
+    if((fd->ptr + bytes) > fd->size)
+        bytes = fd->size - fd->ptr;
 
     /* Copy out the requested amount */
-    memcpy(buf, fh[fd].mnt->image + fh[fd].index + fh[fd].ptr, bytes);
-    fh[fd].ptr += bytes;
+    memcpy(buf, fd->mnt->image + fd->index + fd->ptr, bytes);
+    fd->ptr += bytes;
 
     return bytes;
 }
@@ -310,10 +309,10 @@ static ssize_t romdisk_write(void *h, const void *buf, size_t bytes) {
 
 /* Seek elsewhere in a file */
 static off_t romdisk_seek(void *h, off_t offset, int whence) {
-    file_t fd = (file_t)h;
+    rd_fd_t *fd = (rd_fd_t *)h;
 
     /* Check that the fd is valid */
-    if(romdisk_fd_invalid(fd) || fh[fd].dir) {
+    if(romdisk_fd_invalid(fd) || fd->dir) {
         errno = EBADF;
         return -1;
     }
@@ -326,25 +325,25 @@ static off_t romdisk_seek(void *h, off_t offset, int whence) {
                 return -1;
             }
 
-            fh[fd].ptr = offset;
+            fd->ptr = offset;
             break;
 
         case SEEK_CUR:
-            if(offset < 0 && ((uint32_t)-offset) > fh[fd].ptr) {
+            if(offset < 0 && ((uint32_t)-offset) > fd->ptr) {
                 errno = EINVAL;
                 return -1;
             }
 
-            fh[fd].ptr += offset;
+            fd->ptr += offset;
             break;
 
         case SEEK_END:
-            if(offset < 0 && ((uint32_t)-offset) > fh[fd].size) {
+            if(offset < 0 && ((uint32_t)-offset) > fd->size) {
                 errno = EINVAL;
                 return -1;
             }
 
-            fh[fd].ptr = fh[fd].size + offset;
+            fd->ptr = fd->size + offset;
             break;
 
         default:
@@ -353,80 +352,80 @@ static off_t romdisk_seek(void *h, off_t offset, int whence) {
     }
 
     /* Check bounds */
-    if(fh[fd].ptr > fh[fd].size) fh[fd].ptr = fh[fd].size;
+    if(fd->ptr > fd->size) fd->ptr = fd->size;
 
-    return fh[fd].ptr;
+    return fd->ptr;
 }
 
 /* Tell where in the file we are */
 static off_t romdisk_tell(void *h) {
-    file_t fd = (file_t)h;
+    rd_fd_t *fd = (rd_fd_t *)h;
 
-    if(romdisk_fd_invalid(fd) || fh[fd].dir) {
+    if(romdisk_fd_invalid(fd) || fd->dir) {
         errno = EINVAL;
         return -1;
     }
 
-    return fh[fd].ptr;
+    return fd->ptr;
 }
 
 /* Tell how big the file is */
 static size_t romdisk_total(void *h) {
-    file_t fd = (file_t)h;
+    rd_fd_t *fd = (rd_fd_t *)h;
 
-    if(romdisk_fd_invalid(fd) || fh[fd].dir) {
+    if(romdisk_fd_invalid(fd) || fd->dir) {
         errno = EINVAL;
         return -1;
     }
 
-    return fh[fd].size;
+    return fd->size;
 }
 
 /* Read a directory entry */
 static dirent_t *romdisk_readdir(void *h) {
     romdisk_file_t *fhdr;
     int type;
-    file_t fd = (file_t)h;
+    rd_fd_t *fd = (rd_fd_t *)h;
 
-    if(romdisk_fd_invalid(fd) || !fh[fd].dir) {
+    if(romdisk_fd_invalid(fd) || !fd->dir) {
         errno = EBADF;
         return NULL;
     }
 
     /* This happens if we hit the end of the directory on advancing the pointer
        last time through. */
-    if(fh[fd].ptr == (uint32_t)-1)
+    if(fd->ptr == (uint32_t)-1)
         return NULL;
 
     /* Get the current file header */
-    fhdr = (romdisk_file_t *)(fh[fd].mnt->image + fh[fd].index + fh[fd].ptr);
+    fhdr = (romdisk_file_t *)(fd->mnt->image + fd->index + fd->ptr);
 
     /* Update the pointer */
-    fh[fd].ptr = ntohl_32(&fhdr->next_header);
-    type = fh[fd].ptr & 0x0f;
-    fh[fd].ptr = fh[fd].ptr & 0xfffffff0;
+    fd->ptr = ntohl_32(&fhdr->next_header);
+    type = fd->ptr & 0x0f;
+    fd->ptr = fd->ptr & 0xfffffff0;
 
-    if(fh[fd].ptr != 0)
-        fh[fd].ptr = fh[fd].ptr - fh[fd].index;
+    if(fd->ptr != 0)
+        fd->ptr = fd->ptr - fd->index;
     else
-        fh[fd].ptr = (uint32_t)-1;
+        fd->ptr = (uint32_t)-1;
 
     /* Copy out the requested data */
-    strcpy(fh[fd].dirent.name, fhdr->filename);
-    fh[fd].dirent.time = 0;
+    strcpy(fd->dirent.name, fhdr->filename);
+    fd->dirent.time = 0;
 
     if((type & ROMFH_MASK) == ROMFH_DIR ||
-            strcmp(fh[fd].dirent.name, ".") == 0 ||
-            strcmp(fh[fd].dirent.name, "..") == 0) {
-        fh[fd].dirent.attr = O_DIR;
-        fh[fd].dirent.size = -1;
+            strcmp(fd->dirent.name, ".") == 0 ||
+            strcmp(fd->dirent.name, "..") == 0) {
+        fd->dirent.attr = O_DIR;
+        fd->dirent.size = -1;
     }
     else {
-        fh[fd].dirent.attr = 0;
-        fh[fd].dirent.size = ntohl_32(&fhdr->size);
+        fd->dirent.attr = 0;
+        fd->dirent.size = ntohl_32(&fhdr->size);
     }
 
-    return &fh[fd].dirent;
+    return &fd->dirent;
 }
 
 /* Just to get the errno that might be better recognized upstream. */
@@ -439,7 +438,7 @@ static int romdisk_unlink(vfs_handler_t *vfs, const char *fn) {
 }
 
 static void *romdisk_mmap(void *h) {
-    file_t fd = (file_t)h;
+    rd_fd_t *fd = (rd_fd_t *)h;
 
     if(romdisk_fd_invalid(fd)) {
         errno = EINVAL;
@@ -447,7 +446,7 @@ static void *romdisk_mmap(void *h) {
     }
 
     /* Can't really help the loss of "const" here */
-    return (void *)(fh[fd].mnt->image + fh[fd].index);
+    return (void *)(fd->mnt->image + fd->index);
 }
 
 static int romdisk_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
@@ -510,7 +509,7 @@ static int romdisk_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
 }
 
 static int romdisk_fcntl(void *h, int cmd, va_list ap) {
-    file_t fd = (file_t)h;
+    rd_fd_t *fd = (rd_fd_t *)h;
     int rv = -1;
 
     (void)ap;
@@ -524,7 +523,7 @@ static int romdisk_fcntl(void *h, int cmd, va_list ap) {
         case F_GETFL:
             rv = O_RDONLY;
 
-            if(fh[fd].dir)
+            if(fd->dir)
                 rv |= O_DIR;
 
             break;
@@ -543,19 +542,19 @@ static int romdisk_fcntl(void *h, int cmd, va_list ap) {
 }
 
 static int romdisk_rewinddir(void *h) {
-    file_t fd = (file_t)h;
+    rd_fd_t *fd = (rd_fd_t *)h;
 
-    if(romdisk_fd_invalid(fd) || !fh[fd].dir) {
+    if(romdisk_fd_invalid(fd) || !fd->dir) {
         errno = EBADF;
         return -1;
     }
 
-    fh[fd].ptr = 0;
+    fd->ptr = 0;
     return 0;
 }
 
 static int romdisk_fstat(void *h, struct stat *st) {
-    file_t fd = (file_t)h;
+    rd_fd_t *fd = (rd_fd_t *)h;
 
     if(romdisk_fd_invalid(fd)) {
         errno = EBADF;
@@ -563,15 +562,15 @@ static int romdisk_fstat(void *h, struct stat *st) {
     }
 
     memset(st, 0, sizeof(struct stat));
-    st->st_dev = (dev_t)((uintptr_t)fh[fd].mnt);
+    st->st_dev = (dev_t)((uintptr_t)fd->mnt);
     st->st_mode = S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
-    st->st_mode |= (fh[fd].dir) ? S_IFDIR : S_IFREG;
-    st->st_size = fh[fd].size;
-    st->st_nlink = (fh[fd].dir) ? 2 : 1;
+    st->st_mode |= (fd->dir) ? S_IFDIR : S_IFREG;
+    st->st_size = fd->size;
+    st->st_nlink = (fd->dir) ? 2 : 1;
     st->st_blksize = 1024;
-    st->st_blocks = fh[fd].size >> 10;
+    st->st_blocks = fd->size >> 10;
 
-    if(fh[fd].size & 0x3ff)
+    if(fd->size & 0x3ff)
         ++st->st_blocks;
 
     return 0;
@@ -656,11 +655,8 @@ void fs_romdisk_init(void) {
     /* Init our list of mounted images */
     LIST_INIT(&romdisks);
 
-    /* Reset fd's */
-    memset(fh, 0, sizeof(fh));
-
-    /* Mark the first as active so we can have an error FD of zero */
-    fh[0].index = FH_INDEX_RESERVED;
+    /* Init the list of file descriptors */
+    TAILQ_INIT(&rd_fd_queue);
 
     /* Init thread mutexes */
     mutex_init(&fh_mutex, MUTEX_TYPE_NORMAL);
@@ -670,7 +666,7 @@ void fs_romdisk_init(void) {
 
 /* De-init the file system; also unmounts any mounted images. */
 void fs_romdisk_shutdown(void) {
-    rd_image_t *n, *c;
+    rd_image_t  *n, *c;
 
     if(!initted)
         return;
