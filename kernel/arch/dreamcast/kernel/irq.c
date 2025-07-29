@@ -435,7 +435,7 @@ void irq_shutdown(void) {
 void irq_set_priority(irq_src_t src, unsigned int prio) {
     uint16_t ipr;
 
-    if (prio > IRQ_PRIO_MAX)
+    if(prio > IRQ_PRIO_MAX)
         prio = IRQ_PRIO_MAX;
 
     irq_disable_scoped();

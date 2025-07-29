@@ -744,8 +744,8 @@ void modem_disconnect(void) {
             modemSetBits(REGLOC(0x15), 0x4); /* Set RREN */
 
             /* Wait for a disconnection or a timeout */
-            for (i = 0; i < 500; i++) {
-                if (!(modemRead(REGLOC(0xF)) & 0x80))
+            for(i = 0; i < 500; i++) {
+                if(!(modemRead(REGLOC(0xF)) & 0x80))
                     break;
 
                 thd_sleep(10);
@@ -756,8 +756,8 @@ void modem_disconnect(void) {
             modemWrite(REGLOC(0x12), 0xC0);
             modemSetBits(REGLOC(0x15), 0x4); /* Set RREN */
 
-            for (i = 0; i < 500; i++) {
-                if (!(modemRead(REGLOC(0xF)) & 0x80) ||
+            for(i = 0; i < 500; i++) {
+                if(!(modemRead(REGLOC(0xF)) & 0x80) ||
                     modemRead(REGLOC(0x14)) == 0x96) {
                     break;
                 }

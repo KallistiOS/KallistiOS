@@ -764,9 +764,9 @@ int snd_sfx_play(sfxhnd_t idx, int vol, int pan) {
 }
 
 int snd_sfx_play_ex(sfx_play_data_t *data) {
-    if (data->chn < 0) {
+    if(data->chn < 0) {
         data->chn = find_free_channel();
-        if (data->chn < 0) {
+        if(data->chn < 0) {
             return -1;
         }
     }

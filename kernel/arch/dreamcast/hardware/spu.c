@@ -144,7 +144,7 @@ void spu_memload_dma(uintptr_t dst, void *src_void, size_t length) {
             spu_memload_sq(dst, src_void, aligned_len);
         }
         break;
-    } while (1);
+    } while(1);
 
     if(length > 0) {
         /* Make sure the destination is in a non-cached area */

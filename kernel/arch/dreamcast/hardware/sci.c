@@ -443,7 +443,7 @@ void sci_configure_spi(sci_spi_cs_mode_t cs, size_t buffer_size) {
     sci_shutdown_spi_cs();
 
     /* Allocate a single aligned buffer for both TX and RX DMA operations */
-    if (buffer_size > 0) {
+    if(buffer_size > 0) {
         if(spi_dma_buffer != NULL && spi_buffer_size != buffer_size) {
             free(spi_dma_buffer);
             spi_dma_buffer = NULL;
@@ -451,7 +451,7 @@ void sci_configure_spi(sci_spi_cs_mode_t cs, size_t buffer_size) {
         
         if(spi_dma_buffer == NULL) {
             spi_dma_buffer = aligned_alloc(32, buffer_size);
-            if (spi_dma_buffer == NULL) {
+            if(spi_dma_buffer == NULL) {
                 dbglog(DBG_ERROR, "SCI: Failed to allocate DMA buffer\n");
                 return;
             }
@@ -1075,7 +1075,7 @@ sci_result_t sci_spi_dma_write_data(const uint8_t *data, size_t len, dma_callbac
     if(callback == NULL) {
 
         result = sci_dma_wait_complete();
-        if (result != SCI_OK) {
+        if(result != SCI_OK) {
             return result;
         }
 

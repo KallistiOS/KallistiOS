@@ -249,7 +249,7 @@ int vmu_set_custom_color(maple_device_t *dev, uint8_t red, uint8_t green, uint8_
 int vmu_set_icon_shape(maple_device_t *dev, uint8_t icon_shape) {
     vmu_root_t root;
 
-    if (KOS_PLATFORM_IS_NAOMI)
+    if(KOS_PLATFORM_IS_NAOMI)
         return -1;
 
     if(icon_shape < BFONT_ICON_VMUICON || icon_shape > BFONT_ICON_EMBROIDERY)
@@ -351,7 +351,7 @@ int vmu_draw_lcd_rotated(maple_device_t *dev, const void *bitmap) {
     uint32_t bitmap_inverted[48];
     unsigned int i;
 
-    for (i = 0; i < 48; i++) {
+    for(i = 0; i < 48; i++) {
         bitmap_inverted[i] = bit_reverse(((uint32 *)bitmap)[47 - i]);
     }
 

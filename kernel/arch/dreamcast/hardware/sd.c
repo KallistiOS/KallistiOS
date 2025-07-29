@@ -816,18 +816,18 @@ int sd_blockdev_for_partition(int partition, kos_blockdev_t *rv,
 int sd_blockdev_for_device(kos_blockdev_t *rv) {
     sd_devdata_t *ddata;
 
-    if (!initted) {
+    if(!initted) {
         errno = ENXIO;
         return -1;
     }
 
-    if (!rv) {
+    if(!rv) {
         errno = EFAULT;
         return -1;
     }
 
     /* Allocate the device data */
-    if (!(ddata = (sd_devdata_t *)malloc(sizeof(sd_devdata_t)))) {
+    if(!(ddata = (sd_devdata_t *)malloc(sizeof(sd_devdata_t)))) {
         errno = ENOMEM;
         return -1;
     }

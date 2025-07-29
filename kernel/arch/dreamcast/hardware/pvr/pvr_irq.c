@@ -166,7 +166,7 @@ void pvr_int_handler(uint32 code, void *data) {
         case ASIC_EVT_PVR_RENDERDONE_TSP:
             //DBG(("irq_renderdone\n"));
             pvr_state.render_busy = 0;
-            if (!pvr_state.was_to_texture)
+            if(!pvr_state.was_to_texture)
                 pvr_state.render_completed = 1;
             pvr_sync_stats(PVR_SYNC_RNDDONE);
 

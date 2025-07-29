@@ -211,7 +211,7 @@ uint32_t      *vram_l;
 int8_t vid_check_cable(void) {
     volatile uint32_t * porta = (vuint32 *)0xff80002c;
 
-    if (KOS_PLATFORM_IS_NAOMI) {
+    if(KOS_PLATFORM_IS_NAOMI) {
         /* XXXX: This still needs to be figured out for NAOMI. For now, assume
            VGA mode. */
         return CT_VGA;

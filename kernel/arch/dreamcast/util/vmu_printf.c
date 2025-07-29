@@ -26,9 +26,9 @@ void vmu_printf(const char *fmt, ...) {
 	vmufb_clear(&vmufb);
 	vmufb_print_string(&vmufb, vmu_get_font(), buf);
 
-	for (vmu = 0; ; vmu++) {
+	for(vmu = 0; ; vmu++) {
 		dev = maple_enum_type(vmu, MAPLE_FUNC_LCD);
-		if (!dev)
+		if(!dev)
 			break;
 
 		vmufb_present(&vmufb, dev);

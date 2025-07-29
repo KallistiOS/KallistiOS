@@ -415,8 +415,8 @@ static int vmu_close(void * hnd) {
         case VMU_FILE:
             if((fh->mode & O_MODE_MASK) == O_WRONLY ||
                     (fh->mode & O_MODE_MASK) == O_RDWR) {
-                if ((st = vmu_write_close(hnd))) {
-                    if (st == -7)
+                if((st = vmu_write_close(hnd))) {
+                    if(st == -7)
                         errno = ENOSPC;
                     else
                         errno = EIO;

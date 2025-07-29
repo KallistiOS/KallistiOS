@@ -333,7 +333,7 @@ int netcfg_save_to(const char * fn, const netcfg_t * cfg) {
 
 #define WRITESTR(fmt, data) \
     sprintf(buf, fmt, data); \
-    if (fwrite(buf, strlen(buf), 1, f) != 1) \
+    if(fwrite(buf, strlen(buf), 1, f) != 1) \
         goto error;
 
     WRITESTR("driver=%s\n", cfg->driver);

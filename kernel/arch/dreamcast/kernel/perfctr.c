@@ -81,7 +81,7 @@ uint64_t perf_cntr_count(perf_cntr_t counter) {
         hi = PMCTR_HIGH(counter);
         lo = PMCTR_LOW(counter);
         hi2 = PMCTR_HIGH(counter);
-    } while (__unlikely(hi != hi2));
+    } while(__unlikely(hi != hi2));
 
     return (uint64_t)hi << 32 | lo;
 }

@@ -34,8 +34,8 @@ void aica_init(void) {
    the AICA chip
 
     Calculated by
-        for (int i = 0; i < 256; i++)
-            if (i == 0)
+        for(int i = 0; i < 256; i++)
+            if(i == 0)
                 logs[i] = 255;
             else
                 logs[i] = 16.0 * log2(255.0 / i);

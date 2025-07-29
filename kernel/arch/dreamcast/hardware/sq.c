@@ -81,7 +81,7 @@ uint32_t *sq_lock(void *dest) {
     with_mmu = mmu_enabled();
     mask = with_mmu ? 0x000fffe0 : 0x03ffffe0;
 
-    if (with_mmu)
+    if(with_mmu)
         mmu_set_sq_addr(dest);
     else
         SET_QACR_REGS(dest, dest);
@@ -105,7 +105,7 @@ void sq_unlock(void) {
         tmp_state = &sq_state_cache[sq_mutex.count - 2];
         with_mmu = mmu_enabled();
 
-        if (with_mmu)
+        if(with_mmu)
             mmu_set_sq_addr((void *)tmp_state->dest);
         else
             SET_QACR_REGS(tmp_state->dest, tmp_state->dest);
@@ -130,7 +130,7 @@ __no_inline void *sq_cpy(void *dest, const void *src, size_t n) {
     /* Fill/write queues as many times necessary */
     n >>= 5;
 
-    while (n > 0) {
+    while(n > 0) {
         /* Transfer maximum 1 MiB at once. This is because when using the
          * MMU the SQ area is 2 MiB, and the destination address may
          * not be on a page boundary. */
@@ -142,7 +142,7 @@ __no_inline void *sq_cpy(void *dest, const void *src, size_t n) {
         n -= nb;
 
         /* If src is not 8-byte aligned, slow path */
-        if (!__is_aligned(src, 8)) {
+        if(!__is_aligned(src, 8)) {
             while(nb--) {
                 dcache_pref_block(s + 8); /* Prefetch 32 bytes for next loop */
                 d[0] = *(s++);
@@ -158,7 +158,7 @@ __no_inline void *sq_cpy(void *dest, const void *src, size_t n) {
             }
         } else { /* If src is 8-byte aligned, fast path */
             sq_fast_cpy(d, s, nb);
-	    s += nb * 32;
+            s += nb * 32;
         }
 
         sq_unlock();
@@ -194,7 +194,7 @@ void *sq_set32(void *dest, uint32_t c, size_t n) {
     /* Write them as many times necessary */
     n >>= 5;
 
-    while (n > 0) {
+    while(n > 0) {
         /* Transfer maximum 1 MiB at once. This is because when using the
          * MMU the SQ area is 2 MiB, and the destination address may
          * not be on a page boundary. */

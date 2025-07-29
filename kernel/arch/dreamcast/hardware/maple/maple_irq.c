@@ -64,7 +64,7 @@ static void vbl_chk_next_subdev(maple_state_t *state, maple_frame_t *frm, int p)
     maple_device_t *dev = maple_enum_dev(p, 0);
     int u;
 
-    if (dev && dev->probe_mask) {
+    if(dev && dev->probe_mask) {
         u = __builtin_ffs(dev->probe_mask);
         dev->probe_mask &= ~(1 << (u - 1));
 
@@ -78,7 +78,7 @@ static void vbl_chk_next_subdev(maple_state_t *state, maple_frame_t *frm, int p)
 static void vbl_dev_probed(int p, int u) {
     maple_device_t *dev = maple_enum_dev(p, 0);
 
-    if (dev)
+    if(dev)
         dev->dev_mask |= 1 << (u - 1);
 }
 
@@ -91,7 +91,7 @@ static void vbl_chk_subdevs(maple_state_t *state, int p, uint8 newmask) {
 
     /* Disconnect any device that disappeared */
     for(u = 1; u < MAPLE_UNIT_COUNT; u++) {
-        if (dev->dev_mask & ~newmask & (1 << (u - 1))) {
+        if(dev->dev_mask & ~newmask & (1 << (u - 1))) {
             vbl_chk_disconnect(state, p, u);
         }
     }
@@ -115,7 +115,7 @@ static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm) {
     maple_device_t      *dev;
     int         p, u;
 
-    if (irq_inside_int() && !malloc_irq_safe()) {
+    if(irq_inside_int() && !malloc_irq_safe()) {
         /* We can't create or remove a device now. Fail silently as the device
          * will be re-probed in the next loop of the periodic IRQ. */
         maple_frame_unlock(frm);
@@ -200,7 +200,7 @@ static void vbl_autodetect(maple_state_t *state) {
                               state->detect_port_next, 0);
 
     /* Move to the next device */
-    if (queued) {
+    if(queued) {
         state->detect_port_next++;
 
         if(state->detect_port_next >= MAPLE_PORT_COUNT)

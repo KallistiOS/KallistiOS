@@ -255,14 +255,14 @@ static void asic_threaded_irq(void *data) {
 
     thdata->hdl(thdata->source, thdata->data);
 
-    if (thdata->unmask)
+    if(thdata->unmask)
         thdata->unmask(thdata->source);
 }
 
 static void asic_thirq_dispatch(uint32_t source, void *data) {
     struct asic_thdata *thdata = data;
 
-    if (thdata->ack_and_mask)
+    if(thdata->ack_and_mask)
         thdata->ack_and_mask(source);
 
     thdata->source = source;
@@ -280,7 +280,7 @@ int asic_evt_request_threaded_handler(uint16_t code, asic_evt_handler hnd,
     kthread_t *thd;
 
     thdata = malloc(sizeof(*thdata));
-    if (!thdata)
+    if(!thdata)
         return -1; /* TODO: What return code? */
 
     thdata->hdl = hnd;
@@ -291,7 +291,7 @@ int asic_evt_request_threaded_handler(uint16_t code, asic_evt_handler hnd,
     flags = irq_disable();
 
     thdata->worker = thd_worker_create(asic_threaded_irq, thdata);
-    if (!thdata->worker) {
+    if(!thdata->worker) {
         irq_restore(flags);
         free(thdata);
         return -1; /* TODO: What return code? */
@@ -325,7 +325,7 @@ void asic_evt_remove_handler(uint16_t code)
     entry = asic_evt_handlers[evtreg][evt];
     asic_evt_set_handler(code, NULL, NULL);
 
-    if (entry.hdl == asic_thirq_dispatch) {
+    if(entry.hdl == asic_thirq_dispatch) {
         thdata = entry.data;
 
         thd_worker_destroy(thdata->worker);

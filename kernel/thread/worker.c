@@ -26,15 +26,15 @@ static void *thd_worker_thread(void *d) {
     kthread_worker_t *worker = d;
     uint32_t flags;
 
-    for (;;) {
+    for(;;) {
         flags = irq_disable();
 
-        if ((!worker->pending) && (!worker->quit))
+        if((!worker->pending) && (!worker->quit))
             genwait_wait(worker, worker->thd->label, 0, NULL);
 
         irq_restore(flags);
 
-        if (worker->quit)
+        if(worker->quit)
             break;
 
         worker->pending = false;
@@ -53,7 +53,7 @@ kthread_worker_t *thd_worker_create_ex(const kthread_attr_t *attr,
     assert(routine != NULL);
 
     worker = malloc(sizeof(*worker));
-    if (!worker)
+    if(!worker)
         return NULL;
 
     worker->data = data;
@@ -65,7 +65,7 @@ kthread_worker_t *thd_worker_create_ex(const kthread_attr_t *attr,
     flags = irq_disable();
 
     worker->thd = thd_create_ex(attr, thd_worker_thread, worker);
-    if (!worker->thd) {
+    if(!worker->thd) {
         irq_restore(flags);
         free(worker);
         return NULL;

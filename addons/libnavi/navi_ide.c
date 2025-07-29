@@ -141,7 +141,7 @@ static int ide_read_chs(uint32 cyl, uint32 head, uint32 sector, uint32 numsects,
     wait_data();            /* wait for data to be read */
 
     for(o = 0; o < 256; o++) {
-        /*if (inp(0x1f7) & 1) {
+        /*if(inp(0x1f7) & 1) {
             printf("as of %d, error code is %x/%x\n", o, inp(0x1f7), inp(0x1f1));
             return -1;
         } */
@@ -175,7 +175,7 @@ static int ide_write_chs(uint32 cyl, uint32 head, uint32 sector, uint32 numsects
     wait_data();            /* wait for data to be ready */
 
     for(o = 0; o < 256; o++) {
-        /* if (inp(0x1f7) & 1) {
+        /* if(inp(0x1f7) & 1) {
             printf("as of %d, error code is %x/%x\n", o, inp(0x1f7), inp(0x1f1));
             return -1;
         } */
