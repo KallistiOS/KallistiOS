@@ -230,23 +230,6 @@ int timer_ints_enabled(int channel);
     The highest actual tick resolution of \ref TMU2 is 80ns.
 */
 
-/** \brief   Enable the millisecond timer.
-    \ingroup tmu_uptime
-
-    This function enables the timer used for the gettime functions. This is on
-    by default. These functions use \ref TMU2 to do their work.
-*/
-void timer_ms_enable(void);
-
-/** \brief   Disable the millisecond timer.
-    \ingroup tmu_uptime
-
-    This function disables the timer used for the gettime functions. Generally,
-    you will not want to do this, unless you have some need to use the timer
-    \ref TMU2 for something else.
-*/
-void timer_ms_disable(void);
-
 /** \brief   Get the current uptime of the system (in secs and millisecs).
     \ingroup tmu_uptime
 

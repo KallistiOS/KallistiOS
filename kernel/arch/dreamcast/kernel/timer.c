@@ -206,17 +206,12 @@ static void timer_ms_handler(irq_t source, irq_context_t *context, void *data) {
     TIMER16(tcrs[TMU2]) &= ~UNF;
 }
 
-void timer_ms_enable(void) {
+static void timer_ms_enable(void) {
     irq_set_handler(EXC_TMU2_TUNI2, timer_ms_handler, NULL);
     timer_prime(TMU2, 1, 1);
     timer_ms_countdown = timer_count(TMU2);
     timer_clear(TMU2);
     timer_start(TMU2);
-}
-
-void timer_ms_disable(void) {
-    timer_stop(TMU2);
-    timer_disable_ints(TMU2);
 }
 
 /* Internal structure used to hold timer values in seconds + ticks. */
@@ -428,6 +423,9 @@ int timer_init(void) {
 
     /* Setup the primary timer stuff */
     timer_primary_init();
+
+    /* Setup the 1 HZ timer */
+    timer_ms_enable();
 
     return 0;
 }
