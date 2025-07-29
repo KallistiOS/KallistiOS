@@ -124,10 +124,10 @@ static void genwait_unqueue(kthread_t * thd) {
     }
 }
 
-int genwait_wake_cnt(void * obj, int cntmax, int err) {
+static int genwait_wake_thd_cnt(void *obj, int cntmax, kthread_t *thd, int err) {
     kthread_t       * t, * nt;
     struct slpquehead   * qp;
-    int         cnt;
+    int         cnt = 0;
 
     /* Twiddle interrupt state */
     irq_disable_scoped();
@@ -136,12 +136,9 @@ int genwait_wake_cnt(void * obj, int cntmax, int err) {
     qp = &slpque[LOOKUP(obj)];
 
     /* Go through and find any matching entries */
-    for(cnt = 0, t = TAILQ_FIRST(qp); t != NULL; t = nt) {
-        /* Get the next thread up front */
-        nt = TAILQ_NEXT(t, thdq);
-
+    TAILQ_FOREACH_SAFE(t, qp, thdq, nt) {
         /* Is this thread a match? */
-        if(t->wait_obj == obj) {
+        if(t->wait_obj == obj && (!thd || t == thd)) {
             /* Yes, remove it from the wait queue */
             genwait_unqueue(t);
 
@@ -167,6 +164,10 @@ int genwait_wake_cnt(void * obj, int cntmax, int err) {
     return cnt;
 }
 
+int genwait_wake_cnt(void * obj, int cntmax, int err) {
+    return genwait_wake_thd_cnt(obj, cntmax, NULL, err);
+}
+
 void genwait_wake_all(void * obj) {
     genwait_wake_cnt(obj, -1, 0);
 }
@@ -184,40 +185,7 @@ void genwait_wake_all_err(void *obj, int err) {
 }
 
 int genwait_wake_thd(void *obj, kthread_t *thd, int err) {
-    kthread_t *t, *nt;
-    struct slpquehead *qp;
-
-    /* Twiddle interrupt state */
-    irq_disable_scoped();
-
-    /* Find the queue */
-    qp = &slpque[LOOKUP(obj)];
-
-    /* Go through and find any matching entries */
-    for(t = TAILQ_FIRST(qp); t != NULL; t = nt) {
-        /* Get the next thread up front */
-        nt = TAILQ_NEXT(t, thdq);
-
-        /* Is this thread a match? */
-        if(t->wait_obj == obj && t == thd) {
-            /* Yes, remove it from the wait queue */
-            genwait_unqueue(t);
-
-            /* Set the wake return value */
-            if(err) {
-                CONTEXT_RET(t->context) = -1;
-                t->thd_errno = err;
-            }
-            else {
-                CONTEXT_RET(t->context) = 0;
-            }
-
-            /* We found it, so we're done... */
-	    return 1;
-        }
-    }
-
-    return 0;
+    return genwait_wake_thd_cnt(obj, 1, thd, err);
 }
 
 void genwait_check_timeouts(uint64_t tm) {
