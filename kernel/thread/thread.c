@@ -486,6 +486,11 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
 
             /* Schedule it */
             thd_add_to_runnable(nt, 0);
+
+            /* Make sure our timer IRQs are enabled now that we have more than
+             * one thread. */
+            if(routine && routine != thd_idle_task && routine != thd_reaper)
+                timer_primary_enable_ints();
         }
     }
 
