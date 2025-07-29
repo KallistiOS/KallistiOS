@@ -619,11 +619,11 @@ static inline void thd_schedule_inner(kthread_t *thd) {
    to make sure the priorities are all straight before returning, but you
    don't want a full context switch inside the same priority group.
 */
-void thd_schedule(bool front_of_line, uint64_t now) {
+void thd_schedule(bool front_of_line) {
     kthread_t *thd;
+    uint64_t now;
 
-    if(now == 0)
-        now = timer_ms_gettime64();
+    now = timer_ms_gettime64();
 
     /* If there's only two thread left, it's the idle task and the reaper task:
        exit the OS */
@@ -705,12 +705,10 @@ void thd_schedule_next(kthread_t *thd) {
 
 /* See kos/thread.h for description */
 irq_context_t *thd_choose_new(void) {
-    uint64_t now = timer_ms_gettime64();
-
     //printf("thd_choose_new() woken at %d\n", (uint32_t)now);
 
     /* Do any re-scheduling */
-    thd_schedule(0, now);
+    thd_schedule(false);
 
     /* Return the new IRQ context back to the caller */
     return &thd_current->context;
@@ -723,14 +721,11 @@ irq_context_t *thd_choose_new(void) {
    again until our next context switch (if any). For pre-empts, re-schedule
    threads, swap out contexts, and sleep. */
 static void thd_timer_hnd(irq_context_t *context) {
-    /* Get the system time */
-    uint64_t now = timer_ms_gettime64();
-
     (void)context;
 
     //printf("timer woke at %d\n", (uint32_t)now);
 
-    thd_schedule(0, now);
+    thd_schedule(false);
     timer_primary_wakeup(thd_sched_ms);
 }
 

@@ -109,7 +109,7 @@ static void pvr_render_lists(void) {
 
         // Signal the client code to continue onwards.
         genwait_wake_all((void *)&pvr_state.ta_busy);
-        thd_schedule(1, 0);
+        thd_schedule(true);
     }
 }
 

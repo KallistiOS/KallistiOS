@@ -456,14 +456,13 @@ void thd_exit(void *rv) __noreturn;
     time for checking timeouts.
 
     \param  front_of_line   Set to false, unless you have a good reason not to.
-    \param  now             Set to 0, unless you have a good reason not to.
 
     \sa thd_schedule_next
     \warning                Never call this function from outside of an
                             interrupt context! Doing so will almost certainly
                             end very poorly.
 */
-void thd_schedule(bool front_of_line, uint64_t now);
+void thd_schedule(bool front_of_line);
 
 /** \brief       Force a given thread to the front of the queue.
     \relatesalso kthread_t

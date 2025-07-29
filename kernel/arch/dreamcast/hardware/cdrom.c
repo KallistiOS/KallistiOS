@@ -761,7 +761,7 @@ static void cdrom_vblank(uint32 evt, void *data) {
             if(dma_blocking) {
                 dma_blocking = false;
                 sem_signal(&dma_done);
-                thd_schedule(1, 0);
+                thd_schedule(true);
             }
         }
     }
@@ -779,7 +779,7 @@ static void g1_dma_irq_hnd(uint32_t code, void *data) {
         if(dma_blocking) {
             dma_blocking = false;
             sem_signal(&dma_done);
-            thd_schedule(1, 0);
+            thd_schedule(true);
         }
         else if(dma_thd) {
             mutex_unlock_as_thread(&_g1_ata_mutex, dma_thd);
