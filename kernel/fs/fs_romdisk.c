@@ -667,6 +667,7 @@ void fs_romdisk_init(void) {
 /* De-init the file system; also unmounts any mounted images. */
 void fs_romdisk_shutdown(void) {
     rd_image_t  *n, *c;
+    rd_fd_t     *i, *j;
 
     if(!initted)
         return;
@@ -676,6 +677,11 @@ void fs_romdisk_shutdown(void) {
     /* Go through and free all the romdisk mount entries */
     LIST_FOREACH_SAFE(c, &romdisks, list_ent, n) {
         fs_romdisk_list_remove(c);
+    }
+
+    /* Iterate through any dangling files and clean them */
+    TAILQ_FOREACH_SAFE(i, &rd_fd_queue, next, j) {
+        romdisk_close(i);
     }
 
     mutex_unlock(&fh_mutex);
