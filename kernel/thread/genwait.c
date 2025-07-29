@@ -125,7 +125,7 @@ static void __nonnull_all genwait_unqueue(kthread_t *thd) {
 }
 
 static int genwait_wake_thd_cnt(const void *obj, int cntmax, kthread_t *thd, int err) {
-    kthread_t       * t, * nt;
+    kthread_t       *t, *nt, *best = NULL;
     struct slpquehead   * qp;
     int         cnt = 0;
 
@@ -151,6 +151,9 @@ static int genwait_wake_thd_cnt(const void *obj, int cntmax, kthread_t *thd, int
                 CONTEXT_RET(t->context) = 0;
             }
 
+            if(!best || t->prio < best->prio)
+                best = t;
+
             /* Check to see if we've filled our quota */
             if(cntmax > 0) {
                 cnt++;
@@ -159,6 +162,11 @@ static int genwait_wake_thd_cnt(const void *obj, int cntmax, kthread_t *thd, int
                     break;
             }
         }
+    }
+
+    if(best) {
+        /* If we just woke up a thread, make sure the timer IRQ is enabled. */
+        timer_primary_enable_ints();
     }
 
     return cnt;
