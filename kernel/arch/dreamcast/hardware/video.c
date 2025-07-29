@@ -292,21 +292,21 @@ void vid_set_mode(int dm, vid_pixel_mode_t pm) {
 }
 
 enum pvr_pm_modes {
-	PVR_PM_XRGB1555,
-	PVR_PM_RGB565,
-	PVR_PM_ARGB4444,
-	PVR_PM_ARGB1555,
-	PVR_PM_RGB888,
-	PVR_PM_XRGB8888,
-	PVR_PM_ARGB8888,
-	PVR_PM_DITHER = 8,
+    PVR_PM_XRGB1555,
+    PVR_PM_RGB565,
+    PVR_PM_ARGB4444,
+    PVR_PM_ARGB1555,
+    PVR_PM_RGB888,
+    PVR_PM_XRGB8888,
+    PVR_PM_ARGB8888,
+    PVR_PM_DITHER = 8,
 };
 
 static const unsigned int vid_bpp_to_pvr_cfg2[] = {
-	[PM_RGB555] = PVR_PM_XRGB1555 | PVR_PM_DITHER,
-	[PM_RGB565] = PVR_PM_RGB565 | PVR_PM_DITHER,
-	[PM_RGB888P] = PVR_PM_RGB888,
-	[PM_RGB0888] = PVR_PM_XRGB8888,
+    [PM_RGB555] = PVR_PM_XRGB1555 | PVR_PM_DITHER,
+    [PM_RGB565] = PVR_PM_RGB565 | PVR_PM_DITHER,
+    [PM_RGB888P] = PVR_PM_RGB888,
+    [PM_RGB0888] = PVR_PM_XRGB8888,
 };
 
 /*-----------------------------------------------------------------------------*/

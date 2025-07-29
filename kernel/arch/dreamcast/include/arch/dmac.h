@@ -140,7 +140,7 @@ typedef struct dma_config {
     dma_addrmode_t src_mode, dst_mode;  /**< Source/destination address mode. */
     dma_transmitmode_t transmit_mode;   /**< DMA Transfer transmit mode. */
     dma_callback_t callback;            /**< Optional callback function for
-					     end-of-transfer notification. */
+                                             end-of-transfer notification. */
 } dma_config_t;
 
 /** \brief   DMA address.

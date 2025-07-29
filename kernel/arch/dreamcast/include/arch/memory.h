@@ -73,7 +73,7 @@ __BEGIN_DECLS
     the CB bit of the cache control register. That allows it to function in a
     different caching mode (copy-back v write-through) than the U0, P0, and P3
     regions, whose cache mode are governed by the WT bit. By default KOS sets this
-    to the same	copy-back mode as the other cachable regions.
+    to the same copy-back mode as the other cachable regions.
 
 */
 #define MEM_AREA_P1_BASE    0x80000000

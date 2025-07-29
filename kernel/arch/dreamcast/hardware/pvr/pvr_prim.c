@@ -68,9 +68,9 @@ void pvr_poly_compile(pvr_poly_hdr_t *dst, const pvr_poly_cxt_t *src) {
     }
     else {
         assert_msg(__builtin_popcount(src->txr.width) == 1
-		   && src->txr.width <= 1024, "Invalid texture U size");
+            && src->txr.width <= 1024, "Invalid texture U size");
         assert_msg(__builtin_popcount(src->txr.height) == 1
-		   && src->txr.height <= 1024, "Invalid texture V size");
+            && src->txr.height <= 1024, "Invalid texture V size");
 
         mode2 |= FIELD_PREP(PVR_TA_PM2_TXRALPHA, src->txr.alpha)
             | FIELD_PREP(PVR_TA_PM2_UVFLIP, src->txr.uv_flip)
@@ -304,9 +304,9 @@ void pvr_sprite_compile(pvr_sprite_hdr_t *dst, const pvr_sprite_cxt_t *src) {
     }
     else {
         assert_msg(__builtin_popcount(src->txr.width) == 1
-		   && src->txr.width <= 1024, "Invalid texture U size");
+            && src->txr.width <= 1024, "Invalid texture U size");
         assert_msg(__builtin_popcount(src->txr.height) == 1
-		   && src->txr.height <= 1024, "Invalid texture V size");
+            && src->txr.height <= 1024, "Invalid texture V size");
 
         mode2 |= FIELD_PREP(PVR_TA_PM2_TXRALPHA, src->txr.alpha)
             | FIELD_PREP(PVR_TA_PM2_UVFLIP, src->txr.uv_flip)
@@ -393,9 +393,9 @@ void pvr_poly_mod_compile(pvr_poly_mod_hdr_t *dst, const pvr_poly_cxt_t *src) {
     }
     else {
         assert_msg(__builtin_popcount(src->txr.width) == 1
-		   && src->txr.width <= 1024, "Invalid texture U size");
+            && src->txr.width <= 1024, "Invalid texture U size");
         assert_msg(__builtin_popcount(src->txr.height) == 1
-		   && src->txr.height <= 1024, "Invalid texture V size");
+            && src->txr.height <= 1024, "Invalid texture V size");
 
         mode2 |= FIELD_PREP(PVR_TA_PM2_TXRALPHA, src->txr.alpha)
             | FIELD_PREP(PVR_TA_PM2_UVFLIP, src->txr.uv_flip)
@@ -432,9 +432,9 @@ void pvr_poly_mod_compile(pvr_poly_mod_hdr_t *dst, const pvr_poly_cxt_t *src) {
     }
     else {
         assert_msg(__builtin_popcount(src->txr2.width) == 1
-		   && src->txr2.width <= 1024, "Invalid texture U size");
+            && src->txr2.width <= 1024, "Invalid texture U size");
         assert_msg(__builtin_popcount(src->txr2.height) == 1
-		   && src->txr2.height <= 1024, "Invalid texture V size");
+            && src->txr2.height <= 1024, "Invalid texture V size");
 
         mode2 |= FIELD_PREP(PVR_TA_PM2_TXRALPHA, src->txr2.alpha)
             | FIELD_PREP(PVR_TA_PM2_UVFLIP, src->txr2.uv_flip)

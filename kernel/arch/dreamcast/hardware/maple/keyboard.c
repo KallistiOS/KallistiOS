@@ -49,7 +49,7 @@ typedef struct kbd_state_private {
     kbd_leds_t leds;                       /**< \brief Persistent LED state for toggles */
 
     struct {
-	kbd_key_t key;          /**< \brief Key that is repeating. */
+        kbd_key_t key;          /**< \brief Key that is repeating. */
         uint64_t timeout;       /**< \brief Time that the next repeat will trigger. */
     } repeater;
 } kbd_state_private_t;
