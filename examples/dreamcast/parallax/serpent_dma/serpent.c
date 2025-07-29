@@ -155,7 +155,7 @@ static void draw_sphere(sphere_t *s, int list) {
 static float r = 0;
 static void sphere_frame(void) {
     int i;
-    //uint64 start;
+    //uint64_t start;
 
     if(!big_sphere.data)
         sphere(&big_sphere);
@@ -211,7 +211,7 @@ static void sphere_frame(void) {
     // Fake spending more time on vertices
     //timer_spin_sleep(15);
 
-    //printf("%d\n", (uint32)(timer_ms_gettime64() - start));
+    //printf("%d\n", (uint32_t)(timer_ms_gettime64() - start));
 
     r++;
     phase += 2 * F_PI / 240.0f;
@@ -268,7 +268,7 @@ pvr_init_params_t params = {
 
 // DMA buffers. This should ideally be in separate memory banks to take
 // advantage of greater speed, but this will work for now.
-uint8 dmabuffers[2][4 * 1024 * 1024] __attribute__((aligned(32)));
+uint8_t dmabuffers[2][4 * 1024 * 1024] __attribute__((aligned(32)));
 
 int main(int argc, char **argv) {
     /* Init PVR API */
