@@ -48,11 +48,11 @@ __BEGIN_DECLS
 /** Type for a code passed to the `TRAPA` instruction. */
 typedef uint8_t trapa_t;
 
-/** \defgroup irq_trapa_handler Handlers 
+/** \defgroup irq_trapa_handler Handlers
     \brief                      API for managing TRAPA handlers
 
     This API allows for the setting and retrieving of a handler associated with
-    a particular `TRAPA` value. 
+    a particular `TRAPA` value.
 
     @{
 */
@@ -66,7 +66,7 @@ typedef uint8_t trapa_t;
 typedef void (*trapa_handler)(trapa_t code, irq_context_t *context, void *data);
 
 /** Set or remove a handler for a trapa code.
-    
+
     \param  code            The value passed to the trapa opcode.
     \param  hnd             A pointer to the procedure to handle the trap.
     \param  data            A pointer that will be passed along to the callback.

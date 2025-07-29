@@ -651,7 +651,7 @@ static void kbd_check_poll(maple_frame_t *frm) {
                 }
 
             // Sync persistent LED state to cond
-            state->cond.leds = pstate->leds;            
+            state->cond.leds = pstate->leds;
             /* If the key hadn't been pressed. */
             if(state->key_states[cond->keys[i]].value == KEY_STATE_CHANGED_DOWN) {
                 if(key != KBD_KEY_NONE) {

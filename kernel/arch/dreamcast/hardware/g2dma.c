@@ -51,11 +51,11 @@ static int dma_init;
 #define G2_DMA_REG_BASE 0xa05f7800
 static volatile g2_dma_reg_t * const g2_dma = (g2_dma_reg_t *)G2_DMA_REG_BASE;
 
-/* 
+/*
     List of possible initiation triggers values to assign to trigger_select:
         CPU_TRIGGER: Software-driven. (Setting enable and start to 1)
         HARDWARE_TRIGGER: Via AICA (DMA0) or expansion device.
-        INTERRUPT_TRIGGER: Based on interrupt signals. 
+        INTERRUPT_TRIGGER: Based on interrupt signals.
 */
 #define CPU_TRIGGER       0
 #define HARDWARE_TRIGGER  1
@@ -72,9 +72,9 @@ static volatile g2_dma_reg_t * const g2_dma = (g2_dma_reg_t *)G2_DMA_REG_BASE;
 #define DMA_SUSPEND_ENABLED    0x00000004
 #define DMA_SUSPEND_DISABLED   0x00000000
 
-/*  
-    For sh4 and g2bus addresses, ensure bits 31-29 & 4-0 are '0' to avoid 
-    illegal interrupts. Only bits 28-5 are used for valid addresses. 
+/*
+    For sh4 and g2bus addresses, ensure bits 31-29 & 4-0 are '0' to avoid
+    illegal interrupts. Only bits 28-5 are used for valid addresses.
 */
 #define MASK_ADDRESS      0x1fffffe0
 
@@ -88,9 +88,9 @@ static volatile g2_dma_reg_t * const g2_dma = (g2_dma_reg_t *)G2_DMA_REG_BASE;
 #define PRESERVE_ENABLED  0x00000000
 #define RESET_ENABLED     0x80000000
 
-/* 
+/*
     Specifies system memory address range for G2-DMA across channels 0-3.
-    If a DMA transfer is generated outside of this range, an overrun error 
+    If a DMA transfer is generated outside of this range, an overrun error
     occurs.
 
     Previous range (0x4659404f):
@@ -115,12 +115,12 @@ static volatile g2_dma_reg_t * const g2_dma = (g2_dma_reg_t *)G2_DMA_REG_BASE;
 #define DISABLE_SYS_MEM_PROTECTION (SYS_MEM_SECURITY_CODE << 16 | 0x007F)
 #define ENABLE_SYS_MEM_PROTECTION  (SYS_MEM_SECURITY_CODE << 16 | 0x7F00)
 
-/*  
-    Set the DS# (Data Strobe) timeout to 27 clock cycles for the external DMA. 
+/*
+    Set the DS# (Data Strobe) timeout to 27 clock cycles for the external DMA.
     If data isn't ready for latching by this time, an interrupt will be 
     triggered. 
-    
-    Not sure why its 27 but can be changed later. Default value 
+
+    Not sure why its 27 but can be changed later. Default value
     is 1023 cycles (0x3ff).
 */
 #define DS_CYCLE_OVERRIDE  27

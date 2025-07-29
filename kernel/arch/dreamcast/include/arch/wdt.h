@@ -42,7 +42,7 @@ __BEGIN_DECLS
         - watchdog mode: counter overflow causes a reset interrupt
         - interval timer mode: counter overflow invokes a callback function
 
-    To start the WDT in watchdog mode, use wdt_enable_watchdog(). To use the 
+    To start the WDT in watchdog mode, use wdt_enable_watchdog(). To use the
     WDT as a general-purpose interval timer, use wdt_enable_timer().
 
     The timer can be stopped in either mode by calling wdt_disable().
@@ -52,7 +52,7 @@ __BEGIN_DECLS
 
 /** \brief   Clock divider settings
     \ingroup wdt
- 
+
     Denominators used to set the frequency divider
     for the input clock to the WDT.
  */
@@ -88,19 +88,19 @@ typedef void (*wdt_callback)(void *user_data);
 /** \brief   Enables the WDT as an interval timer
     \ingroup wdt
 
-    Stops the WDT if it was previously running and reconfigures it 
+    Stops the WDT if it was previously running and reconfigures it
     to be used as a generic interval timer, calling the given callback
     periodically at the requested interval (or as close to it as possible
     without calling it prematurely).
 
-    \note 
-    The internal resolution for each tick of the WDT in this mode is 
+    \note
+    The internal resolution for each tick of the WDT in this mode is
     41us, meaning a requested \p microsec_period of 100us will result
     in an actual callback interval of 123us.
 
     \warning
-    \p callback is invoked within an interrupt context, meaning that 
-    special care should be taken to not perform any logic requiring 
+    \p callback is invoked within an interrupt context, meaning that
+    special care should be taken to not perform any logic requiring
     additional interrupts. Data that is accessed from both within
     and outside of the callback should be atomic or protected by a 
     lock.
@@ -122,14 +122,14 @@ void wdt_enable_timer(uint8_t initial_count,
 /** \brief   Enables the WDT in watchdog mode
     \ingroup wdt
 
-    Stops the WDT if it was previously running and reconfigures it 
-    to be used as a typical watchdog timer, generating a reset 
+    Stops the WDT if it was previously running and reconfigures it
+    to be used as a typical watchdog timer, generating a reset
     interrupt upon counter overflow. To prevent this from happening,
     the user should be periodically resetting the counter.
 
     \note
     Keep in mind the speed of the WDT. With a range of 41us to 5.2ms,
-    the WDT will overflow before a single frame in a typical game. 
+    the WDT will overflow before a single frame in a typical game.
 
     \param  initial_count   Initial value of the WDT counter (Normally 0)
     \param  clk_config      Clock divider to set watchdog period
@@ -143,8 +143,8 @@ void wdt_enable_watchdog(uint8_t initial_count,
 
 /** \brief   Fetches the counter value
     \ingroup wdt
- 
-    Returns the current 8-bit value of the WDT counter. 
+
+    Returns the current 8-bit value of the WDT counter.
 
     \return     Current counter value
 
@@ -154,10 +154,10 @@ uint8_t wdt_get_counter(void);
 
 /** \brief   Sets the counter value
     \ingroup wdt
- 
+
     Sets the current 8-bit value of the WDT counter.
 
-    \param  value       New value for the counter 
+    \param  value       New value for the counter
 
     \sa wdt_get_counter(), wdt_pet()
 */
@@ -165,7 +165,7 @@ void wdt_set_counter(uint8_t value);
 
 /** \brief   Resets the counter value
     \ingroup wdt
- 
+
     "Petting" or "kicking" the WDT is the same thing as
     resetting its counter value to 0.
 
@@ -175,9 +175,9 @@ void wdt_pet(void);
 
 /** \brief   Disables the WDT
     \ingroup wdt
-    
-    Disables the WDT if it was previously enabled, 
-    otherwise does nothing. 
+
+    Disables the WDT if it was previously enabled,
+    otherwise does nothing.
 
     \sa wdt_enable_timer(), wdt_enable_watchdog()
 */

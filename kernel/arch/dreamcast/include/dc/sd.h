@@ -11,7 +11,7 @@
 
     This file contains the interface to working with SD card readers.
     The original SD card reader designed by jj1odm connects to the SCIF port,
-    while the SCI port implementation was developed by SWAT (Ruslan Rostovtsev). 
+    while the SCI port implementation was developed by SWAT (Ruslan Rostovtsev).
     The SCIF implementation uses bit-banging technique to emulate SPI protocol,
     while the SCI implementation utilizes the synchronous mode of this interface,
     which is very similar to SPI.

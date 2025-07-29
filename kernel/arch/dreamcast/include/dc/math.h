@@ -21,7 +21,7 @@ __BEGIN_DECLS
 
 /** \defgroup math_general  General
     \brief                  Optimized general-purpose math utilities
-    \ingroup                math    
+    \ingroup                math
     @{
 */
 

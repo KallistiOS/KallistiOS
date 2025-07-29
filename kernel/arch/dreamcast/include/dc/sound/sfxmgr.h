@@ -69,7 +69,7 @@ typedef struct sfx_play_data {
     int loop;       /**< \brief Whether to loop the sound effect or not. */
     int freq;       /**< \brief Frequency */
     unsigned int loopstart;  /**< \brief Loop start index (in samples). */
-    unsigned int loopend;    /**< \brief Loop end index (in samples). If loopend == 0, 
+    unsigned int loopend;    /**< \brief Loop end index (in samples). If loopend == 0,
                             the loop end will default to sfx size in samples. */
 } sfx_play_data_t;
 
@@ -79,7 +79,7 @@ typedef struct sfx_play_data {
     it. The sound effect can be either stereo or mono, and must either be 8-bit
     or 16-bit uncompressed PCM samples, or 4-bit Yamaha ADPCM.
 
-    \warning The sound effect you are loading must be at most 65534 samples 
+    \warning The sound effect you are loading must be at most 65534 samples
     in length.
 
     \param  fn              The file to load.
@@ -94,7 +94,7 @@ sfxhnd_t snd_sfx_load(const char *fn);
     it. The sound effect can be either stereo or mono, and must either be 8-bit
     or 16-bit uncompressed PCM samples, or 4-bit Yamaha ADPCM.
 
-    \warning The sound effect you are loading must be at most 65534 samples 
+    \warning The sound effect you are loading must be at most 65534 samples
     in length and multiple by 32 bytes for each channel.
 
     \param  fn              The file to load.
@@ -112,7 +112,7 @@ sfxhnd_t snd_sfx_load_ex(const char *fn, uint32_t rate, uint16_t bitsize, uint16
     it. The sound effect can be either stereo or mono, and must either be 8-bit
     or 16-bit uncompressed PCM samples, or 4-bit Yamaha ADPCM.
 
-    \warning The sound effect you are loading must be at most 65534 samples 
+    \warning The sound effect you are loading must be at most 65534 samples
     in length and multiple by 32 bytes for each channel.
 
     \param  fd              The file handler.
@@ -132,7 +132,7 @@ sfxhnd_t snd_sfx_load_fd(file_t fd, size_t len, uint32_t rate, uint16_t bitsize,
     must either be 8-bit or 16-bit uncompressed PCM samples, or 4-bit Yamaha
     ADPCM.
 
-    \warning The sound effect you are loading must be at most 65534 samples 
+    \warning The sound effect you are loading must be at most 65534 samples
     in length.
 
     \param  buf             The buffer to load.
@@ -148,7 +148,7 @@ sfxhnd_t snd_sfx_load_buf(char *buf);
     must either be 8-bit or 16-bit uncompressed PCM samples, or 4-bit Yamaha
     ADPCM.
 
-    \warning The sound effect you are loading must be at most 65534 samples 
+    \warning The sound effect you are loading must be at most 65534 samples
     in length and multiple by 32 bytes for each channel.
 
     \param  buf             The buffer.

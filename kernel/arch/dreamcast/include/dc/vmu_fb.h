@@ -192,7 +192,7 @@ void vmufb_print_string(vmufb_t *fb, const vmufb_font_t *font,
 void vmu_printf(const char *fmt, ...) __printflike(1, 2);
 
 /** \brief Sets the default font for drawing text to the VMU.
- 
+
     This function allows you to set a custom font for drawing text
     to the VMU screen. If the \p font parameter is set to `NULL`,
     the built-in VMU font will be used as the default.

@@ -43,7 +43,7 @@ __BEGIN_DECLS
     return a pointer directly, but rather an offset in SPU RAM.
 
     \param  size            The amount of memory to allocate, in bytes.
-    
+
     \return                 The location of the start of the block on success,
                             or 0 on failure.
 */
@@ -156,7 +156,7 @@ void snd_poll_resp(void);
     Splits a buffer containing 2 interleaved channels of 16-bit PCM samples
     into 2 separate buffers of 16-bit PCM samples.
 
-    \warning 
+    \warning
     All arguments must be 32-byte aligned.
 
     \param data   Source buffer of interleaved stereo samples
@@ -174,7 +174,7 @@ void snd_pcm16_split(uint32_t *data, uint32_t *left, uint32_t *right, size_t siz
     into 2 separate buffers of 16-bit PCM samples by using the store queues
     for data transfer.
 
-    \warning 
+    \warning
     All arguments must be 32-byte aligned.
 
     \param data   Source buffer of interleaved stereo samples

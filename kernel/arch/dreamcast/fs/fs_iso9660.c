@@ -1103,7 +1103,7 @@ static int iso_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
     mode_t md;
     iso_dirent_t *de;
     size_t len = strlen(path);
-    
+
     (void)vfs;
     (void)flag;
 
@@ -1134,7 +1134,7 @@ static int iso_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
         errno = ENOENT;
         return -1;
     }
-       
+
     memset(st, 0, sizeof(struct stat));
     st->st_dev = (dev_t)('c' | ('d' << 8));
     st->st_mode = md | S_IRUSR | S_IRGRP | S_IROTH | S_IXUSR | S_IXGRP | S_IXOTH;

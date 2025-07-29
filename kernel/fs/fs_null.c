@@ -105,7 +105,7 @@ static int null_close(void *hnd) {
 static ssize_t null_read(void *hnd, void *buffer, size_t cnt) {
     (void)buffer;
     (void)cnt;
-    
+
     null_fh_t *fh;
 
     /* Check the handle */

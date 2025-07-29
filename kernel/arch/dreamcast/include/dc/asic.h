@@ -31,7 +31,7 @@ __BEGIN_DECLS
     \brief          Events pertaining to the DC's System ASIC
     \ingroup        system
 
-*/ 
+*/
 
 /* All event codes are two 8-bit integers; the top integer is the event code
    register to look in to check the event (and to acknowledge it). The

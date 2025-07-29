@@ -194,7 +194,7 @@ int fs_pty_create(char *buffer, int maxbuflen, file_t *master_out, file_t *slave
     return 0;
 
 cleanup:
-    
+
     if(*slave_out > 0)
         fs_close(*slave_out);
     else

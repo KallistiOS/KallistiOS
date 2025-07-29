@@ -3,7 +3,7 @@
    arch/dreamcast/include/dc/perfctr.h
    Copyright (C) 2023 Andy Barajas
    Copyright (C) 2023 Falco Girgis
-   
+
 */
 
 /** \file    dc/perfctr.h
@@ -12,7 +12,7 @@
 
     This file contains the low-level driver for interacting with and
     utilizing the SH4's two Performance Counters, which are primarily
-    used for profiling and performance tuning. 
+    used for profiling and performance tuning.
 
     \author MoopTheHedgehog
     \author Andy Barajas
@@ -32,8 +32,8 @@ __BEGIN_DECLS
     \brief      SH4 CPU Performance Counter Driver
     \ingroup    debugging
 
-    The performance counter API exposes the SH4's hardware profiling registers, 
-    which consist of two different sets of independently operable 48-bit 
+    The performance counter API exposes the SH4's hardware profiling registers,
+    which consist of two different sets of independently operable 48-bit
     counters.
 
     @{
@@ -63,7 +63,7 @@ typedef enum perf_cntr {
 /** \brief Count clock types for the SH4 performance counters */
 typedef enum perf_cntr_clock {
     /** \brief CPU Cycles
-        
+
         Count CPU cycles. At 5 ns increments (for 200Mhz CPU clock), a 48-bit
         cycle counter can run continuously for 16.33 days. 
     */
@@ -122,7 +122,7 @@ typedef enum perf_cntr_event {
         For 200MHz CPU: 5ns per count in 1 cycle = 1 count mode.
         Around 417.715ps per count (increments by 12) in CPU/bus ratio mode 
     */
-    PMCR_ELAPSED_TIME_MODE                    = 0x23, 
+    PMCR_ELAPSED_TIME_MODE                    = 0x23,
     PMCR_PIPELINE_FREEZE_BY_ICACHE_MISS_MODE  = 0x24, /**< \brief Cycles */
     PMCR_PIPELINE_FREEZE_BY_DCACHE_MISS_MODE  = 0x25, /**< \brief Cycles */
     /* No 0x26 */
@@ -138,7 +138,7 @@ typedef enum perf_cntr_event {
     \param  counter         The performance counter (i.e, \ref PRFC0 or PRFC1).
     \param  event_mode      Pointer to fill in with the counter's event mode
     \param  clock_type      Pointer to fill in with the counter's clock type
-    
+
     \retval true            The performance counter is running
     \retval false           the performance counter is stopped
 */
@@ -182,7 +182,7 @@ void perf_cntr_resume(perf_cntr_t counter);
 /** \brief  Clear a performance counter.
 
     This function clears a performance counter. It resets its count to zero.
-    This function stops the counter before clearing it because you cant clear 
+    This function stops the counter before clearing it because you cant clear
     a running counter.
 
     \param  counter           The counter to clear (i.e, \ref PRFC0 or PRFC1).
@@ -194,7 +194,7 @@ void perf_cntr_clear(perf_cntr_t counter);
     This function simply returns the count of the counter.
 
     \param  counter         The counter to read (i.e, \ref PRFC0 or PRFC1).
-    
+
     \return                 The counter's count.
 */
 uint64_t perf_cntr_count(perf_cntr_t counter);
@@ -215,8 +215,8 @@ uint64_t perf_cntr_count(perf_cntr_t counter);
 
     \warning
     The performance counter timer is only counting \a active CPU cycles. This
-    means that when KOS's thread scheduler uses the "sleep" instruction, 
-    putting the CPU to sleep, these counters cease to record elapsed time. 
+    means that when KOS's thread scheduler uses the "sleep" instruction,
+    putting the CPU to sleep, these counters cease to record elapsed time.
     Because of this, they should only be used to measure small deltas that
     are not across frames, when you want real wall time rather than active
     CPU time.
@@ -230,7 +230,7 @@ uint64_t perf_cntr_count(perf_cntr_t counter);
 
     This function enables the performance counter used for the perf_cntr_timer_ns()
     function. 
-    
+
     \note
     This is on by default. The function uses \ref PRFC0 to do the work.
 
@@ -245,17 +245,17 @@ void perf_cntr_timer_enable(void);
 /** \brief  Disable the nanosecond timer.
 
     This function disables the performance counter used for the
-    perf_cntr_timer_ns() function. 
+    perf_cntr_timer_ns() function.
 
     \note
-    Generally, you will not want to do this, unless you have some need to use 
+    Generally, you will not want to do this, unless you have some need to use
     the counter \ref PRFC0 for something else.
 */
 void perf_cntr_timer_disable(void);
 
 /** \brief Check whether the nanosecond timer is enabled.
-    
-    Queries the configuration of \ref PRFC0 to check whether it's 
+
+    Queries the configuration of \ref PRFC0 to check whether it's
     currently acting as the nanosecond timer.
 
     \note
@@ -272,7 +272,7 @@ bool perf_cntr_timer_enabled(void);
 /** \brief  Gets elapsed CPU time (in nanoseconds)
 
     This function retrieves the total amount of \a active CPU time since
-    perf_cntr_timer_enabled() was called. 
+    perf_cntr_timer_enabled() was called.
 
     \note
     It's called by default when KOS initializes, so unless you reinitialize it

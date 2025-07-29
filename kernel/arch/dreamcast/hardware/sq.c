@@ -23,13 +23,13 @@
     Based on code by Marcus Comstedt, TapamN, and Moop
 */
 
-/** \brief   Store Queue 0 access register 
+/** \brief   Store Queue 0 access register
     \ingroup store_queues
 */
 #define QACR0 (*(volatile uint32_t *)(void *)0xff000038)
 
-/** \brief   Store Queue 1 access register 
-    \ingroup store_queues  
+/** \brief   Store Queue 1 access register
+    \ingroup store_queues
 */
 #define QACR1 (*(volatile uint32_t *)(void *)0xff00003c)
 

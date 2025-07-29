@@ -177,7 +177,7 @@ void vmu_set_buttons_enabled(int enable) {
 }
 
 /* Determine whether polling for button input is enabled or not by presence of periodic callback. */
-int vmu_get_buttons_enabled(void) { 
+int vmu_get_buttons_enabled(void) {
     return !!vmu_drv.periodic;
 }
 

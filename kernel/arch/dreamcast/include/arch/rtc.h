@@ -31,7 +31,7 @@ __BEGIN_DECLS
 
 /** \defgroup rtc Real-Time Clock
     \brief        Real-Time Clock (RTC) Management
-    \ingroup      timing 
+    \ingroup      timing
 
     Provides an API for fetching and managing the date/time using
     the Dreamcast's real-time clock. All timestamps are in standard
