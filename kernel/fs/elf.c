@@ -97,14 +97,14 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
     /* Header is at the front */
     hdr = (elf_hdr_t *)(img + 0);
 
-    if(hdr->ident[0] != 0x7f || strncmp((char *)hdr->ident + 1, "ELF", 3)) {
+    /* First four bytes are a magic number */
+    if(strncmp((char *)hdr->ident, "\177ELF", 4)) {
         dbglog(DBG_ERROR, "elf_load: file is not a valid ELF file\n");
-        hdr->ident[4] = 0;
-        dbglog(DBG_ERROR, "   hdr->ident is %d/%s\n", hdr->ident[0], hdr->ident + 1);
+        dbglog(DBG_ERROR, "   hdr->ident is %d/%.3s\n", hdr->ident[EI_MAG0], hdr->ident + 1);
         goto error1;
     }
 
-    if(hdr->ident[4] != 1 || hdr->ident[5] != 1) {
+    if(hdr->ident[EI_CLASS] != 1 || hdr->ident[EI_DATA] != 1) {
         dbglog(DBG_ERROR, "elf_load: invalid architecture flags in ELF file\n");
         goto error1;
     }
