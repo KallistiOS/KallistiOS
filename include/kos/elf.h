@@ -36,7 +36,10 @@ __BEGIN_DECLS
     \ingroup elf
 
     Initial bytes of the ELF file, specifying how it should be
-    interpreted.
+    interpreted. This group contains first the indexes of each
+    ident field, then defines for the values they can contain.
+
+    Some of these are shared by other header fields.
     @{
 */
 #define EI_MAG0         0   /**< \brief File identification: 0x7f */
@@ -51,6 +54,17 @@ __BEGIN_DECLS
 #define EI_PAD          9   /**< \brief Start of padding bytes */
 
 #define EI_NIDENT       16  /**< \brief Size of elf_hdr::ident */
+
+#define ELFCLASSNONE    0   /**< \brief Invalid class */
+#define ELFCLASS32      1   /**< \brief 32-bit objects */
+#define ELFCLASS64      2   /**< \brief 64-bit objects */
+
+#define ELFDATANONE     0   /**< \brief Invalid encoding */
+#define ELFDATA2LSB     1   /**< \brief 2's complement, little endian */
+#define ELFDATA2MSB     2   /**< \brief 2's complement, big Endian */
+
+#define EV_NONE         0   /**< \brief Invalid version */
+#define EV_CURRENT      1   /**< \brief Current version */
 /** @} */
 
 /** \brief   ELF file header.
@@ -86,6 +100,7 @@ typedef struct elf_hdr {
     @{
 */
 #define EM_386  3   /**< \brief x86 (IA32) */
+#define EM_PPC  20  /**< \brief PowerPC */
 #define EM_ARM  40  /**< \brief ARM */
 #define EM_SH   42  /**< \brief SuperH */
 /** @} */
