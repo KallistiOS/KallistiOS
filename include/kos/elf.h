@@ -26,6 +26,7 @@ __BEGIN_DECLS
 
 #include <stdint.h>
 #include <sys/queue.h>
+#include <kos/regfield.h>
 
 /** \defgroup elf   ELF File Format
     \brief          API for loading and managing ELF files
@@ -124,9 +125,16 @@ typedef struct elf_hdr {
 #define SHT_NOTE        7       /**< \brief Notes section */
 #define SHT_NOBITS      8       /**< \brief A section that occupies no space in
 the file */
-#define SHT_REL         9       /**< \brief Relocation table, no addends */
-#define SHT_SHLIB       10      /**< \brief Reserved */
-#define SHT_DYNSYM      11      /**< \brief Dynamic-only sym tab */
+#define SHT_REL             9   /**< \brief Relocation table, no addends */
+#define SHT_SHLIB           10  /**< \brief Reserved */
+#define SHT_DYNSYM          11  /**< \brief Dynamic linker symbol table */
+#define SHT_INIT_ARRAY      14  /**< \brief Array of constructors */
+#define SHT_FINI_ARRAY      15  /**< \brief Array of destructors */
+#define SHT_PREINIT_ARRAY   16  /**< \brief Array of pre-constructors */
+#define SHT_GROUP           17  /**< \brief Section group */
+#define SHT_SYMTAB_SHNDX    18  /**< \brief Extended section indices */
+#define SHT_NUM             19  /**< \brief Number of defined types.  */
+
 #define SHT_LOPROC  0x70000000  /**< \brief Start of processor specific types */
 #define SHT_HIPROC  0x7fffffff  /**< \brief End of processor specific types */
 #define SHT_LOUSER  0x80000000  /**< \brief Start of program specific types */
@@ -142,9 +150,15 @@ the file */
 
     @{
 */
-#define SHF_WRITE       1           /**< \brief Writable data */
-#define SHF_ALLOC       2           /**< \brief Resident */
-#define SHF_EXECINSTR   4           /**< \brief Executable instructions */
+#define SHF_WRITE       BIT(0)      /**< \brief Writable data */
+#define SHF_ALLOC       BIT(1)      /**< \brief Resident */
+#define SHF_EXECINSTR   BIT(2)      /**< \brief Executable instructions */
+#define SHF_MERGE       BIT(4)      /**< \brief Might be merged */
+#define SHF_STRINGS     BIT(5)      /**< \brief Contains nul-terminated strings */
+#define SHF_INFO_LINK   BIT(6)      /**< \brief `sh_info' contains SHT index */
+#define SHF_LINK_ORDER  BIT(7)      /**< \brief Preserve order after combining */
+#define SHF_GROUP       BIT(9)      /**< \brief Section is member of a group.  */
+#define SHF_TLS         BIT(10)     /**< \brief Section hold thread-local data.  */
 #define SHF_MASKPROC    0xf0000000  /**< \brief Processor specific mask */
 /** @} */
 
@@ -373,5 +387,5 @@ void elf_free(elf_prog_t *prog);
 
 __END_DECLS
 
-#endif  /* __OS_ELF_H */
+#endif  /* __KOS_ELF_H */
 
