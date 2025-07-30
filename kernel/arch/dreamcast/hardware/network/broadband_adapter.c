@@ -499,7 +499,7 @@ static void rx_finish_enq(int room) {
     if(room > 0 && (((rxin + 1) % MAX_PKTS) != rxout)) {
         rxin = (rxin + 1) % MAX_PKTS;
         sem_signal(&bba_rx_sema);
-        thd_schedule(1, 0);
+        thd_schedule(true);
     }
 }
 

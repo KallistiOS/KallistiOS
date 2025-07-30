@@ -473,6 +473,12 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
 
             /* Schedule it */
             thd_add_to_runnable(nt, 0);
+
+            /* Trigger a reschedule (except for our tasks), to make sure
+             * that we'll switch to the new thread if it's higher priority,
+             * and that we'll start the timer if needed. */
+            if(routine && routine != thd_idle_task && routine != thd_reaper)
+                thd_block_now(&thd_current->context);
         }
     }
 
@@ -581,8 +587,21 @@ static void thd_update_cpu_time(kthread_t *thd) {
     thd->cpu_time.scheduled = ns;
 }
 
+static bool thd_no_runnable_threads(void) {
+    kthread_t *thd;
+
+    TAILQ_FOREACH(thd, &run_queue, thdq) {
+        if(thd != thd_idle_thd && thd->state == STATE_READY)
+            return false;
+    }
+
+    return true;
+}
+
 /* Helper function that sets a thread being scheduled */
-static inline void thd_schedule_inner(kthread_t *thd) {
+static inline void thd_schedule_inner(kthread_t *thd, uint64_t now) {
+    uint64_t next_timeout_ms;
+
     thd_remove_from_runnable(thd);
 
     thd_update_cpu_time(thd);
@@ -590,6 +609,26 @@ static inline void thd_schedule_inner(kthread_t *thd) {
     thd_current = thd;
     _impure_ptr = &thd->thd_reent;
     thd->state = STATE_RUNNING;
+
+    if(thd_no_runnable_threads()) {
+        /* No other thread is ready - we can sleep until the next
+         * genwait timeout. If no timeout, we can disable the timer. */
+        next_timeout_ms = genwait_next_timeout();
+        if(!next_timeout_ms) {
+            timer_primary_stop();
+        } else {
+            if(next_timeout_ms > now)
+                next_timeout_ms = next_timeout_ms - now;
+            else
+                next_timeout_ms = thd_sched_ms;
+
+            timer_primary_wakeup(next_timeout_ms);
+        }
+    } else {
+        /* We have other threads ready; enable the timer and set it to the
+         * configured HZ. */
+        timer_primary_wakeup(thd_sched_ms);
+    }
 
     /* Make sure the thread hasn't underrun its stack */
     if(thd_current->stack && thd_current->stack_size) {
@@ -619,11 +658,11 @@ static inline void thd_schedule_inner(kthread_t *thd) {
    to make sure the priorities are all straight before returning, but you
    don't want a full context switch inside the same priority group.
 */
-void thd_schedule(bool front_of_line, uint64_t now) {
+void thd_schedule(bool front_of_line) {
     kthread_t *thd;
+    uint64_t now;
 
-    if(now == 0)
-        now = timer_ms_gettime64();
+    now = timer_ms_gettime64();
 
     /* If there's only two thread left, it's the idle task and the reaper task:
        exit the OS */
@@ -671,7 +710,7 @@ void thd_schedule(bool front_of_line, uint64_t now) {
 
     /* We should now have a runnable thread, so remove it from the
        run queue and switch to it. */
-    thd_schedule_inner(thd);
+    thd_schedule_inner(thd, now);
 }
 
 /* Temporary priority boosting function: call this from within an interrupt
@@ -679,6 +718,8 @@ void thd_schedule(bool front_of_line, uint64_t now) {
    interrupt return to jump back to the new thread instead of the one that
    was executing (unless it was already executing). */
 void thd_schedule_next(kthread_t *thd) {
+    uint64_t now;
+
     /* Make sure we're actually inside an interrupt */
     if(!irq_inside_int())
         return;
@@ -700,17 +741,16 @@ void thd_schedule_next(kthread_t *thd) {
         thd_add_to_runnable(thd_current, 0);
     }
 
-    thd_schedule_inner(thd);
+    now = timer_ms_gettime64();
+    thd_schedule_inner(thd, now);
 }
 
 /* See kos/thread.h for description */
 irq_context_t *thd_choose_new(void) {
-    uint64_t now = timer_ms_gettime64();
-
     //printf("thd_choose_new() woken at %d\n", (uint32_t)now);
 
     /* Do any re-scheduling */
-    thd_schedule(0, now);
+    thd_schedule(false);
 
     /* Return the new IRQ context back to the caller */
     return &thd_current->context;
@@ -723,15 +763,11 @@ irq_context_t *thd_choose_new(void) {
    again until our next context switch (if any). For pre-empts, re-schedule
    threads, swap out contexts, and sleep. */
 static void thd_timer_hnd(irq_context_t *context) {
-    /* Get the system time */
-    uint64_t now = timer_ms_gettime64();
-
     (void)context;
 
     //printf("timer woke at %d\n", (uint32_t)now);
 
-    thd_schedule(0, now);
-    timer_primary_wakeup(thd_sched_ms);
+    thd_schedule(false);
 }
 
 /*****************************************************************************/
@@ -763,6 +799,10 @@ void thd_sleep(unsigned int ms) {
     genwait_wait((void *)0xffffffff, "thd_sleep", ms, NULL);
 }
 
+static bool thd_should_block(void) {
+    return !thd_no_runnable_threads() || !!genwait_next_timeout();
+}
+
 /* Manually cause a re-schedule */
 __used
 void thd_pass(void) {
@@ -770,7 +810,8 @@ void thd_pass(void) {
     if(irq_inside_int()) return;
 
     /* Pass off control manually */
-    thd_block_now(&thd_current->context);
+    if(thd_should_block())
+        thd_block_now(&thd_current->context);
 }
 
 /* Wait for a thread to exit */
@@ -1021,8 +1062,8 @@ int thd_init(void) {
         .prio       = PRIO_MAX,
         .label      = "[idle]"
     };
-
     kthread_t *kern;
+    uint64_t now;
 
     /* Make sure we're not already running */
     if(thd_mode != THD_MODE_NONE)
@@ -1058,7 +1099,9 @@ int thd_init(void) {
 
     /* Main thread -- the kern thread */
     thd_current = kern;
-    thd_schedule_inner(kern);
+
+    now = timer_ms_gettime64();
+    thd_schedule_inner(kern, now);
 
     /* Initialize tls */
     arch_tls_init();

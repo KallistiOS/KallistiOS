@@ -243,7 +243,7 @@ static void g1_dma_done(void) {
     /* Signal the calling thread to continue, if it is blocking. */
     if(dma_blocking) {
         sem_signal(&dma_done);
-        thd_schedule(1, 0);
+        thd_schedule(true);
         dma_blocking = 0;
     }
 

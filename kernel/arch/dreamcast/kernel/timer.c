@@ -403,6 +403,14 @@ static void timer_primary_shutdown(void) {
     irq_set_handler(EXC_TMU0_TUNI0, NULL, NULL);
 }
 
+void timer_primary_stop(void) {
+    timer_stop(TMU0);
+}
+
+bool timer_primary_running(void) {
+    return timer_running(TMU0);
+}
+
 timer_primary_callback_t timer_primary_set_callback(timer_primary_callback_t cb) {
     timer_primary_callback_t cbold = tp_callback;
     tp_callback = cb;

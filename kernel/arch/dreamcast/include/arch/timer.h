@@ -28,6 +28,7 @@
 #define __ARCH_TIMER_H
 
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <sys/cdefs.h>
 __BEGIN_DECLS
@@ -422,6 +423,21 @@ timer_primary_callback_t timer_primary_set_callback(timer_primary_callback_t cal
     \param  millis          The number of milliseconds to schedule for.
 */
 void timer_primary_wakeup(uint32_t millis);
+
+/** \brief   Stop the primary timer.
+    \ingroup tmu_primary
+
+    This function will stop the primary timer. Its registered callback won't
+    be called.
+*/
+void timer_primary_stop(void);
+
+/** \brief   Return whether or not the primary timer is running.
+    \ingroup tmu_primary
+
+    \return                 True if the primary timer is running, false otherwise.
+*/
+bool timer_primary_running(void);
 
 /** \cond */
 /* Init function */

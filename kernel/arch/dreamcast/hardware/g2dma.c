@@ -150,7 +150,7 @@ static void g2_dma_irq_hnd(uint32_t code, void *data) {
         if(dma_blocking[chn]) {
             dma_blocking[chn] = 0;
             sem_signal(&dma_done[chn]);
-            thd_schedule(1, 0);
+            thd_schedule(true);
         }
 
         /* Call the callback, if any. */

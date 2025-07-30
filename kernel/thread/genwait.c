@@ -124,8 +124,8 @@ static void genwait_unqueue(kthread_t * thd) {
     }
 }
 
-int genwait_wake_cnt(void * obj, int cntmax, int err) {
-    kthread_t       * t, * nt;
+static int genwait_wake_thd_cnt(void *obj, int cntmax, kthread_t *thd, int err) {
+    kthread_t       *t, *nt, *best = NULL;
     struct slpquehead   * qp;
     int         cnt;
 
@@ -141,7 +141,7 @@ int genwait_wake_cnt(void * obj, int cntmax, int err) {
         nt = TAILQ_NEXT(t, thdq);
 
         /* Is this thread a match? */
-        if(t->wait_obj == obj) {
+        if(t->wait_obj == obj && (!thd || t == thd)) {
             /* Yes, remove it from the wait queue */
             genwait_unqueue(t);
 
@@ -154,6 +154,9 @@ int genwait_wake_cnt(void * obj, int cntmax, int err) {
                 CONTEXT_RET(t->context) = 0;
             }
 
+            if(!best || t->prio < best->prio)
+                best = t;
+
             /* Check to see if we've filled our quota */
             if(cntmax > 0) {
                 cnt++;
@@ -164,7 +167,21 @@ int genwait_wake_cnt(void * obj, int cntmax, int err) {
         }
     }
 
+    if(best && (best->prio < thd_current->prio || !timer_primary_running())) {
+        /* If we just woke up a higher-priority thread, or we woke up a
+         * lower-priority thread but the scheduler's timer is not running, we
+         * should force a reschedule. */
+        if(irq_inside_int())
+            thd_schedule_next(best);
+        else
+            thd_block_now(&thd_current->context);
+    }
+
     return cnt;
+}
+
+int genwait_wake_cnt(void * obj, int cntmax, int err) {
+    return genwait_wake_thd_cnt(obj, cntmax, NULL, err);
 }
 
 void genwait_wake_all(void * obj) {
@@ -184,40 +201,7 @@ void genwait_wake_all_err(void *obj, int err) {
 }
 
 int genwait_wake_thd(void *obj, kthread_t *thd, int err) {
-    kthread_t *t, *nt;
-    struct slpquehead *qp;
-
-    /* Twiddle interrupt state */
-    irq_disable_scoped();
-
-    /* Find the queue */
-    qp = &slpque[LOOKUP(obj)];
-
-    /* Go through and find any matching entries */
-    for(t = TAILQ_FIRST(qp); t != NULL; t = nt) {
-        /* Get the next thread up front */
-        nt = TAILQ_NEXT(t, thdq);
-
-        /* Is this thread a match? */
-        if(t->wait_obj == obj && t == thd) {
-            /* Yes, remove it from the wait queue */
-            genwait_unqueue(t);
-
-            /* Set the wake return value */
-            if(err) {
-                CONTEXT_RET(t->context) = -1;
-                t->thd_errno = err;
-            }
-            else {
-                CONTEXT_RET(t->context) = 0;
-            }
-
-            /* We found it, so we're done... */
-	    return 1;
-        }
-    }
-
-    return 0;
+    return genwait_wake_thd_cnt(obj, 1, thd, err);
 }
 
 void genwait_check_timeouts(uint64_t tm) {

@@ -62,7 +62,7 @@ static void pvr_dma_irq_hnd(uint32_t code, void *data) {
     /* Signal the calling thread to continue, if any. */
     if(dma_blocking) {
         sem_signal(&dma_done);
-        thd_schedule(1, 0);
+        thd_schedule(true);
         dma_blocking = false;
     }
 }
