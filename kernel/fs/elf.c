@@ -28,12 +28,6 @@
 #   error Unknown architecture
 #endif
 
-#define ELF_DEBUG 0
-
-#define DBG(x) do { \
-    if(__is_defined(ELF_DEBUG)) \
-        printf x; \
-} while(0)
 
 /* Finds a given symbol in a relocated ELF symbol table */
 static int find_sym(char *name, elf_sym_t *table, int tablelen) {
@@ -78,7 +72,7 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
     }
 
     sz = fs_total(fd);
-    DBG(("Loading ELF file of size %d\n", sz));
+    dbglog(DBG_KDEBUG, "Loading ELF file of size %d\n", sz);
 
     img = aligned_alloc(32, sz);
 
@@ -112,17 +106,17 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
     }
 
     /* Print some debug info */
-    DBG(("File size is %d bytes\n", sz));
-    DBG(("	entry point	%08lx\n", hdr->entry));
-    DBG(("	ph offset	%08lx\n", hdr->phoff));
-    DBG(("	sh offset	%08lx\n", hdr->shoff));
-    DBG(("	flags		%08lx\n", hdr->flags));
-    DBG(("	ehsize		%08x\n", hdr->ehsize));
-    DBG(("	phentsize	%08x\n", hdr->phentsize));
-    DBG(("	phnum		%08x\n", hdr->phnum));
-    DBG(("	shentsize	%08x\n", hdr->shentsize));
-    DBG(("	shnum		%08x\n", hdr->shnum));
-    DBG(("	shstrndx	%08x\n", hdr->shstrndx));
+    dbglog(DBG_KDEBUG, "File size is %d bytes\n", sz);
+    dbglog(DBG_KDEBUG, "	entry point	%08lx\n", hdr->entry);
+    dbglog(DBG_KDEBUG, "	ph offset	%08lx\n", hdr->phoff);
+    dbglog(DBG_KDEBUG, "	sh offset	%08lx\n", hdr->shoff);
+    dbglog(DBG_KDEBUG, "	flags		%08lx\n", hdr->flags);
+    dbglog(DBG_KDEBUG, "	ehsize		%08x\n", hdr->ehsize);
+    dbglog(DBG_KDEBUG, "	phentsize	%08x\n", hdr->phentsize);
+    dbglog(DBG_KDEBUG, "	phnum		%08x\n", hdr->phnum);
+    dbglog(DBG_KDEBUG, "	shentsize	%08x\n", hdr->shentsize);
+    dbglog(DBG_KDEBUG, "	shnum		%08x\n", hdr->shnum);
+    dbglog(DBG_KDEBUG, "	shstrndx	%08x\n", hdr->shstrndx);
 
     /* Locate the string table; SH elf files ought to have
        two string tables, one for section names and one for object
@@ -180,7 +174,7 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
         }
     }
 
-    DBG(("Final image is %d bytes\n", sz));
+    dbglog(DBG_KDEBUG, "Final image is %d bytes\n", sz);
     out->data = imgout = malloc(sz);
 
     if(out->data == NULL) {
@@ -194,13 +188,13 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
     for(i = 0; i < hdr->shnum; i++) {
         if(shdrs[i].flags & SHF_ALLOC) {
             if(shdrs[i].type == SHT_NOBITS) {
-                DBG(("  setting %ld bytes of zeros at %08lx\n",
-                     shdrs[i].size, shdrs[i].addr));
+                dbglog(DBG_KDEBUG, "  setting %ld bytes of zeros at %08lx\n",
+                     shdrs[i].size, shdrs[i].addr);
                 memset(imgout + shdrs[i].addr, 0, shdrs[i].size);
             }
             else {
-                DBG(("  copying %ld bytes from %08lx to %08lx\n",
-                     shdrs[i].size, shdrs[i].offset, shdrs[i].addr));
+                dbglog(DBG_KDEBUG, "  copying %ld bytes from %08lx to %08lx\n",
+                     shdrs[i].size, shdrs[i].offset, shdrs[i].addr);
                 memcpy(imgout + shdrs[i].addr,
                        img + shdrs[i].offset,
                        shdrs[i].size);
@@ -212,14 +206,14 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
     for(i = 1; i < symtabsize; i++) {
         export_sym_t * sym;
 
-        /* DBG((" symbol '%s': value %04lx, size %04lx, info %02x, other %02x, shndx %04lx\n",
+        /* dbglog(DBG_KDEBUG, " symbol '%s': value %04lx, size %04lx, info %02x, other %02x, shndx %04lx\n",
             (const char *)(symtab[i].name),
             symtab[i].value, symtab[i].size,
             symtab[i].info,
             symtab[i].other,
-            symtab[i].shndx)); */
+            symtab[i].shndx); */
         if(symtab[i].shndx != SHN_UNDEF || ELF32_ST_TYPE(symtab[i].info) == STT_SECTION) {
-            // DBG((" symbol '%s': skipping\n", (const char *)(symtab[i].name)));
+            // dbglog(DBG_KDEBUG, " symbol '%s': skipping\n", (const char *)(symtab[i].name));
             continue;
         }
 
@@ -232,9 +226,9 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
         }
 
         /* Patch it in */
-        DBG((" symbol '%s' patched to 0x%x\n",
+        dbglog(DBG_KDEBUG, " symbol '%s' patched to 0x%x\n",
              (const char *)(symtab[i].name),
-             sym->ptr));
+             sym->ptr);
         symtab[i].value = sym->ptr;
     }
 
@@ -246,7 +240,8 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
         if(shdrs[i].type != SHT_REL && shdrs[i].type != SHT_RELA) continue;
 
         sect = shdrs[i].info;
-        DBG(("Relocating (%s) on section %d\n", shdrs[i].type == SHT_REL ? "SHT_REL" : "SHT_RELA", sect));
+        dbglog(DBG_KDEBUG, "Relocating (%s) on section %d\n",
+            shdrs[i].type == SHT_REL ? "SHT_REL" : "SHT_RELA", sect);
 
         switch(shdrs[i].type) {
             case SHT_RELA:
@@ -266,11 +261,11 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
                     sym = ELF32_R_SYM(relatab[j].info);
 
                     if(symtab[sym].shndx == SHN_UNDEF) {
-                        DBG(("  Writing undefined RELA %08lx(%08lx+%08lx) -> %08lx\n",
+                        dbglog(DBG_KDEBUG, "  Writing undefined RELA %08lx(%08lx+%08lx) -> %08lx\n",
                              symtab[sym].value + relatab[j].addend,
                              symtab[sym].value,
                              relatab[j].addend,
-                             vma + shdrs[sect].addr + relatab[j].offset));
+                             vma + shdrs[sect].addr + relatab[j].offset);
                         *((uint32_t *)(imgout
                                      + shdrs[sect].addr
                                      + relatab[j].offset))
@@ -278,10 +273,10 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
                               + relatab[j].addend;
                     }
                     else {
-                        DBG(("  Writing RELA %08lx(%08lx+%08lx+%08lx+%08lx) -> %08lx\n",
+                        dbglog(DBG_KDEBUG, "  Writing RELA %08lx(%08lx+%08lx+%08lx+%08lx) -> %08lx\n",
                              vma + shdrs[symtab[sym].shndx].addr + symtab[sym].value + relatab[j].addend,
                              vma, shdrs[symtab[sym].shndx].addr, symtab[sym].value, relatab[j].addend,
-                             vma + shdrs[sect].addr + relatab[j].offset));
+                             vma + shdrs[sect].addr + relatab[j].offset);
                         *((uint32_t*)(imgout
                                     + shdrs[sect].addr      /* assuming 1 == .text */
                                     + relatab[j].offset))
@@ -317,10 +312,10 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
                         uint32_t value = symtab[sym].value;
 
                         if(sect == 1 && j < 5) {
-                            DBG(("  Writing undefined %s %08lx -> %08lx",
+                            dbglog(DBG_KDEBUG, "  Writing undefined %s %08lx -> %08lx",
                                  pcrel ? "PCREL" : "ABSREL",
                                  value,
-                                 vma + shdrs[sect].addr + reltab[j].offset));
+                                 vma + shdrs[sect].addr + reltab[j].offset);
                         }
 
                         if(pcrel)
@@ -332,7 +327,7 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
                         += value;
 
                         if(sect == 1 && j < 5) {
-                            DBG(("(%08lx)\n", *((uint32_t *)(imgout + shdrs[sect].addr + reltab[j].offset))));
+                            dbglog(DBG_KDEBUG, "(%08lx)\n", *((uint32_t *)(imgout + shdrs[sect].addr + reltab[j].offset)));
                         }
                     }
                     else {
@@ -340,11 +335,11 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
                                        + symtab[sym].value;
 
                         if(sect == 1 && j < 5) {
-                            DBG(("  Writing %s %08lx(%08lx+%08lx+%08lx) -> %08lx",
+                            dbglog(DBG_KDEBUG, "  Writing %s %08lx(%08lx+%08lx+%08lx) -> %08lx",
                                  pcrel ? "PCREL" : "ABSREL",
                                  value,
                                  vma, shdrs[symtab[sym].shndx].addr, symtab[sym].value,
-                                 vma + shdrs[sect].addr + reltab[j].offset));
+                                 vma + shdrs[sect].addr + reltab[j].offset);
                         }
 
                         if(pcrel)
@@ -356,7 +351,7 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
                         += value;
 
                         if(sect == 1 && j < 5) {
-                            DBG(("(%08lx)\n", *((uint32_t *)(imgout + shdrs[sect].addr + reltab[j].offset))));
+                            dbglog(DBG_KDEBUG, "(%08lx)\n", *((uint32_t *)(imgout + shdrs[sect].addr + reltab[j].offset)));
                         }
                     }
                 }
@@ -392,7 +387,7 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
     }
 
     free(img);
-    DBG(("elf_load final ELF stats: memory image at %p, size %08lx\n", out->data, out->size));
+    dbglog(DBG_KDEBUG, "elf_load final ELF stats: memory image at %p, size %08lx\n", out->data, out->size);
 
     /* Flush the icache for that zone */
     icache_flush_range((uint32_t)out->data, out->size);
