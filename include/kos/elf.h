@@ -40,7 +40,7 @@ __BEGIN_DECLS
 
     \headerfile kos/elf.h
 */
-struct elf_hdr_t {
+typedef struct elf_hdr {
     uint8_t  ident[16];   /**< \brief ELF identifier */
     uint16_t type;        /**< \brief ELF file type */
     uint16_t machine;     /**< \brief ELF file architecture */
@@ -55,7 +55,7 @@ struct elf_hdr_t {
     uint16_t shentsize;   /**< \brief Section header entry size */
     uint16_t shnum;       /**< \brief Section header entry count */
     uint16_t shstrndx;    /**< \brief String table section index */
-};
+} elf_hdr_t;
 
 /** \defgroup elf_archs                 Architecture Types
     \brief                              Relevant ELF architecture type codes
@@ -132,7 +132,7 @@ the file */
 
     \headerfile kos/elf.h
 */
-struct elf_shdr_t {
+typedef struct elf_shdr {
     uint32_t name;        /**< \brief Index into string table */
     uint32_t type;        /**< \brief Section type \see elf_sections */
     uint32_t flags;       /**< \brief Section flags \see elf_hdrflags */
@@ -143,7 +143,7 @@ struct elf_shdr_t {
     uint32_t info;        /**< \brief Section header extra info */
     uint32_t addralign;   /**< \brief Alignment constraints */
     uint32_t entsize;     /**< \brief Fixed-size table entry sizes */
-};
+} elf_shdr_t;
 /* Link and info fields:
 
 switch (sh_type) {
@@ -204,14 +204,14 @@ switch (sh_type) {
 
     \headerfile kos/elf.h
 */
-struct elf_sym_t {
+typedef struct elf_sym {
     uint32_t name;        /**< \brief Index into file's string table */
     uint32_t value;       /**< \brief Value of the symbol */
     uint32_t size;        /**< \brief Size of the symbol */
     uint8_t  info;        /**< \brief Symbol type and binding */
     uint8_t  other;       /**< \brief 0. Holds no meaning. */
     uint16_t shndx;       /**< \brief Section index */
-};
+} elf_sym_t;
 
 /** \brief   Retrieve the binding type for a symbol.
     \ingroup elf
@@ -240,11 +240,11 @@ struct elf_sym_t {
 
     \headerfile kos/elf.h
 */
-struct elf_rela_t {
+typedef struct elf_rela {
     uint32_t offset;      /**< \brief Offset within section */
     uint32_t info;        /**< \brief Symbol and type */
     int32_t  addend;      /**< \brief Constant addend for the symbol */
-};
+} elf_rela_t;
 
 /** \brief   ELF Relocation entry (without explicit addend).
     \ingroup elf
@@ -255,10 +255,10 @@ struct elf_rela_t {
 
     \headerfile kos/elf.h
 */
-struct elf_rel_t {
+typedef struct elf_rel {
     uint32_t      offset;     /**< \brief Offset within section */
     uint32_t      info;       /**< \brief Symbol and type */
-};
+} elf_rel_t;
 
 /** \defgroup elf_reltypes              Relocation Types
     \brief                              ELF relocation type values
