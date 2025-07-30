@@ -32,29 +32,49 @@ __BEGIN_DECLS
     \ingroup        system_libraries
 */
 
+/** \defgroup elf_ident                 ELF Identification Bytes
+    \ingroup elf
+
+    Initial bytes of the ELF file, specifying how it should be
+    interpreted.
+    @{
+*/
+#define EI_MAG0         0   /**< \brief File identification: 0x7f */
+#define EI_MAG1         1   /**< \brief File identification: 'E' */
+#define EI_MAG2         2   /**< \brief File identification: 'L' */
+#define EI_MAG3         3   /**< \brief File identification: 'F' */
+#define EI_CLASS        4   /**< \brief File class (32/64-bit) */
+#define EI_DATA         5   /**< \brief Data encoding (LSB/MSB) */
+#define EI_VERSION      6   /**< \brief File version (must be 1) */
+#define EI_OSABI        7   /**< \brief Operating System/ABI identification */
+#define EI_ABIVERSION   8   /**< \brief ABI version */
+#define EI_PAD          9   /**< \brief Start of padding bytes */
+
+#define EI_NIDENT       16  /**< \brief Size of elf_hdr::ident */
+/** @} */
+
 /** \brief   ELF file header.
     \ingroup elf
 
     This header is at the beginning of any valid ELF binary and serves to
     identify the architecture of the binary and various data about it.
 
-    \headerfile kos/elf.h
 */
 typedef struct elf_hdr {
-    uint8_t  ident[16];   /**< \brief ELF identifier */
-    uint16_t type;        /**< \brief ELF file type */
-    uint16_t machine;     /**< \brief ELF file architecture */
-    uint32_t version;     /**< \brief Object file version */
-    uint32_t entry;       /**< \brief Entry point */
-    uint32_t phoff;       /**< \brief Program header offset */
-    uint32_t shoff;       /**< \brief Section header offset */
-    uint32_t flags;       /**< \brief Processor flags */
-    uint16_t ehsize;      /**< \brief ELF header size in bytes */
-    uint16_t phentsize;   /**< \brief Program header entry size */
-    uint16_t phnum;       /**< \brief Program header entry count */
-    uint16_t shentsize;   /**< \brief Section header entry size */
-    uint16_t shnum;       /**< \brief Section header entry count */
-    uint16_t shstrndx;    /**< \brief String table section index */
+    uint8_t  ident[EI_NIDENT];  /**< \brief ELF identifier */
+    uint16_t type;              /**< \brief ELF file type */
+    uint16_t machine;           /**< \brief ELF file architecture */
+    uint32_t version;           /**< \brief Object file version */
+    uint32_t entry;             /**< \brief Entry point */
+    uint32_t phoff;             /**< \brief Program header offset */
+    uint32_t shoff;             /**< \brief Section header offset */
+    uint32_t flags;             /**< \brief Processor flags */
+    uint16_t ehsize;            /**< \brief ELF header size in bytes */
+    uint16_t phentsize;         /**< \brief Program header entry size */
+    uint16_t phnum;             /**< \brief Program header entry count */
+    uint16_t shentsize;         /**< \brief Section header entry size */
+    uint16_t shnum;             /**< \brief Section header entry count */
+    uint16_t shstrndx;          /**< \brief String table section index */
 } elf_hdr_t;
 
 /** \defgroup elf_archs                 Architecture Types
