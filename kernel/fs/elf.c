@@ -19,11 +19,9 @@
 
 /* What's our architecture code we're expecting? */
 #if defined(_arch_dreamcast)
-#   define ARCH_CODE EM_SH
-#elif defined(_arch_ia32)
-#   define ARCH_CODE EM_386
-#elif defined(_arch_gba)
-#   define ARCH_CODE EM_ARM
+#   define ARCH_ELFCLASS    ELFCLASS32    /* Dreamcast is 32-bit */
+#   define ARCH_ELFDATA     ELFDATA2LSB   /* and little endian */
+#   define ARCH_CODE        EM_SH         /* and uses an SH processor. */
 #else
 #   error Unknown architecture
 #endif
@@ -39,6 +37,31 @@ static int find_sym(char *name, elf_sym_t *table, int tablelen) {
     }
 
     return -1;
+}
+
+/* This function tests the header to determine if it's valid. It's separated
+    out as this is the section of the header whose parsing needs to test
+    against arch-specific values.
+*/
+static bool elf_hdr_validate(elf_hdr_t *hdr) {
+    /* First four bytes are a magic number */
+    if(strncmp((char *)hdr->ident, "\177ELF", 4)) {
+        dbglog(DBG_ERROR, "elf_load: file is not a valid ELF file\n");
+        dbglog(DBG_ERROR, "   hdr->ident is %d/%.3s\n", hdr->ident[EI_MAG0], hdr->ident + 1);
+        return false;
+    }
+
+    if(hdr->ident[EI_CLASS] != ARCH_ELFCLASS || hdr->ident[EI_DATA] != ARCH_ELFDATA) {
+        dbglog(DBG_ERROR, "elf_load: invalid architecture flags in ELF file\n");
+        return false;
+    }
+
+    if(hdr->machine != ARCH_CODE) {
+        dbglog(DBG_ERROR, "elf_load: invalid architecture %02x in ELF file\n", hdr->machine);
+        return false;
+    }
+
+    return true;
 }
 
 /* Pass in a file descriptor from the virtual file system, and the
@@ -97,22 +120,9 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
     /* Header is at the front */
     hdr = (elf_hdr_t *)(img + 0);
 
-    /* First four bytes are a magic number */
-    if(strncmp((char *)hdr->ident, "\177ELF", 4)) {
-        dbglog(DBG_ERROR, "elf_load: file is not a valid ELF file\n");
-        dbglog(DBG_ERROR, "   hdr->ident is %d/%.3s\n", hdr->ident[EI_MAG0], hdr->ident + 1);
+    /* Test if the header is valid */
+    if(!elf_hdr_validate(hdr))
         goto error1;
-    }
-
-    if(hdr->ident[EI_CLASS] != 1 || hdr->ident[EI_DATA] != 1) {
-        dbglog(DBG_ERROR, "elf_load: invalid architecture flags in ELF file\n");
-        goto error1;
-    }
-
-    if(hdr->machine != ARCH_CODE) {
-        dbglog(DBG_ERROR, "elf_load: invalid architecture %02x in ELF file\n", hdr->machine);
-        goto error1;
-    }
 
     /* Print some debug info */
     dbglog(DBG_KDEBUG, "File size is %d bytes\n", sz);
