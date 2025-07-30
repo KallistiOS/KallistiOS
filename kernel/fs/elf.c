@@ -49,7 +49,8 @@ static int find_sym(char *name, elf_sym_t *table, int tablelen) {
    documented by Intel.. I hope that this works for future compilers. */
 int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
     uint8_t     *img, *imgout;
-    int         sz, i, j, sect;
+    size_t      sz, rsz;
+    int         i, j, sect;
     elf_hdr_t   *hdr;
     elf_shdr_t  *shdrs, *symtabhdr;
     elf_sym_t   *symtab;
@@ -82,8 +83,16 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
         return -1;
     }
 
-    fs_read(fd, img, sz);
+    rsz = fs_read(fd, img, sz);
+
+    /* We close it regardless. */
     fs_close(fd);
+
+    if(rsz < sz) {
+        dbglog(DBG_ERROR, "elf_load: only read %d of %d bytes\n", rsz, sz);
+        free(img);
+        return -1;
+    }
 
     /* Header is at the front */
     hdr = (elf_hdr_t *)(img + 0);
