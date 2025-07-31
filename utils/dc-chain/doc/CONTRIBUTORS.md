@@ -21,3 +21,4 @@
 | [Colton Pawielski](https://github.com/cepawiel) | 2023 |
 | [Eric Fradella](https://github.com/darcagn) | 2023, 2024, 2025 |
 | [Falco Girgis](https://github.com/gyrovorbis) | 2023, 2024 |
+| [Paul Cercueil](https://github.com/pcercuei) | 2025 |

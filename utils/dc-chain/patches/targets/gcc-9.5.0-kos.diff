@@ -1,72 +1,57 @@
-diff --color -ruN gcc-13.4.1/gcc/config/sh/sh-c.cc gcc-13.4.1-kos/gcc/config/sh/sh-c.cc
---- gcc-13.4.1/gcc/config/sh/sh-c.cc	2023-06-04 20:48:46.612552162 -0500
-+++ gcc-13.4.1-kos/gcc/config/sh/sh-c.cc	2023-06-04 20:49:03.486606055 -0500
-@@ -141,4 +141,11 @@
+diff -ruN gcc-9.5.0/gcc/config/elfos.h gcc-9.5.0-kos/gcc/config/elfos.h
+--- gcc-9.5.0/gcc/config/elfos.h	2025-04-17 16:01:33.790051712 -0600
++++ gcc-9.5.0-kos/gcc/config/elfos.h	2025-04-17 16:01:42.910094466 -0600
+@@ -486,3 +486,6 @@
  
-   cpp_define_formatted (pfile, "__SH_ATOMIC_MODEL_%s__",
- 			selected_atomic_model ().cdef_name);
+ #undef TARGET_LIBC_HAS_FUNCTION
+ #define TARGET_LIBC_HAS_FUNCTION no_c99_libc_has_function
 +
-+  /* Custom built-in defines for KallistiOS */
-+  builtin_define ("__KOS_GCC_PATCHED__");
-+  cpp_define_formatted (pfile, "__KOS_GCC_PATCHLEVEL__=%d",
-+			2023010200);
-+  /* Toolchain supports setting up stack for 32MB */
-+  builtin_define ("__KOS_GCC_32MB__");
- }
-diff --color -ruN gcc-13.4.1/gcc/configure gcc-13.4.1-kos/gcc/configure
---- gcc-13.4.1/gcc/configure	2023-06-04 20:48:49.679561957 -0500
-+++ gcc-13.4.1-kos/gcc/configure	2023-06-04 20:49:03.488606061 -0500
-@@ -13094,7 +13094,7 @@
++#define TARGET_OS_CPP_BUILTINS()			\
++  builtin_define ("__KOS_GCC_PATCHLEVEL__=2025062800")
+diff --color -ruN gcc-9.5.0/gcc/configure gcc-9.5.0-kos/gcc/configure
+--- gcc-9.5.0/gcc/configure	2023-06-05 16:31:31.219338192 -0500
++++ gcc-9.5.0-kos/gcc/configure	2023-06-05 16:31:31.712339846 -0500
+@@ -11862,7 +11862,7 @@
      target_thread_file='single'
      ;;
    aix | dce | lynx | mipssde | posix | rtems | \
--  single | tpf | vxworks | win32 | mcf)
-+  single | tpf | vxworks | win32 | kos | mcf)
+-  single | tpf | vxworks | win32)
++  single | tpf | vxworks | win32 | kos)
      target_thread_file=${enable_threads}
      ;;
    *)
-diff --color -ruN gcc-13.4.1/libgcc/config/sh/t-sh gcc-13.4.1-kos/libgcc/config/sh/t-sh
---- gcc-13.4.1/libgcc/config/sh/t-sh	2023-06-04 20:48:45.741549380 -0500
-+++ gcc-13.4.1-kos/libgcc/config/sh/t-sh	2023-06-04 20:49:03.488606061 -0500
-@@ -23,6 +23,8 @@
-   $(LIB1ASMFUNCS_CACHE)
- LIB1ASMFUNCS_CACHE = _ic_invalidate _ic_invalidate_array
- 
-+LIB2ADD = $(srcdir)/config/sh/fake-kos.S
-+
- crt1.o: $(srcdir)/config/sh/crt1.S
- 	$(gcc_compile) -c $<
- 
-diff --color -ruN gcc-13.4.1/libgcc/configure gcc-13.4.1-kos/libgcc/configure
---- gcc-13.4.1/libgcc/configure	2023-06-04 20:48:45.787549527 -0500
-+++ gcc-13.4.1-kos/libgcc/configure	2023-06-04 20:49:03.489606065 -0500
-@@ -5699,6 +5699,7 @@
+diff --color -ruN gcc-9.5.0/libgcc/config.host gcc-9.5.0-kos/libgcc/config.host
+--- gcc-9.5.0/libgcc/config.host	2025-04-27 14:45:09.695053718 -0600
++++ gcc-9.5.0-kos/libgcc/config.host	2025-04-27 15:10:10.267714917 -0600
+@@ -71,7 +71,7 @@
+ asm_hidden_op=.hidden
+ enable_execute_stack=
+ extra_parts=
+-tmake_file=
++tmake_file="t-kos"
+ tm_file=
+ tm_define=
+ md_unwind_def_header=no-unwind.h
+diff -ruN /dev/null gcc-9.5.0-kos/libgcc/config/t-kos
+--- /dev/null	2025-04-27 14:45:09.695053718 -0600
++++ gcc-9.5.0-kos/libgcc/config/t-kos	2025-04-27 15:10:10.267714917 -0600
+@@ -0,0 +1 @@
++LIB2ADD = $(srcdir)/config/fake-kos.c
+diff --color -ruN gcc-9.5.0/libgcc/configure gcc-9.5.0-kos/libgcc/configure
+--- gcc-9.5.0/libgcc/configure	2023-06-05 16:31:31.323338541 -0500
++++ gcc-9.5.0-kos/libgcc/configure	2023-06-05 16:31:31.713339849 -0500
+@@ -5602,6 +5602,7 @@
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;
      win32)	thread_header=config/i386/gthr-win32.h ;;
-+    kos)	thread_header=config/sh/gthr-kos.h ;;
-     mcf)	thread_header=config/i386/gthr-mcf.h ;;
++    kos)    thread_header=gthr-kos.h ;;
  esac
  
-diff --color -ruN gcc-13.4.1/libobjc/configure gcc-13.4.1-kos/libobjc/configure
---- gcc-13.4.1/libobjc/configure	2023-06-04 20:48:49.902562670 -0500
-+++ gcc-13.4.1-kos/libobjc/configure	2023-06-04 20:49:03.489606065 -0500
-@@ -2918,11 +2918,9 @@
  
- cat confdefs.h - <<_ACEOF >conftest.$ac_ext
- /* end confdefs.h.  */
--#include <stdio.h>
- int
- main ()
- {
--printf ("hello world\n");
-   ;
-   return 0;
- }
-diff --color -ruN gcc-13.4.1/libobjc/Makefile.in gcc-13.4.1-kos/libobjc/Makefile.in
---- gcc-13.4.1/libobjc/Makefile.in	2023-06-04 20:48:49.901562666 -0500
-+++ gcc-13.4.1-kos/libobjc/Makefile.in	2023-06-04 20:49:03.490606068 -0500
-@@ -308,14 +308,16 @@
+diff --color -ruN gcc-9.5.0/libobjc/Makefile.in gcc-9.5.0-kos/libobjc/Makefile.in
+--- gcc-9.5.0/libobjc/Makefile.in	2023-06-05 16:31:29.138331210 -0500
++++ gcc-9.5.0-kos/libobjc/Makefile.in	2023-06-05 16:31:31.713339849 -0500
+@@ -307,14 +307,16 @@
  $(srcdir)/aclocal.m4: @MAINT@ $(aclocal_deps)
  	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
  
@@ -87,7 +72,7 @@ diff --color -ruN gcc-13.4.1/libobjc/Makefile.in gcc-13.4.1-kos/libobjc/Makefile
  	fi
  	$(MULTIDO) $(FLAGS_TO_PASS) multi-do DO="$@"
  	@-$(LIBTOOL) --mode=finish $(DESTDIR)$(toolexeclibdir)
-@@ -328,7 +330,7 @@
+@@ -327,7 +329,7 @@
  	  $(INSTALL_DATA) $${realfile} $(DESTDIR)$(libsubdir)/$(includedirname)/objc; \
  	done
  
@@ -96,9 +81,9 @@ diff --color -ruN gcc-13.4.1/libobjc/Makefile.in gcc-13.4.1-kos/libobjc/Makefile
  
  mostlyclean:
  	-$(LIBTOOL_CLEAN) rm -f libobjc$(libsuffix).la libobjc_gc$(libsuffix).la *.lo
-diff --color -ruN gcc-13.4.1/libstdc++-v3/config/cpu/sh/atomicity.h gcc-13.4.1-kos/libstdc++-v3/config/cpu/sh/atomicity.h
---- gcc-13.4.1/libstdc++-v3/config/cpu/sh/atomicity.h	2023-06-04 20:48:46.047550357 -0500
-+++ gcc-13.4.1-kos/libstdc++-v3/config/cpu/sh/atomicity.h	2023-06-04 20:49:03.490606068 -0500
+diff --color -ruN gcc-9.5.0/libstdc++-v3/config/cpu/sh/atomicity.h gcc-9.5.0-kos/libstdc++-v3/config/cpu/sh/atomicity.h
+--- gcc-9.5.0/libstdc++-v3/config/cpu/sh/atomicity.h	2023-06-05 16:31:31.373338708 -0500
++++ gcc-9.5.0-kos/libstdc++-v3/config/cpu/sh/atomicity.h	2023-06-05 16:31:31.714339853 -0500
 @@ -22,14 +22,40 @@
  // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
  // <http://www.gnu.org/licenses/>.
@@ -149,14 +134,14 @@ diff --color -ruN gcc-13.4.1/libstdc++-v3/config/cpu/sh/atomicity.h gcc-13.4.1-k
 +
 +_GLIBCXX_END_NAMESPACE_VERSION
 +} // namespace
-diff --color -ruN gcc-13.4.1/libstdc++-v3/configure gcc-13.4.1-kos/libstdc++-v3/configure
---- gcc-13.4.1/libstdc++-v3/configure	2023-06-04 20:48:46.398551478 -0500
-+++ gcc-13.4.1-kos/libstdc++-v3/configure	2023-06-04 20:49:03.493606077 -0500
-@@ -15825,6 +15825,7 @@
+diff --color -ruN gcc-9.5.0/libstdc++-v3/configure gcc-9.5.0-kos/libstdc++-v3/configure
+--- gcc-9.5.0/libstdc++-v3/configure	2023-06-05 16:31:31.657339661 -0500
++++ gcc-9.5.0-kos/libstdc++-v3/configure	2023-06-05 16:31:31.720339873 -0500
+@@ -15631,6 +15631,7 @@
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;
      win32)	thread_header=config/i386/gthr-win32.h ;;
-+    kos)	thread_header=config/sh/gthr-kos.h ;;
-     mcf)	thread_header=config/i386/gthr-mcf.h ;;
++    kos)    thread_header=gthr-kos.h ;;
  esac
+ 
  
