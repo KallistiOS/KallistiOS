@@ -36,7 +36,6 @@ ftell
 fflush
 rewind
 fputc
-dbglog
 sprintf
 vsprintf
 
@@ -188,6 +187,7 @@ dcache_purge_range
 dcache_purge_all
 
 # Low-level debug I/O
+__real_dbglog
 dbgio_set_irq_usage
 dbgio_enable
 dbgio_disable
