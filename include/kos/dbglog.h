@@ -30,7 +30,7 @@ __BEGIN_DECLS
 */
 
 /** \brief   Kernel debugging printf.
-    \ingroup logging    
+    \ingroup logging
 
     This function is similar to printf(), but filters its output through a log
     level check before being printed. This way, you can set the level of debug
@@ -57,6 +57,10 @@ do { \
     This is the list of levels that are allowed to be passed into the dbglog()
     function, representing different levels of importance.
 
+    For `DBG_SOURCE()` pass to it a define that controls specific debugging
+    and if the define is defined, the logging will be outputted. If not defined
+    the messages will only be outputted if the level is set to `DBG_MAX`.
+
     @{
 */
 #define DBG_DISABLED    -1      /**< \brief No output allowed */
@@ -68,6 +72,9 @@ do { \
 #define DBG_INFO        5       /**< \brief Informational messages */
 #define DBG_DEBUG       6       /**< \brief User debug messages */
 #define DBG_KDEBUG      7       /**< \brief Kernel debug messages */
+#define DBG_MAX         8       /**< \brief All debug outputted */
+
+#define DBG_SOURCE(x)   (__is_defined(x) ? DBG_DEAD : DBG_MAX) /**< \brief Verbose debugging of specific systems */
 /** @} */
 
 /** \brief   Set the debugging log level.
