@@ -15,6 +15,7 @@
 
 #include <arch/types.h>
 #include <kos/mutex.h>
+#include <kos/opts.h>
 #include <kos/dbglog.h>
 #include <dc/fs_vmu.h>
 #include <dc/vmufs.h>
@@ -42,10 +43,9 @@ Note: this new version now talks directly to the vmufs module and doesn't do
 any block-level I/O anymore. This layer and that one are interchangeable
 and may be used pretty much simultaneously in the same program.
 
+Define VMUFS_DEBUG in kos/opts.h, in your CFLAGS, or here if you want copious
+debug output.
 */
-
-/* Enable this if you want copious debug output */
-/* #define VMUFS_DEBUG */
 
 #define VMU_DIR     0
 #define VMU_FILE    1
@@ -167,16 +167,13 @@ static vmu_fh_t *vmu_open_vmu_dir(void) {
                 names[num][1] = u + '0';
                 num++;
 
-                if(__is_defined(VMUFS_DEBUG)) {
-                    dbglog(DBG_KDEBUG, "vmu_open_vmu_dir: found memcard (%c%d)\n",
-                           'a' + p, u);
-                }
+                dbglog(DBG_SOURCE(VMUFS_DEBUG), "vmu_open_vmu_dir: found memcard (%c%d)\n",
+                       'a' + p, u);
             }
         }
     }
 
-    if(__is_defined(VMUFS_DEBUG))
-        dbglog(DBG_KDEBUG, "# of memcards found: %d\n", num);
+    dbglog(DBG_SOURCE(VMUFS_DEBUG), "# of memcards found: %d\n", num);
 
     if(!(dh = malloc(sizeof(vmu_dh_t))))
         return NULL;
@@ -501,8 +498,7 @@ static ssize_t vmu_write(void * hnd, const void *buffer, size_t cnt) {
 
         n = n / 512;
 
-        if(__is_defined(VMUFS_DEBUG))
-            dbglog(DBG_KDEBUG, "VMUFS: extending file's filesize by %d\n", n);
+        dbglog(DBG_SOURCE(VMUFS_DEBUG), "VMUFS: extending file's filesize by %d\n", n);
 
         /* We alloc another 512*n bytes for the file */
         tmp = realloc(fh->data, (fh->filesize + n) * 512);
@@ -519,10 +515,8 @@ static ssize_t vmu_write(void * hnd, const void *buffer, size_t cnt) {
     }
 
     /* insert the data in buffer into fh->data at fh->loc */
-    if(__is_defined(VMUFS_DEBUG)) {
-        dbglog(DBG_KDEBUG, "VMUFS: adding %d bytes of data at loc %ld (%ld avail)\n",
-               cnt, fh->loc, fh->filesize * 512);
-    }
+    dbglog(DBG_SOURCE(VMUFS_DEBUG), "VMUFS: adding %d bytes of data at loc %ld (%ld avail)\n",
+           cnt, fh->loc, fh->filesize * 512);
 
     memcpy(fh->data + fh->loc + fh->start, buffer, cnt);
     fh->loc += cnt;
