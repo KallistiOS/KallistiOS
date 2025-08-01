@@ -22,7 +22,7 @@ static spinlock_t mutex = SPINLOCK_INITIALIZER;
 /* Default kernel debug log level: if a message has a level higher than this,
    it won't be shown. Set to DBG_DEAD to see basically nothing, and set to
    DBG_KDEBUG to see everything. DBG_INFO is generally a decent level. */
-int dbglog_level = DBG_KDEBUG;
+int dbglog_level = DBG_INFO;
 
 /* Set debug level */
 void dbglog_set_level(int level) {
