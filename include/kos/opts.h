@@ -42,9 +42,22 @@ __BEGIN_DECLS
    @{
 */
 
+/* Completely disable debug logging at compile time if defined. */
+/* #define DBGLOG_DISABLED */
+
+/* Set the maximum allowed dbglog level. Normally the level is adjustable at
+   runtime, but that means keeping all debug information even in release builds. */
+#ifdef DBGLOG_DISABLED
+#define DBGLOG_LEVEL_SUPPORT -1
+#endif
+
+/* This retains the old behavior of all debugging being retained for runtime */
+#ifndef DBGLOG_LEVEL_SUPPORT
+#define DBGLOG_LEVEL_SUPPORT 127
+#endif
+
 /* Enable debugging in fs_vmu. */
 /* #define VMUFS_DEBUG 1 */
-
 
 /* Enable to allow extra debugging checks in the malloc code itself. This
    sometimes catches corrupted blocks. Recommended during debugging phases. */
