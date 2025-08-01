@@ -124,13 +124,14 @@ export KOS_LDFLAGS=""
 export KOS_AFLAGS=""
 export DC_ARM_LDFLAGS=""
 
-# Debug Builds
+# Debug Options
 #
-# Controls whether to disable additional debugging checks and assertions,
-# such as for parameter validation or internal errors. Uncomment this if
-# you do not wish to compile with this additional logic enabled.
+# NDEBUG controls whether to disable `assert` per C standard, and
+# DBGLOG_DISABLED controls whether other debug output will be provided
+# (see ./kos/dbglog.h). Enable these if you want to remove assert checks
+# and disable logging output, as is desirable for release builds.
 #
-#export KOS_CFLAGS="${KOS_CFLAGS} -DNDEBUG"
+#export KOS_CFLAGS="${KOS_CFLAGS} -DNDEBUG -DDBGLOG_DISABLED"
 
 # Optimization Level
 #

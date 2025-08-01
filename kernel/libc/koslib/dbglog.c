@@ -13,6 +13,7 @@
 #include <kos/thread.h>
 #include <kos/dbgio.h>
 #include <kos/fs.h>
+
 #include <arch/spinlock.h>
 
 /* Not re-entrant */
@@ -22,7 +23,7 @@ static spinlock_t mutex = SPINLOCK_INITIALIZER;
 /* Default kernel debug log level: if a message has a level higher than this,
    it won't be shown. Set to DBG_DEAD to see basically nothing, and set to
    DBG_KDEBUG to see everything. DBG_INFO is generally a decent level. */
-int dbglog_level = DBG_INFO;
+int dbglog_level = (DBGLOG_LEVEL_SUPPORT < DBG_INFO) ? DBGLOG_LEVEL_SUPPORT : DBG_INFO;
 
 /* Set debug level */
 void dbglog_set_level(int level) {
@@ -30,12 +31,12 @@ void dbglog_set_level(int level) {
 }
 
 /* Kernel debug logging facility */
-void dbglog(int level, const char *fmt, ...) {
+void __real_dbglog(int level, const char *fmt, ...) {
     va_list args;
     int i;
 
     /* If this log level is blocked out, don't even bother */
-    if(level > dbglog_level)
+    if((DBGLOG_LEVEL_SUPPORT < level) || (level > dbglog_level))
         return;
 
     /* We only try to lock if the message isn't urgent */
@@ -49,7 +50,7 @@ void dbglog(int level, const char *fmt, ...) {
     if(i > 0) {
         if(irq_inside_int() || 
             (fs_write(STDOUT_FILENO, printf_buf, strlen(printf_buf)) < 0))
-                dbgio_write_str(printf_buf);        
+                dbgio_write_str(printf_buf);
     }
 
     if(level >= DBG_ERROR && !irq_inside_int())
