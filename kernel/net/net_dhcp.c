@@ -130,7 +130,7 @@ static int net_dhcp_fill_options(netif_t *net, dhcp_pkt_t *req, uint8_t msgtype,
     return (pos < DHCP_MIN_OPTIONS_SIZE) ? DHCP_MIN_OPTIONS_SIZE : pos;
 }
 
-static int net_dhcp_get_message_type(dhcp_pkt_t *pkt, int len) {
+static int __pure net_dhcp_get_message_type(dhcp_pkt_t *pkt, int len) {
     int i;
 
     len -= sizeof(dhcp_pkt_t);
@@ -153,7 +153,7 @@ static int net_dhcp_get_message_type(dhcp_pkt_t *pkt, int len) {
     return -1;
 }
 
-static uint32_t net_dhcp_get_32bit(dhcp_pkt_t *pkt, uint8_t opt, int len) {
+static uint32_t __pure net_dhcp_get_32bit(dhcp_pkt_t *pkt, uint8_t opt, int len) {
     int i;
 
     len -= sizeof(dhcp_pkt_t);
@@ -179,7 +179,7 @@ static uint32_t net_dhcp_get_32bit(dhcp_pkt_t *pkt, uint8_t opt, int len) {
     return 0;
 }
 
-static uint16_t net_dhcp_get_16bit(dhcp_pkt_t *pkt, uint8_t opt, int len) {
+static uint16_t __pure net_dhcp_get_16bit(dhcp_pkt_t *pkt, uint8_t opt, int len) {
     int i;
 
     len -= sizeof(dhcp_pkt_t);
