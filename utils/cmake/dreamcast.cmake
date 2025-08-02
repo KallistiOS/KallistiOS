@@ -34,14 +34,11 @@ endif()
 
 ### Adds a custom "run" target which uses $KOS_LOADER to run the given target. ###
 function(kos_run_target target)
-    # phony.txt is never created, so this command should always be executed
-    add_custom_command(
-        OUTPUT  phony.txt
-        COMMAND bash -c "$ENV{KOS_LOADER} $<TARGET_FILE:${target}>"
+    add_custom_target(run 
+        COMMAND $ENV{KOS_LOADER} $<TARGET_FILE:${target}> 
+        DEPENDS ${target} 
+        USES_TERMINAL
     )
-
-    # Makes the "run" target dependent upon the main target and forces it to run
-    add_custom_target(run DEPENDS ${target} phony.txt)
 endfunction()
 
 ### Helper Function for Bin2Object ###
