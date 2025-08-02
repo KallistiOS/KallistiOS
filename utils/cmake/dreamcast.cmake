@@ -1,12 +1,13 @@
 # Auxiliary CMake Utility Functions
 #   Copyright (C) 2023 Colton Pawielski
-#   Copyright (C) 2024 Falco Girgis
+#   Copyright (C) 2024, 2025 Falco Girgis
 #   Copyright (C) 2024 Paul Cercueil
 #
 # This file implements utilities for the following additional functionality
 # which exists in the KOS Make build system:
 #   1) linking to existing binaries
 #   2) adding a romdisk
+#   3) running the binary using KOS_LOADER
 #
 # NOTE: When using the KOS CMake toolchain file, you do not need to include
 #       this file directly!
@@ -30,6 +31,18 @@ if(NOT DEFINED KOS_CC_BASE)
         set(KOS_CC_BASE $ENV{KOS_CC_BASE})
     endif()
 endif()
+
+### Adds a custom "run" target which uses $KOS_LOADER to run the given target. ###
+function(kos_run_target target)
+    # phony.txt is never created, so this command should always be executed
+    add_custom_command(
+        OUTPUT  phony.txt
+        COMMAND bash -c "$ENV{KOS_LOADER} $<TARGET_FILE:${target}>"
+    )
+
+    # Makes the "run" target dependent upon the main target and forces it to run
+    add_custom_target(run DEPENDS ${target} phony.txt)
+endfunction()
 
 ### Helper Function for Bin2Object ###
 function(kos_bin2o inFile symbol)
