@@ -22,13 +22,15 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
+#include <kos/opts.h>
+
 /** \defgroup logging   Logging
     \brief              KOS's Logging API 
     \ingroup            debugging
 */
 
 /** \brief   Kernel debugging printf.
-    \ingroup logging    
+    \ingroup logging
 
     This function is similar to printf(), but filters its output through a log
     level check before being printed. This way, you can set the level of debug
@@ -39,7 +41,18 @@ __BEGIN_DECLS
     \param  ...             Format arguments
     \see    dbglog_levels
 */
-void dbglog(int level, const char *fmt, ...) __printflike(2, 3);
+void real_dbglog(int level, const char *fmt, ...) __printflike(2, 3);
+
+/* We need to ensure we're still exporting a symbol for external linking */
+#ifdef __EXPORTS_FILE
+    #define dbglog real_dbglog
+#else
+    #define dbglog(lvl, ...) \
+    do { \
+      if ((lvl) <= DBGLOG_LEVEL_SUPPORT) \
+        real_dbglog(lvl, __VA_ARGS__); \
+    } while(0)
+#endif
 
 /** \defgroup   dbglog_levels   Log Levels
     \brief                      dbglog severity levels
@@ -48,8 +61,13 @@ void dbglog(int level, const char *fmt, ...) __printflike(2, 3);
     This is the list of levels that are allowed to be passed into the dbglog()
     function, representing different levels of importance.
 
+    For `DBG_SOURCE()` pass to it a define that controls specific debugging
+    and if the define is defined, the logging will be outputted. If not defined
+    the messages will only be outputted if the level is set to `DBG_MAX`.
+
     @{
 */
+#define DBG_DISABLED    -1      /**< \brief No output allowed */
 #define DBG_DEAD        0       /**< \brief The system is dead */
 #define DBG_CRITICAL    1       /**< \brief A critical error message */
 #define DBG_ERROR       2       /**< \brief A normal error message */
@@ -58,13 +76,17 @@ void dbglog(int level, const char *fmt, ...) __printflike(2, 3);
 #define DBG_INFO        5       /**< \brief Informational messages */
 #define DBG_DEBUG       6       /**< \brief User debug messages */
 #define DBG_KDEBUG      7       /**< \brief Kernel debug messages */
+#define DBG_MAX         8       /**< \brief All debug outputted */
+
+#define DBG_SOURCE(x)   (__is_defined(x) ? DBG_DEAD : DBG_MAX) /**< \brief Verbose debugging of specific systems */
 /** @} */
 
 /** \brief   Set the debugging log level.
     \ingroup logging
 
     This function sets the level for which dbglog() will ignore messages for if
-    the message has a higher level.
+    the message has a higher level. This runtime setting does not override the
+    `DBGLOG_LEVEL_SUPPORT` define.
 
     \param  level           The level to stop paying attention after.
     \see    dbglog_levels
