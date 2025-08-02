@@ -41,7 +41,7 @@ static struct ktqueue timer_queue;
 
 /* Internal function to insert a thread on the timer queue. Maintains
    sorting order by wait time. */
-static void tq_insert(kthread_t * thd) {
+static void __nonnull_all tq_insert(kthread_t * thd) {
     kthread_t * t;
 
     /* Search for its place; note that new threads will be placed at
@@ -58,7 +58,7 @@ static void tq_insert(kthread_t * thd) {
 }
 
 /* Internal function to remove a thread from the timer queue. */
-static void tq_remove(kthread_t * thd) {
+static void __nonnull_all tq_remove(kthread_t * thd) {
     TAILQ_REMOVE(&timer_queue, thd, timerq);
 }
 
@@ -103,7 +103,7 @@ int genwait_wait(void * obj, const char * mesg, int timeout, void (*callback)(vo
 }
 
 /* Removes a thread from its wait queue; assumes ints are disabled. */
-static void genwait_unqueue(kthread_t * thd) {
+static void __nonnull_all genwait_unqueue(kthread_t * thd) {
     if(thd->wait_obj) {
         /* Remove it from the queue */
         TAILQ_REMOVE(&slpque[LOOKUP(thd->wait_obj)], thd, thdq);
