@@ -178,7 +178,7 @@ int main(int argc, char **argv) {
     // You have to keep a watch on these, especially the vertex used
     // for really poly intensive effects.
     pvr_get_stats(&stats);
-    dbglog(DBG_DEBUG, "3D Stats: %d vblanks, frame rate ~%f fps, max vertex used %d bytes\n",
+    dbglog(DBG_INFO, "3D Stats: %d vblanks, frame rate ~%f fps, max vertex used %d bytes\n",
            stats.vbl_count, (double)stats.frame_rate, stats.vtx_buffer_used_max);
 
     return 0;

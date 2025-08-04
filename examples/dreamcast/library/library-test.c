@@ -42,7 +42,7 @@ static void __attribute__((__noreturn__)) wait_exit(void) {
     maple_device_t *dev;
     cont_state_t *state;
 
-    dbglog(DBG_DEBUG, "Press any button to exit.\n");
+    dbglog(DBG_INFO, "Press any button to exit.\n");
 
     for(;;) {
         dev = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
     library_test_func2_t library_test_func2;
 
     // dbgio_dev_select("fb");
-    dbglog(DBG_DEBUG, "Initializing exports.\n");
+    dbglog(DBG_INFO, "Initializing exports.\n");
 
     if(nmmgr_handler_add(&st_libtest.nmmgr) < 0) {
         dbglog(DBG_ERROR, "Failed.");
@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    dbglog(DBG_DEBUG, "Loading /rd/library-dependence.klf\n");
+    dbglog(DBG_INFO, "Loading /rd/library-dependence.klf\n");
     lib_dependence = library_open("dependence", "/rd/library-dependence.klf");
 
     if (lib_dependence == NULL) {
@@ -87,11 +87,11 @@ int main(int argc, char *argv[]) {
 
     ver = library_get_version(lib_dependence);
 
-    dbglog(DBG_DEBUG, "Successfully loaded: %s v%ld.%ld.%ld\n",
+    dbglog(DBG_INFO, "Successfully loaded: %s v%ld.%ld.%ld\n",
         library_get_name(lib_dependence),
         (ver >> 16) & 0xff, (ver >> 8) & 0xff, ver & 0xff);
 
-    dbglog(DBG_DEBUG, "Loading /rd/library-dependence.klf\n");
+    dbglog(DBG_INFO, "Loading /rd/library-dependence.klf\n");
     lib_dependent = library_open("dependent", "/rd/library-dependent.klf");
 
     if (lib_dependence == NULL) {
@@ -102,11 +102,11 @@ int main(int argc, char *argv[]) {
 
     ver = library_get_version(lib_dependent);
 
-    dbglog(DBG_DEBUG, "Successfully loaded: %s v%ld.%ld.%ld\n",
+    dbglog(DBG_INFO, "Successfully loaded: %s v%ld.%ld.%ld\n",
         library_get_name(lib_dependent),
         (ver >> 16) & 0xff, (ver >> 8) & 0xff, ver & 0xff);
 
-    dbglog(DBG_DEBUG, "Testing exports runtime on host\n");
+    dbglog(DBG_INFO, "Testing exports runtime on host\n");
 
     sym = export_lookup("library_test_func");
     

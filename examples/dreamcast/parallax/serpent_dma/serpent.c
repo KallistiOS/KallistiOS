@@ -295,7 +295,7 @@ int main(int argc, char **argv) {
     do_sphere_test();
 
     pvr_get_stats(&stats);
-    dbglog(DBG_DEBUG, "3D Stats: %u vblanks, frame rate ~%f fps, max vertex used %u bytes\n",
+    dbglog(DBG_INFO, "3D Stats: %u vblanks, frame rate ~%f fps, max vertex used %u bytes\n",
            stats.vbl_count, stats.frame_rate, stats.vtx_buffer_used_max);
 
     free(big_sphere.data);

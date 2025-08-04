@@ -60,7 +60,7 @@ static int cd_stream_test(uint32_t lba, uint8_t *buffer, size_t size, int mode) 
     size_t cb_count = 0;
     char *stream_name = (mode == CDROM_READ_PIO ? "PIO" : "DMA");
 
-    dbglog(DBG_DEBUG, "Start %s stream.\n", stream_name);
+    dbglog(DBG_INFO, "Start %s stream.\n", stream_name);
     rs = cdrom_stream_start(lba, size / 2048, mode);
 
     if (rs != ERR_OK) {
@@ -112,7 +112,7 @@ static int cd_stream_test(uint32_t lba, uint8_t *buffer, size_t size, int mode) 
         return -1;
     }
 
-    dbglog(DBG_DEBUG, "%s transfer is done.\n", stream_name);
+    dbglog(DBG_INFO, "%s transfer is done.\n", stream_name);
     return 0;
 }
 
