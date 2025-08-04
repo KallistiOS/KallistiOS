@@ -17,16 +17,6 @@
 #include <kos/library.h>
 #include <kos/dbglog.h>
 
-/* What's our architecture code we're expecting? */
-#if defined(_arch_dreamcast)
-#   define ARCH_ELFCLASS    ELFCLASS32    /* Dreamcast is 32-bit */
-#   define ARCH_ELFDATA     ELFDATA2LSB   /* and little endian */
-#   define ARCH_CODE        EM_SH         /* and uses an SH processor. */
-#else
-#   error Unknown architecture
-#endif
-
-
 /* Finds a given symbol in a relocated ELF symbol table */
 static int find_sym(char *name, elf_sym_t *table, int tablelen) {
     int i;
