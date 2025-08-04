@@ -2,6 +2,7 @@
 
 | Date<br/>_____________ | Author(s)<br/>_____________ | Changes<br/>_____________ |
 |:-----------------------|:----------------------------|---------------------------|
+| 2025-08-03 | Eric Fradella | Update 15.x profiles to 15.2.0/15.2.1-dev. All dev profiles upgraded to Binutils 2.45 and GDB 16.3 |
 | 2025-07-13 | Paul Cercueil | Add new profile for the LRA development toolchain |
 | 2025-07-13 | Paul Cercueil | Re-introduce ARM toolchain support |
 | 2025-07-13 | Paul Cercueil | Add support for PPC toolchains and add GameCube profile |

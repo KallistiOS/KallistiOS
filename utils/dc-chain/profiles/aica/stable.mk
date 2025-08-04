@@ -6,7 +6,7 @@ target=arm-eabi
 cpu_configure_args=--with-arch=armv4 --with-mode=arm --disable-multilib
 
 # Toolchain versions
-binutils_ver=2.44
+binutils_ver=2.45
 gcc_ver=8.5.0
 newlib_ver=4.5.0.20241231
 

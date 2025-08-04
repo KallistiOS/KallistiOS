@@ -4,7 +4,7 @@
 ###############################################################################
 ###############################################################################
 ### THIS CONFIG IS FOR AN EXPERIMENTAL VERSION OF GCC!
-## THERE ARE NO KNOWN ISSUES BUILDING THIS VERSION as of 2025-04-18.
+## THERE ARE NO KNOWN ISSUES BUILDING THIS VERSION as of 2025-08-03.
 ###############################################################################
 ###############################################################################
 
@@ -13,10 +13,10 @@ target=sh-elf
 cpu_configure_args=--with-multilib-list=$(precision_modes) --with-endian=little --with-cpu=$(default_precision)
 
 # Toolchain versions for SH
-binutils_ver=2.44
-gcc_ver=15.1.1
+binutils_ver=2.45
+gcc_ver=15.2.1
 newlib_ver=4.5.0.20241231
-gdb_ver=16.2
+gdb_ver=16.3
 
 # Overide SH toolchain download type
 gcc_download_type=git

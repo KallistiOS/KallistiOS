@@ -1,6 +1,6 @@
-diff -ruN gcc-15.1.1/gcc/config/elfos.h gcc-15.1.1-kos/gcc/config/elfos.h
---- gcc-15.1.1/gcc/config/elfos.h	2025-04-17 16:01:33.790051712 -0600
-+++ gcc-15.1.1-kos/gcc/config/elfos.h	2025-04-17 16:01:42.910094466 -0600
+diff -ruN gcc-15.2.1/gcc/config/elfos.h gcc-15.2.1-kos/gcc/config/elfos.h
+--- gcc-15.2.1/gcc/config/elfos.h	2025-04-17 16:01:33.790051712 -0600
++++ gcc-15.2.1-kos/gcc/config/elfos.h	2025-04-17 16:01:42.910094466 -0600
 @@ -486,3 +486,6 @@
  
  #undef TARGET_LIBC_HAS_FUNCTION
@@ -8,9 +8,9 @@ diff -ruN gcc-15.1.1/gcc/config/elfos.h gcc-15.1.1-kos/gcc/config/elfos.h
 +
 +#define TARGET_OS_CPP_BUILTINS()			\
 +  builtin_define ("__KOS_GCC_PATCHLEVEL__=2025062800")
-diff -ruN gcc-15.1.1/gcc/configure gcc-15.1.1-kos/gcc/configure
---- gcc-15.1.1/gcc/configure	2025-04-18 16:01:33.801051764 -0600
-+++ gcc-15.1.1-kos/gcc/configure	2025-04-18 16:01:42.913094480 -0600
+diff -ruN gcc-15.2.1/gcc/configure gcc-15.2.1-kos/gcc/configure
+--- gcc-15.2.1/gcc/configure	2025-04-18 16:01:33.801051764 -0600
++++ gcc-15.2.1-kos/gcc/configure	2025-04-18 16:01:42.913094480 -0600
 @@ -13165,7 +13165,7 @@
      target_thread_file='single'
      ;;
@@ -20,9 +20,9 @@ diff -ruN gcc-15.1.1/gcc/configure gcc-15.1.1-kos/gcc/configure
      target_thread_file=${enable_threads}
      ;;
    *)
-diff --color -ruN gcc-15.1.1/libgcc/config.host gcc-15.1.1-kos/libgcc/config.host
---- gcc-15.1.1/libgcc/config.host	2025-04-27 14:45:09.695053718 -0600
-+++ gcc-15.1.1-kos/libgcc/config.host	2025-04-27 15:10:10.267714917 -0600
+diff --color -ruN gcc-15.2.1/libgcc/config.host gcc-15.2.1-kos/libgcc/config.host
+--- gcc-15.2.1/libgcc/config.host	2025-04-27 14:45:09.695053718 -0600
++++ gcc-15.2.1-kos/libgcc/config.host	2025-04-27 15:10:10.267714917 -0600
 @@ -71,7 +71,7 @@
  asm_hidden_op=.hidden
  enable_execute_stack=
@@ -32,14 +32,14 @@ diff --color -ruN gcc-15.1.1/libgcc/config.host gcc-15.1.1-kos/libgcc/config.hos
  tm_file=
  tm_define=
  md_unwind_def_header=no-unwind.h
-diff -ruN /dev/null gcc-15.1.1-kos/libgcc/config/t-kos
+diff -ruN /dev/null gcc-15.2.1-kos/libgcc/config/t-kos
 --- /dev/null	2025-04-27 14:45:09.695053718 -0600
-+++ gcc-15.1.1-kos/libgcc/config/t-kos	2025-04-27 15:10:10.267714917 -0600
++++ gcc-15.2.1-kos/libgcc/config/t-kos	2025-04-27 15:10:10.267714917 -0600
 @@ -0,0 +1 @@
 +LIB2ADD = $(srcdir)/config/fake-kos.c
-diff -ruN gcc-15.1.1/libgcc/configure gcc-15.1.1-kos/libgcc/configure
---- gcc-15.1.1/libgcc/configure	2025-04-18 16:01:37.139067412 -0600
-+++ gcc-15.1.1-kos/libgcc/configure	2025-04-18 16:01:42.914094485 -0600
+diff -ruN gcc-15.2.1/libgcc/configure gcc-15.2.1-kos/libgcc/configure
+--- gcc-15.2.1/libgcc/configure	2025-04-18 16:01:37.139067412 -0600
++++ gcc-15.2.1-kos/libgcc/configure	2025-04-18 16:01:42.914094485 -0600
 @@ -5733,6 +5733,7 @@
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;
@@ -48,9 +48,9 @@ diff -ruN gcc-15.1.1/libgcc/configure gcc-15.1.1-kos/libgcc/configure
      mcf)	thread_header=config/i386/gthr-mcf.h ;;
  esac
  
-diff -ruN gcc-15.1.1/libobjc/Makefile.in gcc-15.1.1-kos/libobjc/Makefile.in
---- gcc-15.1.1/libobjc/Makefile.in	2025-04-18 16:01:37.499069099 -0600
-+++ gcc-15.1.1-kos/libobjc/Makefile.in	2025-04-18 16:01:42.915094489 -0600
+diff -ruN gcc-15.2.1/libobjc/Makefile.in gcc-15.2.1-kos/libobjc/Makefile.in
+--- gcc-15.2.1/libobjc/Makefile.in	2025-04-18 16:01:37.499069099 -0600
++++ gcc-15.2.1-kos/libobjc/Makefile.in	2025-04-18 16:01:42.915094489 -0600
 @@ -308,14 +308,16 @@
  $(srcdir)/aclocal.m4: @MAINT@ $(aclocal_deps)
  	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
@@ -81,9 +81,9 @@ diff -ruN gcc-15.1.1/libobjc/Makefile.in gcc-15.1.1-kos/libobjc/Makefile.in
  
  mostlyclean:
  	-$(LIBTOOL_CLEAN) rm -f libobjc$(libsuffix).la libobjc_gc$(libsuffix).la *.lo
-diff -ruN gcc-15.1.1/libstdc++-v3/config/cpu/sh/atomicity.h gcc-15.1.1-kos/libstdc++-v3/config/cpu/sh/atomicity.h
---- gcc-15.1.1/libstdc++-v3/config/cpu/sh/atomicity.h	2025-04-18 16:01:37.608069611 -0600
-+++ gcc-15.1.1-kos/libstdc++-v3/config/cpu/sh/atomicity.h	2025-04-18 16:01:42.916094494 -0600
+diff -ruN gcc-15.2.1/libstdc++-v3/config/cpu/sh/atomicity.h gcc-15.2.1-kos/libstdc++-v3/config/cpu/sh/atomicity.h
+--- gcc-15.2.1/libstdc++-v3/config/cpu/sh/atomicity.h	2025-04-18 16:01:37.608069611 -0600
++++ gcc-15.2.1-kos/libstdc++-v3/config/cpu/sh/atomicity.h	2025-04-18 16:01:42.916094494 -0600
 @@ -22,14 +22,40 @@
  // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
  // <http://www.gnu.org/licenses/>.
@@ -134,9 +134,9 @@ diff -ruN gcc-15.1.1/libstdc++-v3/config/cpu/sh/atomicity.h gcc-15.1.1-kos/libst
 +
 +_GLIBCXX_END_NAMESPACE_VERSION
 +} // namespace
-diff -ruN gcc-15.1.1/libstdc++-v3/configure gcc-15.1.1-kos/libstdc++-v3/configure
---- gcc-15.1.1/libstdc++-v3/configure	2025-04-18 16:01:37.616069648 -0600
-+++ gcc-15.1.1-kos/libstdc++-v3/configure	2025-04-18 16:01:42.919094508 -0600
+diff -ruN gcc-15.2.1/libstdc++-v3/configure gcc-15.2.1-kos/libstdc++-v3/configure
+--- gcc-15.2.1/libstdc++-v3/configure	2025-04-18 16:01:37.616069648 -0600
++++ gcc-15.2.1-kos/libstdc++-v3/configure	2025-04-18 16:01:42.919094508 -0600
 @@ -15974,6 +15974,7 @@
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;

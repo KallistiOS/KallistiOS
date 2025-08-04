@@ -7,10 +7,10 @@ cpu_configure_args=--with-endian=big --with-cpu=750 --disable-multilib --disable
 newlib_extra_configure_args += --disable-libgloss
 
 # Toolchain versions for PowerPC
-binutils_ver=2.44
-gcc_ver=15.1.0
+binutils_ver=2.45
+gcc_ver=15.2.0
 newlib_ver=4.5.0.20241231
-gdb_ver=16.2
+gdb_ver=16.3
 
 # GCC custom dependencies
 # Specify here if you want to use custom GMP, MPFR and MPC libraries when
