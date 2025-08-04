@@ -38,7 +38,7 @@ function(kos_run_target target)
     if(NOT ${ARGC} EQUAL 2)
         set(runTarget run)
     else()
-        set(runTarget ${ARGN})
+        set(runTarget ${ARGV1})
     endif()
 
     # Convert KOS ENV variable to semicolon-separated list of args
@@ -58,7 +58,7 @@ function(kos_bin2o inFile symbol)
     if(NOT ${ARGC} EQUAL 3)
         set(outFile ${CMAKE_CURRENT_BINARY_DIR}/${symbol}.o)
     else()
-        set(outFile ${ARGN})
+        set(outFile ${ARGV2})
     endif()
 
     # Custom Command to generate romdisk object file from image
