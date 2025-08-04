@@ -191,7 +191,7 @@ export KOS_CFLAGS="${KOS_CFLAGS} -fomit-frame-pointer"
 
 # GCC Builtin Functions
 #
-# Comment in this line to prevent GCC from using its own builtin implementations of
+# Uncomment this line to prevent GCC from using its own builtin implementations of
 # certain standard library functions. Under certain conditions, using builtins
 # allows for compiler-optimized routines to replace function calls to the C standard
 # library which are backed by Newlib or KOS.
