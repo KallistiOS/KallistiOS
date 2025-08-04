@@ -110,7 +110,7 @@ ATOMIC_FETCH_NAND_N_(unsigned long long, 8)
    around memcpy() calls. */
 
 /* Size of each memory region covered by an individual lock. */
-#define GENERIC_LOCK_BLOCK_SIZE     (CPU_CACHE_BLOCK_SIZE * 4)
+#define GENERIC_LOCK_BLOCK_SIZE     (CACHE_L1_DCACHE_LINESIZE * 4)
 
 /* Locks have to be shared for each page with the MMU enabled,
    otherwise we can fail when aliasing an address range to multiple

@@ -4,6 +4,7 @@
    Copyright (C) 2001 Megan Potter
    Copyright (C) 2014, 2016, 2023 Ruslan Rostovtsev
    Copyright (C) 2023 Andy Barajas
+   Copyright (C) 2025 Eric Fradella
 */
 
 /** \file    arch/cache.h
@@ -34,11 +35,59 @@ __BEGIN_DECLS
     @{
 */
 
-/** \brief  SH4 cache block size.
+/** \brief  Level 1 instruction cache size.
 
-    The size of a cache block.
+    The capacity of the L1 instruction cache in bytes.
 */
-#define CPU_CACHE_BLOCK_SIZE 32
+#define CACHE_L1_ICACHE_SIZE 8 * 1024
+
+/** \brief  Level 1 instruction cache associativity.
+
+    Number of ways in the L1 instruction cache.
+*/
+#define CACHE_L1_ICACHE_ASSOC 1
+
+/** \brief  L1 instruction cache line size.
+
+    The size of each cache line in the L1 instruction cache.
+*/
+#define CACHE_L1_ICACHE_LINESIZE 32
+
+/** \brief  Level 1 data cache size.
+
+    The capacity of the L1 data cache in bytes.
+*/
+#define CACHE_L1_DCACHE_SIZE 16 * 1024
+
+/** \brief  Level 1 data cache associativity.
+
+    Number of ways in the L1 data cache.
+*/
+#define CACHE_L1_DCACHE_ASSOC 1
+
+/** \brief  L1 data cache line size.
+
+    The size of each cache line in the L1 data cache.
+*/
+#define CACHE_L1_DCACHE_LINESIZE 32
+
+/** \brief  Level 2 cache size.
+
+    The capacity of the L2 cache in bytes.
+*/
+#define CACHE_L2_CACHE_SIZE 0
+
+/** \brief  Level 2 cache associativity.
+
+    Number of ways in the L2 cache.
+*/
+#define CACHE_L2_CACHE_ASSOC 0
+
+/** \brief  Level 2 cache line size.
+
+    The size of each cache line in the L2 cache.
+*/
+#define CACHE_L2_CACHE_LINESIZE 0
 
 /** \brief  Flush the instruction cache.
 
