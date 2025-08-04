@@ -34,8 +34,19 @@ endif()
 
 ### Adds a custom "run" target which uses $KOS_LOADER to run the given target. ###
 function(kos_run_target target)
-    add_custom_target(run 
-        COMMAND $ENV{KOS_LOADER} $<TARGET_FILE:${target}> 
+    # targetName is optional and defaults to "run" when not provided.
+    if(NOT ${ARGC} EQUAL 2)
+        set(runTarget run)
+    else()
+        set(runTarget ${ARGN})
+    endif()
+
+    # Convert KOS ENV variable to semicolon-separated list of args
+    string(REPLACE " " ";" _kos_loader $ENV{KOS_LOADER})
+
+    # Create a new target which simply passes the source target to $KOS_LOADER to run
+    add_custom_target(${runTarget}
+        COMMAND ${_kos_loader};$<TARGET_FILE:${target}>
         DEPENDS ${target} 
         USES_TERMINAL
     )
