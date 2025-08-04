@@ -1,11 +1,20 @@
-all: stream.drv
+TARGET = stream.drv
+OBJS = main.o
 
-aica_fw.h: stream.drv
-	$(KOS_BASE)/utils/bin2c/bin2c stream.drv aica_fw.h.tmp
-	echo 'unsigned char aica_fw[] = {' > aica_fw.h
-	cat aica_fw.h.tmp >> aica_fw.h
-	echo '};' >> aica_fw.h
-	-rm aica_fw.h.tmp
+.PHONY: all clean aicaos
+
+CC = $(DC_ARM_CC)
+AS = $(DC_ARM_AS)
+CPPFLAGS = $(DC_ARM_INCS) -I $(KOS_BASE)/kernel/arch/dreamcast/include/dc/sound
+CFLAGS = $(DC_ARM_CFLAGS)
+ASFLAGS = $(DC_ARM_AFLAGS)
+LDFLAGS = $(DC_ARM_LDFLAGS) $(DC_ARM_LIB_PATHS) -Wl,-Map,prog.map
+LDLIBS = $(DC_ARM_LIBS)
+
+all: $(TARGET)
+
+aicaos:
+	$(MAKE) -C aicaos
 
 ARM_CC_IS_AVAILABLE=0
 ifdef DC_ARM_CC
@@ -24,14 +33,13 @@ stream.drv: stream.drv.prebuilt
 	cp $< $@
 endif
 
-prog.elf: crt0.o main.o aica.o
-	$(DC_ARM_CC) -Wl,-Ttext,0x00000000,-Map,prog.map,-N -nostartfiles -nostdlib -e reset -o prog.elf crt0.o main.o aica.o -lgcc
+prog.elf: $(OBJS)
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-%.o: %.c
-	$(DC_ARM_CC) $(DC_ARM_CFLAGS) $(DC_ARM_INCS) -I $(KOS_BASE)/kernel/arch/dreamcast/include/dc/sound -c $< -o $@
+$(OBJS): aicaos
 
-%.o: %.s
-	$(DC_ARM_AS) $(DC_ARM_AFLAGS) $< -o $@
+clean-aicaos:
+	$(MAKE) -C aicaos clean
 
-clean:
-	-rm -f *.o *.srec *.elf 1ST_READ.BIN prog.bin *.bck prog.map stream.drv
+clean: clean-aicaos
+	-rm -f $(OBJS) prog.elf prog.map $(TARGET)
