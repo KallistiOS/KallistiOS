@@ -7,7 +7,7 @@
 # This file is to be passed to CMake when compiling a regular CMake project
 # to cross-compile for the Dreamcast, using the KOS environment and settings.
 #
-#     cmake /path/to/src -DCMAKE_TOOLCHAIN_FILE=${KOS_BASE}/kos/utils/cmake/dreamcast.toolchain.cmake
+#     cmake /path/to/src -DCMAKE_TOOLCHAIN_FILE=${KOS_BASE}/kos/utils/cmake/kallistios.toolchain.cmake
 #
 #   or alternatively:
 #
@@ -47,11 +47,7 @@ set(KOS_ADDONS ${KOS_BASE}/addons)
 list(APPEND CMAKE_MODULE_PATH $ENV{KOS_BASE}/utils/cmake)
 
 ##### Configure CMake System #####
-set(CMAKE_SYSTEM_NAME Dreamcast)
-set(CMAKE_SYSTEM_VERSION 1)
-set(CMAKE_SYSTEM_PROCESSOR SH4)
-set(CMAKE_SIZEOF_VOID_P 4)
-set(PLATFORM_DREAMCAST TRUE)
+set(CMAKE_SYSTEM_NAME ${KOS_ARCH})
 
 ##### Configure Cross-Compiler #####
 set(CMAKE_CROSSCOMPILING TRUE)
@@ -90,4 +86,3 @@ endif()
 if(NOT DEFINED CMAKE_INSTALL_LIBDIR)
     set(CMAKE_INSTALL_LIBDIR ${KOS_ADDONS}/lib/${KOS_ARCH})
 endif()
-include("${KOS_BASE}/utils/cmake/dreamcast.cmake")
