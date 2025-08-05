@@ -16,6 +16,7 @@ cpu_configure_args=--with-multilib-list=$(precision_modes) --with-endian=little 
 binutils_ver=2.44
 gcc_ver=15.0.0
 newlib_ver=4.5.0.20241231
+gdb_ver=16.3
 
 # Overide SH toolchain download type
 gcc_download_type=git
