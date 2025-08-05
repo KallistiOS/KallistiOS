@@ -4,7 +4,7 @@
    Copyright (C) 2000, 2001, 2002, 2003 Megan Potter
    Copyright (C) 2010, 2016, 2023 Lawrence Sebald
    Copyright (C) 2023 Colton Pawielski
-   Copyright (C) 2023, 2024 Falco Girgis
+   Copyright (C) 2023, 2024, 2025 Falco Girgis
 */
 
 #include <assert.h>
@@ -368,7 +368,7 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
     kthread_t *nt = NULL;
     tid_t tid;
     uint32_t params[4];
-    kthread_attr_t real_attr = { false, THD_STACK_SIZE, NULL, PRIO_DEFAULT, NULL };
+    kthread_attr_t real_attr = { false, THD_STACK_SIZE, NULL, PRIO_DEFAULT, NULL, false };
 
     if(attr)
         real_attr = *attr;
@@ -430,8 +430,10 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
                                ((uint32_t)nt->stack) + nt->stack_size,
                                (uint32_t)thd_birth, params, 0);
 
-            /* Create static TLS data */
-            if(!arch_tls_setup_data(nt)) {
+            /* Create static TLS data if the thread hasn't disabled it. */
+            if(real_attr.disable_tls) {
+                nt->flags |= THD_DISABLE_TLS;
+            } else if(!arch_tls_setup_data(nt)) {
                 if(nt->flags & THD_OWNS_STACK)
                     free(nt->stack);
                 free(nt);
@@ -526,8 +528,9 @@ int thd_destroy(kthread_t *thd) {
     if(thd->flags & THD_OWNS_STACK)
         free(thd->stack);
 
-    /* Free static TLS segment */
-    arch_tls_destroy_data(thd);
+    /* Free static TLS segment (if it hasn't been disabled for the thread). */
+    if(!(thd->flags & THD_DISABLE_TLS))
+        arch_tls_destroy_data(thd);
 
     /* Free the thread */
     free(thd);
@@ -1004,17 +1007,19 @@ int thd_init(void) {
     };
 
     const kthread_attr_t reaper_attr = {
-        .stack_size = sizeof(thd_reaper_stack),
-        .stack_ptr  = thd_reaper_stack,
-        .prio       = 1,
-        .label      = "[reaper]"
+        .stack_size  = sizeof(thd_reaper_stack),
+        .stack_ptr   = thd_reaper_stack,
+        .prio        = 1,
+        .label       = "[reaper]"
+        .disable_tls = true
     };
 
     const kthread_attr_t idle_attr = {
-        .stack_size = sizeof(thd_idle_stack),
-        .stack_ptr  = thd_idle_stack,
-        .prio       = PRIO_MAX,
-        .label      = "[idle]"
+        .stack_size  = sizeof(thd_idle_stack),
+        .stack_ptr   = thd_idle_stack,
+        .prio        = PRIO_MAX,
+        .label       = "[idle]"
+        .disable_tls = true
     };
 
     kthread_t *kern;

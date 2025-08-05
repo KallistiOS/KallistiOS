@@ -11,15 +11,13 @@
 
     This file contains definitions for very simple locks. Most of the time, you
     will probably not use such low-level locking, but will opt for something
-    more fully featured like mutexes, semaphores, reader-writer semaphores, or
-    recursive locks.
+    more fully featured like mutexes, semaphores, or reader-writer semaphores.
 
     \author Megan Potter
 
     \see    kos/sem.h
     \see    kos/mutex.h
     \see    kos/rwsem.h
-    \see    kos/recursive_lock.h
 */
 
 #ifndef __ARCH_SPINLOCK_H
@@ -129,7 +127,7 @@ static inline void spinlock_unlock(spinlock_t *lock) {
     \param  lock            A pointer to the spinlock to be checked.
     \return                 True if the spinlock is locked, false otherwise.
 */
-static inline bool spinlock_is_locked(spinlock_t *lock) {
+static inline bool spinlock_is_locked(const spinlock_t *lock) {
     return *lock != 0;
 }
 

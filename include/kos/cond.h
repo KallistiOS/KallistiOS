@@ -60,48 +60,30 @@ __BEGIN_DECLS
 */
 typedef struct condvar {
     int dummy;
-    int dynamic;
 } condvar_t;
 
 /** \brief  Initializer for a transient condvar. */
-#define COND_INITIALIZER    { 0, 0 }
-
-/** \brief  Allocate a new condition variable.
-
-    This function allocates and initializes a new condition variable for use.
-
-    \deprecated
-    This function is formally deprecated and should not be used in new code.
-    Instead you should use either the static initializer or the cond_init()
-    function.
-
-    \return                 The created condvar on success. NULL is returned on
-                            failure and errno is set as appropriate.
-
-    \par    Error Conditions:
-    \em     ENOMEM - out of memory
-*/
-condvar_t *cond_create(void) __depr("Use cond_init or COND_INITIALIZER.");
+#define COND_INITIALIZER    { 0 }
 
 /** \brief  Initialize a condition variable.
 
     This function initializes a new condition variable for use.
 
     \param  cv              The condition variable to initialize
-    \retval 0               On success
-    \retval -1              On error, sets errno as appropriate
+    \retval 0               On success (no error conditions currently defined)
 */
-int cond_init(condvar_t *cv);
+int cond_init(condvar_t *cv) __nonnull_all;
 
 /** \brief  Free a condition variable.
 
-    This function frees a condition variable, releasing all memory associated
-    with it (but not with the mutex that is associated with it). This will also
-    wake all threads waiting on the condition.
+    This function destroys a condition variable (but not the mutex
+    that is associated with it). This will also wake all threads waiting
+    on the condition.
 
+    \param cv               The condition variable to destroy
     \retval 0               On success (no error conditions currently defined)
 */
-int cond_destroy(condvar_t *cv);
+int cond_destroy(condvar_t *cv) __nonnull_all;
 
 /** \brief  Wait on a condition variable.
 
@@ -124,7 +106,7 @@ int cond_destroy(condvar_t *cv);
     \em     EINVAL - the mutex is not initialized or not locked \n
     \em     ENOTRECOVERABLE - the condvar was destroyed while waiting
 */
-int cond_wait(condvar_t *cv, mutex_t * m);
+int cond_wait(condvar_t *cv, mutex_t * m) __nonnull_all;
 
 /** \brief  Wait on a condition variable with a timeout.
 
@@ -150,7 +132,7 @@ int cond_wait(condvar_t *cv, mutex_t * m);
     \em     EINVAL - the mutex is not initialized or not locked \n
     \em     ENOTRECOVERABLE - the condvar was destroyed while waiting
 */
-int cond_wait_timed(condvar_t *cv, mutex_t * m, int timeout);
+int cond_wait_timed(condvar_t *cv, mutex_t * m, int timeout) __nonnull_all;
 
 /** \brief  Signal a single thread waiting on the condition variable.
 
@@ -165,7 +147,7 @@ int cond_wait_timed(condvar_t *cv, mutex_t * m, int timeout);
     \par    Error Conditions:
     \em     EINVAL - the condvar was not initialized
 */
-int cond_signal(condvar_t *cv);
+int cond_signal(condvar_t *cv) __nonnull_all;
 
 /** \brief  Signal all threads waiting on the condition variable.
 
@@ -180,7 +162,7 @@ int cond_signal(condvar_t *cv);
     \par    Error Conditions:
     \em     EINVAL - the condvar was not initialized
 */
-int cond_broadcast(condvar_t *cv);
+int cond_broadcast(condvar_t *cv) __nonnull_all;
 
 __END_DECLS
 

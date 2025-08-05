@@ -122,7 +122,6 @@ net_input_set_target
 net_get_if_list
 
 # Threads
-cond_create
 cond_destroy
 cond_wait_timed
 cond_wait
@@ -132,14 +131,12 @@ genwait_wait
 genwait_wake_cnt
 genwait_wake_all
 genwait_wake_one
-mutex_create
 mutex_destroy
 mutex_lock
 mutex_lock_timed
 mutex_trylock
 mutex_is_locked
 mutex_unlock
-sem_create
 sem_destroy
 sem_wait
 sem_wait_timed

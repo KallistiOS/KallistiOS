@@ -12,7 +12,8 @@
 
 int pthread_mutex_init(pthread_mutex_t *__RESTRICT mutex,
                        const pthread_mutexattr_t *__RESTRICT attr) {
-    int type = MUTEX_TYPE_NORMAL, old, rv = 0;
+    unsigned int type = MUTEX_TYPE_NORMAL;
+    int old, rv = 0;
 
     if(attr) {
         switch(attr->mtype) {

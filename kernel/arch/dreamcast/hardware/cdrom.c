@@ -812,8 +812,8 @@ static void unlock_dma_memory(void) {
         }
     }
     if(patched) {
-        flush_size = (patch_addr[1] - patch_addr[0]) + CPU_CACHE_BLOCK_SIZE;
-        flush_size &= ~(CPU_CACHE_BLOCK_SIZE - 1);
+        flush_size = (patch_addr[1] - patch_addr[0]) + CACHE_L1_ICACHE_LINESIZE;
+        flush_size &= ~(CACHE_L1_ICACHE_LINESIZE - 1);
         icache_flush_range(patch_addr[0] | MEM_AREA_P1_BASE, flush_size);
     }
     *prot_reg = G1_ATA_DMA_UNLOCK_ALLMEM;
