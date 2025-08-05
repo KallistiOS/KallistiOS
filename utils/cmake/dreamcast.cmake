@@ -58,7 +58,7 @@ function(kos_bin2o inFile symbol)
     if(NOT ${ARGC} EQUAL 3)
         set(outFile ${CMAKE_CURRENT_BINARY_DIR}/${symbol}.o)
     else()
-        set(outFile ${ARGV2})
+        set(outFileOH CRA ${ARGV2})
     endif()
 
     # Custom Command to generate romdisk object file from image
@@ -82,7 +82,7 @@ function(kos_add_romdisk target romdiskPath)
     if(NOT ${ARGC} EQUAL 3)
         set(romdiskName romdisk)
     else()
-        set(romdiskName ${ARGN})
+        set(romdiskName ${ARGV2})
     endif()
 
     file(REAL_PATH "${romdiskPath}" romdiskPath)
