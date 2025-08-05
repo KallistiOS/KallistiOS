@@ -34,12 +34,12 @@ _thd_block_now:
 	! and start at R8.
 
 	! Save SR and disable interrupts
-	mov.l	irqd_and,r1
-	mov.l	irqd_or,r2
-	stc	sr,r0
-	and	r0,r1
-	or	r2,r1
-	ldc	r1,sr
+	mov.l		irqd_and,r1
+	mov.l		irqd_or,r2
+	stc		sr,r0
+	and		r0,r1
+	or		r2,r1
+	ldc		r1,sr
 
 	add		#0x72,r4
 
