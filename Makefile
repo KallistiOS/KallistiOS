@@ -13,7 +13,7 @@
 KOS_CFLAGS += -Wextra -Wno-deprecated
 
 # Add stuff to SUBDIRS to auto-compile it with the big tree.
-SUBDIRS = utils kernel addons # examples
+SUBDIRS = utils kernel addons build_tests # examples
 
 # Detect a non-working or missing environ.sh file.
 ifndef KOS_BASE
