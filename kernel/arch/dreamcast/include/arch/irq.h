@@ -345,7 +345,7 @@ static inline irq_mask_t irq_get_sr(void) {
 
     \sa irq_disable()
 */
-inline static void irq_restore(irq_mask_t old) {
+static inline void irq_restore(irq_mask_t old) {
     __asm__ volatile("ldc %0, sr" : : "r" (old));
 }
 
@@ -360,7 +360,7 @@ inline static void irq_restore(irq_mask_t old) {
 
     \sa irq_restore(), irq_enable()
 */
-inline static irq_mask_t irq_disable(void) {
+static inline irq_mask_t irq_disable(void) {
     uint32_t mask = (uint32_t)irq_get_sr();
     irq_restore((mask & 0xefffff0f) | 0x000000f0);
     return mask;
@@ -372,7 +372,7 @@ inline static irq_mask_t irq_disable(void) {
 
     \sa irq_disable()
 */
-inline static void irq_enable(void) {
+static inline void irq_enable(void) {
     uint32_t mask = ((uint32_t)irq_get_sr() & 0xefffff0f);
     irq_restore(mask);
 }
