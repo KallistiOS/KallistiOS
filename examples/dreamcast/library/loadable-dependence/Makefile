@@ -10,7 +10,7 @@ TARGET_LIB = lib$(TARGET_NAME).a
 OBJS = $(TARGET_NAME).o
 
 # For exporting kos_md5
-LIBS = -lkosutils
+LIBS = -lkosutils -fno-lto
 
 # library-test exported stub for link test
 DBG_LIBS = -llibrary-test
