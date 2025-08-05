@@ -42,8 +42,7 @@ char *realpath(const char *__restrict path, char *__restrict resolved) {
 
     /* Handle absolute path. */
     if(path[0] == '/') {
-        strncpy(temp_path, path, len);
-        temp_path[len] = '\0';
+        strcpy(temp_path, path);
     } 
     else {
         /* Handle relative path: prepend current working directory. */
