@@ -58,7 +58,7 @@ function(kos_bin2o inFile symbol)
     if(NOT ${ARGC} EQUAL 3)
         set(outFile ${CMAKE_CURRENT_BINARY_DIR}/${symbol}.o)
     else()
-        set(outFileOH CRA ${ARGV2})
+        set(outFile ${ARGV2})
     endif()
 
     # Custom Command to generate romdisk object file from image
