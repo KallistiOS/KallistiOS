@@ -23,18 +23,29 @@ int main(int argc, char **argv) {
        top of the screen and two widths from the left */
     o = (640 * BFONT_HEIGHT) + (BFONT_THIN_WIDTH * 2);
 
+    /* Test with ASCII encoding */
+    bfont_set_encoding(BFONT_CODE_ASCII);
+    bfont_draw_str(vram_s + o, 640, 1, "Test of basic ASCII");
+    /* After each string, we'll increment the offset down by one row */
+    o += 640 * BFONT_HEIGHT;
+    bfont_draw_str(vram_s + o, 640, 1, "The brackets below should be empty:");
+    o += 640 * BFONT_HEIGHT;
+    /* These characters are all part of ISO 8859-1 and not in ASCII */
+    bfont_draw_str(vram_s + o, 640, 1, "[¡Àæ¾ç]");
+    o += 640 * BFONT_HEIGHT;
+
+
     /* Test with ISO8859-1 encoding */
     bfont_set_encoding(BFONT_CODE_ISO8859_1);
-    bfont_draw_str(vram_s + o, 640, 1, "Test of basic ASCII");  
-    /* After each string, we'll increment the offset down by one row */
+    bfont_draw_str(vram_s + o, 640, 1, "ISO8859-1 math symbols: «±×÷¼½¾»");
     o += 640 * BFONT_HEIGHT;
     bfont_draw_str(vram_s + o, 640, 1, "Parlez-vous français?");
     o += 640 * BFONT_HEIGHT;
 
     /* Do a second set drawn transparently */
-    bfont_draw_str(vram_s + o, 640, 0, "Test of basic ASCII");
+    bfont_draw_str(vram_s + o, 640, 0, "ISO8859-1 math symbols: «±×÷¼½¾»");
     o += 640 * BFONT_HEIGHT;
-    bfont_draw_str(vram_s + o, 640, 0, "Parlez-vous français?");
+    bfont_draw_str(vram_s + o, 640, 0, "Você fala português?");
     o += 640 * BFONT_HEIGHT;
 
     /* Test with EUC encoding */
