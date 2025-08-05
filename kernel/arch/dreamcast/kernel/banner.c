@@ -35,15 +35,15 @@ static const char license[] =
 "OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF\n"
 "SUCH DAMAGE.";
 
-const char * __pure kos_get_banner(void) {
+const char * __pure2 kos_get_banner(void) {
     __asm__ __volatile__("nop" : : "r"(license), "r"(authors));
     return banner;
 }
 
-const char * __pure kos_get_license(void) {
+const char * __pure2 kos_get_license(void) {
     return license;
 }
 
-const char * __pure kos_get_authors(void) {
+const char * __pure2 kos_get_authors(void) {
     return authors;
 }
