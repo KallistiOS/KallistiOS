@@ -138,23 +138,42 @@ export DC_ARM_LDFLAGS=""
 # Controls the baseline optimization level to use when building.
 # Typically this is -Og (debugging), -O0, -O1, -O2, or -O3.
 # NOTE: For our target, -O4 is a valid optimization level that has
-# been seen to have some performance impact as well.
+#       been seen to have some performance impact as well.
 #
 export KOS_CFLAGS="${KOS_CFLAGS} -O2"
 
+# Link-Time Optimization
+#
+# Uncomment this to enable LTO, which can substantially improve performance
+# of the generated code by enabling the linker to perform inlining, at the
+# cost of longer build times and fatter object files.
+# NOTE: Certain ports and examples require fat LTO objects to work with LTO,
+#       and LTO itself is known to cause issues in code with undefined behavior.
+#
+#export KOS_CFLAGS="${KOS_CFLAGS} -flto=auto -ffat-lto-objects"
+
 # Additional Optimizations
 #
-# Uncomment this to enable what has been found empirically to be
-# the optimal set of additional flags for release build performance
-# on the current stable toolchain. NOTE: Certain KOS-ports and examples
-# do not work properly with "-flto=auto"!
+# Uncomment these to enable what have been found empirically to be a decent
+# set of additional flags for optimal release build performance with the
+# current stable toolchain.
 #
-#export KOS_CFLAGS="${KOS_CFLAGS} -freorder-blocks-algorithm=simple -flto=auto"
+#export KOS_CFLAGS="${KOS_CFLAGS} -freorder-blocks-algorithm=simple"
+#export KOS_CFLAGS="${KOS_CFLAGS} -fipa-pta"
+
+# Position-Independent Code
+#
+# Comment this line out to enable position-dependent code. Codegen is slightly
+# slower, and you lose a register, but it's required when building dynamically
+# linked libraries or code whose symbols aren't resolved until runtime.
+#
+export KOS_CFLAGS="${KOS_CFLAGS} -fno-PIC -fno-PIE"
 
 # Frame Pointers
 #
-# Controls whether frame pointers are emitted or not. Disabled by
-# default. Enable them if you plan to use GDB for debugging.
+# Controls whether frame pointers are emitted or not. Disabled by default, as
+# they use an extra register. Enable them if you plan to use GDB for debugging
+# or need additional stack trace
 #
 export KOS_CFLAGS="${KOS_CFLAGS} -fomit-frame-pointer"
 #export KOS_CFLAGS="${KOS_CFLAGS} -fno-omit-frame-pointer -DFRAME_POINTERS"
@@ -172,13 +191,12 @@ export KOS_CFLAGS="${KOS_CFLAGS} -fomit-frame-pointer"
 
 # GCC Builtin Functions
 #
-# Comment out this line to enable GCC to use its own builtin implementations of
-# certain standard library functions. Under certain conditions, this can allow
-# compiler-optimized implementations to replace standard function invocations.
-# The downside of this is that it COULD interfere with Newlib or KOS implementations
-# of these functions, and it has not been tested thoroughly to ensure compatibility.
+# Uncomment this line to prevent GCC from using its own builtin implementations of
+# certain standard library functions. Under certain conditions, using builtins
+# allows for compiler-optimized routines to replace function calls to the C standard
+# library which are backed by Newlib or KOS.
 #
-export KOS_CFLAGS="${KOS_CFLAGS} -fno-builtin"
+#export KOS_CFLAGS="${KOS_CFLAGS} -fno-builtin"
 
 # Fast Math Instructions
 #
@@ -186,7 +204,8 @@ export KOS_CFLAGS="${KOS_CFLAGS} -fno-builtin"
 # FSCA, and FSQRT) for calculating sin/cos, inverse square root, and square roots.
 # These can result in substantial performance gains for these kinds of operations;
 # however, they do so at the price of accuracy and are not IEEE compliant.
-# NOTE: Enabling this option will also override -fno-builtin!
+# NOTE: If these cause issues when enabled globally, it's advised to try to enable
+#       them on individual files in the critical path to still gain performance.
 #
 #export KOS_CFLAGS="${KOS_CFLAGS} -fbuiltin -ffast-math -ffp-contract=fast"
 
