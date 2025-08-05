@@ -482,7 +482,7 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
 }
 
 kthread_t *thd_create(bool detach, void *(*routine)(void *), void *param) {
-    kthread_attr_t attrs = { detach, 0, NULL, 0, NULL };
+    kthread_attr_t attrs = { detach, 0, NULL, 0, NULL, false };
     return thd_create_ex(&attrs, routine, param);
 }
 
@@ -1010,7 +1010,7 @@ int thd_init(void) {
         .stack_size  = sizeof(thd_reaper_stack),
         .stack_ptr   = thd_reaper_stack,
         .prio        = 1,
-        .label       = "[reaper]"
+        .label       = "[reaper]",
         .disable_tls = true
     };
 
@@ -1018,7 +1018,7 @@ int thd_init(void) {
         .stack_size  = sizeof(thd_idle_stack),
         .stack_ptr   = thd_idle_stack,
         .prio        = PRIO_MAX,
-        .label       = "[idle]"
+        .label       = "[idle]",
         .disable_tls = true
     };
 
