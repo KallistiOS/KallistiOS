@@ -35,13 +35,14 @@ RUN apk --update add --no-cache \
 
 # Making Sega Dreamcast toolchains
 # You may adapt the KallistiOS repository URL if needed
+ARG platform=dreamcast
 ARG dc_chain=stable
 
 RUN mkdir -p /opt/toolchains/dc
 COPY . /opt/toolchains/dc/kos
 
 RUN cd /opt/toolchains/dc/kos/utils/dc-chain \
-	&& make build toolchain_profile=$dc_chain \
+	&& make build platform=$platform toolchain_profile=$dc_chain \
 	&& rm -rf /opt/toolchains/dc/kos
 
 # Stage 2
