@@ -20,6 +20,11 @@ static uintptr_t arch_stack_32m_dft = 0x8e000000;
 extern uintptr_t arch_stack_16m __attribute__((weak,alias("arch_stack_16m_dft")));
 extern uintptr_t arch_stack_32m __attribute__((weak,alias("arch_stack_32m_dft")));
 
+/* This function is unnecessary and does nothing on Dreamcast */
+void arch_stk_setup(kthread_t *nt) {
+    (void)nt;
+}
+
 /* Do a stack trace from the current function; leave off the first n frames
    (i.e., in assert()). */
 __noinline void arch_stk_trace(int n) {
