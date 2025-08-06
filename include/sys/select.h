@@ -27,13 +27,7 @@ __BEGIN_DECLS
 
 #include <newlib.h>
 #include <kos/opts.h>
-
-#if __NEWLIB__ > 2 || (__NEWLIB__ == 2 && __NEWLIB_MINOR__ > 2)
 #include <sys/_timeval.h>
-#else
-#include <time.h>
-#include <sys/time.h>
-#endif
 
 /* Newlib used to define fd_set and friends in <sys/types.h>, but at some point
    that stopped being the case... This should tell us whether we need to define
