@@ -10,8 +10,7 @@
     \brief   Dreamcast architecture specific options.
     \ingroup arch
 
-    This file has various architecture specific options defined in it. Also, any
-    functions that start with arch_ are in here.
+    This file has various architecture specific options defined in it.
 
     \author Megan Potter
 */
@@ -79,21 +78,6 @@ extern char _etext;
  */
 static const
 unsigned HZ __depr("Please use the new THD_SCHED_HZ macro.") = THD_SCHED_HZ;
-
-#ifndef THD_STACK_ALIGNMENT
-/** \brief  Required alignment for stack. */
-#define THD_STACK_ALIGNMENT 8
-#endif
-
-#ifndef THD_STACK_SIZE
-/** \brief  Default thread stack size. */
-#define THD_STACK_SIZE  32768
-#endif
-
-#ifndef THD_KERNEL_STACK_SIZE
-/** \brief Main/kernel thread's stack size. */
-#define THD_KERNEL_STACK_SIZE (64 * 1024)
-#endif
 
 /** \brief  Default video mode. */
 #define DEFAULT_VID_MODE    DM_640x480
@@ -374,59 +358,6 @@ const char *__pure2 kos_get_authors(void);
 */
 static inline void arch_sleep(void) {
     __asm__ __volatile__("sleep\n");
-}
-
-/** \brief   DC specific "function" to get the return address from the current
-             function.
-    \ingroup arch
-
-    \return                 The return address of the current function.
-*/
-static __always_inline uintptr_t arch_get_ret_addr(void) {
-    uintptr_t pr;
-
-    __asm__ __volatile__("sts pr,%0\n" : "=r"(pr));
-
-    return pr;
-}
-
-/* Please note that all of the following frame pointer macros are ONLY
-   valid if you have compiled your code WITHOUT -fomit-frame-pointer. These
-   are mainly useful for getting a stack trace from an error. */
-
-/** \brief   DC specific "function" to get the frame pointer from the current
-             function.
-    \ingroup arch
-
-    \return                 The frame pointer from the current function.
-    \note                   This only works if you don't disable frame pointers.
-*/
-static __always_inline uintptr_t arch_get_fptr(void) {
-    register uintptr_t fp __asm__("r14");
-
-    return fp;
-}
-
-/** \brief   Pass in a frame pointer value to get the return address for the
-             given frame.
-    \ingroup arch
-
-    \param  fptr            The frame pointer to look at.
-    \return                 The return address of the pointer.
-*/
-static inline uintptr_t arch_fptr_ret_addr(uintptr_t fptr) {
-    return *(uintptr_t *)fptr;
-}
-
-/** \brief   Pass in a frame pointer value to get the previous frame pointer for
-             the given frame.
-    \ingroup arch
-
-    \param  fptr            The frame pointer to look at.
-    \return                 The previous frame pointer.
-*/
-static inline uintptr_t arch_fptr_next(uintptr_t fptr) {
-    return arch_fptr_ret_addr(fptr + 4);
 }
 
 /** \brief   Returns true if the passed address is likely to be valid. Doesn't

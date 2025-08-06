@@ -26,9 +26,10 @@
 #include <kos/cond.h>
 #include <kos/genwait.h>
 
-#include <arch/irq.h>
-#include <arch/timer.h>
 #include <arch/arch.h>
+#include <arch/irq.h>
+#include <arch/stack.h>
+#include <arch/timer.h>
 #include <arch/tls_static.h>
 
 /*

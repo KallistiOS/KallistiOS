@@ -11,7 +11,7 @@
 #include <string.h>
 
 #include <kos/thread.h>
-#include <arch/arch.h>
+#include <arch/stack.h>
 
 int pthread_attr_init(pthread_attr_t *attr) {
     if(!attr)
