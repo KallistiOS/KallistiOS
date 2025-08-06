@@ -49,11 +49,6 @@
 #define __noreturn  __attribute__((__noreturn__))
 #endif
 
-#ifndef __weak
-/** \brief  Identify a function or variable that may be overridden by another symbol. */
-#define __weak      __attribute__((weak))
-#endif
-
 #ifndef __likely
 /** \brief  Directive to inform the compiler the condition is in the likely path.
 
