@@ -71,57 +71,7 @@ __BEGIN_DECLS
 #include <arch/stack.h>
 #include <arch/byteorder.h>
 #include <arch/rtc.h>
-
-#ifdef _arch_dreamcast
-#   include <arch/gdb.h>
-#   include <arch/mmu.h>
-#   include <arch/memory.h>
-#   include <arch/wdt.h>
-
-#   include <dc/asic.h>
-#   include <dc/biosfont.h>
-#   include <dc/cdrom.h>
-#   include <dc/fb_console.h>
-#   include <dc/flashrom.h>
-#   include <dc/fmath.h>
-#   include <dc/fs_dcload.h>
-#   include <dc/fs_dclsocket.h>
-#   include <dc/fs_iso9660.h>
-#   include <dc/fs_vmu.h>
-#   include <dc/g1ata.h>
-#   include <dc/g2bus.h>
-#   include <dc/maple.h>
-#   include <dc/maple/controller.h>
-#   include <dc/maple/dreameye.h>
-#   include <dc/maple/keyboard.h>
-#   include <dc/maple/mouse.h>
-#   include <dc/maple/purupuru.h>
-#   include <dc/maple/sip.h>
-#   include <dc/maple/vmu.h>
-#   include <dc/matrix3d.h>
-#   include <dc/matrix.h>
-#   include <dc/modem/modem.h>
-#   include <dc/net/broadband_adapter.h>
-#   include <dc/net/lan_adapter.h>
-#   include <dc/perfctr.h>
-#   include <dc/pvr.h>
-#   include <dc/scif.h>
-#   include <dc/sci.h>
-#   include <dc/sd.h>
-#   include <dc/sound/stream.h>
-#   include <dc/sound/sfxmgr.h>
-#   include <dc/spu.h>
-#   include <dc/sq.h>
-#   include <dc/ubc.h>
-#   include <dc/vblank.h>
-#   include <dc/vec3f.h>
-#   include <dc/video.h>
-#   include <dc/vmu_fb.h>
-#   include <dc/vmu_pkg.h>
-#   include <dc/vmufs.h>
-#else   /* _arch_dreamcast */
-#   error Invalid architecture or no architecture specified
-#endif
+#include <arch/kos.h>
 
 __END_DECLS
 
