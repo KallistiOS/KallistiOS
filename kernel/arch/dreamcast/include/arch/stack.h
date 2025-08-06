@@ -100,6 +100,15 @@ static inline uintptr_t arch_fptr_next(uintptr_t fptr) {
     return arch_fptr_ret_addr(fptr + 4);
 }
 
+/** \brief  Set up new stack before running.
+
+    This function does nothing as it is unnecessary on Dreamcast.
+
+    \param nt               A pointer to the new thread for which a stack
+                            is to be set up.
+*/
+void arch_stk_setup(kthread_t *nt);
+
 /** \brief  Do a stack trace from the current function.
 
     This function does a stack trace from the current function, printing the

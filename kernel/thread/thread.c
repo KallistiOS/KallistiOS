@@ -362,8 +362,11 @@ int thd_remove_from_runnable(kthread_t *thd) {
 }
 
 /* New thread function; given a routine address, it will create a
-   new kernel thread with the given attributes. When the routine
-   returns, the thread will exit. Returns the new thread struct. */
+   new thread with the given attributes. When the routine returns,
+   the thread will exit. Returns the new thread struct.
+   Note that this function is also used in thd_init() to add the
+   already running kernel thread to the thread scheduler. This is
+   the only circumstance in which routine should be NULL. */
 kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
                          void *(*routine)(void *param), void *param) {
     kthread_t *nt = NULL;
@@ -430,6 +433,13 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
             irq_create_context(&nt->context,
                                ((uint32_t)nt->stack) + nt->stack_size,
                                (uint32_t)thd_birth, params, 0);
+
+            /* Some architectures require setting up a new stack before use.
+               We won't do this if routine is NULL, however, as this means
+               we are creating the kernel thread, which is already running. */
+            if(routine) {
+                arch_stk_setup(nt);
+            }
 
             /* Create static TLS data if the thread hasn't disabled it. */
             if(real_attr.disable_tls) {
