@@ -3,8 +3,8 @@
 #
 # usage:
 #   - build one of the images:
-#       docker build -t dcchain:stable --build-arg dc_chain=stable -f ./Dockerfile $KOS_BASE
-#       docker build -t dcchain:9.3.0-legacy --build-arg dc_chain=9.3.0-legacy -f ./Dockerfile $KOS_BASE
+#       docker build -t dcchain:stable --build-arg profile=stable -f ./Dockerfile $KOS_BASE
+#       docker build -t dcchain:9.3.0-legacy --build-arg profile=9.3.0-legacy -f ./Dockerfile $KOS_BASE
 #   - create and run a container, e.g. for stable:
 #       docker run -it --name containername dcchain:stable /bin/bash
 
@@ -36,13 +36,13 @@ RUN apk --update add --no-cache \
 # Making Sega Dreamcast toolchains
 # You may adapt the KallistiOS repository URL if needed
 ARG platform=dreamcast
-ARG dc_chain=stable
+ARG profile=stable
 
 RUN mkdir -p /opt/toolchains/dc
 COPY . /opt/toolchains/dc/kos
 
 RUN cd /opt/toolchains/dc/kos/utils/dc-chain \
-	&& make build platform=$platform toolchain_profile=$dc_chain \
+	&& make build platform=$platform toolchain_profile=$profile \
 	&& rm -rf /opt/toolchains/dc/kos
 
 # Stage 2
