@@ -74,11 +74,6 @@
 #define __fallthrough /* Fall through */
 #endif
 
-#ifndef __no_inline
-/** \brief Ask the compiler to \a never inline a given function. */
-#define __no_inline __attribute__((__noinline__))
-#endif
-
 /** @} */
 
 /** \defgroup system_compat Language Compatibility Defines
