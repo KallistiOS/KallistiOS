@@ -4,6 +4,7 @@
    Copyright (C) 2002, 2004 Megan Potter
    Copyright (C) 2020, 2023 Lawrence Sebald
    Copyright (C) 2023 Falco Girgis
+   Copyright (C) 2024, 2025 Donald Haase
 
    Based loosely around some stuff in BSD's sys/cdefs.h
 */
@@ -19,6 +20,7 @@
     \author Megan Potter
     \author Lawrence Sebald
     \author Falco Girgis
+    \author Donald Haase
 */
 
 #ifndef __KOS_CDEFS_H
@@ -47,29 +49,9 @@
 #define __noreturn  __attribute__((__noreturn__))
 #endif
 
-#ifndef __unused
-/** \brief  Identify a function or variable that may be unused. */
-#define __unused    __attribute__((__unused__))
-#endif
-
-#ifndef __used
-/** \brief  Prevent a symbol from being removed from the binary. */
-#define __used      __attribute__((used))
-#endif
-
 #ifndef __weak
 /** \brief  Identify a function or variable that may be overridden by another symbol. */
 #define __weak      __attribute__((weak))
-#endif
-
-#ifndef __packed
-/** \brief  Force a structure, enum, or other type to be packed as small as possible. */
-#define __packed    __attribute__((packed))
-#endif
-
-#ifndef __dead2
-/** \brief  Alias for \ref __noreturn. For BSD compatibility. */
-#define __dead2     __noreturn  /* BSD compat */
 #endif
 
 #ifndef __likely
@@ -115,44 +97,12 @@
 #define __depr(m) __attribute__((deprecated(m)))
 #endif
 
-/* Printf/Scanf-like declaration */
-#ifndef __printflike
-/** \brief  Identify a function as accepting formatting like printf().
-
-    Using this macro allows GCC to typecheck calls to printf-like functions,
-    which can aid in finding mistakes.
-
-    \param  fmtarg          The argument number (1-based) of the format string.
-    \param  firstvararg     The argument number of the first vararg (the ...).
-*/
-#define __printflike(fmtarg, firstvararg) \
-    __attribute__((__format__ (__printf__, fmtarg, firstvararg)))
-#endif
-
-#ifndef __scanflike
-/** \brief  Identify a function as accepting formatting like scanf().
-
-    Using this macro allows GCC to typecheck calls to scanf-like functions,
-    which can aid in finding mistakes.
-
-    \param  fmtarg          The argument number (1-based) of the format string.
-    \param  firstvararg     The argument number of the first vararg (the ...).
-*/
-#define __scanflike(fmtarg, firstvararg) \
-    __attribute__((__format__ (__scanf__, fmtarg, firstvararg)))
-#endif
-
 #if __GNUC__ >= 7
 /** \brief  Identify a case statement that is expected to fall through to the
             statement underneath it. */
 #define __fallthrough __attribute__((__fallthrough__))
 #else
 #define __fallthrough /* Fall through */
-#endif
-
-#ifndef __always_inline
-/** \brief  Ask the compiler to \a always inline a given function. */
-#define __always_inline inline __attribute__((__always_inline__))
 #endif
 
 #ifndef __no_inline
