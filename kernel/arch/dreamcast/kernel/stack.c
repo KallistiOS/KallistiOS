@@ -7,10 +7,7 @@
 /* Functions to tinker with the stack, including obtaining a stack
    trace when frame pointers are enabled. If frame pointers are enabled,
    then you'll need to also define FRAME_POINTERS to get support for stack
-   traces.
-
-   We could probably technically move this into arch indep with a bit more
-   work... */
+   traces. */
 
 #include <kos/dbgio.h>
 #include <arch/arch.h>

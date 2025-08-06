@@ -2,19 +2,22 @@
 
    arch/dreamcast/include/arch/stack.h
    (c)2002 Megan Potter
+   (c)2025 Eric Fradella
 
 */
 
 /** \file    arch/stack.h
-    \brief   Stack tracing.
+    \brief   Stack functions
     \ingroup debugging_stacktrace
 
-    The functions in this file deal with doing stack traces. These functions
-    will do a stack trace, as specified, printing it out to stdout (usually a
-    dcload terminal). These functions only work if frame pointers have been
-    enabled at compile time (-DFRAME_POINTERS and no -fomit-frame-pointer flag).
+    This file contains arch-specific stack implementations, including defining
+    stack sizes and alignments, as well as functions for stack tracing and
+    debugging. On Dreamcast, the stack tracing functions only work if frame
+    pointers have been enabled at compile time (-DFRAME_POINTERS and no
+    -fomit-frame-pointer flag).
 
     \author Megan Potter
+    \author Eric Fradella
 */
 
 #ifndef __ARCH_STACK_H
@@ -24,6 +27,7 @@
 __BEGIN_DECLS
 
 #include <stdint.h>
+#include <kos/thread.h>
 
 /** \defgroup debugging_stacktrace  Stack Traces
     \brief                          API for managing stack backtracing
@@ -31,6 +35,70 @@ __BEGIN_DECLS
 
     @{
 */
+
+#ifndef THD_STACK_ALIGNMENT
+/** \brief  Required alignment for stack. */
+#define THD_STACK_ALIGNMENT 8
+#endif
+
+#ifndef THD_STACK_SIZE
+/** \brief  Default thread stack size. */
+#define THD_STACK_SIZE  32768
+#endif
+
+#ifndef THD_KERNEL_STACK_SIZE
+/** \brief Main/kernel thread's stack size. */
+#define THD_KERNEL_STACK_SIZE (64 * 1024)
+#endif
+
+/** \brief   DC specific "function" to get the return address from the current
+             function.
+
+    \return                 The return address of the current function.
+*/
+static __always_inline uintptr_t arch_get_ret_addr(void) {
+    uintptr_t pr;
+
+    __asm__ __volatile__("sts pr,%0\n" : "=r"(pr));
+
+    return pr;
+}
+
+/* Please note that all of the following frame pointer macros are ONLY
+   valid if you have compiled your code WITHOUT -fomit-frame-pointer. These
+   are mainly useful for getting a stack trace from an error. */
+
+/** \brief   DC specific "function" to get the frame pointer from the current
+             function.
+
+    \return                 The frame pointer from the current function.
+    \note                   This only works if you don't disable frame pointers.
+*/
+static __always_inline uintptr_t arch_get_fptr(void) {
+    register uintptr_t fp __asm__("r14");
+
+    return fp;
+}
+
+/** \brief   Pass in a frame pointer value to get the return address for the
+             given frame.
+
+    \param  fptr            The frame pointer to look at.
+    \return                 The return address of the pointer.
+*/
+static inline uintptr_t arch_fptr_ret_addr(uintptr_t fptr) {
+    return *(uintptr_t *)fptr;
+}
+
+/** \brief   Pass in a frame pointer value to get the previous frame pointer for
+             the given frame.
+
+    \param  fptr            The frame pointer to look at.
+    \return                 The previous frame pointer.
+*/
+static inline uintptr_t arch_fptr_next(uintptr_t fptr) {
+    return arch_fptr_ret_addr(fptr + 4);
+}
 
 /** \brief  Do a stack trace from the current function.
 
