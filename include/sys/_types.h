@@ -137,13 +137,7 @@ typedef unsigned long __mode_t;
 typedef unsigned short __nlink_t;
 typedef long        __suseconds_t;  /* microseconds (signed) */
 typedef unsigned long   __useconds_t;   /* microseconds (unsigned) */
-
-#if __NEWLIB__ >= 3
-#define _TIME_T_ long long
-#else
-#define _TIME_T_ long
-#endif
-typedef _TIME_T_    __time_t;
+typedef long long    __time_t;
 
 #ifndef __clockid_t_defined
 #define _CLOCKID_T_     unsigned long
