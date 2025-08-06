@@ -27,7 +27,7 @@
 #include <sys/cdefs.h>
 
 /* Check GCC version */
-#if __GNUC__ <= 3
+#if __GNUC__ < 9
 #   warning Your GCC is too old. This will probably not work right.
 #endif
 
