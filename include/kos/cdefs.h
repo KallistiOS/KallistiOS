@@ -255,16 +255,11 @@
  */
 #define __array_size(arr) (sizeof(arr) / sizeof((arr)[0]) + _array_size_chk(arr))
 
-/* Helper for __array_size's type check */
-#if HAVE_BUILTIN_TYPES_COMPATIBLE_P && HAVE_TYPEOF
 /* Two gcc extensions.
  * &a[0] degrades to a pointer: a different type from an array */
 #define _array_size_chk(arr)                        \
     __build_assert_or_zero(!__builtin_types_compatible_p(typeof(arr),   \
                             typeof(&(arr)[0])))
-#else
-#define _array_size_chk(arr) 0
-#endif
 
 /** \brief Create a string from the argument.
 
