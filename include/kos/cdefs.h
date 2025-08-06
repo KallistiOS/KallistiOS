@@ -49,32 +49,6 @@
 #define __noreturn  __attribute__((__noreturn__))
 #endif
 
-#ifndef __likely
-/** \brief  Directive to inform the compiler the condition is in the likely path.
-
-    This can be used around conditionals or loops to help inform the
-    compiler which path to optimize for as the common-case.
-
-    \param  exp     Boolean expression which expected to be true.
-
-    \sa __unlikely()
-*/
-#define __likely(exp)   __builtin_expect(!!(exp), 1)
-#endif
-
-#ifndef __unlikely
-/** \brief  Directive to inform the compiler the condition is in the unlikely path.
-
-    This can be used around conditionals or loops to help inform the
-    compiler which path to optimize against as the infrequent-case.
-
-    \param  exp     Boolean expression which is expected to be false.
-
-    \sa __likely()
-*/
-#define __unlikely(exp) __builtin_expect(!!(exp), 0)
-#endif
-
 #ifndef __deprecated
 /** \brief  Mark something as deprecated.
     This should be used to warn users that a function/type/etc will be removed
