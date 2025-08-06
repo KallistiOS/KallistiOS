@@ -20,7 +20,7 @@
 #define TIMER32(o)  ( *((volatile uint32_t *)(TIMER_BASE + (o))) )
 
 /* Register base address */
-#define TIMER_BASE 0xffd80000 
+#define TIMER_BASE 0xffd80000
 
 /* Register offsets */
 #define TOCR    0x00    /* Timer Output Control Register */
@@ -53,7 +53,7 @@
 #define TDIV(div)   (4 << (2 * div))
 
 /* Timer Prescalar TPSC values (Peripheral clock divided by N) */
-typedef enum PCK_DIV { 
+typedef enum PCK_DIV {
     PCK_DIV_4,      /* Pck/4    => 80ns */
     PCK_DIV_16,     /* Pck/16   => 320ns*/
     PCK_DIV_64,     /* Pck/64   => 1280ns*/
@@ -77,11 +77,11 @@ static const unsigned tcnts[] = { TCNT0, TCNT1, TCNT2 };
 static const unsigned tcrs[] = { TCR0, TCR1, TCR2 };
 
 /* Apply timer configuration to registers. */
-static int timer_prime_apply(int which, uint32_t count, int interrupts) { 
+static int timer_prime_apply(int which, uint32_t count, int interrupts) {
     assert(which <= TMU2);
 
     TIMER32(tcnts[which]) = count;
-    TIMER32(tcors[which]) = count; 
+    TIMER32(tcors[which]) = count;
 
     TIMER16(tcrs[which]) = TIMER_TPSC;
 
@@ -207,9 +207,9 @@ int timer_ints_enabled(int which) {
 }
 
 /* Seconds elapsed (since KOS startup), updated from the TMU2 underflow ISR */
-static volatile uint32_t timer_ms_counter = 0; 
+static volatile uint32_t timer_ms_counter = 0;
 /* Max counter value (used as TMU2 reload), to target a 1 second interval */
-static          uint32_t timer_ms_countdown;   
+static          uint32_t timer_ms_countdown;
 
 /* TMU2 interrupt handler, called every second. Simply updates our
    running second counter and clears the underflow flag. */
@@ -249,7 +249,7 @@ typedef struct timer_value {
 static timer_val_t timer_getticks(const uint32_t *tns, uint32_t shift) {
     uint32_t secs, unf1, unf2, counter1, counter2, delta, ticks;
     uint16_t tmu2;
-    
+
     do {
         /* Read the underflow flag twice, and the counter twice.
            - If both flags are set, it's just unrealistic that one
@@ -278,7 +278,7 @@ static timer_val_t timer_getticks(const uint32_t *tns, uint32_t shift) {
         counter2 = TIMER32(tcnts[TMU2]);
         tmu2 = TIMER16(tcrs[TMU2]);
         unf2 = !!(tmu2 & UNF);
-    } while(__unlikely(unf1 != unf2 || counter1 < counter2));
+    } while(__predict_false(unf1 != unf2 || counter1 < counter2));
 
     delta = timer_ms_countdown - counter2;
 
@@ -371,7 +371,7 @@ static void tp_handler(irq_t src, irq_context_t *cxt, void *data) {
         /* Call the callback, if any */
         if(tp_callback)
             tp_callback(cxt);
-    } 
+    }
     /* Do we have less than a second remaining? */
     else if(tp_ms_remaining < 1000) {
         /* Schedule a "last leg" timer. */
@@ -380,7 +380,7 @@ static void tp_handler(irq_t src, irq_context_t *cxt, void *data) {
         timer_clear(TMU0);
         timer_start(TMU0);
         tp_ms_remaining = 0;
-    } 
+    }
     /* Otherwise, we're just counting down. */
     else {
         tp_ms_remaining -= 1000;
