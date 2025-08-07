@@ -24,8 +24,8 @@ static void purupuru_rumble_cb(maple_state_t *st, maple_frame_t *frame) {
     genwait_wake_all(frame);
 }
 
-int purupuru_rumble_raw(maple_device_t *dev, uint32 effect) {
-    uint32 *send_buf;
+int purupuru_rumble_raw(maple_device_t *dev, uint32_t effect) {
+    uint32_t *send_buf;
 
     assert(dev != NULL);
 
@@ -35,7 +35,7 @@ int purupuru_rumble_raw(maple_device_t *dev, uint32 effect) {
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);
-    send_buf = (uint32 *)dev->frame.recv_buf;
+    send_buf = (uint32_t *)dev->frame.recv_buf;
     send_buf[0] = MAPLE_FUNC_PURUPURU;
     send_buf[1] = effect;
     dev->frame.cmd = MAPLE_COMMAND_SETCOND;
@@ -61,7 +61,7 @@ int purupuru_rumble_raw(maple_device_t *dev, uint32 effect) {
 }
 
 int purupuru_rumble(maple_device_t *dev, purupuru_effect_t *effect) {
-    uint32 comp_effect;
+    uint32_t comp_effect;
 
     assert(dev != NULL);
 
