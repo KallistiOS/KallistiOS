@@ -36,7 +36,7 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
+#include <stdint.h>
 #include <dc/maple.h>
 
 /** \defgroup peripherals_rumble    Rumble Pack
@@ -54,16 +54,16 @@ __BEGIN_DECLS
 */
 typedef struct purupuru_effect  {
     /** \brief  The duration of the effect. No idea on units... */
-    uint8 duration;
+    uint8_t duration;
 
     /** \brief  2nd effect field. */
-    uint8 effect2;
+    uint8_t effect2;
 
     /** \brief  1st effect field. */
-    uint8 effect1;
+    uint8_t effect1;
 
     /** \brief  Special effects field. */
-    uint8 special;
+    uint8_t special;
 } purupuru_effect_t;
 
 /* Set one of each of the following in the effect2 field of the
@@ -181,7 +181,7 @@ int purupuru_rumble(maple_device_t *dev, purupuru_effect_t *effect);
     \retval MAPLE_EOK       On success.
     \retval MAPLE_EAGAIN    If the command couldn't be sent. Try again later.
 */
-int purupuru_rumble_raw(maple_device_t *dev, uint32 effect);
+int purupuru_rumble_raw(maple_device_t *dev, uint32_t effect);
 
 /* \cond */
 /* Init / Shutdown */

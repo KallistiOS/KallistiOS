@@ -7,15 +7,14 @@
 
 #include <assert.h>
 #include <kos/dbglog.h>
-#include <kos/genwait.h>
 #include <dc/maple.h>
 #include <dc/maple/purupuru.h>
 
 /* Be warned, not all purus are created equal, in fact, most of
    them act different for just about everything you feed to them. */
 
-int purupuru_rumble_raw(maple_device_t *dev, uint32 effect) {
-    uint32 *send_buf;
+int purupuru_rumble_raw(maple_device_t *dev, uint32_t effect) {
+    uint32_t *send_buf;
 
     assert(dev != NULL);
 
@@ -25,7 +24,7 @@ int purupuru_rumble_raw(maple_device_t *dev, uint32 effect) {
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);
-    send_buf = (uint32 *)dev->frame.recv_buf;
+    send_buf = (uint32_t *)dev->frame.recv_buf;
     send_buf[0] = MAPLE_FUNC_PURUPURU;
     send_buf[1] = effect;
     dev->frame.cmd = MAPLE_COMMAND_SETCOND;
@@ -40,7 +39,7 @@ int purupuru_rumble_raw(maple_device_t *dev, uint32 effect) {
 }
 
 int purupuru_rumble(maple_device_t *dev, purupuru_effect_t *effect) {
-    uint32 comp_effect;
+    uint32_t comp_effect;
 
     assert(dev != NULL);
 
