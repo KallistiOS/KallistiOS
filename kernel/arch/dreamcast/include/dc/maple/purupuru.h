@@ -52,18 +52,23 @@ __BEGIN_DECLS
     This, along with the various macros in this file can give a slightly better
     idea of the effect being generated than using the raw values.
 */
-typedef struct purupuru_effect  {
-    /** \brief  The duration of the effect. No idea on units... */
-    uint8_t duration;
+typedef union purupuru_effect  {
+    /** \brief Access the raw 32-bit value to be sent to the puru */
+    uint32_t raw;
+    /** \brief Deprecated old structure which has been inverted now to union with raw. */
+    struct {
+        /** \brief  Special effects field. */
+        uint8_t special;
 
-    /** \brief  2nd effect field. */
-    uint8_t effect2;
+        /** \brief  1st effect field. */
+        uint8_t effect1;
 
-    /** \brief  1st effect field. */
-    uint8_t effect1;
+        /** \brief  2nd effect field. */
+        uint8_t effect2;
 
-    /** \brief  Special effects field. */
-    uint8_t special;
+        /** \brief  The duration of the effect. No idea on units... */
+        uint8_t duration;
+    };
 } purupuru_effect_t;
 
 /* Set one of each of the following in the effect2 field of the
