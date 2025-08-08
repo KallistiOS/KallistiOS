@@ -7,10 +7,7 @@
 /* Functions to tinker with the stack, including obtaining a stack
    trace when frame pointers are enabled. If frame pointers are enabled,
    then you'll need to also define FRAME_POINTERS to get support for stack
-   traces.
-
-   We could probably technically move this into arch indep with a bit more
-   work... */
+   traces. */
 
 #include <kos/dbgio.h>
 #include <arch/arch.h>
@@ -22,6 +19,11 @@ static uintptr_t arch_stack_32m_dft = 0x8e000000;
 
 extern uintptr_t arch_stack_16m __attribute__((weak,alias("arch_stack_16m_dft")));
 extern uintptr_t arch_stack_32m __attribute__((weak,alias("arch_stack_32m_dft")));
+
+/* This function is unnecessary and does nothing on Dreamcast */
+void arch_stk_setup(kthread_t *nt) {
+    (void)nt;
+}
 
 /* Do a stack trace from the current function; leave off the first n frames
    (i.e., in assert()). */

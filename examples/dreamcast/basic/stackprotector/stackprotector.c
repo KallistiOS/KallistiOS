@@ -26,7 +26,7 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <arch/arch.h>
+#include <arch/stack.h>
 #include <stdlib.h>
 
 /* This function will override the default stack protector handler that is

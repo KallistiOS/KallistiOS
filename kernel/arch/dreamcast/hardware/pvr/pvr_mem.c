@@ -15,6 +15,8 @@
 #include <kos/opts.h>
 #include <kos/dbglog.h>
 
+#include <arch/stack.h>
+
 /*
 
 This module basically serves as a KOS-friendly front end and support routines
