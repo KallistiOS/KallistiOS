@@ -5,8 +5,8 @@ OUTPUT_ARCH(sh)
 STARTUP(_kos_startup.o)
 INPUT(crti.o)
 INPUT(crtbegin.o)
-INPUT(crtn.o)
 INPUT(crtend.o)
+INPUT(crtn.o)
 LOAD_OFFSET = DEFINED(LOAD_OFFSET) ? LOAD_OFFSET : 0x8c010000 ;
 
 SECTIONS
