@@ -672,6 +672,8 @@ void fs_romdisk_shutdown(void) {
     if(!initted)
         return;
 
+    initted = 0;
+
     mutex_lock(&fh_mutex);
 
     /* Go through and free all the romdisk mount entries */
@@ -679,17 +681,15 @@ void fs_romdisk_shutdown(void) {
         fs_romdisk_list_remove(c);
     }
 
+    mutex_unlock(&fh_mutex);
+
     /* Iterate through any dangling files and clean them */
     TAILQ_FOREACH_SAFE(i, &rd_fd_queue, next, j) {
         romdisk_close(i);
     }
 
-    mutex_unlock(&fh_mutex);
-
     /* Free mutex */
     mutex_destroy(&fh_mutex);
-
-    initted = 0;
 }
 
 /* Mount a romdisk image; must have called fs_romdisk_init() earlier.
