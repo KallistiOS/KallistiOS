@@ -39,7 +39,7 @@ int purupuru_rumble_raw(maple_device_t *dev, uint32_t effect) {
     return MAPLE_EOK;
 }
 
-int purupuru_rumble(maple_device_t *dev, purupuru_effect_t *effect) {
+int purupuru_rumble(maple_device_t *dev, const purupuru_effect_t *effect) {
 
     /* Error checking to prevent hardware-level errors */
     if(!effect->motor) {
