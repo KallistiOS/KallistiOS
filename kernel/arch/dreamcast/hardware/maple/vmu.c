@@ -29,6 +29,30 @@
 
 #define VMU_BLOCK_WRITE_RETRY_TIME  100     /* time to sleep until retrying a failed write */
 
+/* This is the value that official VMUs report for function_data[0]. Have not 
+   found any official ones that report a different value nor any third party
+   that report it.
+*/
+static const uint32_t vmu_official_function_data0 = 0x403f7e7e;
+
+/* Distinguish between VMU (only official, with screen/clock/buttons)
+   and VMS (memcard only). */
+static bool vmu_is_vmu(const maple_device_t *dev) {
+    /* If it doesn't have the known magic number, it's no official VMU. */
+    if(dev->info.function_data[0] != vmu_official_function_data0)
+        return false;
+
+    /* Give a secondary test to confirm that it's presenting all three
+    components of an official VMU. This alone is not sufficient to test
+    for VMU vs VMS though as most (all?) 3rd party VMS report that they
+    have the other functions.
+    */
+    if(dev->info.functions & (MAPLE_FUNC_MEMCARD | MAPLE_FUNC_LCD | MAPLE_FUNC_CLOCK))
+        return true;
+
+    return false;
+}
+
 /* VMU's raw condition data: 0 = PRESSED, 1 = RELEASED */
 typedef struct vmu_cond {
     uint8_t raw_buttons;
@@ -127,8 +151,9 @@ static void vmu_poll_reply(maple_state_t *st, maple_frame_t *frm) {
 static int vmu_poll(maple_device_t *dev) {
     uint32_t *send_buf;
 
-    /* Only query for button input on the front VMU of each controller. */
-    if(dev->unit == 1) {
+    /* Only query for button input on the front VMU of each controller 
+       AND the device actually has the functionality. */
+    if((dev->unit == 1) && vmu_is_vmu(dev)) {
         if(maple_frame_lock(&dev->frame) < 0)
             return 0;
 
