@@ -117,7 +117,7 @@ static const uint8_t PURUPURU_SPECIAL_PULSE     __depr("Please see purupuru_effe
     \retval MAPLE_ETIMEOUT  If the command timed out while blocking.
     \retval MAPLE_EINVALID  The command is not being sent due to invalid input.
 */
-int purupuru_rumble(maple_device_t *dev, purupuru_effect_t *effect);
+int purupuru_rumble(maple_device_t *dev, const purupuru_effect_t *effect);
 
 /** \brief  Send a raw effect to a jump pack.
 
