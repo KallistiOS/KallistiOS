@@ -3,6 +3,7 @@
    dc/maple/purupuru.h
    Copyright (C) 2003 Megan Potter
    Copyright (C) 2005, 2010 Lawrence Sebald
+   Copyright (C) 2025 Donald Haase
 
 */
 
@@ -28,6 +29,7 @@
     that does absolutely nothing on the first try.
 
     \author Lawrence Sebald
+    \author Donald Haase
 */
 
 #ifndef __DC_MAPLE_PURUPURU_H
@@ -36,6 +38,7 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <dc/maple.h>
 
@@ -68,6 +71,28 @@ typedef union purupuru_effect  {
 
         /** \brief  The duration of the effect. No idea on units... */
         uint8_t duration;
+    };
+    struct {
+        /** \brief Continuous Vibration. When set vibration will continue until stopped */
+        bool    cont    : 1;
+        /** \brief Reserved. Always 0s */
+        uint8_t res     : 3;
+        /** \brief Motor number. 0 will cause an error. 1 is the typical setting. */
+        uint8_t motor   : 4;
+
+        /** \brief Backward direction (- direction) intensity setting bits. 0 stops vibration. */
+        uint8_t bpow    : 3;
+        /** \brief Divergent vibration. The rumble will get stronger until it stops. */
+        bool    div     : 1;
+        /** \brief Forward direction (+ direction) intensity setting bits. 0 stops vibration. */
+        uint8_t fpow    : 3;
+        /** \brief Convergent vibration. The rumble will get weaker until it stops. */
+        bool    conv    : 1;
+
+        /** \brief Vibration frequency. for most purupuru 4-59. */
+        uint8_t freq;
+        /** \brief Vibration inclination period. */
+        uint8_t inc;
     };
 } purupuru_effect_t;
 
@@ -172,6 +197,7 @@ typedef union purupuru_effect  {
     \param  effect          The effect to send.
     \retval MAPLE_EOK       On success.
     \retval MAPLE_EAGAIN    If the command couldn't be sent. Try again later.
+    \retval MAPLE_EINVALID  The command is not being sent due to invalid input.
 */
 int purupuru_rumble(maple_device_t *dev, purupuru_effect_t *effect);
 

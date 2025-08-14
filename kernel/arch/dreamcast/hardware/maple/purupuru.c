@@ -3,6 +3,7 @@
    purupuru.c
    Copyright (C) 2003 Megan Potter
    Copyright (C) 2005 Lawrence Sebald
+   Copyright (C) 2025 Donald Haase
 */
 
 #include <assert.h>
@@ -39,6 +40,18 @@ int purupuru_rumble_raw(maple_device_t *dev, uint32_t effect) {
 }
 
 int purupuru_rumble(maple_device_t *dev, purupuru_effect_t *effect) {
+
+    /* Error checking to prevent hardware-level errors */
+    if(!effect->motor) {
+        dbglog(DBG_WARNING, "puru: invalid rumble effect sent. motor must be nonzero.\n");
+        return MAPLE_EINVALID;
+    }
+
+    if(effect->conv && effect->div) {
+        dbglog(DBG_WARNING, "puru: invalid rumble effect sent. Divergent and Convergent rumble cannot be set together.\n");
+        return MAPLE_EINVALID;
+    }
+
     return purupuru_rumble_raw(dev, effect->raw);
 }
 
