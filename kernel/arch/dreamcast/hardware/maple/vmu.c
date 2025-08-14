@@ -317,6 +317,10 @@ int vmu_beep_raw(maple_device_t *dev, uint32_t beep) {
 
     assert(dev);
 
+    /* Only send a beep if this is a real VMU */
+    if(!vmu_is_vmu(dev))
+        return MAPLE_EINVALID;
+
     /* Lock the frame */
     if(maple_frame_lock(&dev->frame) < 0)
         return MAPLE_EAGAIN;
@@ -350,6 +354,10 @@ int vmu_draw_lcd(maple_device_t *dev, const void *bitmap) {
     uint32_t *send_buf;
 
     assert(dev != NULL);
+
+    /* Only try to draw to screen if this is a real VMU */
+    if(!vmu_is_vmu(dev))
+        return MAPLE_EINVALID;
 
     /* Lock the frame */
     if(maple_frame_lock(&dev->frame) < 0)
@@ -643,6 +651,10 @@ int vmu_set_datetime(maple_device_t *dev, time_t unix) {
 
     assert(dev);
 
+    /* Only set datetime if this is a real VMU */
+    if(!vmu_is_vmu(dev))
+        return MAPLE_EINVALID;
+
     btime = localtime(&unix);
     assert(btime); /* A failure here means an invalid unix timestamp was given. */
 
@@ -692,6 +704,10 @@ int vmu_get_datetime(maple_device_t *dev, time_t *unix) {
     uint32_t          *send_buf;
 
     assert(dev);
+
+    /* Only get datetime if this is a real VMU */
+    if(!vmu_is_vmu(dev))
+        return MAPLE_EINVALID;
 
     /* Lock the frame */
     if(maple_frame_lock(&dev->frame) < 0)
