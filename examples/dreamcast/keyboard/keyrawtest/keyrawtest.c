@@ -33,15 +33,15 @@
 #include <assert.h>
 #include <kos.h>
 
-extern uint16 *vram_s;
+extern uint16_t *vram_s;
 
 static cont_state_t *first_kbd_state;
 static maple_device_t *first_kbd_dev = NULL;
 
 /* Track how many times we try to find a keyboard before just quitting. */
-static uint8 no_kbd_loop = 0;
+static uint8_t no_kbd_loop = 0;
 /* This is set up to have multiple tests in the future. */
-static uint8 test_phase = 0;
+static uint8_t test_phase = 0;
 
 // Add this helper function above basic_typing()
 static const char *kbd_key_name(kbd_key_t key) {
