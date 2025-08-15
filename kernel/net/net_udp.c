@@ -181,7 +181,7 @@ static int net_udp_bind(net_socket_t *hnd, const struct sockaddr *addr,
         udpsock->local_addr = realaddr6;
     }
     else {
-        uint16 port = 1024, tmp = 0;
+        uint16_t port = 1024, tmp = 0;
 
         /* Grab the first unused port >= 1024. This is, unfortunately, O(n^2) */
         while(tmp != port) {

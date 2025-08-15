@@ -42,7 +42,7 @@ int net_ipv6_send(netif_t *net, const uint8_t *data, size_t data_size,
                   const struct in6_addr *dst);
 int net_ipv6_input(netif_t *src, const uint8_t *pkt, size_t pktsize,
                    const eth_hdr_t *eth);
-uint16 net_ipv6_checksum_pseudo(const struct in6_addr *src,
+uint16_t net_ipv6_checksum_pseudo(const struct in6_addr *src,
                                 const struct in6_addr *dst,
                                 uint32_t upper_len, uint8_t next_hdr);
 

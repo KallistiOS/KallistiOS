@@ -119,7 +119,7 @@ static void net_icmp6_input_128(netif_t *net, ipv6_hdr_t *ip, icmp6_hdr_t *icmp,
     /* Recompute the ICMP header checksum */
     icmp->checksum = 0;
     cs = net_ipv6_checksum_pseudo(&src, &dst, ntohs(ip->length), IPV6_HDR_ICMP);
-    icmp->checksum = net_ipv4_checksum((uint8 *)icmp, ntohs(ip->length), cs);
+    icmp->checksum = net_ipv4_checksum((uint8_t *)icmp, ntohs(ip->length), cs);
 
     /* Send the result away */
     net_ipv6_send_packet(net, ip, d, s);
@@ -690,7 +690,7 @@ int net_icmp6_send_rsol(netif_t *net) {
 /* Convenience function for handling the parts of error packets that are the
    same no matter what kind we're dealing with. */
 static int send_err_pkt(netif_t *net, uint8_t buf[1240], int ptr,
-                        const uint8 *ppkt, size_t pktsz, int mc_allow) {
+                        const uint8_t *ppkt, size_t pktsz, int mc_allow) {
     size_t size = 1240 - ptr;
     icmp6_hdr_t *pkt = (icmp6_hdr_t *)buf;
     const ipv6_hdr_t *orig = (const ipv6_hdr_t *)ppkt;

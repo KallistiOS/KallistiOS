@@ -2738,7 +2738,7 @@ static int process_pkt(netif_t *src, const struct in6_addr *srca,
 }
 
 static int net_tcp_input(netif_t *src, int domain, const void *hdr,
-                         const uint8 *data, size_t size) {
+                         const uint8_t *data, size_t size) {
     struct in6_addr srca, dsta;
     const ip_hdr_t *ip4;
     const ipv6_hdr_t *ip6;

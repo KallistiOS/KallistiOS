@@ -223,7 +223,7 @@ int net_ipv4_frag_send(netif_t *net, ip_hdr_t *hdr, const uint8_t *data,
 
     /* Recompute the checksum. */
     newhdr.checksum = 0;
-    newhdr.checksum = net_ipv4_checksum((uint8 *)&newhdr, sizeof(ip_hdr_t), 0);
+    newhdr.checksum = net_ipv4_checksum((uint8_t *)&newhdr, sizeof(ip_hdr_t), 0);
 
     if(net_ipv4_send_packet(net, &newhdr, data, ds)) {
         return -1;
@@ -235,7 +235,7 @@ int net_ipv4_frag_send(netif_t *net, ip_hdr_t *hdr, const uint8_t *data,
     hdr->length = htons(ihl + size - ds);
     hdr->flags_frag_offs = htons((flags & 0xE000) | ((flags & 0x1FFF) + nfb));
     hdr->checksum = 0;
-    hdr->checksum = net_ipv4_checksum((uint8 *)hdr, sizeof(ip_hdr_t), 0);
+    hdr->checksum = net_ipv4_checksum((uint8_t *)hdr, sizeof(ip_hdr_t), 0);
 
     return net_ipv4_frag_send(net, hdr, data + ds, size - ds);
 }

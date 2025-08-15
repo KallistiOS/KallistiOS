@@ -193,7 +193,7 @@ int net_ndp_lookup(netif_t *net, const struct in6_addr *ip, uint8_t mac_out[6],
 
     /* Copy our packet if we have one to copy. */
     if(pkt && data && data_size) {
-        i->data = (uint8 *)malloc(data_size);
+        i->data = (uint8_t *)malloc(data_size);
 
         if(i->data) {
             i->pkt = (ipv6_hdr_t *)malloc(sizeof(ipv6_hdr_t));

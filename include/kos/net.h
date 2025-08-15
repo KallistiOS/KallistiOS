@@ -528,7 +528,7 @@ net_ipv4_stats_t net_ipv4_get_stats(void);
 */
 uint32_t __pure net_ipv4_address(const uint8_t addr[4]);
 
-/** \brief   Parse an IP address that is packet into a uint32 into an array of
+/** \brief   Parse an IP address that is packet into a uint32_t into an array of
              the individual bytes.
     \ingroup networking_ipv4
 

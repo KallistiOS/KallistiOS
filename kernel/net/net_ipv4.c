@@ -296,7 +296,7 @@ uint16_t __pure net_ipv4_checksum_pseudo(in_addr_t src, in_addr_t dst, uint8_t p
                                 uint16_t len) {
     ipv4_pseudo_hdr_t ps = { src, dst, 0, proto, htons(len) };
 
-    return ~net_ipv4_checksum((uint8 *)&ps, sizeof(ipv4_pseudo_hdr_t), 0);
+    return ~net_ipv4_checksum((uint8_t *)&ps, sizeof(ipv4_pseudo_hdr_t), 0);
 }
 
 net_ipv4_stats_t net_ipv4_get_stats(void) {

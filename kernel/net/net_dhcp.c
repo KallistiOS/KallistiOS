@@ -79,7 +79,7 @@ static int net_dhcp_fill_options(netif_t *net, dhcp_pkt_t *req, uint8_t msgtype,
 
     /* Host Name: Dreamcast */
     const char* host_name = "KallistiOS";
-    const uint8 size = strlen(host_name);
+    const uint8_t size = strlen(host_name);
     req->options[pos++] = DHCP_OPTION_HOST_NAME;
     req->options[pos++] = size;
     memcpy(req->options + pos, host_name, size);
@@ -464,7 +464,7 @@ static void net_dhcp_bind(dhcp_pkt_t *pkt, int len) {
         int expiry = ntohl(tmp) * 1000;
 
         renew_time = now + (expiry >> 1);
-        rebind_time = now + (uint64)(expiry * 0.875);
+        rebind_time = now + (uint64_t)(expiry * 0.875);
         lease_expires = now + expiry;
     }
     else if(tmp == 0xFFFFFFFF) {
