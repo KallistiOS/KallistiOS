@@ -23,7 +23,7 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
+#include <stdint.h>
 
 /** \brief   Debug I/O Interface.
     \ingroup logging
@@ -93,7 +93,7 @@ typedef struct dbgio_handler {
         \return             Number of characters written on success, or -1 on
                             failure (set errno as appropriate)
     */
-    int (*write_buffer)(const uint8 *data, int len, int xlat);
+    int (*write_buffer)(const uint8_t *data, int len, int xlat);
 
     /** \brief  Read an entire buffer of data from the console.
         \param  data        The buffer to read into
@@ -101,7 +101,7 @@ typedef struct dbgio_handler {
         \return             Number of characters read on success, or -1 on
                             failure (set errno as appropriate)
     */
-    int (*read_buffer)(uint8 *data, int len);
+    int (*read_buffer)(uint8_t *data, int len);
 } dbgio_handler_t;
 
 /** \cond */
@@ -217,7 +217,7 @@ int dbgio_flush(void);
     \return                 Number of characters written on success, or -1 on
                             failure (errno should be set as appropriate)
 */
-int dbgio_write_buffer(const uint8 *data, int len);
+int dbgio_write_buffer(const uint8_t *data, int len);
 
 /** \brief   Read an entire buffer of data from the console.
     \ingroup logging
@@ -228,7 +228,7 @@ int dbgio_write_buffer(const uint8 *data, int len);
     \return                 Number of characters read on success, or -1 on
                             failure (errno should be set as appropriate)
 */
-int dbgio_read_buffer(uint8 *data, int len);
+int dbgio_read_buffer(uint8_t *data, int len);
 
 /** \brief   Write an entire buffer of data to the console (potentially with
              newline transformations).
@@ -240,7 +240,7 @@ int dbgio_read_buffer(uint8 *data, int len);
     \return                 Number of characters written on success, or -1 on
                             failure (errno should be set as appropriate)
 */
-int dbgio_write_buffer_xlat(const uint8 *data, int len);
+int dbgio_write_buffer_xlat(const uint8_t *data, int len);
 
 /** \brief   Write a NUL-terminated string to the console.
     \ingroup logging

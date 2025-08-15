@@ -61,7 +61,7 @@ typedef tid_t libid_t;                  /**< \brief Library ID type. */
     Each loaded library should export at least the functions described in this
     structure:
     \li     const char *lib_get_name()
-    \li     uint32 %lib_get_version()
+    \li     uint32_t %lib_get_version()
     \li     int lib_open(struct klibrary *lib)
     \li     int lib_close(struct klibrary *lib)
 

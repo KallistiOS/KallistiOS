@@ -122,7 +122,7 @@ int dbgio_flush(void) {
     return -1;
 }
 
-int dbgio_write_buffer(const uint8 *data, int len) {
+int dbgio_write_buffer(const uint8_t *data, int len) {
     if(dbgio_enabled) {
         assert(dbgio);
         return dbgio->write_buffer(data, len, 0);
@@ -131,7 +131,7 @@ int dbgio_write_buffer(const uint8 *data, int len) {
     return -1;
 }
 
-int dbgio_read_buffer(uint8 *data, int len) {
+int dbgio_read_buffer(uint8_t *data, int len) {
     if(dbgio_enabled) {
         assert(dbgio);
         return dbgio->read_buffer(data, len);
@@ -140,7 +140,7 @@ int dbgio_read_buffer(uint8 *data, int len) {
     return -1;
 }
 
-int dbgio_write_buffer_xlat(const uint8 *data, int len) {
+int dbgio_write_buffer_xlat(const uint8_t *data, int len) {
     if(dbgio_enabled) {
         assert(dbgio);
         return dbgio->write_buffer(data, len, 1);
@@ -152,7 +152,7 @@ int dbgio_write_buffer_xlat(const uint8 *data, int len) {
 int dbgio_write_str(const char *str) {
     if(dbgio_enabled) {
         assert(dbgio);
-        return dbgio_write_buffer_xlat((const uint8*)str, strlen(str));
+        return dbgio_write_buffer_xlat((const uint8_t *)str, strlen(str));
     }
 
     return -1;
@@ -211,13 +211,13 @@ static int null_write(int c) {
 static int null_flush(void) {
     return 0;
 }
-static int null_write_buffer(const uint8 *data, int len, int xlat) {
+static int null_write_buffer(const uint8_t *data, int len, int xlat) {
     (void)data;
     (void)len;
     (void)xlat;
     return len;
 }
-static int null_read_buffer(uint8 * data, int len) {
+static int null_read_buffer(uint8_t * data, int len) {
     (void)data;
     (void)len;
     errno = EAGAIN;

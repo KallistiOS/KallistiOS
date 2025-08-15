@@ -1663,19 +1663,19 @@ static pthread_mutex_t mALLOC_MUTEx = PTHREAD_MUTEX_INITIALIZER;
  */
 
 typedef struct memctl {
-    uint32          magic;
-    uint32          size;
+    uint32_t        magic;
+    uint32_t        size;
     tid_t           thread;
-    uint32          addr;
-    uint32          *post;
+    uint32_t        addr;
+    uint32_t        *post;
     const char      *type;
     LIST_ENTRY(memctl)  list;
 } memctl_t;
 
 static LIST_HEAD(memctl_list, memctl) block_list;
 
-#define get_memctl(p) ((memctl_t *)( ((uint32)(p)) - BUFFER_SIZE ))
-#define get_buff_p(m) ((void *)( ((uint32)(m)) + BUFFER_SIZE ))
+#define get_memctl(p) ((memctl_t *)( ((uint32_t)(p)) - BUFFER_SIZE ))
+#define get_buff_p(m) ((void *)( ((uint32_t)(m)) + BUFFER_SIZE ))
 
 #define get_cur_tid_safe ((thd_current == NULL) ? (tid_t)0 : thd_current->tid)
 
@@ -1689,7 +1689,7 @@ enum func_type_names { name_MALLOC = 0, name_REALLOC = 1, name_MEMALIGN = 2, nam
 static const char *func_type[8] =
     {"malloc", "realloc", "memalign", "calloc", "free", "check_all", "check", "stats"};
 
-void dbg_print_thd_addr_action(tid_t thread, uint32 addr, void *m, size_t s, uint8_t which) {
+void dbg_print_thd_addr_action(tid_t thread, uint32_t addr, void *m, size_t s, uint8_t which) {
     strcpy(dbg_print_buffer, "Thread ");
     itoa(thread, (dbg_print_buffer + strlen(dbg_print_buffer)), 10);
     strcat(dbg_print_buffer, ", addr 0x");
@@ -1701,13 +1701,13 @@ void dbg_print_thd_addr_action(tid_t thread, uint32 addr, void *m, size_t s, uin
         strcat(dbg_print_buffer, "ing all memory blocks");
     else if(which == name_FREE) {
         strcat(dbg_print_buffer, "ing mem @ 0x");
-        itoa((uint32)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+        itoa((uint32_t)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
     }
     else {
         strcat(dbg_print_buffer, "ing ");
         itoa(s, (dbg_print_buffer + strlen(dbg_print_buffer)), 10);
         strcat(dbg_print_buffer, " bytes @ 0x");
-        itoa((uint32)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+        itoa((uint32_t)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
     }
 
     strcat(dbg_print_buffer, "\n");
@@ -1716,7 +1716,7 @@ void dbg_print_thd_addr_action(tid_t thread, uint32 addr, void *m, size_t s, uin
 }
 
 int mem_check_block_int(memctl_t *ctl, int source) {
-    uint32 rv = arch_get_ret_addr(), *nt, i;
+    uint32_t rv = arch_get_ret_addr(), *nt, i;
     int dmg = 0;
     int retv = 0;
 
@@ -1731,7 +1731,7 @@ int mem_check_block_int(memctl_t *ctl, int source) {
         retv = -1;
     }
     else {
-        nt = (uint32 *)ctl;
+        nt = (uint32_t *)ctl;
 
         for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++) {
             if(nt[i] != PRE_MAGIC) {
@@ -1781,7 +1781,7 @@ Void_t* public_mALLOc(size_t bytes) {
     Void_t* m;
 
 #ifdef KM_DBG
-    uint32 rv = arch_get_ret_addr(), *nt1, *nt2, i, rs;
+    uint32_t rv = arch_get_ret_addr(), *nt1, *nt2, i, rs;
     memctl_t * ctl;
 #endif
 
@@ -1803,7 +1803,7 @@ Void_t* public_mALLOc(size_t bytes) {
     ctl->thread = get_cur_tid_safe;
     ctl->addr = rv;
 
-    nt1 = (uint32*)ctl;
+    nt1 = (uint32_t *)ctl;
 
     for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++)
         nt1[i] = PRE_MAGIC;
@@ -1838,7 +1838,7 @@ void public_fREe(Void_t* m) {
 #ifdef KM_DBG
     memctl_t * ctl;
 #ifdef KM_DBG_VERBOSE
-    uint32 rv = arch_get_ret_addr();
+    uint32_t rv = arch_get_ret_addr();
 #endif
 #endif
 
@@ -1886,7 +1886,7 @@ int mem_check_all(void) {
 #ifdef KM_DBG
     int retv = 0, rvp;
 #ifdef KM_DBG_VERBOSE
-    uint32 rv = arch_get_ret_addr();
+    uint32_t rv = arch_get_ret_addr();
 #endif
     memctl_t * ctl;
 
@@ -1916,7 +1916,7 @@ int mem_check_all(void) {
 
 Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
 #ifdef KM_DBG
-    uint32 rv = arch_get_ret_addr(), rs, *nt, i;
+    uint32_t rv = arch_get_ret_addr(), rs, *nt, i;
     memctl_t * ctl;
     int dmg = 0;
 #endif
@@ -1954,9 +1954,9 @@ Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
 
 #ifdef KM_DBG_VERBOSE
     strcpy(dbg_print_buffer, " realloc'd block 0x");
-    itoa((uint32)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+    itoa((uint32_t)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
     strcat(dbg_print_buffer, " to 0x");
-    itoa(((uint32)ctl) + BUFFER_SIZE, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+    itoa(((uint32_t)ctl) + BUFFER_SIZE, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
     strcat(dbg_print_buffer, "\n");
     dbgio_write_str(dbg_print_buffer);
 #endif
@@ -1974,14 +1974,14 @@ Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
             ctl->thread = get_cur_tid_safe;
             ctl->addr = rv;
 
-            nt = (uint32*)ctl;
+            nt = (uint32_t *)ctl;
 
             for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++)
                 nt[i] = PRE_MAGIC;
 
             ctl->size = bytes;
 
-            ctl->post = nt = ((uint32*)ctl) + BUFFER_SIZE / 4 + rs / 4;
+            ctl->post = nt = ((uint32_t *)ctl) + BUFFER_SIZE / 4 + rs / 4;
 
             for(i = 0; i < BUFFER_SIZE / 4; i++)
                 nt[i] = POST_MAGIC;
@@ -1990,7 +1990,7 @@ Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
 
             ctl->type = func_type[1];
 
-            m = (void *)(((uint32)ctl) + BUFFER_SIZE);
+            m = (void *)(((uint32_t)ctl) + BUFFER_SIZE);
         }
         else
             m = NULL;
@@ -2010,7 +2010,7 @@ Void_t* public_mEMALIGn(size_t alignment, size_t bytes) {
     Void_t* m;
 
 #ifdef KM_DBG
-    uint32 rv = arch_get_ret_addr(), rs, *nt1, *nt2, i;
+    uint32_t rv = arch_get_ret_addr(), rs, *nt1, *nt2, i;
     memctl_t * ctl;
 #endif
 
@@ -2032,7 +2032,7 @@ Void_t* public_mEMALIGn(size_t alignment, size_t bytes) {
     ctl->thread = get_cur_tid_safe;
     ctl->addr = rv;
 
-    nt1 = (uint32*)ctl;
+    nt1 = (uint32_t *)ctl;
 
     for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++)
         nt1[i] = PRE_MAGIC;
@@ -2047,7 +2047,7 @@ Void_t* public_mEMALIGn(size_t alignment, size_t bytes) {
     LIST_INSERT_HEAD(&block_list, ctl, list);
 
     m = (void *)(nt1 + BUFFER_SIZE / 4);
-    assert(!((uint32)m % alignment));
+    assert(!((uint32_t)m % alignment));
 
 #ifdef KM_DBG_VERBOSE
     dbg_print_thd_addr_action(ctl->thread, ctl->addr, m, bytes, name_MEMALIGN);
@@ -2083,7 +2083,7 @@ Void_t* public_cALLOc(size_t n, size_t elem_size) {
     Void_t* m;
 
 #ifdef KM_DBG
-    uint32 rv = arch_get_ret_addr(), *nt1, *nt2, i, rs;
+    uint32_t rv = arch_get_ret_addr(), *nt1, *nt2, i, rs;
     size_t bytes = n * elem_size;
     memctl_t * ctl;
 #endif
@@ -2106,7 +2106,7 @@ Void_t* public_cALLOc(size_t n, size_t elem_size) {
     ctl->thread = get_cur_tid_safe;
     ctl->addr = rv;
 
-    nt1 = (uint32*)ctl;
+    nt1 = (uint32_t *)ctl;
 
     for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++)
         nt1[i] = PRE_MAGIC;
@@ -2206,7 +2206,7 @@ void public_mSTATs(void) {
         dbglog(DBG_CRITICAL, "KM_DBG: Still-allocated memory blocks:\n");
         LIST_FOREACH(c, &block_list, list) {
             dbglog(DBG_CRITICAL, "  INUSE %08lx: size %lu, thread %d, addr %08lx, type %s\n",
-                   (uint32)c + BUFFER_SIZE, c->size, c->thread,
+                   (uint32_t)c + BUFFER_SIZE, c->size, c->thread,
                    c->addr, c->type);
 
             mem_check_block_int(c, name_STATS);
