@@ -29,7 +29,6 @@
 
 __BEGIN_DECLS
 
-#include <arch/types.h>
 #include <kos/fs.h>
 #include <kos/net.h>
 #include <sys/queue.h>
@@ -274,7 +273,7 @@ typedef struct fs_socket_proto {
         \retval -1          On error (the packet is discarded)
         \retval 0           On success
     */
-    int (*input)(netif_t *src, int domain, const void *hdr, const uint8 *data,
+    int (*input)(netif_t *src, int domain, const void *hdr, const uint8_t *data,
                  size_t size);
 
     /** \brief  Get socket options.
@@ -448,7 +447,7 @@ net_socket_t *fs_socket_open_sock(fs_socket_proto_t *proto);
     \retval 0           On success
 */
 int fs_socket_input(netif_t *src, int domain, int protocol, const void *hdr,
-                    const uint8 *data, size_t size);
+                    const uint8_t *data, size_t size);
 
 /** \brief   Add a new protocol for use with fs_socket.
     \ingroup vfs_sockets

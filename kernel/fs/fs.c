@@ -51,16 +51,16 @@ typedef struct fs_hnd {
 } fs_hnd_t;
 
 /* The global file descriptor table */
-fs_hnd_t * fd_table[FD_SETSIZE] = { NULL };
+fs_hnd_t *fd_table[FD_SETSIZE] = { NULL };
 
 /* Internal file commands for root dir reading */
-static fs_hnd_t * fs_root_opendir(void) {
+static fs_hnd_t *fs_root_opendir(void) {
     return calloc(1, sizeof(fs_hnd_t));
 }
 
 /* Not thread-safe right now */
 static dirent_t root_readdir_dirent;
-static dirent_t *fs_root_readdir(fs_hnd_t * handle) {
+static dirent_t *fs_root_readdir(fs_hnd_t *handle) {
     nmmgr_handler_t *nmhnd;
     nmmgr_list_t    *nmhead;
     int         cnt;
@@ -161,7 +161,7 @@ static fs_hnd_t * fs_hnd_open(const char *fn, int mode) {
 
 /* Reference a file handle. This should be called when a persistent reference
    to a raw handle is created somewhere. */
-static void fs_hnd_ref(fs_hnd_t * ref) {
+static void fs_hnd_ref(fs_hnd_t *ref) {
     assert(ref);
     assert(ref->refcnt < (1 << 30));
     ref->refcnt++;
@@ -242,7 +242,7 @@ file_t fs_open(const char *fn, int mode) {
 }
 
 /* See header for comments */
-file_t fs_open_handle(vfs_handler_t * vfs, void * vhnd) {
+file_t fs_open_handle(vfs_handler_t *vfs, void *vhnd) {
     fs_hnd_t * hnd;
 
     /* Wrap it up in a structure */
@@ -317,7 +317,7 @@ file_t fs_dup2(file_t oldfd, file_t newfd) {
 
 /* Returns a file handle for a given fd, or NULL if the parameters
    are not valid. */
-static fs_hnd_t * fs_map_hnd(file_t fd) {
+static fs_hnd_t *fs_map_hnd(file_t fd) {
     if(fd < 0 || fd >= FD_SETSIZE) {
         errno = EBADF;
         return NULL;
@@ -474,7 +474,7 @@ size_t fs_total(file_t fd) {
     return -1;
 }
 
-uint64 fs_total64(file_t fd) {
+uint64_t fs_total64(file_t fd) {
     fs_hnd_t *h = fs_map_hnd(fd);
 
     if(!h) return -1;
@@ -488,7 +488,7 @@ uint64 fs_total64(file_t fd) {
     if(h->handler->total64)
         return h->handler->total64(h->hnd);
     else if(h->handler->total)
-        return (uint64)h->handler->total(h->hnd);
+        return (uint64_t)h->handler->total(h->hnd);
 
     errno = EINVAL;
     return -1;
@@ -582,7 +582,7 @@ int fs_ioctl(file_t fd, int cmd, ...) {
     return rv;
 }
 
-static vfs_handler_t * fs_verify_handler(const char * fn) {
+static vfs_handler_t *fs_verify_handler(const char *fn) {
     nmmgr_handler_t *nh;
 
     nh = nmmgr_lookup(fn);
@@ -676,7 +676,7 @@ void *fs_mmap(file_t fd) {
     return h->handler->mmap(h->hnd);
 }
 
-int fs_complete(file_t fd, ssize_t * rv) {
+int fs_complete(file_t fd, ssize_t *rv) {
     fs_hnd_t *h = fs_map_hnd(fd);
 
     if(!h) return -1;
@@ -689,7 +689,7 @@ int fs_complete(file_t fd, ssize_t * rv) {
     return h->handler->complete(h->hnd, rv);
 }
 
-int fs_mkdir(const char * fn) {
+int fs_mkdir(const char *fn) {
     vfs_handler_t   *cur;
     char        rfn[PATH_MAX];
 
@@ -709,7 +709,7 @@ int fs_mkdir(const char * fn) {
     }
 }
 
-int fs_rmdir(const char * fn) {
+int fs_rmdir(const char *fn) {
     vfs_handler_t   *cur;
     char        rfn[PATH_MAX];
 

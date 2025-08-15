@@ -51,9 +51,9 @@ __BEGIN_DECLS
 */
 typedef struct kos_dirent {
     int size;               /**< \brief Size of the file in bytes. */
-    char name[NAME_MAX];  /**< \brief Name of the file. */
+    char name[NAME_MAX];    /**< \brief Name of the file. */
     time_t time;            /**< \brief Last access/mod/change time (depends on VFS) */
-    uint32 attr;            /**< \brief Attributes of the file. */
+    uint32_t attr;          /**< \brief Attributes of the file. */
 } dirent_t;
 
 /* Forward declaration */
@@ -189,7 +189,7 @@ typedef struct vfs_handler {
     _off64_t (*tell64)(void *hnd);
 
     /** \brief Return the size of an opened file as a 64-bit integer */
-    uint64 (*total64)(void *hnd);
+    uint64_t (*total64)(void *hnd);
 
     /** \brief Read the value of a symbolic link
         \note  path will not be passed through realpath() before calling the
@@ -369,14 +369,14 @@ size_t fs_total(file_t hnd);
     This file retrieves the length of the file associated with the given file
     descriptor.
 
-    \note                   uint64 is unsigned, so the error return value is not
-                            less than 0.                            
+    \note                   uint64_t is unsigned, so the error return value is
+                            not less than 0.
 
     \param  hnd             The file descriptor to retrieve the size from.
     
     \return                 The length of the file on success, -1 on failure.
 */
-uint64 fs_total64(file_t hnd);
+uint64_t fs_total64(file_t hnd);
 
 
 /** \brief   Read an entry from an opened directory.

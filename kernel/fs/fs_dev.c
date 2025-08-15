@@ -10,7 +10,6 @@
 #include <stdint.h>
 #include <errno.h>
 
-#include <arch/types.h>
 #include <kos/dbglog.h>
 #include <kos/fs_dev.h>
 #include <sys/queue.h>

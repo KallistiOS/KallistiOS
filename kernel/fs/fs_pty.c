@@ -29,8 +29,6 @@ or space present.
 #include <kos/cond.h>
 #include <kos/fs_pty.h>
 
-#include <arch/types.h>
-
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -53,10 +51,10 @@ typedef LIST_HEAD(ptylist, ptyhalf) ptylist_t;
 typedef struct ptyhalf {
     LIST_ENTRY(ptyhalf) list;
 
-    struct ptyhalf * other;         /* Other end of the pipe */
+    struct ptyhalf *other;  /* Other end of the pipe */
     int master;             /* Non-zero if we are master */
 
-    uint8   buffer[PTY_BUFFER_SIZE];    /* Our _receive_ buffer */
+    uint8_t   buffer[PTY_BUFFER_SIZE];    /* Our _receive_ buffer */
     int head, tail;         /* Insert at head, remove at tail */
     size_t cnt;             /* Byte count in the queue */
 
@@ -325,15 +323,15 @@ static void * pty_open_dir(const char * fn, int mode) {
     return (void *)fdobj;
 }
 
-static void * pty_open_file(const char * fn, int mode) {
+static void *pty_open_file(const char *fn, int mode) {
     /* Ok, they want an actual pty. We always give them one RDWR, no
        matter what is asked for (it's much simpler). Also we don't have to
        handle fds of our own here thanks to the VFS layer, just reference
        counting so a pty can be opened by more than one process. */
     int     master;
     int     id;
-    ptyhalf_t   * ph;
-    pipefd_t    * fdobj;
+    ptyhalf_t   *ph;
+    pipefd_t    *fdobj;
 
     /* Parse out the name we got */
     if(strlen(fn) != 4) {
@@ -394,7 +392,7 @@ static void * pty_open_file(const char * fn, int mode) {
     return (void *)fdobj;
 }
 
-static void * pty_open(vfs_handler_t * vfs, const char * fn, int mode) {
+static void *pty_open(vfs_handler_t *vfs, const char *fn, int mode) {
     (void)vfs;
 
     /* Skip any preceding slash */
@@ -452,7 +450,7 @@ static int pty_close(void *h) {
 }
 
 /* Read from a pty endpoint, kernel console special case */
-static ssize_t pty_read_serial(pipefd_t * fdobj, ptyhalf_t * ph, void * buf, size_t bytes) {
+static ssize_t pty_read_serial(pipefd_t *fdobj, ptyhalf_t *ph, void *buf, size_t bytes) {
     int c, r = 0;
 
     (void)ph;
@@ -486,7 +484,7 @@ static ssize_t pty_read_serial(pipefd_t * fdobj, ptyhalf_t * ph, void * buf, siz
         }
 
         /* Add the obtained char to the buffer and echo it */
-        ((uint8 *)buf)[r] = c;
+        ((uint8_t *)buf)[r] = c;
         dbgio_write(c);
         r++;
     }
@@ -499,7 +497,7 @@ static ssize_t pty_read_serial(pipefd_t * fdobj, ptyhalf_t * ph, void * buf, siz
 }
 
 /* Read from a pty endpoint */
-static ssize_t pty_read(void * h, void * buf, size_t bytes) {
+static ssize_t pty_read(void *h, void *buf, size_t bytes) {
     size_t avail;
     pipefd_t *fdobj;
     ptyhalf_t *ph;
@@ -547,7 +545,7 @@ static ssize_t pty_read(void * h, void * buf, size_t bytes) {
     if((ph->head + bytes) > PTY_BUFFER_SIZE) {
         avail = PTY_BUFFER_SIZE - ph->head;
         memcpy(buf, ph->buffer + ph->head, avail);
-        memcpy(((uint8 *)buf) + avail, ph->buffer, bytes - avail);
+        memcpy(((uint8_t *)buf) + avail, ph->buffer, bytes - avail);
     }
     else
         memcpy(buf, ph->buffer + ph->head, bytes);
@@ -564,7 +562,7 @@ done:
 }
 
 /* Write to a pty endpoint */
-static ssize_t pty_write(void * h, const void * buf, size_t bytes) {
+static ssize_t pty_write(void *h, const void *buf, size_t bytes) {
     size_t avail;
     pipefd_t *fdobj;
     ptyhalf_t *ph;
@@ -580,7 +578,7 @@ static ssize_t pty_write(void * h, const void * buf, size_t bytes) {
     /* Special case the unattached console */
     if(ph->id == 0 && !ph->master && ph->other->refcnt == 0) {
         /* This actually blocks, but fooey.. :) */
-        dbgio_write_buffer_xlat((const uint8 *)buf, bytes);
+        dbgio_write_buffer_xlat((const uint8_t *)buf, bytes);
         return bytes;
     }
 
@@ -617,7 +615,7 @@ static ssize_t pty_write(void * h, const void * buf, size_t bytes) {
     if((ph->tail + bytes) > PTY_BUFFER_SIZE) {
         avail = PTY_BUFFER_SIZE - ph->tail;
         memcpy(ph->buffer + ph->tail, buf, avail);
-        memcpy(ph->buffer, ((const uint8 *)buf) + avail, bytes - avail);
+        memcpy(ph->buffer, ((const uint8_t *)buf) + avail, bytes - avail);
     }
     else
         memcpy(ph->buffer + ph->tail, buf, bytes);
@@ -635,9 +633,9 @@ done:
 }
 
 /* Get total size. For this we return the number of bytes available for reading. */
-static size_t pty_total(void * h) {
-    pipefd_t    * fdobj;
-    ptyhalf_t   * ph;
+static size_t pty_total(void *h) {
+    pipefd_t    *fdobj;
+    ptyhalf_t   *ph;
 
     fdobj = (pipefd_t *)h;
     ph = fdobj->d.p;
@@ -651,9 +649,9 @@ static size_t pty_total(void * h) {
 }
 
 /* Read a directory entry */
-static dirent_t * pty_readdir(void * h) {
-    pipefd_t * fdobj = (pipefd_t *)h;
-    dirlist_t * dl;
+static dirent_t *pty_readdir(void *h) {
+    pipefd_t *fdobj = (pipefd_t *)h;
+    dirlist_t *dl;
 
     assert(h);
 

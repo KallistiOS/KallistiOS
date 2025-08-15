@@ -11,7 +11,6 @@
 #include <errno.h>
 #include <time.h>
 
-#include <arch/types.h>
 #include <kos/mutex.h>
 #include <kos/fs_random.h>
 #include <kos/dbglog.h>
