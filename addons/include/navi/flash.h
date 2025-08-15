@@ -19,7 +19,7 @@
 #ifndef __NAVI_FLASH_H
 #define __NAVI_FLASH_H
 
-#include <arch/types.h>
+#include <stdint.h>
 
 /** \brief  Try to detect a compatible flashrom.
     \return                 0 if a compatible flashrom is detected, <0 if the
@@ -31,7 +31,7 @@ int nvflash_detect(void);
     \param  addr            The block of the flashrom to erase.
     \return                 0 on success, <0 on error.
 */
-int nvflash_erase_block(uint32 addr);
+int nvflash_erase_block(uint32_t addr);
 
 /** \brief  Write data to the flashrom.
     \param  addr            The block of the flashrom to write to.
@@ -39,7 +39,7 @@ int nvflash_erase_block(uint32 addr);
     \param  len             The length of the data, in bytes.
     \return                 0 on success, <0 on error.
 */
-int nvflash_write_block(uint32 addr, void * data, uint32 len);
+int nvflash_write_block(uint32_t addr, void *data, uint32_t len);
 
 /* Erase the whole flash chip */
 /** \brief  Erase the whole flashrom.

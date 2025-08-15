@@ -5,18 +5,16 @@
 */
 
 #include <string.h>
-#include <arch/types.h>
-
 #include <kos/md5.h>
 
 /* Initial values used in starting the MD5 checksum */
-static const uint32 md5initial[4] = {
+static const uint32_t md5initial[4] = {
     0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476
 };
 
 /* We will append somewhere between 1 and 64 bytes of padding to every message,
    depending on its length. This is the padding that is to be used. */
-static const uint8 md5padding[64] = {
+static const uint8_t md5padding[64] = {
     0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -24,7 +22,7 @@ static const uint8 md5padding[64] = {
 };
 
 /* MD5 "magic" values */
-static const uint32 md5tab[64] = {
+static const uint32_t md5tab[64] = {
     0xD76AA478, 0xE8C7B756, 0x242070DB, 0xC1BDCEEE,
     0xF57C0FAF, 0x4787C62A, 0xA8304613, 0xFD469501,
     0x698098D8, 0x8B44F7AF, 0xFFFF5BB1, 0x895CD7BE,
@@ -52,7 +50,7 @@ int main(int argc, char *argv[]) {
     int i;
     double tmp;
 
-    printf("static const uint32 md5tab[64] = {");
+    printf("static const uint32_t md5tab[64] = {");
 
     for(i = 0; i < 64; ++i) {
         if((i % 4) == 0)
@@ -119,8 +117,8 @@ void kos_md5_start(kos_md5_cxt_t *cxt) {
 }
 
 /* input must be at least 64 bytes long */
-static void kos_md5_process(kos_md5_cxt_t *cxt, const uint8 *input) {
-    uint32 a, b, c, d, w[16];
+static void kos_md5_process(kos_md5_cxt_t *cxt, const uint8_t *input) {
+    uint32_t a, b, c, d, w[16];
     int i;
 
     /* Read in what we're starting with */
@@ -214,11 +212,11 @@ static void kos_md5_process(kos_md5_cxt_t *cxt, const uint8 *input) {
     cxt->hash[3] += d;
 }
 
-void kos_md5_hash_block(kos_md5_cxt_t *cxt, const uint8 *input, uint32 size) {
-    uint32 left, copy;
+void kos_md5_hash_block(kos_md5_cxt_t *cxt, const uint8_t *input, uint32_t size) {
+    uint32_t left, copy;
 
     /* Figure out what we had left over from last time (if anything) */
-    left = (uint32)((cxt->size >> 3) & 0x3F);
+    left = (uint32_t)((cxt->size >> 3) & 0x3F);
     copy = 64 - left;
 
     /* Update the size */
@@ -246,35 +244,35 @@ void kos_md5_hash_block(kos_md5_cxt_t *cxt, const uint8 *input, uint32 size) {
     }
 }
 
-void kos_md5_finish(kos_md5_cxt_t *cxt, uint8 output[16]) {
-    uint64 len = cxt->size;
-    uint32 blen = (cxt->size >> 3) & 0x3F;
-    uint32 plen = MD5_PAD_LEN(blen);
+void kos_md5_finish(kos_md5_cxt_t *cxt, uint8_t output[16]) {
+    uint64_t len = cxt->size;
+    uint32_t blen = (cxt->size >> 3) & 0x3F;
+    uint32_t plen = MD5_PAD_LEN(blen);
     int i;
-    uint8 len_bytes[8];
+    uint8_t len_bytes[8];
 
     /* Add in the padding */
     kos_md5_hash_block(cxt, md5padding, plen);
 
     /* Hash in the length -- this will finish the last 64-byte block */
-    len_bytes[0] = (uint8)(len);
-    len_bytes[1] = (uint8)(len >> 8);
-    len_bytes[2] = (uint8)(len >> 16);
-    len_bytes[3] = (uint8)(len >> 24);
-    len_bytes[4] = (uint8)(len >> 32);
-    len_bytes[5] = (uint8)(len >> 40);
-    len_bytes[6] = (uint8)(len >> 48);
-    len_bytes[7] = (uint8)(len >> 56);
+    len_bytes[0] = (uint8_t)(len);
+    len_bytes[1] = (uint8_t)(len >> 8);
+    len_bytes[2] = (uint8_t)(len >> 16);
+    len_bytes[3] = (uint8_t)(len >> 24);
+    len_bytes[4] = (uint8_t)(len >> 32);
+    len_bytes[5] = (uint8_t)(len >> 40);
+    len_bytes[6] = (uint8_t)(len >> 48);
+    len_bytes[7] = (uint8_t)(len >> 56);
     kos_md5_hash_block(cxt, len_bytes, 8);
 
     /* Copy out the hash, since we're done */
     for(i = 0; i < 16; ++i) {
-        output[i] = (uint8)(cxt->hash[i >> 2] >> ((i & 0x03) << 3));
+        output[i] = (uint8_t)(cxt->hash[i >> 2] >> ((i & 0x03) << 3));
     }
 }
 
 /* Convenience function for computing an MD5 of a complete block. */
-void kos_md5(const uint8 *input, uint32 size, uint8 output[16]) {
+void kos_md5(const uint8_t *input, uint32_t size, uint8_t output[16]) {
     kos_md5_cxt_t cxt;
 
     kos_md5_start(&cxt);

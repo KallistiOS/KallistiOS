@@ -72,7 +72,7 @@
 #define STMICRO             0x0020
 #define D6_MASK                         0x40
 
-static vuint8   * const flashport = (vuint8 *)0xa0000000;
+static volatile uint8_t   * const flashport = (volatile uint8_t *)0xa0000000;
 
 /* We'll do this before sending a command */
 static void send_unlock(void) {
@@ -81,23 +81,23 @@ static void send_unlock(void) {
 }
 
 /* Send a command (including unlock) */
-static void send_cmd(uint32 cmd) {
+static void send_cmd(uint32_t cmd) {
     send_unlock();
     flashport[ADDR_UNLOCK_1] = cmd;
 }
 
 /* Read a flash value */
-static uint32 nvflash_read(uint32 addr) {
+static uint32_t nvflash_read(uint32_t addr) {
     return flashport[addr];
 }
 
 /* Determine if the flash memory is busy writing */
-static int nvflash_busy(uint32 addr) {
+static int nvflash_busy(uint32_t addr) {
     return (nvflash_read(addr) & D6_MASK) != (nvflash_read(addr) & D6_MASK);
 }
 
 /* Wait until the flash is ready, with timeout */
-static int nvflash_wait_ready(uint32 addr, int timeout) {
+static int nvflash_wait_ready(uint32_t addr, int timeout) {
     int wait = 0;
 
     if(timeout < 0) {
@@ -119,7 +119,7 @@ static int nvflash_wait_ready(uint32 addr, int timeout) {
 }
 
 /* Write a single flash value, return -1 if we fail or timeout */
-static int nvflash_write(uint32 addr, uint8 value) {
+static int nvflash_write(uint32_t addr, uint8_t value) {
     send_cmd(CMD_PROGRAM_UNLOCK_DATA);
     flashport[addr] = value;
 
@@ -139,8 +139,8 @@ static int nvflash_write(uint32 addr, uint8 value) {
 }
 
 /* Write a block of data */
-int nvflash_write_block(uint32 addr, void * data, uint32 len) {
-    uint8   * db = (uint8 *)data;
+int nvflash_write_block(uint32_t addr, void *data, uint32_t len) {
+    uint8_t   *db = (uint8_t *)data;
     unsigned i;
 
     for(i = 0; i < len; i++) {
@@ -158,7 +158,7 @@ int nvflash_write_block(uint32 addr, void * data, uint32 len) {
 }
 
 /* Erase a block of flash */
-int nvflash_erase_block(uint32 addr) {
+int nvflash_erase_block(uint32_t addr) {
     send_cmd(CMD_SECTOR_ERASE_UNLOCK_DATA);
     send_unlock();
     flashport[addr] = CMD_SECTOR_ERASE_UNLOCK_DATA_2;
@@ -196,7 +196,7 @@ int nvflash_erase_all(void) {
 
 /* Return 0 if we successfully detect a compatible device */
 int nvflash_detect(void) {
-    uint16      mfr_id, dev_id;
+    uint16_t      mfr_id, dev_id;
 
     if(nvflash_read(0) == 0xff && nvflash_read(2) == 0x28) {
         printf("flash_detect: normal DC BIOS detected\n");

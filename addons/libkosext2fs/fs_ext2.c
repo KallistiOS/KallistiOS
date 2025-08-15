@@ -540,7 +540,7 @@ static _off64_t fs_ext2_tell64(void *h) {
     return rv;
 }
 
-static uint64 fs_ext2_total64(void *h) {
+static uint64_t fs_ext2_total64(void *h) {
     file_t fd = ((file_t)h) - 1;
     size_t rv;
 
