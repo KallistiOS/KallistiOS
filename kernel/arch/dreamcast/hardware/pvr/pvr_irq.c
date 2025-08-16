@@ -11,6 +11,7 @@
 #include <arch/cache.h>
 #include "pvr_internal.h"
 
+#include <kos/dbglog.h>
 #include <kos/genwait.h>
 #include <kos/regfield.h>
 
@@ -89,7 +90,6 @@ static void pvr_render_lists(void) {
 
         // Begin rendering from the dirty TA buffer into the clean
         // frame buffer.
-        //DBG(("start_render(%d -> %d)\n", pvr_state.ta_target, pvr_state.view_target ^ 1));
         pvr_state.ta_target ^= pvr_state.vbuf_doublebuf;
         pvr_begin_queued_render();
         pvr_state.render_busy = 1;
@@ -119,8 +119,6 @@ void pvr_vblank_handler(uint32_t code, void *data) {
     // If the render-done interrupt has fired then we are ready to flip to the
     // new frame buffer.
     if(pvr_state.render_completed) {
-        //DBG(("view(%d)\n", pvr_state.view_target ^ 1));
-
         // Handle PVR stats
         pvr_sync_stats(PVR_SYNC_PAGEFLIP);
 
@@ -144,11 +142,9 @@ void pvr_int_handler(uint32_t code, void *data) {
     // What kind of event did we get?
     switch(code) {
         case ASIC_EVT_PVR_OPAQUEDONE:
-            //DBG(("irq_opaquedone\n"));
             pvr_state.lists_transferred |= BIT(PVR_OPB_OP);
             break;
         case ASIC_EVT_PVR_TRANSDONE:
-            //DBG(("irq_transdone\n"));
             pvr_state.lists_transferred |= BIT(PVR_OPB_TP);
             break;
         case ASIC_EVT_PVR_OPAQUEMODDONE:
@@ -161,7 +157,6 @@ void pvr_int_handler(uint32_t code, void *data) {
             pvr_state.lists_transferred |= BIT(PVR_OPB_PT);
             break;
         case ASIC_EVT_PVR_RENDERDONE_TSP:
-            //DBG(("irq_renderdone\n"));
             pvr_state.render_busy = 0;
             if(!pvr_state.was_to_texture)
                 pvr_state.render_completed = 1;
@@ -171,33 +166,31 @@ void pvr_int_handler(uint32_t code, void *data) {
             break;
     }
 
-    if(__is_defined(PVR_RENDER_DBG)) {
-        /* Show register values on each interrupt */
-        switch (code) {
-            case ASIC_EVT_PVR_ISP_OUTOFMEM:
-                DBG(("[ERROR]: ASIC_EVT_PVR_ISP_OUTOFMEM\n"));
-                break;
+    /* Show register values on each interrupt */
+    switch (code) {
+        case ASIC_EVT_PVR_ISP_OUTOFMEM:
+            dbglog(DBG_SOURCE(PVR_RENDER_DBG), "pvr_irq: ASIC_EVT_PVR_ISP_OUTOFMEM\n");
+            break;
 
-            case ASIC_EVT_PVR_STRIP_HALT:
-                DBG(("[ERROR]: ASIC_EVT_PVR_STRIP_HALT\n"));
-                break;
+        case ASIC_EVT_PVR_STRIP_HALT:
+            dbglog(DBG_SOURCE(PVR_RENDER_DBG), "pvr_irq: ASIC_EVT_PVR_STRIP_HALT\n");
+            break;
 
-            case ASIC_EVT_PVR_OPB_OUTOFMEM:
-                DBG(("[ERROR]: ASIC_EVT_PVR_OPB_OUTOFMEM\n"));
-                DBG(("PVR_TA_OPB_START: %08lx\nPVR_TA_OPB_END: %08lx\nPVR_TA_OPB_POS: %08lx\n",
-                    PVR_GET(PVR_TA_OPB_START),
-                    PVR_GET(PVR_TA_OPB_END),
-                    PVR_GET(PVR_TA_OPB_POS) << 2));
-                break;
+        case ASIC_EVT_PVR_OPB_OUTOFMEM:
+            dbglog(DBG_SOURCE(PVR_RENDER_DBG), "pvr_irq: ASIC_EVT_PVR_OPB_OUTOFMEM\n"
+            "pvr_irq: PVR_TA_OPB_START: %08lx\n"
+            "pvr_irq: PVR_TA_OPB_END: %08lx\n"
+            "pvr_irq: PVR_TA_OPB_POS: %08lx\n",
+            PVR_GET(PVR_TA_OPB_START), PVR_GET(PVR_TA_OPB_END), PVR_GET(PVR_TA_OPB_POS) << 2);
+            break;
 
-            case ASIC_EVT_PVR_TA_INPUT_ERR:
-                DBG(("[ERROR]: ASIC_EVT_PVR_TA_INPUT_ERR\n"));
-                break;
+        case ASIC_EVT_PVR_TA_INPUT_ERR:
+            dbglog(DBG_SOURCE(PVR_RENDER_DBG), "pvr_irq: ASIC_EVT_PVR_TA_INPUT_ERR\n");
+            break;
 
-            case ASIC_EVT_PVR_TA_INPUT_OVERFLOW:
-                DBG(("[ERROR]: ASIC_EVT_PVR_TA_INPUT_OVERFLOW\n"));
-                break;
-        }
+        case ASIC_EVT_PVR_TA_INPUT_OVERFLOW:
+            dbglog(DBG_SOURCE(PVR_RENDER_DBG), "pvr_irq: ASIC_EVT_PVR_TA_INPUT_OVERFLOW\n");
+            break;
     }
 
     /* Update our stats if we finished all registration */

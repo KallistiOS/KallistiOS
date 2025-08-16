@@ -254,13 +254,6 @@ typedef struct pvr_bkg_poly {
     uint32_t    argb3;
 } pvr_bkg_poly_t;
 
-// Debug macro, for debugging IRQ wackiness
-#define DBG(x) do { \
-        int o = irq_disable(); \
-        printf x; \
-        irq_restore(o); \
-    } while(0)
-
 /**** pvr_buffers.c ***************************************************/
 
 /* Initialize buffers for TA/ISP/TSP usage */
