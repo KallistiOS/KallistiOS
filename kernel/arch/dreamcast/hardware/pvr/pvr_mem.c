@@ -152,7 +152,7 @@ void pvr_mem_free(pvr_ptr_t chunk) {
 
 /* Check the memory block list to see what's allocated */
 void pvr_mem_print_list(void) {
-    memctl_t    * ctl;
+    memctl_t    *ctl;
 
     if(!__is_defined(PVR_KM_DBG))
         return;

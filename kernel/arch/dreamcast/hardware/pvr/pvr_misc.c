@@ -175,8 +175,8 @@ void pvr_sync_reg_buffer(void) {
 /* Begin a render operation that has been queued completely (i.e., the
    opposite of ta_target) */
 void pvr_begin_queued_render(void) {
-    volatile pvr_ta_buffers_t   * tbuf;
-    volatile pvr_frame_buffers_t    * rbuf;
+    volatile pvr_ta_buffers_t   *tbuf;
+    volatile pvr_frame_buffers_t    *rbuf;
     pvr_bkg_poly_t  bkg;
     uint32_t      *vrl;
     uint32_t      vert_end;
@@ -258,7 +258,7 @@ void pvr_blank_polyhdr(int type) {
     pvr_prim(&poly, sizeof(poly));
 }
 
-void pvr_blank_polyhdr_buf(int type, pvr_poly_hdr_t * poly) {
+void pvr_blank_polyhdr_buf(int type, pvr_poly_hdr_t *poly) {
     /* Empty it out */
     memset(poly, 0, sizeof(pvr_poly_hdr_t));
 
