@@ -314,7 +314,7 @@ int pvr_list_flush(pvr_list_t list) {
    you have not started a scene already. */
 int pvr_scene_finish(void) {
     int i, o;
-    volatile pvr_dma_buffers_t * b;
+    volatile pvr_dma_buffers_t *b;
 
     /* Release Store Queues if they are used */
     if(pvr_state.dr_used) {
