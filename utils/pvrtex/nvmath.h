@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <math.h>
 
-#ifdef __CPLUSPLUS
+#ifdef __cplusplus
 #include <string.h>
 extern "C" {
 #endif
@@ -45,7 +45,7 @@ union v2f {
 		float x, y;
 	};
 	float v[2];
-	#ifdef __CPLUSPLUS
+	#ifdef __cplusplus
 	inline bool operator <(const v2f &b) const { return memcmp(this, &b, sizeof(b)) < 0; }
 	#endif
 };
@@ -56,7 +56,7 @@ union v3f {
 	};
 	float v[3];
 	v2f xy;
-	#ifdef __CPLUSPLUS
+	#ifdef __cplusplus
 	inline bool operator <(const v3f &b) const { return memcmp(this, &b, sizeof(b)) < 0; }
 	#endif
 };
@@ -95,16 +95,16 @@ typedef union {
 
 /*
 	Select how to preform square roots.
-
+	
 	On KOS, sqrt is somehow set up to always to go a library call. Need to look
 	into why. You can force GCC built-in sqrt handling (recommended), or use
 	inline asm. Built-ins are recommended since the compiler can optimize
 	constant values.
-
+	
 	**GCC is getting passed fno-builtin from $KOS_CFLAGS defined in environ_base.sh**
-
+	
 	With the right compile options, GCC can even generate FSRRA instructions.
-
+	
 	Turn these options on for fast builtins:
 		-ffast-math -ffp-contract=fast -mfsrra -mfsca
 */
@@ -144,7 +144,7 @@ typedef union {
 			: "=f" (a)
 			: "0" (a)
 			: );
-
+		
 		return a;
 	}
 	static inline float NVMFsrra(float a) {
@@ -152,23 +152,23 @@ typedef union {
 			: "=f" (a)
 			: "0" (a)
 			: );
-
+		
 		return a;
 	}
 	#define NVMATH_SQRT(a)	NVMFsqrt(a)
 	#define NVMATH_RSQRT(a)	NVMFsrra(a)
-
+	
 	static inline void NVMATH_SINCOS_I(int angle, float *sine, float *cosine)
 	{
 		register float __s __asm__("fr2");
 		register float __c __asm__("fr3");
-
+		
 		asm(    "lds	%2,fpul\n\t"
 			"fsca	fpul,dr2\n\t"
 			: "=f" (__s), "=f" (__c)
 			: "r" (angle)
 			: "fpul");
-
+		
 		*sine = __s; *cosine = __c;
 	}
 	#define NVMATH_SINCOS(rad, s, c) NVMATH_SINCOS_I((rad) * 10430.37835f, s, c)
@@ -186,8 +186,10 @@ typedef union {
 #ifdef NVMMATH_APPROX_ASIN_ACOS
 	#undef NVMATH_ASIN
 	#undef NVMATH_ACOS
-
+	
 	inline float NVMATH_ASIN(float x) {
+		//const float scale_factor = .391f;
+		//const float scale_factor = .521f;
 		const float scale_factor = .5707963268f;
 		float x5 = x * x;
 		x5 *= x5;
@@ -203,7 +205,7 @@ typedef union {
 
 #define v2Init(x,y) {{x, y}}
 #define v3Init(x,y,z) {{x, y, z}}
-#define v4Init(x,y,z,w) {{x, y, z, w }}
+#define v4Init(x,y,z,w) {{x, y, z, w}}
 #define v2Pass(vec) (vec).x, (vec).y
 #define v3Pass(vec) (vec).x, (vec).y, (vec).z
 #define v4Pass(vec) (vec).x, (vec).y, (vec).z, (vec).w
@@ -218,7 +220,7 @@ typedef union {
 		v3i d; opx; opy; opz; return d; } \
 	static inline v4i v4 ## i ## name(paramx, paramy, paramz, paramw) { \
 		v4i d; opx; opy; opz; opw; return d; }
-
+		
 #define NVM_FF4(name, paramx, paramy, paramz, paramw, opx, opy, opz, opw) \
 	static inline v2f v2 ## name(paramx, paramy) { \
 		v2f d; opx; opy; return d; } \
@@ -234,7 +236,7 @@ typedef union {
 		v3i d; opx; opy; opz; return d; } \
 	static inline v4i v4 ## i ## name(param) { \
 		v4i d; opx; opy; opz; opw; return d; }
-
+		
 #define NVM_FF1(name, param, opx, opy, opz, opw) \
 	static inline v2f v2 ## name(param) { \
 		v2f d; opx; opy; return d; } \
@@ -242,7 +244,12 @@ typedef union {
 		v3f d; opx; opy; opz; return d; } \
 	static inline v4f v4 ## name(param) { \
 		v4f d; opx; opy; opz; opw; return d; }
-
+/*
+	static inline v2i v2 ## i ## name(v2i v) { \
+		v2i d; opx; opy; return d; } \
+	static inline v3i v3 ## i ## name(v3i v) { \
+		v3i d; opx; opy; opz; return d; }
+	*/
 #define NVM_FFU4(name, opx, opy, opz, opw) \
 	static inline v2f v2 ## name(v2f v) { \
 		v2f d; opx; opy; return d; } \
@@ -266,50 +273,53 @@ typedef union {
 		v4f d; opx; opy; opz; opw; return d; }
 
 
+
 #define NVM_FFB4MACV(name, opx, opy, opz, opw) \
 	static inline v2i v2 ## i ## name(v2i l, v2i r, v2i a) { \
-		v2i d; nvint aa = a.x; nvint rr = r.x; opx; aa = a.y; rr = r.y; opy; return d; } \
+		v2i d; nvint aa=a.x; nvint rr=r.x; opx; aa=a.y; rr=r.y; opy; return d; } \
 	static inline v3i v3 ## i ## name(v3i l, v3i r, v3i a) { \
-		v3i d; nvint aa = a.x; nvint rr = r.x; opx; aa = a.y; rr = r.y; opy; aa = a.z; rr = r.z; opz; return d; } \
+		v3i d; nvint aa=a.x; nvint rr=r.x; opx; aa=a.y; rr=r.y; opy; aa=a.z; rr=r.z; opz; return d; } \
 	static inline v4i v4 ## i ## name(v4i l, v4i r, v4i a) { \
-		v4i d; nvint aa = a.x; nvint rr = r.x; opx; aa = a.y; rr = r.y; opy; aa = a.z; rr = r.z; opz; aa = a.w; rr = r.w; opw; return d; } \
+		v4i d; nvint aa=a.x; nvint rr=r.x; opx; aa=a.y; rr=r.y; opy; aa=a.z; rr=r.z; opz; aa=a.w; rr=r.w; opw; return d; } \
 	static inline v2f v2 ## name(v2f l, v2f r, v2f a) { \
-		v2f d; float aa = a.x; float rr = r.x; opx; aa = a.y; rr = r.y; opy; return d; } \
+		v2f d; float aa=a.x; float rr=r.x; opx; aa=a.y; rr=r.y; opy; return d; } \
 	static inline v3f v3 ## name(v3f l, v3f r, v3f a) { \
-		v3f d; float aa = a.x; float rr = r.x; opx; aa = a.y; rr = r.y; opy; aa = a.z; rr = r.z; opz; return d; } \
+		v3f d; float aa=a.x; float rr=r.x; opx; aa=a.y; rr=r.y; opy; aa=a.z; rr=r.z; opz; return d; } \
 	static inline v4f v4 ## name(v4f l, v4f r, v4f a) { \
-		v4f d; float aa = a.x; float rr = r.x; opx; aa = a.y; rr = r.y; opy; aa = a.z; rr = r.z; opz; aa = a.w; rr = r.w; opw; return d; }
+		v4f d; float aa=a.x; float rr=r.x; opx; aa=a.y; rr=r.y; opy; aa=a.z; rr=r.z; opz; aa=a.w; rr=r.w; opw; return d; }
 
 #define NVM_FFB4MACS(name, opx, opy, opz, opw) \
 	static inline v2i v2 ## i ## name(v2i l, v2i r, float a) { \
-			v2i d; float aa = a; nvint rr = r.x; opx; rr = r.y; opy; return d; } \
-		static inline v3i v3 ## i ## name(v3i l, v3i r, float a) { \
-			v3i d; float aa = a; nvint rr = r.x; opx; rr = r.y; opy; rr = r.z; opz; return d; } \
-		static inline v4i v4 ## i ## name(v4i l, v4i r, float a) { \
-			v4i d; float aa = a; nvint rr = r.x; opx; rr = r.y; opy; rr = r.z; opz; rr = r.w; opw; return d; } \
-		static inline v2f v2 ## name(v2f l, v2f r, float a) { \
-			v2f d; float aa = a; float rr = r.x; opx; rr = r.y; opy; return d; } \
-		static inline v3f v3 ## name(v3f l, v3f r, float a) { \
-			v3f d; float aa = a; float rr = r.x; opx; rr = r.y; opy; rr = r.z; opz; return d; } \
-		static inline v4f v4 ## name(v4f l, v4f r, float a) { \
-			v4f d; float aa = a; float rr = r.x; opx; rr = r.y; opy; rr = r.z; opz; rr = r.w; opw; return d; }
+		v2i d; float aa=a; nvint rr=r.x; opx; rr=r.y; opy; return d; } \
+	static inline v3i v3 ## i ## name(v3i l, v3i r, float a) { \
+		v3i d; float aa=a; nvint rr=r.x; opx; rr=r.y;opy; rr=r.z; opz; return d; } \
+	static inline v4i v4 ## i ## name(v4i l, v4i r, float a) { \
+		v4i d; float aa=a; nvint rr=r.x; opx; rr=r.y;opy; rr=r.z; opz; rr=r.w; opw; return d; } \
+	static inline v2f v2 ## name(v2f l, v2f r, float a) { \
+		v2f d; float aa=a; float rr=r.x; opx; rr=r.y; opy; return d; } \
+	static inline v3f v3 ## name(v3f l, v3f r, float a) { \
+		v3f d; float aa=a; float rr=r.x; opx; rr=r.y;opy; rr=r.z; opz; return d; } \
+	static inline v4f v4 ## name(v4f l, v4f r, float a) { \
+		v4f d; float aa=a; float rr=r.x; opx; rr=r.y;opy; rr=r.z; opz; rr=r.w; opw; return d; }
 
 #define NVM_FFB4MACSX(name, opx, opy, opz, opw) \
 	static inline v2i v2 ## i ## name(v2i l, float r, v2i a) { \
-		v2i d; float aa = a.x; nvint rr = r; opx; aa = a.y; opy; return d; } \
-		static inline v3i v3 ## i ## name(v3i l, float r, v3i a) { \
-			v3i d; float aa = a.x; nvint rr = r; opx; aa = a.y; opy; aa = a.z; opz; return d; } \
-		static inline v2f v2 ## name(v2f l, float r, v2f a) { \
-			v2f d; float aa = a.x; float rr = r; opx; aa = a.y; opy; return d; } \
-		static inline v3f v3 ## name(v3f l, float r, v3f a) { \
-			v3f d; float aa = a.x; float rr = r; opx; aa = a.y; opy; aa = a.z; opz; return d; } \
-		static inline v4f v4 ## name(v4f l, float r, v4f a) { \
-			v4f d; float aa = a.x; float rr = r; opx; aa = a.y; opy; aa = a.z; opz; aa = a.w; opw; return d; }
+		v2i d; float aa=a.x; nvint rr=r; opx; aa=a.y; opy; return d; } \
+	static inline v3i v3 ## i ## name(v3i l, float r, v3i a) { \
+		v3i d; float aa=a.x; nvint rr=r; opx; aa=a.y; opy; aa=a.z; opz; return d; } \
+	static inline v2f v2 ## name(v2f l, float r, v2f a) { \
+		v2f d; float aa=a.x; float rr=r; opx; aa=a.y; opy; return d; } \
+	static inline v3f v3 ## name(v3f l, float r, v3f a) { \
+		v3f d; float aa=a.x; float rr=r; opx; aa=a.y; opy; aa=a.z; opz; return d; } \
+	static inline v4f v4 ## name(v4f l, float r, v4f a) { \
+		v4f d; float aa=a.x; float rr=r; opx; aa=a.y; opy; aa=a.z; opz; aa=a.w; opw; return d; }
 
 #define NVM_FFB4MAC(name, opx, opy, opz, opw) \
 	NVM_FFB4MACV(name, opx, opy, opz, opw) \
 	NVM_FFB4MACSX(name ## V, opx, opy, opz, opw) \
 	NVM_FFB4MACS(name ## S, opx, opy, opz, opw)
+
+
 
 #define NVM_FFB4_COMB(name, opx, opy, opz, opw) \
 	static inline float v2 ## name(v2f l, v2f r) { \
@@ -326,7 +336,7 @@ typedef union {
 		return opx opy opz; } \
 	static inline float v4 ## name(v4f l, v4f r) { \
 		return opx opy opz opw; }
-
+		 
 #define NVM_FFB4S(name, opx, opy, opz, opw) \
 	static inline v2i v2 ## i ## name(v2i l, nvint r) { \
 		v2i d; opx; opy; return d; } \
@@ -381,69 +391,69 @@ typedef union {
 		Sets vector
 	v?SetR(float)
 		Sets vector with value Repeated into all dimensions
-
+	
 	v?Get(float*)
 		Creates vector from array of floats
-
+	
 	v?Abs(v?f v)
 		|v|
 	v?Negate(v?f v)
 		-v
 	v?Recip(v?f v)
 		1.0f / v
-
+	
 	v?(Add/Sub/Mul/Div)(v?f l , v?f r)
 		l + r
 		l - r
 		l * r
 		l / r
 		Adds, subtracts, multiplies or divides two vectors.
-
+		
 	v?(Add/Sub/Mul/Div)S(v?f l, float r)
 		l + r
 		l - r
 		l * r
 		l / r
 		Adds, subtracts, multiplies or divides a left vector and a right scalar
-
+		
 	v?(Sub/Div)SR(float l, v?f r)
 		l - r
 		l / r
 		Subtracts or divides a left scalar and a right vector
-
+	
 	v?Mac(v?f l, v?f r, v?f accum)
 		l * r + accum
 	v?MacV(v?f l, float r, v?f accum)
 		l * r + accum
 	v?MacS(v?f l, v?f r, float accum)
 		l * r + accum
-
+	
 	v?Mdc(v?f l, v?f r, v?f accum)
 		l * r - accum
 	v?MdcV(v?f l, float r, v?f accum)
 		l * r - accum
 	v?MdcS(v?f l, v?f r, float accum)
 		l * r - accum
-
+	
 	v?Nms(v?f l, v?f r, v?f accum)
 		accum - l * r
 	v?NmsV(v?f l, float r, v?f accum)
 		accum - l * r
 	v?NmsS(v?f l, v?f r, float accum)
 		accum - l * r
-
+	
 	v?Lerp(v?f start, v?f end, v?f weight)
 		start + weight * (end - start)
 	v?LerpS(v?f start, v?f end, float weight)
 		start + weight * (end - start)
-
+	
 	v?Min(v?f a, v?f b)
 		min(a, b)
 	v?Max(v?f a, v?f b)
 		max(a, b)
 	v?MaxE(v?f a)
 		max(a.x, a.y, a.z, a.w)
-
+	
 	v?Length(v?f v)
 		length of v
 	v?SqrLength(v?f v)
@@ -456,7 +466,7 @@ typedef union {
 		v with unit length (Will divide by zero if vector is of length 0)
 	v?NormalizeS(v?f v)
 		v with unit length (returns zero vector if length zero)
-
+	
 	v?Dot(v?f l, v?f r)
 		l dot r
 	v2Cross(v2f l, v2f r)
@@ -491,9 +501,9 @@ static inline v4f v3Extv4(v3f v, float w) {
 	return v4Set(v.x, v.y, v.z, w);
 }
 
-#define v2Zero() v2Set(0, 0)
-#define v3Zero() v3Set(0, 0, 0)
-#define v4Zero() v4Set(0, 0, 0, 0)
+#define v2Zero() v2Set(0,0)
+#define v3Zero() v3Set(0,0,0)
+#define v4Zero() v4Set(0,0,0,0)
 
 NVM_FFU4(Abs,
 	d.x = NVMATH_ABS(v.x), d.y = NVMATH_ABS(v.y), d.z = NVMATH_ABS(v.z), d.w = NVMATH_ABS(v.w))
@@ -501,9 +511,9 @@ NVM_FFU4(Negate,
 	d.x = -v.x, d.y = -v.y, d.z = -v.z, d.w = -v.w)
 NVM_FFU4(Recip,
 	d.x = 1.0f/v.x, d.y = 1.0f/v.y, d.z = 1.0f/v.z, d.w = 1.0f/v.w)
-NVM_FFB4B(Add, +)
+NVM_FFB4B (Add, +)
 NVM_FFB4BR(Sub, -)
-NVM_FFB4B(Mul, *)
+NVM_FFB4B (Mul, *)
 NVM_FFB4BR(Div, /)
 NVM_FFB4_COMB(Dot,
 	l.x * r.x, + l.y * r.y, + l.z * r.z, + l.w * r.w)
@@ -550,13 +560,13 @@ NVM_FFB4S(MaxS,
 	d.w = l.w > r ? l.w : r)
 
 static inline float v2SqrLength(v2f v) {
-		return v2Dot(v, v);
-	}
-	static inline float v3SqrLength(v3f v) {
-		return v3Dot(v, v);
-	}
-	static inline float v4SqrLength(v4f v) {
-		return v4Dot(v, v);
+	return v2Dot(v,v);
+}
+static inline float v3SqrLength(v3f v) {
+	return v3Dot(v,v);
+}
+static inline float v4SqrLength(v4f v) {
+	return v4Dot(v,v);
 }
 
 static inline nvint v2iMinE(v2i v) {
@@ -634,7 +644,9 @@ static inline float v4SqrDistance(v4f a, v4f b) {
 	v4f v = v4Sub(a, b);
 	return v4Dot(v,v);
 }
-
+static inline v2f v2Normalize(v2f v) {
+	return v2MulS(v, NVMATH_RSQRT(v2Dot(v,v)));
+}
 static inline v3f v3Normalize(v3f v) {
 	return v3MulS(v, NVMATH_RSQRT(v3Dot(v,v)));
 }
@@ -649,17 +661,21 @@ static inline v3f v3NormalizeS(v3f v) {
 	float rs = NVMATH_RSQRT(v3Dot(v,v));
 	return rs ? v3MulS(v, rs) : v;
 }
+static inline v4f v4NormalizeS(v4f v) {
+	float rs = NVMATH_RSQRT(v4Dot(v,v));
+	return rs ? v4MulS(v, rs) : v;
+}
 
-static inline v4f v4Float(v4i v) {
+static inline v4f v4Float(v4i v){
 	v4f r = { {v4Pass(v)} };
 	return r;
 }
 
-static inline v4i v4Int(v4f v) {
+static inline v4i v4Int(v4f v){
 	v4i r = { {v4Pass(v)} };
 	return r;
 }
-static inline v4i v4IntRnd(v4f v) {
+static inline v4i v4IntRnd(v4f v){
 	v4i r = { {v4Pass(v4AddS(v, 0.5))} };
 	return r;
 }
@@ -678,6 +694,42 @@ static inline float v3Triple(v3f a, v3f b, v3f c) {
 	return v3Dot(a, v3Cross(b, c));
 }
 
+#ifdef _arch_dreamcast
+
+static inline v3f v3Ftrv(v3f v) {
+	register float x __asm__("fr8") = v.x;
+	register float y __asm__("fr9") = v.y;
+	register float z __asm__("fr10") = v.z;
+	register float w __asm__("fr11") = 1;
+	__asm__ __volatile__(
+		"ftrv   xmtrx,fv8\n"
+		: "=f" (x), "=f" (y), "=f" (z), "=f" (w)
+		: "0" (x), "1" (y), "2" (z), "3" (w) );
+	return v3Set(x,y,z);
+}
+static inline v3f v3Ftrv0(v3f v) {
+	register float x __asm__("fr8") = v.x;
+	register float y __asm__("fr9") = v.y;
+	register float z __asm__("fr10") = v.z;
+	register float w __asm__("fr11") = 0;
+	__asm__ __volatile__(
+		"ftrv   xmtrx,fv8\n"
+		: "=f" (x), "=f" (y), "=f" (z), "=f" (w)
+		: "0" (x), "1" (y), "2" (z), "3" (w) );
+	return v3Set(x,y,z);
+}
+static inline v4f v4Ftrv(v4f v) {
+	register float x __asm__("fr8") = v.x;
+	register float y __asm__("fr9") = v.y;
+	register float z __asm__("fr10") = v.z;
+	register float w __asm__("fr11") = v.w;
+	__asm__ __volatile__(
+		"ftrv   xmtrx,fv8\n"
+		: "=f" (x), "=f" (y), "=f" (z), "=f" (w)
+		: "0" (x), "1" (y), "2" (z), "3" (w) );
+	return v4Set(x,y,z,w);
+}
+
 #ifndef VMATH_USE_XMTRX
 	static inline float m44Mul4Row(m4x4f m, v4f v, int row) {
 		return v.x * m.c[0].v[row] + v.y * m.c[1].v[row] + v.z * m.c[2].v[row] + v.w * m.c[3].v[row];
@@ -687,6 +739,34 @@ static inline float v3Triple(v3f a, v3f b, v3f c) {
 		r.x = m44Mul4Row(*m, v, 0); r.y = m44Mul4Row(*m, v, 1); r.z = m44Mul4Row(*m, v, 2); r.w = m44Mul4Row(*m, v, 3);
 		return r;
 	}
+	/*static inline float m44Mul4Row(m4x4f m, v4f v, int row) {
+		return v.x * m.c[0].v[row] + v.y * m.c[1].v[row] + v.z * m.c[2].v[row] + v.w * m.c[3].v[row];
+	}
+	static inline v4f v4Mul4x4(m4x4f m, v4f v) {
+		v4f r;
+		r.x = m44Mul4Row(m, v, 0); r.y = m44Mul4Row(m, v, 1); r.z = m44Mul4Row(m, v, 2); r.w = m44Mul4Row(m, v, 3);
+		return r;
+	}
+	static inline m4x4f m44Mul4x4(m4x4f l, m4x4f r) {
+		m4x4f d;
+		d.c[0] = v4Mul4x4(l, r.c[0]);
+		d.c[1] = v4Mul4x4(l, r.c[1]);
+		d.c[2] = v4Mul4x4(l, r.c[2]);
+		d.c[3] = v4Mul4x4(l, r.c[3]);
+		return d;
+	}
+	static inline m4x4f m44Mul4x4_X(m4x4f l, m4x4f r) {
+		m4x4f d;
+		int i, j, k;
+		for (i = 0; i < 4; i++) {
+			for (j = 0; j < 4; j++) {
+				d.c[0].v[j] = 0;
+				for (k = 0; k < 4; k++)
+					d.c[i].v[j] += l.c[i].v[k] * r.c[k].v[j];
+			}
+		}
+		return d;
+	}*/
 #else
 	static inline v4f v4MulMat(m4x4f *m, v4f v) {
 		xmtrxLoad((xMatrix*)m);
@@ -705,17 +785,163 @@ static inline float v3Triple(v3f a, v3f b, v3f c) {
 		xmtrxLoadMultiply((xMatrix*)l, (xMatrix*)r);
 		xmtrxStore((xMatrix*)d);
 	}
-
+	
 	static inline void m44Identity(m4x4f * m) {
 		xmtrxIdentity(d);
 		xmtrxStore(d);
 	}
 #endif
 
+#endif	//ifdef _arch_dreamcast
+
+//Right handed
+static inline vqf vqSetEular(float pitch, float yaw, float roll) {
+	float halfYaw = -roll * 0.5;
+	float halfPitch = yaw * 0.5;
+	float halfRoll = -pitch * 0.5;
+	float cosYaw, sinYaw;
+	float cosPitch, sinPitch;
+	float cosRoll, sinRoll;
+	
+	NVMATH_SINCOS(halfYaw,&cosYaw,&sinYaw);
+	NVMATH_SINCOS(halfPitch,&cosPitch,&sinPitch);
+	NVMATH_SINCOS(halfRoll,&cosRoll,&sinRoll);
+	return v4Set(
+		sinRoll * cosPitch * cosYaw - cosRoll * sinPitch * sinYaw,
+		cosRoll * sinPitch * cosYaw + sinRoll * cosPitch * sinYaw,
+		cosRoll * cosPitch * sinYaw - sinRoll * sinPitch * cosYaw,
+		cosRoll * cosPitch * cosYaw + sinRoll * sinPitch * sinYaw);
+}
+
+static inline vqf vqMul(vqf l, vqf r) {
+	return v4Set(
+		l.w * r.x + l.x * r.w + l.y * r.z - l.z * r.y,
+		l.w * r.y + l.y * r.w + l.z * r.x - l.x * r.z,
+		l.w * r.z + l.z * r.w + l.x * r.y - l.y * r.x,
+		l.w * r.w - l.x * r.x - l.y * r.y - l.z * r.z);
+}
+static inline vqf vqInvert(vqf q) {
+	return v4Set(-q.x, -q.y, -q.z, q.w);
+}
+static inline vqf vqNormalize(vqf v) {
+	return v4Normalize(v);
+}
+static inline vqf vqQuatFrom3(v3f v) {
+	float w = 1.0f - (v.x * v.x) - (v.y * v.y) - (v.z * v.z);
+	//~ if (w < 0)
+		//~ return v4Set(v.x, v.y, v.z, v.w, 0);
+	//~ else
+		return v4Set(v.x, v.y, v.z, -NVMATH_SQRT(w));
+}
+static inline v3f v3Rotate(v3f v, vqf q) {
+	//2.0f * dot(u, v) * u 
+	//+ (s*s - dot(u, u)) * v
+	//+ 2.0f * s * cross(u, v);
+	//~ printf("%f\n", uvd);
+	v3f a = v3MulS(q.xyz, 2*v3Dot(v, q.xyz));
+	a = v3MacV(v, q.w*q.w - v3SqrLength(q.xyz), a);
+	a = v3MacV(v3Cross(q.xyz, v), 2*q.w, a);
+	return a;
+}
+
+/*
+//~ static inline
+ vqf vqSlerp(vqf a, vqf b, float w) {
+	 
+}*/
+
+static inline vqf vqSlerp(vqf a, vqf b, float w) {
+	float dp = v4Dot(a, b);
+	//~ w *= .5;
+	
+	float theta = NVMATH_ACOS(dp);
+	if (theta<0.0) theta=-theta;
+	
+	float st = NVMATH_SIN(theta);
+	float sut = NVMATH_SIN(w*theta);
+	float sout = NVMATH_SIN((1-w)*theta);
+	st = 1.0f / st;
+	float coeff1 = sout*st;
+	float coeff2 = sut*st;
+
+	return vqNormalize(v4Set(
+		coeff1*a.x + coeff2*b.x,
+		coeff1*a.y + coeff2*b.y,
+		coeff1*a.z + coeff2*b.z,
+		coeff1*a.w + coeff2*b.w));
+}
 
 
 
-#ifdef __CPLUSPLUS
+
+/*
+//~ static inline
+ vqf vqSlerp(vqf a, vqf b, float w) {
+	float mag = NVMATH_SQRT(v4SqrLength(a) * v4SqrLength(b));
+	//~ assert(mag > 0);
+	float p = v4Dot(a, b) / mag;
+	if (__builtin_fabsf(p) != 1) {
+		float sign = (p < 0) ? -1 : 1;
+		float theta = NVMATH_ACOS(sign*p);
+		float s1 = NVMATH_SIN(sign * w * theta);
+		float d = 1.0 / NVMATH_SIN(theta);
+		float s0 = NVMATH_SIN( (1-w) * theta );
+
+		return v4Set(
+			(a.x * s0 + b.w * s1) * d,
+			(a.y * s0 + b.y * s1) * d,
+			(a.z * s0 + b.z * s1) * d,
+			(a.w * s0 + b.w * s1) * d);
+	} else {
+		return a;
+	}	
+}//*/
+
+static inline vqf vqNlerp(vqf a, vqf b, float w) {
+	return vqNormalize(v4LerpS(a, b, w));
+}
+
+static inline vqf vqAslerp(vqf a, vqf b, float t) {
+	//https://zeux.io/2016/05/05/optimizing-slerp/
+	float ca = v4Dot(a, b);
+
+	float d = __builtin_fabsf(ca);
+	float A = 1.0904f + d * (-3.2452f + d * (3.55645f - d * 1.43519f));
+	float B = 0.848013f + d * (-1.06021f + d * 0.215638f);
+	float k = A * (t - 0.5f) * (t - 0.5f) + B;
+	float ot = t + t * (t - 0.5f) * (t - 1) * k;
+	
+	vqf a2 = v4MulS(a, 1 - ot);
+	vqf b2 = v4MulS(b, ca > 0 ? ot : -ot);
+	return vqNormalize(v4Add(a2, b2));
+	
+	//~ return vqNlerp(a, b, 1 - ot, ca > 0 ? ot : -ot));
+	//~ return unit(lerp(l, r, 1 - ot, ca > 0 ? ot : -ot));
+}
+
+
+/*
+void QuatInv(float *s, float *d);
+void QuatCalcW(float *r);
+void RotVec(float *q, float *v, float *d);
+void QuatSlerp(float *a, float *b, float w, float *dst);
+
+void MatIdentity(float *m);
+void MatSetOrigin(float *o, float *m);
+void MatSetQuat(float *q, float *m);
+void MatVec4Mul(float *m, float *v, float *dv);
+void MatVec3Mul(float *m, float *v, float *dv);
+void MatMatMul(float *lm, float *rm, float *dm);
+void MatPrint(float *m);
+void MatRotateQuat(float *m, float *q, float *d);
+void MatTranslate3fv(float *m, float *trans, float *d);
+void MatTranslate3f(float *m, float x, float y, float z, float *d);
+void MatRotateXEulerRad3f(float *m, float angle, float *d);
+void MatRotateYEulerRad3f(float *m, float angle, float *d);
+int MatInvert(float m[16], float invOut[16]);
+*/
+
+#ifdef __cplusplus
 }
 #endif
 

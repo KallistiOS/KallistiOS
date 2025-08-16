@@ -3,10 +3,10 @@
 #include <assert.h>
 #include <string.h>
 #include <math.h>
-#include "./pixel.h"
-#include "./pvr_texture_encoder.h"
-#include "./pvr_texture.h"
-#include "./tddither.h"
+#include "pixel.h"
+#include "pvr_texture_encoder.h"
+#include "pvr_texture.h"
+#include "tddither.h"
 
 
 
@@ -21,10 +21,10 @@ void pteDNearestARGB4444(const float *sample, int sample_size, const pxlABGR8888
 }
 void pteDNearestARGB1555(const float *sample, int sample_size, const pxlABGR8888 *palette, size_t palette_size, float *nearest_dst) {
 	(void)palette; (void)sample_size;
-	v4f t = v4Mul(v4Get(sample), v4Set(32,32,32,1));  // Scale by bit depth
-	t = v4Float(v4Int(v4AddS(t, 0.5)));	 // Round to nearest
-	t = v4Div(t, v4Set(32,32,32,1));	 // Unscale by bit depth
-
+	v4f t = v4Mul(v4Get(sample), v4Set(32,32,32,1));	//Scale by bit depth
+	t = v4Float(v4Int(v4AddS(t, 0.5)));	//Round to nearest
+	t = v4Div(t, v4Set(32,32,32,1));	//Unscale by bit depth
+	
 	nearest_dst[0] = t.x;
 	nearest_dst[1] = t.y;
 	nearest_dst[2] = t.z;
@@ -36,7 +36,7 @@ void pteDNearestRGB565(const float *sample, int sample_size, const pxlABGR8888 *
 	v4f t = v4Mul(v4Get(sample), v4Set(32,64,32,0));	//Scale by bit depth
 	t = v4Float(v4IntRnd(t));	//Round to nearest
 	t = v4Div(t, v4Set(32,64,32,0.5));	//Unscale by bit depth
-
+	
 	nearest_dst[0] = t.x;
 	nearest_dst[1] = t.y;
 	nearest_dst[2] = t.z;
@@ -44,9 +44,9 @@ void pteDNearestRGB565(const float *sample, int sample_size, const pxlABGR8888 *
 }
 void pteDNearestNorm(const float *sample, int sample_size, const pxlABGR8888 *palette, size_t palette_size, float *nearest_dst) {
 	int norm = pxlRGBtoSpherical(sample[0] * 255.0f, sample[1] * 255.0f, sample[2] * 255.0f);
-
+	
 	pxlABGR8888 n = pxlSphericaltoABGR8888(norm);
-
+	
 	nearest_dst[0] = pxlU8toF(n.r);
 	nearest_dst[1] = pxlU8toF(n.g);
 	nearest_dst[2] = pxlU8toF(n.b);
@@ -69,7 +69,7 @@ void pteConvertFPtoARGB4444(const float *img, unsigned w, unsigned h, unsigned c
 	assert(channels == 4);
 	assert(dst);
 	assert(img);
-
+	
 	pxlARGB4444 *cdst = dst;
 	for(unsigned y = 0; y < h; y++) {
 		for(unsigned x = 0; x < w; x++) {
@@ -82,7 +82,7 @@ void pteConvertFPtoARGB1555(const float *img, unsigned w, unsigned h, unsigned c
 	assert(channels == 4);
 	assert(dst);
 	assert(img);
-
+	
 	pxlARGB1555 *cdst = dst;
 	for(unsigned y = 0; y < h; y++) {
 		for(unsigned x = 0; x < w; x++) {
@@ -95,7 +95,7 @@ void pteConvertFPtoRGB565(const float *img, unsigned w, unsigned h, unsigned cha
 	assert(channels == 4);
 	assert(dst);
 	assert(img);
-
+	
 	pxlRGB565 *cdst = dst;
 	for(unsigned y = 0; y < h; y++) {
 		for(unsigned x = 0; x < w; x++) {
@@ -109,7 +109,7 @@ void pteConvertFPtoABGR8888(const float *img, unsigned w, unsigned h, unsigned c
 	assert(channels == 4);
 	assert(dst);
 	assert(img);
-
+	
 	pxlABGR8888 *cdst = dst;
 	for(unsigned y = 0; y < h; y++) {
 		for(unsigned x = 0; x < w; x++) {
@@ -126,7 +126,7 @@ void pteDither(const unsigned char *src, unsigned w, unsigned h, unsigned channe
 	assert(src);
 	assert(dst);
 	assert(channels < MAX_CHANNELS);
-
+	
 	//Convert image to floats
 	float *imgf = malloc(sizeof(float) * w * h * channels);
 	//printf("Dither %ux%ux%u\n",w,h,channels);
@@ -140,7 +140,7 @@ void pteDither(const unsigned char *src, unsigned w, unsigned h, unsigned channe
 			}
 		}
 	}
-
+	
 	if (dither_amt != 0) {
 		//Dither floating point image
 		float near[4*4*4];
@@ -156,7 +156,7 @@ void pteDither(const unsigned char *src, unsigned w, unsigned h, unsigned channe
 					err[i] = CLAMP(0, cur[i] - near[i], 1);
 					cur[i] = near[i];
 				}
-			
+				
 				/*
 					 .0
 					123
@@ -166,7 +166,7 @@ void pteDither(const unsigned char *src, unsigned w, unsigned h, unsigned channe
 			for(int i = 0; i < channels; i++) \
 				cur[(w*(yo)+(xo)) * channels + i] += err[i] * (weight); \
 		} while(0)
-		
+			
 			if (1) {
 				diffuse(1, 0, 7/16. * dither_amt);
 				diffuse(-1, 1, 3/16. * dither_amt);
@@ -175,24 +175,24 @@ void pteDither(const unsigned char *src, unsigned w, unsigned h, unsigned channe
 			} else {
 				diffuse( 1, 0, 8/42. * dither_amt);
 				diffuse( 2, 0, 4/42. * dither_amt);
-			
+				
 				diffuse(-2, 1, 2/42. * dither_amt);
 				diffuse(-1, 1, 4/42. * dither_amt);
 				diffuse( 0, 1, 8/42. * dither_amt);
 				diffuse( 1, 1, 4/42. * dither_amt);
 				diffuse( 2, 1, 2/42. * dither_amt);
-			
+				
 				diffuse(-2, 2, 1/42. * dither_amt);
 				diffuse(-1, 2, 2/42. * dither_amt);
 				diffuse( 0, 2, 4/42. * dither_amt);
 				diffuse( 1, 2, 2/42. * dither_amt);
 				diffuse( 2, 2, 1/42. * dither_amt);
 			}
-			
+				
 			}
 		}
 	}
-
+	
 	//Undo gamma correction
 	for(unsigned y = 0; y < h; y++) {
 		for(unsigned x = 0; x < w; x++) {
@@ -203,18 +203,18 @@ void pteDither(const unsigned char *src, unsigned w, unsigned h, unsigned channe
 			}
 		}
 	}
-
+	
 	switch(dst_pixel_format) {
-	case PTE_ARGB4444: pteConvertFPtoARGB4444(imgf, w, h, channels, palette, palette_size, dst); break;
-	case PTE_ARGB1555: pteConvertFPtoARGB1555(imgf, w, h, channels, palette, palette_size, dst); break;
-	case PTE_RGB565: pteConvertFPtoRGB565(imgf, w, h, channels, palette, palette_size, dst); break;
+	case PT_ARGB4444: pteConvertFPtoARGB4444(imgf, w, h, channels, palette, palette_size, dst); break;
+	case PT_ARGB1555: pteConvertFPtoARGB1555(imgf, w, h, channels, palette, palette_size, dst); break;
+	case PT_RGB565: pteConvertFPtoRGB565(imgf, w, h, channels, palette, palette_size, dst); break;
 	case PTE_ABGR8888: pteConvertFPtoABGR8888(imgf, w, h, channels, palette, palette_size, dst); break;
 	}
-
+	
 	free(imgf);
 }
 
-dithFindNearest pteGetFindNearest(ptePixelFormat format) {
+dithFindNearest pteGetFindNearest(ptPixelFormat format) {
 	static const dithFindNearest tbl[] = {
 		&pteDNearestARGB1555,
 		&pteDNearestRGB565,
@@ -223,9 +223,11 @@ dithFindNearest pteGetFindNearest(ptePixelFormat format) {
 		&pteDNearestNorm,
 		&pteDNearest8BPP,
 		&pteDNearest8BPP,
+		NULL,
+		&pteDNearestNorm,
 	};
-
-	assert(format >= PTE_ARGB1555 && format <= PTE_PALETTE_8B && format != PTE_YUV);
-
+	
+	assert(format >= PT_ARGB1555 && format <= PT_NORMAL_TEXCONV && format != PT_YUV);
+	
 	return tbl[format];
 }

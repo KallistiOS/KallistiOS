@@ -126,40 +126,83 @@ static inline unsigned pxlFtoU8B(float val) {
 
 static inline unsigned pxlFloattoSpherical(float fx, float fy, float fz) {
 	v3f norm = v3Set(fx,fy,fz);
-
+	
 	norm = v3NormalizeS(norm);
-
+	
 	float azimuth = 0xff;
 	azimuth = atan2(norm.y, norm.x);
-
-	float altitude = acosf(norm.z);
+	if (azimuth < 0) azimuth += 2*M_PI;
+	azimuth = CLAMP(0, azimuth, 255);
+	
+	float altitude = CLAMP(0, acosf(norm.z), M_PI_2);
+	
 	const float rnd = 0.5;
-
 	int fixed_azimuth = (uint8_t)(azimuth / (2*M_PI) * 255 + rnd);
-	int fixed_altitude = (uint8_t)(altitude / M_PI * 255 + rnd) ^ 0xff;
-
+	int fixed_altitude = (uint8_t)(altitude / M_PI_2 * 255 + rnd) ^ 0xff;
+	
+	fixed_altitude &= 0xff;
+	fixed_azimuth &= 0xff;
+	
 	return (fixed_altitude << 8) | fixed_azimuth;
 
 }
+
 static inline unsigned pxlRGBtoSpherical(unsigned x, unsigned y, unsigned z) {
 	float fx = pxlU8BtoF(x);
 	float fy = pxlU8BtoF(y);
 	float fz = pxlU8BtoF(z);
-
+	
 	return pxlFloattoSpherical(fx, fy, fz);
+}
+
+static inline unsigned pxlRGBtoSphericalTC(unsigned x, unsigned y, unsigned z) {
+	//Converts normal like texconv
+	v3f v;
+	v.x = (x/255.0f) * 2.0f - 1.0f;
+	v.y = (y/255.0f) * 2.0f - 1.0f;
+	v.z = (z/255.0f);
+	
+	float radius = v3Length(v);
+	float polar = acos(v.z / radius);
+	float azimuth = atan2(v.y, v.x);
+	
+	polar = M_PI_2 - polar;
+	polar = (polar / M_PI_2) * 255.0f;
+	int S = CLAMP(0, polar, 255);
+	
+	if (azimuth < 0) azimuth += 2*M_PI;
+	azimuth = (azimuth / (2*M_PI)) * 255.0f;
+	int R = CLAMP(0, azimuth, 255);
+	
+	return (S << 8) | R;
 }
 
 static inline pxlABGR8888 pxlSphericaltoABGR8888(unsigned norm) {
 	float azimuth = (norm & 0xff) / 256.0f * (2*M_PI);
-	float altitude = (((norm >> 8)& 0xff) ^ 0xff) / 255.0f * M_PI;
-
-
+	float altitude = (((norm >> 8)& 0xff) ^ 0xff) / 255.0f * M_PI_2;
+	
+	
 	pxlABGR8888 pxl;
 	pxl.r = pxlFtoU8B(sinf(altitude) * cosf(azimuth));
 	pxl.g = pxlFtoU8B(sinf(altitude) * sinf(azimuth));
 	pxl.b = pxlFtoU8B(cosf(altitude));
 	pxl.a = 255;
+	
+	return pxl;
+}
 
+static inline pxlABGR8888 pxlSphericaltoABGR8888TC(unsigned norm) {
+	//Converts normal like texconv
+	float S = (1.0 - ((norm >> 8) / 255.0)) * M_PI_2;
+	float R = ((norm & 0xFF) / 255.0) * 2*M_PI;
+	if (R > M_PI) R -= 2*M_PI;
+	
+	pxlABGR8888 pxl;
+	pxl.r = (sinf(S) * cosf(R) + 1.0f) * 0.5f * 255.0f;
+	pxl.g = (sinf(S) * sinf(R) + 1.0f) * 0.5f * 255.0f;
+	pxl.b = (cosf(S) + 1.0f) * 0.5f * 255.0f;
+	pxl.a = 255;
+	
 	return pxl;
 }
 
@@ -454,6 +497,14 @@ static inline pxlARGB8888 pxlConvertABGR8888toARGB8888(pxlABGR8888 color) {
 	ret.a = color.a;
 	return ret;
 }
+static inline pxlABGR8888 pxlConvertARGB8888toABGR8888(pxlARGB8888 color) {
+	pxlABGR8888 ret;
+	ret.r = color.r;
+	ret.g = color.g;
+	ret.b = color.b;
+	ret.a = color.a;
+	return ret;
+}
 static inline pxlRGBA32 pxlConvertRGB565toRGBA32(pxlRGB565 color) {
 	pxlRGBA32 ret;
 	ret.r = pxlExpand(color.r, 5);
@@ -476,17 +527,17 @@ static inline unsigned pxlFindClosestColor(const pxlABGR8888 src, const pxlABGR8
 	float bestdist = 1e100;
 	unsigned best = 0;
 	v4f srcf = v4Mul(v4Set(src.r, src.g, src.b, src.a), PXL_COLOR_WEIGHTS);
-
+	
 	for(unsigned i = 0; i < palsize; i++) {
 		pxlABGR8888 c = pal[i];
 		v4f colorf = v4Mul(v4Set(c.r, c.g, c.b, c.a), PXL_COLOR_WEIGHTS);
-	
+		
 		float dist = v4SqrDistance(colorf, srcf);
 		if (dist < bestdist) {
 			bestdist = dist;
 			best = i;
 		}
 	}
-
+	
 	return best;
 }

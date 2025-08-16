@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "config.h"
 #include "mem.h"
 #include "avassert.h"
 #include "avstring.h"

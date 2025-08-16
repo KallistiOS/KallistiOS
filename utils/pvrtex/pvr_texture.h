@@ -22,6 +22,8 @@ extern "C" {
 #define PVR_CODEBOOK_ENTRY_SIZE_BYTES	(8)
 #define PVR_CODEBOOK_SIZE_BYTES	(2048)
 #define PVR_FULL_CODEBOOK	(256)
+#define PVR_4B_PALETTE_SIZE	(16)
+#define PVR_8B_PALETTE_SIZE	(256)
 
 typedef enum {
 	PT_SIZE_8,
@@ -43,13 +45,23 @@ typedef enum {
 	PT_NORMAL,
 	PT_PALETTE_4B,
 	PT_PALETTE_8B,
-
+	
+	PT_PSEUDO_FORMAT_START,
 	//This is not a real PVR pixel format. It's a stand in for a YUV texture that is twiddled,
 	//which is not encoded the same way as other twiddled formats.
 	//It exists so that ConvertFromFormatToBGRA8888 can know that a texture is twiddled.
-	PT_YUV_TWID = PT_YUV + 8,
-
-	//Don't get this confused with ptePixelFormat
+	PT_YUV_TWID = PT_PSEUDO_FORMAT_START,
+	
+	//Also not a real PVR format, used by ptConvertToTargetFormat to encode normals as texconv does
+	PT_NORMAL_TEXCONV,
+	
+	PTE_START,
+	//The following cannot be used with the functions defined in this header.
+	//They are used by pte* functions in pvr_texture_encoder only
+	PTE_ABGR8888,
+	PTE_BUMP,	//Signals input is height map that needs to be converted to normal map
+	PTE_AUTO,	//Selects RGB565, ARGB1555, or ARGB4444 automatically based on alpha of input image
+	PTE_AUTO_YUV,	//Selects YUV, ARGB1555, or ARGB4444 automatically based on alpha of input image
 } ptPixelFormat;
 #define PT_PIXEL_OFFSET	PT_PALETTE_8B
 
@@ -81,13 +93,13 @@ static inline unsigned ConvToYUV(pxlABGR8888 l, pxlABGR8888 r) {
 	//compute each pixel's Y
 	int Y0 = CLAMP(0, (int)(0.299 * l.r + 0.587 * l.g + 0.114 * l.b), 255);
 	int Y1 = CLAMP(0, (int)(0.299 * r.r + 0.587 * r.g + 0.114 * r.b), 255);
-
+	
 	int U = CLAMP(0, (int)(-0.169 * avgR - 0.331 * avgG + 0.4990 * avgB + 128), 255);
 	int V = CLAMP(0, (int)( 0.499 * avgR - 0.418 * avgG - 0.0813 * avgB + 128), 255);
 
 	unsigned yuv1 = ((uint8_t)Y0) << 8 | (uint8_t)U;
 	unsigned yuv2 = ((uint8_t)Y1) << 8 | (uint8_t)V;
-
+	
 	return (yuv1 << 16) | yuv2;
 }
 

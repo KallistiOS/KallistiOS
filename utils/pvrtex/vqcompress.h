@@ -12,12 +12,12 @@ typedef struct {
 	unsigned pix_per_cb;	//number of pixels per cb entry
 	unsigned point_cnt;	//number of pixels / pix_per_cb
 	unsigned cb_size;	//number of entries in cb
-
+	
 	unsigned dimensions;	//pix_per_cb * channels
-
+	
 	//channels can have different gammas (alpha could be 1.0, while RGB could be 2.2)
 	float gamma[VQC_MAX_CHANNELS];
-
+	
 	size_t data_space;
 	int *data;	//data to compress
 } VQCompressor;

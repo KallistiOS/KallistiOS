@@ -9,5 +9,6 @@ void tdDNearestRGB565(const float *sample, int sample_size, const pxlABGR8888 *p
 
 typedef void (*dithFindNearest)(const float *sample, int sample_size, const pxlABGR8888 *palette, size_t palette_size, float *nearest_dst);
 
-dithFindNearest pteGetFindNearest(ptePixelFormat format);
-void pteDither(const unsigned char *src, unsigned w, unsigned h, unsigned channels, float dither_amt, dithFindNearest nearest, const pxlABGR8888 *palette, size_t palette_size, void *dst, int dst_pixel_format);
+dithFindNearest pteGetFindNearest(ptPixelFormat format);
+void pteDither(const unsigned char *src, unsigned w, unsigned h, unsigned channels, float dither_amt,
+	dithFindNearest nearest, const pxlABGR8888 *palette, size_t palette_size, void *dst, int dst_pixel_format);
