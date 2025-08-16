@@ -136,7 +136,6 @@ void pvr_scene_begin(void) {
         }
 
         pvr_sync_stats(PVR_SYNC_BUFSTART);
-        // DBG(("pvr_scene_begin(dma -> %d)\n", pvr_state.ram_target));
     }
     else {
         // We assume registration is starting immediately
@@ -323,7 +322,6 @@ int pvr_scene_finish(void) {
 
     // If we're in DMA mode, then this works a little differently...
     if(pvr_state.dma_mode) {
-        // DBG(("pvr_scene_finish(dma -> %d)\n", pvr_state.ram_target));
         // If any enabled lists are empty, fill them with a blank polyhdr. Also
         // add a zero-marker to the end of each list.
         b = pvr_state.dma_buffers + pvr_state.ram_target;
