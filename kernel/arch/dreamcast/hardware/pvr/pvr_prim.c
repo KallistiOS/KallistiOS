@@ -114,7 +114,7 @@ void pvr_poly_cxt_col(pvr_poly_cxt_t *dst, pvr_list_t list) {
     alpha = list > PVR_LIST_OP_MOD;
     dst->fmt.color = PVR_CLRFMT_ARGBPACKED;
     dst->fmt.uv = PVR_UVFMT_32BIT;
-    dst->gen.shading = PVR_SHADE_GOURAUD;
+    dst->gen.shading = true;
     dst->depth.comparison = PVR_DEPTHCMP_GREATER;
     dst->depth.write = PVR_DEPTHWRITE_ENABLE;
     dst->gen.culling = PVR_CULLING_CCW;
@@ -134,7 +134,7 @@ void pvr_poly_cxt_col(pvr_poly_cxt_t *dst, pvr_list_t list) {
     dst->blend.src_enable = PVR_BLEND_DISABLE;
     dst->blend.dst_enable = PVR_BLEND_DISABLE;
     dst->gen.fog_type = PVR_FOG_DISABLE;
-    dst->gen.color_clamp = PVR_CLRCLAMP_DISABLE;
+    dst->gen.color_clamp = false;
 }
 
 /* Create a textured polygon context with parameters similar to
@@ -152,7 +152,7 @@ void pvr_poly_cxt_txr(pvr_poly_cxt_t *dst, pvr_list_t list,
     alpha = list > PVR_LIST_OP_MOD;
     dst->fmt.color = PVR_CLRFMT_ARGBPACKED;
     dst->fmt.uv = PVR_UVFMT_32BIT;
-    dst->gen.shading = PVR_SHADE_GOURAUD;
+    dst->gen.shading = true;
     dst->depth.comparison = PVR_DEPTHCMP_GREATER;
     dst->depth.write = PVR_DEPTHWRITE_ENABLE;
     dst->gen.culling = PVR_CULLING_CCW;
@@ -176,7 +176,7 @@ void pvr_poly_cxt_txr(pvr_poly_cxt_t *dst, pvr_list_t list,
     dst->blend.src_enable = PVR_BLEND_DISABLE;
     dst->blend.dst_enable = PVR_BLEND_DISABLE;
     dst->gen.fog_type = PVR_FOG_DISABLE;
-    dst->gen.color_clamp = PVR_CLRCLAMP_DISABLE;
+    dst->gen.color_clamp = false;
     dst->txr.uv_flip = PVR_UVFLIP_NONE;
     dst->txr.uv_clamp = PVR_UVCLAMP_NONE;
     dst->txr.filter = filtering;
@@ -216,7 +216,7 @@ void pvr_sprite_cxt_col(pvr_sprite_cxt_t *dst, pvr_list_t list) {
     dst->blend.src_enable = PVR_BLEND_DISABLE;
     dst->blend.dst_enable = PVR_BLEND_DISABLE;
     dst->gen.fog_type = PVR_FOG_DISABLE;
-    dst->gen.color_clamp = PVR_CLRCLAMP_DISABLE;
+    dst->gen.color_clamp = false;
 }
 
 /* Create a textured sprite context. */
@@ -253,7 +253,7 @@ void pvr_sprite_cxt_txr(pvr_sprite_cxt_t *dst, pvr_list_t list,
     dst->blend.src_enable = PVR_BLEND_DISABLE;
     dst->blend.dst_enable = PVR_BLEND_DISABLE;
     dst->gen.fog_type = PVR_FOG_DISABLE;
-    dst->gen.color_clamp = PVR_CLRCLAMP_DISABLE;
+    dst->gen.color_clamp = false;
     dst->txr.enable = PVR_TEXTURE_ENABLE;
     dst->txr.uv_flip = PVR_UVFLIP_NONE;
     dst->txr.uv_clamp = PVR_UVCLAMP_NONE;
@@ -477,7 +477,7 @@ void pvr_poly_cxt_col_mod(pvr_poly_cxt_t *dst, pvr_list_t list) {
     alpha = list > PVR_LIST_OP_MOD;
     dst->fmt.color = PVR_CLRFMT_ARGBPACKED;
     dst->fmt.uv = PVR_UVFMT_32BIT;
-    dst->gen.shading = PVR_SHADE_GOURAUD;
+    dst->gen.shading = true;
     dst->depth.comparison = PVR_DEPTHCMP_GREATER;
     dst->depth.write = PVR_DEPTHWRITE_ENABLE;
     dst->gen.culling = PVR_CULLING_CCW;
@@ -505,11 +505,11 @@ void pvr_poly_cxt_col_mod(pvr_poly_cxt_t *dst, pvr_list_t list) {
     dst->blend.src_enable = PVR_BLEND_DISABLE;
     dst->blend.dst_enable = PVR_BLEND_DISABLE;
     dst->gen.fog_type = PVR_FOG_DISABLE;
-    dst->gen.color_clamp = PVR_CLRCLAMP_DISABLE;
+    dst->gen.color_clamp = false;
     dst->blend.src_enable2 = PVR_BLEND_DISABLE;
     dst->blend.dst_enable2 = PVR_BLEND_DISABLE;
     dst->gen.fog_type2 = PVR_FOG_DISABLE;
-    dst->gen.color_clamp2 = PVR_CLRCLAMP_DISABLE;
+    dst->gen.color_clamp2 = false;
 }
 
 /* Create a textured polygon context for polygons affected by modifier
@@ -529,7 +529,7 @@ void pvr_poly_cxt_txr_mod(pvr_poly_cxt_t *dst, pvr_list_t list,
     alpha = list > PVR_LIST_OP_MOD;
     dst->fmt.color = PVR_CLRFMT_ARGBPACKED;
     dst->fmt.uv = PVR_UVFMT_32BIT;
-    dst->gen.shading = PVR_SHADE_GOURAUD;
+    dst->gen.shading = true;
     dst->depth.comparison = PVR_DEPTHCMP_GREATER;
     dst->depth.write = PVR_DEPTHWRITE_ENABLE;
     dst->gen.culling = PVR_CULLING_CCW;
@@ -565,7 +565,7 @@ void pvr_poly_cxt_txr_mod(pvr_poly_cxt_t *dst, pvr_list_t list,
     dst->blend.src_enable = PVR_BLEND_DISABLE;
     dst->blend.dst_enable = PVR_BLEND_DISABLE;
     dst->gen.fog_type = PVR_FOG_DISABLE;
-    dst->gen.color_clamp = PVR_CLRCLAMP_DISABLE;
+    dst->gen.color_clamp = false;
     dst->txr.uv_flip = PVR_UVFLIP_NONE;
     dst->txr.uv_clamp = PVR_UVCLAMP_NONE;
     dst->txr.filter = filtering;
@@ -577,7 +577,7 @@ void pvr_poly_cxt_txr_mod(pvr_poly_cxt_t *dst, pvr_list_t list,
     dst->blend.src_enable2 = PVR_BLEND_DISABLE;
     dst->blend.dst_enable2 = PVR_BLEND_DISABLE;
     dst->gen.fog_type2 = PVR_FOG_DISABLE;
-    dst->gen.color_clamp2 = PVR_CLRCLAMP_DISABLE;
+    dst->gen.color_clamp2 = false;
     dst->txr2.uv_flip = PVR_UVFLIP_NONE;
     dst->txr2.uv_clamp = PVR_UVCLAMP_NONE;
     dst->txr2.filter = filtering2;
