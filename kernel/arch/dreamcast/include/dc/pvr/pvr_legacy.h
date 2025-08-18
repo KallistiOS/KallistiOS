@@ -104,6 +104,21 @@ __BEGIN_DECLS
 #define PVR_MODIFIER_NORMAL         1
 /** @} */
 
+/** \defgroup pvr_blend             Blending
+    \brief                          Blending attributes for PVR primitive contexts
+    \ingroup                        pvr_ctx_attrib
+*/
+
+/** \defgroup pvr_blend_switch      Blending Toggle
+    \brief                          Enable or Disable Blending.
+    \ingroup                        pvr_blend
+
+    @{
+*/
+#define PVR_BLEND_DISABLE       0   /**< \brief Disable blending */
+#define PVR_BLEND_ENABLE        1   /**< \brief Enable blending */
+/** @} */
+
 /** \defgroup pvr_bitmasks_legacy   Constants and Masks
     \brief                          Legacy polygon header constants and masks
     \deprecated                     Replaced by \ref pvr_bitmasks
