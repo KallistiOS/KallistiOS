@@ -1,7 +1,8 @@
 /* KallistiOS ##version##
 
-   arch/dreamcast/include/arch/byteorder.h
+   include/kos/byteorder.h
    Copyright (C) 2015 Lawrence Sebald
+   Copyright (C) 2025 Paul Cercueil
 
 */
 
@@ -19,15 +20,16 @@
     \author Lawrence Sebald
 */
 
-#ifndef __ARCH_BYTEORDER_H
-#define __ARCH_BYTEORDER_H
+#ifndef __KOS_BYTEORDER_H
+#define __KOS_BYTEORDER_H
 
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-#ifdef BYTE_ORDER
-/* If we've included <arch/types.h>, this might already be defined... */
-#undef BYTE_ORDER
+#include <stdint.h>
+
+#ifndef BYTE_ORDER
+#define BYTE_ORDER __BYTE_ORDER__
 #endif
 
 /** \defgroup system_arch  Byte Order
@@ -36,9 +38,6 @@ __BEGIN_DECLS
 
     @{
 */
-
-/** \brief  Define the byte-order of the platform in use. */
-#define BYTE_ORDER      LITTLE_ENDIAN
 
 /** \brief  Swap the byte order of a 16-bit integer.
 
@@ -78,7 +77,7 @@ static inline uint32_t arch_swap32(uint32_t x) {
     \return             The converted value.
 */
 static inline uint16_t arch_ntohs(uint16_t x) {
-    return __builtin_bswap16(x);
+    return __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ ? x : __builtin_bswap16(x);
 }
 
 /** \brief  Convert network-to-host long.
@@ -93,7 +92,7 @@ static inline uint16_t arch_ntohs(uint16_t x) {
     \return             The converted value.
 */
 static inline uint32_t arch_ntohl(uint32_t x) {
-    return __builtin_bswap32(x);
+    return __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ ? x : __builtin_bswap32(x);
 }
 
 /** \brief  Convert host-to-network short.
@@ -108,7 +107,7 @@ static inline uint32_t arch_ntohl(uint32_t x) {
     \return             The converted value.
 */
 static inline uint16_t arch_htons(uint16_t x) {
-    return __builtin_bswap16(x);
+    return arch_ntohs(x);
 }
 
 /** \brief  Convert host-to-network long.
@@ -123,11 +122,11 @@ static inline uint16_t arch_htons(uint16_t x) {
     \return             The converted value.
 */
 static inline uint32_t arch_htonl(uint32_t x) {
-    return __builtin_bswap32(x);
+    return arch_ntohl(x);
 }
 
 /** @} */
 
 __END_DECLS
 
-#endif /* !__ARCH_BYTEORDER_H */
+#endif /* !__KOS_BYTEORDER_H */

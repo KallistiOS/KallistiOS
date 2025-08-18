@@ -8,7 +8,7 @@
 
 /* Byte-order translation functions */
 #include <stdint.h>
-#include <arch/byteorder.h>
+#include <kos/byteorder.h>
 
 /* Network to Host short */
 uint16_t ntohs(uint16_t value) {
