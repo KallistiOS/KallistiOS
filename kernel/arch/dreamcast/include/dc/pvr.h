@@ -127,23 +127,15 @@ typedef struct {
         bool                color_clamp2;   /**< \brief Enable color clamping inside modifer */
     } gen;                                  /**< \brief General parameters */
     struct {
-        int     src;            /**< \brief Source blending mode outside modifier
-                                     \see   pvr_blend_modes */
-        int     dst;            /**< \brief Dest blending mode outside modifier
-                                     \see   pvr_blend_modes */
-        int     src_enable;     /**< \brief Source blending enable outside modifier
-                                     \see   pvr_blend_switch */
-        int     dst_enable;     /**< \brief Dest blending enable outside modifier
-                                     \see   pvr_blend_switch */
-        int     src2;           /**< \brief Source blending mode inside modifier
-                                     \see   pvr_blend_modes */
-        int     dst2;           /**< \brief Dest blending mode inside modifier
-                                     \see   pvr_blend_modes */
-        int     src_enable2;    /**< \brief Source blending mode inside modifier
-                                     \see   pvr_blend_switch */
-        int     dst_enable2;    /**< \brief Dest blending mode inside modifier
-                                     \see   pvr_blend_switch */
-    } blend;                    /**< \brief Blending parameters */
+        pvr_blend_mode_t    src;            /**< \brief Source blending mode outside modifier */
+        pvr_blend_mode_t    dst;            /**< \brief Dest blending mode outside modifier */
+        bool                src_enable;     /**< \brief Source blending enable outside modifier */
+        bool                dst_enable;     /**< \brief Dest blending enable outside modifier */
+        pvr_blend_mode_t    src2;           /**< \brief Source blending mode inside modifier */
+        pvr_blend_mode_t    dst2;           /**< \brief Dest blending mode inside modifier */
+        bool                src_enable2;    /**< \brief Source blending mode inside modifier */
+        bool                dst_enable2;    /**< \brief Dest blending mode inside modifier */
+    } blend;                                /**< \brief Blending parameters */
     struct {
         int     color;          /**< \brief Color format in vertex
                                      \see   pvr_color_fmts */
@@ -231,14 +223,10 @@ typedef struct {
         bool            specular;       /**< \brief Enable offset color */
     } gen;                              /**< \brief General parameters */
     struct {
-        int     src;            /**< \brief Source blending mode
-                                     \see   pvr_blend_modes */
-        int     dst;            /**< \brief Dest blending mode
-                                     \see   pvr_blend_modes */
-        int     src_enable;     /**< \brief Source blending enable
-                                     \see   pvr_blend_switch */
-        int     dst_enable;     /**< \brief Dest blending enable
-                                     \see   pvr_blend_switch */
+        pvr_blend_mode_t    src;        /**< \brief Source blending mode */
+        pvr_blend_mode_t    dst;        /**< \brief Dest blending mode */
+        bool                src_enable; /**< \brief Source blending enable */
+        bool                dst_enable; /**< \brief Dest blending enable */
     } blend;
     struct {
         int     comparison;     /**< \brief Depth comparison mode
@@ -305,21 +293,6 @@ typedef struct {
 */
 #define PVR_TEXTURE_DISABLE     0   /**< \brief Disable texturing */
 #define PVR_TEXTURE_ENABLE      1   /**< \brief Enable texturing */
-/** @} */
-
-/** \defgroup pvr_blend             Blending
-    \brief                          Blending attributes for PVR primitive contexts
-    \ingroup                        pvr_ctx_attrib
-*/
-
-/** \defgroup pvr_blend_switch      Blending Toggle
-    \brief                          Enable or Disable Blending.
-    \ingroup                        pvr_blend
-
-    @{
-*/
-#define PVR_BLEND_DISABLE       0   /**< \brief Disable blending */
-#define PVR_BLEND_ENABLE        1   /**< \brief Enable blending */
 /** @} */
 
 /** \defgroup pvr_ctx_color     Color
