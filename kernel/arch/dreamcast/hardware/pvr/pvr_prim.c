@@ -113,7 +113,7 @@ void pvr_poly_cxt_col(pvr_poly_cxt_t *dst, pvr_list_t list) {
     dst->list_type = list;
     alpha = list > PVR_LIST_OP_MOD;
     dst->fmt.color = PVR_CLRFMT_ARGBPACKED;
-    dst->fmt.uv = PVR_UVFMT_32BIT;
+    dst->fmt.uv = false;
     dst->gen.shading = true;
     dst->depth.comparison = PVR_DEPTHCMP_GREATER;
     dst->depth.write = PVR_DEPTHWRITE_ENABLE;
@@ -151,7 +151,7 @@ void pvr_poly_cxt_txr(pvr_poly_cxt_t *dst, pvr_list_t list,
     dst->list_type = list;
     alpha = list > PVR_LIST_OP_MOD;
     dst->fmt.color = PVR_CLRFMT_ARGBPACKED;
-    dst->fmt.uv = PVR_UVFMT_32BIT;
+    dst->fmt.uv = false;
     dst->gen.shading = true;
     dst->depth.comparison = PVR_DEPTHCMP_GREATER;
     dst->depth.write = PVR_DEPTHWRITE_ENABLE;
@@ -476,13 +476,13 @@ void pvr_poly_cxt_col_mod(pvr_poly_cxt_t *dst, pvr_list_t list) {
     dst->list_type = list;
     alpha = list > PVR_LIST_OP_MOD;
     dst->fmt.color = PVR_CLRFMT_ARGBPACKED;
-    dst->fmt.uv = PVR_UVFMT_32BIT;
+    dst->fmt.uv = false;
     dst->gen.shading = true;
     dst->depth.comparison = PVR_DEPTHCMP_GREATER;
     dst->depth.write = PVR_DEPTHWRITE_ENABLE;
     dst->gen.culling = PVR_CULLING_CCW;
-    dst->fmt.modifier = PVR_MODIFIER_ENABLE;
-    dst->gen.modifier_mode = PVR_MODIFIER_NORMAL;
+    dst->fmt.modifier = true;
+    dst->gen.modifier_mode = true;
     dst->txr.enable = PVR_TEXTURE_DISABLE;
     dst->txr2.enable = PVR_TEXTURE_DISABLE;
 
@@ -528,13 +528,13 @@ void pvr_poly_cxt_txr_mod(pvr_poly_cxt_t *dst, pvr_list_t list,
     dst->list_type = list;
     alpha = list > PVR_LIST_OP_MOD;
     dst->fmt.color = PVR_CLRFMT_ARGBPACKED;
-    dst->fmt.uv = PVR_UVFMT_32BIT;
+    dst->fmt.uv = false;
     dst->gen.shading = true;
     dst->depth.comparison = PVR_DEPTHCMP_GREATER;
     dst->depth.write = PVR_DEPTHWRITE_ENABLE;
     dst->gen.culling = PVR_CULLING_CCW;
-    dst->fmt.modifier = PVR_MODIFIER_ENABLE;
-    dst->gen.modifier_mode = PVR_MODIFIER_NORMAL;
+    dst->fmt.modifier = true;
+    dst->gen.modifier_mode = true;
     dst->txr.enable = PVR_TEXTURE_ENABLE;
     dst->txr2.enable = PVR_TEXTURE_ENABLE;
 
