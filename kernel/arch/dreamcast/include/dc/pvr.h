@@ -111,29 +111,21 @@ typedef uint32_t pvr_list_t;
     \headerfile dc/pvr.h
 */
 typedef struct {
-    int     list_type;          /**< \brief Primitive list
-                                     \see   pvr_lists */
+    int     list_type;                      /**< \brief Primitive list
+                                                 \see   pvr_lists */
     struct {
-        bool    alpha;          /**< \brief Enable alpha outside modifier */
-        int     shading;        /**< \brief Shading type
-                                     \see   pvr_shading_types */
-        int     fog_type;       /**< \brief Fog type outside modifier
-                                     \see   pvr_fog_types */
-        int     culling;        /**< \brief Culling mode
-                                     \see   pvr_cull_modes */
-        int     color_clamp;    /**< \brief Color clamp enable/disable outside modifier
-                                     \see   pvr_colclamp_switch */
-        int     clip_mode;      /**< \brief Clipping mode
-                                     \see   pvr_clip_modes */
-        int     modifier_mode;  /**< \brief Modifier mode */
-        int     specular;       /**< \brief Offset color enable/disable outside modifier
-                                     \see   pvr_offset_switch */
-        bool    alpha2;         /**< \brief Enable alpha inside modifier */
-        int     fog_type2;      /**< \brief Fog type inside modifier
-                                     \see   pvr_fog_types */
-        int     color_clamp2;   /**< \brief Color clamp enable/disable inside modifier
-                                     \see   pvr_colclamp_switch */
-    } gen;                      /**< \brief General parameters */
+        bool                alpha;          /**< \brief Enable alpha outside modifier */
+        bool                shading;        /**< \brief Enable gourad shading */
+        pvr_fog_type_t      fog_type;       /**< \brief Fog type outside modifier */
+        pvr_cull_mode_t     culling;        /**< \brief Culling mode */
+        bool                color_clamp;    /**< \brief Enable color clamping outside modifer */
+        pvr_clip_mode_t     clip_mode;      /**< \brief Clipping mode */
+        bool                modifier_mode;  /**< \brief True normal; false: cheap shadow */
+        bool                specular;       /**< \brief Enable offset color outside modifier */
+        bool                alpha2;         /**< \brief Enable alpha inside modifier */
+        pvr_fog_type_t      fog_type2;      /**< \brief Fog type inside modifier */
+        bool                color_clamp2;   /**< \brief Enable color clamping inside modifer */
+    } gen;                                  /**< \brief General parameters */
     struct {
         int     src;            /**< \brief Source blending mode outside modifier
                                      \see   pvr_blend_modes */
@@ -228,21 +220,16 @@ typedef struct {
     \headerfile dc/pvr.h
 */
 typedef struct {
-    int     list_type;          /**< \brief Primitive list
-                                     \see   pvr_lists */
+    int     list_type;                  /**< \brief Primitive list
+                                             \see   pvr_lists */
     struct {
-        bool    alpha;          /**< \brief Enable alpha */
-        int     fog_type;       /**< \brief Fog type
-                                     \see   pvr_fog_types */
-        int     culling;        /**< \brief Culling mode
-                                     \see   pvr_cull_modes */
-        int     color_clamp;    /**< \brief Color clamp enable/disable
-                                     \see   pvr_colclamp_switch */
-        int     clip_mode;      /**< \brief Clipping mode
-                                     \see   pvr_clip_modes */
-        int     specular;       /**< \brief Offset color enable/disable
-                                     \see   pvr_offset_switch */
-    } gen;                      /**< \brief General parameters */
+        bool            alpha;          /**< \brief Enable alpha */
+        pvr_fog_type_t  fog_type;       /**< \brief Fog type */
+        pvr_cull_mode_t culling;        /**< \brief Culling mode */
+        bool            color_clamp;    /**< \brief Enable color clamp */
+        pvr_clip_mode_t clip_mode;      /**< \brief Clipping mode */
+        bool            specular;       /**< \brief Enable offset color */
+    } gen;                              /**< \brief General parameters */
     struct {
         int     src;            /**< \brief Source blending mode
                                      \see   pvr_blend_modes */
@@ -290,20 +277,6 @@ typedef struct {
     \brief                   PVR primitive context attributes
     \ingroup                 pvr_ctx
 */
-
-/** \defgroup pvr_shading_types     Shading Modes
-    \brief                          PowerVR primitive context shading modes
-    \ingroup                        pvr_ctx_attrib
-
-    Each polygon can define how it wants to be shaded, be it with flat or
-    Gouraud shading using these constants in the appropriate place in its
-    pvr_poly_cxt_t.
-
-    @{
-*/
-#define PVR_SHADE_FLAT          0   /**< \brief Use flat shading */
-#define PVR_SHADE_GOURAUD       1   /**< \brief Use Gouraud shading */
-/** @} */
 
 /** \defgroup pvr_ctx_depth     Depth
     \brief                      Depth attributes for PVR polygon contexts
@@ -353,40 +326,6 @@ typedef struct {
     \brief                      Color attributes for PowerVR primitive contexts
     \ingroup                    pvr_ctx_attrib
 */
-
-/** \defgroup pvr_colclamp_switch   Clamping Toggle
-    \brief                          Enable or Disable Color Clamping
-    \ingroup                        pvr_ctx_color
-
-    Enabling color clamping will clamp colors between the minimum and maximum
-    values before any sort of fog processing.
-
-    @{
-*/
-#define PVR_CLRCLAMP_DISABLE    0   /**< \brief Disable color clamping */
-#define PVR_CLRCLAMP_ENABLE     1   /**< \brief Enable color clamping */
-/** @} */
-
-/** \defgroup pvr_offset_switch     Offset Toggle
-    \brief                          Enable or Disable Offset Color
-    \ingroup                        pvr_ctx_color
-
-    Enabling offset color calculation allows for "specular" like effects on a
-    per-vertex basis, by providing an additive color in the calculation of the
-    final pixel colors. In vertex types with a "oargb" parameter, that's what it
-    is for.
-
-    \note
-    This must be enabled for bumpmap polygons in order to allow you to
-    specify the parameters in the oargb field of the vertices.
-
-    @{
-*/
-#define PVR_SPECULAR_DISABLE    0   /**< \brief Disable offset colors */
-#define PVR_SPECULAR_ENABLE     1   /**< \brief Enable offset colors */
-/** @} */
-
-
 
 /** \defgroup pvr_txralpha_switch   Alpha Toggle
     \brief                          Enable or Disable Texture Alpha Blending
@@ -552,15 +491,6 @@ static const uint32_t PVR_TXRFMT_STRIDE     __depr("Please use PVR_TXRFMT_X32_ST
 */
 #define PVR_MODIFIER_DISABLE    0   /**< \brief Disable modifier effects */
 #define PVR_MODIFIER_ENABLE     1   /**< \brief Enable modifier effects */
-/** @} */
-
-/** \defgroup pvr_mod_types         Types
-    \brief                          Modifier volume types for PowerVR primitive contexts
-    \ingroup                        pvr_ctx_modvol
-    @{
-*/
-#define PVR_MODIFIER_CHEAP_SHADOW   0
-#define PVR_MODIFIER_NORMAL         1
 /** @} */
 
 /** \defgroup pvr_mod_modes         Modes

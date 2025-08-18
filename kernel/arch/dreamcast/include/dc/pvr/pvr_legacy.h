@@ -49,6 +49,61 @@ __BEGIN_DECLS
 #define PVR_ALPHA_ENABLE        1   /**< \brief Enable alpha blending */
 /** @} */
 
+/** \defgroup pvr_shading_types     Shading Modes
+    \brief                          PowerVR primitive context shading modes
+    \ingroup                        pvr_ctx_attrib
+
+    Each polygon can define how it wants to be shaded, be it with flat or
+    Gouraud shading using these constants in the appropriate place in its
+    pvr_poly_cxt_t.
+
+    @{
+*/
+#define PVR_SHADE_FLAT          0   /**< \brief Use flat shading */
+#define PVR_SHADE_GOURAUD       1   /**< \brief Use Gouraud shading */
+/** @} */
+
+/** \defgroup pvr_colclamp_switch   Clamping Toggle
+    \brief                          Enable or Disable Color Clamping
+    \ingroup                        pvr_ctx_color
+
+    Enabling color clamping will clamp colors between the minimum and maximum
+    values before any sort of fog processing.
+
+    @{
+*/
+#define PVR_CLRCLAMP_DISABLE    0   /**< \brief Disable color clamping */
+#define PVR_CLRCLAMP_ENABLE     1   /**< \brief Enable color clamping */
+/** @} */
+
+/** \defgroup pvr_offset_switch     Offset Toggle
+    \brief                          Enable or Disable Offset Color
+    \ingroup                        pvr_ctx_color
+
+    Enabling offset color calculation allows for "specular" like effects on a
+    per-vertex basis, by providing an additive color in the calculation of the
+    final pixel colors. In vertex types with a "oargb" parameter, that's what it
+    is for.
+
+    \note
+    This must be enabled for bumpmap polygons in order to allow you to
+    specify the parameters in the oargb field of the vertices.
+
+    @{
+*/
+#define PVR_SPECULAR_DISABLE    0   /**< \brief Disable offset colors */
+#define PVR_SPECULAR_ENABLE     1   /**< \brief Enable offset colors */
+/** @} */
+
+/** \defgroup pvr_mod_types         Types
+    \brief                          Modifier volume types for PowerVR primitive contexts
+    \ingroup                        pvr_ctx_modvol
+    @{
+*/
+#define PVR_MODIFIER_CHEAP_SHADOW   0
+#define PVR_MODIFIER_NORMAL         1
+/** @} */
+
 /** \defgroup pvr_bitmasks_legacy   Constants and Masks
     \brief                          Legacy polygon header constants and masks
     \deprecated                     Replaced by \ref pvr_bitmasks
