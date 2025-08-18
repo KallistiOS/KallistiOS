@@ -119,6 +119,33 @@ __BEGIN_DECLS
 #define PVR_BLEND_ENABLE        1   /**< \brief Enable blending */
 /** @} */
 
+/** \defgroup pvr_uv_fmts           U/V Data Format
+    \brief                          U/V data format for PVR textures
+    \ingroup                        pvr_ctx_texture
+    @{
+*/
+#define PVR_UVFMT_32BIT         0   /**< \brief 32-bit floating point U/V */
+#define PVR_UVFMT_16BIT         1   /**< \brief 16-bit floating point U/V */
+/** @} */
+
+/** \defgroup pvr_mod_switch        Toggle
+    \brief                          Enable or Disable Modifier Effects
+    \ingroup                        pvr_ctx_modvol
+    @{
+*/
+#define PVR_MODIFIER_DISABLE    0   /**< \brief Disable modifier effects */
+#define PVR_MODIFIER_ENABLE     1   /**< \brief Enable modifier effects */
+/** @} */
+
+/** \defgroup pvr_depth_switch      Write Toggle
+    \brief                          Enable or Disable Depth Writes.
+    \ingroup                        pvr_ctx_depth
+    @{
+*/
+#define PVR_DEPTHWRITE_ENABLE   0   /**< \brief Update the Z value */
+#define PVR_DEPTHWRITE_DISABLE  1   /**< \brief Do not update the Z value */
+/** @} */
+
 /** \defgroup pvr_bitmasks_legacy   Constants and Masks
     \brief                          Legacy polygon header constants and masks
     \deprecated                     Replaced by \ref pvr_bitmasks

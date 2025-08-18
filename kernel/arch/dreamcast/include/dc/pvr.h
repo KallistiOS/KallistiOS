@@ -137,19 +137,14 @@ typedef struct {
         bool                dst_enable2;    /**< \brief Dest blending mode inside modifier */
     } blend;                                /**< \brief Blending parameters */
     struct {
-        int     color;          /**< \brief Color format in vertex
-                                     \see   pvr_color_fmts */
-        int     uv;             /**< \brief U/V data format in vertex
-                                     \see   pvr_uv_fmts */
-        int     modifier;       /**< \brief Enable or disable modifier effect
-                                     \see   pvr_mod_switch */
-    } fmt;                      /**< \brief Format control */
+        pvr_color_fmts_t    color;      /**< \brief Color format in vertex */
+        bool                uv;         /**< \brief True: 16-bit floating-point U/Vs; False: 32-bit */
+        bool                modifier;   /**< \brief Enable modifier effects */
+    } fmt;                              /**< \brief Format control */
     struct {
-        int     comparison;     /**< \brief Depth comparison mode
-                                     \see pvr_depth_modes */
-        int     write;          /**< \brief Enable or disable depth writes
-                                     \see pvr_depth_switch */
-    } depth;                    /**< \brief Depth comparison/write modes */
+        pvr_depthcmp_mode_t comparison; /**< \brief Depth comparison mode */
+        bool                write;      /**< \brief Enable depth writes */
+    } depth;                            /**< \brief Depth comparison/write modes */
     struct {
         int     enable;         /**< \brief Enable/disable texturing
                                      \see   pvr_txr_switch */
@@ -229,11 +224,9 @@ typedef struct {
         bool                dst_enable; /**< \brief Dest blending enable */
     } blend;
     struct {
-        int     comparison;     /**< \brief Depth comparison mode
-                                     \see pvr_depth_modes */
-        int     write;          /**< \brief Enable or disable depth writes
-                                     \see pvr_depth_switch */
-    } depth;                    /**< \brief Depth comparison/write modes */
+        pvr_depthcmp_mode_t comparison; /**< \brief Depth comparison mode */
+        bool                write;      /**< \brief Enable depth writes */
+    } depth;                            /**< \brief Depth comparison/write modes */
     struct {
         int     enable;         /**< \brief Enable/disable texturing
                                      \see   pvr_txr_switch */
@@ -270,15 +263,6 @@ typedef struct {
     \brief                      Depth attributes for PVR polygon contexts
     \ingroup                    pvr_ctx_attrib
 */
-
-/** \defgroup pvr_depth_switch      Write Toggle
-    \brief                          Enable or Disable Depth Writes.
-    \ingroup                        pvr_ctx_depth
-    @{
-*/
-#define PVR_DEPTHWRITE_ENABLE   0   /**< \brief Update the Z value */
-#define PVR_DEPTHWRITE_DISABLE  1   /**< \brief Do not update the Z value */
-/** @} */
 
 /** \defgroup pvr_ctx_texture Texture
     \brief                    Texture attributes for PVR polygon contexts
@@ -429,42 +413,10 @@ static const uint32_t PVR_TXRFMT_STRIDE     __depr("Please use PVR_TXRFMT_X32_ST
 #define PVR_TXRFMT_4BPP_PAL(x)  ((x) << 21)
 /** @} */
 
-/** \defgroup pvr_color_fmts        Vertex Formats
-    \brief                          Color formats for PowerVR vertices
-    \ingroup                        pvr_ctx_color
-
-    These control how colors are represented in polygon data.
-
-    @{
-*/
-#define PVR_CLRFMT_ARGBPACKED       0   /**< \brief 32-bit integer ARGB */
-#define PVR_CLRFMT_4FLOATS          1   /**< \brief 4 floating point values */
-#define PVR_CLRFMT_INTENSITY        2   /**< \brief Intensity color */
-#define PVR_CLRFMT_INTENSITY_PREV   3   /**< \brief Use last intensity */
-/** @} */
-
-/** \defgroup pvr_uv_fmts           U/V Data Format
-    \brief                          U/V data format for PVR textures
-    \ingroup                        pvr_ctx_texture
-    @{
-*/
-#define PVR_UVFMT_32BIT         0   /**< \brief 32-bit floating point U/V */
-#define PVR_UVFMT_16BIT         1   /**< \brief 16-bit floating point U/V */
-/** @} */
-
 /** \defgroup pvr_ctx_modvol        Modifier Volumes
     \brief                          PowerVR modifier volume polygon context attributes
     \ingroup                        pvr_ctx_attrib
 */
-
-/** \defgroup pvr_mod_switch        Toggle
-    \brief                          Enable or Disable Modifier Effects
-    \ingroup                        pvr_ctx_modvol
-    @{
-*/
-#define PVR_MODIFIER_DISABLE    0   /**< \brief Disable modifier effects */
-#define PVR_MODIFIER_ENABLE     1   /**< \brief Enable modifier effects */
-/** @} */
 
 /** \defgroup pvr_mod_modes         Modes
     \brief                          Modifier volume modes for PowerVR primitive contexts
