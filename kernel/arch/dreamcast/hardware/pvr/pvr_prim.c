@@ -104,7 +104,7 @@ void pvr_poly_compile(pvr_poly_hdr_t *dst, const pvr_poly_cxt_t *src) {
 /* Create a colored polygon context with parameters similar to
    the old "ta" function `ta_poly_hdr_col' */
 void pvr_poly_cxt_col(pvr_poly_cxt_t *dst, pvr_list_t list) {
-    int alpha;
+    bool alpha;
 
     /* Start off blank */
     memset(dst, 0, sizeof(pvr_poly_cxt_t));
@@ -120,13 +120,13 @@ void pvr_poly_cxt_col(pvr_poly_cxt_t *dst, pvr_list_t list) {
     dst->gen.culling = PVR_CULLING_CCW;
     dst->txr.enable = PVR_TEXTURE_DISABLE;
 
+    dst->gen.alpha = alpha;
+
     if(!alpha) {
-        dst->gen.alpha = PVR_ALPHA_DISABLE;
         dst->blend.src = PVR_BLEND_ONE;
         dst->blend.dst = PVR_BLEND_ZERO;
     }
     else {
-        dst->gen.alpha = PVR_ALPHA_ENABLE;
         dst->blend.src = PVR_BLEND_SRCALPHA;
         dst->blend.dst = PVR_BLEND_INVSRCALPHA;
     }
@@ -142,7 +142,7 @@ void pvr_poly_cxt_col(pvr_poly_cxt_t *dst, pvr_list_t list) {
 void pvr_poly_cxt_txr(pvr_poly_cxt_t *dst, pvr_list_t list,
                       int textureformat, int tw, int th, pvr_ptr_t textureaddr,
                       int filtering) {
-    int alpha;
+    bool alpha;
 
     /* Start off blank */
     memset(dst, 0, sizeof(pvr_poly_cxt_t));
@@ -158,15 +158,15 @@ void pvr_poly_cxt_txr(pvr_poly_cxt_t *dst, pvr_list_t list,
     dst->gen.culling = PVR_CULLING_CCW;
     dst->txr.enable = PVR_TEXTURE_ENABLE;
 
+    dst->gen.alpha = alpha;
+
     if(!alpha) {
-        dst->gen.alpha = PVR_ALPHA_DISABLE;
         dst->txr.alpha = PVR_TXRALPHA_ENABLE;
         dst->blend.src = PVR_BLEND_ONE;
         dst->blend.dst = PVR_BLEND_ZERO;
         dst->txr.env = PVR_TXRENV_MODULATE;
     }
     else {
-        dst->gen.alpha = PVR_ALPHA_ENABLE;
         dst->txr.alpha = PVR_TXRALPHA_ENABLE;
         dst->blend.src = PVR_BLEND_SRCALPHA;
         dst->blend.dst = PVR_BLEND_INVSRCALPHA;
@@ -189,7 +189,7 @@ void pvr_poly_cxt_txr(pvr_poly_cxt_t *dst, pvr_list_t list,
 
 /* Create an untextured sprite context. */
 void pvr_sprite_cxt_col(pvr_sprite_cxt_t *dst, pvr_list_t list) {
-    int alpha;
+    bool alpha;
 
     /* Start off blank */
     memset(dst, 0, sizeof(pvr_sprite_cxt_t));
@@ -202,13 +202,13 @@ void pvr_sprite_cxt_col(pvr_sprite_cxt_t *dst, pvr_list_t list) {
     dst->gen.culling = PVR_CULLING_CCW;
     dst->txr.enable = PVR_TEXTURE_DISABLE;
 
+    dst->gen.alpha = alpha;
+
     if(!alpha) {
-        dst->gen.alpha = PVR_ALPHA_DISABLE;
         dst->blend.src = PVR_BLEND_ONE;
         dst->blend.dst = PVR_BLEND_ZERO;
     }
     else {
-        dst->gen.alpha = PVR_ALPHA_ENABLE;
         dst->blend.src = PVR_BLEND_SRCALPHA;
         dst->blend.dst = PVR_BLEND_INVSRCALPHA;
     }
@@ -223,7 +223,7 @@ void pvr_sprite_cxt_col(pvr_sprite_cxt_t *dst, pvr_list_t list) {
 void pvr_sprite_cxt_txr(pvr_sprite_cxt_t *dst, pvr_list_t list,
                         int textureformat, int tw, int th, pvr_ptr_t textureaddr,
                         int filtering) {
-    int alpha;
+    bool alpha;
 
     /* Start off blank */
     memset(dst, 0, sizeof(pvr_sprite_cxt_t));
@@ -235,15 +235,15 @@ void pvr_sprite_cxt_txr(pvr_sprite_cxt_t *dst, pvr_list_t list,
     dst->depth.write = PVR_DEPTHWRITE_ENABLE;
     dst->gen.culling = PVR_CULLING_CCW;
 
+    dst->gen.alpha = alpha;
+
     if(!alpha) {
-        dst->gen.alpha = PVR_ALPHA_DISABLE;
         dst->txr.alpha = PVR_TXRALPHA_ENABLE;
         dst->blend.src = PVR_BLEND_ONE;
         dst->blend.dst = PVR_BLEND_ZERO;
         dst->txr.env = PVR_TXRENV_MODULATE;
     }
     else {
-        dst->gen.alpha = PVR_ALPHA_ENABLE;
         dst->txr.alpha = PVR_TXRALPHA_ENABLE;
         dst->blend.src = PVR_BLEND_SRCALPHA;
         dst->blend.dst = PVR_BLEND_INVSRCALPHA;
@@ -467,7 +467,7 @@ void pvr_poly_mod_compile(pvr_poly_mod_hdr_t *dst, const pvr_poly_cxt_t *src) {
 
 /* Create a colored polygon context for polygons affected by modifier volumes */
 void pvr_poly_cxt_col_mod(pvr_poly_cxt_t *dst, pvr_list_t list) {
-    int alpha;
+    bool alpha;
 
     /* Start off blank */
     memset(dst, 0, sizeof(pvr_poly_cxt_t));
@@ -486,19 +486,18 @@ void pvr_poly_cxt_col_mod(pvr_poly_cxt_t *dst, pvr_list_t list) {
     dst->txr.enable = PVR_TEXTURE_DISABLE;
     dst->txr2.enable = PVR_TEXTURE_DISABLE;
 
+    dst->gen.alpha = alpha;
+    dst->gen.alpha2 = alpha;
+
     if(!alpha) {
-        dst->gen.alpha = PVR_ALPHA_DISABLE;
         dst->blend.src = PVR_BLEND_ONE;
         dst->blend.dst = PVR_BLEND_ZERO;
-        dst->gen.alpha2 = PVR_ALPHA_DISABLE;
         dst->blend.src2 = PVR_BLEND_ONE;
         dst->blend.dst2 = PVR_BLEND_ZERO;
     }
     else {
-        dst->gen.alpha = PVR_ALPHA_ENABLE;
         dst->blend.src = PVR_BLEND_SRCALPHA;
         dst->blend.dst = PVR_BLEND_INVSRCALPHA;
-        dst->gen.alpha2 = PVR_ALPHA_ENABLE;
         dst->blend.src2 = PVR_BLEND_SRCALPHA;
         dst->blend.dst2 = PVR_BLEND_INVSRCALPHA;
     }
@@ -520,7 +519,7 @@ void pvr_poly_cxt_txr_mod(pvr_poly_cxt_t *dst, pvr_list_t list,
                           pvr_ptr_t textureaddr, int filtering,
                           int textureformat2, int tw2, int th2,
                           pvr_ptr_t textureaddr2, int filtering2) {
-    int alpha;
+    bool alpha;
 
     /* Start off blank */
     memset(dst, 0, sizeof(pvr_poly_cxt_t));
@@ -539,25 +538,24 @@ void pvr_poly_cxt_txr_mod(pvr_poly_cxt_t *dst, pvr_list_t list,
     dst->txr.enable = PVR_TEXTURE_ENABLE;
     dst->txr2.enable = PVR_TEXTURE_ENABLE;
 
+    dst->gen.alpha = alpha;
+    dst->gen.alpha2 = alpha;
+
     if(!alpha) {
-        dst->gen.alpha = PVR_ALPHA_DISABLE;
         dst->txr.alpha = PVR_TXRALPHA_ENABLE;
         dst->blend.src = PVR_BLEND_ONE;
         dst->blend.dst = PVR_BLEND_ZERO;
         dst->txr.env = PVR_TXRENV_MODULATE;
-        dst->gen.alpha2 = PVR_ALPHA_DISABLE;
         dst->txr2.alpha = PVR_TXRALPHA_ENABLE;
         dst->blend.src2 = PVR_BLEND_ONE;
         dst->blend.dst2 = PVR_BLEND_ZERO;
         dst->txr2.env = PVR_TXRENV_MODULATE;
     }
     else {
-        dst->gen.alpha = PVR_ALPHA_ENABLE;
         dst->txr.alpha = PVR_TXRALPHA_ENABLE;
         dst->blend.src = PVR_BLEND_SRCALPHA;
         dst->blend.dst = PVR_BLEND_INVSRCALPHA;
         dst->txr.env = PVR_TXRENV_MODULATEALPHA;
-        dst->gen.alpha2 = PVR_ALPHA_ENABLE;
         dst->txr2.alpha = PVR_TXRALPHA_ENABLE;
         dst->blend.src2 = PVR_BLEND_SRCALPHA;
         dst->blend.dst2 = PVR_BLEND_INVSRCALPHA;

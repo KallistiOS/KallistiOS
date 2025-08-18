@@ -36,6 +36,19 @@ __BEGIN_DECLS
     @{
 */
 
+/** \defgroup pvr_alpha_switch      Alpha Toggle
+    \brief                          Enable or Disable Alpha Blending
+    \ingroup                        pvr_blend
+
+    This causes the alpha value in the vertex color to be paid attention to. It
+    really only makes sense to enable this for translucent or punch-thru polys.
+
+    @{
+*/
+#define PVR_ALPHA_DISABLE       0   /**< \brief Disable alpha blending */
+#define PVR_ALPHA_ENABLE        1   /**< \brief Enable alpha blending */
+/** @} */
+
 /** \defgroup pvr_bitmasks_legacy   Constants and Masks
     \brief                          Legacy polygon header constants and masks
     \deprecated                     Replaced by \ref pvr_bitmasks

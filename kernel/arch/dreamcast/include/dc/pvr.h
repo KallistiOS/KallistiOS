@@ -114,8 +114,7 @@ typedef struct {
     int     list_type;          /**< \brief Primitive list
                                      \see   pvr_lists */
     struct {
-        int     alpha;          /**< \brief Enable or disable alpha outside modifier
-                                     \see   pvr_alpha_switch */
+        bool    alpha;          /**< \brief Enable alpha outside modifier */
         int     shading;        /**< \brief Shading type
                                      \see   pvr_shading_types */
         int     fog_type;       /**< \brief Fog type outside modifier
@@ -129,8 +128,7 @@ typedef struct {
         int     modifier_mode;  /**< \brief Modifier mode */
         int     specular;       /**< \brief Offset color enable/disable outside modifier
                                      \see   pvr_offset_switch */
-        int     alpha2;         /**< \brief Enable/disable alpha inside modifier
-                                     \see   pvr_alpha_switch */
+        bool    alpha2;         /**< \brief Enable alpha inside modifier */
         int     fog_type2;      /**< \brief Fog type inside modifier
                                      \see   pvr_fog_types */
         int     color_clamp2;   /**< \brief Color clamp enable/disable inside modifier
@@ -233,8 +231,7 @@ typedef struct {
     int     list_type;          /**< \brief Primitive list
                                      \see   pvr_lists */
     struct {
-        int     alpha;          /**< \brief Enable or disable alpha
-                                     \see   pvr_alpha_switch */
+        bool    alpha;          /**< \brief Enable alpha */
         int     fog_type;       /**< \brief Fog type
                                      \see   pvr_fog_types */
         int     culling;        /**< \brief Culling mode
@@ -389,18 +386,7 @@ typedef struct {
 #define PVR_SPECULAR_ENABLE     1   /**< \brief Enable offset colors */
 /** @} */
 
-/** \defgroup pvr_alpha_switch      Alpha Toggle
-    \brief                          Enable or Disable Alpha Blending
-    \ingroup                        pvr_blend
 
-    This causes the alpha value in the vertex color to be paid attention to. It
-    really only makes sense to enable this for translucent or punch-thru polys.
-
-    @{
-*/
-#define PVR_ALPHA_DISABLE       0   /**< \brief Disable alpha blending */
-#define PVR_ALPHA_ENABLE        1   /**< \brief Enable alpha blending */
-/** @} */
 
 /** \defgroup pvr_txralpha_switch   Alpha Toggle
     \brief                          Enable or Disable Texture Alpha Blending
