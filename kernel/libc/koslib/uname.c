@@ -10,10 +10,10 @@
 #include <string.h>
 #include <sys/utsname.h>
 
-#include "banner.h"
+#include <arch/arch.h>
+#include "../../banner.h"
 
 #define UNAME_KERNEL "KallistiOS"
-#define UNAME_MACHINE "Dreamcast"
 
 int uname(struct utsname *n) {
     if(!n) {
@@ -25,7 +25,7 @@ int uname(struct utsname *n) {
     strcpy(n->sysname, UNAME_KERNEL);
     strcpy(n->release, kern_version);
     snprintf(n->version, 64, "%s %s", UNAME_KERNEL, kern_version);
-    strcpy(n->machine, UNAME_MACHINE);
+    strcpy(n->machine, ARCH_NAME);
 
     return 0;
 }

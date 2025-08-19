@@ -9,6 +9,11 @@ relver="$KOS_VERSION"
 
 printf '"KallistiOS ' >> banner.h
 printf "v$relver" >> banner.h
+printf ' [' >> banner.h
+printf "$KOS_ARCH" >> banner.h
+printf '/' >> banner.h
+printf "$KOS_SUBARCH" >> banner.h
+printf ']' >> banner.h
 printf '\\n"\n' >> banner.h
 if [ -d "$KOS_BASE/.git" ]; then
     printf '"  Git revision: ' >> banner.h
@@ -54,3 +59,4 @@ else
 fi
 
 printf '";\n' >> banner.h
+

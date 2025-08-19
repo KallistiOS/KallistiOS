@@ -9,35 +9,19 @@
 # target processor. Other routines may be present as well, but
 # that minimum set must be present.
 
-COPYOBJS = banner.o cache.o entry.o irq.o init.o mm.o panic.o
+COPYOBJS = cache.o entry.o irq.o init.o mm.o panic.o
 COPYOBJS += rtc.o timer.o perfctr.o perf_monitor.o
 COPYOBJS += init_flags_default.o
 COPYOBJS += mmu.o itlb.o
 COPYOBJS += exec.o execasm.o stack.o gdb_stub.o thdswitch.o tls_static.o arch_exports.o
-COPYOBJS += uname.o
 OBJS = $(COPYOBJS) startup.o
 SUBDIRS =
 
 myall: $(OBJS)
 	-cp $(COPYOBJS) $(KOS_BASE)/kernel/build/
 	-cp startup.o $(KOS_BASE)/lib/$(KOS_ARCH)/_kos_startup.o
-	-rm banner.h authors.h banner.o uname.o
 
 include $(KOS_BASE)/Makefile.prefab
-
-uname.o: uname.c
-
-uname.c: banner.h
-
-banner.o: banner.c
-
-banner.c: banner.h authors.h
-
-banner.h: make_banner.sh
-	./make_banner.sh
-
-authors.h: make_authors.awk
-	awk -f make_authors.awk < ../../../../AUTHORS > authors.h
 
 arch_exports.o: arch_exports.c
 
@@ -45,9 +29,6 @@ arch_exports.c: ../exports-$(KOS_SUBARCH).txt
 	$(KOS_BASE)/utils/genexports/genexports.sh ../exports-$(KOS_SUBARCH).txt arch_exports.c arch_symtab
 
 clean:
-	-rm -f banner.h authors.h
 	-rm -f $(OBJS)
 	-rm -f arch_exports.c
 	-rm -f arch_exports.c
-
-.PHONY: banner.h authors.h
