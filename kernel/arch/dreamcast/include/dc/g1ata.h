@@ -34,7 +34,7 @@
 #ifndef __DC_G1ATA_H
 #define __DC_G1ATA_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 #include <stdint.h>

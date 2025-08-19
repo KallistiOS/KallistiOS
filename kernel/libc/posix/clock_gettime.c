@@ -9,8 +9,6 @@
 #include <arch/timer.h>
 #include <arch/rtc.h>
 
-#include <dc/perfctr.h>
-
 #include <time.h>
 #include <errno.h>
 #include <assert.h>
@@ -74,30 +72,15 @@ int clock_gettime(clockid_t clk_id, struct timespec *ts) {
             ts->tv_nsec = nsecs;
             return 0;
 
-        /* Use the performance counters */
+        /* Use the sum of all kthread-specific CPU time counters */
         case CLOCK_PROCESS_CPUTIME_ID:
-            /* Check whether they are configured properly
-               as an interval timer. */
-            if(!perf_cntr_timer_enabled()) {
-                errno = EINVAL;
-                return -1;
-            }
-
-            ns64 = perf_cntr_timer_ns();
-            div_result = lldiv(ns64, 1000000000);
+            div_result = lldiv(thd_get_total_cpu_time(), 1000000000);
             ts->tv_sec = div_result.quot;
             ts->tv_nsec = div_result.rem;
             return 0;
 
         /* Use the kthread-specific CPU time counters */
         case CLOCK_THREAD_CPUTIME_ID:
-            /* Check whether they are configured properly
-               as an interval timer. */
-            if(!perf_cntr_timer_enabled()) {
-                errno = EINVAL;
-                return -1;
-            }
-
             ns64 = thd_get_cpu_time(thd_get_current());
             div_result = lldiv(ns64, 1000000000);
             ts->tv_sec = div_result.quot;

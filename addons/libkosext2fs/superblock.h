@@ -95,7 +95,7 @@ typedef struct ext2_superblock {
     uint32_t s_first_meta_bg;
 
     uint8_t unused[760];
-} __attribute__((packed)) ext2_superblock_t;
+} __packed ext2_superblock_t;
 
 /* s_state values */
 #define EXT2_VALID_FS   1

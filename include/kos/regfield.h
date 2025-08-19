@@ -16,7 +16,7 @@
 #ifndef __KOS_REGFIELD_H
 #define __KOS_REGFIELD_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 /** \brief  Create a mask with a bit set

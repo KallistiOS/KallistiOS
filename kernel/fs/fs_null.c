@@ -10,7 +10,6 @@
 #include <stdint.h>
 #include <errno.h>
 
-#include <arch/types.h>
 #include <kos/mutex.h>
 #include <kos/fs_null.h>
 #include <sys/queue.h>
@@ -105,7 +104,7 @@ static int null_close(void *hnd) {
 static ssize_t null_read(void *hnd, void *buffer, size_t cnt) {
     (void)buffer;
     (void)cnt;
-    
+
     null_fh_t *fh;
 
     /* Check the handle */
@@ -244,17 +243,14 @@ static vfs_handler_t vh = {
     null_fstat
 };
 
-int fs_null_init(void) {
-    int rv = 0;
+void fs_null_init(void) {
     TAILQ_INIT(&null_fh);
     mutex_init(&fh_mutex, MUTEX_TYPE_NORMAL);
 
     nmmgr_handler_add(&vh.nmmgr);
-
-    return rv;
 }
 
-int fs_null_shutdown(void) {
+void fs_null_shutdown(void) {
     null_fh_t * c, * n;
 
     mutex_lock(&fh_mutex);
@@ -268,7 +264,5 @@ int fs_null_shutdown(void) {
     mutex_destroy(&fh_mutex);
 
     nmmgr_handler_remove(&vh.nmmgr);
-
-    return 0;
 }
 

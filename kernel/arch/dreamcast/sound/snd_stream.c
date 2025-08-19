@@ -4,7 +4,7 @@
    Copyright (C) 2000, 2001, 2002, 2003, 2004 Megan Potter
    Copyright (C) 2002 Florian Schulze
    Copyright (C) 2020 Lawrence Sebald
-   Copyright (C) 2023, 2024 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024, 2025 Ruslan Rostovtsev
    Copyright (C) 2024 Stefanos Kornilios Mitsis Poiitidis
 
    SH-4 support routines for SPU streaming sound driver
@@ -17,6 +17,7 @@
 #include <errno.h>
 #include <sys/queue.h>
 
+#include <kos/dbglog.h>
 #include <kos/mutex.h>
 #include <arch/cache.h>
 #include <arch/timer.h>
@@ -109,7 +110,8 @@ static uint32_t *sep_buffer[2] = {NULL, NULL};
 
 static mutex_t stream_mutex = MUTEX_INITIALIZER;
 
-static int max_channels = 2;
+static int max_channels = 0;
+static size_t max_buffer_size = 0;
 
 /* Check an incoming handle */
 #define CHECK_HND(x) do { \
@@ -216,7 +218,7 @@ static void snd_pcm16_split_unaligned(void *buffer, void *left, void *right, siz
         left_val |= (data & 0xffff0000);
         right_val |= (data & 0xffff) << 16;
 
-        if(((uintptr_t)left_ptr & 31) == 0) {
+        if(__is_aligned(left_ptr, 32)) {
             dcache_alloc_block(left_ptr++, left_val);
             dcache_alloc_block(right_ptr++, right_val);
         }
@@ -315,32 +317,31 @@ void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t 
     g2_unlock(ctx);
 }
 
-
-/* Prefill buffers -- implicitly called by snd_stream_start() */
-void snd_stream_prefill(snd_stream_hnd_t hnd) {
-    strchan_t *stream;
-
-    CHECK_HND(hnd);
-    stream = &streams[hnd];
-
-    if(!stream->get_data && !stream->req_data) {
-        return;
-    }
-
-    snd_stream_fill(hnd, 0, stream->buffer_size / 2);
-    snd_stream_fill(hnd, stream->buffer_size / 2, stream->buffer_size / 2);
-
-    /* Start playing from the beginning */
-    stream->last_write_pos = 0;
-}
-
 /* Initialize stream system */
 int snd_stream_init(void) {
     return snd_stream_init_ex(2, SND_STREAM_BUFFER_MAX);
 }
 
 int snd_stream_init_ex(int channels, size_t buffer_size) {
+
+    if(max_channels) {
+        if(channels > max_channels) {
+            dbglog(DBG_ERROR, "snd_stream_init_ex(): already initialized"
+                " with %d channels, but %d requested\n",
+                max_channels, channels);
+            return -1;
+        }
+        else if(max_buffer_size && buffer_size > max_buffer_size) {
+            dbglog(DBG_ERROR, "snd_stream_init_ex(): already initialized"
+                " with %d buffer size, but %d requested\n",
+                max_buffer_size, buffer_size);
+            return -1;
+        }
+        return 0;
+    }
+
     max_channels = channels;
+    max_buffer_size = buffer_size;
 
     if(buffer_size > 0) {
         /* Create stereo separation buffers. This buffer size for each channel.
@@ -480,6 +481,9 @@ void snd_stream_shutdown(void) {
         sep_buffer[0] = NULL;
         sep_buffer[1] = NULL;
     }
+
+    max_channels = 0;
+    max_buffer_size = 0;
 }
 
 /* Enable / disable stream queueing */
@@ -534,8 +538,12 @@ static void snd_stream_start_type(snd_stream_hnd_t hnd, uint32_t type, uint32_t 
         }
     }
 
-    /* Prefill buffers */
-    snd_stream_prefill(hnd);
+    /* As long as there's a way to get/request data, prefill buffers */
+    snd_stream_fill(hnd, 0, streams[hnd].buffer_size / 2);
+    snd_stream_fill(hnd, streams[hnd].buffer_size / 2, streams[hnd].buffer_size / 2);
+
+    /* Start playing from the beginning */
+    streams[hnd].last_write_pos = 0;
 
     /* Make sure these are sync'd (and/or delayed) */
     snd_sh4_to_aica_stop();
@@ -689,6 +697,12 @@ static size_t snd_stream_fill(snd_stream_hnd_t hnd, uint32_t offset, size_t size
     int got_bytes = 0;
     void *data = NULL;
 
+    /* The stream hasn't been initted or is invalid. */
+    CHECK_HND(hnd);
+
+    /* The stream has been initted but not allocated. */
+    assert(chans != 0);
+
     if(stream->req_data) {
         got_bytes = stream->req_data(hnd,
             (left | SPU_RAM_UNCACHED_BASE),
@@ -729,13 +743,13 @@ static size_t snd_stream_fill(snd_stream_hnd_t hnd, uint32_t offset, size_t size
         if(got_bytes & 3) {
             got_bytes = (got_bytes + 4) & ~3;
         }
-        if(((uintptr_t)data & 31) && sep_buffer[0] == NULL) {
+        if(!__is_aligned(data, 32) && sep_buffer[0] == NULL) {
             spu_memload_sq(left, data, got_bytes);
             return got_bytes;
         }
         mutex_lock(&stream_mutex);
 
-        if((uintptr_t)data & 31) {
+        if(!__is_aligned(data, 32)) {
             memcpy(sep_buffer[0], data, got_bytes);
             data = sep_buffer[0];
         }
@@ -752,7 +766,7 @@ static size_t snd_stream_fill(snd_stream_hnd_t hnd, uint32_t offset, size_t size
     mutex_lock(&stream_mutex);
 
     if(stream->bitsize == 16) {
-        if((uintptr_t)data & 31) {
+        if(!__is_aligned(data, 32)) {
             snd_pcm16_split_unaligned(data, sep_buffer[0], sep_buffer[1], got_bytes);
         }
         else {
@@ -787,6 +801,9 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
     if(!stream->initted || (!stream->get_data && !stream->req_data)) {
         return -1;
     }
+
+    /* The stream has been initted but not started, so we don't know stereo/mono. */
+    assert(stream->channels != 0);
 
     /* Get channels position */
     current_play_pos = g2_read_32(SPU_RAM_UNCACHED_BASE +

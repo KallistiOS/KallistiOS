@@ -46,13 +46,13 @@ struct InputBuf {
 } input_buf;
 
 // Globals for cntroller input
-//static uint32 *btn_buffer;
-//static uint32 *buf_index;
+//static uint32_t *btn_buffer;
+//static uint32_t *buf_index;
 
 static mrb_value btn_mrb_buffer;
 
 // buf has to be BUFSIZE elements at least
-void *read_buttons() {
+void *read_buttons(void*) {
   while(1) {
     input_buf.index = (input_buf.index + 1) % BUFSIZE;
     //printf("index: %" PRIu32 "\n", buf_index);

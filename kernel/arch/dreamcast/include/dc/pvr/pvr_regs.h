@@ -27,8 +27,10 @@
 #ifndef __DC_PVR_PVR_REGS_H
 #define __DC_PVR_PVR_REGS_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
+
+#include <kos/platform.h>
 
 /**** Register macros ***************************************************/
 
@@ -173,7 +175,8 @@ __BEGIN_DECLS
 #define PVR_RAM_BASE        0xa5000000  /**< \brief VRAM 32-bit, P2 area, PVR->VRAM */
 #define PVR_RAM_INT_BASE    0xa4000000  /**< \brief VRAM 64-bit, P2 area, PVR->VRAM */
 
-#define PVR_RAM_SIZE        (8*1024*1024)   /**< \brief RAM size in bytes */
+#define PVR_RAM_SIZE_MB     (KOS_PLATFORM_IS_NAOMI ? 16 : 8)    /**< \brief RAM size in MiB */
+#define PVR_RAM_SIZE        (PVR_RAM_SIZE_MB*1024*1024)         /**< \brief RAM size in bytes */
 
 #define PVR_RAM_TOP         (PVR_RAM_BASE + PVR_RAM_SIZE)       /**< \brief Top of raw PVR RAM */
 #define PVR_RAM_INT_TOP     (PVR_RAM_INT_BASE + PVR_RAM_SIZE)   /**< \brief Top of int PVR RAM */
@@ -207,6 +210,13 @@ __BEGIN_DECLS
 #define PVR_TA_INIT_GO      0x80000000  /**< \brief Write to the PVR_TA_INIT register to confirm settings */
 /** @} */
 
+/** \defgroup pvr_tex_mod   PVR_TEXTURE_MODULO Values
+    \brief                  Definitions for the contents of the PVR_TEXTURE_MODULO register.
+    \ingroup                pvr_registers
+    @{
+*/
+#define PVR_TXR_STRIDE_MULT GENMASK(4, 0)   /**< \brief Bottom 5 bits contain the size when using PVR_TXRFMT_X32_STRIDE */
+/** @} */
 
 __END_DECLS
 

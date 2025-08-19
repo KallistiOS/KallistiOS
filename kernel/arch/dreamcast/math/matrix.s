@@ -218,6 +218,78 @@ _mat_apply:
         rts
         fmov.s      @r15+, fr15
 
+.globl _mat_multiply
+_mat_multiply:
+    fmov.s          fr15, @-r15
+    fmov.s          fr14, @-r15
+    fmov.s          fr13, @-r15
+    fmov.s          fr12, @-r15
+    fschg
+!   nop
+
+    fmov        @r5+,dr0 ! Load up first row.
+!   nop
+    fmov        @r5+, dr2
+!   nop
+    fmov        @r5+, dr4 ! Load up second row.
+!   nop
+    fmov        @r5+, dr6
+!   nop
+
+    ftrv        xmtrx, fv0
+!   nop
+
+    fmov        @r5+, dr8
+!   nop
+    fmov        @r5+, dr10
+!   nop
+
+!   nop nop
+
+    ftrv        xmtrx, fv4
+!   nop
+
+    fmov        @r5+, dr12
+!   nop
+    fmov        @r5+, dr14
+!   nop
+
+!   nop nop
+
+    ftrv        xmtrx, fv8
+!   nop
+
+!   nop nop
+!   nop nop
+!   nop nop
+
+    ftrv        xmtrx, fv12
+!   nop
+
+    fmov        dr0, @r4
+    add         #8, r4
+    fmov        dr2, @r4
+    add         #8, r4
+    fmov        dr4, @r4
+    add         #8, r4
+    fmov        dr6, @r4
+    add         #8, r4
+    fmov        dr8, @r4
+    add         #8, r4
+    fmov        dr10, @r4
+    add         #8, r4
+    fmov        dr12, @r4
+    add         #8, r4
+    fmov        dr14, @r4
+!   nop
+
+    fschg
+    fmov.s      @r15+, fr12
+    fmov.s      @r15+, fr13
+    fmov.s      @r15+, fr14
+    rts
+    fmov.s      @r15+, fr15
+
 
 ! Transform zero or more sets of vectors using the current internal
 ! matrix. Each vector is three floats long.

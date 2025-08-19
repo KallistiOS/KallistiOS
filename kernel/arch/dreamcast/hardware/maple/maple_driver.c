@@ -8,20 +8,38 @@
 #include <stdlib.h>
 #include <dc/maple.h>
 
-static maple_attach_callback_t attach_callback = NULL;
-static uint32 attach_callback_functions = 0;
-
-static maple_detach_callback_t detach_callback = NULL;
-static uint32 detach_callback_functions = 0;
-
 void maple_attach_callback(uint32 functions, maple_attach_callback_t cb) {
-    attach_callback_functions = functions;
-    attach_callback = cb;
+    maple_driver_t *i;
+
+    if(!functions)
+        functions = 0xffffffff;
+
+    LIST_FOREACH(i, &maple_state.driver_list, drv_list) {
+        if(i->functions & functions) {
+            i->user_attach = cb;
+            functions &= ~i->functions;
+
+            if(!functions)
+                break;
+        }
+    }
 }
 
 void maple_detach_callback(uint32 functions, maple_detach_callback_t cb) {
-    detach_callback_functions = functions;
-    detach_callback = cb;
+    maple_driver_t *i;
+
+    if(!functions)
+        functions = 0xffffffff;
+
+    LIST_FOREACH(i, &maple_state.driver_list, drv_list) {
+        if(i->functions & functions) {
+            i->user_detach = cb;
+            functions &= ~i->functions;
+
+            if(!functions)
+                break;
+        }
+    }
 }
 
 /* Register a maple device driver; do this before maple_init() */
@@ -98,6 +116,9 @@ int maple_driver_attach(maple_frame_t *det) {
         }
     }
 
+    if(!dev)
+        return -1;
+
     /* Did we get any hits? */
     if(!attached) {
         free(dev->status);
@@ -111,11 +132,8 @@ int maple_driver_attach(maple_frame_t *det) {
     dev->status_valid = 0;
     dev->valid = true;
 
-    if(!(attach_callback_functions) || (dev->info.functions & attach_callback_functions)) {
-        if(attach_callback) {
-            attach_callback(dev);
-        }
-    }
+    if(i->user_attach)
+        i->user_attach(dev);
 
     return 0;
 }
@@ -129,16 +147,14 @@ int maple_driver_detach(int p, int u) {
 
     dev->valid = false;
 
-    if(dev->drv && dev->drv->detach)
-        dev->drv->detach(dev->drv, dev);
+    if(dev->drv) {
+        if(dev->drv->user_detach)
+            dev->drv->user_detach(dev);
+        if(dev->drv->detach)
+            dev->drv->detach(dev->drv, dev);
+    }
 
     dev->status_valid = 0;
-
-    if(!(detach_callback_functions) || (dev->info.functions & detach_callback_functions)) {
-        if(detach_callback) {
-            detach_callback(dev);
-        }
-    }
 
     if(dev->drv->status_size) {
         free(dev->status);

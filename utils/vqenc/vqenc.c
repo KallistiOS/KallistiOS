@@ -18,6 +18,7 @@
 #include <math.h>
 #include <unistd.h>
 #include <errno.h>
+#include <inttypes.h>
 #include "get_image.h"
 #include "vq_internal.h"
 #include "vq_types.h"
@@ -572,7 +573,7 @@ static fquad_t *create_downscaled_map(int res, fquad_t *oneup) {
     fquad_t *q, *larger, tmp;
 
     if(use_debug) {
-        printf("create_downscaled_map(%d %lx)\n", res, (uintptr_t)oneup);
+        printf("create_downscaled_map(%d %" PRIxPTR ")\n", res, (uintptr_t)oneup);
     }
 
     /* each quad in the lower resolution is an average of

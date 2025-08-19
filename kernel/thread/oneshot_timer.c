@@ -21,7 +21,7 @@ static void oneshot_timer_timeout(void *d) {
     int ret;
 
     ret = genwait_wait(timer, "One-shot timer", timer->timeout_ms, NULL);
-    if (ret < 0)
+    if(ret < 0)
         timer->cb(timer->data);
 }
 
@@ -41,7 +41,7 @@ oneshot_timer_t *oneshot_timer_create(void (*cb)(void *), void *data,
     oneshot_timer_setup(timer, cb, data, timeout_ms);
 
     timer->worker = thd_worker_create(oneshot_timer_timeout, timer);
-    if (!timer->worker) {
+    if(!timer->worker) {
         free(timer);
         return NULL;
     }

@@ -18,7 +18,7 @@
 #ifndef __NETDB_H
 #define __NETDB_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 
 __BEGIN_DECLS
 

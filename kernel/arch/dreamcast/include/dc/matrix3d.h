@@ -19,7 +19,7 @@
 #ifndef __KOS_MATRIX3D_H
 #define __KOS_MATRIX3D_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 #include <dc/matrix.h>

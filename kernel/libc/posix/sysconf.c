@@ -2,6 +2,7 @@
 
    sysconf.c
    Copyright (C) 2023, 2024, 2025 Falco Girgis
+   Copyright (C) 2025 Eric Fradella
 */
 
 #include <arch/arch.h>
@@ -51,22 +52,31 @@ long sysconf(int name) {
             return PAGESIZE;
 
         case _SC_LEVEL1_ICACHE_SIZE:
-            return 8 * 1024;
+            return CACHE_L1_ICACHE_SIZE;
 
         case _SC_LEVEL1_ICACHE_ASSOC:
-            return 1;
+            return CACHE_L1_ICACHE_ASSOC;
 
         case _SC_LEVEL1_ICACHE_LINESIZE:
-            return CPU_CACHE_BLOCK_SIZE;
+            return CACHE_L1_ICACHE_LINESIZE;
 
         case _SC_LEVEL1_DCACHE_SIZE:
-            return 16 * 1024;
+            return CACHE_L1_DCACHE_SIZE;
 
         case _SC_LEVEL1_DCACHE_ASSOC:
-            return 1;
+            return CACHE_L1_DCACHE_ASSOC;
 
         case _SC_LEVEL1_DCACHE_LINESIZE:
-            return CPU_CACHE_BLOCK_SIZE;
+            return CACHE_L1_DCACHE_LINESIZE;
+
+        case _SC_LEVEL2_CACHE_SIZE:
+            return CACHE_L2_CACHE_SIZE;
+
+        case _SC_LEVEL2_CACHE_ASSOC:
+            return CACHE_L2_CACHE_ASSOC;
+
+        case _SC_LEVEL2_CACHE_LINESIZE:
+            return CACHE_L2_CACHE_LINESIZE;
 
         case _SC_SEM_NSEMS_MAX:
             return UINT32_MAX;

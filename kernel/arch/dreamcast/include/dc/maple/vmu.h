@@ -27,10 +27,9 @@
 #ifndef __DC_MAPLE_VMU_H
 #define __DC_MAPLE_VMU_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
 #include <dc/maple.h>
 #include <kos/regfield.h>
 
@@ -190,12 +189,12 @@ int vmu_get_custom_color(maple_device_t *dev, uint8_t *red, uint8_t *green, uint
     icon by providing custom icons for both the DC BIOS menu and the VMU's LCD screen.
 
     \param  dev             The device to change the icon shape of.
-    \param  icon_shape      One of the values found in \ref vmu_icons.
+    \param  icon_shape      One of the values found in \ref bfont_vmu_icon_t.
 
     \retval 0               On success
     \retval -1              On failure
 
-    \sa vmu_icons, vmu_get_icon_shape
+    \sa bfont_vmu_icon_t, vmu_get_icon_shape
 */
 int vmu_set_icon_shape(maple_device_t *dev, uint8_t icon_shape);
 
@@ -212,12 +211,12 @@ int vmu_set_icon_shape(maple_device_t *dev, uint8_t icon_shape);
     icon by providing custom icons for both the DC BIOS menu and the VMU's LCD screen.
 
     \param  dev             The device to change the icon shape of.
-    \param  icon_shape      One of the values found in \ref vmu_icons.
+    \param  icon_shape      One of the values found in \ref bfont_vmu_icon_t.
 
     \retval 0               On success
     \retval -1              On failure
 
-    \sa vmu_icons, vmu_set_icon_shape
+    \sa bfont_vmu_icon_t, vmu_set_icon_shape
 */
 int vmu_get_icon_shape(maple_device_t *dev, uint8_t *icon_shape);
 
@@ -254,7 +253,6 @@ int vmu_get_icon_shape(maple_device_t *dev, uint8_t *icon_shape);
 
     \retval MAPLE_EOK       On success.
     \retval MAPLE_EAGAIN    If the command couldn't be sent. Try again later.
-    \retval MAPLE_ETIMEOUT  If the command timed out while blocking.
 
     \sa vmu_draw_lcd_rotated, vmu_draw_lcd_xbm, vmu_set_icon
 */
@@ -276,7 +274,6 @@ int vmu_draw_lcd(maple_device_t *dev, const void *bitmap);
     \param  bitmap          The bitmap to show.
     \retval MAPLE_EOK       On success.
     \retval MAPLE_EAGAIN    If the command couldn't be sent. Try again later.
-    \retval MAPLE_ETIMEOUT  If the command timed out while blocking.
 
     \sa vmu_draw_lcd, vmu_draw_lcd_xbm, vmu_set_icon
 */
@@ -293,7 +290,6 @@ int vmu_draw_lcd_rotated(maple_device_t *dev, const void *bitmap);
 
     \retval MAPLE_EOK       On success.
     \retval MAPLE_EAGAIN    If the command couldn't be sent. Try again later.
-    \retval MAPLE_ETIMEOUT  If the command timed out while blocking.
 
     \sa vmu_draw_lcd, vmu_set_icon
 */
@@ -414,7 +410,6 @@ int vmu_block_write(maple_device_t *dev, uint16_t blocknum, const uint8_t *buffe
 
     \retval MAPLE_EOK       On success.
     \retval MAPLE_EAGAIN    If the command couldn't be sent. Try again later.
-    \retval MAPLE_ETIMEOUT  If the command timed out while blocking.
 
     \sa vmu_beep_waveform
 */
@@ -476,7 +471,6 @@ int vmu_beep_raw(maple_device_t *dev, uint32_t beep);
 
     \retval MAPLE_EOK           On success.
     \retval MAPLE_EAGAIN        If the command couldn't be sent. Try again later.
-    \retval MAPLE_ETIMEOUT      If the command timed out while blocking.
 */
 int vmu_beep_waveform(maple_device_t *dev, uint8_t period1, uint8_t duty_cycle1, uint8_t period2, uint8_t duty_cycle2);
 

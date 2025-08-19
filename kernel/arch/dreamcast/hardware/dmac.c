@@ -10,6 +10,7 @@
 #include <arch/memory.h>
 #include <kos/dbglog.h>
 #include <kos/genwait.h>
+#include <kos/platform.h>
 #include <kos/regfield.h>
 
 #include <errno.h>
@@ -32,6 +33,20 @@ typedef enum dma_register {
 #define REG_CHCR_INTERRUPT_EN   BIT(2)
 #define REG_CHCR_TRANSFER_END   BIT(1)
 #define REG_CHCR_DMAC_EN        BIT(0)
+
+#define REG_DMAOR_DDT           BIT(15)
+#define REG_DMAOR_PR            GENMASK(9, 8)
+#define REG_DMAOR_COD           BIT(4)
+#define REG_DMAOR_AE            BIT(2)
+#define REG_DMAOR_NMIF          BIT(1)
+#define REG_DMAOR_DME           BIT(0)
+
+enum dmaor_pr_mode {
+    DMAOR_PR_CH0123,
+    DMAOR_PR_CH0231,
+    DMAOR_PR_CH2013,
+    DMAOR_PR_ROUND_ROBIN,
+};
 
 static const dma_config_t *channels_cfg[4];
 
@@ -101,11 +116,14 @@ static void dma_irq_handler(irq_t code, irq_context_t *context, void *d) {
     /* ACK the IRQ by clearing CHCR */
     dmac_write(channel, DMA_REG_CHCR, 0);
 
-    genwait_wake_all((void *)&channels_cfg[channel]->callback);
-    channels_cfg[channel]->callback(d);
+    genwait_wake_all((void *)&channels_cfg[channel]);
+
+    if(channels_cfg[channel]->callback) {
+        channels_cfg[channel]->callback(d);
+    }
 }
 
-static bool dma_is_running(dma_channel_t channel) {
+bool dma_is_running(dma_channel_t channel) {
     uint32_t chcr = dmac_read(channel, DMA_REG_CHCR);
 
     return (chcr & (REG_CHCR_TRANSFER_END | REG_CHCR_DMAC_EN)) == REG_CHCR_DMAC_EN;
@@ -116,10 +134,7 @@ void dma_wait_complete(dma_channel_t channel) {
 
     while(dma_is_running(channel)) {
         if(!irq_inside_int()) {
-            if(channels_cfg[channel]->callback)
-                genwait_wait(channels_cfg[channel]->callback, "DMA complete wait", 0, NULL);
-            else
-                thd_pass();
+            genwait_wait(&channels_cfg[channel], "DMA complete wait", 0, NULL);
         }
     }
 }
@@ -129,8 +144,9 @@ int dma_transfer(const dma_config_t *cfg, dma_addr_t dst, dma_addr_t src,
     unsigned int transfer_size = dma_unit_size[cfg->unit_size];
     uint32_t chcr;
 
-    if((len | dst | src) & (transfer_size - 1)) {
-        dbglog(DBG_ERROR, "dmac: src/dst/len not aligned to the bus width\n");
+    if(!__is_aligned((src|dst|len), transfer_size)) {
+        dbglog(DBG_ERROR, "dmac: src=0x%08x dst=0x%08x len=%u not aligned to %u bytes\n",
+               (uintptr_t)src, (uintptr_t)dst, (uintptr_t)len, transfer_size);
         errno = EFAULT;
         return -1;
     }
@@ -165,4 +181,32 @@ size_t dma_transfer_get_remaining(dma_channel_t channel) {
     uint32_t tcr = dmac_read(channel, DMA_REG_TCR);
 
     return tcr * dma_unit_size[unit_size];
+}
+
+void dma_transfer_abort(dma_channel_t channel) {
+    irq_disable_scoped();
+
+    dmac_write(channel, DMA_REG_CHCR, 0);
+    genwait_wake_all((void *)&channels_cfg[channel]);
+}
+
+void dma_init(void) {
+    /* Set default settings for DMA #2.
+     * These are set by the bios on Dreamcast, but should be set by the OS
+     * on Naomi. */
+    if(KOS_PLATFORM_IS_NAOMI) {
+        uint32_t chcr, dmaor;
+
+        dmac_write(2, DMA_REG_SAR, 0);
+
+        chcr = FIELD_PREP(REG_CHCR_SRC_ADDRMODE, DMA_ADDRMODE_INCREMENT)
+            | FIELD_PREP(REG_CHCR_REQUEST, DMA_REQUEST_EXTERNAL_MEM_TO_DEV)
+            | FIELD_PREP(REG_CHCR_DMAC_EN, 1);
+        dmac_write(2, DMA_REG_CHCR, chcr);
+
+        dmaor = REG_DMAOR_DDT
+            | FIELD_PREP(REG_DMAOR_PR, DMAOR_PR_CH2013)
+            | REG_DMAOR_DME;
+        dmac_write(0, DMA_REG_DMAOR, dmaor);
+    }
 }

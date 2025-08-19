@@ -20,7 +20,7 @@
 
 #include <arch/args.h>
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 

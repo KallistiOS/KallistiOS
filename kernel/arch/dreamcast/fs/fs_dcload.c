@@ -22,10 +22,12 @@ printf goes to the dc-tool console
 #include <dc/fs_dcload.h>
 #include <arch/spinlock.h>
 #include <kos/dbgio.h>
+#include <kos/dbglog.h>
 #include <kos/fs.h>
 #include <kos/init.h>
 
 #include <errno.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -288,6 +290,12 @@ static dirent_t *dcload_readdir(void * h) {
         rv->attr = 0; /* what the hell is attr supposed to be anyways? */
 
         fn = malloc(strlen(entry->path) + strlen(dcld->d_name) + 1);
+
+        if(!fn) {
+            errno = ENOMEM;
+            return NULL;
+        }
+
         strcpy(fn, entry->path);
         strcat(fn, dcld->d_name);
 
@@ -345,7 +353,7 @@ static int dcload_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
     /* Root directory '/pc' */
     if(len == 0 || (len == 1 && *path == '/')) {
         memset(st, 0, sizeof(struct stat));
-        st->st_dev = (dev_t)((ptr_t)vfs);
+        st->st_dev = (dev_t)((uintptr_t)vfs);
         st->st_mode = S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO;
         st->st_size = -1;
         st->st_nlink = 2;
@@ -359,7 +367,7 @@ static int dcload_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
 
     if(!retval) {
         memset(st, 0, sizeof(struct stat));
-        st->st_dev = (dev_t)((ptr_t)vfs);
+        st->st_dev = (dev_t)((uintptr_t)vfs);
         st->st_ino = filestat.st_ino;
         st->st_mode = filestat.st_mode;
         st->st_nlink = filestat.st_nlink;

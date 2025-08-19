@@ -10,7 +10,7 @@
 #include <stdint.h>
 #include <errno.h>
 
-#include <arch/types.h>
+#include <kos/dbglog.h>
 #include <kos/fs_dev.h>
 #include <sys/queue.h>
 
@@ -37,7 +37,7 @@ static dirent_t *dev_root_readdir(dev_hnd_t * handle) {
     LIST_FOREACH(nmhnd, nmhead, list_ent) {
         if(!(nmhnd->flags & NMMGR_FLAGS_INDEV))
             continue;
-        
+
         if(!(cnt--))
             break;
     }
@@ -83,13 +83,13 @@ static int dev_rewinddir(void *f) {
 }
 
 static void *dev_open(vfs_handler_t *vfs, const char *fn, int mode) {
-    (void)vfs;        
-    
+    (void)vfs;
+
     if(!strcmp(fn, "/") || !strcmp(fn, "")) {
         if((mode & O_DIR)) {
             dev_root_hnd.refcnt++;
             return &dev_root_hnd;
-        }   
+        }
         else {
             errno = EISDIR;
             return NULL;
@@ -178,13 +178,13 @@ static vfs_handler_t vh = {
     NULL                /* fstat */
 };
 
-int fs_dev_init(void) {
+void fs_dev_init(void) {
     dev_root_hnd.handler = &vh.nmmgr;
     dev_root_hnd.refcnt = 0;
-    return nmmgr_handler_add(&vh.nmmgr);
+    nmmgr_handler_add(&vh.nmmgr);
 }
 
-int fs_dev_shutdown(void) {
+void fs_dev_shutdown(void) {
     memset(&dev_root_hnd, 0, sizeof(dev_root_hnd));
-    return nmmgr_handler_remove(&vh.nmmgr);
+    nmmgr_handler_remove(&vh.nmmgr);
 }

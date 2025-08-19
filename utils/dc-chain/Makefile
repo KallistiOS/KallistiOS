@@ -14,20 +14,20 @@ ifneq ("$(wildcard $(config_file))","")
   $(info +++ Using configuration from $(config_file))
   include $(config_file)
 else
-  ifneq ("$(wildcard Makefile.default.cfg)","")
-    $(info +++ Using configuration from Makefile.default.cfg)
-    include Makefile.default.cfg
+  ifneq ("$(platform)","")
+    $(info +++ Using configuration from Makefile.$(platform).cfg)
+    include Makefile.$(platform).cfg
   else
-    $(error No configuration file found at $(config_file) or Makefile.default.cfg)
+    $(error No configuration file found at $(config_file))
   endif
 endif
 
 # Toolchain profiles
 include scripts/profile-defaults.mk
-ifneq ("$(wildcard profiles/profile.$(toolchain_profile).mk)","")
-  include profiles/profile.$(toolchain_profile).mk
+ifneq ("$(wildcard profiles/$(platform)/$(toolchain_profile).mk)","")
+  include profiles/$(platform)/$(toolchain_profile).mk
 else
-  $(error No toolchain profile file found at profiles/profile.$(toolchain_profile).mk)
+  $(error No toolchain profile file found at profiles/$(platform)/$(toolchain_profile).mk)
 endif
 
 # Download functions
@@ -44,7 +44,7 @@ include scripts/variables.mk
 
 default: build gdb
 
-all: build build-arm gdb
+all: build gdb
 
 # ---- download {{{
 

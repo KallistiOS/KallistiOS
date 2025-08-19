@@ -144,8 +144,6 @@ static int setup_pvr(void) {
                     PVR_FILTER_BILINEAR);
     pvr_poly_compile(&hdr, &cxt);
 
-    hdr.mode3 |= PVR_TXRFMT_STRIDE;
-
     vert[0].z     = vert[1].z     = vert[2].z     = vert[3].z     = 1.0f; 
     vert[0].argb  = vert[1].argb  = vert[2].argb  = vert[3].argb  = 
         PVR_PACK_COLOR(1.0f, 1.0f, 1.0f, 1.0f);    

@@ -38,11 +38,10 @@
 #ifndef __DC_SQ_H
 #define __DC_SQ_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 #include <stdint.h>
-#include <arch/types.h>
 #include <arch/memory.h>
 #include <arch/cache.h>
 

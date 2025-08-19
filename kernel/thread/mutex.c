@@ -20,35 +20,15 @@
 /* Thread pseudo-ptr representing an active IRQ context. */
 #define IRQ_THREAD  ((kthread_t *)0xFFFFFFFF)
 
-mutex_t *mutex_create(void) {
-    mutex_t *rv;
-
-    dbglog(DBG_WARNING, "Creating mutex with deprecated mutex_create(). Please "
-           "update your code!\n");
-
-    if(!(rv = (mutex_t *)malloc(sizeof(mutex_t)))) {
-        errno = ENOMEM;
-        return NULL;
-    }
-
-    rv->type = MUTEX_TYPE_NORMAL;
-    rv->dynamic = 1;
-    rv->holder = NULL;
-    rv->count = 0;
-
-    return rv;
-}
-
-int mutex_init(mutex_t *m, int mtype) {
+int mutex_init(mutex_t *m, unsigned int mtype) {
     /* Check the type */
-    if(mtype < MUTEX_TYPE_NORMAL || mtype > MUTEX_TYPE_RECURSIVE) {
+    if(mtype > MUTEX_TYPE_RECURSIVE) {
         errno = EINVAL;
         return -1;
     }
 
     /* Set it up */
     m->type = mtype;
-    m->dynamic = 0;
     m->holder = NULL;
     m->count = 0;
 
@@ -58,7 +38,7 @@ int mutex_init(mutex_t *m, int mtype) {
 int mutex_destroy(mutex_t *m) {
     irq_disable_scoped();
 
-    if(m->type < MUTEX_TYPE_NORMAL || m->type > MUTEX_TYPE_RECURSIVE) {
+    if(m->type > MUTEX_TYPE_RECURSIVE) {
         errno = EINVAL;
         return -1;
     }
@@ -70,12 +50,7 @@ int mutex_destroy(mutex_t *m) {
     }
 
     /* Set it to an invalid type of mutex */
-    m->type = -1;
-
-    /* If the mutex was created with the deprecated mutex_create(), free it. */
-    if(m->dynamic) {
-        free(m);
-    }
+    m->type = MUTEX_TYPE_DESTROYED;
 
     return 0;
 }
@@ -111,7 +86,7 @@ int mutex_lock_timed(mutex_t *m, int timeout) {
 
     irq_disable_scoped();
 
-    if(m->type < MUTEX_TYPE_NORMAL || m->type > MUTEX_TYPE_RECURSIVE) {
+    if(m->type > MUTEX_TYPE_RECURSIVE) {
         errno = EINVAL;
         rv = -1;
     }
@@ -177,7 +152,7 @@ int mutex_lock_timed(mutex_t *m, int timeout) {
     return rv;
 }
 
-int mutex_is_locked(mutex_t *m) {
+int __pure mutex_is_locked(const mutex_t *m) {
     return !!m->count;
 }
 
@@ -191,14 +166,14 @@ int mutex_trylock(mutex_t *m) {
     if(irq_inside_int())
         thd = IRQ_THREAD;
 
-    if(m->type < MUTEX_TYPE_NORMAL || m->type > MUTEX_TYPE_RECURSIVE) {
+    if(m->type > MUTEX_TYPE_RECURSIVE) {
         errno = EINVAL;
         return -1;
     }
 
     /* Check if the lock is held by some other thread already */
     if(m->count && m->holder != thd) {
-        errno = EAGAIN;
+        errno = EBUSY;
         return -1;
     }
 
@@ -229,7 +204,7 @@ int mutex_trylock(mutex_t *m) {
     return 0;
 }
 
-static int mutex_unlock_common(mutex_t *m, kthread_t *thd) {
+static int __nonnull_all mutex_unlock_common(mutex_t *m, kthread_t *thd) {
     int wakeup = 0;
 
     irq_disable_scoped();

@@ -36,7 +36,7 @@
 #ifndef __DC_PVR_H
 #define __DC_PVR_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 #include <stdalign.h>
@@ -53,6 +53,7 @@ __BEGIN_DECLS
     at the bottom of the file to be able to use types defined throughout. */
 
 #include "pvr/pvr_mem.h"
+#include "pvr/pvr_header.h"
 
 /** \defgroup pvr   PowerVR API
     \brief          Low-level PowerVR GPU Driver.
@@ -287,22 +288,6 @@ typedef struct {
 
 /* Constants for the above structure; thanks to Benoit Miller for these */
 
-/** \defgroup pvr_lists_types Types
-    \brief                    Values of various PVR polygon list types
-    \ingroup                  pvr_lists
-
-    Each primitive submitted to the PVR must be placed in one of these lists,
-    depending on its characteristics.
-
-    @{
-*/
-#define PVR_LIST_OP_POLY        0   /**< \brief Opaque polygon list */
-#define PVR_LIST_OP_MOD         1   /**< \brief Opaque modifier list */
-#define PVR_LIST_TR_POLY        2   /**< \brief Translucent polygon list */
-#define PVR_LIST_TR_MOD         3   /**< \brief Translucent modifier list*/
-#define PVR_LIST_PT_POLY        4   /**< \brief Punch-thru polygon list */
-/** @} */
-
 /** \defgroup pvr_ctx_attrib Attributes
     \brief                   PVR primitive context attributes
     \ingroup                 pvr_ctx
@@ -327,40 +312,6 @@ typedef struct {
     \ingroup                    pvr_ctx_attrib
 */
 
-/** \defgroup pvr_depth_modes   Comparison Modes
-    \brief                      PowerVR depth comparison modes
-    \ingroup                    pvr_ctx_depth
-
-    These set the depth function used for comparisons.
-
-    @{
-*/
-#define PVR_DEPTHCMP_NEVER      0   /**< \brief Never pass */
-#define PVR_DEPTHCMP_LESS       1   /**< \brief Less than */
-#define PVR_DEPTHCMP_EQUAL      2   /**< \brief Equal to */
-#define PVR_DEPTHCMP_LEQUAL     3   /**< \brief Less than or equal to */
-#define PVR_DEPTHCMP_GREATER    4   /**< \brief Greater than */
-#define PVR_DEPTHCMP_NOTEQUAL   5   /**< \brief Not equal to */
-#define PVR_DEPTHCMP_GEQUAL     6   /**< \brief Greater than or equal to */
-#define PVR_DEPTHCMP_ALWAYS     7   /**< \brief Always pass */
-/** @} */
-
-/** \defgroup pvr_cull_modes        Culling Modes
-    \brief                          PowerVR primitive context culling modes
-    \ingroup                        pvr_ctx_attrib
-
-    These culling modes can be set by polygons to determine when they are
-    culled. They work pretty much as you'd expect them to if you've ever used
-    any 3D hardware before.
-
-    @{
-*/
-#define PVR_CULLING_NONE        0   /**< \brief Disable culling */
-#define PVR_CULLING_SMALL       1   /**< \brief Cull if small */
-#define PVR_CULLING_CCW         2   /**< \brief Cull if counterclockwise */
-#define PVR_CULLING_CW          3   /**< \brief Cull if clockwise */
-/** @} */
-
 /** \defgroup pvr_depth_switch      Write Toggle
     \brief                          Enable or Disable Depth Writes.
     \ingroup                        pvr_ctx_depth
@@ -378,7 +329,7 @@ typedef struct {
 /** \defgroup pvr_txr_switch        Toggle
     \brief                          Enable or Disable Texturing on Polygons.
     \ingroup                        pvr_ctx_texture
-    
+
     @{
 */
 #define PVR_TEXTURE_DISABLE     0   /**< \brief Disable texturing */
@@ -390,61 +341,14 @@ typedef struct {
     \ingroup                        pvr_ctx_attrib
 */
 
-/** \defgroup pvr_blend_modes       Blending Modes
-    \brief                          Blending modes for PowerVR primitive contexts
-    \ingroup                        pvr_blend
-
-    These are all the blending modes that can be done with regard to alpha
-    blending on the PVR.
-
-    @{
-*/
-#define PVR_BLEND_ZERO          0   /**< \brief None of this color */
-#define PVR_BLEND_ONE           1   /**< \brief All of this color */
-#define PVR_BLEND_DESTCOLOR     2   /**< \brief Destination color */
-#define PVR_BLEND_INVDESTCOLOR  3   /**< \brief Inverse of destination color */
-#define PVR_BLEND_SRCALPHA      4   /**< \brief Blend with source alpha */
-#define PVR_BLEND_INVSRCALPHA   5   /**< \brief Blend with inverse source alpha */
-#define PVR_BLEND_DESTALPHA     6   /**< \brief Blend with destination alpha */
-#define PVR_BLEND_INVDESTALPHA  7   /**< \brief Blend with inverse destination alpha */
-/** @} */
-
 /** \defgroup pvr_blend_switch      Blending Toggle
     \brief                          Enable or Disable Blending.
     \ingroup                        pvr_blend
-    
+
     @{
 */
 #define PVR_BLEND_DISABLE       0   /**< \brief Disable blending */
 #define PVR_BLEND_ENABLE        1   /**< \brief Enable blending */
-/** @} */
-
-/** \defgroup pvr_fog_types         Fog Modes
-    \brief                          PowerVR primitive context fog modes
-    \ingroup                        pvr_ctx_attrib
-
-    Each polygon can decide what fog type is used with regard to it using these
-    constants in its pvr_poly_cxt_t.
-
-    @{
-*/
-#define PVR_FOG_TABLE           0   /**< \brief Table fog */
-#define PVR_FOG_VERTEX          1   /**< \brief Vertex fog */
-#define PVR_FOG_DISABLE         2   /**< \brief Disable fog */
-#define PVR_FOG_TABLE2          3   /**< \brief Table fog mode 2 */
-/** @} */
-
-/** \defgroup pvr_clip_modes        Clipping Modes
-    \brief                          PowerVR primitive context clipping modes
-    \ingroup                        pvr_ctx_attrib
-
-    These control how primitives are clipped against the user clipping area.
-
-    @{
-*/
-#define PVR_USERCLIP_DISABLE    0   /**< \brief Disable clipping */
-#define PVR_USERCLIP_INSIDE     2   /**< \brief Enable clipping inside area */
-#define PVR_USERCLIP_OUTSIDE    3   /**< \brief Enable clipping outside area */
 /** @} */
 
 /** \defgroup pvr_ctx_color     Color
@@ -549,19 +453,6 @@ typedef struct {
 #define PVR_UVCLAMP_UV          3   /**< \brief Clamp U and V */
 /** @} */
 
-/** \defgroup pvr_filter_modes      Sampling Modes
-    \brief                          PowerVR texture sampling modes
-    \ingroup                        pvr_ctx_texture
-
-    @{
-*/
-#define PVR_FILTER_NONE         0   /**< \brief No filtering (point sample) */
-#define PVR_FILTER_NEAREST      0   /**< \brief No filtering (point sample) */
-#define PVR_FILTER_BILINEAR     2   /**< \brief Bilinear interpolation */
-#define PVR_FILTER_TRILINEAR1   4   /**< \brief Trilinear interpolation pass 1 */
-#define PVR_FILTER_TRILINEAR2   6   /**< \brief Trilinear interpolation pass 2 */
-/** @} */
-
 /** \defgroup pvr_mip_bias          Mipmap Bias Modes
     \brief                          Mipmap bias modes for PowerVR primitive contexts
     \ingroup                        pvr_ctx_texture
@@ -584,18 +475,6 @@ typedef struct {
 #define PVR_MIPBIAS_3_25        13
 #define PVR_MIPBIAS_3_50        14
 #define PVR_MIPBIAS_3_75        15
-/** @} */
-
-/** \defgroup pvr_txrenv_modes      Color Calculation Modes
-    \brief                          PowerVR texture color calculation modes
-    \ingroup                        pvr_ctx_texture
-
-    @{
-*/
-#define PVR_TXRENV_REPLACE          0   /**< \brief C = Ct, A = At */
-#define PVR_TXRENV_MODULATE         1   /**< \brief  C = Cs * Ct, A = At */
-#define PVR_TXRENV_DECAL            2   /**< \brief C = (Cs * At) + (Cs * (1-At)), A = As */
-#define PVR_TXRENV_MODULATEALPHA    3   /**< \brief C = Cs * Ct, A = As * At */
 /** @} */
 
 /** \defgroup pvr_mip_switch        Mipmap Toggle
@@ -629,8 +508,12 @@ typedef struct {
 #define PVR_TXRFMT_PAL8BPP      (6 << 27)   /**< \brief 8BPP paletted format */
 #define PVR_TXRFMT_TWIDDLED     (0 << 26)   /**< \brief Texture is twiddled */
 #define PVR_TXRFMT_NONTWIDDLED  (1 << 26)   /**< \brief Texture is not twiddled */
-#define PVR_TXRFMT_NOSTRIDE     (0 << 21)   /**< \brief Texture is not strided */
-#define PVR_TXRFMT_STRIDE       (1 << 21)   /**< \brief Texture is strided */
+#define PVR_TXRFMT_POW2_STRIDE  (0 << 25)   /**< \brief Stride is a power-of-two */
+#define PVR_TXRFMT_X32_STRIDE   (1 << 25)   /**< \brief Stride is multiple of 32 */
+
+/* Compat. */
+static const uint32_t PVR_TXRFMT_NOSTRIDE   __depr("Please use PVR_TXRFMT_POW2_STRIDE.") = PVR_TXRFMT_POW2_STRIDE;
+static const uint32_t PVR_TXRFMT_STRIDE     __depr("Please use PVR_TXRFMT_X32_STRIDE. Note this may cause breakage as PVR_TXRFMT_STRIDE was never working correctly." ) = PVR_TXRFMT_X32_STRIDE;
 
 /* OR one of these into your texture format if you need it. Note that
    these coincide with the twiddled/stride bits, so you can't have a
@@ -715,42 +598,14 @@ typedef struct {
     @{
 */
 
-/** \brief   PVR polygon header.
-
-    This is the hardware equivalent of a rendering context; you'll create one of
-    these from your pvr_poly_cxt_t and use it for submission to the hardware.
-
-    \headerfile dc/pvr.h
-*/
-typedef struct pvr_poly_hdr {
-    alignas(32)
-    uint32_t cmd;                /**< \brief TA command */
-    uint32_t mode1;              /**< \brief Parameter word 1 */
-    uint32_t mode2;              /**< \brief Parameter word 2 */
-    uint32_t mode3;              /**< \brief Parameter word 3 */
-    uint32_t d1;                 /**< \brief Dummy value */
-    uint32_t d2;                 /**< \brief Dummy value */
-    uint32_t d3;                 /**< \brief Dummy value */
-    uint32_t d4;                 /**< \brief Dummy value */
-} pvr_poly_hdr_t;
-
 /** \brief   PVR polygon header with intensity color.
 
     This is the equivalent of pvr_poly_hdr_t, but for use with intensity color.
 
     \headerfile dc/pvr.h
 */
-typedef struct pvr_poly_ic_hdr {
-    alignas(32)
-    uint32_t cmd;                /**< \brief TA command */
-    uint32_t mode1;              /**< \brief Parameter word 1 */
-    uint32_t mode2;              /**< \brief Parameter word 2 */
-    uint32_t mode3;              /**< \brief Parameter word 3 */
-    float   a;                   /**< \brief Face color alpha component */
-    float   r;                   /**< \brief Face color red component */
-    float   g;                   /**< \brief Face color green component */
-    float   b;                   /**< \brief Face color blue component */
-} pvr_poly_ic_hdr_t;
+#define pvr_poly_ic_hdr pvr_poly_hdr
+typedef pvr_poly_hdr_t pvr_poly_ic_hdr_t;
 
 /** \brief   PVR polygon header to be used with modifier volumes.
 
@@ -759,17 +614,8 @@ typedef struct pvr_poly_ic_hdr {
 
     \headerfile dc/pvr.h
 */
-typedef struct pvr_poly_mod_hdr {
-    alignas(32)
-    uint32_t cmd;                /**< \brief TA command */
-    uint32_t mode1;              /**< \brief Parameter word 1 */
-    uint32_t mode2_0;            /**< \brief Parameter word 2 (outside volume) */
-    uint32_t mode3_0;            /**< \brief Parameter word 3 (outside volume) */
-    uint32_t mode2_1;            /**< \brief Parameter word 2 (inside volume) */
-    uint32_t mode3_1;            /**< \brief Parameter word 3 (inside volume) */
-    uint32_t d1;                 /**< \brief Dummy value */
-    uint32_t d2;                 /**< \brief Dummy value */
-} pvr_poly_mod_hdr_t;
+#define pvr_poly_mod_hdr pvr_poly_hdr
+typedef pvr_poly_hdr_t pvr_poly_mod_hdr_t;
 
 /** \brief   PVR polygon header specifically for sprites.
 
@@ -778,17 +624,8 @@ typedef struct pvr_poly_mod_hdr {
 
     \headerfile dc/pvr.h
 */
-typedef struct pvr_sprite_hdr {
-    alignas(32)
-    uint32_t cmd;                /**< \brief TA command */
-    uint32_t mode1;              /**< \brief Parameter word 1 */
-    uint32_t mode2;              /**< \brief Parameter word 2 */
-    uint32_t mode3;              /**< \brief Parameter word 3 */
-    uint32_t argb;               /**< \brief Sprite face color */
-    uint32_t oargb;              /**< \brief Sprite offset color */
-    uint32_t d1;                 /**< \brief Dummy value */
-    uint32_t d2;                 /**< \brief Dummy value */
-} pvr_sprite_hdr_t;
+#define pvr_sprite_hdr pvr_poly_hdr
+typedef pvr_poly_hdr_t pvr_sprite_hdr_t;
 
 /** \brief   Modifier volume header.
 
@@ -797,18 +634,8 @@ typedef struct pvr_sprite_hdr {
 
     \headerfile dc/pvr.h
 */
-typedef struct pvr_mod_hdr {
-    alignas(32)
-    uint32_t cmd;                /**< \brief TA command */
-    uint32_t mode1;              /**< \brief Parameter word 1 */
-    uint32_t d1;                 /**< \brief Dummy value */
-    uint32_t d2;                 /**< \brief Dummy value */
-    uint32_t d3;                 /**< \brief Dummy value */
-    uint32_t d4;                 /**< \brief Dummy value */
-    uint32_t d5;                 /**< \brief Dummy value */
-    uint32_t d6;                 /**< \brief Dummy value */
-} pvr_mod_hdr_t;
-
+#define pvr_mod_hdr pvr_poly_hdr
+typedef pvr_poly_hdr_t pvr_mod_hdr_t;
 /** @} */
 
 /** \defgroup pvr_vertex_types  Vertices
@@ -1115,7 +942,7 @@ Striplength set to 2 */
 #define PVR_TA_PM2_TXRALPHA        BIT(19)
 #define PVR_TA_PM2_UVFLIP          GENMASK(18, 17)
 #define PVR_TA_PM2_UVCLAMP         GENMASK(16, 15)
-#define PVR_TA_PM2_FILTER          GENMASK(14, 12)
+#define PVR_TA_PM2_FILTER          GENMASK(14, 13)
 #define PVR_TA_PM2_MIPBIAS         GENMASK(11, 8)
 #define PVR_TA_PM2_TXRENV          GENMASK(7, 6)
 #define PVR_TA_PM2_USIZE           GENMASK(5, 3)
@@ -1125,12 +952,12 @@ Striplength set to 2 */
 /** @} */
 
 /* Initialization ****************************************************/
-/** \defgroup pvr_init  Initialization 
+/** \defgroup pvr_init  Initialization
     \brief              Driver initialization and shutdown
     \ingroup            pvr
 
     Initialization and shutdown: stuff you should only ever have to do
-    once in your program. 
+    once in your program.
 */
 
 /** \defgroup pvr_binsizes          Primitive Bin Sizes
@@ -1194,7 +1021,7 @@ typedef struct {
 
         Preallocates this many extra OPBs (sets of tile bins), allowing the PVR
         to use the extra space when there's too much geometry in the first OPB.
-    
+
         Increasing this value can eliminate artifacts where pieces of geometry
         flicker in and out of existence along the tile boundaries. */
 
@@ -1291,7 +1118,7 @@ int pvr_shutdown(void);
     Another somewhat subtle point that bears mentioning is that in the normal
     case (interrupts enabled) an interrupt handler will automatically take
     care of starting a frame rendering (after scene_finish()) and also
-    flipping pages when appropriate. 
+    flipping pages when appropriate.
 */
 
 /** \defgroup  pvr_vertex_dma   Vertex DMA
@@ -1301,7 +1128,7 @@ int pvr_shutdown(void);
 
 /** \brief   Is vertex DMA enabled?
     \ingroup pvr_vertex_dma
-    
+
     \return                 Non-zero if vertex DMA was enabled at init time
 */
 int pvr_vertex_dma_enabled(void);
@@ -1310,7 +1137,7 @@ int pvr_vertex_dma_enabled(void);
     \ingroup pvr_list_mgmt
 
     If the specified list type already has a vertex buffer, it will be replaced
-    by the new one. 
+    by the new one.
 
     \note
     Each buffer should actually be twice as long as what you will need to hold
@@ -1326,7 +1153,7 @@ int pvr_vertex_dma_enabled(void);
     \param  len             The length of the buffer. This must be a multiple of
                             64, and must be at least 128 (even if you're not
                             using the list).
-    
+
     \return                 The old buffer location (if any)
 */
 void *pvr_set_vertbuf(pvr_list_t list, void *buffer, size_t len);
@@ -1340,7 +1167,7 @@ void *pvr_set_vertbuf(pvr_list_t list, void *buffer, size_t len);
     pvr_vertbuf_written() to notify the system of any such changes.
 
     \param  list            The primitive list to get the buffer for.
-    
+
     \return                 The tail of that list's buffer.
 */
 void *pvr_vertbuf_tail(pvr_list_t list);
@@ -1403,7 +1230,7 @@ void pvr_scene_begin_txr(pvr_ptr_t txr, uint32_t *rx, uint32_t *ry);
     \retval 0               On success.
     \retval -1              If the specified list has already been closed.
 */
-int pvr_list_begin(pvr_list_t list);            
+int pvr_list_begin(pvr_list_t list);
 
 /** \brief   End collecting data for the current list type.
     \ingroup pvr_list_mgmt
@@ -1438,7 +1265,7 @@ int pvr_list_finish(void);
     \param  data            The primitive to submit.
     \param  size            The length of the primitive, in bytes. Must be a
                             multiple of 32.
-    
+
     \retval 0               On success.
     \retval -1              On error.
 */
@@ -1467,7 +1294,7 @@ void pvr_dr_init(pvr_dr_state_t *vtx_buf_ptr);
     \param  vtx_buf_ptr     State variable for Direct Rendering. Should be of
                             type pvr_dr_state_t, and must have been initialized
                             previously in the scene with pvr_dr_init().
-    
+
     \return                 A write-only destination address where a primitive
                             should be written to get ready to submit it to the
                             TA in DR mode.
@@ -1515,7 +1342,7 @@ void pvr_send_to_ta(void *data);
     \param  data            The primitive to submit.
     \param  size            The size of the primitive in bytes. This must be a
                             multiple of 32.
-    
+
     \retval 0               On success.
     \retval -1              On error.
 */
@@ -1529,7 +1356,7 @@ int pvr_list_prim(pvr_list_t list, const void *data, size_t size);
     both direct and DMA TA submission is possible.
 
     \param  list            The list to flush.
-    
+
     \retval -1              On error (it is not possible to succeed).
 */
 int pvr_list_flush(pvr_list_t list);

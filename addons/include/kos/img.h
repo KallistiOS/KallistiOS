@@ -26,7 +26,7 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
+#include <stdint.h>
 
 /** \defgroup video_img  Images
     \brief               Platform-independent image representation
@@ -49,13 +49,13 @@ __BEGIN_DECLS
     \headerfile kos/img.h
 */
 typedef struct kos_img {
-    void *data;         /**< \brief Image data in the specified format. */
-    uint32 w;           /**< \brief Width of the image. */
-    uint32 h;           /**< \brief Height of the image. */
-    uint32 fmt;         /**< \brief Format of the image data.
+    void *data;             /**< \brief Image data in the specified format. */
+    uint32_t w;             /**< \brief Width of the image. */
+    uint32_t h;             /**< \brief Height of the image. */
+    uint32_t fmt;           /**< \brief Format of the image data.
                              \see   kos_img_fmts
                              \see   kos_img_fmt_macros */
-    uint32 byte_count;  /**< \brief Length of the image data, in bytes. */
+    uint32_t byte_count;    /**< \brief Length of the image data, in bytes. */
 } kos_img_t;
 
 /** \defgroup video_img_fmt Format

@@ -17,10 +17,11 @@
 #ifndef __ARCH_DMAC_H
 #define __ARCH_DMAC_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 #include <stdint.h>
+#include <stdbool.h>
 
 /** \defgroup dmac  DMA Controller API
     \brief          API to use the SH4's DMA Controller
@@ -139,7 +140,7 @@ typedef struct dma_config {
     dma_addrmode_t src_mode, dst_mode;  /**< Source/destination address mode. */
     dma_transmitmode_t transmit_mode;   /**< DMA Transfer transmit mode. */
     dma_callback_t callback;            /**< Optional callback function for
-					     end-of-transfer notification. */
+                                             end-of-transfer notification. */
 } dma_config_t;
 
 /** \brief   DMA address.
@@ -227,6 +228,17 @@ int dma_transfer(const dma_config_t *cfg, dma_addr_t dst, dma_addr_t src,
 */
 void dma_wait_complete(dma_channel_t channel);
 
+/** \brief   Check if a DMA transfer is running
+    \ingroup dmac
+
+    This function will return true if a DMA transfer is running for the given
+    DMA channel.
+
+    \param  channel         The DMA channel to check.
+    \return                 True if a DMA transfer is running, false otherwise.
+*/
+bool dma_is_running(dma_channel_t channel);
+
 /** \brief   Get the remaining size of a DMA transfer
     \ingroup dmac
 
@@ -238,6 +250,15 @@ void dma_wait_complete(dma_channel_t channel);
                             if the previous transfer completed.
 */
 size_t dma_transfer_get_remaining(dma_channel_t channel);
+
+/** \brief   Abort a DMA transfer
+    \ingroup dmac
+
+    This function will abort a DMA transfer for the given DMA channel.
+
+    \param  channel         The DMA channel to abort.
+*/
+void dma_transfer_abort(dma_channel_t channel);
 
 /** @} */
 

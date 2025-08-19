@@ -32,7 +32,7 @@
 #ifndef __DC_SYSCALLS_H
 #define __DC_SYSCALLS_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 #include <stdint.h>

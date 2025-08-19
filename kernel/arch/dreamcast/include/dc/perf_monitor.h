@@ -18,7 +18,7 @@
 #ifndef __KOS_PERF_MONITOR_H
 #define __KOS_PERF_MONITOR_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 #include <dc/perfctr.h>
@@ -80,7 +80,7 @@ struct perf_monitor *__start_perf_monitor(struct perf_monitor *monitor);
 /** \brief  Register a performance monitor for branch likeliness analysis
 
     This macro is designed to be used inside an "if" expression, for instance:
-    if (perf_monitor_if(!strcmp("test", str))) { ... }
+    if(perf_monitor_if(!strcmp("test", str))) { ... }
 
     The resulting performance monitor will measure the number of calls, and
     the number of times the branch was taken (in event1) and the number of
@@ -115,5 +115,8 @@ void perf_monitor_exit(void);
 */
 void perf_monitor_print(FILE *f);
 
+/** @} */
+
 __END_DECLS
+
 #endif /* __KOS_PERF_MONITOR_H */

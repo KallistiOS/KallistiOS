@@ -21,7 +21,7 @@ $(TARGET): $(OBJS)
 	kos-cc -o $(TARGET) $(OBJS)
 
 run: $(TARGET)
-	$(KOS_LOADER) $(TARGET) -n
+	$(KOS_LOADER) $(TARGET)
 
 dist: $(TARGET)
 	-rm -f $(OBJS)

@@ -21,7 +21,7 @@
 #ifndef __KOS_ONESHOT_TIMER_H
 #define __KOS_ONESHOT_TIMER_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 struct oneshot_timer;

@@ -20,10 +20,10 @@
 #ifndef __KOS_NET_H
 #define __KOS_NET_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
+#include <stdint.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
 #include <sys/queue.h>
 #include <netinet/in.h>
 
@@ -65,28 +65,28 @@ typedef struct knetif {
     int                 index;
 
     /** \brief  Internal device ID (for whatever the driver wants) */
-    uint32              dev_id;
+    uint32_t            dev_id;
 
     /** \brief  Interface flags */
-    uint32              flags;
+    uint32_t            flags;
 
     /** \brief  The device's MAC address */
-    uint8               mac_addr[6];
+    uint8_t             mac_addr[6];
 
     /** \brief  The device's IP address (if any) */
-    uint8               ip_addr[4];
+    uint8_t             ip_addr[4];
 
     /** \brief  The device's netmask */
-    uint8               netmask[4];
+    uint8_t             netmask[4];
 
     /** \brief  The device's gateway's IP address */
-    uint8               gateway[4];
+    uint8_t             gateway[4];
 
     /** \brief  The device's broadcast address */
-    uint8               broadcast[4];
+    uint8_t             broadcast[4];
 
     /** \brief  The device's DNS server address */
-    uint8               dns[4];
+    uint8_t             dns[4];
 
     /** \brief  The device's MTU */
     int                 mtu;
@@ -104,7 +104,7 @@ typedef struct knetif {
     struct in6_addr     ip6_gateway;
 
     /** \brief  Default MTU over IPv6 */
-    uint32              mtu6;
+    uint32_t            mtu6;
 
     /** \brief  Default hop limit over IPv6 */
     int                 hop_limit;
@@ -117,31 +117,31 @@ typedef struct knetif {
         \param  self        The network device in question.
         \return             0 on success, <0 on failure.
     */
-    int (*if_detect)(struct knetif * self);
+    int (*if_detect)(struct knetif *self);
 
     /** \brief  Initialize the device.
         \param  self        The network device in question.
         \return             0 on success, <0 on failure.
     */
-    int (*if_init)(struct knetif * self);
+    int (*if_init)(struct knetif *self);
 
     /** \brief  Shutdown the device.
         \param  self        The network device in question.
         \return             0 on success, <0 on failure.
     */
-    int (*if_shutdown)(struct knetif * self);
+    int (*if_shutdown)(struct knetif *self);
 
     /** \brief  Start the device (after init or stop).
         \param  self        The network device in question.
         \return             0 on success, <0 on failure.
     */
-    int (*if_start)(struct knetif * self);
+    int (*if_start)(struct knetif *self);
 
     /** \brief  Stop (hibernate) the device.
         \param  self        The network device in question.
         \return             0 on success, <0 on failure
     */
-    int (*if_stop)(struct knetif * self);
+    int (*if_stop)(struct knetif *self);
 
     /** \brief  Queue a packet for transmission.
         \param  self        The network device in question.
@@ -152,20 +152,20 @@ typedef struct knetif {
         \retval NETIF_TX_ERROR  On general failure.
         \retval NETIF_TX_AGAIN  If non-blocking and we must block to send.
     */
-    int (*if_tx)(struct knetif * self, const uint8 * data, int len,
+    int (*if_tx)(struct knetif *self, const uint8_t *data, int len,
                  int blocking);
 
     /** \brief  Commit any queued output packets.
         \param  self        The network device in question.
         \return             0 on success, <0 on failure.
     */
-    int (*if_tx_commit)(struct knetif * self);
+    int (*if_tx_commit)(struct knetif *self);
 
     /** \brief  Poll for queued receive packets, if necessary.
         \param  self        The network device in question.
         \return             0 on success, <0 on failure.
     */
-    int (*if_rx_poll)(struct knetif * self);
+    int (*if_rx_poll)(struct knetif *self);
 
     /** \brief  Set flags; you should generally manipulate flags through here so
                 that the driver gets a chance to act on the info.
@@ -173,14 +173,14 @@ typedef struct knetif {
         \param  flags_and   Bitmask to and with the flags.
         \param  flags_or    Bitmask to or with the flags.
     */
-    int (*if_set_flags)(struct knetif * self, uint32 flags_and, uint32 flags_or);
+    int (*if_set_flags)(struct knetif *self, uint32_t flags_and, uint32_t flags_or);
 
     /** \brief  Set the device's multicast list.
         \param  self        The network device in question.
         \param  list        The list of MAC addresses (6 * count bytes).
         \param  count       The number of addresses in list.
     */
-    int (*if_set_mc)(struct knetif *self, const uint8 *list, int count);
+    int (*if_set_mc)(struct knetif *self, const uint8_t *list, int count);
 } netif_t;
 
 /** \defgroup net_drivers_flags netif_t Flags
@@ -237,17 +237,17 @@ LIST_HEAD(netif_list, knetif);
     \ingroup    networking_ipv4
 */
 typedef struct ip_hdr_s {
-    uint8   version_ihl;        /**< \brief IP version and header length */
-    uint8   tos;                /**< \brief Type of Service */
-    uint16  length;             /**< \brief Length */
-    uint16  packet_id;          /**< \brief Packet ID */
-    uint16  flags_frag_offs;    /**< \brief Flags and fragment offset */
-    uint8   ttl;                /**< \brief Time to live */
-    uint8   protocol;           /**< \brief IP protocol */
-    uint16  checksum;           /**< \brief IP checksum */
-    uint32  src;                /**< \brief Source IP address */
-    uint32  dest;               /**< \brief Destination IP address */
-} ip_hdr_t;
+    uint8_t   version_ihl;        /**< \brief IP version and header length */
+    uint8_t   tos;                /**< \brief Type of Service */
+    uint16_t  length;             /**< \brief Length */
+    uint16_t  packet_id;          /**< \brief Packet ID */
+    uint16_t  flags_frag_offs;    /**< \brief Flags and fragment offset */
+    uint8_t   ttl;                /**< \brief Time to live */
+    uint8_t   protocol;           /**< \brief IP protocol */
+    uint16_t  checksum;           /**< \brief IP checksum */
+    uint32_t  src;                /**< \brief Source IP address */
+    uint32_t  dest;               /**< \brief Destination IP address */
+} __packed ip_hdr_t;
 
 /** \defgroup networking_ipv6   IPv6
     \brief                      IPv6 Network Stack
@@ -259,17 +259,17 @@ typedef struct ip_hdr_s {
     \ingroup    networking_ipv6
 */
 typedef struct ipv6_hdr_s {
-    uint8           version_lclass; /**< \brief Version and low-order class
+    uint8_t         version_lclass; /**< \brief Version and low-order class
                                                 byte */
-    uint8           hclass_lflow;   /**< \brief High-order class byte, low-order
+    uint8_t         hclass_lflow;   /**< \brief High-order class byte, low-order
                                                 flow byte */
-    uint16          lclass;         /**< \brief Low-order class byte */
-    uint16          length;         /**< \brief Length */
-    uint8           next_header;    /**< \brief Next header type */
-    uint8           hop_limit;      /**< \brief Hop limit */
+    uint16_t        lclass;         /**< \brief Low-order class byte */
+    uint16_t        length;         /**< \brief Length */
+    uint8_t         next_header;    /**< \brief Next header type */
+    uint8_t         hop_limit;      /**< \brief Hop limit */
     struct in6_addr src_addr;       /**< \brief Source IP address */
     struct in6_addr dst_addr;       /**< \brief Destination IP address */
-} ipv6_hdr_t;
+} __packed ipv6_hdr_t;
 
 /***** net_arp.c **********************************************************/
 
@@ -299,12 +299,12 @@ void net_arp_shutdown(void);
     \param  timestamp       The entry's timestamp. Set to 0 for a permanent
                             entry, otherwise set to the current number of
                             milliseconds since boot (i.e, timer_ms_gettime64()).
-    
+
     \retval 0               On success.
     \retval -1              Error allocating memory.
 */
-int net_arp_insert(netif_t *nif, const uint8 mac[6], const uint8 ip[4],
-                   uint64 timestamp);
+int net_arp_insert(netif_t *nif, const uint8_t mac[6], const uint8_t ip[4],
+                   uint64_t timestamp);
 
 /** \brief   Look up an entry from the ARP cache.
     \ingroup networking_arp
@@ -320,14 +320,14 @@ int net_arp_insert(netif_t *nif, const uint8 mac[6], const uint8 ip[4],
                             response comes in (if not found immediately).
     \param  data            Packet data to go with the header.
     \param  data_size       The size of data.
-    
+
     \retval 0               On success.
     \retval -1              A query is outstanding for that address.
     \retval -2              Address not found, query generated.
     \retval -3              Error allocating memory.
 */
-int net_arp_lookup(netif_t *nif, const uint8 ip_in[4], uint8 mac_out[6],
-                   const ip_hdr_t *pkt, const uint8 *data, int data_size);
+int net_arp_lookup(netif_t *nif, const uint8_t ip_in[4], uint8_t mac_out[6],
+                   const ip_hdr_t *pkt, const uint8_t *data, int data_size);
 
 /** \brief   Do a reverse ARP lookup.
     \ingroup networking_arp
@@ -338,11 +338,11 @@ int net_arp_lookup(netif_t *nif, const uint8 ip_in[4], uint8 mac_out[6],
     \param  nif             The network device in use.
     \param  ip_out          Storage for the IPv4 address.
     \param  mac_in          The MAC address to look up.
-    
+
     \retval 0               On success.
     \retval -1              On failure.
 */
-int net_arp_revlookup(netif_t *nif, uint8 ip_out[4], const uint8 mac_in[6]);
+int net_arp_revlookup(netif_t *nif, uint8_t ip_out[4], const uint8_t mac_in[6]);
 
 /** \brief   Receive an ARP packet and process it (called by net_input).
     \ingroup networking_arp
@@ -350,20 +350,20 @@ int net_arp_revlookup(netif_t *nif, uint8 ip_out[4], const uint8 mac_in[6]);
     \param  nif             The network device in use.
     \param  pkt             The packet received.
     \param  len             The length of the packet.
-    
+
     \retval 0               On success (no error conditions defined).
 */
-int net_arp_input(netif_t *nif, const uint8 *pkt, int len);
+int net_arp_input(netif_t *nif, const uint8_t *pkt, int len);
 
 /** \brief   Generate an ARP who-has query on the given device.
     \ingroup networking_arp
 
     \param  nif             The network device to use.
     \param  ip              The IP to query.
-    
+
     \retval 0               On success (no error conditions defined).
 */
-int net_arp_query(netif_t *nif, const uint8 ip[4]);
+int net_arp_query(netif_t *nif, const uint8_t ip[4]);
 
 
 /***** net_input.c *********************************************************/
@@ -374,12 +374,12 @@ int net_arp_query(netif_t *nif, const uint8 ip[4]);
     \param  nif             The network device in use.
     \param  pkt             The packet received.
     \param  len             The length of the packet, in bytes.
-    
+
     \return                 0 on success, <0 on failure.
 */
-typedef int (*net_input_func)(netif_t *nif, const uint8 *pkt, int len);
+typedef int (*net_input_func)(netif_t *nif, const uint8_t *pkt, int len);
 
-/** \brief   Where will input packets be routed? 
+/** \brief   Where will input packets be routed?
     \ingroup networking_drivers
  */
 extern net_input_func net_input_target;
@@ -394,16 +394,16 @@ extern net_input_func net_input_target;
     \param  device          The network device submitting packets.
     \param  data            The packet to submit.
     \param  len             The length of the packet, in bytes.
-    
+
     \return                 0 on success, <0 on failure.
 */
-int net_input(netif_t *device, const uint8 *data, int len);
+int net_input(netif_t *device, const uint8_t *data, int len);
 
 /** \brief   Setup a network input target.
     \ingroup networking_drivers
 
     \param  t               The new target callback.
-    
+
     \return                 The old target.
 */
 net_input_func net_input_set_target(net_input_func t);
@@ -431,8 +431,8 @@ net_input_func net_input_set_target(net_input_func t);
     \param  data            Any data in the packet.
     \param  len             The length of the data, in bytes.
 */
-typedef void (*net_echo_cb)(const uint8 *ip, uint16 seq, uint64 delta_us,
-                            uint8 ttl, const uint8 *data, size_t len);
+typedef void (*net_echo_cb)(const uint8_t *ip, uint16_t seq, uint64_t delta_us,
+                            uint8_t ttl, const uint8_t *data, size_t len);
 
 /** \brief   Where will we handle possibly notifying the user of ping replies?
     \ingroup networking_icmp
@@ -448,13 +448,13 @@ extern net_echo_cb net_icmp_echo_cb;
     \param  seq             A packet sequence number.
     \param  data            Data to send with the packet.
     \param  size            The size of the data to send.
-    
+
     \return                 0 on success, <0 on failure.
 */
-int net_icmp_send_echo(netif_t *net, const uint8 ipaddr[4], uint16 ident,
-                       uint16 seq, const uint8 *data, size_t size);
+int net_icmp_send_echo(netif_t *net, const uint8_t ipaddr[4], uint16_t ident,
+                       uint16_t seq, const uint8_t *data, size_t size);
 
-/** \defgroup networking_icmp_unreach Unreachable Values 
+/** \defgroup networking_icmp_unreach Unreachable Values
     \brief    Valid values for net_icmp_send_dest_unreach().
     \ingroup  networking_icmpv4
     @{
@@ -470,10 +470,10 @@ int net_icmp_send_echo(netif_t *net, const uint8 ipaddr[4], uint16 ident,
     \param  net             The network device to use.
     \param  code            The type of message this is.
     \param  msg             The message that caused this error.
-    
+
     \return                 0 on success, <0 on failure.
 */
-int net_icmp_send_dest_unreach(netif_t *net, uint8 code, const uint8 *msg);
+int net_icmp_send_dest_unreach(netif_t *net, uint8_t code, const uint8_t *msg);
 
 /** \brief   Valid values for the code in the net_icmp_send_time_exceeded()
              function.
@@ -483,14 +483,14 @@ int net_icmp_send_dest_unreach(netif_t *net, uint8 code, const uint8 *msg);
 
 /** \brief   Send an ICMP Time Exceeded packet in reply to the given message.
     \ingroup networking_icmp
-    
+
     \param  net             The network device to use.
     \param  code            The type of message this is.
     \param  msg             The message that caused this error.
-    
+
     \return                 0 on success, <0 on failure.
 */
-int net_icmp_send_time_exceeded(netif_t *net, uint8 code, const uint8 *msg);
+int net_icmp_send_time_exceeded(netif_t *net, uint8_t code, const uint8_t *msg);
 
 /***** net_ipv4.c *********************************************************/
 
@@ -503,12 +503,12 @@ int net_icmp_send_time_exceeded(netif_t *net, uint8 code, const uint8 *msg);
     \headerfile kos/net.h
 */
 typedef struct net_ipv4_stats {
-    uint32  pkt_sent;               /** \brief Packets sent out successfully */
-    uint32  pkt_send_failed;        /** \brief Packets that failed to send */
-    uint32  pkt_recv;               /** \brief Packets received successfully */
-    uint32  pkt_recv_bad_size;      /** \brief Packets of a bad size */
-    uint32  pkt_recv_bad_chksum;    /** \brief Packets with a bad checksum */
-    uint32  pkt_recv_bad_proto;     /** \brief Packets with an unknown proto */
+    uint32_t  pkt_sent;               /** \brief Packets sent out successfully */
+    uint32_t  pkt_send_failed;        /** \brief Packets that failed to send */
+    uint32_t  pkt_recv;               /** \brief Packets received successfully */
+    uint32_t  pkt_recv_bad_size;      /** \brief Packets of a bad size */
+    uint32_t  pkt_recv_bad_chksum;    /** \brief Packets with a bad checksum */
+    uint32_t  pkt_recv_bad_proto;     /** \brief Packets with an unknown proto */
 } net_ipv4_stats_t;
 
 /** \brief   Retrieve statistics from the IPv4 layer.
@@ -523,19 +523,19 @@ net_ipv4_stats_t net_ipv4_get_stats(void);
     \ingroup networking_ipv4
 
     \param  addr            Array of IP address octets.
-    
+
     \return                 The address, in host byte order.
 */
-uint32 net_ipv4_address(const uint8 addr[4]);
+uint32_t __pure net_ipv4_address(const uint8_t addr[4]);
 
-/** \brief   Parse an IP address that is packet into a uint32 into an array of
+/** \brief   Parse an IP address that is packet into a uint32_t into an array of
              the individual bytes.
     \ingroup networking_ipv4
-    
+
     \param  addr            The full address, in host byte order.
     \param  out             The output buffer.
 */
-void net_ipv4_parse_address(uint32 addr, uint8 out[4]);
+void net_ipv4_parse_address(uint32_t addr, uint8_t out[4]);
 
 /***** net_icmp6.c ********************************************************/
 
@@ -547,7 +547,7 @@ void net_ipv4_parse_address(uint32 addr, uint8 out[4]);
 
 /** \brief   ICMPv6 echo reply callback type.
     \ingroup networking_icmpv6
-    
+
     \param  ip              The IPv6 address the reply is from.
     \param  seq             The sequence number of the packet.
     \param  delta_us        The time difference, in microseconds.
@@ -555,8 +555,8 @@ void net_ipv4_parse_address(uint32 addr, uint8 out[4]);
     \param  data            Any data in the packet.
     \param  len             The length of the data, in bytes.
 */
-typedef void (*net6_echo_cb)(const struct in6_addr *ip, uint16 seq,
-                             uint64 delta_us, uint8 hlim, const uint8 *data,
+typedef void (*net6_echo_cb)(const struct in6_addr *ip, uint16_t seq,
+                             uint64_t delta_us, uint8_t hlim, const uint8_t *data,
                              size_t len);
 
 /** \brief   Where will we handle possibly notifying the user of ping replies?
@@ -566,27 +566,27 @@ extern net6_echo_cb net_icmp6_echo_cb;
 
 /** \brief   Send an ICMPv6 Echo (PING6) packet to the specified device.
     \ingroup networking_icmpv6
-    
+
     \param  net             The network device to use.
     \param  dst             The address to send to.
     \param  ident           A packet identifier.
     \param  seq             A packet sequence number.
     \param  data            Data to send with the packet.
     \param  size            Length of the data, in bytes.
-    
+
     \return                 0 on success, <0 on failure.
 */
-int net_icmp6_send_echo(netif_t *net, const struct in6_addr *dst, uint16 ident,
-                        uint16 seq, const uint8 *data, size_t size);
+int net_icmp6_send_echo(netif_t *net, const struct in6_addr *dst, uint16_t ident,
+                        uint16_t seq, const uint8_t *data, size_t size);
 
 /** \brief   Send a Neighbor Solicitation packet on the specified device.
     \ingroup networking_icmpv6
-    
+
     \param  net             The network device to use.
     \param  dst             The destination address.
     \param  target          The target address.
     \param  dupdet          1 if this is for duplicate detection.
-    
+
     \return                 0 on success, <0 on failure.
 */
 int net_icmp6_send_nsol(netif_t *net, const struct in6_addr *dst,
@@ -594,12 +594,12 @@ int net_icmp6_send_nsol(netif_t *net, const struct in6_addr *dst,
 
 /** \brief   Send a Neighbor Advertisement packet on the specified device.
     \ingroup networking_icmpv6
-    
+
     \param  net             The network device to use.
     \param  dst             The destination address.
     \param  target          The target address.
     \param  sol             1 if solicited, 0 otherwise.
-    
+
     \return                 0 on success, <0 on failure.
 */
 int net_icmp6_send_nadv(netif_t *net, const struct in6_addr *dst,
@@ -607,9 +607,9 @@ int net_icmp6_send_nadv(netif_t *net, const struct in6_addr *dst,
 
 /** \brief   Send a Router Solicitation request on the specified interface.
     \ingroup networking_icmpv6
-    
+
     \param  net             The network device to use.
-    
+
     \return                 0 on success, <0 on failure.
 */
 int net_icmp6_send_rsol(netif_t *net);
@@ -638,17 +638,17 @@ int net_icmp6_send_rsol(netif_t *net);
     \param  code            The type of message this is.
     \param  ppkt            The message that caused this error.
     \param  psz             Size of the original message.
-    
+
     \return                 0 on success, <0 on failure.
 */
-int net_icmp6_send_dest_unreach(netif_t *net, uint8 code, const uint8 *ppkt,
+int net_icmp6_send_dest_unreach(netif_t *net, uint8_t code, const uint8_t *ppkt,
                                 size_t psz);
 
 /** \defgroup networking_icmpv6_time_exceeded Time Exceeded Codes
     \brief                                    Time exceeded codes for ICMPv6
     \ingroup                                  networking_icmpv6
 
-    Only fragment reassembly time exceeded makes sense 
+    Only fragment reassembly time exceeded makes sense
 
     @{
 */
@@ -658,15 +658,15 @@ int net_icmp6_send_dest_unreach(netif_t *net, uint8 code, const uint8 *ppkt,
 
 /** \brief   Send a time exceeded message on the specified interface.
     \ingroup networking_icmpv6
-    
+
     \param  net             The network device to use.
     \param  code            The error code.
     \param  ppkt            The message that caused this error.
     \param  psz             Size of the original packet.
-    
+
     \return                 0 on success, <0 on failure.
 */
-int net_icmp6_send_time_exceeded(netif_t *net, uint8 code, const uint8 *ppkt,
+int net_icmp6_send_time_exceeded(netif_t *net, uint8_t code, const uint8_t *ppkt,
                                  size_t psz);
 
 /** \defgroup networking_icmpv6_param_problem   Parameter Problem Codes
@@ -681,17 +681,17 @@ int net_icmp6_send_time_exceeded(netif_t *net, uint8 code, const uint8 *ppkt,
 
 /** \brief   Send an ICMPv6 Parameter Problem about the given packet.
     \ingroup networking_icmpv6
-    
+
     \param  net             The network device to use.
     \param  code            The error code.
     \param  ptr             Where in the packet is the error?
     \param  ppkt            The message that caused the error.
     \param  psz             Size of the original packet.
-    
+
     \return                 0 on success, <0 on failure.
 */
-int net_icmp6_send_param_prob(netif_t *net, uint8 code, uint32 ptr,
-                              const uint8 *ppkt, size_t psz);
+int net_icmp6_send_param_prob(netif_t *net, uint8_t code, uint32_t ptr,
+                              const uint8_t *ppkt, size_t psz);
 
 /***** net_ipv6.c *********************************************************/
 
@@ -704,12 +704,12 @@ int net_icmp6_send_param_prob(netif_t *net, uint8 code, uint32 ptr,
     \headerfile kos/net.h
 */
 typedef struct net_ipv6_stats {
-    uint32  pkt_sent;               /**< \brief Packets sent out successfully */
-    uint32  pkt_send_failed;        /**< \brief Packets that failed to send */
-    uint32  pkt_recv;               /**< \brief Packets received successfully */
-    uint32  pkt_recv_bad_size;      /**< \brief Packets of a bad size */
-    uint32  pkt_recv_bad_proto;     /**< \brief Packets with an unknown proto */
-    uint32  pkt_recv_bad_ext;       /**< \brief Packets with an unknown hdr */
+    uint32_t  pkt_sent;               /**< \brief Packets sent out successfully */
+    uint32_t  pkt_send_failed;        /**< \brief Packets that failed to send */
+    uint32_t  pkt_recv;               /**< \brief Packets received successfully */
+    uint32_t  pkt_recv_bad_size;      /**< \brief Packets of a bad size */
+    uint32_t  pkt_recv_bad_proto;     /**< \brief Packets with an unknown proto */
+    uint32_t  pkt_recv_bad_ext;       /**< \brief Packets with an unknown hdr */
 } net_ipv6_stats_t;
 
 /** \brief   Retrieve statistics from the IPv6 layer.
@@ -747,7 +747,7 @@ void net_ndp_gc(void);
     \param  unsol           Was this unsolicited?
     \return                 0 on success, <0 on failure.
 */
-int net_ndp_insert(netif_t *nif, const uint8 mac[6], const struct in6_addr *ip,
+int net_ndp_insert(netif_t *nif, const uint8_t mac[6], const struct in6_addr *ip,
                    int unsol);
 
 /** \brief  Look up an entry from the NDP cache.
@@ -765,8 +765,8 @@ int net_ndp_insert(netif_t *nif, const uint8 mac[6], const struct in6_addr *ip,
     \param  data_size       The size of data.
     \return                 0 on success, <0 on failure.
 */
-int net_ndp_lookup(netif_t *net, const struct in6_addr *ip, uint8 mac_out[6],
-                   const ipv6_hdr_t *pkt, const uint8 *data, int data_size);
+int net_ndp_lookup(netif_t *net, const struct in6_addr *ip, uint8_t mac_out[6],
+                   const ipv6_hdr_t *pkt, const uint8_t *data, int data_size);
 
 /** @} */
 
@@ -786,22 +786,22 @@ int net_ndp_lookup(netif_t *net, const struct in6_addr *ip, uint8 mac_out[6],
     \headerfile kos/net.h
 */
 typedef struct net_udp_stats {
-    uint32  pkt_sent;               /**< \brief Packets sent out successfully */
-    uint32  pkt_send_failed;        /**< \brief Packets that failed to send */
-    uint32  pkt_recv;               /**< \brief Packets received successfully */
-    uint32  pkt_recv_bad_size;      /**< \brief Packets of a bad size */
-    uint32  pkt_recv_bad_chksum;    /**< \brief Packets with a bad checksum */
-    uint32  pkt_recv_no_sock;       /**< \brief Packets with to a closed port */
+    uint32_t  pkt_sent;               /**< \brief Packets sent out successfully */
+    uint32_t  pkt_send_failed;        /**< \brief Packets that failed to send */
+    uint32_t  pkt_recv;               /**< \brief Packets received successfully */
+    uint32_t  pkt_recv_bad_size;      /**< \brief Packets of a bad size */
+    uint32_t  pkt_recv_bad_chksum;    /**< \brief Packets with a bad checksum */
+    uint32_t  pkt_recv_no_sock;       /**< \brief Packets with to a closed port */
 } net_udp_stats_t;
 
 /** \brief  Retrieve statistics from the UDP layer.
-    
+
     \return                 The global UDP stats struct.
 */
 net_udp_stats_t net_udp_get_stats(void);
 
 /** \brief  Init UDP.
-    
+
     \retval 0               On success (no error conditions defined).
 */
 int net_udp_init(void);
@@ -838,25 +838,25 @@ void net_tcp_shutdown(void);
 */
 
 /** \brief  Calculate a "little-endian" CRC-32 over a block of data.
-    
+
     \param  data            The data to calculate over.
     \param  size            The size of the data, in bytes.
-    
+
     \return                 The calculated CRC-32.
 */
-uint32 net_crc32le(const uint8 *data, int size);
+uint32_t __pure net_crc32le(const uint8_t *data, int size);
 
 /** \brief  Calculate a "big-endian" CRC-32 over a block of data.
-    
+
     \param  data            The data to calculate over.
     \param  size            The size of the data, in bytes.
-    
+
     \return                 The calculated CRC-32.
 */
-uint32 net_crc32be(const uint8 *data, int size);
+uint32_t __pure net_crc32be(const uint8_t *data, int size);
 
 /** \brief  Calculate a CRC16-CCITT over a block of data.
-    
+
     \note                   Based on code found online at
                             http://www.ccsinfo.com/forum/viewtopic.php?t=24977
 
@@ -866,10 +866,10 @@ uint32 net_crc32be(const uint8 *data, int size);
                             return value from this function (if continuing a
                             previous calculation) or some initial seed value
                             (typically 0xFFFF or 0x0000).
-    
+
     \return                 The calculated CRC16-CCITT.
 */
-uint16 net_crc16ccitt(const uint8 *data, int size, uint16 start);
+uint16_t __pure net_crc16ccitt(const uint8_t *data, int size, uint16_t start);
 
 /** @} */
 
@@ -889,7 +889,7 @@ uint16 net_crc16ccitt(const uint8 *data, int size, uint16 start);
     \param  mac             The MAC address to add.
     \return                 0 on success, <0 on failure.
 */
-int net_multicast_add(const uint8 mac[6]);
+int net_multicast_add(const uint8_t mac[6]);
 
 /** \brief  Delete a entry from our multicast list.
 
@@ -899,7 +899,7 @@ int net_multicast_add(const uint8 mac[6]);
     \param  mac             The MAC address to add.
     \return                 0 on success, <0 on failure.
 */
-int net_multicast_del(const uint8 mac[6]);
+int net_multicast_del(const uint8_t mac[6]);
 
 /** \brief  Check if an address is on the multicast list.
     \param  mac             The MAC address to check for.
@@ -907,7 +907,7 @@ int net_multicast_del(const uint8 mac[6]);
     \retval 1               The address is in the list.
     \retval -1              On error.
 */
-int net_multicast_check(const uint8 mac[6]);
+int net_multicast_check(const uint8_t mac[6]);
 
 /** \brief  Init multicast support.
     \return                 0 on success, !0 on error.
@@ -921,14 +921,14 @@ void net_multicast_shutdown(void);
 
 /***** net_core.c *********************************************************/
 
-/** \brief   Interface list; note: do not manipulate directly! 
+/** \brief   Interface list; note: do not manipulate directly!
     \ingroup networking_drivers
  */
 extern struct netif_list net_if_list;
 
 /** \brief   Function to retrieve the interface list.
     \ingroup networking_drivers
-    
+
     \warning
     Do not manipulate what this returns to you!
 
@@ -936,8 +936,8 @@ extern struct netif_list net_if_list;
 */
 struct netif_list * net_get_if_list(void);
 
-/** \brief   The default network device, used with sockets (read-only). 
-    \ingroup networking_drivers    
+/** \brief   The default network device, used with sockets (read-only).
+    \ingroup networking_drivers
 */
 extern netif_t *net_default_dev;
 
@@ -945,7 +945,7 @@ extern netif_t *net_default_dev;
     \ingroup networking_drivers
 
     \param  n               The device to set as default.
-    
+
     \return                 The old default device.
 */
 netif_t *net_set_default(netif_t *n);
@@ -963,14 +963,14 @@ int net_reg_device(netif_t *device);
     \ingroup networking_drivers
 
     \param  device          The device to unregister.
-    
+
     \return                 0 on success, <0 on failure.
 */
 int net_unreg_device(netif_t *device);
 
 /** \brief   Init network support.
     \ingroup networking_drivers
-    
+
     \note                   To auto-detect the IP address to assign to the
                             default device (i.e, over DHCP or from the flashrom
                             on the Dreamcast), pass 0 as the IP parameter.
@@ -980,9 +980,9 @@ int net_unreg_device(netif_t *device);
 
     \return                 0 on success, <0 on failure.
 */
-int net_init(uint32 ip);
+int net_init(uint32_t ip);
 
-/** \brief   Shutdown network support. 
+/** \brief   Shutdown network support.
     \ingroup networking_drivers
 */
 void net_shutdown(void);

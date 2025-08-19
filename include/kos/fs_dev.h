@@ -19,7 +19,7 @@
 #ifndef __DC_FS_DEV_H
 #define __DC_FS_DEV_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 #include <kos/fs.h>
@@ -33,8 +33,8 @@ __BEGIN_DECLS
 
 /* \cond */
 /* Initialization */
-int fs_dev_init(void);
-int fs_dev_shutdown(void);
+void fs_dev_init(void);
+void fs_dev_shutdown(void);
 /* \endcond */
 
 /** @} */

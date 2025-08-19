@@ -24,7 +24,7 @@
 #ifndef __DC_FB_CONSOLE_H
 #define __DC_FB_CONSOLE_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 #include <kos/dbgio.h>

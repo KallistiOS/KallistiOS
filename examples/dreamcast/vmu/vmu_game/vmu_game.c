@@ -69,7 +69,7 @@ int wait_start(void) {
 void write_game_entry(void) {
     file_t f;
     int data_size;
-    uint8 *data;
+    uint8_t *data;
     maple_device_t *dev;
 
     f = fs_open("/rd/TETRIS.VMS", O_RDONLY);
@@ -80,7 +80,7 @@ void write_game_entry(void) {
     }
 
     data_size = fs_total(f);
-    data = (uint8*) malloc(data_size + 1);
+    data = (uint8_t*) malloc(data_size + 1);
     fs_read(f, data, data_size);
     fs_close(f);
 

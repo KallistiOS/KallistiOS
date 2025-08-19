@@ -20,7 +20,7 @@
 #ifndef __NETINET_IN_H
 #define __NETINET_IN_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 
 __BEGIN_DECLS
 

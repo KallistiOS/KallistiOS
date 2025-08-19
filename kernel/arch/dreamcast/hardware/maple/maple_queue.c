@@ -155,18 +155,17 @@ void maple_frame_init(maple_frame_t *frame) {
     if(buf_ptr & 0x1f)
         buf_ptr = (buf_ptr & ~0x1f) + 0x20;
 
-#if MAPLE_DMA_DEBUG
-    buf_ptr += 512;
-#endif
+    if(__is_defined(MAPLE_DMA_DEBUG))
+        buf_ptr += 512;
+
     buf_ptr = (buf_ptr & MEM_AREA_CACHE_MASK) | MEM_AREA_P2_BASE;
     frame->recv_buf = (uint8*)buf_ptr;
 
     /* Clear out the receive buffer */
-#if MAPLE_DMA_DEBUG
-    maple_sentinel_setup(frame->recv_buf - 512, 1024 + 1024);
-#else
-    memset(frame->recv_buf, 0, 1024);
-#endif
+    if(__is_defined(MAPLE_DMA_DEBUG))
+        maple_sentinel_setup(frame->recv_buf - 512, 1024 + 1024);
+    else
+        memset(frame->recv_buf, 0, 1024);
 
     /* Initialize other state stuff */
     frame->cmd = -1;

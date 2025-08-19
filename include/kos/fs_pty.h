@@ -23,10 +23,9 @@
 #ifndef __KOS_FS_PTY_H
 #define __KOS_FS_PTY_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
 #include <kos/fs.h>
 
 /** \defgroup vfs_pty   PTY
@@ -59,8 +58,8 @@ __BEGIN_DECLS
 int fs_pty_create(char * buffer, int maxbuflen, file_t * master_out, file_t * slave_out);
 
 /** \cond */
-int fs_pty_init(void);
-int fs_pty_shutdown(void);
+void fs_pty_init(void);
+void fs_pty_shutdown(void);
 /** \endcond */
 
 /** @} */

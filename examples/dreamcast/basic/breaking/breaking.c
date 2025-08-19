@@ -48,6 +48,9 @@ static atomic_bool handled = false;
 static bool on_break(const ubc_breakpoint_t *bp,
                      const irq_context_t *ctx,
                      void *ud) {
+    /* Don't warn about unused bp */
+    (void)bp;
+
     /* Signal to the outside that the breakpoint has been handled. */
     handled = true;
 
@@ -248,7 +251,7 @@ static bool break_on_sized_operand_region_access_value_range(void) {
     VERIFY(!handled);
 
     /* Read from the region-of-interest as the wrong data size. */
-    volatile uint16_t tmp16; (void)tmp16;
+    volatile uint16_t tmp16 = 0; (void)tmp16;
     tmp16 = ((uint16_t *)vars)[1023 / sizeof(uint16_t)];
     VERIFY(!handled);
 

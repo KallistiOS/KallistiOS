@@ -29,7 +29,7 @@
 #ifndef __KOS_WORKER_THREAD_H
 #define __KOS_WORKER_THREAD_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 #include <kos/thread.h>

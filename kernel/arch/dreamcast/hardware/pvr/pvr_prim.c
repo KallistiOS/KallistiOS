@@ -22,7 +22,8 @@
 
 /* Compile a polygon context into a polygon header */
 void pvr_poly_compile(pvr_poly_hdr_t *dst, const pvr_poly_cxt_t *src) {
-    uint32_t txr_base, cmd;
+    pvr_txr_ptr_t txr_base;
+    uint32_t cmd;
     /* Temporary variables we can read-write-modify, since we cannot do so from
        within the SQs, and we want to be able to compile this header from a PVR
        DR API submission target. */
@@ -67,9 +68,9 @@ void pvr_poly_compile(pvr_poly_hdr_t *dst, const pvr_poly_cxt_t *src) {
     }
     else {
         assert_msg(__builtin_popcount(src->txr.width) == 1
-		   && src->txr.width <= 1024, "Invalid texture U size");
+            && src->txr.width <= 1024, "Invalid texture U size");
         assert_msg(__builtin_popcount(src->txr.height) == 1
-		   && src->txr.height <= 1024, "Invalid texture V size");
+            && src->txr.height <= 1024, "Invalid texture V size");
 
         mode2 |= FIELD_PREP(PVR_TA_PM2_TXRALPHA, src->txr.alpha)
             | FIELD_PREP(PVR_TA_PM2_UVFLIP, src->txr.uv_flip)
@@ -81,13 +82,12 @@ void pvr_poly_compile(pvr_poly_hdr_t *dst, const pvr_poly_cxt_t *src) {
             | FIELD_PREP(PVR_TA_PM2_VSIZE, __builtin_ctz(src->txr.height) - 3);
 
         /* Convert the texture address */
-        txr_base = (uint32_t)src->txr.base;
-        txr_base = (txr_base & 0x00fffff8) >> 3;
+        txr_base = to_pvr_txr_ptr(src->txr.base);
 
         /* Polygon mode 3 */
         mode3 = FIELD_PREP(PVR_TA_PM3_MIPMAP, src->txr.mipmap)
             | src->txr.format
-            | txr_base;
+            | (uint32_t)txr_base;
     }
 
     dst->mode2 = mode2;
@@ -96,16 +96,9 @@ void pvr_poly_compile(pvr_poly_hdr_t *dst, const pvr_poly_cxt_t *src) {
     if(src->fmt.modifier && src->gen.modifier_mode) {
         /* If we're affected by a modifier volume, silently promote the header
            to the one that is affected by a modifier volume. */
-        dst->d1 = mode2;
-        dst->d2 = mode3;
+        dst->mode2_1 = mode2;
+        dst->mode3_1 = mode3;
     }
-    else {
-        dst->d1 = 0xffffffff;
-        dst->d2 = 0xffffffff;
-    }
-
-    dst->d3 = 0xffffffff;
-    dst->d4 = 0xffffffff;
 }
 
 /* Create a colored polygon context with parameters similar to
@@ -273,7 +266,8 @@ void pvr_sprite_cxt_txr(pvr_sprite_cxt_t *dst, pvr_list_t list,
 }
 
 void pvr_sprite_compile(pvr_sprite_hdr_t *dst, const pvr_sprite_cxt_t *src) {
-    uint32_t txr_base, cmd, mode2, mode3;
+    uint32_t cmd, mode2, mode3;
+    pvr_txr_ptr_t txr_base;
 
     /* Basically we just take each parameter, clip it, shift it
        into place, and OR it into the final result. */
@@ -310,9 +304,9 @@ void pvr_sprite_compile(pvr_sprite_hdr_t *dst, const pvr_sprite_cxt_t *src) {
     }
     else {
         assert_msg(__builtin_popcount(src->txr.width) == 1
-		   && src->txr.width <= 1024, "Invalid texture U size");
+            && src->txr.width <= 1024, "Invalid texture U size");
         assert_msg(__builtin_popcount(src->txr.height) == 1
-		   && src->txr.height <= 1024, "Invalid texture V size");
+            && src->txr.height <= 1024, "Invalid texture V size");
 
         mode2 |= FIELD_PREP(PVR_TA_PM2_TXRALPHA, src->txr.alpha)
             | FIELD_PREP(PVR_TA_PM2_UVFLIP, src->txr.uv_flip)
@@ -324,13 +318,12 @@ void pvr_sprite_compile(pvr_sprite_hdr_t *dst, const pvr_sprite_cxt_t *src) {
             | FIELD_PREP(PVR_TA_PM2_VSIZE, __builtin_ctz(src->txr.height) - 3);
 
         /* Convert the texture address */
-        txr_base = (uint32_t)src->txr.base;
-        txr_base = (txr_base & 0x00fffff8) >> 3;
+        txr_base = to_pvr_txr_ptr(src->txr.base);
 
         /* Polygon mode 3 */
         mode3 = FIELD_PREP(PVR_TA_PM3_MIPMAP, src->txr.mipmap)
             | src->txr.format
-            | txr_base;
+            | (uint32_t)txr_base;
     }
 
     dst->mode2 = mode2;
@@ -353,15 +346,13 @@ void pvr_mod_compile(pvr_mod_hdr_t *dst, pvr_list_t list, uint32 mode,
 
     dst->mode1 = FIELD_PREP(PVR_TA_PM1_MODIFIERINST, mode)
         | FIELD_PREP(PVR_TA_PM1_CULLING, cull);
-
-    dst->d1 = dst->d2 = dst->d3 = dst->d4 = dst->d5 = dst->d6 = 0;
 }
 
 /* Compile a polygon context into a polygon header that is affected by
    modifier volumes */
 void pvr_poly_mod_compile(pvr_poly_mod_hdr_t *dst, const pvr_poly_cxt_t *src) {
-    uint32_t txr_base, cmd;
-    uint32_t mode2, mode3;
+    uint32_t mode2, mode3, cmd;
+    pvr_txr_ptr_t txr_base;
 
     /* Basically we just take each parameter, clip it, shift it
        into place, and OR it into the final result. */
@@ -402,9 +393,9 @@ void pvr_poly_mod_compile(pvr_poly_mod_hdr_t *dst, const pvr_poly_cxt_t *src) {
     }
     else {
         assert_msg(__builtin_popcount(src->txr.width) == 1
-		   && src->txr.width <= 1024, "Invalid texture U size");
+            && src->txr.width <= 1024, "Invalid texture U size");
         assert_msg(__builtin_popcount(src->txr.height) == 1
-		   && src->txr.height <= 1024, "Invalid texture V size");
+            && src->txr.height <= 1024, "Invalid texture V size");
 
         mode2 |= FIELD_PREP(PVR_TA_PM2_TXRALPHA, src->txr.alpha)
             | FIELD_PREP(PVR_TA_PM2_UVFLIP, src->txr.uv_flip)
@@ -416,13 +407,12 @@ void pvr_poly_mod_compile(pvr_poly_mod_hdr_t *dst, const pvr_poly_cxt_t *src) {
             | FIELD_PREP(PVR_TA_PM2_VSIZE, __builtin_ctz(src->txr.height) - 3);
 
         /* Convert the texture address */
-        txr_base = (uint32_t)src->txr.base;
-        txr_base = (txr_base & 0x00fffff8) >> 3;
+        txr_base = to_pvr_txr_ptr(src->txr.base);
 
         /* Polygon mode 3 */
         mode3 = FIELD_PREP(PVR_TA_PM3_MIPMAP, src->txr.mipmap)
             | src->txr.format
-            | txr_base;
+            | (uint32_t)txr_base;
     }
 
     dst->mode2_0 = mode2;
@@ -442,9 +432,9 @@ void pvr_poly_mod_compile(pvr_poly_mod_hdr_t *dst, const pvr_poly_cxt_t *src) {
     }
     else {
         assert_msg(__builtin_popcount(src->txr2.width) == 1
-		   && src->txr2.width <= 1024, "Invalid texture U size");
+            && src->txr2.width <= 1024, "Invalid texture U size");
         assert_msg(__builtin_popcount(src->txr2.height) == 1
-		   && src->txr2.height <= 1024, "Invalid texture V size");
+            && src->txr2.height <= 1024, "Invalid texture V size");
 
         mode2 |= FIELD_PREP(PVR_TA_PM2_TXRALPHA, src->txr2.alpha)
             | FIELD_PREP(PVR_TA_PM2_UVFLIP, src->txr2.uv_flip)
@@ -456,20 +446,16 @@ void pvr_poly_mod_compile(pvr_poly_mod_hdr_t *dst, const pvr_poly_cxt_t *src) {
             | FIELD_PREP(PVR_TA_PM2_VSIZE, __builtin_ctz(src->txr2.height) - 3);
 
         /* Convert the texture address */
-        txr_base = (uint32_t)src->txr2.base;
-        txr_base = (txr_base & 0x00fffff8) >> 3;
+        txr_base = to_pvr_txr_ptr(src->txr.base);
 
         /* Polygon mode 3 */
         mode3 = FIELD_PREP(PVR_TA_PM3_MIPMAP, src->txr2.mipmap)
             | src->txr2.format
-            | txr_base;
+            | (uint32_t)txr_base;
     }
 
     dst->mode2_1 = mode2;
     dst->mode3_1 = mode3;
-
-    dst->d1 = 0xffffffff;
-    dst->d2 = 0xffffffff;
 }
 
 /* Create a colored polygon context for polygons affected by modifier volumes */

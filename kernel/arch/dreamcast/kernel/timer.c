@@ -12,6 +12,7 @@
 #include <arch/arch.h>
 #include <arch/timer.h>
 #include <arch/irq.h>
+#include <kos/regfield.h>
 
 /* Register access macros */
 #define TIMER8(o)   ( *((volatile uint8_t  *)(TIMER_BASE + (o))) )
@@ -41,12 +42,12 @@
 #define STR0    0   /* TCNT0 Counter Start */
 
 /* Timer Control Register fields */
-#define ICPF    (1 << 9)   /* Input Capture Interrupt Flag (TMU2 only) */
-#define UNF     (1 << 8)   /* Underflow Flag */
-#define ICPE    (3 << 6)   /* Input Capture Control (TMU2 only) */
-#define UNIE    (1 << 5)   /* Underflow Interrupt Control */
-#define CKEG    (3 << 3)   /* Clock Edge */
-#define TPSC    (7 << 0)   /* Timer Prescalar */
+#define ICPF    BIT(9)          /* Input Capture Interrupt Flag (TMU2 only) */
+#define UNF     BIT(8)          /* Underflow Flag */
+#define ICPE    GENMASK(7, 6)   /* Input Capture Control (TMU2 only) */
+#define UNIE    BIT(5)          /* Underflow Interrupt Control */
+#define CKEG    GENMASK(4, 3)   /* Clock Edge */
+#define TPSC    GENMASK(2, 0)   /* Timer Prescalar */
 
 /* Clock divisor value for each TPSC value. */
 #define TDIV(div)   (4 << (2 * div))
@@ -64,8 +65,11 @@ typedef enum PCK_DIV {
 #define TIMER_TPSC      PCK_DIV_4
 /* Timer IRQ priority levels (0-15) */
 #define TIMER_PRIO      15
-/* Peripheral clock rate (50Mhz) */
-#define TIMER_PCK       50000000
+
+/* Peripheral clock rate (~49.9 Mhz).
+ * The main clock is not exactly 200 MHz, and has been measured at
+ * 199499520 Hz. The peripheral clock is a quarter of that. */
+#define TIMER_PCK       (199499520 / 4)
 
 /* Timer registers, indexed by Timer ID. */
 static const unsigned tcors[] = { TCOR0, TCOR1, TCOR2 };
@@ -113,7 +117,7 @@ static int timer_prime_wait(int which, uint32_t millis, int interrupts) {
 int timer_start(int which) {
     assert(which <= TMU2);
 
-    TIMER8(TSTR) |= (1 << which);
+    TIMER8(TSTR) |= BIT(which);
     return 0;
 }
 
@@ -124,7 +128,7 @@ int timer_stop(int which) {
     timer_disable_ints(which);
 
     /* Stop timer */
-    TIMER8(TSTR) &= ~(1 << which);
+    TIMER8(TSTR) &= ~BIT(which);
 
     return 0;
 }
@@ -132,7 +136,7 @@ int timer_stop(int which) {
 int timer_running(int which) {
     assert(which <= TMU2);
 
-    return !!(TIMER8(TSTR) & (1 << which));
+    return !!(TIMER8(TSTR) & BIT(which));
 }
 
 /* Returns the count value of a timer */
@@ -274,7 +278,7 @@ static timer_val_t timer_getticks(const uint32_t *tns, uint32_t shift) {
         counter2 = TIMER32(tcnts[TMU2]);
         tmu2 = TIMER16(tcrs[TMU2]);
         unf2 = !!(tmu2 & UNF);
-    } while (__unlikely(unf1 != unf2 || counter1 < counter2));
+    } while(__unlikely(unf1 != unf2 || counter1 < counter2));
 
     delta = timer_ms_countdown - counter2;
 

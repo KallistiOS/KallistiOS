@@ -225,11 +225,11 @@ void pvr_begin_queued_render(void) {
     PVR_SET(PVR_ISP_TILEMAT_ADDR, tbuf->tile_matrix);
     PVR_SET(PVR_ISP_VERTBUF_ADDR, tbuf->vertex);
 
-    if(!pvr_state.to_texture[bufn])
+    if(!pvr_state.curr_to_texture)
         PVR_SET(PVR_RENDER_ADDR, rbuf->frame);
     else {
-        PVR_SET(PVR_RENDER_ADDR, pvr_state.to_txr_addr[bufn] | BIT(24));
-        PVR_SET(PVR_RENDER_ADDR_2, pvr_state.to_txr_addr[bufn] | BIT(24));
+        PVR_SET(PVR_RENDER_ADDR, pvr_state.to_txr_addr | BIT(24));
+        PVR_SET(PVR_RENDER_ADDR_2, pvr_state.to_txr_addr | BIT(24));
     }
 
     PVR_SET(PVR_BGPLANE_CFG, vert_end); /* Bkg plane location */
@@ -238,10 +238,10 @@ void pvr_begin_queued_render(void) {
     PVR_SET(PVR_PCLIP_X, pvr_state.pclip_x);
     PVR_SET(PVR_PCLIP_Y, pvr_state.pclip_y);
 
-    if(!pvr_state.to_texture[bufn])
+    if(!pvr_state.curr_to_texture)
         PVR_SET(PVR_RENDER_MODULO, (pvr_state.w * vid_pmode_bpp[vid_mode->pm]) / 8);
     else
-        PVR_SET(PVR_RENDER_MODULO, pvr_state.to_txr_rp[bufn]);
+        PVR_SET(PVR_RENDER_MODULO, pvr_state.to_txr_rp);
 
     // XXX Do we _really_ need this every time?
     // SETREG(PVR_FB_CFG_2, 0x00000009);        /* Alpha mode */
@@ -264,10 +264,6 @@ void pvr_blank_polyhdr_buf(int type, pvr_poly_hdr_t * poly) {
 
     /* Put in the list type */
     poly->cmd = FIELD_PREP(PVR_TA_CMD_TYPE, type) | 0x80840012;
-
-    /* Fill in dummy values */
-    poly->d1 = poly->d2 = poly->d3 = poly->d4 = 0xffffffff;
-
 }
 
 pvr_ptr_t pvr_get_front_buffer(void) {
@@ -281,9 +277,9 @@ pvr_ptr_t pvr_get_front_buffer(void) {
        view target, aka. the one not currently being displayed. */
     idx = pvr_state.view_target ^ pvr_state.render_completed;
 
-    addr = pvr_state.frame_buffers[idx].frame;
+    addr = pvr_state.frame_buffers[idx].frame & (PVR_RAM_SIZE - 1);
 
     /* The front buffer is in 32-bit memory, convert its address to make it
        addressable from the 64-bit memory */
-    return (pvr_ptr_t)(((addr << 1) & (PVR_RAM_SIZE - 1)) + PVR_RAM_BASE);
+    return (pvr_ptr_t)(addr * 2 + PVR_RAM_BASE);
 }

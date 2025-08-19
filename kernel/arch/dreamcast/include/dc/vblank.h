@@ -19,7 +19,7 @@
 #ifndef __DC_VBLANK_H
 #define __DC_VBLANK_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 #include <dc/asic.h>

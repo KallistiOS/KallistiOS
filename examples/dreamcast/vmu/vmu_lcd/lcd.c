@@ -30,7 +30,7 @@
 
 #include <arch/arch.h>
 
-static const char smiley[] = {
+static const uint8_t smiley[] = {
     0b00111100,
     0b01000010,
     0b10100101,
@@ -76,6 +76,9 @@ int main(int argc, char **argv) {
         for(vmu = 0; !!(dev = maple_enum_type(vmu, MAPLE_FUNC_LCD)); vmu++) {
             vmufb_present(&vmufb, dev);
         }
+
+        /* Now sleep for a bit so we can actually see the new frame */
+        usleep(2000);
     }
 
     return 0;

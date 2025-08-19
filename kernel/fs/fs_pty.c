@@ -28,14 +28,16 @@ or space present.
 #include <kos/mutex.h>
 #include <kos/cond.h>
 #include <kos/fs_pty.h>
-#include <sys/queue.h>
 
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <assert.h>
 #include <errno.h>
+
 #include <sys/ioctl.h>
+#include <sys/queue.h>
 
 /* pty buffer size */
 #define PTY_BUFFER_SIZE 1024
@@ -49,10 +51,10 @@ typedef LIST_HEAD(ptylist, ptyhalf) ptylist_t;
 typedef struct ptyhalf {
     LIST_ENTRY(ptyhalf) list;
 
-    struct ptyhalf * other;         /* Other end of the pipe */
+    struct ptyhalf *other;  /* Other end of the pipe */
     int master;             /* Non-zero if we are master */
 
-    uint8   buffer[PTY_BUFFER_SIZE];    /* Our _receive_ buffer */
+    uint8_t   buffer[PTY_BUFFER_SIZE];    /* Our _receive_ buffer */
     int head, tail;         /* Insert at head, remove at tail */
     size_t cnt;             /* Byte count in the queue */
 
@@ -190,7 +192,7 @@ int fs_pty_create(char *buffer, int maxbuflen, file_t *master_out, file_t *slave
     return 0;
 
 cleanup:
-    
+
     if(*slave_out > 0)
         fs_close(*slave_out);
     else
@@ -321,15 +323,15 @@ static void * pty_open_dir(const char * fn, int mode) {
     return (void *)fdobj;
 }
 
-static void * pty_open_file(const char * fn, int mode) {
+static void *pty_open_file(const char *fn, int mode) {
     /* Ok, they want an actual pty. We always give them one RDWR, no
        matter what is asked for (it's much simpler). Also we don't have to
        handle fds of our own here thanks to the VFS layer, just reference
        counting so a pty can be opened by more than one process. */
     int     master;
     int     id;
-    ptyhalf_t   * ph;
-    pipefd_t    * fdobj;
+    ptyhalf_t   *ph;
+    pipefd_t    *fdobj;
 
     /* Parse out the name we got */
     if(strlen(fn) != 4) {
@@ -390,7 +392,7 @@ static void * pty_open_file(const char * fn, int mode) {
     return (void *)fdobj;
 }
 
-static void * pty_open(vfs_handler_t * vfs, const char * fn, int mode) {
+static void *pty_open(vfs_handler_t *vfs, const char *fn, int mode) {
     (void)vfs;
 
     /* Skip any preceding slash */
@@ -448,7 +450,7 @@ static int pty_close(void *h) {
 }
 
 /* Read from a pty endpoint, kernel console special case */
-static ssize_t pty_read_serial(pipefd_t * fdobj, ptyhalf_t * ph, void * buf, size_t bytes) {
+static ssize_t pty_read_serial(pipefd_t *fdobj, ptyhalf_t *ph, void *buf, size_t bytes) {
     int c, r = 0;
 
     (void)ph;
@@ -482,7 +484,7 @@ static ssize_t pty_read_serial(pipefd_t * fdobj, ptyhalf_t * ph, void * buf, siz
         }
 
         /* Add the obtained char to the buffer and echo it */
-        ((uint8 *)buf)[r] = c;
+        ((uint8_t *)buf)[r] = c;
         dbgio_write(c);
         r++;
     }
@@ -495,7 +497,7 @@ static ssize_t pty_read_serial(pipefd_t * fdobj, ptyhalf_t * ph, void * buf, siz
 }
 
 /* Read from a pty endpoint */
-static ssize_t pty_read(void * h, void * buf, size_t bytes) {
+static ssize_t pty_read(void *h, void *buf, size_t bytes) {
     size_t avail;
     pipefd_t *fdobj;
     ptyhalf_t *ph;
@@ -543,7 +545,7 @@ static ssize_t pty_read(void * h, void * buf, size_t bytes) {
     if((ph->head + bytes) > PTY_BUFFER_SIZE) {
         avail = PTY_BUFFER_SIZE - ph->head;
         memcpy(buf, ph->buffer + ph->head, avail);
-        memcpy(((uint8 *)buf) + avail, ph->buffer, bytes - avail);
+        memcpy(((uint8_t *)buf) + avail, ph->buffer, bytes - avail);
     }
     else
         memcpy(buf, ph->buffer + ph->head, bytes);
@@ -560,7 +562,7 @@ done:
 }
 
 /* Write to a pty endpoint */
-static ssize_t pty_write(void * h, const void * buf, size_t bytes) {
+static ssize_t pty_write(void *h, const void *buf, size_t bytes) {
     size_t avail;
     pipefd_t *fdobj;
     ptyhalf_t *ph;
@@ -576,7 +578,7 @@ static ssize_t pty_write(void * h, const void * buf, size_t bytes) {
     /* Special case the unattached console */
     if(ph->id == 0 && !ph->master && ph->other->refcnt == 0) {
         /* This actually blocks, but fooey.. :) */
-        dbgio_write_buffer_xlat((const uint8 *)buf, bytes);
+        dbgio_write_buffer_xlat((const uint8_t *)buf, bytes);
         return bytes;
     }
 
@@ -613,7 +615,7 @@ static ssize_t pty_write(void * h, const void * buf, size_t bytes) {
     if((ph->tail + bytes) > PTY_BUFFER_SIZE) {
         avail = PTY_BUFFER_SIZE - ph->tail;
         memcpy(ph->buffer + ph->tail, buf, avail);
-        memcpy(ph->buffer, ((const uint8 *)buf) + avail, bytes - avail);
+        memcpy(ph->buffer, ((const uint8_t *)buf) + avail, bytes - avail);
     }
     else
         memcpy(ph->buffer + ph->tail, buf, bytes);
@@ -631,9 +633,9 @@ done:
 }
 
 /* Get total size. For this we return the number of bytes available for reading. */
-static size_t pty_total(void * h) {
-    pipefd_t    * fdobj;
-    ptyhalf_t   * ph;
+static size_t pty_total(void *h) {
+    pipefd_t    *fdobj;
+    ptyhalf_t   *ph;
 
     fdobj = (pipefd_t *)h;
     ph = fdobj->d.p;
@@ -647,9 +649,9 @@ static size_t pty_total(void * h) {
 }
 
 /* Read a directory entry */
-static dirent_t * pty_readdir(void * h) {
-    pipefd_t * fdobj = (pipefd_t *)h;
-    dirlist_t * dl;
+static dirent_t *pty_readdir(void *h) {
+    pipefd_t *fdobj = (pipefd_t *)h;
+    dirlist_t *dl;
 
     assert(h);
 
@@ -850,19 +852,19 @@ static vfs_handler_t vh = {
 static int initted = 0;
 
 /* Initialize the file system */
-int fs_pty_init(void) {
+void fs_pty_init(void) {
     int cm, cs;
     int tm, ts;
 
     if(initted)
-        return 0;
+        return;
 
     /* Init our list of ptys */
     LIST_INIT(&ptys);
     pty_id_highest = -1;
 
     if(nmmgr_handler_add(&vh.nmmgr) < 0)
-        return -1;
+        return;
 
     mutex_init(&list_mutex, MUTEX_TYPE_NORMAL);
     initted = 1;
@@ -876,16 +878,14 @@ int fs_pty_init(void) {
     fs_pty_create(NULL, 0, &tm, &ts);
     fs_close(tm);
     fs_close(ts);
-
-    return 0;
 }
 
 /* De-init the file system */
-int fs_pty_shutdown(void) {
+void fs_pty_shutdown(void) {
     ptyhalf_t *n, *c;
 
     if(!initted)
-        return 0;
+        return;
 
     mutex_lock_irqsafe(&list_mutex);
 
@@ -908,6 +908,4 @@ int fs_pty_shutdown(void) {
     mutex_destroy(&list_mutex);
 
     initted = 0;
-
-    return 0;
 }

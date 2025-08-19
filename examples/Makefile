@@ -9,7 +9,7 @@
 # Get a list of the sub-directories that contain a Makefile
 get_subdirs=$(foreach each,$(wildcard $(1)/*),$(if $(wildcard $(each)/Makefile),$(each),) $(call get_subdirs,$(each)))
 
-DIRS := $(call get_subdirs, $(shell pwd))
+DIRS := $(call get_subdirs, $(shell pwd)/$(KOS_ARCH))
 
 .PHONY: all $(DIRS)
 

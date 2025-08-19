@@ -29,7 +29,7 @@
 #ifndef __KOS_OPTS_H
 #define __KOS_OPTS_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 /** \defgroup debugging_options Options
@@ -42,9 +42,22 @@ __BEGIN_DECLS
    @{
 */
 
+/* Completely disable debug logging at compile time if defined. */
+/* #define DBGLOG_DISABLED */
+
+/* Set the maximum allowed dbglog level. Normally the level is adjustable at
+   runtime, but that means keeping all debug information even in release builds. */
+#ifdef DBGLOG_DISABLED
+#define DBGLOG_LEVEL_SUPPORT -1
+#endif
+
+/* This retains the old behavior of all debugging being retained for runtime */
+#ifndef DBGLOG_LEVEL_SUPPORT
+#define DBGLOG_LEVEL_SUPPORT 127
+#endif
+
 /* Enable debugging in fs_vmu. */
 /* #define VMUFS_DEBUG 1 */
-
 
 /* Enable to allow extra debugging checks in the malloc code itself. This
    sometimes catches corrupted blocks. Recommended during debugging phases. */
@@ -112,16 +125,6 @@ __BEGIN_DECLS
 #if KOS_DEBUG >= 3
 #define PVR_KM_DBG_VERBOSE 1
 #define VMUFS_DEBUG 1
-#endif
-
-/** \brief  The maximum number of cd files that can be open at a time. */
-#ifndef FS_CD_MAX_FILES
-#define FS_CD_MAX_FILES 8
-#endif
-
-/** \brief  The maximum number of romdisk files that can be open at a time. */
-#ifndef FS_ROMDISK_MAX_FILES
-#define FS_ROMDISK_MAX_FILES 16
 #endif
 
 /** \brief  The maximum number of ramdisk files that can be open at a time. */

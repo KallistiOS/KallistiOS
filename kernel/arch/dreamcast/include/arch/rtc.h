@@ -24,14 +24,14 @@
 #ifndef __ARCH_RTC_H
 #define __ARCH_RTC_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 #include <time.h>
 
 /** \defgroup rtc Real-Time Clock
     \brief        Real-Time Clock (RTC) Management
-    \ingroup      timing 
+    \ingroup      timing
 
     Provides an API for fetching and managing the date/time using
     the Dreamcast's real-time clock. All timestamps are in standard

@@ -12,6 +12,7 @@
 #include <dc/video.h>
 #include <dc/asic.h>
 #include <dc/vblank.h>
+#include <kos/dbglog.h>
 #include "pvr_internal.h"
 
 /*
@@ -160,19 +161,19 @@ int pvr_init(const pvr_init_params_t *params) {
     asic_evt_set_handler(ASIC_EVT_PVR_RENDERDONE_TSP, pvr_int_handler, NULL);
     asic_evt_enable(ASIC_EVT_PVR_RENDERDONE_TSP, ASIC_IRQ_DEFAULT);
 
-#ifdef PVR_RENDER_DBG
-    /* Hook up interrupt handlers for error events */
-    asic_evt_set_handler(ASIC_EVT_PVR_ISP_OUTOFMEM, pvr_int_handler, NULL);
-    asic_evt_enable(ASIC_EVT_PVR_ISP_OUTOFMEM, ASIC_IRQ_DEFAULT);
-    asic_evt_set_handler(ASIC_EVT_PVR_STRIP_HALT, pvr_int_handler, NULL);
-    asic_evt_enable(ASIC_EVT_PVR_STRIP_HALT, ASIC_IRQ_DEFAULT);
-    asic_evt_set_handler(ASIC_EVT_PVR_OPB_OUTOFMEM, pvr_int_handler, NULL);
-    asic_evt_enable(ASIC_EVT_PVR_OPB_OUTOFMEM, ASIC_IRQ_DEFAULT);
-    asic_evt_set_handler(ASIC_EVT_PVR_TA_INPUT_ERR, pvr_int_handler, NULL);
-    asic_evt_enable(ASIC_EVT_PVR_TA_INPUT_ERR, ASIC_IRQ_DEFAULT);
-    asic_evt_set_handler(ASIC_EVT_PVR_TA_INPUT_OVERFLOW, pvr_int_handler, NULL);
-    asic_evt_enable(ASIC_EVT_PVR_TA_INPUT_OVERFLOW, ASIC_IRQ_DEFAULT);
-#endif
+    if(__is_defined(PVR_RENDER_DBG)) {
+        /* Hook up interrupt handlers for error events */
+        asic_evt_set_handler(ASIC_EVT_PVR_ISP_OUTOFMEM, pvr_int_handler, NULL);
+        asic_evt_enable(ASIC_EVT_PVR_ISP_OUTOFMEM, ASIC_IRQ_DEFAULT);
+        asic_evt_set_handler(ASIC_EVT_PVR_STRIP_HALT, pvr_int_handler, NULL);
+        asic_evt_enable(ASIC_EVT_PVR_STRIP_HALT, ASIC_IRQ_DEFAULT);
+        asic_evt_set_handler(ASIC_EVT_PVR_OPB_OUTOFMEM, pvr_int_handler, NULL);
+        asic_evt_enable(ASIC_EVT_PVR_OPB_OUTOFMEM, ASIC_IRQ_DEFAULT);
+        asic_evt_set_handler(ASIC_EVT_PVR_TA_INPUT_ERR, pvr_int_handler, NULL);
+        asic_evt_enable(ASIC_EVT_PVR_TA_INPUT_ERR, ASIC_IRQ_DEFAULT);
+        asic_evt_set_handler(ASIC_EVT_PVR_TA_INPUT_OVERFLOW, pvr_int_handler, NULL);
+        asic_evt_enable(ASIC_EVT_PVR_TA_INPUT_OVERFLOW, ASIC_IRQ_DEFAULT);
+    }
 
     /* 3d-specific parameters; these are all about rendering and
        nothing to do with setting up the video; some stuff in here

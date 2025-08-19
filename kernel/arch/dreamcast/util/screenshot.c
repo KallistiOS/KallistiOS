@@ -12,13 +12,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dc/video.h>
+#include <kos/dbglog.h>
 #include <kos/fs.h>
 #include <arch/irq.h>
 
 #include <arch/timer.h>
 
 /*
-    Provides a very simple screen shot facility (dumps raw 24bpp RGB image 
+    Provides a very simple screen shot facility (dumps raw 24bpp RGB image
     data from the currently viewed framebuffer).
 
     This will now work with any of the supported video modes.
@@ -36,9 +37,14 @@ size_t vid_screen_shot_data(uint8_t **buffer) {
     /* Allocate buffer to store the 24bpp image data */
     numpix = vid_mode->width * vid_mode->height;
     buffer_size = numpix * BYTES_PER_PIXEL;
+    if(!buffer_size) {
+        dbglog(DBG_ERROR, "vid_screen_shot_data: invalid video mode.\n");
+        return 0;
+    }
+
     *buffer = (uint8_t *)malloc(buffer_size);
     if(*buffer == NULL) {
-        dbglog(DBG_ERROR, "vid_screen_shot_data: can't allocate memory\n"); 
+        dbglog(DBG_ERROR, "vid_screen_shot_data: can't allocate memory\n");
         return 0;
     }
 
@@ -101,7 +107,7 @@ size_t vid_screen_shot_data(uint8_t **buffer) {
             }
             break;
         default:
-            dbglog(DBG_ERROR, "vid_screen_shot_data: can't process pixel mode %d\n", vid_mode->pm); 
+            dbglog(DBG_ERROR, "vid_screen_shot_data: can't process pixel mode %d\n", vid_mode->pm);
             free(*buffer);
             *buffer = NULL;
             irq_restore(save);

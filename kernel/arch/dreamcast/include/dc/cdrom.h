@@ -3,16 +3,18 @@
    dc/cdrom.h
    Copyright (C) 2000-2001 Megan Potter
    Copyright (C) 2014 Donald Haase
-   Copyright (C) 2023, 2024 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024, 2025 Ruslan Rostovtsev
 */
 
 #ifndef __DC_CDROM_H
 #define __DC_CDROM_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 #include <arch/types.h>
+#include <stdint.h>
+#include <stdbool.h>
 
 /** \file    dc/cdrom.h
     \brief   CD access to the GD-ROM drive.
@@ -275,6 +277,10 @@ typedef struct {
 #define TOC_TRACK(n) ( ((n) & 0x00ff0000) >> 16 )
 /** @} */
 
+/** \brief  CD-ROM streams callback
+*/
+typedef void (*cdrom_stream_callback_t)(void *data);
+
 /** \brief    Set the sector size for read sectors.
     \ingroup  gdrom
 
@@ -314,7 +320,20 @@ int cdrom_exec_cmd(int cmd, void *param);
 
     \return                 \ref cd_cmd_response
 */
-int cdrom_exec_cmd_timed(int cmd, void *param, int timeout);
+int cdrom_exec_cmd_timed(int cmd, void *param, uint32_t timeout);
+
+/** \brief    Abort a CD-ROM command with timeout.
+    \ingroup  gdrom
+
+    This function aborts current command using the BIOS syscall for
+    aborting GD-ROM commands. They can also abort DMA transfers.
+
+    \param  timeout         Timeout in milliseconds.
+    \param  abort_dma       Whether to abort the DMA transfer.
+
+    \return                 \ref cd_cmd_response
+*/
+int cdrom_abort_cmd(uint32_t timeout, bool abort_dma);
 
 /** \brief    Get the status of the GD-ROM drive.
     \ingroup  gdrom
@@ -387,13 +406,14 @@ int cdrom_reinit_ex(int sector_part, int cdxa, int sector_size);
 /** \brief    Read the table of contents from the disc.
     \ingroup  gdrom
 
-    This function reads the TOC from the specified session of the disc.
+    This function reads the TOC from the specified area of the disc.
+    On regular CD-ROMs, there are only low density area.
 
     \param  toc_buffer      Space to store the returned TOC in.
-    \param  session         The session of the disc to read.
+    \param  high_density    Whether to read from the high density area.
     \return                 \ref cd_cmd_response
 */
-int cdrom_read_toc(CDROM_TOC *toc_buffer, int session);
+int cdrom_read_toc(CDROM_TOC *toc_buffer, bool high_density);
 
 /** \brief    Read one or more sector from a CD-ROM.
     \ingroup  gdrom
@@ -429,6 +449,66 @@ int cdrom_read_sectors_ex(void *buffer, int sector, int cnt, int mode);
     \see    cdrom_read_sectors_ex
 */
 int cdrom_read_sectors(void *buffer, int sector, int cnt);
+
+/** \brief    Start streaming from a CD-ROM.
+    \ingroup  gdrom
+
+    This function pre-reads the specified number of sectors from the disc.
+
+    \param  sector          The sector to start reading from.
+    \param  cnt             The number of sectors to read, 0x1ff means until end of disc.
+    \param  mode            \ref cd_read_sector_mode
+    \return                 \ref cd_cmd_response
+    \see    cdrom_transfer_request
+*/
+int cdrom_stream_start(int sector, int cnt, int mode);
+
+/** \brief    Stop streaming from a CD-ROM.
+    \ingroup  gdrom
+
+    This function finishing stream commands.
+
+    \param  abort_dma       Abort current G1 DMA transfer.
+
+    \return                 \ref cd_cmd_response
+    \see    cdrom_transfer_request
+*/
+int cdrom_stream_stop(bool abort_dma);
+
+/** \brief    Request stream transfer.
+    \ingroup  gdrom
+
+    This function request data from stream.
+
+    \param  buffer          Space to store the read sectors (DMA aligned to 32, PIO to 2).
+    \param  size            The size in bytes to read (DMA min 32, PIO min 2).
+    \param  block           True to block until DMA transfer completes.
+    \return                 \ref cd_cmd_response
+    \see    cdrom_stream_start
+*/
+int cdrom_stream_request(void *buffer, size_t size, bool block);
+
+/** \brief    Check requested stream transfer.
+    \ingroup  gdrom
+
+    This function check requested stream transfer.
+
+    \param  size            The transfered (if in progress) or remain size in bytes.
+    \return                 1 - is in progress, 0 - done
+    \see    cdrom_transfer_request
+*/
+int cdrom_stream_progress(size_t *size);
+
+/** \brief    Setting up a callback for transfers.
+    \ingroup  gdrom
+
+    This callback is called for every transfer request that is completed.
+
+    \param  callback        Callback function.
+    \param  param           Callback function param.
+    \see    cdrom_transfer_request
+*/
+void cdrom_stream_set_callback(cdrom_stream_callback_t callback, void *param);
 
 /** \brief    Read subcode data from the most recently read sectors.
     \ingroup  gdrom

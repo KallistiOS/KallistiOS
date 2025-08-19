@@ -2,6 +2,19 @@
 
 | Date<br/>_____________ | Author(s)<br/>_____________ | Changes<br/>_____________ |
 |:-----------------------|:----------------------------|---------------------------|
+| 2025-08-03 | Eric Fradella | Update 15.x profiles to 15.2.0/15.2.1-dev. All dev profiles upgraded to Binutils 2.45 and GDB 16.3 |
+| 2025-07-13 | Paul Cercueil | Add new profile for the LRA development toolchain |
+| 2025-07-13 | Paul Cercueil | Re-introduce ARM toolchain support |
+| 2025-07-13 | Paul Cercueil | Add support for PPC toolchains and add GameCube profile |
+| 2025-07-13 | Paul Cercueil | Default to using all CPU cores for building toolchains |
+| 2025-07-13 | Paul Cercueil | Do shallow clones of git repositories |
+| 2025-07-13 | Paul Cercueil | Rework startup code mechanism |
+| 2025-07-13 | Paul Cercueil | Drop fake-kos.S and replace with a C equivalent |
+| 2025-07-13 | Paul Cercueil | Introduce support for multiple architectures and decouple ARM |
+| 2025-07-13 | Paul Cercueil | Add kos-gdb wrapper around gdb-multiarch or sh-elf-gdb |
+| 2025-06-07 | Eric Fradella | Upgrade 13.x series profiles to 13.4.0 and 13.4.1. |
+| 2025-05-23 | Eric Fradella | Upgrade 14.x series profiles to 14.3.0 and 14.3.1. |
+| 2025-04-18 | Eric Fradella | Add 15.1.0 release profile and 15.1.1/16.0.0 dev profiles. All dev profiles upgraded to Binutils 2.44 and GDB 16.2 |
 | 2025-02-19 | Eric Fradella | Remove profiles and patches for older toolchains (9.3.0, 10.5.0, 11.5.0, 12.4.0) and Rust dev toolchains. Support for Newlib versions prior to 4.x now deprecated. |
 | 2025-01-26 | Mickaël Cardoso | Update documentations. |
 | 2025-01-05 | Eric Fradella | Add support and update toolchain profiles for Newlib 4.5.0, Binutils 2.43.1, and GDB 15.2. |

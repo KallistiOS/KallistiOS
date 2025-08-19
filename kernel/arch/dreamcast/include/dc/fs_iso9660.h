@@ -26,10 +26,9 @@
 #ifndef __DC_FS_ISO9660_H
 #define __DC_FS_ISO9660_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
 #include <kos/limits.h>
 #include <kos/fs.h>
 

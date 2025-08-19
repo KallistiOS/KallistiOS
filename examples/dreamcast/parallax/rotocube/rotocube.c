@@ -39,7 +39,7 @@ static plx_dr_state_t dr;
 
 // Draws the full cube at the current position.
 void drawcube(void) {
-    uint32 color = 0xff808080;
+    uint32_t color = 0xff808080;
 
     plx_dr_init(&dr);
 
@@ -84,7 +84,7 @@ void drawcube(void) {
 
 // Draws the wave in the background (2D)
 void drawwave(int theta) {
-    uint32 color = 0xffa0a0a0;
+    uint32_t color = 0xffa0a0a0;
     int i, divs = 320;
     float x, y, t;
 
@@ -178,10 +178,8 @@ int main(int argc, char **argv) {
     // You have to keep a watch on these, especially the vertex used
     // for really poly intensive effects.
     pvr_get_stats(&stats);
-    dbglog(DBG_DEBUG, "3D Stats: %d vblanks, frame rate ~%f fps, max vertex used %d bytes\n",
+    dbglog(DBG_INFO, "3D Stats: %d vblanks, frame rate ~%f fps, max vertex used %d bytes\n",
            stats.vbl_count, (double)stats.frame_rate, stats.vtx_buffer_used_max);
 
     return 0;
 }
-
-

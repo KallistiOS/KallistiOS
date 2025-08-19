@@ -7,14 +7,23 @@
  */
 
 #include <assert.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <kos/dbglog.h>
 #include <kos/genwait.h>
 #include <kos/regfield.h>
 #include <kos/thread.h>
 #include <dc/pvr.h>
 #include <dc/sq.h>
 #include "pvr_internal.h"
+
+/* FIXME: NDEBUG is a reserved C macro, we shouldn't use it like that... */
+#ifdef NDEBUG
+#  define PVR_DEBUG 0
+#else
+#  define PVR_DEBUG 1
+#endif
 
 /*
 
@@ -39,7 +48,7 @@ void *pvr_set_vertbuf(pvr_list_t list, void *buffer, size_t len) {
     assert(pvr_state.lists_enabled & BIT(list));
 
     // Make sure the buffer parameters are valid.
-    assert(!(((ptr_t)buffer) & 31));
+    assert(__is_aligned(buffer, 32));
     assert(!(len & 63));
 
     // Save the old value.
@@ -89,7 +98,7 @@ void pvr_vertbuf_written(pvr_list_t list, size_t amt) {
 
 static void pvr_start_ta_rendering(void) {
     // Make sure to wait until the TA is ready to start rendering a new scene
-    if(!pvr_state.ta_ready) {
+    if(!pvr_state.ta_checked_ready) {
         pvr_wait_ready();
 
         // If using a single vertex buffer, we have to wait until the PVR is
@@ -97,12 +106,15 @@ static void pvr_start_ta_rendering(void) {
         if(!pvr_state.vbuf_doublebuf)
             pvr_wait_render_done();
 
-        pvr_state.ta_ready = 1;
-    }
+        pvr_state.ta_checked_ready = 1;
+        pvr_state.curr_to_texture = pvr_state.next_to_texture;
+        pvr_state.to_txr_rp = pvr_state.next_to_txr_rp;
+        pvr_state.to_txr_addr = pvr_state.next_to_txr_addr;
 
-    // Starting from that point, we consider that the Tile Accelerator
-    // might be busy.
-    pvr_state.ta_busy = 1;
+        // Starting from that point, we consider that the Tile Accelerator
+        // might be busy.
+        pvr_state.ta_busy = 1;
+    }
 }
 
 /* Begin collecting data for a frame of 3D output to the off-screen
@@ -110,7 +122,8 @@ static void pvr_start_ta_rendering(void) {
 void pvr_scene_begin(void) {
     int i;
 
-    pvr_state.ta_ready = 0;
+    pvr_state.next_to_texture = 0;
+    pvr_state.ta_checked_ready = 0;
     pvr_state.lists_closed = 0;
 
     // Get general stuff ready.
@@ -139,22 +152,22 @@ void pvr_scene_begin(void) {
    rx and ry are appropriate (i.e. *rx = 1024 and *ry = 512 for 640x480).
    Also, note that this probably won't work with DMA mode for now... */
 void pvr_scene_begin_txr(pvr_ptr_t txr, uint32 *rx, uint32 *ry) {
-    int buf = pvr_state.view_target ^ 1;
     (void)ry;
 
     /* For the most part, this isn't very much different than the normal render setup.
        And, yes, if you remember KOS 1.1.6, this pretty much looks similar to what was
        there. I'm quite uncreative with my variable naming ;) */
-    // Mark us as rendering to a texture
-    pvr_state.to_texture[buf] = 1;
 
     // Set the render pitch up
-    pvr_state.to_txr_rp[buf] = (*rx) * 2 / 8;
+    pvr_state.next_to_txr_rp = (*rx) * 2 / 8;
 
     // Set the output address
-    pvr_state.to_txr_addr[buf] = (uint32)(txr) - PVR_RAM_INT_BASE;
+    pvr_state.next_to_txr_addr = (uint32)(txr) - PVR_RAM_INT_BASE;
 
     pvr_scene_begin();
+
+    // Mark us as rendering to a texture
+    pvr_state.next_to_texture = 1;
 }
 
 static bool pvr_list_dma;
@@ -170,13 +183,10 @@ inline static bool pvr_list_uses_dma(pvr_list_t list) {
    error (-1) is returned. */
 int pvr_list_begin(pvr_list_t list) {
     /* Check to make sure we can do this */
-#ifndef NDEBUG
-    if(!pvr_state.dma_mode && pvr_state.lists_closed & BIT(list)) {
+    if(PVR_DEBUG && !pvr_state.dma_mode && pvr_state.lists_closed & BIT(list)) {
         dbglog(DBG_WARNING, "pvr_list_begin: attempt to open already closed list\n");
         return -1;
     }
-
-#endif  /* !NDEBUG */
 
     /* If we already had a list open, close it first */
     if(pvr_state.list_reg_open != -1 && pvr_state.list_reg_open != (int)list)
@@ -203,13 +213,10 @@ int pvr_list_begin(pvr_list_t list) {
    simplicity we just always submit a blank primitive. */
 int pvr_list_finish(void) {
     /* Check to make sure we can do this */
-#ifndef NDEBUG
-    if(!pvr_state.dma_mode && pvr_state.list_reg_open == -1) {
+    if(PVR_DEBUG && !pvr_state.dma_mode && pvr_state.list_reg_open == -1) {
         dbglog(DBG_WARNING, "pvr_list_finish: attempt to close unopened list\n");
         return -1;
     }
-
-#endif  /* !NDEBUG */
 
     /* Check for immediate submission:
        A. If we are not in DMA mode, we must be submitting polygons
@@ -242,21 +249,17 @@ int pvr_list_finish(void) {
 
 int pvr_prim(const void *data, size_t size) {
     /* Check to make sure we can do this */
-#ifndef NDEBUG
-    if(pvr_state.list_reg_open == -1) {
+    if(PVR_DEBUG && pvr_state.list_reg_open == -1) {
         dbglog(DBG_WARNING, "pvr_prim: attempt to submit to unopened list\n");
         return -1;
     }
-#endif  /* !NDEBUG */
 
     if(!pvr_list_dma) {
-#ifndef NDEBUG
-        if((uintptr_t)data & 0x7) {
+        if(PVR_DEBUG && ((uintptr_t)data & 0x7)) {
             dbglog(DBG_WARNING, "pvr_prim: attempt to submit data unaligned "
                                 "to 8 bytes.\n");
             return -1;
         }
-#endif  /* !NDEBUG */
 
         /* Immediately send data via SQs. */
         sq_fast_cpy(SQ_MASK_DEST(PVR_TA_INPUT), data, size >> 5);
@@ -280,11 +283,11 @@ int pvr_list_prim(pvr_list_t list, const void *data, size_t size) {
     /* Ensure at least 4-byte alignment. */
     assert(!((uintptr_t)data & 0x3));
 
+    /* Ensure we won't overflow the vertex buffer. */
+    assert(b->ptr[list] + size <= b->size[list]);
+
     memcpy(b->base[list] + b->ptr[list], data, size);
     b->ptr[list] += size;
-
-    /* Ensure we didn't overflow the vertex buffer. */
-    assert(b->ptr[list] <= b->size[list]);
 
     return 0;
 }

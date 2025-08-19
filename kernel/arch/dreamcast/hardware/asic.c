@@ -102,6 +102,7 @@
 #include <dc/asic.h>
 #include <arch/spinlock.h>
 #include <kos/genwait.h>
+#include <kos/regfield.h>
 #include <kos/worker_thread.h>
 
 /* XXX These based on g1ata.c and pvr.h and should be replaced by a standardized method */
@@ -167,7 +168,7 @@ static void handler_irq9(irq_t source, irq_context_t *context, void *data) {
         for(i = 0; i < ASIC_EVT_REG_HNDS; i++) {
             entry = &handlers[reg][i];
 
-            if((mask & (1 << i)) && entry->hdl != NULL)
+            if((mask & BIT(i)) && entry->hdl != NULL)
                 entry->hdl((reg << 8) | i, entry->data);
         }
     }
@@ -195,7 +196,7 @@ void asic_evt_disable(uint16_t code, uint8_t irqlevel) {
 
     uint32_t addr = ASIC_EVT_REG_ADDR(irqlevel, evtreg);
     uint32_t val = IN32(addr);
-    OUT32(addr, val & ~(1 << evt));
+    OUT32(addr, val & ~BIT(evt));
 }
 
 /* Enable a particular G2 event */
@@ -209,7 +210,7 @@ void asic_evt_enable(uint16_t code, uint8_t irqlevel) {
 
     uint32_t addr = ASIC_EVT_REG_ADDR(irqlevel, evtreg);
     uint32_t val = IN32(addr);
-    OUT32(addr, val | (1 << evt));
+    OUT32(addr, val | BIT(evt));
 }
 
 /* Initialize events */
@@ -254,14 +255,14 @@ static void asic_threaded_irq(void *data) {
 
     thdata->hdl(thdata->source, thdata->data);
 
-    if (thdata->unmask)
+    if(thdata->unmask)
         thdata->unmask(thdata->source);
 }
 
 static void asic_thirq_dispatch(uint32_t source, void *data) {
     struct asic_thdata *thdata = data;
 
-    if (thdata->ack_and_mask)
+    if(thdata->ack_and_mask)
         thdata->ack_and_mask(source);
 
     thdata->source = source;
@@ -279,7 +280,7 @@ int asic_evt_request_threaded_handler(uint16_t code, asic_evt_handler hnd,
     kthread_t *thd;
 
     thdata = malloc(sizeof(*thdata));
-    if (!thdata)
+    if(!thdata)
         return -1; /* TODO: What return code? */
 
     thdata->hdl = hnd;
@@ -290,7 +291,7 @@ int asic_evt_request_threaded_handler(uint16_t code, asic_evt_handler hnd,
     flags = irq_disable();
 
     thdata->worker = thd_worker_create(asic_threaded_irq, thdata);
-    if (!thdata->worker) {
+    if(!thdata->worker) {
         irq_restore(flags);
         free(thdata);
         return -1; /* TODO: What return code? */
@@ -324,7 +325,7 @@ void asic_evt_remove_handler(uint16_t code)
     entry = asic_evt_handlers[evtreg][evt];
     asic_evt_set_handler(code, NULL, NULL);
 
-    if (entry.hdl == asic_thirq_dispatch) {
+    if(entry.hdl == asic_thirq_dispatch) {
         thdata = entry.data;
 
         thd_worker_destroy(thdata->worker);

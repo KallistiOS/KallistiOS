@@ -18,7 +18,7 @@
     \author Megan Potter
 */
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 /** \addtogroup math_matrices

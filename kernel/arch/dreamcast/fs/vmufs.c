@@ -10,6 +10,7 @@
 #include <string.h>
 #include <time.h>
 
+#include <kos/dbglog.h>
 #include <kos/mutex.h>
 #include <dc/vmufs.h>
 #include <dc/maple.h>
@@ -48,7 +49,7 @@ Function comments located in vmufs.h.
 static mutex_t mutex;
 
 /* Convert a decimal number to BCD; max of two digits */
-static uint8 dec_to_bcd(int dec) {
+static uint8 __pure dec_to_bcd(int dec) {
     uint8 rv = 0;
 
     rv = dec % 10;
@@ -758,7 +759,7 @@ int vmufs_write(maple_device_t * dev, const char * fn, void * inbuf, int insize,
     fnlength = strlen(fn);
     fnlength = fnlength > 12 ? 12 : fnlength;
     memcpy(nd.filename, fn, fnlength);
-    if (fnlength < 12) {
+    if(fnlength < 12) {
         memset(nd.filename + fnlength, '\0', 12 - fnlength);
     }
 

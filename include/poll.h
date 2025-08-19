@@ -22,7 +22,7 @@
 #ifndef __POLL_H
 #define __POLL_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 #include <sys/types.h>
 
 __BEGIN_DECLS

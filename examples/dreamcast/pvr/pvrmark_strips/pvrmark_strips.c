@@ -10,7 +10,7 @@
 
 pvr_init_params_t pvr_params = {
     { PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_0, PVR_BINSIZE_0, PVR_BINSIZE_0 },
-    512 * 1024
+    512 * 1024, 0, 0, 0, 0, 0
 };
 
 enum { PHASE_HALVE, PHASE_INCR, PHASE_DECR, PHASE_FINAL };
@@ -33,7 +33,7 @@ void stats(void) {
     pvr_stats_t stats;
 
     pvr_get_stats(&stats);
-    dbglog(DBG_DEBUG, "3D Stats: %d VBLs, frame rate ~%f fps\n",
+    dbglog(DBG_INFO, "3D Stats: %d VBLs, frame rate ~%f fps\n",
            stats.vbl_count, (double)stats.frame_rate);
 }
 

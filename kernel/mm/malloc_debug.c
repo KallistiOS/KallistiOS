@@ -25,24 +25,24 @@ static spinlock_t mutex = SPINLOCK_INITIALIZER;
    char[1024]   post-buffer no-touch zone
  */
 typedef struct memctl {
-    uint32      magic;
-    uint32      size;
+    uint32_t    magic;
+    uint32_t    size;
     tid_t       thread;
-    uint32      addr;
+    uint32_t    addr;
     int     inuse, damaged;
-    uint32      *post;
+    uint32_t    *post;
     const char  *type;
     struct memctl   *next;
 } memctl_t;
 
 static memctl_t *first = NULL, *last = NULL;
 
-#define get_memctl(p) ((memctl_t*)( ((uint32)(p)) - 1024))
+#define get_memctl(p) ((memctl_t*)( ((uint32_t)(p)) - 1024))
 
 void * sbrk(int amt);
 
 void *calloc(size_t nmemb, size_t size) {
-    uint32 pr = arch_get_ret_addr();
+    uint32_t pr = arch_get_ret_addr();
     void * ptr;
     memctl_t * ctl;
 
@@ -58,9 +58,9 @@ void *calloc(size_t nmemb, size_t size) {
 
 void *malloc(size_t amt) {
     memctl_t *ctl;
-    uint32 *nt1, *nt2;
-    uint32 *space;
-    uint32 pr = arch_get_ret_addr();
+    uint32_t *nt1, *nt2;
+    uint32_t *space;
+    uint32_t pr = arch_get_ret_addr();
     int i;
 
     spinlock_lock_scoped(&mutex);
@@ -83,7 +83,7 @@ void *malloc(size_t amt) {
         last->next = ctl;
 
     /* Fill pre-buffer no-touch zone */
-    nt1 = ((uint32*)ctl);
+    nt1 = ((uint32_t *)ctl);
 
     for(i = sizeof(memctl_t) / 4; i < 1024 / 4; i++) {
         nt1[i] = PRE_MAGIC;
@@ -109,21 +109,21 @@ void *malloc(size_t amt) {
     last = ctl;
 
     printf("Thread %d/%08lx allocated %ld bytes at %08lx; %08lx left\n",
-           ctl->thread, ctl->addr, ctl->size, space, _arch_mem_top - (uint32)sbrk(0));
+           ctl->thread, ctl->addr, ctl->size, space, _arch_mem_top - (uint32_t)sbrk(0));
 
-    assert(!(((uint32)space) & 7));
+    assert(!(((uint32_t)space) & 7));
 
     return space;
 }
 
 void *memalign(size_t alignment, size_t amt) {
-    uint32 sb, pr = arch_get_ret_addr();
+    uint32_t sb, pr = arch_get_ret_addr();
     memctl_t * ctl;
     void *rv;
 
     printf("memalign: real address for the following is %08lx\n   ", pr);
 
-    sb = (uint32)sbrk(0);
+    sb = (uint32_t)sbrk(0);
 
     if(sb & (alignment - 1)) {
         sbrk(alignment - (sb & (alignment - 1)));
@@ -138,9 +138,9 @@ void *memalign(size_t alignment, size_t amt) {
     return rv;
 }
 
-void * realloc(void *ptr, size_t newsize) {
+void *realloc(void *ptr, size_t newsize) {
     memctl_t *ctl;
-    uint32 pr = arch_get_ret_addr();
+    uint32_t pr = arch_get_ret_addr();
     void *nb;
 
     printf("realloc: real address for the following is %08lx\n   ", pr);
@@ -171,15 +171,15 @@ void * realloc(void *ptr, size_t newsize) {
 
 void free(void *block) {
     memctl_t *ctl;
-    uint32 *nt1, *nt2, pr = arch_get_ret_addr();
+    uint32_t *nt1, *nt2, pr = arch_get_ret_addr();
     int i;
 
     spinlock_lock_scoped(&mutex);
 
     printf("Thread %d/%08lx freeing block @ %08lx\n",
-           thd_current->tid, pr, (uint32)block);
+           thd_current->tid, pr, (uint32_t)block);
 
-    if(((uint32)block) & 7 || (uint32)block < 0x8c010000 || (uint32)block >= _arch_mem_top) {
+    if(((uint32_t)block) & 7 || (uint32_t)block < 0x8c010000 || (uint32_t)block >= _arch_mem_top) {
         printf("   ATTEMPT TO FREE INVALID ADDRESS!\n");
         spinlock_unlock(&mutex);
         return;
@@ -198,7 +198,7 @@ void free(void *block) {
         ctl->damaged = 1;
     }
 
-    nt1 = (uint32*)(((uint32)block) - 1024);
+    nt1 = (uint32_t *)(((uint32_t)block) - 1024);
 
     for(i = sizeof(memctl_t) / 4; i < 1024 / 4; i++) {
         if(nt1[i] != PRE_MAGIC) {
@@ -231,7 +231,7 @@ void malloc_stats(void) {
     }
 
     printf("%ld TOTAL BYTES OF MEMORY ALLOCATED\n",
-           (uint32)sbrk(0) - (uint32)first);
+           (uint32_t)sbrk(0) - (uint32_t)first);
 
     ctl = first;
     printf("Problem blocks:\n");
@@ -242,14 +242,14 @@ void malloc_stats(void) {
     while(ctl) {
         if(ctl->inuse) {
             printf("  INUSE %08lx: size %ld, thread %d, addr %08lx, type %s\n",
-                   (uint32)ctl + 1024, ctl->size, ctl->thread, ctl->addr, ctl->type);
+                   (uint32_t)ctl + 1024, ctl->size, ctl->thread, ctl->addr, ctl->type);
             leaked += ctl->size;
             leakedcnt++;
         }
 
         if(ctl->damaged) {
             printf("  DMGED %08lx: size %ld, thread %d, addr %08lx, type %s\n",
-                   (uint32)ctl + 1024, ctl->size, ctl->thread, ctl->addr, ctl->type);
+                   (uint32_t)ctl + 1024, ctl->size, ctl->thread, ctl->addr, ctl->type);
             dmgcnt++;
         }
 

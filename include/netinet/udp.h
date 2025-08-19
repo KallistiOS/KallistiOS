@@ -21,7 +21,7 @@
 #ifndef __NETINET_UDP_H
 #define __NETINET_UDP_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 
 __BEGIN_DECLS
 

@@ -24,8 +24,8 @@ static GLuint PVR_TextureColor(unsigned char *HDR);
    glMipMap should be passed as 1 if Open GL should calculate the Mipmap levels, 0 otherwise */
 GLuint glTextureLoadPVR(char *fname, unsigned char isMipMapped, unsigned char glMipMap) {
     FILE *tex = NULL;
-    uint16 *TEX0 = NULL;
-    uint8 HDR[PVR_HDR_SIZE];
+    uint16_t *TEX0 = NULL;
+    uint8_t HDR[PVR_HDR_SIZE];
     GLuint texID, texSize, texW, texH, texFormat, texColor;
 
     /* Open the PVR texture file, and get its file size */
@@ -134,7 +134,7 @@ static GLuint PVR_TextureFormat(unsigned char *HDR) {
             return PVR_TXRFMT_NONTWIDDLED;                        //RECTANGLE
 
         case 0x0B:
-            return PVR_TXRFMT_STRIDE | PVR_TXRFMT_NONTWIDDLED;    //RECTANGULAR STRIDE
+            return PVR_TXRFMT_X32_STRIDE | PVR_TXRFMT_NONTWIDDLED;    //RECTANGULAR STRIDE
 
         case 0x0D:
             return PVR_TXRFMT_TWIDDLED;                           //RECTANGULAR TWIDDLED

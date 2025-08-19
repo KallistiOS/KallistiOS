@@ -14,7 +14,7 @@
 #ifndef __PVR_MEM_CORE_H
 #define __PVR_MEM_CORE_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 /*

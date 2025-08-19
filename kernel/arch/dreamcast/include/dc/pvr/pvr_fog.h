@@ -23,7 +23,7 @@
 #ifndef __DC_PVR_PVR_FOG_H
 #define __DC_PVR_PVR_FOG_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 /** \defgroup   pvr_fog     Fog

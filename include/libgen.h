@@ -23,7 +23,7 @@
 #ifndef __LIBGEN_H
 #define __LIBGEN_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 /** \addtogroup vfs_posix

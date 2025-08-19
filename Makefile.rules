@@ -78,7 +78,7 @@ $(patsubst %, _clean_dir_%, $(SUBDIRS)):
 # Define KOS_ROMDISK_DIR in your Makefile if you want these two handy rules.
 ifdef KOS_ROMDISK_DIR
 romdisk.img:
-	$(KOS_GENROMFS) -f romdisk.img -d $(KOS_ROMDISK_DIR) -v -x .keepme -x .DS_Store -x Thumbs.db
+	$(KOS_GENROMFS) -f romdisk.img -d $(KOS_ROMDISK_DIR) -v -x .gitignore -x .DS_Store -x Thumbs.db
 
 romdisk.o: romdisk.img
 	$(KOS_BASE)/utils/bin2c/bin2c romdisk.img romdisk_tmp.c romdisk

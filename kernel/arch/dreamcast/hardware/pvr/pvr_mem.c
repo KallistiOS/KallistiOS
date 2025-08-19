@@ -13,6 +13,9 @@
 #include <malloc.h> /* For the struct mallinfo defs */
 
 #include <kos/opts.h>
+#include <kos/dbglog.h>
+
+#include <arch/stack.h>
 
 /*
 
@@ -37,8 +40,6 @@ extern void pvr_int_mem_reset();
 extern void pvr_int_malloc_stats();
 
 
-#ifdef PVR_KM_DBG
-
 #include <kos/thread.h>
 #include <arch/arch.h>
 
@@ -52,8 +53,6 @@ typedef struct memctl {
 } memctl_t;
 
 static LIST_HEAD(memctl_list, memctl) block_list;
-
-#endif  /* PVR_KM_DBG */
 
 
 /* PVR RAM base; NULL is considered invalid */
@@ -86,10 +85,7 @@ void * pvr_int_sbrk(size_t amt) {
    will be relative to the base of texture memory (zero-based) */
 pvr_ptr_t pvr_mem_malloc(size_t size) {
     uint32 rv32;
-#ifdef PVR_KM_DBG
-    uint32      ra = arch_get_ret_addr();
     memctl_t    * ctl;
-#endif  /* PVR_KM_DBG */
 
     CHECK_MEM_BASE;
 
@@ -98,66 +94,68 @@ pvr_ptr_t pvr_mem_malloc(size_t size) {
                "dlmalloc's alignment is broken; "
                "please make a bug report");
 
-#ifdef PVR_KM_DBG
-    ctl = malloc(sizeof(memctl_t));
-    ctl->size = size;
-    ctl->thread = thd_current->tid;
-    ctl->addr = ra;
-    ctl->block = (pvr_ptr_t)rv32;
-    LIST_INSERT_HEAD(&block_list, ctl, list);
-#endif  /* PVR_KM_DBG */
+    if(__is_defined(PVR_KM_DBG)) {
+        ctl = malloc(sizeof(memctl_t));
+        ctl->size = size;
+        ctl->thread = thd_current->tid;
+        ctl->addr = arch_get_ret_addr();
+        ctl->block = (pvr_ptr_t)rv32;
+        LIST_INSERT_HEAD(&block_list, ctl, list);
+    }
 
-#ifdef PVR_KM_DBG_VERBOSE
-    printf("Thread %d/%08lx allocated %lu bytes at %08lx\n",
-           ctl->thread, ctl->addr, ctl->size, rv32);
-#endif
+    if(__is_defined(PVR_KM_DBG_VERBOSE)) {
+        printf("Thread %d/%08lx allocated %lu bytes at %08lx\n",
+               ctl->thread, ctl->addr, ctl->size, rv32);
+    }
 
     return (pvr_ptr_t)rv32;
 }
 
 /* Free a previously allocated chunk of memory */
 void pvr_mem_free(pvr_ptr_t chunk) {
-#ifdef PVR_KM_DBG
-    uint32      ra = arch_get_ret_addr();
+    uint32      ra;
     memctl_t    *ctl, *tmp;
     int     found;
-#endif  /* PVR_KM_DBG */
+
+    if(__is_defined(PVR_KM_DBG))
+        ra = arch_get_ret_addr();
 
     CHECK_MEM_BASE;
 
-#ifdef PVR_KM_DBG_VERBOSE
-    printf("Thread %d/%08lx freeing block @ %08lx\n",
-           thd_current->tid, ra, (uint32)chunk);
-#endif
+    if(__is_defined(PVR_KM_DBG_VERBOSE)) {
+        printf("Thread %d/%08lx freeing block @ %08lx\n",
+               thd_current->tid, ra, (uint32)chunk);
+    }
 
-#ifdef PVR_KM_DBG
-    found = 0;
+    if(__is_defined(PVR_KM_DBG)) {
+        found = 0;
 
-    LIST_FOREACH_SAFE(ctl, &block_list, list, tmp) {
-        if(ctl->block == chunk) {
-            LIST_REMOVE(ctl, list);
-            free(ctl);
-            found = 1;
-            break;
+        LIST_FOREACH_SAFE(ctl, &block_list, list, tmp) {
+            if(ctl->block == chunk) {
+                LIST_REMOVE(ctl, list);
+                free(ctl);
+                found = 1;
+                break;
+            }
+        }
+
+        if(!found) {
+            dbglog(DBG_ERROR,
+                   "pvr_mem_free: trying to free non-alloc'd block "
+                   "%08lx (called from %d/%08lx\n",
+                   (uint32)chunk, thd_current->tid, ra);
         }
     }
-
-    if(!found) {
-        dbglog(DBG_ERROR, 
-               "pvr_mem_free: trying to free non-alloc'd block "
-               "%08lx (called from %d/%08lx\n",
-               (uint32)chunk, thd_current->tid, ra);
-    }
-
-#endif  /* PVR_KM_DBG */
 
     pvr_int_free((void *)chunk);
 }
 
 /* Check the memory block list to see what's allocated */
 void pvr_mem_print_list(void) {
-#ifdef PVR_KM_DBG
     memctl_t    * ctl;
+
+    if(!__is_defined(PVR_KM_DBG))
+        return;
 
     printf("pvr_mem_print_list block list:\n");
     LIST_FOREACH(ctl, &block_list, list) {
@@ -167,7 +165,6 @@ void pvr_mem_print_list(void) {
                ctl->thread, (unsigned long)ctl->addr);
     }
     printf("pvr_mem_print_list end block list\n");
-#endif  /* PVR_KM_DBG */
 }
 
 /* Return the number of bytes available still in the memory pool */
@@ -203,7 +200,5 @@ void pvr_mem_stats(void) {
     printf("pvr_mem_stats():\n");
     pvr_int_malloc_stats();
     printf("max sbrk base: %08lx\n", (uint32)pvr_mem_base);
-#ifdef PVR_KM_DBG
     pvr_mem_print_list();
-#endif
 }

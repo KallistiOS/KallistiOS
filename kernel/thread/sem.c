@@ -18,34 +18,9 @@
 #include <kos/thread.h>
 #include <kos/sem.h>
 #include <kos/genwait.h>
+#include <kos/dbglog.h>
 
 /**************************************/
-
-/* Allocate a new semaphore; the semaphore will be assigned
-   to the calling process and when that process dies, the semaphore
-   will also die. */
-semaphore_t *sem_create(int value) {
-    semaphore_t *sm;
-
-    dbglog(DBG_WARNING, "Creating semaphore with deprecated sem_create(). "
-           "Please update your code!\n");
-
-    if(value < 0) {
-        errno = EINVAL;
-        return NULL;
-    }
-
-    /* Create a semaphore structure */
-    if(!(sm = (semaphore_t*)malloc(sizeof(semaphore_t)))) {
-        errno = ENOMEM;
-        return NULL;
-    }
-
-    sm->count = value;
-    sm->initialized = 2;
-
-    return sm;
-}
 
 int sem_init(semaphore_t *sm, int count) {
     if(!sm) {
@@ -68,20 +43,14 @@ int sem_destroy(semaphore_t *sm) {
     /* Wake up any queued threads with an error */
     genwait_wake_all_err(sm, ENOTRECOVERABLE);
 
-    if(sm->initialized == 2) {
-        /* Free the memory */
-        free(sm);
-    }
-    else {
-        sm->count = 0;
-        sm->initialized = 0;
-    }
+    sm->count = 0;
+    sm->initialized = 0;
 
     return 0;
 }
 
 /* Wait on a semaphore, with timeout (in milliseconds) */
-int sem_wait_timed(semaphore_t *sem, int timeout) {
+int sem_wait_timed(semaphore_t *sm, int timeout) {
     int rv = 0;
 
     /* Make sure we're not inside an interrupt */
@@ -102,24 +71,24 @@ int sem_wait_timed(semaphore_t *sem, int timeout) {
     /* Disable interrupts */
     irq_disable_scoped();
 
-    if(sem->initialized != 1 && sem->initialized != 2) {
+    if(sm->initialized != 1) {
         errno = EINVAL;
         rv = -1;
     }
     /* If there's enough count left, then let the thread proceed */
-    else if(sem->count > 0) {
-        sem->count--;
+    else if(sm->count > 0) {
+        sm->count--;
     }
     else {
         /* Block us until we're signaled */
-        sem->count--;
-        rv = genwait_wait(sem, timeout ? "sem_wait_timed" : "sem_wait", timeout,
+        sm->count--;
+        rv = genwait_wait(sm, timeout ? "sem_wait_timed" : "sem_wait", timeout,
                           NULL);
 
         /* Did we fail to get the lock? */
         if(rv < 0) {
             rv = -1;
-            ++sem->count;
+            ++sm->count;
 
             if(errno == EAGAIN)
                 errno = ETIMEDOUT;
@@ -140,7 +109,7 @@ int sem_trywait(semaphore_t *sm) {
 
     irq_disable_scoped();
 
-    if(sm->initialized != 1 && sm->initialized != 2) {
+    if(sm->initialized != 1) {
         errno = EINVAL;
         rv = -1;
     }
@@ -162,7 +131,7 @@ int sem_signal(semaphore_t *sm) {
 
     irq_disable_scoped();
 
-    if(sm->initialized != 1 && sm->initialized != 2) {
+    if(sm->initialized != 1) {
         errno = EINVAL;
         rv = -1;
     }
@@ -182,7 +151,7 @@ int sem_signal(semaphore_t *sm) {
 }
 
 /* Return the semaphore count */
-int sem_count(semaphore_t *sm) {
+int sem_count(const semaphore_t *sm) {
     /* Look for the semaphore */
     return sm->count;
 }

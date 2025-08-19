@@ -13,6 +13,6 @@ DBG_LIBS = -llibrary-dependence -llibrary-test
 KOS_LIB_PATHS += -L../loadable-dependence -L../
 
 # Dependence include
-KOS_CFLAGS += -I../loadable-dependence
+KOS_CFLAGS += -fno-lto -I../loadable-dependence
 
 include $(KOS_BASE)/loadable/Makefile.prefab

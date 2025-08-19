@@ -10,8 +10,7 @@
     \brief   Dreamcast architecture specific options.
     \ingroup arch
 
-    This file has various architecture specific options defined in it. Also, any
-    functions that start with arch_ are in here.
+    This file has various architecture specific options defined in it.
 
     \author Megan Potter
 */
@@ -25,6 +24,7 @@ __BEGIN_DECLS
 #include <stdbool.h>
 
 #include <arch/types.h>
+#include <kos/elf.h>
 
 /** \defgroup arch  Architecture
     \brief          Dreamcast Architecture-Specific Options and high-level API
@@ -33,7 +33,7 @@ __BEGIN_DECLS
 */
 
 /** \brief  Top of memory available, depending on memory size. */
-#ifdef __KOS_GCC_32MB__
+#if defined(__KOS_GCC_32MB__) || __KOS_GCC_PATCHLEVEL__ >= 2025062800
 extern uint32 _arch_mem_top;
 #else
 #pragma message "Outdated toolchain: not patched for 32MB support, limiting "\
@@ -44,7 +44,7 @@ extern uint32 _arch_mem_top;
 
 /** \brief  Start and End address for .text portion of program. */
 extern char _executable_start;
-extern char _etext; 
+extern char _etext;
 
 #define PAGESIZE        4096            /**< \brief Page size (for MMU) */
 #define PAGESIZE_BITS   12              /**< \brief Bits for page size */
@@ -79,16 +79,6 @@ extern char _etext;
 static const
 unsigned HZ __depr("Please use the new THD_SCHED_HZ macro.") = THD_SCHED_HZ;
 
-#ifndef THD_STACK_SIZE
-/** \brief  Default thread stack size. */
-#define THD_STACK_SIZE  32768
-#endif
-
-#ifndef THD_KERNEL_STACK_SIZE
-/** \brief Main/kernel thread's stack size. */
-#define THD_KERNEL_STACK_SIZE (64 * 1024)
-#endif
-
 /** \brief  Default video mode. */
 #define DEFAULT_VID_MODE    DM_640x480
 
@@ -106,6 +96,15 @@ unsigned HZ __depr("Please use the new THD_SCHED_HZ macro.") = THD_SCHED_HZ;
 
 /** \brief  Length of global symbol prefix in ELF files. */
 #define ELF_SYM_PREFIX_LEN  1
+
+/** \brief  ELF class for this architecture. */
+#define ARCH_ELFCLASS       ELFCLASS32
+
+/** \brief  ELF data encoding for this architecture. */
+#define ARCH_ELFDATA        ELFDATA2LSB
+
+/** \brief  ELF machine type code for this architecture. */
+#define ARCH_CODE           EM_SH
 
 /** \brief  Panic function.
 
@@ -325,7 +324,7 @@ int hardware_sys_mode(int *region);
 
     \return                 A pointer to the banner string.
 */
-const char *kos_get_banner(void);
+const char * __pure2 kos_get_banner(void);
 
 /** \brief   Retrieve the license information for the compiled copy of KOS.
     \ingroup attribution
@@ -336,7 +335,7 @@ const char *kos_get_banner(void);
 
     \return                 A pointer to the license terms.
 */
-const char *kos_get_license(void);
+const char * __pure2 kos_get_license(void);
 
 /** \brief   Retrieve a list of authors and the dates of their contributions.
     \ingroup attribution
@@ -352,66 +351,13 @@ const char *kos_get_license(void);
 
     \return                 A pointer to the authors' copyright information.
 */
-const char *kos_get_authors(void);
+const char *__pure2 kos_get_authors(void);
 
 /** \brief   Dreamcast specific sleep mode function.
     \ingroup arch
 */
 static inline void arch_sleep(void) {
     __asm__ __volatile__("sleep\n");
-}
-
-/** \brief   DC specific "function" to get the return address from the current
-             function.
-    \ingroup arch
-
-    \return                 The return address of the current function.
-*/
-static inline uintptr_t arch_get_ret_addr(void) {
-    uintptr_t pr;
-
-    __asm__ __volatile__("sts pr,%0\n" : "=r"(pr));
-
-    return pr;
-}
-
-/* Please note that all of the following frame pointer macros are ONLY
-   valid if you have compiled your code WITHOUT -fomit-frame-pointer. These
-   are mainly useful for getting a stack trace from an error. */
-
-/** \brief   DC specific "function" to get the frame pointer from the current
-             function.
-    \ingroup arch
-
-    \return                 The frame pointer from the current function.
-    \note                   This only works if you don't disable frame pointers.
-*/
-static inline uintptr_t arch_get_fptr(void) {
-    register uintptr_t fp __asm__("r14");
-
-    return fp;
-}
-
-/** \brief   Pass in a frame pointer value to get the return address for the
-             given frame.
-    \ingroup arch
-
-    \param  fptr            The frame pointer to look at.
-    \return                 The return address of the pointer.
-*/
-static inline uintptr_t arch_fptr_ret_addr(uintptr_t fptr) {
-    return *(uintptr_t *)fptr;
-}
-
-/** \brief   Pass in a frame pointer value to get the previous frame pointer for
-             the given frame.
-    \ingroup arch
-
-    \param  fptr            The frame pointer to look at.
-    \return                 The previous frame pointer.
-*/
-static inline uintptr_t arch_fptr_next(uintptr_t fptr) {
-    return arch_fptr_ret_addr(fptr + 4);
 }
 
 /** \brief   Returns true if the passed address is likely to be valid. Doesn't

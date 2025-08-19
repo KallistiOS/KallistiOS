@@ -25,7 +25,7 @@
 
 #if !defined(__STRICT_ANSI__) || (__STDC_VERSION__ >= 201112L)
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 #include <time.h>
 
 /* Bring in all the threading-related stuff we'll need. */

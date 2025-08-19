@@ -45,16 +45,17 @@ static int lst_playing = -1;
 
 /* Code to draw a nice o-scope on the background during playback :) */
 static mutex_t hookmut = MUTEX_INITIALIZER;
-static int16 sndbuffer[2][16384];
+static int16_t sndbuffer[2][16384];
 static int sndbuffer_cnt = 0;
-static uint64 last_time = 0;
+static uint64_t last_time = 0;
 static int takeframes = 0;
 static int curpos = 0;
 static int filtinitted = 0;
 
 static void snd_hook(int strm, void * obj, int freq, int chn, void ** buf, int *req) {
+    (void)strm; (void)obj, (void)freq, (void)chn;
     int actual;
-    uint64 t;
+    uint64_t t;
 
     mutex_lock(&hookmut);
     actual = *req;
@@ -69,7 +70,7 @@ static void snd_hook(int strm, void * obj, int freq, int chn, void ** buf, int *
     t = timer_ms_gettime64();
 
     if(last_time != 0) {
-        uint32 elapsed = (uint32)(t - last_time);
+        uint32_t elapsed = (uint32_t)(t - last_time);
         takeframes = elapsed * 60 / 1000;
     }
 
@@ -115,6 +116,7 @@ static void draw_wave(void) {
 
 
 static void *load_song_list(void * p) {
+    (void)p;
     file_t d;
 
     d = fs_open(curdir, O_RDONLY | O_DIR);

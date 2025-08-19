@@ -19,7 +19,7 @@
 #ifndef __DC_NET_BROADBAND_ADAPTER_H
 #define __DC_NET_BROADBAND_ADAPTER_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 /** \defgroup bba Broadband Adapter

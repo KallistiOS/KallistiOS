@@ -45,12 +45,11 @@
 #ifndef __ARCH_MMU_H
 #define __ARCH_MMU_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 #include <stdbool.h>
 
-#include <arch/types.h>
 #include <sys/uio.h>
 
 /** \defgroup mmu   MMU

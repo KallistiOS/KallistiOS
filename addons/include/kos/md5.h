@@ -20,7 +20,7 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
+#include <stdint.h>
 
 /** \brief  MD5 context.
 
@@ -31,9 +31,9 @@ __BEGIN_DECLS
     \headerfile kos/md5.h
 */
 typedef struct kos_md5_cxt {
-    uint64 size;        /**< \brief Size of the data in buf. */
-    uint32 hash[4];     /**< \brief Intermediate hash value. */
-    uint8  buf[64];     /**< \brief Temporary storage of values to be hashed. */
+    uint64_t size;        /**< \brief Size of the data in buf. */
+    uint32_t hash[4];     /**< \brief Intermediate hash value. */
+    uint8_t  buf[64];     /**< \brief Temporary storage of values to be hashed. */
 } kos_md5_cxt_t;
 
 /** \brief  Initialize a MD5 context.
@@ -58,7 +58,7 @@ void kos_md5_start(kos_md5_cxt_t *cxt);
     \param  input       The block of data to hash.
     \param  size        The number of bytes of input data passed in.
 */
-void kos_md5_hash_block(kos_md5_cxt_t *cxt, const uint8 *input, uint32 size);
+void kos_md5_hash_block(kos_md5_cxt_t *cxt, const uint8_t *input, uint32_t size);
 
 /** \brief  Complete a MD5 hash.
 
@@ -68,7 +68,7 @@ void kos_md5_hash_block(kos_md5_cxt_t *cxt, const uint8 *input, uint32 size);
     \param  cxt         The MD5 context to finalize.
     \param  output      Where to store the final digest.
 */
-void kos_md5_finish(kos_md5_cxt_t *cxt, uint8 output[16]);
+void kos_md5_finish(kos_md5_cxt_t *cxt, uint8_t output[16]);
 
 /** \brief  Compute the hash of a block of data with MD5.
 
@@ -81,7 +81,7 @@ void kos_md5_finish(kos_md5_cxt_t *cxt, uint8 output[16]);
     \param  size        The number of bytes of input data passed in.
     \param  output      Where to store the final message digest.
 */
-void kos_md5(const uint8 *input, uint32 size, uint8 output[16]);
+void kos_md5(const uint8_t *input, uint32_t size, uint8_t output[16]);
 
 __END_DECLS
 

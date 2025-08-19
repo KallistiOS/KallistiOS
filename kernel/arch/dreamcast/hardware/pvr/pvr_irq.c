@@ -14,9 +14,7 @@
 #include <kos/genwait.h>
 #include <kos/regfield.h>
 
-#ifdef PVR_RENDER_DBG
 #include <stdio.h>
-#endif
 
 /*
    PVR interrupt handler; the way things are setup, we're gonna get
@@ -81,11 +79,9 @@ void pvr_start_dma(void) {
 }
 
 static void pvr_render_lists(void) {
-    int bufn = pvr_state.view_target ^ 1;
-
     if(pvr_state.ta_busy
        && !pvr_state.render_busy
-       && (!pvr_state.render_completed || pvr_state.to_texture[bufn])
+       && (!pvr_state.render_completed || pvr_state.curr_to_texture)
        && pvr_state.lists_transferred == pvr_state.lists_enabled) {
 
         /* XXX Note:
@@ -102,9 +98,6 @@ static void pvr_render_lists(void) {
         pvr_state.render_busy = 1;
         pvr_sync_stats(PVR_SYNC_RNDSTART);
 
-        // Clear the texture render flag if we had it set.
-        pvr_state.to_texture[bufn] = 0;
-
         // Switch to the clean TA buffer.
         pvr_state.lists_transferred = 0;
         pvr_sync_reg_buffer();
@@ -112,9 +105,11 @@ static void pvr_render_lists(void) {
         // The TA is no longer busy.
         pvr_state.ta_busy = 0;
 
+        pvr_state.was_to_texture = pvr_state.curr_to_texture;
+
         // Signal the client code to continue onwards.
         genwait_wake_all((void *)&pvr_state.ta_busy);
-        thd_schedule(1, 0);
+        thd_schedule(true);
     }
 }
 
@@ -127,8 +122,6 @@ void pvr_vblank_handler(uint32 code, void *data) {
     // If the render-done interrupt has fired then we are ready to flip to the
     // new frame buffer.
     if(pvr_state.render_completed) {
-        int bufn = pvr_state.view_target;
-
         //DBG(("view(%d)\n", pvr_state.view_target ^ 1));
 
         // Handle PVR stats
@@ -137,8 +130,7 @@ void pvr_vblank_handler(uint32 code, void *data) {
         // Switch view address to the "good" buffer
         pvr_state.view_target ^= 1;
 
-        if(!pvr_state.to_texture[bufn])
-            pvr_sync_view();
+        pvr_sync_view();
 
         // Clear the render completed flag.
         pvr_state.render_completed = 0;
@@ -174,41 +166,42 @@ void pvr_int_handler(uint32 code, void *data) {
         case ASIC_EVT_PVR_RENDERDONE_TSP:
             //DBG(("irq_renderdone\n"));
             pvr_state.render_busy = 0;
-            pvr_state.render_completed = 1;
+            if(!pvr_state.was_to_texture)
+                pvr_state.render_completed = 1;
             pvr_sync_stats(PVR_SYNC_RNDDONE);
 
             genwait_wake_all((void *)&pvr_state.render_busy);
             break;
     }
 
-#ifdef PVR_RENDER_DBG
-    /* Show register values on each interrupt */
-    switch (code) {
-        case ASIC_EVT_PVR_ISP_OUTOFMEM:
-            DBG(("[ERROR]: ASIC_EVT_PVR_ISP_OUTOFMEM\n"));
-            break;
+    if(__is_defined(PVR_RENDER_DBG)) {
+        /* Show register values on each interrupt */
+        switch (code) {
+            case ASIC_EVT_PVR_ISP_OUTOFMEM:
+                DBG(("[ERROR]: ASIC_EVT_PVR_ISP_OUTOFMEM\n"));
+                break;
 
-        case ASIC_EVT_PVR_STRIP_HALT:
-            DBG(("[ERROR]: ASIC_EVT_PVR_STRIP_HALT\n"));
-            break;
+            case ASIC_EVT_PVR_STRIP_HALT:
+                DBG(("[ERROR]: ASIC_EVT_PVR_STRIP_HALT\n"));
+                break;
 
-        case ASIC_EVT_PVR_OPB_OUTOFMEM:
-            DBG(("[ERROR]: ASIC_EVT_PVR_OPB_OUTOFMEM\n"));
-            DBG(("PVR_TA_OPB_START: %08lx\nPVR_TA_OPB_END: %08lx\nPVR_TA_OPB_POS: %08lx\n",
-                PVR_GET(PVR_TA_OPB_START),
-                PVR_GET(PVR_TA_OPB_END),
-                PVR_GET(PVR_TA_OPB_POS) << 2));
-            break;
+            case ASIC_EVT_PVR_OPB_OUTOFMEM:
+                DBG(("[ERROR]: ASIC_EVT_PVR_OPB_OUTOFMEM\n"));
+                DBG(("PVR_TA_OPB_START: %08lx\nPVR_TA_OPB_END: %08lx\nPVR_TA_OPB_POS: %08lx\n",
+                    PVR_GET(PVR_TA_OPB_START),
+                    PVR_GET(PVR_TA_OPB_END),
+                    PVR_GET(PVR_TA_OPB_POS) << 2));
+                break;
 
-        case ASIC_EVT_PVR_TA_INPUT_ERR:
-            DBG(("[ERROR]: ASIC_EVT_PVR_TA_INPUT_ERR\n"));
-            break;
+            case ASIC_EVT_PVR_TA_INPUT_ERR:
+                DBG(("[ERROR]: ASIC_EVT_PVR_TA_INPUT_ERR\n"));
+                break;
 
-        case ASIC_EVT_PVR_TA_INPUT_OVERFLOW:
-            DBG(("[ERROR]: ASIC_EVT_PVR_TA_INPUT_OVERFLOW\n"));
-            break;
+            case ASIC_EVT_PVR_TA_INPUT_OVERFLOW:
+                DBG(("[ERROR]: ASIC_EVT_PVR_TA_INPUT_OVERFLOW\n"));
+                break;
+        }
     }
-#endif
 
     /* Update our stats if we finished all registration */
     switch(code) {

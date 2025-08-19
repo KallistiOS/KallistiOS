@@ -42,7 +42,7 @@ int check_start(void) {
 /* LCD Test: this will do a grayscale separation into several "frames" and
    flip through them quickly to give the illusion of grayscale on the LCD
    display. */
-uint8 lcd_disp[8][48 * 32 / 8];
+uint8_t lcd_disp[8][48 * 32 / 8];
 void lcd_gs_pixel(int x, int y, int amt) {
     int i;
 

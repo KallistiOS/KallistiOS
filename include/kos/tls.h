@@ -18,7 +18,7 @@
 #ifndef __KOS_TLS_H
 #define __KOS_TLS_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 
 __BEGIN_DECLS
 

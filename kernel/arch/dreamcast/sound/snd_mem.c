@@ -14,6 +14,7 @@
 #include <sys/queue.h>
 #include <dc/sound/sound.h>
 #include <arch/spinlock.h>
+#include <kos/dbglog.h>
 
 /*
 
@@ -97,9 +98,8 @@ int snd_mem_init(uint32 reserve) {
     blk->inuse = 0;
     TAILQ_INSERT_HEAD(&pool, blk, qent);
 
-#if SNDMEMDEBUG
-    dbglog(DBG_DEBUG, "snd_mem_init: %d bytes available\n", blk->size);
-#endif
+    if(__is_defined(SNDMEMDEBUG))
+        dbglog(DBG_DEBUG, "snd_mem_init: %d bytes available\n", blk->size);
 
     initted = 1;
     spinlock_unlock(&snd_mem_mutex);
@@ -120,14 +120,12 @@ void snd_mem_shutdown(void) {
 
     while(e) {
         n = TAILQ_NEXT(e, qent);
-#if SNDMEMDEBUG
 
-        if(e->inuse)
-            dbglog(DBG_DEBUG, "snd_mem_shutdown: in-use block at %08lx (size %d)\n", e->addr, e->size);
-        else
-            dbglog(DBG_DEBUG, "snd_mem_shutdown: unused block at %08lx (size %d)\n", e->addr, e->size);
+        if(__is_defined(SNDMEMDEBUG)) {
+            dbglog(DBG_DEBUG, "snd_mem_shutdown: %s block at %08lx (size %d)\n",
+                   e->inuse ? "in-use" : "unused", e->addr, e->size);
+        }
 
-#endif
         free(e);
         e = n;
     }
@@ -170,9 +168,11 @@ uint32 snd_mem_malloc(size_t size) {
 
     /* Is the block the exact size? */
     if(best->size == size) {
-#if SNDMEMDEBUG
-        dbglog(DBG_DEBUG, "snd_mem_malloc: allocating perfect-fit at %08lx for size %d\n", best->addr, best->size);
-#endif
+        if(__is_defined(SNDMEMDEBUG)) {
+            dbglog(DBG_DEBUG, "snd_mem_malloc: allocating perfect-fit at %08lx for size %d\n",
+                   best->addr, best->size);
+        }
+
         best->inuse = 1;
         spinlock_unlock(&snd_mem_mutex);
         return best->addr;
@@ -193,10 +193,10 @@ uint32 snd_mem_malloc(size_t size) {
     e->inuse = 0;
     TAILQ_INSERT_AFTER(&pool, best, e, qent);
 
-#if SNDMEMDEBUG
-    dbglog(DBG_DEBUG, "snd_mem_malloc: allocating block %08lx for size %d, and leaving %d at %08lx\n",
-           best->addr, size, e->size, e->addr);
-#endif
+    if(__is_defined(SNDMEMDEBUG)) {
+        dbglog(DBG_DEBUG, "snd_mem_malloc: allocating block %08lx for size %d, and leaving %d at %08lx\n",
+               best->addr, size, e->size, e->addr);
+    }
 
     best->size = size;
     best->inuse = 1;
@@ -233,17 +233,15 @@ void snd_mem_free(uint32 addr) {
     /* Set this block as unused */
     e->inuse = 0;
 
-#if SNDMEMDEBUG
-    dbglog(DBG_DEBUG, "snd_mem_free: freeing block at %08lx\n", e->addr);
-#endif
+    if(__is_defined(SNDMEMDEBUG))
+        dbglog(DBG_DEBUG, "snd_mem_free: freeing block at %08lx\n", e->addr);
 
     /* Can we coalesce with the block before us? */
     o = TAILQ_PREV(e, snd_block_q, qent);
 
     if(o && !o->inuse) {
-#if SNDMEMDEBUG
-        dbglog(DBG_DEBUG, "   coalescing with block at %08lx\n", o->addr);
-#endif
+        if(__is_defined(SNDMEMDEBUG))
+            dbglog(DBG_DEBUG, "   coalescing with block at %08lx\n", o->addr);
 
         o->size += e->size;
         TAILQ_REMOVE(&pool, e, qent);
@@ -255,9 +253,8 @@ void snd_mem_free(uint32 addr) {
     o = TAILQ_NEXT(e, qent);
 
     if(o && !o->inuse) {
-#if SNDMEMDEBUG
-        dbglog(DBG_DEBUG, "   coalescing with block at %08lx\n", o->addr);
-#endif
+        if(__is_defined(SNDMEMDEBUG))
+            dbglog(DBG_DEBUG, "   coalescing with block at %08lx\n", o->addr);
 
         e->size += o->size;
         TAILQ_REMOVE(&pool, o, qent);

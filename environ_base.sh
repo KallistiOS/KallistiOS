@@ -14,9 +14,6 @@ fi
 # Arch kernel folder.
 export KOS_ARCH_DIR="${KOS_BASE}/kernel/arch/${KOS_ARCH}"
 
-# Pull in the arch environ file.
-. ${KOS_BASE}/environ_${KOS_ARCH}.sh
-
 # Add the compiler bins dir to the path if it is not already.
 if ! expr ":$PATH:" : ".*:${KOS_CC_BASE}/bin:.*" > /dev/null ; then
   export PATH="${PATH}:${KOS_CC_BASE}/bin"
@@ -29,7 +26,7 @@ fi
 
 # Our includes.
 export KOS_INC_PATHS="${KOS_INC_PATHS} -I${KOS_BASE}/include \
--I${KOS_BASE}/kernel/arch/${KOS_ARCH}/include -I${KOS_BASE}/addons/include \
+-I${KOS_BASE}/kernel/arch/${KOS_ARCH}/include -I${KOS_BASE}/addons/include/ -I${KOS_BASE}/addons/include/${KOS_ARCH} \
 -I${KOS_PORTS}/include"
 
 # "System" libraries.
@@ -48,6 +45,10 @@ export KOS_LD="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-ld"
 export KOS_RANLIB="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-gcc-ranlib"
 export KOS_STRIP="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-strip"
 export KOS_SIZE="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-size"
+
+# Pull in the arch environ file.
+. ${KOS_BASE}/environ_${KOS_ARCH}.sh
+
 export KOS_CFLAGS="${KOS_CFLAGS} ${KOS_INC_PATHS} -D_arch_${KOS_ARCH} -D_arch_sub_${KOS_SUBARCH} -Wall -g"
 export KOS_CPPFLAGS="${KOS_CPPFLAGS} ${KOS_INC_PATHS_CPP}"
 
@@ -59,18 +60,4 @@ export KOS_CPPSTD="-std=gnu++17"
 
 export KOS_GCCVER="`kos-cc -dumpversion`"
 
-case $KOS_GCCVER in
-  2* | 3*)
-    echo "Your GCC version is too old. You probably will run into major problems!"
-    export KOS_LDFLAGS="${KOS_CFLAGS} ${KOS_LDFLAGS} -nostartfiles -nostdlib ${KOS_LIB_PATHS}" ;;
-  *)
-    export KOS_LDFLAGS="${KOS_CFLAGS} ${KOS_LDFLAGS} ${KOS_LD_SCRIPT} -nodefaultlibs ${KOS_LIB_PATHS}" ;;
-esac
-
-# Some extra vars based on architecture.
-case $KOS_GCCVER in
-  2* | 3*)
-    export KOS_START="${KOS_ARCH_DIR}/kernel/startup.o" ;;
-  *)
-    export KOS_START="" ;;
-esac
+export KOS_LDFLAGS="${KOS_CFLAGS} ${KOS_LDFLAGS} ${KOS_LD_SCRIPT} -nostdlib ${KOS_LIB_PATHS}"

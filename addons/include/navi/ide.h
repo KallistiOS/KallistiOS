@@ -19,7 +19,7 @@
 #ifndef __NAVI_IDE_H
 #define __NAVI_IDE_H
 
-#include <arch/types.h>
+#include <stdint.h>
 
 /** \brief  Read sectors from the hard disk via PIO.
     \param  linear          The address to begin reading from.
@@ -27,7 +27,7 @@
     \param  bufptr          The buffer to read into.
     \return                 0 on success, <0 on error.
 */
-int ide_read(uint32 linear, uint32 numsects, void *bufptr);
+int ide_read(uint32_t linear, uint32_t numsects, void *bufptr);
 
 /** \brief  Write sectors from the hard disk via PIO.
     \param  linear          The address to begin writing to.
@@ -35,12 +35,12 @@ int ide_read(uint32 linear, uint32 numsects, void *bufptr);
     \param  bufptr          The buffer to write out of.
     \return                 0 on success, <0 on error.
 */
-int ide_write(uint32 linear, uint32 numsects, void *bufptr);
+int ide_write(uint32_t linear, uint32_t numsects, void *bufptr);
 
 /** \brief  Retrieve the number of sectors from the hard disk.
     \returns                The total number of linear sectors.
 */
-uint32 ide_num_sectors(void);
+uint32_t ide_num_sectors(void);
 
 /** \brief  Initialize Navi IDE.
     \return                 0 on success (no error conditions defined).

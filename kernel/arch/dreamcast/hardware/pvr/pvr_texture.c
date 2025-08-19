@@ -2,12 +2,15 @@
 
    pvr_texture.c
    Copyright (C) 2002, 2004 Megan Potter
+   Copyright (C) 2024 Andress Barajas
 
  */
 
 #include <assert.h>
 #include <dc/pvr.h>
 #include <dc/sq.h>
+#include <kos/dbglog.h>
+#include <kos/regfield.h>
 #include <string.h>
 #include "pvr_internal.h"
 
@@ -19,13 +22,30 @@
 
 */
 
-/* Load raw texture data from an SH-4 buffer into PVR RAM */
-void pvr_txr_load(const void *src, pvr_ptr_t dst, uint32 count) {
-    if(count & 3) {
-        count = (count + 4) & ~3;
-    }
+void pvr_txr_set_stride(size_t texture_width) {
+    uint32_t temp = texture_width / 32;
 
-    pvr_sq_load((uint32 *)dst, (const uint32 *)src, count, PVR_DMA_VRAM64);
+    /* The width must be a non-zero multiple of 32 that fits in the 5 bits
+    of the register field. */
+    assert(temp && __is_aligned(texture_width, 32) && !(temp & ~PVR_TXR_STRIDE_MULT));
+
+    /* Pull the reg, mask out current stride, and rewrite with new */
+    temp = FIELD_PREP(PVR_TXR_STRIDE_MULT, temp);
+    temp |= PVR_GET(PVR_TEXTURE_MODULO) & ~PVR_TXR_STRIDE_MULT;
+    PVR_SET(PVR_TEXTURE_MODULO, temp);
+
+    return;
+}
+
+size_t pvr_txr_get_stride(void) {
+    uint32_t reg = PVR_GET(PVR_TEXTURE_MODULO);
+    return FIELD_GET(reg, PVR_TXR_STRIDE_MULT) * 32;
+}
+
+/* Load raw texture data from an SH-4 buffer into PVR RAM */
+void pvr_txr_load(const void *src, pvr_ptr_t dst, size_t count) {
+    count = __align_up(count, 4);
+    pvr_sq_load((uint32_t *)dst, (const uint32_t *)src, count, PVR_DMA_VRAM64);
 }
 
 /* Linear/iterative twiddling algorithm from Marcus' tatest */
@@ -52,9 +72,9 @@ void pvr_txr_load(const void *src, pvr_ptr_t dst, uint32 count) {
        PVR_TXRLOAD_INVERT
 
 */
-void pvr_txr_load_ex(const void *src, pvr_ptr_t dst, uint32 w, uint32 h,
-                     uint32 flags) {
-    uint32 x, y, yout, min, mask, bpp, invert;
+void pvr_txr_load_ex(const void *src, pvr_ptr_t dst, uint32_t w, uint32_t h,
+                     uint32_t flags) {
+    uint32_t x, y, yout, min, mask, bpp, invert;
 
     /* Make sure we're attempting something we can do */
     switch(flags & PVR_TXRLOAD_FMT_MASK) {
@@ -80,10 +100,10 @@ void pvr_txr_load_ex(const void *src, pvr_ptr_t dst, uint32 w, uint32 h,
 
     switch(bpp) {
         case 4: {
-            uint8 * pixels;
-            uint16 * vtex;
-            pixels = (uint8 *) src;
-            vtex = (uint16*)dst;
+            uint8_t * pixels;
+            uint16_t * vtex;
+            pixels = (uint8_t *) src;
+            vtex = (uint16_t *)dst;
 
             for(y = 0; y < h; y += 2) {
                 if(!invert)
@@ -101,10 +121,10 @@ void pvr_txr_load_ex(const void *src, pvr_ptr_t dst, uint32 w, uint32 h,
         }
         break;
         case 8: {
-            uint8 * pixels;
-            uint16 * vtex;
-            pixels = (uint8 *) src;
-            vtex = (uint16*)dst;
+            uint8_t * pixels;
+            uint16_t * vtex;
+            pixels = (uint8_t *) src;
+            vtex = (uint16_t *)dst;
 
             for(y = 0; y < h; y += 2) {
                 if(!invert)
@@ -121,10 +141,10 @@ void pvr_txr_load_ex(const void *src, pvr_ptr_t dst, uint32 w, uint32 h,
         }
         break;
         case 16: {
-            uint16 * pixels;
-            uint16 * vtex;
-            pixels = (uint16 *) src;
-            vtex = (uint16*)dst;
+            uint16_t * pixels;
+            uint16_t * vtex;
+            pixels = (uint16_t *) src;
+            vtex = (uint16_t *)dst;
 
             for(y = 0; y < h; y++) {
                 if(!invert)
@@ -143,8 +163,8 @@ void pvr_txr_load_ex(const void *src, pvr_ptr_t dst, uint32 w, uint32 h,
 }
 
 /* Load a KOS Platform Independent Image (subject to restraint checking) */
-void pvr_txr_load_kimg(const kos_img_t *img, pvr_ptr_t dst, uint32 flags) {
-    uint32 fmt, w, h;
+void pvr_txr_load_kimg(const kos_img_t *img, pvr_ptr_t dst, uint32_t flags) {
+    uint32_t fmt, w, h;
 
     /* First check and make sure it's a format we can use */
     fmt = KOS_IMG_FMT_I(img->fmt) & KOS_IMG_FMT_MASK;

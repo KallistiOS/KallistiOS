@@ -29,7 +29,7 @@
 
 
 #include <stdint.h>
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 #include <arch/irq.h>
@@ -68,7 +68,7 @@ __BEGIN_DECLS
     All three of these channels are typically reserved and are by KOS for
     OS-related tasks.
 
-    @{ 
+    @{
 */
 
 /** \brief  SH4 Timer Channel 0.

@@ -61,7 +61,7 @@ void glSetCameraPosition(vector3f campos, vector3f camdst) {
     glhLookAtf2(campos, camdst, up);
 }
 
-void draw_gl_cube(float x, float y, float z, uint32 color) {
+void draw_gl_cube(float x, float y, float z, uint32_t color) {
     glPushMatrix();
 
     glDisable(GL_LIGHTING);
@@ -998,7 +998,7 @@ int InputCb(void) {
     return 1;
 }
 
-int main() {
+int main(int argc, const char *argv[]) {
     /* Get basic stuff initialized */
     glKosInit();
 

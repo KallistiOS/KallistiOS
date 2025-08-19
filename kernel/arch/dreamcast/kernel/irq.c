@@ -3,7 +3,7 @@
    arch/dreamcast/kernel/irq.c
    Copyright (C) 2000-2001 Megan Potter
    Copyright (C) 2024 Paul Cercueil
-   Copyright (C) 2024 Falco Girgis
+   Copyright (C) 2024, 2025 Falco Girgis
    Copyright (C) 2024 Andy Barajas
 */
 
@@ -18,6 +18,7 @@
 #include <arch/timer.h>
 #include <arch/stack.h>
 #include <kos/dbgio.h>
+#include <kos/dbglog.h>
 #include <kos/thread.h>
 #include <kos/library.h>
 #include <kos/regfield.h>
@@ -61,6 +62,8 @@ int irq_set_handler(irq_t code, irq_handler hnd, void *data) {
         return -1;
 
     code >>= 5;
+
+    irq_disable_scoped();
     irq_handlers[code] = (struct irq_cb){ hnd, data };
 
     return 0;
@@ -74,11 +77,14 @@ irq_cb_t irq_get_handler(irq_t code) {
 
     code >>= 5;
 
+    irq_disable_scoped();
     return irq_handlers[code];
 }
 
 /* Set a global handler */
 int irq_set_global_handler(irq_handler hnd, void *data) {
+    irq_disable_scoped();
+
     global_irq_handler.hdl = hnd;
     global_irq_handler.data = data;
     return 0;
@@ -86,17 +92,23 @@ int irq_set_global_handler(irq_handler hnd, void *data) {
 
 /* Get the global exception handler */
 irq_cb_t irq_get_global_handler(void) {
+    irq_disable_scoped();
+
     return global_irq_handler;
 }
 
 /* Set or remove a trapa handler */
 int trapa_set_handler(trapa_t code, trapa_handler hnd, void *data) {
+    irq_disable_scoped();
+
     trapa_handlers[code] = (struct trapa_cb){ hnd, data };
     return 0;
 }
 
 /* Get a particular trapa handler */
 trapa_handler trapa_get_handler(trapa_t code, void **data) {
+    irq_disable_scoped();
+
     if(data)
         *data = trapa_handlers[code].data;
 
@@ -119,30 +131,31 @@ static char *irq_exception_string(irq_t evt) {
         case EXC_DATA_ADDRESS_WRITE:
             return "Data address error (write)";
         case EXC_DTLB_MISS_READ:  /* or EXC_ITLB_MISS */
-            return "Instruction or Data(read) TLB miss";  
-        case EXC_DTLB_MISS_WRITE:  
+            return "Instruction or Data(read) TLB miss";
+        case EXC_DTLB_MISS_WRITE:
             return "Data(write) TLB miss";
         case EXC_DTLB_PV_READ:  /* or EXC_ITLB_PV */
-            return "Instruction or Data(read) TLB protection violation";  
+            return "Instruction or Data(read) TLB protection violation";
         case EXC_DTLB_PV_WRITE:
             return "Data TLB protection violation (write)";
         case EXC_FPU:
             return "FPU exception";
-        case EXC_INITIAL_PAGE_WRITE:  
-            return "Initial page write exception";  
-        case EXC_TRAPA:  
-            return "Unconditional trap (trapa)"; 
+        case EXC_INITIAL_PAGE_WRITE:
+            return "Initial page write exception";
+        case EXC_TRAPA:
+            return "Unconditional trap (trapa)";
         case EXC_USER_BREAK_POST:  /* or EXC_USER_BREAK_PRE */
-            return "User break";  
-        default:  
+            return "User break";
+        default:
             return "Unknown exception";
     }
 }
 
 /* Print a kernel panic reg dump */
 extern irq_context_t *irq_srt_addr;
-static void irq_dump_regs(int code, irq_t evt) {
+void irq_dump_regs(int code, irq_t evt) {
     uint32_t fp;
+    uint32_t ret_addr;
     uint32_t *regs = irq_srt_addr->r;
     bool valid_pc;
     bool valid_pr;
@@ -156,40 +169,38 @@ static void irq_dump_regs(int code, irq_t evt) {
     dbglog(DBG_DEAD, " SR %08lx PR %08lx\n", irq_srt_addr->sr, irq_srt_addr->pr);
     fp = regs[14];
     arch_stk_trace_at(fp, 0);
-    
+
     if(code == 1) {
-        dbglog(DBG_DEAD, "\nEncountered %s. ", irq_exception_string(evt)); 
-        
+        dbglog(DBG_DEAD, "\nEncountered %s. ", irq_exception_string(evt));
+
         valid_pc = arch_valid_text_address(irq_srt_addr->pc);
         valid_pr = arch_valid_text_address(irq_srt_addr->pr);
         /* Construct template message only if either PC/PR address is valid */
         if(valid_pc || valid_pr) {
             dbglog(DBG_DEAD, "Use this template terminal command to help"
                 " diagnose:\n\n\t$KOS_ADDR2LINE -f -C -i -e prog.elf");
-            
+
             if(valid_pc)
                 dbglog(DBG_DEAD, " %08lx", irq_srt_addr->pc);
 
             if(valid_pr)
                 dbglog(DBG_DEAD, " %08lx", irq_srt_addr->pr);
 
-#ifdef FRAME_POINTERS
-            while(fp != 0xffffffff) {
+            while(__is_defined(FRAME_POINTERS) && fp != 0xffffffff) {
                 /* Validate the function pointer (fp) */
                 if((fp & 3) || (fp < 0x8c000000) || (fp > _arch_mem_top))
                     break;
 
                 /* Get the return address from the function pointer */
-                fp = arch_fptr_ret_addr(fp);
+                ret_addr = arch_fptr_ret_addr(fp);
 
                 /* Validate the return address */
-                if(!arch_valid_text_address(fp))
+                if(!arch_valid_text_address(ret_addr))
                     break;
 
-                dbglog(DBG_DEAD, " %08lx", fp);
+                dbglog(DBG_DEAD, " %08lx", ret_addr);
                 fp = arch_fptr_next(fp);
             }
-#endif
         }
 
         dbglog(DBG_DEAD, "\n");
@@ -206,20 +217,21 @@ void irq_handle_exception(int code) {
     int handled = 0;
 
     switch(code) {
-        /* If it's a code 0, well, we shouldn't be here. */
-        case 0:
-            arch_panic("spurious RESET exception");
-            break;
-
-        /* If it's a code 1 or 2, grab the event from expevt. */
-        case 1:
-        case 2:
-            evt = EXPEVT;
-            break;
-
         /* If it's a code 3, grab the event from intevt. */
         case 3:
             evt = INTEVT;
+            break;
+
+        /* If it's a code 1 or 2, grab the event from expevt. */
+        case 2:
+        case 1:
+            evt = EXPEVT;
+            break;
+
+        /* If it's a code 0, well, we shouldn't be here. */
+        case 0:
+        default:
+            arch_panic("spurious RESET exception");
             break;
     }
 
@@ -235,7 +247,7 @@ void irq_handle_exception(int code) {
         arch_panic("double fault");
     }
 
-    /* Reveal this info about the int to inside_int for better 
+    /* Reveal this info about the int to inside_int for better
        diagnostics returns if we try to do something in the int. */
     inside_int = ((code&0xf)<<16) | (evt&0xffff);
 
@@ -369,7 +381,7 @@ int irq_init(void) {
     /* Default to not in an interrupt */
     inside_int = 0;
 
-    /* Set a default timer handlers */
+    /* Set default timer handlers */
     irq_set_handler(EXC_TMU0_TUNI0, irq_def_timer, (void *)TMU0);
     irq_set_handler(EXC_TMU1_TUNI1, irq_def_timer, (void *)TMU1);
     irq_set_handler(EXC_TMU2_TUNI2, irq_def_timer, (void *)TMU2);
@@ -423,7 +435,7 @@ void irq_shutdown(void) {
 void irq_set_priority(irq_src_t src, unsigned int prio) {
     uint16_t ipr;
 
-    if (prio > IRQ_PRIO_MAX)
+    if(prio > IRQ_PRIO_MAX)
         prio = IRQ_PRIO_MAX;
 
     irq_disable_scoped();

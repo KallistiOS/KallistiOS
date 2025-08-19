@@ -48,13 +48,8 @@ ifdef MINGW
   endif
 endif
 
-# SH toolchain
-sh_target = sh-elf
-SH_CC_FOR_TARGET = $(sh_target)-$(GCC)
-SH_CXX_FOR_TARGET = $(sh_target)-$(GXX)
-
-# ARM toolchain
-arm_target = arm-eabi
+CC_FOR_TARGET = $(target)-$(GCC)
+CXX_FOR_TARGET = $(target)-$(GXX)
 
 # Handle macOS
 ifdef MACOS
@@ -64,10 +59,22 @@ ifdef MACOS
     macos_extra_args = -isysroot $(sdkroot)
     CC += -Wno-nullability-completeness -Wno-missing-braces $(macos_extra_args)
     CXX += -stdlib=libc++ -mmacosx-version-min=10.14 $(macos_extra_args)
-    SH_CC_FOR_TARGET += $(macos_extra_args)
-    SH_CXX_FOR_TARGET += $(macos_extra_args)
+    CC_FOR_TARGET += $(macos_extra_args)
+    CXX_FOR_TARGET += $(macos_extra_args)
     macos_gcc_configure_args = --with-sysroot --with-native-system-header=/usr/include
     macos_gdb_configure_args = --with-sysroot=$(sdkroot)
+    # Detect if CC is Apple Clang and get major version, skip if using gcc.
+    APPLE_CLANG_MAJOR := $(shell $(CC) --version 2>&1 | \
+      grep -i "Apple clang" | cut -f 4 -d " " | cut -f 1 -d ".")
+    ifdef APPLE_CLANG_MAJOR
+      # When using Apple Clang 17 or above, use system zlib.
+      ifeq ($(shell [ "$(APPLE_CLANG_MAJOR)" -gt 16 ] && echo "yes"), yes)
+        $(info Apple clang $(APPLE_CLANG_MAJOR) detected, using system zlib)
+        macos_gcc_configure_args += --with-system-zlib
+        macos_gdb_configure_args += --with-system-zlib
+        binutils_extra_configure_args += --with-system-zlib
+      endif
+    endif
   endif
 endif
 
@@ -92,29 +99,28 @@ ifdef WINDOWS
   executable_extension=.exe
 endif
 
-# Set up the argument for jobs to be used if specified
-ifdef makejobs
-  ifneq (1,$(makejobs))
-    jobs_arg = -j$(makejobs)
-  endif
-endif
-
 # MinGW/MSYS
 # Disable makejobs possibility in legacy MinGW/MSYS environment as this breaks
 # the build
 ifdef MINGW
-  ifneq ($(jobs_arg),)
+  ifneq ($(makejobs),)
     $(warning 'makejobs' is unsupported in this environment.  Ignoring.)
+  endif
     jobs_arg=
+else
+  ifdef makejobs
+    jobs_arg = -j$(makejobs)
+  else
+    jobs_arg := -j$(shell getconf _NPROCESSORS_ONLN)
   endif
 endif
 
 # Determine if we want to apply fixup sh4 newlib
-do_auto_fixup_sh4_newlib := 1
-ifdef auto_fixup_sh4_newlib
-  ifeq (0,$(auto_fixup_sh4_newlib))
+do_auto_fixup_newlib := 1
+ifdef auto_fixup_newlib
+  ifeq (0,$(auto_fixup_newlib))
     $(warning 'Disabling Newlib Auto Fixup)
-    do_auto_fixup_sh4_newlib := 0
+    do_auto_fixup_newlib := 0
   endif
 endif
 
@@ -129,7 +135,7 @@ endif
 
 # Report an error if KOS threading is enabled when patching or fixup is disabled
 ifeq (kos,$(thread_model))
-  ifeq (0,$(do_auto_fixup_sh4_newlib))
+  ifeq (0,$(do_auto_fixup_newlib))
     $(error kos thread model is unsupported when Newlib fixup is disabled)
   endif
   ifeq (0,$(do_kos_patching))

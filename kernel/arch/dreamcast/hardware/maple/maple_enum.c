@@ -38,7 +38,7 @@ maple_device_t * maple_enum_type(int n, uint32 func) {
         for(u = 0; u < MAPLE_UNIT_COUNT; u++) {
             dev = maple_enum_dev(p, u);
 
-            if(dev != NULL && dev->info.functions & func) {
+            if(dev != NULL && (dev->info.functions & func)) {
                 if(!n) return dev;
 
                 n--;

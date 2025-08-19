@@ -22,7 +22,7 @@
 
 /* Definitions for the "dcload" file system */
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 #include <kos/fs.h>

@@ -21,16 +21,52 @@
 #ifndef __KOS_ELF_H
 #define __KOS_ELF_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
+#include <stdint.h>
 #include <sys/queue.h>
+#include <kos/regfield.h>
 
 /** \defgroup elf   ELF File Format
     \brief          API for loading and managing ELF files
     \ingroup        system_libraries
 */
+
+/** \defgroup elf_ident                 ELF Identification Bytes
+    \ingroup elf
+
+    Initial bytes of the ELF file, specifying how it should be
+    interpreted. This group contains first the indexes of each
+    ident field, then defines for the values they can contain.
+
+    Some of these are shared by other header fields.
+    @{
+*/
+#define EI_MAG0         0   /**< \brief File identification: 0x7f */
+#define EI_MAG1         1   /**< \brief File identification: 'E' */
+#define EI_MAG2         2   /**< \brief File identification: 'L' */
+#define EI_MAG3         3   /**< \brief File identification: 'F' */
+#define EI_CLASS        4   /**< \brief File class (32/64-bit) */
+#define EI_DATA         5   /**< \brief Data encoding (LSB/MSB) */
+#define EI_VERSION      6   /**< \brief File version (must be 1) */
+#define EI_OSABI        7   /**< \brief Operating System/ABI identification */
+#define EI_ABIVERSION   8   /**< \brief ABI version */
+#define EI_PAD          9   /**< \brief Start of padding bytes */
+
+#define EI_NIDENT       16  /**< \brief Size of elf_hdr::ident */
+
+#define ELFCLASSNONE    0   /**< \brief Invalid class */
+#define ELFCLASS32      1   /**< \brief 32-bit objects */
+#define ELFCLASS64      2   /**< \brief 64-bit objects */
+
+#define ELFDATANONE     0   /**< \brief Invalid encoding */
+#define ELFDATA2LSB     1   /**< \brief 2's complement, little endian */
+#define ELFDATA2MSB     2   /**< \brief 2's complement, big Endian */
+
+#define EV_NONE         0   /**< \brief Invalid version */
+#define EV_CURRENT      1   /**< \brief Current version */
+/** @} */
 
 /** \brief   ELF file header.
     \ingroup elf
@@ -38,24 +74,23 @@ __BEGIN_DECLS
     This header is at the beginning of any valid ELF binary and serves to
     identify the architecture of the binary and various data about it.
 
-    \headerfile kos/elf.h
 */
-struct elf_hdr_t {
-    uint8 ident[16];    /**< \brief ELF identifier */
-    uint16 type;        /**< \brief ELF file type */
-    uint16 machine;     /**< \brief ELF file architecture */
-    uint32 version;     /**< \brief Object file version */
-    uint32 entry;       /**< \brief Entry point */
-    uint32 phoff;       /**< \brief Program header offset */
-    uint32 shoff;       /**< \brief Section header offset */
-    uint32 flags;       /**< \brief Processor flags */
-    uint16 ehsize;      /**< \brief ELF header size in bytes */
-    uint16 phentsize;   /**< \brief Program header entry size */
-    uint16 phnum;       /**< \brief Program header entry count */
-    uint16 shentsize;   /**< \brief Section header entry size */
-    uint16 shnum;       /**< \brief Section header entry count */
-    uint16 shstrndx;    /**< \brief String table section index */
-};
+typedef struct elf_hdr {
+    uint8_t  ident[EI_NIDENT];  /**< \brief ELF identifier */
+    uint16_t type;              /**< \brief ELF file type */
+    uint16_t machine;           /**< \brief ELF file architecture */
+    uint32_t version;           /**< \brief Object file version */
+    uint32_t entry;             /**< \brief Entry point */
+    uint32_t phoff;             /**< \brief Program header offset */
+    uint32_t shoff;             /**< \brief Section header offset */
+    uint32_t flags;             /**< \brief Processor flags */
+    uint16_t ehsize;            /**< \brief ELF header size in bytes */
+    uint16_t phentsize;         /**< \brief Program header entry size */
+    uint16_t phnum;             /**< \brief Program header entry count */
+    uint16_t shentsize;         /**< \brief Section header entry size */
+    uint16_t shnum;             /**< \brief Section header entry count */
+    uint16_t shstrndx;          /**< \brief String table section index */
+} elf_hdr_t;
 
 /** \defgroup elf_archs                 Architecture Types
     \brief                              Relevant ELF architecture type codes
@@ -66,6 +101,7 @@ struct elf_hdr_t {
     @{
 */
 #define EM_386  3   /**< \brief x86 (IA32) */
+#define EM_PPC  20  /**< \brief PowerPC */
 #define EM_ARM  40  /**< \brief ARM */
 #define EM_SH   42  /**< \brief SuperH */
 /** @} */
@@ -89,9 +125,16 @@ struct elf_hdr_t {
 #define SHT_NOTE        7       /**< \brief Notes section */
 #define SHT_NOBITS      8       /**< \brief A section that occupies no space in
 the file */
-#define SHT_REL         9       /**< \brief Relocation table, no addends */
-#define SHT_SHLIB       10      /**< \brief Reserved */
-#define SHT_DYNSYM      11      /**< \brief Dynamic-only sym tab */
+#define SHT_REL             9   /**< \brief Relocation table, no addends */
+#define SHT_SHLIB           10  /**< \brief Reserved */
+#define SHT_DYNSYM          11  /**< \brief Dynamic linker symbol table */
+#define SHT_INIT_ARRAY      14  /**< \brief Array of constructors */
+#define SHT_FINI_ARRAY      15  /**< \brief Array of destructors */
+#define SHT_PREINIT_ARRAY   16  /**< \brief Array of pre-constructors */
+#define SHT_GROUP           17  /**< \brief Section group */
+#define SHT_SYMTAB_SHNDX    18  /**< \brief Extended section indices */
+#define SHT_NUM             19  /**< \brief Number of defined types.  */
+
 #define SHT_LOPROC  0x70000000  /**< \brief Start of processor specific types */
 #define SHT_HIPROC  0x7fffffff  /**< \brief End of processor specific types */
 #define SHT_LOUSER  0x80000000  /**< \brief Start of program specific types */
@@ -107,9 +150,15 @@ the file */
 
     @{
 */
-#define SHF_WRITE       1           /**< \brief Writable data */
-#define SHF_ALLOC       2           /**< \brief Resident */
-#define SHF_EXECINSTR   4           /**< \brief Executable instructions */
+#define SHF_WRITE       BIT(0)      /**< \brief Writable data */
+#define SHF_ALLOC       BIT(1)      /**< \brief Resident */
+#define SHF_EXECINSTR   BIT(2)      /**< \brief Executable instructions */
+#define SHF_MERGE       BIT(4)      /**< \brief Might be merged */
+#define SHF_STRINGS     BIT(5)      /**< \brief Contains nul-terminated strings */
+#define SHF_INFO_LINK   BIT(6)      /**< \brief `sh_info' contains SHT index */
+#define SHF_LINK_ORDER  BIT(7)      /**< \brief Preserve order after combining */
+#define SHF_GROUP       BIT(9)      /**< \brief Section is member of a group.  */
+#define SHF_TLS         BIT(10)     /**< \brief Section hold thread-local data.  */
 #define SHF_MASKPROC    0xf0000000  /**< \brief Processor specific mask */
 /** @} */
 
@@ -132,18 +181,18 @@ the file */
 
     \headerfile kos/elf.h
 */
-struct elf_shdr_t {
-    uint32 name;        /**< \brief Index into string table */
-    uint32 type;        /**< \brief Section type \see elf_sections */
-    uint32 flags;       /**< \brief Section flags \see elf_hdrflags */
-    uint32 addr;        /**< \brief In-memory offset */
-    uint32 offset;      /**< \brief On-disk offset */
-    uint32 size;        /**< \brief Size (if SHT_NOBITS, amount of 0s needed) */
-    uint32 link;        /**< \brief Section header table index link */
-    uint32 info;        /**< \brief Section header extra info */
-    uint32 addralign;   /**< \brief Alignment constraints */
-    uint32 entsize;     /**< \brief Fixed-size table entry sizes */
-};
+typedef struct elf_shdr {
+    uint32_t name;        /**< \brief Index into string table */
+    uint32_t type;        /**< \brief Section type \see elf_sections */
+    uint32_t flags;       /**< \brief Section flags \see elf_hdrflags */
+    uint32_t addr;        /**< \brief In-memory offset */
+    uint32_t offset;      /**< \brief On-disk offset */
+    uint32_t size;        /**< \brief Size (if SHT_NOBITS, amount of 0s needed) */
+    uint32_t link;        /**< \brief Section header table index link */
+    uint32_t info;        /**< \brief Section header extra info */
+    uint32_t addralign;   /**< \brief Alignment constraints */
+    uint32_t entsize;     /**< \brief Fixed-size table entry sizes */
+} elf_shdr_t;
 /* Link and info fields:
 
 switch (sh_type) {
@@ -204,14 +253,14 @@ switch (sh_type) {
 
     \headerfile kos/elf.h
 */
-struct elf_sym_t {
-    uint32 name;        /**< \brief Index into file's string table */
-    uint32 value;       /**< \brief Value of the symbol */
-    uint32 size;        /**< \brief Size of the symbol */
-    uint8 info;         /**< \brief Symbol type and binding */
-    uint8 other;        /**< \brief 0. Holds no meaning. */
-    uint16 shndx;       /**< \brief Section index */
-};
+typedef struct elf_sym {
+    uint32_t name;        /**< \brief Index into file's string table */
+    uint32_t value;       /**< \brief Value of the symbol */
+    uint32_t size;        /**< \brief Size of the symbol */
+    uint8_t  info;        /**< \brief Symbol type and binding */
+    uint8_t  other;       /**< \brief 0. Holds no meaning. */
+    uint16_t shndx;       /**< \brief Section index */
+} elf_sym_t;
 
 /** \brief   Retrieve the binding type for a symbol.
     \ingroup elf
@@ -240,11 +289,11 @@ struct elf_sym_t {
 
     \headerfile kos/elf.h
 */
-struct elf_rela_t {
-    uint32 offset;      /**< \brief Offset within section */
-    uint32 info;        /**< \brief Symbol and type */
-    int32 addend;       /**< \brief Constant addend for the symbol */
-};
+typedef struct elf_rela {
+    uint32_t offset;      /**< \brief Offset within section */
+    uint32_t info;        /**< \brief Symbol and type */
+    int32_t  addend;      /**< \brief Constant addend for the symbol */
+} elf_rela_t;
 
 /** \brief   ELF Relocation entry (without explicit addend).
     \ingroup elf
@@ -255,10 +304,10 @@ struct elf_rela_t {
 
     \headerfile kos/elf.h
 */
-struct elf_rel_t {
-    uint32      offset;     /**< \brief Offset within section */
-    uint32      info;       /**< \brief Symbol and type */
-};
+typedef struct elf_rel {
+    uint32_t      offset;     /**< \brief Offset within section */
+    uint32_t      info;       /**< \brief Symbol and type */
+} elf_rel_t;
 
 /** \defgroup elf_reltypes              Relocation Types
     \brief                              ELF relocation type values
@@ -289,7 +338,7 @@ struct elf_rel_t {
     \return                 The relocation type of that relocation.
     \see                    elf_reltypes
 */
-#define ELF32_R_TYPE(i) ((uint8)(i))
+#define ELF32_R_TYPE(i) ((uint8_t)(i))
 
 struct klibrary;
 
@@ -302,16 +351,16 @@ struct klibrary;
     \headerfile kos/elf.h
 */
 typedef struct elf_prog {
-    void *data;             /**< \brief Pointer to program in memory */
-    uint32 size;            /**< \brief Memory image size (rounded up to page size) */
+    void     *data;             /**< \brief Pointer to program in memory */
+    uint32_t size;              /**< \brief Memory image size (rounded up to page size) */
 
     /* Library exports */
-    ptr_t lib_get_name;     /**< \brief Pointer to get_name() function */
-    ptr_t lib_get_version;  /**< \brief Pointer to get_version() function */
-    ptr_t lib_open;         /**< \brief Pointer to library's open function */
-    ptr_t lib_close;        /**< \brief Pointer to library's close function */
+    uintptr_t lib_get_name;     /**< \brief Pointer to get_name() function */
+    uintptr_t lib_get_version;  /**< \brief Pointer to get_version() function */
+    uintptr_t lib_open;         /**< \brief Pointer to library's open function */
+    uintptr_t lib_close;        /**< \brief Pointer to library's close function */
 
-    char fn[256];           /**< \brief Filename of library */
+    char fn[256];               /**< \brief Filename of library */
 } elf_prog_t;
 
 /** \brief   Load an ELF binary.
@@ -338,5 +387,5 @@ void elf_free(elf_prog_t *prog);
 
 __END_DECLS
 
-#endif  /* __OS_ELF_H */
+#endif  /* __KOS_ELF_H */
 

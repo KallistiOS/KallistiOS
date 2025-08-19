@@ -22,7 +22,7 @@
 #ifndef __ARCH_BYTEORDER_H
 #define __ARCH_BYTEORDER_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 #ifdef BYTE_ORDER

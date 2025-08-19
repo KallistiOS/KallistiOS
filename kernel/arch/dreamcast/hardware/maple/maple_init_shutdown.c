@@ -14,6 +14,7 @@
 #include <dc/vblank.h>
 #include <kos/thread.h>
 #include <kos/init.h>
+#include <kos/dbglog.h>
 
 #include <dc/maple/controller.h>
 #include <dc/maple/keyboard.h>
@@ -57,20 +58,22 @@ static void maple_hw_init(void) {
     }
 
     /* Allocate the DMA send buffer */
-#if MAPLE_DMA_DEBUG
-    maple_state.dma_buffer = aligned_alloc(32, MAPLE_DMA_SIZE + 1024);
-#else
-    maple_state.dma_buffer = aligned_alloc(32, MAPLE_DMA_SIZE);
-#endif
+    if(__is_defined(MAPLE_DMA_DEBUG))
+        maple_state.dma_buffer = aligned_alloc(32, MAPLE_DMA_SIZE + 1024);
+    else
+        maple_state.dma_buffer = aligned_alloc(32, MAPLE_DMA_SIZE);
+
     assert_msg(maple_state.dma_buffer != NULL, "Couldn't allocate maple DMA buffer");
     assert_msg((((uint32)maple_state.dma_buffer) & 0x1f) == 0, "DMA buffer was unaligned; bug in dlmalloc; please report!");
 
     /* Force it into the P2 area */
     maple_state.dma_buffer = (uint8*)((((uint32)maple_state.dma_buffer) & MEM_AREA_CACHE_MASK) | MEM_AREA_P2_BASE);
-#if MAPLE_DMA_DEBUG
-    maple_state.dma_buffer += 512;
-    maple_sentinel_setup(maple_state.dma_buffer - 512, MAPLE_DMA_SIZE + 1024);
-#endif
+
+    if(__is_defined(MAPLE_DMA_DEBUG)) {
+        maple_state.dma_buffer += 512;
+        maple_sentinel_setup(maple_state.dma_buffer - 512, MAPLE_DMA_SIZE + 1024);
+    }
+
     maple_state.dma_in_progress = 0;
     dbglog(DBG_INFO, "  DMA Buffer at %08lx\n", (uint32)maple_state.dma_buffer);
 
@@ -116,9 +119,10 @@ void maple_hw_shutdown(void) {
     /* We must cast this back to P1 or cache issues will arise */
     if(maple_state.dma_buffer != NULL) {
         ptr = (uint32)maple_state.dma_buffer;
-#if MAPLE_DMA_DEBUG
-        ptr -= 512;
-#endif
+
+        if(__is_defined(MAPLE_DMA_DEBUG))
+            ptr -= 512;
+
         ptr = (ptr & MEM_AREA_CACHE_MASK) | MEM_AREA_P1_BASE;
         free((void *)ptr);
         maple_state.dma_buffer = NULL;

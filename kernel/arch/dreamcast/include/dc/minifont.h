@@ -44,7 +44,7 @@ __BEGIN_DECLS
     \param  buffer          The buffer to draw to (at least 8 x 16 pixels)
     \param  bufwidth        The width of the buffer in pixels
     \param  c               The character to draw
-    
+
     \return                 Amount of width covered in 16-bit increments.
 */
 int minifont_draw(uint16 *buffer, uint32 bufwidth, uint32 c);
@@ -58,7 +58,7 @@ int minifont_draw(uint16 *buffer, uint32 bufwidth, uint32 c);
     \param  b               The buffer to draw to.
     \param  bufwidth           The width of the buffer in pixels.
     \param  str             The string to draw.
-    
+
     \return                 Amount of width covered in 16-bit increments.
 */
 int minifont_draw_str(uint16 *b, uint32 bufwidth, const char *str);

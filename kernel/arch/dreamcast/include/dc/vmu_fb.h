@@ -18,7 +18,7 @@
     \author Paul Cercueil
 */
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 #include <dc/maple.h>
@@ -50,11 +50,11 @@ typedef struct vmufb {
     layout, and a pointer to the raw font data.
  */
 typedef struct vmufb_font {
-    unsigned int id;        /**< Font id */
-    unsigned int w;         /**< Character width in pixels */
-    unsigned int h;         /**< Character height in pixels */
-    size_t       stride;    /**< Size of one character in bytes */
-    const char  *fontdata;  /**< Pointer to the font data */
+    unsigned int    id;        /**< Font id */
+    unsigned int    w;         /**< Character width in pixels */
+    unsigned int    h;         /**< Character height in pixels */
+    size_t          stride;    /**< Size of one character in bytes */
+    const uint8_t  *fontdata;  /**< Pointer to the font data */
 } vmufb_font_t;
 
 /** \brief  Render into the VMU framebuffer
@@ -75,7 +75,7 @@ typedef struct vmufb_font {
 void vmufb_paint_area(vmufb_t *fb,
                       unsigned int x, unsigned int y,
                       unsigned int w, unsigned int h,
-                      const char *data);
+                      const uint8_t *data);
 
 /** \brief  Clear a specific area of the VMU framebuffer
 
@@ -192,7 +192,7 @@ void vmufb_print_string(vmufb_t *fb, const vmufb_font_t *font,
 void vmu_printf(const char *fmt, ...) __printflike(1, 2);
 
 /** \brief Sets the default font for drawing text to the VMU.
- 
+
     This function allows you to set a custom font for drawing text
     to the VMU screen. If the \p font parameter is set to `NULL`,
     the built-in VMU font will be used as the default.
@@ -216,6 +216,17 @@ const vmufb_font_t *vmu_set_font(const vmufb_font_t *font);
     \sa vmu_set_font()
  */
 const vmufb_font_t *vmu_get_font(void);
+
+/** \brief   Take a screenshot.
+
+    This function takes the current VMU framebuffer and saves it
+    to a PBM file.
+
+    \param  fb              The vmufb_t that will be captured.
+    \param  destfn          The filename to save to.
+    \return                 0 on success, <0 on failure.
+*/
+int vmufb_screen_shot(vmufb_t *fb, const char *destfn);
 
 /** @} */
 

@@ -24,7 +24,7 @@
 #ifndef __DC_MATRIX_H
 #define __DC_MATRIX_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 #include <dc/vector.h>
@@ -57,7 +57,7 @@ void mat_store(matrix_t *out);
     \warning
     \p out MUST be at least 8-byte aligned!
 
-    \note 
+    \note
     For best performance, 32-byte alignment of \p out is recommended.
 
     \param  src             A pointer to where to load the matrix from (must be
@@ -78,12 +78,28 @@ void mat_identity(void);
     \warning
     \p src MUST be at least 8-byte aligned!
 
-    \note 
+    \note
     For best performance, 32-byte alignment of \p src is recommended.
 
     \param  src             A pointer to the matrix to multiply.
 */
 void mat_apply(const matrix_t *src);
+
+/** \brief  Multiply a matrix.
+
+    This function multiplies a matrix in memory with the internal matrix
+    and stores the result into a new matrix.
+
+    \warning
+    \p src and dst MUST be at least 8-byte aligned!
+
+    \note
+    For best performance, 32-byte alignment of \p src and \p dst is recommended.
+
+    \param  dst             A pointer to the destination matrix.
+    \param  src             A pointer to the matrix to multiply.
+*/
+void mat_multiply(matrix_t *dst, const matrix_t *src);
 
 /** \brief  Transform vectors by the internal matrix.
 

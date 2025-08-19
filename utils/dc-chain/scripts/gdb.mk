@@ -4,8 +4,8 @@
 
 gdb_log = $(logdir)/build-$(gdb_name).log
 
-gdb_patches := $(wildcard $(patches)/$(gdb_name)*.diff)
-gdb_patches += $(wildcard $(patches)/$(host_triplet)/$(gdb_name)*.diff)
+gdb_patches := $(wildcard $(patches)/targets/$(gdb_name)*.diff)
+gdb_patches += $(wildcard $(patches)/hosts/$(host_triplet)/$(gdb_name)*.diff)
 
 patch_gdb: $(stamp_gdb_patch)
 
@@ -26,13 +26,13 @@ build_gdb: $(stamp_gdb_build)
 ifeq ($(MACOS), 1)
   ifeq ($(uname_m),arm64)
     $(info Fixing up MacOS arm64 environment variables)
-    $(stamp_gdb_build): export CPATH := /opt/homebrew/include
-    $(stamp_gdb_build): export LIBRARY_PATH := /opt/homebrew/lib
+    $(stamp_gdb_build): export CPATH ?= /opt/homebrew/include
+    $(stamp_gdb_build): export LIBRARY_PATH ?= /opt/homebrew/lib
   endif
   ifeq ($(uname_m),x86_64)
     $(info Fixing up MacOS x86_64 environment variables)
-    $(stamp_gdb_build): export CPATH := /usr/local/include
-    $(stamp_gdb_build): export LIBRARY_PATH := /usr/local/lib
+    $(stamp_gdb_build): export CPATH ?= /usr/local/include
+    $(stamp_gdb_build): export LIBRARY_PATH ?= /usr/local/lib
   endif
 endif
 
@@ -45,8 +45,8 @@ $(stamp_gdb_build): patch_gdb
 	cd $(build); \
         ../$(gdb_name)/configure \
           --disable-werror \
-          --prefix=$(sh_toolchain_path) \
-          --target=$(sh_target) \
+          --prefix=$(toolchain_path) \
+          --target=$(target) \
           CC="$(CC)" \
           CXX="$(CXX)" \
           $(macos_gdb_configure_args) \
@@ -58,7 +58,7 @@ $(stamp_gdb_build): patch_gdb
 # This step runs post install to sign the sh-elf-gdb binary on MacOS
 macos_codesign_gdb: $(stamp_gdb_install)
 	@echo "+++ Codesigning GDB..."
-	codesign --sign "-" $(sh_toolchain_path)/bin/sh-elf-gdb
+	codesign --sign "-" $(toolchain_path)/bin/$(target)-gdb
 
 # If Host is MacOS then place Codesign step into dependency chain
 ifeq ($(MACOS), 1)
@@ -81,7 +81,7 @@ $(stamp_gdb_install): build_gdb
 	$(MAKE) -C $(build) install DESTDIR=$(DESTDIR) $(to_log)
 	@if test "$(install_mode)" = "install-strip"; then \
 		$(MAKE) -C $(build)/gdb $(install_mode) DESTDIR=$(DESTDIR) $(to_log); \
-		gdb_run=$(sh_toolchain_path)/bin/$(sh_target)-run$(executable_extension); \
+		gdb_run=$(toolchain_path)/bin/$(target)-run$(executable_extension); \
 		if test -f $${gdb_run}; then \
 			strip $${gdb_run}; \
 		fi; \

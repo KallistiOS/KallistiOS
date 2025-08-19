@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <dc/flashrom.h>
 #include <dc/syscalls.h>
+#include <kos/dbglog.h>
 #include <arch/irq.h>
 
 static void strcpy_no_term(char *dest, const char *src, size_t destsize) {
@@ -27,7 +28,7 @@ static void strcpy_no_term(char *dest, const char *src, size_t destsize) {
     srclength = strlen(src);
     srclength = srclength > destsize ? destsize : srclength;
     memcpy(dest, src, srclength);
-    if (srclength < destsize) {
+    if(srclength < destsize) {
         memset(dest + srclength, '\0', destsize - srclength);
     }
 }

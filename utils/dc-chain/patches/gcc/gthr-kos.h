@@ -45,6 +45,9 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 #include <arch/irq.h>
 #include <time.h>
 
+/* 9.5.0 somehow requires this. Remove when no longer supported */
+#include <pthread.h>
+
 /* These should work just fine. */
 typedef kthread_key_t __gthread_key_t;
 typedef kthread_once_t __gthread_once_t;

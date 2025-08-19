@@ -11,6 +11,7 @@
 #include <stddef.h>
 #include <errno.h>
 #include <limits.h>
+#include <kos/limits.h>
 #include <assert.h>
 #include <sys/queue.h>
 #include <inttypes.h>
@@ -988,9 +989,11 @@ static ext2_dirent_t *search_indir_23(ext2_fs_t *fs, const uint32_t *iblock,
     uint32_t *buf;
     int i, block_ents;
     ext2_dirent_t *rv;
+    /* Ensure the buffer will hold uint32_ts */
+    size_t bufsize = __align_up(block_size, sizeof(buf[0]));
 
     /* We're going to need this buffer... */
-    if(!(buf = (uint32_t *)malloc(block_size))) {
+    if(!(buf = (uint32_t *)malloc(bufsize))) {
         *err = -ENOMEM;
         return NULL;
     }

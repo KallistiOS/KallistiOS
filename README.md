@@ -27,7 +27,7 @@ KallistiOS also features a package manager called [**_kos-ports_**](https://gith
 * Optical Disc Drive
 * Low-level 3D PowerVR Graphics 
 * SH4 ASM-Optimized Math Routines
-* SH4 SCIF Serial I/O
+* SH4 SCI and SCIF Serial I/O
 * DMA Controller 
 * FlashROM Filesystem
 * AICA SPU Sound Processor Driver

@@ -37,9 +37,9 @@ case $USEMODE in
 	1)
 		# In link mode, add all the extra processing.
 		if [ x${KOS_WRAPPERS_VERBOSE} = x"1" ]; then
-			echo ${KOS_CC} ${KOS_CFLAGS} ${KOS_LDFLAGS} ${KOS_START} "$@" ${KOS_LIBS}
+			echo ${KOS_CC} ${KOS_CFLAGS} ${KOS_LDFLAGS} "$@" ${KOS_LIBS}
 		fi
-		exec ${KOS_CC} ${KOS_CFLAGS} ${KOS_LDFLAGS} ${KOS_START} "$@" ${KOS_LIBS}
+		exec ${KOS_CC} ${KOS_CFLAGS} ${KOS_LDFLAGS} "$@" ${KOS_LIBS}
 	;;
 
 	2)

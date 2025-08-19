@@ -2,9 +2,9 @@
 
    include/kos/thread.h
    Copyright (C) 2000, 2001, 2002, 2003 Megan Potter
-   Copyright (C) 2009, 2010, 2016 Lawrence Sebald
+   Copyright (C) 2009, 2010, 2016, 2023 Lawrence Sebald
    Copyright (C) 2023 Colton Pawielski
-   Copyright (C) 2023, 2024 Falco Girgis
+   Copyright (C) 2023, 2024, 2025 Falco Girgis
 
 */
 
@@ -19,7 +19,6 @@
     \see    kos/genwait.h
     \see    kos/mutex.h
     \see    kos/once.h
-    \see    kos/recursive_lock.h
     \see    kos/rwsem.h
     \see    kos/sem.h
     \see    kos/tls.h
@@ -36,12 +35,13 @@
 #ifndef __KOS_THREAD_H
 #define __KOS_THREAD_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 #include <kos/cdefs.h>
 #include <kos/tls.h>
 #include <arch/irq.h>
+
 #include <sys/queue.h>
 #include <sys/reent.h>
 
@@ -127,11 +127,12 @@ LIST_HEAD(ktlist, kthread);
 
     @{
 */
-#define THD_DEFAULTS    0  /**< \brief Defaults: no flags */
-#define THD_USER        1  /**< \brief Thread runs in user mode */
-#define THD_QUEUED      2  /**< \brief Thread is in the run queue */
-#define THD_DETACHED    4  /**< \brief Thread is detached */
-#define THD_OWNS_STACK  8  /**< \brief Thread manages stack lifetime */
+#define THD_DEFAULTS    0x0  /**< \brief Defaults: no flags */
+#define THD_USER        0x1  /**< \brief Thread runs in user mode */
+#define THD_QUEUED      0x2  /**< \brief Thread is in the run queue */
+#define THD_DETACHED    0x4  /**< \brief Thread is detached */
+#define THD_OWNS_STACK  0x8  /**< \brief Thread manages stack lifetime */
+#define THD_DISABLE_TLS 0x10 /**< \brief Thread does not use TLS variables */
 /** @} */
 
 /** \brief Kernel thread flags type */
@@ -148,17 +149,6 @@ typedef enum kthread_state {
     STATE_WAIT     = 0x0003,  /**< \brief Blocked on a genwait */
     STATE_FINISHED = 0x0004   /**< \brief Finished execution */
 } kthread_state_t;
-
-/** \brief   Thread Control Block Header
-
-    Header preceding the static TLS data segments as defined by
-    the SH-ELF TLS ABI (version 1). This is what the thread pointer 
-    (GBR) points to for compiler access to thread-local data. 
-*/
-typedef struct tcbhead {
-    void *dtv;               /**< \brief Dynamic TLS vector (unused) */
-    uintptr_t pointer_guard; /**< \brief Pointer guard (unused) */
-} tcbhead_t;
 
 /** \brief   Structure describing one running thread.
 
@@ -260,7 +250,7 @@ typedef __attribute__((aligned(32))) struct kthread {
     struct kthread_tls_kv_list tls_list;
 
     /** \brief Compiler-level thread-local storage. */
-    tcbhead_t* tcbhead;
+    void *tls_hnd;
 
     /** \brief  Return value of the thread function.
 
@@ -297,6 +287,9 @@ typedef struct kthread_attr {
 
     /** \brief  Thread label. */
     const char *label;
+
+    /** \brief 1 if the thread doesn't use thread_local variables. */
+    bool disable_tls;
 } kthread_attr_t;
 
 /** \brief  kthread mode values
@@ -454,9 +447,8 @@ void thd_exit(void *rv) __noreturn;
 
 /** \brief   Force a thread reschedule.
 
-    This function is the thread scheduler, and is generally called from a timer
-    interrupt. You will most likely never have a reason to call this function
-    directly.
+    This function is the thread scheduler, and MUST be called in an interrupt
+    context (typically from the primary timer interrupt).
 
     For most cases, you'll want to set front_of_line to zero, but read the
     comments in kernel/thread/thread.c for more info, especially if you need to
@@ -465,11 +457,13 @@ void thd_exit(void *rv) __noreturn;
     time for checking timeouts.
 
     \param  front_of_line   Set to false, unless you have a good reason not to.
-    \param  now             Set to 0, unless you have a good reason not to.
 
     \sa thd_schedule_next
+    \warning                Never call this function from outside of an
+                            interrupt context! Doing so will almost certainly
+                            end very poorly.
 */
-void thd_schedule(bool front_of_line, uint64_t now);
+void thd_schedule(bool front_of_line);
 
 /** \brief       Force a given thread to the front of the queue.
     \relatesalso kthread_t
@@ -517,8 +511,32 @@ void thd_sleep(unsigned ms);
     \retval 0               On success.
     \retval -1              thd is NULL.
     \retval -2              prio requested was out of range.
+
+    \sa thd_get_prio
 */
 int thd_set_prio(kthread_t *thd, prio_t prio);
+
+/** \brief       Retrieve a thread's priority value.
+    \relatesalso kthread_t
+
+    \param  thd             The thread to retrieve from. If NULL, the current
+                            thread will be used.
+
+    \return                 The priority value of the thread
+
+    \sa thd_set_prio
+*/
+prio_t thd_get_prio(kthread_t *thd);
+
+/** \brief       Retrieve a thread's numeric identifier.
+    \relatesalso kthread_t
+
+    \param  thd             The thread to retrieve from. If NULL, the current
+                            thread will be used.
+
+    \return                 The identifier of the thread
+*/
+tid_t thd_get_id(kthread_t *thd);
 
 /** \brief       Retrieve the current thread's kthread struct.
     \relatesalso kthread_t
@@ -551,7 +569,7 @@ const char *thd_get_label(kthread_t *thd);
 
     \sa thd_get_label
 */
-void thd_set_label(kthread_t *thd, const char *__RESTRICT label);
+void thd_set_label(kthread_t *__RESTRICT thd, const char *__RESTRICT label);
 
 /** \brief       Retrieve the thread's current working directory.
     \relatesalso kthread_t
@@ -582,7 +600,7 @@ const char *thd_get_pwd(kthread_t *thd);
 
     \sa thd_get_pwd
 */
-void thd_set_pwd(kthread_t *thd, const char *__RESTRICT pwd);
+void thd_set_pwd(kthread_t *__RESTRICT thd, const char *__RESTRICT pwd);
 
 /** \brief       Retrieve a pointer to the thread errno.
     \relatesalso kthread_t
@@ -608,25 +626,27 @@ int *thd_get_errno(kthread_t *thd);
 */
 struct _reent *thd_get_reent(kthread_t *thd);
 
-
 /** \brief       Retrieves the thread's elapsed CPU time
     \relatesalso kthread_t
 
     Returns the amount of active CPU time the thread has consumed in
     nanoseconds.
 
-    \warning
-    The implementation uses perf_cntr_timer_ns() internally when maintaining
-    this CPU time, so disabling or clearing the nanosecond timer will
-    interfere with this time keeping.
+    \param thd          The thead to retrieve the CPU time for.
 
-    \param thd          The thead to retrieve the CPU time for
-
-    \retval             Total utilized CPU time in nanoseconds OR
-                        0 if the nanosecond timer of the performance
-                        counters has been disturbed.
+    \retval             Total utilized CPU time in nanoseconds.
 */
 uint64_t thd_get_cpu_time(kthread_t *thd);
+
+/** \brief       Retrieves all thread's elapsed CPU time
+    \relatesalso kthread_t
+
+    Returns the amount of active CPU time all threads have consumed in
+    nanoseconds.
+
+    \retval             Total utilized CPU time in nanoseconds.
+*/
+uint64_t thd_get_total_cpu_time(void);
 
 /** \brief   Change threading modes.
 
@@ -684,7 +704,7 @@ unsigned thd_get_hz(void);
     \relatesalso kthread_t
 
     This function "joins" a joinable thread. This means effectively that the
-    calling thread blocks until the speified thread completes execution. It is
+    calling thread blocks until the specified thread completes execution. It is
     invalid to join a detached thread, only joinable threads may be joined.
 
     \param  thd             The joinable thread to join.
@@ -728,6 +748,14 @@ int thd_detach(kthread_t *thd);
 int thd_each(int (*cb)(kthread_t *thd, void *user_data), void *data);
 
 /** \brief   Print a list of all threads using the given print function.
+
+    Each thread is printed with its address, tid, priority level, flags,
+    it's wait timeout (if sleeping) the amount of cpu time usage in ns
+    (this includes time in IRQs), state, and name.
+
+    In addition a '[system]' item is provided that represents time since
+    initialization not spent in a thread (context switching, updating
+    wait timeouts, etc).
 
     \param  pf              The printf-like function to print with.
 

@@ -9,7 +9,7 @@ $(build_gcc_pass2): logdir
 	cd $(build); \
         ../$(src_dir)/configure \
           --target=$(target) \
-          --prefix=$(prefix) \
+          --prefix=$(toolchain_path) \
           --with-gnu-as \
           --with-gnu-ld \
           --with-newlib \
@@ -32,4 +32,5 @@ ifdef enable_ada
   endif
 endif
 	$(MAKE) -C $(build) $(install_mode) DESTDIR=$(DESTDIR) $(to_log)
+	$(target)-gcc-ar d $(shell $(target)-gcc -print-file-name=libgcc.a) fake-kos.o
 	$(clean_up)

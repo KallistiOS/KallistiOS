@@ -35,14 +35,18 @@ assuming you compiled your program with -g:
 
 */
 
-void func2(void) {
+/*  These are marked as __noinline to ensure the compiler
+    doesn't try to get smart and inline them which would
+    defeat the purpose of the example.
+*/
+__noinline void func2(void) {
     int a = 5;
 
     assert_msg(a != 5, "This is a test message!");
     assert(a != 5);
 }
 
-void func1(void) {
+__noinline void func1(void) {
     func2();
 }
 

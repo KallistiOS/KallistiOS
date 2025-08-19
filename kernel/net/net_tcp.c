@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <unistd.h>
 #include <poll.h>
 #include <sys/socket.h>
 #include <netinet/tcp.h>
@@ -100,7 +101,7 @@ typedef struct tcp_hdr {
     uint16_t checksum;
     uint16_t urg;
     uint8_t options[];
-} tcp_hdr_t;
+} __packed tcp_hdr_t;
 
 /* Listening socket. Each one of these is an incoming connection from a socket
    that is in the listen state */
@@ -1998,7 +1999,7 @@ static void tcp_rst(netif_t *net, const struct in6_addr *src,
                     uint16_t dst_port, uint16_t flags, uint32_t seq,
                     uint32_t ack) {
     tcp_hdr_t pkt;
-    uint16 c;
+    uint16_t c;
 
     /* Fill in the packet */
     pkt.src_port = src_port;
@@ -2011,9 +2012,9 @@ static void tcp_rst(netif_t *net, const struct in6_addr *src,
     pkt.urg = 0;
 
     c = net_ipv6_checksum_pseudo(src, dst, sizeof(tcp_hdr_t), IPPROTO_TCP);
-    pkt.checksum = net_ipv4_checksum((const uint8 *)&pkt, sizeof(tcp_hdr_t), c);
+    pkt.checksum = net_ipv4_checksum((const uint8_t *)&pkt, sizeof(tcp_hdr_t), c);
 
-    net_ipv6_send(net, (const uint8 *)&pkt, sizeof(tcp_hdr_t), 0, IPPROTO_TCP,
+    net_ipv6_send(net, (const uint8_t *)&pkt, sizeof(tcp_hdr_t), 0, IPPROTO_TCP,
                   src, dst);
 }
 
@@ -2021,8 +2022,8 @@ static void tcp_bpkt_rst(netif_t *net, const struct in6_addr *src,
                          const struct in6_addr *dst, const tcp_hdr_t *ohdr,
                          int size) {
     tcp_hdr_t pkt;
-    uint16 cs;
-    uint16 flags = ntohs(ohdr->off_flags);
+    uint16_t cs;
+    uint16_t flags = ntohs(ohdr->off_flags);
 
     /* Fill in the packet */
     pkt.src_port = ohdr->dst_port;
@@ -2051,10 +2052,10 @@ static void tcp_bpkt_rst(netif_t *net, const struct in6_addr *src,
     pkt.urg = 0;
 
     cs = net_ipv6_checksum_pseudo(dst, src, sizeof(tcp_hdr_t), IPPROTO_TCP);
-    pkt.checksum = net_ipv4_checksum((const uint8 *)&pkt, sizeof(tcp_hdr_t),
+    pkt.checksum = net_ipv4_checksum((const uint8_t *)&pkt, sizeof(tcp_hdr_t),
                                      cs);
 
-    net_ipv6_send(net, (const uint8 *)&pkt, sizeof(tcp_hdr_t), 0, IPPROTO_TCP,
+    net_ipv6_send(net, (const uint8_t *)&pkt, sizeof(tcp_hdr_t), 0, IPPROTO_TCP,
                   dst, src);
 }
 
@@ -2142,9 +2143,9 @@ static void tcp_send_ack(struct tcp_sock *sock) {
     c = net_ipv6_checksum_pseudo(&sock->local_addr.sin6_addr,
                                  &sock->remote_addr.sin6_addr,
                                  sizeof(tcp_hdr_t), IPPROTO_TCP);
-    hdr.checksum = net_ipv4_checksum((const uint8 *)&hdr, sizeof(tcp_hdr_t), c);
+    hdr.checksum = net_ipv4_checksum((const uint8_t *)&hdr, sizeof(tcp_hdr_t), c);
 
-    net_ipv6_send(sock->data.net, (const uint8 *)&hdr, sizeof(tcp_hdr_t),
+    net_ipv6_send(sock->data.net, (const uint8_t *)&hdr, sizeof(tcp_hdr_t),
                   sock->hop_limit, IPPROTO_TCP, &sock->local_addr.sin6_addr,
                   &sock->remote_addr.sin6_addr);
 }
@@ -2737,7 +2738,7 @@ static int process_pkt(netif_t *src, const struct in6_addr *srca,
 }
 
 static int net_tcp_input(netif_t *src, int domain, const void *hdr,
-                         const uint8 *data, size_t size) {
+                         const uint8_t *data, size_t size) {
     struct in6_addr srca, dsta;
     const ip_hdr_t *ip4;
     const ipv6_hdr_t *ip6;

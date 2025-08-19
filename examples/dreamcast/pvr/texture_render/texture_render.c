@@ -113,7 +113,7 @@ void draw_one_textured_poly(polyplace_t *p) {
 
 int to_texture = 1;
 pvr_ptr_t d_texture;
-uint32 tx_x = 1024, tx_y = 512;
+uint32_t tx_x = 1024, tx_y = 512;
 
 void draw_frame(void) {
     pvr_poly_cxt_t  cxt;
@@ -190,15 +190,15 @@ void draw_textured(void) {
 pvr_init_params_t pvr_params = {
     { PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_0,
       PVR_BINSIZE_0, PVR_BINSIZE_0 },
-    64 * 1024
+    64 * 1024, 0, 0, 0, 0, 0
 };
 
 int main(int argc, char **argv) {
     maple_device_t *cont;
     cont_state_t *state;
     int finished = 0;
-    uint64 timer = timer_ms_gettime64(), start, end;
-    uint32 counter = 0;
+    uint64_t timer = timer_ms_gettime64(), start, end;
+    uint32_t counter = 0;
     pvr_stats_t stats;
 
     pvr_init(&pvr_params);

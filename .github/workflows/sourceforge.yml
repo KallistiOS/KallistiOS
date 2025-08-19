@@ -1,0 +1,27 @@
+name: Sourceforge sync
+
+on:
+  push:
+    branches:
+    - master
+
+jobs:
+  deploy:
+    if: github.repository == 'KallistiOS/KallistiOS'
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: setup-ssh
+      run: |
+        install -m 600 -D /dev/null ~/.ssh/id_ed25519
+        echo "${{ secrets.SF_MIRROR_KEY }}" > ~/.ssh/id_ed25519
+        ssh-keyscan -H git.code.sf.net > ~/.ssh/known_hosts
+
+    - name: sourceforge-sync
+      run: |
+        git remote add sourceforge ssh://kosmirror@git.code.sf.net/p/cadcdev/kallistios
+        git push sourceforge master

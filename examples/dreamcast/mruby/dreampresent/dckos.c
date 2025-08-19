@@ -94,7 +94,7 @@ mrb_value get_button_state(mrb_state *mrb, mrb_value self) {
   return mrb_nil_value();
 }
 
-mrb_value check_btn(mrb_state *mrb, mrb_value self, uint16 target) {
+mrb_value check_btn(mrb_state *mrb, mrb_value self, uint16_t target) {
   struct mrb_value state;
   mrb_get_args(mrb, "i", &state);
 
@@ -135,7 +135,7 @@ mrb_value draw_str(mrb_state *mrb, mrb_value self) {
   printf("KOS draw_str: %s\n", unwrapped_content);
 
   // assuming 16 bit colours
-  bfont_draw_str_ex(vram_s + x + (y * PX_PER_LINE), PX_PER_LINE, PACK_PIXEL(r, g, b), 0x00000000, (sizeof (uint16)) << 3, bg_on, unwrapped_content);
+  bfont_draw_str_ex(vram_s + x + (y * PX_PER_LINE), PX_PER_LINE, PACK_PIXEL(r, g, b), 0x00000000, (sizeof (uint16_t)) << 3, bg_on, unwrapped_content);
 
   return mrb_nil_value();
 }

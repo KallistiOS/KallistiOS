@@ -19,7 +19,7 @@
 #ifndef __DC_MAPLE_LIGHTGUN_H
 #define __DC_MAPLE_LIGHTGUN_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 /** \defgroup peripherals_lightgun  Lightgun

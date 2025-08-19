@@ -24,6 +24,7 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <errno.h>
 #include <dirent.h>
@@ -528,7 +529,7 @@ static int dcls_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
 
     if(!retval) {
         memset(rv, 0, sizeof(struct stat));
-        rv->st_dev = (dev_t)((ptr_t)vfs);
+        rv->st_dev = (dev_t)((uintptr_t)vfs);
         rv->st_ino = filestat.st_ino;
         rv->st_mode = filestat.st_mode;
         rv->st_nlink = filestat.st_nlink;

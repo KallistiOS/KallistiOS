@@ -9,9 +9,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 
 #include <kos/net.h>
 #include <kos/fs_socket.h>
+#include <kos/dbglog.h>
 
 #include "net_dhcp.h"
 #include "net_thd.h"
@@ -137,11 +139,14 @@ int net_dev_init(void) {
 
     dbglog(DBG_DEBUG, "net_dev_init: detected %d usable network device(s)\n", detected);
 
-    return 0;
+    if(detected)
+        return 0;
+    else
+        return -1;
 }
 
 /* Init */
-int net_init(uint32 ip) {
+int net_init(uint32_t ip) {
     int rv = 0;
 
     /* Make sure we haven't already done this */

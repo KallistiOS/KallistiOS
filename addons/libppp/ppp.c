@@ -587,7 +587,7 @@ static int ppp_if_shutdown(netif_t *self) {
     return ppp_shutdown();
 }
 
-static int ppp_if_tx(netif_t *self, const uint8 *data, int len, int blocking) {
+static int ppp_if_tx(netif_t *self, const uint8_t *data, int len, int blocking) {
     (void)self;
     (void)blocking;
 
@@ -595,13 +595,13 @@ static int ppp_if_tx(netif_t *self, const uint8 *data, int len, int blocking) {
     return ppp_send(data, len, PPP_PROTOCOL_IPv4);
 }
 
-static int ppp_if_set_flags(netif_t *self, uint32 flags_and, uint32 flags_or) {
+static int ppp_if_set_flags(netif_t *self, uint32_t flags_and, uint32_t flags_or) {
     self->flags = (self->flags & flags_and) | flags_or;
     return 0;
 }
 
 
-static int ppp_if_set_mc(netif_t *self, const uint8 *list, int count) {
+static int ppp_if_set_mc(netif_t *self, const uint8_t *list, int count) {
     (void)self;
     (void)list;
     (void)count;

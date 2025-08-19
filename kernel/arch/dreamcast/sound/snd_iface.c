@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <stdio.h>
 
+#include <kos/dbglog.h>
 #include <kos/mutex.h>
 #include <arch/timer.h>
 #include <dc/g2bus.h>
@@ -20,12 +21,11 @@
 
 #include "arm/aica_cmd_iface.h"
 
+/* Include the default firmware blob */
+#include "snd_stream_drv.c"
+
 /* Are we initted? */
 static int initted = 0;
-
-/* This will come from a separately linked object file */
-extern uint8_t snd_stream_drv[];
-extern uint8_t snd_stream_drv_end[];
 
 /* The queue processing mutex for snd_sh4_to_aica_start and snd_sh4_to_aica_stop.
    There are some cases like stereo stream control + stereo sfx control
@@ -35,19 +35,19 @@ static mutex_t queue_proc_mutex = MUTEX_INITIALIZER;
 /* Initialize driver; note that this replaces the AICA program so that
    if you had anything else going on, it's gone now! */
 int snd_init(void) {
-    int amt;
+    size_t amt;
 
     /* Finish loading the stream driver */
     if(!initted) {
         spu_disable();
         spu_memset_sq(0, 0, AICA_RAM_START);
-        amt = snd_stream_drv_end - snd_stream_drv;
+        amt = snd_stream_drv_size;
 
         if(amt % 4)
             amt = (amt + 4) & ~3;
 
-        dbglog(DBG_DEBUG, "snd_init(): loading %d bytes into SPU RAM\n", amt);
-        spu_memload_sq(0, snd_stream_drv, amt);
+        dbglog(DBG_DEBUG, "snd_init(): loading %zu bytes into SPU RAM\n", amt);
+        spu_memload_sq(0, (void *)snd_stream_drv_data, amt);
 
         /* Enable the AICA and give it a few ms to start up */
         spu_enable();

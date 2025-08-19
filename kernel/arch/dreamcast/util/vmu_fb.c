@@ -13,12 +13,15 @@
 #include <dc/maple/vmu.h>
 #include <dc/vmu_fb.h>
 
+#include <kos/dbglog.h>
+#include <kos/fs.h>
+
 /* Linux 4x6 font: lib/fonts/font_mini_4x6.c
  *
  * Created by Kenneth Albanowski.
  * No rights reserved, released to the public domain.
  */
-static const char fontdata_4x6[] = {
+static const uint8_t fontdata_4x6[] = {
     0xee, 0xee, 0xe0, 0xee, 0xee, 0xe0, 0xee, 0xee,
     0xe0, 0xee, 0xee, 0xe0, 0xee, 0xee, 0xe0, 0xee,
     0xee, 0xe0, 0xee, 0xee, 0xe0, 0xee, 0xee, 0xe0,
@@ -127,7 +130,7 @@ static const vmufb_font_t vmufb_font4x6 = {
 
 static const vmufb_font_t *default_font = &vmufb_font4x6;
 
-static uint64_t extract_bits(const uint8_t *data,
+static uint64_t __pure extract_bits(const uint8_t *data,
                              unsigned int offt, unsigned int w) {
     uint32_t tmp, lsb, nb_bits;
     uint64_t bits = 0;
@@ -201,8 +204,8 @@ static void vmufb_paint_area_strided(vmufb_t *fb,
 void vmufb_paint_area(vmufb_t *fb,
                       unsigned int x, unsigned int y,
                       unsigned int w, unsigned int h,
-                      const char *data) {
-    vmufb_paint_area_strided(fb, x, y, w, h, w, (const uint8_t *)data);
+                      const uint8_t *data) {
+    vmufb_paint_area_strided(fb, x, y, w, h, w, data);
 }
 
 void vmufb_paint_xbm(vmufb_t *fb,
@@ -227,22 +230,22 @@ void vmufb_clear_area(vmufb_t *fb,
                       unsigned int w, unsigned int h) {
     uint32_t tmp[VMU_SCREEN_WIDTH] = {};
 
-    vmufb_paint_area(fb, x, y, w, h, (const char *) tmp);
+    vmufb_paint_area(fb, x, y, w, h, (const uint8_t *) tmp);
 }
 
 void vmufb_present(const vmufb_t *fb, maple_device_t *dev) {
     /* Check for controller containing VMU (should always be same port, unit 0) */
     maple_device_t *cont = maple_enum_dev(dev->port, 0);
 
-    /* If the VMU connector and controller connector face opposite directions, 
+    /* If the VMU connector and controller connector face opposite directions,
        no flipping necessary (example: VMU in a lightgun). */
     if(cont && (cont->info.functions & MAPLE_FUNC_CONTROLLER) &&
        (cont->info.connector_direction != dev->info.connector_direction))
         vmu_draw_lcd(dev, fb->data);
-    
+
     /* If we somehow found no corresponding controller, or connectors face the same direction,
        we rotate the image 180 degrees (example: VMU in a standard controller). */
-    else 
+    else
         vmu_draw_lcd_rotated(dev, fb->data);
 }
 
@@ -292,4 +295,25 @@ const vmufb_font_t *vmu_set_font(const vmufb_font_t *font) {
 
 const vmufb_font_t *vmu_get_font(void) {
     return default_font;
+}
+
+int vmufb_screen_shot(vmufb_t *fb, const char *destfn) {
+    static const char header[] = "P4\n#KallistiOS VMU Screen Shot\n48 32\n";
+    file_t f;
+
+    /* Open output file */
+    f = fs_open(destfn, O_WRONLY | O_TRUNC);
+    if(!f) {
+        dbglog(DBG_ERROR, "vmufb_screen_shot: can't open output file '%s'\n", destfn);
+        return -1;
+    }
+
+    fs_write(f, header, sizeof(header) - 1);
+    fs_write(f, fb->data, sizeof(fb->data));
+
+    fs_close(f);
+
+    dbglog(DBG_INFO, "vmufb_screen_shot: written to output file '%s'\n", destfn);
+
+    return 0;
 }

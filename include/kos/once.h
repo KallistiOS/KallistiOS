@@ -21,7 +21,7 @@
     \author Lawrence Sebald
 */
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 
 __BEGIN_DECLS
 

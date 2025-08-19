@@ -17,6 +17,7 @@
 
 #include <sys/queue.h>
 #include <sys/ioctl.h>
+#include <kos/dbglog.h>
 #include <kos/fs.h>
 #include <arch/irq.h>
 #include <dc/spu.h>
@@ -145,7 +146,7 @@ static int read_wav_header(file_t fd, wavhdr_t *wavhdr) {
             return -1;
         }
 
-        /* If it is the fmt chunk, grab the fields we care about and skip the 
+        /* If it is the fmt chunk, grab the fields we care about and skip the
            rest of the section if there is more */
         if(strncmp((const char *)wavhdr->chunk.id, "fmt ", 4) == 0) {
             if(fs_read(fd, &(wavhdr->fmt), sizeof(wavhdr->fmt)) != sizeof(wavhdr->fmt)) {
@@ -153,7 +154,7 @@ static int read_wav_header(file_t fd, wavhdr_t *wavhdr) {
                 return -1;
             }
 
-            /* Skip the rest of the fmt chunk */ 
+            /* Skip the rest of the fmt chunk */
             fs_seek(fd, wavhdr->chunk.size - sizeof(wavhdr->fmt), SEEK_CUR);
         }
         /* If we found the data chunk, we are done */
@@ -161,7 +162,7 @@ static int read_wav_header(file_t fd, wavhdr_t *wavhdr) {
             break;
         }
         /* Skip meta data */
-        else { 
+        else {
             fs_seek(fd, wavhdr->chunk.size, SEEK_CUR);
         }
     } while(1);
@@ -192,13 +193,13 @@ static int read_wav_header_buf(char *buf, wavhdr_t *wavhdr, size_t *bufidx) {
         memcpy(&(wavhdr->chunk), buf + tmp_bufidx, sizeof(wavhdr->chunk));
         tmp_bufidx += sizeof(wavhdr->chunk);
 
-        /* If it is the fmt chunk, grab the fields we care about and skip the 
+        /* If it is the fmt chunk, grab the fields we care about and skip the
            rest of the section if there is more */
         if(strncmp((const char *)wavhdr->chunk.id, "fmt ", 4) == 0) {
             memcpy(&(wavhdr->fmt), buf + tmp_bufidx, sizeof(wavhdr->fmt));
             tmp_bufidx += sizeof(wavhdr->fmt);
 
-            /* Skip the rest of the fmt chunk */ 
+            /* Skip the rest of the fmt chunk */
             tmp_bufidx += wavhdr->chunk.size - sizeof(wavhdr->fmt);
         }
         /* If we found the data chunk, we are done */
@@ -206,7 +207,7 @@ static int read_wav_header_buf(char *buf, wavhdr_t *wavhdr, size_t *bufidx) {
             break;
         }
         /* Skip meta data */
-        else { 
+        else {
             tmp_bufidx += wavhdr->chunk.size;
         }
     } while(1);
@@ -258,7 +259,7 @@ static snd_effect_t *create_snd_effect(wavhdr_t *wavhdr, uint8_t *wav_data) {
     snd_effect_t *effect;
     uint32_t len, rate;
     uint16_t channels, bitsize, fmt;
-    
+
     effect = malloc(sizeof(snd_effect_t));
     if(effect == NULL)
         return NULL;
@@ -763,14 +764,14 @@ int snd_sfx_play(sfxhnd_t idx, int vol, int pan) {
 }
 
 int snd_sfx_play_ex(sfx_play_data_t *data) {
-    if (data->chn < 0) {
+    if(data->chn < 0) {
         data->chn = find_free_channel();
-        if (data->chn < 0) {
+        if(data->chn < 0) {
             return -1;
         }
     }
 
-    int size;
+    uint32_t size;
     snd_effect_t *t = (snd_effect_t *)data->idx;
     AICA_CMDSTR_CHANNEL(tmp, cmd, chan);
 
@@ -789,7 +790,7 @@ int snd_sfx_play_ex(sfx_play_data_t *data) {
     chan->loop = data->loop;
     chan->loopstart = data->loopstart;
     chan->loopend = data->loopend ? data->loopend : size;
-    chan->freq = data->freq > 0 ? data->freq : t->rate;
+    chan->freq = data->freq > 0 ? (uint32_t)data->freq : t->rate;
     chan->vol = data->vol;
 
     if(!t->stereo) {

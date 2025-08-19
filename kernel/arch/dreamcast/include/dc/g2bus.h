@@ -32,12 +32,11 @@
 #ifndef __DC_G2BUS_H
 #define __DC_G2BUS_H
 
-#include <sys/cdefs.h>
+#include <kos/cdefs.h>
 __BEGIN_DECLS
 
 #include <stdint.h>
 #include <arch/irq.h>
-#include <arch/types.h>
 
 #include <dc/fifo.h>
 
@@ -141,15 +140,15 @@ void g2_dma_shutdown(void);
     is used in with g2_lock() and g2_unlock().
 */
 typedef struct { 
-    int irq_state;    /** \brief IRQ state when entering a G2 critical block */
+    irq_mask_t irq_state;    /** \brief IRQ state when entering a G2 critical block */
 } g2_ctx_t;
 
 /* Internal constants to access suspend registers for G2 DMA. They are not meant for
    user-code use. */
 /** \cond */ 
-#define G2_DMA_SUSPEND_SPU     (*((vuint32 *)0xa05f781C))
-#define G2_DMA_SUSPEND_BBA     (*((vuint32 *)0xa05f783C))
-#define G2_DMA_SUSPEND_CH2     (*((vuint32 *)0xa05f785C))
+#define G2_DMA_SUSPEND_SPU     (*((volatile uint32_t *)0xa05f781C))
+#define G2_DMA_SUSPEND_BBA     (*((volatile uint32_t *)0xa05f783C))
+#define G2_DMA_SUSPEND_CH2     (*((volatile uint32_t *)0xa05f785C))
 /** \endcond */
 
 /** \brief  Disable IRQs and G2 DMA
@@ -224,7 +223,7 @@ void g2_write_8(uintptr_t address, uint8_t value);
     \param  address         The address in memory to read.
     \return                 The word read from the address specified.
 */
-uint16 g2_read_16(uintptr_t address);
+uint16_t g2_read_16(uintptr_t address);
 
 /** \brief  Write a 16-bit word to G2.
 

@@ -186,7 +186,7 @@ int fs_socket_shutdown(void) {
 }
 
 int fs_socket_input(netif_t *src, int domain, int protocol, const void *hdr,
-                    const uint8 *data, size_t size) {
+                    const uint8_t *data, size_t size) {
     fs_socket_proto_t *i;
     int rv = -2;
 

@@ -104,7 +104,7 @@ export_sym_t *export_lookup_path(const char *name, const char *path) {
 export_sym_t *export_lookup_addr(uintptr_t addr) {
     nmmgr_handler_t *nmmgr;
     nmmgr_list_t *nmmgrs;
-    int	i;
+    int i;
     symtab_handler_t *sth;
 
     uintptr_t dist = ~0;

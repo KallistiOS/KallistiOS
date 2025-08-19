@@ -1,6 +1,6 @@
 #
 # KallistiOS network/speedtest example
-# 
+#
 # Copyright (C) 2024 Andress Barajas
 #
 
@@ -23,7 +23,7 @@ $(TARGET): $(OBJS)
 	kos-cc -o $(TARGET) $(OBJS)
 
 run: $(TARGET)
-	$(KOS_LOADER) $(TARGET) -n
+	$(KOS_LOADER) $(TARGET)
 
 dist: $(TARGET)
 	-rm -f $(OBJS) romdisk.img
