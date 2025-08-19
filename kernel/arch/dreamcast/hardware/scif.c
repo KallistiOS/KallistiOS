@@ -11,6 +11,7 @@
 #include <arch/spinlock.h>
 #include <arch/irq.h>
 #include <dc/fs_dcload.h>
+#include <dc/scif.h>
 
 /*
 
