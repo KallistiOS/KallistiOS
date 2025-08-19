@@ -66,7 +66,6 @@ include scripts/binutils.mk
 include scripts/gcc-pass1.mk
 include scripts/newlib.mk
 include scripts/gcc-pass2.mk
-include scripts/gdc-post.mk
 
 # ---- }}}}
 
