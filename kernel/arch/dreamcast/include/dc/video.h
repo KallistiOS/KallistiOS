@@ -107,6 +107,12 @@ typedef enum vid_display_mode_generic {
 */
 #define DM_MULTIBUFFER  0x2000
 
+/** \brief  Default video mode. */
+#define DEFAULT_VID_MODE    DM_640x480
+
+/** \brief  Default pixel mode for video. */
+#define DEFAULT_PIXEL_MODE  PM_RGB565
+
 /* ------------------------------------------------------------------------- */
 /* More specific modes (and actual indices into the mode table) */
 
