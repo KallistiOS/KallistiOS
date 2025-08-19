@@ -78,6 +78,11 @@ add_compile_options(
 set(CMAKE_ASM_FLAGS "")
 set(CMAKE_ASM_FLAGS_RELEASE "")
 
+# Disable LTO for Debug build
+set(CMAKE_TRY_COMPILE_CONFIGURATION DEBUG)
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_DEBUG OFF)
+set(CMAKE_EXE_LINKER_FLAGS_DEBUG -fno-lto)
+
 # Default CMake installations to install to kos-addons
 set(CMAKE_INSTALL_BINDIR     ${DC_TOOLS_BASE})
 if(NOT DEFINED CMAKE_INSTALL_INCLUDEDIR)
