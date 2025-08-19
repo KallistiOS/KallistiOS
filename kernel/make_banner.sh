@@ -6,6 +6,11 @@ printf 'static const char banner[] = \n' > banner.h
 
 printf '"KallistiOS ' >> banner.h
 printf "v$KOS_VERSION" >> banner.h
+printf ' [' >> banner.h
+printf "$KOS_ARCH" >> banner.h
+printf '/' >> banner.h
+printf "$KOS_SUBARCH" >> banner.h
+printf ']' >> banner.h
 printf '\\n"\n' >> banner.h
 if [ -n "$KOS_GIT_REVISION" ]; then
     printf '"  Git revision: ' >> banner.h
