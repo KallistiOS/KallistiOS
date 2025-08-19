@@ -4,16 +4,12 @@
 
 printf 'static const char banner[] = \n' > banner.h
 
-gitrev=''
-relver="$KOS_VERSION"
-
 printf '"KallistiOS ' >> banner.h
-printf "v$relver" >> banner.h
+printf "v$KOS_VERSION" >> banner.h
 printf '\\n"\n' >> banner.h
-if [ -d "$KOS_BASE/.git" ]; then
+if [ -n "$KOS_GIT_REVISION" ]; then
     printf '"  Git revision: ' >> banner.h
-    gitrev=`git describe --dirty --always`
-    printf "$gitrev" >> banner.h
+    printf "$KOS_GIT_REVISION" >> banner.h
     printf '\\n"\n' >> banner.h
 fi
 
@@ -47,10 +43,10 @@ printf ';\n' >> banner.h
 
 printf 'static const char kern_version[] = \n"' >> banner.h
 
-if [ -z "$gitrev" ]; then
-    printf "$relver" >> banner.h
+if [ -z "$KOS_GIT_REVISION" ]; then
+    printf "v$KOS_VERSION" >> banner.h
 else
-    printf "${gitrev#?}" >> banner.h
+    printf "$KOS_GIT_REVISION" >> banner.h
 fi
 
 printf '";\n' >> banner.h
