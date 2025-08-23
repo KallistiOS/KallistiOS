@@ -11,7 +11,7 @@ patches      := $(pwd)/patches
 logdir       := $(pwd)/logs
 
 # Handling PATH environment variable
-PATH         := $(toolchain_path)/bin:$(PATH)
+export PATH  := $(toolchain_path)/bin:$(PATH)
 
 arch         := $(word 1,$(subst -, ,$(target)))
 gcc_arch     := $(subst powerpc,rs6000,$(arch))
