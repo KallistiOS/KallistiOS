@@ -16,6 +16,7 @@ MAINTAINER KallistiOS <cadcdev-kallistios@lists.sourceforge.net>
 RUN apk --update add --no-cache \
         bison \
         build-base \
+        coreutils \
         gmp-dev \
         mpfr-dev \
         mpc1-dev \
