@@ -112,7 +112,7 @@ typedef union {
 #define NVMATH_TYPE_LIBRARY	(1)
 #define NVMATH_TYPE_SH4_ASM	(2)
 
-#define NVMATH_METHOD	NVMATH_TYPE_BUILTIN
+#define NVMATH_METHOD	NVMATH_TYPE_LIBRARY
 
 
 #define NVMATH_MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -125,7 +125,12 @@ typedef union {
 	#define NVMATH_RSQRT(a)	(1.0f/sqrt(a))
 	#define NVMATH_SIN(rad) sinf(rad)
 	#define NVMATH_COS(rad) cosf(rad)
-	#define NVMATH_SINCOS(rad, s, c) sincosf(rad, s, c)
+	/* Compat for systems without the nonstandard sincosf*/
+	#ifndef sincosf
+		#define NVMATH_SINCOS(rad, s, c) do{*s = sinf(rad); *c = cosf(rad);}while(0)
+	#else
+		#define NVMATH_SINCOS(rad, s, c) sincosf(rad, s, c)
+	#endif
 	#define NVMATH_ACOS(rad) acosf(rad)
 	#define NVMATH_ABS(v) fabsf(v)
 	#define NVMATH_ABSI(v) abs(v)
@@ -134,7 +139,12 @@ typedef union {
 	#define NVMATH_RSQRT(a)	(1.0f/__builtin_sqrt(a))
 	#define NVMATH_SIN(rad) __builtin_sinf(rad)
 	#define NVMATH_COS(rad) __builtin_cosf(rad)
-	#define NVMATH_SINCOS(rad, s, c) __builtin_sincosf(rad, s, c)
+	/* Compat for systems without the nonstandard sincosf*/
+	#ifndef __builtin_sincosf
+		#define NVMATH_SINCOS(rad, s, c) do{*s = __builtin_sinf(rad); *c = __builtin_cosf(rad);}while(0)
+	#else
+		#define NVMATH_SINCOS(rad, s, c) __builtin_sincosf(rad, s, c)
+	#endif
 	#define NVMATH_ACOS(rad) __builtin_acosf(rad)
 	#define NVMATH_ABS(v) __builtin_fabsf(v)
 	#define NVMATH_ABSI(v) __builtin_abs(v)
