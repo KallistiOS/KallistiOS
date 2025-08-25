@@ -22,20 +22,20 @@ class KDTree {
 public:
 	struct KDPoint {
 		double coord[K];
-		
+
 		KDPoint() { }
-		
+
 		KDPoint(double a,double b,double c) {
 			coord[0] = a;
 			coord[1] = b;
 			coord[2] = c;
 		}
-		
+
 		KDPoint(double v[K]) {
 			for(unsigned n=0; n<K; ++n)
 				coord[n] = v[n];
 		}
-		
+
 		bool operator==(const KDPoint& b) const {
 			for(unsigned n=0; n<K; ++n)
 				if(coord[n] != b.coord[n]) return false;
@@ -53,7 +53,7 @@ public:
 private:
 	struct KDRect {
 		KDPoint min, max;
-		
+
 		KDPoint bound(const KDPoint& t) const {
 			KDPoint p;
 			for(unsigned i=0; i<K; ++i)
@@ -72,7 +72,7 @@ private:
 			}
 		}
 	};
-	
+
 	struct KDNode {
 		KDPoint k;
 		V       v;
@@ -80,12 +80,12 @@ private:
 	public:
 		KDNode() : k(),v(),left(0),right(0) { }
 		KDNode(const KDPoint& kk, const V& vv) : k(kk), v(vv), left(0), right(0) { }
-		
+
 		virtual ~KDNode() {
 			delete (left);
 			delete (right);
 		}
-		
+
 		static KDNode* ins( const KDPoint& key, const V& val,
 				    KDNode*& t, int lev) {
 			if(!t)
@@ -110,14 +110,14 @@ private:
 				 Nearest& nearest) {
 			// 1. if kd is empty then set dist-sqd to infinity and exit.
 			if (!kd) return;
-			
+
 			// 2. s := split field of kd
 			int s = lev % K;
-			
+
 			// 3. pivot := dom-elt field of kd
 			const KDPoint& pivot = kd->k;
 			double pivot_to_target = pivot.sqrdist(target);
-			
+
 			// 4. Cut hr into to sub-hyperrectangles left-hr and right-hr.
 			//    The cut plane is through pivot and perpendicular to the s
 			//    dimension.
@@ -125,15 +125,15 @@ private:
 			KDRect right_hr = hr;
 			left_hr.max.coord[s]  = pivot.coord[s];
 			right_hr.min.coord[s] = pivot.coord[s];
-			
+
 			// 5. target-in-left := target_s <= pivot_s
 			bool target_in_left = target.coord[s] < pivot.coord[s];
-			
+
 			const KDNode* nearer_kd;
 			const KDNode* further_kd;
 			KDRect nearer_hr;
 			KDRect further_hr;
-			
+
 			// 6. if target-in-left then nearer is left, further is right
 			if (target_in_left) {
 				nearer_kd = kd->left;
@@ -148,12 +148,12 @@ private:
 				further_kd = kd->left;
 				further_hr = left_hr;
 			}
-			
+
 			// 8. Recursively call Nearest Neighbor with parameters
 			//    (nearer-kd, target, nearer-hr, max-dist-sqd), storing the
 			//    results in nearest and dist-sqd
 			nnbr(nearer_kd, target, nearer_hr, lev + 1, nearest);
-			
+
 			// 10. A nearer point could only lie in further-kd if there were some
 			//     part of further-hr within distance sqrt(max-dist-sqd) of
 			//     target.  If this is the case then
@@ -166,7 +166,7 @@ private:
 					// 10.1.2 dist-sqd = (pivot-target)^2
 					nearest.dist_sqd = pivot_to_target;
 				}
-				
+
 				// 10.2 Recursively call Nearest Neighbor with parameters
 				//      (further-kd, target, further-hr, max-dist_sqd)
 				nnbr(further_kd, target, further_hr, lev + 1, nearest);
@@ -192,15 +192,15 @@ public:
 	virtual ~KDTree() {
 		delete (m_root);
 	}
-	
+
 	bool insert(const KDPoint& key, const V& val) {
 		return KDNode::ins(key, val, m_root, 0);
 	}
-	
+
 	const std::pair<V,double> nearest(const KDPoint& key) const {
 		KDRect hr;
 		hr.MakeInfinite();
-		
+
 		typename KDNode::Nearest nn;
 		nn.kd       = 0;
 		nn.dist_sqd = 1e99;
@@ -255,7 +255,7 @@ static const double illum[3*3] = {
 };
 struct LabItem { // CIE L*a*b* color value with C and h added.
 	double L,a,b,C,h;
-	
+
 	LabItem() { }
 	LabItem(double R,double G,double B) {
 		Set(R,G,B);
@@ -302,7 +302,7 @@ double ColorCompare(const LabItem& lab1, const LabItem& lab2) {
 		double a2 = (1.0 + G) * lab2.a;
 		C1 = sqrt(a1 * a1 + lab1.b * lab1.b);
 		C2 = sqrt(a2 * a2 + lab2.b * lab2.b);
-		
+
 		if (C1 < 1e-9)
 			h1 = 0.0;
 		else {
@@ -310,7 +310,7 @@ double ColorCompare(const LabItem& lab1, const LabItem& lab2) {
 			if (h1 < 0.0)
 				h1 += 360.0;
 		}
-		
+
 		if (C2 < 1e-9)
 			h2 = 0.0;
 		else {
@@ -319,7 +319,7 @@ double ColorCompare(const LabItem& lab1, const LabItem& lab2) {
 				h2 += 360.0;
 		}
 	}
-	
+
 	/* Compute delta L, C and H */
 	double dL = lab2.L - lab1.L, dC = C2 - C1, dH;
 	{
@@ -331,10 +331,10 @@ double ColorCompare(const LabItem& lab1, const LabItem& lab2) {
 			/**/ if (dh > 180.0)  dh -= 360.0;
 			else if (dh < -180.0) dh += 360.0;
 		}
-		
+
 		dH = 2.0 * sqrt(C1 * C2) * sin(DEG2RAD(0.5 * dh));
 	}
-	
+
 	double h;
 	double L = 0.5 * (lab1.L  + lab2.L);
 	double C = 0.5 * (C1 + C2);
@@ -401,36 +401,36 @@ MixingPlan DeviseBestMixingPlan(unsigned color, size_t limit) {
 			     (int)((color>>8)&0xFF),
 			     (int)(color&0xFF)
 			   };
-			   
+
 	// Input color in CIE L*a*b*
 	LabItem input(color);
-	
+
 	// Tally so far (gamma-corrected)
 	double so_far[3] = { 0,0,0 };
-	
+
 	MixingPlan result;
 	while(result.size() < limit) {
 		unsigned chosen_amount = 1;
 		unsigned chosen        = 0;
-		
+
 		const unsigned max_test_count = result.empty() ? 1 : result.size();
-		
+
 		double least_penalty = -1;
 		for(unsigned index=0; index<palettesize; ++index) {
 			//~ const unsigned color = pal[index];
 			double sum[3] = { so_far[0], so_far[1], so_far[2] };
 			double add[3] = { pal_g[index][0], pal_g[index][1], pal_g[index][2] };
-			
+
 			for(unsigned p=1; p<=max_test_count; p*=2) {
 				for(unsigned c=0; c<3; ++c) sum[c] += add[c];
 				for(unsigned c=0; c<3; ++c) add[c] += add[c];
 				double t = result.size() + p;
-				
+
 				double test[3] = { GammaUncorrect(sum[0]/t),
 						   GammaUncorrect(sum[1]/t),
 						   GammaUncorrect(sum[2]/t)
 						 };
-						 
+
 #if COMPARE_RGB
 				double penalty = ColorCompare(
 							 input_rgb[0],input_rgb[1],input_rgb[2],
@@ -446,10 +446,10 @@ MixingPlan DeviseBestMixingPlan(unsigned color, size_t limit) {
 				}
 			}
 		}
-		
+
 		// Append "chosen_amount" times "chosen" to the color list
 		result.resize(result.size() + chosen_amount, chosen);
-		
+
 		for(unsigned c=0; c<3; ++c)
 			so_far[c] += pal_g[chosen][c] * chosen_amount;
 	}
@@ -462,7 +462,7 @@ int main(int argc, char**argv) {
 	FILE* fp = fopen(argv[1], "rb");
 	gdImagePtr srcim = gdImageCreateFromPng(fp);
 	fclose(fp);
-	
+
 	unsigned w = gdImageSX(srcim), h = gdImageSY(srcim);
 	gdImagePtr im = gdImageCreate(w, h);
 	for(unsigned c=0; c<palettesize; ++c) {

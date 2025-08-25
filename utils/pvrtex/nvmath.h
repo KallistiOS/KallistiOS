@@ -95,16 +95,16 @@ typedef union {
 
 /*
 	Select how to preform square roots.
-	
+
 	On KOS, sqrt is somehow set up to always to go a library call. Need to look
 	into why. You can force GCC built-in sqrt handling (recommended), or use
 	inline asm. Built-ins are recommended since the compiler can optimize
 	constant values.
-	
+
 	**GCC is getting passed fno-builtin from $KOS_CFLAGS defined in environ_base.sh**
-	
+
 	With the right compile options, GCC can even generate FSRRA instructions.
-	
+
 	Turn these options on for fast builtins:
 		-ffast-math -ffp-contract=fast -mfsrra -mfsca
 */
@@ -112,7 +112,7 @@ typedef union {
 #define NVMATH_TYPE_LIBRARY	(1)
 #define NVMATH_TYPE_SH4_ASM	(2)
 
-#define NVMATH_METHOD	NVMATH_TYPE_BUILTIN
+#define NVMATH_METHOD	NVMATH_TYPE_LIBRARY
 
 
 #define NVMATH_MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -125,7 +125,12 @@ typedef union {
 	#define NVMATH_RSQRT(a)	(1.0f/sqrt(a))
 	#define NVMATH_SIN(rad) sinf(rad)
 	#define NVMATH_COS(rad) cosf(rad)
-	#define NVMATH_SINCOS(rad, s, c) sincosf(rad, s, c)
+	/* Compat for systems without the nonstandard sincosf*/
+	#ifndef sincosf
+		#define NVMATH_SINCOS(rad, s, c) do{*s = sinf(rad); *c = cosf(rad);}while(0)
+	#else
+		#define NVMATH_SINCOS(rad, s, c) sincosf(rad, s, c)
+	#endif
 	#define NVMATH_ACOS(rad) acosf(rad)
 	#define NVMATH_ABS(v) fabsf(v)
 	#define NVMATH_ABSI(v) abs(v)
@@ -134,7 +139,12 @@ typedef union {
 	#define NVMATH_RSQRT(a)	(1.0f/__builtin_sqrt(a))
 	#define NVMATH_SIN(rad) __builtin_sinf(rad)
 	#define NVMATH_COS(rad) __builtin_cosf(rad)
-	#define NVMATH_SINCOS(rad, s, c) __builtin_sincosf(rad, s, c)
+	/* Compat for systems without the nonstandard sincosf*/
+	#ifndef __builtin_sincosf
+		#define NVMATH_SINCOS(rad, s, c) do{*s = __builtin_sinf(rad); *c = __builtin_cosf(rad);}while(0)
+	#else
+		#define NVMATH_SINCOS(rad, s, c) __builtin_sincosf(rad, s, c)
+	#endif
 	#define NVMATH_ACOS(rad) __builtin_acosf(rad)
 	#define NVMATH_ABS(v) __builtin_fabsf(v)
 	#define NVMATH_ABSI(v) __builtin_abs(v)
@@ -144,7 +154,7 @@ typedef union {
 			: "=f" (a)
 			: "0" (a)
 			: );
-		
+
 		return a;
 	}
 	static inline float NVMFsrra(float a) {
@@ -152,23 +162,23 @@ typedef union {
 			: "=f" (a)
 			: "0" (a)
 			: );
-		
+
 		return a;
 	}
 	#define NVMATH_SQRT(a)	NVMFsqrt(a)
 	#define NVMATH_RSQRT(a)	NVMFsrra(a)
-	
+
 	static inline void NVMATH_SINCOS_I(int angle, float *sine, float *cosine)
 	{
 		register float __s __asm__("fr2");
 		register float __c __asm__("fr3");
-		
+
 		asm(    "lds	%2,fpul\n\t"
 			"fsca	fpul,dr2\n\t"
 			: "=f" (__s), "=f" (__c)
 			: "r" (angle)
 			: "fpul");
-		
+
 		*sine = __s; *cosine = __c;
 	}
 	#define NVMATH_SINCOS(rad, s, c) NVMATH_SINCOS_I((rad) * 10430.37835f, s, c)
@@ -186,7 +196,7 @@ typedef union {
 #ifdef NVMMATH_APPROX_ASIN_ACOS
 	#undef NVMATH_ASIN
 	#undef NVMATH_ACOS
-	
+
 	inline float NVMATH_ASIN(float x) {
 		//const float scale_factor = .391f;
 		//const float scale_factor = .521f;
@@ -220,7 +230,7 @@ typedef union {
 		v3i d; opx; opy; opz; return d; } \
 	static inline v4i v4 ## i ## name(paramx, paramy, paramz, paramw) { \
 		v4i d; opx; opy; opz; opw; return d; }
-		
+
 #define NVM_FF4(name, paramx, paramy, paramz, paramw, opx, opy, opz, opw) \
 	static inline v2f v2 ## name(paramx, paramy) { \
 		v2f d; opx; opy; return d; } \
@@ -236,7 +246,7 @@ typedef union {
 		v3i d; opx; opy; opz; return d; } \
 	static inline v4i v4 ## i ## name(param) { \
 		v4i d; opx; opy; opz; opw; return d; }
-		
+
 #define NVM_FF1(name, param, opx, opy, opz, opw) \
 	static inline v2f v2 ## name(param) { \
 		v2f d; opx; opy; return d; } \
@@ -336,7 +346,7 @@ typedef union {
 		return opx opy opz; } \
 	static inline float v4 ## name(v4f l, v4f r) { \
 		return opx opy opz opw; }
-		 
+
 #define NVM_FFB4S(name, opx, opy, opz, opw) \
 	static inline v2i v2 ## i ## name(v2i l, nvint r) { \
 		v2i d; opx; opy; return d; } \
@@ -391,69 +401,69 @@ typedef union {
 		Sets vector
 	v?SetR(float)
 		Sets vector with value Repeated into all dimensions
-	
+
 	v?Get(float*)
 		Creates vector from array of floats
-	
+
 	v?Abs(v?f v)
 		|v|
 	v?Negate(v?f v)
 		-v
 	v?Recip(v?f v)
 		1.0f / v
-	
+
 	v?(Add/Sub/Mul/Div)(v?f l , v?f r)
 		l + r
 		l - r
 		l * r
 		l / r
 		Adds, subtracts, multiplies or divides two vectors.
-		
+
 	v?(Add/Sub/Mul/Div)S(v?f l, float r)
 		l + r
 		l - r
 		l * r
 		l / r
 		Adds, subtracts, multiplies or divides a left vector and a right scalar
-		
+
 	v?(Sub/Div)SR(float l, v?f r)
 		l - r
 		l / r
 		Subtracts or divides a left scalar and a right vector
-	
+
 	v?Mac(v?f l, v?f r, v?f accum)
 		l * r + accum
 	v?MacV(v?f l, float r, v?f accum)
 		l * r + accum
 	v?MacS(v?f l, v?f r, float accum)
 		l * r + accum
-	
+
 	v?Mdc(v?f l, v?f r, v?f accum)
 		l * r - accum
 	v?MdcV(v?f l, float r, v?f accum)
 		l * r - accum
 	v?MdcS(v?f l, v?f r, float accum)
 		l * r - accum
-	
+
 	v?Nms(v?f l, v?f r, v?f accum)
 		accum - l * r
 	v?NmsV(v?f l, float r, v?f accum)
 		accum - l * r
 	v?NmsS(v?f l, v?f r, float accum)
 		accum - l * r
-	
+
 	v?Lerp(v?f start, v?f end, v?f weight)
 		start + weight * (end - start)
 	v?LerpS(v?f start, v?f end, float weight)
 		start + weight * (end - start)
-	
+
 	v?Min(v?f a, v?f b)
 		min(a, b)
 	v?Max(v?f a, v?f b)
 		max(a, b)
 	v?MaxE(v?f a)
 		max(a.x, a.y, a.z, a.w)
-	
+
 	v?Length(v?f v)
 		length of v
 	v?SqrLength(v?f v)
@@ -466,7 +476,7 @@ typedef union {
 		v with unit length (Will divide by zero if vector is of length 0)
 	v?NormalizeS(v?f v)
 		v with unit length (returns zero vector if length zero)
-	
+
 	v?Dot(v?f l, v?f r)
 		l dot r
 	v2Cross(v2f l, v2f r)
@@ -774,7 +784,7 @@ static inline v4f v4Ftrv(v4f v) {
 		register float y __asm__("fr1") = v.y;
 		register float z __asm__("fr2") = v.z;
 		register float w __asm__("fr3") = v.w;
-		__asm__ __volatile__( 
+		__asm__ __volatile__(
 			"ftrv   xmtrx,fv0\n"
 			: "=f" (x), "=f" (y), "=f" (z), "=f" (w)
 			: "0" (x), "1" (y), "2" (z), "3" (w) );
@@ -785,7 +795,7 @@ static inline v4f v4Ftrv(v4f v) {
 		xmtrxLoadMultiply((xMatrix*)l, (xMatrix*)r);
 		xmtrxStore((xMatrix*)d);
 	}
-	
+
 	static inline void m44Identity(m4x4f * m) {
 		xmtrxIdentity(d);
 		xmtrxStore(d);
@@ -802,7 +812,7 @@ static inline vqf vqSetEular(float pitch, float yaw, float roll) {
 	float cosYaw, sinYaw;
 	float cosPitch, sinPitch;
 	float cosRoll, sinRoll;
-	
+
 	NVMATH_SINCOS(halfYaw,&cosYaw,&sinYaw);
 	NVMATH_SINCOS(halfPitch,&cosPitch,&sinPitch);
 	NVMATH_SINCOS(halfRoll,&cosRoll,&sinRoll);
@@ -834,7 +844,7 @@ static inline vqf vqQuatFrom3(v3f v) {
 		return v4Set(v.x, v.y, v.z, -NVMATH_SQRT(w));
 }
 static inline v3f v3Rotate(v3f v, vqf q) {
-	//2.0f * dot(u, v) * u 
+	//2.0f * dot(u, v) * u
 	//+ (s*s - dot(u, u)) * v
 	//+ 2.0f * s * cross(u, v);
 	//~ printf("%f\n", uvd);
@@ -847,16 +857,16 @@ static inline v3f v3Rotate(v3f v, vqf q) {
 /*
 //~ static inline
  vqf vqSlerp(vqf a, vqf b, float w) {
-	 
+
 }*/
 
 static inline vqf vqSlerp(vqf a, vqf b, float w) {
 	float dp = v4Dot(a, b);
 	//~ w *= .5;
-	
+
 	float theta = NVMATH_ACOS(dp);
 	if (theta<0.0) theta=-theta;
-	
+
 	float st = NVMATH_SIN(theta);
 	float sut = NVMATH_SIN(w*theta);
 	float sout = NVMATH_SIN((1-w)*theta);
@@ -894,7 +904,7 @@ static inline vqf vqSlerp(vqf a, vqf b, float w) {
 			(a.w * s0 + b.w * s1) * d);
 	} else {
 		return a;
-	}	
+	}
 }//*/
 
 static inline vqf vqNlerp(vqf a, vqf b, float w) {
@@ -910,11 +920,11 @@ static inline vqf vqAslerp(vqf a, vqf b, float t) {
 	float B = 0.848013f + d * (-1.06021f + d * 0.215638f);
 	float k = A * (t - 0.5f) * (t - 0.5f) + B;
 	float ot = t + t * (t - 0.5f) * (t - 1) * k;
-	
+
 	vqf a2 = v4MulS(a, 1 - ot);
 	vqf b2 = v4MulS(b, ca > 0 ? ot : -ot);
 	return vqNormalize(v4Add(a2, b2));
-	
+
 	//~ return vqNlerp(a, b, 1 - ot, ca > 0 ? ot : -ot));
 	//~ return unit(lerp(l, r, 1 - ot, ca > 0 ? ot : -ot));
 }

@@ -7,15 +7,17 @@ OBJS = elbg.o mem.o log.o bprint.o avstring.o lfg.o crc.o md5.o stb_image_impl.o
 	dither.o tddither.o vqcompress.o mycommon.o palette.o file_common.o \
 	file_pvr.o file_tex.o file_dctex.o pvr_texture_encoder.o pvr_texture_decoder.o main.o
 
+
+CPPFLAGS = -Ilibavutil -I. -DCONFIG_MEMORY_POISONING=0 -DHAVE_FAST_UNALIGNED=0
+CXXFLAGS = -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare
+
 ifeq ($(DEBUGBUILD), true)
-OPTMODE= -Og -pg -g
+    CXXFLAGS += -Og -pg -g
 else
-OPTMODE= -O3 -flto=auto -march=native
+    CXXFLAGS += -O3
 endif
 
-MYFLAGS=-Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -Ilibavutil -I. -DCONFIG_MEMORY_POISONING=0 -DHAVE_FAST_UNALIGNED=0
-MYCPPFLAGS=$(MYFLAGS)
-MYCFLAGS=$(MYFLAGS) -Wno-pointer-sign
+CFLAGS := $(CXXFLAGS) -Wno-pointer-sign -std=gnu17
 
 define textSegment2Header
 	mkdir -p info
@@ -24,21 +26,14 @@ define textSegment2Header
 	rm $2/$3.txt
 endef
 
+.PHONY: all clean
+
 all: $(TARGET) README
 
-.PHONY: all clean install
+$(TARGET): $(OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
 main.o: main.c info/options.h info/examples.h
-
-%.o: %.c
-	gcc $(CFLAGS) $(MYCFLAGS) $(OPTMODE) -c $< -o $@
-
-%.o: %.cpp
-	gcc $(CFLAGS) $(MYCPPFLAGS) $(CXXFLAGS) $(OPTMODE) -c $< -o $@
-
-$(TARGET): $(OBJS)
-	gcc $(OPTMODE) -o $(TARGET) \
-		$(OBJS) $(PROGMAIN) -lm -lstdc++
 
 clean:
 	rm -f $(TARGET) $(OBJS) README
@@ -48,7 +43,6 @@ README: readme_unformatted.txt
 
 install: all
 	install -m 755 $(TARGET) $(DC_TOOLS_BASE)/
-
 
 info/options.h: README Makefile
 	$(call textSegment2Header,Command Line Options:,info,options)
