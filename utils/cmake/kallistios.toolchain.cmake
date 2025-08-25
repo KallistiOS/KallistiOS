@@ -58,6 +58,14 @@ set(CMAKE_CXX_COMPILER    ${KOS_BASE}/utils/build_wrappers/kos-c++)
 set(CMAKE_OBJC_COMPILER   ${KOS_BASE}/utils/build_wrappers/kos-cc)
 set(CMAKE_OBJCXX_COMPILER ${KOS_BASE}/utils/build_wrappers/kos-c++)
 
+set(CMAKE_ASM_COMPILER_AR ${KOS_BASE}/utils/build_wrappers/kos-ar)
+set(CMAKE_C_COMPILER_AR ${KOS_BASE}/utils/build_wrappers/kos-ar)
+set(CMAKE_CXX_COMPILER_AR ${KOS_BASE}/utils/build_wrappers/kos-ar)
+
+set(CMAKE_ASM_COMPILER_RANLIB ${KOS_BASE}/utils/build_wrappers/kos-ranlib)
+set(CMAKE_C_COMPILER_RANLIB ${KOS_BASE}/utils/build_wrappers/kos-ranlib)
+set(CMAKE_CXX_COMPILER_RANLIB ${KOS_BASE}/utils/build_wrappers/kos-ranlib)
+
 set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 
 # Never use the CMAKE_FIND_ROOT_PATH to find programs with find_program()
