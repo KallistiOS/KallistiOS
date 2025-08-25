@@ -51,6 +51,7 @@ int main(int argc, char **argv) {
     directory_file_t directory_contents[100];
 
     bool prompting = false;
+    bool statting = false;
     bool highlight_yes = true;
     bool mounted_sd = false;
     bool changed_directory = true;
@@ -74,8 +75,14 @@ int main(int argc, char **argv) {
         changed_buttons = current_buttons ^ previous_buttons;
         previous_buttons = current_buttons;
         
+        /* Clear the stat if any button is pressed */
+        if(statting && button_pressed(current_buttons, changed_buttons, 0)) {
+            statting = false;           /* Get us out of captivity */
+            changed_directory = true;   /* Force redraw of the screen to clear stat */
+        }
+
         /* Enter a directory */
-        if(button_pressed(current_buttons, changed_buttons, CONT_A)) {
+        else if(button_pressed(current_buttons, changed_buttons, CONT_A)) {
             if(prompting) {
                 prompting = false;
                 changed_directory = true;
@@ -134,7 +141,7 @@ int main(int argc, char **argv) {
         }
 
         /* Exit a directory */
-        if(button_pressed(current_buttons, changed_buttons, CONT_B)) {
+        else if(button_pressed(current_buttons, changed_buttons, CONT_B)) {
             if(prompting) {
                 prompting = false;
                 changed_directory = true;
@@ -156,9 +163,19 @@ int main(int argc, char **argv) {
                 }
             }
         }
+
+        /* Stat an entry */
+        else if(button_pressed(current_buttons, changed_buttons, CONT_Y)) {
+            if(!prompting) {
+                memset(directory_temp, 0, BUFFER_LENGTH);
+                fs_path_append(directory_temp, current_directory, BUFFER_LENGTH);
+                fs_path_append(directory_temp, directory_contents[selector_index].filename, BUFFER_LENGTH);
+                statting = draw_stat(directory_temp);
+            }
+        }
         
         /* Navigate the directory */
-        if(button_pressed(current_buttons, changed_buttons, CONT_DPAD_DOWN)) {
+        else if(button_pressed(current_buttons, changed_buttons, CONT_DPAD_DOWN)) {
             if(prompting) {
                 highlight_yes = !highlight_yes;
                 show_prompt(current_directory, mounted_sd, highlight_yes);
@@ -170,7 +187,7 @@ int main(int argc, char **argv) {
                 }
             }
         }
-        if(button_pressed(current_buttons, changed_buttons, CONT_DPAD_UP)) {
+        else if(button_pressed(current_buttons, changed_buttons, CONT_DPAD_UP)) {
             if(prompting) {
                 highlight_yes = !highlight_yes;
                 show_prompt(current_directory, mounted_sd, highlight_yes);
@@ -184,7 +201,7 @@ int main(int argc, char **argv) {
         }
 
         /* Exit Program */
-        if(button_pressed(current_buttons, changed_buttons, CONT_START))
+        else if(button_pressed(current_buttons, changed_buttons, CONT_START))
             break;
 
         /* Update the screen if we navigate a directory */
@@ -351,6 +368,23 @@ static void draw_directory_contents(directory_file_t *directory_contents, int nu
         if(y >= (SCREEN_HEIGHT - BFONT_HEIGHT))
             break;
     }
+}
+
+static bool draw_stat(const char *path) {
+    int x = 20 + BFONT_HEIGHT, y = 350;
+    struct stat path_stat;
+
+    /* If stat fails */
+    if(stat(path, &path_stat) < 0)
+        return false;
+
+    /* We got a stat, so lets draw it */
+    bfont_draw_str_fmt(vram_s + y*SCREEN_WIDTH+x, SCREEN_WIDTH, true,
+    "Stat succeeded:\n\tFile size: %lu\n\tLast Modified: %s\n",
+    S_ISDIR(path_stat.st_mode) ? 0 : path_stat.st_size,
+    asctime(gmtime(&path_stat.st_mtime)));
+
+    return true;
 }
 
 static cont_state_t *get_cont_state() {
