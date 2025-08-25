@@ -9,22 +9,22 @@ typedef struct {
 	bool compressed;
 	bool stride;
 	ptPixelFormat pixel_format;
-	
+
 	uint64_t codebook[PVR_FULL_CODEBOOK];
 	pxlABGR8888 palette[PVR_8B_PALETTE_SIZE];
-	
+
 	//Used by .PVR read to return GBIX value
 	uint32_t gbix;
-	
+
 	/*
 		If uncompressed, this is raw PVR texture data
-		
-		If compressed, this is a pointer to the indices, the codebook 
+
+		If compressed, this is a pointer to the indices, the codebook
 		must be written to this struct
 	*/
 	const void *tex_data;
-	
-	
+
+
 	pxlABGR8888 *result_mips[PVR_MAX_MIPMAPS];
 } PvrTexDecoder;
 

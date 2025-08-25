@@ -33,10 +33,10 @@ void pteLogLocV(unsigned level, const char *file, unsigned line, const char *fmt
 		[LOG_COMPLETION] = "COMPLETION",
 		[LOG_NONE] = "NONE"
 	};
-	
+
 	if (level > log_level)
 		return;
-	
+
 	if (log_level == LOG_DEBUG) {
 		if (level >= LOG_DEBUG)
 			level = LOG_DEBUG;
@@ -63,20 +63,20 @@ void ErrorExitV(const char *fmt, va_list args) {
 	"\n\t%s --help for command line options\n\n", program_name, program_name);
 	exit(1);
 }
-	
+
 void ErrorExit(const char *fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
 	ErrorExitV(fmt, args);
 	va_end(args);
-	
+
 	exit(1);
 }
 
 void ErrorExitOn(int cond, const char *fmt, ...) {
 	if (!cond)
 		return;
-	
+
 	va_list args;
 	va_start(args, fmt);
 	ErrorExitV(fmt, args);
@@ -150,7 +150,7 @@ static const OptionMap normal_style_options[] = {
 };
 
 //Search through OptionMap for match and return it's value.
-//If name is not found and invalid_msg is NULL, it returns default_value 
+//If name is not found and invalid_msg is NULL, it returns default_value
 //If name is not found and invalid_msg is not NULL, it prints invalid_msg and exits
 int GetOptMap(const OptionMap *map, size_t mapsize, const char *name, int default_value, const char *invalid_msg) {
 	if (name == NULL) {
@@ -158,7 +158,7 @@ int GetOptMap(const OptionMap *map, size_t mapsize, const char *name, int defaul
 			ErrorExit("%s", invalid_msg);
 		return default_value;
 	}
-	
+
 	for(size_t i = 0; i < mapsize; i++) {
 		if (!strcasecmp(map[i].name, name)) {
 			return map[i].value;
@@ -174,7 +174,7 @@ int main(int argc, char **argv) {
 
 	PvrTexEncoder pte;
 	pteInit(&pte);
-	
+
 	struct optparse_long longopts[] = {
 		{"help", 'h', OPTPARSE_NONE},
 		{"examples", 'E', OPTPARSE_NONE},
@@ -205,14 +205,14 @@ int main(int argc, char **argv) {
 		{"flip-y", 2, OPTPARSE_NONE},
 		{0}
 	};
-	
+
 	#define MAX_FNAMES	11
 	const char *fnames[MAX_FNAMES];
 	unsigned fname_cnt = 0;
 	const char *outname = "";
 	const char *prevname = "";
 	const char *palfile = NULL;
-	
+
 	//Parse command line parameters
 	struct optparse options;
 	int option;
@@ -281,7 +281,7 @@ int main(int argc, char **argv) {
 			break;
 		case 'v':
 			log_level = LOG_INFO;
-			
+
 			//If someone runs this with only -v as a parameter, they probably want the version
 			if (argc != 2)
 				break;
@@ -315,7 +315,7 @@ int main(int argc, char **argv) {
 			} break;
 		case 'm':
 			OPTARG_FIX_UP;
-			
+
 			pte.want_mips = PTE_MIP_QUALITY;
 			if (options.optarg) {
 				if (!strcasecmp(options.optarg, "fast"))
@@ -353,13 +353,13 @@ int main(int argc, char **argv) {
 			ErrorExit("%s\n", options.errmsg);
 		}
 	}
-	
+
 	bool have_output = strlen(outname) > 0;
 	bool have_preview = strlen(prevname) > 0;
 	bool already_have_pal_file = false;
 	bool only_want_pal = false;
 	FileExtension output_file_type = EXT_UNKNOWN;
-	
+
 	//Get output extension
 	if (have_output) {
 		const char *extension = "";
@@ -368,30 +368,30 @@ int main(int argc, char **argv) {
 			output_file_type = GetOptMap(file_extension, ARR_SIZE(file_extension), extension, EXT_UNKNOWN, NULL);
 		}
 	}
-	
+
 	if (output_file_type == EXT_PAL) {
 		output_file_type = EXT_DT;
 		only_want_pal = true;
 	}
-	
+
 	ErrorExitOn(!have_output && !have_preview, "No output or preview file name specified, nothing to do\n");
 	ErrorExitOn(fname_cnt == 0, "No input files specified\n");
 
 	pteLog(LOG_PROGRESS, "Reading input...\n");
 	pteLoadFromFiles(&pte, fnames, fname_cnt);
-	
+
 	//Check and fix up image size
 	pteSetSize(&pte);
-	
+
 	if (pte.pixel_format == PTE_AUTO || pte.pixel_format == PTE_AUTO_YUV)
 		pteAutoSelectPixelFormat(&pte);
-	
+
 	//Fix some stuff up for .PVR files
 	if (output_file_type == EXT_PVR) {
 		if (pteIsCompressed(&pte)) {
 			//.PVR seems to require square textures if compressed
 			pteMakeSquare(&pte);
-			
+
 			if (pte.auto_small_vq == true) {
 				//For other sizes, we make a full size codebook texture, but don't use all the entries
 				pte.codebook_size = fPvrSmallVQCodebookSize(pte.w, pte.want_mips);
@@ -400,7 +400,7 @@ int main(int argc, char **argv) {
 					pte.auto_small_vq = false;
 				} else if (pte.codebook_size < 256) {
 					pteLog(LOG_INFO, "Making small codebook .PVR VQ is CB size of %u\n", pte.codebook_size);
-					
+
 				} else {
 					pteLog(LOG_WARNING, ".PVR file does not support small VQ with current size/mipmap combination, using full size codebook\n");
 					pte.auto_small_vq = false;
@@ -408,7 +408,7 @@ int main(int argc, char **argv) {
 			}
 		}
 	}
-	
+
 	if (output_file_type == EXT_DT) {
 		if (pte.auto_small_vq) {
 			//8x8 no mips has 10 entries, 128x128 with mips has 192 entires
@@ -417,27 +417,27 @@ int main(int argc, char **argv) {
 			float large_uncomp = CalcTextureSize(128, 128, PT_ARGB1555, 1, 0, 0);
 			unsigned small_cbsize = 10;
 			unsigned large_cbsize = 192;
-			
+
 			unsigned idxsize = CalcTextureSize(pte.w, pte.h, PT_ARGB1555, pteHasMips(&pte), 1, 0);
 			float uncompsize = CalcTextureSize(pte.w, pte.h, PT_ARGB1555, pteHasMips(&pte), 0, 0);
-			
+
 			float ratio = (uncompsize - small_uncomp) / (large_uncomp - small_uncomp);
 			unsigned cbsize = lerp(ratio, small_cbsize, large_cbsize);
-			
+
 			//If size is less than 32, add extra entries to use any padding that would result
 			unsigned rndamt = 32;
 			unsigned size = idxsize + cbsize*8;
 			unsigned roundupsize = (size + rndamt - 1) & ~(rndamt-1);
 			unsigned extraroom = roundupsize - size;
 			pteLog(LOG_DEBUG, "Idx %u, CBsize %u, Extra %u\n", idxsize, cbsize, extraroom);
-			
+
 			pte.codebook_size = CLAMP(8, cbsize + extraroom/8, 256);
 		}
-		
+
 		//.DT supports codebook offsets for true reduced codebooks
 		pte.pvr_idx_offset = PVR_FULL_CODEBOOK - pte.codebook_size;
 	}
-	
+
 	//If no edge method is specified, use clamp if no using mipmaps, or wrap if we are
 	if (pte.edge_method == 0) {
 		if (pte.want_mips)
@@ -445,7 +445,7 @@ int main(int argc, char **argv) {
 		else
 			pte.edge_method = STBIR_EDGE_CLAMP;
 	}
-	
+
 	//Load external palette if one exists
 	if (palfile) {
 		const char *pal_ext = strrchr(palfile, '.');
@@ -453,16 +453,16 @@ int main(int argc, char **argv) {
 			already_have_pal_file = strcasecmp(pal_ext, ".pal") == 0;
 		LoadPalette(palfile, &pte);
 	}
-	
+
 	pteEncodeTexture(&pte);
-	
+
 	//Make preview
 	if (have_preview) {
 		const char *prevextension = strrchr(prevname, '.');
 		if (prevextension != NULL) {
 			pteLog(LOG_PROGRESS, "Writing preview to \"%s\"...\n", prevname);
 			pteGeneratePreviews(&pte);
-					
+
 			//Write preview image to file
 			if (strcasecmp(prevextension, ".png") == 0)
 				stbi_write_png(prevname, pte.final_preview_w, pte.h, 4, pte.final_preview, 0);
@@ -478,7 +478,7 @@ int main(int argc, char **argv) {
 			pteLog(LOG_WARNING, "No extension specified for preview, don't know what type to make. Supported types are PNG, JPG, BMP, and TGA.\n");
 		}
 	}
-	
+
 	//Write resulting texture
 	if (have_output) {
 		if (only_want_pal) {
@@ -489,14 +489,14 @@ int main(int argc, char **argv) {
 		} else if (output_file_type == EXT_TEX) {
 			pteLog(LOG_COMPLETION, "Writing texconv .TEX to \"%s\"...\n", outname);
 			fTexWrite(&pte, outname);
-			
+
 			if (!already_have_pal_file && pteIsPalettized(&pte))
 				fTexWritePaletteAppendPal(&pte, outname);
 		} else if (output_file_type == EXT_DT) {
 			pteLog(LOG_COMPLETION, "Writing .DT to \"%s\"...\n", outname);
 			void fDtWrite(const PvrTexEncoder *pte, const char *outfname);
 			fDtWrite(&pte, outname);
-			
+
 			if (!already_have_pal_file && pteIsPalettized(&pte))
 				fTexWritePaletteAppendPal(&pte, outname);
 		} else {
@@ -505,8 +505,8 @@ int main(int argc, char **argv) {
 	} else {
 		pteLog(LOG_COMPLETION, "No output file specified\n");
 	}
-	
+
 	pteFree(&pte);
-	
+
 	return 0;
 }
