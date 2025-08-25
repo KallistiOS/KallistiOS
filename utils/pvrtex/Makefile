@@ -10,12 +10,12 @@ OBJS = elbg.o mem.o log.o bprint.o avstring.o lfg.o crc.o md5.o stb_image_impl.o
 ifeq ($(DEBUGBUILD), true)
 OPTMODE= -Og -pg -g
 else
-OPTMODE= -O3 -flto=auto -march=native
+OPTMODE= -O3 -march=native
 endif
 
 MYFLAGS=-Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -Ilibavutil -I. -DCONFIG_MEMORY_POISONING=0 -DHAVE_FAST_UNALIGNED=0
 MYCPPFLAGS=$(MYFLAGS)
-MYCFLAGS=$(MYFLAGS) -Wno-pointer-sign
+MYCFLAGS=$(MYFLAGS) -Wno-pointer-sign -std=gnu17
 
 define textSegment2Header
 	mkdir -p info
