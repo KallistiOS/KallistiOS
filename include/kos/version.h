@@ -72,7 +72,7 @@
 
     ## App Versioning
     The same \ref version_utils used to implement the KOS versioning
-    API are available as part of the public API so that they may be used to 
+    API are available as part of the public API so that they may be used to
     implement your own similar versioning scheme at the app-level.
 
     @{
@@ -99,7 +99,7 @@
 
 #define KOS_VERSION_MAJOR   2   /**< KOS's current major revision number. */
 #define KOS_VERSION_MINOR   2   /**< KOS's current minor revision number. */
-#define KOS_VERSION_PATCH   0   /**< KOS's current patch revision number. */
+#define KOS_VERSION_PATCH   1   /**< KOS's current patch revision number. */
 
 /** KOS's current version as an integer ID. */
 #define KOS_VERSION \
