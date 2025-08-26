@@ -266,118 +266,6 @@ static inline struct timespec arch_timer_gettime(void) {
     };
 }
 
-/** \brief   Get the current uptime of the system (in secs and millisecs).
-    \ingroup tmu_uptime
-
-    This function retrieves the number of seconds and milliseconds since KOS was
-    started.
-
-    \param  secs            A pointer to store the number of seconds since boot
-                            into.
-    \param  msecs           A pointer to store the number of milliseconds past
-                            a second since boot.
-    \note                   To get the total number of milliseconds since boot,
-                            calculate (*secs * 1000) + *msecs, or use the
-                            timer_ms_gettime64() function.
-*/
-void timer_ms_gettime(uint32_t *secs, uint32_t *msecs);
-
-/** \brief   Get the current uptime of the system (in milliseconds).
-    \ingroup tmu_uptime
-
-    This function retrieves the number of milliseconds since KOS was started. It
-    is equivalent to calling timer_ms_gettime() and combining the number of
-    seconds and milliseconds into one 64-bit value.
-
-    \return                 The number of milliseconds since KOS started.
-*/
-uint64_t timer_ms_gettime64(void);
-
-/** \brief   Get the current uptime of the system (in secs and microsecs).
-    \ingroup tmu_uptime
-
-    This function retrieves the number of seconds and microseconds since KOS was
-    started.
-
-    \note                   To get the total number of microseconds since boot,
-                            calculate (*secs * 1000000) + *usecs, or use the
-                            timer_us_gettime64() function.
-
-    \param  secs            A pointer to store the number of seconds since boot
-                            into.
-    \param  usecs           A pointer to store the number of microseconds past
-                            a second since boot.
-*/
-void timer_us_gettime(uint32_t *secs, uint32_t *usecs);
-
-/** \brief   Get the current uptime of the system (in microseconds).
-    \ingroup tmu_uptime
-
-    This function retrieves the number of microseconds since KOS was started.
-
-    \return                 The number of microseconds since KOS started.
-*/
-uint64_t timer_us_gettime64(void);
-
-/** \brief   Get the current uptime of the system (in secs and nanosecs).
-    \ingroup tmu_uptime
-
-    This function retrieves the number of seconds and nanoseconds since KOS was
-    started.
-
-    \note                   To get the total number of nanoseconds since boot,
-                            calculate (*secs * 1000000000) + *nsecs, or use the
-                            timer_ns_gettime64() function.
-
-    \param  secs            A pointer to store the number of seconds since boot
-                            into.
-    \param  nsecs           A pointer to store the number of nanoseconds past
-                            a second since boot.
-*/
-void timer_ns_gettime(uint32_t *secs, uint32_t *nsecs);
-
-/** \brief   Get the current uptime of the system (in nanoseconds).
-    \ingroup tmu_uptime
-
-    This function retrieves the number of nanoseconds since KOS was started. 
-
-    \return                 The number of nanoseconds since KOS started.
-*/
-uint64_t timer_ns_gettime64(void);
-
-/** \defgroup tmu_sleep     Sleeping
-    \brief                  Low-level thread sleeping
-    \ingroup                timers
-
-    This API provides the low-level functionality used to implement thread
-    sleeping, used by the KOS, C, C++, and POSIX threading APIs.
-*/
-
-/** \brief  Spin-loop delay function with microsecond granularity
-    \ingroup tmu_sleep
-
-    This function is meant as a very accurate delay function, even if threading
-    and interrupts are disabled. It is a delay and not a sleep, which means that
-    the CPU will be busy-looping during that time frame. For any time frame
-    bigger than a few hundred microseconds, it is recommended to sleep instead.
-
-    \param  us              The number of microseconds to wait for.
-    \sa timer_spin_delay_ns, thd_sleep
-*/
-void timer_spin_delay_us(unsigned short us);
-
-/** \brief  Spin-loop delay function with nanosecond granularity
-    \ingroup tmu_sleep
-
-    This function is meant as a very accurate delay function, even if threading
-    and interrupts are disabled. It is a delay and not a sleep, which means that
-    the CPU will be busy-looping during that time frame.
-
-    \param  ns              The number of nanoseconds to wait for.
-    \sa timer_spin_delay_us, thd_sleep
-*/
-void timer_spin_delay_ns(unsigned short ns);
-
 /** \defgroup tmu_primary   Primary Timer
     \brief                  Primary timer used by the kernel.
     \ingroup                timers
@@ -437,5 +325,6 @@ void timer_shutdown(void);
 
 __END_DECLS
 
-#endif  /* __ARCH_TIMER_H */
+#include <kos/timer.h>
 
+#endif  /* __ARCH_TIMER_H */

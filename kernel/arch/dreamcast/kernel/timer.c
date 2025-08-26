@@ -157,22 +157,6 @@ int timer_clear(int which) {
     return !!(value & UNF);
 }
 
-void timer_spin_delay_ns(unsigned short ns) {
-    uint64_t timeout = timer_ns_gettime64() + ns;
-
-    /* Note that we don't actually care about the counter overflowing.
-       Nobody will run their Dreamcast straight for 585 years. */
-    while(timer_ns_gettime64() < timeout);
-}
-
-void timer_spin_delay_us(unsigned short us) {
-    uint64_t timeout = timer_us_gettime64() + us;
-
-    /* Note that we don't actually care about the counter overflowing.
-       Nobody will run their Dreamcast straight for 584942 years. */
-    while(timer_us_gettime64() < timeout);
-}
-
 /* Enable timer interrupts; needs to move to irq.c sometime. */
 void timer_enable_ints(int which) {
     irq_set_priority(IRQ_SRC_TMU0 - which, TIMER_PRIO);
@@ -254,80 +238,6 @@ timer_val_t __dreamcast_get_ticks(void) {
     delta = timer_ms_countdown - counter2;
 
     return (timer_val_t){ .secs = secs, .ticks = delta, };
-}
-
-/* Generic function for retrieving the current time maintained by TMU2.
-   Returns the total amount of time that has elapsed since KOS has been
-   initialized by using a LUT of precomputed, scaled timing values (tns)
-   plus a shift for optimized division. */
-static timer_val_t timer_getticks(uint32_t tns, uint32_t shift) {
-    timer_val_t time = __dreamcast_get_ticks();
-
-    /* We have to do the elapsed time calculations as a 64-bit unsigned
-    integer, otherwise when using the fastest clock speed for timers,
-    this value will very quickly overflow mid-expression, before the
-    final division. */
-    time.ticks = ((uint64_t)time.ticks * tns) >> shift;
-
-    return time;
-}
-
-/* Millisecond timer */
-static const uint32_t tns_values_ms[] = {
-    /* 80, 320, 1280, 5120, 20480
-       each multiplied by (1 << 37) / (1000 * 1000) */
-    10995116, 43980465, 175921860, 703687442, 2814749767
-};
-
-void timer_ms_gettime(uint32_t *secs, uint32_t *msecs) {
-    const timer_val_t val = timer_getticks(tns_values_ms[TIMER_TPSC], 37);
-
-    if(secs)  *secs = val.secs;
-    if(msecs) *msecs = val.ticks;
-}
-
-uint64_t timer_ms_gettime64(void) {
-   const timer_val_t val = timer_getticks(tns_values_ms[TIMER_TPSC], 37);
-
-    return (uint64_t)val.secs * 1000ull + (uint64_t)val.ticks;
-}
-
-/* Microsecond timer */
-static const uint32_t tns_values_us[] = {
-    /* 80, 320, 1280, 5120, 20480,
-       each multiplied by (1 << 27) / 1000 */
-    10737418, 42949673, 171798692, 687194767, 2748779069,
-};
-
-void timer_us_gettime(uint32_t *secs, uint32_t *usecs) {
-    const timer_val_t val = timer_getticks(tns_values_us[TIMER_TPSC], 27);
-
-    if(secs)  *secs = val.secs;
-    if(usecs) *usecs = val.ticks;
-}
-
-uint64_t timer_us_gettime64(void) {
-   const timer_val_t val = timer_getticks(tns_values_us[TIMER_TPSC], 27);
-
-    return (uint64_t)val.secs * 1000000ull + (uint64_t)val.ticks;
-}
-
-/* Nanosecond timer */
-static const uint32_t tns_values_ns[] = {
-    80, 320, 1280, 5120, 20480,
-};
-
-void timer_ns_gettime(uint32_t *secs, uint32_t *nsecs) { 
-    const timer_val_t val = timer_getticks(tns_values_ns[TIMER_TPSC], 0);
-
-    if(secs)  *secs = val.secs;
-    if(nsecs) *nsecs = val.ticks;
-}
-
-uint64_t timer_ns_gettime64(void) {
-   const timer_val_t val = timer_getticks(tns_values_ns[TIMER_TPSC], 0);
-
-    return (uint64_t)val.secs * 1000000000ull + (uint64_t)val.ticks;
 }
 
 /* Primary kernel timer. What we'll do here is handle actual timer IRQs
