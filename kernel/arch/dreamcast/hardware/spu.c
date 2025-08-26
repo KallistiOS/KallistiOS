@@ -355,7 +355,7 @@ int spu_init(void) {
     spu_enable();
 
     /* Wait a few clocks */
-    timer_spin_sleep(10);
+    thd_sleep(10);
 
     /* Initialize CDDA channels */
     spu_cdda_init();

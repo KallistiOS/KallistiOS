@@ -51,7 +51,7 @@ int snd_init(void) {
 
         /* Enable the AICA and give it a few ms to start up */
         spu_enable();
-        timer_spin_sleep(10);
+        thd_sleep(10);
 
         /* Initialize the RAM allocator */
         snd_mem_init(AICA_RAM_START);
