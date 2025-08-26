@@ -25,7 +25,6 @@ __BEGIN_DECLS
 #include <arch/gdb.h>
 #include <arch/mmu.h>
 #include <arch/memory.h>
-#include <arch/wdt.h>
 
 #include <dc/asic.h>
 #include <dc/biosfont.h>
@@ -68,6 +67,7 @@ __BEGIN_DECLS
 #include <dc/vmu_fb.h>
 #include <dc/vmu_pkg.h>
 #include <dc/vmufs.h>
+#include <dc/wdt.h>
 
 __END_DECLS
 

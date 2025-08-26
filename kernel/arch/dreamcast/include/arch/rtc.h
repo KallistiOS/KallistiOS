@@ -15,7 +15,7 @@
     standard C functions, like time(), rather than these when simply needing
     to fetch the current system time.
 
-    \sa arch/wdt.h
+    \sa dc/wdt.h
 
     \author Megan Potter
     \author Falco Girgis

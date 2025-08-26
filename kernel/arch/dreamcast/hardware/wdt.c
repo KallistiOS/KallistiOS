@@ -6,9 +6,9 @@
 
 /* This file contains the implementation of the SH4 watchdog timer driver. */
 
-#include <arch/wdt.h>
 #include <arch/irq.h>
 #include <kos/regfield.h>
+#include <dc/wdt.h>
 
 /* Macros for accessing WDT registers */
 #define WDT(o, t)       (*((volatile t *)(WDT_BASE + (o))))

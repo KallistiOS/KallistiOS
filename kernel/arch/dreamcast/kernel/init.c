@@ -19,12 +19,12 @@
 #include <arch/memory.h>
 #include <arch/rtc.h>
 #include <arch/timer.h>
-#include <arch/wdt.h>
 #include <dc/perfctr.h>
 #include <dc/ubc.h>
 #include <dc/pvr.h>
 #include <dc/vmufs.h>
 #include <dc/syscalls.h>
+#include <dc/wdt.h>
 
 #include "initall_hdrs.h"
 

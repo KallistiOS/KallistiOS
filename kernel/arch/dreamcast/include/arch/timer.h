@@ -18,7 +18,7 @@
     the gettime functions.
 
     \sa arch/rtc.h
-    \sa arch/wdt.h
+    \sa dc/wdt.h
 
     \author Megan Potter
     \author Falco Girgis
