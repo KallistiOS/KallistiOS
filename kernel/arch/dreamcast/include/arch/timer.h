@@ -34,6 +34,8 @@ __BEGIN_DECLS
 
 #include <arch/irq.h>
 
+#include <time.h>
+
 /** \defgroup timers    Timer Unit
     \brief              SH4 CPU peripheral providing timers and counters
     \ingroup            timing
@@ -245,6 +247,24 @@ typedef struct timer_value {
     \return                 The time since KOS started as a timer_val_t.
 */
 timer_val_t __dreamcast_get_ticks(void);
+
+/** \brief   Get the current uptime of the system (in seconds and nanoseconds).
+    \ingroup tmu_uptime
+
+    This function retrieves the time since KOS was started, in a standard
+    timespec format.
+
+    \return                 The time since KOS started as a struct timespec.
+*/
+static inline struct timespec arch_timer_gettime(void) {
+    timer_val_t time = __dreamcast_get_ticks();
+
+    /* Convert from ticks to nanoseconds: each clock tick is 80ns. */
+    return (struct timespec){
+        .tv_sec = time.secs,
+        .tv_nsec = time.ticks * 80,
+    };
+}
 
 /** \brief   Get the current uptime of the system (in secs and millisecs).
     \ingroup tmu_uptime
