@@ -157,24 +157,6 @@ int timer_clear(int which) {
     return !!(value & UNF);
 }
 
-/* Spin-loop kernel sleep func: uses the secondary timer in the
-   SH-4 to very accurately delay even when interrupts are disabled */
-void timer_spin_sleep(int ms) {
-    timer_prime(TMU1, 1000, 0);
-    timer_clear(TMU1);
-    timer_start(TMU1);
-
-    while(ms > 0) {
-        while(!(TIMER16(tcrs[TMU1]) & UNF))
-            ;
-
-        timer_clear(TMU1);
-        ms--;
-    }
-
-    timer_stop(TMU1);
-}
-
 void timer_spin_delay_ns(unsigned short ns) {
     uint64_t timeout = timer_ns_gettime64() + ns;
 
