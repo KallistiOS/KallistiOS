@@ -214,17 +214,11 @@ static void timer_ms_enable(void) {
     timer_start(TMU2);
 }
 
-/* Internal structure used to hold timer values in seconds + ticks. */
-typedef struct timer_value {
-    uint32_t secs, ticks;
-} timer_val_t;
-
-/* Generic function for retrieving the current time maintained by TMU2. 
+/* Generic function for retrieving the current time maintained by TMU2.
    Returns the total amount of time that has elapsed since KOS has been
-   initialized by using a LUT of precomputed, scaled timing values (tns)
-   plus a shift for optimized division. */
-static timer_val_t timer_getticks(uint32_t tns, uint32_t shift) {
-    uint32_t secs, unf1, unf2, counter1, counter2, delta, ticks;
+   initialized, in seconds + ticks. */
+timer_val_t __dreamcast_get_ticks(void) {
+    uint32_t secs, unf1, unf2, counter1, counter2, delta;
     uint16_t tmu2;
 
     do {
@@ -259,13 +253,23 @@ static timer_val_t timer_getticks(uint32_t tns, uint32_t shift) {
 
     delta = timer_ms_countdown - counter2;
 
+    return (timer_val_t){ .secs = secs, .ticks = delta, };
+}
+
+/* Generic function for retrieving the current time maintained by TMU2.
+   Returns the total amount of time that has elapsed since KOS has been
+   initialized by using a LUT of precomputed, scaled timing values (tns)
+   plus a shift for optimized division. */
+static timer_val_t timer_getticks(uint32_t tns, uint32_t shift) {
+    timer_val_t time = __dreamcast_get_ticks();
+
     /* We have to do the elapsed time calculations as a 64-bit unsigned
     integer, otherwise when using the fastest clock speed for timers,
     this value will very quickly overflow mid-expression, before the
     final division. */
-    ticks = ((uint64_t)delta * tns) >> shift;
+    time.ticks = ((uint64_t)time.ticks * tns) >> shift;
 
-    return (timer_val_t){ .secs = secs, .ticks = ticks, };
+    return time;
 }
 
 /* Millisecond timer */

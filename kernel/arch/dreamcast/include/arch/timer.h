@@ -230,6 +230,22 @@ int timer_ints_enabled(int channel);
     The highest actual tick resolution of \ref TMU2 is 80ns.
 */
 
+/** \brief   Structure that holds timer values in seconds + ticks. */
+typedef struct timer_value {
+    uint32_t secs;      /**< \brief Number of seconds */
+    uint32_t ticks;     /**< \brief Number of ticks in the current second */
+} timer_val_t;
+
+/** \brief   Get the current uptime of the system (in seconds and ticks).
+    \ingroup tmu_uptime
+
+    This function retrieves the number of seconds and ticks since KOS was
+    started.
+
+    \return                 The time since KOS started as a timer_val_t.
+*/
+timer_val_t __dreamcast_get_ticks(void);
+
 /** \brief   Get the current uptime of the system (in secs and millisecs).
     \ingroup tmu_uptime
 
