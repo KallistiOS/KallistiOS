@@ -223,7 +223,7 @@ typedef struct timer_value {
    Returns the total amount of time that has elapsed since KOS has been
    initialized by using a LUT of precomputed, scaled timing values (tns)
    plus a shift for optimized division. */
-static timer_val_t timer_getticks(const uint32_t *tns, uint32_t shift) {
+static timer_val_t timer_getticks(uint32_t tns, uint32_t shift) {
     uint32_t secs, unf1, unf2, counter1, counter2, delta, ticks;
     uint16_t tmu2;
 
@@ -263,7 +263,7 @@ static timer_val_t timer_getticks(const uint32_t *tns, uint32_t shift) {
     integer, otherwise when using the fastest clock speed for timers,
     this value will very quickly overflow mid-expression, before the
     final division. */
-    ticks = ((uint64_t)delta * tns[tmu2 & TPSC]) >> shift;
+    ticks = ((uint64_t)delta * tns) >> shift;
 
     return (timer_val_t){ .secs = secs, .ticks = ticks, };
 }
@@ -276,14 +276,14 @@ static const uint32_t tns_values_ms[] = {
 };
 
 void timer_ms_gettime(uint32_t *secs, uint32_t *msecs) {
-    const timer_val_t val = timer_getticks(tns_values_ms, 37);
+    const timer_val_t val = timer_getticks(tns_values_ms[TIMER_TPSC], 37);
 
     if(secs)  *secs = val.secs;
     if(msecs) *msecs = val.ticks;
 }
 
 uint64_t timer_ms_gettime64(void) {
-   const timer_val_t val = timer_getticks(tns_values_ms, 37);
+   const timer_val_t val = timer_getticks(tns_values_ms[TIMER_TPSC], 37);
 
     return (uint64_t)val.secs * 1000ull + (uint64_t)val.ticks;
 }
@@ -296,14 +296,14 @@ static const uint32_t tns_values_us[] = {
 };
 
 void timer_us_gettime(uint32_t *secs, uint32_t *usecs) {
-    const timer_val_t val = timer_getticks(tns_values_us, 27);
+    const timer_val_t val = timer_getticks(tns_values_us[TIMER_TPSC], 27);
 
     if(secs)  *secs = val.secs;
     if(usecs) *usecs = val.ticks;
 }
 
 uint64_t timer_us_gettime64(void) {
-   const timer_val_t val = timer_getticks(tns_values_us, 27);
+   const timer_val_t val = timer_getticks(tns_values_us[TIMER_TPSC], 27);
 
     return (uint64_t)val.secs * 1000000ull + (uint64_t)val.ticks;
 }
@@ -314,14 +314,14 @@ static const uint32_t tns_values_ns[] = {
 };
 
 void timer_ns_gettime(uint32_t *secs, uint32_t *nsecs) { 
-    const timer_val_t val = timer_getticks(tns_values_ns, 0);
+    const timer_val_t val = timer_getticks(tns_values_ns[TIMER_TPSC], 0);
 
     if(secs)  *secs = val.secs;
     if(nsecs) *nsecs = val.ticks;
 }
 
 uint64_t timer_ns_gettime64(void) {
-   const timer_val_t val = timer_getticks(tns_values_ns, 0);
+   const timer_val_t val = timer_getticks(tns_values_ns[TIMER_TPSC], 0);
 
     return (uint64_t)val.secs * 1000000000ull + (uint64_t)val.ticks;
 }
