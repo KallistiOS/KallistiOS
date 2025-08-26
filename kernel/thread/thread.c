@@ -13,7 +13,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <reent.h>
 #include <errno.h>
 #include <stdalign.h>
@@ -750,12 +749,7 @@ static void thd_timer_hnd(irq_context_t *context) {
    threads. */
 void thd_sleep(unsigned int ms) {
     /* This should never happen. This should, perhaps, assert. */
-    if(thd_mode == THD_MODE_NONE) {
-        dbglog(DBG_WARNING, "thd_sleep called when threading not "
-               "initialized.\n");
-        timer_spin_sleep(ms);
-        return;
-    }
+    assert(thd_mode != THD_MODE_NONE);
 
     /* A timeout of zero is the same as thd_pass() and passing zero
        down to genwait_wait() causes bad juju. */
