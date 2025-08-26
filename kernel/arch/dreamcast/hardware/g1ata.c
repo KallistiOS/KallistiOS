@@ -965,7 +965,7 @@ int g1_ata_flush(void) {
 
     /* Select the slave device. */
     g1_ata_select_device(G1_ATA_SLAVE | G1_ATA_LBA_MODE);
-    timer_spin_sleep(1);
+    thd_sleep(1);
 
     /* Flush the disk's write cache to make sure everything gets written out. */
     if(CAN_USE_LBA48())
@@ -973,7 +973,7 @@ int g1_ata_flush(void) {
     else
         OUT8(G1_ATA_COMMAND_REG, ATA_CMD_FLUSH_CACHE);
 
-    timer_spin_sleep(1);
+    thd_sleep(1);
     g1_ata_wait_bsydrq();
     g1_ata_mutex_unlock();
 
@@ -1006,7 +1006,7 @@ static int g1_ata_set_transfer_mode(uint8_t mode) {
 
     /* Send the SET FEATURES command. */
     OUT8(G1_ATA_COMMAND_REG, ATA_CMD_SET_FEATURES);
-    timer_spin_sleep(1);
+    thd_sleep(1);
 
     /* Wait for command completion. */
     g1_ata_wait_nbsy();
@@ -1034,7 +1034,7 @@ static int g1_ata_scan(void) {
     /* For now, just check if there's a slave device. We don't care about the
        primary device, since it should always be the GD-ROM drive. */
     OUT8(G1_ATA_DEVICE_SELECT, 0xF0);
-    timer_spin_sleep(1);
+    thd_sleep(1);
 
     OUT8(G1_ATA_SECTOR_COUNT, 0);
     OUT8(G1_ATA_LBA_LOW, 0);
@@ -1043,7 +1043,7 @@ static int g1_ata_scan(void) {
 
     /* Send the IDENTIFY command. */
     OUT8(G1_ATA_COMMAND_REG, ATA_CMD_IDENTIFY);
-    timer_spin_sleep(1);
+    thd_sleep(1);
     st = IN8(G1_ATA_STATUS_REG);
 
     /* Check if there's anything on the bus. */
