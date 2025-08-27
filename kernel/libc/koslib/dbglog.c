@@ -13,8 +13,7 @@
 #include <kos/thread.h>
 #include <kos/dbgio.h>
 #include <kos/fs.h>
-
-#include <arch/spinlock.h>
+#include <kos/spinlock.h>
 
 /* Not re-entrant */
 static char printf_buf[1024];

@@ -9,8 +9,8 @@
 #include <stdio.h>
 #include <assert.h>
 #include <arch/arch.h>
+#include <kos/spinlock.h>
 #include <kos/thread.h>
-#include <arch/spinlock.h>
 
 static spinlock_t mutex = SPINLOCK_INITIALIZER;
 

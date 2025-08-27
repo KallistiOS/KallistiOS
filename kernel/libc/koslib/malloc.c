@@ -20,11 +20,11 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <arch/spinlock.h>
 #include <arch/arch.h>
 
 #include <kos/dbglog.h>
 #include <kos/opts.h>
+#include <kos/spinlock.h>
 
 #undef DEBUG
 

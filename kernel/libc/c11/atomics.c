@@ -9,10 +9,10 @@
    build flag.
 */
 
+#include <kos/spinlock.h>
 #include <arch/arch.h>
 #include <arch/cache.h>
 #include <arch/irq.h>
-#include <arch/spinlock.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
