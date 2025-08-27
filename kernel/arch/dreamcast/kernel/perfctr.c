@@ -29,7 +29,7 @@
 #define NS_PER_CYCLE      5
 
 /* Get a counter's current configuration. */
-bool perf_cntr_config(perf_cntr_t counter, 
+bool perf_cntr_config(perf_cntr_t counter,
                       perf_cntr_event_t *event,
                       perf_cntr_clock_t *clock) {
 
@@ -42,14 +42,14 @@ bool perf_cntr_config(perf_cntr_t counter,
 }
 
 /* Start a performance counter. */
-void perf_cntr_start(perf_cntr_t counter, 
-                     perf_cntr_event_t event, 
+void perf_cntr_start(perf_cntr_t counter,
+                     perf_cntr_event_t event,
                      perf_cntr_clock_t clock) {
-    
+
     perf_cntr_clear(counter);
 
-    PMCR_CTRL(counter) = PMCR_RUN | 
-                        (clock << PMCR_PMCLK_SHIFT) | 
+    PMCR_CTRL(counter) = PMCR_RUN |
+                        (clock << PMCR_PMCLK_SHIFT) |
                         event;
 }
 
@@ -81,7 +81,7 @@ uint64_t perf_cntr_count(perf_cntr_t counter) {
         hi = PMCTR_HIGH(counter);
         lo = PMCTR_LOW(counter);
         hi2 = PMCTR_HIGH(counter);
-    } while(__unlikely(hi != hi2));
+    } while (__predict_false(hi != hi2));
 
     return (uint64_t)hi << 32 | lo;
 }
@@ -90,7 +90,7 @@ void perf_cntr_timer_enable(void) {
     perf_cntr_start(PRFC0, PMCR_ELAPSED_TIME_MODE, PMCR_COUNT_CPU_CYCLES);
 }
 
-bool perf_cntr_timer_enabled(void) { 
+bool perf_cntr_timer_enabled(void) {
     perf_cntr_event_t event;
     perf_cntr_clock_t clock;
 

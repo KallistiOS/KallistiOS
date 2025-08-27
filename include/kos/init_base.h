@@ -30,7 +30,7 @@ __BEGIN_DECLS
 /* Declares a weak function pointer which can be optionally
    overridden and given a value later. */
 #define KOS_INIT_FLAG_WEAK(func, dft_on) \
-    void (*func##_weak)(void) __weak = (dft_on) ? func : NULL
+    void (*func##_weak)(void) __weak_symbol = (dft_on) ? func : NULL
 
 /* Invokes the given function if its weak function pointer
    has been overridden to point to a valid function. */
