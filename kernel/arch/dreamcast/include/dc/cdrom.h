@@ -350,17 +350,6 @@ int cdrom_get_status(int *status, int *disc_type);
 /** \brief    Change the datatype of disc.
     \ingroup  gdrom
 
-    \note                   This function is formally deprecated. It should not
-                            be used in any future code, and may be removed in
-                            the future. You should instead use
-                            cdrom_change_datatype.
-*/
-int cdrom_change_dataype(int sector_part, int cdxa, int sector_size)
-                        __depr("Use cdrom_change_datatype instead.");
-
-/** \brief    Change the datatype of disc.
-    \ingroup  gdrom
-
     This function will take in all parameters to pass to the change_datatype 
     syscall. This allows these parameters to be modified without a reinit. 
     Each parameter allows -1 as a default, which is tied to the former static 

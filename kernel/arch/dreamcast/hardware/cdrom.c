@@ -311,11 +311,6 @@ int cdrom_get_status(int *status, int *disc_type) {
     return rv;
 }
 
-/* Helper function to account for long-standing typo */
-int cdrom_change_dataype(int sector_part, int cdxa, int sector_size) {
-    return cdrom_change_datatype(sector_part, cdxa, sector_size);
-}
-
 /* Wrapper for the change datatype syscall */
 int cdrom_change_datatype(int sector_part, int cdxa, int sector_size) {
     uint32_t params[4];
