@@ -40,25 +40,33 @@ __BEGIN_DECLS
     \param  value           The value to convert.
     \return                 value converted to network byte order.
 */
-uint32_t htonl(uint32_t value);
+static inline uint32_t htonl(uint32_t value) {
+    return __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ ? value : __builtin_bswap32(value);
+}
 
 /** \brief  Convert a 32-bit value from network byte order to host byte order.
     \param  value           The value to convert.
     \return                 value converted to host byte order.
 */
-uint32_t ntohl(uint32_t value);
+static inline uint32_t ntohl(uint32_t value) {
+    return htonl(value);
+}
 
 /** \brief  Convert a 16-bit value from host byte order to network byte order.
     \param  value           The value to convert.
     \return                 value converted to network byte order.
 */
-uint16_t htons(uint16_t value);
+static inline uint16_t htons(uint16_t value) {
+    return __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ ? value : __builtin_bswap16(value);
+}
 
 /** \brief  Convert a 16-bit value from network byte order to host byte order.
     \param  value           The value to convert.
     \return                 value converted to host byte order.
 */
-uint16_t ntohs(uint16_t value);
+static inline uint16_t ntohs(uint16_t value) {
+    return htons(value);
+}
 
 /** \brief  Convert a string representation of an IPv4 address to an in_addr_t.
 
