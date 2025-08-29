@@ -95,7 +95,7 @@ static struct mallinfo mALLINFo();
 
 #ifdef USE_MALLOC_LOCK
 
-#include <arch/spinlock.h>
+#include <kos/spinlock.h>
 
 static spinlock_t mALLOC_MUTEx = SPINLOCK_INITIALIZER;
 

@@ -16,9 +16,9 @@
 #include <string.h>
 #include <kos/thread.h>
 #include <kos/once.h>
+#include <kos/spinlock.h>
 
 #include <arch/arch.h>
-#include <arch/spinlock.h>
 #include <dc/maple.h>
 #include <dc/maple/controller.h>
 
