@@ -190,7 +190,6 @@ int  __weak arch_auto_init(void) {
 
     /* Initialize our timer */
     perf_cntr_timer_enable();
-    timer_ms_enable();
     rtc_init();
 
     thd_init();
