@@ -24,7 +24,7 @@ if [ -z "${KOS_SH4_PRECISION}" ] || [ "${KOS_SH4_PRECISION}" = "-m4-single" ]; t
     fi
 fi
 
-export KOS_CFLAGS="${KOS_CFLAGS} ${KOS_SH4_PRECISION} -ml -mfsrra -mfsca -ffunction-sections -fdata-sections -matomic-model=soft-imask -ftls-model=local-exec"
+export KOS_CFLAGS="${KOS_CFLAGS} ${KOS_SH4_PRECISION} -ml -mfsrra -mfsca -ffunction-sections -fdata-sections -matomic-model=soft-gusa -ftls-model=local-exec"
 export KOS_AFLAGS="${KOS_AFLAGS} -little"
 export KOS_LDFLAGS="${KOS_LDFLAGS} ${KOS_SH4_PRECISION} -ml -Wl,--gc-sections"
 export KOS_LD_SCRIPT="-T${KOS_BASE}/utils/ldscripts/shlelf.xc"
