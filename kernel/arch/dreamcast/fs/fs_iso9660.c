@@ -616,6 +616,7 @@ static inline void iso_abort_stream(bool lock) {
             mutex_lock(&fh_mutex);
 
         cdrom_stream_stop(false);
+        stream_fd->stream_part = 0;
         stream_fd = NULL;
 
         if(lock)
@@ -652,7 +653,7 @@ static void * iso_open(vfs_handler_t * vfs, const char *fn, int mode) {
         return 0;
     }
 
-    fd = malloc(sizeof(*fd));
+    fd = aligned_alloc(32, sizeof(*fd));
     if(!fd) {
         errno = ENOMEM;
         return 0;
@@ -694,7 +695,8 @@ static int iso_close(void * h) {
 
 /* Read from a file */
 static ssize_t iso_read(void * h, void *buf, size_t bytes) {
-    int rv, toread, thissect, c;
+    int rv, c;
+    size_t toread, thissect;
     uint8 * outbuf;
     size_t remain_size = 0, req_size;
     uint32_t sector;
@@ -716,6 +718,23 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
         toread = (bytes > (fd->size - fd->ptr)) ? fd->size - fd->ptr : bytes;
 
         if(toread == 0) break;
+
+        /* If we have partial data from a stream, use it */
+        if(fd->stream_part > 0) {
+            size_t avail = 32 - fd->stream_part;
+            size_t given = (toread > avail) ? avail : toread;
+
+            memcpy(outbuf, &fd->stream_data[fd->stream_part], given);
+            fd->stream_part = (fd->stream_part + given) & 31;
+
+            outbuf += given;
+            fd->ptr += given;
+            bytes -= given;
+            rv += given;
+            toread -= given;
+
+            if(toread == 0) continue;
+        }
 
         /* How much more can we read in the current sector? */
         thissect = 2048 - (fd->ptr % 2048);
@@ -778,21 +797,18 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
 
             toread = (toread > thissect) ? thissect : toread;
 
-            if(fd->stream_part > 0) {
-                memcpy(outbuf, &fd->stream_data[fd->stream_part - 1], toread);
-                fd->stream_part = 0;
+            c = cdrom_stream_request(fd->stream_data, 32, 0);
+            if(c) {
+                goto read_error;
             }
-            else {
-                c = cdrom_stream_request(fd->stream_data, 32, 0);
-                if(c) {
-                    goto read_error;
-                }
-                fd->stream_part = toread;
-                while(cdrom_stream_progress(&remain_size) == 1) {
-                    thd_pass();
-                }
-                memcpy(outbuf, fd->stream_data, toread);
+
+            while(cdrom_stream_progress(&remain_size) == 1) {
+                thd_pass();
             }
+
+            memcpy(outbuf, fd->stream_data, toread);
+            fd->stream_part = toread & 31;
+
             // dbglog(DBG_DEBUG, "Stream request: read=%d remain=%d part=%d out=%p fd=%p\n",
             //         toread, remain_size, fd->stream_part, outbuf, fd);
 
