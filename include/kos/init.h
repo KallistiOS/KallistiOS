@@ -70,7 +70,6 @@ __BEGIN_DECLS
     KOS_INIT_FLAG(flags, INIT_FS_RND, fs_rnd_shutdown); \
     KOS_INIT_FLAG(flags, INIT_FS_DEV, fs_dev_init); \
     KOS_INIT_FLAG(flags, INIT_FS_DEV, fs_dev_shutdown); \
-    KOS_INIT_FLAG(flags, INIT_EXPORT, export_init); \
     KOS_INIT_FLAG(flags, INIT_LIBRARY, library_init); \
     KOS_INIT_FLAG(flags, INIT_LIBRARY, library_shutdown); \
     KOS_INIT_FLAG_NONE(flags, INIT_NO_SHUTDOWN, kos_shutdown); \

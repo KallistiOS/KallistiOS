@@ -98,15 +98,10 @@ int nmmgr_handler_remove(nmmgr_handler_t *hnd) {
     return rv;
 }
 
-KOS_INIT_FLAG_WEAK(export_init, false);
-
 /* Initialize structures */
 void nmmgr_init(void) {
     /* Start with no handlers */
     LIST_INIT(&nmmgr_handlers);
-
-    /* Initialize our internal exports */
-    KOS_INIT_FLAG_CALL(export_init);
 }
 
 void nmmgr_shutdown(void) {
