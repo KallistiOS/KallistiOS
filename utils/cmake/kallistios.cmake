@@ -1,12 +1,13 @@
 # Auxiliary CMake Utility Functions
 #   Copyright (C) 2023 Colton Pawielski
-#   Copyright (C) 2024 Falco Girgis
+#   Copyright (C) 2024, 2025 Falco Girgis
 #   Copyright (C) 2024 Paul Cercueil
 #
 # This file implements utilities for the following additional functionality
 # which exists in the KOS Make build system:
 #   1) linking to existing binaries
 #   2) adding a romdisk
+#   3) running the binary using KOS_LOADER
 #
 # NOTE: When using the KOS CMake toolchain file, you do not need to include
 #       this file directly!
@@ -31,13 +32,33 @@ if(NOT DEFINED KOS_CC_BASE)
     endif()
 endif()
 
+### Adds a custom "run" target which uses $KOS_LOADER to run the given target. ###
+function(kos_run_target target)
+    # targetName is optional and defaults to "run" when not provided.
+    if(NOT ${ARGC} EQUAL 2)
+        set(runTarget run)
+    else()
+        set(runTarget ${ARGV1})
+    endif()
+
+    # Convert KOS ENV variable to semicolon-separated list of args
+    string(REPLACE " " ";" _kos_loader $ENV{KOS_LOADER})
+
+    # Create a new target which simply passes the source target to $KOS_LOADER to run
+    add_custom_target(${runTarget}
+        COMMAND ${_kos_loader};$<TARGET_FILE:${target}>
+        DEPENDS ${target} 
+        USES_TERMINAL
+    )
+endfunction()
+
 ### Helper Function for Bin2Object ###
 function(kos_bin2o inFile symbol)
     # outFile is optional and defaults to the symbol name in the build directory
     if(NOT ${ARGC} EQUAL 3)
         set(outFile ${CMAKE_CURRENT_BINARY_DIR}/${symbol}.o)
     else()
-        set(outFile ${ARGN})
+        set(outFile ${ARGV2})
     endif()
 
     # Custom Command to generate romdisk object file from image
@@ -61,7 +82,7 @@ function(kos_add_romdisk target romdiskPath)
     if(NOT ${ARGC} EQUAL 3)
         set(romdiskName romdisk)
     else()
-        set(romdiskName ${ARGN})
+        set(romdiskName ${ARGV2})
     endif()
 
     file(REAL_PATH "${romdiskPath}" romdiskPath)

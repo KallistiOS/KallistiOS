@@ -1,13 +1,13 @@
 # CMake Toolchain file for targeting the Dreamcast or NAOMI with CMake.
 #  Copyright (C) 2023 Luke Benstead
-#  Copyright (C) 2023, 2024 Falco Girgis
+#  Copyright (C) 2023, 2024, 2025 Falco Girgis
 #  Copyright (C) 2024 Donald Haase
 #  Copyright (C) 2024 Paul Cercueil
 #
 # This file is to be passed to CMake when compiling a regular CMake project
 # to cross-compile for the Dreamcast, using the KOS environment and settings.
 #
-#     cmake /path/to/src -DCMAKE_TOOLCHAIN_FILE=${KOS_BASE}/kos/utils/cmake/dreamcast.toolchain.cmake
+#     cmake /path/to/src -DCMAKE_TOOLCHAIN_FILE=${KOS_BASE}/kos/utils/cmake/kallistios.toolchain.cmake
 #
 #   or alternatively:
 #
@@ -29,24 +29,25 @@ cmake_minimum_required(VERSION 3.13)
 #### Set Configuration Variables From Environment ####
 if(NOT DEFINED ENV{KOS_BASE}
    OR NOT DEFINED ENV{KOS_CC_BASE}
+   OR NOT DEFINED ENV{KOS_ARCH}
    OR NOT DEFINED ENV{KOS_SUBARCH}
-   OR NOT DEFINED ENV{KOS_PORTS})
+   OR NOT DEFINED ENV{KOS_PORTS}
+   OR NOT DEFINED ENV{DC_TOOLS_BASE})
     message(FATAL_ERROR "KallistiOS environment variables not found")
-else()
-    set(KOS_BASE $ENV{KOS_BASE})
-    set(KOS_CC_BASE $ENV{KOS_CC_BASE})
-    set(KOS_SUBARCH $ENV{KOS_SUBARCH})
-    set(KOS_PORTS $ENV{KOS_PORTS})
 endif()
+
+file(REAL_PATH $ENV{KOS_BASE} KOS_BASE)
+file(REAL_PATH $ENV{KOS_CC_BASE} KOS_CC_BASE)
+file(REAL_PATH $ENV{KOS_PORTS} KOS_PORTS)
+file(REAL_PATH $ENV{DC_TOOLS_BASE} DC_TOOLS_BASE)
+set(KOS_ARCH $ENV{KOS_ARCH})
+set(KOS_SUBARCH $ENV{KOS_SUBARCH})
+set(KOS_ADDONS ${KOS_BASE}/addons)
 
 list(APPEND CMAKE_MODULE_PATH $ENV{KOS_BASE}/utils/cmake)
 
 ##### Configure CMake System #####
-set(CMAKE_SYSTEM_NAME Dreamcast)
-set(CMAKE_SYSTEM_VERSION 1)
-set(CMAKE_SYSTEM_PROCESSOR SH4)
-set(CMAKE_SIZEOF_VOID_P 4)
-set(PLATFORM_DREAMCAST TRUE)
+set(CMAKE_SYSTEM_NAME ${KOS_ARCH})
 
 ##### Configure Cross-Compiler #####
 set(CMAKE_CROSSCOMPILING TRUE)
@@ -56,6 +57,14 @@ set(CMAKE_C_COMPILER      ${KOS_BASE}/utils/build_wrappers/kos-cc)
 set(CMAKE_CXX_COMPILER    ${KOS_BASE}/utils/build_wrappers/kos-c++)
 set(CMAKE_OBJC_COMPILER   ${KOS_BASE}/utils/build_wrappers/kos-cc)
 set(CMAKE_OBJCXX_COMPILER ${KOS_BASE}/utils/build_wrappers/kos-c++)
+
+set(CMAKE_ASM_COMPILER_AR ${KOS_BASE}/utils/build_wrappers/kos-ar)
+set(CMAKE_C_COMPILER_AR ${KOS_BASE}/utils/build_wrappers/kos-ar)
+set(CMAKE_CXX_COMPILER_AR ${KOS_BASE}/utils/build_wrappers/kos-ar)
+
+set(CMAKE_ASM_COMPILER_RANLIB ${KOS_BASE}/utils/build_wrappers/kos-ranlib)
+set(CMAKE_C_COMPILER_RANLIB ${KOS_BASE}/utils/build_wrappers/kos-ranlib)
+set(CMAKE_CXX_COMPILER_RANLIB ${KOS_BASE}/utils/build_wrappers/kos-ranlib)
 
 set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 
@@ -77,4 +86,16 @@ add_compile_options(
 set(CMAKE_ASM_FLAGS "")
 set(CMAKE_ASM_FLAGS_RELEASE "")
 
-include("${KOS_BASE}/utils/cmake/dreamcast.cmake")
+# Disable LTO for Debug build
+set(CMAKE_TRY_COMPILE_CONFIGURATION DEBUG)
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_DEBUG OFF)
+set(CMAKE_EXE_LINKER_FLAGS_DEBUG -fno-lto)
+
+# Default CMake installations to install to kos-addons
+set(CMAKE_INSTALL_BINDIR     ${DC_TOOLS_BASE})
+if(NOT DEFINED CMAKE_INSTALL_INCLUDEDIR)
+    set(CMAKE_INSTALL_INCLUDEDIR ${KOS_ADDONS}/include/${KOS_ARCH})
+endif()
+if(NOT DEFINED CMAKE_INSTALL_LIBDIR)
+    set(CMAKE_INSTALL_LIBDIR ${KOS_ADDONS}/lib/${KOS_ARCH})
+endif()

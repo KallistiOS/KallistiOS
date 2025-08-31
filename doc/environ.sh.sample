@@ -75,7 +75,7 @@ export DC_TOOLS_BASE="/opt/toolchains/dc/bin"
 # Specifies the path to the toolchain file used to target
 # KOS with the "cmake" build utility.
 #
-export KOS_CMAKE_TOOLCHAIN="${KOS_BASE}/utils/cmake/dreamcast.toolchain.cmake"
+export KOS_CMAKE_TOOLCHAIN="${KOS_BASE}/utils/cmake/kallistios.toolchain.cmake"
 
 # Genromfs Utility Path
 #

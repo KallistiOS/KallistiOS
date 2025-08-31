@@ -8,6 +8,6 @@ if [ -z "${KOS_BASE}" ]; then
 fi
 
 cmake \
-  -DCMAKE_TOOLCHAIN_FILE="${KOS_BASE}/utils/cmake/${KOS_ARCH}.toolchain.cmake" \
+  -DCMAKE_TOOLCHAIN_FILE="${KOS_BASE}/utils/cmake/kallistios.toolchain.cmake" \
   "$@"
 
