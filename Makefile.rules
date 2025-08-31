@@ -110,6 +110,8 @@ ifdef EXPORTS_FILE
 
 OBJS += exports.o
 
+exports.o exports_stubs.o: KOS_CFLAGS+=-fno-lto
+
 exports.o: exports.c
 exports.c: $(EXPORTS_FILE)
 	$(KOS_BASE)/utils/genexports/genexports.sh $(EXPORTS_FILE) exports.c $(EXPORTS_SYMBOL)
