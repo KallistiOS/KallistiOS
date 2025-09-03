@@ -248,7 +248,8 @@ int mutex_unlock(mutex_t *m) __nonnull_all;
 
     This function allows an IRQ handler to unlock a mutex that was locked by a
     normal kernel thread. This function is only for use in IRQ handlers, so it
-    will generally not be of much use outside of the kernel itself.
+    will generally not be of much use outside of the kernel itself. It cannot
+    be used with recursive mutexes.
 
     \param  m               The mutex to unlock
     \param  thd             The thread owning the mutex
