@@ -8,7 +8,7 @@
 
 #include <assert.h>
 #include <arch/irq.h>
-#include <arch/spinlock.h>
+#include <kos/spinlock.h>
 #include <kos/thread.h>
 #include <sys/lock.h>
 

@@ -6,7 +6,7 @@
 
 #include "pthread-internal.h"
 #include <pthread.h>
-#include <arch/spinlock.h>
+#include <kos/spinlock.h>
 
 int pthread_spin_unlock(pthread_spinlock_t *lock) {
     spinlock_unlock(lock);

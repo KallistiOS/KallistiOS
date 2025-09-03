@@ -100,9 +100,9 @@
 #include <assert.h>
 #include <arch/irq.h>
 #include <dc/asic.h>
-#include <arch/spinlock.h>
 #include <kos/genwait.h>
 #include <kos/regfield.h>
+#include <kos/spinlock.h>
 #include <kos/worker_thread.h>
 
 /* XXX These based on g1ata.c and pvr.h and should be replaced by a standardized method */
