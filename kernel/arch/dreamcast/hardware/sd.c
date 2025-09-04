@@ -832,6 +832,8 @@ int sd_blockdev_for_device(kos_blockdev_t *rv) {
         return -1;
     }
 
+    /* Copy in the template block device and fill it in */
+    memcpy(rv, &sd_blockdev, sizeof(kos_blockdev_t));
     ddata->start_block = 0;
     ddata->block_count = (sd_get_size() / 512);
     rv->dev_data = ddata;
