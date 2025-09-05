@@ -137,7 +137,8 @@ typedef unsigned long __mode_t;
 typedef unsigned short __nlink_t;
 typedef long        __suseconds_t;  /* microseconds (signed) */
 typedef unsigned long   __useconds_t;   /* microseconds (unsigned) */
-typedef long long    __time_t;
+#define _TIME_T_ long long
+typedef _TIME_T_ __time_t;
 
 #ifndef __clockid_t_defined
 #define _CLOCKID_T_     unsigned long
