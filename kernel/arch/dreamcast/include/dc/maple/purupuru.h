@@ -59,13 +59,15 @@ __BEGIN_DECLS
 typedef union purupuru_effect  {
     /** \brief Access the raw 32-bit value to be sent to the puru */
     uint32_t raw;
-    /** \brief Deprecated old structure which has been inverted now to union with raw. */
+    /* \cond */
+    /* Deprecated old structure which has been inverted now to union with raw. */
     struct {
         uint8_t special     __depr("Please see purupuru_effect_t which has new members.");
         uint8_t effect1     __depr("Please see purupuru_effect_t which has new members.");
         uint8_t effect2     __depr("Please see purupuru_effect_t which has new members.");
         uint8_t duration    __depr("Please see purupuru_effect_t which has new members.");
     };
+    /* \endcond */
     struct {
         /** \brief Continuous Vibration. When set vibration will continue until stopped */
         bool     cont    : 1;
