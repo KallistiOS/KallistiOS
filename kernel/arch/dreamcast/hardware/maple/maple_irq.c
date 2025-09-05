@@ -183,8 +183,8 @@ static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm) {
         vbl_chk_next_subdev(state, frm, p);
     }
     else {
-        /* dbglog(DBG_KDEBUG, "maple: unknown response %d on device %c%c\n",
-            resp->response, 'A'+p, '0'+u); */
+        dbglog(DBG_DEBUG, "maple: unknown response %d on device %c%c\n",
+            resp->response, 'A'+p, '0'+u);
         state->scan_ready_mask |= 1 << p;
         maple_frame_unlock(frm);
     }
@@ -274,6 +274,12 @@ void maple_dma_irq_hnd(uint32 code, void *data) {
         if(resp == MAPLE_RESPONSE_AGAIN) {
             i->state = MAPLE_FRAME_UNSENT;
             continue;
+        }
+        /* This error is generated in the case where bad input is sent to the purupuru.
+           For instance, when setting motor selection to '0' rather than '1'. */
+        else if(resp == MAPLE_RESPONSE_BADFUNC) {
+            dbglog(DBG_ERROR, "maple_irq: error EBADFUNC on %c%i when sending command: %i\n",
+            ('A' - i->dst_port), i->dst_unit, i->cmd);
         }
 
         if(__is_defined(MAPLE_DMA_DEBUG))
