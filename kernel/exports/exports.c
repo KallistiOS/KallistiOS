@@ -20,36 +20,6 @@ to be a somewhat slow process anyway.
 #include <kos/nmmgr.h>
 #include <kos/exports.h>
 
-static symtab_handler_t st_kern = {
-    {
-        "sym/kernel/kernel",
-        0,
-        0x00010000,
-        0,
-        NMMGR_TYPE_SYMTAB,
-        NMMGR_LIST_INIT
-    },
-    kernel_symtab
-};
-
-static symtab_handler_t st_arch = {
-    {
-        "sym/kernel/arch",
-        0,
-        0x00010000,
-        0,
-        NMMGR_TYPE_SYMTAB,
-        NMMGR_LIST_INIT
-    },
-    arch_symtab
-};
-
-void export_init(void) {
-    /* Add our two export tables */
-    nmmgr_handler_add(&st_kern.nmmgr);
-    nmmgr_handler_add(&st_arch.nmmgr);
-}
-
 export_sym_t *export_lookup(const char *name) {
     nmmgr_handler_t *nmmgr;
     nmmgr_list_t *nmmgrs;
