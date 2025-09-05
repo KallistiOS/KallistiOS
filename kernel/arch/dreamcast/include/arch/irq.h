@@ -319,7 +319,7 @@ static inline irq_mask_t irq_get_sr(void) {
     This function will restore the interrupt state to the value specified. This
     should correspond to a value returned by irq_disable().
 
-    \param  v               The IRQ state to restore. This should be a value
+    \param  old             The IRQ state to restore. This should be a value
                             returned by irq_disable().
 
     \sa irq_disable()
