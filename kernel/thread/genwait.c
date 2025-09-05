@@ -69,7 +69,7 @@ static kthread_t *tq_next(void) {
 }
 
 int genwait_wait(void *obj, const char *mesg, int timeout, void (*callback)(void *)) {
-    kthread_t   *me;
+    kthread_t   *me, *t;
 
     /* Twiddle interrupt state */
     if(irq_inside_int()) {
@@ -95,8 +95,17 @@ int genwait_wait(void *obj, const char *mesg, int timeout, void (*callback)(void
 
     me->wait_callback = callback;
 
-    /* Insert us on the appropriate wait queue */
-    TAILQ_INSERT_TAIL(&slpque[LOOKUP(obj)], me, thdq);
+    /* Go through and find where to insert */
+    TAILQ_FOREACH(t, &slpque[LOOKUP(obj)], thdq) {
+        if(me->prio < t->prio) {
+            TAILQ_INSERT_BEFORE(t, me, thdq);
+            break;
+        }
+    }
+
+    /* We got to the end of the list, so insert at end */
+    if(!t)
+        TAILQ_INSERT_TAIL(&slpque[LOOKUP(obj)], me, thdq);
 
     /* Block us until we're signaled */
     return thd_block_now(&me->context);
