@@ -102,6 +102,11 @@ static struct {
 /* Mutex for file system structs */
 static mutex_t rd_mutex;
 
+/* Test if an file_t is invalid, presumes mutex is already held. */
+static inline bool ramdisk_fd_invalid(file_t fd) {
+    return((fd >= FS_RAMDISK_MAX_FILES) || (!fh[fd].file));
+}
+
 /* Search a directory for the named file; return the struct if
    we find it. Assumes we hold rd_mutex. */
 static rd_file_t *ramdisk_find(rd_dir_t *parent, const char *name, size_t namelen) {
@@ -361,80 +366,77 @@ static int ramdisk_close(void * h) {
 
     mutex_lock_scoped(&rd_mutex);
 
-    /* Check that the fd is valid */
-    if(fd < FS_RAMDISK_MAX_FILES && fh[fd].file != NULL) {
-        f = fh[fd].file;
-        fh[fd].file = NULL;
+    /* Check that the fd is invalid */
+    if(ramdisk_fd_invalid(fd)) return 0;
 
-        /* Decrease the usage count */
-        f->usage--;
-        assert(f->usage >= 0);
+    f = fh[fd].file;
+    fh[fd].file = NULL;
 
-        /* If the usage count is back to 0, then no one has the file
-           open. Remove the openfor status. */
-        if(f->usage == 0)
-            f->openfor = OPENFOR_NOTHING;
-    }
+    /* Decrease the usage count */
+    f->usage--;
+    assert(f->usage >= 0);
+
+    /* If the usage count is back to 0, then no one has the file
+       open. Remove the openfor status. */
+    if(f->usage == 0)
+        f->openfor = OPENFOR_NOTHING;
 
     return 0;
 }
 
 /* Read from a file */
 static ssize_t ramdisk_read(void * h, void *buf, size_t bytes) {
-    ssize_t rv = -1;
     file_t  fd = (file_t)h;
 
     mutex_lock_scoped(&rd_mutex);
 
-    /* Check that the fd is valid */
-    if(fd < FS_RAMDISK_MAX_FILES && fh[fd].file != NULL && !fh[fd].dir) {
-        /* Is there enough left? */
-        if((fh[fd].ptr + bytes) > fh[fd].file->size)
-            bytes = fh[fd].file->size - fh[fd].ptr;
+    /* Check that the fd is invalid or a dir */
+    if(ramdisk_fd_invalid(fd) || fh[fd].dir) return (ssize_t)-1;
 
-        /* Copy out the requested amount */
-        memcpy(buf, ((uint8_t *)fh[fd].file->data) + fh[fd].ptr, bytes);
-        fh[fd].ptr += bytes;
+    /* Is there enough left? */
+    if((fh[fd].ptr + bytes) > fh[fd].file->size)
+        bytes = fh[fd].file->size - fh[fd].ptr;
 
-        rv = bytes;
-    }
+    /* Copy out the requested amount */
+    memcpy(buf, ((uint8_t *)fh[fd].file->data) + fh[fd].ptr, bytes);
+    fh[fd].ptr += bytes;
 
-    return rv;
+    return bytes;
 }
 
 /* Write to a file */
 static ssize_t ramdisk_write(void * h, const void *buf, size_t bytes) {
-    ssize_t rv = -1;
     file_t  fd = (file_t)h;
 
     mutex_lock_scoped(&rd_mutex);
 
-    /* Check that the fd is valid */
-    if(fd < FS_RAMDISK_MAX_FILES && fh[fd].file != NULL && !fh[fd].dir && fh[fd].file->openfor == OPENFOR_WRITE) {
-        /* Is there enough left? */
-        if((fh[fd].ptr + bytes) > fh[fd].file->datasize) {
-            /* We need to realloc the block */
-            void * np = realloc(fh[fd].file->data, (fh[fd].ptr + bytes) + 4096);
+    /* Check that the fd is invalid or a dir */
+    if(ramdisk_fd_invalid(fd) || fh[fd].dir) return (ssize_t)-1;
 
-            if(np == NULL)
-                return -1;
+    /* Check that the fd is open for writing */
+    if(fh[fd].file->openfor != OPENFOR_WRITE) return (ssize_t)-1;
 
-            fh[fd].file->data = np;
-            fh[fd].file->datasize = (fh[fd].ptr + bytes) + 4096;
-        }
+    /* Is there enough left? */
+    if((fh[fd].ptr + bytes) > fh[fd].file->datasize) {
+        /* We need to realloc the block */
+        void * np = realloc(fh[fd].file->data, (fh[fd].ptr + bytes) + 4096);
 
-        /* Copy out the requested amount */
-        memcpy(((uint8_t *)fh[fd].file->data) + fh[fd].ptr, buf, bytes);
-        fh[fd].ptr += bytes;
+        if(np == NULL)
+            return -1;
 
-        if(fh[fd].file->size < fh[fd].ptr) {
-            fh[fd].file->size = fh[fd].ptr;
-        }
-
-        rv = bytes;
+        fh[fd].file->data = np;
+        fh[fd].file->datasize = (fh[fd].ptr + bytes) + 4096;
     }
 
-    return rv;
+    /* Copy out the requested amount */
+    memcpy(((uint8_t *)fh[fd].file->data) + fh[fd].ptr, buf, bytes);
+    fh[fd].ptr += bytes;
+
+    if(fh[fd].file->size < fh[fd].ptr) {
+        fh[fd].file->size = fh[fd].ptr;
+    }
+
+    return bytes;
 }
 
 /* Seek elsewhere in a file */
@@ -443,8 +445,8 @@ static off_t ramdisk_seek(void * h, off_t offset, int whence) {
 
     mutex_lock_scoped(&rd_mutex);
 
-    /* Check that the fd is valid */
-    if(fd >= FS_RAMDISK_MAX_FILES || !fh[fd].file || fh[fd].dir) {
+    /* Check that the fd is invalid or a dir */
+    if(ramdisk_fd_invalid(fd) || fh[fd].dir) {
         errno = EBADF;
         return -1;
     }
@@ -496,10 +498,10 @@ static off_t ramdisk_tell(void * h) {
 
     mutex_lock_scoped(&rd_mutex);
 
-    if(fd < FS_RAMDISK_MAX_FILES && fh[fd].file != NULL && !fh[fd].dir)
-        return fh[fd].ptr;
+    /* Check that the fd is invalid or a dir */
+    if(ramdisk_fd_invalid(fd) || fh[fd].dir) return -1;
 
-    return -1;
+    return fh[fd].ptr;
 }
 
 /* Tell how big the file is */
@@ -508,10 +510,10 @@ static size_t ramdisk_total(void * h) {
 
     mutex_lock_scoped(&rd_mutex);
 
-    if(fd < FS_RAMDISK_MAX_FILES && fh[fd].file != NULL && !fh[fd].dir)
-        return fh[fd].file->size;
+    /* Check that the fd is invalid or a dir */
+    if(ramdisk_fd_invalid(fd) || fh[fd].dir) return -1;
 
-    return -1;
+    return fh[fd].file->size;
 }
 
 /* Read a directory entry */
@@ -521,30 +523,30 @@ static dirent_t *ramdisk_readdir(void * h) {
 
     mutex_lock_scoped(&rd_mutex);
 
-    if(fd < FS_RAMDISK_MAX_FILES && fh[fd].file != NULL && fh[fd].ptr != 0 && fh[fd].dir) {
-        /* Find the current file and advance to the next */
-        f = (rd_file_t *)fh[fd].ptr;
-        fh[fd].ptr = (uint32_t)LIST_NEXT(f, dirlist);
-
-        /* Copy out the requested data */
-        strcpy(fh[fd].dirent.name, f->name);
-        fh[fd].dirent.time = 0;
-
-        if(f->type == STAT_TYPE_DIR) {
-            fh[fd].dirent.attr = O_DIR;
-            fh[fd].dirent.size = -1;
-        }
-        else {
-            fh[fd].dirent.attr = 0;
-            fh[fd].dirent.size = f->size;
-        }
-
-        return &fh[fd].dirent;
-    }
-    else {
+    /* Check that the fd is invalid or NOT a dir */
+    if(ramdisk_fd_invalid(fd) || !fh[fd].dir) {
         errno = EBADF;
         return NULL;
     }
+
+    /* Find the current file and advance to the next */
+    f = (rd_file_t *)fh[fd].ptr;
+    fh[fd].ptr = (uint32_t)LIST_NEXT(f, dirlist);
+
+    /* Copy out the requested data */
+    strcpy(fh[fd].dirent.name, f->name);
+    fh[fd].dirent.time = 0;
+
+    if(f->type == STAT_TYPE_DIR) {
+        fh[fd].dirent.attr = O_DIR;
+        fh[fd].dirent.size = -1;
+    }
+    else {
+        fh[fd].dirent.attr = 0;
+        fh[fd].dirent.size = f->size;
+    }
+
+    return &fh[fd].dirent;
 }
 
 static int ramdisk_unlink(vfs_handler_t * vfs, const char *fn) {
@@ -582,10 +584,10 @@ static void * ramdisk_mmap(void * h) {
 
     mutex_lock_scoped(&rd_mutex);
 
-    if(fd < FS_RAMDISK_MAX_FILES && fh[fd].file != NULL && !fh[fd].dir)
-        return fh[fd].file->data;
+    /* Check that the fd is invalid or a dir */
+    if(ramdisk_fd_invalid(fd) || fh[fd].dir) return NULL;
 
-    return NULL;
+    return fh[fd].file->data;
 }
 
 static int ramdisk_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
@@ -639,7 +641,8 @@ static int ramdisk_fcntl(void *h, int cmd, va_list ap) {
 
     mutex_lock_scoped(&rd_mutex);
 
-    if(fd >= FS_RAMDISK_MAX_FILES || !fh[fd].file) {
+    /* Check that the fd is invalid */
+    if(ramdisk_fd_invalid(fd)) {
         errno = EBADF;
         return -1;
     }
@@ -664,7 +667,8 @@ static int ramdisk_rewinddir(void * h) {
 
     mutex_lock_scoped(&rd_mutex);
 
-    if(fd >= FS_RAMDISK_MAX_FILES || !fh[fd].file || !fh[fd].dir) {
+    /* Check that the fd is invalid or NOT a dir */
+    if(ramdisk_fd_invalid(fd) || !fh[fd].dir) {
         errno = EBADF;
         return -1;
     }
@@ -681,7 +685,8 @@ static int ramdisk_fstat(void *h, struct stat *st) {
 
     mutex_lock_scoped(&rd_mutex);
 
-    if(fd >= FS_RAMDISK_MAX_FILES || !fh[fd].file) {
+    /* Check that the fd is invalid */
+    if(ramdisk_fd_invalid(fd)) {
         errno = EBADF;
         return -1;
     }
