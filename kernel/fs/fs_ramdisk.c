@@ -53,7 +53,7 @@ char *strdup(const char *);
 
 /* File definition */
 typedef struct rd_file {
-    char    * name;     /* File name -- allocated */
+    char      *name;    /* File name -- allocated */
     uint32_t  size;     /* Actual file size */
     int type;       /* File type */
     int openfor;    /* Lock constant */
@@ -68,7 +68,7 @@ typedef struct rd_file {
       - In directories, this is just a pointer to an rd_dir struct,
         which is defined below. datasize has no meaning for a
         directory. */
-    void    * data;     /* Data block pointer */
+    void      *data;    /* Data block pointer */
     uint32_t  datasize; /* Size of data block pointer */
 
     LIST_ENTRY(rd_file) dirlist;    /* Directory list entry */
@@ -122,9 +122,9 @@ static rd_file_t *ramdisk_find(rd_dir_t *parent, const char *name, size_t namele
 
 /* Find a path-named file in the ramdisk. There should not be a
    slash at the beginning, nor at the end. Assumes we hold rd_mutex. */
-static rd_file_t * ramdisk_find_path(rd_dir_t * parent, const char * fn, int dir) {
-    rd_file_t * f = NULL;
-    char * cur;
+static rd_file_t *ramdisk_find_path(rd_dir_t *parent, const char *fn, int dir) {
+    rd_file_t *f = NULL;
+    char *cur;
 
     /* If the object is in a sub-tree, traverse the tree looking
        for the right directory */
@@ -167,10 +167,10 @@ static rd_file_t * ramdisk_find_path(rd_dir_t * parent, const char * fn, int dir
 }
 
 /* Find the parent directory and file name in the path-named file */
-static int ramdisk_get_parent(rd_dir_t * parent, const char * fn, rd_dir_t ** dout, const char **fnout) {
-    const char  * p;
-    char        * pname;
-    rd_file_t   * f;
+static int ramdisk_get_parent(rd_dir_t *parent, const char *fn, rd_dir_t **dout, const char **fnout) {
+    const char  *p;
+    char        *pname;
+    rd_file_t   *f;
 
     p = strrchr(fn, '/');
 
@@ -203,10 +203,10 @@ static int ramdisk_get_parent(rd_dir_t * parent, const char * fn, rd_dir_t ** do
 
 /* Create a path-named file in the ramdisk. There should not be a
    slash at the beginning, nor at the end. Assumes we hold rd_mutex. */
-static rd_file_t * ramdisk_create_file(rd_dir_t * parent, const char * fn, int dir) {
-    rd_file_t   * f;
-    rd_dir_t    * pdir;
-    const char  * p;
+static rd_file_t *ramdisk_create_file(rd_dir_t *parent, const char *fn, int dir) {
+    rd_file_t   *f;
+    rd_dir_t    *pdir;
+    const char  *p;
 
     /* First, find the parent dir */
     if(ramdisk_get_parent(parent, fn, &pdir, &p) < 0)
@@ -248,7 +248,7 @@ static rd_file_t * ramdisk_create_file(rd_dir_t * parent, const char * fn, int d
 }
 
 /* Open a file or directory */
-static void * ramdisk_open(vfs_handler_t * vfs, const char *fn, int mode) {
+static void *ramdisk_open(vfs_handler_t *vfs, const char *fn, int mode) {
     file_t      fd = -1;
     rd_file_t   *f;
     int     mm = mode & O_MODE_MASK;
@@ -360,7 +360,7 @@ error_out:
 }
 
 /* Close a file or directory */
-static int ramdisk_close(void * h) {
+static int ramdisk_close(void *h) {
     rd_file_t   *f;
     file_t      fd = (file_t)h;
 
@@ -385,7 +385,7 @@ static int ramdisk_close(void * h) {
 }
 
 /* Read from a file */
-static ssize_t ramdisk_read(void * h, void *buf, size_t bytes) {
+static ssize_t ramdisk_read(void *h, void *buf, size_t bytes) {
     file_t  fd = (file_t)h;
 
     mutex_lock_scoped(&rd_mutex);
@@ -405,7 +405,7 @@ static ssize_t ramdisk_read(void * h, void *buf, size_t bytes) {
 }
 
 /* Write to a file */
-static ssize_t ramdisk_write(void * h, const void *buf, size_t bytes) {
+static ssize_t ramdisk_write(void *h, const void *buf, size_t bytes) {
     file_t  fd = (file_t)h;
 
     mutex_lock_scoped(&rd_mutex);
@@ -419,7 +419,7 @@ static ssize_t ramdisk_write(void * h, const void *buf, size_t bytes) {
     /* Is there enough left? */
     if((fh[fd].ptr + bytes) > fh[fd].file->datasize) {
         /* We need to realloc the block */
-        void * np = realloc(fh[fd].file->data, (fh[fd].ptr + bytes) + 4096);
+        void *np = realloc(fh[fd].file->data, (fh[fd].ptr + bytes) + 4096);
 
         if(np == NULL)
             return -1;
@@ -440,7 +440,7 @@ static ssize_t ramdisk_write(void * h, const void *buf, size_t bytes) {
 }
 
 /* Seek elsewhere in a file */
-static off_t ramdisk_seek(void * h, off_t offset, int whence) {
+static off_t ramdisk_seek(void *h, off_t offset, int whence) {
     file_t  fd = (file_t)h;
 
     mutex_lock_scoped(&rd_mutex);
@@ -493,7 +493,7 @@ static off_t ramdisk_seek(void * h, off_t offset, int whence) {
 }
 
 /* Tell where in the file we are */
-static off_t ramdisk_tell(void * h) {
+static off_t ramdisk_tell(void *h) {
     file_t  fd = (file_t)h;
 
     mutex_lock_scoped(&rd_mutex);
@@ -505,7 +505,7 @@ static off_t ramdisk_tell(void * h) {
 }
 
 /* Tell how big the file is */
-static size_t ramdisk_total(void * h) {
+static size_t ramdisk_total(void *h) {
     file_t  fd = (file_t)h;
 
     mutex_lock_scoped(&rd_mutex);
@@ -517,8 +517,8 @@ static size_t ramdisk_total(void * h) {
 }
 
 /* Read a directory entry */
-static dirent_t *ramdisk_readdir(void * h) {
-    rd_file_t   * f;
+static dirent_t *ramdisk_readdir(void *h) {
+    rd_file_t   *f;
     file_t      fd = (file_t)h;
 
     mutex_lock_scoped(&rd_mutex);
@@ -549,8 +549,8 @@ static dirent_t *ramdisk_readdir(void * h) {
     return &fh[fd].dirent;
 }
 
-static int ramdisk_unlink(vfs_handler_t * vfs, const char *fn) {
-    rd_file_t   * f;
+static int ramdisk_unlink(vfs_handler_t *vfs, const char *fn) {
+    rd_file_t    *f;
     int     rv = -1;
 
     (void)vfs;
@@ -579,7 +579,7 @@ static int ramdisk_unlink(vfs_handler_t * vfs, const char *fn) {
     return rv;
 }
 
-static void * ramdisk_mmap(void * h) {
+static void *ramdisk_mmap(void *h) {
     file_t  fd = (file_t)h;
 
     mutex_lock_scoped(&rd_mutex);
@@ -662,7 +662,7 @@ static int ramdisk_fcntl(void *h, int cmd, va_list ap) {
     }
 }
 
-static int ramdisk_rewinddir(void * h) {
+static int ramdisk_rewinddir(void *h) {
     file_t fd = (file_t)h;
 
     mutex_lock_scoped(&rd_mutex);
@@ -755,7 +755,7 @@ static vfs_handler_t vh = {
 /* Attach a piece of memory to a file. This works somewhat like open for
    writing, but it doesn't actually attach the file to an fd, and it starts
    out with data instead of being blank. */
-int fs_ramdisk_attach(const char * fn, void * obj, size_t size) {
+int fs_ramdisk_attach(const char *fn, void *obj, size_t size) {
     void        *fd;
     rd_file_t   *f;
 
@@ -780,7 +780,7 @@ int fs_ramdisk_attach(const char * fn, void * obj, size_t size) {
 }
 
 /* Does the opposite of attach. This again piggybacks on open. */
-int fs_ramdisk_detach(const char * fn, void ** obj, size_t * size) {
+int fs_ramdisk_detach(const char *fn, void **obj, size_t *size) {
     void        *fd;
     rd_file_t   *f;
 
