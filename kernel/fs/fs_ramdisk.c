@@ -865,14 +865,11 @@ void fs_ramdisk_shutdown(void) {
 
     /* For now assume there's only the root dir, since mkdir and
        rmdir aren't even implemented... */
-    f1 = LIST_FIRST(rootdir);
-
-    while(f1) {
-        f2 = LIST_NEXT(f1, dirlist);
+    LIST_FOREACH_SAFE(f1, rootdir, dirlist, f2) {
+        LIST_REMOVE(f1, dirlist);
         free(f1->name);
         free(f1->data);
         free(f1);
-        f1 = f2;
     }
 
     free(rootdir);
