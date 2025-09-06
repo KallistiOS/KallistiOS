@@ -56,9 +56,9 @@ char *strdup(const char *);
 typedef struct rd_file {
     char      *name;    /* File name -- allocated */
     uint32_t  size;     /* Actual file size */
-    int type;       /* File type */
-    int openfor;    /* Lock constant */
-    int usage;      /* Usage count (unopened is 0) */
+    bool      isdir;    /* Dir or not */
+    int       openfor;  /* Lock constant */
+    int       usage;    /* Usage count (unopened is 0) */
 
     /* For the following two members:
       - In files, this is a block of allocated memory containing the
@@ -136,7 +136,7 @@ static rd_file_t *ramdisk_find_path(rd_dir_t *parent, const char *fn, bool dir) 
                itself, something is wrong. */
             f = ramdisk_find(parent, fn, cur - fn);
 
-            if(f == NULL || f->type != STAT_TYPE_DIR)
+            if(f == NULL || !f->isdir)
                 return NULL;
 
             /* Pull out the rd_dir_t pointer */
@@ -155,7 +155,7 @@ static rd_file_t *ramdisk_find_path(rd_dir_t *parent, const char *fn, bool dir) 
     if(fn[0] != 0) {
         f = ramdisk_find(parent, fn, strlen(fn));
 
-        if((f == NULL) || (!dir && f->type == STAT_TYPE_DIR) || (dir && f->type != STAT_TYPE_DIR))
+        if((f == NULL) || (!dir && f->isdir) || (dir && !f->isdir))
             return NULL;
     }
     else {
@@ -224,7 +224,7 @@ static rd_file_t *ramdisk_create_file(rd_dir_t *parent, const char *fn, bool dir
     }
 
     f->size = 0;
-    f->type = dir ? STAT_TYPE_DIR : STAT_TYPE_FILE;
+    f->isdir = dir;
     f->openfor = OPENFOR_NOTHING;
     f->usage = 0;
 
@@ -289,7 +289,7 @@ static void *ramdisk_open(vfs_handler_t *vfs, const char *fn, int mode) {
     }
 
     /* Check for more stupid things */
-    if(f->type == STAT_TYPE_DIR && (!(mode & O_DIR) || mm != O_RDONLY))
+    if(f->isdir && (!(mode & O_DIR) || mm != O_RDONLY))
         goto error_out;
 
     /* Find a free file handle */
@@ -538,7 +538,7 @@ static dirent_t *ramdisk_readdir(void *h) {
     strcpy(fh[fd].dirent.name, f->name);
     fh[fd].dirent.time = 0;
 
-    if(f->type == STAT_TYPE_DIR) {
+    if(f->isdir) {
         fh[fd].dirent.attr = O_DIR;
         fh[fd].dirent.size = -1;
     }
@@ -622,10 +622,10 @@ static int ramdisk_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
     memset(st, 0, sizeof(struct stat));
     st->st_dev = (dev_t)('r' | ('a' << 8) | ('m' << 16));
     st->st_mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
-    st->st_mode |= (f->type == STAT_TYPE_DIR) ? 
+    st->st_mode |= (f->isdir) ?
         (S_IFDIR | S_IXUSR | S_IXGRP | S_IXOTH) : S_IFREG;
-    st->st_size = (f->type == STAT_TYPE_DIR) ? -1 : (int)f->datasize;
-    st->st_nlink = (f->type == STAT_TYPE_DIR) ? 2 : 1;
+    st->st_size = (f->isdir) ? -1 : (int)f->datasize;
+    st->st_nlink = (f->isdir) ? 2 : 1;
     st->st_blksize = 1024;
     st->st_blocks = f->datasize >> 10;
 
@@ -699,9 +699,9 @@ static int ramdisk_fstat(void *h, struct stat *st) {
     memset(st, 0, sizeof(struct stat));
     st->st_dev = (dev_t)('r' | ('a' << 8) | ('m' << 16));
     st->st_mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
-    st->st_mode |= (f->type == STAT_TYPE_DIR) ? S_IFDIR : S_IFREG;
-    st->st_size = (f->type == STAT_TYPE_DIR) ? -1 : (int)f->datasize;
-    st->st_nlink = (f->type == STAT_TYPE_DIR) ? 2 : 1;
+    st->st_mode |= (f->isdir) ? S_IFDIR : S_IFREG;
+    st->st_size = (f->isdir) ? -1 : (int)f->datasize;
+    st->st_nlink = (f->isdir) ? 2 : 1;
     st->st_blksize = 1024;
     st->st_blocks = f->datasize >> 10;
 
@@ -838,7 +838,7 @@ void fs_ramdisk_init(void) {
     }
 
     root->size = 0;
-    root->type = STAT_TYPE_DIR;
+    root->isdir = true;
     root->openfor = OPENFOR_NOTHING;
     root->usage = 0;
     root->data = rootdir;
