@@ -103,6 +103,9 @@ static struct {
 /* Mutex for file system structs */
 static mutex_t rd_mutex;
 
+/* Data used for stat->st_dev's dev_t */
+static const dev_t rd_dev = (dev_t)('r' | ('a' << 8) | ('m' << 16));
+
 /* Test if an file_t is invalid, presumes mutex is already held. */
 static inline bool ramdisk_fd_invalid(file_t fd) {
     return((fd >= FS_RAMDISK_MAX_FILES) || (!fh[fd].file));
@@ -602,7 +605,7 @@ static int ramdisk_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
     /* Root directory of ramdisk */
     if(len == 0 || (len == 1 && *path == '/')) {
         memset(st, 0, sizeof(struct stat));
-        st->st_dev = (dev_t)('r' | ('a' << 8) | ('m' << 16));
+        st->st_dev = rd_dev;
         st->st_mode = S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO;
         st->st_size = -1;
         st->st_nlink = 2;
@@ -620,7 +623,7 @@ static int ramdisk_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
     }
 
     memset(st, 0, sizeof(struct stat));
-    st->st_dev = (dev_t)('r' | ('a' << 8) | ('m' << 16));
+    st->st_dev = rd_dev;
     st->st_mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
     st->st_mode |= (f->isdir) ?
         (S_IFDIR | S_IXUSR | S_IXGRP | S_IXOTH) : S_IFREG;
@@ -697,7 +700,7 @@ static int ramdisk_fstat(void *h, struct stat *st) {
 
     /* Fill in the structure. */
     memset(st, 0, sizeof(struct stat));
-    st->st_dev = (dev_t)('r' | ('a' << 8) | ('m' << 16));
+    st->st_dev = rd_dev;
     st->st_mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
     st->st_mode |= (f->isdir) ? S_IFDIR : S_IFREG;
     st->st_size = (f->isdir) ? -1 : (int)f->datasize;
