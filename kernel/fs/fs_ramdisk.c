@@ -38,6 +38,7 @@ cache data from disk rather than as a general purpose file system.
 
 #include <string.h>
 #include <strings.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -122,7 +123,7 @@ static rd_file_t *ramdisk_find(rd_dir_t *parent, const char *name, size_t namele
 
 /* Find a path-named file in the ramdisk. There should not be a
    slash at the beginning, nor at the end. Assumes we hold rd_mutex. */
-static rd_file_t *ramdisk_find_path(rd_dir_t *parent, const char *fn, int dir) {
+static rd_file_t *ramdisk_find_path(rd_dir_t *parent, const char *fn, bool dir) {
     rd_file_t *f = NULL;
     char *cur;
 
@@ -187,7 +188,7 @@ static int ramdisk_get_parent(rd_dir_t *parent, const char *fn, rd_dir_t **dout,
         strncpy(pname, fn, p - fn);
         pname[p - fn] = 0;
 
-        f = ramdisk_find_path(parent, pname, 1);
+        f = ramdisk_find_path(parent, pname, true);
         free(pname);
 
         if(!f)
@@ -203,7 +204,7 @@ static int ramdisk_get_parent(rd_dir_t *parent, const char *fn, rd_dir_t **dout,
 
 /* Create a path-named file in the ramdisk. There should not be a
    slash at the beginning, nor at the end. Assumes we hold rd_mutex. */
-static rd_file_t *ramdisk_create_file(rd_dir_t *parent, const char *fn, int dir) {
+static rd_file_t *ramdisk_create_file(rd_dir_t *parent, const char *fn, bool dir) {
     rd_file_t   *f;
     rd_dir_t    *pdir;
     const char  *p;
@@ -558,7 +559,7 @@ static int ramdisk_unlink(vfs_handler_t *vfs, const char *fn) {
     mutex_lock_scoped(&rd_mutex);
 
     /* Find the file */
-    f = ramdisk_find_path(rootdir, fn, 0);
+    f = ramdisk_find_path(rootdir, fn, false);
 
     if(f) {
         /* Make sure it's not in use */
@@ -612,7 +613,7 @@ static int ramdisk_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
     mutex_lock_scoped(&rd_mutex);
 
     /* Find the file */
-    f = ramdisk_find_path(rootdir, path, 0);
+    f = ramdisk_find_path(rootdir, path, false);
     if(!f) {
         errno = ENOENT;
         return -1;
