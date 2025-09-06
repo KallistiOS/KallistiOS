@@ -27,6 +27,7 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
+#include <kos/regfield.h>
 #include <stdint.h>
 #include <kos/regfield.h>
 
@@ -126,6 +127,15 @@ __BEGIN_DECLS
 */
 #define CONT_RESET_BUTTONS  (CONT_A | CONT_B | CONT_X | CONT_Y | CONT_START)
 
+/** \brief   All controller buttons at once
+    \ingroup controller_inputs
+
+    Convenience macro providing all buttons pressed at once.
+    This can be used in conjunction with CONT_CB_ANY to match
+    any button press.
+*/
+#define CONT_ALL            (GENMASK(15,0))
+
 /** \brief   Controller state structure.
     \ingroup controller_inputs
 
@@ -175,6 +185,8 @@ typedef struct cont_state {
     int joyy;     /**< \brief Main joystick y-axis value. */
     int joy2x;    /**< \brief Secondary joystick x-axis value. */
     int joy2y;    /**< \brief Secondary joystick y-axis value. */
+
+    uint64_t last_press;    /**< \brief Timestamp of last button press in ms. */
 } cont_state_t;
 
 /** \brief   Controller automatic callback type.
@@ -198,7 +210,7 @@ typedef void (*cont_btn_callback_t)(uint8_t addr, uint32_t btns);
     \ingroup controller_inputs
 
     This function sets a callback function to be called when the specified
-    controller has the set of buttons given pressed.
+    controller has the set of buttons given pressed or special events.
 
     \note 
     The callback gets invoked for the given maple port; however, providing
@@ -211,12 +223,28 @@ typedef void (*cont_btn_callback_t)(uint8_t addr, uint32_t btns);
 
     \param  addr            The controller to listen on (or 0 for all ports). 
                             This value can be obtained by using maple_addr().
-    \param  btns            The buttons bitmask to match.
+    \param  btns            The buttons bitmask to match. May also be a special
+                            event code.
     \param  cb              The callback to call when the buttons are pressed.
                             Passing NULL will uninstall all callbacks on the
                             addr/btns combination.
+
+    \sa controller_cb_events
 */
 int cont_btn_callback(uint8_t addr, uint32_t btns, cont_btn_callback_t cb);
+
+/** \defgroup controller_cb_events Events
+    \brief    Controller Callback Events
+    \ingroup  controller_inputs
+
+    A set of special event codes sent in the top 16 bits of the btns
+    param of cont_btn_callback.
+
+    @{
+*/
+#define CONT_CB_ANY         BIT(16)      /**< \brief Match if any passed button pressed. */
+#define CONT_CB_TIMEOUT(x)  ((CONT_ALL & x) | BIT(17))  /**< \brief Match if no button pressed in x ms. */
+/** @} */
 
 /** \defgroup controller_query_caps Querying Capabilities
     \brief    API used to query for a controller's capabilities
