@@ -25,7 +25,7 @@
 #include <dc/pvr.h>
 #include <dc/vmufs.h>
 #include <dc/syscalls.h>
-#include <dc/wdt.h>
+#include <dc/dcload.h>
 
 #include "initall_hdrs.h"
 
@@ -128,7 +128,7 @@ KOS_INIT_FLAG_WEAK(fs_iso9660_init, true);
 KOS_INIT_FLAG_WEAK(fs_iso9660_shutdown, true);
 
 void dcload_init(void) {
-    if (*DCLOADMAGICADDR == DCLOADMAGICVALUE) {
+    if (syscall_dcload_detected()) {
         dbglog(DBG_INFO, "dc-load console support enabled\n");
         fs_dcload_init();
     }

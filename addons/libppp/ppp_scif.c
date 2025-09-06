@@ -80,7 +80,7 @@ static ppp_device_t scif_dev = {
 int ppp_scif_init(int bps) {
     /* Make sure we're not using dcload-serial. If we are, we really shouldn't
        take over the serial port from it. */
-    if(*DCLOADMAGICADDR == DCLOADMAGICVALUE && dcload_type == DCLOAD_TYPE_SER) {
+    if(dcload_type == DCLOAD_TYPE_SER) {
         dbglog(DBG_KDEBUG, "ppp_scif_init: aborting -- using dcload-serial.\n");
         return -1;
     }
