@@ -94,10 +94,10 @@ static rd_dir_t  *rootdir = NULL;
    too lazy right now. =) */
 static struct {
     rd_file_t   *file;      /* ramdisk file struct */
-    int         dir;        /* >0 if a directory */
-    int         omode;      /* Open mode */
     uintptr_t   ptr;        /* Current read position in bytes */
+    int         omode;      /* Open mode */
     dirent_t    dirent;     /* A static dirent to pass back to clients */
+    bool        dir;        /* true if a directory */
 } fh[FS_RAMDISK_MAX_FILES];
 
 /* Mutex for file system structs */
@@ -312,7 +312,7 @@ static void *ramdisk_open(vfs_handler_t *vfs, const char *fn, int mode) {
 
     /* Fill the basic fd structure */
     fh[fd].file = f;
-    fh[fd].dir = mode & O_DIR;
+    fh[fd].dir = !!(mode & O_DIR);
     fh[fd].omode = mode;
 
     /* The rest require a bit more thought */
