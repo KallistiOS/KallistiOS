@@ -106,6 +106,9 @@ static mutex_t rd_mutex;
 /* Data used for stat->st_dev's dev_t */
 static const dev_t rd_dev = (dev_t)('r' | ('a' << 8) | ('m' << 16));
 
+/* Data used for stat->st_blksize's blksize_t */
+static const blksize_t rd_blksize = 1024;
+
 /* Test if an file_t is invalid, presumes mutex is already held. */
 static inline bool ramdisk_fd_invalid(file_t fd) {
     return((fd >= FS_RAMDISK_MAX_FILES) || (!fh[fd].file));
@@ -232,8 +235,9 @@ static rd_file_t *ramdisk_create_file(rd_dir_t *parent, const char *fn, bool dir
     f->usage = 0;
 
     if(!dir) {
-        f->data = malloc(1024);
-        f->datasize = 1024;
+        /* Initial file is one block */
+        f->datasize = rd_blksize;
+        f->data = malloc(f->datasize);
     }
     else {
         f->data = malloc(sizeof(rd_dir_t));
@@ -331,8 +335,8 @@ static void *ramdisk_open(vfs_handler_t *vfs, const char *fn, int mode) {
         /* If we're opening with O_TRUNC, kill the existing contents */
         else if(mode & O_TRUNC) {
             free(f->data);
-            f->data = malloc(1024);
-            f->datasize = 1024;
+            f->datasize = rd_blksize;
+            f->data = malloc(f->datasize);
             f->size = 0;
             fh[fd].ptr = 0;
         }
@@ -423,13 +427,13 @@ static ssize_t ramdisk_write(void *h, const void *buf, size_t bytes) {
     /* Is there enough left? */
     if((fh[fd].ptr + bytes) > fh[fd].file->datasize) {
         /* We need to realloc the block */
-        void *np = realloc(fh[fd].file->data, (fh[fd].ptr + bytes) + 4096);
+        void *np = realloc(fh[fd].file->data, (fh[fd].ptr + bytes) + (rd_blksize * 4));
 
         if(np == NULL)
             return -1;
 
         fh[fd].file->data = np;
-        fh[fd].file->datasize = (fh[fd].ptr + bytes) + 4096;
+        fh[fd].file->datasize = (fh[fd].ptr + bytes) + (rd_blksize * 4);
     }
 
     /* Copy out the requested amount */
@@ -629,11 +633,8 @@ static int ramdisk_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
         (S_IFDIR | S_IXUSR | S_IXGRP | S_IXOTH) : S_IFREG;
     st->st_size = (f->isdir) ? -1 : (int)f->datasize;
     st->st_nlink = (f->isdir) ? 2 : 1;
-    st->st_blksize = 1024;
-    st->st_blocks = f->datasize >> 10;
-
-    if(f->datasize & 0x3ff)
-        ++st->st_blocks;
+    st->st_blksize = rd_blksize;
+    st->st_blocks = __align_up(f->datasize, rd_blksize) / rd_blksize;
 
     return 0;
 }
@@ -705,11 +706,8 @@ static int ramdisk_fstat(void *h, struct stat *st) {
     st->st_mode |= (f->isdir) ? S_IFDIR : S_IFREG;
     st->st_size = (f->isdir) ? -1 : (int)f->datasize;
     st->st_nlink = (f->isdir) ? 2 : 1;
-    st->st_blksize = 1024;
-    st->st_blocks = f->datasize >> 10;
-
-    if(f->datasize & 0x3ff)
-        ++st->st_blocks;
+    st->st_blksize = rd_blksize;
+    st->st_blocks = __align_up(f->datasize, rd_blksize) / rd_blksize;
 
     return 0;
 }
