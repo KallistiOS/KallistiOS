@@ -188,8 +188,10 @@ static int ramdisk_get_parent(rd_dir_t *parent, const char *fn, rd_dir_t **dout,
     else {
         pname = (char *)malloc((p - fn) + 1);
 
-        if(!pname)
+        if(!pname) {
+            errno = ENOMEM;
             return -2;
+        }
 
         strncpy(pname, fn, p - fn);
         pname[p - fn] = 0;
@@ -197,8 +199,10 @@ static int ramdisk_get_parent(rd_dir_t *parent, const char *fn, rd_dir_t **dout,
         f = ramdisk_find_path(parent, pname, true);
         free(pname);
 
-        if(!f)
+        if(!f) {
+            errno = ENOENT;
             return -1;
+        }
 
         *dout = (rd_dir_t *)f->data;
         *fnout = p + 1;
@@ -220,12 +224,15 @@ static rd_file_t *ramdisk_create_file(rd_dir_t *parent, const char *fn, bool dir
         return NULL;
 
     /* Now add a file to the parent */
-    if(!(f = (rd_file_t *)malloc(sizeof(rd_file_t))))
+    if(!(f = (rd_file_t *)malloc(sizeof(rd_file_t)))) {
+        errno = ENOMEM;
         return NULL;
+    }
 
     f->name = strdup(p);
     if(f->name == NULL) {
         free(f);
+        errno = ENOMEM;
         return NULL;
     }
 
@@ -247,6 +254,7 @@ static rd_file_t *ramdisk_create_file(rd_dir_t *parent, const char *fn, bool dir
     if(f->data == NULL) {
         free(f->name);
         free(f);
+        errno = ENOMEM;
         return NULL;
     }
 
@@ -269,8 +277,10 @@ static void *ramdisk_open(vfs_handler_t *vfs, const char *fn, int mode) {
     mutex_lock_scoped(&rd_mutex);
 
     /* Are we trying to do something stupid? */
-    if((mode & O_DIR) && mm != O_RDONLY)
+    if((mode & O_DIR) && mm != O_RDONLY) {
+        errno = EISDIR;
         goto error_out;
+    }
 
     /* Look for the file */
     assert(root != NULL);
@@ -282,7 +292,7 @@ static void *ramdisk_open(vfs_handler_t *vfs, const char *fn, int mode) {
         f = ramdisk_find_path(rootdir, fn, mode & O_DIR);
 
         if(f == NULL) {
-            /* Are we planning to write anyway? */
+            /* Are we planning to write to a file anyway? */
             if(mm != O_RDONLY && !(mode & O_DIR)) {
                 /* Create a new file */
                 f = ramdisk_create_file(rootdir, fn, mode & O_DIR);
@@ -290,14 +300,19 @@ static void *ramdisk_open(vfs_handler_t *vfs, const char *fn, int mode) {
                 if(f == NULL)
                     goto error_out;
             }
-            else
+            /* Must be read only mode as we tested for non-read DIR earlier. */
+            else /* if(mm == O_RDONLY) */ {
+                errno = ENOENT;
                 goto error_out;
+            }
         }
     }
 
-    /* Check for more stupid things */
-    if(f->isdir && (!(mode & O_DIR) || mm != O_RDONLY))
+    /* Did we ask for a dir as a file? */
+    if(f->isdir && !(mode & O_DIR)) {
+        errno = EINVAL;
         goto error_out;
+    }
 
     /* Find a free file handle */
     for(fd = 1; fd < FS_RAMDISK_MAX_FILES; fd++)
@@ -307,6 +322,7 @@ static void *ramdisk_open(vfs_handler_t *vfs, const char *fn, int mode) {
     /* Did we find it? */
     if(fd >= FS_RAMDISK_MAX_FILES) {
         fd = -1;
+        errno = EMFILE;
         goto error_out;
     }
 
@@ -375,7 +391,10 @@ static int ramdisk_close(void *h) {
     mutex_lock_scoped(&rd_mutex);
 
     /* Check that the fd is invalid */
-    if(ramdisk_fd_invalid(fd)) return 0;
+    if(ramdisk_fd_invalid(fd)) {
+        errno = EBADF;
+        return 0;
+    }
 
     f = fh[fd].file;
     fh[fd].file = NULL;
@@ -399,7 +418,10 @@ static ssize_t ramdisk_read(void *h, void *buf, size_t bytes) {
     mutex_lock_scoped(&rd_mutex);
 
     /* Check that the fd is invalid or a dir */
-    if(ramdisk_fd_invalid(fd) || fh[fd].dir) return (ssize_t)-1;
+    if(ramdisk_fd_invalid(fd) || fh[fd].dir) {
+        errno = EBADF;
+        return (ssize_t)-1;
+    }
 
     /* Is there enough left? */
     if((fh[fd].ptr + bytes) > fh[fd].file->size)
@@ -418,19 +440,22 @@ static ssize_t ramdisk_write(void *h, const void *buf, size_t bytes) {
 
     mutex_lock_scoped(&rd_mutex);
 
-    /* Check that the fd is invalid or a dir */
-    if(ramdisk_fd_invalid(fd) || fh[fd].dir) return (ssize_t)-1;
-
-    /* Check that the fd is open for writing */
-    if(fh[fd].file->openfor != OPENFOR_WRITE) return (ssize_t)-1;
+    /* Check that the fd is invalid or a dir or not open for writing */
+    if(ramdisk_fd_invalid(fd) || fh[fd].dir ||
+        (fh[fd].file->openfor != OPENFOR_WRITE)) {
+        errno = EBADF;
+        return (ssize_t)-1;
+    }
 
     /* Is there enough left? */
     if((fh[fd].ptr + bytes) > fh[fd].file->datasize) {
         /* We need to realloc the block */
         void *np = realloc(fh[fd].file->data, (fh[fd].ptr + bytes) + (rd_blksize * 4));
 
-        if(np == NULL)
+        if(np == NULL) {
+            errno = ENOSPC;
             return -1;
+        }
 
         fh[fd].file->data = np;
         fh[fd].file->datasize = (fh[fd].ptr + bytes) + (rd_blksize * 4);
@@ -507,7 +532,10 @@ static off_t ramdisk_tell(void *h) {
     mutex_lock_scoped(&rd_mutex);
 
     /* Check that the fd is invalid or a dir */
-    if(ramdisk_fd_invalid(fd) || fh[fd].dir) return -1;
+    if(ramdisk_fd_invalid(fd) || fh[fd].dir) {
+        errno = EBADF;
+        return -1;
+    }
 
     return fh[fd].ptr;
 }
@@ -519,7 +547,10 @@ static size_t ramdisk_total(void *h) {
     mutex_lock_scoped(&rd_mutex);
 
     /* Check that the fd is invalid or a dir */
-    if(ramdisk_fd_invalid(fd) || fh[fd].dir) return -1;
+    if(ramdisk_fd_invalid(fd) || fh[fd].dir) {
+        errno = EBADF;
+        return -1;
+    }
 
     return fh[fd].file->size;
 }
@@ -559,7 +590,6 @@ static dirent_t *ramdisk_readdir(void *h) {
 
 static int ramdisk_unlink(vfs_handler_t *vfs, const char *fn) {
     rd_file_t    *f;
-    int     rv = -1;
 
     (void)vfs;
 
@@ -568,23 +598,29 @@ static int ramdisk_unlink(vfs_handler_t *vfs, const char *fn) {
     /* Find the file */
     f = ramdisk_find_path(rootdir, fn, false);
 
-    if(f) {
-        /* Make sure it's not in use */
-        if(f->usage == 0) {
-            /* Free its data */
-            free(f->name);
-            free(f->data);
-
-            /* Remove it from the parent list */
-            LIST_REMOVE(f, dirlist);
-
-            /* Free the entry itself */
-            free(f);
-            rv = 0;
-        }
+    /* No entry found to unlink */
+    if(!f) {
+        errno = ENOENT;
+        return -1;
     }
 
-    return rv;
+    /* Make sure it's not in use */
+    if(f->usage) {
+        errno = EBUSY;
+        return -1;
+    }
+
+    /* Free its data */
+    free(f->name);
+    free(f->data);
+
+    /* Remove it from the parent list */
+    LIST_REMOVE(f, dirlist);
+
+    /* Free the entry itself */
+    free(f);
+
+    return 0;
 }
 
 static void *ramdisk_mmap(void *h) {
