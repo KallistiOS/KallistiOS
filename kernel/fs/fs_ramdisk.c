@@ -94,7 +94,7 @@ static rd_dir_t  *rootdir = NULL;
    too lazy right now. =) */
 static struct {
     rd_file_t   *file;      /* ramdisk file struct */
-    int         dir;        /* >0 if a directory */
+    bool        dir;        /* true if a directory */
     uint32_t    ptr;        /* Current read position in bytes */
     dirent_t    dirent;     /* A static dirent to pass back to clients */
     int         omode;      /* Open mode */
@@ -312,7 +312,7 @@ static void *ramdisk_open(vfs_handler_t *vfs, const char *fn, int mode) {
 
     /* Fill the basic fd structure */
     fh[fd].file = f;
-    fh[fd].dir = mode & O_DIR;
+    fh[fd].dir = !!(mode & O_DIR);
     fh[fd].omode = mode;
 
     /* The rest require a bit more thought */
