@@ -838,9 +838,9 @@ int fs_ramdisk_detach(const char *fn, void **obj, size_t *size) {
     *size = f->size;
 
     /* Ditch the data block we had and replace it with a fake one. */
-    f->data = malloc(64);
-    f->datasize = 64;
-    f->size = 64;
+    f->data = NULL;
+    f->datasize = 0;
+    f->size = 0;
 
     /* Close the file */
     ramdisk_close(fd);
