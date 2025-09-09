@@ -2,6 +2,13 @@
 
 Platform-specific changes are prefixed with the platform name, otherwise the change is platform-independent. The name/initials of the person who is responsible for the change are listed in [square brackets] for most versions (where they are missing from early versions, assume that they should be attributed to Megan Potter).
 
+## KallistiOS version 2.2.1
+- **Dreamcast**: Fine-tune timer rate to avoid clock drift [Paul Cercueil == PC]
+- **Dreamcast**: Update keyboard LED/mod status handling, add new example to demonstrate [Troy Davis == GPF]
+- **Dreamcast**: Detect 3rd party memory cards and disable sending screen/clock commands to them [Donald Haase == DH]
+- **Dreamcast**: Support for 1st party rumble packs [DH]
+- **Dreamcast**: Various fixes and expansions to the cmake environment [Falco Girgis ==FG][PC]
+
 ## KallistiOS version 2.2.0
 - Added . & .. directories to filesystems that lack it [Andress Barajas == AB]
 - Replaced previous implementation of realpath() to remove license from AUTHORS [AB]

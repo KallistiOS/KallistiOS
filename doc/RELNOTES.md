@@ -4,6 +4,15 @@ Copyright (C) 2012-2019 Lawrence Sebald
 Copyright (C) 2024-2025 Donald Haase  
 Copyright (C) 2025 Eric Fradella  
 
+RELEASE NOTES for 2.2.1
+-----------------------
+
+This minor patch version is primarily aimed at fixing a bug in newlib that
+caused serious issues with dma reading. Alongside that ~20 PRs were included that
+contained minor bugfixes and cmake environment updates. Notably, issues reported
+with clock drift from the DC's SH4 clock should be fixed and 1st party rumble
+packs are now supported.
+
 RELEASE NOTES for 2.2.0
 -----------------------
 
