@@ -14,13 +14,11 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <errno.h>
+#include <time.h>
 
 #include <dc/sd.h>
 #include <dc/maple.h>
 #include <dc/maple/controller.h>
-
-#include <arch/timer.h>
 
 #include <kos/init.h>
 #include <kos/dbgio.h>
@@ -59,8 +57,7 @@ static int run_speed_test(sd_interface_t interface, bool check_crc) {
         .check_crc = check_crc
     };
     kos_blockdev_t sd_dev;
-    uint64_t begin, end, timer, average;
-    uint64_t sum = 0;
+    clock_t begin, end, timer, average, sum = 0;
     uint8_t pt;
     int i;
 
@@ -80,7 +77,7 @@ static int run_speed_test(sd_interface_t interface, bool check_crc) {
     }
 
     for(i = 0; i < 10; i++) {
-        begin = timer_ms_gettime64();
+        begin = clock();
 
         if(sd_dev.read_blocks(&sd_dev, 0, TEST_BLOCK_COUNT, tbuf)) {
             dbglog(DBG_ERROR, "couldn't read block: %s\n", strerror(errno));
@@ -88,14 +85,14 @@ static int run_speed_test(sd_interface_t interface, bool check_crc) {
             return -1;
         }
 
-        end = timer_ms_gettime64();
+        end = clock();
         timer = end - begin;
         sum += timer;
     }
 
-    average = sum / 10;
+    average = (sum / 10) / (CLOCKS_PER_SEC / 1000);
 
-    dbglog(DBG_INFO, "%s: read average took %llu ms (%.3f KB/sec)\n",
+    dbglog(DBG_INFO, "%s: read average took %lu ms (%.3f KB/sec)\n",
            interface_name, average, (512 * TEST_BLOCK_COUNT) / ((double)average));
 
     sd_shutdown();

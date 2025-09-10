@@ -3,12 +3,14 @@
    input code, and that we support render-to-texture mode. */
 
 #include <stdio.h>
-
-#include <arch/timer.h>
+#include <time.h>
 
 #include <dc/pvr.h>
 #include <dc/maple.h>
 #include <dc/maple/controller.h>
+
+/* 200 ms delay */
+static const long unsigned int button_delay = ((CLOCKS_PER_SEC * 200) / 1000);
 
 /* A little test program -- creates six rainbow polygons and
    moves them around over a white background. */
@@ -196,7 +198,7 @@ int main(int argc, char **argv) {
     maple_device_t *cont;
     cont_state_t *state;
     int finished = 0;
-    uint64_t timer = timer_ms_gettime64(), start, end;
+    clock_t timer = clock(), start, end;
     uint32_t counter = 0;
     pvr_stats_t stats;
 
@@ -207,7 +209,7 @@ int main(int argc, char **argv) {
 
     pvr_set_bg_color(1.0f, 1.0f, 1.0f);
 
-    start = timer_ms_gettime64();
+    start = clock();
 
     while(!finished) {
         cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
@@ -215,16 +217,16 @@ int main(int argc, char **argv) {
         if(cont != NULL) {
             state = (cont_state_t *) maple_dev_status(cont);
 
-            if(state != NULL && timer < timer_ms_gettime64()) {
+            if(state != NULL && timer < clock()) {
                 if(state->buttons & CONT_START)
                     finished = 1;
                 else if(state->buttons & CONT_A && (to_texture % 2) != 1) {
                     ++to_texture;
-                    timer = timer_ms_gettime64() + 200;
+                    timer = clock() + button_delay;
                 }
                 else if(state->buttons & CONT_B && to_texture) {
                     to_texture = 0;
-                    timer = timer_ms_gettime64() + 200;
+                    timer = clock() + button_delay;
                 }
             }
         }
@@ -239,10 +241,10 @@ int main(int argc, char **argv) {
         }
     }
 
-    end = timer_ms_gettime64();
+    end = clock();
 
-    printf("%lu frames in %llu ms = %f FPS\n", counter, end - start,
-           (double)(counter / ((float)end - start) * 1000.0f));
+    printf("%lu frames in %lu ms = %f FPS\n", counter, (end - start) / (CLOCKS_PER_SEC / 1000),
+           (double)(counter / ((float)(end - start) / CLOCKS_PER_SEC)));
 
     pvr_get_stats(&stats);
     printf("From pvr_get_stats:\n\tVBlank Count: %u\n\tFrame Count: %u\n",
