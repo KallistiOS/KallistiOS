@@ -5,9 +5,9 @@
 */
 
 #include <stdio.h>
+#include <time.h>
 
 #include <kos/dbgio.h>
-#include <arch/timer.h>
 
 #include <dc/biosfont.h>
 #include <dc/maple.h>
@@ -33,11 +33,14 @@
       Start buttons, generally.
 */
 
+/* 200 ms delay */
+static const long unsigned int button_delay = ((CLOCKS_PER_SEC * 200) / 1000);
+
 int main(int argc, char *argv[]) {
     int x, y, gun = 0;
     maple_device_t *dev;
     cont_state_t *state;
-    uint64_t last = 0, now;
+    clock_t last = 0, now;
 
     /* Do any printing to the screen and make it be black text on a white
        background (as much as we can anyway). I should eventually make it so you
@@ -57,7 +60,7 @@ int main(int argc, char *argv[]) {
     for(;;) {
         /* Wait for vblank... */
         vid_waitvbl();
-        now = timer_ms_gettime64();
+        now = clock();
 
         /* Blank the "play" area of the screen to white. */
         for(y = 0; y < 480; ++y) {
@@ -86,7 +89,7 @@ int main(int argc, char *argv[]) {
 
                 /* The light gun's trigger is mapped to the A button. See if the
                    user is pulling the trigger and enable the gun if needed. */
-                if((state->buttons & CONT_A) && last + 200 < now) {
+                if((state->buttons & CONT_A) && last + button_delay < now) {
                     maple_gun_enable(dev->port);
                     last = now;
                     gun = 1;
