@@ -13,11 +13,11 @@
    merged into the mutex type (when it was rewritten). */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <kos/thread.h>
 #include <kos/mutex.h>
 
-#include <arch/arch.h>
 #include <dc/maple.h>
 #include <dc/maple/controller.h>
 
@@ -93,14 +93,12 @@ void *thd2(void *param UNUSED) {
     return NULL;
 }
 
-KOS_INIT_FLAGS(INIT_DEFAULT);
-
 int main(int argc, char *argv[]) {
     kthread_t *t0, *t1, *t2;
 
     /* Exit if the user presses all buttons at once. */
     cont_btn_callback(0, CONT_START | CONT_A | CONT_B | CONT_X | CONT_Y,
-                      (cont_btn_callback_t)arch_exit);
+                      (cont_btn_callback_t)exit);
 
     printf("KallistiOS Recursive Lock test program\n");
 
@@ -116,11 +114,11 @@ int main(int argc, char *argv[]) {
 
     if(mutex_is_locked(&l)) {
         printf("Lock is still locked!\n");
-        arch_exit();
+        exit(EXIT_FAILURE);
     }
 
     mutex_destroy(&l);
 
     printf("Recursive lock tests completed successfully!\n");
-    return 0;
+    return EXIT_SUCCESS;
 }
