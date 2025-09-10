@@ -6,6 +6,9 @@
 
 TARGET = stackprotector.elf
 OBJS = stackprotector.o
+# Disable optimization that might avoid the overflow and the warning the intentional error would create
+KOS_CFLAGS += -O0 -Wno-stringop-overflow -Wno-analyzer-out-of-bounds
+# Force stack protector on
 KOS_CFLAGS += -fstack-protector-all
 KOS_GCCVER_MIN = 4.0.0
 
