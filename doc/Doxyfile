@@ -911,6 +911,16 @@ INPUT                  = $(KOS_BASE)/include \
                          $(KOS_BASE)/kernel/arch/$(KOS_ARCH)/include \
                          $(KOS_BASE)/addons/include \
                          $(KOS_BASE)/README.md \
+                         $(KOS_BASE)/doc/license/LICENSE.KOS \
+                         $(KOS_BASE)/doc/LICENSE.md \
+                         $(KOS_BASE)/doc/FAQ.md \
+                         $(KOS_BASE)/doc/CHANGELOG.md \
+                         $(KOS_BASE)/doc/README.md \
+                         $(KOS_BASE)/addons/readme.md \
+                         $(KOS_BASE)/utils/readme.md \
+                         $(KOS_BASE)/examples \
+                         $(KOS_BASE)/utils/dc-chain/README.md \
+                         $(KOS_BASE)/utils/dc-chain/doc \
                          $(KOS_BASE)/doc/pages
 
 # This tag can be used to specify the character encoding of the source files
