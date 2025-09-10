@@ -36,7 +36,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <arch/cache.h>
 
 #include <dc/pvr.h>
 #include <dc/maple.h>

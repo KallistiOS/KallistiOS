@@ -4,7 +4,6 @@
 
 #include <stdio.h>
 
-#include <arch/types.h>
 #include <arch/timer.h>
 
 #include <dc/pvr.h>

@@ -16,7 +16,6 @@
 #include <dc/g1ata.h>
 
 #include <arch/timer.h>
-#include <arch/types.h>
 
 #include <kos/dbglog.h>
 #include <kos/blockdev.h>
