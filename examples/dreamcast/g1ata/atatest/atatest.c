@@ -12,10 +12,9 @@
 #include <string.h>
 #include <stdint.h>
 #include <errno.h>
+#include <time.h>
 
 #include <dc/g1ata.h>
-
-#include <arch/timer.h>
 
 #include <kos/dbglog.h>
 #include <kos/blockdev.h>
@@ -26,7 +25,7 @@ static unsigned char tmp[512] __attribute__((aligned(32)));
 
 int main(int argc, char *argv[]) {
     kos_blockdev_t bd_pio, bd_dma;
-    uint64_t spio, epio, sdma, edma, timer;
+    clock_t spio, epio, sdma, edma, timer;
     uint8_t pt;
 
     dbglog(DBG_INFO, "Starting G1 ATA test program...\n");
@@ -55,29 +54,29 @@ int main(int argc, char *argv[]) {
     /* Read blocks 0 - 1023 by DMA and print out timing information. */
     dbglog(DBG_INFO, "Reading 1024 blocks by DMA!\n");
 
-    sdma = timer_ms_gettime64();
+    sdma = clock();
     if(bd_dma.read_blocks(&bd_dma, 0, 1024, dmabuf)) {
         dbglog(DBG_ERROR, "couldn't read block by DMA: %s\n", strerror(errno));
         return -1;
     }
-    edma = timer_ms_gettime64();
-    timer = edma - sdma;
+    edma = clock();
+    timer = (edma - sdma) / (CLOCKS_PER_SEC / 1000);
 
-    dbglog(DBG_INFO, "DMA read took %llu ms (%f MB/sec)\n", timer,
+    dbglog(DBG_INFO, "DMA read took %lu ms (%f MB/sec)\n", timer,
            (512 * 1024) / ((double)timer) / 1000.0);
 
     /* Read blocks 0 - 1023 by PIO and print out timing information. */
     dbglog(DBG_INFO, "Reading 1024 blocks by PIO!\n");
 
-    spio = timer_ms_gettime64();
+    spio = clock();
     if(bd_pio.read_blocks(&bd_pio, 0, 1024, piobuf)) {
         dbglog(DBG_ERROR, "couldn't read block by PIO: %s\n", strerror(errno));
         return -1;
     }
-    epio = timer_ms_gettime64();
-    timer = epio - spio;
+    epio = clock();
+    timer = (epio - spio) / (CLOCKS_PER_SEC / 1000);
 
-    dbglog(DBG_INFO, "PIO read took %llu ms (%f MB/sec)\n", timer,
+    dbglog(DBG_INFO, "PIO read took %lu ms (%f MB/sec)\n", timer,
            (512 * 1024) / ((double)timer) / 1000.0);
 
     /* Check the buffers for consistency... */
