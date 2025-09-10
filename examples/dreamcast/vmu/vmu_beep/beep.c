@@ -35,8 +35,6 @@
 #include <dc/maple/controller.h>
 #include <dc/maple/vmu.h>
 
-#include <arch/arch.h>
-
 #include <plx/font.h>
 
 #define VMU_DEFAULT_EFFECT 0x000065F0
