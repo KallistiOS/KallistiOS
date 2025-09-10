@@ -8,7 +8,7 @@
   </p>
 </div>
 
-# Overview
+## Overview
 
 KallistiOS is a development library and operating system for the Sega Dreamcast game console, developed independently from Sega entirely by free software developers. Its flexible permissive license allows both homebrew and commercial use with little restrictions besides proper attribution. As a result, it powers most homebrew and commercial indie releases for the platform. Interfaces and drivers are included for a significant portion of the Dreamcast's hardware capabilities and accessories, including modifications created by hobbyists. 
 
@@ -48,14 +48,14 @@ KallistiOS also features a package manager called [**_kos-ports_**](https://gith
 ### Hardware Modification Support
 * IDE hard drive, 32MB RAM upgrade, custom BIOS flashROMs
 
-# Getting Started 
+## Getting Started
 A beginner's guide to development for the Sega Dreamcast along with detailed instructions for installing KOS and the required toolchains can be found on [dreamcast.wiki](https://dreamcast.wiki/Getting_Started_with_Dreamcast_development). Additional documentation can be found in the docs folder. 
 
-# Licensing
+## Licensing
 KallistiOS itself is licensed under the BSD-like **KOS License**. **Attribution is not optional**. Additionally, this distribution contains code licensed under various free software licenses.
 See [LICENSE.md](doc/LICENSE.md) for more information on licensing, as well as [LICENSE.KOS](doc/license/LICENSE.KOS) for the actual **KOS License** text.
 
-# Examples 
+## Examples
 Once you've set up the environment and are ready to begin developing, a good place to start learning is the examples directory, which provides demos for the various KOS APIs and for interacting with the Dreamcast's hardware. Examples include:
 - Hello World
 - Console Input/Output
@@ -81,7 +81,7 @@ Once you've set up the environment and are ready to begin developing, a good pla
 - Testing 32MB RAM hardware mod
 - Interactive Lua interpreter terminal
 
-# Resources
+## Resources
 [dreamcast.wiki](http://dreamcast.wiki): Large collection of tutorials and articles for beginners  
 [Simulant Discord Chat](https://discord.gg/bpDZHT78PA): Home to the official Discord channel of KOS  
 [DCEmulation Forums](http://dcemulation.org/phpBB/viewforum.php?f=29): Goldmine of Dreamcast development information and history  
