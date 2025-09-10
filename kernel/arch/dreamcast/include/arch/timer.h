@@ -423,6 +423,25 @@ timer_primary_callback_t timer_primary_set_callback(timer_primary_callback_t cal
 */
 void timer_primary_wakeup(uint32_t millis);
 
+/** \brief   Disable interrupts on the primary timer.
+    \ingroup tmu_primary
+
+    This function will disable interrupts on the primary timer. It does not
+    stop the timer.
+*/
+static inline void timer_primary_disable_ints(void) {
+    timer_disable_ints(TIMER_ID);
+}
+
+/** \brief   Enable interrupts on the primary timer.
+    \ingroup tmu_primary
+
+    This function will enable interrupts on the primary timer.
+*/
+static inline void timer_primary_enable_ints(void) {
+    timer_enable_ints(TIMER_ID);
+}
+
 /** \cond */
 /* Init function */
 int timer_init(void);
