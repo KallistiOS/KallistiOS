@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include <kos/init.h>
 
@@ -27,8 +28,6 @@
 #include <dc/maple/vmu.h>
 #include <dc/vmu_fb.h>
 #include <dc/fmath.h>
-
-#include <arch/arch.h>
 
 static const uint8_t smiley[] = {
     0b00111100,
@@ -55,7 +54,7 @@ int main(int argc, char **argv) {
 
     /* If start is pressed, exit the app. */
     cont_btn_callback(0, CONT_START,
-                      (cont_btn_callback_t)arch_exit);
+                      (cont_btn_callback_t)exit);
 
     font = vmu_get_font();
 

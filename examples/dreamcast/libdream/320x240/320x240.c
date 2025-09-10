@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <kos.h>
 
 #define W 320
@@ -8,7 +9,7 @@ int main(int argc, char **argv) {
 
     /* Press all buttons to exit */
     cont_btn_callback(0, CONT_START | CONT_A | CONT_B | CONT_X | CONT_Y,
-                      (cont_btn_callback_t)arch_exit);
+                      (cont_btn_callback_t)exit);
 
     /* Set the video mode */
     vid_set_mode(DM_320x240, PM_RGB565);
