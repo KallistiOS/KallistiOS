@@ -16,10 +16,10 @@
 #include <string.h>
 #include <kos/thread.h>
 #include <kos/once.h>
+#include <kos/mutex.h>
 #include <kos/init.h>
 
 #include <arch/arch.h>
-#include <arch/spinlock.h>
 #include <dc/maple.h>
 #include <dc/maple/controller.h>
 
@@ -27,13 +27,13 @@
 #define THD_COUNT (475 * (DBL_MEM? 2 : 1))
 
 static kthread_once_t once = KTHREAD_ONCE_INIT;
-static spinlock_t lock = SPINLOCK_INITIALIZER;
+static mutex_t lock = MUTEX_INITIALIZER;
 static int counter = 0;
 
 static void inner_once_func(void) {
-    spinlock_lock(&lock);
+    mutex_lock(&lock);
     ++counter;
-    spinlock_unlock(&lock);
+    mutex_unlock(&lock);
 }
 
 static void *inner_thd_func(void *param UNUSED) {
