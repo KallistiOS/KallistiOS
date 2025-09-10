@@ -4,8 +4,7 @@
 #include <dc/video.h>
 #include <dc/maple/controller.h>
 
-#include <arch/arch.h>
-
+#include <stdlib.h>
 #include <unistd.h>
 
 int main(int argc, char **argv) {
@@ -62,7 +61,7 @@ int main(int argc, char **argv) {
     bfont_draw_wide(vram_s + o + (BFONT_THIN_WIDTH * 15), 640, 1, BFONT_STARTBUTTON);
 
     /* If Start is pressed, exit the app */
-    cont_btn_callback(0, CONT_START, (cont_btn_callback_t)arch_exit);
+    cont_btn_callback(0, CONT_START, (cont_btn_callback_t)exit);
 
     /* Just trap here waiting for the button press */
     for(;;) { usleep(50); }

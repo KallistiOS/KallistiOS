@@ -20,7 +20,6 @@
 #include <dc/maple.h>
 #include <dc/maple/controller.h>
 
-#include <arch/arch.h>
 #include <arch/timer.h>
 
 #include <kos/init.h>
@@ -48,7 +47,7 @@ static void __attribute__((__noreturn__)) wait_exit(void) {
 
             if(state)   {
                 if(state->buttons)
-                    arch_exit();
+                    exit(0);
             }
         }
     }

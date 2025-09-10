@@ -12,11 +12,11 @@
    systems class that I figured would probably be useful for KOS. */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <kos/thread.h>
 #include <kos/rwsem.h>
 
-#include <arch/arch.h>
 #include <dc/maple.h>
 #include <dc/maple/controller.h>
 
@@ -109,13 +109,12 @@ void *reader1(void *param UNUSED) {
     return NULL;
 }
 
-KOS_INIT_FLAGS(INIT_DEFAULT);
 int main(int argc, char *argv[]) {
     kthread_t *w0, *w1, *r0, *r1;
 
     /* Exit if the user presses all buttons at once. */
     cont_btn_callback(0, CONT_START | CONT_A | CONT_B | CONT_X | CONT_Y,
-                      (cont_btn_callback_t)arch_exit);
+                      (cont_btn_callback_t)exit);
 
     printf("KallistiOS Reader/Writer Semaphore test program\n");
 
@@ -134,7 +133,7 @@ int main(int argc, char *argv[]) {
     if(rwsem_read_lock(&s)) {
         printf("Could not obtain final read lock!\n");
         perror("rwsem_read_lock");
-        arch_exit();
+        exit(EXIT_FAILURE);
     }
 
     printf("Final number: %lu\n", number);
@@ -143,5 +142,5 @@ int main(int argc, char *argv[]) {
     rwsem_destroy(&s);
 
     printf("Reader/Writer semaphore tests completed successfully!\n");
-    return 0;
+    return EXIT_SUCCESS;
 }
