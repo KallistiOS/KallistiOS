@@ -151,6 +151,10 @@ typedef enum kthread_state {
     STATE_FINISHED = 0x0004   /**< \brief Finished execution */
 } kthread_state_t;
 
+/* Thread and priority types */
+typedef int tid_t;            /**< \brief Thread ID type */
+typedef int prio_t;           /**< \brief Priority value type */
+
 /** \brief   Structure describing one running thread.
 
     Each thread has one of these structures assigned to it, which holds all the

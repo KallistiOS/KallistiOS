@@ -1650,6 +1650,10 @@ static pthread_mutex_t mALLOC_MUTEx = PTHREAD_MUTEX_INITIALIZER;
 
 #ifdef KM_DBG
 
+#include <stdlib.h>
+#include <kos/dbgio.h>
+#include <kos/thread.h>
+
 #define BLOCK_MAGIC 0x1c518a74
 #define PRE_MAGIC   0x6765adb8
 #define POST_MAGIC  0x29d4ca6d
@@ -1679,8 +1683,6 @@ static LIST_HEAD(memctl_list, memctl) block_list;
 
 #define get_cur_tid_safe ((thd_current == NULL) ? (tid_t)0 : thd_current->tid)
 
-#include <kos/dbgio.h>
-#include <stdlib.h>
 char dbg_print_buffer[256];
 
 enum func_type_names { name_MALLOC = 0, name_REALLOC = 1, name_MEMALIGN = 2, name_CALLOC = 3,
