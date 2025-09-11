@@ -42,6 +42,9 @@ extern void _fini(void);
 extern void __verify_newlib_patch();
 extern void dma_init(void);
 
+/* Jump back to the bootloader. From startup.S */
+void arch_real_exit(int ret_code) __noreturn;
+
 void (*__kos_init_early_fn)(void) __attribute__((weak,section(".data"))) = NULL;
 
 int main(int argc, char **argv);
