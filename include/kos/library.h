@@ -31,7 +31,6 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <kos/thread.h>
 #include <kos/elf.h>
 #include <kos/fs.h>
 
@@ -49,8 +48,7 @@ TAILQ_HEAD(klqueue, klibrary);
 LIST_HEAD(kllist, klibrary);
 /** \endcond */
 
-/* Thread IDs are ok for us */
-typedef tid_t libid_t;                  /**< \brief Library ID type. */
+typedef int libid_t;   /**< \brief Library ID type. */
 
 /** \brief  Loaded library structure.
 
