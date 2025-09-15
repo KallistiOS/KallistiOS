@@ -60,7 +60,7 @@ static void vbl_chk_disconnect(maple_state_t *state, int p, int u) {
     }
 }
 
-static void vbl_chk_next_subdev(maple_state_t *state, maple_frame_t *frm, int p) {
+static void vbl_chk_next_subdev(maple_state_t *state, int p) {
     maple_device_t *dev = maple_enum_dev(p, 0);
     int u;
 
@@ -68,7 +68,7 @@ static void vbl_chk_next_subdev(maple_state_t *state, maple_frame_t *frm, int p)
         u = __builtin_ffs(dev->probe_mask);
         dev->probe_mask &= ~(1 << (u - 1));
 
-        vbl_send_devinfo(frm, p, u);
+        vbl_send_devinfo(&detect_frame, p, u);
     } else {
         /* Nothing else to probe on this port */
         state->scan_ready_mask |= 1 << p;
@@ -180,7 +180,7 @@ static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm) {
         maple_frame_unlock(frm);
 
         /* Probe the next sub-device */
-        vbl_chk_next_subdev(state, frm, p);
+        vbl_chk_next_subdev(state, p);
     }
     else {
         dbglog(DBG_DEBUG, "maple: unknown response %d on device %c%c\n",
@@ -194,6 +194,15 @@ static void vbl_autodetect(maple_state_t *state) {
     bool queued;
     maple_device_t  *dev = maple_state.ports[state->detect_port_next].units[0];
     maple_frame_t   *frm = (dev != NULL) ? &dev->frame : &detect_frame;
+    int p;
+
+    /* Don't start a new top-level probe if a sub-device probe is happening */
+    for(p = 0; p < MAPLE_PORT_COUNT; ++p) {
+        dev = maple_enum_dev(p, 0);
+        if(dev && dev->probe_mask) {
+            return;
+        }
+    }
 
     /* Queue a detection on the next device */
     queued = vbl_send_devinfo(frm,
@@ -220,7 +229,8 @@ void maple_vbl_irq_hnd(uint32 code, void *data) {
     /* Count, for fun and profit */
     state->vbl_cntr++;
 
-    /* Autodetect changed devices */
+    /* Handle auto-detection of devices. This will scan one top-level
+       port if no sub-device probing is currently active. */
     vbl_autodetect(state);
 
     /* Call all registered drivers' periodic callbacks */
