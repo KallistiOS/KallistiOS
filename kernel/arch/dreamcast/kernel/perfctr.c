@@ -6,7 +6,7 @@
 */
 
 #include <dc/perfctr.h>
-#include <arch/timer.h>
+#include <kos/timer.h>
 #include <kos/cdefs.h>
 
 /* Control Registers */

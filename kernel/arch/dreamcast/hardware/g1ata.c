@@ -17,7 +17,7 @@
 #include <kos/mutex.h>
 #include <kos/thread.h>
 
-#include <arch/timer.h>
+#include <kos/timer.h>
 #include <arch/cache.h>
 #include <arch/irq.h>
 #include <arch/memory.h>

@@ -16,7 +16,7 @@
 #include <kos/dbglog.h>
 #include <kos/net.h>
 #include <kos/thread.h>
-#include <arch/timer.h>
+#include <kos/timer.h>
 #include <arpa/inet.h>
 
 #include "net_icmp.h"

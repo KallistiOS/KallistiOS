@@ -15,11 +15,11 @@
 #include <kos/dbglog.h>
 #include <kos/init.h>
 #include <kos/platform.h>
+#include <kos/timer.h>
 #include <arch/arch.h>
 #include <arch/irq.h>
 #include <arch/memory.h>
 #include <arch/rtc.h>
-#include <arch/timer.h>
 #include <dc/perfctr.h>
 #include <dc/ubc.h>
 #include <dc/pvr.h>

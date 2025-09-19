@@ -9,7 +9,7 @@
 #include <dc/spu.h>
 #include <dc/g2bus.h>
 #include <dc/sq.h>
-#include <arch/timer.h>
+#include <kos/timer.h>
 #include <errno.h>
 
 /*

@@ -21,7 +21,7 @@
 #include <kos/rwsem.h>
 #include <kos/fs_socket.h>
 
-#include <arch/timer.h>
+#include <kos/timer.h>
 
 #include <kos/dbglog.h>
 

@@ -8,7 +8,7 @@
 #include <dc/math.h>
 #include <arch/cache.h>
 #include <arch/dmac.h>
-#include <arch/timer.h>
+#include <kos/timer.h>
 
 #include <kos/dbglog.h>
 #include <kos/regfield.h>

@@ -28,7 +28,7 @@
 #include <arch/arch.h>
 #include <arch/irq.h>
 #include <arch/stack.h>
-#include <arch/timer.h>
+#include <kos/timer.h>
 #include <arch/tls_static.h>
 
 /*

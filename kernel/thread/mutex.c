@@ -17,7 +17,7 @@
 #include <kos/dbglog.h>
 
 #include <arch/irq.h>
-#include <arch/timer.h>
+#include <kos/timer.h>
 
 /* Thread pseudo-ptr representing an active IRQ context. */
 #define IRQ_THREAD  ((kthread_t *)0xFFFFFFFF)

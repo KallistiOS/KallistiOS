@@ -11,7 +11,7 @@
 #include <stdint.h>
 
 #include <kos/thread.h>
-#include <arch/timer.h>
+#include <kos/timer.h>
 #include "net_thd.h"
 
 struct thd_cb {

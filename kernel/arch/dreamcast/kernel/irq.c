@@ -15,7 +15,7 @@
 #include <arch/arch.h>
 #include <arch/types.h>
 #include <arch/irq.h>
-#include <arch/timer.h>
+#include <kos/timer.h>
 #include <arch/stack.h>
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>

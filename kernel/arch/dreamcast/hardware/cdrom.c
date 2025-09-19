@@ -12,7 +12,7 @@
 #include <assert.h>
 
 #include <arch/cache.h>
-#include <arch/timer.h>
+#include <kos/timer.h>
 #include <arch/memory.h>
 #include <arch/irq.h>
 

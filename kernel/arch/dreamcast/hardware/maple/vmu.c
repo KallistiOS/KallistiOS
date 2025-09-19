@@ -25,7 +25,7 @@
 #include <dc/math.h>
 #include <dc/biosfont.h>
 #include <dc/vmufs.h>
-#include <arch/timer.h>
+#include <kos/timer.h>
 
 #define VMU_BLOCK_WRITE_RETRY_TIME  100     /* time to sleep until retrying a failed write */
 

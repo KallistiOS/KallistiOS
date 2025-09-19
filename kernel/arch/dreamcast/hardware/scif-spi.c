@@ -8,7 +8,7 @@
 
 #include <dc/scif.h>
 #include <dc/fs_dcload.h>
-#include <arch/timer.h>
+#include <kos/timer.h>
 #include <kos/dbglog.h>
 #include <kos/regfield.h>
 

@@ -18,7 +18,7 @@
 #include <arpa/inet.h>
 #include <kos/net.h>
 #include <kos/fs_socket.h>
-#include <arch/timer.h>
+#include <kos/timer.h>
 
 #include "net_ipv4.h"
 #include "net_icmp.h"

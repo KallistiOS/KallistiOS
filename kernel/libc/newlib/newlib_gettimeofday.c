@@ -8,7 +8,7 @@
 #include <assert.h>
 #include <sys/time.h>
 #include <time.h>
-#include <arch/timer.h>
+#include <kos/timer.h>
 #include <arch/rtc.h>
 
 /* This is kind of approximate and works only with "localtime" */

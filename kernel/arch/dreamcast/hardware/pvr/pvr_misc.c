@@ -10,7 +10,7 @@
 #include <string.h>
 #include <float.h>
 
-#include <arch/timer.h>
+#include <kos/timer.h>
 #include <dc/pvr.h>
 #include <dc/video.h>
 #include <kos/regfield.h>

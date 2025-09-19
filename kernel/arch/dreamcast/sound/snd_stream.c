@@ -20,7 +20,7 @@
 #include <kos/dbglog.h>
 #include <kos/mutex.h>
 #include <arch/cache.h>
-#include <arch/timer.h>
+#include <kos/timer.h>
 #include <dc/g2bus.h>
 #include <dc/sq.h>
 #include <dc/spu.h>

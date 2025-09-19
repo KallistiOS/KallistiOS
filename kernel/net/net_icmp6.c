@@ -11,7 +11,7 @@
 #include <string.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <arch/timer.h>
+#include <kos/timer.h>
 #include <kos/dbglog.h>
 
 #include "net_icmp6.h"

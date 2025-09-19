@@ -14,7 +14,7 @@
 
 #include <kos/dbglog.h>
 #include <kos/mutex.h>
-#include <arch/timer.h>
+#include <kos/timer.h>
 #include <dc/g2bus.h>
 #include <dc/spu.h>
 #include <dc/sound/sound.h>
