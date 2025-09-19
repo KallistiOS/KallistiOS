@@ -40,6 +40,10 @@ __BEGIN_DECLS
    error message. */
 /** \cond */
 #define _assert(e) assert(e)
+
+#if __STDC_VERSION__ >= 201112L && !defined __cplusplus
+#define static_assert _Static_assert
+#endif
 /** \endcond */
 
 #ifdef NDEBUG
