@@ -189,6 +189,23 @@ static inline void timer_spin_delay_ns(unsigned short ns) {
     while(timer_ns_gettime64() < timeout);
 }
 
+/** \brief  Spin-loop delay function with millisecond granularity
+    \ingroup timers
+
+    This function should never be used, and is only used for compatibility with
+    older code. It makes no sense to busy-wait for that long.
+
+    \param  ms              The number of microseconds to wait for.
+    \sa thd_sleep
+*/
+
+__depr("Do not use timer_spin_sleep(), use thd_sleep() instead")
+static inline void timer_spin_sleep(unsigned int ms) {
+    uint64_t timeout = timer_ms_gettime64() + ms;
+
+    while(timer_ms_gettime64() < timeout);
+}
+
 __END_DECLS
 
 #endif /* __KOS_TIMER_H */
