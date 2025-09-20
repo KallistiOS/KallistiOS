@@ -9,7 +9,10 @@
 *~
 .*.swp
 .DS_Store
+.cache/
 .vscode/
+.clangd
+compile_commands.json
 environ.sh
 romdisk.img
 /doc/reference/
