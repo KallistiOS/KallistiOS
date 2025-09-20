@@ -78,7 +78,7 @@ int mutex_lock_timed(mutex_t *m, unsigned int timeout) {
 
     irq_disable_scoped();
 
-    if(!m->holder) {
+    if(__predict_false(!m->holder)) {
         m->count = 1;
         m->holder = thd_current;
         rv = 0;
@@ -108,7 +108,7 @@ int mutex_lock_timed(mutex_t *m, unsigned int timeout) {
                 break;
             }
 
-            if(!m->holder) {
+            if(__predict_true(!m->holder)) {
                 m->holder = thd_current;
                 m->count = 1;
                 break;
@@ -137,7 +137,7 @@ int mutex_trylock(mutex_t *m) {
 
     /* If we're inside of an interrupt, pick a special value for the thread that
        would otherwise be impossible... */
-    if(irq_inside_int())
+    if(__predict_false(irq_inside_int()))
         thd = IRQ_THREAD;
 
     return mutex_trylock_thd(m, thd);
@@ -153,11 +153,11 @@ static int mutex_trylock_thd(mutex_t *m, kthread_t *thd) {
         return 0;
     }
 
-    if(previous_thd == thd) {
+    if(__predict_false(previous_thd == thd)) {
         assert(m->type == MUTEX_TYPE_RECURSIVE);
 
         /* Recursive mutex, we can just increment normally. */
-        if(m->count == INT_MAX) {
+        if(__predict_false(m->count == INT_MAX)) {
             errno = EAGAIN;
             return -1;
         }
@@ -178,16 +178,16 @@ int mutex_unlock(mutex_t *m) {
 
     /* If we're inside of an interrupt, use the special value for the thread
        from mutex_trylock(). */
-    if(irq_inside_int())
+    if(__predict_false(irq_inside_int()))
         thd = IRQ_THREAD;
 
     assert(m->holder == thd && m->count > 0);
 
-    if (!--m->count) {
+    if (__predict_true(!--m->count)) {
         m->holder = NULL;
 
         /* Restore real priority in case we were dynamically boosted. */
-        if (thd != IRQ_THREAD)
+        if (__predict_true(thd != IRQ_THREAD))
             thd->prio = thd->real_prio;
 
         /* If we need to wake up a thread, do so. */
