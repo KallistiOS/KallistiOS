@@ -33,30 +33,11 @@ printf goes to the dc-tool console
 #include <string.h>
 #include <sys/queue.h>
 
-/* A linked list of dir entries. */
-typedef struct dcl_dir {
-    LIST_ENTRY(dcl_dir) fhlist;
+typedef struct dcl_obj {
     int hnd;
     char *path;
     dirent_t dirent;
-} dcl_dir_t;
-
-LIST_HEAD(dcl_de, dcl_dir);
-
-static struct dcl_de dir_head = LIST_HEAD_INITIALIZER(0);
-
-static dcl_dir_t *hnd_is_dir(int hnd) {
-    dcl_dir_t *i;
-
-    if(!hnd) return NULL;
-
-    LIST_FOREACH(i, &dir_head, fhlist) {
-        if(i->hnd == (int)hnd)
-            break;
-    }
-
-    return i;
-}
+} dcl_obj_t;
 
 static spinlock_t mutex = SPINLOCK_INITIALIZER;
 
@@ -92,14 +73,36 @@ size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_
 }
 
 static void *dcload_open(vfs_handler_t * vfs, const char *fn, int mode) {
-    char *dcload_path = NULL;
-    dcl_dir_t *entry;
-    int hnd = 0;
+    dcl_obj_t *obj;
     int dcload_mode = 0;
     int mm = (mode & O_MODE_MASK);
     size_t fn_len = 0;
 
     (void)vfs;
+
+    obj = calloc(1, sizeof(*obj));
+    if(!obj) {
+        errno = ENOMEM;
+        return (void *)NULL;
+    }
+
+    if(mode & O_DIR) {
+        fn_len = strlen(fn);
+
+        if(fn[fn_len - 1] == '/')
+            fn_len--;
+
+        obj->path = malloc(fn_len + 2);
+        if(!obj->path) {
+            free(obj);
+            errno = ENOMEM;
+            return (void *)NULL;
+        }
+
+        memcpy(obj->path, fn, fn_len);
+        obj->path[fn_len]   = '/';
+        obj->path[fn_len+1] = '\0';
+    }
 
     spinlock_lock_scoped(&mutex);
 
@@ -108,44 +111,8 @@ static void *dcload_open(vfs_handler_t * vfs, const char *fn, int mode) {
             fn = "/";
         }
 
-        hnd = dclsc(DCLOAD_OPENDIR, fn);
-
-        if(!hnd) {
-            /* It could be caused by other issues, such as
-            pathname being too long or symlink loops, but
-            ENOTDIR seems to be the best generic and we should
-            set something */
-            errno = ENOTDIR;
-            return (void *)NULL;
-        }
-
-        /* We got something back so create an dir list entry for it */
-        entry = malloc(sizeof(dcl_dir_t));
-        if(!entry) {
-            errno = ENOMEM;
-            return (void *)NULL;
-        }
-
-        fn_len = strlen(fn);
-        if(fn[fn_len - 1] == '/') fn_len--;
-
-        dcload_path = malloc(fn_len + 2);
-        if(!dcload_path) {
-            errno = ENOMEM;
-            free(entry);
-            return (void *)NULL;
-        }
-
-        memcpy(dcload_path, fn, fn_len);
-        dcload_path[fn_len]   = '/';
-        dcload_path[fn_len+1] = '\0';
-
-        /* Now that everything is ready, add to list */
-        entry->hnd = hnd;
-        entry->path = dcload_path;
-        LIST_INSERT_HEAD(&dir_head, entry, fhlist);
-    }
-    else {
+        obj->hnd = dclsc(DCLOAD_OPENDIR, fn);
+    } else {
         if(mm == O_RDONLY)
             dcload_mode = 0;
         else if((mm & O_RDWR) == O_RDWR)
@@ -159,144 +126,137 @@ static void *dcload_open(vfs_handler_t * vfs, const char *fn, int mode) {
         if(mode & O_TRUNC)
             dcload_mode |= 0x0400;
 
-        hnd = dclsc(DCLOAD_OPEN, fn, dcload_mode, 0644);
-        hnd++; /* KOS uses 0 for error, not -1 */
+        obj->hnd = dclsc(DCLOAD_OPEN, fn, dcload_mode, 0644);
     }
 
-    return (void *)hnd;
+    if(!obj->hnd) {
+        free(obj->path);
+        free(obj);
+
+        /* It could be caused by other issues, such as pathname being too long
+           or symlink loops, but ENOTDIR for directories and ENOENT for files
+           seem to be the best generic and we should set something */
+        errno = (mode & O_DIR) ? ENOTDIR : ENOENT;
+        return (void *)NULL;
+    }
+
+    return obj;
 }
 
 static int dcload_close(void * h) {
-    uint32 hnd = (uint32)h;
-    dcl_dir_t *i;
+    dcl_obj_t *obj = h;
 
     spinlock_lock_scoped(&mutex);
 
-    if(hnd) {
-        /* Check if it's a dir */
-        i = hnd_is_dir(hnd);
-
+    if(obj) {
         /* We found it in the list, so it's a dir */
-        if(i) {
-            dclsc(DCLOAD_CLOSEDIR, hnd);
-            LIST_REMOVE(i, fhlist);
-            free(i->path);
-            free(i);
-        }
-        else {
-            hnd--; /* KOS uses 0 for error, not -1 */
-            dclsc(DCLOAD_CLOSE, hnd);
-        }
+        if(obj->path)
+            dclsc(DCLOAD_CLOSEDIR, obj->hnd);
+        else
+            dclsc(DCLOAD_CLOSE, obj->hnd);
+
+        free(obj->path);
+        free(obj);
     }
 
     return 0;
 }
 
 static ssize_t dcload_read(void * h, void *buf, size_t cnt) {
+    dcl_obj_t *obj = h;
     ssize_t ret = -1;
-    uint32 hnd = (uint32)h;
 
     spinlock_lock_scoped(&mutex);
 
-    if(hnd) {
-        hnd--; /* KOS uses 0 for error, not -1 */
-        ret = dclsc(DCLOAD_READ, hnd, buf, cnt);
-    }
+    if(obj)
+        ret = dclsc(DCLOAD_READ, obj->hnd, buf, cnt);
 
     return ret;
 }
 
 static ssize_t dcload_write(void * h, const void *buf, size_t cnt) {
+    dcl_obj_t *obj = h;
     ssize_t ret = -1;
-    uint32 hnd = (uint32)h;
 
     spinlock_lock_scoped(&mutex);
 
-    if(hnd) {
-        hnd--; /* KOS uses 0 for error, not -1 */
-        ret = dclsc(DCLOAD_WRITE, hnd, buf, cnt);
-    }
+    if(obj)
+        ret = dclsc(DCLOAD_WRITE, obj->hnd, buf, cnt);
 
     return ret;
 }
 
 static off_t dcload_seek(void * h, off_t offset, int whence) {
+    dcl_obj_t *obj = h;
     off_t ret = -1;
-    uint32 hnd = (uint32)h;
 
     spinlock_lock_scoped(&mutex);
 
-    if(hnd) {
-        hnd--; /* KOS uses 0 for error, not -1 */
-        ret = dclsc(DCLOAD_LSEEK, hnd, offset, whence);
-    }
+    if(obj)
+        ret = dclsc(DCLOAD_LSEEK, obj->hnd, offset, whence);
 
     return ret;
 }
 
 static off_t dcload_tell(void * h) {
+    dcl_obj_t *obj = h;
     off_t ret = -1;
-    uint32 hnd = (uint32)h;
 
     spinlock_lock_scoped(&mutex);
 
-    if(hnd) {
-        hnd--; /* KOS uses 0 for error, not -1 */
-        ret = dclsc(DCLOAD_LSEEK, hnd, 0, SEEK_CUR);
-    }
+    if(obj)
+        ret = dclsc(DCLOAD_LSEEK, obj->hnd, 0, SEEK_CUR);
 
     return ret;
 }
 
 static size_t dcload_total(void * h) {
+    dcl_obj_t *obj = h;
     size_t ret = -1;
     size_t cur;
-    uint32 hnd = (uint32)h;
 
     spinlock_lock_scoped(&mutex);
 
-    if(hnd) {
-        hnd--; /* KOS uses 0 for error, not -1 */
-        cur = dclsc(DCLOAD_LSEEK, hnd, 0, SEEK_CUR);
-        ret = dclsc(DCLOAD_LSEEK, hnd, 0, SEEK_END);
-        dclsc(DCLOAD_LSEEK, hnd, cur, SEEK_SET);
+    if(obj) {
+        cur = dclsc(DCLOAD_LSEEK, obj->hnd, 0, SEEK_CUR);
+        ret = dclsc(DCLOAD_LSEEK, obj->hnd, 0, SEEK_END);
+        dclsc(DCLOAD_LSEEK, obj->hnd, cur, SEEK_SET);
     }
 
     return ret;
 }
 
 static dirent_t *dcload_readdir(void * h) {
+    dcl_obj_t *obj = h;
     dirent_t *rv = NULL;
     dcload_dirent_t *dcld;
     dcload_stat_t filestat;
     char *fn;
-    uint32 hnd = (uint32)h;
-    dcl_dir_t *entry;
 
-    spinlock_lock_scoped(&mutex);
-
-    if(!(entry = hnd_is_dir(hnd))) {
+    if(!obj || !obj->path) {
         errno = EBADF;
         return NULL;
     }
 
-    dcld = (dcload_dirent_t *)dclsc(DCLOAD_READDIR, hnd);
+    spinlock_lock_scoped(&mutex);
+
+    dcld = (dcload_dirent_t *)dclsc(DCLOAD_READDIR, obj->hnd);
 
     if(dcld) {
-        rv = &(entry->dirent);
+        rv = &obj->dirent;
         strcpy(rv->name, dcld->d_name);
         rv->size = 0;
         rv->time = 0;
         rv->attr = 0; /* what the hell is attr supposed to be anyways? */
 
-        fn = malloc(strlen(entry->path) + strlen(dcld->d_name) + 1);
+        fn = malloc(strlen(obj->path) + strlen(dcld->d_name) + 1);
 
         if(!fn) {
             errno = ENOMEM;
             return NULL;
         }
 
-        strcpy(fn, entry->path);
+        strcpy(fn, obj->path);
         strcat(fn, dcld->d_name);
 
         if(!dclsc(DCLOAD_STAT, fn, &filestat)) {
@@ -414,14 +374,14 @@ static int dcload_fcntl(void *h, int cmd, va_list ap) {
 }
 
 static int dcload_rewinddir(void *h) {
-    uint32_t hnd = (uint32_t)h;
+    dcl_obj_t *obj = h;
 
     spinlock_lock_scoped(&mutex);
 
-    if(!hnd_is_dir(hnd))
+    if(!obj->path)
         return -1;
 
-    return dclsc(DCLOAD_REWINDDIR, hnd);
+    return dclsc(DCLOAD_REWINDDIR, obj->hnd);
 }
 
 /* Pull all that together */
