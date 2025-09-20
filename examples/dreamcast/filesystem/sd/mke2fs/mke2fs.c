@@ -25,8 +25,6 @@
 #include <kos/dbgio.h>
 #include <kos/blockdev.h>
 
-#include <arch/arch.h>
-
 #include <dc/sd.h>
 #include <dc/maple.h>
 #include <dc/maple/controller.h>
@@ -98,7 +96,7 @@ static void __attribute__((__noreturn__)) exit_with_error(const char *err) {
 
             if(state)   {
                 if(state->buttons)
-                    arch_exit();
+                    exit(EXIT_FAILURE);
             }
         }
     }

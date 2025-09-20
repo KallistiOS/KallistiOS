@@ -4,6 +4,7 @@
    because you need the port, but you don't want garbage being printed
    when it's successful either. */
 
+#include <stdlib.h>
 #include <kos.h>
 
 int main(int argc, char **argv) {
@@ -11,7 +12,7 @@ int main(int argc, char **argv) {
 
     /* Press all buttons to exit */
     cont_btn_callback(0, CONT_START | CONT_A | CONT_B | CONT_X | CONT_Y,
-                      (cont_btn_callback_t)arch_exit);
+                      (cont_btn_callback_t)exit);
 
     /* Bother us with output only if something died */
     dbglog_set_level(DBG_DEAD);
