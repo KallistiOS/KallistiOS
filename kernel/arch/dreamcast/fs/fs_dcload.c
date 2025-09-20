@@ -18,9 +18,9 @@ printf goes to the dc-tool console
 
 */
 
+#include <arch/irq.h>
 #include <dc/fifo.h>
 #include <dc/fs_dcload.h>
-#include <arch/spinlock.h>
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>
 #include <kos/fs.h>
@@ -31,15 +31,12 @@ printf goes to the dc-tool console
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/queue.h>
 
 typedef struct dcl_obj {
     int hnd;
     char *path;
     dirent_t dirent;
 } dcl_obj_t;
-
-static spinlock_t mutex = SPINLOCK_INITIALIZER;
 
 #define dclsc(...) ({ \
         irq_disable_scoped(); \
@@ -53,7 +50,6 @@ static spinlock_t mutex = SPINLOCK_INITIALIZER;
 int dcload_write_buffer(const uint8 *data, int len, int xlat) {
     (void)xlat;
 
-    spinlock_lock_scoped(&mutex);
     dclsc(DCLOAD_WRITE, 1, data, len);
 
     return len;
@@ -64,9 +60,6 @@ int dcload_read_cons(void) {
 }
 
 size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_t out_size) {
-
-    spinlock_lock_scoped(&mutex);
-
     /* we have to pack the sizes together because the dcloadsyscall handler
        can only take 4 parameters */
     return dclsc(DCLOAD_GDBPACKET, in_buf, (in_size << 16) | (out_size & 0xffff), out_buf);
@@ -103,8 +96,6 @@ static void *dcload_open(vfs_handler_t * vfs, const char *fn, int mode) {
         obj->path[fn_len]   = '/';
         obj->path[fn_len+1] = '\0';
     }
-
-    spinlock_lock_scoped(&mutex);
 
     if(mode & O_DIR) {
         if(fn[0] == '\0') {
@@ -146,8 +137,6 @@ static void *dcload_open(vfs_handler_t * vfs, const char *fn, int mode) {
 static int dcload_close(void * h) {
     dcl_obj_t *obj = h;
 
-    spinlock_lock_scoped(&mutex);
-
     if(obj) {
         /* We found it in the list, so it's a dir */
         if(obj->path)
@@ -166,8 +155,6 @@ static ssize_t dcload_read(void * h, void *buf, size_t cnt) {
     dcl_obj_t *obj = h;
     ssize_t ret = -1;
 
-    spinlock_lock_scoped(&mutex);
-
     if(obj)
         ret = dclsc(DCLOAD_READ, obj->hnd, buf, cnt);
 
@@ -177,8 +164,6 @@ static ssize_t dcload_read(void * h, void *buf, size_t cnt) {
 static ssize_t dcload_write(void * h, const void *buf, size_t cnt) {
     dcl_obj_t *obj = h;
     ssize_t ret = -1;
-
-    spinlock_lock_scoped(&mutex);
 
     if(obj)
         ret = dclsc(DCLOAD_WRITE, obj->hnd, buf, cnt);
@@ -190,8 +175,6 @@ static off_t dcload_seek(void * h, off_t offset, int whence) {
     dcl_obj_t *obj = h;
     off_t ret = -1;
 
-    spinlock_lock_scoped(&mutex);
-
     if(obj)
         ret = dclsc(DCLOAD_LSEEK, obj->hnd, offset, whence);
 
@@ -201,8 +184,6 @@ static off_t dcload_seek(void * h, off_t offset, int whence) {
 static off_t dcload_tell(void * h) {
     dcl_obj_t *obj = h;
     off_t ret = -1;
-
-    spinlock_lock_scoped(&mutex);
 
     if(obj)
         ret = dclsc(DCLOAD_LSEEK, obj->hnd, 0, SEEK_CUR);
@@ -215,9 +196,9 @@ static size_t dcload_total(void * h) {
     size_t ret = -1;
     size_t cur;
 
-    spinlock_lock_scoped(&mutex);
-
     if(obj) {
+        irq_disable_scoped();
+
         cur = dclsc(DCLOAD_LSEEK, obj->hnd, 0, SEEK_CUR);
         ret = dclsc(DCLOAD_LSEEK, obj->hnd, 0, SEEK_END);
         dclsc(DCLOAD_LSEEK, obj->hnd, cur, SEEK_SET);
@@ -237,8 +218,6 @@ static dirent_t *dcload_readdir(void * h) {
         errno = EBADF;
         return NULL;
     }
-
-    spinlock_lock_scoped(&mutex);
 
     dcld = (dcload_dirent_t *)dclsc(DCLOAD_READDIR, obj->hnd);
 
@@ -282,8 +261,6 @@ static int dcload_rename(vfs_handler_t * vfs, const char *fn1, const char *fn2) 
 
     (void)vfs;
 
-    spinlock_lock_scoped(&mutex);
-
     /* really stupid hack, since I didn't put rename() in dcload */
 
     ret = dclsc(DCLOAD_LINK, fn1, fn2);
@@ -296,8 +273,6 @@ static int dcload_rename(vfs_handler_t * vfs, const char *fn1, const char *fn2) 
 
 static int dcload_unlink(vfs_handler_t * vfs, const char *fn) {
     (void)vfs;
-
-    spinlock_lock_scoped(&mutex);
 
     return dclsc(DCLOAD_UNLINK, fn);
 }
@@ -321,9 +296,7 @@ static int dcload_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
         return 0;
     }
 
-    spinlock_lock(&mutex);
     retval = dclsc(DCLOAD_STAT, path, &filestat);
-    spinlock_unlock(&mutex);
 
     if(!retval) {
         memset(st, 0, sizeof(struct stat));
@@ -375,8 +348,6 @@ static int dcload_fcntl(void *h, int cmd, va_list ap) {
 
 static int dcload_rewinddir(void *h) {
     dcl_obj_t *obj = h;
-
-    spinlock_lock_scoped(&mutex);
 
     if(!obj->path)
         return -1;
