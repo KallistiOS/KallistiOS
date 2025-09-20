@@ -1,6 +1,11 @@
 # KallistiOS environment variable settings. These are the shared pieces
 # for the Dreamcast(tm) platform.
 
+# Add the default subarch (DC) if one hasn't already been set.
+if [ -z "${KOS_SUBARCH}" ] ; then
+    export KOS_SUBARCH="pristine"
+fi
+
 # Add the default external DC tools path if it isn't already set.
 if [ -z "${DC_TOOLS_BASE}" ] ; then
     export DC_TOOLS_BASE="${KOS_CC_BASE}/../bin"

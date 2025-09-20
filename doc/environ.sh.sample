@@ -23,15 +23,13 @@ export KOS_ARCH="dreamcast"
 # is targeting or uses an existing value that
 # can be set externally via your IDE.
 #
+# Only needs to be set if not using default.
+#
 # Valid values:
 #   "pristine" - Dreamcast console or HKT-0120 devkit (default)
 #   "naomi"    - NAOMI or NAOMI 2 arcade board
 #
-if [ -z "${KOS_SUBARCH}" ] ; then
-    export KOS_SUBARCH="pristine"
-else
-    export KOS_SUBARCH
-fi
+#export KOS_SUBARCH="naomi"
 
 # KOS Root Path
 #
