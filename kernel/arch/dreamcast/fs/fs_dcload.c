@@ -146,7 +146,13 @@ static void *fs_dcload_open(vfs_handler_t *vfs, const char *fn, int mode) {
             dcload_mode |= 0x0400;
 
         hnd = dcload_open(fn, dcload_mode, 0644);
-        hnd++; /* KOS uses 0 for error, not -1 */
+
+        if(hnd == -1) {
+            errno = ENOENT;
+            return (void *)NULL;
+        }
+        else
+            hnd++; /* KOS uses 0 for error, not -1 */
     }
 
     return (void *)hnd;
