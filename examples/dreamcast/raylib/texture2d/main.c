@@ -91,14 +91,14 @@ int main() {
 
 	// Load the textures before the loop. Loading textures after BeginDrawing does not work.
 	Texture2D *textures = malloc(sizeof(Texture2D) * collection.used);
-	for (int i = collection.used; --i;) {
+	for (int i = collection.used; i--;) {
 		textures[i] = LoadTextureFromImage(collection.image_arr[i]);
 	}
 
 	// Now we blit all the sprites to the screen repeatedly in random locations.
 	while (1) {
 		BeginDrawing();
-		for (int i = collection.used; --i;) {
+		for (int i = collection.used; i--;) {
 			if (IsTextureValid(textures[i])) {
 				int x = rand() % 640, y = rand() % 480;
 				DrawTexture(textures[i], x, y, WHITE);
