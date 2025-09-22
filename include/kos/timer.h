@@ -51,7 +51,7 @@ static inline timespec_t timer_gettime(void) {
 static inline uint64_t timer_ms_gettime64(void) {
     timespec_t time = timer_gettime();
 
-    return (uint64_t)time.tv_sec * 1000 + time.tv_nsec / 1000000;
+    return (uint64_t)time.tv_sec * 1000 + (uint64_t)(time.tv_nsec / 1000000);
 }
 
 /** \brief   Get the current uptime of the system (in microseconds).
@@ -64,7 +64,7 @@ static inline uint64_t timer_ms_gettime64(void) {
 static inline uint64_t timer_us_gettime64(void) {
     timespec_t time = timer_gettime();
 
-    return (uint64_t)time.tv_sec * 1000000 + time.tv_nsec / 1000;
+    return (uint64_t)time.tv_sec * 1000000 + (uint64_t)(time.tv_nsec / 1000);
 }
 
 /** \brief   Get the current uptime of the system (in nanoseconds).
@@ -77,7 +77,7 @@ static inline uint64_t timer_us_gettime64(void) {
 static inline uint64_t timer_ns_gettime64(void) {
     timespec_t time = timer_gettime();
 
-    return (uint64_t)time.tv_sec * 1000000000 + time.tv_nsec;
+    return (uint64_t)time.tv_sec * 1000000000 + (uint64_t)time.tv_nsec;
 }
 
 /** \brief   Get the current uptime of the system (in secs and millisecs).
@@ -98,7 +98,7 @@ static inline void timer_ms_gettime(uint32_t *secs, uint32_t *msecs) {
     timespec_t time = timer_gettime();
 
     if(secs)  *secs = time.tv_sec;
-    if(msecs) *msecs = time.tv_nsec / 1000000;
+    if(msecs) *msecs = (uint32_t)(time.tv_nsec / 1000000);
 }
 
 /** \brief   Get the current uptime of the system (in secs and microsecs).
@@ -120,7 +120,7 @@ static inline void timer_us_gettime(uint32_t *secs, uint32_t *usecs) {
     timespec_t time = timer_gettime();
 
     if(secs)  *secs = time.tv_sec;
-    if(usecs) *usecs = time.tv_nsec / 1000;
+    if(usecs) *usecs = (uint32_t)(time.tv_nsec / 1000);
 }
 
 /** \brief   Get the current uptime of the system (in secs and nanosecs).
@@ -142,7 +142,7 @@ static inline void timer_ns_gettime(uint32_t *secs, uint32_t *nsecs) {
     timespec_t time = timer_gettime();
 
     if(secs)  *secs = time.tv_sec;
-    if(nsecs) *nsecs = time.tv_nsec;
+    if(nsecs) *nsecs = (uint32_t)time.tv_nsec;
 }
 
 /** \brief  Spin-loop delay function with microsecond granularity
