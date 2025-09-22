@@ -33,6 +33,13 @@ void image_collection_add(ImageCollection *collection, Image *img) {
 	++collection->used;
 }
 
+void image_collection_cleanup(ImageCollection *collection) {
+	for (int i = collection->used; i--;) {
+		UnloadImage(collection->image_arr[i]);
+	}
+	free(collection->image_arr);
+}
+
 uint32_t power_of_two(int dim) {
 	// int is 32-bit.
 	dim--;
@@ -93,12 +100,19 @@ int main() {
 	Texture2D *textures = malloc(sizeof(Texture2D) * collection.used);
 	for (int i = collection.used; i--;) {
 		textures[i] = LoadTextureFromImage(collection.image_arr[i]);
+		// Once textures are loaded, you can free Images.
+		// In our case, we have them in a data structure, so we wait until after the loop.
 	}
 
+	// Since we clean up the images, don't reference data that probably isn't right.
+	int texture_len = collection.used;
+
+	image_collection_cleanup(&collection);
+
 	// Now we blit all the sprites to the screen repeatedly in random locations.
-	while (1) {
+	while (!WindowShouldClose()) {
 		BeginDrawing();
-		for (int i = collection.used; i--;) {
+		for (int i = texture_len; i--;) {
 			if (IsTextureValid(textures[i])) {
 				int x = rand() % 640, y = rand() % 480;
 				DrawTexture(textures[i], x, y, WHITE);
@@ -106,5 +120,12 @@ int main() {
 		}
 		EndDrawing();
 	}
+
+	// Cleanup. Even thought we shouldn't reach here under normal circumstances.
+	for (int i = texture_len; i--;) {
+		UnloadTexture(textures[i]);
+	}
+	CloseWindow();
+
 	return 0;
 }
