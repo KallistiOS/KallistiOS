@@ -1,0 +1,89 @@
+# KallistiOS Environment Settings
+#
+# This is a sample script for configuring and customizing your
+# KOS build environment. Modify it to suit your setup. Several
+# settings may be enabled optionally or are provided with
+# alternative values.
+#
+# This script is typically sourced in your current shell environment
+# (probably by .bashrc, .bash_profile, or something similar), so that
+# the KOS environment is set up automatically for each shell session.
+#
+
+# Build Architecture
+#
+# Set the major architecture you'll be building for.
+# The only option here is "dreamcast" as of KOS 2.0.0.
+#
+export KOS_ARCH="null"
+
+# KOS Root Path
+#
+# Specifies the path to the KOS root directory
+#
+export KOS_BASE="/home/quzar/dcdev/KallistiOS"
+
+export KOS_PORTS="/home/quzar/dcdev/kos-ports"
+
+export KOS_TOOLC_BASE="/usr"
+
+# Host Compiler Prefixes
+#
+# Specifies the path to and prefix for your host toolchain.
+#
+export KOS_CC_BASE="${KOS_TOOLC_BASE}" 
+export KOS_CC_PREFIX="x86_64-linux-gnu"
+
+# Genromfs Utility Path
+#
+# Specifies the path to the utility which is used by KOS
+# to create romdisk filesystem images.
+#
+export KOS_GENROMFS="${KOS_BASE}/utils/genromfs/genromfs"
+
+# Make Utility
+#
+# Configures the tool to be used as the main "make" utility
+# for building GNU Makefiles. On a platform such as BSD,
+# the default can be changed to "gmake," for the GNU
+# implementation.
+#
+export KOS_MAKE="make"
+
+# Default Compiler Flags
+#
+# Resets build flags. You can also initialize them to some preset
+# default values here if you wish.
+#
+export KOS_INC_PATHS=""
+export KOS_CFLAGS=""
+export KOS_CPPFLAGS=""
+export KOS_LDFLAGS=""
+export KOS_AFLAGS=""
+
+# Debug Builds
+#
+# Controls whether to disable additional debugging checks and assertions,
+# such as for parameter validation or internal errors. Uncomment this if
+# you do not wish to compile with this additional logic enabled.
+#
+#export KOS_CFLAGS="${KOS_CFLAGS} -DNDEBUG"
+#export KOS_CFLAGS="${KOS_CFLAGS} -DDBGLOG_DISABLED"
+
+# Optimization Level
+#
+# Controls the baseline optimization level to use when building.
+# Typically this is -Og (debugging), -O0, -O1, -O2, or -O3.
+# NOTE: For our target, -O4 is a valid optimization level that has
+# been seen to have some performance impact as well.
+#
+export KOS_CFLAGS="${KOS_CFLAGS} -O2 -Wall -fanalyzer"
+
+
+# Shared Compiler Configuration
+#
+# Include sub architecture-independent configuration file for shared
+# environment settings. If you want to configure additional compiler
+# options or see where other build flags are set, look at this file.
+#
+. ${KOS_BASE}/environ_base.sh
