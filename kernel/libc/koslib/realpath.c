@@ -19,6 +19,10 @@
 #include <sys/stat.h>
 #include <kos/limits.h>
 
+#ifndef lstat
+    int	lstat (const char *__restrict __path, struct stat *__restrict __buf );
+#endif
+
 char *realpath(const char *__restrict path, char *__restrict resolved) {
     char temp_path[PATH_MAX];
     //char link_target[PATH_MAX];
