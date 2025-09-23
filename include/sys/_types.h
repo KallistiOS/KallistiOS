@@ -166,29 +166,6 @@ typedef _CLOCK_T_   __clock_t;
 /** \brief  PDP Endian test macro */
 #define PDP_ENDIAN      3412
 
-/* Sigh... for some reason, Newlib only bothers defining these on Cygwin...
-   We're only actually concerned with AT_SYMLINK_NOFOLLOW currently. These
-   should all be defined in <fcntl.h>, by the way. */
-#ifndef AT_EACCESS
-/** \brief  Check access using effective user and group ID */
-#define AT_EACCESS              1
-#endif
-
-#ifndef AT_SYMLINK_NOFOLLOW
-/** \brief  Do not follow symlinks */
-#define AT_SYMLINK_NOFOLLOW     2
-#endif
-
-#ifndef AT_SYMLINK_FOLLOW
-/** \brief  Follow symbolic links */
-#define AT_SYMLINK_FOLLOW       4
-#endif
-
-#ifndef AT_REMOVEDIR
-/** \brief  Remove directory instead of file */
-#define AT_REMOVEDIR            8
-#endif
-
 #ifndef IOV_MAX
 /** \brief  Maximum length of an iovec, in elements. */
 #define IOV_MAX                 1024
