@@ -22,6 +22,8 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
+#include <arch/types.h>
+
 /** \defgroup bba Broadband Adapter
     \brief    Driver for the Dreamcast's BBA (RTL8139C).
     \ingroup  networking_drivers
