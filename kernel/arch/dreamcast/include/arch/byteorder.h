@@ -25,6 +25,9 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
+/* Included to get the `LITTLE_ENDIAN` define */
+#include <machine/endian.h>
+
 #ifdef BYTE_ORDER
 /* If we've included <arch/types.h>, this might already be defined... */
 #undef BYTE_ORDER

@@ -155,17 +155,6 @@ typedef _TIMER_T_   __timer_t;
 
 typedef _CLOCK_T_   __clock_t;
 
-/* The architecture should define the macro BYTE_ORDER in <arch/types.h> to
-   equal one of these macros for code that looks for these BSD-style macros. */
-/** \brief  Little Endian test macro */
-#define LITTLE_ENDIAN   1234
-
-/** \brief  Big Endian test macro */
-#define BIG_ENDIAN      4321
-
-/** \brief  PDP Endian test macro */
-#define PDP_ENDIAN      3412
-
 #ifndef IOV_MAX
 /** \brief  Maximum length of an iovec, in elements. */
 #define IOV_MAX                 1024
