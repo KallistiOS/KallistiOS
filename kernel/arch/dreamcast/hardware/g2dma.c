@@ -184,6 +184,7 @@ int g2_dma_transfer(void *sh4, void *g2bus, size_t length, uint32_t block,
         errno = EFAULT;
         return -1;
     }
+    irq_disable_scoped();
 
     /* Make sure we're not already DMA'ing */
     if(dma_progress[g2chn] != 0) {
