@@ -175,11 +175,6 @@ __END_DECLS
 
 #endif  /* _SYS__TYPES_H */
 
-/* Grab our C11 time stuff if we got here from <time.h>. */
-#ifdef _TIME_H_
-#include <kos/time.h>
-#endif
-
 #ifdef _STDLIB_H_
 #include <kos/stdlib.h>
 #endif
