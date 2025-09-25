@@ -22,6 +22,8 @@
 /* Thread pseudo-ptr representing an active IRQ context. */
 #define IRQ_THREAD  ((kthread_t *)0xFFFFFFFF)
 
+static int mutex_trylock_thd(mutex_t *m, kthread_t *thd);
+
 int mutex_init(mutex_t *m, unsigned int mtype) {
     /* Check the type */
     if(mtype > MUTEX_TYPE_RECURSIVE) {
@@ -59,7 +61,7 @@ int mutex_destroy(mutex_t *m) {
 
 int mutex_lock_irqsafe(mutex_t *m) {
     if(irq_inside_int())
-        return mutex_trylock(m);
+        return mutex_trylock_thd(m, IRQ_THREAD);
     else
         return mutex_lock(m);
 }
@@ -77,7 +79,7 @@ int mutex_lock_timed(mutex_t *m, unsigned int timeout) {
         return -1;
     }
 
-    rv = mutex_trylock(m);
+    rv = mutex_trylock_thd(m, thd_current);
     if(!rv || errno != EBUSY)
         return rv;
 
@@ -138,14 +140,20 @@ int __pure mutex_is_locked(const mutex_t *m) {
 }
 
 int mutex_trylock(mutex_t *m) {
-    kthread_t *thd = thd_current, *thd_none = NULL;
-
-    assert(m->type <= MUTEX_TYPE_RECURSIVE);
+    kthread_t *thd = thd_current;
 
     /* If we're inside of an interrupt, pick a special value for the thread that
        would otherwise be impossible... */
     if(irq_inside_int())
         thd = IRQ_THREAD;
+
+    return mutex_trylock_thd(m, thd);
+}
+
+static int mutex_trylock_thd(mutex_t *m, kthread_t *thd) {
+    kthread_t *thd_none = NULL;
+
+    assert(m->type <= MUTEX_TYPE_RECURSIVE);
 
     if(m->holder == thd) {
         if(m->type == MUTEX_TYPE_ERRORCHECK) {
