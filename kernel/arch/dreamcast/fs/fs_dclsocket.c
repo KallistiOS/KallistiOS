@@ -171,6 +171,8 @@ static void dcls_recv_loop(void) {
     while(!escape) {
         /* If we're in an interrupt, this works differently.... */
         if(irq_inside_int()) {
+            if(!net_default_dev)
+                break;
             /* Since we can't count on an interrupt happening, handle it
                manually, and poll the default device... */
             net_default_dev->if_rx_poll(net_default_dev);
