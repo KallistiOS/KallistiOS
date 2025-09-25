@@ -68,7 +68,7 @@ int mutex_lock_irqsafe(mutex_t *m) {
         return mutex_lock(m);
 }
 
-int mutex_lock_timed(mutex_t *m, int timeout) {
+int mutex_lock_timed(mutex_t *m, unsigned int timeout) {
     uint64_t deadline = 0;
     int rv = 0;
 
@@ -78,11 +78,6 @@ int mutex_lock_timed(mutex_t *m, int timeout) {
                timeout ? "mutex_lock_timed" : "mutex_lock",
                ((rv >> 16) & 0xf), (rv & 0xffff));
         errno = EPERM;
-        return -1;
-    }
-
-    if(timeout < 0) {
-        errno = EINVAL;
         return -1;
     }
 
@@ -130,7 +125,7 @@ int mutex_lock_timed(mutex_t *m, int timeout) {
 
             if(timeout) {
                 timeout = deadline - timer_ms_gettime64();
-                if(timeout <= 0) {
+                if((int)timeout <= 0) {
                     errno = ETIMEDOUT;
                     rv = -1;
                     break;
