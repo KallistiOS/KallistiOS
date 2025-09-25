@@ -72,11 +72,7 @@ int genwait_wait(void *obj, const char *mesg, unsigned int timeout,
                  void (*callback)(void *)) {
     kthread_t   *me, *t;
 
-    /* Twiddle interrupt state */
-    if(irq_inside_int()) {
-        dbglog(DBG_WARNING, "genwait_wait: called inside interrupt\n");
-        return -1;
-    }
+    assert(!irq_inside_int());
 
     irq_disable_scoped();
 
