@@ -144,17 +144,18 @@ int mutex_trylock(mutex_t *m) {
 }
 
 static int mutex_trylock_thd(mutex_t *m, kthread_t *thd) {
-    kthread_t *thd_none = NULL;
+    kthread_t *previous_thd = NULL;
 
     assert(m->type <= MUTEX_TYPE_RECURSIVE);
 
-    if(m->holder == thd) {
-        if(m->type == MUTEX_TYPE_ERRORCHECK) {
-            errno = EDEADLK;
-            return -1;
-        }
+    if(atomic_compare_exchange_strong(&m->holder, &previous_thd, thd)) {
+        m->count = 1;
+        return 0;
+    }
 
+    if(previous_thd == thd) {
         if(m->type == MUTEX_TYPE_RECURSIVE) {
+            /* Recursive mutex, we can just increment normally. */
             if(m->count == INT_MAX) {
                 errno = EAGAIN;
                 return -1;
@@ -163,11 +164,11 @@ static int mutex_trylock_thd(mutex_t *m, kthread_t *thd) {
             ++m->count;
             return 0;
         }
-    }
 
-    if(atomic_compare_exchange_strong(&m->holder, &thd_none, thd)) {
-        m->count = 1;
-        return 0;
+        if(m->type == MUTEX_TYPE_ERRORCHECK) {
+            errno = EDEADLK;
+            return -1;
+        }
     }
 
     /* We did not get the lock */
