@@ -24,6 +24,9 @@ int mtx_timedlock(mtx_t *restrict mtx, const struct timespec *restrict ts) {
     if(ts->tv_nsec % 1000000)
         ++ms;
 
+    if(ms < 0)
+        return thrd_timedout;
+
     if(mutex_lock_timed(mtx, ms)) {
         if(errno == ETIMEDOUT)
             return thrd_timedout;
