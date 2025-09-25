@@ -968,13 +968,9 @@ static int net_udp_getpeername(net_socket_t *hnd, struct sockaddr *name, socklen
         return -1;
     }
 
-    if(irq_inside_int()) {
-        if(mutex_trylock(&udp_mutex) == -1) {
-            errno = EWOULDBLOCK;
-            return -1;
-        }
-    } else {
-        mutex_lock(&udp_mutex);
+    if(mutex_lock_irqsafe(&udp_mutex)) {
+        errno = EWOULDBLOCK;
+        return -1;
     }
 
     if(!(sock = (struct udp_sock *)hnd->data)) {
