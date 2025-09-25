@@ -90,7 +90,6 @@ int kthread_key_delete(int key);
 
 int mutex_init(mutex_t *m, unsigned int mtype) __nonnull_all;
 int __pure mutex_is_locked(const mutex_t *m) __nonnull_all;
-int mutex_lock(mutex_t *m) __nonnull_all;
 int mutex_trylock(mutex_t *m) __nonnull_all;
 int mutex_lock_timed(mutex_t *m, unsigned int timeout) __nonnull_all;
 int mutex_unlock(mutex_t *m) __nonnull_all;
@@ -258,7 +257,7 @@ static inline int __gthread_objc_mutex_deallocate(objc_mutex_t mutex) {
 
 /* Grab a lock on a mutex. */
 static inline int __gthread_objc_mutex_lock(objc_mutex_t mutex) {
-    return mutex_lock((mutex_t *)mutex->backend);
+    return mutex_lock_timed((mutex_t *)mutex->backend, 0);
 }
 
 /* Try to grab a lock on a mutex. */
@@ -374,7 +373,7 @@ static inline int __gthread_mutex_destroy(__gthread_mutex_t *__mutex) {
 }
 
 static inline int __gthread_mutex_lock(__gthread_mutex_t *__mutex) {
-    return mutex_lock(__mutex);
+    return mutex_lock_timed(__mutex, 0);
 }
 
 static inline int __gthread_mutex_trylock(__gthread_mutex_t *__mutex) {
@@ -398,7 +397,7 @@ static inline void __gthread_recursive_mutex_init_func(__gthread_recursive_mutex
 }
 
 static inline int __gthread_recursive_mutex_lock(__gthread_recursive_mutex_t *__mutex) {
-    return mutex_lock(__mutex);
+    return mutex_lock_timed(__mutex, 0);
 }
 
 static inline int __gthread_recursive_mutex_trylock(__gthread_recursive_mutex_t *__mutex) {
