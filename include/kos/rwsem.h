@@ -2,6 +2,7 @@
 
    include/kos/rwsem.h
    Copyright (C) 2008, 2010, 2012 Lawrence Sebald
+   Copyright (C) 2025 Paul Cercueil
 
 */
 
@@ -20,7 +21,19 @@
     a reader either (since the reader might attempt to read while the writer is
     changing data).
 
+    This is implemented using two mutexes and an atomic read counter.
+    - The readers will lock the write mutex, then optionally the read mutex
+      (if they are the first reader), then unlock the write mutex. The writers
+      will lock the write mutex, then the read mutex.
+    - The write mutex is used to allow a pending writer to prevent new readers
+      from getting the semaphore.
+    - The read mutex is reserved when the first reader gets the semaphore, and
+      released after the last reader releases the lock. It is used to make the
+      writer wait until all readers are done.
+    - The atomic counter keeps count of the number of readers.
+
     \author Lawrence Sebald
+    \author Paul Cercueil
 */
 
 #ifndef __KOS_RWSEM_H
@@ -32,6 +45,7 @@ __BEGIN_DECLS
 
 #include <stddef.h>
 #include <kos/thread.h>
+#include <kos/mutex.h>
 
 /** \brief  Reader/writer semaphore structure.
 
@@ -44,15 +58,12 @@ typedef struct rw_semaphore {
     /** \brief  The number of readers that are currently holding the lock. */
     int read_count;
 
-    /** \brief  The thread holding the write lock. */
-    kthread_t *write_lock;
-
-    /** \brief  Space for one reader who's trying to upgrade to a writer. */
-    kthread_t *reader_waiting;
+    mutex_t write_lock;
+    mutex_t read_lock;
 } rw_semaphore_t;
 
 /** \brief  Initializer for a transient reader/writer semaphore */
-#define RWSEM_INITIALIZER   { 0, NULL, NULL }
+#define RWSEM_INITIALIZER   { 0, MUTEX_INITIALIZER, MUTEX_INITIALIZER }
 
 /** \brief  Initialize a reader/writer semaphore.
 
