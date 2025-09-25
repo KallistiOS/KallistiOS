@@ -27,10 +27,10 @@
 /* Read one byte from G2 */
 uint8_t g2_read_8(uintptr_t address) {
     g2_ctx_t ctx;
-    uint8 out;
+    uint8_t out;
 
     ctx = g2_lock();
-    out = *((vuint8*)address);
+    out = *((volatile uint8_t*)address);
     g2_unlock(ctx);
 
     return out;
@@ -41,17 +41,17 @@ void g2_write_8(uintptr_t address, uint8_t value) {
     g2_ctx_t ctx;
 
     ctx = g2_lock();
-    *((vuint8*)address) = value;
+    *((volatile uint8_t*)address) = value;
     g2_unlock(ctx);
 }
 
 /* Read one word from G2 */
 uint16_t g2_read_16(uintptr_t address) {
     g2_ctx_t ctx;
-    uint16 out;
+    uint16_t out;
 
     ctx = g2_lock();
-    out = *((vuint16*)address);
+    out = *((volatile uint16_t*)address);
     g2_unlock(ctx);
 
     return out;
@@ -62,17 +62,17 @@ void g2_write_16(uintptr_t address, uint16_t value) {
     g2_ctx_t ctx;
 
     ctx = g2_lock();
-    *((vuint16*)address) = value;
+    *((volatile uint16_t*)address) = value;
     g2_unlock(ctx);
 }
 
 /* Read one dword from G2 */
 uint32_t g2_read_32(uintptr_t address) {
     g2_ctx_t ctx;
-    uint32 out;
+    uint32_t out;
 
     ctx = g2_lock();
-    out = *((vuint32*)address);
+    out = *((volatile uint32_t*)address);
     g2_unlock(ctx);
 
     return out;
@@ -83,13 +83,13 @@ void g2_write_32(uintptr_t address, uint32_t value) {
     g2_ctx_t ctx;
 
     ctx = g2_lock();
-    *((vuint32*)address) = value;
+    *((volatile uint32_t*)address) = value;
     g2_unlock(ctx);
 }
 
 /* Read a block of 8-bit values from G2 */
 void g2_read_block_8(uint8_t * output, uintptr_t address, size_t amt) {
-    const vuint8 * input = (const vuint8 *)address;
+    const volatile uint8_t * input = (const volatile uint8_t *)address;
     g2_ctx_t ctx;
 
     ctx = g2_lock();
@@ -102,8 +102,8 @@ void g2_read_block_8(uint8_t * output, uintptr_t address, size_t amt) {
 }
 
 /* Write a block 8-bit values to G2 */
-void g2_write_block_8(const uint8 * input, uintptr_t address, size_t amt) {
-    vuint8 * output = (vuint8 *)address;
+void g2_write_block_8(const uint8_t * input, uintptr_t address, size_t amt) {
+    volatile uint8_t * output = (volatile uint8_t *)address;
     g2_ctx_t ctx;
 
     ctx = g2_lock();
@@ -117,7 +117,7 @@ void g2_write_block_8(const uint8 * input, uintptr_t address, size_t amt) {
 
 /* Read a block of 16-bit values from G2 */
 void g2_read_block_16(uint16_t * output, uintptr_t address, size_t amt) {
-    const vuint16 * input = (const vuint16 *)address;
+    const volatile uint16_t * input = (const volatile uint16_t *)address;
     g2_ctx_t ctx;
 
     ctx = g2_lock();
@@ -131,7 +131,7 @@ void g2_read_block_16(uint16_t * output, uintptr_t address, size_t amt) {
 
 /* Write a block of 16-bit values to G2 */
 void g2_write_block_16(const uint16_t * input, uintptr_t address, size_t amt) {
-    vuint16 * output = (vuint16 *)address;
+    volatile uint16_t * output = (volatile uint16_t *)address;
     g2_ctx_t ctx;
 
     ctx = g2_lock();
@@ -145,7 +145,7 @@ void g2_write_block_16(const uint16_t * input, uintptr_t address, size_t amt) {
 
 /* Read a block of 32-bit values from G2 */
 void g2_read_block_32(uint32_t * output, uintptr_t address, size_t amt) {
-    const vuint32 * input = (const vuint32 *)address;
+    const volatile uint32_t * input = (const volatile uint32_t *)address;
     g2_ctx_t ctx;
 
     ctx = g2_lock();
@@ -159,7 +159,7 @@ void g2_read_block_32(uint32_t * output, uintptr_t address, size_t amt) {
 
 /* Write a block of 32-bit values to G2 */
 void g2_write_block_32(const uint32_t * input, uintptr_t address, size_t amt) {
-    vuint32 * output = (vuint32 *)address;
+    volatile uint32_t * output = (volatile uint32_t *)address;
     g2_ctx_t ctx;
 
     ctx = g2_lock();
@@ -173,7 +173,7 @@ void g2_write_block_32(const uint32_t * input, uintptr_t address, size_t amt) {
 
 /* A memset-like function for G2 */
 void g2_memset_8(uintptr_t address, uint8_t c, size_t amt) {
-    vuint8 * output = (vuint8 *)address;
+    volatile uint8_t * output = (volatile uint8_t *)address;
     g2_ctx_t ctx;
 
     ctx = g2_lock();
