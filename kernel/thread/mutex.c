@@ -165,10 +165,8 @@ static int mutex_trylock_thd(mutex_t *m, kthread_t *thd) {
             return 0;
         }
 
-        if(m->type == MUTEX_TYPE_ERRORCHECK) {
-            errno = EDEADLK;
-            return -1;
-        }
+        errno = EDEADLK;
+        return -1;
     }
 
     /* We did not get the lock */
@@ -186,39 +184,21 @@ int mutex_unlock(mutex_t *m) {
     if(irq_inside_int())
         thd = IRQ_THREAD;
 
-    switch(m->type) {
-        case MUTEX_TYPE_ERRORCHECK:
-            if(m->holder != thd) {
-                errno = EPERM;
-                return -1;
-            }
-            __fallthrough;
-        default:
-        case MUTEX_TYPE_NORMAL:
-        case MUTEX_TYPE_OLDNORMAL:
-            m->count = 0;
-            m->holder = NULL;
-            break;
-
-        case MUTEX_TYPE_RECURSIVE:
-            if(m->holder != thd) {
-                errno = EPERM;
-                return -1;
-            }
-
-            if(--m->count)
-                return 0;
-
-            m->holder = NULL;
-            break;
+    if(m->holder != thd) {
+        errno = EPERM;
+        return -1;
     }
 
-    /* Restore real priority in case we were dynamically boosted. */
-    if (thd != IRQ_THREAD)
-        thd->prio = thd->real_prio;
+    if (!--m->count) {
+        m->holder = NULL;
 
-    /* If we need to wake up a thread, do so. */
-    genwait_wake_one(m);
+        /* Restore real priority in case we were dynamically boosted. */
+        if (thd != IRQ_THREAD)
+            thd->prio = thd->real_prio;
+
+        /* If we need to wake up a thread, do so. */
+        genwait_wake_one(m);
+    }
 
     return 0;
 }
