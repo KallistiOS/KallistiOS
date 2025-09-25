@@ -95,10 +95,6 @@ int rwsem_read_lock_timed(rw_semaphore_t *s, int timeout) {
     return rwsem_update_timed(s, timeout, UPDATE_TYPE_READ);
 }
 
-int rwsem_read_lock(rw_semaphore_t *s) {
-    return rwsem_read_lock_timed(s, 0);
-}
-
 int rwsem_read_lock_irqsafe(rw_semaphore_t *s) {
     if(irq_inside_int())
         return rwsem_read_trylock(s);
@@ -109,10 +105,6 @@ int rwsem_read_lock_irqsafe(rw_semaphore_t *s) {
 /* Lock a reader/writer semaphore for writing */
 int rwsem_write_lock_timed(rw_semaphore_t *s, int timeout) {
     return rwsem_update_timed(s, timeout, UPDATE_TYPE_WRITE);
-}
-
-int rwsem_write_lock(rw_semaphore_t *s) {
-    return rwsem_write_lock_timed(s, 0);
 }
 
 int rwsem_write_lock_irqsafe(rw_semaphore_t *s) {
@@ -186,10 +178,6 @@ int rwsem_write_trylock(rw_semaphore_t *s) {
 /* "Upgrade" a read lock to a write lock. */
 int rwsem_read_upgrade_timed(rw_semaphore_t *s, int timeout) {
     return rwsem_update_timed(s, timeout, UPDATE_TYPE_UPGRADE);
-}
-
-int rwsem_read_upgrade(rw_semaphore_t *s) {
-    return rwsem_read_upgrade_timed(s, 0);
 }
 
 /* Attempt to upgrade a read lock to a write lock, but do not block. */
