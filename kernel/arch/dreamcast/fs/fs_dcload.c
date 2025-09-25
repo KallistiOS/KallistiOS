@@ -20,11 +20,11 @@ printf goes to the dc-tool console
 
 #include <dc/fifo.h>
 #include <dc/fs_dcload.h>
-#include <arch/spinlock.h>
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>
 #include <kos/fs.h>
 #include <kos/init.h>
+#include <kos/spinlock.h>
 
 #include <errno.h>
 #include <stdint.h>

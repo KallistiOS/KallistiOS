@@ -19,8 +19,8 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <kos/spinlock.h>
 #include <dc/g2bus.h>
-#include <arch/spinlock.h>
 
 /* Always use these functions to access G2 bus memory (includes the SPU
    and the expansion port, e.g., BBA) */

@@ -18,7 +18,7 @@
 
 #include <kos.h>
 #include <stdlib.h>
-#include <arch/spinlock.h>
+#include <kos/spinlock.h>
 
 /* 
     Simple macro that calls printf and immediately flushes its 

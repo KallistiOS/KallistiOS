@@ -10,7 +10,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <kos/dbgio.h>
-#include <arch/spinlock.h>
+#include <kos/spinlock.h>
 
 /*
   This module handles a swappable debug console. These functions used to be
