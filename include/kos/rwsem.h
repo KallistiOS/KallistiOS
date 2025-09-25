@@ -122,7 +122,10 @@ int rwsem_read_lock_timed(rw_semaphore_t *s, int timeout) __nonnull_all;
     \em     EPERM - called inside an interrupt \n
     \em     EINVAL - the semaphore is not initialized
 */
-int rwsem_read_lock(rw_semaphore_t *s) __nonnull_all;
+__nonnull_all
+static inline int rwsem_read_lock(rw_semaphore_t *s) {
+    return rwsem_read_lock_timed(s, 0);
+}
 
 /** \brief  Lock a reader/writer semaphore for reading.
 
@@ -178,7 +181,10 @@ int rwsem_write_lock_timed(rw_semaphore_t *s, int timeout) __nonnull_all;
     \em     EPERM - called inside an interrupt \n
     \em     EINVAL - the semaphore is not initialized
 */
-int rwsem_write_lock(rw_semaphore_t *s) __nonnull_all;
+__nonnull_all
+static inline int rwsem_write_lock(rw_semaphore_t *s) {
+    return rwsem_write_lock_timed(s, 0);
+}
 
 /** \brief  Lock a reader/writer semaphore for writing.
 
@@ -330,7 +336,10 @@ int rwsem_read_upgrade_timed(rw_semaphore_t *s, int timeout) __nonnull_all;
     \em     EINVAL - the semaphore is not initialized \n
     \em     EBUSY - another reader has already requested an upgrade
 */
-int rwsem_read_upgrade(rw_semaphore_t *s) __nonnull_all;
+__nonnull_all
+static inline int rwsem_read_upgrade(rw_semaphore_t *s) {
+    return rwsem_read_upgrade_timed(s, 0);
+}
 
 /** \brief  Attempt to upgrade a thread from reader status to writer status.
 
