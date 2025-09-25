@@ -92,7 +92,7 @@ int mutex_init(mutex_t *m, unsigned int mtype) __nonnull_all;
 int __pure mutex_is_locked(const mutex_t *m) __nonnull_all;
 int mutex_lock(mutex_t *m) __nonnull_all;
 int mutex_trylock(mutex_t *m) __nonnull_all;
-int mutex_lock_timed(mutex_t *m, int timeout) __nonnull_all;
+int mutex_lock_timed(mutex_t *m, unsigned int timeout) __nonnull_all;
 int mutex_unlock(mutex_t *m) __nonnull_all;
 int mutex_destroy(mutex_t *m) __nonnull_all;
 

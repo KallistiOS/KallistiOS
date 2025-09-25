@@ -190,12 +190,11 @@ int mutex_lock_irqsafe(mutex_t *m) __nonnull_all;
 
     \par    Error Conditions:
     \em     EPERM - called inside an interrupt \n
-    \em     EINVAL - the timeout value was invalid (less than 0) \n
     \em     ETIMEDOUT - the timeout expired \n
     \em     EAGAIN - lock has been acquired too many times (recursive) \n
     \em     EDEADLK - would deadlock (error-checking)
 */
-int mutex_lock_timed(mutex_t *m, int timeout) __nonnull_all;
+int mutex_lock_timed(mutex_t *m, unsigned int timeout) __nonnull_all;
 
 /** \brief  Check if a mutex is locked.
 
