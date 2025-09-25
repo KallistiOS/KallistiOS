@@ -2,80 +2,97 @@
 
    rwsem.c
    Copyright (C) 2008, 2012 Lawrence Sebald
+   Copyright (C) 2025 Paul Cercueil
 */
 
 /* Defines reader/writer semaphores */
 
-#include <stdio.h>
+#include <stdatomic.h>
 #include <stdlib.h>
 #include <errno.h>
 
 #include <kos/rwsem.h>
-#include <kos/genwait.h>
-#include <kos/dbglog.h>
+#include <kos/timer.h>
+
+typedef enum rwsem_update_type {
+    UPDATE_TYPE_READ,
+    UPDATE_TYPE_WRITE,
+    UPDATE_TYPE_UPGRADE,
+} rwsem_update_type_t;
 
 int rwsem_init(rw_semaphore_t *s) {
     s->read_count = 0;
-    s->write_lock = NULL;
-    s->reader_waiting = NULL;
+    s->write_lock = (mutex_t)MUTEX_INITIALIZER;
+    s->read_lock = (mutex_t)MUTEX_INITIALIZER;
 
     return 0;
 }
 
 /* Destroy a reader/writer semaphore */
 int rwsem_destroy(rw_semaphore_t *s) {
-    int rv = 0;
-
-    irq_disable_scoped();
-
-    if(s->read_count || s->write_lock) {
+    if(mutex_is_locked(&s->write_lock) || mutex_is_locked(&s->read_lock)) {
         errno = EBUSY;
-        rv = -1;
+        return -1;
     }
 
-    return rv;
+    return 0;
+}
+
+static int rwsem_update_timed(rw_semaphore_t *s, int timeout,
+                              rwsem_update_type_t type) {
+    uint64_t deadline = 0;
+
+    if(timeout)
+        deadline = timer_ms_gettime64() + timeout;
+
+    if(mutex_lock_timed(&s->write_lock, timeout))
+        return -1;
+
+    if(type != UPDATE_TYPE_READ || atomic_fetch_add(&s->read_count, 1) == 0) {
+        if(timeout) {
+            /* Update the timeout value to the remaining time */
+            timeout = deadline - timer_ms_gettime64();
+            if(timeout <= 0) {
+                if(type == UPDATE_TYPE_READ)
+                    atomic_fetch_sub(&s->read_count, 1);
+                mutex_unlock(&s->write_lock);
+                errno = ETIMEDOUT;
+                return -1;
+            }
+        }
+
+        if(type == UPDATE_TYPE_UPGRADE)
+            rwsem_read_unlock(s);
+
+        if(mutex_lock_timed(&s->read_lock, timeout)) {
+            if(type == UPDATE_TYPE_READ) {
+                atomic_fetch_sub(&s->read_count, 1);
+            } else if(type == UPDATE_TYPE_UPGRADE
+                      && atomic_fetch_add(&s->read_count, 1) == 0) {
+                /* mutex_locked_timed() timed out, but the read count we just
+                 * updated was zero, which means that whatever was holding up
+                 * the mutex may have unlocked it since then, or will unlock it
+                 * the next time it runs without delay. This is guaranteed
+                 * because we hold up the write mutex, so no other reader or
+                 * writer can lock up the read mutex before we do. */
+                mutex_lock(&s->read_lock);
+            }
+
+            mutex_unlock(&s->write_lock);
+            errno = ETIMEDOUT;
+            return -1;
+        }
+    }
+
+    if(type == UPDATE_TYPE_READ)
+        mutex_unlock(&s->write_lock);
+
+    return 0;
 }
 
 /* Lock a reader/writer semaphore for reading */
 int rwsem_read_lock_timed(rw_semaphore_t *s, int timeout) {
-    int rv = 0;
-
-    if((rv = irq_inside_int())) {
-        dbglog(DBG_WARNING, "%s: called inside an interrupt with code: "
-               "%x evt: %.4x\n",
-               timeout ? "rwsem_read_lock_timed" : "rwsem_read_lock",
-               ((rv >> 16) & 0xf), (rv & 0xffff));
-        errno = EPERM;
-        return -1;
-    }
-
-    if(timeout < 0) {
-        errno = EINVAL;
-        return -1;
-    }
-
-    irq_disable_scoped();
-
-    /* If the write lock is not held, let the thread proceed */
-    if(!s->write_lock) {
-        ++s->read_count;
-    }
-    else {
-        /* Block until the write lock is not held any more */
-        rv = genwait_wait(s, timeout ? "rwsem_read_lock_timed" :
-                          "rwsem_read_lock", timeout, NULL);
-
-        if(rv < 0) {
-            rv = -1;
-            if(errno == EAGAIN)
-                errno = ETIMEDOUT;
-        }
-        else {
-            ++s->read_count;
-        }
-    }
-
-    return rv;
+    return rwsem_update_timed(s, timeout, UPDATE_TYPE_READ);
 }
 
 int rwsem_read_lock(rw_semaphore_t *s) {
@@ -91,44 +108,7 @@ int rwsem_read_lock_irqsafe(rw_semaphore_t *s) {
 
 /* Lock a reader/writer semaphore for writing */
 int rwsem_write_lock_timed(rw_semaphore_t *s, int timeout) {
-    int rv = 0;
-
-    if(irq_inside_int()) {
-        dbglog(DBG_WARNING, "rwsem_write_lock_timed: called inside "
-               "interrupt\n");
-        errno = EPERM;
-        return -1;
-    }
-
-    if(timeout < 0) {
-        errno = EINVAL;
-        return -1;
-    }
-
-    irq_disable_scoped();
-
-    /* If the write lock is not held and there are no readers in their critical
-       sections, let the thread proceed. */
-    if(!s->write_lock && !s->read_count) {
-        s->write_lock = thd_current;
-    }
-    else {
-        /* Block until the write lock is not held and there are no readers
-           inside their critical sections */
-        rv = genwait_wait(&s->write_lock, timeout ? "rwsem_write_lock_timed" :
-                          "rwsem_write_lock", timeout, NULL);
-
-        if(rv < 0) {
-            rv = -1;
-            if(errno == EAGAIN)
-                errno = ETIMEDOUT;
-        }
-        else {
-            s->write_lock = thd_current;
-        }
-    }
-
-    return rv;
+    return rwsem_update_timed(s, timeout, UPDATE_TYPE_WRITE);
 }
 
 int rwsem_write_lock(rw_semaphore_t *s) {
@@ -144,151 +124,68 @@ int rwsem_write_lock_irqsafe(rw_semaphore_t *s) {
 
 /* Unlock a reader/writer semaphore from a read lock. */
 int rwsem_read_unlock(rw_semaphore_t *s) {
-    irq_disable_scoped();
-
-    if(!s->read_count) {
-        errno = EPERM;
-        return -1;
-    }
-
-    --s->read_count;
-
-    /* If this was the last reader, attempt to wake any writers waiting. */
-    if(!s->read_count) {
-        if(s->reader_waiting) {
-            genwait_wake_thd(&s->write_lock, s->reader_waiting, 0);
-            s->reader_waiting = NULL;
-        }
-        else {
-            genwait_wake_one(&s->write_lock);
-        }
-    }
+    if(atomic_fetch_sub(&s->read_count, 1) == 1)
+        mutex_unlock(&s->read_lock);
 
     return 0;
 }
 
 /* Unlock a reader/writer semaphore from a write lock. */
 int rwsem_write_unlock(rw_semaphore_t *s) {
-    int woken;
-
-    irq_disable_scoped();
-
-    if(s->write_lock != thd_current) {
-        errno = EPERM;
-        return -1;
-    }
-
-    s->write_lock = NULL;
-
-    /* Give writers priority, attempt to wake any writers first. */
-    woken = genwait_wake_cnt(&s->write_lock, 1, 0);
-
-    if(!woken) {
-        /* No writers were waiting, wake up any readers. */
-        genwait_wake_all(s);
-    }
+    mutex_unlock(&s->read_lock);
+    mutex_unlock(&s->write_lock);
 
     return 0;
 }
 
 int rwsem_unlock(rw_semaphore_t *s) {
-    irq_disable_scoped();
+    /* We have readers -> rwsem is a read lock. */
+    if(s->read_count > 0)
+        return rwsem_read_unlock(s);
 
-    if(!s->write_lock && !s->read_count) {
-        errno = EPERM;
-        return -1;
-    }
-
-    /* Is this thread holding the write lock? */
-    if(s->write_lock == thd_current)
-        return rwsem_write_unlock(s);
-
-    /* Not holding the write lock, assume its holding the read lock... */
-    return rwsem_read_unlock(s);
+    /* No readers -> it's a write lock. */
+    return rwsem_write_unlock(s);
 }
 
 /* Attempt to lock a reader/writer semaphore for reading, but do not block. */
 int rwsem_read_trylock(rw_semaphore_t *s) {
-    irq_disable_scoped();
-
-    /* Is the write lock held? */
-    if(s->write_lock) {
+    if(mutex_trylock(&s->write_lock)) {
         errno = EWOULDBLOCK;
         return -1;
     }
 
-    ++s->read_count;
+    if(atomic_fetch_add(&s->read_count, 1) == 0
+       && mutex_trylock(&s->read_lock)) {
+        atomic_fetch_sub(&s->read_count, 1);
+        mutex_unlock(&s->write_lock);
+        errno = EWOULDBLOCK;
+        return -1;
+    }
+
+    mutex_unlock(&s->write_lock);
+
     return 0;
 }
 
 /* Attempt to lock a reader/writer semaphore for writing, but do not block. */
 int rwsem_write_trylock(rw_semaphore_t *s) {
-    irq_disable_scoped();
-
-    /* Are there any readers in their critical sections, or is the write lock
-       already held, if so we can't do anything about that now. */
-    if(s->read_count || s->write_lock) {
+    if(mutex_trylock(&s->write_lock)) {
         errno = EWOULDBLOCK;
         return -1;
     }
 
-    s->write_lock = thd_current;
+    if(mutex_trylock(&s->read_lock)) {
+        mutex_unlock(&s->write_lock);
+        errno = EWOULDBLOCK;
+        return -1;
+    }
+
     return 0;
 }
 
 /* "Upgrade" a read lock to a write lock. */
 int rwsem_read_upgrade_timed(rw_semaphore_t *s, int timeout) {
-    int rv;
-
-    if(irq_inside_int()) {
-        dbglog(DBG_WARNING, "rwsem_read_upgrade_timed: called inside "
-               "interrupt\n");
-        errno = EPERM;
-        return -1;
-    }
-
-    if(timeout < 0) {
-        errno = EINVAL;
-        return -1;
-    }
-
-    irq_disable_scoped();
-
-    /* If there are still other readers, see if any other readers have tried to
-       upgrade or not... */
-    if(s->read_count > 1) {
-        if(s->reader_waiting) {
-            /* We've got someone ahead of us, so there's really not anything
-               that can be done at this point... */
-            errno = EBUSY;
-            return -1;
-        }
-
-        --s->read_count;
-        s->reader_waiting = thd_current;
-        rv = genwait_wait(&s->write_lock, timeout ?
-                          "rwsem_read_upgrade_timed" : "rwsem_read_upgrade",
-                          timeout, NULL);
-
-        if(rv < 0) {
-            /* The only way we can error out is if there are still readers
-               with the lock, so we can safely re-grab the lock here. */
-            ++s->read_count;
-
-            if(errno == EAGAIN)
-                errno = ETIMEDOUT;
-
-            return -1;
-        }
-
-        s->write_lock = thd_current;
-    }
-    else {
-        s->read_count = 0;
-        s->write_lock = thd_current;
-    }
-
-    return 0;
+    return rwsem_update_timed(s, timeout, UPDATE_TYPE_UPGRADE);
 }
 
 int rwsem_read_upgrade(rw_semaphore_t *s) {
@@ -297,20 +194,19 @@ int rwsem_read_upgrade(rw_semaphore_t *s) {
 
 /* Attempt to upgrade a read lock to a write lock, but do not block. */
 int rwsem_read_tryupgrade(rw_semaphore_t *s) {
-    irq_disable_scoped();
+    int one = 1;
 
-    if(s->reader_waiting) {
-        errno = EBUSY;
-        return -1;
-    }
-
-    if(s->read_count != 1) {
+    if(mutex_trylock(&s->write_lock)) {
         errno = EWOULDBLOCK;
         return -1;
     }
 
-    s->read_count = 0;
-    s->write_lock = thd_current;
+    if(!atomic_compare_exchange_strong(&s->read_count, &one, 0)) {
+        /* upgrade failed */
+        mutex_unlock(&s->write_lock);
+        errno = EWOULDBLOCK;
+        return -1;
+    }
 
     return 0;
 }
@@ -322,5 +218,5 @@ int rwsem_read_count(const rw_semaphore_t *s) {
 
 /* Return the current status of the write lock */
 int rwsem_write_locked(const rw_semaphore_t *s) {
-    return !!s->write_lock;
+    return mutex_is_locked(&s->write_lock);
 }
