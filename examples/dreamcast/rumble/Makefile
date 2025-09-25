@@ -1,12 +1,11 @@
 #
 # Rumble Test Redux
 # Copyright (C) 2023 Donald Haase
-
+# Copyright (C) 2025 Daniel Fairchild
 #
 
 TARGET = rumble.elf
-OBJS = rumble.o romdisk.o
-KOS_ROMDISK_DIR = romdisk
+OBJS = rumble.o
 
 all: rm-elf $(TARGET)
 
@@ -16,14 +15,14 @@ clean: rm-elf
 	-rm -f $(OBJS)
 
 rm-elf:
-	-rm -f $(TARGET) romdisk.*
+	-rm -f $(TARGET)
 
 $(TARGET): $(OBJS)
-	kos-cc -o $(TARGET) $(OBJS) -lparallax -lz
+	kos-cc -o $(TARGET) $(OBJS)
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 
 dist: $(TARGET)
-	-rm -f $(OBJS) romdisk.img
+	-rm -f $(OBJS)
 	$(KOS_STRIP) $(TARGET)
