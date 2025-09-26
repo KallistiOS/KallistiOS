@@ -53,11 +53,11 @@ static void icmp6_default_echo_cb(const struct in6_addr *ip, uint16_t seq,
     inet_ntop(AF_INET6, ip, ipstr, INET6_ADDRSTRLEN);
 
     if(delta_us != (uint64_t) - 1) {
-        printf("%d bytes from %s, icmp_seq=%d hlim=%d time=%.3f ms\n", data_sz,
+        printf("%zu bytes from %s, icmp_seq=%d hlim=%d time=%.3f ms\n", data_sz,
                ipstr, seq, hlim, delta_us / 1000.0);
     }
     else {
-        printf("%d bytes from %s, icmp_seq=%d hlim=%d\n", data_sz, ipstr, seq,
+        printf("%zu bytes from %s, icmp_seq=%d hlim=%d\n", data_sz, ipstr, seq,
                hlim);
     }
 }

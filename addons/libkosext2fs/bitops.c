@@ -18,7 +18,7 @@ uint32_t ext2_bit_find_nonzero(const uint32_t *btbl, uint32_t start,
         tmp = btbl[i];
         if(tmp != 0) {
             for(; j < 32; ++j) {
-                if(tmp & (1 << j))
+                if(tmp & (1u << j))
                     return (i << 5) | j;
             }
         }
@@ -31,7 +31,7 @@ uint32_t ext2_bit_find_nonzero(const uint32_t *btbl, uint32_t start,
         tmp = btbl[i];
         if(tmp != 0) {
             for(; j < (end & 0x1F); ++j) {
-                if(tmp & (1 << j))
+                if(tmp & (1u << j))
                     return (i << 5) | j;
             }
         }
@@ -52,7 +52,7 @@ uint32_t ext2_bit_find_zero(const uint32_t *btbl, uint32_t start,
         tmp = btbl[i];
         if(tmp != 0xFFFFFFFF) {
             for(; j < 32; ++j) {
-                if(!(tmp & (1 << j)))
+                if(!(tmp & (1u << j)))
                     return (i << 5) | j;
             }
         }
@@ -65,7 +65,7 @@ uint32_t ext2_bit_find_zero(const uint32_t *btbl, uint32_t start,
         tmp = btbl[i];
         if(tmp != 0xFFFFFFFF) {
             for(; j < (end & 0x1F); ++j) {
-                if(!(tmp & (1 << j)))
+                if(!(tmp & (1u << j)))
                     return (i << 5) | j;
             }
         }
