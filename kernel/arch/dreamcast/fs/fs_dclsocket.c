@@ -514,7 +514,7 @@ static int dcls_unlink(vfs_handler_t *vfs, const char *fn) {
 static int dcls_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
                      int flag) {
     command_t *cmd = (command_t *)pktbuf;
-    dcload_stat_t filestat;
+    dcload_stat_t filestat = { 0 };
 
     (void)flag;
 
