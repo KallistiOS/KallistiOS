@@ -90,15 +90,17 @@ static rd_dir_t  *rootdir = NULL;
 /********************************************************************************/
 /* File primitives */
 
-/* File handles.. I could probably do this with a linked list, but I'm just
-   too lazy right now. =) */
-static struct {
+/* Entries in the fd list. Pointers of this type are passed out to ref files. */
+typedef struct rd_fd {
     rd_file_t   *file;      /* ramdisk file struct */
     bool        dir;        /* true if a directory */
     uint32_t    ptr;        /* Current read position in bytes */
     dirent_t    dirent;     /* A static dirent to pass back to clients */
     int         omode;      /* Open mode */
-} fh[FS_RAMDISK_MAX_FILES];
+    TAILQ_ENTRY(rd_fd)  next;   /* Next handle in the linked list */
+} rd_fd_t;
+
+static TAILQ_HEAD(rd_fd_queue, rd_fd) rd_fd_queue;
 
 /* Mutex for file system structs */
 static mutex_t rd_mutex;
@@ -110,8 +112,8 @@ static const dev_t rd_dev = (dev_t)('r' | ('a' << 8) | ('m' << 16));
 static const blksize_t rd_blksize = 1024;
 
 /* Test if an file_t is invalid, presumes mutex is already held. */
-static inline bool ramdisk_fd_invalid(file_t fd) {
-    return((fd >= FS_RAMDISK_MAX_FILES) || (!fh[fd].file));
+static inline bool ramdisk_fd_invalid(rd_fd_t *fd) {
+    return(!fd || (!fd->file));
 }
 
 /* Search a directory for the named file; return the struct if
@@ -265,7 +267,7 @@ static rd_file_t *ramdisk_create_file(rd_dir_t *parent, const char *fn, bool dir
 
 /* Open a file or directory */
 static void *ramdisk_open(vfs_handler_t *vfs, const char *fn, int mode) {
-    file_t      fd = -1;
+    rd_fd_t     *fd;
     rd_file_t   *f;
     int     mm = mode & O_MODE_MASK;
 
@@ -279,7 +281,7 @@ static void *ramdisk_open(vfs_handler_t *vfs, const char *fn, int mode) {
     /* Are we trying to do something stupid? */
     if((mode & O_DIR) && mm != O_RDONLY) {
         errno = EISDIR;
-        goto error_out;
+        return NULL;
     }
 
     /* Look for the file */
@@ -298,12 +300,12 @@ static void *ramdisk_open(vfs_handler_t *vfs, const char *fn, int mode) {
                 f = ramdisk_create_file(rootdir, fn, mode & O_DIR);
 
                 if(f == NULL)
-                    goto error_out;
+                    return NULL;
             }
             /* Must be read only mode as we tested for non-read DIR earlier. */
             else /* if(mm == O_RDONLY) */ {
                 errno = ENOENT;
-                goto error_out;
+                return NULL;
             }
         }
     }
@@ -311,53 +313,50 @@ static void *ramdisk_open(vfs_handler_t *vfs, const char *fn, int mode) {
     /* Did we ask for a dir as a file? */
     if(f->isdir && !(mode & O_DIR)) {
         errno = EINVAL;
-        goto error_out;
-    }
-
-    /* Find a free file handle */
-    for(fd = 1; fd < FS_RAMDISK_MAX_FILES; fd++)
-        if(fh[fd].file == NULL)
-            break;
-
-    /* Did we find it? */
-    if(fd >= FS_RAMDISK_MAX_FILES) {
-        fd = -1;
-        errno = EMFILE;
-        goto error_out;
+        return NULL;
     }
 
     /* Is the file already open for write? */
     if(f->openfor == OPENFOR_WRITE)
-        goto error_out;
+        return NULL;
+
+    /* Create a new file handle */
+    fd = (rd_fd_t *)calloc(1, sizeof(*fd));
+
+    /* Did we get memory? */
+    if(!fd) {
+        errno = ENOMEM;
+        return NULL;
+    }
 
     /* Fill the basic fd structure */
-    fh[fd].file = f;
-    fh[fd].dir = !!(mode & O_DIR);
-    fh[fd].omode = mode;
+    fd->file = f;
+    fd->dir = !!(mode & O_DIR);
+    fd->omode = mode;
 
     /* The rest require a bit more thought */
     if(mm == O_RDONLY) {
         f->openfor = OPENFOR_READ;
-        fh[fd].ptr = 0;
+        fd->ptr = 0;
     }
     else if((mm & O_RDWR) || (mm & O_WRONLY)) {
         if(f->openfor == OPENFOR_READ)
-            goto error_out;
+            return NULL;
 
         f->openfor = OPENFOR_WRITE;
 
         if(mode & O_APPEND)
-            fh[fd].ptr = f->size;
+            fd->ptr = f->size;
         /* If we're opening with O_TRUNC, kill the existing contents */
         else if(mode & O_TRUNC) {
             free(f->data);
             f->datasize = rd_blksize;
             f->data = malloc(f->datasize);
             f->size = 0;
-            fh[fd].ptr = 0;
+            fd->ptr = 0;
         }
         else
-            fh[fd].ptr = 0;
+            fd->ptr = 0;
     }
     else {
         assert_msg(0, "Unknown file mode");
@@ -366,27 +365,23 @@ static void *ramdisk_open(vfs_handler_t *vfs, const char *fn, int mode) {
     /* If we opened a dir, then ptr is actually a pointer to the first
        file entry. */
     if(mode & O_DIR) {
-        fh[fd].ptr = (uint32_t)LIST_FIRST((rd_dir_t *)f->data);
+        fd->ptr = (uint32_t)LIST_FIRST((rd_dir_t *)f->data);
     }
 
     /* Increase the usage count */
     f->usage++;
 
+    /* Now insert the fd into our fd list */
+    TAILQ_INSERT_TAIL(&rd_fd_queue, fd, next);
+
     /* Should do it... */
-    return (void *)fd;
-
-error_out:
-
-    if(fd != -1)
-        fh[fd].file = NULL;
-
-    return NULL;
+    return fd;
 }
 
 /* Close a file or directory */
 static int ramdisk_close(void *h) {
     rd_file_t   *f;
-    file_t      fd = (file_t)h;
+    rd_fd_t     *fd = h;
 
     mutex_lock_scoped(&rd_mutex);
 
@@ -396,8 +391,8 @@ static int ramdisk_close(void *h) {
         return 0;
     }
 
-    f = fh[fd].file;
-    fh[fd].file = NULL;
+    f = fd->file;
+    fd->file = NULL;
 
     /* Decrease the usage count */
     f->usage--;
@@ -408,65 +403,69 @@ static int ramdisk_close(void *h) {
     if(f->usage == 0)
         f->openfor = OPENFOR_NOTHING;
 
+    /* Remove fd from the queue, and free it. */
+    TAILQ_REMOVE(&rd_fd_queue, fd, next);
+    free(fd);
+
     return 0;
 }
 
 /* Read from a file */
 static ssize_t ramdisk_read(void *h, void *buf, size_t bytes) {
-    file_t  fd = (file_t)h;
+    rd_fd_t     *fd = h;
 
     mutex_lock_scoped(&rd_mutex);
 
     /* Check that the fd is invalid or a dir */
-    if(ramdisk_fd_invalid(fd) || fh[fd].dir) {
+    if(ramdisk_fd_invalid(fd) || fd->dir) {
         errno = EBADF;
         return (ssize_t)-1;
     }
 
     /* Is there enough left? */
-    if((fh[fd].ptr + bytes) > fh[fd].file->size)
-        bytes = fh[fd].file->size - fh[fd].ptr;
+    if((fd->ptr + bytes) > fd->file->size)
+        bytes = fd->file->size - fd->ptr;
 
     /* Copy out the requested amount */
-    memcpy(buf, ((uint8_t *)fh[fd].file->data) + fh[fd].ptr, bytes);
-    fh[fd].ptr += bytes;
+    memcpy(buf, ((uint8_t *)fd->file->data) + fd->ptr, bytes);
+    fd->ptr += bytes;
 
     return bytes;
 }
 
 /* Write to a file */
 static ssize_t ramdisk_write(void *h, const void *buf, size_t bytes) {
-    file_t  fd = (file_t)h;
+    rd_fd_t     *fd = h;
 
     mutex_lock_scoped(&rd_mutex);
 
     /* Check that the fd is invalid or a dir or not open for writing */
-    if(ramdisk_fd_invalid(fd) || fh[fd].dir ||
-        (fh[fd].file->openfor != OPENFOR_WRITE)) {
+    if(ramdisk_fd_invalid(fd) || fd->dir ||
+        (fd->file->openfor != OPENFOR_WRITE)) {
         errno = EBADF;
         return (ssize_t)-1;
     }
 
     /* Is there enough left? */
-    if((fh[fd].ptr + bytes) > fh[fd].file->datasize) {
+    if((fd->ptr + bytes) > fd->file->datasize) {
         /* We need to realloc the block */
-        void *np = realloc(fh[fd].file->data, (fh[fd].ptr + bytes) + (rd_blksize * 4));
+        void *np = realloc(fd->file->data, (fd->ptr + bytes) + (rd_blksize * 4));
 
         if(np == NULL) {
             errno = ENOSPC;
             return -1;
         }
 
-        fh[fd].file->data = np;
-        fh[fd].file->datasize = (fh[fd].ptr + bytes) + (rd_blksize * 4);
+        fd->file->data = np;
+        fd->file->datasize = (fd->ptr + bytes) + (rd_blksize * 4);
     }
 
     /* Copy out the requested amount */
-    memcpy(((uint8_t *)fh[fd].file->data) + fh[fd].ptr, buf, bytes);
-    fh[fd].ptr += bytes;
+    memcpy(((uint8_t *)fd->file->data) + fd->ptr, buf, bytes);
+    fd->ptr += bytes;
 
-    if(fh[fd].file->size < fh[fd].ptr) {
-        fh[fd].file->size = fh[fd].ptr;
+    if(fd->file->size < fd->ptr) {
+        fd->file->size = fd->ptr;
     }
 
     return bytes;
@@ -474,12 +473,12 @@ static ssize_t ramdisk_write(void *h, const void *buf, size_t bytes) {
 
 /* Seek elsewhere in a file */
 static off_t ramdisk_seek(void *h, off_t offset, int whence) {
-    file_t  fd = (file_t)h;
+    rd_fd_t     *fd = h;
 
     mutex_lock_scoped(&rd_mutex);
 
     /* Check that the fd is invalid or a dir */
-    if(ramdisk_fd_invalid(fd) || fh[fd].dir) {
+    if(ramdisk_fd_invalid(fd) || fd->dir) {
         errno = EBADF;
         return -1;
     }
@@ -492,25 +491,25 @@ static off_t ramdisk_seek(void *h, off_t offset, int whence) {
                 return -1;
             }
 
-            fh[fd].ptr = offset;
+            fd->ptr = offset;
             break;
 
         case SEEK_CUR:
-            if(offset < 0 && ((uint32_t)-offset) > fh[fd].ptr) {
+            if(offset < 0 && ((uint32_t)-offset) > fd->ptr) {
                 errno = EINVAL;
                 return -1;
             }
 
-            fh[fd].ptr += offset;
+            fd->ptr += offset;
             break;
 
         case SEEK_END:
-            if(offset < 0 && ((uint32_t)-offset) > fh[fd].file->size) {
+            if(offset < 0 && ((uint32_t)-offset) > fd->file->size) {
                 errno = EINVAL;
                 return -1;
             }
 
-            fh[fd].ptr = fh[fd].file->size + offset;
+            fd->ptr = fd->file->size + offset;
             break;
 
         default:
@@ -520,72 +519,72 @@ static off_t ramdisk_seek(void *h, off_t offset, int whence) {
 
     /* Check bounds */
     // XXXX: Technically this isn't correct. Fix it sometime.
-    if(fh[fd].ptr > fh[fd].file->size) fh[fd].ptr = fh[fd].file->size;
+    if(fd->ptr > fd->file->size) fd->ptr = fd->file->size;
 
-    return fh[fd].ptr;
+    return fd->ptr;
 }
 
 /* Tell where in the file we are */
 static off_t ramdisk_tell(void *h) {
-    file_t  fd = (file_t)h;
+    rd_fd_t     *fd = h;
 
     mutex_lock_scoped(&rd_mutex);
 
     /* Check that the fd is invalid or a dir */
-    if(ramdisk_fd_invalid(fd) || fh[fd].dir) {
+    if(ramdisk_fd_invalid(fd) || fd->dir) {
         errno = EBADF;
         return -1;
     }
 
-    return fh[fd].ptr;
+    return fd->ptr;
 }
 
 /* Tell how big the file is */
 static size_t ramdisk_total(void *h) {
-    file_t  fd = (file_t)h;
+    rd_fd_t     *fd = h;
 
     mutex_lock_scoped(&rd_mutex);
 
     /* Check that the fd is invalid or a dir */
-    if(ramdisk_fd_invalid(fd) || fh[fd].dir) {
+    if(ramdisk_fd_invalid(fd) || fd->dir) {
         errno = EBADF;
         return -1;
     }
 
-    return fh[fd].file->size;
+    return fd->file->size;
 }
 
 /* Read a directory entry */
 static dirent_t *ramdisk_readdir(void *h) {
     rd_file_t   *f;
-    file_t      fd = (file_t)h;
+    rd_fd_t     *fd = h;
 
     mutex_lock_scoped(&rd_mutex);
 
     /* Check that the fd is invalid or NOT a dir */
-    if(ramdisk_fd_invalid(fd) || !fh[fd].dir) {
+    if(ramdisk_fd_invalid(fd) || !fd->dir) {
         errno = EBADF;
         return NULL;
     }
 
     /* Find the current file and advance to the next */
-    f = (rd_file_t *)fh[fd].ptr;
-    fh[fd].ptr = (uint32_t)LIST_NEXT(f, dirlist);
+    f = (rd_file_t *)fd->ptr;
+    fd->ptr = (uint32_t)LIST_NEXT(f, dirlist);
 
     /* Copy out the requested data */
-    strcpy(fh[fd].dirent.name, f->name);
-    fh[fd].dirent.time = 0;
+    strcpy(fd->dirent.name, f->name);
+    fd->dirent.time = 0;
 
     if(f->isdir) {
-        fh[fd].dirent.attr = O_DIR;
-        fh[fd].dirent.size = -1;
+        fd->dirent.attr = O_DIR;
+        fd->dirent.size = -1;
     }
     else {
-        fh[fd].dirent.attr = 0;
-        fh[fd].dirent.size = f->size;
+        fd->dirent.attr = 0;
+        fd->dirent.size = f->size;
     }
 
-    return &fh[fd].dirent;
+    return &fd->dirent;
 }
 
 static int ramdisk_unlink(vfs_handler_t *vfs, const char *fn) {
@@ -624,14 +623,14 @@ static int ramdisk_unlink(vfs_handler_t *vfs, const char *fn) {
 }
 
 static void *ramdisk_mmap(void *h) {
-    file_t  fd = (file_t)h;
+    rd_fd_t     *fd = h;
 
     mutex_lock_scoped(&rd_mutex);
 
     /* Check that the fd is invalid or a dir */
-    if(ramdisk_fd_invalid(fd) || fh[fd].dir) return NULL;
+    if(ramdisk_fd_invalid(fd) || fd->dir) return NULL;
 
-    return fh[fd].file->data;
+    return fd->file->data;
 }
 
 static int ramdisk_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
@@ -676,7 +675,7 @@ static int ramdisk_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
 }
 
 static int ramdisk_fcntl(void *h, int cmd, va_list ap) {
-    file_t fd = (file_t)h;
+    rd_fd_t     *fd = h;
 
     (void)ap;
 
@@ -690,7 +689,7 @@ static int ramdisk_fcntl(void *h, int cmd, va_list ap) {
 
     switch(cmd) {
         case F_GETFL:
-            return fh[fd].omode;
+            return fd->omode;
 
         case F_SETFL:
         case F_GETFD:
@@ -704,24 +703,24 @@ static int ramdisk_fcntl(void *h, int cmd, va_list ap) {
 }
 
 static int ramdisk_rewinddir(void *h) {
-    file_t fd = (file_t)h;
+    rd_fd_t     *fd = h;
 
     mutex_lock_scoped(&rd_mutex);
 
     /* Check that the fd is invalid or NOT a dir */
-    if(ramdisk_fd_invalid(fd) || !fh[fd].dir) {
+    if(ramdisk_fd_invalid(fd) || !fd->dir) {
         errno = EBADF;
         return -1;
     }
 
     /* Rewind to the first file. */
-    fh[fd].ptr = (uint32_t)LIST_FIRST((rd_dir_t *)fh[fd].file->data);
+    fd->ptr = (uint32_t)LIST_FIRST((rd_dir_t *)fd->file->data);
 
     return 0;
 }
 
 static int ramdisk_fstat(void *h, struct stat *st) {
-    file_t fd = (file_t)h;
+    rd_fd_t     *fd = h;
     rd_file_t *f;
 
     mutex_lock_scoped(&rd_mutex);
@@ -733,7 +732,7 @@ static int ramdisk_fstat(void *h, struct stat *st) {
     }
 
     /* Grab the file itself... */
-    f = fh[fd].file;
+    f = fd->file;
 
     /* Fill in the structure. */
     memset(st, 0, sizeof(struct stat));
@@ -794,7 +793,7 @@ static vfs_handler_t vh = {
    writing, but it doesn't actually attach the file to an fd, and it starts
    out with data instead of being blank. */
 int fs_ramdisk_attach(const char *fn, void *obj, size_t size) {
-    void        *fd;
+    rd_fd_t     *fd;
     rd_file_t   *f;
 
     /* First of all, open a file for writing. This'll save us a bunch
@@ -805,7 +804,7 @@ int fs_ramdisk_attach(const char *fn, void *obj, size_t size) {
         return -1;
 
     /* Ditch the data block we had and replace it with the user one. */
-    f = fh[(int)fd].file;
+    f = fd->file;
     free(f->data);
     f->data = obj;
     f->datasize = size;
@@ -819,7 +818,7 @@ int fs_ramdisk_attach(const char *fn, void *obj, size_t size) {
 
 /* Does the opposite of attach. This again piggybacks on open. */
 int fs_ramdisk_detach(const char *fn, void **obj, size_t *size) {
-    void        *fd;
+    rd_fd_t     *fd;
     rd_file_t   *f;
 
     /* First of all, open a file for reading. This'll save us a bunch
@@ -833,7 +832,7 @@ int fs_ramdisk_detach(const char *fn, void **obj, size_t *size) {
     assert(obj != NULL);
     assert(size != NULL);
 
-    f = fh[(int)fd].file;
+    f = fd->file;
     *obj = f->data;
     *size = f->size;
 
@@ -883,8 +882,8 @@ void fs_ramdisk_init(void) {
 
     LIST_INIT(rootdir);
 
-    /* Reset fd's */
-    memset(fh, 0, sizeof(fh));
+    /* Init the list of file descriptors */
+    TAILQ_INIT(&rd_fd_queue);
 
     /* Init thread mutexes */
     mutex_init(&rd_mutex, MUTEX_TYPE_NORMAL);
