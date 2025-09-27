@@ -20,6 +20,11 @@ for i in $ARGS; do
 			# a better way to do this. (scan for any .c?)
 			USEMODE=3
 		;;
+		-dumpversion)
+			# Used for our gcc version test which expects
+			# *just* the output and no verbose output.
+			USEMODE=4
+		;;
 		*)
 		;;
 	esac
@@ -56,5 +61,10 @@ case $USEMODE in
 			echo ${KOS_CC} ${KOS_CFLAGS} "$@"
 		fi
 		exec ${KOS_CC} ${KOS_CFLAGS} "$@"
+	;;
+
+	4)
+		# -dumpversion mode. Ignore verbose.
+		exec ${KOS_CC} "$@"
 	;;
 esac
