@@ -155,3 +155,10 @@ int sem_count(const semaphore_t *sm) {
     /* Look for the semaphore */
     return sm->count;
 }
+
+int sem_wait_irqsafe(semaphore_t *sm) {
+    if(irq_inside_int())
+        return sem_trywait(sm);
+    else
+        return sem_wait(sm);
+}
