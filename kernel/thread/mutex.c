@@ -176,7 +176,16 @@ static int mutex_trylock_thd(mutex_t *m, kthread_t *thd) {
     return -1;
 }
 
-static int __nonnull_all mutex_unlock_common(mutex_t *m, kthread_t *thd) {
+int mutex_unlock(mutex_t *m) {
+    kthread_t *thd = thd_current;
+
+    assert(m->type <= MUTEX_TYPE_RECURSIVE);
+
+    /* If we're inside of an interrupt, use the special value for the thread
+       from mutex_trylock(). */
+    if(irq_inside_int())
+        thd = IRQ_THREAD;
+
     switch(m->type) {
         case MUTEX_TYPE_ERRORCHECK:
             if(m->holder != thd) {
@@ -212,29 +221,4 @@ static int __nonnull_all mutex_unlock_common(mutex_t *m, kthread_t *thd) {
     genwait_wake_one(m);
 
     return 0;
-}
-
-int mutex_unlock(mutex_t *m) {
-    kthread_t *thd = thd_current;
-
-    assert(m->type <= MUTEX_TYPE_RECURSIVE);
-
-    /* If we're inside of an interrupt, use the special value for the thread
-       from mutex_trylock(). */
-    if(irq_inside_int())
-        thd = IRQ_THREAD;
-
-    return mutex_unlock_common(m, thd);
-}
-
-int mutex_unlock_as_thread(mutex_t *m, kthread_t *thd) {
-    assert(m->type < MUTEX_TYPE_RECURSIVE); /* Unsafe with recursive mutexes */
-
-    /* Make sure we're in an IRQ handler */
-    if(!irq_inside_int()) {
-        errno = EACCES;
-        return -1;
-    }
-
-    return mutex_unlock_common(m, thd);
 }
