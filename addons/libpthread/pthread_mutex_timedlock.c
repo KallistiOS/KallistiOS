@@ -8,13 +8,12 @@
 
 #include "pthread-internal.h"
 #include <pthread.h>
-#include <errno.h>
 #include <sys/time.h>
+#include <kos/errno.h>
 #include <kos/mutex.h>
 
 int pthread_mutex_timedlock(pthread_mutex_t *__RESTRICT mutex,
                             const struct timespec *__RESTRICT abstime) {
-    int old, rv = 0;
     int tmo;
     struct timespec ctv;
 
@@ -31,7 +30,7 @@ int pthread_mutex_timedlock(pthread_mutex_t *__RESTRICT mutex,
        the timing... POSIX says that if the lock can be acquired immediately
        then this function should never return a timeout, regardless of what
        abstime says. */
-    old = errno;
+    errno_save_scoped();
 
     if(!mutex_trylock(&mutex->mutex))
         return 0;
@@ -45,9 +44,5 @@ int pthread_mutex_timedlock(pthread_mutex_t *__RESTRICT mutex,
     if(tmo <= 0)
         return ETIMEDOUT;
 
-    if(mutex_lock_timed(&mutex->mutex, tmo))
-        rv = errno;
-
-    errno = old;
-    return rv;
+    return errno_if_nonzero(mutex_lock_timed(&mutex->mutex, tmo));
 }

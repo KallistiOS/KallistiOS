@@ -7,21 +7,14 @@
 
 #include "pthread-internal.h"
 #include <pthread.h>
-#include <errno.h>
+#include <kos/errno.h>
 #include <kos/rwsem.h>
 
 int pthread_rwlock_wrlock(pthread_rwlock_t *rwlock) {
-    int old, rv = 0;
-
     if(!rwlock)
         return EFAULT;
 
-    old = errno;
+    errno_save_scoped();
 
-    if(rwsem_write_lock(&rwlock->rwsem)) {
-        rv = errno;
-        errno = old;
-    }
-
-    return rv;
+    return errno_if_nonzero(rwsem_write_lock(&rwlock->rwsem));
 }
