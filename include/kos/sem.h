@@ -132,6 +132,26 @@ int sem_wait_timed(semaphore_t *sm, int timeout) __nonnull_all;
 */
 int sem_trywait(semaphore_t *sm) __nonnull_all;
 
+/** \brief  Wait on a semaphore.
+
+    This function will decrement the semaphore's count and return, if resources
+    are available. Otherwise, the function will block until the resources become
+    available.
+
+    This function can be used from within an interrupt context. In that case, if
+    the semaphore is already used, an error will be returned.
+
+    \param  sm              The semaphore to wait on
+    \retval 0               On success
+    \retval -1              On error, sets errno as appropriate
+
+    \par    Error Conditions:
+    \em     EWOULDBLOCK - the function was called inside an interrupt and the
+                          semaphore is not free \n
+    \em     EINVAL - the semaphore was not initialized
+*/
+int sem_wait_irqsafe(semaphore_t *sm) __nonnull_all;
+
 /** \brief  Signal a semaphore.
 
     This function will release resources associated with a semaphore, signalling
