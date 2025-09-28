@@ -50,7 +50,7 @@ int sem_destroy(semaphore_t *sm) {
 }
 
 /* Wait on a semaphore, with timeout (in milliseconds) */
-int sem_wait_timed(semaphore_t *sm, int timeout) {
+int sem_wait_timed(semaphore_t *sm, unsigned int timeout) {
     int rv = 0;
 
     /* Make sure we're not inside an interrupt */
@@ -59,12 +59,6 @@ int sem_wait_timed(semaphore_t *sm, int timeout) {
                timeout ? "sem_wait_timed" : "sem_wait",
                ((rv>>16) & 0xf), (rv & 0xffff));
         errno = EPERM;
-        return -1;
-    }
-
-    /* Check for smarty clients */
-    if(timeout < 0) {
-        errno = EINVAL;
         return -1;
     }
 
