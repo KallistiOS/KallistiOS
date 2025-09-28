@@ -108,10 +108,9 @@ int sem_wait(semaphore_t *sm) __nonnull_all;
     \par    Error Conditions:
     \em     EPERM - called inside an interrupt \n
     \em     EINVAL - the semaphore was not initialized \n
-    \em     EINVAL - the timeout value was invalid (less than 0) \n
     \em     ETIMEDOUT - timed out while blocking
  */
-int sem_wait_timed(semaphore_t *sm, int timeout) __nonnull_all;
+int sem_wait_timed(semaphore_t *sm, unsigned int timeout) __nonnull_all;
 
 /** \brief  "Wait" on a semaphore without blocking.
 
