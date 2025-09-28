@@ -246,24 +246,6 @@ int mutex_trylock(mutex_t *m) __nonnull_all;
 */
 int mutex_unlock(mutex_t *m) __nonnull_all;
 
-/** \brief  Unlock a mutex under another thread's authority.
-
-    This function allows an IRQ handler to unlock a mutex that was locked by a
-    normal kernel thread. This function is only for use in IRQ handlers, so it
-    will generally not be of much use outside of the kernel itself. It cannot
-    be used with recursive mutexes.
-
-    \param  m               The mutex to unlock
-    \param  thd             The thread owning the mutex
-    \retval 0               On success
-    \retval -1              On error, errno will be set as appropriate.
-
-    \par    Error Conditions:
-    \em     EPERM - the specified thread does not own the mutex \n
-    \em     EACCES - called outside an IRQ handler
-*/
-int mutex_unlock_as_thread(mutex_t *m, kthread_t *thd) __nonnull_all;
-
 /** \cond */
 static inline void __mutex_scoped_cleanup(mutex_t **m) {
     if(*m)
