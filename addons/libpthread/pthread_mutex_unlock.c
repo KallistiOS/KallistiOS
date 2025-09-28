@@ -7,16 +7,11 @@
 
 #include "pthread-internal.h"
 #include <pthread.h>
-#include <errno.h>
+#include <kos/errno.h>
 #include <kos/mutex.h>
 
 int pthread_mutex_unlock(pthread_mutex_t *mutex) {
-    int old, rv = 0;
+    errno_save_scoped();
 
-    old = errno;
-    if(mutex_unlock(&mutex->mutex))
-        rv = errno;
-
-    errno = old;
-    return rv;
+    return errno_if_nonzero(mutex_unlock(&mutex->mutex));
 }

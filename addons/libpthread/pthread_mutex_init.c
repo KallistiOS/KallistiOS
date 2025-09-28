@@ -7,13 +7,12 @@
 
 #include "pthread-internal.h"
 #include <pthread.h>
-#include <errno.h>
+#include <kos/errno.h>
 #include <kos/mutex.h>
 
 int pthread_mutex_init(pthread_mutex_t *__RESTRICT mutex,
                        const pthread_mutexattr_t *__RESTRICT attr) {
     unsigned int type = MUTEX_TYPE_NORMAL;
-    int old, rv = 0;
 
     if(attr) {
         switch(attr->mtype) {
@@ -34,10 +33,7 @@ int pthread_mutex_init(pthread_mutex_t *__RESTRICT mutex,
         }
     }
 
-    old = errno;
-    if(mutex_init(&mutex->mutex, type))
-        rv = errno;
+    errno_save_scoped();
 
-    errno = old;
-    return rv;
+    return errno_if_nonzero(mutex_init(&mutex->mutex, type));
 }
