@@ -179,6 +179,28 @@ int sem_signal(semaphore_t *sm) __nonnull_all;
 */
 int sem_count(const semaphore_t *sm) __nonnull_all;
 
+/** \cond */
+static inline void __sem_scoped_cleanup(semaphore_t **sm) {
+    if(*sm)
+        sem_signal(*sm);
+}
+
+#define ___sem_wait_scoped(sm, l) \
+    semaphore_t *__scoped_sem_##l __attribute__((cleanup(__sem_scoped_cleanup))) = sem_wait(sm) ? NULL : (sm)
+
+#define __sem_wait_scoped(sm, l) ___sem_wait_scoped(sm, l)
+/** \endcond */
+
+/** \brief  Wait on a semaphore with scope management
+
+    This macro will wait on a semaphore, similarly to sem_wait, with the
+    difference that the semaphore will automatically be signaled once the
+    execution exits the functional block in which the macro was called.
+
+    \param  sm              The semaphore to wait on
+*/
+#define sem_wait_scoped(sm) __sem_wait_scoped((sm), __LINE__)
+
 __END_DECLS
 
 #endif  /* __KOS_SEM_H */
