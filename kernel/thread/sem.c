@@ -33,8 +33,8 @@ int sem_init(semaphore_t *sm, int count) {
         return -1;
     }
 
-    sm->count = count;
-    sm->initialized = 1;
+    *sm = (semaphore_t)SEM_INITIALIZER(count);
+
     return 0;
 }
 
@@ -62,82 +62,73 @@ int sem_wait_timed(semaphore_t *sm, unsigned int timeout) {
         return -1;
     }
 
+    if(sm->initialized != 1) {
+        errno = EINVAL;
+        return -1;
+    }
+
     /* Disable interrupts */
     irq_disable_scoped();
 
-    if(sm->initialized != 1) {
-        errno = EINVAL;
-        rv = -1;
-    }
+    sm->count--;
+
     /* If there's enough count left, then let the thread proceed */
-    else if(sm->count > 0) {
-        sm->count--;
-    }
-    else {
+    if(sm->count < 0) {
         /* Block us until we're signaled */
-        sm->count--;
         rv = genwait_wait(sm, timeout ? "sem_wait_timed" : "sem_wait", timeout,
                           NULL);
 
         /* Did we fail to get the lock? */
         if(rv < 0) {
-            rv = -1;
             ++sm->count;
 
             if(errno == EAGAIN)
                 errno = ETIMEDOUT;
+
+            return -1;
         }
     }
 
-    return rv;
+    return 0;
 }
 
 /* Attempt to wait on a semaphore. If the semaphore would block,
    then return an error instead of actually blocking. */
 int sem_trywait(semaphore_t *sm) {
-    int rv = 0;
+    if(sm->initialized != 1) {
+        errno = EINVAL;
+        return -1;
+    }
 
     irq_disable_scoped();
 
-    if(sm->initialized != 1) {
-        errno = EINVAL;
-        rv = -1;
-    }
     /* Is there enough count left? */
-    else if(sm->count > 0) {
-        sm->count--;
-    }
-    else {
-        rv = -1;
+    if(sm->count <= 0) {
         errno = EWOULDBLOCK;
+        return -1;
     }
 
-    return rv;
+    sm->count--;
+
+    return 0;
 }
 
 /* Signal a semaphore */
 int sem_signal(semaphore_t *sm) {
-    int woken, rv = 0;
+    if(sm->initialized != 1) {
+        errno = EINVAL;
+        return -1;
+    }
 
     irq_disable_scoped();
 
-    if(sm->initialized != 1) {
-        errno = EINVAL;
-        rv = -1;
-    }
     /* Is there anyone waiting? If so, pass off to them */
-    else if(sm->count < 0) {
-        woken = genwait_wake_cnt(sm, 1, 0);
-        (void)woken;
-        assert(woken == 1);
-        sm->count++;
-    }
-    else {
-        /* No one is waiting, so just add another tick */
-        sm->count++;
-    }
+    if(sm->count < 0)
+        genwait_wake_one(sm);
 
-    return rv;
+    sm->count++;
+
+    return 0;
 }
 
 /* Return the semaphore count */
