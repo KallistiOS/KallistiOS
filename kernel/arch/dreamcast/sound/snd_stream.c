@@ -18,7 +18,8 @@
 #include <sys/queue.h>
 
 #include <kos/dbglog.h>
-#include <kos/mutex.h>
+#include <kos/sem.h>
+#include <kos/thread.h>
 #include <arch/cache.h>
 #include <kos/timer.h>
 #include <dc/g2bus.h>
@@ -99,7 +100,6 @@ typedef struct strchan {
 
     uint32_t dma_length;
     uintptr_t dma_dest;
-    kthread_t *mutex_thd;
 } strchan_t;
 
 /* Our stream structs */
@@ -108,7 +108,7 @@ static strchan_t streams[SND_STREAM_MAX];
 /* Separation buffers (for stereo) */
 static uint32_t *sep_buffer[2] = {NULL, NULL};
 
-static mutex_t stream_mutex = MUTEX_INITIALIZER;
+static semaphore_t stream_sem = SEM_INITIALIZER(1);
 
 static int max_channels = 0;
 static size_t max_buffer_size = 0;
@@ -440,7 +440,8 @@ void snd_stream_destroy(snd_stream_hnd_t hnd) {
         return;
     }
 
-    mutex_lock(&stream_mutex);
+    sem_wait(&stream_sem);
+
     snd_stream_stop(hnd);
     snd_sfx_chn_free(streams[hnd].ch[0]);
 
@@ -462,7 +463,7 @@ void snd_stream_destroy(snd_stream_hnd_t hnd) {
     // dbglog(DBG_INFO, "snd_stream: dealloc'd channels %d/%d\n", streams[hnd].ch[0], streams[hnd].ch[1]);
     memset(streams + hnd, 0, sizeof(streams[0]));
 
-    mutex_unlock(&stream_mutex);
+    sem_signal(&stream_sem);
 }
 
 /* Shut everything down and free mem */
@@ -641,8 +642,8 @@ void snd_stream_stop(snd_stream_hnd_t hnd) {
 
 /* The DMA will chain to this to start the second DMA. */
 static inline void dma_done(void *data) {
-    strchan_t *stream = (strchan_t *)data;
-    mutex_unlock_as_thread(&stream_mutex, stream->mutex_thd);
+    (void)data;
+    sem_signal(&stream_sem);
 }
 
 static inline void dma_chain(void *data) {
@@ -659,7 +660,6 @@ static int snd_stream_transfer(strchan_t *stream, void *first_buf,
     int rs;
 
     dcache_purge_range((uintptr_t)first_buf, size);
-    stream->mutex_thd = thd_current;
 
     if(stream->channels == 2) {
         dcache_purge_range((uintptr_t)sep_buffer[1], size);
@@ -679,7 +679,7 @@ static int snd_stream_transfer(strchan_t *stream, void *first_buf,
             break;
         }
         if(errno != EINPROGRESS) {
-            mutex_unlock(&stream_mutex);
+            sem_signal(&stream_sem);
             return -1;
         }
         thd_pass();
@@ -723,7 +723,7 @@ static size_t snd_stream_fill(snd_stream_hnd_t hnd, uint32_t offset, size_t size
             spu_memset_sq(left, 0, needed_bytes);
         }
         else {
-            mutex_lock(&stream_mutex);
+            sem_wait(&stream_sem);
             memset(sep_buffer[0], 0, needed_bytes / chans);
             if(chans == 2) {
                 memset(sep_buffer[1], 0, needed_bytes / chans);
@@ -747,7 +747,7 @@ static size_t snd_stream_fill(snd_stream_hnd_t hnd, uint32_t offset, size_t size
             spu_memload_sq(left, data, got_bytes);
             return got_bytes;
         }
-        mutex_lock(&stream_mutex);
+        sem_wait(&stream_sem);
 
         if(!__is_aligned(data, 32)) {
             memcpy(sep_buffer[0], data, got_bytes);
@@ -763,7 +763,7 @@ static size_t snd_stream_fill(snd_stream_hnd_t hnd, uint32_t offset, size_t size
         got_bytes = (got_bytes + 8) & ~7;
     }
 
-    mutex_lock(&stream_mutex);
+    sem_wait(&stream_sem);
 
     if(stream->bitsize == 16) {
         if(!__is_aligned(data, 32)) {
