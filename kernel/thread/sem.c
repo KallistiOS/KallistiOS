@@ -92,10 +92,6 @@ int sem_wait_timed(semaphore_t *sm, unsigned int timeout) {
     return rv;
 }
 
-int sem_wait(semaphore_t *sm) {
-    return sem_wait_timed(sm, 0);
-}
-
 /* Attempt to wait on a semaphore. If the semaphore would block,
    then return an error instead of actually blocking. */
 int sem_trywait(semaphore_t *sm) {
