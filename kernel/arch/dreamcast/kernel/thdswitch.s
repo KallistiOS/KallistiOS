@@ -20,10 +20,13 @@
 ! must be kept strictly in sync as far as the structure of the saved
 ! registers; all of this must be kept in sync with the C code.
 !
+! This must be called with irqs disabled.
+!
 ! This takes one arg: a pointer to the current task's register save
 ! table (same thing that normally goes in irq_srt_addr).
 !
 ! R4 = address of register save table
+! R5 = irq state to save
 !
 ! No explicit return value, though R0 might be changed while the
 ! called is blocked. Returns when we are woken again later.
@@ -33,17 +36,9 @@ _thd_block_now:
 	! to persist across calls. So we'll put our temps down there
 	! and start at R8.
 
-	! Save SR and disable interrupts
-	mov.l		irqd_and,r1
-	mov.l		irqd_or,r2
-	stc		sr,r0
-	and		r0,r1
-	or		r2,r1
-	ldc		r1,sr
-
 	add		#0x72,r4
 
-	mov		r0,r1
+	mov		r5,r1
 	add		#0x72,r4
 
 	sts.l		fpscr,@-r4	! save FPSCR 0xe0

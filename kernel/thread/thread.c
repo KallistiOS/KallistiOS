@@ -274,7 +274,7 @@ void thd_exit(void *rv) {
     /* The thread's never coming back so we don't need to bother saving the
        interrupt state at all. Disable interrupts just to make sure nothing
        changes underneath us while we're doing our thing here */
-    irq_disable();
+    irq_mask_t saved = irq_disable();
 
     /* Set the return value of the thread */
     thd_current->rv = rv;
@@ -296,7 +296,7 @@ void thd_exit(void *rv) {
     }
 
     /* Manually reschedule */
-    thd_block_now(&thd_current->context);
+    thd_block_now(&thd_current->context, saved);
 
     /* not reached */
     abort();
@@ -594,6 +594,30 @@ static void thd_update_cpu_time(kthread_t *thd) {
     thd->cpu_time.scheduled = ns;
 }
 
+/* Presumes irqs are disabled/in an irq. Returns a
+    thread to run next or NULL if we shouldn't switch.
+*/
+static kthread_t *thd_find_new_thread(void) {
+    kthread_t *thd = NULL;
+    uint64_t now;
+
+    now = timer_ms_gettime64();
+
+    /* Look for timed out waits */
+    genwait_check_timeouts(now);
+
+    /* Search downwards through the run queue for a runnable thread; if
+       we don't find a normal runnable thread, the idle process will
+       always be there at the bottom. */
+    TAILQ_FOREACH(thd, &run_queue, thdq) {
+        /* Is it runnable? If not, keep going */
+        if(thd->state == STATE_READY)
+            break;
+    }
+
+    return thd;
+}
+
 /* Helper function that sets a thread being scheduled */
 static inline void thd_schedule_inner(kthread_t *thd) {
     thd_remove_from_runnable(thd);
@@ -634,9 +658,6 @@ static inline void thd_schedule_inner(kthread_t *thd) {
 */
 void thd_schedule(bool front_of_line) {
     kthread_t *thd;
-    uint64_t now;
-
-    now = timer_ms_gettime64();
 
     /* If there's only two thread left, it's the idle task and the reaper task:
        exit the OS */
@@ -652,17 +673,8 @@ void thd_schedule(bool front_of_line) {
         thd_add_to_runnable(thd_current, front_of_line);
     }
 
-    /* Look for timed out waits */
-    genwait_check_timeouts(now);
-
-    /* Search downwards through the run queue for a runnable thread; if
-       we don't find a normal runnable thread, the idle process will
-       always be there at the bottom. */
-    TAILQ_FOREACH(thd, &run_queue, thdq) {
-        /* Is it runnable? If not, keep going */
-        if(thd->state == STATE_READY)
-            break;
-    }
+    /* Check genwait timeouts and search for a potential thread to switch to. */
+    thd = thd_find_new_thread();
 
     /* If we didn't already re-enqueue the thread and we are supposed to do so,
        do it now. */
@@ -769,11 +781,21 @@ void thd_sleep(unsigned int ms) {
 /* Manually cause a re-schedule */
 __used
 void thd_pass(void) {
+    irq_mask_t saved;
+
     /* Makes no sense inside int */
     if(irq_inside_int()) return;
 
+    saved = irq_disable();
+
+    /* Check to see if we have something to switch to. */
+    if(thd_find_new_thread() == NULL) {
+        irq_restore(saved);
+        return;
+    }
+
     /* Pass off control manually */
-    thd_block_now(&thd_current->context);
+    thd_block_now(&thd_current->context, saved);
 }
 
 /* Wait for a thread to exit */

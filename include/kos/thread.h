@@ -326,10 +326,11 @@ extern kthread_t *thd_current;
     a return value or not.
 
     \param  mycxt           The IRQ context of the calling thread.
+    \param  saved           The irq mask when this function's caller was called.
 
     \return                 Whatever the unblocker deems necessary to return.
 */
-int thd_block_now(irq_context_t *mycxt);
+int thd_block_now(irq_context_t *mycxt, irq_mask_t saved);
 
 /** \brief   Find a new thread to swap in.
 
