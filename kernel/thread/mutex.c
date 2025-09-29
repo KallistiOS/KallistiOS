@@ -154,19 +154,16 @@ static int mutex_trylock_thd(mutex_t *m, kthread_t *thd) {
     }
 
     if(previous_thd == thd) {
-        if(m->type == MUTEX_TYPE_RECURSIVE) {
-            /* Recursive mutex, we can just increment normally. */
-            if(m->count == INT_MAX) {
-                errno = EAGAIN;
-                return -1;
-            }
+        assert(m->type == MUTEX_TYPE_RECURSIVE);
 
-            ++m->count;
-            return 0;
+        /* Recursive mutex, we can just increment normally. */
+        if(m->count == INT_MAX) {
+            errno = EAGAIN;
+            return -1;
         }
 
-        errno = EDEADLK;
-        return -1;
+        ++m->count;
+        return 0;
     }
 
     /* We did not get the lock */
@@ -184,10 +181,7 @@ int mutex_unlock(mutex_t *m) {
     if(irq_inside_int())
         thd = IRQ_THREAD;
 
-    if(m->holder != thd) {
-        errno = EPERM;
-        return -1;
-    }
+    assert(m->holder == thd && m->count > 0);
 
     if (!--m->count) {
         m->holder = NULL;
