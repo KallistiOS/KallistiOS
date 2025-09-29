@@ -33,7 +33,7 @@ int pthread_mutex_timedlock(pthread_mutex_t *__RESTRICT mutex,
     errno_save_scoped();
 
     if(!mutex_trylock(&mutex->mutex))
-        return 0;
+        goto out_check_err;
 
     /* Figure out the timeout we need to provide in milliseconds. */
     clock_gettime(CLOCK_REALTIME, &ctv);
@@ -44,5 +44,14 @@ int pthread_mutex_timedlock(pthread_mutex_t *__RESTRICT mutex,
     if(tmo <= 0)
         return ETIMEDOUT;
 
-    return errno_if_nonzero(mutex_lock_timed(&mutex->mutex, tmo));
+    if(mutex_lock_timed(&mutex->mutex, tmo))
+        return errno;
+
+out_check_err:
+    if(mutex->type == PTHREAD_MUTEX_ERRORCHECK && mutex->mutex.count > 1) {
+        mutex_unlock(&mutex->mutex);
+        return EDEADLK;
+    }
+
+    return 0;
 }
