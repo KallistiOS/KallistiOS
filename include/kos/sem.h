@@ -87,7 +87,6 @@ int sem_destroy(semaphore_t *sm) __nonnull_all;
 
     \par    Error Conditions:
     \em     EPERM - called inside an interrupt \n
-    \em     EINVAL - the semaphore was not initialized \n
     \em     ETIMEDOUT - timed out while blocking
  */
 int sem_wait_timed(semaphore_t *sm, unsigned int timeout) __nonnull_all;
@@ -106,9 +105,7 @@ int sem_wait_timed(semaphore_t *sm, unsigned int timeout) __nonnull_all;
     \retval 0               On success
     \retval -1              On error, sets errno as appropriate
 
-    \par    Error Conditions:
-    \em     EPERM - called inside an interrupt \n
-    \em     EINVAL - the semaphore was not initialized
+    \par    Error Conditions: None defined
 */
 __nonnull_all
 static inline int sem_wait(semaphore_t *sm) {
@@ -130,7 +127,6 @@ static inline int sem_wait(semaphore_t *sm) {
 
     \par    Error Conditions:
     \em     EWOULDBLOCK - a call to sem_wait() would block \n
-    \em     EINVAL - the semaphore was not initialized
 */
 int sem_trywait(semaphore_t *sm) __nonnull_all;
 
@@ -150,7 +146,6 @@ int sem_trywait(semaphore_t *sm) __nonnull_all;
     \par    Error Conditions:
     \em     EWOULDBLOCK - the function was called inside an interrupt and the
                           semaphore is not free \n
-    \em     EINVAL - the semaphore was not initialized
 */
 int sem_wait_irqsafe(semaphore_t *sm) __nonnull_all;
 
@@ -164,8 +159,7 @@ int sem_wait_irqsafe(semaphore_t *sm) __nonnull_all;
     \retval 0               On success
     \retval -1              On error, sets errno as appropriate
 
-    \par    Error Conditions:
-    \em     EINVAL - the semaphore was not initialized
+    \par    Error Conditions: None defined
 */
 int sem_signal(semaphore_t *sm) __nonnull_all;
 
