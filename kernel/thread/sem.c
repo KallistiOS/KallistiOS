@@ -54,18 +54,8 @@ int sem_wait_timed(semaphore_t *sm, unsigned int timeout) {
     int rv = 0;
 
     /* Make sure we're not inside an interrupt */
-    if((rv = irq_inside_int())) {
-        dbglog(DBG_WARNING, "%s: called inside an interrupt with code: %x evt: %.4x\n",
-               timeout ? "sem_wait_timed" : "sem_wait",
-               ((rv>>16) & 0xf), (rv & 0xffff));
-        errno = EPERM;
-        return -1;
-    }
-
-    if(sm->initialized != 1) {
-        errno = EINVAL;
-        return -1;
-    }
+    assert(!irq_inside_int()); /* Only usable outside IRQ handlers */
+    assert(sm->initialized == 1);
 
     /* Disable interrupts */
     irq_disable_scoped();
@@ -95,10 +85,7 @@ int sem_wait_timed(semaphore_t *sm, unsigned int timeout) {
 /* Attempt to wait on a semaphore. If the semaphore would block,
    then return an error instead of actually blocking. */
 int sem_trywait(semaphore_t *sm) {
-    if(sm->initialized != 1) {
-        errno = EINVAL;
-        return -1;
-    }
+    assert(sm->initialized == 1);
 
     irq_disable_scoped();
 
@@ -115,10 +102,7 @@ int sem_trywait(semaphore_t *sm) {
 
 /* Signal a semaphore */
 int sem_signal(semaphore_t *sm) {
-    if(sm->initialized != 1) {
-        errno = EINVAL;
-        return -1;
-    }
+    assert(sm->initialized == 1);
 
     irq_disable_scoped();
 
