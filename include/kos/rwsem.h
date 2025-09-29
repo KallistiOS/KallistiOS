@@ -102,10 +102,9 @@ int rwsem_destroy(rw_semaphore_t *s) __nonnull_all;
     \par    Error Conditions:
     \em     EPERM - called inside an interrupt \n
     \em     ETIMEDOUT - the timeout expires before the lock can be acquired \n
-    \em     EINVAL - the timeout value is invalid \n
     \em     EINVAL - the semaphore is not initialized
 */
-int rwsem_read_lock_timed(rw_semaphore_t *s, int timeout) __nonnull_all;
+int rwsem_read_lock_timed(rw_semaphore_t *s, unsigned int timeout) __nonnull_all;
 
 /** \brief  Lock a reader/writer semaphore for reading.
 
@@ -161,10 +160,9 @@ int rwsem_read_lock_irqsafe(rw_semaphore_t *s) __nonnull_all;
     \par    Error Conditions:
     \em     EPERM - called inside an interrupt \n
     \em     ETIMEDOUT - the timeout expires before the lock can be acquired \n
-    \em     EINVAL - the timeout value is invalid \n
     \em     EINVAL - the semaphore is not initialized
 */
-int rwsem_write_lock_timed(rw_semaphore_t *s, int timeout) __nonnull_all;
+int rwsem_write_lock_timed(rw_semaphore_t *s, unsigned int timeout) __nonnull_all;
 
 /** \brief  Lock a reader/writer semaphore for writing.
 
@@ -307,12 +305,11 @@ int rwsem_write_trylock(rw_semaphore_t *s) __nonnull_all;
     \par    Error Conditions:
     \em     EPERM - called inside an interrupt \n
     \em     EINVAL - the semaphore is not initialized \n
-    \em     EINVAL - the timeout value is invalid \n
     \em     EBUSY - another reader has already requested an upgrade \n
     \em     ETIMEDOUT - the timeout expired before the write lock could be
                         acquired
 */
-int rwsem_read_upgrade_timed(rw_semaphore_t *s, int timeout) __nonnull_all;
+int rwsem_read_upgrade_timed(rw_semaphore_t *s, unsigned int timeout) __nonnull_all;
 
 /** \brief  Upgrade a thread from reader status to writer status.
 
