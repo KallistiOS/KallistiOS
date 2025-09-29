@@ -229,7 +229,7 @@ typedef struct maple_frame {
     This structure is used by the hardware to deliver the response to the device
     info request.
 
-    \note product_name and product_license are not guaranteed to be NULL terminated.
+    \note product_name and product_license are not guaranteed to be NUL terminated.
 
     \headerfile dc/maple.h
 */
@@ -238,8 +238,8 @@ typedef struct maple_devinfo {
     uint32  function_data[3];       /**< \brief Additional data per function */
     uint8   area_code;              /**< \brief Region code */
     uint8   connector_direction;    /**< \brief 0: UP (most controllers), 1: DOWN (lightgun, microphones) */
-    char    product_name[30];       /**< \brief Name of device */
-    char    product_license[60];    /**< \brief License statement */
+    char    product_name[30] __attribute__ ((nonstring));       /**< \brief Name of device */
+    char    product_license[60] __attribute__ ((nonstring));    /**< \brief License statement */
     uint16  standby_power;          /**< \brief Power consumption (standby) */
     uint16  max_power;              /**< \brief Power consumption (max) */
 } maple_devinfo_t;
