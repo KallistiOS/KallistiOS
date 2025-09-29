@@ -17,33 +17,20 @@
     a block of code to prevent two threads from interfering with one another
     when only one would be appropriate to be in the block at a time.
 
-    KallistiOS implements 3 types of mutexes, to bring it roughly in-line with
-    POSIX. The types of mutexes that can be made are normal, error-checking, and
-    recursive. Each has its own strengths and weaknesses, which are briefly
-    discussed below.
+    KallistiOS implements 2 types of mutexes, normal mutexes and recursive
+    mutexes. Internally the implementation is the same, the only difference lies
+    in error-checking. When assert() calls are disabled (by setting the NDEBUG
+    macro), they should have the exact same behaviour.
 
-    A normal mutex (MUTEX_TYPE_NORMAL) is the fastest and simplest mutex of the
-    bunch. This is roughly equivalent to a semaphore that has been initialized
-    with a count of 1. There is no protection against threads unlocking normal
-    mutexes they didn't lock, nor is there any protection against deadlocks that
-    would arise from locking the mutex twice.
+    A normal mutex (MUTEX_TYPE_NORMAL) is roughly equivalent to a semaphore that
+    has been initialized with a count of 1. If assert() is disabled, there is no
+    protection against threads unlocking normal mutexes they didn't lock, nor is
+    there any protection against a thread locking the same mutex twice.
 
-    An error-checking mutex (MUTEX_TYPE_ERRORCHECK) adds a small amount of error
-    checking on top of a normal mutex. This type will not allow you to lock the
-    mutex twice (it will return an error if the same thread tries to lock it two
-    times so it will not deadlock), and it will not allow a different thread to
-    unlock the mutex if it isn't the one holding the lock.
-
-    A recursive mutex (MUTEX_TYPE_RECURSIVE) extends the error checking mutex
-    by allowing you to lock the mutex twice in the same thread, but you must
-    also unlock it twice (this works for any number of locks -- lock it n times,
-    you must unlock it n times). Still only one thread can hold the lock, but it
-    may hold it as many times as it needs to. This is equivalent to the
-    recursive_lock_t type that was available in KallistiOS for a while (before
-    it was basically merged back into a normal mutex).
-
-    There is a fourth type of mutex defined (MUTEX_TYPE_DEFAULT), which maps to
-    the MUTEX_TYPE_NORMAL type. This is simply for alignment with POSIX.
+    A recursive mutex (MUTEX_TYPE_RECURSIVE) allows you to lock the mutex
+    N times in the same thread; in which case, the mutex has to be unlocked N
+    times for the mutex to be effectively released. Still only one thread can
+    hold the lock, but it may hold it as many times as it needs to.
 
     \author Lawrence Sebald
     \see    kos/sem.h
@@ -154,7 +141,6 @@ int mutex_destroy(mutex_t *m) __nonnull_all;
     \em     EAGAIN - lock has been acquired too many times (recursive), or the
                      function was called inside an interrupt and the mutex was
                      already locked \n
-    \em     EDEADLK - would deadlock (error-checking)
 */
 int mutex_lock_irqsafe(mutex_t *m) __nonnull_all;
 
@@ -166,16 +152,16 @@ int mutex_lock_irqsafe(mutex_t *m) __nonnull_all;
     If the lock cannot be acquired in this timeframe, this function will return
     an error.
 
+    This function cannot be used in an interrupt context.
+
     \param  m               The mutex to acquire
     \param  timeout         The number of milliseconds to wait for the lock
     \retval 0               On success
     \retval -1              On error, errno will be set as appropriate
 
     \par    Error Conditions:
-    \em     EPERM - called inside an interrupt \n
     \em     ETIMEDOUT - the timeout expired \n
     \em     EAGAIN - lock has been acquired too many times (recursive) \n
-    \em     EDEADLK - would deadlock (error-checking)
 */
 int mutex_lock_timed(mutex_t *m, unsigned int timeout) __nonnull_all;
 
@@ -187,6 +173,8 @@ int mutex_lock_timed(mutex_t *m, unsigned int timeout) __nonnull_all;
 
     The semantics of this function depend on the type of mutex that is used.
 
+    This function cannot be used in an interrupt context.
+
     \param  m               The mutex to acquire
     \retval 0               On success
     \retval -1              On error, sets errno as appropriate
@@ -194,7 +182,6 @@ int mutex_lock_timed(mutex_t *m, unsigned int timeout) __nonnull_all;
     \par    Error Conditions:
     \em     EPERM - called inside an interrupt \n
     \em     EAGAIN - lock has been acquired too many times (recursive) \n
-    \em     EDEADLK - would deadlock (error-checking)
 */
 __nonnull_all
 static inline int mutex_lock(mutex_t *m) {
@@ -242,9 +229,7 @@ int mutex_trylock(mutex_t *m) __nonnull_all;
     \retval 0               On success
     \retval -1              On error, errno will be set as appropriate.
 
-    \par    Error Conditions:
-    \em     EPERM - the current thread does not own the mutex (error-checking or
-                    recursive)
+    \par    Error Conditions: None defined
 */
 int mutex_unlock(mutex_t *m) __nonnull_all;
 
