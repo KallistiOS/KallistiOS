@@ -38,7 +38,7 @@ int rwsem_destroy(rw_semaphore_t *s) {
     return 0;
 }
 
-static int rwsem_update_timed(rw_semaphore_t *s, int timeout,
+static int rwsem_update_timed(rw_semaphore_t *s, unsigned int timeout,
                               rwsem_update_type_t type) {
     uint64_t deadline = 0;
 
@@ -91,7 +91,7 @@ static int rwsem_update_timed(rw_semaphore_t *s, int timeout,
 }
 
 /* Lock a reader/writer semaphore for reading */
-int rwsem_read_lock_timed(rw_semaphore_t *s, int timeout) {
+int rwsem_read_lock_timed(rw_semaphore_t *s, unsigned int timeout) {
     return rwsem_update_timed(s, timeout, UPDATE_TYPE_READ);
 }
 
@@ -103,7 +103,7 @@ int rwsem_read_lock_irqsafe(rw_semaphore_t *s) {
 }
 
 /* Lock a reader/writer semaphore for writing */
-int rwsem_write_lock_timed(rw_semaphore_t *s, int timeout) {
+int rwsem_write_lock_timed(rw_semaphore_t *s, unsigned int timeout) {
     return rwsem_update_timed(s, timeout, UPDATE_TYPE_WRITE);
 }
 
@@ -176,7 +176,7 @@ int rwsem_write_trylock(rw_semaphore_t *s) {
 }
 
 /* "Upgrade" a read lock to a write lock. */
-int rwsem_read_upgrade_timed(rw_semaphore_t *s, int timeout) {
+int rwsem_read_upgrade_timed(rw_semaphore_t *s, unsigned int timeout) {
     return rwsem_update_timed(s, timeout, UPDATE_TYPE_UPGRADE);
 }
 
