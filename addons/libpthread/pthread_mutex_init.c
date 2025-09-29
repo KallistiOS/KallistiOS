@@ -21,9 +21,6 @@ int pthread_mutex_init(pthread_mutex_t *__RESTRICT mutex,
                 break;
 
             case PTHREAD_MUTEX_ERRORCHECK:
-                type = MUTEX_TYPE_ERRORCHECK;
-                break;
-
             case PTHREAD_MUTEX_RECURSIVE:
                 type = MUTEX_TYPE_RECURSIVE;
                 break;
@@ -31,6 +28,10 @@ int pthread_mutex_init(pthread_mutex_t *__RESTRICT mutex,
             default:
                 return EINVAL;
         }
+
+        mutex->type = attr->mtype;
+    } else {
+        mutex->type = PTHREAD_MUTEX_NORMAL;
     }
 
     errno_save_scoped();

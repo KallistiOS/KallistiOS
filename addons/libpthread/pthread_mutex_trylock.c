@@ -16,5 +16,13 @@ int pthread_mutex_trylock(pthread_mutex_t *mutex) {
 
     errno_save_scoped();
 
-    return errno_if_nonzero(mutex_trylock(&mutex->mutex));
+    if(mutex_trylock(&mutex->mutex))
+        return errno;
+
+    if(mutex->type == PTHREAD_MUTEX_ERRORCHECK && mutex->mutex.count > 1) {
+        mutex_unlock(&mutex->mutex);
+        return EDEADLK;
+    }
+
+    return 0;
 }
