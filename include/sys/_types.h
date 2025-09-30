@@ -171,7 +171,3 @@ typedef char *          __va_list;
 __END_DECLS
 
 #endif  /* _SYS__TYPES_H */
-
-#ifdef _STDLIB_H_
-#include <kos/stdlib.h>
-#endif
