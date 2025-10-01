@@ -6,7 +6,7 @@
 */
 
 #include <kos/dbglog.h>
-#include <sys/dirent.h>
+#include <dirent.h>
 
 void seekdir(DIR *dir, off_t offset) {
     (void)dir;

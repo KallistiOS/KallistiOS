@@ -32,7 +32,7 @@ __BEGIN_DECLS
 #include <time.h>
 #include <unistd.h>
 #include <utime.h>
-#include <sys/dirent.h>
+#include <dirent.h>
 #include <sys/types.h>
 
 typedef enum {
