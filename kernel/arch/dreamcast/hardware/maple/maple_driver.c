@@ -47,9 +47,6 @@ int maple_driver_reg(maple_driver_t *driver) {
     /* Don't add two drivers for the same function */
     maple_driver_t *i;
 
-    if(driver->drv_list.le_prev)
-        return -1;
-
     LIST_FOREACH(i, &maple_state.driver_list, drv_list)
         if(i->functions & driver->functions)
             return -1;
