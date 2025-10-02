@@ -568,14 +568,14 @@ int thd_set_prio(kthread_t *thd, prio_t prio) {
     return 0;
 }
 
-prio_t thd_get_prio(kthread_t *thd) {
+prio_t thd_get_prio(const kthread_t *thd) {
     if(!thd)
         thd = thd_current;
 
     return thd->prio;
 }
 
-tid_t thd_get_id(kthread_t *thd) {
+tid_t thd_get_id(const kthread_t *thd) {
     if(!thd)
         thd = thd_current;
 
@@ -873,7 +873,7 @@ int thd_detach(kthread_t *thd) {
 
 /*****************************************************************************/
 /* Retrieve / set thread label */
-const char *thd_get_label(kthread_t *thd) {
+const char *thd_get_label(const kthread_t *thd) {
     if(!thd)
         thd = thd_current;
 
@@ -893,7 +893,7 @@ kthread_t *thd_get_current(void) {
 }
 
 /* Retrieve / set thread pwd */
-const char *thd_get_pwd(kthread_t *thd) {
+const char *thd_get_pwd(const kthread_t *thd) {
     if(!thd)
         thd = thd_current;
 
