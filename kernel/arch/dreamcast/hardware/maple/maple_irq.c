@@ -23,6 +23,8 @@
 /* Maple frame used for attach/detach detection. */
 static maple_frame_t detect_frame;
 
+volatile bool autodetect_in_progress = false;
+
 /* Fwd declare */
 static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm);
 
@@ -119,6 +121,7 @@ static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm) {
         /* We can't create or remove a device now. Fail silently as the device
          * will be re-probed in the next loop of the periodic IRQ. */
         maple_frame_unlock(frm);
+        autodetect_in_progress = false;
         return;
     }
 
@@ -188,12 +191,20 @@ static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm) {
         state->scan_ready_mask |= 1 << p;
         maple_frame_unlock(frm);
     }
+
+    autodetect_in_progress = false;
 }
 
 static void vbl_autodetect(maple_state_t *state) {
     bool queued;
     maple_device_t  *dev = maple_state.ports[state->detect_port_next].units[0];
     maple_frame_t   *frm = (dev != NULL) ? &dev->frame : &detect_frame;
+
+    /* Don't try again if we haven't finished the last one */
+    if(autodetect_in_progress)
+        return;
+
+    autodetect_in_progress = true;
 
     /* Queue a detection on the next device */
     queued = vbl_send_devinfo(frm,
