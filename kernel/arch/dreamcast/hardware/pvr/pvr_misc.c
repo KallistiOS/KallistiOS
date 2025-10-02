@@ -283,3 +283,25 @@ pvr_ptr_t pvr_get_front_buffer(void) {
        addressable from the 64-bit memory */
     return (pvr_ptr_t)(addr * 2 + PVR_RAM_BASE);
 }
+
+int pvr_set_vertical_scale(float factor) {
+    uint32_t f16;
+    uint32_t cfg;
+
+    if(factor == 0.0f)
+        return -1;
+
+    f16 = 1024.0f / factor;
+
+    if(f16 == 0 || f16 >= 65536)
+        return -1;
+
+    irq_disable_scoped();
+
+    cfg = PVR_GET(PVR_SCALER_CFG);
+
+    cfg &= ~PVR_SCALER_CFG_VSCALE_FACTOR;
+    cfg |= FIELD_PREP(PVR_SCALER_CFG_VSCALE_FACTOR, f16);
+
+    PVR_SET(PVR_SCALER_CFG, cfg);
+}
