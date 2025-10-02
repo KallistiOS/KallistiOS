@@ -22,7 +22,7 @@
 #include <stdatomic.h>
 #include <time.h>
 
-#include <arch/wdt.h>
+#include <dc/wdt.h>
 #include <dc/maple/controller.h>
 
 /* Microsecond-based units */

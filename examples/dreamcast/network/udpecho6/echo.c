@@ -26,7 +26,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include <arch/arch.h>
+#include <kos/init.h>
 #include <kos/net.h>
 #include <kos/thread.h>
 #include <kos/dbgio.h>
@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
     socklen_t alen;
 
     /* Set a callback to exit when start is pressed */
-    cont_btn_callback(0, CONT_START, (cont_btn_callback_t)arch_exit);
+    cont_btn_callback(0, CONT_START, (cont_btn_callback_t)exit);
 
     dbgio_dev_select("fb");
 

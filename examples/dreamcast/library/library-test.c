@@ -13,8 +13,6 @@
 #include <dc/maple.h>
 #include <dc/maple/controller.h>
 
-#include <arch/arch.h>
-
 #include <kos/init.h>
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>
@@ -38,7 +36,7 @@ static symtab_handler_t st_libtest = {
     libtest_symtab
 };
 
-static void __attribute__((__noreturn__)) wait_exit(void) {
+static void __attribute__((__noreturn__)) wait_exit(int status) {
     maple_device_t *dev;
     cont_state_t *state;
 
@@ -51,7 +49,7 @@ static void __attribute__((__noreturn__)) wait_exit(void) {
             state = (cont_state_t *)maple_dev_status(dev);
             if(state) {
                 if(state->buttons) {
-                    arch_exit();
+                    exit(status);
                 }
             }
         }
@@ -72,7 +70,7 @@ int main(int argc, char *argv[]) {
 
     if(nmmgr_handler_add(&st_libtest.nmmgr) < 0) {
         dbglog(DBG_ERROR, "Failed.");
-        wait_exit();                             
+        wait_exit(EXIT_FAILURE);
         return -1;
     }
 
@@ -81,7 +79,7 @@ int main(int argc, char *argv[]) {
 
     if (lib_dependence == NULL) {
         dbglog(DBG_ERROR, "Loading failed.\n");
-        wait_exit();
+        wait_exit(EXIT_FAILURE);
         return -1;
     }
 
@@ -96,7 +94,7 @@ int main(int argc, char *argv[]) {
 
     if (lib_dependence == NULL) {
         dbglog(DBG_ERROR, "Loading failed.\n");
-        wait_exit();
+        wait_exit(EXIT_FAILURE);
         return -1;
     }
 
@@ -132,6 +130,6 @@ int main(int argc, char *argv[]) {
     library_close(lib_dependence);
     nmmgr_handler_remove(&st_libtest.nmmgr);
 
-    wait_exit();
+    wait_exit(EXIT_SUCCESS);
     return 0;
 }
