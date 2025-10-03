@@ -4,6 +4,7 @@
 # usage:
 #   - build one of the images:
 #       docker build -t dcchain:stable --build-arg dc_chain=stable .
+#		docker build -t dcchain:stable --build-arg dc_chain=stable --build-arg target=gamecube .
 #       docker build -t dcchain:9.3.0-legacy --build-arg dc_chain=9.3.0-legacy --build-arg makejobs=4 .
 #   - create and run a container, e.g. for stable:
 #       docker run -it --name containername dcchain:stable /bin/bash
@@ -36,9 +37,11 @@ RUN apk --update add --no-cache \
 # You may adapt the KallistiOS repository URL if needed
 ARG dc_chain=stable
 ARG makejobs=2
+ARG target=dreamcast
 RUN mkdir -p /opt/toolchains/dc \
 	&& git clone https://git.code.sf.net/p/cadcdev/kallistios /opt/toolchains/dc/kos || git clone https://github.com/KallistiOS/KallistiOS.git /opt/toolchains/dc/kos \
 	&& cd /opt/toolchains/dc/kos/utils/dc-chain \
+	&& cp Makefile.$target.cfg Makefile.cfg \
 	&& make build toolchain_profile=$dc_chain makejobs=$makejobs \
 	&& rm -rf /opt/toolchains/dc/kos
 
