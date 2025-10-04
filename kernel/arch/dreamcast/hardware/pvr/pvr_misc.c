@@ -304,4 +304,6 @@ int pvr_set_vertical_scale(float factor) {
     cfg |= FIELD_PREP(PVR_SCALER_CFG_VSCALE_FACTOR, f16);
 
     PVR_SET(PVR_SCALER_CFG, cfg);
+
+    return 0;
 }
