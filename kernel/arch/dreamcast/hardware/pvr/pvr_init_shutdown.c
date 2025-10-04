@@ -194,7 +194,7 @@ int pvr_init(const pvr_init_params_t *params) {
     PVR_SET(PVR_UNK_0118, 0x00008040);      /* M */
 
     /* Initialize PVR DMA */
-    mutex_init((mutex_t *)&pvr_state.dma_lock, MUTEX_TYPE_NORMAL);
+    sem_init((semaphore_t *)&pvr_state.dma_lock, 1);
     pvr_dma_init();
 
     /* Set us as valid and return success */
@@ -246,7 +246,7 @@ int pvr_shutdown(void) {
     pvr_mem_reset();
 
     /* Destroy the mutex */
-    mutex_destroy((mutex_t *)&pvr_state.dma_lock);
+    sem_destroy((semaphore_t *)&pvr_state.dma_lock);
 
     /* Clear video memory */
     vid_empty();

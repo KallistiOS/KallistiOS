@@ -55,8 +55,8 @@ struct cmd_transfer_data {
     size_t size;
 };
 
-/* The G1 ATA access mutex */
-mutex_t _g1_ata_mutex = MUTEX_INITIALIZER;
+/* The G1 ATA access semaphore */
+semaphore_t _g1_ata_sem = SEM_INITIALIZER(1);
 
 /* Command handling */
 static gdc_cmd_hnd_t cmd_hnd = 0;
@@ -71,7 +71,7 @@ static int32_t cmd_status[4] = {
 /* DMA and IRQ handling */
 static bool dma_in_progress = false;
 static bool dma_blocking = false;
-static kthread_t *dma_thd = NULL;
+static bool dma_auto_unlock = false;
 static semaphore_t dma_done = SEM_INITIALIZER(0);
 static asic_evt_handler_entry_t old_dma_irq = {NULL, NULL};
 static int vblank_hnd = -1;
@@ -199,7 +199,7 @@ int cdrom_exec_cmd(int cmd, void *param) {
 int cdrom_exec_cmd_timed(int cmd, void *param, uint32_t timeout) {
     int rv = ERR_OK;
 
-    mutex_lock_scoped(&_g1_ata_mutex);
+    sem_wait_scoped(&_g1_ata_sem);
     cmd_hnd = cdrom_req_cmd(cmd, param);
 
     if(cmd_hnd <= 0) {
@@ -247,11 +247,11 @@ int cdrom_abort_cmd(uint32_t timeout, bool abort_dma) {
     if(abort_dma && dma_in_progress) {
         dma_in_progress = false;
         dma_blocking = false;
-        dma_thd = NULL;
+        dma_auto_unlock = false;
         /* G1 ATA mutex already locked */
     }
     else {
-        mutex_lock(&_g1_ata_mutex);
+        sem_wait(&_g1_ata_sem);
     }
 
     irq_restore(old);
@@ -271,7 +271,7 @@ int cdrom_abort_cmd(uint32_t timeout, bool abort_dma) {
         cdrom_stream_set_callback(0, NULL);
     }
 
-    mutex_unlock(&_g1_ata_mutex);
+    sem_signal(&_g1_ata_sem);
     return rv;
 }
 
@@ -283,13 +283,13 @@ int cdrom_get_status(int *status, int *disc_type) {
     /* We might be called in an interrupt to check for ISO cache
        flushing, so make sure we're not interrupting something
        already in progress. */
-    if(mutex_lock_irqsafe(&_g1_ata_mutex))
+    if(sem_wait_irqsafe(&_g1_ata_sem))
         /* DH: Figure out a better return to signal error */
         return -1;
 
     rv = cdrom_poll(params, 0, cdrom_check_drive_ready);
 
-    mutex_unlock(&_g1_ata_mutex);
+    sem_signal(&_g1_ata_sem);
 
     if(rv >= 0) {
         rv = ERR_OK;
@@ -315,7 +315,7 @@ int cdrom_get_status(int *status, int *disc_type) {
 int cdrom_change_datatype(int sector_part, int cdxa, int sector_size) {
     uint32_t params[4];
 
-    mutex_lock_scoped(&_g1_ata_mutex);
+    sem_wait_scoped(&_g1_ata_sem);
 
     /* Check if we are using default params */
     if(sector_size == 2352) {
@@ -390,7 +390,7 @@ int cdrom_read_toc(CDROM_TOC *toc_buffer, bool high_density) {
 
 static int cdrom_read_sectors_dma_irq(void *params) {
 
-    mutex_lock_scoped(&_g1_ata_mutex);
+    sem_wait_scoped(&_g1_ata_sem);
     cmd_hnd = cdrom_req_cmd(CMD_DMAREAD, params);
 
     if(cmd_hnd <= 0) {
@@ -522,18 +522,18 @@ int cdrom_stream_stop(bool abort_dma) {
     if(abort_dma && dma_in_progress) {
         return cdrom_abort_cmd(1000, true);
     }
-    mutex_lock(&_g1_ata_mutex);
+    sem_wait(&_g1_ata_sem);
 
     cdrom_poll(&cmd_hnd, 0, cdrom_check_abort_streaming);
 
     if(cmd_response == STREAMING) {
-        mutex_unlock(&_g1_ata_mutex);
+        sem_signal(&_g1_ata_sem);
         return cdrom_abort_cmd(1000, false);
     }
 
     cmd_hnd = 0;
     stream_mode = -1;
-    mutex_unlock(&_g1_ata_mutex);
+    sem_signal(&_g1_ata_sem);
 
     if(stream_cb) {
         cdrom_stream_set_callback(0, NULL);
@@ -573,24 +573,19 @@ int cdrom_stream_request(void *buffer, size_t size, bool block) {
     }
 
     params[1] = size;
-    mutex_lock_scoped(&_g1_ata_mutex);
+    sem_wait_scoped(&_g1_ata_sem);
 
     if(stream_mode == CDROM_READ_DMA) {
         dma_in_progress = true;
         dma_blocking = block;
+        dma_auto_unlock = !block;
 
-        if(!block) {
-            dma_thd = thd_current;
-            if(irq_inside_int()) {
-                dma_thd = (kthread_t *)0xFFFFFFFF;
-            }
-        }
         rs = syscall_gdrom_dma_transfer(cmd_hnd, params);
 
         if(rs < 0) {
             dma_in_progress = false;
             dma_blocking = false;
-            dma_thd = NULL;
+            dma_auto_unlock = false;
             return ERR_SYS;
         }
         if(!block) {
@@ -776,9 +771,9 @@ static void g1_dma_irq_hnd(uint32_t code, void *data) {
             sem_signal(&dma_done);
             thd_schedule(true);
         }
-        else if(dma_thd) {
-            mutex_unlock_as_thread(&_g1_ata_mutex, dma_thd);
-            dma_thd = NULL;
+        else if(dma_auto_unlock) {
+            sem_signal(&_g1_ata_sem);
+            dma_auto_unlock = false;
         }
         if(stream_mode != -1) {
             syscall_gdrom_dma_callback((uintptr_t)stream_cb, stream_cb_param);
@@ -825,7 +820,7 @@ void cdrom_init(void) {
         return;
     }
 
-    mutex_lock(&_g1_ata_mutex);
+    sem_wait(&_g1_ata_sem);
 
     /*
         First, check the protection status to determine if it's necessary 
@@ -854,7 +849,7 @@ void cdrom_init(void) {
     syscall_gdrom_init();
 
     unlock_dma_memory();
-    mutex_unlock(&_g1_ata_mutex);
+    sem_signal(&_g1_ata_sem);
 
     /* Hook all the DMA related events. */
     old_dma_irq = asic_evt_set_handler(ASIC_EVT_GD_DMA, g1_dma_irq_hnd, NULL);
