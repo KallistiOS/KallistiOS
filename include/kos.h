@@ -39,6 +39,7 @@ __BEGIN_DECLS
 #include <kos/fs_dev.h>
 #include <kos/fs_pty.h>
 #include <kos/limits.h>
+#include <kos/linker.h>
 #include <kos/thread.h>
 #include <kos/sem.h>
 #include <kos/rwsem.h>

@@ -14,6 +14,7 @@
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>
 #include <kos/init.h>
+#include <kos/linker.h>
 #include <kos/platform.h>
 #include <kos/timer.h>
 #include <arch/arch.h>
@@ -29,8 +30,6 @@
 #include <dc/dcload.h>
 
 #include "initall_hdrs.h"
-
-extern uintptr_t _bss_start, end;
 
 /* ctor/dtor stuff from libgcc. */
 #if __GNUC__ == 4
@@ -281,7 +280,6 @@ void  __weak_symbol arch_auto_shutdown(void) {
 
 /* This is the entry point inside the C program */
 void arch_main(void) {
-    uint8 *bss_start = (uint8 *)(&_bss_start);
     int rv;
 
     dma_init();
@@ -297,7 +295,7 @@ void arch_main(void) {
         __kos_init_early_fn();
 
     /* Clear out the BSS area */
-    memset(bss_start, 0, (uintptr_t)(&end) - (uintptr_t)bss_start);
+    memset(_bss_start, 0, (uintptr_t)end - (uintptr_t)_bss_start);
 
     /* Do auto-init stuff */
     arch_auto_init();
