@@ -57,6 +57,8 @@ int pvr_init_defaults(void) {
    come from the texture memory pool! Expects that a 2D mode was
    initialized already using the vid_* API. */
 int pvr_init(const pvr_init_params_t *params) {
+    uint16_t vscale = 1024;
+
     /* If we're already initialized, fail */
     if(pvr_state.valid == 1) {
         dbglog(DBG_WARNING, "pvr: pvr_init called twice!\n");
@@ -130,20 +132,15 @@ int pvr_init(const pvr_init_params_t *params) {
     /* If we're on a VGA box, disable vertical smoothing */
     if(vid_mode->cable_type == CT_VGA) {
         dbglog(DBG_KDEBUG, "pvr: disabling vertical scaling for VGA\n");
-
-        if(pvr_state.fsaa)
-            PVR_SET(PVR_SCALER_CFG, 0x10400);
-        else
-            PVR_SET(PVR_SCALER_CFG, 0x400);
-    }
-    else {
+    } else {
         dbglog(DBG_KDEBUG, "pvr: enabling vertical scaling for non-VGA\n");
-
-        if(pvr_state.fsaa)
-            PVR_SET(PVR_SCALER_CFG, 0x10401);
-        else
-            PVR_SET(PVR_SCALER_CFG, 0x401);
+        vscale++;
     }
+
+    /* Set horizontal / vertical scale factors */
+    PVR_SET(PVR_SCALER_CFG,
+            FIELD_PREP(PVR_SCALER_CFG_FSAA, pvr_state.fsaa) |
+            FIELD_PREP(PVR_SCALER_CFG_VSCALE_FACTOR, vscale));
 
     /* Hook the PVR interrupt events on G2 */
     pvr_state.vbl_handle = vblank_handler_add(pvr_vblank_handler, NULL);

@@ -213,16 +213,6 @@ void * mm_sbrk(unsigned long increment);
 #include <kos/init.h>
 
 /* Dreamcast-specific arch init things */
-/** \brief   Jump back to the bootloader.
-    \ingroup arch
-
-    You generally shouldn't use this function, but rather use arch_exit() or
-    exit() instead.
-
-    \note                   This function will never return!
-*/
-void arch_real_exit(int ret_code) __noreturn;
-
 /** \brief   Initialize bare-bones hardware systems.
     \ingroup arch
 

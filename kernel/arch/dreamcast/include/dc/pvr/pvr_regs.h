@@ -218,6 +218,16 @@ __BEGIN_DECLS
 #define PVR_TXR_STRIDE_MULT GENMASK(4, 0)   /**< \brief Bottom 5 bits contain the size when using PVR_TXRFMT_X32_STRIDE */
 /** @} */
 
+/** \defgroup pvr_scaler    PVR_SCALER_CFG Values
+    \brief                  Definitions for the fields of the PVR_SCALER_CFG register.
+    \ingroup                pvr_registers
+    @{
+*/
+#define PVR_SCALER_CFG_FSAA BIT(16)  /**< \brief Enable FSAA */
+
+#define PVR_SCALER_CFG_VSCALE_FACTOR GENMASK(15, 0) /**< \brief Vertical scale factor = 1024 / value */
+/** @} */
+
 __END_DECLS
 
 #endif  /* __DC_PVR_PVR_REGS_H */

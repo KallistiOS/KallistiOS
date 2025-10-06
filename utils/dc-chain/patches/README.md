@@ -25,7 +25,6 @@ Generic `newlib` fixups (applied directly after `newlib` is installed):
 ```
 cp $(kos_base)/include/pthread.h $(newlib_inc)                       # KOS pthread.h is modified
 cp $(kos_base)/include/sys/_pthread.h $(newlib_inc)/sys              # to define _POSIX_THREADS
-cp $(kos_base)/include/sys/sched.h $(newlib_inc)/sys                 # pthreads to kthreads mapping
 ln -nsf $(kos_base)/include/kos $(newlib_inc)                        # so KOS includes are available as kos/file.h
 ln -nsf $(kos_base)/kernel/arch/dreamcast/include/arch $(newlib_inc) # kos/thread.h requires arch/arch.h
 ln -nsf $(kos_base)/kernel/arch/dreamcast/include/dc   $(newlib_inc) # arch/arch.h requires dc/video.h

@@ -155,47 +155,10 @@ typedef _TIMER_T_   __timer_t;
 
 typedef _CLOCK_T_   __clock_t;
 
-/* The architecture should define the macro BYTE_ORDER in <arch/types.h> to
-   equal one of these macros for code that looks for these BSD-style macros. */
-/** \brief  Little Endian test macro */
-#define LITTLE_ENDIAN   1234
-
-/** \brief  Big Endian test macro */
-#define BIG_ENDIAN      4321
-
-/** \brief  PDP Endian test macro */
-#define PDP_ENDIAN      3412
-
-/* Sigh... for some reason, Newlib only bothers defining these on Cygwin...
-   We're only actually concerned with AT_SYMLINK_NOFOLLOW currently. These
-   should all be defined in <fcntl.h>, by the way. */
-#ifndef AT_EACCESS
-/** \brief  Check access using effective user and group ID */
-#define AT_EACCESS              1
-#endif
-
-#ifndef AT_SYMLINK_NOFOLLOW
-/** \brief  Do not follow symlinks */
-#define AT_SYMLINK_NOFOLLOW     2
-#endif
-
-#ifndef AT_SYMLINK_FOLLOW
-/** \brief  Follow symbolic links */
-#define AT_SYMLINK_FOLLOW       4
-#endif
-
-#ifndef AT_REMOVEDIR
-/** \brief  Remove directory instead of file */
-#define AT_REMOVEDIR            8
-#endif
-
 #ifndef IOV_MAX
 /** \brief  Maximum length of an iovec, in elements. */
 #define IOV_MAX                 1024
 #endif
-
-/* This is for old KOS source compatibility. */
-#include <arch/types.h>
 
 #if __GNUC_MINOR__ > 95 || __GNUC__ >= 3
 typedef __builtin_va_list   __va_list;
@@ -208,11 +171,6 @@ typedef char *          __va_list;
 __END_DECLS
 
 #endif  /* _SYS__TYPES_H */
-
-/* Grab our C11 time stuff if we got here from <time.h>. */
-#ifdef _TIME_H_
-#include <kos/time.h>
-#endif
 
 #ifdef _STDLIB_H_
 #include <kos/stdlib.h>

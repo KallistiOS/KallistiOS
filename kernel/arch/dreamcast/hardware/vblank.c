@@ -4,6 +4,7 @@
    Copyright (C)2003 Megan Potter
 */
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <sys/queue.h>
@@ -28,7 +29,7 @@ static TAILQ_HEAD(vhlist, vblhnd) vblhnds;
 static int vblid_high;
 
 /* Our internal IRQ handler */
-static void vblank_handler(uint32 src, void *data) {
+static void vblank_handler(uint32_t src, void *data) {
     struct vblhnd * t;
 
     (void)data;

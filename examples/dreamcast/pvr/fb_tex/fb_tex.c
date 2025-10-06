@@ -203,6 +203,12 @@ int main(int argc, char **argv) {
     /* Set the stride length for strided textures. */
     pvr_txr_set_stride(640);
 
+    /* The default vertical scale is actually 0.999f when a regular A/V cable
+     * is plugged. This won't work properly here, as the error will accumulate
+     * in the framebuffer, causing a rather neat fading effect towards the
+     * center (but not what we want in this example). */
+    pvr_set_vertical_scale(1.0f);
+
     fake_tex = pvr_mem_malloc(sizeof(fake_tex_data));
     pvr_txr_load(fake_tex_data, fake_tex, sizeof(fake_tex_data));
 

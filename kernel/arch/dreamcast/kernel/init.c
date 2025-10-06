@@ -14,6 +14,7 @@
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>
 #include <kos/init.h>
+#include <kos/linker.h>
 #include <kos/platform.h>
 #include <kos/timer.h>
 #include <arch/arch.h>
@@ -26,10 +27,9 @@
 #include <dc/vmufs.h>
 #include <dc/syscalls.h>
 #include <dc/wdt.h>
+#include <dc/dcload.h>
 
 #include "initall_hdrs.h"
-
-extern uintptr_t _bss_start, end;
 
 /* ctor/dtor stuff from libgcc. */
 #if __GNUC__ == 4
@@ -41,6 +41,9 @@ extern void _init(void);
 extern void _fini(void);
 extern void __verify_newlib_patch();
 extern void dma_init(void);
+
+/* Jump back to the bootloader. From startup.S */
+void arch_real_exit(int ret_code) __noreturn;
 
 void (*__kos_init_early_fn)(void) __attribute__((weak,section(".data"))) = NULL;
 
@@ -128,7 +131,7 @@ KOS_INIT_FLAG_WEAK(fs_iso9660_init, true);
 KOS_INIT_FLAG_WEAK(fs_iso9660_shutdown, true);
 
 void dcload_init(void) {
-    if (*DCLOADMAGICADDR == DCLOADMAGICVALUE) {
+    if (syscall_dcload_detected()) {
         dbglog(DBG_INFO, "dc-load console support enabled\n");
         fs_dcload_init();
     }
@@ -277,7 +280,6 @@ void  __weak_symbol arch_auto_shutdown(void) {
 
 /* This is the entry point inside the C program */
 void arch_main(void) {
-    uint8 *bss_start = (uint8 *)(&_bss_start);
     int rv;
 
     dma_init();
@@ -293,7 +295,7 @@ void arch_main(void) {
         __kos_init_early_fn();
 
     /* Clear out the BSS area */
-    memset(bss_start, 0, (uintptr_t)(&end) - (uintptr_t)bss_start);
+    memset(_bss_start, 0, (uintptr_t)end - (uintptr_t)_bss_start);
 
     /* Do auto-init stuff */
     arch_auto_init();

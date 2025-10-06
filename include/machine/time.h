@@ -1,11 +1,11 @@
 /* KallistiOS ##version##
 
-   kos/time.h
+   machine/time.h
    Copyright (C) 2023 Lawrence Sebald
    Copyright (C) 2024 Falco Girgis
 */
 
-/** \file    kos/time.h
+/** \file    machine/time.h
     \brief   KOS-implementation of select C11 and POSIX extensions
 
     Add select POSIX extensions, C11, and C23 functionality to time.h which are not
@@ -40,7 +40,7 @@ __BEGIN_DECLS
 #define __STDC_VERSION_TIME_H__  202311L
 
 /* Microsecond resolution for clock(), per POSIX standard.. */
-#define CLOCKS_PER_SEC           1000000
+#define _CLOCKS_PER_SEC_         1000000
 
 /* =============== Enable the following for >=c11, >=c++17 =================== */
 #if (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)) || \

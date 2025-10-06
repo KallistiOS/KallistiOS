@@ -46,7 +46,7 @@ static uint16 scsptr2 = 0;
 int scif_spi_init(void) {
     /* Make sure we're not using dcload-serial. If we are, then we definitely do
        not have a SPI device on the serial port. */
-    if(*DCLOADMAGICADDR == DCLOADMAGICVALUE && dcload_type == DCLOAD_TYPE_SER) {
+    if(dcload_type == DCLOAD_TYPE_SER) {
         dbglog(DBG_KDEBUG, "scif_spi_init: no spi device -- using "
                "dcload-serial\n");
         return -1;
