@@ -91,6 +91,9 @@ typedef struct strchan {
        actually start it playing until the signal (for music sync, etc) */
     int queueing;
 
+    /* Pending call to snd_sh4_to_aica_start() function, don't forget it */
+    int queueing_pending_aica_start;
+
     /* Have we been initialized yet? (and reserved a buffer, etc) */
     volatile int initted;
 
@@ -395,6 +398,7 @@ snd_stream_hnd_t snd_stream_alloc(snd_stream_callback_t cb, int bufsize) {
 
     /* Start off with queueing disabled */
     streams[hnd].queueing = 0;
+    // streams[hnd].queueing_pending_aica_start = 0;
 
     /* Setup the callback */
     snd_stream_set_callback(hnd, cb);
@@ -446,6 +450,13 @@ void snd_stream_destroy(snd_stream_hnd_t hnd) {
 
     if(max_channels == 2) {
         snd_sfx_chn_free(streams[hnd].ch[1]);
+    }
+
+    /* In queue mode, check if snd_stream_queue_go() was never called after stream start */
+    if(streams[hnd].queueing_pending_aica_start) {
+        dbglog(DBG_WARNING, "snd_stream_destroy: stream start requested in queue mode\n");
+        /* Resume AICA queue after being stopped in snd_stream_start_type() function */
+        snd_sh4_to_aica_start();
     }
 
     c = TAILQ_FIRST(&streams[hnd].filters);
@@ -584,9 +595,13 @@ static void snd_stream_start_type(snd_stream_hnd_t hnd, uint32_t type, uint32_t 
     chan->cmd = AICA_CH_CMD_START | AICA_CH_START_SYNC;
     snd_sh4_to_aica(tmp, cmd->size);
 
+    if(streams[hnd].queueing) {
+        streams[hnd].queueing_pending_aica_start = 1;
+        return;
+    }
+
     /* Process the changes */
-    if(!streams[hnd].queueing)
-        snd_sh4_to_aica_start();
+    snd_sh4_to_aica_start();
 }
 
 void snd_stream_start(snd_stream_hnd_t hnd, uint32_t freq, int st) {
@@ -605,6 +620,13 @@ void snd_stream_start_adpcm(snd_stream_hnd_t hnd, uint32_t freq, int st) {
 void snd_stream_queue_go(snd_stream_hnd_t hnd) {
     (void)hnd;
     CHECK_HND(hnd);
+
+    if(!streams[hnd].queueing_pending_aica_start) {
+        /* No queueing or function snd_stream_start_type() was never called */
+        return;
+    }
+    streams[hnd].queueing_pending_aica_start = 0;
+
     snd_sh4_to_aica_start();
 }
 
