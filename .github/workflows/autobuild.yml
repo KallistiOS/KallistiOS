@@ -52,7 +52,6 @@ jobs:
             - .github/workflows/build-kos.sh
             - .github/workflows/list-profiles.sh
             - utils/dc-chain/**
-            - '!**/*.md'
 
     - name: build-toolchain
       if: steps.filter.outputs.paths == 'true'
