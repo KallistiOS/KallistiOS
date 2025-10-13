@@ -31,7 +31,7 @@ static int initted = 0;
 /* Halt counts in queue processing used by snd_sh4_to_aica_stop and snd_sh4_to_aica_start.
    Avoids partial queue flush when threads submit stream and sfx controls at the same time.
 */
-static int queue_halt_count = 0;
+static atomic_int queue_halt_count = 0;
 
 /* Initialize driver; note that this replaces the AICA program so that
    if you had anything else going on, it's gone now! */
