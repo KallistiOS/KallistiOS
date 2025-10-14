@@ -135,7 +135,7 @@ static inline file_t fs_vmu_open_constrained(const char* fn, int mode) {
         return fd;
     }
 
-    /* status was FSVMU_BADHEADER or FSVMU_READERROR */
+    /* status was corrupted or unreadable */
     fs_close(fd);
 
     return FILEHND_INVALID;
