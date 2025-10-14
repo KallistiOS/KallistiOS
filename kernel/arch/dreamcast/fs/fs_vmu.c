@@ -66,7 +66,7 @@ typedef struct vmu_fh_str {
     uint8 *data;                        /* copy of the whole file */
     vmu_pkg_t *header;                  /* VMU file header */
     bool raw;                           /* file opened as raw */
-    int header_parse_result;            /* Parse status of VMU file header */
+    int hdr_status;                     /* Parse status of VMU file header */
 } vmu_fh_t;
 
 /* Directory handles */
@@ -247,7 +247,7 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
     fd->dev = dev;
     fd->header = NULL;
     fd->raw = mode & O_META;
-    fd->header_parse_result = FSVMU_HEADEROK;
+    fd->hdr_status = VMUHDR_STATUS_OK;
 
     /* What mode are we opening in? If we're reading or writing without O_TRUNC
        then we need to read the old file if there is one. */
@@ -261,8 +261,12 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
             if(realmode == O_RDWR || realmode == O_WRONLY) {
                 /* In some modes failure is ok -- flag to setup a blank first block. */
                 datasize = -1;
-                /* Posible errors on: init/alloc/eof=-1 find/read/size=-2 */
-                fd->header_parse_result = rv == -2 ? FSVMU_NOFILE : FSVMU_READERROR;
+
+                if(rv == -2) {
+                    fd->hdr_status = VMUHDR_STATUS_NEWFILE;
+                } else {
+                    fd->hdr_status = VMUHDR_STATUS_UNREADABLE;
+                }
             }
             else {
                 free(fd);
@@ -286,7 +290,7 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
         memset(data, 0, 512);
     } else if(!fd->raw) {
         if(vmu_pkg_parse(data, datasize, &vmu_pkg)) {
-            fd->header_parse_result = FSVMU_BADHEADER;
+            fd->hdr_status = VMUHDR_STATUS_CORRUPTED;
         } else {
             fd->header = vmu_pkg_dup(&vmu_pkg);
             fd->start = (unsigned int)vmu_pkg.data - (unsigned int)data;
@@ -676,7 +680,7 @@ static int vmu_ioctl(void *fd, int cmd, va_list ap) {
         }
         break;
     case IOCTL_VMU_GET_HDR_STATE:
-        return fh->header_parse_result;
+        return fh->hdr_status;
     }
 
     return 0;
