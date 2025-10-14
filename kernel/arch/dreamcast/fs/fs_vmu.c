@@ -679,7 +679,7 @@ static int vmu_ioctl(void *fd, int cmd, va_list ap) {
             free(old_hdr);
         }
         break;
-    case IOCTL_VMU_GET_HDR_STATE:
+    case IOCTL_VMU_GET_HDR_STATUS:
         return fh->hdr_status;
     }
 

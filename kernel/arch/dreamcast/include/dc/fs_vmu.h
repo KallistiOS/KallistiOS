@@ -48,12 +48,12 @@ __BEGIN_DECLS
 int fs_vmu_init(void);
 int fs_vmu_shutdown(void);
 
-#define IOCTL_VMU_SET_HDR          0x564d5530 /* "VMU0" */
-#define IOCTL_VMU_GET_HDR_STATE    0x564d5531 /* "VMU1" */
+#define IOCTL_VMU_SET_HDR           0x564d5530 /* "VMU0" */
+#define IOCTL_VMU_GET_HDR_STATUS    0x564d5531 /* "VMU1" */
 /* \endcond */
 
 /** \defgroup file_hdr_status      File header parse status
-    \brief                         Values returned from IOCTL_VMU_GET_HDR_STATE
+    \brief                         Values returned from IOCTL_VMU_GET_HDR_STATUS
     \ingroup                       VMU
 
     When O_META flag is not used, fs_open() function will parse the VMU file header.
@@ -61,7 +61,7 @@ int fs_vmu_shutdown(void);
     If successful the header is hidden, so any operation in the VMU file won't see the header.
     However, if it fails, the entire file is available in the same way as with O_META (raw access).
 
-    The codes returned by IOCTL_VMU_GET_HDR_STATE indicate status of that parse.
+    The codes returned by IOCTL_VMU_GET_HDR_STATUS indicate status of that parse.
 */
 typedef enum vmu_hdr_status {
     VMUHDR_STATUS_OK          = 0,  /**< \brief Header parsed correctly */
@@ -104,7 +104,7 @@ static inline int fs_vmu_set_header(file_t fd, const vmu_pkg_t *pkg) {
     \return                 status
 */
 static inline vmu_hdr_status_t fs_vmu_get_header_parse_status(file_t fd) {
-    return fs_ioctl(fd, IOCTL_VMU_GET_HDR_STATE);
+    return fs_ioctl(fd, IOCTL_VMU_GET_HDR_STATUS);
 }
 
 /** \brief  Open a file on the VMU and check its header
