@@ -49,14 +49,12 @@ static irq_cb_t        global_irq_handler;
 /* Default IRQ context location */
 static irq_context_t   irq_context_default;
 
-/* Are we inside an interrupt? */
-static int inside_int;
-int irq_inside_int(void) {
-    return inside_int;
-}
+/* Are we inside an interrupt?
+   Content is ((code&0xf)<<16) | (evt&0xffff) */
+int inside_int;
 
 /* Set a handler, or remove a handler */
-int irq_set_handler(irq_t code, irq_hdl_t hnd, void *data) {
+int arch_irq_set_handler(irq_t code, irq_hdl_t hnd, void *data) {
     /* Make sure they don't do something crackheaded */
     if(code >= 0x1000 || (code & 0x000f))
         return -1;
@@ -70,7 +68,7 @@ int irq_set_handler(irq_t code, irq_hdl_t hnd, void *data) {
 }
 
 /* Get the address of the current handler */
-irq_cb_t irq_get_handler(irq_t code) {
+irq_cb_t arch_irq_get_handler(irq_t code) {
     /* Make sure they don't do something crackheaded */
     if(code >= 0x1000 || (code & 0x000f))
         return (irq_cb_t){ NULL, NULL };
@@ -82,7 +80,7 @@ irq_cb_t irq_get_handler(irq_t code) {
 }
 
 /* Set a global handler */
-int irq_set_global_handler(irq_hdl_t hnd, void *data) {
+int arch_irq_set_global_handler(irq_hdl_t hnd, void *data) {
     irq_disable_scoped();
 
     global_irq_handler.hdl = hnd;
@@ -91,7 +89,7 @@ int irq_set_global_handler(irq_hdl_t hnd, void *data) {
 }
 
 /* Get the global exception handler */
-irq_cb_t irq_get_global_handler(void) {
+irq_cb_t arch_irq_get_global_handler(void) {
     irq_disable_scoped();
 
     return global_irq_handler;
@@ -314,22 +312,22 @@ extern void irq_vma_table(void);
    Make sure you have at least REG_BYTE_CNT bytes available. DO NOT
    ALLOW ANY INTERRUPTS TO HAPPEN UNTIL THIS HAS BEEN CALLED AT
    LEAST ONCE! */
-void irq_set_context(irq_context_t *regbank) {
+void arch_irq_set_context(irq_context_t *regbank) {
     irq_srt_addr = regbank;
 }
 
 /* Return the current IRQ context */
-irq_context_t *irq_get_context(void) {
+irq_context_t *arch_irq_get_context(void) {
     return irq_srt_addr;
 }
 
 /* Fill a newly allocated context block for usage with supervisor/kernel
    or user mode. The given parameters will be passed to the called routine (up
    to the architecture maximum). */
-void irq_create_context(irq_context_t *context,
-                        uintptr_t stack_pointer,
-                        uintptr_t routine,
-                        const uintptr_t *args) {
+void arch_irq_create_context(irq_context_t *context,
+                             uintptr_t stack_pointer,
+                             uintptr_t routine,
+                             const uintptr_t *args) {
     /* Clear out all registers. */
     memset(context, 0, sizeof(irq_context_t));
 
