@@ -15,8 +15,8 @@
 #include <dc/asic.h>
 #include <dc/flashrom.h>
 #include <dc/net/lan_adapter.h>
-#include <arch/irq.h>
 #include <kos/dbglog.h>
+#include <kos/irq.h>
 #include <kos/net.h>
 #include <kos/thread.h>
 

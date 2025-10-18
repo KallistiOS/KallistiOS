@@ -12,10 +12,10 @@
 #include <errno.h>
 #include <malloc.h>
 
+#include <kos/irq.h>
 #include <kos/tls.h>
 #include <kos/spinlock.h>
 #include <kos/thread.h>
-#include <arch/irq.h>
 
 static spinlock_t mutex = SPINLOCK_INITIALIZER;
 static kthread_key_t next_key = 1;

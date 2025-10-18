@@ -17,7 +17,6 @@
 #include <kos/genwait.h>
 #include <sys/queue.h>
 #include <kos/fs_socket.h>
-#include <arch/irq.h>
 #include <sys/socket.h>
 #include <netinet/udp.h>
 #include <netinet/udplite.h>

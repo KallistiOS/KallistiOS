@@ -20,15 +20,15 @@
 #include <kos/thread.h>
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>
+#include <kos/irq.h>
 #include <kos/sem.h>
 #include <kos/rwsem.h>
 #include <kos/cond.h>
 #include <kos/genwait.h>
+#include <kos/timer.h>
 
 #include <arch/arch.h>
-#include <arch/irq.h>
 #include <arch/stack.h>
-#include <kos/timer.h>
 #include <arch/tls_static.h>
 
 /*

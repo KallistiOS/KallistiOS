@@ -5,11 +5,10 @@
 */
 
 #include <dc/ubc.h>
-
 #include <dc/memory.h>
-#include <arch/irq.h>
 
 #include <kos/dbglog.h>
+#include <kos/irq.h>
 
 #include <string.h>
 #include <assert.h>

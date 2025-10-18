@@ -6,10 +6,12 @@
 */
 #include <arch/cache.h>
 #include <arch/dmac.h>
-#include <arch/irq.h>
+
 #include <dc/memory.h>
+
 #include <kos/dbglog.h>
 #include <kos/genwait.h>
+#include <kos/irq.h>
 #include <kos/platform.h>
 #include <kos/regfield.h>
 

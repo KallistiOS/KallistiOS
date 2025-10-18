@@ -14,9 +14,9 @@
 /* Note: right now we only support system RAM */
 
 #include <arch/arch.h>
-#include <arch/irq.h>
 #include <arch/stack.h>
 #include <kos/dbglog.h>
+#include <kos/irq.h>
 #include <kos/linker.h>
 #include <errno.h>
 #include <inttypes.h>

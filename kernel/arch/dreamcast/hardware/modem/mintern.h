@@ -11,7 +11,6 @@
 #define __MINTERN_H
 
 #include <time.h>
-#include <arch/irq.h>
 #include <dc/g2bus.h>
 #include "chainbuf.h"
 

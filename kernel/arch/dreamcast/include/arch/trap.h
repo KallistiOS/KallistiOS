@@ -27,9 +27,10 @@
 
 #include <stdint.h>
 
-#include <arch/irq.h>
 #include <kos/cdefs.h>
 __BEGIN_DECLS
+
+#include <kos/irq.h>
 
 /** \defgroup traps  Traps
     \brief    API for managing TRAPA events and handlers.

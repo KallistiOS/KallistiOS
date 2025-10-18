@@ -9,10 +9,12 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
-#include <kos/thread.h>
+
 #include <dc/maple.h>
-#include <arch/irq.h>
 #include <dc/memory.h>
+
+#include <kos/irq.h>
+#include <kos/thread.h>
 
 /* Send all queued frames */
 void maple_queue_flush(void) {

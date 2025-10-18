@@ -11,17 +11,17 @@
 
 #include <dc/g1ata.h>
 #include <dc/asic.h>
+#include <dc/memory.h>
 
 #include <kos/dbglog.h>
+#include <kos/irq.h>
 #include <kos/sem.h>
 #include <kos/mutex.h>
 #include <kos/thread.h>
-
 #include <kos/timer.h>
+
 #include <arch/arch.h>
 #include <arch/cache.h>
-#include <arch/irq.h>
-#include <dc/memory.h>
 
 /*
    This file implements support for accessing devices over the G1 bus by the
