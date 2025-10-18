@@ -138,43 +138,6 @@ __attribute__((aligned(32))) struct irq_context {
 #define CONTEXT_RET(c)  ((c).r[0])
 /** @} */
 
-/** Switch out contexts (for interrupt return).
-
-    This function will set the processor state that will be restored when the
-    exception returns.
-
-    \param  regbank         The values of all registers to be restored.
-
-    \sa irq_get_context()
-*/
-void irq_set_context(irq_context_t *regbank);
-
-/** Get the current IRQ context.
-
-    This will fetch the processor context prior to the exception handling during
-    an IRQ service routine.
-
-    \return                 The current IRQ context.
-
-    \sa irq_set_context()
-*/
-irq_context_t *irq_get_context(void);
-
-/** Fill a newly allocated context block.
-
-    The given parameters will be passed to the called routine (up to the
-    architecture maximum). For the Dreamcast, this maximum is 4.
-
-    \param  context         The IRQ context to fill in.
-    \param  stack_pointer   The value to set in the stack pointer.
-    \param  routine         The address of the program counter for the context.
-    \param  args            Any arguments to set in the registers. This cannot
-                            be NULL, and must have enough values to fill in up
-                            to the architecture maximum.
-*/
-void irq_create_context(irq_context_t *context, uintptr_t stack_pointer,
-                        uintptr_t routine, const uintptr_t *args);
-
 /** @} */
 
 /** Interrupt exception codes
@@ -268,105 +231,32 @@ enum irq_exception
     EXC_UNHANDLED_EXC      = 0x07e0  /**< `[SOFT  ]` Exception went unhandled */
 };
 
-/** \defgroup irq_state     State
-    \brief                  Methods for querying active IRQ information.
+static inline int arch_irq_inside_int(void) {
+    extern int inside_int;
 
-    Provides an API for accessing the state of the current IRQ context such
-    as the active interrupt or whether it has been handled.
-
-    @{
-*/
-
-
-/** Returns whether inside of an interrupt context.
-
-    \retval non-zero        If interrupt handling is in progress.
-                            ((code&0xf)<<16) | (evt&0xffff)
-    \retval 0               If normal processing is in progress.
-
-*/
-int irq_inside_int(void);
-
-/** @} */
-
-/** \defgroup irq_mask      Mask
-    \brief                  Accessors and modifiers of the IMASK state.
-
-    This API is provided for managing and querying information regarding the
-    interrupt mask, a series of bitflags representing whether each type of
-    interrupt has been enabled or not.
-
-    @{
-*/
-
-/** Get status register contents.
-
-    Returns the current value of the status register, as irq_disable() does.
-    The function can be found in arch\dreamcast\kernel\entry.s
-
-    \note
-    This is the entire status register word, not just the `IMASK` field.
-
-    \retval                 Status register word
-    \sa irq_disable()
-*/
-static inline irq_mask_t irq_get_sr(void) {
-    irq_mask_t value;
-    __asm__ volatile("stc sr, %0" : "=r" (value));
-    return value;
+    return inside_int;
 }
 
-/** Restore IRQ state.
-
-    This function will restore the interrupt state to the value specified. This
-    should correspond to a value returned by irq_disable().
-
-    \param  old             The IRQ state to restore. This should be a value
-                            returned by irq_disable().
-
-    \sa irq_disable()
-*/
-static inline void irq_restore(irq_mask_t old) {
+static inline void arch_irq_restore(irq_mask_t old) {
     __asm__ volatile("ldc %0, sr" : : "r" (old));
 }
 
-/** Disable interrupts.
+static inline irq_mask_t arch_irq_disable(void) {
+    irq_mask_t mask;
 
-    This function will disable SH4 interrupts, but will leave SH4 general
-    exceptions enabled.
+    __asm__ volatile("stc sr, %0" : "=r" (mask));
 
-    \return                 The state of the SH4 interrupts before calling the
-                            function. This can be used to restore this state
-                            later on with irq_restore().
-
-    \sa irq_restore(), irq_enable()
-*/
-static inline irq_mask_t irq_disable(void) {
-    uint32_t mask = (uint32_t)irq_get_sr();
-    irq_restore((mask & 0xefffff0f) | 0x000000f0);
+    arch_irq_restore((mask & 0xefffff0f) | 0x000000f0);
     return mask;
 }
 
-/** Enable all interrupts.
+static inline void arch_irq_enable(void) {
+    irq_mask_t mask;
 
-    This function will enable ALL interrupts, including external ones.
+    __asm__ volatile("stc sr, %0" : "=r" (mask));
 
-    \sa irq_disable()
-*/
-static inline void irq_enable(void) {
-    uint32_t mask = ((uint32_t)irq_get_sr() & 0xefffff0f);
-    irq_restore(mask);
+    arch_irq_restore(mask & 0xefffff0f);
 }
-
-/** \brief  Disable interrupts with scope management.
-
-    This macro will disable interrupts, similarly to irq_disable(), with the
-    difference that the interrupt state will automatically be restored once the
-    execution exits the functional block in which the macro was called.
-*/
-#define irq_disable_scoped() __irq_disable_scoped(__LINE__)
-
-/** @} */
 
 /** \defgroup irq_ctrl Control Flow
     \brief Methods for managing control flow within an irq_handler.
@@ -389,112 +279,24 @@ static inline void irq_enable(void) {
 */
 void irq_force_return(void);
 
-/** @} */
+void arch_irq_create_context(irq_context_t *context,
+                             uintptr_t stack_pointer,
+                             uintptr_t routine,
+                             const uintptr_t *args);
 
-/** \defgroup irq_handlers  Handlers
-    \brief                  API for managing IRQ handlers
+int arch_irq_set_handler(irq_t code, irq_hdl_t hnd, void *data);
 
-    This API provides a series of methods for registering and retrieving
-    different types of exception handlers.
+irq_cb_t arch_irq_get_handler(irq_t code);
 
-    @{
-*/
+int arch_irq_set_global_handler(irq_hdl_t hnd, void *data);
 
-/** \defgroup irq_handlers_ind  Individual
-    \brief                      API for managing individual IRQ handlers.
+irq_cb_t arch_irq_get_global_handler(void);
 
-    This API is for managing handlers installed to handle individual IRQ codes.
+void arch_irq_set_context(irq_context_t *cxt);
 
-    @{
-*/
-
-/** Set or remove an IRQ handler.
-
-    Passing a NULL value for hnd will remove the current handler, if any.
-
-    \param  code            The IRQ type to set the handler for
-                            (see #irq_t).
-    \param  hnd             A pointer to a procedure to handle the exception.
-    \param  data            A pointer that will be passed along to the callback.
-
-    \retval 0               On success.
-    \retval -1              If the code is invalid.
-
-    \sa irq_get_handler()
-*/
-int irq_set_handler(irq_t code, irq_hdl_t hnd, void *data);
-
-/** Get the address of the current handler for the IRQ type.
-
-    \param  code            The IRQ type to look up.
-
-    \return                 The current handler for the IRQ type and
-                            its userdata.
-
-    \sa irq_set_handler()
-*/
-irq_cb_t irq_get_handler(irq_t code);
+irq_context_t *arch_irq_get_context(void);
 
 /** @} */
-
-/** \defgroup irq_handlers_global   Global
-    \brief                          API for managing global IRQ handler.
-
-    @{
-*/
-/** Set a global exception handler.
-
-    This function sets a global catch-all filter for all exception types.
-
-    \note                   The specific handler will still be called for the
-                            exception if one is set. If not, setting one of
-                            these will stop the unhandled exception error.
-
-    \param  hnd             A pointer to the procedure to handle the exception.
-    \param  data            A pointer that will be passed along to the callback.
-
-    \retval 0               On success (no error conditions defined).
-
-*/
-int irq_set_global_handler(irq_hdl_t hnd, void *data);
-
-/** Get the global exception handler.
-
-    \return                 The global exception handler and userdata set with
-                            irq_set_global_handler(), or NULL if none is set.
-*/
-irq_cb_t irq_get_global_handler(void);
-/** @} */
-
-/** @} */
-
-/** \cond INTERNAL */
-
-/** Initialize interrupts.
-
-    \retval 0               On success (no error conditions defined).
-
-    \sa irq_shutdown()
-*/
-int irq_init(void);
-
-/** Shutdown interrupts.
-
-    Restores the state to how it was before irq_init() was called.
-
-    \sa irq_init()
-*/
-void irq_shutdown(void);
-
-static inline void __irq_scoped_cleanup(irq_mask_t *state) {
-    irq_restore(*state);
-}
-
-#define ___irq_disable_scoped(l) \
-    irq_mask_t __scoped_irq_##l __attribute__((cleanup(__irq_scoped_cleanup))) = irq_disable()
-
-#define __irq_disable_scoped(l) ___irq_disable_scoped(l)
-/** \endcond */
 
 /** \brief  Minimum/maximum values for IRQ priorities
 
