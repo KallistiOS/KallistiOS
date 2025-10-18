@@ -81,9 +81,11 @@ typedef struct kos_mutex {
 */
 #define MUTEX_TYPE_NORMAL       0   /**< \brief Normal mutex type */
 #define MUTEX_TYPE_OLDNORMAL    1   /**< \brief Alias for MUTEX_TYPE_NORMAL */
-#define MUTEX_TYPE_ERRORCHECK   2   /**< \brief Error-checking mutex type */
 #define MUTEX_TYPE_RECURSIVE    3   /**< \brief Recursive mutex type */
 #define MUTEX_TYPE_DESTROYED    4   /**< \brief Mutex that has been destroyed */
+
+ __depr("Error-checking mutexes are deprecated")
+static const unsigned int MUTEX_TYPE_ERRORCHECK = 2;
 
 /** \brief Default mutex type */
 #define MUTEX_TYPE_DEFAULT      MUTEX_TYPE_NORMAL
