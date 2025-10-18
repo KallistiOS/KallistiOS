@@ -32,7 +32,7 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/irq.h>
+#include <kos/irq.h>
 
 #include <time.h>
 

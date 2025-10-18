@@ -105,9 +105,6 @@ __attribute__((aligned(32))) struct irq_context {
     uint32_t  fpscr;      /**< Floating-point status/control register */
 };
 
-/* Included for legacy compatibility with these two APIs being one. */
-#include <arch/trap.h>
-
 /** \name Register Accessors
     \brief Convenience macros for accessing context registers
     @{
@@ -349,6 +346,9 @@ unsigned int irq_get_priority(irq_src_t src);
 
 /* Include <kos/irq.h> for compatibility with code that includes <arch/irq.h> instead. */
 #include <kos/irq.h>
+
+/* Included for legacy compatibility with these two APIs being one. */
+#include <arch/trap.h>
 
 __END_DECLS
 

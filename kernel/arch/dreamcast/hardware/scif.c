@@ -7,8 +7,8 @@
 #include <stdio.h>
 #include <errno.h>
 #include <kos/dbgio.h>
+#include <kos/irq.h>
 #include <arch/arch.h>
-#include <arch/irq.h>
 #include <dc/fs_dcload.h>
 #include <dc/scif.h>
 

@@ -9,7 +9,7 @@
 #include <errno.h>
 #include <sys/queue.h>
 
-#include <arch/irq.h>
+#include <kos/irq.h>
 #include <dc/vblank.h>
 
 /*

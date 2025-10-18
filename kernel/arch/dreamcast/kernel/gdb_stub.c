@@ -150,9 +150,10 @@
 #include <dc/dcload.h>
 #include <arch/gdb.h>
 #include <arch/types.h>
-#include <arch/irq.h>
 #include <arch/arch.h>
 #include <arch/cache.h>
+
+#include <kos/irq.h>
 
 #include <stddef.h>
 #include <string.h>

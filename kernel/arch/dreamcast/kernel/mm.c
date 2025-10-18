@@ -15,9 +15,9 @@
 
 #include <arch/arch.h>
 #include <arch/types.h>
-#include <arch/irq.h>
 #include <arch/stack.h>
 #include <kos/dbglog.h>
+#include <kos/irq.h>
 #include <errno.h>
 #include <stdio.h>
 

@@ -14,11 +14,11 @@
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>
 #include <kos/init.h>
+#include <kos/irq.h>
 #include <kos/linker.h>
 #include <kos/platform.h>
 #include <kos/timer.h>
 #include <arch/arch.h>
-#include <arch/irq.h>
 #include <arch/memory.h>
 #include <arch/rtc.h>
 #include <dc/perfctr.h>

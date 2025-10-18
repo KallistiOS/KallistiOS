@@ -12,9 +12,7 @@
 #include <assert.h>
 
 #include <arch/cache.h>
-#include <kos/timer.h>
 #include <arch/memory.h>
-#include <arch/irq.h>
 
 #include <dc/asic.h>
 #include <dc/cdrom.h>
@@ -22,6 +20,8 @@
 #include <dc/syscalls.h>
 #include <dc/vblank.h>
 
+#include <kos/irq.h>
+#include <kos/timer.h>
 #include <kos/thread.h>
 #include <kos/mutex.h>
 #include <kos/sem.h>
