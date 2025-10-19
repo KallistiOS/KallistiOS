@@ -7,19 +7,22 @@
 
 #include "pthread-internal.h"
 #include <pthread.h>
-#include <errno.h>
+#include <kos/errno.h>
 #include <kos/mutex.h>
 
 int pthread_mutex_trylock(pthread_mutex_t *mutex) {
-    int old, rv = 0;
-
     if(mutex->mutex.type > MUTEX_TYPE_RECURSIVE)
         return EINVAL;
 
-    old = errno;
-    if(mutex_trylock(&mutex->mutex))
-        rv = errno;
+    errno_save_scoped();
 
-    errno = old;
-    return rv;
+    if(mutex_trylock(&mutex->mutex))
+        return errno;
+
+    if(mutex->type == PTHREAD_MUTEX_ERRORCHECK && mutex->mutex.count > 1) {
+        mutex_unlock(&mutex->mutex);
+        return EDEADLK;
+    }
+
+    return 0;
 }

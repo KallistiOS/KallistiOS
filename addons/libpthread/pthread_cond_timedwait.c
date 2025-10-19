@@ -9,14 +9,13 @@
 
 #include "pthread-internal.h"
 #include <pthread.h>
-#include <errno.h>
 #include <sys/time.h>
 #include <kos/cond.h>
+#include <kos/errno.h>
 
 int pthread_cond_timedwait(pthread_cond_t *__RESTRICT cond,
                            pthread_mutex_t *__RESTRICT mutex,
                            const struct timespec *__RESTRICT abstime) {
-    int old, rv = 0;
     int tmo;
     struct timespec ctv;
 
@@ -26,7 +25,7 @@ int pthread_cond_timedwait(pthread_cond_t *__RESTRICT cond,
     if(abstime->tv_nsec < 0 || abstime->tv_nsec > 1000000000L)
         return EINVAL;
 
-    old = errno;
+    errno_save_scoped();
 
     /* Figure out the timeout we need to provide in milliseconds. */
     clock_gettime(cond->clock_id, &ctv);
@@ -37,9 +36,5 @@ int pthread_cond_timedwait(pthread_cond_t *__RESTRICT cond,
     if(tmo <= 0)
         return ETIMEDOUT;
 
-    if(cond_wait_timed(&cond->cond, &mutex->mutex, tmo))
-        rv = errno;
-
-    errno = old;
-    return rv;
+    return errno_if_nonzero(cond_wait_timed(&cond->cond, &mutex->mutex, tmo));
 }
