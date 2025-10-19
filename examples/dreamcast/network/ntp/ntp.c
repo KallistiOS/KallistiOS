@@ -15,9 +15,9 @@
 
 #include <netdb.h>
 
-#include <arch/arch.h>
 #include <arch/rtc.h>
 #include <kos/dbgio.h>
+#include <kos/init.h>
 #include <kos/net.h>
 #include <kos/thread.h>
 

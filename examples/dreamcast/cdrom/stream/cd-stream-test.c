@@ -17,7 +17,6 @@
 #include <dc/maple/controller.h>
 #include <dc/cdrom.h>
 
-#include <arch/arch.h>
 #include <arch/cache.h>
 
 #include <kos/init.h>
@@ -43,7 +42,7 @@ static void __attribute__((__noreturn__)) wait_exit(void) {
 
             if(state)   {
                 if(state->buttons)
-                    arch_exit();
+                    exit(0);
             }
         }
     }
