@@ -48,8 +48,27 @@ __BEGIN_DECLS
 int fs_vmu_init(void);
 int fs_vmu_shutdown(void);
 
-#define IOCTL_VMU_SET_HDR     0x564d5530 /* "VMU0" */
+#define IOCTL_VMU_SET_HDR           0x564d5530 /* "VMU0" */
+#define IOCTL_VMU_GET_HDR_STATUS    0x564d5531 /* "VMU1" */
 /* \endcond */
+
+/** \defgroup file_hdr_status      File header parse status
+    \brief                         Values returned from IOCTL_VMU_GET_HDR_STATUS
+    \ingroup                       VMU
+
+    When O_META flag is not used, fs_open() function will parse the VMU file header.
+
+    If successful the header is hidden, so any operation in the VMU file won't see the header.
+    However, if it fails, the entire file is available in the same way as with O_META (raw access).
+
+    The codes returned by IOCTL_VMU_GET_HDR_STATUS indicate status of that parse.
+*/
+typedef enum vmu_hdr_status {
+    VMUHDR_STATUS_OK          = 0,  /**< \brief Header parsed correctly */
+    VMUHDR_STATUS_CORRUPTED   = 1,  /**< \brief Corrupted, invalid CRC or missing header */
+    VMUHDR_STATUS_NEWFILE     = 2,  /**< \brief File not found, not an error per-se */
+    VMUHDR_STATUS_UNREADABLE  = 3   /**< \brief Unreadable or truncated header data */
+} vmu_hdr_status_t;
 
 /** \brief  Set a header to an opened VMU file
 
@@ -71,6 +90,55 @@ int fs_vmu_shutdown(void);
 */
 static inline int fs_vmu_set_header(file_t fd, const vmu_pkg_t *pkg) {
     return fs_ioctl(fd, IOCTL_VMU_SET_HDR, pkg);
+}
+
+/** \brief  Retrieves the header parse status from an opened VMU file
+
+    This function can be used to check if the header was parsed correctly (which contains the
+    metadata, icons...) from an opened VMU file.
+
+    Note: always returns 0 for truncated files and directories.
+
+    \see file_hdr_status
+    \param fd               A file descriptor corresponding to the VMU file
+    \return                 status
+*/
+static inline vmu_hdr_status_t fs_vmu_get_header_parse_status(file_t fd) {
+    return fs_ioctl(fd, IOCTL_VMU_GET_HDR_STATUS);
+}
+
+/** \brief  Open a file on the VMU and check its header
+
+    Wrapper arround fs_open() function, returns a new file descriptor if
+    the header is not corrupted.
+
+    \param  fn              The file path to open.
+    \param  mode            The mode to use with opening the file. This may
+                            include the standard open modes (O_RDONLY, O_WRONLY,
+                            etc), as well as values from the \ref vfs_fopen_modes
+                            "File Open Modes" list. Multiple values can be ORed
+                            together.
+
+    \return                 The new file descriptor on success, -1 on error.
+*/
+static inline file_t fs_vmu_open_constrained(const char* fn, int mode) {
+    file_t fd;
+    int status;
+
+    fd = fs_open(fn, mode);
+    if(fd == FILEHND_INVALID || mode & O_TRUNC || mode & O_DIR) {
+        return fd;
+    }
+
+    status = fs_vmu_get_header_parse_status(fd);
+    if(status == VMUHDR_STATUS_OK || status == VMUHDR_STATUS_NEWFILE) {
+        return fd;
+    }
+
+    /* status was corrupted or unreadable */
+    fs_close(fd);
+
+    return FILEHND_INVALID;
 }
 
 /** \brief  Set a default header for newly created VMU files
@@ -108,6 +176,7 @@ static inline int fs_vmu_set_default_header(const vmu_pkg_t *pkg) {
 }
 
 /** @} */
+
 
 __END_DECLS
 
