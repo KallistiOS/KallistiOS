@@ -18,10 +18,14 @@ void aica_init(void);
 void aica_play(int ch, int delay);
 void aica_sync_play(uint32 chmap);
 void aica_stop(int ch);
+void aica_sync_stop(uint32 chmap);
 void aica_vol(int ch);
 void aica_pan(int ch);
 void aica_freq(int ch);
 int aica_get_pos(int ch);
+void aica_sync_vol(uint32 chmap, uint32 vol);
+void aica_sync_pan(uint32 chmap, uint32 pan);
+void aica_sync_freq(uint32 chmap, uint32 freq);
 
 #endif  /* __AICA_H */
 
