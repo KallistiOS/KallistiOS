@@ -71,6 +71,9 @@ int main() {
 	struct dirent *at_dir;
 
 	while ((at_dir = readdir(dir))) {
+		// Skip over . and .. filesystem directory structure.
+		if (strcmp(at_dir->d_name, ".") == 0 || strcmp(at_dir->d_name, "..") == 0)
+			continue;
 		char buf[NAME_MAX+5];
 		strcpy(buf, ASSETS"/");
 		strcat(buf, at_dir->d_name);
