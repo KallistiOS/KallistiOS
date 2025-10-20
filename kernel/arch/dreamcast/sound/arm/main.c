@@ -65,13 +65,56 @@ volatile aica_queue_t   *q_cmd = (volatile aica_queue_t *)AICA_MEM_CMD_QUEUE;
 volatile aica_queue_t   *q_resp = (volatile aica_queue_t *)AICA_MEM_RESP_QUEUE;
 volatile aica_channel_t *chans = (volatile aica_channel_t *)AICA_MEM_CHANNELS;
 
+/* Process a BATCH command */
+void proccess_batch(aica_batch_param_t *chnprms) {
+    int chn;
+
+    while(1) {
+        chn = chnprms->channel;
+
+        switch(chnprms->param) {
+            case AICA_BATCH_PARAM_EOL:
+                /* End of list reached */
+                return;
+            case AICA_BATCH_PARAM_FREQ:
+                chans[chn].freq = chnprms->value;
+                aica_freq(chn);
+                break;
+            case AICA_BATCH_PARAM_VOL:
+                chans[chn].vol = chnprms->value;
+                aica_vol(chn);
+                break;
+            case AICA_BATCH_PARAM_PAN :
+                chans[chn].pan = chnprms->value;
+                aica_pan(chn);
+                break;
+        }
+
+        chnprms++;
+    }
+}
+
+/* Process a CHAN command with UPDATE_SYNC on selected channels (only first 32) */
+void process_chn_update_sync(uint32 chnmap, aica_channel_t *chndat) {
+    uint32 cmd = chndat->cmd;
+
+    if (cmd & AICA_CH_UPDATE_SET_FREQ) {
+        aica_sync_freq(chnmap, chndat->freq);
+    }
+    if (cmd & AICA_CH_UPDATE_SET_VOL) {
+        aica_sync_vol(chnmap, chndat->vol);
+    }
+    if (cmd & AICA_CH_UPDATE_SET_PAN) {
+        aica_sync_pan(chnmap, chndat->pan);
+    }
+}
+
 /* Process a CHAN command */
 void process_chn(uint32 chn, aica_channel_t *chndat) {
     switch(chndat->cmd & AICA_CH_CMD_MASK) {
         case AICA_CH_CMD_NONE:
             break;
         case AICA_CH_CMD_START:
-
             if(chndat->cmd & AICA_CH_START_SYNC) {
                 aica_sync_play(chn);
             }
@@ -83,9 +126,19 @@ void process_chn(uint32 chn, aica_channel_t *chndat) {
 
             break;
         case AICA_CH_CMD_STOP:
-            aica_stop(chn);
+            if(chndat->cmd & AICA_CH_STOP_SYNC) {
+                aica_sync_stop(chn);
+            }
+            else {
+                aica_stop(chn);
+            }
+
             break;
         case AICA_CH_CMD_UPDATE:
+            if(chndat->cmd & AICA_CH_UPDATE_SYNC) {
+                process_chn_update_sync(chn, chndat);
+                break;
+            }
 
             if(chndat->cmd & AICA_CH_UPDATE_SET_FREQ) {
                 chans[chn].freq = chndat->freq;
@@ -146,6 +199,9 @@ uint32 process_one(uint32 tail) {
         case AICA_CMD_SYNC_CLOCK:
             /* Reset our timer clock to zero */
             timer = 0;
+            break;
+        case AICA_CMD_BATCH:
+            proccess_batch((aica_batch_param_t *)pkt->cmd_data);
             break;
         default:
             /* error */

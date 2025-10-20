@@ -121,12 +121,15 @@ int snd_sh4_to_aica(void *packet, uint32 size);
 /** \brief  Begin processing AICA queue requests.
 
     This function begins processing of any queued requests in the AICA queue.
+    This function will first decrement an internal halt count, processing
+    begins when the count is zero.
 */
 void snd_sh4_to_aica_start(void);
 
 /** \brief  Stop processing AICA queue requests.
 
     This function stops the processing of any queued requests in the AICA queue.
+    This function is reentrant, so each call increments an internal halt count.
 */
 void snd_sh4_to_aica_stop(void);
 
