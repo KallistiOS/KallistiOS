@@ -16,7 +16,7 @@
 #include <kos/genwait.h>
 #include <kos/dbglog.h>
 
-#include <arch/irq.h>
+#include <kos/irq.h>
 #include <kos/timer.h>
 
 /* Thread pseudo-ptr representing an active IRQ context. */

@@ -49,11 +49,9 @@ static irq_cb_t        global_irq_handler;
 /* Default IRQ context location */
 static irq_context_t   irq_context_default;
 
-/* Are we inside an interrupt? */
-static int inside_int;
-int irq_inside_int(void) {
-    return inside_int;
-}
+/* Are we inside an interrupt?
+   Content is ((code&0xf)<<16) | (evt&0xffff) */
+int inside_int;
 
 /* Set a handler, or remove a handler */
 int irq_set_handler(irq_t code, irq_handler hnd, void *data) {
