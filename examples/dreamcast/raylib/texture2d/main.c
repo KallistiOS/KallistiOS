@@ -114,7 +114,14 @@ int main() {
 		BeginDrawing();
 		for (int i = texture_len; i--;) {
 			if (IsTextureValid(textures[i])) {
-				int x = rand() % 640, y = rand() % 480;
+				/* By subtracting the dimensions of the texture from the modulo,
+				 * we can ensure that the sprites appear on the screen.
+				 * Due to canvas resizing, this will make some sprites not draw
+				 * all the way in the corner, but this is better behavior
+				 * than drawing mostly off the screen.
+				 */
+				int x = rand() % (640 - textures[i].width),
+				    y = rand() % (480 - textures[i].height);
 				DrawTexture(textures[i], x, y, WHITE);
 			}
 		}
