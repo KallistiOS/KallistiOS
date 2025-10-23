@@ -8,6 +8,9 @@
 #define ASSETS "/rd"
 //#define ASSETS "images"
 
+/**
+ * Functions for handling a custom vector of images.
+ */
 typedef struct ImageCollection {
 	Image *image_arr;
 	int capacity;
@@ -39,6 +42,47 @@ void image_collection_cleanup(ImageCollection *collection) {
 	}
 	free(collection->image_arr);
 }
+/**
+ * End custom vector
+ */
+
+/**
+ * Structure for creating a circular buffer of textures.
+ */
+typedef struct {
+	Texture *elem;
+	int x;
+	int y;
+} ScreenElement;
+
+typedef struct {
+	ScreenElement *scr;
+	int at;
+	int len;
+} ElementBuffer;
+
+void buffer_add_element(ElementBuffer *buf, Texture *elem, int x, int y) {
+	buf->scr[buf->at].elem = elem;
+	buf->scr[buf->at].x = x;
+	buf->scr[buf->at].y = y;
+	buf->at = (buf->at + 1) % buf->len;
+}
+
+ElementBuffer *buffer_init(int len) {
+	ElementBuffer *buf = malloc(sizeof(ElementBuffer));
+	buf->scr = calloc(sizeof(ScreenElement), len);
+	buf->at = 0;
+	buf->len = len;
+	return buf;
+}
+
+void buffer_cleanup(ElementBuffer *buf) {
+	free(buf->scr);
+	free(buf);
+}
+/**
+ * End circular buffer
+ */
 
 uint32_t power_of_two(int dim) {
 	// int is 32-bit.
@@ -112,9 +156,11 @@ int main() {
 
 	image_collection_cleanup(&collection);
 
+	// 400 is arbitrary. Should be enough for images to stay for a decent amount of time.
+	ElementBuffer *buf = buffer_init(400);
+
 	// Now we blit all the sprites to the screen repeatedly in random locations.
 	while (!WindowShouldClose()) {
-		BeginDrawing();
 		for (int i = texture_len; i--;) {
 			if (IsTextureValid(textures[i])) {
 				/* By subtracting the dimensions of the texture from the modulo,
@@ -125,13 +171,22 @@ int main() {
 				 */
 				int x = rand() % (640 - textures[i].width),
 				    y = rand() % (480 - textures[i].height);
-				DrawTexture(textures[i], x, y, WHITE);
+				// Add to the circular buffer
+				buffer_add_element(buf, &textures[i], x, y);
+			}
+		}
+		BeginDrawing();
+		// We loop like this so it draws from oldest entry to newest entry.
+		for (int i = buf->at, first = 1; first == 1 || i != buf->at; first = 0, i = (i + 1) % buf->len) {
+			if (buf->scr[i].elem != NULL) {
+				DrawTexture(*buf->scr[i].elem, buf->scr[i].x, buf->scr[i].y, WHITE);
 			}
 		}
 		EndDrawing();
 	}
 
 	// Cleanup. Even thought we shouldn't reach here under normal circumstances.
+	buffer_cleanup(buf);
 	for (int i = texture_len; i--;) {
 		UnloadTexture(textures[i]);
 	}
