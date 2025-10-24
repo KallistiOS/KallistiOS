@@ -266,7 +266,7 @@ void pvr_blank_polyhdr_buf(int type, pvr_poly_hdr_t * poly) {
     poly->cmd = FIELD_PREP(PVR_TA_CMD_TYPE, type) | 0x80840012;
 }
 
-pvr_ptr_t pvr_get_front_buffer(void) {
+static pvr_ptr_t pvr_get_frame_buffer(bool back) {
     unsigned int idx;
     uint32_t addr;
 
@@ -275,13 +275,21 @@ pvr_ptr_t pvr_get_front_buffer(void) {
     /* The front buffer may not have been fully rendered or submitted to the
        video hardware yet. In case this has yet to happen, we want the second
        view target, aka. the one not currently being displayed. */
-    idx = pvr_state.view_target ^ pvr_state.render_completed;
+    idx = pvr_state.view_target ^ pvr_state.render_completed ^ back;
 
     addr = pvr_state.frame_buffers[idx].frame & (PVR_RAM_SIZE - 1);
 
     /* The front buffer is in 32-bit memory, convert its address to make it
        addressable from the 64-bit memory */
     return (pvr_ptr_t)(addr * 2 + PVR_RAM_BASE);
+}
+
+pvr_ptr_t pvr_get_front_buffer(void) {
+    return pvr_get_frame_buffer(false);
+}
+
+pvr_ptr_t pvr_get_back_buffer(void) {
+    return pvr_get_frame_buffer(true);
 }
 
 int pvr_set_vertical_scale(float factor) {

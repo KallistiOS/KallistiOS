@@ -1603,6 +1603,20 @@ void pvr_poly_cxt_txr_mod(pvr_poly_cxt_t *dst, pvr_list_t list,
 */
 pvr_ptr_t pvr_get_front_buffer(void);
 
+/** \brief   Get a pointer to the back buffer.
+    \ingroup pvr_txr_mgmt
+
+    This function can be used to retrieve a pointer to the back buffer, aka.
+    the frame buffer that will be rendered to.
+
+    Note that the frame buffers lie in 32-bit memory, while textures lie in
+    64-bit memory. The address returned will point to 64-bit memory, but the
+    back buffer cannot be used directly as a regular texture.
+
+    \return                 A pointer to the back buffer.
+*/
+pvr_ptr_t pvr_get_back_buffer(void);
+
 /*********************************************************************/
 
 #include "pvr/pvr_regs.h"
