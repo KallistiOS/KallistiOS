@@ -253,6 +253,7 @@ void hardware_shutdown(void);
 */
 #define HW_TYPE_RETAIL      0x0     /**< \brief A retail Dreamcast. */
 #define HW_TYPE_SET5        0x9     /**< \brief A Set5.xx devkit. */
+#define HW_TYPE_NAOMI       0xa     /**< \brief A NAOMI arcade. */
 /** @} */
 
 /** \defgroup hw_regions            Region Codes
