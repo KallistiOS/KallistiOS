@@ -155,6 +155,7 @@ static fs_hnd_t * fs_hnd_open(const char *fn, int mode) {
     hnd->handler = cur;
     hnd->hnd = h;
     hnd->refcnt = 0;
+    hnd->idx = 0;
 
     return hnd;
 }
