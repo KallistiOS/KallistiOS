@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
     free(mod_buffer);*/
 
     snd_stream_hnd_t shnd = snd_stream_alloc(mod_callback, SND_STREAM_BUFFER_MAX);
-    snd_stream_setup(shnd, 44100, 1, SND_STREAM_BUFFER_MAX_PCM16);
+    snd_stream_setup(shnd, 44100, 1, SND_STRMFMT_PCM16);
     snd_stream_start(shnd);
 
     while(1) {

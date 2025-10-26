@@ -649,7 +649,7 @@ void snd_stream_stop(snd_stream_hnd_t hnd) {
     if(!streams[hnd].ready_to_start) {
         return;
     }
-    streams[hnd].ready_to_start = 0;
+    streams[hnd].ready_to_start = 1;
 
     /* Stop stream */
     cmd->cmd = AICA_CMD_CHAN;
