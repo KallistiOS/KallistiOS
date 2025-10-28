@@ -52,6 +52,7 @@ int fs_vmu_shutdown(void);
 #define IOCTL_VMU_GET_REALFSIZE    0x564d5531 /* "VMU1" */
 #define IOCTL_VMU_GET_HDR_STATE    0x564d5532 /* "VMU2" */
 #define IOCTL_VMU_SET_HDR_GAME     0x564d5533 /* "VMU3" */
+#define IOCTL_VMU_GET_INIT_DATA    0x564d5534 /* "VMU4" */
 /* \endcond */
 
 /** \defgroup file_hdr_status      File header parse status
@@ -114,6 +115,33 @@ static inline int fs_vmu_set_header(file_t fd, const vmu_pkg_t *pkg) {
 */
 static inline int fs_vmu_set_header_game(file_t fd, const vmu_pkg_t *pkg, const void *intl_dts) {
     return fs_ioctl(fd, IOCTL_VMU_SET_HDR_GAME, pkg, intl_dts);
+}
+
+/** \brief  Gets initial data of an opened VMU file
+
+    This function can be used to retrieve the initial data from
+    an opened VMU file.
+
+    The initial data is 512 bytes long and is used only for GAME file types.
+    It will be NULL for DATA file types, this also makes it possible to know
+    if the opened file type is DATA or GAME.
+
+    This function will also return NULL if there no header.
+
+    Is valid make changes if the file is opened for writing but note
+    that fs_vmu_set_header_game() function can override the initial data.
+
+    \warning The underlying buffer may be reallocated by some fs functions, so
+    use it before continuing.
+
+    \param fd       A file descriptor corresponding to the VMU file
+
+    \return         A pointer to the initial data
+*/
+static inline void *fs_vmu_get_initial_data(file_t fd) {
+    void *initial_data = NULL;
+    fs_ioctl(fd, IOCTL_VMU_GET_INIT_DATA, &initial_data);
+    return initial_data;
 }
 
 /** \brief  Retrieves the real file size from an opened VMU file

@@ -837,6 +837,7 @@ static int vmu_ioctl(void *fd, int cmd, va_list ap) {
     vmu_dh_t *dh = (vmu_dh_t*)fd;
     const vmu_pkg_t *new_hdr;
     const void* intl_dts;
+    const void **out_intial_data;
 
     if(!dh || (dh->strtype == VMU_DIR && !dh->rootdir)) {
         errno = EBADF;
@@ -866,6 +867,23 @@ static int vmu_ioctl(void *fd, int cmd, va_list ap) {
                 return VMUHDR_STATUS_OK;
             }
             return fh->header_status;
+        case IOCTL_VMU_GET_INIT_DATA:
+            out_intial_data = va_arg(ap, const void **);
+
+            if(!out_intial_data) {
+                return -1;
+            } else if(fh->strtype != VMU_FILE) {
+                errno = EISDIR;
+                return -1;
+            } else if(!fh->is_game) {
+                *out_intial_data = NULL;
+            } else if(fh->start < 1) {
+                dbglog(DBG_SOURCE(VMUFS_DEBUG), "VMUFS: attempt to retrieve removed initial data\n");
+                *out_intial_data = NULL;
+            } else {
+                *out_intial_data = fh->data;
+            }
+            break;
         case IOCTL_VMU_GET_REALFSIZE:
             if(fh->strtype == VMU_FILE) {
                 _Static_assert(sizeof(int) >= sizeof(fh->blks));
