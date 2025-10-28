@@ -24,6 +24,7 @@
 __BEGIN_DECLS
 
 #include <stdint.h>
+#include <stdbool.h>
 
 /** \defgroup   vmu_package     Header Package
     \brief                      API for Managing VMU File Headers
@@ -123,6 +124,23 @@ int vmu_pkg_build(vmu_pkg_t *src, uint8_t ** dst, int * dst_size);
     \retval 0               On success.
 */
 int vmu_pkg_parse(uint8_t *data, size_t data_size, vmu_pkg_t *pkg);
+
+/** \brief   Parse an array of uint8s into a vmu_pkg_t.
+    \ingroup vmu_package
+
+    This function does the opposite of vmu_pkg_build and is used to parse VMU
+    files read in.
+
+    \param  data            The buffer to parse.
+    \param  data_size       The size of the buffer, in bytes.
+    \param  pkg             Where to store the vmu_pkg_t.
+    \param  nocrc           Action on bad CRC. true to ignore and parse anyway, false to return.
+
+    \retval -1              On invalid CRC in the data, header will be parsed if requested.
+    \retval -2              On truncated array or corrupted header.
+    \retval 0               On success.
+*/
+int vmu_pkg_parse_ex(uint8_t *data, size_t data_size, vmu_pkg_t *pkg, bool nocrc);
 
 /** \brief   Load a .ico file to use as a VMU file's icon.
     \ingroup vmu_package
