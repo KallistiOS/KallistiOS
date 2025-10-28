@@ -719,7 +719,7 @@ int vmufs_write(maple_device_t * dev, const char * fn, void * inbuf, int insize,
     vmu_root_t  root;
     vmu_dir_t   * dir = NULL, nd;
     uint16      * fat = NULL;
-    int     oldinsize, fatsize, dirsize, idx, rv = 0, st, fnlength;
+    int     oldinsize, fatsize, dirsize, idx, rv = 0, st, fnlength, blkavail, blksfile;
 
     /* Round up the size if necessary */
     oldinsize = insize;
@@ -747,6 +747,17 @@ int vmufs_write(maple_device_t * dev, const char * fn, void * inbuf, int insize,
             goto ex;
         }
         else {
+            /* Check if there enough free blocks before deletion */
+            blksfile = insize / 512;
+            blkavail = dir[idx].filesize + vmufs_fat_free(&root, fat);
+            if(blkavail < blksfile) {
+                dbglog(
+                    DBG_INFO, "vmufs_write: not enough space for file. Need %d blocks, have %d\n", blksfile, blkavail
+                );
+                rv =  -7;
+                goto ex;
+            }
+
             if(vmufs_file_delete(&root, fat, dir, fn) < 0) {
                 dbglog(DBG_ERROR, "vmufs_write: can't delete old file '%s' on device %c%c\n",
                        fn, dev->port + 'A', dev->unit + '0');
