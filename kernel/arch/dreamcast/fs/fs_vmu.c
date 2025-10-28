@@ -510,8 +510,8 @@ static ssize_t vmu_read(void * hnd, void *buffer, size_t cnt) {
         return 0;
 
     /* Check size */
-    cnt = (fh->loc + cnt) > (fh->filesize * 512) ?
-          (fh->filesize * 512 - fh->loc) : cnt;
+    cnt = (fh->loc + fh->start + cnt) > (fh->filesize * 512) ?
+          ((fh->filesize * 512) - fh->start - fh->loc) : cnt;
 
     /* Reads past EOF return 0 */
     if((long)cnt < 0)
@@ -577,7 +577,10 @@ static ssize_t vmu_write(void * hnd, const void *buffer, size_t cnt) {
 }
 
 /* mmap a file */
-/* note: writing past EOF will invalidate your pointer */
+/* notes:
+    - writing past EOF will invalidate your pointer
+    - buffer can be invalidated when is reallocated
+*/
 static void *vmu_mmap(void * hnd) {
     vmu_fh_t *fh;
 
@@ -608,7 +611,7 @@ static off_t vmu_seek(void * hnd, off_t offset, int whence) {
             offset += fh->loc;
             break;
         case SEEK_END:
-            offset = fh->filesize * 512 - offset;
+            offset = (off_t)((fh->filesize * 512) - fh->start) - offset;
             break;
         default:
             return -1;
@@ -638,8 +641,7 @@ static size_t vmu_total(void * fd) {
     if(!vmu_verify_hnd(fd, VMU_FILE))
         return -1;
 
-    /* note that all filesizes are multiples of 512 for the vmu */
-    return (((vmu_fh_t *) fd)->filesize) * 512;
+    return ((((vmu_fh_t *) fd)->filesize) * 512) - ((vmu_fh_t *)fd)->start;
 }
 
 /* read a directory handle */
@@ -697,28 +699,36 @@ static int vmu_ioctl(void *fd, int cmd, va_list ap) {
     }
 
     switch(cmd) {
-    case IOCTL_VMU_SET_HDR:
-        new_hdr = va_arg(ap, const vmu_pkg_t *);
-        if(new_hdr) {
-            hdr = vmu_pkg_dup(new_hdr);
-            if(!hdr)
+        case IOCTL_VMU_SET_HDR:
+            new_hdr = va_arg(ap, const vmu_pkg_t *);
+            if(new_hdr) {
+                hdr = vmu_pkg_dup(new_hdr);
+                if(!hdr)
+                    return -1;
+            }
+
+            if(fh->strtype == VMU_FILE) {
+                old_hdr = fh->header;
+                fh->header = hdr;
+            } else {
+                old_hdr = dft_header;
+                dft_header = hdr;
+            }
+
+            if(old_hdr) {
+                free(old_hdr->icon_data);
+                free(old_hdr->eyecatch_data);
+                free(old_hdr);
+            }
+            break;
+        case IOCTL_VMU_GET_REALFSIZE:
+            if(fh->strtype == VMU_FILE) {
+                _Static_assert(sizeof(int) >= sizeof(fh->filesize));
+                return (int)fh->filesize * 512;
+            } else {
+                errno = EISDIR;
                 return -1;
-        }
-
-        if(fh->strtype == VMU_FILE) {
-            old_hdr = fh->header;
-            fh->header = hdr;
-        } else {
-            old_hdr = dft_header;
-            dft_header = hdr;
-        }
-
-        if(old_hdr) {
-            free(old_hdr->icon_data);
-            free(old_hdr->eyecatch_data);
-            free(old_hdr);
-        }
-        break;
+            }
     }
 
     return 0;
@@ -753,7 +763,7 @@ static int vmu_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
     if(len == 0 || (len == 1 && *path == '/')) {
         memset(st, 0, sizeof(struct stat));
         st->st_dev = (dev_t)('v' | ('m' << 8) | ('u' << 16));
-        st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | 
+        st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP |
             S_IXGRP | S_IROTH | S_IXOTH;
         st->st_size = -1;
         st->st_nlink = 2;
@@ -779,7 +789,7 @@ static int vmu_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
     /* Get the number of free blocks */
     memset(st, 0, sizeof(struct stat));
     st->st_dev = (dev_t)((uintptr_t)dev);
-    st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | 
+    st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP |
         S_IXGRP | S_IROTH | S_IXOTH;
     st->st_size = vmufs_free_blocks(dev);
     st->st_nlink = 1;
@@ -858,7 +868,7 @@ static int vmu_fstat(void *fd, struct stat *st) {
     st->st_dev = (dev_t)((uintptr_t)fh->dev);
     st->st_mode =  S_IRWXU | S_IRWXG | S_IRWXO;
     st->st_mode |= (fh->strtype == VMU_DIR) ? S_IFDIR : S_IFREG;
-    st->st_size = (fh->strtype == VMU_DIR) ? 
+    st->st_size = (fh->strtype == VMU_DIR) ?
         vmufs_free_blocks(((vmu_dh_t *)fh)->dev) : (int)(fh->filesize * 512);
     st->st_nlink = (fh->strtype == VMU_DIR) ? 2 : 1;
     st->st_blksize = 512;

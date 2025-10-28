@@ -48,7 +48,8 @@ __BEGIN_DECLS
 int fs_vmu_init(void);
 int fs_vmu_shutdown(void);
 
-#define IOCTL_VMU_SET_HDR     0x564d5530 /* "VMU0" */
+#define IOCTL_VMU_SET_HDR          0x564d5530 /* "VMU0" */
+#define IOCTL_VMU_GET_REALFSIZE    0x564d5531 /* "VMU1" */
 /* \endcond */
 
 /** \brief  Set a header to an opened VMU file
@@ -71,6 +72,21 @@ int fs_vmu_shutdown(void);
 */
 static inline int fs_vmu_set_header(file_t fd, const vmu_pkg_t *pkg) {
     return fs_ioctl(fd, IOCTL_VMU_SET_HDR, pkg);
+}
+
+/** \brief  Retrieves the real file size from an opened VMU file
+
+    Retrieves the real size as it was read (or will be written). This includes
+    the header, initial data and padding added at the end of the file.
+
+    The retrieved value is multiple of 512 bytes.
+
+    \see file_hdr_status
+    \param fd               A file descriptor corresponding to the VMU file
+    \return                 The size in bytes or -1 on invalid file descriptor
+*/
+static inline int fs_vmu_get_file_size(file_t fd) {
+    return fs_ioctl(fd, IOCTL_VMU_GET_REALFSIZE);
 }
 
 /** \brief  Set a default header for newly created VMU files
