@@ -325,9 +325,15 @@ int vmufs_readdir(maple_device_t * dev, vmu_dir_t ** outbuf, int * outcnt);
     \param  outbuf          A buffer that will be allocated where the file data
                             will be placed.
     \param  outsize         Storage for the size of the file, in bytes.
+    \param  outtype         Storage for the file type, 0x33=DATA or 0xCC=GAME.
     \return                 0 on success, or <0 on failure.
+
+    \retval 0               On success.
+    \retval -1              On invalid device.
+    \retval -2              On file not found.
+    \retval -3              On read error.
 */
-int vmufs_read(maple_device_t * dev, const char * fn, void ** outbuf, int * outsize);
+int vmufs_read(maple_device_t * dev, const char * fn, void ** outbuf, int * outsize, uint8 * outtype);
 
 /** \brief  Read a file from the VMU, using a pre-read dirent.
 

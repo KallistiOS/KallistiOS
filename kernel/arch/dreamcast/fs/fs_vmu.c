@@ -231,6 +231,7 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
     void        * data;
     int     datasize;
     vmu_pkg_t vmu_pkg;
+    uint8   filetype;
 
     /* Malloc a new fh struct */
     if(!(fd = malloc(sizeof(vmu_fh_t))))
@@ -253,7 +254,7 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
 
     if(realmode == O_RDONLY || ((realmode == O_RDWR || realmode == O_WRONLY) && !(mode & O_TRUNC))) {
         /* Try to open it */
-        rv = vmufs_read(dev, fd->name, &data, &datasize);
+        rv = vmufs_read(dev, fd->name, &data, &datasize, &filetype);
 
         if(rv < 0) {
             if(realmode == O_RDWR || realmode == O_WRONLY) {
@@ -264,6 +265,12 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
                 free(fd);
                 return NULL;
             }
+        }
+        else if(filetype != 0x33) {
+            dbglog(DBG_WARNING, "VMUFS: file %s isn't DATA type\n", path);
+            errno = EFTYPE;
+            free(fd);
+            return NULL;
         }
     }
     else {
