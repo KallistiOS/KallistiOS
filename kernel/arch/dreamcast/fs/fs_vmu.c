@@ -198,6 +198,7 @@ static vmu_fh_t *vmu_open_vmu_dir(void) {
         dh->dirblocks[u].filetype = 0xff;
     }
 
+    errno = 0;
     return (vmu_fh_t *)dh;
 }
 
@@ -208,12 +209,15 @@ static vmu_fh_t *vmu_open_dir(maple_device_t * dev) {
     vmu_dh_t    * dh;
 
     /* Read the VMU's directory */
-    if(vmufs_readdir(dev, &dirents, &dircnt) < 0)
+    if(vmufs_readdir(dev, &dirents, &dircnt) < 0) {
+        errno = ENOENT;
         return NULL;
+    }
 
     /* Allocate a handle for the dir blocks */
     if(!(dh = malloc(sizeof(vmu_dh_t))))
         return NULL;
+
     dh->strtype = VMU_DIR;
     dh->dirblocks = dirents;
     dh->rootdir = 0;
@@ -221,6 +225,7 @@ static vmu_fh_t *vmu_open_dir(maple_device_t * dev) {
     dh->dircnt = dircnt;
     dh->dev = dev;
 
+    errno = 0;
     return (vmu_fh_t *)dh;
 }
 
@@ -234,9 +239,9 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
     uint8   filetype;
 
     /* Malloc a new fh struct */
-    if(!(fd = malloc(sizeof(vmu_fh_t))))
+    if(!(fd = malloc(sizeof(vmu_fh_t)))) 
         return NULL;
-
+ 
     /* Fill in the filehandle struct */
     fd->strtype = VMU_FILE;
     fd->mode = mode;
@@ -252,25 +257,42 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
        then we need to read the old file if there is one. */
     realmode = mode & O_MODE_MASK;
 
+    if(realmode == O_RDONLY && (mode & O_TRUNC)) {
+        errno = EINVAL;
+        goto error;
+    }
+    //if(!(mode & O_META) && strcmp(fd->name, "ICONDATA_VMS") == 0) {
+    //    dbglog(DBG_SOURCE(VMUFS_DEBUG), "vmu_open_file: attempt to open ICONDATA_VMS without raw mode\n");
+    //}
+
     if(realmode == O_RDONLY || ((realmode == O_RDWR || realmode == O_WRONLY) && !(mode & O_TRUNC))) {
         /* Try to open it */
         rv = vmufs_read(dev, fd->name, &data, &datasize, &filetype);
 
-        if(rv < 0) {
-            if(realmode == O_RDWR || realmode == O_WRONLY) {
-                /* In some modes failure is ok -- flag to setup a blank first block. */
-                datasize = -1;
+        if(rv != 0 && rv != -2) {
+            /* Invalid device, read error or truncated file */
+            errno = EIO;
+            goto error;
+        }
+        else if(rv == -2) {
+            if(realmode == O_RDONLY) {
+                errno = ENOENT;
+                goto error;
             }
-            else {
-                free(fd);
-                return NULL;
-            }
+
+            //if(!(mode & O_CREAT)) {
+            //    //dbglog(DBG_INFO, "vmu_open_file: file %s not found\n", path);
+            //    errno = ENOENT;
+            //    goto error;
+            //}
+
+            /* File not found, flag to setup a blank first block. */
+            datasize = -1;
         }
         else if(filetype != 0x33) {
             dbglog(DBG_WARNING, "VMUFS: file %s isn't DATA type\n", path);
             errno = EFTYPE;
-            free(fd);
-            return NULL;
+            goto error;
         }
     }
     else {
@@ -282,12 +304,22 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
     if(datasize == -1) {
         data = malloc(512);
         if(data == NULL) {
-            free(fd);
-            return NULL;
+            goto error;
         }
         datasize = 512;
         memset(data, 0, 512);
-    } else if(!fd->raw && !vmu_pkg_parse(data, datasize, &vmu_pkg)) {
+    } else if(!fd->raw) {
+        /* Parse header */
+        rv = vmu_pkg_parse(data, datasize, &vmu_pkg);
+        if (rv == -1) {
+            /* Invalid checksum */
+            errno = EILSEQ;
+            goto error;
+        } else if(rv == -2) {
+            /* vmufs_read() doesn't lie about the file size, file is totally corrupted */
+            errno = EIO;
+            goto error;
+        }
         fd->header = vmu_pkg_dup(&vmu_pkg);
         fd->start = (unsigned int)vmu_pkg.data - (unsigned int)data;
     }
@@ -297,12 +329,16 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
 
     if(fd->filesize == 0) {
         dbglog(DBG_WARNING, "VMUFS: can't open zero-length file %s\n", path);
-        free(fd->data);
-        free(fd);
-        return NULL;
+        errno = ENODATA;
+        goto error;
     }
 
     return fd;
+
+error:
+    free(data);
+    free(fd);
+    return NULL;
 }
 
 /* open function */
@@ -321,22 +357,31 @@ static void * vmu_open(vfs_handler_t * vfs, const char *path, int mode) {
         dev = vmu_path_to_addr(path);
 
         /* printf("VMUFS: card address is %02x\n", addr); */
-        if(dev == NULL) return 0;
+        if(dev == NULL) {
+            errno = ENODEV;
+            return NULL;
+        }
 
         /* Check for open as dir */
         if(strlen(path) == 3 || (strlen(path) == 4 && path[3] == '/')) {
-            if(!(mode & O_DIR)) return 0;
+            if(!(mode & O_DIR)) {
+                errno = EISDIR;
+                return NULL;
+            }
 
             fh = vmu_open_dir(dev);
         }
         else {
-            if(mode & O_DIR) return 0;
+            if(mode & O_DIR) {
+                errno = ENOTDIR;
+                return NULL;
+            }
 
             fh = vmu_open_file(dev, path, mode);
         }
     }
 
-    if(fh == NULL) return 0;
+    if(fh == NULL) return NULL;
 
     /* link the fh onto the top of the list */
     mutex_lock(&fh_mutex);

@@ -54,7 +54,7 @@ void netcfg_vmuify(const char *filename_in, const char *filename_out) {
     dbgp("Closing source file\n");
 
     dbgp("Opening output file\n");
-    fd = fs_open(filename_out, O_WRONLY);
+    fd = fs_open(filename_out, O_WRONLY | O_CREAT);
     dbgp("Writing..\n");
     fs_write(fd, pkg_out, pkg_size);
     dbgp("Closing output file\n");
