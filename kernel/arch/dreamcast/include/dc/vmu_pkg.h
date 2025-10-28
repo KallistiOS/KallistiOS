@@ -148,6 +148,23 @@ int vmu_pkg_parse(uint8_t *data, size_t data_size, vmu_pkg_t *pkg);
 */
 int vmu_pkg_load_icon(vmu_pkg_t *pkg, const char *icon_fn);
 
+/** \brief   Calculate CRC on a raw VMU data
+    \ingroup vmu_package
+
+    This function calculates the checksum and then writes the result. The buffer
+    created by vmu_pkg_build() function can be used here.
+
+    The following layout is expected to be in the buffer: header+payload_data.
+
+    Is possible change the vmu_hdr_t::data_len field present
+    in the buffer by suppling a non-negative value if more bytes was added at the
+    end of the buffer.
+
+    \param  buffer          The Buffer to process.
+    \param  data_len        Value in bytes to overwrite data_len field, otherwise, -1 to keep.
+*/
+void vmu_pkg_crc_set(uint8_t *buffer, int data_len);
+
 __END_DECLS
 
 #endif  /* __DC_VMU_PKG_H */

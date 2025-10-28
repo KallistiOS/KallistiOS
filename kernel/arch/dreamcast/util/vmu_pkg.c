@@ -213,6 +213,32 @@ int vmu_pkg_parse(uint8_t *data, size_t data_size, vmu_pkg_t *pkg) {
     return 0;
 }
 
+/* Calculates the CRC on raw VMU file then writes the result */
+void vmu_pkg_crc_set(uint8_t *buffer, int data_len) {
+    vmu_hdr_t *hdr;
+    size_t total_size;
+    int ec_size;
+
+    assert(buffer);
+
+    hdr = (vmu_hdr_t *)buffer;
+    ec_size = vmu_eyecatch_size(hdr->eyecatch_type);
+
+    assert(ec_size != -1 && hdr->icon_cnt > 0);
+
+    if(data_len >= 0) {
+        hdr->data_len = (uint32_t)data_len;
+    }
+
+    total_size = sizeof(vmu_hdr_t);
+    total_size += 512 * hdr->icon_cnt;
+    total_size += (size_t)ec_size;
+    total_size += hdr->data_len;
+
+    hdr->crc = 0x0000;
+    hdr->crc = vmu_pkg_crc(buffer, total_size);
+}
+
 static unsigned int pal_get_map(uint32_t *pal, const uint32_t *curr_pal,
                                 uint8_t *map, unsigned int nb_colors) {
     unsigned int i, j;

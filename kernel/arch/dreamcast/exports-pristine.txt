@@ -123,6 +123,7 @@ vid_screen_shot
 vid_screen_shot_data
 vmu_pkg_build
 vmu_pkg_parse
+vmu_pkg_crc_set
 
 # Bios Font
 bfont_set_foreground_color
