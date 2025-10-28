@@ -124,3 +124,5 @@ This page serves as an index for all KallistiOS examples.
   - vmu_game
   - vmu_lcd
   - vmu_pkg
+  - vmu_pkg_ex_data
+  - vmu_pkg_ex_game
