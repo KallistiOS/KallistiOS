@@ -280,7 +280,7 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
         fd->blks = datasize / 512;
     } else {
         /* Parse header but ignore any bad checksum */
-        rv = vmu_pkg_parse_ex(data, datasize, &vmu_pkg, true);
+        rv = vmu_pkg_parse_ex(data, datasize, &vmu_pkg, false, true);
         if(rv == -2) {
             /* vmufs_read() doesn't lie about the file size, file is totally corrupted */
             errno = EIO;
@@ -517,7 +517,7 @@ static int vmu_write_close(void * hnd) {
     if(fh->start < 1) {
         dbglog(DBG_WARNING, "VMUFS: file written without header\n");
     } else {
-        vmu_pkg_crc_set(fh->data, (int)fh->filelength);
+        vmu_pkg_crc_set(fh->data, false, (int)fh->filelength);
     }
 
 perform_write:
