@@ -73,6 +73,7 @@ typedef struct vmu_fh_str {
     uint8 *data;                        /* copy of the whole file */
     bool raw;                           /* file opened as raw */
     vmu_hdr_status_t header_status;     /* parse status of VMU file header */
+    bool is_game;                       /* file type is GAME otherwise DATA */
 } vmu_fh_t;
 
 /* Directory handles */
@@ -218,6 +219,7 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
     fd->dev = dev;
     fd->raw = mode & O_META;
     fd->header_status = VMUHDR_STATUS_NEWFILE;
+    fd->is_game = false;
 
     /* What mode are we opening in? If we're reading or writing without O_TRUNC
        then we need to read the old file if there is one. */
@@ -255,10 +257,15 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
             /* File not found, flag to setup a blank first block. */
             datasize = -1;
         }
-        else if(filetype != 0x33) {
-            dbglog(DBG_WARNING, "VMUFS: file %s isn't DATA type\n", path);
+        else if(filetype != 0x33 && filetype != 0xCC) {
+            /* Unknown file type, this never should happen */
+            dbglog(DBG_WARNING, "VMUFS: file %s isn't DATA or GAME type, got 0x%X\n", path, filetype);
             errno = EFTYPE;
             goto error;
+        }
+        else {
+            /* Success, remember file type */
+            fd->is_game = filetype == 0xCC;
         }
     }
     else {
@@ -280,7 +287,7 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
         fd->blks = datasize / 512;
     } else {
         /* Parse header but ignore any bad checksum */
-        rv = vmu_pkg_parse_ex(data, datasize, &vmu_pkg, false, true);
+        rv = vmu_pkg_parse_ex(data, datasize, &vmu_pkg, fd->is_game, true);
         if(rv == -2) {
             /* vmufs_read() doesn't lie about the file size, file is totally corrupted */
             errno = EIO;
@@ -383,7 +390,7 @@ static int vmu_overwrite_header(vmu_fh_t *fh, const uint8_t *hdr, size_t hdr_siz
         }
     }
 
-    /* Move payload data */
+    /* Move payload data or application code */
     memmove(data + hdr_size, data + old_hdr_size, fh->filelength);
 
     /* Write new header */
@@ -395,7 +402,7 @@ static int vmu_overwrite_header(vmu_fh_t *fh, const uint8_t *hdr, size_t hdr_siz
 }
 
 /* Ovewrite, remove or insert a raw header from vmu_pkg */
-static int vmu_overwrite_header_from_pkg(vmu_fh_t *fh, const vmu_pkg_t *new_hdr) {
+static int vmu_overwrite_header_from_pkg(vmu_fh_t *fh, const vmu_pkg_t *new_hdr, const void *intl_dts) {
     int rv;
     int buffer_length;
     uint8_t *buffer;
@@ -412,12 +419,12 @@ static int vmu_overwrite_header_from_pkg(vmu_fh_t *fh, const vmu_pkg_t *new_hdr)
     }
 
     if(!new_hdr) {
-        /* Remove header (this should be illegal) */
+        /* Remove header. This also removes initial data on GAME files */
         rv = vmu_overwrite_header(fh, NULL, 0);
         return rv;
     }
 
-    /* Don't write payload data twice, temporally set to zero. */
+    /* Don't write payload data or application code twice, temporally set to zero. */
     memcpy(&pkg, new_hdr, sizeof(vmu_pkg_t));
     pkg.data_len = 0;
 
@@ -425,7 +432,12 @@ static int vmu_overwrite_header_from_pkg(vmu_fh_t *fh, const vmu_pkg_t *new_hdr)
         dbglog(DBG_SOURCE(VMUFS_DEBUG), "VMUFS: Field vmu_pkg_t::data_len will be ignored\n");
     }
 
-    rv = vmu_pkg_build(&pkg, &buffer, &buffer_length);
+    if(fh->is_game && !intl_dts) {
+        /* Keep existing initial data */
+        intl_dts = fh->data;
+    }
+
+    rv = vmu_pkg_build_ex(&pkg, &buffer, &buffer_length, intl_dts);
     if(rv) {
         /* Build failed */
         return -1;
@@ -435,6 +447,45 @@ static int vmu_overwrite_header_from_pkg(vmu_fh_t *fh, const vmu_pkg_t *new_hdr)
     free(buffer);
 
     return rv;
+}
+
+/* Manage header for new files or existing GAME files */
+static int vmu_overwrite_header_game(vmu_fh_t *fh, const vmu_pkg_t *new_hdr, const void *intl_dts) {
+    const uint8_t empty_initial_data[512] = {};
+
+    if(fh->raw && !new_hdr && !intl_dts) {
+        /* Allow create GAME files in RAW mode */
+        if(!fh->is_game) {
+            fh->is_game = true;
+            dbglog(DBG_SOURCE(VMUFS_DEBUG), "VMUFS: raw file %s will be written as GAME\n", fh->name);
+        }
+        return 0;
+    }
+
+    if(!new_hdr && intl_dts) {
+        dbglog(DBG_SOURCE(VMUFS_DEBUG), "VMUFS: initial data must be provided with a header\n");
+        return -2;
+    }
+
+    if(fh->is_game) {
+        return vmu_overwrite_header_from_pkg(fh, new_hdr, intl_dts);
+    }
+
+    if(fh->header_status == VMUHDR_STATUS_NEWFILE) {
+        dbglog(DBG_SOURCE(VMUFS_DEBUG), "VMUFS: file %s will be written as GAME\n", fh->name);
+    } else {
+        /* Using fs_vmu_set_header() first can trigger this warning */
+        dbglog(DBG_WARNING, "VMUFS: attempt to convert an existing DATA file into GAME\n");
+    }
+
+    fh->is_game = true;
+
+    if(new_hdr && !intl_dts) {
+        /* Something needs to be written, use an empty initial data */
+        intl_dts = empty_initial_data;
+    }
+
+    return vmu_overwrite_header_from_pkg(fh, new_hdr, intl_dts);
 }
 
 /* Compile and replace default header */
@@ -447,7 +498,7 @@ static int vmu_change_default_header(const vmu_pkg_t *new_hdr) {
     old_buffer = default_header.buffer;
 
     if(new_hdr) {
-        /* Don't write payload data twice, temporally set to zero. */
+        /* Don't write payload data or application code twice, temporally set to zero. */
         memcpy(&pkg, new_hdr, sizeof(vmu_pkg_t));
         pkg.data_len = 0;
 
@@ -500,13 +551,14 @@ static int vmu_write_close(void * hnd) {
     uint8_t *def_hdr = default_header.buffer;
     size_t def_len = default_header.buffer_length;
 
+    /* Deal with raw mode (file type is known for existing files) */
     if(fh->raw) {
-        /* In raw mode new files are written as DATA */
+        if(fh->is_game) flags |= VMUFS_VMUGAME;
         goto perform_write;
     }
 
-    if(def_hdr && fh->start < 1) {
-        /* Write in buffer the default header */
+    if(def_hdr && fh->start < 1 && !fh->is_game) {
+        /* Write in buffer the default header for DATA file types */
         ret = vmu_overwrite_header(fh, def_hdr, def_len);
         if(ret) {
             /* Write failed */
@@ -516,6 +568,9 @@ static int vmu_write_close(void * hnd) {
 
     if(fh->start < 1) {
         dbglog(DBG_WARNING, "VMUFS: file written without header\n");
+    } else if(fh->is_game) {
+        flags |= VMUFS_VMUGAME;
+        vmu_pkg_crc_set(fh->data, true, -1);
     } else {
         vmu_pkg_crc_set(fh->data, false, (int)fh->filelength);
     }
@@ -781,6 +836,7 @@ static int vmu_ioctl(void *fd, int cmd, va_list ap) {
     vmu_fh_t *fh = (vmu_fh_t*)fd;
     vmu_dh_t *dh = (vmu_dh_t*)fd;
     const vmu_pkg_t *new_hdr;
+    const void* intl_dts;
 
     if(!dh || (dh->strtype == VMU_DIR && !dh->rootdir)) {
         errno = EBADF;
@@ -792,9 +848,18 @@ static int vmu_ioctl(void *fd, int cmd, va_list ap) {
             new_hdr = va_arg(ap, const vmu_pkg_t *);
 
             if(fh->strtype == VMU_FILE) {
-                return vmu_overwrite_header_from_pkg(fh, new_hdr);
+                return vmu_overwrite_header_from_pkg(fh, new_hdr, NULL);
             }
             return vmu_change_default_header(new_hdr);
+        case IOCTL_VMU_SET_HDR_GAME:
+            new_hdr = va_arg(ap, const vmu_pkg_t *);
+            intl_dts = va_arg(ap, const void *);
+
+            if(fh->strtype != VMU_FILE) {
+                errno = EISDIR;
+                return -1;
+            }
+            return vmu_overwrite_header_game(fh, new_hdr, intl_dts);
         case IOCTL_VMU_GET_HDR_STATE:
             if(fh->strtype != VMU_FILE) {
                 /* Not applicable */

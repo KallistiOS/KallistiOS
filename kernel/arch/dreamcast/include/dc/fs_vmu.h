@@ -51,6 +51,7 @@ int fs_vmu_shutdown(void);
 #define IOCTL_VMU_SET_HDR          0x564d5530 /* "VMU0" */
 #define IOCTL_VMU_GET_REALFSIZE    0x564d5531 /* "VMU1" */
 #define IOCTL_VMU_GET_HDR_STATE    0x564d5532 /* "VMU2" */
+#define IOCTL_VMU_SET_HDR_GAME     0x564d5533 /* "VMU3" */
 /* \endcond */
 
 /** \defgroup file_hdr_status      File header parse status
@@ -89,6 +90,30 @@ typedef enum vmu_hdr_status {
 */
 static inline int fs_vmu_set_header(file_t fd, const vmu_pkg_t *pkg) {
     return fs_ioctl(fd, IOCTL_VMU_SET_HDR, pkg);
+}
+
+/** \brief  Set a header to an opened VMU file
+
+    Same as fs_vmu_set_header() function but sets or allocates initial data
+    required for GAME file types.
+
+    Note that new files are always created as DATA file type, however, calling
+    this function will change the file type to GAME which is desirable for new files.
+
+    This function can be used on RAW mode to indicate that new files should
+    be written as GAME by passing NULL to "pkg" and "intl_dts" pointers.
+
+    \warning Do not use this function on existing DATA files, or they will be GAME!
+
+    \param fd               A file descriptor corresponding to the VMU file
+    \param pkg              The header to set to the VMU file or NULL to remove
+    \param intl_dts         Initial data to set or NULL to keep existing
+    \retval 0               On success.
+    \retval -1              On error.
+    \retval -2              On attempt to set initial data without a header
+*/
+static inline int fs_vmu_set_header_game(file_t fd, const vmu_pkg_t *pkg, const void *intl_dts) {
+    return fs_ioctl(fd, IOCTL_VMU_SET_HDR_GAME, pkg, intl_dts);
 }
 
 /** \brief  Retrieves the real file size from an opened VMU file
@@ -134,6 +159,8 @@ static inline vmu_hdr_status_t fs_vmu_get_header_status(file_t fd) {
     Note that the "pkg" pointer as well as the eyecatch/icon data pointers it
     contain can be freed (if dynamically allocated) as soon as this function
     return, as the filesystem code will keep an internal copy.
+
+    Note that the default header is only available to DATA files.
 
     It is valid to pass NULL as the header pointer, in which case the default
     header will be discarded.
