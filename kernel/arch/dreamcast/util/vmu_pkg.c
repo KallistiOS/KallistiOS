@@ -158,22 +158,25 @@ int vmu_pkg_build(vmu_pkg_t *src, uint8_t **dst, int *dst_size) {
 /* Parse an array of uint8_t's (i.e. a VMU data file) into a
  * vmu_pkg_t package structure. */
 int vmu_pkg_parse(uint8_t *data, size_t data_size, vmu_pkg_t *pkg) {
-    uint16_t crc, crc_save;
-    int ec_size, hdr_size, total_size, icon_size;
+    uint16_t crc, crc_save, icon_cnt;
+    int ec_size;
+    size_t hdr_size, icon_size, total_size;
     vmu_hdr_t *hdr;
 
     assert(data && pkg);
 
     hdr = (vmu_hdr_t *)data;
 
-    icon_size = 512 * hdr->icon_cnt;
+    icon_cnt = hdr->icon_cnt;
+    icon_size = 512 * icon_cnt;
     ec_size = vmu_eyecatch_size(hdr->eyecatch_type);
-    hdr_size = sizeof(vmu_hdr_t) + icon_size + ec_size;
+    hdr_size = sizeof(vmu_hdr_t) + icon_size + (size_t)ec_size;
     total_size = hdr->data_len + hdr_size;
 
-    if(total_size < 0 || (size_t)total_size > data_size) {
-        dbglog(DBG_ERROR, "vmu_pkg_parse: file header is corrupted, or no header?\n");
-        return -1;
+    if(ec_size < 0 || icon_cnt < 1 || icon_cnt > 3 || total_size > data_size) {
+        /* Invalid eyecatch_type, icon_cnt, data_len, or truncated buffer. */
+        dbglog(DBG_ERROR, "vmu_pkg_parse: truncated buffer or corrupted header\n");
+        return -2;
     }
 
     /* Verify the CRC.  Note: this writes a zero byte into data[].
@@ -185,7 +188,7 @@ int vmu_pkg_parse(uint8_t *data, size_t data_size, vmu_pkg_t *pkg) {
     hdr->crc = crc_save;
 
     if(crc_save != crc) {
-        dbglog(DBG_ERROR, "vmu_pkg_parse: expected CRC %04x, got %04x\n", crc_save, crc);
+        dbglog(DBG_ERROR, "vmu_pkg_parse: expected CRC %04x, got %04x\n", crc, crc_save);
         return -1;
     }
 
