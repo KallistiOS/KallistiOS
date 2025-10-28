@@ -62,7 +62,8 @@ typedef struct vmu_fh_str {
     off_t loc;                          /* current position from the start in the file (bytes) */
     off_t start;                        /* start of the data in the file (bytes) */
     maple_device_t *dev;                /* maple address of the vmu to use */
-    uint32 filesize;                    /* file length from dirent (in 512-byte blks) */
+    uint32 blks;                        /* block count from dirent (each blk is 512-byte) */
+    uint32 filelength;                  /* file length in bytes */
     uint8 *data;                        /* copy of the whole file */
     vmu_pkg_t *header;                  /* VMU file header */
     bool raw;                           /* file opened as raw */
@@ -233,7 +234,7 @@ static vmu_fh_t *vmu_open_dir(maple_device_t * dev) {
 static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode) {
     vmu_fh_t    * fd;       /* file descriptor */
     int     realmode, rv;
-    void        * data;
+    void        * data = NULL;
     int     datasize;
     vmu_pkg_t vmu_pkg;
     uint8   filetype;
@@ -302,13 +303,18 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
 
     /* We were flagged to set up a blank first block */
     if(datasize == -1) {
-        data = malloc(512);
+        fd->blks = 1;
+        fd->filelength = 0;
+
+        data = malloc(fd->blks * 512);
         if(data == NULL) {
             goto error;
         }
-        datasize = 512;
         memset(data, 0, 512);
-    } else if(!fd->raw) {
+    } else if(fd->raw)  {
+        fd->filelength = datasize;
+        fd->blks = datasize / 512;
+    } else {
         /* Parse header */
         rv = vmu_pkg_parse(data, datasize, &vmu_pkg);
         if (rv == -1) {
@@ -322,12 +328,13 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
         }
         fd->header = vmu_pkg_dup(&vmu_pkg);
         fd->start = (unsigned int)vmu_pkg.data - (unsigned int)data;
+        fd->filelength = vmu_pkg.data_len;
+        fd->blks = datasize / 512;
     }
 
     fd->data = (uint8 *)data;
-    fd->filesize = datasize / 512;
 
-    if(fd->filesize == 0) {
+    if(fd->blks == 0) {
         dbglog(DBG_WARNING, "VMUFS: can't open zero-length file %s\n", path);
         errno = ENODATA;
         goto error;
@@ -417,7 +424,7 @@ static int vmu_verify_hnd(void * hnd, int type) {
 static int vmu_write_close(void * hnd) {
     vmu_fh_t    *fh = (vmu_fh_t*)hnd;
     uint8_t     *data = fh->data + fh->start;
-    int         ret, data_len = fh->filesize * 512;
+    int         ret, data_len = fh->blks * 512;
     vmu_pkg_t   *hdr = fh->header ?: dft_header;
 
     if(!fh->raw) {
@@ -510,8 +517,8 @@ static ssize_t vmu_read(void * hnd, void *buffer, size_t cnt) {
         return 0;
 
     /* Check size */
-    cnt = (fh->loc + fh->start + cnt) > (fh->filesize * 512) ?
-          ((fh->filesize * 512) - fh->start - fh->loc) : cnt;
+    if((fh->loc + cnt) > fh->filelength)
+        cnt = fh->filelength - fh->loc;
 
     /* Reads past EOF return 0 */
     if((long)cnt < 0)
@@ -540,38 +547,41 @@ static ssize_t vmu_write(void * hnd, const void *buffer, size_t cnt) {
     if((fh->mode & O_MODE_MASK) != O_WRONLY && (fh->mode & O_MODE_MASK) != O_RDWR)
         return -1;
 
-    /* Check to make sure we have enough room in data */
-    if(fh->loc + fh->start + cnt > fh->filesize * 512) {
+    /* Check to make sure we have enough room in buffer */
+    if(fh->loc + fh->start + cnt > fh->blks * 512) {
         /* Figure out the new block count */
-        n = ((fh->loc + fh->start + cnt) - (fh->filesize * 512));
+        n = ((fh->loc + fh->start + cnt) - (fh->blks * 512));
 
         if(n & 511)
             n = (n + 512) & ~511;
 
         n = n / 512;
 
-        dbglog(DBG_SOURCE(VMUFS_DEBUG), "VMUFS: extending file's filesize by %d\n", n);
+        dbglog(DBG_SOURCE(VMUFS_DEBUG), "VMUFS: extending file's blocks by %d\n", n);
 
         /* We alloc another 512*n bytes for the file */
-        tmp = realloc(fh->data, (fh->filesize + n) * 512);
+        tmp = realloc(fh->data, (fh->blks + n) * 512);
 
         if(!tmp) {
-            dbglog(DBG_ERROR, "VMUFS: unable to realloc another 512 bytes\n");
+            dbglog(DBG_ERROR, "VMUFS: unable to realloc another %d bytes\n", n * 512);
             return -1;
         }
 
-        /* Assign the new pointer and clear out the new space */
+        /* Assign the new pointer */
         fh->data = tmp;
-        memset(fh->data + fh->filesize * 512, 0, 512 * n);
-        fh->filesize += n;
+        memset(fh->data + fh->blks * 512, 0, 512 * n);
+        fh->blks += n;
     }
 
     /* insert the data in buffer into fh->data at fh->loc */
     dbglog(DBG_SOURCE(VMUFS_DEBUG), "VMUFS: adding %d bytes of data at loc %ld (%ld avail)\n",
-           cnt, fh->loc, fh->filesize * 512);
+           cnt, fh->loc, fh->blks * 512);
 
     memcpy(fh->data + fh->loc + fh->start, buffer, cnt);
     fh->loc += cnt;
+
+    if((uint32_t)fh->loc > fh->filelength)
+        fh->filelength = (uint32_t)fh->loc;
 
     return cnt;
 }
@@ -611,7 +621,7 @@ static off_t vmu_seek(void * hnd, off_t offset, int whence) {
             offset += fh->loc;
             break;
         case SEEK_END:
-            offset = (off_t)((fh->filesize * 512) - fh->start) - offset;
+            offset = (off_t)fh->filelength - offset;
             break;
         default:
             return -1;
@@ -641,7 +651,7 @@ static size_t vmu_total(void * fd) {
     if(!vmu_verify_hnd(fd, VMU_FILE))
         return -1;
 
-    return ((((vmu_fh_t *) fd)->filesize) * 512) - ((vmu_fh_t *)fd)->start;
+    return ((vmu_fh_t *)fd)->filelength;
 }
 
 /* read a directory handle */
@@ -723,8 +733,8 @@ static int vmu_ioctl(void *fd, int cmd, va_list ap) {
             break;
         case IOCTL_VMU_GET_REALFSIZE:
             if(fh->strtype == VMU_FILE) {
-                _Static_assert(sizeof(int) >= sizeof(fh->filesize));
-                return (int)fh->filesize * 512;
+                _Static_assert(sizeof(int) >= sizeof(fh->blks));
+                return (int)fh->blks * 512;
             } else {
                 errno = EISDIR;
                 return -1;
@@ -869,7 +879,7 @@ static int vmu_fstat(void *fd, struct stat *st) {
     st->st_mode =  S_IRWXU | S_IRWXG | S_IRWXO;
     st->st_mode |= (fh->strtype == VMU_DIR) ? S_IFDIR : S_IFREG;
     st->st_size = (fh->strtype == VMU_DIR) ?
-        vmufs_free_blocks(((vmu_dh_t *)fh)->dev) : (int)(fh->filesize * 512);
+        vmufs_free_blocks(((vmu_dh_t *)fh)->dev) : (int)(fh->blks * 512);
     st->st_nlink = (fh->strtype == VMU_DIR) ? 2 : 1;
     st->st_blksize = 512;
 
