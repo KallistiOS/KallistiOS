@@ -50,7 +50,24 @@ int fs_vmu_shutdown(void);
 
 #define IOCTL_VMU_SET_HDR          0x564d5530 /* "VMU0" */
 #define IOCTL_VMU_GET_REALFSIZE    0x564d5531 /* "VMU1" */
+#define IOCTL_VMU_GET_HDR_STATE    0x564d5532 /* "VMU2" */
 /* \endcond */
+
+/** \defgroup file_hdr_status      File header parse status
+    \brief                         Values returned from IOCTL_VMU_GET_HDR_STATE
+    \ingroup                       VMU
+
+    Function fs_open() will parse the VMU file header before return.
+    If successful the header is hidden, so any operation in the VMU file won't see the header.
+    However if the checksum is invalid, the file will open anyway.
+
+    The codes returned by IOCTL_VMU_GET_HDR_STATE indicate the header status.
+*/
+typedef enum vmu_hdr_status {
+    VMUHDR_STATUS_OK,            /**< \brief Header parsed correctly */
+    VMUHDR_STATUS_NEWFILE,       /**< \brief There is no header */
+    VMUHDR_STATUS_BADCRC         /**< \brief Invalid checksum */
+} vmu_hdr_status_t;
 
 /** \brief  Set a header to an opened VMU file
 
@@ -87,6 +104,22 @@ static inline int fs_vmu_set_header(file_t fd, const vmu_pkg_t *pkg) {
 */
 static inline int fs_vmu_get_file_size(file_t fd) {
     return fs_ioctl(fd, IOCTL_VMU_GET_REALFSIZE);
+}
+
+/** \brief  Retrieves the header status from an opened VMU file
+
+    This function can be used to check if the header was parsed
+    correctly (which contains the metadata, icons...) from an opened VMU file.
+    It does not apply to directories and returns VMUHDR_STATUS_OK.
+
+    \note Always returns VMUHDR_STATUS_NEWFILE for truncated files.
+
+    \see file_hdr_status
+    \param fd               A file descriptor corresponding to the VMU file
+    \return                 Header status
+*/
+static inline vmu_hdr_status_t fs_vmu_get_header_status(file_t fd) {
+    return fs_ioctl(fd, IOCTL_VMU_GET_HDR_STATE);
 }
 
 /** \brief  Set a default header for newly created VMU files

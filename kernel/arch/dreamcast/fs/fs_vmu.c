@@ -51,6 +51,12 @@ debug output.
 #define VMU_FILE    1
 #define VMU_ANY     -1  /* Used for checking validity */
 
+/* File header */
+typedef struct vmufs_rawhdr_str {
+    uint8_t *buffer;                    /* buffer holding the header */
+    size_t buffer_length;               /* buffer length in bytes */
+} vmufs_rawhdr_t;
+
 /* File handles */
 typedef struct vmu_fh_str {
     uint32 strtype;                     /* 0==dir, 1==file */
@@ -65,8 +71,8 @@ typedef struct vmu_fh_str {
     uint32 blks;                        /* block count from dirent (each blk is 512-byte) */
     uint32 filelength;                  /* file length in bytes */
     uint8 *data;                        /* copy of the whole file */
-    vmu_pkg_t *header;                  /* VMU file header */
     bool raw;                           /* file opened as raw */
+    vmu_hdr_status_t header_status;     /* parse status of VMU file header */
 } vmu_fh_t;
 
 /* Directory handles */
@@ -88,50 +94,9 @@ TAILQ_HEAD(vmu_fh_list, vmu_fh_str) vmu_fh;
 /* Thread mutex for vmu_fh access */
 static mutex_t fh_mutex;
 
-static vmu_pkg_t *dft_header;
+/* Default VMU header for new files */
+static vmufs_rawhdr_t default_header = { NULL, 0 };
 
-static vmu_pkg_t * vmu_pkg_dup(const vmu_pkg_t *old_hdr) {
-    size_t ec_size, icon_size;
-    vmu_pkg_t *hdr;
-
-    hdr = malloc(sizeof(*hdr));
-    if(!hdr)
-        return NULL;
-
-    memcpy(hdr, old_hdr, sizeof(*hdr));
-
-    if(old_hdr->eyecatch_type && old_hdr->eyecatch_data) {
-        ec_size = (72 * 56 / 2) << (3 - old_hdr->eyecatch_type);
-
-        hdr->eyecatch_data = malloc(ec_size);
-        if(!hdr->eyecatch_data)
-            goto err_free_hdr;
-
-        memcpy(hdr->eyecatch_data, old_hdr->eyecatch_data, ec_size);
-    } else {
-        hdr->eyecatch_data = NULL;
-    }
-
-    if(old_hdr->icon_cnt) {
-        icon_size = 512 * old_hdr->icon_cnt;
-
-        hdr->icon_data = malloc(icon_size);
-        if(!hdr->icon_data)
-            goto err_free_ec_data;
-
-        memcpy(hdr->icon_data, old_hdr->icon_data, icon_size);
-    } else {
-        hdr->icon_data = NULL;
-    }
-
-    return hdr;
-
-err_free_ec_data:
-    free(hdr->eyecatch_data);
-err_free_hdr:
-    free(hdr);
-    return NULL;
-}
 
 /* Take a VMUFS path and return the requested address */
 static maple_device_t * vmu_path_to_addr(const char *p) {
@@ -251,8 +216,8 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
     fd->loc = 0;
     fd->start = 0;
     fd->dev = dev;
-    fd->header = NULL;
     fd->raw = mode & O_META;
+    fd->header_status = VMUHDR_STATUS_NEWFILE;
 
     /* What mode are we opening in? If we're reading or writing without O_TRUNC
        then we need to read the old file if there is one. */
@@ -315,18 +280,15 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
         fd->filelength = datasize;
         fd->blks = datasize / 512;
     } else {
-        /* Parse header */
-        rv = vmu_pkg_parse(data, datasize, &vmu_pkg);
-        if (rv == -1) {
-            /* Invalid checksum */
-            errno = EILSEQ;
-            goto error;
-        } else if(rv == -2) {
+        /* Parse header but ignore any bad checksum */
+        rv = vmu_pkg_parse_ex(data, datasize, &vmu_pkg, true);
+        if(rv == -2) {
             /* vmufs_read() doesn't lie about the file size, file is totally corrupted */
             errno = EIO;
             goto error;
         }
-        fd->header = vmu_pkg_dup(&vmu_pkg);
+
+        fd->header_status = rv == -1 ? VMUHDR_STATUS_BADCRC : VMUHDR_STATUS_OK;
         fd->start = (unsigned int)vmu_pkg.data - (unsigned int)data;
         fd->filelength = vmu_pkg.data_len;
         fd->blks = datasize / 512;
@@ -398,6 +360,115 @@ static void * vmu_open(vfs_handler_t * vfs, const char *path, int mode) {
     return (void *)fh;
 }
 
+/* Ovewrite, remove or insert a raw header */
+static int vmu_overwrite_header(vmu_fh_t *fh, const uint8_t *hdr, size_t hdr_size) {
+    uint8_t *data = fh->data;
+    size_t old_hdr_size = (size_t)fh->start;
+    size_t new_blks;
+
+    if(hdr_size > old_hdr_size) {
+        new_blks = fh->filelength + hdr_size;
+        new_blks = (new_blks + 511) / 512;
+
+        if(new_blks > fh->blks) {
+            dbglog(DBG_SOURCE(VMUFS_DEBUG), "VMUFS: extending file's blocks by %d\n", new_blks);
+
+            data = realloc(data, new_blks * 512);
+            if(!data) {
+                dbglog(DBG_ERROR, "VMUFS: unable to realloc another %d bytes\n", new_blks * 512);
+                return -1;
+            }
+
+            fh->data = data;
+            fh->blks = new_blks;
+        }
+    }
+
+    /* Move payload data */
+    memmove(data + hdr_size, data + old_hdr_size, fh->filelength);
+
+    /* Write new header */
+    fh->start = hdr_size;
+    memcpy(data, hdr, hdr_size);
+
+    fh->header_status = hdr_size < 1 ? VMUHDR_STATUS_NEWFILE : VMUHDR_STATUS_OK;
+    return 0;
+}
+
+/* Ovewrite, remove or insert a raw header from vmu_pkg */
+static int vmu_overwrite_header_from_pkg(vmu_fh_t *fh, const vmu_pkg_t *new_hdr) {
+    int rv;
+    int buffer_length;
+    uint8_t *buffer;
+    vmu_pkg_t pkg;
+
+    if(fh->raw) {
+        dbglog(DBG_ERROR, "VMUFS: can't set header in raw mode\n");
+        return -1;
+    }
+
+    if((fh->mode & O_MODE_MASK) != O_WRONLY && (fh->mode & O_MODE_MASK) != O_RDWR) {
+        /* File is read-only */
+        return -1;
+    }
+
+    if(!new_hdr) {
+        /* Remove header (this should be illegal) */
+        rv = vmu_overwrite_header(fh, NULL, 0);
+        return rv;
+    }
+
+    /* Don't write payload data twice, temporally set to zero. */
+    memcpy(&pkg, new_hdr, sizeof(vmu_pkg_t));
+    pkg.data_len = 0;
+
+    if(new_hdr->data_len > 0) {
+        dbglog(DBG_SOURCE(VMUFS_DEBUG), "VMUFS: Field vmu_pkg_t::data_len will be ignored\n");
+    }
+
+    rv = vmu_pkg_build(&pkg, &buffer, &buffer_length);
+    if(rv) {
+        /* Build failed */
+        return -1;
+    }
+
+    rv = vmu_overwrite_header(fh, buffer, (size_t)buffer_length);
+    free(buffer);
+
+    return rv;
+}
+
+/* Compile and replace default header */
+static int vmu_change_default_header(const vmu_pkg_t *new_hdr) {
+    int rv;
+    int buffer_length;
+    uint8_t *buffer, *old_buffer;
+    vmu_pkg_t pkg;
+
+    old_buffer = default_header.buffer;
+
+    if(new_hdr) {
+        /* Don't write payload data twice, temporally set to zero. */
+        memcpy(&pkg, new_hdr, sizeof(vmu_pkg_t));
+        pkg.data_len = 0;
+
+        rv = vmu_pkg_build(&pkg, &buffer, &buffer_length);
+        if(rv) {
+            /* Build failed */
+            return rv;
+        }
+
+        default_header.buffer = buffer;
+        default_header.buffer_length = (size_t)buffer_length;
+    }
+    else {
+        memset(&default_header, 0x00, sizeof(vmufs_rawhdr_t));
+    }
+
+    free(old_buffer);
+    return 0;
+}
+
 /* Verify that a given hnd is actually in the list */
 static int vmu_verify_hnd(void * hnd, int type) {
     vmu_fh_t    *cur;
@@ -423,27 +494,40 @@ static int vmu_verify_hnd(void * hnd, int type) {
 /* write a file out before closing it: we aren't perfect on error handling here */
 static int vmu_write_close(void * hnd) {
     vmu_fh_t    *fh = (vmu_fh_t*)hnd;
-    uint8_t     *data = fh->data + fh->start;
-    int         ret, data_len = fh->blks * 512;
-    vmu_pkg_t   *hdr = fh->header ?: dft_header;
+    int         ret;
+    uint32      buffer_used, blks_bytes_used;
 
-    if(!fh->raw) {
-        if(!hdr) {
-            dbglog(DBG_WARNING, "VMUFS: file written without header\n");
-        } else {
-            hdr->data_len = data_len;
-            hdr->data = data;
+    int flags = VMUFS_OVERWRITE;
+    uint8_t *def_hdr = default_header.buffer;
+    size_t def_len = default_header.buffer_length;
 
-            ret = vmu_pkg_build(hdr, &data, &data_len);
-            if(ret < 0)
-                return ret;
+    if(fh->raw) {
+        /* In raw mode new files are written as DATA */
+        goto perform_write;
+    }
+
+    if(def_hdr && fh->start < 1) {
+        /* Write in buffer the default header */
+        ret = vmu_overwrite_header(fh, def_hdr, def_len);
+        if(ret) {
+            /* Write failed */
+            return ret;
         }
     }
 
-    ret = vmufs_write(fh->dev, fh->name, data, data_len, VMUFS_OVERWRITE);
+    if(fh->start < 1) {
+        dbglog(DBG_WARNING, "VMUFS: file written without header\n");
+    } else {
+        vmu_pkg_crc_set(fh->data, (int)fh->filelength);
+    }
 
-    if(hdr)
-        free(data);
+perform_write:
+    /* Count the amount blocks required */
+    buffer_used = fh->start + fh->filelength;
+    blks_bytes_used = ((buffer_used + 511) / 512) * 512;
+
+    /* Write everything */
+    ret = vmufs_write(fh->dev, fh->name, fh->data, blks_bytes_used, flags);
 
     return ret;
 }
@@ -483,11 +567,6 @@ static int vmu_close(void * hnd) {
                 }
             }
 
-            if(fh->header) {
-                free(fh->header->eyecatch_data);
-                free(fh->header->icon_data);
-                free(fh->header);
-            }
             free(fh->data);
             break;
 
@@ -700,7 +779,6 @@ static dirent_t *vmu_readdir(void * fd) {
 static int vmu_ioctl(void *fd, int cmd, va_list ap) {
     vmu_fh_t *fh = (vmu_fh_t*)fd;
     vmu_dh_t *dh = (vmu_dh_t*)fd;
-    vmu_pkg_t *old_hdr, *hdr = NULL;
     const vmu_pkg_t *new_hdr;
 
     if(!dh || (dh->strtype == VMU_DIR && !dh->rootdir)) {
@@ -711,26 +789,17 @@ static int vmu_ioctl(void *fd, int cmd, va_list ap) {
     switch(cmd) {
         case IOCTL_VMU_SET_HDR:
             new_hdr = va_arg(ap, const vmu_pkg_t *);
-            if(new_hdr) {
-                hdr = vmu_pkg_dup(new_hdr);
-                if(!hdr)
-                    return -1;
-            }
 
             if(fh->strtype == VMU_FILE) {
-                old_hdr = fh->header;
-                fh->header = hdr;
-            } else {
-                old_hdr = dft_header;
-                dft_header = hdr;
+                return vmu_overwrite_header_from_pkg(fh, new_hdr);
             }
-
-            if(old_hdr) {
-                free(old_hdr->icon_data);
-                free(old_hdr->eyecatch_data);
-                free(old_hdr);
+            return vmu_change_default_header(new_hdr);
+        case IOCTL_VMU_GET_HDR_STATE:
+            if(fh->strtype != VMU_FILE) {
+                /* Not applicable */
+                return VMUHDR_STATUS_OK;
             }
-            break;
+            return fh->header_status;
         case IOCTL_VMU_GET_REALFSIZE:
             if(fh->strtype == VMU_FILE) {
                 _Static_assert(sizeof(int) >= sizeof(fh->blks));
@@ -964,11 +1033,8 @@ int fs_vmu_shutdown(void) {
     mutex_unlock(&fh_mutex);
     mutex_destroy(&fh_mutex);
 
-    if(dft_header) {
-        free(dft_header->eyecatch_data);
-        free(dft_header->icon_data);
-        free(dft_header);
-    }
+    /* Deallocate default header */
+    vmu_change_default_header(NULL);
 
     return nmmgr_handler_remove(&vh.nmmgr);
 }
