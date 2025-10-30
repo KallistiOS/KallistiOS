@@ -3,7 +3,7 @@
    dc/pvr/pvr_regs.h
    Copyright (C) 2002 Megan Potter
    Copyright (C) 2014 Lawrence Sebald
-   Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023, 2025 Ruslan Rostovtsev
    Copyright (C) 2024 Falco Girgis
 */
 
@@ -30,7 +30,7 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <kos/platform.h>
+#include <arch/arch.h>
 
 /**** Register macros ***************************************************/
 
@@ -175,7 +175,7 @@ __BEGIN_DECLS
 #define PVR_RAM_BASE        0xa5000000  /**< \brief VRAM 32-bit, P2 area, PVR->VRAM */
 #define PVR_RAM_INT_BASE    0xa4000000  /**< \brief VRAM 64-bit, P2 area, PVR->VRAM */
 
-#define PVR_RAM_SIZE_MB     (KOS_PLATFORM_IS_NAOMI ? 16 : 8)    /**< \brief RAM size in MiB */
+#define PVR_RAM_SIZE_MB     (hardware_sys_mode(NULL) == HW_TYPE_RETAIL ? 8 : 16)  /**< \brief RAM size in MiB */
 #define PVR_RAM_SIZE        (PVR_RAM_SIZE_MB*1024*1024)         /**< \brief RAM size in bytes */
 
 #define PVR_RAM_TOP         (PVR_RAM_BASE + PVR_RAM_SIZE)       /**< \brief Top of raw PVR RAM */
