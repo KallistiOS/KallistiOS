@@ -291,6 +291,8 @@ void hardware_shutdown(void);
                             -- otherwise, you must retrieve the region from the
                             flashrom.
     \return                 The console type (one of the \ref hw_consoles).
+
+    \note    Do not use before hardware_sys_init() has been called.
 */
 int hardware_sys_mode(int *region);
 
