@@ -659,8 +659,16 @@ typedef struct pvr_vertex {
     float   x;                   /**< \brief X coordinate */
     float   y;                   /**< \brief Y coordinate */
     float   z;                   /**< \brief Z coordinate */
-    float   u;                   /**< \brief Texture U coordinate */
-    float   v;                   /**< \brief Texture V coordinate */
+    union {
+        struct {
+            float u;             /**< \brief Texture U coordinate */
+            float v;             /**< \brief Texture V coordinate */
+        };
+        struct {
+            uint32_t argb0;      /**< \brief Vertex color when modified, outside area */
+            uint32_t argb1;      /**< \brief Vertex color when modified, inside area */
+        };
+    };
     uint32_t argb;               /**< \brief Vertex color */
     uint32_t oargb;              /**< \brief Vertex offset color */
 } pvr_vertex_t;
