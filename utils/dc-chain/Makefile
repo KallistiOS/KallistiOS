@@ -30,6 +30,9 @@ else
   $(error No toolchain profile file found at profiles/profile.$(toolchain_profile).mk)
 endif
 
+# GDB version
+include scripts/gdb_ver.mk
+
 # Download functions
 include scripts/utils.mk
 
