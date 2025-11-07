@@ -275,7 +275,6 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
         if(data == NULL) {
             goto error;
         }
-        memset(data, 0, 512);
     } else if(fd->raw)  {
         fd->filelength = datasize;
         fd->blks = datasize / 512;
@@ -526,6 +525,9 @@ perform_write:
     buffer_used = fh->start + fh->filelength;
     blks_bytes_used = ((buffer_used + 511) / 512) * 512;
 
+    /* Clear padding bytes */
+    memset(fh->data + buffer_used, 0x00, blks_bytes_used - buffer_used);
+
     /* Write everything */
     ret = vmufs_write(fh->dev, fh->name, fh->data, blks_bytes_used, flags);
 
@@ -648,7 +650,6 @@ static ssize_t vmu_write(void * hnd, const void *buffer, size_t cnt) {
 
         /* Assign the new pointer */
         fh->data = tmp;
-        memset(fh->data + fh->blks * 512, 0, 512 * n);
         fh->blks += n;
     }
 
