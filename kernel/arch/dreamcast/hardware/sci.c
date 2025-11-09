@@ -6,6 +6,7 @@
 
 #include <dc/sci.h>
 #include <dc/math.h>
+#include <arch/arch.h>
 #include <arch/cache.h>
 #include <arch/dmac.h>
 #include <kos/timer.h>
@@ -333,14 +334,15 @@ sci_result_t sci_init(uint32_t baud_rate, sci_mode_t mode, sci_clock_t clock_src
     else if(mode == SCI_MODE_SPI) {
         /* Use 512 bytes DMA buffer for SPI operations by default,
             because it's sector size of SD cards. */
-#ifdef __DREAMCAST__
-        /* On Dreamcast, we use GPIO for CS (anyway need soldering all pins),
-           because RTS can be used for VS-link cable */
-        sci_configure_spi(SCI_SPI_CS_GPIO, 512);
-#else
-        /* On Naomi, we use SCIF RTS for CS, because no GPIO pins on CN1 connector */
-        sci_configure_spi(SCI_SPI_CS_RTS, 512);
-#endif
+        if(hardware_sys_mode(NULL) == HW_TYPE_RETAIL) {
+            /* On Dreamcast, we use GPIO for CS (anyway need soldering all pins),
+               because RTS can be used for VS-link cable */
+            sci_configure_spi(SCI_SPI_CS_GPIO, 512);
+        }
+        else {
+            /* On NAOMI, we use SCIF RTS for CS, because no GPIO pins on CN1 connector */
+            sci_configure_spi(SCI_SPI_CS_RTS, 512);
+        }
         /* Set CA bit for 8-bit synchronous mode */
         scsmr1 |= SCSMR_CA;
     }
