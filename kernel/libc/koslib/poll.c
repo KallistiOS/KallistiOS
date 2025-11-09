@@ -9,8 +9,8 @@
 #include <errno.h>
 #include <sys/queue.h>
 
-#include <arch/irq.h>
 #include <kos/fs.h>
+#include <kos/irq.h>
 #include <kos/mutex.h>
 #include <kos/cond.h>
 

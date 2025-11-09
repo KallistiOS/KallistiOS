@@ -7,7 +7,7 @@
 #include <errno.h>
 #include <stdint.h>
 #include <string.h>
-#include <arch/irq.h>
+#include <kos/irq.h>
 #include <kos/mutex.h>
 #include <kos/cond.h>
 
