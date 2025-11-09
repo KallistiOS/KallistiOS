@@ -9,7 +9,6 @@ cpu_configure_args=--with-multilib-list=$(precision_modes) --with-endian=little 
 binutils_ver=2.34
 gcc_ver=9.5.0
 newlib_ver=4.3.0.20230120
-gdb_ver=15.2
 
 # GCC custom dependencies
 # Specify here if you want to use custom GMP, MPFR and MPC libraries when

@@ -2,7 +2,7 @@
 
    snd_mem.c
    Copyright (C) 2002 Megan Potter
-   Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023, 2025 Ruslan Rostovtsev
 
  */
 
@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <sys/queue.h>
 #include <dc/sound/sound.h>
+#include <arch/arch.h>
 #include <arch/spinlock.h>
 #include <kos/dbglog.h>
 
@@ -94,7 +95,12 @@ int snd_mem_init(uint32 reserve) {
 
     memset(blk, 0, sizeof(snd_block_t));
     blk->addr = reserve;
-    blk->size = 2 * 1024 * 1024 - reserve;
+
+    if(hardware_sys_mode(NULL) == HW_TYPE_RETAIL)
+        blk->size = 2 * 1024 * 1024 - reserve;
+    else
+        blk->size = 8 * 1024 * 1024 - reserve;
+
     blk->inuse = 0;
     TAILQ_INSERT_HEAD(&pool, blk, qent);
 
@@ -137,7 +143,7 @@ void snd_mem_shutdown(void) {
 /* Allocate a chunk of SPU RAM; we will return an offset into SPU RAM. */
 uint32 snd_mem_malloc(size_t size) {
     snd_block_t *e, *best = NULL;
-    size_t best_size = 4 * 1024 * 1024;
+    size_t best_size = SIZE_MAX;
 
     assert_msg(initted, "Use of snd_mem_malloc before snd_mem_init");
 
