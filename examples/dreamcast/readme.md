@@ -108,6 +108,7 @@ This page serves as an index for all KallistiOS examples.
   - hello-opus
   - multi-stream
   - sfx
+  - stream-ym2612
 - raylib
   - raytris
 - tsunami
