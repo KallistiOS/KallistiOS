@@ -16,7 +16,7 @@
 #include <kos/dbglog.h>
 #include <kos/net.h>
 #include <kos/thread.h>
-#include <arch/timer.h>
+#include <kos/timer.h>
 #include <arpa/inet.h>
 
 #include "net_icmp.h"
@@ -60,12 +60,12 @@ static void icmp_default_echo_cb(const uint8_t *ip, uint16_t seq, uint64_t delta
     (void)data;
 
     if(delta_us != (uint64_t) - 1) {
-        printf("%d bytes from %d.%d.%d.%d: icmp_seq=%d ttl=%d time=%.3f ms\n",
+        printf("%zu bytes from %d.%d.%d.%d: icmp_seq=%d ttl=%d time=%.3f ms\n",
                data_sz, ip[0], ip[1], ip[2], ip[3], seq, ttl,
                delta_us / 1000.0);
     }
     else {
-        printf("%d bytes from %d.%d.%d.%d: icmp_seq=%d ttl=%d\n", data_sz,
+        printf("%zu bytes from %d.%d.%d.%d: icmp_seq=%d ttl=%d\n", data_sz,
                ip[0], ip[1], ip[2], ip[3], seq, ttl);
     }
 }

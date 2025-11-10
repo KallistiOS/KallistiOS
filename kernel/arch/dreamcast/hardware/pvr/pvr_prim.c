@@ -446,7 +446,7 @@ void pvr_poly_mod_compile(pvr_poly_mod_hdr_t *dst, const pvr_poly_cxt_t *src) {
             | FIELD_PREP(PVR_TA_PM2_VSIZE, __builtin_ctz(src->txr2.height) - 3);
 
         /* Convert the texture address */
-        txr_base = to_pvr_txr_ptr(src->txr.base);
+        txr_base = to_pvr_txr_ptr(src->txr2.base);
 
         /* Polygon mode 3 */
         mode3 = FIELD_PREP(PVR_TA_PM3_MIPMAP, src->txr2.mipmap)

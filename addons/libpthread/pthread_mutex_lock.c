@@ -13,6 +13,9 @@
 int pthread_mutex_lock(pthread_mutex_t *mutex) {
     int old, rv = 0;
 
+    if(mutex->mutex.type > MUTEX_TYPE_RECURSIVE)
+        return EINVAL;
+
     old = errno;
     if(mutex_lock(&mutex->mutex))
         rv = errno;

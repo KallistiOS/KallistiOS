@@ -31,22 +31,88 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 #ifndef GCC_GTHR_KOS_H
 #define GCC_GTHR_KOS_H
 
+#include <sys/cdefs.h>
+__BEGIN_DECLS
+
 /* KallistiOS threads specific definitions. */
 
 #define __GTHREADS 1
 #define __GTHREADS_CXX0X 1
 #define __GTHREAD_HAS_COND 1
 
+#if defined(TEST_GTHR_KOS_API) || defined(__cplusplus)
 #include <kos/thread.h>
 #include <kos/tls.h>
 #include <kos/mutex.h>
 #include <kos/once.h>
 #include <kos/cond.h>
 #include <arch/irq.h>
-#include <time.h>
+#endif
 
 /* 9.5.0 somehow requires this. Remove when no longer supported */
 #include <pthread.h>
+#include <stdbool.h>
+#include <time.h>
+
+#if !defined(__cplusplus)
+/* KOS types */
+struct kthread;
+
+typedef struct kthread kthread_t;
+
+typedef int kthread_key_t;
+typedef volatile int kthread_once_t;
+
+/* mutex_t / condvar_t need to be defined explicitly as we need to be able to
+ * sizeof() them */
+typedef struct kos_mutex {
+    unsigned int type;
+    kthread_t *holder;
+    int count;
+} mutex_t;
+
+typedef struct condvar {
+    int dummy;
+} condvar_t;
+
+kthread_t *thd_create(bool detach, void *(*routine)(void *param), void *param);
+void thd_pass(void);
+void thd_exit(void *rv) __noreturn;
+int thd_join(kthread_t *thd, void **value_ptr);
+int thd_detach(kthread_t *thd);
+kthread_t *thd_get_current(void);
+int kthread_setspecific(int key, const void *value);
+void *kthread_getspecific(int key);
+
+int kthread_once(volatile int *once_control, void (*init_routine)(void));
+int kthread_key_create(int *key, void (*destructor)(void *));
+int kthread_key_delete(int key);
+
+int mutex_init(mutex_t *m, unsigned int mtype) __nonnull_all;
+int __pure mutex_is_locked(const mutex_t *m) __nonnull_all;
+int mutex_lock(mutex_t *m) __nonnull_all;
+int mutex_trylock(mutex_t *m) __nonnull_all;
+int mutex_lock_timed(mutex_t *m, int timeout) __nonnull_all;
+int mutex_unlock(mutex_t *m) __nonnull_all;
+int mutex_destroy(mutex_t *m) __nonnull_all;
+
+int cond_init(condvar_t *cv) __nonnull_all;
+int cond_destroy(condvar_t *cv) __nonnull_all;
+int cond_wait(condvar_t *cv, mutex_t * m) __nonnull_all;
+int cond_wait_timed(condvar_t *cv, mutex_t *m, int timeout) __nonnull_all;
+int cond_broadcast(condvar_t *cv) __nonnull_all;
+int cond_signal(condvar_t *cv) __nonnull_all;
+
+#define KTHREAD_ONCE_INIT   0
+
+#define MUTEX_TYPE_NORMAL       0
+#define MUTEX_TYPE_RECURSIVE    3
+
+#define MUTEX_INITIALIZER               { MUTEX_TYPE_NORMAL, NULL, 0 }
+#define RECURSIVE_MUTEX_INITIALIZER     { MUTEX_TYPE_RECURSIVE, NULL, 0 }
+#define COND_INITIALIZER    { 0 }
+
+#endif /* !defined(__cplusplus) */
 
 /* These should work just fine. */
 typedef kthread_key_t __gthread_key_t;
@@ -176,19 +242,14 @@ static inline int __gthread_objc_mutex_allocate(objc_mutex_t mutex) {
 /* Deallocate a mutex. */
 static inline int __gthread_objc_mutex_deallocate(objc_mutex_t mutex) {
     mutex_t *m = (mutex_t *)mutex->backend;
-    uint32 old;
 
-    old = irq_disable();
-
-    while(mutex_is_locked(m)) {
+    if(mutex_is_locked(m))
         mutex_unlock(m);
-    }
 
     if(mutex_destroy(m))
         return -1;
 
     mutex->backend = NULL;
-    irq_restore(old);
 
     objc_free(m);
 
@@ -403,5 +464,6 @@ static inline int __gthread_cond_destroy(__gthread_cond_t *cond) {
 
 #endif /* !_LIBOBJC */
 
+__END_DECLS
 
 #endif /* ! GCC_GTHR_KOS_H */

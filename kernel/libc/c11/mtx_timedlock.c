@@ -10,6 +10,11 @@
 int mtx_timedlock(mtx_t *restrict mtx, const struct timespec *restrict ts) {
     int ms = 0;
 
+    if(mtx->type > MUTEX_TYPE_RECURSIVE) {
+        errno = EINVAL;
+        return -1;
+    }
+
     /* Calculate the number of milliseconds to sleep for. No, you don't get
        anywhere near nanosecond precision here. */
     ms = ts->tv_sec * 1000 + ts->tv_nsec / 1000000;

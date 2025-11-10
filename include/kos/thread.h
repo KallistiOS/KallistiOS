@@ -41,6 +41,7 @@ __BEGIN_DECLS
 #include <kos/cdefs.h>
 #include <kos/tls.h>
 #include <arch/irq.h>
+#include <arch/types.h>
 
 #include <sys/queue.h>
 #include <sys/reent.h>
@@ -149,6 +150,10 @@ typedef enum kthread_state {
     STATE_WAIT     = 0x0003,  /**< \brief Blocked on a genwait */
     STATE_FINISHED = 0x0004   /**< \brief Finished execution */
 } kthread_state_t;
+
+/* Thread and priority types */
+typedef int tid_t;            /**< \brief Thread ID type */
+typedef int prio_t;           /**< \brief Priority value type */
 
 /** \brief   Structure describing one running thread.
 
@@ -526,7 +531,7 @@ int thd_set_prio(kthread_t *thd, prio_t prio);
 
     \sa thd_set_prio
 */
-prio_t thd_get_prio(kthread_t *thd);
+prio_t thd_get_prio(const kthread_t *thd);
 
 /** \brief       Retrieve a thread's numeric identifier.
     \relatesalso kthread_t
@@ -536,7 +541,7 @@ prio_t thd_get_prio(kthread_t *thd);
 
     \return                 The identifier of the thread
 */
-tid_t thd_get_id(kthread_t *thd);
+tid_t thd_get_id(const kthread_t *thd);
 
 /** \brief       Retrieve the current thread's kthread struct.
     \relatesalso kthread_t
@@ -554,7 +559,7 @@ kthread_t *thd_get_current(void);
 
     \sa thd_set_label
 */
-const char *thd_get_label(kthread_t *thd);
+const char *thd_get_label(const kthread_t *thd);
 
 /** \brief       Set the thread's label.
     \relatesalso kthread_t
@@ -585,7 +590,7 @@ void thd_set_label(kthread_t *__RESTRICT thd, const char *__RESTRICT label);
 
     \sa thd_set_pd
 */
-const char *thd_get_pwd(kthread_t *thd);
+const char *thd_get_pwd(const kthread_t *thd);
 
 /** \brief       Set the thread's current working directory.
     \relatesalso kthread_t

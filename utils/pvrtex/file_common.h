@@ -18,5 +18,7 @@ void Write8(unsigned int val, FILE *f);
 void WritePvrTexEncoder(const PvrTexEncoder *td, FILE *f, ptewSmallVQType svq, int mip_pad_override);
 void WritePadZero(size_t len, FILE *f);
 
+size_t Slurp(const char *fname, void **data);
+
 //Returns size of file, returns -1 if file does not exist
 int FileSize(const char *fname);

@@ -19,7 +19,7 @@
 #ifndef __SYS_UIO_H
 #define __SYS_UIO_H
 
-#include <kos/cdefs.h>
+#include <sys/cdefs.h>
 #include <sys/types.h>
 
 __BEGIN_DECLS

@@ -10,25 +10,26 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <kos/banner.h>
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>
 #include <kos/init.h>
+#include <kos/linker.h>
 #include <kos/platform.h>
+#include <kos/timer.h>
 #include <arch/arch.h>
 #include <arch/irq.h>
 #include <arch/memory.h>
 #include <arch/rtc.h>
-#include <arch/timer.h>
-#include <arch/wdt.h>
 #include <dc/perfctr.h>
 #include <dc/ubc.h>
 #include <dc/pvr.h>
 #include <dc/vmufs.h>
 #include <dc/syscalls.h>
+#include <dc/wdt.h>
+#include <dc/dcload.h>
 
 #include "initall_hdrs.h"
-
-extern uintptr_t _bss_start, end;
 
 /* ctor/dtor stuff from libgcc. */
 #if __GNUC__ == 4
@@ -40,6 +41,9 @@ extern void _init(void);
 extern void _fini(void);
 extern void __verify_newlib_patch();
 extern void dma_init(void);
+
+/* Jump back to the bootloader. From startup.S */
+void arch_real_exit(int ret_code) __noreturn;
 
 void (*__kos_init_early_fn)(void) __attribute__((weak,section(".data"))) = NULL;
 
@@ -127,7 +131,7 @@ KOS_INIT_FLAG_WEAK(fs_iso9660_init, true);
 KOS_INIT_FLAG_WEAK(fs_iso9660_shutdown, true);
 
 void dcload_init(void) {
-    if (*DCLOADMAGICADDR == DCLOADMAGICVALUE) {
+    if (syscall_dcload_detected()) {
         dbglog(DBG_INFO, "dc-load console support enabled\n");
         fs_dcload_init();
     }
@@ -153,7 +157,7 @@ KOS_INIT_FLAG_WEAK(library_shutdown, true);
 /* Auto-init stuff: override with a non-weak symbol if you don't want all of
    this to be linked into your code (and do the same with the
    arch_auto_shutdown function too). */
-int  __weak arch_auto_init(void) {
+int  __weak_symbol arch_auto_init(void) {
     /* Initialize memory management */
     mm_init();
 
@@ -190,7 +194,6 @@ int  __weak arch_auto_init(void) {
 
     /* Initialize our timer */
     perf_cntr_timer_enable();
-    timer_ms_enable();
     rtc_init();
 
     thd_init();
@@ -234,7 +237,7 @@ int  __weak arch_auto_init(void) {
     return 0;
 }
 
-void  __weak arch_auto_shutdown(void) {
+void  __weak_symbol arch_auto_shutdown(void) {
     KOS_INIT_FLAG_CALL(fs_dclsocket_shutdown);
     if (!KOS_PLATFORM_IS_NAOMI)
         KOS_INIT_FLAG_CALL(net_shutdown);
@@ -277,7 +280,6 @@ void  __weak arch_auto_shutdown(void) {
 
 /* This is the entry point inside the C program */
 void arch_main(void) {
-    uint8 *bss_start = (uint8 *)(&_bss_start);
     int rv;
 
     dma_init();
@@ -293,7 +295,7 @@ void arch_main(void) {
         __kos_init_early_fn();
 
     /* Clear out the BSS area */
-    memset(bss_start, 0, (uintptr_t)(&end) - (uintptr_t)bss_start);
+    memset(_bss_start, 0, (uintptr_t)end - (uintptr_t)_bss_start);
 
     /* Do auto-init stuff */
     arch_auto_init();

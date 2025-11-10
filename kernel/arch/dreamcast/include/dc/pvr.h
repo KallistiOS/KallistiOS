@@ -659,8 +659,16 @@ typedef struct pvr_vertex {
     float   x;                   /**< \brief X coordinate */
     float   y;                   /**< \brief Y coordinate */
     float   z;                   /**< \brief Z coordinate */
-    float   u;                   /**< \brief Texture U coordinate */
-    float   v;                   /**< \brief Texture V coordinate */
+    union {
+        struct {
+            float u;             /**< \brief Texture U coordinate */
+            float v;             /**< \brief Texture V coordinate */
+        };
+        struct {
+            uint32_t argb0;      /**< \brief Vertex color when modified, outside area */
+            uint32_t argb1;      /**< \brief Vertex color when modified, inside area */
+        };
+    };
     uint32_t argb;               /**< \brief Vertex color */
     uint32_t oargb;              /**< \brief Vertex offset color */
 } pvr_vertex_t;
@@ -1602,6 +1610,20 @@ void pvr_poly_cxt_txr_mod(pvr_poly_cxt_t *dst, pvr_list_t list,
     \return                 A pointer to the front buffer.
 */
 pvr_ptr_t pvr_get_front_buffer(void);
+
+/** \brief   Get a pointer to the back buffer.
+    \ingroup pvr_txr_mgmt
+
+    This function can be used to retrieve a pointer to the back buffer, aka.
+    the frame buffer that will be rendered to.
+
+    Note that the frame buffers lie in 32-bit memory, while textures lie in
+    64-bit memory. The address returned will point to 64-bit memory, but the
+    back buffer cannot be used directly as a regular texture.
+
+    \return                 A pointer to the back buffer.
+*/
+pvr_ptr_t pvr_get_back_buffer(void);
 
 /*********************************************************************/
 

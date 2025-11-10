@@ -14,13 +14,13 @@ void fTexWrite(const PvrTexEncoder *pte, const char *outfname) {
 	unsigned textype = 0;
 	textype |= pteHasMips(pte) ? (1<<31) : 0;
 	textype |= pteIsCompressed(pte) ? (1<<30) : 0;
-	textype |= pte->pixel_format << 27;
+	textype |= pte->hw_pixel_format << 27;
 	textype |= !pte->raw_is_twiddled << 26;
 	textype |= pteIsStrided(pte) ? (1<<25) : 0;
 	textype |= (pte->w / 32) & 0x1f;
 
 	//Size does not include size of header
-	unsigned origsize = CalcTextureSize(pte->w, pte->h, (ptPixelFormat)pte->pixel_format, pteHasMips(pte), pteIsCompressed(pte), PVR_CODEBOOK_SIZE_BYTES);
+	unsigned origsize = CalcTextureSize(pte->w, pte->h, pte->pixel_format, pteHasMips(pte), pteIsCompressed(pte), PVR_CODEBOOK_SIZE_BYTES);
 	unsigned size = ROUND_UP_POW2(origsize, 32);
 	unsigned paddingamt = size - origsize;
 	pteLog(LOG_DEBUG, "File DTEX size: (%u + %u) %u\n", origsize, paddingamt, size);

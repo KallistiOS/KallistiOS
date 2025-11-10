@@ -148,7 +148,6 @@ int mutex_destroy(mutex_t *m) __nonnull_all;
 
     \par    Error Conditions:
     \em     EPERM - called inside an interrupt \n
-    \em     EINVAL - the mutex has not been initialized properly \n
     \em     EAGAIN - lock has been acquired too many times (recursive) \n
     \em     EDEADLK - would deadlock (error-checking)
 */
@@ -169,7 +168,6 @@ int mutex_lock(mutex_t *m) __nonnull_all;
     \retval -1              On error, sets errno as appropriate
 
     \par    Error Conditions:
-    \em     EINVAL - the mutex has not been initialized properly \n
     \em     EAGAIN - lock has been acquired too many times (recursive), or the
                      function was called inside an interrupt and the mutex was
                      already locked \n
@@ -192,7 +190,6 @@ int mutex_lock_irqsafe(mutex_t *m) __nonnull_all;
 
     \par    Error Conditions:
     \em     EPERM - called inside an interrupt \n
-    \em     EINVAL - the mutex has not been initialized properly \n
     \em     EINVAL - the timeout value was invalid (less than 0) \n
     \em     ETIMEDOUT - the timeout expired \n
     \em     EAGAIN - lock has been acquired too many times (recursive) \n
@@ -227,7 +224,6 @@ int __pure mutex_is_locked(const mutex_t *m) __nonnull_all;
 
     \par    Error Conditions:
     \em     EBUSY  - the mutex is already locked (mutex_lock() would block) \n
-    \em     EINVAL - the mutex has not been initialized properly \n
     \em     EAGAIN - lock has been acquired too many times (recursive) \n
     \em     EDEADLK - would deadlock (error-checking)
 */
@@ -252,7 +248,8 @@ int mutex_unlock(mutex_t *m) __nonnull_all;
 
     This function allows an IRQ handler to unlock a mutex that was locked by a
     normal kernel thread. This function is only for use in IRQ handlers, so it
-    will generally not be of much use outside of the kernel itself.
+    will generally not be of much use outside of the kernel itself. It cannot
+    be used with recursive mutexes.
 
     \param  m               The mutex to unlock
     \param  thd             The thread owning the mutex

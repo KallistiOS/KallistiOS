@@ -26,7 +26,7 @@
  */
 
 #include <arch/rtc.h>
-#include <arch/timer.h>
+#include <kos/timer.h>
 #include <dc/g2bus.h>
 
 #include <stdint.h>

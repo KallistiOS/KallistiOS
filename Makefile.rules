@@ -82,7 +82,7 @@ romdisk.img:
 
 romdisk.o: romdisk.img
 	$(KOS_BASE)/utils/bin2c/bin2c romdisk.img romdisk_tmp.c romdisk
-	$(KOS_CC) $(KOS_CFLAGS) -o romdisk_tmp.o -c romdisk_tmp.c
+	kos-cc -o romdisk_tmp.o -c romdisk_tmp.c
 	$(KOS_CC) -o romdisk.o -r romdisk_tmp.o $(KOS_LIB_PATHS) -Wl,--whole-archive -lromdiskbase
 	rm romdisk_tmp.c romdisk_tmp.o
 endif

@@ -12,7 +12,7 @@
 #include <assert.h>
 
 #include <arch/cache.h>
-#include <arch/timer.h>
+#include <kos/timer.h>
 #include <arch/memory.h>
 #include <arch/irq.h>
 
@@ -309,11 +309,6 @@ int cdrom_get_status(int *status, int *disc_type) {
     }
 
     return rv;
-}
-
-/* Helper function to account for long-standing typo */
-int cdrom_change_dataype(int sector_part, int cdxa, int sector_size) {
-    return cdrom_change_datatype(sector_part, cdxa, sector_size);
 }
 
 /* Wrapper for the change datatype syscall */

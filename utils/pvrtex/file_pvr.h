@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include "pvr_texture_encoder.h"
+#include "pvr_texture_decoder.h"
 
 #define FILE_PVR_SQUARE		(1<<8)
 #define FILE_PVR_SQUARE_MIP	(2<<8)
@@ -12,10 +13,12 @@
 #define FILE_PVR_8BPP_MIP	(8<<8)	//Assumed
 #define FILE_PVR_RECT		(9<<8)
 #define FILE_PVR_RECT_MIP	(10<<8)	//Not supported by hardware, but implied
+#define FILE_PVR_RECT_TWID	(13<<8)
 #define FILE_PVR_SMALL_VQ	(16<<8)
 #define FILE_PVR_SMALL_VQ_MIP	(17<<8)
 
 #define FILE_PVR_MIP_ADD	(1<<8)
 
 void fPvrWrite(const PvrTexEncoder *td, const char *outfname);
+int fPvrLoad(const char *fname, PvrTexDecoder *dst);
 int fPvrSmallVQCodebookSize(int texsize_pixels, int mip);

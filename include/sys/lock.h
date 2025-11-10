@@ -19,7 +19,7 @@
 #ifndef __SYS_LOCK_H__
 #define __SYS_LOCK_H__
 
-#include <kos/cdefs.h>
+#include <sys/cdefs.h>
 __BEGIN_DECLS
 
 /** \cond */

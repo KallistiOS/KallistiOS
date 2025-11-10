@@ -73,17 +73,20 @@ typedef struct ELBGContext {
 
 static inline int distance_limited(int *a, int *b, int dim, int limit)
 {
+    //Changing the conditional allows for auto-vectorization, and does not seem to
+    //have any affect on final result
     int i, dist=0;
     for (i=0; i<dim; i++) {
         int64_t distance = a[i] - b[i];
 
         distance *= distance;
-        if (dist >= limit - distance)
-            return limit;
+//      if (dist >= limit - distance)
+//          return limit;
         dist += distance;
     }
 
-    return dist;
+//  return dist;
+    return dist > limit ? limit : dist;
 }
 
 static inline void vect_division(int *res, int *vect, int div, int dim)

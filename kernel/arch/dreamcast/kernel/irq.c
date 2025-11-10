@@ -15,7 +15,7 @@
 #include <arch/arch.h>
 #include <arch/types.h>
 #include <arch/irq.h>
-#include <arch/timer.h>
+#include <kos/timer.h>
 #include <arch/stack.h>
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>
@@ -215,6 +215,16 @@ void irq_handle_exception(int code) {
     const struct irq_cb *hnd;
     uint32_t evt = 0;
     int handled = 0;
+
+    if(__is_defined(__SH_ATOMIC_MODEL_SOFT_GUSA__)
+       && __predict_false((int32_t)irq_srt_addr->r[15] >= -128
+                     && irq_srt_addr->pc != irq_srt_addr->r[0])) {
+        /* The stack pointer has been altered: it means we are in the middle of
+           an atomic section, and we need to roll-back.
+           The r0 register contains the address of the end of the section,
+           and the stack pointer contains the negated section size. */
+        irq_srt_addr->pc = irq_srt_addr->r[0] + irq_srt_addr->r[15];
+    }
 
     switch(code) {
         /* If it's a code 3, grab the event from intevt. */

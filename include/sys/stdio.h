@@ -8,7 +8,7 @@
 #ifndef _NEWLIB_STDIO_H
 #define _NEWLIB_STDIO_H
 
-#include <kos/cdefs.h>
+#include <sys/cdefs.h>
 __BEGIN_DECLS
 
 // Cribbed from newlib sys/stdio.h

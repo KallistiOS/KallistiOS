@@ -21,6 +21,9 @@ int pthread_mutex_timedlock(pthread_mutex_t *__RESTRICT mutex,
     if(!mutex || !abstime)
         return EFAULT;
 
+    if(mutex->mutex.type > MUTEX_TYPE_RECURSIVE)
+        return EINVAL;
+
     if(abstime->tv_nsec < 0 || abstime->tv_nsec > 1000000000L)
         return EINVAL;
 

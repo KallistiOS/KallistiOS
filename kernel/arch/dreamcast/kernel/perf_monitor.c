@@ -4,7 +4,7 @@
    Copyright (C) 2024 Paul Cercueil
 */
 
-#include <arch/timer.h>
+#include <kos/timer.h>
 #include <dc/perf_monitor.h>
 
 extern struct perf_monitor _monitors_start, _monitors_end;

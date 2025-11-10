@@ -25,6 +25,9 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
+/* Included to get the `LITTLE_ENDIAN` define */
+#include <machine/endian.h>
+
 #ifdef BYTE_ORDER
 /* If we've included <arch/types.h>, this might already be defined... */
 #undef BYTE_ORDER
@@ -49,6 +52,7 @@ __BEGIN_DECLS
                         or equivalent.
     \return             The swapped value.
 */
+__depr("arch_swap16() is deprecated, use __builtin_bswap16().")
 static inline uint16_t arch_swap16(uint16_t x) {
     return __builtin_bswap16(x);
 }
@@ -62,6 +66,7 @@ static inline uint16_t arch_swap16(uint16_t x) {
                         or equivalent.
     \return             The swapped value.
 */
+__depr("arch_swap32() is deprecated, use __builtin_bswap32().")
 static inline uint32_t arch_swap32(uint32_t x) {
     return __builtin_bswap32(x);
 }
@@ -77,6 +82,7 @@ static inline uint32_t arch_swap32(uint32_t x) {
                         or equivalent.
     \return             The converted value.
 */
+__depr("arch_ntohs() is deprecated, use ntohs() from <arpa/inet.h>")
 static inline uint16_t arch_ntohs(uint16_t x) {
     return __builtin_bswap16(x);
 }
@@ -92,6 +98,7 @@ static inline uint16_t arch_ntohs(uint16_t x) {
                         or equivalent.
     \return             The converted value.
 */
+__depr("arch_ntohl() is deprecated, use ntohl() from <arpa/inet.h>")
 static inline uint32_t arch_ntohl(uint32_t x) {
     return __builtin_bswap32(x);
 }
@@ -107,6 +114,7 @@ static inline uint32_t arch_ntohl(uint32_t x) {
                         or equivalent.
     \return             The converted value.
 */
+__depr("arch_htons() is deprecated, use htons() from <arpa/inet.h>")
 static inline uint16_t arch_htons(uint16_t x) {
     return __builtin_bswap16(x);
 }
@@ -122,6 +130,7 @@ static inline uint16_t arch_htons(uint16_t x) {
                         or equivalent.
     \return             The converted value.
 */
+__depr("arch_htonl() is deprecated, use htonl() from <arpa/inet.h>")
 static inline uint32_t arch_htonl(uint32_t x) {
     return __builtin_bswap32(x);
 }

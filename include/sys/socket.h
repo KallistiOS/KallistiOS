@@ -21,7 +21,7 @@
 #ifndef __SYS_SOCKET_H
 #define __SYS_SOCKET_H
 
-#include <kos/cdefs.h>
+#include <sys/cdefs.h>
 #include <sys/types.h>
 #include <sys/uio.h>
 

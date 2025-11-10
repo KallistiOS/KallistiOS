@@ -49,6 +49,7 @@ $(stamp_gdb_build): patch_gdb
           --target=$(target) \
           CC="$(CC)" \
           CXX="$(CXX)" \
+          CFLAGS="$(CFLAGS) -Wno-error=incompatible-pointer-types" \
           $(macos_gdb_configure_args) \
           $(static_flag) \
           $(to_log)

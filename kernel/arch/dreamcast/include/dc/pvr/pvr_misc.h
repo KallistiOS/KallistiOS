@@ -115,6 +115,20 @@ void pvr_set_shadow_scale(bool enable, float scale_value);
 */
 void pvr_set_zclip(float zc);
 
+/** \brief   Set the vertical scale factor.
+    \ingroup pvr_global
+
+    This function sets the vertical scale factor used when the PVR scene is
+    rendered to the framebuffer. Generally you want 1.0f or near-1.0f values
+    here. The default used by the PVR driver is 1.0f when using VGA, and 0.999f
+    otherwise. Having a value slightly below 1.0f gives the image a pleasant
+    smoothing.
+
+    \retval 0               On success
+    \retval -1              On invalid factor value
+*/
+int pvr_set_vertical_scale(float factor);
+
 /** \brief   Set the translucent polygon sort mode for the next frame.
     \ingroup pvr_scene_mgmt
 

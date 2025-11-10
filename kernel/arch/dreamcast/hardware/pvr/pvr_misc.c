@@ -10,7 +10,7 @@
 #include <string.h>
 #include <float.h>
 
-#include <arch/timer.h>
+#include <kos/timer.h>
 #include <dc/pvr.h>
 #include <dc/video.h>
 #include <kos/regfield.h>
@@ -266,7 +266,7 @@ void pvr_blank_polyhdr_buf(int type, pvr_poly_hdr_t * poly) {
     poly->cmd = FIELD_PREP(PVR_TA_CMD_TYPE, type) | 0x80840012;
 }
 
-pvr_ptr_t pvr_get_front_buffer(void) {
+static pvr_ptr_t pvr_get_frame_buffer(bool back) {
     unsigned int idx;
     uint32_t addr;
 
@@ -275,11 +275,43 @@ pvr_ptr_t pvr_get_front_buffer(void) {
     /* The front buffer may not have been fully rendered or submitted to the
        video hardware yet. In case this has yet to happen, we want the second
        view target, aka. the one not currently being displayed. */
-    idx = pvr_state.view_target ^ pvr_state.render_completed;
+    idx = pvr_state.view_target ^ pvr_state.render_completed ^ back;
 
     addr = pvr_state.frame_buffers[idx].frame & (PVR_RAM_SIZE - 1);
 
     /* The front buffer is in 32-bit memory, convert its address to make it
        addressable from the 64-bit memory */
     return (pvr_ptr_t)(addr * 2 + PVR_RAM_BASE);
+}
+
+pvr_ptr_t pvr_get_front_buffer(void) {
+    return pvr_get_frame_buffer(false);
+}
+
+pvr_ptr_t pvr_get_back_buffer(void) {
+    return pvr_get_frame_buffer(true);
+}
+
+int pvr_set_vertical_scale(float factor) {
+    uint32_t f16;
+    uint32_t cfg;
+
+    if(factor == 0.0f)
+        return -1;
+
+    f16 = 1024.0f / factor;
+
+    if(f16 == 0 || f16 >= 65536)
+        return -1;
+
+    irq_disable_scoped();
+
+    cfg = PVR_GET(PVR_SCALER_CFG);
+
+    cfg &= ~PVR_SCALER_CFG_VSCALE_FACTOR;
+    cfg |= FIELD_PREP(PVR_SCALER_CFG_VSCALE_FACTOR, f16);
+
+    PVR_SET(PVR_SCALER_CFG, cfg);
+
+    return 0;
 }

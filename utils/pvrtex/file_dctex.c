@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include "pvr_texture_encoder.h"
+#include "pvr_texture_decoder.h"
 #include "file_common.h"
 #include "file_dctex.h"
 
@@ -33,7 +34,7 @@ void fDtWrite(const PvrTexEncoder *pte, const char *outfname) {
 	unsigned textype = 0;
 	textype |= pteHasMips(pte) << FDT_MIPMAP_SHIFT;
 	textype |= pteIsCompressed(pte) << FDT_VQ_SHIFT;
-	textype |= pte->pixel_format << FDT_PIXEL_FORMAT_SHIFT;
+	textype |= pte->hw_pixel_format << FDT_PIXEL_FORMAT_SHIFT;
 	textype |= !pte->raw_is_twiddled << FDT_NOT_TWIDDLED_SHIFT;
 
 	//If the width is a power of two, we don't need the stride bit set
@@ -45,7 +46,7 @@ void fDtWrite(const PvrTexEncoder *pte, const char *outfname) {
 	textype |= convert_size(pte->h) << FDT_HEIGHT_SHIFT;
 
 	//Include size of header
-	unsigned origsize = 32 + CalcTextureSize(pte->w, pte->h, (ptPixelFormat)pte->pixel_format, pteHasMips(pte), pteIsCompressed(pte), pte->codebook_size * 8);
+	unsigned origsize = 32 + CalcTextureSize(pte->w, pte->h, pte->pixel_format, pteHasMips(pte), pteIsCompressed(pte), pte->codebook_size * 8);
 	unsigned size = ROUND_UP_POW2(origsize, 32);
 	unsigned paddingamt = size - origsize;
 	pteLog(LOG_DEBUG, "File size: %u orig + %u pad = %u total\n", origsize, paddingamt, size);
@@ -84,5 +85,52 @@ void fDtWrite(const PvrTexEncoder *pte, const char *outfname) {
 	}
 	fclose(f);
 	free(readbuff);
+}
+
+
+int fDtLoad(const char *fname, PvrTexDecoder *dst) {
+	assert(fname);
+	assert(dst);
+
+	void *data = NULL;
+	size_t size = Slurp(fname, &data);
+
+	if (size == 0 || data == 0)
+		goto err_exit;
+
+	fDtHeader *hdr = data;
+	if (size < sizeof(*hdr) || fDtGetTotalSize(hdr) < size) {
+		pteLog(LOG_WARNING, ".PVR file appears invalid (incomplete file?)\n");
+		goto err_exit;
+	}
+
+	if (!fDtValidateHeader(hdr)) {
+		pteLog(LOG_WARNING, ".DT file appears corrupt\n");
+		goto err_exit;
+	}
+
+	ptdSetSize(dst, fDtGetWidth(hdr), fDtGetHeight(hdr), fDtIsMipmapped(hdr));
+	ptdSetPixelFormat(dst, fDtGetPixelFormat(hdr));
+	ptdSetStride(dst, fDtIsStrided(hdr));
+	if (fDtIsCompressed(hdr)) {
+		unsigned cbsize = fDtGetCodebookSizeBytes(hdr) / PVR_CODEBOOK_ENTRY_SIZE_BYTES;
+		pteLog(LOG_WARNING, "CB size %u\n", cbsize);
+		ptdSetCompressedSource(dst,
+			fDtGetPvrTexData(hdr) + fDtGetCodebookSizeBytes(hdr),
+			fDtGetPvrTexData(hdr),
+			cbsize,
+			PVR_FULL_CODEBOOK - cbsize);
+	} else {
+		ptdSetUncompressedSource(dst, fDtGetPvrTexData(hdr));
+	}
+
+	ptdDecode(dst);
+
+	return 0;
+
+err_exit:
+	SAFE_FREE(&data);
+	return 1;
+
 }
 

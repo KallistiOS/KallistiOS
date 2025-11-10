@@ -18,7 +18,7 @@
     the gettime functions.
 
     \sa arch/rtc.h
-    \sa arch/wdt.h
+    \sa dc/wdt.h
 
     \author Megan Potter
     \author Falco Girgis
@@ -33,6 +33,8 @@
 __BEGIN_DECLS
 
 #include <arch/irq.h>
+
+#include <time.h>
 
 /** \defgroup timers    Timer Unit
     \brief              SH4 CPU peripheral providing timers and counters
@@ -82,8 +84,7 @@ __BEGIN_DECLS
 /** \brief  SH4 Timer Channel 1.
 
     \warning
-    This timer channel is used for the timer_spin_sleep() function, which also
-    backs the kthread, C, C++, and POSIX sleep functions.
+    This timer channel is free to use.
 */
 #define TMU1    1
 
@@ -231,148 +232,39 @@ int timer_ints_enabled(int channel);
     The highest actual tick resolution of \ref TMU2 is 80ns.
 */
 
-/** \brief   Enable the millisecond timer.
+/** \brief   Structure that holds timer values in seconds + ticks. */
+typedef struct timer_value {
+    uint32_t secs;      /**< \brief Number of seconds */
+    uint32_t ticks;     /**< \brief Number of ticks in the current second */
+} timer_val_t;
+
+/** \brief   Get the current uptime of the system (in seconds and ticks).
     \ingroup tmu_uptime
 
-    This function enables the timer used for the gettime functions. This is on
-    by default. These functions use \ref TMU2 to do their work.
-*/
-void timer_ms_enable(void);
-
-/** \brief   Disable the millisecond timer.
-    \ingroup tmu_uptime
-
-    This function disables the timer used for the gettime functions. Generally,
-    you will not want to do this, unless you have some need to use the timer
-    \ref TMU2 for something else.
-*/
-void timer_ms_disable(void);
-
-/** \brief   Get the current uptime of the system (in secs and millisecs).
-    \ingroup tmu_uptime
-
-    This function retrieves the number of seconds and milliseconds since KOS was
+    This function retrieves the number of seconds and ticks since KOS was
     started.
 
-    \param  secs            A pointer to store the number of seconds since boot
-                            into.
-    \param  msecs           A pointer to store the number of milliseconds past
-                            a second since boot.
-    \note                   To get the total number of milliseconds since boot,
-                            calculate (*secs * 1000) + *msecs, or use the
-                            timer_ms_gettime64() function.
+    \return                 The time since KOS started as a timer_val_t.
 */
-void timer_ms_gettime(uint32_t *secs, uint32_t *msecs);
+timer_val_t __dreamcast_get_ticks(void);
 
-/** \brief   Get the current uptime of the system (in milliseconds).
+/** \brief   Get the current uptime of the system (in seconds and nanoseconds).
     \ingroup tmu_uptime
 
-    This function retrieves the number of milliseconds since KOS was started. It
-    is equivalent to calling timer_ms_gettime() and combining the number of
-    seconds and milliseconds into one 64-bit value.
+    This function retrieves the time since KOS was started, in a standard
+    timespec format.
 
-    \return                 The number of milliseconds since KOS started.
+    \return                 The time since KOS started as a struct timespec.
 */
-uint64_t timer_ms_gettime64(void);
+static inline struct timespec arch_timer_gettime(void) {
+    timer_val_t time = __dreamcast_get_ticks();
 
-/** \brief   Get the current uptime of the system (in secs and microsecs).
-    \ingroup tmu_uptime
-
-    This function retrieves the number of seconds and microseconds since KOS was
-    started.
-
-    \note                   To get the total number of microseconds since boot,
-                            calculate (*secs * 1000000) + *usecs, or use the
-                            timer_us_gettime64() function.
-
-    \param  secs            A pointer to store the number of seconds since boot
-                            into.
-    \param  usecs           A pointer to store the number of microseconds past
-                            a second since boot.
-*/
-void timer_us_gettime(uint32_t *secs, uint32_t *usecs);
-
-/** \brief   Get the current uptime of the system (in microseconds).
-    \ingroup tmu_uptime
-
-    This function retrieves the number of microseconds since KOS was started.
-
-    \return                 The number of microseconds since KOS started.
-*/
-uint64_t timer_us_gettime64(void);
-
-/** \brief   Get the current uptime of the system (in secs and nanosecs).
-    \ingroup tmu_uptime
-
-    This function retrieves the number of seconds and nanoseconds since KOS was
-    started.
-
-    \note                   To get the total number of nanoseconds since boot,
-                            calculate (*secs * 1000000000) + *nsecs, or use the
-                            timer_ns_gettime64() function.
-
-    \param  secs            A pointer to store the number of seconds since boot
-                            into.
-    \param  nsecs           A pointer to store the number of nanoseconds past
-                            a second since boot.
-*/
-void timer_ns_gettime(uint32_t *secs, uint32_t *nsecs);
-
-/** \brief   Get the current uptime of the system (in nanoseconds).
-    \ingroup tmu_uptime
-
-    This function retrieves the number of nanoseconds since KOS was started. 
-
-    \return                 The number of nanoseconds since KOS started.
-*/
-uint64_t timer_ns_gettime64(void);
-
-/** \defgroup tmu_sleep     Sleeping
-    \brief                  Low-level thread sleeping
-    \ingroup                timers
-
-    This API provides the low-level functionality used to implement thread
-    sleeping, used by the KOS, C, C++, and POSIX threading APIs.
-
-    \warning
-    This API and its underlying functionality are using \ref TMU1, so any
-    direct manipulation of it will interfere with the API's proper functioning.
-*/
-
-/** \brief  Spin-loop sleep function.
-    \ingroup tmu_sleep
-
-    This function is meant as a very accurate delay function, even if threading
-    and interrupts are disabled. It uses \ref TMU1 to sleep.
-
-    \param  ms              The number of milliseconds to sleep.
-*/
-void timer_spin_sleep(int ms);
-
-/** \brief  Spin-loop delay function with microsecond granularity
-    \ingroup tmu_sleep
-
-    This function is meant as a very accurate delay function, even if threading
-    and interrupts are disabled. It is a delay and not a sleep, which means that
-    the CPU will be busy-looping during that time frame. For any time frame
-    bigger than a few hundred microseconds, it is recommended to sleep instead.
-
-    \param  us              The number of microseconds to wait for.
-    \sa timer_spin_delay_ns, thd_sleep
-*/
-void timer_spin_delay_us(unsigned short us);
-
-/** \brief  Spin-loop delay function with nanosecond granularity
-    \ingroup tmu_sleep
-
-    This function is meant as a very accurate delay function, even if threading
-    and interrupts are disabled. It is a delay and not a sleep, which means that
-    the CPU will be busy-looping during that time frame.
-
-    \param  ns              The number of nanoseconds to wait for.
-    \sa timer_spin_delay_us, thd_sleep
-*/
-void timer_spin_delay_ns(unsigned short ns);
+    /* Convert from ticks to nanoseconds: each clock tick is 80ns. */
+    return (struct timespec){
+        .tv_sec = time.secs,
+        .tv_nsec = (long int)(time.ticks * 80),
+    };
+}
 
 /** \defgroup tmu_primary   Primary Timer
     \brief                  Primary timer used by the kernel.
@@ -433,5 +325,6 @@ void timer_shutdown(void);
 
 __END_DECLS
 
-#endif  /* __ARCH_TIMER_H */
+#include <kos/timer.h>
 
+#endif  /* __ARCH_TIMER_H */

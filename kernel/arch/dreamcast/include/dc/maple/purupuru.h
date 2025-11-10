@@ -3,6 +3,7 @@
    dc/maple/purupuru.h
    Copyright (C) 2003 Megan Potter
    Copyright (C) 2005, 2010 Lawrence Sebald
+   Copyright (C) 2025 Donald Haase
 
 */
 
@@ -28,6 +29,7 @@
     that does absolutely nothing on the first try.
 
     \author Lawrence Sebald
+    \author Donald Haase
 */
 
 #ifndef __DC_MAPLE_PURUPURU_H
@@ -36,7 +38,8 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <dc/maple.h>
 
 /** \defgroup peripherals_rumble    Rumble Pack
@@ -49,114 +52,58 @@ __BEGIN_DECLS
 /** \brief  Effect generation structure.
 
     This structure is used for convenience to send an effect to the jump pack.
-    This, along with the various macros in this file can give a slightly better
-    idea of the effect being generated than using the raw values.
+    The members in the structure note general explanations of their use as well
+    as some limitations and suggestions. There shouldn't be a need to use the
+    raw accessor with the new fully specified members.
 */
-typedef struct purupuru_effect  {
-    /** \brief  The duration of the effect. No idea on units... */
-    uint8 duration;
+typedef union purupuru_effect  {
+    /** \brief Access the raw 32-bit value to be sent to the puru */
+    uint32_t raw;
+    /** \brief Deprecated old structure which has been inverted now to union with raw. */
+    struct {
+        uint8_t special     __depr("Please see purupuru_effect_t which has new members.");
+        uint8_t effect1     __depr("Please see purupuru_effect_t which has new members.");
+        uint8_t effect2     __depr("Please see purupuru_effect_t which has new members.");
+        uint8_t duration    __depr("Please see purupuru_effect_t which has new members.");
+    };
+    struct {
+        /** \brief Continuous Vibration. When set vibration will continue until stopped */
+        bool     cont    : 1;
+        /** \brief Reserved. Always 0s */
+        uint32_t res     : 3;
+        /** \brief Motor number. 0 will cause an error. 1 is the typical setting. */
+        uint32_t motor   : 4;
 
-    /** \brief  2nd effect field. */
-    uint8 effect2;
+        /** \brief Backward direction (- direction) intensity setting bits. 0 stops vibration. */
+        uint32_t bpow    : 3;
+        /** \brief Divergent vibration. The rumble will get stronger until it stops. */
+        bool     div     : 1;
+        /** \brief Forward direction (+ direction) intensity setting bits. 0 stops vibration. */
+        uint32_t fpow    : 3;
+        /** \brief Convergent vibration. The rumble will get weaker until it stops. */
+        bool     conv    : 1;
 
-    /** \brief  1st effect field. */
-    uint8 effect1;
-
-    /** \brief  Special effects field. */
-    uint8 special;
+        /** \brief Vibration frequency. for most purupuru 4-59. */
+        uint8_t  freq;
+        /** \brief Vibration inclination period. */
+        uint8_t  inc;
+    };
 } purupuru_effect_t;
 
-/* Set one of each of the following in the effect2 field of the
-   purupuru_effect_t. Valid values for each are 0-7. The LINTENSITY
-   value works with the INTENSITY of effect1 to increase the intensity
-   of the rumble, where UINTENSITY apparently lowers the rumble's
-   intensity somewhat. */
+_Static_assert(sizeof(purupuru_effect_t) == 4, "Invalid effect size");
 
-/** \brief  Upper-nibble of effect2 convenience macro.
+ /* Compat */
+static inline uint32_t __depr("Please see purupuru_effect_t for modern equivalent.") PURUPURU_EFFECT2_UINTENSITY(uint8_t x) {return (x << 4);}
+static inline uint32_t __depr("Please see purupuru_effect_t for modern equivalent.") PURUPURU_EFFECT2_LINTENSITY(uint8_t x) {return (x);}
+static inline uint32_t __depr("Please see purupuru_effect_t for modern equivalent.") PURUPURU_EFFECT1_INTENSITY(uint8_t x)  {return (x << 4);}
 
-    This macro is for setting the upper nibble of the effect2 field of the
-    purupuru_effect_t. This apparently lowers the rumble's intensity somewhat.
-    Valid values are 0-7.
-*/
-#define PURUPURU_EFFECT2_UINTENSITY(x) (x << 4)
-
-/** \brief  Lower-nibble of effect2 convenience macro.
-
-    This macro is for setting the lower nibble of the effect2 field of the
-    purupuru_effect_t. This value works with the upper nibble of the effect1
-    field to increase the intensity of the rumble effect. Valid values are 0-7.
-
-    \see    PURUPURU_EFFECT1_INTENSITY
-*/
-#define PURUPURU_EFFECT2_LINTENSITY(x) (x)
-
-/* OR these in with your effect2 value if you feel so inclined.
-   if you or the PULSE effect in here, you probably should also
-   do so with the effect1 one below. */
-/** \brief  Give a decay effect to the rumble on some packs. */
-#define PURUPURU_EFFECT2_DECAY         (8 << 4)
-
-/** \brief  Give a pulse effect to the rumble.
-
-    This probably should be used with PURUPURU_EFFECT1_PULSE as well.
-
-    \see    PURUPURU_EFFECT1_PULSE
-*/
-#define PURUPURU_EFFECT2_PULSE         (8)
-
-/* Set one value for this in the effect1 field of the effect structure. */
-/** \brief  Upper nibble of effect1 convenience macro.
-
-    This macro is for setting the upper nibble of the effect1 field of the
-    purupuru_effect_t. This value works with the lower nibble of the effect2
-    field to increase the intensity of the rumble effect. Valid values are 0-7.
-
-    \see    PURUPURU_EFFECT2_LINTENSITY
-*/
-#define PURUPURU_EFFECT1_INTENSITY(x)  (x << 4)
-
-/* OR these in with your effect1 value, if you need them. PULSE
-   should probably be used with the PULSE in effect2, as well.
-   POWERSAVE will probably make your purupuru ignore that command. */
-/** \brief  Give a pulse effect to the rumble.
-
-    This probably should be used with PURUPURU_EFFECT2_PULSE as well.
-
-    \see    PURUPURU_EFFECT2_PULSE
-*/
-#define PURUPURU_EFFECT1_PULSE         (8 << 4)
-
-/** \brief  Ignore this command.
-
-    Most jump packs will ignore commands with this set in effect1, apparently.
-*/
-#define PURUPURU_EFFECT1_POWERSAVE     (15)
-
-/* Special Effects and motor select. The normal purupuru packs will
-   only have one motor. Selecting MOTOR2 for these is probably not
-   a good idea. The PULSE setting here supposably creates a sharp
-   pulse effect, when ORed with the special field. */
-/** \brief  Select motor #1.
-
-    Most jump packs only have one motor, but on things that do have more than
-    one motor (like PS1->Dreamcast controller adapters that support rumble),
-    this selects the first motor.
-*/
-#define PURUPURU_SPECIAL_MOTOR1        (1 << 4)
-
-/** \brief  Select motor #2.
-
-    Most jump packs only have one motor, but on things that do have more than
-    one motor (like PS1->Dreamcast controller adapters that support rumble),
-    this selects the second motor.
-*/
-#define PURUPURU_SPECIAL_MOTOR2        (1 << 7)
-
-/** \brief  Yet another pulse effect.
-
-    This supposedly creates a sharp pulse effect.
-*/
-#define PURUPURU_SPECIAL_PULSE         (1)
+static const uint8_t PURUPURU_EFFECT2_DECAY     __depr("Please see purupuru_effect_t for modern equivalent.") = (8 << 4);
+static const uint8_t PURUPURU_EFFECT2_PULSE     __depr("Please see purupuru_effect_t for modern equivalent.") = (8);
+static const uint8_t PURUPURU_EFFECT1_PULSE     __depr("Please see purupuru_effect_t for modern equivalent.") = (8 << 4);
+static const uint8_t PURUPURU_EFFECT1_POWERSAVE __depr("Please see purupuru_effect_t for modern equivalent.") = (15);
+static const uint8_t PURUPURU_SPECIAL_MOTOR1    __depr("Please see purupuru_effect_t for modern equivalent.") = (1 << 4);
+static const uint8_t PURUPURU_SPECIAL_MOTOR2    __depr("Please see purupuru_effect_t for modern equivalent.") = (1 << 7);
+static const uint8_t PURUPURU_SPECIAL_PULSE     __depr("Please see purupuru_effect_t for modern equivalent.") = (1);
 
 /** \brief  Send an effect to a jump pack.
 
@@ -167,21 +114,22 @@ typedef struct purupuru_effect  {
     \param  effect          The effect to send.
     \retval MAPLE_EOK       On success.
     \retval MAPLE_EAGAIN    If the command couldn't be sent. Try again later.
+    \retval MAPLE_EINVALID  The command is not being sent due to invalid input.
 */
-int purupuru_rumble(maple_device_t *dev, purupuru_effect_t *effect);
+int purupuru_rumble(maple_device_t *dev, const purupuru_effect_t *effect);
 
 /** \brief  Send a raw effect to a jump pack.
 
     This function sends an effect to a jump pack to be executed. This is for if
-    you (for some reason) don't want to use purupuru_effect_t to build the
-    effect up.
+    you want to bypass KOS-based error checking. This is not recommended except
+    for testing purposes.
 
     \param  dev             The device to send the command to.
     \param  effect          The effect to send.
     \retval MAPLE_EOK       On success.
     \retval MAPLE_EAGAIN    If the command couldn't be sent. Try again later.
 */
-int purupuru_rumble_raw(maple_device_t *dev, uint32 effect);
+int purupuru_rumble_raw(maple_device_t *dev, uint32_t effect);
 
 /* \cond */
 /* Init / Shutdown */

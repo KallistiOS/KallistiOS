@@ -8,6 +8,11 @@
 #include <errno.h>
 
 int mtx_trylock(mtx_t *mtx) {
+    if(mtx->type > MUTEX_TYPE_RECURSIVE) {
+        errno = EINVAL;
+        return -1;
+    }
+
     if(mutex_trylock(mtx)) {
         if(errno == EBUSY)
             return thrd_busy;

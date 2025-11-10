@@ -1,6 +1,11 @@
 # KallistiOS environment variable settings. These are the shared pieces
 # for the Dreamcast(tm) platform.
 
+# Add the default subarch (DC) if one hasn't already been set.
+if [ -z "${KOS_SUBARCH}" ] ; then
+    export KOS_SUBARCH="pristine"
+fi
+
 # Add the default external DC tools path if it isn't already set.
 if [ -z "${DC_TOOLS_BASE}" ] ; then
     export DC_TOOLS_BASE="${KOS_CC_BASE}/../bin"
@@ -24,7 +29,7 @@ if [ -z "${KOS_SH4_PRECISION}" ] || [ "${KOS_SH4_PRECISION}" = "-m4-single" ]; t
     fi
 fi
 
-export KOS_CFLAGS="${KOS_CFLAGS} ${KOS_SH4_PRECISION} -ml -mfsrra -mfsca -ffunction-sections -fdata-sections -matomic-model=soft-imask -ftls-model=local-exec"
+export KOS_CFLAGS="${KOS_CFLAGS} ${KOS_SH4_PRECISION} -ml -mfsrra -mfsca -ffunction-sections -fdata-sections -matomic-model=soft-gusa -ftls-model=local-exec"
 export KOS_AFLAGS="${KOS_AFLAGS} -little"
 export KOS_LDFLAGS="${KOS_LDFLAGS} ${KOS_SH4_PRECISION} -ml -Wl,--gc-sections"
 export KOS_LD_SCRIPT="-T${KOS_BASE}/utils/ldscripts/shlelf.xc"

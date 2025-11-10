@@ -36,10 +36,10 @@ if(NOT DEFINED ENV{KOS_BASE}
     message(FATAL_ERROR "KallistiOS environment variables not found")
 endif()
 
-file(REAL_PATH $ENV{KOS_BASE} KOS_BASE EXPAND_TILDE)
-file(REAL_PATH $ENV{KOS_CC_BASE} KOS_CC_BASE EXPAND_TILDE)
-file(REAL_PATH $ENV{KOS_PORTS} KOS_PORTS EXPAND_TILDE)
-file(REAL_PATH $ENV{DC_TOOLS_BASE} DC_TOOLS_BASE EXPAND_TILDE)
+file(REAL_PATH $ENV{KOS_BASE} KOS_BASE)
+file(REAL_PATH $ENV{KOS_CC_BASE} KOS_CC_BASE)
+file(REAL_PATH $ENV{KOS_PORTS} KOS_PORTS)
+file(REAL_PATH $ENV{DC_TOOLS_BASE} DC_TOOLS_BASE)
 set(KOS_ARCH $ENV{KOS_ARCH})
 set(KOS_SUBARCH $ENV{KOS_SUBARCH})
 set(KOS_ADDONS ${KOS_BASE}/addons)
@@ -57,6 +57,14 @@ set(CMAKE_C_COMPILER      ${KOS_BASE}/utils/build_wrappers/kos-cc)
 set(CMAKE_CXX_COMPILER    ${KOS_BASE}/utils/build_wrappers/kos-c++)
 set(CMAKE_OBJC_COMPILER   ${KOS_BASE}/utils/build_wrappers/kos-cc)
 set(CMAKE_OBJCXX_COMPILER ${KOS_BASE}/utils/build_wrappers/kos-c++)
+
+set(CMAKE_ASM_COMPILER_AR ${KOS_BASE}/utils/build_wrappers/kos-ar)
+set(CMAKE_C_COMPILER_AR ${KOS_BASE}/utils/build_wrappers/kos-ar)
+set(CMAKE_CXX_COMPILER_AR ${KOS_BASE}/utils/build_wrappers/kos-ar)
+
+set(CMAKE_ASM_COMPILER_RANLIB ${KOS_BASE}/utils/build_wrappers/kos-ranlib)
+set(CMAKE_C_COMPILER_RANLIB ${KOS_BASE}/utils/build_wrappers/kos-ranlib)
+set(CMAKE_CXX_COMPILER_RANLIB ${KOS_BASE}/utils/build_wrappers/kos-ranlib)
 
 set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 
@@ -77,6 +85,11 @@ add_compile_options(
 
 set(CMAKE_ASM_FLAGS "")
 set(CMAKE_ASM_FLAGS_RELEASE "")
+
+# Disable LTO for Debug build
+set(CMAKE_TRY_COMPILE_CONFIGURATION DEBUG)
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_DEBUG OFF)
+set(CMAKE_EXE_LINKER_FLAGS_DEBUG -fno-lto)
 
 # Default CMake installations to install to kos-addons
 set(CMAKE_INSTALL_BINDIR     ${DC_TOOLS_BASE})

@@ -25,6 +25,7 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
+#include <stdbool.h>
 #include <kos/fs.h>
 #include <kos/dbgio.h>
 
@@ -56,76 +57,9 @@ extern dbgio_handler_t dbgio_dcload;
 extern int dcload_type;
 
 /* \cond */
-/* Available dcload console commands */
 
-#define DCLOAD_READ         0
-#define DCLOAD_WRITE        1
-#define DCLOAD_OPEN         2
-#define DCLOAD_CLOSE        3
-#define DCLOAD_CREAT        4
-#define DCLOAD_LINK         5
-#define DCLOAD_UNLINK       6
-#define DCLOAD_CHDIR        7
-#define DCLOAD_CHMOD        8
-#define DCLOAD_LSEEK        9
-#define DCLOAD_FSTAT        10
-#define DCLOAD_TIME         11
-#define DCLOAD_STAT         12
-#define DCLOAD_UTIME        13
-#define DCLOAD_ASSIGNWRKMEM 14
-#define DCLOAD_EXIT         15
-#define DCLOAD_OPENDIR      16
-#define DCLOAD_CLOSEDIR     17
-#define DCLOAD_READDIR      18
-#define DCLOAD_GETHOSTINFO  19
-#define DCLOAD_GDBPACKET    20
-#define DCLOAD_REWINDDIR    21
-
-/* dcload syscall function */
-
-int dcloadsyscall(unsigned int syscall, ...);
-
-/* dcload dirent */
-
-struct dcload_dirent {
-    long            d_ino;  /* inode number */
-    off_t           d_off;  /* offset to the next dirent */
-    unsigned short  d_reclen;/* length of this record */
-    unsigned char   d_type;         /* type of file */
-    char            d_name[256];    /* filename */
-};
-
-typedef struct dcload_dirent dcload_dirent_t;
-
-/* dcload stat */
-
-struct  dcload_stat {
-    unsigned short st_dev;
-    unsigned short st_ino;
-    int st_mode;
-    unsigned short st_nlink;
-    unsigned short st_uid;
-    unsigned short st_gid;
-    unsigned short st_rdev;
-    long st_size;
-    long atime;
-    long st_spare1;
-    long mtime;
-    long st_spare2;
-    long ctime;
-    long st_spare3;
-    long st_blksize;
-    long st_blocks;
-    long st_spare4[2];
-};
-
-typedef struct dcload_stat dcload_stat_t;
-
-/* Printk replacement */
-void dcload_printk(const char *str);
-
-/* GDB tunnel */
-size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_t out_size);
+/* Tests for the dcload syscall being present. */
+int syscall_dcload_detected(void);
 
 /* Init func */
 void fs_dcload_init_console(void);

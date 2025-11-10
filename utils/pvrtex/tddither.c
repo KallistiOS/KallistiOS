@@ -3,10 +3,10 @@
 #include <assert.h>
 #include <string.h>
 #include <math.h>
-#include "./pixel.h"
-#include "./pvr_texture_encoder.h"
-#include "./pvr_texture.h"
-#include "./tddither.h"
+#include "pixel.h"
+#include "pvr_texture_encoder.h"
+#include "pvr_texture.h"
+#include "tddither.h"
 
 
 
@@ -21,9 +21,9 @@ void pteDNearestARGB4444(const float *sample, int sample_size, const pxlABGR8888
 }
 void pteDNearestARGB1555(const float *sample, int sample_size, const pxlABGR8888 *palette, size_t palette_size, float *nearest_dst) {
 	(void)palette; (void)sample_size;
-	v4f t = v4Mul(v4Get(sample), v4Set(32,32,32,1));  // Scale by bit depth
-	t = v4Float(v4Int(v4AddS(t, 0.5)));	 // Round to nearest
-	t = v4Div(t, v4Set(32,32,32,1));	 // Unscale by bit depth
+	v4f t = v4Mul(v4Get(sample), v4Set(32,32,32,1));	//Scale by bit depth
+	t = v4Float(v4Int(v4AddS(t, 0.5)));	//Round to nearest
+	t = v4Div(t, v4Set(32,32,32,1));	//Unscale by bit depth
 
 	nearest_dst[0] = t.x;
 	nearest_dst[1] = t.y;
@@ -156,7 +156,7 @@ void pteDither(const unsigned char *src, unsigned w, unsigned h, unsigned channe
 					err[i] = CLAMP(0, cur[i] - near[i], 1);
 					cur[i] = near[i];
 				}
-			
+
 				/*
 					 .0
 					123
@@ -166,7 +166,7 @@ void pteDither(const unsigned char *src, unsigned w, unsigned h, unsigned channe
 			for(int i = 0; i < channels; i++) \
 				cur[(w*(yo)+(xo)) * channels + i] += err[i] * (weight); \
 		} while(0)
-		
+
 			if (1) {
 				diffuse(1, 0, 7/16. * dither_amt);
 				diffuse(-1, 1, 3/16. * dither_amt);
@@ -175,20 +175,20 @@ void pteDither(const unsigned char *src, unsigned w, unsigned h, unsigned channe
 			} else {
 				diffuse( 1, 0, 8/42. * dither_amt);
 				diffuse( 2, 0, 4/42. * dither_amt);
-			
+
 				diffuse(-2, 1, 2/42. * dither_amt);
 				diffuse(-1, 1, 4/42. * dither_amt);
 				diffuse( 0, 1, 8/42. * dither_amt);
 				diffuse( 1, 1, 4/42. * dither_amt);
 				diffuse( 2, 1, 2/42. * dither_amt);
-			
+
 				diffuse(-2, 2, 1/42. * dither_amt);
 				diffuse(-1, 2, 2/42. * dither_amt);
 				diffuse( 0, 2, 4/42. * dither_amt);
 				diffuse( 1, 2, 2/42. * dither_amt);
 				diffuse( 2, 2, 1/42. * dither_amt);
 			}
-			
+
 			}
 		}
 	}
@@ -205,16 +205,16 @@ void pteDither(const unsigned char *src, unsigned w, unsigned h, unsigned channe
 	}
 
 	switch(dst_pixel_format) {
-	case PTE_ARGB4444: pteConvertFPtoARGB4444(imgf, w, h, channels, palette, palette_size, dst); break;
-	case PTE_ARGB1555: pteConvertFPtoARGB1555(imgf, w, h, channels, palette, palette_size, dst); break;
-	case PTE_RGB565: pteConvertFPtoRGB565(imgf, w, h, channels, palette, palette_size, dst); break;
+	case PT_ARGB4444: pteConvertFPtoARGB4444(imgf, w, h, channels, palette, palette_size, dst); break;
+	case PT_ARGB1555: pteConvertFPtoARGB1555(imgf, w, h, channels, palette, palette_size, dst); break;
+	case PT_RGB565: pteConvertFPtoRGB565(imgf, w, h, channels, palette, palette_size, dst); break;
 	case PTE_ABGR8888: pteConvertFPtoABGR8888(imgf, w, h, channels, palette, palette_size, dst); break;
 	}
 
 	free(imgf);
 }
 
-dithFindNearest pteGetFindNearest(ptePixelFormat format) {
+dithFindNearest pteGetFindNearest(ptPixelFormat format) {
 	static const dithFindNearest tbl[] = {
 		&pteDNearestARGB1555,
 		&pteDNearestRGB565,
@@ -223,9 +223,11 @@ dithFindNearest pteGetFindNearest(ptePixelFormat format) {
 		&pteDNearestNorm,
 		&pteDNearest8BPP,
 		&pteDNearest8BPP,
+		NULL,
+		&pteDNearestNorm,
 	};
 
-	assert(format >= PTE_ARGB1555 && format <= PTE_PALETTE_8B && format != PTE_YUV);
+	assert(format >= PT_ARGB1555 && format <= PT_NORMAL_TEXCONV && format != PT_YUV);
 
 	return tbl[format];
 }

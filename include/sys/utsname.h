@@ -19,7 +19,7 @@
 #ifndef __SYS_UTSNAME_H
 #define __SYS_UTSNAME_H
 
-#include <kos/cdefs.h>
+#include <sys/cdefs.h>
 
 __BEGIN_DECLS
 

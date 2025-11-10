@@ -19,7 +19,7 @@
 #ifndef __SYS_DIRENT_H
 #define __SYS_DIRENT_H
 
-#include <kos/cdefs.h>
+#include <sys/cdefs.h>
 
 __BEGIN_DECLS
 

@@ -34,6 +34,12 @@ __BEGIN_DECLS
     @{
 */
 
+/** \brief  Default serial bitrate. */
+#define DEFAULT_SERIAL_BAUD 115200
+
+/** \brief  Default serial FIFO behavior. */
+#define DEFAULT_SERIAL_FIFO 1
+
 /** \brief  Set serial parameters.
     \param  baud            The bitrate to set.
     \param  fifo            1 to enable FIFO mode.

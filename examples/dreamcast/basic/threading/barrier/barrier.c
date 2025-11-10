@@ -17,7 +17,7 @@
 
 #include <kos/thread.h>
 #include <kos/barrier.h>
-#include <arch/wdt.h>
+#include <dc/wdt.h>
 
 #include <stdlib.h>
 #include <stdint.h>

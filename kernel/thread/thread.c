@@ -13,7 +13,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <reent.h>
 #include <errno.h>
 #include <stdalign.h>
@@ -29,7 +28,7 @@
 #include <arch/arch.h>
 #include <arch/irq.h>
 #include <arch/stack.h>
-#include <arch/timer.h>
+#include <kos/timer.h>
 #include <arch/tls_static.h>
 
 /*
@@ -569,14 +568,14 @@ int thd_set_prio(kthread_t *thd, prio_t prio) {
     return 0;
 }
 
-prio_t thd_get_prio(kthread_t *thd) {
+prio_t thd_get_prio(const kthread_t *thd) {
     if(!thd)
         thd = thd_current;
 
     return thd->prio;
 }
 
-tid_t thd_get_id(kthread_t *thd) {
+tid_t thd_get_id(const kthread_t *thd) {
     if(!thd)
         thd = thd_current;
 
@@ -750,12 +749,7 @@ static void thd_timer_hnd(irq_context_t *context) {
    threads. */
 void thd_sleep(unsigned int ms) {
     /* This should never happen. This should, perhaps, assert. */
-    if(thd_mode == THD_MODE_NONE) {
-        dbglog(DBG_WARNING, "thd_sleep called when threading not "
-               "initialized.\n");
-        timer_spin_sleep(ms);
-        return;
-    }
+    assert(thd_mode != THD_MODE_NONE);
 
     /* A timeout of zero is the same as thd_pass() and passing zero
        down to genwait_wait() causes bad juju. */
@@ -879,7 +873,7 @@ int thd_detach(kthread_t *thd) {
 
 /*****************************************************************************/
 /* Retrieve / set thread label */
-const char *thd_get_label(kthread_t *thd) {
+const char *thd_get_label(const kthread_t *thd) {
     if(!thd)
         thd = thd_current;
 
@@ -899,7 +893,7 @@ kthread_t *thd_get_current(void) {
 }
 
 /* Retrieve / set thread pwd */
-const char *thd_get_pwd(kthread_t *thd) {
+const char *thd_get_pwd(const kthread_t *thd) {
     if(!thd)
         thd = thd_current;
 

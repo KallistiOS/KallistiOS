@@ -19,7 +19,7 @@ typedef struct {
 #define BAD_PIXEL() assert((0 && "Bad pixel format"))
 
 static void AssertPixelFormat(ptPixelFormat fmt) {
-	assert((fmt >= PT_ARGB1555 && fmt <= PT_PALETTE_8B) || fmt == PT_YUV_TWID);
+	assert(fmt >= PT_ARGB1555 && fmt <= PT_NORMAL_TEXCONV);
 }
 
 static inline Morton2D Morton2DInit(unsigned int x_bits, unsigned int y_bits) {
@@ -48,6 +48,7 @@ float BytesPerPixel(ptPixelFormat format) {
 	case PT_ARGB4444:
 	case PT_YUV:
 	case PT_NORMAL:
+	case PT_NORMAL_TEXCONV:
 	case PT_YUV_TWID:
 		return 2;
 	case PT_PALETTE_8B:
@@ -58,6 +59,7 @@ float BytesPerPixel(ptPixelFormat format) {
 		BAD_PIXEL();
 	}
 }
+
 size_t UncompressedMipSize(unsigned w, unsigned h, ptPixelFormat format) {
 	switch(format) {
 	case PT_ARGB1555:
@@ -66,6 +68,7 @@ size_t UncompressedMipSize(unsigned w, unsigned h, ptPixelFormat format) {
 	case PT_YUV:
 	case PT_YUV_TWID:
 	case PT_NORMAL:
+	case PT_NORMAL_TEXCONV:
 		return w*h*2;
 	case PT_PALETTE_8B:
 		return w*h;
@@ -83,6 +86,7 @@ unsigned VectorArea(ptPixelFormat format) {
 	case PT_YUV:
 	case PT_YUV_TWID:
 	case PT_NORMAL:
+	case PT_NORMAL_TEXCONV:
 		return 4;
 	case PT_PALETTE_8B:
 		return 8;
@@ -109,7 +113,7 @@ size_t CalcTextureSize(int u, int v, ptPixelFormat format, int mipmap, int vq, i
 	if (mipmap)
 		texsize = texsize *4/3 + 3;
 
-	if ((unsigned)format <= PT_NORMAL || format == PT_YUV_TWID)
+	if ((unsigned)format <= PT_NORMAL || format == PT_YUV_TWID || format == PT_NORMAL_TEXCONV)
 		texsize *= 2;
 	else if (format == PT_PALETTE_4B)
 		texsize /= 2;
@@ -156,6 +160,7 @@ size_t MipMapOffset(ptPixelFormat format, int vq, int level) {
 	case PT_YUV:
 	case PT_YUV_TWID:
 	case PT_NORMAL:
+	case PT_NORMAL_TEXCONV:
 		return ret;
 	case PT_PALETTE_4B:
 		return ret/4;
@@ -291,17 +296,26 @@ void ConvertFromFormatToBGRA8888(const void *src, int pixel_format, pxlABGR8888 
 			for(size_t i = 0; i < cnt; i++)
 				dst[i] = pxlConvertARGB1555toABGR8888(psrc[i]);
 		} break;
-		case PT_NORMAL: {
+		case PT_NORMAL:
+		case PT_NORMAL_TEXCONV: {
 			const uint16_t *psrc = src;
 			for(size_t i = 0; i < cnt; i++) {
 				dst[i] = pxlSphericaltoABGR8888(psrc[i]);
-			
+
 			}
 		} break;
+	/*
+		case PT_NORMAL_TEXCONV: {
+			const uint16_t *psrc = src;
+			for(size_t i = 0; i < cnt; i++) {
+				dst[i] = pxlSphericaltoABGR8888TC(psrc[i]);
+			}
+		} break;
+	*/
 		case PT_YUV_TWID: {
 			//YUV pixels always come in pairs
 			assert((cnt % 2) == 0);
-		
+
 			const uint16_t *psrc = src;
 			for(size_t i = 0; i < cnt; i += 4) {
 				pxlABGR8888 dec[4];
@@ -316,7 +330,7 @@ void ConvertFromFormatToBGRA8888(const void *src, int pixel_format, pxlABGR8888 
 		case PT_YUV: {
 			//YUV pixels always come in pairs
 			assert((cnt % 2) == 0);
-		
+
 			const uint16_t *psrc = src;
 			for(size_t i = 0; i < cnt; i += 2) {
 				ConvFromYUV(psrc[i+0], psrc[i+1], dst + i);
@@ -327,7 +341,7 @@ void ConvertFromFormatToBGRA8888(const void *src, int pixel_format, pxlABGR8888 
 			const uint8_t *psrc = src;
 			for(size_t i = 0; i < cnt; i++) {
 				dst[i] = pal[psrc[i]];
-			
+
 			}
 		} break;
 		case PT_PALETTE_4B: {
@@ -338,7 +352,7 @@ void ConvertFromFormatToBGRA8888(const void *src, int pixel_format, pxlABGR8888 
 			for(size_t i = 0; i < cnt/2; i++) {
 				dst[i*2+0] = pal[psrc[i] & 0xf];
 				dst[i*2+1] = pal[psrc[i] >> 4];
-			
+
 			}
 		} break;
 		default:
@@ -351,6 +365,7 @@ void ptConvertToTargetFormat(const pxlABGR8888 *src, unsigned w, unsigned h, pxl
 	assert(src);
 	assert(dst);
 	size_t cnt = w*h;
+
 	switch(pixel_format) {
 	case PT_RGB565: {
 		pxlRGB565 *pdst = dst;
@@ -371,13 +386,20 @@ void ptConvertToTargetFormat(const pxlABGR8888 *src, unsigned w, unsigned h, pxl
 		uint16_t *pdst = dst;
 		for(size_t i = 0; i < cnt; i++) {
 			pdst[i] = pxlRGBtoSpherical(src[i].r, src[i].g, src[i].b);
-		
+
+		}
+	} break;
+	case PT_NORMAL_TEXCONV: {
+		uint16_t *pdst = dst;
+		for(size_t i = 0; i < cnt; i++) {
+			pdst[i] = pxlRGBtoSphericalTC(src[i].r, src[i].g, src[i].b);
+
 		}
 	} break;
 	case PT_YUV: {
 		//Untwiddled YUV
 		uint16_t *pdst = dst;
-	
+
 		//YUV always encodes pairs
 		assert((cnt % 2) == 0);
 		for(size_t i = 0; i < cnt; i+=2) {
@@ -389,7 +411,7 @@ void ptConvertToTargetFormat(const pxlABGR8888 *src, unsigned w, unsigned h, pxl
 	case PT_YUV_TWID: {
 		//Twiddled YUV
 		uint16_t *pdst = dst;
-	
+
 		//YUV always encodes pairs
 		assert((cnt % 2) == 0);
 		for(size_t i = 0; i < cnt; i+=4) {
@@ -408,7 +430,7 @@ void ptConvertToTargetFormat(const pxlABGR8888 *src, unsigned w, unsigned h, pxl
 		uint8_t *pdst = dst;
 		for(size_t i = 0; i < cnt; i++) {
 			pdst[i] = pxlFindClosestColor(src[i], pal, palsize);
-		
+
 		}
 	} break;
 	case PT_PALETTE_4B: {
@@ -418,7 +440,7 @@ void ptConvertToTargetFormat(const pxlABGR8888 *src, unsigned w, unsigned h, pxl
 		uint8_t *pdst = dst;
 		for(size_t i = 0; i < cnt/2; i++) {
 			pdst[i] = (pxlFindClosestColor(src[i*2+1], pal, palsize) << 4) | pxlFindClosestColor(src[i*2], pal, palsize);
-		
+
 		}
 	} break;
 	default:
@@ -468,9 +490,12 @@ const char * ptGetPixelFormatString(unsigned format) {
 	const char *name[] = {
 		"ARGB1555", "RGB565", "ARGB4444", "YUV422", "NORMAL", "PAL4BPP", "PAL8BPP", "INVALID"
 	};
-	if (format > PT_YUV_TWID)
+	if (format == PT_YUV_TWID)
 		format = PT_YUV;
-	if (format > 7)
-		format = 7;
+	if (format == PT_NORMAL_TEXCONV)
+		format = PT_NORMAL;
+	if (format > ARR_SIZE(name))
+		format = ARR_SIZE(name)-1;
 	return name[format];
 }
+

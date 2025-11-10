@@ -31,22 +31,11 @@ __BEGIN_DECLS
     @{
 */
 
-/* Sigh... C99 treats inline stuff a lot differently than traditional GCC did,
-   so we need to take care of that... */
-#if __STDC_VERSION__ >= 199901L
-#define __FMINLINE static inline
-#elif __GNUC__
-#define __FMINLINE extern inline
-#else
-/* Uhm... I guess this is the best we can do? */
-#define __FMINLINE static
-#endif
-
 /**
     \brief  Floating point inner product.
     \return v1 dot v2 (inner product)
 */
-__FMINLINE float __pure fipr(float x, float y, float z, float w,
+static inline float __pure fipr(float x, float y, float z, float w,
                       float a, float b, float c, float d) {
     return __fipr(x, y, z, w, a, b, c, d);
 }
@@ -55,7 +44,7 @@ __FMINLINE float __pure fipr(float x, float y, float z, float w,
     \brief  Floating point inner product w/self (square of vector magnitude)
     \return v1 dot v1 (square of magnitude)
 */
-__FMINLINE float __pure fipr_magnitude_sqr(float x, float y, float z, float w) {
+static inline float __pure fipr_magnitude_sqr(float x, float y, float z, float w) {
     return __fipr_magnitude_sqr(x, y, z, w);
 }
 
@@ -64,7 +53,7 @@ __FMINLINE float __pure fipr_magnitude_sqr(float x, float y, float z, float w) {
     \param r a floating point number between 0 and 2*PI
     \return sin(r), where r is [0..2*PI]
 */
-__FMINLINE float __pure fsin(float r) {
+static inline float __pure fsin(float r) {
     return __fsin(r);
 }
 
@@ -73,7 +62,7 @@ __FMINLINE float __pure fsin(float r) {
     \param r a floating point number between 0 and 2*PI
     \return cos(r), where r is [0..2*PI]
 */
-__FMINLINE __pure float fcos(float r) {
+static inline __pure float fcos(float r) {
     return __fcos(r);
 }
 
@@ -82,7 +71,7 @@ __FMINLINE __pure float fcos(float r) {
     \param r a floating point number between 0 and 2*PI
     \return tan(r), where r is [0..2*PI]
 */
-__FMINLINE __pure float ftan(float r) {
+static inline __pure float ftan(float r) {
     return __ftan(r);
 }
 
@@ -91,7 +80,7 @@ __FMINLINE __pure float ftan(float r) {
     \param d an integer between 0 and 65535
     \return sin(d), where d is [0..65535]
 */
-__FMINLINE __pure float fisin(int d) {
+static inline __pure float fisin(int d) {
     return __fisin(d);
 }
 
@@ -100,7 +89,7 @@ __FMINLINE __pure float fisin(int d) {
     \param d an integer between 0 and 65535
     \return cos(d), where d is [0..65535]
 */
-__FMINLINE __pure float ficos(int d) {
+static inline __pure float ficos(int d) {
     return __ficos(d);
 }
 
@@ -109,7 +98,7 @@ __FMINLINE __pure float ficos(int d) {
     \param d an integer between 0 and 65535
     \return tan(d), where d is [0..65535]
 */
-__FMINLINE float __pure fitan(int d) {
+static inline float __pure fitan(int d) {
     return __fitan(d);
 }
 
@@ -117,14 +106,14 @@ __FMINLINE float __pure fitan(int d) {
     \brief Floating point square root
     \return sqrt(f)
 */
-__FMINLINE float __pure fsqrt(float f) {
+static inline float __pure fsqrt(float f) {
     return __fsqrt(f);
 }
 
 /**
     \return 1.0f / sqrt(f)
 */
-__FMINLINE float __pure frsqrt(float f) {
+static inline float __pure frsqrt(float f) {
     return __frsqrt(f);
 }
 
@@ -137,7 +126,7 @@ __FMINLINE float __pure frsqrt(float f) {
     \param  s               Storage for the returned sine value.
     \param  c               Storage for the returned cosine value.
 */
-__FMINLINE void fsincos(float f, float *s, float *c) {
+static inline void fsincos(float f, float *s, float *c) {
     __fsincos(f, *s, *c);
 }
 
@@ -150,7 +139,7 @@ __FMINLINE void fsincos(float f, float *s, float *c) {
     \param  s               Storage for the returned sine value.
     \param  c               Storage for the returned cosine value.
 */
-__FMINLINE void fsincosr(float f, float *s, float *c) {
+static inline void fsincosr(float f, float *s, float *c) {
     __fsincosr(f, *s, *c);
 }
 
@@ -178,7 +167,7 @@ __FMINLINE void fsincosr(float f, float *s, float *c) {
     \note   Thanks to Fredrik Ehnbom for figuring this stuff out and posting it
             to the mailing list back in 2005!
 */
-__FMINLINE uint32_t __pure pvr_pack_bump(float h, float t, float q) {
+static inline uint32_t __pure pvr_pack_bump(float h, float t, float q) {
     uint8_t hp = (uint8_t)(h * 255.0f);
     uint8_t k1 = ~hp;
     uint8_t k2 = (uint8_t)(hp * __fsin(t));

@@ -4,16 +4,17 @@
 TARGET = pvrtex
 OBJS = elbg.o mem.o log.o bprint.o avstring.o lfg.o crc.o md5.o stb_image_impl.o \
 	stb_image_write_impl.o stb_image_resize_impl.o optparse_impl.o pvr_texture.o \
-	dither.o tddither.o vqcompress.o mycommon.o file_common.o \
-	file_pvr.o file_tex.o file_dctex.o pvr_texture_encoder.o main.o
+	dither.o tddither.o vqcompress.o mycommon.o palette.o file_common.o \
+	file_pvr.o file_tex.o file_dctex.o pvr_texture_encoder.o pvr_texture_decoder.o main.o
+
 
 CPPFLAGS = -Ilibavutil -I. -DCONFIG_MEMORY_POISONING=0 -DHAVE_FAST_UNALIGNED=0
 CXXFLAGS = -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare
 
-ifdef $(DEBUGBUILD)
-	CXXFLAGS += -Og -pg -g
+ifeq ($(DEBUGBUILD), true)
+    CXXFLAGS += -Og -pg -g
 else
-	CXXFLAGS += -O3
+    CXXFLAGS += -O3
 endif
 
 CFLAGS := $(CXXFLAGS) -Wno-pointer-sign -std=gnu17
@@ -48,3 +49,10 @@ info/options.h: README Makefile
 
 info/examples.h: README Makefile
 	$(call textSegment2Header,Usage Examples:,info,examples)
+
+bash-completion-dir: 
+	mkdir -p ~/.local/share/bash-completion/completions
+	
+
+install-bash-completion: bash-completion-dir
+	install pvrtex-completion.bash ~/.local/share/bash-completion/completions/pvrtex.bash

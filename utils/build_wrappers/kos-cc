@@ -6,7 +6,7 @@ USEMODE=0
 for i in $ARGS; do
 	case "${i}" in
 		-o)
-			if [ $USEMODE != 2 ]; then
+			if [ $USEMODE != 2 -a $USEMODE != 3 ]; then
 				# Link
 				USEMODE=1
 			fi
@@ -15,10 +15,15 @@ for i in $ARGS; do
 			# Partial compile
 			USEMODE=2
 		;;
-		conftest.c | conftest.cc | conftest.cpp)
+		conftest.c | conftest.cc | conftest.cpp | conftest__.c | conftest__.cc | conftest__.cpp)
 			# Used in autoconf... we really probably need
 			# a better way to do this. (scan for any .c?)
-			USEMODE=1
+			USEMODE=3
+		;;
+		-dumpversion)
+			# Used for our gcc version test which expects
+			# *just* the output and no verbose output.
+			USEMODE=4
 		;;
 		*)
 		;;
@@ -42,11 +47,24 @@ case $USEMODE in
 		exec ${KOS_CC} ${KOS_CFLAGS} ${KOS_LDFLAGS} "$@" ${KOS_LIBS}
 	;;
 
+	3)
+		# Link mode for autoconf: pass -fno-lto to speed up process
+		if [ x${KOS_WRAPPERS_VERBOSE} = x"1" ]; then
+			echo ${KOS_CC} ${KOS_CFLAGS} ${KOS_LDFLAGS} -fno-lto "$@" ${KOS_LIBS}
+		fi
+		exec ${KOS_CC} ${KOS_CFLAGS} ${KOS_LDFLAGS} -fno-lto "$@" ${KOS_LIBS}
+	;;
+
 	2)
 		# In non-link mode, just go ahead and run CC.
 		if [ x${KOS_WRAPPERS_VERBOSE} = x"1" ]; then
 			echo ${KOS_CC} ${KOS_CFLAGS} "$@"
 		fi
 		exec ${KOS_CC} ${KOS_CFLAGS} "$@"
+	;;
+
+	4)
+		# -dumpversion mode. Ignore verbose.
+		exec ${KOS_CC} "$@"
 	;;
 esac

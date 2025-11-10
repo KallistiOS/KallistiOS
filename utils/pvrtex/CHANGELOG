@@ -1,16 +1,35 @@
 Based on code by TapamN
 Source released here: https://dcemulation.org/phpBB/viewtopic.php?t=106138
 
-	Version 1.0
-		Initial release
+	Version 2.00
+		Mipmaps can now be generationed optionally only if
+		texture is already square, using "--mip-resize opt".
+
+		.PVR and .DT files can be used as input files.
+
+		Custom palettes can be specified with --palette option.
+
+		Option to generate texconv style normal maps.
+
+		Added flip-v option.
+
+		Texture size is printed when --verbose is enabled.
+
+		Speed optimizations.
 
 	Version 1.01
-		Program now displays error message when an error occurs loading a source image. Previously, the program would hit an assertion.
+		Program now displays error message when an error occurs
+		loading a source image. Previously, the program would
+		hit an assertion.
 
-		Fixed "--resize down" option. Previously, the program would round down sizes that were already a power-of-two, now sizes that are already POT are left unchanged.
+		Fixed "--resize down" option. Previously, the program
+		would round down sizes that were already a power-of-two,
+		now sizes that are already POT are left unchanged.
 
 		Included a missing FFmpeg header file.
 
+	Version 1.0
+		Initial release
 ---------------------------
 
 Adaption into KOS by Daniel Fairchild, 2024

@@ -23,7 +23,7 @@
 #include <kos/mutex.h>
 #include <kos/fs_socket.h>
 
-#include <arch/timer.h>
+#include <kos/timer.h>
 
 #include "net_dhcp.h"
 #include "net_thd.h"

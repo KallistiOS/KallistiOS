@@ -79,23 +79,14 @@ extern char _etext;
 static const
 unsigned HZ __depr("Please use the new THD_SCHED_HZ macro.") = THD_SCHED_HZ;
 
-/** \brief  Default video mode. */
-#define DEFAULT_VID_MODE    DM_640x480
-
-/** \brief  Default pixel mode for video. */
-#define DEFAULT_PIXEL_MODE  PM_RGB565
-
-/** \brief  Default serial bitrate. */
-#define DEFAULT_SERIAL_BAUD 115200
-
-/** \brief  Default serial FIFO behavior. */
-#define DEFAULT_SERIAL_FIFO 1
-
 /** \brief  Global symbol prefix in ELF files. */
 #define ELF_SYM_PREFIX      "_"
 
 /** \brief  Length of global symbol prefix in ELF files. */
 #define ELF_SYM_PREFIX_LEN  1
+
+/** \brief  Standard name for this arch. */
+#define ARCH_NAME           "Dreamcast"
 
 /** \brief  ELF class for this architecture. */
 #define ARCH_ELFCLASS       ELFCLASS32
@@ -222,16 +213,6 @@ void * mm_sbrk(unsigned long increment);
 #include <kos/init.h>
 
 /* Dreamcast-specific arch init things */
-/** \brief   Jump back to the bootloader.
-    \ingroup arch
-
-    You generally shouldn't use this function, but rather use arch_exit() or
-    exit() instead.
-
-    \note                   This function will never return!
-*/
-void arch_real_exit(int ret_code) __noreturn;
-
 /** \brief   Initialize bare-bones hardware systems.
     \ingroup arch
 
@@ -272,6 +253,7 @@ void hardware_shutdown(void);
 */
 #define HW_TYPE_RETAIL      0x0     /**< \brief A retail Dreamcast. */
 #define HW_TYPE_SET5        0x9     /**< \brief A Set5.xx devkit. */
+#define HW_TYPE_NAOMI       0xa     /**< \brief A NAOMI arcade. */
 /** @} */
 
 /** \defgroup hw_regions            Region Codes
@@ -309,49 +291,10 @@ void hardware_shutdown(void);
                             -- otherwise, you must retrieve the region from the
                             flashrom.
     \return                 The console type (one of the \ref hw_consoles).
+
+    \note    Do not use before hardware_sys_init() has been called.
 */
 int hardware_sys_mode(int *region);
-
-/* These three aught to be in their own header file at some point, but for now,
-   they'll stay here. */
-
-/** \brief   Retrieve the banner printed at program initialization.
-    \ingroup attribution
-
-    This function retrieves the banner string that is printed at initialization
-    time by the kernel. This contains the version of KOS in use and basic
-    information about the environment in which it was compiled.
-
-    \return                 A pointer to the banner string.
-*/
-const char * __pure2 kos_get_banner(void);
-
-/** \brief   Retrieve the license information for the compiled copy of KOS.
-    \ingroup attribution
-
-    This function retrieves a string containing the license terms that the
-    version of KOS in use is distributed under. This can be used to easily add
-    information to your program to be displayed at runtime.
-
-    \return                 A pointer to the license terms.
-*/
-const char * __pure2 kos_get_license(void);
-
-/** \brief   Retrieve a list of authors and the dates of their contributions.
-    \ingroup attribution
-
-    This function retrieves the copyright information for the version of KOS in
-    use. This function can be used to add such information to the credits of
-    programs using KOS to give the appropriate credit to those that have worked
-    on KOS.
-
-    \remark
-    Remember, you do need to give credit where credit is due, and this is an
-    easy way to do so. ;-)
-
-    \return                 A pointer to the authors' copyright information.
-*/
-const char *__pure2 kos_get_authors(void);
 
 /** \brief   Dreamcast specific sleep mode function.
     \ingroup arch
@@ -381,6 +324,15 @@ static inline bool arch_valid_address(uintptr_t ptr) {
 static inline bool arch_valid_text_address(uintptr_t ptr) {
     return ptr >= (uintptr_t)&_executable_start && ptr < (uintptr_t)&_etext;
 }
+
+/* The following functions are moved out of this header and are only provided for
+   compatibility reasons. Including any of them via this header is deprecated.
+*/
+
+/* Moved to <kos/banner.h> */
+const char * __pure2 kos_get_banner(void);
+const char * __pure2 kos_get_license(void);
+const char *__pure2 kos_get_authors(void);
 
 __END_DECLS
 

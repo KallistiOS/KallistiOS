@@ -73,6 +73,7 @@ int maple_driver_attach(maple_frame_t *det) {
     maple_devinfo_t     *devinfo;
     maple_device_t      *dev = maple_state.ports[det->dst_port].units[det->dst_unit];
     bool                attached = false;
+    bool                dev_allocated = false;
 
     /* Resolve some pointers first */
     resp = (maple_response_t *)det->recv_buf;
@@ -89,12 +90,11 @@ int maple_driver_attach(maple_frame_t *det) {
                 if(!dev)
                     return 1;
 
-                maple_state.ports[det->dst_port].units[det->dst_unit] = dev;
-
                 /* Add the basics for the initial version of the struct */
                 dev->port = det->dst_port;
                 dev->unit = det->dst_unit;
                 dev->frame.state = MAPLE_FRAME_VACANT;
+                dev_allocated = true;
             }
 
             memcpy(&dev->info, devinfo, sizeof(maple_devinfo_t));
@@ -102,9 +102,15 @@ int maple_driver_attach(maple_frame_t *det) {
             /* Now lets allocate a new status buffer */
             if(i->status_size && !dev->status) {
                 dev->status = calloc(1, i->status_size);
-                if(!dev->status)
+                if(!dev->status) {
+                    if(dev_allocated)
+                        free(dev);
                     return 1;
+                }
             }
+
+            if(dev_allocated)
+                maple_state.ports[det->dst_port].units[det->dst_unit] = dev;
 
             if(!i->status_size || dev->status) {
                 /* Try to attach if we need to then break out. */

@@ -36,6 +36,7 @@
 #include <kos/dbglog.h>
 
 #include <dc/fs_dclsocket.h>
+#include <dc/dcload.h>
 
 #define DCLOAD_PORT 31313
 #define NAME "dcload-ip over KOS sockets"
@@ -170,6 +171,8 @@ static void dcls_recv_loop(void) {
     while(!escape) {
         /* If we're in an interrupt, this works differently.... */
         if(irq_inside_int()) {
+            if(!net_default_dev)
+                break;
             /* Since we can't count on an interrupt happening, handle it
                manually, and poll the default device... */
             net_default_dev->if_rx_poll(net_default_dev);
@@ -394,7 +397,7 @@ static size_t dcls_total(void *hnd) {
 }
 
 static dirent_t their_dir;
-static dcload_dirent_t our_dir;
+static dirent_t our_dir;
 
 static dirent_t *dcls_readdir(void *hnd) {
     uint32 fd = (uint32) hnd;
@@ -411,24 +414,24 @@ static dirent_t *dcls_readdir(void *hnd) {
     memcpy(cmd->id, "DC18", 4);
     cmd->value0 = htonl(fd);
     cmd->value1 = htonl((uint32)(&our_dir));
-    cmd->value2 = htonl(sizeof(dcload_dirent_t));
+    cmd->value2 = htonl(sizeof(dirent_t));
 
     send(dcls_socket, cmd, sizeof(command_3int_t), 0);
 
     dcls_recv_loop();
 
     if(retval) {
-        char fn[strlen(dcload_path) + strlen(our_dir.d_name) + 1];
+        char fn[strlen(dcload_path) + strlen(our_dir.name) + 1];
         command_t *cmd2 = (command_t *)pktbuf;
         dcload_stat_t filestat;
 
-        strcpy(their_dir.name, our_dir.d_name);
+        strcpy(their_dir.name, our_dir.name);
         their_dir.size = 0;
         their_dir.time = 0;
         their_dir.attr = 0;
 
         strcpy(fn, dcload_path);
-        strcat(fn, our_dir.d_name);
+        strcat(fn, our_dir.name);
 
         memcpy(cmd2->id, "DC13", 4);
         cmd2->address = htonl((uint32) &filestat);
@@ -511,7 +514,7 @@ static int dcls_unlink(vfs_handler_t *vfs, const char *fn) {
 static int dcls_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
                      int flag) {
     command_t *cmd = (command_t *)pktbuf;
-    dcload_stat_t filestat;
+    dcload_stat_t filestat = { 0 };
 
     (void)flag;
 
@@ -689,7 +692,7 @@ void fs_dclsocket_init_console(void) {
 uint32 _fs_dclsocket_get_ip(void) {
     uint32 ip, port;
 
-    return dcloadsyscall(DCLOAD_GETHOSTINFO, &ip, &port);
+    return dcload_gethostinfo(&ip, &port);
 }
 
 int fs_dclsocket_init(void) {
@@ -707,7 +710,7 @@ int fs_dclsocket_init(void) {
         return -1;
 
     /* Determine where dctool is running, and set up our variables for that */
-    dcloadsyscall(DCLOAD_GETHOSTINFO, &ip, &port);
+    dcload_gethostinfo(&ip, &port);
 
     /* Put dc-tool's info into our ARP cache */
     net_ipv4_parse_address(ip, ipaddr);

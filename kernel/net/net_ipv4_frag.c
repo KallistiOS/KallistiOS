@@ -13,7 +13,7 @@
 
 #include <kos/net.h>
 #include <kos/mutex.h>
-#include <arch/timer.h>
+#include <kos/timer.h>
 #include <arch/irq.h>
 
 #include "net_ipv4.h"

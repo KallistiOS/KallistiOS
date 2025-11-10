@@ -1,6 +1,9 @@
 # Sega Dreamcast Toolchains Maker (dc-chain)
 # This file is part of KallistiOS.
 
+__comma:=,
+__libgcc=$(foreach item,$(addprefix -,$(subst $(__comma), ,$(precision_modes))) "",$(shell $(toolchain_path)/bin/$(target)-gcc $(item) -print-file-name=libgcc.a))
+
 $(build_gcc_pass2): build = build-gcc-$(target)-$(gcc_ver)-pass2
 $(build_gcc_pass2): logdir
 	@echo "+++ Building $(src_dir) to $(build) (pass 2)..."
@@ -40,5 +43,7 @@ ifdef enable_d
   endif
 endif
 	$(MAKE) -C $(build) $(install_mode) DESTDIR=$(DESTDIR) $(to_log)
-	$(target)-gcc-ar d $(shell $(target)-gcc -print-file-name=libgcc.a) fake-kos.o
+	for each in $(__libgcc) ; do \
+		$(toolchain_path)/bin/$(target)-gcc-ar d $$each fake-kos.o $(to_log) ; \
+	done
 	$(clean_up)

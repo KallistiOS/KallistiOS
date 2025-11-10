@@ -15,7 +15,8 @@
 
 #include <kos/dbglog.h>
 
-#include <arch/timer.h>
+#include <kos/timer.h>
+#include <arch/irq.h>
 #include <dc/maple.h>
 #include <dc/maple/keyboard.h>
 

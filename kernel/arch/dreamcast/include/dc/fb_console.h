@@ -27,6 +27,7 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
+#include <arch/types.h>
 #include <kos/dbgio.h>
 
 /* \cond */
