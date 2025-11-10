@@ -52,6 +52,13 @@ __BEGIN_DECLS
             and for backward compatibility. */
 #define SND_STREAM_BUFFER_MAX       (64 << 10)
 
+/** \brief  Stream sample format */
+typedef enum snd_stream_format {
+    SND_STRMFMT_PCM16,  /**< \brief PCM 16-bit signed litte-endian */
+    SND_STRMFMT_PCM8,   /**< \brief PCM 8-bit signed */
+    SND_STRMFMT_ADPCM,  /**< \brief Yamaha 4-bit ADPCM */
+} snd_stream_format_t;
+
 /** \brief  Stream handle type.
 
     Each stream will be assigned a handle, which will be of this type. Further
@@ -242,16 +249,6 @@ void snd_stream_shutdown(void);
 */
 snd_stream_hnd_t snd_stream_alloc(snd_stream_callback_t cb, int bufsize);
 
-/** \brief  Reinitialize a stream.
-
-    This function reinitializes a stream, resetting its callback function.
-
-    \param  hnd             The stream handle to reinit.
-    \param  cb              The new get data callback for the stream.
-    \return                 hnd
-*/
-int snd_stream_reinit(snd_stream_hnd_t hnd, snd_stream_callback_t cb);
-
 /** \brief  Destroy a stream.
 
     This function destroys a previously created stream, freeing all memory
@@ -261,73 +258,52 @@ int snd_stream_reinit(snd_stream_hnd_t hnd, snd_stream_callback_t cb);
 */
 void snd_stream_destroy(snd_stream_hnd_t hnd);
 
-/** \brief  Enable queueing on a stream.
+/** \brief  Setup a stream.
 
-    This function enables queueing on the specified stream. This will make it so
-    that you must call snd_stream_queue_go() to actually start the stream, after
-    scheduling the start. This is useful for getting something ready but not
-    firing it right away.
+    This function prepares AICA channels for the given stream and prefills the buffers
+    as needed.
 
-    \param  hnd             The stream to enable queueing on.
+    Once configured, is possible to set starting volume or panning.
+
+    \note The stream will be stopped if it is active.
+
+    \param  hnd             The stream to setup.
+    \param  freq            The frequency of the sound (sample rate).
+    \param  st              1 if stereo, otherwise, 0 for mono.
+    \param  fmt             Sample format.
+
+    \retval 0               On success
+    \retval -1              No callback set, both are NULL
+    \retval -2              Stereo not supported for this stream
 */
-void snd_stream_queue_enable(snd_stream_hnd_t hnd);
+int snd_stream_setup(snd_stream_hnd_t hnd, uint32 freq, int st, snd_stream_format_t fmt);
 
-/** \brief  Disable queueing on a stream.
+/** \brief  Start a stream after begin configured.
 
-    This function disables queueing on the specified stream. This does not imply
-    that a previously queued start on the stream will be fired if queueing was
-    enabled before.
+    This function starts playback by instructing AICA to poll audio buffers.
 
-    \param  hnd             The stream to disable queueing on.
+    Does nothing if the stream is active or not configured.
+
+    \param  hnd             The stream to start
 */
-void snd_stream_queue_disable(snd_stream_hnd_t hnd);
+void snd_stream_start(snd_stream_hnd_t hnd);
 
-/** \brief  Start a stream after queueing the request.
+/** \brief  Start various streams in sync.
 
-    This function makes the stream start once a start request has been queued,
-    if queueing mode is enabled on the stream.
+    This function starts playback by instructing AICA to poll audio buffers of
+    each stream.
 
-    \param  hnd             The stream to start the queue on.
+    Does nothing on streams with active playback or not configured.
+
+    \param  hnd_arr         Array of streams, terminated with SND_STREAM_INVALID
 */
-void snd_stream_queue_go(snd_stream_hnd_t hnd);
-
-/** \brief  Start a 16-bit PCM stream.
-
-    This function starts processing the given stream, prefilling the buffers as
-    necessary. In queueing mode, this will not start playback.
-
-    \param  hnd             The stream to start.
-    \param  freq            The frequency of the sound.
-    \param  st              1 if the sound is stereo, 0 if mono.
-*/
-void snd_stream_start(snd_stream_hnd_t hnd, uint32 freq, int st);
-
-/** \brief  Start a 8-bit PCM stream.
-
-    This function starts processing the given stream, prefilling the buffers as
-    necessary. In queueing mode, this will not start playback.
-
-    \param  hnd             The stream to start.
-    \param  freq            The frequency of the sound.
-    \param  st              1 if the sound is stereo, 0 if mono.
-*/
-void snd_stream_start_pcm8(snd_stream_hnd_t hnd, uint32 freq, int st);
-
-/** \brief  Start a 4-bit ADPCM stream.
-
-    This function starts processing the given stream, prefilling the buffers as
-    necessary. In queueing mode, this will not start playback.
-
-    \param  hnd             The stream to start.
-    \param  freq            The frequency of the sound.
-    \param  st              1 if the sound is stereo, 0 if mono.
-*/
-void snd_stream_start_adpcm(snd_stream_hnd_t hnd, uint32 freq, int st);
+void snd_stream_start_streams(snd_stream_hnd_t *hnd_arr);
 
 /** \brief  Stop a stream.
 
-    This function stops a stream, stopping any sound playing from it. This will
-    happen immediately, regardless of whether queueing is enabled or not.
+    This function stops a stream, stopping any sound playing from it.
+
+    Does nothing if the stream is not configured.
 
     \param  hnd             The stream to stop.
 */
@@ -351,6 +327,8 @@ int snd_stream_poll(snd_stream_hnd_t hnd);
 
     This function sets the volume of the specified stream.
 
+    Does nothing if the stream is not configured.
+
     \param  hnd             The stream to set volume on.
     \param  vol             The volume to set. Valid values are 0-255.
 */
@@ -359,6 +337,8 @@ void snd_stream_volume(snd_stream_hnd_t hnd, int vol);
 /** \brief  Set the panning on the stream.
 
     This function sets the panning of the specified stream.
+
+    Does nothing if the stream is not configured.
 
     \param  hnd             The stream to set volume on.
     \param  left_pan        The left panning to set. Valid values are 0-255.

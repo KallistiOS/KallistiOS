@@ -80,6 +80,21 @@ typedef struct aica_channel {
     uint32      pad[5];     /**< \brief Padding */
 } aica_channel_t;
 
+/** \brief AICA command payload data for aica channel batch
+
+    This is the aica_cmd_t::cmd_data for AICA_CMD_BATCH.
+    Used to build a list of per AICA channel parameters to set.
+
+    To mark the end-of-list, use AICA_BATCH_PARAM_EOL as param.
+
+    \see audio_aica_cmd_batch
+*/
+typedef struct aica_batch_param {
+    uint32 param : 8;       /**< \brief Parameter to set */
+    uint32 channel : 8;     /**< \brief Target channel id (0-63) */
+    uint32 value;           /**< \brief Desired value */
+} aica_batch_param_t;
+
 /** \brief Macro for declaring an aica channel command
 
     Declare an aica_cmd_t big enough to hold an aica_channel_t
@@ -94,8 +109,35 @@ typedef struct aica_channel {
     aica_cmd_t  * CMDR = (aica_cmd_t *)T; \
     aica_channel_t  * CHANR = (aica_channel_t *)(CMDR->cmd_data);
 
-/** \brief Size of an AICA channel command in words */
+/** \brief Size of an AICA channel command in dwords */
 #define AICA_CMDSTR_CHANNEL_SIZE    ((sizeof(aica_cmd_t) + sizeof(aica_channel_t))/4)
+
+/** \brief Macro for declaring an aica batch command
+
+    Declare an aica_cmd_t big enough to hold an aica_batch_param_t list
+    using temp name T, aica_cmd_t name CMDR, and aica_batch_param_t name LST.
+
+    Fields aica_cmd_t::cmd and aica_cmd_t::size are set automatically.
+    End-of-list item is also added and set automatically.
+
+    \param T        Buffer name
+    \param CMDR     aica_cmd_t pointer name
+    \param LST      aica_batch_param_t array pointer name
+    \param CNT      Amount of channel parameters to set
+*/
+#define AICA_CMDSTR_BATCH(T, CMDR, LST, CNT) \
+    uint32   T[AICA_CMDSTR_BATCH_SIZE(CNT)]; \
+    aica_cmd_t  * CMDR = (aica_cmd_t *)T; \
+    CMDR->cmd = AICA_CMD_BATCH; \
+    CMDR->size = sizeof(T) / 4; \
+    aica_batch_param_t  * LST = (aica_batch_param_t *)(CMDR->cmd_data); \
+    LST[CNT] = (aica_batch_param_t){.param = AICA_BATCH_PARAM_EOL};
+
+/** \brief Size of an AICA batch command in dwords
+
+    \param CNT    Amount of channel parameters to set (without EOL item)
+*/
+#define AICA_CMDSTR_BATCH_SIZE(CNT) ((sizeof(aica_cmd_t)+(sizeof(aica_batch_param_t)*(CNT + 1)))/4)
 
 /** \defgroup audio_aica_cmd Commands
     \brief                   Values of commands for aica_cmd_t
@@ -105,6 +147,7 @@ typedef struct aica_channel {
 #define AICA_CMD_PING       0x00000001  /**< \brief Check for signs of life  */
 #define AICA_CMD_CHAN       0x00000002  /**< \brief Perform a wavetable action   */
 #define AICA_CMD_SYNC_CLOCK 0x00000003  /**< \brief Reset the millisecond clock  */
+#define AICA_CMD_BATCH      0x00000004  /**< \brief List of wavetable params to set  */
 /** @} */
 
 /** \defgroup audio_aica_resp Responses
@@ -138,15 +181,37 @@ typedef struct aica_channel {
 #define AICA_CH_START_SYNC  0x00200000 /**< \brief Set key-on for all selected channels */
 /** @} */
 
+/** \defgroup audio_aica_ch_stop  Channel Stop Values
+    \brief                        Stop values for AICA channels
+    @{
+*/
+#define AICA_CH_STOP_MASK  0x00400000 /**< \brief Mask for stop values */
+
+#define AICA_CH_STOP_ONE   0x00000000 /**< \brief Single channel key-off */
+#define AICA_CH_STOP_SYNC  0x00400000 /**< \brief Set key-off for all selected channels */
+/** @} */
+
 /** \defgroup audio_aica_ch_update Channel Update Values 
     \brief                         Update values for AICA channels
     @{
 */
 #define AICA_CH_UPDATE_MASK 0x000ff000     /**< \brief Mask for update values */
+#define AICA_CH_UPDATE_SYNC 0x00080000     /**< \brief Apply to all selected channels */
 
 #define AICA_CH_UPDATE_SET_FREQ 0x00001000 /**< \brief frequency */
-#define AICA_CH_UPDATE_SET_VOL  0x00002000 /**< \brief volume*/
+#define AICA_CH_UPDATE_SET_VOL  0x00002000 /**< \brief volume */
 #define AICA_CH_UPDATE_SET_PAN  0x00004000 /**< \brief panning */
+
+/** @} */
+
+/** \defgroup audio_aica_cmd_batch  Batch Update
+    \brief                          AICA channel parameters that can be set
+    @{
+*/
+#define AICA_BATCH_PARAM_EOL   0 /**< \brief end-of-list marker */
+#define AICA_BATCH_PARAM_FREQ  1 /**< \brief frequency */
+#define AICA_BATCH_PARAM_VOL   2 /**< \brief volume */
+#define AICA_BATCH_PARAM_PAN   3 /**< \brief panning */
 /** @} */
 
 /** \defgroup audio_aica_samples Sample Types 

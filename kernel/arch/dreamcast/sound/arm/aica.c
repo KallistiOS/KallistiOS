@@ -63,7 +63,7 @@ static inline uint8 calc_aica_vol(uint8 x) {
     return logs[x];
 }
 
-static inline int calc_aica_pan(int x) {
+static inline uint32 calc_aica_pan(uint32 x) {
     if(x == 0x80)
         return 0;
     else if(x < 0x80) {
@@ -72,6 +72,23 @@ static inline int calc_aica_pan(int x) {
     else {
         return (x - 0x80) >> 3;
     }
+}
+
+static inline uint32 calc_aica_freq(uint32 freq) {
+    uint32 freq_lo, freq_base = 5644800;
+    int freq_hi = 7;
+
+    /* Integer to floating point
+       (freq_hi is exponent, freq_lo is mantissa)
+       Formula is freq = 44100*2^freq_hi*(1+freq_lo/1024) */
+    while(freq < freq_base && freq_hi > -8) {
+        freq_base >>= 1;
+        freq_hi--;
+    }
+
+    freq_lo = (freq << 10) / freq_base;
+
+    return (freq_hi << 11) | (freq_lo & 1023);
 }
 
 /* Sets up a sound channel completely. This is generally good if you want
@@ -100,22 +117,13 @@ void aica_play(int ch, int delay) {
     uint32 pan      = chans[ch].pan;
     uint32 loopflag = chans[ch].loop;
 
-    uint32 freq_lo, freq_base = 5644800;
-    int freq_hi = 7;
     uint32 playCont;
 
     /* Stop the channel (if it's already playing) */
     aica_stop(ch);
 
-    /* Need to convert frequency to floating point format
-       (freq_hi is exponent, freq_lo is mantissa)
-       Formula is freq = 44100*2^freq_hi*(1+freq_lo/1024) */
-    while(freq < freq_base && freq_hi > -8) {
-        freq_base >>= 1;
-        --freq_hi;
-    }
-
-    freq_lo = (freq << 10) / freq_base;
+    /* Need to convert frequency to floating point format*/
+    freq = calc_aica_freq(freq);
 
     /* Envelope setup. The first of these is the loop point,
        e.g., where the sample starts over when it loops. The second
@@ -127,7 +135,7 @@ void aica_play(int ch, int delay) {
     CHNREG32(ch, 12) = loopend & 0xffff;
 
     /* Write resulting values */
-    CHNREG32(ch, 24) = (freq_hi << 11) | (freq_lo & 1023);
+    CHNREG32(ch, 24) = freq;
 
     /* Convert the incoming pan into a hardware value and set it */
     CHNREG8(ch, 36) = calc_aica_pan(pan);
@@ -165,7 +173,7 @@ void aica_play(int ch, int delay) {
     }
 }
 
-/* Start sound on all channels specified by chmap bitmap */
+/* Start sound on all channels specified by chmap bitmap (only first 32) */
 void aica_sync_play(uint32 chmap) {
     int i = 0;
 
@@ -181,6 +189,19 @@ void aica_sync_play(uint32 chmap) {
 /* Stop the sound on a given channel */
 void aica_stop(int ch) {
     CHNREG32(ch, 0) = (CHNREG32(ch, 0) & ~0x4000) | 0x8000;
+}
+
+/* Stop sound on all channels specified by chmap bitmap (only first 32) */
+void aica_sync_stop(uint32 chmap) {
+    int i = 0;
+
+    while(chmap) {
+        if(chmap & 0x1)
+            CHNREG32(i, 0) = (CHNREG32(i, 0) & ~0x4000) | 0x8000;
+
+        i++;
+        chmap >>= 1;
+    }
 }
 
 
@@ -199,17 +220,7 @@ void aica_pan(int ch) {
 
 /* Set channel frequency */
 void aica_freq(int ch) {
-    uint32 freq = chans[ch].freq;
-    uint32 freq_lo, freq_base = 5644800;
-    int freq_hi = 7;
-
-    while(freq < freq_base && freq_hi > -8) {
-        freq_base >>= 1;
-        freq_hi--;
-    }
-
-    freq_lo = (freq << 10) / freq_base;
-    CHNREG32(ch, 24) = (freq_hi << 11) | (freq_lo & 1023);
+    CHNREG32(ch, 24) = calc_aica_freq(chans[ch].freq);
 }
 
 /* Get channel position */
@@ -227,4 +238,52 @@ int aica_get_pos(int ch) {
     chans[ch].pos = SNDREG32(0x2814) & 0xffff;
 
     return chans[ch].pos;
+}
+
+/* Set volume and update status on selected channels (only first 32) */
+void aica_sync_vol(uint32 chmap, uint32 vol) {
+    int i = 0;
+    uint8 native_vol = calc_aica_vol(vol);
+
+    while(chmap) {
+        if(chmap & 0x1) {
+            chans[i].vol = vol;
+            CHNREG8(i, 41) = native_vol;
+        }
+
+        i++;
+        chmap >>= 1;
+    }
+}
+
+/* Set pan and update status on selected channels (only first 32) */
+void aica_sync_pan(uint32 chmap, uint32 pan) {
+    int i = 0;
+    uint32 native_pan = calc_aica_pan(pan);
+
+    while(chmap) {
+        if(chmap & 0x1) {
+            chans[i].pan = pan;
+            CHNREG8(i, 36) = native_pan;
+        }
+
+        i++;
+        chmap >>= 1;
+    }
+}
+
+/* Set frequency and update status on selected channels (only first 32) */
+void aica_sync_freq(uint32 chmap, uint32 freq) {
+    int i = 0;
+    uint32 native_freq = calc_aica_freq(freq);
+
+    while(chmap) {
+        if(chmap & 0x1) {
+            chans[i].freq = freq;
+            CHNREG32(i, 24) = native_freq;
+        }
+
+        i++;
+        chmap >>= 1;
+    }
 }

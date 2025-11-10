@@ -1,0 +1,13 @@
+
+# Stream-ym2612
+
+This example make use of `snd_stream_set_callback_direct`, `spu_dma_transfer` and `snd_stream_start_streams` functions.
+An YM2612 interpreter is used to synthetize audio samples including real-time channel panning. The interpreter is implemented from [https://github.com/vgmrips/vgmplay-legacy](https://github.com/vgmrips/vgmplay-legacy "VGMPlay (legacy)").
+VGM files can not be used directly here because is a hassle parse it. A "compacted" version of the format is used.
+
+## Notes
+
+- Result ccl file size should not be bigger than 10MiB.
+- Build with optimizations (with `-O1` should be enough), synthetize audio samples is quite expensive.
+- Panning starts to drift after consecutive loops, reason is unkwown.
+- One of the FM channels may be silent because is reversed for SFX playback.
