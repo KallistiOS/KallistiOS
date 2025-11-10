@@ -38,7 +38,7 @@ ifdef enable_d
   ifneq (0,$(enable_d))
 	@echo "+++ Running post-install fixups for GNU D..."
 	-mkdir -p $(toolchain_path)/lib/gcc/$(target)/$(gcc_ver)/include/d
-	cp -r ./gcc-$(gcc_ver)/libphobos/libdruntime/* $(sh_toolchain_path)/lib/gcc/$(target)/$(gcc_ver)/include/d
+	cp -r ./gcc-$(gcc_ver)/libphobos/libdruntime/* $(toolchain_path)/lib/gcc/$(target)/$(gcc_ver)/include/d
 	cp $(patches)/gdc/config.d $(toolchain_path)/lib/gcc/$(target)/$(gcc_ver)/include/d/gcc/config.d
   endif
 endif
