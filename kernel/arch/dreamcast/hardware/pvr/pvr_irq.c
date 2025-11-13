@@ -60,10 +60,7 @@ static void dma_next_list(void *thread) {
     pvr_state.lists_dmaed = 0;
 
     // Unlock
-    if(irq_inside_int())
-        mutex_unlock_as_thread((mutex_t *)&pvr_state.dma_lock, thread);
-    else
-        mutex_unlock((mutex_t *)&pvr_state.dma_lock);
+    sem_signal((semaphore_t *)&pvr_state.dma_lock);
 
     // Buffers are now empty again
     pvr_state.dma_buffers[pvr_state.ram_target ^ 1].ready = 0;
@@ -72,7 +69,7 @@ static void dma_next_list(void *thread) {
 void pvr_start_dma(void) {
     pvr_sync_stats(PVR_SYNC_REGSTART);
 
-    mutex_lock((mutex_t *)&pvr_state.dma_lock);
+    sem_wait((semaphore_t *)&pvr_state.dma_lock);
 
     // Begin DMAing the first list.
     dma_next_list(thd_get_current());

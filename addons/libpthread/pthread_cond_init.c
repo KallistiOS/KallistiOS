@@ -7,19 +7,18 @@
 
 #include "pthread-internal.h"
 #include <pthread.h>
-#include <errno.h>
+#include <kos/errno.h>
 #include <kos/cond.h>
 
 int pthread_cond_init(pthread_cond_t *__RESTRICT cond,
                       const pthread_condattr_t *__RESTRICT attr) {
-    int old, rv = 0;
-
     if(!cond)
         return EFAULT;
 
-    old = errno;
+    errno_save_scoped();
+
     if(cond_init(&cond->cond))
-        rv = errno;
+        return errno;
 
     /* Copy attributes over into the condition variable. */
     if(attr)
@@ -27,6 +26,5 @@ int pthread_cond_init(pthread_cond_t *__RESTRICT cond,
     else
         cond->clock_id = CLOCK_REALTIME;
 
-    errno = old;
-    return rv;
+    return 0;
 }

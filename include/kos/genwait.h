@@ -47,7 +47,8 @@ __BEGIN_DECLS
     \par    Error Conditions:
     \em     EAGAIN - on timeout
 */
-int genwait_wait(void *obj, const char *mesg, int timeout, void (*callback)(void *));
+int genwait_wait(void *obj, const char *mesg, unsigned int timeout,
+                 void (*callback)(void *));
 
 /* Wake up N threads waiting on the given object. If cnt is <=0, then we
    wake all threads. Returns the number of threads actually woken. */
