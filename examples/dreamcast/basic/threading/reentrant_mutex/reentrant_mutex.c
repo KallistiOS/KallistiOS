@@ -168,6 +168,9 @@ static void *thread_func(void *arg) {
 
 int main(int argc, const char* argv[]) {
     kthread_t *threads[THREAD_COUNT];
+
+    char thd_label[16];
+    kthread_attr_t attrs = { .label = thd_label };
     
     /* Initialize our mutex */
     reentrant_mutex_init(&rmutex);
@@ -175,12 +178,10 @@ int main(int argc, const char* argv[]) {
     /* Spawn a bunch of threads, potentially yielding the main thread after
        each one gets spawned. */
     for(size_t i = 0; i < THREAD_COUNT; ++i) {
-        threads[i] = thd_create(false, thread_func, NULL);
-
-        char thd_label[16];
         snprintf(thd_label, sizeof(thd_label), "%u", i);
-        thd_set_label(threads[i], thd_label);
- 
+
+        threads[i] = thd_create_ex(&attrs, thread_func, NULL);
+
         maybe_pass();
     }
  
