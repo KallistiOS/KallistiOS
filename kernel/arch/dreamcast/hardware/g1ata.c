@@ -18,6 +18,7 @@
 #include <kos/thread.h>
 
 #include <kos/timer.h>
+#include <arch/arch.h>
 #include <arch/cache.h>
 #include <arch/irq.h>
 #include <arch/memory.h>
@@ -218,7 +219,9 @@ inline int g1_ata_mutex_lock(void) {
 
 inline int g1_ata_mutex_unlock(void) {
     /* Make sure to select the GD-ROM drive back. */
-    g1_ata_select_device(G1_ATA_MASTER);
+    if(hardware_sys_mode(NULL) == HW_TYPE_RETAIL) {
+        g1_ata_select_device(G1_ATA_MASTER);
+    }
     return mutex_unlock(&_g1_ata_mutex);
 }
 
@@ -250,7 +253,9 @@ static void g1_dma_done(void) {
     dma_in_progress = 0;
 
     /* Make sure to select the GD-ROM drive back. */
-    g1_ata_select_device(G1_ATA_MASTER);
+    if(hardware_sys_mode(NULL) == HW_TYPE_RETAIL) {
+        g1_ata_select_device(G1_ATA_MASTER);
+    }
     mutex_unlock_as_thread(&_g1_ata_mutex, dma_thd);
 }
 
