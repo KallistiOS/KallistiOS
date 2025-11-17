@@ -73,7 +73,7 @@ int dcload_chmod(const char *path, mode_t mode) {
 }
 
 off_t dcload_lseek(uint32_t hnd, off_t offset, int whence) {
-    return (off_t)dcload_syscall(DCLOAD_READ, (void *)hnd, (void *)offset, (void *)whence);
+    return (off_t)dcload_syscall(DCLOAD_LSEEK, (void *)hnd, (void *)offset, (void *)whence);
 }
 
 int dcload_fstat(int fildes, dcload_stat_t *buf) {
