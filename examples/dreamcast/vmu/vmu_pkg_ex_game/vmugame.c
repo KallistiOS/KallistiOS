@@ -19,9 +19,8 @@
 extern int snprintf(char* s, size_t n, const char* format, ...);
 
 
-KOS_INIT_FLAGS(
-    INIT_IRQ | INIT_CONTROLLER | INIT_VMU | INIT_LIBRARY | INIT_FS_PTY | INIT_FS_ROMDISK
-);
+KOS_INIT_FLAGS(INIT_DEFAULT | INIT_CONTROLLER);
+
 
 static uint8_t* RAW_VMS;
 static size_t RAW_VMS_SIZE;

@@ -282,10 +282,12 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
         if(data == NULL) {
             goto error;
         }
-    } else if(fd->raw)  {
+    }
+    else if(fd->raw)  {
         fd->filelength = datasize;
         fd->blks = datasize / 512;
-    } else {
+    }
+    else {
         /* Parse header but ignore any bad checksum */
         rv = vmu_pkg_parse_ex(data, datasize, &vmu_pkg, fd->is_game, true);
         if(rv == -2) {
@@ -473,7 +475,8 @@ static int vmu_overwrite_header_game(vmu_fh_t *fh, const vmu_pkg_t *new_hdr, con
 
     if(fh->header_status == VMUHDR_STATUS_NEWFILE) {
         dbglog(DBG_SOURCE(VMUFS_DEBUG), "VMUFS: file %s will be written as GAME\n", fh->name);
-    } else {
+    }
+    else {
         /* Using fs_vmu_set_header() first can trigger this warning */
         dbglog(DBG_WARNING, "VMUFS: attempt to convert an existing DATA file into GAME\n");
     }
@@ -568,10 +571,12 @@ static int vmu_write_close(void * hnd) {
 
     if(fh->start < 1) {
         dbglog(DBG_WARNING, "VMUFS: file written without header\n");
-    } else if(fh->is_game) {
+    }
+    else if(fh->is_game) {
         flags |= VMUFS_VMUGAME;
         vmu_pkg_crc_set(fh->data, true, -1);
-    } else {
+    }
+    else {
         vmu_pkg_crc_set(fh->data, false, (int)fh->filelength);
     }
 
@@ -872,15 +877,19 @@ static int vmu_ioctl(void *fd, int cmd, va_list ap) {
 
             if(!out_intial_data) {
                 return -1;
-            } else if(fh->strtype != VMU_FILE) {
+            }
+            else if(fh->strtype != VMU_FILE) {
                 errno = EISDIR;
                 return -1;
-            } else if(!fh->is_game) {
+            }
+            else if(!fh->is_game) {
                 *out_intial_data = NULL;
-            } else if(fh->start < 1) {
+            }
+            else if(fh->start < 1) {
                 dbglog(DBG_SOURCE(VMUFS_DEBUG), "VMUFS: attempt to retrieve removed initial data\n");
                 *out_intial_data = NULL;
-            } else {
+            }
+            else {
                 *out_intial_data = fh->data;
             }
             break;
@@ -888,7 +897,8 @@ static int vmu_ioctl(void *fd, int cmd, va_list ap) {
             if(fh->strtype == VMU_FILE) {
                 _Static_assert(sizeof(int) >= sizeof(fh->blks));
                 return (int)fh->blks * 512;
-            } else {
+            }
+            else {
                 errno = EISDIR;
                 return -1;
             }

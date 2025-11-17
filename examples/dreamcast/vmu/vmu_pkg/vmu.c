@@ -134,10 +134,10 @@ void write_entry(void) {
     vmu_pkg_load_icon(&pkg, "/rd/ebook.ico");
     vmu_pkg_build(&pkg, &pkg_out, &pkg_size);
 
-    /* Delete existing entry */
+    /* Delete existing entry (optional, is done in fs_close() func) */
     //fs_unlink("/vmu/a1/TESTFILE");
 
-    f = fs_open("/vmu/a1/TESTFILE", O_WRONLY | O_CREAT);
+    f = fs_open("/vmu/a1/TESTFILE", O_WRONLY | O_CREAT | O_TRUNC);
 
     if(!f) {
         printf("error writing\n");
