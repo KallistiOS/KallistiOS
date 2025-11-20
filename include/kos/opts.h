@@ -127,11 +127,6 @@ __BEGIN_DECLS
 #define VMUFS_DEBUG 1
 #endif
 
-/** \brief  The maximum number of ramdisk files that can be open at a time. */
-#ifndef FS_RAMDISK_MAX_FILES
-#define FS_RAMDISK_MAX_FILES 8
-#endif
-
 /** \brief  The number of distinct file descriptors, including files and
             network sockets, that can be in use at a time. Decreasing this
             value can reduce memory usage.  */
