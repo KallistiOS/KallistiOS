@@ -783,7 +783,6 @@ int snd_sfx_play_ex(sfx_play_data_t *data) {
     cmd->timestamp = 0;
     cmd->size = AICA_CMDSTR_CHANNEL_SIZE;
     cmd->cmd_id = data->chn;
-    chan->cmd = AICA_CH_CMD_START;
     chan->base = t->locl;
     chan->type = t->fmt;
     chan->length = size;
@@ -794,20 +793,24 @@ int snd_sfx_play_ex(sfx_play_data_t *data) {
     chan->vol = data->vol;
 
     if(!t->stereo) {
+        chan->cmd = AICA_CH_CMD_START;
         chan->pan = data->pan;
         snd_sh4_to_aica(tmp, cmd->size);
     }
     else {
+        chan->cmd = AICA_CH_CMD_START | AICA_CH_START_DELAY;
         chan->pan = 0;
-
-        snd_sh4_to_aica_stop();
         snd_sh4_to_aica(tmp, cmd->size);
 
         cmd->cmd_id = data->chn + 1;
         chan->base = t->locr;
         chan->pan = 255;
         snd_sh4_to_aica(tmp, cmd->size);
-        snd_sh4_to_aica_start();
+
+        /* Now start both channels */
+        chan->cmd = AICA_CH_CMD_START | AICA_CH_START_SYNC;
+        cmd->cmd_id = (1ULL << data->chn) | (1ULL << (data->chn + 1));
+        snd_sh4_to_aica(tmp, cmd->size);
     }
 
     return data->chn;

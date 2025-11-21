@@ -84,12 +84,12 @@ typedef struct strchan {
     /* Stereo/mono flag */
     int channels;
 
-    /* Playback frequency */
+    /* Sample rate */
     int frequency;
 
-    /* Stream queueing is where we get everything ready to go but don't
-       actually start it playing until the signal (for music sync, etc) */
-    int queueing;
+    /*  Everything is ready to start, will eventually set to 2 to avoid
+        calling snd_stream_start() function twice. */
+    int ready_to_start;
 
     /* Have we been initialized yet? (and reserved a buffer, etc) */
     volatile int initted;
@@ -142,6 +142,18 @@ static inline size_t bytes_to_samples(snd_stream_hnd_t hnd, size_t bytes) {
         case 16:
         default:
             return bytes >> 1;
+    }
+}
+
+static inline void set_channels_in_cmd(snd_stream_hnd_t hnd, aica_cmd_t *cmd) {
+    if(streams[hnd].channels == 2) {
+        /* both channels simultaneously */
+        cmd->cmd_id = (1ULL << streams[hnd].ch[0]) |
+                      (1ULL << streams[hnd].ch[1]);
+    }
+    else {
+        /* one channel */
+        cmd->cmd_id = (1ULL << streams[hnd].ch[0]);
     }
 }
 
@@ -389,12 +401,10 @@ snd_stream_hnd_t snd_stream_alloc(snd_stream_callback_t cb, int bufsize) {
     }
 
     streams[hnd].initted = 1;
+    streams[hnd].ready_to_start = 0;
 
     /* Default this for now */
     streams[hnd].buffer_size = bufsize;
-
-    /* Start off with queueing disabled */
-    streams[hnd].queueing = 0;
 
     /* Setup the callback */
     snd_stream_set_callback(hnd, cb);
@@ -415,19 +425,6 @@ snd_stream_hnd_t snd_stream_alloc(snd_stream_callback_t cb, int bufsize) {
     }
 
     // dbglog(DBG_INFO, "snd_stream: alloc'd channels %d/%d\n", streams[hnd].ch[0], streams[hnd].ch[1]);
-    return hnd;
-}
-
-snd_stream_hnd_t snd_stream_reinit(snd_stream_hnd_t hnd, snd_stream_callback_t cb) {
-    CHECK_HND(hnd);
-
-    /* Start off with queueing disabled */
-    streams[hnd].queueing = 0;
-
-    /* Setup the callback */
-    snd_stream_set_callback(hnd, cb);
-    snd_stream_set_callback_direct(hnd, NULL);
-
     return hnd;
 }
 
@@ -486,52 +483,44 @@ void snd_stream_shutdown(void) {
     max_buffer_size = 0;
 }
 
-/* Enable / disable stream queueing */
-void snd_stream_queue_enable(snd_stream_hnd_t hnd) {
-    CHECK_HND(hnd);
-    streams[hnd].queueing = 1;
-}
-
-void snd_stream_queue_disable(snd_stream_hnd_t hnd) {
-    CHECK_HND(hnd);
-    streams[hnd].queueing = 0;
-}
-
-/* Start streaming (or if queueing is enabled, just get ready) */
-static void snd_stream_start_type(snd_stream_hnd_t hnd, uint32_t type, uint32_t freq, int st) {
+/* Configure AICA channels and prefill buffers */
+int snd_stream_setup(snd_stream_hnd_t hnd, uint32_t freq, int st, snd_stream_format_t fmt) {
     AICA_CMDSTR_CHANNEL(tmp, cmd, chan);
 
     CHECK_HND(hnd);
 
     if(!streams[hnd].get_data && !streams[hnd].req_data) {
-        return;
+        return -1;
     }
-
-    streams[hnd].type = type;
-    streams[hnd].channels = st ? 2 : 1;
-    streams[hnd].frequency = freq;
 
     if(streams[hnd].channels > max_channels) {
         dbglog(DBG_ERROR, "snd_stream_start_type: initted only for mono\n");
-        return;
+        return -2;
     }
 
-    if(streams[hnd].type == AICA_SM_16BIT) {
+    streams[hnd].channels = st ? 2 : 1;
+    streams[hnd].frequency = freq;
+    streams[hnd].ready_to_start = 1;
+
+    if(fmt == SND_STRMFMT_PCM16) {
         streams[hnd].bitsize = 16;
+        streams[hnd].type = AICA_SM_16BIT;
 
         if(streams[hnd].buffer_size > SND_STREAM_BUFFER_MAX_PCM16) {
             streams[hnd].buffer_size = SND_STREAM_BUFFER_MAX_PCM16;
         }
     }
-    else if(streams[hnd].type == AICA_SM_8BIT) {
+    else if(fmt == SND_STRMFMT_PCM8) {
         streams[hnd].bitsize = 8;
+        streams[hnd].type = AICA_SM_8BIT;
 
         if(streams[hnd].buffer_size > SND_STREAM_BUFFER_MAX_PCM8) {
             streams[hnd].buffer_size = SND_STREAM_BUFFER_MAX_PCM8;
         }
     }
-    else if(streams[hnd].type == AICA_SM_ADPCM_LS) {
+    else if(fmt == SND_STRMFMT_ADPCM) {
         streams[hnd].bitsize = 4;
+        streams[hnd].type = AICA_SM_ADPCM_LS;
 
         if(streams[hnd].buffer_size > SND_STREAM_BUFFER_MAX_ADPCM) {
             streams[hnd].buffer_size = SND_STREAM_BUFFER_MAX_ADPCM;
@@ -545,9 +534,6 @@ static void snd_stream_start_type(snd_stream_hnd_t hnd, uint32_t type, uint32_t 
     /* Start playing from the beginning */
     streams[hnd].last_write_pos = 0;
 
-    /* Make sure these are sync'd (and/or delayed) */
-    snd_sh4_to_aica_stop();
-
     /* Channel 0 */
     cmd->cmd = AICA_CMD_CHAN;
     cmd->timestamp = 0;
@@ -555,7 +541,7 @@ static void snd_stream_start_type(snd_stream_hnd_t hnd, uint32_t type, uint32_t 
     cmd->cmd_id = streams[hnd].ch[0];
     chan->cmd = AICA_CH_CMD_START | AICA_CH_START_DELAY;
     chan->base = streams[hnd].spu_ram_sch[0];
-    chan->type = type;
+    chan->type = streams[hnd].type;
     chan->length = bytes_to_samples(hnd, streams[hnd].buffer_size);
     chan->loop = 1;
     chan->loopstart = 0;
@@ -581,31 +567,73 @@ static void snd_stream_start_type(snd_stream_hnd_t hnd, uint32_t type, uint32_t 
         cmd->cmd_id = (1ULL << streams[hnd].ch[0]);
     }
 
+    /* Process the changes */
     chan->cmd = AICA_CH_CMD_START | AICA_CH_START_SYNC;
     snd_sh4_to_aica(tmp, cmd->size);
 
-    /* Process the changes */
-    if(!streams[hnd].queueing)
-        snd_sh4_to_aica_start();
+    return 0;
 }
 
-void snd_stream_start(snd_stream_hnd_t hnd, uint32_t freq, int st) {
-    snd_stream_start_type(hnd, AICA_SM_16BIT, freq, st);
-}
+/* Start stream after begin ready */
+void snd_stream_start(snd_stream_hnd_t hnd) {
+    AICA_CMDSTR_CHANNEL(tmp, cmd, chan);
 
-void snd_stream_start_pcm8(snd_stream_hnd_t hnd, uint32_t freq, int st) {
-    snd_stream_start_type(hnd, AICA_SM_8BIT, freq, st);
-}
-
-void snd_stream_start_adpcm(snd_stream_hnd_t hnd, uint32_t freq, int st) {
-    snd_stream_start_type(hnd, AICA_SM_ADPCM_LS, freq, st);
-}
-
-/* Actually make it go (in queued mode) */
-void snd_stream_queue_go(snd_stream_hnd_t hnd) {
-    (void)hnd;
     CHECK_HND(hnd);
-    snd_sh4_to_aica_start();
+
+    if(streams[hnd].ready_to_start != 1) {
+        /* Stream not configured */
+        return;
+    }
+
+    /* Avoid calling this function twice */
+    streams[hnd].ready_to_start++;
+
+    if(streams[hnd].channels == 2) {
+        /* Start both channels simultaneously */
+        cmd->cmd_id = (1ULL << streams[hnd].ch[0]) |
+                      (1ULL << streams[hnd].ch[1]);
+    }
+    else {
+        /* Start one channel */
+        cmd->cmd_id = (1ULL << streams[hnd].ch[0]);
+    }
+
+    /* Start the playback */
+    cmd->timestamp = 0;
+    cmd->size = AICA_CMDSTR_CHANNEL_SIZE;
+    chan->cmd = AICA_CH_CMD_START | AICA_CH_START_SYNC;
+    snd_sh4_to_aica(tmp, cmd->size);
+}
+
+/* Start in sync various streams */
+void snd_stream_start_streams(snd_stream_hnd_t *hnd_arr) {
+    AICA_CMDSTR_CHANNEL(tmp, cmd, chan);
+    snd_stream_hnd_t hnd;
+    uint32 chnmap = 0x00;
+
+    assert(hnd_arr);
+
+    while((hnd = *hnd_arr++) != SND_STREAM_INVALID) {
+        CHECK_HND(hnd);
+
+        if(streams[hnd].ready_to_start != 1) {
+            continue;
+        }
+
+        streams[hnd].ready_to_start++;
+
+        chnmap |= 1ULL << streams[hnd].ch[0];
+        if(streams[hnd].channels == 2) {
+            chnmap |= 1ULL << streams[hnd].ch[1];
+        }
+    }
+
+    /* Start the playback */
+    cmd->cmd_id = chnmap;
+    cmd->timestamp = 0;
+    cmd->size = AICA_CMDSTR_CHANNEL_SIZE;
+    chan->cmd = AICA_CH_CMD_START | AICA_CH_START_SYNC;
+    snd_sh4_to_aica(tmp, cmd->size);
 }
 
 /* Stop streaming */
@@ -618,25 +646,23 @@ void snd_stream_stop(snd_stream_hnd_t hnd) {
         return;
     }
 
-    if(streams[hnd].channels == 2) {
-        snd_sh4_to_aica_stop();
+    if(!streams[hnd].ready_to_start) {
+        return;
     }
+    streams[hnd].ready_to_start = 1;
 
     /* Stop stream */
-    /* Channel 0 */
     cmd->cmd = AICA_CMD_CHAN;
     cmd->timestamp = 0;
     cmd->size = AICA_CMDSTR_CHANNEL_SIZE;
-    cmd->cmd_id = streams[hnd].ch[0];
-    chan->cmd = AICA_CH_CMD_STOP;
-    snd_sh4_to_aica(tmp, cmd->size);
 
-    if(streams[hnd].channels == 2) {
-        /* Channel 1 */
-        cmd->cmd_id = streams[hnd].ch[1];
-        snd_sh4_to_aica(tmp, cmd->size);
-        snd_sh4_to_aica_start();
-    }
+    if(streams[hnd].channels == 2)
+        chan->cmd = AICA_CH_CMD_STOP | AICA_CH_STOP_SYNC;
+    else
+        chan->cmd = AICA_CH_CMD_STOP;
+
+    set_channels_in_cmd(hnd, cmd);
+    snd_sh4_to_aica(tmp, cmd->size);
 }
 
 /* The DMA will chain to this to start the second DMA. */
@@ -786,7 +812,7 @@ static size_t snd_stream_fill(snd_stream_hnd_t hnd, uint32_t offset, size_t size
     return got_bytes;
 }
 
-/* Poll streamer to load more data if necessary */
+/* Poll stream to load more data if necessary */
 int snd_stream_poll(snd_stream_hnd_t hnd) {
     uint32_t write_pos;
     uint16_t current_play_pos;
@@ -800,6 +826,9 @@ int snd_stream_poll(snd_stream_hnd_t hnd) {
 
     if(!stream->initted || (!stream->get_data && !stream->req_data)) {
         return -1;
+    }
+    if(!stream->ready_to_start) {
+        return 0;
     }
 
     /* The stream has been initted but not started, so we don't know stereo/mono. */
@@ -877,47 +906,61 @@ void snd_stream_volume(snd_stream_hnd_t hnd, int vol) {
 
     CHECK_HND(hnd);
 
-    if(streams[hnd].channels == 2) {
-        snd_sh4_to_aica_stop();
+    if(!streams[hnd].ready_to_start) {
+        /* Nothing to do, volume will be overrided by AICA_CH_CMD_START_DELAY */
+        return;
     }
 
     cmd->cmd = AICA_CMD_CHAN;
     cmd->timestamp = 0;
     cmd->size = AICA_CMDSTR_CHANNEL_SIZE;
-    cmd->cmd_id = streams[hnd].ch[0];
-    chan->cmd = AICA_CH_CMD_UPDATE | AICA_CH_UPDATE_SET_VOL;
     chan->vol = vol;
-    snd_sh4_to_aica(tmp, cmd->size);
 
-    if(streams[hnd].channels == 2) {
-        cmd->cmd_id = streams[hnd].ch[1];
-        snd_sh4_to_aica(tmp, cmd->size);
-        snd_sh4_to_aica_start();
-    }
+    if(streams[hnd].channels == 2)
+        chan->cmd = AICA_CH_CMD_UPDATE | AICA_CH_UPDATE_SYNC | AICA_CH_UPDATE_SET_VOL;
+    else
+        chan->cmd = AICA_CH_CMD_UPDATE | AICA_CH_UPDATE_SET_VOL;
+
+    set_channels_in_cmd(hnd, cmd);
+    snd_sh4_to_aica(tmp, cmd->size);
 }
 
 /* Set the panning on the streaming channels */
 void snd_stream_pan(snd_stream_hnd_t hnd, int left_pan, int right_pan) {
-    AICA_CMDSTR_CHANNEL(tmp, cmd, chan);
-
     CHECK_HND(hnd);
 
-    if(streams[hnd].channels == 2) {
-        snd_sh4_to_aica_stop();
+    if(!streams[hnd].ready_to_start) {
+        /* Nothing to do, panning will be overrided by AICA_CH_CMD_START_DELAY */
+        return;
     }
 
-    cmd->cmd = AICA_CMD_CHAN;
-    cmd->timestamp = 0;
-    cmd->size = AICA_CMDSTR_CHANNEL_SIZE;
-    cmd->cmd_id = streams[hnd].ch[0];
-    chan->cmd = AICA_CH_CMD_UPDATE | AICA_CH_UPDATE_SET_PAN;
-    chan->pan = left_pan;
-    snd_sh4_to_aica(tmp, cmd->size);
-
     if(streams[hnd].channels == 2) {
-        cmd->cmd_id = streams[hnd].ch[1];
-        chan->pan = right_pan;
+        AICA_CMDSTR_BATCH(tmp, cmd, lst, 2);
+
+        /* Left channel pan value */
+        lst[0].param = AICA_BATCH_PARAM_PAN;
+        lst[0].channel = streams[hnd].ch[0];
+        lst[0].value = left_pan;
+
+        /* Right channel pan value */
+        lst[1].param = AICA_BATCH_PARAM_PAN;
+        lst[1].channel = streams[hnd].ch[1];
+        lst[1].value = right_pan;
+
+        cmd->timestamp = 0;
         snd_sh4_to_aica(tmp, cmd->size);
-        snd_sh4_to_aica_start();
     }
+    else {
+        AICA_CMDSTR_CHANNEL(tmp, cmd, chan);
+
+        cmd->cmd = AICA_CMD_CHAN;
+        cmd->timestamp = 0;
+        cmd->size = AICA_CMDSTR_CHANNEL_SIZE;
+        cmd->cmd_id = streams[hnd].ch[0];
+        chan->cmd = AICA_CH_CMD_UPDATE | AICA_CH_UPDATE_SET_PAN;
+        chan->pan = left_pan;
+
+        snd_sh4_to_aica(tmp, cmd->size);
+    }
+
 }
