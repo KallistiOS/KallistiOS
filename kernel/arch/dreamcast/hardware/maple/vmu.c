@@ -520,6 +520,10 @@ static void vmu_block_write_callback(maple_state_t *st, maple_frame_t *frm) {
     genwait_wake_all(frm);
 }
 
+static int vmu_wait_frame_lock(maple_frame_t *frm) {
+    return maple_frame_lock(frm) == 0;
+}
+
 static int vmu_block_write_internal(maple_device_t *dev, uint16_t blocknum, const uint8_t *buffer) {
     maple_response_t *resp;
     int              rv, phase, r;
@@ -532,8 +536,7 @@ static int vmu_block_write_internal(maple_device_t *dev, uint16_t blocknum, cons
     rv = MAPLE_EOK;
 
     /* Lock the frame. XXX: Priority inversion issues here. */
-    while(maple_frame_lock(&dev->frame) < 0)
-        thd_pass();
+    thd_poll((thd_cb_t)vmu_wait_frame_lock, &dev->frame, 0);
 
     /* Writes have to occur in four phases per block -- this is the
        way of flash memory, which you must erase an entire block

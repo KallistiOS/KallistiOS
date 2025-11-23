@@ -33,13 +33,17 @@ static void ser_irq(irq_t source, irq_context_t *context) {
     sem_signal(chr_ready);
 }
 
+static int dbgio_wait_ready(void *d) {
+    int ret = dbgio_read();
+
+    return ret == -1 ? 0 : (ret + 1);
+}
+
 static char *read_line(void) {
     int q = 0, ch;
 
     while(1) {
-        while((ch = dbgio_read()) == -1)
-            /* sem_wait(chr_ready); */
-            thd_pass();
+        ch = thd_poll((thd_cb_t)dbgio_wait_ready, NULL, 0) - 1;
 
         if(ch == '\r') {
             buffer[q] = 0;
