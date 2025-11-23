@@ -102,7 +102,7 @@ int mutex_lock_timed(mutex_t *m, unsigned int timeout) {
             }
 
             rv = genwait_wait(m, timeout ? "mutex_lock_timed" : "mutex_lock",
-                              timeout, NULL);
+                              timeout);
             if(rv < 0) {
                 errno = ETIMEDOUT;
                 break;
