@@ -193,9 +193,12 @@ int maple_frame_trylock(maple_frame_t *frame) {
     return -1;
 }
 
+static int maple_wait_frame_lock(maple_frame_t *frm) {
+    return maple_frame_trylock(frm) == 0;
+}
+
 int maple_frame_lock(maple_frame_t *frame) {
-    while(maple_frame_trylock(frame) < 0)
-        thd_pass();
+    thd_poll((thd_cb_t)maple_wait_frame_lock, frame, 0);
 
     return 0;
 }

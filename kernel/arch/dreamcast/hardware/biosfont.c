@@ -82,10 +82,15 @@ uint32_t bfont_set_background_color(uint32_t c) {
     return rv;
 }
 
+static int bfont_lock(void *d) {
+    (void)d;
+
+    return syscall_font_lock() == 0;
+}
+
 int lock_bfont(void) {
     /* Just make sure no outside system took the lock */
-    while(syscall_font_lock() != 0)
-        thd_pass();
+    thd_poll(bfont_lock, NULL, 0);
 
     return 0;
 }
