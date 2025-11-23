@@ -85,22 +85,11 @@ int cdrom_set_sector_size(int size) {
 }
 
 static int cdrom_poll(void *d, uint32_t timeout, int (*cb)(void *)) {
-    uint64_t start_time;
     int ret;
 
-    if(timeout)
-        start_time = timer_ms_gettime64();
+    ret = thd_poll(cb, d, timeout);
 
-    do {
-        ret = (*cb)(d);
-        if(ret)
-            return ret;
-
-        if(!irq_inside_int())
-            thd_pass();
-    } while(!timeout || (timer_ms_gettime64() - start_time) < timeout);
-
-    return ERR_TIMEOUT;
+    return ret == 0 ? ERR_TIMEOUT : ret;
 }
 
 static gdc_cmd_hnd_t cdrom_submit_cmd(void *d) {
