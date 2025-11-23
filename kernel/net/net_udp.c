@@ -342,7 +342,7 @@ static ssize_t net_udp_recvfrom(net_socket_t *hnd, void *buffer, size_t length,
 
     while(TAILQ_EMPTY(&udpsock->packets)) {
         mutex_unlock(&udp_mutex);
-        genwait_wait(udpsock, "net_udp_recvfrom", 0, NULL);
+        genwait_wait(udpsock, "net_udp_recvfrom", 0);
         mutex_lock(&udp_mutex);
     }
 

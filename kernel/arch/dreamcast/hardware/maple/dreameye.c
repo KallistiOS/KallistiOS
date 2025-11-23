@@ -124,8 +124,7 @@ int dreameye_get_image_count(maple_device_t *dev, int block) {
 
     if(block) {
         /* Wait for the Dreameye to accept it */
-        if(genwait_wait(&dev->frame, "dreameye_get_image_count", 500,
-                        NULL) < 0) {
+        if(genwait_wait(&dev->frame, "dreameye_get_image_count", 500) < 0) {
             if(dev->frame.state != MAPLE_FRAME_VACANT) {
                 /* Something went wrong... */
                 dev->frame.state = MAPLE_FRAME_VACANT;
@@ -231,8 +230,7 @@ static int dreameye_get_transfer_count(maple_device_t *dev, uint8_t img) {
     maple_queue_frame(&dev->frame);
 
     /* Wait for the Dreameye to accept it */
-    if(genwait_wait(&dev->frame, "dreameye_get_transfer_count", 500,
-                    NULL) < 0) {
+    if(genwait_wait(&dev->frame, "dreameye_get_transfer_count", 500) < 0) {
         if(dev->frame.state != MAPLE_FRAME_VACANT) {
             /* Something went wrong... */
             dev->frame.state = MAPLE_FRAME_VACANT;
@@ -369,7 +367,7 @@ int dreameye_erase_image(maple_device_t *dev, uint8_t image, int block) {
 
     if(block) {
         /* Wait for the Dreameye to accept it */
-        if(genwait_wait(&dev->frame, "dreameye_erase_image", 500, NULL) < 0) {
+        if(genwait_wait(&dev->frame, "dreameye_erase_image", 500) < 0) {
             if(dev->frame.state != MAPLE_FRAME_VACANT) {
                 /* Something went wrong.... */
                 dev->frame.state = MAPLE_FRAME_VACANT;
