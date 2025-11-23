@@ -150,11 +150,6 @@ static int cdrom_check_cmd_done(void *d) {
     return cmd_response != BUSY && cmd_response != PROCESSING;
 }
 
-static int cdrom_check_drive_ready(void *d) {
-    int rv = syscall_gdrom_check_drive(d);
-    return rv != BUSY;
-}
-
 static int cdrom_check_abort_done(void *d) {
     syscall_gdrom_exec_server();
 
@@ -287,7 +282,7 @@ int cdrom_get_status(int *status, int *disc_type) {
         /* DH: Figure out a better return to signal error */
         return -1;
 
-    rv = cdrom_poll(params, 0, cdrom_check_drive_ready);
+    rv = syscall_gdrom_check_drive(params);
 
     mutex_unlock(&_g1_ata_mutex);
 
