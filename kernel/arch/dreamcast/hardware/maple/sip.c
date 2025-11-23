@@ -150,7 +150,7 @@ int sip_start_sampling(maple_device_t *dev, sip_sample_cb cb, bool block) {
 
     if(block) {
         /* Wait for the SIP to accept it */
-        if(genwait_wait(&dev->frame, "sip_start_sampling", 500, NULL) < 0) {
+        if(genwait_wait(&dev->frame, "sip_start_sampling", 500) < 0) {
             if(dev->frame.state != MAPLE_FRAME_VACANT) {
                 /* Something went wrong.... */
                 dev->frame.state = MAPLE_FRAME_VACANT;
@@ -191,7 +191,7 @@ int sip_stop_sampling(maple_device_t *dev, bool block) {
 
     if(block) {
         /* Wait for the SIP to accept it */
-        if(genwait_wait(&dev->frame, "sip_stop_sampling", 500, NULL) < 0) {
+        if(genwait_wait(&dev->frame, "sip_stop_sampling", 500) < 0) {
             if(dev->frame.state != MAPLE_FRAME_VACANT) {
                 /* Something went wrong.... */
                 dev->frame.state = MAPLE_FRAME_VACANT;

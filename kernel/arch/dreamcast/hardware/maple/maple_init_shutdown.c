@@ -63,7 +63,7 @@ static void maple_dev_reset(maple_device_t *dev) {
     maple_queue_frame(&dev->frame);
 
     /* Wait for the device to accept it */
-    if(genwait_wait(&dev->frame, "dev_reset", 500, NULL) < 0) {
+    if(genwait_wait(&dev->frame, "dev_reset", 500) < 0) {
         if(dev->frame.state != MAPLE_FRAME_VACANT) {
             /* Something went wrong.... */
             dev->frame.state = MAPLE_FRAME_VACANT;

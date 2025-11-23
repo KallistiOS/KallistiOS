@@ -136,7 +136,7 @@ void dma_wait_complete(dma_channel_t channel) {
 
     while(dma_is_running(channel)) {
         if(!irq_inside_int()) {
-            genwait_wait(&channels_cfg[channel], "DMA complete wait", 0, NULL);
+            genwait_wait(&channels_cfg[channel], "DMA complete wait", 0);
         }
     }
 }

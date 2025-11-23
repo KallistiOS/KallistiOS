@@ -55,8 +55,7 @@ int cond_wait_timed(condvar_t *cv, mutex_t *m, int timeout) {
     mutex_unlock(m);
 
     /* Now block us until we're signaled */
-    rv = genwait_wait(cv, timeout ? "cond_wait_timed" : "cond_wait", timeout,
-                      NULL);
+    rv = genwait_wait(cv, timeout ? "cond_wait_timed" : "cond_wait", timeout);
 
     if(rv < 0 && errno == EAGAIN)
         errno = ETIMEDOUT;

@@ -274,7 +274,7 @@ int net_dhcp_request(uint32_t required_address) {
     /* We need to wait til we're either bound to an IP address, or until we give
        up all hope of doing so (give us 60 seconds). */
     if(!net_thd_is_current()) {
-        rv = genwait_wait(&dhcp_sock, "net_dhcp_request", 60 * 1000, NULL);
+        rv = genwait_wait(&dhcp_sock, "net_dhcp_request", 60 * 1000);
     }
 
     return rv;

@@ -763,7 +763,7 @@ void thd_sleep(unsigned int ms) {
        sleep cases into a single case, which is nice for scheduling
        purposes. 0xffffffff definitely doesn't exist as an object, so we'll
        use that for straight up timeouts. */
-    genwait_wait((void *)0xffffffff, "thd_sleep", ms, NULL);
+    genwait_wait((void *)0xffffffff, "thd_sleep", ms);
 }
 
 /* Manually cause a re-schedule */
@@ -816,7 +816,7 @@ int thd_join(kthread_t *thd, void **value_ptr) {
     else {
         if(thd->state != STATE_FINISHED) {
             /* Wait for the target thread to die */
-            genwait_wait(thd, "thd_join", 0, NULL);
+            genwait_wait(thd, "thd_join", 0);
         }
 
         /* Ok, we're all clear */
