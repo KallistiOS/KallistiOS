@@ -148,7 +148,8 @@ typedef enum kthread_state {
     STATE_RUNNING  = 0x0001,  /**< \brief Process is "current" */
     STATE_READY    = 0x0002,  /**< \brief Ready to be scheduled */
     STATE_WAIT     = 0x0003,  /**< \brief Blocked on a genwait */
-    STATE_FINISHED = 0x0004   /**< \brief Finished execution */
+    STATE_POLLING  = 0x0004,  /**< \brief Blocked on a poll */
+    STATE_FINISHED = 0x0005   /**< \brief Finished execution */
 } kthread_state_t;
 
 /* Thread and priority types */
@@ -200,6 +201,12 @@ typedef struct __attribute__((aligned(32))) kthread {
         \see    kos/genwait.h
     */
     const char *wait_msg;
+
+    /** \brief  Poll callback.
+
+        \param  data        A pointer passed to the polling function.
+    */
+    int (*poll_cb)(void *data);
 
     /** \brief  Next scheduled time.
 
@@ -493,6 +500,26 @@ void thd_pass(void);
     \param  ms              The number of milliseconds to sleep.
 */
 void thd_sleep(unsigned ms);
+
+/** \brief Callback type for thd_poll(). */
+typedef int (*thd_cb_t)(void *);
+
+/** \brief   Poll until the callback function returns non-zero.
+
+    This function will put the current thread into a pseudo-sleep state. The
+    scheduler will periodically call the callback function, and if it returns
+    non-zero, the thread is awaken.
+    Since the callback function is called by the scheduler, the callback will
+    be running inside an interrupt context, with all that entails.
+
+    \param  cb              The polling function.
+    \param  data            A pointer provided to the polling function.
+    \param  timeout_ms      If non-zero, the number of milliseconds to sleep.
+
+    \return                 Zero if a timeout occurs; the return value of the
+                            polling function otherwise.
+*/
+int thd_poll(thd_cb_t cb, void *data, unsigned long timeout_ms);
 
 /** \brief       Set a thread's priority value.
     \relatesalso kthread_t
