@@ -40,8 +40,8 @@ static uint8_t (*spi_rw_byte)(uint8_t data) = NULL;
 static void (*spi_set_cs)(bool enabled) = NULL;
 static int (*spi_init)(bool fast) = NULL;
 static void (*spi_shutdown)(void) = NULL;
-static void (*spi_read_data)(uint8_t *data, size_t len) = NULL;
-static void (*spi_write_data)(const uint8_t *data, size_t len) = NULL;
+static int (*spi_read_data)(uint8_t *data, size_t len) = NULL;
+static int (*spi_write_data)(const uint8_t *data, size_t len) = NULL;
 static uint8_t (*spi_read_byte)(void) = NULL;
 static void (*spi_write_byte)(uint8_t data) = NULL;
 
@@ -117,10 +117,16 @@ static uint8_t scif_rw_byte_wrapper(uint8_t data) {
         return scif_spi_slow_rw_byte(data);
 }
 
-static void scif_write_data_wrapper(const uint8_t *data, size_t len) {
+static int scif_read_data_wrapper(uint8_t *data, size_t len) {
+    scif_spi_read_data(data, len);
+    return 0;
+}
+
+static int scif_write_data_wrapper(const uint8_t *data, size_t len) {
     while(len--) {
         scif_spi_write_byte(*data++);
     }
+    return 0;
 }
 
 static uint8_t sci_read_byte_wrapper(void) {
@@ -133,18 +139,18 @@ static void sci_write_byte_wrapper(uint8_t data) {
     sci_spi_write_byte(data);
 }
 
-static void sci_read_data_wrapper(uint8_t *data, size_t len) {
+static int sci_read_data_wrapper(uint8_t *data, size_t len) {
     if(len & 31)
-        sci_spi_read_data(data, len);
+        return sci_spi_read_data(data, len);
     else
-        sci_spi_dma_read_data(data, len, NULL, NULL);
+        return sci_spi_dma_read_data(data, len, NULL, NULL);
 }
 
-static void sci_write_data_wrapper(const uint8_t *data, size_t len) {
+static int sci_write_data_wrapper(const uint8_t *data, size_t len) {
     if(len & 31)
-        sci_spi_write_data(data, len);
+        return sci_spi_write_data(data, len);
     else
-        sci_spi_dma_write_data(data, len, NULL, NULL);
+        return sci_spi_dma_write_data(data, len, NULL, NULL);
 }
 
 static void scif_shutdown_wrapper(void) {
@@ -269,6 +275,21 @@ int sd_init(void) {
     return sd_init_ex(&params);
 }
 
+static int sd_reinit(void) {
+    sd_init_params_t params = {
+        .interface = current_interface,
+        .check_crc = check_crc
+    };
+
+    spi_set_cs(false);
+    spi_rw_byte(0xFF);
+
+    spi_shutdown();
+
+    initted = false;
+    return sd_init_ex(&params);
+}
+
 int sd_init_ex(const sd_init_params_t *params) {
     int i;
     uint8 buf[4];
@@ -290,7 +311,7 @@ int sd_init_ex(const sd_init_params_t *params) {
         spi_set_cs = &scif_set_cs_wrapper;
         spi_init = &scif_init_wrapper;
         spi_shutdown = &scif_shutdown_wrapper;
-        spi_read_data = &scif_spi_read_data;
+        spi_read_data = &scif_read_data_wrapper;
         spi_write_data = &scif_write_data_wrapper;
         spi_read_byte = &scif_spi_read_byte;
         spi_write_byte = &scif_spi_write_byte;
@@ -440,7 +461,9 @@ static int read_data(size_t bytes, uint8 *buf) {
         return -1;
 
     /* Read in the data */
-    spi_read_data(buf, bytes);
+    if(spi_read_data(buf, bytes)) {
+        return -1;
+    }
 
     /* Read in the trailing CRC */
     if(check_crc) {
@@ -455,7 +478,10 @@ static int read_data(size_t bytes, uint8 *buf) {
 }
 
 int sd_read_blocks(uint32 block, size_t count, uint8 *buf) {
-    int rv = 0;
+    int rv;
+    size_t read_count;
+    uint8_t *read_buf;
+    bool retried = false;
 
     if(!initted) {
         errno = ENXIO;
@@ -466,9 +492,13 @@ int sd_read_blocks(uint32 block, size_t count, uint8 *buf) {
     if(byte_mode)
         block <<= 9;
 
+read_blocks:
+    read_count = count;
+    read_buf = buf;
+    rv = 0;
     spi_set_cs(true);
 
-    if(count == 1) {
+    if(read_count == 1) {
         /* Ask the card for the block */
         if(sd_send_cmd(CMD(17), block)) {
             rv = -1;
@@ -477,7 +507,7 @@ int sd_read_blocks(uint32 block, size_t count, uint8 *buf) {
         }
 
         /* Read the block back */
-        if(read_data(512, buf)) {
+        if(read_data(512, read_buf)) {
             rv = -1;
             errno = EIO;
             goto out;
@@ -491,14 +521,14 @@ int sd_read_blocks(uint32 block, size_t count, uint8 *buf) {
             goto out;
         }
 
-        while(count--) {
-            if(read_data(512, buf)) {
+        while(read_count--) {
+            if(read_data(512, read_buf)) {
                 rv = -1;
                 errno = EIO;
                 goto out;
             }
 
-            buf += 512;
+            read_buf += 512;
         }
 
         /* Stop the data transfer */
@@ -507,6 +537,12 @@ int sd_read_blocks(uint32 block, size_t count, uint8 *buf) {
 
 out:
     spi_set_cs(false);
+    if(rv && !retried) {
+        retried = true;
+        if(!sd_reinit()) {
+            goto read_blocks;
+        }
+    }
     spi_rw_byte(0xFF);
 
     return rv;
@@ -516,7 +552,6 @@ static int write_data(uint8 tag, size_t bytes, const uint8 *buf) {
     uint8 rv;
     int i = 0;
     uint16 crc;
-    const uint8 *ptr = buf;
 
     /* Wait for the card to be ready for our data */
     spi_rw_byte(0xFF);
@@ -532,8 +567,8 @@ static int write_data(uint8 tag, size_t bytes, const uint8 *buf) {
 
     /* Send the data. */
     crc = net_crc16ccitt(buf, bytes, 0);
-    while(bytes--) {
-        spi_write_byte(*ptr++);
+    if(spi_write_data(buf, bytes)) {
+        return -1;
     }
 
     /* Write out the block's crc */
@@ -549,8 +584,11 @@ static int write_data(uint8 tag, size_t bytes, const uint8 *buf) {
 }
 
 int sd_write_blocks(uint32 block, size_t count, const uint8 *buf) {
-    int rv = 0, i = 0;
-    uint8 byte;
+    int rv, i = 0;
+    uint8_t byte;
+    size_t write_count;
+    uint8_t *write_buf;
+    bool retried = false;
 
     if(!initted) {
         errno = ENXIO;
@@ -561,9 +599,13 @@ int sd_write_blocks(uint32 block, size_t count, const uint8 *buf) {
     if(byte_mode)
         block <<= 9;
 
+write_blocks:
+    write_count = count;
+    write_buf = buf;
+    rv = 0;
     spi_set_cs(true);
 
-    if(count == 1) {
+    if(write_count == 1) {
         /* Prepare the card for the block */
         if(sd_send_cmd(CMD(24), block)) {
             rv = -1;
@@ -571,8 +613,8 @@ int sd_write_blocks(uint32 block, size_t count, const uint8 *buf) {
             goto out;
         }
 
-        /* Read the block back */
-        if(write_data(0xFE, 512, buf)) {
+        /* Write the block */
+        if(write_data(0xFE, 512, write_buf)) {
             rv = -1;
             errno = EIO;
             goto out;
@@ -583,7 +625,7 @@ int sd_write_blocks(uint32 block, size_t count, const uint8 *buf) {
            we intend to write. */
         if(!is_mmc) {
             sd_send_cmd(CMD(55), 0);
-            sd_send_cmd(CMD(23), count);
+            sd_send_cmd(CMD(23), write_count);
         }
 
         /* Set up the multi-block write */
@@ -593,15 +635,15 @@ int sd_write_blocks(uint32 block, size_t count, const uint8 *buf) {
             goto out;
         }
 
-        while(count--) {
-            if(write_data(0xFC, 512, buf)) {
+        while(write_count--) {
+            if(write_data(0xFC, 512, write_buf)) {
                 /* Make sure we at least try to stop the transfer... */
                 rv = -1;
                 errno = EIO;
                 break;
             }
 
-            buf += 512;
+            write_buf += 512;
         }
 
         /* Write the end data token. */
@@ -622,6 +664,12 @@ int sd_write_blocks(uint32 block, size_t count, const uint8 *buf) {
 
 out:
     spi_set_cs(false);
+    if(rv && !retried) {
+        retried = true;
+        if(!sd_reinit()) {
+            goto write_blocks;
+        }
+    }
     spi_rw_byte(0xFF);
 
     return rv;
