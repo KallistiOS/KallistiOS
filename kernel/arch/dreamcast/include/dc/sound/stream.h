@@ -28,7 +28,7 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
+#include <stdint.h>
 
 /** \defgroup audio_streaming   Streaming
     \brief                      Streaming audio playback and management
@@ -300,7 +300,7 @@ void snd_stream_queue_go(snd_stream_hnd_t hnd);
     \param  freq            The frequency of the sound.
     \param  st              1 if the sound is stereo, 0 if mono.
 */
-void snd_stream_start(snd_stream_hnd_t hnd, uint32 freq, int st);
+void snd_stream_start(snd_stream_hnd_t hnd, uint32_t freq, int st);
 
 /** \brief  Start a 8-bit PCM stream.
 
@@ -311,7 +311,7 @@ void snd_stream_start(snd_stream_hnd_t hnd, uint32 freq, int st);
     \param  freq            The frequency of the sound.
     \param  st              1 if the sound is stereo, 0 if mono.
 */
-void snd_stream_start_pcm8(snd_stream_hnd_t hnd, uint32 freq, int st);
+void snd_stream_start_pcm8(snd_stream_hnd_t hnd, uint32_t freq, int st);
 
 /** \brief  Start a 4-bit ADPCM stream.
 
@@ -322,7 +322,7 @@ void snd_stream_start_pcm8(snd_stream_hnd_t hnd, uint32 freq, int st);
     \param  freq            The frequency of the sound.
     \param  st              1 if the sound is stereo, 0 if mono.
 */
-void snd_stream_start_adpcm(snd_stream_hnd_t hnd, uint32 freq, int st);
+void snd_stream_start_adpcm(snd_stream_hnd_t hnd, uint32_t freq, int st);
 
 /** \brief  Stop a stream.
 
