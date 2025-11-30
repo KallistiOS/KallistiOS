@@ -14,9 +14,9 @@
 #include <stdio.h>
 
 #include <kos/dbglog.h>
-
+#include <kos/irq.h>
 #include <kos/timer.h>
-#include <arch/irq.h>
+
 #include <dc/maple.h>
 #include <dc/maple/keyboard.h>
 

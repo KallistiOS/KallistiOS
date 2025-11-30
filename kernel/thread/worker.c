@@ -4,9 +4,9 @@
    Copyright (C) 2024 Paul Cercueil
 */
 
-#include <arch/irq.h>
 #include <assert.h>
 #include <kos/genwait.h>
+#include <kos/irq.h>
 #include <kos/thread.h>
 #include <kos/worker_thread.h>
 #include <stdbool.h>

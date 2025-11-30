@@ -11,11 +11,11 @@
 
 #include <arch/arch.h>
 #include <arch/cache.h>
-#include <arch/irq.h>
 #include <arch/spinlock.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <kos/irq.h>
 
 /* Create a set of macros to codegen atomic symbols for primitive types.
    For these types, we simply disable interrupts then re-enable them

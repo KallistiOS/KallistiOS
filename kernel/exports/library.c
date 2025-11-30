@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <errno.h>
 
-#include <arch/irq.h>
+#include <kos/irq.h>
 #include <kos/library.h>
 
 /*

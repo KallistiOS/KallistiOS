@@ -263,26 +263,11 @@ typedef enum irq_exception {
     EXC_UNHANDLED_EXC      = 0x07e0  /**< `[SOFT  ]` Exception went unhandled */
 } irq_t;
 
-/** \defgroup irq_state     State
-    \brief                  Methods for querying active IRQ information.
+static inline int arch_irq_inside_int(void) {
+    extern int inside_int;
 
-    Provides an API for accessing the state of the current IRQ context such
-    as the active interrupt or whether it has been handled.
-
-    @{
-*/
-
-
-/** Returns whether inside of an interrupt context.
-
-    \retval non-zero        If interrupt handling is in progress.
-                            ((code&0xf)<<16) | (evt&0xffff)
-    \retval 0               If normal processing is in progress.
-
-*/
-int irq_inside_int(void);
-
-/** @} */
+    return inside_int;
+}
 
 /** \defgroup irq_mask      Mask
     \brief                  Accessors and modifiers of the IMASK state.
@@ -297,72 +282,26 @@ int irq_inside_int(void);
 /** Type representing an interrupt mask state. */
 typedef uint32_t irq_mask_t;
 
-/** Get status register contents.
-
-    Returns the current value of the status register, as irq_disable() does.
-    The function can be found in arch\dreamcast\kernel\entry.s
-
-    \note
-    This is the entire status register word, not just the `IMASK` field.
-
-    \retval                 Status register word
-    \sa irq_disable()
-*/
-static inline irq_mask_t irq_get_sr(void) {
-    irq_mask_t value;
-    __asm__ volatile("stc sr, %0" : "=r" (value));
-    return value;
-}
-
-/** Restore IRQ state.
-
-    This function will restore the interrupt state to the value specified. This
-    should correspond to a value returned by irq_disable().
-
-    \param  v               The IRQ state to restore. This should be a value
-                            returned by irq_disable().
-
-    \sa irq_disable()
-*/
-static inline void irq_restore(irq_mask_t old) {
+static inline void arch_irq_restore(irq_mask_t old) {
     __asm__ volatile("ldc %0, sr" : : "r" (old));
 }
 
-/** Disable interrupts.
+static inline irq_mask_t arch_irq_disable(void) {
+    irq_mask_t mask;
 
-    This function will disable SH4 interrupts, but will leave SH4 general
-    exceptions enabled.
+    __asm__ volatile("stc sr, %0" : "=r" (mask));
 
-    \return                 The state of the SH4 interrupts before calling the
-                            function. This can be used to restore this state
-                            later on with irq_restore().
-
-    \sa irq_restore(), irq_enable()
-*/
-static inline irq_mask_t irq_disable(void) {
-    uint32_t mask = (uint32_t)irq_get_sr();
-    irq_restore((mask & 0xefffff0f) | 0x000000f0);
+    arch_irq_restore((mask & 0xefffff0f) | 0x000000f0);
     return mask;
 }
 
-/** Enable all interrupts.
+static inline void arch_irq_enable(void) {
+    irq_mask_t mask;
 
-    This function will enable ALL interrupts, including external ones.
+    __asm__ volatile("stc sr, %0" : "=r" (mask));
 
-    \sa irq_disable()
-*/
-static inline void irq_enable(void) {
-    uint32_t mask = ((uint32_t)irq_get_sr() & 0xefffff0f);
-    irq_restore(mask);
+    arch_irq_restore(mask & 0xefffff0f);
 }
-
-/** \brief  Disable interrupts with scope management.
-
-    This macro will disable interrupts, similarly to irq_disable(), with the
-    difference that the interrupt state will automatically be restored once the
-    execution exits the functional block in which the macro was called.
-*/
-#define irq_disable_scoped() __irq_disable_scoped(__LINE__)
 
 /** @} */
 
@@ -484,34 +423,6 @@ irq_cb_t irq_get_global_handler(void);
 
 /** @} */
 
-/** \cond INTERNAL */
-
-/** Initialize interrupts.
-
-    \retval 0               On success (no error conditions defined).
-
-    \sa irq_shutdown()
-*/
-int irq_init(void);
-
-/** Shutdown interrupts.
-
-    Restores the state to how it was before irq_init() was called.
-
-    \sa irq_init()
-*/
-void irq_shutdown(void);
-
-static inline void __irq_scoped_cleanup(irq_mask_t *state) {
-    irq_restore(*state);
-}
-
-#define ___irq_disable_scoped(l) \
-    irq_mask_t __scoped_irq_##l __attribute__((cleanup(__irq_scoped_cleanup))) = irq_disable()
-
-#define __irq_disable_scoped(l) ___irq_disable_scoped(l)
-/** \endcond */
-
 /** \brief  Minimum/maximum values for IRQ priorities
 
     A priority of zero means the interrupt is masked.
@@ -565,6 +476,9 @@ void irq_set_priority(irq_src_t src, unsigned int prio);
 unsigned int irq_get_priority(irq_src_t src);
 
 /** @} */
+
+/* Include <kos/irq.h> for compatibility with code that includes <arch/irq.h> instead. */
+#include <kos/irq.h>
 
 __END_DECLS
 
