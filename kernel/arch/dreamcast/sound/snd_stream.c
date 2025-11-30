@@ -237,7 +237,7 @@ static void snd_pcm16_split_unaligned(void *buffer, void *left, void *right, siz
 void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t size) {
     g2_ctx_t ctx;
     uint32_t i;
-    uint16 *s = (uint16 *)data;
+    uint16_t *s = (uint16_t *)data;
     size_t remain = size;
     uint32_t *masked_left;
     uint32_t *masked_right;
@@ -308,8 +308,8 @@ void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t 
         right += size - remain;
 
         for(; remain >= 4; remain -= 4) {
-            *((vuint16 *)left) = *s++;
-            *((vuint16 *)right) = *s++;
+            *((volatile uint16_t *)left) = *s++;
+            *((volatile uint16_t *)right) = *s++;
             left += 2;
             right += 2;
         }
