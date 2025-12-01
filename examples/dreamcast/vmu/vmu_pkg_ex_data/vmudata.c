@@ -20,9 +20,6 @@
 extern int snprintf(char* s, size_t n, const char* format, ...);
 
 
-KOS_INIT_FLAGS(INIT_DEFAULT | INIT_CONTROLLER);
-
-
 static uint8_t* RAW_VMS_HEADER;
 static size_t RAW_VMS_HEADER_SIZE;
 static char VMU_PATH[] = "/vmu/a0/SMPLTXTSD";
