@@ -128,8 +128,7 @@ int dreameye_get_image_count(maple_device_t *dev, int block) {
 
     if(block) {
         /* Wait for the Dreameye to accept it */
-        if(genwait_wait(&dev->frame, "dreameye_get_image_count", 500,
-                        NULL) < 0) {
+        if(genwait_wait(&dev->frame, "dreameye_get_image_count", 500) < 0) {
             if(dev->frame.state != MAPLE_FRAME_VACANT) {
                 /* Something went wrong... */
                 dev->frame.state = MAPLE_FRAME_VACANT;
@@ -243,8 +242,7 @@ static int dreameye_get_transfer_count(maple_device_t *dev, uint8 img) {
     maple_queue_frame(&dev->frame);
 
     /* Wait for the Dreameye to accept it */
-    if(genwait_wait(&dev->frame, "dreameye_get_transfer_count", 500,
-                    NULL) < 0) {
+    if(genwait_wait(&dev->frame, "dreameye_get_transfer_count", 500) < 0) {
         if(dev->frame.state != MAPLE_FRAME_VACANT) {
             /* Something went wrong... */
             dev->frame.state = MAPLE_FRAME_VACANT;
@@ -255,6 +253,10 @@ static int dreameye_get_transfer_count(maple_device_t *dev, uint8 img) {
     }
 
     return MAPLE_EOK;
+}
+
+static int dreameye_wait_transfer_done(const dreameye_state_t *de) {
+    return de->img_transferring != 1;
 }
 
 int dreameye_get_image(maple_device_t *dev, uint8 image, uint8 **data,
@@ -300,9 +302,7 @@ int dreameye_get_image(maple_device_t *dev, uint8 image, uint8 **data,
     dreameye_send_get_image(dev4, de, DREAMEYE_IMAGEREQ_CONTINUE, 3);
     dreameye_send_get_image(dev5, de, DREAMEYE_IMAGEREQ_CONTINUE, 4);
 
-    while(de->img_transferring == 1) {
-        thd_pass();
-    }
+    thd_poll((thd_cb_t)dreameye_wait_transfer_done, de, 0);
 
     if(de->img_transferring == 0) {
         *data = de->img_buf;
@@ -385,7 +385,7 @@ int dreameye_erase_image(maple_device_t *dev, uint8 image, int block) {
 
     if(block) {
         /* Wait for the Dreameye to accept it */
-        if(genwait_wait(&dev->frame, "dreameye_erase_image", 500, NULL) < 0) {
+        if(genwait_wait(&dev->frame, "dreameye_erase_image", 500) < 0) {
             if(dev->frame.state != MAPLE_FRAME_VACANT) {
                 /* Something went wrong.... */
                 dev->frame.state = MAPLE_FRAME_VACANT;

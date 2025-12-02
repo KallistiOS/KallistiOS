@@ -470,7 +470,7 @@ int vmu_block_read(maple_device_t *dev, uint16_t blocknum, uint8_t *buffer) {
     maple_queue_frame(&dev->frame);
 
     /* Wait for the VMU to accept it */
-    if(genwait_wait(&dev->frame, "vmu_block_read", 100, NULL) < 0) {
+    if(genwait_wait(&dev->frame, "vmu_block_read", 100) < 0) {
         if(dev->frame.state != MAPLE_FRAME_RESPONDED) {
             /* It's probably never coming back, so just unlock the frame */
             dev->frame.state = MAPLE_FRAME_VACANT;
@@ -520,6 +520,10 @@ static void vmu_block_write_callback(maple_state_t *st, maple_frame_t *frm) {
     genwait_wake_all(frm);
 }
 
+static int vmu_wait_frame_lock(maple_frame_t *frm) {
+    return maple_frame_lock(frm) == 0;
+}
+
 static int vmu_block_write_internal(maple_device_t *dev, uint16_t blocknum, const uint8_t *buffer) {
     maple_response_t *resp;
     int              rv, phase, r;
@@ -532,8 +536,7 @@ static int vmu_block_write_internal(maple_device_t *dev, uint16_t blocknum, cons
     rv = MAPLE_EOK;
 
     /* Lock the frame. XXX: Priority inversion issues here. */
-    while(maple_frame_lock(&dev->frame) < 0)
-        thd_pass();
+    thd_poll((thd_cb_t)vmu_wait_frame_lock, &dev->frame, 0);
 
     /* Writes have to occur in four phases per block -- this is the
        way of flash memory, which you must erase an entire block
@@ -557,7 +560,7 @@ static int vmu_block_write_internal(maple_device_t *dev, uint16_t blocknum, cons
         maple_queue_frame(&dev->frame);
 
         /* Wait for the VMU to accept it */
-        if(genwait_wait(&dev->frame, "vmu_block_write", 100, NULL) < 0) {
+        if(genwait_wait(&dev->frame, "vmu_block_write", 100) < 0) {
             if(dev->frame.state != MAPLE_FRAME_UNSENT) {
                 /* It's probably never coming back, so just unlock the frame */
                 dev->frame.state = MAPLE_FRAME_VACANT;
@@ -602,7 +605,7 @@ static int vmu_block_write_internal(maple_device_t *dev, uint16_t blocknum, cons
     maple_queue_frame(&dev->frame);
 
     /* Wait for the VMU to accept it */
-    if(genwait_wait(&dev->frame, "vmu_block_write", 100, NULL) < 0) {
+    if(genwait_wait(&dev->frame, "vmu_block_write", 100) < 0) {
         if(dev->frame.state != MAPLE_FRAME_UNSENT) {
             /* It's probably never coming back, so just unlock the frame */
             dev->frame.state = MAPLE_FRAME_VACANT;
@@ -678,7 +681,7 @@ int vmu_set_datetime(maple_device_t *dev, time_t unix) {
     maple_queue_frame(&dev->frame);
 
     /* Wait for the timer to accept it */
-    if(genwait_wait(&dev->frame, "vmu_set_datetime", 500, NULL) < 0) {
+    if(genwait_wait(&dev->frame, "vmu_set_datetime", 500) < 0) {
         if(dev->frame.state != MAPLE_FRAME_VACANT)  {
             /* Something went wrong.... */
             dev->frame.state = MAPLE_FRAME_VACANT;
@@ -728,7 +731,7 @@ int vmu_get_datetime(maple_device_t *dev, time_t *unix) {
     maple_queue_frame(&dev->frame);
 
     /* Wait for the VMU to accept it */
-    if(genwait_wait(&dev->frame, "vmu_get_datetime", 10000, NULL) < 0) {
+    if(genwait_wait(&dev->frame, "vmu_get_datetime", 10000) < 0) {
         if(dev->frame.state != MAPLE_FRAME_RESPONDED) {
             /* It's probably never coming back, so just unlock the frame */
             dev->frame.state = MAPLE_FRAME_VACANT;

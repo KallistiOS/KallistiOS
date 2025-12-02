@@ -92,22 +92,9 @@ int cdrom_set_sector_size(int size) {
 
 static int cdrom_poll(void *d, uint32_t timeout, int (*cb)(void *))
 {
-    uint64_t start_time;
-    int ret;
+    int ret = thd_poll(cb, d, timeout);
 
-    if(timeout)
-        start_time = timer_ms_gettime64();
-
-    do {
-        ret = (*cb)(d);
-        if(ret)
-            return ret;
-
-        if(!irq_inside_int())
-            thd_pass();
-    } while(!timeout || (timer_ms_gettime64() - start_time) < timeout);
-
-    return ERR_TIMEOUT;
+    return ret == 0 ? ERR_TIMEOUT : ret;
 }
 
 static int cdrom_submit_cmd(void *d) {
@@ -148,11 +135,6 @@ static int cdrom_check_cmd_done(void *d) {
         return ERR_SYS;
 
     return cmd_response != BUSY && cmd_response != PROCESSING;
-}
-
-static int cdrom_check_drive_ready(void *d) {
-    int rv = syscall_gdrom_check_drive(d);
-    return rv != BUSY;
 }
 
 static int cdrom_check_abort_done(void *d) {
@@ -287,7 +269,7 @@ int cdrom_get_status(int *status, int *disc_type) {
         /* DH: Figure out a better return to signal error */
         return -1;
 
-    rv = cdrom_poll(params, 0, cdrom_check_drive_ready);
+    rv = syscall_gdrom_check_drive(params);
 
     mutex_unlock(&_g1_ata_mutex);
 

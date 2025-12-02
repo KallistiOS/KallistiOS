@@ -63,7 +63,7 @@ int rwsem_read_lock_timed(rw_semaphore_t *s, int timeout) {
     else {
         /* Block until the write lock is not held any more */
         rv = genwait_wait(s, timeout ? "rwsem_read_lock_timed" :
-                          "rwsem_read_lock", timeout, NULL);
+                          "rwsem_read_lock", timeout);
 
         if(rv < 0) {
             rv = -1;
@@ -116,7 +116,7 @@ int rwsem_write_lock_timed(rw_semaphore_t *s, int timeout) {
         /* Block until the write lock is not held and there are no readers
            inside their critical sections */
         rv = genwait_wait(&s->write_lock, timeout ? "rwsem_write_lock_timed" :
-                          "rwsem_write_lock", timeout, NULL);
+                          "rwsem_write_lock", timeout);
 
         if(rv < 0) {
             rv = -1;
@@ -268,7 +268,7 @@ int rwsem_read_upgrade_timed(rw_semaphore_t *s, int timeout) {
         s->reader_waiting = thd_current;
         rv = genwait_wait(&s->write_lock, timeout ?
                           "rwsem_read_upgrade_timed" : "rwsem_read_upgrade",
-                          timeout, NULL);
+                          timeout);
 
         if(rv < 0) {
             /* The only way we can error out is if there are still readers
