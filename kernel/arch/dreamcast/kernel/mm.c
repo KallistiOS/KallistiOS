@@ -18,18 +18,18 @@
 #include <arch/irq.h>
 #include <arch/stack.h>
 #include <kos/dbglog.h>
+#include <kos/linker.h>
 #include <errno.h>
 #include <stdio.h>
 
 /* The end of the program is always marked by the '_end' symbol. So we'll
    longword-align that and add a little for safety. sbrk() calls will
    move up from there. */
-extern unsigned long end;
 static void *sbrk_base;
 
 /* MM-wide initialization */
 int mm_init(void) {
-    int base = (int)(&end);
+    int base = (int)end;
     base = (base / 4) * 4 + 4;  /* longword align */
     sbrk_base = (void*)base;
 
