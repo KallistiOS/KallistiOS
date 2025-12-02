@@ -23,15 +23,14 @@
 #include <stdint.h>
 #include <stdio.h>
 
-/* The end of the program is always marked by the '_end' symbol. So we'll
-   longword-align that and add a little for safety. sbrk() calls will
-   move up from there. */
+/* The end of the program is always marked by the 'end' symbol. So we'll
+   just longword-align that. sbrk() calls will move up from there. */
 static uintptr_t sbrk_base;
 
 /* MM-wide initialization */
 int mm_init(void) {
     uintptr_t base = (uintptr_t)end;
-    base = (base / 4) * 4 + 4;  /* longword align */
+    base = __align_up(base, 4);
     sbrk_base = base;
 
     return 0;
@@ -43,8 +42,7 @@ void *mm_sbrk(unsigned long increment) {
 
     irq_disable_scoped();
 
-    if(increment & 3)
-        increment = (increment + 4) & ~3;
+    increment = __align_up(increment, 4);
 
     sbrk_base += increment;
 
