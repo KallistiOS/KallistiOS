@@ -38,10 +38,9 @@ int mm_init(void) {
 
 /* Simple sbrk function */
 void* mm_sbrk(unsigned long increment) {
-    int old;
     void *base = sbrk_base;
 
-    old = irq_disable();
+    irq_disable_scoped();
 
     if(increment & 3)
         increment = (increment + 4) & ~3;
@@ -53,11 +52,8 @@ void* mm_sbrk(unsigned long increment) {
                sbrk_base, base, increment);
         sbrk_base = base;  /* Restore old value and mark failed */
         errno = ENOMEM;
-        irq_restore(old);
         return (void*) -1;
     }
-
-    irq_restore(old);
 
     return base;
 }
