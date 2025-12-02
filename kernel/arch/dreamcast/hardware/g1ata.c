@@ -182,11 +182,10 @@ static uint8_t dma_cmd = 0;
 static size_t dma_nb_sectors = 0;
 static uint64_t dma_sector = 0;
 static semaphore_t dma_done = SEM_INITIALIZER(0);
-static kthread_t *dma_thd = NULL;
 static asic_evt_handler_entry_t old_dma_irq;
 
 /* From cdrom.c */
-extern mutex_t _g1_ata_mutex;
+extern semaphore_t _g1_ata_sem;
 
 #define g1_ata_wait_status(n) \
     do {} while((IN8(G1_ATA_ALTSTATUS) & (n)))
@@ -211,10 +210,7 @@ int g1_dma_in_progress(void) {
 
 /* G1 mutex handling. */
 inline int g1_ata_mutex_lock(void) {
-    if(irq_inside_int())
-        return mutex_trylock(&_g1_ata_mutex);
-    else
-        return mutex_lock(&_g1_ata_mutex);
+    return sem_wait_irqsafe(&_g1_ata_sem);
 }
 
 inline int g1_ata_mutex_unlock(void) {
@@ -222,7 +218,7 @@ inline int g1_ata_mutex_unlock(void) {
     if(hardware_sys_mode(NULL) == HW_TYPE_RETAIL) {
         g1_ata_select_device(G1_ATA_MASTER);
     }
-    return mutex_unlock(&_g1_ata_mutex);
+    return sem_signal(&_g1_ata_sem);
 }
 
 static void g1_ata_set_sector_and_count(uint64_t sector, size_t count, int lba28) {
@@ -253,10 +249,7 @@ static void g1_dma_done(void) {
     dma_in_progress = 0;
 
     /* Make sure to select the GD-ROM drive back. */
-    if(hardware_sys_mode(NULL) == HW_TYPE_RETAIL) {
-        g1_ata_select_device(G1_ATA_MASTER);
-    }
-    mutex_unlock_as_thread(&_g1_ata_mutex, dma_thd);
+    g1_ata_mutex_unlock();
 }
 
 static void g1_dma_irq_hnd(uint32 code, void *data) {
@@ -362,12 +355,6 @@ static int dma_common(uint8_t cmd, size_t nsects, uint32_t addr, int dir,
     uint8_t status;
 
     dma_cmd = cmd;
-
-    /* Set the thread ID that initiated this DMA. */
-    dma_thd = thd_current;
-
-    if(irq_inside_int())
-        dma_thd = (kthread_t *)0xFFFFFFFF;
 
     /* Set the DMA parameters up. */
     OUT32(G1_ATA_DMA_ADDRESS, addr);
