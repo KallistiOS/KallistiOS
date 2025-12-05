@@ -172,7 +172,7 @@ static inline int fs_vmu_get_file_size(file_t fd) {
     \return                 Header status
 */
 static inline vmu_hdr_status_t fs_vmu_get_header_status(file_t fd) {
-    return fs_ioctl(fd, IOCTL_VMU_GET_HDR_STATE);
+    return (vmu_hdr_status_t)fs_ioctl(fd, IOCTL_VMU_GET_HDR_STATE);
 }
 
 /** \brief  Set a default header for newly created VMU files
