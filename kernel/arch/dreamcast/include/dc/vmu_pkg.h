@@ -24,6 +24,7 @@
 __BEGIN_DECLS
 
 #include <stdint.h>
+#include <stdbool.h>
 
 /** \defgroup   vmu_package     Header Package
     \brief                      API for Managing VMU File Headers
@@ -41,6 +42,8 @@ __BEGIN_DECLS
     eventually it will be turned into a flat file that you can save using
     fs_vmu.
 
+    This struct can be used for GAME and DATA file types.
+
     \headerfile dc/vmu_pkg.h
 */
 typedef struct vmu_pkg {
@@ -50,11 +53,11 @@ typedef struct vmu_pkg {
     int             icon_cnt;           /**< \brief Number of icons */
     int             icon_anim_speed;    /**< \brief Icon animation speed */
     int             eyecatch_type;      /**< \brief "Eyecatch" type */
-    int             data_len;           /**< \brief Number of data (payload) bytes */
+    int             data_len;           /**< \brief Number of data bytes (payload or application code) */
     uint16_t        icon_pal[16];       /**< \brief Icon palette (ARGB4444) */
     uint8_t         *icon_data;         /**< \brief 512*n bytes of icon data */
     uint8_t         *eyecatch_data;     /**< \brief Eyecatch data */
-    const uint8_t   *data;              /**< \brief Payload data */
+    const uint8_t   *data;              /**< \brief Payload data for DATA, application code for GAME */
 } vmu_pkg_t;
 
 /** \brief   Final VMU package type.
@@ -108,19 +111,55 @@ typedef struct vmu_hdr {
 */
 int vmu_pkg_build(vmu_pkg_t *src, uint8_t ** dst, int * dst_size);
 
+/** \brief   Convert a vmu_pkg_t into an array of uint8s.
+    \ingroup vmu_package
+
+    This function converts a vmu_pkg_t structure into an array of uint8's which
+    may be written to a VMU file via fs_vmu, or whatever.
+
+    \param  src             The vmu_pkg_t to convert.
+    \param  dst             The buffer (will be allocated for you).
+    \param  dst_size        The size of the output.
+    \param  intl_dst        The initial 512 bytes for GAME, null for DATA.
+    \return                 0 on success, <0 on failure.
+*/
+int vmu_pkg_build_ex(vmu_pkg_t *src, uint8_t **dst, int *dst_size, const void *intl_dst);
+
+/** \brief   Parse an array of uint8s into a vmu_pkg_t.
+    \ingroup vmu_package
+
+    This function does the opposite of vmu_pkg_build and is used to parse VMU
+    files read in. Source file type is expected to be DATA.
+
+    \param  data            The buffer to parse.
+    \param  data_size       The size of the buffer, in bytes.
+    \param  pkg             Where to store the vmu_pkg_t.
+
+    \retval -1              On invalid CRC in the data.
+    \retval -2              On truncated array or corrupted header.
+    \retval 0               On success.
+*/
+int vmu_pkg_parse(uint8_t *data, size_t data_size, vmu_pkg_t *pkg);
+
 /** \brief   Parse an array of uint8s into a vmu_pkg_t.
     \ingroup vmu_package
 
     This function does the opposite of vmu_pkg_build and is used to parse VMU
     files read in.
 
+    For GAME VMU files, the first 512 bytes are omitted before parse the header.
+
     \param  data            The buffer to parse.
     \param  data_size       The size of the buffer, in bytes.
     \param  pkg             Where to store the vmu_pkg_t.
-    \retval -1              On invalid CRC in the data.
+    \param  ftgame          Source file type. true for GAME, false for DATA.
+    \param  nocrc           Action on bad CRC. true to ignore and parse anyway, false to return.
+
+    \retval -1              On invalid CRC in the data, header will be parsed if requested.
+    \retval -2              On truncated array or corrupted header.
     \retval 0               On success.
 */
-int vmu_pkg_parse(uint8_t *data, size_t data_size, vmu_pkg_t *pkg);
+int vmu_pkg_parse_ex(uint8_t *data, size_t data_size, vmu_pkg_t *pkg, bool ftgame, bool nocrc);
 
 /** \brief   Load a .ico file to use as a VMU file's icon.
     \ingroup vmu_package
@@ -145,6 +184,25 @@ int vmu_pkg_parse(uint8_t *data, size_t data_size, vmu_pkg_t *pkg);
     \retval 0               On success.
 */
 int vmu_pkg_load_icon(vmu_pkg_t *pkg, const char *icon_fn);
+
+/** \brief   Calculate CRC on a raw VMU data
+    \ingroup vmu_package
+
+    This function calculates the checksum and then writes the result. The buffer
+    created by vmu_pkg_build() function can be used here.
+
+    The following layout is expected to be in the buffer: initial+header+data.
+    The initial part only exists on GAME file types.
+
+    For DATA file types, it possible change the vmu_hdr_t::data_len field present
+    in the buffer by suppling a non-negative value if more bytes was added at the
+    end of the buffer.
+
+    \param  buffer          The Buffer to process.
+    \param  ftgame          VMU file type. true for GAME, false for DATA.
+    \param  data_len        Value in bytes to overwrite data_len field, otherwise, -1 to keep.
+*/
+void vmu_pkg_crc_set(uint8_t *buffer, bool ftgame, int data_len);
 
 __END_DECLS
 
