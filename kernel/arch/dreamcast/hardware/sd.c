@@ -587,7 +587,7 @@ int sd_write_blocks(uint32 block, size_t count, const uint8 *buf) {
     int rv, i = 0;
     uint8_t byte;
     size_t write_count;
-    uint8_t *write_buf;
+    const uint8_t *write_buf;
     bool retried = false;
 
     if(!initted) {
