@@ -32,6 +32,11 @@ int main(int argc, char **argv)
        We use the value 127 here, to distinguish from the 0 or 255 we set later.
     */
     memset(ring_buffer_storage, 127, sizeof(ring_buffer_storage));
+    // To convince you that every byte of the array is cleared to 127 at startup :-)
+    for (int i = 0; i < 4096; i++)
+    {
+        assert(ring_buffer_storage[i] == 127);
+    }
 
     /* Initialize basic MMU support; only using static TLB mappings */
     mmu_init_basic();
