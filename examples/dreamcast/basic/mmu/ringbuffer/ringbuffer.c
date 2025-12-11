@@ -49,17 +49,17 @@ int main(int argc, char **argv) {
          p0 p1 p2 ... p4095   /     /     /          /
          |  |  |      |      /     /     /          /   
          |--|--|------|-----/     /     /          / 
-            |--|------|----------/     /          /
-               |------|---------------/          /
-                      |-------------------------/
-            
+         |  |--|------|----------/     /          /
+         |  |  |------|---------------/          /
+         |  |  |      |-------------------------/
+         |  |  |      |
         [p0 p1 p2 ... p4095]
         physical memory
     */
 
-    // physical(ring_buffer_pointer) to 0x12340000
+    // physical(ring_buffer_storage) to ring_buffer_pointer
     mmu_page_map_static((uintptr_t)ring_buffer_pointer, ((uintptr_t)ring_buffer_storage - 0x80000000), PAGE_SIZE_4K, MMU_ALL_RDWR, true);
-    // physical(ring_buffer_pointer) to 0x12340000
+    // physical(ring_buffer_pointer) to ring_buffer_pointer + 0x1000 (4 kb)
     mmu_page_map_static((uintptr_t)ring_buffer_pointer + 0x1000, ((uintptr_t)ring_buffer_storage - 0x80000000), PAGE_SIZE_4K, MMU_ALL_RDWR, true);
 
     // here we iterate over 6144 bytes, starting at the beginning of our ring buffer
