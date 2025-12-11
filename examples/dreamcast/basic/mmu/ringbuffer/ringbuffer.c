@@ -74,15 +74,15 @@ int main(int argc, char **argv)
     mmu_page_map_static((uintptr_t)ring_buffer_pointer + 0x1000,
                         (uintptr_t)ring_buffer_storage & ~MEM_AREA_P1_BASE, PAGE_SIZE_4K, MMU_ALL_RDWR, MMU_CACHEABLE);
 
-    // here we iterate over 6144 bytes, starting at the beginning of our ring buffer
     // although the backing store is 4096 bytes of physical memory,
     // we have mapped 8192 bytes of virtual memory to duplicate the physical memory linearly
+    // here we iterate over 4096 bytes, starting at index 2048 of our ring buffer
     // the initial value of all of these bytes is 127
     // if the index is less than 4096,
     //  we set the byte to 0
     // if the index (byte i past the start of the ring buffer) is greater than or equal to 4096,
     //  we set the byte to 255
-    for (int i = 0; i < 6144; i++)
+    for (int i = 2048; i < 6144; i++)
     {
         if (i < 4096)
         {
