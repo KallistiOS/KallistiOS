@@ -31,16 +31,10 @@
 /* Interrupt priority registers */
 #define REG_IPR(x) ( *((volatile uint16_t *)(0xffd00004 + (x) * 4)) )
 
-/* TRAPA handler closure */
-struct trapa_cb {
-    trapa_handler hdl;
-    void         *data;
-};
-
 /* Individual exception handlers */
 static irq_cb_t        irq_handlers[0x40];
 /* TRAPA exception handlers */
-static struct trapa_cb trapa_handlers[0x100];
+static irq_cb_t        trapa_handlers[0x100];
 
 /* Global exception handler -- hook this if you want to get each and every
    exception; you might get more than you bargained for, but it can be useful. */
@@ -56,13 +50,14 @@ int inside_int;
 /* Set a handler, or remove a handler */
 int arch_irq_set_handler(irq_t code, irq_hdl_t hnd, void *data) {
     /* Make sure they don't do something crackheaded */
-    if(code >= 0x1000 || (code & 0x000f))
-        return -1;
-
-    code >>= 5;
+    assert(((code & EXC_TRAP) || !(code & 0xf)) && code < 0x900);
 
     irq_disable_scoped();
-    irq_handlers[code] = (struct irq_cb){ hnd, data };
+
+    if(code & EXC_TRAP)
+        trapa_handlers[code & 0xff] = (irq_cb_t){ hnd, data };
+    else
+        irq_handlers[code >> 5] = (irq_cb_t){ hnd, data };
 
     return 0;
 }
@@ -70,13 +65,14 @@ int arch_irq_set_handler(irq_t code, irq_hdl_t hnd, void *data) {
 /* Get the address of the current handler */
 irq_cb_t arch_irq_get_handler(irq_t code) {
     /* Make sure they don't do something crackheaded */
-    if(code >= 0x1000 || (code & 0x000f))
-        return (irq_cb_t){ NULL, NULL };
-
-    code >>= 5;
+    assert(((code & EXC_TRAP) || !(code & 0xf)) && code < 0x900);
 
     irq_disable_scoped();
-    return irq_handlers[code];
+
+    if(code & EXC_TRAP)
+        return trapa_handlers[code & 0xff];
+    else
+        return irq_handlers[code >> 5];
 }
 
 /* Set a global handler */
@@ -93,24 +89,6 @@ irq_cb_t arch_irq_get_global_handler(void) {
     irq_disable_scoped();
 
     return global_irq_handler;
-}
-
-/* Set or remove a trapa handler */
-int trapa_set_handler(trapa_t code, trapa_handler hnd, void *data) {
-    irq_disable_scoped();
-
-    trapa_handlers[code] = (struct trapa_cb){ hnd, data };
-    return 0;
-}
-
-/* Get a particular trapa handler */
-trapa_handler trapa_get_handler(trapa_t code, void **data) {
-    irq_disable_scoped();
-
-    if(data)
-        *data = trapa_handlers[code].data;
-
-    return trapa_handlers[code].hdl;
 }
 
 /* Get a string description of the exception */
@@ -288,7 +266,7 @@ void irq_handle_exception(int code) {
     inside_int = 0;
 }
 
-void irq_handle_trapa(irq_t code, irq_context_t *context, void *data) {
+static void irq_handle_trapa(irq_t code, irq_context_t *context, void *data) {
     const struct irq_cb *hnd, *handlers = data;
     uint32_t vec;
 
