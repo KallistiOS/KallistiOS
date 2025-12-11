@@ -91,7 +91,7 @@ int main(int argc, char **argv)
         }
     }
 
-    // we will now also assert that the second half of the buffer contains zeros, as it was written to
+    // we will now ssert that the second half of the buffer contains zeros, as it was written to
     // from virtual memory indices 2048 through 4095
     for (int i = 2048; i < 4096; i++)
     {
