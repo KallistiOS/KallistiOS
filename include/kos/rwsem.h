@@ -100,9 +100,7 @@ int rwsem_destroy(rw_semaphore_t *s) __nonnull_all;
     \retval -1      On error, errno will be set as appropriate.
 
     \par    Error Conditions:
-    \em     EPERM - called inside an interrupt \n
     \em     ETIMEDOUT - the timeout expires before the lock can be acquired \n
-    \em     EINVAL - the semaphore is not initialized
 */
 int rwsem_read_lock_timed(rw_semaphore_t *s, unsigned int timeout) __nonnull_all;
 
@@ -114,12 +112,7 @@ int rwsem_read_lock_timed(rw_semaphore_t *s, unsigned int timeout) __nonnull_all
     call inside of an interrupt; use rwsem_read_lock_irqsafe instead.
 
     \param  s       The r/w semaphore to lock.
-    \retval 0       On success
-    \retval -1      On error, errno will be set as appropriate.
-
-    \par    Error Conditions:
-    \em     EPERM - called inside an interrupt \n
-    \em     EINVAL - the semaphore is not initialized
+    \retval 0       The return value is always 0.
 */
 __nonnull_all
 static inline int rwsem_read_lock(rw_semaphore_t *s) {
@@ -139,7 +132,6 @@ static inline int rwsem_read_lock(rw_semaphore_t *s) {
     \retval -1      On error, errno will be set as appropriate.
 
     \par    Error Conditions:
-    \em     EINVAL - the semaphore is not initialized \n
     \em     EWOULDBLOCK - called inside an interrupt and the semaphore was
                           already locked
 */
@@ -158,9 +150,7 @@ int rwsem_read_lock_irqsafe(rw_semaphore_t *s) __nonnull_all;
     \retval -1      On error, errno will be set as appropriate.
 
     \par    Error Conditions:
-    \em     EPERM - called inside an interrupt \n
     \em     ETIMEDOUT - the timeout expires before the lock can be acquired \n
-    \em     EINVAL - the semaphore is not initialized
 */
 int rwsem_write_lock_timed(rw_semaphore_t *s, unsigned int timeout) __nonnull_all;
 
@@ -172,12 +162,7 @@ int rwsem_write_lock_timed(rw_semaphore_t *s, unsigned int timeout) __nonnull_al
     safe to call inside of an interrupt; use rwsem_write_lock_irqsafe instead.
 
     \param  s       The r/w semaphore to lock.
-    \retval 0       On success.
-    \retval -1      On error, errno will be set as appropriate.
-
-    \par    Error conditions:
-    \em     EPERM - called inside an interrupt \n
-    \em     EINVAL - the semaphore is not initialized
+    \retval 0       The return value is always 0.
 */
 __nonnull_all
 static inline int rwsem_write_lock(rw_semaphore_t *s) {
@@ -197,7 +182,6 @@ static inline int rwsem_write_lock(rw_semaphore_t *s) {
     \retval -1      On error, errno will be set as appropriate.
 
     \par    Error conditions:
-    \em     EINVAL - the semaphore is not initialized \n
     \em     EWOULDBLOCK - called inside an interrupt and the semaphore was
                           already locked
 */
@@ -213,7 +197,6 @@ int rwsem_write_lock_irqsafe(rw_semaphore_t *s) __nonnull_all;
 
     \par    Error Conditions:
     \em     EPERM - the read lock is not currently held \n
-    \em     EINVAL - the semaphore is not initialized
 */
 int rwsem_read_unlock(rw_semaphore_t *s) __nonnull_all;
 
@@ -228,7 +211,6 @@ int rwsem_read_unlock(rw_semaphore_t *s) __nonnull_all;
     \par    Error Conditions:
     \em     EPERM - the write lock is not currently held by the calling
                     thread \n
-    \em     EINVAL - the semaphore is not initialized
 */
 int rwsem_write_unlock(rw_semaphore_t *s) __nonnull_all;
 
@@ -247,7 +229,6 @@ int rwsem_write_unlock(rw_semaphore_t *s) __nonnull_all;
 
     \par    Error Conditions:
     \em     EPERM - the lock is not currently held by the calling thread \n
-    \em     EINVAL - the semaphore is not initialized
 */
 int rwsem_unlock(rw_semaphore_t *s) __nonnull_all;
 
@@ -263,7 +244,6 @@ int rwsem_unlock(rw_semaphore_t *s) __nonnull_all;
 
     \par    Error Conditions:
     \em     EWOULDBLOCK - a call to rwsem_read_lock would block \n
-    \em     EINVAL - the semaphore is not initialized
 */
 int rwsem_read_trylock(rw_semaphore_t *s) __nonnull_all;
 
@@ -279,7 +259,6 @@ int rwsem_read_trylock(rw_semaphore_t *s) __nonnull_all;
 
     \par    Error Conditions:
     \em     EWOULDBLOCK - a call to rwsem_write_lock would block \n
-    \em     EINVAL - the semaphore is not initialized
 */
 int rwsem_write_trylock(rw_semaphore_t *s) __nonnull_all;
 
@@ -303,8 +282,6 @@ int rwsem_write_trylock(rw_semaphore_t *s) __nonnull_all;
     \retval -1      On error, errno will be set as appropriate.
 
     \par    Error Conditions:
-    \em     EPERM - called inside an interrupt \n
-    \em     EINVAL - the semaphore is not initialized \n
     \em     EBUSY - another reader has already requested an upgrade \n
     \em     ETIMEDOUT - the timeout expired before the write lock could be
                         acquired
@@ -329,8 +306,6 @@ int rwsem_read_upgrade_timed(rw_semaphore_t *s, unsigned int timeout) __nonnull_
     \retval -1      On error, errno will be set as appropriate.
 
     \par    Error Conditions:
-    \em     EPERM - called inside an interrupt \n
-    \em     EINVAL - the semaphore is not initialized \n
     \em     EBUSY - another reader has already requested an upgrade
 */
 __nonnull_all
@@ -352,7 +327,6 @@ static inline int rwsem_read_upgrade(rw_semaphore_t *s) {
     \par    Error Conditions:
     \em     EWOULDBLOCK - a call to rwsem_read_upgrade would block \n
     \em     EBUSY - another reader has already requested an upgrade \n
-    \em     EINVAL - the semaphore is not initialized
 */
 int rwsem_read_tryupgrade(rw_semaphore_t *s) __nonnull_all;
 
