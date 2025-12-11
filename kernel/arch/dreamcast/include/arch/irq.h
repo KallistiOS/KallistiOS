@@ -23,6 +23,9 @@
     \see    dc/asic.h, arch/trap.h
 */
 
+/* Keep this include above the macro guards */
+#include <kos/irq.h>
+
 #ifndef __ARCH_IRQ_H
 #define __ARCH_IRQ_H
 
@@ -88,7 +91,7 @@ __BEGIN_DECLS
     The size of this structure should be less than or equal to the
     \ref REG_BYTE_CNT value.
 */
-typedef __attribute__((aligned(32))) struct irq_context {
+__attribute__((aligned(32))) struct irq_context {
     uint32_t  pc;         /**< Program counter */
     uint32_t  pr;         /**< Procedure register (aka return address) */
     uint32_t  gbr;        /**< Global base register (TLS segment ptr) */
@@ -101,7 +104,7 @@ typedef __attribute__((aligned(32))) struct irq_context {
     uint32_t  frbank[16]; /**< Secondary floating point registers */
     uint32_t  r[16];      /**< 16 general purpose (integer) registers */
     uint32_t  fpscr;      /**< Floating-point status/control register */
-} irq_context_t;
+};
 
 /* Included for legacy compatibility with these two APIs being one. */
 #include <arch/trap.h>
@@ -192,7 +195,11 @@ void irq_create_context(irq_context_t *context, uintptr_t stack_pointer,
 
     List of exception codes:
 */
-typedef enum irq_exception {
+enum irq_exception
+#ifdef __cplusplus
+: unsigned int
+#endif
+{
     EXC_RESET_POWERON      = 0x0000, /**< `[RESET ]` Power-on reset */
     EXC_RESET_MANUAL       = 0x0020, /**< `[RESET ]` Manual reset */
     EXC_RESET_UDI          = 0x0000, /**< `[RESET ]` Hitachi UDI reset */
@@ -259,7 +266,7 @@ typedef enum irq_exception {
     EXC_SCIF_TXI           = 0x0760, /**< `[POST  ]` SCIF Transmit ready */
     EXC_DOUBLE_FAULT       = 0x0780, /**< `[SOFT  ]` Exception happened in an ISR */
     EXC_UNHANDLED_EXC      = 0x07e0  /**< `[SOFT  ]` Exception went unhandled */
-} irq_t;
+};
 
 /** \defgroup irq_state     State
     \brief                  Methods for querying active IRQ information.
@@ -291,9 +298,6 @@ int irq_inside_int(void);
 
     @{
 */
-
-/** Type representing an interrupt mask state. */
-typedef uint32_t irq_mask_t;
 
 /** Get status register contents.
 
@@ -396,24 +400,6 @@ void irq_force_return(void);
     @{
 */
 
-/** The type of an IRQ handler.
-
-    \param  code            The IRQ that caused the handler to be called.
-    \param  context         The CPU's context.
-    \param  data            Arbitrary userdata associated with the handler.
-*/
-typedef void (*irq_handler)(irq_t code, irq_context_t *context, void *data);
-
-
-/** The type of a full callback of an IRQ handler and userdata.
-
-    This type is used to set or get IRQ handlers and their data.
-*/
-typedef struct irq_cb {
-    irq_handler hdl;    /**< A pointer to a procedure to handle an exception. */
-    void       *data;   /**< A pointer that will be passed along to the callback. */
-} irq_cb_t;
-
 /** \defgroup irq_handlers_ind  Individual
     \brief                      API for managing individual IRQ handlers.
 
@@ -436,7 +422,7 @@ typedef struct irq_cb {
 
     \sa irq_get_handler()
 */
-int irq_set_handler(irq_t code, irq_handler hnd, void *data);
+int irq_set_handler(irq_t code, irq_hdl_t hnd, void *data);
 
 /** Get the address of the current handler for the IRQ type.
 
@@ -470,7 +456,7 @@ irq_cb_t irq_get_handler(irq_t code);
     \retval 0               On success (no error conditions defined).
 
 */
-int irq_set_global_handler(irq_handler hnd, void *data);
+int irq_set_global_handler(irq_hdl_t hnd, void *data);
 
 /** Get the global exception handler.
 

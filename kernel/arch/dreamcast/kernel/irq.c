@@ -56,7 +56,7 @@ int irq_inside_int(void) {
 }
 
 /* Set a handler, or remove a handler */
-int irq_set_handler(irq_t code, irq_handler hnd, void *data) {
+int irq_set_handler(irq_t code, irq_hdl_t hnd, void *data) {
     /* Make sure they don't do something crackheaded */
     if(code >= 0x1000 || (code & 0x000f))
         return -1;
@@ -82,7 +82,7 @@ irq_cb_t irq_get_handler(irq_t code) {
 }
 
 /* Set a global handler */
-int irq_set_global_handler(irq_handler hnd, void *data) {
+int irq_set_global_handler(irq_hdl_t hnd, void *data) {
     irq_disable_scoped();
 
     global_irq_handler.hdl = hnd;
