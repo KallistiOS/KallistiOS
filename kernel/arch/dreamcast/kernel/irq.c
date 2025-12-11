@@ -326,15 +326,17 @@ irq_context_t *irq_get_context(void) {
 /* Fill a newly allocated context block for usage with supervisor/kernel
    or user mode. The given parameters will be passed to the called routine (up
    to the architecture maximum). */
-void irq_create_context(irq_context_t *context, uint32_t stkpntr,
-                        uint32_t routine, const uint32_t *args, bool usermode) {
+void irq_create_context(irq_context_t *context,
+                        uintptr_t stack_pointer,
+                        uintptr_t routine,
+                        const uintptr_t *args) {
     /* Clear out all registers. */
     memset(context, 0, sizeof(irq_context_t));
 
     /* Setup the program frame */
     context->pc = (uint32_t)routine;
     context->sr = 0x40000000;   /* note: need to handle IMASK */
-    context->r[15] = stkpntr;
+    context->r[15] = stack_pointer;
     context->r[14] = 0xffffffff;
 
     /* Copy up to four args */
@@ -342,12 +344,6 @@ void irq_create_context(irq_context_t *context, uint32_t stkpntr,
     context->r[5] = args[1];
     context->r[6] = args[2];
     context->r[7] = args[3];
-
-    /* Handle user mode */
-    if(usermode) {
-        context->sr &= ~0x40000000;
-        context->r[15] &= ~0xf0000000;
-    }
 }
 
 /* Default timer handler (until threads can take over) */

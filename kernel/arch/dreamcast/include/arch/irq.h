@@ -168,11 +168,9 @@ irq_context_t *irq_get_context(void);
     \param  args            Any arguments to set in the registers. This cannot
                             be NULL, and must have enough values to fill in up
                             to the architecture maximum.
-    \param  usermode        true to run the routine in user mode, false for
-                            supervisor.
 */
-void irq_create_context(irq_context_t *context, uint32_t stack_pointer,
-                        uint32_t routine, const uint32_t *args, bool usermode);
+void irq_create_context(irq_context_t *context, uintptr_t stack_pointer,
+                        uintptr_t routine, const uintptr_t *args);
 
 /** @} */
 
