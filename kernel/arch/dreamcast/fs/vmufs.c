@@ -567,7 +567,7 @@ static int vmufs_setup(maple_device_t * dev, vmu_root_t * root, vmu_dir_t ** dir
 
 dead:
     vmufs_mutex_unlock();
-    return -1;
+    return -2;
 }
 
 /* Internal function to tear everything down for you */
@@ -656,7 +656,7 @@ static int vmufs_read_common(maple_device_t * dev, vmu_dir_t * dirent, uint16 * 
     return 0;
 }
 
-int vmufs_read(maple_device_t * dev, const char * fn, void ** outbuf, int * outsize) {
+int vmufs_read(maple_device_t * dev, const char * fn, void ** outbuf, int * outsize, uint8 * outtype) {
     vmu_root_t  root;
     vmu_dir_t   * dir = NULL;
     uint16      * fat = NULL;
@@ -664,10 +664,14 @@ int vmufs_read(maple_device_t * dev, const char * fn, void ** outbuf, int * outs
 
     *outbuf = NULL;
     *outsize = 0;
+    *outtype = 0x00;
 
     /* Init everything */
-    if(vmufs_setup(dev, &root, &dir, &dirsize, &fat, &fatsize) < 0)
-        return -1;
+    rv = vmufs_setup(dev, &root, &dir, &dirsize, &fat, &fatsize);
+    if(rv < 0) {
+        //dbglog(DBG_ERROR, "vmufs_read: %s\n", rv == -1 ? "invalid dev" : "fat/root read error");
+        return rv == -1 ? -1 : -3;
+    }
 
     /* Look for the file we want */
     idx = vmufs_dir_find(&root, dir, fn);
@@ -678,6 +682,8 @@ int vmufs_read(maple_device_t * dev, const char * fn, void ** outbuf, int * outs
         rv = -2;
         goto ex;
     }
+
+    *outtype = dir[idx].filetype;
 
     if(vmufs_read_common(dev, dir + idx, fat, outbuf, outsize) < 0) {
         rv = -3;
@@ -713,7 +719,7 @@ int vmufs_write(maple_device_t * dev, const char * fn, void * inbuf, int insize,
     vmu_root_t  root;
     vmu_dir_t   * dir = NULL, nd;
     uint16      * fat = NULL;
-    int     oldinsize, fatsize, dirsize, idx, rv = 0, st, fnlength;
+    int     oldinsize, fatsize, dirsize, idx, rv = 0, st, fnlength, blkavail, blksfile;
 
     /* Round up the size if necessary */
     oldinsize = insize;
@@ -741,6 +747,17 @@ int vmufs_write(maple_device_t * dev, const char * fn, void * inbuf, int insize,
             goto ex;
         }
         else {
+            /* Check if there enough free blocks before deletion */
+            blksfile = insize / 512;
+            blkavail = dir[idx].filesize + vmufs_fat_free(&root, fat);
+            if(blkavail < blksfile) {
+                dbglog(
+                    DBG_INFO, "vmufs_write: not enough space for file. Need %d blocks, have %d\n", blksfile, blkavail
+                );
+                rv =  -7;
+                goto ex;
+            }
+
             if(vmufs_file_delete(&root, fat, dir, fn) < 0) {
                 dbglog(DBG_ERROR, "vmufs_write: can't delete old file '%s' on device %c%c\n",
                        fn, dev->port + 'A', dev->unit + '0');
