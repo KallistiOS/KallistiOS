@@ -20,7 +20,7 @@
     \author Paul Cercueil
     \author Falco Girgis
 
-    \see    dc/asic.h, arch/trap.h
+    \see    dc/asic.h
 */
 
 #ifndef __ARCH_IRQ_H
@@ -151,6 +151,7 @@ __attribute__((aligned(32))) struct irq_context {
    |`POST`  | Continues with next instruciton after interrupt processing. Context PC is the next instruction.
    |`SOFT`  | Software-driven exceptions for triggering interrupts upon special events.
    |`UNUSED`| Known to not be present and usable with the DC's SH4 configuration.
+   |`TRAP ` | Virtual type (not a SH hardware type) for trap codes.
 
     List of exception codes:
 */
@@ -220,8 +221,11 @@ enum irq_exception {
     EXC_SCIF_BRI           = 0x0740, /**< `[POST  ]` SCIF break */
     EXC_SCIF_TXI           = 0x0760, /**< `[POST  ]` SCIF Transmit ready */
     EXC_DOUBLE_FAULT       = 0x0780, /**< `[SOFT  ]` Exception happened in an ISR */
-    EXC_UNHANDLED_EXC      = 0x07e0  /**< `[SOFT  ]` Exception went unhandled */
+    EXC_UNHANDLED_EXC      = 0x07e0, /**< `[SOFT  ]` Exception went unhandled */
+    EXC_TRAP               = 0x0800  /**< `[TRAP  ]` Trap */
 };
+
+#define IRQ_TRAP_CODE(code) (EXC_TRAP + (code))
 
 static inline int arch_irq_inside_int(void) {
     extern int inside_int;
@@ -346,9 +350,6 @@ unsigned int irq_get_priority(irq_src_t src);
 
 /* Include <kos/irq.h> for compatibility with code that includes <arch/irq.h> instead. */
 #include <kos/irq.h>
-
-/* Included for legacy compatibility with these two APIs being one. */
-#include <arch/trap.h>
 
 __END_DECLS
 
