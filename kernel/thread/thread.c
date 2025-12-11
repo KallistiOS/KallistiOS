@@ -370,7 +370,7 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
                          void *(*routine)(void *param), void *param) {
     kthread_t *nt = NULL;
     tid_t tid;
-    uint32_t params[4];
+    uintptr_t params[4];
     kthread_attr_t real_attr = { false, THD_STACK_SIZE, NULL, PRIO_DEFAULT, NULL, false };
 
     if(attr)
@@ -425,13 +425,13 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
             nt->stack_size = real_attr.stack_size;
 
             /* Populate the context */
-            params[0] = (uint32_t)routine;
-            params[1] = (uint32_t)param;
+            params[0] = (uintptr_t)routine;
+            params[1] = (uintptr_t)param;
             params[2] = 0;
             params[3] = 0;
             irq_create_context(&nt->context,
-                               ((uint32_t)nt->stack) + nt->stack_size,
-                               (uint32_t)thd_birth, params, 0);
+                               ((uintptr_t)nt->stack) + nt->stack_size,
+                               (uintptr_t)thd_birth, params);
 
             /* Some architectures require setting up a new stack before use.
                We won't do this if routine is NULL, however, as this means
