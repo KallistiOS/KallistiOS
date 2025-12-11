@@ -27,6 +27,11 @@ static uint8_t __attribute__((aligned(4096))) ring_buffer_storage[4096];
 static uint8_t *ring_buffer_pointer = (uint8_t*)0x12340000;
 
 int main(int argc, char **argv) {
+    /* Before we proceed, set ring_buffer_storage to a sentinel value
+       We use the value 127 here, to distinguish from the 0 or 255 we set later.
+    */
+    memset(ring_buffer_storage, 127, sizeof(ring_buffer_storage));
+
     /* Initialize basic MMU support; only using static TLB mappings */
     mmu_init_basic();
 
@@ -65,6 +70,7 @@ int main(int argc, char **argv) {
     // here we iterate over 6144 bytes, starting at the beginning of our ring buffer
     // although the backing store is 4096 bytes of physical memory,
     // we have mapped 8192 bytes of virtual memory to duplicate the physical memory linearly
+    // the initial value of all of these bytes is 127
     // if the index is less than 4096,
     //  we set the byte to 0
     // if the index (byte i past the start of the ring buffer) is greater than or equal to 4096,
@@ -77,14 +83,20 @@ int main(int argc, char **argv) {
         }
     }
 
-    // now that we have iterated, we check the value of the first 2048 bytes in the actual ring buffer storage array
+    // we will now also assert that the second half of the buffer contains zeros, as it was written to
+    // from virtual memory indices 2048 through 4095
+    for (int i = 2048; i < 4096; i++) {
+        assert(ring_buffer_storage[i] == 0);
+    }
+    printf("Writing to elements 2048 through 4095 updated elements 2048 through 4095 :-)\n");
+
+    // we then check the value of the first 2048 bytes in the actual ring buffer storage array
     // they should all be set to 255 at this time
     // if they are, that means we wrapped around a 4kb buffer by writing into it as if it was an 8kb buffer
     // magic :-)
     for (int i = 0; i < 2048; i++) {
         assert(ring_buffer_storage[i] == 255);
     }
-
     printf("Writing to elements 4096 through 6143 updated elements 0 through 2047 :-)\n");
 
     /* Shutdown MMU support */
