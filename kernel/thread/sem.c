@@ -82,8 +82,7 @@ int sem_wait_timed(semaphore_t *sm, int timeout) {
     else {
         /* Block us until we're signaled */
         sm->count--;
-        rv = genwait_wait(sm, timeout ? "sem_wait_timed" : "sem_wait", timeout,
-                          NULL);
+        rv = genwait_wait(sm, timeout ? "sem_wait_timed" : "sem_wait", timeout);
 
         /* Did we fail to get the lock? */
         if(rv < 0) {
