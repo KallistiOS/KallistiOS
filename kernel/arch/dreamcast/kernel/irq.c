@@ -13,15 +13,15 @@
 #include <assert.h>
 #include <stdio.h>
 #include <arch/arch.h>
-#include <arch/types.h>
 #include <arch/irq.h>
-#include <kos/timer.h>
+#include <arch/types.h>
 #include <arch/stack.h>
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>
-#include <kos/thread.h>
 #include <kos/library.h>
 #include <kos/regfield.h>
+#include <kos/thread.h>
+#include <kos/timer.h>
 
 /* Macros for accessing related registers. */
 #define TRA    ( *((volatile uint32_t *)(0xff000020)) ) /* TRAPA Exception Register */
@@ -31,16 +31,10 @@
 /* Interrupt priority registers */
 #define REG_IPR(x) ( *((volatile uint16_t *)(0xffd00004 + (x) * 4)) )
 
-/* TRAPA handler closure */
-struct trapa_cb {
-    trapa_handler hdl;
-    void         *data;
-};
-
 /* Individual exception handlers */
 static irq_cb_t        irq_handlers[0x40];
 /* TRAPA exception handlers */
-static struct trapa_cb trapa_handlers[0x100];
+static irq_cb_t        trapa_handlers[0x100];
 
 /* Global exception handler -- hook this if you want to get each and every
    exception; you might get more than you bargained for, but it can be useful. */
@@ -49,40 +43,40 @@ static irq_cb_t        global_irq_handler;
 /* Default IRQ context location */
 static irq_context_t   irq_context_default;
 
-/* Are we inside an interrupt? */
-static int inside_int;
-int irq_inside_int(void) {
-    return inside_int;
-}
+/* Are we inside an interrupt?
+   Content is ((code&0xf)<<16) | (evt&0xffff) */
+int inside_int;
 
 /* Set a handler, or remove a handler */
-int irq_set_handler(irq_t code, irq_handler hnd, void *data) {
+int arch_irq_set_handler(irq_t code, irq_hdl_t hnd, void *data) {
     /* Make sure they don't do something crackheaded */
-    if(code >= 0x1000 || (code & 0x000f))
-        return -1;
-
-    code >>= 5;
+    assert(((code & EXC_TRAP) || !(code & 0xf)) && code < 0x900);
 
     irq_disable_scoped();
-    irq_handlers[code] = (struct irq_cb){ hnd, data };
+
+    if(code & EXC_TRAP)
+        trapa_handlers[code & 0xff] = (irq_cb_t){ hnd, data };
+    else
+        irq_handlers[code >> 5] = (irq_cb_t){ hnd, data };
 
     return 0;
 }
 
 /* Get the address of the current handler */
-irq_cb_t irq_get_handler(irq_t code) {
+irq_cb_t arch_irq_get_handler(irq_t code) {
     /* Make sure they don't do something crackheaded */
-    if(code >= 0x1000 || (code & 0x000f))
-        return (irq_cb_t){ NULL, NULL };
-
-    code >>= 5;
+    assert(((code & EXC_TRAP) || !(code & 0xf)) && code < 0x900);
 
     irq_disable_scoped();
-    return irq_handlers[code];
+
+    if(code & EXC_TRAP)
+        return trapa_handlers[code & 0xff];
+    else
+        return irq_handlers[code >> 5];
 }
 
 /* Set a global handler */
-int irq_set_global_handler(irq_handler hnd, void *data) {
+int arch_irq_set_global_handler(irq_hdl_t hnd, void *data) {
     irq_disable_scoped();
 
     global_irq_handler.hdl = hnd;
@@ -91,28 +85,10 @@ int irq_set_global_handler(irq_handler hnd, void *data) {
 }
 
 /* Get the global exception handler */
-irq_cb_t irq_get_global_handler(void) {
+irq_cb_t arch_irq_get_global_handler(void) {
     irq_disable_scoped();
 
     return global_irq_handler;
-}
-
-/* Set or remove a trapa handler */
-int trapa_set_handler(trapa_t code, trapa_handler hnd, void *data) {
-    irq_disable_scoped();
-
-    trapa_handlers[code] = (struct trapa_cb){ hnd, data };
-    return 0;
-}
-
-/* Get a particular trapa handler */
-trapa_handler trapa_get_handler(trapa_t code, void **data) {
-    irq_disable_scoped();
-
-    if(data)
-        *data = trapa_handlers[code].data;
-
-    return trapa_handlers[code].hdl;
 }
 
 /* Get a string description of the exception */
@@ -290,7 +266,7 @@ void irq_handle_exception(int code) {
     inside_int = 0;
 }
 
-void irq_handle_trapa(irq_t code, irq_context_t *context, void *data) {
+static void irq_handle_trapa(irq_t code, irq_context_t *context, void *data) {
     const struct irq_cb *hnd, *handlers = data;
     uint32_t vec;
 
@@ -314,27 +290,29 @@ extern void irq_vma_table(void);
    Make sure you have at least REG_BYTE_CNT bytes available. DO NOT
    ALLOW ANY INTERRUPTS TO HAPPEN UNTIL THIS HAS BEEN CALLED AT
    LEAST ONCE! */
-void irq_set_context(irq_context_t *regbank) {
+void arch_irq_set_context(irq_context_t *regbank) {
     irq_srt_addr = regbank;
 }
 
 /* Return the current IRQ context */
-irq_context_t *irq_get_context(void) {
+irq_context_t *arch_irq_get_context(void) {
     return irq_srt_addr;
 }
 
 /* Fill a newly allocated context block for usage with supervisor/kernel
    or user mode. The given parameters will be passed to the called routine (up
    to the architecture maximum). */
-void irq_create_context(irq_context_t *context, uint32_t stkpntr,
-                        uint32_t routine, const uint32_t *args, bool usermode) {
+void arch_irq_create_context(irq_context_t *context,
+                             uintptr_t stack_pointer,
+                             uintptr_t routine,
+                             const uintptr_t *args) {
     /* Clear out all registers. */
     memset(context, 0, sizeof(irq_context_t));
 
     /* Setup the program frame */
     context->pc = (uint32_t)routine;
     context->sr = 0x40000000;   /* note: need to handle IMASK */
-    context->r[15] = stkpntr;
+    context->r[15] = stack_pointer;
     context->r[14] = 0xffffffff;
 
     /* Copy up to four args */
@@ -342,12 +320,6 @@ void irq_create_context(irq_context_t *context, uint32_t stkpntr,
     context->r[5] = args[1];
     context->r[6] = args[2];
     context->r[7] = args[3];
-
-    /* Handle user mode */
-    if(usermode) {
-        context->sr &= ~0x40000000;
-        context->r[15] &= ~0xf0000000;
-    }
 }
 
 /* Default timer handler (until threads can take over) */

@@ -6,7 +6,7 @@
 
 /* This file contains the implementation of the SH4 watchdog timer driver. */
 
-#include <arch/irq.h>
+#include <kos/irq.h>
 #include <kos/regfield.h>
 #include <dc/wdt.h>
 
