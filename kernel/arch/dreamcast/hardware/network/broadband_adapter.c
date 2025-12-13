@@ -8,6 +8,7 @@
 
  */
 
+#include <stdalign.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
@@ -470,7 +471,7 @@ static struct pkt {
     uint8 * rxbuff;
 } rx_pkt[MAX_PKTS];
 
-static uint8 rxbuff[RXBSZ + 2 * 1600] __attribute__((aligned(32)));
+static alignas(32) uint8 rxbuff[RXBSZ + 2 * 1600];
 static uint32 rxbuff_pos;
 static int rxin;
 static int rxout;

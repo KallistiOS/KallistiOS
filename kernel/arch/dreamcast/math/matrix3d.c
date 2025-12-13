@@ -9,12 +9,13 @@
 */
 
 #include <assert.h>
+#include <stdalign.h>
 #include <dc/fmath.h>
 #include <dc/matrix.h>
 #include <dc/matrix3d.h>
 #include <dc/vec3f.h>
 
-static matrix_t tr_m __attribute__((aligned(32))) = {
+static alignas(32) matrix_t tr_m = {
     { 1.0f, 0.0f, 0.0f, 0.0f },
     { 0.0f, 1.0f, 0.0f, 0.0f },
     { 0.0f, 0.0f, 1.0f, 0.0f },
@@ -27,7 +28,7 @@ void mat_translate(float x, float y, float z) {
     mat_apply(&tr_m);
 }
 
-static matrix_t sc_m  __attribute__((aligned(32))) = {
+static alignas(32) matrix_t sc_m = {
     { 0.0f, 0.0f, 0.0f, 0.0f },
     { 0.0f, 0.0f, 0.0f, 0.0f },
     { 0.0f, 0.0f, 0.0f, 0.0f },
@@ -40,7 +41,7 @@ void mat_scale(float xs, float ys, float zs) {
     mat_apply(&sc_m);
 }
 
-static matrix_t rx_m __attribute__((aligned(32))) = {
+static alignas(32) matrix_t rx_m = {
     { 1.0f, 0.0f, 0.0f, 0.0f },
     { 0.0f, 0.0f, 0.0f, 0.0f },
     { 0.0f, 0.0f, 0.0f, 0.0f },
@@ -53,7 +54,7 @@ void mat_rotate_x(float r) {
     mat_apply(&rx_m);
 }
 
-static matrix_t ry_m  __attribute__((aligned(32))) = {
+static alignas(32) matrix_t ry_m = {
     { 0.0f, 0.0f, 0.0f, 0.0f },
     { 0.0f, 1.0f, 0.0f, 0.0f },
     { 0.0f, 0.0f, 0.0f, 0.0f },
@@ -66,7 +67,7 @@ void mat_rotate_y(float r) {
     mat_apply(&ry_m);
 }
 
-static matrix_t rz_m  __attribute__((aligned(32))) = {
+static alignas(32) matrix_t rz_m = {
     { 0.0f, 0.0f, 0.0f, 0.0f },
     { 0.0f, 0.0f, 0.0f, 0.0f },
     { 0.0f, 0.0f, 1.0f, 0.0f },
