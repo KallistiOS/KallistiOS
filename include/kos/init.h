@@ -29,10 +29,6 @@
 #ifndef __KOS_INIT_H
 #define __KOS_INIT_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
@@ -169,9 +165,5 @@ extern const void * __kos_romdisk;
 /** @} */
 
 __END_DECLS
-
-#ifdef __cplusplus
-};
-#endif
 
 #endif /* !__KOS_INIT_H */
