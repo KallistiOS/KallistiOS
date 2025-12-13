@@ -139,15 +139,6 @@ _irq_force_return:
 	stc	sr,r0
 	or	r1,r0
 	ldc	r0,sr
-	bra	_save_regs_finish
-	nop
-	
-	.align 2
-_irqfr_or:
-	.long	0x20000000
-stkaddr:
-	.long	krn_stack
-
 
 ! Now restore all the registers and jump back to the thread
 _save_regs_finish:
@@ -209,6 +200,10 @@ _save_regs_finish:
 	nop
 
 	.align 2
+_irqfr_or:
+	.long	0x20000000
+stkaddr:
+	.long	krn_stack
 _irq_srt_addr:
 	.long	0	! Save Regs Table -- this is an indirection
 			! so we can easily swap out pointers during a
