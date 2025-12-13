@@ -29,6 +29,4 @@ arch_exports.c: ../exports-$(KOS_SUBARCH).txt
 	$(KOS_BASE)/utils/genexports/genexports.sh ../exports-$(KOS_SUBARCH).txt arch_exports.c arch_symtab
 
 clean:
-	-rm -f $(OBJS)
-	-rm -f arch_exports.c
 	-rm -f arch_exports.c
