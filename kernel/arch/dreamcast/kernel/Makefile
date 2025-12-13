@@ -13,7 +13,7 @@ COPYOBJS = cache.o entry.o irq.o init.o mm.o panic.o
 COPYOBJS += rtc.o timer.o perfctr.o perf_monitor.o
 COPYOBJS += init_flags_default.o
 COPYOBJS += mmu.o itlb.o
-COPYOBJS += exec.o execasm.o stack.o gdb_stub.o thdswitch.o tls_static.o arch_exports.o
+COPYOBJS += exec.o execasm.o stack.o gdb_stub.o thdswitch.o tls_static.o arch_exports.o subarch_exports.o
 OBJS = $(COPYOBJS) startup.o
 SUBDIRS =
 
@@ -25,8 +25,11 @@ include $(KOS_BASE)/Makefile.prefab
 
 arch_exports.o: arch_exports.c
 
-arch_exports.c: ../exports-$(KOS_SUBARCH).txt
-	$(KOS_BASE)/utils/genexports/genexports.sh ../exports-$(KOS_SUBARCH).txt arch_exports.c arch_symtab
+arch_exports.c: ../exports.txt
+	$(KOS_BASE)/utils/genexports/genexports.sh $< $@ arch_symtab
+
+subarch_exports.c: ../exports-$(KOS_SUBARCH).txt
+	$(KOS_BASE)/utils/genexports/genexports.sh $< $@ subarch_symtab
 
 clean:
 	-rm -f $(OBJS)

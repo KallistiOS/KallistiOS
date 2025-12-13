@@ -48,6 +48,9 @@ extern export_sym_t kernel_symtab[];
 
 /* And these are the arch-specific exports */
 extern export_sym_t arch_symtab[];
+
+/* And these are the subarch-specific exports */
+extern export_sym_t subarch_symtab[];
 /** \endcond */
 
 #ifndef __EXPORTS_FILE
