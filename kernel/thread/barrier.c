@@ -4,6 +4,7 @@
    Copyright (C) 2023 Lawrence Sebald
 */
 
+#include <assert.h>
 #include <errno.h>
 #include <stdint.h>
 #include <string.h>
@@ -34,11 +35,7 @@ typedef union kos_thd_barrier {
     long int __align;
 } thd_barrier_t;
 
-#define STATIC_ASSERT(condition) \
-    typedef char __CONCAT(_static_assert_, __LINE__)[ (condition) ? 1 : -1];
-
-STATIC_ASSERT(sizeof(thd_barrier_t) == THD_BARRIER_SIZE)
-#undef STATIC_ASSERT
+_Static_assert(sizeof(thd_barrier_t) == THD_BARRIER_SIZE, "Invalid thread barrier size");
 
 #include <kos/barrier.h>
 
