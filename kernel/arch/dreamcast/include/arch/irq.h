@@ -268,18 +268,6 @@ static inline void arch_irq_enable(void) {
     @{
 */
 
-/** Resume normal execution from IRQ context.
-
-    Pretend like we just came in from an interrupt and force a context switch
-    back to the "current" context.
-
-    \warning
-    Make sure you've called irq_set_context() before doing this!
-
-    \sa irq_set_context()
-*/
-void irq_force_return(void);
-
 void arch_irq_create_context(irq_context_t *context,
                              uintptr_t stack_pointer,
                              uintptr_t routine,

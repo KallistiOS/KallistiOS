@@ -199,7 +199,6 @@ dbgio_read_buffer
 dbgio_printf
 
 # Interrupt / Exception handling
-irq_force_return
 irq_disable
 irq_enable
 irq_restore
