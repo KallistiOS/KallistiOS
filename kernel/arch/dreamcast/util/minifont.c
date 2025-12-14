@@ -2,6 +2,7 @@
 
    util/minifont.c
    Copyright (C) 2020 Lawrence Sebald
+   Copyright (C) 2025 Daniel Fairchild
 
 */
 
@@ -14,10 +15,16 @@
 
 #define BYTES_PER_CHAR ((CHAR_WIDTH / 8) * CHAR_HEIGHT)
 
-int minifont_draw(uint16 *buffer, uint32 bufwidth, uint32 c) {
+static uint16_t textcolor = 0xFFFF;
+
+void minifont_set_color(uint8_t r, uint8_t g, uint8_t b) {
+    textcolor = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b & 0xF8) >> 3;
+}
+
+int minifont_draw(uint16_t *buffer, uint32_t bufwidth, uint32_t c) {
     int pos, i, j, k;
-    uint8 byte;
-    uint16 *cur;
+    uint8_t byte;
+    uint16_t *cur;
 
     if(c < 33 || c > 126)
         return CHAR_WIDTH;
@@ -32,7 +39,7 @@ int minifont_draw(uint16 *buffer, uint32 bufwidth, uint32 c) {
 
             for(k = 0; k < 8; ++k) {
                 if(byte & (1 << (7 - k)))
-                    *cur++ = 0xFFFF;
+                    *cur++ = textcolor;
                 else
                     ++cur;
             }
@@ -44,7 +51,7 @@ int minifont_draw(uint16 *buffer, uint32 bufwidth, uint32 c) {
     return CHAR_WIDTH;
 }
 
-int minifont_draw_str(uint16 *buffer, uint32 bufwidth, const char *str) {
+int minifont_draw_str(uint16_t *buffer, uint32_t bufwidth, const char *str) {
     char c;
     int adv = 0;
 
