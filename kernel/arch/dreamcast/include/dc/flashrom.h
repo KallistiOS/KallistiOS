@@ -27,6 +27,7 @@
 __BEGIN_DECLS
 
 #include <arch/types.h>
+#include <kos/regfield.h>
 
 /** \defgroup flashrom  Flashrom
     \brief              Driver for the Dreamcast's Internal Flash Storage
@@ -109,7 +110,7 @@ __BEGIN_DECLS
     \retval 0               On success.
     \retval -1              On error.
 */
-int flashrom_info(int part, int * start_out, int * size_out);
+int flashrom_info(int part, int *start_out, int *size_out);
 
 /** \brief   Read data from the flashrom.
     \ingroup flashrom
@@ -123,7 +124,7 @@ int flashrom_info(int part, int * start_out, int * size_out);
     \return                 The number of bytes read if successful, or -1
                             otherwise.
 */
-int flashrom_read(int offset, void * buffer_out, int bytes);
+int flashrom_read(int offset, void *buffer_out, int bytes);
 
 /** \brief   Write data to the flashrom.
     \ingroup flashrom
@@ -141,7 +142,7 @@ int flashrom_read(int offset, void * buffer_out, int bytes);
     \return                 The number of bytes written if successful, -1
                             otherwise.
 */
-int flashrom_write(int offset, void * buffer, int bytes);
+int flashrom_write(int offset, void *buffer, int bytes);
 
 /** \brief   Delete data from the flashrom.
     \ingroup flashrom
@@ -173,7 +174,7 @@ int flashrom_delete(int offset);
     \return                 0 on success, <0 on error.
     \see    fr_errs
 */
-int flashrom_get_block(int partid, int blockid, uint8 * buffer_out);
+int flashrom_get_block(int partid, int blockid, uint8 *buffer_out);
 
 
 /* Higher level functions */
@@ -217,7 +218,7 @@ typedef struct flashrom_syscfg {
     \return                 0 on success, <0 on error.
     \see    fr_errs
 */
-int flashrom_get_syscfg(flashrom_syscfg_t * out);
+int flashrom_get_syscfg(flashrom_syscfg_t *out);
 
 
 /** \defgroup fr_region Region Settings
@@ -271,16 +272,16 @@ int flashrom_get_region(void);
 
     @{
 */
-#define FLASHROM_ISP_IP         (1 <<  0)   /**< \brief Static IP address */
-#define FLASHROM_ISP_NETMASK    (1 <<  1)   /**< \brief Netmask */
-#define FLASHROM_ISP_BROADCAST  (1 <<  2)   /**< \brief Broadcast address */
-#define FLASHROM_ISP_GATEWAY    (1 <<  3)   /**< \brief Gateway address */
-#define FLASHROM_ISP_DNS        (1 <<  4)   /**< \brief DNS servers */
-#define FLASHROM_ISP_HOSTNAME   (1 <<  5)   /**< \brief Hostname */
-#define FLASHROM_ISP_EMAIL      (1 <<  6)   /**< \brief Email address */
-#define FLASHROM_ISP_SMTP       (1 <<  7)   /**< \brief SMTP server */
-#define FLASHROM_ISP_POP3       (1 <<  8)   /**< \brief POP3 server */
-#define FLASHROM_ISP_POP3_USER  (1 <<  9)   /**< \brief POP3 username */
+#define FLASHROM_ISP_IP         BIT(0)   /**< \brief Static IP address */
+#define FLASHROM_ISP_NETMASK    BIT(1)   /**< \brief Netmask */
+#define FLASHROM_ISP_BROADCAST  BIT(2)   /**< \brief Broadcast address */
+#define FLASHROM_ISP_GATEWAY    BIT(3)   /**< \brief Gateway address */
+#define FLASHROM_ISP_DNS        BIT(4)   /**< \brief DNS servers */
+#define FLASHROM_ISP_HOSTNAME   BIT(5)   /**< \brief Hostname */
+#define FLASHROM_ISP_EMAIL      BIT(6)   /**< \brief Email address */
+#define FLASHROM_ISP_SMTP       BIT(7)   /**< \brief SMTP server */
+#define FLASHROM_ISP_POP3       BIT(8)   /**< \brief POP3 server */
+#define FLASHROM_ISP_POP3_USER  BIT(9)   /**< \brief POP3 username */
 #define FLASHROM_ISP_POP3_PASS  (1 << 10)   /**< \brief POP3 password */
 #define FLASHROM_ISP_PROXY_HOST (1 << 11)   /**< \brief Proxy hostname */
 #define FLASHROM_ISP_PROXY_PORT (1 << 12)   /**< \brief Proxy port */
@@ -305,10 +306,10 @@ int flashrom_get_region(void);
 
     @{
 */
-#define FLASHROM_ISP_DIAL_AREACODE  (1 <<  0)   /**< \brief Dial area code before number */
-#define FLASHROM_ISP_USE_PROXY      (1 <<  1)   /**< \brief Proxy enabled */
-#define FLASHROM_ISP_PULSE_DIAL     (1 <<  2)   /**< \brief Pulse dialing (instead of tone) */
-#define FLASHROM_ISP_BLIND_DIAL     (1 <<  3)   /**< \brief Blind dial (don't wait for tone) */
+#define FLASHROM_ISP_DIAL_AREACODE  BIT(0)   /**< \brief Dial area code before number */
+#define FLASHROM_ISP_USE_PROXY      BIT(1)   /**< \brief Proxy enabled */
+#define FLASHROM_ISP_PULSE_DIAL     BIT(2)   /**< \brief Pulse dialing (instead of tone) */
+#define FLASHROM_ISP_BLIND_DIAL     BIT(3)   /**< \brief Blind dial (don't wait for tone) */
 /** @} */
 
 /** \brief   ISP configuration structure.
@@ -366,7 +367,7 @@ typedef struct flashrom_ispcfg {
     \retval 0               On success.
     \retval -1              On error (no settings found, or other errors).
 */
-int flashrom_get_ispcfg(flashrom_ispcfg_t * out);
+int flashrom_get_ispcfg(flashrom_ispcfg_t *out);
 
 /** \brief   Retrieve PlanetWeb's ISP configuration.
     \ingroup flashrom
