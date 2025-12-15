@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#include <sys/cdefs.h>
 #include <sys/queue.h>
 
 #include <kos/dbglog.h>
@@ -740,9 +741,8 @@ static size_t snd_stream_fill(snd_stream_hnd_t hnd, uint32_t offset, size_t size
     process_filters(hnd, &data, &got_bytes);
 
     if(chans == 1) {
-        if(got_bytes & 3) {
-            got_bytes = (got_bytes + 4) & ~3;
-        }
+        got_bytes = __align_up(got_bytes, 4);
+
         if(!__is_aligned(data, 32) && sep_buffer[0] == NULL) {
             spu_memload_sq(left, data, got_bytes);
             return got_bytes;
@@ -759,9 +759,7 @@ static size_t snd_stream_fill(snd_stream_hnd_t hnd, uint32_t offset, size_t size
         return got_bytes;
     }
 
-    if(got_bytes & 7) {
-        got_bytes = (got_bytes + 8) & ~7;
-    }
+    got_bytes = __align_up(got_bytes, 8);
 
     mutex_lock(&stream_mutex);
 
