@@ -28,8 +28,6 @@
 #define BYTES_TO_WORDS(x) ((x) >> 2)
 #define WORDS_TO_BYTES(x) ((x) << 2)
 
-#define IS_ALIGNED(x, m) ((x) % (m) == 0)
-
 #define LIST_ENABLED(i) (pvr_state.lists_enabled & BIT(i))
 
 
@@ -149,8 +147,6 @@ available texture RAM, the PVR structures for the two frames are broken
 up and placed at 0x000000 and 0x400000.
 
 */
-#define APPLY_ALIGNMENT(addr) __align_up(addr, 128)
-
 void pvr_allocate_buffers(const pvr_init_params_t *params) {
     volatile pvr_ta_buffers_t   *buf;
     volatile pvr_frame_buffers_t    *fbuf;
@@ -171,7 +167,7 @@ void pvr_allocate_buffers(const pvr_init_params_t *params) {
 
     /* We can actually handle non-mod-32 heights pretty easily -- just extend
        the frame buffer a bit, but use a pixel clip for the real mode. */
-    if(!IS_ALIGNED(pvr_state.h, 32)) {
+    if(!__is_aligned(pvr_state.h, 32)) {
         pvr_state.h = (pvr_state.h + 32) & ~31;
         pvr_state.th++;
     }
@@ -252,7 +248,7 @@ void pvr_allocate_buffers(const pvr_init_params_t *params) {
         buf->vertex_size = params->vertex_buf_size;
         outaddr += buf->vertex_size;
         /* N-byte align */
-        outaddr = APPLY_ALIGNMENT(outaddr);
+        outaddr = __align_up(outaddr, 128);
 
         /* Object Pointer Blocks */
         buf->opb = outaddr;
@@ -272,7 +268,7 @@ void pvr_allocate_buffers(const pvr_init_params_t *params) {
         assert(buf->opb_size == opb_size_accum);
 
         /* N-byte align */
-        outaddr = APPLY_ALIGNMENT(outaddr);
+        outaddr = __align_up(outaddr, 128);
 
         /* Tile Matrix */
         buf->tile_matrix = outaddr;
@@ -280,7 +276,7 @@ void pvr_allocate_buffers(const pvr_init_params_t *params) {
         outaddr += buf->tile_matrix_size;
 
         /* N-byte align */
-        outaddr = APPLY_ALIGNMENT(outaddr);
+        outaddr = __align_up(outaddr, 128);
 
         /* Output buffer */
         fbuf->frame = outaddr;
@@ -288,7 +284,7 @@ void pvr_allocate_buffers(const pvr_init_params_t *params) {
         outaddr += fbuf->frame_size;
 
         /* N-byte align */
-        outaddr = APPLY_ALIGNMENT(outaddr);
+        outaddr = __align_up(outaddr, 128);
     }
 
     /* Texture ram is whatever is left */
