@@ -102,8 +102,6 @@ static void dreameye_get_transfer_count_cb(maple_state_t *st, maple_frame_t *fra
 
 int dreameye_get_image_count(maple_device_t *dev, int block) {
     dreameye_state_t *de;
-    uint32 *send_buf;
-
     assert(dev != NULL);
 
     de = (dreameye_state_t *)dev->status;
@@ -115,15 +113,13 @@ int dreameye_get_image_count(maple_device_t *dev, int block) {
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);
-    send_buf = (uint32 *)dev->frame.recv_buf;
-    send_buf[0] = MAPLE_FUNC_CAMERA;
-    send_buf[1] = DREAMEYE_GETCOND_NUM_IMAGES | (0x04 << 8);
+    dev->frame.send_buf[0] = MAPLE_FUNC_CAMERA;
+    dev->frame.send_buf[1] = DREAMEYE_GETCOND_NUM_IMAGES | (0x04 << 8);
     dev->frame.cmd = MAPLE_COMMAND_GETCOND;
     dev->frame.dst_port = dev->port;
     dev->frame.dst_unit = dev->unit;
     dev->frame.length = 2;
     dev->frame.callback = dreameye_get_image_count_cb;
-    dev->frame.send_buf = send_buf;
     maple_queue_frame(&dev->frame);
 
     if(block) {
@@ -197,32 +193,26 @@ static void dreameye_get_image_cb(maple_state_t *st, maple_frame_t *frame) {
 static int dreameye_send_get_image(maple_device_t *dev,
                                    dreameye_state_t *state, uint8 req,
                                    uint8 cnt) {
-    uint32 *send_buf;
-
     /* Lock the frame */
     if(maple_frame_lock(&dev->frame) < 0)
         return MAPLE_EAGAIN;
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);
-    send_buf = (uint32 *)dev->frame.recv_buf;
-    send_buf[0] = MAPLE_FUNC_CAMERA;
-    send_buf[1] = DREAMEYE_SUBCOMMAND_IMAGEREQ | (state->img_number << 8) |
-                  (req << 16) | (cnt << 24);
+    dev->frame.send_buf[0] = MAPLE_FUNC_CAMERA;
+    dev->frame.send_buf[1] = DREAMEYE_SUBCOMMAND_IMAGEREQ | (state->img_number << 8) |
+        (req << 16) | (cnt << 24);
     dev->frame.cmd = MAPLE_COMMAND_CAMCONTROL;
     dev->frame.dst_port = dev->port;
     dev->frame.dst_unit = dev->unit;
     dev->frame.length = 2;
     dev->frame.callback = dreameye_get_image_cb;
-    dev->frame.send_buf = send_buf;
     maple_queue_frame(&dev->frame);
 
     return MAPLE_EOK;
 }
 
 static int dreameye_get_transfer_count(maple_device_t *dev, uint8 img) {
-    uint32 *send_buf;
-
     assert(dev != NULL);
 
     /* Lock the frame */
@@ -231,15 +221,13 @@ static int dreameye_get_transfer_count(maple_device_t *dev, uint8 img) {
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);
-    send_buf = (uint32 *)dev->frame.recv_buf;
-    send_buf[0] = MAPLE_FUNC_CAMERA;
-    send_buf[1] = DREAMEYE_GETCOND_TRANSFER_COUNT | (img << 8);
+    dev->frame.send_buf[0] = MAPLE_FUNC_CAMERA;
+    dev->frame.send_buf[1] = DREAMEYE_GETCOND_TRANSFER_COUNT | (img << 8);
     dev->frame.cmd = MAPLE_COMMAND_GETCOND;
     dev->frame.dst_port = dev->port;
     dev->frame.dst_unit = dev->unit;
     dev->frame.length = 2;
     dev->frame.callback = dreameye_get_transfer_count_cb;
-    dev->frame.send_buf = send_buf;
     maple_queue_frame(&dev->frame);
 
     /* Wait for the Dreameye to accept it */
@@ -359,8 +347,6 @@ static void dreameye_erase_cb(maple_state_t *st, maple_frame_t *frame) {
 }
 
 int dreameye_erase_image(maple_device_t *dev, uint8 image, int block) {
-    uint32 *send_buf;
-
     assert(dev != NULL);
 
     if(image < 0x02 || (image > 0x21 && image != 0xFF))
@@ -372,15 +358,13 @@ int dreameye_erase_image(maple_device_t *dev, uint8 image, int block) {
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);
-    send_buf = (uint32 *)dev->frame.recv_buf;
-    send_buf[0] = MAPLE_FUNC_CAMERA;
-    send_buf[1] = DREAMEYE_SUBCOMMAND_ERASE | (0x80 << 8) | (image << 16);
+    dev->frame.send_buf[0] = MAPLE_FUNC_CAMERA;
+    dev->frame.send_buf[1] = DREAMEYE_SUBCOMMAND_ERASE | (0x80 << 8) | (image << 16);
     dev->frame.cmd = MAPLE_COMMAND_CAMCONTROL;
     dev->frame.dst_port = dev->port;
     dev->frame.dst_unit = dev->unit;
     dev->frame.length = 2;
     dev->frame.callback = dreameye_erase_cb;
-    dev->frame.send_buf = send_buf;
     maple_queue_frame(&dev->frame);
 
     if(block) {

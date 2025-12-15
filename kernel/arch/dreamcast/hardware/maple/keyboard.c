@@ -761,20 +761,16 @@ static void kbd_reply(maple_state_t *st, maple_frame_t *frm) {
 }
 
 static int kbd_poll_intern(maple_device_t *dev) {
-    uint32_t *send_buf;
-
     if(maple_frame_lock(&dev->frame) < 0)
         return 0;
 
     maple_frame_init(&dev->frame);
-    send_buf = (uint32_t *)dev->frame.recv_buf;
-    send_buf[0] = MAPLE_FUNC_KEYBOARD;
+    dev->frame.send_buf[0] = MAPLE_FUNC_KEYBOARD;
     dev->frame.cmd = MAPLE_COMMAND_GETCOND;
     dev->frame.dst_port = dev->port;
     dev->frame.dst_unit = dev->unit;
     dev->frame.length = 1;
     dev->frame.callback = kbd_reply;
-    dev->frame.send_buf = send_buf;
     maple_queue_frame(&dev->frame);
 
     return 0;

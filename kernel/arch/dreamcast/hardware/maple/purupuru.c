@@ -15,8 +15,6 @@
    them act different for just about everything you feed to them. */
 
 int purupuru_rumble_raw(maple_device_t *dev, uint32_t effect) {
-    uint32_t *send_buf;
-
     assert(dev != NULL);
 
     /* Lock the frame */
@@ -25,15 +23,13 @@ int purupuru_rumble_raw(maple_device_t *dev, uint32_t effect) {
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);
-    send_buf = (uint32_t *)dev->frame.recv_buf;
-    send_buf[0] = MAPLE_FUNC_PURUPURU;
-    send_buf[1] = effect;
+    dev->frame.send_buf[0] = MAPLE_FUNC_PURUPURU;
+    dev->frame.send_buf[1] = effect;
     dev->frame.cmd = MAPLE_COMMAND_SETCOND;
     dev->frame.dst_port = dev->port;
     dev->frame.dst_unit = dev->unit;
     dev->frame.length = 2;
     dev->frame.callback = NULL;
-    dev->frame.send_buf = send_buf;
     maple_queue_frame(&dev->frame);
 
     return MAPLE_EOK;

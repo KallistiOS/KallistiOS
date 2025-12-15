@@ -54,7 +54,6 @@ void maple_queue_flush(void) {
 
         /* Finally, parameter words, if any */
         if(i->length > 0) {
-            assert(i->send_buf != NULL);
             memcpy(out, i->send_buf, i->length * 4);
             out += i->length;
         }
@@ -173,7 +172,7 @@ void maple_frame_init(maple_frame_t *frame) {
     frame->length = 0;
     frame->queued = 0;
     frame->dev = NULL;
-    frame->send_buf = NULL;
+    frame->send_buf = (uint32_t *)frame->recv_buf;
     frame->callback = NULL;
 }
 

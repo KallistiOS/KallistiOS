@@ -40,6 +40,7 @@
 __BEGIN_DECLS
 
 #include <stdbool.h>
+#include <stdint.h>
 #include <arch/types.h>
 #include <sys/queue.h>
 
@@ -198,7 +199,7 @@ typedef struct maple_frame {
     volatile int        state;      /**< \brief Has this frame been sent / responded to? */
     volatile int        queued;     /**< \brief Are we on the queue? */
 
-    void                *send_buf;  /**< \brief The data which will be sent (if any) */
+    uint32_t            *send_buf;  /**< \brief The data which will be sent (if any) */
     uint8               *recv_buf;  /**< \brief Points into recv_buf_arr, but 32-byte aligned */
 
     struct maple_device *dev;       /**< \brief Does this belong to a device? */

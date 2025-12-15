@@ -149,8 +149,6 @@ static void vmu_poll_reply(maple_state_t *st, maple_frame_t *frm) {
 }
 
 static int vmu_poll(maple_device_t *dev) {
-    uint32_t *send_buf;
-
     /* Only query for button input on the front VMU of each controller 
        AND the device actually has the functionality. */
     if((dev->unit == 1) && vmu_is_vmu(dev)) {
@@ -158,14 +156,12 @@ static int vmu_poll(maple_device_t *dev) {
             return 0;
 
         maple_frame_init(&dev->frame);
-        send_buf = (uint32_t *)dev->frame.recv_buf;
-        send_buf[0] = MAPLE_FUNC_CLOCK;
+        dev->frame.send_buf[0] = MAPLE_FUNC_CLOCK;
         dev->frame.cmd = MAPLE_COMMAND_GETCOND;
         dev->frame.dst_port = dev->port;
         dev->frame.dst_unit = dev->unit;
         dev->frame.length = 1;
         dev->frame.callback = vmu_poll_reply;
-        dev->frame.send_buf = send_buf;
         maple_queue_frame(&dev->frame);
 
     }
@@ -313,8 +309,6 @@ static void vmu_gen_callback(maple_state_t *st, maple_frame_t *frame) {
    refactoring as the clock is a separate device from
    the screen and storage. */
 int vmu_beep_raw(maple_device_t *dev, uint32_t beep) {
-    uint32_t *send_buf;
-
     assert(dev);
 
     /* Only send a beep if this is a real VMU */
@@ -327,15 +321,13 @@ int vmu_beep_raw(maple_device_t *dev, uint32_t beep) {
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);
-    send_buf = (uint32_t *)dev->frame.recv_buf;
-    send_buf[0] = MAPLE_FUNC_CLOCK;
-    send_buf[1] = beep;
+    dev->frame.send_buf[0] = MAPLE_FUNC_CLOCK;
+    dev->frame.send_buf[1] = beep;
     dev->frame.cmd = MAPLE_COMMAND_SETCOND;
     dev->frame.dst_port = dev->port;
     dev->frame.dst_unit = dev->unit;
     dev->frame.length = 2;
     dev->frame.callback = NULL;
-    dev->frame.send_buf = send_buf;
     maple_queue_frame(&dev->frame);
 
     return MAPLE_EOK;
@@ -351,8 +343,6 @@ int vmu_beep_waveform(maple_device_t *dev, uint8_t period1, uint8_t duty_cycle1,
 /* Draw a 1-bit bitmap on the LCD screen (48x32). return a -1 if
    an error occurs */
 int vmu_draw_lcd(maple_device_t *dev, const void *bitmap) {
-    uint32_t *send_buf;
-
     assert(dev != NULL);
 
     /* Only try to draw to screen if this is a real VMU */
@@ -365,16 +355,14 @@ int vmu_draw_lcd(maple_device_t *dev, const void *bitmap) {
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);
-    send_buf = (uint32_t *)dev->frame.recv_buf;
-    send_buf[0] = MAPLE_FUNC_LCD;
-    send_buf[1] = 0;    /* Block / phase / partition */
-    memcpy(send_buf + 2, bitmap, VMU_SCREEN_WIDTH * 4);
+    dev->frame.send_buf[0] = MAPLE_FUNC_LCD;
+    dev->frame.send_buf[1] = 0;    /* Block / phase / partition */
+    memcpy(dev->frame.send_buf + 2, bitmap, VMU_SCREEN_WIDTH * 4);
     dev->frame.cmd = MAPLE_COMMAND_BWRITE;
     dev->frame.dst_port = dev->port;
     dev->frame.dst_unit = dev->unit;
     dev->frame.length = 2 + VMU_SCREEN_WIDTH;
     dev->frame.callback = NULL;
-    dev->frame.send_buf = send_buf;
     maple_queue_frame(&dev->frame);
 
     return MAPLE_EOK;
@@ -444,7 +432,6 @@ static void vmu_block_read_callback(maple_state_t *st, maple_frame_t *frm) {
 int vmu_block_read(maple_device_t *dev, uint16_t blocknum, uint8_t *buffer) {
     maple_response_t *resp;
     int              rv;
-    uint32_t         *send_buf;
     uint32_t         blkid;
 
     assert(dev != NULL);
@@ -458,15 +445,13 @@ int vmu_block_read(maple_device_t *dev, uint16_t blocknum, uint8_t *buffer) {
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);
-    send_buf = (uint32_t *)dev->frame.recv_buf;
-    send_buf[0] = MAPLE_FUNC_MEMCARD;
-    send_buf[1] = blkid;
+    dev->frame.send_buf[0] = MAPLE_FUNC_MEMCARD;
+    dev->frame.send_buf[1] = blkid;
     dev->frame.cmd = MAPLE_COMMAND_BREAD;
     dev->frame.dst_port = dev->port;
     dev->frame.dst_unit = dev->unit;
     dev->frame.length = 2;
     dev->frame.callback = vmu_block_read_callback;
-    dev->frame.send_buf = send_buf;
     maple_queue_frame(&dev->frame);
 
     /* Wait for the VMU to accept it */
@@ -489,18 +474,17 @@ int vmu_block_read(maple_device_t *dev, uint16_t blocknum, uint8_t *buffer) {
 
     /* Copy out the response */
     resp = (maple_response_t *)dev->frame.recv_buf;
-    send_buf = (uint32_t *)resp->data;
 
     if(resp->response != MAPLE_RESPONSE_DATATRF
-            || send_buf[0] != MAPLE_FUNC_MEMCARD
-            || send_buf[1] != blkid) {
+            || dev->frame.send_buf[0] != MAPLE_FUNC_MEMCARD
+            || dev->frame.send_buf[1] != blkid) {
         rv = MAPLE_EFAIL;
         dbglog(DBG_ERROR, "vmu_block_read failed: %s(%d)/%08lx\r\n",
-               maple_perror(resp->response), resp->response, send_buf[0]);
+               maple_perror(resp->response), resp->response, dev->frame.send_buf[0]);
     }
     else {
         rv = MAPLE_EOK;
-        memcpy(buffer, send_buf + 2, (resp->data_len - 2) * 4);
+        memcpy(buffer, dev->frame.send_buf + 2, (resp->data_len - 2) * 4);
     }
 
     maple_frame_unlock(&dev->frame);
@@ -523,7 +507,6 @@ static void vmu_block_write_callback(maple_state_t *st, maple_frame_t *frm) {
 static int vmu_block_write_internal(maple_device_t *dev, uint16_t blocknum, const uint8_t *buffer) {
     maple_response_t *resp;
     int              rv, phase, r;
-    uint32_t         *send_buf;
     uint32_t         blkid;
 
     assert(dev != NULL);
@@ -544,16 +527,14 @@ static int vmu_block_write_internal(maple_device_t *dev, uint16_t blocknum, cons
 
         /* Reset the frame */
         maple_frame_init(&dev->frame);
-        send_buf = (uint32_t *)dev->frame.recv_buf;
-        send_buf[0] = MAPLE_FUNC_MEMCARD;
-        send_buf[1] = blkid;
-        memcpy(send_buf + 2, buffer + 128 * phase, 128);
+        dev->frame.send_buf[0] = MAPLE_FUNC_MEMCARD;
+        dev->frame.send_buf[1] = blkid;
+        memcpy(dev->frame.send_buf + 2, buffer + 128 * phase, 128);
         dev->frame.cmd = MAPLE_COMMAND_BWRITE;
         dev->frame.dst_port = dev->port;
         dev->frame.dst_unit = dev->unit;
         dev->frame.length = 2 + (128 / 4);
         dev->frame.callback = vmu_block_write_callback;
-        dev->frame.send_buf = send_buf;
         maple_queue_frame(&dev->frame);
 
         /* Wait for the VMU to accept it */
@@ -588,9 +569,8 @@ static int vmu_block_write_internal(maple_device_t *dev, uint16_t blocknum, cons
 
     /* Finally a "sync" command -- thanks Nagra */
     maple_frame_init(&dev->frame);
-    send_buf = (uint32_t *)dev->frame.recv_buf;
-    send_buf[0] = MAPLE_FUNC_MEMCARD;
-    send_buf[1] = ((blocknum & 0xff) << 24)
+    dev->frame.send_buf[0] = MAPLE_FUNC_MEMCARD;
+    dev->frame.send_buf[1] = ((blocknum & 0xff) << 24)
                   | (((blocknum >> 8) & 0xff) << 16)
                   | (4 << 8);
     dev->frame.cmd = MAPLE_COMMAND_BSYNC;
@@ -598,7 +578,6 @@ static int vmu_block_write_internal(maple_device_t *dev, uint16_t blocknum, cons
     dev->frame.dst_unit = dev->unit;
     dev->frame.length = 2;
     dev->frame.callback = vmu_block_write_callback;
-    dev->frame.send_buf = send_buf;
     maple_queue_frame(&dev->frame);
 
     /* Wait for the VMU to accept it */
@@ -646,7 +625,6 @@ int vmu_block_write(maple_device_t *dev, uint16_t blocknum, const uint8_t *buffe
 }
 
 int vmu_set_datetime(maple_device_t *dev, time_t unix) {
-    uint32_t *send_buf;
     struct tm *btime;
 
     assert(dev);
@@ -664,17 +642,15 @@ int vmu_set_datetime(maple_device_t *dev, time_t unix) {
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);
-    send_buf = (uint32_t *)dev->frame.recv_buf;
-    send_buf[0] = MAPLE_FUNC_CLOCK;
-    send_buf[1] = 0;
-    vmu_datetime_from_tm((vmu_datetime_t *)(send_buf + 2), btime);
+    dev->frame.send_buf[0] = MAPLE_FUNC_CLOCK;
+    dev->frame.send_buf[1] = 0;
+    vmu_datetime_from_tm((vmu_datetime_t *)(dev->frame.send_buf + 2), btime);
 
     dev->frame.cmd = MAPLE_COMMAND_BWRITE;
     dev->frame.dst_port = dev->port;
     dev->frame.dst_unit = dev->unit;
     dev->frame.length = 4;
     dev->frame.callback = vmu_gen_callback;
-    dev->frame.send_buf = send_buf;
     maple_queue_frame(&dev->frame);
 
     /* Wait for the timer to accept it */
@@ -701,7 +677,6 @@ static void vmu_get_datetime_callback(maple_state_t *st, maple_frame_t *frm) {
 int vmu_get_datetime(maple_device_t *dev, time_t *unix) {
     maple_response_t *resp;
     int               rv;
-    uint32_t          *send_buf;
 
     assert(dev);
 
@@ -715,16 +690,14 @@ int vmu_get_datetime(maple_device_t *dev, time_t *unix) {
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);
-    send_buf = (uint32_t *)dev->frame.recv_buf;
-    send_buf[0] = MAPLE_FUNC_CLOCK;
-    send_buf[1] = 0;
+    dev->frame.send_buf[0] = MAPLE_FUNC_CLOCK;
+    dev->frame.send_buf[1] = 0;
 
     dev->frame.cmd = MAPLE_COMMAND_BREAD;
     dev->frame.dst_port = dev->port;
     dev->frame.dst_unit = dev->unit;
     dev->frame.length = 2;
     dev->frame.callback = vmu_get_datetime_callback;
-    dev->frame.send_buf = send_buf;
     maple_queue_frame(&dev->frame);
 
     /* Wait for the VMU to accept it */
@@ -749,19 +722,18 @@ int vmu_get_datetime(maple_device_t *dev, time_t *unix) {
 
     /* Copy out the response */
     resp = (maple_response_t *)dev->frame.recv_buf;
-    send_buf = (uint32_t *)resp->data;
 
     if(resp->response != MAPLE_RESPONSE_DATATRF
-            || send_buf[0] != MAPLE_FUNC_CLOCK) {
+            || dev->frame.send_buf[0] != MAPLE_FUNC_CLOCK) {
         rv = MAPLE_EFAIL;
         *unix = -1;
         dbglog(DBG_ERROR, "vmu_get_datetime failed: %s(%d)/%08lx\r\n",
-               maple_perror(resp->response), resp->response, send_buf[0]);
+               maple_perror(resp->response), resp->response, dev->frame.send_buf[0]);
     }
     else {
         rv = MAPLE_EOK;
         struct tm btime = { 0 };
-        vmu_datetime_to_tm((const vmu_datetime_t*)(send_buf + 1), &btime);
+        vmu_datetime_to_tm((const vmu_datetime_t*)(dev->frame.send_buf + 1), &btime);
         *unix = mktime(&btime);
     }
 
