@@ -51,6 +51,12 @@ debug output.
 #define VMU_FILE    1
 #define VMU_ANY     -1  /* Used for checking validity */
 
+/* File header */
+typedef struct vmufs_rawhdr_str {
+    uint8_t *buffer;                    /* buffer holding the header */
+    size_t buffer_length;               /* buffer length in bytes */
+} vmufs_rawhdr_t;
+
 /* File handles */
 typedef struct vmu_fh_str {
     uint32 strtype;                     /* 0==dir, 1==file */
@@ -62,10 +68,12 @@ typedef struct vmu_fh_str {
     off_t loc;                          /* current position from the start in the file (bytes) */
     off_t start;                        /* start of the data in the file (bytes) */
     maple_device_t *dev;                /* maple address of the vmu to use */
-    uint32 filesize;                    /* file length from dirent (in 512-byte blks) */
+    uint32 blks;                        /* block count from dirent (each blk is 512-byte) */
+    uint32 filelength;                  /* file length in bytes */
     uint8 *data;                        /* copy of the whole file */
-    vmu_pkg_t *header;                  /* VMU file header */
     bool raw;                           /* file opened as raw */
+    vmu_hdr_status_t header_status;     /* parse status of VMU file header */
+    bool is_game;                       /* file type is GAME otherwise DATA */
 } vmu_fh_t;
 
 /* Directory handles */
@@ -87,50 +95,9 @@ TAILQ_HEAD(vmu_fh_list, vmu_fh_str) vmu_fh;
 /* Thread mutex for vmu_fh access */
 static mutex_t fh_mutex;
 
-static vmu_pkg_t *dft_header;
+/* Default VMU header for new files */
+static vmufs_rawhdr_t default_header = { NULL, 0 };
 
-static vmu_pkg_t * vmu_pkg_dup(const vmu_pkg_t *old_hdr) {
-    size_t ec_size, icon_size;
-    vmu_pkg_t *hdr;
-
-    hdr = malloc(sizeof(*hdr));
-    if(!hdr)
-        return NULL;
-
-    memcpy(hdr, old_hdr, sizeof(*hdr));
-
-    if(old_hdr->eyecatch_type && old_hdr->eyecatch_data) {
-        ec_size = (72 * 56 / 2) << (3 - old_hdr->eyecatch_type);
-
-        hdr->eyecatch_data = malloc(ec_size);
-        if(!hdr->eyecatch_data)
-            goto err_free_hdr;
-
-        memcpy(hdr->eyecatch_data, old_hdr->eyecatch_data, ec_size);
-    } else {
-        hdr->eyecatch_data = NULL;
-    }
-
-    if(old_hdr->icon_cnt) {
-        icon_size = 512 * old_hdr->icon_cnt;
-
-        hdr->icon_data = malloc(icon_size);
-        if(!hdr->icon_data)
-            goto err_free_ec_data;
-
-        memcpy(hdr->icon_data, old_hdr->icon_data, icon_size);
-    } else {
-        hdr->icon_data = NULL;
-    }
-
-    return hdr;
-
-err_free_ec_data:
-    free(hdr->eyecatch_data);
-err_free_hdr:
-    free(hdr);
-    return NULL;
-}
 
 /* Take a VMUFS path and return the requested address */
 static maple_device_t * vmu_path_to_addr(const char *p) {
@@ -198,6 +165,7 @@ static vmu_fh_t *vmu_open_vmu_dir(void) {
         dh->dirblocks[u].filetype = 0xff;
     }
 
+    errno = 0;
     return (vmu_fh_t *)dh;
 }
 
@@ -208,12 +176,15 @@ static vmu_fh_t *vmu_open_dir(maple_device_t * dev) {
     vmu_dh_t    * dh;
 
     /* Read the VMU's directory */
-    if(vmufs_readdir(dev, &dirents, &dircnt) < 0)
+    if(vmufs_readdir(dev, &dirents, &dircnt) < 0) {
+        errno = ENOENT;
         return NULL;
+    }
 
     /* Allocate a handle for the dir blocks */
     if(!(dh = malloc(sizeof(vmu_dh_t))))
         return NULL;
+
     dh->strtype = VMU_DIR;
     dh->dirblocks = dirents;
     dh->rootdir = 0;
@@ -221,6 +192,7 @@ static vmu_fh_t *vmu_open_dir(maple_device_t * dev) {
     dh->dircnt = dircnt;
     dh->dev = dev;
 
+    errno = 0;
     return (vmu_fh_t *)dh;
 }
 
@@ -228,14 +200,15 @@ static vmu_fh_t *vmu_open_dir(maple_device_t * dev) {
 static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode) {
     vmu_fh_t    * fd;       /* file descriptor */
     int     realmode, rv;
-    void        * data;
+    void        * data = NULL;
     int     datasize;
     vmu_pkg_t vmu_pkg;
+    uint8   filetype;
 
     /* Malloc a new fh struct */
-    if(!(fd = malloc(sizeof(vmu_fh_t))))
+    if(!(fd = malloc(sizeof(vmu_fh_t)))) 
         return NULL;
-
+ 
     /* Fill in the filehandle struct */
     fd->strtype = VMU_FILE;
     fd->mode = mode;
@@ -244,26 +217,55 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
     fd->loc = 0;
     fd->start = 0;
     fd->dev = dev;
-    fd->header = NULL;
     fd->raw = mode & O_META;
+    fd->header_status = VMUHDR_STATUS_NEWFILE;
+    fd->is_game = false;
 
     /* What mode are we opening in? If we're reading or writing without O_TRUNC
        then we need to read the old file if there is one. */
     realmode = mode & O_MODE_MASK;
 
+    if(realmode == O_RDONLY && (mode & O_TRUNC)) {
+        errno = EINVAL;
+        goto error;
+    }
+    //if(!(mode & O_META) && strcmp(fd->name, "ICONDATA_VMS") == 0) {
+    //    dbglog(DBG_SOURCE(VMUFS_DEBUG), "vmu_open_file: attempt to open ICONDATA_VMS without raw mode\n");
+    //}
+
     if(realmode == O_RDONLY || ((realmode == O_RDWR || realmode == O_WRONLY) && !(mode & O_TRUNC))) {
         /* Try to open it */
-        rv = vmufs_read(dev, fd->name, &data, &datasize);
+        rv = vmufs_read(dev, fd->name, &data, &datasize, &filetype);
 
-        if(rv < 0) {
-            if(realmode == O_RDWR || realmode == O_WRONLY) {
-                /* In some modes failure is ok -- flag to setup a blank first block. */
-                datasize = -1;
+        if(rv != 0 && rv != -2) {
+            /* Invalid device, read error or truncated file */
+            errno = EIO;
+            goto error;
+        }
+        else if(rv == -2) {
+            if(realmode == O_RDONLY) {
+                errno = ENOENT;
+                goto error;
             }
-            else {
-                free(fd);
-                return NULL;
-            }
+
+            //if(!(mode & O_CREAT)) {
+            //    //dbglog(DBG_INFO, "vmu_open_file: file %s not found\n", path);
+            //    errno = ENOENT;
+            //    goto error;
+            //}
+
+            /* File not found, flag to setup a blank first block. */
+            datasize = -1;
+        }
+        else if(filetype != 0x33 && filetype != 0xCC) {
+            /* Unknown file type, this never should happen */
+            dbglog(DBG_WARNING, "VMUFS: file %s isn't DATA or GAME type, got 0x%X\n", path, filetype);
+            errno = EFTYPE;
+            goto error;
+        }
+        else {
+            /* Success, remember file type */
+            fd->is_game = filetype == 0xCC;
         }
     }
     else {
@@ -273,29 +275,47 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
 
     /* We were flagged to set up a blank first block */
     if(datasize == -1) {
-        data = malloc(512);
+        fd->blks = 1;
+        fd->filelength = 0;
+
+        data = malloc(fd->blks * 512);
         if(data == NULL) {
-            free(fd);
-            return NULL;
+            goto error;
         }
-        datasize = 512;
-        memset(data, 0, 512);
-    } else if(!fd->raw && !vmu_pkg_parse(data, datasize, &vmu_pkg)) {
-        fd->header = vmu_pkg_dup(&vmu_pkg);
+    }
+    else if(fd->raw)  {
+        fd->filelength = datasize;
+        fd->blks = datasize / 512;
+    }
+    else {
+        /* Parse header but ignore any bad checksum */
+        rv = vmu_pkg_parse_ex(data, datasize, &vmu_pkg, fd->is_game, true);
+        if(rv == -2) {
+            /* vmufs_read() doesn't lie about the file size, file is totally corrupted */
+            errno = EIO;
+            goto error;
+        }
+
+        fd->header_status = rv == -1 ? VMUHDR_STATUS_BADCRC : VMUHDR_STATUS_OK;
         fd->start = (unsigned int)vmu_pkg.data - (unsigned int)data;
+        fd->filelength = vmu_pkg.data_len;
+        fd->blks = datasize / 512;
     }
 
     fd->data = (uint8 *)data;
-    fd->filesize = datasize / 512;
 
-    if(fd->filesize == 0) {
+    if(fd->blks == 0) {
         dbglog(DBG_WARNING, "VMUFS: can't open zero-length file %s\n", path);
-        free(fd->data);
-        free(fd);
-        return NULL;
+        errno = ENODATA;
+        goto error;
     }
 
     return fd;
+
+error:
+    free(data);
+    free(fd);
+    return NULL;
 }
 
 /* open function */
@@ -314,22 +334,31 @@ static void * vmu_open(vfs_handler_t * vfs, const char *path, int mode) {
         dev = vmu_path_to_addr(path);
 
         /* printf("VMUFS: card address is %02x\n", addr); */
-        if(dev == NULL) return 0;
+        if(dev == NULL) {
+            errno = ENODEV;
+            return NULL;
+        }
 
         /* Check for open as dir */
         if(strlen(path) == 3 || (strlen(path) == 4 && path[3] == '/')) {
-            if(!(mode & O_DIR)) return 0;
+            if(!(mode & O_DIR)) {
+                errno = EISDIR;
+                return NULL;
+            }
 
             fh = vmu_open_dir(dev);
         }
         else {
-            if(mode & O_DIR) return 0;
+            if(mode & O_DIR) {
+                errno = ENOTDIR;
+                return NULL;
+            }
 
             fh = vmu_open_file(dev, path, mode);
         }
     }
 
-    if(fh == NULL) return 0;
+    if(fh == NULL) return NULL;
 
     /* link the fh onto the top of the list */
     mutex_lock(&fh_mutex);
@@ -337,6 +366,160 @@ static void * vmu_open(vfs_handler_t * vfs, const char *path, int mode) {
     mutex_unlock(&fh_mutex);
 
     return (void *)fh;
+}
+
+/* Ovewrite, remove or insert a raw header */
+static int vmu_overwrite_header(vmu_fh_t *fh, const uint8_t *hdr, size_t hdr_size) {
+    uint8_t *data = fh->data;
+    size_t old_hdr_size = (size_t)fh->start;
+    size_t new_blks;
+
+    if(hdr_size > old_hdr_size) {
+        new_blks = fh->filelength + hdr_size;
+        new_blks = (new_blks + 511) / 512;
+
+        if(new_blks > fh->blks) {
+            dbglog(DBG_SOURCE(VMUFS_DEBUG), "VMUFS: extending file's blocks by %d\n", new_blks);
+
+            data = realloc(data, new_blks * 512);
+            if(!data) {
+                dbglog(DBG_ERROR, "VMUFS: unable to realloc another %d bytes\n", new_blks * 512);
+                return -1;
+            }
+
+            fh->data = data;
+            fh->blks = new_blks;
+        }
+    }
+
+    /* Move payload data or application code */
+    memmove(data + hdr_size, data + old_hdr_size, fh->filelength);
+
+    /* Write new header */
+    fh->start = hdr_size;
+    memcpy(data, hdr, hdr_size);
+
+    fh->header_status = hdr_size < 1 ? VMUHDR_STATUS_NEWFILE : VMUHDR_STATUS_OK;
+    return 0;
+}
+
+/* Ovewrite, remove or insert a raw header from vmu_pkg */
+static int vmu_overwrite_header_from_pkg(vmu_fh_t *fh, const vmu_pkg_t *new_hdr, const void *intl_dts) {
+    int rv;
+    int buffer_length;
+    uint8_t *buffer;
+    vmu_pkg_t pkg;
+
+    if(fh->raw) {
+        dbglog(DBG_ERROR, "VMUFS: can't set header in raw mode\n");
+        return -1;
+    }
+
+    if((fh->mode & O_MODE_MASK) != O_WRONLY && (fh->mode & O_MODE_MASK) != O_RDWR) {
+        /* File is read-only */
+        return -1;
+    }
+
+    if(!new_hdr) {
+        /* Remove header. This also removes initial data on GAME files */
+        rv = vmu_overwrite_header(fh, NULL, 0);
+        return rv;
+    }
+
+    /* Don't write payload data or application code twice, temporally set to zero. */
+    memcpy(&pkg, new_hdr, sizeof(vmu_pkg_t));
+    pkg.data_len = 0;
+
+    if(new_hdr->data_len > 0) {
+        dbglog(DBG_SOURCE(VMUFS_DEBUG), "VMUFS: Field vmu_pkg_t::data_len will be ignored\n");
+    }
+
+    if(fh->is_game && !intl_dts) {
+        /* Keep existing initial data */
+        intl_dts = fh->data;
+    }
+
+    rv = vmu_pkg_build_ex(&pkg, &buffer, &buffer_length, intl_dts);
+    if(rv) {
+        /* Build failed */
+        return -1;
+    }
+
+    rv = vmu_overwrite_header(fh, buffer, (size_t)buffer_length);
+    free(buffer);
+
+    return rv;
+}
+
+/* Manage header for new files or existing GAME files */
+static int vmu_overwrite_header_game(vmu_fh_t *fh, const vmu_pkg_t *new_hdr, const void *intl_dts) {
+    const uint8_t empty_initial_data[512] = {};
+
+    if(fh->raw && !new_hdr && !intl_dts) {
+        /* Allow create GAME files in RAW mode */
+        if(!fh->is_game) {
+            fh->is_game = true;
+            dbglog(DBG_SOURCE(VMUFS_DEBUG), "VMUFS: raw file %s will be written as GAME\n", fh->name);
+        }
+        return 0;
+    }
+
+    if(!new_hdr && intl_dts) {
+        dbglog(DBG_SOURCE(VMUFS_DEBUG), "VMUFS: initial data must be provided with a header\n");
+        return -2;
+    }
+
+    if(fh->is_game) {
+        return vmu_overwrite_header_from_pkg(fh, new_hdr, intl_dts);
+    }
+
+    if(fh->header_status == VMUHDR_STATUS_NEWFILE) {
+        dbglog(DBG_SOURCE(VMUFS_DEBUG), "VMUFS: file %s will be written as GAME\n", fh->name);
+    }
+    else {
+        /* Using fs_vmu_set_header() first can trigger this warning */
+        dbglog(DBG_WARNING, "VMUFS: attempt to convert an existing DATA file into GAME\n");
+    }
+
+    fh->is_game = true;
+
+    if(new_hdr && !intl_dts) {
+        /* Something needs to be written, use an empty initial data */
+        intl_dts = empty_initial_data;
+    }
+
+    return vmu_overwrite_header_from_pkg(fh, new_hdr, intl_dts);
+}
+
+/* Compile and replace default header */
+static int vmu_change_default_header(const vmu_pkg_t *new_hdr) {
+    int rv;
+    int buffer_length;
+    uint8_t *buffer, *old_buffer;
+    vmu_pkg_t pkg;
+
+    old_buffer = default_header.buffer;
+
+    if(new_hdr) {
+        /* Don't write payload data or application code twice, temporally set to zero. */
+        memcpy(&pkg, new_hdr, sizeof(vmu_pkg_t));
+        pkg.data_len = 0;
+
+        rv = vmu_pkg_build(&pkg, &buffer, &buffer_length);
+        if(rv) {
+            /* Build failed */
+            return rv;
+        }
+
+        default_header.buffer = buffer;
+        default_header.buffer_length = (size_t)buffer_length;
+    }
+    else {
+        memset(&default_header, 0x00, sizeof(vmufs_rawhdr_t));
+    }
+
+    free(old_buffer);
+    return 0;
 }
 
 /* Verify that a given hnd is actually in the list */
@@ -364,27 +547,49 @@ static int vmu_verify_hnd(void * hnd, int type) {
 /* write a file out before closing it: we aren't perfect on error handling here */
 static int vmu_write_close(void * hnd) {
     vmu_fh_t    *fh = (vmu_fh_t*)hnd;
-    uint8_t     *data = fh->data + fh->start;
-    int         ret, data_len = fh->filesize * 512;
-    vmu_pkg_t   *hdr = fh->header ?: dft_header;
+    int         ret;
+    uint32      buffer_used, blks_bytes_used;
 
-    if(!fh->raw) {
-        if(!hdr) {
-            dbglog(DBG_WARNING, "VMUFS: file written without header\n");
-        } else {
-            hdr->data_len = data_len;
-            hdr->data = data;
+    int flags = VMUFS_OVERWRITE;
+    uint8_t *def_hdr = default_header.buffer;
+    size_t def_len = default_header.buffer_length;
 
-            ret = vmu_pkg_build(hdr, &data, &data_len);
-            if(ret < 0)
-                return ret;
+    /* Deal with raw mode (file type is known for existing files) */
+    if(fh->raw) {
+        if(fh->is_game) flags |= VMUFS_VMUGAME;
+        goto perform_write;
+    }
+
+    if(def_hdr && fh->start < 1 && !fh->is_game) {
+        /* Write in buffer the default header for DATA file types */
+        ret = vmu_overwrite_header(fh, def_hdr, def_len);
+        if(ret) {
+            /* Write failed */
+            return ret;
         }
     }
 
-    ret = vmufs_write(fh->dev, fh->name, data, data_len, VMUFS_OVERWRITE);
+    if(fh->start < 1) {
+        dbglog(DBG_WARNING, "VMUFS: file written without header\n");
+    }
+    else if(fh->is_game) {
+        flags |= VMUFS_VMUGAME;
+        vmu_pkg_crc_set(fh->data, true, -1);
+    }
+    else {
+        vmu_pkg_crc_set(fh->data, false, (int)fh->filelength);
+    }
 
-    if(hdr)
-        free(data);
+perform_write:
+    /* Count the amount blocks required */
+    buffer_used = fh->start + fh->filelength;
+    blks_bytes_used = ((buffer_used + 511) / 512) * 512;
+
+    /* Clear padding bytes */
+    memset(fh->data + buffer_used, 0x00, blks_bytes_used - buffer_used);
+
+    /* Write everything */
+    ret = vmufs_write(fh->dev, fh->name, fh->data, blks_bytes_used, flags);
 
     return ret;
 }
@@ -424,11 +629,6 @@ static int vmu_close(void * hnd) {
                 }
             }
 
-            if(fh->header) {
-                free(fh->header->eyecatch_data);
-                free(fh->header->icon_data);
-                free(fh->header);
-            }
             free(fh->data);
             break;
 
@@ -458,8 +658,8 @@ static ssize_t vmu_read(void * hnd, void *buffer, size_t cnt) {
         return 0;
 
     /* Check size */
-    cnt = (fh->loc + cnt) > (fh->filesize * 512) ?
-          (fh->filesize * 512 - fh->loc) : cnt;
+    if((fh->loc + cnt) > fh->filelength)
+        cnt = fh->filelength - fh->loc;
 
     /* Reads past EOF return 0 */
     if((long)cnt < 0)
@@ -488,44 +688,49 @@ static ssize_t vmu_write(void * hnd, const void *buffer, size_t cnt) {
     if((fh->mode & O_MODE_MASK) != O_WRONLY && (fh->mode & O_MODE_MASK) != O_RDWR)
         return -1;
 
-    /* Check to make sure we have enough room in data */
-    if(fh->loc + fh->start + cnt > fh->filesize * 512) {
+    /* Check to make sure we have enough room in buffer */
+    if(fh->loc + fh->start + cnt > fh->blks * 512) {
         /* Figure out the new block count */
-        n = ((fh->loc + fh->start + cnt) - (fh->filesize * 512));
+        n = ((fh->loc + fh->start + cnt) - (fh->blks * 512));
 
         if(n & 511)
             n = (n + 512) & ~511;
 
         n = n / 512;
 
-        dbglog(DBG_SOURCE(VMUFS_DEBUG), "VMUFS: extending file's filesize by %d\n", n);
+        dbglog(DBG_SOURCE(VMUFS_DEBUG), "VMUFS: extending file's blocks by %d\n", n);
 
         /* We alloc another 512*n bytes for the file */
-        tmp = realloc(fh->data, (fh->filesize + n) * 512);
+        tmp = realloc(fh->data, (fh->blks + n) * 512);
 
         if(!tmp) {
-            dbglog(DBG_ERROR, "VMUFS: unable to realloc another 512 bytes\n");
+            dbglog(DBG_ERROR, "VMUFS: unable to realloc another %d bytes\n", n * 512);
             return -1;
         }
 
-        /* Assign the new pointer and clear out the new space */
+        /* Assign the new pointer */
         fh->data = tmp;
-        memset(fh->data + fh->filesize * 512, 0, 512 * n);
-        fh->filesize += n;
+        fh->blks += n;
     }
 
     /* insert the data in buffer into fh->data at fh->loc */
     dbglog(DBG_SOURCE(VMUFS_DEBUG), "VMUFS: adding %d bytes of data at loc %ld (%ld avail)\n",
-           cnt, fh->loc, fh->filesize * 512);
+           cnt, fh->loc, fh->blks * 512);
 
     memcpy(fh->data + fh->loc + fh->start, buffer, cnt);
     fh->loc += cnt;
+
+    if((uint32_t)fh->loc > fh->filelength)
+        fh->filelength = (uint32_t)fh->loc;
 
     return cnt;
 }
 
 /* mmap a file */
-/* note: writing past EOF will invalidate your pointer */
+/* notes:
+    - writing past EOF will invalidate your pointer
+    - buffer can be invalidated when is reallocated
+*/
 static void *vmu_mmap(void * hnd) {
     vmu_fh_t *fh;
 
@@ -556,7 +761,7 @@ static off_t vmu_seek(void * hnd, off_t offset, int whence) {
             offset += fh->loc;
             break;
         case SEEK_END:
-            offset = fh->filesize * 512 - offset;
+            offset = (off_t)fh->filelength - offset;
             break;
         default:
             return -1;
@@ -586,8 +791,7 @@ static size_t vmu_total(void * fd) {
     if(!vmu_verify_hnd(fd, VMU_FILE))
         return -1;
 
-    /* note that all filesizes are multiples of 512 for the vmu */
-    return (((vmu_fh_t *) fd)->filesize) * 512;
+    return ((vmu_fh_t *)fd)->filelength;
 }
 
 /* read a directory handle */
@@ -636,8 +840,9 @@ static dirent_t *vmu_readdir(void * fd) {
 static int vmu_ioctl(void *fd, int cmd, va_list ap) {
     vmu_fh_t *fh = (vmu_fh_t*)fd;
     vmu_dh_t *dh = (vmu_dh_t*)fd;
-    vmu_pkg_t *old_hdr, *hdr = NULL;
     const vmu_pkg_t *new_hdr;
+    const void* intl_dts;
+    const void **out_intial_data;
 
     if(!dh || (dh->strtype == VMU_DIR && !dh->rootdir)) {
         errno = EBADF;
@@ -645,28 +850,58 @@ static int vmu_ioctl(void *fd, int cmd, va_list ap) {
     }
 
     switch(cmd) {
-    case IOCTL_VMU_SET_HDR:
-        new_hdr = va_arg(ap, const vmu_pkg_t *);
-        if(new_hdr) {
-            hdr = vmu_pkg_dup(new_hdr);
-            if(!hdr)
+        case IOCTL_VMU_SET_HDR:
+            new_hdr = va_arg(ap, const vmu_pkg_t *);
+
+            if(fh->strtype == VMU_FILE) {
+                return vmu_overwrite_header_from_pkg(fh, new_hdr, NULL);
+            }
+            return vmu_change_default_header(new_hdr);
+        case IOCTL_VMU_SET_HDR_GAME:
+            new_hdr = va_arg(ap, const vmu_pkg_t *);
+            intl_dts = va_arg(ap, const void *);
+
+            if(fh->strtype != VMU_FILE) {
+                errno = EISDIR;
                 return -1;
-        }
+            }
+            return vmu_overwrite_header_game(fh, new_hdr, intl_dts);
+        case IOCTL_VMU_GET_HDR_STATE:
+            if(fh->strtype != VMU_FILE) {
+                /* Not applicable */
+                return VMUHDR_STATUS_OK;
+            }
+            return fh->header_status;
+        case IOCTL_VMU_GET_INIT_DATA:
+            out_intial_data = va_arg(ap, const void **);
 
-        if(fh->strtype == VMU_FILE) {
-            old_hdr = fh->header;
-            fh->header = hdr;
-        } else {
-            old_hdr = dft_header;
-            dft_header = hdr;
-        }
-
-        if(old_hdr) {
-            free(old_hdr->icon_data);
-            free(old_hdr->eyecatch_data);
-            free(old_hdr);
-        }
-        break;
+            if(!out_intial_data) {
+                return -1;
+            }
+            else if(fh->strtype != VMU_FILE) {
+                errno = EISDIR;
+                return -1;
+            }
+            else if(!fh->is_game) {
+                *out_intial_data = NULL;
+            }
+            else if(fh->start < 1) {
+                dbglog(DBG_SOURCE(VMUFS_DEBUG), "VMUFS: attempt to retrieve removed initial data\n");
+                *out_intial_data = NULL;
+            }
+            else {
+                *out_intial_data = fh->data;
+            }
+            break;
+        case IOCTL_VMU_GET_REALFSIZE:
+            if(fh->strtype == VMU_FILE) {
+                _Static_assert(sizeof(int) >= sizeof(fh->blks));
+                return (int)fh->blks * 512;
+            }
+            else {
+                errno = EISDIR;
+                return -1;
+            }
     }
 
     return 0;
@@ -701,7 +936,7 @@ static int vmu_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
     if(len == 0 || (len == 1 && *path == '/')) {
         memset(st, 0, sizeof(struct stat));
         st->st_dev = (dev_t)('v' | ('m' << 8) | ('u' << 16));
-        st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | 
+        st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP |
             S_IXGRP | S_IROTH | S_IXOTH;
         st->st_size = -1;
         st->st_nlink = 2;
@@ -727,7 +962,7 @@ static int vmu_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
     /* Get the number of free blocks */
     memset(st, 0, sizeof(struct stat));
     st->st_dev = (dev_t)((uintptr_t)dev);
-    st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | 
+    st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP |
         S_IXGRP | S_IROTH | S_IXOTH;
     st->st_size = vmufs_free_blocks(dev);
     st->st_nlink = 1;
@@ -806,8 +1041,8 @@ static int vmu_fstat(void *fd, struct stat *st) {
     st->st_dev = (dev_t)((uintptr_t)fh->dev);
     st->st_mode =  S_IRWXU | S_IRWXG | S_IRWXO;
     st->st_mode |= (fh->strtype == VMU_DIR) ? S_IFDIR : S_IFREG;
-    st->st_size = (fh->strtype == VMU_DIR) ? 
-        vmufs_free_blocks(((vmu_dh_t *)fh)->dev) : (int)(fh->filesize * 512);
+    st->st_size = (fh->strtype == VMU_DIR) ?
+        vmufs_free_blocks(((vmu_dh_t *)fh)->dev) : (int)(fh->blks * 512);
     st->st_nlink = (fh->strtype == VMU_DIR) ? 2 : 1;
     st->st_blksize = 512;
 
@@ -892,11 +1127,8 @@ int fs_vmu_shutdown(void) {
     mutex_unlock(&fh_mutex);
     mutex_destroy(&fh_mutex);
 
-    if(dft_header) {
-        free(dft_header->eyecatch_data);
-        free(dft_header->icon_data);
-        free(dft_header);
-    }
+    /* Deallocate default header */
+    vmu_change_default_header(NULL);
 
     return nmmgr_handler_remove(&vh.nmmgr);
 }

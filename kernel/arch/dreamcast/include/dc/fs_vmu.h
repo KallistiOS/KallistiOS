@@ -48,8 +48,28 @@ __BEGIN_DECLS
 int fs_vmu_init(void);
 int fs_vmu_shutdown(void);
 
-#define IOCTL_VMU_SET_HDR     0x564d5530 /* "VMU0" */
+#define IOCTL_VMU_SET_HDR          0x564d5530 /* "VMU0" */
+#define IOCTL_VMU_GET_REALFSIZE    0x564d5531 /* "VMU1" */
+#define IOCTL_VMU_GET_HDR_STATE    0x564d5532 /* "VMU2" */
+#define IOCTL_VMU_SET_HDR_GAME     0x564d5533 /* "VMU3" */
+#define IOCTL_VMU_GET_INIT_DATA    0x564d5534 /* "VMU4" */
 /* \endcond */
+
+/** \defgroup file_hdr_status      File header parse status
+    \brief                         Values returned from IOCTL_VMU_GET_HDR_STATE
+    \ingroup                       VMU
+
+    Function fs_open() will parse the VMU file header before return.
+    If successful the header is hidden, so any operation in the VMU file won't see the header.
+    However if the checksum is invalid, the file will open anyway.
+
+    The codes returned by IOCTL_VMU_GET_HDR_STATE indicate the header status.
+*/
+typedef enum vmu_hdr_status {
+    VMUHDR_STATUS_OK,            /**< \brief Header parsed correctly */
+    VMUHDR_STATUS_NEWFILE,       /**< \brief There is no header */
+    VMUHDR_STATUS_BADCRC         /**< \brief Invalid checksum */
+} vmu_hdr_status_t;
 
 /** \brief  Set a header to an opened VMU file
 
@@ -73,6 +93,88 @@ static inline int fs_vmu_set_header(file_t fd, const vmu_pkg_t *pkg) {
     return fs_ioctl(fd, IOCTL_VMU_SET_HDR, pkg);
 }
 
+/** \brief  Set a header to an opened VMU file
+
+    Same as fs_vmu_set_header() function but sets or allocates initial data
+    required for GAME file types.
+
+    Note that new files are always created as DATA file type, however, calling
+    this function will change the file type to GAME which is desirable for new files.
+
+    This function can be used on RAW mode to indicate that new files should
+    be written as GAME by passing NULL to "pkg" and "intl_dts" pointers.
+
+    \warning Do not use this function on existing DATA files, or they will be GAME!
+
+    \param fd               A file descriptor corresponding to the VMU file
+    \param pkg              The header to set to the VMU file or NULL to remove
+    \param intl_dts         Initial data to set or NULL to keep existing
+    \retval 0               On success.
+    \retval -1              On error.
+    \retval -2              On attempt to set initial data without a header
+*/
+static inline int fs_vmu_set_header_game(file_t fd, const vmu_pkg_t *pkg, const void *intl_dts) {
+    return fs_ioctl(fd, IOCTL_VMU_SET_HDR_GAME, pkg, intl_dts);
+}
+
+/** \brief  Gets initial data of an opened VMU file
+
+    This function can be used to retrieve the initial data from
+    an opened VMU file.
+
+    The initial data is 512 bytes long and is used only for GAME file types.
+    It will be NULL for DATA file types, this also makes it possible to know
+    if the opened file type is DATA or GAME.
+
+    This function will also return NULL if there no header.
+
+    Is valid make changes if the file is opened for writing but note
+    that fs_vmu_set_header_game() function can override the initial data.
+
+    \warning The underlying buffer may be reallocated by some fs functions, so
+    use it before continuing.
+
+    \param fd       A file descriptor corresponding to the VMU file
+
+    \return         A pointer to the initial data
+*/
+static inline void *fs_vmu_get_initial_data(file_t fd) {
+    void *initial_data = NULL;
+    fs_ioctl(fd, IOCTL_VMU_GET_INIT_DATA, &initial_data);
+    return initial_data;
+}
+
+/** \brief  Retrieves the real file size from an opened VMU file
+
+    Retrieves the real size as it was read (or will be written). This includes
+    the header, initial data and padding added at the end of the file.
+
+    The retrieved value is multiple of 512 bytes.
+
+    \see file_hdr_status
+    \param fd               A file descriptor corresponding to the VMU file
+    \return                 The size in bytes or -1 on invalid file descriptor
+*/
+static inline int fs_vmu_get_file_size(file_t fd) {
+    return fs_ioctl(fd, IOCTL_VMU_GET_REALFSIZE);
+}
+
+/** \brief  Retrieves the header status from an opened VMU file
+
+    This function can be used to check if the header was parsed
+    correctly (which contains the metadata, icons...) from an opened VMU file.
+    It does not apply to directories and returns VMUHDR_STATUS_OK.
+
+    \note Always returns VMUHDR_STATUS_NEWFILE for truncated files.
+
+    \see file_hdr_status
+    \param fd               A file descriptor corresponding to the VMU file
+    \return                 Header status
+*/
+static inline vmu_hdr_status_t fs_vmu_get_header_status(file_t fd) {
+    return (vmu_hdr_status_t)fs_ioctl(fd, IOCTL_VMU_GET_HDR_STATE);
+}
+
 /** \brief  Set a default header for newly created VMU files
 
     This function will set a default header, that will be used for new files
@@ -85,6 +187,8 @@ static inline int fs_vmu_set_header(file_t fd, const vmu_pkg_t *pkg) {
     Note that the "pkg" pointer as well as the eyecatch/icon data pointers it
     contain can be freed (if dynamically allocated) as soon as this function
     return, as the filesystem code will keep an internal copy.
+
+    Note that the default header is only available to DATA files.
 
     It is valid to pass NULL as the header pointer, in which case the default
     header will be discarded.
