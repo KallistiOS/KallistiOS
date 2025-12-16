@@ -173,12 +173,8 @@ int kthread_tls_init(void) {
 void kthread_tls_shutdown(void) {
     kthread_tls_dest_t *n1, *n2;
 
-    /* Tear down the destructor list. */
-    n1 = LIST_FIRST(&dest_list);
-
-    while(n1 != NULL) {
-        n2 = LIST_NEXT(n1, dest_list);
+    LIST_FOREACH_SAFE(n1, &dest_list, dest_list, n2) {
+        LIST_REMOVE(n1, dest_list);
         free(n1);
-        n1 = n2;
     }
 }
