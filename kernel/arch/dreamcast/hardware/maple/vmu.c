@@ -432,7 +432,7 @@ static void vmu_block_read_callback(maple_state_t *st, maple_frame_t *frm) {
 int vmu_block_read(maple_device_t *dev, uint16_t blocknum, uint8_t *buffer) {
     maple_response_t *resp;
     int              rv;
-    uint32_t         blkid;
+    uint32_t         blkid, *send_buf;
 
     assert(dev != NULL);
 
@@ -474,17 +474,18 @@ int vmu_block_read(maple_device_t *dev, uint16_t blocknum, uint8_t *buffer) {
 
     /* Copy out the response */
     resp = (maple_response_t *)dev->frame.recv_buf;
+    send_buf = (uint32_t *)resp->data;
 
     if(resp->response != MAPLE_RESPONSE_DATATRF
-            || dev->frame.send_buf[0] != MAPLE_FUNC_MEMCARD
-            || dev->frame.send_buf[1] != blkid) {
+            || send_buf[0] != MAPLE_FUNC_MEMCARD
+            || send_buf[1] != blkid) {
         rv = MAPLE_EFAIL;
         dbglog(DBG_ERROR, "vmu_block_read failed: %s(%d)/%08lx\r\n",
-               maple_perror(resp->response), resp->response, dev->frame.send_buf[0]);
+               maple_perror(resp->response), resp->response, send_buf[0]);
     }
     else {
         rv = MAPLE_EOK;
-        memcpy(buffer, dev->frame.send_buf + 2, (resp->data_len - 2) * 4);
+        memcpy(buffer, send_buf + 2, (resp->data_len - 2) * 4);
     }
 
     maple_frame_unlock(&dev->frame);
@@ -677,6 +678,7 @@ static void vmu_get_datetime_callback(maple_state_t *st, maple_frame_t *frm) {
 int vmu_get_datetime(maple_device_t *dev, time_t *unix) {
     maple_response_t *resp;
     int               rv;
+    uint32_t         *send_buf;
 
     assert(dev);
 
@@ -722,18 +724,19 @@ int vmu_get_datetime(maple_device_t *dev, time_t *unix) {
 
     /* Copy out the response */
     resp = (maple_response_t *)dev->frame.recv_buf;
+    send_buf = (uint32_t *)resp->data;
 
     if(resp->response != MAPLE_RESPONSE_DATATRF
-            || dev->frame.send_buf[0] != MAPLE_FUNC_CLOCK) {
+            || send_buf[0] != MAPLE_FUNC_CLOCK) {
         rv = MAPLE_EFAIL;
         *unix = -1;
         dbglog(DBG_ERROR, "vmu_get_datetime failed: %s(%d)/%08lx\r\n",
-               maple_perror(resp->response), resp->response, dev->frame.send_buf[0]);
+               maple_perror(resp->response), resp->response, send_buf[0]);
     }
     else {
         rv = MAPLE_EOK;
         struct tm btime = { 0 };
-        vmu_datetime_to_tm((const vmu_datetime_t*)(dev->frame.send_buf + 1), &btime);
+        vmu_datetime_to_tm((const vmu_datetime_t*)(send_buf + 1), &btime);
         *unix = mktime(&btime);
     }
 
