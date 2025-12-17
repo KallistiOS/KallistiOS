@@ -7,6 +7,7 @@
 /* This file defines methods for accessing thread-local storage, added in KOS
    1.3.0. */
 
+#include <stdatomic.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <errno.h>
@@ -17,8 +18,7 @@
 #include <kos/spinlock.h>
 #include <kos/thread.h>
 
-static spinlock_t mutex = SPINLOCK_INITIALIZER;
-static kthread_key_t next_key = 1;
+static _Atomic kthread_key_t next_key = 1;
 
 typedef struct kthread_tls_dest {
     /* List handle */
@@ -73,13 +73,10 @@ int kthread_key_create(kthread_key_t *key, void (*destructor)(void *)) {
     kthread_tls_dest_t *dest;
 
     if(irq_inside_int() &&
-       (spinlock_is_locked(&mutex) ||
-       (destructor && !malloc_irq_safe()))) {
+       destructor && !malloc_irq_safe()) {
         errno = EPERM;
         return -1;
     }
-
-    spinlock_lock_scoped(&mutex);
 
     /* Store the destructor if need be. */
     if(destructor) {
@@ -89,13 +86,16 @@ int kthread_key_create(kthread_key_t *key, void (*destructor)(void *)) {
             errno = ENOMEM;
             return -1;
         }
+    }
 
-        dest->key = next_key;
+    /* Now that the destructor's ready, we can get our key */
+    *key = atomic_fetch_add(&next_key, 1);
+
+    if(destructor) {
+        dest->key = *key;
         dest->destructor = destructor;
         LIST_INSERT_HEAD(&dest_list, dest, dest_list);
     }
-
-    *key = next_key++;
 
     return 0;
 }
@@ -124,19 +124,14 @@ int kthread_setspecific(kthread_key_t key, const void *value) {
     kthread_tls_kv_t *i;
 
     if(irq_inside_int() &&
-       (spinlock_is_locked(&mutex) || !malloc_irq_safe())) {
+       !malloc_irq_safe()) {
         errno = EPERM;
         return -1;
     }
 
-    /* Make sure the key is valid. */
-    {
-        spinlock_lock_scoped(&mutex);
-
-        if(key >= next_key || key < 1) {
-            errno = EINVAL;
-            return -1;
-        }
+    if(key >= next_key || key < 1) {
+        errno = EINVAL;
+        return -1;
     }
 
     /* Check if we already have an entry for this key. */
