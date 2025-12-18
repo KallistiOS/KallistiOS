@@ -5,6 +5,7 @@
    Copyright (C) 2015 Lawrence Sebald
  */
 
+#include <stdatomic.h>
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
@@ -179,23 +180,13 @@ void maple_frame_init(maple_frame_t *frame) {
 /* Lock a frame so that someone else can't use it in the mean time; if the
    frame is already locked, an error will be returned. */
 int maple_frame_lock(maple_frame_t *frame) {
-    uint32  save = 0;
-    int rv;
+    int oldstate = MAPLE_FRAME_VACANT;
 
-    if(!irq_inside_int())
-        save = irq_disable();
+    if(atomic_compare_exchange_strong(&frame->state, &oldstate,
+                                      MAPLE_FRAME_UNSENT))
+        return 0;
 
-    if(frame->queued || frame->state != MAPLE_FRAME_VACANT)
-        rv = -1;
-    else {
-        frame->state = MAPLE_FRAME_UNSENT;
-        rv = 0;
-    }
-
-    if(!irq_inside_int())
-        irq_restore(save);
-
-    return rv;
+    return -1;
 }
 
 /* Unlock a frame */
