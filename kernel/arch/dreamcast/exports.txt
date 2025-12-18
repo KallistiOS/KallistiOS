@@ -210,6 +210,7 @@ maple_enum_type
 maple_dev_status
 maple_queue_frame
 maple_frame_init
+maple_frame_trylock
 maple_frame_lock
 maple_frame_unlock
 maple_addr

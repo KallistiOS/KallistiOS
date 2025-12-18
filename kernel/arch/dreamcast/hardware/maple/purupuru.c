@@ -18,7 +18,7 @@ int purupuru_rumble_raw(maple_device_t *dev, uint32_t effect) {
     assert(dev != NULL);
 
     /* Lock the frame */
-    if(maple_frame_lock(&dev->frame) < 0)
+    if(maple_frame_trylock(&dev->frame) < 0)
         return MAPLE_EAGAIN;
 
     /* Reset the frame */

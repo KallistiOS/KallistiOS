@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
+#include <kos/thread.h>
 #include <dc/maple.h>
 #include <arch/irq.h>
 #include <arch/memory.h>
@@ -179,7 +180,7 @@ void maple_frame_init(maple_frame_t *frame) {
 
 /* Lock a frame so that someone else can't use it in the mean time; if the
    frame is already locked, an error will be returned. */
-int maple_frame_lock(maple_frame_t *frame) {
+int maple_frame_trylock(maple_frame_t *frame) {
     int oldstate = MAPLE_FRAME_VACANT;
 
     if(atomic_compare_exchange_strong(&frame->state, &oldstate,
@@ -187,6 +188,13 @@ int maple_frame_lock(maple_frame_t *frame) {
         return 0;
 
     return -1;
+}
+
+int maple_frame_lock(maple_frame_t *frame) {
+    while(maple_frame_trylock(frame) < 0)
+        thd_pass();
+
+    return 0;
 }
 
 /* Unlock a frame */

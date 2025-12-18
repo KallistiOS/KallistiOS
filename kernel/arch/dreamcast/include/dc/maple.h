@@ -672,11 +672,20 @@ int maple_queue_remove(maple_frame_t *frame);
 */
 void maple_frame_init(maple_frame_t *frame);
 
-/** \brief   Lock a frame so that someone else can't use it in the mean time.
+/** \brief   Try to lock a frame so that someone else can't use it in the
+             mean time.
     \ingroup maple
 
     \retval 0               On success.
     \retval -1              If the frame is already locked.
+*/
+int maple_frame_trylock(maple_frame_t *frame);
+
+/** \brief   Lock a frame so that someone else can't use it in the mean time.
+             This function is not safe to use in interrupt context.
+    \ingroup maple
+
+    \retval 0               On success. No error code defined.
 */
 int maple_frame_lock(maple_frame_t *frame);
 

@@ -130,7 +130,7 @@ int sip_start_sampling(maple_device_t *dev, sip_sample_cb cb, int block) {
         return MAPLE_EFAIL;
 
     /* Lock the frame */
-    if(maple_frame_lock(&dev->frame) < 0)
+    if(maple_frame_trylock(&dev->frame) < 0)
         return MAPLE_EAGAIN;
 
     sip->callback = cb;
@@ -175,7 +175,7 @@ int sip_stop_sampling(maple_device_t *dev, int block) {
         return MAPLE_EFAIL;
 
     /* Lock the frame */
-    if(maple_frame_lock(&dev->frame) < 0)
+    if(maple_frame_trylock(&dev->frame) < 0)
         return MAPLE_EAGAIN;
 
     /* Reset the frame */
@@ -248,7 +248,7 @@ static int sip_poll(maple_device_t *dev) {
     }
 
     /* Lock the frame, or die trying */
-    if(maple_frame_lock(&dev->frame) < 0)
+    if(maple_frame_trylock(&dev->frame) < 0)
         return 0;
 
     maple_frame_init(&dev->frame);

@@ -152,7 +152,7 @@ static int vmu_poll(maple_device_t *dev) {
     /* Only query for button input on the front VMU of each controller 
        AND the device actually has the functionality. */
     if((dev->unit == 1) && vmu_is_vmu(dev)) {
-        if(maple_frame_lock(&dev->frame) < 0)
+        if(maple_frame_trylock(&dev->frame) < 0)
             return 0;
 
         maple_frame_init(&dev->frame);
@@ -316,7 +316,7 @@ int vmu_beep_raw(maple_device_t *dev, uint32_t beep) {
         return MAPLE_EINVALID;
 
     /* Lock the frame */
-    if(maple_frame_lock(&dev->frame) < 0)
+    if(maple_frame_trylock(&dev->frame) < 0)
         return MAPLE_EAGAIN;
 
     /* Reset the frame */
@@ -350,7 +350,7 @@ int vmu_draw_lcd(maple_device_t *dev, const void *bitmap) {
         return MAPLE_EINVALID;
 
     /* Lock the frame */
-    if(maple_frame_lock(&dev->frame) < 0)
+    if(maple_frame_trylock(&dev->frame) < 0)
         return MAPLE_EAGAIN;
 
     /* Reset the frame */
@@ -437,7 +437,7 @@ int vmu_block_read(maple_device_t *dev, uint16_t blocknum, uint8_t *buffer) {
     assert(dev != NULL);
 
     /* Lock the frame */
-    if(maple_frame_lock(&dev->frame) < 0)
+    if(maple_frame_trylock(&dev->frame) < 0)
         return MAPLE_EAGAIN;
 
     /* This is (block << 24) | (phase << 8) | (partition (0 for all vmu)) */
@@ -516,7 +516,7 @@ static int vmu_block_write_internal(maple_device_t *dev, uint16_t blocknum, cons
     rv = MAPLE_EOK;
 
     /* Lock the frame. XXX: Priority inversion issues here. */
-    while(maple_frame_lock(&dev->frame) < 0)
+    while(maple_frame_trylock(&dev->frame) < 0)
         thd_pass();
 
     /* Writes have to occur in four phases per block -- this is the
@@ -638,7 +638,7 @@ int vmu_set_datetime(maple_device_t *dev, time_t unix) {
     assert(btime); /* A failure here means an invalid unix timestamp was given. */
 
     /* Lock the frame */
-    if(maple_frame_lock(&dev->frame) < 0)
+    if(maple_frame_trylock(&dev->frame) < 0)
         return MAPLE_EAGAIN;
 
     /* Reset the frame */
@@ -687,7 +687,7 @@ int vmu_get_datetime(maple_device_t *dev, time_t *unix) {
         return MAPLE_EINVALID;
 
     /* Lock the frame */
-    if(maple_frame_lock(&dev->frame) < 0)
+    if(maple_frame_trylock(&dev->frame) < 0)
         return MAPLE_EAGAIN;
 
     /* Reset the frame */

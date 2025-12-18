@@ -108,7 +108,7 @@ int dreameye_get_image_count(maple_device_t *dev, int block) {
     de->image_count_valid = 0;
 
     /* Lock the frame */
-    if(maple_frame_lock(&dev->frame) < 0)
+    if(maple_frame_trylock(&dev->frame) < 0)
         return MAPLE_EAGAIN;
 
     /* Reset the frame */
@@ -194,7 +194,7 @@ static int dreameye_send_get_image(maple_device_t *dev,
                                    dreameye_state_t *state, uint8 req,
                                    uint8 cnt) {
     /* Lock the frame */
-    if(maple_frame_lock(&dev->frame) < 0)
+    if(maple_frame_trylock(&dev->frame) < 0)
         return MAPLE_EAGAIN;
 
     /* Reset the frame */
@@ -216,7 +216,7 @@ static int dreameye_get_transfer_count(maple_device_t *dev, uint8 img) {
     assert(dev != NULL);
 
     /* Lock the frame */
-    if(maple_frame_lock(&dev->frame) < 0)
+    if(maple_frame_trylock(&dev->frame) < 0)
         return MAPLE_EAGAIN;
 
     /* Reset the frame */
@@ -353,7 +353,7 @@ int dreameye_erase_image(maple_device_t *dev, uint8 image, int block) {
         return MAPLE_EINVALID;
 
     /* Lock the frame */
-    if(maple_frame_lock(&dev->frame) < 0)
+    if(maple_frame_trylock(&dev->frame) < 0)
         return MAPLE_EAGAIN;
 
     /* Reset the frame */

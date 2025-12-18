@@ -29,7 +29,7 @@ static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm);
 /* Send a DEVINFO command for the given port/unit */
 static bool vbl_send_devinfo(maple_frame_t *frame, int p, int u) {
     /* Reserve access; if we don't get it, forget about it */
-    if(maple_frame_lock(frame) < 0)
+    if(maple_frame_trylock(frame) < 0)
         return false;
 
     /* Setup our autodetect frame to probe at a new device */

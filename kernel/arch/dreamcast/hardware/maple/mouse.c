@@ -48,7 +48,7 @@ static void mouse_reply(maple_state_t *st, maple_frame_t *frm) {
 }
 
 static int mouse_poll(maple_device_t *dev) {
-    if(maple_frame_lock(&dev->frame) < 0)
+    if(maple_frame_trylock(&dev->frame) < 0)
         return 0;
 
     maple_frame_init(&dev->frame);
