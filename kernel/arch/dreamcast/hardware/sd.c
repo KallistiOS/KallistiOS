@@ -23,9 +23,9 @@
 #include <kos/blockdev.h>
 #include <kos/dbglog.h>
 
-#define MAX_RETRIES     500000
+#define MAX_RETRIES     5000
 #define READ_RETRIES    50000
-#define WRITE_RETRIES   150000
+#define WRITE_RETRIES   50000
 
 #define CMD(n) ((n) | 0x40)
 
@@ -344,6 +344,7 @@ int sd_init_ex(const sd_init_params_t *params) {
     /* Reset the card, putting it in its idle state. */
     if(sd_send_cmd(CMD(0), 0) != 1) {
         spi_set_cs(false);
+        spi_shutdown();
         return -1;
     }
 
@@ -356,18 +357,21 @@ int sd_init_ex(const sd_init_params_t *params) {
 
         if((buf[2] & 0x0F) != 0x01 || buf[3] != 0xAA) {
             spi_set_cs(false);
+            spi_shutdown();
             return -2;
         }
 
         /* ACMD41 until we're ready */
         if(acmd41_loop(0x40000000)) {
             spi_set_cs(false);
+            spi_shutdown();
             return -1;
         }
 
         /* Detect if we do byte addressing or block addressing with CMD58 */
         if(sd_send_cmd(CMD(58), 0)) {
             spi_set_cs(false);
+            spi_shutdown();
             return -1;
         }
 
@@ -385,6 +389,7 @@ int sd_init_ex(const sd_init_params_t *params) {
             /* Try with CMD1 instead then... */
             if(cmd1_loop()) {
                 spi_set_cs(false);
+                spi_shutdown();
                 return -1;
             }
 
@@ -395,6 +400,7 @@ int sd_init_ex(const sd_init_params_t *params) {
         /* Set the block length to 512 with CMD16 */
         if(sd_send_cmd(CMD(16), 512)) {
             spi_set_cs(false);
+            spi_shutdown();
             return -1;
         }
 
@@ -405,12 +411,15 @@ int sd_init_ex(const sd_init_params_t *params) {
     /* Re-enable CRC checking. */
     if(sd_send_cmd(CMD(59), 1)) {
         spi_set_cs(false);
+        spi_shutdown();
         return -1;
     }
 
     /* Make sure that the card releases the data line */
     spi_set_cs(false);
     spi_rw_byte(0xFF);
+
+    spi_shutdown();
 
     /* Switch to maximum speed after successful initialization */
     if(spi_init(true))
