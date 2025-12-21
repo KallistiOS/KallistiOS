@@ -56,7 +56,7 @@ static destructor kthread_key_get_destructor(kthread_key_t key) {
 }
 
 /* Delete the destructor for a given key. */
-void kthread_key_delete_destructor(kthread_key_t key) {
+static void kthread_key_delete_destructor(kthread_key_t key) {
     kthread_tls_dest_t *i, *tmp;
 
     LIST_FOREACH_SAFE(i, &dest_list, dest_list, tmp) {
@@ -96,6 +96,50 @@ int kthread_key_create(kthread_key_t *key, void (*destructor)(void *)) {
         dest->destructor = destructor;
         LIST_INSERT_HEAD(&dest_list, dest, dest_list);
     }
+
+    return 0;
+}
+
+/* Always returns 0 as we want to iterate over all threads. */
+static int key_delete_cb(kthread_t *thd, void *user_data) {
+    kthread_tls_kv_t *i, *tmp;
+    kthread_key_t key = *(kthread_key_t *)(user_data);
+
+    LIST_FOREACH_SAFE(i, &thd->tls_list, kv_list, tmp) {
+            if(i->key == key) {
+                LIST_REMOVE(i, kv_list);
+                free(i);
+                return 0;
+            }
+        }
+
+    return 0;
+}
+
+/* Delete a TLS key. Note that currently this doesn't prevent you from reusing
+   the key after deletion. This seems ok, as the pthreads standard states that
+   using the key after deletion results in "undefined behavior".
+*/
+int kthread_key_delete(kthread_key_t key) {
+
+    irq_disable_scoped();
+
+    /* Make sure the key is valid. */
+    if(key >= kthread_key_next() || key < 1) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    /* Make sure we can actually use free below. */
+    if(!malloc_irq_safe()) {
+        errno = EPERM;
+        return -1;
+    }
+
+    /* Go through each thread searching for (and removing) the data. */
+    thd_each(key_delete_cb, (void *)&key);
+
+    kthread_key_delete_destructor(key);
 
     return 0;
 }

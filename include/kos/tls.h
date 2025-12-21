@@ -117,11 +117,6 @@ int kthread_setspecific(kthread_key_t key, const void *value);
 */
 int kthread_key_delete(kthread_key_t key);
 
-/** \cond */
-/* Delete the destructor for a given key. This function is for internal use
-   only! */
-void kthread_key_delete_destructor(kthread_key_t key);
-
 /* Initialization and shutdown. Once again, internal use only. */
 int kthread_tls_init(void);
 void kthread_tls_shutdown(void);
