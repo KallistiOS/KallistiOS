@@ -23,6 +23,7 @@
 #include <kos/net.h>
 #include <kos/thread.h>
 #include <kos/sem.h>
+#include <kos/worker_thread.h>
 
 /* Configuration definitions */
 
@@ -479,9 +480,6 @@ static int dma_used;
 
 static uint32 rx_size;
 
-static kthread_t * bba_rx_thread;
-static semaphore_t bba_rx_sema;
-static int bba_rx_exit_thread;
 static void bba_rx(void);
 
 static semaphore_t tx_sema;
@@ -490,6 +488,8 @@ static uint8 * next_dst;
 static uint8 * next_src;
 static int next_len;
 
+static kthread_worker_t *rx_worker;
+
 static void rx_finish_enq(int room) {
     /* Tell the chip where we are for overflow checking */
     rtl.cur_rx = (rtl.cur_rx + rx_size + 4 + 3) & ~3;
@@ -497,8 +497,8 @@ static void rx_finish_enq(int room) {
 
     if(room > 0 && (((rxin + 1) % MAX_PKTS) != rxout)) {
         rxin = (rxin + 1) % MAX_PKTS;
-        sem_signal(&bba_rx_sema);
-        thd_schedule(1, 0);
+        thd_worker_wakeup(rx_worker);
+        thd_schedule(true, 0);
     }
 }
 
@@ -695,24 +695,11 @@ static void bba_rx_process(void) {
     rxout = (rxout + 1) % MAX_PKTS;
 }
 
-static void *bba_rx_threadfunc(void *dummy) {
+static void bba_rx_worker(void *dummy) {
     (void)dummy;
 
-    while(!bba_rx_exit_thread) {
-        //sem_wait_timed(&bba_rx_sema, 500);
-        sem_wait(&bba_rx_sema);
-
-        if(bba_rx_exit_thread)
-            break;
-
-        if(rxout != rxin)
-            bba_rx_process();
-    }
-
-    bba_rx_exit_thread = 0;
-
-    printf("bba_rx_thread exiting ...\n");
-    return NULL;
+    while(rxout != rxin)
+        bba_rx_process();
 }
 
 static void bba_rx(void) {
@@ -891,6 +878,11 @@ static int bba_if_shutdown(netif_t *self) {
     return 0;
 }
 
+static const kthread_attr_t bba_rx_worker_attr = {
+    .label = "bba-rx-worker",
+    .prio = 1,
+};
+
 static int bba_if_start(netif_t *self) {
     int i;
 
@@ -903,11 +895,8 @@ static int bba_if_start(netif_t *self) {
         return 0;
 
     // Start the BBA RX thread.
-    assert(bba_rx_thread == NULL);
-    sem_init(&bba_rx_sema, 0);
-    bba_rx_thread = thd_create(0, bba_rx_threadfunc, 0);
-    bba_rx_thread->prio = 1;
-    thd_set_label(bba_rx_thread, "BBA-rx-thd");
+    assert(rx_worker == NULL);
+    rx_worker = thd_worker_create_ex(&bba_rx_worker_attr, bba_rx_worker, NULL);
 
     /* We need something like this to get DHCP to work (since it doesn't
        know anything about an activated and yet not-yet-receiving network
@@ -936,13 +925,10 @@ static int bba_if_stop(netif_t *self) {
         return 0;
 
     /* VP : Shutdown rx thread */
-    assert(bba_rx_thread != NULL);
-    bba_rx_exit_thread = 1;
-    sem_signal(&bba_rx_sema);
-    thd_join(bba_rx_thread, NULL);
-    sem_destroy(&bba_rx_sema);
+    assert(rx_worker != NULL);
+    thd_worker_destroy(rx_worker);
 
-    bba_rx_thread = NULL;
+    rx_worker = NULL;
 
     bba_if.flags &= ~NETIF_RUNNING;
     return 0;
@@ -1082,7 +1068,7 @@ int bba_init(void) {
     // Note: The thread itself is not created here, but when we actually
     // activate the adapter. This way we don't have a spare thread
     // laying around unless it's actually needed.
-    bba_rx_thread = NULL;
+    rx_worker = NULL;
 
     /* Setup the structure */
     bba_if.name = "bba";
