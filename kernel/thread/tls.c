@@ -17,6 +17,7 @@
 #include <kos/tls.h>
 #include <kos/spinlock.h>
 #include <kos/thread.h>
+#include <kos/mutex.h>
 
 static _Atomic kthread_key_t next_key = 1;
 
@@ -34,6 +35,7 @@ typedef struct kthread_tls_dest {
 LIST_HEAD(kthread_tls_dest_list, kthread_tls_dest);
 
 static struct kthread_tls_dest_list dest_list;
+static mutex_t dlist_mtx;
 
 /* What is the next key that will be given out? */
 kthread_key_t kthread_key_next(void) {
@@ -45,6 +47,8 @@ typedef void (*destructor)(void *);
 /* Get the destructor for a given key. */
 static destructor kthread_key_get_destructor(kthread_key_t key) {
     kthread_tls_dest_t *i;
+
+    mutex_lock_scoped(&dlist_mtx);
 
     LIST_FOREACH(i, &dest_list, dest_list) {
         if(i->key == key) {
@@ -59,6 +63,8 @@ static destructor kthread_key_get_destructor(kthread_key_t key) {
 static void kthread_key_delete_destructor(kthread_key_t key) {
     kthread_tls_dest_t *i, *tmp;
 
+    mutex_lock_scoped(&dlist_mtx);
+
     LIST_FOREACH_SAFE(i, &dest_list, dest_list, tmp) {
         if(i->key == key) {
             LIST_REMOVE(i, dest_list);
@@ -72,8 +78,8 @@ static void kthread_key_delete_destructor(kthread_key_t key) {
 int kthread_key_create(kthread_key_t *key, void (*destructor)(void *)) {
     kthread_tls_dest_t *dest;
 
-    if(irq_inside_int() &&
-       destructor && !malloc_irq_safe()) {
+    if(irq_inside_int() && destructor &&
+        (!malloc_irq_safe() || mutex_is_locked(&dlist_mtx))) {
         errno = EPERM;
         return -1;
     }
@@ -94,6 +100,7 @@ int kthread_key_create(kthread_key_t *key, void (*destructor)(void *)) {
     if(destructor) {
         dest->key = *key;
         dest->destructor = destructor;
+        mutex_lock_scoped(&dlist_mtx);
         LIST_INSERT_HEAD(&dest_list, dest, dest_list);
     }
 
@@ -130,8 +137,8 @@ int kthread_key_delete(kthread_key_t key) {
         return -1;
     }
 
-    /* Make sure we can actually use free below. */
-    if(!malloc_irq_safe()) {
+    /* Make sure we can actually delete things below. */
+    if(!malloc_irq_safe() || mutex_is_locked(&dlist_mtx)) {
         errno = EPERM;
         return -1;
     }
@@ -167,12 +174,6 @@ int kthread_setspecific(kthread_key_t key, const void *value) {
     kthread_t *cur = thd_get_current();
     kthread_tls_kv_t *i;
 
-    if(irq_inside_int() &&
-       !malloc_irq_safe()) {
-        errno = EPERM;
-        return -1;
-    }
-
     if(key >= next_key || key < 1) {
         errno = EINVAL;
         return -1;
@@ -184,6 +185,12 @@ int kthread_setspecific(kthread_key_t key, const void *value) {
             i->data = (void *)value;
             return 0;
         }
+    }
+
+    if(irq_inside_int() &&
+        (!malloc_irq_safe() || mutex_is_locked(&dlist_mtx))) {
+        errno = EPERM;
+        return -1;
     }
 
     /* No entry, create a new one. */
@@ -206,11 +213,16 @@ int kthread_tls_init(void) {
     /* Initialize the destructor list. */
     LIST_INIT(&dest_list);
 
+    mutex_init(&dlist_mtx, MUTEX_TYPE_DEFAULT);
+
     return 0;
 }
 
 void kthread_tls_shutdown(void) {
     kthread_tls_dest_t *n1, *n2;
+
+    /* If we can't get it, shut down anyways */
+    mutex_lock_irqsafe(&dlist_mtx);
 
     LIST_FOREACH_SAFE(n1, &dest_list, dest_list, n2) {
         LIST_REMOVE(n1, dest_list);
