@@ -54,13 +54,6 @@ typedef struct kthread_tls_kv {
 LIST_HEAD(kthread_tls_kv_list, kthread_tls_kv);
 /** \endcond */
 
-/** \cond */
-/* Retrieve the next key value (i.e, what key the next kthread_key_create will
-   use). This function is not meant for external use (although it won't really
-   hurt anything for you to call it). */
-kthread_key_t kthread_key_next(void);
-/** \endcond */
-
 /** \brief  Create a new thread-local storage key.
 
     This function creates a new thread-local storage key that shall be visible
@@ -73,10 +66,15 @@ kthread_key_t kthread_key_next(void);
                         and a value associated with the key is non-NULL at
                         thread exit, then the destructor will be called with the
                         value as its argument.
-    \retval -1      On failure, and sets errno to one of the following: EPERM if
-                    called inside an interrupt and another call is in progress,
-                    ENOMEM if out of memory.
+
     \retval 0       On success.
+    \retval -1      On error, sets errno as appropriate.
+
+    \par    Error Conditions:
+    \em     EPERM - Called inside an interrupt, destructor is not NULL, and there
+                    is already a malloc call or destructor operation in progress.
+    \em     ENOMEM - Out of memory.
+
 */
 int kthread_key_create(kthread_key_t *key, void (*destructor)(void *));
 
@@ -97,11 +95,15 @@ void *kthread_getspecific(kthread_key_t key);
 
     \param  key     The key to set data for.
     \param  value   The thread-specific value to use.
-    \retval -1      On failure, and sets errno to one of the following: EINVAL
-                    if the key is not valid, ENOMEM if out of memory, or EPERM
-                    if called inside an interrupt and another call is in
-                    progress.
+
     \retval 0       On success.
+    \retval -1      On error, sets errno as appropriate.
+
+    \par    Error Conditions:
+    \em     EINVAL - The key is not valid.
+    \em     EPERM - Called inside an interrupt, the key needs to be created, and there
+                    is already a malloc call or destructor operation in progress.
+    \em     ENOMEM - Out of memory.
 */
 int kthread_setspecific(kthread_key_t key, const void *value);
 
@@ -111,12 +113,18 @@ int kthread_setspecific(kthread_key_t key, const void *value);
     key. This function <em>does not</em> cause any destructors to be called.
 
     \param  key     The key to delete.
-    \retval -1      On failure, and sets errno to one of the following: EINVAL
-                    if the key is invalid, EPERM if unsafe to call free.
+
     \retval 0       On success.
+    \retval -1      On error, sets errno as appropriate.
+
+    \par    Error Conditions:
+    \em     EINVAL - The key is not valid.
+    \em     EPERM - Called inside an interrupt, and there is already a malloc
+                    call or destructor operation in progress.
 */
 int kthread_key_delete(kthread_key_t key);
 
+/** \cond */
 /* Initialization and shutdown. Once again, internal use only. */
 int kthread_tls_init(void);
 void kthread_tls_shutdown(void);

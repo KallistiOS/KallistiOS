@@ -38,7 +38,7 @@ static struct kthread_tls_dest_list dest_list;
 static mutex_t dlist_mtx;
 
 /* What is the next key that will be given out? */
-kthread_key_t kthread_key_next(void) {
+static kthread_key_t kthread_key_next(void) {
     return next_key;
 }
 
