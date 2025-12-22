@@ -42,7 +42,7 @@ __BEGIN_DECLS
 #include <stdalign.h>
 #include <stdbool.h>
 
-#include <arch/memory.h>
+#include <dc/memory.h>
 #include <arch/types.h>
 #include <arch/cache.h>
 #include <dc/sq.h>

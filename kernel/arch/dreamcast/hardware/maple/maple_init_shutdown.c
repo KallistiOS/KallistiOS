@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <arch/memory.h>
+#include <dc/memory.h>
 #include <dc/maple.h>
 #include <dc/asic.h>
 #include <dc/vblank.h>

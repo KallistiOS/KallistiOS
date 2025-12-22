@@ -22,7 +22,7 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/memory.h>
+#include <dc/memory.h>
 #include <dc/g2bus.h>
 
 /** \addtogroup audio_driver

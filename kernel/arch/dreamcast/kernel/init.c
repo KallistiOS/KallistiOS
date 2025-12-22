@@ -19,7 +19,7 @@
 #include <kos/timer.h>
 #include <arch/arch.h>
 #include <arch/irq.h>
-#include <arch/memory.h>
+#include <dc/memory.h>
 #include <arch/rtc.h>
 #include <dc/perfctr.h>
 #include <dc/ubc.h>

@@ -12,7 +12,7 @@
 #include <kos/thread.h>
 #include <dc/maple.h>
 #include <arch/irq.h>
-#include <arch/memory.h>
+#include <dc/memory.h>
 
 /* Send all queued frames */
 void maple_queue_flush(void) {

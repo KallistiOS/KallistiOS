@@ -13,7 +13,7 @@
 #include <arch/arch.h>
 #include <arch/types.h>
 #include <arch/irq.h>
-#include <arch/memory.h>
+#include <dc/memory.h>
 #include <arch/mmu.h>
 #include <kos/dbgio.h>
 #include <kos/regfield.h>

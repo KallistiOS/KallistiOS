@@ -8,7 +8,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <arch/memory.h>
+#include <dc/memory.h>
 #include <dc/maple.h>
 #include <kos/dbglog.h>
 

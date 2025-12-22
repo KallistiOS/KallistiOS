@@ -10,7 +10,7 @@
 #include <arch/cache.h>
 #include <arch/exec.h>
 #include <arch/irq.h>
-#include <arch/memory.h>
+#include <dc/memory.h>
 
 /* Pull the shutdown function in from init.c */
 void arch_shutdown();

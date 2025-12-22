@@ -13,7 +13,7 @@
 
 #include <arch/cache.h>
 #include <kos/timer.h>
-#include <arch/memory.h>
+#include <dc/memory.h>
 #include <arch/irq.h>
 
 #include <dc/asic.h>

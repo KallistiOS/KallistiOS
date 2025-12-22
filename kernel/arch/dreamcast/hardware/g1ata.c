@@ -21,7 +21,7 @@
 #include <arch/arch.h>
 #include <arch/cache.h>
 #include <arch/irq.h>
-#include <arch/memory.h>
+#include <dc/memory.h>
 
 /*
    This file implements support for accessing devices over the G1 bus by the

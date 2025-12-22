@@ -11,7 +11,7 @@
 #include <dc/fifo.h>
 #include <dc/dcload.h>
 #include <arch/irq.h>
-#include <arch/memory.h>
+#include <dc/memory.h>
 
 /* This is the address where the function pointer for the dcload syscall is fetched from */
 #define VEC_DCLOAD        (MEM_AREA_P1_BASE | 0x0C004008)
