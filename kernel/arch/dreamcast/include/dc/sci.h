@@ -120,16 +120,19 @@ typedef enum {
     SCI_ERR_OVERRUN = -4,           /**< Overrun error */
     SCI_ERR_FRAMING = -5,           /**< Framing error */
     SCI_ERR_PARITY = -6,            /**< Parity error */
-    SCI_ERR_DMA = -7                /**< DMA error */
+    SCI_ERR_DMA = -7,               /**< DMA error */
+    SCI_ERR_IN_USE = -8             /**< Already in use */
 } sci_result_t;
 
 /** \brief  Initialize the SCI port with specified parameters.
     \param  baud_rate       The baudrate to set.
     \param  mode            SCI_MODE_UART for UART mode, SCI_MODE_SPI for SPI mode.
     \param  clock_src       Clock source (internal or external).
+    \param  buffer_size     Size of SPI DMA buffer to allocate,
+                            0 for no DMA support.
     \return                 SCI_OK on success, error code otherwise.
 */
-sci_result_t sci_init(uint32_t baud_rate, sci_mode_t mode, sci_clock_t clock_src);
+sci_result_t sci_init(uint32_t baud_rate, sci_mode_t mode, sci_clock_t clock_src, size_t buffer_size);
 
 /** \brief  Configure UART parameters.
     \param  config          UART configuration (data bits, parity, stop bits).
@@ -139,8 +142,8 @@ void sci_configure_uart(sci_uart_config_t config, uint8_t *scsmr1);
 
 /** \brief  Configure SPI parameters.
     \param  cs              Chip select mode for SPI.
-    \param  buffer_size     Size of DMA buffer to allocate,
-                            0 for no DMA support, default is 512 bytes.
+    \param  buffer_size     Size of SPI DMA buffer to allocate,
+                            0 for no DMA support.
 */
 void sci_configure_spi(sci_spi_cs_mode_t cs, size_t buffer_size);
 

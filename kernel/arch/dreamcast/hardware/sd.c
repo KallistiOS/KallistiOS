@@ -172,7 +172,7 @@ static void scif_set_cs_wrapper(bool enabled) {
 
 static int sci_init_wrapper(bool fast) {
     uint32_t baud = fast ? SCI_SPI_BAUD_MAX : SCI_SPI_BAUD_INIT;
-    return sci_init(baud, SCI_MODE_SPI, SCI_CLK_INT);
+    return sci_init(baud, SCI_MODE_SPI, SCI_CLK_INT, 512);
 }
 
 static int sd_send_cmd(uint8_t cmd, uint32 arg) {

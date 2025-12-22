@@ -290,17 +290,17 @@ static int calculate_baud_rate(uint32_t baud_rate, sci_mode_t mode, uint8_t *scs
     return 0;
 }
 
-sci_result_t sci_init(uint32_t baud_rate, sci_mode_t mode, sci_clock_t clock_src) {
+sci_result_t sci_init(uint32_t baud_rate, sci_mode_t mode, sci_clock_t clock_src, size_t buffer_size) {
     uint8_t scsmr1 = 0, scbrr1, scscr1, dummy;
     uint32_t timeout_cnt;
     sci_result_t result;
 
-    dbglog(DBG_DEBUG, "SCI: Initializing in %s mode at %lu baud\n", 
-           (mode == SCI_MODE_UART) ? "UART" : "SPI", baud_rate);
-
     if(initialized) {
-        sci_shutdown();
+        return SCI_ERR_IN_USE;
     }
+
+    dbglog(DBG_KDEBUG, "SCI: Initializing in %s mode at %lu baud\n", 
+        (mode == SCI_MODE_UART) ? "UART" : "SPI", baud_rate);
 
     /* Enable SCI module (disable standby) */
     if(STBCR & STBCR_SCI_STP) {
@@ -332,16 +332,14 @@ sci_result_t sci_init(uint32_t baud_rate, sci_mode_t mode, sci_clock_t clock_src
         sci_configure_uart(SCI_UART_8N1, &scsmr1);
     }
     else if(mode == SCI_MODE_SPI) {
-        /* Use 512 bytes DMA buffer for SPI operations by default,
-            because it's sector size of SD cards. */
         if(hardware_sys_mode(NULL) == HW_TYPE_RETAIL) {
             /* On Dreamcast, we use GPIO for CS (anyway need soldering all pins),
                because RTS can be used for VS-link cable */
-            sci_configure_spi(SCI_SPI_CS_GPIO, 512);
+            sci_configure_spi(SCI_SPI_CS_GPIO, buffer_size);
         }
         else {
             /* On NAOMI, we use SCIF RTS for CS, because no GPIO pins on CN1 connector */
-            sci_configure_spi(SCI_SPI_CS_RTS, 512);
+            sci_configure_spi(SCI_SPI_CS_RTS, buffer_size);
         }
         /* Set CA bit for 8-bit synchronous mode */
         scsmr1 |= SCSMR_CA;
@@ -459,6 +457,11 @@ void sci_configure_spi(sci_spi_cs_mode_t cs, size_t buffer_size) {
             }
             spi_buffer_size = buffer_size;
         }
+    }
+    else if(spi_dma_buffer != NULL) {
+        free(spi_dma_buffer);
+        spi_dma_buffer = NULL;
+        spi_buffer_size = 0;
     }
 
     if(cs == SCI_SPI_CS_GPIO) {
