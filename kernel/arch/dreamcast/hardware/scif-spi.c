@@ -2,7 +2,7 @@
 
    hardware/scif-spi.c
    Copyright (C) 2012 Lawrence Sebald
-   Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023, 2025 Ruslan Rostovtsev
    Copyright (C) 2024 Paul Cercueil
 */
 
@@ -39,11 +39,16 @@
 #define SD_WAIT() __asm__("nop\n\tnop\n\tnop\n\tnop\n\tnop")
 
 static uint16 scsptr2 = 0;
+static int initialized = 0;
 
 /* Re-initialize the state of SCIF to match what we need for communication with
    the SPI device. We basically take complete control of the pins of the port
    directly, overriding the normal byte FIFO and whatnot. */
 int scif_spi_init(void) {
+    if(initialized) {
+        dbglog(DBG_KDEBUG, "SCIF-SPI: Already in use\n");
+        return -1;
+    }
     /* Make sure we're not using dcload-serial. If we are, then we definitely do
        not have a SPI device on the serial port. */
     if(dcload_type == DCLOAD_TYPE_SER) {
@@ -62,10 +67,14 @@ int scif_spi_init(void) {
     SCLSR2 = 0;
     SCSPTR2 = scsptr2 = PTR2_RTSIO | PTR2_RTSDT | PTR2_CTSIO | PTR2_SPB2IO;
 
+    initialized = 1;
+
     return 0;
 }
 
 int scif_spi_shutdown(void) {
+    initialized = 0;
+    scif_init();
     return 0;
 }
 
