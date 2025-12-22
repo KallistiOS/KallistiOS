@@ -541,6 +541,9 @@ static int bba_copy_dma(uint8_t *dst, uint32_t s, int len) {
         if(!__is_defined(USE_P2_AREA))
             dcache_inval_range((uint32_t) dst, len);
 
+        /* Prevent racing against the callback */
+        irq_disable_scoped();
+
         if(!dma_used) {
             dma_used = 1;
             g2_dma_transfer(dst, src, len, 0,
