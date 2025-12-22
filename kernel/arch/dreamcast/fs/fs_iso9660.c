@@ -38,6 +38,7 @@ ISO9660 systems, as these were used as references as well.
 #include <kos/fs.h>
 #include <kos/opts.h>
 #include <kos/dbglog.h>
+#include <kos/limits.h>
 
 #include <stdlib.h>
 #include <stdio.h>
