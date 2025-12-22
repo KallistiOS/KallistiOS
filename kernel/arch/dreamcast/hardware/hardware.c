@@ -16,6 +16,7 @@
 #include <dc/maple.h>
 #include <dc/net/broadband_adapter.h>
 #include <dc/net/lan_adapter.h>
+#include <dc/net/w5500_adapter.h>
 #include <dc/vblank.h>
 
 static int initted = 0;
@@ -44,19 +45,21 @@ int hardware_sys_init(void) {
 }
 
 
-void bba_la_init(void) {
+void eth_init(void) {
     /* Setup network (this won't do anything unless we enable netcore) */
     bba_init();
     la_init();
+    w5500_adapter_init(NULL, true);
 }
 
-void bba_la_shutdown(void) {
+void eth_shutdown(void) {
     la_shutdown();
     bba_shutdown();
+    w5500_adapter_shutdown();
 }
 
-KOS_INIT_FLAG_WEAK(bba_la_init, false);
-KOS_INIT_FLAG_WEAK(bba_la_shutdown, false);
+KOS_INIT_FLAG_WEAK(eth_init, false);
+KOS_INIT_FLAG_WEAK(eth_shutdown, false);
 KOS_INIT_FLAG_WEAK(maple_init, true);
 KOS_INIT_FLAG_WEAK(cdrom_init, true);
 KOS_INIT_FLAG_WEAK(cdrom_shutdown, true);
@@ -78,7 +81,7 @@ int hardware_periph_init(void) {
     vid_init(DEFAULT_VID_MODE, DEFAULT_PIXEL_MODE);
 
     if(!KOS_PLATFORM_IS_NAOMI)
-        KOS_INIT_FLAG_CALL(bba_la_init);
+        KOS_INIT_FLAG_CALL(eth_init);
 
     initted = 2;
 
@@ -91,7 +94,7 @@ void hardware_shutdown(void) {
     switch(initted) {
         case 2:
             if(!KOS_PLATFORM_IS_NAOMI)
-                KOS_INIT_FLAG_CALL(bba_la_shutdown);
+                KOS_INIT_FLAG_CALL(eth_shutdown);
             KOS_INIT_FLAG_CALL(maple_shutdown);
             if(!KOS_PLATFORM_IS_NAOMI)
                 KOS_INIT_FLAG_CALL(cdrom_shutdown);
