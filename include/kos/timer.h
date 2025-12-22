@@ -190,6 +190,8 @@ static inline void timer_spin_delay_ns(unsigned short ns) {
 }
 
 /** \brief  Spin-loop delay function with millisecond granularity
+    \deprecated Use thd_sleep() instead.
+
     \ingroup timers
 
     This function should never be used, and is only used for compatibility with

@@ -190,6 +190,7 @@ void snd_stream_filter_remove(snd_stream_hnd_t hnd,
                               snd_stream_filter_t filtfunc, void *obj);
 
 /** \brief  Prefill the stream buffers.
+    \deprecated This function has no effect and should be removed.
 
     This function has no effect. The stream is prefilled on start.
     This is deprecated and should be removed if used.
