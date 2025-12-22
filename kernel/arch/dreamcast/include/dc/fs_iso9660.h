@@ -29,9 +29,6 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <kos/limits.h>
-#include <kos/fs.h>
-
 /** \addtogroup gdrom
     @{
 */
