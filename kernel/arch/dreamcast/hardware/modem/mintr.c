@@ -126,7 +126,7 @@ void modemDisconnected(void) {
    is checked to see if it fits inside of the signed 8-bit data range. If it
    does, then it's stored into the counter, otherwise the value is capped at
    either end. */
-void mInternUpdateClockCounter(char *counter, int32 toAdd) {
+void mInternUpdateClockCounter(char *counter, int32_t toAdd) {
     /* Add the counter value to the clock difference */
     toAdd += *counter;
 
@@ -573,7 +573,7 @@ void modemConnection(void) {
     }
 }
 
-static void modemCallback(uint32 code, void *data) {
+static void modemCallback(uint32_t code, void *data) {
     (void)code;
     (void)data;
 

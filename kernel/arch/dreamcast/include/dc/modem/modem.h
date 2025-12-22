@@ -20,8 +20,6 @@
 #ifndef __DC_MODEM_MODEM_H
 #define __DC_MODEM_MODEM_H
 
-#include <arch/types.h>
-
 #include "mconst.h"
 
 /** \defgroup   modem           Modem
