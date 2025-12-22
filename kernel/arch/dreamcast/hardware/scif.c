@@ -25,8 +25,8 @@ kernel or for debugging it.
 */
 
 /* SCIF registers */
-#define SCIFREG08(x) *((volatile uint8 *)(x))
-#define SCIFREG16(x) *((volatile uint16 *)(x))
+#define SCIFREG08(x) *((volatile uint8_t *)(x))
+#define SCIFREG16(x) *((volatile uint16_t *)(x))
 #define SCSMR2  SCIFREG16(0xffe80000)
 #define SCBRR2  SCIFREG08(0xffe80004)
 #define SCSCR2  SCIFREG16(0xffe80008)
@@ -54,7 +54,7 @@ void scif_set_parameters(int baud, int fifo) {
 
 /* Receive ring buffer */
 #define BUFSIZE 1024
-static uint8 recvbuf[BUFSIZE];
+static uint8_t recvbuf[BUFSIZE];
 static int rb_head = 0, rb_tail = 0, rb_cnt = 0;
 static int rb_paused = 0;
 
@@ -359,7 +359,7 @@ int scif_flush(void) {
 }
 
 /* Send an entire buffer */
-int scif_write_buffer(const uint8 *data, int len, int xlat) {
+int scif_write_buffer(const uint8_t *data, int len, int xlat) {
     int rv, i = 0, c;
 
     while(len-- > 0) {
@@ -389,7 +389,7 @@ int scif_write_buffer(const uint8 *data, int len, int xlat) {
 }
 
 /* Read an entire buffer (block) */
-int scif_read_buffer(uint8 *data, int len) {
+int scif_read_buffer(uint8_t *data, int len) {
     int c, i = 0;
 
     while(len-- > 0) {

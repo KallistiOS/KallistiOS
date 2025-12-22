@@ -13,8 +13,8 @@
 #include <kos/regfield.h>
 
 /* SCIF registers */
-#define SCIFREG08(x) *((volatile uint8 *)(x))
-#define SCIFREG16(x) *((volatile uint16 *)(x))
+#define SCIFREG08(x) *((volatile uint8_t *)(x))
+#define SCIFREG16(x) *((volatile uint16_t *)(x))
 #define SCSMR2  SCIFREG16(0xffe80000)
 #define SCBRR2  SCIFREG08(0xffe80004)
 #define SCSCR2  SCIFREG16(0xffe80008)
@@ -38,7 +38,7 @@
    but I'm keeping it around, just in case... */
 #define SD_WAIT() __asm__("nop\n\tnop\n\tnop\n\tnop\n\tnop")
 
-static uint16 scsptr2 = 0;
+static uint16_t scsptr2 = 0;
 static int initialized = 0;
 
 /* Re-initialize the state of SCIF to match what we need for communication with
@@ -86,10 +86,10 @@ void scif_spi_set_cs(int v) {
     SCSPTR2 = scsptr2;
 }
 
-uint8 scif_spi_rw_byte(uint8 b) {
-    uint16 tmp = scsptr2 & ~PTR2_CTSDT & ~PTR2_SPB2DT;
-    uint8 bit;
-    uint8 rv = 0;
+uint8_t scif_spi_rw_byte(uint8_t b) {
+    uint16_t tmp = scsptr2 & ~PTR2_CTSDT & ~PTR2_SPB2DT;
+    uint8_t bit;
+    uint8_t rv = 0;
 
     /* Write the data out, one bit at a time (most significant bit first), while
        reading in a data byte, one bit at a time as well...
@@ -136,11 +136,11 @@ static void slow_rw_delay(void) {
     timer_spin_delay_ns(1500);
 }
 
-uint8 scif_spi_slow_rw_byte(uint8 b) {
+uint8_t scif_spi_slow_rw_byte(uint8_t b) {
     int i;
-    uint8 rv = 0;
-    uint16 tmp = scsptr2 & ~PTR2_CTSDT & ~PTR2_SPB2DT;
-    uint8 bit;
+    uint8_t rv = 0;
+    uint16_t tmp = scsptr2 & ~PTR2_CTSDT & ~PTR2_SPB2DT;
+    uint8_t bit;
 
     for(i = 7; i >= 0; --i) {
         SCSPTR2 = tmp | (bit = (b >> i) & 0x01);
@@ -153,9 +153,9 @@ uint8 scif_spi_slow_rw_byte(uint8 b) {
     return rv;
 }
 
-void scif_spi_write_byte(uint8 b) {
-    uint16 tmp = scsptr2 & ~PTR2_CTSDT & ~PTR2_SPB2DT;
-    uint8 bit;
+void scif_spi_write_byte(uint8_t b) {
+    uint16_t tmp = scsptr2 & ~PTR2_CTSDT & ~PTR2_SPB2DT;
+    uint8_t bit;
 
     /* Write the data out, one bit at a time (most significant bit first)...
        For some reason, we have to have the bit set on the Tx line before we set
@@ -187,9 +187,9 @@ void scif_spi_write_byte(uint8 b) {
     SCSPTR2 = tmp;
 }
 
-uint8 scif_spi_read_byte(void) {
-    uint8 b = 0xff;
-    uint16 tmp = (scsptr2 & ~PTR2_CTSDT) | PTR2_SPB2DT;
+uint8_t scif_spi_read_byte(void) {
+    uint8_t b = 0xff;
+    uint16_t tmp = (scsptr2 & ~PTR2_CTSDT) | PTR2_SPB2DT;
 
     /* Read the data in, one bit at a time (most significant bit first) */
     SCSPTR2 = tmp;
@@ -221,15 +221,15 @@ uint8 scif_spi_read_byte(void) {
 }
 
 
-void scif_spi_read_data(uint8 *buffer, size_t len) {
-    uint8 b = 0xff;
-    uint16 tmp;
-    uint32 data;
-    uint32 *ptr;
+void scif_spi_read_data(uint8_t *buffer, size_t len) {
+    uint8_t b = 0xff;
+    uint16_t tmp;
+    uint32_t data;
+    uint32_t *ptr;
 
     /* Less optimized version for unaligned buffers or lengths not divisible by
        four. */
-    if((((uint32)buffer) & 0x03) || (len & 0x03)) {
+    if((((uint32_t)buffer) & 0x03) || (len & 0x03)) {
         while(len--) {
             *buffer++ = scif_spi_read_byte();
         }
@@ -239,7 +239,7 @@ void scif_spi_read_data(uint8 *buffer, size_t len) {
 
     b = 0xff;
     tmp = (scsptr2 & ~PTR2_CTSDT) | PTR2_SPB2DT;
-    ptr = (uint32 *)buffer;
+    ptr = (uint32_t *)buffer;
     SCSPTR2 = tmp;
 
     for(; len > 0; len -= 4) {

@@ -24,7 +24,7 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
+#include <stdint.h>
 #include <kos/dbgio.h>
 
 /** \defgroup system_scif   SCIF
@@ -110,7 +110,7 @@ int scif_flush(void);
     \param  xlat            If set to 1, all newlines will be written as CRLF.
     \return                 The number of bytes written on success, -1 on error.
 */
-int scif_write_buffer(const uint8 *data, int len, int xlat);
+int scif_write_buffer(const uint8_t *data, int len, int xlat);
 
 /** \brief  Read a buffer of data from the SCIF port.
 
@@ -121,7 +121,7 @@ int scif_write_buffer(const uint8 *data, int len, int xlat);
     \param  len             The number of bytes to read.
     \return                 The number of bytes read on success, -1 on error.
 */
-int scif_read_buffer(uint8 *data, int len);
+int scif_read_buffer(uint8_t *data, int len);
 
 /** \brief  SCIF debug I/O handler. Do not modify! */
 extern dbgio_handler_t dbgio_scif;
@@ -167,7 +167,7 @@ void scif_spi_set_cs(int v);
     \param  b               The byte to write out to the port.
     \return                 The byte returned from the card.
 */
-uint8 scif_spi_rw_byte(uint8 b);
+uint8_t scif_spi_rw_byte(uint8_t b);
 
 /** \brief  Read and write one byte from the SPI device, slowly.
 
@@ -181,7 +181,7 @@ uint8 scif_spi_rw_byte(uint8 b);
     \param  b               The byte to write out to the port.
     \return                 The byte returned from the card.
 */
-uint8 scif_spi_slow_rw_byte(uint8 b);
+uint8_t scif_spi_slow_rw_byte(uint8_t b);
 
 
 /** \brief  Write a byte to the SPI device.
@@ -191,7 +191,7 @@ uint8 scif_spi_slow_rw_byte(uint8 b);
 
     \param  b               The byte to write out to the port.
 */
-void scif_spi_write_byte(uint8 b);
+void scif_spi_write_byte(uint8_t b);
 
 /** \brief  Read a byte from the SPI device.
 
@@ -200,7 +200,7 @@ void scif_spi_write_byte(uint8 b);
 
     \return                 The byte returned from the device.
 */
-uint8 scif_spi_read_byte(void);
+uint8_t scif_spi_read_byte(void);
 
 /** \brief  Read a data from the SPI device.
 
@@ -210,7 +210,7 @@ uint8 scif_spi_read_byte(void);
     \param  buffer          Buffer to store read data into.
     \param  len             Number of bytes to read from the device.
 */
-void scif_spi_read_data(uint8 *buffer, size_t len);
+void scif_spi_read_data(uint8_t *buffer, size_t len);
 
 /** @} */
 

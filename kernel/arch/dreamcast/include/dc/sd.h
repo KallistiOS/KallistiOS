@@ -44,9 +44,9 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
-#include <kos/blockdev.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <kos/blockdev.h>
 
 /** \defgroup vfs_sd    SD Card
     \brief              VFS driver for accessing SD cards over the SCIF or SCI port
@@ -79,7 +79,7 @@ typedef struct {
                             passing in a full block, this will probably be 0.
     \return                 The calculated CRC.
 */
-uint8 sd_crc7(const uint8 *data, int size, uint8 crc);
+uint8_t sd_crc7(const uint8_t *data, int size, uint8_t crc);
 
 /** \brief  Initialize the SD card with extended parameters.
 
@@ -135,7 +135,7 @@ int sd_shutdown(void);
     \em     EIO - an I/O error occurred in reading data \n
     \em     ENXIO - SD card support was not initialized
 */
-int sd_read_blocks(uint32 block, size_t count, uint8 *buf);
+int sd_read_blocks(uint32_t block, size_t count, uint8_t *buf);
 
 /** \brief  Write one or more blocks to the SD card.
 
@@ -158,7 +158,7 @@ int sd_read_blocks(uint32 block, size_t count, uint8 *buf);
     \em     EIO - an I/O error occurred in reading data \n
     \em     ENXIO - SD card support was not initialized
 */
-int sd_write_blocks(uint32 block, size_t count, const uint8 *buf);
+int sd_write_blocks(uint32_t block, size_t count, const uint8_t *buf);
 
 /** \brief  Retrieve the size of the SD card.
 
@@ -173,7 +173,7 @@ int sd_write_blocks(uint32 block, size_t count, const uint8 *buf);
     \em     EIO - an I/O error occurred in reading data \n
     \em     ENXIO - SD card support was not initialized
 */
-uint64 sd_get_size(void);
+uint64_t sd_get_size(void);
 
 /** \brief  Get a block device for a given partition on the SD card.
 
@@ -200,7 +200,7 @@ uint64 sd_get_size(void);
             is currently no support for GPT partition tables.
 */
 int sd_blockdev_for_partition(int partition, kos_blockdev_t *rv,
-                              uint8 *partition_type);
+                              uint8_t *partition_type);
 
 /** \brief  Get a block device for the SD card.
 
