@@ -94,7 +94,7 @@ static rd_dir_t  *rootdir = NULL;
 typedef struct rd_fd {
     rd_file_t   *file;      /* ramdisk file struct */
     bool        dir;        /* true if a directory */
-    uint32_t    ptr;        /* Current read position in bytes */
+    uintptr_t   ptr;        /* Current read position in bytes */
     dirent_t    dirent;     /* A static dirent to pass back to clients */
     int         omode;      /* Open mode */
     TAILQ_ENTRY(rd_fd)  next;   /* Next handle in the linked list */
@@ -365,7 +365,7 @@ static void *ramdisk_open(vfs_handler_t *vfs, const char *fn, int mode) {
     /* If we opened a dir, then ptr is actually a pointer to the first
        file entry. */
     if(mode & O_DIR) {
-        fd->ptr = (uint32_t)LIST_FIRST((rd_dir_t *)f->data);
+        fd->ptr = (uintptr_t)LIST_FIRST((rd_dir_t *)f->data);
     }
 
     /* Increase the usage count */
@@ -569,7 +569,7 @@ static dirent_t *ramdisk_readdir(void *h) {
 
     /* Find the current file and advance to the next */
     f = (rd_file_t *)fd->ptr;
-    fd->ptr = (uint32_t)LIST_NEXT(f, dirlist);
+    fd->ptr = (uintptr_t)LIST_NEXT(f, dirlist);
 
     /* Copy out the requested data */
     strcpy(fd->dirent.name, f->name);
@@ -714,7 +714,7 @@ static int ramdisk_rewinddir(void *h) {
     }
 
     /* Rewind to the first file. */
-    fd->ptr = (uint32_t)LIST_FIRST((rd_dir_t *)fd->file->data);
+    fd->ptr = (uintptr_t)LIST_FIRST((rd_dir_t *)fd->file->data);
 
     return 0;
 }
