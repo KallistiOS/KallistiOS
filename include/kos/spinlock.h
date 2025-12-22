@@ -28,6 +28,7 @@
 /* These can only be used in C */
 #if !defined(__cplusplus)
 
+#include <stdint.h>
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <kos/thread.h>

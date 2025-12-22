@@ -20,8 +20,8 @@
 #include <kos/linker.h>
 #include <errno.h>
 #include <inttypes.h>
-#include <stdatomic.h>
 #include <stdint.h>
+#include <stdatomic.h>
 #include <stdio.h>
 
 /* The end of the program is always marked by the 'end' symbol. So we'll

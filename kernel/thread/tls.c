@@ -7,6 +7,7 @@
 /* This file defines methods for accessing thread-local storage, added in KOS
    1.3.0. */
 
+#include <stdint.h>
 #include <stdatomic.h>
 #include <stdlib.h>
 #include <assert.h>

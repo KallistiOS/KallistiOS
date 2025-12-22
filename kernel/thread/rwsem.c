@@ -7,6 +7,7 @@
 
 /* Defines reader/writer semaphores */
 
+#include <stdint.h>
 #include <stdatomic.h>
 #include <stdlib.h>
 #include <errno.h>

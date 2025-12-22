@@ -27,6 +27,7 @@ something like this:
 
 */
 
+#include <stdint.h>
 #include <stdatomic.h>
 #include <stdio.h>
 #include <string.h>

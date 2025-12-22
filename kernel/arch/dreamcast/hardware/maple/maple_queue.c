@@ -5,8 +5,8 @@
    Copyright (C) 2015 Lawrence Sebald
  */
 
-#include <stdatomic.h>
 #include <stdint.h>
+#include <stdatomic.h>
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
