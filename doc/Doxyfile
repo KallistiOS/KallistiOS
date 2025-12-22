@@ -2279,7 +2279,8 @@ PREDEFINED             = _arch_$(KOS_ARCH)=1 \
                          __extension__= \
                          __packed__= \
                          __attribute__(x)= \
-                         __depr 
+                         __deprecated= \
+                         __depr(x)= 
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
