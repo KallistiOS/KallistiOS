@@ -425,41 +425,6 @@ static void bba_hw_shutdown(void) {
     asic_evt_remove_handler(ASIC_EVT_EXP_PCI);
 }
 
-static void g2_read_block_8_fast(uint8_t *dst, uint8_t *src, int len) {
-    if(len <= 0)
-        return;
-
-    g2_lock_scoped();
-
-    uint32_t *d = (uint32_t *) dst;
-    uint32_t *s = (uint32_t *) src;
-    len = (len + 3) >> 2;
-
-    while(len & 7) {
-        *d++ = *s++;
-        --len;
-    }
-
-    if(len > 0) {
-
-        len >>= 3;
-
-        do {
-            d[0] = *s++;
-            d[1] = *s++;
-            d[2] = *s++;
-            d[3] = *s++;
-            d[4] = *s++;
-            d[5] = *s++;
-            d[6] = *s++;
-            d[7] = *s++;
-            d += 8;
-        }
-        while(--len);
-    }
-}
-
-
 #define RXBSZ    (64*1024) /* must be a power of two */
 #define MAX_PKTS (RXBSZ / 32)
 static struct pkt {
@@ -548,7 +513,7 @@ static int bba_copy_packet(uint8_t *dst, uint32_t s, int len) {
         return 0;
     }
     else {
-        g2_read_block_8_fast(dst, src, len);
+        g2_read_block_32((uint32_t *)dst, (uint32_t)src, len >> 2);
         return !dma_used;
     }
 }
