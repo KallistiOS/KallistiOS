@@ -64,10 +64,10 @@ static void maple_hw_init(void) {
         maple_state.dma_buffer = aligned_alloc(32, MAPLE_DMA_SIZE);
 
     assert_msg(maple_state.dma_buffer != NULL, "Couldn't allocate maple DMA buffer");
-    assert_msg((((uint32)maple_state.dma_buffer) & 0x1f) == 0, "DMA buffer was unaligned; bug in dlmalloc; please report!");
+    assert_msg((((uint32_t)maple_state.dma_buffer) & 0x1f) == 0, "DMA buffer was unaligned; bug in dlmalloc; please report!");
 
     /* Force it into the P2 area */
-    maple_state.dma_buffer = (uint8*)((((uint32)maple_state.dma_buffer) & MEM_AREA_CACHE_MASK) | MEM_AREA_P2_BASE);
+    maple_state.dma_buffer = (uint8_t *)((((uint32_t)maple_state.dma_buffer) & MEM_AREA_CACHE_MASK) | MEM_AREA_P2_BASE);
 
     if(__is_defined(MAPLE_DMA_DEBUG)) {
         maple_state.dma_buffer += 512;
@@ -75,7 +75,7 @@ static void maple_hw_init(void) {
     }
 
     maple_state.dma_in_progress = 0;
-    dbglog(DBG_INFO, "  DMA Buffer at %08lx\n", (uint32)maple_state.dma_buffer);
+    dbglog(DBG_INFO, "  DMA Buffer at %08lx\n", (uint32_t)maple_state.dma_buffer);
 
     /* Initialize other misc stuff */
     maple_state.vbl_cntr = maple_state.dma_cntr = 0;
@@ -100,7 +100,7 @@ static void maple_hw_init(void) {
 /* AGGG!! Someone save me from this idiotic voodoo bug fixing crap.. */
 void maple_hw_shutdown(void) {
     int p, u, cnt;
-    uint32  ptr;
+    uint32_t  ptr;
     maple_device_t *dev;
 
     /* Unhook interrupts */
@@ -118,7 +118,7 @@ void maple_hw_shutdown(void) {
 
     /* We must cast this back to P1 or cache issues will arise */
     if(maple_state.dma_buffer != NULL) {
-        ptr = (uint32)maple_state.dma_buffer;
+        ptr = (uint32_t)maple_state.dma_buffer;
 
         if(__is_defined(MAPLE_DMA_DEBUG))
             ptr -= 512;

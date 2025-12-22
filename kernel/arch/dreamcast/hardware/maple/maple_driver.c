@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <dc/maple.h>
 
-void maple_attach_callback(uint32 functions, maple_attach_callback_t cb) {
+void maple_attach_callback(uint32_t functions, maple_attach_callback_t cb) {
     maple_driver_t *i;
 
     if(!functions)
@@ -25,7 +25,7 @@ void maple_attach_callback(uint32 functions, maple_attach_callback_t cb) {
     }
 }
 
-void maple_detach_callback(uint32 functions, maple_detach_callback_t cb) {
+void maple_detach_callback(uint32_t functions, maple_detach_callback_t cb) {
     maple_driver_t *i;
 
     if(!functions)

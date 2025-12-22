@@ -30,7 +30,7 @@ maple_device_t * maple_enum_dev(int p, int u) {
 }
 
 /* Return the Nth device of the requested type (where N is zero-indexed) */
-maple_device_t * maple_enum_type(int n, uint32 func) {
+maple_device_t * maple_enum_type(int n, uint32_t func) {
     int p, u;
     maple_device_t *dev;
 
@@ -51,10 +51,10 @@ maple_device_t * maple_enum_type(int n, uint32 func) {
 
 /* Return the Nth device that is of the requested type and supports the list of
    capabilities given. */
-maple_device_t * maple_enum_type_ex(int n, uint32 func, uint32 cap) {
+maple_device_t * maple_enum_type_ex(int n, uint32_t func, uint32_t cap) {
     int p, u, d;
     maple_device_t *dev;
-    uint32 f, tmp;
+    uint32_t f, tmp;
 
     for(p = 0; p < MAPLE_PORT_COUNT; ++p) {
         for(u = 0; u < MAPLE_UNIT_COUNT; ++u) {

@@ -26,7 +26,7 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <sys/types.h>
+#include <stdint.h>
 #include <dc/maple.h>
 
 /** \defgroup peripherals_mic   Microphone
@@ -51,7 +51,7 @@ __BEGIN_DECLS
 
     \headerfile dc/maple/sip.h
 */
-typedef void (*sip_sample_cb)(maple_device_t *dev, uint8 *samples, size_t len);
+typedef void (*sip_sample_cb)(maple_device_t *dev, uint8_t *samples, size_t len);
 
 /** \brief  SIP status structure.
 
