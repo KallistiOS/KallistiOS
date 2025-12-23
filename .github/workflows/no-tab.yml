@@ -1,0 +1,16 @@
+name: No-tabulation check
+
+on: pull_request
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: No-tabulation check
+      run: |
+        git fetch origin ${{ github.base_ref }}:${{ github.base_ref }}
+        test -z "$(git diff ${{ github.base_ref }} -- . ':(exclude)*Makefile' |grep $'\t')"
