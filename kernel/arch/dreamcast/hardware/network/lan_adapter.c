@@ -7,6 +7,7 @@
 
 */
 
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
@@ -218,10 +219,10 @@ netif_t la_if;
 static int la_started = LA_NOT_STARTED;
 
 /* Mac address (read from EEPROM) */
-static uint8 la_mac[6];
+static uint8_t la_mac[6];
 
 /* Forward declaration */
-static void la_irq_hnd(uint32 code, void *data);
+static void la_irq_hnd(uint32_t code, void *data);
 
 /* Set the current bank */
 static void la_set_bank(int bank) {
@@ -262,8 +263,8 @@ static void la_strobe_eeprom(void) {
     la_write(BMPR16, BMPR16_ECS | BMPR16_ESK);
     la_write(BMPR16, BMPR16_ECS);
 }
-static void la_read_eeprom(uint8 *data) {
-    uint8 val;
+static void la_read_eeprom(uint8_t *data) {
+    uint8_t val;
     int n, bit;
 
     /* Read bytes from EEPROM, two per iteration */
@@ -446,7 +447,7 @@ static int total_pkts_rx = 0, total_pkts_tx = 0;
 /* Transmit a packet */
 /* Note that it's technically possible to queue up more than one packet
    at a time for transmission, but this is the simple way. */
-static int la_tx(const uint8 * pkt, int len, int blocking) {
+static int la_tx(const uint8_t *pkt, int len, int blocking) {
     int i, timeout;
 
     (void)blocking;
@@ -529,7 +530,7 @@ static int la_rx(void) {
     }
 }
 
-static void la_irq_hnd(uint32 code, void *data) {
+static void la_irq_hnd(uint32_t code, void *data) {
     int intr_rx, intr_tx, hnd = 0;
 
     (void)code;
@@ -572,7 +573,7 @@ static void set_ipv6_lladdr(void) {
     la_if.ip6_lladdr.__s6_addr.__s6_addr8[15] = la_if.mac_addr[5];
 }
 
-static int la_if_detect(netif_t * self) {
+static int la_if_detect(netif_t *self) {
     if(self->flags & NETIF_DETECTED)
         return 0;
 
@@ -583,7 +584,7 @@ static int la_if_detect(netif_t * self) {
     return 0;
 }
 
-static int la_if_init(netif_t * self) {
+static int la_if_init(netif_t *self) {
     if(self->flags & NETIF_INITIALIZED)
         return 0;
 
@@ -596,7 +597,7 @@ static int la_if_init(netif_t * self) {
     return 0;
 }
 
-static int la_if_shutdown(netif_t * self) {
+static int la_if_shutdown(netif_t *self) {
     if(!(self->flags & NETIF_INITIALIZED))
         return 0;
 
@@ -606,7 +607,7 @@ static int la_if_shutdown(netif_t * self) {
     return 0;
 }
 
-static int la_if_start(netif_t * self) {
+static int la_if_start(netif_t *self) {
     if(!(self->flags & NETIF_INITIALIZED))
         return -1;
 
@@ -624,7 +625,7 @@ static int la_if_start(netif_t * self) {
     return 0;
 }
 
-static int la_if_stop(netif_t * self) {
+static int la_if_stop(netif_t *self) {
     if(!(self->flags & NETIF_RUNNING))
         return -1;
 
@@ -636,7 +637,7 @@ static int la_if_stop(netif_t * self) {
     return 0;
 }
 
-static int la_if_tx(netif_t * self, const uint8 * data, int len, int blocking) {
+static int la_if_tx(netif_t *self, const uint8_t *data, int len, int blocking) {
     if(!(self->flags & NETIF_RUNNING))
         return NETIF_TX_ERROR;
 
@@ -647,23 +648,23 @@ static int la_if_tx(netif_t * self, const uint8 * data, int len, int blocking) {
 }
 
 /* We'll auto-commit for now */
-static int la_if_tx_commit(netif_t * self) {
+static int la_if_tx_commit(netif_t *self) {
     (void)self;
     return 0;
 }
 
-static int la_if_rx_poll(netif_t * self) {
+static int la_if_rx_poll(netif_t *self) {
     (void)self;
     return la_rx();
 }
 
 /* Don't need to hook anything here yet */
-static int la_if_set_flags(netif_t * self, uint32 flags_and, uint32 flags_or) {
+static int la_if_set_flags(netif_t *self, uint32_t flags_and, uint32_t flags_or) {
     self->flags = (self->flags & flags_and) | flags_or;
     return 0;
 }
 
-static int la_if_set_mc(netif_t *self, const uint8 *list, int count) {
+static int la_if_set_mc(netif_t *self, const uint8_t *list, int count) {
     int i;
 
     (void)self;
@@ -681,8 +682,8 @@ static int la_if_set_mc(netif_t *self, const uint8 *list, int count) {
     }
     else {
         int pos;
-        uint32 tmp;
-        uint8 mar[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+        uint32_t tmp;
+        uint8_t mar[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
         /* Go through each entry and add the value to the filter */
         for(i = 0, pos = 0; i < count; ++i, pos += 6) {

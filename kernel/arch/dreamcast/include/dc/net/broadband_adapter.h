@@ -22,7 +22,7 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
+#include <stdint.h>
 
 /** \defgroup bba Broadband Adapter
     \brief    Driver for the Dreamcast's BBA (RTL8139C).
@@ -281,7 +281,7 @@ __BEGIN_DECLS
 
     \param  arr             The array to read the MAC into.
 */
-void bba_get_mac(uint8 *arr);
+void bba_get_mac(uint8_t *arr);
 
 /** \defgroup bba_rx RX
     \brief    Receive packet API for the BBA
@@ -296,7 +296,7 @@ void bba_get_mac(uint8 *arr);
     \param  pkt             A pointer to the packet in question.
     \param  len             The length, in bytes, of the packet.
 */
-typedef void (*eth_rx_callback_t)(uint8 *pkt, int len);
+typedef void (*eth_rx_callback_t)(uint8_t *pkt, int len);
 
 /** \brief   Set the ethernet packet receive callback.
 
@@ -346,7 +346,7 @@ void bba_set_rx_callback(eth_rx_callback_t cb);
     \retval BBA_TX_AGAIN    If BBA_TX_NOWAIT was specified and it is not ok to
                             transmit right now.
 */
-int bba_tx(const uint8 *pkt, int len, int wait);
+int bba_tx(const uint8_t *pkt, int len, int wait);
 
 /** @} */
 

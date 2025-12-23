@@ -85,7 +85,7 @@ This driver has basically been rewritten since KOS 1.0.x.
 static int gaps_detect(void) {
     char str[16];
 
-    g2_read_block_8((uint8 *)str, GAPS_BASE + 0x1400, 16);
+    g2_read_block_8((uint8_t *)str, GAPS_BASE + 0x1400, 16);
 
     if(!strncmp(str, "GAPSPCI_BRIDGE_2", 16))
     {
@@ -205,19 +205,19 @@ static int gaps_init(void) {
 
 /* RTL8139C Config/Status info */
 struct {
-    uint16  cur_rx;     /* Current Rx read ptr */
-    uint16  cur_tx;     /* Current available Tx slot */
-    uint8   mac[6];     /* Mac address */
+    uint16_t  cur_rx;     /* Current Rx read ptr */
+    uint16_t  cur_tx;     /* Current available Tx slot */
+    uint8_t   mac[6];     /* Mac address */
 } rtl;
 
 /* 8, 16, and 32 bit access to the PCI I/O space (configured by GAPS) */
 #define NIC(ADDR) (GAPS_BASE + 0x1700 + (ADDR))
 
 /* 8 and 32 bit access to the PCI MEMMAP space (configured by GAPS) */
-static uint32 const rtl_mem = MEM_AREA_P2_BASE + RTL_MEM;
+static uint32_t const rtl_mem = MEM_AREA_P2_BASE + RTL_MEM;
 
 /* TX buffer pointers */
-static uint32 const txdesc[TX_NB_BUFFERS] = {
+static uint32_t const txdesc[TX_NB_BUFFERS] = {
     MEM_AREA_P2_BASE + (TX_BUFFER_LEN * 0) + RTL_MEM + TX_BUFFER_OFFSET,
     MEM_AREA_P2_BASE + (TX_BUFFER_LEN * 1) + RTL_MEM + TX_BUFFER_OFFSET,
     MEM_AREA_P2_BASE + (TX_BUFFER_LEN * 2) + RTL_MEM + TX_BUFFER_OFFSET,
@@ -231,10 +231,10 @@ static volatile int link_stable;
 static eth_rx_callback_t eth_rx_callback;
 
 /* Forward-declaration for IRQ handler */
-static void bba_irq_hnd(uint32 code, void *data);
+static void bba_irq_hnd(uint32_t code, void *data);
 
 /* Reads the MAC address of the BBA into the specified array */
-void bba_get_mac(uint8 *arr) {
+void bba_get_mac(uint8_t *arr) {
     memcpy(arr, rtl.mac, 6);
 }
 
@@ -268,7 +268,7 @@ static int rtl_reset(void) {
   Returns 0 for success or -1 for failure.
  */
 static int bba_hw_init(void) {
-    uint32 tmp;
+    uint32_t tmp;
 
     link_stable = 0;
 
@@ -425,7 +425,7 @@ static void bba_hw_shutdown(void) {
     asic_evt_remove_handler(ASIC_EVT_EXP_PCI);
 }
 
-static void g2_read_block_8_fast(uint8 *dst, uint8 *src, int len) {
+static void g2_read_block_8_fast(uint8_t *dst, uint8_t *src, int len) {
     if(len <= 0)
         return;
 
@@ -433,8 +433,8 @@ static void g2_read_block_8_fast(uint8 *dst, uint8 *src, int len) {
 
     ctx = g2_lock();
 
-    uint32 * d = (uint32 *) dst;
-    uint32 * s = (uint32 *) src;
+    uint32_t *d = (uint32_t *) dst;
+    uint32_t *s = (uint32_t *) src;
     len = (len + 3) >> 2;
 
     while(len & 7) {
@@ -468,16 +468,16 @@ static void g2_read_block_8_fast(uint8 *dst, uint8 *src, int len) {
 #define MAX_PKTS (RXBSZ / 32)
 static struct pkt {
     int pkt_size;
-    uint8 * rxbuff;
+    uint8_t *rxbuff;
 } rx_pkt[MAX_PKTS];
 
-static alignas(32) uint8 rxbuff[RXBSZ + 2 * 1600];
-static uint32 rxbuff_pos;
+static alignas(32) uint8_t rxbuff[RXBSZ + 2 * 1600];
+static uint32_t rxbuff_pos;
 static int rxin;
 static int rxout;
 static int dma_used;
 
-static uint32 rx_size;
+static uint32_t rx_size;
 
 static kthread_t * bba_rx_thread;
 static semaphore_t bba_rx_sema;
@@ -488,8 +488,8 @@ static void bba_rx(void);
 
 static semaphore_t tx_sema;
 
-static uint8 * next_dst;
-static uint8 * next_src;
+static uint8_t *next_dst;
+static uint8_t *next_src;
 static int next_len;
 
 static void rx_finish_enq(int room) {
@@ -523,28 +523,28 @@ static void bba_dma_cb(void *p) {
     }
 }
 
-static int bba_copy_dma(uint8 * dst, uint32 s, int len) {
-    uint8 *src = (uint8 *) s;
+static int bba_copy_dma(uint8_t *dst, uint32_t s, int len) {
+    uint8_t *src = (uint8_t *) s;
 
     if(len <= 0)
         return 1;
 
     if(len > DMA_THRESHOLD && !irq_inside_int()) {
-        uint32 add;
+        uint32_t add;
 
         /*
            This way all will be nicely 32 bytes aligned (assuming that dst and src have
            same alignment initially and that we don't care about the beginning of dst
            buffer)
         */
-        add = ((uint32) src) & 31;
+        add = ((uint32_t) src) & 31;
         len += add;
         src -= add;
         dst -= add;
 
         /* Invalidate the dcache over the range of the data. */
         if(!__is_defined(USE_P2_AREA))
-            dcache_inval_range((uint32) dst, len);
+            dcache_inval_range((uint32_t) dst, len);
 
         if(!dma_used) {
             dma_used = 1;
@@ -570,7 +570,7 @@ static int bba_copy_dma(uint8 * dst, uint32 s, int len) {
 /* Utility function to copy out a some data from the ring buffer into an SH-4
    buffer. This is done to make sure the buffers don't overflow. */
 /* XXX Could probably use a memcpy8 here, even */
-static int  bba_copy_packet(uint8 * dst, uint32 src, int len) {
+static int  bba_copy_packet(uint8_t *dst, uint32_t src, int len) {
 
     if(__is_defined(RX_NOWRAP) || (src + len) < RX_BUFFER_LEN) {
         /* Straight copy is ok */
@@ -610,7 +610,7 @@ static int rx_enq(int ring_offset, size_t pkt_size) {
 }
 
 /* Transmit a single packet */
-static int bba_rtx(const uint8 * pkt, int len, int wait)
+static int bba_rtx(const uint8_t *pkt, int len, int wait)
 {
     if(!link_stable) {
         if(wait == BBA_TX_WAIT) {
@@ -643,11 +643,11 @@ static int bba_rtx(const uint8 * pkt, int len, int wait)
     /* Check alignment of the packet, if its 32-bit aligned, use
        g2_write_block_32, if its 16-bit aligned, use g2_write_block_16,
        otherwise, use g2_write_block_8. */
-    if(!((uint32)pkt & 0x03)) {
-        g2_write_block_32((uint32 *) pkt, txdesc[rtl.cur_tx], (len + 3) >> 2);
+    if(!((uint32_t)pkt & 0x03)) {
+        g2_write_block_32((uint32_t *) pkt, txdesc[rtl.cur_tx], (len + 3) >> 2);
     }
-    else if(!((uint32)pkt & 0x01)) {
-        g2_write_block_16((uint16 *) pkt, txdesc[rtl.cur_tx], (len + 1) >> 1);
+    else if(!((uint32_t)pkt & 0x01)) {
+        g2_write_block_16((uint16_t *) pkt, txdesc[rtl.cur_tx], (len + 1) >> 1);
     }
     else {
         g2_write_block_8(pkt, txdesc[rtl.cur_tx], len);
@@ -669,7 +669,7 @@ static int bba_rtx(const uint8 * pkt, int len, int wait)
     return BBA_TX_OK;
 }
 
-int bba_tx(const uint8 * pkt, int len, int wait) {
+int bba_tx(const uint8_t *pkt, int len, int wait) {
     int res;
 
     if(!__is_defined(TX_SEMA))
@@ -730,7 +730,7 @@ static void *bba_rx_threadfunc(void *dummy) {
 }
 
 static void bba_rx(void) {
-    uint32 rx_status;
+    uint32_t rx_status;
     size_t pkt_size, ring_offset;
 
     while(!(g2_read_8(NIC(RT_CHIPCMD)) & RT_CMD_RX_BUF_EMPTY)) {
@@ -793,7 +793,7 @@ static void bba_link_change(void) {
 }
 
 /* Ethernet IRQ handler */
-static void bba_irq_hnd(uint32 code, void *data) {
+static void bba_irq_hnd(uint32_t code, void *data) {
     int intr, hnd;
 
     (void)code;
@@ -965,7 +965,7 @@ static int bba_if_stop(netif_t *self) {
     return 0;
 }
 
-static int bba_if_tx(netif_t *self, const uint8 *data, int len, int blocking) {
+static int bba_if_tx(netif_t *self, const uint8_t *data, int len, int blocking) {
     (void)self;
 
     if(!(bba_if.flags & NETIF_RUNNING))
@@ -1008,14 +1008,14 @@ static int bba_if_rx_poll(netif_t *self) {
 }
 
 /* Don't need to hook anything here yet */
-static int bba_if_set_flags(netif_t *self, uint32 flags_and, uint32 flags_or) {
+static int bba_if_set_flags(netif_t *self, uint32_t flags_and, uint32_t flags_or) {
     (void)self;
     bba_if.flags = (bba_if.flags & flags_and) | flags_or;
     return 0;
 }
 
-static int bba_if_set_mc(netif_t *self, const uint8 *list, int count) {
-    uint32 old;
+static int bba_if_set_mc(netif_t *self, const uint8_t *list, int count) {
+    uint32_t old;
 
     (void)self;
 
@@ -1030,8 +1030,8 @@ static int bba_if_set_mc(netif_t *self, const uint8 *list, int count) {
     }
     else {
         int i, pos;
-        uint32 tmp;
-        uint32 mar[2] = { 0, 0 };
+        uint32_t tmp;
+        uint32_t mar[2] = { 0, 0 };
 
         /* Go through each entry and add the value to the filter */
         for(i = 0, pos = 0; i < count; ++i, pos += 6) {
@@ -1052,7 +1052,7 @@ static int bba_if_set_mc(netif_t *self, const uint8 *list, int count) {
 }
 
 /* We'll take packets from the interrupt handler and push them into netcore */
-static void bba_if_netinput(uint8 *pkt, int pktsize) {
+static void bba_if_netinput(uint8_t *pkt, int pktsize) {
     net_input(&bba_if, pkt, pktsize);
 }
 
