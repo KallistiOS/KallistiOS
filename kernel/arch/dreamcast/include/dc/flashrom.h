@@ -26,7 +26,7 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
+#include <stdint.h>
 #include <kos/regfield.h>
 
 /** \defgroup flashrom  Flashrom
@@ -174,7 +174,7 @@ int flashrom_delete(int offset);
     \return                 0 on success, <0 on error.
     \see    fr_errs
 */
-int flashrom_get_block(int partid, int blockid, uint8 *buffer_out);
+int flashrom_get_block(int partid, int blockid, uint8_t *buffer_out);
 
 
 /* Higher level functions */
@@ -322,18 +322,18 @@ int flashrom_get_region(void);
     \headerfile dc/flashrom.h
 */
 typedef struct flashrom_ispcfg {
-    int     method;         /**< \brief DHCP, Static, dialup(?), PPPoE
+    int       method;         /**< \brief DHCP, Static, dialup(?), PPPoE
                                  \see   fr_method */
-    uint32  valid_fields;   /**< \brief Which fields are valid?
+    uint32_t  valid_fields;   /**< \brief Which fields are valid?
                                  \see   fr_fields */
-    uint32  flags;          /**< \brief Various flags that can be set in options
+    uint32_t  flags;          /**< \brief Various flags that can be set in options
                                  \see   fr_flags */
 
-    uint8   ip[4];          /**< \brief Host IP address */
-    uint8   nm[4];          /**< \brief Netmask */
-    uint8   bc[4];          /**< \brief Broadcast address */
-    uint8   gw[4];          /**< \brief Gateway address */
-    uint8   dns[2][4];      /**< \brief DNS servers (2) */
+    uint8_t ip[4];          /**< \brief Host IP address */
+    uint8_t nm[4];          /**< \brief Netmask */
+    uint8_t bc[4];          /**< \brief Broadcast address */
+    uint8_t gw[4];          /**< \brief Gateway address */
+    uint8_t dns[2][4];      /**< \brief DNS servers (2) */
     int     proxy_port;     /**< \brief Proxy server port */
     char    hostname[24];   /**< \brief DHCP/Host name */
     char    email[64];      /**< \brief Email address */

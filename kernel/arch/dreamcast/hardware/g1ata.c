@@ -252,7 +252,7 @@ static void g1_dma_done(void) {
     g1_ata_mutex_unlock();
 }
 
-static void g1_dma_irq_hnd(uint32 code, void *data) {
+static void g1_dma_irq_hnd(uint32_t code, void *data) {
     int can_lba48 = CAN_USE_LBA48();
     size_t nb_sectors;
     uint8_t status;

@@ -149,12 +149,12 @@
 #include <dc/scif.h>
 #include <dc/dcload.h>
 #include <arch/gdb.h>
-#include <arch/types.h>
 #include <arch/irq.h>
 #include <arch/arch.h>
 #include <arch/cache.h>
 
 #include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 
 /* Hitachi SH architecture instruction encoding masks */
@@ -216,14 +216,14 @@ typedef void (*Function)();
  */
 
 static int hex(char);
-static char *mem2hex(char *, char *, uint32);
-static char *hex2mem(char *, char *, uint32);
-static int hexToInt(char **, uint32 *);
+static char *mem2hex(char *, char *, uint32_t);
+static char *hex2mem(char *, char *, uint32_t);
+static int hexToInt(char **, uint32_t *);
 static unsigned char *getpacket(void);
 static void putpacket(char *);
 static int computeSignal(int exceptionVector);
 
-static void hardBreakpoint(int, int, uint32, int, char*);
+static void hardBreakpoint(int, int, uint32_t, int, char*);
 static void putDebugChar(char);
 static char getDebugChar(void);
 static void flushDebugChannel(void);
@@ -240,7 +240,7 @@ static int remote_debug;
 
 #define KOS_REG(r)      offsetof(irq_context_t, r)
 
-static uint32 kosRegMap[] = {
+static uint32_t kosRegMap[] = {
     KOS_REG(r[0]), KOS_REG(r[1]), KOS_REG(r[2]), KOS_REG(r[3]),
     KOS_REG(r[4]), KOS_REG(r[5]), KOS_REG(r[6]), KOS_REG(r[7]),
     KOS_REG(r[8]), KOS_REG(r[9]), KOS_REG(r[10]), KOS_REG(r[11]),
@@ -307,8 +307,8 @@ static int __pure hex(char ch) {
 
 /* convert the memory, pointed to by mem into hex, placing result in buf */
 /* return a pointer to the last char put in buf (null) */
-static char * mem2hex(char *mem, char *buf, uint32 count) {
-    uint32 i;
+static char *mem2hex(char *mem, char *buf, uint32_t count) {
+    uint32_t i;
     int ch;
 
     for(i = 0; i < count; i++) {
@@ -324,8 +324,8 @@ static char * mem2hex(char *mem, char *buf, uint32 count) {
 /* convert the hex array pointed to by buf into binary, to be placed in mem */
 /* return a pointer to the character after the last byte written */
 
-static char * hex2mem(char *buf, char *mem, uint32 count) {
-    uint32 i;
+static char *hex2mem(char *buf, char *mem, uint32_t count) {
+    uint32_t i;
     unsigned char ch;
 
     for(i = 0; i < count; i++) {
@@ -341,7 +341,7 @@ static char * hex2mem(char *buf, char *mem, uint32 count) {
 /* WHILE WE FIND NICE HEX CHARS, BUILD AN INT */
 /* RETURN NUMBER OF CHARS PROCESSED           */
 /**********************************************/
-static int hexToInt(char **ptr, uint32 *intValue) {
+static int hexToInt(char **ptr, uint32_t *intValue) {
     int numChars = 0;
     int hexValue;
 
@@ -369,7 +369,7 @@ static int hexToInt(char **ptr, uint32 *intValue) {
 
 /* scan for the sequence $<data>#<checksum>     */
 
-static unsigned char * getpacket(void) {
+static unsigned char *getpacket(void) {
     unsigned char *buffer = (unsigned char *)(&remcomInBuffer[0]);
     unsigned char checksum;
     unsigned char xmitcsum;
@@ -589,7 +589,7 @@ static void doSStep(void) {
     instrBuffer.memAddr = instrMem;
     instrBuffer.oldInstr = *instrMem;
     *instrMem = SSTEP_INSTR;
-    icache_flush_range((uint32)instrMem, 2);
+    icache_flush_range((uint32_t)instrMem, 2);
 }
 
 
@@ -601,7 +601,7 @@ static void undoSStep(void) {
         short *instrMem;
         instrMem = instrBuffer.memAddr;
         *instrMem = instrBuffer.oldInstr;
-        icache_flush_range((uint32)instrMem, 2);
+        icache_flush_range((uint32_t)instrMem, 2);
     }
 
     stepped = 0;
@@ -613,16 +613,16 @@ static void undoSStep(void) {
    Break channel B can match a specific data being moved, but there is
    no GDB remote protocol spec for utilizing this functionality. */
 
-#define LREG(r, o) (*((uint32*)((r)+(o))))
-#define WREG(r, o) (*((uint16*)((r)+(o))))
-#define BREG(r, o) (*((uint8*)((r)+(o))))
+#define LREG(r, o) (*((uint32_t *)((r)+(o))))
+#define WREG(r, o) (*((uint16_t *)((r)+(o))))
+#define BREG(r, o) (*((uint8_t *)((r)+(o))))
 
-static void hardBreakpoint(int set, int brktype, uint32 addr, int length, char* resBuffer) {
-    char* const ucb_base = (char*)0xff200000;
+static void hardBreakpoint(int set, int brktype, uint32_t addr, int length, char *resBuffer) {
+    char* const ucb_base = (char *)0xff200000;
     static const int ucb_step = 0xc;
     static const char BAR = 0x0, BAMR = 0x4, BBR = 0x8, /*BASR = 0x14,*/ BRCR = 0x20;
 
-    static const uint8 bbrBrk[] = {
+    static const uint8_t bbrBrk[] = {
         0x0,  /* type 0, memory breakpoint -- unsupported */
         0x14, /* type 1, hardware breakpoint */
         0x28, /* type 2, write watchpoint */
@@ -630,7 +630,7 @@ static void hardBreakpoint(int set, int brktype, uint32 addr, int length, char* 
         0x2c  /* type 4, access watchpoint */
     };
 
-    uint8 bbr = 0;
+    uint8_t bbr = 0;
     char* ucb;
     int i;
 
@@ -700,7 +700,7 @@ When in the monitor mode we talk a human on the serial line rather than gdb.
 
 static void gdb_handle_exception(int exceptionVector) {
     int sigval, stepping;
-    uint32 addr, length;
+    uint32_t addr, length;
     char *ptr;
 
     /* reply to host that an exception has occurred */
@@ -740,7 +740,7 @@ static void gdb_handle_exception(int exceptionVector) {
                 char* outBuf = remcomOutBuffer;
 
                 for(i = 0; i < NUMREGBYTES / 4; i++)
-                    outBuf = mem2hex((char *)((uint32)irq_ctx + kosRegMap[i]), outBuf, 4);
+                    outBuf = mem2hex((char *)((uint32_t)irq_ctx + kosRegMap[i]), outBuf, 4);
             }
             break;
 
@@ -749,7 +749,7 @@ static void gdb_handle_exception(int exceptionVector) {
                 char* inBuf = ptr;
 
                 for(i = 0; i < NUMREGBYTES / 4; i++, inBuf += 8)
-                    hex2mem(inBuf, (char *)((uint32)irq_ctx + kosRegMap[i]), 4);
+                    hex2mem(inBuf, (char *)((uint32_t)irq_ctx + kosRegMap[i]), 4);
 
                 strcpy(remcomOutBuffer, "OK");
             }

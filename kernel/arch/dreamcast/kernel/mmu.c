@@ -7,11 +7,11 @@
 /* SH-4 MMU related functions, ported up from KOS-MMU */
 
 #include <string.h>
+#include <stdint.h>
 #include <stdlib.h>
 
 #include <kos/thread.h>
 #include <arch/arch.h>
-#include <arch/types.h>
 #include <arch/irq.h>
 #include <dc/memory.h>
 #include <arch/mmu.h>

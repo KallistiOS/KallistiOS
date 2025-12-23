@@ -42,8 +42,8 @@ static void strcpy_with_term(char *dest, const char *src, size_t destsize) {
     dest[srclength] = '\0';
 }
 
-int flashrom_info(int part, int * start_out, int * size_out) {
-    uint32  ptrs[2];
+int flashrom_info(int part, int *start_out, int *size_out) {
+    uint32_t  ptrs[2];
     int old, rv;
 
     old = irq_disable();
@@ -58,7 +58,7 @@ int flashrom_info(int part, int * start_out, int * size_out) {
     return rv;
 }
 
-int flashrom_read(int offset, void * buffer_out, int bytes) {
+int flashrom_read(int offset, void *buffer_out, int bytes) {
     int old, rv;
 
     old = irq_disable();
@@ -67,7 +67,7 @@ int flashrom_read(int offset, void * buffer_out, int bytes) {
     return rv;
 }
 
-int flashrom_write(int offset, void * buffer, int bytes) {
+int flashrom_write(int offset, void *buffer, int bytes) {
     int old, rv;
 
     old = irq_disable();
@@ -89,7 +89,7 @@ int flashrom_delete(int offset) {
 
 /* Internal function calculates the checksum of a flashrom block. Thanks
    to Marcus Comstedt for this code. */
-static int flashrom_calc_crc(uint8 * buffer) {
+static int flashrom_calc_crc(uint8_t *buffer) {
     int i, c, n = 0xffff;
 
     for(i = 0; i < FLASHROM_OFFSET_CRC; i++) {
@@ -106,11 +106,11 @@ static int flashrom_calc_crc(uint8 * buffer) {
     return (~n) & 0xffff;
 }
 
-int flashrom_get_block(int partid, int blockid, uint8 * buffer_out) {
+int flashrom_get_block(int partid, int blockid, uint8_t *buffer_out) {
     int start, size;
     int bmcnt;
     char magic[18];
-    uint8 * bitmap;
+    uint8_t *bitmap;
     int i;
 
     /* First, figure out where the partition is located. */
@@ -123,8 +123,8 @@ int flashrom_get_block(int partid, int blockid, uint8 * buffer_out) {
         return FLASHROM_ERR_READ_PART;
     }
 
-    if(strncmp(magic, "KATANA_FLASH____", 16) || *((uint16*)(magic + 16)) != partid) {
-        bmcnt = *((uint16*)(magic + 16));
+    if(strncmp(magic, "KATANA_FLASH____", 16) || *((uint16_t *)(magic + 16)) != partid) {
+        bmcnt = *((uint16_t *)(magic + 16));
         magic[16] = 0;
         dbglog(DBG_ERROR, "flashrom_get_block: invalid magic '%s' or id %d in part %d\n", magic, bmcnt, partid);
         return FLASHROM_ERR_BAD_MAGIC;
@@ -147,7 +147,7 @@ int flashrom_get_block(int partid, int blockid, uint8 * buffer_out) {
         return FLASHROM_ERR_BOGUS_PART;
     }
 
-    if(!(bitmap = (uint8 *)malloc(bmcnt)))
+    if(!(bitmap = (uint8_t *)malloc(bmcnt)))
         return FLASHROM_ERR_NOMEM;
 
     if(flashrom_read(start + size - bmcnt, bitmap, bmcnt) < 0) {
@@ -188,15 +188,15 @@ int flashrom_get_block(int partid, int blockid, uint8 * buffer_out) {
         }
 
         /* Does the block ID match? */
-        if(*((uint16*)buffer_out) != blockid)
+        if(*((uint16_t *)buffer_out) != blockid)
             continue;
 
         /* Check the checksum to make sure it's valid */
         bmcnt = flashrom_calc_crc(buffer_out);
 
-        if(bmcnt != *((uint16*)(buffer_out + FLASHROM_OFFSET_CRC))) {
+        if(bmcnt != *((uint16_t *)(buffer_out + FLASHROM_OFFSET_CRC))) {
             dbglog(DBG_WARNING, "flashrom_get_block: part %d phys block %d has invalid checksum %04x (should be %04x)\n",
-                   partid, i + 1, *((uint16*)(buffer_out + FLASHROM_OFFSET_CRC)), bmcnt);
+                   partid, i + 1, *((uint16_t *)(buffer_out + FLASHROM_OFFSET_CRC)), bmcnt);
             continue;
         }
 
@@ -210,24 +210,24 @@ int flashrom_get_block(int partid, int blockid, uint8 * buffer_out) {
 
 /* This internal function returns the system config block. As far as I
    can determine, this is always partition 2, logical block 5. */
-static int flashrom_load_syscfg(uint8 * buffer) {
+static int flashrom_load_syscfg(uint8_t *buffer) {
     return flashrom_get_block(FLASHROM_PT_BLOCK_1, FLASHROM_B1_SYSCFG, buffer);
 }
 
 /* Structure of the system config block (as much as we know anyway). */
 typedef struct {
-    uint16  block_id;   /* Should be 5 */
-    uint8   date[4];    /* Last set time (secs since 1/1/1950 in LE) */
-    uint8   unk1;       /* Unknown */
-    uint8   lang;       /* Language ID */
-    uint8   mono;       /* Mono/stereo setting */
-    uint8   autostart;  /* Auto-start setting */
-    uint8   unk2[4];    /* Unknown */
-    uint8   padding[50];    /* Should generally be all 0xff */
+    uint16_t  block_id;   /* Should be 5 */
+    uint8_t   date[4];    /* Last set time (secs since 1/1/1950 in LE) */
+    uint8_t   unk1;       /* Unknown */
+    uint8_t   lang;       /* Language ID */
+    uint8_t   mono;       /* Mono/stereo setting */
+    uint8_t   autostart;  /* Auto-start setting */
+    uint8_t   unk2[4];    /* Unknown */
+    uint8_t   padding[50];    /* Should generally be all 0xff */
 } syscfg_t;
 
-int flashrom_get_syscfg(flashrom_syscfg_t * out) {
-    uint8 buffer[64];
+int flashrom_get_syscfg(flashrom_syscfg_t *out) {
+    uint8_t buffer[64];
     int rv;
     syscfg_t *sc = (syscfg_t *)buffer;
 
@@ -278,126 +278,126 @@ typedef struct {
     union {
         struct {
             /* Block 0xE0 */
-            uint16  blockid;        /* Should be 0xE0 */
-            uint8   prodname[4];    /* SEGA */
-            uint8   method;
-            uint8   unk1;           /* 0x00 */
-            uint8   unk2[2];        /* 0x00 0x00 */
-            uint8   ip[4];          /* These are all in big-endian notation */
-            uint8   nm[4];
-            uint8   bc[4];
-            uint8   dns1[4];
-            uint8   dns2[4];
-            uint8   gw[4];
-            uint8   unk3[4];        /* All zeros */
-            char    hostname[24];   /* Host name */
-            uint16  crc;
+            uint16_t  blockid;        /* Should be 0xE0 */
+            uint8_t   prodname[4];    /* SEGA */
+            uint8_t   method;
+            uint8_t   unk1;           /* 0x00 */
+            uint8_t   unk2[2];        /* 0x00 0x00 */
+            uint8_t   ip[4];          /* These are all in big-endian notation */
+            uint8_t   nm[4];
+            uint8_t   bc[4];
+            uint8_t   dns1[4];
+            uint8_t   dns2[4];
+            uint8_t   gw[4];
+            uint8_t   unk3[4];        /* All zeros */
+            char      hostname[24];   /* Host name */
+            uint16_t  crc;
         } e0;
 
         struct {
             /* Block E2 */
-            uint16  blockid;    /* Should be 0xE2 */
-            uint8   unk[12];
-            char    email[48];
-            uint16  crc;
+            uint16_t  blockid;    /* Should be 0xE2 */
+            uint8_t   unk[12];
+            char      email[48];
+            uint16_t  crc;
         } e2;
 
         struct {
             /* Block E4 */
-            uint16  blockid;    /* Should be 0xE4 */
-            uint8   unk[32];
-            char    smtp[28];
-            uint16  crc;
+            uint16_t  blockid;    /* Should be 0xE4 */
+            uint8_t   unk[32];
+            char      smtp[28];
+            uint16_t  crc;
         } e4;
 
         struct {
             /* Block E5 */
-            uint16  blockid;    /* Should be 0xE5 */
-            uint8   unk[36];
-            char    pop3[24];
-            uint16  crc;
+            uint16_t  blockid;    /* Should be 0xE5 */
+            uint8_t   unk[36];
+            char      pop3[24];
+            uint16_t  crc;
         } e5;
 
         struct {
             /* Block E6 */
-            uint16  blockid;    /* Should be 0xE6 */
-            uint8   unk[40];
-            char    pop3_login[20];
-            uint16  crc;
+            uint16_t  blockid;    /* Should be 0xE6 */
+            uint8_t   unk[40];
+            char      pop3_login[20];
+            uint16_t  crc;
         } e6;
 
         struct {
             /* Block E7 */
-            uint16  blockid;    /* Should be 0xE7 */
-            uint8   unk[12];
-            char    pop3_passwd[32];
-            char    proxy_host[16];
-            uint16  crc;
+            uint16_t  blockid;    /* Should be 0xE7 */
+            uint8_t   unk[12];
+            char      pop3_passwd[32];
+            char      proxy_host[16];
+            uint16_t  crc;
         } e7;
 
         struct {
             /* Block E8 */
-            uint16  blockid;    /* Should be 0xE8 */
-            uint8   unk1[48];
-            uint16  proxy_port;
-            uint16  unk2;
-            char    ppp_login[8];
-            uint16  crc;
+            uint16_t  blockid;    /* Should be 0xE8 */
+            uint8_t   unk1[48];
+            uint16_t  proxy_port;
+            uint16_t  unk2;
+            char      ppp_login[8];
+            uint16_t  crc;
         } e8;
 
         struct {
             /* Block E9 */
-            uint16  blockid;    /* Should be 0xE9 */
-            uint8   unk[40];
-            char    ppp_passwd[20];
-            uint16  crc;
+            uint16_t  blockid;    /* Should be 0xE9 */
+            uint8_t   unk[40];
+            char      ppp_passwd[20];
+            uint16_t  crc;
         } e9;
 
         struct {
             /* Block 0xC6 */
-            uint16  blockid;
-            char    prodname[4];
-            char    ppp_login[28];
-            char    ppp_passwd[16];
-            char    phone1_pt1[12];
-            uint16  crc;
+            uint16_t  blockid;
+            char      prodname[4];
+            char      ppp_login[28];
+            char      ppp_passwd[16];
+            char      phone1_pt1[12];
+            uint16_t  crc;
         } c6;
 
         struct {
             /* Block 0xC7 */
-            uint16  blockid;
-            char    phone1_pt2[15];
-            char    unk1[13];
-            char    phone2[27];
-            char    unk2[5];
-            uint16  crc;
+            uint16_t  blockid;
+            char      phone1_pt2[15];
+            char      unk1[13];
+            char      phone2[27];
+            char      unk2[5];
+            uint16_t  crc;
         } c7;
 
         struct {
             /* Block 0xC8 */
-            uint16  blockid;
-            char    unk1[8];
-            char    phone3[27];
-            char    unk4[13];
-            uint8   dns1[4];
-            uint8   dns2[4];
-            char    unk5[4];
-            uint16  crc;
+            uint16_t  blockid;
+            char      unk1[8];
+            char      phone3[27];
+            char      unk4[13];
+            uint8_t   dns1[4];
+            uint8_t   dns2[4];
+            char      unk5[4];
+            uint16_t  crc;
         } c8;
 
         struct {
             /* Block 0xEB */
-            uint16  blockid;
-            char    unk1[12];
-            char    atx[48];
-            uint16  crc;
+            uint16_t  blockid;
+            char      unk1[12];
+            char      atx[48];
+            uint16_t  crc;
         } eb;
     };
 } isp_settings_t;
 
-int flashrom_get_ispcfg(flashrom_ispcfg_t * out) {
-    uint8 buffer[sizeof(isp_settings_t)];
-    isp_settings_t * isp = (isp_settings_t *)buffer;
+int flashrom_get_ispcfg(flashrom_ispcfg_t *out) {
+    uint8_t buffer[sizeof(isp_settings_t)];
+    isp_settings_t *isp = (isp_settings_t *)buffer;
     int found = 0;
 
     /* Clean out the output config buffer. */
@@ -540,54 +540,54 @@ typedef struct {
     union {
         struct {
             /* Block 0x80 */
-            uint16  blockid;        /* Should be 0x80 */
-            char    prodname[9];    /* Should be 'PWBrowser' */
-            uint8   unk1[2];        /* Unknown: 00 16 (1.0), 00 1C (2.1) */
-            uint8   dial_areacode;  /* 1 = Dial area code, 0 = don't */
-            char    out_prefix[8];  /* Outside dial prefix */
-            uint8   padding1[8];
-            char    email_pt2[16];  /* Second? part of email address (2.1) */
-            char    cw_prefix[8];   /* Call waiting prefix */
-            uint8   padding2[8];
-            uint16  crc;
+            uint16_t  blockid;        /* Should be 0x80 */
+            char      prodname[9];    /* Should be 'PWBrowser' */
+            uint8_t   unk1[2];        /* Unknown: 00 16 (1.0), 00 1C (2.1) */
+            uint8_t   dial_areacode;  /* 1 = Dial area code, 0 = don't */
+            char      out_prefix[8];  /* Outside dial prefix */
+            uint8_t   padding1[8];
+            char      email_pt2[16];  /* Second? part of email address (2.1) */
+            char      cw_prefix[8];   /* Call waiting prefix */
+            uint8_t   padding2[8];
+            uint16_t  crc;
         } b80;
 
         struct {
             /* Block 0x81 */
-            uint16  blockid;        /* Should be 0x81 */
-            char    email_pt3[14];  /* Third? part of email address (2.1)*/
-            uint8   padding1[2];
-            char    real_name[30];  /* The "Real Name" (21 bytes on 1.0) */
-            uint8   padding2[14];
-            uint16  crc;
+            uint16_t  blockid;        /* Should be 0x81 */
+            char      email_pt3[14];  /* Third? part of email address (2.1)*/
+            uint8_t   padding1[2];
+            char      real_name[30];  /* The "Real Name" (21 bytes on 1.0) */
+            uint8_t   padding2[14];
+            uint16_t  crc;
         } b81;
 
         struct {
             /* Block 0x82 */
-            uint16  blockid;        /* Should be 0x82 */
-            uint8   padding1[30];
-            char    modem_str[30];  /* Modem init string (confirmed on 2.1) */
-            uint16  crc;
+            uint16_t  blockid;        /* Should be 0x82 */
+            uint8_t   padding1[30];
+            char      modem_str[30];  /* Modem init string (confirmed on 2.1) */
+            uint16_t  crc;
         } b82;
 
         struct {
             /* Block 0x83 */
-            uint16  blockid;        /* Should be 0x83 */
-            uint8   modem_str2[2];  /* Modem init string continued */
-            char    area_code[3];
-            uint8   padding2[29];
-            char    ld_prefix[20];  /* Long-distance prefix */
-            uint8   padding3[6];
-            uint16  crc;
+            uint16_t  blockid;        /* Should be 0x83 */
+            uint8_t   modem_str2[2];  /* Modem init string continued */
+            char      area_code[3];
+            uint8_t   padding2[29];
+            char      ld_prefix[20];  /* Long-distance prefix */
+            uint8_t   padding3[6];
+            uint16_t  crc;
         } b83;
 
         struct {
             /* Block 0x84 -- This one is pretty much mostly a mystery. */
-            uint16  blockid;        /* Should be 0x84 */
-            uint8   unk1[6];        /* Might be padding, all 0x00s */
-            uint8   use_proxy;      /* 1 = use proxy, 0 = don't */
-            uint8   unk2[53];       /* No idea on this stuff... */
-            uint16  crc;
+            uint16_t  blockid;        /* Should be 0x84 */
+            uint8_t   unk1[6];        /* Might be padding, all 0x00s */
+            uint8_t   use_proxy;      /* 1 = use proxy, 0 = don't */
+            uint8_t   unk2[53];       /* No idea on this stuff... */
+            uint16_t  crc;
         } b84;
 
         /* Other 0x80 range blocks might be used, but I don't really know what
@@ -595,71 +595,71 @@ typedef struct {
 
         struct {
             /* Block 0xC0 */
-            uint16  blockid;        /* Should be 0xC0 */
-            uint8   unk1;           /* Might be padding? (0x00) */
-            uint8   settings;       /* Bitfield:
+            uint16_t  blockid;        /* Should be 0xC0 */
+            uint8_t   unk1;           /* Might be padding? (0x00) */
+            uint8_t   settings;       /* Bitfield:
                                        bit 0 = pulse dial (1) or tone dial (0),
                                        bit 7 = blind dial (1) or not (0) */
-            uint8   unk2[2];        /* Might be padding (0x00 0x00) */
-            char    prodname[4];    /* Should be 'SEGA' */
-            char    ppp_login[28];
-            char    ppp_passwd[16];
-            char    ac1[5];         /* Area code for phone 1, in parenthesis */
-            char    phone1_pt1[3];  /* First three digits of phone 1 */
-            uint16  crc;
+            uint8_t   unk2[2];        /* Might be padding (0x00 0x00) */
+            char      prodname[4];    /* Should be 'SEGA' */
+            char      ppp_login[28];
+            char      ppp_passwd[16];
+            char      ac1[5];         /* Area code for phone 1, in parenthesis */
+            char      phone1_pt1[3];  /* First three digits of phone 1 */
+            uint16_t  crc;
         } c0;
 
         struct {
             /* Block 0xC1 */
-            uint16  blockid;        /* Should be 0xC1 */
-            char    phone1_pt2[22]; /* Rest of phone 1 */
-            uint8   padding[10];
-            char    ac2[5];         /* Area code for phone 2, in parenthesis */
-            char    phone2_pt1[23]; /* First 23 digits of phone 2 */
-            uint16  crc;
+            uint16_t  blockid;        /* Should be 0xC1 */
+            char      phone1_pt2[22]; /* Rest of phone 1 */
+            uint8_t   padding[10];
+            char      ac2[5];         /* Area code for phone 2, in parenthesis */
+            char      phone2_pt1[23]; /* First 23 digits of phone 2 */
+            uint16_t  crc;
         } c1;
 
         struct {
             /* Block 0xC2 */
-            uint16  blockid;        /* Should be 0xC2 */
-            char    phone2_pt2[2];  /* Last two digits of phone 2 */
-            uint8   padding[50];
-            uint8   dns1[4];        /* DNS 1, big endian notation */
-            uint8   dns2[4];        /* DNS 2, big endian notation */
-            uint16  crc;
+            uint16_t  blockid;        /* Should be 0xC2 */
+            char      phone2_pt2[2];  /* Last two digits of phone 2 */
+            uint8_t   padding[50];
+            uint8_t   dns1[4];        /* DNS 1, big endian notation */
+            uint8_t   dns2[4];        /* DNS 2, big endian notation */
+            uint16_t  crc;
         } c2;
 
         struct {
             /* Block 0xC3 */
-            uint16  blockid;        /* Should be 0xC3 */
-            char    email_p1[32];   /* First? part of the email address
+            uint16_t  blockid;        /* Should be 0xC3 */
+            char      email_p1[32];   /* First? part of the email address
                                        (This is the only part on 1.0) */
-            uint8   padding[16];
-            char    out_srv_p1[12]; /* Outgoing email server, first 12 chars */
-            uint16  crc;
+            uint8_t   padding[16];
+            char      out_srv_p1[12]; /* Outgoing email server, first 12 chars */
+            uint16_t  crc;
         } c3;
 
         struct {
             /* Block 0xC4 */
-            uint16  blockid;        /* Should be 0xC4 */
-            char    out_srv_p2[18]; /* Rest of outgoing email server */
-            uint8   padding1[2];
-            char    in_srv[30];     /* Incoming email server */
-            uint8   padding2[2];
-            char    em_login_p1[8]; /* Email login, first 8 chars */
-            uint16  crc;
+            uint16_t  blockid;        /* Should be 0xC4 */
+            char      out_srv_p2[18]; /* Rest of outgoing email server */
+            uint8_t   padding1[2];
+            char      in_srv[30];     /* Incoming email server */
+            uint8_t   padding2[2];
+            char      em_login_p1[8]; /* Email login, first 8 chars */
+            uint16_t  crc;
         } c4;
 
         struct {
             /* Block 0xC5 */
-            uint16  blockid;        /* Should be 0xC5 */
-            char    em_login_p2[8]; /* Rest of email login */
-            char    em_passwd[16];  /* Email password */
-            char    proxy_srv[30];  /* Proxy Server */
-            uint8   padding1[2];
-            uint16  proxy_port;     /* Proxy port, little endian notation */
-            uint8   padding2[2];
-            uint16  crc;
+            uint16_t  blockid;        /* Should be 0xC5 */
+            char      em_login_p2[8]; /* Rest of email login */
+            char      em_passwd[16];  /* Email password */
+            char      proxy_srv[30];  /* Proxy Server */
+            uint8_t   padding1[2];
+            uint16_t  proxy_port;     /* Proxy port, little endian notation */
+            uint8_t   padding2[2];
+            uint16_t  crc;
         } c5;
 
         /* Blocks 0xC7 - 0xCB also appear to be used by PlanetWeb, but are
@@ -669,7 +669,7 @@ typedef struct {
 } pw_isp_settings_t;
 
 int flashrom_get_pw_ispcfg(flashrom_ispcfg_t *out) {
-    uint8 buffer[64];
+    uint8_t buffer[64];
     pw_isp_settings_t *isp = (pw_isp_settings_t *)buffer;
 
     /* Clear our output buffer completely.  */

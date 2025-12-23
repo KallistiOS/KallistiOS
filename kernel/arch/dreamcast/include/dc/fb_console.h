@@ -27,7 +27,7 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
+#include <stdint.h>
 #include <kos/dbgio.h>
 
 /* \cond */
@@ -53,7 +53,7 @@ extern dbgio_handler_t dbgio_fb;
     \param  bordery         How much border to leave around the target in the
                             Y direction.
 */
-void dbgio_fb_set_target(uint16 *t, int w, int h, int borderx, int bordery);
+void dbgio_fb_set_target(uint16_t *t, int w, int h, int borderx, int bordery);
 
 __END_DECLS
 

@@ -22,8 +22,8 @@
 __BEGIN_DECLS
 
 #include <stdbool.h>
+#include <stdint.h>
 
-#include <arch/types.h>
 #include <kos/elf.h>
 
 /** \defgroup arch  Architecture
@@ -34,12 +34,12 @@ __BEGIN_DECLS
 
 /** \brief  Top of memory available, depending on memory size. */
 #if defined(__KOS_GCC_32MB__) || __KOS_GCC_PATCHLEVEL__ >= 2025062800
-extern uint32 _arch_mem_top;
+extern uint32_t _arch_mem_top;
 #else
 #pragma message "Outdated toolchain: not patched for 32MB support, limiting "\
     "KOS to 16MB-only behavior to retain maximum compatibility. Please "\
     "update your toolchain."
-#define _arch_mem_top   ((uint32) 0x8d000000)
+#define _arch_mem_top   ((uint32_t) 0x8d000000)
 #endif
 
 /** \brief  Start and End address for .text portion of program. */
