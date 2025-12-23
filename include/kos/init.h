@@ -52,8 +52,8 @@ __BEGIN_DECLS
     const uint32_t __kos_init_flags = (flags); \
     KOS_INIT_FLAG(flags, INIT_NET, arch_init_net); \
     KOS_INIT_FLAG(flags, INIT_NET, net_shutdown); \
-    KOS_INIT_FLAG(flags, INIT_NET, bba_la_init); \
-    KOS_INIT_FLAG(flags, INIT_NET, bba_la_shutdown); \
+    KOS_INIT_FLAG(flags, INIT_NET, eth_init); \
+    KOS_INIT_FLAG(flags, INIT_NET, eth_shutdown); \
     KOS_INIT_FLAG(flags, INIT_FS_ROMDISK, fs_romdisk_init); \
     KOS_INIT_FLAG(flags, INIT_FS_ROMDISK, fs_romdisk_shutdown); \
     KOS_INIT_FLAG(flags, INIT_FS_NULL, fs_null_init); \
