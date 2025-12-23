@@ -55,11 +55,11 @@ void *pvr_set_vertbuf(pvr_list_t list, void *buffer, size_t len) {
     oldbuf = pvr_state.dma_buffers[0].base[list];
 
     // Write new values.
-    pvr_state.dma_buffers[0].base[list] = (uint8 *)buffer;
+    pvr_state.dma_buffers[0].base[list] = (uint8_t *)buffer;
     pvr_state.dma_buffers[0].ptr[list] = 0;
     pvr_state.dma_buffers[0].size[list] = len / 2;
     pvr_state.dma_buffers[0].ready = 0;
-    pvr_state.dma_buffers[1].base[list] = ((uint8 *)buffer) + len / 2;
+    pvr_state.dma_buffers[1].base[list] = ((uint8_t *)buffer) + len / 2;
     pvr_state.dma_buffers[1].ptr[list] = 0;
     pvr_state.dma_buffers[1].size[list] = len / 2;
     pvr_state.dma_buffers[1].ready = 0;
@@ -68,7 +68,7 @@ void *pvr_set_vertbuf(pvr_list_t list, void *buffer, size_t len) {
 }
 
 void *pvr_vertbuf_tail(pvr_list_t list) {
-    uint8 *bufbase;
+    uint8_t *bufbase;
 
     // Check the validity of the request.
     assert(list < PVR_OPB_COUNT);
@@ -83,7 +83,7 @@ void *pvr_vertbuf_tail(pvr_list_t list) {
 }
 
 void pvr_vertbuf_written(pvr_list_t list, size_t amt) {
-    uint32 val;
+    uint32_t val;
 
     // Check the validity of the request.
     assert(list < PVR_OPB_COUNT);
@@ -151,7 +151,7 @@ void pvr_scene_begin(void) {
 /* Currently the resize functionality is not implemented, so make sure that
    rx and ry are appropriate (i.e. *rx = 1024 and *ry = 512 for 640x480).
    Also, note that this probably won't work with DMA mode for now... */
-void pvr_scene_begin_txr(pvr_ptr_t txr, uint32 *rx, uint32 *ry) {
+void pvr_scene_begin_txr(pvr_ptr_t txr, uint32_t *rx, uint32_t *ry) {
     (void)ry;
 
     /* For the most part, this isn't very much different than the normal render setup.
@@ -162,7 +162,7 @@ void pvr_scene_begin_txr(pvr_ptr_t txr, uint32 *rx, uint32 *ry) {
     pvr_state.next_to_txr_rp = (*rx) * 2 / 8;
 
     // Set the output address
-    pvr_state.next_to_txr_addr = (uint32)(txr) - PVR_RAM_INT_BASE;
+    pvr_state.next_to_txr_addr = (uint32_t)(txr) - PVR_RAM_INT_BASE;
 
     pvr_scene_begin();
 

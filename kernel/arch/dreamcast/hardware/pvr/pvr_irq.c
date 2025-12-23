@@ -110,7 +110,7 @@ static void pvr_render_lists(void) {
     }
 }
 
-void pvr_vblank_handler(uint32 code, void *data) {
+void pvr_vblank_handler(uint32_t code, void *data) {
     (void)code;
     (void)data;
 
@@ -138,7 +138,7 @@ void pvr_vblank_handler(uint32 code, void *data) {
     pvr_render_lists();
 }
 
-void pvr_int_handler(uint32 code, void *data) {
+void pvr_int_handler(uint32_t code, void *data) {
     (void)data;
 
     // What kind of event did we get?

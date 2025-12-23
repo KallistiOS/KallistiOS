@@ -37,11 +37,11 @@
 static void pvr_init_tile_matrix(int which, bool presort) {
     volatile pvr_ta_buffers_t   *buf;
     int     x, y, tn;
-    uint32      *vr;  /* Note: We're working in 4-byte pointer maths in this function */
+    uint32_t      *vr;  /* Note: We're working in 4-byte pointer maths in this function */
     volatile int    *opb_sizes;
     //uint32      matbase, opbbase;
 
-    vr = (uint32*)PVR_RAM_BASE;
+    vr = (uint32_t *)PVR_RAM_BASE;
     buf = pvr_state.ta_buffers + which;
     opb_sizes = pvr_state.opb_size;
 
@@ -151,7 +151,7 @@ void pvr_allocate_buffers(const pvr_init_params_t *params) {
     volatile pvr_ta_buffers_t   *buf;
     volatile pvr_frame_buffers_t    *fbuf;
     int i, j;
-    uint32  outaddr, sconst, opb_size_accum, opb_total_size;
+    uint32_t  outaddr, sconst, opb_size_accum, opb_total_size;
 
     /* Set screen sizes; pvr_init has ensured that we have a valid mode
        and all that by now, so we can freely dig into the vid_mode

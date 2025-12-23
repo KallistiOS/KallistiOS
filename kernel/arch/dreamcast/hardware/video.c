@@ -209,7 +209,7 @@ uint32_t      *vram_l;
    [This is the old KOS function by Megan.]
 */
 int8_t vid_check_cable(void) {
-    volatile uint32_t * porta = (vuint32 *)0xff80002c;
+    volatile uint32_t *porta = (volatile uint32_t *)0xff80002c;
 
     if(hardware_sys_mode(NULL) != HW_TYPE_RETAIL) {
         /* XXXX: This still needs to be figured out for NAOMI. For now, assume
@@ -220,7 +220,7 @@ int8_t vid_check_cable(void) {
     *porta = (*porta & 0xfff0ffff) | 0x000a0000;
 
     /* Read port8 and port9 */
-    return (*((volatile uint16_t*)(porta + 1)) >> 8) & 3;
+    return (*((volatile uint16_t *)(porta + 1)) >> 8) & 3;
 }
 
 /*-----------------------------------------------------------------------------*/
@@ -435,7 +435,7 @@ void vid_set_mode_ex(vid_mode_t *mode) {
     vid_flip(0);
 
     /* Set cable type */
-    *((vuint32*)0xa0702c00) = (*((vuint32*)0xa0702c00) & 0xfffffcff) |
+    *((volatile uint32_t *)0xa0702c00) = (*((volatile uint32_t *)0xa0702c00) & 0xfffffcff) |
         ((ct & 3) << 8);
 
     /* Re-enable the display */

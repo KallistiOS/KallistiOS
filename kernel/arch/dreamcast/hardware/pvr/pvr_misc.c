@@ -179,11 +179,11 @@ void pvr_begin_queued_render(void) {
     volatile pvr_frame_buffers_t    * rbuf;
     pvr_bkg_poly_t  bkg;
     uint32_t      *vrl;
-    uint32      vert_end;
+    uint32_t      vert_end;
     int bufn = pvr_state.view_target;
     union {
-        float f;
-        uint32 i;
+        float    f;
+        uint32_t i;
     } zclip;
 
     /* Get the appropriate buffer */

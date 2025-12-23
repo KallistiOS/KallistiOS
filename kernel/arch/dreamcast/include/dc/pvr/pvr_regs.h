@@ -49,7 +49,7 @@ __BEGIN_DECLS
     
     \return                  The value of that register (32-bits)
 */
-#define PVR_GET(REG) (* ( (vuint32*)( 0xa05f8000 + (REG) ) ) )
+#define PVR_GET(REG) (* ( (volatile uint32_t *)( 0xa05f8000 + (REG) ) ) )
 
 /** \brief   Set a PVR register value
 

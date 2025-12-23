@@ -333,8 +333,8 @@ void pvr_sprite_compile(pvr_sprite_hdr_t *dst, const pvr_sprite_cxt_t *src) {
     dst->oargb = 0x00000000;
 }
 
-void pvr_mod_compile(pvr_mod_hdr_t *dst, pvr_list_t list, uint32 mode,
-                     uint32 cull) {
+void pvr_mod_compile(pvr_mod_hdr_t *dst, pvr_list_t list, uint32_t mode,
+                     uint32_t cull) {
     uint32_t cmd;
 
     cmd = PVR_CMD_MODIFIER

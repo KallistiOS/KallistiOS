@@ -35,9 +35,9 @@ instead. ^_^;
    the real malloc header */
 extern void * pvr_int_malloc(size_t bytes);
 extern void pvr_int_free(void *ptr);
-extern struct mallinfo pvr_int_mallinfo();
-extern void pvr_int_mem_reset();
-extern void pvr_int_malloc_stats();
+extern struct mallinfo pvr_int_mallinfo(void);
+extern void pvr_int_mem_reset(void);
+extern void pvr_int_malloc_stats(void);
 
 
 #include <kos/thread.h>
@@ -45,9 +45,9 @@ extern void pvr_int_malloc_stats();
 
 /* List of allocated memory blocks for leak checking */
 typedef struct memctl {
-    uint32          size;
+    uint32_t        size;
     tid_t           thread;
-    uint32          addr;
+    uint32_t        addr;
     pvr_ptr_t       block;
     LIST_ENTRY(memctl)  list;
 } memctl_t;
@@ -62,14 +62,14 @@ static pvr_ptr_t pvr_mem_base = NULL;
                "pvr_mem_* used, but PVR hasn't been initialized yet")
 
 /* Used in pvr_mem_core.c */
-void * pvr_int_sbrk(size_t amt) {
-    uint32 old, n;
+void *pvr_int_sbrk(size_t amt) {
+    uint32_t old, n;
 
     /* Are we valid? */
     CHECK_MEM_BASE;
 
     /* Try to increment it */
-    old = (uint32)pvr_mem_base;
+    old = (uint32_t)pvr_mem_base;
     n = old + amt;
 
     /* Did we run over? */
@@ -84,12 +84,12 @@ void * pvr_int_sbrk(size_t amt) {
 /* Allocate a chunk of memory from texture space; the returned value
    will be relative to the base of texture memory (zero-based) */
 pvr_ptr_t pvr_mem_malloc(size_t size) {
-    uint32 rv32;
-    memctl_t    * ctl;
+    uint32_t rv32;
+    memctl_t    *ctl;
 
     CHECK_MEM_BASE;
 
-    rv32 = (uint32)pvr_int_malloc(size);
+    rv32 = (uint32_t)pvr_int_malloc(size);
     assert_msg((rv32 & 0x1f) == 0,
                "dlmalloc's alignment is broken; "
                "please make a bug report");
@@ -113,7 +113,7 @@ pvr_ptr_t pvr_mem_malloc(size_t size) {
 
 /* Free a previously allocated chunk of memory */
 void pvr_mem_free(pvr_ptr_t chunk) {
-    uint32      ra;
+    uint32_t    ra;
     memctl_t    *ctl, *tmp;
     int     found;
 
@@ -124,7 +124,7 @@ void pvr_mem_free(pvr_ptr_t chunk) {
 
     if(__is_defined(PVR_KM_DBG_VERBOSE)) {
         printf("Thread %d/%08lx freeing block @ %08lx\n",
-               thd_current->tid, ra, (uint32)chunk);
+               thd_current->tid, ra, (uint32_t)chunk);
     }
 
     if(__is_defined(PVR_KM_DBG)) {
@@ -143,7 +143,7 @@ void pvr_mem_free(pvr_ptr_t chunk) {
             dbglog(DBG_ERROR,
                    "pvr_mem_free: trying to free non-alloc'd block "
                    "%08lx (called from %d/%08lx\n",
-                   (uint32)chunk, thd_current->tid, ra);
+                   (uint32_t)chunk, thd_current->tid, ra);
         }
     }
 
@@ -199,6 +199,6 @@ void pvr_mem_reset(void) {
 void pvr_mem_stats(void) {
     printf("pvr_mem_stats():\n");
     pvr_int_malloc_stats();
-    printf("max sbrk base: %08lx\n", (uint32)pvr_mem_base);
+    printf("max sbrk base: %08lx\n", (uint32_t)pvr_mem_base);
     pvr_mem_print_list();
 }
