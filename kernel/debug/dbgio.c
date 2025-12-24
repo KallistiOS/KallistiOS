@@ -22,9 +22,9 @@
 */
 
 // Our currently selected handler.
-static dbgio_handler_t * dbgio = NULL;
+static dbgio_handler_t *dbgio = NULL;
 
-int dbgio_dev_select(const char * name) {
+int dbgio_dev_select(const char *name) {
     size_t i;
 
     for(i = 0; i < dbgio_handler_cnt; i++) {
@@ -44,7 +44,7 @@ int dbgio_dev_select(const char * name) {
     return -1;
 }
 
-const char * dbgio_dev_get(void) {
+const char *dbgio_dev_get(void) {
     if(!dbgio)
         return NULL;
     else
@@ -217,7 +217,7 @@ static int null_write_buffer(const uint8_t *data, int len, int xlat) {
     (void)xlat;
     return len;
 }
-static int null_read_buffer(uint8_t * data, int len) {
+static int null_read_buffer(uint8_t *data, int len) {
     (void)data;
     (void)len;
     errno = EAGAIN;

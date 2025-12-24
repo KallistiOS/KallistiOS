@@ -38,7 +38,7 @@ __BEGIN_DECLS
 */
 typedef struct dbgio_handler {
     /** \brief  Name of the dbgio handler */
-    const char  * name;
+    const char *name;
 
     /** \brief  Detect this debug interface.
         \retval 1           If the device is available and usable
@@ -106,7 +106,7 @@ typedef struct dbgio_handler {
 
 /** \cond */
 /* These two should be initialized in arch. */
-extern dbgio_handler_t * dbgio_handlers[];
+extern dbgio_handler_t *dbgio_handlers[];
 extern const size_t dbgio_handler_cnt;
 
 /* This is defined by the shared code, in case there's no valid handler. */
@@ -121,13 +121,13 @@ extern dbgio_handler_t dbgio_null;
 
     \param  name            The dbgio interface to select
     \retval 0               On success
-    
+
     \retval -1              On error
 
     \par    Error Conditions:
     \em     ENODEV - The specified device could not be initialized
 */
-int dbgio_dev_select(const char * name);
+int dbgio_dev_select(const char *name);
 
 /** \brief   Fetch the name of the currently selected dbgio interface.
     \ingroup logging
@@ -135,7 +135,7 @@ int dbgio_dev_select(const char * name);
     \return                 The name of the current dbgio interface (or NULL if
                             no device is selected)
 */
-const char * dbgio_dev_get(void);
+const char *dbgio_dev_get(void);
 
 /** \brief   Initialize the dbgio console.
     \ingroup logging
@@ -144,9 +144,9 @@ const char * dbgio_dev_get(void);
     user programs.
 
     \retval 0               On success
-    
+
     \retval -1              On error
-    
+
     \par    Error Conditions:
     \em     ENODEV - No devices could be detected/initialized
 */
@@ -159,7 +159,7 @@ int dbgio_init(void);
     mode at all.
 
     \param  mode            The mode to use
-    
+
     \retval 0               On success
     \retval -1              On error (errno should be set as appropriate)
 */
@@ -194,7 +194,7 @@ int dbgio_read(void);
                             output is actually flushed to the console.
 
     \param  c               The character to write
-    
+
     \retval 1               On success (number of characters written)
     \retval -1              On error (errno should be set as appropriate)
 */
@@ -213,7 +213,7 @@ int dbgio_flush(void);
 
     \param  data            The buffer to write
     \param  len             The length of the buffer
-    
+
     \return                 Number of characters written on success, or -1 on
                             failure (errno should be set as appropriate)
 */
@@ -224,7 +224,7 @@ int dbgio_write_buffer(const uint8_t *data, int len);
 
     \param  data            The buffer to read into
     \param  len             The length of the buffer
-    
+
     \return                 Number of characters read on success, or -1 on
                             failure (errno should be set as appropriate)
 */
@@ -236,7 +236,7 @@ int dbgio_read_buffer(uint8_t *data, int len);
 
     \param  data            The buffer to write
     \param  len             The length of the buffer
-    
+
     \return                 Number of characters written on success, or -1 on
                             failure (errno should be set as appropriate)
 */
@@ -246,7 +246,7 @@ int dbgio_write_buffer_xlat(const uint8_t *data, int len);
     \ingroup logging
 
     \param  str             The string to write
-    
+
     \return                 Number of characters written on success, or -1 on
                             failure (errno should be set as appropriate)
 */
@@ -257,17 +257,17 @@ int dbgio_write_str(const char *str);
 */
 void dbgio_disable(void);
 
-/** \brief   Enable debug I/O globally. 
+/** \brief   Enable debug I/O globally.
     \ingroup logging
 */
 void dbgio_enable(void);
 
 /** \brief   Built-in debug I/O printf function.
     \ingroup logging
-    
+
     \param  fmt             A printf() style format string
     \param  ...             Format arguments
-    
+
     \return                 The number of bytes written, or <0 on error (errno
                             should be set as appropriate)
 */
