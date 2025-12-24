@@ -10,7 +10,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <kos/dbgio.h>
-#include <kos/spinlock.h>
+#include <kos/mutex.h>
 
 /*
   This module handles a swappable debug console. These functions used to be
@@ -160,7 +160,7 @@ int dbgio_write_str(const char *str) {
 
 // Not re-entrant
 static char printf_buf[1024];
-static spinlock_t lock = SPINLOCK_INITIALIZER;
+static mutex_t lock = MUTEX_INITIALIZER;
 
 int dbgio_printf(const char *fmt, ...) {
     va_list args;
@@ -170,7 +170,7 @@ int dbgio_printf(const char *fmt, ...) {
       enabled, and we could be outside an int with IRQs disabled, which
       would cause a deadlock here. We need an irq_is_enabled()! */
     if(!irq_inside_int())
-        spinlock_lock(&lock);
+        mutex_lock(&lock);
 
     va_start(args, fmt);
     i = vsnprintf(printf_buf, sizeof(printf_buf), fmt, args);
@@ -180,7 +180,7 @@ int dbgio_printf(const char *fmt, ...) {
         dbgio_write_str(printf_buf);
 
     if(!irq_inside_int())
-        spinlock_unlock(&lock);
+        mutex_unlock(&lock);
 
     return i;
 }
