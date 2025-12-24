@@ -168,6 +168,7 @@ __BEGIN_DECLS
 #define MAPLE_FUNC_ARGUN        0x20000000  /**< \brief AR gun? */
 #define MAPLE_FUNC_KEYBOARD     0x40000000  /**< \brief Keyboard */
 #define MAPLE_FUNC_LIGHTGUN     0x80000000  /**< \brief Lightgun */
+#define MAPLE_FUNC_ANY          0xffffffff  /**< \brief Match/request any */
 /** @} */
 
 /* \cond */
