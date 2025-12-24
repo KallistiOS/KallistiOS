@@ -53,7 +53,7 @@ void fs_ramdisk_shutdown(void);
     \retval 0               On success
     \retval -1              On failure
 */
-int fs_ramdisk_attach(const char * fn, void * obj, size_t size);
+int fs_ramdisk_attach(const char *fn, void *obj, size_t size);
 
 /** \brief  Detach a file from the ramdisk.
 
@@ -67,7 +67,7 @@ int fs_ramdisk_attach(const char * fn, void * obj, size_t size);
     \retval 0               On success
     \retval -1              On failure
 */
-int fs_ramdisk_detach(const char * fn, void ** obj, size_t * size);
+int fs_ramdisk_detach(const char *fn, void **obj, size_t *size);
 
 /** @} */
 
