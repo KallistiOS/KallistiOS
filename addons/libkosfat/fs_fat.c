@@ -1020,7 +1020,7 @@ static int fs_fat_unlink(vfs_handler_t *vfs, const char *fn) {
         if((err = fat_erase_chain(fs->fs, cluster))) {
             /* Uh oh... This is really bad... */
             dbglog(DBG_ERROR, "fs_fat: Error erasing FAT chain for file %s\n",
-	           fn);
+                fn);
             irv = -1;
             errno = -err;
         }

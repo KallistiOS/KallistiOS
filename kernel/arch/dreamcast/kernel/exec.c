@@ -62,15 +62,15 @@ void arch_exec_at(const void *image, uint32_t length, uint32_t address) {
     arch_shutdown();
 
     /* Reset our old SR, VBR, and FPSCR */
-    __asm__ __volatile__("ldc	%0,sr\n"
+    __asm__ __volatile__("ldc   %0,sr\n"
                          : /* no outputs */
                          : "z"(_arch_old_sr)
                          : "memory");
-    __asm__ __volatile__("ldc	%0,vbr\n"
+    __asm__ __volatile__("ldc   %0,vbr\n"
                          : /* no outputs */
                          : "z"(_arch_old_vbr)
                          : "memory");
-    __asm__ __volatile__("lds	%0,fpscr\n"
+    __asm__ __volatile__("lds   %0,fpscr\n"
                          : /* no outputs */
                          : "z"(_arch_old_fpscr)
                          : "memory");

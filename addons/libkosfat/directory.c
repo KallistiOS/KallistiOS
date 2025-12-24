@@ -702,24 +702,24 @@ int fat_erase_dentry(fat_fs_t *fs, uint32_t cl, uint32_t off, uint32_t lcl,
                 ent->name[0] = FAT_ENTRY_FREE;
             }
 
-	    if(!done) {
+        if(!done) {
                 /* Move onto the next cluster. */
                 if(!(lcl & 0x80000000)) {
                     lcl = fat_read_fat(fs, lcl, &err);
                     if(lcl == 0xFFFFFFFF) {
                         dbglog(DBG_ERROR, "Invalid FAT value hit while "
-			       "reading long name entry for deletion at "
-			       "cluster %" PRIu32 ", offset %" PRIu32 "\n",
-			       lcl, i << 5);
+                            "reading long name entry for deletion at "
+                            "cluster %" PRIu32 ", offset %" PRIu32 "\n",
+                            lcl, i << 5);
                         return -err;
                     }
 
                     /* This shouldn't happen either... */
                     if(fat_is_eof(fs, lcl)) {
                         dbglog(DBG_ERROR, "End of directory hit while "
-			       "reading long name entry for deletion at "
-			       "cluster %" PRIu32 ", offset %" PRIu32 "\n",
-			       lcl, i << 5);
+                            "reading long name entry for deletion at "
+                            "cluster %" PRIu32 ", offset %" PRIu32 "\n",
+                            lcl, i << 5);
                         return -EIO;
                     }
 
@@ -731,15 +731,15 @@ int fat_erase_dentry(fat_fs_t *fs, uint32_t cl, uint32_t off, uint32_t lcl,
 
                     if(max2 <= 0) {
                         dbglog(DBG_ERROR, "End of directory hit while "
-			       "reading long name entry for deletion at "
-			       "cluster %" PRIu32 ", offset %" PRIu32 "\n",
-			       lcl, i << 5);
+                            "reading long name entry for deletion at "
+                            "cluster %" PRIu32 ", offset %" PRIu32 "\n",
+                            lcl, i << 5);
                         return -EIO;
                     }
 
                     i = 0;
                 }
-	    }
+            }
         }
     }
 

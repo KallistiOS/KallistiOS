@@ -24,7 +24,7 @@ __BEGIN_DECLS
     \param  bit             The bit to set (from 0 to 31)
     \return                 A 32-bit mask with the corresponding bit set
  */
-#define BIT(bit)	(1u << (bit))
+#define BIT(bit)        (1u << (bit))
 
 /** \brief  Create a mask with a range of bits set
 
@@ -32,7 +32,7 @@ __BEGIN_DECLS
     \param  l               The low bit of the range to set, included
     \return                 A 32-bit mask with the corresponding bits set
  */
-#define GENMASK(h, l)	((0xffffffff << (l)) & (0xffffffff >> (31 - (h))))
+#define GENMASK(h, l)   ((0xffffffff << (l)) & (0xffffffff >> (31 - (h))))
 
 /** \brief  Extract a field value from a variable
 
@@ -41,7 +41,7 @@ __BEGIN_DECLS
     \return                 The value of the field (shifted)
  */
 #define FIELD_GET(var, field) \
-	(((var) & (field)) >> __builtin_ctz(field))
+    (((var) & (field)) >> __builtin_ctz(field))
 
 /** \brief  Prepare a field with a given value
 
@@ -49,7 +49,7 @@ __BEGIN_DECLS
     \param  value           The value to be put in the field
  */
 #define FIELD_PREP(field, value) \
-	(((value) << __builtin_ctz(field)) & (field))
+    (((value) << __builtin_ctz(field)) & (field))
 
 __END_DECLS
 #endif /* __KOS_REGFIELD_H */

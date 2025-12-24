@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
     snd_init();
 
     // Load wav files found in romdisk
-    // Beep wav files found in the romdisk where provided by 
+    // Beep wav files found in the romdisk where provided by
     // https://gamesounds.xyz/?dir=Sound%20Effects/Beeps
     sfxhnd_t beep1 = snd_sfx_load("/rd/beep-1.wav");
     sfxhnd_t beep2 = snd_sfx_load("/rd/beep-2.wav");
@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
         current_buttons = cond->buttons;
         changed_buttons = current_buttons ^ previous_buttons;
         previous_buttons = current_buttons;
-        
+
         // Play sounds on different channels
         if(button_pressed(current_buttons, changed_buttons, CONT_A)) {
             snd_sfx_play(beep1, volume, CENTER);
@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
         if(button_pressed(current_buttons, changed_buttons, CONT_Y)) {
             snd_sfx_play(beep4, volume, CENTER);
         }
-        
+
         // Play sounds on same channel
         if(button_pressed(current_buttons, changed_buttons, CONT_DPAD_DOWN)) {
             snd_sfx_play_chn(0, beep1, volume, CENTER);
@@ -107,12 +107,12 @@ int main(int argc, char **argv) {
     }
 
     // Unload all sound effects from sound RAM
-    snd_sfx_unload(beep1);	
+    snd_sfx_unload(beep1);
     snd_sfx_unload(beep2);
-    snd_sfx_unload(beep3);	
+    snd_sfx_unload(beep3);
     snd_sfx_unload(beep4);
     // OR
-    // snd_sfx_unload_all();	
+    // snd_sfx_unload_all();
 
     snd_shutdown();
 
@@ -126,7 +126,7 @@ static void draw_instructions(uint8_t volume) {
 
     memset(current_volume_str, 0, 32);
     snprintf(current_volume_str, 32, "Current Volume: %3i", volume);
-    
+
     bfont_draw_str(vram_s + y*640+x, 640, color, "Press A,B,X,Y to play beeps on separate channels");
     y += 48;
     bfont_draw_str(vram_s + y*640+x, 640, color, "Press UP,DOWN,LEFT,RIGHT on D-Pad to play beeps");

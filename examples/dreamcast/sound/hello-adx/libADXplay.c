@@ -32,38 +32,38 @@ int check_cont()
 {
     int ret=0;
     maple_device_t *cont;
-	cont_state_t *state;		
+    cont_state_t *state;
     cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
 
-	if(cont)
-	{
-		state = (cont_state_t *)maple_dev_status(cont);
-		if (!state)
-			ret = 0;
-		if (state->buttons & CONT_START)
-            ret = CONT_STOP;               
-		if (state->buttons & CONT_X)
+    if(cont)
+    {
+        state = (cont_state_t *)maple_dev_status(cont);
+        if (!state)
+            ret = 0;
+        if (state->buttons & CONT_START)
+            ret = CONT_STOP;
+        if (state->buttons & CONT_X)
             ret = CONT_RESTART;
-		if (state->buttons & CONT_A) 
+        if (state->buttons & CONT_A)
             ret = CONT_PAUSE;
-		if (state->buttons & CONT_B) 
+        if (state->buttons & CONT_B)
             ret = CONT_RESUME;
-		if (state->buttons & CONT_DPAD_UP) 
+        if (state->buttons & CONT_DPAD_UP)
             ret = CONT_VOLUP;
-		if (state->buttons & CONT_DPAD_DOWN) 
-            ret = CONT_VOLDN;   
-	}
-	return ret;
+        if (state->buttons & CONT_DPAD_DOWN)
+            ret = CONT_VOLDN;
+    }
+    return ret;
 }
 
 int main(int argc, const char *argv[])
 {
     /* Print some text to the screen */
-	int o = 20*640+20;
-	bfont_set_encoding(BFONT_CODE_ISO8859_1);
+    int o = 20*640+20;
+    bfont_set_encoding(BFONT_CODE_ISO8859_1);
     bfont_draw_str(vram_s+o,640,1,"LibADX (C) PH3NOM 2012"); o+=640*48;
     printf("LibADX (C) PH3NOM 2012\n");
-    
+
     /* Start the ADX stream, with looping enabled */
     if( adx_dec( "/rd/test.adx", 1 ) < 1 )
     {
@@ -73,49 +73,49 @@ int main(int argc, const char *argv[])
 
     /* Wait for the stream to start */
     while( snddrv.drv_status == SNDDRV_STATUS_NULL )
-        thd_pass(); 
-    
+        thd_pass();
+
     bfont_draw_str(vram_s+o,640,1,"Press Start to stop, press X to restart");
     o+=640*48;
     bfont_draw_str(vram_s+o,640,1,"Press A to pause, press B to resume");
     o+=640*48;
     bfont_draw_str(vram_s+o,640,1,"Press UP or Down to increase/decrease volume");
-             
+
     /* Check for user input and eof */
-	while( snddrv.drv_status != SNDDRV_STATUS_NULL ) {               
+    while( snddrv.drv_status != SNDDRV_STATUS_NULL ) {
        int vol;
        switch (check_cont()) {
             case CONT_RESTART:
                  if(adx_restart())
                     printf("ADX streaming restarted\n");
                  break;
-            case CONT_STOP: 
+            case CONT_STOP:
                  if(adx_stop())
                     printf("ADX streaming stopped\n");
                  break;
-            case CONT_PAUSE: 
+            case CONT_PAUSE:
                  if(adx_pause())
                     printf("ADX streaming paused\n");
                  break;
-            case CONT_RESUME: 
+            case CONT_RESUME:
                  if(adx_resume())
                     printf("ADX streaming resumed\n");
                  break;
-            case CONT_VOLUP: 
+            case CONT_VOLUP:
                  vol = snddrv_volume_up();
                  printf("SNDDRV: Volume set to %i%s\n", ((vol*100)/255), "%");
                  break;
-            case CONT_VOLDN: 
+            case CONT_VOLDN:
                  vol = snddrv_volume_down();
                  printf("SNDDRV: Volume set to %i%s\n", ((vol*100)/255), "%");
                  break;
             default:
-                 break; 
+                 break;
        }
        thd_sleep(50);
     } /* when (snddrv.drv_status == SNDDRV_STATUS_NULL) the stream is finished*/
 
     printf( "LibADX Example Finished\n");
-    
+
     return 0;
 }
