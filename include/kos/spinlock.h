@@ -26,15 +26,13 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <kos/thread.h>
 
 
 /** \brief  Spinlock data type. */
 typedef volatile int spinlock_t;
-
-/* Include architecture-specific implementations */
-#include <arch/spinlock.h>
 
 /** \brief  Spinlock initializer.
 
@@ -67,7 +65,14 @@ static inline void spinlock_init(spinlock_t *lock) {
                             the lock was successfully obtained.
 */
 static inline bool spinlock_trylock(spinlock_t *lock) {
-    return arch_spinlock_trylock(lock);
+    int locked = 0;
+    return atomic_compare_exchange_strong_explicit(
+        lock,
+        &locked,
+        1,
+        memory_order_acquire,
+        memory_order_relaxed
+    );
 }
 
 /** \brief  Spin on a lock.
