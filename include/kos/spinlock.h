@@ -24,7 +24,9 @@
 #define __KOS_SPINLOCK_H
 
 #include <kos/cdefs.h>
-__BEGIN_DECLS
+
+/* These can only be used in C */
+#if !defined(__cplusplus)
 
 #include <stdatomic.h>
 #include <stdbool.h>
@@ -149,6 +151,6 @@ static inline void __spinlock_scoped_cleanup(spinlock_t **lock) {
 #define spinlock_lock_scoped(lock) \
     __spinlock_lock_scoped((lock), __LINE__)
 
-__END_DECLS
+#endif /* !defined(__cplusplus) */
 
 #endif  /* __KOS_SPINLOCK_H */
