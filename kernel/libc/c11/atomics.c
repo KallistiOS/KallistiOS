@@ -92,6 +92,7 @@
         return ret;  \
     }
 
+#if !__has_builtin(__atomic_load_8)
 /* GCC provides us with all primitive atomics except for 64-bit types. */
 ATOMIC_LOAD_N_(unsigned long long, 8)
 ATOMIC_STORE_N_(unsigned long long, 8)
@@ -103,6 +104,7 @@ ATOMIC_FETCH_N_(unsigned long long, 8, and, &=)
 ATOMIC_FETCH_N_(unsigned long long, 8, or, |=)
 ATOMIC_FETCH_N_(unsigned long long, 8, xor, ^=)
 ATOMIC_FETCH_NAND_N_(unsigned long long, 8)
+#endif
 
 /* Provide GCC with symbols and logic required to implement
    generically sized atomics. Rather than disabling an enabling
