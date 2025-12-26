@@ -961,45 +961,6 @@ int thd_set_hz(unsigned int hertz) {
     return 0;
 }
 
-/* Delete a TLS key. Note that currently this doesn't prevent you from reusing
-   the key after deletion. This seems ok, as the pthreads standard states that
-   using the key after deletion results in "undefined behavior".
-   XXXX: This should really be in tls.c, but we need the list of threads to go
-   through, so it ends up here instead. */
-int kthread_key_delete(kthread_key_t key) {
-    kthread_t *cur;
-    kthread_tls_kv_t *i, *tmp;
-
-    irq_disable_scoped();
-
-    /* Make sure the key is valid. */
-    if(key >= kthread_key_next() || key < 1) {
-        errno = EINVAL;
-        return -1;
-    }
-
-    /* Make sure we can actually use free below. */
-    if(!malloc_irq_safe()) {
-        errno = EPERM;
-        return -1;
-    }
-
-    /* Go through each thread searching for (and removing) the data. */
-    LIST_FOREACH(cur, &thd_list, t_list) {
-        LIST_FOREACH_SAFE(i, &cur->tls_list, kv_list, tmp) {
-            if(i->key == key) {
-                LIST_REMOVE(i, kv_list);
-                free(i);
-                break;
-            }
-        }
-    }
-
-    kthread_key_delete_destructor(key);
-
-    return 0;
-}
-
 /*****************************************************************************/
 /* Init/shutdown */
 

@@ -7,6 +7,7 @@
 /* This file defines methods for accessing thread-local storage, added in KOS
    1.3.0. */
 
+#include <stdatomic.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <errno.h>
@@ -16,9 +17,9 @@
 #include <kos/tls.h>
 #include <kos/spinlock.h>
 #include <kos/thread.h>
+#include <kos/mutex.h>
 
-static spinlock_t mutex = SPINLOCK_INITIALIZER;
-static kthread_key_t next_key = 1;
+static _Atomic kthread_key_t next_key = 1;
 
 typedef struct kthread_tls_dest {
     /* List handle */
@@ -34,9 +35,10 @@ typedef struct kthread_tls_dest {
 LIST_HEAD(kthread_tls_dest_list, kthread_tls_dest);
 
 static struct kthread_tls_dest_list dest_list;
+static mutex_t dlist_mtx;
 
 /* What is the next key that will be given out? */
-kthread_key_t kthread_key_next(void) {
+static kthread_key_t kthread_key_next(void) {
     return next_key;
 }
 
@@ -45,6 +47,8 @@ typedef void (*destructor)(void *);
 /* Get the destructor for a given key. */
 static destructor kthread_key_get_destructor(kthread_key_t key) {
     kthread_tls_dest_t *i;
+
+    mutex_lock_scoped(&dlist_mtx);
 
     LIST_FOREACH(i, &dest_list, dest_list) {
         if(i->key == key) {
@@ -56,8 +60,10 @@ static destructor kthread_key_get_destructor(kthread_key_t key) {
 }
 
 /* Delete the destructor for a given key. */
-void kthread_key_delete_destructor(kthread_key_t key) {
+static void kthread_key_delete_destructor(kthread_key_t key) {
     kthread_tls_dest_t *i, *tmp;
+
+    mutex_lock_scoped(&dlist_mtx);
 
     LIST_FOREACH_SAFE(i, &dest_list, dest_list, tmp) {
         if(i->key == key) {
@@ -72,13 +78,11 @@ void kthread_key_delete_destructor(kthread_key_t key) {
 int kthread_key_create(kthread_key_t *key, void (*destructor)(void *)) {
     kthread_tls_dest_t *dest;
 
-    if(irq_inside_int() &&
-       (spinlock_is_locked(&mutex) || !malloc_irq_safe())) {
+    if(irq_inside_int() && destructor &&
+        (!malloc_irq_safe() || mutex_is_locked(&dlist_mtx))) {
         errno = EPERM;
         return -1;
     }
-
-    spinlock_lock_scoped(&mutex);
 
     /* Store the destructor if need be. */
     if(destructor) {
@@ -88,13 +92,61 @@ int kthread_key_create(kthread_key_t *key, void (*destructor)(void *)) {
             errno = ENOMEM;
             return -1;
         }
+    }
 
-        dest->key = next_key;
+    /* Now that the destructor's ready, we can get our key */
+    *key = atomic_fetch_add(&next_key, 1);
+
+    if(destructor) {
+        dest->key = *key;
         dest->destructor = destructor;
+        mutex_lock_scoped(&dlist_mtx);
         LIST_INSERT_HEAD(&dest_list, dest, dest_list);
     }
 
-    *key = next_key++;
+    return 0;
+}
+
+/* Always returns 0 as we want to iterate over all threads. */
+static int key_delete_cb(kthread_t *thd, void *user_data) {
+    kthread_tls_kv_t *i, *tmp;
+    kthread_key_t key = *(kthread_key_t *)(user_data);
+
+    LIST_FOREACH_SAFE(i, &thd->tls_list, kv_list, tmp) {
+            if(i->key == key) {
+                LIST_REMOVE(i, kv_list);
+                free(i);
+                return 0;
+            }
+        }
+
+    return 0;
+}
+
+/* Delete a TLS key. Note that currently this doesn't prevent you from reusing
+   the key after deletion. This seems ok, as the pthreads standard states that
+   using the key after deletion results in "undefined behavior".
+*/
+int kthread_key_delete(kthread_key_t key) {
+
+    irq_disable_scoped();
+
+    /* Make sure the key is valid. */
+    if(key >= kthread_key_next() || key < 1) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    /* Make sure we can actually delete things below. */
+    if(!malloc_irq_safe() || mutex_is_locked(&dlist_mtx)) {
+        errno = EPERM;
+        return -1;
+    }
+
+    /* Go through each thread searching for (and removing) the data. */
+    thd_each(key_delete_cb, (void *)&key);
+
+    kthread_key_delete_destructor(key);
 
     return 0;
 }
@@ -122,19 +174,9 @@ int kthread_setspecific(kthread_key_t key, const void *value) {
     kthread_t *cur = thd_get_current();
     kthread_tls_kv_t *i;
 
-    if(irq_inside_int() && spinlock_is_locked(&mutex)) {
-        errno = EPERM;
+    if(key >= next_key || key < 1) {
+        errno = EINVAL;
         return -1;
-    }
-
-    /* Make sure the key is valid. */
-    {
-        spinlock_lock_scoped(&mutex);
-
-        if(key >= next_key || key < 1) {
-            errno = EINVAL;
-            return -1;
-        }
     }
 
     /* Check if we already have an entry for this key. */
@@ -143,6 +185,12 @@ int kthread_setspecific(kthread_key_t key, const void *value) {
             i->data = (void *)value;
             return 0;
         }
+    }
+
+    if(irq_inside_int() &&
+        (!malloc_irq_safe() || mutex_is_locked(&dlist_mtx))) {
+        errno = EPERM;
+        return -1;
     }
 
     /* No entry, create a new one. */
@@ -165,18 +213,19 @@ int kthread_tls_init(void) {
     /* Initialize the destructor list. */
     LIST_INIT(&dest_list);
 
+    mutex_init(&dlist_mtx, MUTEX_TYPE_DEFAULT);
+
     return 0;
 }
 
 void kthread_tls_shutdown(void) {
     kthread_tls_dest_t *n1, *n2;
 
-    /* Tear down the destructor list. */
-    n1 = LIST_FIRST(&dest_list);
+    /* If we can't get it, shut down anyways */
+    mutex_lock_irqsafe(&dlist_mtx);
 
-    while(n1 != NULL) {
-        n2 = LIST_NEXT(n1, dest_list);
+    LIST_FOREACH_SAFE(n1, &dest_list, dest_list, n2) {
+        LIST_REMOVE(n1, dest_list);
         free(n1);
-        n1 = n2;
     }
 }
