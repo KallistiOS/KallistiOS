@@ -92,17 +92,39 @@
         return ret;  \
     }
 
-/* GCC provides us with all primitive atomics except for 64-bit types. */
-ATOMIC_LOAD_N_(unsigned long long, 8)
-ATOMIC_STORE_N_(unsigned long long, 8)
-ATOMIC_EXCHANGE_N_(unsigned long long, 8)
-ATOMIC_COMPARE_EXCHANGE_N_(unsigned long long, 8)
-ATOMIC_FETCH_N_(unsigned long long, 8, add, +=)
-ATOMIC_FETCH_N_(unsigned long long, 8, sub, -=)
-ATOMIC_FETCH_N_(unsigned long long, 8, and, &=)
-ATOMIC_FETCH_N_(unsigned long long, 8, or, |=)
-ATOMIC_FETCH_N_(unsigned long long, 8, xor, ^=)
-ATOMIC_FETCH_NAND_N_(unsigned long long, 8)
+/* GCC, for some targets (such as SH4), is missing 64-bit types. 
+    provide them if they aren't already defined.
+*/
+#if !__has_builtin(__atomic_load_8)
+    ATOMIC_LOAD_N_(unsigned long long, 8)
+#endif
+#if !__has_builtin(__atomic_store_8)
+    ATOMIC_STORE_N_(unsigned long long, 8)
+#endif
+#if !__has_builtin(__atomic_exchange_8)
+    ATOMIC_EXCHANGE_N_(unsigned long long, 8)
+#endif
+#if !__has_builtin(__atomic_compare_exchange_8)
+    ATOMIC_COMPARE_EXCHANGE_N_(unsigned long long, 8)
+#endif
+#if !__has_builtin(__atomic_fetch_add_8)
+    ATOMIC_FETCH_N_(unsigned long long, 8, add, +=)
+#endif
+#if !__has_builtin(__atomic_fetch_sub_8)
+    ATOMIC_FETCH_N_(unsigned long long, 8, sub, -=)
+#endif
+#if !__has_builtin(__atomic_fetch_and_8)
+    ATOMIC_FETCH_N_(unsigned long long, 8, and, &=)
+#endif
+#if !__has_builtin(__atomic_fetch_or_8)
+    ATOMIC_FETCH_N_(unsigned long long, 8, or, |=)
+#endif
+#if !__has_builtin(__atomic_fetch_xor_8)
+    ATOMIC_FETCH_N_(unsigned long long, 8, xor, ^=)
+#endif
+#if !__has_builtin(__atomic_fetch_nand_8)
+    ATOMIC_FETCH_NAND_N_(unsigned long long, 8)
+#endif
 
 /* Provide GCC with symbols and logic required to implement
    generically sized atomics. Rather than disabling an enabling
