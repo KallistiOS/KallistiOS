@@ -5,6 +5,7 @@
 */
 
 #include <kos.h>
+#include <stdlib.h>
 #include <math.h>
 
 /*

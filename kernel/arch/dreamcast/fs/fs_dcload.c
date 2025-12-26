@@ -32,7 +32,7 @@ printf goes to the dc-tool console
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/dirent.h>
+#include <dirent.h>
 #include <sys/queue.h>
 
 typedef struct dcl_obj {
