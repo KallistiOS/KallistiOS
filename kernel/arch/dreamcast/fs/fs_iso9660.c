@@ -693,6 +693,10 @@ static int iso_close(void * h) {
     return 0;
 }
 
+static int iso_stream_done(size_t *remain_size) {
+    return cdrom_stream_progress(remain_size) != 1;
+}
+
 /* Read from a file */
 static ssize_t iso_read(void * h, void *buf, size_t bytes) {
     int rv, c;
@@ -802,9 +806,7 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
                 goto read_error;
             }
 
-            while(cdrom_stream_progress(&remain_size) == 1) {
-                thd_pass();
-            }
+            thd_poll((thd_cb_t)iso_stream_done, &remain_size, 0);
 
             memcpy(outbuf, fd->stream_data, toread);
             fd->stream_part = toread & 31;

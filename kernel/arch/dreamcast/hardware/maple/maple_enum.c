@@ -99,6 +99,10 @@ maple_device_t * maple_enum_type_ex(int n, uint32_t func, uint32_t cap) {
     return NULL;
 }
 
+static int maple_dev_first_dma_done(maple_device_t *dev) {
+    return dev->status_valid;
+}
+
 /* Get the status struct for the requested maple device; wait until it's
    valid before returning. Cast to the appropriate type you're expecting. */
 void * maple_dev_status(maple_device_t *dev) {
@@ -107,8 +111,7 @@ void * maple_dev_status(maple_device_t *dev) {
         return NULL;
 
     /* Waits until the first DMA happens: crude but effective (replace me later) */
-    while(!dev->status_valid)
-        thd_pass();
+    thd_poll((thd_cb_t)maple_dev_first_dma_done, dev, 0);
 
     /* Cast and return the status buffer */
     return dev->status;
