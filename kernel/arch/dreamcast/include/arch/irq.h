@@ -91,7 +91,7 @@ __BEGIN_DECLS
     The size of this structure should be less than or equal to the
     \ref REG_BYTE_CNT value.
 */
-__attribute__((aligned(32))) struct irq_context {
+struct __attribute__((aligned(32))) irq_context {
     uint32_t  pc;         /**< Program counter */
     uint32_t  pr;         /**< Procedure register (aka return address) */
     uint32_t  gbr;        /**< Global base register (TLS segment ptr) */
