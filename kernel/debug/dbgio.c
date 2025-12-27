@@ -26,9 +26,8 @@
 static dbgio_handler_t *dbgio = NULL;
 
 static bool dbgio_dev_assign(dbgio_handler_t *d) {
-    assert(d->init);
 
-    if(d->init())
+    if(d && d->init())
         return false;
 
     dbgio = d;
@@ -74,6 +73,9 @@ int dbgio_init(void) {
 
     // Look for a valid interface.
     for(i = 0; i < dbgio_handler_cnt; i++) {
+        /* Stop looking once we hit an empty slot */
+        if(!dbgio_handlers[i]) break;
+
         if(dbgio_handlers[i]->detected()) {
 
             // Try to assign it. If it fails, then move on to the
@@ -93,8 +95,8 @@ int dbgio_init(void) {
 
 int dbgio_set_irq_usage(int mode) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->set_irq_usage(mode);
+        if(dbgio && dbgio->set_irq_usage)
+            return dbgio->set_irq_usage(mode);
     }
 
     return -1;
@@ -102,8 +104,8 @@ int dbgio_set_irq_usage(int mode) {
 
 int dbgio_read(void) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->read();
+        if(dbgio && dbgio->read)
+            return dbgio->read();
     }
 
     return -1;
@@ -111,8 +113,8 @@ int dbgio_read(void) {
 
 int dbgio_write(int c) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->write(c);
+        if(dbgio && dbgio->write)
+            return dbgio->write(c);
     }
 
     return -1;
@@ -120,8 +122,8 @@ int dbgio_write(int c) {
 
 int dbgio_flush(void) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->flush();
+        if(dbgio && dbgio->flush)
+            return dbgio->flush();
     }
 
     return -1;
@@ -129,8 +131,8 @@ int dbgio_flush(void) {
 
 int dbgio_write_buffer(const uint8_t *data, int len) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->write_buffer(data, len, 0);
+        if(dbgio && dbgio->write_buffer)
+            return dbgio->write_buffer(data, len, 0);
     }
 
     return -1;
@@ -138,8 +140,8 @@ int dbgio_write_buffer(const uint8_t *data, int len) {
 
 int dbgio_read_buffer(uint8_t *data, int len) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->read_buffer(data, len);
+        if(dbgio && dbgio->read_buffer)
+            return dbgio->read_buffer(data, len);
     }
 
     return -1;
@@ -147,8 +149,8 @@ int dbgio_read_buffer(uint8_t *data, int len) {
 
 int dbgio_write_buffer_xlat(const uint8_t *data, int len) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->write_buffer(data, len, 1);
+        if(dbgio && dbgio->write_buffer)
+            return dbgio->write_buffer(data, len, 1);
     }
 
     return -1;
@@ -189,55 +191,3 @@ int dbgio_printf(const char *fmt, ...) {
 
     return i;
 }
-
-
-// The null dbgio handler
-static int null_detected(void) {
-    return 1;
-}
-static int null_init(void) {
-    return 0;
-}
-static int null_shutdown(void) {
-    return 0;
-}
-static int null_set_irq_usage(int mode) {
-    (void)mode;
-    return 0;
-}
-static int null_read(void) {
-    errno = EAGAIN;
-    return -1;
-}
-static int null_write(int c) {
-    (void)c;
-    return 1;
-}
-static int null_flush(void) {
-    return 0;
-}
-static int null_write_buffer(const uint8_t *data, int len, int xlat) {
-    (void)data;
-    (void)len;
-    (void)xlat;
-    return len;
-}
-static int null_read_buffer(uint8_t *data, int len) {
-    (void)data;
-    (void)len;
-    errno = EAGAIN;
-    return -1;
-}
-
-dbgio_handler_t dbgio_null = {
-    "null",
-    null_detected,
-    null_init,
-    null_shutdown,
-    null_set_irq_usage,
-    null_read,
-    null_write,
-    null_flush,
-    null_write_buffer,
-    null_read_buffer
-};

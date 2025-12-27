@@ -55,7 +55,7 @@ dbgio_handler_t * dbgio_handlers[] = {
     &dbgio_dcload,
     &dbgio_dcls,
     &dbgio_scif,
-    &dbgio_null,
+    NULL,
     &dbgio_fb
 };
 const size_t dbgio_handler_cnt = __array_size(dbgio_handlers);

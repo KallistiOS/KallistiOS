@@ -108,9 +108,6 @@ typedef struct dbgio_handler {
 /* These two should be initialized in arch. */
 extern dbgio_handler_t *dbgio_handlers[];
 extern const size_t dbgio_handler_cnt;
-
-/* This is defined by the shared code, in case there's no valid handler. */
-extern dbgio_handler_t dbgio_null;
 /** \endcond */
 
 /** \brief   Select a new dbgio interface by name.
