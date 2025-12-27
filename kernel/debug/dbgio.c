@@ -6,6 +6,7 @@
 
 #include <string.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <errno.h>
 #include <assert.h>
@@ -24,18 +25,27 @@
 // Our currently selected handler.
 static dbgio_handler_t *dbgio = NULL;
 
+static bool dbgio_dev_assign(dbgio_handler_t *d) {
+    assert(d->init);
+
+    if(d->init())
+        return false;
+
+    dbgio = d;
+    return true;
+}
+
 int dbgio_dev_select(const char *name) {
     size_t i;
 
     for(i = 0; i < dbgio_handler_cnt; i++) {
         if(!strcmp(dbgio_handlers[i]->name, name)) {
-            /* Try to initialize the device, and if we can't then bail. */
-            if(dbgio_handlers[i]->init()) {
+            /* Try to assign the device, and if we can't then bail. */
+            if(!dbgio_dev_assign(dbgio_handlers[i])) {
                 errno = ENODEV;
                 return -1;
             }
 
-            dbgio = dbgio_handlers[i];
             return 0;
         }
     }
@@ -65,19 +75,14 @@ int dbgio_init(void) {
     // Look for a valid interface.
     for(i = 0; i < dbgio_handler_cnt; i++) {
         if(dbgio_handlers[i]->detected()) {
-            // Select this device.
-            dbgio = dbgio_handlers[i];
 
-            // Try to init it. If it fails, then move on to the
+            // Try to assign it. If it fails, then move on to the
             // next one anyway.
-            if(!dbgio->init()) {
+            if(!dbgio_dev_assign(dbgio_handlers[i])) {
                 // Worked.
                 dbgio_enable();
                 return 0;
             }
-
-            // Failed... nuke it and continue.
-            dbgio = NULL;
         }
     }
 
