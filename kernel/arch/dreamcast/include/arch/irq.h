@@ -110,25 +110,25 @@ __attribute__((aligned(32))) struct irq_context {
     \brief Convenience macros for accessing context registers
     @{
 */
-/** Fetch the program counter from an irq_context_t.
+/** Fetch the program counter from a struct irq_context.
     \param  c               The context to read from.
     \return                 The program counter value.
 */
 #define CONTEXT_PC(c)   ((c).pc)
 
-/** Fetch the frame pointer from an irq_context_t.
+/** Fetch the frame pointer from a struct irq_context.
     \param  c               The context to read from.
     \return                 The frame pointer value.
 */
 #define CONTEXT_FP(c)   ((c).r[14])
 
-/** Fetch the stack pointer from an irq_context_t.
+/** Fetch the stack pointer from a struct irq_context.
     \param  c               The context to read from.
     \return                 The stack pointer value.
 */
 #define CONTEXT_SP(c)   ((c).r[15])
 
-/** Fetch the return value from an irq_context_t.
+/** Fetch the return value from a struct irq_context.
     \param  c               The context to read from.
     \return                 The return value.
 */
@@ -268,22 +268,22 @@ static inline void arch_irq_enable(void) {
     @{
 */
 
-void arch_irq_create_context(irq_context_t *context,
+void arch_irq_create_context(struct irq_context *context,
                              uintptr_t stack_pointer,
                              uintptr_t routine,
                              const uintptr_t *args);
 
-int arch_irq_set_handler(irq_t code, irq_hdl_t hnd, void *data);
+int arch_irq_set_handler(enum irq_exception code, irq_hdl_t hnd, void *data);
 
-irq_cb_t arch_irq_get_handler(irq_t code);
+irq_cb_t arch_irq_get_handler(enum irq_exception code);
 
 int arch_irq_set_global_handler(irq_hdl_t hnd, void *data);
 
 irq_cb_t arch_irq_get_global_handler(void);
 
-void arch_irq_set_context(irq_context_t *cxt);
+void arch_irq_set_context(struct irq_context *cxt);
 
-irq_context_t *arch_irq_get_context(void);
+struct irq_context *arch_irq_get_context(void);
 
 /** @} */
 
