@@ -110,25 +110,25 @@ struct __attribute__((aligned(32))) irq_context {
     \brief Convenience macros for accessing context registers
     @{
 */
-/** Fetch the program counter from an irq_context_t.
+/** Fetch the program counter from a struct irq_context.
     \param  c               The context to read from.
     \return                 The program counter value.
 */
 #define CONTEXT_PC(c)   ((c).pc)
 
-/** Fetch the frame pointer from an irq_context_t.
+/** Fetch the frame pointer from a struct irq_context.
     \param  c               The context to read from.
     \return                 The frame pointer value.
 */
 #define CONTEXT_FP(c)   ((c).r[14])
 
-/** Fetch the stack pointer from an irq_context_t.
+/** Fetch the stack pointer from a struct irq_context.
     \param  c               The context to read from.
     \return                 The stack pointer value.
 */
 #define CONTEXT_SP(c)   ((c).r[15])
 
-/** Fetch the return value from an irq_context_t.
+/** Fetch the return value from a struct irq_context.
     \param  c               The context to read from.
     \return                 The return value.
 */
@@ -157,9 +157,6 @@ struct __attribute__((aligned(32))) irq_context {
     List of exception codes:
 */
 enum irq_exception
-#ifdef __cplusplus
-: unsigned int
-#endif
 {
     EXC_RESET_POWERON      = 0x0000, /**< `[RESET ]` Power-on reset */
     EXC_RESET_MANUAL       = 0x0020, /**< `[RESET ]` Manual reset */
@@ -230,6 +227,27 @@ enum irq_exception
     EXC_TRAP               = 0x0800  /**< `[TRAP  ]` Trap */
 };
 
+/** Type representing an interrupt mask state. */
+typedef uint32_t irq_mask_t;
+
+/** The type of an IRQ handler.
+
+    \param  code            The IRQ that caused the handler to be called.
+    \param  context         The CPU's context.
+    \param  data            Arbitrary userdata associated with the handler.
+*/
+typedef void (*irq_hdl_t)(enum irq_exception code, struct irq_context *context, void *data);
+
+
+/** The type of a full callback of an IRQ handler and userdata.
+
+    This type is used to set or get IRQ handlers and their data.
+*/
+typedef struct irq_cb {
+    irq_hdl_t   hdl;    /**< A pointer to a procedure to handle an exception. */
+    void       *data;   /**< A pointer that will be passed along to the callback. */
+} irq_cb_t;
+
 #define IRQ_TRAP_CODE(code) (irq_t)(EXC_TRAP + (code))
 
 extern int inside_int;
@@ -267,22 +285,22 @@ static inline void arch_irq_enable(void) {
     @{
 */
 
-void arch_irq_create_context(irq_context_t *context,
+void arch_irq_create_context(struct irq_context *context,
                              uintptr_t stack_pointer,
                              uintptr_t routine,
                              const uintptr_t *args);
 
-int arch_irq_set_handler(irq_t code, irq_hdl_t hnd, void *data);
+int arch_irq_set_handler(enum irq_exception code, irq_hdl_t hnd, void *data);
 
-irq_cb_t arch_irq_get_handler(irq_t code);
+irq_cb_t arch_irq_get_handler(enum irq_exception code);
 
 int arch_irq_set_global_handler(irq_hdl_t hnd, void *data);
 
 irq_cb_t arch_irq_get_global_handler(void);
 
-void arch_irq_set_context(irq_context_t *cxt);
+void arch_irq_set_context(struct irq_context *cxt);
 
-irq_context_t *arch_irq_get_context(void);
+struct irq_context *arch_irq_get_context(void);
 
 /** @} */
 
