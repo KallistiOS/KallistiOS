@@ -9,7 +9,7 @@
 
 #include <arch/dmac.h>
 #include <arch/timer.h>
-#include <arch/irq.h>
+#include <kos/irq.h>
 #include <dc/pvr.h>
 #include <kos/genwait.h>
 
