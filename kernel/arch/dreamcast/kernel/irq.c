@@ -334,10 +334,8 @@ int irq_init(void) {
     assert(!initted);
 
     /* Save SR and VBR */
-    __asm__("stc    sr,r0\n"
-            "mov.l  r0,%0" : : "m"(pre_sr));
-    __asm__("stc    vbr,r0\n"
-            "mov.l  r0,%0" : : "m"(pre_vbr));
+    __asm__("stc sr,r0" : "=z"(pre_sr));
+    __asm__("stc vbr,r0" : "=z"(pre_vbr));
 
     /* Make sure interrupts are disabled */
     irq_disable();
@@ -370,15 +368,7 @@ int irq_init(void) {
 
     /* Set VBR to our exception table above, but don't enable
        exceptions and IRQs yet. */
-    __asm__("	! Set VBR\n"
-            "	mov.l _vbr_addr,r0\n"
-            "	ldc	  r0,vbr\n"
-            "	bra   _after_vbr\n"
-            "	nop\n"
-            "	.align 2\n"
-            "_vbr_addr:\n"
-            "	.long _irq_vma_table\n"
-            "_after_vbr:\n");
+    __asm__("ldc r0,vbr" :: "z"(irq_vma_table));
 
     initted = true;
 
@@ -393,10 +383,8 @@ void irq_shutdown(void) {
     irq_set_priority(IRQ_SRC_DMAC, IRQ_PRIO_MASKED);
 
     /* Restore SR and VBR */
-    __asm__("mov.l  %0,r0\n"
-            "ldc    r0,sr" : : "m"(pre_sr));
-    __asm__("mov.l  %0,r0\n"
-            "ldc    r0,vbr" : : "m"(pre_vbr));
+    __asm__("ldc r0,sr" :: "z"(pre_sr));
+    __asm__("ldc r0,vbr" :: "z"(pre_vbr));
 
     initted = false;
 }
