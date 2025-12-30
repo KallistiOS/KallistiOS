@@ -44,7 +44,6 @@
 __BEGIN_DECLS
 
 #include <stddef.h>
-#include <kos/thread.h>
 #include <kos/mutex.h>
 
 /** \brief  Reader/writer semaphore structure.
