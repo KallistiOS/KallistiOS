@@ -161,7 +161,7 @@ typedef int prio_t;           /**< \brief Priority value type */
     data associated with the thread. There are various functions to manipulate
     the data in here, so you shouldn't generally do so manually.
 */
-typedef __attribute__((aligned(32))) struct kthread {
+typedef struct __attribute__((aligned(32))) kthread {
     /** \brief  Register store -- used to save thread context. */
     irq_context_t context;
 
