@@ -13,6 +13,7 @@
 #include <stdio.h>
 
 #include <kos/dbglog.h>
+#include <kos/thread.h>
 #include <kos/mutex.h>
 #include <kos/timer.h>
 #include <dc/g2bus.h>

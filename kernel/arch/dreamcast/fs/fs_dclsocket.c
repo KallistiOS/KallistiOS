@@ -29,6 +29,7 @@
 #include <errno.h>
 #include <dirent.h>
 
+#include <kos/irq.h>
 #include <kos/mutex.h>
 #include <kos/fs.h>
 #include <kos/net.h>
