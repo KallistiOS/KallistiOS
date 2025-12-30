@@ -43,7 +43,8 @@
 
 __BEGIN_DECLS
 
-#include <kos/thread.h>
+/* Forward declare kthread to not expose all of thread.h here */
+struct kthread;
 
 /** \brief  Mutual exclusion lock type.
 
@@ -54,7 +55,7 @@ __BEGIN_DECLS
 */
 typedef struct kos_mutex {
     unsigned int type;
-    kthread_t *holder;
+    struct kthread *holder;
     int count;
 } mutex_t;
 
