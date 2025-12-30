@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
     /* Now flip through each frame until stopped, waiting a bit each time. */
     while(1) {
         vid_flip(-1);
-        timer_spin_sleep(1500);
+        thd_sleep(1500);
     }
 
     return 0;

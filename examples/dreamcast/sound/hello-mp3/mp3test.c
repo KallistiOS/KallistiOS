@@ -59,7 +59,6 @@ int main(int argc, char **argv) {
                 mp3_start("/rd/test.mp3", 0);
             }
 
-            // timer_spin_sleep(10);    <-- causes infinite loop sometimes!
             thd_sleep(10);
             /* bitratenew=sndoggvorbis_getbitrate();
             if (bitratenew != bitrateold)

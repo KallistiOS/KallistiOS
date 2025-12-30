@@ -133,7 +133,7 @@ int main(int argc, char **argv) {
     t1 = thd_create(0, thd_1, NULL);
     t2 = thd_create(0, thd_2, NULL);
 
-    timer_spin_sleep(1000);
+    thd_sleep(1000);
     thd_pslist(printf);
     thd_pslist_queue(printf);
 
