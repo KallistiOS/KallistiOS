@@ -99,3 +99,13 @@ endif()
 if(NOT DEFINED CMAKE_INSTALL_LIBDIR)
     set(CMAKE_INSTALL_LIBDIR ${KOS_ADDONS}/lib/${KOS_ARCH})
 endif()
+
+# Ensure our default include paths are set
+set(CMAKE_SYSTEM_INCLUDE_PATH   "${CMAKE_SYSTEM_INCLUDE_PATH} ${KOS_BASE}/include ${KOS_BASE}/kernel/arch/${KOS_ARCH}/include ${KOS_BASE}/addons/include ${KOS_PORTS}/include")
+
+include_directories(
+    ${KOS_BASE}/include
+    ${KOS_BASE}/kernel/arch/${KOS_ARCH}/include
+    ${KOS_BASE}/addons/include
+    ${KOS_PORTS}/include
+)
