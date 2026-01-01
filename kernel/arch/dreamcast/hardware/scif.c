@@ -407,14 +407,14 @@ int scif_read_buffer(uint8_t *data, int len) {
 
 /* Tie all of that together into a dbgio package. */
 dbgio_handler_t dbgio_scif = {
-    "scif",
-    scif_detected,
-    scif_init_fake,
-    scif_shutdown,
-    scif_set_irq_usage,
-    scif_read,
-    scif_write,
-    scif_flush,
-    scif_write_buffer,
-    scif_read_buffer
+    .name = "scif",
+    .detected = scif_detected,
+    .init = scif_init_fake,
+    .shutdown = scif_shutdown,
+    .set_irq_usage = scif_set_irq_usage,
+    .read = scif_read,
+    .write = scif_write,
+    .flush = scif_flush,
+    .write_buffer = scif_write_buffer,
+    .read_buffer = scif_read_buffer
 };

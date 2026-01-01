@@ -109,16 +109,16 @@ static int fb_read_buffer(uint8_t *data, int len) {
 }
 
 dbgio_handler_t dbgio_fb = {
-    "fb",
-    fb_detected,
-    fb_init,
-    fb_shutdown,
-    fb_set_irq_usage,
-    fb_read,
-    fb_write,
-    fb_flush,
-    fb_write_buffer,
-    fb_read_buffer
+    .name = "fb",
+    .detected = fb_detected,
+    .init = fb_init,
+    .shutdown = fb_shutdown,
+    .set_irq_usage = fb_set_irq_usage,
+    .read = fb_read,
+    .write = fb_write,
+    .flush = fb_flush,
+    .write_buffer = fb_write_buffer,
+    .read_buffer = fb_read_buffer
 };
 
 void dbgio_fb_set_target(uint16_t *t, int w, int h, int borderx, int bordery) {

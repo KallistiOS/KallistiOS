@@ -662,16 +662,11 @@ static vfs_handler_t vh = {
 
 /* dbgio handler */
 dbgio_handler_t dbgio_dcls = {
-    "fs_dclsocket",
-    dcls_detected,
-    dcls_fake_init,
-    dcls_fake_shutdown,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    dcls_writebuf,
-    NULL
+    .name = "fs_dclsocket",
+    .detected = dcls_detected,
+    .init = dcls_fake_init,
+    .shutdown = dcls_fake_shutdown,
+    .write_buffer = dcls_writebuf
 };
 
 /* This function must be called prior to calling fs_dclsocket_init() */

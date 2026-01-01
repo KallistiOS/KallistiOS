@@ -415,16 +415,8 @@ static int never_detected(void) {
 }
 
 dbgio_handler_t dbgio_dcload = {
-    "fs_dcload_uninit",
-    never_detected,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL
+    .name = "fs_dcload_uninit",
+    .detected = never_detected
 };
 
 int syscall_dcload_detected(void) {
