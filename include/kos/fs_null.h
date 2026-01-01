@@ -9,7 +9,7 @@
     \brief   /dev/null, a black hole.
     \ingroup vfs_dev
 
-    This is a IEEE Std 1003.1-2017 POSIX standard 
+    This is a IEEE Std 1003.1-2017 POSIX standard
     'empty data source and infinite data sink'
 
     \author Donald Haase

@@ -38,8 +38,8 @@ __BEGIN_DECLS
 /** \defgroup bba_regs_locs Locations
     \brief    Locations for various broadband adapter registers.
 
-    The default assumption is that these are all RW at any aligned size unless 
-    otherwise noted. ex (RW 32bit, RO 16/8) indicates read/write at 32bit and 
+    The default assumption is that these are all RW at any aligned size unless
+    otherwise noted. ex (RW 32bit, RO 16/8) indicates read/write at 32bit and
     read-only at 16 or 8bits.
 
     @{

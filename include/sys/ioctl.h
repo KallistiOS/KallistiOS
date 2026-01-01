@@ -27,7 +27,7 @@ __BEGIN_DECLS
 #include <kos/fs.h>
 
 #ifndef IOCTL_FS_ROOTBUS_DMA_READY
-/** \brief This operation can determine that file system 
+/** \brief This operation can determine that file system
  * can read data directly into SPU and PVR RAM's thought the Root Bus
  * and are all the conditions for this met like file position
  * on sector boundary at first reading and DMA aligning for others,

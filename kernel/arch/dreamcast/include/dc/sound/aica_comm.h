@@ -36,7 +36,7 @@ typedef unsigned long uint32;
     AICA, and another for the other direction. If a command is written
     to the queue and it is longer than the amount of space between the
     head point and the queue size, the command will wrap around to
-    the beginning (i.e., queue commands _can_ be split up). 
+    the beginning (i.e., queue commands _can_ be split up).
 */
 typedef struct aica_queue {
     uint32      head;       /**< \brief Insertion point offset (in bytes) */
@@ -63,7 +63,7 @@ typedef struct aica_cmd {
 /** \brief AICA command payload data for AICA_CMD_CHAN
 
     This is the aica_cmd_t::cmd_data for AICA_CMD_CHAN.
-    Make this 16 dwords long for two aica bus queues. 
+    Make this 16 dwords long for two aica bus queues.
 */
 typedef struct aica_channel {
     uint32      cmd;        /**< \brief Command ID */
@@ -83,7 +83,7 @@ typedef struct aica_channel {
 /** \brief Macro for declaring an aica channel command
 
     Declare an aica_cmd_t big enough to hold an aica_channel_t
-    using temp name T, aica_cmd_t name CMDR, and aica_channel_t name CHANR 
+    using temp name T, aica_cmd_t name CMDR, and aica_channel_t name CHANR
 
     \param T        Buffer name
     \param CMDR     aica_cmd_t pointer name
@@ -117,7 +117,7 @@ typedef struct aica_channel {
 /** @} */
 
 /** \defgroup audio_aica_ch_cmd Channel Commands
-    \brief Command values (for aica_channel_t commands) 
+    \brief Command values (for aica_channel_t commands)
     @{
 */
 #define AICA_CH_CMD_MASK    0x0000000f /**< \brief Mask for commands */
@@ -128,7 +128,7 @@ typedef struct aica_channel {
 #define AICA_CH_CMD_UPDATE  0x00000003 /**< \brief Update command */
 /** @} */
 
-/** \defgroup audio_aica_ch_start Channel Start Values 
+/** \defgroup audio_aica_ch_start Channel Start Values
     \brief                        Start values for AICA channels
     @{
 */
@@ -138,7 +138,7 @@ typedef struct aica_channel {
 #define AICA_CH_START_SYNC  0x00200000 /**< \brief Set key-on for all selected channels */
 /** @} */
 
-/** \defgroup audio_aica_ch_update Channel Update Values 
+/** \defgroup audio_aica_ch_update Channel Update Values
     \brief                         Update values for AICA channels
     @{
 */
@@ -149,7 +149,7 @@ typedef struct aica_channel {
 #define AICA_CH_UPDATE_SET_PAN  0x00004000 /**< \brief panning */
 /** @} */
 
-/** \defgroup audio_aica_samples Sample Types 
+/** \defgroup audio_aica_samples Sample Types
     \brief                       Types of samples used by the AICA
     @{
 */

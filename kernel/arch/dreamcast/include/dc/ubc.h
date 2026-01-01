@@ -5,10 +5,10 @@
 */
 
 /** \file    dc/ubc.h
-    \brief   User Break Controller Driver 
+    \brief   User Break Controller Driver
     \ingroup ubc
 
-    This file provides a driver and API around the SH4's UBC. 
+    This file provides a driver and API around the SH4's UBC.
 
     \sa arch/gdb.h
 
@@ -294,7 +294,7 @@ typedef struct ubc_breakpoint {
 
     \sa ubc_add_breakpoint()
 */
-typedef bool (*ubc_break_func_t)(const ubc_breakpoint_t   *bp, 
+typedef bool (*ubc_break_func_t)(const ubc_breakpoint_t   *bp,
                                  const irq_context_t *ctx,
                                  void                     *user_data);
 

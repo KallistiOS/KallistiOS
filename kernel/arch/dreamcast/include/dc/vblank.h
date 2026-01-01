@@ -39,7 +39,7 @@ __BEGIN_DECLS
 
     \param  hnd             The handler to add.
     \param  data            A user pointer that will be passed to the callback.
-    
+
     \return                 The handle id on success, or <0 on failure.
 */
 int vblank_handler_add(asic_evt_handler hnd, void *data);
@@ -50,7 +50,7 @@ int vblank_handler_add(asic_evt_handler hnd, void *data);
 
     \param  handle          The handle id to remove (returned by
                             vblank_handler_add() when the handler was added).
-    
+
     \retval 0               On success.
     \retval -1              On failure.
 */

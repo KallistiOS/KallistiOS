@@ -48,18 +48,18 @@ __BEGIN_DECLS
 */
 
 /** \name       List of G2 Bus channels
- 
-    AICA (SPU) is channel 0, BBA uses channel 1. CH2_DMA_G2CHN and 
+
+    AICA (SPU) is channel 0, BBA uses channel 1. CH2_DMA_G2CHN and
     CH3_DMA_G2CHN are not currently tied to any specific device.
 
-    \note 
-      A change in the implementation has rendered *_DMA_MODE and *_DMA_SHCHN 
+    \note
+      A change in the implementation has rendered *_DMA_MODE and *_DMA_SHCHN
       obsolete.
 
-      In the current implementation, *_DMA_MODE should always be set to zero 
+      In the current implementation, *_DMA_MODE should always be set to zero
       (representing CPU_TRIGGER). There is also no involvement of SH4-DMA with
       G2-DMA; therefore, the *_DMA_SHCHN values have been deprecated.
-      
+
     @{
 */
 #define G2_DMA_CHAN_SPU  0 /**< \brief AICA: G2 channel 0 */
@@ -89,8 +89,8 @@ typedef void (*g2_dma_callback_t)(void *data);
 
 /** \brief  Perform a DMA transfer between SH-4 RAM and G2 Bus
 
-    This function copies a block of data between SH-4 RAM and G2 Bus via DMA. 
-    You specify the direction of the copy (SH4TOG2BUS/G2BUSTOSH4). There are all 
+    This function copies a block of data between SH-4 RAM and G2 Bus via DMA.
+    You specify the direction of the copy (SH4TOG2BUS/G2BUSTOSH4). There are all
     kinds of constraints that must be fulfilled to actually do this, so
     make sure to read all the fine print with the parameter list.
 
@@ -139,13 +139,13 @@ void g2_dma_shutdown(void);
     A G2 context containing the states of IRQs and G2 DMA. This struct
     is used in with g2_lock() and g2_unlock().
 */
-typedef struct { 
+typedef struct {
     irq_mask_t irq_state;    /** \brief IRQ state when entering a G2 critical block */
 } g2_ctx_t;
 
 /* Internal constants to access suspend registers for G2 DMA. They are not meant for
    user-code use. */
-/** \cond */ 
+/** \cond */
 #define G2_DMA_SUSPEND_SPU     (*((volatile uint32_t *)0xa05f781C))
 #define G2_DMA_SUSPEND_BBA     (*((volatile uint32_t *)0xa05f783C))
 #define G2_DMA_SUSPEND_CH2     (*((volatile uint32_t *)0xa05f785C))
@@ -153,8 +153,8 @@ typedef struct {
 
 /** \brief  Disable IRQs and G2 DMA
 
-    This function makes the following g2_read_*()/g2_write_*() functions atomic 
-    by disabling IRQs and G2 DMA and storing their states. Pass the context 
+    This function makes the following g2_read_*()/g2_write_*() functions atomic
+    by disabling IRQs and G2 DMA and storing their states. Pass the context
     created by this function to g2_unlock() to re-enable IRQs and G2 DMA.
 
     \return                 The context containing the IRQ and G2 DMA states.

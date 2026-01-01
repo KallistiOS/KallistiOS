@@ -116,7 +116,7 @@ typedef enum vid_display_mode_generic {
 /* ------------------------------------------------------------------------- */
 /* More specific modes (and actual indices into the mode table) */
 
-/** \brief   Specific Display Modes 
+/** \brief   Specific Display Modes
     \ingroup video_modes_display
 */
 typedef enum vid_display_mode {
@@ -186,13 +186,13 @@ typedef struct vid_mode {
     size_t  fb_size;      /**< \brief Size of each framebuffer */
 } vid_mode_t;
 
-/** \brief   The list of builtin video modes. Do not modify these! 
+/** \brief   The list of builtin video modes. Do not modify these!
     \ingroup video_modes
 */
 extern vid_mode_t vid_builtin[DM_MODE_COUNT];
 
-/** \brief   The current video mode. Do not modify directly! 
-    \ingroup video_modes 
+/** \brief   The current video mode. Do not modify directly!
+    \ingroup video_modes
 */
 extern vid_mode_t *vid_mode;
 
@@ -209,12 +209,12 @@ extern vid_mode_t *vid_mode;
     \ingroup           video_display
 */
 
-/** \brief   16-bit size pointer to the current drawing area. 
+/** \brief   16-bit size pointer to the current drawing area.
     \ingroup video_fb
 */
 extern uint16_t *vram_s;
 
-/** \brief   32-bit size pointer to the current drawing area. 
+/** \brief   32-bit size pointer to the current drawing area.
     \ingroup video_fb
 */
 extern uint32_t *vram_l;
@@ -292,7 +292,7 @@ void vid_flip(int32_t fb);
 /** \brief   Set the border color of the display.
     \ingroup video_display
 
-    This sets the color of the border area of the display. 
+    This sets the color of the border area of the display.
 
     \note
     On some screens, the border area may not be shown at all,
@@ -301,7 +301,7 @@ void vid_flip(int32_t fb);
     \param  r               The red value of the color (0-255).
     \param  g               The green value of the color (0-255).
     \param  b               The blue value of the color (0-255).
-    
+
     \return                 Old border color value (RGB888)
 */
 uint32_t vid_border_color(uint8_t r, uint8_t g, uint8_t b);
@@ -313,7 +313,7 @@ uint32_t vid_border_color(uint8_t r, uint8_t g, uint8_t b);
     this uses the store queues to actually clear the display entirely.
 
     \note
-    This operates via the vram convenience pointers. In multibuffered mode, 
+    This operates via the vram convenience pointers. In multibuffered mode,
     by default it will clear the framebuffer you are currently writing to
     rather than the one being displayed.
 
@@ -430,7 +430,7 @@ int vid_screen_shot(const char *destfn);
     \ingroup video_fb
 
     This function takes the current framebuffer (/vram_l) and converts it into
-    24bpp image data. The function allocates memory for the image data, which 
+    24bpp image data. The function allocates memory for the image data, which
     the caller is responsible for freeing.
 
     \param  buffer          A pointer to a uint8_t* that will be allocated and

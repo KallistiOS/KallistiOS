@@ -771,7 +771,7 @@ int thd_detach(kthread_t *thd);
 /** \brief       Iterate all threads and call the passed callback for each
     \relatesalso kthread_t
 
-    \param cb               The callback to call for each thread. 
+    \param cb               The callback to call for each thread.
                             If a nonzero value is returned, iteration
                             ceases immediately.
     \param data             User data to be passed to the callback
@@ -813,7 +813,7 @@ int thd_pslist_queue(int (*pf)(const char *fmt, ...)) __nonnull_all;
 /** \cond INTERNAL */
 
 /** \brief  Initialize the threading system.
-    
+
     This is normally done for you by default when KOS starts. This will also
     initialize all the various synchronization primitives.
     \retval -1              If threads are already initialized.
@@ -823,10 +823,10 @@ int thd_pslist_queue(int (*pf)(const char *fmt, ...)) __nonnull_all;
 int thd_init(void);
 
 /** \brief   Shutdown the threading system.
- 
+
     This is done for you by the normal shutdown procedure of KOS. This will
     also shutdown all the various synchronization primitives.
- 
+
     \sa thd_init
 */
 void thd_shutdown(void);

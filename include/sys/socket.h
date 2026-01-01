@@ -222,7 +222,7 @@ struct sockaddr_storage {
     \param  address_len A pointer to a socklen_t which specifies the amount of
                         space in address on input, and the amount used of the
                         space on output.
-    
+
     \return             On success, the non-negative file descriptor of the
                         new connection, otherwise -1 and errno will be set to
                         the appropriate error value.
@@ -237,7 +237,7 @@ int accept(int socket, struct sockaddr *address, socklen_t *address_len);
     \param  address     A pointer to a sockaddr structure where the name to be
                         assigned to the socket resides.
     \param  address_len The length of the address structure.
-    
+
     \retval 0           On success.
     \retval -1          On error, sets errno as appropriate.
 */
@@ -252,7 +252,7 @@ int bind(int socket, const struct sockaddr *address, socklen_t address_len);
     \param  address     A pointer to a sockaddr structure where the name of the
                         peer resides.
     \param  address_len The length of the address structure.
-    
+
     \retval 0           On success.
     \retval -1          On error, sets errno as appropriate.
 */
@@ -264,7 +264,7 @@ int connect(int socket, const struct sockaddr *address, socklen_t address_len);
 
     \param  socket      A connection-mode socket to listen on.
     \param  backlog     The number of queue entries.
-    
+
     \retval 0           On success.
     \retval -1          On error, sets errno as appropriate.
 */
@@ -278,7 +278,7 @@ int listen(int socket, int backlog);
     \param  buffer      A pointer to a buffer to store the message in.
     \param  length      The length of the buffer.
     \param  flags       The type of message reception. Set to 0 for now.
-    
+
     \return             On success, the length of the message in bytes. If no
                         messages are available, and the socket has been shut
                         down, 0. On error, -1, and sets errno as appropriate.
@@ -298,7 +298,7 @@ ssize_t recv(int socket, void *buffer, size_t length, int flags);
                         name in.
     \param  address_len A pointer to the length of the address structure on
                         input, the number of bytes used on output.
-    
+
     \return             On success, the length of the message in bytes. If no
                         messages are available, and the socket has been shut
                         down, 0. On error, -1, and sets errno as appropriate.
@@ -314,7 +314,7 @@ ssize_t recvfrom(int socket, void *buffer, size_t length, int flags,
     \param  message     A pointer to a buffer with the message to send.
     \param  length      The length of the message.
     \param  flags       The type of message transmission. Set to 0 for now.
-    
+
     \return             On success, the number of bytes sent. On error, -1,
                         and sets errno as appropriate.
 */
@@ -332,7 +332,7 @@ ssize_t send(int socket, const void *message, size_t length, int flags);
     \param  flags       The type of message transmission. Set to 0 for now.
     \param  dest_addr   A pointer to a sockaddr structure with the peer's name.
     \param  dest_len    The length of dest_addr, in bytes.
-    
+
     \return             On success, the number of bytes sent. On error, -1,
                         and sets errno as appropriate.
 */
@@ -345,10 +345,10 @@ ssize_t sendto(int socket, const void *message, size_t length, int flags,
 
     \param  socket      The socket to shutdown.
     \param  how         The type of shutdown.
-    
+
     \retval 0           On success.
     \retval -1          On error, sets errno as appropriate.
-    
+
     \see                SHUT_RD
     \see                SHUT_WR
     \see                SHUT_RDWR
@@ -364,7 +364,7 @@ int shutdown(int socket, int how);
     \param  type        The type of socket to be created (i.e, SOCK_DGRAM).
     \param  protocol    The protocol to use with the socket. May be 0 to allow
                         a default to be used.
-    
+
     \return             A non-negative file descriptor on success. -1 on error,
                         and sets errno as appropriate.
 */
@@ -381,7 +381,7 @@ int socket(int domain, int type, int protocol);
     \param  name_len        The amount of space pointed to by name, in bytes.
                             On return, this is set to the actual size of the
                             returned address information.
-    
+
     \retval -1              On error, sets errno as appropriate.
     \retval 0               On success.
 */
@@ -396,27 +396,27 @@ int getsockname(int socket, struct sockaddr *name, socklen_t *name_len);
     returned in the name_len parameter.
 
     \param  socket          A socket that is already connected to a peer.
-    \param  name            A pointer to a sockaddr structure where the peer 
+    \param  name            A pointer to a sockaddr structure where the peer
                             address will be stored.
-    \param  name_len        A pointer to a socklen_t variable that specifies the 
+    \param  name_len        A pointer to a socklen_t variable that specifies the
                             length of the address structure.
-                            On return, it will contain the actual size of the 
+                            On return, it will contain the actual size of the
                             address returned.
 
     \retval 0               On success.
     \retval -1              On error, sets errno as appropriate, such as:
-                            - EBADF: The socket argument is not a valid file 
+                            - EBADF: The socket argument is not a valid file
                                      descriptor.
-                            - EFAULT: The addr argument points to memory not in a 
+                            - EFAULT: The addr argument points to memory not in a
                                       valid part of the process address space.
-                            - ENOBUFS: Insufficient resources were available in the 
+                            - ENOBUFS: Insufficient resources were available in the
                                        system to perform the operation.
                             - ENOTCONN: The socket is not connected.
-                            - ENOTSOCK: The socket argument does not refer to a 
+                            - ENOTSOCK: The socket argument does not refer to a
                                         socket.
                             - EOPNOTSUPP: The socket does not support getpeername.
 */
-int getpeername(int socket, struct sockaddr *__RESTRICT name, 
+int getpeername(int socket, struct sockaddr *__RESTRICT name,
                 socklen_t *__RESTRICT name_len);
 
 /** \brief  Get socket options.
@@ -432,7 +432,7 @@ int getpeername(int socket, struct sockaddr *__RESTRICT name,
     \param  option_len      The length of option_value on call, and the real
                             option length (if less than the original value)
                             on return.
-    
+
     \return                 Zero on success. -1 on error, and sets errno as
                             appropriate.
 
@@ -455,7 +455,7 @@ int getsockopt(int socket, int level, int option_name, void *option_value,
     \param  option_name     The option to set.
     \param  option_value    The value to set for the option.
     \param  option_len      The length of option_value in bytes.
-    
+
     \return                 Zero on success. -1 on error, and sets errno as
                             appropriate.
 

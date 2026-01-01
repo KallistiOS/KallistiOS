@@ -32,7 +32,7 @@ __BEGIN_DECLS
 
     \todo Explain fog modes + equations
 
-    \note 
+    \note
     Thanks to Paul Boese for figuring this stuff out
 
     @{
@@ -52,11 +52,11 @@ void pvr_fog_table_color(float a, float r, float g, float b);
 /** Set the vertex fog color.
 
     This function sets the fog color for vertex fog. `0-1` range for all colors.
-    
+
     \todo
     This function is currently not implemented, as vertex fog is not supported
-    by KOS. 
-    
+    by KOS.
+
     \warning
     Calling this function will cause an assertion failure.
 
