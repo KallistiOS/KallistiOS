@@ -5,6 +5,13 @@ ARGS=$*
 USEMODE=0
 for i in $ARGS; do
 	case "${i}" in
+		@*)
+			ARGS="${ARGS} $(cat ${i:1})"
+		;;
+	esac
+done
+for i in $ARGS; do
+	case "${i}" in
 		-o)
 			if [ $USEMODE != 2 -a $USEMODE != 3 ]; then
 				# Link
