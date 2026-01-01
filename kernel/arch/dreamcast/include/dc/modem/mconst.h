@@ -117,7 +117,7 @@
 */
 #define MODEM_MAKE_SPEED(p, s)      ((modem_speed_t)((((p) & 0xF) << 4) | ((s) & 0xF)))
 
-/** \brief   Modem speed/protocol value type. 
+/** \brief   Modem speed/protocol value type.
     \ingroup modem
  */
 typedef unsigned char modem_speed_t;

@@ -254,7 +254,7 @@ extern struct fs_hnd *fd_table[FD_SETSIZE];
                             etc), as well as values from the \ref vfs_fopen_modes
                             "File Open Modes" list. Multiple values can be ORed
                             together.
-    
+
     \return                 The new file descriptor on success, FILEHND_INVALID on error.
 */
 file_t fs_open(const char *fn, int mode);
@@ -265,7 +265,7 @@ file_t fs_open(const char *fn, int mode);
     associated with the descriptor.
 
     \param  hnd             The file descriptor to close.
-    
+
     \return                 0 for success, -1 for error
 */
 int fs_close(file_t hnd);
@@ -279,7 +279,7 @@ int fs_close(file_t hnd);
     \param  buffer          The buffer to read into.
     \param  cnt             The size of the buffer (or the number of bytes
                             requested).
-    
+
     \return                 The number of bytes read, or -1 on error. Note that
                             this may not be the full number of bytes requested.
 */
@@ -293,7 +293,7 @@ ssize_t fs_read(file_t hnd, void *buffer, size_t cnt);
     \param  hnd             The file descriptor to write into.
     \param  buffer          The data to write into the file.
     \param  cnt             The size of the buffer, in bytes.
-    
+
     \return                 The number of bytes written, or -1 on failure. Note
                             that the number of bytes written may be less than
                             what was requested.
@@ -309,7 +309,7 @@ ssize_t fs_write(file_t hnd, const void *buffer, size_t cnt);
     \param  offset          The offset in bytes from the specified base.
     \param  whence          The base of the pointer move. This should be one of
                             the \ref vfs_seek_modes "Seek Modes" values.
-    
+
     \return                 The new position of the file pointer.
 */
 off_t fs_seek(file_t hnd, off_t offset, int whence);
@@ -323,7 +323,7 @@ off_t fs_seek(file_t hnd, off_t offset, int whence);
     \param  offset          The offset in bytes from the specified base.
     \param  whence          The base of the pointer move. This should be one of
                             the \ref vfs_seek_modes "Seek Modes" values.
-    
+
     \return                 The new position of the file pointer.
 */
 _off64_t fs_seek64(file_t hnd, _off64_t offset, int whence);
@@ -334,7 +334,7 @@ _off64_t fs_seek64(file_t hnd, _off64_t offset, int whence);
     opened file. This is an offset in bytes from the start of the file.
 
     \param  hnd             The file descriptor to retrieve the pointer from.
-    
+
     \return                 The offset within the file for the pointer.
 */
 off_t fs_tell(file_t hnd);
@@ -345,7 +345,7 @@ off_t fs_tell(file_t hnd);
     opened file. This is an offset in bytes from the start of the file.
 
     \param  hnd             The file descriptor to retrieve the pointer from.
-    
+
     \return                 The offset within the file for the pointer.
 */
 _off64_t fs_tell64(file_t hnd);
@@ -356,7 +356,7 @@ _off64_t fs_tell64(file_t hnd);
     descriptor.
 
     \param  hnd             The file descriptor to retrieve the size from.
-    
+
     \return                 The length of the file on success, -1 on failure.
 */
 ssize_t fs_total(file_t hnd);
@@ -370,7 +370,7 @@ ssize_t fs_total(file_t hnd);
                             not less than 0.
 
     \param  hnd             The file descriptor to retrieve the size from.
-    
+
     \return                 The length of the file on success, -1 on failure.
 */
 int64_t fs_total64(file_t hnd);
@@ -382,7 +382,7 @@ int64_t fs_total64(file_t hnd);
     file descriptor.
 
     \param  hnd             The opened directory's file descriptor.
-    
+
     \return                 The next entry, or NULL on failure.
 */
 const dirent_t *fs_readdir(file_t hnd);
@@ -396,7 +396,7 @@ const dirent_t *fs_readdir(file_t hnd);
     \param  hnd             The file descriptor to use.
     \param  cmd             The command to run.
     \param  ...             Arguments for the command specified.
-    
+
     \return                 -1 on error.
 */
 int fs_ioctl(file_t hnd, int cmd, ...);
@@ -408,7 +408,7 @@ int fs_ioctl(file_t hnd, int cmd, ...);
 
     \param  fn1             The existing file to rename.
     \param  fn2             The new filename to rename to.
-    
+
     \return                 0 on success, -1 on failure.
 */
 int fs_rename(const char *fn1, const char *fn2);
@@ -420,7 +420,7 @@ int fs_rename(const char *fn1, const char *fn2);
     instead of this function.
 
     \param  fn              The path to remove.
-    
+
     \return                 0 on success, -1 on failure.
 */
 int fs_unlink(const char *fn);
@@ -432,7 +432,7 @@ int fs_unlink(const char *fn);
     the path that is changed to.
 
     \param  fn              The path to set as the current working directory.
-    
+
     \return                 0 on success, -1 on failure.
 */
 int fs_chdir(const char *fn);
@@ -451,7 +451,7 @@ int fs_chdir(const char *fn);
                             function will return NULL and set errno to EINVAL.
 
     \param  hnd             The descriptor to memory map.
-    
+
     \return                 The memory mapped buffer, or NULL on failure.
 */
 void *fs_mmap(file_t hnd);
@@ -468,7 +468,7 @@ void *fs_mmap(file_t hnd);
 
     \param  fd              The descriptor to complete I/O on.
     \param  rv              A buffer to store the size of the I/O in.
-    
+
     \return                 0 on success, -1 on failure.
 */
 int fs_complete(file_t fd, ssize_t *rv);
@@ -488,7 +488,7 @@ int fs_mkdir(const char *fn);
     removed if it is empty.
 
     \param  fn              The path of the directory to remove.
-    
+
     \return                 0 on success, -1 on failure.
 */
 int fs_rmdir(const char *fn);
@@ -500,7 +500,7 @@ int fs_rmdir(const char *fn);
     \param  fd              The file descriptor to use.
     \param  cmd             The command to run.
     \param  ...             Arguments for the command specified.
-    
+
     \return                 -1 on error (generally).
 */
 int fs_fcntl(file_t fd, int cmd, ...);
@@ -517,7 +517,7 @@ int fs_fcntl(file_t fd, int cmd, ...);
 
     \param  path1           An existing file to create a new link to.
     \param  path2           The pathname of the new link to be created.
-    
+
     \return                 0 on success, -1 on failure.
 */
 int fs_link(const char *path1, const char *path2);
@@ -536,7 +536,7 @@ int fs_link(const char *path1, const char *path2);
 
     \param  path1           The content of the link (i.e, what to point at).
     \param  path2           The pathname of the new link to be created.
-    
+
     \return                 0 on success, -1 on failure.
 */
 int fs_symlink(const char *path1, const char *path2);
@@ -555,7 +555,7 @@ int fs_symlink(const char *path1, const char *path2);
     \param  path            The symbolic link to read.
     \param  buf             The buffer to place the link's contents in.
     \param  bufsize         The number of bytes allocated to buf.
-    
+
     \return                 -1 on failure, the number of bytes placed into buf
                             on success. If the return value is equal to bufsize,
                             you may not have the whole link -- provide a larger
@@ -576,7 +576,7 @@ ssize_t fs_readlink(const char *path, char *buf, size_t bufsize);
                             If you don't want to resolve any symbolic links at
                             the end of the path, pass AT_SYMLINK_NOFOLLOW,
                             otherwise pass 0.
-    
+
     \return                 0 on success, -1 on failure.
 */
 int fs_stat(const char *path, struct stat *buf, int flag);
@@ -591,7 +591,7 @@ int fs_stat(const char *path, struct stat *buf, int flag);
                             ENOSYS and -1 will be returned.
 
     \param  hnd             The opened directory's file descriptor.
-    
+
     \return                 0 on success, -1 on failure.
 */
 int fs_rewinddir(file_t hnd);
@@ -607,7 +607,7 @@ int fs_rewinddir(file_t hnd);
 
     \param  hnd             The file descriptor to retrieve information about.
     \param  buf             The buffer to store stat information in.
-    
+
     \return                 0 on success, -1 on failure.
 */
 int fs_fstat(file_t hnd, struct stat *buf);
@@ -619,7 +619,7 @@ int fs_fstat(file_t hnd, struct stat *buf);
     standard POSIX function dup().
 
     \param  oldfd           The old file descriptor to duplicate.
-    
+
     \return                 The new file descriptor on success, FILEHND_INVALID on failure.
 */
 file_t fs_dup(file_t oldfd);
@@ -633,7 +633,7 @@ file_t fs_dup(file_t oldfd);
 
     \param  oldfd           The old file descriptor to duplicate.
     \param  newfd           The descriptor to copy into.
-    
+
     \return                 The new file descriptor on success, FILEHND_INVALID on failure.
 */
 file_t fs_dup2(file_t oldfd, file_t newfd);
@@ -648,7 +648,7 @@ file_t fs_dup2(file_t oldfd, file_t newfd);
 
     \param  vfs             The VFS handler structure to use for the file.
     \param  hnd             Internal handle data for the file.
-    
+
     \return                 The opened descriptor on success, FILEHND_INVALID on failure.
 */
 file_t fs_open_handle(vfs_handler_t *vfs, void *hnd);
@@ -660,7 +660,7 @@ file_t fs_open_handle(vfs_handler_t *vfs, void *hnd);
     code, as it is meant for use internally.
 
     \param  fd              The file descriptor to retrieve the handler for.
-    
+
     \return                 The VFS' handler structure.
 */
 vfs_handler_t *fs_get_handler(file_t fd);
@@ -672,7 +672,7 @@ vfs_handler_t *fs_get_handler(file_t fd);
     as it is meant for use internally.
 
     \param  fd              The file descriptor to retrieve the handler for.
-    
+
     \return                 The internal handle for the file descriptor.
 */
 void *fs_get_handle(file_t fd);
@@ -691,7 +691,7 @@ const char *fs_getwd(void);
 
     \param  src             The filename to copy from.
     \param  dst             The filename to copy to.
-    
+
     \return                 The number of bytes copied successfully.
 */
 ssize_t fs_copy(const char *src, const char *dst);
@@ -704,7 +704,7 @@ ssize_t fs_copy(const char *src, const char *dst);
 
     \param  src             The filename to open and read.
     \param  out_ptr         A pointer to the buffer on success, NULL otherwise.
-    
+
     \return                 The size of the file on success, -1 otherwise.
 */
 ssize_t fs_load(const char *src, void **out_ptr);
@@ -721,7 +721,7 @@ ssize_t fs_load(const char *src, void **out_ptr);
     \param  dst             The string to modify.
     \param  src             The path component to append.
     \param  len             The length allocated for dst.
-    
+
     \return                 The length of the new string (including the NUL
                             terminator) on success, -1 otherwise.
 
@@ -732,16 +732,16 @@ ssize_t fs_load(const char *src, void **out_ptr);
 */
 ssize_t fs_path_append(char *dst, const char *src, size_t len);
 
-/** \brief   Normalize the specified path. 
+/** \brief   Normalize the specified path.
     This function acts mostly like the function realpath() but it only simplifies
-    a path by resolving . and .. components and removing redundant slashes.  It 
+    a path by resolving . and .. components and removing redundant slashes.  It
     doesn't check if the path exists or resolve symbolic links.
     \param  path            The path to normalize.
-    \param  resolved        The buffer to store resolved normalized path. It has 
+    \param  resolved        The buffer to store resolved normalized path. It has
                             to be PATH_MAX bytes in size.
-    
-    \return                 A pointer to the normalized path on success, 
-                            or NULL on failure, in which case the path which 
+
+    \return                 A pointer to the normalized path on success,
+                            or NULL on failure, in which case the path which
                             caused trouble is left in resolved.
     \par    Error Conditions:
     \em     EINVAL - path or resolved is a NULL pointer \n

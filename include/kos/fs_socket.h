@@ -335,7 +335,7 @@ typedef struct fs_socket_proto {
     */
     int (*getsockname)(net_socket_t *s, struct sockaddr *name, socklen_t *name_len);
 
-        /** \brief  Get the name of the peer connected to a socket created with the 
+        /** \brief  Get the name of the peer connected to a socket created with the
                     protocol.
 
         This function should implement the ::getpeername() system call for the
@@ -379,7 +379,7 @@ typedef struct fs_socket_proto {
     short (*poll)(net_socket_t *s, short events);
 } fs_socket_proto_t;
 
-/** \brief   Initializer for the entry field in the fs_socket_proto_t struct. 
+/** \brief   Initializer for the entry field in the fs_socket_proto_t struct.
     \ingroup vfs_sockets
 */
 #define FS_SOCKET_PROTO_ENTRY { NULL, NULL }
@@ -461,7 +461,7 @@ int fs_socket_input(netif_t *src, int domain, int protocol, const void *hdr,
     This function is NOT safe to call inside an interrupt.
 
     \param  proto       The new protocol handler to register
-    
+
     \retval 0           On success (no error conditions are currently defined)
 */
 int fs_socket_proto_add(fs_socket_proto_t *proto);
@@ -470,7 +470,7 @@ int fs_socket_proto_add(fs_socket_proto_t *proto);
     \ingroup vfs_sockets
 
     This function does the exact opposite of fs_socket_proto_add, and removes
-    a protocol from use with fs_socket. 
+    a protocol from use with fs_socket.
 
     \note
     It is the programmer's responsibility to make sure that no sockets are
@@ -478,7 +478,7 @@ int fs_socket_proto_add(fs_socket_proto_t *proto);
     they will not work properly once the handler has been removed).
 
     \param  proto       The protocol handler to remove
-    
+
     \retval -1          On error (This function does not directly change errno)
     \retval 0           On success
 */

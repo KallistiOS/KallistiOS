@@ -36,7 +36,7 @@ __BEGIN_DECLS
 /** \defgroup pvr_txr_mgmt      Texturing
     \brief                      API for managing PowerVR textures
     \ingroup                    pvr
-    
+
     Helper functions for handling texture tasks of various kinds.
 */
 
@@ -83,7 +83,7 @@ void pvr_txr_set_stride(size_t texture_width);
 size_t pvr_txr_get_stride(void);
 
 /** \brief   Load raw texture data from an SH-4 buffer into PVR RAM.
-    \ingroup pvr_txr_mgmt 
+    \ingroup pvr_txr_mgmt
 
     This essentially just acts as a memcpy() from main RAM to PVR RAM, using
     the Store Queues and 64-bit TA bus.

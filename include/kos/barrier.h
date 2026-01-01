@@ -33,7 +33,7 @@ __BEGIN_DECLS
 
     Barriers are a type of synchronization method which halt execution
     for group of threads until a certain number of them have reached
-    the barrier. 
+    the barrier.
 
     @{
 */

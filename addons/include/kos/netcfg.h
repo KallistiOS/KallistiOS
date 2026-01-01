@@ -111,7 +111,7 @@ typedef struct netcfg {
 
     \param  fn          The file to read the configuration from.
     \param  out         Buffer to store the parsed configuration.
-    
+
     \return             0 on success, <0 on failure.
 */
 int netcfg_load_from(const char *fn, netcfg_t *out);
@@ -126,7 +126,7 @@ int netcfg_load_from(const char *fn, netcfg_t *out);
                         the PlanetWeb browser at all.
 
     \param  out         Buffer to store the parsed configuration.
-    
+
     \return             0 on success, <0 on failure.
 */
 int netcfg_load_flash(netcfg_t *out);
@@ -136,12 +136,12 @@ int netcfg_load_flash(netcfg_t *out);
 
     This function loads the network configuration data, searching in multiple
     locations to attempt to find a file with a stored configuration. This
-    function will attempt to read the configuration from each VMU first (from 
+    function will attempt to read the configuration from each VMU first (from
     a file named net.cfg), then it will try the flashrom, followed by the
     current working directory, and lastly the root of the CD.
 
     \param  out         Buffer to store the parsed configuration.
-    
+
     \return             0 on success, <0 on failure.
 */
 int netcfg_load(netcfg_t *out);
@@ -155,7 +155,7 @@ int netcfg_load(netcfg_t *out);
 
     \param  fn          The file to save to.
     \param  cfg         The configuration to save.
-    
+
     \return             0 on success, <0 on failure.
 */
 int netcfg_save_to(const char *fn, const netcfg_t *cfg);
@@ -167,7 +167,7 @@ int netcfg_save_to(const char *fn, const netcfg_t *cfg);
     will not retry if the first VMU doesn't have enough space to hold the file.
 
     \param  cfg         The configuration to save.
-    
+
     \return             0 on success, <0 on failure.
 */
 int netcfg_save(const netcfg_t *cfg);

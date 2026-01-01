@@ -46,7 +46,7 @@ __BEGIN_DECLS
 /** \brief   Retrieve a PVR register value
 
     \param   REG             The register to fetch. See \ref pvr_regs.
-    
+
     \return                  The value of that register (32-bits)
 */
 #define PVR_GET(REG) (* ( (volatile uint32_t *)( 0xa05f8000 + (REG) ) ) )
@@ -68,7 +68,7 @@ __BEGIN_DECLS
 
     \note
     2D specific registers have been excluded for now (like
-    vsync, hsync, v/h size, etc) 
+    vsync, hsync, v/h size, etc)
 
     @{
 */

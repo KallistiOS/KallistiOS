@@ -34,12 +34,12 @@ __BEGIN_DECLS
     \ingroup                pvr_global
 
     In addition to its 16-bit truecolor modes, the PVR also supports some
-    nice paletted modes. 
+    nice paletted modes.
 
     \remark
     These aren't useful for super high quality images most of the time,
     but they can be useful for doing some interesting special effects,
-    like the old cheap "worm hole". 
+    like the old cheap "worm hole".
 */
 
 /** \brief   Color palette formats of the PowerVR
@@ -86,6 +86,6 @@ static inline void pvr_set_pal_entry(uint32_t idx, uint32_t value) {
     PVR_SET(PVR_PALETTE_TABLE_BASE + 4 * idx, value);
 }
 
-__END_DECLS 
+__END_DECLS
 
 #endif  /* __DC_PVR_PVR_PALETTE_H */

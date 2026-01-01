@@ -30,7 +30,7 @@ __BEGIN_DECLS
     CD, it will automatically detect and react to disc changes for you.
 
     This file only facilitates reading raw sectors and doing other fairly low-
-    level things with CDs. If you're looking for higher-level stuff, like 
+    level things with CDs. If you're looking for higher-level stuff, like
     normal file reading, consult with the stuff for the fs and for fs_iso9660.
 
     If you're looking for *even lower* level things with CDs, see the gdrom
@@ -46,7 +46,7 @@ __BEGIN_DECLS
     \see    dc/g1ata.h
 */
 
-/** \defgroup gdrom     GD-ROM 
+/** \defgroup gdrom     GD-ROM
     \brief              Driver for the Dreamcast's GD-ROM drive
     \ingroup            vfs
 */
@@ -229,9 +229,9 @@ int cdrom_get_status(int *status, int *disc_type);
 /** \brief    Change the datatype of disc.
     \ingroup  gdrom
 
-    This function will take in all parameters to pass to the change_datatype 
-    syscall. This allows these parameters to be modified without a reinit. 
-    Each parameter allows -1 as a default, which is tied to the former static 
+    This function will take in all parameters to pass to the change_datatype
+    syscall. This allows these parameters to be modified without a reinit.
+    Each parameter allows -1 as a default, which is tied to the former static
     values provided by cdrom_reinit and cdrom_set_sector_size.
 
     \param sector_part      How much of each sector to return.
@@ -257,8 +257,8 @@ int cdrom_reinit(void);
 /** \brief    Re-initialize the GD-ROM drive with custom parameters.
     \ingroup  gdrom
 
-    At the end of each cdrom_reinit(), cdrom_change_datatype is called. 
-    This passes in the requested values to that function after 
+    At the end of each cdrom_reinit(), cdrom_change_datatype is called.
+    This passes in the requested values to that function after
     reinitialization, as opposed to defaults.
 
     \param sector_part      How much of each sector to return.
@@ -381,8 +381,8 @@ void cdrom_stream_set_callback(cdrom_stream_callback_t callback, void *param);
 /** \brief    Read subcode data from the most recently read sectors.
     \ingroup  gdrom
 
-    After reading sectors, this can pull subcode data regarding the sectors 
-    read. If reading all subcode data with CD_SUB_CURRENT_POSITION, this needs 
+    After reading sectors, this can pull subcode data regarding the sectors
+    read. If reading all subcode data with CD_SUB_CURRENT_POSITION, this needs
     to be performed one sector at a time.
 
     \param  buffer          Space to store the read subcode data.

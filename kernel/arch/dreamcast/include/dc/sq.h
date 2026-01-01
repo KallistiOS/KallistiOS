@@ -27,12 +27,12 @@
     destinations must be 32-byte aligned.
 
     \note
-    Mastery over knowing when and how to utilize the store queues is 
+    Mastery over knowing when and how to utilize the store queues is
     important when trying to push the limits of the Dreamcast, specifically
     when transferring chunks of data between regions of memory. It is often
-    the case that the DMA is faster for transactions which are consistently 
-    large; however, the store queues tend to have better performance and 
-    have less configuration overhead when bursting smaller chunks of data. 
+    the case that the DMA is faster for transactions which are consistently
+    large; however, the store queues tend to have better performance and
+    have less configuration overhead when bursting smaller chunks of data.
 */
 
 #ifndef __DC_SQ_H
@@ -59,13 +59,13 @@ __BEGIN_DECLS
 /** \brief  Lock Store Queues
     \ingroup store_queues
 
-    Locks the store queues so that they cannot be used from another thread 
-    until unlocked. 
+    Locks the store queues so that they cannot be used from another thread
+    until unlocked.
 
     \warning
-    This function is called automatically by the store queue API provided by KOS; 
-    however, it must be called manually when driving the SQs directly from outside 
-    of this API. 
+    This function is called automatically by the store queue API provided by KOS;
+    however, it must be called manually when driving the SQs directly from outside
+    of this API.
 
     \param  dest            The destination address.
     \return                 The translated address that can be directly written to.
@@ -77,24 +77,24 @@ uint32_t *sq_lock(void *dest);
 /** \brief  Unlock Store Queues
     \ingroup store_queues
 
-    Unlocks the store queues so that they can be used from any thread. 
+    Unlocks the store queues so that they can be used from any thread.
 
-    \note 
+    \note
     sq_lock() should've already been called previously.
 
     \warning
-    sq_lock() and sq_unlock() are called automatically by the store queue API provided 
-    by KOS; however, they must be called manually when driving the SQs directly from 
+    sq_lock() and sq_unlock() are called automatically by the store queue API provided
+    by KOS; however, they must be called manually when driving the SQs directly from
     outside this API.
 
     \sa sq_lock()
 */
 void sq_unlock(void);
 
-/** \brief  Wait for both Store Queues to complete 
+/** \brief  Wait for both Store Queues to complete
     \ingroup store_queues
 
-    Wait for both store queues to complete by writing to SQ area. 
+    Wait for both store queues to complete by writing to SQ area.
 
     \sa sq_lock()
 */
@@ -125,7 +125,7 @@ static inline void sq_flush(void *src) {
 
     \warning
     The dest pointer must be at least 32-byte aligned, the src pointer
-    must be at least 4-byte aligned (8-byte aligned uses fast path), 
+    must be at least 4-byte aligned (8-byte aligned uses fast path),
     and n must be a multiple of 32!
 
     \param  dest            The address to copy to (32-byte aligned).
@@ -145,8 +145,8 @@ void *sq_cpy(void *dest, const void *src, size_t n);
     for the params.
 
     \warning
-    The dest pointer must be at least 32-byte aligned that already has been 
-    masked by SQ_MASK_DEST(), the src pointer must be at least 8-byte aligned, 
+    The dest pointer must be at least 32-byte aligned that already has been
+    masked by SQ_MASK_DEST(), the src pointer must be at least 8-byte aligned,
     and n must be the number of 32-byte blocks you want to copy.
 
     \param  dest            The store queue address to copy to (32-byte aligned).
@@ -165,7 +165,7 @@ void *sq_fast_cpy(void *dest, const void *src, size_t n);
     do its work.
 
     \warning
-    The dest pointer must be a 32-byte aligned with n being a multiple of 32, 
+    The dest pointer must be a 32-byte aligned with n being a multiple of 32,
     and only the low 8-bits are used from c.
 
     \param  dest            The address to begin setting at (32-byte aligned).
@@ -184,7 +184,7 @@ void *sq_set(void *dest, uint32_t c, size_t n);
     do its work.
 
     \warning
-    The dest pointer must be a 32-byte aligned with n being a multiple of 32, 
+    The dest pointer must be a 32-byte aligned with n being a multiple of 32,
     and only the low 16-bits are used from c.
 
     \param  dest            The address to begin setting at (32-byte aligned).

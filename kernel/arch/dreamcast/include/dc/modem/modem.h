@@ -60,7 +60,7 @@
 
 /** \defgroup   modem_v22       V.22 Modes
     \brief                      Modem V.22 Modes
-    \ingroup    modem 
+    \ingroup    modem
     @{
 */
 /** \brief  1200bps, V.22 */
@@ -171,7 +171,7 @@ typedef enum {
     MODEM_EVENT_TX_EMPTY
 } modemEvent_t;
 
-/** \brief   Type of a modem event handling function. 
+/** \brief   Type of a modem event handling function.
     \ingroup modem
  */
 typedef void (*MODEMEVENTHANDLERPROC)(modemEvent_t event);

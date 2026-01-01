@@ -247,7 +247,7 @@ switch (sh_type) {
 
 /** \brief   Symbol table entry
     \ingroup elf
-    
+
     This structure represents a single entry in a symbol table in an ELF file.
 
     \headerfile kos/elf.h

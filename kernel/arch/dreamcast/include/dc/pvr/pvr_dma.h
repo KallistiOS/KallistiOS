@@ -176,12 +176,12 @@ int pvr_dma_yuv_conv(const void *src, size_t count, bool block,
 */
 bool pvr_dma_ready(void);
 
-/** \brief   Initialize TA/PVR DMA. 
+/** \brief   Initialize TA/PVR DMA.
     \ingroup pvr_dma
  */
 void pvr_dma_init(void);
 
-/** \brief   Shut down TA/PVR DMA. 
+/** \brief   Shut down TA/PVR DMA.
     \ingroup pvr_dma
  */
 void pvr_dma_shutdown(void);
@@ -195,8 +195,8 @@ void pvr_dma_shutdown(void);
     \warning
     This function cannot be used at the same time as a PVR DMA transfer.
 
-    The dest pointer must be at least 32-byte aligned and reside 
-    in video memory, the src pointer must be at least 8-byte aligned, 
+    The dest pointer must be at least 32-byte aligned and reside
+    in video memory, the src pointer must be at least 8-byte aligned,
     and n must be a multiple of 32.
 
     \param  dest            The address to copy to (32-byte aligned).
@@ -218,9 +218,9 @@ void *pvr_sq_load(void *dest, const void *src,
 
     \warning
     This function cannot be used at the same time as a PVR DMA transfer.
-    
-    The dest pointer must be at least 32-byte aligned and reside in video 
-    memory, n must be a multiple of 32 and only the low 16-bits are used 
+
+    The dest pointer must be at least 32-byte aligned and reside in video
+    memory, n must be a multiple of 32 and only the low 16-bits are used
     from c.
 
     \param  dest            The address to begin setting at (32-byte aligned).
@@ -242,7 +242,7 @@ void *pvr_sq_set16(void *dest, uint32_t c, size_t n, pvr_dma_type_t type);
     \warning
     This function cannot be used at the same time as a PVR DMA transfer.
 
-    The dest pointer must be at least 32-byte aligned and reside in video 
+    The dest pointer must be at least 32-byte aligned and reside in video
     memory, n must be a multiple of 32.
 
     \param  dest            The address to begin setting at (32-byte aligned).

@@ -9,8 +9,8 @@
     \brief   Container for /dev.
     \ingroup vfs_dev
 
-    This is a thin filesystem that allows the /dev folder 
-    and its contents to be read/listed as well new devices 
+    This is a thin filesystem that allows the /dev folder
+    and its contents to be read/listed as well new devices
     to be added under it.
 
     \author Donald Haase

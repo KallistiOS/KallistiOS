@@ -37,7 +37,7 @@ __BEGIN_DECLS
     \ingroup                    debugging
 
    Various debug options. Uncomment the `#define` line to enable the specific
-   option described. 
+   option described.
 
    @{
 */
@@ -110,7 +110,7 @@ __BEGIN_DECLS
    malloc, as well as everything in level 2. */
 /* #define KOS_DEBUG 3 */
 
-#ifndef KOS_DEBUG 
+#ifndef KOS_DEBUG
 #define KOS_DEBUG 0
 #endif
 

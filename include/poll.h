@@ -33,7 +33,7 @@ __BEGIN_DECLS
     @{
 */
 
-/** \brief   Type representing a number of file descriptors. 
+/** \brief   Type representing a number of file descriptors.
     \ingroup threading_polling
  */
 typedef __uint32_t nfds_t;
@@ -86,11 +86,11 @@ struct pollfd {
     \param  timeout     Maximum amount of time to block, in milliseconds. Pass
                         0 to ensure the function does not block and -1 to block
                         for an "infinite" amount of time, until an event occurs.
-    
+
     \return             -1 on error (sets errno as appropriate), or the number
                         of file descriptors that matched the event flags before
                         the function returns.
-    
+
     \sa     poll_events
 */
 int poll(struct pollfd fds[], nfds_t nfds, int timeout);

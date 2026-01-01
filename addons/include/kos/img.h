@@ -77,7 +77,7 @@ typedef struct kos_img {
     of the value, which contains the platform-independent half of the format.
 
     \param  x           An image format (fmt field of a kos_img_t).
-    
+
     \return             The platform-independent half of the format.
 */
 #define KOS_IMG_FMT_I(x) ((x) & 0xffff)
@@ -88,7 +88,7 @@ typedef struct kos_img {
     of the value, which contains the platform-specific half of the format.
 
     \param  x           An image format (fmt field of a kos_img_t).
-    
+
     \return             The platform-specific half of the format.
 */
 #define KOS_IMG_FMT_D(x) (((x) >> 16) & 0xffff)
@@ -103,7 +103,7 @@ typedef struct kos_img {
     \param  i           The platform-independent half of the format.
     \param  d           The platform-specific half of the format. This should
                         not be pre-shifted.
-    
+
     \return             A complete image format value, suitable for placing in
                         the fmt variable of a kos_img_t.
 */

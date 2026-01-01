@@ -244,10 +244,10 @@ void hardware_shutdown(void);
     \ingroup  arch
 
     These are the various region codes that can be returned by the
-    hardware_sys_mode() function. 
+    hardware_sys_mode() function.
 
     \note
-    A retail Dreamcast will always return 0 for the region code. 
+    A retail Dreamcast will always return 0 for the region code.
     You must read the region of a retail device from the flashrom.
 
     \see    fr_region

@@ -285,7 +285,7 @@ typedef struct ipv6_hdr_s {
 */
 int net_arp_init(void);
 
-/** \brief   Shutdown ARP. 
+/** \brief   Shutdown ARP.
     \ingroup networking_arp
  */
 void net_arp_shutdown(void);

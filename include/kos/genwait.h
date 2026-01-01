@@ -95,9 +95,9 @@ void genwait_wake_one(const void *obj);
 void genwait_wake_all_err(const void *obj, int err);
 
 /** \brief  Wake up one thread sleeping on an object, with an error.
- 
+
     This function simply calls genwait_wake_cnt(obj, 1, err).
- 
+
     \param  obj             The object to wake threads that are sleeping on it
     \param  err             The value to set in the threads' errno values
     \see    genwait_wake_cnt()
