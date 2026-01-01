@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    kos/include/dbgio.h
-   Copyright (C)2000,2004 Megan Potter
+   Copyright (C) 2000, 2004 Megan Potter
 
 */
 
@@ -38,7 +38,7 @@ __BEGIN_DECLS
 */
 typedef struct dbgio_handler {
     /** \brief  Name of the dbgio handler */
-    const char  * name;
+    const char  *name;
 
     /** \brief  Detect this debug interface.
         \retval 1           If the device is available and usable
@@ -106,7 +106,7 @@ typedef struct dbgio_handler {
 
 /** \cond */
 /* These two should be initialized in arch. */
-extern dbgio_handler_t * dbgio_handlers[];
+extern dbgio_handler_t *dbgio_handlers[];
 extern const size_t dbgio_handler_cnt;
 
 /* This is defined by the shared code, in case there's no valid handler. */
@@ -127,7 +127,7 @@ extern dbgio_handler_t dbgio_null;
     \par    Error Conditions:
     \em     ENODEV - The specified device could not be initialized
 */
-int dbgio_dev_select(const char * name);
+int dbgio_dev_select(const char *name);
 
 /** \brief   Fetch the name of the currently selected dbgio interface.
     \ingroup logging
@@ -135,7 +135,7 @@ int dbgio_dev_select(const char * name);
     \return                 The name of the current dbgio interface (or NULL if
                             no device is selected)
 */
-const char * dbgio_dev_get(void);
+const char *dbgio_dev_get(void);
 
 /** \brief   Initialize the dbgio console.
     \ingroup logging

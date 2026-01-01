@@ -21,10 +21,10 @@
   See the dbgio.h header for more info on exactly how this works.
 */
 
-// Our currently selected handler.
-static dbgio_handler_t * dbgio = NULL;
+/* Our currently selected handler. */
+static dbgio_handler_t *dbgio = NULL;
 
-int dbgio_dev_select(const char * name) {
+int dbgio_dev_select(const char *name) {
     size_t i;
 
     for(i = 0; i < dbgio_handler_cnt; i++) {
@@ -44,7 +44,7 @@ int dbgio_dev_select(const char * name) {
     return -1;
 }
 
-const char * dbgio_dev_get(void) {
+const char *dbgio_dev_get(void) {
     if(!dbgio)
         return NULL;
     else
@@ -62,26 +62,26 @@ void dbgio_disable(void) {
 int dbgio_init(void) {
     size_t i;
 
-    // Look for a valid interface.
+    /* Look for a valid interface. */
     for(i = 0; i < dbgio_handler_cnt; i++) {
         if(dbgio_handlers[i]->detected()) {
-            // Select this device.
+            /* Select this device. */
             dbgio = dbgio_handlers[i];
 
-            // Try to init it. If it fails, then move on to the
-            // next one anyway.
+            /* Try to init it. If it fails,
+               then move on to the next one anyway. */
             if(!dbgio->init()) {
-                // Worked.
+                /* Worked. */
                 dbgio_enable();
                 return 0;
             }
 
-            // Failed... nuke it and continue.
+            /* Failed... nuke it and continue. */
             dbgio = NULL;
         }
     }
 
-    // Didn't find an interface.
+    /* Didn't find an interface. */
     errno = ENODEV;
     return -1;
 }
@@ -158,7 +158,7 @@ int dbgio_write_str(const char *str) {
     return -1;
 }
 
-// Not re-entrant
+/* Not re-entrant */
 static char printf_buf[1024];
 static spinlock_t lock = SPINLOCK_INITIALIZER;
 
@@ -186,7 +186,7 @@ int dbgio_printf(const char *fmt, ...) {
 }
 
 
-// The null dbgio handler
+/* The null dbgio handler */
 static int null_detected(void) {
     return 1;
 }
@@ -217,7 +217,7 @@ static int null_write_buffer(const uint8_t *data, int len, int xlat) {
     (void)xlat;
     return len;
 }
-static int null_read_buffer(uint8_t * data, int len) {
+static int null_read_buffer(uint8_t *data, int len) {
     (void)data;
     (void)len;
     errno = EAGAIN;
