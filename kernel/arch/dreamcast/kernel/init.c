@@ -50,16 +50,6 @@ void (*__kos_init_early_fn)(void) __attribute__((weak,section(".data"))) = NULL;
 int main(int argc, char **argv);
 uint32 _fs_dclsocket_get_ip(void);
 
-/* We have to put this here so we can include plat-specific devices */
-dbgio_handler_t * dbgio_handlers[] = {
-    &dbgio_dcload,
-    &dbgio_dcls,
-    &dbgio_scif,
-    &dbgio_null,
-    &dbgio_fb
-};
-const size_t dbgio_handler_cnt = __array_size(dbgio_handlers);
-
 void arch_init_net_dcload_ip(void) {
     union {
         uint32 ipl;
@@ -173,6 +163,13 @@ int  __weak_symbol arch_auto_init(void) {
 
     /* Init SCIF for debug stuff (maybe) */
     scif_init();
+
+    /* Add dbgio handlers for our arch, from last to first in precedence */
+    dbgio_add_handler(&dbgio_fb);
+    dbgio_add_handler(&dbgio_null);
+    dbgio_add_handler(&dbgio_scif);
+    dbgio_add_handler(&dbgio_dcls);
+    dbgio_add_handler(&dbgio_dcload);
 
     /* Init debug IO */
     dbgio_init();

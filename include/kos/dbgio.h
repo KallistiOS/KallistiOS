@@ -2,6 +2,7 @@
 
    kos/include/dbgio.h
    Copyright (C) 2000, 2004 Megan Potter
+   Copyright (C) 2026 Eric Fradella
 
 */
 
@@ -24,15 +25,17 @@
 __BEGIN_DECLS
 
 #include <stdint.h>
+#include <sys/queue.h>
 
 /** \brief   Debug I/O Interface.
     \ingroup logging
 
     This struct represents a single dbgio interface. This should represent
-    a generic pollable console interface. We will store an ordered list of
-    these statically linked into the program and fall back from one to the
-    next until one returns true for detected(). Note that the last device in
-    this chain is the null console, which will always return true.
+    a generic pollable console interface. We store an ordered, singly-linked
+    list of these and fall back from one to the next until one returns true
+    for detected(). Users may create and add their own dbgio interfaces using
+    the dbgio_add_handler() function. Note that the last device in this chain
+    is the null console, which will always return true.
 
     \headerfile kos/dbgio.h
 */
@@ -102,16 +105,40 @@ typedef struct dbgio_handler {
                             failure (set errno as appropriate)
     */
     int (*read_buffer)(uint8_t *data, int len);
+
+    /** \brief dbgio handler list handle.
+
+        Contrary to what doxygen might think, this is not a function.
+    */
+    SLIST_ENTRY(dbgio_handler) entry;
 } dbgio_handler_t;
 
 /** \cond */
-/* These two should be initialized in arch. */
-extern dbgio_handler_t *dbgio_handlers[];
-extern const size_t dbgio_handler_cnt;
-
 /* This is defined by the shared code, in case there's no valid handler. */
 extern dbgio_handler_t dbgio_null;
 /** \endcond */
+
+/** \brief   Add a new dbgio handler to the list.
+    \ingroup logging
+
+    This function adds a new dbgio handler to the top of the list.
+
+    \retval 0               On success
+    \retval -1              On error
+*/
+int dbgio_add_handler(dbgio_handler_t *handler);
+
+/** \brief   Remove a dbgio handler from the list.
+    \ingroup logging
+
+    This function removes a dbgio handler from the list. If the removed handler
+    was the currently selected dbgio handler, the first valid dbgio interface
+    in the list will then be selected.
+
+    \retval 0               On success
+    \retval -1              On error
+*/
+int dbgio_remove_handler(dbgio_handler_t *handler);
 
 /** \brief   Select a new dbgio interface by name.
     \ingroup logging
@@ -128,6 +155,20 @@ extern dbgio_handler_t dbgio_null;
     \em     ENODEV - The specified device could not be initialized
 */
 int dbgio_dev_select(const char *name);
+
+/** \brief   Select a valid dbgio interface automatically.
+    \ingroup logging
+
+    This function selects the first detected dbgio interface in the list.
+
+    \retval 0               On success
+
+    \retval -1              On error
+
+    \par    Error Conditions:
+    \em     ENODEV - No devices could be detected/initialized
+*/
+int dbgio_dev_select_auto(void);
 
 /** \brief   Fetch the name of the currently selected dbgio interface.
     \ingroup logging
