@@ -16,11 +16,11 @@
 #include <arch/arch.h>
 #include <arch/stack.h>
 #include <kos/dbglog.h>
-#include <kos/irq.h>
 #include <kos/mm.h>
 #include <kos/linker.h>
 #include <errno.h>
 #include <inttypes.h>
+#include <stdatomic.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -40,20 +40,20 @@ int mm_init(void) {
 /* Simple sbrk function */
 void *mm_sbrk(size_t increment) {
     uintptr_t base = sbrk_base;
-
-    irq_disable_scoped();
+    uintptr_t new_base;
 
     increment = __align_up(increment, 4);
 
-    sbrk_base += increment;
+    do {
+        new_base = base + increment;
 
-    if(sbrk_base >= (_arch_mem_top - THD_KERNEL_STACK_SIZE)) {
-        dbglog(DBG_CRITICAL, "Out of memory. Requested sbrk_base %" PRIxPTR \
-            ", was %" PRIxPTR ", diff %zu\n", sbrk_base, base, increment);
-        sbrk_base = base;  /* Restore old value and mark failed */
-        errno = ENOMEM;
-        return (void *)-1;
-    }
+        if(new_base >= (_arch_mem_top - THD_KERNEL_STACK_SIZE)) {
+            dbglog(DBG_CRITICAL, "Out of memory. Requested sbrk_base %" PRIxPTR \
+                   ", was %" PRIxPTR ", diff %zu\n", new_base, base, increment);
+            errno = ENOMEM;
+            return (void *)-1;
+        }
+    } while(!atomic_compare_exchange_strong(&sbrk_base, &base, new_base));
 
     return (void *)base;
 }
