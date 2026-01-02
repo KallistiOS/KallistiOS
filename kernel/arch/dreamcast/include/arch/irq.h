@@ -230,7 +230,7 @@ enum irq_exception
     EXC_TRAP               = 0x0800  /**< `[TRAP  ]` Trap */
 };
 
-#define IRQ_TRAP_CODE(code) (EXC_TRAP + (code))
+#define IRQ_TRAP_CODE(code) (irq_t)(EXC_TRAP + (code))
 
 extern int inside_int;
 static inline int arch_irq_inside_int(void) {
