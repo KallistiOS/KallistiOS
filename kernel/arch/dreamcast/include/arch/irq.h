@@ -248,7 +248,7 @@ typedef struct irq_cb {
     void       *data;   /**< A pointer that will be passed along to the callback. */
 } irq_cb_t;
 
-#define IRQ_TRAP_CODE(code) (EXC_TRAP + (code))
+#define IRQ_TRAP_CODE(code) (irq_t)(EXC_TRAP + (code))
 
 extern int inside_int;
 static inline int arch_irq_inside_int(void) {
