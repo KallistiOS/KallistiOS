@@ -2,6 +2,7 @@
 
 | Date<br/>_____________ | Author(s)<br/>_____________ | Changes<br/>_____________ |
 |:-----------------------|:----------------------------|---------------------------|
+| 2026-01-01 | Eric Fradella | Do not build GDB by default |
 | 2025-11-05 | Eric Fradella | Decouple compiled GDB version from toolchain profile | 
 | 2025-06-07 | Eric Fradella | Upgrade 13.x series profiles to 13.4.0 and 13.4.1. |
 | 2025-05-23 | Eric Fradella | Upgrade 14.x series profiles to 14.3.0 and 14.3.1. |
