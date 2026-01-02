@@ -191,23 +191,6 @@ void arch_menu(void) __noreturn;
 */
 #define DBL_MEM (_arch_mem_top - 0x8d000000)
 
-/* These are in mm.c */
-/** \brief   Initialize the memory management system.
-    \ingroup arch
-
-    \retval 0               On success (no error conditions defined).
-*/
-int mm_init(void);
-
-/** \brief   Request more core memory from the system.
-    \ingroup arch
-
-    \param  increment       The number of bytes requested.
-    \return                 A pointer to the memory.
-    \note                   This function will panic if no memory is available.
-*/
-void * mm_sbrk(unsigned long increment);
-
 /* Bring in the init flags for compatibility with old code that expects them
    here. */
 #include <kos/init.h>

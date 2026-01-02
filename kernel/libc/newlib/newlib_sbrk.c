@@ -6,7 +6,7 @@
 */
 
 #include <sys/reent.h>
-#include <arch/arch.h>
+#include <kos/mm.h>
 
 char * _sbrk_r(struct _reent * reent, size_t incr) {
     (void)reent;

@@ -4,7 +4,7 @@
 # (c)2000-2001 Megan Potter
 #
 
-OBJS =
+OBJS = mm.o
 
 SUBDIRS =
 

@@ -16,6 +16,7 @@
 #include <kos/init.h>
 #include <kos/irq.h>
 #include <kos/linker.h>
+#include <kos/mm.h>
 #include <kos/platform.h>
 #include <kos/timer.h>
 #include <arch/arch.h>

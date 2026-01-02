@@ -6,7 +6,7 @@
 #
 
 OBJS = banner.o version.o
-SUBDIRS = arch debug fs thread net libc exports romdisk
+SUBDIRS = arch debug fs thread mm net libc exports romdisk
 STUBS = stubs/kernel_export_stubs.o stubs/arch_export_stubs.o stubs/subarch_export_stubs.o
 
 # Everything from here up should be plain old C.

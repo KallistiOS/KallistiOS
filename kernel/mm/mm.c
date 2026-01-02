@@ -17,6 +17,7 @@
 #include <arch/stack.h>
 #include <kos/dbglog.h>
 #include <kos/irq.h>
+#include <kos/mm.h>
 #include <kos/linker.h>
 #include <errno.h>
 #include <inttypes.h>
