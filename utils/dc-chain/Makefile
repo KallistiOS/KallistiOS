@@ -45,7 +45,7 @@ include scripts/init.mk
 # Makefile variables
 include scripts/variables.mk
 
-default: build gdb
+default: build
 
 all: build gdb
 
