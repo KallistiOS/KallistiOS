@@ -146,20 +146,16 @@ typedef struct {
         bool                write;      /**< \brief Enable depth writes */
     } depth;                            /**< \brief Depth comparison/write modes */
     struct {
-        int     enable;         /**< \brief Enable/disable texturing
-                                     \see   pvr_txr_switch */
-        int     filter;         /**< \brief Filtering mode
-                                     \see   pvr_filter_modes */
-        int     mipmap;         /**< \brief Enable/disable mipmaps
-                                     \see   pvr_mip_switch */
+        bool                enable; /**< \brief Enable/disable texturing */
+        pvr_filter_mode_t   filter; /**< \brief Filtering mode */
+        bool                mipmap; /**< \brief Enable/disable mipmaps */
         int     mipmap_bias;    /**< \brief Mipmap bias
                                      \see   pvr_mip_bias */
         int     uv_flip;        /**< \brief Enable/disable U/V flipping
                                      \see   pvr_uv_flip */
         int     uv_clamp;       /**< \brief Enable/disable U/V clamping
                                      \see   pvr_uv_clamp */
-        int     alpha;          /**< \brief Enable/disable texture alpha
-                                     \see   pvr_txralpha_switch */
+        bool    alpha;          /**< \brief Enable/disable texture alpha */
         int     env;            /**< \brief Texture color contribution
                                      \see   pvr_txrenv_modes */
         int     width;          /**< \brief Texture width (requires a power of 2) */
@@ -167,30 +163,8 @@ typedef struct {
         int     format;         /**< \brief Texture format
                                      \see   pvr_txr_fmts */
         pvr_ptr_t base;         /**< \brief Texture pointer */
-    } txr;                      /**< \brief Texturing params outside modifier */
-    struct {
-        int     enable;         /**< \brief Enable/disable texturing
-                                     \see   pvr_txr_switch */
-        int     filter;         /**< \brief Filtering mode
-                                     \see   pvr_filter_modes */
-        int     mipmap;         /**< \brief Enable/disable mipmaps
-                                     \see   pvr_mip_switch */
-        int     mipmap_bias;    /**< \brief Mipmap bias
-                                     \see   pvr_mip_bias */
-        int     uv_flip;        /**< \brief Enable/disable U/V flipping
-                                     \see   pvr_uv_flip */
-        int     uv_clamp;       /**< \brief Enable/disable U/V clamping
-                                     \see   pvr_uv_clamp */
-        int     alpha;          /**< \brief Enable/disable texture alpha
-                                     \see   pvr_txralpha_switch */
-        int     env;            /**< \brief Texture color contribution
-                                     \see   pvr_txrenv_modes */
-        int     width;          /**< \brief Texture width (requires a power of 2) */
-        int     height;         /**< \brief Texture height (requires a power of 2) */
-        int     format;         /**< \brief Texture format
-                                     \see   pvr_txr_fmts */
-        pvr_ptr_t base;         /**< \brief Texture pointer */
-    } txr2;                     /**< \brief Texturing params inside modifier */
+    } txr,                      /**< \brief Texturing params outside modifier */
+      txr2;                     /**< \brief Texturing params inside modifier */
 } pvr_poly_cxt_t;
 
 /** \brief   PVR sprite context.
@@ -228,20 +202,16 @@ typedef struct {
         bool                write;      /**< \brief Enable depth writes */
     } depth;                            /**< \brief Depth comparison/write modes */
     struct {
-        int     enable;         /**< \brief Enable/disable texturing
-                                     \see   pvr_txr_switch */
-        int     filter;         /**< \brief Filtering mode
-                                     \see   pvr_filter_modes */
-        int     mipmap;         /**< \brief Enable/disable mipmaps
-                                     \see   pvr_mip_switch */
+        bool                enable; /**< \brief Enable/disable texturing */
+        pvr_filter_mode_t   filter; /**< \brief Filtering mode */
+        bool                mipmap; /**< \brief Enable/disable mipmaps */
         int     mipmap_bias;    /**< \brief Mipmap bias
                                      \see   pvr_mip_bias */
         int     uv_flip;        /**< \brief Enable/disable U/V flipping
                                      \see   pvr_uv_flip */
         int     uv_clamp;       /**< \brief Enable/disable U/V clamping
                                      \see   pvr_uv_clamp */
-        int     alpha;          /**< \brief Enable/disable texture alpha
-                                     \see   pvr_txralpha_switch */
+        bool    alpha;          /**< \brief Enable/disable texture alpha */
         int     env;            /**< \brief Texture color contribution
                                      \see   pvr_txrenv_modes */
         int     width;          /**< \brief Texture width (requires a power of 2) */
@@ -269,33 +239,10 @@ typedef struct {
     \ingroup                  pvr_ctx_attrib
 */
 
-/** \defgroup pvr_txr_switch        Toggle
-    \brief                          Enable or Disable Texturing on Polygons.
-    \ingroup                        pvr_ctx_texture
-
-    @{
-*/
-#define PVR_TEXTURE_DISABLE     0   /**< \brief Disable texturing */
-#define PVR_TEXTURE_ENABLE      1   /**< \brief Enable texturing */
-/** @} */
-
 /** \defgroup pvr_ctx_color     Color
     \brief                      Color attributes for PowerVR primitive contexts
     \ingroup                    pvr_ctx_attrib
 */
-
-/** \defgroup pvr_txralpha_switch   Alpha Toggle
-    \brief                          Enable or Disable Texture Alpha Blending
-    \ingroup                        pvr_ctx_texture
-
-    This causes the alpha value in the texel color to be paid attention to. It
-    really only makes sense to enable this for translucent or punch-thru polys.
-
-    @{
-*/
-#define PVR_TXRALPHA_ENABLE     0   /**< \brief Enable alpha blending */
-#define PVR_TXRALPHA_DISABLE    1   /**< \brief Disable alpha blending */
-/** @} */
 
 /** \defgroup pvr_uv_flip           U/V Flip Mode
     \brief                          Enable or disable U/V flipping on the PVR
@@ -358,16 +305,6 @@ typedef struct {
 #define PVR_MIPBIAS_3_25        13
 #define PVR_MIPBIAS_3_50        14
 #define PVR_MIPBIAS_3_75        15
-/** @} */
-
-/** \defgroup pvr_mip_switch        Mipmap Toggle
-    \brief                          Enable or Disable Mipmap Processing
-    \ingroup                        pvr_ctx_texture
-
-    @{
-*/
-#define PVR_MIPMAP_DISABLE      0   /**< \brief Disable mipmap processing */
-#define PVR_MIPMAP_ENABLE       1   /**< \brief Enable mipmap processing */
 /** @} */
 
 /** \defgroup pvr_txr_fmts          Formats
@@ -1219,11 +1156,10 @@ void pvr_poly_cxt_col(pvr_poly_cxt_t *dst, pvr_list_t list);
     \param  filtering       The type of filtering to use.
 
     \see    pvr_txr_fmts
-    \see    pvr_filter_modes
 */
 void pvr_poly_cxt_txr(pvr_poly_cxt_t *dst, pvr_list_t list,
                       int textureformat, int tw, int th, pvr_ptr_t textureaddr,
-                      int filtering);
+                      pvr_filter_mode_t filtering);
 
 /** \brief   Compile a sprite context into a sprite header.
     \ingroup pvr_primitives_compilation
@@ -1263,11 +1199,10 @@ void pvr_sprite_cxt_col(pvr_sprite_cxt_t *dst, pvr_list_t list);
     \param  filtering       The type of filtering to use.
 
     \see    pvr_txr_fmts
-    \see    pvr_filter_modes
 */
 void pvr_sprite_cxt_txr(pvr_sprite_cxt_t *dst, pvr_list_t list,
                         int textureformat, int tw, int th, pvr_ptr_t textureaddr,
-                        int filtering);
+                        pvr_filter_mode_t filtering);
 
 /** \brief   Create a modifier volume header.
     \ingroup pvr_primitives_compilation
@@ -1336,13 +1271,12 @@ void pvr_poly_cxt_col_mod(pvr_poly_cxt_t *dst, pvr_list_t list);
     \param  filtering2      The type of filtering to use (inside).
 
     \see    pvr_txr_fmts
-    \see    pvr_filter_modes
 */
 void pvr_poly_cxt_txr_mod(pvr_poly_cxt_t *dst, pvr_list_t list,
                           int textureformat, int tw, int th,
-                          pvr_ptr_t textureaddr, int filtering,
+                          pvr_ptr_t textureaddr, pvr_filter_mode_t filtering,
                           int textureformat2, int tw2, int th2,
-                          pvr_ptr_t textureaddr2, int filtering2);
+                          pvr_ptr_t textureaddr2, pvr_filter_mode_t filtering2);
 
 /** \brief   Get a pointer to the front buffer.
     \ingroup pvr_txr_mgmt

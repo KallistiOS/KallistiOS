@@ -146,6 +146,39 @@ __BEGIN_DECLS
 #define PVR_DEPTHWRITE_DISABLE  1   /**< \brief Do not update the Z value */
 /** @} */
 
+/** \defgroup pvr_txr_switch        Toggle
+    \brief                          Enable or Disable Texturing on Polygons.
+    \ingroup                        pvr_ctx_texture
+
+    @{
+*/
+#define PVR_TEXTURE_DISABLE     0   /**< \brief Disable texturing */
+#define PVR_TEXTURE_ENABLE      1   /**< \brief Enable texturing */
+/** @} */
+
+/** \defgroup pvr_mip_switch        Mipmap Toggle
+    \brief                          Enable or Disable Mipmap Processing
+    \ingroup                        pvr_ctx_texture
+
+    @{
+*/
+#define PVR_MIPMAP_DISABLE      0   /**< \brief Disable mipmap processing */
+#define PVR_MIPMAP_ENABLE       1   /**< \brief Enable mipmap processing */
+/** @} */
+
+/** \defgroup pvr_txralpha_switch   Alpha Toggle
+    \brief                          Enable or Disable Texture Alpha Blending
+    \ingroup                        pvr_ctx_texture
+
+    This causes the alpha value in the texel color to be paid attention to. It
+    really only makes sense to enable this for translucent or punch-thru polys.
+
+    @{
+*/
+#define PVR_TXRALPHA_ENABLE     0   /**< \brief Enable alpha blending */
+#define PVR_TXRALPHA_DISABLE    1   /**< \brief Disable alpha blending */
+/** @} */
+
 /** \defgroup pvr_bitmasks_legacy   Constants and Masks
     \brief                          Legacy polygon header constants and masks
     \deprecated                     Replaced by \ref pvr_bitmasks
