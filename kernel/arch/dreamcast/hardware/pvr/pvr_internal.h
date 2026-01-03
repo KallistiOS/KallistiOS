@@ -111,13 +111,7 @@
 
  */
 
-/* Note that these must match the list types in pvr.h; these are here
-   mainly because they're easier to type =) */
-#define PVR_OPB_OP      0   /* Array indices for these structures */
-#define PVR_OPB_OM      1
-#define PVR_OPB_TP      2
-#define PVR_OPB_TM      3
-#define PVR_OPB_PT      4
+/* Total number of OPBs. Matches the count of pvr_list_t elements */
 #define PVR_OPB_COUNT   5
 
 // TA buffers structure: we have two sets of these

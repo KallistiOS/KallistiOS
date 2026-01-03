@@ -142,19 +142,19 @@ void pvr_int_handler(uint32_t code, void *data) {
     // What kind of event did we get?
     switch(code) {
         case ASIC_EVT_PVR_OPAQUEDONE:
-            pvr_state.lists_transferred |= BIT(PVR_OPB_OP);
+            pvr_state.lists_transferred |= BIT(PVR_LIST_OP_POLY);
             break;
         case ASIC_EVT_PVR_TRANSDONE:
-            pvr_state.lists_transferred |= BIT(PVR_OPB_TP);
+            pvr_state.lists_transferred |= BIT(PVR_LIST_TR_POLY);
             break;
         case ASIC_EVT_PVR_OPAQUEMODDONE:
-            pvr_state.lists_transferred |= BIT(PVR_OPB_OM);
+            pvr_state.lists_transferred |= BIT(PVR_LIST_OP_MOD);
             break;
         case ASIC_EVT_PVR_TRANSMODDONE:
-            pvr_state.lists_transferred |= BIT(PVR_OPB_TM);
+            pvr_state.lists_transferred |= BIT(PVR_LIST_TR_MOD);
             break;
         case ASIC_EVT_PVR_PTDONE:
-            pvr_state.lists_transferred |= BIT(PVR_OPB_PT);
+            pvr_state.lists_transferred |= BIT(PVR_LIST_PT_POLY);
             break;
         case ASIC_EVT_PVR_RENDERDONE_TSP:
             pvr_state.render_busy = 0;
