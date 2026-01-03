@@ -41,9 +41,6 @@ void *pvr_set_vertbuf(pvr_list_t list, void *buffer, size_t len) {
     // that themselves.
     assert(pvr_state.dma_mode);
 
-    // Make sure it's a valid list.
-    assert(list < PVR_OPB_COUNT);
-
     // Make sure it's an _enabled_ list.
     assert(pvr_state.lists_enabled & BIT(list));
 
@@ -71,7 +68,6 @@ void *pvr_vertbuf_tail(pvr_list_t list) {
     uint8_t *bufbase;
 
     // Check the validity of the request.
-    assert(list < PVR_OPB_COUNT);
     assert(pvr_state.dma_mode);
 
     // Get the buffer base.
@@ -86,7 +82,6 @@ void pvr_vertbuf_written(pvr_list_t list, size_t amt) {
     uint32_t val;
 
     // Check the validity of the request.
-    assert(list < PVR_OPB_COUNT);
     assert(pvr_state.dma_mode);
 
     // Change the current end of the buffer.

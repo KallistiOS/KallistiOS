@@ -68,16 +68,6 @@ __BEGIN_DECLS
     \ingroup            pvr
 */
 
-/** \brief   PVR list specification.
-    \ingroup pvr_lists
-
-    Each primitive in the PVR is submitted to one of the hardware primitive
-    lists. This type is an identifier for a list.
-
-    \see    pvr_lists
-*/
-typedef uint32_t pvr_list_t;
-
 /** \defgroup pvr_geometry Geometry
     \brief                 PVR API for managing scene geometry
     \ingroup               pvr
@@ -180,8 +170,7 @@ typedef enum pvr_uv_clamp {
     \headerfile dc/pvr.h
 */
 typedef struct {
-    int     list_type;                      /**< \brief Primitive list
-                                                 \see   pvr_lists */
+    pvr_list_t  list_type;  /**< \brief Primitive list */
     struct {
         bool                alpha;          /**< \brief Enable alpha outside modifier */
         bool                shading;        /**< \brief Enable gourad shading */
@@ -246,8 +235,7 @@ typedef struct {
     \headerfile dc/pvr.h
 */
 typedef struct {
-    int     list_type;                  /**< \brief Primitive list
-                                             \see   pvr_lists */
+    pvr_list_t  list_type;  /**< \brief Primitive list */
     struct {
         bool            alpha;          /**< \brief Enable alpha */
         pvr_fog_type_t  fog_type;       /**< \brief Fog type */
