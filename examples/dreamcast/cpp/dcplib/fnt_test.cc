@@ -35,8 +35,6 @@ fntTexFont *font_list[MAX_FONTS];
 int cur_font = 0;
 int max_font = 0;
 
-int filter_mode = 0;
-
 void switchFont() {
     cur_font++;
 
@@ -44,11 +42,24 @@ void switchFont() {
         cur_font = 0;
 }
 
-void switchFilterMode() {
-    filter_mode++;
+pvr_filter_mode_t filter_mode = PVR_FILTER_NEAREST;
 
-    if(filter_mode >= 8)
-        filter_mode = 0;
+void switchFilterMode() {
+
+    switch(filter_mode) {
+        case PVR_FILTER_NEAREST:
+            filter_mode = PVR_FILTER_BILINEAR;
+            return;
+        case PVR_FILTER_BILINEAR:
+            filter_mode = PVR_FILTER_TRILINEAR1;
+            return;
+        case PVR_FILTER_TRILINEAR1:
+            filter_mode = PVR_FILTER_TRILINEAR2;
+            return;
+        case PVR_FILTER_TRILINEAR2:
+            filter_mode = PVR_FILTER_NEAREST;
+            return;
+    }
 }
 
 void drawFrame() {
