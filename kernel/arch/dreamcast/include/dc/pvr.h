@@ -93,6 +93,75 @@ typedef uint32_t pvr_list_t;
     \ingroup          pvr_primitives
 */
 
+/** \defgroup pvr_mip_bias          Mipmap Bias Modes
+    \brief                          Mipmap bias modes for PowerVR primitive contexts
+    \ingroup                        pvr_ctx_texture
+
+    @{
+*/
+typedef enum pvr_mip_bias {
+    PVR_MIPBIAS_0_25   = 1,
+    PVR_MIPBIAS_0_50   = 2,
+    PVR_MIPBIAS_0_75   = 3,
+    PVR_MIPBIAS_1_00   = 4,
+    PVR_MIPBIAS_1_25   = 5,
+    PVR_MIPBIAS_1_50   = 6,
+    PVR_MIPBIAS_1_75   = 7,
+    PVR_MIPBIAS_2_00   = 8,
+    PVR_MIPBIAS_2_25   = 9,
+    PVR_MIPBIAS_2_50   = 10,
+    PVR_MIPBIAS_2_75   = 11,
+    PVR_MIPBIAS_3_00   = 12,
+    PVR_MIPBIAS_3_25   = 13,
+    PVR_MIPBIAS_3_50   = 14,
+    PVR_MIPBIAS_3_75   = 15,
+    PVR_MIPBIAS_NORMAL = PVR_MIPBIAS_1_00    /* txr_mipmap_bias */
+} pvr_mip_bias_t;
+/** @} */
+
+/** \defgroup pvr_uv_flip           U/V Flip Mode
+    \brief                          Enable or disable U/V flipping on the PVR
+    \ingroup                        pvr_ctx_texture
+
+    These flags determine what happens when U/V coordinate values exceed 1.0.
+    In any of the flipped cases, the specified coordinate value will flip around
+    after 1.0, essentially mirroring the image. So, if you displayed an image
+    with a U coordinate of 0.0 on the left hand side and 2.0 on the right hand
+    side with U flipping turned on, you'd have an image that was displayed twice
+    as if mirrored across the middle. This mirroring behavior happens at every
+    unit boundary (so at 2.0 it returns to normal, at 3.0 it flips, etc).
+
+    The default case is to disable mirroring. In addition, clamping of the U/V
+    coordinates by PVR_UVCLAMP_U, PVR_UVCLAMP_V, or PVR_UVCLAMP_UV will disable
+    the mirroring behavior.
+    @{
+*/
+typedef enum pvr_uv_flip {
+    PVR_UVFLIP_NONE, /**< No flipped coordinates */
+    PVR_UVFLIP_V,    /**< Flip V only */
+    PVR_UVFLIP_U,    /**< Flip U only */
+    PVR_UVFLIP_UV    /**< Flip U and V */
+} pvr_uv_flip_t;
+/** @} */
+
+/** \defgroup pvr_uv_clamp  U/V Clamp Mode
+    \brief                  Enable or disable clamping of U/V on the PVR
+    \ingroup                pvr_ctx_texture
+
+    These flags determine whether clamping will be applied to U/V coordinate
+    values that exceed 1.0. If enabled, these modes will explicitly override the
+    flip/mirroring modes (PVR_UVFLIP_U, PVR_UVFLIP_V, and PVR_UVFLIP_UV), and
+    will instead ensure that the coordinate(s) in question never exceed 1.0.
+    @{
+*/
+typedef enum pvr_uv_clamp {
+    PVR_UVCLAMP_NONE, /**< Disable clamping */
+    PVR_UVCLAMP_V,    /**< Clamp V only */
+    PVR_UVCLAMP_U,    /**< Clamp U only */
+    PVR_UVCLAMP_UV    /**< Clamp U and V */
+} pvr_uv_clamp_t;
+/** @} */
+
 /** \brief   PVR polygon context.
     \ingroup pvr_ctx
 
@@ -146,25 +215,21 @@ typedef struct {
         bool                write;      /**< \brief Enable depth writes */
     } depth;                            /**< \brief Depth comparison/write modes */
     struct {
-        bool                enable; /**< \brief Enable/disable texturing */
-        pvr_filter_mode_t   filter; /**< \brief Filtering mode */
-        bool                mipmap; /**< \brief Enable/disable mipmaps */
-        int     mipmap_bias;    /**< \brief Mipmap bias
-                                     \see   pvr_mip_bias */
-        int     uv_flip;        /**< \brief Enable/disable U/V flipping
-                                     \see   pvr_uv_flip */
-        int     uv_clamp;       /**< \brief Enable/disable U/V clamping
-                                     \see   pvr_uv_clamp */
-        bool    alpha;          /**< \brief Enable/disable texture alpha */
-        int     env;            /**< \brief Texture color contribution
-                                     \see   pvr_txrenv_modes */
+        bool                enable;         /**< \brief Enable/disable texturing */
+        pvr_filter_mode_t   filter;         /**< \brief Filtering mode */
+        bool                mipmap;         /**< \brief Enable/disable mipmaps */
+        pvr_mip_bias_t      mipmap_bias;    /**< \brief Mipmap bias */
+        pvr_uv_flip_t       uv_flip;        /**< \brief Enable/disable U/V flipping */
+        pvr_uv_clamp_t      uv_clamp;       /**< \brief Enable/disable U/V clamping */
+        bool                alpha;          /**< \brief Enable/disable texture alpha */
+        pvr_txr_shading_mode_t  env;        /**< \brief Texture color contribution */
         int     width;          /**< \brief Texture width (requires a power of 2) */
         int     height;         /**< \brief Texture height (requires a power of 2) */
         int     format;         /**< \brief Texture format
                                      \see   pvr_txr_fmts */
         pvr_ptr_t base;         /**< \brief Texture pointer */
-    } txr,                      /**< \brief Texturing params outside modifier */
-      txr2;                     /**< \brief Texturing params inside modifier */
+    } txr,                  /**< \brief Texturing params outside modifier */
+      txr2;                 /**< \brief Texturing params inside modifier */
 } pvr_poly_cxt_t;
 
 /** \brief   PVR sprite context.
@@ -202,18 +267,14 @@ typedef struct {
         bool                write;      /**< \brief Enable depth writes */
     } depth;                            /**< \brief Depth comparison/write modes */
     struct {
-        bool                enable; /**< \brief Enable/disable texturing */
-        pvr_filter_mode_t   filter; /**< \brief Filtering mode */
-        bool                mipmap; /**< \brief Enable/disable mipmaps */
-        int     mipmap_bias;    /**< \brief Mipmap bias
-                                     \see   pvr_mip_bias */
-        int     uv_flip;        /**< \brief Enable/disable U/V flipping
-                                     \see   pvr_uv_flip */
-        int     uv_clamp;       /**< \brief Enable/disable U/V clamping
-                                     \see   pvr_uv_clamp */
-        bool    alpha;          /**< \brief Enable/disable texture alpha */
-        int     env;            /**< \brief Texture color contribution
-                                     \see   pvr_txrenv_modes */
+        bool                enable;         /**< \brief Enable/disable texturing */
+        pvr_filter_mode_t   filter;         /**< \brief Filtering mode */
+        bool                mipmap;         /**< \brief Enable/disable mipmaps */
+        pvr_mip_bias_t      mipmap_bias;    /**< \brief Mipmap bias */
+        pvr_uv_flip_t       uv_flip;        /**< \brief Enable/disable U/V flipping */
+        pvr_uv_clamp_t      uv_clamp;       /**< \brief Enable/disable U/V clamping */
+        bool                alpha;          /**< \brief Enable/disable texture alpha */
+        pvr_txr_shading_mode_t  env;        /**< \brief Texture color contribution */
         int     width;          /**< \brief Texture width (requires a power of 2) */
         int     height;         /**< \brief Texture height (requires a power of 2) */
         int     format;         /**< \brief Texture format
@@ -243,69 +304,6 @@ typedef struct {
     \brief                      Color attributes for PowerVR primitive contexts
     \ingroup                    pvr_ctx_attrib
 */
-
-/** \defgroup pvr_uv_flip           U/V Flip Mode
-    \brief                          Enable or disable U/V flipping on the PVR
-    \ingroup                        pvr_ctx_texture
-
-    These flags determine what happens when U/V coordinate values exceed 1.0.
-    In any of the flipped cases, the specified coordinate value will flip around
-    after 1.0, essentially mirroring the image. So, if you displayed an image
-    with a U coordinate of 0.0 on the left hand side and 2.0 on the right hand
-    side with U flipping turned on, you'd have an image that was displayed twice
-    as if mirrored across the middle. This mirroring behavior happens at every
-    unit boundary (so at 2.0 it returns to normal, at 3.0 it flips, etc).
-
-    The default case is to disable mirroring. In addition, clamping of the U/V
-    coordinates by PVR_UVCLAMP_U, PVR_UVCLAMP_V, or PVR_UVCLAMP_UV will disable
-    the mirroring behavior.
-    @{
-*/
-#define PVR_UVFLIP_NONE         0   /**< \brief No flipped coordinates */
-#define PVR_UVFLIP_V            1   /**< \brief Flip V only */
-#define PVR_UVFLIP_U            2   /**< \brief Flip U only */
-#define PVR_UVFLIP_UV           3   /**< \brief Flip U and V */
-/** @} */
-
-/** \defgroup pvr_uv_clamp  U/V Clamp Mode
-    \brief                  Enable or disable clamping of U/V on the PVR
-    \ingroup                pvr_ctx_texture
-
-    These flags determine whether clamping will be applied to U/V coordinate
-    values that exceed 1.0. If enabled, these modes will explicitly override the
-    flip/mirroring modes (PVR_UVFLIP_U, PVR_UVFLIP_V, and PVR_UVFLIP_UV), and
-    will instead ensure that the coordinate(s) in question never exceed 1.0.
-    @{
-*/
-#define PVR_UVCLAMP_NONE        0   /**< \brief Disable clamping */
-#define PVR_UVCLAMP_V           1   /**< \brief Clamp V only */
-#define PVR_UVCLAMP_U           2   /**< \brief Clamp U only */
-#define PVR_UVCLAMP_UV          3   /**< \brief Clamp U and V */
-/** @} */
-
-/** \defgroup pvr_mip_bias          Mipmap Bias Modes
-    \brief                          Mipmap bias modes for PowerVR primitive contexts
-    \ingroup                        pvr_ctx_texture
-
-    @{
-*/
-#define PVR_MIPBIAS_NORMAL      PVR_MIPBIAS_1_00    /* txr_mipmap_bias */
-#define PVR_MIPBIAS_0_25        1
-#define PVR_MIPBIAS_0_50        2
-#define PVR_MIPBIAS_0_75        3
-#define PVR_MIPBIAS_1_00        4
-#define PVR_MIPBIAS_1_25        5
-#define PVR_MIPBIAS_1_50        6
-#define PVR_MIPBIAS_1_75        7
-#define PVR_MIPBIAS_2_00        8
-#define PVR_MIPBIAS_2_25        9
-#define PVR_MIPBIAS_2_50        10
-#define PVR_MIPBIAS_2_75        11
-#define PVR_MIPBIAS_3_00        12
-#define PVR_MIPBIAS_3_25        13
-#define PVR_MIPBIAS_3_50        14
-#define PVR_MIPBIAS_3_75        15
-/** @} */
 
 /** \defgroup pvr_txr_fmts          Formats
     \brief                          PowerVR texture formats
