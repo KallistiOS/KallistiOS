@@ -156,7 +156,7 @@ static fs_hnd_t * fs_hnd_open(const char *fn, int mode) {
     hnd->handler = cur;
     hnd->hnd = h;
     hnd->refcnt = 0;
-    hnd->idx = 0;
+    hnd->idx = -2;
 
     return hnd;
 }
@@ -505,10 +505,23 @@ uint64_t fs_total64(file_t fd) {
     return -1;
 }
 
+static const dirent_t dot_dirent = {
+    .name = ".",
+    .attr = O_DIR,
+    .size = -1,
+    .time = 0,
+};
+
+static const dirent_t dotdot_dirent = {
+    .name = "..",
+    .attr = O_DIR,
+    .size = -1,
+    .time = 0,
+};
+
 const dirent_t *fs_readdir(file_t fd) {
-    static dirent_t dot_dirent;
-    static const dirent_t *temp_dirent;
     fs_hnd_t *h = fs_map_hnd(fd);
+    const dirent_t *dirent;
 
     if(!h) return NULL;
 
@@ -521,49 +534,21 @@ const dirent_t *fs_readdir(file_t fd) {
     }
 
     switch (h->idx) {
-        case 0:
-            temp_dirent = h->handler->readdir(h->hnd);
+        case -2:
             h->idx++;
-
-            /* Does fs provide its own . directory? */
-            if(temp_dirent && (strcmp(temp_dirent->name, ".") == 0)) {
-                return temp_dirent;
-            } else {
-                /* Send . directory first */
-                strcpy(dot_dirent.name, ".");
-                dot_dirent.attr = O_DIR;
-                dot_dirent.size = -1;
-                dot_dirent.time = 0;
-                return &dot_dirent;
-            }
-        case 1:
+            /* Send . directory first */
+            return &dot_dirent;
+        case -1:
             h->idx++;
-
-            /* Did fs provide its own . directory? */
-            if(temp_dirent && (strcmp(temp_dirent->name, ".") == 0)) {
-                /* Read a new entry */
-                temp_dirent = h->handler->readdir(h->hnd);
-            }
-
-            /* Does fs provide its own .. directory? */
-            if(temp_dirent && (strcmp(temp_dirent->name, "..") == 0)) {
-                h->idx++;
-                return temp_dirent;
-            } else {
-                /* Send .. directory second */
-                strcpy(dot_dirent.name, "..");
-                dot_dirent.attr = O_DIR;
-                dot_dirent.size = -1;
-                dot_dirent.time = 0;
-                return &dot_dirent;
-            }
-        case 2:
-            h->idx++;
-            /* FS didnt provide a . or .. directory. 
-               Return what we read first */
-            return temp_dirent;
+            /* Send .. directory second */
+            return &dotdot_dirent;
         default:
-            return h->handler->readdir(h->hnd);
+            for(;; h->idx++) {
+                dirent = h->handler->readdir(h->hnd);
+                if(!dirent ||
+                   (strcmp(dirent->name, ".") && strcmp(dirent->name, "..")))
+                    return dirent;
+            }
     }
 }
 
