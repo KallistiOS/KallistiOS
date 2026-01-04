@@ -23,8 +23,6 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <dc/fs_dcload.h>
-
 /** \addtogroup vfs_dcload
    @{
 */
