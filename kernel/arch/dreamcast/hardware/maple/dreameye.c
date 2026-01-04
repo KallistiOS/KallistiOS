@@ -383,29 +383,11 @@ int dreameye_erase_image(maple_device_t *dev, uint8_t image, int block) {
     return MAPLE_EOK;
 }
 
-static int dreameye_attach(maple_driver_t *drv, maple_device_t *dev) {
-    dreameye_state_t *de;
-
-    (void)drv;
-
-    de = (dreameye_state_t *)dev->status;
-    de->image_count = 0;
-    de->image_count_valid = 0;
-    de->transfer_count = 0;
-    de->img_transferring = 0;
-    de->img_buf = NULL;
-    de->img_size = 0;
-    de->img_number = 0;
-
-    return 0;
-}
-
 /* Device Driver Struct */
 static maple_driver_t dreameye_drv = {
     .functions = MAPLE_FUNC_CAMERA,
     .name = "Dreameye (Camera)",
-    .status_size = sizeof(dreameye_state_t),
-    .attach = dreameye_attach
+    .status_size = sizeof(dreameye_state_t)
 };
 
 /* Add the Dreameye to the driver chain */
