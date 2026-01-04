@@ -388,7 +388,7 @@ uint64_t fs_total64(file_t hnd);
     
     \return                 The next entry, or NULL on failure.
 */
-dirent_t *fs_readdir(file_t hnd);
+const dirent_t *fs_readdir(file_t hnd);
 
 /** \brief   Execute a device-specific command on a file descriptor.
 

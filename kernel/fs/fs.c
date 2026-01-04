@@ -505,9 +505,9 @@ uint64_t fs_total64(file_t fd) {
     return -1;
 }
 
-dirent_t *fs_readdir(file_t fd) {
+const dirent_t *fs_readdir(file_t fd) {
     static dirent_t dot_dirent;
-    static dirent_t *temp_dirent;
+    static const dirent_t *temp_dirent;
     fs_hnd_t *h = fs_map_hnd(fd);
 
     if(!h) return NULL;
