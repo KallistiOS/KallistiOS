@@ -396,7 +396,7 @@ static size_t dcls_total(void *hnd) {
 static dirent_t their_dir;
 static dcload_dirent_t our_dir;
 
-static dirent_t *dcls_readdir(void *hnd) {
+static const dirent_t *dcls_readdir(void *hnd) {
     uint32 fd = (uint32) hnd;
     command_3int_t *cmd = (command_3int_t *)pktbuf;
 

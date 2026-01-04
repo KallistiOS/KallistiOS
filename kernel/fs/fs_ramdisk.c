@@ -515,7 +515,7 @@ static size_t ramdisk_total(void * h) {
 }
 
 /* Read a directory entry */
-static dirent_t *ramdisk_readdir(void * h) {
+static const dirent_t *ramdisk_readdir(void * h) {
     rd_file_t   * f;
     file_t      fd = (file_t)h;
 

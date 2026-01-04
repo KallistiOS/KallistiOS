@@ -134,7 +134,7 @@ typedef struct vfs_handler {
     size_t (*total)(void *hnd);
 
     /** \brief Read the next directory entry in a directory opened with O_DIR */
-    dirent_t *(*readdir)(void *hnd);
+    const dirent_t *(*readdir)(void *hnd);
 
     /** \brief Execute a device-specific call on a previously opened file */
     int (*ioctl)(void *hnd, int cmd, va_list ap);
