@@ -9,6 +9,7 @@
 #include <malloc.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <assert.h>
 #include <dc/maple.h>
@@ -83,7 +84,7 @@ static void vbl_dev_probed(int p, int u) {
 }
 
 /* Check the sub-devices for a top-level port */
-static void vbl_chk_subdevs(maple_state_t *state, int p, uint8 newmask) {
+static void vbl_chk_subdevs(maple_state_t *state, int p, uint8_t newmask) {
     maple_device_t *dev = maple_enum_dev(p, 0);
     unsigned int u;
 
@@ -203,7 +204,7 @@ static void vbl_autodetect(maple_state_t *state) {
 }
 
 /* Called on every VBL (~60fps) */
-void maple_vbl_irq_hnd(uint32 code, void *data) {
+void maple_vbl_irq_hnd(uint32_t code, void *data) {
     maple_state_t *state = data;
     maple_driver_t *drv;
 
@@ -234,11 +235,11 @@ void maple_vbl_irq_hnd(uint32 code, void *data) {
 /* Maple DMA completion handler */
 
 /* Called after a Maple DMA send / receive pair completes */
-void maple_dma_irq_hnd(uint32 code, void *data) {
+void maple_dma_irq_hnd(uint32_t code, void *data) {
     maple_state_t *state = data;
     maple_frame_t   *i, *tmp;
-    int8        resp;
-    uint32 gun;
+    int8_t        resp;
+    uint32_t gun;
 
     (void)code;
 
@@ -263,7 +264,7 @@ void maple_dma_irq_hnd(uint32 code, void *data) {
 
         /* Check to see if it got a proper response; we might
            have to resubmit the request */
-        resp = ((int8*)i->recv_buf)[0];
+        resp = ((int8_t *)i->recv_buf)[0];
 
         if(resp == MAPLE_RESPONSE_AGAIN) {
             i->state = MAPLE_FRAME_UNSENT;

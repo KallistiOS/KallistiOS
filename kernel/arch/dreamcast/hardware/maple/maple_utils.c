@@ -6,6 +6,7 @@
  */
 
 #include <assert.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <dc/memory.h>
@@ -34,12 +35,12 @@ int maple_dma_in_progress(void) {
 
 /* Set the DMA Address */
 void maple_dma_addr(void *ptr) {
-    maple_write(MAPLE_DMAADDR, ((uint32) ptr) & MEM_AREA_CACHE_MASK);
+    maple_write(MAPLE_DMAADDR, ((uint32_t) ptr) & MEM_AREA_CACHE_MASK);
 }
 
 /* Return a "maple address" for a port,unit pair */
-uint8 maple_addr(int port, int unit) {
-    uint8 addr;
+uint8_t maple_addr(int port, int unit) {
+    uint8_t addr;
 
     assert(port < MAPLE_PORT_COUNT && unit < MAPLE_UNIT_COUNT);
 
@@ -55,7 +56,7 @@ uint8 maple_addr(int port, int unit) {
 
 /* Decompose a "maple address" into a port,unit pair */
 /* WARNING: Won't work on multi-cast addresses! */
-void maple_raddr(uint8 addr, int * port, int * unit) {
+void maple_raddr(uint8_t addr, int *port, int *unit) {
     *port = (addr >> 6) & 3;
 
     if(addr & 0x20)
@@ -97,7 +98,7 @@ static const char *maple_cap_names[] = {
 
 /* Print the capabilities of a given driver to dbglog; NOT THREAD SAFE */
 static char caps_buffer[64];
-const char * maple_pcaps(uint32 functions) {
+const char *maple_pcaps(uint32_t functions) {
     unsigned int i, o;
 
     for(o = 0, i = 0; i < 32; i++) {
@@ -135,7 +136,7 @@ static const char *maple_resp_names[] = {
 };
 
 /* Return a string representing the maple response code */
-const char * maple_perror(int response) {
+const char *maple_perror(int response) {
     response += 5;
 
     if(response < 0 || (size_t)response >= __array_size(maple_resp_names))
@@ -168,20 +169,20 @@ void maple_gun_read_pos(int *x, int *y) {
 }
 
 /* Debugging help */
-void maple_sentinel_setup(void * buffer, int bufsize) {
+void maple_sentinel_setup(void *buffer, int bufsize) {
     assert(__is_defined(MAPLE_DMA_DEBUG));
     assert(bufsize % 4 == 0);
     memset(buffer, 0xdeadbeef, bufsize);
 }
 
-void maple_sentinel_verify(const char * bufname, void * buffer, int bufsize) {
+void maple_sentinel_verify(const char *bufname, void *buffer, int bufsize) {
     int i;
-    uint32 *b32;
+    uint32_t *b32;
 
     assert(__is_defined(MAPLE_DMA_DEBUG));
     assert(bufsize % 4 == 0);
 
-    b32 = ((uint32 *)buffer) - 512 / 4;
+    b32 = ((uint32_t *)buffer) - 512 / 4;
 
     for(i = 0; i < 512 / 4; i++) {
         if(b32[i] != 0xdeadbeef) {
@@ -191,7 +192,7 @@ void maple_sentinel_verify(const char * bufname, void * buffer, int bufsize) {
         }
     }
 
-    b32 = ((uint32 *)buffer) + bufsize / 4;
+    b32 = ((uint32_t *)buffer) + bufsize / 4;
 
     for(i = 0; i < 512 / 4; i++) {
         if(b32[i] != 0xdeadbeef) {

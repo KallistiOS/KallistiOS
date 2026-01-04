@@ -163,7 +163,6 @@ static int vmu_poll(maple_device_t *dev) {
         dev->frame.length = 1;
         dev->frame.callback = vmu_poll_reply;
         maple_queue_frame(&dev->frame);
-
     }
 
     return 0;
@@ -373,7 +372,7 @@ int vmu_draw_lcd_rotated(maple_device_t *dev, const void *bitmap) {
     unsigned int i;
 
     for(i = 0; i < 48; i++) {
-        bitmap_inverted[i] = bit_reverse(((uint32 *)bitmap)[47 - i]);
+        bitmap_inverted[i] = bit_reverse(((uint32_t *)bitmap)[47 - i]);
     }
 
     return vmu_draw_lcd(dev, bitmap_inverted);

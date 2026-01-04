@@ -7,13 +7,14 @@
 #include <dc/maple.h>
 #include <dc/maple/mouse.h>
 #include <string.h>
+#include <stdint.h>
 #include <assert.h>
 
 static void mouse_reply(maple_state_t *st, maple_frame_t *frm) {
     (void)st;
 
     maple_response_t    *resp;
-    uint32          *respbuf;
+    uint32_t            *respbuf;
     mouse_cond_t        *raw;
     mouse_state_t       *cooked;
 
@@ -26,7 +27,7 @@ static void mouse_reply(maple_state_t *st, maple_frame_t *frm) {
     if(resp->response != MAPLE_RESPONSE_DATATRF)
         return;
 
-    respbuf = (uint32 *)resp->data;
+    respbuf = (uint32_t *)resp->data;
 
     if(respbuf[0] != MAPLE_FUNC_MOUSE)
         return;
