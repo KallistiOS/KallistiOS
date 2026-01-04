@@ -22,8 +22,6 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <kos/net.h>
-
 /** \defgroup lan_adapter  LAN Adapter
     \brief                 Driver for the Dreamcast's LAN Adapter
     \ingroup               networking_drivers
