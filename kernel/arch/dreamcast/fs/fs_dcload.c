@@ -265,7 +265,7 @@ static size_t dcload_total(void * h) {
     return ret;
 }
 
-static dirent_t *dcload_readdir(void * h) {
+static const dirent_t *dcload_readdir(void *h) {
     dirent_t *rv = NULL;
     dcload_dirent_t *dcld;
     dcload_stat_t filestat;
