@@ -99,16 +99,12 @@ maple_device_t * maple_enum_type_ex(int n, uint32_t func, uint32_t cap) {
     return NULL;
 }
 
-/* Get the status struct for the requested maple device; wait until it's
-   valid before returning. Cast to the appropriate type you're expecting. */
-void * maple_dev_status(maple_device_t *dev) {
-    /* The device must be valid, and must get periodic updates. */
-    if(!dev || !dev->valid || !dev->drv || !dev->drv->periodic)
+/* Get the status struct for the requested maple device.
+   Cast to the appropriate type you're expecting. */
+void *maple_dev_status(maple_device_t *dev) {
+    /* The device must be valid. */
+    if(!dev || !dev->valid || !dev->drv)
         return NULL;
-
-    /* Waits until the first DMA happens: crude but effective (replace me later) */
-    while(!dev->status_valid)
-        thd_pass();
 
     /* Cast and return the status buffer */
     return dev->status;

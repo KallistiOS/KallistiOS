@@ -45,7 +45,6 @@ static void mouse_reply(maple_state_t *st, maple_frame_t *frm) {
     cooked->dx = raw->dx - MOUSE_DELTA_CENTER;
     cooked->dy = raw->dy - MOUSE_DELTA_CENTER;
     cooked->dz = raw->dz - MOUSE_DELTA_CENTER;
-    frm->dev->status_valid = 1;
 }
 
 static int mouse_poll(maple_device_t *dev) {

@@ -55,7 +55,6 @@ static void dreameye_get_image_count_cb(maple_state_t *st, maple_frame_t *frame)
         de = (dreameye_state_t *)frame->dev->status;
         de->image_count = (respbuf8[10] << 8) | respbuf8[11];
         de->image_count_valid = 1;
-        frame->dev->status_valid = 1;
     }
 
     /* Wake up! */
@@ -384,17 +383,6 @@ int dreameye_erase_image(maple_device_t *dev, uint8_t image, int block) {
     return MAPLE_EOK;
 }
 
-static int dreameye_poll(maple_device_t *dev) {
-    /* For right now, we don't have anything particularly pressing to do here,
-       so punt. */
-    dev->status_valid = 1;
-    return 0;
-}
-
-static void dreameye_periodic(maple_driver_t *drv) {
-    maple_driver_foreach(drv, dreameye_poll);
-}
-
 static int dreameye_attach(maple_driver_t *drv, maple_device_t *dev) {
     dreameye_state_t *de;
 
@@ -409,7 +397,6 @@ static int dreameye_attach(maple_driver_t *drv, maple_device_t *dev) {
     de->img_size = 0;
     de->img_number = 0;
 
-    dev->status_valid = 1;
     return 0;
 }
 
@@ -417,10 +404,8 @@ static int dreameye_attach(maple_driver_t *drv, maple_device_t *dev) {
 static maple_driver_t dreameye_drv = {
     .functions = MAPLE_FUNC_CAMERA,
     .name = "Dreameye (Camera)",
-    .periodic = dreameye_periodic,
     .status_size = sizeof(dreameye_state_t),
-    .attach = dreameye_attach,
-    .detach = NULL
+    .attach = dreameye_attach
 };
 
 /* Add the Dreameye to the driver chain */

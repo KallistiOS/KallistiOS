@@ -537,7 +537,7 @@ kbd_state_t *kbd_get_state(maple_device_t *device) {
     if(!device)
         return NULL;
 
-    if(!device->status_valid)
+    if(!device->status)
         return NULL;
 
     if(!(device->info.functions & MAPLE_FUNC_KEYBOARD))
@@ -756,7 +756,6 @@ static void kbd_reply(maple_state_t *st, maple_frame_t *frm) {
     state = (kbd_state_t *)frm->dev->status;
     cond = (kbd_cond_t *)&state->cond;
     memcpy(cond, respbuf + 1, (resp->data_len - 1) * sizeof(uint32_t));
-    frm->dev->status_valid = 1;
     kbd_check_poll(frm);
 }
 

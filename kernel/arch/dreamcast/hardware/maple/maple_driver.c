@@ -132,7 +132,6 @@ int maple_driver_attach(maple_frame_t *det) {
 
     /* Finish setting stuff up */
     dev->drv = i;
-    dev->status_valid = 0;
     dev->valid = true;
 
     if(i->user_attach)
@@ -156,8 +155,6 @@ int maple_driver_detach(int p, int u) {
         if(dev->drv->detach)
             dev->drv->detach(dev->drv, dev);
     }
-
-    dev->status_valid = 0;
 
     if(dev->drv->status_size) {
         free(dev->status);

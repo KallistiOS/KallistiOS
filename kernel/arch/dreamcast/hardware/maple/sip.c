@@ -230,7 +230,6 @@ static void sip_reply(maple_state_t *st, maple_frame_t *frm) {
         return;
 
     sip = (sip_state_t *)frm->dev->status;
-    frm->dev->status_valid = 1;
 
     if(sip->is_sampling && sip->callback) {
         /* Call the user's callback. */
@@ -243,7 +242,6 @@ static int sip_poll(maple_device_t *dev) {
 
     /* Test to make sure that the particular mic is enabled */
     if(!sip->is_sampling || !sip->callback) {
-        dev->status_valid = 1;
         return 0;
     }
 
@@ -277,7 +275,6 @@ static int sip_attach(maple_driver_t *drv, maple_device_t *dev) {
     sip->is_sampling = 0;
     sip->amp_gain = SIP_DEFAULT_GAIN;
     sip->callback = NULL;
-    dev->status_valid = 1;
 
     return 0;
 }
