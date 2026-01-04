@@ -18,7 +18,7 @@ size_t strnlen(const char *, size_t);
 #endif
 
 struct dirent *readdir(DIR *dir) {
-    dirent_t *d;
+    const dirent_t *d;
     size_t len;
 
     if(!dir) {
