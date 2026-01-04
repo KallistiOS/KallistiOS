@@ -55,7 +55,7 @@ static dirent_t *dev_root_readdir(dev_hnd_t * handle) {
 }
 
 
-static dirent_t *dev_readdir(void *f) {
+static const dirent_t *dev_readdir(void *f) {
     dev_hnd_t * hnd = (dev_hnd_t *)f;
 
     if((!hnd) || (hnd != &dev_root_hnd)

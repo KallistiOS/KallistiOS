@@ -960,7 +960,7 @@ static void fn_postprocess(char *fnin) {
 }
 
 /* Read a directory entry */
-static dirent_t *iso_readdir(void * h) {
+static const dirent_t *iso_readdir(void * h) {
     int     c;
     iso_dirent_t    *de;
 
