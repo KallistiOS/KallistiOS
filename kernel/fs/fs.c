@@ -27,6 +27,7 @@ something like this:
 
 */
 
+#include <stdatomic.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
@@ -165,7 +166,8 @@ static fs_hnd_t * fs_hnd_open(const char *fn, int mode) {
 static void fs_hnd_ref(fs_hnd_t *ref) {
     assert(ref);
     assert(ref->refcnt < (1 << 30));
-    ref->refcnt++;
+
+    atomic_fetch_add(&ref->refcnt, 1);
 }
 
 /* Unreference a file handle. Should be called when a persistent reference
@@ -177,13 +179,13 @@ static int fs_hnd_unref(fs_hnd_t *ref) {
     assert(ref);
     assert(ref->refcnt > 0);
 
-    if(--ref->refcnt > 0)
-        return retval; /* Still references left, nothing to do */
+    if(atomic_fetch_sub(&ref->refcnt, 1) == 1) {
+        if(ref->handler && ref->handler->close)
+            retval = ref->handler->close(ref->hnd);
 
-    if(ref->handler && ref->handler->close)
-        retval = ref->handler->close(ref->hnd);
+        free(ref);
+    }
 
-    free(ref);
     return retval;
 }
 
@@ -194,10 +196,12 @@ static int fs_hnd_assign(fs_hnd_t *hnd) {
 
     fs_hnd_ref(hnd);
 
-    /* XXX Not thread-safe! */
-    for(i = 0; i < FD_SETSIZE; i++)
-        if(!fd_table[i])
+    for(i = 0; i < FD_SETSIZE; i++) {
+        fs_hnd_t *old = NULL;
+
+        if(atomic_compare_exchange_strong(&fd_table[i], &old, hnd))
             break;
+    }
 
     if(i >= FD_SETSIZE) {
         dbglog(DBG_ERROR, "fs_hnd_assign: Update FD_SETSIZE definition in \
@@ -208,8 +212,6 @@ static int fs_hnd_assign(fs_hnd_t *hnd) {
         errno = EMFILE;
         return -1;
     }
-
-    fd_table[i] = hnd;
 
     return i;
 }
@@ -297,6 +299,8 @@ file_t fs_dup(file_t oldfd) {
 }
 
 file_t fs_dup2(file_t oldfd, file_t newfd) {
+    fs_hnd_t *prev;
+
     /* Make sure the descriptors are valid */
     if(oldfd < 0 || oldfd >= FD_SETSIZE || newfd < 0 || newfd >= FD_SETSIZE) {
         errno = EBADF;
@@ -307,10 +311,16 @@ file_t fs_dup2(file_t oldfd, file_t newfd) {
         return -1;
     }
 
-    if(fd_table[newfd])
-        fs_close(newfd);
+    do {
+        prev = fd_table[newfd];
+        if(prev) {
+            fs_close(newfd);
+            prev = NULL;
+        }
 
-    fd_table[newfd] = fd_table[oldfd];
+    } while(!atomic_compare_exchange_strong(&fd_table[newfd],
+                                            &prev, fd_table[oldfd]));
+
     fs_hnd_ref(fd_table[newfd]);
 
     return newfd;
@@ -342,7 +352,7 @@ int fs_close(file_t fd) {
     /* Deref it and remove it from our table */
     retval = fs_hnd_unref(h);
 
-    fd_table[fd] = NULL;
+    atomic_store(&fd_table[fd], NULL);
     return retval ? -1 : 0;
 }
 
