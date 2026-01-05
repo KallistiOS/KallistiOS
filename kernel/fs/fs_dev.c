@@ -11,7 +11,7 @@
 #include <errno.h>
 
 #include <kos/dbglog.h>
-#include <kos/fs_dev.h>
+#include <kos/fs.h>
 #include <sys/queue.h>
 
 /* File handle structure; this is an entirely internal structure so it does

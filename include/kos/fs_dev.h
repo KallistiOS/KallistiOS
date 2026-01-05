@@ -22,8 +22,6 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <kos/fs.h>
-
 /** \defgroup vfs_dev   Dev
     \brief              VFS driver for /dev
     \ingroup            vfs
