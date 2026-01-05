@@ -86,22 +86,18 @@ int dbgio_dev_select_auto(void) {
     /* Look for a valid interface. */
     SLIST_FOREACH(cur, &dbgio_handlers, entry) {
         if(cur->detected()) {
-            /* Select this device. */
-            dbgio = cur;
-
             /* Try to init it. If it fails,
                then move on to the next one anyway. */
-            if(!dbgio->init()) {
-                /* Worked. */
+            if(!cur->init()) {
+                /* Worked, so assign it */
+                dbgio = cur;
                 return 0;
             }
-
-            /* Failed... nuke it and continue. */
-            dbgio = NULL;
         }
     }
 
     /* Didn't find an interface. */
+    dbgio = NULL;
     errno = ENODEV;
     return -1;
 }
