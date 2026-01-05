@@ -148,7 +148,7 @@ int dbgio_remove_handler(dbgio_handler_t *handler);
 
     \param  name            The dbgio interface to select
     \retval 0               On success
-    
+
     \retval -1              On error
 
     \par    Error Conditions:
@@ -185,9 +185,9 @@ const char *dbgio_dev_get(void);
     user programs.
 
     \retval 0               On success
-    
+
     \retval -1              On error
-    
+
     \par    Error Conditions:
     \em     ENODEV - No devices could be detected/initialized
 */
@@ -200,7 +200,7 @@ int dbgio_init(void);
     mode at all.
 
     \param  mode            The mode to use
-    
+
     \retval 0               On success
     \retval -1              On error (errno should be set as appropriate)
 */
@@ -235,7 +235,7 @@ int dbgio_read(void);
                             output is actually flushed to the console.
 
     \param  c               The character to write
-    
+
     \retval 1               On success (number of characters written)
     \retval -1              On error (errno should be set as appropriate)
 */
@@ -254,7 +254,7 @@ int dbgio_flush(void);
 
     \param  data            The buffer to write
     \param  len             The length of the buffer
-    
+
     \return                 Number of characters written on success, or -1 on
                             failure (errno should be set as appropriate)
 */
@@ -265,7 +265,7 @@ int dbgio_write_buffer(const uint8_t *data, int len);
 
     \param  data            The buffer to read into
     \param  len             The length of the buffer
-    
+
     \return                 Number of characters read on success, or -1 on
                             failure (errno should be set as appropriate)
 */
@@ -277,7 +277,7 @@ int dbgio_read_buffer(uint8_t *data, int len);
 
     \param  data            The buffer to write
     \param  len             The length of the buffer
-    
+
     \return                 Number of characters written on success, or -1 on
                             failure (errno should be set as appropriate)
 */
@@ -287,7 +287,7 @@ int dbgio_write_buffer_xlat(const uint8_t *data, int len);
     \ingroup logging
 
     \param  str             The string to write
-    
+
     \return                 Number of characters written on success, or -1 on
                             failure (errno should be set as appropriate)
 */
@@ -298,17 +298,17 @@ int dbgio_write_str(const char *str);
 */
 void dbgio_disable(void);
 
-/** \brief   Enable debug I/O globally. 
+/** \brief   Enable debug I/O globally.
     \ingroup logging
 */
 void dbgio_enable(void);
 
 /** \brief   Built-in debug I/O printf function.
     \ingroup logging
-    
+
     \param  fmt             A printf() style format string
     \param  ...             Format arguments
-    
+
     \return                 The number of bytes written, or <0 on error (errno
                             should be set as appropriate)
 */
