@@ -29,7 +29,7 @@ struct dbgio_handlers_list dbgio_handlers;
 /* Our currently selected handler. */
 static dbgio_handler_t *dbgio = NULL;
 
-int dbgio_dev_select(const char * name) {
+int dbgio_dev_select(const char *name) {
     dbgio_handler_t *cur;
 
     SLIST_FOREACH(cur, &dbgio_handlers, entry) {
