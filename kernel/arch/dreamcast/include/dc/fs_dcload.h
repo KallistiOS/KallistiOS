@@ -26,8 +26,6 @@
 __BEGIN_DECLS
 
 #include <stdbool.h>
-#include <kos/fs.h>
-#include <kos/dbgio.h>
 
 /** \defgroup vfs_dcload    PC
     \brief                  VFS driver for accessing a remote PC via
@@ -38,28 +36,6 @@ __BEGIN_DECLS
 */
 
 /* \cond */
-extern dbgio_handler_t dbgio_dcload;
-/* \endcond */
-
-/* dcload magic value */
-/** \brief  The dcload magic value! */
-#define DCLOADMAGICVALUE 0xdeadbeef
-
-/** \brief  The address of the dcload magic value */
-#define DCLOADMAGICADDR (unsigned int *)0x8c004004
-
-/* Are we using dc-load-serial or dc-load-ip? */
-#define DCLOAD_TYPE_NONE    -1      /**< \brief No dcload connection */
-#define DCLOAD_TYPE_SER     0       /**< \brief dcload-serial connection */
-#define DCLOAD_TYPE_IP      1       /**< \brief dcload-ip connection */
-
-/** \brief  What type of dcload connection do we have? */
-extern int dcload_type;
-
-/* \cond */
-
-/* Tests for the dcload syscall being present. */
-int syscall_dcload_detected(void);
 
 /* Init func */
 void fs_dcload_init_console(void);

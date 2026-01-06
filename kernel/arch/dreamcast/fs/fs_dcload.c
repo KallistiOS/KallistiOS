@@ -411,57 +411,29 @@ static vfs_handler_t vh = {
 /* We have to provide a minimal interface in case dcload usage is
    disabled through init flags. */
 dbgio_handler_t dbgio_dcload = {
-    .name = "fs_dcload_uninit"
+    .name = "fs_dcload",
+    .detected = syscall_dcload_detected,
+    .write_buffer = dcload_write_buffer
+    // .read = dcload_read_cons;
 };
-
-int syscall_dcload_detected(void) {
-    /* Check for dcload */
-    if(*DCLOADMAGICADDR == DCLOADMAGICVALUE)
-        return 1;
-    else
-        return 0;
-}
-
-static int *dcload_wrkmem = NULL;
-static const char * dbgio_dcload_name = "fs_dcload";
-int dcload_type = DCLOAD_TYPE_NONE;
 
 /* Call this before arch_init_all (or any call to dbgio_*) to use dcload's
    console output functions. */
 void fs_dcload_init_console(void) {
-    /* Setup our dbgio handler */
-    dbgio_dcload.name = dbgio_dcload_name;
-    dbgio_dcload.detected = syscall_dcload_detected;
-    dbgio_dcload.write_buffer = dcload_write_buffer;
-    // dbgio_dcload.read = dcload_read_cons;
 
     /* We actually need to detect here to make sure we're on
        dcload-serial, or scif_init must not proceed. */
     if(!syscall_dcload_detected())
         return;
 
-
-    /* dcload IP will always return -1 here. Serial will return 0 and make
-      no change since it already holds 0 as 'no mem assigned */
-    if(dcload_assignwrkmem(0) == -1) {
-        dcload_type = DCLOAD_TYPE_IP;
-    }
-    else {
-        dcload_type = DCLOAD_TYPE_SER;
-
-        /* Give dcload the 64k it needs to compress data (if on serial) */
-        dcload_wrkmem = malloc(65536);
-        if(dcload_wrkmem) {
-            if(dcload_assignwrkmem(dcload_wrkmem) == -1)
-                free(dcload_wrkmem);
-        }
-    }
+    /* Now that we know we have dcload, setup our dbgio handler */
+    dbgio_add_handler(&dbgio_dcload);
 }
 
 /* Call fs_dcload_init_console() before calling fs_dcload_init() */
 void fs_dcload_init(void) {
     /* This was already done in init_console. */
-    if(dcload_type == DCLOAD_TYPE_NONE)
+    if(!syscall_dcload_detected() || (dcload_type == DCLOAD_TYPE_NONE))
         return;
 
     /* Check for combination of KOS networking and dcload-ip */
@@ -469,6 +441,8 @@ void fs_dcload_init(void) {
         dbglog(DBG_INFO, "dc-load console+kosnet, fs_dcload unavailable.\n");
         return;
     }
+    else
+        dbglog(DBG_INFO, "dc-load console support enabled\n");
 
     /* Register with VFS */
     nmmgr_handler_add(&vh.nmmgr);
@@ -479,11 +453,7 @@ void fs_dcload_shutdown(void) {
     if(!syscall_dcload_detected())
         return;
 
-    /* Free dcload wrkram */
-    if(dcload_wrkmem) {
-        dcload_assignwrkmem(0);
-        free(dcload_wrkmem);
-    }
+    dbgio_remove_handler(&dbgio_dcload);
 
     nmmgr_handler_remove(&vh.nmmgr);
 }
