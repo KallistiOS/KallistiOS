@@ -430,7 +430,6 @@ int dcload_type = DCLOAD_TYPE_NONE;
    console output functions. */
 void fs_dcload_init_console(void) {
     /* Setup our dbgio handler */
-    memcpy(&dbgio_dcload, &dbgio_null, sizeof(dbgio_dcload));
     dbgio_dcload.name = dbgio_dcload_name;
     dbgio_dcload.detected = syscall_dcload_detected;
     dbgio_dcload.write_buffer = dcload_write_buffer;

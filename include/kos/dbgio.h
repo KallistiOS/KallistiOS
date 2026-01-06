@@ -33,9 +33,8 @@ __BEGIN_DECLS
     This struct represents a single dbgio interface. This should represent
     a generic pollable console interface. We store an ordered, singly-linked
     list of these and fall back from one to the next until one returns true
-    for detected(). Users may create and add their own dbgio interfaces using
-    the dbgio_add_handler() function. Note that the last device in this chain
-    is the null console, which will always return true.
+    for detected() and init(). Users may create and add their own dbgio
+    interfaces using the dbgio_add_handler() function.
 
     \headerfile kos/dbgio.h
 */
@@ -119,11 +118,6 @@ typedef struct dbgio_handler {
     */
     SLIST_ENTRY(dbgio_handler) entry;
 } dbgio_handler_t;
-
-/** \cond */
-/* This is defined by the shared code, in case there's no valid handler. */
-extern dbgio_handler_t dbgio_null;
-/** \endcond */
 
 /** \brief   Add a new dbgio handler to the list.
     \ingroup logging

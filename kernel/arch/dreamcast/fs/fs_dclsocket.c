@@ -676,12 +676,6 @@ void fs_dclsocket_init_console(void) {
         return;
     }
 
-    dbgio_dcls.set_irq_usage = dbgio_null.set_irq_usage;
-    dbgio_dcls.read = dbgio_null.read;
-    dbgio_dcls.write = dbgio_null.write;
-    dbgio_dcls.flush = dbgio_null.flush;
-    dbgio_dcls.read_buffer = dbgio_null.read_buffer;
-
     initted = 1;
 }
 
