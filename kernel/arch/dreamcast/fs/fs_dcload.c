@@ -410,13 +410,8 @@ static vfs_handler_t vh = {
 
 /* We have to provide a minimal interface in case dcload usage is
    disabled through init flags. */
-static int never_detected(void) {
-    return 0;
-}
-
 dbgio_handler_t dbgio_dcload = {
-    .name = "fs_dcload_uninit",
-    .detected = never_detected
+    .name = "fs_dcload_uninit"
 };
 
 int syscall_dcload_detected(void) {

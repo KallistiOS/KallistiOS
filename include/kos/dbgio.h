@@ -43,9 +43,12 @@ typedef struct dbgio_handler {
     /** \brief  Name of the dbgio handler */
     const char  *name;
 
-    /** \brief  Detect this debug interface.
-        \retval 1           If the device is available and usable
-        \retval 0           If the device is unavailable
+    /** \brief  Return if the handler is available for auto-selection.
+
+        If not present, will presume unavailable.
+
+        \retval 1           The device is available for auto-selection
+        \retval 0           The device is unavailable for auto-selection
     */
     int (*detected)(void);
 
