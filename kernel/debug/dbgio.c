@@ -113,8 +113,8 @@ int __weak_symbol dbgio_init(void) {
 
 int dbgio_set_irq_usage(int mode) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->set_irq_usage(mode);
+        if(dbgio && dbgio->set_irq_usage)
+            return dbgio->set_irq_usage(mode);
     }
 
     return -1;
@@ -122,8 +122,8 @@ int dbgio_set_irq_usage(int mode) {
 
 int dbgio_read(void) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->read();
+        if(dbgio && dbgio->read)
+            return dbgio->read();
     }
 
     return -1;
@@ -131,8 +131,8 @@ int dbgio_read(void) {
 
 int dbgio_write(int c) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->write(c);
+        if(dbgio && dbgio->write)
+            return dbgio->write(c);
     }
 
     return -1;
@@ -140,8 +140,8 @@ int dbgio_write(int c) {
 
 int dbgio_flush(void) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->flush();
+        if(dbgio && dbgio->flush)
+            return dbgio->flush();
     }
 
     return -1;
@@ -149,8 +149,8 @@ int dbgio_flush(void) {
 
 int dbgio_write_buffer(const uint8_t *data, int len) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->write_buffer(data, len, 0);
+        if(dbgio && dbgio->write_buffer)
+            return dbgio->write_buffer(data, len, 0);
     }
 
     return -1;
@@ -158,8 +158,8 @@ int dbgio_write_buffer(const uint8_t *data, int len) {
 
 int dbgio_read_buffer(uint8_t *data, int len) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->read_buffer(data, len);
+        if(dbgio && dbgio->read_buffer)
+            return dbgio->read_buffer(data, len);
     }
 
     return -1;
@@ -167,8 +167,8 @@ int dbgio_read_buffer(uint8_t *data, int len) {
 
 int dbgio_write_buffer_xlat(const uint8_t *data, int len) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->write_buffer(data, len, 1);
+        if(dbgio && dbgio->write_buffer)
+            return dbgio->write_buffer(data, len, 1);
     }
 
     return -1;
@@ -176,8 +176,8 @@ int dbgio_write_buffer_xlat(const uint8_t *data, int len) {
 
 int dbgio_write_str(const char *str) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio_write_buffer_xlat((const uint8_t *)str, strlen(str));
+        if(dbgio && dbgio->write_buffer)
+            return dbgio_write_buffer_xlat((const uint8_t *)str, strlen(str));
     }
 
     return -1;
