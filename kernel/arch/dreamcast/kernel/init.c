@@ -164,12 +164,12 @@ int  __weak_symbol arch_auto_init(void) {
     /* Init dc-load console, if applicable */
     KOS_INIT_FLAG_CALL(fs_dcload_init_console);
 
+    /* Add dbgio handlers for our arch, from last to first in precedence */
+    dbgio_add_handler(&dbgio_fb);
+
     /* Init SCIF for debug stuff (maybe) */
     scif_init();
 
-    /* Add dbgio handlers for our arch, from last to first in precedence */
-    dbgio_add_handler(&dbgio_fb);
-    dbgio_add_handler(&dbgio_scif);
     dbgio_add_handler(&dbgio_dcls);
     dbgio_add_handler(&dbgio_dcload);
 
