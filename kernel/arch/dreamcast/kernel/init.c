@@ -121,16 +121,11 @@ KOS_INIT_FLAG_WEAK(vmu_fs_shutdown, true);
 KOS_INIT_FLAG_WEAK(fs_iso9660_init, true);
 KOS_INIT_FLAG_WEAK(fs_iso9660_shutdown, true);
 
-void dcload_init(void) {
-    if (syscall_dcload_detected()) {
-        dbglog(DBG_INFO, "dc-load console support enabled\n");
-        fs_dcload_init();
-    }
-}
-
-KOS_INIT_FLAG_WEAK(dcload_init, true);
+KOS_INIT_FLAG_WEAK(dcload_syscall_init, true);
+KOS_INIT_FLAG_WEAK(fs_dcload_init, true);
 KOS_INIT_FLAG_WEAK(fs_dcload_init_console, true);
 KOS_INIT_FLAG_WEAK(fs_dcload_shutdown, true);
+KOS_INIT_FLAG_WEAK(dcload_syscall_shutdown, true);
 KOS_INIT_FLAG_WEAK(fs_dclsocket_shutdown, true);
 KOS_INIT_FLAG_WEAK(fs_init, true);
 KOS_INIT_FLAG_WEAK(fs_dev_init, true);
@@ -161,8 +156,8 @@ int  __weak_symbol arch_auto_init(void) {
 
     ubc_init();
 
-    /* Init dc-load console, if applicable */
-    KOS_INIT_FLAG_CALL(fs_dcload_init_console);
+    /* Initialize the dcload syscall if available */
+    KOS_INIT_FLAG_CALL(dcload_syscall_init);
 
     /* Add dbgio handlers for our arch, from last to first in precedence */
     dbgio_add_handler(&dbgio_fb);
@@ -171,7 +166,9 @@ int  __weak_symbol arch_auto_init(void) {
     scif_init();
 
     dbgio_add_handler(&dbgio_dcls);
-    dbgio_add_handler(&dbgio_dcload);
+
+    /* Init dc-load console, if applicable */
+    KOS_INIT_FLAG_CALL(fs_dcload_init_console);
 
     /* Init debug IO */
     dbgio_init();
@@ -212,7 +209,7 @@ int  __weak_symbol arch_auto_init(void) {
     if(!KOS_INIT_FLAG_CALL(fs_romdisk_mount_builtin))
         KOS_INIT_FLAG_CALL(fs_romdisk_mount_builtin_legacy);
 
-    KOS_INIT_FLAG_CALL(dcload_init);
+    KOS_INIT_FLAG_CALL(fs_dcload_init);
 
     if (!KOS_PLATFORM_IS_NAOMI)
         KOS_INIT_FLAG_CALL(fs_iso9660_init);
@@ -253,6 +250,7 @@ void  __weak_symbol arch_auto_shutdown(void) {
     KOS_INIT_FLAG_CALL(library_shutdown);
 
     KOS_INIT_FLAG_CALL(fs_dcload_shutdown);
+    KOS_INIT_FLAG_CALL(dcload_syscall_shutdown);
     KOS_INIT_FLAG_CALL(vmu_fs_shutdown);
     if (!KOS_PLATFORM_IS_NAOMI)
         KOS_INIT_FLAG_CALL(fs_iso9660_shutdown);

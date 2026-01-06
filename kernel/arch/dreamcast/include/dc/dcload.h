@@ -107,6 +107,26 @@ uint32_t dcload_gethostinfo(uint32_t *ip, uint32_t *port);
 size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_t out_size);
 int dcload_rewinddir(uint32_t hnd);
 
+/* dcload magic value */
+/** \brief  The dcload magic value! */
+#define DCLOADMAGICVALUE 0xdeadbeef
+
+/** \brief  The address of the dcload magic value */
+#define DCLOADMAGICADDR (unsigned int *)0x8c004004
+/* Tests for the dcload syscall being present. */
+int syscall_dcload_detected(void);
+
+/* Are we using dc-load-serial or dc-load-ip? */
+#define DCLOAD_TYPE_NONE    -1      /**< \brief No dcload connection */
+#define DCLOAD_TYPE_SER     0       /**< \brief dcload-serial connection */
+#define DCLOAD_TYPE_IP      1       /**< \brief dcload-ip connection */
+
+/* What type of dcload connection do we have? */
+extern int dcload_type;
+
+void dcload_syscall_init(void);
+void dcload_syscall_shutdown(void);
+
 /** @} */
 
 __END_DECLS

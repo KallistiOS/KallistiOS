@@ -44,9 +44,11 @@ __BEGIN_DECLS
     \sa KOS_INIT_FLAGS()
 */
 #define KOS_INIT_FLAGS_ARCH(flags) \
-    KOS_INIT_FLAG_NONE(flags, INIT_NO_DCLOAD, dcload_init); \
+    KOS_INIT_FLAG_NONE(flags, INIT_NO_DCLOAD, dcload_syscall_init); \
+    KOS_INIT_FLAG_NONE(flags, INIT_NO_DCLOAD, fs_dcload_init); \
     KOS_INIT_FLAG_NONE(flags, INIT_NO_DCLOAD, fs_dcload_init_console); \
     KOS_INIT_FLAG_NONE(flags, INIT_NO_DCLOAD, fs_dcload_shutdown); \
+    KOS_INIT_FLAG_NONE(flags, INIT_NO_DCLOAD, dcload_syscall_shutdown); \
     KOS_INIT_FLAG_NONE(flags, INIT_NO_DCLOAD, arch_init_net_dcload_ip); \
     KOS_INIT_FLAG(flags, INIT_NO_DCLOAD, arch_init_net_no_dcload); \
     KOS_INIT_FLAG(flags, INIT_CDROM, cdrom_init); \

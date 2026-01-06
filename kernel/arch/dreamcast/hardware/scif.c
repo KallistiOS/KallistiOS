@@ -10,7 +10,7 @@
 #include <kos/dbgio.h>
 #include <kos/irq.h>
 #include <arch/arch.h>
-#include <dc/fs_dcload.h>
+#include <dc/dcload.h>
 #include <dc/scif.h>
 
 /*
