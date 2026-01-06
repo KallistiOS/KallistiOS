@@ -32,4 +32,4 @@ subarch_exports.c: ../exports-$(KOS_SUBARCH).txt
 	$(KOS_BASE)/utils/genexports/genexports.sh $< $@ subarch_symtab
 
 clean:
-	-rm -f arch_exports.c
+	-rm -f arch_exports.c subarch_exports.c
