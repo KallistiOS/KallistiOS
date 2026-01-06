@@ -53,6 +53,10 @@ typedef struct dbgio_handler {
     int (*detected)(void);
 
     /** \brief  Initialize this debug interface with default parameters.
+
+        If not present, will simply succeed. Only needed if it's possible
+        to fail at initializing the dbgio device.
+
         \retval 0           On success
         \retval -1          On failure
     */

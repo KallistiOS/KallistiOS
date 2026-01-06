@@ -35,8 +35,8 @@ int dbgio_dev_select(const char *name) {
 
     SLIST_FOREACH(cur, &dbgio_handlers, entry) {
         if(!strcmp(cur->name, name)) {
-            /* Try to initialize the device, and if we can't then bail. */
-            if(cur->init()) {
+            /* If it has init, try to and kick on failure. */
+            if(cur->init && cur->init()) {
                 errno = ENODEV;
                 return -1;
             }
@@ -86,9 +86,9 @@ int dbgio_dev_select_auto(void) {
     /* Look for a valid interface. */
     SLIST_FOREACH(cur, &dbgio_handlers, entry) {
         if(cur->detected && cur->detected()) {
-            /* Try to init it. If it fails,
+            /* If inittable, try to init it. If it fails,
                then move on to the next one anyway. */
-            if(!cur->init()) {
+            if(!cur->init || !cur->init()) {
                 /* Worked, so assign it */
                 dbgio = cur;
                 return 0;
@@ -113,8 +113,8 @@ int __weak_symbol dbgio_init(void) {
 
 int dbgio_set_irq_usage(int mode) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->set_irq_usage(mode);
+        if(dbgio && dbgio->set_irq_usage)
+            return dbgio->set_irq_usage(mode);
     }
 
     return -1;
@@ -122,8 +122,8 @@ int dbgio_set_irq_usage(int mode) {
 
 int dbgio_read(void) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->read();
+        if(dbgio && dbgio->read)
+            return dbgio->read();
     }
 
     return -1;
@@ -131,8 +131,8 @@ int dbgio_read(void) {
 
 int dbgio_write(int c) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->write(c);
+        if(dbgio && dbgio->write)
+            return dbgio->write(c);
     }
 
     return -1;
@@ -140,8 +140,8 @@ int dbgio_write(int c) {
 
 int dbgio_flush(void) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->flush();
+        if(dbgio && dbgio->flush)
+            return dbgio->flush();
     }
 
     return -1;
@@ -149,8 +149,8 @@ int dbgio_flush(void) {
 
 int dbgio_write_buffer(const uint8_t *data, int len) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->write_buffer(data, len, 0);
+        if(dbgio && dbgio->write_buffer)
+            return dbgio->write_buffer(data, len, 0);
     }
 
     return -1;
@@ -158,8 +158,8 @@ int dbgio_write_buffer(const uint8_t *data, int len) {
 
 int dbgio_read_buffer(uint8_t *data, int len) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->read_buffer(data, len);
+        if(dbgio && dbgio->read_buffer)
+            return dbgio->read_buffer(data, len);
     }
 
     return -1;
@@ -167,8 +167,8 @@ int dbgio_read_buffer(uint8_t *data, int len) {
 
 int dbgio_write_buffer_xlat(const uint8_t *data, int len) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->write_buffer(data, len, 1);
+        if(dbgio && dbgio->write_buffer)
+            return dbgio->write_buffer(data, len, 1);
     }
 
     return -1;
@@ -176,8 +176,8 @@ int dbgio_write_buffer_xlat(const uint8_t *data, int len) {
 
 int dbgio_write_str(const char *str) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio_write_buffer_xlat((const uint8_t *)str, strlen(str));
+        if(dbgio && dbgio->write_buffer)
+            return dbgio_write_buffer_xlat((const uint8_t *)str, strlen(str));
     }
 
     return -1;
