@@ -71,13 +71,20 @@ int dbgio_add_handler(dbgio_handler_t *handler) {
 }
 
 int dbgio_remove_handler(dbgio_handler_t *handler) {
-    SLIST_REMOVE(&dbgio_handlers, handler, dbgio_handler, entry);
+    dbgio_handler_t *t;
 
-    if(dbgio == handler) {
-        dbgio_dev_select_auto();
+    SLIST_FOREACH(t, &dbgio_handlers, entry) {
+        if(t == handler) {
+            SLIST_REMOVE(&dbgio_handlers, handler, dbgio_handler, entry);
+            if(dbgio == handler) {
+                dbgio_dev_select_auto();
+            }
+            return 0;
+        }
     }
 
-    return 0;
+    /* Handler hadn't been added */
+    return -1;
 }
 
 int dbgio_dev_select_auto(void) {
