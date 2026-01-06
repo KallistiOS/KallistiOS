@@ -54,6 +54,8 @@ __BEGIN_DECLS
     KOS_INIT_FLAG(flags, INIT_NET, net_shutdown); \
     KOS_INIT_FLAG(flags, INIT_NET, eth_init); \
     KOS_INIT_FLAG(flags, INIT_NET, eth_shutdown); \
+    KOS_INIT_FLAG(flags, INIT_FS_ALL, fs_init); \
+    KOS_INIT_FLAG(flags, INIT_FS_ALL, fs_shutdown); \
     KOS_INIT_FLAG(flags, INIT_FS_ROMDISK, fs_romdisk_init); \
     KOS_INIT_FLAG(flags, INIT_FS_ROMDISK, fs_romdisk_shutdown); \
     KOS_INIT_FLAG(flags, INIT_FS_NULL, fs_null_init); \
