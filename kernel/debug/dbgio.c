@@ -85,7 +85,7 @@ int dbgio_dev_select_auto(void) {
 
     /* Look for a valid interface. */
     SLIST_FOREACH(cur, &dbgio_handlers, entry) {
-        if(cur->detected()) {
+        if(cur->detected && cur->detected()) {
             /* Try to init it. If it fails,
                then move on to the next one anyway. */
             if(!cur->init()) {
