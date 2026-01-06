@@ -168,7 +168,6 @@ int  __weak_symbol arch_auto_init(void) {
     /* Add dbgio handlers for our arch, from last to first in precedence */
     dbgio_add_handler(&dbgio_fb);
     dbgio_add_handler(&dbgio_dcls);
-    dbgio_add_handler(&dbgio_dcload);
 
     /* Init debug IO */
     dbgio_init();
