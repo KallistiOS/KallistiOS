@@ -25,10 +25,6 @@ static int min_x, min_y, max_x, max_y;
 #define FONT_CHAR_WIDTH 12
 #define FONT_CHAR_HEIGHT 24
 
-static int fb_detected(void) {
-    return 1;
-}
-
 static int fb_init(void) {
     bfont_set_encoding(BFONT_CODE_ISO8859_1);
 
@@ -110,7 +106,6 @@ static int fb_read_buffer(uint8_t *data, int len) {
 
 dbgio_handler_t dbgio_fb = {
     .name = "fb",
-    .detected = fb_detected,
     .init = fb_init,
     .shutdown = fb_shutdown,
     .set_irq_usage = fb_set_irq_usage,

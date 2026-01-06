@@ -29,10 +29,6 @@ static int min_x, min_y, max_x, max_y;
 #define FONT_WIDTH 256
 #define FONT_HEIGHT 48
 
-static int fb_detected(void) {
-    return 1;
-}
-
 static int fb_init(void) {
     /* Init based on current video mode, defaulting to 640x480x16bpp. */
     if(vid_mode == 0)
@@ -112,7 +108,6 @@ static int fb_read_buffer(uint8_t *data, int len) {
 
 dbgio_handler_t dbgio_fb = {
     .name = "fb",
-    .detected = fb_detected,
     .init = fb_init,
     .shutdown = fb_shutdown,
     .set_irq_usage = fb_set_irq_usage,
