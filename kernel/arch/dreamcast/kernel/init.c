@@ -49,12 +49,12 @@ void arch_real_exit(int ret_code) __noreturn;
 void (*__kos_init_early_fn)(void) __attribute__((weak,section(".data"))) = NULL;
 
 int main(int argc, char **argv);
-uint32 _fs_dclsocket_get_ip(void);
+uint32_t _fs_dclsocket_get_ip(void);
 
 void arch_init_net_dcload_ip(void) {
     union {
-        uint32 ipl;
-        uint8 ipb[4];
+        uint32_t ipl;
+        uint8_t  ipb[4];
     } ip = { 0 };
 
     if(dcload_type == DCLOAD_TYPE_IP) {
