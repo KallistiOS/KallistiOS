@@ -2,31 +2,42 @@
 
    util/fb_console.c
    Copyright (C) 2009 Lawrence Sebald
+   Copyright (C) 2026 Donald Haase
 
 */
 
 #include <string.h>
 #include <errno.h>
 #include <kos/dbgio.h>
+#include <kos/platform.h>
 #include <dc/fb_console.h>
-#include <dc/biosfont.h>
 #include <dc/video.h>
+#include <dc/biosfont.h>
+#include <dc/minifont.h>
 
 /* This is a very simple dbgio interface for doing debug to the framebuffer with
-   the biosfont functionality. Basically, this was written to aid in debugging
+   the biosfont or minifont functionality. Basically, this was written to aid in debugging
    the network stack, and I figured other people would probably get some use out
    of it as well. */
 
 static uint16_t *fb;
-static int fb_w, fb_h;
-static int cur_x, cur_y;
-static int min_x, min_y, max_x, max_y;
+static size_t fb_w, fb_h;
+static size_t cur_x, cur_y;
+static size_t min_x, min_y, max_x, max_y;
 
-#define FONT_CHAR_WIDTH 12
-#define FONT_CHAR_HEIGHT 24
+static size_t FONT_CHAR_WIDTH;
+static size_t FONT_CHAR_HEIGHT;
 
 static int fb_init(void) {
-    bfont_set_encoding(BFONT_CODE_ISO8859_1);
+    if(KOS_PLATFORM_IS_NAOMI) {
+        FONT_CHAR_WIDTH = 8;
+        FONT_CHAR_HEIGHT = 16;
+    }
+    else {
+        bfont_set_encoding(BFONT_CODE_ISO8859_1);
+        FONT_CHAR_WIDTH = BFONT_THIN_WIDTH;
+        FONT_CHAR_HEIGHT = BFONT_HEIGHT;
+    }
 
     /* Init based on current video mode, defaulting to 640x480x16bpp. */
     if(vid_mode == 0)
@@ -37,20 +48,6 @@ static int fb_init(void) {
     return 0;
 }
 
-static int fb_shutdown(void) {
-    return 0;
-}
-
-static int fb_set_irq_usage(int mode) {
-    (void)mode;
-    return 0;
-}
-
-static int fb_read(void) {
-    errno = EAGAIN;
-    return -1;
-}
-
 static int fb_write(int c) {
     uint16_t *t = fb;
 
@@ -58,7 +55,10 @@ static int fb_write(int c) {
         t = vram_s;
 
     if(c != '\n') {
-        bfont_draw(t + cur_y * fb_w + cur_x, fb_w, 1, c);
+        if(KOS_PLATFORM_IS_NAOMI)
+            minifont_draw(t + cur_y * fb_w + cur_x, fb_w, c);
+        else
+            bfont_draw(t + cur_y * fb_w + cur_x, fb_w, 1, c);
         cur_x += FONT_CHAR_WIDTH;
     }
 
@@ -81,10 +81,6 @@ static int fb_write(int c) {
     return 1;
 }
 
-static int fb_flush(void) {
-    return 0;
-}
-
 static int fb_write_buffer(const uint8_t *data, int len, int xlat) {
     int rv = len;
 
@@ -97,23 +93,11 @@ static int fb_write_buffer(const uint8_t *data, int len, int xlat) {
     return rv;
 }
 
-static int fb_read_buffer(uint8_t *data, int len) {
-    (void)data;
-    (void)len;
-    errno = EAGAIN;
-    return -1;
-}
-
 dbgio_handler_t dbgio_fb = {
     .name = "fb",
     .init = fb_init,
-    .shutdown = fb_shutdown,
-    .set_irq_usage = fb_set_irq_usage,
-    .read = fb_read,
     .write = fb_write,
-    .flush = fb_flush,
-    .write_buffer = fb_write_buffer,
-    .read_buffer = fb_read_buffer
+    .write_buffer = fb_write_buffer
 };
 
 void dbgio_fb_set_target(uint16_t *t, int w, int h, int borderx, int bordery) {
