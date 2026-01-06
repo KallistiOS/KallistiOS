@@ -464,7 +464,7 @@ _off64_t fs_tell64(file_t fd) {
     return -1;
 }
 
-size_t fs_total(file_t fd) {
+ssize_t fs_total(file_t fd) {
     fs_hnd_t *h = fs_map_hnd(fd);
 
     if(!h) return -1;
@@ -476,15 +476,15 @@ size_t fs_total(file_t fd) {
 
     /* Prefer the 32-bit version, but fall back if needed to the 64-bit one. */
     if(h->handler->total)
-        return h->handler->total(h->hnd);
+        return (ssize_t)h->handler->total(h->hnd);
     else if(h->handler->total64)
-        return (size_t)h->handler->total64(h->hnd);
+        return (ssize_t)h->handler->total64(h->hnd);
 
     errno = EINVAL;
     return -1;
 }
 
-uint64_t fs_total64(file_t fd) {
+int64_t fs_total64(file_t fd) {
     fs_hnd_t *h = fs_map_hnd(fd);
 
     if(!h) return -1;
@@ -496,9 +496,9 @@ uint64_t fs_total64(file_t fd) {
 
     /* Prefer the 64-bit version, but fall back if needed to the 32-bit one. */
     if(h->handler->total64)
-        return h->handler->total64(h->hnd);
+        return (int64_t)h->handler->total64(h->hnd);
     else if(h->handler->total)
-        return (uint64_t)h->handler->total(h->hnd);
+        return (int64_t)h->handler->total(h->hnd);
 
     errno = EINVAL;
     return -1;

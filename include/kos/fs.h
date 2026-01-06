@@ -362,7 +362,7 @@ _off64_t fs_tell64(file_t hnd);
     
     \return                 The length of the file on success, -1 on failure.
 */
-size_t fs_total(file_t hnd);
+ssize_t fs_total(file_t hnd);
 
 /** \brief   Retrieve the length of an opened file as a 64-bit integer.
 
@@ -376,7 +376,7 @@ size_t fs_total(file_t hnd);
     
     \return                 The length of the file on success, -1 on failure.
 */
-uint64_t fs_total64(file_t hnd);
+int64_t fs_total64(file_t hnd);
 
 
 /** \brief   Read an entry from an opened directory.
