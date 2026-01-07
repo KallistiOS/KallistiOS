@@ -6,7 +6,7 @@ USEMODE=0
 for i in $ARGS; do
 	case "${i}" in
 		@*)
-			ARGS="${ARGS} $(cat ${i:1})"
+			ARGS="${ARGS} $(cat ${i#*@})"
 		;;
 	esac
 done
