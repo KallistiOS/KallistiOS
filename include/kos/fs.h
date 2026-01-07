@@ -756,10 +756,8 @@ char *fs_normalize_path(const char *__RESTRICT path, char *__RESTRICT resolved);
 
     This is normally done for you by default when KOS starts. In general, there
     should be no reason for you to call this function.
-
-    \retval 0               On success.
 */
-int fs_init(void);
+void fs_init(void);
 
 /** \brief   Shut down the virtual filesystem.
 

@@ -929,8 +929,7 @@ int fs_fstat(file_t fd, struct stat *st) {
 }
 
 /* Initialize FS structures */
-int fs_init(void) {
-    return 0;
+void fs_init(void) {
 }
 
 void fs_shutdown(void) {
