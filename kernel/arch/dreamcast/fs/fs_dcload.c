@@ -410,13 +410,11 @@ static vfs_handler_t vh = {
 
 /* We have to provide a minimal interface in case dcload usage is
    disabled through init flags. */
-static int never_detected(void) {
-    return 0;
-}
-
 dbgio_handler_t dbgio_dcload = {
-    .name = "fs_dcload_uninit",
-    .detected = never_detected
+    .name = "fs_dcload",
+    .detected = syscall_dcload_detected,
+    .write_buffer = dcload_write_buffer
+    // .read = dcload_read_cons;
 };
 
 int syscall_dcload_detected(void) {
@@ -428,24 +426,19 @@ int syscall_dcload_detected(void) {
 }
 
 static int *dcload_wrkmem = NULL;
-static const char * dbgio_dcload_name = "fs_dcload";
 int dcload_type = DCLOAD_TYPE_NONE;
 
 /* Call this before arch_init_all (or any call to dbgio_*) to use dcload's
    console output functions. */
 void fs_dcload_init_console(void) {
-    /* Setup our dbgio handler */
-    memcpy(&dbgio_dcload, &dbgio_null, sizeof(dbgio_dcload));
-    dbgio_dcload.name = dbgio_dcload_name;
-    dbgio_dcload.detected = syscall_dcload_detected;
-    dbgio_dcload.write_buffer = dcload_write_buffer;
-    // dbgio_dcload.read = dcload_read_cons;
 
     /* We actually need to detect here to make sure we're on
        dcload-serial, or scif_init must not proceed. */
     if(!syscall_dcload_detected())
         return;
 
+    /* Now that we know we have dcload, setup our dbgio handler */
+    dbgio_add_handler(&dbgio_dcload);
 
     /* dcload IP will always return -1 here. Serial will return 0 and make
       no change since it already holds 0 as 'no mem assigned */
@@ -484,6 +477,8 @@ void fs_dcload_shutdown(void) {
     /* Check for dcload */
     if(!syscall_dcload_detected())
         return;
+
+    dbgio_remove_handler(&dbgio_dcload);
 
     /* Free dcload wrkram */
     if(dcload_wrkmem) {

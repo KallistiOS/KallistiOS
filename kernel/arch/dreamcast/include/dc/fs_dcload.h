@@ -26,8 +26,6 @@
 __BEGIN_DECLS
 
 #include <stdbool.h>
-#include <kos/fs.h>
-#include <kos/dbgio.h>
 
 /** \defgroup vfs_dcload    PC
     \brief                  VFS driver for accessing a remote PC via
@@ -36,10 +34,6 @@ __BEGIN_DECLS
 
     @{
 */
-
-/* \cond */
-extern dbgio_handler_t dbgio_dcload;
-/* \endcond */
 
 /* dcload magic value */
 /** \brief  The dcload magic value! */
