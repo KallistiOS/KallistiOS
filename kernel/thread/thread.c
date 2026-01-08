@@ -46,7 +46,7 @@ also using their queue library verbatim (sys/queue.h).
 
 /* Builtin background thread data */
 static alignas(THD_STACK_ALIGNMENT) uint8_t thd_reaper_stack[512];
-static alignas(THD_STACK_ALIGNMENT) uint8_t thd_idle_stack[64];
+static alignas(THD_STACK_ALIGNMENT) uint8_t thd_idle_stack[512];
 
 /*****************************************************************************/
 /* Thread scheduler data */
@@ -99,6 +99,8 @@ static const char *thd_state_to_str(kthread_t *thd) {
             else
                 return "wait";
 
+        case STATE_POLLING:
+            return "polling";
         case STATE_FINISHED:
             return "finished";
         default:
@@ -210,6 +212,19 @@ kthread_t *thd_by_tid(tid_t tid) {
 }
 
 
+static bool thd_has_polls(void) {
+    kthread_t *thd;
+
+    irq_disable_scoped();
+
+    TAILQ_FOREACH(thd, &run_queue, thdq) {
+        if(thd->state == STATE_POLLING)
+            return true;
+    }
+
+    return false;
+}
+
 /*****************************************************************************/
 /* Thread support routines: idle task and start task wrapper */
 
@@ -226,7 +241,10 @@ static void *thd_idle_task(void *param) {
     (void)param;
 
     for(;;) {
-        arch_sleep();   /* We can safely enter sleep mode here */
+        if(thd_has_polls())
+            thd_pass();     /* If some threads are polling, reschedule */
+        else
+            arch_sleep();   /* We can safely enter sleep mode here */
     }
 
     /* Never reached */
@@ -635,6 +653,7 @@ static inline void thd_schedule_inner(kthread_t *thd) {
 void thd_schedule(bool front_of_line) {
     kthread_t *thd;
     uint64_t now;
+    int ret;
 
     now = timer_ms_gettime64();
 
@@ -659,6 +678,23 @@ void thd_schedule(bool front_of_line) {
        we don't find a normal runnable thread, the idle process will
        always be there at the bottom. */
     TAILQ_FOREACH(thd, &run_queue, thdq) {
+        if(__predict_false(thd->state == STATE_POLLING)) {
+            /* Is it polling? Call the polling function. */
+
+            if(thd->wait_timeout && thd->wait_timeout < now) {
+                thd->state = STATE_READY;
+                CONTEXT_RET(thd->context) = 0;
+            }
+            else {
+                ret = thd->poll_cb(thd->wait_obj);
+
+                if(ret) {
+                    thd->state = STATE_READY;
+                    CONTEXT_RET(thd->context) = ret;
+                }
+            }
+        }
+
         /* Is it runnable? If not, keep going */
         if(thd->state == STATE_READY)
             break;
@@ -674,6 +710,9 @@ void thd_schedule(bool front_of_line) {
            above. */
         if(thd == NULL || thd == thd_idle_thd)
             thd = thd_current;
+    }
+    else if(__predict_false(thd_current->state == STATE_POLLING)) {
+        thd_add_to_runnable(thd_current, front_of_line);
     }
 
     /* Didn't find one? Big problem here... */
@@ -763,7 +802,7 @@ void thd_sleep(unsigned int ms) {
        sleep cases into a single case, which is nice for scheduling
        purposes. 0xffffffff definitely doesn't exist as an object, so we'll
        use that for straight up timeouts. */
-    genwait_wait((void *)0xffffffff, "thd_sleep", ms, NULL);
+    genwait_wait((void *)0xffffffff, "thd_sleep", ms);
 }
 
 /* Manually cause a re-schedule */
@@ -816,7 +855,7 @@ int thd_join(kthread_t *thd, void **value_ptr) {
     else {
         if(thd->state != STATE_FINISHED) {
             /* Wait for the target thread to die */
-            genwait_wait(thd, "thd_join", 0, NULL);
+            genwait_wait(thd, "thd_join", 0);
         }
 
         /* Ok, we're all clear */
@@ -868,6 +907,35 @@ int thd_detach(kthread_t *thd) {
     }
 
     return rv;
+}
+
+
+/*****************************************************************************/
+
+int thd_poll(thd_cb_t cb, void *data, unsigned long timeout_ms) {
+    kthread_t *thd = thd_current;
+    int ret;
+
+    assert(cb != NULL);
+    assert(!irq_inside_int());
+
+    irq_disable_scoped();
+
+    /* Try to poll once, just in case */
+    ret = cb(data);
+    if(ret)
+        return ret;
+
+    thd->state = STATE_POLLING;
+    thd->poll_cb = cb;
+    thd->wait_obj = data;
+
+    if (timeout_ms > 0)
+        thd->wait_timeout = timer_ms_gettime64() + timeout_ms;
+    else
+        thd->wait_timeout = 0;
+
+    return thd_block_now(&thd->context);
 }
 
 
