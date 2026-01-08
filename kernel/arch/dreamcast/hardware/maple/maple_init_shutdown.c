@@ -15,6 +15,7 @@
 #include <kos/thread.h>
 #include <kos/init.h>
 #include <kos/dbglog.h>
+#include <kos/genwait.h>
 
 #include <dc/maple/controller.h>
 #include <dc/maple/keyboard.h>
@@ -34,6 +35,56 @@
   Thanks to the LinuxDC guys for some ideas on how to better implement this.
 
 */
+
+static void maple_dev_reset_cb(maple_state_t *st, maple_frame_t *frame) {
+    (void)st;
+
+    /* Unlock the frame */
+    maple_frame_unlock(frame);
+
+    /* Wake up! */
+    genwait_wake_all(frame);
+}
+
+static void maple_dev_reset(maple_device_t *dev) {
+
+    assert(dev != NULL);
+
+    /* Lock the frame */
+    while(maple_frame_lock(&dev->frame) < 0)
+        thd_pass();
+
+    /* Reset the frame */
+    maple_frame_init(&dev->frame);
+    dev->frame.cmd = MAPLE_COMMAND_RESET;
+    dev->frame.dst_port = dev->port;
+    dev->frame.dst_unit = dev->unit;
+    dev->frame.length = 0;
+    dev->frame.callback = maple_dev_reset_cb;
+    maple_queue_frame(&dev->frame);
+
+    /* Wait for the device to accept it */
+    if(genwait_wait(&dev->frame, "dev_reset", 500, NULL) < 0) {
+        if(dev->frame.state != MAPLE_FRAME_VACANT) {
+            /* Something went wrong.... */
+            dev->frame.state = MAPLE_FRAME_VACANT;
+            dbglog(DBG_ERROR, "dev_reset: timeout to unit %c%c\n",
+                   dev->port + 'A', dev->unit + '0');
+        }
+    }
+
+    dbglog(DBG_KDEBUG, "dev_reset: reset sent to unit %c%c\n",
+                   dev->port + 'A', dev->unit + '0');
+
+    return;
+}
+
+static void maple_dev_reset_all(void) {
+    MAPLE_FOREACH_BEGIN(MAPLE_FUNC_ANY, void, st)
+        maple_dev_reset(__dev);
+        (void)st;
+    MAPLE_FOREACH_END()
+}
 
 /* Initialize Hardware (call after driver inits) */
 static void maple_hw_init(void) {
@@ -102,6 +153,9 @@ void maple_hw_shutdown(void) {
     int p, u, cnt;
     uint32_t  ptr;
     maple_device_t *dev;
+
+    /* Reset all devices to leave them as we found them */
+    maple_dev_reset_all();
 
     /* Unhook interrupts */
     vblank_handler_remove(maple_state.vbl_handle);
@@ -202,10 +256,8 @@ KOS_INIT_FLAG_WEAK(purupuru_shutdown, true);
 KOS_INIT_FLAG_WEAK(sip_shutdown, true);
 KOS_INIT_FLAG_WEAK(dreameye_shutdown, true);
 
-/* Full shutdown: shutdown maple operations and known drivers */
+/* Full shutdown: shutdown each driver, then all hardware operations. */
 void maple_shutdown(void) {
-    maple_hw_shutdown();
-
     KOS_INIT_FLAG_CALL(dreameye_shutdown);
     KOS_INIT_FLAG_CALL(sip_shutdown);
     KOS_INIT_FLAG_CALL(purupuru_shutdown);
@@ -214,4 +266,6 @@ void maple_shutdown(void) {
     KOS_INIT_FLAG_CALL(kbd_shutdown);
     KOS_INIT_FLAG_CALL(cont_shutdown);
     KOS_INIT_FLAG_CALL(lightgun_shutdown);
+
+    maple_hw_shutdown();
 }
