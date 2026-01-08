@@ -134,7 +134,7 @@ typedef struct vfs_handler {
     size_t (*total)(void *hnd);
 
     /** \brief Read the next directory entry in a directory opened with O_DIR */
-    dirent_t *(*readdir)(void *hnd);
+    const dirent_t *(*readdir)(void *hnd);
 
     /** \brief Execute a device-specific call on a previously opened file */
     int (*ioctl)(void *hnd, int cmd, va_list ap);
@@ -362,7 +362,7 @@ _off64_t fs_tell64(file_t hnd);
     
     \return                 The length of the file on success, -1 on failure.
 */
-size_t fs_total(file_t hnd);
+ssize_t fs_total(file_t hnd);
 
 /** \brief   Retrieve the length of an opened file as a 64-bit integer.
 
@@ -376,7 +376,7 @@ size_t fs_total(file_t hnd);
     
     \return                 The length of the file on success, -1 on failure.
 */
-uint64_t fs_total64(file_t hnd);
+int64_t fs_total64(file_t hnd);
 
 
 /** \brief   Read an entry from an opened directory.
@@ -388,7 +388,7 @@ uint64_t fs_total64(file_t hnd);
     
     \return                 The next entry, or NULL on failure.
 */
-dirent_t *fs_readdir(file_t hnd);
+const dirent_t *fs_readdir(file_t hnd);
 
 /** \brief   Execute a device-specific command on a file descriptor.
 
@@ -756,10 +756,8 @@ char *fs_normalize_path(const char *__RESTRICT path, char *__RESTRICT resolved);
 
     This is normally done for you by default when KOS starts. In general, there
     should be no reason for you to call this function.
-
-    \retval 0               On success.
 */
-int fs_init(void);
+void fs_init(void);
 
 /** \brief   Shut down the virtual filesystem.
 

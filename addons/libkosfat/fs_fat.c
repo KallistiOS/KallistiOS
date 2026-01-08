@@ -824,7 +824,7 @@ static void copy_longname(fat_dentry_t *dent) {
     memcpy(&longname_buf[fnlen + 11], lent->name3, 4);
 }
 
-static dirent_t *fs_fat_readdir(void *h) {
+static const dirent_t *fs_fat_readdir(void *h) {
     file_t fd = ((file_t)h) - 1;
     fat_fs_t *fs;
     uint32_t bs, cl;

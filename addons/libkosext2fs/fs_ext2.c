@@ -557,7 +557,7 @@ static uint64_t fs_ext2_total64(void *h) {
     return rv;
 }
 
-static dirent_t *fs_ext2_readdir(void *h) {
+static const dirent_t *fs_ext2_readdir(void *h) {
     file_t fd = ((file_t)h) - 1;
     ext2_fs_t *fs;
     uint32_t bs, lbs;

@@ -382,7 +382,7 @@ static size_t romdisk_total(void *h) {
 }
 
 /* Read a directory entry */
-static dirent_t *romdisk_readdir(void *h) {
+static const dirent_t *romdisk_readdir(void *h) {
     romdisk_file_t *fhdr;
     int type;
     rd_fd_t *fd = (rd_fd_t *)h;

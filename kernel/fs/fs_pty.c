@@ -649,7 +649,7 @@ static size_t pty_total(void *h) {
 }
 
 /* Read a directory entry */
-static dirent_t *pty_readdir(void *h) {
+static const dirent_t *pty_readdir(void *h) {
     pipefd_t *fdobj = (pipefd_t *)h;
     dirlist_t *dl;
 

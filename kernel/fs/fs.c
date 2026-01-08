@@ -27,6 +27,7 @@ something like this:
 
 */
 
+#include <stdatomic.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
@@ -58,7 +59,6 @@ static fs_hnd_t *fs_root_opendir(void) {
     return calloc(1, sizeof(fs_hnd_t));
 }
 
-/* Not thread-safe right now */
 static dirent_t root_readdir_dirent;
 static dirent_t *fs_root_readdir(fs_hnd_t *handle) {
     nmmgr_handler_t *nmhnd;
@@ -155,7 +155,7 @@ static fs_hnd_t * fs_hnd_open(const char *fn, int mode) {
     hnd->handler = cur;
     hnd->hnd = h;
     hnd->refcnt = 0;
-    hnd->idx = 0;
+    hnd->idx = -2;
 
     return hnd;
 }
@@ -165,7 +165,8 @@ static fs_hnd_t * fs_hnd_open(const char *fn, int mode) {
 static void fs_hnd_ref(fs_hnd_t *ref) {
     assert(ref);
     assert(ref->refcnt < (1 << 30));
-    ref->refcnt++;
+
+    atomic_fetch_add(&ref->refcnt, 1);
 }
 
 /* Unreference a file handle. Should be called when a persistent reference
@@ -177,13 +178,13 @@ static int fs_hnd_unref(fs_hnd_t *ref) {
     assert(ref);
     assert(ref->refcnt > 0);
 
-    if(--ref->refcnt > 0)
-        return retval; /* Still references left, nothing to do */
+    if(atomic_fetch_sub(&ref->refcnt, 1) == 1) {
+        if(ref->handler && ref->handler->close)
+            retval = ref->handler->close(ref->hnd);
 
-    if(ref->handler && ref->handler->close)
-        retval = ref->handler->close(ref->hnd);
+        free(ref);
+    }
 
-    free(ref);
     return retval;
 }
 
@@ -194,10 +195,12 @@ static int fs_hnd_assign(fs_hnd_t *hnd) {
 
     fs_hnd_ref(hnd);
 
-    /* XXX Not thread-safe! */
-    for(i = 0; i < FD_SETSIZE; i++)
-        if(!fd_table[i])
+    for(i = 0; i < FD_SETSIZE; i++) {
+        fs_hnd_t *old = NULL;
+
+        if(atomic_compare_exchange_strong(&fd_table[i], &old, hnd))
             break;
+    }
 
     if(i >= FD_SETSIZE) {
         dbglog(DBG_ERROR, "fs_hnd_assign: Update FD_SETSIZE definition in \
@@ -208,8 +211,6 @@ static int fs_hnd_assign(fs_hnd_t *hnd) {
         errno = EMFILE;
         return -1;
     }
-
-    fd_table[i] = hnd;
 
     return i;
 }
@@ -297,6 +298,8 @@ file_t fs_dup(file_t oldfd) {
 }
 
 file_t fs_dup2(file_t oldfd, file_t newfd) {
+    fs_hnd_t *prev;
+
     /* Make sure the descriptors are valid */
     if(oldfd < 0 || oldfd >= FD_SETSIZE || newfd < 0 || newfd >= FD_SETSIZE) {
         errno = EBADF;
@@ -307,10 +310,16 @@ file_t fs_dup2(file_t oldfd, file_t newfd) {
         return -1;
     }
 
-    if(fd_table[newfd])
-        fs_close(newfd);
+    do {
+        prev = fd_table[newfd];
+        if(prev) {
+            fs_close(newfd);
+            prev = NULL;
+        }
 
-    fd_table[newfd] = fd_table[oldfd];
+    } while(!atomic_compare_exchange_strong(&fd_table[newfd],
+                                            &prev, fd_table[oldfd]));
+
     fs_hnd_ref(fd_table[newfd]);
 
     return newfd;
@@ -342,7 +351,7 @@ int fs_close(file_t fd) {
     /* Deref it and remove it from our table */
     retval = fs_hnd_unref(h);
 
-    fd_table[fd] = NULL;
+    atomic_store(&fd_table[fd], NULL);
     return retval ? -1 : 0;
 }
 
@@ -455,7 +464,7 @@ _off64_t fs_tell64(file_t fd) {
     return -1;
 }
 
-size_t fs_total(file_t fd) {
+ssize_t fs_total(file_t fd) {
     fs_hnd_t *h = fs_map_hnd(fd);
 
     if(!h) return -1;
@@ -467,15 +476,15 @@ size_t fs_total(file_t fd) {
 
     /* Prefer the 32-bit version, but fall back if needed to the 64-bit one. */
     if(h->handler->total)
-        return h->handler->total(h->hnd);
+        return (ssize_t)h->handler->total(h->hnd);
     else if(h->handler->total64)
-        return (size_t)h->handler->total64(h->hnd);
+        return (ssize_t)h->handler->total64(h->hnd);
 
     errno = EINVAL;
     return -1;
 }
 
-uint64_t fs_total64(file_t fd) {
+int64_t fs_total64(file_t fd) {
     fs_hnd_t *h = fs_map_hnd(fd);
 
     if(!h) return -1;
@@ -487,18 +496,31 @@ uint64_t fs_total64(file_t fd) {
 
     /* Prefer the 64-bit version, but fall back if needed to the 32-bit one. */
     if(h->handler->total64)
-        return h->handler->total64(h->hnd);
+        return (int64_t)h->handler->total64(h->hnd);
     else if(h->handler->total)
-        return (uint64_t)h->handler->total(h->hnd);
+        return (int64_t)h->handler->total(h->hnd);
 
     errno = EINVAL;
     return -1;
 }
 
-dirent_t *fs_readdir(file_t fd) {
-    static dirent_t dot_dirent;
-    static dirent_t *temp_dirent;
+static const dirent_t dot_dirent = {
+    .name = ".",
+    .attr = O_DIR,
+    .size = -1,
+    .time = 0,
+};
+
+static const dirent_t dotdot_dirent = {
+    .name = "..",
+    .attr = O_DIR,
+    .size = -1,
+    .time = 0,
+};
+
+const dirent_t *fs_readdir(file_t fd) {
     fs_hnd_t *h = fs_map_hnd(fd);
+    const dirent_t *dirent;
 
     if(!h) return NULL;
 
@@ -511,49 +533,21 @@ dirent_t *fs_readdir(file_t fd) {
     }
 
     switch (h->idx) {
-        case 0:
-            temp_dirent = h->handler->readdir(h->hnd);
+        case -2:
             h->idx++;
-
-            /* Does fs provide its own . directory? */
-            if(temp_dirent && (strcmp(temp_dirent->name, ".") == 0)) {
-                return temp_dirent;
-            } else {
-                /* Send . directory first */
-                strcpy(dot_dirent.name, ".");
-                dot_dirent.attr = O_DIR;
-                dot_dirent.size = -1;
-                dot_dirent.time = 0;
-                return &dot_dirent;
-            }
-        case 1:
+            /* Send . directory first */
+            return &dot_dirent;
+        case -1:
             h->idx++;
-
-            /* Did fs provide its own . directory? */
-            if(temp_dirent && (strcmp(temp_dirent->name, ".") == 0)) {
-                /* Read a new entry */
-                temp_dirent = h->handler->readdir(h->hnd);
-            }
-
-            /* Does fs provide its own .. directory? */
-            if(temp_dirent && (strcmp(temp_dirent->name, "..") == 0)) {
-                h->idx++;
-                return temp_dirent;
-            } else {
-                /* Send .. directory second */
-                strcpy(dot_dirent.name, "..");
-                dot_dirent.attr = O_DIR;
-                dot_dirent.size = -1;
-                dot_dirent.time = 0;
-                return &dot_dirent;
-            }
-        case 2:
-            h->idx++;
-            /* FS didnt provide a . or .. directory. 
-               Return what we read first */
-            return temp_dirent;
+            /* Send .. directory second */
+            return &dotdot_dirent;
         default:
-            return h->handler->readdir(h->hnd);
+            for(;; h->idx++) {
+                dirent = h->handler->readdir(h->hnd);
+                if(!dirent ||
+                   (strcmp(dirent->name, ".") && strcmp(dirent->name, "..")))
+                    return dirent;
+            }
     }
 }
 
@@ -935,8 +929,7 @@ int fs_fstat(file_t fd, struct stat *st) {
 }
 
 /* Initialize FS structures */
-int fs_init(void) {
-    return 0;
+void fs_init(void) {
 }
 
 void fs_shutdown(void) {

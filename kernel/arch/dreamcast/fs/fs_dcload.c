@@ -203,7 +203,7 @@ static size_t fs_dcload_total(void *h) {
     return ret;
 }
 
-static dirent_t *fs_dcload_readdir(void *h) {
+static const dirent_t *fs_dcload_readdir(void *h) {
     dirent_t *rv = NULL;
     struct dirent *dcld;
     dcload_stat_t filestat;

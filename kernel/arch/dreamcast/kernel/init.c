@@ -132,8 +132,10 @@ KOS_INIT_FLAG_WEAK(dcload_init, true);
 KOS_INIT_FLAG_WEAK(fs_dcload_init_console, true);
 KOS_INIT_FLAG_WEAK(fs_dcload_shutdown, true);
 KOS_INIT_FLAG_WEAK(fs_dclsocket_shutdown, true);
+KOS_INIT_FLAG_WEAK(fs_init, true);
 KOS_INIT_FLAG_WEAK(fs_dev_init, true);
 KOS_INIT_FLAG_WEAK(fs_dev_shutdown, true);
+KOS_INIT_FLAG_WEAK(fs_shutdown, true);
 KOS_INIT_FLAG_WEAK(fs_null_init, true);
 KOS_INIT_FLAG_WEAK(fs_null_shutdown, true);
 KOS_INIT_FLAG_WEAK(fs_pty_init, true);
@@ -198,9 +200,7 @@ int  __weak_symbol arch_auto_init(void) {
 
     nmmgr_init();
 
-    if(__kos_init_flags & INIT_FS_ALL)
-        fs_init();                        /* VFS */
-
+    KOS_INIT_FLAG_CALL(fs_init);          /* VFS */
     KOS_INIT_FLAG_CALL(fs_dev_init);      /* /dev */
     KOS_INIT_FLAG_CALL(fs_null_init);     /* /dev/null */
     KOS_INIT_FLAG_CALL(fs_pty_init);      /* Pty */
@@ -267,8 +267,7 @@ void  __weak_symbol arch_auto_shutdown(void) {
 
     /* As a workaround, shut down the base FS before fs_pty
        to avoid triggering bugs. */
-    if(__kos_init_flags & INIT_FS_ALL)
-        fs_shutdown();
+    KOS_INIT_FLAG_CALL(fs_shutdown);
 
     KOS_INIT_FLAG_CALL(fs_pty_shutdown);
 

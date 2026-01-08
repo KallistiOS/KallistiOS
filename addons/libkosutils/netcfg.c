@@ -257,8 +257,8 @@ int netcfg_load_flash(netcfg_t *out) {
 }
 
 int netcfg_load(netcfg_t *out) {
+    const dirent_t *d;
     file_t f;
-    dirent_t * d;
     char buf[64];
 
     /* Scan for VMUs */
@@ -384,8 +384,8 @@ error:
 }
 
 int netcfg_save(const netcfg_t *cfg) {
+    const dirent_t *d;
     file_t f;
-    dirent_t * d;
     char buf[64];
 
     /* Scan for a VMU */
