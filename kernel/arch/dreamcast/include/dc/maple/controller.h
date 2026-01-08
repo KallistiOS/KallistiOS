@@ -83,7 +83,7 @@ __BEGIN_DECLS
     Next you can check for the state of a particular button with:
 
         if(state->a)                // Check via bitfield
-            printf("Pressed A".);
+            printf("Pressed A.");
 
     or
 

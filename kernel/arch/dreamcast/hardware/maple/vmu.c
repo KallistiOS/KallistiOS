@@ -89,12 +89,6 @@ static void vmu_datetime_from_tm(vmu_datetime_t *dt, const struct tm *bt) {
     dt->weekday = bt->tm_wday? dt->weekday - 1 : 6;
 }
 
-static int vmu_attach(maple_driver_t *drv, maple_device_t *dev) {
-    (void)drv;
-    dev->status_valid = 1;
-    return 0;
-}
-
 static void vmu_poll_reply(maple_state_t *st, maple_frame_t *frm) {
     (void)st;
 
@@ -144,8 +138,6 @@ static void vmu_poll_reply(maple_state_t *st, maple_frame_t *frm) {
             (cooked->buttons.current.dpad_left  << 3) | /* right */
             (cooked->buttons.current.dpad_right << 2);  /* left */
     }
-
-    frm->dev->status_valid = 1;
 }
 
 static int vmu_poll(maple_device_t *dev) {
@@ -163,7 +155,6 @@ static int vmu_poll(maple_device_t *dev) {
         dev->frame.length = 1;
         dev->frame.callback = vmu_poll_reply;
         maple_queue_frame(&dev->frame);
-
     }
 
     return 0;
@@ -177,10 +168,7 @@ static void vmu_periodic(maple_driver_t *drv) {
 static maple_driver_t vmu_drv = {
     .functions = MAPLE_FUNC_MEMCARD | MAPLE_FUNC_LCD | MAPLE_FUNC_CLOCK,
     .name = "VMU Driver",
-    .periodic = NULL,
-    .status_size = sizeof(vmu_state_t),
-    .attach = vmu_attach,
-    .detach = NULL
+    .status_size = sizeof(vmu_state_t)
 };
 
 /* Add the VMU to the driver chain */
@@ -373,7 +361,7 @@ int vmu_draw_lcd_rotated(maple_device_t *dev, const void *bitmap) {
     unsigned int i;
 
     for(i = 0; i < 48; i++) {
-        bitmap_inverted[i] = bit_reverse(((uint32 *)bitmap)[47 - i]);
+        bitmap_inverted[i] = bit_reverse(((uint32_t *)bitmap)[47 - i]);
     }
 
     return vmu_draw_lcd(dev, bitmap_inverted);

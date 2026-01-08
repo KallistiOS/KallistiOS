@@ -6,6 +6,7 @@
  */
 
 #include <stdatomic.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
@@ -18,12 +19,12 @@
 
 /* Send all queued frames */
 void maple_queue_flush(void) {
-    int     cnt, amt;
-    uint32      *out, *last;
+    int             cnt, amt;
+    uint32_t        *out, *last;
     maple_frame_t   *i;
 
     cnt = amt = 0;
-    out = (uint32 *)maple_state.dma_buffer;
+    out = (uint32_t *)maple_state.dma_buffer;
     last = NULL;
 
     /* Make sure we end up with space for the gun enable command... */
@@ -49,7 +50,7 @@ void maple_queue_flush(void) {
         *out++ = i->length | (i->dst_port << 16);
 
         /* Second word: receive buffer physical address */
-        *out++ = ((uint32)i->recv_buf) & MEM_AREA_CACHE_MASK;
+        *out++ = ((uint32_t)i->recv_buf) & MEM_AREA_CACHE_MASK;
 
         /* Third word: command, addressing, packet length */
         *out++ = (i->cmd & 0xff) | (maple_addr(i->dst_port, i->dst_unit) << 8)
@@ -90,7 +91,7 @@ void maple_queue_flush(void) {
 
 /* Submit a frame for queueing; see header for notes */
 int maple_queue_frame(maple_frame_t *frame) {
-    uint32 save = 0;
+    uint32_t save = 0;
 
     /* Don't add it twice */
     if(frame->queued)
@@ -117,7 +118,7 @@ int maple_queue_frame(maple_frame_t *frame) {
 
 /* Remove a used frame from the queue */
 int maple_queue_remove(maple_frame_t *frame) {
-    uint32 save = 0;
+    uint32_t save = 0;
 
     /* Don't remove twice */
     if(!frame->queued)
@@ -147,13 +148,13 @@ int maple_queue_remove(maple_frame_t *frame) {
    the old system I put it inside a big chunk of memory so it couldn't do
    that, and that seems to be the only working fix here too. *shrug* */
 void maple_frame_init(maple_frame_t *frame) {
-    uint32 buf_ptr;
+    uint32_t buf_ptr;
 
     assert(frame->state == MAPLE_FRAME_UNSENT);
     assert(!frame->queued);
 
     /* Setup the buffer pointer (64-byte align and force -> P2) */
-    buf_ptr = (uint32)frame->recv_buf_arr;
+    buf_ptr = (uint32_t)frame->recv_buf_arr;
 
     if(buf_ptr & 0x1f)
         buf_ptr = (buf_ptr & ~0x1f) + 0x20;
@@ -162,7 +163,7 @@ void maple_frame_init(maple_frame_t *frame) {
         buf_ptr += 512;
 
     buf_ptr = (buf_ptr & MEM_AREA_CACHE_MASK) | MEM_AREA_P2_BASE;
-    frame->recv_buf = (uint8*)buf_ptr;
+    frame->recv_buf = (uint8_t *)buf_ptr;
 
     /* Clear out the receive buffer */
     if(__is_defined(MAPLE_DMA_DEBUG))

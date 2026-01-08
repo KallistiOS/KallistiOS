@@ -181,7 +181,6 @@ static void cont_reply(maple_state_t *st, maple_frame_t *frm) {
     cooked->joyy = ((int)raw->joyy) - 128;
     cooked->joy2x = ((int)raw->joy2x) - 128;
     cooked->joy2y = ((int)raw->joy2y) - 128;
-    frm->dev->status_valid = 1;
 
     /* If someone is in the middle of modifying the list, don't process callbacks */
     if(mutex_trylock(&btn_cbs_mtx))

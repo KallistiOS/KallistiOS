@@ -283,8 +283,6 @@ typedef struct maple_device {
     uint8_t                 probe_mask;     /**< \brief Mask of sub-devices left to probe */
     uint8_t                 dev_mask;       /**< \brief Device-present mask for unit 0's */
 
-    volatile uint8_t        status_valid;   /**< \brief Have we got our first status update? */
-
     void                    *status;        /**< \brief Status buffer (for pollable devices) */
 } maple_device_t;
 

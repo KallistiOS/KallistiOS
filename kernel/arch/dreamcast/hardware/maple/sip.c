@@ -6,6 +6,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
 #include <kos/dbglog.h>
@@ -208,7 +209,7 @@ static void sip_reply(maple_state_t *st, maple_frame_t *frm) {
     (void)st;
 
     maple_response_t *resp;
-    uint32 *respbuf;
+    uint32_t *respbuf;
     sip_state_t *sip;
 
     /* Unlock the frame now (it's ok, we're in an IRQ) */
@@ -220,7 +221,7 @@ static void sip_reply(maple_state_t *st, maple_frame_t *frm) {
     if(resp->response != MAPLE_RESPONSE_DATATRF)
         return;
 
-    respbuf = (uint32 *)resp->data;
+    respbuf = (uint32_t *)resp->data;
 
     if(respbuf[0] != MAPLE_FUNC_MICROPHONE)
         return;
@@ -229,7 +230,6 @@ static void sip_reply(maple_state_t *st, maple_frame_t *frm) {
         return;
 
     sip = (sip_state_t *)frm->dev->status;
-    frm->dev->status_valid = 1;
 
     if(sip->is_sampling && sip->callback) {
         /* Call the user's callback. */
@@ -242,7 +242,6 @@ static int sip_poll(maple_device_t *dev) {
 
     /* Test to make sure that the particular mic is enabled */
     if(!sip->is_sampling || !sip->callback) {
-        dev->status_valid = 1;
         return 0;
     }
 
@@ -276,7 +275,6 @@ static int sip_attach(maple_driver_t *drv, maple_device_t *dev) {
     sip->is_sampling = 0;
     sip->amp_gain = SIP_DEFAULT_GAIN;
     sip->callback = NULL;
-    dev->status_valid = 1;
 
     return 0;
 }
