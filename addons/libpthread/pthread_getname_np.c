@@ -9,7 +9,7 @@
 #include <errno.h>
 #include <string.h>
 #include <kos/thread.h>
-#include <arch/irq.h>
+#include <kos/irq.h>
 
 int pthread_getname_np(pthread_t thread, char *buf, size_t buflen) {
     kthread_t *thd = (kthread_t *)thread;
