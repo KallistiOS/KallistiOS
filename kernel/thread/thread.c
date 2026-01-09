@@ -9,6 +9,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <limits.h>
 #include <malloc.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -20,6 +21,7 @@
 #include <kos/thread.h>
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>
+#include <kos/intmath.h>
 #include <kos/irq.h>
 #include <kos/sem.h>
 #include <kos/rwsem.h>
@@ -52,7 +54,15 @@ static alignas(THD_STACK_ALIGNMENT) uint8_t thd_idle_stack[64];
 /* Thread scheduler data */
 
 /* Scheduler timer interrupt frequency (Hertz) */
-static unsigned int thd_sched_ms = 1000 / THD_SCHED_HZ;
+static unsigned int thd_sched_ms;
+
+/* Time interval in milliseconds since a thread's last preemption, after which
+ * the thread's priority is doubled */
+static unsigned int thd_ageing_threshold_ms;
+
+/* The number of ticks since its last preemption after which a thread's priority
+ * will be doubled. */
+#define THD_AGEING_THRESHOLD 8
 
 /* Thread list. This includes all threads except dead ones. */
 static struct ktlist thd_list;
@@ -614,6 +624,15 @@ static inline void thd_schedule_inner(kthread_t *thd, uint64_t now) {
     irq_set_context(&thd_current->context);
 }
 
+static inline prio_t thd_calc_prio(const kthread_t *thd, uint32_t now) {
+    prio_t prio = thd->prio;
+
+    if(__predict_true(thd != thd_idle_thd))
+       prio >>= (now - (uint32_t)thd->cpu_time.scheduled) >> thd_ageing_threshold_ms;
+
+    return prio;
+}
+
 /* Thread scheduler; this function will find a new thread to run when a
    context switch is requested. No work is done in here except to change
    out the thd_current variable contents. Assumed that we are in an
@@ -631,7 +650,8 @@ static inline void thd_schedule_inner(kthread_t *thd, uint64_t now) {
    don't want a full context switch inside the same priority group.
 */
 void thd_schedule(bool front_of_line) {
-    kthread_t *thd;
+    kthread_t *tmp, *thd = NULL;
+    prio_t prio, max_prio = INT_MAX;
     uint64_t now;
 
     now = timer_ms_gettime64();
@@ -656,10 +676,16 @@ void thd_schedule(bool front_of_line) {
     /* Search downwards through the run queue for a runnable thread; if
        we don't find a normal runnable thread, the idle process will
        always be there at the bottom. */
-    TAILQ_FOREACH(thd, &run_queue, thdq) {
+    TAILQ_FOREACH(tmp, &run_queue, thdq) {
         /* Is it runnable? If not, keep going */
-        if(thd->state == STATE_READY)
-            break;
+        if(tmp->state != STATE_READY)
+            continue;
+
+        prio = thd_calc_prio(tmp, now);
+        if(prio < max_prio) {
+            thd = tmp;
+            max_prio = prio;
+        }
     }
 
     /* If we didn't already re-enqueue the thread and we are supposed to do so,
@@ -955,6 +981,7 @@ int thd_set_hz(unsigned int hertz) {
         return -1;
 
     thd_sched_ms = 1000 / hertz;
+    thd_ageing_threshold_ms = log2_rup(thd_sched_ms * THD_AGEING_THRESHOLD);
 
     return 0;
 }
@@ -1012,6 +1039,9 @@ int thd_init(void) {
 
     /* Reinitialize thread counter */
     thd_count = 0;
+
+    /* Set default HZ value */
+    thd_set_hz(THD_SCHED_HZ);
 
     /* Setup a kernel task for the currently running "main" thread */
     kern = thd_create_ex(&kern_attr, NULL, NULL);
