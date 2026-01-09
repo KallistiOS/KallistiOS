@@ -218,6 +218,8 @@ typedef struct __attribute__((aligned(32))) kthread {
     */
     uint64_t wait_timeout;
 
+    uint64_t last_sched;
+
     /** \brief Per-Thread CPU Time. */
     struct {
         uint64_t scheduled; /**< \brief time when the thread became active */

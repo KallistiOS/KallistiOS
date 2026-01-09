@@ -9,6 +9,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <limits.h>
 #include <malloc.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -30,6 +31,10 @@
 #include <arch/arch.h>
 #include <arch/stack.h>
 #include <arch/tls_static.h>
+
+/* Time interval in milliseconds since a thread's last preemption, after which
+ * the thread's priority is doubled */
+#define THD_AGEING_THRESHOLD_MS 32
 
 /*
 
@@ -595,7 +600,7 @@ static void thd_update_cpu_time(kthread_t *thd) {
 }
 
 /* Helper function that sets a thread being scheduled */
-static inline void thd_schedule_inner(kthread_t *thd) {
+static inline void thd_schedule_inner(kthread_t *thd, uint64_t now) {
     thd_remove_from_runnable(thd);
 
     thd_update_cpu_time(thd);
@@ -603,6 +608,7 @@ static inline void thd_schedule_inner(kthread_t *thd) {
     thd_current = thd;
     _impure_ptr = &thd->thd_reent;
     thd->state = STATE_RUNNING;
+    thd->last_sched = now;
 
     /* Make sure the thread hasn't underrun its stack */
     if(thd_current->stack && thd_current->stack_size) {
@@ -614,6 +620,10 @@ static inline void thd_schedule_inner(kthread_t *thd) {
     }
 
     irq_set_context(&thd_current->context);
+}
+
+static inline prio_t thd_calc_prio(const kthread_t *thd, uint64_t now) {
+    return thd->prio >> ((now - thd->last_sched) / THD_AGEING_THRESHOLD_MS);
 }
 
 /* Thread scheduler; this function will find a new thread to run when a
@@ -633,7 +643,8 @@ static inline void thd_schedule_inner(kthread_t *thd) {
    don't want a full context switch inside the same priority group.
 */
 void thd_schedule(bool front_of_line) {
-    kthread_t *thd;
+    kthread_t *tmp, *thd = NULL;
+    prio_t prio, max_prio = INT_MAX;
     uint64_t now;
 
     now = timer_ms_gettime64();
@@ -658,10 +669,16 @@ void thd_schedule(bool front_of_line) {
     /* Search downwards through the run queue for a runnable thread; if
        we don't find a normal runnable thread, the idle process will
        always be there at the bottom. */
-    TAILQ_FOREACH(thd, &run_queue, thdq) {
+    TAILQ_FOREACH(tmp, &run_queue, thdq) {
         /* Is it runnable? If not, keep going */
-        if(thd->state == STATE_READY)
-            break;
+        if(tmp->state != STATE_READY)
+            continue;
+
+        prio = thd_calc_prio(tmp, now);
+        if(prio < max_prio) {
+            thd = tmp;
+            max_prio = prio;
+        }
     }
 
     /* If we didn't already re-enqueue the thread and we are supposed to do so,
@@ -684,7 +701,7 @@ void thd_schedule(bool front_of_line) {
 
     /* We should now have a runnable thread, so remove it from the
        run queue and switch to it. */
-    thd_schedule_inner(thd);
+    thd_schedule_inner(thd, now);
 }
 
 /* Temporary priority boosting function: call this from within an interrupt
@@ -713,7 +730,7 @@ void thd_schedule_next(kthread_t *thd) {
         thd_add_to_runnable(thd_current, 0);
     }
 
-    thd_schedule_inner(thd);
+    thd_schedule_inner(thd, timer_ms_gettime64());
 }
 
 /* See kos/thread.h for description */
@@ -1024,7 +1041,7 @@ int thd_init(void) {
 
     /* Main thread -- the kern thread */
     thd_current = kern;
-    thd_schedule_inner(kern);
+    thd_schedule_inner(kern, timer_ms_gettime64());
 
     /* Initialize tls */
     arch_tls_init();
