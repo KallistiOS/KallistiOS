@@ -9,6 +9,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <limits.h>
 #include <malloc.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -20,6 +21,7 @@
 #include <kos/thread.h>
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>
+#include <kos/intmath.h>
 #include <kos/irq.h>
 #include <kos/sem.h>
 #include <kos/rwsem.h>
@@ -52,7 +54,15 @@ static alignas(THD_STACK_ALIGNMENT) uint8_t thd_idle_stack[512];
 /* Thread scheduler data */
 
 /* Scheduler timer interrupt frequency (Hertz) */
-static unsigned int thd_sched_ms = 1000 / THD_SCHED_HZ;
+static unsigned int thd_sched_ms;
+
+/* log2() of the time interval in milliseconds since a thread's last preemption,
+ * after which the thread's priority is doubled */
+static unsigned int thd_ageing_ms_log2;
+
+/* The number of ticks since its last preemption after which a thread's priority
+ * will be doubled. */
+#define THD_AGEING_THRESHOLD 8
 
 /* Thread list. This includes all threads except dead ones. */
 static struct ktlist thd_list;
@@ -632,6 +642,15 @@ static inline void thd_schedule_inner(kthread_t *thd, uint64_t now) {
     irq_set_context(&thd_current->context);
 }
 
+static inline prio_t thd_calc_prio(const kthread_t *thd, uint32_t now) {
+    prio_t prio = thd->prio;
+
+    if(__predict_true(thd != thd_idle_thd))
+       prio >>= (now - (uint32_t)thd->cpu_time.scheduled) >> thd_ageing_ms_log2;
+
+    return prio;
+}
+
 /* Thread scheduler; this function will find a new thread to run when a
    context switch is requested. No work is done in here except to change
    out the thd_current variable contents. Assumed that we are in an
@@ -649,7 +668,8 @@ static inline void thd_schedule_inner(kthread_t *thd, uint64_t now) {
    don't want a full context switch inside the same priority group.
 */
 void thd_schedule(bool front_of_line) {
-    kthread_t *thd;
+    kthread_t *thd, *next_thd = NULL;
+    prio_t prio, max_prio = INT_MAX;
     uint64_t now;
     int ret;
 
@@ -694,8 +714,14 @@ void thd_schedule(bool front_of_line) {
         }
 
         /* Is it runnable? If not, keep going */
-        if(thd->state == STATE_READY)
-            break;
+        if(thd->state != STATE_READY)
+            continue;
+
+        prio = thd_calc_prio(thd, now);
+        if(prio < max_prio) {
+            next_thd = thd;
+            max_prio = prio;
+        }
     }
 
     /* If we didn't already re-enqueue the thread and we are supposed to do so,
@@ -706,22 +732,22 @@ void thd_schedule(bool front_of_line) {
 
         /* Make sure we have a thread, just in case we couldn't find anything
            above. */
-        if(thd == NULL || thd == thd_idle_thd)
-            thd = thd_current;
+        if(next_thd == NULL || next_thd == thd_idle_thd)
+            next_thd = thd_current;
     }
     else if(__predict_false(thd_current->state == STATE_POLLING)) {
         thd_add_to_runnable(thd_current, front_of_line);
     }
 
     /* Didn't find one? Big problem here... */
-    if(thd == NULL) {
+    if(next_thd == NULL) {
         thd_pslist(printf);
         arch_panic("couldn't find a runnable thread");
     }
 
     /* We should now have a runnable thread, so remove it from the
        run queue and switch to it. */
-    thd_schedule_inner(thd, now);
+    thd_schedule_inner(next_thd, now);
 }
 
 /* Temporary priority boosting function: call this from within an interrupt
@@ -1023,6 +1049,7 @@ int thd_set_hz(unsigned int hertz) {
         return -1;
 
     thd_sched_ms = 1000 / hertz;
+    thd_ageing_ms_log2 = log2_rup(thd_sched_ms * THD_AGEING_THRESHOLD);
 
     return 0;
 }
@@ -1080,6 +1107,9 @@ int thd_init(void) {
 
     /* Reinitialize thread counter */
     thd_count = 0;
+
+    /* Set default HZ value */
+    thd_set_hz(THD_SCHED_HZ);
 
     /* Setup a kernel task for the currently running "main" thread */
     kern = thd_create_ex(&kern_attr, NULL, NULL);
