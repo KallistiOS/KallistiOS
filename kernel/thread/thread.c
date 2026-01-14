@@ -121,7 +121,7 @@ int thd_each(int (*cb)(kthread_t *thd, void *user_data), void *data) {
 }
 
 int thd_pslist(int (*pf)(const char *fmt, ...)) {
-    uint64_t cpu_time, ns_time, cpu_total = 0;
+    uint64_t cpu_time, ms_time, cpu_total = 0;
     kthread_t *cur;
 
     pf("All threads (may not be deterministic):\n");
@@ -129,7 +129,7 @@ int thd_pslist(int (*pf)(const char *fmt, ...)) {
 
     irq_disable_scoped();
     thd_get_cpu_time(thd_get_current());
-    ns_time = timer_ns_gettime64();
+    ms_time = timer_ms_gettime64();
 
     LIST_FOREACH(cur, &thd_list, t_list) {
         pf("%08lx  ", CONTEXT_PC(cur->context));
@@ -147,15 +147,15 @@ int thd_pslist(int (*pf)(const char *fmt, ...)) {
         cpu_total += cpu_time;
 
         pf("%12llu (%6.3lf%%)  ",
-            cpu_time, (double)cpu_time / (double)ns_time * 100.0);
+            cpu_time, (double)cpu_time / (double)ms_time * 100.0);
 
         pf("%-10s  ", thd_state_to_str(cur));
         pf("%-10s\n", cur->label);
     }
 
     pf("-\t  -\t -\t       -\t     -");
-    pf("%12llu (%6.3lf%%)       -      [system]\n", (ns_time - cpu_total),
-        (double)(ns_time - cpu_total) / (double)ns_time * 100.0);
+    pf("%12llu (%6.3lf%%)       -      [system]\n", (ms_time - cpu_total),
+        (double)(ms_time - cpu_total) / (double)ms_time * 100.0);
 
     pf("--end of list--\n");
 
@@ -603,20 +603,18 @@ tid_t thd_get_id(const kthread_t *thd) {
 /*****************************************************************************/
 /* Scheduling routines */
 
-static void thd_update_cpu_time(kthread_t *thd) {
-    const uint64_t ns = timer_ns_gettime64();
-
+static void thd_update_cpu_time(kthread_t *thd, uint64_t now) {
     thd_current->cpu_time.total +=
-            ns - thd_current->cpu_time.scheduled;
+            now - thd_current->cpu_time.scheduled;
 
-    thd->cpu_time.scheduled = ns;
+    thd->cpu_time.scheduled = now;
 }
 
 /* Helper function that sets a thread being scheduled */
-static inline void thd_schedule_inner(kthread_t *thd) {
+static inline void thd_schedule_inner(kthread_t *thd, uint64_t now) {
     thd_remove_from_runnable(thd);
 
-    thd_update_cpu_time(thd);
+    thd_update_cpu_time(thd, now);
 
     thd_current = thd;
     _impure_ptr = &thd->thd_reent;
@@ -723,7 +721,7 @@ void thd_schedule(bool front_of_line) {
 
     /* We should now have a runnable thread, so remove it from the
        run queue and switch to it. */
-    thd_schedule_inner(thd);
+    thd_schedule_inner(thd, now);
 }
 
 /* Temporary priority boosting function: call this from within an interrupt
@@ -752,7 +750,7 @@ void thd_schedule_next(kthread_t *thd) {
         thd_add_to_runnable(thd_current, 0);
     }
 
-    thd_schedule_inner(thd);
+    thd_schedule_inner(thd, timer_ms_gettime64());
 }
 
 /* See kos/thread.h for description */
@@ -988,10 +986,6 @@ struct _reent *thd_get_reent(kthread_t *thd) {
 }
 
 uint64_t thd_get_cpu_time(kthread_t *thd) {
-    /* Check whether we should force an update immediately for accuracy. */
-    if(thd == thd_get_current())
-        thd_update_cpu_time(thd);
-
     return thd->cpu_time.total;
 }
 
@@ -1096,7 +1090,7 @@ int thd_init(void) {
 
     /* Main thread -- the kern thread */
     thd_current = kern;
-    thd_schedule_inner(kern);
+    thd_schedule_inner(kern, timer_ms_gettime64());
 
     /* Initialize tls */
     arch_tls_init();
