@@ -4,6 +4,7 @@
    Copyright (C)2000,2001,2004 Megan Potter
 */
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <errno.h>
 #include <kos/dbgio.h>
@@ -42,8 +43,8 @@ kernel or for debugging it.
 static int serial_baud = DEFAULT_SERIAL_BAUD,
            serial_fifo = DEFAULT_SERIAL_FIFO;
 
-/* This will get set to zero if we fail to send. */
-static int serial_enabled = 1;
+/* This will get set to false if we fail to send, and reset by scif_init */
+static bool serial_enabled = false;
 
 /* Set serial parameters; this is not platform independent like I want
    it to be, but it should be generic enough to be useful. */
@@ -186,14 +187,166 @@ int scif_set_irq_usage(int on) {
 
 /* We are always detected, though we might end up realizing there's no
    cable connected later... */
-int scif_detected(void) {
+static int scif_detected(void) {
     return 1;
 }
 
-/* We use this for the dbgio interface because we always init SCIF. */
-int scif_init_fake(void) {
+/* Fail initialization if we haven't called scif_init, have failed a
+   read/write, or have called scif_shutdown */
+static int scif_init_dbgio(void) {
+    if(serial_enabled)
+        return 0;
+    return -1;
+}
+
+/* Read one char from the serial port (-1 if nothing to read) */
+int scif_read(void) {
+    if(!serial_enabled) {
+        errno = EIO;
+        return -1;
+    }
+
+    if(scif_irq_usage) {
+        /* Do we have anything ready? */
+        if(rb_space_used() <= 0) {
+            errno = EAGAIN;
+            return -1;
+        }
+        else
+            return rb_pop_char();
+    }
+    else {
+        int c;
+
+        if(!(SCFDR2 & 0x1f)) {
+            errno = EAGAIN;
+            return -1;
+        }
+
+        /* Get the input char */
+        c = SCFRDR2;
+
+        /* Ack */
+        SCFSR2 &= ~0x92;
+
+        return c;
+    }
+}
+
+/* Write one char to the serial port (call serial_flush()!) */
+int scif_write(int c) {
+    int timeout = 800000;
+
+    if(!serial_enabled) {
+        errno = EIO;
+        return -1;
+    }
+
+    /* Wait until the transmit buffer has space. Too long of a failure
+       is indicative of no serial cable. */
+    while(!(SCFSR2 & 0x20) && timeout > 0)
+        timeout--;
+
+    if(timeout <= 0) {
+        serial_enabled = false;
+        errno = EIO;
+        return -1;
+    }
+
+    /* Send the char */
+    SCFTDR2 = c;
+
+    /* Clear status */
+    SCFSR2 &= 0xff9f;
+
+    return 1;
+}
+
+/* Flush all FIFO'd bytes out of the serial port buffer */
+int scif_flush(void) {
+    int timeout = 800000;
+
+    if(!serial_enabled) {
+        errno = EIO;
+        return -1;
+    }
+
+    SCFSR2 &= 0xbf;
+
+    while(!(SCFSR2 & 0x40) && timeout > 0)
+        timeout--;
+
+    if(timeout <= 0) {
+        serial_enabled = false;
+        errno = EIO;
+        return -1;
+    }
+
+    SCFSR2 &= 0xbf;
+
     return 0;
 }
+
+/* Send an entire buffer */
+int scif_write_buffer(const uint8_t *data, int len, int xlat) {
+    int rv, i = 0, c;
+
+    while(len-- > 0) {
+        c = *data++;
+
+        if(xlat) {
+            if(c == '\n') {
+                if(scif_write('\r') < 0)
+                    return -1;
+
+                i++;
+            }
+        }
+
+        rv = scif_write(c);
+
+        if(rv < 0)
+            return -1;
+
+        i += rv;
+    }
+
+    if(scif_flush() < 0)
+        return -1;
+
+    return i;
+}
+
+/* Read an entire buffer (block) */
+int scif_read_buffer(uint8_t *data, int len) {
+    int c, i = 0;
+
+    while(len-- > 0) {
+        while((c = scif_read()) == -1) {
+            if(errno != EAGAIN)
+                return -1;
+        }
+
+        *data++ = c;
+        i++;
+    }
+
+    return i;
+}
+
+/* Tie all of that together into a dbgio package. */
+dbgio_handler_t dbgio_scif = {
+    .name = "scif",
+    .detected = scif_detected,
+    .init = scif_init_dbgio,
+    .shutdown = scif_shutdown,
+    .set_irq_usage = scif_set_irq_usage,
+    .read = scif_read,
+    .write = scif_write,
+    .flush = scif_flush,
+    .write_buffer = scif_write_buffer,
+    .read_buffer = scif_read_buffer
+};
 
 /* Initialize the SCIF port; */
 /* recv trigger to 1 byte */
@@ -262,159 +415,15 @@ int scif_init(void) {
     for(i = 0; i < 800000; i++)
         __asm__("nop");
 
+    serial_enabled = true;
+    dbgio_add_handler(&dbgio_scif);
+
     return 0;
 }
 
 int scif_shutdown(void) {
+    dbgio_remove_handler(&dbgio_scif);
+    serial_enabled = false;
     scif_set_irq_usage(DBGIO_MODE_POLLED);
     return 0;
 }
-
-/* Read one char from the serial port (-1 if nothing to read) */
-int scif_read(void) {
-    if(!serial_enabled) {
-        errno = EIO;
-        return -1;
-    }
-
-    if(scif_irq_usage) {
-        /* Do we have anything ready? */
-        if(rb_space_used() <= 0) {
-            errno = EAGAIN;
-            return -1;
-        }
-        else
-            return rb_pop_char();
-    }
-    else {
-        int c;
-
-        if(!(SCFDR2 & 0x1f)) {
-            errno = EAGAIN;
-            return -1;
-        }
-
-        /* Get the input char */
-        c = SCFRDR2;
-
-        /* Ack */
-        SCFSR2 &= ~0x92;
-
-        return c;
-    }
-}
-
-/* Write one char to the serial port (call serial_flush()!) */
-int scif_write(int c) {
-    int timeout = 800000;
-
-    if(!serial_enabled) {
-        errno = EIO;
-        return -1;
-    }
-
-    /* Wait until the transmit buffer has space. Too long of a failure
-       is indicative of no serial cable. */
-    while(!(SCFSR2 & 0x20) && timeout > 0)
-        timeout--;
-
-    if(timeout <= 0) {
-        serial_enabled = 0;
-        errno = EIO;
-        return -1;
-    }
-
-    /* Send the char */
-    SCFTDR2 = c;
-
-    /* Clear status */
-    SCFSR2 &= 0xff9f;
-
-    return 1;
-}
-
-/* Flush all FIFO'd bytes out of the serial port buffer */
-int scif_flush(void) {
-    int timeout = 800000;
-
-    if(!serial_enabled) {
-        errno = EIO;
-        return -1;
-    }
-
-    SCFSR2 &= 0xbf;
-
-    while(!(SCFSR2 & 0x40) && timeout > 0)
-        timeout--;
-
-    if(timeout <= 0) {
-        serial_enabled = 0;
-        errno = EIO;
-        return -1;
-    }
-
-    SCFSR2 &= 0xbf;
-
-    return 0;
-}
-
-/* Send an entire buffer */
-int scif_write_buffer(const uint8_t *data, int len, int xlat) {
-    int rv, i = 0, c;
-
-    while(len-- > 0) {
-        c = *data++;
-
-        if(xlat) {
-            if(c == '\n') {
-                if(scif_write('\r') < 0)
-                    return -1;
-
-                i++;
-            }
-        }
-
-        rv = scif_write(c);
-
-        if(rv < 0)
-            return -1;
-
-        i += rv;
-    }
-
-    if(scif_flush() < 0)
-        return -1;
-
-    return i;
-}
-
-/* Read an entire buffer (block) */
-int scif_read_buffer(uint8_t *data, int len) {
-    int c, i = 0;
-
-    while(len-- > 0) {
-        while((c = scif_read()) == -1) {
-            if(errno != EAGAIN)
-                return -1;
-        }
-
-        *data++ = c;
-        i++;
-    }
-
-    return i;
-}
-
-/* Tie all of that together into a dbgio package. */
-dbgio_handler_t dbgio_scif = {
-    .name = "scif",
-    .detected = scif_detected,
-    .init = scif_init_fake,
-    .shutdown = scif_shutdown,
-    .set_irq_usage = scif_set_irq_usage,
-    .read = scif_read,
-    .write = scif_write,
-    .flush = scif_flush,
-    .write_buffer = scif_write_buffer,
-    .read_buffer = scif_read_buffer
-};

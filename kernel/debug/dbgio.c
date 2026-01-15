@@ -11,7 +11,8 @@
 #include <errno.h>
 #include <assert.h>
 #include <kos/dbgio.h>
-#include <kos/spinlock.h>
+#include <kos/irq.h>
+#include <kos/mutex.h>
 
 /*
   This module handles a swappable debug console. These functions used to be
@@ -29,7 +30,7 @@ struct dbgio_handlers_list dbgio_handlers;
 /* Our currently selected handler. */
 static dbgio_handler_t *dbgio = NULL;
 
-int dbgio_dev_select(const char * name) {
+int dbgio_dev_select(const char *name) {
     dbgio_handler_t *cur;
 
     SLIST_FOREACH(cur, &dbgio_handlers, entry) {
@@ -84,23 +85,19 @@ int dbgio_dev_select_auto(void) {
 
     /* Look for a valid interface. */
     SLIST_FOREACH(cur, &dbgio_handlers, entry) {
-        if(cur->detected()) {
-            /* Select this device. */
-            dbgio = cur;
-
+        if(cur->detected && cur->detected()) {
             /* Try to init it. If it fails,
                then move on to the next one anyway. */
-            if(!dbgio->init()) {
-                /* Worked. */
+            if(!cur->init()) {
+                /* Worked, so assign it */
+                dbgio = cur;
                 return 0;
             }
-
-            /* Failed... nuke it and continue. */
-            dbgio = NULL;
         }
     }
 
     /* Didn't find an interface. */
+    dbgio = NULL;
     errno = ENODEV;
     return -1;
 }
@@ -116,8 +113,8 @@ int __weak_symbol dbgio_init(void) {
 
 int dbgio_set_irq_usage(int mode) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->set_irq_usage(mode);
+        if(dbgio && dbgio->set_irq_usage)
+            return dbgio->set_irq_usage(mode);
     }
 
     return -1;
@@ -125,8 +122,8 @@ int dbgio_set_irq_usage(int mode) {
 
 int dbgio_read(void) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->read();
+        if(dbgio && dbgio->read)
+            return dbgio->read();
     }
 
     return -1;
@@ -134,8 +131,8 @@ int dbgio_read(void) {
 
 int dbgio_write(int c) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->write(c);
+        if(dbgio && dbgio->write)
+            return dbgio->write(c);
     }
 
     return -1;
@@ -143,8 +140,8 @@ int dbgio_write(int c) {
 
 int dbgio_flush(void) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->flush();
+        if(dbgio && dbgio->flush)
+            return dbgio->flush();
     }
 
     return -1;
@@ -152,8 +149,8 @@ int dbgio_flush(void) {
 
 int dbgio_write_buffer(const uint8_t *data, int len) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->write_buffer(data, len, 0);
+        if(dbgio && dbgio->write_buffer)
+            return dbgio->write_buffer(data, len, 0);
     }
 
     return -1;
@@ -161,8 +158,8 @@ int dbgio_write_buffer(const uint8_t *data, int len) {
 
 int dbgio_read_buffer(uint8_t *data, int len) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->read_buffer(data, len);
+        if(dbgio && dbgio->read_buffer)
+            return dbgio->read_buffer(data, len);
     }
 
     return -1;
@@ -170,8 +167,8 @@ int dbgio_read_buffer(uint8_t *data, int len) {
 
 int dbgio_write_buffer_xlat(const uint8_t *data, int len) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->write_buffer(data, len, 1);
+        if(dbgio && dbgio->write_buffer)
+            return dbgio->write_buffer(data, len, 1);
     }
 
     return -1;
@@ -179,8 +176,8 @@ int dbgio_write_buffer_xlat(const uint8_t *data, int len) {
 
 int dbgio_write_str(const char *str) {
     if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio_write_buffer_xlat((const uint8_t *)str, strlen(str));
+        if(dbgio && dbgio->write_buffer)
+            return dbgio_write_buffer_xlat((const uint8_t *)str, strlen(str));
     }
 
     return -1;
@@ -188,7 +185,7 @@ int dbgio_write_str(const char *str) {
 
 /* Not re-entrant */
 static char printf_buf[1024];
-static spinlock_t lock = SPINLOCK_INITIALIZER;
+static mutex_t lock = MUTEX_INITIALIZER;
 
 int dbgio_printf(const char *fmt, ...) {
     va_list args;
@@ -198,7 +195,7 @@ int dbgio_printf(const char *fmt, ...) {
       enabled, and we could be outside an int with IRQs disabled, which
       would cause a deadlock here. We need an irq_is_enabled()! */
     if(!irq_inside_int())
-        spinlock_lock(&lock);
+        mutex_lock(&lock);
 
     va_start(args, fmt);
     i = vsnprintf(printf_buf, sizeof(printf_buf), fmt, args);
@@ -208,59 +205,7 @@ int dbgio_printf(const char *fmt, ...) {
         dbgio_write_str(printf_buf);
 
     if(!irq_inside_int())
-        spinlock_unlock(&lock);
+        mutex_unlock(&lock);
 
     return i;
 }
-
-
-/* The null dbgio handler */
-static int null_detected(void) {
-    return 1;
-}
-static int null_init(void) {
-    return 0;
-}
-static int null_shutdown(void) {
-    return 0;
-}
-static int null_set_irq_usage(int mode) {
-    (void)mode;
-    return 0;
-}
-static int null_read(void) {
-    errno = EAGAIN;
-    return -1;
-}
-static int null_write(int c) {
-    (void)c;
-    return 1;
-}
-static int null_flush(void) {
-    return 0;
-}
-static int null_write_buffer(const uint8_t *data, int len, int xlat) {
-    (void)data;
-    (void)len;
-    (void)xlat;
-    return len;
-}
-static int null_read_buffer(uint8_t *data, int len) {
-    (void)data;
-    (void)len;
-    errno = EAGAIN;
-    return -1;
-}
-
-dbgio_handler_t dbgio_null = {
-    .name = "null",
-    .detected = null_detected,
-    .init = null_init,
-    .shutdown = null_shutdown,
-    .set_irq_usage = null_set_irq_usage,
-    .read = null_read,
-    .write = null_write,
-    .flush = null_flush,
-    .write_buffer = null_write_buffer,
-    .read_buffer = null_read_buffer
-};
