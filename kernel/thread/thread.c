@@ -892,6 +892,10 @@ kthread_t *thd_get_current(void) {
     return thd_current;
 }
 
+kthread_t *thd_get_idle(void) {
+    return thd_idle_thd;
+}
+
 /* Retrieve / set thread pwd */
 const char *thd_get_pwd(const kthread_t *thd) {
     if(!thd)

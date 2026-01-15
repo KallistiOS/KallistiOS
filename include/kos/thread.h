@@ -550,6 +550,13 @@ tid_t thd_get_id(const kthread_t *thd);
 */
 kthread_t *thd_get_current(void);
 
+/** \brief       Retrieve the idle thread's kthread struct.
+    \relatesalso kthread_t
+
+    \return                 The idle thread's structure.
+*/
+kthread_t *thd_get_idle(void);
+
 /** \brief       Retrieve the thread's label.
     \relatesalso kthread_t
 
