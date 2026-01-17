@@ -2,6 +2,18 @@
 
 Platform-specific changes are prefixed with the platform name, otherwise the change is platform-independent. The name/initials of the person who is responsible for the change are listed in [square brackets] for most versions (where they are missing from early versions, assume that they should be attributed to Megan Potter).
 
+## KallistiOS version 2.2.2
+- **Dreamcast**: Add missing header to `snd_stream.h` [Donald Haase ==DH]
+- Fix bug causing erratic behavior in `readdir` [Paul Cercueil == PC]
+- No longer build GDB by default with toolchain [Eric Fradella == EF]
+- Fix building older toolchains with newer host GCC [PC]
+- Correct cmake include path for addons [DH]
+- **Dreamcast**: Prevent controller from unregistering if sub-devices still active [PC]
+- Improved support for C static asserts [Falco Girgis ==FG][PC]
+- Correct errors in doxygen processing [DH][PC]
+- Improve thread safety of fs operations [PC]
+- Fix CLion compatibility with kos-cc wrappers [kouta]
+
 ## KallistiOS version 2.2.1
 - **Dreamcast**: Fine-tune timer rate to avoid clock drift [Paul Cercueil == PC]
 - **Dreamcast**: Update keyboard LED/mod status handling, add new example to demonstrate [Troy Davis == GPF]
