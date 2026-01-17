@@ -1,8 +1,16 @@
 KallistiOS ##version##  
 Copyright (C) 2002, 2003 Megan Potter  
 Copyright (C) 2012-2019 Lawrence Sebald  
-Copyright (C) 2024-2025 Donald Haase  
+Copyright (C) 2024-2026 Donald Haase  
 Copyright (C) 2025 Eric Fradella  
+
+RELEASE NOTES for 2.2.2
+-----------------------
+
+Another minor patch version to collect ~20 PRs of bug fixes. Notably GDB is no
+longer built by default with the toolchain as it was frequently breaking,
+further improvements to rumble support, and fixes to allow CLion to function
+again with our build wrappers.
 
 RELEASE NOTES for 2.2.1
 -----------------------
