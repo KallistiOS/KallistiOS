@@ -9,6 +9,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <limits.h>
 #include <malloc.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -20,6 +21,7 @@
 #include <kos/thread.h>
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>
+#include <kos/intmath.h>
 #include <kos/irq.h>
 #include <kos/sem.h>
 #include <kos/rwsem.h>
@@ -52,7 +54,15 @@ static alignas(THD_STACK_ALIGNMENT) uint8_t thd_idle_stack[64];
 /* Thread scheduler data */
 
 /* Scheduler timer interrupt frequency (Hertz) */
-static unsigned int thd_sched_ms = 1000 / THD_SCHED_HZ;
+static unsigned int thd_sched_ms;
+
+/* Time interval in milliseconds since a thread's last preemption, after which
+ * the thread's priority is doubled */
+static unsigned int thd_ageing_threshold_ms;
+
+/* The number of ticks since its last preemption after which a thread's priority
+ * will be doubled. */
+#define THD_AGEING_THRESHOLD 8
 
 /* Thread list. This includes all threads except dead ones. */
 static struct ktlist thd_list;
@@ -119,7 +129,7 @@ int thd_each(int (*cb)(kthread_t *thd, void *user_data), void *data) {
 }
 
 int thd_pslist(int (*pf)(const char *fmt, ...)) {
-    uint64_t cpu_time, ns_time, cpu_total = 0;
+    uint64_t cpu_time, ms_time, cpu_total = 0;
     kthread_t *cur;
 
     pf("All threads (may not be deterministic):\n");
@@ -127,7 +137,7 @@ int thd_pslist(int (*pf)(const char *fmt, ...)) {
 
     irq_disable_scoped();
     thd_get_cpu_time(thd_get_current());
-    ns_time = timer_ns_gettime64();
+    ms_time = timer_ms_gettime64();
 
     LIST_FOREACH(cur, &thd_list, t_list) {
         pf("%08lx  ", CONTEXT_PC(cur->context));
@@ -145,15 +155,15 @@ int thd_pslist(int (*pf)(const char *fmt, ...)) {
         cpu_total += cpu_time;
 
         pf("%12llu (%6.3lf%%)  ",
-            cpu_time, (double)cpu_time / (double)ns_time * 100.0);
+            cpu_time, (double)cpu_time / (double)ms_time * 100.0);
 
         pf("%-10s  ", thd_state_to_str(cur));
         pf("%-10s\n", cur->label);
     }
 
     pf("-\t  -\t -\t       -\t     -");
-    pf("%12llu (%6.3lf%%)       -      [system]\n", (ns_time - cpu_total),
-        (double)(ns_time - cpu_total) / (double)ns_time * 100.0);
+    pf("%12llu (%6.3lf%%)       -      [system]\n", (ms_time - cpu_total),
+        (double)(ms_time - cpu_total) / (double)ms_time * 100.0);
 
     pf("--end of list--\n");
 
@@ -585,20 +595,18 @@ tid_t thd_get_id(const kthread_t *thd) {
 /*****************************************************************************/
 /* Scheduling routines */
 
-static void thd_update_cpu_time(kthread_t *thd) {
-    const uint64_t ns = timer_ns_gettime64();
-
+static void thd_update_cpu_time(kthread_t *thd, uint64_t now) {
     thd_current->cpu_time.total +=
-            ns - thd_current->cpu_time.scheduled;
+            now - thd_current->cpu_time.scheduled;
 
-    thd->cpu_time.scheduled = ns;
+    thd->cpu_time.scheduled = now;
 }
 
 /* Helper function that sets a thread being scheduled */
-static inline void thd_schedule_inner(kthread_t *thd) {
+static inline void thd_schedule_inner(kthread_t *thd, uint64_t now) {
     thd_remove_from_runnable(thd);
 
-    thd_update_cpu_time(thd);
+    thd_update_cpu_time(thd, now);
 
     thd_current = thd;
     _impure_ptr = &thd->thd_reent;
@@ -614,6 +622,15 @@ static inline void thd_schedule_inner(kthread_t *thd) {
     }
 
     irq_set_context(&thd_current->context);
+}
+
+static inline prio_t thd_calc_prio(const kthread_t *thd, uint32_t now) {
+    prio_t prio = thd->prio;
+
+    if(__predict_true(thd != thd_idle_thd))
+       prio >>= (now - (uint32_t)thd->cpu_time.scheduled) >> thd_ageing_threshold_ms;
+
+    return prio;
 }
 
 /* Thread scheduler; this function will find a new thread to run when a
@@ -633,7 +650,8 @@ static inline void thd_schedule_inner(kthread_t *thd) {
    don't want a full context switch inside the same priority group.
 */
 void thd_schedule(bool front_of_line) {
-    kthread_t *thd;
+    kthread_t *tmp, *thd = NULL;
+    prio_t prio, max_prio = INT_MAX;
     uint64_t now;
 
     now = timer_ms_gettime64();
@@ -658,10 +676,16 @@ void thd_schedule(bool front_of_line) {
     /* Search downwards through the run queue for a runnable thread; if
        we don't find a normal runnable thread, the idle process will
        always be there at the bottom. */
-    TAILQ_FOREACH(thd, &run_queue, thdq) {
+    TAILQ_FOREACH(tmp, &run_queue, thdq) {
         /* Is it runnable? If not, keep going */
-        if(thd->state == STATE_READY)
-            break;
+        if(tmp->state != STATE_READY)
+            continue;
+
+        prio = thd_calc_prio(tmp, now);
+        if(prio < max_prio) {
+            thd = tmp;
+            max_prio = prio;
+        }
     }
 
     /* If we didn't already re-enqueue the thread and we are supposed to do so,
@@ -684,7 +708,7 @@ void thd_schedule(bool front_of_line) {
 
     /* We should now have a runnable thread, so remove it from the
        run queue and switch to it. */
-    thd_schedule_inner(thd);
+    thd_schedule_inner(thd, now);
 }
 
 /* Temporary priority boosting function: call this from within an interrupt
@@ -713,7 +737,7 @@ void thd_schedule_next(kthread_t *thd) {
         thd_add_to_runnable(thd_current, 0);
     }
 
-    thd_schedule_inner(thd);
+    thd_schedule_inner(thd, timer_ms_gettime64());
 }
 
 /* See kos/thread.h for description */
@@ -920,10 +944,6 @@ struct _reent *thd_get_reent(kthread_t *thd) {
 }
 
 uint64_t thd_get_cpu_time(kthread_t *thd) {
-    /* Check whether we should force an update immediately for accuracy. */
-    if(thd == thd_get_current())
-        thd_update_cpu_time(thd);
-
     return thd->cpu_time.total;
 }
 
@@ -961,6 +981,7 @@ int thd_set_hz(unsigned int hertz) {
         return -1;
 
     thd_sched_ms = 1000 / hertz;
+    thd_ageing_threshold_ms = log2_rup(thd_sched_ms * THD_AGEING_THRESHOLD);
 
     return 0;
 }
@@ -1019,6 +1040,9 @@ int thd_init(void) {
     /* Reinitialize thread counter */
     thd_count = 0;
 
+    /* Set default HZ value */
+    thd_set_hz(THD_SCHED_HZ);
+
     /* Setup a kernel task for the currently running "main" thread */
     kern = thd_create_ex(&kern_attr, NULL, NULL);
     if(!kern) {
@@ -1028,7 +1052,7 @@ int thd_init(void) {
 
     /* Main thread -- the kern thread */
     thd_current = kern;
-    thd_schedule_inner(kern);
+    thd_schedule_inner(kern, timer_ms_gettime64());
 
     /* Initialize tls */
     arch_tls_init();
