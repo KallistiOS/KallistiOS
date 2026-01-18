@@ -41,9 +41,6 @@ void *pvr_set_vertbuf(pvr_list_t list, void *buffer, size_t len) {
     // that themselves.
     assert(pvr_state.dma_mode);
 
-    // Make sure it's a valid list.
-    assert(list < PVR_OPB_COUNT);
-
     // Make sure it's an _enabled_ list.
     assert(pvr_state.lists_enabled & BIT(list));
 
@@ -71,7 +68,6 @@ void *pvr_vertbuf_tail(pvr_list_t list) {
     uint8_t *bufbase;
 
     // Check the validity of the request.
-    assert(list < PVR_OPB_COUNT);
     assert(pvr_state.dma_mode);
 
     // Get the buffer base.
@@ -86,7 +82,6 @@ void pvr_vertbuf_written(pvr_list_t list, size_t amt) {
     uint32_t val;
 
     // Check the validity of the request.
-    assert(list < PVR_OPB_COUNT);
     assert(pvr_state.dma_mode);
 
     // Change the current end of the buffer.
@@ -136,7 +131,6 @@ void pvr_scene_begin(void) {
         }
 
         pvr_sync_stats(PVR_SYNC_BUFSTART);
-        // DBG(("pvr_scene_begin(dma -> %d)\n", pvr_state.ram_target));
     }
     else {
         // We assume registration is starting immediately
@@ -314,7 +308,7 @@ int pvr_list_flush(pvr_list_t list) {
    you have not started a scene already. */
 int pvr_scene_finish(void) {
     int i, o;
-    volatile pvr_dma_buffers_t * b;
+    volatile pvr_dma_buffers_t *b;
 
     /* Release Store Queues if they are used */
     if(pvr_state.dr_used) {
@@ -323,7 +317,6 @@ int pvr_scene_finish(void) {
 
     // If we're in DMA mode, then this works a little differently...
     if(pvr_state.dma_mode) {
-        // DBG(("pvr_scene_finish(dma -> %d)\n", pvr_state.ram_target));
         // If any enabled lists are empty, fill them with a blank polyhdr. Also
         // add a zero-marker to the end of each list.
         b = pvr_state.dma_buffers + pvr_state.ram_target;

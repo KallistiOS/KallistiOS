@@ -39,7 +39,7 @@ static void pvr_init_tile_matrix(int which, bool presort) {
     int     x, y, tn;
     uint32_t      *vr;  /* Note: We're working in 4-byte pointer maths in this function */
     volatile int    *opb_sizes;
-    //uint32      matbase, opbbase;
+    //uint32_t      matbase, opbbase;
 
     vr = (uint32_t *)PVR_RAM_BASE;
     buf = pvr_state.ta_buffers + which;
@@ -312,7 +312,7 @@ void pvr_allocate_buffers(const pvr_init_params_t *params) {
     dbglog(DBG_KDEBUG, "  list_mask %08lx\n", pvr_state.list_reg_mask);
     dbglog(DBG_KDEBUG, "  w/h = %d/%d, tw/th = %d/%d\n", pvr_state.w, pvr_state.h,
            pvr_state.tw, pvr_state.th);
-    dbglog(DBG_KDEBUG, "  zclip %08lx\n", *((uint32*)&pvr_state.zclip));
+    dbglog(DBG_KDEBUG, "  zclip %08lx\n", *((uint32_t *)&pvr_state.zclip));
     dbglog(DBG_KDEBUG, "  pclip_left/right %08lx/%08lx\n", pvr_state.pclip_left, pvr_state.pclip_right);
     dbglog(DBG_KDEBUG, "  pclip_top/bottom %08lx/%08lx\n", pvr_state.pclip_top, pvr_state.pclip_bottom);
     dbglog(DBG_KDEBUG, "  lists_enabled %08lx\n", pvr_state.lists_enabled);

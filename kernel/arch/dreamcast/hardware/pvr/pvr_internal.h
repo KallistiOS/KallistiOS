@@ -111,13 +111,7 @@
 
  */
 
-/* Note that these must match the list types in pvr.h; these are here
-   mainly because they're easier to type =) */
-#define PVR_OPB_OP      0   /* Array indices for these structures */
-#define PVR_OPB_OM      1
-#define PVR_OPB_TP      2
-#define PVR_OPB_TM      3
-#define PVR_OPB_PT      4
+/* Total number of OPBs. Matches the count of pvr_list_t elements */
 #define PVR_OPB_COUNT   5
 
 // TA buffers structure: we have two sets of these
@@ -253,13 +247,6 @@ typedef struct pvr_bkg_poly {
     float       x3, y3, z3;
     uint32_t    argb3;
 } pvr_bkg_poly_t;
-
-// Debug macro, for debugging IRQ wackiness
-#define DBG(x) do { \
-        int o = irq_disable(); \
-        printf x; \
-        irq_restore(o); \
-    } while(0)
 
 /**** pvr_buffers.c ***************************************************/
 

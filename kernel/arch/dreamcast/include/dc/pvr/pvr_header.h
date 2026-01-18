@@ -63,7 +63,9 @@ typedef enum pvr_list_type {
     PVR_LIST_TR_POLY,           /**< Translucent polygon list */
     PVR_LIST_TR_MOD,            /**< Translucent modifier list*/
     PVR_LIST_PT_POLY,           /**< Punch-thru polygon list */
-} pvr_list_type_t;
+} pvr_list_t;
+
+#define pvr_list_type_t pvr_list_t
 
 /** \brief   Primitive culling modes
 
@@ -242,7 +244,7 @@ typedef struct pvr_poly_hdr_cmd {
     pvr_strip_len_t strip_len    :2; /* 19-18 */ /**< Triangle strips length (if non-auto) */
     uint32_t                     :3; /* 22-20 */
     bool auto_strip_len          :1; /* 23 */    /**< Auto select triangle strips length */
-    pvr_list_type_t list_type    :3; /* 26-24 */ /**< Render list to use */
+    pvr_list_t list_type         :3; /* 26-24 */ /**< Render list to use */
     uint32_t                     :1; /* 27 */
     bool strip_end               :1; /* 28 */    /**< Mark an end-of-strip */
     pvr_hdr_type_t hdr_type      :3; /* 31-29 */ /**< Header type */
