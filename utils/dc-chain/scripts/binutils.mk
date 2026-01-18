@@ -19,6 +19,7 @@ $(build_binutils): logdir
         $(binutils_extra_configure_args) \
         CC="$(CC)" \
         CXX="$(CXX)" \
+        CFLAGS="$(CFLAGS) -std=gnu17" \
         $(static_flag) \
         $(to_log)
 	$(MAKE) $(jobs_arg) -C $(build) DESTDIR=$(DESTDIR) $(to_log)

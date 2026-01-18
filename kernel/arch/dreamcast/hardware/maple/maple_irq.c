@@ -131,14 +131,8 @@ static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm) {
     if(resp->response == MAPLE_RESPONSE_NONE) {
         /* No device, or not functioning properly; check for removal */
         if(u == 0) {
-            if(dev) {
-                /* Top-level device -- detach all sub-devices as well */
-                for(u = 0; u < MAPLE_UNIT_COUNT; u++) {
-                    vbl_chk_disconnect(state, p, u);
-                }
-
-                dev->dev_mask = 0;
-            }
+            if(dev && dev->dev_mask == 0)
+                vbl_chk_disconnect(state, p, 0);
 
             state->scan_ready_mask |= 1 << p;
         }

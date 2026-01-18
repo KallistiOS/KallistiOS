@@ -18,7 +18,7 @@
 #include <string.h>
 
 #include "lua.h"
-
+#include "llimits.h"
 #include "lauxlib.h"
 #include "lualib.h"
 
