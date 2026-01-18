@@ -5,6 +5,8 @@
    Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2012, 2013,
                  2016 Lawrence Sebald
 
+   Copyright (C) 2026 Falco Girgis
+
    Portions adapted from KOS' old net_icmp.c file:
    Copyright (C) 2002 Megan Potter
 
@@ -29,31 +31,26 @@ static net_ipv4_stats_t ipv4_stats = { 0 };
 uint16_t __pure net_ipv4_checksum(const uint8_t *data, size_t bytes, uint16_t start) {
     uint32_t sum = start;
     size_t i = bytes;
+    uintptr_t end = (uintptr_t)data + bytes;
 
     /* Make sure we don't do any unaligned memory accesses */
     if(((uint32_t)data) & 0x01) {
         const uint8_t *ptr = data;
 
-        while(i > 1) {
-            sum += *ptr | ((*ptr + 1) << 8);
+        while((size_t)(&ptr[2]) <= end) {
+            sum += ptr[0] | ((ptr[1]) << 8);
             ptr += 2;
-            i -= 2;
-
-            while(sum >> 16)
-                sum = (sum >> 16) + (sum & 0xFFFF);
         }
     }
+    /* Fast path assumes at least 2-byte alignment. */
     else {
         const uint16_t *ptr = (const uint16_t *)data;
-
-        while(i > 1) {
+        while((size_t)(&ptr[1]) <= end) {
             sum += *ptr++;
-            i -= 2;
-
-            while(sum >> 16)
-                sum = (sum >> 16) + (sum & 0xFFFF);
         }
     }
+
+    i &= 0x1;
 
     /* Handle the last byte, if we have an odd byte count */
     if(i)
@@ -63,7 +60,7 @@ uint16_t __pure net_ipv4_checksum(const uint8_t *data, size_t bytes, uint16_t st
     while(sum >> 16)
         sum = (sum >> 16) + (sum & 0xFFFF);
 
-    return sum ^ 0xFFFF;
+    return (uint16_t)~sum;
 }
 
 /* Determine if a given IP is in the current network */
