@@ -1830,9 +1830,8 @@ Void_t* public_mALLOc(size_t bytes) {
     m = (void *)(nt1 + BUFFER_SIZE / 4);
 
 
-#ifdef KM_DBG_VERBOSE
-    dbg_print_thd_addr_action(ctl->thread, ctl->addr, m, bytes, name_MALLOC);
-#endif
+    if(__is_defined(KM_DBG_VERBOSE))
+        dbg_print_thd_addr_action(ctl->thread, ctl->addr, m, bytes, name_MALLOC);
 
 #else
     m = mALLOc(bytes);
@@ -1847,9 +1846,6 @@ Void_t* public_mALLOc(size_t bytes) {
 void public_fREe(Void_t* m) {
 #ifdef KM_DBG
     memctl_t * ctl;
-#ifdef KM_DBG_VERBOSE
-    uint32_t rv = arch_get_ret_addr();
-#endif
 #endif
 
     /* standard C says if block is NULL, do not try to free it */
@@ -1861,10 +1857,8 @@ void public_fREe(Void_t* m) {
     }
 
 #ifdef KM_DBG
-
-#ifdef KM_DBG_VERBOSE
-    dbg_print_thd_addr_action(get_cur_tid_safe, rv, m, 0, name_FREE);
-#endif
+    if(__is_defined(KM_DBG_VERBOSE))
+        dbg_print_thd_addr_action(get_cur_tid_safe, arch_get_ret_addr(), m, 0, name_FREE);
 
     ctl = get_memctl(m);
 
@@ -1895,18 +1889,14 @@ int mem_check_block(void *m) {
 int mem_check_all(void) {
 #ifdef KM_DBG
     int retv = 0, rvp;
-#ifdef KM_DBG_VERBOSE
-    uint32_t rv = arch_get_ret_addr();
-#endif
     memctl_t * ctl;
 
     if(MALLOC_PREACTION != 0) {
         return 0;
     }
 
-#ifdef KM_DBG_VERBOSE
-    dbg_print_thd_addr_action(get_cur_tid_safe, rv, 0, 0, name_CHECKALL);
-#endif
+    if(__is_defined(KM_DBG_VERBOSE))
+        dbg_print_thd_addr_action(get_cur_tid_safe, arch_get_ret_addr(), 0, 0, name_CHECKALL);
 
     LIST_FOREACH(ctl, &block_list, list) {
         rvp = mem_check_block_int(ctl, name_CHECKALL);
@@ -1938,9 +1928,8 @@ Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
 #ifdef KM_DBG
     ctl = get_memctl(m);
 
-#ifdef KM_DBG_VERBOSE
-    dbg_print_thd_addr_action(get_cur_tid_safe, rv, m, bytes, name_REALLOC);
-#endif
+    if(__is_defined(KM_DBG_VERBOSE))
+        dbg_print_thd_addr_action(get_cur_tid_safe, rv, m, bytes, name_REALLOC);
 
     // We can't check realloc'ing the zero block (this is valid but of
     // course there is no "previous" block to check).
@@ -1962,14 +1951,14 @@ Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
         if(bytes != 0)
             assert(ctl != NULL);
 
-#ifdef KM_DBG_VERBOSE
-    strcpy(dbg_print_buffer, " realloc'd block 0x");
-    itoa((uint32_t)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
-    strcat(dbg_print_buffer, " to 0x");
-    itoa(((uint32_t)ctl) + BUFFER_SIZE, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
-    strcat(dbg_print_buffer, "\n");
-    dbgio_write_str(dbg_print_buffer);
-#endif
+    if(__is_defined(KM_DBG_VERBOSE)) {
+        strcpy(dbg_print_buffer, " realloc'd block 0x");
+        itoa((uint32_t)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+        strcat(dbg_print_buffer, " to 0x");
+        itoa(((uint32_t)ctl) + BUFFER_SIZE, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+        strcat(dbg_print_buffer, "\n");
+        dbgio_write_str(dbg_print_buffer);
+    }
 
         // If they realloc'd to zero, we're done here.
         if(bytes != 0) {
@@ -2059,9 +2048,8 @@ Void_t* public_mEMALIGn(size_t alignment, size_t bytes) {
     m = (void *)(nt1 + BUFFER_SIZE / 4);
     assert(!((uint32_t)m % alignment));
 
-#ifdef KM_DBG_VERBOSE
-    dbg_print_thd_addr_action(ctl->thread, ctl->addr, m, bytes, name_MEMALIGN);
-#endif
+    if(__is_defined(KM_DBG_VERBOSE))
+        dbg_print_thd_addr_action(ctl->thread, ctl->addr, m, bytes, name_MEMALIGN);
 
 #else
     m = mEMALIGn(alignment, bytes);
@@ -2133,9 +2121,8 @@ Void_t* public_cALLOc(size_t n, size_t elem_size) {
     m = (void *)(nt1 + BUFFER_SIZE / 4);
     memset(m, 0, bytes);
 
-#ifdef KM_DBG_VERBOSE
-    dbg_print_thd_addr_action(ctl->thread, ctl->addr, m, bytes, name_CALLOC);
-#endif
+    if(__is_defined(KM_DBG_VERBOSE))
+        dbg_print_thd_addr_action(ctl->thread, ctl->addr, m, bytes, name_CALLOC);
 
 #else
     m = cALLOc(n, elem_size);
