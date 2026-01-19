@@ -1653,6 +1653,7 @@ static pthread_mutex_t mALLOC_MUTEx = PTHREAD_MUTEX_INITIALIZER;
 #include <stdlib.h>
 #include <kos/dbgio.h>
 #include <kos/thread.h>
+#include <arch/stack.h>
 
 #define BLOCK_MAGIC 0x1c518a74
 #define PRE_MAGIC   0x6765adb8
