@@ -1703,9 +1703,9 @@ void dbg_print_thd_addr_action(tid_t thread, uint32_t addr, void *m, size_t s, u
     }
 
     strcpy(dbg_print_buffer, "Thread ");
-    itoa(thread, (dbg_print_buffer + strlen(dbg_print_buffer)), 10);
+    utoa(thread, (dbg_print_buffer + strlen(dbg_print_buffer)), 10);
     strcat(dbg_print_buffer, ", addr 0x");
-    itoa(addr, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+    utoa(addr, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
     strcat(dbg_print_buffer, " ");
     strcat(dbg_print_buffer, func_type[which]);
 
@@ -1713,13 +1713,13 @@ void dbg_print_thd_addr_action(tid_t thread, uint32_t addr, void *m, size_t s, u
         strcat(dbg_print_buffer, "ing all memory blocks");
     else if(which == name_FREE) {
         strcat(dbg_print_buffer, "ing mem @ 0x");
-        itoa((uint32_t)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+        utoa((uint32_t)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
     }
     else {
         strcat(dbg_print_buffer, "ing ");
-        itoa(s, (dbg_print_buffer + strlen(dbg_print_buffer)), 10);
+        utoa(s, (dbg_print_buffer + strlen(dbg_print_buffer)), 10);
         strcat(dbg_print_buffer, " bytes @ 0x");
-        itoa((uint32_t)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+        utoa((uint32_t)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
     }
 
     strcat(dbg_print_buffer, "\n");
@@ -1736,7 +1736,7 @@ static int mem_check_block_int(memctl_t *ctl, int source) {
         dbg_print_thd_addr_action(get_cur_tid_safe, rv, get_buff_p(ctl), 0, source);
 
         strcpy(dbg_print_buffer, "  'magic' is not correct! 0x");
-        itoa(ctl->magic, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+        utoa(ctl->magic, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
         strcat(dbg_print_buffer, "\n");
         dbgio_write_str(dbg_print_buffer);
         
@@ -1750,9 +1750,9 @@ static int mem_check_block_int(memctl_t *ctl, int source) {
                 dbg_print_thd_addr_action(get_cur_tid_safe, rv, get_buff_p(ctl), 0, source);
 
                 strcpy(dbg_print_buffer, "  pre-magic is wrong at index ");
-                itoa(i, (dbg_print_buffer + strlen(dbg_print_buffer)), 10);
+                utoa(i, (dbg_print_buffer + strlen(dbg_print_buffer)), 10);
                 strcat(dbg_print_buffer, " (0x");
-                itoa(nt[i], (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+                utoa(nt[i], (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
                 strcat(dbg_print_buffer, ")\n");
                 dbgio_write_str(dbg_print_buffer);
 
@@ -1768,9 +1768,9 @@ static int mem_check_block_int(memctl_t *ctl, int source) {
                 dbg_print_thd_addr_action(get_cur_tid_safe, rv, get_buff_p(ctl), 0, source);
 
                 strcpy(dbg_print_buffer, "  post-magic is wrong at index ");
-                itoa(i, (dbg_print_buffer + strlen(dbg_print_buffer)), 10);
+                utoa(i, (dbg_print_buffer + strlen(dbg_print_buffer)), 10);
                 strcat(dbg_print_buffer, " (0x");
-                itoa(nt[i], (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+                utoa(nt[i], (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
                 strcat(dbg_print_buffer, ")\n");
                 dbgio_write_str(dbg_print_buffer);
 
@@ -1938,9 +1938,9 @@ Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
 
             if(__is_defined(KM_DBG_VERBOSE)) {
                 strcpy(dbg_print_buffer, " realloc'd block 0x");
-                itoa((uint32_t)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+                utoa((uint32_t)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
                 strcat(dbg_print_buffer, " to 0x");
-                itoa(((uint32_t)ctl) + BUFFER_SIZE, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+                utoa(((uint32_t)ctl) + BUFFER_SIZE, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
                 strcat(dbg_print_buffer, "\n");
                 dbgio_write_str(dbg_print_buffer);
             }
