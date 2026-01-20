@@ -1729,7 +1729,6 @@ void dbg_print_thd_addr_action(tid_t thread, uint32_t addr, void *m, size_t s, u
 
 static int mem_check_block_int(memctl_t *ctl, int source) {
     uint32_t rv = arch_get_ret_addr(), *nt, i;
-    int dmg = 0;
     int retv = 0;
 
     if(ctl->magic != BLOCK_MAGIC) {
@@ -1756,7 +1755,6 @@ static int mem_check_block_int(memctl_t *ctl, int source) {
                 strcat(dbg_print_buffer, ")\n");
                 dbgio_write_str(dbg_print_buffer);
 
-                dmg = 1;
                 retv = -2;
             }
         }
@@ -1774,12 +1772,11 @@ static int mem_check_block_int(memctl_t *ctl, int source) {
                 strcat(dbg_print_buffer, ")\n");
                 dbgio_write_str(dbg_print_buffer);
 
-                dmg = 1;
                 retv = -3;
             }
         }
 
-        if(dmg) {
+        if(retv) {
              dbgio_write_str("  DAMAGED BLOCK DURING MEM_CHECK_BLOCK\n");
         }
     }
@@ -1919,8 +1916,10 @@ Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
         // We can't check realloc'ing the zero block (this is valid but of
         // course there is no "previous" block to check).
         if(m != NULL) {
-            if(mem_check_block_int(ctl, name_REALLOC) != -1)
+            if(!mem_check_block_int(ctl, name_REALLOC))
                 LIST_REMOVE(ctl, list);
+            else
+                dmg = 1;
         }
         else
             ctl = NULL;
