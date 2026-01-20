@@ -1795,43 +1795,43 @@ Void_t* public_mALLOc(size_t bytes) {
     }
 
     if(__is_defined(KM_DBG)) {
-    uint32_t rv = arch_get_ret_addr(), *nt1, *nt2, i, rs;
-    memctl_t * ctl;
+        uint32_t rv = arch_get_ret_addr(), *nt1, *nt2, i, rs;
+        memctl_t * ctl;
 
-    if(bytes & 31)
-        rs = (bytes & ~31) + 32;
-    else
-        rs = bytes;
+        if(bytes & 31)
+            rs = (bytes & ~31) + 32;
+        else
+            rs = bytes;
 
-    ctl = (memctl_t *)mALLOc(rs + (BUFFER_SIZE * 2));
-    memset(ctl, 0, sizeof(memctl_t));
-    ctl->magic = BLOCK_MAGIC;
-    ctl->size = bytes;
-    ctl->thread = get_cur_tid_safe;
-    ctl->addr = rv;
+        ctl = (memctl_t *)mALLOc(rs + (BUFFER_SIZE * 2));
+        memset(ctl, 0, sizeof(memctl_t));
+        ctl->magic = BLOCK_MAGIC;
+        ctl->size = bytes;
+        ctl->thread = get_cur_tid_safe;
+        ctl->addr = rv;
 
-    nt1 = (uint32_t *)ctl;
+        nt1 = (uint32_t *)ctl;
 
-    for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++)
-        nt1[i] = PRE_MAGIC;
+        for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++)
+            nt1[i] = PRE_MAGIC;
 
-    ctl->post = nt2 = nt1 + BUFFER_SIZE / 4 + rs / 4;
+        ctl->post = nt2 = nt1 + BUFFER_SIZE / 4 + rs / 4;
 
-    for(i = 0; i < BUFFER_SIZE / 4; i++)
-        nt2[i] = POST_MAGIC;
+        for(i = 0; i < BUFFER_SIZE / 4; i++)
+            nt2[i] = POST_MAGIC;
 
-    ctl->type = func_type[0];
+        ctl->type = func_type[0];
 
-    LIST_INSERT_HEAD(&block_list, ctl, list);
+        LIST_INSERT_HEAD(&block_list, ctl, list);
 
-    m = (void *)(nt1 + BUFFER_SIZE / 4);
+        m = (void *)(nt1 + BUFFER_SIZE / 4);
 
 
-    if(__is_defined(KM_DBG_VERBOSE))
-        dbg_print_thd_addr_action(ctl->thread, ctl->addr, m, bytes, name_MALLOC);
+        if(__is_defined(KM_DBG_VERBOSE))
+            dbg_print_thd_addr_action(ctl->thread, ctl->addr, m, bytes, name_MALLOC);
     }
     else
-    m = mALLOc(bytes);
+        m = mALLOc(bytes);
 
     if(MALLOC_POSTACTION != 0) {
     }
@@ -1850,18 +1850,18 @@ void public_fREe(Void_t* m) {
     }
 
     if(__is_defined(KM_DBG)) {
-    if(__is_defined(KM_DBG_VERBOSE))
-        dbg_print_thd_addr_action(get_cur_tid_safe, arch_get_ret_addr(), m, 0, name_FREE);
+        if(__is_defined(KM_DBG_VERBOSE))
+            dbg_print_thd_addr_action(get_cur_tid_safe, arch_get_ret_addr(), m, 0, name_FREE);
 
-    memctl_t *ctl = get_memctl(m);
+        memctl_t *ctl = get_memctl(m);
 
-    if(mem_check_block_int(ctl, name_FREE) != -1) {
-        LIST_REMOVE(ctl, list);
-        fREe(ctl);
-    }
+        if(mem_check_block_int(ctl, name_FREE) != -1) {
+            LIST_REMOVE(ctl, list);
+            fREe(ctl);
+        }
     }
     else
-    fREe(m);
+        fREe(m);
 
     if(MALLOC_POSTACTION != 0) {
     }
@@ -1871,7 +1871,7 @@ int mem_check_block(void *m) {
     if(__is_defined(KM_DBG))
         return mem_check_block_int(get_memctl(m), name_CHECK);
     else
-    return 0;
+        return 0;
 }
 
 int mem_check_all(void) {
@@ -1908,80 +1908,80 @@ Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
     }
 
     if(__is_defined(KM_DBG)) {
-    uint32_t rv = arch_get_ret_addr(), rs, *nt, i;
-    memctl_t * ctl;
-    int dmg = 0;
-    ctl = get_memctl(m);
+        uint32_t rv = arch_get_ret_addr(), rs, *nt, i;
+        memctl_t * ctl;
+        int dmg = 0;
+        ctl = get_memctl(m);
 
-    if(__is_defined(KM_DBG_VERBOSE))
-        dbg_print_thd_addr_action(get_cur_tid_safe, rv, m, bytes, name_REALLOC);
+        if(__is_defined(KM_DBG_VERBOSE))
+            dbg_print_thd_addr_action(get_cur_tid_safe, rv, m, bytes, name_REALLOC);
 
-    // We can't check realloc'ing the zero block (this is valid but of
-    // course there is no "previous" block to check).
-    if(m != NULL) {
-        if(mem_check_block_int(ctl, name_REALLOC) != -1)
-            LIST_REMOVE(ctl, list);
-    }
-    else
-        ctl = NULL;
-
-    if(!dmg) {
-        if(bytes & 31)
-            rs = (bytes & ~31) + 32;
-        else
-            rs = bytes;
-
-        ctl = (memctl_t *)rEALLOc(ctl, rs + (BUFFER_SIZE * 2));
-
-        if(bytes != 0)
-            assert(ctl != NULL);
-
-    if(__is_defined(KM_DBG_VERBOSE)) {
-        strcpy(dbg_print_buffer, " realloc'd block 0x");
-        itoa((uint32_t)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
-        strcat(dbg_print_buffer, " to 0x");
-        itoa(((uint32_t)ctl) + BUFFER_SIZE, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
-        strcat(dbg_print_buffer, "\n");
-        dbgio_write_str(dbg_print_buffer);
-    }
-
-        // If they realloc'd to zero, we're done here.
-        if(bytes != 0) {
-            /* Our data may or may not still be there because the realloc
-               may have gone from NULL. So redo both sentinels and add
-               it back to the list. */
-            /* Our data is still there, we just need to move the end
-               block sentinel and add it back to the list */
-            memset(ctl, 0, sizeof(memctl_t));
-            ctl->magic = BLOCK_MAGIC;
-            ctl->size = bytes;
-            ctl->thread = get_cur_tid_safe;
-            ctl->addr = rv;
-
-            nt = (uint32_t *)ctl;
-
-            for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++)
-                nt[i] = PRE_MAGIC;
-
-            ctl->size = bytes;
-
-            ctl->post = nt = ((uint32_t *)ctl) + BUFFER_SIZE / 4 + rs / 4;
-
-            for(i = 0; i < BUFFER_SIZE / 4; i++)
-                nt[i] = POST_MAGIC;
-
-            LIST_INSERT_HEAD(&block_list, ctl, list);
-
-            ctl->type = func_type[1];
-
-            m = (void *)(((uint32_t)ctl) + BUFFER_SIZE);
+        // We can't check realloc'ing the zero block (this is valid but of
+        // course there is no "previous" block to check).
+        if(m != NULL) {
+            if(mem_check_block_int(ctl, name_REALLOC) != -1)
+                LIST_REMOVE(ctl, list);
         }
         else
-            m = NULL;
-    }
+            ctl = NULL;
+
+        if(!dmg) {
+            if(bytes & 31)
+                rs = (bytes & ~31) + 32;
+            else
+                rs = bytes;
+
+            ctl = (memctl_t *)rEALLOc(ctl, rs + (BUFFER_SIZE * 2));
+
+            if(bytes != 0)
+                assert(ctl != NULL);
+
+            if(__is_defined(KM_DBG_VERBOSE)) {
+                strcpy(dbg_print_buffer, " realloc'd block 0x");
+                itoa((uint32_t)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+                strcat(dbg_print_buffer, " to 0x");
+                itoa(((uint32_t)ctl) + BUFFER_SIZE, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+                strcat(dbg_print_buffer, "\n");
+                dbgio_write_str(dbg_print_buffer);
+            }
+
+            // If they realloc'd to zero, we're done here.
+            if(bytes != 0) {
+                /* Our data may or may not still be there because the realloc
+                   may have gone from NULL. So redo both sentinels and add
+                   it back to the list. */
+                /* Our data is still there, we just need to move the end
+                   block sentinel and add it back to the list */
+                memset(ctl, 0, sizeof(memctl_t));
+                ctl->magic = BLOCK_MAGIC;
+                ctl->size = bytes;
+                ctl->thread = get_cur_tid_safe;
+                ctl->addr = rv;
+
+                nt = (uint32_t *)ctl;
+
+                for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++)
+                    nt[i] = PRE_MAGIC;
+
+                ctl->size = bytes;
+
+                ctl->post = nt = ((uint32_t *)ctl) + BUFFER_SIZE / 4 + rs / 4;
+
+                for(i = 0; i < BUFFER_SIZE / 4; i++)
+                    nt[i] = POST_MAGIC;
+
+                LIST_INSERT_HEAD(&block_list, ctl, list);
+
+                ctl->type = func_type[1];
+
+                m = (void *)(((uint32_t)ctl) + BUFFER_SIZE);
+            }
+            else
+                m = NULL;
+        }
     }
     else
-    m = rEALLOc(m, bytes);
+        m = rEALLOc(m, bytes);
 
     if(MALLOC_POSTACTION != 0) {
     }
@@ -1997,42 +1997,42 @@ Void_t* public_mEMALIGn(size_t alignment, size_t bytes) {
     }
 
     if(__is_defined(KM_DBG)) {
-    uint32_t rv = arch_get_ret_addr(), rs, *nt1, *nt2, i;
-    memctl_t * ctl;
-    if(bytes & 31)
-        rs = (bytes & ~31) + 32;
-    else
-        rs = bytes;
+        uint32_t rv = arch_get_ret_addr(), rs, *nt1, *nt2, i;
+        memctl_t * ctl;
+        if(bytes & 31)
+            rs = (bytes & ~31) + 32;
+        else
+            rs = bytes;
 
-    ctl = (memctl_t *)mEMALIGn(alignment, rs + (BUFFER_SIZE * 2));
-    memset(ctl, 0, BUFFER_SIZE);
-    ctl->magic = BLOCK_MAGIC;
-    ctl->size = bytes;
-    ctl->thread = get_cur_tid_safe;
-    ctl->addr = rv;
+        ctl = (memctl_t *)mEMALIGn(alignment, rs + (BUFFER_SIZE * 2));
+        memset(ctl, 0, BUFFER_SIZE);
+        ctl->magic = BLOCK_MAGIC;
+        ctl->size = bytes;
+        ctl->thread = get_cur_tid_safe;
+        ctl->addr = rv;
 
-    nt1 = (uint32_t *)ctl;
+        nt1 = (uint32_t *)ctl;
 
-    for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++)
-        nt1[i] = PRE_MAGIC;
+        for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++)
+            nt1[i] = PRE_MAGIC;
 
-    ctl->post = nt2 = nt1 + BUFFER_SIZE / 4 + rs / 4;
+        ctl->post = nt2 = nt1 + BUFFER_SIZE / 4 + rs / 4;
 
-    for(i = 0; i < BUFFER_SIZE / 4; i++)
-        nt2[i] = POST_MAGIC;
+        for(i = 0; i < BUFFER_SIZE / 4; i++)
+            nt2[i] = POST_MAGIC;
 
-    ctl->type = func_type[2];
+        ctl->type = func_type[2];
 
-    LIST_INSERT_HEAD(&block_list, ctl, list);
+        LIST_INSERT_HEAD(&block_list, ctl, list);
 
-    m = (void *)(nt1 + BUFFER_SIZE / 4);
-    assert(!((uint32_t)m % alignment));
+        m = (void *)(nt1 + BUFFER_SIZE / 4);
+        assert(!((uint32_t)m % alignment));
 
-    if(__is_defined(KM_DBG_VERBOSE))
-        dbg_print_thd_addr_action(ctl->thread, ctl->addr, m, bytes, name_MEMALIGN);
+        if(__is_defined(KM_DBG_VERBOSE))
+            dbg_print_thd_addr_action(ctl->thread, ctl->addr, m, bytes, name_MEMALIGN);
     }
     else
-    m = mEMALIGn(alignment, bytes);
+        m = mEMALIGn(alignment, bytes);
 
     if(MALLOC_POSTACTION != 0) {
     }
@@ -2064,44 +2064,44 @@ Void_t* public_cALLOc(size_t n, size_t elem_size) {
     }
 
     if(__is_defined(KM_DBG)) {
-    uint32_t rv = arch_get_ret_addr(), *nt1, *nt2, i, rs;
-    size_t bytes = n * elem_size;
-    memctl_t * ctl;
+        uint32_t rv = arch_get_ret_addr(), *nt1, *nt2, i, rs;
+        size_t bytes = n * elem_size;
+        memctl_t * ctl;
 
-    if(bytes & 31)
-        rs = (bytes & ~31) + 32;
-    else
-        rs = bytes;
+        if(bytes & 31)
+            rs = (bytes & ~31) + 32;
+        else
+            rs = bytes;
 
-    ctl = (memctl_t *)mALLOc(rs + (BUFFER_SIZE * 2));
-    memset(ctl, 0, BUFFER_SIZE);
-    ctl->magic = BLOCK_MAGIC;
-    ctl->size = bytes;
-    ctl->thread = get_cur_tid_safe;
-    ctl->addr = rv;
+        ctl = (memctl_t *)mALLOc(rs + (BUFFER_SIZE * 2));
+        memset(ctl, 0, BUFFER_SIZE);
+        ctl->magic = BLOCK_MAGIC;
+        ctl->size = bytes;
+        ctl->thread = get_cur_tid_safe;
+        ctl->addr = rv;
 
-    nt1 = (uint32_t *)ctl;
+        nt1 = (uint32_t *)ctl;
 
-    for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++)
-        nt1[i] = PRE_MAGIC;
+        for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++)
+            nt1[i] = PRE_MAGIC;
 
-    ctl->post = nt2 = nt1 + BUFFER_SIZE / 4 + rs / 4;
+        ctl->post = nt2 = nt1 + BUFFER_SIZE / 4 + rs / 4;
 
-    for(i = 0; i < BUFFER_SIZE / 4; i++)
-        nt2[i] = POST_MAGIC;
+        for(i = 0; i < BUFFER_SIZE / 4; i++)
+            nt2[i] = POST_MAGIC;
 
-    ctl->type = func_type[3];
+        ctl->type = func_type[3];
 
-    LIST_INSERT_HEAD(&block_list, ctl, list);
+        LIST_INSERT_HEAD(&block_list, ctl, list);
 
-    m = (void *)(nt1 + BUFFER_SIZE / 4);
-    memset(m, 0, bytes);
+        m = (void *)(nt1 + BUFFER_SIZE / 4);
+        memset(m, 0, bytes);
 
-    if(__is_defined(KM_DBG_VERBOSE))
-        dbg_print_thd_addr_action(ctl->thread, ctl->addr, m, bytes, name_CALLOC);
+        if(__is_defined(KM_DBG_VERBOSE))
+            dbg_print_thd_addr_action(ctl->thread, ctl->addr, m, bytes, name_CALLOC);
     }
     else
-    m = cALLOc(n, elem_size);
+        m = cALLOc(n, elem_size);
 
     if(MALLOC_POSTACTION != 0) {
     }
@@ -2169,20 +2169,20 @@ void public_mSTATs(void) {
     mSTATs();
 
     if(__is_defined(KM_DBG)) {
-    memctl_t *c;
-    if(!LIST_EMPTY(&block_list)) {
-        dbglog(DBG_CRITICAL, "KM_DBG: Still-allocated memory blocks:\n");
-        LIST_FOREACH(c, &block_list, list) {
-            dbglog(DBG_CRITICAL, "  INUSE %08lx: size %lu, thread %d, addr %08lx, type %s\n",
-                   (uint32_t)c + BUFFER_SIZE, c->size, c->thread,
-                   c->addr, c->type);
+        memctl_t *c;
+        if(!LIST_EMPTY(&block_list)) {
+            dbglog(DBG_CRITICAL, "KM_DBG: Still-allocated memory blocks:\n");
+            LIST_FOREACH(c, &block_list, list) {
+                dbglog(DBG_CRITICAL, "  INUSE %08lx: size %lu, thread %d, addr %08lx, type %s\n",
+                       (uint32_t)c + BUFFER_SIZE, c->size, c->thread,
+                       c->addr, c->type);
 
-            mem_check_block_int(c, name_STATS);
+                mem_check_block_int(c, name_STATS);
+            }
         }
-    }
-    else {
-        dbglog(DBG_CRITICAL, "KM_DBG: All memory blocks were properly freed\n");
-    }
+        else {
+            dbglog(DBG_CRITICAL, "KM_DBG: All memory blocks were properly freed\n");
+        }
     }
 
     if(MALLOC_POSTACTION != 0) {
