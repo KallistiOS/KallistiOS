@@ -51,8 +51,7 @@ static void maple_dev_reset(maple_device_t *dev) {
     assert(dev != NULL);
 
     /* Lock the frame */
-    while(maple_frame_lock(&dev->frame) < 0)
-        thd_pass();
+    maple_frame_lock(&dev->frame);
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);
