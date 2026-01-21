@@ -2,6 +2,7 @@
 
    controller.c
    Copyright (C) 2002 Megan Potter
+   Copyright (C) 2024 Donald Haase
    Copyright (C) 2025 Falco Girgis
 
  */
@@ -74,21 +75,20 @@ int __pure cont_has_capabilities(const maple_device_t *cont, uint32_t capabiliti
 static void cont_btn_callback_del(cont_callback_params_t *params) {
     cont_callback_params_t *c, *n;
 
-    mutex_lock(&btn_cbs_mtx);
+    mutex_lock_scoped(&btn_cbs_mtx);
 
     TAILQ_FOREACH_SAFE(c, &btn_cbs, listent, n) {
         if((params == NULL) || ((params->addr == c->addr) &&
             (params->btns == c->btns))) {
 
-                if((params == NULL) || (params->cb == NULL) ||
-                    (params->cb == c->cb)) {
-                    TAILQ_REMOVE(&btn_cbs, c, listent);
-                    thd_worker_destroy(c->worker);
-                    free(c);
-                }
+            if((params == NULL) || (params->cb == NULL) ||
+                (params->cb == c->cb)) {
+                TAILQ_REMOVE(&btn_cbs, c, listent);
+                thd_worker_destroy(c->worker);
+                free(c);
             }
+        }
     }
-    mutex_unlock(&btn_cbs_mtx);
 }
 
 static void cont_btn_cb_thread(void *d) {
@@ -129,14 +129,12 @@ int cont_btn_callback(uint8_t addr, uint32_t btns, cont_btn_callback_t cb) {
         return -1;
     }
 
-    mutex_lock(&btn_cbs_mtx);
+    mutex_lock_scoped(&btn_cbs_mtx);
 
     if(addr)
         TAILQ_INSERT_HEAD(&btn_cbs, params, listent);
     else
         TAILQ_INSERT_TAIL(&btn_cbs, params, listent);
-
-    mutex_unlock(&btn_cbs_mtx);
 
     return 0;
 }
