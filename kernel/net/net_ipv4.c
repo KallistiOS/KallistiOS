@@ -30,7 +30,6 @@ static net_ipv4_stats_t ipv4_stats = { 0 };
 /* Perform an IP-style checksum on a block of data */
 uint16_t __pure net_ipv4_checksum(const uint8_t *data, size_t bytes, uint16_t start) {
     uint32_t sum = start;
-    size_t i = bytes;
     uintptr_t end = (uintptr_t)data + bytes;
 
     /* Make sure we don't do any unaligned memory accesses */
@@ -50,10 +49,8 @@ uint16_t __pure net_ipv4_checksum(const uint8_t *data, size_t bytes, uint16_t st
         }
     }
 
-    i &= 0x1;
-
     /* Handle the last byte, if we have an odd byte count */
-    if(i)
+    if(bytes & 0x1)
         sum += data[bytes - 1];
 
     /* Take care of any carry bits */
