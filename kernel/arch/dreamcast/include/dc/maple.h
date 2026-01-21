@@ -760,7 +760,7 @@ typedef void (*maple_attach_callback_t)(maple_device_t *dev);
     maple device that supports functions has been attached.
 
     \param  functions       The functions maple device must support. Set to
-                            0 to support all maple devices.
+                            0 or MAPLE_FUNC_ANY to support all maple devices.
     \param  cb              The callback to call when the maple is attached.
 */
 void maple_attach_callback(uint32_t functions, maple_attach_callback_t cb);
@@ -781,7 +781,7 @@ typedef void (*maple_detach_callback_t)(maple_device_t *dev);
     maple device that supports functions has been detached.
 
     \param  functions       The functions maple device must support. Set to
-                            0 to support all maple devices.
+                            0 or MAPLE_FUNC_ANY to support all maple devices.
     \param  cb              The callback to call when the maple is detached.
 */
 void maple_detach_callback(uint32_t functions, maple_detach_callback_t cb);

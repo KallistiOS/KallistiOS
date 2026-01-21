@@ -12,7 +12,7 @@ void maple_attach_callback(uint32_t functions, maple_attach_callback_t cb) {
     maple_driver_t *i;
 
     if(!functions)
-        functions = 0xffffffff;
+        functions = MAPLE_FUNC_ANY;
 
     LIST_FOREACH(i, &maple_state.driver_list, drv_list) {
         if(i->functions & functions) {
@@ -29,7 +29,7 @@ void maple_detach_callback(uint32_t functions, maple_detach_callback_t cb) {
     maple_driver_t *i;
 
     if(!functions)
-        functions = 0xffffffff;
+        functions = MAPLE_FUNC_ANY;
 
     LIST_FOREACH(i, &maple_state.driver_list, drv_list) {
         if(i->functions & functions) {
