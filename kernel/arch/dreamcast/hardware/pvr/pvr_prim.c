@@ -340,6 +340,13 @@ void pvr_mod_compile(pvr_mod_hdr_t *dst, pvr_list_t list, uint32_t mode,
     cmd = PVR_CMD_MODIFIER
         | FIELD_PREP(PVR_TA_CMD_TYPE, list);
 
+    /* For modifier volumes, the PVR_TA_CMD_MODIFIERMODE flag specifies that
+     * the next polygon is the last one in the volume. */
+    if(mode == PVR_MODIFIER_INCLUDE_LAST_POLY
+       || mode == PVR_MODIFIER_EXCLUDE_LAST_POLY) {
+        cmd |= PVR_TA_CMD_MODIFIERMODE;
+    }
+
     /* pvr_mod_hdr_t is cacheline-aligned and we're writing all 32 bytes:
      * we can allocate a dirty cache line */
     dcache_alloc_block(dst, cmd);
