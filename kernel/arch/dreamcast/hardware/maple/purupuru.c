@@ -55,10 +55,7 @@ int purupuru_rumble(maple_device_t *dev, const purupuru_effect_t *effect) {
 /* Device Driver Struct */
 static maple_driver_t purupuru_drv = {
     .functions = MAPLE_FUNC_PURUPURU,
-    .name = "PuruPuru (Vibration) Pack",
-    .periodic = NULL,
-    .attach = NULL,
-    .detach = NULL
+    .name = "PuruPuru (Vibration) Pack"
 };
 
 /* Add the purupuru to the driver chain */

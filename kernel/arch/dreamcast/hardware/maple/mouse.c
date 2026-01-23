@@ -87,9 +87,7 @@ static maple_driver_t mouse_drv = {
     .functions = MAPLE_FUNC_MOUSE,
     .name = "Mouse Driver",
     .periodic = mouse_periodic,
-    .status_size = sizeof(mouse_state_t),
-    .attach = NULL,
-    .detach = NULL
+    .status_size = sizeof(mouse_state_t)
 };
 
 /* Add the mouse to the driver chain */

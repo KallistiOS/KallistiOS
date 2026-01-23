@@ -808,8 +808,7 @@ static maple_driver_t kbd_drv = {
     .name = "Keyboard Driver",
     .periodic = kbd_periodic,
     .status_size = sizeof(kbd_state_private_t),
-    .attach = kbd_attach,
-    .detach = NULL
+    .attach = kbd_attach
 };
 
 /* Add the keyboard to the driver chain */
