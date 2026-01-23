@@ -117,7 +117,6 @@ static void draw_modifier(matrix_t *pvm)
         vol[i].cz = transform[index[i][2]][2];
     }
     pvr_mod_compile(&hdr, PVR_LIST_OP_MOD, PVR_MODIFIER_INCLUDE_LAST_POLY, PVR_CULLING_SMALL);
-    hdr.cmd |= (1 << 6); /* Last poly */
     pvr_modifier_commit_zclip(&hdr, vol, 12);
 }
 
