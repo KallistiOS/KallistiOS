@@ -33,7 +33,7 @@ static void sip_start_sampling_cb(maple_state_t *st, maple_frame_t *frame) {
 
     /* Set the is_sampling flag. */
     sip = (sip_state_t *)frame->dev->status;
-    sip->is_sampling = 1;
+    sip->is_sampling = true;
 
     /* Wake up! */
     genwait_wake_all(frame);
@@ -56,7 +56,7 @@ static void sip_stop_sampling_cb(maple_state_t *st, maple_frame_t *frame) {
 
     /* Clear the is_sampling flag. */
     sip = (sip_state_t *)frame->dev->status;
-    sip->is_sampling = 0;
+    sip->is_sampling = false;
     sip->callback = NULL;
 
     /* Wake up! */
@@ -118,7 +118,7 @@ int sip_set_frequency(maple_device_t *dev, unsigned int freq) {
     return MAPLE_EOK;
 }
 
-int sip_start_sampling(maple_device_t *dev, sip_sample_cb cb, int block) {
+int sip_start_sampling(maple_device_t *dev, sip_sample_cb cb, bool block) {
     sip_state_t *sip;
 
     assert(dev != NULL);
@@ -164,7 +164,7 @@ int sip_start_sampling(maple_device_t *dev, sip_sample_cb cb, int block) {
     return MAPLE_EOK;
 }
 
-int sip_stop_sampling(maple_device_t *dev, int block) {
+int sip_stop_sampling(maple_device_t *dev, bool block) {
     sip_state_t *sip;
     assert(dev != NULL);
 
@@ -272,7 +272,7 @@ static int sip_attach(maple_driver_t *drv, maple_device_t *dev) {
     (void)drv;
 
     sip = (sip_state_t *)dev->status;
-    sip->is_sampling = 0;
+    sip->is_sampling = false;
     sip->amp_gain = SIP_DEFAULT_GAIN;
     sip->callback = NULL;
 

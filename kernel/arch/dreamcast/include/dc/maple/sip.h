@@ -26,6 +26,7 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <dc/maple.h>
 
@@ -74,7 +75,7 @@ typedef struct  sip_state {
     int             frequency;
 
     /** \brief  Is the mic currently sampling? */
-    int             is_sampling;
+    bool            is_sampling;
 
     /** \brief  Sampling callback. */
     sip_sample_cb   callback;
@@ -176,7 +177,7 @@ int sip_set_frequency(maple_device_t *dev, unsigned int freq);
 
     \param  dev             The device to start sampling on.
     \param  cb              A callback to call when samples are ready.
-    \param  block           Set to 1 to wait for the SIP to start sampling.
+    \param  block           Set to true to wait for the SIP to start sampling.
                             Otherwise check the is_sampling member of the status
                             for dev to know when it has started.
     \retval MAPLE_EOK       On success.
@@ -185,14 +186,14 @@ int sip_set_frequency(maple_device_t *dev, unsigned int freq);
                             callback function is NULL.
     \retval MAPLE_ETIMEOUT  If the command timed out while blocking.
 */
-int sip_start_sampling(maple_device_t *dev, sip_sample_cb cb, int block);
+int sip_start_sampling(maple_device_t *dev, sip_sample_cb cb, bool block);
 
 /** \brief  Stop sampling on a microphone.
 
     This function informs a microphone it should stop recording samples.
 
     \param  dev             The device to stop sampling on.
-    \param  block           Set to 1 to wait for the SIP to stop sampling.
+    \param  block           Set to true to wait for the SIP to stop sampling.
                             Otherwise check the is_sampling member of the status
                             for dev to know when it has finished.
     \retval MAPLE_EOK       On success.
@@ -200,7 +201,7 @@ int sip_start_sampling(maple_device_t *dev, sip_sample_cb cb, int block);
     \retval MAPLE_EFAIL     If the microphone is not sampling.
     \retval MAPLE_ETIMEOUT  If the command timed out while blocking.
 */
-int sip_stop_sampling(maple_device_t *dev, int block);
+int sip_stop_sampling(maple_device_t *dev, bool block);
 
 /* \cond */
 /* Init / Shutdown */
