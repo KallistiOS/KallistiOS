@@ -221,7 +221,7 @@ void draw_cube(int which) {
     float x, y, z, tx, ty, tz;
     float xt, yt;
     float xtrans, ytrans, ztrans;
-    float a, r, g, b;
+    float a = 0.0f, r = 0.0f, g = 0.0f, b = 0.0f;
     pvr_vertex_t vert;
 
     cp = 0;
