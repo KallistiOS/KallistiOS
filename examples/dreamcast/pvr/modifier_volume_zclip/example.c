@@ -123,24 +123,24 @@ static void draw_modifier(matrix_t *pvm)
 static void draw_box(matrix_t *pvm)
 {
     pvr_vertex_t poly[18] = {
-        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0xffffffff, 0x00000000},
-        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0xffffffff, 0x00000000},
-        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0xffffffff, 0x00000000},
-        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0xffffffff, 0x00000000},
-        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0xffffffff, 0x00000000},
-        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0xffffffff, 0x00000000},
-        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0xffffffff, 0x00000000},
-        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0xffffffff, 0x00000000},
-        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0xffffffff, 0x00000000},
-        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0xffffffff, 0x00000000},
-        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0xffffffff, 0x00000000},
-        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0xffffffff, 0x00000000},
-        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0xffffffff, 0x00000000},
-        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0xffffffff, 0x00000000},
-        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0xffffffff, 0x00000000},
-        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0xffffffff, 0x00000000},
-        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0xffffffff, 0x00000000},
-        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0xffffffff, 0x00000000},
+        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, {{0.0f, 1.0f}}, 0xffffffff, 0x00000000},
+        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, {{0.0f, 0.0f}}, 0xffffffff, 0x00000000},
+        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, {{1.0f, 1.0f}}, 0xffffffff, 0x00000000},
+        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, {{1.0f, 0.0f}}, 0xffffffff, 0x00000000},
+        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, {{0.0f, 1.0f}}, 0xffffffff, 0x00000000},
+        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, {{0.0f, 0.0f}}, 0xffffffff, 0x00000000},
+        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, {{1.0f, 1.0f}}, 0xffffffff, 0x00000000},
+        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, {{1.0f, 0.0f}}, 0xffffffff, 0x00000000},
+        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, {{0.0f, 1.0f}}, 0xffffffff, 0x00000000},
+        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, {{0.0f, 0.0f}}, 0xffffffff, 0x00000000},
+        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, {{1.0f, 1.0f}}, 0xffffffff, 0x00000000},
+        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, {{1.0f, 0.0f}}, 0xffffffff, 0x00000000},
+        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, {{0.0f, 1.0f}}, 0xffffffff, 0x00000000},
+        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, {{0.0f, 0.0f}}, 0xffffffff, 0x00000000},
+        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, {{1.0f, 1.0f}}, 0xffffffff, 0x00000000},
+        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, {{1.0f, 0.0f}}, 0xffffffff, 0x00000000},
+        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, {{0.0f, 1.0f}}, 0xffffffff, 0x00000000},
+        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, {{0.0f, 0.0f}}, 0xffffffff, 0x00000000},
     };
     float vert[8][3] = {
         {-1.0f, -1.0f, 1.0f},
@@ -200,10 +200,10 @@ static void draw_plane(matrix_t *pvm)
     pvr_poly_cxt_t cxt;
     pvr_poly_hdr_t hdr;
     pvr_vertex_t poly[4] = {
-        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0xffff0000, 0x00000000},
-        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0xff00ff00, 0x00000000},
-        {PVR_CMD_VERTEX, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0xff0000ff, 0x00000000},
-        {PVR_CMD_VERTEX_EOL, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0xffffffff, 0x00000000},
+        {PVR_CMD_VERTEX,     0.0f, 0.0f, 0.0f, {{0.0f, 1.0f}}, 0xffff0000, 0x00000000},
+        {PVR_CMD_VERTEX,     0.0f, 0.0f, 0.0f, {{0.0f, 0.0f}}, 0xff00ff00, 0x00000000},
+        {PVR_CMD_VERTEX,     0.0f, 0.0f, 0.0f, {{1.0f, 1.0f}}, 0xff0000ff, 0x00000000},
+        {PVR_CMD_VERTEX_EOL, 0.0f, 0.0f, 0.0f, {{1.0f, 0.0f}}, 0xffffffff, 0x00000000},
     };
     float vert[4][3] = {
         {-5.0f, 0.0f, 5.0f},
