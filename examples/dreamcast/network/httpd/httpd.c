@@ -185,7 +185,7 @@ int send_ok(http_state_t * hs, const char * ct) {
 
 int do_dirlist(const char * name, http_state_t * hs, file_t f) {
     char * dl, *dlout;
-    dirent_t * d;
+    const dirent_t *d;
     int dlsize, r;
 
     dl = malloc(65536);
