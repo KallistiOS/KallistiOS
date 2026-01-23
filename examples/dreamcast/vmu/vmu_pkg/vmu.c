@@ -30,7 +30,7 @@
 void draw_dir(void) {
     file_t      d;
     size_t      y = INFO_Y;
-    dirent_t    *de;
+    const dirent_t    *de;
 
     d = fs_open("/vmu/a1", O_RDONLY | O_DIR);
 
