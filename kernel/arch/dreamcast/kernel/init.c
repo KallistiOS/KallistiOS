@@ -68,8 +68,6 @@ void arch_init_net_dcload_ip(void) {
     net_init(ip.ipl);     /* Enable networking (and drivers) */
 
     if(dcload_type == DCLOAD_TYPE_IP) {
-        fs_dclsocket_init_console();
-
         if(!fs_dclsocket_init()) {
             dbgio_dev_select("fs_dclsocket");
             dbgio_enable();
