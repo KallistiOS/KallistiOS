@@ -560,14 +560,6 @@ static int dcls_detected(void) {
     return initted > 0;
 }
 
-static int dcls_fake_init(void) {
-    return 0;
-}
-
-static int dcls_fake_shutdown(void) {
-    return 0;
-}
-
 static int dcls_writebuf(const uint8_t *buf, int len, int xlat) {
     command_3int_t cmd;
 
@@ -664,8 +656,6 @@ static vfs_handler_t vh = {
 dbgio_handler_t dbgio_dcls = {
     .name = "fs_dclsocket",
     .detected = dcls_detected,
-    .init = dcls_fake_init,
-    .shutdown = dcls_fake_shutdown,
     .write_buffer = dcls_writebuf
 };
 
