@@ -41,6 +41,10 @@ int dbgio_dev_select(const char *name) {
                 return -1;
             }
 
+            /* If it has a shutdown, do so */
+            if(dbgio->shutdown)
+                dbgio->shutdown();
+
             dbgio = cur;
             return 0;
         }
@@ -96,6 +100,10 @@ int dbgio_dev_select_auto(void) {
             /* If inittable, try to init it. If it fails,
                then move on to the next one anyway. */
             if(!cur->init || !cur->init()) {
+                /* If it has a shutdown, do so */
+                if(dbgio->shutdown)
+                    dbgio->shutdown();
+
                 /* Worked, so assign it */
                 dbgio = cur;
                 return 0;
