@@ -659,16 +659,6 @@ dbgio_handler_t dbgio_dcls = {
     .write_buffer = dcls_writebuf
 };
 
-/* This function must be called prior to calling fs_dclsocket_init() */
-void fs_dclsocket_init_console(void) {
-    /* Make sure networking is up first of all */
-    if(!net_default_dev) {
-        return;
-    }
-
-    initted = 1;
-}
-
 uint32_t _fs_dclsocket_get_ip(void) {
     uint32_t ip, port;
 
@@ -681,8 +671,8 @@ int fs_dclsocket_init(void) {
     uint8_t ipaddr[4], mac[6];
     uint32_t ip, port;
 
-    /* Make sure we've initted the console */
-    if(initted != 1)
+    /* Make sure networking is up, first of all */
+    if(!net_default_dev)
         return -1;
 
     /* Make sure we're actually on dcload-ip */
