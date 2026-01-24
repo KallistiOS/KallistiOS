@@ -24,6 +24,7 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <sys/queue.h>
 
@@ -112,6 +113,9 @@ typedef struct dbgio_handler {
     */
     int (*read_buffer)(uint8_t *data, int len);
 
+    /** \brief Output even when not selected. */
+    bool    output;
+
     /** \brief dbgio handler list handle.
 
         Contrary to what doxygen might think, this is not a function.
@@ -122,10 +126,11 @@ typedef struct dbgio_handler {
 /** \brief   Add a new dbgio handler to the list.
     \ingroup logging
 
-    This function adds a new dbgio handler to the top of the list.
+    This function adds a new dbgio handler to the top of the list. Regardless
+    of return value, the handler will be installed.
 
-    \retval 0               On success
-    \retval -1              On error
+    \retval 0               No errors.
+    \retval Non-zero        The return of a handler's init if set to output by default.
 */
 int dbgio_add_handler(dbgio_handler_t *handler);
 
@@ -153,7 +158,7 @@ int dbgio_remove_handler(dbgio_handler_t *handler);
     \retval -1              On error
 
     \par    Error Conditions:
-    \em     ENODEV - The specified device could not be initialized
+    \em     ENODEV - The specified device could not be initialized or wasn't found.
 */
 int dbgio_dev_select(const char *name);
 
@@ -178,6 +183,30 @@ int dbgio_dev_select_auto(void);
                             no device is selected)
 */
 const char *dbgio_dev_get(void);
+
+/** \brief   Set a dbgio interface to output mode by name.
+    \ingroup logging
+
+    This function sets the output status of a named dbgio interface.
+    The default operation is for this to be set to false.
+    When output is true, the interface will receive all outputs:
+    write, write_buffer, and flush regardless of which interface is
+    selected.
+
+    If the interface hasn't been initialized and is being set to true, it
+    will be initialized. Similarly if setting to false and the interface
+    isn't already in use as the selected one it will be shut down.
+
+    \param  name            The dbgio interface to set output.
+    \param  output          Whether to enable or disable output mode.
+
+    \retval 0               On success
+    \retval -1              On error
+
+    \par    Error Conditions:
+    \em     ENODEV - The specified device could not be initialized or wasn't found.
+*/
+int dbgio_dev_output(const char *name, bool output);
 
 /** \brief   Initialize the dbgio console.
     \ingroup logging

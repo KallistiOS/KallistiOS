@@ -36,13 +36,13 @@ int dbgio_dev_select(const char *name) {
     SLIST_FOREACH(cur, &dbgio_handlers, entry) {
         if(!strcmp(cur->name, name)) {
             /* If it has init, try to and kick on failure. */
-            if(cur->init && cur->init()) {
+            if(!dbgio->output && cur->init && cur->init()) {
                 errno = ENODEV;
                 return -1;
             }
 
-            /* If it has a shutdown, do so */
-            if(dbgio->shutdown)
+            /* If it won't be used, and has a shutdown, do so */
+            if(!dbgio->output && dbgio->shutdown)
                 dbgio->shutdown();
 
             dbgio = cur;
@@ -61,6 +61,48 @@ const char *dbgio_dev_get(void) {
         return dbgio->name;
 }
 
+int dbgio_dev_output(const char *name, bool output) {
+    dbgio_handler_t *cur;
+
+    SLIST_FOREACH(cur, &dbgio_handlers, entry) {
+        if(!strcmp(cur->name, name)) {
+            /* Nothing to do */
+            if(output == cur->output)
+                return 0;
+
+            /* Already set as primary so just pass through */
+            if(cur == dbgio) {
+                cur->output = output;
+                return 0;
+            }
+
+            /* Enable the outputter */
+            if(output) {
+                /* If it has init, and can't, fail. */
+                if(cur->init && cur->init()) {
+                    errno = ENODEV;
+                    return -1;
+                }
+                cur->output = true;
+
+                return 0;
+            }
+            /* Disable the outputter */
+            else {
+                cur->output = false;
+
+                if(cur->shutdown)
+                    cur->shutdown();
+
+                return 0;
+            }
+        }
+    }
+
+    errno = ENODEV;
+    return -1;
+}
+
 static int dbgio_enabled = 0;
 void dbgio_enable(void) {
     dbgio_enabled = 1;
@@ -70,8 +112,14 @@ void dbgio_disable(void) {
 }
 
 int dbgio_add_handler(dbgio_handler_t *handler) {
+    int rv = 0;
+    /* The handler's set by default to always output */
+    if(handler->output)
+        if(handler->init)
+            rv = handler->init();
+
     SLIST_INSERT_HEAD(&dbgio_handlers, handler, entry);
-    return 0;
+    return rv;
 }
 
 int dbgio_remove_handler(dbgio_handler_t *handler) {
@@ -79,9 +127,20 @@ int dbgio_remove_handler(dbgio_handler_t *handler) {
 
     SLIST_FOREACH(t, &dbgio_handlers, entry) {
         if(t == handler) {
+
             SLIST_REMOVE(&dbgio_handlers, handler, dbgio_handler, entry);
             if(dbgio == handler) {
+                /* Stop forced output, if set */
+                handler->output = false;
                 dbgio_dev_select_auto();
+            }
+            else {
+                /* If we're outputting clean up */
+                if(handler->output) {
+                    handler->output = false;
+                    if(handler->shutdown)
+                        handler->shutdown();
+                }
             }
             return 0;
         }
@@ -99,9 +158,9 @@ int dbgio_dev_select_auto(void) {
         if(cur->detected && cur->detected()) {
             /* If inittable, try to init it. If it fails,
                then move on to the next one anyway. */
-            if(!cur->init || !cur->init()) {
+            if(cur->output || !cur->init || !cur->init()) {
                 /* If it has a shutdown, do so */
-                if(dbgio->shutdown)
+                if(!dbgio->output && dbgio->shutdown)
                     dbgio->shutdown();
 
                 /* Worked, so assign it */
@@ -146,6 +205,14 @@ int dbgio_read(void) {
 
 int dbgio_write(int c) {
     if(dbgio_enabled) {
+        dbgio_handler_t *cur;
+
+        /* Output on all outputters. */
+        SLIST_FOREACH(cur, &dbgio_handlers, entry) {
+            if((cur != dbgio) && cur->write)
+                cur->write(c);
+        }
+
         if(dbgio && dbgio->write)
             return dbgio->write(c);
     }
@@ -155,6 +222,14 @@ int dbgio_write(int c) {
 
 int dbgio_flush(void) {
     if(dbgio_enabled) {
+        dbgio_handler_t *cur;
+
+        /* Flush on all outputters. */
+        SLIST_FOREACH(cur, &dbgio_handlers, entry) {
+            if((cur != dbgio) && cur->flush)
+                cur->flush();
+        }
+
         if(dbgio && dbgio->flush)
             return dbgio->flush();
     }
@@ -164,6 +239,14 @@ int dbgio_flush(void) {
 
 int dbgio_write_buffer(const uint8_t *data, int len) {
     if(dbgio_enabled) {
+        dbgio_handler_t *cur;
+
+        /* Output on all outputters. */
+        SLIST_FOREACH(cur, &dbgio_handlers, entry) {
+            if((cur != dbgio) && cur->write_buffer)
+                cur->write_buffer(data, len, 0);
+        }
+
         if(dbgio && dbgio->write_buffer)
             return dbgio->write_buffer(data, len, 0);
     }
