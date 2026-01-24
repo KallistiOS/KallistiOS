@@ -733,6 +733,9 @@ int fs_dclsocket_init(void) {
     if(mutex_init(&mutex, MUTEX_TYPE_NORMAL))
         goto error;
 
+    /* We're all ready, so install the dbgio handler */
+    dbgio_add_handler(&dbgio_dcls);
+
     initted = 2;
 
     return nmmgr_handler_add(&vh.nmmgr);
@@ -752,8 +755,7 @@ void fs_dclsocket_shutdown(void) {
     dbglog(DBG_INFO, "fs_dclsocket: About to disable console\n");
 
     /* Disable the console first of all */
-    if(!strcmp(dbgio_dev_get(), "fs_dclsocket"))
-        dbgio_disable();
+    dbgio_remove_handler(&dbgio_dcls);
 
     /* Send dc-tool an exit packet */
     memcpy(cmd.id, "DC00", 4);
