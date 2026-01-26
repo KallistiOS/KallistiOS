@@ -7,5 +7,5 @@
 #include <arch/arch.h>
 
 /* Default values which will be used if the user doesn't declare anything */
-KOS_INIT_FLAGS(INIT_DEFAULT);
+__weak_symbol KOS_INIT_FLAGS(INIT_DEFAULT);
 
