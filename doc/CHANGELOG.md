@@ -9,7 +9,7 @@ Platform-specific changes are prefixed with the platform name, otherwise the cha
 - Fix building older toolchains with newer host GCC [PC]
 - Correct cmake include path for addons [DH]
 - **Dreamcast**: Prevent controller from unregistering if sub-devices still active [PC]
-- Improved support for C static asserts [Falco Girgis ==FG][PC]
+- Improved support for C static asserts [Falco Girgis == FG][PC]
 - Correct errors in doxygen processing [DH][PC]
 - Improve thread safety of fs operations [PC]
 - Fix CLion compatibility with kos-cc wrappers [kouta]
@@ -19,7 +19,7 @@ Platform-specific changes are prefixed with the platform name, otherwise the cha
 - **Dreamcast**: Update keyboard LED/mod status handling, add new example to demonstrate [Troy Davis == GPF]
 - **Dreamcast**: Detect 3rd party memory cards and disable sending screen/clock commands to them [Donald Haase == DH]
 - **Dreamcast**: Support for 1st party rumble packs [DH]
-- **Dreamcast**: Various fixes and expansions to the cmake environment [Falco Girgis ==FG][PC]
+- **Dreamcast**: Various fixes and expansions to the cmake environment [Falco Girgis == FG][PC]
 
 ## KallistiOS version 2.2.0
 - Added . & .. directories to filesystems that lack it [Andress Barajas == AB]
