@@ -16,6 +16,11 @@ ifeq (1,$(do_kos_patching))
 
 # Add Patching Pre-Reqs for GDB
   build_gdb: patch_gdb
+
+# Add patching pre-reqs for GDC.
+ifeq (1,$(enable_d))
+  build-gcc-pass1 build-gcc-pass2: patch-gdc
+endif
 endif
 
 # Require downloads before patching
@@ -29,6 +34,12 @@ gcc-fixup: fetch-gcc
 	@echo "+++ Copying required KOS files into GCC directory..."
 	cp $(patches)/gcc/gthr-kos.h $(src_dir)/libgcc/gthr-kos.h
 	cp $(patches)/gcc/fake-kos.c $(src_dir)/libgcc/config/fake-kos.c
+
+# Copy over required files for compiled GDC to work.
+patch-gdc: gdc-fixup
+gdc-fixup: fetch-gcc
+	@echo "+++ Copying required GDC KOS files into GCC directory..."
+	cp $(patches)/gdc/kos-d.cc $(src_dir)/gcc/config/kos-d.cc
 
 # Copy over required KOS files to newlib directory before patching
 patch-newlib: newlib-fixup
@@ -96,6 +107,15 @@ patch-gcc: diff_patches += $(wildcard $(patches)/hosts/arm-Darwin/$(src_dir)*.di
 endif
 endif
 patch-gcc:
+	$(call patch_apply)
+	$(call update_config_guess_sub)
+
+# GNU D Compiler
+patch-gdc: patch_target_name = GDC
+patch-gdc: src_dir = gcc-$(gcc_ver)
+patch-gdc: stamp_radical_name = $(src_dir)
+patch-gdc: diff_patches := $(wildcard $(patches)/gdc/*.diff)
+patch-gdc:
 	$(call patch_apply)
 	$(call update_config_guess_sub)
 

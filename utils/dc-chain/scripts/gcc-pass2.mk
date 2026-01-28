@@ -35,6 +35,14 @@ ifdef enable_ada
 	$(MAKE) $(jobs_arg) -C $(build)/gcc cross-gnattools ada.all.cross DESTDIR=$(DESTDIR) $(to_log)
   endif
 endif
+ifdef enable_d
+  ifneq (0,$(enable_d))
+	@echo "+++ Running post-install fixups for GNU D..."
+	-mkdir -p $(toolchain_path)/lib/gcc/$(target)/$(gcc_ver)/include/d
+	cp -r ./gcc-$(gcc_ver)/libphobos/libdruntime/* $(toolchain_path)/lib/gcc/$(target)/$(gcc_ver)/include/d
+	cp $(patches)/gdc/config.d $(toolchain_path)/lib/gcc/$(target)/$(gcc_ver)/include/d/gcc/config.d
+  endif
+endif
 	$(MAKE) -C $(build) $(install_mode) DESTDIR=$(DESTDIR) $(to_log)
 	for each in $(__libgcc) ; do \
 		$(toolchain_path)/bin/$(target)-gcc-ar d $$each fake-kos.o $(to_log) ; \
