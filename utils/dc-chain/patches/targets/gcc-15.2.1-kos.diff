@@ -40,7 +40,7 @@ diff -ruN /dev/null gcc-15.2.1-kos/libgcc/config/t-kos
 diff -ruN gcc-15.2.1/libgcc/configure gcc-15.2.1-kos/libgcc/configure
 --- gcc-15.2.1/libgcc/configure	2025-04-18 16:01:37.139067412 -0600
 +++ gcc-15.2.1-kos/libgcc/configure	2025-04-18 16:01:42.914094485 -0600
-@@ -5733,6 +5733,7 @@
+@@ -5736,6 +5736,7 @@
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;
      win32)	thread_header=config/i386/gthr-win32.h ;;
