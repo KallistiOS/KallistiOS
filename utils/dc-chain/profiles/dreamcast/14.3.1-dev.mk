@@ -15,7 +15,7 @@ cpu_configure_args=--with-multilib-list=$(precision_modes) --with-endian=little 
 # Toolchain versions for SH
 binutils_ver=2.45.1
 gcc_ver=14.3.1
-newlib_ver=4.5.0.20241231
+newlib_ver=4.6.0.20260123
 
 # Overide SH toolchain download type
 gcc_download_type=git
