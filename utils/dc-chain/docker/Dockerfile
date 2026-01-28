@@ -4,7 +4,7 @@
 # usage:
 #   - build one of the images:
 #       docker build -t dcchain:stable --build-arg profile=stable -f ./Dockerfile $KOS_BASE
-#       docker build -t dcchain:9.3.0-legacy --build-arg profile=9.3.0-legacy -f ./Dockerfile $KOS_BASE
+#       docker build -t dcchain:9.5.0-winxp --build-arg profile=9.5.0-winxp -f ./Dockerfile $KOS_BASE
 #   - create and run a container, e.g. for stable:
 #       docker run -it --name containername dcchain:stable /bin/bash
 
