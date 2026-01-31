@@ -307,7 +307,6 @@ int straight_copy(FILE *in, const char *outfile) {
 
     if(fread(buffer, filesize, 1, in) != 1) {
         fprintf(stderr, "Cannot read file.\n");
-        free(buffer);
         result = -1;
         goto cleanup;
     }
