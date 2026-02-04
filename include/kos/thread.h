@@ -40,7 +40,7 @@ __BEGIN_DECLS
 
 #include <kos/cdefs.h>
 #include <kos/tls.h>
-#include <arch/irq.h>
+#include <kos/irq.h>
 #include <arch/types.h>
 
 #include <sys/queue.h>

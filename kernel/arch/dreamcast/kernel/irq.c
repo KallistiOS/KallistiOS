@@ -13,11 +13,11 @@
 #include <assert.h>
 #include <stdio.h>
 #include <arch/arch.h>
-#include <arch/irq.h>
 #include <arch/types.h>
 #include <arch/stack.h>
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>
+#include <kos/irq.h>
 #include <kos/library.h>
 #include <kos/regfield.h>
 #include <kos/thread.h>
