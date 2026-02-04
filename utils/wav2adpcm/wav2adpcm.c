@@ -371,7 +371,8 @@ int wav2adpcm(const char *infile, const char *outfile) {
     }
 
     pcmsize = wavhdr_chunk.datasize;
-    adpcmsize = pcmsize / 4;
+    /* round size up to next multiple of 4 before division */
+    adpcmsize = ((pcmsize + 3) & ~3) / 4;
 
     pcmbuf = malloc(pcmsize);
     adpcmbuf = malloc(adpcmsize);
