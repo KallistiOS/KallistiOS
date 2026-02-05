@@ -22,7 +22,7 @@
    around accesses to our atomics to ensure their atomicity.
 */
 #define ATOMIC_LOAD_N_(type, n) \
-    type \
+    __weak_symbol type \
     __atomic_load_##n(const volatile void *ptr, int model) { \
         (void)model; \
         irq_disable_scoped(); \
@@ -30,7 +30,7 @@
     }
 
 #define ATOMIC_STORE_N_(type, n) \
-    void \
+    __weak_symbol void \
     __atomic_store_##n(volatile void *ptr, type val, int model) { \
         (void)model; \
         irq_disable_scoped(); \
@@ -38,7 +38,7 @@
     }
 
 #define ATOMIC_EXCHANGE_N_(type, n) \
-    type \
+    __weak_symbol type \
     __atomic_exchange_##n(volatile void* ptr, type val, int model) { \
         irq_disable_scoped(); \
         const type ret = *(type *)ptr; \
@@ -48,7 +48,7 @@
     }
 
 #define ATOMIC_COMPARE_EXCHANGE_N_(type, n) \
-    bool \
+    __weak_symbol bool \
     __atomic_compare_exchange_##n(volatile void *ptr, \
                                   void *expected, \
                                   type desired, \
@@ -69,7 +69,7 @@
     }
 
 #define ATOMIC_FETCH_N_(type, n, opname, op) \
-    type \
+    __weak_symbol type \
     __atomic_fetch_##opname##_##n(volatile void* ptr, \
                                   type val, \
                                   int memorder) { \
@@ -81,7 +81,7 @@
     }
 
 #define ATOMIC_FETCH_NAND_N_(type, n) \
-    type \
+    __weak_symbol type \
     __atomic_fetch_nand_##n(volatile void* ptr, \
                             type val, \
                             int memorder) { \
@@ -104,18 +104,10 @@
     ATOMIC_FETCH_N_(type, n, xor, ^=) \
     ATOMIC_FETCH_NAND_N_(type, n)
 
-#if !__has_builtin(__atomic_load_1)
 ATOMIC_OPS_N_(unsigned char, 1)
-#endif
-#if !__has_builtin(__atomic_load_2)
 ATOMIC_OPS_N_(unsigned short, 2)
-#endif
-#if !__has_builtin(__atomic_load_4)
 ATOMIC_OPS_N_(unsigned int, 4)
-#endif
-#if !__has_builtin(__atomic_load_8)
 ATOMIC_OPS_N_(unsigned long long, 8)
-#endif
 
 /* Provide GCC with symbols and logic required to implement
    generically sized atomics. Rather than disabling an enabling
