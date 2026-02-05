@@ -28,10 +28,12 @@ __BEGIN_DECLS
 
 /** \cond INTERNAL */
 struct irq_context;
-#ifdef __cplusplus
+#ifndef __cplusplus
+enum irq_exception;
+#elif (__cplusplus >= 201103L)
 enum irq_exception: unsigned int;
 #else
-enum irq_exception;
+#error "Using KOS' IRQ API requires at least C++11"
 #endif
 /** \endcond */
 
