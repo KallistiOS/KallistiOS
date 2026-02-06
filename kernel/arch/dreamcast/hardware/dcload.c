@@ -7,6 +7,7 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <dc/fifo.h>
 #include <dc/dcload.h>
@@ -131,4 +132,48 @@ uint32_t dcload_gethostinfo(uint32_t *ip, uint32_t *port) {
 
 int dcload_rewinddir(uint32_t hnd) {
     return dcload_syscall(DCLOAD_REWINDDIR, (void *)hnd, NULL, NULL);
+}
+
+int syscall_dcload_detected(void) {
+    /* Check for dcload */
+    if(*DCLOADMAGICADDR == DCLOADMAGICVALUE)
+        return 1;
+    else
+        return 0;
+}
+
+static int *dcload_wrkmem = NULL;
+int dcload_type = DCLOAD_TYPE_NONE;
+
+/* Call this before installing the dcload dbgio or vfs */
+void dcload_syscall_init(void) {
+
+    /* We actually need to detect here to make sure we're on
+       dcload-serial, or scif_init must not proceed. */
+    if(!syscall_dcload_detected())
+        return;
+
+    /* dcload IP will always return -1 here. Serial will return 0 and make
+      no change since it already holds 0 as 'no mem assigned */
+    if(dcload_assignwrkmem(0) == -1) {
+        dcload_type = DCLOAD_TYPE_IP;
+    }
+    else {
+        dcload_type = DCLOAD_TYPE_SER;
+
+        /* Give dcload the 64k it needs to compress data (if on serial) */
+        dcload_wrkmem = malloc(65536);
+        if(dcload_wrkmem) {
+            if(dcload_assignwrkmem(dcload_wrkmem) == -1)
+                free(dcload_wrkmem);
+        }
+    }
+}
+
+void dcload_syscall_shutdown(void) {
+    /* Free dcload wrkram */
+    if(dcload_wrkmem) {
+        dcload_assignwrkmem(0);
+        free(dcload_wrkmem);
+    }
 }
