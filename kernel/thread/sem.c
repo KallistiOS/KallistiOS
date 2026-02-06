@@ -65,8 +65,7 @@ int sem_wait_timed(semaphore_t *sm, unsigned int timeout) {
     /* If there's enough count left, then let the thread proceed */
     if(sm->count < 0) {
         /* Block us until we're signaled */
-        rv = genwait_wait(sm, timeout ? "sem_wait_timed" : "sem_wait", timeout,
-                          NULL);
+        rv = genwait_wait(sm, timeout ? "sem_wait_timed" : "sem_wait", timeout);
 
         /* Did we fail to get the lock? */
         if(rv < 0) {
