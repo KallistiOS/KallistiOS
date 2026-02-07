@@ -23,9 +23,7 @@ ifeq ($(is_clean_target),)
 endif
 
 # Retrieve the host triplet
-ifneq ($(config_guess_check),0)
-  host_triplet=$(shell ./config.guess)
-endif
+host_triplet := $(shell ./config.guess)
 
 # Retrieve the system
 uname_s := $(shell uname -s)
