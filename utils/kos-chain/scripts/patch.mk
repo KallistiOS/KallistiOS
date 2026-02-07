@@ -12,9 +12,6 @@ ifeq (1,$(do_kos_patching))
   build-binutils: patch-binutils
   build-gcc-pass1 build-gcc-pass2: patch-gcc
   build-newlib-only: patch-newlib
-
-# Add Patching Pre-Reqs for GDB
-  build-gdb: patch-gdb
 endif
 
 # Require downloads before patching
