@@ -12,7 +12,7 @@ $(stamp_gdb_patch): fetch-gdb
 	if ! test -f "$(stamp_gdb_patch)"; then \
 		if ! test -z "$${patches}"; then \
 			echo "+++ Patching GDB..."; \
-			patch -N -d $(gdb_name) -p1 < $${patches}; \
+			echo "$${patches}" | xargs -n 1 patch -N -d $(gdb_name) -p1 -i; \
 		fi; \
 		touch "$(stamp_gdb_patch)"; \
 	fi;
