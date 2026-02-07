@@ -34,7 +34,7 @@ build-gcc-pass1 build-gcc-pass2: fetch-gcc
 build-newlib-only: fetch-newlib
 
 # GDB Patch Dependency
-build_gdb: patch_gdb
+build-gdb: patch-gdb
 
 # MinGW/MSYS or 'sh_force_libbfd_installation=1': install BFD if required.
 # To compile dc-tool, we need to install libbfd for sh-elf.
