@@ -1,10 +1,11 @@
-# Sega Dreamcast Toolchains Maker (`dc-chain`) Changelog
+# KallistiOS Toolchain Builder (`kos-chain`) Changelog
 
 | Date<br/>_____________ | Author(s)<br/>_____________ | Changes<br/>_____________ |
 |:-----------------------|:----------------------------|---------------------------|
+| 2026-02-07 | Eric Fradella | Rename to KallistiOS Toolchain Builder, move to utils/kos-chain, stabilize GCC 15.2.0, various bug fixes |
 | 2026-01-28 | Eric Fradella | Update binutils to 2.45.1 and Newlib to 4.6.0 for most profiles |
 | 2026-01-01 | Eric Fradella | Update GDB to 17.1, do not build GDB by default |
-| 2025-11-05 | Eric Fradella | Decouple compiled GDB version from toolchain profile | 
+| 2025-11-05 | Eric Fradella | Decouple compiled GDB version from toolchain profile |
 | 2025-08-03 | Eric Fradella | Update 15.x profiles to 15.2.0/15.2.1-dev. All dev profiles upgraded to Binutils 2.45 and GDB 16.3 |
 | 2025-07-13 | Paul Cercueil | Add new profile for the LRA development toolchain |
 | 2025-07-13 | Paul Cercueil | Re-introduce ARM toolchain support |
@@ -65,7 +66,7 @@
 | 2023-05-22 | Falco Girgis<br/>Andrew Apperley<br/>Eric Fradella | Update patches to fix libobjc Makefile so that library and headers are properly installed with GCC. |
 | 2023-05-20 | Colton Pawielski | Update GDB to use download_type variable in configuration. |
 | 2023-05-15 | Eric Fradella | Fix libobjc building after regression. |
-| 2023-05-15 | James Peach | Use mirrors instead of main GNU server for download sources.| 
+| 2023-05-15 | James Peach | Use mirrors instead of main GNU server for download sources.|
 | 2023-05-14 | Colton Pawielski | Remove option to build insight as it no longer works. |
 | 2023-05-13 | Paul Cercueil | Adjust GCC patches to allow sourcing stack address from C for both 16MB and 32MB stacks. |
 | 2023-05-07 | Mickaël Cardoso | Fixed critical 'Access Violation' bug in Binutils 2.34 with LTO under MinGW. |
@@ -85,7 +86,7 @@
 | 2023-02-27 | Tchan0 | Fix Dockerfile due to lack of --check option in sha512sum. |
 | 2023-02-26 | Mickaël Cardoso | Fix GCC 8.4.0 building under MinGW-w64. |
 | 2023-02-26 | Tchan0 | Fix Dockerfiles to specify python3 version and add missing endline continues. |
-| 2023-02-24 | Mickaël Cardoso | Fix GCC 12.2.0 building under MinGW-w64/MSYS2. Adjust script to allow applying several patch files at once. | 
+| 2023-02-24 | Mickaël Cardoso | Fix GCC 12.2.0 building under MinGW-w64/MSYS2. Adjust script to allow applying several patch files at once. |
 | 2023-02-21 | Falco Girgis | Update GCC dependency versions for "testing" configuration. |
 | 2023-02-04 | Falco Girgis | Adjust configurations: 4.7.4 changes from "stable" to "legacy", 9.3.0 changes from "testing" to "stable", 12.2.0 changes from "latest" to "testing". |
 | 2023-02-04 | Eric Fradella | Add patch for building GCC 12.2.0 on macOS. |
@@ -109,7 +110,7 @@
 | 2018-09-18 | Lawrence Sebald | Update Binutils version to 2.31.1. |
 | 2017-01-17 | Lawrence Sebald | Make dc-chain not fail if patches have already been applied. |
 | 2016-12-11 | Lawrence Sebald | Update GCC patch to make it compatible with newer makeinfo versions. |
-| 2016-10-01 | Lawrence Sebald | Update Binutils to 2.27. | 
+| 2016-10-01 | Lawrence Sebald | Update Binutils to 2.27. |
 | 2016-09-22 | Lawrence Sebald | Add cleanup.sh script. |
 | 2016-07-01 | Corbin<br/>Nia<br/>Lawrence Sebald | Update GDB to 7.11.1 and insight to 6.8 due to previous versions being removed. Add more files to be cleaned up related to GDB/insight in the make clean target. |
 | 2016-01-14 | Luke Benstead | Fix compiling GCC 4.7.3 with a host GCC version of 5.x and above. |

@@ -1,5 +1,4 @@
-# Sega Dreamcast Toolchains Maker (dc-chain)
-# This file is part of KallistiOS.
+# KallistiOS Toolchain Builder (kos-chain)
 
 # Set default mirror if not specified
 gnu_mirror ?= ftpmirror.gnu.org
@@ -7,7 +6,7 @@ binutils_base_url = $(download_protocol)://$(gnu_mirror)/gnu/binutils
 gcc_base_url = $(download_protocol)://$(gnu_mirror)/gnu/gcc/gcc-$(1)
 newlib_base_url = $(download_protocol)://sourceware.org/pub/newlib
 
-# Can't use same mirror as above since the versions of these 
+# Can't use same mirror as above since the versions of these
 # required by GCC4.7 are older than available on the newer mirror
 gcc_deps_url = gcc.gnu.org/pub/gcc/infrastructure
 gmp_base_url = $(download_protocol)://$(gcc_deps_url)
@@ -110,7 +109,7 @@ $(ARCHIVE_EXTRACTS):
 	tar xf $(file)
 #   Move folder if dest was specified
 	$(if $(dest),mv $(name) $(dest))
-#   Run download_prerequisites if GCC	
+#   Run download_prerequisites if GCC
 	$(if $(filter gcc-%,$(name)),$(gcc_prereqs_script))
 	touch $@
 
@@ -129,7 +128,7 @@ fetch_gcc_deps_source = $(stamp_gmp_download) $(stamp_mpfr_download) $(stamp_mpc
 # Some older versions of GCC (including 4.7) don't require ISL so we skip adding a dependency
 # if a version number is not provided
 ifdef isl_ver
-  fetch_gcc_deps_source += $(stamp_isl_download) 
+  fetch_gcc_deps_source += $(stamp_isl_download)
 endif
 
 fetch-binutils: $(stamp_binutils_download)

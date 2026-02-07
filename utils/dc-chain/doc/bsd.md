@@ -1,4 +1,4 @@
-# Sega Dreamcast Toolchains Maker (`dc-chain`) with BSD #
+# KallistiOS Toolchain Builder (`kos-chain`) with BSD #
 
 This document contains all the instructions to create a fully working
 toolchain targeting the **Sega Dreamcast** system under **Berkeley Software
@@ -10,11 +10,11 @@ applicable on all **BSD** systems like **NetBSD** and **OpenBSD**.
 ## Introduction ##
 
 On **FreeBSD** system, the package manager is the `pkg` tool.
- 
+
 If you never used the `pkg` tool before, you will be asked to install it. Please
 do this before continuing reading the document.
 
-All the operations in this document should be executed with the `root` user. If 
+All the operations in this document should be executed with the `root` user. If
 you don't want to use with the `root` user, another option is to escalate your
 account privileges using the `sudo` command, which you will need to install:
 ```
@@ -53,8 +53,8 @@ git clone git://git.code.sf.net/p/cadcdev/kos-ports
 
 ## Compilation ##
 
-The **dc-chain** system may be customized by setting up a
-[`Makefile.cfg`] file in the root of the `dc-chain` directory tree. If this is
+The **kos-chain** system may be customized by setting up a
+[`Makefile.cfg`] file in the root of the `kos-chain` directory tree. If this is
 desired, read the main [`README`](../README.md) for more information on
 setting up custom options for the toolchain; however, in most circumstances,
 the stable defaults already present in
@@ -68,9 +68,9 @@ To build the toolchain, do the following:
 	```
 	bash
 	```
-2. Navigate to the `dc-chain` directory by entering:
+2. Navigate to the `kos-chain` directory by entering:
 	```
-	cd /opt/toolchains/dc/kos/utils/dc-chain/
+	cd /opt/toolchains/dc/kos/utils/kos-chain/
 	```
 3. (Optional) Copy and alter the `Makefile.cfg` file options to your liking.
 

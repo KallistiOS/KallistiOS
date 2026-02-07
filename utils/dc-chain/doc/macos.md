@@ -1,4 +1,4 @@
-# Sega Dreamcast Toolchains Maker (`dc-chain`) with macOS #
+# KallistiOS Toolchain Builder (`kos-chain`) with macOS #
 
 This document contains all the instructions to create a fully working
 toolchains targeting the **Sega Dreamcast** system under **macOS**.
@@ -7,7 +7,7 @@ This document was initially written while using **macOS** (`10.14 Mojave`) but
 it should be applicable on all modern **macOS** systems. Note that Apple
 introduced some breaking changes in `10.14 Mojave`; so starting from that
 version, some header files have moved. They have been removed in
-`10.15 Catalina` and later versions. **dc-chain** supports all modern macOS
+`10.15 Catalina` and later versions. **kos-chain** supports all modern macOS
 versions, including `pre-Mojave` releases.
 
 This document has been refreshed using `14.2.1 Sonoma`.
@@ -16,7 +16,7 @@ This document has been refreshed using `14.2.1 Sonoma`.
 
 On **macOS** system, the package manager is the `brew` tool, which is provided
 by the [Homebrew project](https://brew.sh).
- 
+
 If you have never used the `brew` tool before, you will need to install it
 using your standard user account.
 
@@ -50,7 +50,7 @@ entering `gcc --version` in the **Terminal**.
 
 **Note:** On **macOS**, `gcc` redirects to `clang` from the
 [LLVM](https://llvm.org/) project. This is normal and doesn't affect the
-**dc-chain** process.
+**kos-chain** process.
 
 ### Installation of Homebrew ###
 
@@ -61,7 +61,7 @@ with a package manager, but fortunately, the
 Visit [https://brew.sh](https://brew.sh) and follow the instructions to install
 the `brew` package manager. Please note that all operations done involving
 **Homebrew** installation and use should be done under a normal user account,
-not using `root` or `sudo`. 
+not using `root` or `sudo`.
 
 You can check if `brew` is installed by running `brew --version`.
 
@@ -85,8 +85,8 @@ git clone git://git.code.sf.net/p/cadcdev/kos-ports
 
 ## Compilation ##
 
-The **dc-chain** system may be customized by setting up a
-[`Makefile.cfg`] file in the root of the `dc-chain` directory tree. If this is
+The **kos-chain** system may be customized by setting up a
+[`Makefile.cfg`] file in the root of the `kos-chain` directory tree. If this is
 desired, read the main [`README`](../README.md) for more information on
 setting up custom options for the toolchain; however, in most circumstances,
 the stable defaults already present in
@@ -96,9 +96,9 @@ the stable defaults already present in
 
 To build the toolchain, do the following:
 
-1. Navigate to the `dc-chain` directory by entering:
+1. Navigate to the `kos-chain` directory by entering:
 	```
-	cd /opt/toolchains/dc/kos/utils/dc-chain/
+	cd /opt/toolchains/dc/kos/utils/kos-chain/
 	```
 
 2. (Optional) Copy and alter the `Makefile.cfg` file options to your liking.

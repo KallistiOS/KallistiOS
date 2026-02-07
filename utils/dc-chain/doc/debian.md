@@ -1,4 +1,4 @@
-# Sega Dreamcast Toolchains Maker (`dc-chain`) with Debian #
+# KallistiOS Toolchain Builder (`kos-chain`) with Debian #
 
 This document contains all the instructions to create a fully working
 toolchain targeting the **Sega Dreamcast** system under **Debian**.
@@ -10,7 +10,7 @@ This document was written for **Debian** systems, but should apply to any
 
 On **Debian** family system, the package manager is the `apt-get` tool.
 
-All the operations in this document should be executed with the `root` user. If 
+All the operations in this document should be executed with the `root` user. If
 you don't want to use with the `root` user, another option is to escalate your
 account privileges using the `sudo` command which is installed by default on
 standard **Debian** and **Ubuntu** systems. If that is the case, you will need
@@ -26,7 +26,7 @@ build the toolchains.
 The first thing to do is to update your local installation:
 ```
 apt-get update
-apt-get upgrade -y	
+apt-get upgrade -y
 ```
 This should update all the packages of the **Debian** environment.
 
@@ -49,8 +49,8 @@ git clone git://git.code.sf.net/p/cadcdev/kos-ports
 
 ## Compilation ##
 
-The **dc-chain** system may be customized by setting up a
-[`Makefile.cfg`] file in the root of the `dc-chain` directory tree. If this is
+The **kos-chain** system may be customized by setting up a
+[`Makefile.cfg`] file in the root of the `kos-chain` directory tree. If this is
 desired, read the main [`README`](../README.md) for more information on
 setting up custom options for the toolchain; however, in most circumstances,
 the stable defaults already present in
@@ -60,9 +60,9 @@ the stable defaults already present in
 
 To build the toolchain, do the following:
 
-1. Navigate to the `dc-chain` directory by entering:
+1. Navigate to the `kos-chain` directory by entering:
 	```
-	cd /opt/toolchains/dc/kos/utils/dc-chain/
+	cd /opt/toolchains/dc/kos/utils/kos-chain/
 	```
 
 2. (Optional) Copy and alter the `Makefile.cfg` file options to your liking.

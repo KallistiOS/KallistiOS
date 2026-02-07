@@ -1,5 +1,4 @@
-# Sega Dreamcast Toolchains Maker (dc-chain)
-# This file is part of KallistiOS.
+# KallistiOS Toolchain Builder (kos-chain)
 
 $(build_newlib): build = build-newlib-$(target)-$(newlib_ver)
 $(build_newlib): src_dir = newlib-$(newlib_ver)

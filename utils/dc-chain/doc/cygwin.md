@@ -1,4 +1,4 @@
-# Sega Dreamcast Toolchains Maker (`dc-chain`) with Cygwin #
+# KallistiOS Toolchain Builder (`kos-chain`) with Cygwin #
 
 This document contains all the instructions to create a fully working
 toolchain targeting the **Sega Dreamcast** system under **Cygwin**.
@@ -24,11 +24,11 @@ toolchains, so its usage is not recommended; feel free to test it out, however.
 ## Installation of Cygwin ##
 
 1. Open your browser on [**Cygwin.com**](https://www.cygwin.com/) and download
-   `setup-${arch}.exe` (e.g. `setup-i686.exe`) from the 
+   `setup-${arch}.exe` (e.g. `setup-i686.exe`) from the
    [**Cygwin** website](https://cygwin.com/install.html).
 
 2. Run `setup-${arch}.exe` on **Administrator mode** (if using
-   **Microsoft Windows Vista** or later) then click on the `Next` button. 
+   **Microsoft Windows Vista** or later) then click on the `Next` button.
 
 3. Choose `Install from Internet` then click on the `Next` button.
 
@@ -71,15 +71,15 @@ toolchains, so its usage is not recommended; feel free to test it out, however.
 10. Move the `setup-${arch}.exe` file in the `${CYGWIN_ROOT}` directory. This is
     important if you want to update your **Cygwin** installation.
 
-The **Cygwin** base environment is ready. It's time to setup the 
+The **Cygwin** base environment is ready. It's time to setup the
 whole environment to build the toolchains.
 
 ## Preparing the environment installation ##
 
-1. Open the **Cygwin Terminal** by double-clicking the shortcut on your Desktop 
-   (or alternatively, double-click on the `${CYGWIN_ROOT}\cygwin.bat` batch 
+1. Open the **Cygwin Terminal** by double-clicking the shortcut on your Desktop
+   (or alternatively, double-click on the `${CYGWIN_ROOT}\cygwin.bat` batch
    file).
-   
+
 2. Enter the following to prepare **KallistiOS**:
 	```
 	mkdir -p /opt/toolchains/dc/
@@ -92,8 +92,8 @@ Everything is ready, now it's time to make the toolchains.
 
 ## Compilation ##
 
-The **dc-chain** system may be customized by setting up a
-[`Makefile.cfg`] file in the root of the `dc-chain` directory tree. If this is
+The **kos-chain** system may be customized by setting up a
+[`Makefile.cfg`] file in the root of the `kos-chain` directory tree. If this is
 desired, read the main [`README`](../README.md) for more information on
 setting up custom options for the toolchain; however, in most circumstances,
 the stable defaults already present in
@@ -105,9 +105,9 @@ To build the toolchain, do the following:
 
 1. Start the **Cygwin Terminal** if not already done.
 
-2. Navigate to the `dc-chain` directory by entering:
+2. Navigate to the `kos-chain` directory by entering:
 	```
-	cd /opt/toolchains/dc/kos/utils/dc-chain/
+	cd /opt/toolchains/dc/kos/utils/kos-chain/
 	```
 
 3. (Optional) Copy and alter the `Makefile.cfg` file options to your liking.

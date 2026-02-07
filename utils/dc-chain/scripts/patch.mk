@@ -1,5 +1,4 @@
-# Sega Dreamcast Toolchains Maker (dc-chain)
-# This file is part of KallistiOS.
+# KallistiOS Toolchain Builder (kos-chain)
 
 # Ensure that, no matter where we enter, prefix and target are set correctly.
 patch_targets = patch-binutils patch-gcc patch-newlib
@@ -53,7 +52,7 @@ define patch_apply
 	fi;
 endef
 
-# This function is used to replace the config.guess & config.sub that come 
+# This function is used to replace the config.guess & config.sub that come
 # bundled with the sources with updated versions from GNU. This fixes issues
 # when trying to compile older versions of the toolchain software on newer
 # hardware.

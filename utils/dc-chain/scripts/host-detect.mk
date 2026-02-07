@@ -1,5 +1,4 @@
-# Sega Dreamcast Toolchains Maker (dc-chain)
-# This file is part of KallistiOS.
+# KallistiOS Toolchain Builder (kos-chain)
 
 # This Makefile determines on what platform we are running. Instead of the
 # 'Makefile.hostdetect' included in dcload packages, this version uses
@@ -63,7 +62,7 @@ endif
 ifneq ($(shell echo "$(host_triplet)" | grep -i 'cygwin'),)
   $(info Cygwin build environment detected)
   CYGWIN := 1
-  WINDOWS := 1  
+  WINDOWS := 1
 endif
 
 # Determine if we are running under MinGW/MSYS
@@ -76,11 +75,11 @@ ifneq ($(shell echo "$(host_triplet)" | grep -i 'mingw'),)
   else
     $(info MinGW-w64/MSYS2 build environment detected)
     MINGW64 := 1
-    # config.guess is not reliable in this environment	
+    # config.guess is not reliable in this environment
     host_triplet=$(shell echo $$MSYSTEM_CHOST)
   endif
-  MINGW32 := 1  
-  WINDOWS := 1  
+  MINGW32 := 1
+  WINDOWS := 1
 endif
 
 # Determine if we are on WSL

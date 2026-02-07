@@ -1,8 +1,7 @@
-# Sega Dreamcast Toolchains Maker (dc-chain)
-# This file is part of KallistiOS.
+# KallistiOS Toolchain Builder (kos-chain)
 
-banner_text=Sega Dreamcast Toolchains Maker (dc-chain)
-banner_line=******************************************
+banner_text=KallistiOS Toolchain Builder (kos-chain)
+banner_line=****************************************
 
 $(info $(banner_line))
 $(info $(banner_text))

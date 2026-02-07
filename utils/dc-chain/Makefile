@@ -1,8 +1,7 @@
-# Sega Dreamcast Toolchains Maker (dc-chain)
-# This file is part of KallistiOS.
+# KallistiOS Toolchain Builder (kos-chain)
 
 #
-# Please edit 'Makefile.cfg' to customize your 'dc-chain' setup.
+# Please edit 'Makefile.cfg' to customize your 'kos-chain' setup.
 #
 
 # Display startup banner

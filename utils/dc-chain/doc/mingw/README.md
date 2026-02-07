@@ -1,4 +1,4 @@
-# Sega Dreamcast Toolchains Maker (`dc-chain`) with MinGW #
+# KallistiOS Toolchain Builder (`kos-chain`) with MinGW #
 
 Before starting, you need to open the correct `README` file, depending of
 your environment:
@@ -23,10 +23,10 @@ can be:
 2. Enter the following:
     ```
     command -v pacman
-    ```  
+    ```
 3. Check the output:
 
 	* If the output is blank: You are using the legacy **MinGW/MSYS**
       environment.
-	* If the output is similar to `/usr/bin/pacman`: You are using the newer 
+	* If the output is similar to `/usr/bin/pacman`: You are using the newer
       **MinGW-w64/MSYS2** environment.

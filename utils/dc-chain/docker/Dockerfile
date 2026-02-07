@@ -1,5 +1,5 @@
 #
-# Dockerfile for Sega Dreamcast Toolchains Maker (dc-chain)
+# Dockerfile for KallistiOS Toolchain Builder (kos-chain)
 #
 # usage:
 #   - build one of the images:
@@ -42,7 +42,7 @@ ARG profile=stable
 RUN mkdir -p /opt/toolchains/dc
 COPY . /opt/toolchains/dc/kos
 
-RUN cd /opt/toolchains/dc/kos/utils/dc-chain \
+RUN cd /opt/toolchains/dc/kos/utils/kos-chain \
 	&& make build platform=$platform toolchain_profile=$profile \
 	&& rm -rf /opt/toolchains/dc/kos
 
