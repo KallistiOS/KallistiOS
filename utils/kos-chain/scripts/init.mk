@@ -60,7 +60,7 @@ ifdef MACOS
     CXX += -stdlib=libc++ -mmacosx-version-min=10.14 $(macos_extra_args)
     CC_FOR_TARGET += $(macos_extra_args)
     CXX_FOR_TARGET += $(macos_extra_args)
-    macos_gcc_configure_args = --with-sysroot --with-native-system-header=/usr/include
+    macos_gcc_configure_args = --with-sysroot --with-native-system-header-dir=/usr/include
     macos_gdb_configure_args = --with-sysroot=$(sdkroot)
     # Detect if CC is Apple Clang and get major version, skip if using gcc.
     APPLE_CLANG_MAJOR := $(shell $(CC) --version 2>&1 | \
