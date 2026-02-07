@@ -51,7 +51,7 @@ jobs:
             - .github/workflows/autobuild.yml
             - .github/workflows/build-kos.sh
             - .github/workflows/list-profiles.sh
-            - utils/dc-chain/**
+            - utils/kos-chain/**
 
     - name: build-toolchain
       if: steps.filter.outputs.paths == 'true'
@@ -60,7 +60,7 @@ jobs:
         -t $dockerhub_user/$platform-toolchain:$profile
         --build-arg platform=$platform
         --build-arg profile=$profile
-        -f $GITHUB_WORKSPACE/utils/dc-chain/docker/Dockerfile
+        -f $GITHUB_WORKSPACE/utils/kos-chain/docker/Dockerfile
         $GITHUB_WORKSPACE
 
     - name: publish

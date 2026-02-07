@@ -1,5 +1,4 @@
-# Sega Dreamcast Toolchains Maker (dc-chain)
-# This file is part of KallistiOS.
+# KallistiOS Toolchain Builder (kos-chain)
 
 # kos_base is equivalent of KOS_BASE (contains include/ and kernel/)
 kos_base = $(CURDIR)/../..

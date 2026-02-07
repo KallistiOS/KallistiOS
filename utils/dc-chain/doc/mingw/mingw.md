@@ -1,4 +1,4 @@
-# Sega Dreamcast Toolchains Maker (`dc-chain`) with MinGW/MSYS #
+# KallistiOS Toolchain Builder (`kos-chain`) with MinGW/MSYS #
 
 This document contains all the instructions to create a fully working
 toolchain targeting the **Sega Dreamcast** system under **MinGW/MSYS**.
@@ -48,7 +48,7 @@ Windows Vista** or later) then click on the `Install` button. In the
 `Installation Directory` text box, input `C:\dcsdk\`. The `Installation
 Directory` will be called `${MINGW_ROOT}` later in the document.
 
-3. Leave the other options to its defaults, then click on `Continue`. 
+3. Leave the other options to its defaults, then click on `Continue`.
 The **MinGW/MSYS** installation will begin. When the progress bar is full, click
 on the `Continue` button.
 
@@ -97,10 +97,10 @@ To install the **MSYS** heap patch:
 2. Close `bash` by entering the `exit` command.
 
 3. Move the original `/bin/msys-1.0.dll`
-   (i.e. `${MINGW_ROOT}\msys\1.0\bin\msys-1.0.dll`) outside its folder (please 
+   (i.e. `${MINGW_ROOT}\msys\1.0\bin\msys-1.0.dll`) outside its folder (please
    don't just rename the file in the `/bin` folder!).
- 
-4. Extract the patched `msys-1.0.dll` from 
+
+4. Extract the patched `msys-1.0.dll` from
    `msysCORE-1.0.18-1-heap-patch-20140117.7z` and place it in the `/bin`
    directory (i.e. `${MINGW_ROOT}\msys\1.0\bin\`).
 
@@ -116,7 +116,7 @@ of the `/etc/fstab` file (i.e. `${MINGW_ROOT}\msys\1.0\etc\fstab`).
 ## Preparing the environment installation ##
 
 1. Open the **MSYS Shell** by double-clicking the shortcut on your desktop (or
-   alternatively, double-click on the `${MINGW_ROOT}\msys\1.0\msys.bat` batch 
+   alternatively, double-click on the `${MINGW_ROOT}\msys\1.0\msys.bat` batch
    file).
 
 2. Enter the following to prepare **KallistiOS**:
@@ -144,7 +144,7 @@ In the **MinGW/MSYS** environment, you have the option to make the
 toolchain binaries statically linked; i.e. they can be run **outside** the
 **MinGW/MSYS** environment:
 
-1. Open the **dc-chain** `Makefile` with a text editor.
+1. Open the **kos-chain** `Makefile` with a text editor.
 
 2. Locate the `STANDALONE_BINARY` flag and set it to `1`.
 
@@ -153,7 +153,7 @@ toolchain binaries statically linked; i.e. they can be run **outside** the
 Now, if you just double-click on any `sh-elf` binary (e.g. `sh-elf-gcc`)
 the program should run properly.
 
-Of course, this is not relevant if you are working directly from the 
+Of course, this is not relevant if you are working directly from the
 **MinGW/MSYS** environment (i.e. from the **MSYS Shell**), but this point can
 be notable if you want to use these toolchains from an IDE (like
 **Code::Blocks**, **CodeLite**...), i.e. **outside** the **MinGW/MSYS**
@@ -166,9 +166,9 @@ Basically, if you just plan to use the **MinGW/MSYS** environment through the
 
 ## Compilation ##
 
-The **dc-chain** system may be customized by setting up a
-[`Makefile.cfg`] file in the root of the `dc-chain` directory tree. If this is
-desired, read the main [`README`](/utils/dc-chain/README.md) for more information on
+The **kos-chain** system may be customized by setting up a
+[`Makefile.cfg`] file in the root of the `kos-chain` directory tree. If this is
+desired, read the main [`README`](/utils/kos-chain/README.md) for more information on
 setting up custom options for the toolchain; however, in most circumstances,
 the stable defaults already present in
 [`Makefile.dreamcast.cfg`](../../Makefile.dreamcast.cfg) will be fine.
@@ -179,9 +179,9 @@ To build the toolchain, do the following:
 
 1. Start the **MSYS Shell** if not already done.
 
-2. Navigate to the `dc-chain` directory by entering:
+2. Navigate to the `kos-chain` directory by entering:
    ```
-   cd /opt/toolchains/dc/kos/utils/dc-chain/
+   cd /opt/toolchains/dc/kos/utils/kos-chain/
    ```
 
 3. (Optional) Copy and alter the `Makefile.cfg` file options to your liking.

@@ -38,7 +38,7 @@ multiplatform functionality to be compatible in all modern environments.
 
 Tested environments with specific instructions are as follows:
 
-- **GNU/Linux** 
+- **GNU/Linux**
   - **[Alpine Linux](doc/alpine.md)**
   - **[Debian 12](doc/debian.md)**
 
@@ -59,7 +59,7 @@ an issue and let us know!
 
 ### KallistiOS Toolchain Builder installation
 KallistiOS Toolchain Builder is packaged with KallistiOS, where it can be found
-within the `$KOS_BASE/utils/dc-chain` directory. As building this toolchain is a
+within the `$KOS_BASE/utils/kos-chain` directory. As building this toolchain is a
 prerequisite to building KallistiOS, KallistiOS does not yet need to be
 configured to proceed to building the toolchain.
 
@@ -108,7 +108,7 @@ you may be required to use older versions of some of the prerequisites in
 certain situations. If you receive errors about tools you have installed, check
 your system's package manager for an older version of that tool. Depending on
 availability, it may not be possible to build older versions of the toolchain
-on your platform. 
+on your platform.
 
 ## Building the toolchain
 

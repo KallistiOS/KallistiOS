@@ -1,5 +1,4 @@
-# Sega Dreamcast Toolchains Maker (dc-chain)
-# This file is part of KallistiOS.
+# KallistiOS Toolchain Builder (kos-chain)
 
 build-gcc-pass1: build = build-gcc-$(target)-$(gcc_ver)-pass1
 build-gcc-pass1: enabled_languages = $(pass1_languages)

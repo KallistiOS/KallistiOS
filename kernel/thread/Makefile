@@ -16,5 +16,5 @@ OBJS += $(intcmp $(firstword $(subst ., ,${KOS_GCCVER})),14,,,toolchain_test.o)
 
 include $(KOS_BASE)/Makefile.prefab
 
-toolchain_test.o: ${KOS_BASE}/utils/dc-chain/patches/gcc/gthr-kos.h
+toolchain_test.o: ${KOS_BASE}/utils/kos-chain/patches/gcc/gthr-kos.h
 	kos-cc -DTEST_GTHR_KOS_API -std=c23 -c $< -o $@

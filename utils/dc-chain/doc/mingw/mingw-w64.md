@@ -1,4 +1,4 @@
-# Sega Dreamcast Toolchains Maker (`dc-chain`) with MinGW-w64/MSYS2 #
+# KallistiOS Toolchain Builder (`kos-chain`) with MinGW-w64/MSYS2 #
 
 This document contains all the instructions to create a fully working
 toolchain targeting the **Sega Dreamcast** system under **MinGW-w64/MSYS2**.
@@ -63,7 +63,7 @@ At the end of the process, a similar message to this one should be appear:
 warning: terminate MSYS2 without returning to shell and check for updates again
 warning: for example close your terminal window instead of calling exit
 ```
-This just means the `pacman` runtime has been updated. Close the terminal as 
+This just means the `pacman` runtime has been updated. Close the terminal as
 requested. Restart the **MSYS2 Shell** and run the same command again:
 ```
 pacman -Syuu
@@ -93,7 +93,7 @@ Same applies for **Python**, using `python --version`.
 
 ## Preparing the environment installation ##
 
-1. Open the **MSYS2 Shell** by double-clicking the shortcut on your start menu 
+1. Open the **MSYS2 Shell** by double-clicking the shortcut on your start menu
    (or alternatively, double-click on the `${MINGW_ROOT}\mingw${arch}.exe` file,
    e.g. `${MINGW_ROOT}\mingw64.exe`).
 
@@ -108,9 +108,9 @@ Everything is ready, now it's time to make the toolchains.
 
 ## Compilation ##
 
-The **dc-chain** system may be customized by setting up a
-`Makefile.cfg` file in the root of the `dc-chain` directory tree. If this is
-desired, read the main [`README`](/utils/dc-chain/README.md) for more information on
+The **kos-chain** system may be customized by setting up a
+`Makefile.cfg` file in the root of the `kos-chain` directory tree. If this is
+desired, read the main [`README`](/utils/kos-chain/README.md) for more information on
 setting up custom options for the toolchain; however, in most circumstances,
 the stable defaults already present in
 [`Makefile.dreamcast.cfg`](../../Makefile.dreamcast.cfg) will be fine.
@@ -121,9 +121,9 @@ To build the toolchain, do the following:
 
 1. Start the **MSYS2 Shell** if not already done.
 
-2. Navigate to the `dc-chain` directory by entering:
+2. Navigate to the `kos-chain` directory by entering:
 	```
-	cd /opt/toolchains/dc/kos/utils/dc-chain/
+	cd /opt/toolchains/dc/kos/utils/kos-chain/
 	```
 
 3. (Optional) Copy and alter the `Makefile.cfg` file options to your liking.

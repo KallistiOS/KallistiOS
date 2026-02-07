@@ -1,4 +1,4 @@
-# Sega Dreamcast Toolchains Maker (`dc-chain`) Contributors List
+# KallistiOS Toolchain Builder (`kos-chain`) Contributors List
 
 | Contributor | Years |
 |-------------|-------|
@@ -19,6 +19,6 @@
 | [Ben Baron](https://github.com/einsteinx2) | 2020 |
 | [Jon Daniel](https://github.com/jopadan) | 2020 |
 | [Colton Pawielski](https://github.com/cepawiel) | 2023 |
-| [Eric Fradella](https://github.com/darcagn) | 2023, 2024, 2025 |
+| [Eric Fradella](https://github.com/darcagn) | 2023, 2024, 2025, 2026 |
 | [Falco Girgis](https://github.com/gyrovorbis) | 2023, 2024 |
 | [Paul Cercueil](https://github.com/pcercuei) | 2025 |

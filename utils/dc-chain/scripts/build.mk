@@ -1,5 +1,4 @@
-# Sega Dreamcast Toolchains Maker (dc-chain)
-# This file is part of KallistiOS.
+# KallistiOS Toolchain Builder (kos-chain)
 
 build: build-done
 build-gcc: build-gcc-pass2

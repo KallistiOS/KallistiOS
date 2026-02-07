@@ -919,8 +919,8 @@ INPUT                  = $(KOS_BASE)/include \
                          $(KOS_BASE)/addons/readme.md \
                          $(KOS_BASE)/utils/readme.md \
                          $(KOS_BASE)/examples \
-                         $(KOS_BASE)/utils/dc-chain/README.md \
-                         $(KOS_BASE)/utils/dc-chain/doc \
+                         $(KOS_BASE)/utils/kos-chain/README.md \
+                         $(KOS_BASE)/utils/kos-chain/doc \
                          $(KOS_BASE)/doc/pages
 
 # This tag can be used to specify the character encoding of the source files

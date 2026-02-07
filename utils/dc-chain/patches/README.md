@@ -4,7 +4,7 @@ This file list patches information applied to the toolchains before building it
 for usage in **KallistiOS**.
 
 Patches are located in the `patches` directory. These are automatically applied
-when using the **dc-chain** `Makefile`.
+when using the **kos-chain** `Makefile`.
 
 `gcc-3.4.6-diff`:
 
@@ -32,4 +32,4 @@ ln -nsf $(kos_base)/kernel/arch/dreamcast/include/dc   $(newlib_inc) # arch/arch
 **Note:** For the **MinGW/MSYS** environment, these `newlib` fixups should be
 manually applied. See the `mingw` directory for details. For all the others
 platforms, these fixups are applied automatically from the `Makefile`.
- 
+

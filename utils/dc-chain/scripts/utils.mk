@@ -1,10 +1,9 @@
-# Sega Dreamcast Toolchains Maker (dc-chain)
-# This file is part of KallistiOS.
+# KallistiOS Toolchain Builder (kos-chain)
 
 # Web downloaders command-lines
 downloaders = curl wget
 wget_cmd = wget -c $(if $(2),-O $(2)) '$(1)'
-curl_cmd = curl --fail --location  -C - $(if $(2),-o $(2),-O) '$(1)' 
+curl_cmd = curl --fail --location  -C - $(if $(2),-o $(2),-O) '$(1)'
 
 ifneq ($(force_downloader),)
 # Check if specified downloader is in supported list
@@ -19,7 +18,7 @@ ifeq ($(web_downloader),)
   ifeq ($(force_downloader),)
     $(error No supported downloader was found ($(downloaders)))
   else
-    $(error Unsupported downloader ($(force_downloader)), select from ($(downloaders))) 
+    $(error Unsupported downloader ($(force_downloader)), select from ($(downloaders)))
   endif
 endif
 
