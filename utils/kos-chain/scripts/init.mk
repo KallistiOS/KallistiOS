@@ -118,7 +118,7 @@ endif
 do_auto_fixup_newlib := 1
 ifdef auto_fixup_newlib
   ifeq (0,$(auto_fixup_newlib))
-    $(warning 'Disabling Newlib Auto Fixup)
+    $(warning Disabling Newlib Auto Fixup)
     do_auto_fixup_newlib := 0
   endif
 endif
@@ -127,7 +127,7 @@ endif
 do_kos_patching := 1
 ifdef use_kos_patches
   ifeq (0,$(use_kos_patches))
-    $(warning 'Disabling KOS Patches)
+    $(warning Disabling KOS Patches)
     do_kos_patching := 0
   endif
 endif

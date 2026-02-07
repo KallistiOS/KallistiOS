@@ -69,13 +69,13 @@ include scripts/gcc-pass1.mk
 include scripts/newlib.mk
 include scripts/gcc-pass2.mk
 
-# ---- }}}}
+# ---- }}}
 
 # ---- optional components {{{
 
 include scripts/gdb.mk
 
-# ---- }}}}
+# ---- }}}
 
 # ---- support {{{
 
@@ -89,6 +89,6 @@ include scripts/options.mk
 
 include scripts/phony.mk
 
-# ---- }}}}
+# ---- }}}
 
 # vim:tw=0:fdm=marker:fdc=2:fdl=1
