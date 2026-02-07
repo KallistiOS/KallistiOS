@@ -5,7 +5,7 @@ gdb_log = $(logdir)/build-$(gdb_name).log
 gdb_patches := $(wildcard $(patches)/targets/$(gdb_name)*.diff)
 gdb_patches += $(wildcard $(patches)/hosts/$(host_triplet)/$(gdb_name)*.diff)
 
-patch_gdb: $(stamp_gdb_patch)
+patch-gdb: $(stamp_gdb_patch)
 
 $(stamp_gdb_patch): fetch-gdb
 	@patches=$$(echo "$(gdb_patches)" | xargs); \
@@ -17,9 +17,9 @@ $(stamp_gdb_patch): fetch-gdb
 		touch "$(stamp_gdb_patch)"; \
 	fi;
 
-build_gdb: log = $(gdb_log)
-build_gdb: logdir
-build_gdb: $(stamp_gdb_build)
+build-gdb: log = $(gdb_log)
+build-gdb: logdir
+build-gdb: $(stamp_gdb_build)
 
 ifeq ($(MACOS), 1)
   ifeq ($(uname_m),arm64)
@@ -34,7 +34,7 @@ ifeq ($(MACOS), 1)
   endif
 endif
 
-$(stamp_gdb_build): patch_gdb
+$(stamp_gdb_build): patch-gdb
 	@echo "+++ Building GDB..."
 	rm -f $@
 	> $(log)
@@ -66,15 +66,15 @@ else
 GDB_INSTALL_TARGET = $(stamp_gdb_install)
 endif
 
-install_gdb: log = $(gdb_log)
-install_gdb: logdir
-install_gdb: $(GDB_INSTALL_TARGET)
+install-gdb: log = $(gdb_log)
+install-gdb: logdir
+install-gdb: $(GDB_INSTALL_TARGET)
 
 # The 'install-strip' mode support is partial in GDB so there is a little hack
 # below to remove useless debug symbols
 # See: https://sourceware.org/legacy-ml/gdb-patches/2012-01/msg00335.html
 
-$(stamp_gdb_install): build_gdb
+$(stamp_gdb_install): build-gdb
 	@echo "+++ Installing GDB..."
 	rm -f $@
 	$(MAKE) -C $(build) install DESTDIR=$(DESTDIR) $(to_log)
@@ -89,4 +89,4 @@ $(stamp_gdb_install): build_gdb
 	$(clean_up)
 
 gdb: build = build-$(gdb_name)
-gdb: install_gdb
+gdb: install-gdb

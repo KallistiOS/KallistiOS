@@ -14,7 +14,7 @@ ifeq (1,$(do_kos_patching))
   build-newlib-only: patch-newlib
 
 # Add Patching Pre-Reqs for GDB
-  build_gdb: patch_gdb
+  build-gdb: patch-gdb
 endif
 
 # Require downloads before patching
