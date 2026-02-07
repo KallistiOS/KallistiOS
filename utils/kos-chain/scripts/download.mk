@@ -27,43 +27,36 @@ STAMP_TYPES = download patch build install
 # Function to Generate Variables from Config Options
 # Args:
 # 1 - Package (binutils,gcc,newlib,gdb,gmp,mpfr,mpc,isl)
-# 2 - Arch Prefixed with underscore (Optional) (sh_,arm_,)
-# 3 - Dest Folder after Extraction (Optional) (used to move gcc deps inside gcc folder)
+# 2 - Dest Folder after Extraction (Optional) (used to move gcc deps inside gcc folder)
 define gen_download_vars
 
-$(2)$(1)_name = $(1)-$($(2)$(1)_ver)
-$(2)$(1)_file = $$($(2)$(1)_name).tar.$$($(2)$(1)_download_type)
-$(2)$(1)_url  = $(call $(1)_base_url,$($(2)$(1)_ver))/$$($(2)$(1)_file)
-$(2)$(1)_dest = $(3)
+$(1)_name = $(1)-$$($(1)_ver)
+$(1)_file = $$($(1)_name).tar.$$($(1)_download_type)
+$(1)_url  = $(call $(1)_base_url,$($(1)_ver))/$$($(1)_file)
+$(1)_dest = $(2)
 
 # Generate Stamp Variables
-$(foreach type,$(STAMP_TYPES),$(blank_line)stamp_$(2)$(1)_$(type) = $(if $(3),$(3),$$($(2)$(1)_name))/$(1)_$(type).stamp)
+$(foreach type,$(STAMP_TYPES),$(blank_line)stamp_$(1)_$(type) = $(if $(2),$(2),$$($(1)_name))/$(1)_$(type).stamp)
 
 endef
-
 
 GCC_DEPS = gmp mpfr mpc isl
-# Function to setup variables for GCC dependencies
-# 1 - Arch (sh,arm)
-define gen_dep_download_vars
-$(foreach dep,$(GCC_DEPS),$(call gen_download_vars,$(dep),$(1)_,$($(1)_gcc_name)/$(dep)))
-$(foreach dep,$(GCC_DEPS),$(blank_line)$$(stamp_$(1)_$(dep)_download): $$(stamp_$(1)_gcc_download))
-endef
 
+# Generate download variables for main packages
 $(eval $(call gen_download_vars,binutils))
 $(eval $(call gen_download_vars,gcc))
 $(eval $(call gen_download_vars,newlib))
-$(eval $(call gen_dep_download_vars,sh))
-
-$(eval $(call gen_download_vars,binutils,arm_))
-$(eval $(call gen_download_vars,gcc,arm_))
-$(eval $(call gen_dep_download_vars,arm))
-
 $(eval $(call gen_download_vars,gdb))
+
+# Generate download variables for GCC dependencies
+$(foreach dep,$(GCC_DEPS),$(eval $(call gen_download_vars,$(dep),$(gcc_name)/$(dep))))
+
+# GCC dependencies can only be extracted after GCC itself is extracted
+$(foreach dep,$(GCC_DEPS),$(eval $(stamp_$(dep)_download): $(stamp_gcc_download)))
 
 # Setup Targets for Downloading & Unpacking Archives
 # Args:
-# 1 - Package Name (gdb, newlib, sh_gcc, arm_binutils, etc)
+# 1 - Package Name (binutils, newlib, gcc, gdb, etc.)
 define setup_archive_targets
 # set file & url for target archive
 $(stamp_$(1)_download): name = $($(1)_name)
@@ -77,7 +70,7 @@ endef
 
 # Setup Targets for Downloading Git Repos
 # Args:
-# 1 - Package Name (gdb, newlib, sh_gcc, arm_binutils, etc)
+# 1 - Package Name (binutils, newlib, gcc, gdb, etc.)
 define setup_git_targets
 $(stamp_$(1)_download): name = $($(1)_name)
 $(stamp_$(1)_download): git_repo = $($(1)_git_repo)
