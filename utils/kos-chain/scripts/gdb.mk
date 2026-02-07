@@ -17,6 +17,7 @@ $(stamp_gdb_patch): fetch-gdb
 		touch "$(stamp_gdb_patch)"; \
 	fi;
 
+build-gdb: build = build-$(gdb_name)
 build-gdb: log = $(gdb_log)
 build-gdb: logdir
 build-gdb: $(stamp_gdb_build)
