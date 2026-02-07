@@ -37,4 +37,4 @@ enable_libgccjit=0
 thread_model=single
 
 # Do not fixup newlib
-auto_fixup_sh4_newlib=0
+auto_fixup_newlib=0
