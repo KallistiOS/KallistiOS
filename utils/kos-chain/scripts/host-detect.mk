@@ -26,6 +26,7 @@ endif
 host_triplet := $(shell ./config.guess)
 
 # Retrieve the system
+uname_p := $(shell uname -p)
 uname_s := $(shell uname -s)
 uname_r := $(shell uname -r)
 uname_m := $(shell uname -m)

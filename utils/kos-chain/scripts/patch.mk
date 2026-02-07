@@ -36,9 +36,6 @@ newlib-fixup: fetch-newlib
 	mkdir -p $(src_dir)/newlib/libc/machine/$(arch)/sys
 	cp $(kos_base)/include/sys/lock.h $(src_dir)/newlib/libc/machine/$(arch)/sys/lock.h
 
-uname_p := $(shell uname -p)
-uname_s := $(shell uname -s)
-
 # This is a common 'patch_apply' function used in all the cases
 define patch_apply
 	@stamp_file=$(src_dir)/$(patch_target_name)_patch.stamp; \
