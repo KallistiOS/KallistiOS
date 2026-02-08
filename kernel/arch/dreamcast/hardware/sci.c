@@ -574,7 +574,7 @@ sci_result_t sci_read_byte(uint8_t *data) {
     return SCI_OK;
 }
 
-sci_result_t sci_write_data(uint8_t *data, size_t len) {
+sci_result_t sci_write_data(const uint8_t *data, size_t len) {
     uint32_t timeout_cnt;
     sci_result_t result;
 
