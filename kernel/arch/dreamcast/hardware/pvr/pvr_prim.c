@@ -159,15 +159,14 @@ void pvr_poly_cxt_txr(pvr_poly_cxt_t *dst, pvr_list_t list,
     dst->txr.enable = true;
 
     dst->gen.alpha = alpha;
+    dst->txr.alpha = false;
 
     if(!alpha) {
-        dst->txr.alpha = true;
         dst->blend.src = PVR_BLEND_ONE;
         dst->blend.dst = PVR_BLEND_ZERO;
         dst->txr.env = PVR_TXRENV_MODULATE;
     }
     else {
-        dst->txr.alpha = true;
         dst->blend.src = PVR_BLEND_SRCALPHA;
         dst->blend.dst = PVR_BLEND_INVSRCALPHA;
         dst->txr.env = PVR_TXRENV_MODULATEALPHA;
@@ -236,15 +235,14 @@ void pvr_sprite_cxt_txr(pvr_sprite_cxt_t *dst, pvr_list_t list,
     dst->gen.culling = PVR_CULLING_CCW;
 
     dst->gen.alpha = alpha;
+    dst->txr.alpha = false;
 
     if(!alpha) {
-        dst->txr.alpha = true;
         dst->blend.src = PVR_BLEND_ONE;
         dst->blend.dst = PVR_BLEND_ZERO;
         dst->txr.env = PVR_TXRENV_MODULATE;
     }
     else {
-        dst->txr.alpha = true;
         dst->blend.src = PVR_BLEND_SRCALPHA;
         dst->blend.dst = PVR_BLEND_INVSRCALPHA;
         dst->txr.env = PVR_TXRENV_MODULATEALPHA;
@@ -540,23 +538,21 @@ void pvr_poly_cxt_txr_mod(pvr_poly_cxt_t *dst, pvr_list_t list,
 
     dst->gen.alpha = alpha;
     dst->gen.alpha2 = alpha;
+    dst->txr.alpha = false;
+    dst->txr2.alpha = false;
 
     if(!alpha) {
-        dst->txr.alpha = true;
         dst->blend.src = PVR_BLEND_ONE;
         dst->blend.dst = PVR_BLEND_ZERO;
         dst->txr.env = PVR_TXRENV_MODULATE;
-        dst->txr2.alpha = true;
         dst->blend.src2 = PVR_BLEND_ONE;
         dst->blend.dst2 = PVR_BLEND_ZERO;
         dst->txr2.env = PVR_TXRENV_MODULATE;
     }
     else {
-        dst->txr.alpha = true;
         dst->blend.src = PVR_BLEND_SRCALPHA;
         dst->blend.dst = PVR_BLEND_INVSRCALPHA;
         dst->txr.env = PVR_TXRENV_MODULATEALPHA;
-        dst->txr2.alpha = true;
         dst->blend.src2 = PVR_BLEND_SRCALPHA;
         dst->blend.dst2 = PVR_BLEND_INVSRCALPHA;
         dst->txr2.env = PVR_TXRENV_MODULATEALPHA;

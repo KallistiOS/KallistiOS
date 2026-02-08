@@ -210,7 +210,7 @@ typedef struct {
         pvr_mip_bias_t      mipmap_bias;    /**< \brief Mipmap bias */
         pvr_uv_flip_t       uv_flip;        /**< \brief Enable/disable U/V flipping */
         pvr_uv_clamp_t      uv_clamp;       /**< \brief Enable/disable U/V clamping */
-        bool                alpha;          /**< \brief Enable/disable texture alpha */
+        bool                alpha;          /**< \brief True to _disable_ texture alpha */
         pvr_txr_shading_mode_t  env;        /**< \brief Texture color contribution */
         int     width;          /**< \brief Texture width (requires a power of 2) */
         int     height;         /**< \brief Texture height (requires a power of 2) */
@@ -261,7 +261,7 @@ typedef struct {
         pvr_mip_bias_t      mipmap_bias;    /**< \brief Mipmap bias */
         pvr_uv_flip_t       uv_flip;        /**< \brief Enable/disable U/V flipping */
         pvr_uv_clamp_t      uv_clamp;       /**< \brief Enable/disable U/V clamping */
-        bool                alpha;          /**< \brief Enable/disable texture alpha */
+        bool                alpha;          /**< \brief True to _disable_ texture alpha */
         pvr_txr_shading_mode_t  env;        /**< \brief Texture color contribution */
         int     width;          /**< \brief Texture width (requires a power of 2) */
         int     height;         /**< \brief Texture height (requires a power of 2) */
