@@ -767,23 +767,23 @@ static int sdb_shutdown(kos_blockdev_t *d) {
     return 0;
 }
 
-static int sdb_read_blocks(kos_blockdev_t *d, uint64_t block, size_t count,
+static int sdb_read_blocks(const kos_blockdev_t *d, uint64_t block, size_t count,
                            void *buf) {
-    sd_devdata_t *data = (sd_devdata_t *)d->dev_data;
+    const sd_devdata_t *data = (const sd_devdata_t *)d->dev_data;
 
     return sd_read_blocks(block + data->start_block, count, (uint8_t *)buf);
 }
 
-static int sdb_write_blocks(kos_blockdev_t *d, uint64_t block, size_t count,
+static int sdb_write_blocks(const kos_blockdev_t *d, uint64_t block, size_t count,
                             const void *buf) {
-    sd_devdata_t *data = (sd_devdata_t *)d->dev_data;
+    const sd_devdata_t *data = (const sd_devdata_t *)d->dev_data;
 
     return sd_write_blocks(block + data->start_block, count,
                            (const uint8_t *)buf);
 }
 
-static uint64_t sdb_count_blocks(kos_blockdev_t *d) {
-    sd_devdata_t *data = (sd_devdata_t *)d->dev_data;
+static uint64_t sdb_count_blocks(const kos_blockdev_t *d) {
+    const sd_devdata_t *data = (sd_devdata_t *)d->dev_data;
 
     return data->block_count;
 }

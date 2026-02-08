@@ -60,11 +60,11 @@ typedef struct kos_blockdev {
     uint32_t l_block_size;
     int (*init)(struct kos_blockdev *d);
     int (*shutdown)(struct kos_blockdev *d);
-    int (*read_blocks)(struct kos_blockdev *d, uint32_t block, size_t count,
+    int (*read_blocks)(const struct kos_blockdev *d, uint32_t block, size_t count,
                        void *buf);
-    int (*write_blocks)(struct kos_blockdev *d, uint32_t block, size_t count,
+    int (*write_blocks)(const struct kos_blockdev *d, uint32_t block, size_t count,
                         const void *buf);
-    uint32_t (*count_blocks)(struct kos_blockdev *d);
+    uint32_t (*count_blocks)(const struct kos_blockdev *d);
 } kos_blockdev_t;
 
 #ifndef SYMLOOP_MAX
