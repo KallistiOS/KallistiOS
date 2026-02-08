@@ -168,7 +168,7 @@ sci_result_t sci_write_byte(uint8_t data);
     \param  len             Number of bytes to write.
     \return                 SCI_OK on success, error code otherwise.
 */
-sci_result_t sci_write_data(uint8_t *data, size_t len);
+sci_result_t sci_write_data(const uint8_t *data, size_t len);
 
 /** \brief  Read multiple bytes from the UART.
     \param  data            Buffer to store read data.
