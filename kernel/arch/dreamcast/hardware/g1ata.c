@@ -1147,7 +1147,7 @@ static int atab_shutdown(kos_blockdev_t *d) {
     return 0;
 }
 
-static int atab_read_blocks(kos_blockdev_t *d, uint64_t block, size_t count,
+static int atab_read_blocks(const kos_blockdev_t *d, uint64_t block, size_t count,
                             void *buf) {
     ata_devdata_t *data = (ata_devdata_t *)d->dev_data;
 
@@ -1159,7 +1159,7 @@ static int atab_read_blocks(kos_blockdev_t *d, uint64_t block, size_t count,
     return g1_ata_read_lba(block + data->start_block, count, (uint16_t *)buf);
 }
 
-static int atab_read_blocks_dma(kos_blockdev_t *d, uint64_t block, size_t count,
+static int atab_read_blocks_dma(const kos_blockdev_t *d, uint64_t block, size_t count,
                                 void *buf) {
     ata_devdata_t *data = (ata_devdata_t *)d->dev_data;
 
@@ -1171,7 +1171,7 @@ static int atab_read_blocks_dma(kos_blockdev_t *d, uint64_t block, size_t count,
     return g1_ata_read_lba_dma(block + data->start_block, count, buf, 1);
 }
 
-static int atab_write_blocks(kos_blockdev_t *d, uint64_t block, size_t count,
+static int atab_write_blocks(const kos_blockdev_t *d, uint64_t block, size_t count,
                              const void *buf) {
     ata_devdata_t *data = (ata_devdata_t *)d->dev_data;
 
@@ -1183,7 +1183,7 @@ static int atab_write_blocks(kos_blockdev_t *d, uint64_t block, size_t count,
     return g1_ata_write_lba(block + data->start_block, count, buf);
 }
 
-static int atab_write_blocks_dma(kos_blockdev_t *d, uint64_t block,
+static int atab_write_blocks_dma(const kos_blockdev_t *d, uint64_t block,
                                  size_t count, const void *buf) {
     ata_devdata_t *data = (ata_devdata_t *)d->dev_data;
 
@@ -1195,7 +1195,7 @@ static int atab_write_blocks_dma(kos_blockdev_t *d, uint64_t block,
     return g1_ata_write_lba_dma(block + data->start_block, count, buf, 1);
 }
 
-static int atab_read_blocks_chs(kos_blockdev_t *d, uint64_t block, size_t count,
+static int atab_read_blocks_chs(const kos_blockdev_t *d, uint64_t block, size_t count,
                                 void *buf) {
     ata_devdata_t *data = (ata_devdata_t *)d->dev_data;
     uint8_t h, s;
@@ -1215,7 +1215,7 @@ static int atab_read_blocks_chs(kos_blockdev_t *d, uint64_t block, size_t count,
     return g1_ata_read_chs(c, h, s, count, buf);
 }
 
-static int atab_write_blocks_chs(kos_blockdev_t *d, uint64_t block,
+static int atab_write_blocks_chs(const kos_blockdev_t *d, uint64_t block,
                                  size_t count, const void *buf) {
     ata_devdata_t *data = (ata_devdata_t *)d->dev_data;
     uint8_t h, s;
@@ -1235,7 +1235,7 @@ static int atab_write_blocks_chs(kos_blockdev_t *d, uint64_t block,
     return g1_ata_write_chs(c, h, s, count, buf);
 }
 
-static uint64_t atab_count_blocks(kos_blockdev_t *d) {
+static uint64_t atab_count_blocks(const kos_blockdev_t *d) {
     ata_devdata_t *data = (ata_devdata_t *)d->dev_data;
 
     return (uint32_t)data->block_count;
