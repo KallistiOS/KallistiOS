@@ -3,8 +3,8 @@
    lock_common.h
    Copyright (C) 2004 Megan Potter
 
-   This file is patched into the dc-chain newlib's <sys/lock.h>, by newlib.mk 
-   in \utils\dc-chain\scripts.
+   This file is patched into the kos-chain newlib's <sys/lock.h>, by newlib.mk
+   in \utils\kos-chain\scripts.
 */
 
 /** \file
