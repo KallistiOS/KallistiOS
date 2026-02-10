@@ -1,6 +1,6 @@
 <!-- PROJECT LOGO -->
 <div align="center">
-  <img src="doc/logo.png" alt="KallistiOS Logo" width="200" />
+  <img src="doc/logo.png" alt="KallistiOS Logo" width="400" />
   <h1 align="center"><strong>KallistiOS</strong></h1>
   <p align="center">
     Independent SDK for the Sega Dreamcast
