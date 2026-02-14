@@ -957,31 +957,20 @@ int pvr_prim(const void *data, size_t size);
     @{
 */
 
-/** \brief   Direct Rendering state variable type. */
-typedef uint32_t pvr_dr_state_t;
-
-/** \brief   Initialize a state variable for Direct Rendering.
-
-    Store Queues are used.
-
-    \param  vtx_buf_ptr     A variable of type pvr_dr_state_t to init.
-*/
-void pvr_dr_init(pvr_dr_state_t *vtx_buf_ptr);
+/** \cond */
+extern uint32_t pvr_dr_addr;
+/** \endcond */
 
 /** \brief   Obtain the target address for Direct Rendering.
 
-    \param  vtx_buf_ptr     State variable for Direct Rendering. Should be of
-                            type pvr_dr_state_t, and must have been initialized
-                            previously in the scene with pvr_dr_init().
+    Note that you're not expected to pass any argument. The macro can take
+    arguments for compatibility reasons and will ignore them.
 
     \return                 A write-only destination address where a primitive
                             should be written to get ready to submit it to the
                             TA in DR mode.
 */
-#define pvr_dr_target(vtx_buf_ptr) \
-    ({ (vtx_buf_ptr) ^= 32; \
-        (pvr_vertex_t *)(MEM_AREA_SQ_BASE | (vtx_buf_ptr)); \
-    })
+#define pvr_dr_target(...) __builtin_assume_aligned((void *)((pvr_dr_addr ^= 32)), 32)
 
 /** \brief   Commit a primitive written into the Direct Rendering target address.
 
@@ -989,14 +978,6 @@ void pvr_dr_init(pvr_dr_state_t *vtx_buf_ptr);
                             have written the primitive to it.
 */
 #define pvr_dr_commit(addr) sq_flush(addr)
-
-/** \brief  Finish work with Direct Rendering.
-
-    Called atomatically in pvr_scene_finish().
-    Use it manually if you want to release Store Queues earlier.
-
-*/
-void pvr_dr_finish(void);
 
 /** \brief  Upload a 32-byte payload to the Tile Accelerator
 

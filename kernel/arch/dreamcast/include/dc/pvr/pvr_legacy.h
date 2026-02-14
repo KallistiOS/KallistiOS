@@ -277,6 +277,17 @@ __BEGIN_DECLS
 #define PVR_TA_PM3_TXRFMT_MASK          0xffffffff
 /** @} */
 
+typedef uint32_t pvr_dr_state_t;
+
+__depr("pvr_dr_init is not useful anymore")
+static inline void pvr_dr_init(pvr_dr_state_t *vtx_buf_ptr) {
+    (void)vtx_buf_ptr;
+}
+
+__depr("pvr_dr_finish is not useful anymore")
+static inline void pvr_dr_finish(void) {
+}
+
 /** @} */
 
 __END_DECLS
