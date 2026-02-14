@@ -219,11 +219,6 @@ int pvr_list_finish(void) {
           with the list type, assume we're doing hybrid drawing and
           are directly submitting this list type. */
     if(!pvr_list_dma) {
-        /* Release Store Queues if they are used */
-        if(pvr_state.dr_used) {
-            pvr_dr_finish();
-        }
-
         /* In case we haven't sent anything in this list, send a dummy */
         pvr_blank_polyhdr(pvr_state.list_reg_open);
 
@@ -286,15 +281,6 @@ int pvr_list_prim(pvr_list_t list, const void *data, size_t size) {
     return 0;
 }
 
-void pvr_dr_init(pvr_dr_state_t *vtx_buf_ptr) {
-    *vtx_buf_ptr = 0;
-    pvr_state.dr_used = 1;
-}
-
-void pvr_dr_finish(void) {
-    pvr_state.dr_used = 0;
-}
-
 int pvr_list_flush(pvr_list_t list) {
     (void)list;
 
@@ -309,11 +295,6 @@ int pvr_list_flush(pvr_list_t list) {
 int pvr_scene_finish(void) {
     int i, o;
     volatile pvr_dma_buffers_t *b;
-
-    /* Release Store Queues if they are used */
-    if(pvr_state.dr_used) {
-        pvr_dr_finish();
-    }
 
     // If we're in DMA mode, then this works a little differently...
     if(pvr_state.dma_mode) {
