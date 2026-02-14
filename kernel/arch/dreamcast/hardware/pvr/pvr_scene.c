@@ -393,7 +393,7 @@ int pvr_wait_ready(void) {
     flags = irq_disable();
 
     if(pvr_state.ta_busy)
-        t = genwait_wait((void *)&pvr_state.ta_busy, "PVR wait ready", 100, NULL);
+        t = genwait_wait((void *)&pvr_state.ta_busy, "PVR wait ready", 100);
 
     irq_restore(flags);
 
@@ -431,7 +431,7 @@ int pvr_wait_render_done(void) {
     irq_disable_scoped();
 
     if(pvr_state.render_busy)
-        t = genwait_wait((void *)&pvr_state.render_busy, "PVR wait render done", 100, NULL);
+        t = genwait_wait((void *)&pvr_state.render_busy, "PVR wait render done", 100);
 
     return t;
 }

@@ -303,6 +303,12 @@ static void g1_dma_irq_hnd(uint32_t code, void *data) {
     }
 }
 
+static int g1_ata_dma_done(void *d) {
+    (void)d;
+
+    return !g1_dma_in_progress();
+}
+
 /* Set the device select register to select a particular device. */
 uint8_t g1_ata_select_device(uint8_t dev) {
     uint8_t old = IN8(G1_ATA_DEVICE_SELECT);
@@ -322,8 +328,7 @@ uint8_t g1_ata_select_device(uint8_t dev) {
         }
         else {
             /* Wait for any in-progress DMA transfers to finish. */
-            while(g1_dma_in_progress())
-                thd_pass();
+            thd_poll((thd_cb_t)g1_ata_dma_done, NULL, 0);
 
             /* According to section 7.10 of the ATA-5 spec, setting the device
                select register with either of BSY or DRQ asserted produces an
