@@ -18,7 +18,6 @@ struct square_fcoords {
 
 static bool done;
 
-static uint32_t dr_state;
 static uint32_t fbuf_color = 0xffffffff;
 
 static void change_color(uint8_t, uint32_t btns) {
@@ -71,7 +70,7 @@ static void render_coords(const struct square_fcoords *coords, float z,
     unsigned int i;
 
     for(i = 0; i < 4; i++) {
-        vert = pvr_dr_target(dr_state);
+        vert = pvr_dr_target();
         *vert = (pvr_vertex_t){
             .flags = i == 3 ? PVR_CMD_VERTEX_EOL : PVR_CMD_VERTEX,
             .x = coords->x[i],
@@ -97,7 +96,7 @@ static void render_bouncing_cube(uint16_t x, uint16_t y) {
 
     pvr_poly_cxt_col(&cxt, PVR_LIST_OP_POLY);
 
-    hdr_sq = (void *)pvr_dr_target(dr_state);
+    hdr_sq = pvr_dr_target();
     pvr_poly_compile(hdr_sq, &cxt);
     pvr_dr_commit(hdr_sq);
 
@@ -140,7 +139,7 @@ static void render_back_buffer_step1(pvr_ptr_t fake_tex) {
 
     cxt.txr.alpha = PVR_TXRALPHA_ENABLE;
 
-    hdr_sq = (void *)pvr_dr_target(dr_state);
+    hdr_sq = pvr_dr_target();
     pvr_poly_compile(hdr_sq, &cxt);
     pvr_dr_commit(hdr_sq);
 
@@ -169,7 +168,7 @@ static void render_back_buffer_step2(pvr_ptr_t frontbuf, bool hi_chip) {
     cxt.blend.dst = PVR_BLEND_ZERO;
     cxt.blend.src = PVR_BLEND_DESTALPHA;
 
-    hdr_sq = (void *)pvr_dr_target(dr_state);
+    hdr_sq = pvr_dr_target();
     pvr_poly_compile(hdr_sq, &cxt);
     pvr_dr_commit(hdr_sq);
 
@@ -180,7 +179,7 @@ static void render_back_buffer_step2(pvr_ptr_t frontbuf, bool hi_chip) {
     cxt.blend.dst = PVR_BLEND_ONE;
     cxt.blend.src = PVR_BLEND_INVDESTALPHA;
 
-    hdr_sq = (void *)pvr_dr_target(dr_state);
+    hdr_sq = pvr_dr_target();
     pvr_poly_compile(hdr_sq, &cxt);
     pvr_dr_commit(hdr_sq);
 
