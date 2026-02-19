@@ -650,7 +650,7 @@ namespace {
     };
 
     template<typename FF>
-    defer_raii(FF &&ff) -> defer_raii<decltype(ff)>;
+    defer_raii(FF &&ff) -> defer_raii<std::decay_t<FF>>;
 }  // anonymous namespace
 
 auto defer(auto &&f) {
