@@ -30,7 +30,7 @@ static pvr_dma_callback_t dma_callback;
 static void *dma_cbdata;
 
 /* DMA registers */
-static vuint32 * const pvr_dma = (vuint32 *)0xa05f6800;
+static volatile uint32_t *const pvr_dma = (volatile uint32_t *)0xa05f6800;
 
 /* PVR Dma registers - Offset by 0xA05F6800 */
 #define PVR_STATE   0x00

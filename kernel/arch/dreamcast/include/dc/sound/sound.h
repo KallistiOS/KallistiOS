@@ -25,7 +25,6 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -47,7 +46,7 @@ __BEGIN_DECLS
     \return                 The location of the start of the block on success,
                             or 0 on failure.
 */
-uint32 snd_mem_malloc(size_t size);
+uint32_t snd_mem_malloc(size_t size);
 
 /** \brief  Free a block of allocated memory in the SPU RAM pool.
 
@@ -55,7 +54,7 @@ uint32 snd_mem_malloc(size_t size);
 
     \param  addr            The location of the start of the block to free.
 */
-void snd_mem_free(uint32 addr);
+void snd_mem_free(uint32_t addr);
 
 /** \brief  Get the size of the largest allocateable block in the SPU RAM pool.
 
@@ -68,7 +67,7 @@ void snd_mem_free(uint32 addr);
     \return                 The size of the largest available block of memory in
                             the SPU RAM pool.
 */
-uint32 snd_mem_available(void);
+uint32_t snd_mem_available(void);
 
 /** \brief  Reinitialize the SPU RAM pool.
 
@@ -79,7 +78,7 @@ uint32 snd_mem_available(void);
     \param  reserve         The amount of memory to reserve as a base.
     \retval 0               On success (no failure conditions defined).
 */
-int snd_mem_init(uint32 reserve);
+int snd_mem_init(uint32_t reserve);
 
 /** \brief  Shutdown the SPU RAM allocator.
 
@@ -116,7 +115,7 @@ void snd_shutdown(void);
     \param  size            The size of the packet, in 32-bit increments.
     \retval 0               On success (no error conditions defined).
 */
-int snd_sh4_to_aica(void *packet, uint32 size);
+int snd_sh4_to_aica(void *packet, uint32_t size);
 
 /** \brief  Begin processing AICA queue requests.
 

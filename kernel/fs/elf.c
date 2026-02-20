@@ -86,7 +86,7 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
     }
 
     sz = fs_total(fd);
-    dbglog(DBG_KDEBUG, "Loading ELF file of size %d\n", sz);
+    dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "Loading ELF file of size %d\n", sz);
 
     img = aligned_alloc(32, sz);
 
@@ -115,17 +115,17 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
         goto error1;
 
     /* Print some debug info */
-    dbglog(DBG_KDEBUG, "File size is %d bytes\n", sz);
-    dbglog(DBG_KDEBUG, "	entry point	%08lx\n", hdr->entry);
-    dbglog(DBG_KDEBUG, "	ph offset	%08lx\n", hdr->phoff);
-    dbglog(DBG_KDEBUG, "	sh offset	%08lx\n", hdr->shoff);
-    dbglog(DBG_KDEBUG, "	flags		%08lx\n", hdr->flags);
-    dbglog(DBG_KDEBUG, "	ehsize		%08x\n", hdr->ehsize);
-    dbglog(DBG_KDEBUG, "	phentsize	%08x\n", hdr->phentsize);
-    dbglog(DBG_KDEBUG, "	phnum		%08x\n", hdr->phnum);
-    dbglog(DBG_KDEBUG, "	shentsize	%08x\n", hdr->shentsize);
-    dbglog(DBG_KDEBUG, "	shnum		%08x\n", hdr->shnum);
-    dbglog(DBG_KDEBUG, "	shstrndx	%08x\n", hdr->shstrndx);
+    dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "File size is %d bytes\n", sz);
+    dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "	entry point	%08lx\n", hdr->entry);
+    dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "	ph offset	%08lx\n", hdr->phoff);
+    dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "	sh offset	%08lx\n", hdr->shoff);
+    dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "	flags		%08lx\n", hdr->flags);
+    dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "	ehsize		%08x\n", hdr->ehsize);
+    dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "	phentsize	%08x\n", hdr->phentsize);
+    dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "	phnum		%08x\n", hdr->phnum);
+    dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "	shentsize	%08x\n", hdr->shentsize);
+    dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "	shnum		%08x\n", hdr->shnum);
+    dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "	shstrndx	%08x\n", hdr->shstrndx);
 
     /* Locate the string table; SH elf files ought to have
        two string tables, one for section names and one for object
@@ -183,7 +183,7 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
         }
     }
 
-    dbglog(DBG_KDEBUG, "Final image is %d bytes\n", sz);
+    dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "Final image is %d bytes\n", sz);
     out->data = imgout = malloc(sz);
 
     if(out->data == NULL) {
@@ -197,12 +197,14 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
     for(i = 0; i < hdr->shnum; i++) {
         if(shdrs[i].flags & SHF_ALLOC) {
             if(shdrs[i].type == SHT_NOBITS) {
-                dbglog(DBG_KDEBUG, "  setting %ld bytes of zeros at %08lx\n",
+                dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), 
+                     "  setting %ld bytes of zeros at %08lx\n",
                      shdrs[i].size, shdrs[i].addr);
                 memset(imgout + shdrs[i].addr, 0, shdrs[i].size);
             }
             else {
-                dbglog(DBG_KDEBUG, "  copying %ld bytes from %08lx to %08lx\n",
+                dbglog(DBG_SOURCE(ELF_DBG_VERBOSE),
+                     "  copying %ld bytes from %08lx to %08lx\n",
                      shdrs[i].size, shdrs[i].offset, shdrs[i].addr);
                 memcpy(imgout + shdrs[i].addr,
                        img + shdrs[i].offset,
@@ -235,7 +237,7 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
         }
 
         /* Patch it in */
-        dbglog(DBG_KDEBUG, " symbol '%s' patched to 0x%x\n",
+        dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), " symbol '%s' patched to 0x%x\n",
              (const char *)(symtab[i].name),
              sym->ptr);
         symtab[i].value = sym->ptr;
@@ -249,7 +251,7 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
         if(shdrs[i].type != SHT_REL && shdrs[i].type != SHT_RELA) continue;
 
         sect = shdrs[i].info;
-        dbglog(DBG_KDEBUG, "Relocating (%s) on section %d\n",
+        dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "Relocating (%s) on section %d\n",
             shdrs[i].type == SHT_REL ? "SHT_REL" : "SHT_RELA", sect);
 
         switch(shdrs[i].type) {
@@ -270,7 +272,8 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
                     sym = ELF32_R_SYM(relatab[j].info);
 
                     if(symtab[sym].shndx == SHN_UNDEF) {
-                        dbglog(DBG_KDEBUG, "  Writing undefined RELA %08lx(%08lx+%08lx) -> %08lx\n",
+                        dbglog(DBG_SOURCE(ELF_DBG_VERBOSE),
+                             "  Writing undefined RELA %08lx(%08lx+%08lx) -> %08lx\n",
                              symtab[sym].value + relatab[j].addend,
                              symtab[sym].value,
                              relatab[j].addend,
@@ -282,7 +285,8 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
                               + relatab[j].addend;
                     }
                     else {
-                        dbglog(DBG_KDEBUG, "  Writing RELA %08lx(%08lx+%08lx+%08lx+%08lx) -> %08lx\n",
+                        dbglog(DBG_SOURCE(ELF_DBG_VERBOSE),
+                             "  Writing RELA %08lx(%08lx+%08lx+%08lx+%08lx) -> %08lx\n",
                              vma + shdrs[symtab[sym].shndx].addr + symtab[sym].value + relatab[j].addend,
                              vma, shdrs[symtab[sym].shndx].addr, symtab[sym].value, relatab[j].addend,
                              vma + shdrs[sect].addr + relatab[j].offset);
@@ -321,7 +325,8 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
                         uint32_t value = symtab[sym].value;
 
                         if(sect == 1 && j < 5) {
-                            dbglog(DBG_KDEBUG, "  Writing undefined %s %08lx -> %08lx",
+                            dbglog(DBG_SOURCE(ELF_DBG_VERBOSE),
+                                 "  Writing undefined %s %08lx -> %08lx",
                                  pcrel ? "PCREL" : "ABSREL",
                                  value,
                                  vma + shdrs[sect].addr + reltab[j].offset);
@@ -336,7 +341,8 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
                         += value;
 
                         if(sect == 1 && j < 5) {
-                            dbglog(DBG_KDEBUG, "(%08lx)\n", *((uint32_t *)(imgout + shdrs[sect].addr + reltab[j].offset)));
+                            dbglog(DBG_SOURCE(ELF_DBG_VERBOSE),"(%08lx)\n",
+                             *((uint32_t *)(imgout + shdrs[sect].addr + reltab[j].offset)));
                         }
                     }
                     else {
@@ -344,7 +350,8 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
                                        + symtab[sym].value;
 
                         if(sect == 1 && j < 5) {
-                            dbglog(DBG_KDEBUG, "  Writing %s %08lx(%08lx+%08lx+%08lx) -> %08lx",
+                            dbglog(DBG_SOURCE(ELF_DBG_VERBOSE),
+                                 "  Writing %s %08lx(%08lx+%08lx+%08lx) -> %08lx",
                                  pcrel ? "PCREL" : "ABSREL",
                                  value,
                                  vma, shdrs[symtab[sym].shndx].addr, symtab[sym].value,
@@ -360,7 +367,8 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
                         += value;
 
                         if(sect == 1 && j < 5) {
-                            dbglog(DBG_KDEBUG, "(%08lx)\n", *((uint32_t *)(imgout + shdrs[sect].addr + reltab[j].offset)));
+                            dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "(%08lx)\n",
+                             *((uint32_t *)(imgout + shdrs[sect].addr + reltab[j].offset)));
                         }
                     }
                 }
@@ -396,7 +404,7 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
     }
 
     free(img);
-    dbglog(DBG_KDEBUG, "elf_load final ELF stats: memory image at %p, size %08lx\n", out->data, out->size);
+    dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "elf_load final ELF stats: memory image at %p, size %08lx\n", out->data, out->size);
 
     /* Flush the icache for that zone */
     icache_flush_range((uint32_t)out->data, out->size);

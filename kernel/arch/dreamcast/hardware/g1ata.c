@@ -11,16 +11,17 @@
 
 #include <dc/g1ata.h>
 #include <dc/asic.h>
+#include <dc/memory.h>
 
 #include <kos/dbglog.h>
+#include <kos/irq.h>
 #include <kos/sem.h>
 #include <kos/mutex.h>
 #include <kos/thread.h>
+#include <kos/timer.h>
 
-#include <arch/timer.h>
+#include <arch/arch.h>
 #include <arch/cache.h>
-#include <arch/irq.h>
-#include <arch/memory.h>
 
 /*
    This file implements support for accessing devices over the G1 bus by the
@@ -181,11 +182,10 @@ static uint8_t dma_cmd = 0;
 static size_t dma_nb_sectors = 0;
 static uint64_t dma_sector = 0;
 static semaphore_t dma_done = SEM_INITIALIZER(0);
-static kthread_t *dma_thd = NULL;
 static asic_evt_handler_entry_t old_dma_irq;
 
 /* From cdrom.c */
-extern mutex_t _g1_ata_mutex;
+extern semaphore_t _g1_ata_sem;
 
 #define g1_ata_wait_status(n) \
     do {} while((IN8(G1_ATA_ALTSTATUS) & (n)))
@@ -210,16 +210,15 @@ int g1_dma_in_progress(void) {
 
 /* G1 mutex handling. */
 inline int g1_ata_mutex_lock(void) {
-    if(irq_inside_int())
-        return mutex_trylock(&_g1_ata_mutex);
-    else
-        return mutex_lock(&_g1_ata_mutex);
+    return sem_wait_irqsafe(&_g1_ata_sem);
 }
 
 inline int g1_ata_mutex_unlock(void) {
     /* Make sure to select the GD-ROM drive back. */
-    g1_ata_select_device(G1_ATA_MASTER);
-    return mutex_unlock(&_g1_ata_mutex);
+    if(hardware_sys_mode(NULL) == HW_TYPE_RETAIL) {
+        g1_ata_select_device(G1_ATA_MASTER);
+    }
+    return sem_signal(&_g1_ata_sem);
 }
 
 static void g1_ata_set_sector_and_count(uint64_t sector, size_t count, int lba28) {
@@ -250,11 +249,10 @@ static void g1_dma_done(void) {
     dma_in_progress = 0;
 
     /* Make sure to select the GD-ROM drive back. */
-    g1_ata_select_device(G1_ATA_MASTER);
-    mutex_unlock_as_thread(&_g1_ata_mutex, dma_thd);
+    g1_ata_mutex_unlock();
 }
 
-static void g1_dma_irq_hnd(uint32 code, void *data) {
+static void g1_dma_irq_hnd(uint32_t code, void *data) {
     int can_lba48 = CAN_USE_LBA48();
     size_t nb_sectors;
     uint8_t status;
@@ -357,12 +355,6 @@ static int dma_common(uint8_t cmd, size_t nsects, uint32_t addr, int dir,
     uint8_t status;
 
     dma_cmd = cmd;
-
-    /* Set the thread ID that initiated this DMA. */
-    dma_thd = thd_current;
-
-    if(irq_inside_int())
-        dma_thd = (kthread_t *)0xFFFFFFFF;
 
     /* Set the DMA parameters up. */
     OUT32(G1_ATA_DMA_ADDRESS, addr);
@@ -965,7 +957,7 @@ int g1_ata_flush(void) {
 
     /* Select the slave device. */
     g1_ata_select_device(G1_ATA_SLAVE | G1_ATA_LBA_MODE);
-    timer_spin_sleep(1);
+    thd_sleep(1);
 
     /* Flush the disk's write cache to make sure everything gets written out. */
     if(CAN_USE_LBA48())
@@ -973,7 +965,7 @@ int g1_ata_flush(void) {
     else
         OUT8(G1_ATA_COMMAND_REG, ATA_CMD_FLUSH_CACHE);
 
-    timer_spin_sleep(1);
+    thd_sleep(1);
     g1_ata_wait_bsydrq();
     g1_ata_mutex_unlock();
 
@@ -1006,7 +998,7 @@ static int g1_ata_set_transfer_mode(uint8_t mode) {
 
     /* Send the SET FEATURES command. */
     OUT8(G1_ATA_COMMAND_REG, ATA_CMD_SET_FEATURES);
-    timer_spin_sleep(1);
+    thd_sleep(1);
 
     /* Wait for command completion. */
     g1_ata_wait_nbsy();
@@ -1034,7 +1026,7 @@ static int g1_ata_scan(void) {
     /* For now, just check if there's a slave device. We don't care about the
        primary device, since it should always be the GD-ROM drive. */
     OUT8(G1_ATA_DEVICE_SELECT, 0xF0);
-    timer_spin_sleep(1);
+    thd_sleep(1);
 
     OUT8(G1_ATA_SECTOR_COUNT, 0);
     OUT8(G1_ATA_LBA_LOW, 0);
@@ -1043,7 +1035,7 @@ static int g1_ata_scan(void) {
 
     /* Send the IDENTIFY command. */
     OUT8(G1_ATA_COMMAND_REG, ATA_CMD_IDENTIFY);
-    timer_spin_sleep(1);
+    thd_sleep(1);
     st = IN8(G1_ATA_STATUS_REG);
 
     /* Check if there's anything on the bus. */

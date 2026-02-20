@@ -448,14 +448,14 @@ void modemHardReset(void) {
     /* This zeroes out all of the modem's registers */
     modemWrite(G2_8BP_RST, 0);
 
-    timer_spin_sleep(25); /* A slight delay just to be safe */
+    thd_sleep(25); /* A slight delay just to be safe */
 
     /* This sets the modem's registers to their default settings */
     modemWrite(G2_8BP_RST, 1);
 
     /* Wait for a little while so the modem has time to reset itself
        completely */
-    timer_spin_sleep(150);
+    thd_sleep(150);
 }
 
 void modemSoftReset(void) {
@@ -465,7 +465,7 @@ void modemSoftReset(void) {
     while(modemRead(REGLOC(0x1F)) & 0x1);  /* Wait for NEWC to clear */
 
     /* Wait a minimum of 10ms before using the MDP again */
-    timer_spin_sleep(100);
+    thd_sleep(100);
 }
 
 void modemConfigurationReset(void) {
@@ -600,7 +600,7 @@ int modem_set_mode(int mode, modem_speed_t speed) {
             modemSetBits(REGLOC(0x1F), 0x1); /* Set NEWC */
 
             /* Delay at least 4ms */
-            timer_spin_sleep(10);
+            thd_sleep(10);
 
             /* Dial using DTMF tones, and set the modem in origination
                mode */
@@ -801,7 +801,7 @@ void modemEstablishConnection(void) {
        can be answered */
     if(!(modemCfg.flags & MODEM_CFG_FLAG_ORIGINATE)) {
         modemSetBits(REGLOC(0x7), 0x2); /* Set RA */
-        timer_spin_sleep(10);
+        thd_sleep(10);
     }
 
     /* Note that in all modes of operation RTS will be turned on as soon

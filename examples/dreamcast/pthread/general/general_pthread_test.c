@@ -21,7 +21,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <assert.h>
-#include <arch/arch.h>
+
 #include <dc/video.h>
 #include <dc/maple/controller.h>
 
@@ -126,7 +126,7 @@ int main(int argc, char **argv) {
     pthread_attr_t attr;
 
     cont_btn_callback(0, CONT_START | CONT_A | CONT_B | CONT_X | CONT_Y,
-                      (cont_btn_callback_t)arch_exit);
+                      (cont_btn_callback_t)exit);
 
     /* Print a banner */
     printf("KOS pthread test program:\n");

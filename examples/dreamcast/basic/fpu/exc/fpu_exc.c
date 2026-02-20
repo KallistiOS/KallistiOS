@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
     bool success = true;
 
     /* Exit parachute */
-    cont_btn_callback(0, CONT_START, (cont_btn_callback_t)arch_exit);
+    cont_btn_callback(0, CONT_START, (cont_btn_callback_t)exit);
 
     printf("Beginning the FPU exception test!\n");
     printf("\tFPU Config: %s\n", SH4_FPU_CONFIG_NAME);

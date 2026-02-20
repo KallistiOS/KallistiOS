@@ -6,9 +6,9 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
-#include <arch/irq.h>
 #include <kos/dbglog.h>
 #include <kos/genwait.h>
 #include <dc/maple.h>
@@ -33,7 +33,7 @@ static void sip_start_sampling_cb(maple_state_t *st, maple_frame_t *frame) {
 
     /* Set the is_sampling flag. */
     sip = (sip_state_t *)frame->dev->status;
-    sip->is_sampling = 1;
+    sip->is_sampling = true;
 
     /* Wake up! */
     genwait_wake_all(frame);
@@ -56,7 +56,7 @@ static void sip_stop_sampling_cb(maple_state_t *st, maple_frame_t *frame) {
 
     /* Clear the is_sampling flag. */
     sip = (sip_state_t *)frame->dev->status;
-    sip->is_sampling = 0;
+    sip->is_sampling = false;
     sip->callback = NULL;
 
     /* Wake up! */
@@ -118,9 +118,8 @@ int sip_set_frequency(maple_device_t *dev, unsigned int freq) {
     return MAPLE_EOK;
 }
 
-int sip_start_sampling(maple_device_t *dev, sip_sample_cb cb, int block) {
+int sip_start_sampling(maple_device_t *dev, sip_sample_cb cb, bool block) {
     sip_state_t *sip;
-    uint32 *send_buf;
 
     assert(dev != NULL);
 
@@ -131,16 +130,15 @@ int sip_start_sampling(maple_device_t *dev, sip_sample_cb cb, int block) {
         return MAPLE_EFAIL;
 
     /* Lock the frame */
-    if(maple_frame_lock(&dev->frame) < 0)
+    if(maple_frame_trylock(&dev->frame) < 0)
         return MAPLE_EAGAIN;
 
     sip->callback = cb;
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);
-    send_buf = (uint32 *)dev->frame.recv_buf;
-    send_buf[0] = MAPLE_FUNC_MICROPHONE;
-    send_buf[1] = SIP_SUBCOMMAND_BASIC_CTRL |
+    dev->frame.send_buf[0] = MAPLE_FUNC_MICROPHONE;
+    dev->frame.send_buf[1] = SIP_SUBCOMMAND_BASIC_CTRL |
                   (((sip->sample_type) | (sip->frequency << 2) |
                     SIP_START_SAMPLING) << 8);
     dev->frame.cmd = MAPLE_COMMAND_MICCONTROL;
@@ -148,7 +146,6 @@ int sip_start_sampling(maple_device_t *dev, sip_sample_cb cb, int block) {
     dev->frame.dst_unit = dev->unit;
     dev->frame.length = 2;
     dev->frame.callback = sip_start_sampling_cb;
-    dev->frame.send_buf = send_buf;
     maple_queue_frame(&dev->frame);
 
     if(block) {
@@ -167,10 +164,8 @@ int sip_start_sampling(maple_device_t *dev, sip_sample_cb cb, int block) {
     return MAPLE_EOK;
 }
 
-int sip_stop_sampling(maple_device_t *dev, int block) {
+int sip_stop_sampling(maple_device_t *dev, bool block) {
     sip_state_t *sip;
-    uint32 *send_buf;
-
     assert(dev != NULL);
 
     sip = (sip_state_t *)dev->status;
@@ -180,20 +175,18 @@ int sip_stop_sampling(maple_device_t *dev, int block) {
         return MAPLE_EFAIL;
 
     /* Lock the frame */
-    if(maple_frame_lock(&dev->frame) < 0)
+    if(maple_frame_trylock(&dev->frame) < 0)
         return MAPLE_EAGAIN;
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);
-    send_buf = (uint32 *)dev->frame.recv_buf;
-    send_buf[0] = MAPLE_FUNC_MICROPHONE;
-    send_buf[1] = SIP_SUBCOMMAND_BASIC_CTRL;
+    dev->frame.send_buf[0] = MAPLE_FUNC_MICROPHONE;
+    dev->frame.send_buf[1] = SIP_SUBCOMMAND_BASIC_CTRL;
     dev->frame.cmd = MAPLE_COMMAND_MICCONTROL;
     dev->frame.dst_port = dev->port;
     dev->frame.dst_unit = dev->unit;
     dev->frame.length = 2;
     dev->frame.callback = sip_stop_sampling_cb;
-    dev->frame.send_buf = send_buf;
     maple_queue_frame(&dev->frame);
 
     if(block) {
@@ -216,7 +209,7 @@ static void sip_reply(maple_state_t *st, maple_frame_t *frm) {
     (void)st;
 
     maple_response_t *resp;
-    uint32 *respbuf;
+    uint32_t *respbuf;
     sip_state_t *sip;
 
     /* Unlock the frame now (it's ok, we're in an IRQ) */
@@ -228,7 +221,7 @@ static void sip_reply(maple_state_t *st, maple_frame_t *frm) {
     if(resp->response != MAPLE_RESPONSE_DATATRF)
         return;
 
-    respbuf = (uint32 *)resp->data;
+    respbuf = (uint32_t *)resp->data;
 
     if(respbuf[0] != MAPLE_FUNC_MICROPHONE)
         return;
@@ -237,7 +230,6 @@ static void sip_reply(maple_state_t *st, maple_frame_t *frm) {
         return;
 
     sip = (sip_state_t *)frm->dev->status;
-    frm->dev->status_valid = 1;
 
     if(sip->is_sampling && sip->callback) {
         /* Call the user's callback. */
@@ -246,32 +238,25 @@ static void sip_reply(maple_state_t *st, maple_frame_t *frm) {
 }
 
 static int sip_poll(maple_device_t *dev) {
-    sip_state_t *sip;
-    uint32 *send_buf;
-
-    sip = (sip_state_t *)dev->status;
+    sip_state_t *sip = (sip_state_t *)dev->status;
 
     /* Test to make sure that the particular mic is enabled */
     if(!sip->is_sampling || !sip->callback) {
-        dev->status_valid = 1;
         return 0;
     }
 
     /* Lock the frame, or die trying */
-    if(maple_frame_lock(&dev->frame) < 0)
+    if(maple_frame_trylock(&dev->frame) < 0)
         return 0;
 
     maple_frame_init(&dev->frame);
-    send_buf = (uint32 *)dev->frame.recv_buf;
-    send_buf[0] = MAPLE_FUNC_MICROPHONE;
-    send_buf[1] = SIP_SUBCOMMAND_GET_SAMPLES |
-                  (sip->amp_gain << 8);
+    dev->frame.send_buf[0] = MAPLE_FUNC_MICROPHONE;
+    dev->frame.send_buf[1] = SIP_SUBCOMMAND_GET_SAMPLES | (sip->amp_gain << 8);
     dev->frame.cmd = MAPLE_COMMAND_MICCONTROL;
     dev->frame.dst_port = dev->port;
     dev->frame.dst_unit = dev->unit;
     dev->frame.length = 2;
     dev->frame.callback = sip_reply;
-    dev->frame.send_buf = send_buf;
     maple_queue_frame(&dev->frame);
 
     return 0;
@@ -287,10 +272,9 @@ static int sip_attach(maple_driver_t *drv, maple_device_t *dev) {
     (void)drv;
 
     sip = (sip_state_t *)dev->status;
-    sip->is_sampling = 0;
+    sip->is_sampling = false;
     sip->amp_gain = SIP_DEFAULT_GAIN;
     sip->callback = NULL;
-    dev->status_valid = 1;
 
     return 0;
 }
@@ -301,8 +285,7 @@ static maple_driver_t sip_drv = {
     .name = "Sound Input Peripheral",
     .periodic = sip_periodic,
     .status_size = sizeof(sip_state_t),
-    .attach = sip_attach,
-    .detach = NULL
+    .attach = sip_attach
 };
 
 /* Add the SIP to the driver chain */

@@ -9,6 +9,7 @@
 #include <malloc.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <assert.h>
 #include <dc/maple.h>
@@ -29,7 +30,7 @@ static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm);
 /* Send a DEVINFO command for the given port/unit */
 static bool vbl_send_devinfo(maple_frame_t *frame, int p, int u) {
     /* Reserve access; if we don't get it, forget about it */
-    if(maple_frame_lock(frame) < 0)
+    if(maple_frame_trylock(frame) < 0)
         return false;
 
     /* Setup our autodetect frame to probe at a new device */
@@ -83,7 +84,7 @@ static void vbl_dev_probed(int p, int u) {
 }
 
 /* Check the sub-devices for a top-level port */
-static void vbl_chk_subdevs(maple_state_t *state, int p, uint8 newmask) {
+static void vbl_chk_subdevs(maple_state_t *state, int p, uint8_t newmask) {
     maple_device_t *dev = maple_enum_dev(p, 0);
     unsigned int u;
 
@@ -131,14 +132,8 @@ static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm) {
     if(resp->response == MAPLE_RESPONSE_NONE) {
         /* No device, or not functioning properly; check for removal */
         if(u == 0) {
-            if(dev) {
-                /* Top-level device -- detach all sub-devices as well */
-                for(u = 0; u < MAPLE_UNIT_COUNT; u++) {
-                    vbl_chk_disconnect(state, p, u);
-                }
-
-                dev->dev_mask = 0;
-            }
+            if(dev && dev->dev_mask == 0)
+                vbl_chk_disconnect(state, p, 0);
 
             state->scan_ready_mask |= 1 << p;
         }
@@ -209,7 +204,7 @@ static void vbl_autodetect(maple_state_t *state) {
 }
 
 /* Called on every VBL (~60fps) */
-void maple_vbl_irq_hnd(uint32 code, void *data) {
+void maple_vbl_irq_hnd(uint32_t code, void *data) {
     maple_state_t *state = data;
     maple_driver_t *drv;
 
@@ -240,11 +235,11 @@ void maple_vbl_irq_hnd(uint32 code, void *data) {
 /* Maple DMA completion handler */
 
 /* Called after a Maple DMA send / receive pair completes */
-void maple_dma_irq_hnd(uint32 code, void *data) {
+void maple_dma_irq_hnd(uint32_t code, void *data) {
     maple_state_t *state = data;
     maple_frame_t   *i, *tmp;
-    int8        resp;
-    uint32 gun;
+    int8_t        resp;
+    uint32_t gun;
 
     (void)code;
 
@@ -269,7 +264,7 @@ void maple_dma_irq_hnd(uint32 code, void *data) {
 
         /* Check to see if it got a proper response; we might
            have to resubmit the request */
-        resp = ((int8*)i->recv_buf)[0];
+        resp = ((int8_t *)i->recv_buf)[0];
 
         if(resp == MAPLE_RESPONSE_AGAIN) {
             i->state = MAPLE_FRAME_UNSENT;

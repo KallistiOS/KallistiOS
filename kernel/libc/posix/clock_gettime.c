@@ -6,7 +6,7 @@
 
 #include <kos/thread.h>
 
-#include <arch/timer.h>
+#include <kos/timer.h>
 #include <arch/rtc.h>
 
 #include <time.h>

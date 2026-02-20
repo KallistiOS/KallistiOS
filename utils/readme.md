@@ -6,7 +6,7 @@ This directory contains a number of PC-side tools used for a variety of purposes
 - [**bincnv**](bincnv/): An ELF to BIN conversion testing utility
 - [**blender**](blender/): A Python-based Blender export plugin
 - [**cmake**](cmake/): CMake configuration files to build KOS projects using CMake
-- [**dc-chain**](dc-chain/): Scripts to assist in building a Dreamcast cross-compiler toolchain for the SuperH 4 and ARM7DI processors
+- [**kos-chain**](kos-chain/): Scripts to assist in building compiler toolchains for KallistiOS
 - [**dcbumpgen**](dcbumpgen/): Generates PVR bumpmap textures from JPG and PNG files
 - [**elf2bin**](elf2bin/): Script to convert ELF files to BIN programs
 - [**genexports**](genexports/): Scripts used by KallistiOS's build system to generate symbol exports

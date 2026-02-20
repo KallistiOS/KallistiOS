@@ -200,8 +200,8 @@ disc of three, the **Device Information** field might be something like
 `"8B40 CD-ROM2/3  "`.
 
 Please note, commercial `IP.BIN` files (which aren't produced by **IP creator**)
-supports the `" GD-ROM"` type. Also, the **CRC** value doesn't need to be
-provided as it's computed automatically by the **IP creator** program.
+supports the `" GD-ROM"` and `" MIL CD"` type. Also, the **CRC** value doesn't
+need to be provided as it's computed automatically by the **IP creator** program.
 
 In clear, you just have to pass `CD-ROMx/y` to that field, where `x` is the disc
 number and `y` the total discs in the set. The default value is `CD-ROM1/1`.

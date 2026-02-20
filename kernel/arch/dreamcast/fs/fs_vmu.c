@@ -591,7 +591,7 @@ static size_t vmu_total(void * fd) {
 }
 
 /* read a directory handle */
-static dirent_t *vmu_readdir(void * fd) {
+static const dirent_t *vmu_readdir(void * fd) {
     vmu_dh_t    *dh;
     vmu_dir_t   *dir;
 

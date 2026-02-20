@@ -98,10 +98,9 @@
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
-#include <arch/irq.h>
 #include <dc/asic.h>
-#include <arch/spinlock.h>
 #include <kos/genwait.h>
+#include <kos/irq.h>
 #include <kos/regfield.h>
 #include <kos/worker_thread.h>
 

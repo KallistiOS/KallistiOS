@@ -5,21 +5,26 @@
    Copyright (C) 2015 Lawrence Sebald
  */
 
+#include <stdatomic.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
+
 #include <dc/maple.h>
-#include <arch/irq.h>
-#include <arch/memory.h>
+#include <dc/memory.h>
+
+#include <kos/irq.h>
+#include <kos/thread.h>
 
 /* Send all queued frames */
 void maple_queue_flush(void) {
-    int     cnt, amt;
-    uint32      *out, *last;
+    int             cnt, amt;
+    uint32_t        *out, *last;
     maple_frame_t   *i;
 
     cnt = amt = 0;
-    out = (uint32 *)maple_state.dma_buffer;
+    out = (uint32_t *)maple_state.dma_buffer;
     last = NULL;
 
     /* Make sure we end up with space for the gun enable command... */
@@ -45,7 +50,7 @@ void maple_queue_flush(void) {
         *out++ = i->length | (i->dst_port << 16);
 
         /* Second word: receive buffer physical address */
-        *out++ = ((uint32)i->recv_buf) & MEM_AREA_CACHE_MASK;
+        *out++ = ((uint32_t)i->recv_buf) & MEM_AREA_CACHE_MASK;
 
         /* Third word: command, addressing, packet length */
         *out++ = (i->cmd & 0xff) | (maple_addr(i->dst_port, i->dst_unit) << 8)
@@ -54,7 +59,6 @@ void maple_queue_flush(void) {
 
         /* Finally, parameter words, if any */
         if(i->length > 0) {
-            assert(i->send_buf != NULL);
             memcpy(out, i->send_buf, i->length * 4);
             out += i->length;
         }
@@ -87,7 +91,7 @@ void maple_queue_flush(void) {
 
 /* Submit a frame for queueing; see header for notes */
 int maple_queue_frame(maple_frame_t *frame) {
-    uint32 save = 0;
+    uint32_t save = 0;
 
     /* Don't add it twice */
     if(frame->queued)
@@ -114,7 +118,7 @@ int maple_queue_frame(maple_frame_t *frame) {
 
 /* Remove a used frame from the queue */
 int maple_queue_remove(maple_frame_t *frame) {
-    uint32 save = 0;
+    uint32_t save = 0;
 
     /* Don't remove twice */
     if(!frame->queued)
@@ -144,13 +148,13 @@ int maple_queue_remove(maple_frame_t *frame) {
    the old system I put it inside a big chunk of memory so it couldn't do
    that, and that seems to be the only working fix here too. *shrug* */
 void maple_frame_init(maple_frame_t *frame) {
-    uint32 buf_ptr;
+    uint32_t buf_ptr;
 
     assert(frame->state == MAPLE_FRAME_UNSENT);
     assert(!frame->queued);
 
     /* Setup the buffer pointer (64-byte align and force -> P2) */
-    buf_ptr = (uint32)frame->recv_buf_arr;
+    buf_ptr = (uint32_t)frame->recv_buf_arr;
 
     if(buf_ptr & 0x1f)
         buf_ptr = (buf_ptr & ~0x1f) + 0x20;
@@ -159,7 +163,7 @@ void maple_frame_init(maple_frame_t *frame) {
         buf_ptr += 512;
 
     buf_ptr = (buf_ptr & MEM_AREA_CACHE_MASK) | MEM_AREA_P2_BASE;
-    frame->recv_buf = (uint8*)buf_ptr;
+    frame->recv_buf = (uint8_t *)buf_ptr;
 
     /* Clear out the receive buffer */
     if(__is_defined(MAPLE_DMA_DEBUG))
@@ -173,30 +177,27 @@ void maple_frame_init(maple_frame_t *frame) {
     frame->length = 0;
     frame->queued = 0;
     frame->dev = NULL;
-    frame->send_buf = NULL;
+    frame->send_buf = (uint32_t *)frame->recv_buf;
     frame->callback = NULL;
 }
 
 /* Lock a frame so that someone else can't use it in the mean time; if the
    frame is already locked, an error will be returned. */
+int maple_frame_trylock(maple_frame_t *frame) {
+    int oldstate = MAPLE_FRAME_VACANT;
+
+    if(atomic_compare_exchange_strong(&frame->state, &oldstate,
+                                      MAPLE_FRAME_UNSENT))
+        return 0;
+
+    return -1;
+}
+
 int maple_frame_lock(maple_frame_t *frame) {
-    uint32  save = 0;
-    int rv;
+    while(maple_frame_trylock(frame) < 0)
+        thd_pass();
 
-    if(!irq_inside_int())
-        save = irq_disable();
-
-    if(frame->queued || frame->state != MAPLE_FRAME_VACANT)
-        rv = -1;
-    else {
-        frame->state = MAPLE_FRAME_UNSENT;
-        rv = 0;
-    }
-
-    if(!irq_inside_int())
-        irq_restore(save);
-
-    return rv;
+    return 0;
 }
 
 /* Unlock a frame */

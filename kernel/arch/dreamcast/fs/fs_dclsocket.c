@@ -29,6 +29,7 @@
 #include <errno.h>
 #include <dirent.h>
 
+#include <kos/irq.h>
 #include <kos/mutex.h>
 #include <kos/fs.h>
 #include <kos/net.h>
@@ -36,6 +37,7 @@
 #include <kos/dbglog.h>
 
 #include <dc/fs_dclsocket.h>
+#include <dc/dcload.h>
 
 #define DCLOAD_PORT 31313
 #define NAME "dcload-ip over KOS sockets"
@@ -71,7 +73,7 @@ static int escape = 0;
 static int retval = 0;
 static mutex_t mutex;
 static char *dcload_path = NULL;
-static uint8 pktbuf[1024 + sizeof(command_t)];
+static uint8_t pktbuf[1024 + sizeof(command_t)];
 
 static int dcls_socket = -1;
 
@@ -86,7 +88,7 @@ static void dcls_handle_lbin(command_t *cmd) {
 static void dcls_handle_pbin(command_t *cmd) {
     int index = (ntohl(cmd->address) - bin_info.addr) >> 10;
 
-    memcpy((uint8 *)ntohl(cmd->address), cmd->data, ntohl(cmd->size));
+    memcpy((uint8_t *)ntohl(cmd->address), cmd->data, ntohl(cmd->size));
     bin_info.map[index] = 1;
 }
 
@@ -117,13 +119,13 @@ static void dcls_handle_dbin(command_t *cmd) {
 }
 
 static void dcls_handle_sbin(command_t *cmd) {
-    uint32 left, size;
-    uint8 *ptr;
+    uint32_t left, size;
+    uint8_t *ptr;
     int count, i;
     command_t *resp = (command_t *)pktbuf;
 
     left = ntohl(cmd->size);
-    ptr = (uint8 *)ntohl(cmd->address);
+    ptr = (uint8_t *)ntohl(cmd->address);
     count = (left + 1023) / 1024;
 
     memcpy(resp->id, "SBIN", 4);
@@ -132,7 +134,7 @@ static void dcls_handle_sbin(command_t *cmd) {
         size = left > 1024 ? 1024 : left;
         left -= size;
 
-        resp->address = htonl((uint32)ptr);
+        resp->address = htonl((uint32_t)ptr);
         resp->size = htonl(size);
         memcpy(resp->data, ptr, size);
 
@@ -164,12 +166,14 @@ static void dcls_handle_vers(command_t *cmd) {
 }
 
 static void dcls_recv_loop(void) {
-    uint8 pkt[1514];
+    uint8_t pkt[1514];
     command_t *cmd = (command_t *)pkt;
 
     while(!escape) {
         /* If we're in an interrupt, this works differently.... */
         if(irq_inside_int()) {
+            if(!net_default_dev)
+                break;
             /* Since we can't count on an interrupt happening, handle it
                manually, and poll the default device... */
             net_default_dev->if_rx_poll(net_default_dev);
@@ -305,7 +309,7 @@ static int dcls_close(void *hnd) {
 }
 
 static ssize_t dcls_read(void *hnd, void *buf, size_t cnt) {
-    uint32 fd = (uint32) hnd;
+    uint32_t fd = (uint32_t) hnd;
     command_3int_t *cmd = (command_3int_t *)pktbuf;
 
     if(!fd)
@@ -318,8 +322,8 @@ static ssize_t dcls_read(void *hnd, void *buf, size_t cnt) {
 
     memcpy(cmd->id, "DC03", 4);
     cmd->value0 = htonl(fd);
-    cmd->value1 = htonl((uint32) buf);
-    cmd->value2 = htonl((uint32) cnt);
+    cmd->value1 = htonl((uint32_t) buf);
+    cmd->value2 = htonl((uint32_t) cnt);
 
     send(dcls_socket, cmd, sizeof(command_3int_t), 0);
     dcls_recv_loop();
@@ -330,7 +334,7 @@ static ssize_t dcls_read(void *hnd, void *buf, size_t cnt) {
 }
 
 static ssize_t dcls_write(void *hnd, const void *buf, size_t cnt) {
-    uint32 fd = (uint32) hnd;
+    uint32_t fd = (uint32_t) hnd;
     command_3int_t *cmd = (command_3int_t *)pktbuf;
 
     if(!fd)
@@ -343,7 +347,7 @@ static ssize_t dcls_write(void *hnd, const void *buf, size_t cnt) {
 
     memcpy(cmd->id, "DD02", 4);
     cmd->value0 = htonl(fd);
-    cmd->value1 = htonl((uint32) buf);
+    cmd->value1 = htonl((uint32_t) buf);
     cmd->value2 = htonl(cnt);
 
     send(dcls_socket, cmd, sizeof(command_3int_t), 0);
@@ -355,7 +359,7 @@ static ssize_t dcls_write(void *hnd, const void *buf, size_t cnt) {
 }
 
 static off_t dcls_seek(void *hnd, off_t offset, int whence) {
-    uint32 fd = (uint32)hnd;
+    uint32_t fd = (uint32_t)hnd;
     command_3int_t *command = (command_3int_t *)pktbuf;
 
     if(!hnd)
@@ -368,8 +372,8 @@ static off_t dcls_seek(void *hnd, off_t offset, int whence) {
 
     memcpy(command->id, "DC11", 4);
     command->value0 = htonl(fd);
-    command->value1 = htonl((uint32)offset);
-    command->value2 = htonl((uint32)whence);
+    command->value1 = htonl((uint32_t)offset);
+    command->value2 = htonl((uint32_t)whence);
 
     send(dcls_socket, command, sizeof(command_3int_t), 0);
     dcls_recv_loop();
@@ -394,10 +398,10 @@ static size_t dcls_total(void *hnd) {
 }
 
 static dirent_t their_dir;
-static dcload_dirent_t our_dir;
+static dirent_t our_dir;
 
-static dirent_t *dcls_readdir(void *hnd) {
-    uint32 fd = (uint32) hnd;
+static const dirent_t *dcls_readdir(void *hnd) {
+    uint32_t fd = (uint32_t) hnd;
     command_3int_t *cmd = (command_3int_t *)pktbuf;
 
     if(fd < 100) {
@@ -410,28 +414,28 @@ static dirent_t *dcls_readdir(void *hnd) {
 
     memcpy(cmd->id, "DC18", 4);
     cmd->value0 = htonl(fd);
-    cmd->value1 = htonl((uint32)(&our_dir));
-    cmd->value2 = htonl(sizeof(dcload_dirent_t));
+    cmd->value1 = htonl((uint32_t)(&our_dir));
+    cmd->value2 = htonl(sizeof(dirent_t));
 
     send(dcls_socket, cmd, sizeof(command_3int_t), 0);
 
     dcls_recv_loop();
 
     if(retval) {
-        char fn[strlen(dcload_path) + strlen(our_dir.d_name) + 1];
+        char fn[strlen(dcload_path) + strlen(our_dir.name) + 1];
         command_t *cmd2 = (command_t *)pktbuf;
         dcload_stat_t filestat;
 
-        strcpy(their_dir.name, our_dir.d_name);
+        strcpy(their_dir.name, our_dir.name);
         their_dir.size = 0;
         their_dir.time = 0;
         their_dir.attr = 0;
 
         strcpy(fn, dcload_path);
-        strcat(fn, our_dir.d_name);
+        strcat(fn, our_dir.name);
 
         memcpy(cmd2->id, "DC13", 4);
-        cmd2->address = htonl((uint32) &filestat);
+        cmd2->address = htonl((uint32_t) &filestat);
         cmd2->size = htonl(sizeof(dcload_stat_t));
         strcpy((char *)cmd2->data, fn);
 
@@ -511,7 +515,7 @@ static int dcls_unlink(vfs_handler_t *vfs, const char *fn) {
 static int dcls_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
                      int flag) {
     command_t *cmd = (command_t *)pktbuf;
-    dcload_stat_t filestat;
+    dcload_stat_t filestat = { 0 };
 
     (void)flag;
 
@@ -519,7 +523,7 @@ static int dcls_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
         return -1;
 
     memcpy(cmd->id, "DC13", 4);
-    cmd->address = htonl((uint32) &filestat);
+    cmd->address = htonl((uint32_t) &filestat);
     cmd->size = htonl(sizeof(dcload_stat_t));
     strcpy((char *)(cmd->data), fn);
 
@@ -564,7 +568,7 @@ static int dcls_fake_shutdown(void) {
     return 0;
 }
 
-static int dcls_writebuf(const uint8 *buf, int len, int xlat) {
+static int dcls_writebuf(const uint8_t *buf, int len, int xlat) {
     command_3int_t cmd;
 
     (void)xlat;
@@ -577,7 +581,7 @@ static int dcls_writebuf(const uint8 *buf, int len, int xlat) {
 
     memcpy(cmd.id, "DD02", 4);
     cmd.value0 = htonl(1);
-    cmd.value1 = htonl((uint32) buf);
+    cmd.value1 = htonl((uint32_t) buf);
     cmd.value2 = htonl(len);
 
     send(dcls_socket, &cmd, sizeof(cmd), 0);
@@ -658,16 +662,11 @@ static vfs_handler_t vh = {
 
 /* dbgio handler */
 dbgio_handler_t dbgio_dcls = {
-    "fs_dclsocket",
-    dcls_detected,
-    dcls_fake_init,
-    dcls_fake_shutdown,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    dcls_writebuf,
-    NULL
+    .name = "fs_dclsocket",
+    .detected = dcls_detected,
+    .init = dcls_fake_init,
+    .shutdown = dcls_fake_shutdown,
+    .write_buffer = dcls_writebuf
 };
 
 /* This function must be called prior to calling fs_dclsocket_init() */
@@ -686,17 +685,17 @@ void fs_dclsocket_init_console(void) {
     initted = 1;
 }
 
-uint32 _fs_dclsocket_get_ip(void) {
-    uint32 ip, port;
+uint32_t _fs_dclsocket_get_ip(void) {
+    uint32_t ip, port;
 
-    return dcloadsyscall(DCLOAD_GETHOSTINFO, &ip, &port);
+    return dcload_gethostinfo(&ip, &port);
 }
 
 int fs_dclsocket_init(void) {
     struct sockaddr_in addr;
     int err;
-    uint8 ipaddr[4], mac[6];
-    uint32 ip, port;
+    uint8_t ipaddr[4], mac[6];
+    uint32_t ip, port;
 
     /* Make sure we've initted the console */
     if(initted != 1)
@@ -707,7 +706,7 @@ int fs_dclsocket_init(void) {
         return -1;
 
     /* Determine where dctool is running, and set up our variables for that */
-    dcloadsyscall(DCLOAD_GETHOSTINFO, &ip, &port);
+    dcload_gethostinfo(&ip, &port);
 
     /* Put dc-tool's info into our ARP cache */
     net_ipv4_parse_address(ip, ipaddr);
@@ -738,7 +737,7 @@ int fs_dclsocket_init(void) {
     if(err == -1)
         goto error;
 
-    addr.sin_port = htons((uint16)port);
+    addr.sin_port = htons((uint16_t)port);
     addr.sin_addr.s_addr = htonl(ip);
 
     err = connect(dcls_socket, (struct sockaddr *)&addr,

@@ -209,7 +209,7 @@ static void sphere_frame(void) {
     plx_mat3d_pop();
 
     // Fake spending more time on vertices
-    //timer_spin_sleep(15);
+    //thd_sleep(15);
 
     //printf("%d\n", (uint32_t)(timer_ms_gettime64() - start));
 

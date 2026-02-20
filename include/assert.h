@@ -40,6 +40,15 @@ __BEGIN_DECLS
    error message. */
 /** \cond */
 #define _assert(e) assert(e)
+
+/* 1) C11-C17: _Static_assert is a reserved word, and <assert.h> adds a macro,
+               static_assert which maps to it.
+   2) C23+:    static_assert becomes a reserved word, _Static_assert becomes deprecated.
+   3) C++11+:  static_assert is a reserved word.
+*/
+#if __STDC_VERSION__ >= 201112L && __STDC_VERSION__ <= 201710L && !defined __cplusplus
+#   define static_assert _Static_assert
+#endif
 /** \endcond */
 
 #ifdef NDEBUG

@@ -60,7 +60,7 @@ typedef struct ptyhalf {
 
     int refcnt;             /* When this reaches zero, we close */
 
-    int id;
+    unsigned int id;
 
     mutex_t     mutex;
     condvar_t   ready_read, ready_write;
@@ -329,7 +329,7 @@ static void *pty_open_file(const char *fn, int mode) {
        handle fds of our own here thanks to the VFS layer, just reference
        counting so a pty can be opened by more than one process. */
     int     master;
-    int     id;
+    unsigned int id;
     ptyhalf_t   *ph;
     pipefd_t    *fdobj;
 
@@ -649,7 +649,7 @@ static size_t pty_total(void *h) {
 }
 
 /* Read a directory entry */
-static dirent_t *pty_readdir(void *h) {
+static const dirent_t *pty_readdir(void *h) {
     pipefd_t *fdobj = (pipefd_t *)h;
     dirlist_t *dl;
 
@@ -678,7 +678,7 @@ static dirent_t *pty_readdir(void *h) {
 static int pty_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
                     int flag) {
     ptyhalf_t *ph;
-    int id;
+    unsigned int id;
     int master;
     size_t len = strlen(path);
 

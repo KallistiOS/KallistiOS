@@ -8,13 +8,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <arch/memory.h>
+#include <dc/memory.h>
 #include <dc/maple.h>
 #include <dc/asic.h>
 #include <dc/vblank.h>
 #include <kos/thread.h>
 #include <kos/init.h>
 #include <kos/dbglog.h>
+#include <kos/genwait.h>
 
 #include <dc/maple/controller.h>
 #include <dc/maple/keyboard.h>
@@ -34,6 +35,55 @@
   Thanks to the LinuxDC guys for some ideas on how to better implement this.
 
 */
+
+static void maple_dev_reset_cb(maple_state_t *st, maple_frame_t *frame) {
+    (void)st;
+
+    /* Unlock the frame */
+    maple_frame_unlock(frame);
+
+    /* Wake up! */
+    genwait_wake_all(frame);
+}
+
+static void maple_dev_reset(maple_device_t *dev) {
+
+    assert(dev != NULL);
+
+    /* Lock the frame */
+    maple_frame_lock(&dev->frame);
+
+    /* Reset the frame */
+    maple_frame_init(&dev->frame);
+    dev->frame.cmd = MAPLE_COMMAND_RESET;
+    dev->frame.dst_port = dev->port;
+    dev->frame.dst_unit = dev->unit;
+    dev->frame.length = 0;
+    dev->frame.callback = maple_dev_reset_cb;
+    maple_queue_frame(&dev->frame);
+
+    /* Wait for the device to accept it */
+    if(genwait_wait(&dev->frame, "dev_reset", 500, NULL) < 0) {
+        if(dev->frame.state != MAPLE_FRAME_VACANT) {
+            /* Something went wrong.... */
+            dev->frame.state = MAPLE_FRAME_VACANT;
+            dbglog(DBG_ERROR, "dev_reset: timeout to unit %c%c\n",
+                   dev->port + 'A', dev->unit + '0');
+        }
+    }
+
+    dbglog(DBG_KDEBUG, "dev_reset: reset sent to unit %c%c\n",
+                   dev->port + 'A', dev->unit + '0');
+
+    return;
+}
+
+static void maple_dev_reset_all(void) {
+    MAPLE_FOREACH_BEGIN(MAPLE_FUNC_ANY, void, st)
+        maple_dev_reset(__dev);
+        (void)st;
+    MAPLE_FOREACH_END()
+}
 
 /* Initialize Hardware (call after driver inits) */
 static void maple_hw_init(void) {
@@ -64,10 +114,10 @@ static void maple_hw_init(void) {
         maple_state.dma_buffer = aligned_alloc(32, MAPLE_DMA_SIZE);
 
     assert_msg(maple_state.dma_buffer != NULL, "Couldn't allocate maple DMA buffer");
-    assert_msg((((uint32)maple_state.dma_buffer) & 0x1f) == 0, "DMA buffer was unaligned; bug in dlmalloc; please report!");
+    assert_msg((((uint32_t)maple_state.dma_buffer) & 0x1f) == 0, "DMA buffer was unaligned; bug in dlmalloc; please report!");
 
     /* Force it into the P2 area */
-    maple_state.dma_buffer = (uint8*)((((uint32)maple_state.dma_buffer) & MEM_AREA_CACHE_MASK) | MEM_AREA_P2_BASE);
+    maple_state.dma_buffer = (uint8_t *)((((uint32_t)maple_state.dma_buffer) & MEM_AREA_CACHE_MASK) | MEM_AREA_P2_BASE);
 
     if(__is_defined(MAPLE_DMA_DEBUG)) {
         maple_state.dma_buffer += 512;
@@ -75,7 +125,7 @@ static void maple_hw_init(void) {
     }
 
     maple_state.dma_in_progress = 0;
-    dbglog(DBG_INFO, "  DMA Buffer at %08lx\n", (uint32)maple_state.dma_buffer);
+    dbglog(DBG_INFO, "  DMA Buffer at %08lx\n", (uint32_t)maple_state.dma_buffer);
 
     /* Initialize other misc stuff */
     maple_state.vbl_cntr = maple_state.dma_cntr = 0;
@@ -100,8 +150,11 @@ static void maple_hw_init(void) {
 /* AGGG!! Someone save me from this idiotic voodoo bug fixing crap.. */
 void maple_hw_shutdown(void) {
     int p, u, cnt;
-    uint32  ptr;
+    uint32_t  ptr;
     maple_device_t *dev;
+
+    /* Reset all devices to leave them as we found them */
+    maple_dev_reset_all();
 
     /* Unhook interrupts */
     vblank_handler_remove(maple_state.vbl_handle);
@@ -118,7 +171,7 @@ void maple_hw_shutdown(void) {
 
     /* We must cast this back to P1 or cache issues will arise */
     if(maple_state.dma_buffer != NULL) {
-        ptr = (uint32)maple_state.dma_buffer;
+        ptr = (uint32_t)maple_state.dma_buffer;
 
         if(__is_defined(MAPLE_DMA_DEBUG))
             ptr -= 512;
@@ -202,10 +255,8 @@ KOS_INIT_FLAG_WEAK(purupuru_shutdown, true);
 KOS_INIT_FLAG_WEAK(sip_shutdown, true);
 KOS_INIT_FLAG_WEAK(dreameye_shutdown, true);
 
-/* Full shutdown: shutdown maple operations and known drivers */
+/* Full shutdown: shutdown each driver, then all hardware operations. */
 void maple_shutdown(void) {
-    maple_hw_shutdown();
-
     KOS_INIT_FLAG_CALL(dreameye_shutdown);
     KOS_INIT_FLAG_CALL(sip_shutdown);
     KOS_INIT_FLAG_CALL(purupuru_shutdown);
@@ -214,4 +265,6 @@ void maple_shutdown(void) {
     KOS_INIT_FLAG_CALL(kbd_shutdown);
     KOS_INIT_FLAG_CALL(cont_shutdown);
     KOS_INIT_FLAG_CALL(lightgun_shutdown);
+
+    maple_hw_shutdown();
 }

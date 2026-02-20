@@ -188,7 +188,7 @@ int main(int argc, char **argv)
             first_kbd_dev = maple_enum_type(0, MAPLE_FUNC_KEYBOARD);
             /* If it's *still* null, wait a bit and check again. */
             if(first_kbd_dev == NULL)   {
-                timer_spin_sleep(500);
+                thd_sleep(500);
                 no_kbd_loop++;
             }
             if( no_kbd_loop >= 25 ) return -1;

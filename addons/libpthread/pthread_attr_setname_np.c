@@ -6,14 +6,12 @@
 
 #include "pthread-internal.h"
 #include <pthread.h>
-#include <errno.h>
 #include <string.h>
+#include <kos/errno.h>
 #include <kos/thread.h>
 
 int pthread_attr_setname_np(pthread_attr_t *__RESTRICT attr,
                             const char *__RESTRICT name) {
-    int old, rv;
-
     if(!attr)
         return EINVAL;
 
@@ -23,13 +21,10 @@ int pthread_attr_setname_np(pthread_attr_t *__RESTRICT attr,
     if(strlen(name) >= KTHREAD_LABEL_SIZE)
         return EINVAL;
 
-    old = errno;
+    errno_save_scoped();
 
-    if(!(attr->attr.label = strdup(name))) {
-        rv = errno;
-        errno = old;
-        return rv;
-    }
+    if(!(attr->attr.label = strdup(name)))
+        return errno;
 
     return 0;
 }

@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <sys/reent.h>
 #include <sys/times.h>
-#include <arch/timer.h>
+#include <kos/timer.h>
 
 int _times_r(struct _reent *re, struct tms *tmsbuf) {
     (void)re;

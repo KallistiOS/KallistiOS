@@ -35,8 +35,6 @@
 #include <dc/maple/controller.h>
 #include <dc/maple/vmu.h>
 
-#include <arch/arch.h>
-
 #include <plx/font.h>
 
 #define VMU_DEFAULT_EFFECT 0x000065F0
@@ -70,8 +68,8 @@ int main(int argc, char *argv[]) {
     };
     char s[8][2] = { "", "", "", "", "", "", "", "" };
 
-    /* If the face buttons are all pressed, exit the app */
-    cont_btn_callback(0, CONT_RESET_BUTTONS, on_reset);
+    /* If start is pressed, exit the app */
+    cont_btn_callback(0, CONT_START, on_reset);
 
     pvr_init_defaults();
 
@@ -171,7 +169,7 @@ int main(int argc, char *argv[]) {
         w.y += 25.0f;
 
         plx_fcxt_setpos_pnt(cxt, &w);
-        plx_fcxt_draw(cxt, "Press A+B+X+Y+START to quit.");
+        plx_fcxt_draw(cxt, "Press START to quit.");
 
         plx_fcxt_end(cxt);
         pvr_scene_finish();

@@ -2,6 +2,7 @@
 
    kernel/debug/dbgio.c
    Copyright (C) 2004 Megan Potter
+   Copyright (C) 2026 Eric Fradella
 */
 
 #include <string.h>
@@ -10,7 +11,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <kos/dbgio.h>
-#include <arch/spinlock.h>
+#include <kos/spinlock.h>
 
 /*
   This module handles a swappable debug console. These functions used to be
@@ -21,21 +22,25 @@
   See the dbgio.h header for more info on exactly how this works.
 */
 
-// Our currently selected handler.
-static dbgio_handler_t * dbgio = NULL;
+/* A singly linked list of dbgio handlers */
+SLIST_HEAD(dbgio_handlers_list, dbgio_handler);
+struct dbgio_handlers_list dbgio_handlers;
+
+/* Our currently selected handler. */
+static dbgio_handler_t *dbgio = NULL;
 
 int dbgio_dev_select(const char * name) {
-    size_t i;
+    dbgio_handler_t *cur;
 
-    for(i = 0; i < dbgio_handler_cnt; i++) {
-        if(!strcmp(dbgio_handlers[i]->name, name)) {
+    SLIST_FOREACH(cur, &dbgio_handlers, entry) {
+        if(!strcmp(cur->name, name)) {
             /* Try to initialize the device, and if we can't then bail. */
-            if(dbgio_handlers[i]->init()) {
+            if(cur->init()) {
                 errno = ENODEV;
                 return -1;
             }
 
-            dbgio = dbgio_handlers[i];
+            dbgio = cur;
             return 0;
         }
     }
@@ -44,7 +49,7 @@ int dbgio_dev_select(const char * name) {
     return -1;
 }
 
-const char * dbgio_dev_get(void) {
+const char *dbgio_dev_get(void) {
     if(!dbgio)
         return NULL;
     else
@@ -59,31 +64,54 @@ void dbgio_disable(void) {
     dbgio_enabled = 0;
 }
 
-int dbgio_init(void) {
-    size_t i;
+int dbgio_add_handler(dbgio_handler_t *handler) {
+    SLIST_INSERT_HEAD(&dbgio_handlers, handler, entry);
+    return 0;
+}
 
-    // Look for a valid interface.
-    for(i = 0; i < dbgio_handler_cnt; i++) {
-        if(dbgio_handlers[i]->detected()) {
-            // Select this device.
-            dbgio = dbgio_handlers[i];
+int dbgio_remove_handler(dbgio_handler_t *handler) {
+    SLIST_REMOVE(&dbgio_handlers, handler, dbgio_handler, entry);
 
-            // Try to init it. If it fails, then move on to the
-            // next one anyway.
+    if(dbgio == handler) {
+        dbgio_dev_select_auto();
+    }
+
+    return 0;
+}
+
+int dbgio_dev_select_auto(void) {
+    dbgio_handler_t *cur;
+
+    /* Look for a valid interface. */
+    SLIST_FOREACH(cur, &dbgio_handlers, entry) {
+        if(cur->detected()) {
+            /* Select this device. */
+            dbgio = cur;
+
+            /* Try to init it. If it fails,
+               then move on to the next one anyway. */
             if(!dbgio->init()) {
-                // Worked.
-                dbgio_enable();
+                /* Worked. */
                 return 0;
             }
 
-            // Failed... nuke it and continue.
+            /* Failed... nuke it and continue. */
             dbgio = NULL;
         }
     }
 
-    // Didn't find an interface.
+    /* Didn't find an interface. */
     errno = ENODEV;
     return -1;
+}
+
+/* Override with a non-weak symbol if you want to
+   add or adjust your own debug I/O handler code */
+int __weak_symbol dbgio_init(void) {
+    dbgio_dev_select_auto();
+    dbgio_enable();
+
+    return 0;
 }
 
 int dbgio_set_irq_usage(int mode) {
@@ -158,7 +186,7 @@ int dbgio_write_str(const char *str) {
     return -1;
 }
 
-// Not re-entrant
+/* Not re-entrant */
 static char printf_buf[1024];
 static spinlock_t lock = SPINLOCK_INITIALIZER;
 
@@ -186,7 +214,7 @@ int dbgio_printf(const char *fmt, ...) {
 }
 
 
-// The null dbgio handler
+/* The null dbgio handler */
 static int null_detected(void) {
     return 1;
 }
@@ -217,7 +245,7 @@ static int null_write_buffer(const uint8_t *data, int len, int xlat) {
     (void)xlat;
     return len;
 }
-static int null_read_buffer(uint8_t * data, int len) {
+static int null_read_buffer(uint8_t *data, int len) {
     (void)data;
     (void)len;
     errno = EAGAIN;
@@ -225,14 +253,14 @@ static int null_read_buffer(uint8_t * data, int len) {
 }
 
 dbgio_handler_t dbgio_null = {
-    "null",
-    null_detected,
-    null_init,
-    null_shutdown,
-    null_set_irq_usage,
-    null_read,
-    null_write,
-    null_flush,
-    null_write_buffer,
-    null_read_buffer
+    .name = "null",
+    .detected = null_detected,
+    .init = null_init,
+    .shutdown = null_shutdown,
+    .set_irq_usage = null_set_irq_usage,
+    .read = null_read,
+    .write = null_write,
+    .flush = null_flush,
+    .write_buffer = null_write_buffer,
+    .read_buffer = null_read_buffer
 };

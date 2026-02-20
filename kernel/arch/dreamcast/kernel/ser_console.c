@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <arch/dbgio.h>
-#include <arch/irq.h>
+#include <kos/irq.h>
 #include <kos/thread.h>
 #include <kos/sem.h>
 

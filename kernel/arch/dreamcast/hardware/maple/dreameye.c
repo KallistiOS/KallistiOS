@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #include <kos/dbglog.h>
 #include <kos/genwait.h>
@@ -14,8 +15,8 @@
 #include <dc/maple/dreameye.h>
 
 static int dreameye_send_get_image(maple_device_t *dev,
-                                   dreameye_state_t *state, uint8 req,
-                                   uint8 cnt);
+                                   dreameye_state_t *state, uint8_t req,
+                                   uint8_t cnt);
 
 static dreameye_state_t *first_state = NULL;
 
@@ -24,8 +25,8 @@ static void dreameye_get_image_count_cb(maple_state_t *st, maple_frame_t *frame)
 
     dreameye_state_t *de;
     maple_response_t *resp;
-    uint32 *respbuf32;
-    uint8 *respbuf8;
+    uint32_t *respbuf32;
+    uint8_t *respbuf8;
 
     /* Unlock the frame */
     maple_frame_unlock(frame);
@@ -36,8 +37,8 @@ static void dreameye_get_image_count_cb(maple_state_t *st, maple_frame_t *frame)
     if(resp->response != MAPLE_RESPONSE_DATATRF)
         return;
 
-    respbuf32 = (uint32 *)resp->data;
-    respbuf8 = (uint8 *)resp->data;
+    respbuf32 = (uint32_t *)resp->data;
+    respbuf8 = (uint8_t *)resp->data;
 
     if(respbuf32[0] != MAPLE_FUNC_CAMERA)
         return;
@@ -54,7 +55,6 @@ static void dreameye_get_image_count_cb(maple_state_t *st, maple_frame_t *frame)
         de = (dreameye_state_t *)frame->dev->status;
         de->image_count = (respbuf8[10] << 8) | respbuf8[11];
         de->image_count_valid = 1;
-        frame->dev->status_valid = 1;
     }
 
     /* Wake up! */
@@ -66,8 +66,8 @@ static void dreameye_get_transfer_count_cb(maple_state_t *st, maple_frame_t *fra
 
     dreameye_state_t *de;
     maple_response_t *resp;
-    uint32 *respbuf32;
-    uint8 *respbuf8;
+    uint32_t *respbuf32;
+    uint8_t *respbuf8;
 
     /* Unlock the frame */
     maple_frame_unlock(frame);
@@ -78,8 +78,8 @@ static void dreameye_get_transfer_count_cb(maple_state_t *st, maple_frame_t *fra
     if(resp->response != MAPLE_RESPONSE_DATATRF)
         return;
 
-    respbuf32 = (uint32 *)resp->data;
-    respbuf8 = (uint8 *)resp->data;
+    respbuf32 = (uint32_t *)resp->data;
+    respbuf8 = (uint8_t *)resp->data;
 
     if(respbuf32[0] != MAPLE_FUNC_CAMERA)
         return;
@@ -102,28 +102,24 @@ static void dreameye_get_transfer_count_cb(maple_state_t *st, maple_frame_t *fra
 
 int dreameye_get_image_count(maple_device_t *dev, int block) {
     dreameye_state_t *de;
-    uint32 *send_buf;
-
     assert(dev != NULL);
 
     de = (dreameye_state_t *)dev->status;
     de->image_count_valid = 0;
 
     /* Lock the frame */
-    if(maple_frame_lock(&dev->frame) < 0)
+    if(maple_frame_trylock(&dev->frame) < 0)
         return MAPLE_EAGAIN;
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);
-    send_buf = (uint32 *)dev->frame.recv_buf;
-    send_buf[0] = MAPLE_FUNC_CAMERA;
-    send_buf[1] = DREAMEYE_GETCOND_NUM_IMAGES | (0x04 << 8);
+    dev->frame.send_buf[0] = MAPLE_FUNC_CAMERA;
+    dev->frame.send_buf[1] = DREAMEYE_GETCOND_NUM_IMAGES | (0x04 << 8);
     dev->frame.cmd = MAPLE_COMMAND_GETCOND;
     dev->frame.dst_port = dev->port;
     dev->frame.dst_unit = dev->unit;
     dev->frame.length = 2;
     dev->frame.callback = dreameye_get_image_count_cb;
-    dev->frame.send_buf = send_buf;
     maple_queue_frame(&dev->frame);
 
     if(block) {
@@ -148,8 +144,8 @@ static void dreameye_get_image_cb(maple_state_t *st, maple_frame_t *frame) {
 
     maple_device_t *dev;
     maple_response_t *resp;
-    uint32 *respbuf32;
-    uint8 *respbuf8;
+    uint32_t *respbuf32;
+    uint8_t *respbuf8;
     int len;
 
     /* Unlock the frame */
@@ -168,8 +164,8 @@ static void dreameye_get_image_cb(maple_state_t *st, maple_frame_t *frame) {
         return;
     }
 
-    respbuf32 = (uint32 *)resp->data;
-    respbuf8 = (uint8 *)resp->data;
+    respbuf32 = (uint32_t *)resp->data;
+    respbuf8 = (uint8_t *)resp->data;
 
     if(respbuf32[0] != MAPLE_FUNC_CAMERA) {
         first_state->img_transferring = -1;
@@ -195,51 +191,43 @@ static void dreameye_get_image_cb(maple_state_t *st, maple_frame_t *frame) {
 }
 
 static int dreameye_send_get_image(maple_device_t *dev,
-                                   dreameye_state_t *state, uint8 req,
-                                   uint8 cnt) {
-    uint32 *send_buf;
-
+                                   dreameye_state_t *state, uint8_t req,
+                                   uint8_t cnt) {
     /* Lock the frame */
-    if(maple_frame_lock(&dev->frame) < 0)
+    if(maple_frame_trylock(&dev->frame) < 0)
         return MAPLE_EAGAIN;
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);
-    send_buf = (uint32 *)dev->frame.recv_buf;
-    send_buf[0] = MAPLE_FUNC_CAMERA;
-    send_buf[1] = DREAMEYE_SUBCOMMAND_IMAGEREQ | (state->img_number << 8) |
-                  (req << 16) | (cnt << 24);
+    dev->frame.send_buf[0] = MAPLE_FUNC_CAMERA;
+    dev->frame.send_buf[1] = DREAMEYE_SUBCOMMAND_IMAGEREQ | (state->img_number << 8) |
+        (req << 16) | (cnt << 24);
     dev->frame.cmd = MAPLE_COMMAND_CAMCONTROL;
     dev->frame.dst_port = dev->port;
     dev->frame.dst_unit = dev->unit;
     dev->frame.length = 2;
     dev->frame.callback = dreameye_get_image_cb;
-    dev->frame.send_buf = send_buf;
     maple_queue_frame(&dev->frame);
 
     return MAPLE_EOK;
 }
 
-static int dreameye_get_transfer_count(maple_device_t *dev, uint8 img) {
-    uint32 *send_buf;
-
+static int dreameye_get_transfer_count(maple_device_t *dev, uint8_t img) {
     assert(dev != NULL);
 
     /* Lock the frame */
-    if(maple_frame_lock(&dev->frame) < 0)
+    if(maple_frame_trylock(&dev->frame) < 0)
         return MAPLE_EAGAIN;
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);
-    send_buf = (uint32 *)dev->frame.recv_buf;
-    send_buf[0] = MAPLE_FUNC_CAMERA;
-    send_buf[1] = DREAMEYE_GETCOND_TRANSFER_COUNT | (img << 8);
+    dev->frame.send_buf[0] = MAPLE_FUNC_CAMERA;
+    dev->frame.send_buf[1] = DREAMEYE_GETCOND_TRANSFER_COUNT | (img << 8);
     dev->frame.cmd = MAPLE_COMMAND_GETCOND;
     dev->frame.dst_port = dev->port;
     dev->frame.dst_unit = dev->unit;
     dev->frame.length = 2;
     dev->frame.callback = dreameye_get_transfer_count_cb;
-    dev->frame.send_buf = send_buf;
     maple_queue_frame(&dev->frame);
 
     /* Wait for the Dreameye to accept it */
@@ -257,7 +245,7 @@ static int dreameye_get_transfer_count(maple_device_t *dev, uint8 img) {
     return MAPLE_EOK;
 }
 
-int dreameye_get_image(maple_device_t *dev, uint8 image, uint8 **data,
+int dreameye_get_image(maple_device_t *dev, uint8_t image, uint8_t **data,
                        int *img_sz) {
     dreameye_state_t *de;
     maple_device_t *dev2, *dev3, *dev4, *dev5;
@@ -288,7 +276,7 @@ int dreameye_get_image(maple_device_t *dev, uint8 image, uint8 **data,
 
     /* Allocate space for the largest possible image that could fit in that
        number of transfers. */
-    de->img_buf = (uint8 *)malloc(512 * de->transfer_count);
+    de->img_buf = (uint8_t *)malloc(512 * de->transfer_count);
 
     if(!de->img_buf)
         goto fail;
@@ -337,14 +325,14 @@ static void dreameye_erase_cb(maple_state_t *st, maple_frame_t *frame) {
     (void)st;
 
     maple_response_t *resp;
-    uint8 *respbuf;
+    uint8_t *respbuf;
 
     /* Unlock the frame */
     maple_frame_unlock(frame);
 
     /* Make sure we got a valid response */
     resp = (maple_response_t *)frame->recv_buf;
-    respbuf = (uint8 *)resp->data;
+    respbuf = (uint8_t *)resp->data;
 
     if(resp->response == MAPLE_COMMAND_CAMCONTROL &&
             respbuf[4] == DREAMEYE_SUBCOMMAND_ERROR) {
@@ -358,29 +346,25 @@ static void dreameye_erase_cb(maple_state_t *st, maple_frame_t *frame) {
     genwait_wake_all(frame);
 }
 
-int dreameye_erase_image(maple_device_t *dev, uint8 image, int block) {
-    uint32 *send_buf;
-
+int dreameye_erase_image(maple_device_t *dev, uint8_t image, int block) {
     assert(dev != NULL);
 
     if(image < 0x02 || (image > 0x21 && image != 0xFF))
         return MAPLE_EINVALID;
 
     /* Lock the frame */
-    if(maple_frame_lock(&dev->frame) < 0)
+    if(maple_frame_trylock(&dev->frame) < 0)
         return MAPLE_EAGAIN;
 
     /* Reset the frame */
     maple_frame_init(&dev->frame);
-    send_buf = (uint32 *)dev->frame.recv_buf;
-    send_buf[0] = MAPLE_FUNC_CAMERA;
-    send_buf[1] = DREAMEYE_SUBCOMMAND_ERASE | (0x80 << 8) | (image << 16);
+    dev->frame.send_buf[0] = MAPLE_FUNC_CAMERA;
+    dev->frame.send_buf[1] = DREAMEYE_SUBCOMMAND_ERASE | (0x80 << 8) | (image << 16);
     dev->frame.cmd = MAPLE_COMMAND_CAMCONTROL;
     dev->frame.dst_port = dev->port;
     dev->frame.dst_unit = dev->unit;
     dev->frame.length = 2;
     dev->frame.callback = dreameye_erase_cb;
-    dev->frame.send_buf = send_buf;
     maple_queue_frame(&dev->frame);
 
     if(block) {
@@ -399,43 +383,11 @@ int dreameye_erase_image(maple_device_t *dev, uint8 image, int block) {
     return MAPLE_EOK;
 }
 
-static int dreameye_poll(maple_device_t *dev) {
-    /* For right now, we don't have anything particularly pressing to do here,
-       so punt. */
-    dev->status_valid = 1;
-    return 0;
-}
-
-static void dreameye_periodic(maple_driver_t *drv) {
-    maple_driver_foreach(drv, dreameye_poll);
-}
-
-static int dreameye_attach(maple_driver_t *drv, maple_device_t *dev) {
-    dreameye_state_t *de;
-
-    (void)drv;
-
-    de = (dreameye_state_t *)dev->status;
-    de->image_count = 0;
-    de->image_count_valid = 0;
-    de->transfer_count = 0;
-    de->img_transferring = 0;
-    de->img_buf = NULL;
-    de->img_size = 0;
-    de->img_number = 0;
-
-    dev->status_valid = 1;
-    return 0;
-}
-
 /* Device Driver Struct */
 static maple_driver_t dreameye_drv = {
     .functions = MAPLE_FUNC_CAMERA,
     .name = "Dreameye (Camera)",
-    .periodic = dreameye_periodic,
-    .status_size = sizeof(dreameye_state_t),
-    .attach = dreameye_attach,
-    .detach = NULL
+    .status_size = sizeof(dreameye_state_t)
 };
 
 /* Add the Dreameye to the driver chain */

@@ -7,5 +7,7 @@
 #include <dc/maple.h>
 
 /* Global state info */
-maple_state_t   maple_state;
+maple_state_t   maple_state = {
+    .driver_list = LIST_HEAD_INITIALIZER(maple_driver_list)
+};
 

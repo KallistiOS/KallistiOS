@@ -16,11 +16,13 @@
 #include <kos/genwait.h>
 #include <kos/dbglog.h>
 
-#include <arch/irq.h>
-#include <arch/timer.h>
+#include <kos/irq.h>
+#include <kos/timer.h>
 
 /* Thread pseudo-ptr representing an active IRQ context. */
 #define IRQ_THREAD  ((kthread_t *)0xFFFFFFFF)
+
+static int mutex_trylock_thd(mutex_t *m, kthread_t *thd);
 
 int mutex_init(mutex_t *m, unsigned int mtype) {
     /* Check the type */
@@ -57,42 +59,26 @@ int mutex_destroy(mutex_t *m) {
     return 0;
 }
 
-int mutex_lock(mutex_t *m) {
-    return mutex_lock_timed(m, 0);
-}
-
 int mutex_lock_irqsafe(mutex_t *m) {
     if(irq_inside_int())
-        return mutex_trylock(m);
+        return mutex_trylock_thd(m, IRQ_THREAD);
     else
         return mutex_lock(m);
 }
 
-int mutex_lock_timed(mutex_t *m, int timeout) {
+int mutex_lock_timed(mutex_t *m, unsigned int timeout) {
     uint64_t deadline = 0;
     int rv = 0;
 
-    if((rv = irq_inside_int())) {
-        dbglog(DBG_WARNING, "%s: called inside an interrupt with code: "
-               "%x evt: %.4x\n",
-               timeout ? "mutex_lock_timed" : "mutex_lock",
-               ((rv >> 16) & 0xf), (rv & 0xffff));
-        errno = EPERM;
-        return -1;
-    }
+    assert(!irq_inside_int()); /* Only usable outside IRQ handlers */
 
-    if(timeout < 0) {
-        errno = EINVAL;
-        return -1;
-    }
-
-    rv = mutex_trylock(m);
+    rv = mutex_trylock_thd(m, thd_current);
     if(!rv || errno != EBUSY)
         return rv;
 
     irq_disable_scoped();
 
-    if(!m->holder) {
+    if(__predict_false(!m->holder)) {
         m->count = 1;
         m->holder = thd_current;
         rv = 0;
@@ -122,7 +108,7 @@ int mutex_lock_timed(mutex_t *m, int timeout) {
                 break;
             }
 
-            if(!m->holder) {
+            if(__predict_true(!m->holder)) {
                 m->holder = thd_current;
                 m->count = 1;
                 break;
@@ -130,7 +116,7 @@ int mutex_lock_timed(mutex_t *m, int timeout) {
 
             if(timeout) {
                 timeout = deadline - timer_ms_gettime64();
-                if(timeout <= 0) {
+                if((int)timeout <= 0) {
                     errno = ETIMEDOUT;
                     rv = -1;
                     break;
@@ -147,78 +133,42 @@ int __pure mutex_is_locked(const mutex_t *m) {
 }
 
 int mutex_trylock(mutex_t *m) {
-    kthread_t *thd = thd_current, *thd_none = NULL;
-
-    assert(m->type <= MUTEX_TYPE_RECURSIVE);
+    kthread_t *thd = thd_current;
 
     /* If we're inside of an interrupt, pick a special value for the thread that
        would otherwise be impossible... */
-    if(irq_inside_int())
+    if(__predict_false(irq_inside_int()))
         thd = IRQ_THREAD;
 
-    if(m->holder == thd) {
-        if(m->type == MUTEX_TYPE_ERRORCHECK) {
-            errno = EDEADLK;
+    return mutex_trylock_thd(m, thd);
+}
+
+static int mutex_trylock_thd(mutex_t *m, kthread_t *thd) {
+    kthread_t *previous_thd = NULL;
+
+    assert(m->type <= MUTEX_TYPE_RECURSIVE);
+
+    if(atomic_compare_exchange_strong(&m->holder, &previous_thd, thd)) {
+        m->count = 1;
+        return 0;
+    }
+
+    if(__predict_false(previous_thd == thd)) {
+        assert(m->type == MUTEX_TYPE_RECURSIVE);
+
+        /* Recursive mutex, we can just increment normally. */
+        if(__predict_false(m->count == INT_MAX)) {
+            errno = EAGAIN;
             return -1;
         }
 
-        if(m->type == MUTEX_TYPE_RECURSIVE) {
-            if(m->count == INT_MAX) {
-                errno = EAGAIN;
-                return -1;
-            }
-
-            ++m->count;
-            return 0;
-        }
-    }
-
-    if(atomic_compare_exchange_strong(&m->holder, &thd_none, thd)) {
-        m->count = 1;
+        ++m->count;
         return 0;
     }
 
     /* We did not get the lock */
     errno = EBUSY;
     return -1;
-}
-
-static int __nonnull_all mutex_unlock_common(mutex_t *m, kthread_t *thd) {
-    switch(m->type) {
-        case MUTEX_TYPE_ERRORCHECK:
-            if(m->holder != thd) {
-                errno = EPERM;
-                return -1;
-            }
-            __fallthrough;
-        default:
-        case MUTEX_TYPE_NORMAL:
-        case MUTEX_TYPE_OLDNORMAL:
-            m->count = 0;
-            m->holder = NULL;
-            break;
-
-        case MUTEX_TYPE_RECURSIVE:
-            if(m->holder != thd) {
-                errno = EPERM;
-                return -1;
-            }
-
-            if(--m->count)
-                return 0;
-
-            m->holder = NULL;
-            break;
-    }
-
-    /* Restore real priority in case we were dynamically boosted. */
-    if (thd != IRQ_THREAD)
-        thd->prio = thd->real_prio;
-
-    /* If we need to wake up a thread, do so. */
-    genwait_wake_one(m);
-
-    return 0;
 }
 
 int mutex_unlock(mutex_t *m) {
@@ -228,20 +178,21 @@ int mutex_unlock(mutex_t *m) {
 
     /* If we're inside of an interrupt, use the special value for the thread
        from mutex_trylock(). */
-    if(irq_inside_int())
+    if(__predict_false(irq_inside_int()))
         thd = IRQ_THREAD;
 
-    return mutex_unlock_common(m, thd);
-}
+    assert(m->holder == thd && m->count > 0);
 
-int mutex_unlock_as_thread(mutex_t *m, kthread_t *thd) {
-    assert(m->type < MUTEX_TYPE_RECURSIVE); /* Unsafe with recursive mutexes */
+    if (__predict_true(!--m->count)) {
+        m->holder = NULL;
 
-    /* Make sure we're in an IRQ handler */
-    if(!irq_inside_int()) {
-        errno = EACCES;
-        return -1;
+        /* Restore real priority in case we were dynamically boosted. */
+        if (__predict_true(thd != IRQ_THREAD))
+            thd->prio = thd->real_prio;
+
+        /* If we need to wake up a thread, do so. */
+        genwait_wake_one(m);
     }
 
-    return mutex_unlock_common(m, thd);
+    return 0;
 }

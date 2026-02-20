@@ -2,6 +2,7 @@
 
    controller.c
    Copyright (C) 2002 Megan Potter
+   Copyright (C) 2024 Donald Haase
    Copyright (C) 2025 Falco Girgis
 
  */
@@ -74,21 +75,20 @@ int __pure cont_has_capabilities(const maple_device_t *cont, uint32_t capabiliti
 static void cont_btn_callback_del(cont_callback_params_t *params) {
     cont_callback_params_t *c, *n;
 
-    mutex_lock(&btn_cbs_mtx);
+    mutex_lock_scoped(&btn_cbs_mtx);
 
     TAILQ_FOREACH_SAFE(c, &btn_cbs, listent, n) {
         if((params == NULL) || ((params->addr == c->addr) &&
             (params->btns == c->btns))) {
 
-                if((params == NULL) || (params->cb == NULL) ||
-                    (params->cb == c->cb)) {
-                    TAILQ_REMOVE(&btn_cbs, c, listent);
-                    thd_worker_destroy(c->worker);
-                    free(c);
-                }
+            if((params == NULL) || (params->cb == NULL) ||
+                (params->cb == c->cb)) {
+                TAILQ_REMOVE(&btn_cbs, c, listent);
+                thd_worker_destroy(c->worker);
+                free(c);
             }
+        }
     }
-    mutex_unlock(&btn_cbs_mtx);
 }
 
 static void cont_btn_cb_thread(void *d) {
@@ -129,14 +129,12 @@ int cont_btn_callback(uint8_t addr, uint32_t btns, cont_btn_callback_t cb) {
         return -1;
     }
 
-    mutex_lock(&btn_cbs_mtx);
+    mutex_lock_scoped(&btn_cbs_mtx);
 
     if(addr)
         TAILQ_INSERT_HEAD(&btn_cbs, params, listent);
     else
         TAILQ_INSERT_TAIL(&btn_cbs, params, listent);
-
-    mutex_unlock(&btn_cbs_mtx);
 
     return 0;
 }
@@ -181,7 +179,6 @@ static void cont_reply(maple_state_t *st, maple_frame_t *frm) {
     cooked->joyy = ((int)raw->joyy) - 128;
     cooked->joy2x = ((int)raw->joy2x) - 128;
     cooked->joy2y = ((int)raw->joy2y) - 128;
-    frm->dev->status_valid = 1;
 
     /* If someone is in the middle of modifying the list, don't process callbacks */
     if(mutex_trylock(&btn_cbs_mtx))
@@ -204,20 +201,16 @@ static void cont_reply(maple_state_t *st, maple_frame_t *frm) {
 }
 
 static int cont_poll(maple_device_t *dev) {
-    uint32_t *send_buf;
-
-    if(maple_frame_lock(&dev->frame) < 0)
+    if(maple_frame_trylock(&dev->frame) < 0)
         return 0;
 
     maple_frame_init(&dev->frame);
-    send_buf = (uint32_t *)dev->frame.recv_buf;
-    send_buf[0] = MAPLE_FUNC_CONTROLLER;
+    dev->frame.send_buf[0] = MAPLE_FUNC_CONTROLLER;
     dev->frame.cmd = MAPLE_COMMAND_GETCOND;
     dev->frame.dst_port = dev->port;
     dev->frame.dst_unit = dev->unit;
     dev->frame.length = 1;
     dev->frame.callback = cont_reply;
-    dev->frame.send_buf = send_buf;
     maple_queue_frame(&dev->frame);
 
     return 0;
@@ -232,9 +225,7 @@ static maple_driver_t controller_drv = {
     .functions = MAPLE_FUNC_CONTROLLER,
     .name = "Controller Driver",
     .periodic = cont_periodic,
-    .status_size = sizeof(cont_state_t),
-    .attach = NULL,
-    .detach = NULL
+    .status_size = sizeof(cont_state_t)
 };
 
 /* Add the controller to the driver chain */

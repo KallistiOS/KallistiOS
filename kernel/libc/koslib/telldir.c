@@ -6,7 +6,7 @@
 */
 
 #include <kos/dbglog.h>
-#include <sys/dirent.h>
+#include <dirent.h>
 #include <errno.h>
 
 off_t telldir(DIR *dir) {

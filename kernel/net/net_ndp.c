@@ -12,7 +12,7 @@
 #include <netinet/in.h>
 #include <sys/queue.h>
 #include <kos/net.h>
-#include <arch/timer.h>
+#include <kos/timer.h>
 
 #include "net_ipv6.h"
 #include "net_icmp6.h"

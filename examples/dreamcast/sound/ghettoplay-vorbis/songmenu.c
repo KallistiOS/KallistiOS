@@ -136,7 +136,7 @@ static void *load_song_list(void * p) {
     }
 
     {
-        dirent_t *de;
+        const dirent_t *de;
         num_entries = 0;
 
         if(strcmp(curdir, "/")) {

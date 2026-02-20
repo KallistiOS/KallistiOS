@@ -307,7 +307,6 @@ int straight_copy(FILE *in, const char *outfile) {
 
     if(fread(buffer, filesize, 1, in) != 1) {
         fprintf(stderr, "Cannot read file.\n");
-        free(buffer);
         result = -1;
         goto cleanup;
     }
@@ -372,7 +371,8 @@ int wav2adpcm(const char *infile, const char *outfile) {
     }
 
     pcmsize = wavhdr_chunk.datasize;
-    adpcmsize = pcmsize / 4;
+    /* round size up to next multiple of 4 before division */
+    adpcmsize = ((pcmsize + 3) & ~3) / 4;
 
     pcmbuf = malloc(pcmsize);
     adpcmbuf = malloc(adpcmsize);

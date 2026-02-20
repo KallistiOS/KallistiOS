@@ -59,6 +59,9 @@ __BEGIN_DECLS
 /* Enable debugging in fs_vmu. */
 /* #define VMUFS_DEBUG 1 */
 
+/* Enable verbose debugging in elf loading. */
+/* #define ELF_DBG_VERBOSE 1 */
+
 /* Enable to allow extra debugging checks in the malloc code itself. This
    sometimes catches corrupted blocks. Recommended during debugging phases. */
 /* #define MALLOC_DEBUG 1 */

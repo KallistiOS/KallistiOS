@@ -7,13 +7,29 @@
 #include <dc/maple.h>
 #include <dc/maple/mouse.h>
 #include <string.h>
+#include <stdint.h>
 #include <assert.h>
+
+/* Mouse center value in the raw condition structure. */
+#define MOUSE_DELTA_CENTER      0x200
+
+/* Raw controller condition structure */
+typedef struct {
+    uint16_t    buttons;
+    uint16_t    dummy1;
+    int16_t     dx;
+    int16_t     dy;
+    int16_t     dz;
+    uint16_t    dummy2;
+    uint32_t    dummy3;
+    uint32_t    dummy4;
+} mouse_cond_t;
 
 static void mouse_reply(maple_state_t *st, maple_frame_t *frm) {
     (void)st;
 
     maple_response_t    *resp;
-    uint32          *respbuf;
+    uint32_t            *respbuf;
     mouse_cond_t        *raw;
     mouse_state_t       *cooked;
 
@@ -26,7 +42,7 @@ static void mouse_reply(maple_state_t *st, maple_frame_t *frm) {
     if(resp->response != MAPLE_RESPONSE_DATATRF)
         return;
 
-    respbuf = (uint32 *)resp->data;
+    respbuf = (uint32_t *)resp->data;
 
     if(respbuf[0] != MAPLE_FUNC_MOUSE)
         return;
@@ -44,24 +60,19 @@ static void mouse_reply(maple_state_t *st, maple_frame_t *frm) {
     cooked->dx = raw->dx - MOUSE_DELTA_CENTER;
     cooked->dy = raw->dy - MOUSE_DELTA_CENTER;
     cooked->dz = raw->dz - MOUSE_DELTA_CENTER;
-    frm->dev->status_valid = 1;
 }
 
 static int mouse_poll(maple_device_t *dev) {
-    uint32 * send_buf;
-
-    if(maple_frame_lock(&dev->frame) < 0)
+    if(maple_frame_trylock(&dev->frame) < 0)
         return 0;
 
     maple_frame_init(&dev->frame);
-    send_buf = (uint32 *)dev->frame.recv_buf;
-    send_buf[0] = MAPLE_FUNC_MOUSE;
+    dev->frame.send_buf[0] = MAPLE_FUNC_MOUSE;
     dev->frame.cmd = MAPLE_COMMAND_GETCOND;
     dev->frame.dst_port = dev->port;
     dev->frame.dst_unit = dev->unit;
     dev->frame.length = 1;
     dev->frame.callback = mouse_reply;
-    dev->frame.send_buf = send_buf;
     maple_queue_frame(&dev->frame);
 
     return 0;
@@ -76,9 +87,7 @@ static maple_driver_t mouse_drv = {
     .functions = MAPLE_FUNC_MOUSE,
     .name = "Mouse Driver",
     .periodic = mouse_periodic,
-    .status_size = sizeof(mouse_state_t),
-    .attach = NULL,
-    .detach = NULL
+    .status_size = sizeof(mouse_state_t)
 };
 
 /* Add the mouse to the driver chain */

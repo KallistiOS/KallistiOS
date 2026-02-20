@@ -1,6 +1,6 @@
 TARGET = makeip
 
-VERSION = 2.0.0
+VERSION = 2.0.1
 
 OBJECTS = utils.o vector.o crc.o mr.o field.o ip.o main.o
 

@@ -94,7 +94,6 @@ static void do_frame(void) {
     int i;
     static int oldseed = 0xdeadbeef;
     int seed = oldseed;
-    pvr_dr_state_t dr_state;
 
     vid_border_color(0, 0, 0);
     pvr_wait_ready();
@@ -103,12 +102,10 @@ static void do_frame(void) {
     pvr_list_begin(PVR_LIST_OP_POLY);
     pvr_prim(&hdr, sizeof(hdr));
 
-    pvr_dr_init(&dr_state);
-
     get_vert(&seed, &x, &y, &col);
     z = getnum(&seed, 128) + 1;
 
-    vert = pvr_dr_target(dr_state);
+    vert = pvr_dr_target();
     vert->flags = PVR_CMD_VERTEX;
     vert->x = x;
     vert->y = y;
@@ -119,7 +116,7 @@ static void do_frame(void) {
     for(i = 0; i < polycnt; i++) {
         get_vert(&seed, &x, &y, &col);
 
-        vert = pvr_dr_target(dr_state);
+        vert = pvr_dr_target();
         vert->flags = PVR_CMD_VERTEX;
         vert->x = x;
         vert->y = y;
@@ -130,7 +127,7 @@ static void do_frame(void) {
 
     get_vert(&seed, &x, &y, &col);
 
-    vert = pvr_dr_target(dr_state);
+    vert = pvr_dr_target();
     vert->flags = PVR_CMD_VERTEX_EOL;
     vert->x = x;
     vert->y = y;

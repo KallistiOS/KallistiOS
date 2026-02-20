@@ -15,7 +15,6 @@
 #include <sys/queue.h>
 #include <kos/net.h>
 #include <kos/mutex.h>
-#include <arch/irq.h>
 
 typedef struct mc_entry {
     LIST_ENTRY(mc_entry)    entry;

@@ -5,6 +5,13 @@ ARGS=$*
 USEMODE=0
 for i in $ARGS; do
 	case "${i}" in
+		@*)
+			ARGS="${ARGS} $(cat ${i#*@})"
+		;;
+	esac
+done
+for i in $ARGS; do
+	case "${i}" in
 		-o)
 			if [ $USEMODE != 2 -a $USEMODE != 3 ]; then
 				# Link
@@ -19,6 +26,11 @@ for i in $ARGS; do
 			# Used in autoconf... we really probably need
 			# a better way to do this. (scan for any .c?)
 			USEMODE=3
+		;;
+		-dumpversion)
+			# Used for our gcc version test which expects
+			# *just* the output and no verbose output.
+			USEMODE=4
 		;;
 		*)
 		;;
@@ -56,5 +68,10 @@ case $USEMODE in
 			echo ${KOS_CC} ${KOS_CFLAGS} "$@"
 		fi
 		exec ${KOS_CC} ${KOS_CFLAGS} "$@"
+	;;
+
+	4)
+		# -dumpversion mode. Ignore verbose.
+		exec ${KOS_CC} "$@"
 	;;
 esac

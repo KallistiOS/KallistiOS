@@ -14,22 +14,23 @@
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>
 #include <kos/init.h>
+#include <kos/irq.h>
+#include <kos/linker.h>
+#include <kos/mm.h>
 #include <kos/platform.h>
+#include <kos/timer.h>
 #include <arch/arch.h>
-#include <arch/irq.h>
-#include <arch/memory.h>
 #include <arch/rtc.h>
-#include <arch/timer.h>
+#include <dc/memory.h>
 #include <dc/perfctr.h>
 #include <dc/ubc.h>
 #include <dc/pvr.h>
 #include <dc/vmufs.h>
 #include <dc/syscalls.h>
 #include <dc/wdt.h>
+#include <dc/dcload.h>
 
 #include "initall_hdrs.h"
-
-extern uintptr_t _bss_start, end;
 
 /* ctor/dtor stuff from libgcc. */
 #if __GNUC__ == 4
@@ -42,20 +43,13 @@ extern void _fini(void);
 extern void __verify_newlib_patch();
 extern void dma_init(void);
 
+/* Jump back to the bootloader. From startup.S */
+void arch_real_exit(int ret_code) __noreturn;
+
 void (*__kos_init_early_fn)(void) __attribute__((weak,section(".data"))) = NULL;
 
 int main(int argc, char **argv);
 uint32 _fs_dclsocket_get_ip(void);
-
-/* We have to put this here so we can include plat-specific devices */
-dbgio_handler_t * dbgio_handlers[] = {
-    &dbgio_dcload,
-    &dbgio_dcls,
-    &dbgio_scif,
-    &dbgio_null,
-    &dbgio_fb
-};
-const size_t dbgio_handler_cnt = __array_size(dbgio_handlers);
 
 void arch_init_net_dcload_ip(void) {
     union {
@@ -128,7 +122,7 @@ KOS_INIT_FLAG_WEAK(fs_iso9660_init, true);
 KOS_INIT_FLAG_WEAK(fs_iso9660_shutdown, true);
 
 void dcload_init(void) {
-    if (*DCLOADMAGICADDR == DCLOADMAGICVALUE) {
+    if (syscall_dcload_detected()) {
         dbglog(DBG_INFO, "dc-load console support enabled\n");
         fs_dcload_init();
     }
@@ -138,8 +132,10 @@ KOS_INIT_FLAG_WEAK(dcload_init, true);
 KOS_INIT_FLAG_WEAK(fs_dcload_init_console, true);
 KOS_INIT_FLAG_WEAK(fs_dcload_shutdown, true);
 KOS_INIT_FLAG_WEAK(fs_dclsocket_shutdown, true);
+KOS_INIT_FLAG_WEAK(fs_init, true);
 KOS_INIT_FLAG_WEAK(fs_dev_init, true);
 KOS_INIT_FLAG_WEAK(fs_dev_shutdown, true);
+KOS_INIT_FLAG_WEAK(fs_shutdown, true);
 KOS_INIT_FLAG_WEAK(fs_null_init, true);
 KOS_INIT_FLAG_WEAK(fs_null_shutdown, true);
 KOS_INIT_FLAG_WEAK(fs_pty_init, true);
@@ -171,6 +167,13 @@ int  __weak_symbol arch_auto_init(void) {
     /* Init SCIF for debug stuff (maybe) */
     scif_init();
 
+    /* Add dbgio handlers for our arch, from last to first in precedence */
+    dbgio_add_handler(&dbgio_fb);
+    dbgio_add_handler(&dbgio_null);
+    dbgio_add_handler(&dbgio_scif);
+    dbgio_add_handler(&dbgio_dcls);
+    dbgio_add_handler(&dbgio_dcload);
+
     /* Init debug IO */
     dbgio_init();
 
@@ -191,16 +194,13 @@ int  __weak_symbol arch_auto_init(void) {
 
     /* Initialize our timer */
     perf_cntr_timer_enable();
-    timer_ms_enable();
     rtc_init();
 
     thd_init();
 
     nmmgr_init();
 
-    if(__kos_init_flags & INIT_FS_ALL)
-        fs_init();                        /* VFS */
-
+    KOS_INIT_FLAG_CALL(fs_init);          /* VFS */
     KOS_INIT_FLAG_CALL(fs_dev_init);      /* /dev */
     KOS_INIT_FLAG_CALL(fs_null_init);     /* /dev/null */
     KOS_INIT_FLAG_CALL(fs_pty_init);      /* Pty */
@@ -267,8 +267,7 @@ void  __weak_symbol arch_auto_shutdown(void) {
 
     /* As a workaround, shut down the base FS before fs_pty
        to avoid triggering bugs. */
-    if(__kos_init_flags & INIT_FS_ALL)
-        fs_shutdown();
+    KOS_INIT_FLAG_CALL(fs_shutdown);
 
     KOS_INIT_FLAG_CALL(fs_pty_shutdown);
 
@@ -278,7 +277,6 @@ void  __weak_symbol arch_auto_shutdown(void) {
 
 /* This is the entry point inside the C program */
 void arch_main(void) {
-    uint8 *bss_start = (uint8 *)(&_bss_start);
     int rv;
 
     dma_init();
@@ -294,7 +292,7 @@ void arch_main(void) {
         __kos_init_early_fn();
 
     /* Clear out the BSS area */
-    memset(bss_start, 0, (uintptr_t)(&end) - (uintptr_t)bss_start);
+    memset(_bss_start, 0, (uintptr_t)end - (uintptr_t)_bss_start);
 
     /* Do auto-init stuff */
     arch_auto_init();

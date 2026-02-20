@@ -1,10 +1,10 @@
 # Determine on what platform we are running
 
-# This is much more simpler than using the "config.guess" mechanism, as we 
+# This is much more simpler than using the "config.guess" mechanism, as we
 # don't need the full host triplet, but it will be sufficient here.
 
-# For a more complete mechanism, based on host triplet and "config.guess", 
-# check the "dc-chain/Makefile".
+# For a more complete mechanism, based on host triplet and "config.guess",
+# check the "kos-chain/Makefile".
 
 HOST = $(shell uname -s)
 

@@ -17,7 +17,7 @@
    the network stack, and I figured other people would probably get some use out
    of it as well. */
 
-static uint16 *fb;
+static uint16_t *fb;
 static int fb_w, fb_h;
 static int cur_x, cur_y;
 static int min_x, min_y, max_x, max_y;
@@ -56,7 +56,7 @@ static int fb_read(void) {
 }
 
 static int fb_write(int c) {
-    uint16 *t = fb;
+    uint16_t *t = fb;
 
     if(!t)
         t = vram_s;
@@ -89,7 +89,7 @@ static int fb_flush(void) {
     return 0;
 }
 
-static int fb_write_buffer(const uint8 *data, int len, int xlat) {
+static int fb_write_buffer(const uint8_t *data, int len, int xlat) {
     int rv = len;
 
     (void)xlat;
@@ -101,7 +101,7 @@ static int fb_write_buffer(const uint8 *data, int len, int xlat) {
     return rv;
 }
 
-static int fb_read_buffer(uint8 * data, int len) {
+static int fb_read_buffer(uint8_t *data, int len) {
     (void)data;
     (void)len;
     errno = EAGAIN;
@@ -109,19 +109,19 @@ static int fb_read_buffer(uint8 * data, int len) {
 }
 
 dbgio_handler_t dbgio_fb = {
-    "fb",
-    fb_detected,
-    fb_init,
-    fb_shutdown,
-    fb_set_irq_usage,
-    fb_read,
-    fb_write,
-    fb_flush,
-    fb_write_buffer,
-    fb_read_buffer
+    .name = "fb",
+    .detected = fb_detected,
+    .init = fb_init,
+    .shutdown = fb_shutdown,
+    .set_irq_usage = fb_set_irq_usage,
+    .read = fb_read,
+    .write = fb_write,
+    .flush = fb_flush,
+    .write_buffer = fb_write_buffer,
+    .read_buffer = fb_read_buffer
 };
 
-void dbgio_fb_set_target(uint16 *t, int w, int h, int borderx, int bordery) {
+void dbgio_fb_set_target(uint16_t *t, int w, int h, int borderx, int bordery) {
     /* Set up all the new parameters. */
     fb = t;
 

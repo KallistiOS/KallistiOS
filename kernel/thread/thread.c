@@ -13,7 +13,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <reent.h>
 #include <errno.h>
 #include <stdalign.h>
@@ -21,15 +20,15 @@
 #include <kos/thread.h>
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>
+#include <kos/irq.h>
 #include <kos/sem.h>
 #include <kos/rwsem.h>
 #include <kos/cond.h>
 #include <kos/genwait.h>
+#include <kos/timer.h>
 
 #include <arch/arch.h>
-#include <arch/irq.h>
 #include <arch/stack.h>
-#include <arch/timer.h>
 #include <arch/tls_static.h>
 
 /*
@@ -371,7 +370,7 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
                          void *(*routine)(void *param), void *param) {
     kthread_t *nt = NULL;
     tid_t tid;
-    uint32_t params[4];
+    uintptr_t params[4];
     kthread_attr_t real_attr = { false, THD_STACK_SIZE, NULL, PRIO_DEFAULT, NULL, false };
 
     if(attr)
@@ -426,13 +425,13 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
             nt->stack_size = real_attr.stack_size;
 
             /* Populate the context */
-            params[0] = (uint32_t)routine;
-            params[1] = (uint32_t)param;
+            params[0] = (uintptr_t)routine;
+            params[1] = (uintptr_t)param;
             params[2] = 0;
             params[3] = 0;
             irq_create_context(&nt->context,
-                               ((uint32_t)nt->stack) + nt->stack_size,
-                               (uint32_t)thd_birth, params, 0);
+                               ((uintptr_t)nt->stack) + nt->stack_size,
+                               (uintptr_t)thd_birth, params);
 
             /* Some architectures require setting up a new stack before use.
                We won't do this if routine is NULL, however, as this means
@@ -569,14 +568,14 @@ int thd_set_prio(kthread_t *thd, prio_t prio) {
     return 0;
 }
 
-prio_t thd_get_prio(kthread_t *thd) {
+prio_t thd_get_prio(const kthread_t *thd) {
     if(!thd)
         thd = thd_current;
 
     return thd->prio;
 }
 
-tid_t thd_get_id(kthread_t *thd) {
+tid_t thd_get_id(const kthread_t *thd) {
     if(!thd)
         thd = thd_current;
 
@@ -750,12 +749,7 @@ static void thd_timer_hnd(irq_context_t *context) {
    threads. */
 void thd_sleep(unsigned int ms) {
     /* This should never happen. This should, perhaps, assert. */
-    if(thd_mode == THD_MODE_NONE) {
-        dbglog(DBG_WARNING, "thd_sleep called when threading not "
-               "initialized.\n");
-        timer_spin_sleep(ms);
-        return;
-    }
+    assert(thd_mode != THD_MODE_NONE);
 
     /* A timeout of zero is the same as thd_pass() and passing zero
        down to genwait_wait() causes bad juju. */
@@ -879,7 +873,7 @@ int thd_detach(kthread_t *thd) {
 
 /*****************************************************************************/
 /* Retrieve / set thread label */
-const char *thd_get_label(kthread_t *thd) {
+const char *thd_get_label(const kthread_t *thd) {
     if(!thd)
         thd = thd_current;
 
@@ -898,8 +892,12 @@ kthread_t *thd_get_current(void) {
     return thd_current;
 }
 
+kthread_t *thd_get_idle(void) {
+    return thd_idle_thd;
+}
+
 /* Retrieve / set thread pwd */
-const char *thd_get_pwd(kthread_t *thd) {
+const char *thd_get_pwd(const kthread_t *thd) {
     if(!thd)
         thd = thd_current;
 
@@ -963,45 +961,6 @@ int thd_set_hz(unsigned int hertz) {
         return -1;
 
     thd_sched_ms = 1000 / hertz;
-
-    return 0;
-}
-
-/* Delete a TLS key. Note that currently this doesn't prevent you from reusing
-   the key after deletion. This seems ok, as the pthreads standard states that
-   using the key after deletion results in "undefined behavior".
-   XXXX: This should really be in tls.c, but we need the list of threads to go
-   through, so it ends up here instead. */
-int kthread_key_delete(kthread_key_t key) {
-    kthread_t *cur;
-    kthread_tls_kv_t *i, *tmp;
-
-    irq_disable_scoped();
-
-    /* Make sure the key is valid. */
-    if(key >= kthread_key_next() || key < 1) {
-        errno = EINVAL;
-        return -1;
-    }
-
-    /* Make sure we can actually use free below. */
-    if(!malloc_irq_safe()) {
-        errno = EPERM;
-        return -1;
-    }
-
-    /* Go through each thread searching for (and removing) the data. */
-    LIST_FOREACH(cur, &thd_list, t_list) {
-        LIST_FOREACH_SAFE(i, &cur->tls_list, kv_list, tmp) {
-            if(i->key == key) {
-                LIST_REMOVE(i, kv_list);
-                free(i);
-                break;
-            }
-        }
-    }
-
-    kthread_key_delete_destructor(key);
 
     return 0;
 }

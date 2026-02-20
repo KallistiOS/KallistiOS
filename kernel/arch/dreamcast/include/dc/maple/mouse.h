@@ -43,24 +43,6 @@ __BEGIN_DECLS
 #define MOUSE_SIDEBUTTON    BIT(3)  /**< \brief Side mouse button */
 /** @} */
 
-/** \brief   Mouse center value in the raw condition structure. 
-    \ingroup mouse
- */
-#define MOUSE_DELTA_CENTER      0x200
-
-/** \cond */
-typedef struct {
-    uint16_t    buttons;
-    uint16_t    dummy1;
-    int16_t     dx;
-    int16_t     dy;
-    int16_t     dz;
-    uint16_t    dummy2;
-    uint32_t    dummy3;
-    uint32_t    dummy4;
-} mouse_cond_t;
-/** \endcond */
-
 /* More civilized mouse structure. There are several significant
    differences in data interpretation between the "cooked" and
    the old "raw" structs:

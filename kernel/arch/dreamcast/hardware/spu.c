@@ -9,8 +9,9 @@
 #include <dc/spu.h>
 #include <dc/g2bus.h>
 #include <dc/sq.h>
-#include <arch/timer.h>
+#include <kos/timer.h>
 #include <errno.h>
+#include <sys/cdefs.h>
 
 /*
 
@@ -73,9 +74,7 @@ void spu_memload_sq(uintptr_t dst, void *src_void, size_t length) {
     }
 
     /* Round up to the nearest multiple of 4 */
-    if(length & 3) {
-        length = (length + 4) & ~3;
-    }
+    length = __align_up(length, 4);
 
     /* Using SQs for all that is divisible by 32 */
     aligned_len = length & ~31;
@@ -127,9 +126,7 @@ void spu_memload_dma(uintptr_t dst, void *src_void, size_t length) {
     }
 
     /* Round up to the nearest multiple of 4 */
-    if(length & 3) {
-        length = (length + 4) & ~3;
-    }
+    length = __align_up(length, 4);
 
     /* Using DMA (or SQ's on fail) for all that is divisible by 32 */
     aligned_len = length & ~31;
@@ -215,9 +212,7 @@ void spu_memset_sq(uintptr_t dst, uint32_t what, size_t length) {
     g2_ctx_t ctx;
 
     /* Round up to the nearest multiple of 4 */
-    if(length & 3) {
-        length = (length + 4) & ~3;
-    }
+    length = __align_up(length, 4);
 
     /* Using SQs for all that is divisible by 32 */
     aligned_len = length & ~31;
@@ -355,7 +350,7 @@ int spu_init(void) {
     spu_enable();
 
     /* Wait a few clocks */
-    timer_spin_sleep(10);
+    thd_sleep(10);
 
     /* Initialize CDDA channels */
     spu_cdda_init();

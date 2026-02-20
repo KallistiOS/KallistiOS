@@ -41,9 +41,6 @@ void *pvr_set_vertbuf(pvr_list_t list, void *buffer, size_t len) {
     // that themselves.
     assert(pvr_state.dma_mode);
 
-    // Make sure it's a valid list.
-    assert(list < PVR_OPB_COUNT);
-
     // Make sure it's an _enabled_ list.
     assert(pvr_state.lists_enabled & BIT(list));
 
@@ -55,11 +52,11 @@ void *pvr_set_vertbuf(pvr_list_t list, void *buffer, size_t len) {
     oldbuf = pvr_state.dma_buffers[0].base[list];
 
     // Write new values.
-    pvr_state.dma_buffers[0].base[list] = (uint8 *)buffer;
+    pvr_state.dma_buffers[0].base[list] = (uint8_t *)buffer;
     pvr_state.dma_buffers[0].ptr[list] = 0;
     pvr_state.dma_buffers[0].size[list] = len / 2;
     pvr_state.dma_buffers[0].ready = 0;
-    pvr_state.dma_buffers[1].base[list] = ((uint8 *)buffer) + len / 2;
+    pvr_state.dma_buffers[1].base[list] = ((uint8_t *)buffer) + len / 2;
     pvr_state.dma_buffers[1].ptr[list] = 0;
     pvr_state.dma_buffers[1].size[list] = len / 2;
     pvr_state.dma_buffers[1].ready = 0;
@@ -68,10 +65,9 @@ void *pvr_set_vertbuf(pvr_list_t list, void *buffer, size_t len) {
 }
 
 void *pvr_vertbuf_tail(pvr_list_t list) {
-    uint8 *bufbase;
+    uint8_t *bufbase;
 
     // Check the validity of the request.
-    assert(list < PVR_OPB_COUNT);
     assert(pvr_state.dma_mode);
 
     // Get the buffer base.
@@ -83,10 +79,9 @@ void *pvr_vertbuf_tail(pvr_list_t list) {
 }
 
 void pvr_vertbuf_written(pvr_list_t list, size_t amt) {
-    uint32 val;
+    uint32_t val;
 
     // Check the validity of the request.
-    assert(list < PVR_OPB_COUNT);
     assert(pvr_state.dma_mode);
 
     // Change the current end of the buffer.
@@ -136,7 +131,6 @@ void pvr_scene_begin(void) {
         }
 
         pvr_sync_stats(PVR_SYNC_BUFSTART);
-        // DBG(("pvr_scene_begin(dma -> %d)\n", pvr_state.ram_target));
     }
     else {
         // We assume registration is starting immediately
@@ -151,7 +145,7 @@ void pvr_scene_begin(void) {
 /* Currently the resize functionality is not implemented, so make sure that
    rx and ry are appropriate (i.e. *rx = 1024 and *ry = 512 for 640x480).
    Also, note that this probably won't work with DMA mode for now... */
-void pvr_scene_begin_txr(pvr_ptr_t txr, uint32 *rx, uint32 *ry) {
+void pvr_scene_begin_txr(pvr_ptr_t txr, uint32_t *rx, uint32_t *ry) {
     (void)ry;
 
     /* For the most part, this isn't very much different than the normal render setup.
@@ -162,7 +156,7 @@ void pvr_scene_begin_txr(pvr_ptr_t txr, uint32 *rx, uint32 *ry) {
     pvr_state.next_to_txr_rp = (*rx) * 2 / 8;
 
     // Set the output address
-    pvr_state.next_to_txr_addr = (uint32)(txr) - PVR_RAM_INT_BASE;
+    pvr_state.next_to_txr_addr = (uint32_t)(txr) - PVR_RAM_INT_BASE;
 
     pvr_scene_begin();
 
@@ -225,11 +219,6 @@ int pvr_list_finish(void) {
           with the list type, assume we're doing hybrid drawing and
           are directly submitting this list type. */
     if(!pvr_list_dma) {
-        /* Release Store Queues if they are used */
-        if(pvr_state.dr_used) {
-            pvr_dr_finish();
-        }
-
         /* In case we haven't sent anything in this list, send a dummy */
         pvr_blank_polyhdr(pvr_state.list_reg_open);
 
@@ -292,15 +281,6 @@ int pvr_list_prim(pvr_list_t list, const void *data, size_t size) {
     return 0;
 }
 
-void pvr_dr_init(pvr_dr_state_t *vtx_buf_ptr) {
-    *vtx_buf_ptr = 0;
-    pvr_state.dr_used = 1;
-}
-
-void pvr_dr_finish(void) {
-    pvr_state.dr_used = 0;
-}
-
 int pvr_list_flush(pvr_list_t list) {
     (void)list;
 
@@ -314,16 +294,10 @@ int pvr_list_flush(pvr_list_t list) {
    you have not started a scene already. */
 int pvr_scene_finish(void) {
     int i, o;
-    volatile pvr_dma_buffers_t * b;
-
-    /* Release Store Queues if they are used */
-    if(pvr_state.dr_used) {
-        pvr_dr_finish();
-    }
+    volatile pvr_dma_buffers_t *b;
 
     // If we're in DMA mode, then this works a little differently...
     if(pvr_state.dma_mode) {
-        // DBG(("pvr_scene_finish(dma -> %d)\n", pvr_state.ram_target));
         // If any enabled lists are empty, fill them with a blank polyhdr. Also
         // add a zero-marker to the end of each list.
         b = pvr_state.dma_buffers + pvr_state.ram_target;

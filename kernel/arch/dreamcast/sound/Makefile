@@ -8,7 +8,6 @@
 OBJS = snd_iface.o \
 	snd_sfxmgr.o \
 	snd_stream.o \
-	snd_stream_drv.o \
 	snd_mem.o \
 	snd_pcm_split.o
 
