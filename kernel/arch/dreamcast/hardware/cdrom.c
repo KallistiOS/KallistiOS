@@ -557,7 +557,7 @@ int cdrom_stream_request(void *buffer, size_t size, bool block) {
     }
 
     params.size = size;
-    sem_wait_scoped(&_g1_ata_sem);
+    sem_wait(&_g1_ata_sem);
 
     if(stream_dma) {
         dma_in_progress = true;
@@ -570,6 +570,7 @@ int cdrom_stream_request(void *buffer, size_t size, bool block) {
             dma_in_progress = false;
             dma_blocking = false;
             dma_auto_unlock = false;
+            sem_signal(&_g1_ata_sem);
             return ERR_SYS;
         }
         if(!block) {
@@ -579,8 +580,10 @@ int cdrom_stream_request(void *buffer, size_t size, bool block) {
     }
     else {
         rs = syscall_gdrom_pio_transfer(cmd_hnd, &params);
-        if(rs < 0)
+        if(rs < 0) {
+            sem_signal(&_g1_ata_sem);
             return ERR_SYS;
+        }
     }
 
     data = (struct cmd_transfer_data){ cmd_hnd, 0 };
@@ -595,6 +598,7 @@ int cdrom_stream_request(void *buffer, size_t size, bool block) {
             stream_cb(stream_cb_param);
     }
 
+    sem_signal(&_g1_ata_sem);
     return ERR_OK;
 }
 
