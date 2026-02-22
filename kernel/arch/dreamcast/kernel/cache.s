@@ -299,10 +299,10 @@ _dcache_purge_all_with_buffer:
 .dpurge_all_buffer_loop:
     ! Allocate and then invalidate the dcache line
     movca.l  r0, @r4
-    ocbi     @r4
-    add      #32, r4        ! Move on to next cache block
     cmp/hi   r4, r5
-    bt       .dpurge_all_buffer_loop
+    ocbi     @r4
+    bt.s    .dpurge_all_buffer_loop
+    add      #32, r4        ! Move on to next cache block
 
     rts
     nop
