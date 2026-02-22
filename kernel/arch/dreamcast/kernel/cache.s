@@ -68,10 +68,6 @@ _icache_inval_range:
     bt/s     .iinval_loop
     mov.l    r7, @r6       ! Invalidate cache entry
 
-    ! Restore old SR
-    mov.l    @r15+, r0
-    ldc      r0, sr
-
     ! make sure we have enough instrs before returning to P1
     nop
     nop
@@ -80,6 +76,10 @@ _icache_inval_range:
     nop
     nop
     nop
+
+    ! Restore old SR
+    mov.l    @r15+, r0
+    ldc      r0, sr
 
 .iinval_exit:
     rts
@@ -131,10 +131,6 @@ _icache_flush_range:
     bt/s     .iinval_loop
     mov.l    r7, @r6       ! Invalidate cache entry
 
-    ! Restore old SR
-    mov.l    @r15+, r0
-    ldc      r0, sr
-
     ! make sure we have enough instrs before returning to P1
     nop
     nop
@@ -143,6 +139,10 @@ _icache_flush_range:
     nop
     nop
     nop
+
+    ! Restore old SR
+    mov.l    @r15+, r0
+    ldc      r0, sr
 
 .iflush_exit:
     rts
