@@ -119,21 +119,17 @@ _icache_flush_range:
     mov.l    ic_valid_mask, r3
 
 .iflush_loop:
-    ! Write back D cache
-    ocbwb    @r4
-
     ! Invalidate I cache
-    mov      r4, r6        ! v & CACHE_IC_ENTRY_MASK
-    and      r2, r6
-    or       r1, r6        ! CACHE_IC_ADDRESS_ARRAY | ^
-
-    mov      r4, r7        ! v & 0xfffffc00
-    and      r3, r7
-
+    mov      r4, r6
     add      #32, r4       ! Move on to next cache block
+    mov      r6, r7
+    and      r2, r6        ! v & CACHE_IC_ENTRY_MASK
     cmp/hi   r4, r5
-    bt/s     .iflush_loop
-    mov.l    r7, @r6       ! *addr = data    
+    or       r1, r6        ! CACHE_IC_ADDRESS_ARRAY | (v & CACHE_IC_ENTRY_MASK)
+    ocbwb    @r7           ! Write back D cache
+    and      r3, r7        ! v & 0xfffffc00
+    bt/s     .iinval_loop
+    mov.l    r7, @r6       ! Invalidate cache entry
 
     ! Restore old SR
     mov.l    @r15+, r0
