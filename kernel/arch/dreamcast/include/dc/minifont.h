@@ -71,6 +71,14 @@ int minifont_draw_str(uint16_t *b, uint32_t bufwidth, const char *str);
 */
 void minifont_set_color(uint8_t r, uint8_t g, uint8_t b);
 
+
+/** \brief  Set the color for the mini font.
+    \param  r               Red component (0-255)
+    \param  g               Green component (0-255)
+    \param  b               Blue component (0-255)
+*/
+void minifont_set_color(uint8_t r, uint8_t g, uint8_t b);
+
 /** @} */
 
 __END_DECLS

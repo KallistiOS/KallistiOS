@@ -6,6 +6,7 @@
 
 */
 
+
 #include <string.h>
 #include <dc/minifont.h>
 #include "minifont.h"
@@ -26,15 +27,14 @@ int minifont_draw(uint16_t *buffer, uint32_t bufwidth, uint32_t c) {
     uint8_t byte;
     uint16_t *cur;
 
-    if(c < 33 || c > 126)
-        return CHAR_WIDTH;
+    if (c < 33 || c > 126) return CHAR_WIDTH;
 
     pos = (c - 33) * BYTES_PER_CHAR;
 
-    for(i = 0; i < CHAR_HEIGHT; ++i) {
+    for (i = 0; i < CHAR_HEIGHT; ++i) {
         cur = buffer;
 
-        for(j = 0; j < CHAR_WIDTH / 8; ++j) {
+        for (j = 0; j < CHAR_WIDTH / 8; ++j) {
             byte = minifont_data[pos + (i * (CHAR_WIDTH / 8)) + j];
 
             for(k = 0; k < 8; ++k) {
@@ -44,7 +44,6 @@ int minifont_draw(uint16_t *buffer, uint32_t bufwidth, uint32_t c) {
                     ++cur;
             }
         }
-
         buffer += bufwidth;
     }
 
@@ -55,7 +54,7 @@ int minifont_draw_str(uint16_t *buffer, uint32_t bufwidth, const char *str) {
     char c;
     int adv = 0;
 
-    while((c = *str++)) {
+    while ((c = *str++)) {
         adv += minifont_draw(buffer + adv, bufwidth, c);
     }
 
