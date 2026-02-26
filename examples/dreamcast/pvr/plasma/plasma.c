@@ -140,8 +140,6 @@ void do_frame(void) {
     float r, g, b;
 
     vid_border_color(255, 0, 0);
-    pvr_wait_ready();
-    vid_border_color(0, 255, 0);
     pvr_scene_begin();
     pvr_list_begin(PVR_LIST_OP_POLY);
     pvr_prim(&hdr[txr_cur], sizeof(*hdr));

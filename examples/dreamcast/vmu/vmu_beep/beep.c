@@ -83,7 +83,6 @@ int main(int argc, char *argv[]) {
         vmudev = maple_enum_type(0, MAPLE_FUNC_CLOCK);
 
         while(!dev) {
-            pvr_wait_ready();
             pvr_scene_begin();
             pvr_list_begin(PVR_LIST_OP_POLY);
             pvr_list_begin(PVR_LIST_TR_POLY);
@@ -100,7 +99,6 @@ int main(int argc, char *argv[]) {
         }
 
         while(!vmudev) {
-            pvr_wait_ready();
             pvr_scene_begin();
             pvr_list_begin(PVR_LIST_OP_POLY);
             pvr_list_begin(PVR_LIST_TR_POLY);
@@ -116,7 +114,6 @@ int main(int argc, char *argv[]) {
             vmudev = maple_enum_type(0, MAPLE_FUNC_CLOCK);
         }
 
-        pvr_wait_ready();
         pvr_scene_begin();
         pvr_list_begin(PVR_LIST_OP_POLY);
         pvr_list_begin(PVR_LIST_TR_POLY);

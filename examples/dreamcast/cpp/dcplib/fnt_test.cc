@@ -64,7 +64,6 @@ void switchFilterMode() {
 
 void drawFrame() {
     //ta_begin_render();
-    pvr_wait_ready();
     pvr_scene_begin();
     pvr_list_begin(PVR_LIST_TR_POLY);
     //pvr_dummy_poly (TA_OPAQUE);

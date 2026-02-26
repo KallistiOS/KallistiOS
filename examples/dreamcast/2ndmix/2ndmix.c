@@ -794,7 +794,6 @@ void font_init(void) {
 int framecnt = 0;
 void draw_one_frame(void) {
     /* Begin opaque polygons */
-    pvr_wait_ready();
     pvr_scene_begin();
     pvr_list_begin(PVR_LIST_OP_POLY);
 

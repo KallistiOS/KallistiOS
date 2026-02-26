@@ -156,7 +156,6 @@ int main(int argc, char** argv) {
 
         animate_palette(frame);
 
-        pvr_wait_ready();
         pvr_scene_begin();
 
         pvr_list_begin(PVR_LIST_OP_POLY);
