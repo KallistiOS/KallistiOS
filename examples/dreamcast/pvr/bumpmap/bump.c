@@ -185,7 +185,6 @@ static void do_frame(void) {
     shdr[0].oargb = pvr_pack_bump(bumpiness, F_PI / 4.0f, 5.0f * F_PI / 6.0f);
     shdr[0].argb = 0;
 
-    pvr_wait_ready();
     pvr_scene_begin();
 
     pvr_list_begin(PVR_LIST_OP_POLY);

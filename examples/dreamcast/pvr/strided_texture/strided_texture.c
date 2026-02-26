@@ -97,7 +97,6 @@ static pvr_vertex_t verts[4];
 static pvr_ptr_t board_texture;
 
 static void draw_frame(void) {
-    pvr_wait_ready();
     pvr_scene_begin();
 
     pvr_list_begin(PVR_LIST_OP_POLY);

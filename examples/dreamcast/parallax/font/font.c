@@ -35,7 +35,6 @@ int main(int argc, char **argv) {
     w.z = 10.0f;
 
     while(!done) {
-        pvr_wait_ready();
         pvr_scene_begin();
         pvr_list_begin(PVR_LIST_OP_POLY);
         pvr_list_begin(PVR_LIST_TR_POLY);
