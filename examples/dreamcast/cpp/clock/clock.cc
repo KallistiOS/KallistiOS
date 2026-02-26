@@ -64,7 +64,6 @@ void drawFrame() {
     timespec_get(&spec, TIME_UTC);
     localtime_r(&spec.tv_sec, &tm);
 
-    pvr_wait_ready();
     pvr_scene_begin();
     pvr_list_begin(PVR_LIST_TR_POLY);
 

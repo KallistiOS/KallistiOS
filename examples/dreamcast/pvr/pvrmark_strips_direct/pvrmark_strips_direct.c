@@ -95,9 +95,6 @@ static void do_frame(void) {
     static int oldseed = 0xdeadbeef;
     int seed = oldseed;
 
-    vid_border_color(0, 0, 0);
-    pvr_wait_ready();
-    vid_border_color(255, 0, 0);
     pvr_scene_begin();
     pvr_list_begin(PVR_LIST_OP_POLY);
     pvr_prim(&hdr, sizeof(hdr));
@@ -137,7 +134,6 @@ static void do_frame(void) {
 
     pvr_list_finish();
     pvr_scene_finish();
-    vid_border_color(0, 255, 0);
     oldseed = seed;
 }
 

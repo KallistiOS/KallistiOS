@@ -124,14 +124,12 @@ void draw_frame(void) {
     pvr_poly_cxt_col(&cxt, PVR_LIST_OP_POLY);
     pvr_poly_compile(&poly, &cxt);
 
-    /* Start opaque poly list */
-    pvr_wait_ready();
-
     if(!to_texture)
         pvr_scene_begin();
     else
         pvr_scene_begin_txr(d_texture, &tx_x, &tx_y);
 
+    /* Start opaque poly list */
     pvr_list_begin(PVR_LIST_OP_POLY);
 
     /* Send polygon header to the TA using store queues */
@@ -164,7 +162,6 @@ void draw_textured(void) {
                      d_texture, PVR_FILTER_NONE);
     pvr_poly_compile(&hdr, &cxt);
 
-    pvr_wait_ready();
     pvr_scene_begin();
 
     /* Start opaque poly list */
