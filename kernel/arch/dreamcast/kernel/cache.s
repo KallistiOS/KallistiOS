@@ -12,13 +12,13 @@
 !
 
     .text
-    .globl _icache_inval_range
-    .globl _icache_flush_range
-    .globl _dcache_inval_range
-    .globl _dcache_flush_range
-    .globl _dcache_flush_all
-    .globl _dcache_purge_range
-    .globl _dcache_purge_all
+    .globl _arch_icache_inval_range
+    .globl _arch_icache_sync_range
+    .globl _arch_dcache_inval_range
+    .globl _arch_dcache_flush_range
+    .globl _arch_dcache_flush_all
+    .globl _arch_dcache_purge_range
+    .globl _arch_dcache_purge_all
     .globl _dcache_purge_all_with_buffer
 
 
@@ -28,7 +28,7 @@
 ! r4 is starting address
 ! r5 is size
     .align 2
-_icache_inval_range:
+_arch_icache_inval_range:
     tst      r5, r5          ! Test if size is 0
     mov.l    iir_addr, r0
 
@@ -91,7 +91,7 @@ _icache_inval_range:
 ! r4 is starting address
 ! r5 is size
     .align 2
-_icache_flush_range:
+_arch_icache_sync_range:
     tst      r5, r5          ! Test if size is 0
     mov.l    ifr_addr, r0
 
@@ -156,7 +156,7 @@ _icache_flush_range:
 ! r4 is starting address
 ! r5 is size
     .align 2
-_dcache_inval_range:
+_arch_dcache_inval_range:
     tst      r5, r5         ! Test if size is 0
     mov.l    align_mask, r0
 
@@ -185,7 +185,7 @@ _dcache_inval_range:
 ! r4 is starting address
 ! r5 is size
     .align 2
-_dcache_flush_range:
+_arch_dcache_flush_range:
     ! Check that 0 < size < flush_check
     tst      r5, r5
     mov.l    flush_check, r2
@@ -196,7 +196,7 @@ _dcache_flush_range:
     cmp/hi   r2, r5             ! Compare with flush_check
     add      r4, r5             ! Get ending address from size
 
-    bt       _dcache_flush_all  ! If size > flush_check, jump to _dcache_flush_all
+    bt       _arch_dcache_flush_all  ! If size > flush_check, jump to _arch_dcache_flush_all
     and      r0, r4             ! Align start address
 
 .dflush_loop:
@@ -216,7 +216,7 @@ _dcache_flush_range:
 ! the U bit and V bit are set to 1.  Then updates the entry with
 ! U bit cleared.
     .align 2
-_dcache_flush_all:
+_arch_dcache_flush_all:
     mov.l    dca_addr, r1
     mov.w    cache_lines, r2
     mov.l    dc_ubit_mask, r3
@@ -241,7 +241,7 @@ _dcache_flush_all:
 ! r4 is starting address
 ! r5 is size
     .align 2
-_dcache_purge_range:
+_arch_dcache_purge_range:
     ! Check that 0 < size < purge_check
     tst      r5, r5
     mov.l    purge_check, r2
@@ -252,7 +252,7 @@ _dcache_purge_range:
     cmp/hi   r2, r5             ! Compare with purge_check
     add      r4, r5             ! Get ending address from size
 
-    bt       _dcache_purge_all  ! If size > purge_check, jump to _dcache_purge_all
+    bt       _arch_dcache_purge_all  ! If size > purge_check, jump to _arch_dcache_purge_all
     and      r0, r4             ! Align start address
 
 .dpurge_loop:
@@ -271,7 +271,7 @@ _dcache_purge_range:
 ! dcache entries.  It goes through and forces a write-back and invalidate
 ! on all of the dcache.
     .align 2
-_dcache_purge_all:
+_arch_dcache_purge_all:
     mov.l    dca_addr, r1
     mov.w    cache_lines, r2
     mov      #0, r3
@@ -329,13 +329,13 @@ dca_addr:
 dc_ubit_mask:
     .long    0xfffffffd    ! Mask to zero out U bit
 
-! _dcache_flush_range can have size param set up to 66560 bytes
+! _arch_dcache_flush_range can have size param set up to 66560 bytes
 ! and still be faster than dcache_flush_all.
 flush_check:
     .long    66560
 
-! _dcache_purge_range can have size param set up to 39936 bytes
-! and still be faster than dcache_purge_all.
+! _arch_dcache_purge_range can have size param set up to 39936 bytes
+! and still be faster than arch_dcache_purge_all.
 purge_check:
     .long    39936
 

@@ -17,8 +17,8 @@
 #include <dc/g2bus.h>
 #include <dc/sq.h>
 #include <dc/flashrom.h>
-#include <arch/cache.h>
 #include <dc/memory.h>
+#include <kos/cache.h>
 #include <kos/dbglog.h>
 #include <kos/irq.h>
 #include <kos/net.h>

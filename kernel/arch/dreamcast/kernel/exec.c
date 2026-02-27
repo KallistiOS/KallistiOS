@@ -7,9 +7,9 @@
 #include <assert.h>
 
 #include <arch/arch.h>
-#include <arch/cache.h>
 #include <arch/exec.h>
 #include <dc/memory.h>
+#include <kos/cache.h>
 #include <kos/irq.h>
 
 /* Pull the shutdown function in from init.c */

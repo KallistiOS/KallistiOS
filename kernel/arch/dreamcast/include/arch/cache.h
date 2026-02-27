@@ -1,7 +1,6 @@
 /* KallistiOS ##version##
 
-   arch/dreamcast/include/cache.h
-
+   arch/dreamcast/include/arch/cache.h
    Copyright (C) 2001 Megan Potter
    Copyright (C) 2014, 2016, 2023 Ruslan Rostovtsev
    Copyright (C) 2023 Andy Barajas
@@ -23,6 +22,9 @@
     \author Falco Girgis
 */
 
+/* Keep this include above the macro guards */
+#include <kos/cache.h>
+
 #ifndef __ARCH_CACHE_H
 #define __ARCH_CACHE_H
 
@@ -31,204 +33,93 @@ __BEGIN_DECLS
 
 #include <stdint.h>
 
-/** \defgroup system_cache Cache
-    \brief                 Driver and API for managing the SH4's cache
-    \ingroup               system
+#define ARCH_CACHE_L1_ICACHE_SIZE       (8 * 1024)
+#define ARCH_CACHE_L1_ICACHE_ASSOC      1
+#define ARCH_CACHE_L1_ICACHE_LINESIZE   32
 
-    @{
-*/
+#define ARCH_CACHE_L1_DCACHE_SIZE       (16 * 1024)
+#define ARCH_CACHE_L1_DCACHE_ASSOC      1
+#define ARCH_CACHE_L1_DCACHE_LINESIZE   32
 
-/** \brief  Level 1 instruction cache size.
+#define ARCH_CACHE_L2_CACHE_SIZE        0
+#define ARCH_CACHE_L2_CACHE_ASSOC       0
+#define ARCH_CACHE_L2_CACHE_LINESIZE    0
 
-    The capacity of the L1 instruction cache in bytes.
-*/
-#define CACHE_L1_ICACHE_SIZE 8 * 1024
+void arch_icache_inval_range(uintptr_t start, size_t count);
+void arch_icache_sync_range(uintptr_t start, size_t count);
 
-/** \brief  Level 1 instruction cache associativity.
+void arch_dcache_inval_range(uintptr_t start, size_t count);
+void arch_dcache_flush_range(uintptr_t start, size_t count);
+void arch_dcache_purge_range(uintptr_t start, size_t count);
 
-    Number of ways in the L1 instruction cache.
-*/
-#define CACHE_L1_ICACHE_ASSOC 1
+void arch_dcache_flush_all(void);
+void arch_dcache_purge_all(void);
 
-/** \brief  L1 instruction cache line size.
+static inline void arch_dcache_pref_line(const void *src) {
+    __builtin_prefetch(src);
+}
 
-    The size of each cache line in the L1 instruction cache.
-*/
-#define CACHE_L1_ICACHE_LINESIZE 32
+static inline void arch_dcache_alloc_line(void *src, uintptr_t value) {
+    uintptr_t *ptr = (uintptr_t *)src;
 
-/** \brief  Level 1 data cache size.
-
-    The capacity of the L1 data cache in bytes.
-*/
-#define CACHE_L1_DCACHE_SIZE 16 * 1024
-
-/** \brief  Level 1 data cache associativity.
-
-    Number of ways in the L1 data cache.
-*/
-#define CACHE_L1_DCACHE_ASSOC 1
-
-/** \brief  L1 data cache line size.
-
-    The size of each cache line in the L1 data cache.
-*/
-#define CACHE_L1_DCACHE_LINESIZE 32
-
-/** \brief  Level 2 cache size.
-
-    The capacity of the L2 cache in bytes.
-*/
-#define CACHE_L2_CACHE_SIZE 0
-
-/** \brief  Level 2 cache associativity.
-
-    Number of ways in the L2 cache.
-*/
-#define CACHE_L2_CACHE_ASSOC 0
-
-/** \brief  Level 2 cache line size.
-
-    The size of each cache line in the L2 cache.
-*/
-#define CACHE_L2_CACHE_LINESIZE 0
-
-/** \brief Invalidate the instruction cache.
-
-    This instruction invalidates a range of the instruction cache.
-
-    \warning
-    If you care aobut the contents of the cache that have not been written
-    back yet, use icache_flush_range() instead!
-
-    \param  start           The physical address to begin invalidation at.
-    \param  count           The number of bytes to invalidate.
-*/
-void icache_inval_range(uintptr_t start, size_t count);
-
-/** \brief  Flush the instruction cache.
-
-    This function flushes a range of the instruction cache.
-
-    \param  start           The physical address to begin flushing at.
-    \param  count           The number of bytes to flush.
-*/
-void icache_flush_range(uintptr_t start, size_t count);
-
-/** \brief  Invalidate the data/operand cache.
-
-    This function invalidates a range of the data/operand cache. If you care
-    about the contents of the cache that have not been written back yet, use
-    dcache_flush_range() before using this function.
-
-    \param  start           The physical address to begin invalidating at.
-    \param  count           The number of bytes to invalidate.
-*/
-void dcache_inval_range(uintptr_t start, size_t count);
-
-/** \brief  Flush the data/operand cache.
-
-    This function flushes a range of the data/operand cache, forcing a write-
-    back on all of the data in the specified range. This does not invalidate 
-    the cache in the process (meaning the blocks will still be in the cache, 
-    just not marked as dirty after this has completed). If you wish to 
-    invalidate the cache as well, call dcache_inval_range() after calling this
-    function or use dcache_purge_range() instead of dcache_flush_range().
-
-    \param  start           The physical address to begin flushing at.
-    \param  count           The number of bytes to flush.
-*/
-void dcache_flush_range(uintptr_t start, size_t count);
-
-/** \brief  Flush all the data/operand cache.
-
-    This function flushes all the data/operand cache, forcing a write-
-    back on all of the cache blocks that are marked as dirty.
-
-    \note
-    dcache_flush_range() is faster than dcache_flush_all() if the count
-    param is 66560 or less.
-*/
-void dcache_flush_all(void);
-
-/** \brief  Purge the data/operand cache.
-
-    This function flushes a range of the data/operand cache, forcing a write-
-    back and then invalidates all of the data in the specified range.
-
-    \param  start           The physical address to begin purging at.
-    \param  count           The number of bytes to purge.
-*/
-void dcache_purge_range(uintptr_t start, size_t count);
-
-/** \brief  Purge all the data/operand cache.
-
-    This function flushes the entire data/operand cache, ensuring that all 
-    cache blocks marked as dirty are written back to memory and all cache 
-    entries are invalidated. It does not require an additional buffer and is 
-    preferred when memory resources are constrained.
-
-    \note
-    dcache_purge_range() is faster than dcache_purge_all() if the count
-    param is 39936 or less.
-*/
-void dcache_purge_all(void);
-
-/** \brief  Purge all the data/operand cache with buffer.
-
-    This function performs a purge of all data/operand cache blocks by 
-    utilizing an external buffer to speed up the write-back and invalidation 
-    process. It is always faster than dcache_purge_all() and is recommended 
-    where maximum speed is required.
-
-    \note While this function offers a superior purge rate, it does require
-    the use of a temporary buffer. So use this function if you have an extra 
-    8/16 kb of memory laying around that you can utilize for no other purpose 
-    than for this function.
-
-    \param  start           The physical address for temporary buffer (32-byte 
-                            aligned)
-    \param  count           The size of the temporary buffer, which can be 
-                            either 8 KB or 16 KB, depending on cache 
-                            configuration - 8 KB buffer with OCRAM enabled, 
-                            otherwise 16 KB.
-
-*/
-void dcache_purge_all_with_buffer(uintptr_t start, size_t count);
-
-/** \brief  Prefetch one block to the data/operand cache.
-
-    This function prefetch a block of the data/operand cache.
-
-    \param  src             The physical address to prefetch.
-*/
-static __always_inline void dcache_pref_block(const void *src) {
-    __asm__ __volatile__("pref @%0\n"
-                         : /* No outputs */
-                         : "r" (src)
-                         : /* No clobbers */
+    __asm__ ("movca.l r0, @%8\n\t"
+             : "=m"(ptr[0]),
+               "=m"(ptr[1]),
+               "=m"(ptr[2]),
+               "=m"(ptr[3]),
+               "=m"(ptr[4]),
+               "=m"(ptr[5]),
+               "=m"(ptr[6]),
+               "=m"(ptr[7])
+             : "r" (ptr), "z" (value)
     );
 }
 
-/** \brief  Allocate one block of the data/operand cache.
+static inline void arch_dcache_inval_line(void *src) {
+    uintptr_t *ptr = (uintptr_t *)src;
 
-    This function allocate a block of the data/operand cache.
+    __asm__ ("ocbi @%8\n\t"
+             : "=m"(ptr[0]),
+               "=m"(ptr[1]),
+               "=m"(ptr[2]),
+               "=m"(ptr[3]),
+               "=m"(ptr[4]),
+               "=m"(ptr[5]),
+               "=m"(ptr[6]),
+               "=m"(ptr[7])
+             : "r" (ptr)
+    );
+}
 
-    \param  src             The address to allocate (32-byte aligned)
-    \param  value           The value written to first 4-byte.
-*/
-static __always_inline void dcache_alloc_block(void *src, uint32_t value) {
-    uint32_t *src32 = (uint32_t *)src;
+static inline void arch_dcache_purge_line(void *src) {
+    uintptr_t *ptr = (uintptr_t *)src;
 
-    __asm__ ("movca.l r0, @%8\n\t"
-             : "=m"(src32[0]),
-               "=m"(src32[1]),
-               "=m"(src32[2]),
-               "=m"(src32[3]),
-               "=m"(src32[4]),
-               "=m"(src32[5]),
-               "=m"(src32[6]),
-               "=m"(src32[7])
-             : "r" (src32), "z" (value)
+    __asm__ ("ocbp @%8\n\t"
+             : "=m"(ptr[0]),
+               "=m"(ptr[1]),
+               "=m"(ptr[2]),
+               "=m"(ptr[3]),
+               "=m"(ptr[4]),
+               "=m"(ptr[5]),
+               "=m"(ptr[6]),
+               "=m"(ptr[7])
+             : "r" (ptr)
+    );
+}
+
+static inline void arch_dcache_flush_line(void *src) {
+    uintptr_t *ptr = (uintptr_t *)src;
+
+    __asm__ ("ocbwb @%8\n\t"
+             : "=m"(ptr[0]),
+               "=m"(ptr[1]),
+               "=m"(ptr[2]),
+               "=m"(ptr[3]),
+               "=m"(ptr[4]),
+               "=m"(ptr[5]),
+               "=m"(ptr[6]),
+               "=m"(ptr[7])
+             : "r" (ptr)
     );
 }
 

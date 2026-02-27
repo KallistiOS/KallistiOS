@@ -33,6 +33,7 @@ __BEGIN_DECLS
 #include <unistd.h>
 
 #include <kos/version.h>
+#include <kos/cache.h>
 #include <kos/fs.h>
 #include <kos/fs_romdisk.h>
 #include <kos/fs_ramdisk.h>
@@ -64,7 +65,6 @@ __BEGIN_DECLS
 #include <kos/spinlock.h>
 
 #include <arch/arch.h>
-#include <arch/cache.h>
 #include <arch/irq.h>
 #include <arch/timer.h>
 #include <arch/types.h>

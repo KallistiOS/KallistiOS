@@ -8,7 +8,6 @@
 #include <assert.h>
 #include <dc/pvr.h>
 #include <dc/asic.h>
-#include <arch/cache.h>
 #include "pvr_internal.h"
 
 #include <kos/dbglog.h>

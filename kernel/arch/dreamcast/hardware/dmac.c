@@ -4,11 +4,11 @@
 
    Copyright (C) 2025 Paul Cercueil
 */
-#include <arch/cache.h>
 #include <arch/dmac.h>
 
 #include <dc/memory.h>
 
+#include <kos/cache.h>
 #include <kos/dbglog.h>
 #include <kos/genwait.h>
 #include <kos/irq.h>
