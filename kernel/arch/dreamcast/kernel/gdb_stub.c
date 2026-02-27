@@ -590,7 +590,7 @@ static void doSStep(void) {
     instrBuffer.memAddr = instrMem;
     instrBuffer.oldInstr = *instrMem;
     *instrMem = SSTEP_INSTR;
-    icache_flush_range((uint32_t)instrMem, 2);
+    icache_sync_range((uint32_t)instrMem, 2);
 }
 
 
@@ -602,7 +602,7 @@ static void undoSStep(void) {
         short *instrMem;
         instrMem = instrBuffer.memAddr;
         *instrMem = instrBuffer.oldInstr;
-        icache_flush_range((uint32_t)instrMem, 2);
+        icache_sync_range((uint32_t)instrMem, 2);
     }
 
     stepped = 0;
@@ -785,7 +785,7 @@ static void gdb_handle_exception(int exceptionVector) {
                         if(hexToInt(&ptr, &length))
                             if(*(ptr++) == ':') {
                                 hex2mem(ptr, (char *) addr, length);
-                                icache_flush_range(addr, length);
+                                icache_sync_range(addr, length);
                                 ptr = 0;
                                 strcpy(remcomOutBuffer, "OK");
                             }
