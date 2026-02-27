@@ -228,7 +228,7 @@ static uint32_t const txdesc[TX_NB_BUFFERS] = {
 };
 
 /* Is the link stabilized? */
-static volatile bool link_stable;
+static bool link_stable;
 
 /* Receive callback */
 static eth_rx_callback_t eth_rx_callback;
@@ -246,19 +246,17 @@ void bba_set_rx_callback(eth_rx_callback_t cb) {
     eth_rx_callback = cb;
 }
 
-static int rtl_reset(void) {
-    int i = 100;
+static int rtl_is_ready(void *d) {
+    (void)d;
+    return !(g2_read_8(NIC(RT_CHIPCMD)) & RT_CMD_RESET);
+}
 
+static int rtl_reset(void) {
     /* Soft-reset the chip */
     g2_write_8(NIC(RT_CHIPCMD), RT_CMD_RESET);
 
     /* Wait for it to come back */
-    while((g2_read_8(NIC(RT_CHIPCMD)) & RT_CMD_RESET) && i > 0) {
-        i--;
-        thd_sleep(10);
-    }
-
-    if(g2_read_8(NIC(RT_CHIPCMD)) & RT_CMD_RESET) {
+    if(!thd_poll(rtl_is_ready, NULL, 1000)) {
         dbglog(DBG_ERROR, "bba: timed out on reset\n");
         return -1;
     }
@@ -608,16 +606,20 @@ static int rx_enq(int ring_offset, size_t pkt_size) {
         return 1;
 }
 
+static int bba_link_is_stable(void *d) {
+    return *(int *)d;
+}
+
 /* Transmit a single packet */
 static int bba_rtx(const uint8_t *pkt, int len, int wait)
 {
-    if(!link_stable) {
-        if(wait == BBA_TX_WAIT) {
-            while(!link_stable)
-                ;
-        }
-        else
-            return BBA_TX_AGAIN;
+    if(wait == BBA_TX_WAIT) {
+        assert(!irq_inside_int());
+
+        if(!link_stable)
+            thd_poll(bba_link_is_stable, &link_stable, 0);
+    } else if(!link_stable) {
+        return BBA_TX_AGAIN;
     }
 
     /* Wait till it's clear to transmit */
@@ -885,8 +887,6 @@ static const kthread_attr_t bba_rx_worker_attr = {
 };
 
 static int bba_if_start(netif_t *self) {
-    int i;
-
     (void)self;
 
     if(!(bba_if.flags & NETIF_INITIALIZED))
@@ -902,15 +902,9 @@ static int bba_if_start(netif_t *self) {
     /* We need something like this to get DHCP to work (since it doesn't
        know anything about an activated and yet not-yet-receiving network
        adapter =) */
-    /* Spin until the link is stabilized */
-    i = 1000;
 
-    while(!link_stable && i > 0) {
-        i--;
-        thd_sleep(10);
-    }
-
-    if(!link_stable) {
+    /* Wait until the link is stabilized */
+    if(!thd_poll(bba_link_is_stable, &link_stable, 10000)) {
         dbglog(DBG_ERROR, "bba: timed out waiting for link to stabilize\n");
         return -1;
     }
