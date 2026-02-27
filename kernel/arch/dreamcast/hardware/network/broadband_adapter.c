@@ -685,6 +685,13 @@ int bba_tx(const uint8_t *pkt, int len, int wait) {
     return res;
 }
 
+static void bba_rx_process(void) {
+    /* Call the callback to process it */
+    eth_rx_callback(rx_pkt[rxout].rxbuff, rx_pkt[rxout].pkt_size);
+
+    rxout = (rxout + 1) % MAX_PKTS;
+}
+
 static void *bba_rx_threadfunc(void *dummy) {
     (void)dummy;
 
@@ -695,13 +702,8 @@ static void *bba_rx_threadfunc(void *dummy) {
         if(bba_rx_exit_thread)
             break;
 
-        if(rxout != rxin) {
-
-            /* Call the callback to process it */
-            eth_rx_callback(rx_pkt[rxout].rxbuff, rx_pkt[rxout].pkt_size);
-
-            rxout = (rxout + 1) % MAX_PKTS;
-        }
+        if(rxout != rxin)
+            bba_rx_process();
     }
 
     bba_rx_exit_thread = 0;
@@ -975,12 +977,8 @@ static int bba_if_rx_poll(netif_t *self) {
         g2_write_16(NIC(RT_INTRSTATUS), RT_INT_RX_ACK);
     }
 
-    if(rxout != rxin) {
-        /* Call the callback to process it */
-        eth_rx_callback(rx_pkt[rxout].rxbuff, rx_pkt[rxout].pkt_size);
-
-        rxout = (rxout + 1) % MAX_PKTS;
-    }
+    if(rxout != rxin)
+        bba_rx_process();
 
     return 0;
 }
