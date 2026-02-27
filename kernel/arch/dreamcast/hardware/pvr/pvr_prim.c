@@ -7,7 +7,7 @@
 
 #include <assert.h>
 #include <string.h>
-#include <arch/cache.h>
+#include <kos/cache.h>
 #include <dc/pvr.h>
 #include "pvr_internal.h"
 

@@ -7,7 +7,6 @@
 #include <dc/sci.h>
 #include <dc/math.h>
 #include <arch/arch.h>
-#include <arch/cache.h>
 #include <arch/dmac.h>
 #include <kos/timer.h>
 

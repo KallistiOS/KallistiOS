@@ -6,8 +6,8 @@
 */
 
 #include <arch/arch.h>
-#include <arch/cache.h>
 #include <sys/uio.h>
+#include <kos/cache.h>
 #include <kos/netcfg.h>
 #include <kos/fs.h>
 #include <kos/thread.h>

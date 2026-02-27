@@ -45,7 +45,6 @@ __BEGIN_DECLS
 
 #include <dc/memory.h>
 #include <arch/types.h>
-#include <arch/cache.h>
 #include <dc/sq.h>
 #include <kos/img.h>
 #include <kos/regfield.h>

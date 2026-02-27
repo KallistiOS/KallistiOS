@@ -8,8 +8,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <arch/cache.h>
 #include <arch/arch.h>
+#include <kos/cache.h>
 #include <kos/fs.h>
 #include <kos/elf.h>
 #include <kos/exports.h>
