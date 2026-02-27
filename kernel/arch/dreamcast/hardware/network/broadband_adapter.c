@@ -9,6 +9,7 @@
  */
 
 #include <stdalign.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
@@ -227,7 +228,7 @@ static uint32_t const txdesc[TX_NB_BUFFERS] = {
 };
 
 /* Is the link stabilized? */
-static volatile int link_stable;
+static volatile bool link_stable;
 
 /* Receive callback */
 static eth_rx_callback_t eth_rx_callback;
@@ -272,7 +273,7 @@ static int rtl_reset(void) {
 static int bba_hw_init(void) {
     uint32_t tmp;
 
-    link_stable = 0;
+    link_stable = false;
 
     /* Initialize GAPS */
     if(gaps_init() < 0)
@@ -749,7 +750,7 @@ static void bba_link_change(void) {
         dbglog(DBG_INFO, "bba: link stable\n");
 
         // The link is back.
-        link_stable = 1;
+        link_stable = true;
     }
     else {
         dbglog(DBG_INFO, "bba: link lost\n");
@@ -761,7 +762,7 @@ static void bba_link_change(void) {
                     RT_MII_AN_START);
 
         // The link is gone.
-        link_stable = 0;
+        link_stable = false;
     }
 }
 
