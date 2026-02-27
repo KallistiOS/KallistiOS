@@ -175,13 +175,6 @@ thd_block_now
 #library_open
 #library_close
 
-# Cache management
-icache_flush_range
-dcache_inval_range
-dcache_flush_range
-dcache_purge_range
-dcache_purge_all
-
 # Low-level debug I/O
 __real_dbglog
 dbgio_set_irq_usage

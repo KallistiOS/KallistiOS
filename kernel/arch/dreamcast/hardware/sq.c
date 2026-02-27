@@ -10,9 +10,9 @@
 
 #include <assert.h>
 
-#include <arch/cache.h>
 #include <arch/mmu.h>
 #include <dc/sq.h>
+#include <kos/cache.h>
 #include <kos/dbglog.h>
 #include <kos/mutex.h>
 
@@ -144,7 +144,7 @@ __noinline void *sq_cpy(void *dest, const void *src, size_t n) {
         /* If src is not 8-byte aligned, slow path */
         if(!__is_aligned(src, 8)) {
             while(nb--) {
-                dcache_pref_block(s + 8); /* Prefetch 32 bytes for next loop */
+                dcache_pref_line(s + 8); /* Prefetch 32 bytes for next loop */
                 d[0] = *(s++);
                 d[1] = *(s++);
                 d[2] = *(s++);
