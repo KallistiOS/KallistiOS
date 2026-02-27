@@ -67,11 +67,15 @@ void fsincosr(float f, float *s, float *c) {
 }
 
 uint32_t __pure pvr_pack_bump(float h, float t, float q) {
+    float s, c;
+
+    fsincos(t, &s, &c);
+
     uint8_t hp = (uint8_t)(h * 255.0f);
     uint8_t k1 = ~hp;
-    uint8_t k2 = (uint8_t)(hp * __fsin(t));
-    uint8_t k3 = (uint8_t)(hp * __fcos(t));
-    uint8_t qp = (uint8_t)((q / (2 * F_PI)) * 255.0f);
+    uint8_t k2 = (uint8_t)(hp * s);
+    uint8_t k3 = (uint8_t)(hp * c);
+    uint8_t qp = (uint8_t)((q / (2.0f * F_PI)) * 255.0f);
 
     return (k1 << 24) | (k2 << 16) | (k3 << 8) | qp;
 }
