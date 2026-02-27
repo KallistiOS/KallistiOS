@@ -11,8 +11,6 @@
  */
 #include <assert.h>
 
-#include <arch/cache.h>
-
 #include <dc/asic.h>
 #include <dc/cdrom.h>
 #include <dc/g1ata.h>
@@ -20,6 +18,7 @@
 #include <dc/syscalls.h>
 #include <dc/vblank.h>
 
+#include <kos/cache.h>
 #include <kos/irq.h>
 #include <kos/timer.h>
 #include <kos/thread.h>
