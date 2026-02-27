@@ -136,7 +136,6 @@ void do_frame(void) {
     pvr_modifier_vol_t mod;
     int i;
 
-    pvr_wait_ready();
     pvr_scene_begin();
     pvr_list_begin(list);
 

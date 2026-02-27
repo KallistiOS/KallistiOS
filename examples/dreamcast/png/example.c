@@ -184,7 +184,6 @@ int y = 0;
 
 /* draw one frame */
 void draw_frame(void) {
-    pvr_wait_ready();
     pvr_scene_begin();
 
     pvr_list_begin(PVR_LIST_OP_POLY);

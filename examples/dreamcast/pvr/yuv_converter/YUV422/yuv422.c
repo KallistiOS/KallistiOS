@@ -240,8 +240,6 @@ static void convert_YUV422_to_YUV422_texture(void) {
 }
 
 static void show_image(void) {
-
-    pvr_wait_ready();
     pvr_scene_begin();
 
     pvr_list_begin(PVR_LIST_OP_POLY);

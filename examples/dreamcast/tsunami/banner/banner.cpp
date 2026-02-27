@@ -154,7 +154,6 @@ int main(int argc, char **argv) {
 
     // Enter the main loop -- user interaction would normally happen here.
     while(!done) {
-        pvr_wait_ready();
         pvr_scene_begin();
         pvr_list_begin(PVR_LIST_OP_POLY);
 
@@ -215,7 +214,6 @@ int main(int argc, char **argv) {
 
     // Ok, do another drawing loop, and quit when the scene says it's done
     while(!sc->isFinished() && !done2) {
-        pvr_wait_ready();
         pvr_scene_begin();
         pvr_list_begin(PVR_LIST_OP_POLY);
 

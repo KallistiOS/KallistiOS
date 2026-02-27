@@ -157,7 +157,6 @@ void _display_png_file(char *file_path, int x1, int y1, int x2, int y2) {
   pvr_poly_hdr_t hdr;
   pvr_vertex_t vert;
 
-  pvr_wait_ready();
   pvr_scene_begin();
 
   pvr_list_begin(PVR_LIST_OP_POLY);
