@@ -56,7 +56,7 @@ void arch_exec_at(const void *image, uint32_t length, uint32_t address) {
 
     /* Flush both caches for the trampoline area */
     dcache_flush_range((uintptr_t)buffer, tcount * 4);
-    icache_flush_range((uintptr_t)buffer, tcount * 4);
+    icache_sync_range((uintptr_t)buffer, tcount * 4);
 
     /* Shut us down */
     arch_shutdown();

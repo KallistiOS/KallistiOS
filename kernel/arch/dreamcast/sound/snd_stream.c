@@ -209,7 +209,7 @@ static void snd_pcm16_split_unaligned(void *buffer, void *left, void *right, siz
     uint32_t right_val;
 
     for(; len >= 8; len -= 8) {
-        dcache_pref_block(buf + 8);
+        dcache_pref_line(buf + 8);
 
         data = *buf++;
         left_val = (data >> 16);
@@ -220,8 +220,8 @@ static void snd_pcm16_split_unaligned(void *buffer, void *left, void *right, siz
         right_val |= (data & 0xffff) << 16;
 
         if(__is_aligned(left_ptr, 32)) {
-            dcache_alloc_block(left_ptr++, left_val);
-            dcache_alloc_block(right_ptr++, right_val);
+            dcache_alloc_line(left_ptr++, left_val);
+            dcache_alloc_line(right_ptr++, right_val);
         }
         else {
             *left_ptr++ = left_val;
@@ -251,7 +251,7 @@ void snd_pcm16_split_sq(uint32_t *data, uintptr_t left, uintptr_t right, size_t 
     masked_right = SQ_MASK_DEST(right);
 
     sq_lock((void *)left);
-    dcache_pref_block(s);
+    dcache_pref_line(s);
 
     ctx = g2_lock();
 
