@@ -27,37 +27,30 @@
 
 static net_ipv4_stats_t ipv4_stats = { 0 };
 
+static inline uint16_t checksum_one(uint16_t val, uint16_t sum) {
+    uint16_t result;
+
+    return __builtin_add_overflow(val, sum, &result) + result;
+}
+
 /* Perform an IP-style checksum on a block of data */
-uint16_t __pure net_ipv4_checksum(const uint8_t *data, size_t bytes, uint16_t start) {
-    uint32_t sum = start;
-    uintptr_t end = (uintptr_t)data + bytes;
-
+uint16_t __pure net_ipv4_checksum(const uint8_t *data, size_t bytes, uint16_t sum) {
     /* Make sure we don't do any unaligned memory accesses */
-    if(((uint32_t)data) & 0x01) {
-        const uint8_t *ptr = data;
+    if((uintptr_t)data & 1) {
+        sum = checksum_one(*data, sum);
+        bytes--;
+        data++;
+    }
 
-        while((size_t)(&ptr[2]) <= end) {
-            sum += ptr[0] | ((ptr[1]) << 8);
-            ptr += 2;
-        }
-    }
-    /* Fast path assumes at least 2-byte alignment. */
-    else {
-        const uint16_t *ptr = (const uint16_t *)data;
-        while((size_t)(&ptr[1]) <= end) {
-            sum += *ptr++;
-        }
-    }
+    /* Compute checksum two bytes at a time */
+    for(; bytes > 1; bytes -= 2, data += 2)
+        sum = checksum_one(*(const uint16_t *)data, sum);
 
     /* Handle the last byte, if we have an odd byte count */
-    if(bytes & 0x1)
-        sum += data[bytes - 1];
+    if(bytes)
+        sum = checksum_one(*data, sum);
 
-    /* Take care of any carry bits */
-    while(sum >> 16)
-        sum = (sum >> 16) + (sum & 0xFFFF);
-
-    return (uint16_t)~sum;
+    return ~sum;
 }
 
 /* Determine if a given IP is in the current network */
