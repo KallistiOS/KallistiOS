@@ -121,7 +121,7 @@ _arch_icache_sync_range:
     or       r1, r6        ! CACHE_IC_ADDRESS_ARRAY | (v & CACHE_IC_ENTRY_MASK)
     ocbwb    @r7           ! Write back D cache
     and      r3, r7        ! v & 0xfffffc00
-    bt/s     .iinval_loop
+    bt/s     .iflush_loop
     mov.l    r7, @r6       ! Invalidate cache entry
 
     ! make sure we have enough instrs before returning to P1
