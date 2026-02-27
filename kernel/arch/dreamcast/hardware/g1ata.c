@@ -895,7 +895,7 @@ int g1_ata_write_lba_dma(uint64_t sector, size_t count, const void *buf,
     */
     if((addr & MEM_AREA_P2_BASE) != MEM_AREA_P2_BASE) {
         /* Flush the dcache over the range of the data. */
-        dcache_flush_range(addr, count * 512);
+        dcache_wback_range(addr, count * 512);
     }
 
     /* Use the physical memory address. */

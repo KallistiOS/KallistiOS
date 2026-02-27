@@ -42,7 +42,7 @@ void arch_exec_at(const void *image, uint32_t length, uint32_t address) {
     irq_disable();
 
     /* Flush the data cache for the source area */
-    dcache_flush_range((uintptr_t)image, length);
+    dcache_wback_range((uintptr_t)image, length);
 
     /* Copy over the trampoline */
     for(i = 0; i < tcount; i++)
@@ -55,8 +55,8 @@ void arch_exec_at(const void *image, uint32_t length, uint32_t address) {
     values[3] = _arch_old_stack;    /* Patch in old R15 */
 
     /* Flush both caches for the trampoline area */
-    dcache_flush_range((uintptr_t)buffer, tcount * 4);
-    icache_flush_range((uintptr_t)buffer, tcount * 4);
+    dcache_wback_range((uintptr_t)buffer, tcount * 4);
+    icache_sync_range((uintptr_t)buffer, tcount * 4);
 
     /* Shut us down */
     arch_shutdown();
