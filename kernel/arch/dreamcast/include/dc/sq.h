@@ -110,7 +110,13 @@ void sq_wait(void);
 
     \sa sq_wait()
 */
-#define sq_flush(dest) dcache_wback_sq(dest)
+static inline void sq_flush(void *src) {
+    __asm__ __volatile__("pref @%0\n"
+                         : /* No outputs */
+                         : "r" (src)
+                         : "memory"
+    );
+}
 
 /** \brief   Copy a block of memory.
     \ingroup store_queues

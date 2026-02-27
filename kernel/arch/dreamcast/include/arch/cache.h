@@ -209,12 +209,7 @@ static __always_inline void dcache_pref_block(const void *src) {
     );
 }
 
-/** \brief  Write-back Store Queue buffer to external memory
-
-    This function initiates write-back for one Store Queue.
-
-    \param  src             The SQ mapped address to write-back.
-*/
+__depr("dcache_wback_sq is deprecated. Use sq_flush() from <dc/sq.h>")
 static __always_inline void dcache_wback_sq(void *src) {
     __asm__ __volatile__("pref @%0\n"
                          : /* No outputs */
