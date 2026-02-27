@@ -31,6 +31,8 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
+#include <kos/regfield.h>
+
 #include <stdint.h>
 
 #define ARCH_CACHE_L1_ICACHE_SIZE       (8 * 1024)
@@ -47,13 +49,6 @@ __BEGIN_DECLS
 
 void arch_icache_inval_range(uintptr_t start, size_t count);
 void arch_icache_sync_range(uintptr_t start, size_t count);
-
-void arch_dcache_inval_range(uintptr_t start, size_t count);
-void arch_dcache_flush_range(uintptr_t start, size_t count);
-void arch_dcache_purge_range(uintptr_t start, size_t count);
-
-void arch_dcache_flush_all(void);
-void arch_dcache_purge_all(void);
 
 static inline void arch_dcache_pref_line(const void *src) {
     __builtin_prefetch(src);
@@ -121,6 +116,61 @@ static inline void arch_dcache_flush_line(void *src) {
                "=m"(ptr[7])
              : "r" (ptr)
     );
+}
+
+static inline void arch_dcache_inval_range(uintptr_t start, size_t count) {
+    uintptr_t end = start + count;
+
+    start &= ~0x1f;
+
+    for(; start < end; start += 32)
+        arch_dcache_inval_line((void *)start);
+}
+
+static inline void arch_dcache_flush_all(void) {
+    unsigned int i;
+    volatile uint32_t *dca = (volatile uint32_t *)0xf4000008;
+
+    for (i = 0; i < 512; i++, dca += 8)
+        *dca &= ~BIT(1); /* Zero out U bit */
+}
+
+static inline void arch_dcache_flush_range(uintptr_t start, size_t count) {
+    uintptr_t end = start + count;
+
+    if(count >= 65560) {
+        /* Above this magic threshold, it's just faster to flush the whole cache. */
+        arch_dcache_flush_all();
+    }
+    else {
+        start &= ~0x1f;
+
+        for(; start < end; start += 32)
+            arch_dcache_flush_line((void *)start);
+    }
+}
+
+static inline void arch_dcache_purge_all(void) {
+    volatile uint32_t *dca = (volatile uint32_t *)0xf4000008;
+    unsigned int i;
+
+    for (i = 0; i < 512; i++, dca += 8)
+        *dca = 0;
+}
+
+static inline void arch_dcache_purge_range(uintptr_t start, size_t count) {
+    uintptr_t end = start + count;
+
+    if(count >= 39936) {
+        /* Above this magic threshold, it's just faster to purge the whole cache. */
+        arch_dcache_purge_all();
+    }
+    else {
+        start &= ~0x1f;
+
+        for(; start < end; start += 32)
+            arch_dcache_purge_line((void *)start);
+    }
 }
 
 /** @} */
