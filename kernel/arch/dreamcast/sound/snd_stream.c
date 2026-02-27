@@ -18,10 +18,10 @@
 #include <sys/cdefs.h>
 #include <sys/queue.h>
 
+#include <kos/cache.h>
 #include <kos/dbglog.h>
 #include <kos/sem.h>
 #include <kos/thread.h>
-#include <arch/cache.h>
 #include <kos/timer.h>
 #include <dc/g2bus.h>
 #include <dc/sq.h>

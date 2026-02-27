@@ -9,10 +9,10 @@
    build flag.
 */
 
+#include <kos/cache.h>
 #include <kos/irq.h>
 #include <kos/mutex.h>
 #include <arch/arch.h>
-#include <arch/cache.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
