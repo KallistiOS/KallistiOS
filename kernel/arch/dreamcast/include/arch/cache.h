@@ -33,6 +33,7 @@ __BEGIN_DECLS
 
 #include <kos/regfield.h>
 
+#include <stdalign.h>
 #include <stdint.h>
 
 #define ARCH_CACHE_L1_ICACHE_SIZE       (8 * 1024)
@@ -151,11 +152,24 @@ static inline void arch_dcache_flush_range(uintptr_t start, size_t count) {
 }
 
 static inline void arch_dcache_purge_all(void) {
-    volatile uint32_t *dca = (volatile uint32_t *)0xf4000008;
     unsigned int i;
 
-    for (i = 0; i < 512; i++, dca += 8)
-        *dca = 0;
+    if(__is_defined(__OPTIMIZE_SIZE__)) {
+        volatile uint32_t *dca = (volatile uint32_t *)0xf4000008;
+
+        for (i = 0; i < 512; i++, dca += 8)
+            *dca = 0;
+    }
+    else {
+        alignas(32) static char buffer[ARCH_CACHE_L1_DCACHE_SIZE];
+        char *buf = buffer;
+
+        for(i = 0; i < ARCH_CACHE_L1_DCACHE_SIZE / 32; i++) {
+            arch_dcache_alloc_line(buf, 0);
+            arch_dcache_inval_line(buf);
+            buf += 32;
+        }
+    }
 }
 
 static inline void arch_dcache_purge_range(uintptr_t start, size_t count) {
