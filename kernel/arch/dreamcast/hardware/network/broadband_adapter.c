@@ -482,8 +482,6 @@ static uint32 rx_size;
 static kthread_t * bba_rx_thread;
 static semaphore_t bba_rx_sema;
 static int bba_rx_exit_thread;
-static semaphore_t bba_rx_sema2;
-
 static void bba_rx(void);
 
 static semaphore_t tx_sema;
@@ -690,16 +688,6 @@ int bba_tx(const uint8 * pkt, int len, int wait) {
     return res;
 }
 
-void bba_lock(void) {
-    //sem_wait(&bba_rx_sema2);
-    //asic_evt_disable(ASIC_EVT_EXP_PCI, BBA_ASIC_IRQ);
-}
-
-void bba_unlock(void) {
-    //asic_evt_enable(ASIC_EVT_EXP_PCI, BBA_ASIC_IRQ);
-    //sem_signal(&bba_rx_sema2);
-}
-
 static void *bba_rx_threadfunc(void *dummy) {
     (void)dummy;
 
@@ -710,8 +698,6 @@ static void *bba_rx_threadfunc(void *dummy) {
         if(bba_rx_exit_thread)
             break;
 
-        bba_lock();
-
         if(rxout != rxin) {
 
             /* Call the callback to process it */
@@ -719,8 +705,6 @@ static void *bba_rx_threadfunc(void *dummy) {
 
             rxout = (rxout + 1) % MAX_PKTS;
         }
-
-        bba_unlock();
     }
 
     bba_rx_exit_thread = 0;
@@ -919,7 +903,6 @@ static int bba_if_start(netif_t *self) {
     // Start the BBA RX thread.
     assert(bba_rx_thread == NULL);
     sem_init(&bba_rx_sema, 0);
-    sem_init(&bba_rx_sema2, 1);
     bba_rx_thread = thd_create(0, bba_rx_threadfunc, 0);
     bba_rx_thread->prio = 1;
     thd_set_label(bba_rx_thread, "BBA-rx-thd");
@@ -954,10 +937,8 @@ static int bba_if_stop(netif_t *self) {
     assert(bba_rx_thread != NULL);
     bba_rx_exit_thread = 1;
     sem_signal(&bba_rx_sema);
-    sem_signal(&bba_rx_sema2);
     thd_join(bba_rx_thread, NULL);
     sem_destroy(&bba_rx_sema);
-    sem_destroy(&bba_rx_sema2);
 
     bba_rx_thread = NULL;
 
