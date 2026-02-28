@@ -183,6 +183,27 @@ int main() {
 			}
 		}
 		EndDrawing();
+
+		// Check the inputs for an exit combination of ABXYStart on every controller port
+		// A more complicated program would likely want to decouple input checks from framerate,
+		// which this example accomplishes by putting the input check in the same loop as drawing.
+		for (int i = 0; i < 4; ++i) {
+			// Assuming gamepad 0 is the primary controller
+			if(IsGamepadAvailable(i)){
+				int a_pressed = IsGamepadButtonDown(i, GAMEPAD_BUTTON_RIGHT_FACE_DOWN);
+				int b_pressed = IsGamepadButtonDown(i, GAMEPAD_BUTTON_RIGHT_FACE_RIGHT);
+				int x_pressed = IsGamepadButtonDown(i, GAMEPAD_BUTTON_RIGHT_FACE_LEFT);
+				int y_pressed = IsGamepadButtonDown(i, GAMEPAD_BUTTON_RIGHT_FACE_UP);
+				int start_pressed = IsGamepadButtonDown(i, GAMEPAD_BUTTON_MIDDLE_RIGHT);
+
+				// Now we do the check. We don't really care what controller presses the combo,
+				// only that some controller presses the combo.
+				if (a_pressed && b_pressed && x_pressed && y_pressed && start_pressed) {
+					// I think this directly closes the window, which should escape the loop
+					CloseWindow();
+				}
+			}
+		}
 	}
 
 	// Cleanup. Even thought we shouldn't reach here under normal circumstances.
