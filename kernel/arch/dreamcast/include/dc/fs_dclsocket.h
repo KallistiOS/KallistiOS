@@ -30,7 +30,6 @@ __BEGIN_DECLS
 */
 
 /* \cond */
-extern dbgio_handler_t dbgio_dcls;
 
 /* Initialization */
 void fs_dclsocket_init_console(void);

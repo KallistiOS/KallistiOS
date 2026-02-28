@@ -560,14 +560,6 @@ static int dcls_detected(void) {
     return initted > 0;
 }
 
-static int dcls_fake_init(void) {
-    return 0;
-}
-
-static int dcls_fake_shutdown(void) {
-    return 0;
-}
-
 static int dcls_writebuf(const uint8_t *buf, int len, int xlat) {
     command_3int_t cmd;
 
@@ -664,26 +656,8 @@ static vfs_handler_t vh = {
 dbgio_handler_t dbgio_dcls = {
     .name = "fs_dclsocket",
     .detected = dcls_detected,
-    .init = dcls_fake_init,
-    .shutdown = dcls_fake_shutdown,
     .write_buffer = dcls_writebuf
 };
-
-/* This function must be called prior to calling fs_dclsocket_init() */
-void fs_dclsocket_init_console(void) {
-    /* Make sure networking is up first of all */
-    if(!net_default_dev) {
-        return;
-    }
-
-    dbgio_dcls.set_irq_usage = dbgio_null.set_irq_usage;
-    dbgio_dcls.read = dbgio_null.read;
-    dbgio_dcls.write = dbgio_null.write;
-    dbgio_dcls.flush = dbgio_null.flush;
-    dbgio_dcls.read_buffer = dbgio_null.read_buffer;
-
-    initted = 1;
-}
 
 uint32_t _fs_dclsocket_get_ip(void) {
     uint32_t ip, port;
@@ -697,8 +671,8 @@ int fs_dclsocket_init(void) {
     uint8_t ipaddr[4], mac[6];
     uint32_t ip, port;
 
-    /* Make sure we've initted the console */
-    if(initted != 1)
+    /* Make sure networking is up, first of all */
+    if(!net_default_dev)
         return -1;
 
     /* Make sure we're actually on dcload-ip */
@@ -749,6 +723,9 @@ int fs_dclsocket_init(void) {
     if(mutex_init(&mutex, MUTEX_TYPE_NORMAL))
         goto error;
 
+    /* We're all ready, so install the dbgio handler */
+    dbgio_add_handler(&dbgio_dcls);
+
     initted = 2;
 
     return nmmgr_handler_add(&vh.nmmgr);
@@ -768,8 +745,7 @@ void fs_dclsocket_shutdown(void) {
     dbglog(DBG_INFO, "fs_dclsocket: About to disable console\n");
 
     /* Disable the console first of all */
-    if(!strcmp(dbgio_dev_get(), "fs_dclsocket"))
-        dbgio_disable();
+    dbgio_remove_handler(&dbgio_dcls);
 
     /* Send dc-tool an exit packet */
     memcpy(cmd.id, "DC00", 4);

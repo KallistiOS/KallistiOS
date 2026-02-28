@@ -29,7 +29,6 @@ vblank_handler_remove
 # SCIF
 scif_set_parameters
 scif_set_irq_usage
-scif_detected
 scif_init
 scif_shutdown
 scif_read
