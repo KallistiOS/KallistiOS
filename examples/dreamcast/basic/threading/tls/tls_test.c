@@ -16,11 +16,11 @@
 #include <errno.h>
 #include <string.h>
 
+#include <kos/init.h>
 #include <kos/thread.h>
 #include <kos/once.h>
 #include <kos/tls.h>
 
-#include <arch/arch.h>
 #include <dc/maple.h>
 #include <dc/maple/controller.h>
 
@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
     int retval;
 
     cont_btn_callback(0, CONT_START | CONT_A | CONT_B | CONT_X | CONT_Y,
-                      (cont_btn_callback_t)arch_exit);
+                      (cont_btn_callback_t)exit);
 
     printf("KallistiOS TLS test program\n\n");
 

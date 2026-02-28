@@ -161,7 +161,7 @@ export KOS_CFLAGS="${KOS_CFLAGS} -O2"
 
 # Position-Independent Code
 #
-# Comment this line out to enable position-dependent code. Codegen is slightly
+# Comment this line out to enable position-independent code. Codegen is slightly
 # slower, and you lose a register, but it's required when building dynamically
 # linked libraries or code whose symbols aren't resolved until runtime.
 #

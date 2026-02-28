@@ -23,8 +23,6 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
-
 /* These first two versions are mainly for use with the GBA, and they are
    defined in the "pcx_small" file. They can be used on any architecture of
    course. */

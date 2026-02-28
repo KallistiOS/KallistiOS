@@ -20,15 +20,15 @@
 #include <kos/thread.h>
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>
+#include <kos/irq.h>
 #include <kos/sem.h>
 #include <kos/rwsem.h>
 #include <kos/cond.h>
 #include <kos/genwait.h>
+#include <kos/timer.h>
 
 #include <arch/arch.h>
-#include <arch/irq.h>
 #include <arch/stack.h>
-#include <kos/timer.h>
 #include <arch/tls_static.h>
 
 /*
@@ -46,7 +46,7 @@ also using their queue library verbatim (sys/queue.h).
 
 /* Builtin background thread data */
 static alignas(THD_STACK_ALIGNMENT) uint8_t thd_reaper_stack[512];
-static alignas(THD_STACK_ALIGNMENT) uint8_t thd_idle_stack[64];
+static alignas(THD_STACK_ALIGNMENT) uint8_t thd_idle_stack[512];
 
 /*****************************************************************************/
 /* Thread scheduler data */
@@ -99,6 +99,8 @@ static const char *thd_state_to_str(kthread_t *thd) {
             else
                 return "wait";
 
+        case STATE_POLLING:
+            return "polling";
         case STATE_FINISHED:
             return "finished";
         default:
@@ -210,6 +212,19 @@ kthread_t *thd_by_tid(tid_t tid) {
 }
 
 
+static bool thd_has_polls(void) {
+    kthread_t *thd;
+
+    irq_disable_scoped();
+
+    TAILQ_FOREACH(thd, &run_queue, thdq) {
+        if(thd->state == STATE_POLLING)
+            return true;
+    }
+
+    return false;
+}
+
 /*****************************************************************************/
 /* Thread support routines: idle task and start task wrapper */
 
@@ -226,7 +241,10 @@ static void *thd_idle_task(void *param) {
     (void)param;
 
     for(;;) {
-        arch_sleep();   /* We can safely enter sleep mode here */
+        if(thd_has_polls())
+            thd_pass();     /* If some threads are polling, reschedule */
+        else
+            arch_sleep();   /* We can safely enter sleep mode here */
     }
 
     /* Never reached */
@@ -370,7 +388,7 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
                          void *(*routine)(void *param), void *param) {
     kthread_t *nt = NULL;
     tid_t tid;
-    uint32_t params[4];
+    uintptr_t params[4];
     kthread_attr_t real_attr = { false, THD_STACK_SIZE, NULL, PRIO_DEFAULT, NULL, false };
 
     if(attr)
@@ -425,13 +443,13 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
             nt->stack_size = real_attr.stack_size;
 
             /* Populate the context */
-            params[0] = (uint32_t)routine;
-            params[1] = (uint32_t)param;
+            params[0] = (uintptr_t)routine;
+            params[1] = (uintptr_t)param;
             params[2] = 0;
             params[3] = 0;
             irq_create_context(&nt->context,
-                               ((uint32_t)nt->stack) + nt->stack_size,
-                               (uint32_t)thd_birth, params, 0);
+                               ((uintptr_t)nt->stack) + nt->stack_size,
+                               (uintptr_t)thd_birth, params);
 
             /* Some architectures require setting up a new stack before use.
                We won't do this if routine is NULL, however, as this means
@@ -568,14 +586,14 @@ int thd_set_prio(kthread_t *thd, prio_t prio) {
     return 0;
 }
 
-prio_t thd_get_prio(kthread_t *thd) {
+prio_t thd_get_prio(const kthread_t *thd) {
     if(!thd)
         thd = thd_current;
 
     return thd->prio;
 }
 
-tid_t thd_get_id(kthread_t *thd) {
+tid_t thd_get_id(const kthread_t *thd) {
     if(!thd)
         thd = thd_current;
 
@@ -635,6 +653,7 @@ static inline void thd_schedule_inner(kthread_t *thd) {
 void thd_schedule(bool front_of_line) {
     kthread_t *thd;
     uint64_t now;
+    int ret;
 
     now = timer_ms_gettime64();
 
@@ -659,6 +678,23 @@ void thd_schedule(bool front_of_line) {
        we don't find a normal runnable thread, the idle process will
        always be there at the bottom. */
     TAILQ_FOREACH(thd, &run_queue, thdq) {
+        if(__predict_false(thd->state == STATE_POLLING)) {
+            /* Is it polling? Call the polling function. */
+
+            if(thd->wait_timeout && thd->wait_timeout < now) {
+                thd->state = STATE_READY;
+                CONTEXT_RET(thd->context) = 0;
+            }
+            else {
+                ret = thd->poll_cb(thd->wait_obj);
+
+                if(ret) {
+                    thd->state = STATE_READY;
+                    CONTEXT_RET(thd->context) = ret;
+                }
+            }
+        }
+
         /* Is it runnable? If not, keep going */
         if(thd->state == STATE_READY)
             break;
@@ -674,6 +710,9 @@ void thd_schedule(bool front_of_line) {
            above. */
         if(thd == NULL || thd == thd_idle_thd)
             thd = thd_current;
+    }
+    else if(__predict_false(thd_current->state == STATE_POLLING)) {
+        thd_add_to_runnable(thd_current, front_of_line);
     }
 
     /* Didn't find one? Big problem here... */
@@ -763,7 +802,7 @@ void thd_sleep(unsigned int ms) {
        sleep cases into a single case, which is nice for scheduling
        purposes. 0xffffffff definitely doesn't exist as an object, so we'll
        use that for straight up timeouts. */
-    genwait_wait((void *)0xffffffff, "thd_sleep", ms, NULL);
+    genwait_wait((void *)0xffffffff, "thd_sleep", ms);
 }
 
 /* Manually cause a re-schedule */
@@ -816,7 +855,7 @@ int thd_join(kthread_t *thd, void **value_ptr) {
     else {
         if(thd->state != STATE_FINISHED) {
             /* Wait for the target thread to die */
-            genwait_wait(thd, "thd_join", 0, NULL);
+            genwait_wait(thd, "thd_join", 0);
         }
 
         /* Ok, we're all clear */
@@ -872,8 +911,37 @@ int thd_detach(kthread_t *thd) {
 
 
 /*****************************************************************************/
+
+int thd_poll(thd_cb_t cb, void *data, unsigned long timeout_ms) {
+    kthread_t *thd = thd_current;
+    int ret;
+
+    assert(cb != NULL);
+    assert(!irq_inside_int());
+
+    irq_disable_scoped();
+
+    /* Try to poll once, just in case */
+    ret = cb(data);
+    if(ret)
+        return ret;
+
+    thd->state = STATE_POLLING;
+    thd->poll_cb = cb;
+    thd->wait_obj = data;
+
+    if (timeout_ms > 0)
+        thd->wait_timeout = timer_ms_gettime64() + timeout_ms;
+    else
+        thd->wait_timeout = 0;
+
+    return thd_block_now(&thd->context);
+}
+
+
+/*****************************************************************************/
 /* Retrieve / set thread label */
-const char *thd_get_label(kthread_t *thd) {
+const char *thd_get_label(const kthread_t *thd) {
     if(!thd)
         thd = thd_current;
 
@@ -892,8 +960,12 @@ kthread_t *thd_get_current(void) {
     return thd_current;
 }
 
+kthread_t *thd_get_idle(void) {
+    return thd_idle_thd;
+}
+
 /* Retrieve / set thread pwd */
-const char *thd_get_pwd(kthread_t *thd) {
+const char *thd_get_pwd(const kthread_t *thd) {
     if(!thd)
         thd = thd_current;
 
@@ -957,45 +1029,6 @@ int thd_set_hz(unsigned int hertz) {
         return -1;
 
     thd_sched_ms = 1000 / hertz;
-
-    return 0;
-}
-
-/* Delete a TLS key. Note that currently this doesn't prevent you from reusing
-   the key after deletion. This seems ok, as the pthreads standard states that
-   using the key after deletion results in "undefined behavior".
-   XXXX: This should really be in tls.c, but we need the list of threads to go
-   through, so it ends up here instead. */
-int kthread_key_delete(kthread_key_t key) {
-    kthread_t *cur;
-    kthread_tls_kv_t *i, *tmp;
-
-    irq_disable_scoped();
-
-    /* Make sure the key is valid. */
-    if(key >= kthread_key_next() || key < 1) {
-        errno = EINVAL;
-        return -1;
-    }
-
-    /* Make sure we can actually use free below. */
-    if(!malloc_irq_safe()) {
-        errno = EPERM;
-        return -1;
-    }
-
-    /* Go through each thread searching for (and removing) the data. */
-    LIST_FOREACH(cur, &thd_list, t_list) {
-        LIST_FOREACH_SAFE(i, &cur->tls_list, kv_list, tmp) {
-            if(i->key == key) {
-                LIST_REMOVE(i, kv_list);
-                free(i);
-                break;
-            }
-        }
-    }
-
-    kthread_key_delete_destructor(key);
 
     return 0;
 }

@@ -1,8 +1,25 @@
 KallistiOS ##version##  
 Copyright (C) 2002, 2003 Megan Potter  
 Copyright (C) 2012-2019 Lawrence Sebald  
-Copyright (C) 2024-2025 Donald Haase  
+Copyright (C) 2024-2026 Donald Haase  
 Copyright (C) 2025 Eric Fradella  
+
+RELEASE NOTES for 2.2.2
+-----------------------
+
+Another minor patch version to collect ~20 PRs of bug fixes. Notably GDB is no
+longer built by default with the toolchain as it was frequently breaking,
+further improvements to rumble support, and fixes to allow CLion to function
+again with our build wrappers.
+
+RELEASE NOTES for 2.2.1
+-----------------------
+
+This minor patch version is primarily aimed at fixing a bug in newlib that
+caused serious issues with dma reading. Alongside that ~20 PRs were included that
+contained minor bugfixes and cmake environment updates. Notably, issues reported
+with clock drift from the DC's SH4 clock should be fixed and 1st party rumble
+packs are now supported.
 
 RELEASE NOTES for 2.2.0
 -----------------------

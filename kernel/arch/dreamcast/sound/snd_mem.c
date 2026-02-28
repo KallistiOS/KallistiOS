@@ -2,7 +2,7 @@
 
    snd_mem.c
    Copyright (C) 2002 Megan Potter
-   Copyright (C) 2023 Ruslan Rostovtsev
+   Copyright (C) 2023, 2025 Ruslan Rostovtsev
 
  */
 
@@ -13,8 +13,9 @@
 #include <errno.h>
 #include <sys/queue.h>
 #include <dc/sound/sound.h>
-#include <arch/spinlock.h>
+#include <arch/arch.h>
 #include <kos/dbglog.h>
+#include <kos/spinlock.h>
 
 /*
 
@@ -51,7 +52,7 @@ typedef struct snd_block_str {
     TAILQ_ENTRY(snd_block_str)  qent;
 
     /* The address of this block (offset from SPU RAM base) */
-    uint32  addr;
+    uint32_t  addr;
 
     /* The size of this block */
     size_t  size;
@@ -67,7 +68,7 @@ static spinlock_t snd_mem_mutex = SPINLOCK_INITIALIZER;
 
 
 /* Reinitialize the pool with the given RAM base offset */
-int snd_mem_init(uint32 reserve) {
+int snd_mem_init(uint32_t reserve) {
     snd_block_t *blk;
 
     if(initted)
@@ -94,7 +95,12 @@ int snd_mem_init(uint32 reserve) {
 
     memset(blk, 0, sizeof(snd_block_t));
     blk->addr = reserve;
-    blk->size = 2 * 1024 * 1024 - reserve;
+
+    if(hardware_sys_mode(NULL) == HW_TYPE_RETAIL)
+        blk->size = 2 * 1024 * 1024 - reserve;
+    else
+        blk->size = 8 * 1024 * 1024 - reserve;
+
     blk->inuse = 0;
     TAILQ_INSERT_HEAD(&pool, blk, qent);
 
@@ -135,9 +141,9 @@ void snd_mem_shutdown(void) {
 }
 
 /* Allocate a chunk of SPU RAM; we will return an offset into SPU RAM. */
-uint32 snd_mem_malloc(size_t size) {
+uint32_t snd_mem_malloc(size_t size) {
     snd_block_t *e, *best = NULL;
-    size_t best_size = 4 * 1024 * 1024;
+    size_t best_size = SIZE_MAX;
 
     assert_msg(initted, "Use of snd_mem_malloc before snd_mem_init");
 
@@ -207,7 +213,7 @@ uint32 snd_mem_malloc(size_t size) {
 
 /* Free a chunk of SPU RAM; pointer is expected to be an offset into
    SPU RAM. */
-void snd_mem_free(uint32 addr) {
+void snd_mem_free(uint32_t addr) {
     snd_block_t *e, *o;
 
     assert_msg(initted, "Use of snd_mem_free before snd_mem_init");
@@ -225,7 +231,7 @@ void snd_mem_free(uint32 addr) {
     }
 
     if(!e) {
-        dbglog(DBG_ERROR, "snd_mem_free: attempt to free non-existent block at %08lx\n", (uint32)e);
+        dbglog(DBG_ERROR, "snd_mem_free: attempt to free non-existent block at %08lx\n", (uint32_t)e);
         spinlock_unlock(&snd_mem_mutex);
         return;
     }
@@ -263,7 +269,7 @@ void snd_mem_free(uint32 addr) {
     spinlock_unlock(&snd_mem_mutex);
 }
 
-uint32 snd_mem_available(void) {
+uint32_t snd_mem_available(void) {
     snd_block_t *e;
     size_t largest = 0;
 
@@ -281,5 +287,5 @@ uint32 snd_mem_available(void) {
     }
 
     spinlock_unlock(&snd_mem_mutex);
-    return (uint32)largest;
+    return (uint32_t)largest;
 }

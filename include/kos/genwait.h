@@ -38,16 +38,13 @@ __BEGIN_DECLS
     \param  mesg            A message to show in the status
     \param  timeout         If not woken before this many milliseconds have
                             passed, wake up anyway
-    \param  callback        If non-NULL, call this function with obj as its
-                            argument if the wait times out (but before the
-                            calling thread has been woken back up)
     \retval 0               On successfully being woken up (not by timeout)
     \retval -1              On error or being woken by timeout
 
     \par    Error Conditions:
     \em     EAGAIN - on timeout
 */
-int genwait_wait(void *obj, const char *mesg, int timeout, void (*callback)(void *));
+int genwait_wait(void *obj, const char *mesg, unsigned int timeout);
 
 /* Wake up N threads waiting on the given object. If cnt is <=0, then we
    wake all threads. Returns the number of threads actually woken. */

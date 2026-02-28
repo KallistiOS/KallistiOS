@@ -8,11 +8,11 @@
 #include <stdlib.h>
 #include <dc/maple.h>
 
-void maple_attach_callback(uint32 functions, maple_attach_callback_t cb) {
+void maple_attach_callback(uint32_t functions, maple_attach_callback_t cb) {
     maple_driver_t *i;
 
     if(!functions)
-        functions = 0xffffffff;
+        functions = MAPLE_FUNC_ANY;
 
     LIST_FOREACH(i, &maple_state.driver_list, drv_list) {
         if(i->functions & functions) {
@@ -25,11 +25,11 @@ void maple_attach_callback(uint32 functions, maple_attach_callback_t cb) {
     }
 }
 
-void maple_detach_callback(uint32 functions, maple_detach_callback_t cb) {
+void maple_detach_callback(uint32_t functions, maple_detach_callback_t cb) {
     maple_driver_t *i;
 
     if(!functions)
-        functions = 0xffffffff;
+        functions = MAPLE_FUNC_ANY;
 
     LIST_FOREACH(i, &maple_state.driver_list, drv_list) {
         if(i->functions & functions) {
@@ -46,9 +46,6 @@ void maple_detach_callback(uint32 functions, maple_detach_callback_t cb) {
 int maple_driver_reg(maple_driver_t *driver) {
     /* Don't add two drivers for the same function */
     maple_driver_t *i;
-
-    if(driver->drv_list.le_prev)
-        return -1;
 
     LIST_FOREACH(i, &maple_state.driver_list, drv_list)
         if(i->functions & driver->functions)
@@ -135,7 +132,6 @@ int maple_driver_attach(maple_frame_t *det) {
 
     /* Finish setting stuff up */
     dev->drv = i;
-    dev->status_valid = 0;
     dev->valid = true;
 
     if(i->user_attach)
@@ -159,8 +155,6 @@ int maple_driver_detach(int p, int u) {
         if(dev->drv->detach)
             dev->drv->detach(dev->drv, dev);
     }
-
-    dev->status_valid = 0;
 
     if(dev->drv->status_size) {
         free(dev->status);

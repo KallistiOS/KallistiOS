@@ -14,7 +14,7 @@
 #include <dc/video.h>
 #include <kos/dbglog.h>
 #include <kos/fs.h>
-#include <arch/irq.h>
+#include <kos/irq.h>
 
 #include <kos/timer.h>
 

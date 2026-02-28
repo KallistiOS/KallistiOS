@@ -5,11 +5,8 @@
 #
 
 # Various network devices
-OBJS = broadband_adapter.o lan_adapter.o
+OBJS = broadband_adapter.o lan_adapter.o w5500_adapter.o
 
 SUBDIRS =
 
 include $(KOS_BASE)/Makefile.prefab
-
-
-

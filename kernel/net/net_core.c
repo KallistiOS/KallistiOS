@@ -258,12 +258,8 @@ void net_shutdown(void) {
 
         if(cur->flags & NETIF_INITIALIZED && cur->if_shutdown)
             cur->if_shutdown(cur);
-
-        cur->flags &= ~NETIF_REGISTERED;
     }
 
-    /* Blank out the list */
-    LIST_INIT(&net_if_list);
-
+    net_set_default(NULL);
     net_initted = 0;
 }

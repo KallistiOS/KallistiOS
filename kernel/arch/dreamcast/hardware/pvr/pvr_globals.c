@@ -18,4 +18,4 @@
    valid flag will be zero. */
 volatile pvr_state_t pvr_state;
 
-
+uint32_t pvr_dr_addr = MEM_AREA_SQ_BASE;

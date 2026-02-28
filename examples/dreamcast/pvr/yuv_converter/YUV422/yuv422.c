@@ -36,8 +36,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <arch/arch.h>
-#include <arch/cache.h>
 
 #include <dc/pvr.h>
 #include <dc/maple.h>
@@ -271,7 +269,7 @@ static void __attribute__((__noreturn__)) wait_exit(void) {
 
             if(state)   {
                 if(state->buttons)
-                    arch_exit();
+                    exit(0);
             }
         }
     }

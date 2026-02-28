@@ -14,9 +14,9 @@
 #include <stdio.h>
 
 #include <kos/dbglog.h>
-
+#include <kos/irq.h>
 #include <kos/timer.h>
-#include <arch/irq.h>
+
 #include <dc/maple.h>
 #include <dc/maple/keyboard.h>
 
@@ -534,16 +534,12 @@ int kbd_get_key(void) {
 }
 
 kbd_state_t *kbd_get_state(maple_device_t *device) {
-    if(!device)
+    kbd_state_t *state = (kbd_state_t *)maple_dev_status(device);
+
+    if(!state || !(device->info.functions & MAPLE_FUNC_KEYBOARD))
         return NULL;
 
-    if(!device->status_valid)
-        return NULL;
-
-    if(!(device->info.functions & MAPLE_FUNC_KEYBOARD))
-        return NULL;
-
-    return (kbd_state_t *)device->status;
+    return state;
 }
 
 /* Take a key off of a specific key queue. */
@@ -756,25 +752,20 @@ static void kbd_reply(maple_state_t *st, maple_frame_t *frm) {
     state = (kbd_state_t *)frm->dev->status;
     cond = (kbd_cond_t *)&state->cond;
     memcpy(cond, respbuf + 1, (resp->data_len - 1) * sizeof(uint32_t));
-    frm->dev->status_valid = 1;
     kbd_check_poll(frm);
 }
 
 static int kbd_poll_intern(maple_device_t *dev) {
-    uint32_t *send_buf;
-
-    if(maple_frame_lock(&dev->frame) < 0)
+    if(maple_frame_trylock(&dev->frame) < 0)
         return 0;
 
     maple_frame_init(&dev->frame);
-    send_buf = (uint32_t *)dev->frame.recv_buf;
-    send_buf[0] = MAPLE_FUNC_KEYBOARD;
+    dev->frame.send_buf[0] = MAPLE_FUNC_KEYBOARD;
     dev->frame.cmd = MAPLE_COMMAND_GETCOND;
     dev->frame.dst_port = dev->port;
     dev->frame.dst_unit = dev->unit;
     dev->frame.length = 1;
     dev->frame.callback = kbd_reply;
-    dev->frame.send_buf = send_buf;
     maple_queue_frame(&dev->frame);
 
     return 0;
@@ -817,8 +808,7 @@ static maple_driver_t kbd_drv = {
     .name = "Keyboard Driver",
     .periodic = kbd_periodic,
     .status_size = sizeof(kbd_state_private_t),
-    .attach = kbd_attach,
-    .detach = NULL
+    .attach = kbd_attach
 };
 
 /* Add the keyboard to the driver chain */

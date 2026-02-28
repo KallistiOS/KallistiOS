@@ -44,10 +44,23 @@ static symtab_handler_t st_arch = {
     arch_symtab
 };
 
+static symtab_handler_t st_subarch = {
+    {
+        "sym/kernel/subarch",
+        0,
+        0x00010000,
+        0,
+        NMMGR_TYPE_SYMTAB,
+        NMMGR_LIST_INIT
+    },
+    subarch_symtab
+};
+
 void export_init(void) {
     /* Add our two export tables */
     nmmgr_handler_add(&st_kern.nmmgr);
     nmmgr_handler_add(&st_arch.nmmgr);
+    nmmgr_handler_add(&st_subarch.nmmgr);
 }
 
 export_sym_t *export_lookup(const char *name) {

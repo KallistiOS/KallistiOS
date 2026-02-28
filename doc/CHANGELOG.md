@@ -2,6 +2,25 @@
 
 Platform-specific changes are prefixed with the platform name, otherwise the change is platform-independent. The name/initials of the person who is responsible for the change are listed in [square brackets] for most versions (where they are missing from early versions, assume that they should be attributed to Megan Potter).
 
+## KallistiOS version 2.2.2
+- **Dreamcast**: Add missing header to `snd_stream.h` [Donald Haase ==DH]
+- Fix bug causing erratic behavior in `readdir` [Paul Cercueil == PC]
+- No longer build GDB by default with toolchain [Eric Fradella == EF]
+- Fix building older toolchains with newer host GCC [PC]
+- Correct cmake include path for addons [DH]
+- **Dreamcast**: Prevent controller from unregistering if sub-devices still active [PC]
+- Improved support for C static asserts [Falco Girgis == FG][PC]
+- Correct errors in doxygen processing [DH][PC]
+- Improve thread safety of fs operations [PC]
+- Fix CLion compatibility with kos-cc wrappers [kouta]
+
+## KallistiOS version 2.2.1
+- **Dreamcast**: Fine-tune timer rate to avoid clock drift [Paul Cercueil == PC]
+- **Dreamcast**: Update keyboard LED/mod status handling, add new example to demonstrate [Troy Davis == GPF]
+- **Dreamcast**: Detect 3rd party memory cards and disable sending screen/clock commands to them [Donald Haase == DH]
+- **Dreamcast**: Support for 1st party rumble packs [DH]
+- **Dreamcast**: Various fixes and expansions to the cmake environment [Falco Girgis == FG][PC]
+
 ## KallistiOS version 2.2.0
 - Added . & .. directories to filesystems that lack it [Andress Barajas == AB]
 - Replaced previous implementation of realpath() to remove license from AUTHORS [AB]
@@ -41,7 +60,7 @@ Platform-specific changes are prefixed with the platform name, otherwise the cha
 - **Dreamcast**: maple Keyboard driver significantly rewritten, new event driven API added [FG]
 - **Dreamcast**: Add SCI driver [RR]
 - **Dreamcast**: Update SD card driver for SCI support and optional CRC check disabling [RR]
-- New macro __is_defined() which should be used in place of #ifdef guards internally [PC]
+- New macro __is_defined() which should be used in place of \#ifdef guards internally [PC]
 
 ## KallistiOS version 2.1.1
 - Added pvrtex utility by TapamN to utils [Daniel Fairchild == DF]
@@ -197,7 +216,7 @@ Platform-specific changes are prefixed with the platform name, otherwise the cha
 - Simplify kthread_once_t into a simple variable rather than a struct [LS]
 - Simplify sync primitive structures to remove initialized member [LS]
 - Move definition of __RESTRICT from <sys/_types.h> to <kos/cdefs.h> [LS]
-- **Dreamcast**: Added DMA YUV converter path. Adjust some name of related #defines. Added yuv examples [AB]
+- **Dreamcast**: Added DMA YUV converter path. Adjust some name of related \#defines. Added yuv examples [AB]
 - Added GCC builtin functions for supporting all of C11 atomics [FG]
 - Added toolchain and KOS support for C/C++ compiler-level TLS [CP && FG]
 - **Dreamcast**: Added GCC 9.5.0 support for WinXP users [EF]
@@ -984,7 +1003,7 @@ Platform-specific changes are prefixed with the platform name, otherwise the cha
 - Fixed memory leak in process.c (ps_load_and_fork wasn't freeing the image)
 - Added 'LIBS' var in userland's Makefile.prefab
 - Cleaned up a few things in JAM (including removing "required" mouse support)
-- Changed Kosh's \r and \n handling to be more Unix-like
+- Changed Kosh's \\r and \\n handling to be more Unix-like
 - Removed a few debug lines in libk
 - New userland program "streamtest" demonstrates the beta streaming AICA driver, and includes a DC/KOS port of XingMP3 from FreeAmp. Note that compiling this program from scratch requires the ARM compiler and a working libm from newlib.
 

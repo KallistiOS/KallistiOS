@@ -8,13 +8,12 @@
 
 #include "pthread-internal.h"
 #include <pthread.h>
-#include <errno.h>
 #include <sys/time.h>
+#include <kos/errno.h>
 #include <kos/rwsem.h>
 
 int pthread_rwlock_timedrdlock(pthread_rwlock_t *__RESTRICT rwlock,
                                const struct timespec *__RESTRICT abstime) {
-    int old, rv = 0;
     int tmo;
     struct timespec ctv;
 
@@ -28,7 +27,7 @@ int pthread_rwlock_timedrdlock(pthread_rwlock_t *__RESTRICT rwlock,
        the timing... POSIX says that if the lock can be acquired immediately
        then this function should never return a timeout, regardless of what
        abstime says. */
-    old = errno;
+    errno_save_scoped();
 
     if(!rwsem_read_trylock(&rwlock->rwsem))
         return 0;
@@ -42,9 +41,5 @@ int pthread_rwlock_timedrdlock(pthread_rwlock_t *__RESTRICT rwlock,
     if(tmo <= 0)
         return ETIMEDOUT;
 
-    if(rwsem_read_lock_timed(&rwlock->rwsem, tmo))
-        rv = errno;
-
-    errno = old;
-    return rv;
+    return errno_if_nonzero(rwsem_read_lock_timed(&rwlock->rwsem, tmo));
 }

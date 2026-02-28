@@ -17,7 +17,6 @@
 #include <kos/genwait.h>
 #include <sys/queue.h>
 #include <kos/fs_socket.h>
-#include <arch/irq.h>
 #include <sys/socket.h>
 #include <netinet/udp.h>
 #include <netinet/udplite.h>
@@ -343,7 +342,7 @@ static ssize_t net_udp_recvfrom(net_socket_t *hnd, void *buffer, size_t length,
 
     while(TAILQ_EMPTY(&udpsock->packets)) {
         mutex_unlock(&udp_mutex);
-        genwait_wait(udpsock, "net_udp_recvfrom", 0, NULL);
+        genwait_wait(udpsock, "net_udp_recvfrom", 0);
         mutex_lock(&udp_mutex);
     }
 
@@ -968,13 +967,9 @@ static int net_udp_getpeername(net_socket_t *hnd, struct sockaddr *name, socklen
         return -1;
     }
 
-    if(irq_inside_int()) {
-        if(mutex_trylock(&udp_mutex) == -1) {
-            errno = EWOULDBLOCK;
-            return -1;
-        }
-    } else {
-        mutex_lock(&udp_mutex);
+    if(mutex_lock_irqsafe(&udp_mutex)) {
+        errno = EWOULDBLOCK;
+        return -1;
     }
 
     if(!(sock = (struct udp_sock *)hnd->data)) {

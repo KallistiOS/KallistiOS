@@ -1,3 +1,2 @@
 arch_exports.c
-authors.h
-banner.h
+subarch_exports.c

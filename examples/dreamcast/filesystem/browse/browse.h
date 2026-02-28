@@ -17,6 +17,8 @@ static void delete_file(char *filename, bool mounted_sd);
 
 static void prompt_message(char *message, bool highlight_yes);
 
+static bool draw_stat(const char *path);
+
 static void draw_directory_selector(int index);
 static void draw_directory_contents(directory_file_t *directory_contents, int num);
 

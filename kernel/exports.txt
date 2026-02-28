@@ -132,7 +132,6 @@ genwait_wake_cnt
 genwait_wake_all
 genwait_wake_one
 mutex_destroy
-mutex_lock
 mutex_lock_timed
 mutex_trylock
 mutex_is_locked
@@ -200,7 +199,6 @@ dbgio_read_buffer
 dbgio_printf
 
 # Interrupt / Exception handling
-irq_force_return
 irq_disable
 irq_enable
 irq_restore
@@ -219,21 +217,6 @@ arch_exec
 # Misc other kernel control
 arch_exit
 arch_abort
-
-# MMU handling
-mmu_reset_itlb
-mmu_use_table
-mmu_context_create
-mmu_context_destroy
-mmu_virt_to_phys
-mmu_switch_context
-mmu_page_map
-mmu_copyin
-mmu_copyv
-mmu_map_get_callback
-mmu_map_set_callback
-mmu_init
-mmu_shutdown
 
 # Panic!
 arch_panic

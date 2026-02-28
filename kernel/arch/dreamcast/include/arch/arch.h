@@ -22,8 +22,8 @@
 __BEGIN_DECLS
 
 #include <stdbool.h>
+#include <stdint.h>
 
-#include <arch/types.h>
 #include <kos/elf.h>
 
 /** \defgroup arch  Architecture
@@ -34,12 +34,12 @@ __BEGIN_DECLS
 
 /** \brief  Top of memory available, depending on memory size. */
 #if defined(__KOS_GCC_32MB__) || __KOS_GCC_PATCHLEVEL__ >= 2025062800
-extern uint32 _arch_mem_top;
+extern uint32_t _arch_mem_top;
 #else
 #pragma message "Outdated toolchain: not patched for 32MB support, limiting "\
     "KOS to 16MB-only behavior to retain maximum compatibility. Please "\
     "update your toolchain."
-#define _arch_mem_top   ((uint32) 0x8d000000)
+#define _arch_mem_top   ((uint32_t) 0x8d000000)
 #endif
 
 /** \brief  Start and End address for .text portion of program. */
@@ -191,38 +191,11 @@ void arch_menu(void) __noreturn;
 */
 #define DBL_MEM (_arch_mem_top - 0x8d000000)
 
-/* These are in mm.c */
-/** \brief   Initialize the memory management system.
-    \ingroup arch
-
-    \retval 0               On success (no error conditions defined).
-*/
-int mm_init(void);
-
-/** \brief   Request more core memory from the system.
-    \ingroup arch
-
-    \param  increment       The number of bytes requested.
-    \return                 A pointer to the memory.
-    \note                   This function will panic if no memory is available.
-*/
-void * mm_sbrk(unsigned long increment);
-
 /* Bring in the init flags for compatibility with old code that expects them
    here. */
 #include <kos/init.h>
 
 /* Dreamcast-specific arch init things */
-/** \brief   Jump back to the bootloader.
-    \ingroup arch
-
-    You generally shouldn't use this function, but rather use arch_exit() or
-    exit() instead.
-
-    \note                   This function will never return!
-*/
-void arch_real_exit(int ret_code) __noreturn;
-
 /** \brief   Initialize bare-bones hardware systems.
     \ingroup arch
 
@@ -263,6 +236,7 @@ void hardware_shutdown(void);
 */
 #define HW_TYPE_RETAIL      0x0     /**< \brief A retail Dreamcast. */
 #define HW_TYPE_SET5        0x9     /**< \brief A Set5.xx devkit. */
+#define HW_TYPE_NAOMI       0xa     /**< \brief A NAOMI arcade. */
 /** @} */
 
 /** \defgroup hw_regions            Region Codes
@@ -300,6 +274,8 @@ void hardware_shutdown(void);
                             -- otherwise, you must retrieve the region from the
                             flashrom.
     \return                 The console type (one of the \ref hw_consoles).
+
+    \note    Do not use before hardware_sys_init() has been called.
 */
 int hardware_sys_mode(int *region);
 

@@ -13,10 +13,7 @@
 /* Device Driver Struct */
 static maple_driver_t lightgun_drv = {
     .functions = MAPLE_FUNC_LIGHTGUN,
-    .name = "Lightgun",
-    .periodic = NULL,
-    .attach = NULL,
-    .detach = NULL
+    .name = "Lightgun"
 };
 
 /* Add the lightgun to the driver chain */

@@ -2,6 +2,7 @@
 
     dc/minifont.h
     Copyright (C) 2020 Lawrence Sebald
+    Copyright (C) 2025 Daniel Fairchild
 
 */
 
@@ -28,7 +29,7 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
+#include <stdint.h>
 
 /** \defgroup video_fonts_mini Mini
     \brief                     Extra mini-font provided for Dreamcast and NAOMI
@@ -47,7 +48,7 @@ __BEGIN_DECLS
 
     \return                 Amount of width covered in 16-bit increments.
 */
-int minifont_draw(uint16 *buffer, uint32 bufwidth, uint32 c);
+int minifont_draw(uint16_t *buffer, uint32_t bufwidth, uint32_t c);
 
 /** \brief  Draw a full string to any sort of buffer.
 
@@ -61,7 +62,14 @@ int minifont_draw(uint16 *buffer, uint32 bufwidth, uint32 c);
 
     \return                 Amount of width covered in 16-bit increments.
 */
-int minifont_draw_str(uint16 *b, uint32 bufwidth, const char *str);
+int minifont_draw_str(uint16_t *b, uint32_t bufwidth, const char *str);
+
+/** \brief  Set the color for the mini font.
+    \param  r               Red component (0-255)
+    \param  g               Green component (0-255)
+    \param  b               Blue component (0-255)
+*/
+void minifont_set_color(uint8_t r, uint8_t g, uint8_t b);
 
 /** @} */
 

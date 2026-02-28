@@ -32,7 +32,7 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/irq.h>
+#include <kos/irq.h>
 
 #include <time.h>
 
@@ -262,7 +262,7 @@ static inline struct timespec arch_timer_gettime(void) {
     /* Convert from ticks to nanoseconds: each clock tick is 80ns. */
     return (struct timespec){
         .tv_sec = time.secs,
-        .tv_nsec = time.ticks * 80,
+        .tv_nsec = (long int)(time.ticks * 80),
     };
 }
 

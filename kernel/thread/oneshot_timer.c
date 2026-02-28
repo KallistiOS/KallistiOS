@@ -20,7 +20,7 @@ static void oneshot_timer_timeout(void *d) {
     oneshot_timer_t *timer = d;
     int ret;
 
-    ret = genwait_wait(timer, "One-shot timer", timer->timeout_ms, NULL);
+    ret = genwait_wait(timer, "One-shot timer", timer->timeout_ms);
     if(ret < 0)
         timer->cb(timer->data);
 }

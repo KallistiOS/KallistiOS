@@ -48,7 +48,6 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <kos/thread.h>
 #include <kos/mutex.h>
 
 /** \brief  Condition variable.
@@ -106,7 +105,7 @@ int cond_destroy(condvar_t *cv) __nonnull_all;
     \em     EINVAL - the mutex is not initialized or not locked \n
     \em     ENOTRECOVERABLE - the condvar was destroyed while waiting
 */
-int cond_wait(condvar_t *cv, mutex_t * m) __nonnull_all;
+int cond_wait(condvar_t *cv, mutex_t *m) __nonnull_all;
 
 /** \brief  Wait on a condition variable with a timeout.
 
@@ -132,7 +131,7 @@ int cond_wait(condvar_t *cv, mutex_t * m) __nonnull_all;
     \em     EINVAL - the mutex is not initialized or not locked \n
     \em     ENOTRECOVERABLE - the condvar was destroyed while waiting
 */
-int cond_wait_timed(condvar_t *cv, mutex_t * m, int timeout) __nonnull_all;
+int cond_wait_timed(condvar_t *cv, mutex_t *m, int timeout) __nonnull_all;
 
 /** \brief  Signal a single thread waiting on the condition variable.
 

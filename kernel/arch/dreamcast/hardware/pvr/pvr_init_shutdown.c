@@ -57,6 +57,8 @@ int pvr_init_defaults(void) {
    come from the texture memory pool! Expects that a 2D mode was
    initialized already using the vid_* API. */
 int pvr_init(const pvr_init_params_t *params) {
+    uint16_t vscale = 1024;
+
     /* If we're already initialized, fail */
     if(pvr_state.valid == 1) {
         dbglog(DBG_WARNING, "pvr: pvr_init called twice!\n");
@@ -125,25 +127,19 @@ int pvr_init(const pvr_init_params_t *params) {
     pvr_state.rnd_last_len = -1;
     pvr_state.vtx_buf_used = 0;
     pvr_state.vtx_buf_used_max = 0;
-    pvr_state.dr_used = 0;
 
     /* If we're on a VGA box, disable vertical smoothing */
     if(vid_mode->cable_type == CT_VGA) {
         dbglog(DBG_KDEBUG, "pvr: disabling vertical scaling for VGA\n");
-
-        if(pvr_state.fsaa)
-            PVR_SET(PVR_SCALER_CFG, 0x10400);
-        else
-            PVR_SET(PVR_SCALER_CFG, 0x400);
-    }
-    else {
+    } else {
         dbglog(DBG_KDEBUG, "pvr: enabling vertical scaling for non-VGA\n");
-
-        if(pvr_state.fsaa)
-            PVR_SET(PVR_SCALER_CFG, 0x10401);
-        else
-            PVR_SET(PVR_SCALER_CFG, 0x401);
+        vscale++;
     }
+
+    /* Set horizontal / vertical scale factors */
+    PVR_SET(PVR_SCALER_CFG,
+            FIELD_PREP(PVR_SCALER_CFG_FSAA, pvr_state.fsaa) |
+            FIELD_PREP(PVR_SCALER_CFG_VSCALE_FACTOR, vscale));
 
     /* Hook the PVR interrupt events on G2 */
     pvr_state.vbl_handle = vblank_handler_add(pvr_vblank_handler, NULL);
@@ -197,7 +193,7 @@ int pvr_init(const pvr_init_params_t *params) {
     PVR_SET(PVR_UNK_0118, 0x00008040);      /* M */
 
     /* Initialize PVR DMA */
-    mutex_init((mutex_t *)&pvr_state.dma_lock, MUTEX_TYPE_NORMAL);
+    sem_init((semaphore_t *)&pvr_state.dma_lock, 1);
     pvr_dma_init();
 
     /* Set us as valid and return success */
@@ -249,7 +245,7 @@ int pvr_shutdown(void) {
     pvr_mem_reset();
 
     /* Destroy the mutex */
-    mutex_destroy((mutex_t *)&pvr_state.dma_lock);
+    sem_destroy((semaphore_t *)&pvr_state.dma_lock);
 
     /* Clear video memory */
     vid_empty();

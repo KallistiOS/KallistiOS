@@ -4,9 +4,9 @@
    Copyright (C) 2024 Paul Cercueil
 */
 
-#include <arch/irq.h>
 #include <assert.h>
 #include <kos/genwait.h>
+#include <kos/irq.h>
 #include <kos/thread.h>
 #include <kos/worker_thread.h>
 #include <stdbool.h>
@@ -30,7 +30,7 @@ static void *thd_worker_thread(void *d) {
         flags = irq_disable();
 
         if((!worker->pending) && (!worker->quit))
-            genwait_wait(worker, worker->thd->label, 0, NULL);
+            genwait_wait(worker, worker->thd->label, 0);
 
         irq_restore(flags);
 

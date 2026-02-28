@@ -39,6 +39,7 @@ __BEGIN_DECLS
 #include <kos/fs_dev.h>
 #include <kos/fs_pty.h>
 #include <kos/limits.h>
+#include <kos/linker.h>
 #include <kos/thread.h>
 #include <kos/sem.h>
 #include <kos/rwsem.h>
@@ -60,11 +61,11 @@ __BEGIN_DECLS
 #include <kos/init.h>
 #include <kos/oneshot_timer.h>
 #include <kos/regfield.h>
+#include <kos/spinlock.h>
 
 #include <arch/arch.h>
 #include <arch/cache.h>
 #include <arch/irq.h>
-#include <arch/spinlock.h>
 #include <arch/timer.h>
 #include <arch/types.h>
 #include <arch/exec.h>

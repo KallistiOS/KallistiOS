@@ -7,16 +7,11 @@
 
 #include "pthread-internal.h"
 #include <pthread.h>
-#include <errno.h>
+#include <kos/errno.h>
 #include <kos/cond.h>
 
 int pthread_cond_destroy(pthread_cond_t *cond) {
-    int old, rv = 0;
+    errno_save_scoped();
 
-    old = errno;
-    if(cond_destroy(&cond->cond))
-        rv = errno;
-
-    errno = old;
-    return rv;
+    return errno_if_nonzero(cond_destroy(&cond->cond));
 }

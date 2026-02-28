@@ -8,6 +8,7 @@
 
  */
 
+#include <stdlib.h>
 #include <kos.h>
 #include <conio/conio.h>
 
@@ -16,7 +17,7 @@ int main(int argc, char **argv) {
     char buffer[256];
 
     /* If the user hits start, bail */
-    cont_btn_callback(0, CONT_START, (cont_btn_callback_t)arch_exit);
+    cont_btn_callback(0, CONT_START, (cont_btn_callback_t)exit);
 
     /* Setup the console */
     pvr_init_defaults();

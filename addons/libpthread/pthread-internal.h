@@ -47,6 +47,7 @@ typedef union pthread_attr_t {
 
 typedef union pthread_mutex_t {
     mutex_t mutex;
+    unsigned int type;
     unsigned char __data[__PTHREAD_MUTEX_SIZE];
     long int __align;
 } pthread_mutex_t;

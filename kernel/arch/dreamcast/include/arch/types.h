@@ -48,15 +48,6 @@ typedef volatile int32 vint32;      /**< \brief 32-bit volatile signed type */
 typedef volatile int16 vint16;      /**< \brief 16-bit volatile signed type */
 typedef volatile int8 vint8;        /**< \brief 8-bit volatile signed type */
 
-/* This type may be used for any generic handle type that is allowed
-   to be negative (for errors) and has no specific bit count
-   restraints. */
-typedef int handle_t;               /**< \brief Generic "handle" type */
-
-/* Thread and priority types */
-typedef handle_t tid_t;             /**< \brief Thread ID type */
-typedef handle_t prio_t;            /**< \brief Priority value type */
-
 /** @} */
 
 __END_DECLS

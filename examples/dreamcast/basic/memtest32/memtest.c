@@ -1,13 +1,13 @@
 /**********************************************************************
  *
  * Filename:    memtest.c
- * 
+ *
  * Description: General-purpose memory testing functions.
  *
  * Notes:       This software can be easily ported to systems with
  *              different data bus widths by redefining 'datum'.
  *
- * 
+ *
  * Copyright (c) 1998 by Michael Barr.  This software is placed into
  * the public domain and may be used for any purpose.  However, this
  * notice must not be changed or removed and no warranty is either
@@ -27,9 +27,9 @@
  *              within that region.  The address (and hence the
  *              memory region) is selected by the caller.
  *
- * Notes:       
+ * Notes:
  *
- * Returns:     0 if the test succeeds.  
+ * Returns:     0 if the test succeeds.
  *              A non-zero result is the first pattern that failed.
  *
  **********************************************************************/
@@ -52,7 +52,7 @@ memTestDataBus(volatile datum * address)
         /*
          * Read it back (immediately is okay for this test).
          */
-        if (*address != pattern) 
+        if (*address != pattern)
         {
             return (pattern);
         }
@@ -76,19 +76,19 @@ memTestDataBus(volatile datum * address)
  *
  * Notes:       For best results, the selected base address should
  *              have enough LSB 0's to guarantee single address bit
- *              changes.  For example, to test a 64-Kbyte region, 
- *              select a base address on a 64-Kbyte boundary.  Also, 
- *              select the region size as a power-of-two--if at all 
+ *              changes.  For example, to test a 64-Kbyte region,
+ *              select a base address on a 64-Kbyte boundary.  Also,
+ *              select the region size as a power-of-two--if at all
  *              possible.
  *
- * Returns:     NULL if the test succeeds.  
+ * Returns:     NULL if the test succeeds.
  *              A non-zero result is the first address at which an
  *              aliasing problem was uncovered.  By examining the
  *              contents of memory, it may be possible to gather
  *              additional information about the problem.
  *
  **********************************************************************/
-datum * 
+datum *
 memTestAddressBus(volatile datum * baseAddress, unsigned long nBytes)
 {
     unsigned long addressMask = (nBytes/sizeof(datum) - 1);
@@ -107,7 +107,7 @@ memTestAddressBus(volatile datum * baseAddress, unsigned long nBytes)
         baseAddress[offset] = pattern;
     }
 
-    /* 
+    /*
      * Check for address bits stuck high.
      */
     testOffset = 0;
@@ -130,10 +130,10 @@ memTestAddressBus(volatile datum * baseAddress, unsigned long nBytes)
     {
         baseAddress[testOffset] = antipattern;
 
-		if (baseAddress[0] != pattern)
-		{
-			return ((datum *) &baseAddress[testOffset]);
-		}
+        if (baseAddress[0] != pattern)
+        {
+            return ((datum *) &baseAddress[testOffset]);
+        }
 
         for (offset = 1; (offset & addressMask) != 0; offset <<= 1)
         {
@@ -157,12 +157,12 @@ memTestAddressBus(volatile datum * baseAddress, unsigned long nBytes)
  *
  * Description: Test the integrity of a physical memory device by
  *              performing an increment/decrement test over the
- *              entire region.  In the process every storage bit 
+ *              entire region.  In the process every storage bit
  *              in the device is tested as a zero and a one.  The
  *              base address and the size of the region are
  *              selected by the caller.
  *
- * Notes:       
+ * Notes:
  *
  * Returns:     NULL if the test succeeds.
  *
@@ -172,8 +172,8 @@ memTestAddressBus(volatile datum * baseAddress, unsigned long nBytes)
  *              additional information about the problem.
  *
  **********************************************************************/
-datum * 
-memTestDevice(volatile datum * baseAddress, unsigned long nBytes)	
+datum *
+memTestDevice(volatile datum * baseAddress, unsigned long nBytes)
 {
     unsigned long offset;
     unsigned long nWords = nBytes / sizeof(datum);

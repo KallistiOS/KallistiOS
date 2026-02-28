@@ -13,6 +13,7 @@
 
  */
 
+#include <stdlib.h>
 #include <kos.h>
 
 /* Semaphore used for timing below */
@@ -112,7 +113,7 @@ int main(int argc, char **argv) {
     kthread_t * t0, * t1, * t2, *t3[10];
 
     cont_btn_callback(0, CONT_START | CONT_A | CONT_B | CONT_X | CONT_Y,
-                      (cont_btn_callback_t)arch_exit);
+                      (cont_btn_callback_t)exit);
 
     /* Print a banner */
     printf("KOS 2.0.x thread program:\n");
@@ -132,7 +133,7 @@ int main(int argc, char **argv) {
     t1 = thd_create(0, thd_1, NULL);
     t2 = thd_create(0, thd_2, NULL);
 
-    timer_spin_sleep(1000);
+    thd_sleep(1000);
     thd_pslist(printf);
     thd_pslist_queue(printf);
 

@@ -60,7 +60,7 @@ Building KallistiOS from source entirely requires two things:
   target cross-compiler toolchain (GCC or Clang) and GNU Make
 
 A toolchain-building script is included to build the cross-compiler. 
-See the [dc-chain documentation](../utils/dc-chain/README.md) for more
+See the [kos-chain documentation](../utils/kos-chain/README.md) for more
 information on installing the toolchain.
 
 If building KallistiOS to target NAOMI, additionally you will need to

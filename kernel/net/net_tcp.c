@@ -18,6 +18,7 @@
 #include <kos/net.h>
 #include <kos/cond.h>
 #include <kos/mutex.h>
+#include <kos/thread.h>
 #include <kos/rwsem.h>
 #include <kos/fs_socket.h>
 
@@ -1823,14 +1824,10 @@ static int net_tcp_getpeername(net_socket_t *hnd, struct sockaddr *name, socklen
         return -1;
     }
 
-    if(irq_inside_int()) {
-        if(mutex_trylock(&sock->mutex)) {
-            rwsem_read_unlock(&tcp_sem);
-            errno = EWOULDBLOCK;
-            return -1;
-        }
-    } else {
-        mutex_lock(&sock->mutex);
+    if(mutex_lock_irqsafe(&sock->mutex)) {
+        rwsem_read_unlock(&tcp_sem);
+        errno = EWOULDBLOCK;
+        return -1;
     }
 
     if(sock->state == TCP_STATE_CLOSED) {

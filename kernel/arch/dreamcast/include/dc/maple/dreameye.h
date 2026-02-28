@@ -23,7 +23,7 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <arch/types.h>
+#include <stdint.h>
 #include <dc/maple.h>
 
 /** \defgroup peripherals_camera    Camera
@@ -58,13 +58,13 @@ typedef struct dreameye_state {
     int             img_transferring;
 
     /** \brief  Storage for image data. */
-    uint8          *img_buf;
+    uint8_t        *img_buf;
 
     /** \brief  The size of the image in bytes. */
     int             img_size;
 
     /** \brief  The image number currently being transferred. */
-    uint8           img_number;
+    uint8_t         img_number;
 } dreameye_state_t;
 
 /** \brief  Get the number of images on the device.
@@ -141,7 +141,7 @@ int dreameye_get_image_count(maple_device_t *dev, int block);
     \retval MAPLE_EOK       On success.
     \retval MAPLE_EFAIL     On error.
 */
-int dreameye_get_image(maple_device_t *dev, uint8 image, uint8 **data,
+int dreameye_get_image(maple_device_t *dev, uint8_t image, uint8_t **data,
                        int *img_sz);
 
 /** \brief  Erase an image from the Dreameye.
@@ -158,7 +158,7 @@ int dreameye_get_image(maple_device_t *dev, uint8 image, uint8 **data,
     \retval MAPLE_ETIMEOUT  Timeout on blocking.
     \retval MAPLE_EINVALID  Invalid image number specified.
 */
-int dreameye_erase_image(maple_device_t *dev, uint8 image, int block);
+int dreameye_erase_image(maple_device_t *dev, uint8_t image, int block);
 
 /* \cond */
 /* Init / Shutdown */

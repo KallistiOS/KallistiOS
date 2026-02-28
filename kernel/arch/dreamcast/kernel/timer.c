@@ -11,7 +11,7 @@
 
 #include <arch/arch.h>
 #include <arch/timer.h>
-#include <arch/irq.h>
+#include <kos/irq.h>
 #include <kos/regfield.h>
 
 /* Register access macros */

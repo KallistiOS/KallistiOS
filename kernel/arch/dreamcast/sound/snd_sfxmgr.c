@@ -19,7 +19,7 @@
 #include <sys/ioctl.h>
 #include <kos/dbglog.h>
 #include <kos/fs.h>
-#include <arch/irq.h>
+#include <kos/irq.h>
 #include <dc/spu.h>
 #include <dc/sound/sound.h>
 #include <dc/sound/sfxmgr.h>

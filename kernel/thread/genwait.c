@@ -68,14 +68,10 @@ static kthread_t *tq_next(void) {
     return TAILQ_FIRST(&timer_queue);
 }
 
-int genwait_wait(void *obj, const char *mesg, int timeout, void (*callback)(void *)) {
+int genwait_wait(void *obj, const char *mesg, unsigned int timeout) {
     kthread_t   *me, *t;
 
-    /* Twiddle interrupt state */
-    if(irq_inside_int()) {
-        dbglog(DBG_WARNING, "genwait_wait: called inside interrupt\n");
-        return -1;
-    }
+    assert(!irq_inside_int());
 
     irq_disable_scoped();
 
@@ -92,8 +88,6 @@ int genwait_wait(void *obj, const char *mesg, int timeout, void (*callback)(void
     }
     else
         me->wait_timeout = 0;
-
-    me->wait_callback = callback;
 
     /* Go through and find where to insert */
     TAILQ_FOREACH(t, &slpque[LOOKUP(obj)], thdq) {
@@ -125,7 +119,6 @@ static void __nonnull_all genwait_unqueue(kthread_t *thd) {
         thd->wait_obj = NULL;
         thd->wait_msg = NULL;
         thd->wait_timeout = 0;
-        thd->wait_callback = NULL;
 
         /* Make it runnable again */
         thd->state = STATE_READY;
@@ -211,10 +204,6 @@ void genwait_check_timeouts(uint64_t tm) {
         /* Set an error code */
         t->thd_errno = EAGAIN;  /* This is fairly close */
         CONTEXT_RET(t->context) = -1;
-
-        /* If there's a callback, then call it */
-        if(t->wait_callback)
-            t->wait_callback(t->wait_obj);
 
         /* Re-activate it */
         genwait_unqueue(t);

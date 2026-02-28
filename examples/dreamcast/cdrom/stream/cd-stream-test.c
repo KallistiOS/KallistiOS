@@ -11,13 +11,13 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <errno.h>
 
 #include <dc/maple.h>
 #include <dc/maple/controller.h>
 #include <dc/cdrom.h>
 
-#include <arch/arch.h>
 #include <arch/cache.h>
 
 #include <kos/init.h>
@@ -43,7 +43,7 @@ static void __attribute__((__noreturn__)) wait_exit(void) {
 
             if(state)   {
                 if(state->buttons)
-                    arch_exit();
+                    exit(0);
             }
         }
     }
@@ -53,15 +53,15 @@ static void cd_stream_callback(void *param) {
     (*(size_t *)param)++;
 }
 
-static int cd_stream_test(uint32_t lba, uint8_t *buffer, size_t size, int mode) {
+static int cd_stream_test(uint32_t lba, uint8_t *buffer, size_t size, bool dma) {
 
     int rs;
     size_t cur_size = 0;
     size_t cb_count = 0;
-    char *stream_name = (mode == CDROM_READ_PIO ? "PIO" : "DMA");
+    char *stream_name = (!dma ? "PIO" : "DMA");
 
     dbglog(DBG_INFO, "Start %s stream.\n", stream_name);
-    rs = cdrom_stream_start(lba, size / 2048, mode);
+    rs = cdrom_stream_start(lba, size / 2048, dma);
 
     if (rs != ERR_OK) {
         dbglog(DBG_ERROR, "Failed to start stream for %s.\n", stream_name);
@@ -146,7 +146,7 @@ int main(int argc, char *argv[]) {
     int rs;
     size_t i;
     uint32_t lba;
-    CDROM_TOC toc;
+    cd_toc_t toc;
 
     dbgio_dev_select("fb");
     dbglog(DBG_INFO, "CD-ROM stream test.\n\n");
@@ -171,7 +171,7 @@ int main(int argc, char *argv[]) {
     */
     dcache_purge_range((uintptr_t)dma_buf, BUFFER_SIZE);
 
-    rs = cd_stream_test(lba, dma_buf, BUFFER_SIZE, CDROM_READ_DMA);
+    rs = cd_stream_test(lba, dma_buf, BUFFER_SIZE, true);
 
     if (rs != ERR_OK) {
         dbglog(DBG_ERROR, "DMA stream test failed.\n");
@@ -179,7 +179,7 @@ int main(int argc, char *argv[]) {
     }
 
     memset(pio_buf, 0xee, BUFFER_SIZE);
-    rs = cd_stream_test(lba, pio_buf, BUFFER_SIZE, CDROM_READ_PIO);
+    rs = cd_stream_test(lba, pio_buf, BUFFER_SIZE, false);
 
     if (rs != ERR_OK) {
         dbglog(DBG_ERROR, "PIO stream test failed.\n");
@@ -204,13 +204,13 @@ int main(int argc, char *argv[]) {
         dcache_purge_range((uintptr_t)dma_buf, BUFFER_SIZE);
 
         rs = cdrom_read_sectors_ex(dma_buf, lba,
-            BUFFER_SIZE >> 11, CDROM_READ_DMA);
+            BUFFER_SIZE >> 11, true);
     }
     else {
         dbglog(DBG_INFO, "Read PIO data.\n");
         memset(pio_buf, 0xee, BUFFER_SIZE);
         rs = cdrom_read_sectors_ex(pio_buf, lba,
-            BUFFER_SIZE >> 11, CDROM_READ_PIO);
+            BUFFER_SIZE >> 11, false);
     }
 
     if (rs != ERR_OK) {

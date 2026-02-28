@@ -26,7 +26,7 @@ __BEGIN_DECLS
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <arch/irq.h>
+#include <kos/irq.h>
 
 /** \defgroup ubc   User Break Controller
     \brief          Driver for the SH4's UBC

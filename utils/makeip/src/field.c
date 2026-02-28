@@ -346,7 +346,8 @@ _check_deviceinfo(field_t *f, char *value)
   long dummy;
   result = result && (strlen(deviceinfo) == 9)
     && ((!strncmp(deviceinfo, "CD-ROM", 6)) ||
-        (!strncmp(deviceinfo, "GD-ROM", 6)))
+        (!strncmp(deviceinfo, "GD-ROM", 6)) ||
+        (!strncmp(deviceinfo, "MIL CD", 6)))
     && substr_long_parse(deviceinfo, 6, 1, &dummy) && (deviceinfo[7] == '/')
 	&& substr_long_parse(deviceinfo, 8, 1, &dummy);
 
