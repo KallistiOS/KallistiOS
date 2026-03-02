@@ -45,6 +45,7 @@ __BEGIN_DECLS
 
 #include <stddef.h>
 #include <kos/mutex.h>
+#include <kos/sem.h>
 
 /** \brief  Reader/writer semaphore structure.
 
@@ -58,11 +59,11 @@ typedef struct rw_semaphore {
     int read_count;
 
     mutex_t write_lock;
-    mutex_t read_lock;
+    semaphore_t read_sem;
 } rw_semaphore_t;
 
 /** \brief  Initializer for a transient reader/writer semaphore */
-#define RWSEM_INITIALIZER   { 0, MUTEX_INITIALIZER, MUTEX_INITIALIZER }
+#define RWSEM_INITIALIZER   { 0, MUTEX_INITIALIZER, SEM_INITIALIZER(1) }
 
 /** \brief  Initialize a reader/writer semaphore.
 
