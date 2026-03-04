@@ -683,14 +683,10 @@ int bba_tx(const uint8_t *pkt, int len, int wait) {
     if(!__is_defined(TX_SEMA))
         return bba_rtx(pkt, len, wait);
 
-    if(irq_inside_int()) {
-        if(sem_trywait(&tx_sema)) {
-            //printf("bba_tx called from an irq while a thread was running it !\n");
-            return BBA_TX_OK;   /* sorry guys ... */
-        }
+    if(sem_wait_irqsafe(&tx_sema)) {
+        //printf("bba_tx called from an irq while a thread was running it !\n");
+        return BBA_TX_OK;   /* sorry guys ... */
     }
-    else
-        sem_wait(&tx_sema);
 
     res = bba_rtx(pkt, len, wait);
     sem_signal(&tx_sema);
