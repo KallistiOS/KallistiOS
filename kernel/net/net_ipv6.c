@@ -5,6 +5,8 @@
 
 */
 
+#include <stdalign.h>
+#include <stdint.h>
 #include <string.h>
 #include <netinet/in.h>
 #include <kos/net.h>
@@ -62,8 +64,8 @@ static int is_in_network(netif_t *net, const struct in6_addr *ip) {
 /* Send a packet on the specified network adapter */
 int net_ipv6_send_packet(netif_t *net, ipv6_hdr_t *hdr, const uint8 *data,
                          size_t data_size) {
-    uint8 pkt[data_size + sizeof(ipv6_hdr_t) + sizeof(eth_hdr_t)];
-    uint8 dst_mac[6];
+    alignas(32) uint8_t pkt[data_size + sizeof(ipv6_hdr_t) + sizeof(eth_hdr_t)];
+    uint8_t dst_mac[6];
     int err;
     struct in6_addr dst = hdr->dst_addr;
     eth_hdr_t *ehdr;
