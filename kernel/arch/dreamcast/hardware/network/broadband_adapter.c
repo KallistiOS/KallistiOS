@@ -648,18 +648,8 @@ static int bba_rtx(const uint8_t *pkt, int len, int wait)
 
     //g2_write_block_8(pkt, txdesc[rtl.cur_tx], len);
 
-    /* Check alignment of the packet, if its 32-bit aligned, use
-       g2_write_block_32, if its 16-bit aligned, use g2_write_block_16,
-       otherwise, use g2_write_block_8. */
-    if(!((uint32_t)pkt & 0x03)) {
-        g2_write_block_32((uint32_t *) pkt, txdesc[rtl.cur_tx], (len + 3) >> 2);
-    }
-    else if(!((uint32_t)pkt & 0x01)) {
-        g2_write_block_16((uint16_t *) pkt, txdesc[rtl.cur_tx], (len + 1) >> 1);
-    }
-    else {
-        g2_write_block_8(pkt, txdesc[rtl.cur_tx], len);
-    }
+    assert(__is_aligned((uintptr_t)pkt, 32));
+    g2_write_block_32((uint32_t *) pkt, txdesc[rtl.cur_tx], (len + 3) >> 2);
 
     /* All packets must be at least 60 bytes, pad them with null bytes if
        they are not already of an appropriate size. */
