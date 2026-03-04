@@ -610,6 +610,19 @@ static int bba_link_is_stable(void *d) {
     return *(int *)d;
 }
 
+static int bba_can_tx(void *d) {
+    (void)d;
+
+    if(!(g2_read_32(NIC(RT_TXSTATUS0 + 4 * rtl.cur_tx)) & RT_TX_HOST_OWNS)) {
+        if(g2_read_32(NIC(RT_TXSTATUS0 + 4 * rtl.cur_tx)) & RT_TX_ABORTED)
+            g2_write_32(NIC(RT_TXSTATUS0 + 4 * rtl.cur_tx),
+                        g2_read_32(NIC(RT_TXSTATUS0 + 4 * rtl.cur_tx)) | 1);
+        return 0;
+    }
+
+    return 1;
+}
+
 /* Transmit a single packet */
 static int bba_rtx(const uint8_t *pkt, int len, int wait)
 {
@@ -624,16 +637,10 @@ static int bba_rtx(const uint8_t *pkt, int len, int wait)
 
     /* Wait till it's clear to transmit */
     if(wait == BBA_TX_WAIT) {
-        while(!(g2_read_32(NIC(RT_TXSTATUS0 + 4 * rtl.cur_tx)) & RT_TX_HOST_OWNS)) {
-            if(g2_read_32(NIC(RT_TXSTATUS0 + 4 * rtl.cur_tx)) & RT_TX_ABORTED)
-                g2_write_32(NIC(RT_TXSTATUS0 + 4 * rtl.cur_tx),
-                            g2_read_32(NIC(RT_TXSTATUS0 + 4 * rtl.cur_tx)) | 1);
-        }
+        thd_poll(bba_can_tx, NULL, 0);
     }
-    else {
-        if(!(g2_read_32(NIC(RT_TXSTATUS0 + 4 * rtl.cur_tx)) & RT_TX_HOST_OWNS)) {
-            return BBA_TX_AGAIN;
-        }
+    else if(!(g2_read_32(NIC(RT_TXSTATUS0 + 4 * rtl.cur_tx)) & RT_TX_HOST_OWNS)) {
+        return BBA_TX_AGAIN;
     }
 
     /* Copy the packet out to RTL memory */
