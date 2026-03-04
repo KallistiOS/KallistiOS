@@ -12,6 +12,7 @@
 
 */
 
+#include <stdalign.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -83,9 +84,9 @@ static int __pure is_broadcast(const uint8_t dest[4], const uint8_t bc[4]) {
 /* Send a packet on the specified network adapter */
 int net_ipv4_send_packet(netif_t *net, ip_hdr_t *hdr, const uint8_t *data,
                          size_t size) {
+    alignas(32) uint8_t pkt[size + sizeof(ip_hdr_t) + sizeof(eth_hdr_t)];
     uint8_t dest_ip[4];
     uint8_t dest_mac[6];
-    uint8_t pkt[size + sizeof(ip_hdr_t) + sizeof(eth_hdr_t)];
     eth_hdr_t *ehdr;
     int err;
 

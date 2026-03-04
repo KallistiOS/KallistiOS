@@ -6,6 +6,7 @@
    Copyright (C) 2005, 2010, 2012, 2013, 2016 Lawrence Sebald
 */
 
+#include <stdalign.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -254,7 +255,7 @@ int net_arp_revlookup(netif_t *nif, uint8_t ip_out[4], const uint8_t mac_in[6]) 
 static int net_arp_send(netif_t *nif, arp_pkt_t *pkt) {
     arp_pkt_t pkt_out;
     eth_hdr_t eth_hdr;
-    uint8_t buf[sizeof(arp_pkt_t) + sizeof(eth_hdr_t)];
+    alignas(32) uint8_t buf[sizeof(arp_pkt_t) + sizeof(eth_hdr_t)];
 
     /* First, fill in the ARP packet. */
     pkt_out.hw_type[0] = 0;
@@ -318,7 +319,7 @@ int net_arp_input(netif_t *nif, const uint8_t *pkt_in, int len) {
 int net_arp_query(netif_t *nif, const uint8_t ip[4]) {
     arp_pkt_t pkt_out;
     eth_hdr_t eth_hdr;
-    uint8_t buf[sizeof(arp_pkt_t) + sizeof(eth_hdr_t)];
+    alignas(32) uint8_t buf[sizeof(arp_pkt_t) + sizeof(eth_hdr_t)];
 
     /* First, fill in the ARP packet. */
     pkt_out.hw_type[0] = 0;
