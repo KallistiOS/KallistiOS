@@ -1,18 +1,17 @@
-diff -ruN gcc-8.5.0/gcc/config/elfos.h gcc-8.5.0-kos/gcc/config/elfos.h
---- gcc-8.5.0/gcc/config/elfos.h	2025-04-17 16:01:33.790051712 -0600
-+++ gcc-8.5.0-kos/gcc/config/elfos.h	2025-04-17 16:01:42.910094466 -0600
-@@ -486,3 +486,6 @@
+diff --color -ruN gcc-8.5.0/gcc/config/elfos.h gcc-8.5.0-kos/gcc/config/elfos.h
+--- gcc-8.5.0/gcc/config/elfos.h	2021-05-14 10:42:08.000000000 +0200
++++ gcc-8.5.0-kos/gcc/config/elfos.h	2026-03-08 19:36:58.481305649 +0100
+@@ -463,3 +463,6 @@
  
  #undef TARGET_LIBC_HAS_FUNCTION
  #define TARGET_LIBC_HAS_FUNCTION no_c99_libc_has_function
 +
 +#define TARGET_OS_CPP_BUILTINS()			\
 +  builtin_define ("__KOS_GCC_PATCHLEVEL__=2025062800")
-diff --git a/gcc/configure b/gcc/configure
-index 16965953f..5d8d51a98 100755
---- a/gcc/configure
-+++ b/gcc/configure
-@@ -13165,7 +13165,7 @@ case ${enable_threads} in
+diff --color -ruN gcc-8.5.0/gcc/configure gcc-8.5.0-kos/gcc/configure
+--- gcc-8.5.0/gcc/configure	2021-05-14 10:42:27.000000000 +0200
++++ gcc-8.5.0-kos/gcc/configure	2026-03-08 19:36:58.483427663 +0100
+@@ -11694,7 +11694,7 @@
      target_thread_file='single'
      ;;
    aix | dce | lynx | mipssde | posix | rtems | \
@@ -21,11 +20,42 @@ index 16965953f..5d8d51a98 100755
      target_thread_file=${enable_threads}
      ;;
    *)
-diff --git a/libgcc/config.host b/libgcc/config.host
-index 6a88ee5a2..df575f48e 100644
---- a/libgcc/config.host
-+++ b/libgcc/config.host
-@@ -71,7 +71,7 @@
+diff --color -ruN gcc-8.5.0/libgcc/config/arm/crtn.S gcc-8.5.0-kos/libgcc/config/arm/crtn.S
+--- gcc-8.5.0/libgcc/config/arm/crtn.S	2021-05-14 10:42:10.000000000 +0200
++++ gcc-8.5.0-kos/libgcc/config/arm/crtn.S	2026-03-08 19:37:37.215159857 +0100
+@@ -63,11 +63,7 @@
+ 	ldmfd	sp, {r4, r5, r6, r7, r8, r9, sl, fp, sp, lr}
+ #endif
+ 	
+-#if defined __THUMB_INTERWORK__ || defined __thumb__
+-	bx	lr
+-#else
+ 	mov	pc, lr
+-#endif
+ .endm
+ 		
+ 	
+diff --color -ruN gcc-8.5.0/libgcc/config/arm/libunwind.S gcc-8.5.0-kos/libgcc/config/arm/libunwind.S
+--- gcc-8.5.0/libgcc/config/arm/libunwind.S	2021-05-14 10:42:10.000000000 +0200
++++ gcc-8.5.0-kos/libgcc/config/arm/libunwind.S	2026-03-08 19:36:58.490833475 +0100
+@@ -46,7 +46,7 @@
+ 	EQUIV SYM (\name), SYM (__\name)
+ .endm
+ 
+-#if (__ARM_ARCH__ == 4)
++#if (__ARM_ARCH__ <= 4)
+ /* Some coprocessors require armv5.  We know this code will never be run on
+    other cpus.  Tell gas to allow armv5, but only mark the objects as armv4.
+  */
+diff --color -ruN gcc-8.5.0/libgcc/config/t-kos gcc-8.5.0-kos/libgcc/config/t-kos
+--- gcc-8.5.0/libgcc/config/t-kos	1970-01-01 01:00:00.000000000 +0100
++++ gcc-8.5.0-kos/libgcc/config/t-kos	2026-03-08 19:36:58.491164806 +0100
+@@ -0,0 +1 @@
++LIB2ADD = $(srcdir)/config/fake-kos.c
+diff --color -ruN gcc-8.5.0/libgcc/config.host gcc-8.5.0-kos/libgcc/config.host
+--- gcc-8.5.0/libgcc/config.host	2021-05-14 10:42:10.000000000 +0200
++++ gcc-8.5.0-kos/libgcc/config.host	2026-03-08 19:36:58.492372384 +0100
+@@ -69,7 +69,7 @@
  asm_hidden_op=.hidden
  enable_execute_stack=
  extra_parts=
@@ -33,30 +63,22 @@ index 6a88ee5a2..df575f48e 100644
 +tmake_file="t-kos"
  tm_file=
  tm_define=
- md_unwind_def_header=no-unwind.h
-diff --git a/libgcc/config/t-kos b/libgcc/config/t-kos
-new file mode 100644
-index 000000000..f9847a78d
---- /dev/null
-+++ b/libgcc/config/t-kos
-@@ -0,0 +1 @@
-+LIB2ADD = $(srcdir)/config/fake-kos.c
-diff --git a/libgcc/configure b/libgcc/configure
-index 18418336c..39ec96416 100755
---- a/libgcc/configure
-+++ b/libgcc/configure
-@@ -5733,5 +5733,6 @@ case $target_thread_file in
+ md_unwind_header=no-unwind.h
+diff --color -ruN gcc-8.5.0/libgcc/configure gcc-8.5.0-kos/libgcc/configure
+--- gcc-8.5.0/libgcc/configure	2021-05-14 10:42:10.000000000 +0200
++++ gcc-8.5.0-kos/libgcc/configure	2026-03-08 19:36:58.497215391 +0100
+@@ -5503,6 +5503,7 @@
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;
      win32)	thread_header=config/i386/gthr-win32.h ;;
 +    kos)	thread_header=gthr-kos.h ;;
  esac
  
-diff --git a/libobjc/Makefile.in b/libobjc/Makefile.in
-index 3f4186dee..e516072ef 100644
---- a/libobjc/Makefile.in
-+++ b/libobjc/Makefile.in
-@@ -308,14 +308,16 @@ $(srcdir)/configure: @MAINT@ configure.ac $(srcdir)/aclocal.m4
+ 
+diff --color -ruN gcc-8.5.0/libobjc/Makefile.in gcc-8.5.0-kos/libobjc/Makefile.in
+--- gcc-8.5.0/libobjc/Makefile.in	2021-05-14 10:42:11.000000000 +0200
++++ gcc-8.5.0-kos/libobjc/Makefile.in	2026-03-08 19:36:58.498671719 +0100
+@@ -307,14 +307,16 @@
  $(srcdir)/aclocal.m4: @MAINT@ $(aclocal_deps)
  	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
  
@@ -77,7 +99,7 @@ index 3f4186dee..e516072ef 100644
  	fi
  	$(MULTIDO) $(FLAGS_TO_PASS) multi-do DO="$@"
  	@-$(LIBTOOL) --mode=finish $(DESTDIR)$(toolexeclibdir)
-@@ -328,7 +330,7 @@ install-headers:
+@@ -327,7 +329,7 @@
  	  $(INSTALL_DATA) $${realfile} $(DESTDIR)$(libsubdir)/$(includedirname)/objc; \
  	done
  
@@ -86,10 +108,9 @@ index 3f4186dee..e516072ef 100644
  
  mostlyclean:
  	-$(LIBTOOL_CLEAN) rm -f libobjc$(libsuffix).la libobjc_gc$(libsuffix).la *.lo
-diff --git a/libstdc++-v3/config/cpu/sh/atomicity.h b/libstdc++-v3/config/cpu/sh/atomicity.h
-index 327bd0e45..aeb95d33b 100644
---- a/libstdc++-v3/config/cpu/sh/atomicity.h
-+++ b/libstdc++-v3/config/cpu/sh/atomicity.h
+diff --color -ruN gcc-8.5.0/libstdc++-v3/config/cpu/sh/atomicity.h gcc-8.5.0-kos/libstdc++-v3/config/cpu/sh/atomicity.h
+--- gcc-8.5.0/libstdc++-v3/config/cpu/sh/atomicity.h	2021-05-14 10:42:11.000000000 +0200
++++ gcc-8.5.0-kos/libstdc++-v3/config/cpu/sh/atomicity.h	2026-03-08 19:36:58.498870520 +0100
 @@ -22,14 +22,40 @@
  // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
  // <http://www.gnu.org/licenses/>.
@@ -140,14 +161,14 @@ index 327bd0e45..aeb95d33b 100644
 +
 +_GLIBCXX_END_NAMESPACE_VERSION
 +} // namespace
-diff --git a/libstdc++-v3/configure b/libstdc++-v3/configure
-index 819a1d828..1d7b817d8 100755
---- a/libstdc++-v3/configure
-+++ b/libstdc++-v3/configure
-@@ -15974,5 +15974,6 @@ case $target_thread_file in
+diff --color -ruN gcc-8.5.0/libstdc++-v3/configure gcc-8.5.0-kos/libstdc++-v3/configure
+--- gcc-8.5.0/libstdc++-v3/configure	2021-05-14 10:42:11.000000000 +0200
++++ gcc-8.5.0-kos/libstdc++-v3/configure	2026-03-08 19:36:58.507428202 +0100
+@@ -15391,6 +15391,7 @@
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;
      win32)	thread_header=config/i386/gthr-win32.h ;;
 +    kos)	thread_header=gthr-kos.h ;;
  esac
+ 
  

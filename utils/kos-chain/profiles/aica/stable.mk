@@ -38,3 +38,6 @@ thread_model=single
 
 # Do not fixup newlib
 auto_fixup_newlib=0
+
+gcc_pass1_configure_args=CFLAGS_FOR_TARGET="-mcpu=arm7di -marm"
+gcc_pass2_configure_args=CFLAGS_FOR_TARGET="-mcpu=arm7di -marm"
