@@ -30,5 +30,5 @@ __used void _exit(int code) {
            "arch: _exit(%d) called without SHUTDOWN flag enabled!\n",
            code);
 
-    arch_menu();
+    arch_abort();
 }
