@@ -6,7 +6,6 @@
 */
 
 #include <arch/arch.h>
-#include <kos/dbglog.h>
 #include <kos/init_base.h>
 
 extern void arch_exit_handler(int ret_code) __noreturn;
@@ -26,9 +25,5 @@ __used void _exit(int code) {
 
     KOS_INIT_FLAG_CALL(kos_shutdown);
 
-    dbglog(DBG_WARNING,
-           "arch: _exit(%d) called without SHUTDOWN flag enabled!\n",
-           code);
-
-    arch_menu();
+    arch_panic("exit() called with INIT_NO_SHUTDOWN flag");
 }
