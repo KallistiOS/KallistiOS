@@ -210,10 +210,6 @@ irq_get_global_handler
 irq_set_context
 irq_get_context
 
-# Kernel image replacement
-arch_exec_at
-arch_exec
-
 # Misc other kernel control
 arch_exit
 arch_abort

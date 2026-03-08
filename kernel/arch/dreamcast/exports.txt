@@ -90,6 +90,10 @@ timer_enable_ints
 timer_disable_ints
 timer_ints_enabled
 
+# Kernel image replacement
+arch_exec_at
+arch_exec
+
 # Misc
 arch_reboot
 arch_menu
