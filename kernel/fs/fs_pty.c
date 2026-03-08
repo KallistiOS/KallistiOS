@@ -172,8 +172,8 @@ int fs_pty_create(char *buffer, int maxbuflen, file_t *master_out, file_t *slave
     mutex_unlock(&list_mutex);
 
     /* Call back up to fs to open two file descriptors */
-    sprintf(mname, "/pty/ma%02x", master->id);
-    sprintf(sname, "/pty/sl%02x", slave->id);
+    sprintf(mname, "/dev/pty/ma%02x", master->id);
+    sprintf(sname, "/dev/pty/sl%02x", slave->id);
     *slave_out = fs_open(sname, O_RDWR);
     if(*slave_out < 0)
         goto cleanup;
@@ -810,7 +810,7 @@ static int pty_fstat(void *h, struct stat *st) {
 static vfs_handler_t vh = {
     /* Name Handler */
     {
-        { "/pty" },     /* name */
+        { "/dev/pty" },     /* name */
         0,              /* in-kernel */
         0x00010000,     /* Version 1.0 */
         0,              /* flags */
