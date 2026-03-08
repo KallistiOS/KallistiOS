@@ -1,7 +1,17 @@
 diff --color -ruN newlib-4.6.0.20260123/newlib/configure.host newlib-4.6.0.20260123-kos/newlib/configure.host
 --- newlib-4.6.0.20260123/newlib/configure.host	2024-02-10 09:30:58.772247624 -0600
 +++ newlib-4.6.0.20260123-kos/newlib/configure.host	2024-02-10 09:31:16.329331366 -0600
-@@ -326,6 +326,7 @@
+@@ -130,8 +130,7 @@
+ 	machine_dir=arc64
+ 	;;
+   arm*)
+-	machine_dir=arm
+-	libm_machine_dir=arm
++	newlib_cflags="${newlib_cflags} -mcpu=arm7di -DREENTRANT_SYSCALLS_PROVIDED -DMALLOC_PROVIDED -DABORT_PROVIDED -DHAVE_FCNTL -ffunction-sections -fdata-sections"
+ 	;;
+   avr*)
+ 	newlib_cflags="${newlib_cflags} -DPREFER_SIZE_OVER_SPEED -mcall-prologues"
+@@ -326,6 +325,7 @@
  	;;
    sh | sh64)
  	machine_dir=sh
@@ -236,7 +246,7 @@ diff --color -ruN newlib-4.6.0.20260123/newlib/libc/include/sys/_types.h newlib-
  #ifndef __machine_ino_t_defined
  #if (defined(__i386__) && (defined(GO32) || defined(__MSDOS__))) || \
 -    defined(__sparc__) || defined(__SPU__)
-+    defined(__sparc__) || defined(__SPU__) || defined(__sh__) || defined(__PPC__)
++    defined(__sparc__) || defined(__SPU__) || defined(__sh__) || defined(__PPC__) || defined(__ARMEL__)
  typedef unsigned long __ino_t;
  #else
  typedef unsigned short __ino_t;
