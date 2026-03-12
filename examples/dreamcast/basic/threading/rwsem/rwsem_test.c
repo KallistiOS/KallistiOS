@@ -109,8 +109,23 @@ void *reader1(void *param UNUSED) {
     return NULL;
 }
 
+void *lilo(void *param UNUSED) {
+
+    /* Take the lock */
+    rwsem_read_lock(&s);
+
+    /* Then wait for the main thread to unlock */
+    while(rwsem_read_count(&s) != 1)
+        thd_pass();
+
+    /* Now that we're the only lock on it, try to unlock */
+    rwsem_read_unlock(&s);
+
+    return NULL;
+}
+
 int main(int argc, char *argv[]) {
-    kthread_t *w0, *w1, *r0, *r1;
+    kthread_t *w0, *w1, *r0, *r1, *ll;
 
     /* Exit if the user presses all buttons at once. */
     cont_btn_callback(0, CONT_START | CONT_A | CONT_B | CONT_X | CONT_Y,
@@ -130,15 +145,31 @@ int main(int argc, char *argv[]) {
     thd_join(r0, NULL);
     thd_join(r1, NULL);
 
+    printf("Final number: %lu\n", number);
+
+    printf("Starting second test\n");
+
+    /* Second test is to take a lock and ensure a thread can unlock. */
     if(rwsem_read_lock(&s)) {
         printf("Could not obtain final read lock!\n");
         perror("rwsem_read_lock");
         exit(EXIT_FAILURE);
     }
 
-    printf("Final number: %lu\n", number);
+    /* Spin off a thread that will be the last-in, last-out lock holder */
+    ll = thd_create(0, lilo, NULL);
 
+    /* Wait for ll to take their read lock */
+    while(rwsem_read_count(&s) != 2)
+        thd_pass();
+
+    /* Now that ll has a lock, we can unlock */
     rwsem_read_unlock(&s);
+
+    thd_join(ll, NULL);
+
+    printf("Second test passed!\n");
+
     rwsem_destroy(&s);
 
     printf("Reader/Writer semaphore tests completed successfully!\n");
