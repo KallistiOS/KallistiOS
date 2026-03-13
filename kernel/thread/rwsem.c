@@ -23,14 +23,14 @@ typedef enum rwsem_update_type {
 int rwsem_init(rw_semaphore_t *s) {
     s->read_count = 0;
     s->write_lock = (mutex_t)MUTEX_INITIALIZER;
-    s->read_lock = (mutex_t)MUTEX_INITIALIZER;
+    s->read_sem = (semaphore_t)SEM_INITIALIZER(1);
 
     return 0;
 }
 
 /* Destroy a reader/writer semaphore */
 int rwsem_destroy(rw_semaphore_t *s) {
-    if(mutex_is_locked(&s->write_lock) || mutex_is_locked(&s->read_lock)) {
+    if(mutex_is_locked(&s->write_lock) || sem_count(&s->read_sem) == 0) {
         errno = EBUSY;
         return -1;
     }
@@ -64,18 +64,19 @@ static int rwsem_update_timed(rw_semaphore_t *s, unsigned int timeout,
         if(type == UPDATE_TYPE_UPGRADE)
             rwsem_read_unlock(s);
 
-        if(mutex_lock_timed(&s->read_lock, timeout)) {
+        if(sem_wait_timed(&s->read_sem, timeout)) {
             if(type == UPDATE_TYPE_READ) {
                 atomic_fetch_sub(&s->read_count, 1);
             } else if(type == UPDATE_TYPE_UPGRADE
                       && atomic_fetch_add(&s->read_count, 1) == 0) {
-                /* mutex_locked_timed() timed out, but the read count we just
+                /* sem_wait_timed() timed out, but the read count we just
                  * updated was zero, which means that whatever was holding up
-                 * the mutex may have unlocked it since then, or will unlock it
-                 * the next time it runs without delay. This is guaranteed
-                 * because we hold up the write mutex, so no other reader or
-                 * writer can lock up the read mutex before we do. */
-                mutex_lock(&s->read_lock);
+                 * the semaphore may have unlocked it since then, or will
+                 * unlock it the next time it runs without delay. This is
+                 * guaranteed because we hold up the write mutex, so no other
+                 * reader or writer can lock up the read semaphore before we
+                 * do. */
+                sem_wait(&s->read_sem);
             }
 
             mutex_unlock(&s->write_lock);
@@ -117,14 +118,14 @@ int rwsem_write_lock_irqsafe(rw_semaphore_t *s) {
 /* Unlock a reader/writer semaphore from a read lock. */
 int rwsem_read_unlock(rw_semaphore_t *s) {
     if(atomic_fetch_sub(&s->read_count, 1) == 1)
-        mutex_unlock(&s->read_lock);
+        sem_signal(&s->read_sem);
 
     return 0;
 }
 
 /* Unlock a reader/writer semaphore from a write lock. */
 int rwsem_write_unlock(rw_semaphore_t *s) {
-    mutex_unlock(&s->read_lock);
+    sem_signal(&s->read_sem);
     mutex_unlock(&s->write_lock);
 
     return 0;
@@ -147,7 +148,7 @@ int rwsem_read_trylock(rw_semaphore_t *s) {
     }
 
     if(atomic_fetch_add(&s->read_count, 1) == 0
-       && mutex_trylock(&s->read_lock)) {
+       && sem_trywait(&s->read_sem)) {
         atomic_fetch_sub(&s->read_count, 1);
         mutex_unlock(&s->write_lock);
         errno = EWOULDBLOCK;
@@ -166,7 +167,7 @@ int rwsem_write_trylock(rw_semaphore_t *s) {
         return -1;
     }
 
-    if(mutex_trylock(&s->read_lock)) {
+    if(sem_trywait(&s->read_sem)) {
         mutex_unlock(&s->write_lock);
         errno = EWOULDBLOCK;
         return -1;

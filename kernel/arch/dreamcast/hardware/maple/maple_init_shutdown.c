@@ -63,7 +63,7 @@ static void maple_dev_reset(maple_device_t *dev) {
     maple_queue_frame(&dev->frame);
 
     /* Wait for the device to accept it */
-    if(genwait_wait(&dev->frame, "dev_reset", 500, NULL) < 0) {
+    if(genwait_wait(&dev->frame, "dev_reset", 500) < 0) {
         if(dev->frame.state != MAPLE_FRAME_VACANT) {
             /* Something went wrong.... */
             dev->frame.state = MAPLE_FRAME_VACANT;
@@ -197,14 +197,17 @@ void maple_hw_shutdown(void) {
            cnt, maple_state.vbl_cntr, maple_state.dma_cntr);
 }
 
+static int maple_scan_done(maple_state_t *state) {
+    return state->scan_ready_mask == 0xf;
+}
+
 /* Wait for the initial bus scan to complete */
 void maple_wait_scan(void) {
     int     p, u;
     maple_device_t  *dev;
 
     /* Wait for it to finish */
-    while(maple_state.scan_ready_mask != 0xf)
-        thd_pass();
+    thd_poll((thd_cb_t)maple_scan_done, &maple_state, 0);
 
     /* Enumerate everything */
     dbglog(DBG_INFO, "maple: attached devices:\n");

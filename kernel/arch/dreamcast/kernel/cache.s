@@ -12,6 +12,7 @@
 !
 
     .text
+    .globl _icache_inval_range
     .globl _icache_flush_range
     .globl _dcache_inval_range
     .globl _dcache_flush_range
@@ -19,6 +20,70 @@
     .globl _dcache_purge_range
     .globl _dcache_purge_all
     .globl _dcache_purge_all_with_buffer
+
+
+! This routine goes through and flushes/invalidates the icache
+! for a given range.
+!
+! r4 is starting address
+! r5 is size
+    .align 2
+_icache_inval_range:
+    tst      r5, r5          ! Test if size is 0
+    mov.l    iir_addr, r0
+
+    bt       .iinval_exit    ! Exit early if no blocks to flush
+
+    mov.l    p2_mask, r1
+    or       r1, r0
+    jmp      @r0
+    nop
+
+.iinval_real:
+    ! Save old SR and disable interrupts
+    stc      sr, r0
+    mov.l    r0, @-r15
+    mov.l    ormask, r1
+    or       r1, r0
+    ldc      r0, sr
+
+    ! Get ending address from size and align start address
+    add      r4, r5
+    mov.l    align_mask, r0
+    and      r0, r4
+    mov.l    ica_addr, r1
+    mov.l    ic_entry_mask, r2
+    mov.l    ic_valid_mask, r3
+
+    .align 2
+.iinval_loop:
+    ! Invalidate I cache
+    mov      r4, r6
+    add      #32, r4       ! Move on to next cache block
+    mov      r6, r7
+    and      r2, r6        ! v & CACHE_IC_ENTRY_MASK
+    cmp/hi   r4, r5
+    or       r1, r6        ! CACHE_IC_ADDRESS_ARRAY | (v & CACHE_IC_ENTRY_MASK)
+    and      r3, r7        ! v & 0xfffffc00
+    bt/s     .iinval_loop
+    mov.l    r7, @r6       ! Invalidate cache entry
+
+    ! make sure we have enough instrs before returning to P1
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+
+    ! Restore old SR
+    mov.l    @r15+, r0
+    ldc      r0, sr
+
+.iinval_exit:
+    rts
+    nop
 
 ! This routine goes through and flushes/invalidates the icache 
 ! for a given range.
@@ -54,25 +119,17 @@ _icache_flush_range:
     mov.l    ic_valid_mask, r3
 
 .iflush_loop:
-    ! Write back D cache
-    ocbwb    @r4
-
     ! Invalidate I cache
-    mov      r4, r6        ! v & CACHE_IC_ENTRY_MASK
-    and      r2, r6
-    or       r1, r6        ! CACHE_IC_ADDRESS_ARRAY | ^
-
-    mov      r4, r7        ! v & 0xfffffc00
-    and      r3, r7
-
+    mov      r4, r6
     add      #32, r4       ! Move on to next cache block
+    mov      r6, r7
+    and      r2, r6        ! v & CACHE_IC_ENTRY_MASK
     cmp/hi   r4, r5
-    bt/s     .iflush_loop
-    mov.l    r7, @r6       ! *addr = data    
-
-    ! Restore old SR
-    mov.l    @r15+, r0
-    ldc      r0, sr
+    or       r1, r6        ! CACHE_IC_ADDRESS_ARRAY | (v & CACHE_IC_ENTRY_MASK)
+    ocbwb    @r7           ! Write back D cache
+    and      r3, r7        ! v & 0xfffffc00
+    bt/s     .iinval_loop
+    mov.l    r7, @r6       ! Invalidate cache entry
 
     ! make sure we have enough instrs before returning to P1
     nop
@@ -82,6 +139,10 @@ _icache_flush_range:
     nop
     nop
     nop
+
+    ! Restore old SR
+    mov.l    @r15+, r0
+    ldc      r0, sr
 
 .iflush_exit:
     rts
@@ -238,10 +299,10 @@ _dcache_purge_all_with_buffer:
 .dpurge_all_buffer_loop:
     ! Allocate and then invalidate the dcache line
     movca.l  r0, @r4
-    ocbi     @r4
-    add      #32, r4        ! Move on to next cache block
     cmp/hi   r4, r5
-    bt       .dpurge_all_buffer_loop
+    ocbi     @r4
+    bt.s    .dpurge_all_buffer_loop
+    add      #32, r4        ! Move on to next cache block
 
     rts
     nop
@@ -259,6 +320,8 @@ ic_valid_mask:
     .long    0xfffffc00
 ifr_addr:    
     .long    .iflush_real
+iir_addr:
+    .long    .iinval_real
 
 ! D-cache (Data cache)
 dca_addr:

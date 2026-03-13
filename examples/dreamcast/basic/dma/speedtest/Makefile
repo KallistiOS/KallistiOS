@@ -16,5 +16,8 @@ clean: rm-elf
 rm-elf:
 	-rm -f $(TARGET)
 
+run: $(TARGET)
+	$(KOS_LOADER) $(TARGET)
+
 $(TARGET): $(OBJS)
 	kos-cc -o $@ $^

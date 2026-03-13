@@ -1,10 +1,12 @@
 /* KallistiOS ##version##
 
    arch/dreamcast/include/cache.h
+
    Copyright (C) 2001 Megan Potter
    Copyright (C) 2014, 2016, 2023 Ruslan Rostovtsev
    Copyright (C) 2023 Andy Barajas
    Copyright (C) 2025 Eric Fradella
+   Copyright (C) 2026 Falco Girgis
 */
 
 /** \file    arch/cache.h
@@ -18,6 +20,7 @@
     \author Megan Potter
     \author Ruslan Rostovtsev
     \author Andy Barajas
+    \author Falco Girgis
 */
 
 #ifndef __ARCH_CACHE_H
@@ -88,6 +91,19 @@ __BEGIN_DECLS
     The size of each cache line in the L2 cache.
 */
 #define CACHE_L2_CACHE_LINESIZE 0
+
+/** \brief Invalidate the instruction cache.
+
+    This instruction invalidates a range of the instruction cache.
+
+    \warning
+    If you care aobut the contents of the cache that have not been written
+    back yet, use icache_flush_range() instead!
+
+    \param  start           The physical address to begin invalidation at.
+    \param  count           The number of bytes to invalidate.
+*/
+void icache_inval_range(uintptr_t start, size_t count);
 
 /** \brief  Flush the instruction cache.
 
