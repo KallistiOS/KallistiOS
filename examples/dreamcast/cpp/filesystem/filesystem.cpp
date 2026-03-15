@@ -1,8 +1,20 @@
+/* KallistiOS ##version##
+
+    filesystem.cpp
+    Copyright (C) 2026 Yevhen Lohachov
+
+    This example serves two purposes: to demonstrate the basic usage 
+    of the C++17 std::filesystem API, and to serve as a validation test for
+    the toolchain, to ensure that it's functioning properly. 
+*/
+
 #include <filesystem>
 #include <print>
 #include <chrono>
 
 namespace fs = std::filesystem;
+
+namespace {
 
 void print_entry(const fs::directory_entry& entry) {
     if (entry.is_directory()) {
@@ -34,6 +46,8 @@ void print_perm(fs::perms p)
     show('x', perms::others_exec);
     std::print("\n");
 }
+
+} // namespace
 
 int main(int argc, char* argv[]) {
     std::print("*** std::filesystem test ***\n");
