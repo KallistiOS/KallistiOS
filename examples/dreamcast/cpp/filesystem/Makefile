@@ -6,6 +6,7 @@ TARGET = filesystem.elf
 OBJS = filesystem.o romdisk.o
 KOS_CPPFLAGS += -std=c++23
 KOS_ROMDISK_DIR = romdisk
+KOS_GCCVER_MIN = 14.0.0
 
 all: rm-elf $(TARGET)
 
