@@ -7,7 +7,7 @@ RUN_DIR = $(TEST_DIR)/run
 PVRTEX = ../pvrtex
 
 # Default target
-all: test
+all: compare
 
 # Define the array of commands
 TESTS = \
@@ -59,4 +59,4 @@ approve:
 clean:
 	@rm -rf $(RECEIVED_DIR)
 
-.PHONY: all test approve clean
+.PHONY: all compare approve clean
