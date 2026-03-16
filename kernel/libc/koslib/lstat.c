@@ -1,6 +1,6 @@
 /* KallistiOS ##version##
 
-   pathconf.c
+   lstat.c
    Copyright (C)2026 Yevhen Lohachov
 */
 
