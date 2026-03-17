@@ -39,6 +39,10 @@
 #include <sched.h>
 #include <time.h>
 
+#include <kos/cond.h>
+#include <kos/mutex.h>
+#include <kos/rwsem.h>
+
 __BEGIN_DECLS
 
 /* Process shared/private flag. Since we don't support multiple processes, these
@@ -128,7 +132,7 @@ int pthread_cond_init(pthread_cond_t *__RESTRICT cond,
                       const pthread_condattr_t *__RESTRICT attr);
 int pthread_cond_destroy(pthread_cond_t *cond);
 
-#define PTHREAD_COND_INITIALIZER    { .__data = { 0 } }
+#define PTHREAD_COND_INITIALIZER    { .cond = COND_INITIALIZER }
 
 int pthread_cond_broadcast(pthread_cond_t *cond);
 int pthread_cond_signal(pthread_cond_t *cond);
@@ -158,7 +162,7 @@ int pthread_mutex_init(pthread_mutex_t *__RESTRICT mutex,
                        const pthread_mutexattr_t *__RESTRICT attr);
 int pthread_mutex_destroy(pthread_mutex_t *mutex);
 
-#define PTHREAD_MUTEX_INITIALIZER   { .__data = { 0 } }
+#define PTHREAD_MUTEX_INITIALIZER   { .mutex = MUTEX_INITIALIZER }
 #define PTHREAD_MUTEX_NORMAL        0
 #define PTHREAD_MUTEX_DEFAULT       PTHREAD_MUTEX_NORMAL
 #define PTHREAD_MUTEX_ERRORCHECK    2
@@ -196,7 +200,7 @@ int pthread_rwlock_init(pthread_rwlock_t *__RESTRICT rwlock,
                         const pthread_rwlockattr_t *__RESTRICT attr);
 int pthread_rwlock_destroy(pthread_rwlock_t *rwlock);
 
-#define PTHREAD_RWLOCK_INITIALIZER  { .__data = { 0 } }
+#define PTHREAD_RWLOCK_INITIALIZER  { .rwsem = RWSEM_INITIALIZER }
 
 int pthread_rwlock_rdlock(pthread_rwlock_t *rwlock);
 int pthread_rwlock_timedrdlock(pthread_rwlock_t *__RESTRICT rwlock,
