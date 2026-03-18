@@ -1306,8 +1306,11 @@ static ssize_t net_tcp_recvfrom(net_socket_t *hnd, void *buffer, size_t length,
             sock->data.rcvbuf_head = size - tmp;
     }
 
-    /* If we've got nothing left, move the pointers back to the beginning */
-    if(!sock->data.rcvbuf_cur_sz) {
+    /* If we've got nothing left, move the pointers back to the beginning.
+       But NOT if there are OOO segments buffered — their data was placed
+       at offsets relative to the current tail. Resetting tail to 0 would
+       make tcp_ooo_consume look for data at the wrong position. */
+    if(!sock->data.rcvbuf_cur_sz && !sock->data.ooo_count) {
         sock->data.rcvbuf_head = sock->data.rcvbuf_tail = 0;
     }
 
@@ -2516,6 +2519,16 @@ static int tcp_ooo_add(struct tcp_sock *s, uint32_t seq, size_t sz,
                         const uint8_t *data) {
     if(s->data.ooo_count >= TCP_OOO_MAX)
         return -1;
+
+    /* Reject duplicates — if this segment overlaps with an existing
+       OOO entry, skip it. Without this check, retransmitted OOO
+       segments decrement rcv.wnd repeatedly, eventually leaking
+       the window to zero and deadlocking the connection. */
+    for(int i = 0; i < s->data.ooo_count; i++) {
+        uint32_t ooo_end = s->data.ooo[i].seq + s->data.ooo[i].len;
+        if(SEQ_GE(seq, s->data.ooo[i].seq) && SEQ_LT(seq, ooo_end))
+            return -1;
+    }
 
     /* Place data at correct offset in the circular buffer */
     uint32_t gap = (uint32_t)(seq - s->data.rcv.nxt);
