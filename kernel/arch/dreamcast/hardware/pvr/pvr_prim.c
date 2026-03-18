@@ -7,7 +7,7 @@
 
 #include <assert.h>
 #include <string.h>
-#include <arch/cache.h>
+#include <kos/cache.h>
 #include <dc/pvr.h>
 #include "pvr_internal.h"
 
@@ -46,7 +46,7 @@ void pvr_poly_compile(pvr_poly_hdr_t *dst, const pvr_poly_cxt_t *src) {
 
     /* pvr_poly_hdr_t is cacheline-aligned and we're writing all 32 bytes:
      * we can allocate a dirty cache line */
-    dcache_alloc_block(dst, cmd);
+    dcache_alloc_line(dst, cmd);
 
     /* Polygon mode 1 */
     dst->mode1 = FIELD_PREP(PVR_TA_PM1_DEPTHCMP, src->depth.comparison)
@@ -280,7 +280,7 @@ void pvr_sprite_compile(pvr_sprite_hdr_t *dst, const pvr_sprite_cxt_t *src) {
 
     /* pvr_sprite_hdr_t is cacheline-aligned and we're writing all 32 bytes:
      * we can allocate a dirty cache line */
-    dcache_alloc_block(dst, cmd);
+    dcache_alloc_line(dst, cmd);
 
     /* Polygon mode 1 */
     dst->mode1 = FIELD_PREP(PVR_TA_PM1_DEPTHCMP, src->depth.comparison)
@@ -347,7 +347,7 @@ void pvr_mod_compile(pvr_mod_hdr_t *dst, pvr_list_t list, uint32_t mode,
 
     /* pvr_mod_hdr_t is cacheline-aligned and we're writing all 32 bytes:
      * we can allocate a dirty cache line */
-    dcache_alloc_block(dst, cmd);
+    dcache_alloc_line(dst, cmd);
 
     dst->mode1 = FIELD_PREP(PVR_TA_PM1_MODIFIERINST, mode)
         | FIELD_PREP(PVR_TA_PM1_CULLING, cull);
@@ -376,7 +376,7 @@ void pvr_poly_mod_compile(pvr_poly_mod_hdr_t *dst, const pvr_poly_cxt_t *src) {
 
     /* pvr_poly_mod_hdr_t is cacheline-aligned and we're writing all 32 bytes:
      * we can allocate a dirty cache line */
-    dcache_alloc_block(dst, cmd);
+    dcache_alloc_line(dst, cmd);
 
     /* Polygon mode 1 */
     dst->mode1 = FIELD_PREP(PVR_TA_PM1_DEPTHCMP, src->depth.comparison)

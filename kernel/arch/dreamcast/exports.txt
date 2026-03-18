@@ -1,6 +1,10 @@
 include kos.h
 include dc/sound/sound.h
 
+# Cache management
+arch_icache_inval_range
+arch_icache_sync_range
+
 # ASIC
 asic_evt_set_handler
 asic_evt_disable_all

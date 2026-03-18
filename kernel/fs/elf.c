@@ -8,8 +8,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <arch/cache.h>
 #include <arch/arch.h>
+#include <kos/cache.h>
 #include <kos/fs.h>
 #include <kos/elf.h>
 #include <kos/exports.h>
@@ -407,7 +407,7 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
     dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "elf_load final ELF stats: memory image at %p, size %08lx\n", out->data, out->size);
 
     /* Flush the icache for that zone */
-    icache_flush_range((uint32_t)out->data, out->size);
+    icache_sync_range((uint32_t)out->data, out->size);
 
     return 0;
 
