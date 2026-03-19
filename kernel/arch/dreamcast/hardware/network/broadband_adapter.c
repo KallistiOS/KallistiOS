@@ -31,12 +31,11 @@
 
 #define RTL_MEM                 (0x1840000)
 
-#define RX_NOWRAP               1 /* Default to no wrapping */
 #define RX_BUFFER_SHIFT         1 /* 0 : 8Kb, 1 : 16Kb, 2 : 32Kb, 3 : 64Kb */
 
 #define RX_CONFIG_DEFAULT       (RT_ERTH(0) | RT_RXC_RXFTH(0) | \
                                 RT_RXC_RBLEN(RX_BUFFER_SHIFT) | RT_RXC_MXDMA(6) | \
-                                (RX_NOWRAP ? RT_RXC_WRAP : 0))
+                                RT_RXC_WRAP)
 
 #define RX_BUFFER_LEN           (0x2000 << RX_BUFFER_SHIFT)
 
@@ -517,7 +516,7 @@ static void bba_dma_cb(void *p) {
     }
 }
 
-static int bba_copy_dma(uint8_t *dst, uint32_t s, int len) {
+static int bba_copy_packet(uint8_t *dst, uint32_t s, int len) {
     uint8_t *src = (uint8_t *) s;
 
     if(len <= 0)
@@ -564,24 +563,6 @@ static int bba_copy_dma(uint8_t *dst, uint32_t s, int len) {
     }
 }
 
-/* Utility function to copy out a some data from the ring buffer into an SH-4
-   buffer. This is done to make sure the buffers don't overflow. */
-/* XXX Could probably use a memcpy8 here, even */
-static int  bba_copy_packet(uint8_t *dst, uint32_t src, int len) {
-
-    if(__is_defined(RX_NOWRAP) || (src + len) < RX_BUFFER_LEN) {
-        /* Straight copy is ok */
-        return bba_copy_dma(dst, rtl_mem + src, len);
-    }
-    else {
-        /* Have to copy around the ring end */
-        bba_copy_dma(dst, rtl_mem + src, RX_BUFFER_LEN - src);
-
-        return bba_copy_dma(dst + (RX_BUFFER_LEN - src),
-                            rtl_mem, len - (RX_BUFFER_LEN - src));
-    }
-}
-
 static int rx_enq(int ring_offset, size_t pkt_size) {
     /* If there's no one to receive it, don't bother. */
     if(eth_rx_callback) {
@@ -600,7 +581,7 @@ static int rx_enq(int ring_offset, size_t pkt_size) {
         rxbuff_pos = (rxbuff_pos + pkt_size + 63) & (RXBSZ - 32);
 
         rx_pkt[rxin].pkt_size = pkt_size;
-        return bba_copy_packet(rx_pkt[rxin].rxbuff, ring_offset, pkt_size);
+        return bba_copy_packet(rx_pkt[rxin].rxbuff, rtl_mem + ring_offset, pkt_size);
     }
     else
         return 1;
