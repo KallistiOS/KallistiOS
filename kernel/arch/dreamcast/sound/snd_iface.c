@@ -75,10 +75,9 @@ void snd_shutdown(void) {
 /* Submit a request to the SH4->AICA queue; size is in uint32's */
 int snd_sh4_to_aica(void *packet, uint32_t size) {
     uint32_t qa, bot, start, top, *pkt32, cnt;
-    g2_ctx_t ctx;
     assert_msg(size < AICA_CMD_MAX_SIZE, "SH4->AICA packets may not be >256 uint32's long");
 
-    ctx = g2_lock();
+    g2_lock_scoped();
 
     /* Set these up for reference */
     qa = SPU_RAM_UNCACHED_BASE + AICA_MEM_CMD_QUEUE;
@@ -111,7 +110,6 @@ int snd_sh4_to_aica(void *packet, uint32_t size) {
         g2_fifo_wait();
 
     g2_write_32_raw(qa + offsetof(aica_queue_t, head), start - bot);
-    g2_unlock(ctx);
 
     /* We could wait until head == tail here for processing, but there's
        not really much point; it'll just slow things down. */
@@ -136,7 +134,8 @@ void snd_sh4_to_aica_stop(void) {
    might mean a permanent failure since the queue is probably out of sync. */
 int snd_aica_to_sh4(void *packetout) {
     uint32  bot, start, stop, top, size, cnt, *pkt32;
-    g2_ctx_t ctx = g2_lock();
+
+    g2_lock_scoped();
 
     /* Set these up for reference */
     bot = SPU_RAM_UNCACHED_BASE + AICA_MEM_RESP_QUEUE;
@@ -150,7 +149,6 @@ int snd_aica_to_sh4(void *packetout) {
 
     /* Is there anything? */
     if(start == stop) {
-        g2_unlock(ctx);
         return 0;
     }
 
@@ -158,7 +156,6 @@ int snd_aica_to_sh4(void *packetout) {
     size = g2_read_32_raw(start + offsetof(aica_cmd_t, size));
 
     if(size >= AICA_CMD_MAX_SIZE) {
-        g2_unlock(ctx);
         dbglog(DBG_ERROR, "snd_aica_to_sh4(): packet larger than %d dwords\n", AICA_CMD_MAX_SIZE);
         return -1;
     }
@@ -189,7 +186,6 @@ int snd_aica_to_sh4(void *packetout) {
         g2_fifo_wait();
 
     g2_write_32_raw(bot + offsetof(aica_queue_t, tail), start - (SPU_RAM_UNCACHED_BASE + AICA_MEM_RESP_QUEUE));
-    g2_unlock(ctx);
 
     return 1;
 }

@@ -33,7 +33,7 @@ int isatty(int fd) {
         return 0;
 
     /* pty is the only tty we support */
-    if(!strcmp(vh->nmmgr.pathname,"/pty"))
+    if(!strcmp(vh->nmmgr.pathname, "/dev/pty"))
         return 1;
     else {
         errno = ENOTTY;

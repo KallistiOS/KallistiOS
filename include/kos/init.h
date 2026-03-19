@@ -139,7 +139,7 @@ extern const void * __kos_romdisk;
 
 /** Default init flags (IRQs on, preemption enabled, romdisks). */
 #define INIT_DEFAULT    (INIT_IRQ     | INIT_THD_PREEMPT | INIT_FS_ALL | \
-                         INIT_LIBRARY | INIT_DEFAULT_ARCH)
+                         INIT_DEFAULT_ARCH)
 
 /** Init flags to include all virtual filesystems within `/dev` */
 #define INIT_FS_DEV     (INIT_FS_NULL | INIT_FS_RND)

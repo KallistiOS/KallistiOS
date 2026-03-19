@@ -90,6 +90,14 @@ timer_enable_ints
 timer_disable_ints
 timer_ints_enabled
 
+# Real-time clock
+rtc_unix_secs
+rtc_boot_time
+
+# Kernel image replacement
+arch_exec_at
+arch_exec
+
 # Misc
 arch_reboot
 arch_menu
