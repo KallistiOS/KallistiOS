@@ -489,7 +489,7 @@ static int bba_copy_packet(uint8_t *dst, uint32_t s, int len) {
     assert(__is_aligned(s, 32));
     assert(__is_aligned(len, 32));
 
-    if(len > DMA_THRESHOLD && !irq_inside_int()) {
+    if(len > DMA_THRESHOLD) {
         /* Invalidate the dcache over the range of the data. */
         if(!__is_defined(USE_P2_AREA))
             dcache_inval_range((uint32_t) dst, len);
