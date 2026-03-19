@@ -463,7 +463,8 @@ static void g2_read_block_8_fast(uint8_t *dst, uint8_t *src, int len) {
 #define RXBSZ    (64*1024) /* must be a power of two */
 #define MAX_PKTS (RXBSZ / 32)
 static struct pkt {
-    int pkt_size;
+    uint16_t pkt_size;
+    uint16_t offt;
     uint8_t *rxbuff;
 } rx_pkt[MAX_PKTS];
 
@@ -519,22 +520,11 @@ static void bba_dma_cb(void *p) {
 static int bba_copy_packet(uint8_t *dst, uint32_t s, int len) {
     uint8_t *src = (uint8_t *) s;
 
-    if(len <= 0)
-        return 1;
+    assert(__is_aligned((uintptr_t)dst, 32));
+    assert(__is_aligned(s, 32));
+    assert(__is_aligned(len, 32));
 
     if(len > DMA_THRESHOLD && !irq_inside_int()) {
-        uint32_t add;
-
-        /*
-           This way all will be nicely 32 bytes aligned (assuming that dst and src have
-           same alignment initially and that we don't care about the beginning of dst
-           buffer)
-        */
-        add = ((uint32_t) src) & 31;
-        len += add;
-        src -= add;
-        dst -= add;
-
         /* Invalidate the dcache over the range of the data. */
         if(!__is_defined(USE_P2_AREA))
             dcache_inval_range((uint32_t) dst, len);
@@ -563,28 +553,43 @@ static int bba_copy_packet(uint8_t *dst, uint32_t s, int len) {
     }
 }
 
+/* Compute the difference between the read head and the write head in a circular buffer */
+static inline unsigned int ptr_diff(const uint8_t *rd, const uint8_t *wr, size_t len) {
+    return (len + (uintptr_t)rd - (uintptr_t)wr) % len;
+}
+
 static int rx_enq(int ring_offset, size_t pkt_size) {
+    size_t aligned_size;
+    uint16_t offt;
+
     /* If there's no one to receive it, don't bother. */
-    if(eth_rx_callback) {
-        if(rxin != rxout &&
-                (((rx_pkt[rxout].rxbuff - (rxbuff + 32)) - rxbuff_pos) & (RXBSZ - 1)) < pkt_size + 2048) {
-            return -1;
-        }
+    if(!eth_rx_callback)
+        return -1;
 
-        /* Receive buffer: temporary space to copy out received data */
+    offt = ring_offset & 0x1f;
+    aligned_size = __align_up(pkt_size + offt, 32);
 
-        if(__is_defined(USE_P2_AREA))
-            rx_pkt[rxin].rxbuff = rxbuff + 32 + (rxbuff_pos | MEM_AREA_P2_BASE) + (ring_offset & 31);
-        else
-            rx_pkt[rxin].rxbuff = rxbuff + 32 + rxbuff_pos + (ring_offset & 31);
-
-        rxbuff_pos = (rxbuff_pos + pkt_size + 63) & (RXBSZ - 32);
-
-        rx_pkt[rxin].pkt_size = pkt_size;
-        return bba_copy_packet(rx_pkt[rxin].rxbuff, rtl_mem + ring_offset, pkt_size);
+    /* Do we have space for it? */
+    if(rxin != rxout
+       && ptr_diff(rx_pkt[rxout].rxbuff, &rxbuff[rxbuff_pos], RXBSZ) < aligned_size) {
+        dbglog(DBG_WARNING, "No space in RX buffer\n");
+        return -1;
     }
-    else
-        return 1;
+
+    /* Get a pointer to the receive buffer where we will store the packet */
+    rx_pkt[rxin].rxbuff = &rxbuff[rxbuff_pos];
+    if(__is_defined(USE_P2_AREA))
+        rx_pkt[rxin].rxbuff = (void *)(((uintptr_t)rx_pkt[rxin].rxbuff) | MEM_AREA_P2_BASE);
+
+    rx_pkt[rxin].pkt_size = pkt_size;
+    rx_pkt[rxin].offt = offt;
+
+    rxbuff_pos += aligned_size;
+    if(rxbuff_pos >= RXBSZ)
+        rxbuff_pos = 0;
+
+    return bba_copy_packet(rx_pkt[rxin].rxbuff,
+                           rtl_mem + (ring_offset & ~0x1f), aligned_size);
 }
 
 static int bba_link_is_stable(void *d) {
@@ -667,7 +672,7 @@ int bba_tx(const uint8_t *pkt, int len, int wait) {
 
 static void bba_rx_process(void) {
     /* Call the callback to process it */
-    eth_rx_callback(rx_pkt[rxout].rxbuff, rx_pkt[rxout].pkt_size);
+    eth_rx_callback(rx_pkt[rxout].rxbuff + rx_pkt[rxout].offt, rx_pkt[rxout].pkt_size);
 
     rxout = (rxout + 1) % MAX_PKTS;
 }
