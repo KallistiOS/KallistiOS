@@ -104,7 +104,6 @@ int main(int argc, char **argv)
             }
         }
 
-        pvr_wait_ready();
         pvr_scene_begin();
 
         /* set vertex buffers for pvr_list_prim use */

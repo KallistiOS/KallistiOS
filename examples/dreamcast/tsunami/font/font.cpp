@@ -39,7 +39,6 @@ int main(int argc, char **argv) {
     pvr_set_bg_color(0.2f, 0.0f, 0.4f);
 
     while(!done) {
-        pvr_wait_ready();
         pvr_scene_begin();
         pvr_list_begin(PVR_LIST_OP_POLY);
         pvr_list_begin(PVR_LIST_TR_POLY);

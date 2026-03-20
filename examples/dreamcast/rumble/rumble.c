@@ -63,7 +63,6 @@ void wait_for_dev_attach(maple_device_t **dev_ptr, unsigned int func) {
         return;
 
     /* Draw up a screen */
-    pvr_wait_ready();
     pvr_scene_begin();
     pvr_list_begin(PVR_LIST_OP_POLY);
     pvr_list_begin(PVR_LIST_TR_POLY);
@@ -141,7 +140,6 @@ int main(int argc, char *argv[]) {
         wait_for_dev_attach(&purudev, MAPLE_FUNC_PURUPURU);
 
         /* Start drawing and draw the header */
-        pvr_wait_ready();
         pvr_scene_begin();
         pvr_list_begin(PVR_LIST_OP_POLY);
         pvr_list_begin(PVR_LIST_TR_POLY);

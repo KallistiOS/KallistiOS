@@ -74,9 +74,6 @@ void do_frame(void) {
     int x, y, z;
     int i, col;
 
-    vid_border_color(0, 0, 0);
-    pvr_wait_ready();
-    vid_border_color(255, 0, 0);
     pvr_scene_begin();
     pvr_list_begin(PVR_LIST_OP_POLY);
     pvr_prim(&hdr, sizeof(hdr));
@@ -111,7 +108,6 @@ void do_frame(void) {
 
     pvr_list_finish();
     pvr_scene_finish();
-    vid_border_color(0, 255, 0);
 }
 
 time_t begin;

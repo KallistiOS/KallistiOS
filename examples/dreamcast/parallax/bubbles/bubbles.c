@@ -96,10 +96,6 @@ static float r = 0;
 static void sphere_frame_opaque(void) {
     int i;
 
-    vid_border_color(255, 0, 0);
-    pvr_wait_ready();
-    vid_border_color(0, 255, 0);
-
     pvr_scene_begin();
     pvr_list_begin(PVR_LIST_OP_POLY);
 
@@ -135,7 +131,6 @@ static void sphere_frame_opaque(void) {
 
     plx_mat3d_pop();
 
-    vid_border_color(0, 0, 255);
     pvr_scene_finish();
 
     r++;
@@ -144,10 +139,6 @@ static void sphere_frame_opaque(void) {
 
 static void sphere_frame_trans(void) {
     int i;
-
-    vid_border_color(255, 0, 0);
-    pvr_wait_ready();
-    vid_border_color(0, 255, 0);
 
     pvr_scene_begin();
     pvr_list_begin(PVR_LIST_TR_POLY);
@@ -168,7 +159,6 @@ static void sphere_frame_trans(void) {
 
     plx_mat3d_pop();
 
-    vid_border_color(0, 0, 255);
     pvr_scene_finish();
 
     r++;

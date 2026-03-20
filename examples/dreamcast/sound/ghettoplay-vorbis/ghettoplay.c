@@ -135,7 +135,6 @@ int main(int argc, char **argv) {
     bkg_setup();
 
     while(!check_start()) {
-        pvr_wait_ready();
         pvr_scene_begin();
         pvr_list_begin(PVR_LIST_OP_POLY);
 

@@ -285,7 +285,6 @@ int main(int argc, char* argv[])
         mat_lookat(&cam_pos, &cam_tar, &cam_up);
         mat_store(&cam_pvm);
 
-        pvr_wait_ready();
         pvr_scene_begin();
 
         pvr_list_begin(PVR_LIST_OP_POLY);

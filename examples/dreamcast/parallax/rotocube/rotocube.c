@@ -137,7 +137,6 @@ int main(int argc, char **argv) {
         MAPLE_FOREACH_END()
 
         // Setup the frame
-        pvr_wait_ready();
         pvr_scene_begin();
         pvr_list_begin(PVR_LIST_OP_POLY);
 

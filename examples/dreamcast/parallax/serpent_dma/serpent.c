@@ -163,7 +163,6 @@ static void sphere_frame(void) {
     if(!small_sphere.data)
         sphere(&small_sphere);
 
-    pvr_wait_ready();
     pvr_scene_begin();
 
     //start = timer_ms_gettime64();
