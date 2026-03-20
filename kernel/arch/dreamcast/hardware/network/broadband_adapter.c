@@ -504,6 +504,10 @@ static int bba_copy_packet(uint8_t *dst, uint32_t s, int len) {
                             1,  /* dir = 1, we're *reading* from the g2 bus */
                             0, G2_DMA_CHAN_BBA, 0);
         }
+        else if(next_len) {
+            /* RX DMA is really busy - notify that we couldn't read the packet */
+            return -1;
+        }
         else {
             next_dst = dst;
             next_src = src;
