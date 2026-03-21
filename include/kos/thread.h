@@ -89,6 +89,9 @@ __BEGIN_DECLS
 
     This macro defines the maximum value for a thread's priority. Note that the
     larger this number, the lower the priority of the thread.
+
+    Priority values above this threshold are still supported, with the caveat
+    that the scheduler might not give any CPU time to the thread.
 */
 #define PRIO_MAX 4096
 
@@ -216,7 +219,7 @@ typedef struct __attribute__((aligned(32))) kthread {
     */
     uint64_t wait_timeout;
 
-    /** \brief Per-Thread CPU Time. */
+    /** \brief Per-Thread CPU Time, in milliseconds. */
     struct {
         uint64_t scheduled; /**< \brief time when the thread became active */
         uint64_t total;     /**< \brief total running CPU time for thread */
