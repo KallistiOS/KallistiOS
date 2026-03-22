@@ -1270,12 +1270,17 @@ static ssize_t net_tcp_recvfrom(net_socket_t *hnd, void *buffer, size_t length,
         sock->data.rcv.wnd += size;
         sock->data.rcvbuf_cur_sz -= size;
 
-        /* When the receive window was zero, the sender has entered TCP
-           persist mode. Send a window-update ACK so it knows the window
-           has reopened — without this the connection deadlocks. */
+        /* BUG FIX: When the receive window was zero, the sender has
+           entered TCP persist mode (zero-window probing). We must send
+           a window-update ACK so it knows the window has reopened.
+           Without this, the sender never learns and the connection
+           deadlocks permanently. */
         if(old_wnd == 0 && sock->data.rcv.wnd > 0) {
             tcp_send_ack(sock);
         }
+        /* Flush any pending delayed ACK now that the app has read.
+           This gets the ACK out immediately instead of waiting up to
+           10ms for the timer, reducing effective RTT significantly. */
         else if(sock->data.ack_pending > 0) {
             tcp_send_ack(sock);
             sock->data.ack_pending = 0;
@@ -3017,7 +3022,8 @@ static void tcp_thd_cb(void *arg) {
             case TCP_STATE_ESTABLISHED:
             case TCP_STATE_CLOSE_WAIT:
 
-                /* Flush pending delayed ACK */
+                /* Flush pending delayed ACK. Without this, a single
+                   unACKed segment stalls the sender indefinitely. */
                 if(i->data.ack_pending > 0) {
                     tcp_send_ack(i);
                     i->data.ack_pending = 0;
@@ -3096,7 +3102,7 @@ static fs_socket_proto_t proto = {
 };
 
 int net_tcp_init(void) {
-    if((thd_cb_id = net_thd_add_callback(tcp_thd_cb, NULL, 50)) < 0)
+    if((thd_cb_id = net_thd_add_callback(tcp_thd_cb, NULL, 10)) < 0)
         return -1;
 
     return fs_socket_proto_add(&proto);
