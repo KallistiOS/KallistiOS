@@ -1255,8 +1255,16 @@ static ssize_t net_tcp_recvfrom(net_socket_t *hnd, void *buffer, size_t length,
 
     /* Advance the window if we're pulling data out of the queue. */
     if(!(flags & MSG_PEEK)) {
+        uint32_t old_wnd = sock->data.rcv.wnd;
         sock->data.rcv.wnd += size;
         sock->data.rcvbuf_cur_sz -= size;
+
+        /* When the receive window was zero, the sender has entered TCP
+           persist mode. Send a window-update ACK so it knows the window
+           has reopened — without this the connection deadlocks. */
+        if(old_wnd == 0 && sock->data.rcv.wnd > 0) {
+            tcp_send_ack(sock);
+        }
     }
 
     if(sock->data.rcvbuf_head + size <= sock->rcvbuf_sz) {
