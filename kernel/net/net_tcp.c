@@ -134,6 +134,14 @@ struct rcvrec {
     uint32_t irs;
 };
 
+/* Out-of-order segment table for TCP reassembly */
+#define TCP_OOO_MAX 32
+
+struct tcp_ooo_seg {
+    uint32_t seq;
+    uint16_t len;
+};
+
 struct tcp_sock {
     LIST_ENTRY(tcp_sock) sock_list;
     struct sockaddr_in6 local_addr;
@@ -174,6 +182,9 @@ struct tcp_sock {
             uint64_t timer;
             condvar_t send_cv;
             condvar_t recv_cv;
+            struct tcp_ooo_seg ooo[TCP_OOO_MAX];
+            int ooo_count;
+            uint8_t ack_pending;    /* segments since last ACK */
         } data;
     };
 };
@@ -1264,6 +1275,10 @@ static ssize_t net_tcp_recvfrom(net_socket_t *hnd, void *buffer, size_t length,
            has reopened — without this the connection deadlocks. */
         if(old_wnd == 0 && sock->data.rcv.wnd > 0) {
             tcp_send_ack(sock);
+        }
+        else if(sock->data.ack_pending > 0) {
+            tcp_send_ack(sock);
+            sock->data.ack_pending = 0;
         }
     }
 
@@ -2489,6 +2504,66 @@ static int synsent_pkt(netif_t *src, const struct in6_addr *srca,
     return 0;
 }
 
+/* Buffer an out-of-order segment: copy data to the correct offset in
+   the circular receive buffer, and record the range in the OOO table. */
+/* Returns 0 on success, -1 if table is full (data NOT buffered). */
+static int tcp_ooo_add(struct tcp_sock *s, uint32_t seq, size_t sz,
+                        const uint8_t *data) {
+    if(s->data.ooo_count >= TCP_OOO_MAX)
+        return -1;
+
+    /* Place data at correct offset in the circular buffer */
+    uint32_t gap = (uint32_t)(seq - s->data.rcv.nxt);
+    uint32_t offset = (s->data.rcvbuf_tail + gap) % s->rcvbuf_sz;
+
+    if(offset + sz <= s->rcvbuf_sz) {
+        memcpy(s->data.rcvbuf + offset, data, sz);
+    }
+    else {
+        uint32_t first = s->rcvbuf_sz - offset;
+        memcpy(s->data.rcvbuf + offset, data, first);
+        memcpy(s->data.rcvbuf, data + first, sz - first);
+    }
+
+    s->data.ooo[s->data.ooo_count].seq = seq;
+    s->data.ooo[s->data.ooo_count].len = (uint16_t)sz;
+    s->data.ooo_count++;
+    return 0;
+}
+
+/* After an in-order segment advances rcv.nxt, check if any buffered
+   OOO segments are now contiguous and can be consumed. Returns total
+   additional bytes consumed (data already in the buffer). */
+static uint32_t tcp_ooo_consume(struct tcp_sock *s) {
+    uint32_t total = 0;
+    int changed;
+
+    do {
+        changed = 0;
+        for(int i = 0; i < s->data.ooo_count; i++) {
+            uint32_t seg_end = s->data.ooo[i].seq + s->data.ooo[i].len;
+
+            /* Stale entry (behind rcv.nxt) — remove */
+            if(SEQ_LE(seg_end, s->data.rcv.nxt)) {
+                s->data.ooo[i] = s->data.ooo[--s->data.ooo_count];
+                changed = 1;
+                break;
+            }
+
+            /* Contiguous — consume */
+            if(s->data.ooo[i].seq == s->data.rcv.nxt) {
+                total += s->data.ooo[i].len;
+                s->data.rcv.nxt += s->data.ooo[i].len;
+                s->data.ooo[i] = s->data.ooo[--s->data.ooo_count];
+                changed = 1;
+                break;
+            }
+        }
+    } while(changed);
+
+    return total;
+}
+
 /* This implements the processing described for the synchronized states, as
    described in pages 69-76 of the RFC. */
 static int process_pkt(netif_t *src, const struct in6_addr *srca,
@@ -2521,6 +2596,9 @@ static int process_pkt(netif_t *src, const struct in6_addr *srca,
                 bad_pkt = 1;
         }
         else {
+            /* Accept data segments anywhere in [rcv.nxt, rcv.nxt+wnd).
+               In-order segments (seq == rcv.nxt) go straight to the app.
+               Out-of-order segments are buffered for reassembly. */
             if(!(SEQ_GE(seq, s->data.rcv.nxt) &&
                     SEQ_LT(seq, s->data.rcv.nxt + s->data.rcv.wnd)))
                 bad_pkt = 1;
@@ -2674,28 +2752,70 @@ static int process_pkt(netif_t *src, const struct in6_addr *srca,
 
         /* Copy the data out */
         if(sz) {
-            rb = s->data.rcvbuf + s->data.rcvbuf_tail;
-            s->data.rcv.nxt += sz;
-            s->data.rcv.wnd -= sz;
-            s->data.rcvbuf_cur_sz += sz;
+            if(seq == s->data.rcv.nxt) {
+                /* --- In-order segment: deliver to app buffer --- */
+                rb = s->data.rcvbuf + s->data.rcvbuf_tail;
+                s->data.rcv.nxt += sz;
+                s->data.rcv.wnd -= sz;
+                s->data.rcvbuf_cur_sz += sz;
 
-            if(s->data.rcvbuf_tail + sz <= s->rcvbuf_sz) {
-                memcpy(rb, buf, sz);
-                s->data.rcvbuf_tail += sz;
-            }
-            else {
-                tmp = s->rcvbuf_sz - s->data.rcvbuf_tail;
-                memcpy(rb, buf, tmp);
-                sz -= tmp;
-                buf += tmp;
-                memcpy(s->data.rcvbuf, buf, sz);
-                s->data.rcvbuf_tail = sz;
-            }
+                if(s->data.rcvbuf_tail + sz <= s->rcvbuf_sz) {
+                    memcpy(rb, buf, sz);
+                    s->data.rcvbuf_tail += sz;
+                }
+                else {
+                    tmp = s->rcvbuf_sz - s->data.rcvbuf_tail;
+                    memcpy(rb, buf, tmp);
+                    memcpy(s->data.rcvbuf, buf + tmp, sz - tmp);
+                    s->data.rcvbuf_tail = sz - tmp;
+                }
 
-            /* Signal any waiting thread and send an ack for what we read */
-            __poll_event_trigger(s->sock, POLLRDNORM);
-            cond_signal(&s->data.recv_cv);
-            tcp_send_ack(s);
+                /* Check if buffered OOO segments are now contiguous */
+                uint32_t extra = 0;
+                if(s->data.ooo_count > 0) {
+                    extra = tcp_ooo_consume(s);
+                    if(extra) {
+                        /* Data already in buffer from when OOO arrived.
+                           Advance tail and cur_sz. rcv.wnd was already
+                           decremented when the OOO segment was buffered,
+                           and rcv.nxt was advanced by tcp_ooo_consume. */
+                        s->data.rcvbuf_cur_sz += extra;
+                        s->data.rcvbuf_tail =
+                            (s->data.rcvbuf_tail + extra) % s->rcvbuf_sz;
+                    }
+                }
+
+                __poll_event_trigger(s->sock, POLLRDNORM);
+                cond_signal(&s->data.recv_cv);
+
+                /* Delayed ACK: ACK every 2nd in-order segment to
+                   reduce TX load on the RX thread (each ACK TX takes
+                   ~150us during which RX is blocked, risking RTL8139
+                   buffer overflow). Pending ACKs are flushed by the
+                   10ms timer in tcp_thd_cb. Also ACK immediately
+                   after consuming OOO segments (big jump in rcv.nxt
+                   tells the sender to stop retransmitting). */
+                s->data.ack_pending++;
+                if(s->data.ack_pending >= 8 || extra > 0) {
+                    tcp_send_ack(s);
+                    s->data.ack_pending = 0;
+                }
+            }
+            else if(SEQ_GT(seq, s->data.rcv.nxt)) {
+                /* --- Out-of-order segment: buffer for reassembly --- */
+                if(tcp_ooo_add(s, seq, sz, buf) == 0) {
+                    /* Only shrink window if data was actually buffered.
+                       If table was full, data was dropped — don't account
+                       for phantom bytes or the app gets garbage later. */
+                    s->data.rcv.wnd -= sz;
+                }
+
+                /* Send dup ACK (with current rcv.nxt) so the sender
+                   can do fast retransmit after 3 dup ACKs. */
+                tcp_send_ack(s);
+            }
+            /* else: seq < rcv.nxt — duplicate/retransmit, ignore data.
+               The ACK sent for bad_pkt (if any) covers this. */
         }
     }
     else if(sz) {
@@ -2896,6 +3016,12 @@ static void tcp_thd_cb(void *arg) {
 
             case TCP_STATE_ESTABLISHED:
             case TCP_STATE_CLOSE_WAIT:
+
+                /* Flush pending delayed ACK */
+                if(i->data.ack_pending > 0) {
+                    tcp_send_ack(i);
+                    i->data.ack_pending = 0;
+                }
 
                 if(i->data.sndbuf_cur_sz &&
                         i->data.timer + TCP_DEFAULT_RTTO <= timer) {
