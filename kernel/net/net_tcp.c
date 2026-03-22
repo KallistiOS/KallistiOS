@@ -184,9 +184,10 @@ static struct tcp_sock_list tcp_socks = LIST_HEAD_INITIALIZER(0);
 static rw_semaphore_t tcp_sem = RWSEM_INITIALIZER;
 static int thd_cb_id = 0;
 
-/* Default starting window size for connections. This should be big enough as a
-   starting point, in general. If you need to adjust it, you can do so... */
-#define TCP_DEFAULT_WINDOW  8192
+/* Default starting window size for connections. Must fit in uint16_t (max
+   65535 without RFC 1323 window scaling). Larger = more in-flight data =
+   better throughput on links with any latency or reordering. */
+#define TCP_DEFAULT_WINDOW  65535
 
 /* Default MSS */
 #define TCP_DEFAULT_MSS     1460
