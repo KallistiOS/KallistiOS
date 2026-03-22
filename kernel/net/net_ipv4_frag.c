@@ -204,7 +204,7 @@ int net_ipv4_frag_send(netif_t *net, ip_hdr_t *hdr, const uint8_t *data,
         net = net_default_dev;
 
     /* If the packet doesn't need to be fragmented, send it away as is. */
-    if(total < net->mtu) {
+    if(total <= net->mtu) {
         return net_ipv4_send_packet(net, hdr, data, size);
     }
     /* If it needs to be fragmented and the DF flag is set, return error. */
