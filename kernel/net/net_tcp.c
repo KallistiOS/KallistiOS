@@ -854,9 +854,10 @@ static int net_tcp_bind(net_socket_t *hnd, const struct sockaddr *addr,
         sock->local_addr = realaddr6;
     }
     else {
-        uint16_t port = 1024, tmp = 0;
+        static uint16_t next_bind_ephemeral = 1024;
+        uint16_t port = next_bind_ephemeral, tmp = 0;
 
-        /* Grab the first unused port >= 1024. This is, unfortunately, O(n^2) */
+        /* Grab the first unused port >= next_bind_ephemeral. */
         while(tmp != port) {
             tmp = port;
 
@@ -870,8 +871,10 @@ static int net_tcp_bind(net_socket_t *hnd, const struct sockaddr *addr,
                     return -1;
                 }
 
-                if(iter->local_addr.sin6_port == port) {
+                if(iter->local_addr.sin6_port == htons(port)) {
+                    mutex_unlock(&iter->mutex);
                     ++port;
+                    if(port > 65000) port = 1024;
                     break;
                 }
 
@@ -881,6 +884,8 @@ static int net_tcp_bind(net_socket_t *hnd, const struct sockaddr *addr,
 
         sock->local_addr = realaddr6;
         sock->local_addr.sin6_port = htons(port);
+        next_bind_ephemeral = port + 1;
+        if(next_bind_ephemeral > 65000) next_bind_ephemeral = 1024;
     }
 
     /* Release the locks, we're done */
@@ -985,7 +990,8 @@ static int net_tcp_connect(net_socket_t *hnd, const struct sockaddr *addr,
 
     /* See if the socket is already bound to a local port */
     if(!sock->local_addr.sin6_port) {
-        uint16_t port = 1024, tmp = 0;
+        static uint16_t next_ephemeral = 1024;
+        uint16_t port = next_ephemeral, tmp = 0;
 
         /* Grab the first unused port >= 1024. This is, unfortunately, O(n^2) */
         while(tmp != port) {
@@ -1001,7 +1007,8 @@ static int net_tcp_connect(net_socket_t *hnd, const struct sockaddr *addr,
                     return -1;
                 }
 
-                if(iter->local_addr.sin6_port == port) {
+                if(iter->local_addr.sin6_port == htons(port)) {
+                    mutex_unlock(&iter->mutex);
                     ++port;
                     break;
                 }
@@ -1011,6 +1018,8 @@ static int net_tcp_connect(net_socket_t *hnd, const struct sockaddr *addr,
         }
 
         sock->local_addr.sin6_port = htons(port);
+        next_ephemeral = port + 1;
+        if(next_ephemeral > 65000) next_ephemeral = 1024;
 
         if(addr->sa_family == AF_INET) {
             sock->local_addr.sin6_addr.__s6_addr.__s6_addr16[5] = 0xFFFF;
