@@ -2188,8 +2188,8 @@ static void tcp_send_data(struct tcp_sock *sock, int resend) {
         sb = sock->data.sndbuf + head;
         snd = wnd;
 
-        if(snd > sock->data.snd.mss - sizeof(tcp_hdr_t))
-            snd = sock->data.snd.mss - sizeof(tcp_hdr_t);
+        if(snd > sock->data.snd.mss)
+            snd = sock->data.snd.mss;
 
         if(snd > sock->data.sndbuf_cur_sz - unacked)
             snd = sock->data.sndbuf_cur_sz - unacked;
