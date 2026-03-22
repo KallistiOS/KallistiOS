@@ -48,8 +48,9 @@ static void *net_thd_thd(void *data) {
             }
         }
 
-        /* Go to sleep til we need to be run again. */
-        thd_sleep(50);
+        /* Go to sleep til we need to be run again. Shorter sleep =
+           more responsive TCP timers (retransmission, etc). */
+        thd_sleep(10);
     }
 
     return NULL;
