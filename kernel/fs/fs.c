@@ -815,15 +815,8 @@ int fs_readlink(const char *path, char *buf, size_t bufsize) {
     vfs_handler_t *vfs;
     char fullpath[PATH_MAX];
 
-    /* Prepend the current working directory if we have to. */
-    if(path[0] == '/') {
-        strcpy(fullpath, path);
-    }
-    else {
-        strcpy(fullpath, fs_getwd());
-        strcat(fullpath, "/");
-        strcat(fullpath, path);
-    }
+    if(!fs_normalize_path(path, fullpath))
+        return -1;
 
     /* Look for the handler */
     vfs = fs_verify_handler(fullpath);
@@ -857,15 +850,8 @@ int fs_stat(const char *path, struct stat *buf, int flag) {
         return -1;
     }
 
-    /* Prepend the current working directory if we have to. */
-    if(path[0] == '/') {
-        strcpy(fullpath, path);
-    }
-    else {
-        strcpy(fullpath, fs_getwd());
-        strcat(fullpath, "/");
-        strcat(fullpath, path);
-    }
+    if(!fs_normalize_path(path, fullpath))
+        return -1;
 
     /* Look for the handler */
     vfs = fs_verify_handler(fullpath);
