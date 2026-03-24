@@ -11,6 +11,10 @@
 #include <sys/cdefs.h>
 __BEGIN_DECLS
 
+#include <kos/cond.h>
+#include <kos/mutex.h>
+#include <kos/rwsem.h>
+
 typedef unsigned long int pthread_t;
 
 typedef struct pthread_mutexattr_t {
@@ -60,6 +64,7 @@ typedef union pthread_attr_t {
 #define __PTHREAD_MUTEX_SIZE        32
 
 typedef union pthread_mutex_t {
+    mutex_t mutex;
     unsigned char __data[__PTHREAD_MUTEX_SIZE];
     long int __align;
 } pthread_mutex_t;
@@ -72,6 +77,7 @@ typedef union pthread_mutex_t {
 #define __PTHREAD_COND_SIZE         16
 
 typedef union pthread_cond_t {
+    condvar_t cond;
     unsigned char __data[__PTHREAD_COND_SIZE];
     long int __align;
 } pthread_cond_t;
@@ -84,6 +90,7 @@ typedef union pthread_cond_t {
 #define __PTHREAD_RWLOCK_SIZE       32
 
 typedef union pthread_rwlock_t {
+    rw_semaphore_t rwsem;
     unsigned char __data[__PTHREAD_RWLOCK_SIZE];
     long int __align;
 } pthread_rwlock_t;
