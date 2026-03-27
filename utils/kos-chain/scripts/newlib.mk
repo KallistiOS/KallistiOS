@@ -43,6 +43,7 @@ fixup-newlib-apply: fixup-newlib-init
 	cp $(kos_base)/include/pthread.h $(newlib_inc)
 	cp $(kos_base)/include/sys/_pthreadtypes.h $(newlib_inc)/sys
 	cp $(kos_base)/include/sys/_pthread.h $(newlib_inc)/sys
+	cp $(kos_base)/include/sys/dirent.h $(newlib_inc)/sys
 ifndef MINGW32
 	ln -nsf $(kos_base)/include/kos $(newlib_inc)
 	ln -nsf $(kos_base)/kernel/arch/$(platform)/include/arch $(newlib_inc)
