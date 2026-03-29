@@ -24,7 +24,7 @@
 
 #include <kos/dbglog.h>
 #include <kos/opts.h>
-#include <kos/spinlock.h>
+#include <kos/mutex.h>
 
 #undef DEBUG
 
@@ -41,17 +41,16 @@
 #define malloc_getpagesize PAGESIZE
 #define HAVE_USR_INCLUDE_MALLOC_H
 
-/* Enable thread locking. Because mutexes actually require malloc themselves,
-   we use spinlocks here. They are also MUCH faster. As a general rule this
-   shouldn't be a big problem. */
-static spinlock_t mALLOC_MUTEx = SPINLOCK_INITIALIZER;
-#define MALLOC_PREACTION   ({ spinlock_lock(&mALLOC_MUTEx); 0; })
-#define MALLOC_POSTACTION  ({ spinlock_unlock(&mALLOC_MUTEx); 0; })
+/* Enable thread locking. Because spin locks can cause priority inversion,
+   we use mutexes here. */
+static mutex_t mALLOC_MUTEx = MUTEX_INITIALIZER;
+#define MALLOC_PREACTION   ({ mutex_lock_irqsafe(&mALLOC_MUTEx); 0; })
+#define MALLOC_POSTACTION  ({ mutex_unlock(&mALLOC_MUTEx); 0; })
 
 /* Use this from within an IRQ to determine if it's safe
    to do memory allocation stuff */
 int malloc_irq_safe(void) {
-    return !spinlock_is_locked(&mALLOC_MUTEx);
+    return !mutex_is_locked(&mALLOC_MUTEx);
 }
 
 /* <unistd.h> doesn't define this in strict standard-compliant mode, so do so
