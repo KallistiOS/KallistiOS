@@ -38,6 +38,9 @@ __BEGIN_DECLS
 #define CCR_ICI         BIT(11) /** \< IC invalidate */
 #define CCR_IIX         BIT(15) /** \< IC INDEX enable */
 
+/** \brief  Default cache settings */
+#define CCR_DEFAULT     (CCR_ICI | CCR_ICE | CCR_OCI | CCR_CB | CCR_OCE)
+
 /** \brief  Write CCR register.
 
     This function is used internally to write the cache control register.
