@@ -44,8 +44,16 @@
 /* Enable thread locking. Because spin locks can cause priority inversion,
    we use mutexes here. */
 static mutex_t mALLOC_MUTEx = MUTEX_INITIALIZER;
-#define MALLOC_PREACTION   ({ mutex_lock_irqsafe(&mALLOC_MUTEx); 0; })
-#define MALLOC_POSTACTION  ({ mutex_unlock(&mALLOC_MUTEx); 0; })
+#define MALLOC_PREACTION ({                         \
+    int result = mutex_lock_irqsafe(&mALLOC_MUTEx); \
+    assert(result == 0);                            \
+    0;                                              \
+})
+#define MALLOC_POSTACTION ({                  \
+    int result = mutex_unlock(&mALLOC_MUTEx); \
+    assert(result == 0);                      \
+    0;                                        \
+})
 
 /* Use this from within an IRQ to determine if it's safe
    to do memory allocation stuff */
