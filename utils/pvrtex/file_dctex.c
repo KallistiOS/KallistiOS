@@ -28,7 +28,7 @@ static int convert_size(int size) {
 void fDtWrite(const PvrTexEncoder *pte, const char *outfname) {
 	assert(pte);
 
-	FILE *f = fopen(outfname, "w");
+	FILE *f = fopen(outfname, "wb");
 	assert(f);
 
 	unsigned textype = 0;
@@ -74,7 +74,7 @@ void fDtWrite(const PvrTexEncoder *pte, const char *outfname) {
 	unsigned resultsize = FileSize(outfname);
 	ErrorExitOn(resultsize != size, "Size of file written for \"%s\" was incorrect. Expected file to be %u bytes, but result was %u bytes.\n", outfname, size, resultsize);
 
-	f = fopen(outfname, "r");
+	f = fopen(outfname, "rb");
 	void *readbuff = malloc(size);
 	if (fread(readbuff, size, 1, f) == 1) {
 		if (!fDtValidateHeader(readbuff)) {

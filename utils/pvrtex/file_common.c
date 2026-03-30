@@ -63,7 +63,7 @@ void WritePvrTexEncoder(const PvrTexEncoder *pte, FILE *f, ptewSmallVQType svq, 
 int FileSize(const char *fname) {
 	assert(fname);
 
-	FILE *f = fopen(fname, "r");
+	FILE *f = fopen(fname, "rb");
 	if (f == NULL)
 		return -1;
 	fseek(f, 0, SEEK_END);
@@ -75,7 +75,7 @@ int FileSize(const char *fname) {
 size_t Slurp(const char *fname, void **data) {
 	assert(fname);
 
-	FILE *f = fopen(fname, "r");
+	FILE *f = fopen(fname, "rb");
 	if (f == NULL)
 		return 0;
 
