@@ -176,7 +176,8 @@ thd_block_now
 #library_close
 
 # Low-level debug I/O
-__real_dbglog
+dbglog_level
+dbglog_set_level
 dbgio_set_irq_usage
 dbgio_enable
 dbgio_disable
