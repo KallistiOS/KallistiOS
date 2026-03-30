@@ -29,7 +29,7 @@
 #include <sys/cdefs.h>
 
 /* Check GCC version */
-#if __GNUC__ < 9
+#if __GNUC__ < 8
 #   warning Your GCC is too old. This will probably not work right.
 #endif
 
