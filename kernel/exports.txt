@@ -215,10 +215,6 @@ arch_abort
 # Panic!
 arch_panic
 
-# Real-time clock
-rtc_unix_secs
-rtc_boot_time
-
 # Stack tracing
 arch_stk_trace
 arch_stk_trace_at
