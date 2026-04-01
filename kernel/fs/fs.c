@@ -309,6 +309,9 @@ file_t fs_dup2(file_t oldfd, file_t newfd) {
         return -1;
     }
 
+    if(oldfd == newfd)
+        goto out_get_ref;
+
     do {
         prev = fd_table[newfd];
         if(prev) {
@@ -319,6 +322,7 @@ file_t fs_dup2(file_t oldfd, file_t newfd) {
     } while(!atomic_compare_exchange_strong(&fd_table[newfd],
                                             &prev, fd_table[oldfd]));
 
+out_get_ref:
     fs_hnd_ref(fd_table[newfd]);
 
     return newfd;
