@@ -40,21 +40,21 @@ __BEGIN_DECLS
     to be in the local time zone.
 
     \note
-    The RTC that is used by the DC is located on the AICA rather than SH4, 
-    presumably for power-efficiency reasons. Because of this, accessing 
+    The RTC that is used by the DC is located on the AICA rather than SH4,
+    presumably for power-efficiency reasons. Because of this, accessing
     it requires a trip over the G2 BUS, which is notoriously slow.
 
     \note
     For reading the current date/time, you should favor the standard C,
-    C++, or POSIX functions, as they are platform-indpendent and are 
+    C++, or POSIX functions, as they are platform-indpendent and are
     calculating current time based on a cached boot time plus a delta
     that is maintained by the timer subsystem, rather than actually
     having to requery the RTC over the G2 BUS, so they are faster.
 
     \warning
-    Internally, the RTC's date/time is maintained using a 32-bit counter 
+    Internally, the RTC's date/time is maintained using a 32-bit counter
     with an epoch of January 1, 1950 00:00. Because of this, the Dreamcast's
-    Y2K and the last timestamp it can represent before rolling over is 
+    Y2K and the last timestamp it can represent before rolling over is
     February 06 2086 06:28:15.
 
     \sa wdt, timers, perf_counters
