@@ -180,7 +180,8 @@ int fs_pty_create(char *buffer, int maxbuflen, file_t *master_out, file_t *slave
 
     if(boot) {
         /* Get the slave channel setup first, and dup it across
-           our stdout and stderr. */
+           our stdin, stdout and stderr. */
+        fs_dup2(*slave_out, STDIN_FILENO);
         fs_dup2(*slave_out, STDOUT_FILENO);
         fs_dup2(*slave_out, STDERR_FILENO);
     }
