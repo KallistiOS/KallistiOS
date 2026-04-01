@@ -194,7 +194,7 @@ static int fs_hnd_assign(fs_hnd_t *hnd) {
 
     fs_hnd_ref(hnd);
 
-    for(i = 0; i < FD_SETSIZE; i++) {
+    for(i = 3; i < FD_SETSIZE; i++) {
         fs_hnd_t *old = NULL;
 
         if(atomic_compare_exchange_strong(&fd_table[i], &old, hnd))
