@@ -3,7 +3,7 @@
 ###############################################################################
 ###############################################################################
 ### THIS CONFIG IS FOR AN EXPERIMENTAL VERSION OF GCC!
-## THERE ARE NO KNOWN ISSUES BUILDING THIS VERSION as of 2026-01-28.
+## THERE ARE NO KNOWN ISSUES BUILDING THIS VERSION as of 2026-04-01.
 ###############################################################################
 ###############################################################################
 
@@ -13,7 +13,7 @@ cpu_configure_args=--with-multilib-list=$(precision_modes) --with-endian=little 
 
 # Toolchain versions for SH
 binutils_ver=2.45.1
-gcc_ver=15.0.0
+gcc_ver=16.0.0
 newlib_ver=4.6.0.20260123
 
 # Overide SH toolchain download type

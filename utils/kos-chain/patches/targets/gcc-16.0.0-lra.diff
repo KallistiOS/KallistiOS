@@ -1,6 +1,6 @@
-diff -ruN gcc-15.0.0/gcc/config/elfos.h gcc-15.0.0-kos/gcc/config/elfos.h
---- gcc-15.0.0/gcc/config/elfos.h	2025-04-17 16:01:33.790051712 -0600
-+++ gcc-15.0.0-kos/gcc/config/elfos.h	2025-04-17 16:01:42.910094466 -0600
+diff -ruN gcc-16.0.0/gcc/config/elfos.h gcc-16.0.0-kos/gcc/config/elfos.h
+--- gcc-16.0.0/gcc/config/elfos.h	2026-04-01 16:42:42.950821041 +0200
++++ gcc-16.0.0-kos/gcc/config/elfos.h	2026-04-01 16:59:01.923993708 +0200
 @@ -486,3 +486,6 @@
  
  #undef TARGET_LIBC_HAS_FUNCTION
@@ -8,10 +8,27 @@ diff -ruN gcc-15.0.0/gcc/config/elfos.h gcc-15.0.0-kos/gcc/config/elfos.h
 +
 +#define TARGET_OS_CPP_BUILTINS()			\
 +  builtin_define ("__KOS_GCC_PATCHLEVEL__=2025062800")
-diff -ruN gcc-15.0.0/gcc/configure gcc-15.0.0-kos/gcc/configure
---- gcc-15.0.0/gcc/configure	2025-04-18 16:01:33.801051764 -0600
-+++ gcc-15.0.0-kos/gcc/configure	2025-04-18 16:01:42.913094480 -0600
-@@ -13165,7 +13165,7 @@
+diff -ruN gcc-16.0.0/gcc/config/sh/sh.md gcc-16.0.0-kos/gcc/config/sh/sh.md
+--- gcc-16.0.0/gcc/config/sh/sh.md	2026-04-01 16:42:42.991949914 +0200
++++ gcc-16.0.0-kos/gcc/config/sh/sh.md	2026-04-01 17:09:39.819267734 +0200
+@@ -6540,7 +6540,12 @@
+ 	      &&  ! satisfies_constraint_G (operands[1])
+ 	      &&  ! satisfies_constraint_H (operands[1])
+ 	      && REG_P (operands[0]))
+-	    emit_insn (gen_movsf_ie_F_z (operands[0], operands[1]));
++	    {
++	      if (lra_in_progress)
++		emit_insn (gen_movsf_ie (operands[0], operands[1]));
++	      else
++		emit_insn (gen_movsf_ie_F_z (operands[0], operands[1]));
++	    }
+ 	  else if (REG_P (operands[0]) && REGNO (operands[0]) == FPUL_REG
+ 		   && satisfies_constraint_Q (operands[1]))
+ 	    emit_insn (gen_movsf_ie_Q_z (operands[0], operands[1]));
+diff -ruN gcc-16.0.0/gcc/configure gcc-16.0.0-kos/gcc/configure
+--- gcc-16.0.0/gcc/configure	2026-04-01 16:42:42.997726226 +0200
++++ gcc-16.0.0-kos/gcc/configure	2026-04-01 16:59:01.925023139 +0200
+@@ -13218,7 +13218,7 @@
      target_thread_file='single'
      ;;
    aix | dce | lynx | mipssde | posix | rtems | \
@@ -20,9 +37,14 @@ diff -ruN gcc-15.0.0/gcc/configure gcc-15.0.0-kos/gcc/configure
      target_thread_file=${enable_threads}
      ;;
    *)
-diff --color -ruN gcc-15.0.0/libgcc/config.host gcc-15.0.0-kos/libgcc/config.host
---- gcc-15.0.0/libgcc/config.host	2025-04-27 14:45:09.695053718 -0600
-+++ gcc-15.0.0-kos/libgcc/config.host	2025-04-27 15:10:10.267714917 -0600
+diff -ruN gcc-16.0.0/libgcc/config/t-kos gcc-16.0.0-kos/libgcc/config/t-kos
+--- gcc-16.0.0/libgcc/config/t-kos	1970-01-01 01:00:00.000000000 +0100
++++ gcc-16.0.0-kos/libgcc/config/t-kos	2026-04-01 16:59:01.926215842 +0200
+@@ -0,0 +1 @@
++LIB2ADD = $(srcdir)/config/fake-kos.c
+diff -ruN gcc-16.0.0/libgcc/config.host gcc-16.0.0-kos/libgcc/config.host
+--- gcc-16.0.0/libgcc/config.host	2026-04-01 16:42:44.416583026 +0200
++++ gcc-16.0.0-kos/libgcc/config.host	2026-04-01 16:59:01.926107571 +0200
 @@ -71,7 +71,7 @@
  asm_hidden_op=.hidden
  enable_execute_stack=
@@ -32,40 +54,20 @@ diff --color -ruN gcc-15.0.0/libgcc/config.host gcc-15.0.0-kos/libgcc/config.hos
  tm_file=
  tm_define=
  md_unwind_def_header=no-unwind.h
-diff -ruN /dev/null gcc-15.0.0-kos/libgcc/config/t-kos
---- /dev/null	2025-04-27 14:45:09.695053718 -0600
-+++ gcc-15.0.0-kos/libgcc/config/t-kos	2025-04-27 15:10:10.267714917 -0600
-@@ -0,0 +1 @@
-+LIB2ADD = $(srcdir)/config/fake-kos.c
-diff -ruN gcc-15.0.0/libgcc/configure gcc-15.0.0-kos/libgcc/configure
---- gcc-15.0.0/libgcc/configure	2025-04-18 16:01:37.139067412 -0600
-+++ gcc-15.0.0-kos/libgcc/configure	2025-04-18 16:01:42.914094485 -0600
-@@ -5733,6 +5733,7 @@
+diff -ruN gcc-16.0.0/libgcc/configure gcc-16.0.0-kos/libgcc/configure
+--- gcc-16.0.0/libgcc/configure	2026-04-01 16:42:44.443087652 +0200
++++ gcc-16.0.0-kos/libgcc/configure	2026-04-01 16:59:01.926391244 +0200
+@@ -5826,6 +5826,7 @@
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;
      win32)	thread_header=config/i386/gthr-win32.h ;;
 +    kos)	thread_header=gthr-kos.h ;;
      mcf)	thread_header=config/i386/gthr-mcf.h ;;
- esac
- 
-diff -ruN gcc-15.0.0/libobjc/configure gcc-15.0.0-kos/libobjc/configure
---- gcc-15.0.0/libobjc/configure	2025-04-18 16:01:37.499069099 -0600
-+++ gcc-15.0.0-kos/libobjc/configure	2025-04-18 16:01:42.915094489 -0600
-@@ -2924,11 +2924,9 @@
- 
- cat confdefs.h - <<_ACEOF >conftest.$ac_ext
- /* end confdefs.h.  */
--#include <stdio.h>
- int
- main ()
- {
--printf ("hello world\n");
-   ;
-   return 0;
- }
-diff -ruN gcc-15.0.0/libobjc/Makefile.in gcc-15.0.0-kos/libobjc/Makefile.in
---- gcc-15.0.0/libobjc/Makefile.in	2025-04-18 16:01:37.499069099 -0600
-+++ gcc-15.0.0-kos/libobjc/Makefile.in	2025-04-18 16:01:42.915094489 -0600
+     *)
+         as_fn_error $? "No known header for threading model '$target_thread_file'." "$LINENO" 5
+diff -ruN gcc-16.0.0/libobjc/Makefile.in gcc-16.0.0-kos/libobjc/Makefile.in
+--- gcc-16.0.0/libobjc/Makefile.in	2026-04-01 16:42:44.621337750 +0200
++++ gcc-16.0.0-kos/libobjc/Makefile.in	2026-04-01 16:59:01.926608986 +0200
 @@ -308,14 +308,16 @@
  $(srcdir)/aclocal.m4: @MAINT@ $(aclocal_deps)
  	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
@@ -96,9 +98,9 @@ diff -ruN gcc-15.0.0/libobjc/Makefile.in gcc-15.0.0-kos/libobjc/Makefile.in
  
  mostlyclean:
  	-$(LIBTOOL_CLEAN) rm -f libobjc$(libsuffix).la libobjc_gc$(libsuffix).la *.lo
-diff -ruN gcc-15.0.0/libstdc++-v3/config/cpu/sh/atomicity.h gcc-15.0.0-kos/libstdc++-v3/config/cpu/sh/atomicity.h
---- gcc-15.0.0/libstdc++-v3/config/cpu/sh/atomicity.h	2025-04-18 16:01:37.608069611 -0600
-+++ gcc-15.0.0-kos/libstdc++-v3/config/cpu/sh/atomicity.h	2025-04-18 16:01:42.916094494 -0600
+diff -ruN gcc-16.0.0/libstdc++-v3/config/cpu/sh/atomicity.h gcc-16.0.0-kos/libstdc++-v3/config/cpu/sh/atomicity.h
+--- gcc-16.0.0/libstdc++-v3/config/cpu/sh/atomicity.h	2026-04-01 16:42:44.675273171 +0200
++++ gcc-16.0.0-kos/libstdc++-v3/config/cpu/sh/atomicity.h	2026-04-01 16:59:01.926663637 +0200
 @@ -22,14 +22,40 @@
  // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
  // <http://www.gnu.org/licenses/>.
@@ -149,31 +151,14 @@ diff -ruN gcc-15.0.0/libstdc++-v3/config/cpu/sh/atomicity.h gcc-15.0.0-kos/libst
 +
 +_GLIBCXX_END_NAMESPACE_VERSION
 +} // namespace
-diff -ruN gcc-15.0.0/libstdc++-v3/configure gcc-15.0.0-kos/libstdc++-v3/configure
---- gcc-15.0.0/libstdc++-v3/configure	2025-04-18 16:01:37.616069648 -0600
-+++ gcc-15.0.0-kos/libstdc++-v3/configure	2025-04-18 16:01:42.919094508 -0600
-@@ -15974,6 +15974,7 @@
+diff -ruN gcc-16.0.0/libstdc++-v3/configure gcc-16.0.0-kos/libstdc++-v3/configure
+--- gcc-16.0.0/libstdc++-v3/configure	2026-04-01 16:42:44.677036740 +0200
++++ gcc-16.0.0-kos/libstdc++-v3/configure	2026-04-01 16:59:01.927802329 +0200
+@@ -16391,6 +16391,7 @@
      tpf)	thread_header=config/s390/gthr-tpf.h ;;
      vxworks)	thread_header=config/gthr-vxworks.h ;;
      win32)	thread_header=config/i386/gthr-win32.h ;;
 +    kos)	thread_header=gthr-kos.h ;;
      mcf)	thread_header=config/i386/gthr-mcf.h ;;
- esac
- 
-diff -ruN gcc-15.0.0/gcc/config/sh/sh.md gcc-15.0.0-kos/gcc/config/sh/sh.md
---- gcc-15.0.0/gcc/config/sh/sh.md	2025-04-17 16:01:37.616069648 -0600
-+++ gcc-15.0.0-kos/gcc/config/sh/sh.md	2025-04-17 16:01:42.919094508 -0600
-@@ -6521,7 +6521,12 @@
- 	      &&  ! satisfies_constraint_G (operands[1])
- 	      &&  ! satisfies_constraint_H (operands[1])
- 	      && REG_P (operands[0]))
--	    emit_insn (gen_movsf_ie_F_z (operands[0], operands[1]));
-+	    {
-+	      if (lra_in_progress)
-+		emit_insn (gen_movsf_ie (operands[0], operands[1]));
-+	      else
-+		emit_insn (gen_movsf_ie_F_z (operands[0], operands[1]));
-+	    }
- 	  else if (REG_P (operands[0]) && REGNO (operands[0]) == FPUL_REG
- 		   && satisfies_constraint_Q (operands[1]))
- 	    emit_insn (gen_movsf_ie_Q_z (operands[0], operands[1]));
+     *)
+         as_fn_error $? "No known header for threading model '$target_thread_file'." "$LINENO" 5
