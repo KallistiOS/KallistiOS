@@ -81,7 +81,12 @@ static inline void arch_dcache_alloc_line_with_value(void *src, uintptr_t value)
 }
 
 static inline void arch_dcache_alloc_line(void *src) {
+#if __GNUC__ <= 9
+    /* Avoid ICE on GCC 9 */
+    uint32_t r0 = 0;
+#else
     register uint32_t r0 asm("r0");
+#endif
 
     arch_dcache_alloc_line_with_value(src, r0);
 }
