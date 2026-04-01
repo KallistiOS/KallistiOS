@@ -39,7 +39,6 @@ something like this:
 #include <kos/thread.h>
 #include <kos/mutex.h>
 #include <kos/nmmgr.h>
-#include <kos/dbgio.h>
 #include <kos/dbglog.h>
 
 /* File handle structure; this is an entirely internal structure so it does
