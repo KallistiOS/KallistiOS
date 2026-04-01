@@ -16,7 +16,7 @@ endif
 OBJS += syscalls.o syscall_font.o dcload.o
 
 # G2
-OBJS += g2dma.o
+OBJS += g2dma.o rtc.o
 
 # Sound
 OBJS += spu.o
