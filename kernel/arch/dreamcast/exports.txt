@@ -125,6 +125,11 @@ sq_lock
 sq_unlock
 sq_wait
 
+# RTC
+arch_rtc_unix_secs
+arch_rtc_set_unix_secs
+dc_boot_time
+
 # Sound
 snd_mem_init
 snd_mem_shutdown
