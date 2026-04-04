@@ -32,6 +32,7 @@ newlib-fixup: fetch-newlib
 	@echo "+++ Copying required KOS files into newlib directory..."
 	mkdir -p $(src_dir)/newlib/libc/machine/$(arch)/sys
 	cp $(kos_base)/include/sys/lock.h $(src_dir)/newlib/libc/machine/$(arch)/sys/lock.h
+	cp $(kos_base)/include/sys/lock.h $(src_dir)/newlib/libc/include/sys/lock.h
 
 # This is a common 'patch_apply' function used in all the cases
 define patch_apply
