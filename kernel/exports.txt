@@ -222,6 +222,7 @@ rtc_boot_time
 # Stack tracing
 arch_stk_trace
 arch_stk_trace_at
+arch_stk_unwind_step
 
 # Timers
 timer_ms_gettime
