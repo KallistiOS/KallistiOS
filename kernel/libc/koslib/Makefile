@@ -14,7 +14,7 @@ OBJS = abort.o memset2.o memset4.o memcpy2.o memcpy4.o \
 	creat.o sleep.o rmdir.o rename.o inet_pton.o inet_ntop.o \
 	inet_ntoa.o inet_aton.o poll.o select.o symlink.o readlink.o \
 	gethostbyname.o getaddrinfo.o dirfd.o nanosleep.o basename.o dirname.o \
-	sched_yield.o dup.o dup2.o pipe.o uname.o pathconf.o stat.o lstat.o \
+	sched_yield.o dup.o dup2.o pipe.o uname.o pathconf.o stat.o \
 	link.o unlink.o
 
 include $(KOS_BASE)/Makefile.prefab
