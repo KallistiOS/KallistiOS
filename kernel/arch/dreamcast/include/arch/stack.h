@@ -12,9 +12,10 @@
 
     This file contains arch-specific stack implementations, including defining
     stack sizes and alignments, as well as functions for stack tracing and
-    debugging. On Dreamcast, the stack tracing functions only work if frame
-    pointers have been enabled at compile time (-DFRAME_POINTERS and no
-    -fomit-frame-pointer flag).
+    debugging. On Dreamcast, the stack tracing functions use heuristic stack
+    pointer scanning rather than frame pointer chains, because GCC for SH4
+    does not reliably maintain r14-based frame pointers, even with
+    -fno-omit-frame-pointer.
 
     \author Megan Potter
     \author Eric Fradella
@@ -100,6 +101,20 @@ static inline uintptr_t arch_fptr_next(uintptr_t fptr) {
     return arch_fptr_ret_addr(fptr + 4);
 }
 
+/** \brief   Find the next return address by scanning the stack.
+
+    Scans upward from the given stack pointer for saved PR values
+    validated as return addresses from call instructions.
+
+    \param  sp              Stack pointer to start scanning from.
+    \param  ret_addr_out    On success, receives the found return address.
+    \param  next_sp_out     On success, receives the stack position to
+                            continue scanning from.
+    \return                 `true` if a return address was found.
+*/
+bool arch_stk_unwind_step(uintptr_t sp, uintptr_t *ret_addr_out,
+                      uintptr_t *next_sp_out);
+
 /** \brief  Set up new stack before running.
 
     This function does nothing as it is unnecessary on Dreamcast.
@@ -118,23 +133,24 @@ void arch_stk_setup(kthread_t *nt);
     \param  n               The number of frames to leave off. Each frame is a
                             jump to subroutine or branch to subroutine. assert()
                             leaves off 2 frames, for reference.
+
+    \see    arch_stk_trace_at
 */
 void arch_stk_trace(int n);
 
-/** \brief  Do a stack trace from the current function.
+/** \brief  Do a stack trace from the given stack pointer.
 
-    This function does a stack trace from the the specified frame pointer,
+    This function does a stack trace from the specified stack pointer,
     printing the results to stdout. This could be used for doing something like
     stack tracing a main thread from inside an IRQ handler.
 
-    \param  fp              The frame pointer to start from.
+    \param  sp              The stack pointer to start scanning from.
     \param  n               The number of frames to leave off.
 */
-void arch_stk_trace_at(uint32_t fp, size_t n);
+void arch_stk_trace_at(uintptr_t sp, size_t n);
 
 /** @} */
 
 __END_DECLS
 
 #endif  /* __ARCH_EXEC_H */
-
