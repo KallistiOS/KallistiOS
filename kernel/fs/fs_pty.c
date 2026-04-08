@@ -512,8 +512,12 @@ static ssize_t pty_read(void *h, void *buf, size_t bytes) {
     }
 
     /* Special case the unattached console */
-    if(ph->id == 0 && !ph->master && ph->other->refcnt == 0)
-        return pty_read_serial(fdobj, ph, buf, bytes);
+    if(ph->id == 0 && !ph->master && ph->other->refcnt == 0) {
+        if(!strcmp(dbgio_dev_get(), "fs_dcload"))
+            return dbgio_read_buffer((uint8_t *)buf, bytes);
+        else
+            return pty_read_serial(fdobj, ph, buf, bytes);
+    }
 
     /* Lock the ptyhalf */
     mutex_lock(&ph->mutex);
@@ -799,8 +803,8 @@ static int pty_fstat(void *h, struct stat *st) {
 
     memset(st, 0, sizeof(struct stat));
     st->st_dev = (dev_t)('p' | ('t' << 8) | ('y' << 16));
-    st->st_mode = (fd->mode & O_DIR) ? 
-        (S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO) : 
+    st->st_mode = (fd->mode & O_DIR) ?
+        (S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO) :
         (S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
     st->st_size = (fd->mode & O_DIR) ? -1 : (off_t)fd->d.p->cnt;
     st->st_blksize = (fd->mode & O_DIR) ? 0 : 1;
