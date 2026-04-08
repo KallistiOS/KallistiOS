@@ -123,24 +123,6 @@ int dbgio_set_irq_usage(int mode) {
     return -1;
 }
 
-int dbgio_read(void) {
-    if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->read();
-    }
-
-    return -1;
-}
-
-int dbgio_write(int c) {
-    if(dbgio_enabled) {
-        assert(dbgio);
-        return dbgio->write(c);
-    }
-
-    return -1;
-}
-
 int dbgio_flush(void) {
     if(dbgio_enabled) {
         assert(dbgio);
@@ -218,27 +200,24 @@ int dbgio_printf(const char *fmt, ...) {
 static int null_detected(void) {
     return 1;
 }
+
 static int null_init(void) {
     return 0;
 }
+
 static int null_shutdown(void) {
     return 0;
 }
+
 static int null_set_irq_usage(int mode) {
     (void)mode;
     return 0;
 }
-static int null_read(void) {
-    errno = EAGAIN;
-    return -1;
-}
-static int null_write(int c) {
-    (void)c;
-    return 1;
-}
+
 static int null_flush(void) {
     return 0;
 }
+
 static int null_write_buffer(const uint8_t *data, int len, int xlat) {
     (void)data;
     (void)len;
@@ -258,8 +237,6 @@ dbgio_handler_t dbgio_null = {
     .init = null_init,
     .shutdown = null_shutdown,
     .set_irq_usage = null_set_irq_usage,
-    .read = null_read,
-    .write = null_write,
     .flush = null_flush,
     .write_buffer = null_write_buffer,
     .read_buffer = null_read_buffer

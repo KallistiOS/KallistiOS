@@ -50,11 +50,6 @@ static int fb_set_irq_usage(int mode) {
     return 0;
 }
 
-static int fb_read(void) {
-    errno = EAGAIN;
-    return -1;
-}
-
 static int fb_write(int c) {
     uint16_t *t = fb;
 
@@ -114,8 +109,6 @@ dbgio_handler_t dbgio_fb = {
     .init = fb_init,
     .shutdown = fb_shutdown,
     .set_irq_usage = fb_set_irq_usage,
-    .read = fb_read,
-    .write = fb_write,
     .flush = fb_flush,
     .write_buffer = fb_write_buffer,
     .read_buffer = fb_read_buffer
