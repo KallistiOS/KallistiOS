@@ -51,8 +51,8 @@ int dcload_write_buffer(const uint8_t *data, int len, int xlat) {
     return len;
 }
 
-int dcload_read_cons(void) {
-    return -1;
+int dcload_read_buffer(uint8_t *data, int len) {
+    return dcload_read(STDIN_FILENO, data, len);
 }
 
 static void *fs_dcload_open(vfs_handler_t *vfs, const char *fn, int mode) {
@@ -439,7 +439,7 @@ void fs_dcload_init_console(void) {
     dbgio_dcload.name = dbgio_dcload_name;
     dbgio_dcload.detected = syscall_dcload_detected;
     dbgio_dcload.write_buffer = dcload_write_buffer;
-    // dbgio_dcload.read = dcload_read_cons;
+    dbgio_dcload.read_buffer = dcload_read_buffer;
 
     /* We actually need to detect here to make sure we're on
        dcload-serial, or scif_init must not proceed. */
