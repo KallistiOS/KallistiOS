@@ -450,53 +450,6 @@ static int pty_close(void *h) {
     return 0;
 }
 
-/* Read from a pty endpoint, kernel console special case */
-static ssize_t pty_read_serial(pipefd_t *fdobj, ptyhalf_t *ph, void *buf, size_t bytes) {
-    int c, r = 0;
-
-    (void)ph;
-
-    while(bytes > 0) {
-    again:
-        /* Try to read a char */
-        c = dbgio_read();
-
-        /* Get anything? */
-        if(c == -1) {
-            /* If we are in non-block, we give up now */
-            if(fdobj->mode & O_NONBLOCK) {
-                if(r == 0) {
-                    errno = EAGAIN;
-                    r = -1;
-                }
-
-                break;
-            }
-
-            /* Have we read anything at all? */
-            if(r == 0) {
-                /* Nope -- sleep a bit and try again */
-                thd_sleep(10);
-                goto again;
-            }
-            else
-                /* Yep -- that's enough */
-                break;
-        }
-
-        /* Add the obtained char to the buffer and echo it */
-        ((uint8_t *)buf)[r] = c;
-        dbgio_write(c);
-        r++;
-    }
-
-    /* Flush any remaining echoed chars */
-    dbgio_flush();
-
-    /* Return the number we got */
-    return r;
-}
-
 /* Read from a pty endpoint */
 static ssize_t pty_read(void *h, void *buf, size_t bytes) {
     size_t avail;
@@ -513,10 +466,7 @@ static ssize_t pty_read(void *h, void *buf, size_t bytes) {
 
     /* Special case the unattached console */
     if(ph->id == 0 && !ph->master && ph->other->refcnt == 0) {
-        if(!strcmp(dbgio_dev_get(), "fs_dcload"))
-            return dbgio_read_buffer((uint8_t *)buf, bytes);
-        else
-            return pty_read_serial(fdobj, ph, buf, bytes);
+        return dbgio_read_buffer((uint8_t *)buf, bytes);
     }
 
     /* Lock the ptyhalf */

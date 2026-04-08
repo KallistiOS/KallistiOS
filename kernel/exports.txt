@@ -189,12 +189,10 @@ dbgio_enable
 dbgio_disable
 dbgio_dev_select
 dbgio_dev_get
-dbgio_write
 dbgio_flush
 dbgio_write_buffer
 dbgio_write_buffer_xlat
 dbgio_write_str
-dbgio_read
 dbgio_read_buffer
 dbgio_printf
 
