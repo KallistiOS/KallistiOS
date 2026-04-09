@@ -8,9 +8,15 @@
 
 */
 
+#include <stdio.h>
+
 #include "gdb_internal.h"
 
 static const char hexchars[] = "0123456789abcdef";
+
+int format_thread_id_hex(char out[9], uint32_t tid) {
+    return snprintf(out, 9, "%x", (unsigned int)tid);
+}
 
 char highhex(int x) {
     return hexchars[(x >> 4) & 0xf];
