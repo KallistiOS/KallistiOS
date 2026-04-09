@@ -32,6 +32,8 @@ extern irq_context_t *irq_ctx;
 unsigned char *get_packet(void);
 void put_packet(const char *buffer);
 
+void handle_read_reg(char *ptr);
+void handle_write_reg(char *ptr);
 void handle_read_regs(char *ptr);
 void handle_write_regs(char *ptr);
 void handle_read_mem(char *ptr);
