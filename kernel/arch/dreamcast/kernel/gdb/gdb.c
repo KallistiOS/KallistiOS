@@ -219,6 +219,7 @@ static void gdb_handle_exception(int exception_vector) {
             case 'P': handle_write_reg(ptr); break;
             case 'q': handle_query(ptr); break;
             case 'T': handle_thread_alive(ptr); break;
+            case 'H': handle_thread_select(ptr); break;
             case 'g': handle_read_regs(ptr); break;
             case 'G': handle_write_regs(ptr); break;
             case 'm': handle_read_mem(ptr); break;
@@ -249,6 +250,27 @@ void gdb_enter_exception(irq_context_t *context,
         irq_ctx->pc -= 2;
 
     gdb_handle_exception(exception_vector);
+}
+
+irq_context_t *gdb_get_irq_context(void) {
+    return irq_ctx;
+}
+
+irq_context_t *gdb_resolve_thread_context(int tid) {
+    irq_context_t *default_context = gdb_get_irq_context();
+    kthread_t *target;
+
+    if(tid == GDB_THREAD_ALL || tid == GDB_THREAD_ANY)
+        return default_context;
+
+    target = thd_by_tid((tid_t)tid);
+    if(!target)
+        return default_context;
+
+    if(default_context && target == thd_get_current())
+        return default_context;
+
+    return &target->context;
 }
 
 
