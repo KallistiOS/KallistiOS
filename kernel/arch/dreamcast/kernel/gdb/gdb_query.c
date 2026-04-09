@@ -6,6 +6,8 @@
 
 */
 
+#include <stdio.h>
+
 #include <kos/thread.h>
 
 #include "gdb_internal.h"
@@ -39,6 +41,24 @@ static size_t tls_static_data_offset(void) {
         align = (size_t)_tbss_align;
 
     return align_to(sizeof(gdb_tcbhead_t), align);
+}
+
+static void parse_qsupported_features(const char *features) {
+    const char *ptr = features;
+
+    set_error_messages_enabled(false);
+
+    while(*ptr) {
+        if(strncmp(ptr, "error-message+", 14) == 0) {
+            set_error_messages_enabled(true);
+            break;
+        }
+
+        ptr = strchr(ptr, ';');
+        if(!ptr)
+            break;
+        ++ptr;
+    }
 }
 
 static int append_thread_id(kthread_t *thd, void *user_data) {
@@ -75,6 +95,39 @@ void handle_thread_alive(char *ptr) {
 }
 
 void handle_query(char *ptr) {
+    if(strncmp(ptr, "Supported:", 10) == 0) {
+        parse_qsupported_features(ptr + 10);
+        snprintf(remcom_out_buffer, BUFMAX,
+                 "PacketSize=%x;"
+                 "QStartNoAckMode+;"
+                 "error-message+;"
+                 "vContSupported+;"
+                 "swbreak+;"
+                 "hwbreak+;",
+                 BUFMAX - 4);
+        return;
+    }
+
+    if(strncmp(ptr, "TStatus", 7) == 0) {
+        gdb_clear_out_buffer();
+        return;
+    }
+
+    if(strncmp(ptr, "Offsets", 7) == 0) {
+        gdb_put_str("Text=0;Data=0;Bss=0");
+        return;
+    }
+
+    if(strncmp(ptr, "Attached", 8) == 0) {
+        gdb_put_str("1");
+        return;
+    }
+
+    if(strncmp(ptr, "Symbol", 6) == 0) {
+        gdb_put_ok();
+        return;
+    }
+
     if(*ptr == 'C') {
         kthread_t *thd = thd_get_current();
 
@@ -158,4 +211,14 @@ void handle_query(char *ptr) {
     }
 
     remcom_out_buffer[0] = '\0';
+}
+
+void handle_set_query(char *ptr) {
+    if(strncmp(ptr, "StartNoAckMode", 14) == 0) {
+        set_no_ack_mode_enabled(true);
+        gdb_put_ok();
+    }
+    else {
+        gdb_clear_out_buffer();
+    }
 }
