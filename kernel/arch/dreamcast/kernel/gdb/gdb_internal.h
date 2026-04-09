@@ -17,6 +17,9 @@
 #define GDB_OK         "OK"
 #define GDB_THREAD_ALL (-1)
 #define GDB_THREAD_ANY 0
+#define GDB_EINVAL     "E01"
+#define GDB_EUNIMPL    "E02"
+#define GDB_EBADCMD    "E03"
 
 char highhex(int x);
 char lowhex(int x);
@@ -36,6 +39,13 @@ void set_ctrl_thread(int tid);
 void setup_regs_context(void);
 void setup_ctrl_context(void);
 char *append_regs(char *out, const irq_context_t *context);
+void gdb_put_ok(void);
+void gdb_put_str(const char *msg);
+void gdb_clear_out_buffer(void);
+char *gdb_get_out_buffer(void);
+void set_error_messages_enabled(bool enabled);
+void set_no_ack_mode_enabled(bool enabled);
+void gdb_error_with_code_str(const char *errcode, const char *msg_fmt, ...);
 
 extern int using_dcl;
 extern char remcom_out_buffer[];
@@ -53,8 +63,10 @@ void handle_write_mem(char *ptr);
 bool handle_continue_step(char *ptr);
 void handle_breakpoint(char *ptr);
 void handle_query(char *ptr);
+void handle_set_query(char *ptr);
 void handle_thread_alive(char *ptr);
 void handle_thread_select(char *ptr);
 void handle_detach(void);
 void handle_kill(void);
 void handle_t_stop_reply(int exception_vector);
+bool handle_v_packet(char *ptr);

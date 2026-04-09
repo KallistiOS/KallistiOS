@@ -173,6 +173,7 @@ static void gdb_handle_exception(int exception_vector) {
             case 'p': handle_read_reg(ptr); break;
             case 'P': handle_write_reg(ptr); break;
             case 'q': handle_query(ptr); break;
+            case 'Q': handle_set_query(ptr); break;
             case 'T': handle_thread_alive(ptr); break;
             case 'H': handle_thread_select(ptr); break;
             case 'g': handle_read_regs(ptr); break;
@@ -187,6 +188,10 @@ static void gdb_handle_exception(int exception_vector) {
             case 'Z':
             case 'z':
                 handle_breakpoint(ptr); break;
+            case 'v':
+                if(handle_v_packet(ptr))
+                    return;
+                break;
             case 'D': handle_detach(); return;
             case 'k': handle_kill(); return;
             default:

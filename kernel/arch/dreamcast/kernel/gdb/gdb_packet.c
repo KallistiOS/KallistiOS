@@ -11,10 +11,15 @@
 #include <dc/dcload.h>
 #include <dc/scif.h>
 
+#include <stdarg.h>
+#include <stdio.h>
+
 #include "gdb_internal.h"
 
 int using_dcl = 0;
 char remcom_out_buffer[BUFMAX];
+static bool no_ack_mode;
+static bool error_messages_enabled;
 
 static char in_dcl_buf[BUFMAX];
 static char out_dcl_buf[BUFMAX];
@@ -22,6 +27,51 @@ static uint32_t in_dcl_pos = 0;
 static uint32_t out_dcl_pos = 0;
 static uint32_t in_dcl_size = 0;
 static char remcom_in_buffer[BUFMAX];
+
+char *gdb_get_out_buffer(void) {
+    return remcom_out_buffer;
+}
+
+void gdb_clear_out_buffer(void) {
+    remcom_out_buffer[0] = '\0';
+}
+
+void gdb_put_ok(void) {
+    strcpy(remcom_out_buffer, GDB_OK);
+}
+
+void gdb_put_str(const char *msg) {
+    strcpy(remcom_out_buffer, msg);
+}
+
+void set_error_messages_enabled(bool enabled) {
+    error_messages_enabled = enabled;
+}
+
+void set_no_ack_mode_enabled(bool enabled) {
+    no_ack_mode = enabled;
+}
+
+void gdb_error_with_code_str(const char *errcode, const char *msg_fmt, ...) {
+    va_list args;
+
+    if(error_messages_enabled) {
+        int written;
+
+        strcpy(remcom_out_buffer, "E.");
+        va_start(args, msg_fmt);
+        written = vsnprintf(remcom_out_buffer + 2, BUFMAX - 2, msg_fmt, args);
+        va_end(args);
+
+        if(written < 0)
+            strncpy(remcom_out_buffer, errcode, BUFMAX - 1);
+    }
+    else {
+        strncpy(remcom_out_buffer, errcode, BUFMAX - 1);
+    }
+
+    remcom_out_buffer[BUFMAX - 1] = '\0';
+}
 
 static char get_debug_char(void) {
     int ch;
@@ -83,6 +133,8 @@ static int get_rle_runlen(const char *src) {
     if(runlen > 98)
         runlen = 98;
 
+    /* The RLE count byte is runlen + (' ' - 4), so runs of 7 and 8 would
+       encode to '#' and '$'. Break those into smaller chunks instead. */
     if(runlen == 7 || runlen == 8)
         runlen = 6;
 
@@ -99,7 +151,6 @@ static void discard_packet_tail(void) {
     (void)get_debug_char();
     (void)get_debug_char();
 }
-
 /*
  * Routines to get and put packets
  */
@@ -154,10 +205,12 @@ unsigned char *get_packet(void) {
             xmitcsum += hex(ch);
 
             if(checksum != xmitcsum) {
-                put_debug_char('-');    /* failed checksum */
+                if(!no_ack_mode)
+                    put_debug_char('-');    /* failed checksum */
             }
             else {
-                put_debug_char('+');    /* successful transfer */
+                if(!no_ack_mode)
+                    put_debug_char('+');    /* successful transfer */
 
 //        printf("get_packet() -> %s\n", buffer);
 
@@ -196,14 +249,14 @@ void put_packet(const char *buffer) {
                 check_sum += *src;
                 put_debug_char('*');
                 check_sum += '*';
-                check_sum += encode;
                 put_debug_char(encode);
+                check_sum += encode;
                 src += runlen;
             }
             else {
                 put_debug_char(*src);
                 check_sum += *src;
-                src++;
+                ++src;
             }
         }
 
@@ -211,5 +264,8 @@ void put_packet(const char *buffer) {
         put_debug_char(highhex(check_sum));
         put_debug_char(lowhex(check_sum));
         flush_debug_channel();
+
+        if(no_ack_mode)
+            break;
     } while(get_debug_char() != '+');
 }
