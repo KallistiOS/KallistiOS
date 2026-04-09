@@ -18,6 +18,7 @@
 char highhex(int x);
 char lowhex(int x);
 int hex(char ch);
+int format_thread_id_hex(char out[9], uint32_t tid);
 
 char *mem_to_hex(const char *src, char *dest, size_t count);
 char *hex_to_mem(const char *src, char *dest, size_t count);
@@ -40,3 +41,5 @@ void handle_read_mem(char *ptr);
 void handle_write_mem(char *ptr);
 bool handle_continue_step(char *ptr);
 void handle_breakpoint(char *ptr);
+void handle_query(char *ptr);
+void handle_thread_alive(char *ptr);
