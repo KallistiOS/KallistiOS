@@ -217,6 +217,8 @@ static void gdb_handle_exception(int exception_vector) {
                 break;
             case 'p': handle_read_reg(ptr); break;
             case 'P': handle_write_reg(ptr); break;
+            case 'q': handle_query(ptr); break;
+            case 'T': handle_thread_alive(ptr); break;
             case 'g': handle_read_regs(ptr); break;
             case 'G': handle_write_regs(ptr); break;
             case 'm': handle_read_mem(ptr); break;
