@@ -22,6 +22,12 @@
 #define GDB_EBADCMD    "E03"
 #define GDB_EMEM_SIZE  "E34"
 #define GDB_EMEM_PROT  "E35"
+#define GDB_EBKPT_SET_FAIL   "E50"
+#define GDB_EBKPT_HW_NORES   "E52"
+#define GDB_EBKPT_HW_ACCESS  "E53"
+#define GDB_EBKPT_CLEAR_ID   "E55"
+#define GDB_EBKPT_SW_NORES   "E57"
+#define GDB_EBKPT_CLEAR_ADDR "E56"
 
 char highhex(int x);
 char lowhex(int x);
@@ -63,7 +69,6 @@ void handle_read_regs(char *ptr);
 void handle_write_regs(char *ptr);
 void handle_read_mem(char *ptr);
 void handle_write_mem(char *ptr);
-bool handle_continue_step(char *ptr);
 void handle_read_mem_binary(char *ptr);
 void handle_write_mem_binary(char *ptr);
 bool handle_continue_step(char *ptr);
