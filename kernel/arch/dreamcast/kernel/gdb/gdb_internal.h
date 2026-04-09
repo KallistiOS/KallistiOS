@@ -35,6 +35,7 @@ void set_regs_thread(int tid);
 void set_ctrl_thread(int tid);
 void setup_regs_context(void);
 void setup_ctrl_context(void);
+char *append_regs(char *out, const irq_context_t *context);
 
 extern int using_dcl;
 extern char remcom_out_buffer[];
@@ -54,3 +55,6 @@ void handle_breakpoint(char *ptr);
 void handle_query(char *ptr);
 void handle_thread_alive(char *ptr);
 void handle_thread_select(char *ptr);
+void handle_detach(void);
+void handle_kill(void);
+void handle_t_stop_reply(int exception_vector);

@@ -109,6 +109,25 @@ static void build_fv(uint32_t fv[4], const irq_context_t *context, int base) {
     fv[3] = context->fr[base + 3];
 }
 
+static char *append_reg(char *out, int regnum, const void *value, size_t size) {
+    *out++ = highhex(regnum);
+    *out++ = lowhex(regnum);
+    *out++ = ':';
+    out = mem_to_hex((const char *)value, out, size);
+    *out++ = ';';
+    return out;
+}
+
+char *append_regs(char *out, const irq_context_t *context) {
+    for(int i = 0; i < BASE_REG_COUNT; ++i) {
+        const uint32_t *reg_ptr =
+            (const uint32_t *)((uintptr_t)context + kos_reg_map[i]);
+        out = append_reg(out, i, reg_ptr, sizeof(*reg_ptr));
+    }
+
+    return out;
+}
+
 static char *append_zero_reg_hex(char *out) {
     static const uint32_t zero;
     return mem_to_hex((const char *)&zero, out, sizeof(zero));
