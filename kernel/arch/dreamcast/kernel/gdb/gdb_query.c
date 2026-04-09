@@ -99,6 +99,7 @@ void handle_query(char *ptr) {
         parse_qsupported_features(ptr + 10);
         snprintf(remcom_out_buffer, BUFMAX,
                  "PacketSize=%x;"
+                 "binary-upload+;"
                  "QStartNoAckMode+;"
                  "error-message+;"
                  "vContSupported+;"
