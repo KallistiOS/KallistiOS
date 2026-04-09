@@ -27,9 +27,14 @@ static uint32_t in_dcl_pos = 0;
 static uint32_t out_dcl_pos = 0;
 static uint32_t in_dcl_size = 0;
 static char remcom_in_buffer[BUFMAX];
+static size_t remcom_in_length;
 
 char *gdb_get_out_buffer(void) {
     return remcom_out_buffer;
+}
+
+size_t gdb_get_in_packet_length(void) {
+    return remcom_in_length;
 }
 
 void gdb_clear_out_buffer(void) {
@@ -173,6 +178,7 @@ unsigned char *get_packet(void) {
         checksum = 0;
         xmitcsum = -1;
         count = 0;
+        remcom_in_length = 0;
 
         /* now, read until a # or end of buffer is found */
         while(count < (BUFMAX-1)) {
@@ -193,8 +199,12 @@ unsigned char *get_packet(void) {
 
         if(count >= (BUFMAX - 1) && ch != '#') {
             discard_packet_tail();
-            put_debug_char('-');
-            flush_debug_channel();
+
+            if(!no_ack_mode) {
+                put_debug_char('-');
+                flush_debug_channel();
+            }
+
             continue;
         }
 
@@ -216,12 +226,14 @@ unsigned char *get_packet(void) {
 
                 /* if a sequence char is present, reply the sequence ID */
                 if(count > 2 && buffer[2] == ':') {
+                    remcom_in_length = (size_t)count - 3u;
                     put_debug_char(buffer[0]);
                     put_debug_char(buffer[1]);
 
                     return &buffer[3];
                 }
 
+                remcom_in_length = (size_t)count;
                 return &buffer[0];
             }
         }

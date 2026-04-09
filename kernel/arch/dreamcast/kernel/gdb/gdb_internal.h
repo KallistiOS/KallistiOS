@@ -20,6 +20,8 @@
 #define GDB_EINVAL     "E01"
 #define GDB_EUNIMPL    "E02"
 #define GDB_EBADCMD    "E03"
+#define GDB_EMEM_SIZE  "E34"
+#define GDB_EMEM_PROT  "E35"
 
 char highhex(int x);
 char lowhex(int x);
@@ -43,6 +45,7 @@ void gdb_put_ok(void);
 void gdb_put_str(const char *msg);
 void gdb_clear_out_buffer(void);
 char *gdb_get_out_buffer(void);
+size_t gdb_get_in_packet_length(void);
 void set_error_messages_enabled(bool enabled);
 void set_no_ack_mode_enabled(bool enabled);
 void gdb_error_with_code_str(const char *errcode, const char *msg_fmt, ...);
@@ -60,6 +63,9 @@ void handle_read_regs(char *ptr);
 void handle_write_regs(char *ptr);
 void handle_read_mem(char *ptr);
 void handle_write_mem(char *ptr);
+bool handle_continue_step(char *ptr);
+void handle_read_mem_binary(char *ptr);
+void handle_write_mem_binary(char *ptr);
 bool handle_continue_step(char *ptr);
 void handle_breakpoint(char *ptr);
 void handle_query(char *ptr);
