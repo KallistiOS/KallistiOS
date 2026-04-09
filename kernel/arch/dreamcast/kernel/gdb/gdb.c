@@ -142,6 +142,9 @@
 /* TRAPA #0x20: internal single-step or resume */
 #define TRAPA_GDB_SINGLESTEP 32
 
+/* TRAPA #0x3F: GDB-inserted software breakpoints (Z0) */
+#define TRAPA_GDB_BREAKPOINT 63
+
 /* TRAPA #0xFF: manually inserted via gdb_breakpoint() */
 #define TRAPA_USER_BREAKPOINT 255
 
@@ -285,6 +288,7 @@ void gdb_init(void) {
     irq_set_handler(EXC_USER_BREAK_PRE, handle_exception, NULL);
 
     irq_set_handler(IRQ_TRAP_CODE(TRAPA_GDB_SINGLESTEP), handle_gdb_trapa, NULL);
+    irq_set_handler(IRQ_TRAP_CODE(TRAPA_GDB_BREAKPOINT), handle_gdb_trapa, NULL);
     irq_set_handler(IRQ_TRAP_CODE(TRAPA_USER_BREAKPOINT), handle_user_trapa, NULL);
 
     gdb_breakpoint();
