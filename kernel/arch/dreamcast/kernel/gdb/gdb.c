@@ -146,50 +146,7 @@
 #define TRAPA_USER_BREAKPOINT 255
 
 irq_context_t *irq_ctx;
-int last_sigval;
 static int remote_debug;
-
-/*
- * this function takes the SH-1 exception number and attempts to
- * translate this number into a unix compatible signal value
- */
-static int compute_signal(int exception_vector) {
-    int sigval;
-
-    switch(exception_vector) {
-        case EXC_ILLEGAL_INSTR:
-        case EXC_SLOT_ILLEGAL_INSTR:
-            sigval = 4;
-            break;
-        case EXC_DATA_ADDRESS_READ:
-        case EXC_DATA_ADDRESS_WRITE:
-            sigval = 10;
-            break;
-
-        case EXC_TRAPA:
-            sigval = 5;
-            break;
-
-        default:
-            sigval = 7;       /* "software generated"*/
-            break;
-    }
-
-    return sigval;
-}
-
-/*
- * Handle the '?' command.
- * Responds with the signal that caused the target to stop.
- * Format: Sxx where xx is the hex signal number.
- * TODO: TXX
- */
-static void handle_status() {
-    remcom_out_buffer[0] = 'S';
-    remcom_out_buffer[1] = highhex(last_sigval);
-    remcom_out_buffer[2] = lowhex(last_sigval);
-    remcom_out_buffer[3] = 0;
-}
 
 /*
     This function does all exception handling.  It only does two things -
@@ -199,9 +156,7 @@ static void handle_status() {
 static void gdb_handle_exception(int exception_vector) {
     char *ptr;
 
-    last_sigval = compute_signal(exception_vector);
-    handle_status();
-
+    handle_t_stop_reply(exception_vector);
     put_packet(remcom_out_buffer);
 
     undo_single_step();
@@ -211,7 +166,7 @@ static void gdb_handle_exception(int exception_vector) {
         ptr = (char *)get_packet();
 
         switch(*ptr++) {
-            case '?': handle_status(); break;
+            case '?': handle_t_stop_reply(exception_vector); break;
             case 'd':
                 remote_debug = !remote_debug;
                 break;
@@ -232,7 +187,8 @@ static void gdb_handle_exception(int exception_vector) {
             case 'Z':
             case 'z':
                 handle_breakpoint(ptr); break;
-            case 'k': arch_reboot(); break;
+            case 'D': handle_detach(); return;
+            case 'k': handle_kill(); return;
             default:
                 break;
         }
