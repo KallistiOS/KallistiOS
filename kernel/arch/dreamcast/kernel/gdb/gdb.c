@@ -180,6 +180,8 @@ static void gdb_handle_exception(int exception_vector) {
             case 'G': handle_write_regs(ptr); break;
             case 'm': handle_read_mem(ptr); break;
             case 'M': handle_write_mem(ptr); break;
+            case 'x': handle_read_mem_binary(ptr); break;
+            case 'X': handle_write_mem_binary(ptr); break;
             case 'c':
             case 's':
                 if(handle_continue_step(ptr))
