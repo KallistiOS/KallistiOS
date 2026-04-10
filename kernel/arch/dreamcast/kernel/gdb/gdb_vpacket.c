@@ -6,6 +6,8 @@
 
 */
 
+#include <arch/arch.h>
+
 #include "gdb_internal.h"
 
 static bool handle_vcont(char *ptr) {
@@ -33,6 +35,14 @@ static bool handle_vcont(char *ptr) {
 bool handle_v_packet(char *ptr) {
     if(strncmp(ptr, "Cont", 4) == 0)
         return handle_vcont(ptr);
+
+    if(strcmp(ptr, "CtrlC") == 0) {
+        put_packet(GDB_OK);
+        arch_reboot();
+    }
+
+    if(strcmp(ptr, "Kill") == 0)
+        handle_kill();
 
     if(strncmp(ptr, "MustReplyEmpty", 14) == 0) {
         gdb_clear_out_buffer();
