@@ -182,7 +182,12 @@ static void gdb_handle_exception(int exception_vector) {
             case 'X': handle_write_mem_binary(ptr); break;
             case 'c':
             case 's':
-                if(handle_continue_step(ptr))
+                if(handle_continue_step(ptr[-1], ptr))
+                    return;
+                break;
+            case 'C':
+            case 'S':
+                if(handle_continue_step_signal(ptr[-1], ptr))
                     return;
                 break;
             case 'Z':
