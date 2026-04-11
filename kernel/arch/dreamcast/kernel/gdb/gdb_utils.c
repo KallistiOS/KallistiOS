@@ -105,8 +105,8 @@ size_t hex_to_int(char **ptr, uint32_t *int_value) {
     size_t num_chars = 0;
     int hex_value;
 
-    // if(!ptr || !*ptr || !int_value)
-    //     return 0;
+    if(!ptr || !*ptr || !int_value)
+        return 0;
 
     *int_value = 0;
 
