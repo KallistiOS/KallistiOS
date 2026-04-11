@@ -148,6 +148,7 @@
 #define TRAPA_USER_BREAKPOINT 255
 
 irq_context_t *irq_ctx;
+static bool connected;
 
 /*
     This function does all exception handling.  It only does two things -
@@ -165,6 +166,7 @@ static void gdb_handle_exception(int exception_vector) {
     while(true) {
         remcom_out_buffer[0] = 0;
         ptr = (char *)get_packet();
+        connected = true;
 
         switch(*ptr++) {
             case '?': handle_t_stop_reply(exception_vector); break;
@@ -239,6 +241,10 @@ irq_context_t *gdb_resolve_thread_context(int tid) {
     return &target->context;
 }
 
+void gdb_set_connected(bool is_connected) {
+    connected = is_connected;
+}
+
 
 static void handle_exception(irq_t code, irq_context_t *context, void *data) {
     (void)data;
@@ -286,6 +292,7 @@ void gdb_init(void) {
     irq_set_handler(EXC_DATA_ADDRESS_READ, handle_exception, NULL);
     irq_set_handler(EXC_DATA_ADDRESS_WRITE, handle_exception, NULL);
     irq_set_handler(EXC_USER_BREAK_PRE, handle_exception, NULL);
+    irq_set_handler(EXC_USER_BREAK_POST, handle_exception, NULL);
 
     irq_set_handler(IRQ_TRAP_CODE(TRAPA_GDB_SINGLESTEP), handle_gdb_trapa, NULL);
     irq_set_handler(IRQ_TRAP_CODE(TRAPA_GDB_BREAKPOINT), handle_gdb_trapa, NULL);

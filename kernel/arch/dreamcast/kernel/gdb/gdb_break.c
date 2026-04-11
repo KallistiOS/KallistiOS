@@ -27,6 +27,11 @@
 
 #define MAX_SW_BREAKPOINTS 32
 #define GDB_SW_BREAK_OPCODE 0xc33f
+#define GDB_BRK_SW 0
+#define GDB_BRK_HW 1
+#define GDB_WATCH_W 2
+#define GDB_WATCH_R 3
+#define GDB_WATCH_RW 4
 
 typedef struct {
     uintptr_t addr;
@@ -52,6 +57,25 @@ static bool is_valid_sw_breakpoint_range(uintptr_t addr, size_t length) {
 
     return arch_valid_text_address(normalize_cached_address(addr)) &&
            arch_valid_text_address(normalize_cached_address(end_addr));
+}
+
+static bool encode_hw_break_length(size_t length, uint8_t *size_code) {
+    switch(length) {
+        case 1u:
+            *size_code = 1u;
+            return true;
+        case 2u:
+            *size_code = 2u;
+            return true;
+        case 4u:
+            *size_code = 3u;
+            return true;
+        case 8u:
+            *size_code = 4u;
+            return true;
+        default:
+            return false;
+    }
 }
 
 static void soft_breakpoint(bool set, uintptr_t addr, size_t length) {
@@ -117,58 +141,47 @@ static void soft_breakpoint(bool set, uintptr_t addr, size_t length) {
     gdb_error_with_code_str(GDB_EBKPT_SW_NORES, "Z0: no free breakpoint slots");
 }
 
-static void hard_breakpoint(bool set, int brk_type, uintptr_t addr, size_t length, char* res_buffer) {
-    char* const ucb_base = (char*)0xff200000;
+static void hard_breakpoint(bool set, int brk_type, uintptr_t addr,
+                            size_t length, char *res_buffer) {
+    char * const ucb_base = (char *)0xff200000;
     static const int ucb_step = 0xc;
-    static const char BAR = 0x0, BAMR = 0x4, BBR = 0x8, /*BASR = 0x14,*/ BRCR = 0x20;
-
+    static const char BAR = 0x0, BAMR = 0x4, BBR = 0x8, BRCR = 0x20;
     static const uint8_t bbrBrk[] = {
-        0x0,  /* type 0, memory breakpoint -- unsupported */
-        0x14, /* type 1, hardware breakpoint */
-        0x28, /* type 2, write watchpoint */
-        0x24, /* type 3, read watchpoint */
-        0x2c  /* type 4, access watchpoint */
+        0x0,
+        0x14,
+        0x28,
+        0x24,
+        0x2c
     };
-
-    uint8_t bbr = 0;
-    char* ucb;
+    uint8_t bbr;
+    char *ucb;
     int i;
 
-    if(brk_type < 0 || brk_type > 4) {
-        strcpy(res_buffer, "E02");
+    if(brk_type < GDB_BRK_HW || brk_type > GDB_WATCH_RW) {
+        gdb_error_with_code_str(GDB_EINVAL,
+                                "Z/z: invalid hardware breakpoint type");
         return;
     }
 
-    if(length <= 8) {
-        do {
-            bbr++;
-        } while(length >>= 1);
-    }
-
-    bbr |= bbrBrk[brk_type];
-
-    if(addr == 0) {  /* GDB tries to watch 0, wasting a UCB channel */
+    if(addr == 0) {
         strcpy(res_buffer, GDB_OK);
     }
-    else if(brk_type == 0) {
-        /* we don't support memory breakpoints -- the debugger
-           will use the manual memory modification method */
-        *res_buffer = '\0';
-    }
-    else if(length > 8) {
-        strcpy(res_buffer, "E22");
+    else if(!encode_hw_break_length(length, &bbr)) {
+        gdb_error_with_code_str(GDB_EMEM_SIZE,
+                                "Z/z: unsupported hardware breakpoint length");
     }
     else if(set) {
+        bbr |= bbrBrk[brk_type];
         WREG(ucb_base, BRCR) = 0;
 
-        /* find a free UCB channel */
-        for(ucb = ucb_base, i = 2; i > 0; ucb += ucb_step, i--)
+        for(ucb = ucb_base, i = 2; i > 0; ucb += ucb_step, i--) {
             if(WREG(ucb, BBR) == 0)
                 break;
+        }
 
         if(i) {
             LREG(ucb, BAR) = addr;
-            BREG(ucb, BAMR) = 0x4; /* no BASR bits used, all BAR bits used */
+            BREG(ucb, BAMR) = 0x4;
             WREG(ucb, BBR) = bbr;
             strcpy(res_buffer, GDB_OK);
         }
@@ -176,10 +189,12 @@ static void hard_breakpoint(bool set, int brk_type, uintptr_t addr, size_t lengt
             strcpy(res_buffer, "E12");
     }
     else {
-        /* find matching UCB channel */
-        for(ucb = ucb_base, i = 2; i > 0; ucb += ucb_step, i--)
+        bbr |= bbrBrk[brk_type];
+
+        for(ucb = ucb_base, i = 2; i > 0; ucb += ucb_step, i--) {
             if(LREG(ucb, BAR) == addr && WREG(ucb, BBR) == bbr)
                 break;
+        }
 
         if(i) {
             WREG(ucb, BBR) = 0;
@@ -193,11 +208,6 @@ static void hard_breakpoint(bool set, int brk_type, uintptr_t addr, size_t lengt
 #undef LREG
 #undef WREG
 
-/*
- * Handle the 'Z' and 'z' commands.
- * Inserts or removes a breakpoint or watchpoint.
- * Format: Ztype,addr,kind or ztype,addr,kind
- */
 void handle_breakpoint(char *ptr) {
     bool set = (ptr[-1] == 'Z');
     int brk_type = *ptr++ - '0';
@@ -206,7 +216,10 @@ void handle_breakpoint(char *ptr) {
 
     if(*ptr++ == ',' && hex_to_int(&ptr, &addr) &&
        *ptr++ == ',' && hex_to_int(&ptr, &length) && *ptr == '\0') {
-        if(brk_type == 0)
+        if(brk_type < GDB_BRK_SW || brk_type > GDB_WATCH_RW) {
+            gdb_error_with_code_str(GDB_EINVAL, "Z/z: invalid breakpoint type");
+        }
+        else if(brk_type == GDB_BRK_SW)
             soft_breakpoint(set, addr, length);
         else
             hard_breakpoint(set, brk_type, addr, length, remcom_out_buffer);
