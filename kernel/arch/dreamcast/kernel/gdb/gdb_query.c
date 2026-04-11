@@ -168,7 +168,11 @@ void handle_query(char *ptr) {
 
             if(thd) {
                 const char *label = thd_get_label(thd);
-                mem_to_hex(label, remcom_out_buffer, strlen(label));
+
+                if(label)
+                    mem_to_hex(label, remcom_out_buffer, strlen(label));
+                else
+                    gdb_clear_out_buffer();
             }
             else {
                 strcpy(remcom_out_buffer, "E01");
