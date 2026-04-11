@@ -20,11 +20,12 @@ static int compute_signal(int exception_vector) {
         case EXC_ILLEGAL_INSTR:
         case EXC_SLOT_ILLEGAL_INSTR:
             return SIGILL;
+        case EXC_USER_BREAK_PRE:
+        case EXC_TRAPA:
+            return SIGTRAP;
         case EXC_DATA_ADDRESS_READ:
         case EXC_DATA_ADDRESS_WRITE:
             return SIGSEGV;
-        case EXC_TRAPA:
-            return SIGTRAP;
         default:
             return SIGBUS;
     }
@@ -47,7 +48,7 @@ static const char *stop_reason_name(int exception_vector) {
 
 void handle_detach(void) {
     put_packet(GDB_OK);
-    arch_abort();
+    gdb_set_connected(false);
 }
 
 void handle_kill(void) {

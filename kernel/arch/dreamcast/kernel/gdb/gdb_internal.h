@@ -41,6 +41,7 @@ void undo_single_step(void);
 void gdb_enter_exception(irq_context_t *context, int exception_vector, bool rewind_pc);
 irq_context_t *gdb_get_irq_context(void);
 irq_context_t *gdb_resolve_thread_context(int tid);
+void gdb_set_connected(bool is_connected);
 
 void set_regs_thread(int tid);
 void set_ctrl_thread(int tid);
@@ -56,6 +57,7 @@ size_t gdb_get_in_packet_length(void);
 void set_error_messages_enabled(bool enabled);
 void set_no_ack_mode_enabled(bool enabled);
 void gdb_error_with_code_str(const char *errcode, const char *msg_fmt, ...);
+void gdb_set_connected(bool is_connected);
 
 extern int using_dcl;
 extern char remcom_out_buffer[];
