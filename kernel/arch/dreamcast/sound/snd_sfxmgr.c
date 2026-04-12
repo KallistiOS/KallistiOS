@@ -50,24 +50,10 @@ static uint64_t sfx_inuse = 0;
 
 /* Unload all loaded samples and free their SPU RAM */
 void snd_sfx_unload_all(void) {
-    snd_effect_t *t, *n;
+    snd_effect_t *t;
 
-    t = LIST_FIRST(&snd_effects);
-
-    while(t) {
-        n = LIST_NEXT(t, list);
-
-        snd_mem_free(t->locl);
-
-        if(t->stereo)
-            snd_mem_free(t->locr);
-
-        free(t);
-
-        t = n;
-    }
-
-    LIST_INIT(&snd_effects);
+    while((t = LIST_FIRST(&snd_effects)))
+        snd_sfx_unload((sfxhnd_t)t);
 }
 
 /* Unload a single sample */
