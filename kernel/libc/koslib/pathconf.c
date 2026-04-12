@@ -28,7 +28,7 @@ long pathconf(const char *path, int name) {
         break;
     case _PC_NO_TRUNC:
         return 1;
-        break;    
+        break;
     default:
         errno = EINVAL;
         return -1;
