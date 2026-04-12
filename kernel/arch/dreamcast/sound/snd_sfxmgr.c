@@ -741,12 +741,7 @@ int find_free_channel(void) {
 }
 
 int snd_sfx_play(sfxhnd_t idx, int vol, int pan) {
-    sfx_play_data_t data = {0};
-    data.chn = -1;
-    data.idx = idx;
-    data.vol = vol;
-    data.pan = pan;
-    return snd_sfx_play_ex(&data);
+    return snd_sfx_play_chn(-1, idx, vol, pan);
 }
 
 int snd_sfx_play_ex(sfx_play_data_t *data) {
