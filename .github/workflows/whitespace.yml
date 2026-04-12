@@ -13,6 +13,4 @@ jobs:
     - name: Whitespace check
       run: |
         git fetch origin ${{ github.base_ref }}:${{ github.base_ref }}
-        git diff ${{ github.base_ref }} >/tmp/diff1.txt
-        git diff --ignore-space-at-eol ${{ github.base_ref }} >/tmp/diff2.txt
-        diff /tmp/diff1.txt /tmp/diff2.txt >/dev/null
+        ! git diff ${{ github.base_ref }} |grep '^\+.* $' >/dev/null
