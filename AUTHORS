@@ -48,29 +48,3 @@ Ruslan Rostovtsev: 2014, 2016, 2023, 2024, 2025
 Colton Pawielski: 2023
 Andy Barajas: 2023, 2024, 2026
 Paul Cercueil: 2023, 2024, 2025
-
-Files with Specific licenses:
------------------------------
-kernel/arch/dreamcast/kernel/gdb_stub.c:
-/*   This is originally based on an m68k software stub written by Glenn
-     Engel at HP, but has changed quite a bit.
-
-     Modifications for the SH by Ben Lee and Steve Chamberlain
-
-     Modifications for KOS by Megan Potter (earlier) and Richard Moats (more
-     recently).
-*/
-
-/****************************************************************************
-
-        THIS SOFTWARE IS NOT COPYRIGHTED
-
-   HP offers the following for use in the public domain.  HP makes no
-   warranty with regard to the software or it's performance and the
-   user accepts the software "AS IS" with all faults.
-
-   HP DISCLAIMS ANY WARRANTIES, EXPRESS OR IMPLIED, WITH REGARD
-   TO THIS SOFTWARE INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-   OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
-
-****************************************************************************/
