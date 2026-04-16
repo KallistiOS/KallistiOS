@@ -221,7 +221,9 @@ static void gdb_handle_exception(int exception_vector) {
             case 'M': handle_write_mem(ptr); break;
             case 'c':
             case 's':
-                handle_continue_step(ptr); return;
+                if(handle_continue_step(ptr))
+                    return;
+                break;
             case 'Z':
             case 'z':
                 handle_breakpoint(ptr); break;
@@ -234,20 +236,29 @@ static void gdb_handle_exception(int exception_vector) {
     }
 }
 
+void gdb_enter_exception(irq_context_t *context,
+                         int exception_vector,
+                         bool rewind_pc) {
+    irq_ctx = context;
+
+    if(rewind_pc)
+        irq_ctx->pc -= 2;
+
+    gdb_handle_exception(exception_vector);
+}
+
 
 static void handle_exception(irq_t code, irq_context_t *context, void *data) {
     (void)data;
 
-    irq_ctx = context;
-    gdb_handle_exception(code);
+    gdb_enter_exception(context, code, false);
 }
 
 static void handle_user_trapa(irq_t code, irq_context_t *context, void *data) {
     (void)code;
     (void)data;
 
-    irq_ctx = context;
-    gdb_handle_exception(EXC_TRAPA);
+    gdb_enter_exception(context, EXC_TRAPA, false);
 }
 
 static void handle_gdb_trapa(irq_t code, irq_context_t *context, void *data) {
@@ -260,9 +271,7 @@ static void handle_gdb_trapa(irq_t code, irq_context_t *context, void *data) {
     (void)code;
     (void)data;
 
-    irq_ctx = context;
-    irq_ctx->pc -= 2;
-    gdb_handle_exception(EXC_TRAPA);
+    gdb_enter_exception(context, EXC_TRAPA, true);
 }
 
 /* This function will generate a breakpoint exception.  It is used at the

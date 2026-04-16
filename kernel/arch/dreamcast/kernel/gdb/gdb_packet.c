@@ -74,6 +74,32 @@ static void flush_debug_channel(void) {
     }
 }
 
+static int get_rle_runlen(const char *src) {
+    int runlen = 1;
+
+    while(runlen < 99 && src[runlen] == src[0])
+        ++runlen;
+
+    if(runlen > 98)
+        runlen = 98;
+
+    if(runlen == 7 || runlen == 8)
+        runlen = 6;
+
+    return runlen > 3 ? runlen : 0;
+}
+
+static void discard_packet_tail(void) {
+    char ch;
+
+    do {
+        ch = get_debug_char();
+    } while(ch != '#');
+
+    (void)get_debug_char();
+    (void)get_debug_char();
+}
+
 /*
  * Routines to get and put packets
  */
@@ -114,6 +140,13 @@ unsigned char *get_packet(void) {
 
         buffer[count] = 0;
 
+        if(count >= (BUFMAX - 1) && ch != '#') {
+            discard_packet_tail();
+            put_debug_char('-');
+            flush_debug_channel();
+            continue;
+        }
+
         if(ch == '#') {
             ch = get_debug_char();
             xmitcsum = hex(ch) << 4;
@@ -129,7 +162,7 @@ unsigned char *get_packet(void) {
 //        printf("get_packet() -> %s\n", buffer);
 
                 /* if a sequence char is present, reply the sequence ID */
-                if(buffer[2] == ':') {
+                if(count > 2 && buffer[2] == ':') {
                     put_debug_char(buffer[0]);
                     put_debug_char(buffer[1]);
 
@@ -154,30 +187,23 @@ void put_packet(const char *buffer) {
         check_sum = 0;
 
         while(*src) {
-            int runlen;
+            int runlen = get_rle_runlen(src);
 
-            /* Do run length encoding */
-            for(runlen = 0; runlen < 100; runlen ++) {
-                if(src[0] != src[runlen] || runlen == 99) {
-                    if(runlen > 3) {
-                        int encode;
-                        /* Got a useful amount */
-                        put_debug_char(*src);
-                        check_sum += *src;
-                        put_debug_char('*');
-                        check_sum += '*';
-                        check_sum += (encode = runlen + ' ' - 4);
-                        put_debug_char(encode);
-                        src += runlen;
-                    }
-                    else {
-                        put_debug_char(*src);
-                        check_sum += *src;
-                        src++;
-                    }
+            if(runlen > 0) {
+                int encode = runlen + ' ' - 4;
 
-                    break;
-                }
+                put_debug_char(*src);
+                check_sum += *src;
+                put_debug_char('*');
+                check_sum += '*';
+                check_sum += encode;
+                put_debug_char(encode);
+                src += runlen;
+            }
+            else {
+                put_debug_char(*src);
+                check_sum += *src;
+                src++;
             }
         }
 

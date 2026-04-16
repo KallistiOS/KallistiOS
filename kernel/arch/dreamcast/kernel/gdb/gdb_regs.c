@@ -36,6 +36,37 @@ uint32_t kos_reg_map[] = {
 
 #undef KOS_REG
 
+static bool hex_to_mem_checked_n(const char *src, void *dest, size_t count) {
+    unsigned char *out = (unsigned char *)dest;
+
+    if(!src || !dest)
+        return false;
+
+    for(size_t i = 0; i < count; ++i) {
+        int high = hex(src[(i * 2u)]);
+        int low = hex(src[(i * 2u) + 1u]);
+
+        if(high < 0 || low < 0)
+            return false;
+
+        out[i] = (unsigned char)((high << 4) | low);
+    }
+
+    return true;
+}
+
+static bool validate_hex_span(const char *in, size_t hex_chars) {
+    if(!in)
+        return false;
+
+    for(size_t i = 0; i < hex_chars; ++i) {
+        if(hex(in[i]) < 0)
+            return false;
+    }
+
+    return in[hex_chars] == '\0';
+}
+
 /*
  * Handle the 'g' command.
  * Returns the full set of general-purpose registers.
@@ -45,7 +76,7 @@ void handle_read_regs(char *ptr) {
 
     char *out = remcom_out_buffer;
     for(int i = 0; i < NUM_REG_BYTES / 4; i++)
-        out = mem_to_hex((char *)((uint32_t)irq_ctx + kos_reg_map[i]), out, 4);
+        out = mem_to_hex((char *)((uintptr_t)irq_ctx + kos_reg_map[i]), out, 4);
     *out = 0;
 }
 
@@ -56,7 +87,18 @@ void handle_read_regs(char *ptr) {
  */
 void handle_write_regs(char *ptr) {
     char *in = ptr;
-    for(int i = 0; i < NUM_REG_BYTES / 4; i++, in += 8)
-        hex_to_mem(in, (char *)((uint32_t)irq_ctx + kos_reg_map[i]), 4);
+
+    if(!validate_hex_span(ptr, NUM_REG_BYTES * 2u)) {
+        strcpy(remcom_out_buffer, "E01");
+        return;
+    }
+
+    for(int i = 0; i < NUM_REG_BYTES / 4; i++, in += 8) {
+        if(!hex_to_mem_checked_n(in, (char *)((uintptr_t)irq_ctx + kos_reg_map[i]), 4)) {
+            strcpy(remcom_out_buffer, "E01");
+            return;
+        }
+    }
+
     strcpy(remcom_out_buffer, GDB_OK);
 }

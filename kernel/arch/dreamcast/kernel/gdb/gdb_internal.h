@@ -23,6 +23,7 @@ char *mem_to_hex(const char *src, char *dest, size_t count);
 char *hex_to_mem(const char *src, char *dest, size_t count);
 size_t hex_to_int(char **ptr, uint32_t *int_value);
 void undo_single_step(void);
+void gdb_enter_exception(irq_context_t *context, int exception_vector, bool rewind_pc);
 
 extern int using_dcl;
 extern char remcom_out_buffer[];
@@ -35,5 +36,5 @@ void handle_read_regs(char *ptr);
 void handle_write_regs(char *ptr);
 void handle_read_mem(char *ptr);
 void handle_write_mem(char *ptr);
-void handle_continue_step(char *ptr);
+bool handle_continue_step(char *ptr);
 void handle_breakpoint(char *ptr);
