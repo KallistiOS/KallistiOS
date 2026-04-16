@@ -241,6 +241,8 @@ int pthread_getconcurrency(void);
 int pthread_setconcurrency(int new_level);
 int pthread_atfork(void (*prepare)(void), void (*parent)(void),
                    void (*child)(void));
+void pthread_cleanup_push(void (*routine)(void *), void *arg);
+void pthread_cleanup_pop(int execute);
 
 #if __GNU_VISIBLE || __BSD_VISIBLE
 /* Technically, the BSD prototype for this is to return void, not int.
