@@ -132,7 +132,21 @@ void pvr_init_tile_matrices(bool presort) {
 }
 
 void pvr_set_presort_mode(bool presort) {
-    pvr_init_tile_matrix(pvr_state.ta_target, presort);
+    uint32_t tile_matrix;
+    uint32_t *vr;
+    int x, y;
+
+    tile_matrix = pvr_state.ta_buffers[pvr_state.ta_target].tile_matrix;
+    vr = (uint32_t *)PVR_RAM_BASE + BYTES_TO_WORDS(tile_matrix) + 6;
+
+    for(x = 0; x < pvr_state.tw; x++) {
+        for(y = 0; y < pvr_state.th; y++) {
+            vr[0] = (y << 8) | (x << 2) | (presort << 29);
+            vr += 6;
+        }
+    }
+
+    vr[-6] |= BIT(31);
 }
 
 
