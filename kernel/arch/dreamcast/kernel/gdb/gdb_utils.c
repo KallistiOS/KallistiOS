@@ -1,12 +1,14 @@
 /* KallistiOS ##version##
 
-   kernel/gdb/gdb_utils.c
+   arch/dreamcast/kernel/gdb/gdb_utils.c
 
    Copyright (C) Megan Potter
    Copyright (C) Richard Moats
    Copyright (C) 2026 Andy Barajas
 
 */
+
+/* Shared utility helpers for the GDB stub. */
 
 #include <stdio.h>
 
@@ -42,12 +44,12 @@ int hex(char ch) {
 /*
    Convert binary data to a hex string.
 
-   This function converts 'count' bytes from the binary data pointed to by 'mem'
-   into a hex string and stores it in 'buf'. It returns a pointer to the character
-   in 'buf' immediately after the last written character (null-terminator).
+   This function converts `count` bytes from `src` into lowercase hexadecimal
+   and stores the result in `dest`. It returns a pointer to the terminating
+   null byte written at the end of the hex string.
 
-   mem     Pointer to the binary data.
-   buf     Pointer to the output buffer for the hex string.
+   src     Pointer to the binary input data.
+   dest    Pointer to the output buffer for the hex string.
    count   Number of bytes to convert.
  */
 char *mem_to_hex(const char *src, char *dest, size_t count) {
@@ -65,15 +67,16 @@ char *mem_to_hex(const char *src, char *dest, size_t count) {
 }
 
 /*
-   Convert a hex string to binary data.
+   Convert hexadecimal text to binary data.
 
-   This function converts 'count' bytes from the hex string 'buf' into binary
-   data and stores it in 'mem'. It returns a pointer to the character in 'mem'
-   immediately after the last byte written.
+   This function converts `count` output bytes from the hex string `src` and
+   stores them in `dest`. It returns a pointer to the byte immediately after
+   the last byte written. The caller is responsible for validating that the
+   input characters are hexadecimal when silent garbage would be unsafe.
 
-    buf     Pointer to the hex string.
-    mem     Pointer to the output buffer for binary data.
-    count   Number of bytes to convert (half the length of 'buf').
+   src     Pointer to the hex string.
+   dest    Pointer to the output buffer for binary data.
+   count   Number of bytes to produce (half the consumed hex length).
  */
 char *hex_to_mem(const char *src, char *dest, size_t count) {
     uint32_t i;
@@ -90,16 +93,16 @@ char *hex_to_mem(const char *src, char *dest, size_t count) {
 }
 
 /*
-   Convert a hex string to an integer value.
+   Parse hexadecimal digits into a 32-bit integer value.
 
    This function reads hexadecimal digits from the string pointed to by `*ptr`
-   and accumulates them into an integer. It updates `*int_value` with the
-   result and advances `*ptr` to the first non-hex character.
+   and accumulates them into `*int_value`. On success it advances `*ptr` to
+   the first non-hex character and returns the number of hex digits consumed.
+   If no digits are present, it leaves `*ptr` at the first non-hex character
+   and returns zero.
 
    ptr        Pointer to a char pointer that will be advanced past the parsed digits.
    int_value  Output parameter to store the resulting integer value.
-
-   Returns the number of hex digits processed.
  */
 size_t hex_to_int(char **ptr, uint32_t *int_value) {
     size_t num_chars = 0;
