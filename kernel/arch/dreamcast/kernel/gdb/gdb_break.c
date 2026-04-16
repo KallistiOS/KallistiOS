@@ -37,6 +37,11 @@ static void hard_breakpoint(bool set, int brk_type, uintptr_t addr, size_t lengt
     char* ucb;
     int i;
 
+    if(brk_type < 0 || brk_type > 4) {
+        strcpy(res_buffer, "E02");
+        return;
+    }
+
     if(length <= 8) {
         do {
             bbr++;
@@ -103,7 +108,7 @@ void handle_breakpoint(char *ptr) {
     uint32_t length;
 
     if(*ptr++ == ',' && hex_to_int(&ptr, &addr) &&
-       *ptr++ == ',' && hex_to_int(&ptr, &length)) {
+       *ptr++ == ',' && hex_to_int(&ptr, &length) && *ptr == '\0') {
         hard_breakpoint(set, brk_type, addr, length, remcom_out_buffer);
     } else {
         strcpy(remcom_out_buffer, "E02");
