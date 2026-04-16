@@ -1,6 +1,6 @@
 /* KallistiOS ##version##
 
-   kernel/gdb/gdb_regs.c
+   arch/dreamcast/kernel/gdb/gdb_regs.c
 
    Copyright (C) Megan Potter
    Copyright (C) Richard Moats
@@ -8,9 +8,22 @@
 
 */
 
+/*
+   Implements SH4 register access for the GDB remote stub.
+
+   This module provides:
+     - g / G access to the raw SH4 register block expected by GDB
+     - p / P access to individual raw registers and the implemented pseudo registers
+     - register formatting for T stop replies
+     - thread-selected register contexts via Hg packets
+
+   Bulk g/G packets cover only the raw SH4 register block. Implemented pseudo
+   registers such as drN and fvN are available through single-register access.
+*/
+
 #include "gdb_internal.h"
 
-/* map from KOS register context order to GDB sh4 order */
+/* Map from KOS register context order to GDB sh4 order */
 #define KOS_REG(r)      offsetof(irq_context_t, r)
 
 uint32_t kos_reg_map[] = {
@@ -32,12 +45,12 @@ uint32_t kos_reg_map[] = {
 #undef KOS_REG
 
 /*
- * GDB's raw SH4 remote register block is 67 32-bit registers:
- *  - 41 directly readable registers we map from irq_context_t
- *  - 18 unavailable raw slots for ssr/spc and banked r0-r7 values
- *  - 8 reserved blank raw slots
- *
- * Pseudo registers like dr0-dr14 and fv0-fv12 are not part of the g/G block.
+   GDB's raw SH4 remote register block is 67 32-bit registers:
+     - 41 directly mapped registers we expose from irq_context_t
+     - 18 unavailable raw slots for ssr, spc, and banked r0-r7 values
+     - 8 reserved blank raw slots
+
+   Pseudo registers like dr0-dr14 and fv0-fv12 are not part of the g/G block.
  */
 #define BASE_REG_COUNT         ((int)(sizeof(kos_reg_map) / sizeof(kos_reg_map[0])))
 #define UNAVAILABLE_REG_COUNT  18
@@ -52,14 +65,104 @@ uint32_t kos_reg_map[] = {
 static int32_t gdb_thread_for_regs = GDB_THREAD_ANY;
 static irq_context_t *regs_irq_ctx;
 
+/* Sets the current thread ID used for register operations. */
 void set_regs_thread(int tid) {
     gdb_thread_for_regs = tid;
 }
 
+/*
+   Selects the appropriate IRQ context for the current register thread.
+
+   When the selected thread is the one currently stopped in the debugger, this
+   must use the live exception frame rather than the dormant kthread context.
+*/
 void setup_regs_context(void) {
     regs_irq_ctx = gdb_resolve_thread_context(gdb_thread_for_regs);
 }
 
+/* Packs two FR register words into one pseudo double register (drN). */
+static uint64_t build_dr(uint32_t fr_low, uint32_t fr_high) {
+    return ((uint64_t)fr_high << 32) | fr_low;
+}
+
+/* Packs four FR register words into one pseudo vector register (fvN). */
+static void build_fv(uint32_t *fv, const irq_context_t *context, int base) {
+    fv[0] = context->fr[base + 0];
+    fv[1] = context->fr[base + 1];
+    fv[2] = context->fr[base + 2];
+    fv[3] = context->fr[base + 3];
+}
+
+/*
+   Appends a single register to the GDB T packet in stop reply format.
+
+   Format: nn:vvvvvvvv;
+     - nn: register number (2 hex digits)
+     - vvvvvvvv: value encoded in hex (endianness-respecting)
+     - Ends with a semicolon
+
+   Returns pointer to the end of the output buffer, or NULL if the full field
+   would not fit in the remaining space.
+*/
+static char *append_reg(char *out, size_t *remaining, int regnum,
+                        const void *value, size_t size) {
+    size_t needed = 2u + 1u + (size * 2u) + 1u;
+
+    if(!remaining || (needed + 1u) > *remaining)
+        return NULL;
+
+    *out++ = highhex(regnum);
+    *out++ = lowhex(regnum);
+    *out++ = ':';
+    out = mem_to_hex((const char *)value, out, size);
+    *out++ = ';';
+    *out = '\0';
+    *remaining -= needed;
+
+    return out;
+}
+
+/*
+   Appends the mapped base SH4 registers to a GDB T stop reply.
+
+   Includes:
+     - General-purpose registers (r0-r15)
+     - Control registers (pc, pr, gbr, vbr, mach, macl, sr, fpul, fpscr)
+     - Floating-point registers (fr0-fr15)
+
+   Does not include unavailable raw g/G slots or pseudo registers.
+
+   Returns a pointer to the end of the output buffer. If the buffer fills up,
+   only complete register fields are emitted and the reply remains
+   null-terminated.
+*/
+char *append_regs(char *out, size_t *remaining, const irq_context_t *context) {
+    for(int i = 0; i < BASE_REG_COUNT; ++i) {
+        const uint32_t *reg_ptr =
+            (const uint32_t *)((uintptr_t)context + kos_reg_map[i]);
+        char *next = append_reg(out, remaining, i, reg_ptr, sizeof(*reg_ptr));
+
+        if(!next)
+            break;
+
+        out = next;
+    }
+
+    return out;
+}
+
+static char *append_zero_reg_hex(char *out) {
+    static const uint32_t zero;
+    return mem_to_hex((const char *)&zero, out, sizeof(zero));
+}
+
+/*
+   Decodes a fixed number of hex bytes after validating every nibble.
+
+   This helper is used for register payloads where silent garbage would be
+   unsafe. It converts exactly count output bytes and fails if any input
+   character is not hexadecimal.
+*/
 static bool hex_to_mem_checked_n(const char *src, void *dest, size_t count) {
     unsigned char *out = (unsigned char *)dest;
 
@@ -79,6 +182,13 @@ static bool hex_to_mem_checked_n(const char *src, void *dest, size_t count) {
     return true;
 }
 
+/*
+   Parses a register payload whose encoded width must match exactly.
+
+   The input must be exactly size * 2 hex characters long and terminate
+   immediately after the encoded value. This prevents partial or overlong
+   single-register writes from being accepted accidentally.
+*/
 static bool parse_register_hex_exact(const char *in, void *out, size_t size) {
     if(!in || in[size * 2u] != '\0')
         return false;
@@ -86,6 +196,13 @@ static bool parse_register_hex_exact(const char *in, void *out, size_t size) {
     return hex_to_mem_checked_n(in, out, size);
 }
 
+/*
+   Validates that a fixed-width span consists only of hexadecimal digits.
+
+   This is used for the bulk G packet before consuming the raw SH4 register
+   block, so malformed characters can be rejected before any register state is
+   written back into irq_context_t.
+*/
 static bool validate_hex_span(const char *in, size_t hex_chars) {
     if(!in)
         return false;
@@ -98,41 +215,13 @@ static bool validate_hex_span(const char *in, size_t hex_chars) {
     return in[hex_chars] == '\0';
 }
 
-static uint64_t build_dr(uint32_t fr_low, uint32_t fr_high) {
-    return ((uint64_t)fr_high << 32) | fr_low;
-}
+/*
+   Encodes one raw or pseudo register into GDB hex form.
 
-static void build_fv(uint32_t fv[4], const irq_context_t *context, int base) {
-    fv[0] = context->fr[base + 0];
-    fv[1] = context->fr[base + 1];
-    fv[2] = context->fr[base + 2];
-    fv[3] = context->fr[base + 3];
-}
-
-static char *append_reg(char *out, int regnum, const void *value, size_t size) {
-    *out++ = highhex(regnum);
-    *out++ = lowhex(regnum);
-    *out++ = ':';
-    out = mem_to_hex((const char *)value, out, size);
-    *out++ = ';';
-    return out;
-}
-
-char *append_regs(char *out, const irq_context_t *context) {
-    for(int i = 0; i < BASE_REG_COUNT; ++i) {
-        const uint32_t *reg_ptr =
-            (const uint32_t *)((uintptr_t)context + kos_reg_map[i]);
-        out = append_reg(out, i, reg_ptr, sizeof(*reg_ptr));
-    }
-
-    return out;
-}
-
-static char *append_zero_reg_hex(char *out) {
-    static const uint32_t zero;
-    return mem_to_hex((const char *)&zero, out, sizeof(zero));
-}
-
+   Base SH4 registers are read from the selected IRQ context, unavailable and
+   reserved raw slots are reported as zero, and implemented pseudo registers
+   such as drN and fvN are synthesized from the floating-point register bank.
+*/
 static bool read_register_hex(char *out, int regnum) {
     irq_context_t *context;
 
@@ -185,8 +274,17 @@ static bool read_register_hex(char *out, int regnum) {
     return false;
 }
 
+/*
+   Decodes and writes one raw or pseudo register from GDB hex form.
+
+   Base SH4 registers are written directly into the selected IRQ context.
+   Unavailable and reserved raw slots are accepted only for layout
+   compatibility and ignored. Implemented pseudo registers such as drN and fvN
+   are unpacked back into the underlying floating-point register words.
+*/
 static bool write_register_hex(int regnum, const char *in) {
     irq_context_t *context;
+    uint32_t value32;
 
     if(regnum < 0)
         return false;
@@ -195,8 +293,6 @@ static bool write_register_hex(int regnum, const char *in) {
     context = regs_irq_ctx;
 
     if(regnum < BASE_REG_COUNT) {
-        uint32_t value32;
-
         if(!parse_register_hex_exact(in, &value32, sizeof(value32)))
             return false;
 
@@ -250,38 +346,53 @@ static bool write_register_hex(int regnum, const char *in) {
 }
 
 /*
- * Handle the 'p' command.
- * Returns the value of a single register.
- */
+   Handle the 'p' command.
+
+   Reads one raw GDB register slot from the current register-selection context.
+   Format: pNN where NN is the register number in hex.
+
+   The reply width depends on the selected raw register definition. Invalid,
+   unmapped, or malformed register requests return EINVAL.
+*/
 void handle_read_reg(char *ptr) {
     uint32_t regnum = 0;
 
     if(!hex_to_int(&ptr, &regnum) || *ptr != '\0' ||
        !read_register_hex(remcom_out_buffer, (int)regnum)) {
-        strcpy(remcom_out_buffer, "E01");
+        gdb_error_with_code_str(GDB_EINVAL, "p: invalid register request");
     }
 }
 
 /*
- * Handle the 'P' command.
- * Writes a single register in the form Pn...=r...
- */
+   Handle the 'P' command.
+
+   Writes one raw GDB register slot in the current register-selection context.
+   Format: PNN=... where NN is the register number in hex.
+
+   The payload width must match the selected register exactly. Invalid register
+   numbers, malformed packet syntax, and bad hex payloads return EINVAL.
+*/
 void handle_write_reg(char *ptr) {
     uint32_t regnum = 0;
 
     if(!hex_to_int(&ptr, &regnum) || *ptr++ != '=' ||
        !write_register_hex((int)regnum, ptr)) {
-        strcpy(remcom_out_buffer, "E01");
+        gdb_error_with_code_str(GDB_EINVAL, "P: invalid register write");
         return;
     }
 
-    strcpy(remcom_out_buffer, GDB_OK);
+    gdb_put_ok();
 }
 
 /*
- * Handle the 'g' command.
- * Returns the full set of general-purpose registers.
- */
+   Handle the 'g' command.
+
+   Returns the full raw SH4 g/G register block expected by GDB.
+   Format: g
+
+   This includes the mapped base registers plus zero-filled unavailable and
+   reserved raw slots; pseudo registers are not part of the bulk packet.
+*/
 void handle_read_regs(char *ptr) {
     (void)ptr;
 
@@ -301,32 +412,44 @@ void handle_read_regs(char *ptr) {
 }
 
 /*
- * Handle the 'G' command.
- * Writes to all general-purpose registers.
- * Format: Gxxxxxxxx.... (entire register state in hex).
- */
+   Handle the 'G' command.
+
+   Consumes the full raw SH4 g/G register block supplied by GDB.
+   Format: G<raw-register-hex-block>
+
+   Only the mapped base registers are written back to irq_context_t;
+   unavailable and reserved raw slots are accepted and ignored.
+*/
 void handle_write_regs(char *ptr) {
     char *in = ptr;
+    size_t remaining = strlen(in);
     uint32_t values[BASE_REG_COUNT];
     irq_context_t *context;
 
-    if(!validate_hex_span(in, (size_t)RAW_REG_COUNT * 8u)) {
-        strcpy(remcom_out_buffer, "E01");
+    if(remaining < (size_t)RAW_REG_COUNT * 8) {
+        gdb_error_with_code_str(GDB_EINVAL, "G: short register payload");
         return;
     }
 
-    for(int i = 0; i < BASE_REG_COUNT; i++, in += 8) {
-        if(!hex_to_mem_checked_n(in, &values[i], sizeof(values[i]))) {
-            strcpy(remcom_out_buffer, "E01");
-            return;
-        }
+    if(!validate_hex_span(in, (size_t)RAW_REG_COUNT * 8u)) {
+        gdb_error_with_code_str(GDB_EINVAL, "G: invalid register payload");
+        return;
     }
 
     setup_regs_context();
     context = regs_irq_ctx;
 
+    for(int i = 0; i < BASE_REG_COUNT; i++, in += 8) {
+        if(!hex_to_mem_checked_n(in, &values[i], sizeof(values[i]))) {
+            gdb_error_with_code_str(GDB_EINVAL, "G: invalid register payload");
+            return;
+        }
+    }
+
     for(int i = 0; i < BASE_REG_COUNT; ++i)
         *(uint32_t *)((uintptr_t)context + kos_reg_map[i]) = values[i];
 
-    strcpy(remcom_out_buffer, GDB_OK);
+    in += (UNAVAILABLE_REG_COUNT + RESERVED_REG_COUNT) * 8;
+
+    gdb_put_ok();
 }
