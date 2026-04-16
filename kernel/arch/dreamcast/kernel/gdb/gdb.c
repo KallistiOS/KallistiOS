@@ -1,6 +1,6 @@
 /* KallistiOS ##version##
 
-   kernel/gdb/gdb.c
+   arch/dreamcast/kernel/gdb/gdb.c
 
    Copyright (C) Megan Potter
    Copyright (C) Richard Moats
@@ -8,127 +8,15 @@
 
 */
 
-/* Remote communication protocol.
+/*
+   Core Dreamcast GDB stub entry points and exception dispatch.
 
-   A debug packet whose contents are <data>
-   is encapsulated for transmission in the form:
-
-    $ <data> # CSUM1 CSUM2
-
-    <data> must be ASCII alphanumeric and cannot include characters
-    '$' or '#'.  If <data> starts with two characters followed by
-    ':', then the existing stubs interpret this as a sequence number.
-
-    CSUM1 and CSUM2 are ascii hex representation of an 8-bit
-    checksum of <data>, the most significant nibble is sent first.
-    the hex digits 0-9,a-f are used.
-
-   Receiver responds with:
-
-    +   - if CSUM is correct and ready for next packet
-    -   - if CSUM is incorrect
-
-   <data> is as follows:
-   All values are encoded in ascii hex digits.
-**********************************************************************
-    REQUEST     PACKET
-**********************************************************************
-    read regs   g
-
-    reply       XX....X     Each byte of register data
-                            is described by two hex digits.
-                            Registers are in the internal order
-                            for GDB, and the bytes in a register
-                            are in the same order the machine uses.
-                or ENN      for an error.
-**********************************************************************
-    write regs  GXX..XX     Each byte of register data
-                            is described by two hex digits.
-
-    reply       OK          for success
-                ENN         for an error
-**********************************************************************
-    write reg   Pn...=r...  Write register n... with value r...,
-                            which contains two hex digits for each
-                            byte in the register (target byte
-                            order).
-
-    reply       OK          for success
-                ENN         for an error
-    (not supported by all stubs).
-**********************************************************************
-    read mem    mAA..AA,LLLL
-                            AA..AA is address, LLLL is length.
-    reply       XX..XX      XX..XX is mem contents
-
-                            Can be fewer bytes than requested
-                            if able to read only part of the data.
-                or ENN      NN is errno
-**********************************************************************
-    write mem   MAA..AA,LLLL:XX..XX
-                            AA..AA is address,
-                            LLLL is number of bytes,
-                            XX..XX is data
-
-    reply       OK          for success
-                ENN         for an error (this includes the case
-                            where only part of the data was
-                            written).
-**********************************************************************
-    cont        cAA..AA     AA..AA is address to resume
-                            If AA..AA is omitted,
-                            resume at same address.
-**********************************************************************
-    step        sAA..AA     AA..AA is address to resume
-                            If AA..AA is omitted,
-                            resume at same address.
-**********************************************************************
-    last signal     ?               Reply the current reason for stopping.
-                                        This is the same reply as is generated
-                    for step or cont : SAA where AA is the
-                    signal number.
-
-    There is no immediate reply to step or cont.
-    The reply comes when the machine stops.
-    It is       SAA     AA is the "signal number"
-
-    or...       TAAn...:r...;n:r...;n...:r...;
-                    AA = signal number
-                    n... = register number
-                    r... = register contents
-    or...       WAA     The process exited, and AA is
-                    the exit status.  This is only
-                    applicable for certains sorts of
-                    targets.
-    kill request    k
-
-    reset       r       reset -- see sparc stub.
-    reserved    <other>     On other requests, the stub should
-                    ignore the request and send an empty
-                    response ($#<checksum>).  This way
-                    we can extend the protocol and GDB
-                    can tell whether the stub it is
-                    talking to uses the old or the new.
-    search      tAA:PP,MM   Search backwards starting at address
-                    AA for a match with pattern PP and
-                    mask MM.  PP and MM are 4 bytes.
-                    Not supported by all stubs.
-
-    general query   qXXXX       Request info about XXXX.
-    general set QXXXX=yyyy  Set value of XXXX to yyyy.
-    query sect offs qOffsets    Get section offsets.  Reply is
-                    Text=xxx;Data=yyy;Bss=zzz
-    console output  Otext       Send text to stdout.  Only comes from
-                    remote target.
-
-    Responses can be run-length encoded to save space.  A '*' means that
-    the next character is an ASCII encoding giving a repeat count which
-    stands for that many repetitions of the character preceding the '*'.
-    The encoding is n+29, yielding a printable character where n >=3
-    (which is where rle starts to win).  Don't use an n > 126.
-
-    So
-    "0* " means the same as "0000".  */
+   This file owns:
+     - stub initialization and shutdown
+     - trap and exception registration
+     - the main remote-protocol dispatch loop
+     - connection lifecycle state for a live GDB session
+*/
 
 #include <arch/arch.h>
 #include <arch/gdb.h>
@@ -136,26 +24,32 @@
 #include <dc/dcload.h>
 #include <dc/scif.h>
 
+#include <stdio.h>
+
 #include "gdb_internal.h"
 
-/* TRAPA #0x20: internal single-step or resume */
-#define TRAPA_GDB_SINGLESTEP 32
+/* TRAPA #0x20: internal single-step trap */
+#define TRAPA_GDB_SINGLESTEP  32
 
 /* TRAPA #0x3F: GDB-inserted software breakpoints (Z0) */
-#define TRAPA_GDB_BREAKPOINT 63
+#define TRAPA_GDB_BREAKPOINT  63
 
 /* TRAPA #0xFF: manually inserted via gdb_breakpoint() */
 #define TRAPA_USER_BREAKPOINT 255
 
-irq_context_t *irq_ctx;
+static irq_context_t *irq_ctx;
+static bool initialized;
 static bool connected;
 
 /*
-    This function does all exception handling.  It only does two things -
-    it figures out why it was called and tells gdb, and then it reacts
-    to gdb's requests.
+   Main GDB exception handler.
+
+   Builds the initial stop reply for the current exception, then services
+   remote packets until execution is resumed or the debugger detaches or kills
+   the target.
 */
 static void gdb_handle_exception(int exception_vector) {
+    char command;
     char *ptr;
 
     handle_t_stop_reply(exception_vector);
@@ -168,7 +62,9 @@ static void gdb_handle_exception(int exception_vector) {
         ptr = (char *)get_packet();
         connected = true;
 
-        switch(*ptr++) {
+        command = *ptr++;
+
+        switch(command) {
             case '?': handle_t_stop_reply(exception_vector); break;
             case 'p': handle_read_reg(ptr); break;
             case 'P': handle_write_reg(ptr); break;
@@ -184,12 +80,12 @@ static void gdb_handle_exception(int exception_vector) {
             case 'X': handle_write_mem_binary(ptr); break;
             case 'c':
             case 's':
-                if(handle_continue_step(ptr[-1], ptr))
+                if(handle_continue_step(command, ptr))
                     return;
                 break;
             case 'C':
             case 'S':
-                if(handle_continue_step_signal(ptr[-1], ptr))
+                if(handle_continue_step_signal(command, ptr))
                     return;
                 break;
             case 'Z':
@@ -209,6 +105,17 @@ static void gdb_handle_exception(int exception_vector) {
     }
 }
 
+/* Returns the current IRQ context captured during a GDB exception. */
+irq_context_t *gdb_get_irq_context(void) {
+    return irq_ctx;
+}
+
+/*
+   Enter the debugger for an already-captured exception context.
+
+   This is used when we need to stop from helper code that is already running
+   inside an exception handler, such as the stepped TRAPA shim in gdb_ctrl.c.
+*/
 void gdb_enter_exception(irq_context_t *context,
                          int exception_vector,
                          bool rewind_pc) {
@@ -220,18 +127,21 @@ void gdb_enter_exception(irq_context_t *context,
     gdb_handle_exception(exception_vector);
 }
 
-irq_context_t *gdb_get_irq_context(void) {
-    return irq_ctx;
-}
+/*
+   Resolve a thread selector to the register context that GDB should edit.
 
+   If the requested thread is the one currently stopped in the debugger, we
+   must use the live exception frame rather than the parked kthread context;
+   otherwise register reads and writes would not affect the state that resumes.
+*/
 irq_context_t *gdb_resolve_thread_context(int tid) {
     irq_context_t *default_context = gdb_get_irq_context();
-    kthread_t *target;
 
     if(tid == GDB_THREAD_ALL || tid == GDB_THREAD_ANY)
         return default_context;
 
-    target = thd_by_tid((tid_t)tid);
+    kthread_t *target = thd_by_tid((tid_t)tid);
+
     if(!target)
         return default_context;
 
@@ -241,17 +151,31 @@ irq_context_t *gdb_resolve_thread_context(int tid) {
     return &target->context;
 }
 
+/* Updates whether a live debugger session is currently considered connected. */
 void gdb_set_connected(bool is_connected) {
     connected = is_connected;
 }
 
+/*
+   Handle a debugger-visible SH4 exception entry.
 
+   This is the common IRQ callback for faults and traps that should stop in
+   GDB. It forwards the captured exception frame and raw exception code into
+   gdb_enter_exception() without rewriting the saved PC.
+*/
 static void handle_exception(irq_t code, irq_context_t *context, void *data) {
     (void)data;
 
     gdb_enter_exception(context, code, false);
 }
 
+/*
+   Handle TRAPA #0xFF breakpoints raised by gdb_breakpoint().
+
+   This path reports the stop as EXC_TRAPA without rewinding the saved PC.
+   Unlike internal single-step and Z0 trap sites, the user breakpoint does not
+   replace another instruction that needs to be virtually restored for GDB.
+*/
 static void handle_user_trapa(irq_t code, irq_context_t *context, void *data) {
     (void)code;
     (void)data;
@@ -259,33 +183,50 @@ static void handle_user_trapa(irq_t code, irq_context_t *context, void *data) {
     gdb_enter_exception(context, EXC_TRAPA, false);
 }
 
+/*
+   Handle TRAPA exceptions used internally by the stub for single-step traps
+   and patched Z0 software breakpoints.
+
+   Because the trap instruction replaces the original instruction in memory,
+   the saved PC is rewound by one instruction before reporting EXC_TRAPA.
+*/
 static void handle_gdb_trapa(irq_t code, irq_context_t *context, void *data) {
-    /*
-    * trapa 0x20 indicates a software trap inserted in
-    * place of code ... so back up PC by one
-    * instruction, since this instruction will
-    * later be replaced by its original one!
-    */
     (void)code;
     (void)data;
 
     gdb_enter_exception(context, EXC_TRAPA, true);
 }
 
-/* This function will generate a breakpoint exception.  It is used at the
-   beginning of a program to sync up with a debugger and can be used
-   otherwise as a quick means to stop program execution and "break" into
-   the debugger. */
+/*
+   Triggers a software breakpoint using TRAPA #0xFF.
 
+   Typically called at the start of a program to establish a connection
+   with the debugger, or used to halt execution and enter the debugger manually.
+*/
 void gdb_breakpoint(void) {
     __asm__ __volatile__("trapa	#0xff"::);
 }
 
+/*
+   Initialize the Dreamcast GDB stub and register its exception handlers.
+
+   The transport backend is chosen at runtime by probing for dc-load GDB
+   support and otherwise falling back to SCIF. Initialization ends by raising
+   an initial breakpoint so the debugger can attach immediately.
+*/
 void gdb_init(void) {
+    if(initialized)
+        return;
+
+    initialized = true;
+    connected = false;
+
     if(dcload_gdbpacket(NULL, 0, NULL, 0) == 0)
         using_dcl = 1;
-    else
+    else {
+        using_dcl = 0;
         scif_set_parameters(57600, 1);
+    }
 
     irq_set_handler(EXC_ILLEGAL_INSTR, handle_exception, NULL);
     irq_set_handler(EXC_SLOT_ILLEGAL_INSTR, handle_exception, NULL);

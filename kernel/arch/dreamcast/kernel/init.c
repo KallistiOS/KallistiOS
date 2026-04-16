@@ -20,6 +20,7 @@
 #include <kos/platform.h>
 #include <kos/timer.h>
 #include <arch/arch.h>
+#include <arch/gdb.h>
 #include <arch/rtc.h>
 #include <dc/memory.h>
 #include <dc/perfctr.h>
