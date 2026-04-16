@@ -30,6 +30,8 @@
 
 #define LIST_ENABLED(i) (pvr_state.lists_enabled & BIT(i))
 
+#define PVR_TILE_MATRIX_HEADER_SIZE 0x48
+
 
 /* Fill Tile Matrix buffers. This function takes a base address and sets up
    the rendering structures there. Each tile of the screen (32x32) receives
@@ -56,9 +58,9 @@ static void pvr_init_tile_matrix(int which, bool presort) {
     */
 
     /* Header of zeros */
-    vr += BYTES_TO_WORDS(buf->tile_matrix);
+    vr += BYTES_TO_WORDS(buf->tile_matrix - PVR_TILE_MATRIX_HEADER_SIZE);
 
-    for(x = 0; x < 0x48; x += 4)
+    for(x = 0; x < PVR_TILE_MATRIX_HEADER_SIZE; x += 4)
         * vr++ = 0;
 
     /* Initial init tile */
@@ -69,9 +71,6 @@ static void pvr_init_tile_matrix(int which, bool presort) {
     vr[4] = 0x80000000;
     vr[5] = 0x80000000;
     vr += 6;
-
-    /* Must skip over zeroed header for actual usage */
-    buf->tile_matrix += 0x48;
 
     /* Now the main tile matrix */
 #if 0
@@ -270,9 +269,12 @@ void pvr_allocate_buffers(const pvr_init_params_t *params) {
         /* N-byte align */
         outaddr = __align_up(outaddr, 128);
 
+        /* Tile Matrix header */
+        outaddr += PVR_TILE_MATRIX_HEADER_SIZE;
+
         /* Tile Matrix */
         buf->tile_matrix = outaddr;
-        buf->tile_matrix_size = WORDS_TO_BYTES(18 + 6 * pvr_state.tw * pvr_state.th);
+        buf->tile_matrix_size = WORDS_TO_BYTES(6 + 6 * pvr_state.tw * pvr_state.th);
         outaddr += buf->tile_matrix_size;
 
         /* N-byte align */
