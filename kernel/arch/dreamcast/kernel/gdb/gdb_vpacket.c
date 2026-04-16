@@ -29,6 +29,7 @@ typedef struct {
     bool has_thread;
 } vcont_action_t;
 
+/* Returns whether a vCont thread selector can target the currently stopped thread. */
 static bool is_supported_vcont_thread(int tid) {
     kthread_t *current = thd_get_current();
 
@@ -41,6 +42,7 @@ static bool is_supported_vcont_thread(int tid) {
     return current->tid == (tid_t)tid;
 }
 
+/* Parses a vCont thread-id suffix into one of the stub's thread selectors. */
 static bool parse_vcont_thread_id(char *ptr, int *tid) {
     uint32_t parsed_tid = 0;
 
@@ -60,6 +62,7 @@ static bool parse_vcont_thread_id(char *ptr, int *tid) {
     return true;
 }
 
+/* Parses one vCont action token such as c, s, or s:thread-id. */
 static bool parse_vcont_action(char *token, vcont_action_t *action) {
     memset(action, 0, sizeof(vcont_action_t));
     action->tid = GDB_THREAD_ANY;
@@ -99,6 +102,14 @@ static bool parse_vcont_action(char *token, vcont_action_t *action) {
     return true;
 }
 
+/*
+   Handle the action list from a 'vCont;...' packet.
+
+   This all-stop stub accepts at most one continue or single-step action per
+   packet. Optional thread qualifiers are honored only when they resolve to
+   the currently stopped thread (or the equivalent any/all selectors), so the
+   stub does not pretend to support scheduler-aware multi-thread resume.
+*/
 static bool handle_vcont_actions(char *ptr) {
     vcont_action_t selected = { 0 };
     bool have_selected = false;
@@ -136,6 +147,15 @@ static bool handle_vcont_actions(char *ptr) {
     return gdb_resume_target(selected.type == 's', false, 0);
 }
 
+/*
+   Handle supported extended 'v' packets.
+
+   This dispatcher implements vCont, vMustReplyEmpty, vCtrlC, and vKill[;pid].
+   Unsupported optional 'v' packets fall back to an empty reply, which is the
+   normal RSP way to say that an extension is not implemented. Packets that
+   reboot or kill the target do not return to the normal packet-processing
+   loop.
+*/
 bool handle_v_packet(char *ptr) {
     if(strcmp(ptr, "Cont?") == 0) {
         gdb_put_str("vCont;c;s");
