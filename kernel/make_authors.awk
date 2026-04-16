@@ -23,12 +23,11 @@ BEGIN {
         phase = 2;
         print "static const char authors[] = ";
     }
-    else if($0 == "Files with Specific licenses:") {
-        print ";\n";
-        exit;
-    }
     else if(phase == 2 && $0 != "") {
         gsub(/"/, "\\\"", $1)
         print "\"Copyright (C)" $2, $1 "\\n\"";
     }
+}
+END {
+    print ";\n";
 }
