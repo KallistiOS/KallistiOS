@@ -1,7 +1,7 @@
 /* KallistiOS ##version##
 
    vmu_game.c
-   (c)2020 BBHoodsta
+   Copyright (C) 2020 Andy Barajas
 */
 
 /* This simple example shows how to use the vmufs_write function to write
@@ -10,16 +10,16 @@
 #include <kos.h>
 
 void draw_findings(void) {
-    file_t      d;
+    file_t d;
 
     d = fs_open("/vmu/a1", O_RDONLY | O_DIR);
-
     if(!d) {
         bfont_draw_str_vram_fmt(10, 88, false, "Can't read VMU");
+        return;
     }
-    else {
-        bfont_draw_str_vram_fmt(10, 88, false, "VMU found. Press Start.");
-    }
+
+    bfont_draw_str_vram_fmt(10, 88, false, "VMU found. Press Start.");
+    fs_close(d);
 }
 
 int dev_checked = 0;
@@ -73,21 +73,27 @@ void write_game_entry(void) {
     maple_device_t *dev;
 
     f = fs_open("/rd/TETRIS.VMS", O_RDONLY);
-
     if(!f) {
         printf("Error reading Tetris game from romdisk\n");
         return;
     }
 
     data_size = fs_total(f);
-    data = (uint8_t*) malloc(data_size + 1);
+    data = (uint8_t *)malloc(data_size + 1);
+    if(!data) {
+        printf("Error allocating memory for game data\n");
+        fs_close(f);
+        return;
+    }
+
     fs_read(f, data, data_size);
     fs_close(f);
 
     dev = maple_enum_type(0, MAPLE_FUNC_MEMCARD);
-    
     if(dev)
         vmufs_write(dev, "Tetris", data, data_size, VMUFS_VMUGAME);
+
+    free(data);
 }
 
 int main(int argc, char **argv) {
