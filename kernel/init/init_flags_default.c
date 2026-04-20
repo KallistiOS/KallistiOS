@@ -4,7 +4,7 @@
    (c)2002 Megan Potter
 */
 
-#include <arch/arch.h>
+#include <kos/init.h>
 
 /* Default values which will be used if the user doesn't declare anything */
 __weak_symbol KOS_INIT_FLAGS(INIT_DEFAULT);
