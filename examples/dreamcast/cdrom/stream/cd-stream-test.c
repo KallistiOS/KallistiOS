@@ -18,8 +18,7 @@
 #include <dc/maple/controller.h>
 #include <dc/cdrom.h>
 
-#include <arch/cache.h>
-
+#include <kos/cache.h>
 #include <kos/init.h>
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>

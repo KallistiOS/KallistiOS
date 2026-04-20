@@ -4,11 +4,11 @@
 
    Copyright (C) 2025 Paul Cercueil
 */
-#include <arch/cache.h>
 #include <arch/dmac.h>
 
 #include <dc/memory.h>
 
+#include <kos/cache.h>
 #include <kos/dbglog.h>
 #include <kos/genwait.h>
 #include <kos/irq.h>
@@ -83,7 +83,7 @@ static dma_addr_t dma_map_src_dst(uintptr_t addr, size_t len, bool is_dst) {
         if(is_dst)
             dcache_inval_range(addr, len);
         else
-            dcache_flush_range(addr, len);
+            dcache_wback_range(addr, len);
         break;
 
     default:
