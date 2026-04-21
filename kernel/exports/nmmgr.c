@@ -82,7 +82,8 @@ int nmmgr_handler_remove(nmmgr_handler_t *hnd) {
     nmmgr_handler_t *c, *tmp;
     int rv = -1;
 
-    mutex_lock_irqsafe(&mutex);
+    if(mutex_lock_irqsafe(&mutex) < 0)
+        return -1;
 
     /* Verify that it's actually in there */
     LIST_FOREACH_SAFE(c, &nmmgr_handlers, list_ent, tmp) {
