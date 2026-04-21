@@ -73,7 +73,7 @@ export_sym_t *export_lookup(const char *name) {
     nmmgrs = nmmgr_get_list();
 
     /* Go through and look at each symtab entry */
-    LIST_FOREACH(nmmgr, nmmgrs, list_ent) {
+    SLIST_FOREACH(nmmgr, nmmgrs, list_ent) {
         /* Not a symtab -> ignore */
         if(nmmgr->type != NMMGR_TYPE_SYMTAB)
             continue;
@@ -127,7 +127,7 @@ export_sym_t *export_lookup_addr(uintptr_t addr) {
     nmmgrs = nmmgr_get_list();
 
     /* Go through and look at each symtab entry */
-    LIST_FOREACH(nmmgr, nmmgrs, list_ent) {
+    SLIST_FOREACH(nmmgr, nmmgrs, list_ent) {
         /* Not a symtab -> ignore */
         if(nmmgr->type != NMMGR_TYPE_SYMTAB)
             continue;

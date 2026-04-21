@@ -68,7 +68,7 @@ static dirent_t *fs_root_readdir(fs_hnd_t *handle) {
 
     nmhead = nmmgr_get_list();
 
-    LIST_FOREACH(nmhnd, nmhead, list_ent) {
+    SLIST_FOREACH(nmhnd, nmhead, list_ent) {
         if((nmhnd->flags & NMMGR_FLAGS_INDEV))
             continue;
 
