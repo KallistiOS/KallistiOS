@@ -39,7 +39,7 @@ struct nmmgr_handler;
 
     Contrary to what doxygen may think, this is not a function.
 */
-typedef LIST_HEAD(nmmgr_list, nmmgr_handler) nmmgr_list_t;
+typedef SLIST_HEAD(nmmgr_list, nmmgr_handler) nmmgr_list_t;
 
 /** \brief   List entry initializer for static structs.
     \ingroup system_namemgr
@@ -64,7 +64,7 @@ typedef struct nmmgr_handler {
     uint32_t  version;        /* Version code */
     uint32_t  flags;          /* Bitmask of flags */
     uint32_t  type;           /* Type of handler */
-    LIST_ENTRY(nmmgr_handler)   list_ent;   /* Linked list entry */
+    SLIST_ENTRY(nmmgr_handler)  list_ent;   /* Linked list entry */
 } nmmgr_handler_t;
 
 /** \brief   Alias handler interface.
