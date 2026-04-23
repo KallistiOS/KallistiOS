@@ -868,6 +868,13 @@ int fs_stat(const char *path, struct stat *buf, int flag) {
         return vfs->stat(vfs, fullpath + strlen(vfs->nmmgr.pathname), buf,
                          flag);
     }
+    else if(!strcmp(path, vfs->nmmgr.pathname)) {
+        /* no vfs->stat - handle stat() on the mount folder */
+        *buf = (struct stat){
+            .st_mode = S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO,
+        };
+        return 0;
+    }
     else {
         errno = ENOSYS;
         return -1;
