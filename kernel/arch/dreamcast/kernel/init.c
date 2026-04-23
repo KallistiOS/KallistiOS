@@ -147,12 +147,48 @@ KOS_INIT_FLAG_WEAK(fs_rnd_shutdown, true);
 KOS_INIT_FLAG_WEAK(library_init, true);
 KOS_INIT_FLAG_WEAK(library_shutdown, true);
 
+struct args_data {
+    size_t args_size;
+    int argc;
+    char **argv;
+};
+
+static struct args_data __default_args = { 0, 0, NULL };
+static struct args_data *__args = &__default_args;
+
+/* Look for argc/argv. It's expected that a loader will pass a size_t
+at `end` which will set the amount of bytes to follow that needs to be
+set aside on the heap after the program data. 0 indicates none. */
+void args_init(void) {
+    /* Start by setting this up to test if it has data */
+    __args = (struct args_data *)end;
+
+    /* Try to set aside memory for the args */
+    if((__args->args_size == 0) ||
+        (mm_sbrk(__args->args_size) == (void *)-1)) {
+        /* Currently there's no error response we can provide. dbgio_init
+            has the chance of needing to malloc for serial cable. So we just
+            set ourselves back to the default. */
+            __args = &__default_args;
+            return;
+    }
+
+    /* We were able to set the heap to start after all the args data, so
+        nothing more to do. */
+    return;
+}
+
+KOS_INIT_FLAG_WEAK(args_init, true);
+
 /* Auto-init stuff: override with a non-weak symbol if you don't want all of
    this to be linked into your code (and do the same with the
    arch_auto_shutdown function too). */
 int  __weak_symbol arch_auto_init(void) {
     /* Initialize memory management */
     mm_init();
+
+    /* Prepare argc/argv if available */
+    KOS_INIT_FLAG_CALL(args_init);
 
     /* Do this immediately so we can receive exceptions for init code
        and use ints for dbgio receive. */
@@ -305,7 +341,7 @@ void arch_main(void) {
     _init();
 
     /* Call the user's main function */
-    rv = main(0, NULL);
+    rv = main(__args->argc, __args->argv);
 
     /* Call kernel exit */
     exit(rv);
