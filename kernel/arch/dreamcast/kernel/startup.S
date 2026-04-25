@@ -34,44 +34,6 @@ start:
 	mov.l	init_sr,r0
 	ldc	r0,sr
 
-	! Run in the P2 area
-	mov.l	setup_cache_addr,r0
-	mov.l	p2_mask,r1
-	or	r1,r0
-	jmp	@r0
-	nop
-
-setup_cache:
-	! Now that we are in P2, it's safe to enable the cache
-	! Check to see if we should enable OCRAM.
-	mov.l	kos_init_flags_addr, r0
-	mov.b 	@(3,r0),r0
-	tst 	#0x10,r0
-	bf	.L_setup_cache_L0
-	mov.w	ccr_data,r1
-	bra	.L_setup_cache_L1
-	nop
-.L_setup_cache_L0:
-	mov.w	ccr_data_ocram,r1
-.L_setup_cache_L1:
-	mov.l	ccr_addr,r0
-	mov.l	r1,@r0
-
-	! After changing CCR, eight instructions must be executed before
-	! it's safe to enter a cached area such as P1
-	nop			! 1
-	nop			! 2
-	nop			! 3
-	nop			! 4
-	nop			! 5 (d-cache now safe)
-	nop			! 6
-	mov.l	init_addr,r0	! 7
-	mov	#0,r1		! 8
-	jmp	@r0		! go
-	mov	r1,r0
-	nop
-
-init:
 	! Save old PR on old stack so we can get to it later
 	sts.l	pr,@-r15
 
@@ -221,21 +183,9 @@ new_stack_32m:
 	.long	_arch_stack_32m
 p2_mask:
 	.long	0xa0000000
-setup_cache_addr:
-	.long	setup_cache
-init_addr:
-	.long	init
 main_addr:
 	.long	_arch_main
 mmu_addr:
 	.long	0xff000010
 fpscr_addr:
 	.long	___set_fpscr	! in libgcc
-kos_init_flags_addr:
-	.long	___kos_init_flags
-ccr_addr:
-	.long	0xff00001c
-ccr_data:
-	.word	0x090d
-ccr_data_ocram:
-	.word	0x092d

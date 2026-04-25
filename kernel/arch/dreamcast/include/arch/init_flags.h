@@ -29,6 +29,8 @@
 #include <kos/init_base.h>
 __BEGIN_DECLS
 
+#include <stdint.h>
+
 /** \brief   Dreamcast-specific KOS_INIT Exports
     \ingroup init_flags
 
@@ -106,7 +108,7 @@ __BEGIN_DECLS
 
 #define INIT_CDROM          0x00100000  /**< \brief Enable CD-ROM support */
 
-#define INIT_OCRAM          0x10000000  /**< \brief Use half of the dcache as RAM */
+static const uint32_t INIT_OCRAM __depr("INIT_OCRAM has been removed. Use dcache_toggle_ocram().");
 #define INIT_NO_DCLOAD      0x20000000  /**< \brief Disable dcload */
 
 /** @} */

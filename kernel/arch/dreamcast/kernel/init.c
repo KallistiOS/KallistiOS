@@ -21,6 +21,7 @@
 #include <kos/timer.h>
 #include <arch/arch.h>
 #include <arch/rtc.h>
+#include <dc/cache.h>
 #include <dc/memory.h>
 #include <dc/perfctr.h>
 #include <dc/ubc.h>
@@ -278,6 +279,9 @@ void  __weak_symbol arch_auto_shutdown(void) {
 /* This is the entry point inside the C program */
 void arch_main(void) {
     int rv;
+
+    /* Enable caches */
+    cache_write_ccr((uint32_t)~0, 0x90d);
 
     dma_init();
 
