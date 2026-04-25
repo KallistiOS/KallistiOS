@@ -12,9 +12,9 @@
 COPYOBJS = cache.o entry.o irq.o init.o panic.o
 COPYOBJS += rtc.o timer.o perfctr.o perf_monitor.o
 COPYOBJS += mmu.o itlb.o
-COPYOBJS += exec.o execasm.o stack.o gdb_stub.o thdswitch.o tls_static.o arch_exports.o subarch_exports.o
+COPYOBJS += exec.o execasm.o stack.o thdswitch.o tls_static.o arch_exports.o subarch_exports.o
 OBJS = $(COPYOBJS) startup.o
-SUBDIRS =
+SUBDIRS = gdb
 
 myall: $(OBJS)
 	-cp $(COPYOBJS) $(KOS_BASE)/kernel/build/
