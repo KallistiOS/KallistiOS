@@ -1,7 +1,8 @@
 /* KallistiOS ##version##
 
    kos/dbglog.h
-   Copyright (C)2004 Megan Potter
+   Copyright (C) 2004 Megan Potter
+   Copyright (C) 2026 Paul Cercueil
 
 */
 
@@ -23,9 +24,10 @@
 __BEGIN_DECLS
 
 #include <kos/opts.h>
+#include <stdio.h>
 
 /** \defgroup logging   Logging
-    \brief              KOS's Logging API 
+    \brief              KOS's Logging API
     \ingroup            debugging
 */
 
@@ -37,17 +39,16 @@ __BEGIN_DECLS
     info you want to see (or want your users to see).
 
     \param  level           The level of importance of this message.
-    \param  fmt             Message format string.
-    \param  ...             Format arguments
+    \param  ...             Format string + Format arguments
     \see    dbglog_levels
 */
-void __real_dbglog(int level, const char *fmt, ...) __printflike(2, 3);
-
-/* This wrapper allows for the garbage collection of unneeded debug data */
 #define dbglog(lvl, ...) \
 do { \
-  if ((lvl) <= DBGLOG_LEVEL_SUPPORT) \
-    __real_dbglog(lvl, __VA_ARGS__); \
+  if((lvl) <= DBGLOG_LEVEL_SUPPORT && (lvl) <= dbglog_level) { \
+    __builtin_choose_expr((lvl) <= DBG_WARNING, \
+                          fprintf(stderr, __VA_ARGS__), \
+                          printf(__VA_ARGS__)); \
+  } \
 } while(0)
 
 /** \defgroup   dbglog_levels   Log Levels
@@ -88,6 +89,10 @@ do { \
     \see    dbglog_levels
 */
 void dbglog_set_level(int level);
+
+/** \cond */
+extern int dbglog_level;
+/** \endcond */
 
 __END_DECLS
 
