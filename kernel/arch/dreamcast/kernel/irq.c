@@ -130,8 +130,9 @@ static char *irq_exception_string(irq_t evt) {
 /* Print a kernel panic reg dump */
 extern irq_context_t *irq_srt_addr;
 void irq_dump_regs(int code, irq_t evt) {
-    uint32_t fp;
-    uint32_t ret_addr;
+    uintptr_t sp;
+    uintptr_t ret_addr;
+    uintptr_t next_sp;
     uint32_t *regs = irq_srt_addr->r;
     bool valid_pc;
     bool valid_pr;
@@ -143,8 +144,8 @@ void irq_dump_regs(int code, irq_t evt) {
     dbglog(DBG_DEAD, " R8-R15: %08lx %08lx %08lx %08lx %08lx %08lx %08lx %08lx\n",
            regs[8], regs[9], regs[10], regs[11], regs[12], regs[13], regs[14], regs[15]);
     dbglog(DBG_DEAD, " SR %08lx PR %08lx\n", irq_srt_addr->sr, irq_srt_addr->pr);
-    fp = regs[14];
-    arch_stk_trace_at(fp, 0);
+    sp = regs[15];
+    arch_stk_trace_at(sp, 0);
 
     if(code == 1) {
         dbglog(DBG_DEAD, "\nEncountered %s. ", irq_exception_string(evt));
@@ -162,20 +163,9 @@ void irq_dump_regs(int code, irq_t evt) {
             if(valid_pr)
                 dbglog(DBG_DEAD, " %08lx", irq_srt_addr->pr);
 
-            while(__is_defined(FRAME_POINTERS) && fp != 0xffffffff) {
-                /* Validate the function pointer (fp) */
-                if((fp & 3) || (fp < 0x8c000000) || (fp > _arch_mem_top))
-                    break;
-
-                /* Get the return address from the function pointer */
-                ret_addr = arch_fptr_ret_addr(fp);
-
-                /* Validate the return address */
-                if(!arch_valid_text_address(ret_addr))
-                    break;
-
-                dbglog(DBG_DEAD, " %08lx", ret_addr);
-                fp = arch_fptr_next(fp);
+            while(arch_stk_unwind_step(sp, &ret_addr, &next_sp)) {
+                dbglog(DBG_DEAD, " %08x", ret_addr);
+                sp = next_sp;
             }
         }
 
