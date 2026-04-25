@@ -19,7 +19,6 @@ struct kthread_worker {
     void *data;
     bool pending;
     bool quit;
-    STAILQ_HEAD(kthread_jobs, kthread_job) jobs;
 };
 
 static void *thd_worker_thread(void *d) {
@@ -60,7 +59,6 @@ kthread_worker_t *thd_worker_create_ex(const kthread_attr_t *attr,
     worker->routine = routine;
     worker->pending = false;
     worker->quit = false;
-    STAILQ_INIT(&worker->jobs);
 
     flags = irq_disable();
 
@@ -104,21 +102,4 @@ void thd_worker_destroy(kthread_worker_t *worker) {
 
 kthread_t *thd_worker_get_thread(kthread_worker_t *worker) {
     return worker->thd;
-}
-
-void thd_worker_add_job(kthread_worker_t *worker, kthread_job_t *job) {
-    irq_disable_scoped();
-
-    STAILQ_INSERT_TAIL(&worker->jobs, job, entry);
-}
-
-kthread_job_t *thd_worker_dequeue_job(kthread_worker_t *worker) {
-    kthread_job_t *job;
-
-    irq_disable_scoped();
-
-    job = STAILQ_FIRST(&worker->jobs);
-    STAILQ_REMOVE_HEAD(&worker->jobs, entry);
-
-    return job;
 }
