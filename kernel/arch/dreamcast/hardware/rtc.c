@@ -84,10 +84,10 @@
 #define RTC_RETRY_COUNT         3
 
 /* The boot time; we'll save this in rtc_init() */
-static time_t boot_time = 0;
+time_t dc_boot_time;
 
 /* Returns the date/time value as a UNIX epoch time stamp */
-time_t rtc_unix_secs(void) {
+time_t arch_rtc_unix_secs(void) {
     uint32_t rtcold, rtcnew;
     int i;
 
@@ -114,9 +114,9 @@ time_t rtc_unix_secs(void) {
     return rtcnew - RTC_UNIX_EPOCH_DELTA;
 }
 
-/* Sets the date/time value from a UNIX epoch time stamp, 
+/* Sets the date/time value from a UNIX epoch time stamp,
    returning 0 for success or -1 for failure. */
-int rtc_set_unix_secs(time_t secs) {
+int arch_rtc_set_unix_secs(time_t secs) {
     int result = 0;
     uint32_t rtcnew;
     int i;
@@ -135,16 +135,16 @@ int rtc_set_unix_secs(time_t secs) {
     /* Enable writing by setting LSB of control */
     g2_write_32(RTC_CTRL_ADDR, RTC_CTRL_WRITE_EN);
 
-    /* Try 3 times to ensure we didn't write a value then have 
+    /* Try 3 times to ensure we didn't write a value then have
        the clock increment itself before the next. */
     for(i = 0; i < RTC_RETRY_COUNT; i++) {
-        /* Write the least-significant 16-bits first, because 
+        /* Write the least-significant 16-bits first, because
            writing to the high 16-bits will lock RTC writes. */
         g2_write_32(RTC_TIMESTAMP_LOW_ADDR, (adjusted) & 0xffff);
         g2_write_32(RTC_TIMESTAMP_HIGH_ADDR, (adjusted >> 16) & 0xffff);
 
         /* Read the time back again, to ensure it was written properly. */
-        rtcnew = rtc_unix_secs() + RTC_UNIX_EPOCH_DELTA;
+        rtcnew = arch_rtc_unix_secs() + RTC_UNIX_EPOCH_DELTA;
 
         if(rtcnew == adjusted)
             break;
@@ -161,25 +161,10 @@ int rtc_set_unix_secs(time_t secs) {
     }
 
     /* We have to update the boot time now as well, subtracting
-       the amount of time that has elapsed since boot from the 
+       the amount of time that has elapsed since boot from the
        new time we've just set. */
     timer_ms_gettime(&s, &ms);
-    boot_time = ((time_t)rtcnew - RTC_UNIX_EPOCH_DELTA) - s;
+    dc_boot_time = ((time_t)rtcnew - RTC_UNIX_EPOCH_DELTA) - s;
 
     return result;
-}
-
-/* Returns the date/time that the system was booted as a UNIX epoch time
-   stamp. Adding this to the value from timer_ms_gettime() will
-   produce a current timestamp without needing the trip over the G2 BUS. */
-time_t rtc_boot_time(void) {
-    return boot_time;
-}
-
-int rtc_init(void) {
-    boot_time = rtc_unix_secs();
-    return 0;
-}
-
-void rtc_shutdown(void) {
 }
