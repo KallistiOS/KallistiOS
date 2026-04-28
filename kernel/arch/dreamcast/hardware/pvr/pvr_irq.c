@@ -91,9 +91,17 @@ static void pvr_render_lists(void) {
         // Begin rendering from the dirty TA buffer into the clean
         // frame buffer.
         pvr_state.ta_target ^= pvr_state.vbuf_doublebuf;
-        pvr_begin_queued_render();
-        pvr_state.render_busy = 1;
-        pvr_sync_stats(PVR_SYNC_RNDSTART);
+
+        // Check if the vertex or OPB buffers have overflown
+        // NOTE: Some emulators have a bug, where PVR_TA_OPB_POS is already pre-multiplied, which we work around here.
+        if ( 
+            PVR_GET(PVR_TA_VERTBUF_POS) < PVR_GET(PVR_TA_VERTBUF_END) &&
+            (PVR_GET(PVR_TA_OPB_POS)*4 < PVR_GET(PVR_TA_OPB_END) || PVR_GET(PVR_TA_OPB_POS) == PVR_GET(PVR_TA_OPB_INIT))
+        ) {
+            pvr_begin_queued_render();
+            pvr_state.render_busy = 1;
+            pvr_sync_stats(PVR_SYNC_RNDSTART);
+        }
 
         // Switch to the clean TA buffer.
         pvr_state.lists_transferred = 0;
