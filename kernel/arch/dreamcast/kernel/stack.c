@@ -35,36 +35,72 @@ __noinline void arch_stk_trace(int n) {
    tracing from an ISR); leave off the first n frames. */
 void arch_stk_trace_at(uint32_t fp, size_t n) {
     uint32_t ret_addr;
-    if(!__is_defined(FRAME_POINTERS)) {
-        dbgio_printf("Stack Trace: frame pointers not enabled!\n");
-        return;
-    }
-
     dbgio_printf("-------- Stack Trace (innermost first) ---------\n");
-
-    while(fp != 0xffffffff) {
-        /* Validate the function pointer (fp) */
-        if((fp & 3) || (fp < 0x8c000000) || (fp > _arch_mem_top)) {
-            dbgio_printf("   %08lx   (invalid frame pointer)\n", fp);
-            break;
-        }
-
-        if(n == 0) {
-            /* Get the return address from the function pointer */
-            ret_addr = arch_fptr_ret_addr(fp);
-
-            /* Validate the return address */
-            if(!arch_valid_address(ret_addr)) {
-                dbgio_printf("   %08lx   (invalid return address)\n", ret_addr);
+    if(__is_defined(FRAME_POINTERS)) {
+        while(fp != 0xffffffff) {
+            /* Validate the function pointer (fp) */
+            if((fp & 3) || (fp < 0x8c000000) || (fp > _arch_mem_top)) {
+                dbgio_printf("   %08lx   (invalid frame pointer)\n", fp);
                 break;
-            } else
-                dbgio_printf("   %08lx\n", ret_addr);
+            }
+
+            if(n == 0) {
+                /* Get the return address from the function pointer */
+                ret_addr = arch_fptr_ret_addr(fp);
+
+                /* Validate the return address */
+                if(!arch_valid_address(ret_addr)) {
+                    dbgio_printf("   %08lx   (invalid return address)\n", ret_addr);
+                    break;
+                } else
+                    dbgio_printf("   %08lx\n", ret_addr);
+            }
+            else n--;
+
+            fp = arch_fptr_next(fp);
         }
-        else n--;
+    } else {
+        extern const char etext[];
+        uint32 sp;
+        int depth = 0;
+        dbgio_printf("Frame pointers disabled, using heuristics\n");
+        __asm__ __volatile__(
+            "mov    r15,%0\n"
+            : "=r" (sp)
+            :
+            : );
+        if(!(sp & 3) && sp > 0x8c000000 && sp < _arch_mem_top) {
+            char** sp_ptr = (char**)sp;
+            for (int so = 0; so < 16384; so++) {
+                if ((uintptr_t)(&sp_ptr[so]) >= _arch_mem_top) {
+                    dbgio_printf("(@@%08X) ", (uintptr_t)&sp_ptr[so]);
+                    break;
+                }
+                if (sp_ptr[so] > (char*)0x8c000000 && sp_ptr[so] < etext) {
+                    uintptr_t addr = (uintptr_t)(sp_ptr[so]);
+                    // candidate return pointer
+                    if (addr & 1) {
+                        continue;
+                    }
 
-        fp = arch_fptr_next(fp);
+                    uint16_t* instrp = (uint16_t*)addr;
+
+                    uint16_t instr = instrp[-2];
+                    // BSR or BSRF or JSR @Rn ?
+                    if (((instr & 0xf000) == 0xB000) || ((instr & 0xf0ff) == 0x0003) || ((instr & 0xf0ff) == 0x400B)) {
+                        dbgio_printf("%08X ", (uintptr_t)instrp);
+                        if (depth++ > 24) {
+                            dbgio_printf("(@%08X) ", (uintptr_t)&sp_ptr[so]);
+                            break;
+                        }
+                    }
+                }
+            }
+            dbgio_printf("end\n");
+        } else {
+            dbgio_printf("(@%08X)\n", sp);
+        }
     }
-
     dbgio_printf("-------------- End Stack Trace -----------------\n");
 }
 
