@@ -7,7 +7,6 @@
 
 #include <assert.h>
 #include <dc/pvr.h>
-#include "pvr_internal.h"
 #include <stdio.h>
 
 #include <malloc.h> /* For the struct mallinfo defs */
@@ -57,8 +56,9 @@ static LIST_HEAD(memctl_list, memctl) block_list;
 
 /* PVR RAM base; NULL is considered invalid */
 static pvr_ptr_t pvr_mem_base = NULL;
-#define CHECK_MEM_BASE \
-    assert_msg(pvr_mem_base != NULL, \
+static pvr_ptr_t pvr_mem_sbrk = NULL;
+#define CHECK_MEM_SBRK \
+    assert_msg(pvr_mem_sbrk != NULL, \
                "pvr_mem_* used, but PVR hasn't been initialized yet")
 
 /* Used in pvr_mem_core.c */
@@ -66,10 +66,10 @@ void *pvr_int_sbrk(size_t amt) {
     uint32_t old, n;
 
     /* Are we valid? */
-    CHECK_MEM_BASE;
+    CHECK_MEM_SBRK;
 
     /* Try to increment it */
-    old = (uint32_t)pvr_mem_base;
+    old = (uint32_t)pvr_mem_sbrk;
     n = old + amt;
 
     /* Did we run over? */
@@ -77,17 +77,17 @@ void *pvr_int_sbrk(size_t amt) {
         return (void *) - 1;
 
     /* Nope, everything's cool */
-    pvr_mem_base = (pvr_ptr_t)n;
+    pvr_mem_sbrk = (pvr_ptr_t)n;
     return (pvr_ptr_t)old;
 }
 
 /* Allocate a chunk of memory from texture space; the returned value
    will be relative to the base of texture memory (zero-based) */
-pvr_ptr_t pvr_mem_malloc(size_t size) {
+pvr_ptr_t __weak_symbol pvr_mem_malloc(size_t size) {
     uint32_t rv32;
     memctl_t    *ctl;
 
-    CHECK_MEM_BASE;
+    CHECK_MEM_SBRK;
 
     rv32 = (uint32_t)pvr_int_malloc(size);
     assert_msg((rv32 & 0x1f) == 0,
@@ -112,7 +112,7 @@ pvr_ptr_t pvr_mem_malloc(size_t size) {
 }
 
 /* Free a previously allocated chunk of memory */
-void pvr_mem_free(pvr_ptr_t chunk) {
+void __weak_symbol pvr_mem_free(pvr_ptr_t chunk) {
     uint32_t    ra;
     memctl_t    *ctl, *tmp;
     int     found;
@@ -120,7 +120,7 @@ void pvr_mem_free(pvr_ptr_t chunk) {
     if(__is_defined(PVR_KM_DBG))
         ra = arch_get_ret_addr();
 
-    CHECK_MEM_BASE;
+    CHECK_MEM_SBRK;
 
     if(__is_defined(PVR_KM_DBG_VERBOSE)) {
         printf("Thread %d/%08lx freeing block @ %08lx\n",
@@ -151,7 +151,7 @@ void pvr_mem_free(pvr_ptr_t chunk) {
 }
 
 /* Check the memory block list to see what's allocated */
-void pvr_mem_print_list(void) {
+void __weak_symbol pvr_mem_print_list(void) {
     memctl_t    *ctl;
 
     if(!__is_defined(PVR_KM_DBG))
@@ -175,30 +175,34 @@ static size_t pvr_mem_available_int(void) {
     return mi.arena - mi.uordblks;
 }
 
-size_t pvr_mem_available(void) {
-    if(!pvr_mem_base)
+size_t __weak_symbol pvr_mem_available(void) {
+    if(!pvr_mem_sbrk)
         return 0;
 
     return pvr_mem_available_int() + 
-        (PVR_RAM_INT_TOP - (size_t)pvr_mem_base);
+        (PVR_RAM_INT_TOP - (size_t)pvr_mem_sbrk);
 }
 
 /* Reset the memory pool, equivalent to freeing all textures currently
    residing in RAM. This _must_ be done on a mode change, configuration
    change, etc. */
-void pvr_mem_reset(void) {
-    if(!pvr_state.valid)
-        pvr_mem_base = NULL;
-    else {
-        pvr_mem_base = (pvr_ptr_t)(PVR_RAM_INT_BASE + pvr_state.texture_base);
+void __weak_symbol pvr_mem_reset(void) {    
+    if (pvr_mem_base != NULL) {
+        pvr_mem_sbrk = pvr_mem_base;
         pvr_int_mem_reset();
+    } else {
+        pvr_mem_sbrk = NULL;
     }
 }
 
+void __weak_symbol pvr_mem_initialize(pvr_ptr_t pvr_texture_base, size_t) {
+    pvr_mem_sbrk = pvr_texture_base;
+}
+
 /* Print some statistics (like mallocstats) */
-void pvr_mem_stats(void) {
+void __weak_symbol pvr_mem_stats(void) {
     printf("pvr_mem_stats():\n");
     pvr_int_malloc_stats();
-    printf("max sbrk base: %08lx\n", (uint32_t)pvr_mem_base);
+    printf("max sbrk base: %08lx\n", (uint32_t)pvr_mem_sbrk);
     pvr_mem_print_list();
 }
