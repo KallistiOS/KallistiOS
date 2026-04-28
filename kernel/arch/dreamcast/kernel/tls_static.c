@@ -44,7 +44,7 @@ void arch_tls_init(void) {
    subchunk.
 */
 bool arch_tls_setup_data(kthread_t *thd) {
-    size_t align, tdata_offset, tdata_end, tbss_offset, 
+    size_t align, tdata_offset, tdata_end, tbss_offset,
         tbss_end, align_rem, tls_size;
 
     tcbhead_t *tcbhead;
@@ -55,7 +55,7 @@ bool arch_tls_setup_data(kthread_t *thd) {
        linker script.
 
        SIZES MUST BE VOLATILE or the optimizer on non-debug builds will
-       optimize zero-check conditionals away, since why would the 
+       optimize zero-check conditionals away, since why would the
        address of a variable be NULL? (Linker script magic, it can be.)
    */
     const volatile size_t   tdata_size  = (size_t)(&_tdata_size);
@@ -77,7 +77,7 @@ bool arch_tls_setup_data(kthread_t *thd) {
     tdata_offset = align_to(sizeof(tcbhead_t), align);
     tdata_end    = tdata_offset + tdata_size;
     tbss_offset  = align_to(tdata_end, tbss_align);
-    tbss_end     = tbss_offset + tbss_size; 
+    tbss_end     = tbss_offset + tbss_size;
 
     /* Calculate final aligned size requirement. */
     align_rem = tbss_end % align;
@@ -128,4 +128,20 @@ bool arch_tls_setup_data(kthread_t *thd) {
 
 void arch_tls_destroy_data(kthread_t *thd) {
     free(thd->tls_hnd);
+}
+
+/* Returns the byte offset from the TLS handle to the thread's static
+   TLS data.
+*/
+size_t arch_tls_data_offset(void) {
+    const size_t tdata_size = (size_t)(&_tdata_size);
+    const size_t tbss_size = (size_t)(&_tbss_size);
+    size_t align = 8;
+
+    if(tdata_size && (size_t)_tdata_align > align)
+        align = (size_t)_tdata_align;
+    if(tbss_size && (size_t)_tbss_align > align)
+        align = (size_t)_tbss_align;
+
+    return align_to(sizeof(tcbhead_t), align);
 }
