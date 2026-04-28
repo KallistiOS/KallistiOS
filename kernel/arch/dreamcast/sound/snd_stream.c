@@ -559,7 +559,13 @@ static void snd_stream_start_type(snd_stream_hnd_t hnd, uint32_t type, uint32_t 
     chan->length = bytes_to_samples(hnd, streams[hnd].buffer_size);
     chan->loop = 1;
     chan->loopstart = 0;
-    chan->loopend = chan->length - 1;
+
+    if (type == AICA_SM_ADPCM_LS) {
+        chan->loopend = chan->length - 1;
+    }
+    else {
+        chan->loopend = chan->length;
+
     chan->freq = freq;
     chan->vol = 255;
     chan->pan = streams[hnd].channels == 2 ? 0 : 128;
