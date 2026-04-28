@@ -215,6 +215,7 @@ void aica_freq(int ch) {
 /* Get channel position */
 int aica_get_pos(int ch) {
     int i;
+    uint32 lp_aeg;
 
     /* Observe channel ch */
     SNDREG8(0x280d) = ch;
@@ -223,8 +224,11 @@ int aica_get_pos(int ch) {
     for(i = 0; i < 20; i++)
         __asm__ volatile ("nop");  /* Prevent loop from being optimized out */
 
-    /* Update position counters */
+    /* Update position, aeg, looped */
+    lp_aeg = SNDREG32(0x2810) & 0xffff;
     chans[ch].pos = SNDREG32(0x2814) & 0xffff;
+    chans[ch].aeg = lp_aeg & 0x1fff;
+    chans[ch].looped |= (lp_aeg & 0x8000) >> 15;
 
     return chans[ch].pos;
 }
