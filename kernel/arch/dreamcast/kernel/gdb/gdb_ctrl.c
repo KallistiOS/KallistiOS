@@ -106,7 +106,7 @@ static bool is_supported_ctrl_thread(int tid);
    needed before returning control to the target.
 */
 bool gdb_resume_target(bool stepping, bool set_pc, uint32_t pc) {
-    setup_ctrl_context();
+    gdb_setup_ctrl_context();
 
     if(set_pc)
         ctrl_irq_ctx->pc = pc;
@@ -161,7 +161,7 @@ static bool handle_step_rte_break(const ubc_breakpoint_t *bp,
 }
 
 /* Sets the target thread for control operations (continue/step). */
-void set_ctrl_thread(int tid) {
+void gdb_set_ctrl_thread(int tid) {
     gdb_thread_for_ctrl = tid;
 }
 
@@ -172,7 +172,7 @@ void set_ctrl_thread(int tid) {
    stub. Hc accepts only selectors that resolve to the live exception context:
    "any", "all", or the currently stopped thread's ID.
 */
-void setup_ctrl_context(void) {
+void gdb_setup_ctrl_context(void) {
     ctrl_irq_ctx = gdb_resolve_thread_context(gdb_thread_for_ctrl);
 }
 
@@ -210,7 +210,7 @@ static bool do_single_step(void) {
     int reg;
     unsigned short opcode, br_opcode;
 
-    setup_ctrl_context();
+    gdb_setup_ctrl_context();
 
     instr_mem = (short *)ctrl_irq_ctx->pc;
     opcode = *instr_mem;
@@ -314,7 +314,7 @@ static bool do_single_step(void) {
    Depending on the step kind, this restores the patched instruction, removes
    the temporary TRAPA wrapper, or disarms the UBC post-step breakpoint.
 */
-void undo_single_step(void) {
+void gdb_undo_single_step(void) {
     if(stepped) {
         if(step_state.kind == STEP_PATCHED_INSTR) {
             short *instr_mem = step_state.patch.mem_addr;
@@ -354,10 +354,10 @@ void undo_single_step(void) {
    present, updates the live exception context's PC, and resumes execution. If
    single-stepping, it prepares the computed next stop location for trapping.
 */
-bool handle_continue_step(char command, char *ptr) {
+bool gdb_handle_continue_step(char command, char *ptr) {
     bool stepping = (command == 's');
     uint32_t addr = 0;
-    bool set_pc = hex_to_int(&ptr, &addr) != 0;
+    bool set_pc = gdb_hex_to_int(&ptr, &addr) != 0;
 
     if(*ptr != '\0') {
         gdb_error_with_code_str(GDB_EINVAL, "c/s: invalid packet");
@@ -383,14 +383,14 @@ bool handle_continue_step(char command, char *ptr) {
    command is the packet opcode ('C' or 'S'), and ptr points to the character
    after it.
 */
-bool handle_continue_step_signal(char command, char *ptr) {
+bool gdb_handle_continue_step_signal(char command, char *ptr) {
     bool stepping = (command == 'S');
     uint32_t signal = 0;
     uint32_t addr = 0;
     bool set_pc = false;
 
     /* Parse signal (always two hex digits) */
-    if(hex_to_int(&ptr, &signal) != 2) {
+    if(gdb_hex_to_int(&ptr, &signal) != 2) {
         gdb_error_with_code_str(GDB_EINVAL, "C/S: invalid signal packet");
         return false;
     }
@@ -399,7 +399,7 @@ bool handle_continue_step_signal(char command, char *ptr) {
     if(*ptr == ';') {
         ++ptr;
 
-        if(!hex_to_int(&ptr, &addr) || *ptr != '\0') {
+        if(!gdb_hex_to_int(&ptr, &addr) || *ptr != '\0') {
             gdb_error_with_code_str(GDB_EINVAL, "C/S: invalid address packet");
             return false;
         }
@@ -431,14 +431,14 @@ bool handle_continue_step_signal(char command, char *ptr) {
    intentionally narrower: without scheduler help, continue/step can only act
    on the currently stopped thread (or the equivalent "any/all" selectors).
 */
-void handle_thread_select(char *ptr) {
+void gdb_handle_thread_select(char *ptr) {
     int tid = GDB_THREAD_ANY;
     char type = *ptr++;
     uint32_t parsed_tid = 0;
 
     if(*ptr == '-' && ptr[1] == '1' && ptr[2] == '\0')
         tid = GDB_THREAD_ALL;
-    else if(hex_to_int(&ptr, &parsed_tid) && *ptr == '\0')
+    else if(gdb_hex_to_int(&ptr, &parsed_tid) && *ptr == '\0')
         tid = (int)parsed_tid;
     else {
         gdb_error_with_code_str(GDB_EINVAL, "H: invalid thread selector");
@@ -451,7 +451,7 @@ void handle_thread_select(char *ptr) {
     }
 
     if(type == 'g')
-        set_regs_thread(tid);
+        gdb_set_regs_thread(tid);
     else if(type == 'c') {
         if(!is_supported_ctrl_thread(tid)) {
             gdb_error_with_code_str(GDB_EUNIMPL,
@@ -459,7 +459,7 @@ void handle_thread_select(char *ptr) {
             return;
         }
 
-        set_ctrl_thread(tid);
+        gdb_set_ctrl_thread(tid);
     }
     else {
         gdb_error_with_code_str(GDB_EINVAL, "H: unsupported selector");

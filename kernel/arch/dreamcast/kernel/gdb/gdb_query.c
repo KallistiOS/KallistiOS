@@ -54,11 +54,11 @@ static bool match_query_with_optional_suffix(const char *ptr,
 static void parse_qsupported_features(const char *features) {
     const char *ptr = features;
 
-    set_error_messages_enabled(false);
+    gdb_set_error_messages_enabled(false);
 
     while(*ptr) {
         if(strncmp(ptr, "error-message+", 14) == 0) {
-            set_error_messages_enabled(true);
+            gdb_set_error_messages_enabled(true);
             break;
         }
 
@@ -75,7 +75,7 @@ static int append_thread_id(kthread_t *thd, void *user_data) {
     char tid_hex[9];
     int len;
 
-    len = format_thread_id_hex(tid_hex, (uint32_t)thd->tid);
+    len = gdb_format_thread_id_hex(tid_hex, (uint32_t)thd->tid);
     if(len < 0)
         return -1;
 
@@ -103,10 +103,10 @@ static int append_thread_id(kthread_t *thd, void *user_data) {
    The stub replies "OK" only when the parsed thread exists at the time of
    the query. Malformed thread IDs and dead threads both return EINVAL.
 */
-void handle_thread_alive(char *ptr) {
+void gdb_handle_thread_alive(char *ptr) {
     uint32_t tid = 0;
 
-    if(hex_to_int(&ptr, &tid) && *ptr == '\0' && thd_by_tid((tid_t)tid))
+    if(gdb_hex_to_int(&ptr, &tid) && *ptr == '\0' && thd_by_tid((tid_t)tid))
         gdb_put_ok();
     else
         gdb_error_with_code_str(GDB_EINVAL, "T: invalid or dead thread");
@@ -120,7 +120,7 @@ void handle_thread_alive(char *ptr) {
    Recognized malformed queries return an explicit error; unrecognized optional
    queries fall back to the normal empty RSP reply.
 */
-void handle_query(char *ptr) {
+void gdb_handle_query(char *ptr) {
     /*
        Handle the 'qSupported' command.
 
@@ -201,7 +201,7 @@ void handle_query(char *ptr) {
 
         remcom_out_buffer[0] = 'Q';
         remcom_out_buffer[1] = 'C';
-        format_thread_id_hex(remcom_out_buffer + 2, (uint32_t)thd->tid);
+        gdb_format_thread_id_hex(remcom_out_buffer + 2, (uint32_t)thd->tid);
         return;
     }
     /*
@@ -259,14 +259,14 @@ void handle_query(char *ptr) {
         uint32_t tid = 0;
 
         ptr += 16;
-        if(hex_to_int(&ptr, &tid) && *ptr == '\0') {
+        if(gdb_hex_to_int(&ptr, &tid) && *ptr == '\0') {
             kthread_t *thd = thd_by_tid((tid_t)tid);
 
             if(thd) {
                 const char *label = thd_get_label(thd);
 
                 if(label)
-                    mem_to_hex(label, remcom_out_buffer, strlen(label));
+                    gdb_mem_to_hex(label, remcom_out_buffer, strlen(label));
                 else
                     gdb_clear_out_buffer();
             }
@@ -301,9 +301,9 @@ void handle_query(char *ptr) {
         uint32_t lmid = 0;
 
         ptr += 11;
-        if(hex_to_int(&ptr, &tid) && *ptr++ == ',' &&
-           hex_to_int(&ptr, &offset) && *ptr++ == ',' &&
-           hex_to_int(&ptr, &lmid) && *ptr == '\0') {
+        if(gdb_hex_to_int(&ptr, &tid) && *ptr++ == ',' &&
+           gdb_hex_to_int(&ptr, &offset) && *ptr++ == ',' &&
+           gdb_hex_to_int(&ptr, &lmid) && *ptr == '\0') {
             kthread_t *thd = thd_by_tid((tid_t)tid);
 
             (void)lmid;
@@ -341,9 +341,9 @@ void handle_query(char *ptr) {
    QStartNoAckMode switches the transport into no-ack mode after replying
    "OK". Unsupported Q packets return an empty reply rather than an error.
 */
-void handle_set_query(char *ptr) {
+void gdb_handle_set_query(char *ptr) {
     if(match_exact_query(ptr, "StartNoAckMode")) {
-        set_no_ack_mode_enabled(true);
+        gdb_set_no_ack_mode_enabled(true);
         gdb_put_ok();
     }
     else {

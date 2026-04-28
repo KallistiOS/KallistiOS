@@ -66,8 +66,8 @@ static char *append_escaped_binary_byte(char *out, unsigned char value) {
 
 /* Parses the ADDR,LEN header shared by m/M/x/X memory packets. */
 static bool parse_binary_memory_header(char **ptr, uint32_t *addr, uint32_t *len) {
-    return hex_to_int(ptr, addr) && *(*ptr)++ == ',' &&
-           hex_to_int(ptr, len);
+    return gdb_hex_to_int(ptr, addr) && *(*ptr)++ == ',' &&
+           gdb_hex_to_int(ptr, len);
 }
 
 /* Decodes a fixed-width hex payload only when every nibble is valid. */
@@ -76,14 +76,14 @@ static bool hex_to_mem_checked(const char *src, void *dest, uint32_t count) {
         return false;
 
     for(uint32_t i = 0; i < count; ++i) {
-        int high = hex(src[i * 2u]);
-        int low = hex(src[(i * 2u) + 1u]);
+        int high = gdb_hex(src[i * 2u]);
+        int low = gdb_hex(src[(i * 2u) + 1u]);
 
         if(high < 0 || low < 0)
             return false;
     }
 
-    hex_to_mem(src, (char *)dest, count);
+    gdb_hex_to_mem(src, (char *)dest, count);
     return true;
 }
 
@@ -96,7 +96,7 @@ static bool hex_to_mem_checked(const char *src, void *dest, uint32_t count) {
    The range must be readable and the encoded reply must fit in
    remcom_out_buffer.
 */
-void handle_read_mem(char *ptr) {
+void gdb_handle_read_mem(char *ptr) {
     uint32_t addr = 0;
     uint32_t len = 0;
 
@@ -115,7 +115,7 @@ void handle_read_mem(char *ptr) {
         return;
     }
 
-    mem_to_hex((const char *)addr, remcom_out_buffer, len);
+    gdb_mem_to_hex((const char *)addr, remcom_out_buffer, len);
 }
 
 /*
@@ -126,7 +126,7 @@ void handle_read_mem(char *ptr) {
 
    The range, payload length, and hex digits are validated before writing.
 */
-void handle_write_mem(char *ptr) {
+void gdb_handle_write_mem(char *ptr) {
     uint32_t addr = 0;
     uint32_t len = 0;
     size_t payload_len;
@@ -174,7 +174,7 @@ void handle_write_mem(char *ptr) {
 
    Bytes that would collide with packet framing are escaped in the reply.
 */
-void handle_read_mem_binary(char *ptr) {
+void gdb_handle_read_mem_binary(char *ptr) {
     uint32_t addr = 0;
     uint32_t len = 0;
     const unsigned char *src;
@@ -239,7 +239,7 @@ static bool unescape_binary_data(const unsigned char *src, size_t src_len,
 
    The range and escaped payload are validated before writing decoded bytes.
 */
-void handle_write_mem_binary(char *ptr) {
+void gdb_handle_write_mem_binary(char *ptr) {
     char *packet_start = ptr;
     uint32_t addr = 0;
     uint32_t len = 0;

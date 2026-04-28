@@ -66,7 +66,7 @@ static int32_t gdb_thread_for_regs = GDB_THREAD_ANY;
 static irq_context_t *regs_irq_ctx;
 
 /* Sets the current thread ID used for register operations. */
-void set_regs_thread(int tid) {
+void gdb_set_regs_thread(int tid) {
     gdb_thread_for_regs = tid;
 }
 
@@ -76,7 +76,7 @@ void set_regs_thread(int tid) {
    When the selected thread is the one currently stopped in the debugger, this
    must use the live exception frame rather than the dormant kthread context.
 */
-void setup_regs_context(void) {
+void gdb_setup_regs_context(void) {
     regs_irq_ctx = gdb_resolve_thread_context(gdb_thread_for_regs);
 }
 
@@ -111,10 +111,10 @@ static char *append_reg(char *out, size_t *remaining, int regnum,
     if(!remaining || (needed + 1u) > *remaining)
         return NULL;
 
-    *out++ = highhex(regnum);
-    *out++ = lowhex(regnum);
+    *out++ = gdb_highhex(regnum);
+    *out++ = gdb_lowhex(regnum);
     *out++ = ':';
-    out = mem_to_hex((const char *)value, out, size);
+    out = gdb_mem_to_hex((const char *)value, out, size);
     *out++ = ';';
     *out = '\0';
     *remaining -= needed;
@@ -136,7 +136,7 @@ static char *append_reg(char *out, size_t *remaining, int regnum,
    only complete register fields are emitted and the reply remains
    null-terminated.
 */
-char *append_regs(char *out, size_t *remaining, const irq_context_t *context) {
+char *gdb_append_regs(char *out, size_t *remaining, const irq_context_t *context) {
     for(int i = 0; i < BASE_REG_COUNT; ++i) {
         const uint32_t *reg_ptr =
             (const uint32_t *)((uintptr_t)context + kos_reg_map[i]);
@@ -153,7 +153,7 @@ char *append_regs(char *out, size_t *remaining, const irq_context_t *context) {
 
 static char *append_zero_reg_hex(char *out) {
     static const uint32_t zero;
-    return mem_to_hex((const char *)&zero, out, sizeof(zero));
+    return gdb_mem_to_hex((const char *)&zero, out, sizeof(zero));
 }
 
 /*
@@ -170,8 +170,8 @@ static bool hex_to_mem_checked_n(const char *src, void *dest, size_t count) {
         return false;
 
     for(size_t i = 0; i < count; ++i) {
-        int high = hex(src[(i * 2u)]);
-        int low = hex(src[(i * 2u) + 1u]);
+        int high = gdb_hex(src[(i * 2u)]);
+        int low = gdb_hex(src[(i * 2u) + 1u]);
 
         if(high < 0 || low < 0)
             return false;
@@ -208,7 +208,7 @@ static bool validate_hex_span(const char *in, size_t hex_chars) {
         return false;
 
     for(size_t i = 0; i < hex_chars; ++i) {
-        if(hex(in[i]) < 0)
+        if(gdb_hex(in[i]) < 0)
             return false;
     }
 
@@ -228,13 +228,13 @@ static bool read_register_hex(char *out, int regnum) {
     if(regnum < 0)
         return false;
 
-    setup_regs_context();
+    gdb_setup_regs_context();
     context = regs_irq_ctx;
 
     if(regnum < BASE_REG_COUNT) {
         uint32_t *reg_ptr =
             (uint32_t *)((uintptr_t)context + kos_reg_map[regnum]);
-        mem_to_hex((const char *)reg_ptr, out, sizeof(*reg_ptr));
+        gdb_mem_to_hex((const char *)reg_ptr, out, sizeof(*reg_ptr));
         return true;
     }
 
@@ -257,7 +257,7 @@ static bool read_register_hex(char *out, int regnum) {
     if(regnum < DOUBLE_REG_COUNT) {
         int base = regnum * 2;
         uint64_t dr = build_dr(context->fr[base], context->fr[base + 1]);
-        mem_to_hex((const char *)&dr, out, sizeof(dr));
+        gdb_mem_to_hex((const char *)&dr, out, sizeof(dr));
         return true;
     }
 
@@ -267,7 +267,7 @@ static bool read_register_hex(char *out, int regnum) {
         int base = regnum * 4;
         uint32_t fv[4];
         build_fv(fv, context, base);
-        mem_to_hex((const char *)fv, out, sizeof(fv));
+        gdb_mem_to_hex((const char *)fv, out, sizeof(fv));
         return true;
     }
 
@@ -289,7 +289,7 @@ static bool write_register_hex(int regnum, const char *in) {
     if(regnum < 0)
         return false;
 
-    setup_regs_context();
+    gdb_setup_regs_context();
     context = regs_irq_ctx;
 
     if(regnum < BASE_REG_COUNT) {
@@ -354,10 +354,10 @@ static bool write_register_hex(int regnum, const char *in) {
    The reply width depends on the selected raw register definition. Invalid,
    unmapped, or malformed register requests return EINVAL.
 */
-void handle_read_reg(char *ptr) {
+void gdb_handle_read_reg(char *ptr) {
     uint32_t regnum = 0;
 
-    if(!hex_to_int(&ptr, &regnum) || *ptr != '\0' ||
+    if(!gdb_hex_to_int(&ptr, &regnum) || *ptr != '\0' ||
        !read_register_hex(remcom_out_buffer, (int)regnum)) {
         gdb_error_with_code_str(GDB_EINVAL, "p: invalid register request");
     }
@@ -372,10 +372,10 @@ void handle_read_reg(char *ptr) {
    The payload width must match the selected register exactly. Invalid register
    numbers, malformed packet syntax, and bad hex payloads return EINVAL.
 */
-void handle_write_reg(char *ptr) {
+void gdb_handle_write_reg(char *ptr) {
     uint32_t regnum = 0;
 
-    if(!hex_to_int(&ptr, &regnum) || *ptr++ != '=' ||
+    if(!gdb_hex_to_int(&ptr, &regnum) || *ptr++ != '=' ||
        !write_register_hex((int)regnum, ptr)) {
         gdb_error_with_code_str(GDB_EINVAL, "P: invalid register write");
         return;
@@ -393,17 +393,17 @@ void handle_write_reg(char *ptr) {
    This includes the mapped base registers plus zero-filled unavailable and
    reserved raw slots; pseudo registers are not part of the bulk packet.
 */
-void handle_read_regs(char *ptr) {
+void gdb_handle_read_regs(char *ptr) {
     (void)ptr;
 
     char *out = remcom_out_buffer;
     irq_context_t *context;
 
-    setup_regs_context();
+    gdb_setup_regs_context();
     context = regs_irq_ctx;
 
     for(int i = 0; i < BASE_REG_COUNT; i++)
-        out = mem_to_hex((char *)((uintptr_t)context + kos_reg_map[i]), out, 4);
+        out = gdb_mem_to_hex((char *)((uintptr_t)context + kos_reg_map[i]), out, 4);
 
     for(int i = 0; i < UNAVAILABLE_REG_COUNT + RESERVED_REG_COUNT; i++)
         out = append_zero_reg_hex(out);
@@ -420,7 +420,7 @@ void handle_read_regs(char *ptr) {
    Only the mapped base registers are written back to irq_context_t;
    unavailable and reserved raw slots are accepted and ignored.
 */
-void handle_write_regs(char *ptr) {
+void gdb_handle_write_regs(char *ptr) {
     char *in = ptr;
     size_t remaining = strlen(in);
     uint32_t values[BASE_REG_COUNT];
@@ -436,7 +436,7 @@ void handle_write_regs(char *ptr) {
         return;
     }
 
-    setup_regs_context();
+    gdb_setup_regs_context();
     context = regs_irq_ctx;
 
     for(int i = 0; i < BASE_REG_COUNT; i++, in += 8) {

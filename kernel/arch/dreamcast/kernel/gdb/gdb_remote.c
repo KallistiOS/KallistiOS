@@ -88,7 +88,7 @@ static bool append_char(char **out, size_t *remaining, char ch) {
 */
 static bool append_thread_field(char **out, size_t *remaining, uint32_t tid) {
     char tid_hex[9];
-    int tid_len = format_thread_id_hex(tid_hex, tid);
+    int tid_len = gdb_format_thread_id_hex(tid_hex, tid);
     size_t needed;
 
     if(tid_len <= 0 || tid_len >= (int)sizeof(tid_hex))
@@ -135,9 +135,9 @@ static bool append_reason_field(char **out, size_t *remaining,
    disconnected, and returns to the interrupted program without staying in the
    debug loop.
 */
-void handle_detach(void) {
-    put_packet(GDB_OK);
-    set_no_ack_mode_enabled(false);
+void gdb_handle_detach(void) {
+    gdb_put_packet(GDB_OK);
+    gdb_set_no_ack_mode_enabled(false);
     gdb_set_connected(false);
 }
 
@@ -151,8 +151,8 @@ void handle_detach(void) {
    This is the terminal path used for plain 'k' and for vKill once that packet
    has been accepted by the extended-command dispatcher.
 */
-void handle_kill(void) {
-    put_packet(GDB_OK);
+void gdb_handle_kill(void) {
+    gdb_put_packet(GDB_OK);
     arch_abort();
 }
 
@@ -168,7 +168,7 @@ void handle_kill(void) {
    the full raw g/G register block. If the packet ever grows beyond BUFMAX,
    optional fields are omitted rather than overrunning remcom_out_buffer.
 */
-void handle_t_stop_reply(int exception_vector) {
+void gdb_handle_t_stop_reply(int exception_vector) {
     const irq_context_t *context = gdb_get_irq_context();
     kthread_t *thd = thd_get_current();
     char *out = remcom_out_buffer;
@@ -179,12 +179,12 @@ void handle_t_stop_reply(int exception_vector) {
     remcom_out_buffer[0] = '\0';
 
     if(!append_char(&out, &remaining, 'T') ||
-       !append_char(&out, &remaining, highhex(sigval)) ||
-       !append_char(&out, &remaining, lowhex(sigval))) {
+       !append_char(&out, &remaining, gdb_highhex(sigval)) ||
+       !append_char(&out, &remaining, gdb_lowhex(sigval))) {
         return;
     }
 
-    out = append_regs(out, &remaining, context);
+    out = gdb_append_regs(out, &remaining, context);
     append_thread_field(&out, &remaining, tid);
     append_reason_field(&out, &remaining, exception_vector);
 }

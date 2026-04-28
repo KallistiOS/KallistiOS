@@ -446,14 +446,14 @@ static void hard_breakpoint(bool set, int brk_type, uintptr_t addr,
    the request into the software-breakpoint or UBC-backed hardware/watchpoint
    path. Invalid packet syntax and unsupported breakpoint kinds return EINVAL.
 */
-void handle_breakpoint(char *ptr) {
+void gdb_handle_breakpoint(char *ptr) {
     bool set = (ptr[-1] == 'Z');
     int brk_type = *ptr++ - '0';
     uint32_t addr;
     uint32_t length;
 
-    if(*ptr++ == ',' && hex_to_int(&ptr, &addr) &&
-       *ptr++ == ',' && hex_to_int(&ptr, &length) && *ptr == '\0') {
+    if(*ptr++ == ',' && gdb_hex_to_int(&ptr, &addr) &&
+       *ptr++ == ',' && gdb_hex_to_int(&ptr, &length) && *ptr == '\0') {
         if(brk_type < GDB_BRK_SW || brk_type > GDB_WATCH_RW) {
             gdb_error_with_code_str(GDB_EINVAL, "Z/z: invalid breakpoint type");
         }

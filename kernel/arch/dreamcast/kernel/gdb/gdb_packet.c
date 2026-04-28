@@ -68,12 +68,12 @@ void gdb_put_str(const char *msg) {
 }
 
 /* Enable or disable textual E.<message> replies after qSupported negotiation. */
-void set_error_messages_enabled(bool enabled) {
+void gdb_set_error_messages_enabled(bool enabled) {
     error_messages_enabled = enabled;
 }
 
 /* Enable or disable RSP no-ack mode after QStartNoAckMode negotiation. */
-void set_no_ack_mode_enabled(bool enabled) {
+void gdb_set_no_ack_mode_enabled(bool enabled) {
     no_ack_mode = enabled;
 }
 
@@ -223,7 +223,7 @@ static void discard_packet_tail(void) {
    Verifies the checksum and emits +/- acknowledgements when ack mode is active.
    If a sequence prefix is present, the returned pointer skips past it.
 */
-unsigned char *get_packet(void) {
+unsigned char *gdb_get_packet(void) {
     unsigned char *buffer = (unsigned char *)(&remcom_in_buffer[0]);
     unsigned char checksum;
     unsigned char xmitcsum;
@@ -271,9 +271,9 @@ unsigned char *get_packet(void) {
 
         if(ch == '#') {
             ch = get_debug_char();
-            xmitcsum = hex(ch) << 4;
+            xmitcsum = gdb_hex(ch) << 4;
             ch = get_debug_char();
-            xmitcsum += hex(ch);
+            xmitcsum += gdb_hex(ch);
 
             if(checksum != xmitcsum) {
                 if(!no_ack_mode) {
@@ -307,7 +307,7 @@ unsigned char *get_packet(void) {
    Format: $<data>#<checksum>
    Retransmits until the host sends an ACK, unless no-ack mode is active.
 */
-void put_packet(const char *buffer) {
+void gdb_put_packet(const char *buffer) {
     int check_sum;
 
     /*  $<packet info>#<checksum>. */
@@ -338,8 +338,8 @@ void put_packet(const char *buffer) {
         }
 
         put_debug_char('#');
-        put_debug_char(highhex(check_sum));
-        put_debug_char(lowhex(check_sum));
+        put_debug_char(gdb_highhex(check_sum));
+        put_debug_char(gdb_lowhex(check_sum));
         flush_debug_channel();
 
         if(no_ack_mode)

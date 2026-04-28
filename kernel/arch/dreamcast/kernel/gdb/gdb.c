@@ -52,56 +52,56 @@ static void gdb_handle_exception(int exception_vector) {
     char command;
     char *ptr;
 
-    handle_t_stop_reply(exception_vector);
-    put_packet(remcom_out_buffer);
+    gdb_handle_t_stop_reply(exception_vector);
+    gdb_put_packet(remcom_out_buffer);
 
-    undo_single_step();
+    gdb_undo_single_step();
 
     while(true) {
         remcom_out_buffer[0] = 0;
-        ptr = (char *)get_packet();
+        ptr = (char *)gdb_get_packet();
         connected = true;
 
         command = *ptr++;
 
         switch(command) {
-            case '?': handle_t_stop_reply(exception_vector); break;
-            case 'p': handle_read_reg(ptr); break;
-            case 'P': handle_write_reg(ptr); break;
-            case 'q': handle_query(ptr); break;
-            case 'Q': handle_set_query(ptr); break;
-            case 'T': handle_thread_alive(ptr); break;
-            case 'H': handle_thread_select(ptr); break;
-            case 'g': handle_read_regs(ptr); break;
-            case 'G': handle_write_regs(ptr); break;
-            case 'm': handle_read_mem(ptr); break;
-            case 'M': handle_write_mem(ptr); break;
-            case 'x': handle_read_mem_binary(ptr); break;
-            case 'X': handle_write_mem_binary(ptr); break;
+            case '?': gdb_handle_t_stop_reply(exception_vector); break;
+            case 'p': gdb_handle_read_reg(ptr); break;
+            case 'P': gdb_handle_write_reg(ptr); break;
+            case 'q': gdb_handle_query(ptr); break;
+            case 'Q': gdb_handle_set_query(ptr); break;
+            case 'T': gdb_handle_thread_alive(ptr); break;
+            case 'H': gdb_handle_thread_select(ptr); break;
+            case 'g': gdb_handle_read_regs(ptr); break;
+            case 'G': gdb_handle_write_regs(ptr); break;
+            case 'm': gdb_handle_read_mem(ptr); break;
+            case 'M': gdb_handle_write_mem(ptr); break;
+            case 'x': gdb_handle_read_mem_binary(ptr); break;
+            case 'X': gdb_handle_write_mem_binary(ptr); break;
             case 'c':
             case 's':
-                if(handle_continue_step(command, ptr))
+                if(gdb_handle_continue_step(command, ptr))
                     return;
                 break;
             case 'C':
             case 'S':
-                if(handle_continue_step_signal(command, ptr))
+                if(gdb_handle_continue_step_signal(command, ptr))
                     return;
                 break;
             case 'Z':
             case 'z':
-                handle_breakpoint(ptr); break;
+                gdb_handle_breakpoint(ptr); break;
             case 'v':
-                if(handle_v_packet(ptr))
+                if(gdb_handle_v_packet(ptr))
                     return;
                 break;
-            case 'D': handle_detach(); return;
-            case 'k': handle_kill(); return;
+            case 'D': gdb_handle_detach(); return;
+            case 'k': gdb_handle_kill(); return;
             default:
                 break;
         }
 
-        put_packet(remcom_out_buffer);
+        gdb_put_packet(remcom_out_buffer);
     }
 }
 
