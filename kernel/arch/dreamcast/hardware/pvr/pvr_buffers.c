@@ -136,6 +136,9 @@ void pvr_set_presort_mode(bool presort) {
     uint32_t *vr;
     int x, y;
 
+    if(__predict_false(!pvr_state.vbuf_doublebuf))
+	    pvr_wait_render_done();
+
     tile_matrix = pvr_state.ta_buffers[pvr_state.ta_target].tile_matrix;
     vr = (uint32_t *)PVR_RAM_BASE + BYTES_TO_WORDS(tile_matrix) + 6;
 
