@@ -59,6 +59,17 @@ bool arch_tls_setup_data(kthread_t *thd);
 */
 void arch_tls_destroy_data(kthread_t *thd);
 
+/** \brief  Returns the byte offset to static TLS data.
+
+    Computes the offset from the thread control block (TCB)
+    pointer to where the thread's static TLS data begins. The
+    offset accounts for the size of the TCB header.
+
+    \return                 Byte offset to the static TLS data
+                            block.
+*/
+size_t arch_tls_data_offset(void);
+
 __END_DECLS
 
 #endif  /* __ARCH_TLS_STATIC_H */
