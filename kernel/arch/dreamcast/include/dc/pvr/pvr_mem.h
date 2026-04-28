@@ -64,7 +64,7 @@ typedef void *pvr_ptr_t;
     
     \return                 A pointer to the memory on success, NULL on error
 */
-pvr_ptr_t pvr_mem_malloc(size_t size);
+pvr_ptr_t __weak_symbol pvr_mem_malloc(size_t size);
 
 /** \brief   Free a block of allocated memory in the PVR RAM pool.
     \ingroup pvr_mem_mgmt
@@ -73,14 +73,14 @@ pvr_ptr_t pvr_mem_malloc(size_t size);
 
     \param  chunk           The location of the start of the block to free
 */
-void pvr_mem_free(pvr_ptr_t chunk);
+void __weak_symbol pvr_mem_free(pvr_ptr_t chunk);
 
 /** \brief   Return the number of bytes available still in the PVR RAM pool.
     \ingroup pvr_mem_mgmt
 
     \return                 The number of bytes available
 */
-size_t pvr_mem_available(void);
+size_t __weak_symbol pvr_mem_available(void);
 
 /** \brief   Reset the PVR RAM pool.
     \ingroup pvr_mem_mgmt
@@ -88,14 +88,22 @@ size_t pvr_mem_available(void);
     This will essentially free any blocks allocated within the pool. There's
     generally not many good reasons for doing this.
 */
-void pvr_mem_reset(void);
+void __weak_symbol pvr_mem_reset(void);
+
+/** \brief   Set the the PVR RAM base address.
+    \ingroup pvr_mem_mgmt
+
+    This sets the base address for texture allocations.
+    pvr_mem_reset should be called after calling this function.
+*/
+void __weak_symbol pvr_mem_initialize(pvr_ptr_t pvr_texture_base);
 
 /** \brief   Print the list of allocated blocks in the PVR RAM pool.
     \ingroup pvr_mem_mgmt
 
     This function only works if you've enabled KM_DBG in pvr_mem.c.
 */
-void pvr_mem_print_list(void);
+void __weak_symbol pvr_mem_print_list(void);
 
 /** \brief   Print statistics about the PVR RAM pool.
     \ingroup pvr_mem_mgmt
@@ -103,7 +111,7 @@ void pvr_mem_print_list(void);
     This prints out statistics like what malloc_stats() provides. Also, if
     KM_DBG is enabled in pvr_mem.c, it prints the list of allocated blocks.
 */
-void pvr_mem_stats(void);
+void __weak_symbol pvr_mem_stats(void);
 
 __END_DECLS
 
