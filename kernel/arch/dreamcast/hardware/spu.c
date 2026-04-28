@@ -2,10 +2,12 @@
 
    spu.c
    Copyright (C) 2000, 2001 Megan Potter
-   Copyright (C) 2023, 2024 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024, 2026 Ruslan Rostovtsev
  */
 
 #include <kos/thread.h>
+#include <kos/regfield.h>
+#include <arch/arch.h>
 #include <dc/spu.h>
 #include <dc/g2bus.h>
 #include <dc/sq.h>
@@ -250,21 +252,33 @@ void spu_memset_sq(uintptr_t dst, uint32_t what, size_t length) {
 /* Reset the AICA channel registers */
 void spu_reset_chans(void) {
     int i;
+    uint32_t sav;
 
     g2_lock_scoped();
     g2_fifo_wait();
 
-    g2_write_32_raw(SNDREGADDR(0x2800), 0);
-
-    for(i = 0; i < 64; i++) {
-        if((i & 3) == 0) g2_fifo_wait();
-
-        g2_write_32_raw(CHNREGADDR(i, 0), 0x8000);
-        g2_write_32_raw(CHNREGADDR(i, 20), 0x1f);
-    }
+    /* Read current mode and stereo settings */
+    sav = g2_read_32_raw(SNDREGADDR(0x2800));
 
     g2_fifo_wait();
-    g2_write_32_raw(SNDREGADDR(0x2800), 0x000f);
+    g2_write_32_raw(SNDREGADDR(0x2800), sav & ~0x000f);
+    g2_fifo_wait();
+
+    for(i = 0; i < 64; i++) {
+        g2_write_32_raw(CHNREGADDR(i, 0), 0x8000);
+        g2_write_32_raw(CHNREGADDR(i, 0x10), 0x1f);
+        g2_write_32_raw(CHNREGADDR(i, 0x14), 0x1f);
+
+        g2_write_32_raw(CHNREGADDR(i, 0x2C), 0x1ff8);
+        g2_write_32_raw(CHNREGADDR(i, 0x30), 0x1ff8);
+        g2_write_32_raw(CHNREGADDR(i, 0x34), 0x1ff8);
+        g2_write_32_raw(CHNREGADDR(i, 0x38), 0x1ff8);
+        g2_write_32_raw(CHNREGADDR(i, 0x3C), 0x1ff8);
+
+        g2_fifo_wait();
+    }
+
+    g2_write_32_raw(SNDREGADDR(0x2800), (sav & ~0x000f) | 0x000f);
 }
 
 /* Enable/disable the SPU; note that disable implies reset of the
@@ -326,18 +340,27 @@ static void spu_cdda_init(void) {
 
 /* Set master volume (0..15) and mono/stereo settings */
 void spu_master_mixer(int volume, int stereo) {
+    uint32_t val;
+
     g2_fifo_wait();
-    g2_write_32(SNDREGADDR(0x2800), volume | (stereo ? 0 : 0x8000));
+    val = g2_read_32(SNDREGADDR(0x2800));
+    g2_write_32(SNDREGADDR(0x2800),
+                (val & ~0x800f) | (volume & 0xf) | (stereo ? 0 : 0x8000));
 }
 
 /* Initialize the SPU; by default it will be left in a state of
    reset until you upload a program. */
 int spu_init(void) {
+    bool is_retail = hardware_sys_mode(NULL) == HW_TYPE_RETAIL;
+
+    /* Set the RAM mode (2MB or 8MB) and default to stereo/min volume */
+    g2_write_32(SNDREGADDR(0x2800), is_retail ? 0 : BIT(9));
+
     /* Stop the ARM */
     spu_disable();
 
     /* Clear out sound RAM */
-    spu_memset_sq(0, 0, 0x200000);
+    spu_memset_sq(0, 0, is_retail ? 0x200000 : 0x800000);
 
     /* Load a default "program" into the SPU that just executes
        an infinite loop, so that CD audio works. */
