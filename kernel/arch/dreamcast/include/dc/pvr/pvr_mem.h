@@ -90,7 +90,7 @@ size_t __weak_symbol pvr_mem_available(void);
 */
 void __weak_symbol pvr_mem_reset(void);
 
-/** \brief   Set the the PVR RAM base address.
+/** \brief   Set the PVR RAM base address.
     \ingroup pvr_mem_mgmt
 
     This sets the base address for texture allocations.
