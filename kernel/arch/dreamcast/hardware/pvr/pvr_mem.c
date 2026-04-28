@@ -195,7 +195,7 @@ void __weak_symbol pvr_mem_reset(void) {
     }
 }
 
-void __weak_symbol pvr_mem_initialize(pvr_ptr_t pvr_texture_base) {
+void __weak_symbol pvr_mem_initialize(pvr_ptr_t pvr_texture_base, size_t) {
     pvr_mem_sbrk = pvr_texture_base;
 }
 

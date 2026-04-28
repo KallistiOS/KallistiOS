@@ -96,7 +96,7 @@ void __weak_symbol pvr_mem_reset(void);
     This sets the base address for texture allocations.
     pvr_mem_reset should be called after calling this function.
 */
-void __weak_symbol pvr_mem_initialize(pvr_ptr_t pvr_texture_base);
+void __weak_symbol pvr_mem_initialize(pvr_ptr_t pvr_texture_base, size_t available_memory);
 
 /** \brief   Print the list of allocated blocks in the PVR RAM pool.
     \ingroup pvr_mem_mgmt

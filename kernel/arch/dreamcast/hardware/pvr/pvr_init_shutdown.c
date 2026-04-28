@@ -200,7 +200,7 @@ int pvr_init(const pvr_init_params_t *params) {
     pvr_state.valid = 1;
 
     /* Validate our memory pool */
-    pvr_mem_initialize((pvr_ptr_t)(PVR_RAM_INT_BASE + pvr_state.texture_base));
+    pvr_mem_initialize((pvr_ptr_t)(PVR_RAM_INT_BASE + pvr_state.texture_base), PVR_RAM_SIZE - pvr_state.texture_base);
     pvr_mem_reset();
     /* This doesn't work right now... */
     /*#ifndef NDEBUG
@@ -243,7 +243,7 @@ int pvr_shutdown(void) {
     pvr_dma_shutdown();
 
     /* Invalidate our memory pool */
-    pvr_mem_initialize((pvr_ptr_t)NULL);
+    pvr_mem_initialize((pvr_ptr_t)NULL, 0);
     pvr_mem_reset();
 
     /* Destroy the mutex */
