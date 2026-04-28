@@ -204,7 +204,7 @@ static void handle_gdb_trapa(irq_t code, irq_context_t *context, void *data) {
    with the debugger, or used to halt execution and enter the debugger manually.
 */
 void gdb_breakpoint(void) {
-    __asm__ __volatile__("trapa	#0xff"::);
+    __asm__ __volatile__("trapa #0xff"::);
 }
 
 /*

@@ -30,34 +30,10 @@ extern int _tdata_size, _tbss_size;
 extern long _tdata_align, _tbss_align;
 
 typedef struct {
-    void *dtv;
-    uintptr_t pointer_guard;
-} gdb_tcbhead_t;
-
-typedef struct {
     char *out;
     size_t remaining;
     bool first;
 } thread_list_state_t;
-
-/* Rounds a size up to the next multiple of the requested alignment. */
-static size_t align_to(size_t value, size_t alignment) {
-    return (value + (alignment - 1)) & ~(alignment - 1);
-}
-
-/* Returns the byte offset from the TLS handle to the thread's static TLS data. */
-static size_t tls_static_data_offset(void) {
-    const size_t tdata_size = (size_t)(&_tdata_size);
-    const size_t tbss_size = (size_t)(&_tbss_size);
-    size_t align = 8;
-
-    if(tdata_size && (size_t)_tdata_align > align)
-        align = (size_t)_tdata_align;
-    if(tbss_size && (size_t)_tbss_align > align)
-        align = (size_t)_tbss_align;
-
-    return align_to(sizeof(gdb_tcbhead_t), align);
-}
 
 /* Returns whether a query packet must match the given name exactly. */
 static bool match_exact_query(const char *ptr, const char *query) {
@@ -334,7 +310,7 @@ void handle_query(char *ptr) {
 
             if(thd && thd->tls_hnd) {
                 uintptr_t tls_addr =
-                    (uintptr_t)thd->tls_hnd + tls_static_data_offset() + offset;
+                    (uintptr_t)thd->tls_hnd + arch_tls_data_offset() + offset;
                 snprintf(remcom_out_buffer, BUFMAX, "%0*" PRIxPTR,
                          (int)(sizeof(tls_addr) * 2u), tls_addr);
             }
