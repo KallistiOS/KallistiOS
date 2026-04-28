@@ -16,19 +16,19 @@
 
 static const char hexchars[] = "0123456789abcdef";
 
-int format_thread_id_hex(char out[9], uint32_t tid) {
+int gdb_format_thread_id_hex(char out[9], uint32_t tid) {
     return snprintf(out, 9, "%x", (unsigned int)tid);
 }
 
-char highhex(int x) {
+char gdb_highhex(int x) {
     return hexchars[(x >> 4) & 0xf];
 }
 
-char lowhex(int x) {
+char gdb_lowhex(int x) {
     return hexchars[x & 0xf];
 }
 
-int hex(char ch) {
+int gdb_hex(char ch) {
     if((ch >= 'a') && (ch <= 'f'))
         return (ch - 'a' + 10);
 
@@ -52,14 +52,14 @@ int hex(char ch) {
    dest    Pointer to the output buffer for the hex string.
    count   Number of bytes to convert.
  */
-char *mem_to_hex(const char *src, char *dest, size_t count) {
+char *gdb_mem_to_hex(const char *src, char *dest, size_t count) {
     size_t i;
     int ch;
 
     for(i = 0; i < count; i++) {
         ch = *src++;
-        *dest++ = highhex(ch);
-        *dest++ = lowhex(ch);
+        *dest++ = gdb_highhex(ch);
+        *dest++ = gdb_lowhex(ch);
     }
     *dest = 0;
 
@@ -78,14 +78,14 @@ char *mem_to_hex(const char *src, char *dest, size_t count) {
    dest    Pointer to the output buffer for binary data.
    count   Number of bytes to produce (half the consumed hex length).
  */
-char *hex_to_mem(const char *src, char *dest, size_t count) {
+char *gdb_hex_to_mem(const char *src, char *dest, size_t count) {
     uint32_t i;
     unsigned char high;
     unsigned char low;
 
     for(i = 0; i < count; i++) {
-        high = hex(*src++);
-        low  = hex(*src++);
+        high = gdb_hex(*src++);
+        low  = gdb_hex(*src++);
         *dest++ = (high << 4) | low;
     }
 
@@ -104,7 +104,7 @@ char *hex_to_mem(const char *src, char *dest, size_t count) {
    ptr        Pointer to a char pointer that will be advanced past the parsed digits.
    int_value  Output parameter to store the resulting integer value.
  */
-size_t hex_to_int(char **ptr, uint32_t *int_value) {
+size_t gdb_hex_to_int(char **ptr, uint32_t *int_value) {
     size_t num_chars = 0;
     int hex_value;
 
@@ -114,7 +114,7 @@ size_t hex_to_int(char **ptr, uint32_t *int_value) {
     *int_value = 0;
 
     while(**ptr) {
-        hex_value = hex(**ptr);
+        hex_value = gdb_hex(**ptr);
 
         if(hex_value >= 0) {
             *int_value = (*int_value << 4) | hex_value;

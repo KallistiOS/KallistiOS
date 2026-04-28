@@ -51,7 +51,7 @@ static bool parse_vcont_thread_id(char *ptr, int *tid) {
         return true;
     }
 
-    if(!hex_to_int(&ptr, &parsed_tid) || *ptr != '\0')
+    if(!gdb_hex_to_int(&ptr, &parsed_tid) || *ptr != '\0')
         return false;
 
     *tid = (int)parsed_tid;
@@ -156,7 +156,7 @@ static bool handle_vcont_actions(char *ptr) {
    reboot or kill the target do not return to the normal packet-processing
    loop.
 */
-bool handle_v_packet(char *ptr) {
+bool gdb_handle_v_packet(char *ptr) {
     if(strcmp(ptr, "Cont?") == 0) {
         gdb_put_str("vCont;c;s");
         return false;
@@ -166,12 +166,12 @@ bool handle_v_packet(char *ptr) {
         return handle_vcont_actions(ptr + 5);
 
     if(strcmp(ptr, "CtrlC") == 0) {
-        put_packet(GDB_OK);
+        gdb_put_packet(GDB_OK);
         arch_reboot();
     }
 
     if(strncmp(ptr, "Kill", 4) == 0 && (ptr[4] == '\0' || ptr[4] == ';')) {
-        handle_kill();
+        gdb_handle_kill();
         return true;
     }
 
