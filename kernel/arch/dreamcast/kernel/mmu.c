@@ -12,10 +12,10 @@
 
 #include <arch/arch.h>
 #include <arch/mmu.h>
-#include <arch/cache.h>
 
 #include <dc/memory.h>
 
+#include <kos/cache.h>
 #include <kos/dbgio.h>
 #include <kos/irq.h>
 #include <kos/regfield.h>

@@ -13,6 +13,7 @@
 #include <dc/asic.h>
 #include <dc/memory.h>
 
+#include <kos/cache.h>
 #include <kos/dbglog.h>
 #include <kos/irq.h>
 #include <kos/sem.h>
@@ -21,7 +22,6 @@
 #include <kos/timer.h>
 
 #include <arch/arch.h>
-#include <arch/cache.h>
 
 /*
    This file implements support for accessing devices over the G1 bus by the
@@ -895,7 +895,7 @@ int g1_ata_write_lba_dma(uint64_t sector, size_t count, const void *buf,
     */
     if((addr & MEM_AREA_P2_BASE) != MEM_AREA_P2_BASE) {
         /* Flush the dcache over the range of the data. */
-        dcache_flush_range(addr, count * 512);
+        dcache_wback_range(addr, count * 512);
     }
 
     /* Use the physical memory address. */
