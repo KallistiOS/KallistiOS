@@ -210,7 +210,8 @@ static void pty_destroy_unused(void) {
 
     /* Make sure no one else is messing with the list and then disable
        everything for a bit */
-    mutex_lock_irqsafe(&list_mutex);
+    if(mutex_lock_irqsafe(&list_mutex))
+        return;
 
     old = irq_disable();
 
@@ -427,7 +428,8 @@ static int pty_close(void *h) {
 
     if(fdobj->type == PF_PTY) {
         /* De-ref this end of it */
-        mutex_lock_irqsafe(&fdobj->d.p->mutex);
+        if(mutex_lock_irqsafe(&fdobj->d.p->mutex))
+            return -1;
 
         fdobj->d.p->refcnt--;
 
@@ -842,7 +844,8 @@ void fs_pty_shutdown(void) {
     if(!initted)
         return;
 
-    mutex_lock_irqsafe(&list_mutex);
+    /* If we fail, we proceed anyways */
+    mutex_trylock(&list_mutex);
 
     /* Go through and free all the pty entries */
     c = LIST_FIRST(&ptys);
