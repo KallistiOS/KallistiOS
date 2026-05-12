@@ -122,10 +122,6 @@ memchk_done:
 	shll16	r4
 #endif
 
-	! Setup a sentinel value for frame pointer in case we're using
-	! FRAME_POINTERS for stack tracing.
-	mov	#-1,r14
-
 	! Jump to the kernel main
 	mov.l	main_addr,r0
 	jsr	@r0
