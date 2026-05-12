@@ -4,10 +4,7 @@
    (c)2002 Megan Potter
 */
 
-/* Functions to tinker with the stack, including obtaining a stack
-   trace when frame pointers are enabled. If frame pointers are enabled,
-   then you'll need to also define FRAME_POINTERS to get support for stack
-   traces. */
+/* Functions to tinker with the stack, including obtaining a stack trace. */
 
 #include <kos/dbgio.h>
 #include <arch/arch.h>
@@ -129,12 +126,10 @@ void arch_stk_setup(kthread_t *nt) {
 
 /* Do a stack trace from the current function; leave off the first n frames
    (i.e., in assert()). */
-__noinline void arch_stk_trace(int n) {
+void arch_stk_trace(int n) {
     register uintptr_t sp asm("r15");
 
-    /* Keep previous behaviour: arch_stk_trace skipped one extra frame
-       (the tracer itself), so pass n+1 to arch_stk_trace_at. */
-    arch_stk_trace_at(sp, n + 1);
+    arch_stk_trace_at(sp, n);
 }
 
 /* Do a stack trace from the given stack pointer. Leave off the first
