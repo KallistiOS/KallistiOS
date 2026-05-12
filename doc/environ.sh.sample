@@ -169,12 +169,10 @@ export KOS_CFLAGS="${KOS_CFLAGS} -fno-PIC -fno-PIE"
 
 # Frame Pointers
 #
-# Controls whether frame pointers are emitted or not. Disabled by default, as
-# they use an extra register. Enable them if you plan to use GDB for debugging
-# or need additional stack trace
+# Frame pointers are always disabled — they use an extra register and do not
+# work reliably on SH4. Stack tracing uses heuristic SP scanning instead.
 #
 export KOS_CFLAGS="${KOS_CFLAGS} -fomit-frame-pointer"
-#export KOS_CFLAGS="${KOS_CFLAGS} -fno-omit-frame-pointer -DFRAME_POINTERS"
 
 # Stack Protector
 #
