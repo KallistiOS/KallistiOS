@@ -12,26 +12,25 @@
 This example shows off how to setup an assert handler (for example for
 a custom crash screen, or some other debug method, or even ignoring
 asserts selectively). It also demonstrates the default assert handler.
-If you compiled with -DFRAME_POINTERS and without -fomit-frame-pointer
-then you'll get something like this:
+You'll get something like this:
 
 *** ASSERTION FAILURE ***
 Assertion "a != 5" failed at asserthnd.c:40 in `func2': This is a test message!
 
 -------- Stack Trace (innermost first) ---------
-   8c01016a
-   8c0101e0
-   8c010478
-   8c010062
+   8c010170
+   8c0101ca
+   8c0111f2
+   8c010086
 -------------- End Stack Trace -----------------
 
 You can punch those numbers into addr2line to get a nice stack traceback,
 assuming you compiled your program with -g:
 
->] dc-addr2line -e asserthnd.elf 8c01016a 8c0101e0 8c010478
-/usr/local/home/bard/prj/kos/examples/dreamcast/basic/asserthnd/asserthnd.c:46
-/usr/local/home/bard/prj/kos/examples/dreamcast/basic/asserthnd/asserthnd.c:69
-/usr/local/home/bard/prj/kos/kernel/arch/dreamcast/kernel/main.c:129
+>] $KOS_ADDR2LINE -e asserthnd.elf 8c010170 8c0101ca 8c0111f2
+/opt/toolchains/dc/kos/examples/dreamcast/basic/asserthnd/asserthnd.c:45 (discriminator 1)
+/opt/toolchains/dc/kos/examples/dreamcast/basic/asserthnd/asserthnd.c:73
+/opt/toolchains/dc/kos/kernel/arch/dreamcast/kernel/init.c:311
 
 */
 
