@@ -1323,7 +1323,8 @@ int fat_add_dentry(fat_fs_t *fs, const char *fn, fat_dentry_t *parent,
         /* Make things easier later... */
         if(len % 13) {
             ++dents;
-            memset(longname_buf2 + len, 0, 13 * sizeof(uint16_t));
+            memset(longname_buf2 + len, 0xFF, 13 * sizeof(uint16_t));
+            longname_buf2[len] = 0x0000;
         }
 
         /* Come up with the short name the file will have. */
