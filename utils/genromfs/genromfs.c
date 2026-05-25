@@ -207,6 +207,9 @@ int realbase;
 int nodematch(char *pattern, struct filenode *node) {
     char *start = node->name;
 
+	/* empty means all */
+	if(pattern[0] == 0) return 0;
+
     /* XXX: ugly realbase is global */
     if(pattern[0] == '/') start = node->realname + realbase;
 
@@ -221,27 +224,27 @@ int findalign(struct filenode *node) {
     struct aligns *pa;
     int i;
 
-    if(S_ISREG(node->modes)) i = align;
-    else i = 16;
+    if(!S_ISREG(node->modes)) return 16;
+
+    i = align;
 
     for(pa = alignlist; pa; pa = pa->next) {
-        if(pa->align > i) {
-            if(!nodematch(pa->pattern, node)) i = pa->align;
-        }
+        if(!nodematch(pa->pattern, node)) i = pa->align;
     }
 
     return i;
 }
 
 int romfs_checksum(void *data, int size) {
-    int32_t sum, *ptr;
+    int32_t sum, word, *ptr;
 
     sum = 0;
     ptr = data;
     size >>= 2;
 
     while(size > 0) {
-        sum += ntohl(*ptr++);
+        word = *ptr++;
+        sum += ntohl(word);
         size--;
     }
 
@@ -629,7 +632,11 @@ int processdir(int level, const char *base, const char *dirname, struct stat *sb
 
     dirfd = opendir(dir->realname);
 
-    while((dp = readdir(dirfd))) {
+	if(dirfd == NULL) {
+		perror(dir->realname);
+	}
+
+    while(dirfd && (dp = readdir(dirfd))) {
         /* don't process main . and .. twice */
         if(level <= 1 &&
                 (strcmp(dp->d_name, ".") == 0
@@ -682,7 +689,7 @@ int processdir(int level, const char *base, const char *dirname, struct stat *sb
                 int       major;
                 int       minor;
 
-                if(sscanf(n->name, "@%[a-zA-Z0-9],%c,%d,%d",
+                if(sscanf(n->name, "@%[a-zA-Z0-9_+-],%c,%d,%d",
                           devname, &type, &major, &minor) == 4) {
                     strcpy(n->name, devname);
                     sb->st_rdev = makedev(major, minor);
@@ -775,7 +782,7 @@ int processdir(int level, const char *base, const char *dirname, struct stat *sb
         }
     }
 
-    closedir(dirfd);
+    if(dirfd) closedir(dirfd);
     return curroffset;
 }
 
