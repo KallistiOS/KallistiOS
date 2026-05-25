@@ -35,7 +35,7 @@ typedef struct timespec timespec_t;
 
     \return                 The current uptime of the system as a timespec struct.
 */
-static inline timespec_t timer_gettime(void) {
+static inline timespec_t timer_gettimespec(void) {
     return arch_timer_gettime();
 }
 
@@ -49,7 +49,7 @@ static inline timespec_t timer_gettime(void) {
     \return                 The number of milliseconds since KOS started.
 */
 static inline uint64_t timer_ms_gettime64(void) {
-    timespec_t time = timer_gettime();
+    timespec_t time = timer_gettimespec();
 
     return (uint64_t)time.tv_sec * 1000 + (uint64_t)(time.tv_nsec / 1000000);
 }
@@ -62,7 +62,7 @@ static inline uint64_t timer_ms_gettime64(void) {
     \return                 The uptime in microseconds.
 */
 static inline uint64_t timer_us_gettime64(void) {
-    timespec_t time = timer_gettime();
+    timespec_t time = timer_gettimespec();
 
     return (uint64_t)time.tv_sec * 1000000 + (uint64_t)(time.tv_nsec / 1000);
 }
@@ -75,7 +75,7 @@ static inline uint64_t timer_us_gettime64(void) {
     \return                 The uptime in nanoseconds.
 */
 static inline uint64_t timer_ns_gettime64(void) {
-    timespec_t time = timer_gettime();
+    timespec_t time = timer_gettimespec();
 
     return (uint64_t)time.tv_sec * 1000000000 + (uint64_t)time.tv_nsec;
 }
@@ -95,7 +95,7 @@ static inline uint64_t timer_ns_gettime64(void) {
                             timer_ms_gettime64() function.
 */
 static inline void timer_ms_gettime(uint32_t *secs, uint32_t *msecs) {
-    timespec_t time = timer_gettime();
+    timespec_t time = timer_gettimespec();
 
     if(secs)  *secs = time.tv_sec;
     if(msecs) *msecs = (uint32_t)(time.tv_nsec / 1000000);
@@ -117,7 +117,7 @@ static inline void timer_ms_gettime(uint32_t *secs, uint32_t *msecs) {
                             a second since boot.
 */
 static inline void timer_us_gettime(uint32_t *secs, uint32_t *usecs) {
-    timespec_t time = timer_gettime();
+    timespec_t time = timer_gettimespec();
 
     if(secs)  *secs = time.tv_sec;
     if(usecs) *usecs = (uint32_t)(time.tv_nsec / 1000);
@@ -139,7 +139,7 @@ static inline void timer_us_gettime(uint32_t *secs, uint32_t *usecs) {
                             a second since boot.
 */
 static inline void timer_ns_gettime(uint32_t *secs, uint32_t *nsecs) {
-    timespec_t time = timer_gettime();
+    timespec_t time = timer_gettimespec();
 
     if(secs)  *secs = time.tv_sec;
     if(nsecs) *nsecs = (uint32_t)time.tv_nsec;
