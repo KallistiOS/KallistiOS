@@ -402,6 +402,9 @@ int dumpnode(struct filenode *node, FILE *f) {
                  );
 
         if(fd) {
+			/* we cannot handle 64 bit file sizes */
+			int realsize = 0;
+			struct stat s;
             while(offset < max) {
                 avail = max - offset < sizeof(bigbuf) ? max - offset : sizeof(bigbuf);
                 len = read(fd, bigbuf, avail);
@@ -412,8 +415,26 @@ int dumpnode(struct filenode *node, FILE *f) {
                 dumpdata(bigbuf, len, f);
                 offset += len;
             }
-
+			if (offset != max) {
+				fprintf(stderr, "file %s changed size while reading?\n", node->realname);
+				exit(1);
+			}
+			if(!fstat(fd, &s)) {
+				realsize = s.st_size;
+			}
+			if(realsize != max) {
+				fprintf(stderr,"file %s changed size while reading?\n", node->realname);
+				exit(1);
+			}
+			realsize = lseek(fd, 0, SEEK_CUR);
+			if(realsize != max) {
+				fprintf(stderr,"file %s changed size while reading?\n", node->realname);
+				exit(1);
+			}
             close(fd);
+		} else {
+			fprintf(stderr, "file %s cannot be opened?\n", node->realname);
+			exit(1);
         }
 
         max = (max + 15)&~15;
