@@ -44,7 +44,7 @@ __BEGIN_DECLS
 
 /** \brief  Determine if it is safe to call malloc() in an IRQ context.
 
-    This function checks the value of the internal spinlock that is used for
+    This function checks the value of the internal mutex that is used for
     malloc() to ensure that a call to it will not freeze the running process.
     This is only really useful in an IRQ context to ensure that a call to
     malloc() (or some other memory allocation function) won't cause a deadlock.
