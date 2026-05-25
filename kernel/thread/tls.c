@@ -15,7 +15,6 @@
 
 #include <kos/irq.h>
 #include <kos/tls.h>
-#include <kos/spinlock.h>
 #include <kos/thread.h>
 #include <kos/mutex.h>
 
