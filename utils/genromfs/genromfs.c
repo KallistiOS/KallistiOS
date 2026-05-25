@@ -92,6 +92,9 @@
 #    include <sys/sysmacros.h>
 #endif
 
+/* physical on-disk layout */
+
+/* 16 byte romfs header */
 struct romfh {
     int32_t nextfh;
     int32_t spec;
@@ -109,6 +112,8 @@ struct romfh {
 #define ROMFH_SCK 6
 #define ROMFH_FIF 7
 #define ROMFH_EXEC 8
+
+/* genromfs internal data types */
 
 struct filenode;
 
@@ -138,16 +143,17 @@ struct filenode {
     unsigned int offset;
     unsigned int size;
     unsigned int pad;
+	int exclude;
+	unsigned int align;
 };
 
-struct aligns {
-    struct aligns *next;
-    int align;
-    char pattern[0];
-};
-
-struct excludes {
-    struct excludes *next;
+#define EXTTYPE_UNKNOWN 0
+#define EXTTYPE_ALIGNMENT 1
+#define EXTTYPE_EXCLUDE 2
+struct extmatches {
+    struct extmatches *next;
+    int exttype;
+    int num;
     char pattern[0];
 };
 
@@ -197,10 +203,10 @@ void shownode(int level, struct filenode *node, FILE *f) {
 static char bigbuf[4096];
 static char fixbuf[512];
 static int atoffs = 0;
-static int align = 16;
-struct aligns *alignlist = NULL;
-struct excludes *excludelist = NULL;
-int realbase;
+static struct extmatches *patterns = NULL;
+static int realbase;
+
+#define DEFALIGN 16
 
 /* helper function to match an exclusion or align pattern */
 
@@ -220,19 +226,21 @@ int nodematch(char *pattern, struct filenode *node) {
 #endif
 }
 
-int findalign(struct filenode *node) {
-    struct aligns *pa;
-    int i;
+void addpattern(int type,int num,char *s) {
+    struct extmatches *pa, *pa2;
+	pa = (struct extmatches *)malloc(sizeof(*pa) + strlen(s) + 1);
+	pa->exttype = type;
+	pa->num = num;
+	pa->next = NULL;
+	strcpy (pa->pattern,s);
 
-    if(!S_ISREG(node->modes)) return 16;
-
-    i = align;
-
-    for(pa = alignlist; pa; pa = pa->next) {
-        if(!nodematch(pa->pattern, node)) i = pa->align;
-    }
-
-    return i;
+	if (!patterns) { patterns = pa; }
+	else {
+		for (pa2 = patterns; pa2->next; pa2 = pa2->next) {
+			;
+		}
+		pa2->next = pa;
+	}
 }
 
 int romfs_checksum(void *data, int size) {
@@ -498,6 +506,7 @@ struct filenode *newnode(const char *base, const char *name, int curroffset) {
         fprintf(stderr, "out of memory\n");
         exit(1);
     }
+    memset(node, 0, sizeof(*node));
 
     len = strlen(name);
     str = malloc(len + 1);
@@ -540,11 +549,8 @@ struct filenode *newnode(const char *base, const char *name, int curroffset) {
     node->ondev = -1;
     node->onino = -1;
     node->modes = -1;
-    node->size = 0;
-    node->devnode = 0;
-    node->orig_link = NULL;
     node->offset = curroffset;
-    node->pad = 0;
+    node->align = DEFALIGN;
 
     return node;
 }
@@ -581,7 +587,9 @@ int spaceneeded(struct filenode *node) {
 }
 
 int alignnode(struct filenode *node, int curroffset, int extraspace) {
-    int align = findalign(node), d;
+    int d;
+	unsigned int align = DEFALIGN;
+	if (S_ISREG(node->modes)) align = node->align;
 
     d = ((curroffset + extraspace) & (align - 1));
 
@@ -600,7 +608,7 @@ int processdir(int level, const char *base, const char *dirname, struct stat *sb
     DIR *dirfd;
     struct dirent *dp;
     struct filenode *n, *link;
-    struct excludes *pe;
+    struct extmatches *pa;
 
     if(level <= 1) {
         /* Ok, to make sure . and .. are handled correctly
@@ -645,15 +653,18 @@ int processdir(int level, const char *base, const char *dirname, struct stat *sb
 
         n = newnode(base, dp->d_name, curroffset);
 
-        /* Process exclude list. */
-        for(pe = excludelist; pe; pe = pe->next) {
-            if(!nodematch(pe->pattern, n)) {
-                freenode(n);
-                break;
-            }
+        /* Process exclude/align list. */
+		for(pa = patterns; pa; pa = pa->next) {
+            if(!nodematch(pa->pattern, n)) {
+				if(pa->exttype == EXTTYPE_EXCLUDE) { n->exclude = pa->num; }
+				if(pa->exttype == EXTTYPE_ALIGNMENT) { n->align = pa->num; }
+			}
         }
 
-        if(pe) continue;
+        if(n->exclude) { 
+            freenode(n); 
+            continue; 
+        }
 
         if(lstat(n->realname, sb)) {
             fprintf(stderr, "ignoring '%s' (lstat failed)\n", n->realname);
@@ -800,7 +811,7 @@ void showhelp(const char *argv0) {
     printf("  -x PATTERN             Exclude all objects matching pattern\n");
     printf("  -h                     Show this help\n");
     printf("\n");
-    printf("Report bugs to chexum@shadow.banki.hu\n");
+    printf("To report bugs check http://romfs.sf.net/\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -813,10 +824,8 @@ int main(int argc, char *argv[]) {
     struct filenode *root;
     struct stat sb;
     int lastoff;
-    int i;
+    unsigned int i;
     char *p;
-    struct aligns *pa, *pa2;
-    struct excludes *pe, *pe2;
     FILE *f;
 
     while((c = getopt(argc, argv, "V:vd:f:ha:A:x:")) != EOF) {
@@ -837,57 +846,30 @@ int main(int argc, char *argv[]) {
                 showhelp(argv[0]);
                 exit(0);
             case 'a':
-                align = strtoul(optarg, NULL, 0);
-
-                if(align < 16 || (align & (align - 1))) {
-                    fprintf(stderr, "Align has to be at least 16 bytes and a power of two\n");
-                    exit(1);
-                }
-
-                break;
             case 'A':
                 i = strtoul(optarg, &p, 0);
 
                 if(i < 16 || (i & (i - 1))) {
-                    fprintf(stderr, "Align has to be at least 16 bytes and a power of two\n");
+                    fprintf(stderr, "Alignment has to be at least 16 bytes and a power of two\n");
                     exit(1);
                 }
 
-                if(*p != ',' || !p[1]) {
+                if (c == 'a') {
+                    if (p[0] != 0) {
+                        fprintf(stderr, "-a must only be given a number\n");
+                        exit(1);
+                    }
+                    p=",";
+                }
+                if (*p != ',') {
                     fprintf(stderr, "-A takes N,PATTERN format of argument, where N is a number\n");
                     exit(1);
                 }
 
-                /* strlen(p+1) + 1 eq strlen(p) */
-                pa = (struct aligns *)malloc(sizeof(*pa) + strlen(p));
-                pa->align = i;
-                pa->next = NULL;
-                strcpy(pa->pattern, p + 1);
-
-                if(!alignlist)
-                    alignlist = pa;
-                else {
-                    for(pa2 = alignlist; pa2->next; pa2 = pa2->next)
-                        ;
-
-                    pa2->next = pa;
-                }
-
+                addpattern(EXTTYPE_ALIGNMENT, i, p+1);
                 break;
             case 'x':
-                pe = (struct excludes *)malloc(sizeof(*pe) + strlen(optarg) + 1);
-                pe->next = NULL;
-                strcpy(pe->pattern, optarg);
-
-                if(!excludelist)
-                    excludelist = pe;
-                else {
-                    for(pe2 = excludelist; pe2->next; pe2 = pe2->next)
-                        ;
-
-                    pe2->next = pe;
-                }
-
+                addpattern(EXTTYPE_EXCLUDE, 1, optarg);
                 break;
             default:
                 exit(1);
