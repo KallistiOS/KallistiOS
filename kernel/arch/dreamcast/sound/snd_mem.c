@@ -15,7 +15,7 @@
 #include <dc/sound/sound.h>
 #include <arch/arch.h>
 #include <kos/dbglog.h>
-#include <kos/spinlock.h>
+#include <kos/mutex.h>
 
 /*
 
@@ -64,7 +64,7 @@ typedef struct snd_block_str {
 /* Our SPU RAM pool */
 static int initted = 0;
 static TAILQ_HEAD(snd_block_q, snd_block_str) pool = {0};
-static spinlock_t snd_mem_mutex = SPINLOCK_INITIALIZER;
+static mutex_t snd_mem_mutex = MUTEX_INITIALIZER;
 
 
 /* Reinitialize the pool with the given RAM base offset */
@@ -74,7 +74,7 @@ int snd_mem_init(uint32_t reserve) {
     if(initted)
         snd_mem_shutdown();
 
-    if(!spinlock_lock_irqsafe(&snd_mem_mutex)) {
+    if(mutex_lock_irqsafe(&snd_mem_mutex)) {
         errno = EAGAIN;
         return -1;
     }
@@ -88,7 +88,7 @@ int snd_mem_init(uint32_t reserve) {
     blk = (snd_block_t *)malloc(sizeof(snd_block_t));
 
     if(!blk) {
-        spinlock_unlock(&snd_mem_mutex);
+        mutex_unlock(&snd_mem_mutex);
         errno = ENOMEM;
         return -1;
     }
@@ -108,7 +108,7 @@ int snd_mem_init(uint32_t reserve) {
         dbglog(DBG_DEBUG, "snd_mem_init: %d bytes available\n", blk->size);
 
     initted = 1;
-    spinlock_unlock(&snd_mem_mutex);
+    mutex_unlock(&snd_mem_mutex);
 
     return 0;
 }
@@ -119,7 +119,7 @@ void snd_mem_shutdown(void) {
 
     if(!initted) return;
 
-    if(!spinlock_lock_irqsafe(&snd_mem_mutex))
+    if(mutex_lock_irqsafe(&snd_mem_mutex))
         return;
 
     e = TAILQ_FIRST(&pool);
@@ -137,7 +137,7 @@ void snd_mem_shutdown(void) {
     }
 
     initted = 0;
-    spinlock_unlock(&snd_mem_mutex);
+    mutex_unlock(&snd_mem_mutex);
 }
 
 /* Allocate a chunk of SPU RAM; we will return an offset into SPU RAM. */
@@ -150,7 +150,7 @@ uint32_t snd_mem_malloc(size_t size) {
     if(size == 0)
         return 0;
 
-    if(!spinlock_lock_irqsafe(&snd_mem_mutex)) {
+    if(mutex_lock_irqsafe(&snd_mem_mutex)) {
         errno = EAGAIN;
         return 0;
     }
@@ -168,7 +168,7 @@ uint32_t snd_mem_malloc(size_t size) {
 
     if(best == NULL) {
         dbglog(DBG_ERROR, "snd_mem_malloc: no chunks big enough for alloc(%d)\n", size);
-        spinlock_unlock(&snd_mem_mutex);
+        mutex_unlock(&snd_mem_mutex);
         return 0;
     }
 
@@ -180,7 +180,7 @@ uint32_t snd_mem_malloc(size_t size) {
         }
 
         best->inuse = 1;
-        spinlock_unlock(&snd_mem_mutex);
+        mutex_unlock(&snd_mem_mutex);
         return best->addr;
     }
 
@@ -189,7 +189,7 @@ uint32_t snd_mem_malloc(size_t size) {
 
     if(e == NULL) {
         dbglog(DBG_ERROR, "snd_mem_malloc: not enough main memory to alloc(%d)\n", size);
-        spinlock_unlock(&snd_mem_mutex);
+        mutex_unlock(&snd_mem_mutex);
         return 0;
     }
 
@@ -207,7 +207,7 @@ uint32_t snd_mem_malloc(size_t size) {
     best->size = size;
     best->inuse = 1;
 
-    spinlock_unlock(&snd_mem_mutex);
+    mutex_unlock(&snd_mem_mutex);
     return best->addr;
 }
 
@@ -221,7 +221,7 @@ void snd_mem_free(uint32_t addr) {
     if(addr == 0)
         return;
 
-    if(!spinlock_lock_irqsafe(&snd_mem_mutex))
+    if(mutex_lock_irqsafe(&snd_mem_mutex))
         return;
 
     /* Look for the block */
@@ -232,7 +232,7 @@ void snd_mem_free(uint32_t addr) {
 
     if(!e) {
         dbglog(DBG_ERROR, "snd_mem_free: attempt to free non-existent block at %08lx\n", (uint32_t)e);
-        spinlock_unlock(&snd_mem_mutex);
+        mutex_unlock(&snd_mem_mutex);
         return;
     }
 
@@ -266,7 +266,7 @@ void snd_mem_free(uint32_t addr) {
         TAILQ_REMOVE(&pool, o, qent);
         free(o);
     }
-    spinlock_unlock(&snd_mem_mutex);
+    mutex_unlock(&snd_mem_mutex);
 }
 
 uint32_t snd_mem_available(void) {
@@ -276,7 +276,7 @@ uint32_t snd_mem_available(void) {
     if(!initted)
         return 0;
 
-    if(!spinlock_lock_irqsafe(&snd_mem_mutex)) {
+    if(mutex_lock_irqsafe(&snd_mem_mutex)) {
         errno = EAGAIN;
         return 0;
     }
@@ -286,6 +286,6 @@ uint32_t snd_mem_available(void) {
             largest = e->size;
     }
 
-    spinlock_unlock(&snd_mem_mutex);
+    mutex_unlock(&snd_mem_mutex);
     return (uint32_t)largest;
 }
