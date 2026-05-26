@@ -25,14 +25,6 @@ static int conio_dbgio_set_irq_usage(int mode) {
     (void)mode;
     return 0;
 }
-static int conio_dbgio_read(void) {
-    errno = EAGAIN;
-    return -1;
-}
-static int conio_dbgio_write(int c) {
-    conio_putch(c);
-    return 1;
-}
 static int conio_dbgio_flush(void) {
     return 0;
 }
@@ -55,8 +47,6 @@ dbgio_handler_t dbgio_conio = {
     .init = conio_dbgio_init,
     .shutdown = conio_dbgio_shutdown,
     .set_irq_usage = conio_dbgio_set_irq_usage,
-    .read = conio_dbgio_read,
-    .write = conio_dbgio_write,
     .flush = conio_dbgio_flush,
     .write_buffer = conio_dbgio_write_buffer,
     .read_buffer = conio_dbgio_read_buffer
