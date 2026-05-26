@@ -143,8 +143,8 @@ struct filenode {
     unsigned int offset;
     unsigned int size;
     unsigned int pad;
-	int exclude;
-	unsigned int align;
+    int exclude;
+    unsigned int align;
 };
 
 #define EXTTYPE_UNKNOWN 0
@@ -213,8 +213,8 @@ static int realbase;
 int nodematch(char *pattern, struct filenode *node) {
     char *start = node->name;
 
-	/* empty means all */
-	if(pattern[0] == 0) return 0;
+    /* empty means all */
+    if(pattern[0] == 0) return 0;
 
     /* XXX: ugly realbase is global */
     if(pattern[0] == '/') start = node->realname + realbase;
@@ -228,19 +228,19 @@ int nodematch(char *pattern, struct filenode *node) {
 
 void addpattern(int type,int num,char *s) {
     struct extmatches *pa, *pa2;
-	pa = (struct extmatches *)malloc(sizeof(*pa) + strlen(s) + 1);
-	pa->exttype = type;
-	pa->num = num;
-	pa->next = NULL;
-	strcpy (pa->pattern,s);
+    pa = (struct extmatches *)malloc(sizeof(*pa) + strlen(s) + 1);
+    pa->exttype = type;
+    pa->num = num;
+    pa->next = NULL;
+    strcpy (pa->pattern,s);
 
-	if (!patterns) { patterns = pa; }
-	else {
-		for (pa2 = patterns; pa2->next; pa2 = pa2->next) {
-			;
-		}
-		pa2->next = pa;
-	}
+    if (!patterns) { patterns = pa; }
+    else {
+        for (pa2 = patterns; pa2->next; pa2 = pa2->next) {
+            ;
+        }
+        pa2->next = pa;
+    }
 }
 
 int romfs_checksum(void *data, int size) {
@@ -402,9 +402,9 @@ int dumpnode(struct filenode *node, FILE *f) {
                  );
 
         if(fd) {
-			/* we cannot handle 64 bit file sizes */
-			int realsize = 0;
-			struct stat s;
+            /* we cannot handle 64 bit file sizes */
+            int realsize = 0;
+            struct stat s;
             while(offset < max) {
                 avail = max - offset < sizeof(bigbuf) ? max - offset : sizeof(bigbuf);
                 len = read(fd, bigbuf, avail);
@@ -415,26 +415,26 @@ int dumpnode(struct filenode *node, FILE *f) {
                 dumpdata(bigbuf, len, f);
                 offset += len;
             }
-			if (offset != max) {
-				fprintf(stderr, "file %s changed size while reading?\n", node->realname);
-				exit(1);
-			}
-			if(!fstat(fd, &s)) {
-				realsize = s.st_size;
-			}
-			if(realsize != max) {
-				fprintf(stderr,"file %s changed size while reading?\n", node->realname);
-				exit(1);
-			}
-			realsize = lseek(fd, 0, SEEK_CUR);
-			if(realsize != max) {
-				fprintf(stderr,"file %s changed size while reading?\n", node->realname);
-				exit(1);
-			}
+            if (offset != max) {
+                fprintf(stderr, "file %s changed size while reading?\n", node->realname);
+                exit(1);
+            }
+            if(!fstat(fd, &s)) {
+                realsize = s.st_size;
+            }
+            if(realsize != max) {
+                fprintf(stderr,"file %s changed size while reading?\n", node->realname);
+                exit(1);
+            }
+            realsize = lseek(fd, 0, SEEK_CUR);
+            if(realsize != max) {
+                fprintf(stderr,"file %s changed size while reading?\n", node->realname);
+                exit(1);
+            }
             close(fd);
-		} else {
-			fprintf(stderr, "file %s cannot be opened?\n", node->realname);
-			exit(1);
+        } else {
+            fprintf(stderr, "file %s cannot be opened?\n", node->realname);
+            exit(1);
         }
 
         max = (max + 15)&~15;
@@ -609,8 +609,8 @@ int spaceneeded(struct filenode *node) {
 
 int alignnode(struct filenode *node, int curroffset, int extraspace) {
     int d;
-	unsigned int align = DEFALIGN;
-	if (S_ISREG(node->modes)) align = node->align;
+    unsigned int align = DEFALIGN;
+    if(S_ISREG(node->modes)) align = node->align;
 
     d = ((curroffset + extraspace) & (align - 1));
 
@@ -661,9 +661,9 @@ int processdir(int level, const char *base, const char *dirname, struct stat *sb
 
     dirfd = opendir(dir->realname);
 
-	if(dirfd == NULL) {
-		perror(dir->realname);
-	}
+    if(dirfd == NULL) {
+        perror(dir->realname);
+    }
 
     while(dirfd && (dp = readdir(dirfd))) {
         /* don't process main . and .. twice */
@@ -675,11 +675,11 @@ int processdir(int level, const char *base, const char *dirname, struct stat *sb
         n = newnode(base, dp->d_name, curroffset);
 
         /* Process exclude/align list. */
-		for(pa = patterns; pa; pa = pa->next) {
+        for(pa = patterns; pa; pa = pa->next) {
             if(!nodematch(pa->pattern, n)) {
-				if(pa->exttype == EXTTYPE_EXCLUDE) { n->exclude = pa->num; }
-				if(pa->exttype == EXTTYPE_ALIGNMENT) { n->align = pa->num; }
-			}
+                if(pa->exttype == EXTTYPE_EXCLUDE) { n->exclude = pa->num; }
+                if(pa->exttype == EXTTYPE_ALIGNMENT) { n->align = pa->num; }
+            }
         }
 
         if(n->exclude) { 
@@ -936,5 +936,5 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-		return 0;
+    return 0;
 }
