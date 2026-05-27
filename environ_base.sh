@@ -25,9 +25,9 @@ if ! expr ":$PATH:" : ".*:${KOS_BASE}/utils/build_wrappers:.*" > /dev/null ; the
 fi
 
 # Our includes.
-export KOS_INC_PATHS="${KOS_INC_PATHS} -I${KOS_BASE}/include \
--I${KOS_BASE}/kernel/arch/${KOS_ARCH}/include -I${KOS_BASE}/addons/include/ \
--I${KOS_PORTS}/include"
+export KOS_INC_PATHS="${KOS_INC_PATHS} -isystem ${KOS_BASE}/include \
+-isystem ${KOS_BASE}/kernel/arch/${KOS_ARCH}/include -isystem ${KOS_BASE}/addons/include/ \
+-isystem ${KOS_PORTS}/include"
 
 # "System" libraries.
 export KOS_LIB_PATHS="-L${KOS_BASE}/lib/${KOS_ARCH} -L${KOS_BASE}/addons/lib/${KOS_ARCH} -L${KOS_PORTS}/lib"
