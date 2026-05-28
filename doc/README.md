@@ -105,16 +105,20 @@ This process should work (and has been tested) under Linux, BSD, Cygwin and
 MinGW/MSYS. It is very doubtful that it will work in any non-*nix environment.
 
 # Version Codes
-All KOS versions are composed of three sections: major, minor, micro. Major
-revisions are generally something that changes the OS fundamentally, or
+All KOS versions are composed of three sections: major, minor, and patch.
+Major revisions are generally something that changes the OS fundamentally, or
 when we wait several years between releases :smiley:. The minor version number
-is used to denote a development series. This gets incremented basically
-whenever we feel that it is relevant to do so. Finally, the micro version
-denotes a sequence in the development series. 1.1.0 would be the first
-snapshot of the 1.1 development series.
+is used to denote a stable version series. This gets incremented basically
+whenever we feel that it is relevant to do so. Finally, the patch version
+denotes a bugfixing patch to the stable version.
 
-And as always, if you want to be on the bleeding edge, use the Git
-repository hosted at SourceForge.
+Starting with v2.1.0, each stable version series will have its own branch cut
+with the format `v[major].[minor].x` and each patch version will be a tag on
+that branch. Updates to these branches should only contain bug fixes and
+should not be expected to change the API or break existing code.
+
+And as always, if you want to be on the bleeding edge, use the `master` branch
+in the Git repository hosted at GitHub.
 
 # Hacking
 If you are planning on doing your own hacking and potentially submitting
