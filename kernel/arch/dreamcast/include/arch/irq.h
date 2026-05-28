@@ -60,7 +60,7 @@ __BEGIN_DECLS
     @{
 */
 
-/** \defgroup irq_context Context
+/** \ingroup irq_context
     \brief Thread execution state and accessors
 
     This API includes the structure and accessors for a
