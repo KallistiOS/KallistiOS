@@ -186,8 +186,10 @@ int mutex_unlock(mutex_t *m) {
     if (__predict_true(!--m->count)) {
         m->holder = NULL;
 
-        /* Restore real priority in case we were dynamically boosted. */
-        if (__predict_true(thd != IRQ_THREAD))
+        /* Restore real priority in case we were dynamically boosted.
+           Skip for IRQ context (IRQ_THREAD) and for the pre-scheduler
+           case where there is no current thread yet (thd_current == NULL) */
+        if (__predict_true(thd != NULL && thd != IRQ_THREAD))
             thd->prio = thd->real_prio;
 
         /* If we need to wake up a thread, do so. */
