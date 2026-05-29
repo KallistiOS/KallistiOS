@@ -272,8 +272,10 @@ static int mutex_unlock_common(mutex_t *m, kthread_t *thd) {
 
     /* If we need to wake up a thread, do so. */
     if(wakeup) {
-        /* Restore real priority in case we were dynamically boosted. */
-        if (thd != IRQ_THREAD)
+        /* Restore real priority in case we were dynamically boosted.
+           Skip for IRQ context (IRQ_THREAD) and for the pre-scheduler
+           case where there is no current thread yet (thd_current == NULL) */
+        if (__predict_true(thd != NULL && thd != IRQ_THREAD))
             thd->prio = thd->real_prio;
 
         genwait_wake_one(m);
