@@ -330,7 +330,8 @@ static int divide(int *ptr, int stride, int x, int y, int blocksize, int seq) {
 
 static int *twiddle_twiddle(int length) {
     /* divide and conquer */
-    int *ptr = (int *)malloc(sizeof(int) * length * length);
+    size_t alloc_count = (size_t)length * (size_t)length;
+    int *ptr = (int *)calloc(alloc_count, sizeof(int));
 
     if(ptr == NULL)
         return NULL;
@@ -536,7 +537,7 @@ static fquad_t *create_map(int res, image_t *im) {
     }
 
     nquads = quads_in_map(res);
-    q = (fquad_t *)malloc(nquads * sizeof(fquad_t));
+    q = (fquad_t *)calloc(nquads, sizeof(fquad_t));
 
     if(q == NULL)
         return NULL;
@@ -582,7 +583,7 @@ static fquad_t *create_downscaled_map(int res, fquad_t *oneup) {
 
     qw = 1 << res;
     nquads = quads_in_map(res);
-    q = (fquad_t *)malloc(sizeof(fquad_t) * nquads);
+    q = (fquad_t *)calloc(nquads, sizeof(fquad_t));
 
     if(q == NULL)
         return NULL;
@@ -697,9 +698,7 @@ static const char *figure_outfilename(const char *f, const char *newext) {
 
     if(!newname) return NULL;
 
-    strncpy(newname, f, namelen);
-    strcat(newname, ".");
-    strcat(newname, newext);
+    snprintf(newname, namelen + strlen(newext) + 2, "%.*s.%s", (int)namelen, f, newext);
 
     return newname;
 }
