@@ -147,7 +147,7 @@
     "0* " means the same as "0000".  */
 
 #include <dc/scif.h>
-#include <dc/dcload.h>
+#include <kos/fs_kosload.h>
 #include <arch/gdb.h>
 #include <arch/arch.h>
 #include <arch/cache.h>
@@ -859,7 +859,7 @@ static char getDebugChar(void) {
 
     if(using_dcl) {
         if(in_dcl_pos >= in_dcl_size) {
-            in_dcl_size = dcload_gdbpacket(NULL, 0, in_dcl_buf, BUFMAX);
+            in_dcl_size = kosload_gdbpacket(NULL, 0, in_dcl_buf, BUFMAX);
             in_dcl_pos = 0;
         }
 
@@ -880,7 +880,7 @@ static void putDebugChar(char ch) {
         out_dcl_buf[out_dcl_pos++] = ch;
 
         if(out_dcl_pos >= BUFMAX) {
-            dcload_gdbpacket(out_dcl_buf, out_dcl_pos, NULL, 0);
+            kosload_gdbpacket(out_dcl_buf, out_dcl_pos, NULL, 0);
             out_dcl_pos = 0;
         }
     }
@@ -895,11 +895,11 @@ static void flushDebugChannel(void) {
     /* send the current complete packet and wait for a response */
     if(using_dcl) {
         if(in_dcl_pos >= in_dcl_size) {
-            in_dcl_size = dcload_gdbpacket(out_dcl_buf, out_dcl_pos, in_dcl_buf, BUFMAX);
+            in_dcl_size = kosload_gdbpacket(out_dcl_buf, out_dcl_pos, in_dcl_buf, BUFMAX);
             in_dcl_pos = 0;
         }
         else
-            dcload_gdbpacket(out_dcl_buf, out_dcl_pos, NULL, 0);
+            kosload_gdbpacket(out_dcl_buf, out_dcl_pos, NULL, 0);
 
         out_dcl_pos = 0;
     }
@@ -933,7 +933,7 @@ static void handle_gdb_trapa(irq_t code, irq_context_t *context, void *data) {
 }
 
 void gdb_init(void) {
-    if(dcload_gdbpacket(NULL, 0, NULL, 0) == 0)
+    if(kosload_gdbpacket(NULL, 0, NULL, 0) == 0)
         using_dcl = 1;
     else
         scif_set_parameters(57600, 1);

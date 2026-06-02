@@ -1,6 +1,6 @@
 /* KallistiOS ##version##
 
-   kernel/arch/dreamcast/fs/fs_dclsocket.c
+   kernel/fs/fs_koslsocket.c
    Copyright (C) 2007, 2008, 2012, 2013, 2015 Lawrence Sebald
 
    Based on fs_dclnative.c and related files
@@ -13,10 +13,9 @@
 
 */
 
-/* This file is basically a rewrite of the old fs_dclnative that uses KOS'
-   internal sockets library. This fs module is basically designed for debugging
-   networked code with dcload-ip, rather than requiring a serial cable and
-   dcload-serial. */
+/* This file implements the kos-load IP host filesystem using KOS's internal
+   sockets library, allowing file I/O against the development host over the
+   network without requiring a serial cable. */
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -36,11 +35,10 @@
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>
 
-#include <dc/fs_dclsocket.h>
-#include <dc/dcload.h>
+#include <kos/fs_koslsocket.h>
 
-#define DCLOAD_PORT 31313
-#define NAME "dcload-ip over KOS sockets"
+#define KOSLOAD_PORT 31313
+#define NAME "kosload-ip over KOS sockets"
 
 typedef struct {
     unsigned char id[4];
@@ -67,32 +65,32 @@ static struct {
     unsigned char map[16384];
 } bin_info;
 
-extern int dcload_type;
+extern int kosload_type;
 static int initted = 0;
 static int escape = 0;
 static int retval = 0;
 static mutex_t mutex;
-static char *dcload_path = NULL;
+static char *kosload_path = NULL;
 static uint8_t pktbuf[1024 + sizeof(command_t)];
 
-static int dcls_socket = -1;
+static int kosls_socket = -1;
 
-static void dcls_handle_lbin(command_t *cmd) {
+static void kosls_handle_lbin(command_t *cmd) {
     bin_info.addr = ntohl(cmd->address);
     bin_info.size = ntohl(cmd->size);
     memset(bin_info.map, 0, 16384);
 
-    send(dcls_socket, cmd, sizeof(command_t), 0);
+    send(kosls_socket, cmd, sizeof(command_t), 0);
 }
 
-static void dcls_handle_pbin(command_t *cmd) {
+static void kosls_handle_pbin(command_t *cmd) {
     int index = (ntohl(cmd->address) - bin_info.addr) >> 10;
 
     memcpy((uint8_t *)ntohl(cmd->address), cmd->data, ntohl(cmd->size));
     bin_info.map[index] = 1;
 }
 
-static void dcls_handle_dbin(command_t *cmd) {
+static void kosls_handle_dbin(command_t *cmd) {
     unsigned int i;
 
     for(i = 0; i < (bin_info.size + 1023) / 1024; ++i) {
@@ -115,10 +113,10 @@ static void dcls_handle_dbin(command_t *cmd) {
         }
     }
 
-    send(dcls_socket, cmd, sizeof(command_t), 0);
+    send(kosls_socket, cmd, sizeof(command_t), 0);
 }
 
-static void dcls_handle_sbin(command_t *cmd) {
+static void kosls_handle_sbin(command_t *cmd) {
     uint32_t left, size;
     uint8_t *ptr;
     int count, i;
@@ -138,7 +136,7 @@ static void dcls_handle_sbin(command_t *cmd) {
         resp->size = htonl(size);
         memcpy(resp->data, ptr, size);
 
-        send(dcls_socket, resp, sizeof(command_t) + size, 0);
+        send(kosls_socket, resp, sizeof(command_t) + size, 0);
         ptr += size;
     }
 
@@ -146,26 +144,26 @@ static void dcls_handle_sbin(command_t *cmd) {
 
     resp->address = 0;
     resp->size = 0;
-    send(dcls_socket, resp, sizeof(command_t), 0);
+    send(kosls_socket, resp, sizeof(command_t), 0);
 }
 
-static void dcls_handle_retv(command_t *cmd) {
-    send(dcls_socket, cmd, sizeof(command_t), 0);
+static void kosls_handle_retv(command_t *cmd) {
+    send(kosls_socket, cmd, sizeof(command_t), 0);
     retval = ntohl(cmd->address);
     escape = 1;
 }
 
-static void dcls_handle_vers(command_t *cmd) {
+static void kosls_handle_vers(command_t *cmd) {
     command_t *resp = (command_t *)pktbuf;
     int size = strlen(NAME) + 1 + sizeof(command_t);
 
     memcpy(resp, cmd, sizeof(command_t));
     strcpy((char *)resp->data, NAME);
 
-    send(dcls_socket, pktbuf, size, 0);
+    send(kosls_socket, pktbuf, size, 0);
 }
 
-static void dcls_recv_loop(void) {
+static void kosls_recv_loop(void) {
     uint8_t pkt[1514];
     command_t *cmd = (command_t *)pkt;
 
@@ -178,38 +176,38 @@ static void dcls_recv_loop(void) {
                manually, and poll the default device... */
             net_default_dev->if_rx_poll(net_default_dev);
 
-            if(recv(dcls_socket, pkt, 1514, 0) == -1)
+            if(recv(kosls_socket, pkt, 1514, 0) == -1)
                 continue;
         }
-        else if(recv(dcls_socket, pkt, 1514, 0) == -1) {
+        else if(recv(kosls_socket, pkt, 1514, 0) == -1) {
             break;
         }
 
         if(!memcmp(cmd->id, "RETV", 4)) {
-            dcls_handle_retv(cmd);
+            kosls_handle_retv(cmd);
         }
         else if(!memcmp(cmd->id, "SBIN", 4) || !memcmp(cmd->id, "SBIQ", 4)) {
-            dcls_handle_sbin(cmd);
+            kosls_handle_sbin(cmd);
         }
         else if(!memcmp(cmd->id, "LBIN", 4)) {
-            dcls_handle_lbin(cmd);
+            kosls_handle_lbin(cmd);
         }
         else if(!memcmp(cmd->id, "PBIN", 4)) {
-            dcls_handle_pbin(cmd);
+            kosls_handle_pbin(cmd);
         }
         else if(!memcmp(cmd->id, "DBIN", 4)) {
-            dcls_handle_dbin(cmd);
+            kosls_handle_dbin(cmd);
         }
         else if(!memcmp(cmd->id, "VERS", 4)) {
-            dcls_handle_vers(cmd);
+            kosls_handle_vers(cmd);
         }
     }
 
     escape = 0;
 }
 
-static void *dcls_open(struct vfs_handler *vfs, const char *fn, int mode) {
-    int hnd, dcload_mode = 0;
+static void *kosls_open(struct vfs_handler *vfs, const char *fn, int mode) {
+    int hnd, open_mode = 0;
     int mm = (mode & O_MODE_MASK);
     command_t *cmd = (command_t *)pktbuf;
 
@@ -231,47 +229,47 @@ static void *dcls_open(struct vfs_handler *vfs, const char *fn, int mode) {
         memcpy(pktbuf, "DC16", 4);
         strcpy((char *)(pktbuf + 4), fn);
 
-        send(dcls_socket, pktbuf, 5 + strlen(realfn), 0);
+        send(kosls_socket, pktbuf, 5 + strlen(realfn), 0);
 
-        dcls_recv_loop();
+        kosls_recv_loop();
         hnd = retval;
 
         if(hnd) {
-            if(dcload_path)
-                free(dcload_path);
+            if(kosload_path)
+                free(kosload_path);
 
             if(fn[strlen(realfn) - 1] == '/') {
-                dcload_path = (char *)malloc(strlen(realfn) + 1);
-                strcpy(dcload_path, realfn);
+                kosload_path = (char *)malloc(strlen(realfn) + 1);
+                strcpy(kosload_path, realfn);
             }
             else {
-                dcload_path = (char *)malloc(strlen(realfn) + 2);
-                strcpy(dcload_path, realfn);
-                strcat(dcload_path, "/");
+                kosload_path = (char *)malloc(strlen(realfn) + 2);
+                strcpy(kosload_path, realfn);
+                strcat(kosload_path, "/");
             }
         }
     }
     else {
         if(mm == O_RDONLY)
-            dcload_mode = 0;
+            open_mode = 0;
         else if((mm & O_RDWR) == O_RDWR)
-            dcload_mode = 0x0202;
+            open_mode = 0x0202;
         else if((mm & O_WRONLY) == O_WRONLY)
-            dcload_mode = 0x0201;
+            open_mode = 0x0201;
 
         if(mode & O_APPEND)
-            dcload_mode |= 0x0008;
+            open_mode |= 0x0008;
 
         if(mode & O_TRUNC)
-            dcload_mode |= 0x0400;
+            open_mode |= 0x0400;
 
         memcpy(cmd->id, "DC04", 4);
-        cmd->address = htonl(dcload_mode); /* Open flags */
+        cmd->address = htonl(open_mode); /* Open flags */
         cmd->size = htonl(0644);           /* umask */
         strcpy((char *)cmd->data, fn);
 
-        send(dcls_socket, pktbuf, sizeof(command_t) + strlen(fn) + 1, 0);
-        dcls_recv_loop();
+        send(kosls_socket, pktbuf, sizeof(command_t) + strlen(fn) + 1, 0);
+        kosls_recv_loop();
         hnd = retval + 1;
     }
 
@@ -280,7 +278,7 @@ static void *dcls_open(struct vfs_handler *vfs, const char *fn, int mode) {
     return (void *)hnd;
 }
 
-static int dcls_close(void *hnd) {
+static int kosls_close(void *hnd) {
     int fd = (int) hnd;
     command_int_t *cmd = (command_int_t *)pktbuf;
 
@@ -291,8 +289,8 @@ static int dcls_close(void *hnd) {
         memcpy(cmd->id, "DC17", 4);
         cmd->value0 = htonl(fd);
 
-        send(dcls_socket, cmd, sizeof(command_int_t), 0);
-        dcls_recv_loop();
+        send(kosls_socket, cmd, sizeof(command_int_t), 0);
+        kosls_recv_loop();
     }
     else if(fd) {
         --fd;
@@ -300,15 +298,15 @@ static int dcls_close(void *hnd) {
         memcpy(cmd->id, "DC05", 4);
         cmd->value0 = htonl(fd);
 
-        send(dcls_socket, cmd, sizeof(command_int_t), 0);
-        dcls_recv_loop();
+        send(kosls_socket, cmd, sizeof(command_int_t), 0);
+        kosls_recv_loop();
     }
 
     mutex_unlock(&mutex);
     return 0;
 }
 
-static ssize_t dcls_read(void *hnd, void *buf, size_t cnt) {
+static ssize_t kosls_read(void *hnd, void *buf, size_t cnt) {
     uint32_t fd = (uint32_t) hnd;
     command_3int_t *cmd = (command_3int_t *)pktbuf;
 
@@ -325,15 +323,15 @@ static ssize_t dcls_read(void *hnd, void *buf, size_t cnt) {
     cmd->value1 = htonl((uint32_t) buf);
     cmd->value2 = htonl((uint32_t) cnt);
 
-    send(dcls_socket, cmd, sizeof(command_3int_t), 0);
-    dcls_recv_loop();
+    send(kosls_socket, cmd, sizeof(command_3int_t), 0);
+    kosls_recv_loop();
 
     mutex_unlock(&mutex);
 
     return retval;
 }
 
-static ssize_t dcls_write(void *hnd, const void *buf, size_t cnt) {
+static ssize_t kosls_write(void *hnd, const void *buf, size_t cnt) {
     uint32_t fd = (uint32_t) hnd;
     command_3int_t *cmd = (command_3int_t *)pktbuf;
 
@@ -350,15 +348,15 @@ static ssize_t dcls_write(void *hnd, const void *buf, size_t cnt) {
     cmd->value1 = htonl((uint32_t) buf);
     cmd->value2 = htonl(cnt);
 
-    send(dcls_socket, cmd, sizeof(command_3int_t), 0);
-    dcls_recv_loop();
+    send(kosls_socket, cmd, sizeof(command_3int_t), 0);
+    kosls_recv_loop();
 
     mutex_unlock(&mutex);
 
     return retval;
 }
 
-static off_t dcls_seek(void *hnd, off_t offset, int whence) {
+static off_t kosls_seek(void *hnd, off_t offset, int whence) {
     uint32_t fd = (uint32_t)hnd;
     command_3int_t *command = (command_3int_t *)pktbuf;
 
@@ -375,24 +373,24 @@ static off_t dcls_seek(void *hnd, off_t offset, int whence) {
     command->value1 = htonl((uint32_t)offset);
     command->value2 = htonl((uint32_t)whence);
 
-    send(dcls_socket, command, sizeof(command_3int_t), 0);
-    dcls_recv_loop();
+    send(kosls_socket, command, sizeof(command_3int_t), 0);
+    kosls_recv_loop();
 
     mutex_unlock(&mutex);
 
     return retval;
 }
 
-static off_t dcls_tell(void *hnd) {
-    return dcls_seek(hnd, 0, SEEK_CUR);
+static off_t kosls_tell(void *hnd) {
+    return kosls_seek(hnd, 0, SEEK_CUR);
 }
 
-static size_t dcls_total(void *hnd) {
+static size_t kosls_total(void *hnd) {
     size_t cur, ret;
 
-    cur = dcls_tell(hnd);
-    ret = dcls_seek(hnd, 0, SEEK_END);
-    dcls_seek(hnd, cur, SEEK_SET);
+    cur = kosls_tell(hnd);
+    ret = kosls_seek(hnd, 0, SEEK_END);
+    kosls_seek(hnd, cur, SEEK_SET);
 
     return ret;
 }
@@ -400,7 +398,7 @@ static size_t dcls_total(void *hnd) {
 static dirent_t their_dir;
 static dirent_t our_dir;
 
-static const dirent_t *dcls_readdir(void *hnd) {
+static const dirent_t *kosls_readdir(void *hnd) {
     uint32_t fd = (uint32_t) hnd;
     command_3int_t *cmd = (command_3int_t *)pktbuf;
 
@@ -417,31 +415,31 @@ static const dirent_t *dcls_readdir(void *hnd) {
     cmd->value1 = htonl((uint32_t)(&our_dir));
     cmd->value2 = htonl(sizeof(dirent_t));
 
-    send(dcls_socket, cmd, sizeof(command_3int_t), 0);
+    send(kosls_socket, cmd, sizeof(command_3int_t), 0);
 
-    dcls_recv_loop();
+    kosls_recv_loop();
 
     if(retval) {
-        char fn[strlen(dcload_path) + strlen(our_dir.name) + 1];
+        char fn[strlen(kosload_path) + strlen(our_dir.name) + 1];
         command_t *cmd2 = (command_t *)pktbuf;
-        dcload_stat_t filestat;
+        kosload_stat_t filestat;
 
         strcpy(their_dir.name, our_dir.name);
         their_dir.size = 0;
         their_dir.time = 0;
         their_dir.attr = 0;
 
-        strcpy(fn, dcload_path);
+        strcpy(fn, kosload_path);
         strcat(fn, our_dir.name);
 
         memcpy(cmd2->id, "DC13", 4);
         cmd2->address = htonl((uint32_t) &filestat);
-        cmd2->size = htonl(sizeof(dcload_stat_t));
+        cmd2->size = htonl(sizeof(kosload_stat_t));
         strcpy((char *)cmd2->data, fn);
 
-        send(dcls_socket, cmd2, sizeof(command_t) + strlen(fn) + 1, 0);
+        send(kosls_socket, cmd2, sizeof(command_t) + strlen(fn) + 1, 0);
 
-        dcls_recv_loop();
+        kosls_recv_loop();
 
         if(!retval) {
             if(filestat.st_mode & S_IFDIR) {
@@ -462,7 +460,7 @@ static const dirent_t *dcls_readdir(void *hnd) {
     return NULL;
 }
 
-static int dcls_rename(vfs_handler_t *vfs, const char *fn1, const char *fn2) {
+static int kosls_rename(vfs_handler_t *vfs, const char *fn1, const char *fn2) {
     int len1 = strlen(fn1), len2 = strlen(fn2);
 
     (void)vfs;
@@ -474,17 +472,17 @@ static int dcls_rename(vfs_handler_t *vfs, const char *fn1, const char *fn2) {
     strcpy((char *)(pktbuf + 4), fn1);
     strcpy((char *)(pktbuf + 5 + len1), fn2);
 
-    send(dcls_socket, pktbuf, 6 + len1 + len2, 0);
+    send(kosls_socket, pktbuf, 6 + len1 + len2, 0);
 
-    dcls_recv_loop();
+    kosls_recv_loop();
 
     if(retval == 0) {
         memcpy(pktbuf, "DC08", 4);
         strcpy((char *)(pktbuf + 4), fn1);
 
-        send(dcls_socket, pktbuf, len1 + 5, 0);
+        send(kosls_socket, pktbuf, len1 + 5, 0);
 
-        dcls_recv_loop();
+        kosls_recv_loop();
     }
 
     mutex_unlock(&mutex);
@@ -492,7 +490,7 @@ static int dcls_rename(vfs_handler_t *vfs, const char *fn1, const char *fn2) {
     return retval;
 }
 
-static int dcls_unlink(vfs_handler_t *vfs, const char *fn) {
+static int kosls_unlink(vfs_handler_t *vfs, const char *fn) {
     int len = strlen(fn) + 5;
 
     (void)vfs;
@@ -503,19 +501,19 @@ static int dcls_unlink(vfs_handler_t *vfs, const char *fn) {
     memcpy(pktbuf, "DC08", 4);
     strcpy((char *)(pktbuf + 4), fn);
 
-    send(dcls_socket, pktbuf, len, 0);
+    send(kosls_socket, pktbuf, len, 0);
 
-    dcls_recv_loop();
+    kosls_recv_loop();
 
     mutex_unlock(&mutex);
 
     return retval;
 }
 
-static int dcls_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
+static int kosls_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
                      int flag) {
     command_t *cmd = (command_t *)pktbuf;
-    dcload_stat_t filestat = { 0 };
+    kosload_stat_t filestat = { 0 };
 
     (void)flag;
 
@@ -524,12 +522,12 @@ static int dcls_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
 
     memcpy(cmd->id, "DC13", 4);
     cmd->address = htonl((uint32_t) &filestat);
-    cmd->size = htonl(sizeof(dcload_stat_t));
+    cmd->size = htonl(sizeof(kosload_stat_t));
     strcpy((char *)(cmd->data), fn);
 
-    send(dcls_socket, cmd, sizeof(command_t) + strlen(fn) + 1, 0);
+    send(kosls_socket, cmd, sizeof(command_t) + strlen(fn) + 1, 0);
 
-    dcls_recv_loop();
+    kosls_recv_loop();
 
     if(!retval) {
         memset(rv, 0, sizeof(struct stat));
@@ -556,19 +554,19 @@ static int dcls_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
 }
 
 /* dbgio interface */
-static int dcls_detected(void) {
+static int kosls_detected(void) {
     return initted > 0;
 }
 
-static int dcls_fake_init(void) {
+static int kosls_fake_init(void) {
     return 0;
 }
 
-static int dcls_fake_shutdown(void) {
+static int kosls_fake_shutdown(void) {
     return 0;
 }
 
-static int dcls_writebuf(const uint8_t *buf, int len, int xlat) {
+static int kosls_writebuf(const uint8_t *buf, int len, int xlat) {
     command_3int_t cmd;
 
     (void)xlat;
@@ -584,16 +582,16 @@ static int dcls_writebuf(const uint8_t *buf, int len, int xlat) {
     cmd.value1 = htonl((uint32_t) buf);
     cmd.value2 = htonl(len);
 
-    send(dcls_socket, &cmd, sizeof(cmd), 0);
+    send(kosls_socket, &cmd, sizeof(cmd), 0);
 
-    dcls_recv_loop();
+    kosls_recv_loop();
 
     mutex_unlock(&mutex);
 
     return retval;
 }
 
-static int dcls_fcntl(void *h, int cmd, va_list ap) {
+static int kosls_fcntl(void *h, int cmd, va_list ap) {
     int rv = -1;
 
     (void)h;
@@ -623,32 +621,32 @@ static vfs_handler_t vh = {
     /* Name handler */
     {
         "/pc",      /* name */
-        0,      /* tbfi */
+        0,          /* tbfi */
         0x00010000, /* Version 1.0 */
-        0,      /* flags */
+        0,          /* flags */
         NMMGR_TYPE_VFS,
         NMMGR_LIST_INIT
     },
 
     0, NULL,    /* no cache, privdata */
 
-    dcls_open,
-    dcls_close,
-    dcls_read,
-    dcls_write,
-    dcls_seek,
-    dcls_tell,
-    dcls_total,
-    dcls_readdir,
+    kosls_open,
+    kosls_close,
+    kosls_read,
+    kosls_write,
+    kosls_seek,
+    kosls_tell,
+    kosls_total,
+    kosls_readdir,
     NULL,               /* ioctl */
-    dcls_rename,
-    dcls_unlink,
+    kosls_rename,
+    kosls_unlink,
     NULL,               /* mmap */
     NULL,               /* complete */
-    dcls_stat,
+    kosls_stat,
     NULL,               /* mkdir */
     NULL,               /* rmdir */
-    dcls_fcntl,
+    kosls_fcntl,
     NULL,               /* poll */
     NULL,               /* link */
     NULL,               /* symlink */
@@ -661,35 +659,35 @@ static vfs_handler_t vh = {
 };
 
 /* dbgio handler */
-dbgio_handler_t dbgio_dcls = {
-    .name = "fs_dclsocket",
-    .detected = dcls_detected,
-    .init = dcls_fake_init,
-    .shutdown = dcls_fake_shutdown,
-    .write_buffer = dcls_writebuf
+dbgio_handler_t dbgio_kosl = {
+    .name = "fs_koslsocket",
+    .detected = kosls_detected,
+    .init = kosls_fake_init,
+    .shutdown = kosls_fake_shutdown,
+    .write_buffer = kosls_writebuf
 };
 
-/* This function must be called prior to calling fs_dclsocket_init() */
-void fs_dclsocket_init_console(void) {
+/* This function must be called prior to calling fs_koslsocket_init() */
+void fs_koslsocket_init_console(void) {
     /* Make sure networking is up first of all */
     if(!net_default_dev) {
         return;
     }
 
-    dbgio_dcls.set_irq_usage = dbgio_null.set_irq_usage;
-    dbgio_dcls.flush = dbgio_null.flush;
-    dbgio_dcls.read_buffer = dbgio_null.read_buffer;
+    dbgio_kosl.set_irq_usage = dbgio_null.set_irq_usage;
+    dbgio_kosl.flush = dbgio_null.flush;
+    dbgio_kosl.read_buffer = dbgio_null.read_buffer;
 
     initted = 1;
 }
 
-uint32_t _fs_dclsocket_get_ip(void) {
+uint32_t fs_koslsocket_get_ip(void) {
     uint32_t ip, port;
 
-    return dcload_gethostinfo(&ip, &port);
+    return kosload_gethostinfo(&ip, &port);
 }
 
-int fs_dclsocket_init(void) {
+int fs_koslsocket_init(void) {
     struct sockaddr_in addr;
     int err;
     uint8_t ipaddr[4], mac[6];
@@ -699,14 +697,14 @@ int fs_dclsocket_init(void) {
     if(initted != 1)
         return -1;
 
-    /* Make sure we're actually on dcload-ip */
-    if(dcload_type != DCLOAD_TYPE_IP)
+    /* Make sure we're actually on kos-load IP mode */
+    if(kosload_type != KOSLOAD_TYPE_IP)
         return -1;
 
-    /* Determine where dctool is running, and set up our variables for that */
-    dcload_gethostinfo(&ip, &port);
+    /* Determine where kos-tool is running, and set up our variables for that */
+    kosload_gethostinfo(&ip, &port);
 
-    /* Put dc-tool's info into our ARP cache */
+    /* Put kos-tool's info into our ARP cache */
     net_ipv4_parse_address(ip, ipaddr);
 
     err = net_arp_lookup(net_default_dev, ipaddr, mac, NULL, NULL, 0);
@@ -719,17 +717,17 @@ int fs_dclsocket_init(void) {
     net_arp_insert(net_default_dev, mac, ipaddr, 0);
 
     /* Ok, now create our socket, and set it up properly */
-    dcls_socket = socket(PF_INET, SOCK_DGRAM, 0);
+    kosls_socket = socket(PF_INET, SOCK_DGRAM, 0);
 
-    if(dcls_socket == -1)
+    if(kosls_socket == -1)
         return -1;
 
     memset(&addr, 0, sizeof(struct sockaddr_in));
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(DCLOAD_PORT);
+    addr.sin_port = htons(KOSLOAD_PORT);
     addr.sin_addr.s_addr = INADDR_ANY;
 
-    err = bind(dcls_socket, (struct sockaddr *)&addr,
+    err = bind(kosls_socket, (struct sockaddr *)&addr,
                sizeof(struct sockaddr_in));
 
     if(err == -1)
@@ -738,7 +736,7 @@ int fs_dclsocket_init(void) {
     addr.sin_port = htons((uint16_t)port);
     addr.sin_addr.s_addr = htonl(ip);
 
-    err = connect(dcls_socket, (struct sockaddr *)&addr,
+    err = connect(kosls_socket, (struct sockaddr *)&addr,
                   sizeof(struct sockaddr_in));
 
     if(err == -1)
@@ -752,30 +750,30 @@ int fs_dclsocket_init(void) {
     return nmmgr_handler_add(&vh.nmmgr);
 
 error:
-    close(dcls_socket);
+    close(kosls_socket);
     return -1;
 }
 
-void fs_dclsocket_shutdown(void) {
+void fs_koslsocket_shutdown(void) {
     int old;
     command_t cmd;
 
     if(initted != 2)
         return;
 
-    dbglog(DBG_INFO, "fs_dclsocket: About to disable console\n");
+    dbglog(DBG_INFO, "fs_koslsocket: About to disable console\n");
 
     /* Disable the console first of all */
-    if(!strcmp(dbgio_dev_get(), "fs_dclsocket"))
+    if(!strcmp(dbgio_dev_get(), "fs_koslsocket"))
         dbgio_disable();
 
-    /* Send dc-tool an exit packet */
+    /* Send kos-tool an exit packet */
     memcpy(cmd.id, "DC00", 4);
 
     cmd.address = 0;
     cmd.size = 0;
 
-    send(dcls_socket, &cmd, sizeof(command_t), 0);
+    send(kosls_socket, &cmd, sizeof(command_t), 0);
 
     old = irq_disable();
 
@@ -786,7 +784,7 @@ void fs_dclsocket_shutdown(void) {
     irq_restore(old);
 
     /* Finally, clean up the socket */
-    close(dcls_socket);
+    close(kosls_socket);
 
     nmmgr_handler_remove(&vh.nmmgr);
 }

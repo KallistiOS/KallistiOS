@@ -10,7 +10,7 @@
 #include <kos/dbglog.h>
 
 #include <dc/scif.h>
-#include <dc/fs_dcload.h>
+#include <kos/fs_kosload.h>
 
 #include <ppp/ppp.h>
 
@@ -80,7 +80,7 @@ static ppp_device_t scif_dev = {
 int ppp_scif_init(int bps) {
     /* Make sure we're not using dcload-serial. If we are, we really shouldn't
        take over the serial port from it. */
-    if(dcload_type == DCLOAD_TYPE_SER) {
+    if(kosload_type == KOSLOAD_TYPE_SER) {
         dbglog(DBG_KDEBUG, "ppp_scif_init: aborting -- using dcload-serial.\n");
         return -1;
     }

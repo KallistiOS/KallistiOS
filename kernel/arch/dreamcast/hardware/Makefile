@@ -13,7 +13,7 @@ ifneq ($(KOS_SUBARCH), naomi)
 endif
 
 # System Calls
-OBJS += syscalls.o syscall_font.o dcload.o
+OBJS += syscalls.o syscall_font.o
 
 # G2
 OBJS += g2dma.o
