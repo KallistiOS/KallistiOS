@@ -21,7 +21,7 @@
    framing characters(#, $) on the wire.
 */
 
-#include <dc/dcload.h>
+#include <kos/fs_kosload.h>
 #include <dc/scif.h>
 
 #include <stdarg.h>
@@ -116,7 +116,7 @@ static char get_debug_char(void) {
 
     if(using_dcl) {
         if(in_dcl_pos >= in_dcl_size) {
-            in_dcl_size = dcload_gdbpacket(NULL, 0, in_dcl_buf, BUFMAX);
+            in_dcl_size = kosload_gdbpacket(NULL, 0, in_dcl_buf, BUFMAX);
             in_dcl_pos = 0;
         }
 
@@ -141,7 +141,7 @@ static void put_debug_char(char ch) {
         out_dcl_buf[out_dcl_pos++] = ch;
 
         if(out_dcl_pos >= BUFMAX) {
-            dcload_gdbpacket(out_dcl_buf, out_dcl_pos, NULL, 0);
+            kosload_gdbpacket(out_dcl_buf, out_dcl_pos, NULL, 0);
             out_dcl_pos = 0;
         }
     }
@@ -163,11 +163,11 @@ static void flush_debug_channel(void) {
     /* send the current complete packet and wait for a response */
     if(using_dcl) {
         if(in_dcl_pos >= in_dcl_size) {
-            in_dcl_size = dcload_gdbpacket(out_dcl_buf, out_dcl_pos, in_dcl_buf, BUFMAX);
+            in_dcl_size = kosload_gdbpacket(out_dcl_buf, out_dcl_pos, in_dcl_buf, BUFMAX);
             in_dcl_pos = 0;
         }
         else
-            dcload_gdbpacket(out_dcl_buf, out_dcl_pos, NULL, 0);
+            kosload_gdbpacket(out_dcl_buf, out_dcl_pos, NULL, 0);
 
         out_dcl_pos = 0;
     }

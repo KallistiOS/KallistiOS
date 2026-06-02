@@ -30,7 +30,6 @@
 #include <dc/vmufs.h>
 #include <dc/syscalls.h>
 #include <dc/wdt.h>
-#include <dc/dcload.h>
 
 #include "initall_hdrs.h"
 
@@ -46,17 +45,17 @@ void arch_real_exit(int ret_code) __noreturn;
 void (*__kos_init_early_fn)(void) __attribute__((weak,section(".data"))) = NULL;
 
 int main(int argc, char **argv);
-uint32_t _fs_dclsocket_get_ip(void);
+uint32_t fs_koslsocket_get_ip(void);
 
-void arch_init_net_dcload_ip(void) {
+void arch_init_net_kosload_ip(void) {
     union {
         uint32_t ipl;
         uint8_t ipb[4];
     } ip = { 0 };
 
-    if(dcload_type == DCLOAD_TYPE_IP) {
-        /* Grab the IP address from dcload before we disable dbgio... */
-        ip.ipl = _fs_dclsocket_get_ip();
+    if(kosload_type == KOSLOAD_TYPE_IP) {
+        /* Grab the IP address from kos-load before we disable dbgio... */
+        ip.ipl = fs_koslsocket_get_ip();
         dbglog(DBG_INFO, "dc-load says our IP is %d.%d.%d.%d\n", ip.ipb[3],
                ip.ipb[2], ip.ipb[1], ip.ipb[0]);
         dbgio_disable();
@@ -64,27 +63,27 @@ void arch_init_net_dcload_ip(void) {
 
     net_init(ip.ipl);     /* Enable networking (and drivers) */
 
-    if(dcload_type == DCLOAD_TYPE_IP) {
-        fs_dclsocket_init_console();
+    if(kosload_type == KOSLOAD_TYPE_IP) {
+        fs_koslsocket_init_console();
 
-        if(!fs_dclsocket_init()) {
-            dbgio_dev_select("fs_dclsocket");
+        if(!fs_koslsocket_init()) {
+            dbgio_dev_select("fs_koslsocket");
             dbgio_enable();
-            dbglog(DBG_INFO, "fs_dclsocket console support enabled\n");
+            dbglog(DBG_INFO, "fs_koslsocket console support enabled\n");
         }
     }
 }
 
-void arch_init_net_no_dcload(void) {
+void arch_init_net_no_kosload(void) {
     net_init(0);
 }
 
-KOS_INIT_FLAG_WEAK(arch_init_net_dcload_ip, true);
-KOS_INIT_FLAG_WEAK(arch_init_net_no_dcload, false);
+KOS_INIT_FLAG_WEAK(arch_init_net_kosload_ip, true);
+KOS_INIT_FLAG_WEAK(arch_init_net_no_kosload, false);
 
 void arch_init_net(void) {
-    KOS_INIT_FLAG_CALL(arch_init_net_dcload_ip);
-    KOS_INIT_FLAG_CALL(arch_init_net_no_dcload);
+    KOS_INIT_FLAG_CALL(arch_init_net_kosload_ip);
+    KOS_INIT_FLAG_CALL(arch_init_net_no_kosload);
 }
 
 void vmu_fs_init(void) {
@@ -118,17 +117,17 @@ KOS_INIT_FLAG_WEAK(vmu_fs_shutdown, true);
 KOS_INIT_FLAG_WEAK(fs_iso9660_init, true);
 KOS_INIT_FLAG_WEAK(fs_iso9660_shutdown, true);
 
-void dcload_init(void) {
-    if (syscall_dcload_detected()) {
-        dbglog(DBG_INFO, "dc-load console support enabled\n");
-        fs_dcload_init();
+void kosload_init(void) {
+    if (syscall_kosload_detected()) {
+        dbglog(DBG_INFO, "kos-load console support enabled\n");
+        fs_kosload_init();
     }
 }
 
-KOS_INIT_FLAG_WEAK(dcload_init, true);
-KOS_INIT_FLAG_WEAK(fs_dcload_init_console, true);
-KOS_INIT_FLAG_WEAK(fs_dcload_shutdown, true);
-KOS_INIT_FLAG_WEAK(fs_dclsocket_shutdown, true);
+KOS_INIT_FLAG_WEAK(kosload_init, true);
+KOS_INIT_FLAG_WEAK(fs_kosload_init_console, true);
+KOS_INIT_FLAG_WEAK(fs_kosload_shutdown, true);
+KOS_INIT_FLAG_WEAK(fs_koslsocket_shutdown, true);
 KOS_INIT_FLAG_WEAK(fs_init, true);
 KOS_INIT_FLAG_WEAK(fs_dev_init, true);
 KOS_INIT_FLAG_WEAK(fs_dev_shutdown, true);
@@ -159,7 +158,7 @@ int  __weak_symbol arch_auto_init(void) {
     ubc_init();
 
     /* Init dc-load console, if applicable */
-    KOS_INIT_FLAG_CALL(fs_dcload_init_console);
+    KOS_INIT_FLAG_CALL(fs_kosload_init_console);
 
     /* Init SCIF for debug stuff (maybe) */
     scif_init();
@@ -168,8 +167,8 @@ int  __weak_symbol arch_auto_init(void) {
     dbgio_add_handler(&dbgio_fb);
     dbgio_add_handler(&dbgio_null);
     dbgio_add_handler(&dbgio_scif);
-    dbgio_add_handler(&dbgio_dcls);
-    dbgio_add_handler(&dbgio_dcload);
+    dbgio_add_handler(&dbgio_kosl);
+    dbgio_add_handler(&dbgio_kosload);
 
     /* Init debug IO */
     dbgio_init();
@@ -210,7 +209,7 @@ int  __weak_symbol arch_auto_init(void) {
     if(!KOS_INIT_FLAG_CALL(fs_romdisk_mount_builtin))
         KOS_INIT_FLAG_CALL(fs_romdisk_mount_builtin_legacy);
 
-    KOS_INIT_FLAG_CALL(dcload_init);
+    KOS_INIT_FLAG_CALL(kosload_init);
 
     if (!KOS_PLATFORM_IS_NAOMI)
         KOS_INIT_FLAG_CALL(fs_iso9660_init);
@@ -233,7 +232,7 @@ int  __weak_symbol arch_auto_init(void) {
 }
 
 void  __weak_symbol arch_auto_shutdown(void) {
-    KOS_INIT_FLAG_CALL(fs_dclsocket_shutdown);
+    KOS_INIT_FLAG_CALL(fs_koslsocket_shutdown);
     if (!KOS_PLATFORM_IS_NAOMI)
         KOS_INIT_FLAG_CALL(net_shutdown);
 
@@ -250,7 +249,7 @@ void  __weak_symbol arch_auto_shutdown(void) {
 
     KOS_INIT_FLAG_CALL(library_shutdown);
 
-    KOS_INIT_FLAG_CALL(fs_dcload_shutdown);
+    KOS_INIT_FLAG_CALL(fs_kosload_shutdown);
     KOS_INIT_FLAG_CALL(vmu_fs_shutdown);
     if (!KOS_PLATFORM_IS_NAOMI)
         KOS_INIT_FLAG_CALL(fs_iso9660_shutdown);
