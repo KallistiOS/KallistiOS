@@ -287,3 +287,15 @@ diff --color -ruN newlib-4.6.0.20260123/newlib/libc/stdlib/assert.c newlib-4.6.0
 +// This is put in here to cause link errors if a proper newlib isn't present.
 +int __newlib_kos_patch = 1;
 +
+diff --color -ruN newlib-4.6.0.20260123/newlib/libc/machine/sh/asm.h newlib-4.6.0.20260123-kos/newlib/libc/machine/sh/asm.h
+--- newlib-4.6.0.20260123/newlib/libc/machine/sh/asm.h	2026-01-23 16:12:49.000000000 -0600
++++ newlib-4.6.0.20260123-kos/newlib/libc/machine/sh/asm.h	2026-01-23 16:12:49.000000000 -0600
+@@ -16,7 +16,7 @@
+ 	TEXT; .balign 8; .globl name; name:
+ #else
+ #define _ENTRY(name)	\
+-	.text; .align 2; .globl name; name:
++	.text; .align 2; .globl name; .weak name; .type name, %function; name:
+ #endif /* __SH5__ */
+ 
+ #define ENTRY(name)	\
