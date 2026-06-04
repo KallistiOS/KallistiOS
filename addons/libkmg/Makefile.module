@@ -1,6 +1,6 @@
 TARGET = kmgloader.klf
-OBJS = module_main.o exports.o
-LIBS = -lkmg -lloadable
+OBJS = module_main.o
+LIBS = -lkmg
 EXPORTS_SYMBOL = exports
 EXPORTS_FILE = exports.txt
 
