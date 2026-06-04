@@ -142,11 +142,13 @@ void conio_gotoxy(int x, int y) {
 int conio_getch(void) {
     int key = -1;
     uint8_t b;
+    maple_device_t *dev;
 
     switch (conio_ttymode) {
         case CONIO_TTY_PVR:
 #ifdef GFX
-            while ((key = kbd_get_key()) == -1) { thd_pass(); }
+            dev = maple_enum_type(0, MAPLE_FUNC_KEYBOARD);
+            while (dev && ((key = kbd_queue_pop(dev, true)) == KBD_QUEUE_END)) { thd_pass(); }
 #endif
             break;
         case CONIO_TTY_SERIAL: {
@@ -188,11 +190,14 @@ int conio_getch(void) {
 int conio_check_getch(void) {
     int key = -1;
     uint8_t b;
+    maple_device_t *dev;
 
     switch (conio_ttymode) {
         case CONIO_TTY_PVR:
 #ifdef GFX
-            key = kbd_get_key();
+            dev = maple_enum_type(0, MAPLE_FUNC_KEYBOARD);
+            if(dev)
+                key = kbd_queue_pop(dev, true);
 #endif
             break;
         case CONIO_TTY_SERIAL: {
