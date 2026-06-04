@@ -1,0 +1,7 @@
+TARGET = kmgloader.klf
+OBJS = module_main.o exports.o
+LIBS = -lkmg -lloadable
+EXPORTS_SYMBOL = exports
+EXPORTS_FILE = exports.txt
+
+include $(KOS_BASE)/loadable/Makefile.prefab

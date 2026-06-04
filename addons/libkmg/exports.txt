@@ -1,0 +1,9 @@
+include kos/exports.h
+include kmg/kmg.h
+
+# Exports for the klf file
+lib_get_name
+lib_get_version
+lib_open
+lib_close
+kmg_to_img
