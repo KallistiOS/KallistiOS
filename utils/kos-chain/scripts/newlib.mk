@@ -39,18 +39,15 @@ fixup-newlib-apply: fixup-newlib-init
 # to define _POSIX_THREADS
 # pthreads to kthreads mapping
 # so KOS includes are available as kos/file.h
-# kos/thread.h requires arch/irq.h
 	cp $(kos_base)/include/pthread.h $(newlib_inc)
 	cp $(kos_base)/include/sys/_pthreadtypes.h $(newlib_inc)/sys
 	cp $(kos_base)/include/sys/dirent.h $(newlib_inc)/sys
 ifndef MINGW32
 	ln -nsf $(kos_base)/include/kos $(newlib_inc)
-	ln -nsf $(kos_base)/kernel/arch/$(platform)/include/arch $(newlib_inc)
 else
 # Under MinGW/MSYS or MinGW-w64/MSYS2, the ln tool is not efficient, so it's
 # better to do a simple copy. Please keep that in mind when upgrading
 # KallistiOS or your toolchain!
 	cp -r $(kos_base)/include/kos $(newlib_inc)
-	cp -r $(kos_base)/kernel/arch/$(platform)/include/arch $(newlib_inc)
 	touch $(fixup_newlib_stamp)
 endif
