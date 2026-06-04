@@ -7,10 +7,8 @@
 #ifndef __KMG_KMG_H
 #define __KMG_KMG_H
 
-#ifdef _arch_dreamcast
-#   include <sys/cdefs.h>
-    __BEGIN_DECLS
-#endif
+#include <sys/cdefs.h>
+__BEGIN_DECLS
 
 #include <stdint.h>
 #include <kos/img.h>
@@ -57,13 +55,11 @@ typedef struct kmg_header {
 #define KMG_DCFMT_MIPMAP    0x0400  /* Includes mipmaps */
 
 #ifdef _arch_dreamcast
-
     /* Call to load a KMG file from the VFS. */
     int kmg_to_img(const char *fn, kos_img_t *rv);
-
-
-    __END_DECLS
 #endif
+
+__END_DECLS
 
 #endif  /* __KMG_KMG_H */
 
