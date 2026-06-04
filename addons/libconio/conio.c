@@ -146,7 +146,8 @@ int conio_getch(void) {
     switch (conio_ttymode) {
         case CONIO_TTY_PVR:
 #ifdef GFX
-            while ((key = kbd_get_key()) == -1) { thd_pass(); }
+            maple_device_t *dev = maple_enum_type(0, MAPLE_FUNC_KEYBOARD);
+            while (dev && ((key = kbd_queue_pop(dev, true)) == KBD_QUEUE_END)) { thd_pass(); }
 #endif
             break;
         case CONIO_TTY_SERIAL: {
@@ -192,7 +193,9 @@ int conio_check_getch(void) {
     switch (conio_ttymode) {
         case CONIO_TTY_PVR:
 #ifdef GFX
-            key = kbd_get_key();
+            maple_device_t *dev = maple_enum_type(0, MAPLE_FUNC_KEYBOARD);
+            if(dev)
+                key = kbd_queue_pop(dev, true);
 #endif
             break;
         case CONIO_TTY_SERIAL: {
