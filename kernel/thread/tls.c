@@ -221,7 +221,7 @@ void kthread_tls_shutdown(void) {
     kthread_tls_dest_t *n1, *n2;
 
     /* If we can't get it, shut down anyways */
-    mutex_lock_irqsafe(&dlist_mtx);
+    mutex_trylock(&dlist_mtx);
 
     LIST_FOREACH_SAFE(n1, &dest_list, dest_list, n2) {
         LIST_REMOVE(n1, dest_list);
