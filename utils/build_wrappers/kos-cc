@@ -60,6 +60,20 @@ if [ ${COVERAGE} = 1 ]; then
 	GCOV_LIBS="-Wl,--whole-archive -lkosgcov -Wl,--no-whole-archive $(${KOS_CC} -print-file-name=libgcov.a)"
 fi
 
+# When -pg is used, auto-link the gprof runtime so users only need -pg (like gcc
+# auto-adds -lgcov for --coverage). On SH4 the instrumentation is a bare trap
+# with no symbol reference, so --whole-archive is needed to pull libgprof in. It
+# goes just before the KOS lib group so its dependencies resolve from it. On
+# other consoles -pg emits a real _mcount call that already pulls libgprof, so
+# --whole-archive is redundant there but harmless -- one path fits all arches.
+GPROF_LIBS=""
+for i in $ARGS; do
+	if [ "${i}" = "-pg" ]; then
+		GPROF_LIBS="-Wl,--whole-archive -lgprof -Wl,--no-whole-archive"
+		break
+	fi
+done
+
 case $USEMODE in
 	0)
 		# Unknown mode ... use default args and cross fingers.
@@ -72,17 +86,17 @@ case $USEMODE in
 	1)
 		# In link mode, add all the extra processing.
 		if [ x${KOS_WRAPPERS_VERBOSE} = x"1" ]; then
-			echo ${KOS_CC} ${KOS_CFLAGS} ${GCOV_CFLAGS} ${KOS_LDFLAGS} "$@" ${GCOV_LIBS} ${KOS_LIBS}
+			echo ${KOS_CC} ${KOS_CFLAGS} ${GCOV_CFLAGS} ${KOS_LDFLAGS} "$@" ${GCOV_LIBS} ${GPROF_LIBS} ${KOS_LIBS}
 		fi
-		exec ${KOS_CC} ${KOS_CFLAGS} ${GCOV_CFLAGS} ${KOS_LDFLAGS} "$@" ${GCOV_LIBS} ${KOS_LIBS}
+		exec ${KOS_CC} ${KOS_CFLAGS} ${GCOV_CFLAGS} ${KOS_LDFLAGS} "$@" ${GCOV_LIBS} ${GPROF_LIBS} ${KOS_LIBS}
 	;;
 
 	3)
 		# Link mode for autoconf: pass -fno-lto to speed up process
 		if [ x${KOS_WRAPPERS_VERBOSE} = x"1" ]; then
-			echo ${KOS_CC} ${KOS_CFLAGS} ${KOS_LDFLAGS} -fno-lto "$@" ${KOS_LIBS}
+			echo ${KOS_CC} ${KOS_CFLAGS} ${KOS_LDFLAGS} -fno-lto "$@" ${GPROF_LIBS} ${KOS_LIBS}
 		fi
-		exec ${KOS_CC} ${KOS_CFLAGS} ${KOS_LDFLAGS} -fno-lto "$@" ${KOS_LIBS}
+		exec ${KOS_CC} ${KOS_CFLAGS} ${KOS_LDFLAGS} -fno-lto "$@" ${GPROF_LIBS} ${KOS_LIBS}
 	;;
 
 	2)
