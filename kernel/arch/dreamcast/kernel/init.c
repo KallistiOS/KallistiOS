@@ -272,6 +272,10 @@ void  __weak_symbol arch_auto_shutdown(void) {
     rtc_shutdown();
 }
 
+/* Weak default; the libgprof addon provides the strong version that starts
+   gprof profiling. Called after constructors so it never profiles them. */
+void __weak_symbol gprof_init(void) { }
+
 /* This is the entry point inside the C program */
 void arch_main(void) {
     int rv;
@@ -303,6 +307,9 @@ void arch_main(void) {
 
     /* Run ctors */
     _init();
+
+    /* Start gprof profiling, if libgprof is linked in */
+    gprof_init();
 
     /* Call the user's main function */
     rv = main(0, NULL);
