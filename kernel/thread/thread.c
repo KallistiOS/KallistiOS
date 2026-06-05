@@ -131,7 +131,7 @@ int thd_each(int (*cb)(kthread_t *thd, void *user_data), void *data) {
 }
 
 int thd_pslist(int (*pf)(const char *fmt, ...)) {
-    uint64_t cpu_time, ms_time, cpu_total = 0;
+    uint64_t cpu_time, ns_time, cpu_total = 0;
     kthread_t *cur;
 
     pf("All threads (may not be deterministic):\n");
@@ -139,7 +139,7 @@ int thd_pslist(int (*pf)(const char *fmt, ...)) {
 
     irq_disable_scoped();
     thd_get_cpu_time(thd_get_current());
-    ms_time = timer_ms_gettime64();
+    ns_time = timer_ns_gettime64();
 
     LIST_FOREACH(cur, &thd_list, t_list) {
         pf("%08lx  ", CONTEXT_PC(cur->context));
@@ -157,15 +157,15 @@ int thd_pslist(int (*pf)(const char *fmt, ...)) {
         cpu_total += cpu_time;
 
         pf("%12llu (%6.3lf%%)  ",
-            cpu_time, (double)cpu_time / (double)ms_time * 100.0);
+            cpu_time, (double)cpu_time / (double)ns_time * 100.0);
 
         pf("%-10s  ", thd_state_to_str(cur));
         pf("%-10s\n", cur->label);
     }
 
     pf("-\t  -\t -\t       -\t     -");
-    pf("%12llu (%6.3lf%%)       -      [system]\n", (ms_time - cpu_total),
-        (double)(ms_time - cpu_total) / (double)ms_time * 100.0);
+    pf("%12llu (%6.3lf%%)       -      [system]\n", (ns_time - cpu_total),
+        (double)(ns_time - cpu_total) / (double)ns_time * 100.0);
 
     pf("--end of list--\n");
 
@@ -614,10 +614,12 @@ tid_t thd_get_id(const kthread_t *thd) {
 /* Scheduling routines */
 
 static void thd_update_cpu_time(kthread_t *thd, uint64_t now) {
+
     thd_current->cpu_time.total +=
             now - thd_current->cpu_time.scheduled;
 
     thd->cpu_time.scheduled = now;
+    thd->cpu_time.scheduled_ms = (uint32_t)(now / 1000000UL);
 }
 
 /* Helper function that sets a thread being scheduled */
@@ -646,7 +648,7 @@ static inline prio_t thd_calc_prio(const kthread_t *thd, uint32_t now) {
     prio_t prio = thd->prio;
 
     if(__predict_true(prio < PRIO_MAX))
-       prio >>= (now - (uint32_t)thd->cpu_time.scheduled) >> thd_ageing_ms_log2;
+       prio >>= (now - thd->cpu_time.scheduled_ms) >> thd_ageing_ms_log2;
 
     return prio;
 }
