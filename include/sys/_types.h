@@ -155,11 +155,6 @@ typedef _TIMER_T_   __timer_t;
 
 typedef _CLOCK_T_   __clock_t;
 
-#ifndef IOV_MAX
-/** \brief  Maximum length of an iovec, in elements. */
-#define IOV_MAX                 1024
-#endif
-
 #if __GNUC_MINOR__ > 95 || __GNUC__ >= 3
 typedef __builtin_va_list   __va_list;
 #else

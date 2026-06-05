@@ -49,6 +49,7 @@
 __BEGIN_DECLS
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include <sys/uio.h>
 
