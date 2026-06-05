@@ -25,7 +25,6 @@
 __BEGIN_DECLS
 
 #include <stdint.h>
-#include <sys/queue.h>
 #include <kos/regfield.h>
 
 /** \defgroup elf   ELF File Format
