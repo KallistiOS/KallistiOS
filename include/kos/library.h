@@ -32,7 +32,7 @@
 __BEGIN_DECLS
 
 #include <kos/elf.h>
-#include <kos/fs.h>
+#include <sys/queue.h>
 
 /** \defgroup system_libraries  Libraries
     \brief                      API for managing dynamically loaded libraries
