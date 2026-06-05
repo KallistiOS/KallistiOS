@@ -6,7 +6,7 @@
 */
 
 #include <arch/arch.h>
-#include <sys/uio.h>
+#include <sys/syslimits.h>
 #include <kos/cache.h>
 #include <kos/netcfg.h>
 #include <kos/fs.h>

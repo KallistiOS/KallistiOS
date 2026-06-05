@@ -20,7 +20,7 @@
 #define __SYS_UIO_H
 
 #include <sys/cdefs.h>
-#include <sys/types.h>
+#include <sys/syslimits.h>
 
 __BEGIN_DECLS
 
