@@ -143,7 +143,7 @@ int mutex_destroy(mutex_t *m) __nonnull_all;
                      function was called inside an interrupt and the mutex was
                      already locked \n
 */
-int mutex_lock_irqsafe(mutex_t *m) __nonnull_all;
+__result_use_check int mutex_lock_irqsafe(mutex_t *m) __nonnull_all;
 
 /** \brief  Lock a mutex (with a timeout).
 
