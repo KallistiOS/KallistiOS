@@ -62,9 +62,9 @@ static dirent_t root_readdir_dirent;
 static dirent_t *fs_root_readdir(fs_hnd_t *handle) {
     nmmgr_handler_t *nmhnd;
     nmmgr_list_t    *nmhead;
-    int         cnt;
+    uintptr_t        cnt;
 
-    cnt = (int)handle->hnd;
+    cnt = (uintptr_t)handle->hnd;
 
     nmhead = nmmgr_get_list();
 
@@ -90,7 +90,7 @@ static dirent_t *fs_root_readdir(fs_hnd_t *handle) {
     else
         strcpy(root_readdir_dirent.name, nmhnd->pathname);
 
-    handle->hnd = (void *)((int)handle->hnd + 1);
+    handle->hnd = (void *)((uintptr_t)handle->hnd + 1);
 
     return &root_readdir_dirent;
 }

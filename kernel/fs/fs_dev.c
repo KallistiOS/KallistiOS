@@ -28,9 +28,9 @@ static dirent_t dev_readdir_dirent;
 static dirent_t *dev_root_readdir(dev_hnd_t * handle) {
     nmmgr_handler_t *nmhnd;
     nmmgr_list_t    *nmhead;
-    int         cnt;
+    uintptr_t        cnt;
 
-    cnt = (int)handle->hnd;
+    cnt = (uintptr_t)handle->hnd;
 
     nmhead = nmmgr_get_list();
 
@@ -49,7 +49,7 @@ static dirent_t *dev_root_readdir(dev_hnd_t * handle) {
 
     strcpy(dev_readdir_dirent.name, nmhnd->pathname + strlen("/dev/"));
 
-    handle->hnd = (void *)((int)handle->hnd + 1);
+    handle->hnd = (void *)((uintptr_t)handle->hnd + 1);
 
     return &dev_readdir_dirent;
 }
