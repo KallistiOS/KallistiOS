@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
        in memory.
     */
     f = fs_open("/rd/sub.bin", O_RDONLY);
-    assert(f);
+    assert(f != FILEHND_INVALID);
 
     /* Get the size of sub.bin */
     s = fs_total(f);
