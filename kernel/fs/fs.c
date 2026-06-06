@@ -814,7 +814,7 @@ int fs_symlink(const char *path1, const char *path2) {
     }
 }
 
-int fs_readlink(const char *path, char *buf, size_t bufsize) {
+ssize_t fs_readlink(const char *path, char *buf, size_t bufsize) {
     vfs_handler_t *vfs;
     char fullpath[PATH_MAX];
 
