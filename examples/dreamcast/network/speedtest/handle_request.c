@@ -174,7 +174,7 @@ refresh_buffer:
 done_parsing:
     char response_buf[BUFSIZE];
     if(hr->method == METHOD_GET) {
-        file_t file = -1;
+        file_t file = FILEHND_INVALID;
         uint32_t offset;
         int cnt;
         int wrote;
