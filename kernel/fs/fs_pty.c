@@ -121,8 +121,8 @@ int fs_pty_create(char *buffer, int maxbuflen, file_t *master_out, file_t *slave
         return -1;
 
     /* Initialize outputs to invalid values */
-    *master_out = -1;
-    *slave_out = -1;
+    *master_out = FILEHND_INVALID;
+    *slave_out = FILEHND_INVALID;
 
     /* Are we bootstrapping? */
     boot = LIST_EMPTY(&ptys);
@@ -175,7 +175,7 @@ int fs_pty_create(char *buffer, int maxbuflen, file_t *master_out, file_t *slave
     sprintf(mname, "/pty/ma%02x", master->id);
     sprintf(sname, "/pty/sl%02x", slave->id);
     *slave_out = fs_open(sname, O_RDWR);
-    if(*slave_out < 0)
+    if(*slave_out == FILEHND_INVALID)
         goto cleanup;
 
     if(boot) {
@@ -808,8 +808,8 @@ static int initted = 0;
 
 /* Initialize the file system */
 void fs_pty_init(void) {
-    int cm, cs;
-    int tm, ts;
+    file_t cm, cs;
+    file_t tm, ts;
 
     if(initted)
         return;
