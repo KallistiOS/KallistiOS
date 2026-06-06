@@ -137,7 +137,7 @@ void write_entry(void) {
     fs_unlink("/vmu/a1/TESTFILE");
     f = fs_open("/vmu/a1/TESTFILE", O_WRONLY);
 
-    if(!f) {
+    if(f == FILEHND_INVALID) {
         printf("error writing\n");
         return;
     }

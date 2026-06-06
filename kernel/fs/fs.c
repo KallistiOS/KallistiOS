@@ -191,7 +191,7 @@ static int fs_hnd_unref(fs_hnd_t *ref) {
 
 /* Assigns a file descriptor (index) to a file handle (pointer). Will auto-
    reference the handle, and unrefs on error. */
-static int fs_hnd_assign(fs_hnd_t *hnd) {
+static file_t fs_hnd_assign(fs_hnd_t *hnd) {
     int i;
 
     fs_hnd_ref(hnd);
@@ -210,10 +210,10 @@ static int fs_hnd_assign(fs_hnd_t *hnd) {
 
         fs_hnd_unref(hnd);
         errno = EMFILE;
-        return -1;
+        return FILEHND_INVALID;
     }
 
-    return i;
+    return (file_t)i;
 }
 
 int fs_fdtbl_destroy(void) {
@@ -238,7 +238,7 @@ file_t fs_open(const char *fn, int mode) {
     hnd = fs_hnd_open(fn, mode);
 
     if(!hnd)
-        return -1;
+        return FILEHND_INVALID;
 
     /* Ok, that succeeded -- now look for a file descriptor. */
     return fs_hnd_assign(hnd);
@@ -253,7 +253,7 @@ file_t fs_open_handle(vfs_handler_t * vfs, void * vhnd) {
 
     if(hnd == NULL) {
         errno = ENOMEM;
-        return -1;
+        return FILEHND_INVALID;
     }
 
     hnd->handler = vfs;
@@ -286,13 +286,13 @@ void * fs_get_handle(file_t fd) {
 
 file_t fs_dup(file_t oldfd) {
     /* Make sure it exists */
-    if(oldfd < 0 || oldfd >= FD_SETSIZE) {
+    if(oldfd < 0 || oldfd >= FD_SETSIZE || oldfd == FILEHND_INVALID) {
         errno = EBADF;
-        return -1;
+        return FILEHND_INVALID;
     }
     else if(!fd_table[oldfd]) {
         errno = EBADF;
-        return -1;
+        return FILEHND_INVALID;
     }
 
     return fs_hnd_assign(fd_table[oldfd]);
@@ -302,13 +302,14 @@ file_t fs_dup2(file_t oldfd, file_t newfd) {
     fs_hnd_t *prev;
 
     /* Make sure the descriptors are valid */
-    if(oldfd < 0 || oldfd >= FD_SETSIZE || newfd < 0 || newfd >= FD_SETSIZE) {
+    if(oldfd < 0 || oldfd >= FD_SETSIZE || oldfd == FILEHND_INVALID ||
+       newfd < 0 || newfd >= FD_SETSIZE || newfd == FILEHND_INVALID) {
         errno = EBADF;
-        return -1;
+        return FILEHND_INVALID;
     }
     else if(!fd_table[oldfd]) {
         errno = EBADF;
-        return -1;
+        return FILEHND_INVALID;
     }
 
     if(oldfd == newfd)
@@ -332,8 +333,8 @@ out_get_ref:
 
 /* Returns a file handle for a given fd, or NULL if the parameters
    are not valid. */
-static fs_hnd_t * fs_map_hnd(file_t fd) {
-    if(fd < 0 || fd >= FD_SETSIZE) {
+static fs_hnd_t *fs_map_hnd(file_t fd) {
+    if(fd < 0 || fd >= FD_SETSIZE || fd == FILEHND_INVALID) {
         errno = EBADF;
         return NULL;
     }

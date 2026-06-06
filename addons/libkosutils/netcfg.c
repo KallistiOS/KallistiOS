@@ -264,7 +264,7 @@ int netcfg_load(netcfg_t *out) {
     /* Scan for VMUs */
     f = fs_open("/vmu", O_RDONLY | O_DIR);
 
-    if(f >= 0) {
+    if(f != FILEHND_INVALID) {
         for(; ;) {
             d = fs_readdir(f);
 
@@ -391,7 +391,7 @@ int netcfg_save(const netcfg_t *cfg) {
     /* Scan for a VMU */
     f = fs_open("/vmu", O_RDONLY | O_DIR);
 
-    if(f < 0)
+    if(f == FILEHND_INVALID)
         return -1;
 
     d = fs_readdir(f);
