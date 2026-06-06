@@ -396,7 +396,7 @@ sfxhnd_t snd_sfx_load(const char *fn) {
 
     /* Open the sound effect file */
     fd = fs_open(fn, O_RDONLY);
-    if(fd <= FILEHND_INVALID) {
+    if(fd == FILEHND_INVALID) {
         dbglog(DBG_ERROR, "snd_sfx_load: can't open %s\n", fn);
         return SFXHND_INVALID;
     }
@@ -448,7 +448,7 @@ sfxhnd_t snd_sfx_load_ex(const char *fn, uint32_t rate, uint16_t bitsize, uint16
     sfxhnd_t effect;
     file_t fd = fs_open(fn, O_RDONLY);
 
-    if(fd <= FILEHND_INVALID) {
+    if(fd == FILEHND_INVALID) {
         dbglog(DBG_ERROR, "snd_sfx_load_ex: can't open sfx %s\n", fn);
         return SFXHND_INVALID;
     }

@@ -98,7 +98,7 @@ static inline int fs_vmu_set_default_header(const vmu_pkg_t *pkg) {
     int ret;
 
     fd = fs_open("/vmu", O_RDONLY | O_DIR);
-    if(!fd)
+    if(fd == FILEHND_INVALID)
         return -1;
 
     ret = fs_vmu_set_header(fd, pkg);

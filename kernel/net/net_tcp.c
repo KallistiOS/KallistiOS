@@ -467,7 +467,7 @@ ret_no_remove:
             sock->state == TCP_STATE_CLOSE_WAIT)
         sock->intflags |= TCP_IFLAG_QUEUEDCLOSE;
 
-    sock->sock = -1;
+    sock->sock = FILEHND_INVALID;
 
     /* Don't free anything here, it will be dealt with later on in the
        net_thd callback. */
@@ -3149,7 +3149,7 @@ void net_tcp_shutdown(void) {
     while(i) {
         tmp = LIST_NEXT(i, sock_list);
 
-        if(i->sock != -1) {
+        if(i->sock != FILEHND_INVALID) {
             close(i->sock);
         }
         else {

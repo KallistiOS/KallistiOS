@@ -274,7 +274,7 @@ int vmu_pkg_load_icon(vmu_pkg_t *pkg, const char *icon_fn) {
     }
 
     fd = fs_open(icon_fn, O_RDONLY);
-    if(fd == -1)
+    if(fd == FILEHND_INVALID)
         return fd;
 
     fs_read(fd, &hdr, sizeof(hdr));
