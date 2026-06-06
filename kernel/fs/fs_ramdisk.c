@@ -94,9 +94,9 @@ static rd_dir_t  *rootdir = NULL;
 static struct {
     rd_file_t   *file;      /* ramdisk file struct */
     int         dir;        /* >0 if a directory */
-    uint32_t    ptr;        /* Current read position in bytes */
-    dirent_t    dirent;     /* A static dirent to pass back to clients */
     int         omode;      /* Open mode */
+    uintptr_t   ptr;        /* Current read position in bytes */
+    dirent_t    dirent;     /* A static dirent to pass back to clients */
 } fh[FS_RAMDISK_MAX_FILES];
 
 /* Mutex for file system structs */
@@ -337,7 +337,7 @@ static void * ramdisk_open(vfs_handler_t * vfs, const char *fn, int mode) {
     /* If we opened a dir, then ptr is actually a pointer to the first
        file entry. */
     if(mode & O_DIR) {
-        fh[fd].ptr = (uint32_t)LIST_FIRST((rd_dir_t *)f->data);
+        fh[fd].ptr = (uintptr_t)LIST_FIRST((rd_dir_t *)f->data);
     }
 
     /* Increase the usage count */
@@ -524,7 +524,7 @@ static const dirent_t *ramdisk_readdir(void * h) {
     if(fd < FS_RAMDISK_MAX_FILES && fh[fd].file != NULL && fh[fd].ptr != 0 && fh[fd].dir) {
         /* Find the current file and advance to the next */
         f = (rd_file_t *)fh[fd].ptr;
-        fh[fd].ptr = (uint32_t)LIST_NEXT(f, dirlist);
+        fh[fd].ptr = (uintptr_t)LIST_NEXT(f, dirlist);
 
         /* Copy out the requested data */
         strcpy(fh[fd].dirent.name, f->name);
@@ -670,7 +670,7 @@ static int ramdisk_rewinddir(void * h) {
     }
 
     /* Rewind to the first file. */
-    fh[fd].ptr = (uint32_t)LIST_FIRST((rd_dir_t *)fh[fd].file->data);
+    fh[fd].ptr = (uintptr_t)LIST_FIRST((rd_dir_t *)fh[fd].file->data);
 
     return 0;
 }
@@ -762,7 +762,7 @@ int fs_ramdisk_attach(const char * fn, void * obj, size_t size) {
         return -1;
 
     /* Ditch the data block we had and replace it with the user one. */
-    f = fh[(int)fd].file;
+    f = fh[(uintptr_t)fd].file;
     free(f->data);
     f->data = obj;
     f->datasize = size;
@@ -790,7 +790,7 @@ int fs_ramdisk_detach(const char * fn, void ** obj, size_t * size) {
     assert(obj != NULL);
     assert(size != NULL);
 
-    f = fh[(int)fd].file;
+    f = fh[(uintptr_t)fd].file;
     *obj = f->data;
     *size = f->size;
 
