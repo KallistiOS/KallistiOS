@@ -13,7 +13,6 @@
 #include <assert.h>
 #include <stdio.h>
 #include <arch/arch.h>
-#include <arch/types.h>
 #include <arch/stack.h>
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>
