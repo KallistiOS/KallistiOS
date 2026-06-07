@@ -281,7 +281,7 @@ static int do_net_dhcp_request(uint32_t required_address, bool in_wq) {
     return rv;
 }
 
-int net_dhcp_request(uint32 required_address) {
+int net_dhcp_request(uint32_t required_address) {
     return do_net_dhcp_request(required_address, false);
 }
 
