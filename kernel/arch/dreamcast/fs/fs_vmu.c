@@ -13,7 +13,6 @@
 #include <errno.h>
 #include <time.h>
 
-#include <arch/types.h>
 #include <kos/mutex.h>
 #include <kos/opts.h>
 #include <kos/dbglog.h>
@@ -53,7 +52,7 @@ debug output.
 
 /* File handles */
 typedef struct vmu_fh_str {
-    uint32 strtype;                     /* 0==dir, 1==file */
+    uint32_t strtype;                   /* 0==dir, 1==file */
     TAILQ_ENTRY(vmu_fh_str) listent;    /* list entry */
 
     int mode;                           /* mode the file was opened with */
@@ -62,22 +61,22 @@ typedef struct vmu_fh_str {
     off_t loc;                          /* current position from the start in the file (bytes) */
     off_t start;                        /* start of the data in the file (bytes) */
     maple_device_t *dev;                /* maple address of the vmu to use */
-    uint32 filesize;                    /* file length from dirent (in 512-byte blks) */
-    uint8 *data;                        /* copy of the whole file */
+    uint32_t filesize;                  /* file length from dirent (in 512-byte blks) */
+    uint8_t *data;                      /* copy of the whole file */
     vmu_pkg_t *header;                  /* VMU file header */
     bool raw;                           /* file opened as raw */
 } vmu_fh_t;
 
 /* Directory handles */
 typedef struct vmu_dh_str {
-    uint32 strtype;                     /* 0==dir, 1==file */
+    uint32_t strtype;                   /* 0==dir, 1==file */
     TAILQ_ENTRY(vmu_dh_str) listent;    /* list entry */
 
     int rootdir;                        /* 1 if we're reading /vmu */
     dirent_t dirent;                    /* Dirent to pass back */
     vmu_dir_t *dirblocks;               /* Copy of all directory blocks */
-    uint16 entry;                       /* Current dirent */
-    uint16 dircnt;                      /* Count of dir entries */
+    uint16_t entry;                     /* Current dirent */
+    uint16_t dircnt;                    /* Count of dir entries */
     maple_device_t *dev;                /* VMU address */
 } vmu_dh_t;
 
@@ -285,7 +284,7 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
         fd->start = (unsigned int)vmu_pkg.data - (unsigned int)data;
     }
 
-    fd->data = (uint8 *)data;
+    fd->data = (uint8_t *)data;
     fd->filesize = datasize / 512;
 
     if(fd->filesize == 0) {
