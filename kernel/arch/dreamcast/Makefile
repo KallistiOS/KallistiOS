@@ -4,7 +4,7 @@
 # Copyright (C) 2001 Megan Potter
 #
 
-SUBDIRS=fs hardware kernel math sound util
+SUBDIRS=fs gdb hardware kernel math sound util
 
 include $(KOS_BASE)/Makefile.rules
 

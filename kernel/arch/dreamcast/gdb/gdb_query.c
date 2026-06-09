@@ -23,6 +23,7 @@
 #include <inttypes.h>
 
 #include <kos/thread.h>
+#include <arch/tls_static.h>
 
 #include "gdb_internal.h"
 
