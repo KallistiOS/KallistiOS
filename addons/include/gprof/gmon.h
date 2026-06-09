@@ -34,7 +34,7 @@ __BEGIN_DECLS
         CFLAGS += -pg -fno-omit-frame-pointer -fno-inline
 
         $(TARGET): $(OBJS)
-        	kos-cc -pg -o $(TARGET) $(OBJS)
+            kos-cc -pg -o $(TARGET) $(OBJS)
         ```
         \c -fno-omit-frame-pointer is REQUIRED because GCC rejects \c -pg together
         with \c -fomit-frame-pointer (which KOS sets by default); \c -fno-inline
