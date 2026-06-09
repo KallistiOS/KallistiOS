@@ -22,6 +22,13 @@
 
 #include "gdb_internal.h"
 
+#define MEM_AREA_BIOS_BASE      0x80000000  /* P1, 2MB boot ROM */
+#define MEM_AREA_BIOS_SIZE      0x00200000
+#define MEM_AREA_FLASH_BASE     0x80200000  /* P1, 128KB flash */
+#define MEM_AREA_FLASH_SIZE     0x00020000
+#define MEM_AREA_FIRMWARE_BASE  MEM_AREA_BIOS_BASE
+#define MEM_AREA_FIRMWARE_SIZE  (MEM_AREA_BIOS_SIZE + MEM_AREA_FLASH_SIZE)
+
 /* Returns whether one address is valid for a GDB memory access. */
 static bool is_valid_memory_address(uintptr_t addr, bool is_write) {
     if(addr >= MEM_AREA_P4_BASE)
@@ -30,6 +37,10 @@ static bool is_valid_memory_address(uintptr_t addr, bool is_write) {
     uintptr_t normalized = (addr & MEM_AREA_CACHE_MASK) | MEM_AREA_P1_BASE;
 
     if(arch_valid_address(normalized) || arch_valid_text_address(normalized))
+        return true;
+
+    if(!is_write && normalized >= MEM_AREA_FIRMWARE_BASE &&
+            normalized < MEM_AREA_FIRMWARE_BASE + MEM_AREA_FIRMWARE_SIZE)
         return true;
 
     return false;
