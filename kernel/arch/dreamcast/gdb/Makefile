@@ -1,6 +1,6 @@
 # KallistiOS ##version##
 #
-# arch/dreamcast/kernel/gdb/Makefile
+# arch/dreamcast/gdb/Makefile
 # Copyright (C) 2026 Andy Barajas
 #
 
