@@ -80,7 +80,8 @@ static inline void dcache_toggle_ocindex(bool enable) {
 
     Using OCRAM mode, the cache lines 128 to 255 and 384 to 511 are guaranteed
     to be unused, and can be accessed directly as if it was RAM. The 8 KiB
-    scratchpad can then be accessed at address 0x7c001000.
+    scratchpad can then be accessed at address 0x7c001000, or preferably
+    through any variable tagged with the __ocram tag.
 
     \param  enable          Whether or not to enable OCINDEX mode
 */
@@ -107,6 +108,19 @@ static inline void dcache_toggle_ocram(bool enable) {
 static inline void icache_toggle_icindex(bool enable) {
     cache_write_ccr(CCR_IIX, (enable ? CCR_IIX : 0) | CCR_ICI);
 }
+
+/** \brief  Mark a variable as residing in OCRAM
+
+    This can be used to place a variable in OCRAM space. Before any access
+    (read or write) can be made, OCRAM needs to be enabled.
+    Also note that after enabling OCRAM the variable will contain garbage, so
+    the code must not rely on the content of the variable, and must not be
+    statically initialized (even to zero).
+
+    Example:
+    __ocram static uint32_t my_array[16];
+*/
+#define __ocram __attribute__((section(".ocram")))
 
 __END_DECLS
 
