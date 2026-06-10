@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
 
     printf("Memory allocated\n");
 
-    if((size_t)fs_read(hnd, mod_buffer, fs_total(hnd)) != fs_total(hnd)) {
+    if(fs_read(hnd, mod_buffer, fs_total(hnd)) != fs_total(hnd)) {
         printf("Read error\n");
         free(mod_buffer);
         return 0;
@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
 
         snd_stream_poll(shnd);
 
-        timer_spin_sleep(10);
+        thd_sleep(10);
     }
 
     delete soundfile;
