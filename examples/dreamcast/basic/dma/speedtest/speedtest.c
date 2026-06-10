@@ -27,7 +27,7 @@ static void dma_done(void *d)
 }
 
 static dma_config_t dma_cfg = {
-    .channel = 1,
+    .channel = DMA_CHANNEL_1,
     .request = DMA_REQUEST_AUTO_MEM_TO_MEM,
     .unit_size = DMA_UNITSIZE_32BYTE,
     .src_mode = DMA_ADDRMODE_INCREMENT,
