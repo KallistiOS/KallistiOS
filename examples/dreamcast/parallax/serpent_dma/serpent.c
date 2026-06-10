@@ -111,7 +111,7 @@ static void sphere(sphere_t *s) { /* {{{ */
     }
 }
 
-static void draw_sphere(sphere_t *s, int list) {
+static void draw_sphere(sphere_t *s, pvr_list_t list) {
     void * sqd;
     pvr_vertex_t *v, *vd;
 

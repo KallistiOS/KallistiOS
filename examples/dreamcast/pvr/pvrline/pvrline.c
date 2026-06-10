@@ -37,7 +37,7 @@ uint8_t __attribute__((aligned(32))) tr_buf[VERTBUF_SIZE];
  * representing a quad
 */
 void draw_pvr_line(vec3f_t *v1, vec3f_t *v2, float width, int color,
-    int which_list, pvr_poly_hdr_t *which_hdr);
+    pvr_list_t which_list, pvr_poly_hdr_t *which_hdr);
 
 int main(int argc, char **argv)
 {
@@ -185,7 +185,7 @@ int main(int argc, char **argv)
 }
 
 void draw_pvr_line(vec3f_t *v1, vec3f_t *v2, float width, int color,
-    int which_list, pvr_poly_hdr_t *which_hdr)
+    pvr_list_t which_list, pvr_poly_hdr_t *which_hdr)
 {
     pvr_vertex_t __attribute__((aligned(32))) line_verts[4];
     pvr_vertex_t *vert = line_verts;
