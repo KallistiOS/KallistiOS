@@ -39,6 +39,7 @@ ISO9660 systems, as these were used as references as well.
 #include <kos/opts.h>
 #include <kos/dbglog.h>
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdalign.h>
@@ -50,7 +51,7 @@ ISO9660 systems, as these were used as references as well.
 #include <sys/ioctl.h>
 
 static int init_percd(void);
-static int percd_done;
+static bool percd_done;
 
 /********************************************************************************/
 /* Low-level Joliet utils */
@@ -643,7 +644,7 @@ static void * iso_open(vfs_handler_t * vfs, const char *fn, int mode) {
         return 0;
     }
 
-    percd_done = 1;
+    percd_done = true;
 
     /* Find the file we want */
     de = find_object_path(fn, (mode & O_DIR) ? 1 : 0, &root_dirent);
@@ -1087,7 +1088,7 @@ int iso_reset(void) {
     iso_break_all();
     bclear();
     iso_abort_stream(false);
-    percd_done = 0;
+    percd_done = false;
     return 0;
 }
 
@@ -1110,7 +1111,7 @@ static void iso_vblank(uint32 evt, void *data) {
 
     if(iso_last_status != status) {
         if(status == CD_STATUS_OPEN || status == CD_STATUS_NO_DISC)
-            percd_done = 0;
+            percd_done = false;
 
         iso_last_status = status;
     }
@@ -1281,7 +1282,7 @@ void fs_iso9660_init(void) {
         dcache[i]->sector = -1;
     }
 
-    percd_done = 0;
+    percd_done = false;
     iso_last_status = -1;
 
     /* Register with the vblank */
