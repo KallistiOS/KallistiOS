@@ -177,8 +177,7 @@ void pvr_sync_reg_buffer(void) {
 void pvr_begin_queued_render(void) {
     volatile pvr_ta_buffers_t   *tbuf;
     volatile pvr_frame_buffers_t    *rbuf;
-    pvr_bkg_poly_t  bkg;
-    uint32_t      *vrl;
+    pvr_bkg_poly_t  *bkg;
     uint32_t      vert_end;
     int bufn = pvr_state.view_target;
     union {
@@ -198,24 +197,25 @@ void pvr_begin_queued_render(void) {
     vert_end = 0x01000000 | ((PVR_GET(PVR_TA_VERTBUF_POS) - tbuf->vertex) << 1);
 
     /* Throw the background data on the end of the TA's list */
-    bkg.flags1 = 0x90800000;    /* These are from libdream.. ought to figure out */
-    bkg.flags2 = 0x20800440;    /*   what they mean for sure... heh =) */
-    bkg.dummy  = 0;
-    bkg.x1     = 0.0f;
-    bkg.y1     = pvr_state.h;
-    bkg.z1     = FLT_EPSILON;
-    bkg.argb1  = pvr_state.bg_color;
-    bkg.x2     = 0.0f;
-    bkg.y2     = 0.0f;
-    bkg.z2     = FLT_EPSILON;
-    bkg.argb2  = pvr_state.bg_color;
-    bkg.x3     = pvr_state.w;
-    bkg.y3     = pvr_state.h;
-    bkg.z3     = FLT_EPSILON;
-    bkg.argb3  = pvr_state.bg_color;
-    vrl = (uint32_t *)(PVR_RAM_BASE | PVR_GET(PVR_TA_VERTBUF_POS));
+    bkg = (pvr_bkg_poly_t *)(PVR_RAM_BASE | PVR_GET(PVR_TA_VERTBUF_POS));
 
-    memcpy(vrl, &bkg, sizeof(bkg));
+    *bkg = (pvr_bkg_poly_t){
+        .flags1 = 0x90800000,    /* These are from libdream.. ought to figure out */
+        .flags2 = 0x20800440,    /*   what they mean for sure... heh =) */
+        .dummy  = 0,
+        .x1     = 0.0f,
+        .y1     = pvr_state.h,
+        .z1     = FLT_EPSILON,
+        .argb1  = pvr_state.bg_color,
+        .x2     = 0.0f,
+        .y2     = 0.0f,
+        .z2     = FLT_EPSILON,
+        .argb2  = pvr_state.bg_color,
+        .x3     = pvr_state.w,
+        .y3     = pvr_state.h,
+        .z3     = FLT_EPSILON,
+        .argb3  = pvr_state.bg_color,
+    };
 
     /* Reset the ISP/TSP, just in case */
     //PVR_SET(PVR_RESET, PVR_RESET_ISPTSP);
