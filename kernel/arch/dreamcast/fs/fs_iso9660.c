@@ -1138,6 +1138,14 @@ static int iso_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
         return 0;
     }
 
+    /* Do this only when we need to (this is still imperfect) */
+    if(!percd_done && init_percd() < 0) {
+        errno = ENODEV;
+        return -1;
+    }
+
+    percd_done = true;
+
     /* First try opening as a file */
     de = find_object_path(path, 0, &root_dirent);
     md = S_IFREG;
