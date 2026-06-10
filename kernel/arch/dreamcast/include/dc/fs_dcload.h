@@ -1,70 +1,64 @@
 /* KallistiOS ##version##
 
    kernel/arch/dreamcast/include/dc/fs_dcload.h
-   (c)2002 Andrew Kieschnick
+   Copyright (C) 2002 Andrew Kieschnick
+   Copyright (C) 2026 Andy Barajas
 
 */
 
 /** \file    dc/fs_dcload.h
-    \brief   Implementation of dcload "filesystem".
-    \ingroup vfs_dcload
+    \brief   Deprecated compatibility shim for the old dcload API.
+    \ingroup vfs_kosload
 
-    This file contains declarations related to using dcload, both in its -ip and
-    -serial forms. This is only used for dcload-ip support if the internal
-    network stack is not initialized at start via KOS_INIT_FLAGS().
+    \deprecated
+    The dc-load "filesystem" has been made platform-agnostic and renamed to
+    kos-load.  This header only provides backwards-compatible aliases for the
+    old dc-load names.
 
     \author Andrew Kieschnick
-    \see    dc/fs_dclsocket.h
+    \see    kos/fs_kosload.h
+    \see    kos/kosload.h
 */
 
 #ifndef __DC_FS_DCLOAD_H
 #define __DC_FS_DCLOAD_H
 
-/* Definitions for the "dcload" file system */
-
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-#include <stdbool.h>
-#include <kos/fs.h>
-#include <kos/dbgio.h>
+#include <arch/kosload.h>
+#include <kos/fs_kosload.h>
 
-/** \defgroup vfs_dcload    PC
-    \brief                  VFS driver for accessing a remote PC via
-                            DC-Load/Tool
-    \ingroup                vfs
-
+/** \addtogroup vfs_kosload
     @{
 */
 
+/** \brief  \deprecated Use \ref dbgio_kosload. */
+#define dbgio_dcload        dbgio_kosload
+
+/** \brief  \deprecated Use \ref KOSLOAD_CONSOLE_ON. */
+#define DCLOADMAGICVALUE    KOSLOAD_CONSOLE_ON
+
+/** \brief  \deprecated Use \ref KOSLOAD_MAGIC_ADDR. */
+#define DCLOADMAGICADDR     ((unsigned int *)KOSLOAD_MAGIC_ADDR)
+
+/** \brief  \deprecated Use \ref KOSLOAD_TYPE_NONE. */
+#define DCLOAD_TYPE_NONE    KOSLOAD_TYPE_NONE
+/** \brief  \deprecated Use \ref KOSLOAD_TYPE_SER. */
+#define DCLOAD_TYPE_SER     KOSLOAD_TYPE_SER
+/** \brief  \deprecated Use \ref KOSLOAD_TYPE_IP. */
+#define DCLOAD_TYPE_IP      KOSLOAD_TYPE_IP
+
+/** \brief  \deprecated Use \ref kosload_type. */
+#define dcload_type         kosload_type
+
 /* \cond */
-extern dbgio_handler_t dbgio_dcload;
-/* \endcond */
 
-/* dcload magic value */
-/** \brief  The dcload magic value! */
-#define DCLOADMAGICVALUE 0xdeadbeef
-
-/** \brief  The address of the dcload magic value */
-#define DCLOADMAGICADDR (unsigned int *)0x8c004004
-
-/* Are we using dc-load-serial or dc-load-ip? */
-#define DCLOAD_TYPE_NONE    -1      /**< \brief No dcload connection */
-#define DCLOAD_TYPE_SER     0       /**< \brief dcload-serial connection */
-#define DCLOAD_TYPE_IP      1       /**< \brief dcload-ip connection */
-
-/** \brief  What type of dcload connection do we have? */
-extern int dcload_type;
-
-/* \cond */
-
-/* Tests for the dcload syscall being present. */
-int syscall_dcload_detected(void);
-
-/* Init func */
-void fs_dcload_init_console(void);
-void fs_dcload_init(void);
-void fs_dcload_shutdown(void);
+/** \brief  \deprecated Use syscall_kosload_detected(). */
+__depr("use syscall_kosload_detected()")
+static inline int fs_dcload_detected(void) {
+    return syscall_kosload_detected();
+}
 
 /* \endcond */
 

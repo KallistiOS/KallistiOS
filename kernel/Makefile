@@ -5,7 +5,7 @@
 # Copyright (C) 2024 Falco Girgis
 #
 
-OBJS = banner.o version.o
+OBJS = banner.o version.o kosload.o
 SUBDIRS = arch debug fs thread mm net libc exports romdisk init
 STUBS = stubs/kernel_export_stubs.o stubs/arch_export_stubs.o stubs/subarch_export_stubs.o
 
