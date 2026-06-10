@@ -90,7 +90,7 @@ static void on_key_event(maple_device_t *dev, kbd_key_t key,
     /* Print keyboard address + key ID and state change type. */
     printf("[%c%u] %c: %s\n",
            'A' + dev->port, dev->unit,
-           kbd_key_to_ascii(key, 1, mods, leds),
+           kbd_key_to_ascii(key, ((kbd_state_t *)dev->status)->region, mods, leds),
            state.value == KEY_STATE_CHANGED_DOWN? "PRESSED" : "RELEASED");
 
     /* Check whether the RETURN key was pressed (but not held): */
