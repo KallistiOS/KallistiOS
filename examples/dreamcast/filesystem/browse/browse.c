@@ -218,7 +218,7 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-static bool mount_sd_fat() {
+static bool mount_sd_fat(void) {
     if(sd_init()) {
         fprintf(stderr, "Could not initialize the SD card. Please make sure that you "
                "have an SD card adapter plugged in and an SD card inserted.\n");
@@ -244,7 +244,7 @@ static bool mount_sd_fat() {
     return true;
 }
 
-static void unmount_sd_fat() {
+static void unmount_sd_fat(void) {
     fs_fat_unmount("/sd");
     fs_fat_shutdown();
     sd_shutdown();
@@ -387,7 +387,7 @@ static bool draw_stat(const char *path) {
     return true;
 }
 
-static cont_state_t *get_cont_state() {
+static cont_state_t *get_cont_state(void) {
     maple_device_t *cont;
     cont_state_t *state;
 
