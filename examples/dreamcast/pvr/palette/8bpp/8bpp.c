@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 #include <math.h>
+#include <assert.h>
 
 #include <dc/pvr.h>
 #include <dc/maple.h>
@@ -80,7 +81,7 @@ static float distance(float x0, float y0, float x1, float y1) {
 }
 
 static pvr_ptr_t generate_texture(uint32_t width, uint32_t height) {
-    int i, j, mid_x, mid_y;
+    size_t i, j, mid_x, mid_y;
     float max_dist;
 
     uint8_t *texbuf;
@@ -95,6 +96,7 @@ static pvr_ptr_t generate_texture(uint32_t width, uint32_t height) {
 
     /* Allocate temp storage in RAM to generate texture in */
     texbuf = calloc(width * height, sizeof(uint8_t));
+    if(!texbuf) return NULL;
 
     /* Generate the texture */
     for(i = 0; i < height; i++)
@@ -143,6 +145,7 @@ int main(int argc, char** argv) {
 
     /* Initialize the texture */
     texptr = generate_texture(TEXTURE_WIDTH, TEXTURE_HEIGHT);
+    assert_msg(texptr, "Texture initialization failed\n");
 
     /* Setup PVR context */
     pvr_poly_cxt_txr(&cxt, PVR_LIST_OP_POLY, PVR_TXRFMT_PAL8BPP | 

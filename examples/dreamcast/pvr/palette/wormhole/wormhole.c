@@ -23,6 +23,7 @@
 
 #include <stdlib.h>
 #include <math.h>
+#include <assert.h>
 
 #include <dc/pvr.h>
 #include <dc/maple.h>
@@ -99,12 +100,13 @@ static void draw_screen() {
 }
 
 static pvr_ptr_t generate_texture(uint32_t width, uint32_t height) {
-    int x, y, index;
+    size_t x, y, index;
     float dx, dy, dist, angle;
     uint8_t *texbuf;
     pvr_ptr_t texptr;
 
     texbuf = calloc(width * height, sizeof(uint8_t));
+    if(!texbuf) return NULL;
 
     for(y = 0; y < height; y++)
         for(x = 0; x < width; x++) {
@@ -119,7 +121,7 @@ static pvr_ptr_t generate_texture(uint32_t width, uint32_t height) {
                 angle = (atan2f(dy, dx) + F_PI) * (31.0 / (2 * F_PI));
 
                 /* Calculate palette index based on distance and angle, skipping index 0 */
-                index = 1 + (int)(dist / 8 + angle) % 31;
+                index = 1 + (size_t)(dist / 8 + angle) % 31;
 
                 /* Use wormhole colors (1-31) */
                 texbuf[y * width + x] = index;
@@ -166,6 +168,7 @@ int main(int argc, char** argv) {
 
     /* Initialize the texture */
     texptr = generate_texture(WORMHOLE_WIDTH, WORMHOLE_HEIGHT);
+    assert_msg(texptr, "Texture initialization failed\n");
 
     /* Set the background color */
     pvr_set_pal_entry(0, wormhole_palette[0]);
