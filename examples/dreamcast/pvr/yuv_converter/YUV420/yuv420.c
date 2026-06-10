@@ -177,7 +177,7 @@ static int setup_pvr(void) {
 }
 
 static void convert_YUV420_to_YUV422_texture(void) {
-    int i, j, index, x_blk, y_blk;
+    size_t i, j, index, x_blk, y_blk;
     size_t dummies = (BYTE_SIZE_FOR_16x16_BLOCK *
         ((PVR_TEXTURE_WIDTH >> 4) - (FRAME_TEXTURE_WIDTH >> 4))) >> 5;
     uint32_t *db = (uint32_t *)SQ_MASK_DEST_ADDR(PVR_TA_YUV_CONV);
