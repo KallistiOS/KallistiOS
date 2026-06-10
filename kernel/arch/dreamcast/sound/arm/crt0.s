@@ -2,12 +2,14 @@
 #
 #  crt0.s
 #  (c)2000-2002 Megan Potter
+#  (c)2026 Ruslan Rostovtsev
 #
 #  Startup for ARM program
 #  Adapted from Marcus' AICA example among a few other sources =)
 
 .text
 .globl	arm_main
+.globl	arm_fiq_enable
 .globl	jps
 
 # Meaningless but makes the linker shut up
@@ -104,14 +106,16 @@ jps:
 	# 1000 jiffies per second
 	.long	256-(44100/1000)
 
+arm_fiq_enable:
+	mrs	r0, CPSR
+	orr	r0, r0, #0x80
+	bic	r0, r0, #0x40
+	msr	CPSR_c, r0
+	mov	pc, lr
 
 start:
-	# Setup a basic stack, disable IRQ, enable FIQ
+	# Setup a basic stack, disable IRQ
 	mov	sp,#0xb000
-	mrs	r10,CPSR
-	orr	r10,r10,#0x80
-	bic	r10,r10,#0x40
-	msr	CPSR_all,r10
 
 	# Call the main for the SPU
 	bl	arm_main
