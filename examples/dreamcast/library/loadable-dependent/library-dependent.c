@@ -16,11 +16,11 @@
 
 #include "library-dependence.h"
 
-const char *lib_get_name() {
+const char *lib_get_name(void) {
     return "dependent";
 }
 
-uint32_t lib_get_version() {
+uint32_t lib_get_version(void) {
     return KOS_VERSION_MAKE(1, 0, 0);
 }
 

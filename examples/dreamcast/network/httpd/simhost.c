@@ -7,7 +7,7 @@
 
 KOS_INIT_FLAGS(INIT_DEFAULT | INIT_NET);
 
-void httpd();
+void httpd(void);
 void *do_httpd(void * foo) {
     httpd();
     return NULL;

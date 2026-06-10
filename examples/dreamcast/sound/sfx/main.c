@@ -23,7 +23,7 @@
 
 static void draw_instructions(uint8_t volume);
 
-static cont_state_t *get_cont_state();
+static cont_state_t *get_cont_state(void);
 static int button_pressed(uint32_t current_buttons, uint32_t changed_buttons, uint32_t button);
 
 int main(int argc, char **argv) {
@@ -140,7 +140,7 @@ static void draw_instructions(uint8_t volume) {
     bfont_draw_str(vram_s + y*640+x, 640, color, "Press Start to exit program");
 }
 
-static cont_state_t *get_cont_state() {
+static cont_state_t *get_cont_state(void) {
     maple_device_t *cont;
     cont_state_t *state;
 

@@ -28,7 +28,7 @@
 #define CONT_VOLUP   0x05
 #define CONT_VOLDN   0x06
 
-int check_cont()
+int check_cont(void)
 {
     int ret=0;
     maple_device_t *cont;

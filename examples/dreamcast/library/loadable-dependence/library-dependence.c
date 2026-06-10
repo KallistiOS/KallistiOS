@@ -26,11 +26,11 @@ static symtab_handler_t library_hnd = {
 };
 
 /* Library functions */
-const char *lib_get_name() {
+const char *lib_get_name(void) {
     return library_hnd.nmmgr.pathname + 12;
 }
 
-uint32_t lib_get_version() {
+uint32_t lib_get_version(void) {
     return KOS_VERSION_MAKE(1, 0, 0);
 }
 

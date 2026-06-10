@@ -96,7 +96,7 @@ uint32_t power_of_two(int dim) {
 	return (uint32_t)dim;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
 	InitWindow(640, 480, "Raylib Image Test");
 	if (!IsWindowReady())
 		return 1;

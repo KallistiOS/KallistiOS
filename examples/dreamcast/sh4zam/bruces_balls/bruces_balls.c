@@ -425,7 +425,17 @@ int main(int argc, const char *argv[]) {
         // The only tile bins we need are those for opaque geometry. This is 32 bins per TA tile.
         { PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_0, PVR_BINSIZE_0, PVR_BINSIZE_0 },
         // We need 3MB of vertex array storage in VRAM to fit all of Bruce's balls.
-        1024 * 1024 * 3, 0, 0, 0, 6
+        1024 * 1024 * 3,
+        // No vertex DMA
+        0,
+        // No FSAA
+        0,
+        // Enable translucent polygon autosort
+        0,
+        // Preallocate 6 extra OPBs
+        6,
+        // Default vertex buffer double-buffering
+        0
     });
 
     // Precompute our projection view matrix.

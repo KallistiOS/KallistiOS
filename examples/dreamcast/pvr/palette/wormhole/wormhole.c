@@ -60,7 +60,7 @@ static const uint32_t wormhole_palette[32] = {
 
 static pvr_poly_hdr_t hdr;
 
-static void draw_screen() {
+static void draw_screen(void) {
     pvr_vertex_t vert;
 
     pvr_prim(&hdr, sizeof(hdr));
