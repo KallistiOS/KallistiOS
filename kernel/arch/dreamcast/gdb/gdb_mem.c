@@ -16,7 +16,7 @@
 */
 
 #include <arch/arch.h>
-#include <arch/cache.h>
+#include <kos/cache.h>
 
 #include <dc/memory.h>
 
@@ -173,7 +173,7 @@ void gdb_handle_write_mem(char *ptr) {
         return;
     }
 
-    icache_flush_range(addr, len);
+    icache_sync_range(addr, len);
     gdb_put_ok();
 }
 
@@ -293,6 +293,6 @@ void gdb_handle_write_mem_binary(char *ptr) {
     }
 
     memcpy((void *)addr, tmp, len);
-    icache_flush_range(addr, len);
+    icache_sync_range(addr, len);
     gdb_put_ok();
 }

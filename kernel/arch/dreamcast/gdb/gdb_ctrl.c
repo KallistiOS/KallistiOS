@@ -25,7 +25,7 @@
 
 #include <arch/arch.h>
 #include <arch/irq.h>
-#include <arch/cache.h>
+#include <kos/cache.h>
 #include <dc/ubc.h>
 
 #include "gdb_internal.h"
@@ -303,7 +303,7 @@ static bool do_single_step(void) {
     step_state.patch.mem_addr = instr_mem;
     step_state.patch.old_instr = *instr_mem;
     *instr_mem = SSTEP_INSTR;
-    icache_flush_range((uint32_t)instr_mem, 2);
+    icache_sync_range((uint32_t)instr_mem, 2);
     stepped = true;
     return true;
 }
@@ -320,7 +320,7 @@ void gdb_undo_single_step(void) {
             short *instr_mem = step_state.patch.mem_addr;
 
             *instr_mem = step_state.patch.old_instr;
-            icache_flush_range((uint32_t)instr_mem, 2);
+            icache_sync_range((uint32_t)instr_mem, 2);
         }
         else if(step_state.kind == STEP_TRAPA_HANDLER) {
             irq_set_handler(step_state.trapa.code,

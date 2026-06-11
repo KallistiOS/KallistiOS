@@ -24,7 +24,7 @@
 */
 
 #include <arch/arch.h>
-#include <arch/cache.h>
+#include <kos/cache.h>
 
 #include <dc/memory.h>
 #include <dc/ubc.h>
@@ -126,7 +126,7 @@ static void soft_breakpoint(bool set, uintptr_t addr, size_t length) {
 
                 /* Remove the stub's TRAPA and restore the original instruction. */
                 *site = sw_breakpoints[i].original;
-                icache_flush_range(normalized_addr, 2);
+                icache_sync_range(normalized_addr, 2);
                 sw_breakpoints[i].active = false;
                 gdb_put_ok();
             }
@@ -149,7 +149,7 @@ static void soft_breakpoint(bool set, uintptr_t addr, size_t length) {
 
             /* Patch the target instruction with the software-break TRAPA. */
             *site = GDB_SW_BREAK_OPCODE;
-            icache_flush_range(normalized_addr, 2);
+            icache_sync_range(normalized_addr, 2);
             gdb_put_ok();
             return;
         }
