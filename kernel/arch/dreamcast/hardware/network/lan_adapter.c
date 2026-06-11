@@ -556,8 +556,6 @@ static void la_irq_hnd(uint32_t code, void *data) {
 /****************************************************************************/
 /* Netcore interface */
 
-netif_t la_if;
-
 static void set_ipv6_lladdr(void) {
     /* Set up the IPv6 link-local address. This is done in accordance with
        Section 4/5 of RFC 2464 based on the MAC Address of the adapter. */
