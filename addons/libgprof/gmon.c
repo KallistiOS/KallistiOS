@@ -29,9 +29,6 @@
 
 #include "gprof_internal.h"
 
-#define ROUNDDOWN(x, y)  (((x) / (y)) * (y))
-#define ROUNDUP(x, y)    ((((x) + (y) - 1) / (y)) * (y))
-
 /* Histogram sampling interval, in milliseconds. */
 #define HISTOGRAM_INTERVAL_MS  10
 
@@ -140,22 +137,7 @@ typedef struct gmon_context {
 } gmon_context_t;
 
 static gmon_context_t g_context = {
-    .state = GMON_PROF_OFF,
-    .lowpc = 0,
-    .highpc = 0,
-    .textsize = 0,
-    .nfroms = 0,
-    .froms = NULL,
-    .nnodes = 0,
-    .nodes = NULL,
-    .node_count = 0,
-    .ncounters = 0,
-    .allocate_size = 0,
-    .histogram = NULL,
-    .main_thread = NULL,
-    .histogram_thread = NULL,
-    .running_thread = false,
-    .initialized = false
+    .state = GMON_PROF_OFF
 };
 
 /* Build the gmon.out path.If GMON_OUT_PREFIX is set, the file is "<prefix>.<pid>";
@@ -474,8 +456,8 @@ void monstartup(uintptr_t lowpc, uintptr_t highpc) {
         return;
     }
 
-    cxt->lowpc = ROUNDDOWN(lowpc, HISTFRACTION * sizeof(HIST_COUNTER_TYPE));
-    cxt->highpc = ROUNDUP(highpc, HISTFRACTION * sizeof(HIST_COUNTER_TYPE));
+    cxt->lowpc  = __align_down(lowpc, HISTFRACTION * sizeof(HIST_COUNTER_TYPE));
+    cxt->highpc = __align_up(highpc, HISTFRACTION * sizeof(HIST_COUNTER_TYPE));
     cxt->textsize = cxt->highpc - cxt->lowpc;
 
     /* Number of histogram counters, rounded up so all of textsize is covered. */
@@ -491,9 +473,9 @@ void monstartup(uintptr_t lowpc, uintptr_t highpc) {
     nodes_size = cxt->nnodes * sizeof(gmon_node_t);
 
     /* Allocate one block, padded so each sub-buffer can be 32-byte aligned. */
-    cxt->allocate_size = ROUNDUP(counter_size, 32) +
-                         ROUNDUP(froms_size, 32) +
-                         ROUNDUP(nodes_size, 32) +
+    cxt->allocate_size = __align_up(counter_size, 32) +
+                         __align_up(froms_size, 32) +
+                         __align_up(nodes_size, 32) +
                          32; /* slack for alignment adjustments */
 
     dbglog(DBG_NOTICE, "[GPROF] Profiling from <%p to %p>\n"
@@ -514,8 +496,8 @@ void monstartup(uintptr_t lowpc, uintptr_t highpc) {
 
     /* Clear the block and carve out 32-byte-aligned sub-buffers. */
     memset(cxt->histogram, 0, cxt->allocate_size);
-    cxt->froms = (uint16_t *)((uintptr_t)cxt->histogram + ROUNDUP(counter_size, 32));
-    cxt->nodes = (gmon_node_t *)((uintptr_t)cxt->froms + ROUNDUP(froms_size, 32));
+    cxt->froms = (uint16_t *)((uintptr_t)cxt->histogram + __align_up(counter_size, 32));
+    cxt->nodes = (gmon_node_t *)((uintptr_t)cxt->froms + __align_up(froms_size, 32));
 
     /* Create gmon.out and write the file header. */
     gmon_build_out_path(out_path, sizeof(out_path));
