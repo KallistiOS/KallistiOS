@@ -37,6 +37,29 @@ for i in $ARGS; do
 	esac
 done
 
+# If building for coverage (--coverage), route each translation unit's gcov_info
+# into a linker section named "gcov_info". That name is a valid C identifier, so
+# GNU ld auto-provides __start_gcov_info/__stop_gcov_info and no linker-script
+# edit is needed. Also auto-link the .gcda writer (libkosgcov) and GCC's own
+# libgcov runtime, so a plain "kos-cc --coverage" just works.
+COVERAGE=0
+for i in $ARGS; do
+	case "${i}" in
+		--coverage | -coverage | -ftest-coverage)
+			COVERAGE=1
+		;;
+	esac
+done
+GCOV_CFLAGS=""
+GCOV_LIBS=""
+if [ ${COVERAGE} = 1 ]; then
+	GCOV_CFLAGS="-fprofile-info-section=gcov_info"
+	# Force-include the whole addon so its constructor (the at-exit flush)
+	# is linked even though the program references nothing in it -- no source
+	# changes needed.
+	GCOV_LIBS="-Wl,--whole-archive -lkosgcov -Wl,--no-whole-archive $(${KOS_CC} -print-file-name=libgcov.a)"
+fi
+
 case $USEMODE in
 	0)
 		# Unknown mode ... use default args and cross fingers.
@@ -49,9 +72,9 @@ case $USEMODE in
 	1)
 		# In link mode, add all the extra processing.
 		if [ x${KOS_WRAPPERS_VERBOSE} = x"1" ]; then
-			echo ${KOS_CC} ${KOS_CFLAGS} ${KOS_LDFLAGS} "$@" ${KOS_LIBS}
+			echo ${KOS_CC} ${KOS_CFLAGS} ${GCOV_CFLAGS} ${KOS_LDFLAGS} "$@" ${GCOV_LIBS} ${KOS_LIBS}
 		fi
-		exec ${KOS_CC} ${KOS_CFLAGS} ${KOS_LDFLAGS} "$@" ${KOS_LIBS}
+		exec ${KOS_CC} ${KOS_CFLAGS} ${GCOV_CFLAGS} ${KOS_LDFLAGS} "$@" ${GCOV_LIBS} ${KOS_LIBS}
 	;;
 
 	3)
@@ -65,9 +88,9 @@ case $USEMODE in
 	2)
 		# In non-link mode, just go ahead and run CC.
 		if [ x${KOS_WRAPPERS_VERBOSE} = x"1" ]; then
-			echo ${KOS_CC} ${KOS_CFLAGS} "$@"
+			echo ${KOS_CC} ${KOS_CFLAGS} ${GCOV_CFLAGS} "$@"
 		fi
-		exec ${KOS_CC} ${KOS_CFLAGS} "$@"
+		exec ${KOS_CC} ${KOS_CFLAGS} ${GCOV_CFLAGS} "$@"
 	;;
 
 	4)
