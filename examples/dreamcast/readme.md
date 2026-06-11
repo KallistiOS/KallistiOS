@@ -96,6 +96,9 @@ This page serves as an index for all KallistiOS examples.
   - serpent_dma
   - sinus
 - [**png**](png/): - Demonstrates the use of PNG textures, gzip decompression, and drawing text
+- profiling
+  - gcov
+  - gprof
 - pthread
   - general
 - pvr
