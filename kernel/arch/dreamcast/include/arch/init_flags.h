@@ -108,7 +108,7 @@ __BEGIN_DECLS
 
 #define INIT_CDROM          0x00100000  /**< \brief Enable CD-ROM support */
 
-static const uint32_t INIT_OCRAM __depr("INIT_OCRAM has been removed. Use dcache_toggle_ocram().");
+static const uint32_t INIT_OCRAM __depr("INIT_OCRAM has been removed. Use dcache_toggle_ocram().") = 0;
 #define INIT_NO_DCLOAD      0x20000000  /**< \brief Disable dcload */
 
 /** @} */
