@@ -109,7 +109,7 @@ int pvr_init(const pvr_init_params_t *params) {
     pvr_state.ta_target = 0;
     pvr_state.view_target = 0;
 
-    pvr_state.list_reg_open = -1;
+    pvr_state.list_reg_open = PVR_LIST_NONE;
 
     // Sync all the hardware registers with our pipeline state.
     pvr_sync_view();

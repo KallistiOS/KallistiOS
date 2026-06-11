@@ -61,8 +61,9 @@ typedef enum pvr_list_type {
     PVR_LIST_OP_POLY,           /**< Opaque polygon list */
     PVR_LIST_OP_MOD,            /**< Opaque modifier list */
     PVR_LIST_TR_POLY,           /**< Translucent polygon list */
-    PVR_LIST_TR_MOD,            /**< Translucent modifier list*/
+    PVR_LIST_TR_MOD,            /**< Translucent modifier list */
     PVR_LIST_PT_POLY,           /**< Punch-thru polygon list */
+    PVR_LIST_NONE = -1          /**< Used internally to signal unset values */
 } pvr_list_t;
 
 #define pvr_list_type_t pvr_list_t
