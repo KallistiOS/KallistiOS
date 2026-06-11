@@ -122,7 +122,7 @@ void pvr_scene_begin(void) {
     pvr_state.lists_closed = 0;
 
     // Get general stuff ready.
-    pvr_state.list_reg_open = -1;
+    pvr_state.list_reg_open = PVR_LIST_NONE;
 
     // Clear these out in case we're using DMA.
     if(pvr_state.dma_mode) {
@@ -183,7 +183,7 @@ int pvr_list_begin(pvr_list_t list) {
     }
 
     /* If we already had a list open, close it first */
-    if(pvr_state.list_reg_open != -1 && pvr_state.list_reg_open != (int)list)
+    if(pvr_state.list_reg_open != PVR_LIST_NONE && pvr_state.list_reg_open != list)
         pvr_list_finish();
 
     pvr_list_dma = pvr_list_uses_dma(list);
@@ -207,7 +207,7 @@ int pvr_list_begin(pvr_list_t list) {
    simplicity we just always submit a blank primitive. */
 int pvr_list_finish(void) {
     /* Check to make sure we can do this */
-    if(PVR_DEBUG && !pvr_state.dma_mode && pvr_state.list_reg_open == -1) {
+    if(PVR_DEBUG && !pvr_state.dma_mode && pvr_state.list_reg_open == PVR_LIST_NONE) {
         dbglog(DBG_WARNING, "pvr_list_finish: attempt to close unopened list\n");
         return -1;
     }
@@ -231,14 +231,14 @@ int pvr_list_finish(void) {
         pvr_sq_set32((void *)0, 0, 32, PVR_DMA_TA);
     }
 
-    pvr_state.list_reg_open = -1;
+    pvr_state.list_reg_open = PVR_LIST_NONE;
 
     return 0;
 }
 
 int pvr_prim(const void *data, size_t size) {
     /* Check to make sure we can do this */
-    if(PVR_DEBUG && pvr_state.list_reg_open == -1) {
+    if(PVR_DEBUG && pvr_state.list_reg_open == PVR_LIST_NONE) {
         dbglog(DBG_WARNING, "pvr_prim: attempt to submit to unopened list\n");
         return -1;
     }
@@ -348,7 +348,7 @@ int pvr_scene_finish(void) {
     }
     else {
         /* If a list was open, close it */
-        if(pvr_state.list_reg_open != -1)
+        if(pvr_state.list_reg_open != PVR_LIST_NONE)
             pvr_list_finish();
 
         /* If any lists weren't submitted, then submit blank ones now */
