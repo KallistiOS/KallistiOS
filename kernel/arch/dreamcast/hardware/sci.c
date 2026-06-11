@@ -151,11 +151,11 @@ static dma_config_t sci_dma_rx_config = {
     .callback = NULL
 };
 
-static __always_inline void clear_sci_errors() {
+static __always_inline void clear_sci_errors(void) {
     SCSSR1 &= ~(ORER | FER | PER);
 }
 
-static __always_inline sci_result_t check_sci_errors() {
+static __always_inline sci_result_t check_sci_errors(void) {
     uint8_t status = SCSSR1;
 
     if(status & ORER) {
@@ -416,7 +416,7 @@ void sci_configure_uart(sci_uart_config_t config, uint8_t *scsmr1) {
     }
 }
 
-static void sci_shutdown_spi_cs() {
+static void sci_shutdown_spi_cs(void) {
     uint16_t sptr;
     uint16_t fcr;
 

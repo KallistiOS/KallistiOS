@@ -1178,7 +1178,7 @@ size_t   public_pvr_mUSABLe();
 
 */
 #if __STD_C
-void     public_pvr_mSTATs();
+void     public_pvr_mSTATs(void);
 #else
 void     public_pvr_mSTATs();
 #endif
