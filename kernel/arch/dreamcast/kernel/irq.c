@@ -25,8 +25,8 @@
 
 /* Macros for accessing related registers. */
 #define TRA    ( *((volatile uint32_t *)(0xff000020)) ) /* TRAPA Exception Register */
-#define EXPEVT ( *((volatile uint32_t *)(0xff000024)) ) /* Exception Event Register */
-#define INTEVT ( *((volatile uint32_t *)(0xff000028)) ) /* Interrupt Event Register */
+#define EXPEVT ((irq_t) *((volatile uint32_t *)(0xff000024)) ) /* Exception Event Register */
+#define INTEVT ((irq_t) *((volatile uint32_t *)(0xff000028)) ) /* Interrupt Event Register */
 
 /* Interrupt priority registers */
 #define REG_IPR(x) ( *((volatile uint16_t *)(0xffd00004 + (x) * 4)) )
@@ -179,7 +179,7 @@ void irq_dump_regs(int code, irq_t evt) {
 volatile uint32_t jiffies = 0;
 void irq_handle_exception(int code) {
     const struct irq_cb *hnd;
-    uint32_t evt = 0;
+    irq_t evt;
     int handled = 0;
 
     if(__is_defined(__SH_ATOMIC_MODEL_SOFT_GUSA__)
@@ -257,19 +257,17 @@ void irq_handle_exception(int code) {
 }
 
 static void irq_handle_trapa(irq_t code, irq_context_t *context, void *data) {
-    const struct irq_cb *hnd, *handlers = data;
-    uint32_t vec;
-
     (void)code;
+    const struct irq_cb *hnd, *handlers = data;
 
     /* Get the trapa vector */
-    vec = TRA >> 2;
+    uint32_t vec = TRA >> 2;
 
     /* Check for handler and call if present */
     hnd = &handlers[vec];
 
     if(hnd->hdl)
-        hnd->hdl(vec, context, hnd->data);
+        hnd->hdl(IRQ_TRAP_CODE(vec), context, hnd->data);
 }
 
 extern void irq_vma_table(void);
