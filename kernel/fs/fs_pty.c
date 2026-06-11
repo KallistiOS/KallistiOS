@@ -654,7 +654,7 @@ static int pty_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
     }
 
     /* Handle paths that start directly with '/maXX' or '/slXX' */
-    if(sscanf(path, "/%2c%02x", (char[3]){}, &id) != 2) {
+    if(sscanf(path, "/%*2c%02x", &id) != 2) {
         errno = ENOENT;
         return -1;
     }
