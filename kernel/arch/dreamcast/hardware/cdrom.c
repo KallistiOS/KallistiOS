@@ -43,7 +43,7 @@ also for the CDDA playback routines.
 */
 
 struct cmd_req_data {
-    int cmd;
+    cd_cmd_code_t cmd;
     void *data;
 };
 
@@ -80,7 +80,7 @@ static int cur_sector_size = 2048;
 
 /* Shortcut to cdrom_reinit_ex. Typically this is the only thing changed. */
 int cdrom_set_sector_size(int size) {
-    return cdrom_reinit_ex(-1, -1, size);
+    return cdrom_reinit_ex(CDROM_READ_DEFAULT, -1, size);
 }
 
 static int cdrom_poll(void *d, uint32_t timeout, int (*cb)(void *)) {
