@@ -138,7 +138,6 @@ int thd_pslist(int (*pf)(const char *fmt, ...)) {
     pf("addr\t  tid\tprio\tflags\t  wait_timeout\t  cpu_time\t      state\t  name\n");
 
     irq_disable_scoped();
-    thd_get_cpu_time(thd_get_current());
     ms_time = timer_ms_gettime64();
 
     LIST_FOREACH(cur, &thd_list, t_list) {
