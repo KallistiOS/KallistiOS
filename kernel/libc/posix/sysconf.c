@@ -21,15 +21,15 @@
 
 long sysconf(int name) {
     switch(name) {
-        case _SC_HOST_NAME_MAX:  
+        case _SC_HOST_NAME_MAX:
             return sizeof ((netcfg_t *)NULL)->hostname;
-        
+
         case _SC_CHILD_MAX:
             return 1;
 
-        case _SC_CLK_TCK: 
+        case _SC_CLK_TCK:
             return thd_get_hz();
-        
+
         case _SC_OPEN_MAX:
             return FD_SETSIZE;
 
@@ -83,18 +83,18 @@ long sysconf(int name) {
 
         case _SC_SEM_VALUE_MAX:
             return UINT32_MAX;
-        
+
         case _SC_PHYS_PAGES:
             return page_count;
-        
+
         case _SC_AVPHYS_PAGES:
             return mallinfo().fordblks / PAGESIZE;
 
-        case _SC_NPROCESSORS_CONF: 
-        case _SC_NPROCESSORS_ONLN: 
+        case _SC_NPROCESSORS_CONF:
+        case _SC_NPROCESSORS_ONLN:
             return 1;
 
-        default: 
+        default:
             errno = EINVAL;
             return -1;
     }
