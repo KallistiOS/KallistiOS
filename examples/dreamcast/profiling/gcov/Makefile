@@ -6,14 +6,17 @@
 
 TARGET = gcov.elf
 OBJS = gcov.o math/ops.o util/str.o util/text/format.o
+KOS_GCCVER_MIN = 12.0.0
 
 # --coverage is all you need. kos-cc auto-adds -fprofile-info-section=gcov_info
 # at compile time and links libkosgcov + GCC's libgcov at link time.
 CFLAGS = --coverage
 
-all: rm-elf $(TARGET)
-
 include $(KOS_BASE)/Makefile.rules
+
+ifeq ($(call KOS_GCCVER_MIN_CHECK,$(KOS_GCCVER_MIN)),1)
+
+all: rm-elf $(TARGET)
 
 clean: rm-elf
 	-rm -f $(OBJS)
@@ -31,9 +34,18 @@ $(TARGET): $(OBJS)
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
 
+dist: $(TARGET)
+	-rm -f $(OBJS)
+	$(KOS_STRIP) $(TARGET)
+
 # HTML report. The lcov flags keep lcov 2.x from aborting on the data quirks
 # normal for optimized/inlined and header code.
 report:
 	lcov --capture --directory . --gcov-tool $(KOS_GCOV) --rc geninfo_unexecuted_blocks=1 --ignore-errors inconsistent,unused,source,empty --output-file coverage.info
 	genhtml coverage.info --output-directory html --ignore-errors inconsistent,source
 	@echo "open html/index.html"
+
+else
+  all $(TARGET) clean rm-elf run dist:
+	$(KOS_GCCVER_MIN_WARNING)
+endif
