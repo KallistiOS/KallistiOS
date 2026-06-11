@@ -1343,7 +1343,7 @@ extern "C" {
 
     */
 #if __STD_C
-    void     public_mSTATs();
+    void     public_mSTATs(void);
 #else
     void     public_mSTATs();
 #endif
@@ -1589,7 +1589,7 @@ static Void_t*  cALLOc(size_t, size_t);
 static int      mTRIm(size_t);
 #endif
 static size_t   mUSABLe(Void_t*);
-static void     mSTATs();
+static void     mSTATs(void);
 static int      mALLOPt(int, int);
 static struct mallinfo mALLINFo(void);
 #else

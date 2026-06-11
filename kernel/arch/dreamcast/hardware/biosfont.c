@@ -56,7 +56,7 @@ static uint8_t *get_font_address(void) {
     return font_address;
 }
 
-static inline uint8_t bits_per_pixel() {
+static inline uint8_t bits_per_pixel(void) {
     return ((vid_mode->pm == PM_RGB0888) ? sizeof(uint32_t) : sizeof(uint16_t)) << 3;
 }
 

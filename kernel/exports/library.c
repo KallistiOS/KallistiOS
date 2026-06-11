@@ -267,8 +267,8 @@ klibrary_t *library_open(const char *name, const char *fn) {
     }
 
     // Pull out the image pointers
-    lib->lib_get_name = (const char * (*)())lib->image.lib_get_name;
-    lib->lib_get_version = (uint32_t(*)())lib->image.lib_get_version;
+    lib->lib_get_name = (const char * (*)(void))lib->image.lib_get_name;
+    lib->lib_get_version = (uint32_t(*)(void))lib->image.lib_get_version;
     lib->lib_open = (int (*)(klibrary_t *))lib->image.lib_open;
     lib->lib_close = (int (*)(klibrary_t *))lib->image.lib_close;
 

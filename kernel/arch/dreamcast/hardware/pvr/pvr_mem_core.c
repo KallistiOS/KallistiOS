@@ -63,7 +63,7 @@ static Void_t** iCOMALLOc(size_t, size_t*, Void_t**);
 static void     cFREe(Void_t*);
 static int      mTRIm(size_t);
 static size_t   mUSABLe(Void_t*);
-static void     mSTATs();
+static void     mSTATs(void);
 static int      mALLOPt(int, int);
 static struct mallinfo mALLINFo(void);
 #else

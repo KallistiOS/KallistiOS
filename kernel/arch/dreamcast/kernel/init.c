@@ -42,7 +42,7 @@
 
 extern void _init(void);
 extern void _fini(void);
-extern void __verify_newlib_patch();
+extern void __verify_newlib_patch(void);
 extern void dma_init(void);
 
 /* Jump back to the bootloader. From startup.S */
@@ -433,7 +433,7 @@ void arch_abort(void) {
 /* Called to reboot the system; assume the system is in peril and don't
    try to call the dtors */
 void arch_reboot(void) {
-    typedef void (*reboot_func)() __noreturn;
+    typedef void (*reboot_func)(void) __noreturn;
     reboot_func rb;
 
     dbglog(DBG_CRITICAL, "arch: rebooting the system\n");
