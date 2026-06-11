@@ -29,10 +29,9 @@ int clock_getcpuclockid(pid_t pid, clockid_t *clock_id) {
 
 int clock_getres(clockid_t clk_id, struct timespec *ts) {
     switch(clk_id) {
+        /* Backed by the nanosecond resolution */
         case CLOCK_REALTIME:
         case CLOCK_MONOTONIC:
-        case CLOCK_PROCESS_CPUTIME_ID:
-        case CLOCK_THREAD_CPUTIME_ID:
             if(!ts) {
                 errno = EFAULT;
                 return -1;
@@ -41,7 +40,19 @@ int clock_getres(clockid_t clk_id, struct timespec *ts) {
             ts->tv_sec = 0;
             ts->tv_nsec = 1;
             return 0;
-            
+
+        /* Backed by the millisecond resolution */
+        case CLOCK_PROCESS_CPUTIME_ID:
+        case CLOCK_THREAD_CPUTIME_ID:
+            if(!ts) {
+                errno = EFAULT;
+                return -1;
+            }
+
+            ts->tv_sec = 0;
+            ts->tv_nsec = 1000000;
+            return 0;
+
         default:
             errno = EINVAL;
             return -1;
@@ -50,7 +61,6 @@ int clock_getres(clockid_t clk_id, struct timespec *ts) {
 
 int clock_gettime(clockid_t clk_id, struct timespec *ts) {
     lldiv_t  div_result;
-    uint64_t ns64;
     uint32_t secs, nsecs, secs_offset=0;
 
     if(!ts) {
@@ -72,19 +82,18 @@ int clock_gettime(clockid_t clk_id, struct timespec *ts) {
             ts->tv_nsec = nsecs;
             return 0;
 
-        /* Use the sum of all kthread-specific CPU time counters */
+        /* Use the sum of all kthread-specific CPU time counters (in ms) */
         case CLOCK_PROCESS_CPUTIME_ID:
-            div_result = lldiv(thd_get_total_cpu_time(), 1000000000);
+            div_result = lldiv(thd_get_total_cpu_time(), 1000);
             ts->tv_sec = div_result.quot;
-            ts->tv_nsec = div_result.rem;
+            ts->tv_nsec = div_result.rem * 1000000;
             return 0;
 
-        /* Use the kthread-specific CPU time counters */
+        /* Use the kthread-specific CPU time counters (in ms) */
         case CLOCK_THREAD_CPUTIME_ID:
-            ns64 = thd_get_cpu_time(thd_get_current());
-            div_result = lldiv(ns64, 1000000000);
+            div_result = lldiv(thd_get_cpu_time(thd_get_current()), 1000);
             ts->tv_sec = div_result.quot;
-            ts->tv_nsec = div_result.rem;
+            ts->tv_nsec = div_result.rem * 1000000;
             return 0;
 
         default:
