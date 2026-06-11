@@ -6,6 +6,8 @@
 *.exe
 *.dll
 *.map
+*.gcno
+*.gcda
 *~
 .*.swp
 .DS_Store
@@ -14,7 +16,9 @@
 .clangd
 .envrc
 compile_commands.json
+coverage.info
 environ.sh
 romdisk.img
+html/
 /doc/reference/
 /ports/
