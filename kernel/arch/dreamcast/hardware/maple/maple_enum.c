@@ -12,10 +12,10 @@
 
 /* Return the number of connected devices */
 int maple_enum_count(void) {
-    int p, u, cnt;
+    size_t cnt = 0;
 
-    for(cnt = 0, p = 0; p < MAPLE_PORT_COUNT; p++)
-        for(u = 0; u < MAPLE_UNIT_COUNT; u++) {
+    for(size_t p = 0; p < MAPLE_PORT_COUNT; p++)
+        for(size_t u = 0; u < MAPLE_UNIT_COUNT; u++) {
             if(maple_dev_valid(p,u))
                 cnt++;
         }
@@ -33,12 +33,10 @@ maple_device_t *maple_enum_dev(int p, int u) {
 
 /* Return the Nth device of the requested type (where N is zero-indexed) */
 maple_device_t *maple_enum_type(int n, uint32_t func) {
-    int p, u;
-    maple_device_t *dev;
 
-    for(p = 0; p < MAPLE_PORT_COUNT; p++) {
-        for(u = 0; u < MAPLE_UNIT_COUNT; u++) {
-            dev = maple_enum_dev(p, u);
+    for(size_t p = 0; p < MAPLE_PORT_COUNT; p++) {
+        for(size_t u = 0; u < MAPLE_UNIT_COUNT; u++) {
+            maple_device_t *dev = maple_enum_dev(p, u);
 
             if(dev != NULL && (dev->info.functions & func)) {
                 if(!n) return dev;
@@ -54,8 +52,6 @@ maple_device_t *maple_enum_type(int n, uint32_t func) {
 /* Return the Nth device that is of the requested type and supports the list of
    capabilities given. */
 maple_device_t *maple_enum_type_ex(int n, uint32_t func, uint32_t cap) {
-    int p, u, d;
-    maple_device_t *dev;
     uint32_t funcmask;
 
     /* If func is 0, there can be no match (and it's UB for clz below) */
@@ -64,9 +60,9 @@ maple_device_t *maple_enum_type_ex(int n, uint32_t func, uint32_t cap) {
     /* Create a mask that leaves only the bits above func. */
     funcmask = ~GENMASK(31 - __builtin_clz(func), 0);
 
-    for(p = 0; p < MAPLE_PORT_COUNT; ++p) {
-        for(u = 0; u < MAPLE_UNIT_COUNT; ++u) {
-            dev = maple_enum_dev(p, u);
+    for(size_t p = 0; p < MAPLE_PORT_COUNT; ++p) {
+        for(size_t u = 0; u < MAPLE_UNIT_COUNT; ++u) {
+            maple_device_t *dev = maple_enum_dev(p, u);
 
             /* If the device supports the function code we passed in, check
                if it supports the capabilities that the user requested. */
@@ -75,7 +71,7 @@ maple_device_t *maple_enum_type_ex(int n, uint32_t func, uint32_t cap) {
                 /* Figure out which function data we want to look at. Function
                    data entries are arranged by the function code, most
                    significant bit first. So we count the bits above func. */
-                d = __builtin_popcount(dev->info.functions & funcmask);
+                int d = __builtin_popcount(dev->info.functions & funcmask);
 
                 /* Ensure that the result is in-bounds */
                 assert((d >= 0) && (d < 3));
