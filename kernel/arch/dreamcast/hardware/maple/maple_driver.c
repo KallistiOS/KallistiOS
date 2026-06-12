@@ -69,7 +69,6 @@ int maple_driver_attach(maple_frame_t *det) {
     maple_response_t    *resp;
     maple_devinfo_t     *devinfo;
     maple_device_t      *dev = maple_state.ports[det->dst_port].units[det->dst_unit];
-    bool                attached = false;
     bool                dev_allocated = false;
 
     /* Resolve some pointers first */
@@ -100,6 +99,7 @@ int maple_driver_attach(maple_frame_t *det) {
             if(i->status_size && !dev->status) {
                 dev->status = calloc(1, i->status_size);
                 if(!dev->status) {
+                    /* If dev was freshly allocated, don't keep it */
                     if(dev_allocated)
                         free(dev);
                     return 1;
@@ -109,35 +109,25 @@ int maple_driver_attach(maple_frame_t *det) {
             if(dev_allocated)
                 maple_state.ports[det->dst_port].units[det->dst_unit] = dev;
 
-            if(!i->status_size || dev->status) {
-                /* Try to attach if we need to then break out. */
-                if(!(i->attach) || (i->attach(i, dev) >= 0)) {
-                    attached = true;
-                    break;
-                }
+            /* Try to attach if we need to then finish up. */
+            if(!(i->attach) || (i->attach(i, dev) >= 0)) {
+                dev->drv = i;
+                dev->valid = true;
+
+                if(i->user_attach)
+                    i->user_attach(dev);
+
+                return 0;
+            }
+            else {
+                /* We allocated a status, but couldn't attach */
+                free(dev->status);
+                dev->status = NULL;
             }
         }
     }
 
-    if(!dev)
-        return -1;
-
-    /* Did we get any hits? */
-    if(!attached) {
-        free(dev->status);
-        dev->status = NULL;
-
-        return -1;
-    }
-
-    /* Finish setting stuff up */
-    dev->drv = i;
-    dev->valid = true;
-
-    if(i->user_attach)
-        i->user_attach(dev);
-
-    return 0;
+    return -1;
 }
 
 /* Detach an attached maple device */
