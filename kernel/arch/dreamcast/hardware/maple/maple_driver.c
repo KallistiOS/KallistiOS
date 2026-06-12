@@ -159,12 +159,10 @@ int maple_driver_detach(int p, int u) {
 
 /* For each device which the given driver controls, call the callback */
 int maple_driver_foreach(maple_driver_t *drv, int (*callback)(maple_device_t *)) {
-    int     p, u;
-    maple_device_t  *dev;
 
-    for(p = 0; p < MAPLE_PORT_COUNT; p++) {
-        for(u = 0; u < MAPLE_UNIT_COUNT; u++) {
-            dev = maple_enum_dev(p, u);
+    for(size_t p = 0; p < MAPLE_PORT_COUNT; p++) {
+        for(size_t u = 0; u < MAPLE_UNIT_COUNT; u++) {
+            maple_device_t *dev = maple_enum_dev(p, u);
 
             if(dev && dev->drv == drv && !dev->frame.queued)
                 if(callback(dev) < 0)
