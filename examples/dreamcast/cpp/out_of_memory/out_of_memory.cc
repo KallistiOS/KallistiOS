@@ -18,7 +18,7 @@
 
 #include <kos/init.h>
 
-KOS_INIT_FLAGS(INIT_MALLOCSTATS);
+KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS);
 
 static unsigned new_handler_counter = 0;
 
