@@ -24,6 +24,7 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <sys/queue.h>
 
@@ -33,9 +34,8 @@ __BEGIN_DECLS
     This struct represents a single dbgio interface. This should represent
     a generic pollable console interface. We store an ordered, singly-linked
     list of these and fall back from one to the next until one returns true
-    for detected(). Users may create and add their own dbgio interfaces using
-    the dbgio_add_handler() function. Note that the last device in this chain
-    is the null console, which will always return true.
+    for detected() and init(). Users may create and add their own dbgio
+    interfaces using the dbgio_add_handler() function.
 
     \headerfile kos/dbgio.h
 */
@@ -43,13 +43,20 @@ typedef struct dbgio_handler {
     /** \brief  Name of the dbgio handler */
     const char  *name;
 
-    /** \brief  Detect this debug interface.
-        \retval 1           If the device is available and usable
-        \retval 0           If the device is unavailable
+    /** \brief  Return if the handler is available for auto-selection.
+
+        If not present, will presume unavailable.
+
+        \retval 1           The device is available for auto-selection
+        \retval 0           The device is unavailable for auto-selection
     */
     int (*detected)(void);
 
     /** \brief  Initialize this debug interface with default parameters.
+
+        If not present, will simply succeed. Only needed if it's possible
+        to fail at initializing the dbgio device.
+
         \retval 0           On success
         \retval -1          On failure
     */
@@ -91,6 +98,9 @@ typedef struct dbgio_handler {
     */
     int (*read_buffer)(uint8_t *data, int len);
 
+    /** \brief Output even when not selected. */
+    bool    output;
+
     /** \brief dbgio handler list handle.
 
         Contrary to what doxygen might think, this is not a function.
@@ -98,18 +108,14 @@ typedef struct dbgio_handler {
     SLIST_ENTRY(dbgio_handler) entry;
 } dbgio_handler_t;
 
-/** \cond */
-/* This is defined by the shared code, in case there's no valid handler. */
-extern dbgio_handler_t dbgio_null;
-/** \endcond */
-
 /** \brief   Add a new dbgio handler to the list.
     \ingroup logging
 
-    This function adds a new dbgio handler to the top of the list.
+    This function adds a new dbgio handler to the top of the list. Regardless
+    of return value, the handler will be installed.
 
-    \retval 0               On success
-    \retval -1              On error
+    \retval 0               No errors.
+    \retval Non-zero        The return of a handler's init if set to output by default.
 */
 int dbgio_add_handler(dbgio_handler_t *handler);
 
@@ -137,7 +143,7 @@ int dbgio_remove_handler(dbgio_handler_t *handler);
     \retval -1              On error
 
     \par    Error Conditions:
-    \em     ENODEV - The specified device could not be initialized
+    \em     ENODEV - The specified device could not be initialized or wasn't found.
 */
 int dbgio_dev_select(const char *name);
 
@@ -162,6 +168,30 @@ int dbgio_dev_select_auto(void);
                             no device is selected)
 */
 const char *dbgio_dev_get(void);
+
+/** \brief   Set a dbgio interface to output mode by name.
+    \ingroup logging
+
+    This function sets the output status of a named dbgio interface.
+    The default operation is for this to be set to false.
+    When output is true, the interface will receive all outputs:
+    write, write_buffer, and flush regardless of which interface is
+    selected.
+
+    If the interface hasn't been initialized and is being set to true, it
+    will be initialized. Similarly if setting to false and the interface
+    isn't already in use as the selected one it will be shut down.
+
+    \param  name            The dbgio interface to set output.
+    \param  output          Whether to enable or disable output mode.
+
+    \retval 0               On success
+    \retval -1              On error
+
+    \par    Error Conditions:
+    \em     ENODEV - The specified device could not be initialized or wasn't found.
+*/
+int dbgio_dev_output(const char *name, bool output);
 
 /** \brief   Initialize the dbgio console.
     \ingroup logging
