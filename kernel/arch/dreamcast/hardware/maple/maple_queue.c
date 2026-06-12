@@ -91,7 +91,7 @@ void maple_queue_flush(void) {
 
 /* Submit a frame for queueing; see header for notes */
 int maple_queue_frame(maple_frame_t *frame) {
-    uint32_t save = 0;
+    irq_mask_t save = 0;
 
     /* Don't add it twice */
     if(frame->queued)
@@ -118,7 +118,7 @@ int maple_queue_frame(maple_frame_t *frame) {
 
 /* Remove a used frame from the queue */
 int maple_queue_remove(maple_frame_t *frame) {
-    uint32_t save = 0;
+    irq_mask_t save = 0;
 
     /* Don't remove twice */
     if(!frame->queued)
@@ -148,16 +148,12 @@ int maple_queue_remove(maple_frame_t *frame) {
    the old system I put it inside a big chunk of memory so it couldn't do
    that, and that seems to be the only working fix here too. *shrug* */
 void maple_frame_init(maple_frame_t *frame) {
-    uint32_t buf_ptr;
 
     assert(frame->state == MAPLE_FRAME_UNSENT);
     assert(!frame->queued);
 
-    /* Setup the buffer pointer (64-byte align and force -> P2) */
-    buf_ptr = (uint32_t)frame->recv_buf_arr;
-
-    if(buf_ptr & 0x1f)
-        buf_ptr = (buf_ptr & ~0x1f) + 0x20;
+    /* Setup the buffer pointer (32-byte align and force -> P2) */
+    uintptr_t buf_ptr = __align_up((uintptr_t)frame->recv_buf_arr, 32);
 
     if(__is_defined(MAPLE_DMA_DEBUG))
         buf_ptr += 512;
