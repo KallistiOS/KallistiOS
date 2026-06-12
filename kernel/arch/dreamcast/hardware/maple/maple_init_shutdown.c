@@ -125,7 +125,7 @@ static void maple_hw_init(void) {
     }
 
     maple_state.dma_in_progress = 0;
-    dbglog(DBG_INFO, "  DMA Buffer at %08lx\n", (uint32_t)maple_state.dma_buffer);
+    dbglog(DBG_SOURCE(MAPLE_DMA_DEBUG), "  DMA Buffer at %08lx\n", (uint32_t)maple_state.dma_buffer);
 
     /* Initialize other misc stuff */
     maple_state.vbl_cntr = maple_state.dma_cntr = 0;
