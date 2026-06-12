@@ -4,6 +4,7 @@
    Copyright (C) 2002 Megan Potter
  */
 
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -88,15 +89,14 @@ static void maple_dev_reset_all(void) {
 /* Initialize Hardware (call after driver inits) */
 static void maple_hw_init(void) {
     maple_driver_t *drv;
-    int p, u;
 
     dbglog(DBG_INFO, "maple: active drivers:\n");
 
     /* Reset structures */
-    for(p = 0; p < MAPLE_PORT_COUNT; p++) {
+    for(size_t p = 0; p < MAPLE_PORT_COUNT; p++) {
         maple_state.ports[p].port = p;
 
-        for(u = 0; u < MAPLE_UNIT_COUNT; u++)
+        for(size_t u = 0; u < MAPLE_UNIT_COUNT; u++)
             maple_state.ports[p].units[u] = NULL;
     }
 
@@ -114,7 +114,7 @@ static void maple_hw_init(void) {
         maple_state.dma_buffer = aligned_alloc(32, MAPLE_DMA_SIZE);
 
     assert_msg(maple_state.dma_buffer != NULL, "Couldn't allocate maple DMA buffer");
-    assert_msg((((uint32_t)maple_state.dma_buffer) & 0x1f) == 0, "DMA buffer was unaligned; bug in dlmalloc; please report!");
+    assert_msg(__is_aligned((uint32_t)maple_state.dma_buffer, 32), "DMA buffer was unaligned; bug in dlmalloc; please report!");
 
     /* Force it into the P2 area */
     maple_state.dma_buffer = (uint8_t *)((((uint32_t)maple_state.dma_buffer) & MEM_AREA_CACHE_MASK) | MEM_AREA_P2_BASE);
@@ -149,8 +149,7 @@ static void maple_hw_init(void) {
 /* Turn off the maple bus, free mem */
 /* AGGG!! Someone save me from this idiotic voodoo bug fixing crap.. */
 void maple_hw_shutdown(void) {
-    int p, u, cnt;
-    uint32_t  ptr;
+    size_t cnt = 0;
 
     /* Reset all devices to leave them as we found them */
     maple_dev_reset_all();
@@ -170,7 +169,7 @@ void maple_hw_shutdown(void) {
 
     /* We must cast this back to P1 or cache issues will arise */
     if(maple_state.dma_buffer != NULL) {
-        ptr = (uint32_t)maple_state.dma_buffer;
+        uint32_t ptr = (uint32_t)maple_state.dma_buffer;
 
         if(__is_defined(MAPLE_DMA_DEBUG))
             ptr -= 512;
@@ -181,8 +180,8 @@ void maple_hw_shutdown(void) {
     }
 
     /* Free any attached devices */
-    for(cnt = 0, p = 0; p < MAPLE_PORT_COUNT; p++) {
-        for(u = 0; u < MAPLE_UNIT_COUNT; u++) {
+    for(size_t p = 0; p < MAPLE_PORT_COUNT; p++) {
+        for(size_t u = 0; u < MAPLE_UNIT_COUNT; u++) {
             cnt += !maple_driver_detach(p, u);
 
             free(maple_state.ports[p].units[u]);
@@ -199,8 +198,6 @@ static int maple_scan_done(maple_state_t *state) {
 
 /* Wait for the initial bus scan to complete */
 void maple_wait_scan(void) {
-    int     p, u;
-    maple_device_t  *dev;
 
     /* Wait for it to finish */
     thd_poll((thd_cb_t)maple_scan_done, &maple_state, 0);
@@ -208,9 +205,9 @@ void maple_wait_scan(void) {
     /* Enumerate everything */
     dbglog(DBG_INFO, "maple: attached devices:\n");
 
-    for(p = 0; p < MAPLE_PORT_COUNT; p++) {
-        for(u = 0; u < MAPLE_UNIT_COUNT; u++) {
-            dev = maple_enum_dev(p, u);
+    for(size_t p = 0; p < MAPLE_PORT_COUNT; p++) {
+        for(size_t u = 0; u < MAPLE_UNIT_COUNT; u++) {
+            maple_device_t *dev = maple_enum_dev(p, u);
 
             if(dev) {
                 dbglog(DBG_INFO, "  %c%c: %.30s (%08lx: %s)\n",
