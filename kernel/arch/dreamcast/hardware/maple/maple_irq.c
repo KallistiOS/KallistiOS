@@ -274,7 +274,7 @@ void maple_dma_irq_hnd(uint32_t code, void *data) {
            For instance, when setting motor selection to '0' rather than '1'. */
         else if(resp == MAPLE_RESPONSE_BADFUNC) {
             dbglog(DBG_ERROR, "maple_irq: error EBADFUNC on %c%i when sending command: %i\n",
-            ('A' - i->dst_port), i->dst_unit, i->cmd);
+            ('A' + i->dst_port), i->dst_unit, i->cmd);
         }
 
         if(__is_defined(MAPLE_DMA_DEBUG))
