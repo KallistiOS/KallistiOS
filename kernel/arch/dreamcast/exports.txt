@@ -49,6 +49,7 @@ scif_spi_set_cs
 scif_spi_rw_byte
 scif_spi_slow_rw_byte
 scif_spi_write_byte
+scif_spi_write_data
 scif_spi_read_byte
 scif_spi_read_data
 

@@ -193,6 +193,17 @@ uint8_t scif_spi_slow_rw_byte(uint8_t b);
 */
 void scif_spi_write_byte(uint8_t b);
 
+/** \brief  Write data to the SPI device.
+
+    This function writes data to the SPI device. The bulk of the buffer is
+    written four bytes at a time; any unaligned leading bytes and leftover
+    trailing bytes are written one byte at a time.
+
+    \param  buffer          Buffer to write data from.
+    \param  len             Number of bytes to write to the device.
+*/
+void scif_spi_write_data(const uint8_t *buffer, size_t len);
+
 /** \brief  Read a byte from the SPI device.
 
     This function reads a byte from the SPI device, one bit at a time. Timing
@@ -202,7 +213,7 @@ void scif_spi_write_byte(uint8_t b);
 */
 uint8_t scif_spi_read_byte(void);
 
-/** \brief  Read a data from the SPI device.
+/** \brief  Read data from the SPI device.
 
     This function reads data from the SPI device. If the buffer is aligned and
     len is divisible by 4, optimizations are applied.
