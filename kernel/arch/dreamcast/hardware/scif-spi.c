@@ -324,14 +324,18 @@ void scif_spi_read_data(uint8_t *buffer, size_t len) {
     uint32_t data;
     uint32_t *ptr;
 
-    /* Less optimized version for unaligned buffers or lengths not divisible by
-       four. */
-    if((((uint32_t)buffer) & 0x03) || (len & 0x03)) {
+    /* Not worth the alignment/setup overhead for short reads. */
+    if(len < 16) {
         while(len--) {
             *buffer++ = scif_spi_read_byte();
         }
-
         return;
+    }
+
+    /* Read single bytes until the buffer is 4-byte aligned. */
+    while(((uint32_t)buffer) & 0x03) {
+        *buffer++ = scif_spi_read_byte();
+        --len;
     }
 
     b = 0xff;
@@ -339,7 +343,7 @@ void scif_spi_read_data(uint8_t *buffer, size_t len) {
     ptr = (uint32_t *)buffer;
     SCSPTR2 = tmp;
 
-    for(; len > 0; len -= 4) {
+    for(; len >= 4; len -= 4) {
         SCSPTR2 = tmp | PTR2_CTSDT;
         b = (b << 1) | (SCSPTR2 & PTR2_SPB2DT);   /* 7 */
         SCSPTR2 = tmp;
@@ -443,6 +447,13 @@ void scif_spi_read_data(uint8_t *buffer, size_t len) {
         b = (b << 1) | (SCSPTR2 & PTR2_SPB2DT);   /* 0 */
         SCSPTR2 = tmp;
         data |= b << 24;
+
         *ptr++ = data;
+    }
+
+    /* Read any leftover bytes. */
+    buffer = (uint8_t *)ptr;
+    while(len--) {
+        *buffer++ = scif_spi_read_byte();
     }
 }
