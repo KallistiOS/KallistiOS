@@ -162,28 +162,20 @@ void scif_spi_write_byte(uint8_t b) {
        CTS, otherwise it doesn't work -- that's why this looks so ugly... */
     SCSPTR2 = tmp | (bit = (b >> 7) & 0x01);
     SCSPTR2 = tmp | bit | PTR2_CTSDT;
-    SD_WAIT();
     SCSPTR2 = tmp | (bit = (b >> 6) & 0x01);
     SCSPTR2 = tmp | bit | PTR2_CTSDT;
-    SD_WAIT();
     SCSPTR2 = tmp | (bit = (b >> 5) & 0x01);
     SCSPTR2 = tmp | bit | PTR2_CTSDT;
-    SD_WAIT();
     SCSPTR2 = tmp | (bit = (b >> 4) & 0x01);
     SCSPTR2 = tmp | bit | PTR2_CTSDT;
-    SD_WAIT();
     SCSPTR2 = tmp | (bit = (b >> 3) & 0x01);
     SCSPTR2 = tmp | bit | PTR2_CTSDT;
-    SD_WAIT();
     SCSPTR2 = tmp | (bit = (b >> 2) & 0x01);
     SCSPTR2 = tmp | bit | PTR2_CTSDT;
-    SD_WAIT();
     SCSPTR2 = tmp | (bit = (b >> 1) & 0x01);
     SCSPTR2 = tmp | bit | PTR2_CTSDT;
-    SD_WAIT();
     SCSPTR2 = tmp | (bit = (b >> 0) & 0x01);
     SCSPTR2 = tmp | bit | PTR2_CTSDT;
-    SD_WAIT();
     SCSPTR2 = tmp;
 }
 
