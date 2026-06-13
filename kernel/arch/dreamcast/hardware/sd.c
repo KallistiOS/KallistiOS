@@ -131,9 +131,7 @@ static int scif_read_data_wrapper(uint8_t *data, size_t len) {
 }
 
 static int scif_write_data_wrapper(const uint8_t *data, size_t len) {
-    while(len--) {
-        scif_spi_write_byte(*data++);
-    }
+    scif_spi_write_data(data, len);
     return 0;
 }
 

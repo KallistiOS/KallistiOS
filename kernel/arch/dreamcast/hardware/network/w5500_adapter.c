@@ -105,9 +105,7 @@ static int scif_read_data_wrapper(uint8_t *data, size_t len) {
 }
 
 static int scif_write_data_wrapper(const uint8_t *data, size_t len) {
-    while(len--) {
-        scif_spi_write_byte(*data++);
-    }
+    scif_spi_write_data(data, len);
     return 0;
 }
 
@@ -489,7 +487,7 @@ static int w5500_tx(const uint8_t *pkt, int len, int blocking) {
     fsr = w5500_read_reg16_safe(W5500_S0_REG_BLOCK, Sn_TX_FSR);
     if(fsr < len) {
         dbglog(DBG_ERROR, "w5500: TX buffer full\n");
-        return -1; 
+        return -1;
     }
 
     /* Write Data */
@@ -630,7 +628,7 @@ static int w5500_if_init(netif_t *self) {
 static int w5500_if_start(netif_t *self) {
     if(!(self->flags & NETIF_INITIALIZED))
         return -1;
-        
+
     if(self->flags & NETIF_RUNNING)
         return 0;
 
