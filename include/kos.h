@@ -67,7 +67,6 @@ __BEGIN_DECLS
 #include <arch/arch.h>
 #include <arch/irq.h>
 #include <arch/timer.h>
-#include <arch/types.h>
 #include <arch/exec.h>
 #include <arch/stack.h>
 #include <arch/byteorder.h>

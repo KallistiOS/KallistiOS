@@ -52,7 +52,6 @@ __BEGIN_DECLS
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <arch/types.h>
 #include <sys/queue.h>
 
 /** \defgroup maple Maple Bus
