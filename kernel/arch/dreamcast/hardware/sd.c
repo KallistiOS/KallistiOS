@@ -23,6 +23,7 @@
 
 #include <kos/blockdev.h>
 #include <kos/timer.h>
+#include <kos/thread.h>
 #include <kos/dbglog.h>
 
 #define MAX_RETRIES       5000
@@ -30,6 +31,9 @@
 
 /* SD spec allows a card to signal busy for up to 500ms */
 #define READY_TIMEOUT_MS  500
+
+/* Spin for a 200us before yielding */
+#define SD_SPIN_US  200
 
 #define CMD(n) ((n) | 0x40)
 
@@ -179,16 +183,25 @@ static int sci_init_wrapper(bool fast) {
     return sci_init(baud, SCI_MODE_SPI, SCI_CLK_INT, 512);
 }
 
+static int sd_ready_cb(void *d) {
+    (void)d;
+    return spi_rw_byte(0xFF) == 0xFF;
+}
+
 static int sd_wait_ready(void) {
-    uint8_t rv;
-    uint64_t timeout = timer_ms_gettime64() + READY_TIMEOUT_MS;
+    uint64_t now = timer_us_gettime64();
+    uint64_t spin_deadline = now + SD_SPIN_US;
 
     spi_rw_byte(0xFF);
-    do {
-        rv = spi_rw_byte(0xFF);
-    } while(rv != 0xFF && timer_ms_gettime64() < timeout);
 
-    return (rv == 0xFF) ? 0 : -1;
+    /* Fast path: the card is almost always ready within ~12-44us. */
+    do {
+        if(spi_rw_byte(0xFF) == 0xFF)
+            return 0;
+    } while(timer_us_gettime64() < spin_deadline);
+
+    /* Slow path: yield instead of burning CPU. */
+    return thd_poll(sd_ready_cb, NULL, READY_TIMEOUT_MS) ? 0 : -1;
 }
 
 static int sd_send_cmd(uint8_t cmd, uint32_t arg) {
