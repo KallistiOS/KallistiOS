@@ -34,10 +34,6 @@
 #define PTR2_SPB2IO BIT(1)
 #define PTR2_SPB2DT BIT(0)
 
-/* This doesn't seem to actually be necessary on any of the SD cards I've tried,
-   but I'm keeping it around, just in case... */
-#define SD_WAIT() __asm__("nop\n\tnop\n\tnop\n\tnop\n\tnop")
-
 static uint16_t scsptr2 = 0;
 static int initialized = 0;
 
@@ -96,35 +92,27 @@ uint8_t scif_spi_rw_byte(uint8_t b) {
        For some reason, we have to have the bit set on the Tx line before we set
        CTS, otherwise it doesn't work -- that's why this looks so ugly... */
     SCSPTR2 = tmp | (bit = (b >> 7) & 0x01);    /* write 7 */
-    SD_WAIT();
     SCSPTR2 = tmp | bit | PTR2_CTSDT;
     rv = SCSPTR2 & PTR2_SPB2DT;                 /* read 7 */
     SCSPTR2 = tmp | (bit = (b >> 6) & 0x01);    /* write 6 */
-    SD_WAIT();
     SCSPTR2 = tmp | bit | PTR2_CTSDT;
     rv = (rv << 1) | (SCSPTR2 & PTR2_SPB2DT);   /* read 6 */
     SCSPTR2 = tmp | (bit = (b >> 5) & 0x01);    /* write 5 */
-    SD_WAIT();
     SCSPTR2 = tmp | bit | PTR2_CTSDT;
     rv = (rv << 1) | (SCSPTR2 & PTR2_SPB2DT);   /* read 5 */
     SCSPTR2 = tmp | (bit = (b >> 4) & 0x01);    /* write 4 */
-    SD_WAIT();
     SCSPTR2 = tmp | bit | PTR2_CTSDT;
     rv = (rv << 1) | (SCSPTR2 & PTR2_SPB2DT);   /* read 4 */
     SCSPTR2 = tmp | (bit = (b >> 3) & 0x01);    /* write 3 */
-    SD_WAIT();
     SCSPTR2 = tmp | bit | PTR2_CTSDT;
     rv = (rv << 1) | (SCSPTR2 & PTR2_SPB2DT);   /* read 3 */
     SCSPTR2 = tmp | (bit = (b >> 2) & 0x01);    /* write 2 */
-    SD_WAIT();
     SCSPTR2 = tmp | bit | PTR2_CTSDT;
     rv = (rv << 1) | (SCSPTR2 & PTR2_SPB2DT);   /* read 2 */
     SCSPTR2 = tmp | (bit = (b >> 1) & 0x01);    /* write 1 */
-    SD_WAIT();
     SCSPTR2 = tmp | bit | PTR2_CTSDT;
     rv = (rv << 1) | (SCSPTR2 & PTR2_SPB2DT);   /* read 1 */
     SCSPTR2 = tmp | (bit = (b >> 0) & 0x01);    /* write 0 */
-    SD_WAIT();
     SCSPTR2 = tmp | bit | PTR2_CTSDT;
     rv = (rv << 1) | (SCSPTR2 & PTR2_SPB2DT);   /* read 0 */
 
@@ -162,29 +150,66 @@ void scif_spi_write_byte(uint8_t b) {
        CTS, otherwise it doesn't work -- that's why this looks so ugly... */
     SCSPTR2 = tmp | (bit = (b >> 7) & 0x01);
     SCSPTR2 = tmp | bit | PTR2_CTSDT;
-    SD_WAIT();
     SCSPTR2 = tmp | (bit = (b >> 6) & 0x01);
     SCSPTR2 = tmp | bit | PTR2_CTSDT;
-    SD_WAIT();
     SCSPTR2 = tmp | (bit = (b >> 5) & 0x01);
     SCSPTR2 = tmp | bit | PTR2_CTSDT;
-    SD_WAIT();
     SCSPTR2 = tmp | (bit = (b >> 4) & 0x01);
     SCSPTR2 = tmp | bit | PTR2_CTSDT;
-    SD_WAIT();
     SCSPTR2 = tmp | (bit = (b >> 3) & 0x01);
     SCSPTR2 = tmp | bit | PTR2_CTSDT;
-    SD_WAIT();
     SCSPTR2 = tmp | (bit = (b >> 2) & 0x01);
     SCSPTR2 = tmp | bit | PTR2_CTSDT;
-    SD_WAIT();
     SCSPTR2 = tmp | (bit = (b >> 1) & 0x01);
     SCSPTR2 = tmp | bit | PTR2_CTSDT;
-    SD_WAIT();
     SCSPTR2 = tmp | (bit = (b >> 0) & 0x01);
     SCSPTR2 = tmp | bit | PTR2_CTSDT;
-    SD_WAIT();
     SCSPTR2 = tmp;
+}
+
+void scif_spi_write_data(const uint8_t *buffer, size_t len) {
+    uint16_t tmp;
+    uint32_t bit;
+    uint32_t data;
+    const uint32_t *ptr;
+
+    /* Not worth the alignment/setup overhead for short writes. */
+    if(len < 16) {
+        while(len--) {
+            scif_spi_write_byte(*buffer++);
+        }
+        return;
+    }
+
+    /* Write single bytes until the buffer is 4-byte aligned. */
+    while(((uint32_t)buffer) & 0x03) {
+        scif_spi_write_byte(*buffer++);
+        --len;
+    }
+
+    tmp = scsptr2 & ~PTR2_CTSDT & ~PTR2_SPB2DT;
+    ptr = (const uint32_t *)buffer;
+    SCSPTR2 = tmp;
+
+    for(; len >= 4; len -= 4) {
+        /* Data is transmitted in big-endian */
+        data = __builtin_bswap32(*ptr++);
+
+        for(uint32_t i = 0; i < 32; i++) {
+            bit = data >> 31;
+            SCSPTR2 = tmp | bit;
+            SCSPTR2 = tmp | bit | PTR2_CTSDT;
+            data <<= 1;
+        }
+
+        SCSPTR2 = tmp;
+    }
+
+    /* Write any leftover bytes. */
+    buffer = (const uint8_t *)ptr;
+    while(len--) {
+        scif_spi_write_byte(*buffer++);
+    }
 }
 
 uint8_t scif_spi_read_byte(void) {
@@ -227,14 +252,18 @@ void scif_spi_read_data(uint8_t *buffer, size_t len) {
     uint32_t data;
     uint32_t *ptr;
 
-    /* Less optimized version for unaligned buffers or lengths not divisible by
-       four. */
-    if((((uint32_t)buffer) & 0x03) || (len & 0x03)) {
+    /* Not worth the alignment/setup overhead for short reads. */
+    if(len < 16) {
         while(len--) {
             *buffer++ = scif_spi_read_byte();
         }
-
         return;
+    }
+
+    /* Read single bytes until the buffer is 4-byte aligned. */
+    while(((uint32_t)buffer) & 0x03) {
+        *buffer++ = scif_spi_read_byte();
+        --len;
     }
 
     b = 0xff;
@@ -242,7 +271,7 @@ void scif_spi_read_data(uint8_t *buffer, size_t len) {
     ptr = (uint32_t *)buffer;
     SCSPTR2 = tmp;
 
-    for(; len > 0; len -= 4) {
+    for(; len >= 4; len -= 4) {
         SCSPTR2 = tmp | PTR2_CTSDT;
         b = (b << 1) | (SCSPTR2 & PTR2_SPB2DT);   /* 7 */
         SCSPTR2 = tmp;
@@ -346,6 +375,13 @@ void scif_spi_read_data(uint8_t *buffer, size_t len) {
         b = (b << 1) | (SCSPTR2 & PTR2_SPB2DT);   /* 0 */
         SCSPTR2 = tmp;
         data |= b << 24;
+
         *ptr++ = data;
+    }
+
+    /* Read any leftover bytes. */
+    buffer = (uint8_t *)ptr;
+    while(len--) {
+        *buffer++ = scif_spi_read_byte();
     }
 }

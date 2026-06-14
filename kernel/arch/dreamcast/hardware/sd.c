@@ -116,10 +116,10 @@ static uint8_t sci_rw_byte(uint8_t data) {
     return rx;
 }
 
-static bool current_speed = false; /* false = slow, true = fast */
+static bool fast_mode = false; /* false = slow, true = fast */
 
 static uint8_t scif_rw_byte_wrapper(uint8_t data) {
-    if(current_speed)
+    if(fast_mode)
         return scif_spi_rw_byte(data);
     else
         return scif_spi_slow_rw_byte(data);
@@ -131,9 +131,7 @@ static int scif_read_data_wrapper(uint8_t *data, size_t len) {
 }
 
 static int scif_write_data_wrapper(const uint8_t *data, size_t len) {
-    while(len--) {
-        scif_spi_write_byte(*data++);
-    }
+    scif_spi_write_data(data, len);
     return 0;
 }
 
@@ -170,7 +168,7 @@ static void sci_shutdown_wrapper(void) {
 }
 
 static int scif_init_wrapper(bool fast) {
-    current_speed = fast;
+    fast_mode = fast;
     return scif_spi_init();
 }
 
