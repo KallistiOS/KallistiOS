@@ -330,7 +330,7 @@ extern kthread_t *thd_current;
 
     \return                 Whatever the unblocker deems necessary to return.
 */
-int thd_block_now(irq_context_t *mycxt);
+int thd_block_now(irq_context_t *mycxt) __nonnull_all;
 
 /** \brief   Find a new thread to swap in.
 
@@ -369,7 +369,7 @@ kthread_t *thd_by_tid(tid_t tid);
 
     \sa thd_remove_from_runnable
 */
-void thd_add_to_runnable(kthread_t *t, bool front_of_line);
+void thd_add_to_runnable(kthread_t *t, bool front_of_line) __nonnull_all;
 
 /** \brief       Removes a thread from the runnable queue, if it's there.
     \relatesalso kthread_t
@@ -384,7 +384,7 @@ void thd_add_to_runnable(kthread_t *t, bool front_of_line);
 
     \sa thd_add_to_runnable
 */
-int thd_remove_from_runnable(kthread_t *thd);
+int thd_remove_from_runnable(kthread_t *thd) __nonnull_all;
 
 /** \brief       Create a new thread.
     \relatesalso kthread_t
@@ -439,7 +439,7 @@ kthread_t *thd_create_ex(const kthread_attr_t *__RESTRICT attr,
 
     \sa thd_create
 */
-int thd_destroy(kthread_t *thd);
+int thd_destroy(kthread_t *thd) __nonnull_all;
 
 /** \brief   Exit the current thread.
 
@@ -480,7 +480,7 @@ void thd_schedule(bool front_of_line);
 
     \param  thd     The thread to schedule next.
 */
-void thd_schedule_next(kthread_t *thd);
+void thd_schedule_next(kthread_t *thd) __nonnull_all;
 
 /** \brief   Throw away the current thread's timeslice.
 
@@ -581,7 +581,8 @@ kthread_t *thd_get_idle(void);
 /** \brief       Retrieve the thread's label.
     \relatesalso kthread_t
 
-    \param  thd             The thread to retrieve from.
+    \param  thd             The thread to retrieve from. If NULL, the current
+                            thread will be used.
 
     \return                 The human-readable label of the thread.
 
@@ -597,7 +598,8 @@ const char *thd_get_label(const kthread_t *thd);
     anything internally, and you can give them any label you want. These are
     mainly seen in the printouts from thd_pslist() or thd_pslist_queue().
 
-    \param  thd             The thread to set the label of.
+    \param  thd             The thread to set the label of. If NULL, the current
+                            thread will be used.
     \param  label           The string to set as the label.
 
     \sa thd_get_label
@@ -612,7 +614,8 @@ void thd_set_label(kthread_t *__RESTRICT thd, const char *__RESTRICT label);
     doing this, but this is here in case you need it when the thread isn't
     active for some reason.
 
-    \param  thd             The thread to retrieve from.
+    \param  thd             The thread to retrieve from. If NULL, the current
+                            thread will be used.
 
     \return                 The thread's working directory.
 
@@ -629,6 +632,7 @@ const char *thd_get_pwd(const kthread_t *thd);
     active for some reason.
 
     \param  thd             The thread to set the working directory of.
+                            If NULL, the current thread will be used.
     \param  pwd             The directory to set as active.
 
     \sa thd_get_pwd
@@ -796,7 +800,7 @@ int thd_each(int (*cb)(kthread_t *thd, void *user_data), void *data);
 
     \sa thd_pslist_queue
 */
-int thd_pslist(int (*pf)(const char *fmt, ...));
+int thd_pslist(int (*pf)(const char *fmt, ...)) __nonnull_all;
 
 /** \brief   Print a list of all queued threads using the given print function.
 
@@ -806,7 +810,7 @@ int thd_pslist(int (*pf)(const char *fmt, ...));
 
     \sa thd_pslist
 */
-int thd_pslist_queue(int (*pf)(const char *fmt, ...));
+int thd_pslist_queue(int (*pf)(const char *fmt, ...)) __nonnull_all;
 
 /** \cond INTERNAL */
 
@@ -819,7 +823,6 @@ int thd_pslist_queue(int (*pf)(const char *fmt, ...));
     \sa thd_shutdown
 */
 int thd_init(void);
-
 
 /** \brief   Shutdown the threading system.
  
