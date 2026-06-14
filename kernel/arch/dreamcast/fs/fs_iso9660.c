@@ -58,7 +58,7 @@ static bool percd_done;
 /* Low-level Joliet utils */
 
 /* Joliet UCS is big endian */
-static void utf2ucs(uint8 * ucs, const uint8 * utf) {
+static void utf2ucs(uint8_t *ucs, const uint8_t *utf) {
     int c;
 
     do {
@@ -82,7 +82,7 @@ static void utf2ucs(uint8 * ucs, const uint8 * utf) {
     while(c);
 }
 
-static void ucs2utfn(uint8 * utf, const uint8 * ucs, size_t len) {
+static void ucs2utfn(uint8_t *utf, const uint8_t *ucs, size_t len) {
     int c;
 
     len = len / 2;
@@ -111,7 +111,7 @@ static void ucs2utfn(uint8 * utf, const uint8 * ucs, size_t len) {
     *utf = 0;
 }
 
-static int ucscompare(const uint8 * isofn, const uint8 * normalfn, int isosize) {
+static int ucscompare(const uint8_t *isofn, const uint8_t *normalfn, int isosize) {
     int i, c0, c1 = 0;
 
     /* Compare ISO name */
@@ -135,7 +135,7 @@ static int ucscompare(const uint8 * isofn, const uint8 * normalfn, int isosize) 
         return 0;
 }
 
-static int isjoliet(char * p) {
+static int isjoliet(char *p) {
     if(p[0] == '%' && p[1] == '/') {
         switch(p[2]) {
             case '@':
@@ -157,37 +157,37 @@ static int joliet;
 
 /* ISO Directory entry */
 typedef struct {
-    uint8   length;         /* 711 */
-    uint8   ext_attr_length;    /* 711 */
-    uint8   extent[8];      /* 733 */
-    uint8   size[8];        /* 733 */
-    uint8   date[7];        /* 7x711 */
-    uint8   flags;
-    uint8   file_unit_size;     /* 711 */
-    uint8   interleave;     /* 711 */
-    uint8   vol_sequence[4];    /* 723 */
-    uint8   name_len;       /* 711 */
+    uint8_t length;         /* 711 */
+    uint8_t ext_attr_length;/* 711 */
+    uint8_t extent[8];      /* 733 */
+    uint8_t size[8];        /* 733 */
+    uint8_t date[7];        /* 7x711 */
+    uint8_t flags;
+    uint8_t file_unit_size; /* 711 */
+    uint8_t interleave;     /* 711 */
+    uint8_t vol_sequence[4];/* 723 */
+    uint8_t name_len;       /* 711 */
     char    name[1];
 } iso_dirent_t;
 
-/* Util function to reverse the byte order of a uint32 */
-/* static uint32 ntohl_32(const void *data) {
-    const uint8 *d = (const uint8*)data;
+/* Util function to reverse the byte order of a uint32_t */
+/* static uint32_t ntohl_32(const void *data) {
+    const uint8_t *d = (const uint8 *)data;
     return (d[0] << 24) | (d[1] << 16) | (d[2] << 8) | (d[3] << 0);
 } */
 
 /* This seems kinda silly, but it's important since it allows us
    to do unaligned accesses on a buffer */
-static uint32 htohl_32(const void *data) {
-    const uint8 *d = (const uint8*)data;
+static uint32_t htohl_32(const void *data) {
+    const uint8_t *d = (const uint8_t *)data;
     return (d[0] << 0) | (d[1] << 8) | (d[2] << 16) | (d[3] << 24);
 }
 
 /* Read red-book section 7.1.1 number (8 bit) */
-/* static uint8 iso_711(const uint8 *from) { return (*from & 0xff); } */
+/* static uint8_t iso_711(const uint8_t *from) { return (*from & 0xff); } */
 
 /* Read red-book section 7.3.3 number (32 bit LE / 32 bit BE) */
-static uint32 iso_733(const uint8 *from) {
+static uint32_t iso_733(const uint8_t *from) {
     return htohl_32(from);
 }
 
@@ -203,8 +203,8 @@ static uint32 iso_733(const uint8 *from) {
    this cache. As the cache fills up, sectors are removed from the end
    of it. */
 typedef struct {
-    uint8   *data;          /* Sector data */
-    uint32  sector;         /* CD sector */
+    uint8_t   *data;          /* Sector data */
+    uint32_t  sector;         /* CD sector */
 } cache_block_t;
 
 /* List of cache blocks (ordered least recently used to most recently) */
@@ -220,19 +220,14 @@ static mutex_t cache_mutex;
 
 /* Clears all cache blocks */
 static void bclear_cache(cache_block_t **cache) {
-    int i;
+    mutex_lock_scoped(&cache_mutex);
 
-    mutex_lock(&cache_mutex);
-
-    for(i = 0; i < NUM_CACHE_BLOCKS; i++)
-        cache[i]->sector = (uint32)-1;
-
-    mutex_unlock(&cache_mutex);
+    for(size_t i = 0; i < NUM_CACHE_BLOCKS; i++)
+        cache[i]->sector = (uint32_t)-1;
 }
 
 /* Graduate a block from its current position to the MRU end of the cache */
 static void bgrad_cache(cache_block_t **cache, int block) {
-    int     i;
     cache_block_t   *tmp;
 
     /* Don't try it with the end block */
@@ -241,7 +236,7 @@ static void bgrad_cache(cache_block_t **cache, int block) {
     /* Make a copy and scoot everything down */
     tmp = cache[block];
 
-    for(i = block; i < (NUM_CACHE_BLOCKS - 1); i++)
+    for(size_t i = block; i < (NUM_CACHE_BLOCKS - 1); i++)
         cache[i] = cache[i + 1];
 
     cache[NUM_CACHE_BLOCKS - 1] = tmp;
@@ -252,7 +247,7 @@ static void bgrad_cache(cache_block_t **cache, int block) {
    cache, in which case it just returns the containing block. */
 static void iso_break_all(void);
 static void iso_abort_stream(bool lock);
-static int bread_cache(cache_block_t **cache, uint32 sector) {
+static int bread_cache(cache_block_t **cache, uint32_t sector) {
     int i, j, rv;
 
     rv = -1;
@@ -269,7 +264,7 @@ static int bread_cache(cache_block_t **cache, uint32 sector) {
 
     /* If not, look for an open cache slot; if we find one, use it */
     for(i = 0; i < NUM_CACHE_BLOCKS; i++) {
-        if(cache[i]->sector == (uint32)-1) break;
+        if(cache[i]->sector == (uint32_t)-1) break;
     }
 
     /* If we didn't find one, kick an LRU block out of cache */
@@ -326,10 +321,10 @@ static inline void bclear(void) {
 /* Higher-level ISO9660 primitives */
 
 /* Root FS session location (in sectors) */
-static uint32 session_base = 0;
+static uint32_t session_base = 0;
 
 /* Root directory extent and size in bytes */
-static uint32 root_extent = 0, root_size = 0;
+static uint32_t root_extent = 0, root_size = 0;
 
 /* Root dirent */
 static iso_dirent_t root_dirent;
@@ -436,14 +431,14 @@ static int fncompare(const char *isofn, int isosize, const char *normalfn) {
    expect this buffer to stay around much longer than the call itself).
  */
 static iso_dirent_t *find_object(const char *fn, int dir,
-                                 uint32 dir_extent, uint32 dir_size) {
+                                 uint32_t dir_extent, uint32_t dir_size) {
     int     i, c;
     iso_dirent_t    *de;
 
     /* RockRidge */
     int     len;
-    uint8       *pnt;
-    char        rrname[NAME_MAX];
+    uint8_t *pnt;
+    char    rrname[NAME_MAX];
     int     rrnamelen;
     int     size_left;
 
@@ -451,11 +446,11 @@ static iso_dirent_t *find_object(const char *fn, int dir,
     size_left = (int)dir_size;
 
     /* Joliet */
-    uint8       * ucsname = (uint8 *)rrname;
+    uint8_t *ucsname = (uint8_t *)rrname;
 
     /* If this is a Joliet CD, then UCSify the name */
     if(joliet)
-        utf2ucs(ucsname, (uint8 *)fn);
+        utf2ucs(ucsname, (uint8_t *)fn);
 
     while(size_left > 0) {
         c = biread(dir_extent);
@@ -470,7 +465,7 @@ static iso_dirent_t *find_object(const char *fn, int dir,
 
             /* Try the Joliet filename if the CD is a Joliet disc */
             if(joliet) {
-                if(!ucscompare((uint8 *)de->name, ucsname, de->name_len)) {
+                if(!ucscompare((uint8_t *)de->name, ucsname, de->name_len)) {
                     if(!((dir << 1) ^ de->flags))
                         return de;
                 }
@@ -482,7 +477,7 @@ static iso_dirent_t *find_object(const char *fn, int dir,
                 /* Check for Rock Ridge NM extension */
                 len = de->length - sizeof(iso_dirent_t)
                       + sizeof(de->name) - de->name_len;
-                pnt = (uint8*)de + sizeof(iso_dirent_t)
+                pnt = (uint8_t *)de + sizeof(iso_dirent_t)
                       - sizeof(de->name) + de->name_len;
 
                 if((de->name_len & 1) == 0) {
@@ -700,10 +695,10 @@ static int iso_stream_done(size_t *remain_size) {
 }
 
 /* Read from a file */
-static ssize_t iso_read(void * h, void *buf, size_t bytes) {
+static ssize_t iso_read(void *h, void *buf, size_t bytes) {
     int rv, c;
     size_t toread, thissect;
-    uint8 * outbuf;
+    uint8_t *outbuf;
     size_t remain_size = 0, req_size;
     uint32_t sector;
     iso_fd_t *fd = (iso_fd_t *)h;
@@ -715,7 +710,7 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
     }
 
     rv = 0;
-    outbuf = (uint8 *)buf;
+    outbuf = (uint8_t *)buf;
     mutex_lock(&fh_mutex);
 
     /* Read zero or more sectors into the buffer from the current pos */
@@ -888,7 +883,7 @@ static off_t iso_seek(void * h, off_t offset, int whence) {
             break;
 
         case SEEK_CUR:
-            if(offset < 0 && ((uint32)-offset) > fd->ptr) {
+            if(offset < 0 && ((uint32_t)-offset) > fd->ptr) {
                 errno = EINVAL;
                 return -1;
             }
@@ -897,7 +892,7 @@ static off_t iso_seek(void * h, off_t offset, int whence) {
             break;
 
         case SEEK_END:
-            if(offset < 0 && ((uint32)-offset) > fd->size) {
+            if(offset < 0 && ((uint32_t)-offset) > fd->size) {
                 errno = EINVAL;
                 return -1;
             }
@@ -970,7 +965,7 @@ static const dirent_t *iso_readdir(void * h) {
 
     /* RockRidge */
     int     len;
-    uint8       *pnt;
+    uint8_t       *pnt;
 
     iso_fd_t *fd = (iso_fd_t *)h;
 
@@ -1011,7 +1006,7 @@ static const dirent_t *iso_readdir(void * h) {
     }
 
     if(joliet) {
-        ucs2utfn((uint8 *)fd->dirent.name, (uint8 *)de->name, de->name_len);
+        ucs2utfn((uint8_t *)fd->dirent.name, (uint8_t *)de->name, de->name_len);
     }
     else {
         /* Fill out the VFS dirent */
@@ -1021,7 +1016,7 @@ static const dirent_t *iso_readdir(void * h) {
 
         /* Check for Rock Ridge NM extension */
         len = de->length - sizeof(iso_dirent_t) + sizeof(de->name) - de->name_len;
-        pnt = (uint8*)de + sizeof(iso_dirent_t) - sizeof(de->name) + de->name_len;
+        pnt = (uint8_t *)de + sizeof(iso_dirent_t) - sizeof(de->name) + de->name_len;
 
         if((de->name_len & 1) == 0) {
             pnt++;
@@ -1099,7 +1094,7 @@ int iso_reset(void) {
    time someone calls in it'll get reset. */
 static int iso_last_status;
 static int iso_vblank_hnd;
-static void iso_vblank(uint32 evt, void *data) {
+static void iso_vblank(uint32_t evt, void *data) {
     int status, disc_type;
 
     (void)evt;

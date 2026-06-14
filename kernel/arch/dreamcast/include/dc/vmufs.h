@@ -25,6 +25,7 @@
 #ifndef __DC_VMUFS_H
 #define __DC_VMUFS_H
 
+#include <stdint.h>
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
@@ -38,49 +39,49 @@ __BEGIN_DECLS
     \headerfile dc/vmufs.h
 */
 typedef struct {
-    uint8   cent;   /**< \brief Century */
-    uint8   year;   /**< \brief Year, within century */
-    uint8   month;  /**< \brief Month of the year */
-    uint8   day;    /**< \brief Day of the month */
-    uint8   hour;   /**< \brief Hour of the day */
-    uint8   min;    /**< \brief Minutes */
-    uint8   sec;    /**< \brief Seconds */
-    uint8   dow;    /**< \brief Day of week (0 = monday, etc) */
+    uint8_t cent;   /**< \brief Century */
+    uint8_t year;   /**< \brief Year, within century */
+    uint8_t month;  /**< \brief Month of the year */
+    uint8_t day;    /**< \brief Day of the month */
+    uint8_t hour;   /**< \brief Hour of the day */
+    uint8_t min;    /**< \brief Minutes */
+    uint8_t sec;    /**< \brief Seconds */
+    uint8_t dow;    /**< \brief Day of week (0 = monday, etc) */
 } vmu_timestamp_t;
 
 /** \brief  VMU FS Root block layout.
     \headerfile dc/vmufs.h
 */
 typedef struct {
-    uint8           magic[16];      /**< \brief All should contain 0x55 */
-    uint8           use_custom;     /**< \brief 0 = standard, 1 = custom */
-    uint8           custom_color[4];/**< \brief blue, green, red, alpha */
-    uint8           pad1[27];       /**< \brief All zeros */
+    uint8_t         magic[16];      /**< \brief All should contain 0x55 */
+    uint8_t         use_custom;     /**< \brief 0 = standard, 1 = custom */
+    uint8_t         custom_color[4];/**< \brief blue, green, red, alpha */
+    uint8_t         pad1[27];       /**< \brief All zeros */
     vmu_timestamp_t timestamp;      /**< \brief BCD timestamp */
-    uint8           pad2[8];        /**< \brief All zeros */
-    uint8           unk1[6];        /**< \brief ??? */
-    uint16          fat_loc;        /**< \brief FAT location */
-    uint16          fat_size;       /**< \brief FAT size in blocks */
-    uint16          dir_loc;        /**< \brief Directory location */
-    uint16          dir_size;       /**< \brief Directory size in blocks */
-    uint16          icon_shape;     /**< \brief Icon shape for this VMS */
-    uint16          blk_cnt;        /**< \brief Number of user blocks */
-    uint8           unk2[430];      /**< \brief ??? */
+    uint8_t         pad2[8];        /**< \brief All zeros */
+    uint8_t         unk1[6];        /**< \brief ??? */
+    uint16_t        fat_loc;        /**< \brief FAT location */
+    uint16_t        fat_size;       /**< \brief FAT size in blocks */
+    uint16_t        dir_loc;        /**< \brief Directory location */
+    uint16_t        dir_size;       /**< \brief Directory size in blocks */
+    uint16_t        icon_shape;     /**< \brief Icon shape for this VMS */
+    uint16_t        blk_cnt;        /**< \brief Number of user blocks */
+    uint8_t         unk2[430];      /**< \brief ??? */
 } vmu_root_t;
 
 /** \brief  VMU FS Directory entries, 32 bytes each.
     \headerfile dc/vmufs.h
 */
 typedef struct {
-    uint8           filetype;       /**< \brief 0x00 = no file; 0x33 = data; 0xcc = a game */
-    uint8           copyprotect;    /**< \brief 0x00 = copyable; 0xff = copy protected */
-    uint16          firstblk;       /**< \brief Location of the first block in the file */
+    uint8_t         filetype;       /**< \brief 0x00 = no file; 0x33 = data; 0xcc = a game */
+    uint8_t         copyprotect;    /**< \brief 0x00 = copyable; 0xff = copy protected */
+    uint16_t        firstblk;       /**< \brief Location of the first block in the file */
     char            filename[12];   /**< \brief Note: there is no null terminator */
     vmu_timestamp_t timestamp;      /**< \brief File time */
-    uint16          filesize;       /**< \brief Size of the file in blocks */
-    uint16          hdroff;         /**< \brief Offset of header, in blocks from start of file */
-    uint8           dirty;          /**< \brief See header notes */
-    uint8           pad1[3];        /**< \brief All zeros */
+    uint16_t        filesize;       /**< \brief Size of the file in blocks */
+    uint16_t        hdroff;         /**< \brief Offset of header, in blocks from start of file */
+    uint8_t         dirty;          /**< \brief See header notes */
+    uint8_t         pad1[3];        /**< \brief All zeros */
 } vmu_dir_t;
 
 /* Notes about the "dirty" field on vmu_dir_t :)
@@ -115,7 +116,7 @@ void vmufs_dir_fill_time(vmu_dir_t *d);
     \retval -1              On failure.
     \retval 0               On success.
 */
-int vmufs_root_read(maple_device_t * dev, vmu_root_t * root_buf);
+int vmufs_root_read(maple_device_t *dev, vmu_root_t *root_buf);
 
 /** \brief  Writes a selected VMU's root block.
 
@@ -126,7 +127,7 @@ int vmufs_root_read(maple_device_t * dev, vmu_root_t * root_buf);
     \retval -1              On failure.
     \retval 0               On success.
 */
-int vmufs_root_write(maple_device_t * dev, vmu_root_t * root_buf);
+int vmufs_root_write(maple_device_t *dev, vmu_root_t *root_buf);
 
 /** \brief  Given a VMU's root block, return the amount of space in bytes
             required to hold its directory.
@@ -134,7 +135,7 @@ int vmufs_root_write(maple_device_t * dev, vmu_root_t * root_buf);
     \param  root_buf        The root block to check.
     \return                 The amount of space, in bytes, needed.
 */
-int vmufs_dir_blocks(vmu_root_t * root_buf);
+int vmufs_dir_blocks(vmu_root_t *root_buf);
 
 /** \brief  Given a VMU's root block, return the amount of space in bytes
             required to hold its FAT.
@@ -142,7 +143,7 @@ int vmufs_dir_blocks(vmu_root_t * root_buf);
     \param  root_buf        The root block to check.
     \return                 The amount of space, in bytes, needed.
 */
-int vmufs_fat_blocks(vmu_root_t * root_buf);
+int vmufs_fat_blocks(vmu_root_t *root_buf);
 
 /** \brief  Given a selected VMU's root block, read its directory.
 
@@ -156,8 +157,8 @@ int vmufs_fat_blocks(vmu_root_t * root_buf);
                             allocated this yourself.
     \return                 0 on success, <0 on failure.
 */
-int vmufs_dir_read(maple_device_t * dev, vmu_root_t * root_buf,
-                   vmu_dir_t * dir_buf);
+int vmufs_dir_read(maple_device_t *dev, vmu_root_t *root_buf,
+                   vmu_dir_t *dir_buf);
 
 /** \brief  Given a selected VMU's root block and dir blocks, write the dirty
             dir blocks back to the VMU. Assumes the mutex is held.
@@ -167,8 +168,8 @@ int vmufs_dir_read(maple_device_t * dev, vmu_root_t * root_buf,
     \param  dir_buf         The VMU's directory structure.
     \return                 0 on success, <0 on failure.
 */
-int vmufs_dir_write(maple_device_t * dev, vmu_root_t * root,
-                    vmu_dir_t * dir_buf);
+int vmufs_dir_write(maple_device_t *dev, vmu_root_t *root,
+                    vmu_dir_t *dir_buf);
 
 /** \brief Given a selected VMU's root block, read its FAT.
 
@@ -182,7 +183,7 @@ int vmufs_dir_write(maple_device_t * dev, vmu_root_t * root,
                             pre-allocate this.
     \return                 0 on success, <0 on failure.
 */
-int vmufs_fat_read(maple_device_t * dev, vmu_root_t * root, uint16 * fat_buf);
+int vmufs_fat_read(maple_device_t *dev, vmu_root_t *root, uint16_t *fat_buf);
 
 /** \brief  Given a selected VMU's root block and its FAT, write the FAT blocks
             back to the VMU.
@@ -194,7 +195,7 @@ int vmufs_fat_read(maple_device_t * dev, vmu_root_t * root, uint16 * fat_buf);
     \param  fat_buf         The buffer to write to the FAT.
     \return                 0 on success, <0 on failure.
 */
-int vmufs_fat_write(maple_device_t * dev, vmu_root_t * root, uint16 * fat_buf);
+int vmufs_fat_write(maple_device_t *dev, vmu_root_t *root, uint16_t *fat_buf);
 
 /** \brief  Given a previously-read directory, locate a file by filename.
 
@@ -204,7 +205,7 @@ int vmufs_fat_write(maple_device_t * dev, vmu_root_t * root, uint16 * fat_buf);
     \return                 The index into the directory array on success, or
                             <0 on failure.
 */
-int vmufs_dir_find(vmu_root_t * root, vmu_dir_t * dir, const char * fn);
+int vmufs_dir_find(vmu_root_t *root, vmu_dir_t *dir, const char *fn);
 
 /** \brief  Given a previously-read directory, add a new dirent to the dir.
 
@@ -215,7 +216,7 @@ int vmufs_dir_find(vmu_root_t * root, vmu_dir_t * dir, const char * fn);
     \param  dir             The VMU directory.
     \param  newdirent       The new entry to add.
     \return                 0 on success, or <0 on failure. */
-int vmufs_dir_add(vmu_root_t * root, vmu_dir_t * dir, vmu_dir_t * newdirent);
+int vmufs_dir_add(vmu_root_t *root, vmu_dir_t *dir, vmu_dir_t *newdirent);
 
 /** \brief  Given a pointer to a directory struct and a previously loaded FAT,
             load the indicated file from the VMU.
@@ -230,7 +231,7 @@ int vmufs_dir_add(vmu_root_t * root, vmu_dir_t * dir, vmu_dir_t * newdirent);
                             this yourself with the appropriate amount of space.
     \return                 0 on success, <0 on failure.
 */
-int vmufs_file_read(maple_device_t * dev, uint16 * fat, vmu_dir_t * dirent, void * outbuf);
+int vmufs_file_read(maple_device_t *dev, uint16_t *fat, vmu_dir_t *dirent, void *outbuf);
 
 /** \brief  Given a pointer to a mostly-filled directory struct and a previously
             loaded directory and FAT, write the indicated file to the VMU.
@@ -248,8 +249,8 @@ int vmufs_file_read(maple_device_t * dev, uint16 * fat, vmu_dir_t * dirent, void
     \param  size            The size of the file in blocks (512-bytes each).
     \return                 0 on success, <0 on failure.
 */
-int vmufs_file_write(maple_device_t * dev, vmu_root_t * root, uint16 * fat,
-                     vmu_dir_t * dir, vmu_dir_t * newdirent, void * filebuf, int size);
+int vmufs_file_write(maple_device_t *dev, vmu_root_t *root, uint16_t *fat,
+                     vmu_dir_t *dir, vmu_dir_t *newdirent, void *filebuf, int size);
 
 /** \brief  Given a previously-read FAT and directory, delete the named file.
 
@@ -262,7 +263,7 @@ int vmufs_file_write(maple_device_t * dev, vmu_root_t * root, uint16 * fat,
     \retval 0               On success.
     \retval -1              If fn is not found.
 */
-int vmufs_file_delete(vmu_root_t * root, uint16 * fat, vmu_dir_t * dir, const char *fn);
+int vmufs_file_delete(vmu_root_t *root, uint16_t *fat, vmu_dir_t *dir, const char *fn);
 
 /** \brief  Given a previously-read FAT, return the number of blocks available
             to write out new file data.
@@ -271,7 +272,7 @@ int vmufs_file_delete(vmu_root_t * root, uint16 * fat, vmu_dir_t * dir, const ch
     \param  fat             The FAT to be examined.
     \return                 The number of blocks available.
 */
-int vmufs_fat_free(vmu_root_t * root, uint16 * fat);
+int vmufs_fat_free(vmu_root_t *root, uint16_t *fat);
 
 /** \brief  Given a previously-read directory, return the number of dirents
             available for new files.
@@ -280,7 +281,7 @@ int vmufs_fat_free(vmu_root_t * root, uint16 * fat);
     \param  dir             The directory in question.
     \return                 The number of entries available.
 */
-int vmufs_dir_free(vmu_root_t * root, vmu_dir_t * dir);
+int vmufs_dir_free(vmu_root_t *root, vmu_dir_t *dir);
 
 /** \brief  Lock the vmufs mutex.
 
@@ -312,7 +313,7 @@ int vmufs_mutex_unlock(void);
                             data will be placed.
     \param  outcnt          The number of entries in outbuf.
     \return                 0 on success, or <0 on failure. */
-int vmufs_readdir(maple_device_t * dev, vmu_dir_t ** outbuf, int * outcnt);
+int vmufs_readdir(maple_device_t *dev, vmu_dir_t **outbuf, int *outcnt);
 
 /** \brief  Read a file from the VMU.
 
@@ -327,7 +328,7 @@ int vmufs_readdir(maple_device_t * dev, vmu_dir_t ** outbuf, int * outcnt);
     \param  outsize         Storage for the size of the file, in bytes.
     \return                 0 on success, or <0 on failure.
 */
-int vmufs_read(maple_device_t * dev, const char * fn, void ** outbuf, int * outsize);
+int vmufs_read(maple_device_t *dev, const char *fn, void **outbuf, int *outsize);
 
 /** \brief  Read a file from the VMU, using a pre-read dirent.
 
@@ -341,7 +342,7 @@ int vmufs_read(maple_device_t * dev, const char * fn, void ** outbuf, int * outs
     \param  outsize         Storage for the size of the file, in bytes.
     \return                 0 on success, <0 on failure.
 */
-int vmufs_read_dirent(maple_device_t * dev, vmu_dir_t * dirent, void ** outbuf, int * outsize);
+int vmufs_read_dirent(maple_device_t *dev, vmu_dir_t *dirent, void **outbuf, int *outsize);
 
 /* Flags for vmufs_write */
 #define VMUFS_OVERWRITE 1   /**< \brief Overwrite existing files */
@@ -363,7 +364,7 @@ int vmufs_read_dirent(maple_device_t * dev, vmu_dir_t * dirent, void ** outbuf, 
                             VMUFS_VMUGAME, VMUFS_NOCOPY).
     \return                 0 on success, or <0 for failure.
 */
-int vmufs_write(maple_device_t * dev, const char * fn, void * inbuf, int insize, int flags);
+int vmufs_write(maple_device_t *dev, const char *fn, void *inbuf, int insize, int flags);
 
 /** \brief  Delete a file from the VMU.
 
@@ -371,7 +372,7 @@ int vmufs_write(maple_device_t * dev, const char * fn, void * inbuf, int insize,
     \retval -1              If the file is not found.
     \retval -2              On other failure.
 */
-int vmufs_delete(maple_device_t * dev, const char * fn);
+int vmufs_delete(maple_device_t *dev, const char *fn);
 
 /** \brief  Return the number of user blocks free for file writing.
 
@@ -379,7 +380,7 @@ int vmufs_delete(maple_device_t * dev, const char * fn);
 
     \return                 The number of blocks free for writing.
 */
-int vmufs_free_blocks(maple_device_t * dev);
+int vmufs_free_blocks(maple_device_t *dev);
 
 
 /** \brief  Initialize vmufs.
