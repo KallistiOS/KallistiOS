@@ -169,7 +169,7 @@ void scif_spi_write_byte(uint8_t b) {
 
 void scif_spi_write_data(const uint8_t *buffer, size_t len) {
     uint16_t tmp;
-    uint8_t bit;
+    uint32_t bit;
     uint32_t data;
     const uint32_t *ptr;
 
@@ -192,75 +192,15 @@ void scif_spi_write_data(const uint8_t *buffer, size_t len) {
     SCSPTR2 = tmp;
 
     for(; len >= 4; len -= 4) {
-        data = *ptr++;
+        /* Data is transmitted in big-endian */
+        data = __builtin_bswap32(*ptr++);
 
-        SCSPTR2 = tmp | (bit = (data >> 7) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 6) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 5) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 4) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 3) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 2) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 1) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 0) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-
-        SCSPTR2 = tmp | (bit = (data >> 15) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 14) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 13) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 12) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 11) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 10) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 9) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 8) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-
-        SCSPTR2 = tmp | (bit = (data >> 23) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 22) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 21) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 20) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 19) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 18) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 17) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 16) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-
-        SCSPTR2 = tmp | (bit = (data >> 31) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 30) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 29) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 28) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 27) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 26) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 25) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
-        SCSPTR2 = tmp | (bit = (data >> 24) & 0x01);
-        SCSPTR2 = tmp | bit | PTR2_CTSDT;
+        for(uint32_t i = 0; i < 32; i++) {
+            bit = data >> 31;
+            SCSPTR2 = tmp | bit;
+            SCSPTR2 = tmp | bit | PTR2_CTSDT;
+            data <<= 1;
+        }
 
         SCSPTR2 = tmp;
     }
