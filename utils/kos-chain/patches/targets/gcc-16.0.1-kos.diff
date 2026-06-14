@@ -146,3 +146,15 @@ diff -ruN gcc-16.0.1/libstdc++-v3/configure gcc-16.0.1-kos/libstdc++-v3/configur
      mcf)	thread_header=config/i386/gthr-mcf.h ;;
      *)
          as_fn_error $? "No known header for threading model '$target_thread_file'." "$LINENO" 5
+@@ -21489,6 +21490,11 @@
+         ac_has_clock_realtime=yes
+         ac_has_nanosleep=yes
+         ;;
++      elf*)
++        ac_has_clock_monotonic=yes
++        ac_has_clock_realtime=yes
++        ac_has_nanosleep=yes
++        ;;
+       gnu* | linux* | kfreebsd*-gnu | knetbsd*-gnu)
+         # Don't use link test for freestanding library, in case gcc_no_link=yes
+         if test x"$is_hosted" = xyes; then

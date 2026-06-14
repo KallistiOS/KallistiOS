@@ -287,3 +287,22 @@ diff --color -ruN newlib-4.6.0.20260123/newlib/libc/stdlib/assert.c newlib-4.6.0
 +// This is put in here to cause link errors if a proper newlib isn't present.
 +int __newlib_kos_patch = 1;
 +
+diff --color -ruN newlib-4.6.0.20260123/newlib/libc/include/sys/features.h newlib-4.6.0.20260123-kos/newlib/libc/include/sys/features.h
+--- newlib-4.6.0.20260123/newlib/libc/include/sys/features.h	2024-02-10 09:30:58.772247624 -0600
++++ newlib-4.6.0.20260123-kos/newlib/libc/include/sys/features.h	2024-02-10 09:31:16.329331366 -0600
+@@ -440,6 +440,15 @@
+ #endif
+ 
+ 
++#ifdef __sh__
++/* KallistiOS provides POSIX timer support via clock_gettime() */
++#define _POSIX_TIMERS           200809L
++#define _POSIX_MONOTONIC_CLOCK  200809L
++#define _POSIX_CPUTIME          200809L
++#define _POSIX_THREAD_CPUTIME   200809L
++#endif
++
++
+ #ifdef __svr4__
+ # define _POSIX_JOB_CONTROL     1
+ # define _POSIX_SAVED_IDS       1

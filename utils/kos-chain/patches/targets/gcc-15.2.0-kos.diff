@@ -144,4 +144,16 @@ diff -ruN gcc-15.2.0/libstdc++-v3/configure gcc-15.2.0-kos/libstdc++-v3/configur
 +    kos)	thread_header=gthr-kos.h ;;
      mcf)	thread_header=config/i386/gthr-mcf.h ;;
  esac
- 
+
+@@ -21307,6 +21308,11 @@
+       vxworks*)
+         ac_has_nanosleep=yes
+         ;;
++      elf*)
++        ac_has_clock_monotonic=yes
++        ac_has_clock_realtime=yes
++        ac_has_nanosleep=yes
++        ;;
+       gnu* | linux* | kfreebsd*-gnu | knetbsd*-gnu)
+         # Don't use link test for freestanding library, in case gcc_no_link=yes
+         if test x"$is_hosted" = xyes; then
