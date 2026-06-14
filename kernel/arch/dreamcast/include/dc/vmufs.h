@@ -39,15 +39,17 @@ __BEGIN_DECLS
     \headerfile dc/vmufs.h
 */
 typedef struct {
-    uint8_t cent;   /**< \brief Century */
-    uint8_t year;   /**< \brief Year, within century */
-    uint8_t month;  /**< \brief Month of the year */
-    uint8_t day;    /**< \brief Day of the month */
-    uint8_t hour;   /**< \brief Hour of the day */
-    uint8_t min;    /**< \brief Minutes */
-    uint8_t sec;    /**< \brief Seconds */
-    uint8_t dow;    /**< \brief Day of week (0 = monday, etc) */
+    uint8_t cent;   /**< \brief Century (0-99) */
+    uint8_t year;   /**< \brief Year, within century (0-99) */
+    uint8_t month;  /**< \brief Month of the year (1-12) */
+    uint8_t day;    /**< \brief Day of the month (1-31) */
+    uint8_t hour;   /**< \brief Hour of the day (0-23) */
+    uint8_t min;    /**< \brief Minutes (0-59) */
+    uint8_t sec;    /**< \brief Seconds (0-59) */
+    uint8_t dow;    /**< \brief Day of week (0 = Mon, ..., 6 = Sun) */
 } vmu_timestamp_t;
+
+_Static_assert(sizeof(vmu_timestamp_t) == 8, "Invalid vmu_timestamp_t size");
 
 /** \brief  VMU FS Root block layout.
     \headerfile dc/vmufs.h
@@ -69,8 +71,21 @@ typedef struct {
     uint8_t         unk2[430];      /**< \brief ??? */
 } vmu_root_t;
 
+_Static_assert(sizeof(vmu_root_t) == 512, "Invalid vmu_root_t size");
+
 /** \brief  VMU FS Directory entries, 32 bytes each.
     \headerfile dc/vmufs.h
+
+    \note
+    vmu_dir_t::dirty should always be zero when written out to the VMU. What
+    this lets us do, though, is conserve on flash writes. If you only want to
+    modify one single file (which is the standard case) then re-writing all
+    of the dir blocks is a big waste. Instead, you should set the dirty flag
+    on the in-mem copy of the directory, and writing it back out will only
+    flush the containing block back to the VMU, setting it back to zero
+    in the process. Loaded blocks should always have zero here (though we
+    enforce that in the code to make sure) so it will be non-dirty by
+    default.
 */
 typedef struct {
     uint8_t         filetype;       /**< \brief 0x00 = no file; 0x33 = data; 0xcc = a game */
@@ -84,19 +99,7 @@ typedef struct {
     uint8_t         pad1[3];        /**< \brief All zeros */
 } vmu_dir_t;
 
-/* Notes about the "dirty" field on vmu_dir_t :)
-
-   This byte should always be zero when written out to the VMU. What this
-   lets us do, though, is conserve on flash writes. If you only want to
-   modify one single file (which is the standard case) then re-writing all
-   of the dir blocks is a big waste. Instead, you should set the dirty flag
-   on the in-mem copy of the directory, and writing it back out will only
-   flush the containing block back to the VMU, setting it back to zero
-   in the process. Loaded blocks should always have zero here (though we
-   enforce that in the code to make sure) so it will be non-dirty by
-   default.
- */
-
+_Static_assert(sizeof(vmu_dir_t) == 32, "Invalid vmu_dir_t size");
 
 /* ****************** Low level functions ******************** */
 
