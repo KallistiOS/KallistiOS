@@ -292,7 +292,7 @@ typedef struct maple_device {
 
 /** \brief   Internal representation of a Maple port.
     \ingroup maple
-    
+
     Each maple port can contain up to 6 devices, the first one of which is
     always the port itself.
 
@@ -441,7 +441,7 @@ typedef struct maple_state_str {
  */
 #define maple_read(A) ( *((volatile uint32_t*)(A)) )
 
-/** \brief   Maple memory write macro. 
+/** \brief   Maple memory write macro.
     \ingroup maple
  */
 #define maple_write(A, V) ( *((volatile uint32_t*)(A)) = (V) )
@@ -529,7 +529,7 @@ uint8_t maple_addr(int port, int unit);
 
 /** \brief   Decompose a "maple address" into a port, unit pair.
     \ingroup maple
-    
+
     \warning
     This function will not work with multi-cast addresses!
 
@@ -537,7 +537,7 @@ uint8_t maple_addr(int port, int unit);
     \param  port            Output space for the port of the address.
     \param  unit            Output space for the unit of the address.
 */
-void maple_raddr(uint8_t addr, int * port, int * unit);
+void maple_raddr(uint8_t addr, int *port, int *unit);
 
 /** \brief   Return a string with the capabilities of a given function code.
     \ingroup maple
@@ -547,7 +547,7 @@ void maple_raddr(uint8_t addr, int * port, int * unit);
     \param  functions       The list of function codes.
     \return                 A string containing the capabilities.
 */
-const char * maple_pcaps(uint32_t functions);
+const char *maple_pcaps(uint32_t functions);
 
 /** \brief   Return a string representing the maple response code.
     \ingroup maple
@@ -556,7 +556,7 @@ const char * maple_pcaps(uint32_t functions);
     \return                 A string containing a textual representation of the
                             response code.
 */
-const char * maple_perror(int response);
+const char *maple_perror(int response);
 
 /** \brief   Determine if a given device is valid.
     \ingroup maple
@@ -617,7 +617,7 @@ void maple_gun_read_pos(int *x, int *y);
     \param  buffer          The buffer to add the sentinel to.
     \param  bufsize         The size of the data in the buffer.
 */
-void maple_sentinel_setup(void * buffer, int bufsize);
+void maple_sentinel_setup(void *buffer, int bufsize);
 
 /** \brief   Verify the presence of the sentine.
     \ingroup maple
@@ -626,12 +626,12 @@ void maple_sentinel_setup(void * buffer, int bufsize);
     \param  buffer          The buffer to check.
     \param  bufsize         The size of the buffer.
 */
-void maple_sentinel_verify(const char * bufname, void * buffer, int bufsize);
+void maple_sentinel_verify(const char *bufname, void *buffer, int bufsize);
 
 /**************************************************************************/
 /* maple_queue.c */
 
-/** \brief   Send all queued frames. 
+/** \brief   Send all queued frames.
     \ingroup maple
  */
 void maple_queue_flush(void);
@@ -688,7 +688,7 @@ int maple_frame_trylock(maple_frame_t *frame);
 */
 int maple_frame_lock(maple_frame_t *frame);
 
-/** \brief   Unlock a frame. 
+/** \brief   Unlock a frame.
     \ingroup maple
  */
 void maple_frame_unlock(maple_frame_t *frame);
@@ -791,15 +791,15 @@ void maple_detach_callback(uint32_t functions, maple_detach_callback_t cb);
 
 /** \brief   Called on every VBL (~60fps).
     \ingroup maple
-    
+
     \param  code            The ASIC event code.
     \param  data            The user pointer associated with this callback.
 */
 void maple_vbl_irq_hnd(uint32_t code, void *data);
 
 /** \brief   Called after a Maple DMA send / receive pair completes.
-    \ingroup maple 
-    
+    \ingroup maple
+
     \param  code            The ASIC event code.
     \param  data            The user pointer associated with this callback.
 */
@@ -864,17 +864,17 @@ void *maple_dev_status(maple_device_t *dev);
 /**************************************************************************/
 /* maple_init.c */
 
-/** \brief   Initialize Maple. 
-    \ingroup maple 
+/** \brief   Initialize Maple.
+    \ingroup maple
  */
 void maple_init(void);
 
-/** \brief   Shutdown Maple. 
+/** \brief   Shutdown Maple.
     \ingroup maple
  */
 void maple_shutdown(void);
 
-/** \brief   Wait for the initial bus scan to complete. 
+/** \brief   Wait for the initial bus scan to complete.
     \ingroup maple
  */
 void maple_wait_scan(void);
@@ -911,11 +911,10 @@ void maple_wait_scan(void);
 */
 #define MAPLE_FOREACH_BEGIN(TYPE, VARTYPE, VAR) \
     do { \
-        maple_device_t  * __dev; \
+        maple_device_t  *__dev; \
         VARTYPE * VAR; \
-        int __i; \
+        int __i = 0; \
         \
-        __i = 0; \
         while( (__dev = maple_enum_type(__i, TYPE)) ) { \
             VAR = (VARTYPE *)maple_dev_status(__dev); \
             do {
