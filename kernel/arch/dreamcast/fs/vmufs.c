@@ -207,7 +207,7 @@ int vmufs_dir_find(vmu_root_t *root, vmu_dir_t *dir, const char *fn) {
 
     for(int i = 0; i < dcnt; i++) {
         /* Not a file -> skip it */
-        if(dir[i].filetype == 0)
+        if(dir[i].filetype == VMU_FILE_NONE)
             continue;
 
         /* Check the filename */
@@ -224,7 +224,7 @@ int vmufs_dir_add(vmu_root_t *root, vmu_dir_t *dir, vmu_dir_t *newdirent) {
 
     for(size_t i = 0; i < dcnt; i++) {
         /* A file -> skip it */
-        if(dir[i].filetype != 0)
+        if(dir[i].filetype != VMU_FILE_NONE)
             continue;
 
         /* Copy in the entry */
@@ -285,14 +285,14 @@ int vmufs_file_read(maple_device_t *dev, uint16_t *fat, vmu_dir_t *dirent, void 
 
 /* Find an open block for writing in the FAT */
 static int vmufs_find_block(vmu_root_t *root, uint16_t *fat, vmu_dir_t *dirent) {
-    if(dirent->filetype == 0x33) {
+    if(dirent->filetype == VMU_FILE_DATA) {
         /* Data files -- count down from top */
         for(int i = root->blk_cnt - 1; i >= 0; i--) {
             if(fat[i] == 0xfffc)
                 return i;
         }
     }
-    else if(dirent->filetype == 0xcc) {
+    else if(dirent->filetype == VMU_FILE_GAME) {
         /* VMU games -- count up from bottom */
         for(int i = 0; i < root->blk_cnt; i++) {
             if(fat[i] == 0xfffc)
@@ -449,7 +449,7 @@ int vmufs_dir_free(vmu_root_t *root, vmu_dir_t *dir) {
     int freeblocks = 0;
 
     for(size_t i = 0; i < root->dir_size * VMU_BLOCK_SIZE / sizeof(vmu_dir_t); i++) {
-        if(dir[i].filetype == 0)
+        if(dir[i].filetype == VMU_FILE_NONE)
             freeblocks++;
     }
 
@@ -564,15 +564,15 @@ int vmufs_readdir(maple_device_t *dev, vmu_dir_t **outbuf, int *outcnt) {
     /* Go through and move all entries to the lowest-numbered spots. */
     for(size_t i = 0; i < dirsize / sizeof(vmu_dir_t); i++) {
         /* Skip blanks */
-        if(dir[i].filetype == 0)
+        if(dir[i].filetype == VMU_FILE_NONE)
             continue;
 
         /* Not a blank -- look for an earlier slot that's empty. If
            we don't find one, just leave it alone. */
         for(size_t j = 0; j < i; j++) {
-            if(dir[j].filetype == 0) {
+            if(dir[j].filetype == VMU_FILE_NONE) {
                 memcpy(dir + j, dir + i, sizeof(vmu_dir_t));
-                dir[i].filetype = 0;
+                dir[i].filetype = VMU_FILE_NONE;
                 break;
             }
         }
@@ -715,7 +715,7 @@ int vmufs_write(maple_device_t *dev, const char *fn, void *inbuf, int insize, in
 
     /* Fill out a new dirent for this file */
     memset(&nd, 0, sizeof(nd));
-    nd.filetype = (flags & VMUFS_VMUGAME) ? 0xcc : 0x33;
+    nd.filetype = (flags & VMUFS_VMUGAME) ? VMU_FILE_GAME : VMU_FILE_DATA;
     nd.copyprotect = (flags & VMUFS_NOCOPY) ? 0xff : 0x00;
     nd.firstblk = 0;
 
