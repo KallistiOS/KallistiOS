@@ -252,7 +252,7 @@ int vmufs_file_read(maple_device_t *dev, uint16_t *fat, vmu_dir_t *dirent, void 
     /* While we've got stuff remaining... */
     while(blkleft > 0) {
         /* Make sure the FAT matches up with the directory */
-        if(curblk == 0xfffc || curblk == 0xfffa) {
+        if(curblk == VMU_FAT_UNALLOCATED || curblk == VMU_FAT_LAST_IN_FILE) {
             dbglog(DBG_ERROR, "vmufs_file_read: file '%.12s' ends prematurely in fat on device %c%c\n",
                    dirent->filename, dev->port + 'A', dev->unit + '0');
             return -1;
@@ -274,7 +274,7 @@ int vmufs_file_read(maple_device_t *dev, uint16_t *fat, vmu_dir_t *dirent, void 
     }
 
     /* Make sure the FAT matches up with the directory */
-    if(curblk != 0xfffa) {
+    if(curblk != VMU_FAT_LAST_IN_FILE) {
         dbglog(DBG_ERROR, "vmufs_file_read: file '%.12s' is sized shorter than in the FAT on device %c%c\n",
                dirent->filename, dev->port + 'A', dev->unit + '0');
         return -3;
@@ -288,14 +288,14 @@ static int vmufs_find_block(vmu_root_t *root, uint16_t *fat, vmu_dir_t *dirent) 
     if(dirent->filetype == VMU_FILE_DATA) {
         /* Data files -- count down from top */
         for(int i = root->blk_cnt - 1; i >= 0; i--) {
-            if(fat[i] == 0xfffc)
+            if(fat[i] == VMU_FAT_UNALLOCATED)
                 return i;
         }
     }
     else if(dirent->filetype == VMU_FILE_GAME) {
         /* VMU games -- count up from bottom */
         for(int i = 0; i < root->blk_cnt; i++) {
-            if(fat[i] == 0xfffc)
+            if(fat[i] == VMU_FAT_UNALLOCATED)
                 return i;
         }
     }
@@ -371,7 +371,7 @@ int vmufs_file_write(maple_device_t *dev, vmu_root_t *root, uint16_t *fat,
             // b) the calling code for some reason writes the FAT back out anyway.
             // This may render the save game unusable but at least we won't link
             // into some other file (or worse, a game!)
-            fat[curblk] = 0xfffa;
+            fat[curblk] = VMU_FAT_LAST_IN_FILE;
             rv = vmufs_find_block(root, fat, newdirent);
 
             if(rv < 0)
@@ -381,7 +381,7 @@ int vmufs_file_write(maple_device_t *dev, vmu_root_t *root, uint16_t *fat,
             curblk = rv;
         }
         else {
-            fat[curblk] = 0xfffa;
+            fat[curblk] = VMU_FAT_LAST_IN_FILE;
         }
     }
 
@@ -409,15 +409,15 @@ int vmufs_file_delete(vmu_root_t *root, uint16_t *fat, vmu_dir_t *dir, const cha
     /* Find its first block, and go through clearing FAT blocks. */
     blk = dir[idx].firstblk;
 
-    while(blk != 0xfffa) {
-        if(blk == 0xfffc || blk > root->blk_cnt) {
+    while(blk != VMU_FAT_LAST_IN_FILE) {
+        if(blk == VMU_FAT_UNALLOCATED || blk > root->blk_cnt) {
             dbglog(DBG_ERROR, "vmufs_file_delete: inconsistency -- corrupt FAT or dir\n");
             return -2;
         }
 
         /* Free it */
         nextblk = fat[blk];
-        fat[blk] = 0xfffc;
+        fat[blk] = VMU_FAT_UNALLOCATED;
 
         /* Move to the next one */
         blk = nextblk;
@@ -438,7 +438,7 @@ int vmufs_fat_free(vmu_root_t *root, uint16_t *fat) {
 
     for(size_t i = 0; i < root->blk_cnt; i++) {
         /* only count user blocks */
-        if(fat[i] == 0xfffc)
+        if(fat[i] == VMU_FAT_UNALLOCATED)
             freeblocks++;
     }
 
