@@ -716,7 +716,7 @@ int vmufs_write(maple_device_t *dev, const char *fn, void *inbuf, int insize, in
     /* Fill out a new dirent for this file */
     memset(&nd, 0, sizeof(nd));
     nd.filetype = (flags & VMUFS_VMUGAME) ? VMU_FILE_GAME : VMU_FILE_DATA;
-    nd.copyprotect = (flags & VMUFS_NOCOPY) ? 0xff : 0x00;
+    nd.copyprotect = (flags & VMUFS_NOCOPY) ? VMU_FILE_PROTECTED : VMU_FILE_COPYABLE;
     nd.firstblk = 0;
 
     strncpy(nd.filename, fn, VMU_FILENAME_SIZE);

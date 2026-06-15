@@ -90,6 +90,19 @@ _Static_assert(sizeof(vmu_root_t) == VMU_BLOCK_SIZE, "Invalid vmu_root_t size");
 #define VMU_FILE_GAME       0xcc    /**< \brief Is a VMU game file */
 /** @} */
 
+/** \defgroup   vmu_copyprotect VMU Copy Protection
+    \brief                      VMU Copy Protection Options
+
+    These mark whether a vmu_dir_t is copy protected or not.
+
+    \sa vmu_dir_t::copyprotect
+
+    @{
+*/
+#define VMU_FILE_COPYABLE   0x00
+#define VMU_FILE_PROTECTED  0xff
+/** @} */
+
 /** \brief  VMU FS Directory entries, 32 bytes each.
     \headerfile dc/vmufs.h
 
