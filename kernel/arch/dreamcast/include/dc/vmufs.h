@@ -76,6 +76,20 @@ typedef struct {
 
 _Static_assert(sizeof(vmu_root_t) == VMU_BLOCK_SIZE, "Invalid vmu_root_t size");
 
+/** \defgroup   vmu_filetypes   Types
+    \brief                      VMU File types
+
+    These mark whether a vmu_dir_t is empty, contains a data file, or a game.
+
+    \sa vmu_dir_t::filetype
+
+    @{
+*/
+#define VMU_FILE_NONE       0x00    /**< \brief No file in the entry */
+#define VMU_FILE_DATA       0x33    /**< \brief Is a data file */
+#define VMU_FILE_GAME       0xcc    /**< \brief Is a VMU game file */
+/** @} */
+
 /** \brief  VMU FS Directory entries, 32 bytes each.
     \headerfile dc/vmufs.h
 

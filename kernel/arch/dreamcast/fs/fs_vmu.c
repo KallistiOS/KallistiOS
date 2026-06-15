@@ -194,7 +194,7 @@ static vmu_fh_t *vmu_open_vmu_dir(void) {
     for(u = 0; u < num; u++) {
         memset(dh->dirblocks + u, 0, sizeof(vmu_dir_t));    /* Start in a clean room */
         memcpy(dh->dirblocks[u].filename, names + u, 2);
-        dh->dirblocks[u].filetype = 0xff;
+        dh->dirblocks[u].filetype = 0xff;   /* Set to an invalid type as this isn't a real vmu dir. */
     }
 
     return (vmu_fh_t *)dh;
