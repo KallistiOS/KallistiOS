@@ -29,13 +29,6 @@
 
 #include "gprof_internal.h"
 
-/* Histogram sampling interval, in milliseconds. */
-#define HISTOGRAM_INTERVAL_MS  10
-
-/* Sampling rate in samples/second, as stored in the gmon.out histogram
-   header. gprof interprets this field as a frequency, not a period. */
-#define PROF_HZ  (1000 / HISTOGRAM_INTERVAL_MS)
-
 /* The type that holds the count for each histogram bucket. */
 #define HIST_COUNTER_TYPE  uint16_t
 
@@ -129,7 +122,6 @@ typedef struct gmon_context {
     size_t ncounters;
     HIST_COUNTER_TYPE *histogram;
 
-    kthread_t *main_thread;
     kthread_t *histogram_thread;
 
     volatile bool running_thread;
@@ -208,7 +200,7 @@ static bool write_histogram(void) {
         .lowpc = cxt->lowpc,
         .highpc = cxt->highpc,
         .num_bins = cxt->ncounters,
-        .profrate = PROF_HZ,
+        .profrate = thd_get_hz(),
         .units = "seconds",
         .units_abbrev = 's'
     };
@@ -265,29 +257,33 @@ static bool write_arcs(void) {
     return true;
 }
 
-/* Function that gets executed every HISTOGRAM_INTERVAL_MS */
-static void *histogram_thread(void *arg) {
-    (void)arg;
+/* Scheduler-driven PC sampler: samples thd_current each reschedule. */
+static int histogram_callback(void *data) {
+    (void)data;
     uintptr_t pc;
     uint32_t index;
+    kthread_t *cur = thd_current;
     gmon_context_t *cxt = &g_context;
 
-    while(cxt->running_thread) {
-        if(cxt->state == GMON_PROF_ON) {
-            /* Grab the saved PC of the profiled (main) thread. */
-            pc = CONTEXT_PC(cxt->main_thread->context);
+    if(cxt->state == GMON_PROF_ON && cur->state == STATE_RUNNING) {
+        /* Grab the saved PC of the current thread. */
+        pc = CONTEXT_PC(cur->context);
 
-            /* If the PC is within the profiled .text range... */
-            if(pc >= cxt->lowpc && pc < cxt->highpc) {
-                /* Compute the bucket and bump its counter. */
-                index = (pc - cxt->lowpc) / HISTFRACTION;
-                cxt->histogram[index]++;
-            }
+        /* If the PC is within the profiled .text range... */
+        if(pc >= cxt->lowpc && pc < cxt->highpc) {
+            /* Compute the bucket and bump its counter. */
+            index = (pc - cxt->lowpc) / HISTFRACTION;
+            cxt->histogram[index]++;
         }
-
-        /* Always sleep before the next sample */
-        thd_sleep(HISTOGRAM_INTERVAL_MS);
     }
+
+    return cxt->running_thread ? 0 : 1;
+}
+
+static void *histogram_thread(void *arg) {
+    (void)arg;
+
+    thd_poll(histogram_callback, NULL, 0);
 
     return NULL;
 }
@@ -528,7 +524,6 @@ void monstartup(uintptr_t lowpc, uintptr_t highpc) {
 
     /* Spin up the histogram sampling thread. */
     cxt->running_thread = true;
-    cxt->main_thread = thd_by_tid(KOS_PID);
     cxt->histogram_thread = thd_create(false, histogram_thread, NULL);
     if(cxt->histogram_thread == NULL) {
         cxt->running_thread = false;
@@ -538,7 +533,6 @@ void monstartup(uintptr_t lowpc, uintptr_t highpc) {
         cxt->histogram = NULL;
         return;
     }
-    thd_set_prio(cxt->histogram_thread, PRIO_DEFAULT / 2);
     thd_set_label(cxt->histogram_thread, "histogram_thread");
 
     cxt->initialized = true;
