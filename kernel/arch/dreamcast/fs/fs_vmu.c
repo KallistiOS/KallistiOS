@@ -239,7 +239,7 @@ static vmu_fh_t *vmu_open_file(maple_device_t * dev, const char *path, int mode)
     fd->strtype = VMU_FILE;
     fd->mode = mode;
     strncpy(fd->path, path, 16);
-    strncpy(fd->name, path + 4, 12);
+    strncpy(fd->name, path + 4, VMU_FILENAME_SIZE);
     fd->loc = 0;
     fd->start = 0;
     fd->dev = dev;
@@ -622,8 +622,8 @@ static const dirent_t *vmu_readdir(void * fd) {
         dh->dirent.attr = 0;
     }
 
-    strncpy(dh->dirent.name, dir->filename, 12);
-    dh->dirent.name[12] = 0;
+    strncpy(dh->dirent.name, dir->filename, VMU_FILENAME_SIZE);
+    dh->dirent.name[VMU_FILENAME_SIZE] = 0;
     dh->dirent.time = 0;    /* FIXME */
 
     /* Move to the next entry */

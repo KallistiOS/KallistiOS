@@ -211,7 +211,7 @@ int vmufs_dir_find(vmu_root_t *root, vmu_dir_t *dir, const char *fn) {
             continue;
 
         /* Check the filename */
-        if(!strncmp(fn, dir[i].filename, 12))
+        if(!strncmp(fn, dir[i].filename, VMU_FILENAME_SIZE))
             return i;
     }
 
@@ -253,10 +253,8 @@ int vmufs_file_read(maple_device_t *dev, uint16_t *fat, vmu_dir_t *dirent, void 
     while(blkleft > 0) {
         /* Make sure the FAT matches up with the directory */
         if(curblk == 0xfffc || curblk == 0xfffa) {
-            char fn[13] = {0};
-            memcpy(fn, dirent->filename, 12);
-            dbglog(DBG_ERROR, "vmufs_file_read: file '%s' ends prematurely in fat on device %c%c\n",
-                   fn, dev->port + 'A', dev->unit + '0');
+            dbglog(DBG_ERROR, "vmufs_file_read: file '%.12s' ends prematurely in fat on device %c%c\n",
+                   dirent->filename, dev->port + 'A', dev->unit + '0');
             return -1;
         }
 
@@ -277,10 +275,8 @@ int vmufs_file_read(maple_device_t *dev, uint16_t *fat, vmu_dir_t *dirent, void 
 
     /* Make sure the FAT matches up with the directory */
     if(curblk != 0xfffa) {
-        char fn[13] = {0};
-        memcpy(fn, dirent->filename, 12);
-        dbglog(DBG_ERROR, "vmufs_file_read: file '%s' is sized shorter than in the FAT on device %c%c\n",
-               fn, dev->port + 'A', dev->unit + '0');
+        dbglog(DBG_ERROR, "vmufs_file_read: file '%.12s' is sized shorter than in the FAT on device %c%c\n",
+               dirent->filename, dev->port + 'A', dev->unit + '0');
         return -3;
     }
 
@@ -305,17 +301,13 @@ static int vmufs_find_block(vmu_root_t *root, uint16_t *fat, vmu_dir_t *dirent) 
     }
     else {
         /* Dunno what this is! */
-        char fn[13] = {0};
-        memcpy(fn, dirent->filename, 12);
-        dbglog(DBG_ERROR, "vmufs_find_block: file '%s' has unknown type %d\n", fn, dirent->filetype);
+        dbglog(DBG_ERROR, "vmufs_find_block: file '%.12s' has unknown type %d\n", dirent->filename, dirent->filetype);
         return -1;
     }
 
     /* No free blocks left */
     {
-        char fn[13] = {0};
-        memcpy(fn, dirent->filename, 12);
-        dbglog(DBG_ERROR, "vmufs_find_block: can't find any more free blocks for file '%s'\n", fn);
+        dbglog(DBG_ERROR, "vmufs_find_block: can't find any more free blocks for file '%.12s'\n", dirent->filename);
     }
     return -2;
 }
@@ -328,18 +320,14 @@ int vmufs_file_write(maple_device_t *dev, vmu_root_t *root, uint16_t *fat,
 
     /* Files must be at least one block long */
     if(size <= 0) {
-        char fn[13] = {0};
-        memcpy(fn, newdirent->filename, 12);
-        dbglog(DBG_ERROR, "vmufs_file_write: file '%s' is too short (%d blocks)\n", fn, size);
+        dbglog(DBG_ERROR, "vmufs_file_write: file '%s' is too short (%d blocks)\n", newdirent->filename, size);
         return -3;
     }
 
     /* Make sure this file isn't already in the directory */
     if(vmufs_dir_find(root, dir, newdirent->filename) >= 0) {
-        char fn[13] = {0};
-        memcpy(fn, newdirent->filename, 12);
-        dbglog(DBG_ERROR, "vmufs_file_write: file '%s' is already in the dir on device %c%c\n",
-               fn, dev->port + 'A', dev->unit + '0');
+        dbglog(DBG_ERROR, "vmufs_file_write: file '%.12s' is already in the dir on device %c%c\n",
+               newdirent->filename, dev->port + 'A', dev->unit + '0');
         return -4;
     }
 
@@ -690,7 +678,7 @@ int vmufs_write(maple_device_t *dev, const char *fn, void *inbuf, int insize, in
     vmu_root_t  root;
     vmu_dir_t   *dir = NULL, nd;
     uint16_t    *fat = NULL;
-    int     oldinsize, fatsize, dirsize, idx, rv = 0, st, fnlength;
+    int     oldinsize, fatsize, dirsize, idx, rv = 0, st;
 
     /* Round up the size if necessary */
     oldinsize = insize;
@@ -733,12 +721,7 @@ int vmufs_write(maple_device_t *dev, const char *fn, void *inbuf, int insize, in
     nd.copyprotect = (flags & VMUFS_NOCOPY) ? 0xff : 0x00;
     nd.firstblk = 0;
 
-    fnlength = strlen(fn);
-    fnlength = fnlength > 12 ? 12 : fnlength;
-    memcpy(nd.filename, fn, fnlength);
-    if(fnlength < 12) {
-        memset(nd.filename + fnlength, '\0', 12 - fnlength);
-    }
+    strncpy(nd.filename, fn, VMU_FILENAME_SIZE);
 
     vmufs_dir_fill_time(&nd);
     nd.filesize = insize / 512;
