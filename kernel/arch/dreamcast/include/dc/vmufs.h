@@ -54,6 +54,12 @@ typedef struct {
 
 _Static_assert(sizeof(vmu_timestamp_t) == 8, "Invalid vmu_timestamp_t size");
 
+/* \cond */
+/* Special markers values in the FAT */
+#define VMU_FAT_UNALLOCATED   0xfffc
+#define VMU_FAT_LAST_IN_FILE  0xfffa
+/* \endcond */
+
 /** \brief  VMU FS Root block layout.
     \headerfile dc/vmufs.h
 */
