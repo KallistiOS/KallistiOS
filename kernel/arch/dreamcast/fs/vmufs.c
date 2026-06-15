@@ -99,11 +99,11 @@ int vmufs_root_write(maple_device_t *dev, vmu_root_t *root_buf) {
 }
 
 int vmufs_dir_blocks(vmu_root_t *root_buf) {
-    return root_buf->dir_size * 512;
+    return root_buf->dir_size * VMU_BLOCK_SIZE;
 }
 
 int vmufs_fat_blocks(vmu_root_t *root_buf) {
-    return root_buf->fat_size * 512;
+    return root_buf->fat_size * VMU_BLOCK_SIZE;
 }
 
 /* Common code for both dir_read and dir_write */
@@ -120,7 +120,7 @@ static int vmufs_dir_ops(maple_device_t *dev, vmu_root_t *root, vmu_dir_t *dir_b
 
         if(write) {
             /* Scan this block for changes */
-            for(size_t i = 0; i < 512 / sizeof(vmu_dir_t); i++) {
+            for(size_t i = 0; i < VMU_BLOCK_SIZE / sizeof(vmu_dir_t); i++) {
                 if(dir_buf[i].dirty) {
                     needsop = true;
                 }
@@ -148,7 +148,7 @@ static int vmufs_dir_ops(maple_device_t *dev, vmu_root_t *root, vmu_dir_t *dir_b
 
         dir_block--;
         dir_size--;
-        dir_buf += 512 / sizeof(vmu_dir_t); /* == 16 */
+        dir_buf += VMU_BLOCK_SIZE / sizeof(vmu_dir_t); /* == 16 */
     }
 
     return 0;
@@ -203,7 +203,7 @@ int vmufs_fat_write(maple_device_t *dev, vmu_root_t *root, uint16_t *fat_buf) {
 }
 
 int vmufs_dir_find(vmu_root_t *root, vmu_dir_t *dir, const char *fn) {
-    int dcnt = root->dir_size * 512 / sizeof(vmu_dir_t);
+    int dcnt = root->dir_size * VMU_BLOCK_SIZE / sizeof(vmu_dir_t);
 
     for(int i = 0; i < dcnt; i++) {
         /* Not a file -> skip it */
@@ -220,7 +220,7 @@ int vmufs_dir_find(vmu_root_t *root, vmu_dir_t *dir, const char *fn) {
 }
 
 int vmufs_dir_add(vmu_root_t *root, vmu_dir_t *dir, vmu_dir_t *newdirent) {
-    size_t dcnt = root->dir_size * 512 / sizeof(vmu_dir_t);
+    size_t dcnt = root->dir_size * VMU_BLOCK_SIZE / sizeof(vmu_dir_t);
 
     for(size_t i = 0; i < dcnt; i++) {
         /* A file -> skip it */
@@ -361,7 +361,7 @@ int vmufs_file_write(maple_device_t *dev, vmu_root_t *root, uint16_t *fat,
 
         /* Scoot our counters */
         blkleft--;
-        out += 512;
+        out += VMU_BLOCK_SIZE;
 
         /* If we have blocks left, find another free block. Otherwise,
            write out a terminator. */
@@ -448,7 +448,7 @@ int vmufs_fat_free(vmu_root_t *root, uint16_t *fat) {
 int vmufs_dir_free(vmu_root_t *root, vmu_dir_t *dir) {
     int freeblocks = 0;
 
-    for(size_t i = 0; i < root->dir_size * 512 / sizeof(vmu_dir_t); i++) {
+    for(size_t i = 0; i < root->dir_size * VMU_BLOCK_SIZE / sizeof(vmu_dir_t); i++) {
         if(dir[i].filetype == 0)
             freeblocks++;
     }
@@ -601,7 +601,7 @@ ex:
 /* Shared code between read/read_dirent */
 static int vmufs_read_common(maple_device_t *dev, vmu_dir_t *dirent, uint16_t *fat, void **outbuf, int *outsize) {
     /* Allocate the output space */
-    *outsize = dirent->filesize * 512;
+    *outsize = dirent->filesize * VMU_BLOCK_SIZE;
     *outbuf = malloc(*outsize);
 
     if(!*outbuf) {
@@ -682,9 +682,7 @@ int vmufs_write(maple_device_t *dev, const char *fn, void *inbuf, int insize, in
 
     /* Round up the size if necessary */
     oldinsize = insize;
-    insize = (insize + 511) & ~511;
-
-    if(insize == 0) insize = 512;
+    insize = !oldinsize ? VMU_BLOCK_SIZE : __align_up(insize, VMU_BLOCK_SIZE);
 
     if(oldinsize != insize) {
         dbglog(DBG_WARNING, "vmufs_write: padded file '%s' from %d to %d bytes\n",
@@ -724,14 +722,14 @@ int vmufs_write(maple_device_t *dev, const char *fn, void *inbuf, int insize, in
     strncpy(nd.filename, fn, VMU_FILENAME_SIZE);
 
     vmufs_dir_fill_time(&nd);
-    nd.filesize = insize / 512;
+    nd.filesize = insize / VMU_BLOCK_SIZE;
     nd.hdroff = (flags & VMUFS_VMUGAME) ? 1 : 0;
     nd.dirty = 1;
 
     // If any of these fail, the action to take can be decided by the caller.
 
     /* Write out the data and update our structs */
-    if((st = vmufs_file_write(dev, &root, fat, dir, &nd, inbuf, insize / 512)) < 0) {
+    if((st = vmufs_file_write(dev, &root, fat, dir, &nd, inbuf, insize / VMU_BLOCK_SIZE)) < 0) {
         if(st == -2)
             rv = -7;
         else

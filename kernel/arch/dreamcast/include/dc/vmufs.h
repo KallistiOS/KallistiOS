@@ -35,6 +35,7 @@ __BEGIN_DECLS
     @{
 */
 
+#define VMU_BLOCK_SIZE      512
 #define VMU_FILENAME_SIZE   12
 
 /** \brief  BCD timestamp, used several places in the vmufs.
@@ -73,7 +74,7 @@ typedef struct {
     uint8_t         unk2[430];      /**< \brief ??? */
 } vmu_root_t;
 
-_Static_assert(sizeof(vmu_root_t) == 512, "Invalid vmu_root_t size");
+_Static_assert(sizeof(vmu_root_t) == VMU_BLOCK_SIZE, "Invalid vmu_root_t size");
 
 /** \brief  VMU FS Directory entries, 32 bytes each.
     \headerfile dc/vmufs.h
