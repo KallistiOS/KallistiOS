@@ -35,6 +35,8 @@ __BEGIN_DECLS
     @{
 */
 
+#define VMU_FILENAME_SIZE   12
+
 /** \brief  BCD timestamp, used several places in the vmufs.
     \headerfile dc/vmufs.h
 */
@@ -91,7 +93,8 @@ typedef struct {
     uint8_t         filetype;       /**< \brief 0x00 = no file; 0x33 = data; 0xcc = a game */
     uint8_t         copyprotect;    /**< \brief 0x00 = copyable; 0xff = copy protected */
     uint16_t        firstblk;       /**< \brief Location of the first block in the file */
-    char            filename[12];   /**< \brief Note: there is no null terminator */
+    char            filename[VMU_FILENAME_SIZE] __attribute__ ((nonstring));
+                                    /**< \brief Note: there is no null terminator */
     vmu_timestamp_t timestamp;      /**< \brief File time */
     uint16_t        filesize;       /**< \brief Size of the file in blocks */
     uint16_t        hdroff;         /**< \brief Offset of header, in blocks from start of file */
