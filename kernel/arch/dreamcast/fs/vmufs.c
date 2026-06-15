@@ -87,7 +87,7 @@ int vmufs_root_read(maple_device_t *dev, vmu_root_t *root_buf) {
     return 0;
 }
 
-int vmufs_root_write(maple_device_t *dev, vmu_root_t *root_buf) {
+int vmufs_root_write(maple_device_t *dev, const vmu_root_t *root_buf) {
     /* XXX: Assume root is at 255.. is there some way to figure this out dynamically? */
     if(vmu_block_write(dev, 255, (uint8_t *)root_buf) != 0) {
         dbglog(DBG_ERROR, "vmufs_root_write: can't write block %d on device %c%c\n",
@@ -98,16 +98,16 @@ int vmufs_root_write(maple_device_t *dev, vmu_root_t *root_buf) {
         return 0;
 }
 
-int vmufs_dir_blocks(vmu_root_t *root_buf) {
+int vmufs_dir_blocks(const vmu_root_t *root_buf) {
     return root_buf->dir_size * VMU_BLOCK_SIZE;
 }
 
-int vmufs_fat_blocks(vmu_root_t *root_buf) {
+int vmufs_fat_blocks(const vmu_root_t *root_buf) {
     return root_buf->fat_size * VMU_BLOCK_SIZE;
 }
 
 /* Common code for both dir_read and dir_write */
-static int vmufs_dir_ops(maple_device_t *dev, vmu_root_t *root, vmu_dir_t *dir_buf, bool write) {
+static int vmufs_dir_ops(maple_device_t *dev, const vmu_root_t *root, vmu_dir_t *dir_buf, bool write) {
     int rv;
 
     /* Find the directory starting block and length */
@@ -154,16 +154,16 @@ static int vmufs_dir_ops(maple_device_t *dev, vmu_root_t *root, vmu_dir_t *dir_b
     return 0;
 }
 
-int vmufs_dir_read(maple_device_t *dev, vmu_root_t *root, vmu_dir_t *dir_buf) {
+int vmufs_dir_read(maple_device_t *dev, const vmu_root_t *root, vmu_dir_t *dir_buf) {
     return vmufs_dir_ops(dev, root, dir_buf, false);
 }
 
-int vmufs_dir_write(maple_device_t *dev, vmu_root_t *root, vmu_dir_t *dir_buf) {
+int vmufs_dir_write(maple_device_t *dev, const vmu_root_t *root, vmu_dir_t *dir_buf) {
     return vmufs_dir_ops(dev, root, dir_buf, true);
 }
 
 /* Common code for both fat_read and fat_write */
-static int vmufs_fat_ops(maple_device_t *dev, vmu_root_t *root, uint16_t *fat_buf, bool write) {
+static int vmufs_fat_ops(maple_device_t *dev, const vmu_root_t *root, uint16_t *fat_buf, bool write) {
     int rv;
 
     /* Find the FAT starting block and length */
@@ -194,15 +194,15 @@ static int vmufs_fat_ops(maple_device_t *dev, vmu_root_t *root, uint16_t *fat_bu
     return 0;
 }
 
-int vmufs_fat_read(maple_device_t *dev, vmu_root_t *root, uint16_t *fat_buf) {
+int vmufs_fat_read(maple_device_t *dev, const vmu_root_t *root, uint16_t *fat_buf) {
     return vmufs_fat_ops(dev, root, fat_buf, false);
 }
 
-int vmufs_fat_write(maple_device_t *dev, vmu_root_t *root, uint16_t *fat_buf) {
+int vmufs_fat_write(maple_device_t *dev, const vmu_root_t *root, uint16_t *fat_buf) {
     return vmufs_fat_ops(dev, root, fat_buf, true);
 }
 
-int vmufs_dir_find(vmu_root_t *root, vmu_dir_t *dir, const char *fn) {
+int vmufs_dir_find(const vmu_root_t *root, const vmu_dir_t *dir, const char *fn) {
     int dcnt = root->dir_size * VMU_BLOCK_SIZE / sizeof(vmu_dir_t);
 
     for(int i = 0; i < dcnt; i++) {
@@ -219,7 +219,7 @@ int vmufs_dir_find(vmu_root_t *root, vmu_dir_t *dir, const char *fn) {
     return -1;
 }
 
-int vmufs_dir_add(vmu_root_t *root, vmu_dir_t *dir, vmu_dir_t *newdirent) {
+int vmufs_dir_add(const vmu_root_t *root, vmu_dir_t *dir, const vmu_dir_t *newdirent) {
     size_t dcnt = root->dir_size * VMU_BLOCK_SIZE / sizeof(vmu_dir_t);
 
     for(size_t i = 0; i < dcnt; i++) {
@@ -240,7 +240,7 @@ int vmufs_dir_add(vmu_root_t *root, vmu_dir_t *dir, vmu_dir_t *newdirent) {
     return -1;
 }
 
-int vmufs_file_read(maple_device_t *dev, uint16_t *fat, vmu_dir_t *dirent, void *outbuf) {
+int vmufs_file_read(maple_device_t *dev, const uint16_t *fat, const vmu_dir_t *dirent, void *outbuf) {
     uint8_t *out = (uint8_t *)outbuf;
 
     /* Find the first block */
@@ -284,7 +284,7 @@ int vmufs_file_read(maple_device_t *dev, uint16_t *fat, vmu_dir_t *dirent, void 
 }
 
 /* Find an open block for writing in the FAT */
-static int vmufs_find_block(vmu_root_t *root, uint16_t *fat, vmu_dir_t *dirent) {
+static int vmufs_find_block(const vmu_root_t *root, const uint16_t *fat, const vmu_dir_t *dirent) {
     if(dirent->filetype == VMU_FILE_DATA) {
         /* Data files -- count down from top */
         for(int i = root->blk_cnt - 1; i >= 0; i--) {
@@ -312,8 +312,8 @@ static int vmufs_find_block(vmu_root_t *root, uint16_t *fat, vmu_dir_t *dirent) 
     return -2;
 }
 
-int vmufs_file_write(maple_device_t *dev, vmu_root_t *root, uint16_t *fat,
-                     vmu_dir_t *dir, vmu_dir_t *newdirent, void *filebuf, int size) {
+int vmufs_file_write(maple_device_t *dev, const vmu_root_t *root, uint16_t *fat,
+                     vmu_dir_t *dir, vmu_dir_t *newdirent, const void *filebuf, int size) {
     int curblk, blkleft, rv;
     int vmuspaceleft;
     uint8_t *out = (uint8_t *)filebuf;
@@ -395,7 +395,7 @@ int vmufs_file_write(maple_device_t *dev, vmu_root_t *root, uint16_t *fat,
     return 0;
 }
 
-int vmufs_file_delete(vmu_root_t *root, uint16_t *fat, vmu_dir_t *dir, const char *fn) {
+int vmufs_file_delete(const vmu_root_t *root, uint16_t *fat, vmu_dir_t *dir, const char *fn) {
     int blk, nextblk;
 
     /* Find the file */
@@ -433,7 +433,7 @@ int vmufs_file_delete(vmu_root_t *root, uint16_t *fat, vmu_dir_t *dir, const cha
 }
 
 /* hee hee :) */
-int vmufs_fat_free(vmu_root_t *root, uint16_t *fat) {
+int vmufs_fat_free(const vmu_root_t *root, const uint16_t *fat) {
     int freeblocks = 0;
 
     for(size_t i = 0; i < root->blk_cnt; i++) {
@@ -445,7 +445,7 @@ int vmufs_fat_free(vmu_root_t *root, uint16_t *fat) {
     return freeblocks;
 }
 
-int vmufs_dir_free(vmu_root_t *root, vmu_dir_t *dir) {
+int vmufs_dir_free(const vmu_root_t *root, const vmu_dir_t *dir) {
     int freeblocks = 0;
 
     for(size_t i = 0; i < root->dir_size * VMU_BLOCK_SIZE / sizeof(vmu_dir_t); i++) {
@@ -599,7 +599,7 @@ ex:
 }
 
 /* Shared code between read/read_dirent */
-static int vmufs_read_common(maple_device_t *dev, vmu_dir_t *dirent, uint16_t *fat, void **outbuf, int *outsize) {
+static int vmufs_read_common(maple_device_t *dev, const vmu_dir_t *dirent, const uint16_t *fat, void **outbuf, int *outsize) {
     /* Allocate the output space */
     *outsize = dirent->filesize * VMU_BLOCK_SIZE;
     *outbuf = malloc(*outsize);
@@ -654,7 +654,7 @@ ex:
     return rv;
 }
 
-int vmufs_read_dirent(maple_device_t *dev, vmu_dir_t *dirent, void **outbuf, int *outsize) {
+int vmufs_read_dirent(maple_device_t *dev, const vmu_dir_t *dirent, void **outbuf, int *outsize) {
     vmu_root_t  root;
     uint16_t      *fat = NULL;
     int     fatsize, rv = 0;
