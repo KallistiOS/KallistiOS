@@ -106,7 +106,7 @@ __BEGIN_DECLS
 #define INIT_SIP            0x00100000  /**< \brief Enable Sound input maple driver */
 #define INIT_DREAMEYE       0x00200000  /**< \brief Enable DreamEye maple driver */
 
-#define INIT_CDROM          0x00100000  /**< \brief Enable CD-ROM support */
+#define INIT_CDROM          0x01000000  /**< \brief Enable CD-ROM support */
 
 static const uint32_t INIT_OCRAM __depr("INIT_OCRAM has been removed. Use dcache_toggle_ocram().") = 0;
 #define INIT_NO_DCLOAD      0x20000000  /**< \brief Disable dcload */
