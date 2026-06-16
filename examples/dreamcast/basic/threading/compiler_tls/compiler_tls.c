@@ -24,14 +24,8 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#if (__GNUC__ <= 4)
-/* GCC4 only supports using TLS with the __thread identifier,
-   even when passed the -std=c99 flag */
-#define thread_local __thread
-#else
-/* Newer versions of GCC use C11's _Thread_local to specify TLS */
+/* Use C11's _Thread_local to specify TLS */
 #define thread_local _Thread_local
-#endif
 
 typedef struct {
     uint8_t inner[3];
