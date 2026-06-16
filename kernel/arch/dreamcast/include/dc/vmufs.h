@@ -358,8 +358,8 @@ int vmufs_readdir(maple_device_t *dev, vmu_dir_t **outbuf, int *outcnt);
 /** \brief  Read a file from the VMU.
 
     The output buffer will be allocated for you using malloc(), and the size of
-    the file will be returned.  On failure, outbuf will not contain a dangling
-    buffer that needs to be freed (no further action required).
+    the file will be returned. On failure, outbuf and outsize will not be
+    written to.
 
     \param  dev             The VMU to read from.
     \param  fn              The name of the file to read.

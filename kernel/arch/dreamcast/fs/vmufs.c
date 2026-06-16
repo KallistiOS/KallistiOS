@@ -590,23 +590,23 @@ ex:
 /* Shared code between read/read_dirent */
 static int vmufs_read_common(maple_device_t *dev, const vmu_dir_t *dirent, const uint16_t *fat, void **outbuf, int *outsize) {
     /* Allocate the output space */
-    *outsize = dirent->filesize * VMU_BLOCK_SIZE;
-    *outbuf = malloc(*outsize);
+    int filesize = dirent->filesize * VMU_BLOCK_SIZE;
+    void *file = malloc(filesize);
 
-    if(!*outbuf) {
+    if(!file) {
         dbglog(DBG_ERROR, "vmufs_read: can't alloc %d bytes for reading a file  on device %c%c\n",
-               *outsize, dev->port + 'A', dev->unit + '0');
+               filesize, dev->port + 'A', dev->unit + '0');
         return -1;
     }
 
     /* Ok, go ahead and read it */
-    if(vmufs_file_read(dev, fat, dirent, *outbuf) < 0) {
-        free(*outbuf);
-        *outbuf = NULL;
-        *outsize = 0;
+    if(vmufs_file_read(dev, fat, dirent, file) < 0) {
+        free(file);
         return -1;
     }
 
+    *outsize = filesize;
+    *outbuf = file;
     return 0;
 }
 
@@ -615,9 +615,6 @@ int vmufs_read(maple_device_t *dev, const char *fn, void **outbuf, int *outsize)
     vmu_dir_t   *dir = NULL;
     uint16_t    *fat = NULL;
     int     fatsize, dirsize, idx, rv = 0;
-
-    *outbuf = NULL;
-    *outsize = 0;
 
     /* Init everything */
     if(vmufs_setup(dev, &root, &dir, &dirsize, &fat, &fatsize) < 0)
@@ -647,9 +644,6 @@ int vmufs_read_dirent(maple_device_t *dev, const vmu_dir_t *dirent, void **outbu
     vmu_root_t  root;
     uint16_t      *fat = NULL;
     int     fatsize, rv = 0;
-
-    *outbuf = NULL;
-    *outsize = 0;
 
     /* Init everything */
     if(vmufs_setup(dev, &root, NULL, NULL, &fat, &fatsize) < 0)
