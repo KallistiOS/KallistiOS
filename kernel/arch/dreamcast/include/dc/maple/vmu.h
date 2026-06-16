@@ -33,6 +33,7 @@ __BEGIN_DECLS
 #include <dc/maple.h>
 #include <kos/regfield.h>
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <time.h>
 
@@ -112,12 +113,12 @@ int vmu_has_241_blocks(maple_device_t *dev);
                 for a very few commercial games.
 
     \param  dev             The device to enable/disable 41 blocks.
-    \param  enable          Values other than 0 enables. Equal to 0 disables.
+    \param  enable          True enables. false disables.
 
     \retval 0               On success
     \retval -1              On failure
 */
-int vmu_toggle_241_blocks(maple_device_t *dev, int enable);
+int vmu_toggle_241_blocks(maple_device_t *dev, bool enable);
 
 /** \brief   Enable custom color of a VMU
     \ingroup vmu_settings
@@ -126,14 +127,14 @@ int vmu_toggle_241_blocks(maple_device_t *dev, int enable);
     This color is only displayed in the Dreamcast's file manager.
 
     \param  dev             The device to enable/disable custom color.
-    \param  enable          Values other than 0 enables. Equal to 0 disables.
+    \param  enable          True enables. false disables.
 
     \retval 0               On success
     \retval -1              On failure
 
     \sa vmu_set_custom_color
 */
-int vmu_use_custom_color(maple_device_t *dev, int enable);
+int vmu_use_custom_color(maple_device_t *dev, bool enable);
 
 /** \brief   Set custom color of a VMU
     \ingroup vmu_settings
@@ -612,7 +613,7 @@ typedef struct vmu_state {
 
     \sa vmu_get_buttons_enabled
 */
-void vmu_set_buttons_enabled(int enable);
+void vmu_set_buttons_enabled(bool enable);
 
 /** \brief   Check whether polling for VMU input has been enabled
     \ingroup maple_clock
@@ -626,7 +627,7 @@ void vmu_set_buttons_enabled(int enable);
 
     \sa vmu_set_buttons_enabled
 */
-int vmu_get_buttons_enabled(void);
+bool vmu_get_buttons_enabled(void);
 
 /** @} */
 

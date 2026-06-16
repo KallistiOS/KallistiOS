@@ -181,12 +181,12 @@ void vmu_shutdown(void) {
 }
 
 /* Dynamically add the periodic polling callback to the driver when button input is enabled. */
-void vmu_set_buttons_enabled(int enable) {
+void vmu_set_buttons_enabled(bool enable) {
     vmu_drv.periodic = enable ? vmu_periodic : NULL;
 }
 
 /* Determine whether polling for button input is enabled or not by presence of periodic callback. */
-int vmu_get_buttons_enabled(void) {
+bool vmu_get_buttons_enabled(void) {
     return !!vmu_drv.periodic;
 }
 
@@ -202,13 +202,13 @@ int vmu_has_241_blocks(maple_device_t *dev) {
     return 0;
 }
 
-int vmu_toggle_241_blocks(maple_device_t *dev, int enable) {
+int vmu_toggle_241_blocks(maple_device_t *dev, bool enable) {
     vmu_root_t root;
 
     if(vmufs_root_read(dev, &root) < 0)
         return -1;
 
-    root.blk_cnt = (enable != 0) ? 241 : 200;
+    root.blk_cnt = enable ? 241 : 200;
 
     if(vmufs_root_write(dev, &root) < 0)
         return -1;
@@ -216,14 +216,14 @@ int vmu_toggle_241_blocks(maple_device_t *dev, int enable) {
     return 0;
 }
 
-int vmu_use_custom_color(maple_device_t *dev, int enable) {
+int vmu_use_custom_color(maple_device_t *dev, bool enable) {
     vmu_root_t root;
 
     if(vmufs_root_read(dev, &root) < 0)
         return -1;
 
     /* 1 - Enables the use of the custom color. 0 - Disables */
-    root.use_custom = (enable != 0) ? 1 : 0;
+    root.use_custom = enable;
 
     if(vmufs_root_write(dev, &root) < 0)
         return -1;
