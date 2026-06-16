@@ -466,7 +466,16 @@ int vmufs_mutex_unlock(void) {
 
 /* ****************** Higher level functions ******************** */
 
+/* Internal function to tear everything down for you */
+static void vmufs_teardown(vmu_dir_t *dir, uint16_t *fat) {
+    free(dir);
+    free(fat);
+
+    vmufs_mutex_unlock();
+}
+
 /* Internal function gets everything setup for you */
+__nonnull((2)) /* root will not be null */
 static int vmufs_setup(maple_device_t *dev, vmu_root_t *root, vmu_dir_t **dir, int *dirsize,
                        uint16_t **fat, int *fatsize) {
     /* Check to make sure this is a valid device right now */
@@ -483,13 +492,13 @@ static int vmufs_setup(maple_device_t *dev, vmu_root_t *root, vmu_dir_t **dir, i
     vmufs_mutex_lock();
 
     /* Read its root block */
-    if(!root || vmufs_root_read(dev, root) < 0)
+    if(vmufs_root_read(dev, root) < 0)
         goto dead;
 
     if(dir) {
-        /* Alloc enough space for the whole dir */
+        /* Alloc enough space for the whole dir, and ensure it's 0'd */
         *dirsize = vmufs_dir_blocks(root);
-        *dir = (vmu_dir_t *)malloc(*dirsize);
+        *dir = (vmu_dir_t *)calloc(1, *dirsize);
 
         if(!*dir) {
             dbglog(DBG_ERROR, "vmufs_setup: can't alloc %d bytes for dir on device %c%c\n",
@@ -497,13 +506,8 @@ static int vmufs_setup(maple_device_t *dev, vmu_root_t *root, vmu_dir_t **dir, i
             goto dead;
         }
 
-        /* Ensure that the dir is 0'd to avoid possible uninitialized reads */
-        memset(*dir, 0, sizeof(*dirsize));
-
         /* Read it */
         if(vmufs_dir_read(dev, root, *dir) < 0) {
-            free(*dir);
-            *dir = NULL;
             goto dead;
         }
     }
@@ -516,16 +520,11 @@ static int vmufs_setup(maple_device_t *dev, vmu_root_t *root, vmu_dir_t **dir, i
         if(!*fat) {
             dbglog(DBG_ERROR, "vmufs_setup: can't alloc %d bytes for FAT on device %c%c\n",
                    *fatsize, dev->port + 'A', dev->unit + '0');
-            if(dir)
-                free(*dir);
             goto dead;
         }
 
         /* Read it */
         if(vmufs_fat_read(dev, root, *fat) < 0) {
-            free(*fat);
-            if(dir)
-                free(*dir);
             goto dead;
         }
     }
@@ -534,19 +533,9 @@ static int vmufs_setup(maple_device_t *dev, vmu_root_t *root, vmu_dir_t **dir, i
     return 0;
 
 dead:
-    vmufs_mutex_unlock();
+    /* Tear any that were passed in down. */
+    vmufs_teardown(dir ? *dir : NULL, fat ? *fat : NULL);
     return -1;
-}
-
-/* Internal function to tear everything down for you */
-static void vmufs_teardown(vmu_dir_t *dir, uint16_t *fat) {
-    if(dir)
-        free(dir);
-
-    if(fat)
-        free(fat);
-
-    vmufs_mutex_unlock();
 }
 
 int vmufs_readdir(maple_device_t *dev, vmu_dir_t **outbuf, int *outcnt) {
