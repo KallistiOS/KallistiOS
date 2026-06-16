@@ -230,7 +230,8 @@ static vmu_fh_t *vmu_open_file(maple_device_t *dev, const char *path, int mode) 
     vmu_fh_t    *fd;       /* file descriptor */
     int     realmode, rv;
     void        *data;
-    int     datasize;
+    /* In some modes failure is ok -- flag to setup a blank first block. */
+    int     datasize = -1;
     vmu_pkg_t vmu_pkg;
 
     /* Malloc a new fh struct */
@@ -256,23 +257,13 @@ static vmu_fh_t *vmu_open_file(maple_device_t *dev, const char *path, int mode) 
         /* Try to open it */
         rv = vmufs_read(dev, fd->name, &data, &datasize);
 
-        if(rv < 0) {
-            if(realmode == O_RDWR || realmode == O_WRONLY) {
-                /* In some modes failure is ok -- flag to setup a blank first block. */
-                datasize = -1;
-            }
-            else {
-                free(fd);
-                return NULL;
-            }
+        if(rv < 0 && realmode == O_RDONLY) {
+            free(fd);
+            return NULL;
         }
     }
-    else {
-        /* We're writing with truncate... flag to setup a blank first block. */
-        datasize = -1;
-    }
 
-    /* We were flagged to set up a blank first block */
+    /* We're in O_TRUNC or didn't get a datasize back from vmufs_read */
     if(datasize == -1) {
         data = malloc(VMU_BLOCK_SIZE);
         if(data == NULL) {
