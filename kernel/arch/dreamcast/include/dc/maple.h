@@ -311,7 +311,7 @@ typedef struct maple_port {
 
     \param  dev         The device that triggered the callback.
 */
-typedef void (*maple_user_callback_t)(maple_device_t *dev);
+typedef void (*maple_user_callback_t)(maple_device_t *dev, void *user_data);
 
 /* \cond */
 /* Compat */
@@ -379,6 +379,12 @@ typedef struct maple_driver {
     */
     maple_user_callback_t user_attach;
 
+    /** \brief  User-specified device attached callback data.
+
+        This data will be passed to user_attach when called.
+    */
+    void *user_attach_data;
+
     /** \brief  User-specified device detached callback.
 
         This callback will be called when a device using this driver is
@@ -386,6 +392,12 @@ typedef struct maple_driver {
         maple_detach_callback().
     */
     maple_user_callback_t user_detach;
+
+    /** \brief  User-specified device detached callback data.
+
+        This data will be passed to user_detach when called.
+    */
+    void *user_detach_data;
 } maple_driver_t;
 
 /** \brief   Maple state structure.
@@ -771,8 +783,9 @@ int maple_driver_foreach(maple_driver_t *drv, int (*callback)(maple_device_t *))
     \param  functions       The functions maple device must support. Set to
                             0 or MAPLE_FUNC_ANY to support all maple devices.
     \param  cb              The callback to call when the maple is attached.
+    \param  user_data       User data to be passed to cb when called.
 */
-void maple_attach_callback(uint32_t functions, maple_user_callback_t cb);
+void maple_attach_callback(uint32_t functions, maple_user_callback_t cb, void *user_data);
 
 /** \brief   Set an automatic maple detach callback.
     \ingroup maple
@@ -783,8 +796,9 @@ void maple_attach_callback(uint32_t functions, maple_user_callback_t cb);
     \param  functions       The functions maple device must support. Set to
                             0 or MAPLE_FUNC_ANY to support all maple devices.
     \param  cb              The callback to call when the maple is detached.
+    \param  user_data       User data to be passed to cb when called.
 */
-void maple_detach_callback(uint32_t functions, maple_user_callback_t cb);
+void maple_detach_callback(uint32_t functions, maple_user_callback_t cb, void *user_data);
 
 /**************************************************************************/
 /* maple_irq.c */

@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <dc/maple.h>
 
-void maple_attach_callback(uint32_t functions, maple_user_callback_t cb) {
+void maple_attach_callback(uint32_t functions, maple_user_callback_t cb, void *user_data) {
     maple_driver_t *i;
 
     if(!functions)
@@ -17,6 +17,7 @@ void maple_attach_callback(uint32_t functions, maple_user_callback_t cb) {
     LIST_FOREACH(i, &maple_state.driver_list, drv_list) {
         if(i->functions & functions) {
             i->user_attach = cb;
+            i->user_attach_data = user_data;
             functions &= ~i->functions;
 
             if(!functions)
@@ -25,7 +26,7 @@ void maple_attach_callback(uint32_t functions, maple_user_callback_t cb) {
     }
 }
 
-void maple_detach_callback(uint32_t functions, maple_user_callback_t cb) {
+void maple_detach_callback(uint32_t functions, maple_user_callback_t cb, void *user_data) {
     maple_driver_t *i;
 
     if(!functions)
@@ -34,6 +35,7 @@ void maple_detach_callback(uint32_t functions, maple_user_callback_t cb) {
     LIST_FOREACH(i, &maple_state.driver_list, drv_list) {
         if(i->functions & functions) {
             i->user_detach = cb;
+            i->user_detach_data = user_data;
             functions &= ~i->functions;
 
             if(!functions)
@@ -115,7 +117,7 @@ int maple_driver_attach(maple_frame_t *det) {
                 dev->valid = true;
 
                 if(i->user_attach)
-                    i->user_attach(dev);
+                    i->user_attach(dev, i->user_attach_data);
 
                 return 0;
             }
@@ -141,7 +143,7 @@ int maple_driver_detach(int p, int u) {
 
     if(dev->drv) {
         if(dev->drv->user_detach)
-            dev->drv->user_detach(dev);
+            dev->drv->user_detach(dev, dev->drv->user_detach_data);
         if(dev->drv->detach)
             dev->drv->detach(dev->drv, dev);
     }
