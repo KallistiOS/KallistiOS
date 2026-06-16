@@ -1,6 +1,6 @@
 /* KallistiOS ##version##
 
-   arch/dreamcast/kernel/gdb/gdb_vpacket.c
+   arch/dreamcast/gdb/gdb_vpacket.c
 
    Copyright (C) 2026 Andy Barajas
 

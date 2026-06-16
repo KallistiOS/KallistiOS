@@ -1,6 +1,6 @@
 /* KallistiOS ##version##
 
-   lock_common.h
+   sys/lock.h
    Copyright (C) 2004 Megan Potter
 
    This file is patched into the kos-chain newlib's <sys/lock.h>, by newlib.mk

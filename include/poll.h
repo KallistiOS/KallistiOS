@@ -99,4 +99,4 @@ int poll(struct pollfd fds[], nfds_t nfds, int timeout);
 
 __END_DECLS
 
-#endif /* !POLL_H */
+#endif /* !__POLL_H */

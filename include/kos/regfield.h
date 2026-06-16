@@ -1,6 +1,6 @@
 /* KallistiOS ##version##
 
-   kos/compiler.h
+   kos/regfield.h
    Copyright (C) 2024 Paul Cercueil
 
    Macros to extract / insert bit fields

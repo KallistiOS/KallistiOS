@@ -65,4 +65,4 @@ __BEGIN_DECLS
 
 __END_DECLS
 
-#endif /* !__ARCH_INIT_BASE_H */
+#endif /* !__KOS_INIT_BASE_H */
