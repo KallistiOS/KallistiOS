@@ -35,11 +35,6 @@
 #include "initall_hdrs.h"
 
 /* ctor/dtor stuff from libgcc. */
-#if __GNUC__ == 4
-#define _init init
-#define _fini fini
-#endif
-
 extern void _init(void);
 extern void _fini(void);
 extern void __verify_newlib_patch(void);
