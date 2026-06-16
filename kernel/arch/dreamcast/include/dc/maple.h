@@ -303,6 +303,22 @@ typedef struct maple_port {
     maple_device_t *units[MAPLE_UNIT_COUNT];    /**< \brief Pointers to active units */
 } maple_port_t;
 
+/** \brief   Maple user callback type.
+    \ingroup maple
+
+    Functions of this type can be set with maple_{attach,detach}_callback()
+    to respond automatically to those events.
+
+    \param  dev         The device that triggered the callback.
+*/
+typedef void (*maple_user_callback_t)(maple_device_t *dev);
+
+/* \cond */
+/* Compat */
+#define maple_attach_callback_t __depr("Use the type maple_user_callback_t rather than maple_attach_callback_t.") maple_user_callback_t
+#define maple_detach_callback_t __depr("Use the type maple_user_callback_t rather than maple_detach_callback_t.") maple_user_callback_t
+/* \endcond */
+
 /** \brief   A maple device driver.
     \ingroup maple
 
@@ -360,22 +376,16 @@ typedef struct maple_driver {
         This callback will be called when a new device of this driver is
         connected to the system. It should be set by applications using
         maple_attach_callback().
-
-        \param  dev         The device that was connected.
-        \return             0 on success, <0 on error.
     */
-    void (*user_attach)(maple_device_t *dev);
+    maple_user_callback_t user_attach;
 
     /** \brief  User-specified device detached callback.
 
-        This callback will be called when a new device of this driver is
-        connected to the system. It should be set by applications using
+        This callback will be called when a device using this driver is
+        disconnected from the system. It should be set by applications using
         maple_detach_callback().
-
-        \param  dev         The device that was connected.
-        \return             0 on success, <0 on error.
     */
-    void (*user_detach)(maple_device_t *dev);
+    maple_user_callback_t user_detach;
 } maple_driver_t;
 
 /** \brief   Maple state structure.
@@ -744,35 +754,25 @@ int maple_driver_detach(int p, int u);
 */
 int maple_driver_foreach(maple_driver_t *drv, int (*callback)(maple_device_t *));
 
-/** \brief   Maple attach callback type.
-    \ingroup maple
-
-    Functions of this type can be set with maple_attach_callback() to respond
-    automatically to the attachment of a maple device that supports specified
-    functions.
-*/
-typedef void (*maple_attach_callback_t)(maple_device_t *dev);
-
 /** \brief   Set an automatic maple attach callback.
     \ingroup maple
 
     This function sets a callback function to be called when the specified
     maple device that supports functions has been attached.
 
+    \note
+    Your function will not be called for devices which have already been
+    detected on the maple bus. This is only for newly detected devices.
+
+    \warning
+    \p cb will be invoked from within an IRQ context! Do not perform any logic
+    which requires additional interrupt processing!
+
     \param  functions       The functions maple device must support. Set to
                             0 or MAPLE_FUNC_ANY to support all maple devices.
     \param  cb              The callback to call when the maple is attached.
 */
-void maple_attach_callback(uint32_t functions, maple_attach_callback_t cb);
-
-/** \brief   Maple detach callback type.
-    \ingroup maple
-
-    Functions of this type can be set with maple_detach_callback() to respond
-    automatically to the detachment of a maple device that supports specified
-    functions.
-*/
-typedef void (*maple_detach_callback_t)(maple_device_t *dev);
+void maple_attach_callback(uint32_t functions, maple_user_callback_t cb);
 
 /** \brief   Set an automatic maple detach callback.
     \ingroup maple
@@ -784,7 +784,7 @@ typedef void (*maple_detach_callback_t)(maple_device_t *dev);
                             0 or MAPLE_FUNC_ANY to support all maple devices.
     \param  cb              The callback to call when the maple is detached.
 */
-void maple_detach_callback(uint32_t functions, maple_detach_callback_t cb);
+void maple_detach_callback(uint32_t functions, maple_user_callback_t cb);
 
 /**************************************************************************/
 /* maple_irq.c */
