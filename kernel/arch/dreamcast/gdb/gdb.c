@@ -1,6 +1,6 @@
 /* KallistiOS ##version##
 
-   arch/dreamcast/kernel/gdb/gdb.c
+   arch/dreamcast/gdb/gdb.c
 
    Copyright (C) Megan Potter
    Copyright (C) Richard Moats

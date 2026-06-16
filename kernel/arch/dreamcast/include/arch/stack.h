@@ -153,4 +153,4 @@ void arch_stk_trace_at(uintptr_t sp, size_t n);
 
 __END_DECLS
 
-#endif  /* __ARCH_EXEC_H */
+#endif  /* __ARCH_STACK_H */

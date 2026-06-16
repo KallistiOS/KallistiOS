@@ -1,6 +1,6 @@
 /* KallistiOS ##version##
 
-   arch/dreamcast/kernel/gdb/gdb_query.c
+   arch/dreamcast/gdb/gdb_query.c
 
    Copyright (C) 2026 Andy Barajas
 

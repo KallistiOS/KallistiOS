@@ -1,6 +1,6 @@
 /* KallistiOS ##version##
 
-   kos/include/dbgio.h
+   include/kos/dbgio.h
    Copyright (C) 2000, 2004 Megan Potter
    Copyright (C) 2026 Eric Fradella
 
