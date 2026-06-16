@@ -207,8 +207,10 @@ static vmu_fh_t *vmu_open_dir(maple_device_t *dev) {
     vmu_dh_t    *dh;
 
     /* Read the VMU's directory */
-    if(vmufs_readdir(dev, &dirents, &dircnt) < 0)
+    if(vmufs_readdir(dev, &dirents, &dircnt) < 0) {
+        errno = ENOENT;
         return NULL;
+    }
 
     /* Allocate a handle for the dir blocks */
     if(!(dh = malloc(sizeof(vmu_dh_t))))
@@ -299,7 +301,6 @@ static vmu_fh_t *vmu_open_file(maple_device_t *dev, const char *path, int mode) 
 
 /* open function */
 static void *vmu_open(vfs_handler_t *vfs, const char *path, int mode) {
-    maple_device_t  *dev;      /* maple bus address of the vmu unit */
     vmu_fh_t    *fh;
 
     (void)vfs;
@@ -310,25 +311,29 @@ static void *vmu_open(vfs_handler_t *vfs, const char *path, int mode) {
     }
     else {
         /* Figure out which vmu slot is being opened */
-        dev = vmu_path_to_addr(path);
+        maple_device_t  *dev = vmu_path_to_addr(path);
 
-        /* printf("VMUFS: card address is %02x\n", addr); */
-        if(dev == NULL) return 0;
+        if(dev == NULL) {
+            dbglog(DBG_ERROR, "VMUFS: vmu_open on invalid path '%s'\n", path);
+            errno = ENXIO;
+            return NULL;
+        }
 
         /* Check for open as dir */
         if(strlen(path) == 3 || (strlen(path) == 4 && path[3] == '/')) {
-            if(!(mode & O_DIR)) return 0;
+            if(!(mode & O_DIR)) return NULL;
 
             fh = vmu_open_dir(dev);
         }
         else {
-            if(mode & O_DIR) return 0;
+            if(mode & O_DIR) return NULL;
 
             fh = vmu_open_file(dev, path, mode);
         }
     }
 
-    if(fh == NULL) return 0;
+    /* vmu_open_{dir/file} set their own errnos on failure */
+    if(fh == NULL) return NULL;
 
     /* link the fh onto the top of the list */
     mutex_lock(&fh_mutex);
