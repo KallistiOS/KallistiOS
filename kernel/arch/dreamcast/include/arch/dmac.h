@@ -160,7 +160,7 @@ typedef uint32_t dma_addr_t;
     \param  hw_addr         The hardware address.
     \return                 The converted DMA address.
 */
-dma_addr_t hw_to_dma_addr(uintptr_t hw_addr);
+dma_addr_t __pure2 hw_to_dma_addr(uintptr_t hw_addr);
 
 /** \brief   Prepare a source memory buffer for a DMA transfer.
     \ingroup dmac
