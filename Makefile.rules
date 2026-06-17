@@ -50,11 +50,29 @@ else
 
 endif
 
-.PHONY: all_naomi all_pristine
+define KOS_GCCVER_MIN_CHECK
+$(shell \
+	awk 'BEGIN { \
+		split("$(1)", min, "."); \
+		split("$(KOS_GCCVER)", cur, "."); \
+		if (cur[1] > min[1] || \
+			(cur[1] == min[1] && cur[2] > min[2]) || \
+			(cur[1] == min[1] && cur[2] == min[2] && cur[3] >= min[3])) { \
+			print 1; \
+		} \
+	}')
+endef
 
-all_naomi: $(if $(filter $(KOS_BUILD_SUBARCHS),naomi),all)
+.PHONY: all_naomi all_pristine check err_kos_gccver_min_warning
 
-all_pristine: $(if $(filter $(KOS_BUILD_SUBARCHS),pristine),all)
+all_naomi: $(if $(filter $(KOS_BUILD_SUBARCHS),naomi),check)
+
+all_pristine: $(if $(filter $(KOS_BUILD_SUBARCHS),pristine),check)
+
+check: $(if $(KOS_GCCVER_MIN),$(if $(call KOS_GCCVER_MIN_CHECK,$(KOS_GCCVER_MIN)),all,err_kos_gccver_min_warning),all)
+
+err_kos_gccver_min_warning:
+	@echo "Skipping $(TARGET) build as current GCC version ($(KOS_GCCVER)) is less than $(KOS_GCCVER_MIN)."
 
 %.o: %.s
 	kos-as $< -o $@
@@ -86,25 +104,6 @@ romdisk.o: romdisk.img
 	$(KOS_CC) -o romdisk.o -r romdisk_tmp.o $(KOS_LIB_PATHS) -Wl,--whole-archive -lromdiskbase -nostdlib
 	rm romdisk_tmp.c romdisk_tmp.o
 endif
-
-define KOS_GCCVER_MIN_CHECK
-$(shell \
-	awk 'BEGIN { \
-		split("$(1)", min, "."); \
-		split("$(KOS_GCCVER)", cur, "."); \
-		if (cur[1] > min[1] || \
-			(cur[1] == min[1] && cur[2] > min[2]) || \
-			(cur[1] == min[1] && cur[2] == min[2] && cur[3] >= min[3])) { \
-			print 1; \
-		} else { \
-			print 0; \
-		} \
-	}')
-endef
-
-define KOS_GCCVER_MIN_WARNING
-@echo "Skipping $(TARGET) build as current GCC version ($(KOS_GCCVER)) is less than $(KOS_GCCVER_MIN)."
-endef
 
 ifdef EXPORTS_FILE
 
