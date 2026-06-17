@@ -135,7 +135,7 @@ static int ucscompare(const uint8_t *isofn, const uint8_t *normalfn, int isosize
         return 0;
 }
 
-static int isjoliet(char *p) {
+static int isjoliet(const char *p) {
     if(p[0] == '%' && p[1] == '/') {
         switch(p[2]) {
             case '@':
