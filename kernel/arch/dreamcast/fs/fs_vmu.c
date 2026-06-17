@@ -337,23 +337,14 @@ static void *vmu_open(vfs_handler_t *vfs, const char *path, int mode) {
 /* Verify that a given hnd is actually in the list */
 static int vmu_verify_hnd(void *hnd, int type) {
     vmu_fh_t    *cur;
-    int     rv;
 
-    rv = 0;
-
-    mutex_lock(&fh_mutex);
+    mutex_lock_scoped(&fh_mutex);
     TAILQ_FOREACH(cur, &vmu_fh, listent) {
         if((void *)cur == hnd) {
-            rv = 1;
-            break;
+            return (type == VMU_ANY) ? 1 : ((int)cur->strtype == type);
         }
     }
-    mutex_unlock(&fh_mutex);
-
-    if(rv)
-        return type == VMU_ANY ? 1 : ((int)cur->strtype == type);
-    else
-        return 0;
+    return 0;
 }
 
 /* write a file out before closing it: we aren't perfect on error handling here */
