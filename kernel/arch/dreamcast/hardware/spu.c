@@ -40,7 +40,7 @@ kernel; so don't use them if you don't need to =).
 /* memcpy and memset designed for sound RAM; for addresses, don't
    bother to include the 0xa0800000 offset that is implied. 'length'
    must be a multiple of 4, but if it is not it will be rounded up. */
-void spu_memload(uintptr_t dst, void *src_void, size_t length) {
+void spu_memload(uintptr_t dst, const void *src_void, size_t length) {
     uint8_t *src = (uint8_t *)src_void;
 
     /* Make sure it's an even number of 32-bit words and convert the
@@ -65,7 +65,7 @@ void spu_memload(uintptr_t dst, void *src_void, size_t length) {
     }
 }
 
-void spu_memload_sq(uintptr_t dst, void *src_void, size_t length) {
+void spu_memload_sq(uintptr_t dst, const void *src_void, size_t length) {
     uint8_t *src = (uint8_t *)src_void;
     size_t aligned_len;
     g2_ctx_t ctx;
@@ -114,7 +114,7 @@ void spu_memload_sq(uintptr_t dst, void *src_void, size_t length) {
     }
 }
 
-void spu_memload_dma(uintptr_t dst, void *src_void, size_t length) {
+void spu_memload_dma(uintptr_t dst, const void *src_void, size_t length) {
     uint8_t *src = (uint8_t *)src_void;
     size_t aligned_len;
 
@@ -135,7 +135,7 @@ void spu_memload_dma(uintptr_t dst, void *src_void, size_t length) {
     length &= 31;
 
     do {
-        if(spu_dma_transfer(src_void, dst, aligned_len, 1, NULL, NULL) < 0) {
+        if(spu_dma_transfer((void *)src_void, dst, aligned_len, 1, NULL, NULL) < 0) {
             if(errno == EINPROGRESS) {
                 thd_pass();
                 continue;
