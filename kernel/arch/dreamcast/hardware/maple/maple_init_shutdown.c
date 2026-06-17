@@ -80,7 +80,9 @@ static void maple_dev_reset(maple_device_t *dev) {
 }
 
 static void maple_dev_reset_all(void) {
-    MAPLE_FOREACH_BEGIN(MAPLE_FUNC_ANY, void, st)
+    /* Skip controllers: a RESET re-zeroes their analog axes at the current
+       position, so triggers/stick held at exit stay miscalibrated. */
+    MAPLE_FOREACH_BEGIN(MAPLE_FUNC_ANY & ~MAPLE_FUNC_CONTROLLER, void, st)
         maple_dev_reset(__dev);
         (void)st;
     MAPLE_FOREACH_END()
