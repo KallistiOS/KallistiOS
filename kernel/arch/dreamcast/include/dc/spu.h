@@ -43,7 +43,7 @@ __BEGIN_DECLS
     \param  length          The number of bytes to copy. Automatically rounded
                             up to be a multiple of 4.
 */
-void spu_memload(uintptr_t to, void *from, size_t length);
+void spu_memload(uintptr_t to, const void *from, size_t length);
 
 
 /** \brief  Copy a block of data to sound RAM by using the Store Queues.
@@ -57,7 +57,7 @@ void spu_memload(uintptr_t to, void *from, size_t length);
     \param  length          The number of bytes to copy. Automatically rounded
                             up to be a multiple of 4.
 */
-void spu_memload_sq(uintptr_t to, void *from, size_t length);
+void spu_memload_sq(uintptr_t to, const void *from, size_t length);
 
 /** \brief  Copy a block of data to sound RAM by using DMA (or SQ on fails).
 
@@ -69,7 +69,7 @@ void spu_memload_sq(uintptr_t to, void *from, size_t length);
     \param  from            A pointer to copy from.
     \param  length          The number of bytes to copy. Must be a multiple of 32.
 */
-void spu_memload_dma(uintptr_t to, void *from, size_t length);
+void spu_memload_dma(uintptr_t to, const void *from, size_t length);
 
 /** \brief  Copy a block of data from sound RAM.
 
