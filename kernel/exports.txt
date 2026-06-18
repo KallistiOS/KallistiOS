@@ -214,8 +214,5 @@ arch_stk_trace
 arch_stk_trace_at
 
 # Timers
-timer_ms_gettime
-timer_ms_gettime64
-timer_us_gettime64
 timer_primary_set_callback
 timer_primary_wakeup
