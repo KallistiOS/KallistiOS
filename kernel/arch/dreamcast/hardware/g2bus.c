@@ -80,10 +80,14 @@ void g2_read_block_8(uint8_t * output, uintptr_t address, size_t amt) {
 /* Write a block 8-bit values to G2 */
 void g2_write_block_8(const uint8_t * input, uintptr_t address, size_t amt) {
     volatile uint8_t * output = (volatile uint8_t *)address;
+    size_t i = 0;
 
     g2_lock_scoped();
 
-    while(amt--) {
+    for(i = 0; i < amt; i++) {
+        if(!(i % 32))
+            g2_fifo_wait();
+
         *output++ = *input++;
     }
 }
@@ -102,10 +106,14 @@ void g2_read_block_16(uint16_t * output, uintptr_t address, size_t amt) {
 /* Write a block of 16-bit values to G2 */
 void g2_write_block_16(const uint16_t * input, uintptr_t address, size_t amt) {
     volatile uint16_t * output = (volatile uint16_t *)address;
+    size_t i = 0;
 
     g2_lock_scoped();
 
-    while(amt--) {
+    for(i = 0; i < amt; i++) {
+        if(!(i % 16))
+            g2_fifo_wait();
+
         *output++ = *input++;
     }
 }
@@ -124,10 +132,14 @@ void g2_read_block_32(uint32_t * output, uintptr_t address, size_t amt) {
 /* Write a block of 32-bit values to G2 */
 void g2_write_block_32(const uint32_t * input, uintptr_t address, size_t amt) {
     volatile uint32_t * output = (volatile uint32_t *)address;
+    size_t i;
 
     g2_lock_scoped();
 
-    while(amt--) {
+    for(i = 0; i < amt; i++) {
+        if(!(i % 8))
+            g2_fifo_wait();
+
         *output++ = *input++;
     }
 }
@@ -135,10 +147,14 @@ void g2_write_block_32(const uint32_t * input, uintptr_t address, size_t amt) {
 /* A memset-like function for G2 */
 void g2_memset_8(uintptr_t address, uint8_t c, size_t amt) {
     volatile uint8_t * output = (volatile uint8_t *)address;
+    size_t i;
 
     g2_lock_scoped();
 
-    while(amt--) {
+    for(i = 0; i < amt; i++) {
+        if(!(i % 32))
+            g2_fifo_wait();
+
         *output++ = c;
     }
 }
