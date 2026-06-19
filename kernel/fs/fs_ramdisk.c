@@ -388,7 +388,7 @@ static int ramdisk_close(void *h) {
     /* Check that the fd is invalid */
     if(ramdisk_fd_invalid(fd)) {
         errno = EBADF;
-        return 0;
+        return -1;
     }
 
     f = fd->file;
