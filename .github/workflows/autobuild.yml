@@ -19,7 +19,7 @@ jobs:
       matrix: ${{ steps.setup-matrix.outputs.matrix }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Setup matrix
       id: setup-matrix
