@@ -19,12 +19,19 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
-/** \brief  Create a mask with a bit set
+/** \brief  Create a 32-bit mask with a bit set
 
     \param  bit             The bit to set (from 0 to 31)
     \return                 A 32-bit mask with the corresponding bit set
  */
 #define BIT(bit)        (1u << (bit))
+
+/** \brief  Create a 64-bit mask with a bit set
+
+    \param  bit             The bit to set (from 0 to 63)
+    \return                 A 64-bit mask with the corresponding bit set
+ */
+#define BITLL(bit)        (1ull << (bit))
 
 /** \brief  Create a mask with a range of bits set
 
