@@ -43,12 +43,12 @@ typedef struct workqueue workqueue_t;
     \brief   Structure describing a job for the work queue.
 */
 typedef struct workqueue_job {
-    /** \brief  Routine to call. */
-    void (*cb)(workqueue_t *queue, struct workqueue_job *job);
-
     /** \brief  Time at which the job will be processed.
                 If set to 0, the job will be set to execute immediately. */
     uint64_t time_ms;
+
+    /** \brief  Routine to call. */
+    void (*cb)(workqueue_t *queue, struct workqueue_job *job);
 
     /** \brief  List handle. No need to set manually. */
     STAILQ_ENTRY(workqueue_job) entry;
