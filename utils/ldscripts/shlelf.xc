@@ -143,9 +143,9 @@ SECTIONS
   PROVIDE (__etext = .);
   PROVIDE (_etext = .);
   PROVIDE (etext = .);
-  .rodata         : 
-  { 
-    *(.rodata .rodata.* .gnu.linkonce.r.*) 
+  .rodata         :
+  {
+    *(.rodata .rodata.* .gnu.linkonce.r.*)
     . = ALIGN(4);
     __tdata_align = .;
     LONG (ALIGNOF(.tdata));
@@ -170,15 +170,15 @@ SECTIONS
   .eh_frame       : ONLY_IF_RW { KEEP (*(.eh_frame)) }
   .gcc_except_table   : ONLY_IF_RW { *(.gcc_except_table .gcc_except_table.*) }
   /* Thread Local Storage sections  */
-  .tdata	  : 
-  { 
+  .tdata	  :
+  {
     __tdata_start = .;
-    *(.tdata .tdata.* .gnu.linkonce.td.*) 
+    *(.tdata .tdata.* .gnu.linkonce.td.*)
   }
   __tdata_size = SIZEOF(.tdata);
-  .tbss	(NOLOAD)	  : 
-  { 
-    *(.tbss .tbss.* .gnu.linkonce.tb.*) 
+  .tbss	(NOLOAD)	  :
+  {
+    *(.tbss .tbss.* .gnu.linkonce.tb.*)
     *(.tcommon)
   }
   __tbss_size = SIZEOF(.tbss);
