@@ -1931,9 +1931,6 @@ Void_t *public_rEALLOc(Void_t *m, size_t bytes) {
 
             ctl = (memctl_t *)rEALLOc(ctl, rs + (BUFFER_SIZE * 2));
 
-            if(bytes != 0)
-                assert(ctl != NULL);
-
             if(__is_defined(KM_DBG_VERBOSE)) {
                 strcpy(dbg_print_buffer, " realloc'd block 0x");
                 utoa((uint32_t)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
@@ -1941,6 +1938,14 @@ Void_t *public_rEALLOc(Void_t *m, size_t bytes) {
                 utoa(((uint32_t)ctl) + BUFFER_SIZE, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
                 strcat(dbg_print_buffer, "\n");
                 dbgio_write_str(dbg_print_buffer);
+            }
+
+            if(bytes != 0) {
+                assert(ctl != NULL);
+
+                /* If in NDEBUG for some reason, still behave well */
+                if(MALLOC_POSTACTION != 0) { }
+                return NULL;
             }
 
             // If they realloc'd to zero, we're done here.
