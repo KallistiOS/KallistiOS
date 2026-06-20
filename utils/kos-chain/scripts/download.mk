@@ -2,6 +2,7 @@
 
 # Set default mirror if not specified
 gnu_mirror ?= ftpmirror.gnu.org
+gnu_mirror_backup ?= mirrors.kernel.org
 binutils_base_url = $(download_protocol)://$(gnu_mirror)/gnu/binutils
 gcc_base_url = $(download_protocol)://$(gnu_mirror)/gnu/gcc/gcc-$(1)
 newlib_base_url = $(download_protocol)://sourceware.org/pub/newlib
@@ -33,6 +34,7 @@ define gen_download_vars
 $(1)_name = $(1)-$$($(1)_ver)
 $(1)_file = $$($(1)_name).tar.$$($(1)_download_type)
 $(1)_url  = $(call $(1)_base_url,$($(1)_ver))/$$($(1)_file)
+$(1)_backup_url = $$(subst $$(gnu_mirror),$$(gnu_mirror_backup),$$(filter $(download_protocol)://$$(gnu_mirror)/%,$$($(1)_url)))
 $(1)_dest = $(2)
 
 # Generate Stamp Variables
@@ -62,6 +64,7 @@ define setup_archive_targets
 $(stamp_$(1)_download): name = $($(1)_name)
 $(stamp_$(1)_download): file = $($(1)_file)
 $(stamp_$(1)_download): url = $($(1)_url)
+$(stamp_$(1)_download): backup_url = $($(1)_backup_url)
 $(stamp_$(1)_download): dest = $($(1)_dest)
 
 # add as dependency for download stamp
@@ -93,7 +96,7 @@ ARCHIVE_EXTRACTS = $(sort $(foreach target,$(FROM_ARCHIVES),$(stamp_$(target)_do
 
 $(ARCHIVE_TARGETS):
 	@echo "+++ Downloading $(file)..."
-	$(call web_download,$(url))
+	$(call web_download,$(url),,$(backup_url))
 
 gcc_prereqs_script = $(if $(filter 1,$(use_custom_dependencies)),,cd ./$(name) && ./contrib/download_prerequisites)
 $(ARCHIVE_EXTRACTS):
