@@ -27,4 +27,5 @@ $(info Using $(web_downloader) as download tool)
 # Args:
 # 1 - URL
 # 2 - Output File (Optional)
-web_download = $(call $(web_downloader)_cmd,$(1),$(2))
+# 3 - Backup URL (Optional) - tried if the primary URL fails
+web_download = $(call $(web_downloader)_cmd,$(1),$(2))$(if $(3), || $(call $(web_downloader)_cmd,$(3),$(2)))
