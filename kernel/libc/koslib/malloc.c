@@ -1687,7 +1687,7 @@ static LIST_HEAD(memctl_list, memctl) block_list;
 
 #define get_cur_tid_safe ((thd_current == NULL) ? (tid_t)0 : thd_current->tid)
 
-char dbg_print_buffer[256];
+static char dbg_print_buffer[256];
 
 enum func_type_names { name_MALLOC = 0, name_REALLOC = 1, name_MEMALIGN = 2, name_CALLOC = 3,
     name_FREE = 4, name_CHECKALL = 5, name_CHECK = 6, name_STATS = 7};
@@ -1784,8 +1784,8 @@ static int mem_check_block_int(memctl_t *ctl, int source) {
     return retv;
 }
 
-Void_t* public_mALLOc(size_t bytes) {
-    Void_t* m;
+Void_t *public_mALLOc(size_t bytes) {
+    Void_t *m;
 
     if(MALLOC_PREACTION != 0) {
         return 0;
@@ -1793,7 +1793,7 @@ Void_t* public_mALLOc(size_t bytes) {
 
     if(__is_defined(KM_DBG)) {
         uint32_t rv = arch_get_ret_addr(), *nt1, *nt2, i, rs;
-        memctl_t * ctl;
+        memctl_t *ctl;
 
         if(bytes & 31)
             rs = (bytes & ~31) + 32;
@@ -1876,7 +1876,7 @@ int mem_check_all(void) {
         return 0;
 
     int retv = 0, rvp;
-    memctl_t * ctl;
+    memctl_t *ctl;
 
     if(MALLOC_PREACTION != 0) {
         return 0;
@@ -1898,7 +1898,7 @@ int mem_check_all(void) {
     return retv;
 }
 
-Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
+Void_t *public_rEALLOc(Void_t *m, size_t bytes) {
 
     if(MALLOC_PREACTION != 0) {
         return 0;
@@ -1906,9 +1906,8 @@ Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
 
     if(__is_defined(KM_DBG)) {
         uint32_t rv = arch_get_ret_addr(), rs, *nt, i;
-        memctl_t * ctl;
         int dmg = 0;
-        ctl = get_memctl(m);
+        memctl_t *ctl = get_memctl(m);
 
         if(__is_defined(KM_DBG_VERBOSE))
             dbg_print_thd_addr_action(get_cur_tid_safe, rv, m, bytes, name_REALLOC);
@@ -1988,8 +1987,8 @@ Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
     return m;
 }
 
-Void_t* public_mEMALIGn(size_t alignment, size_t bytes) {
-    Void_t* m;
+Void_t *public_mEMALIGn(size_t alignment, size_t bytes) {
+    Void_t *m;
 
     if(MALLOC_PREACTION != 0) {
         return 0;
@@ -1997,13 +1996,12 @@ Void_t* public_mEMALIGn(size_t alignment, size_t bytes) {
 
     if(__is_defined(KM_DBG)) {
         uint32_t rv = arch_get_ret_addr(), rs, *nt1, *nt2, i;
-        memctl_t * ctl;
         if(bytes & 31)
             rs = (bytes & ~31) + 32;
         else
             rs = bytes;
 
-        ctl = (memctl_t *)mEMALIGn(alignment, rs + (BUFFER_SIZE * 2));
+        memctl_t *ctl = (memctl_t *)mEMALIGn(alignment, rs + (BUFFER_SIZE * 2));
         memset(ctl, 0, BUFFER_SIZE);
         ctl->magic = BLOCK_MAGIC;
         ctl->size = bytes;
@@ -2039,7 +2037,7 @@ Void_t* public_mEMALIGn(size_t alignment, size_t bytes) {
     return m;
 }
 
-Void_t* public_vALLOc(size_t bytes) {
+Void_t *public_vALLOc(size_t bytes) {
     /* unsupported */
     assert(!__is_defined(KM_DBG));
 
@@ -2047,7 +2045,7 @@ Void_t* public_vALLOc(size_t bytes) {
     return 0;
 }
 
-Void_t* public_pVALLOc(size_t bytes) {
+Void_t *public_pVALLOc(size_t bytes) {
     /* unsupported */
     assert(!__is_defined(KM_DBG));
 
@@ -2055,8 +2053,8 @@ Void_t* public_pVALLOc(size_t bytes) {
     return 0;
 }
 
-Void_t* public_cALLOc(size_t n, size_t elem_size) {
-    Void_t* m;
+Void_t *public_cALLOc(size_t n, size_t elem_size) {
+    Void_t *m;
 
     if(MALLOC_PREACTION != 0) {
         return 0;
@@ -2065,14 +2063,13 @@ Void_t* public_cALLOc(size_t n, size_t elem_size) {
     if(__is_defined(KM_DBG)) {
         uint32_t rv = arch_get_ret_addr(), *nt1, *nt2, i, rs;
         size_t bytes = n * elem_size;
-        memctl_t * ctl;
 
         if(bytes & 31)
             rs = (bytes & ~31) + 32;
         else
             rs = bytes;
 
-        ctl = (memctl_t *)mALLOc(rs + (BUFFER_SIZE * 2));
+        memctl_t *ctl = (memctl_t *)mALLOc(rs + (BUFFER_SIZE * 2));
         memset(ctl, 0, BUFFER_SIZE);
         ctl->magic = BLOCK_MAGIC;
         ctl->size = bytes;
@@ -2109,7 +2106,7 @@ Void_t* public_cALLOc(size_t n, size_t elem_size) {
 }
 
 
-Void_t** public_iCALLOc(size_t n, size_t elem_size, Void_t** chunks) {
+Void_t **public_iCALLOc(size_t n, size_t elem_size, Void_t **chunks) {
     /* unsupported */
     assert(!__is_defined(KM_DBG));
 
@@ -2119,7 +2116,7 @@ Void_t** public_iCALLOc(size_t n, size_t elem_size, Void_t** chunks) {
     return 0;
 }
 
-Void_t** public_iCOMALLOc(size_t n, size_t sizes[], Void_t** chunks) {
+Void_t **public_iCOMALLOc(size_t n, size_t sizes[], Void_t **chunks) {
     /* unsupported */
     assert(!__is_defined(KM_DBG));
 
@@ -2129,7 +2126,7 @@ Void_t** public_iCOMALLOc(size_t n, size_t sizes[], Void_t** chunks) {
     return 0;
 }
 
-void public_cFREe(Void_t* m) {
+void public_cFREe(Void_t *m) {
     /* unsupported */
     assert(!__is_defined(KM_DBG));
 
@@ -2145,7 +2142,7 @@ int public_mTRIm(size_t s) {
     return 0;
 }
 
-size_t public_mUSABLe(Void_t* m) {
+size_t public_mUSABLe(Void_t *m) {
     size_t result;
 
     if(MALLOC_PREACTION != 0) {
