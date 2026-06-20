@@ -1801,6 +1801,12 @@ Void_t *public_mALLOc(size_t bytes) {
             rs = bytes;
 
         ctl = (memctl_t *)mALLOc(rs + (BUFFER_SIZE * 2));
+        if(!ctl) {
+            if(MALLOC_POSTACTION != 0) {
+            }
+
+            return NULL;
+        }
         memset(ctl, 0, sizeof(memctl_t));
         ctl->magic = BLOCK_MAGIC;
         ctl->size = bytes;
@@ -2002,6 +2008,12 @@ Void_t *public_mEMALIGn(size_t alignment, size_t bytes) {
             rs = bytes;
 
         memctl_t *ctl = (memctl_t *)mEMALIGn(alignment, rs + (BUFFER_SIZE * 2));
+        if(!ctl) {
+            if(MALLOC_POSTACTION != 0) {
+            }
+
+            return NULL;
+        }
         memset(ctl, 0, BUFFER_SIZE);
         ctl->magic = BLOCK_MAGIC;
         ctl->size = bytes;
@@ -2070,6 +2082,12 @@ Void_t *public_cALLOc(size_t n, size_t elem_size) {
             rs = bytes;
 
         memctl_t *ctl = (memctl_t *)mALLOc(rs + (BUFFER_SIZE * 2));
+        if(!ctl) {
+            if(MALLOC_POSTACTION != 0) {
+            }
+
+            return NULL;
+        }
         memset(ctl, 0, BUFFER_SIZE);
         ctl->magic = BLOCK_MAGIC;
         ctl->size = bytes;
