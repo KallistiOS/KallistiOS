@@ -191,9 +191,7 @@ int genwait_wake_thd(const void *obj, kthread_t *thd, int err) {
 void genwait_check_timeouts(uint64_t tm) {
     kthread_t   *t;
 
-    t = tq_next();
-
-    while(t) {
+    while((t = tq_next())) {
         /* If the next timeout is beyond our current time, then
            forget about it. */
         if(t->wait_timeout > tm)
@@ -205,9 +203,6 @@ void genwait_check_timeouts(uint64_t tm) {
 
         /* Re-activate it */
         genwait_unqueue(t);
-
-        /* Get the next one */
-        t = tq_next();
     }
 }
 
