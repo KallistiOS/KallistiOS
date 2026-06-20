@@ -106,7 +106,17 @@ int genwait_wait(void *obj, const char *mesg, unsigned int timeout) {
 }
 
 /* Removes a thread from its wait queue; assumes ints are disabled. */
-static void __nonnull_all genwait_unqueue(kthread_t *thd) {
+static void __nonnull_all genwait_unqueue(kthread_t *thd, int err) {
+
+    /* Set the wake return value */
+    if(err) {
+        CONTEXT_RET(thd->context) = -1;
+        thd->thd_errno = err;
+    }
+    else {
+        CONTEXT_RET(thd->context) = 0;
+    }
+
     /* Remove it from the queue */
     TAILQ_REMOVE(&slpque[LOOKUP(thd->wait_obj)], thd, thdq);
 
@@ -140,16 +150,7 @@ static int genwait_wake_thd_cnt(const void *obj, int cntmax, kthread_t *thd, int
         /* Is this thread a match? */
         if(t->wait_obj == obj && (!thd || t == thd)) {
             /* Yes, remove it from the wait queue */
-            genwait_unqueue(t);
-
-            /* Set the wake return value */
-            if(err) {
-                CONTEXT_RET(t->context) = -1;
-                t->thd_errno = err;
-            }
-            else {
-                CONTEXT_RET(t->context) = 0;
-            }
+            genwait_unqueue(t, err);
 
             /* Check to see if we've filled our quota */
             if(cntmax > 0) {
@@ -197,12 +198,8 @@ void genwait_check_timeouts(uint64_t tm) {
         if(t->wait_timeout > tm)
             return;
 
-        /* Set an error code */
-        t->thd_errno = EAGAIN;  /* This is fairly close */
-        CONTEXT_RET(t->context) = -1;
-
-        /* Re-activate it */
-        genwait_unqueue(t);
+        /* Re-activate it with an error code */
+        genwait_unqueue(t, EAGAIN);
     }
 }
 
