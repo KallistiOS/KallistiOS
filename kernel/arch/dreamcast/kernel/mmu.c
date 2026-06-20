@@ -234,6 +234,8 @@ static void mmu_page_map_single(mmucontext_t *context,
 
     if(sub == NULL) {
         sub = (mmusubcontext_t *)malloc(sizeof(mmusubcontext_t));
+        if(sub == NULL)
+            return;
 
         for(i = 0; i < MMU_SUB_PAGES; i++)
             sub->page[i].valid = 0;
