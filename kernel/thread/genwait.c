@@ -107,23 +107,21 @@ int genwait_wait(void *obj, const char *mesg, unsigned int timeout) {
 
 /* Removes a thread from its wait queue; assumes ints are disabled. */
 static void __nonnull_all genwait_unqueue(kthread_t *thd) {
-    if(thd->wait_obj) {
-        /* Remove it from the queue */
-        TAILQ_REMOVE(&slpque[LOOKUP(thd->wait_obj)], thd, thdq);
+    /* Remove it from the queue */
+    TAILQ_REMOVE(&slpque[LOOKUP(thd->wait_obj)], thd, thdq);
 
-        /* Also remove it from the timer queue if applicable */
-        if(thd->wait_timeout)
-            tq_remove(thd);
+    /* Also remove it from the timer queue if applicable */
+    if(thd->wait_timeout)
+        tq_remove(thd);
 
-        /* Clean up wait stuff */
-        thd->wait_obj = NULL;
-        thd->wait_msg = NULL;
-        thd->wait_timeout = 0;
+    /* Clean up wait stuff */
+    thd->wait_obj = NULL;
+    thd->wait_msg = NULL;
+    thd->wait_timeout = 0;
 
-        /* Make it runnable again */
-        thd->state = STATE_READY;
-        thd_add_to_runnable(thd, 0);
-    }
+    /* Make it runnable again */
+    thd->state = STATE_READY;
+    thd_add_to_runnable(thd, 0);
 }
 
 static int genwait_wake_thd_cnt(const void *obj, int cntmax, kthread_t *thd, int err) {
