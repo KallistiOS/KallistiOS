@@ -135,18 +135,14 @@ static void __nonnull_all genwait_unqueue(kthread_t *thd, int err) {
 }
 
 static int genwait_wake_thd_cnt(const void *obj, int cntmax, kthread_t *thd, int err) {
-    kthread_t       * t, * nt;
-    struct slpquehead   * qp;
+    kthread_t       *t, *nt;
     int         cnt = 0;
 
     /* Twiddle interrupt state */
     irq_disable_scoped();
 
-    /* Find the queue */
-    qp = &slpque[LOOKUP(obj)];
-
     /* Go through and find any matching entries */
-    TAILQ_FOREACH_SAFE(t, qp, thdq, nt) {
+    TAILQ_FOREACH_SAFE(t, &slpque[LOOKUP(obj)], thdq, nt) {
         /* Is this thread a match? */
         if(t->wait_obj == obj && (!thd || t == thd)) {
             /* Yes, remove it from the wait queue */
@@ -204,9 +200,7 @@ void genwait_check_timeouts(uint64_t tm) {
 }
 
 uint64_t genwait_next_timeout(void) {
-    kthread_t *t;
-
-    t = tq_next();
+    kthread_t *t = tq_next();
 
     if(t == NULL)
         return 0;
@@ -215,9 +209,7 @@ uint64_t genwait_next_timeout(void) {
 }
 
 int genwait_init(void) {
-    int i;
-
-    for(i = 0; i < TABLESIZE; i++)
+    for(size_t i = 0; i < TABLESIZE; i++)
         TAILQ_INIT(&slpque[i]);
 
     TAILQ_INIT(&timer_queue);
