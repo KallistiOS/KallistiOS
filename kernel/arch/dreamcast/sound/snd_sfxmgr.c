@@ -507,6 +507,9 @@ sfxhnd_t snd_sfx_load_fd(file_t fd, size_t len, uint32_t rate, uint16_t bitsize,
     if(read_len > 0) {
         tmp_buff = aligned_alloc(32, read_len);
 
+        if(!tmp_buff)
+            goto err_occurred;
+
         if(fs_read(fd, tmp_buff, read_len) <= 0) {
             goto err_occurred;
         }
@@ -664,6 +667,8 @@ sfxhnd_t snd_sfx_load_raw_buf(char *buf, size_t len, uint32_t rate, uint16_t bit
     read_len = chan_len;
     if(read_len > 0) {
         tmp_buff = aligned_alloc(32, read_len);
+        if(!tmp_buff)
+            goto err_occurred;
         memcpy(tmp_buff, buf, read_len);
         bufidx += read_len;
 
