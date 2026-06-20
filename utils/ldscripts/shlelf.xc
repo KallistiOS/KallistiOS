@@ -161,13 +161,21 @@ SECTIONS
   }
   .sbss2          : { *(.sbss2 .sbss2.* .gnu.linkonce.sb2.*) }
   .eh_frame_hdr : { *(.eh_frame_hdr) }
-  .eh_frame       : ONLY_IF_RO { KEEP (*(.eh_frame)) }
+  .eh_frame       : ONLY_IF_RO {
+    KEEP (*crtbegin.o(.eh_frame))
+    KEEP (*(EXCLUDE_FILE (*crtend.o) .eh_frame))
+    KEEP (*crtend.o(.eh_frame))
+  }
   .gcc_except_table   : ONLY_IF_RO { *(.gcc_except_table .gcc_except_table.*) }
   /* Adjust the address for the data segment.  We want to adjust up to
      the same address within the page on the next page up.  */
   . = ALIGN(128) + (. & (128 - 1));
   /* Exception handling  */
-  .eh_frame       : ONLY_IF_RW { KEEP (*(.eh_frame)) }
+  .eh_frame       : ONLY_IF_RW {
+    KEEP (*crtbegin.o(.eh_frame))
+    KEEP (*(EXCLUDE_FILE (*crtend.o) .eh_frame))
+    KEEP (*crtend.o(.eh_frame))
+  }
   .gcc_except_table   : ONLY_IF_RW { *(.gcc_except_table .gcc_except_table.*) }
   /* Thread Local Storage sections  */
   .tdata	  :
