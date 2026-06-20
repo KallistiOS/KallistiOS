@@ -1795,10 +1795,7 @@ Void_t *public_mALLOc(size_t bytes) {
         uint32_t rv = arch_get_ret_addr(), *nt1, *nt2, i, rs;
         memctl_t *ctl;
 
-        if(bytes & 31)
-            rs = (bytes & ~31) + 32;
-        else
-            rs = bytes;
+        rs = __align_up(bytes, 32);
 
         ctl = (memctl_t *)mALLOc(rs + (BUFFER_SIZE * 2));
         if(!ctl) {
@@ -1930,10 +1927,7 @@ Void_t *public_rEALLOc(Void_t *m, size_t bytes) {
             ctl = NULL;
 
         if(!dmg) {
-            if(bytes & 31)
-                rs = (bytes & ~31) + 32;
-            else
-                rs = bytes;
+            rs = __align_up(bytes, 32);
 
             ctl = (memctl_t *)rEALLOc(ctl, rs + (BUFFER_SIZE * 2));
 
@@ -2001,11 +1995,8 @@ Void_t *public_mEMALIGn(size_t alignment, size_t bytes) {
     }
 
     if(__is_defined(KM_DBG)) {
-        uint32_t rv = arch_get_ret_addr(), rs, *nt1, *nt2, i;
-        if(bytes & 31)
-            rs = (bytes & ~31) + 32;
-        else
-            rs = bytes;
+        uint32_t rv = arch_get_ret_addr(), *nt1, *nt2, i;
+        uint32_t rs = __align_up(bytes, 32);
 
         memctl_t *ctl = (memctl_t *)mEMALIGn(alignment, rs + (BUFFER_SIZE * 2));
         if(!ctl) {
@@ -2073,13 +2064,9 @@ Void_t *public_cALLOc(size_t n, size_t elem_size) {
     }
 
     if(__is_defined(KM_DBG)) {
-        uint32_t rv = arch_get_ret_addr(), *nt1, *nt2, i, rs;
+        uint32_t rv = arch_get_ret_addr(), *nt1, *nt2, i;
         size_t bytes = n * elem_size;
-
-        if(bytes & 31)
-            rs = (bytes & ~31) + 32;
-        else
-            rs = bytes;
+        uint32_t rs = __align_up(bytes, 32);
 
         memctl_t *ctl = (memctl_t *)mALLOc(rs + (BUFFER_SIZE * 2));
         if(!ctl) {
