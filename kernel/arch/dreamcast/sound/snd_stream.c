@@ -172,6 +172,8 @@ void snd_stream_filter_add(snd_stream_hnd_t hnd, snd_stream_filter_t filtfunc, v
     CHECK_HND(hnd);
 
     f = malloc(sizeof(filter_t));
+    assert(f != NULL);
+
     f->func = filtfunc;
     f->data = obj;
     TAILQ_INSERT_TAIL(&streams[hnd].filters, f, lent);
