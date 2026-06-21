@@ -904,6 +904,8 @@ int fs_stat(const char *path, struct stat *st, int flag) {
         /* no vfs->stat - handle stat() on the mount folder */
         *st = (struct stat) {
             .st_mode = S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO,
+            .st_size = -1,
+            .st_nlink = 2
         };
         return 0;
     }
