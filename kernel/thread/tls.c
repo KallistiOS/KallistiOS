@@ -73,7 +73,8 @@ int kthread_key_create(kthread_key_t *key, void (*destructor)(void *)) {
     kthread_tls_dest_t *dest;
 
     if(irq_inside_int() &&
-       (spinlock_is_locked(&mutex) || !malloc_irq_safe())) {
+       (spinlock_is_locked(&mutex) ||
+       (destructor && !malloc_irq_safe()))) {
         errno = EPERM;
         return -1;
     }
@@ -122,7 +123,8 @@ int kthread_setspecific(kthread_key_t key, const void *value) {
     kthread_t *cur = thd_get_current();
     kthread_tls_kv_t *i;
 
-    if(irq_inside_int() && spinlock_is_locked(&mutex)) {
+    if(irq_inside_int() &&
+       (spinlock_is_locked(&mutex) || !malloc_irq_safe())) {
         errno = EPERM;
         return -1;
     }

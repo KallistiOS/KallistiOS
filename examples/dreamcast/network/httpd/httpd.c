@@ -244,7 +244,7 @@ void *client_thread(void *p) {
     http_state_t * hs = (http_state_t *)p;
     char * buf, * ext;
     const char * ct;
-    file_t f = -1;
+    file_t f = FILEHND_INVALID;
     int r, o, cnt;
 
     printf("httpd: client thread started, sock %d\n", hs->socket);
@@ -260,13 +260,13 @@ void *client_thread(void *p) {
     // Is it a directory or a file?
     f = fs_open(buf, O_RDONLY | O_DIR);
 
-    if(f >= 0) {
+    if(f != FILEHND_INVALID) {
         do_dirlist(buf, hs, f);
     }
     else {
         f = fs_open(buf, O_RDONLY);
 
-        if(f < 0) {
+        if(f == FILEHND_INVALID) {
             if(send_error(hs, 404, "File not found or unreadable") < 0)
                 printf("Error sending 404\n");
             goto out;
@@ -319,7 +319,7 @@ out:
     close(hs->socket);
     st_destroy(hs);
 
-    if(f >= 0)
+    if(f != FILEHND_INVALID)
         fs_close(f);
 
     return NULL;
