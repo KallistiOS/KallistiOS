@@ -48,15 +48,17 @@
     <div class="speed-test-container">
         <h2>Dreamcast Network Speed Test</h2>
         <div class="speed-text" id="download-speed">Download: -- MB/s</div>
-        <div class="speed-text" id="upload-speed">Upload: -- KB/s</div>
+        <div class="speed-text" id="upload-speed">Upload: -- MB/s</div>
         <div class="test-type" id="test-status">Ready</div>
         <button onclick="startTest()">Start Test</button>
     </div>
 
     <script>
-        const downloadUrl = '/download-test?size=1048576'; // 1 MB
+        const DOWNLOAD_SIZE = 2 * 1024 * 1024; // 2 MB
+        const UPLOAD_SIZE   = 2 * 1024 * 1024; // 2 MB
+        const downloadUrl = `/download-test?size=${DOWNLOAD_SIZE}`;
         const uploadUrl = '/upload-test';
-        const numRuns = 5;
+        const numRuns = 3;
 
         async function measureDownloadSpeed() {
             const startTime = Date.now();
@@ -64,20 +66,18 @@
             const data = await response.blob();
             const endTime = Date.now();
             const duration = (endTime - startTime) / 1000; // time in seconds
-            const fileSize = data.size / (1024 * 1024); // size in MB
-            const speed = fileSize / duration; // speed in MB/s
-            return speed;
+            const sizeMB = data.size / (1024 * 1024);
+            return sizeMB / duration; // speed in MB/s
         }
 
         async function measureUploadSpeed() {
-            const data = new ArrayBuffer(10 * 1024); // 10 KB
+            const data = new ArrayBuffer(UPLOAD_SIZE);
             const startTime = Date.now();
             await fetch(uploadUrl, { method: 'POST', body: data });
             const endTime = Date.now();
             const duration = (endTime - startTime) / 1000; // time in seconds
-            const fileSize = data.byteLength / 1024; // size in KB
-            const speed = fileSize / duration; // speed in KB/s
-            return speed;
+            const sizeMB = data.byteLength / (1024 * 1024);
+            return sizeMB / duration; // speed in MB/s
         }
 
         async function runTests() {
@@ -98,18 +98,18 @@
                 document.getElementById('test-status').textContent = `Upload test ${i + 1}/${numRuns}`;
                 const uploadSpeed = await measureUploadSpeed();
                 uploadTotal += uploadSpeed;
-                console.log(`Upload test ${i + 1}: ${uploadSpeed.toFixed(2)} KB/s`);
+                console.log(`Upload test ${i + 1}: ${uploadSpeed.toFixed(2)} MB/s`);
             }
-            
+
             const avgUpload = (uploadTotal / numRuns).toFixed(2);
-            document.getElementById('upload-speed').textContent = `Upload: ${avgUpload} KB/s`;
+            document.getElementById('upload-speed').textContent = `Upload: ${avgUpload} MB/s`;
 
             document.getElementById('test-status').textContent = 'Test complete';
         }
 
         async function startTest() {
             document.getElementById('download-speed').textContent = 'Download: -- MB/s';
-            document.getElementById('upload-speed').textContent = 'Upload: -- KB/s';
+            document.getElementById('upload-speed').textContent = 'Upload: -- MB/s';
             document.getElementById('test-status').textContent = 'Starting tests...';
             await runTests();
         }
