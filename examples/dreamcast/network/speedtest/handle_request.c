@@ -29,7 +29,7 @@ bool prefix_match(const char *path, const char *pattern);
 int send_ok(http_state_t *h, const char *ct);
 void send_code(int socket, uint16_t code, const char *message);
 
-#define BUFSIZE 1024
+#define BUFSIZE 4096
 #define REQUEST_LINE_SIZE 160
 #define HEADER_BUF_SIZE  512
 
@@ -37,7 +37,7 @@ void *handle_request(void *p) {
     char request_line[REQUEST_LINE_SIZE] = {0};
     char *buf_ptr = request_line;
     char *path_end;
-    size_t total_bytes = 0;
+    ssize_t total_bytes = 0;
     http_state_t *hr = (http_state_t *)p;
 
     /* Read the max we expect the request line to be */
@@ -70,8 +70,6 @@ void *handle_request(void *p) {
     hr->path = buf_ptr;
     buf_ptr = path_end + 1;
 
-    printf("%s\n", hr->path);
-
     if(hr->method == METHOD_POST) {
         char *content_length_key = "Content-Length: ";
         char *cl_key_ptr = content_length_key;
@@ -85,8 +83,6 @@ void *handle_request(void *p) {
         char *buf_start = request_line;
         bool got_content_length = false;
         size_t bytes_left = total_bytes - (buf_ptr - buf_start);
-
-        printf("RL: %s\n", buf_ptr);
 
         /* Look for Content-Length header(optional) and start of the body */
         while(true) {
@@ -237,7 +233,9 @@ done_parsing:
     else { /* POST */
         if(exact_match(hr->path, "/upload-test")) {
             while(hr->rem_content_length) {
-                total_bytes = recv(hr->socket, response_buf, HEADER_BUF_SIZE - 1, MSG_NONE);
+                total_bytes = recv(hr->socket, response_buf, BUFSIZE, MSG_NONE);
+                if(total_bytes <= 0)
+                    break;
 
                 hr->rem_content_length -= total_bytes;
             }
