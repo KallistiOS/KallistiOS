@@ -53,6 +53,9 @@ int main(int argc, char **argv) {
             return 0;
 
         MAPLE_FOREACH_END()
+
+        /* Poll the controller once per frame. */
+        thd_sleep(17);
     }
 
     return 0;
