@@ -1278,13 +1278,14 @@ static ssize_t net_tcp_recvfrom(net_socket_t *hnd, void *buffer, size_t length,
         sock->data.rcv.wnd += size;
         sock->data.rcvbuf_cur_sz -= size;
 
-        /* BUG FIX: When the receive window was zero, the sender has
-           entered TCP persist mode (zero-window probing). We must send
-           a window-update ACK so it knows the window has reopened.
-           Without this, the sender never learns and the connection
-           deadlocks permanently. */
-        if(old_wnd == 0 && sock->data.rcv.wnd > 0) {
+        /* Send a window-update ACK once the read has reopened the window,
+           so the sender doesn't stall waiting for the next delayed ACK.
+           Fire when it reopens from zero (sender in TCP persist mode) or
+           by at least one MSS (SWS avoidance). */
+        if((old_wnd == 0 && sock->data.rcv.wnd > 0) ||
+                sock->data.rcv.wnd >= old_wnd + sock->data.snd.mss) {
             tcp_send_ack(sock);
+            sock->data.ack_pending = 0;
         }
         /* Flush any pending delayed ACK now that the app has read.
            This gets the ACK out immediately instead of waiting up to
