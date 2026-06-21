@@ -838,6 +838,16 @@ int fs_stat(const char *path, struct stat *st, int flag) {
     if(!fs_normalize_path(path, fullpath))
         return -1;
 
+    /* The VFS root has no backing handler so stat it directly as a directory */
+    if(!strcmp(fullpath, "/")) {
+        *st = (struct stat) {
+            .st_mode = S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO,
+            .st_size = -1,
+            .st_nlink = 2
+        };
+        return 0;
+    }
+
     /* Look for the handler */
     vfs = fs_verify_handler(fullpath);
 
@@ -895,8 +905,13 @@ int fs_fstat(file_t fd, struct stat *st) {
         return -1;
     }
 
+    /* The VFS root has no backing handler so stat it directly as a directory */
     if(h->handler == NULL) {
-        h->hnd = (void *)0;
+        *st = (struct stat) {
+            .st_mode = S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO,
+            .st_size = -1,
+            .st_nlink = 2
+        };
         return 0;
     }
 
