@@ -56,10 +56,6 @@ void *server_thread(void *p) {
             goto server_cleanup;
         }
 
-        uint32_t new_buf_sz = 65535;
-        setsockopt(hr->socket, SOL_SOCKET, SO_SNDBUF, &new_buf_sz, sizeof(new_buf_sz));
-        setsockopt(hr->socket, SOL_SOCKET, SO_RCVBUF, &new_buf_sz, sizeof(new_buf_sz));
-
         /* Create thread for new client */
         thd_create(DETACHED_THREAD, handle_request, hr);
     }
