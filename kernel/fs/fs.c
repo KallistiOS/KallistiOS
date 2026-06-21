@@ -821,12 +821,12 @@ ssize_t fs_readlink(const char *path, char *buf, size_t bufsize) {
     }
 }
 
-int fs_stat(const char *path, struct stat *buf, int flag) {
+int fs_stat(const char *path, struct stat *st, int flag) {
     vfs_handler_t *vfs;
     char fullpath[PATH_MAX];
 
     /* Verify the input... */
-    if(!buf || !path) {
+    if(!st || !path) {
         errno = EFAULT;
         return -1;
     }
@@ -847,12 +847,12 @@ int fs_stat(const char *path, struct stat *buf, int flag) {
     }
 
     if(vfs->stat) {
-        return vfs->stat(vfs, fullpath + strlen(vfs->nmmgr.pathname), buf,
+        return vfs->stat(vfs, fullpath + strlen(vfs->nmmgr.pathname), st,
                          flag);
     }
     else if(!strcmp(path, vfs->nmmgr.pathname)) {
         /* no vfs->stat - handle stat() on the mount folder */
-        *buf = (struct stat){
+        *st = (struct stat) {
             .st_mode = S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO,
         };
         return 0;
