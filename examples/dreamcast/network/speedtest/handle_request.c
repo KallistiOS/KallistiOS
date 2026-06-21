@@ -9,13 +9,13 @@
 #include "speedtest.h"
 
 /*
-   This file defines the handle_request function, which processes HTTP requests 
-   received by the speed test server. It parses the request, determines the HTTP 
-   method (GET or POST), and routes the request to the appropriate handler based 
-   on the requested path. It supports GET requests to serve files such as 
-   index.html and handles download and upload test endpoints to measure network 
+   This file defines the handle_request function, which processes HTTP requests
+   received by the speed test server. It parses the request, determines the HTTP
+   method (GET or POST), and routes the request to the appropriate handler based
+   on the requested path. It supports GET requests to serve files such as
+   index.html and handles download and upload test endpoints to measure network
    speed.
- 
+
    Key paths:
    - "/": serves the speed test HTML page (index.html).
    - "/download-test?size=": initiates a download test of the requested size.
@@ -105,7 +105,7 @@ find_length:
                             if(found) {
                                 buf_ptr = found;
                                 got_content_length = true;
-                                
+
                                 goto find_body;
                             }
                         }
@@ -116,7 +116,7 @@ find_length:
                             buf_ptr--;
                             bytes_left++;
                             /* Fall through to find_body */
-                        } 
+                        }
                         else /* bytes_left == 0 */
                             goto refresh_buffer;
                     }
@@ -131,7 +131,7 @@ find_body:
                         hr->read_content_length = total_bytes - (hr->body - buf_start);
                         if(got_content_length)
                             hr->rem_content_length -= hr->read_content_length;
-                        
+
                         goto done_parsing;
                     }
                     else if(bytes_left > 0) /* Start over */ {
