@@ -17,6 +17,7 @@
 
 #include <kos/init.h>
 #include <kos/dbgio.h>
+#include <kos/net.h>
 
 #include <dc/video.h>
 #include <dc/biosfont.h>
@@ -30,7 +31,18 @@ KOS_INIT_FLAGS(INIT_DEFAULT | INIT_NET);
 int main(int argc, char **argv) {
     vid_clear(23,86,155);
     bfont_draw_str(vram_s + 20 * 640 + 20, 640, 0, "SpeedTest Server active");
-    bfont_draw_str(vram_s + 44 * 640 + 20, 640, 0, "Press START to shutdown.");
+
+    /* Show the URL the user should open in their browser. */
+    if(net_default_dev) {
+        uint8_t *ip = net_default_dev->ip_addr;
+        bfont_draw_str_fmt(vram_s + 44 * 640 + 20, 640, 0,
+                           "Open http://%d.%d.%d.%d/ in a web browser",
+                           ip[0], ip[1], ip[2], ip[3]);
+    }
+    else {
+        bfont_draw_str(vram_s + 44 * 640 + 20, 640, 0, "No network device found");
+    }
+    bfont_draw_str(vram_s + 68 * 640 + 20, 640, 0, "Press START to shutdown.");
 
     thd_create(DETACHED_THREAD, server_thread, NULL);
 
