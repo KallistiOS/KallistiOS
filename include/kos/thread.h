@@ -667,11 +667,11 @@ struct _reent *thd_get_reent(kthread_t *thd);
     \relatesalso kthread_t
 
     Returns the amount of active CPU time the thread has consumed in
-    nanoseconds.
+    milliseconds.
 
     \param thd          The thead to retrieve the CPU time for.
 
-    \retval             Total utilized CPU time in nanoseconds.
+    \retval             Total utilized CPU time in milliseconds.
 */
 uint64_t thd_get_cpu_time(kthread_t *thd);
 
@@ -679,9 +679,9 @@ uint64_t thd_get_cpu_time(kthread_t *thd);
     \relatesalso kthread_t
 
     Returns the amount of active CPU time all threads have consumed in
-    nanoseconds.
+    milliseconds.
 
-    \retval             Total utilized CPU time in nanoseconds.
+    \retval             Total utilized CPU time in milliseconds.
 */
 uint64_t thd_get_total_cpu_time(void);
 
