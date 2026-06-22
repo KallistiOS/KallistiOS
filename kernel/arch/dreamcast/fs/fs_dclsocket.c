@@ -576,6 +576,30 @@ static int dcls_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
     return -1;
 }
 
+static int dcls_rewinddir(void *hnd) {
+    uint32_t fd = (uint32_t) hnd;
+    command_int_t *cmd = (command_int_t *)pktbuf;
+
+    if(fd < 100) {
+        errno = EBADF;
+        return -1;
+    }
+
+    if(mutex_lock_irqsafe(&mutex))
+        return -1;
+
+    memcpy(cmd->id, "DC21", 4);
+    cmd->value0 = htonl(fd);
+
+    send(dcls_socket, cmd, sizeof(command_int_t), 0);
+
+    dcls_recv_loop();
+
+    mutex_unlock(&mutex);
+
+    return retval;
+}
+
 /* dbgio interface */
 static int dcls_detected(void) {
     return initted > 0;
@@ -677,7 +701,7 @@ static vfs_handler_t vh = {
     NULL,               /* tell64 */
     NULL,               /* total64 */
     NULL,               /* readlink */
-    NULL,               /* rewinddir */
+    dcls_rewinddir,     /* rewinddir */
     NULL                /* fstat */
 };
 
