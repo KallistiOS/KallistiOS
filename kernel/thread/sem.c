@@ -51,8 +51,6 @@ int sem_destroy(semaphore_t *sm) {
 
 /* Wait on a semaphore, with timeout (in milliseconds) */
 int sem_wait_timed(semaphore_t *sm, unsigned int timeout) {
-    int rv = 0;
-
     /* Make sure we're not inside an interrupt */
     assert(!irq_inside_int()); /* Only usable outside IRQ handlers */
     assert(sm->initialized == 1);
@@ -65,7 +63,7 @@ int sem_wait_timed(semaphore_t *sm, unsigned int timeout) {
     /* If there's enough count left, then let the thread proceed */
     if(sm->count < 0) {
         /* Block us until we're signaled */
-        rv = genwait_wait(sm, timeout ? "sem_wait_timed" : "sem_wait", timeout);
+        int rv = genwait_wait(sm, timeout ? "sem_wait_timed" : "sem_wait", timeout);
 
         /* Did we fail to get the lock? */
         if(rv < 0) {
