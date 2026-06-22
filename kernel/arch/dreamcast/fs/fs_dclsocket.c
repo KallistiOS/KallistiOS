@@ -40,8 +40,12 @@
 #include <dc/fs_dcload.h>
 #include <dc/dcload.h>
 
-#define DCLOAD_PORT 31313
+#define DCLOAD_PORT 53535
+#define DCLOAD_PACKET_SIZE 1440
 #define NAME "dcload-ip over KOS sockets"
+
+/* Number of DCLOAD_PACKET_SIZE chunks needed to cover n bytes. */
+#define DCLOAD_PACKETS(n)  (((n) + DCLOAD_PACKET_SIZE - 1) / DCLOAD_PACKET_SIZE)
 
 typedef struct {
     unsigned char id[4];
@@ -74,7 +78,7 @@ static int escape = 0;
 static int retval = 0;
 static mutex_t mutex;
 static char *dcload_path = NULL;
-static uint8_t pktbuf[1024 + sizeof(command_t)];
+static uint8_t pktbuf[DCLOAD_PACKET_SIZE + sizeof(command_t)];
 
 static int dcls_socket = -1;
 
@@ -87,7 +91,7 @@ static void dcls_handle_lbin(command_t *cmd) {
 }
 
 static void dcls_handle_pbin(command_t *cmd) {
-    int index = (ntohl(cmd->address) - bin_info.addr) >> 10;
+    int index = (ntohl(cmd->address) - bin_info.addr) / DCLOAD_PACKET_SIZE;
 
     memcpy((uint8_t *)ntohl(cmd->address), cmd->data, ntohl(cmd->size));
     bin_info.map[index] = 1;
@@ -96,23 +100,23 @@ static void dcls_handle_pbin(command_t *cmd) {
 static void dcls_handle_dbin(command_t *cmd) {
     unsigned int i;
 
-    for(i = 0; i < (bin_info.size + 1023) / 1024; ++i) {
+    for(i = 0; i < DCLOAD_PACKETS(bin_info.size); ++i) {
         if(!bin_info.map[i])
             break;
     }
 
-    if(i == (bin_info.size + 1023) / 1024) {
+    if(i == DCLOAD_PACKETS(bin_info.size)) {
         cmd->address = 0;
         cmd->size = 0;
     }
     else {
-        cmd->address = htonl(bin_info.addr + i * 1024);
+        cmd->address = htonl(bin_info.addr + i * DCLOAD_PACKET_SIZE);
 
-        if(i == (bin_info.size + 1023) / 1024 - 1) {
-            cmd->size = htonl(bin_info.size % 1024);
+        if(i == DCLOAD_PACKETS(bin_info.size) - 1) {
+            cmd->size = htonl(bin_info.size % DCLOAD_PACKET_SIZE);
         }
         else {
-            cmd->size = htonl(1024);
+            cmd->size = htonl(DCLOAD_PACKET_SIZE);
         }
     }
 
@@ -127,12 +131,12 @@ static void dcls_handle_sbin(command_t *cmd) {
 
     left = ntohl(cmd->size);
     ptr = (uint8_t *)ntohl(cmd->address);
-    count = (left + 1023) / 1024;
+    count = DCLOAD_PACKETS(left);
 
     memcpy(resp->id, "SBIN", 4);
 
     for(i = 0; i < count; ++i) {
-        size = left > 1024 ? 1024 : left;
+        size = left > DCLOAD_PACKET_SIZE ? DCLOAD_PACKET_SIZE : left;
         left -= size;
 
         resp->address = htonl((uint32_t)ptr);
