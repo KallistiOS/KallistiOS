@@ -90,22 +90,16 @@ uint32_t *sq_lock(void *dest) {
 }
 
 void sq_unlock(void) {
-    sq_state_t *tmp_state;
-    bool with_mmu;
-
     if(sq_mutex.count == 0) {
         dbglog(DBG_WARNING, "sq_unlock: Called without any lock\n");
         return;
     }
 
-    tmp_state = &sq_state_cache[sq_mutex.count - 1];
-
     /* If we aren't the last entry, set the regs back where they belong */
     if(sq_mutex.count - 1) {
-        tmp_state = &sq_state_cache[sq_mutex.count - 2];
-        with_mmu = mmu_enabled();
+        sq_state_t *tmp_state = &sq_state_cache[sq_mutex.count - 2];
 
-        if(with_mmu)
+        if(mmu_enabled())
             mmu_set_sq_addr((void *)tmp_state->dest);
         else
             SET_QACR_REGS(tmp_state->dest, tmp_state->dest);
