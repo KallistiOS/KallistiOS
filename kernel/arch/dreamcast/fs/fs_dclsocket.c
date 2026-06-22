@@ -35,6 +35,7 @@
 #include <kos/net.h>
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>
+#include <kos/regfield.h>
 
 #include <dc/fs_dclsocket.h>
 #include <dc/fs_dcload.h>
@@ -46,6 +47,10 @@
 
 /* Number of DCLOAD_PACKET_SIZE chunks needed to cover n bytes. */
 #define DCLOAD_PACKETS(n)  (((n) + DCLOAD_PACKET_SIZE - 1) / DCLOAD_PACKET_SIZE)
+
+/* PARTBIN receive map: one bit per chunk, sized to cover 16 MB of RAM. */
+#define DCLOAD_MAP_ENTRIES DCLOAD_PACKETS(16 * 1024 * 1024)
+#define DCLOAD_MAP_BYTES   (((DCLOAD_MAP_ENTRIES) + 7) / 8)
 
 typedef struct {
     unsigned char id[4];
@@ -69,7 +74,7 @@ typedef struct {
 static struct {
     unsigned int addr;
     unsigned int size;
-    unsigned char map[16384];
+    unsigned char map[DCLOAD_MAP_BYTES];
 } bin_info;
 
 extern int dcload_type;
@@ -82,10 +87,19 @@ static uint8_t pktbuf[DCLOAD_PACKET_SIZE + sizeof(command_t)];
 
 static int dcls_socket = -1;
 
+/* Mark / test receipt of chunk `index` in the PARTBIN map. */
+static inline void bin_map_set(unsigned int index) {
+    bin_info.map[index >> 3] |= BIT(index & 7);
+}
+
+static inline int bin_map_test(unsigned int index) {
+    return bin_info.map[index >> 3] & BIT(index & 7);
+}
+
 static void dcls_handle_lbin(command_t *cmd) {
     bin_info.addr = ntohl(cmd->address);
     bin_info.size = ntohl(cmd->size);
-    memset(bin_info.map, 0, 16384);
+    memset(bin_info.map, 0, DCLOAD_MAP_BYTES);
 
     send(dcls_socket, cmd, sizeof(command_t), 0);
 }
@@ -94,14 +108,16 @@ static void dcls_handle_pbin(command_t *cmd) {
     int index = (ntohl(cmd->address) - bin_info.addr) / DCLOAD_PACKET_SIZE;
 
     memcpy((uint8_t *)ntohl(cmd->address), cmd->data, ntohl(cmd->size));
-    bin_info.map[index] = 1;
+
+    if(index >= 0 && index < DCLOAD_MAP_ENTRIES)
+        bin_map_set(index);
 }
 
 static void dcls_handle_dbin(command_t *cmd) {
     unsigned int i;
 
     for(i = 0; i < DCLOAD_PACKETS(bin_info.size); ++i) {
-        if(!bin_info.map[i])
+        if(!bin_map_test(i))
             break;
     }
 
