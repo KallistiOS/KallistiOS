@@ -537,8 +537,20 @@ static int dcls_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
                      int flag) {
     command_t *cmd = (command_t *)pktbuf;
     dcload_stat_t filestat = { 0 };
+    size_t len = strlen(path);
 
     (void)flag;
+
+    /* Root directory '/pc' */
+    if(len == 0 || (len == 1 && *path == '/')) {
+        memset(st, 0, sizeof(struct stat));
+        st->st_dev = (dev_t)((uintptr_t)vfs);
+        st->st_mode = S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO;
+        st->st_size = -1;
+        st->st_nlink = 2;
+
+        return 0;
+    }
 
     if(mutex_lock_irqsafe(&mutex))
         return -1;
