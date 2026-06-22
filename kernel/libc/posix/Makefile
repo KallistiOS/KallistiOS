@@ -1,7 +1,7 @@
 # KallistiOS ##version##
 #
 # kernel/libc/posix/Makefile
-# Copyright (C) 2023 Falco Girgis
+# Copyright (C) 2023, 2026 Falco Girgis
 #
 
 #
@@ -11,6 +11,6 @@
 #
 
 CFLAGS += -std=gnu11
-OBJS = posix_memalign.o clock_gettime.o settimeofday.o sysconf.o
+OBJS = clock_gettime.o posix_timer.o posix_memalign.o settimeofday.o sysconf.o
 
 include $(KOS_BASE)/Makefile.prefab

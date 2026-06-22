@@ -2,7 +2,7 @@
 
    machine/time.h
    Copyright (C) 2023 Lawrence Sebald
-   Copyright (C) 2024 Falco Girgis
+   Copyright (C) 2024, 2026 Falco Girgis
 */
 
 /** \file    machine/time.h
@@ -14,10 +14,6 @@
     \remark
     This will probably go away at some point in the future, if/when Newlib gets
     an implementation of this function. But for now, it's here.
-
-    \todo
-    - Implement _POSIX_TIMERS, which requires POSIX signals back-end.
-    - Implement thread-specific CPU time
 
     \author Lawrence Sebald
     \author Falco Girgis
@@ -89,37 +85,6 @@ extern struct tm *localtime_r(const __time_t *timer, struct tm *timeptr);
 
 /* C23 added POSIX gmtime() for UTC broken-down time to a Unix timestamp. */
 extern __time_t timegm(struct tm *timeptr);
-
-#endif
-
-/* =========== Enable the following for POSIX POSIX.1b (1993) =========== */
-#if defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 199309L)
-
-/* We do not support POSIX timers!
-#ifndef _POSIX_TIMERS
-#define _POSIX_TIMERS 1
-#endif */
-
-#ifndef _POSIX_MONOTONIC_CLOCK
-#define _POSIX_MONOTONIC_CLOCK 1
-#endif
-
-#ifndef _POSIX_CPUTIME
-#define _POSIX_CPUTIME 1
-#endif
-
-#ifndef _POSIX_THREAD_CPUTIME
-#define _POSIX_THREAD_CPUTIME 1
-#endif
-
-/* Explicitly provided function declarations for POSIX clock API, since
-   getting them from Newlib requires supporting the rest of the _POSIX_TIMERS
-   API, which is not implemented yet. */
-extern int clock_settime(__clockid_t clock_id, const struct timespec *ts);
-extern int clock_gettime(__clockid_t clock_id, struct timespec *ts);
-extern int clock_getres(__clockid_t clock_id, struct timespec *res);
-
-extern int nanosleep(const struct timespec *req, struct timespec *rem);
 
 #endif
 
