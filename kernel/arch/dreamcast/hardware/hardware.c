@@ -101,11 +101,11 @@ void hardware_shutdown(void) {
             g2_dma_shutdown();
             spu_shutdown();
             vid_shutdown();
-            /* fallthru */
+            __fallthrough;
         case 1:
             vblank_shutdown();
             asic_shutdown();
-            /* fallthru */
+            __fallthrough;
         case 0:
             return;
     }
