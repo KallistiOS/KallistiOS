@@ -533,7 +533,7 @@ static int dcls_unlink(vfs_handler_t *vfs, const char *fn) {
     return retval;
 }
 
-static int dcls_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
+static int dcls_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
                      int flag) {
     command_t *cmd = (command_t *)pktbuf;
     dcload_stat_t filestat = { 0 };
@@ -546,27 +546,27 @@ static int dcls_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
     memcpy(cmd->id, "DC13", 4);
     cmd->address = htonl((uint32_t) &filestat);
     cmd->size = htonl(sizeof(dcload_stat_t));
-    strcpy((char *)(cmd->data), fn);
+    strcpy((char *)(cmd->data), path);
 
-    send(dcls_socket, cmd, sizeof(command_t) + strlen(fn) + 1, 0);
+    send(dcls_socket, cmd, sizeof(command_t) + strlen(path) + 1, 0);
 
     dcls_recv_loop();
 
     if(!retval) {
-        memset(rv, 0, sizeof(struct stat));
-        rv->st_dev = (dev_t)((uintptr_t)vfs);
-        rv->st_ino = filestat.st_ino;
-        rv->st_mode = filestat.st_mode;
-        rv->st_nlink = filestat.st_nlink;
-        rv->st_uid = filestat.st_uid;
-        rv->st_gid = filestat.st_gid;
-        rv->st_rdev = filestat.st_rdev;
-        rv->st_size = filestat.st_size;
-        rv->st_atime = filestat.atime;
-        rv->st_mtime = filestat.mtime;
-        rv->st_ctime = filestat.ctime;
-        rv->st_blksize = filestat.st_blksize;
-        rv->st_blocks = filestat.st_blocks;
+        memset(st, 0, sizeof(struct stat));
+        st->st_dev = (dev_t)((uintptr_t)vfs);
+        st->st_ino = filestat.st_ino;
+        st->st_mode = filestat.st_mode;
+        st->st_nlink = filestat.st_nlink;
+        st->st_uid = filestat.st_uid;
+        st->st_gid = filestat.st_gid;
+        st->st_rdev = filestat.st_rdev;
+        st->st_size = filestat.st_size;
+        st->st_atime = filestat.atime;
+        st->st_mtime = filestat.mtime;
+        st->st_ctime = filestat.ctime;
+        st->st_blksize = filestat.st_blksize;
+        st->st_blocks = filestat.st_blocks;
 
         mutex_unlock(&mutex);
         return 0;
