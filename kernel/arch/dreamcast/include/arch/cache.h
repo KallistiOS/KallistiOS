@@ -81,14 +81,19 @@ static inline void arch_dcache_alloc_line_with_value(void *src, uintptr_t value)
 }
 
 static inline void arch_dcache_alloc_line(void *src) {
-#if __GNUC__ <= 9
-    /* Avoid ICE on GCC 9 */
-    uint32_t r0 = 0;
-#else
-    register uint32_t r0 __asm__("r0");
-#endif
+    uintptr_t *ptr = (uintptr_t *)src;
 
-    arch_dcache_alloc_line_with_value(src, r0);
+    __asm__ ("movca.l r0, @%8\n\t"
+             : "=m"(ptr[0]),
+               "=m"(ptr[1]),
+               "=m"(ptr[2]),
+               "=m"(ptr[3]),
+               "=m"(ptr[4]),
+               "=m"(ptr[5]),
+               "=m"(ptr[6]),
+               "=m"(ptr[7])
+             : "r" (ptr)
+    );
 }
 
 static inline void arch_dcache_zero_alloc_line(void *src) {
