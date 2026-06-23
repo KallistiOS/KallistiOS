@@ -127,7 +127,7 @@ void arch_stk_setup(kthread_t *nt) {
 /* Do a stack trace from the current function; leave off the first n frames
    (i.e., in assert()). */
 void arch_stk_trace(int n) {
-    register uintptr_t sp asm("r15");
+    register uintptr_t sp __asm__("r15");
 
     arch_stk_trace_at(sp, n);
 }
