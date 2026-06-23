@@ -226,9 +226,9 @@ int8_t vid_check_cable(void) {
 /*-----------------------------------------------------------------------------*/
 void vid_set_mode(int dm, vid_pixel_mode_t pm) {
     vid_mode_t mode;
-    int i, ct, found, mb;
+    int i, found, mb;
 
-    ct = vid_check_cable();
+    int8_t ct = vid_check_cable();
 
     /* Remove the multi-buffering flag from the mode, if its present, and save
        the state of that flag. */
@@ -311,12 +311,10 @@ static const unsigned int vid_bpp_to_pvr_cfg2[] = {
 
 /*-----------------------------------------------------------------------------*/
 void vid_set_mode_ex(vid_mode_t *mode) {
-    uint16_t ct;
     uint32_t data;
 
-
     /* Verify cable type for video mode. */
-    ct = vid_check_cable();
+    int8_t ct = vid_check_cable();
 
     if(mode->cable_type != CT_ANY) {
         if(mode->cable_type != ct) {

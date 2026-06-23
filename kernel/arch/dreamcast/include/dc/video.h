@@ -165,7 +165,7 @@ typedef struct vid_mode {
     uint16_t  height;     /**< \brief Height of the display, in pixels */
     uint32_t  flags;      /**< \brief Combination of one or more VID_* flags */
 
-    int16_t   cable_type; /**< \brief Allowed cable type */
+    int8_t    cable_type; /**< \brief Allowed cable type */
     vid_pixel_mode_t  pm; /**< \brief Pixel mode */
 
     uint16_t  scanlines;  /**< \brief Number of scanlines */
