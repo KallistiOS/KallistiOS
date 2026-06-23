@@ -419,7 +419,13 @@ static size_t dcls_total(void *hnd) {
 }
 
 static dirent_t their_dir;
-static dirent_t our_dir;
+
+/* The host fills the readdir reply as a POSIX struct dirent, not a KOS
+   dirent_t, so receive it as one */
+static union {
+    struct dirent de;
+    char storage[sizeof(struct dirent) + NAME_MAX + 1];
+} our_dir;
 
 static const dirent_t *dcls_readdir(void *hnd) {
     uint32_t fd = (uint32_t) hnd;
@@ -435,25 +441,33 @@ static const dirent_t *dcls_readdir(void *hnd) {
 
     memcpy(cmd->id, "DC18", 4);
     cmd->value0 = htonl(fd);
-    cmd->value1 = htonl((uint32_t)(&our_dir));
-    cmd->value2 = htonl(sizeof(dirent_t));
+    cmd->value1 = htonl((uint32_t)(&our_dir.de));
+    cmd->value2 = htonl(sizeof(our_dir));
 
     send(dcls_socket, cmd, sizeof(command_3int_t), 0);
 
     dcls_recv_loop();
 
     if(retval) {
-        char fn[strlen(dcload_path) + strlen(our_dir.name) + 1];
         command_t *cmd2 = (command_t *)pktbuf;
         dcload_stat_t filestat;
 
-        strcpy(their_dir.name, our_dir.name);
+        /* Verify dcload won't overflow us */
+        if(strlen(our_dir.de.d_name) + 1 > NAME_MAX) {
+            mutex_unlock(&mutex);
+            errno = EOVERFLOW;
+            return NULL;
+        }
+
+        char fn[strlen(dcload_path) + strlen(our_dir.de.d_name) + 1];
+
+        strcpy(their_dir.name, our_dir.de.d_name);
         their_dir.size = 0;
         their_dir.time = 0;
         their_dir.attr = 0;
 
         strcpy(fn, dcload_path);
-        strcat(fn, our_dir.name);
+        strcat(fn, our_dir.de.d_name);
 
         memcpy(cmd2->id, "DC13", 4);
         cmd2->address = htonl((uint32_t) &filestat);
@@ -467,6 +481,7 @@ static const dirent_t *dcls_readdir(void *hnd) {
         if(!retval) {
             if(filestat.st_mode & S_IFDIR) {
                 their_dir.size = -1;
+                their_dir.attr = O_DIR;
             }
             else {
                 their_dir.size = filestat.st_size;
