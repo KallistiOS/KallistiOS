@@ -245,12 +245,12 @@ static void *dcls_open(struct vfs_handler *vfs, const char *fn, int mode) {
         if(fn[0] == '\0') {
             strcpy(realfn, "/");
         }
-        else    {
+        else {
             strcpy(realfn, fn);
         }
 
         memcpy(pktbuf, "DC16", 4);
-        strcpy((char *)(pktbuf + 4), fn);
+        strcpy((char *)(pktbuf + 4), realfn);
 
         send(dcls_socket, pktbuf, 5 + strlen(realfn), 0);
 
