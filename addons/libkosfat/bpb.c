@@ -191,7 +191,8 @@ int fat_read_boot(fat_superblock_t *sb, kos_blockdev_t *bd) {
     }
 
     /* Make sure it looks sane... */
-    if(bb.ebpb.fat16.boot_sig[0] != 0x55 || bb.ebpb.fat16.boot_sig[1] != 0xAA) {
+    if(bb.ebpb.fat16.boot_sig[0] != 0x55 || bb.ebpb.fat16.boot_sig[1] != 0xAA ||
+       bb.bpb.num_fats == 0) {
         return -EINVAL;
     }
 
