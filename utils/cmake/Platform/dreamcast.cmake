@@ -4,8 +4,9 @@
 include(Platform/Generic)
 set(CMAKE_EXECUTABLE_SUFFIX .elf)
 
+# Default CMake installations to install to the sysroot
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set(CMAKE_INSTALL_PREFIX "" CACHE PATH "Install prefix" FORCE)
+    set(CMAKE_INSTALL_PREFIX "${CMAKE_SYSROOT}" CACHE PATH "Install prefix" FORCE)
 endif()
 
 set(CMAKE_SYSTEM_VERSION 1)
