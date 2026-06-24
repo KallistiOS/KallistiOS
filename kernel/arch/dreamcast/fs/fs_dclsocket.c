@@ -52,6 +52,10 @@
 #define DCLOAD_MAP_ENTRIES DCLOAD_PACKETS(16 * 1024 * 1024)
 #define DCLOAD_MAP_BYTES   (((DCLOAD_MAP_ENTRIES) + 7) / 8)
 
+/* dc-tool hands back big handles for opendir() but small ones for files, so any
+   handle past this cutoff is a directory. */
+#define FS_DCLSOCKET_FD_DIR_THRESH 100
+
 typedef struct {
     unsigned char id[4];
     unsigned int address;
@@ -308,7 +312,7 @@ static int dcls_close(void *hnd) {
     if(mutex_lock_irqsafe(&mutex))
         return -1;
 
-    if(fd > 100) {
+    if(fd > FS_DCLSOCKET_FD_DIR_THRESH) {
         memcpy(cmd->id, "DC17", 4);
         cmd->value0 = htonl(fd);
 
@@ -431,7 +435,7 @@ static const dirent_t *dcls_readdir(void *hnd) {
     uint32_t fd = (uint32_t) hnd;
     command_3int_t *cmd = (command_3int_t *)pktbuf;
 
-    if(fd < 100) {
+    if(fd < FS_DCLSOCKET_FD_DIR_THRESH) {
         errno = EBADF;
         return NULL;
     }
@@ -607,7 +611,7 @@ static int dcls_rewinddir(void *hnd) {
     uint32_t fd = (uint32_t) hnd;
     command_int_t *cmd = (command_int_t *)pktbuf;
 
-    if(fd < 100) {
+    if(fd < FS_DCLSOCKET_FD_DIR_THRESH) {
         errno = EBADF;
         return -1;
     }
