@@ -30,7 +30,7 @@ static int dcload_syscall(dcload_cmd_t cmd, void *param1, void *param2, void *pa
 
     /* Ensure that the FIFO buffer is clear */
     /* XXX - Is this needed? It seems like something only for serial. */
-    while(FIFO_STATUS & FIFO_SH4)            ;
+    while(FIFO_STATUS & FIFO_SH4);
 
     /* Make the call */
     return syscall(cmd, param1, param2, param3);
