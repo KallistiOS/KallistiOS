@@ -3,6 +3,7 @@
    dc/maple.h
    Copyright (C) 2002 Megan Potter
    Copyright (C) 2015 Lawrence Sebald
+   Copyright (C) 2026 Ruslan Rostovtsev
 
    This new driver's design is based loosely on the LinuxDC maple
    bus driver.
@@ -32,6 +33,7 @@
 
     \author Megan Potter
     \author Lawrence Sebald
+    \author Ruslan Rostovtsev
 
     \see    dc/maple/controller.h
     \see    dc/maple/dreameye.h
@@ -87,12 +89,12 @@ __BEGIN_DECLS
     @{
 */
 #define MAPLE_BASE      0xa05f6c00          /**< \brief Maple register base */
-#define MAPLE_DMAADDR   (MAPLE_BASE+0x04)   /**< \brief DMA address register */
-#define MAPLE_RESET2    (MAPLE_BASE+0x10)   /**< \brief Reset register #2 */
+#define MAPLE_DMA_ADDR  (MAPLE_BASE+0x04)   /**< \brief DMA address register */
+#define MAPLE_DMA_TSEL  (MAPLE_BASE+0x10)   /**< \brief Maple DMA trigger select (bit 0) */
 #define MAPLE_ENABLE    (MAPLE_BASE+0x14)   /**< \brief Enable register */
 #define MAPLE_STATE     (MAPLE_BASE+0x18)   /**< \brief Status register */
 #define MAPLE_SPEED     (MAPLE_BASE+0x80)   /**< \brief Speed register */
-#define MAPLE_RESET1    (MAPLE_BASE+0x8c)   /**< \brief Reset register #1 */
+#define MAPLE_DMA_PROT  (MAPLE_BASE+0x8c)   /**< \brief Allowed DMA buffer address range */
 /** @} */
 
 /** \defgroup maple_reg_values      Register Values
@@ -104,19 +106,19 @@ __BEGIN_DECLS
 
     @{
 */
-#define MAPLE_RESET2_MAGIC      0               /**< \brief 2nd reset value */
+#define MAPLE_DMA_TSEL_SOFTWARE 0               /**< \brief DMA initiated by software */
+#define MAPLE_DMA_TSEL_VBLANK   1               /**< \brief DMA initiated at V-Blank */
 #define MAPLE_ENABLE_ENABLED    1               /**< \brief Enable Maple */
 #define MAPLE_ENABLE_DISABLED   0               /**< \brief Disable Maple */
 #define MAPLE_STATE_IDLE        0               /**< \brief Idle state */
 #define MAPLE_STATE_DMA         1               /**< \brief DMA in-progress */
-#define MAPLE_SPEED_2MBPS       0               /**< \brief 2Mbps bus speed */
+#define MAPLE_SPEED_1MBPS       0x0100          /**< \brief 1Mbps bus speed */
+#define MAPLE_SPEED_2MBPS       0x0000          /**< \brief 2Mbps bus speed */
+#define MAPLE_SPEED_4MBPS       0x0200          /**< \brief 4Mbps bus speed */
+#define MAPLE_SPEED_8MBPS       0x0300          /**< \brief 8Mbps bus speed */
 #define MAPLE_SPEED_TIMEOUT(n)  ((n) << 16)     /**< \brief Bus timeout macro */
 
-#ifndef _arch_sub_naomi
-#define MAPLE_RESET1_MAGIC      0x6155404f      /**< \brief First reset value */
-#else
-#define MAPLE_RESET1_MAGIC      0x6155405f
-#endif
+#define MAPLE_DMA_PROT_MAGIC    0x61550000      /**< \brief Key in bits 31-16; lo/hi bytes set the allowed range */
 
 /** @} */
 

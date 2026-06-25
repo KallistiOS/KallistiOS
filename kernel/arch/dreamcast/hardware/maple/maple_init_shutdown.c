@@ -2,6 +2,7 @@
 
    maple_init_shutdown.c
    Copyright (C) 2002 Megan Potter
+   Copyright (C) 2026 Ruslan Rostovtsev
  */
 
 #include <inttypes.h>
@@ -9,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <arch/arch.h>
 #include <dc/memory.h>
 #include <dc/maple.h>
 #include <dc/asic.h>
@@ -88,6 +90,18 @@ static void maple_dev_reset_all(void) {
     MAPLE_FOREACH_END()
 }
 
+static uint8_t maple_dma_addr_prot_byte(uint32_t addr) {
+    return ((((addr) & MEM_AREA_CACHE_MASK) >> 20) - 0x80) & 0xff;
+}
+
+static uint32_t maple_dma_mem_protection(void) {
+    uint32_t ram_lo, ram_hi;
+
+    ram_lo = maple_dma_addr_prot_byte(0x0c000000);
+    ram_hi = maple_dma_addr_prot_byte(_arch_mem_top - 1);
+    return MAPLE_DMA_PROT_MAGIC | (ram_lo << 8) | ram_hi;
+}
+
 /* Initialize Hardware (call after driver inits) */
 static void maple_hw_init(void) {
     maple_driver_t *drv;
@@ -137,8 +151,8 @@ static void maple_hw_init(void) {
     maple_state.gun_x = maple_state.gun_y = -1;
 
     /* Reset hardware */
-    maple_write(MAPLE_RESET1, MAPLE_RESET1_MAGIC);
-    maple_write(MAPLE_RESET2, MAPLE_RESET2_MAGIC);
+    maple_write(MAPLE_DMA_PROT, maple_dma_mem_protection());
+    maple_write(MAPLE_DMA_TSEL, MAPLE_DMA_TSEL_SOFTWARE);
     maple_write(MAPLE_SPEED, MAPLE_SPEED_2MBPS | MAPLE_SPEED_TIMEOUT(50000));
     maple_bus_enable();
 
