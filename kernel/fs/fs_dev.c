@@ -18,15 +18,15 @@
 /* File handle structure; this is an entirely internal structure so it does
    not go in a header file. */
 typedef struct dev_hnd {
-    nmmgr_handler_t * handler;
-    void *      hnd;        /* Handler-internal */
-    int     refcnt;     /* Reference count */
+    nmmgr_handler_t *handler;
+    void *hnd;       /* Handler-internal */
+    int  refcnt;     /* Reference count */
 } dev_hnd_t;
 
 static dev_hnd_t dev_root_hnd = {0};
 static dirent_t dev_readdir_dirent;
 
-static dirent_t *dev_root_readdir(dev_hnd_t * handle) {
+static dirent_t *dev_root_readdir(dev_hnd_t *handle) {
     nmmgr_handler_t *nmhnd;
     nmmgr_list_t    *nmhead;
     int         cnt;
@@ -57,10 +57,9 @@ static dirent_t *dev_root_readdir(dev_hnd_t * handle) {
 
 
 static const dirent_t *dev_readdir(void *f) {
-    dev_hnd_t * hnd = (dev_hnd_t *)f;
+    dev_hnd_t *hnd = (dev_hnd_t *)f;
 
-    if((!hnd) || (hnd != &dev_root_hnd)
-        || (hnd->refcnt <= 0)) {
+    if((!hnd) || (hnd != &dev_root_hnd) || (hnd->refcnt <= 0)) {
         errno = EBADF;
         return NULL;
     }
@@ -69,10 +68,9 @@ static const dirent_t *dev_readdir(void *f) {
 }
 
 static int dev_rewinddir(void *f) {
-    dev_hnd_t * hnd = (dev_hnd_t *)f;
+    dev_hnd_t *hnd = (dev_hnd_t *)f;
 
-    if((!hnd) || (hnd != &dev_root_hnd)
-        || (hnd->refcnt <= 0)) {
+    if((!hnd) || (hnd != &dev_root_hnd) || (hnd->refcnt <= 0)) {
         errno = EBADF;
         return -1;
     }
@@ -105,12 +103,11 @@ static void *dev_open(vfs_handler_t *vfs, const char *fn, int mode) {
 
 /* Close a file and clean up the handle */
 static int dev_close(void *f) {
-    dev_hnd_t * hnd = (dev_hnd_t *)f;
+    dev_hnd_t *hnd = (dev_hnd_t *)f;
 
-    if((hnd != &dev_root_hnd)
-        || (hnd->refcnt <= 0)) {
-      errno = EBADF;
-      return -1;
+    if((hnd != &dev_root_hnd) || (hnd->refcnt <= 0)) {
+        errno = EBADF;
+        return -1;
     }
 
     hnd->refcnt--;
@@ -130,7 +127,7 @@ static int dev_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
 
     memset(st, 0, sizeof(struct stat));
     st->st_dev = (dev_t)('d' | ('e' << 8) | ('v' << 16));
-    st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | 
+    st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP |
         S_IXGRP | S_IROTH | S_IXOTH;
     st->st_size = -1;
     st->st_nlink = 2 + 3; /* 2 + (number of subdirectories) */
