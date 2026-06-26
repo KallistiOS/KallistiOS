@@ -85,9 +85,8 @@ static void *rnd_open(vfs_handler_t *vfs, const char *path, int mode) {
     }
 
     /* link the fh onto the top of the list */
-    mutex_lock(&fh_mutex);
+    mutex_lock_scoped(&fh_mutex);
     TAILQ_INSERT_TAIL(&rnd_fh, fh, listent);
-    mutex_unlock(&fh_mutex);
 
     return (void *)fh;
 }
@@ -97,14 +96,13 @@ static int rnd_verify_hnd(void *hnd) {
     rnd_fh_t *cur;
     int rv = 0;
 
-    mutex_lock(&fh_mutex);
+    mutex_lock_scoped(&fh_mutex);
     TAILQ_FOREACH(cur, &rnd_fh, listent) {
         if((void *)cur == hnd) {
             rv = 1;
             break;
         }
     }
-    mutex_unlock(&fh_mutex);
 
     return rv;
 }
