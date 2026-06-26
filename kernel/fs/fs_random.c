@@ -52,6 +52,12 @@ static rnd_fh_t *rnd_open_file(vfs_handler_t *vfs, const char *fn, int mode) {
 
     rnd_fh_t *fd;       /* file descriptor */
 
+    /* This is a special file, not a directory */
+    if(mode & O_DIR) {
+        errno = ENOTDIR;
+        return NULL;
+    }
+
     /* We only allow reading, not writing */
     if((mode & O_MODE_MASK) != O_RDONLY) {
         errno = EPERM;
