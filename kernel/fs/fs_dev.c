@@ -124,9 +124,16 @@ static int dev_close(void *f) {
 
 static int dev_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
                     int flag) {
+    size_t len = strlen(path);
+
     (void)vfs;
-    (void)path;
     (void)flag;
+
+    /* Only the /dev root is handled; devices have own handlers. */
+    if(len != 0 && !(len == 1 && *path == '/')) {
+        errno = ENOENT;
+        return -1;
+    }
 
     memset(st, 0, sizeof(struct stat));
     st->st_dev = (dev_t)('d' | ('e' << 8) | ('v' << 16));
