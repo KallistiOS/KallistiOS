@@ -28,32 +28,31 @@
 
 static net_ipv4_stats_t ipv4_stats = { 0 };
 
-static inline uint16_t checksum_one(uint16_t val, uint16_t sum) {
-    uint16_t result;
-
-    return __builtin_add_overflow(val, sum, &result) + result;
-}
-
 /* Perform an IP-style checksum on a block of data */
 uint16_t __pure net_ipv4_checksum(const uint8_t *data, size_t bytes, uint16_t sum) {
     typedef uint16_t __attribute__((may_alias)) alias_u16_t;
+    uint32_t acc_sum = sum;
 
     /* Make sure we don't do any unaligned memory accesses */
     if((uintptr_t)data & 1) {
-        sum = checksum_one(*data, sum);
+        acc_sum += *data;
         bytes--;
         data++;
     }
 
     /* Compute checksum two bytes at a time */
     for(; bytes > 1; bytes -= 2, data += 2)
-        sum = checksum_one(*(const alias_u16_t *)data, sum);
+        acc_sum += *(const alias_u16_t *)data;
 
     /* Handle the last byte, if we have an odd byte count */
     if(bytes)
-        sum = checksum_one(*data, sum);
+        acc_sum += *data;
 
-    return ~sum;
+    /* Take care of any carry bits */
+    while(acc_sum >> 16)
+        acc_sum = (acc_sum >> 16) + (acc_sum & 0xFFFF);
+
+    return (uint16_t)~acc_sum;
 }
 
 /* Determine if a given IP is in the current network */
