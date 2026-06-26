@@ -35,6 +35,12 @@ static null_fh_t *null_open_file(vfs_handler_t *vfs, const char *fn, int mode) {
 
     null_fh_t *fd;       /* file descriptor */
 
+    /* This is a special file, not a directory */
+    if(mode & O_DIR) {
+        errno = ENOTDIR;
+        return NULL;
+    }
+
     /* Malloc a new fh struct */
     fd = malloc(sizeof(null_fh_t));
     if(!fd) {

@@ -46,7 +46,10 @@ static dirent_t *dev_root_readdir(dev_hnd_t *handle) {
     if(nmhnd == NULL)
         return NULL;
 
-    dev_readdir_dirent.size = -1;
+    /* Entries in /dev are special files */
+    dev_readdir_dirent.size = 0;
+    dev_readdir_dirent.time = 0;
+    dev_readdir_dirent.attr = 0;
 
     strcpy(dev_readdir_dirent.name, nmhnd->pathname + strlen("/dev/"));
 
