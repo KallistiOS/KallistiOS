@@ -132,7 +132,7 @@ static int dev_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
     st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP |
         S_IXGRP | S_IROTH | S_IXOTH;
     st->st_size = -1;
-    st->st_nlink = 2 + 3; /* 2 + (number of subdirectories) */
+    st->st_nlink = 2;
 
     return 0;
 }
