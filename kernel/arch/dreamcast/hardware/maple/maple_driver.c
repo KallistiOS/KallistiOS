@@ -147,11 +147,11 @@ int maple_driver_detach(int p, int u) {
 
         if(dev->drv->detach)
             dev->drv->detach(dev->drv, dev);
-    }
 
-    if(dev->drv->status_size) {
-        free(dev->status);
-        dev->status = NULL;
+        if(dev->drv->status_size) {
+            free(dev->status);
+            dev->status = NULL;
+        }
     }
 
     dev->probe_mask = 0;
