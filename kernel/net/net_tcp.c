@@ -2212,12 +2212,15 @@ static void tcp_send_ack(struct tcp_sock *sock) {
 
 static void tcp_send_data(struct tcp_sock *sock, int resend) {
     uint32_t wnd = sock->data.snd.wnd, snd;
-    int sz = sizeof(tcp_hdr_t);
-    uint8_t rawpkt[1500];
-    tcp_hdr_t *hdr = (tcp_hdr_t *)rawpkt;
+    int sz;
+    alignas(32) uint8_t frame[NET_IPV4_FRAME_HDR_SIZE + 1500];
+    uint8_t *seg = frame + NET_IPV4_FRAME_HDR_SIZE;
+    tcp_hdr_t *hdr = (tcp_hdr_t *)seg;
     uint16_t cs;
     uint8_t *sb, *buf;
     uint32_t seq, unacked, head;
+    int v4;
+    uint32_t v4src = 0, v4dst = 0;
 
     if(!resend) {
         seq = sock->data.snd.nxt;
@@ -2234,6 +2237,15 @@ static void tcp_send_data(struct tcp_sock *sock, int resend) {
     if(!wnd)
         wnd = 1;
 
+    /* Use the zero-extra-copy IPv4 path when both ends are V4-mapped. */
+    v4 = IN6_IS_ADDR_V4MAPPED(&sock->local_addr.sin6_addr) &&
+         IN6_IS_ADDR_V4MAPPED(&sock->remote_addr.sin6_addr);
+
+    if(v4) {
+        v4src = sock->local_addr.sin6_addr.__s6_addr.__s6_addr32[3];
+        v4dst = sock->remote_addr.sin6_addr.__s6_addr.__s6_addr32[3];
+    }
+
     /* Fill in the base packet */
     hdr->src_port = sock->local_addr.sin6_port;
     hdr->dst_port = sock->remote_addr.sin6_port;
@@ -2246,7 +2258,7 @@ static void tcp_send_data(struct tcp_sock *sock, int resend) {
     while(sock->data.sndbuf_cur_sz - unacked && wnd) {
         hdr->seq = htonl(seq);
         hdr->checksum = 0;
-        buf = rawpkt + sizeof(tcp_hdr_t);
+        buf = seg + sizeof(tcp_hdr_t);
         sb = sock->data.sndbuf + head;
         snd = wnd;
 
@@ -2256,7 +2268,7 @@ static void tcp_send_data(struct tcp_sock *sock, int resend) {
         if(snd > sock->data.sndbuf_cur_sz - unacked)
             snd = sock->data.sndbuf_cur_sz - unacked;
 
-        /* Copy in the data */
+        /* Copy in the data(unavoidable copy) */
         if(head + snd <= sock->sndbuf_sz) {
             memcpy(buf, sb, snd);
             head += snd;
@@ -2280,11 +2292,15 @@ static void tcp_send_data(struct tcp_sock *sock, int resend) {
         cs = net_ipv6_checksum_pseudo(&sock->local_addr.sin6_addr,
                                       &sock->remote_addr.sin6_addr, sz,
                                       IPPROTO_TCP);
-        hdr->checksum = net_ipv4_checksum(rawpkt, sz, cs);
+        hdr->checksum = net_ipv4_checksum(seg, sz, cs);
 
-        net_ipv6_send(sock->data.net, rawpkt, sz, sock->hop_limit, IPPROTO_TCP,
-                      &sock->local_addr.sin6_addr,
-                      &sock->remote_addr.sin6_addr);
+        if(v4)
+            net_ipv4_send_inplace(sock->data.net, frame, sz, -1,
+                                  sock->hop_limit, IPPROTO_TCP, v4src, v4dst);
+        else
+            net_ipv6_send(sock->data.net, seg, sz, sock->hop_limit, IPPROTO_TCP,
+                          &sock->local_addr.sin6_addr,
+                          &sock->remote_addr.sin6_addr);
     }
 
     sock->data.timer = timer_ms_gettime64();

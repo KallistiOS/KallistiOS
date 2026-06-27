@@ -201,6 +201,95 @@ int net_ipv4_send(netif_t *net, const uint8_t *data, size_t size, int id, int tt
     return net_ipv4_frag_send(net, &hdr, data, size);
 }
 
+int net_ipv4_send_inplace(netif_t *net, uint8_t *frame, size_t size, int id,
+                          int ttl, int proto, uint32_t src, uint32_t dst) {
+    eth_hdr_t *ehdr = (eth_hdr_t *)frame;
+    ip_hdr_t *hdr = (ip_hdr_t *)(frame + sizeof(eth_hdr_t));
+    uint8_t *data = frame + NET_IPV4_FRAME_HDR_SIZE;
+    uint8_t dest_ip[4];
+    uint8_t dest_mac[6];
+    int err;
+
+    if(!net) {
+        net = net_default_dev;
+
+        if(!net) {
+            errno = ENETDOWN;
+            return -1;
+        }
+    }
+
+    /* If the ID is -1, generate a random ID value that can be used in case the
+       packet gets fragmented. */
+    if(id == -1)
+        id = rand() & 0xFFFF;
+
+    /* Match net_ipv6_send()'s handling of an unset hop limit. */
+    if(ttl <= 0)
+        ttl = net->hop_limit ? net->hop_limit : 255;
+
+    /* Build the IPv4 header in place, directly in front of the segment. */
+    hdr->version_ihl = 0x45;
+    hdr->tos = 0;
+    hdr->length = htons(size + sizeof(ip_hdr_t));
+    hdr->packet_id = id;
+    hdr->flags_frag_offs = 0;
+    hdr->ttl = ttl;
+    hdr->protocol = proto;
+    hdr->checksum = 0;
+    hdr->src = src;
+    hdr->dest = dst;
+    hdr->checksum = net_ipv4_checksum((uint8_t *)hdr, sizeof(ip_hdr_t), 0);
+
+    net_ipv4_parse_address(ntohl(dst), dest_ip);
+
+    /* Only handle a single unfragmented frame on an ethernet link. Loopback,
+       header-less links (e.g. PPP), and anything that would need fragmentation
+       needs to go through the copy-based path */
+    if((net->flags & NETIF_NOETH) || dest_ip[0] == 0x7F ||
+       (size + sizeof(ip_hdr_t)) > (size_t)net->mtu)
+        return net_ipv4_frag_send(net, hdr, data, size);
+
+    /* Are we sending a broadcast packet? */
+    if(dst == 0xFFFFFFFF || is_broadcast(dest_ip, net->broadcast)) {
+        memset(dest_mac, 0xFF, 6);
+    }
+    else {
+        /* Is it in our network? */
+        if(!is_in_network(net->ip_addr, dest_ip, net->netmask))
+            memcpy(dest_ip, net->gateway, 4);
+
+        /* Get our destination's MAC address. If we do not have the MAC address
+           cached, return a distinguished error to the upper-level protocol so
+           that it can decide what to do. */
+        err = net_arp_lookup(net, dest_ip, dest_mac, hdr, data, size);
+
+        if(err == -1) {
+            errno = ENETUNREACH;
+            ++ipv4_stats.pkt_send_failed;
+            return -1;
+        }
+        else if(err == -2) {
+            /* It'll send when the ARP reply comes in (assuming one does), so
+               return success. */
+            return 0;
+        }
+    }
+
+    /* Put the IP header / data into our ethernet packet */
+    memcpy(ehdr->dest, dest_mac, 6);
+    memcpy(ehdr->src, net->mac_addr, 6);
+    ehdr->type[0] = 0x08;
+    ehdr->type[1] = 0x00;
+
+    ++ipv4_stats.pkt_sent;
+
+    /* Send it away */
+    net->if_tx(net, frame, NET_IPV4_FRAME_HDR_SIZE + size, NETIF_BLOCK);
+
+    return 0;
+}
+
 int net_ipv4_input(netif_t *src, const uint8_t *pkt, size_t pktsize,
                    const eth_hdr_t *eth) {
     const ip_hdr_t *ip;
