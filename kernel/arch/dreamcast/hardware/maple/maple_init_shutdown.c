@@ -1,6 +1,6 @@
 /* KallistiOS ##version##
 
-   maple_init.c
+   maple_init_shutdown.c
    Copyright (C) 2002 Megan Potter
  */
 
