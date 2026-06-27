@@ -144,6 +144,7 @@ int maple_driver_detach(int p, int u) {
     if(dev->drv) {
         if(dev->drv->user_detach)
             dev->drv->user_detach(dev, dev->drv->user_detach_data);
+
         if(dev->drv->detach)
             dev->drv->detach(dev->drv, dev);
     }
