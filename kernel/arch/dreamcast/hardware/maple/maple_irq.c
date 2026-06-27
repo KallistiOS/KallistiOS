@@ -58,6 +58,13 @@ static void vbl_chk_disconnect(maple_state_t *state, int p, int u) {
         if(maple_driver_detach(p, u) >= 0) {
             assert(!maple_dev_valid(p, u));
         }
+
+        if(u > 0) {
+            maple_device_t *dev = maple_enum_dev(p, 0);
+
+            if(dev)
+                dev->dev_mask &= ~BIT(u - 1);
+        }
     }
 }
 
@@ -130,8 +137,20 @@ static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm) {
     if(resp->response == MAPLE_RESPONSE_NONE) {
         /* No device, or not functioning properly; check for removal */
         if(u == 0) {
-            if(dev && dev->dev_mask == 0)
-                vbl_chk_disconnect(state, p, 0);
+            if(dev) {
+                if(dev->dev_mask == 0) {
+                    /* No sub-devices remaining - we can disconnect the parent */
+                    vbl_chk_disconnect(state, p, 0);
+                }
+                else {
+                    maple_frame_unlock(frm);
+
+                    /* Unit 0 unplugged? Re-probe all devices */
+                    dev->probe_mask = dev->dev_mask;
+                    vbl_chk_next_subdev(state, frm, p);
+                    return;
+                }
+            }
 
             state->scan_ready_mask |= 1 << p;
         }
