@@ -1263,8 +1263,27 @@ static ssize_t net_tcp_recvfrom(net_socket_t *hnd, void *buffer, size_t length,
                request... */
             while(sock->data.rcvbuf_cur_sz < length) {
                 cond_wait(&sock->data.recv_cv, &sock->mutex);
+
+                /* Connection closed or reset while waiting; stop blocking forever. */
+                if(sock->state == TCP_STATE_CLOSED ||
+                   sock->state == TCP_STATE_CLOSE_WAIT ||
+                   sock->state == TCP_STATE_CLOSING ||
+                   sock->state == TCP_STATE_LAST_ACK ||
+                   sock->state == TCP_STATE_TIME_WAIT ||
+                   (sock->state & TCP_STATE_RESET))
+                    break;
             }
         }
+    }
+
+    /* Nothing buffered: report reset as error, otherwise signal end-of-stream. */
+    if(sock->data.rcvbuf_cur_sz == 0) {
+        if(sock->state & TCP_STATE_RESET) {
+            errno = ECONNRESET;
+            size = -1;
+        }
+
+        goto out;
     }
 
     /* Figure out how much we're going to give the user. */
