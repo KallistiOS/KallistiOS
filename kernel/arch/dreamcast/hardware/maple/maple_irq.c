@@ -16,6 +16,7 @@
 #include <dc/asic.h>
 #include <dc/pvr.h>
 #include <kos/dbglog.h>
+#include <kos/regfield.h>
 #include <kos/thread.h>
 
 /*********************************************************************/
@@ -66,12 +67,12 @@ static void vbl_chk_next_subdev(maple_state_t *state, maple_frame_t *frm, int p)
 
     if(dev && dev->probe_mask) {
         int u = __builtin_ffs(dev->probe_mask);
-        dev->probe_mask &= ~(1 << (u - 1));
+        dev->probe_mask &= ~BIT(u - 1);
 
         vbl_send_devinfo(frm, p, u);
     } else {
         /* Nothing else to probe on this port */
-        state->scan_ready_mask |= 1 << p;
+        state->scan_ready_mask |= BIT(p);
     }
 }
 
@@ -79,18 +80,18 @@ static void vbl_dev_probed(int p, int u) {
     maple_device_t *dev = maple_enum_dev(p, 0);
 
     if(dev)
-        dev->dev_mask |= 1 << (u - 1);
+        dev->dev_mask |= BIT(u - 1);
 }
 
 /* Check the sub-devices for a top-level port */
 static void vbl_chk_subdevs(maple_state_t *state, int p, uint8_t newmask) {
     maple_device_t *dev = maple_enum_dev(p, 0);
 
-    newmask &= (1 << (MAPLE_UNIT_COUNT - 1)) - 1;
+    newmask &= BIT(MAPLE_UNIT_COUNT - 1) - 1;
 
     /* Disconnect any device that disappeared */
     for(size_t u = 1; u < MAPLE_UNIT_COUNT; u++) {
-        if(dev->dev_mask & ~newmask & (1 << (u - 1))) {
+        if(dev->dev_mask & ~newmask & BIT(u - 1)) {
             vbl_chk_disconnect(state, p, u);
         }
     }
@@ -133,7 +134,7 @@ static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm) {
             if(dev && dev->dev_mask == 0)
                 vbl_chk_disconnect(state, p, 0);
 
-            state->scan_ready_mask |= 1 << p;
+            state->scan_ready_mask |= BIT(p);
         }
         else {
             /* Not a top-level device -- only detach this device */
@@ -176,7 +177,7 @@ static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm) {
     else {
         dbglog(DBG_DEBUG, "maple: unknown response %d on device %c%c\n",
             resp->response, 'A'+p, '0'+u);
-        state->scan_ready_mask |= 1 << p;
+        state->scan_ready_mask |= BIT(p);
         maple_frame_unlock(frm);
     }
 }
