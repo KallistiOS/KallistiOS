@@ -33,9 +33,9 @@ uint16_t __pure net_ipv4_checksum(const uint8_t *data, size_t bytes, uint16_t st
 int net_ipv4_send_packet(netif_t *net, ip_hdr_t *hdr, const uint8_t *data,
                          size_t size);
 int net_ipv4_send(netif_t *net, const uint8_t *data, size_t size, int id, int ttl,
-                  int proto, uint32_t src, uint32_t dst);
+                  int tos, int proto, uint32_t src, uint32_t dst);
 int net_ipv4_send_inplace(netif_t *net, uint8_t *frame, size_t size, int id,
-                          int ttl, int proto, uint32_t src, uint32_t dst);
+                          int ttl, int tos,int proto, uint32_t src, uint32_t dst);
 int net_ipv4_input(netif_t *src, const uint8_t *pkt, size_t pktsize,
                    const eth_hdr_t *eth);
 int net_ipv4_input_proto(netif_t *net, const ip_hdr_t *ip, const uint8_t *data);

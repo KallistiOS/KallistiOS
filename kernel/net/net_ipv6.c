@@ -145,7 +145,7 @@ int net_ipv6_send_packet(netif_t *net, ipv6_hdr_t *hdr, const uint8_t *data,
 }
 
 int net_ipv6_send(netif_t *net, const uint8_t *data, size_t data_size,
-                  int hop_limit, int proto, const struct in6_addr *src,
+                  int hop_limit, int tos, int proto, const struct in6_addr *src,
                   const struct in6_addr *dst) {
     ipv6_hdr_t hdr;
 
@@ -172,7 +172,7 @@ int net_ipv6_send(netif_t *net, const uint8_t *data, size_t data_size,
        send function to do the rest. Note that only V4-mapped addresses are
        supported here (::ffff:x.y.z.w) */
     if(IN6_IS_ADDR_V4MAPPED(src) && IN6_IS_ADDR_V4MAPPED(dst)) {
-        return net_ipv4_send(net, data, data_size, -1, hop_limit, proto,
+        return net_ipv4_send(net, data, data_size, -1, hop_limit, tos, proto,
                              src->__s6_addr.__s6_addr32[3],
                              dst->__s6_addr.__s6_addr32[3]);
     }
@@ -181,8 +181,8 @@ int net_ipv6_send(netif_t *net, const uint8_t *data, size_t data_size,
         return -1;
     }
 
-    hdr.version_lclass = 0x60;
-    hdr.hclass_lflow = 0;
+    hdr.version_lclass = 0x60 | ((tos >> 4) & 0x0F);  /* version 6 + TC high nibble */
+    hdr.hclass_lflow = (tos & 0x0F) << 4;  /* TC low nibble (flow label = 0) */
     hdr.lclass = 0;
     hdr.length = ntohs(data_size);
     hdr.next_header = proto;

@@ -154,6 +154,7 @@ struct tcp_sock {
     int state;
     mutex_t mutex;
     int hop_limit;
+    int tos;
     uint32_t rcvbuf_sz;
     uint32_t sndbuf_sz;
 
@@ -1580,6 +1581,9 @@ static int net_tcp_getsockopt(net_socket_t *hnd, int level, int option_name,
                 case IP_TTL:
                     tmp = sock->hop_limit;
                     goto copy_int;
+                case IP_TOS:
+                    tmp = sock->tos;
+                    goto copy_int;
             }
 
             break;
@@ -1718,6 +1722,18 @@ static int net_tcp_setsockopt(net_socket_t *hnd, int level, int option_name,
                         sock->hop_limit = TCP_DEFAULT_HOPS;
                     else
                         sock->hop_limit = tmp;
+
+                    goto ret_success;
+                case IP_TOS:
+                    if(option_len != sizeof(int))
+                        goto ret_inval;
+
+                    tmp = *((int *)option_value);
+
+                    if(tmp < 0 || tmp > 255)
+                        goto ret_inval;
+                    else
+                        sock->tos = tmp;
 
                     goto ret_success;
             }
@@ -2074,7 +2090,7 @@ static void tcp_rst(netif_t *net, const struct in6_addr *src,
     c = net_ipv6_checksum_pseudo(src, dst, sizeof(tcp_hdr_t), IPPROTO_TCP);
     pkt.checksum = net_ipv4_checksum((const uint8_t *)&pkt, sizeof(tcp_hdr_t), c);
 
-    net_ipv6_send(net, (const uint8_t *)&pkt, sizeof(tcp_hdr_t), 0, IPPROTO_TCP,
+    net_ipv6_send(net, (const uint8_t *)&pkt, sizeof(tcp_hdr_t), 0, 0, IPPROTO_TCP,
                   src, dst);
 }
 
@@ -2115,7 +2131,7 @@ static void tcp_bpkt_rst(netif_t *net, const struct in6_addr *src,
     pkt.checksum = net_ipv4_checksum((const uint8_t *)&pkt, sizeof(tcp_hdr_t),
                                      cs);
 
-    net_ipv6_send(net, (const uint8_t *)&pkt, sizeof(tcp_hdr_t), 0, IPPROTO_TCP,
+    net_ipv6_send(net, (const uint8_t *)&pkt, sizeof(tcp_hdr_t), 0, 0, IPPROTO_TCP,
                   dst, src);
 }
 
@@ -2154,7 +2170,7 @@ static int tcp_send_syn(struct tcp_sock *sock, int ack) {
     hdr->checksum = net_ipv4_checksum(rawpkt, sizeof(tcp_hdr_t) + 4, cs);
 
     return net_ipv6_send(sock->data.net, rawpkt, sizeof(tcp_hdr_t) + 4,
-                         sock->hop_limit, IPPROTO_TCP,
+                         sock->hop_limit, sock->tos, IPPROTO_TCP,
                          &sock->local_addr.sin6_addr,
                          &sock->remote_addr.sin6_addr);
 }
@@ -2181,7 +2197,7 @@ static void tcp_send_fin_ack(struct tcp_sock *sock) {
     hdr->checksum = net_ipv4_checksum(rawpkt, sizeof(tcp_hdr_t), cs);
 
     net_ipv6_send(sock->data.net, rawpkt, sizeof(tcp_hdr_t), sock->hop_limit,
-                  IPPROTO_TCP, &sock->local_addr.sin6_addr,
+                  sock->tos, IPPROTO_TCP, &sock->local_addr.sin6_addr,
                   &sock->remote_addr.sin6_addr);
 }
 
@@ -2206,7 +2222,7 @@ static void tcp_send_ack(struct tcp_sock *sock) {
     hdr.checksum = net_ipv4_checksum((const uint8_t *)&hdr, sizeof(tcp_hdr_t), c);
 
     net_ipv6_send(sock->data.net, (const uint8_t *)&hdr, sizeof(tcp_hdr_t),
-                  sock->hop_limit, IPPROTO_TCP, &sock->local_addr.sin6_addr,
+                  sock->hop_limit, sock->tos, IPPROTO_TCP, &sock->local_addr.sin6_addr,
                   &sock->remote_addr.sin6_addr);
 }
 
@@ -2296,9 +2312,9 @@ static void tcp_send_data(struct tcp_sock *sock, int resend) {
 
         if(v4)
             net_ipv4_send_inplace(sock->data.net, frame, sz, -1,
-                                  sock->hop_limit, IPPROTO_TCP, v4src, v4dst);
+                                  sock->hop_limit, sock->tos, IPPROTO_TCP, v4src, v4dst);
         else
-            net_ipv6_send(sock->data.net, seg, sz, sock->hop_limit, IPPROTO_TCP,
+            net_ipv6_send(sock->data.net, seg, sz, sock->hop_limit, sock->tos, IPPROTO_TCP,
                           &sock->local_addr.sin6_addr,
                           &sock->remote_addr.sin6_addr);
     }
