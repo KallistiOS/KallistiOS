@@ -21,6 +21,15 @@
     accessed through the functions here. Most of the drivers have their own
     functionality that is implemented in their header files, as well.
 
+    \bug    Sending a rumble (PuruPuru / Jump Pack) command can cause VMUs
+            plugged into any controller to beep. This is a hardware-level side
+            effect and not something KOS can prevent in software.
+
+    \bug    Inserting a VMU can cause its parent controller to briefly disconnect
+            and re-enumerate on the Maple bus, producing a detach/attach event for
+            the controller as well as the VMU. This is another hardware-level side
+            effect and not something KOS can prevent in software.
+
     \author Megan Potter
     \author Lawrence Sebald
 
