@@ -237,6 +237,7 @@ extern const struct in6_addr in6addr_loopback;
 */
 
 #define IP_TTL              24  /**< \brief TTL for unicast (get/set) */
+#define IP_TOS              26  /**< \brief Type of service (get/set) */
 
 /** @} */
 

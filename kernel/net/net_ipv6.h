@@ -38,7 +38,7 @@ typedef struct ipv6_pseudo_hdr_s {
 int net_ipv6_send_packet(netif_t *net, ipv6_hdr_t *hdr, const uint8_t *data,
                          size_t data_size);
 int net_ipv6_send(netif_t *net, const uint8_t *data, size_t data_size,
-                  int hop_limit, int proto, const struct in6_addr *src,
+                  int hop_limit, int tos, int proto, const struct in6_addr *src,
                   const struct in6_addr *dst);
 int net_ipv6_input(netif_t *src, const uint8_t *pkt, size_t pktsize,
                    const eth_hdr_t *eth);

@@ -111,7 +111,7 @@ static void net_icmp_input_8(netif_t *src, const ip_hdr_t *ip, icmp_hdr_t *icmp,
     /* Set the destination to the original source, and substitute in our IP
        for the src (done this way so that pings that are broadcasted get an
        appropriate reply), and send it away. */
-    net_ipv4_send(src, d, s, ip->packet_id, 255, 1, ip->dest, ip->src);
+    net_ipv4_send(src, d, s, ip->packet_id, 255, 0, 1, ip->dest, ip->src);
 }
 
 int net_icmp_input(netif_t *src, const ip_hdr_t *ip, const uint8_t *d, size_t s) {
@@ -199,7 +199,7 @@ int net_icmp_send_echo(netif_t *net, const uint8_t ipaddr[4], uint16_t ident,
         src = net_ipv4_address(net->ip_addr);
     }
 
-    r = net_ipv4_send(net, databuf, sz, seq, 255, 1, htonl(src),
+    r = net_ipv4_send(net, databuf, sz, seq, 255, 0, 1, htonl(src),
                       htonl(net_ipv4_address(ipaddr)));
 
     return r;
@@ -226,7 +226,7 @@ int net_icmp_send_dest_unreach(netif_t *net, uint8_t code, const uint8_t *msg) {
     icmp->checksum = net_ipv4_checksum(databuf, sizeof(icmp_hdr_t) + sz, 0);
 
     /* Send the packet away */
-    return net_ipv4_send(net, databuf, sizeof(icmp_hdr_t) + sz, 0, 255, 1,
+    return net_ipv4_send(net, databuf, sizeof(icmp_hdr_t) + sz, 0, 255, 0, 1,
                          orig_msg->dest, orig_msg->src);
 }
 
@@ -251,6 +251,6 @@ int net_icmp_send_time_exceeded(netif_t *net, uint8_t code, const uint8_t *msg) 
     icmp->checksum = net_ipv4_checksum(databuf, sizeof(icmp_hdr_t) + sz, 0);
 
     /* Send the packet away */
-    return net_ipv4_send(net, databuf, sizeof(icmp_hdr_t) + sz, 0, 255, 1,
+    return net_ipv4_send(net, databuf, sizeof(icmp_hdr_t) + sz, 0, 255, 0, 1,
                          orig_msg->dest, orig_msg->src);
 }

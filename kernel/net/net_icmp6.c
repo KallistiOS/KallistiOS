@@ -531,7 +531,7 @@ int net_icmp6_send_echo(netif_t *net, const struct in6_addr *dst, uint16_t ident
     cs = net_ipv6_checksum_pseudo(&src, dst, sz, IPV6_HDR_ICMP);
     echo->checksum = net_ipv4_checksum(databuf, sz, cs);
 
-    return net_ipv6_send(net, databuf, sz, 0, IPV6_HDR_ICMP, &src, dst);
+    return net_ipv6_send(net, databuf, sz, 0, 0, IPV6_HDR_ICMP, &src, dst);
 }
 
 /* Send a Neighbor Solicitation packet on the specified device */
@@ -593,7 +593,7 @@ int net_icmp6_send_nsol(netif_t *net, const struct in6_addr *dst,
     cs = net_ipv6_checksum_pseudo(&src, dst, size, IPV6_HDR_ICMP);
     pkt->checksum = net_ipv4_checksum(databuf, size, cs);
 
-    return net_ipv6_send(net, databuf, size, 255, IPV6_HDR_ICMP, &src, dst);
+    return net_ipv6_send(net, databuf, size, 255, 0, IPV6_HDR_ICMP, &src, dst);
 }
 
 /* Send a Neighbor Advertisement packet on the specified device */
@@ -638,7 +638,7 @@ int net_icmp6_send_nadv(netif_t *net, const struct in6_addr *dst,
     cs = net_ipv6_checksum_pseudo(&src, dst, size, IPV6_HDR_ICMP);
     pkt->checksum = net_ipv4_checksum(databuf, size, cs);
 
-    return net_ipv6_send(net, databuf, size, 255, IPV6_HDR_ICMP, &src, dst);
+    return net_ipv6_send(net, databuf, size, 255, 0, IPV6_HDR_ICMP, &src, dst);
 }
 
 /* Send a Router Solicitation request on the specified interface */
@@ -683,7 +683,7 @@ int net_icmp6_send_rsol(netif_t *net) {
                                   IPV6_HDR_ICMP);
     pkt->checksum = net_ipv4_checksum(databuf, size, cs);
 
-    return net_ipv6_send(net, databuf, size, 255, IPV6_HDR_ICMP, &src,
+    return net_ipv6_send(net, databuf, size, 255, 0, IPV6_HDR_ICMP, &src,
                          &in6addr_linklocal_allrouters);
 }
 
@@ -740,7 +740,7 @@ static int send_err_pkt(netif_t *net, uint8_t buf[1240], int ptr,
     pkt->checksum = net_ipv4_checksum(buf, size, cs);
 
     /* Send it away */
-    return net_ipv6_send(net, buf, size, 0, IPV6_HDR_ICMP, &src, &osrc);
+    return net_ipv6_send(net, buf, size, 0, 0, IPV6_HDR_ICMP, &src, &osrc);
 }
 
 /* Send an ICMPv6 Destination Unreachable about the given packet. */

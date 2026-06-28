@@ -175,7 +175,7 @@ int net_ipv4_send_packet(netif_t *net, ip_hdr_t *hdr, const uint8_t *data,
 }
 
 int net_ipv4_send(netif_t *net, const uint8_t *data, size_t size, int id, int ttl,
-                  int proto, uint32_t src, uint32_t dst) {
+                  int tos, int proto, uint32_t src, uint32_t dst) {
     ip_hdr_t hdr;
 
     /* If the ID is -1, generate a random ID value that can be used in case the
@@ -186,7 +186,7 @@ int net_ipv4_send(netif_t *net, const uint8_t *data, size_t size, int id, int tt
 
     /* Fill in the IPv4 Header */
     hdr.version_ihl = 0x45;
-    hdr.tos = 0;
+    hdr.tos = tos;
     hdr.length = htons(size + 20);
     hdr.packet_id = id;
     hdr.flags_frag_offs = 0;
@@ -202,7 +202,7 @@ int net_ipv4_send(netif_t *net, const uint8_t *data, size_t size, int id, int tt
 }
 
 int net_ipv4_send_inplace(netif_t *net, uint8_t *frame, size_t size, int id,
-                          int ttl, int proto, uint32_t src, uint32_t dst) {
+                          int ttl, int tos, int proto, uint32_t src, uint32_t dst) {
     eth_hdr_t *ehdr = (eth_hdr_t *)frame;
     ip_hdr_t *hdr = (ip_hdr_t *)(frame + sizeof(eth_hdr_t));
     uint8_t *data = frame + NET_IPV4_FRAME_HDR_SIZE;
@@ -230,7 +230,7 @@ int net_ipv4_send_inplace(netif_t *net, uint8_t *frame, size_t size, int id,
 
     /* Build the IPv4 header in place, directly in front of the segment. */
     hdr->version_ihl = 0x45;
-    hdr->tos = 0;
+    hdr->tos = tos;
     hdr->length = htons(size + sizeof(ip_hdr_t));
     hdr->packet_id = id;
     hdr->flags_frag_offs = 0;
