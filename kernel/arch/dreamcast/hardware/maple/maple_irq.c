@@ -129,6 +129,18 @@ static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm) {
     dev = maple_enum_dev(p, u);
 
     if(resp->response == MAPLE_RESPONSE_NONE) {
+
+        /* Don't try to disconnect unless we get MAPLE_DEV_VALID_TIMEOUT failed
+         * autodetects. A vmu being plugged in, or a puru doing certain sorts
+         * of rumbles cause the controller they're in to be unresponsive for
+         * a little bit. Having this timeout prevents them all from being
+         * disconnected only to be reconnected shortly after. */
+        if(dev && (dev->valid > 1)) {
+            dev->valid--;
+            maple_frame_unlock(frm);
+            return;
+        }
+
         /* No device, or not functioning properly; check for removal */
         if(u == 0) {
             if(dev) {
@@ -166,6 +178,9 @@ static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm) {
             dev->info.function_data[0] = devinfo->function_data[0];
             dev->info.function_data[1] = devinfo->function_data[1];
             dev->info.function_data[2] = devinfo->function_data[2];
+
+            /* Since we got a response, reset the timeout */
+            dev->valid = MAPLE_DEV_VALID_TIMEOUT;
         }
 
         /* If this is a top-level port, then also check any
