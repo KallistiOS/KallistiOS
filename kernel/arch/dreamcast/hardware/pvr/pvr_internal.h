@@ -18,6 +18,7 @@
 
 #include <stdbool.h>
 #include <kos/sem.h>
+#include <dc/vblank.h>
 
 /**** State stuff ***************************************************/
 
@@ -200,7 +201,7 @@ typedef struct {
     size_t   vtx_buf_used_max;           // Maximum used vertex buffer size
 
     // Handle for the vblank interrupt
-    int     vbl_handle;
+    vblhnd_t    *vbl_handle;
 
     // Non-zero if FSAA was enabled at init time.
     int     fsaa;
