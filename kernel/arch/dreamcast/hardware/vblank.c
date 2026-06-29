@@ -94,12 +94,9 @@ int vblank_shutdown(void) {
     mutex_lock(&vbl_tailq_mutex);
 
     /* Free any allocated handlers */
-    c = TAILQ_FIRST(&vblhnds);
-
-    while(c != NULL) {
-        n = TAILQ_NEXT(c, listent);
+    TAILQ_FOREACH_SAFE(c, &vblhnds, listent, n) {
+        TAILQ_REMOVE(&vblhnds, c, listent);
         free(c);
-        c = n;
     }
 
     mutex_unlock(&vbl_tailq_mutex);
@@ -109,5 +106,4 @@ int vblank_shutdown(void) {
 
     return 0;
 }
-
 
