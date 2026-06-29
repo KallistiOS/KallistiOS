@@ -10,8 +10,6 @@ KOS_GCCVER_MIN = 12.0.0
 
 include $(KOS_BASE)/Makefile.rules
 
-ifeq ($(call KOS_GCCVER_MIN_CHECK,$(KOS_GCCVER_MIN)),1)
-
 all: rm-elf $(TARGET)
 
 clean:
@@ -29,8 +27,3 @@ run: $(TARGET)
 dist:
 	rm -f $(OBJS)
 	$(KOS_STRIP) $(TARGET)
-
-else
-  all $(TARGET) clean rm-elf run dist:
-	$(KOS_GCCVER_MIN_WARNING)
-endif

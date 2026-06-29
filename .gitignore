@@ -22,3 +22,5 @@ romdisk.img
 html/
 /doc/reference/
 /ports/
+/examples/errors.txt
+/examples/error_count.txt

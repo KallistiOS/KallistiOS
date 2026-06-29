@@ -16,7 +16,11 @@
 # Include the KOS-specific config for the build arch, if any
 -include kos/$(KOS_ARCH).cnf
 
+include $(KOS_BASE)/Makefile.rules
+
 defaultall: $(OBJS) subdirs linklib
+
+all: defaultall
 
 linklib: $(OBJS) $(LIB_OBJS)
 	rm -f $(KOS_BASE)/addons/lib/$(KOS_ARCH)/$(TARGET)
@@ -27,4 +31,3 @@ clean: defaultclean
 defaultclean: clean_subdirs
 	-rm -f $(OBJS) $(KOS_BASE)/addons/lib/$(KOS_ARCH)/$(TARGET) $(LOCAL_CLEAN)
 
-include $(KOS_BASE)/Makefile.rules
