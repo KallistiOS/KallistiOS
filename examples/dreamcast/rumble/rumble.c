@@ -52,8 +52,8 @@ void print_rumble_fields(purupuru_effect_t fields) {
   printf("  .inc    =  %u,\n", fields.inc);
 }
 /* This blocks waiting for a specified device to be present and valid */
-void wait_for_dev_attach(maple_device_t **dev_ptr, unsigned int func) {
-    maple_device_t *dev = *dev_ptr;
+void wait_for_dev_attach(maple_device_t **cont_dev_ptr, maple_device_t **puru_dev_ptr) {
+    maple_device_t *dev = *puru_dev_ptr;
     point_t w = {40.0f, 200.0f, 10.0f, 0.0f};
 
     /* If we already have it, and it's still valid, leave */
@@ -69,20 +69,20 @@ void wait_for_dev_attach(maple_device_t **dev_ptr, unsigned int func) {
 
     plx_fcxt_begin(cxt);
     plx_fcxt_setpos_pnt(cxt, &w);
-    if(func == MAPLE_FUNC_CONTROLLER)
-        plx_fcxt_draw(cxt, "Please attach a controller!");
-    else if(func == MAPLE_FUNC_PURUPURU)
-        plx_fcxt_draw(cxt, "Please attach a rumbler!");
+    plx_fcxt_draw(cxt, "Please attach a rumbler!");
     plx_fcxt_end(cxt);
 
     pvr_scene_finish();
 
     /* Repeatedly check until we find one and it's valid */
     while((dev == NULL) || !dev->valid) {
-        *dev_ptr = maple_enum_type(0, func);
-        dev = *dev_ptr;
+        *puru_dev_ptr = maple_enum_type(0, MAPLE_FUNC_PURUPURU);
+        dev = *puru_dev_ptr;
         usleep(50);
     }
+
+    /* Now that we have a rumbler, grab its parent */
+    *cont_dev_ptr = maple_enum_dev(dev->port, 0);
 }
 
 
@@ -136,8 +136,7 @@ int main(int argc, char *argv[]) {
 
         /* Before drawing the screen, trap into these functions to be
            sure that there's at least one controller and one rumbler */
-        wait_for_dev_attach(&contdev, MAPLE_FUNC_CONTROLLER);
-        wait_for_dev_attach(&purudev, MAPLE_FUNC_PURUPURU);
+        wait_for_dev_attach(&contdev, &purudev);
 
         /* Start drawing and draw the header */
         pvr_scene_begin();
@@ -173,8 +172,12 @@ int main(int argc, char *argv[]) {
         state = (cont_state_t *)maple_dev_status(contdev);
 
         /* Make sure we can rely on the state, otherwise loop. */
-        if(state == NULL)
+        if(state == NULL) {
+            /* Finish things up */
+            plx_fcxt_end(cxt);
+            pvr_scene_finish();
             continue;
+        }
 
         rel_buttons = (old_buttons ^ state->buttons);
 
