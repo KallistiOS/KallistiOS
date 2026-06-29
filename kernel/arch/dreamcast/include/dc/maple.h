@@ -262,6 +262,11 @@ typedef struct maple_response {
     uint8_t   data[];     /**< \brief Data (if any) */
 } maple_response_t;
 
+/* \cond */
+/* Number of failed autodetects before detaching a device. */
+#define MAPLE_DEV_VALID_TIMEOUT 30
+/* \endcond */
+
 /** \brief   One maple device.
     \ingroup maple
 
@@ -272,7 +277,7 @@ typedef struct maple_response {
 */
 typedef struct maple_device {
     /* Public */
-    bool            valid;  /**< \brief Is this a valid device? */
+    uint8_t         valid;  /**< \brief Is this a valid device? 0 for no */
     int             port;   /**< \brief Maple bus port connected to */
     int             unit;   /**< \brief Unit number, off of the port */
     maple_devinfo_t info;   /**< \brief Device info struct */

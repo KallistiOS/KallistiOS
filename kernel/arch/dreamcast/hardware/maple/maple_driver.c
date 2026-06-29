@@ -114,7 +114,7 @@ int maple_driver_attach(maple_frame_t *det) {
             /* Try to attach if we need to then finish up. */
             if(!i->attach || (i->attach(i, dev) >= 0)) {
                 dev->drv = i;
-                dev->valid = true;
+                dev->valid = MAPLE_DEV_VALID_TIMEOUT;
 
                 if(i->user_attach)
                     i->user_attach(dev, i->user_attach_data);
@@ -139,7 +139,7 @@ int maple_driver_detach(int p, int u) {
     if(!dev)
         return -1;
 
-    dev->valid = false;
+    dev->valid = 0;
 
     if(dev->drv) {
         if(dev->drv->user_detach)
