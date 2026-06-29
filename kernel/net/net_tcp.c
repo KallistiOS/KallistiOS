@@ -153,6 +153,7 @@ struct tcp_sock {
     file_t sock;
     int state;
     mutex_t mutex;
+    short poll_pending; /* Accumulated POLL* events while mutex is held */
     int hop_limit;
     int tos;
     uint32_t rcvbuf_sz;
@@ -2467,7 +2468,7 @@ static int listen_pkt(netif_t *src, const struct in6_addr *srca,
         s->listen.tail = 0;
 
     /* Signal the condvar, in case anyone's waiting */
-    __poll_event_trigger(s->sock, POLLRDNORM);
+    s->poll_pending |= POLLRDNORM;
     cond_signal(&s->listen.cv);
 
     /* We're done, return success. */
@@ -2503,7 +2504,7 @@ static int synsent_pkt(netif_t *src, const struct in6_addr *srca,
     if(flags & TCP_FLAG_RST) {
         if(gotack) {
             s->state = TCP_STATE_CLOSED | TCP_STATE_RESET;
-            __poll_event_trigger(s->sock, POLLHUP);
+            s->poll_pending |= POLLHUP;
             cond_signal(&s->data.recv_cv);
             cond_signal(&s->data.send_cv);
             return 0;
@@ -2560,14 +2561,14 @@ static int synsent_pkt(netif_t *src, const struct in6_addr *srca,
             if(SEQ_GT(ack, s->data.snd.iss)) {
                 s->state = TCP_STATE_ESTABLISHED;
                 tcp_send_ack(s);
-                __poll_event_trigger(s->sock, POLLWRNORM | POLLWRBAND);
+                s->poll_pending |= (POLLWRNORM | POLLWRBAND);
                 cond_signal(&s->data.send_cv);
             }
         }
         else {
             s->state = TCP_STATE_SYN_RECEIVED;
             tcp_send_syn(s, 1);
-            __poll_event_trigger(s->sock, POLLWRNORM | POLLWRBAND);
+            s->poll_pending |= (POLLWRNORM | POLLWRBAND);
             cond_signal(&s->data.send_cv);
         }
     }
@@ -2713,7 +2714,7 @@ static int process_pkt(netif_t *src, const struct in6_addr *srca,
         }
         else {
             s->state = TCP_STATE_RESET | TCP_STATE_CLOSED;
-            __poll_event_trigger(s->sock, POLLHUP);
+            s->poll_pending |= POLLHUP;
             cond_signal(&s->data.recv_cv);
             cond_signal(&s->data.send_cv);
             return 0;
@@ -2752,7 +2753,7 @@ static int process_pkt(netif_t *src, const struct in6_addr *srca,
         s->data.sndbuf_acked += (int32_t)(ack - s->data.snd.una - acksyn);
         s->data.sndbuf_cur_sz -= (int32_t)(ack - s->data.snd.una - acksyn);
         s->data.snd.una = ack;
-        __poll_event_trigger(s->sock, POLLWRNORM | POLLWRBAND);
+        s->poll_pending |= (POLLWRNORM | POLLWRBAND);
         cond_signal(&s->data.send_cv);
 
         if(s->data.sndbuf_acked >= s->sndbuf_sz)
@@ -2866,7 +2867,7 @@ static int process_pkt(netif_t *src, const struct in6_addr *srca,
                     }
                 }
 
-                __poll_event_trigger(s->sock, POLLRDNORM);
+                s->poll_pending |= POLLRDNORM;
                 cond_signal(&s->data.recv_cv);
 
                 /* Delayed ACK: ACK every 2nd in-order segment to
@@ -2911,7 +2912,7 @@ static int process_pkt(netif_t *src, const struct in6_addr *srca,
         /* ACK the FIN */
         ++s->data.rcv.nxt;
         tcp_send_ack(s);
-        __poll_event_trigger(s->sock, POLLRDNORM);
+        s->poll_pending |= POLLRDNORM;
         cond_signal(&s->data.recv_cv);
 
         /* Do the various processing that needs to be done based on our state */
@@ -3032,7 +3033,16 @@ static int net_tcp_input(netif_t *src, int domain, const void *hdr,
                 break;
         }
 
+        short poll_ev = s->poll_pending;
+        file_t poll_fd = s->sock;
+        s->poll_pending = 0;
+
         mutex_unlock(&s->mutex);
+
+        /* Fire poll wakeups after releasing sock->mutex to avoid the
+           poll-mutex / sock->mutex ABBA deadlock. */
+        if(poll_ev)
+            __poll_event_trigger(poll_fd, poll_ev);
     }
 
     rwsem_read_unlock(&tcp_sem);
