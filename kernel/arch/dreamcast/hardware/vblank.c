@@ -85,12 +85,9 @@ int vblank_shutdown(void) {
     asic_evt_remove_handler(ASIC_EVT_PVR_VBLANK_BEGIN);
 
     /* Free any allocated handlers */
-    c = TAILQ_FIRST(&vblhnds);
-
-    while(c != NULL) {
-        n = TAILQ_NEXT(c, listent);
+    TAILQ_FOREACH_SAFE(c, &vblhnds, listent, n) {
+        TAILQ_REMOVE(&vblhnds, c, listent);
         free(c);
-        c = n;
     }
 
     TAILQ_INIT(&vblhnds);
