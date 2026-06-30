@@ -1240,9 +1240,13 @@ static int net_udp_input4(netif_t *src, const ip_hdr_t *ip, const uint8_t *data,
         TAILQ_INSERT_TAIL(&sock->packets, pkt, pkt_queue);
 
         ++udp_stats.pkt_recv;
-        __poll_event_trigger(sock->sock, POLLRDNORM);
         genwait_wake_one(sock);
+
+        /* Fire poll wakeups after releasing udp_mutex to avoid the
+           poll-mutex / udp_mutex ABBA deadlock. */
+        file_t poll_fd = sock->sock;
         mutex_unlock(&udp_mutex);
+        __poll_event_trigger(poll_fd, POLLRDNORM);
 
         return 0;
     }
@@ -1376,9 +1380,13 @@ static int net_udp_input6(netif_t *src, const ipv6_hdr_t *ip, const uint8_t *dat
         TAILQ_INSERT_TAIL(&sock->packets, pkt, pkt_queue);
 
         ++udp_stats.pkt_recv;
-        __poll_event_trigger(sock->sock, POLLRDNORM);
         genwait_wake_one(sock);
+
+        /* Fire poll wakeups after releasing udp_mutex to avoid the
+           poll-mutex / udp_mutex ABBA deadlock. */
+        file_t poll_fd = sock->sock;
         mutex_unlock(&udp_mutex);
+        __poll_event_trigger(poll_fd, POLLRDNORM);
 
         return 0;
     }
