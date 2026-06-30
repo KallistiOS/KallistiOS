@@ -3,6 +3,7 @@
    pvr_scene.c
    Copyright (C) 2002,2004 Megan Potter
    Copyright (C) 2024 Falco Girgis
+   Copyright (C) 2026 Troy Davis
 
  */
 
@@ -104,6 +105,9 @@ static void pvr_start_ta_rendering(void) {
         pvr_state.ta_checked_ready = 1;
         pvr_state.curr_to_texture = pvr_state.next_to_texture;
         pvr_state.to_txr_rp = pvr_state.next_to_txr_rp;
+        pvr_state.to_txr_w = pvr_state.next_to_txr_w;
+        pvr_state.to_txr_h = pvr_state.next_to_txr_h;
+        pvr_state.to_txr_stride_px = pvr_state.next_to_txr_stride_px;
         pvr_state.to_txr_addr = pvr_state.next_to_txr_addr;
 
         // Starting from that point, we consider that the Tile Accelerator
@@ -138,30 +142,31 @@ void pvr_scene_begin(void) {
     }
 }
 
-/* Begin collecting data for a frame of 3D output to the specified texture;
-   pass in the size of the buffer in rx and ry, and the return values in
-   rx and ry will be the size actually used (if changed). Note that
-   currently this only supports screen-sized output! */
-/* Currently the resize functionality is not implemented, so make sure that
-   rx and ry are appropriate (i.e. *rx = 1024 and *ry = 512 for 640x480).
-   Also, note that this probably won't work with DMA mode for now... */
 void pvr_scene_begin_txr(pvr_ptr_t txr, uint32_t *rx, uint32_t *ry) {
     (void)ry;
 
-    /* For the most part, this isn't very much different than the normal render setup.
-       And, yes, if you remember KOS 1.1.6, this pretty much looks similar to what was
-       there. I'm quite uncreative with my variable naming ;) */
+    (void)pvr_scene_begin_rtt(txr, pvr_state.w, pvr_state.h, *rx);
+}
 
-    // Set the render pitch up
-    pvr_state.next_to_txr_rp = (*rx) * 2 / 8;
+int pvr_scene_begin_rtt(pvr_ptr_t txr, uint32_t render_w,
+                        uint32_t render_h, uint32_t stride_px) {
+    if(!txr || render_w == 0 || render_h == 0 || stride_px < render_w ||
+            (stride_px & 3))
+        return -1;
 
-    // Set the output address
+    /* The existing render-to-texture path programs a 16-bit render pitch in
+       64-bit units. Keep that behavior explicit for the sized RTT API. */
+    pvr_state.next_to_txr_rp = stride_px * 2 / 8;
+    pvr_state.next_to_txr_w = render_w;
+    pvr_state.next_to_txr_h = render_h;
+    pvr_state.next_to_txr_stride_px = stride_px;
     pvr_state.next_to_txr_addr = (uint32_t)(txr) - PVR_RAM_INT_BASE;
 
     pvr_scene_begin();
 
-    // Mark us as rendering to a texture
     pvr_state.next_to_texture = 1;
+
+    return 0;
 }
 
 static bool pvr_list_dma;
