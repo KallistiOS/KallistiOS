@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
+#include <kos/irq.h>
 #include <kos/rwsem.h>
 #include <kos/timer.h>
 
