@@ -6,8 +6,8 @@
 
 #include <kos/thread.h>
 
+#include <kos/rtc.h>
 #include <kos/timer.h>
-#include <arch/rtc.h>
 
 #include <time.h>
 #include <errno.h>
