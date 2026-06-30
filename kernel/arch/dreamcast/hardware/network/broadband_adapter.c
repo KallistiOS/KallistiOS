@@ -8,6 +8,7 @@
 
  */
 
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,7 +17,6 @@
 #include <dc/net/broadband_adapter.h>
 #include <dc/asic.h>
 #include <dc/g2bus.h>
-#include <dc/sq.h>
 #include <dc/flashrom.h>
 #include <dc/memory.h>
 #include <kos/cache.h>
@@ -439,7 +439,7 @@ static uint8_t *rxbuff;
 static uint32_t rxbuff_pos;
 static int rxin;
 static int rxout;
-static int dma_used;
+static atomic_int dma_used;
 
 static uint32_t rx_size;
 
@@ -492,7 +492,9 @@ static void rx_finish_enq(int room) {
     if(room > 0 && (((rxin + 1) % MAX_PKTS) != rxout)) {
         rxin = (rxin + 1) % MAX_PKTS;
         thd_worker_wakeup(rx_worker);
-        thd_schedule(true);
+        /* Only in IRQ context (unsafe from the TX drain). */
+        if(irq_inside_int())
+            thd_schedule(true);
     }
 }
 
@@ -611,6 +613,44 @@ static int bba_can_tx(void *d) {
     return 1;
 }
 
+/* Copy a large outbound frame into the current TX buffer with G2 DMA. Keep interrupts
+   active until the transfer is complete */
+static bool bba_tx_dma(const uint8_t *pkt, int len) {
+    size_t total = __align_up(len, 4);
+    size_t aligned = __align_down(total, 32);
+    size_t remainder = total - aligned;
+    int expected = 0;
+
+    /* Take the single shared BBA DMA channel, if available. */
+    if(!atomic_compare_exchange_strong(&dma_used, &expected, 1))
+        return false;
+
+    dcache_wback_range((uintptr_t)pkt, aligned);
+
+    /* Blocking DMA copy into the current TX buffer. Keep interrupts active to
+       queue up RX packets. */
+    g2_dma_transfer((void *)pkt, (void *)txdesc[rtl.cur_tx], aligned,
+                    1,             /* block */
+                    NULL, NULL,    /* no callback */
+                    G2_DMA_TO_G2,
+                    0, G2_DMA_CHAN_BBA, 0);
+
+    if(remainder) {
+        g2_fifo_wait();
+        g2_write_block_32((uint32_t *)(pkt + aligned),
+                          txdesc[rtl.cur_tx] + aligned, remainder >> 2);
+    }
+
+    irq_disable_scoped();
+    dma_used = 0;
+
+    /* Drain any queued RX packets received during TX transfer. */
+    if(!(g2_read_8(NIC(RT_CHIPCMD)) & RT_CMD_RX_BUF_EMPTY))
+        bba_rx();
+
+    return true;
+}
+
 /* Transmit a single packet */
 static int bba_rtx(const uint8_t *pkt, int len, int wait)
 {
@@ -632,12 +672,12 @@ static int bba_rtx(const uint8_t *pkt, int len, int wait)
     }
 
     /* Copy the packet out to RTL memory */
-    /* XXX could use store queues or memcpy8 here */
-
-    //g2_write_block_8(pkt, txdesc[rtl.cur_tx], len);
-
     assert(__is_aligned((uintptr_t)pkt, 32));
-    g2_write_block_32((uint32_t *) pkt, txdesc[rtl.cur_tx], (len + 3) >> 2);
+
+    /* Large frames go out via G2 DMA when the channel is free. Interrupt
+       context, small frames, or a channel busy with RX fall back to PIO. */
+    if(irq_inside_int() || len < DMA_THRESHOLD || !bba_tx_dma(pkt, len))
+        g2_write_block_32((uint32_t *)pkt, txdesc[rtl.cur_tx], (len + 3) >> 2);
 
     /* All packets must be at least 60 bytes, pad them with null bytes if
        they are not already of an appropriate size. */
