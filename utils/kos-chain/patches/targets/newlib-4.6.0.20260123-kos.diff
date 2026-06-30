@@ -7,7 +7,7 @@ diff --color -ruN newlib-4.6.0.20260123/newlib/configure.host newlib-4.6.0.20260
    arm*)
 -	machine_dir=arm
 -	libm_machine_dir=arm
-+	newlib_cflags="${newlib_cflags} -mcpu=arm7di -DREENTRANT_SYSCALLS_PROVIDED -DMALLOC_PROVIDED -DABORT_PROVIDED -DHAVE_FCNTL -ffunction-sections -fdata-sections"
++	newlib_cflags="${newlib_cflags} -DREENTRANT_SYSCALLS_PROVIDED -DMALLOC_PROVIDED -DABORT_PROVIDED -DHAVE_FCNTL -ffunction-sections -fdata-sections"
  	;;
    avr*)
  	newlib_cflags="${newlib_cflags} -DPREFER_SIZE_OVER_SPEED -mcall-prologues"

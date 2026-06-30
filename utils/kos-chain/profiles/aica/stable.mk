@@ -41,3 +41,4 @@ auto_fixup_newlib=0
 
 gcc_pass1_configure_args=CFLAGS_FOR_TARGET="-mcpu=arm7di -marm"
 gcc_pass2_configure_args=CFLAGS_FOR_TARGET="-mcpu=arm7di -marm"
+newlib_extra_configure_args=CFLAGS_FOR_TARGET="-mcpu=arm7di -O2 -g"
