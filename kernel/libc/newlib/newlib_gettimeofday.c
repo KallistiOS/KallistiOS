@@ -8,8 +8,8 @@
 #include <assert.h>
 #include <sys/time.h>
 #include <time.h>
+#include <kos/rtc.h>
 #include <kos/timer.h>
-#include <arch/rtc.h>
 
 /* This is kind of approximate and works only with "localtime" */
 int _gettimeofday_r(void * re, struct timeval *tv, struct timezone *tz) {
