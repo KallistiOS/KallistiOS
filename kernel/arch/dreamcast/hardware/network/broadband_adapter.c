@@ -139,17 +139,17 @@ static int gaps_init(void) {
        there is a VERY good chance it will never change. */
 
     /* VEN:DEV is 11db:1234 (vendor code is "Sega Enterprises, LTD")
-       The GAPS bridge is really just an MMU with a memory buffer that maps 
-       the RTL8139C to the Dreamcast's memory space, so these are actually 
-       the PCI configuration registers for the RTL8139, not GAPS (those are 
+       The GAPS bridge is really just an MMU with a memory buffer that maps
+       the RTL8139C to the Dreamcast's memory space, so these are actually
+       the PCI configuration registers for the RTL8139, not GAPS (those are
        just the 0x1400 regs).
 
-       It has a custom ven:dev ID, but the class ID in 0x1608 indicates a 
-       network controller (byte 0x160b = 0x02 = network controller, 
+       It has a custom ven:dev ID, but the class ID in 0x1608 indicates a
+       network controller (byte 0x160b = 0x02 = network controller,
        0x160a = 0x00 = Ethernet controller)
 
-       See PCI Local Bus Specification 2.2 (2.3 has all the 2.2 stuff in 
-       it and the RTL8139C uses 2.2). This is also documented in the 
+       See PCI Local Bus Specification 2.2 (2.3 has all the 2.2 stuff in
+       it and the RTL8139C uses 2.2). This is also documented in the
        RTL8139C's datasheet, under "PCI Configuration Space Registers"
     */
 
@@ -188,8 +188,8 @@ static int gaps_init(void) {
 
             if(g2_read_32(GAPS_BASE + 0x141c) == 0xaa5500ff) {
                 g2_write_32(GAPS_BASE + 0x141c, 0x41474553);
-                /* I think GAPS automatically pulls RSTB low for 120ns, which 
-                   causes the EEPROM to autoload all the registers initially. 
+                /* I think GAPS automatically pulls RSTB low for 120ns, which
+                   causes the EEPROM to autoload all the registers initially.
                    So we don't need to worry about it.
                 */
                 return 0;
@@ -320,7 +320,7 @@ static int bba_hw_init(void) {
     g2_write_32(NIC(RT_MAR0), 0x55aaff00);
     g2_write_32(NIC(RT_MAR4), 0xaa5500ff);
 
-    if((g2_read_32(NIC(RT_MAR0)) == 0x55aaff00) && 
+    if((g2_read_32(NIC(RT_MAR0)) == 0x55aaff00) &&
        (g2_read_32(NIC(RT_MAR4)) == 0xaa5500ff)) {
         /* Enable receive and transmit functions */
         g2_write_8(NIC(RT_CHIPCMD), RT_CMD_RX_ENABLE | RT_CMD_TX_ENABLE);
@@ -345,7 +345,7 @@ static int bba_hw_init(void) {
     g2_write_8(NIC(RT_CFG9346), 0xc0);
 
     /* Old style would turn of LWACT and on DVRLOAD. New also disables LED0 and enables LED1 */
-    g2_write_8(NIC(RT_CONFIG1), (g2_read_8(NIC(RT_CONFIG1)) & 
+    g2_write_8(NIC(RT_CONFIG1), (g2_read_8(NIC(RT_CONFIG1)) &
         ~(RT_CONFIG1_LWACT | RT_CONFIG1_LED0)) | RT_CONFIG1_DVRLOAD | RT_CONFIG1_LED1);
 
     /* Enable FIFO auto-clear */
