@@ -1688,11 +1688,13 @@ static int net_tcp_setsockopt(net_socket_t *hnd, int level, int option_name,
                         goto ret_inval;
 
                     tmp = *(uint32_t *)option_value;
-                    /* Send buffer size must be in the range 2048 - 65535 */
+                    /* Local staging send buffer size for outbound data
+                       (unsent + unacked). Not a wire value, so unlike SO_RCVBUF
+                       it isn't bound by the 16-bit window field. */
                     if(tmp < 2048)
                         tmp = 2048;
-                    else if(tmp > 65535)
-                        tmp = 65535;
+                    else if(tmp > 1024 * 1024)
+                        tmp = 1024 * 1024;
 
                     new_ptr = realloc(sock->data.sndbuf, tmp);
                     if(!new_ptr) {
