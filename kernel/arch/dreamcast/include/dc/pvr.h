@@ -866,7 +866,7 @@ void pvr_vertbuf_written(pvr_list_t list, size_t amt);
              frame buffer.
     \ingroup pvr_scene_mgmt
 
-    You must call this function (or pvr_scene_begin_txr()) for ever frame of
+    You must call this function (or pvr_scene_begin_rtt()) for ever frame of
     output.
 */
 void pvr_scene_begin(void);
@@ -874,6 +874,7 @@ void pvr_scene_begin(void);
 /** \brief   Begin collecting data for a frame of 3D output to the specified
              texture.
     \ingroup pvr_scene_mgmt
+    \deprecated Use pvr_scene_begin_rtt() instead.
 
     This function currently only supports outputting at the same size as the
     actual screen. Thus, make sure rx and ry are at least large enough for that.
@@ -885,7 +886,35 @@ void pvr_scene_begin(void);
     \param  rx              Width of the texture buffer (in pixels).
     \param  ry              Height of the texture buffer (in pixels).
 */
-void pvr_scene_begin_txr(pvr_ptr_t txr, uint32_t *rx, uint32_t *ry);
+void pvr_scene_begin_txr(pvr_ptr_t txr, uint32_t *rx, uint32_t *ry)
+    __depr("pvr_scene_begin_txr() is deprecated. Use pvr_scene_begin_rtt().");
+
+/** \brief   Begin collecting scene data for rendering into a texture target
+             with an explicit render size.
+    \ingroup pvr_scene_mgmt
+
+    This is the preferred render-to-texture API and does not require a
+    screen-sized backing texture. The PVR will render into a region of render_w
+    by render_h pixels, using stride_px pixels as the backing memory pitch.
+
+    render_w and render_h describe the area to draw. stride_px describes the
+    number of pixels between rows in memory and must be greater than or equal
+    to render_w. For the initial 16-bit render target implementation,
+    stride_px must also be a multiple of 4 pixels.
+
+    \note Initial support is intended for 16-bit render targets, matching the
+    deprecated pvr_scene_begin_txr() compatibility wrapper behavior.
+
+    \param  txr             The texture to render to.
+    \param  render_w        Width of the render area (in pixels).
+    \param  render_h        Height of the render area (in pixels).
+    \param  stride_px       Backing texture pitch (in pixels).
+
+    \retval 0               On success.
+    \retval -1              If the specified arguments are invalid.
+*/
+int pvr_scene_begin_rtt(pvr_ptr_t txr, uint32_t render_w,
+                        uint32_t render_h, uint32_t stride_px);
 
 
 /** \defgroup pvr_list_mgmt Polygon Lists
@@ -1024,7 +1053,7 @@ int pvr_list_flush(pvr_list_t list);
     \ingroup pvr_scene_mgmt
 
     Once this has been called, you can not submit any more data until one of the
-    pvr_scene_begin() or pvr_scene_begin_txr() functions is called again.
+    pvr_scene_begin() or pvr_scene_begin_rtt() functions is called again.
 
     \retval 0               On success.
     \retval -1              On error (no scene started).

@@ -223,6 +223,16 @@ typedef struct {
     // Render pitch for to-texture mode for the next frame
     int     next_to_txr_rp;
 
+    // Render target dimensions for to-texture mode for the current frame
+    uint32_t  to_txr_w;
+    uint32_t  to_txr_h;
+    uint32_t  to_txr_stride_px;
+
+    // Render target dimensions for to-texture mode for the next frame
+    uint32_t  next_to_txr_w;
+    uint32_t  next_to_txr_h;
+    uint32_t  next_to_txr_stride_px;
+
     // Output address for to-texture mode for the current frame
     uint32_t  to_txr_addr;
 
