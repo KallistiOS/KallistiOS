@@ -6,7 +6,7 @@ cpu_configure_args=--with-endian=big --with-cpu=750 --disable-multilib --disable
 newlib_extra_configure_args += --disable-libgloss
 
 # Toolchain versions for PowerPC
-binutils_ver=2.45.1
+binutils_ver=2.46.1
 gcc_ver=15.2.0
 newlib_ver=4.6.0.20260123
 
