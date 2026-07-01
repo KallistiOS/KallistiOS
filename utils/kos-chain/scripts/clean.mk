@@ -2,6 +2,11 @@
 
 clean: clean-downloads clean-builds clean_patches_stamp
 
+deepclean:
+	-rm -rf build-*
+	-rm -rf binutils-* gcc-* newlib-* gdb-*
+	-rm -f *.stamp
+
 distclean: clean-archives clean-downloads clean-builds clean_patches_stamp
 
 clean_patches_stamp:
