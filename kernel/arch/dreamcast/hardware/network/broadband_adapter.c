@@ -8,9 +8,9 @@
 
  */
 
-#include <stdalign.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <dc/net/broadband_adapter.h>
@@ -425,15 +425,17 @@ static void bba_hw_shutdown(void) {
     asic_evt_remove_handler(ASIC_EVT_EXP_PCI);
 }
 
-#define RXBSZ    (64*1024) /* must be a power of two */
-#define MAX_PKTS (RXBSZ / 32)
+#define RXBSZ       (64 * 1024) /* must be a power of two */
+#define MAX_PKTS    (RXBSZ / 32)
+#define RXBUF_EXTRA (2 * 1600)
+
 static struct pkt {
     uint16_t pkt_size;
     uint16_t offt;
     uint8_t *rxbuff;
-} rx_pkt[MAX_PKTS];
+} *rx_pkt;
 
-static alignas(32) uint8_t rxbuff[RXBSZ + 2 * 1600];
+static uint8_t *rxbuff;
 static uint32_t rxbuff_pos;
 static int rxin;
 static int rxout;
@@ -442,6 +444,37 @@ static int dma_used;
 static uint32_t rx_size;
 
 static void bba_rx(void);
+
+static int bba_rxbuf_alloc(void) {
+    if(rxbuff)
+        return 0;
+
+    rx_pkt = calloc(MAX_PKTS, sizeof(*rx_pkt));
+    if(!rx_pkt)
+        return -1;
+
+    rxbuff = aligned_alloc(32, RXBSZ + RXBUF_EXTRA);
+    if(!rxbuff) {
+        free(rx_pkt);
+        rx_pkt = NULL;
+        return -1;
+    }
+
+    rxbuff_pos = 0;
+    rxin = 0;
+    rxout = 0;
+    return 0;
+}
+
+static void bba_rxbuf_free(void) {
+    free(rxbuff);
+    rxbuff = NULL;
+    free(rx_pkt);
+    rx_pkt = NULL;
+    rxbuff_pos = 0;
+    rxin = 0;
+    rxout = 0;
+}
 
 static semaphore_t tx_sema;
 
@@ -540,13 +573,13 @@ static int rx_enq(int ring_offset, size_t pkt_size) {
 
     /* Do we have space for it? */
     if(rxin != rxout
-       && ptr_diff(rx_pkt[rxout].rxbuff, &rxbuff[rxbuff_pos], RXBSZ) < aligned_size) {
+       && ptr_diff(rx_pkt[rxout].rxbuff, rxbuff + rxbuff_pos, RXBSZ) < aligned_size) {
         dbglog(DBG_WARNING, "No space in RX buffer\n");
         return -1;
     }
 
     /* Get a pointer to the receive buffer where we will store the packet */
-    rx_pkt[rxin].rxbuff = &rxbuff[rxbuff_pos];
+    rx_pkt[rxin].rxbuff = rxbuff + rxbuff_pos;
     if(__is_defined(USE_P2_AREA))
         rx_pkt[rxin].rxbuff = (void *)(((uintptr_t)rx_pkt[rxin].rxbuff) | MEM_AREA_P2_BASE);
 
@@ -811,6 +844,11 @@ static int bba_if_init(netif_t *self) {
     if(bba_hw_init() < 0)
         return -1;
 
+    if(bba_rxbuf_alloc() < 0) {
+        bba_hw_shutdown();
+        return -1;
+    }
+
     memcpy(bba_if.mac_addr, rtl.mac, 6);
     set_ipv6_lladdr();
     bba_if.flags |= NETIF_INITIALIZED;
@@ -824,6 +862,7 @@ static int bba_if_shutdown(netif_t *self) {
         return 0;
 
     bba_hw_shutdown();
+    bba_rxbuf_free();
 
     bba_if.flags &= ~(NETIF_INITIALIZED | NETIF_RUNNING);
     return 0;
