@@ -1,0 +1,1 @@
+OBJS += arch/dreamcast/trap.o

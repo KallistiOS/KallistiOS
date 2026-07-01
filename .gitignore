@@ -19,6 +19,7 @@ compile_commands.json
 coverage.info
 environ.sh
 romdisk.img
+gmon.out
 html/
 /doc/reference/
 /ports/
