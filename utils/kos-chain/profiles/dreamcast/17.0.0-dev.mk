@@ -3,7 +3,7 @@
 ###############################################################################
 ###############################################################################
 ### THIS CONFIG IS FOR AN EXPERIMENTAL VERSION OF GCC!
-## THERE ARE NO KNOWN ISSUES BUILDING THIS VERSION as of 2026-01-28.
+## THERE ARE NO KNOWN ISSUES BUILDING THIS VERSION as of 2026-06-30.
 ###############################################################################
 ###############################################################################
 
@@ -12,14 +12,14 @@ target=sh-elf
 cpu_configure_args=--with-multilib-list=$(precision_modes) --with-endian=little --with-cpu=$(default_precision)
 
 # Toolchain versions for SH
-binutils_ver=2.45.1
-gcc_ver=15.2.1
+binutils_ver=2.46.1
+gcc_ver=17.0.0
 newlib_ver=4.6.0.20260123
 
 # Overide SH toolchain download type
 gcc_download_type=git
 gcc_git_repo=git://gcc.gnu.org/git/gcc.git
-gcc_git_branch=releases/gcc-15
+gcc_git_branch=master
 
 # GCC custom dependencies
 # Specify here if you want to use custom GMP, MPFR and MPC libraries when

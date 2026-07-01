@@ -6,7 +6,7 @@ cpu_configure_args=--with-multilib-list=$(precision_modes) --with-endian=little 
 
 # Toolchain versions for SH
 binutils_ver=2.46.1
-gcc_ver=13.4.0
+gcc_ver=14.4.0
 newlib_ver=4.6.0.20260123
 
 # GCC custom dependencies
