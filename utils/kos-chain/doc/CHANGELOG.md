@@ -2,6 +2,8 @@
 
 | Date<br/>_____________ | Author(s)<br/>_____________ | Changes<br/>_____________ |
 |:-----------------------|:----------------------------|---------------------------|
+| 2026-06-30 | Eric Fradella | Bump GCC series 14/15/16/17 profiles to latest available versions, update LRA testing toolchain |
+| 2026-06-30 | Eric Fradella | Update binutils to 2.46.1 for most profiles |
 | 2026-02-07 | Eric Fradella | Rename to KallistiOS Toolchain Builder, move to utils/kos-chain, stabilize GCC 15.2.0, various bug fixes |
 | 2026-01-28 | Eric Fradella | Update binutils to 2.45.1 and Newlib to 4.6.0 for most profiles |
 | 2026-01-01 | Eric Fradella | Update GDB to 17.1, do not build GDB by default |

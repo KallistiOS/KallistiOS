@@ -13,13 +13,13 @@ cpu_configure_args=--with-multilib-list=$(precision_modes) --with-endian=little 
 
 # Toolchain versions for SH
 binutils_ver=2.46.1
-gcc_ver=13.4.1
+gcc_ver=14.4.1
 newlib_ver=4.6.0.20260123
 
 # Overide SH toolchain download type
 gcc_download_type=git
 gcc_git_repo=git://gcc.gnu.org/git/gcc.git
-gcc_git_branch=releases/gcc-13
+gcc_git_branch=releases/gcc-14
 
 # GCC custom dependencies
 # Specify here if you want to use custom GMP, MPFR and MPC libraries when
@@ -30,7 +30,7 @@ gcc_git_branch=releases/gcc-13
 # numbers (i.e. 'isl_ver') to disable the ISL library.
 #use_custom_dependencies=1
 
-# GCC dependencies
+# GCC dependencies for SH
 gmp_ver=6.2.1
 mpfr_ver=4.1.0
 mpc_ver=1.2.1
