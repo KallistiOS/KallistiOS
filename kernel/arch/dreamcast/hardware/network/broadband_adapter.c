@@ -893,6 +893,8 @@ static int bba_if_start(netif_t *self) {
     /* Wait until the link is stabilized */
     if(!thd_poll(bba_link_is_stable, &link_stable, 10000)) {
         dbglog(DBG_ERROR, "bba: timed out waiting for link to stabilize\n");
+        thd_worker_destroy(rx_worker);
+        rx_worker = NULL;
         return -1;
     }
 
