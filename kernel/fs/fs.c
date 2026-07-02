@@ -890,7 +890,7 @@ int fs_rewinddir(file_t fd) {
         return -1;
     }
 
-    h->idx = 0;
+    h->idx = -2;
 
     return h->handler->rewinddir(h->hnd);
 }

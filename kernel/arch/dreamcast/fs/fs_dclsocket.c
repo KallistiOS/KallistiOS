@@ -35,13 +35,26 @@
 #include <kos/net.h>
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>
+#include <kos/regfield.h>
 
 #include <dc/fs_dclsocket.h>
 #include <dc/fs_dcload.h>
 #include <dc/dcload.h>
 
-#define DCLOAD_PORT 31313
+#define DCLOAD_PORT 53535
+#define DCLOAD_PACKET_SIZE 1440
 #define NAME "dcload-ip over KOS sockets"
+
+/* Number of DCLOAD_PACKET_SIZE chunks needed to cover n bytes. */
+#define DCLOAD_PACKETS(n)  (((n) + DCLOAD_PACKET_SIZE - 1) / DCLOAD_PACKET_SIZE)
+
+/* PARTBIN receive map: one bit per chunk, sized to cover 16 MB of RAM. */
+#define DCLOAD_MAP_ENTRIES DCLOAD_PACKETS(16 * 1024 * 1024)
+#define DCLOAD_MAP_BYTES   (((DCLOAD_MAP_ENTRIES) + 7) / 8)
+
+/* dc-tool hands back big handles for opendir() but small ones for files, so any
+   handle past this cutoff is a directory. */
+#define FS_DCLSOCKET_FD_DIR_THRESH 100
 
 typedef struct {
     unsigned char id[4];
@@ -65,7 +78,7 @@ typedef struct {
 static struct {
     unsigned int addr;
     unsigned int size;
-    unsigned char map[16384];
+    unsigned char map[DCLOAD_MAP_BYTES];
 } bin_info;
 
 extern int dcload_type;
@@ -74,45 +87,56 @@ static int escape = 0;
 static int retval = 0;
 static mutex_t mutex;
 static char *dcload_path = NULL;
-static uint8_t pktbuf[1024 + sizeof(command_t)];
+static uint8_t pktbuf[DCLOAD_PACKET_SIZE + sizeof(command_t)];
 
 static int dcls_socket = -1;
+
+/* Mark / test receipt of chunk `index` in the PARTBIN map. */
+static inline void bin_map_set(unsigned int index) {
+    bin_info.map[index >> 3] |= BIT(index & 7);
+}
+
+static inline int bin_map_test(unsigned int index) {
+    return bin_info.map[index >> 3] & BIT(index & 7);
+}
 
 static void dcls_handle_lbin(command_t *cmd) {
     bin_info.addr = ntohl(cmd->address);
     bin_info.size = ntohl(cmd->size);
-    memset(bin_info.map, 0, 16384);
+    memset(bin_info.map, 0, DCLOAD_MAP_BYTES);
 
     send(dcls_socket, cmd, sizeof(command_t), 0);
 }
 
 static void dcls_handle_pbin(command_t *cmd) {
-    int index = (ntohl(cmd->address) - bin_info.addr) >> 10;
+    int index = (ntohl(cmd->address) - bin_info.addr) / DCLOAD_PACKET_SIZE;
 
     memcpy((uint8_t *)ntohl(cmd->address), cmd->data, ntohl(cmd->size));
-    bin_info.map[index] = 1;
+
+    if(index >= 0 && index < DCLOAD_MAP_ENTRIES)
+        bin_map_set(index);
 }
 
 static void dcls_handle_dbin(command_t *cmd) {
     unsigned int i;
 
-    for(i = 0; i < (bin_info.size + 1023) / 1024; ++i) {
-        if(!bin_info.map[i])
+    for(i = 0; i < DCLOAD_PACKETS(bin_info.size); ++i) {
+        if(!bin_map_test(i))
             break;
     }
 
-    if(i == (bin_info.size + 1023) / 1024) {
+    if(i == DCLOAD_PACKETS(bin_info.size)) {
         cmd->address = 0;
         cmd->size = 0;
     }
     else {
-        cmd->address = htonl(bin_info.addr + i * 1024);
+        cmd->address = htonl(bin_info.addr + i * DCLOAD_PACKET_SIZE);
 
-        if(i == (bin_info.size + 1023) / 1024 - 1) {
-            cmd->size = htonl(bin_info.size % 1024);
+        if(i == DCLOAD_PACKETS(bin_info.size) - 1) {
+            cmd->size = htonl(bin_info.size % DCLOAD_PACKET_SIZE);
         }
         else {
-            cmd->size = htonl(1024);
+            cmd->size = htonl(DCLOAD_PACKET_SIZE);
         }
     }
 
@@ -127,12 +151,12 @@ static void dcls_handle_sbin(command_t *cmd) {
 
     left = ntohl(cmd->size);
     ptr = (uint8_t *)ntohl(cmd->address);
-    count = (left + 1023) / 1024;
+    count = DCLOAD_PACKETS(left);
 
     memcpy(resp->id, "SBIN", 4);
 
     for(i = 0; i < count; ++i) {
-        size = left > 1024 ? 1024 : left;
+        size = left > DCLOAD_PACKET_SIZE ? DCLOAD_PACKET_SIZE : left;
         left -= size;
 
         resp->address = htonl((uint32_t)ptr);
@@ -225,12 +249,12 @@ static void *dcls_open(struct vfs_handler *vfs, const char *fn, int mode) {
         if(fn[0] == '\0') {
             strcpy(realfn, "/");
         }
-        else    {
+        else {
             strcpy(realfn, fn);
         }
 
         memcpy(pktbuf, "DC16", 4);
-        strcpy((char *)(pktbuf + 4), fn);
+        strcpy((char *)(pktbuf + 4), realfn);
 
         send(dcls_socket, pktbuf, 5 + strlen(realfn), 0);
 
@@ -288,7 +312,7 @@ static int dcls_close(void *hnd) {
     if(mutex_lock_irqsafe(&mutex))
         return -1;
 
-    if(fd > 100) {
+    if(fd > FS_DCLSOCKET_FD_DIR_THRESH) {
         memcpy(cmd->id, "DC17", 4);
         cmd->value0 = htonl(fd);
 
@@ -399,13 +423,19 @@ static size_t dcls_total(void *hnd) {
 }
 
 static dirent_t their_dir;
-static dirent_t our_dir;
+
+/* The host fills the readdir reply as a POSIX struct dirent, not a KOS
+   dirent_t, so receive it as one */
+static union {
+    struct dirent de;
+    char storage[sizeof(struct dirent) + NAME_MAX + 1];
+} our_dir;
 
 static const dirent_t *dcls_readdir(void *hnd) {
     uint32_t fd = (uint32_t) hnd;
     command_3int_t *cmd = (command_3int_t *)pktbuf;
 
-    if(fd < 100) {
+    if(fd < FS_DCLSOCKET_FD_DIR_THRESH) {
         errno = EBADF;
         return NULL;
     }
@@ -415,25 +445,33 @@ static const dirent_t *dcls_readdir(void *hnd) {
 
     memcpy(cmd->id, "DC18", 4);
     cmd->value0 = htonl(fd);
-    cmd->value1 = htonl((uint32_t)(&our_dir));
-    cmd->value2 = htonl(sizeof(dirent_t));
+    cmd->value1 = htonl((uint32_t)(&our_dir.de));
+    cmd->value2 = htonl(sizeof(our_dir));
 
     send(dcls_socket, cmd, sizeof(command_3int_t), 0);
 
     dcls_recv_loop();
 
     if(retval) {
-        char fn[strlen(dcload_path) + strlen(our_dir.name) + 1];
         command_t *cmd2 = (command_t *)pktbuf;
         dcload_stat_t filestat;
 
-        strcpy(their_dir.name, our_dir.name);
+        /* Verify dcload won't overflow us */
+        if(strlen(our_dir.de.d_name) + 1 > NAME_MAX) {
+            mutex_unlock(&mutex);
+            errno = EOVERFLOW;
+            return NULL;
+        }
+
+        char fn[strlen(dcload_path) + strlen(our_dir.de.d_name) + 1];
+
+        strcpy(their_dir.name, our_dir.de.d_name);
         their_dir.size = 0;
         their_dir.time = 0;
         their_dir.attr = 0;
 
         strcpy(fn, dcload_path);
-        strcat(fn, our_dir.name);
+        strcat(fn, our_dir.de.d_name);
 
         memcpy(cmd2->id, "DC13", 4);
         cmd2->address = htonl((uint32_t) &filestat);
@@ -447,6 +485,7 @@ static const dirent_t *dcls_readdir(void *hnd) {
         if(!retval) {
             if(filestat.st_mode & S_IFDIR) {
                 their_dir.size = -1;
+                their_dir.attr = O_DIR;
             }
             else {
                 their_dir.size = filestat.st_size;
@@ -513,12 +552,24 @@ static int dcls_unlink(vfs_handler_t *vfs, const char *fn) {
     return retval;
 }
 
-static int dcls_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
+static int dcls_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
                      int flag) {
     command_t *cmd = (command_t *)pktbuf;
     dcload_stat_t filestat = { 0 };
+    size_t len = strlen(path);
 
     (void)flag;
+
+    /* Root directory '/pc' */
+    if(len == 0 || (len == 1 && *path == '/')) {
+        memset(st, 0, sizeof(struct stat));
+        st->st_dev = (dev_t)((uintptr_t)vfs);
+        st->st_mode = S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO;
+        st->st_size = -1;
+        st->st_nlink = 2;
+
+        return 0;
+    }
 
     if(mutex_lock_irqsafe(&mutex))
         return -1;
@@ -526,27 +577,27 @@ static int dcls_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
     memcpy(cmd->id, "DC13", 4);
     cmd->address = htonl((uint32_t) &filestat);
     cmd->size = htonl(sizeof(dcload_stat_t));
-    strcpy((char *)(cmd->data), fn);
+    strcpy((char *)(cmd->data), path);
 
-    send(dcls_socket, cmd, sizeof(command_t) + strlen(fn) + 1, 0);
+    send(dcls_socket, cmd, sizeof(command_t) + strlen(path) + 1, 0);
 
     dcls_recv_loop();
 
     if(!retval) {
-        memset(rv, 0, sizeof(struct stat));
-        rv->st_dev = (dev_t)((uintptr_t)vfs);
-        rv->st_ino = filestat.st_ino;
-        rv->st_mode = filestat.st_mode;
-        rv->st_nlink = filestat.st_nlink;
-        rv->st_uid = filestat.st_uid;
-        rv->st_gid = filestat.st_gid;
-        rv->st_rdev = filestat.st_rdev;
-        rv->st_size = filestat.st_size;
-        rv->st_atime = filestat.atime;
-        rv->st_mtime = filestat.mtime;
-        rv->st_ctime = filestat.ctime;
-        rv->st_blksize = filestat.st_blksize;
-        rv->st_blocks = filestat.st_blocks;
+        memset(st, 0, sizeof(struct stat));
+        st->st_dev = (dev_t)((uintptr_t)vfs);
+        st->st_ino = filestat.st_ino;
+        st->st_mode = filestat.st_mode;
+        st->st_nlink = filestat.st_nlink;
+        st->st_uid = filestat.st_uid;
+        st->st_gid = filestat.st_gid;
+        st->st_rdev = filestat.st_rdev;
+        st->st_size = filestat.st_size;
+        st->st_atime = filestat.atime;
+        st->st_mtime = filestat.mtime;
+        st->st_ctime = filestat.ctime;
+        st->st_blksize = filestat.st_blksize;
+        st->st_blocks = filestat.st_blocks;
 
         mutex_unlock(&mutex);
         return 0;
@@ -554,6 +605,30 @@ static int dcls_stat(vfs_handler_t *vfs, const char *fn, struct stat *rv,
 
     mutex_unlock(&mutex);
     return -1;
+}
+
+static int dcls_rewinddir(void *hnd) {
+    uint32_t fd = (uint32_t) hnd;
+    command_int_t *cmd = (command_int_t *)pktbuf;
+
+    if(fd < FS_DCLSOCKET_FD_DIR_THRESH) {
+        errno = EBADF;
+        return -1;
+    }
+
+    if(mutex_lock_irqsafe(&mutex))
+        return -1;
+
+    memcpy(cmd->id, "DC21", 4);
+    cmd->value0 = htonl(fd);
+
+    send(dcls_socket, cmd, sizeof(command_int_t), 0);
+
+    dcls_recv_loop();
+
+    mutex_unlock(&mutex);
+
+    return retval;
 }
 
 /* dbgio interface */
@@ -657,7 +732,7 @@ static vfs_handler_t vh = {
     NULL,               /* tell64 */
     NULL,               /* total64 */
     NULL,               /* readlink */
-    NULL,               /* rewinddir */
+    dcls_rewinddir,     /* rewinddir */
     NULL                /* fstat */
 };
 
