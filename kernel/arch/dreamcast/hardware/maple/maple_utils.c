@@ -35,7 +35,7 @@ int maple_dma_in_progress(void) {
 
 /* Set the DMA Address */
 void maple_dma_addr(void *ptr) {
-    maple_write(MAPLE_DMAADDR, ((uint32_t) ptr) & MEM_AREA_CACHE_MASK);
+    maple_write(MAPLE_DMA_ADDR, ((uint32_t) ptr) & MEM_AREA_CACHE_MASK);
 }
 
 /* Return a "maple address" for a port,unit pair */
@@ -93,7 +93,10 @@ static const char *maple_cap_names[] = {
     "Camera",
     NULL,
     "Mouse",
-    "JumpPack"
+    "JumpPack",
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    "JVS I/O"
 };
 
 /* Print the capabilities of a given driver to dbglog; NOT THREAD SAFE */

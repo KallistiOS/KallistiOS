@@ -1,5 +1,6 @@
 include kos.h
 include dc/sound/sound.h
+include dc/maple/mie.h
 
 # Cache management
 arch_icache_inval_range
@@ -235,6 +236,38 @@ vmu_draw_lcd
 vmu_block_read
 vmu_block_write
 vmu_set_icon
+
+# MIE
+mie_port0_mode
+mie_get_coin_meter
+mie_read_coin_input
+mie_coin_decrease
+mie_coin_add
+mie_jvs_set_outputs
+mie_jvs_set_output
+mie_jvs_get_outputs
+mie_jvs_driver_outputs
+mie_btn_callback
+mie_jvs_callback
+mie_set_cont_map
+mie_analog_calib_get
+mie_analog_calib_set
+mie_analog_calib_reset
+mie_analog_calib_valid
+mie_analog_calib_start
+mie_analog_calib_cancel
+mie_analog_calib_active
+mie_analog_calib_current
+mie_analog_calib_capture
+mie_analog_norm_wheel
+mie_analog_norm_accel
+mie_analog_norm_brake
+mie_get_id
+mie_get_eeprom
+mie_set_eeprom
+mie_eeprom_crc16
+mie_eeprom_fix_crc
+mie_init_fw
 
 # VMUFS
 vmufs_dir_fill_time
