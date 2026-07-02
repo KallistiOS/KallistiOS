@@ -16,6 +16,7 @@ OBJS := $(OBJS) purupuru.o sip.o dreameye.o lightgun.o
 # Output devices
 OBJS := $(OBJS) vmu.o
 
-SUBDIRS =
+# MIE-JVS bridge
+SUBDIRS := mie
 
 include $(KOS_BASE)/Makefile.prefab

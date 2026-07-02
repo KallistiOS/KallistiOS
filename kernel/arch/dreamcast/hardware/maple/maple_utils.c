@@ -93,7 +93,10 @@ static const char *maple_cap_names[] = {
     "Camera",
     NULL,
     "Mouse",
-    "JumpPack"
+    "JumpPack",
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    "JVS I/O"
 };
 
 /* Print the capabilities of a given driver to dbglog; NOT THREAD SAFE */

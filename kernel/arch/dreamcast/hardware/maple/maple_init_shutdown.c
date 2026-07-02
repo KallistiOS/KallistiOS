@@ -28,6 +28,7 @@
 #include <dc/maple/sip.h>
 #include <dc/maple/dreameye.h>
 #include <dc/maple/lightgun.h>
+#include <dc/maple/mie.h>
 
 /*
   This system handles low-level communication/initialization of the maple
@@ -147,6 +148,7 @@ static void maple_hw_init(void) {
     maple_state.vbl_cntr = maple_state.dma_cntr = 0;
     maple_state.detect_port_next = 0;
     maple_state.scan_ready_mask = 0;
+    maple_state.port0_mie = 0;
     maple_state.gun_port = -1;
     maple_state.gun_x = maple_state.gun_y = -1;
 
@@ -213,11 +215,15 @@ static int maple_scan_done(maple_state_t *state) {
     return state->scan_ready_mask == 0xf;
 }
 
+KOS_INIT_FLAG_WEAK(mie_init_scan, __is_defined(_arch_sub_naomi));
+
 /* Wait for the initial bus scan to complete */
 void maple_wait_scan(void) {
 
     /* Wait for it to finish */
     thd_poll((thd_cb_t)maple_scan_done, &maple_state, 0);
+
+    KOS_INIT_FLAG_CALL(mie_init_scan);
 
     /* Enumerate everything */
     dbglog(DBG_INFO, "maple: attached devices:\n");
@@ -227,7 +233,7 @@ void maple_wait_scan(void) {
             maple_device_t *dev = maple_enum_dev(p, u);
 
             if(dev) {
-                dbglog(DBG_INFO, "  %c%c: %.30s (%08lx: %s)\n",
+                dbglog(DBG_INFO, "  %c%c: %-30.30s (%08lx: %s)\n",
                        'A' + p, '0' + u,
                        dev->info.product_name,
                        dev->info.functions, maple_pcaps(dev->info.functions));
@@ -244,6 +250,7 @@ KOS_INIT_FLAG_WEAK(vmu_init, true);
 KOS_INIT_FLAG_WEAK(purupuru_init, true);
 KOS_INIT_FLAG_WEAK(sip_init, true);
 KOS_INIT_FLAG_WEAK(dreameye_init, true);
+KOS_INIT_FLAG_WEAK(mie_init, __is_defined(_arch_sub_naomi));
 
 /* Full init: initialize known drivers and start maple operations */
 void maple_init(void) {
@@ -255,6 +262,7 @@ void maple_init(void) {
     KOS_INIT_FLAG_CALL(purupuru_init);
     KOS_INIT_FLAG_CALL(sip_init);
     KOS_INIT_FLAG_CALL(dreameye_init);
+    KOS_INIT_FLAG_CALL(mie_init);
 
     maple_hw_init();
 }
@@ -267,9 +275,11 @@ KOS_INIT_FLAG_WEAK(vmu_shutdown, true);
 KOS_INIT_FLAG_WEAK(purupuru_shutdown, true);
 KOS_INIT_FLAG_WEAK(sip_shutdown, true);
 KOS_INIT_FLAG_WEAK(dreameye_shutdown, true);
+KOS_INIT_FLAG_WEAK(mie_shutdown, __is_defined(_arch_sub_naomi));
 
 /* Full shutdown: shutdown each driver, then all hardware operations. */
 void maple_shutdown(void) {
+    KOS_INIT_FLAG_CALL(mie_shutdown);
     KOS_INIT_FLAG_CALL(dreameye_shutdown);
     KOS_INIT_FLAG_CALL(sip_shutdown);
     KOS_INIT_FLAG_CALL(purupuru_shutdown);

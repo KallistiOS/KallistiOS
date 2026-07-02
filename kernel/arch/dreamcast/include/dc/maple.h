@@ -179,6 +179,7 @@ __BEGIN_DECLS
 #define MAPLE_FUNC_ARGUN        0x20000000  /**< \brief AR gun? */
 #define MAPLE_FUNC_KEYBOARD     0x40000000  /**< \brief Keyboard */
 #define MAPLE_FUNC_LIGHTGUN     0x80000000  /**< \brief Lightgun */
+#define MAPLE_FUNC_MIE          0x00000001  /**< \brief Naomi MIE/JVS bridge */
 #define MAPLE_FUNC_ANY          0xffffffff  /**< \brief Match/request any */
 /** @} */
 
@@ -446,6 +447,9 @@ typedef struct maple_state_str {
 
     /** \brief  Mask of ports that completed the initial scan */
     volatile uint8_t            scan_ready_mask;
+
+    /** \brief  Port A is MIE (skip autodetect on port 0). */
+    uint8_t                     port0_mie;
 
     /** \brief  Our vblank handler handle */
     int                         vbl_handle;
