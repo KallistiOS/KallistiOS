@@ -4,7 +4,7 @@
    Copyright (C) 2000, 2001, 2002, 2003, 2004 Megan Potter
    Copyright (C) 2002 Florian Schulze
    Copyright (C) 2020 Lawrence Sebald
-   Copyright (C) 2023, 2024, 2025 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024, 2025, 2026 Ruslan Rostovtsev
    Copyright (C) 2024 Stefanos Kornilios Mitsis Poiitidis
 
    SH-4 support routines for SPU streaming sound driver
@@ -213,12 +213,12 @@ static void snd_pcm16_split_unaligned(void *buffer, void *left, void *right, siz
         dcache_pref_block(buf + 8);
 
         data = *buf++;
-        left_val = (data >> 16);
-        right_val = (data & 0xffff);
+        left_val = (data & 0xffff) << 16;
+        right_val = (data >> 16) << 16;
 
         data = *buf++;
-        left_val |= (data & 0xffff0000);
-        right_val |= (data & 0xffff) << 16;
+        left_val |= (data & 0xffff);
+        right_val |= (data >> 16);
 
         if(__is_aligned(left_ptr, 32)) {
             dcache_alloc_block(left_ptr++, left_val);
@@ -231,8 +231,8 @@ static void snd_pcm16_split_unaligned(void *buffer, void *left, void *right, siz
     }
     if(len) {
         data = *buf++;
-        *(uint16_t *)left_ptr = (data >> 16);
-        *(uint16_t *)right_ptr = (data & 0xffff);
+        *(uint16_t *)left_ptr = (data & 0xffff);
+        *(uint16_t *)right_ptr = (data >> 16);
     }
 }
 
