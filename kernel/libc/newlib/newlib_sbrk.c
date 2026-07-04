@@ -5,10 +5,10 @@
 
 */
 
-#include <sys/reent.h>
+#include <reent.h>
 #include <kos/mm.h>
 
-char *_sbrk_r(struct _reent *reent, size_t incr) {
+void *_sbrk_r(struct _reent *reent, ptrdiff_t incr) {
     (void)reent;
-    return (char *)mm_sbrk(incr);
+    return mm_sbrk(incr);
 }

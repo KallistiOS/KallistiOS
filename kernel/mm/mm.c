@@ -38,7 +38,7 @@ int mm_init(void) {
 }
 
 /* Simple sbrk function */
-void *mm_sbrk(size_t increment) {
+void *mm_sbrk(ptrdiff_t increment) {
     uintptr_t base = sbrk_base;
     uintptr_t new_base;
 

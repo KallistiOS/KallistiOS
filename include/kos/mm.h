@@ -35,7 +35,7 @@ int mm_init(void);
     \return                 A pointer to the memory.
     \note                   This function will panic if no memory is available.
 */
-void *mm_sbrk(size_t increment);
+void *mm_sbrk(ptrdiff_t increment);
 
 __END_DECLS
 #endif /* __KOS_MM_H */
