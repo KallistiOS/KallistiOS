@@ -8,7 +8,7 @@
 #include <sys/reent.h>
 #include <kos/fs.h>
 
-int _close_r(struct _reent * reent, int f) {
+int _close_r(struct _reent *reent, int f) {
     (void)reent;
     return fs_close(f);
 }

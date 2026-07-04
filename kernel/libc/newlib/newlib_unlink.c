@@ -7,7 +7,7 @@
 
 #include <kos/fs.h>
 
-int _unlink_r(void * reent, const char * fn) {
+int _unlink_r(void *reent, const char *fn) {
     (void)reent;
     return fs_unlink(fn);
 }

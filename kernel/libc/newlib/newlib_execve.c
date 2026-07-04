@@ -8,7 +8,7 @@
 #include <sys/reent.h>
 #include <errno.h>
 
-int _execve_r(struct _reent * reent) {
+int _execve_r(struct _reent *reent) {
     reent->_errno = EAGAIN;
     return -1;
 }
