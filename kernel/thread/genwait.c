@@ -111,7 +111,7 @@ static void __nonnull_all genwait_unqueue(kthread_t *thd, int err) {
     /* Set the wake return value */
     if(err) {
         CONTEXT_RET(thd->context) = -1;
-        thd->thd_errno = err;
+        *thd_get_errno(thd) = err;
     }
     else {
         CONTEXT_RET(thd->context) = 0;
