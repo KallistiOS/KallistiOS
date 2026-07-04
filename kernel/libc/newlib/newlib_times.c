@@ -9,11 +9,11 @@
 
 #include <errno.h>
 #include <stdint.h>
-#include <sys/reent.h>
+#include <reent.h>
 #include <sys/times.h>
 #include <kos/timer.h>
 
-int _times_r(struct _reent *re, struct tms *tmsbuf) {
+clock_t _times_r(struct _reent *re, struct tms *tmsbuf) {
     (void)re;
 
     if(tmsbuf) {
@@ -33,9 +33,9 @@ int _times_r(struct _reent *re, struct tms *tmsbuf) {
         /* Children System CPU Time: Unimplemented */
         tmsbuf->tms_cstime = 0;
 
-        return (int)tmsbuf->tms_utime;
+        return tmsbuf->tms_utime;
     }
 
     re->_errno = EFAULT;
-    return -1;
+    return (clock_t)-1;
 }

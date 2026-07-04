@@ -5,9 +5,10 @@
 
 */
 
+#include <reent.h>
 #include <kos/fs.h>
 
-long _write_r(void *reent, int fd, void *buf, size_t cnt) {
+ssize_t _write_r(struct _reent *reent, int fd, const void *buf, size_t cnt) {
     (void)reent;
     return fs_write(fd, buf, cnt);
 }

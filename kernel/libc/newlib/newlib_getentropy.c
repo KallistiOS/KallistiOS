@@ -16,9 +16,11 @@
 #if __NEWLIB__ < 4 || (__NEWLIB__ == 4 && __NEWLIB_MINOR__ < 4)
 int getentropy(void *ptr, size_t len) {
 #else
+
+#include <reent.h>
 /* getentropy() is provided by Newlib >= 4.4.0,
    but we must provide _getentropy_r() */
-int _getentropy_r(void *re, void *ptr, size_t len) {
+int _getentropy_r(struct _reent *re, void *ptr, size_t len) {
     (void)re;
 #endif
     const int block_size = 128;
