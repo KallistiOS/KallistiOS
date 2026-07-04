@@ -253,24 +253,36 @@ file_t fs_open_handle(vfs_handler_t *vfs, void *vhnd) {
     return fs_hnd_assign(hnd);
 }
 
-vfs_handler_t *fs_get_handler(file_t fd) {
-    /* Make sure it exists */
+/* Returns a file handle for a given fd, or NULL if the parameters
+   are not valid. */
+static fs_hnd_t *fs_map_hnd(file_t fd) {
+    if(fd < 0 || fd >= FD_SETSIZE || fd == FILEHND_INVALID) {
+        errno = EBADF;
+        return NULL;
+    }
+
     if(!fd_table[fd]) {
         errno = EBADF;
         return NULL;
     }
 
-    return fd_table[fd]->handler;
+    return fd_table[fd];
+}
+
+vfs_handler_t *fs_get_handler(file_t fd) {
+    fs_hnd_t *h = fs_map_hnd(fd);
+
+    if(!h) return NULL;
+
+    return h->handler;
 }
 
 void *fs_get_handle(file_t fd) {
-    /* Make sure it exists */
-    if(!fd_table[fd]) {
-        errno = EBADF;
-        return NULL;
-    }
+    fs_hnd_t *h = fs_map_hnd(fd);
 
-    return fd_table[fd]->hnd;
+    if(!h) return NULL;
+
+    return h->hnd;
 }
 
 file_t fs_dup(file_t oldfd) {
@@ -318,22 +330,6 @@ out_get_ref:
     fs_hnd_ref(fd_table[newfd]);
 
     return newfd;
-}
-
-/* Returns a file handle for a given fd, or NULL if the parameters
-   are not valid. */
-static fs_hnd_t *fs_map_hnd(file_t fd) {
-    if(fd < 0 || fd >= FD_SETSIZE || fd == FILEHND_INVALID) {
-        errno = EBADF;
-        return NULL;
-    }
-
-    if(!fd_table[fd]) {
-        errno = EBADF;
-        return NULL;
-    }
-
-    return fd_table[fd];
 }
 
 /* Close a file and clean up the handle */
