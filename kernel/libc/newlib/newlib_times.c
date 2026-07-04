@@ -22,9 +22,12 @@ clock_t _times_r(struct _reent *re, struct tms *tmsbuf) {
                   timer_us_gettime64();
 
         /* We have to protect against overflow. */
-        tmsbuf->tms_utime =
-            (precise_clock <= UINT32_MAX)?
-                precise_clock : (clock_t)-1;
+        if(precise_clock > UINT32_MAX) {
+            errno = EOVERFLOW;
+            return (clock_t)-1;
+        }
+
+        tmsbuf->tms_utime = precise_clock;
 
         /* System CPU Time: Unimplemented */
         tmsbuf->tms_stime = 0;
@@ -36,6 +39,6 @@ clock_t _times_r(struct _reent *re, struct tms *tmsbuf) {
         return tmsbuf->tms_utime;
     }
 
-    re->_errno = EFAULT;
+    errno = EFAULT;
     return (clock_t)-1;
 }
