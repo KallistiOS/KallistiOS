@@ -12,7 +12,7 @@
 # without needing recompilation ;)
 #
 
-OBJS = lock_common.o newlib_close.o newlib_env_lock.o newlib_environ.o \
+OBJS = lock_common.o newlib_close.o newlib_environ.o \
 	newlib_execve.o newlib_exit.o \
 	newlib_fork.o newlib_fstat.o newlib_getentropy.o newlib_getpid.o \
 	newlib_gettimeofday.o newlib_isatty.o newlib_kill.o newlib_link.o \
