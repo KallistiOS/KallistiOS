@@ -7,7 +7,7 @@
 */
 
 #include <kos/thread.h>
-#include <sys/reent.h>
+#include <reent.h>
 
 int _getpid_r(struct _reent *re) {
     (void)re;

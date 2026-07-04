@@ -44,7 +44,7 @@ __BEGIN_DECLS
 #include <arch/types.h>
 
 #include <sys/queue.h>
-#include <sys/reent.h>
+#include <reent.h>
 
 #include <stdint.h>
 #include <stdbool.h>

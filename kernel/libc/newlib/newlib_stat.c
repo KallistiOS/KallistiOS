@@ -8,7 +8,7 @@
 
 #include <unistd.h>
 #include <sys/stat.h>
-#include <sys/reent.h>
+#include <reent.h>
 #include <kos/fs.h>
 #include <errno.h>
 #include <fcntl.h>

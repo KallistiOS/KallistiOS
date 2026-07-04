@@ -5,7 +5,7 @@
 
 */
 
-#include <sys/reent.h>
+#include <reent.h>
 #include <errno.h>
 
 int _kill_r(struct _reent *reent, int pid, int sig) {

@@ -11,7 +11,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include <sys/reent.h>
+#include <reent.h>
 #include <kos/fs.h>
 
 int isatty(int fd) {

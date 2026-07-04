@@ -5,7 +5,7 @@
 
 */
 
-#include <sys/reent.h>
+#include <reent.h>
 #include <errno.h>
 
 int _fork_r(struct _reent *reent) {

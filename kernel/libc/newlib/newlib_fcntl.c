@@ -5,11 +5,8 @@
 
 */
 
-#include <sys/fcntl.h>
-
+#include <reent.h>
 #include <kos/fs.h>
-
-struct _reent;
 
 int _fcntl_r(struct _reent *reent, int fd, int cmd, int arg) {
     (void)reent;
