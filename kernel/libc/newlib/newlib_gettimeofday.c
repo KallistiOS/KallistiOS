@@ -12,7 +12,6 @@
 #include <kos/rtc.h>
 #include <kos/timer.h>
 
-/* This is kind of approximate and works only with "localtime" */
 int _gettimeofday_r(struct _reent *re, struct timeval *tv, void *tz) {
     uint32_t u, s;
 
