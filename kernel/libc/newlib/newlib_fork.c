@@ -9,6 +9,8 @@
 #include <errno.h>
 
 int _fork_r(struct _reent *reent) {
-    reent->_errno = EAGAIN;
+    (void)reent;
+
+    errno = EAGAIN;
     return -1;
 }
