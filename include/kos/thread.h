@@ -243,9 +243,6 @@ typedef struct __attribute__((aligned(32))) kthread {
     /** \brief  Size of the thread's stack, in bytes. */
     size_t stack_size;
 
-    /** \brief  Thread errno variable. */
-    int thd_errno;
-
     /** \brief  Our reent struct for newlib. */
     struct _reent thd_reent;
 
@@ -645,7 +642,8 @@ void thd_set_pwd(kthread_t *__RESTRICT thd, const char *__RESTRICT pwd);
     This function retrieves a pointer to the errno value for the thread. You
     should generally just use the errno variable to access this.
 
-    \param  thd             The thread to retrieve from.
+    \param  thd             The thread to retrieve from. If NULL, the current
+                            thread will be used.
 
     \return                 A pointer to the thread's errno.
 */

@@ -1003,7 +1003,10 @@ void thd_set_pwd(kthread_t *__RESTRICT thd, const char *__RESTRICT pwd) {
 }
 
 int *thd_get_errno(kthread_t *thd) {
-    return &thd->thd_errno;
+    if(!thd)
+        thd = thd_current;
+
+    return &(__errno_r(&thd->thd_reent));
 }
 
 struct _reent *thd_get_reent(kthread_t *thd) {
