@@ -12,7 +12,7 @@
 #include <kos/timer.h>
 
 /* This is kind of approximate and works only with "localtime" */
-int _gettimeofday_r(void * re, struct timeval *tv, struct timezone *tz) {
+int _gettimeofday_r(void *re, struct timeval *tv, struct timezone *tz) {
     uint32_t u, s;
 
     (void)re;

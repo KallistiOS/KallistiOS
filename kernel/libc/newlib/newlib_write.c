@@ -7,7 +7,7 @@
 
 #include <kos/fs.h>
 
-long _write_r(void * reent, int fd, void * buf, size_t cnt) {
+long _write_r(void *reent, int fd, void *buf, size_t cnt) {
     (void)reent;
     return fs_write(fd, buf, cnt);
 }

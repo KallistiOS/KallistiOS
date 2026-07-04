@@ -8,7 +8,7 @@
 #include <sys/reent.h>
 #include <errno.h>
 
-int _wait_r(struct _reent * reent, int * status) {
+int _wait_r(struct _reent *reent, int *status) {
     (void)status;
     reent->_errno = EAGAIN;
     return -1;
