@@ -43,7 +43,6 @@
 
 #define DCLOAD_PORT 53535
 #define DCLOAD_PACKET_SIZE 1440
-#define NAME "dcload-ip over KOS sockets"
 
 /* Number of DCLOAD_PACKET_SIZE chunks needed to cover n bytes. */
 #define DCLOAD_PACKETS(n)  (((n) + DCLOAD_PACKET_SIZE - 1) / DCLOAD_PACKET_SIZE)
@@ -180,16 +179,6 @@ static void dcls_handle_retv(command_t *cmd) {
     escape = 1;
 }
 
-static void dcls_handle_vers(command_t *cmd) {
-    command_t *resp = (command_t *)pktbuf;
-    int size = strlen(NAME) + 1 + sizeof(command_t);
-
-    memcpy(resp, cmd, sizeof(command_t));
-    strcpy((char *)resp->data, NAME);
-
-    send(dcls_socket, pktbuf, size, 0);
-}
-
 static void dcls_recv_loop(void) {
     uint8_t pkt[1514];
     command_t *cmd = (command_t *)pkt;
@@ -224,9 +213,6 @@ static void dcls_recv_loop(void) {
         }
         else if(!memcmp(cmd->id, "DBIN", 4)) {
             dcls_handle_dbin(cmd);
-        }
-        else if(!memcmp(cmd->id, "VERS", 4)) {
-            dcls_handle_vers(cmd);
         }
     }
 
