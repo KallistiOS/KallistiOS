@@ -82,7 +82,7 @@ static struct {
 
 extern int dcload_type;
 static int initted = 0;
-static int escape = 0;
+static bool escape = false;
 static int retval = 0;
 static mutex_t mutex;
 static char *dcload_path = NULL;
@@ -176,7 +176,7 @@ static void dcls_handle_sbin(command_t *cmd) {
 static void dcls_handle_retv(command_t *cmd) {
     send(dcls_socket, cmd, sizeof(command_t), 0);
     retval = ntohl(cmd->address);
-    escape = 1;
+    escape = true;
 }
 
 static void dcls_recv_loop(void) {
@@ -216,7 +216,7 @@ static void dcls_recv_loop(void) {
         }
     }
 
-    escape = 0;
+    escape = false;
 }
 
 static void *dcls_open(struct vfs_handler *vfs, const char *fn, int mode) {
