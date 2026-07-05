@@ -504,7 +504,7 @@ static void bba_dma_cb(void *p) {
     if(next_len) {
         g2_dma_transfer(next_dst, next_src, next_len, 0,
                         bba_dma_cb, 0,  /* callback */
-                        1,  /* dir = 1, we're *reading* from the g2 bus */
+                        G2_DMA_TO_SH4,
                         0, G2_DMA_CHAN_BBA, 0);
         next_len = 0;
     }
@@ -536,7 +536,7 @@ static int bba_copy_packet(uint8_t *dst, uint32_t s, int len) {
             dma_used = 1;
             g2_dma_transfer(dst, src, len, 0,
                             bba_dma_cb, 0,  /* callback */
-                            1,  /* dir = 1, we're *reading* from the g2 bus */
+                            G2_DMA_TO_SH4,
                             0, G2_DMA_CHAN_BBA, 0);
         }
         else if(next_len) {
