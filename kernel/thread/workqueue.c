@@ -17,6 +17,7 @@
 
 typedef struct workqueue {
     STAILQ_HEAD(workqueue_jobs, workqueue_job) jobs;
+    workqueue_job_t *curr_job;
     kthread_t *thd;
     mutex_t lock;
     condvar_t cond;
@@ -31,6 +32,10 @@ static void *workqueue_thread(void *d) {
 
     while(!wq->quit) {
         mutex_lock(&wq->lock);
+
+        /* Signal that we're done with the previous job */
+        wq->curr_job = NULL;
+        cond_signal(&wq->cond);
 
         job = STAILQ_FIRST(&wq->jobs);
         if(job)
@@ -50,6 +55,7 @@ static void *workqueue_thread(void *d) {
         /* Remove the job from the queue */
         STAILQ_REMOVE(&wq->jobs, job, workqueue_job, entry);
 
+        wq->curr_job = job;
         mutex_unlock(&wq->lock);
 
         job->cb(d, job);
@@ -112,6 +118,14 @@ void workqueue_cancel(workqueue_t *wq, workqueue_job_t *job) {
     mutex_lock_scoped(&wq->lock);
 
     STAILQ_REMOVE(&wq->jobs, job, workqueue_job, entry);
+
+    if(wq->curr_job == job) {
+        /* The job's callback is being executed. Wait until it's done. */
+        cond_wait(&wq->cond, &wq->lock);
+    }
+
+    /* We modified the queue, so notify the thread that it should parse the
+     * list once again. */
     cond_signal(&wq->cond);
 }
 
