@@ -659,7 +659,30 @@ static int dcls_writebuf(const uint8_t *buf, int len, int xlat) {
         return -1;
 
     memcpy(cmd.id, "DD02", 4);
-    cmd.value0 = htonl(1);
+    cmd.value0 = htonl(STDOUT_FILENO);
+    cmd.value1 = htonl((uint32_t) buf);
+    cmd.value2 = htonl(len);
+
+    send(dcls_socket, &cmd, sizeof(cmd), 0);
+
+    dcls_recv_loop();
+
+    mutex_unlock(&mutex);
+
+    return retval;
+}
+
+static int dcls_readbuf(uint8_t *buf, int len) {
+    command_3int_t cmd;
+
+    if(initted < 2)
+        return -1;
+
+    if(mutex_lock(&mutex))
+        return -1;
+
+    memcpy(cmd.id, "DC03", 4);
+    cmd.value0 = htonl(STDIN_FILENO);
     cmd.value1 = htonl((uint32_t) buf);
     cmd.value2 = htonl(len);
 
@@ -745,7 +768,8 @@ dbgio_handler_t dbgio_dcls = {
     .detected = dcls_detected,
     .init = dcls_fake_init,
     .shutdown = dcls_fake_shutdown,
-    .write_buffer = dcls_writebuf
+    .write_buffer = dcls_writebuf,
+    .read_buffer = dcls_readbuf
 };
 
 /* This function must be called prior to calling fs_dclsocket_init() */
@@ -757,7 +781,6 @@ void fs_dclsocket_init_console(void) {
 
     dbgio_dcls.set_irq_usage = dbgio_null.set_irq_usage;
     dbgio_dcls.flush = dbgio_null.flush;
-    dbgio_dcls.read_buffer = dbgio_null.read_buffer;
 
     initted = 1;
 }
