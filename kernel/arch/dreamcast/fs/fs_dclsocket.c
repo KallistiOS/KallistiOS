@@ -235,7 +235,7 @@ static void *dcls_open(struct vfs_handler *vfs, const char *fn, int mode) {
         return NULL;
     }
 
-    if(mutex_lock_irqsafe(&mutex)) {
+    if(mutex_lock(&mutex)) {
         free(entry);
         return NULL;
     }
@@ -322,7 +322,7 @@ static int dcls_close(void *hnd) {
     if(!obj)
         return 0;
 
-    if(mutex_lock_irqsafe(&mutex))
+    if(mutex_lock(&mutex))
         return -1;
 
     if(obj->path) {
@@ -351,7 +351,7 @@ static ssize_t dcls_read(void *hnd, void *buf, size_t cnt) {
     if(!obj)
         return -1;
 
-    if(mutex_lock_irqsafe(&mutex))
+    if(mutex_lock(&mutex))
         return -1;
 
     memcpy(cmd->id, "DC03", 4);
@@ -374,7 +374,7 @@ static ssize_t dcls_write(void *hnd, const void *buf, size_t cnt) {
     if(!obj)
         return -1;
 
-    if(mutex_lock_irqsafe(&mutex))
+    if(mutex_lock(&mutex))
         return -1;
 
     memcpy(cmd->id, "DD02", 4);
@@ -397,7 +397,7 @@ static off_t dcls_seek(void *hnd, off_t offset, int whence) {
     if(!obj)
         return -1;
 
-    if(mutex_lock_irqsafe(&mutex))
+    if(mutex_lock(&mutex))
         return -1;
 
     memcpy(command->id, "DC11", 4);
@@ -443,7 +443,7 @@ static const dirent_t *dcls_readdir(void *hnd) {
         return NULL;
     }
 
-    if(mutex_lock_irqsafe(&mutex))
+    if(mutex_lock(&mutex))
         return NULL;
 
     memcpy(cmd->id, "DC18", 4);
@@ -511,7 +511,7 @@ static int dcls_rename(vfs_handler_t *vfs, const char *fn1, const char *fn2) {
 
     (void)vfs;
 
-    if(mutex_lock_irqsafe(&mutex))
+    if(mutex_lock(&mutex))
         return -1;
 
     memcpy(pktbuf, "DC07", 4);
@@ -541,7 +541,7 @@ static int dcls_unlink(vfs_handler_t *vfs, const char *fn) {
 
     (void)vfs;
 
-    if(mutex_lock_irqsafe(&mutex))
+    if(mutex_lock(&mutex))
         return -1;
 
     memcpy(pktbuf, "DC08", 4);
@@ -574,7 +574,7 @@ static int dcls_stat(vfs_handler_t *vfs, const char *path, struct stat *st, int 
         return 0;
     }
 
-    if(mutex_lock_irqsafe(&mutex))
+    if(mutex_lock(&mutex))
         return -1;
 
     memcpy(cmd->id, "DC13", 4);
@@ -619,7 +619,7 @@ static int dcls_rewinddir(void *hnd) {
         return -1;
     }
 
-    if(mutex_lock_irqsafe(&mutex))
+    if(mutex_lock(&mutex))
         return -1;
 
     memcpy(cmd->id, "DC21", 4);
