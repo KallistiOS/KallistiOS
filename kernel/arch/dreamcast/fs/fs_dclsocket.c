@@ -80,6 +80,10 @@ static struct {
     unsigned char map[DCLOAD_MAP_BYTES];
 } bin_info;
 
+typedef struct dcl_obj {
+    int hnd;
+} dcl_obj_t;
+
 extern int dcload_type;
 static int initted = 0;
 static bool escape = false;
@@ -222,12 +226,21 @@ static void dcls_recv_loop(void) {
 static void *dcls_open(struct vfs_handler *vfs, const char *fn, int mode) {
     int hnd, dcload_mode = 0;
     int mm = (mode & O_MODE_MASK);
+    dcl_obj_t *entry;
     command_t *cmd = (command_t *)pktbuf;
 
     (void)vfs;
 
-    if(mutex_lock_irqsafe(&mutex))
+    entry = calloc(1, sizeof(dcl_obj_t));
+    if(!entry) {
+        errno = ENOMEM;
         return NULL;
+    }
+
+    if(mutex_lock_irqsafe(&mutex)) {
+        free(entry);
+        return NULL;
+    }
 
     if(mode & O_DIR) {
         char realfn[fn[0] ? strlen(fn) + 1 : 2];
@@ -247,19 +260,22 @@ static void *dcls_open(struct vfs_handler *vfs, const char *fn, int mode) {
         dcls_recv_loop();
         hnd = retval;
 
-        if(hnd) {
-            if(dcload_path)
-                free(dcload_path);
+        if(!hnd)                        /* opendir failed */
+            goto fail;
 
-            if(fn[strlen(realfn) - 1] == '/') {
-                dcload_path = (char *)malloc(strlen(realfn) + 1);
-                strcpy(dcload_path, realfn);
-            }
-            else {
-                dcload_path = (char *)malloc(strlen(realfn) + 2);
-                strcpy(dcload_path, realfn);
-                strcat(dcload_path, "/");
-            }
+        entry->hnd = hnd;
+
+        if(dcload_path)
+            free(dcload_path);
+
+        if(fn[strlen(realfn) - 1] == '/') {
+            dcload_path = (char *)malloc(strlen(realfn) + 1);
+            strcpy(dcload_path, realfn);
+        }
+        else {
+            dcload_path = (char *)malloc(strlen(realfn) + 2);
+            strcpy(dcload_path, realfn);
+            strcat(dcload_path, "/");
         }
     }
     else {
@@ -283,56 +299,61 @@ static void *dcls_open(struct vfs_handler *vfs, const char *fn, int mode) {
 
         send(dcls_socket, pktbuf, sizeof(command_t) + strlen(fn) + 1, 0);
         dcls_recv_loop();
-        hnd = retval + 1;
+
+        if(retval < 0)                  /* open failed */
+            goto fail;
+
+        entry->hnd = retval;
     }
 
     mutex_unlock(&mutex);
 
-    return (void *)hnd;
+    return entry;
+
+fail:
+    mutex_unlock(&mutex);
+    free(entry);
+    return NULL;
 }
 
 static int dcls_close(void *hnd) {
-    int fd = (int) hnd;
+    dcl_obj_t *obj = hnd;
     command_int_t *cmd = (command_int_t *)pktbuf;
+
+    if(!obj)
+        return 0;
 
     if(mutex_lock_irqsafe(&mutex))
         return -1;
 
-    if(fd > FS_DCLSOCKET_FD_DIR_THRESH) {
+    if(obj->hnd > FS_DCLSOCKET_FD_DIR_THRESH)
         memcpy(cmd->id, "DC17", 4);
-        cmd->value0 = htonl(fd);
-
-        send(dcls_socket, cmd, sizeof(command_int_t), 0);
-        dcls_recv_loop();
-    }
-    else if(fd) {
-        --fd;
-
+    else
         memcpy(cmd->id, "DC05", 4);
-        cmd->value0 = htonl(fd);
 
-        send(dcls_socket, cmd, sizeof(command_int_t), 0);
-        dcls_recv_loop();
-    }
+    cmd->value0 = htonl(obj->hnd);
+
+    send(dcls_socket, cmd, sizeof(command_int_t), 0);
+    dcls_recv_loop();
+
+    free(obj);
 
     mutex_unlock(&mutex);
     return 0;
 }
 
 static ssize_t dcls_read(void *hnd, void *buf, size_t cnt) {
-    uint32_t fd = (uint32_t) hnd;
+    dcl_obj_t *obj = hnd;
     command_3int_t *cmd = (command_3int_t *)pktbuf;
 
-    if(!fd)
+    if(!obj)
         return -1;
 
     if(mutex_lock_irqsafe(&mutex))
         return -1;
 
-    --fd;
-
     memcpy(cmd->id, "DC03", 4);
-    cmd->value0 = htonl(fd);
+    cmd->value0 = htonl(obj->hnd);
     cmd->value1 = htonl((uint32_t) buf);
     cmd->value2 = htonl((uint32_t) cnt);
 
@@ -345,19 +366,17 @@ static ssize_t dcls_read(void *hnd, void *buf, size_t cnt) {
 }
 
 static ssize_t dcls_write(void *hnd, const void *buf, size_t cnt) {
-    uint32_t fd = (uint32_t) hnd;
+    dcl_obj_t *obj = hnd;
     command_3int_t *cmd = (command_3int_t *)pktbuf;
 
-    if(!fd)
+    if(!obj)
         return -1;
 
     if(mutex_lock_irqsafe(&mutex))
         return -1;
 
-    --fd;
-
     memcpy(cmd->id, "DD02", 4);
-    cmd->value0 = htonl(fd);
+    cmd->value0 = htonl(obj->hnd);
     cmd->value1 = htonl((uint32_t) buf);
     cmd->value2 = htonl(cnt);
 
@@ -370,19 +389,17 @@ static ssize_t dcls_write(void *hnd, const void *buf, size_t cnt) {
 }
 
 static off_t dcls_seek(void *hnd, off_t offset, int whence) {
-    uint32_t fd = (uint32_t)hnd;
+    dcl_obj_t *obj = hnd;
     command_3int_t *command = (command_3int_t *)pktbuf;
 
-    if(!hnd)
+    if(!obj)
         return -1;
 
     if(mutex_lock_irqsafe(&mutex))
         return -1;
 
-    --fd;
-
     memcpy(command->id, "DC11", 4);
-    command->value0 = htonl(fd);
+    command->value0 = htonl(obj->hnd);
     command->value1 = htonl((uint32_t)offset);
     command->value2 = htonl((uint32_t)whence);
 
@@ -418,10 +435,10 @@ static union {
 } our_dir;
 
 static const dirent_t *dcls_readdir(void *hnd) {
-    uint32_t fd = (uint32_t) hnd;
+    dcl_obj_t *entry = hnd;
     command_3int_t *cmd = (command_3int_t *)pktbuf;
 
-    if(fd < FS_DCLSOCKET_FD_DIR_THRESH) {
+    if(!entry || entry->hnd < FS_DCLSOCKET_FD_DIR_THRESH) {
         errno = EBADF;
         return NULL;
     }
@@ -430,7 +447,7 @@ static const dirent_t *dcls_readdir(void *hnd) {
         return NULL;
 
     memcpy(cmd->id, "DC18", 4);
-    cmd->value0 = htonl(fd);
+    cmd->value0 = htonl(entry->hnd);
     cmd->value1 = htonl((uint32_t)(&our_dir.de));
     cmd->value2 = htonl(sizeof(our_dir));
 
@@ -594,10 +611,10 @@ static int dcls_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
 }
 
 static int dcls_rewinddir(void *hnd) {
-    uint32_t fd = (uint32_t) hnd;
+    dcl_obj_t *obj = hnd;
     command_int_t *cmd = (command_int_t *)pktbuf;
 
-    if(fd < FS_DCLSOCKET_FD_DIR_THRESH) {
+    if(!obj || obj->hnd < FS_DCLSOCKET_FD_DIR_THRESH) {
         errno = EBADF;
         return -1;
     }
@@ -606,7 +623,7 @@ static int dcls_rewinddir(void *hnd) {
         return -1;
 
     memcpy(cmd->id, "DC21", 4);
-    cmd->value0 = htonl(fd);
+    cmd->value0 = htonl(obj->hnd);
 
     send(dcls_socket, cmd, sizeof(command_int_t), 0);
 
