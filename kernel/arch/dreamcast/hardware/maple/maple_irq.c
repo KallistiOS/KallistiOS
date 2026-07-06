@@ -183,8 +183,14 @@ static void vbl_autodet_callback(maple_state_t *state, maple_frame_t *frm) {
 }
 
 static void vbl_autodetect(maple_state_t *state) {
-    maple_device_t  *dev = maple_state.ports[state->detect_port_next].units[0];
-    maple_frame_t   *frm = (dev != NULL) ? &dev->frame : &detect_frame;
+
+    if(state->detect_port_next == 0 && state->port0_mie) {
+        state->detect_port_next = 1;
+        return;
+    }
+
+    maple_device_t *dev = maple_state.ports[state->detect_port_next].units[0];
+    maple_frame_t *frm = (dev != NULL) ? &dev->frame : &detect_frame;
 
     /* Queue a detection on the next device */
     bool queued = vbl_send_devinfo(frm,

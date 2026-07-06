@@ -73,6 +73,9 @@ __BEGIN_DECLS
     KOS_INIT_FLAG(flags, INIT_SIP, sip_shutdown); \
     KOS_INIT_FLAG(flags, INIT_DREAMEYE, dreameye_init); \
     KOS_INIT_FLAG(flags, INIT_DREAMEYE, dreameye_shutdown); \
+    KOS_INIT_FLAG(flags, INIT_MIE, mie_init); \
+    KOS_INIT_FLAG(flags, INIT_MIE, mie_shutdown); \
+    KOS_INIT_FLAG(flags, INIT_MIE, mie_init_scan); \
     KOS_INIT_FLAG(flags, INIT_MAPLE_ALL, maple_wait_scan); \
     KOS_INIT_FLAG(flags, INIT_MAPLE_ALL, maple_init); \
     KOS_INIT_FLAG(flags, INIT_MAPLE_ALL, maple_shutdown)
@@ -93,7 +96,13 @@ __BEGIN_DECLS
 #define INIT_DEFAULT_ARCH   (INIT_MAPLE_ALL | INIT_CDROM)
 
 /** \brief Enable all Maple peripheral drivers. */
-#define INIT_MAPLE_ALL      (INIT_CONTROLLER | INIT_KEYBOARD | INIT_MOUSE    | \
+#if defined(_arch_sub_naomi)
+#define INIT_MAPLE_ALL      (INIT_MAPLE_PERIPH | INIT_MIE)
+#else
+#define INIT_MAPLE_ALL      INIT_MAPLE_PERIPH
+#endif
+
+#define INIT_MAPLE_PERIPH   (INIT_CONTROLLER | INIT_KEYBOARD | INIT_MOUSE    | \
                              INIT_LIGHTGUN   | INIT_VMU      | INIT_PURUPURU | \
                              INIT_SIP        | INIT_DREAMEYE)
 
@@ -105,6 +114,7 @@ __BEGIN_DECLS
 #define INIT_PURUPURU       0x00080000  /**< \brief Enable Puru Puru maple driver */
 #define INIT_SIP            0x00100000  /**< \brief Enable Sound input maple driver */
 #define INIT_DREAMEYE       0x00200000  /**< \brief Enable DreamEye maple driver */
+#define INIT_MIE            0x00400000  /**< \brief Enable MIE/JVS maple driver */
 
 #define INIT_CDROM          0x01000000  /**< \brief Enable CD-ROM support */
 
