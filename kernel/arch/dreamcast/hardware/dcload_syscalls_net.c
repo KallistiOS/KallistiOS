@@ -356,6 +356,21 @@ static int dcload_net_unlink(const char *fn) {
     return rv;
 }
 
+static int dcload_net_opendir(const char *fn) {
+    if(mutex_lock_irqsafe(&mutex))
+        return -1;
+
+    memcpy(pktbuf, "DC16", 4);
+    strcpy((char *)(pktbuf + 4), fn);
+
+    send(dcls_socket, pktbuf, 5 + strlen(fn), 0);
+    dcls_recv_loop();
+
+    int rv = retval;
+    mutex_unlock(&mutex);
+    return rv;
+}
+
 int dcload_syscall_net(dcload_cmd_t cmd, void *p1, void *p2, void *p3) {
     switch(cmd) {
         case DCLOAD_OPEN:
@@ -375,6 +390,7 @@ int dcload_syscall_net(dcload_cmd_t cmd, void *p1, void *p2, void *p3) {
         case DCLOAD_UNLINK:
             return dcload_net_unlink((const char *)p1);
         case DCLOAD_OPENDIR:
+            return dcload_net_opendir((const char *)p1);
         case DCLOAD_CLOSEDIR:
         case DCLOAD_READDIR:
         case DCLOAD_REWINDDIR:
