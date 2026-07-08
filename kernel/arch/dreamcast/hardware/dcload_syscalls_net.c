@@ -302,6 +302,25 @@ static off_t dcload_net_seek(uint32_t hnd, off_t offset, int whence) {
     return rv;
 }
 
+static int dcload_net_stat(const char *path, dcload_stat_t *filestat) {
+    command_t *cmd = (command_t *)pktbuf;
+
+    if(mutex_lock_irqsafe(&mutex))
+        return -1;
+
+    memcpy(cmd->id, "DC13", 4);
+    cmd->address = htonl((uint32_t) filestat);
+    cmd->size = htonl(sizeof(dcload_stat_t));
+    strcpy((char *)(cmd->data), path);
+
+    send(dcls_socket, cmd, sizeof(command_t) + strlen(path) + 1, 0);
+    dcls_recv_loop();
+
+    int rv = retval;
+    mutex_unlock(&mutex);
+    return rv;
+}
+
 int dcload_syscall_net(dcload_cmd_t cmd, void *p1, void *p2, void *p3) {
     switch(cmd) {
         case DCLOAD_OPEN:
@@ -315,6 +334,7 @@ int dcload_syscall_net(dcload_cmd_t cmd, void *p1, void *p2, void *p3) {
         case DCLOAD_LSEEK:
             return dcload_net_seek((uint32_t)p1, (off_t)p2, (int)p3);
         case DCLOAD_STAT:
+            return dcload_net_stat((const char *)p1, (dcload_stat_t *)p2);
         case DCLOAD_LINK:
         case DCLOAD_UNLINK:
         case DCLOAD_OPENDIR:
