@@ -23,9 +23,8 @@ $(build_gcc_pass1): logdir
 	      $(gcc_pass1_configure_args) \
 	      $(macos_gcc_configure_args) \
 	      MAKEINFO=missing \
-	      CC="$(CC)" \
-	      CXX="$(CXX)" \
-	      CFLAGS="$(CFLAGS) -std=gnu17" \
+	      CC="$(CC) -std=gnu17" \
+	      CXX="$(CXX) -std=gnu++14" \
 	      $(static_flag) \
 	      $(to_log)
 	$(MAKE) $(jobs_arg) -C $(build) DESTDIR=$(DESTDIR) $(to_log)
