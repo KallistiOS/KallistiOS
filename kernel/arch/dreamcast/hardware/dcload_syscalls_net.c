@@ -264,6 +264,25 @@ static ssize_t dcload_net_read(uint32_t hnd, void *buf, size_t cnt) {
     return rv;
 }
 
+static ssize_t dcload_net_write(uint32_t hnd, const void *buf, size_t cnt) {
+    command_3int_t *cmd = (command_3int_t *)pktbuf;
+
+    if(mutex_lock_irqsafe(&mutex))
+        return -1;
+
+    memcpy(cmd->id, "DD02", 4);
+    cmd->value0 = htonl(hnd);  /* file handle */
+    cmd->value1 = htonl((uint32_t) buf);  /* buffer address */
+    cmd->value2 = htonl((uint32_t) cnt);  /* count */
+
+    send(dcls_socket, cmd, sizeof(command_3int_t), 0);
+    dcls_recv_loop();
+
+    ssize_t rv = retval;
+    mutex_unlock(&mutex);
+    return rv;
+}
+
 int dcload_syscall_net(dcload_cmd_t cmd, void *p1, void *p2, void *p3) {
     switch(cmd) {
         case DCLOAD_OPEN:
@@ -273,6 +292,7 @@ int dcload_syscall_net(dcload_cmd_t cmd, void *p1, void *p2, void *p3) {
         case DCLOAD_READ:
             return dcload_net_read((uint32_t)p1, p2, (size_t)p3);
         case DCLOAD_WRITE:
+            return dcload_net_write((uint32_t)p1, p2, (size_t)p3);
         case DCLOAD_LSEEK:
         case DCLOAD_STAT:
         case DCLOAD_LINK:
