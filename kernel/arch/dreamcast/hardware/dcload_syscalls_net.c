@@ -413,6 +413,23 @@ static struct dirent *dcload_net_readdir(uint32_t hnd) {
     return rv;
 }
 
+static int dcload_net_rewinddir(uint32_t hnd) {
+    command_int_t *cmd = (command_int_t *)pktbuf;
+
+    if(mutex_lock_irqsafe(&mutex))
+        return -1;
+
+    memcpy(cmd->id, "DC21", 4);
+    cmd->value0 = htonl(hnd);  /* dir handle */
+
+    send(dcls_socket, cmd, sizeof(command_int_t), 0);
+    dcls_recv_loop();
+
+    int rv = retval;
+    mutex_unlock(&mutex);
+    return rv;
+}
+
 int dcload_syscall_net(dcload_cmd_t cmd, void *p1, void *p2, void *p3) {
     switch(cmd) {
         case DCLOAD_OPEN:
@@ -438,7 +455,7 @@ int dcload_syscall_net(dcload_cmd_t cmd, void *p1, void *p2, void *p3) {
         case DCLOAD_READDIR:
             return (int)(uintptr_t)dcload_net_readdir((uint32_t)p1);
         case DCLOAD_REWINDDIR:
-            return -1;
+            return dcload_net_rewinddir((uint32_t)p1);
 
         /* ----------- Native-only ----------- */
         case DCLOAD_ASSIGNWRKMEM:
