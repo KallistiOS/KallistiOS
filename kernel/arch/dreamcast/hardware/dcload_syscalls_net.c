@@ -387,6 +387,32 @@ static int dcload_net_closedir(uint32_t hnd) {
     return 0;
 }
 
+/* The host fills the readdir reply as a POSIX struct dirent, not a KOS
+   dirent_t, so receive it as one */
+static union {
+    struct dirent de;
+    char storage[sizeof(struct dirent) + NAME_MAX + 1];
+} our_dir;
+
+static struct dirent *dcload_net_readdir(uint32_t hnd) {
+    command_3int_t *cmd = (command_3int_t *)pktbuf;
+
+    if(mutex_lock_irqsafe(&mutex))
+        return NULL;
+
+    memcpy(cmd->id, "DC18", 4);
+    cmd->value0 = htonl(hnd);                    /* dir handle */
+    cmd->value1 = htonl((uint32_t)&our_dir.de);  /* buffer address */
+    cmd->value2 = htonl(sizeof(our_dir));        /* buffer size */
+
+    send(dcls_socket, cmd, sizeof(command_3int_t), 0);
+    dcls_recv_loop();
+
+    struct dirent *rv = retval ? &our_dir.de : NULL;
+    mutex_unlock(&mutex);
+    return rv;
+}
+
 int dcload_syscall_net(dcload_cmd_t cmd, void *p1, void *p2, void *p3) {
     switch(cmd) {
         case DCLOAD_OPEN:
@@ -410,6 +436,7 @@ int dcload_syscall_net(dcload_cmd_t cmd, void *p1, void *p2, void *p3) {
         case DCLOAD_CLOSEDIR:
             return dcload_net_closedir((uint32_t)p1);
         case DCLOAD_READDIR:
+            return (int)(uintptr_t)dcload_net_readdir((uint32_t)p1);
         case DCLOAD_REWINDDIR:
             return -1;
 
