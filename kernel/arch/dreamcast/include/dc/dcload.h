@@ -63,6 +63,10 @@ typedef enum {
 typedef int (*dcload_syscall_t)(dcload_cmd_t cmd, void *param1, void *param2, void *param3);
 void dcload_syscall_set(dcload_syscall_t fn);
 
+/* Network (dcload-ip over KOS sockets) syscall backend. */
+int dcload_syscall_net_init(void);
+void dcload_syscall_net_shutdown(void);
+
 ssize_t dcload_read(uint32_t hnd, uint8_t *data, size_t len);
 ssize_t dcload_write(uint32_t hnd, const uint8_t *data, size_t len);
 int dcload_open(const char *fn, int oflags, int mode);

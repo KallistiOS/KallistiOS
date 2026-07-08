@@ -35,6 +35,7 @@
 #include <kos/regfield.h>
 
 #include <dc/dcload.h>
+#include <dc/fs_dcload.h>
 
 /* Default backend, defined in dcload_syscall.c */
 int dcload_syscall_native(dcload_cmd_t cmd, void *p1, void *p2, void *p3);
@@ -74,6 +75,8 @@ static struct {
     unsigned char map[DCLOAD_MAP_BYTES];
 } bin_info;
 
+extern int dcload_type;
+static bool initted = false;
 static bool escape = false;
 static int retval = 0;
 static mutex_t mutex;
@@ -430,7 +433,7 @@ static int dcload_net_rewinddir(uint32_t hnd) {
     return rv;
 }
 
-int dcload_syscall_net(dcload_cmd_t cmd, void *p1, void *p2, void *p3) {
+static int dcload_syscall_net(dcload_cmd_t cmd, void *p1, void *p2, void *p3) {
     switch(cmd) {
         case DCLOAD_OPEN:
             return dcload_net_open((const char *)p1, (uint32_t)p2, (uint32_t)p3);
@@ -475,5 +478,80 @@ int dcload_syscall_net(dcload_cmd_t cmd, void *p1, void *p2, void *p3) {
             errno = ENOSYS;
             return -1;
     }
+}
+
+int dcload_syscall_net_init(void) {
+    struct sockaddr_in addr;
+    uint8_t ipaddr[4], mac[6];
+    uint32_t ip, port;
+    int err;
+
+    /* Make sure we've initted the console */
+    if(initted)
+        return 0;
+
+    if(!net_default_dev || dcload_type != DCLOAD_TYPE_IP)
+        return -1;
+
+    /* Determine where dctool is running, and set up our variables for that */
+    dcload_gethostinfo(&ip, &port);
+
+    /* Put dc-tool's info into our ARP cache */
+    net_ipv4_parse_address(ip, ipaddr);
+
+    err = net_arp_lookup(net_default_dev, ipaddr, mac, NULL, NULL, 0);
+    while(err == -1 || err == -2)
+        err = net_arp_lookup(net_default_dev, ipaddr, mac, NULL, NULL, 0);
+
+    /* Make the entry permanent */
+    net_arp_insert(net_default_dev, mac, ipaddr, 0);
+
+    /* Ok, now create our socket, and set it up properly */
+    dcls_socket = socket(PF_INET, SOCK_DGRAM, 0);
+    if(dcls_socket == -1)
+        return -1;
+
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(DCLOAD_PORT);
+    addr.sin_addr.s_addr = INADDR_ANY;
+
+    if(bind(dcls_socket, (struct sockaddr *)&addr, sizeof(addr)) == -1)
+        goto error;
+
+    addr.sin_port = htons((uint16_t)port);
+    addr.sin_addr.s_addr = htonl(ip);
+
+    if(connect(dcls_socket, (struct sockaddr *)&addr, sizeof(addr)) == -1)
+        goto error;
+
+    if(mutex_init(&mutex, MUTEX_TYPE_NORMAL))
+        goto error;
+
+    initted = true;
+    dcload_syscall_set(dcload_syscall_net);
+
+    return 0;
+
+error:
+    close(dcls_socket);
+    dcls_socket = -1;
+    return -1;
+}
+
+/* Restore the native backend and tear down the socket */
+void dcload_syscall_net_shutdown(void) {
+    /* Nothing to undo if the socket backend was never installed. */
+    if(!initted)
+        return;
+
+    /* Point dcload syscalls back at the native backend before the socket that
+       the net backend depends on goes away. */
+    dcload_syscall_set(NULL);
+    mutex_destroy(&mutex);
+
+    close(dcls_socket);
+    dcls_socket = -1;
+    initted = false;
 }
 

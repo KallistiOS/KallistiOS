@@ -46,7 +46,6 @@ void arch_real_exit(int ret_code) __noreturn;
 void (*__kos_init_early_fn)(void) __attribute__((weak,section(".data"))) = NULL;
 
 int main(int argc, char **argv);
-uint32_t _fs_dclsocket_get_ip(void);
 
 void arch_init_net_dcload_ip(void) {
     union {
@@ -55,8 +54,10 @@ void arch_init_net_dcload_ip(void) {
     } ip = { 0 };
 
     if(dcload_type == DCLOAD_TYPE_IP) {
+        uint32_t tool_ip, tool_port;
+
         /* Grab the IP address from dcload before we disable dbgio... */
-        ip.ipl = _fs_dclsocket_get_ip();
+        ip.ipl = dcload_gethostinfo(&tool_ip, &tool_port);
         dbglog(DBG_INFO, "dc-load says our IP is %d.%d.%d.%d\n", ip.ipb[3],
                ip.ipb[2], ip.ipb[1], ip.ipb[0]);
         dbgio_disable();
@@ -65,12 +66,9 @@ void arch_init_net_dcload_ip(void) {
     net_init(ip.ipl);     /* Enable networking (and drivers) */
 
     if(dcload_type == DCLOAD_TYPE_IP) {
-        fs_dclsocket_init_console();
-
-        if(!fs_dclsocket_init()) {
-            dbgio_dev_select("fs_dclsocket");
+        if(!dcload_syscall_net_init()) {
             dbgio_enable();
-            dbglog(DBG_INFO, "fs_dclsocket console support enabled\n");
+            dbglog(DBG_INFO, "dcload_syscalls_net backend enabled\n");
         }
     }
 }
@@ -128,7 +126,6 @@ void dcload_init(void) {
 KOS_INIT_FLAG_WEAK(dcload_init, true);
 KOS_INIT_FLAG_WEAK(fs_dcload_init_console, true);
 KOS_INIT_FLAG_WEAK(fs_dcload_shutdown, true);
-KOS_INIT_FLAG_WEAK(fs_dclsocket_shutdown, true);
 KOS_INIT_FLAG_WEAK(fs_init, true);
 KOS_INIT_FLAG_WEAK(fs_dev_init, true);
 KOS_INIT_FLAG_WEAK(fs_dev_shutdown, true);
@@ -168,7 +165,6 @@ int  __weak_symbol arch_auto_init(void) {
     dbgio_add_handler(&dbgio_fb);
     dbgio_add_handler(&dbgio_null);
     dbgio_add_handler(&dbgio_scif);
-    dbgio_add_handler(&dbgio_dcls);
     dbgio_add_handler(&dbgio_dcload);
 
     /* Init debug IO */
@@ -233,7 +229,9 @@ int  __weak_symbol arch_auto_init(void) {
 }
 
 void  __weak_symbol arch_auto_shutdown(void) {
-    KOS_INIT_FLAG_CALL(fs_dclsocket_shutdown);
+    /* Restore the native transport before it is torn down below. */
+    dcload_syscall_net_shutdown();
+
     if (!KOS_PLATFORM_IS_NAOMI)
         KOS_INIT_FLAG_CALL(net_shutdown);
 
