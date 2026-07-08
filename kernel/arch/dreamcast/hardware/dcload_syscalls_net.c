@@ -283,6 +283,25 @@ static ssize_t dcload_net_write(uint32_t hnd, const void *buf, size_t cnt) {
     return rv;
 }
 
+static off_t dcload_net_seek(uint32_t hnd, off_t offset, int whence) {
+    command_3int_t *command = (command_3int_t *)pktbuf;
+
+    if(mutex_lock_irqsafe(&mutex))
+        return -1;
+
+    memcpy(command->id, "DC11", 4);
+    command->value0 = htonl(hnd);
+    command->value1 = htonl((uint32_t)offset);
+    command->value2 = htonl((uint32_t)whence);
+
+    send(dcls_socket, command, sizeof(command_3int_t), 0);
+    dcls_recv_loop();
+
+    off_t rv = retval;
+    mutex_unlock(&mutex);
+    return rv;
+}
+
 int dcload_syscall_net(dcload_cmd_t cmd, void *p1, void *p2, void *p3) {
     switch(cmd) {
         case DCLOAD_OPEN:
@@ -294,6 +313,7 @@ int dcload_syscall_net(dcload_cmd_t cmd, void *p1, void *p2, void *p3) {
         case DCLOAD_WRITE:
             return dcload_net_write((uint32_t)p1, p2, (size_t)p3);
         case DCLOAD_LSEEK:
+            return dcload_net_seek((uint32_t)p1, (off_t)p2, (int)p3);
         case DCLOAD_STAT:
         case DCLOAD_LINK:
         case DCLOAD_UNLINK:
