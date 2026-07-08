@@ -14,7 +14,6 @@
     network stack is not initialized at start via KOS_INIT_FLAGS().
 
     \author Andrew Kieschnick
-    \see    dc/fs_dclsocket.h
 */
 
 #ifndef __DC_FS_DCLOAD_H
