@@ -321,6 +321,24 @@ static int dcload_net_stat(const char *path, dcload_stat_t *filestat) {
     return rv;
 }
 
+static int dcload_net_link(const char *fn1, const char *fn2) {
+    int len1 = strlen(fn1), len2 = strlen(fn2);
+
+    if(mutex_lock_irqsafe(&mutex))
+        return -1;
+
+    memcpy(pktbuf, "DC07", 4);
+    strcpy((char *)(pktbuf + 4), fn1);
+    strcpy((char *)(pktbuf + 5 + len1), fn2);
+
+    send(dcls_socket, pktbuf, 6 + len1 + len2, 0);
+    dcls_recv_loop();
+
+    int rv = retval;
+    mutex_unlock(&mutex);
+    return rv;
+}
+
 int dcload_syscall_net(dcload_cmd_t cmd, void *p1, void *p2, void *p3) {
     switch(cmd) {
         case DCLOAD_OPEN:
@@ -336,6 +354,7 @@ int dcload_syscall_net(dcload_cmd_t cmd, void *p1, void *p2, void *p3) {
         case DCLOAD_STAT:
             return dcload_net_stat((const char *)p1, (dcload_stat_t *)p2);
         case DCLOAD_LINK:
+            return dcload_net_link((const char *)p1, (const char *)p2);
         case DCLOAD_UNLINK:
         case DCLOAD_OPENDIR:
         case DCLOAD_CLOSEDIR:
