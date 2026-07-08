@@ -210,9 +210,29 @@ static void dcls_recv_loop(void) {
     escape = false;
 }
 
+static int dcload_net_open(const char *fn, uint32_t flags, uint32_t umask) {
+    command_t *cmd = (command_t *)pktbuf;
+
+    if(mutex_lock_irqsafe(&mutex))
+        return -1;
+
+    memcpy(cmd->id, "DC04", 4);
+    cmd->address = htonl(flags);     /* open flags */
+    cmd->size = htonl(umask);        /* umask */
+    strcpy((char *)cmd->data, fn);   /* NUL-terminated path in data[] */
+
+    send(dcls_socket, cmd, sizeof(command_t) + strlen(fn) + 1, 0);
+    dcls_recv_loop();
+
+    int rv = retval;
+    mutex_unlock(&mutex);
+    return rv;
+}
+
 int dcload_syscall_net(dcload_cmd_t cmd, void *p1, void *p2, void *p3) {
     switch(cmd) {
         case DCLOAD_OPEN:
+            return dcload_net_open((const char *)p1, (uint32_t)p2, (uint32_t)p3);
         case DCLOAD_CLOSE:
         case DCLOAD_READ:
         case DCLOAD_WRITE:
