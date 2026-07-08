@@ -45,7 +45,7 @@ set(KOS_ARCH $ENV{KOS_ARCH})
 set(KOS_SUBARCH $ENV{KOS_SUBARCH})
 set(KOS_ADDONS ${KOS_BASE}/addons)
 
-list(APPEND CMAKE_MODULE_PATH $ENV{KOS_BASE}/utils/cmake)
+list(APPEND CMAKE_MODULE_PATH ${KOS_BASE}/utils/cmake;${KOS_SYSROOT}/lib/cmake)
 
 ##### Configure CMake System #####
 set(CMAKE_SYSTEM_NAME ${KOS_ARCH})
