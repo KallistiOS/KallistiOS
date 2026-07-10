@@ -277,6 +277,31 @@ void asic_evt_disable(uint16_t code, uint8_t irqlevel);
  */
 void asic_evt_enable(uint16_t code, uint8_t irqlevel);
 
+/** \cond */
+static inline void __asic_evt_disable_scoped_cleanup(uint32_t *param) {
+    asic_evt_enable(*param & 0xffff, (*param >> 16) & 0xff);
+}
+
+#define ___asic_evt_disable_scoped(c, i, l) \
+    uint32_t __scoped_param_##l __attribute__((cleanup(__asic_evt_disable_scoped_cleanup))) = (c | (i << 16)); \
+    asic_evt_disable(c, i);
+
+#define __asic_evt_disable_scoped(c, i, l) ___asic_evt_disable_scoped(c, i, l)
+/** \endcond */
+
+/** \brief  Disable one ASIC event with scope management
+
+    This macro will disable one ASIC event, similarly to asic_evt_disable, with
+    the difference that the event will automatically be enabled once the
+    execution exits the functional block in which the macro was called.
+
+    \param  code            The ASIC event code to unhook (see
+                            \ref asic_events).
+    \param  irqlevel        The IRQ level it was hooked on (see
+                            \ref asic_irq_lv).
+*/
+#define asic_evt_disable_scoped(c, i) __asic_evt_disable_scoped((c), (i), __LINE__)
+
 /** \cond   Enable ASIC events */
 void asic_init(void);
 /* Shutdown ASIC events, disabling all hooks. */
