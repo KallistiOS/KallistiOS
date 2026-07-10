@@ -6,10 +6,10 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <sys/queue.h>
 
 #include <kos/mutex.h>
+#include <dc/asic.h>
 #include <dc/vblank.h>
 
 /*
@@ -22,7 +22,7 @@
 struct vblhnd {
     TAILQ_ENTRY(vblhnd) listent;
     asic_evt_handler    handler;
-    void *data;
+    void                *data;
 };
 static TAILQ_HEAD(vhlist, vblhnd) vblhnds;
 
@@ -42,10 +42,7 @@ static void vblank_handler(uint32_t src, void *data) {
 vblhnd_t *vblank_handler_add(asic_evt_handler hnd, void *data) {
     vblhnd_t *vh = malloc(sizeof(vblhnd_t));
 
-    if(!vh) {
-        errno = ENOMEM;
-        return NULL;
-    }
+    if(!vh) return NULL;
 
     /* Ensure thread safety for tailq access */
     mutex_lock_scoped(&vbl_tailq_mutex);
@@ -106,4 +103,3 @@ int vblank_shutdown(void) {
 
     return 0;
 }
-
