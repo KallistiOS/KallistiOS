@@ -1,7 +1,7 @@
 ! KallistiOS ##version##
 !
 ! arch/dreamcast/sound/snd_pcm_split.s
-! Copyright (C) 2023, 2024 Ruslan Rostovtsev
+! Copyright (C) 2023, 2024, 2026 Ruslan Rostovtsev
 !
 ! Optimized SH4 assembler code for separating stereo 8/16-bit PCM and
 ! stereo 4-bit ADPCM into independent single channels.
@@ -39,8 +39,8 @@ _snd_pcm16_split:
 	bt/s .pcm16_store_alloc
 	xtrct r1, r11
 .pcm16_store:
-	mov.l r11, @(r0,r5)
-	mov.l r12, @(r0,r6)
+	mov.l r12, @(r0,r5)
+	mov.l r11, @(r0,r6)
 .pcm16_loops:
 	tst r3, r4
 	bf/s .pcm16_load
@@ -57,9 +57,9 @@ _snd_pcm16_split:
 .pcm16_store_alloc:
 	add r0, r5
 	add r0, r6
-	mov r11, r0
-	movca.l r0, @r5
 	mov r12, r0
+	movca.l r0, @r5
+	mov r11, r0
 	movca.l r0, @r6
 	bra .pcm16_loops
 	mov #0, r0

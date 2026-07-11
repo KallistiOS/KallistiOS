@@ -101,7 +101,6 @@ static void maple_hw_init(void) {
 void maple_hw_shutdown(void) {
     int p, u, cnt;
     uint32  ptr;
-    maple_device_t *dev;
 
     /* Unhook interrupts */
     vblank_handler_remove(maple_state.vbl_handle);
@@ -131,12 +130,10 @@ void maple_hw_shutdown(void) {
     /* Free any attached devices */
     for(cnt = 0, p = 0; p < MAPLE_PORT_COUNT; p++) {
         for(u = 0; u < MAPLE_UNIT_COUNT; u++) {
-            cnt += !!maple_driver_detach(p, u);
+            cnt += !maple_driver_detach(p, u);
 
-            dev = maple_state.ports[p].units[u];
-            if(dev)
-                free(dev->status);
-            free(dev);
+            free(maple_state.ports[p].units[u]);
+            maple_state.ports[p].units[u] = NULL;
         }
     }
 

@@ -44,7 +44,7 @@ int pcx_load_flat(const char *fn, int *w_out, int *h_out, void *pic_out) {
     /* Open the file */
     fd = fs_open(fn, O_RDONLY);
 
-    if(fd == 0) {
+    if(fd == FILEHND_INVALID) {
         printf("pcx_load(%s): Couldn't open file\n", fn);
         return -1;
     }
@@ -129,7 +129,7 @@ int pcx_load_palette(const char *fn, int *w_out, int *h_out, void *pic_out, void
     /* Open the file */
     fd = fs_open(fn, O_RDONLY);
 
-    if(fd == 0) {
+    if(fd == FILEHND_INVALID) {
         printf("pcx_load(%s): Couldn't open file\n", fn);
         return -1;
     }

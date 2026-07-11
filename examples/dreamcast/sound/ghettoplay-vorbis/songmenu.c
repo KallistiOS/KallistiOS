@@ -121,11 +121,11 @@ static void *load_song_list(void * p) {
 
     d = fs_open(curdir, O_RDONLY | O_DIR);
 
-    if(!d) {
+    if(d == FILEHND_INVALID) {
         strcpy(curdir, "/");
         d = fs_open(curdir, O_RDONLY | O_DIR);
 
-        if(!d) {
+        if(d == FILEHND_INVALID) {
             mutex_lock(&mut);
             num_entries = 1;
             strcpy(entries[0].fn, "Error!");
@@ -136,7 +136,7 @@ static void *load_song_list(void * p) {
     }
 
     {
-        dirent_t *de;
+        const dirent_t *de;
         num_entries = 0;
 
         if(strcmp(curdir, "/")) {

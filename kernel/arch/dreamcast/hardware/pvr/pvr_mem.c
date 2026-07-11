@@ -94,6 +94,9 @@ pvr_ptr_t pvr_mem_malloc(size_t size) {
 
     if(__is_defined(PVR_KM_DBG)) {
         ctl = malloc(sizeof(memctl_t));
+        if(!ctl)
+            return (pvr_ptr_t)rv32;
+
         ctl->size = size;
         ctl->thread = thd_current->tid;
         ctl->addr = arch_get_ret_addr();

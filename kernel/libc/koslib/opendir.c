@@ -18,7 +18,7 @@ DIR * opendir(const char * name) {
     // Try to open the dir itself
     fd = fs_open(name, O_DIR | O_RDONLY);
 
-    if(fd < 0) {
+    if(fd == FILEHND_INVALID) {
         // VFS will set errno
         return NULL;
     }

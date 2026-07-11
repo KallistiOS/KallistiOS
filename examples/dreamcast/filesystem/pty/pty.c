@@ -19,7 +19,7 @@
 
 int main(int argc, char* argv[]) {
     /* Create a PTY pair */
-    file_t master_fd = -1, slave_fd = -1;
+    file_t master_fd = FILEHND_INVALID, slave_fd = FILEHND_INVALID;
     int retval = EXIT_SUCCESS;
 
     if(fs_pty_create(NULL, 0, &master_fd, &slave_fd) < 0) {
@@ -83,8 +83,8 @@ failure:
 
     /* Clean up resources */
 cleanup:
-    if(master_fd) fs_close(master_fd);
-    if(slave_fd) fs_close(slave_fd);
+    if(master_fd != FILEHND_INVALID) fs_close(master_fd);
+    if(slave_fd != FILEHND_INVALID) fs_close(slave_fd);
 
     printf("DONE!\n");
 
