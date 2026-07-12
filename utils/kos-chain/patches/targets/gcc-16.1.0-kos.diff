@@ -145,3 +145,565 @@ diff -ruN gcc-16.1.0/libstdc++-v3/configure gcc-16.1.0-kos/libstdc++-v3/configur
      mcf)	thread_header=config/i386/gthr-mcf.h ;;
      *)
          as_fn_error $? "No known header for threading model '$target_thread_file'." "$LINENO" 5
+
+--- gcc-16.1.0/gcc/config.gcc
++++ gcc-16.1.0-kos/gcc/config.gcc
+@@ -2879,7 +2879,7 @@
+ 	tmake_file="mips/t-elf"
+ 	;;
+ mips64r5900-*-elf* | mips64r5900el-*-elf*)
+-	tm_file="elfos.h newlib-stdint.h ${tm_file} mips/elf.h mips/n32-elf.h"
++	tm_file="elfos.h newlib-stdint.h ${tm_file} mips/elf.h mips/n32-elf.h mips/ps2.h"
+ 	tmake_file="mips/t-elf"
+ 	tm_defines="${tm_defines} MIPS_ISA_DEFAULT=MIPS_ISA_MIPS3 MIPS_ABI_DEFAULT=ABI_N32"
+ 	;;
+
+--- gcc-16.1.0/gcc/config/mips/ps2.h
++++ gcc-16.1.0-kos/gcc/config/mips/ps2.h
+@@ -0,0 +1,8 @@
++/* KallistiOS: PlayStation 2 Emotion Engine target tweaks on top of the
++   generic mips64r5900*-elf configuration.  */
++
++/* Do not place data in gp-relative small-data sections by default; KOS
++   does not set up $gp for small data, and newlib/libstdc++ are built
++   with -G0 to match.  */
++#undef MIPS_DEFAULT_GVALUE
++#define MIPS_DEFAULT_GVALUE 0
+
+--- gcc-16.1.0/gcc/config/mips/5900.md
++++ gcc-16.1.0-kos/gcc/config/mips/5900.md
+@@ -0,0 +1,121 @@
++;; Copyright (C) 2002-2015 Free Software Foundation, Inc.
++;;
++;; This file is part of GCC.
++;;
++;; GCC is free software; you can redistribute it and/or modify
++;; it under the terms of the GNU General Public License as published by
++;; the Free Software Foundation; either version 3, or (at your option)
++;; any later version.
++;;
++;; GCC is distributed in the hope that it will be useful,
++;; but WITHOUT ANY WARRANTY; without even the implied warranty of
++;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++;; GNU General Public License for more details.
++;;
++;; You should have received a copy of the GNU General Public License
++;; along with GCC; see the file COPYING3.  If not see
++;; <http://www.gnu.org/licenses/>.
++;;
++;; R5900 instruction patterns and pipeline tuning.
++
++(define_automaton "r5900_alu,r5900_fpu,r5900_br,r5900_ls")
++
++(define_cpu_unit "r5900_alu0,r5900_alu1" "r5900_alu")
++(define_cpu_unit "r5900_c1" "r5900_fpu")
++(define_cpu_unit "r5900_br" "r5900_br")
++(define_cpu_unit "r5900_ls" "r5900_ls")
++
++(define_insn_reservation "r5900_alu" 1
++  (and (eq_attr "cpu" "r5900")
++       (eq_attr "type" "unknown,prefetch,prefetchx,condmove,const,arith,
++			shift,slt,clz,trap,multi,nop,logical,signext,move"))
++ "r5900_alu0|r5900_alu1")
++
++(define_insn_reservation "r5900_loadstore" 1
++  (and (eq_attr "cpu" "r5900")
++       (eq_attr "type" "load,store"))
++ "r5900_ls")
++
++(define_insn_reservation "r5900_fploadstore" 2
++  (and (eq_attr "cpu" "r5900")
++       (eq_attr "type" "fpload,fpstore"))
++ "r5900_c1,nothing")
++
++(define_insn_reservation "r5900_fcvt" 4
++  (and (eq_attr "cpu" "r5900")
++       (eq_attr "type" "fcvt"))
++ "r5900_c1,nothing*3")
++
++(define_insn_reservation "r5900_fmove" 4
++  (and (eq_attr "cpu" "r5900")
++       (eq_attr "type" "fabs,fneg,fmove"))
++ "r5900_c1,nothing*3")
++
++(define_insn_reservation "r5900_fcmp" 4
++  (and (eq_attr "cpu" "r5900")
++       (eq_attr "type" "fcmp"))
++ "r5900_c1,nothing*3")
++
++(define_insn_reservation "r5900_fadd" 4
++  (and (eq_attr "cpu" "r5900")
++       (eq_attr "type" "fadd"))
++ "r5900_c1,nothing*3")
++
++(define_insn_reservation "r5900_fmul_single" 4
++  (and (eq_attr "cpu" "r5900")
++       (and (eq_attr "type" "fmul,fmadd")
++            (eq_attr "mode" "SF")))
++ "r5900_c1,nothing*3")
++
++(define_insn_reservation "r5900_fdiv_single" 8
++  (and (eq_attr "cpu" "r5900")
++       (and (eq_attr "type" "fdiv,frdiv")
++            (eq_attr "mode" "SF")))
++ "r5900_c1*7,nothing")
++
++(define_insn_reservation "r5900_fsqrt_single" 8
++  (and (eq_attr "cpu" "r5900")
++       (and (eq_attr "type" "fsqrt")
++            (eq_attr "mode" "SF")))
++ "r5900_c1*7,nothing")
++
++(define_insn_reservation "r5900_frsqrt_single" 14
++  (and (eq_attr "cpu" "r5900")
++       (and (eq_attr "type" "frsqrt")
++            (eq_attr "mode" "SF")))
++ "r5900_c1*13,nothing")
++
++(define_insn_reservation "r5900_xfer" 2
++  (and (eq_attr "cpu" "r5900")
++       (eq_attr "type" "mfc,mtc"))
++ "r5900_c1+r5900_ls,nothing")
++
++(define_insn_reservation "r5900_branch" 1
++  (and (eq_attr "cpu" "r5900")
++       (eq_attr "type" "branch,jump,call"))
++ "r5900_br")
++
++(define_insn_reservation "r5900_hilo" 1
++  (and (eq_attr "cpu" "r5900")
++       (eq_attr "type" "mfhi,mflo,mthi,mtlo"))
++ "r5900_alu0")
++
++(define_insn_reservation "r5900_imul" 4
++  (and (eq_attr "cpu" "r5900")
++       (eq_attr "type" "imul,imul3,imadd"))
++ "r5900_alu0*2,nothing*2")
++
++(define_insn_reservation "r5900_idiv" 37
++  (and (eq_attr "cpu" "r5900")
++       (eq_attr "type" "idiv,idiv3"))
++ "r5900_alu0*37")
++
++;; RSQRT
++(define_insn "rsqrtsf"
++  [(set (match_operand:SF 0 "register_operand" "=f")
++	(div:SF (match_operand:SF 1 "register_operand" "f")
++		  (sqrt:SF (match_operand:SF 2 "register_operand" "f"))))]
++  "TARGET_MIPS5900"
++  "rsqrt.s\t%0,%1,%2"
++  [(set_attr "type" "frsqrt")
++   (set_attr "mode" "SF")])
+
+--- gcc-16.1.0/gcc/config/mips/mips.cc
++++ gcc-16.1.0-kos/gcc/config/mips/mips.cc
+@@ -3609,6 +3609,9 @@
+ /* The __tls_get_attr symbol.  */
+ static GTY(()) rtx mips_tls_symbol;
+ 
++/* The __r5900_get_tp symbol — R5900-specific TLS-pointer helper.  */
++static GTY(()) rtx mips_r5900_get_tp_symbol;
++
+ /* Return an instruction sequence that calls __tls_get_addr.  SYM is
+    the TLS symbol we are referencing and TYPE is the symbol type to use
+    (either global dynamic or local dynamic).  V0 is an RTX for the
+@@ -3653,6 +3656,28 @@
+ 	mips16_rdhwr_stub = new mips16_rdhwr_one_only_stub ();
+       fn = mips16_stub_call_address (mips16_rdhwr_stub);
+       emit_insn (PMODE_INSN (gen_tls_get_tp_mips16, (tp, fn)));
++    }
++  else if (TARGET_MIPS5900)
++    {
++      /* The R5900 cannot read the thread pointer via rdhwr — that opcode
++	 is `sq $rt, -6085($zero)` on this core and the hardware executes
++	 it as a silent 128-bit store rather than a trap-and-emulate-able
++	 unimplemented-instruction exception.  Call the kernel-provided
++	 helper __r5900_get_tp instead, following the same libcall pattern
++	 used for __tls_get_addr in the global-/local-dynamic TLS models
++	 above.  The helper returns the (bias-adjusted) thread pointer in
++	 $v0 per the standard MIPS calling convention; we then move that
++	 into the destination register the caller asked us to populate.  */
++      rtx v0 = gen_rtx_REG (Pmode, GP_RETURN);
++      rtx_insn *insn;
++
++      if (!mips_r5900_get_tp_symbol)
++	mips_r5900_get_tp_symbol = init_one_libfunc ("__r5900_get_tp");
++
++      insn = mips_expand_call (MIPS_CALL_NORMAL, v0, mips_r5900_get_tp_symbol,
++			       const0_rtx, NULL_RTX, false);
++      RTL_CONST_CALL_P (insn) = 1;
++      emit_move_insn (tp, v0);
+     }
+   else
+     emit_insn (PMODE_INSN (gen_tls_get_tp, (tp)));
+@@ -20582,6 +20607,11 @@
+   if (TARGET_MIPS5900 && TARGET_HARD_FLOAT_ABI && TARGET_DOUBLE_FLOAT)
+     error ("unsupported combination: %s",
+ 	   "-march=r5900 -mhard-float -mdouble-float");
++
++  /* The R5900 does not support some MIPS16 instructions.  */
++  if (TARGET_MIPS5900 && ((mips_base_compression_flags & MASK_MIPS16) != 0))
++	  error("unsupported combination: %s",
++		  "-march=r5900 -mips16");
+ 
+   /* If a -mlong* option was given, check that it matches the ABI,
+      otherwise infer the -mlong* setting from the other options.  */
+
+--- gcc-16.1.0/gcc/config/mips/mips.md
++++ gcc-16.1.0-kos/gcc/config/mips/mips.md
+@@ -1124,6 +1124,7 @@
+ 
+ (define_delay (and (eq_attr "type" "branch")
+ 		   (not (match_test "TARGET_MIPS16"))
++		   (not (match_test "TARGET_FIX_R5900"))
+ 		   (eq_attr "branch_likely" "yes"))
+   [(eq_attr "can_delay" "yes")
+    (nil)
+@@ -1133,6 +1134,7 @@
+ ;; not annul on false.
+ (define_delay (and (eq_attr "type" "branch,simd_branch")
+ 		   (not (match_test "TARGET_MIPS16"))
++		   (not (match_test "TARGET_FIX_R5900"))
+ 		   (ior (match_test "TARGET_CB_NEVER")
+ 			(and (eq_attr "compact_form" "maybe")
+ 			     (not (match_test "TARGET_CB_ALWAYS")))
+@@ -1203,6 +1205,7 @@
+ (include "5000.md")
+ (include "5400.md")
+ (include "5500.md")
++(include "5900.md")
+ (include "6000.md")
+ (include "7000.md")
+ (include "9000.md")
+@@ -1811,7 +1814,7 @@
+ 		 (match_operand:SI 3 "register_operand" "l,l,l,d")))
+    (clobber (match_scratch:SI 4 "=X,X,3,l"))
+    (clobber (match_scratch:SI 5 "=X,X,X,&d"))]
+-  "TARGET_MIPS3900 && !TARGET_MIPS16"
++  "(TARGET_MIPS3900 || TARGET_MIPS5900) && !TARGET_MIPS16"
+   "@
+     madd\t%1,%2
+     madd\t%1,%2
+
+--- gcc-16.1.0/include/longlong.h
++++ gcc-16.1.0-kos/include/longlong.h
+@@ -853,6 +853,17 @@
+ #endif
+ 
+ #if defined (__mips__) && W_TYPE_SIZE == 32
++/* Force R5900 to use mult for mulsidi3, this is used in muldi3 */
++#ifdef _MIPS_ARCH_R5900
++#define __umulsidi3(u, v) \
++  ({UDItype __w;							\
++    __asm__ ("multu	%1,%2\n\tpmfhl.lw %0"				\
++	     : "=d" (__w)						\
++	     : "d" ((USItype) (u)),					\
++	       "d" ((USItype) (v))					\
++	     : "hi", "lo");						\
++    __w; })
++#endif
+ #define umul_ppmm(w1, w0, u, v)						\
+   do {									\
+     UDItype __x = (UDItype) (USItype) (u) * (USItype) (v);		\
+
+--- gcc-16.1.0/libgcc/config.host
++++ gcc-16.1.0-kos/libgcc/config.host
+@@ -155,7 +155,11 @@
+ 	cpu_type=mips
+ 	tmake_file="mips/t-mips"
+ 	if test "${libgcc_cv_mips_hard_float}" = yes; then
++	    if test "${libgcc_cv_mips_single_float}" = yes; then
++                tmake_file="${tmake_file} t-hardfp-sf t-hardfp"
++	    else
+ 		tmake_file="${tmake_file} t-hardfp-sfdf t-hardfp"
++	    fi
+ 	else
+ 		tmake_file="${tmake_file} t-softfp-sfdf"
+ 	fi
+@@ -1064,19 +1068,16 @@
+ mips*-*-linux*)				# Linux MIPS, either endian.
+ 	extra_parts="$extra_parts crtfastmath.o"
+ 	tmake_file="${tmake_file} t-crtfm"
+-	case ${host} in
+-	  mips64r5900* | mipsr5900*)
+-	    # The MIPS16 support code uses floating point
+-	    # instructions that are not supported on r5900.
+-	    ;;
+-	  *)
++    if test "${libgcc_cv_mips16}" = yes; then
+ 	    tmake_file="${tmake_file} mips/t-mips16 t-slibgcc-libgcc"
+-	    ;;
+-	esac
++    fi
+ 	md_unwind_header=mips/linux-unwind.h
+ 	;;
+ mips*-sde-elf*)
+-	tmake_file="$tmake_file mips/t-crtstuff mips/t-mips16"
++	tmake_file="$tmake_file mips/t-crtstuff"
++    if test "${libgcc_cv_mips16}" = yes; then
++	  tmake_file="${tmake_file} mips/t-mips16"
++    fi
+ 	case "${with_newlib}" in
+ 	  yes)
+ 	    # newlib / libgloss.
+@@ -1106,7 +1107,10 @@
+ 	extra_parts="$extra_parts crti.o crtn.o"
+ 	;;
+ mips-*-elf* | mipsel-*-elf*)
+-	tmake_file="$tmake_file mips/t-elf mips/t-crtstuff mips/t-mips16"
++	tmake_file="$tmake_file mips/t-elf mips/t-crtstuff"
++    if test "${libgcc_cv_mips16}" = yes; then
++	  tmake_file="${tmake_file} mips/t-mips16"
++    fi
+ 	extra_parts="$extra_parts crti.o crtn.o"
+ 	;;
+ mipsr5900-*-elf* | mipsr5900el-*-elf*)
+@@ -1114,7 +1118,10 @@
+ 	extra_parts="$extra_parts crti.o crtn.o"
+ 	;;
+ mips64-*-elf* | mips64el-*-elf*)
+-	tmake_file="$tmake_file mips/t-elf mips/t-crtstuff mips/t-mips16"
++	tmake_file="$tmake_file mips/t-elf mips/t-crtstuff"
++    if test "${libgcc_cv_mips16}" = yes; then
++	  tmake_file="${tmake_file} mips/t-mips16"
++    fi
+ 	extra_parts="$extra_parts crti.o crtn.o"
+ 	;;
+ mips64r5900-*-elf* | mips64r5900el-*-elf*)
+@@ -1130,7 +1137,10 @@
+ 	extra_parts="$extra_parts crti.o crtn.o"
+ 	;;
+ mips*-*-rtems*)
+-	tmake_file="$tmake_file mips/t-elf mips/t-crtstuff mips/t-mips16"
++	tmake_file="$tmake_file mips/t-elf mips/t-crtstuff"
++    if test "${libgcc_cv_mips16}" = yes; then
++	  tmake_file="${tmake_file} mips/t-mips16"
++    fi
+ 	extra_parts="$extra_parts crti.o crtn.o"
+ 	;;
+ mips-wrs-vxworks)
+
+--- gcc-16.1.0/libgcc/config/mips/sfp-machine.h
++++ gcc-16.1.0-kos/libgcc/config/mips/sfp-machine.h
+@@ -22,7 +22,7 @@
+ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+ <http://www.gnu.org/licenses/>.  */
+ 
+-#ifdef __mips64
++#if defined(__mips64) && !defined(_MIPS_ARCH_R5900)
+ #define _FP_W_TYPE_SIZE		64
+ #define _FP_W_TYPE		unsigned long long
+ #define _FP_WS_TYPE		signed long long
+
+--- gcc-16.1.0/libgcc/config/t-hardfp-sf
++++ gcc-16.1.0-kos/libgcc/config/t-hardfp-sf
+@@ -0,0 +1,32 @@
++# Copyright (C) 2014-2015 Free Software Foundation, Inc.
++
++# This file is part of GCC.
++
++# GCC is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 3, or (at your option)
++# any later version.
++
++# GCC is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++
++# You should have received a copy of the GNU General Public License
++# along with GCC; see the file COPYING3.  If not see
++# <http://www.gnu.org/licenses/>.
++
++hardfp_float_modes := sf
++# di and ti are provided by libgcc2.c where needed.
++hardfp_int_modes := si
++hardfp_extensions :=
++hardfp_truncations :=
++
++# Emulate 64 bit float:
++FPBIT = true
++DPBIT = true
++# Don't build functions handled by 32 bit hardware:
++LIB2FUNCS_EXCLUDE = _addsub_sf _mul_sf _div_sf \
++    _fpcmp_parts_sf _compare_sf _eq_sf _ne_sf _gt_sf _ge_sf \
++    _lt_sf _le_sf _unord_sf _si_to_sf _sf_to_si _negate_sf \
++    _thenan_sf _sf_to_usi _usi_to_sf
+
+--- gcc-16.1.0/libgcc/configure
++++ gcc-16.1.0-kos/libgcc/configure
+@@ -5164,6 +5164,48 @@
+ fi
+ { $as_echo "$as_me:${as_lineno-$LINENO}: result: $libgcc_cv_mips_hard_float" >&5
+ $as_echo "$libgcc_cv_mips_hard_float" >&6; }
++  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether the target is single-float" >&5
++$as_echo_n "checking whether the target is single-float... " >&6; }
++if test "${libgcc_cv_mips_single_float+set}" = set; then :
++  $as_echo_n "(cached) " >&6
++else
++  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++#ifndef __mips_single_float
++     #error FOO
++     #endif
++_ACEOF
++if ac_fn_c_try_compile "$LINENO"; then :
++  libgcc_cv_mips_single_float=yes
++else
++  libgcc_cv_mips_single_float=no
++fi
++rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
++fi
++{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $libgcc_cv_mips_single_float" >&5
++$as_echo "$libgcc_cv_mips_single_float" >&6; }
++  # Some targets (i.e. R5900) don't support some MIPS16 instructions.
++  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether the target supports the MIPS16 ASE" >&5
++$as_echo_n "checking whether the target supports MIPS16 ASE... " >&6; }
++if test "${libgcc_cv_mips16+set}" = set; then :
++  $as_echo_n "(cached) " >&6
++else
++  CFLAGS_hold=$CFLAGS
++		 CFLAGS="$CFLAGS -mips16"
++		 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++int i;
++_ACEOF
++if ac_fn_c_try_compile "$LINENO"; then :
++  libgcc_cv_mips16=yes
++else
++  libgcc_cv_mips16=no
++fi
++rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
++	CFLAGS=$CFLAGS_hold
++fi
++{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $libgcc_cv_mips16" >&5
++$as_echo "$libgcc_cv_mips16" >&6; }
+ esac
+ 
+ # Determine the version of glibc, if any, used on the target.
+
+--- gcc-16.1.0/libgcc/configure.ac
++++ gcc-16.1.0-kos/libgcc/configure.ac
+@@ -356,6 +356,23 @@
+     ])],
+     [libgcc_cv_mips_hard_float=yes],
+     [libgcc_cv_mips_hard_float=no])])
++  AC_CACHE_CHECK([whether the target is single-float],
++		 [libgcc_cv_mips_single_float],
++		 [AC_COMPILE_IFELSE(
++    [#ifndef __mips_single_float
++     #error FOO
++     #endif],
++    [libgcc_cv_mips_single_float=yes],
++    [libgcc_cv_mips_single_float=no])])
++  # Some targets (i.e. R5900) don't support some MIPS16 instructions.
++  AC_CACHE_CHECK([whether the target supports the MIPS16 ASE],
++		 [libgcc_cv_mips16],
++		 [CFLAGS_hold=$CFLAGS
++		 CFLAGS="$CFLAGS -mips16"
++		 AC_COMPILE_IFELSE([[int i;]],
++    [libgcc_cv_mips16=yes],
++    [libgcc_cv_mips16=no])
++	CFLAGS=$CFLAGS_hold])
+ esac
+ 
+ # Determine the version of glibc, if any, used on the target.
+
+
+--- gcc-16.1.0/gcc/builtins.cc
++++ gcc-16.1.0-kos/gcc/builtins.cc
+@@ -10301,6 +10301,8 @@
+     default:
+       gcc_unreachable ();
+     }
++
++  unsigned int llu_size = TYPE_PRECISION (long_long_unsigned_type_node);
+ 
+   if (TYPE_PRECISION (arg0_type)
+       <= TYPE_PRECISION (long_long_unsigned_type_node))
+@@ -10324,10 +10326,10 @@
+ 	  fcodei = fcodell;
+ 	}
+     }
+-  else if (TYPE_PRECISION (arg0_type) <= MAX_FIXED_MODE_SIZE)
++  else if (TYPE_PRECISION (arg0_type) <= 2 * llu_size)
+     {
+       cast_type
+-	= build_nonstandard_integer_type (MAX_FIXED_MODE_SIZE,
++	= build_nonstandard_integer_type (2 * llu_size,
+ 					  TYPE_UNSIGNED (arg0_type));
+       gcc_assert (TYPE_PRECISION (cast_type)
+ 		  == 2 * TYPE_PRECISION (long_long_unsigned_type_node));
+@@ -10361,7 +10363,7 @@
+       arg2 = NULL_TREE;
+     }
+   tree call = NULL_TREE, tem;
+-  if (TYPE_PRECISION (arg0_type) == MAX_FIXED_MODE_SIZE
++  if (TYPE_PRECISION (arg0_type) == 2 * llu_size
+       && (TYPE_PRECISION (arg0_type)
+ 	  == 2 * TYPE_PRECISION (long_long_unsigned_type_node))
+       /* If the target supports the optab, then don't do the expansion. */
+@@ -10374,7 +10376,7 @@
+ 		   : long_long_integer_type_node);
+       tree hi = fold_build2 (RSHIFT_EXPR, arg0_type, arg0,
+ 			     build_int_cst (integer_type_node,
+-					    MAX_FIXED_MODE_SIZE / 2));
++					    llu_size));
+       hi = fold_convert (type, hi);
+       tree lo = fold_convert (type, arg0);
+       switch (fcode)
+@@ -10383,7 +10385,7 @@
+ 	  call = fold_builtin_bit_query (loc, fcode, lo, NULL_TREE);
+ 	  call = fold_build2 (PLUS_EXPR, integer_type_node, call,
+ 			      build_int_cst (integer_type_node,
+-					     MAX_FIXED_MODE_SIZE / 2));
++					     llu_size));
+ 	  if (arg2)
+ 	    call = fold_build3 (COND_EXPR, integer_type_node,
+ 				fold_build2 (NE_EXPR, boolean_type_node,
+@@ -10400,7 +10402,7 @@
+ 	  call = fold_builtin_bit_query (loc, fcode, hi, NULL_TREE);
+ 	  call = fold_build2 (PLUS_EXPR, integer_type_node, call,
+ 			      build_int_cst (integer_type_node,
+-					     MAX_FIXED_MODE_SIZE / 2));
++					     llu_size));
+ 	  if (arg2)
+ 	    call = fold_build3 (COND_EXPR, integer_type_node,
+ 				fold_build2 (NE_EXPR, boolean_type_node,
+@@ -10417,14 +10419,14 @@
+ 	  tem = fold_builtin_bit_query (loc, fcode, lo, NULL_TREE);
+ 	  tem = fold_build2 (PLUS_EXPR, integer_type_node, tem,
+ 			     build_int_cst (integer_type_node,
+-					    MAX_FIXED_MODE_SIZE / 2));
++					    llu_size));
+ 	  tem = fold_build3 (COND_EXPR, integer_type_node,
+ 			     fold_build2 (LT_EXPR, boolean_type_node,
+ 					  fold_build2 (BIT_XOR_EXPR, type,
+ 						       lo, hi),
+ 					  build_zero_cst (type)),
+ 			     build_int_cst (integer_type_node,
+-					    MAX_FIXED_MODE_SIZE / 2 - 1),
++					    llu_size - 1),
+ 			     tem);
+ 	  call = fold_builtin_bit_query (loc, fcode, hi, NULL_TREE);
+ 	  call = save_expr (call);
+@@ -10432,15 +10434,15 @@
+ 			      fold_build2 (NE_EXPR, boolean_type_node,
+ 					   call,
+ 					   build_int_cst (integer_type_node,
+-							  MAX_FIXED_MODE_SIZE
+-							  / 2 - 1)),
++							  llu_size
++							  - 1)),
+ 			      call, tem);
+ 	  break;
+ 	case BUILT_IN_FFSG:
+ 	  call = fold_builtin_bit_query (loc, fcode, hi, NULL_TREE);
+ 	  call = fold_build2 (PLUS_EXPR, integer_type_node, call,
+ 			      build_int_cst (integer_type_node,
+-					     MAX_FIXED_MODE_SIZE / 2));
++					     llu_size));
+ 	  call = fold_build3 (COND_EXPR, integer_type_node,
+ 			      fold_build2 (NE_EXPR, boolean_type_node,
+ 					   hi, build_zero_cst (type)),
