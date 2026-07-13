@@ -871,6 +871,9 @@ void fs_dclsocket_shutdown(void) {
     if(!strcmp(dbgio_dev_get(), "fs_dclsocket"))
         dbgio_disable();
 
+    /* Close out any still open files */
+    fs_vfs_shutdown(&vh);
+
     /* Send dc-tool an exit packet */
     memcpy(cmd.id, "DC00", 4);
 

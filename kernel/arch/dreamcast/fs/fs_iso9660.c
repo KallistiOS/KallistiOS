@@ -1301,6 +1301,9 @@ void fs_iso9660_shutdown(void) {
     /* De-register with vblank */
     vblank_handler_remove(iso_vblank_hnd);
 
+    /* Close out any still open files */
+    fs_vfs_shutdown(&vh);
+
     /* Dealloc cache block space */
     free(cache_data);
     free(caches);

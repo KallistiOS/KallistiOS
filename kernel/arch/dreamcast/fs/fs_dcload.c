@@ -491,5 +491,6 @@ void fs_dcload_shutdown(void) {
         free(dcload_wrkmem);
     }
 
+    fs_vfs_shutdown(&vh);
     nmmgr_handler_remove(&vh.nmmgr);
 }
