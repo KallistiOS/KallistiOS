@@ -663,10 +663,20 @@ file_t fs_open_handle(vfs_handler_t *vfs, void *hnd);
     code, as it is meant for use internally.
 
     \param  fd              The file descriptor to retrieve the handler for.
-    
+
     \return                 The VFS' handler structure.
 */
 vfs_handler_t *fs_get_handler(file_t fd);
+
+/** \brief   Close all FDs for a VFS Handler.
+
+    This function goes through all open fds and closes any that use the given
+    VFS Handler. This should be called during the shutdown of a vfs to ensure
+    the top-level fs is aware that the handler is gone.
+
+    \param  vfs             The VFS that is being shut down.
+*/
+void fs_vfs_shutdown(vfs_handler_t *vfs);
 
 /** \brief   Retrieve the internal handle for a file descriptor.
 
