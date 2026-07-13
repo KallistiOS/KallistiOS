@@ -39,6 +39,7 @@ void *handle_request(void *p) {
     char *path_end;
     ssize_t total_bytes = 0;
     http_state_t *hr = (http_state_t *)p;
+    char response_buf[BUFSIZE];
 
     /* Read the max we expect the request line to be */
     total_bytes = recv(hr->socket, request_line, REQUEST_LINE_SIZE-1, MSG_NONE);
@@ -168,7 +169,6 @@ refresh_buffer:
     }
 
 done_parsing:
-    char response_buf[BUFSIZE];
     if(hr->method == METHOD_GET) {
         file_t file = FILEHND_INVALID;
         uint32_t offset;
