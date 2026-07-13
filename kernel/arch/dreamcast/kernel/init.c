@@ -250,6 +250,7 @@ void  __weak_symbol arch_auto_shutdown(void) {
 
     KOS_INIT_FLAG_CALL(library_shutdown);
 
+    KOS_INIT_FLAG_CALL(fs_shutdown);
     KOS_INIT_FLAG_CALL(fs_dcload_shutdown);
     KOS_INIT_FLAG_CALL(vmu_fs_shutdown);
     if (!KOS_PLATFORM_IS_NAOMI)
@@ -261,11 +262,6 @@ void  __weak_symbol arch_auto_shutdown(void) {
     KOS_INIT_FLAG_CALL(fs_romdisk_shutdown);
     KOS_INIT_FLAG_CALL(fs_null_shutdown);
     KOS_INIT_FLAG_CALL(fs_dev_shutdown);
-
-    /* As a workaround, shut down the base FS before fs_pty
-       to avoid triggering bugs. */
-    KOS_INIT_FLAG_CALL(fs_shutdown);
-
     KOS_INIT_FLAG_CALL(fs_pty_shutdown);
 
     thd_shutdown();
