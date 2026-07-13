@@ -336,6 +336,15 @@ int fs_close(file_t fd) {
     return retval ? -1 : 0;
 }
 
+void fs_vfs_shutdown(vfs_handler_t *vfs) {
+
+    for(size_t i = 0; i < FD_SETSIZE; i++) {
+        if(fd_table[i] && (fd_table[i]->handler == vfs)) {
+            fs_close(i);
+        }
+    }
+}
+
 /* The rest of these pretty much map straight through */
 ssize_t fs_read(file_t fd, void *buffer, size_t cnt) {
     fs_hnd_t *h = fs_map_hnd(fd);
