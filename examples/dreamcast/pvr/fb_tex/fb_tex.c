@@ -20,14 +20,18 @@ static bool done;
 
 static uint32_t fbuf_color = 0xffffffff;
 
-static void change_color(uint8_t, uint32_t btns) {
+static void change_color(uint8_t unused, uint32_t btns) {
+    (void)unused;
+
     if(btns & CONT_A)
         fbuf_color = 0xfff8f8f8;
     else
         fbuf_color = 0xffffffff;
 }
 
-static void do_exit(uint8_t, uint32_t) {
+static void do_exit(uint8_t unused1, uint32_t unused2) {
+    (void)unused1;
+    (void)unused2;
     done = 1;
 }
 

@@ -348,6 +348,7 @@ int pvr_vertex_commit_zclip(pvr_vertex_t *src, int size)
             case 3: /* 0 and 1 inside, 2 outside */
                 inter_vert_commit(dest++, &src[-2], src, 0);
                 vert_commit(dest++, &src[-1], 0);
+                __fallthrough;
             case 2: /* 0 outside, 1 inside, 2 outside */
                 inter_vert_commit(dest++, &src[-1], src, eos);
                 break;
@@ -368,6 +369,7 @@ int pvr_vertex_commit_zclip(pvr_vertex_t *src, int size)
                 vert_commit(dest++, src, eos);
                 break;
             default:
+                break;
             }
         }
     }
@@ -446,6 +448,7 @@ int pvr_vertex_commit_zclip_intensity(pvr_vertex_t *src, int size)
             case 3: /* 0 and 1 inside, 2 outside */
                 inter_vert_commit_intensity(dest++, &src[-2], src, 0);
                 vert_commit(dest++, &src[-1], 0);
+                __fallthrough;
             case 2: /* 0 outside, 1 inside, 2 outside */
                 inter_vert_commit_intensity(dest++, &src[-1], src, eos);
                 break;
@@ -466,6 +469,7 @@ int pvr_vertex_commit_zclip_intensity(pvr_vertex_t *src, int size)
                 vert_commit(dest++, src, eos);
                 break;
             default:
+                break;
             }
         }
     }
