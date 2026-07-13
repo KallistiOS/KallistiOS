@@ -839,27 +839,16 @@ void fs_pty_init(void) {
 
 /* De-init the file system */
 void fs_pty_shutdown(void) {
-    ptyhalf_t *n, *c;
-
     if(!initted)
         return;
+
+    fs_vfs_shutdown(&vh);
 
     /* If we fail, we proceed anyways */
     mutex_trylock(&list_mutex);
 
-    /* Go through and free all the pty entries */
-    c = LIST_FIRST(&ptys);
-
-    while(c != NULL) {
-        n = LIST_NEXT(c, list);
-
-        cond_destroy(&c->ready_read);
-        cond_destroy(&c->ready_write);
-        mutex_destroy(&c->mutex);
-        free(c);
-
-        c = n;
-    }
+    /* fs_vfs_shutdown should have cleared these all out */
+    assert(LIST_EMPTY(&ptys));
 
     nmmgr_handler_remove(&vh.nmmgr);
 

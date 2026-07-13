@@ -256,6 +256,8 @@ void fs_null_init(void) {
 void fs_null_shutdown(void) {
     null_fh_t *c, *n;
 
+    fs_vfs_shutdown(&vh);
+
     mutex_lock(&fh_mutex);
 
     /* First, clean up any open files */
