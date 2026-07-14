@@ -355,9 +355,6 @@ _off64_t fs_tell64(file_t hnd);
     This file retrieves the length of the file associated with the given file
     descriptor.
 
-    \note                   size_t is unsigned, so the error return value is not
-                            less than 0.
-
     \param  hnd             The file descriptor to retrieve the size from.
     
     \return                 The length of the file on success, -1 on failure.
