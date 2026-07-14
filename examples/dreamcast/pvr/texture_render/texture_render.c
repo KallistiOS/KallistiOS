@@ -127,7 +127,7 @@ void draw_frame(void) {
     if(!to_texture)
         pvr_scene_begin();
     else
-        pvr_scene_begin_txr(d_texture, &tx_x, &tx_y);
+        pvr_scene_begin_rtt(d_texture, 640, 480, tx_x);
 
     /* Start opaque poly list */
     pvr_list_begin(PVR_LIST_OP_POLY);
