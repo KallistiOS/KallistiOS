@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <dirent.h>
+#include <langinfo.h>
 #include <libgen.h>
 #include <sys/stat.h>
 
@@ -351,7 +352,6 @@ static void draw_directory_selector(int index) {
 static void draw_directory_contents(directory_file_t *directory_contents, int num) {
     int x = 20 + BFONT_HEIGHT, y = BFONT_HEIGHT;
     int color = 1;
-    int count = 0;
     char str[80];
 
     bfont_set_foreground_color(0xFFFFFFFF);
@@ -364,7 +364,6 @@ static void draw_directory_contents(directory_file_t *directory_contents, int nu
         else {
             bfont_draw_str(vram_s + y*SCREEN_WIDTH+x, SCREEN_WIDTH, color, directory_contents[i].filename);
         }
-        count++;
         y += BFONT_HEIGHT;
 
         if(y >= (SCREEN_HEIGHT - BFONT_HEIGHT))
@@ -375,16 +374,18 @@ static void draw_directory_contents(directory_file_t *directory_contents, int nu
 static bool draw_stat(const char *path) {
     int x = 20 + BFONT_HEIGHT, y = 350;
     struct stat path_stat;
+    char timestring[64];
 
     /* If stat fails */
     if(stat(path, &path_stat) < 0)
         return false;
 
     /* We got a stat, so lets draw it */
+    strftime(timestring, 64, nl_langinfo(D_T_FMT), localtime(&path_stat.st_mtime));
     bfont_draw_str_fmt(vram_s + y*SCREEN_WIDTH+x, SCREEN_WIDTH, true,
     "Stat succeeded:\n\tFile size: %lu\n\tLast Modified: %s\n",
     S_ISDIR(path_stat.st_mode) ? 0 : path_stat.st_size,
-    asctime(gmtime(&path_stat.st_mtime)));
+    timestring);
 
     return true;
 }
