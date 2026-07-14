@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
 
     printf("First testing out getpriority()\n");
 
-    for(int i = 0; i < __array_size(gp_samples); i++) {
+    for(size_t i = 0; i < __array_size(gp_samples); i++) {
         int rv = gp_samples[i].rv;
         int which = gp_samples[i].which;
         id_t who = gp_samples[i].who;
@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
 
     printf("Next testing out setpriority()\n");
 
-    for(int i = 0; i < __array_size(sp_samples); i++) {
+    for(size_t i = 0; i < __array_size(sp_samples); i++) {
         int rv = sp_samples[i].rv;
         int which = sp_samples[i].which;
         id_t who = sp_samples[i].who;
