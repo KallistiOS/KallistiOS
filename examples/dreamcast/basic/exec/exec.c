@@ -9,8 +9,7 @@
 
 int main(int argc, char **argv) {
     file_t f;
-    size_t s;
-    ssize_t rv;
+    ssize_t s, rv;
     void *subbin;
 
     /* Print a hello */
@@ -25,7 +24,7 @@ int main(int argc, char **argv) {
 
     /* Get the size of sub.bin */
     s = fs_total(f);
-    assert(s);
+    assert(s > 0);
 
     /* Allocate space for it */
     subbin = malloc(s);
