@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <langinfo.h>
 
 #include <netdb.h>
 
@@ -54,6 +55,7 @@ int main(int argc, char **argv) {
     int sockfd;
     struct addrinfo *ai;
     time_t ntp_time, dc_time;
+    char timestring[64];
 
     /* Set the framebuffer as the output device for dbgio. */
     dbgio_dev_select("fb");
@@ -100,17 +102,20 @@ int main(int argc, char **argv) {
     /* Grab time from the structure, and subtract 70 years to convert
        from NTP's 1900 epoch to Unix time's 1970 epoch */
     ntp_time = (ntohl(packet.trns_time_s) - NTP_DELTA);
-    printf("The current NTP time is...\n %s\n", ctime(&ntp_time));
+    strftime(timestring, 64, nl_langinfo(D_T_FMT), localtime(&ntp_time));
+    printf("The current NTP time is...\n %s\n", timestring);
 
     /* Print the current system time */
     dc_time = rtc_unix_secs();
-    printf("Dreamcast system time is...\n %s\n", ctime(&dc_time));
+    strftime(timestring, 64, nl_langinfo(D_T_FMT), localtime(&dc_time));
+    printf("Dreamcast system time is...\n %s\n", timestring);
 
     /* Set the system time to the NTP time and read it back */
     printf("Setting Dreamcast clock's time to NTP time...\n\n");
     rtc_set_unix_secs(ntp_time);
     dc_time = rtc_unix_secs();
-    printf("Dreamcast system time is now...\n %s\n", ctime(&dc_time));
+    strftime(timestring, 64, nl_langinfo(D_T_FMT), localtime(&dc_time));
+    printf("Dreamcast system time is now...\n %s\n", timestring);
 
     /* Wait 10 seconds for the user to see what's on the screen before we clear
        it during the exit back to the loader */
