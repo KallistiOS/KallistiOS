@@ -120,6 +120,7 @@ int mutex_init(mutex_t *m, unsigned int mtype) __nonnull_all;
     \retval -1              On error, errno will be set as appropriate
 
     \par    Error Conditions:
+    \em     EINVAL - an invalid type of mutex was specified
     \em     EBUSY - the mutex is currently locked
 */
 int mutex_destroy(mutex_t *m) __nonnull_all;
@@ -181,7 +182,6 @@ int mutex_lock_timed(mutex_t *m, unsigned int timeout) __nonnull_all;
     \retval -1              On error, sets errno as appropriate
 
     \par    Error Conditions:
-    \em     EPERM - called inside an interrupt \n
     \em     EAGAIN - lock has been acquired too many times (recursive) \n
 */
 __nonnull_all
@@ -217,7 +217,6 @@ int __pure mutex_is_locked(const mutex_t *m) __nonnull_all;
     \par    Error Conditions:
     \em     EBUSY  - the mutex is already locked (mutex_lock() would block) \n
     \em     EAGAIN - lock has been acquired too many times (recursive) \n
-    \em     EDEADLK - would deadlock (error-checking)
 */
 int mutex_trylock(mutex_t *m) __nonnull_all;
 
