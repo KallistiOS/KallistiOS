@@ -21,6 +21,7 @@
 #include <dc/syscalls.h>
 #include <kos/dbglog.h>
 #include <kos/irq.h>
+#include <kos/net.h>
 
 static void strcpy_no_term(char *dest, const char *src, size_t destsize) {
     size_t srclength;
@@ -87,23 +88,8 @@ int flashrom_delete(int offset) {
 
 /* Higher level stuff follows */
 
-/* Internal function calculates the checksum of a flashrom block. Thanks
-   to Marcus Comstedt for this code. */
-static int flashrom_calc_crc(uint8_t *buffer) {
-    int i, c, n = 0xffff;
-
-    for(i = 0; i < FLASHROM_OFFSET_CRC; i++) {
-        n ^= buffer[i] << 8;
-
-        for(c = 0; c < 8; c++) {
-            if(n & 0x8000)
-                n = (n << 1) ^ 4129;
-            else
-                n = (n << 1);
-        }
-    }
-
-    return (~n) & 0xffff;
+static uint16_t flashrom_calc_crc(uint8_t *buffer) {
+    return net_crc16ccitt(buffer, FLASHROM_OFFSET_CRC, 0xffff) ^ 0xffff;
 }
 
 int flashrom_get_block(int partid, int blockid, uint8_t *buffer_out) {
