@@ -16,6 +16,7 @@
 #ifndef __SYS_RESOURCE_H
 #define __SYS_RESOURCE_H
 
+#include <sys/cdefs.h>
 __BEGIN_DECLS
 
 #include <limits.h>
