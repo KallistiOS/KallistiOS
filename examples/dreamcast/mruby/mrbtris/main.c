@@ -27,8 +27,16 @@
 */
 
 #include <kos.h>
+
+/* Allow both old kos-ports location and standard */
+#if __has_include("mruby/mruby.h")
 #include <mruby/mruby.h>
 #include <mruby/mruby/irep.h>
+#else
+#include <mruby.h>
+#include <mruby/irep.h>
+#endif
+
 #include "dckos.h"
 
 /* These macros tell KOS how to initialize itself. All of this initialization
