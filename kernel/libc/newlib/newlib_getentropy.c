@@ -6,23 +6,18 @@
 */
 
 #include <errno.h>
+#include <reent.h>
 #include <stdint.h>
 #include <unistd.h>
 #include <sys/time.h>
 
 #include <arch/arch.h>
 
-/* We provide getentropy() if using Newlib < 4.4.0 */
-#if __NEWLIB__ < 4 || (__NEWLIB__ == 4 && __NEWLIB_MINOR__ < 4)
-int getentropy(void *ptr, size_t len) {
-#else
-
-#include <reent.h>
 /* getentropy() is provided by Newlib >= 4.4.0,
    but we must provide _getentropy_r() */
 int _getentropy_r(struct _reent *re, void *ptr, size_t len) {
     (void)re;
-#endif
+
     const int block_size = 128;
     struct timeval tv;
     uint8_t *src = ((uint8_t *)_arch_mem_top);
@@ -49,3 +44,10 @@ int _getentropy_r(struct _reent *re, void *ptr, size_t len) {
 
     return 0;
 }
+
+/* We provide getentropy() if using Newlib < 4.4.0 */
+#if __NEWLIB__ < 4 || (__NEWLIB__ == 4 && __NEWLIB_MINOR__ < 4)
+int getentropy(void *ptr, size_t len) {
+    return _getentropy_r(NULL, ptr, len);
+}
+#endif
