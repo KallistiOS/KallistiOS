@@ -1,6 +1,13 @@
 #include <kos.h>
+
+/* Allow both old kos-ports location and standard */
+#if __has_include("modplug/stdafx.h")
 #include <modplug/stdafx.h>
 #include <modplug/sndfile.h>
+#else
+#include <libmodplug/stdafx.h>
+#include <libmodplug/sndfile.h>
+#endif
 
 uint16_t sound_buffer[65536] = {0};
 CSoundFile *soundfile;

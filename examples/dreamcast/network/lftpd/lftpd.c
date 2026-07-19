@@ -26,7 +26,12 @@
 #include <dc/sd.h>
 #include <fat/fs_fat.h>
 
+/* Allow both old kos-ports location and standard */
+#if __has_include("lftpd/lftpd.h")
 #include <lftpd/lftpd.h>
+#else
+#include <lftpd.h>
+#endif
 
 KOS_INIT_FLAGS(INIT_DEFAULT | INIT_NET);
 
