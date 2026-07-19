@@ -93,6 +93,7 @@
 
  */
 
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -103,10 +104,6 @@
 #include <kos/irq.h>
 #include <kos/regfield.h>
 #include <kos/worker_thread.h>
-
-/* XXX These based on g1ata.c and pvr.h and should be replaced by a standardized method */
-#define IN32(addr)         (* ( (volatile uint32_t *)(addr) ) )
-#define OUT32(addr, data)  IN32(addr) = (data)
 
 /* The set of asic regs are spaced by 0x10 with 0x4 between each sub reg */
 #define ASIC_EVT_REG_ADDR(irq, sub) (ASIC_IRQD_A + ((irq) * 0x10) + ((sub) * 0x4))
@@ -157,8 +154,8 @@ static void handler_irq9(irq_t source, irq_context_t *context, void *data) {
     /* Go through each event register and look for pending events */
     for(reg = 0; reg < ASIC_EVT_REGS; reg++) {
         /* Read the event mask and clear pending */
-        uint32_t mask = IN32(ASIC_ACK_A + (reg * 0x4));
-        OUT32(ASIC_ACK_A + (reg * 0x4), mask);
+        uint32_t addr = ASIC_ACK_A + (reg * 0x4);
+        uint32_t mask = atomic_fetch_add((atomic_uint *)addr, 0);
 
         /* Short circuit going through the table if none on this reg */
         if(mask == 0) continue;
@@ -179,7 +176,7 @@ void asic_evt_disable_all(void) {
 
     for(irq = 0; irq < ASIC_IRQ_MAX; irq++) {
         for(sub = 0; sub < ASIC_EVT_REGS; sub++) {
-            OUT32(ASIC_EVT_REG_ADDR(irq, sub), 0);
+            atomic_store((atomic_uint *)ASIC_EVT_REG_ADDR(irq, sub), 0);
         }
     }
 }
@@ -194,8 +191,7 @@ void asic_evt_disable(uint16_t code, uint8_t irqlevel) {
     evt = code & 0xff;
 
     uint32_t addr = ASIC_EVT_REG_ADDR(irqlevel, evtreg);
-    uint32_t val = IN32(addr);
-    OUT32(addr, val & ~BIT(evt));
+    atomic_fetch_and((atomic_uint *)addr, ~BIT(evt));
 }
 
 /* Enable a particular G2 event */
@@ -208,17 +204,16 @@ void asic_evt_enable(uint16_t code, uint8_t irqlevel) {
     evt = code & 0xff;
 
     uint32_t addr = ASIC_EVT_REG_ADDR(irqlevel, evtreg);
-    uint32_t val = IN32(addr);
-    OUT32(addr, val | BIT(evt));
+    atomic_fetch_or((atomic_uint *)addr, BIT(evt));
 }
 
 /* Initialize events */
 static void asic_evt_init(void) {
     /* Clear any pending interrupts and disable all events */
     asic_evt_disable_all();
-    OUT32(ASIC_ACK_A, 0xffffffff);
-    OUT32(ASIC_ACK_B, 0xffffffff);
-    OUT32(ASIC_ACK_C, 0xffffffff);
+    atomic_store((atomic_uint *)ASIC_ACK_A, 0xffffffff);
+    atomic_store((atomic_uint *)ASIC_ACK_B, 0xffffffff);
+    atomic_store((atomic_uint *)ASIC_ACK_C, 0xffffffff);
 
     /* Clear out the event table */
     memset(asic_evt_handlers, 0, sizeof(asic_evt_handlers));

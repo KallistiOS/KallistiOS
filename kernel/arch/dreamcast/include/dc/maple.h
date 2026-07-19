@@ -54,6 +54,7 @@ __BEGIN_DECLS
 #include <stdint.h>
 #include <arch/types.h>
 #include <sys/queue.h>
+#include <dc/vblank.h>
 
 /** \defgroup maple Maple Bus
     \brief          Driver for the Dreamcast's Maple Peripheral Bus
@@ -457,7 +458,7 @@ typedef struct maple_state_str {
     uint8_t                     port0_mie;
 
     /** \brief  Our vblank handler handle */
-    int                         vbl_handle;
+    vblhnd_t                    *vbl_handle;
 
     /** \brief  The port to read for lightgun status, if any. */
     int                         gun_port;

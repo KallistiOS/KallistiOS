@@ -1093,7 +1093,7 @@ int iso_reset(void) {
    foreground, so instead we'll just set a "dead" flag and next
    time someone calls in it'll get reset. */
 static int iso_last_status;
-static int iso_vblank_hnd;
+static vblhnd_t *iso_vblank_hnd;
 static void iso_vblank(uint32_t evt, void *data) {
     int status, disc_type;
 
