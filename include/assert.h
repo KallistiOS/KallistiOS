@@ -52,7 +52,7 @@ __BEGIN_DECLS
 /** \endcond */
 
 #ifdef NDEBUG
-#   define assert(e) ((void)(0 ? (e) : 0))
+#   define assert(e) ((void)0)
 #   define assert_msg(e, m) assert(e)
 #else
 
