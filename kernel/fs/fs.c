@@ -287,31 +287,21 @@ void *fs_get_handle(file_t fd) {
 
 file_t fs_dup(file_t oldfd) {
     /* Make sure it exists */
-    if(oldfd < 0 || oldfd >= FD_SETSIZE || oldfd == FILEHND_INVALID) {
-        errno = EBADF;
-        return FILEHND_INVALID;
-    }
-    else if(!fd_table[oldfd]) {
-        errno = EBADF;
-        return FILEHND_INVALID;
-    }
+    fs_hnd_t *hnd = fs_map_hnd(oldfd);
 
-    return fs_hnd_assign(fd_table[oldfd]);
+    if(!hnd)
+        return FILEHND_INVALID;
+
+    return fs_hnd_assign(hnd);
 }
 
 file_t fs_dup2(file_t oldfd, file_t newfd) {
-    fs_hnd_t *prev;
+    fs_hnd_t *prev = fs_map_hnd(newfd);
+    fs_hnd_t *oldhnd = fs_map_hnd(oldfd);
 
-    /* Make sure the descriptors are valid */
-    if(oldfd < 0 || oldfd >= FD_SETSIZE || oldfd == FILEHND_INVALID ||
-       newfd < 0 || newfd >= FD_SETSIZE || newfd == FILEHND_INVALID) {
-        errno = EBADF;
+    /* If the old one couldn't be found, or either errored */
+    if((oldhnd == NULL) || (errno == EBADF))
         return FILEHND_INVALID;
-    }
-    else if(!fd_table[oldfd]) {
-        errno = EBADF;
-        return FILEHND_INVALID;
-    }
 
     if(oldfd == newfd)
         goto out_get_ref;
@@ -344,6 +334,15 @@ int fs_close(file_t fd) {
 
     atomic_store(&fd_table[fd], NULL);
     return retval ? -1 : 0;
+}
+
+void fs_vfs_shutdown(vfs_handler_t *vfs) {
+
+    for(size_t i = 0; i < FD_SETSIZE; i++) {
+        if(fd_table[i] && (fd_table[i]->handler == vfs)) {
+            fs_close(i);
+        }
+    }
 }
 
 /* The rest of these pretty much map straight through */
