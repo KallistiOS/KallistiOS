@@ -12,9 +12,12 @@
 #include <dc/dcload.h>
 #include <dc/memory.h>
 #include <kos/irq.h>
+#include <kos/mutex.h>
 
 /* This is the address where the function pointer for the dcload syscall is fetched from */
 #define VEC_DCLOAD        (MEM_AREA_P1_BASE | 0x0C004008)
+
+static mutex_t mutex = RECURSIVE_MUTEX_INITIALIZER;
 
 /*
     This is the single syscall dcload provides. It is then multiplexed out based on the `cmd`
@@ -24,16 +27,22 @@
 static int dcload_syscall(dcload_cmd_t cmd, void *param1, void *param2, void *param3) {
     uintptr_t *syscall_ptr = (uintptr_t *)VEC_DCLOAD;
     int (*syscall)() = (int (*)())(*syscall_ptr);
+    int ret;
 
-    /* Disable IRQs until the syscall returns */
-    irq_disable_scoped();
+    /* Serialize callers */
+    if(mutex_lock_irqsafe(&mutex))
+        return -1;
 
     /* Ensure that the FIFO buffer is clear */
     /* XXX - Is this needed? It seems like something only for serial. */
-    while(FIFO_STATUS & FIFO_SH4)            ;
+    while(FIFO_STATUS & FIFO_SH4);
 
     /* Make the call */
-    return syscall(cmd, param1, param2, param3);
+    ret = syscall(cmd, param1, param2, param3);
+
+    mutex_unlock(&mutex);
+
+    return ret;
 }
 
 ssize_t dcload_read(uint32_t hnd, uint8_t *data, size_t len) {
