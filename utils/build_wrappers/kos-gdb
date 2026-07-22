@@ -11,4 +11,4 @@
 RESULT=$($KOS_GDB -iex "set architecture $KOS_GDB_CPU" -iex quit 2>&1 >/dev/null)
 [ -n "$RESULT" ] && echo "GDB program does not support $KOS_GDB_CPU." && exit 1
 
-exec $KOS_GDB -iex "set architecture $KOS_GDB_CPU" -iex "set sysroot $KOS_PORTS" -iex "target remote 127.0.0.1:2159" $*
+exec $KOS_GDB -iex "set architecture $KOS_GDB_CPU" -iex "set sysroot $KOS_SYSROOT" -iex "target remote 127.0.0.1:2159" $*
