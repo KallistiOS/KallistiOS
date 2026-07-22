@@ -470,12 +470,6 @@ void fs_dcload_init(void) {
     if(dcload_type == DCLOAD_TYPE_NONE)
         return;
 
-    /* Check for combination of KOS networking and dcload-ip */
-    if((dcload_type == DCLOAD_TYPE_IP) && (__kos_init_flags & INIT_NET)) {
-        dbglog(DBG_INFO, "dc-load console+kosnet, fs_dcload unavailable.\n");
-        return;
-    }
-
     /* Register with VFS */
     nmmgr_handler_add(&vh.nmmgr);
 }

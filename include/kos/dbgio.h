@@ -12,8 +12,8 @@
 
     This file contains the Debug I/O system, which abstracts things so that
     various types of debugging tools can be used by programs in KOS. Included
-    among these tools is the dcload console (dcload-serial, dcload-ip, and
-    fs_dclsocket), a raw serial console, and a framebuffer based console.
+    among these tools is the dcload console (dcload-serial and dcload-ip), a
+    raw serial console, and a framebuffer based console.
 
     \author Megan Potter
 */

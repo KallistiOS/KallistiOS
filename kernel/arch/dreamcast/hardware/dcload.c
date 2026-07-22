@@ -8,32 +8,19 @@
 
 #include <stdio.h>
 
-#include <dc/fifo.h>
 #include <dc/dcload.h>
-#include <dc/memory.h>
-#include <kos/irq.h>
 
-/* This is the address where the function pointer for the dcload syscall is fetched from */
-#define VEC_DCLOAD        (MEM_AREA_P1_BASE | 0x0C004008)
+/* Default backend, defined in dcload_syscall.c */
+int dcload_syscall_native(dcload_cmd_t cmd, void *p1, void *p2, void *p3);
 
-/*
-    This is the single syscall dcload provides. It is then multiplexed out based on the `cmd`
-    parameter.
-*/
+static dcload_syscall_t transport = dcload_syscall_native;
 
-static int dcload_syscall(dcload_cmd_t cmd, void *param1, void *param2, void *param3) {
-    uintptr_t *syscall_ptr = (uintptr_t *)VEC_DCLOAD;
-    int (*syscall)() = (int (*)())(*syscall_ptr);
+void dcload_syscall_set(dcload_syscall_t fp) {
+    transport = fp ? fp : dcload_syscall_native;
+}
 
-    /* Disable IRQs until the syscall returns */
-    irq_disable_scoped();
-
-    /* Ensure that the FIFO buffer is clear */
-    /* XXX - Is this needed? It seems like something only for serial. */
-    while(FIFO_STATUS & FIFO_SH4)            ;
-
-    /* Make the call */
-    return syscall(cmd, param1, param2, param3);
+static inline int dcload_syscall(dcload_cmd_t cmd, void *p1, void *p2, void *p3) {
+    return transport(cmd, p1, p2, p3);
 }
 
 ssize_t dcload_read(uint32_t hnd, uint8_t *data, size_t len) {
@@ -100,7 +87,7 @@ int dcload_utime(const char *path, const struct utimbuf *times) {
 */
 
 int dcload_assignwrkmem(int *buf) {
-    return dcload_syscall(DCLOAD_ASSIGNWRKMEM, (void *)buf, NULL, NULL);
+    return dcload_syscall_native(DCLOAD_ASSIGNWRKMEM, (void *)buf, NULL, NULL);
 }
 
 void dcload_exit(void) {
@@ -126,7 +113,7 @@ size_t dcload_gdbpacket(const char* in_buf, size_t in_size, char* out_buf, size_
 }
 
 uint32_t dcload_gethostinfo(uint32_t *ip, uint32_t *port) {
-    return dcload_syscall(DCLOAD_GETHOSTINFO, (void *)ip, (void *)port, NULL);
+    return dcload_syscall_native(DCLOAD_GETHOSTINFO, (void *)ip, (void *)port, NULL);
 }
 
 int dcload_rewinddir(uint32_t hnd) {
