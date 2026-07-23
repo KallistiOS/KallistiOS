@@ -26,17 +26,30 @@
    SOFTWARE.
 */
 
+#include <stdio.h>
+#include <inttypes.h>
 #include <assert.h>
 #include <kos.h>
 #include <kos/img.h>
+
+/* Allow both old kos-ports location and standard */
+#if __has_include("mruby/mruby.h")
 #include <mruby/mruby.h>
+#include <mruby/mruby/array.h>
 #include <mruby/mruby/internal.h>
-#include <mruby/mruby/data.h>
 #include <mruby/mruby/string.h>
-#include <mruby/mruby/error.h>
-#include <stdio.h>
-#include <inttypes.h>
+#else
+#include <mruby.h>
+#include <mruby/array.h>
+#include <mruby/internal.h>
+#include <mruby/string.h>
+#endif
+
+#if __has_include("png/png.h")
 #include <png/png.h>
+#else
+#include <png.h>
+#endif
 
 // Convert ARGB1555 to RGB565 - drops the A bit and G is exapanded to 6 bits
 #define CONV1555TO565(colour) ( (((colour) & 0x7C00) << 1) | (((colour) & 0x03E0) << 1) | ((colour) & 0x001F) )

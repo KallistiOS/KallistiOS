@@ -17,10 +17,18 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Allow both old kos-ports location and standard */
+#if __has_include("lua.h")
 #include "lua.h"
 #include "llimits.h"
 #include "lauxlib.h"
 #include "lualib.h"
+#else
+#include <lua/lua.h>
+#include <lua/llimits.h>
+#include <lua/lauxlib.h>
+#include <lua/lualib.h>
+#endif
 
 /* KOS-specific stuff. */
 #include <kos/dbgio.h>
