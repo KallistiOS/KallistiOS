@@ -28,11 +28,6 @@
 /* Are we initted? */
 static int initted = 0;
 
-/* The queue processing mutex for snd_sh4_to_aica_start and snd_sh4_to_aica_stop.
-   There are some cases like stereo stream control + stereo sfx control
-   at the same time in separate threads. */
-static mutex_t queue_proc_mutex = MUTEX_INITIALIZER;
-
 /* Initialize driver; note that this replaces the AICA program so that
    if you had anything else going on, it's gone now! */
 int snd_init(void) {
@@ -119,12 +114,10 @@ int snd_sh4_to_aica(void *packet, uint32_t size) {
 /* Start processing requests in the queue */
 void snd_sh4_to_aica_start(void) {
     g2_write_32(SPU_RAM_UNCACHED_BASE + AICA_MEM_CMD_QUEUE + offsetof(aica_queue_t, process_ok), 1);
-    mutex_unlock(&queue_proc_mutex);
 }
 
 /* Stop processing requests in the queue */
 void snd_sh4_to_aica_stop(void) {
-    mutex_lock(&queue_proc_mutex);
     g2_write_32(SPU_RAM_UNCACHED_BASE + AICA_MEM_CMD_QUEUE + offsetof(aica_queue_t, process_ok), 0);
 }
 
