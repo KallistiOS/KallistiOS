@@ -1,6 +1,7 @@
 # KallistiOS Toolchain Builder (kos-chain)
 
-build: build-done
+# Profiles may stop the build early (dvp: binutils only; iop: no newlib).
+build: $(or $(build_final_target),build-done)
 build-gcc: build-gcc-pass2
 build-newlib: build-newlib-only fixup-newlib
 

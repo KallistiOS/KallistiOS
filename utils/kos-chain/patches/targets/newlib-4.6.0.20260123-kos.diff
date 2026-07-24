@@ -1,6 +1,1485 @@
-diff --color -ruN newlib-4.6.0.20260123/newlib/configure.host newlib-4.6.0.20260123-kos/newlib/configure.host
---- newlib-4.6.0.20260123/newlib/configure.host	2024-02-10 09:30:58.772247624 -0600
-+++ newlib-4.6.0.20260123-kos/newlib/configure.host	2024-02-10 09:31:16.329331366 -0600
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/configure newlib-4.6.0.20260123-kos/configure
+--- newlib-4.6.0.20260123/configure	2026-01-23 14:12:49
++++ newlib-4.6.0.20260123-kos/configure	2026-07-02 12:52:38
+@@ -3985,6 +3985,9 @@
+   | mips*-*-irix* | mips*-*-lnews* | mips*-*-riscos*)
+     noconfigdirs="$noconfigdirs ld gas gprof"
+     ;;
++  mips*-ps2-*)
++    noconfigdirs="$noconfigdirs target-libgloss"
++    ;;
+   mips*-*-*)
+     noconfigdirs="$noconfigdirs gprof"
+     ;;
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/configure.ac newlib-4.6.0.20260123-kos/configure.ac
+--- newlib-4.6.0.20260123/configure.ac	2026-01-23 14:12:49
++++ newlib-4.6.0.20260123-kos/configure.ac	2026-05-13 05:01:13
+@@ -1269,6 +1269,9 @@
+   | mips*-*-irix* | mips*-*-lnews* | mips*-*-riscos*)
+     noconfigdirs="$noconfigdirs ld gas gprof"
+     ;;
++  mips*-ps2-*)
++    noconfigdirs="$noconfigdirs target-libgloss"
++    ;;
+   mips*-*-*)
+     noconfigdirs="$noconfigdirs gprof"
+     ;;
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/newlib/Makefile.in newlib-4.6.0.20260123-kos/newlib/Makefile.in
+--- newlib-4.6.0.20260123/newlib/Makefile.in	2026-01-23 14:12:49
++++ newlib-4.6.0.20260123-kos/newlib/Makefile.in	2026-07-02 13:13:18
+@@ -586,30 +586,30 @@
+ @HAVE_LIBC_SYS_NETWARE_DIR_TRUE@	libc/sys/netware/link.c
+ 
+ @HAVE_LIBC_SYS_OR1K_DIR_TRUE@am__append_53 = libc/sys/or1k/getreent.S libc/sys/or1k/mlock.c
+-@HAVE_LIBC_SYS_RDOS_DIR_TRUE@am__append_54 = \
++@HAVE_LIBC_SYS_RDOS_DIR_TRUE@am__append_55 = \
+ @HAVE_LIBC_SYS_RDOS_DIR_TRUE@	libc/sys/rdos/chown.c libc/sys/rdos/close.c libc/sys/rdos/execve.c libc/sys/rdos/fork.c libc/sys/rdos/fstat.c libc/sys/rdos/getenv.c \
+ @HAVE_LIBC_SYS_RDOS_DIR_TRUE@	libc/sys/rdos/getpid.c libc/sys/rdos/gettod.c libc/sys/rdos/isatty.c libc/sys/rdos/kill.c libc/sys/rdos/link.c libc/sys/rdos/lseek.c libc/sys/rdos/open.c libc/sys/rdos/rdoshelp.c \
+ @HAVE_LIBC_SYS_RDOS_DIR_TRUE@	libc/sys/rdos/rdos.S libc/sys/rdos/read.c libc/sys/rdos/readlink.c libc/sys/rdos/sbrk.c libc/sys/rdos/stat.c libc/sys/rdos/symlink.c libc/sys/rdos/times.c libc/sys/rdos/unlink.c \
+ @HAVE_LIBC_SYS_RDOS_DIR_TRUE@	libc/sys/rdos/wait.c libc/sys/rdos/write.c
+ 
+-@HAVE_LIBC_SYS_RTEMS_DIR_TRUE@am__append_55 = libc/sys/rtems/dummysys.c libc/sys/rtems/cpusetalloc.c libc/sys/rtems/cpusetfree.c
+-@HAVE_LIBC_SYS_SH_DIR_TRUE@@MAY_SUPPLY_SYSCALLS_TRUE@am__append_56 = libc/sys/sh/syscalls.c libc/sys/sh/trap.S libc/sys/sh/creat.c libc/sys/sh/ftruncate.c libc/sys/sh/truncate.c
+-@HAVE_LIBC_SYS_SYSMEC_DIR_TRUE@am__append_57 = \
++@HAVE_LIBC_SYS_RTEMS_DIR_TRUE@am__append_56 = libc/sys/rtems/dummysys.c libc/sys/rtems/cpusetalloc.c libc/sys/rtems/cpusetfree.c
++@HAVE_LIBC_SYS_SH_DIR_TRUE@@MAY_SUPPLY_SYSCALLS_TRUE@am__append_57 = libc/sys/sh/syscalls.c libc/sys/sh/trap.S libc/sys/sh/creat.c libc/sys/sh/ftruncate.c libc/sys/sh/truncate.c
++@HAVE_LIBC_SYS_SYSMEC_DIR_TRUE@am__append_58 = \
+ @HAVE_LIBC_SYS_SYSMEC_DIR_TRUE@	libc/sys/sysmec/_exit.c libc/sys/sysmec/access.c libc/sys/sysmec/chmod.c libc/sys/sysmec/chown.c libc/sys/sysmec/close.c libc/sys/sysmec/creat.c libc/sys/sysmec/crt1.c \
+ @HAVE_LIBC_SYS_SYSMEC_DIR_TRUE@	libc/sys/sysmec/execv.c libc/sys/sysmec/execve.c libc/sys/sysmec/fork.c libc/sys/sysmec/fstat.c libc/sys/sysmec/getpid.c libc/sys/sysmec/isatty.c \
+ @HAVE_LIBC_SYS_SYSMEC_DIR_TRUE@	libc/sys/sysmec/kill.c libc/sys/sysmec/lseek.c libc/sys/sysmec/open.c libc/sys/sysmec/pipe.c libc/sys/sysmec/read.c \
+ @HAVE_LIBC_SYS_SYSMEC_DIR_TRUE@	libc/sys/sysmec/sbrk.c libc/sys/sysmec/stat.c libc/sys/sysmec/time.c libc/sys/sysmec/trap.S libc/sys/sysmec/unlink.c libc/sys/sysmec/utime.c libc/sys/sysmec/wait.c libc/sys/sysmec/write.c \
+ @HAVE_LIBC_SYS_SYSMEC_DIR_TRUE@	libc/sys/sysmec/times.c libc/sys/sysmec/gettime.c
+ 
+-@HAVE_LIBC_SYS_SYSNEC810_DIR_TRUE@am__append_58 = libc/sys/sysnec810/io.S libc/sys/sysnec810/write.c libc/sys/sysnec810/sbrk.c libc/sys/sysnec810/misc.c
+-@HAVE_LIBC_SYS_SYSNECV850_DIR_TRUE@@MAY_SUPPLY_SYSCALLS_TRUE@am__append_59 = \
++@HAVE_LIBC_SYS_SYSNEC810_DIR_TRUE@am__append_59 = libc/sys/sysnec810/io.S libc/sys/sysnec810/write.c libc/sys/sysnec810/sbrk.c libc/sys/sysnec810/misc.c
++@HAVE_LIBC_SYS_SYSNECV850_DIR_TRUE@@MAY_SUPPLY_SYSCALLS_TRUE@am__append_60 = \
+ @HAVE_LIBC_SYS_SYSNECV850_DIR_TRUE@@MAY_SUPPLY_SYSCALLS_TRUE@	libc/sys/sysnecv850/_exit.c libc/sys/sysnecv850/access.c libc/sys/sysnecv850/chmod.c libc/sys/sysnecv850/chown.c libc/sys/sysnecv850/close.c libc/sys/sysnecv850/creat.c libc/sys/sysnecv850/crt1.c \
+ @HAVE_LIBC_SYS_SYSNECV850_DIR_TRUE@@MAY_SUPPLY_SYSCALLS_TRUE@	libc/sys/sysnecv850/execv.c libc/sys/sysnecv850/execve.c libc/sys/sysnecv850/fork.c libc/sys/sysnecv850/fstat.c libc/sys/sysnecv850/getpid.c libc/sys/sysnecv850/isatty.c \
+ @HAVE_LIBC_SYS_SYSNECV850_DIR_TRUE@@MAY_SUPPLY_SYSCALLS_TRUE@	libc/sys/sysnecv850/kill.c libc/sys/sysnecv850/lseek.c libc/sys/sysnecv850/open.c libc/sys/sysnecv850/pipe.c libc/sys/sysnecv850/read.c libc/sys/sysnecv850/link.c \
+ @HAVE_LIBC_SYS_SYSNECV850_DIR_TRUE@@MAY_SUPPLY_SYSCALLS_TRUE@	libc/sys/sysnecv850/sbrk.c libc/sys/sysnecv850/stat.c libc/sys/sysnecv850/time.c libc/sys/sysnecv850/trap.S libc/sys/sysnecv850/unlink.c libc/sys/sysnecv850/utime.c libc/sys/sysnecv850/wait.c libc/sys/sysnecv850/write.c \
+ @HAVE_LIBC_SYS_SYSNECV850_DIR_TRUE@@MAY_SUPPLY_SYSCALLS_TRUE@	libc/sys/sysnecv850/times.c libc/sys/sysnecv850/gettime.c libc/sys/sysnecv850/rename.c
+ 
+-@HAVE_LIBC_SYS_SYSVI386_DIR_TRUE@am__append_60 = \
++@HAVE_LIBC_SYS_SYSVI386_DIR_TRUE@am__append_61 = \
+ @HAVE_LIBC_SYS_SYSVI386_DIR_TRUE@	libc/sys/sysvi386/ioctl.S libc/sys/sysvi386/isatty.c libc/sys/sysvi386/read.S libc/sys/sysvi386/lseek.S libc/sys/sysvi386/close.S libc/sys/sysvi386/sbrk.c libc/sys/sysvi386/fstat.S libc/sys/sysvi386/cerror.S \
+ @HAVE_LIBC_SYS_SYSVI386_DIR_TRUE@	libc/sys/sysvi386/_exit.S libc/sys/sysvi386/write.S libc/sys/sysvi386/open.S libc/sys/sysvi386/signal.S libc/sys/sysvi386/kill.S libc/sys/sysvi386/getpid.S libc/sys/sysvi386/brk.S libc/sys/sysvi386/fork.S libc/sys/sysvi386/wait.S \
+ @HAVE_LIBC_SYS_SYSVI386_DIR_TRUE@	libc/sys/sysvi386/execve.S libc/sys/sysvi386/exec.c libc/sys/sysvi386/utime.S libc/sys/sysvi386/fcntl.S libc/sys/sysvi386/chmod.S libc/sys/sysvi386/getuid.S libc/sys/sysvi386/getgid.S libc/sys/sysvi386/time.S \
+@@ -620,14 +620,14 @@
+ @HAVE_LIBC_SYS_SYSVI386_DIR_TRUE@	libc/sys/sysvi386/chdir.S libc/sys/sysvi386/dup2.c libc/sys/sysvi386/dup.c libc/sys/sysvi386/tcgetattr.c libc/sys/sysvi386/tcsetattr.c libc/sys/sysvi386/speed.c libc/sys/sysvi386/tcline.c \
+ @HAVE_LIBC_SYS_SYSVI386_DIR_TRUE@	libc/sys/sysvi386/times.S libc/sys/sysvi386/pause.S libc/sys/sysvi386/sleep.c libc/sys/sysvi386/alarm.S libc/sys/sysvi386/access.S libc/sys/sysvi386/_longjmp.S libc/sys/sysvi386/_setjmp.S
+ 
+-@HAVE_LIBC_SYS_SYSVNECV70_DIR_TRUE@am__append_61 = \
++@HAVE_LIBC_SYS_SYSVNECV70_DIR_TRUE@am__append_62 = \
+ @HAVE_LIBC_SYS_SYSVNECV70_DIR_TRUE@	libc/sys/sysvnecv70/ioctl.S libc/sys/sysvnecv70/isatty.S libc/sys/sysvnecv70/read.S libc/sys/sysvnecv70/lseek.S libc/sys/sysvnecv70/close.S libc/sys/sysvnecv70/sbrk.S libc/sys/sysvnecv70/fstat.S \
+ @HAVE_LIBC_SYS_SYSVNECV70_DIR_TRUE@	libc/sys/sysvnecv70/cerror.S libc/sys/sysvnecv70/exit.S libc/sys/sysvnecv70/write.S libc/sys/sysvnecv70/sysv60.S libc/sys/sysvnecv70/fpx.c libc/sys/sysvnecv70/fps.S libc/sys/sysvnecv70/open.S
+ 
+-@HAVE_LIBC_SYS_TIRTOS_DIR_TRUE@am__append_62 = libc/sys/tirtos/lock.c
+-@HAVE_LIBC_SYS_W65_DIR_TRUE@am__append_63 = libc/sys/w65/syscalls.c libc/sys/w65/trap.c
+-@HAVE_LIBC_SYS_Z8KSIM_DIR_TRUE@am__append_64 = libc/sys/z8ksim/glue.c
+-@HAVE_LIBC_MACHINE_AARCH64_TRUE@am__append_65 = \
++@HAVE_LIBC_SYS_TIRTOS_DIR_TRUE@am__append_63 = libc/sys/tirtos/lock.c
++@HAVE_LIBC_SYS_W65_DIR_TRUE@am__append_64 = libc/sys/w65/syscalls.c libc/sys/w65/trap.c
++@HAVE_LIBC_SYS_Z8KSIM_DIR_TRUE@am__append_65 = libc/sys/z8ksim/glue.c
++@HAVE_LIBC_MACHINE_AARCH64_TRUE@am__append_66 = \
+ @HAVE_LIBC_MACHINE_AARCH64_TRUE@	libc/machine/aarch64/memchr-stub.c \
+ @HAVE_LIBC_MACHINE_AARCH64_TRUE@	libc/machine/aarch64/memchr.S \
+ @HAVE_LIBC_MACHINE_AARCH64_TRUE@	libc/machine/aarch64/memcmp-stub.c \
+@@ -661,7 +661,7 @@
+ @HAVE_LIBC_MACHINE_AARCH64_TRUE@	libc/machine/aarch64/strrchr-stub.c \
+ @HAVE_LIBC_MACHINE_AARCH64_TRUE@	libc/machine/aarch64/strrchr.S
+ 
+-@HAVE_LIBC_MACHINE_AMDGCN_TRUE@am__append_66 = \
++@HAVE_LIBC_MACHINE_AMDGCN_TRUE@am__append_67 = \
+ @HAVE_LIBC_MACHINE_AMDGCN_TRUE@	libc/machine/amdgcn/_exit.c \
+ @HAVE_LIBC_MACHINE_AMDGCN_TRUE@	libc/machine/amdgcn/abort.c \
+ @HAVE_LIBC_MACHINE_AMDGCN_TRUE@	libc/machine/amdgcn/atexit.c \
+@@ -669,7 +669,7 @@
+ @HAVE_LIBC_MACHINE_AMDGCN_TRUE@	libc/machine/amdgcn/getreent.c \
+ @HAVE_LIBC_MACHINE_AMDGCN_TRUE@	libc/machine/amdgcn/signal.c
+ 
+-@HAVE_LIBC_MACHINE_ARC_TRUE@am__append_67 = \
++@HAVE_LIBC_MACHINE_ARC_TRUE@am__append_68 = \
+ @HAVE_LIBC_MACHINE_ARC_TRUE@	libc/machine/arc/memcmp.S \
+ @HAVE_LIBC_MACHINE_ARC_TRUE@	libc/machine/arc/memcmp-bs-norm.S \
+ @HAVE_LIBC_MACHINE_ARC_TRUE@	libc/machine/arc/memcmp-stub.c \
+@@ -701,7 +701,7 @@
+ @HAVE_LIBC_MACHINE_ARC_TRUE@	libc/machine/arc/strncpy-stub.c \
+ @HAVE_LIBC_MACHINE_ARC_TRUE@	libc/machine/arc/strncpy-bs.S
+ 
+-@HAVE_LIBC_MACHINE_ARC64_TRUE@am__append_68 = \
++@HAVE_LIBC_MACHINE_ARC64_TRUE@am__append_69 = \
+ @HAVE_LIBC_MACHINE_ARC64_TRUE@	libc/machine/arc64/memcmp.S \
+ @HAVE_LIBC_MACHINE_ARC64_TRUE@	libc/machine/arc64/memcmp-stub.c \
+ @HAVE_LIBC_MACHINE_ARC64_TRUE@	libc/machine/arc64/memcpy.S \
+@@ -715,7 +715,7 @@
+ @HAVE_LIBC_MACHINE_ARC64_TRUE@	libc/machine/arc64/strcmp.S \
+ @HAVE_LIBC_MACHINE_ARC64_TRUE@	libc/machine/arc64/memchr.S
+ 
+-@HAVE_LIBC_MACHINE_ARM_TRUE@am__append_69 = \
++@HAVE_LIBC_MACHINE_ARM_TRUE@am__append_70 = \
+ @HAVE_LIBC_MACHINE_ARM_TRUE@	libc/machine/arm/setjmp.S libc/machine/arm/strcmp.S libc/machine/arm/strcpy.c \
+ @HAVE_LIBC_MACHINE_ARM_TRUE@	libc/machine/arm/aeabi_memcpy.c libc/machine/arm/aeabi_memcpy-armv7a.S \
+ @HAVE_LIBC_MACHINE_ARM_TRUE@	libc/machine/arm/aeabi_memmove.c libc/machine/arm/aeabi_memmove-soft.S \
+@@ -727,39 +727,39 @@
+ @HAVE_LIBC_MACHINE_ARM_TRUE@	libc/machine/arm/strlen-stub.c \
+ @HAVE_LIBC_MACHINE_ARM_TRUE@	libc/machine/arm/strlen.S
+ 
+-@HAVE_LIBC_MACHINE_BFIN_TRUE@am__append_70 = libc/machine/bfin/setjmp.S libc/machine/bfin/longjmp.S
+-@HAVE_LIBC_MACHINE_CR16_TRUE@am__append_71 = libc/machine/cr16/setjmp.S libc/machine/cr16/getenv.c
+-@HAVE_LIBC_MACHINE_CRIS_TRUE@am__append_72 = libc/machine/cris/setjmp.c libc/machine/cris/memcpy.c libc/machine/cris/memset.c libc/machine/cris/memmove.c libc/machine/cris/libcdtor.c
++@HAVE_LIBC_MACHINE_BFIN_TRUE@am__append_71 = libc/machine/bfin/setjmp.S libc/machine/bfin/longjmp.S
++@HAVE_LIBC_MACHINE_CR16_TRUE@am__append_72 = libc/machine/cr16/setjmp.S libc/machine/cr16/getenv.c
++@HAVE_LIBC_MACHINE_CRIS_TRUE@am__append_73 = libc/machine/cris/setjmp.c libc/machine/cris/memcpy.c libc/machine/cris/memset.c libc/machine/cris/memmove.c libc/machine/cris/libcdtor.c
+ 
+ # We also make a library with just the useful
+ # machine-but-not-system-specific functions, usable as an add-on
+ # by itself together with e.g. uclibc.
+-@HAVE_LIBC_MACHINE_CRIS_TRUE@am__append_73 = libc/machine/cris/libic.a
+-@HAVE_LIBC_MACHINE_CRX_TRUE@am__append_74 = libc/machine/crx/setjmp.S libc/machine/crx/getenv.c
+-@HAVE_LIBC_MACHINE_CSKY_TRUE@am__append_75 = libc/machine/csky/setjmp.S
+-@HAVE_LIBC_MACHINE_D10V_TRUE@am__append_76 = libc/machine/d10v/setjmp.S
+-@HAVE_LIBC_MACHINE_D30V_TRUE@am__append_77 = libc/machine/d30v/setjmp.S
+-@HAVE_LIBC_MACHINE_EPIPHANY_TRUE@am__append_78 = libc/machine/epiphany/setjmp.S
+-@HAVE_LIBC_MACHINE_FR30_TRUE@am__append_79 = libc/machine/fr30/setjmp.S
+-@HAVE_LIBC_MACHINE_FRV_TRUE@am__append_80 = libc/machine/frv/setjmp.S
+-@HAVE_LIBC_MACHINE_FT32_TRUE@am__append_81 = libc/machine/ft32/setjmp.S libc/machine/ft32/strlen.S libc/machine/ft32/memcpy.S libc/machine/ft32/strcmp.S libc/machine/ft32/memset.S libc/machine/ft32/strcpy.S
+-@HAVE_LIBC_MACHINE_H8300_TRUE@am__append_82 = \
++@HAVE_LIBC_MACHINE_CRIS_TRUE@am__append_74 = libc/machine/cris/libic.a
++@HAVE_LIBC_MACHINE_CRX_TRUE@am__append_75 = libc/machine/crx/setjmp.S libc/machine/crx/getenv.c
++@HAVE_LIBC_MACHINE_CSKY_TRUE@am__append_76 = libc/machine/csky/setjmp.S
++@HAVE_LIBC_MACHINE_D10V_TRUE@am__append_77 = libc/machine/d10v/setjmp.S
++@HAVE_LIBC_MACHINE_D30V_TRUE@am__append_78 = libc/machine/d30v/setjmp.S
++@HAVE_LIBC_MACHINE_EPIPHANY_TRUE@am__append_79 = libc/machine/epiphany/setjmp.S
++@HAVE_LIBC_MACHINE_FR30_TRUE@am__append_80 = libc/machine/fr30/setjmp.S
++@HAVE_LIBC_MACHINE_FRV_TRUE@am__append_81 = libc/machine/frv/setjmp.S
++@HAVE_LIBC_MACHINE_FT32_TRUE@am__append_82 = libc/machine/ft32/setjmp.S libc/machine/ft32/strlen.S libc/machine/ft32/memcpy.S libc/machine/ft32/strcmp.S libc/machine/ft32/memset.S libc/machine/ft32/strcpy.S
++@HAVE_LIBC_MACHINE_H8300_TRUE@am__append_83 = \
+ @HAVE_LIBC_MACHINE_H8300_TRUE@	libc/machine/h8300/reg_memcpy.S libc/machine/h8300/reg_memset.S libc/machine/h8300/strcmp.S libc/machine/h8300/memcpy.S libc/machine/h8300/memset.S \
+ @HAVE_LIBC_MACHINE_H8300_TRUE@	libc/machine/h8300/setjmp.S libc/machine/h8300/h8sx_strcpy.S
+ 
+-@HAVE_LIBC_MACHINE_H8500_TRUE@am__append_83 = libc/machine/h8500/divsi3.c libc/machine/h8500/mulsi3.c libc/machine/h8500/divhi3.S libc/machine/h8500/shifts.c libc/machine/h8500/cmpsi.c libc/machine/h8500/psi.S libc/machine/h8500/setjmp.S
+-@HAVE_LIBC_MACHINE_HPPA_TRUE@am__append_84 = \
++@HAVE_LIBC_MACHINE_H8500_TRUE@am__append_84 = libc/machine/h8500/divsi3.c libc/machine/h8500/mulsi3.c libc/machine/h8500/divhi3.S libc/machine/h8500/shifts.c libc/machine/h8500/cmpsi.c libc/machine/h8500/psi.S libc/machine/h8500/setjmp.S
++@HAVE_LIBC_MACHINE_HPPA_TRUE@am__append_85 = \
+ @HAVE_LIBC_MACHINE_HPPA_TRUE@	libc/machine/hppa/memchr.S libc/machine/hppa/memcmp.S libc/machine/hppa/memcpy.S libc/machine/hppa/memset.S \
+ @HAVE_LIBC_MACHINE_HPPA_TRUE@	libc/machine/hppa/setjmp.S \
+ @HAVE_LIBC_MACHINE_HPPA_TRUE@	libc/machine/hppa/strcat.S libc/machine/hppa/strcmp.S \
+ @HAVE_LIBC_MACHINE_HPPA_TRUE@	libc/machine/hppa/strcpy.S libc/machine/hppa/strlen.S libc/machine/hppa/strncat.S libc/machine/hppa/strncmp.S libc/machine/hppa/strncpy.S
+ 
+-@HAVE_LIBC_MACHINE_I386_TRUE@@MACH_ADD_SETJMP_TRUE@am__append_85 = libc/machine/i386/setjmp.S
+-@HAVE_LIBC_MACHINE_I386_TRUE@am__append_86 = \
++@HAVE_LIBC_MACHINE_I386_TRUE@@MACH_ADD_SETJMP_TRUE@am__append_86 = libc/machine/i386/setjmp.S
++@HAVE_LIBC_MACHINE_I386_TRUE@am__append_87 = \
+ @HAVE_LIBC_MACHINE_I386_TRUE@	libc/machine/i386/memchr.S libc/machine/i386/memcmp.S libc/machine/i386/memcpy.S libc/machine/i386/memset.S libc/machine/i386/strchr.S \
+ @HAVE_LIBC_MACHINE_I386_TRUE@	libc/machine/i386/memmove.S libc/machine/i386/strlen.S libc/machine/i386/i386mach.h
+ 
+-@HAVE_LIBC_MACHINE_I960_TRUE@am__append_87 = \
++@HAVE_LIBC_MACHINE_I960_TRUE@am__append_88 = \
+ @HAVE_LIBC_MACHINE_I960_TRUE@	libc/machine/i960/memccpy_ca.S \
+ @HAVE_LIBC_MACHINE_I960_TRUE@	libc/machine/i960/memccpy.S \
+ @HAVE_LIBC_MACHINE_I960_TRUE@	libc/machine/i960/memchr_ca.S \
+@@ -789,43 +789,43 @@
+ @HAVE_LIBC_MACHINE_I960_TRUE@	libc/machine/i960/strpbrk.S \
+ @HAVE_LIBC_MACHINE_I960_TRUE@	libc/machine/i960/strrchr.S
+ 
+-@HAVE_LIBC_MACHINE_IQ2000_TRUE@am__append_88 = libc/machine/iq2000/setjmp.S
+-@HAVE_LIBC_MACHINE_LM32_TRUE@am__append_89 = libc/machine/lm32/setjmp.S
+-@HAVE_LIBC_MACHINE_M32C_TRUE@am__append_90 = libc/machine/m32c/setjmp.S
+-@HAVE_LIBC_MACHINE_M32R_TRUE@am__append_91 = libc/machine/m32r/setjmp.S
+-@HAVE_LIBC_MACHINE_M68HC11_TRUE@am__append_92 = libc/machine/m68hc11/setjmp.S
+-@HAVE_LIBC_MACHINE_M68K_TRUE@am__append_93 = libc/machine/m68k/setjmp.S libc/machine/m68k/strcpy.c libc/machine/m68k/strlen.c libc/machine/m68k/memcpy.S libc/machine/m68k/memset.S
+-@HAVE_LIBC_MACHINE_M88K_TRUE@am__append_94 = libc/machine/m88k/setjmp.S
+-@HAVE_LIBC_MACHINE_MEP_TRUE@am__append_95 = libc/machine/mep/setjmp.S
+-@HAVE_LIBC_MACHINE_MICROBLAZE_TRUE@am__append_96 = libc/machine/microblaze/strlen.c libc/machine/microblaze/strcmp.c libc/machine/microblaze/strcpy.c libc/machine/microblaze/setjmp.S libc/machine/microblaze/longjmp.S
+-@HAVE_LIBC_MACHINE_MIPS_TRUE@am__append_97 = libc/machine/mips/setjmp.S libc/machine/mips/strlen.c libc/machine/mips/strcmp.S libc/machine/mips/strncpy.c libc/machine/mips/memset.c libc/machine/mips/memcpy.c
+-@HAVE_LIBC_MACHINE_MN10200_TRUE@am__append_98 = libc/machine/mn10200/setjmp.S
+-@HAVE_LIBC_MACHINE_MN10300_TRUE@am__append_99 = \
++@HAVE_LIBC_MACHINE_IQ2000_TRUE@am__append_89 = libc/machine/iq2000/setjmp.S
++@HAVE_LIBC_MACHINE_LM32_TRUE@am__append_90 = libc/machine/lm32/setjmp.S
++@HAVE_LIBC_MACHINE_M32C_TRUE@am__append_91 = libc/machine/m32c/setjmp.S
++@HAVE_LIBC_MACHINE_M32R_TRUE@am__append_92 = libc/machine/m32r/setjmp.S
++@HAVE_LIBC_MACHINE_M68HC11_TRUE@am__append_93 = libc/machine/m68hc11/setjmp.S
++@HAVE_LIBC_MACHINE_M68K_TRUE@am__append_94 = libc/machine/m68k/setjmp.S libc/machine/m68k/strcpy.c libc/machine/m68k/strlen.c libc/machine/m68k/memcpy.S libc/machine/m68k/memset.S
++@HAVE_LIBC_MACHINE_M88K_TRUE@am__append_95 = libc/machine/m88k/setjmp.S
++@HAVE_LIBC_MACHINE_MEP_TRUE@am__append_96 = libc/machine/mep/setjmp.S
++@HAVE_LIBC_MACHINE_MICROBLAZE_TRUE@am__append_97 = libc/machine/microblaze/strlen.c libc/machine/microblaze/strcmp.c libc/machine/microblaze/strcpy.c libc/machine/microblaze/setjmp.S libc/machine/microblaze/longjmp.S
++@HAVE_LIBC_MACHINE_MIPS_TRUE@am__append_98 = libc/machine/mips/setjmp.S libc/machine/mips/strlen.c libc/machine/mips/strcmp.S libc/machine/mips/strncpy.c libc/machine/mips/memset.c libc/machine/mips/memcpy.c
++@HAVE_LIBC_MACHINE_MN10200_TRUE@am__append_99 = libc/machine/mn10200/setjmp.S
++@HAVE_LIBC_MACHINE_MN10300_TRUE@am__append_100 = \
+ @HAVE_LIBC_MACHINE_MN10300_TRUE@	libc/machine/mn10300/setjmp.S libc/machine/mn10300/memchr.S libc/machine/mn10300/memcmp.S libc/machine/mn10300/memcpy.S libc/machine/mn10300/memset.S libc/machine/mn10300/strchr.S \
+ @HAVE_LIBC_MACHINE_MN10300_TRUE@	libc/machine/mn10300/strcmp.S libc/machine/mn10300/strcpy.S libc/machine/mn10300/strlen.S
+ 
+-@HAVE_LIBC_MACHINE_MOXIE_TRUE@am__append_100 = libc/machine/moxie/setjmp.S
+-@HAVE_LIBC_MACHINE_MSP430_TRUE@am__append_101 = libc/machine/msp430/setjmp.S
+-@HAVE_LIBC_MACHINE_MSP430_TRUE@@NEWLIB_NANO_FORMATTED_IO_TRUE@am__append_102 = libc/machine/msp430/tiny-puts.c libc/machine/msp430/tiny-printf.c
+-@HAVE_LIBC_MACHINE_MT_TRUE@am__append_103 = libc/machine/mt/setjmp.S
+-@HAVE_LIBC_MACHINE_NDS32_TRUE@am__append_104 = \
++@HAVE_LIBC_MACHINE_MOXIE_TRUE@am__append_101 = libc/machine/moxie/setjmp.S
++@HAVE_LIBC_MACHINE_MSP430_TRUE@am__append_102 = libc/machine/msp430/setjmp.S
++@HAVE_LIBC_MACHINE_MSP430_TRUE@@NEWLIB_NANO_FORMATTED_IO_TRUE@am__append_103 = libc/machine/msp430/tiny-puts.c libc/machine/msp430/tiny-printf.c
++@HAVE_LIBC_MACHINE_MT_TRUE@am__append_104 = libc/machine/mt/setjmp.S
++@HAVE_LIBC_MACHINE_NDS32_TRUE@am__append_105 = \
+ @HAVE_LIBC_MACHINE_NDS32_TRUE@	libc/machine/nds32/abort.c \
+ @HAVE_LIBC_MACHINE_NDS32_TRUE@	libc/machine/nds32/setjmp.S \
+ @HAVE_LIBC_MACHINE_NDS32_TRUE@	libc/machine/nds32/strcmp.S \
+ @HAVE_LIBC_MACHINE_NDS32_TRUE@	libc/machine/nds32/strcpy.S
+ 
+-@HAVE_LIBC_MACHINE_NDS32_TRUE@@IS_NDS32_ISA_V3M_FALSE@am__append_105 = libc/machine/nds32/memcpy.S libc/machine/nds32/memset.S
+-@HAVE_LIBC_MACHINE_NECV70_TRUE@am__append_106 = libc/machine/necv70/fastmath.S libc/machine/necv70/setjmp.S
+-@HAVE_LIBC_MACHINE_NIOS2_TRUE@am__append_107 = libc/machine/nios2/setjmp.s
+-@HAVE_LIBC_MACHINE_NVPTX_TRUE@am__append_108 = \
++@HAVE_LIBC_MACHINE_NDS32_TRUE@@IS_NDS32_ISA_V3M_FALSE@am__append_106 = libc/machine/nds32/memcpy.S libc/machine/nds32/memset.S
++@HAVE_LIBC_MACHINE_NECV70_TRUE@am__append_107 = libc/machine/necv70/fastmath.S libc/machine/necv70/setjmp.S
++@HAVE_LIBC_MACHINE_NIOS2_TRUE@am__append_108 = libc/machine/nios2/setjmp.s
++@HAVE_LIBC_MACHINE_NVPTX_TRUE@am__append_109 = \
+ @HAVE_LIBC_MACHINE_NVPTX_TRUE@	libc/machine/nvptx/_exit.c \
+ @HAVE_LIBC_MACHINE_NVPTX_TRUE@	libc/machine/nvptx/calloc.c libc/machine/nvptx/callocr.c libc/machine/nvptx/malloc.c libc/machine/nvptx/mallocr.c libc/machine/nvptx/realloc.c libc/machine/nvptx/reallocr.c \
+ @HAVE_LIBC_MACHINE_NVPTX_TRUE@	libc/machine/nvptx/free.c libc/machine/nvptx/write.c libc/machine/nvptx/assert.c libc/machine/nvptx/puts.c libc/machine/nvptx/putchar.c libc/machine/nvptx/printf.c libc/machine/nvptx/abort.c \
+ @HAVE_LIBC_MACHINE_NVPTX_TRUE@	libc/machine/nvptx/misc.c libc/machine/nvptx/clock.c
+ 
+-@HAVE_LIBC_MACHINE_OR1K_TRUE@am__append_109 = libc/machine/or1k/setjmp.S
+-@HAVE_LIBC_MACHINE_POWERPC_TRUE@am__append_110 = libc/machine/powerpc/setjmp.S
+-@HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_ALTIVEC_TRUE@am__append_111 = \
++@HAVE_LIBC_MACHINE_OR1K_TRUE@am__append_110 = libc/machine/or1k/setjmp.S
++@HAVE_LIBC_MACHINE_POWERPC_TRUE@am__append_111 = libc/machine/powerpc/setjmp.S
++@HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_ALTIVEC_TRUE@am__append_112 = \
+ @HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_ALTIVEC_TRUE@	libc/machine/powerpc/vfprintf.c \
+ @HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_ALTIVEC_TRUE@	libc/machine/powerpc/vfscanf.c \
+ @HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_ALTIVEC_TRUE@	libc/machine/powerpc/vec_malloc.c \
+@@ -836,7 +836,7 @@
+ @HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_ALTIVEC_TRUE@	libc/machine/powerpc/vec_callocr.c \
+ @HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_ALTIVEC_TRUE@	libc/machine/powerpc/vec_reallocr.c
+ 
+-@HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_SPE_TRUE@am__append_112 = \
++@HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_SPE_TRUE@am__append_113 = \
+ @HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_SPE_TRUE@	libc/machine/powerpc/atosfix16.c \
+ @HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_SPE_TRUE@	libc/machine/powerpc/atosfix32.c \
+ @HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_SPE_TRUE@	libc/machine/powerpc/atosfix64.c \
+@@ -854,21 +854,22 @@
+ @HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_SPE_TRUE@	libc/machine/powerpc/vfprintf.c \
+ @HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_SPE_TRUE@	libc/machine/powerpc/vfscanf.c
+ 
+-@HAVE_LIBC_MACHINE_PRU_TRUE@am__append_113 = libc/machine/pru/setjmp.s
+-@HAVE_LIBC_MACHINE_RISCV_TRUE@am__append_114 = \
++@HAVE_LIBC_MACHINE_PRU_TRUE@am__append_114 = libc/machine/pru/setjmp.s
++@HAVE_LIBC_MACHINE_R5900_TRUE@am__append_115 = libc/machine/r5900/setjmp.S
++@HAVE_LIBC_MACHINE_RISCV_TRUE@am__append_116 = \
+ @HAVE_LIBC_MACHINE_RISCV_TRUE@	libc/machine/riscv/memmove-asm.S libc/machine/riscv/memmove.c libc/machine/riscv/memset.S libc/machine/riscv/memcpy-asm.S libc/machine/riscv/memcpy.c libc/machine/riscv/strlen.c \
+ @HAVE_LIBC_MACHINE_RISCV_TRUE@	libc/machine/riscv/strcpy.c libc/machine/riscv/stpcpy.c libc/machine/riscv/strcmp.S libc/machine/riscv/memchr.c libc/machine/riscv/memrchr.c libc/machine/riscv/setjmp.S libc/machine/riscv/ieeefp.c libc/machine/riscv/ffs.c
+ 
+-@HAVE_LIBC_MACHINE_RL78_TRUE@am__append_115 = libc/machine/rl78/setjmp.S
+-@HAVE_LIBC_MACHINE_RX_TRUE@am__append_116 = \
++@HAVE_LIBC_MACHINE_RL78_TRUE@am__append_117 = libc/machine/rl78/setjmp.S
++@HAVE_LIBC_MACHINE_RX_TRUE@am__append_118 = \
+ @HAVE_LIBC_MACHINE_RX_TRUE@	libc/machine/rx/setjmp.S \
+ @HAVE_LIBC_MACHINE_RX_TRUE@	libc/machine/rx/strncmp.S libc/machine/rx/strcmp.S libc/machine/rx/strncpy.S libc/machine/rx/strcpy.S libc/machine/rx/strlen.S libc/machine/rx/strcat.S libc/machine/rx/strncat.S \
+ @HAVE_LIBC_MACHINE_RX_TRUE@	libc/machine/rx/memset.S libc/machine/rx/mempcpy.S libc/machine/rx/memcpy.S libc/machine/rx/memmove.S libc/machine/rx/memchr.S
+ 
+-@HAVE_LIBC_MACHINE_SH_TRUE@am__append_117 = libc/machine/sh/memcpy.S libc/machine/sh/memset.S libc/machine/sh/setjmp.S libc/machine/sh/strcpy.S libc/machine/sh/strlen.S libc/machine/sh/strcmp.S
+-@HAVE_LIBC_MACHINE_SH_TRUE@@SH64_TRUE@am__append_118 = libc/machine/sh/strncpy.S
+-@HAVE_LIBC_MACHINE_SPARC_TRUE@am__append_119 = libc/machine/sparc/scan.c libc/machine/sparc/shuffle.c libc/machine/sparc/setjmp.S
+-@HAVE_LIBC_MACHINE_SPU_TRUE@am__append_120 = \
++@HAVE_LIBC_MACHINE_SH_TRUE@am__append_119 = libc/machine/sh/memcpy.S libc/machine/sh/memset.S libc/machine/sh/setjmp.S libc/machine/sh/strcpy.S libc/machine/sh/strlen.S libc/machine/sh/strcmp.S
++@HAVE_LIBC_MACHINE_SH_TRUE@@SH64_TRUE@am__append_120 = libc/machine/sh/strncpy.S
++@HAVE_LIBC_MACHINE_SPARC_TRUE@am__append_121 = libc/machine/sparc/scan.c libc/machine/sparc/shuffle.c libc/machine/sparc/setjmp.S
++@HAVE_LIBC_MACHINE_SPU_TRUE@am__append_122 = \
+ @HAVE_LIBC_MACHINE_SPU_TRUE@	libc/machine/spu/setjmp.S libc/machine/spu/assert.c libc/machine/spu/clearerr.c libc/machine/spu/creat.c libc/machine/spu/fclose.c libc/machine/spu/feof.c \
+ @HAVE_LIBC_MACHINE_SPU_TRUE@	libc/machine/spu/ferror.c libc/machine/spu/fflush.c libc/machine/spu/fgetc.c libc/machine/spu/fgetpos.c libc/machine/spu/fgets.c libc/machine/spu/fileno.c libc/machine/spu/fiprintf.S \
+ @HAVE_LIBC_MACHINE_SPU_TRUE@	libc/machine/spu/fiscanf.S libc/machine/spu/fopen.c libc/machine/spu/fprintf.S libc/machine/spu/fputc.c libc/machine/spu/fputs.c libc/machine/spu/fread.c libc/machine/spu/freopen.c \
+@@ -886,7 +887,7 @@
+ @HAVE_LIBC_MACHINE_SPU_TRUE@	libc/machine/spu/spu_timer_slih.c libc/machine/spu/spu_timer_slih_reg.c libc/machine/spu/spu_timer_svcs.c \
+ @HAVE_LIBC_MACHINE_SPU_TRUE@	libc/machine/spu/spu_timer_stop.c libc/machine/spu/spu_timer_free.c libc/machine/spu/spu_timebase.c libc/machine/spu/fdopen.c
+ 
+-@HAVE_LIBC_MACHINE_SPU_TRUE@@HAVE_SPU_EA_TRUE@am__append_121 = \
++@HAVE_LIBC_MACHINE_SPU_TRUE@@HAVE_SPU_EA_TRUE@am__append_123 = \
+ @HAVE_LIBC_MACHINE_SPU_TRUE@@HAVE_SPU_EA_TRUE@	libc/machine/spu/calloc_ea.c libc/machine/spu/free_ea.c libc/machine/spu/malloc_ea.c libc/machine/spu/memchr_ea.c libc/machine/spu/memcmp_ea.c \
+ @HAVE_LIBC_MACHINE_SPU_TRUE@@HAVE_SPU_EA_TRUE@	libc/machine/spu/memcpy_ea.c libc/machine/spu/memmove_ea.c libc/machine/spu/memset_ea.c libc/machine/spu/mmap_ea.c libc/machine/spu/mremap_ea.c libc/machine/spu/msync_ea.c \
+ @HAVE_LIBC_MACHINE_SPU_TRUE@@HAVE_SPU_EA_TRUE@	libc/machine/spu/munmap_ea.c libc/machine/spu/posix_memalign_ea.c libc/machine/spu/realloc_ea.c libc/machine/spu/strcat_ea.c libc/machine/spu/strchr_ea.c \
+@@ -895,18 +896,18 @@
+ @HAVE_LIBC_MACHINE_SPU_TRUE@@HAVE_SPU_EA_TRUE@	libc/machine/spu/pread_ea.c libc/machine/spu/readv_ea.c libc/machine/spu/write_ea.c libc/machine/spu/pwrite_ea.c libc/machine/spu/writev_ea.c libc/machine/spu/spu-mcount.S \
+ @HAVE_LIBC_MACHINE_SPU_TRUE@@HAVE_SPU_EA_TRUE@	libc/machine/spu/spu-gmon.c
+ 
+-@HAVE_LIBC_MACHINE_TIC4X_TRUE@am__append_122 = libc/machine/tic4x/setjmp.S
+-@HAVE_LIBC_MACHINE_TIC6X_TRUE@am__append_123 = libc/machine/tic6x/setjmp.S
+-@HAVE_LIBC_MACHINE_TIC80_TRUE@am__append_124 = libc/machine/tic80/setjmp.S
+-@HAVE_LIBC_MACHINE_V850_TRUE@am__append_125 = libc/machine/v850/setjmp.S
+-@HAVE_LIBC_MACHINE_VISIUM_TRUE@am__append_126 = libc/machine/visium/memcpy.c libc/machine/visium/memset.c libc/machine/visium/memmove.c libc/machine/visium/setjmp.S
+-@HAVE_LIBC_MACHINE_W65_TRUE@am__append_127 = \
++@HAVE_LIBC_MACHINE_TIC4X_TRUE@am__append_124 = libc/machine/tic4x/setjmp.S
++@HAVE_LIBC_MACHINE_TIC6X_TRUE@am__append_125 = libc/machine/tic6x/setjmp.S
++@HAVE_LIBC_MACHINE_TIC80_TRUE@am__append_126 = libc/machine/tic80/setjmp.S
++@HAVE_LIBC_MACHINE_V850_TRUE@am__append_127 = libc/machine/v850/setjmp.S
++@HAVE_LIBC_MACHINE_VISIUM_TRUE@am__append_128 = libc/machine/visium/memcpy.c libc/machine/visium/memset.c libc/machine/visium/memmove.c libc/machine/visium/setjmp.S
++@HAVE_LIBC_MACHINE_W65_TRUE@am__append_129 = \
+ @HAVE_LIBC_MACHINE_W65_TRUE@	libc/machine/w65/udivhi3.S libc/machine/w65/umodhi3.S libc/machine/w65/smulhi3.S libc/machine/w65/lshrhi.S libc/machine/w65/sdivhi3.S libc/machine/w65/mulsi3.c \
+ @HAVE_LIBC_MACHINE_W65_TRUE@	libc/machine/w65/divsi3.c libc/machine/w65/cmpsi.c
+ 
+-@HAVE_LIBC_MACHINE_X86_64_TRUE@am__append_128 = libc/machine/x86_64/setjmp.S libc/machine/x86_64/memcpy.S libc/machine/x86_64/memset.S
+-@HAVE_LIBC_MACHINE_XC16X_TRUE@am__append_129 = libc/machine/xc16x/setjmp.S libc/machine/xc16x/puts.c libc/machine/xc16x/putchar.c
+-@HAVE_LIBC_MACHINE_XSTORMY16_TRUE@am__append_130 = \
++@HAVE_LIBC_MACHINE_X86_64_TRUE@am__append_130 = libc/machine/x86_64/setjmp.S libc/machine/x86_64/memcpy.S libc/machine/x86_64/memset.S
++@HAVE_LIBC_MACHINE_XC16X_TRUE@am__append_131 = libc/machine/xc16x/setjmp.S libc/machine/xc16x/puts.c libc/machine/xc16x/putchar.c
++@HAVE_LIBC_MACHINE_XSTORMY16_TRUE@am__append_132 = \
+ @HAVE_LIBC_MACHINE_XSTORMY16_TRUE@	libc/machine/xstormy16/setjmp.S \
+ @HAVE_LIBC_MACHINE_XSTORMY16_TRUE@	libc/machine/xstormy16/calloc.c \
+ @HAVE_LIBC_MACHINE_XSTORMY16_TRUE@	libc/machine/xstormy16/callocr.c \
+@@ -921,13 +922,13 @@
+ @HAVE_LIBC_MACHINE_XSTORMY16_TRUE@	libc/machine/xstormy16/reallocr.c \
+ @HAVE_LIBC_MACHINE_XSTORMY16_TRUE@	libc/machine/xstormy16/valloc.c
+ 
+-@HAVE_LIBC_MACHINE_XTENSA_TRUE@am__append_131 = \
++@HAVE_LIBC_MACHINE_XTENSA_TRUE@am__append_133 = \
+ @HAVE_LIBC_MACHINE_XTENSA_TRUE@	libc/machine/xtensa/memcpy.S libc/machine/xtensa/memset.S libc/machine/xtensa/setjmp.S libc/machine/xtensa/strcmp.S libc/machine/xtensa/strcpy.S \
+ @HAVE_LIBC_MACHINE_XTENSA_TRUE@	libc/machine/xtensa/strlen.S libc/machine/xtensa/strncpy.S
+ 
+-@HAVE_LIBC_MACHINE_Z8K_TRUE@am__append_132 = libc/machine/z8k/setjmp.S libc/machine/z8k/memset.S libc/machine/z8k/memcpy.S libc/machine/z8k/memmove.S libc/machine/z8k/memcmp.S
+-@NEWLIB_HW_FP_TRUE@am__append_133 = $(libm_mathfp_src) $(libm_mathfp_fsrc)
+-@NEWLIB_HW_FP_TRUE@am__append_134 = \
++@HAVE_LIBC_MACHINE_Z8K_TRUE@am__append_134 = libc/machine/z8k/setjmp.S libc/machine/z8k/memset.S libc/machine/z8k/memcpy.S libc/machine/z8k/memmove.S libc/machine/z8k/memcmp.S
++@NEWLIB_HW_FP_TRUE@am__append_135 = $(libm_mathfp_src) $(libm_mathfp_fsrc)
++@NEWLIB_HW_FP_TRUE@am__append_136 = \
+ @NEWLIB_HW_FP_TRUE@	libm/mathfp/e_acosh.def \
+ @NEWLIB_HW_FP_TRUE@	libm/mathfp/e_atanh.def \
+ @NEWLIB_HW_FP_TRUE@	libm/mathfp/e_hypot.def \
+@@ -957,9 +958,9 @@
+ @NEWLIB_HW_FP_TRUE@	libm/mathfp/s_tanh.def \
+ @NEWLIB_HW_FP_TRUE@	libm/mathfp/w_jn.def
+ 
+-@NEWLIB_HW_FP_TRUE@am__append_135 = libm/mathfp/mathfp.tex
+-@NEWLIB_HW_FP_FALSE@am__append_136 = $(libm_math_src) $(libm_math_fsrc) $(libm_math_lsrc)
+-@NEWLIB_HW_FP_FALSE@am__append_137 = \
++@NEWLIB_HW_FP_TRUE@am__append_137 = libm/mathfp/mathfp.tex
++@NEWLIB_HW_FP_FALSE@am__append_138 = $(libm_math_src) $(libm_math_fsrc) $(libm_math_lsrc)
++@NEWLIB_HW_FP_FALSE@am__append_139 = \
+ @NEWLIB_HW_FP_FALSE@	libm/math/w_acos.def libm/math/w_acosh.def libm/math/w_asin.def libm/math/s_asinh.def \
+ @NEWLIB_HW_FP_FALSE@	libm/math/s_atan.def libm/math/w_atan2.def libm/math/w_atanh.def libm/math/w_j0.def \
+ @NEWLIB_HW_FP_FALSE@	libm/math/w_cosh.def libm/math/s_erf.def libm/math/w_exp.def libm/math/w_exp2.def \
+@@ -969,41 +970,41 @@
+ @NEWLIB_HW_FP_FALSE@	libm/math/w_pow.def libm/math/w_remainder.def libm/math/s_sin.def libm/math/w_sinh.def \
+ @NEWLIB_HW_FP_FALSE@	libm/math/w_sqrt.def libm/math/s_tan.def libm/math/s_tanh.def
+ 
+-@NEWLIB_HW_FP_FALSE@am__append_138 = libm/math/math.tex
+-@HAVE_LONG_DOUBLE_TRUE@am__append_139 = $(libm_common_lsrc)
+-@HAVE_FPMATH_H_TRUE@@HAVE_LONG_DOUBLE_TRUE@am__append_140 = $(libm_ld_lsrc)
+-@HAVE_FPMATH_H_TRUE@am__append_141 = 
+-@HAVE_FPMATH_H_TRUE@am__append_142 = 
+-@HAVE_LIBM_MACHINE_AARCH64_TRUE@am__append_143 = $(libm_machine_aarch64_src)
+-@HAVE_LIBM_MACHINE_AARCH64_TRUE@@HAVE_LONG_DOUBLE_TRUE@am__append_144 = $(libm_ld128_lsrc)
+-@HAVE_LIBM_MACHINE_AARCH64_TRUE@am__append_145 = 
+-@HAVE_LIBM_MACHINE_AARCH64_TRUE@am__append_146 = 
+-@HAVE_LIBM_MACHINE_AMDGCN_TRUE@am__append_147 = $(libm_machine_amdgcn_src)
+-@HAVE_LIBM_MACHINE_ARM_TRUE@am__append_148 = $(libm_machine_arm_src)
+-@HAVE_LIBM_MACHINE_I386_TRUE@am__append_149 = $(libm_machine_i386_src)
+-@HAVE_LIBM_MACHINE_I386_TRUE@@HAVE_LONG_DOUBLE_TRUE@am__append_150 = $(libm_ld80_lsrc)
+-@HAVE_LIBM_MACHINE_I386_TRUE@am__append_151 = 
+-@HAVE_LIBM_MACHINE_I386_TRUE@am__append_152 = 
+-@HAVE_LIBM_MACHINE_MIPS_TRUE@am__append_153 = $(libm_machine_mips_src)
+-@HAS_NDS32_FPU_SP_TRUE@@HAVE_LIBM_MACHINE_NDS32_TRUE@am__append_154 = libm/machine/nds32/wf_sqrt.S
+-@HAS_NDS32_FPU_DP_TRUE@@HAVE_LIBM_MACHINE_NDS32_TRUE@am__append_155 = libm/machine/nds32/w_sqrt.S
+-@HAVE_LIBM_MACHINE_NDS32_TRUE@am__append_156 = $(libm_machine_nds32_src)
+-@HAVE_LIBM_MACHINE_POWERPC_TRUE@am__append_157 = $(libm_machine_powerpc_src)
+-@HAVE_LIBM_MACHINE_PRU_TRUE@am__append_158 = $(libm_machine_pru_src)
+-@HAVE_LIBM_MACHINE_SPARC_TRUE@am__append_159 = $(libm_machine_sparc_src)
+-@HAVE_LIBM_MACHINE_SPU_TRUE@am__append_160 = $(libm_machine_spu_src)
+-@HAVE_LIBM_MACHINE_RISCV_TRUE@am__append_161 = $(libm_machine_riscv_src)
+-@HAVE_LIBM_MACHINE_RISCV_TRUE@@HAVE_LONG_DOUBLE_TRUE@am__append_162 = $(libm_ld128_lsrc)
+-@HAVE_LIBM_MACHINE_RISCV_TRUE@am__append_163 = 
+-@HAVE_LIBM_MACHINE_RISCV_TRUE@am__append_164 = 
+-@HAVE_LIBM_MACHINE_X86_64_TRUE@am__append_165 = $(libm_machine_x86_64_src)
+-@HAVE_LIBM_MACHINE_X86_64_TRUE@@HAVE_LONG_DOUBLE_TRUE@am__append_166 = $(libm_ld80_lsrc)
+-@HAVE_LIBM_MACHINE_X86_64_TRUE@am__append_167 = 
+-@HAVE_LIBM_MACHINE_X86_64_TRUE@am__append_168 = 
+-@HAVE_LIBM_MACHINE_XTENSA_TRUE@@XTENSA_XCHAL_HAVE_FP_SQRT_TRUE@am__append_169 = \
++@NEWLIB_HW_FP_FALSE@am__append_140 = libm/math/math.tex
++@HAVE_LONG_DOUBLE_TRUE@am__append_141 = $(libm_common_lsrc)
++@HAVE_FPMATH_H_TRUE@@HAVE_LONG_DOUBLE_TRUE@am__append_142 = $(libm_ld_lsrc)
++@HAVE_FPMATH_H_TRUE@am__append_143 = 
++@HAVE_FPMATH_H_TRUE@am__append_144 = 
++@HAVE_LIBM_MACHINE_AARCH64_TRUE@am__append_145 = $(libm_machine_aarch64_src)
++@HAVE_LIBM_MACHINE_AARCH64_TRUE@@HAVE_LONG_DOUBLE_TRUE@am__append_146 = $(libm_ld128_lsrc)
++@HAVE_LIBM_MACHINE_AARCH64_TRUE@am__append_147 = 
++@HAVE_LIBM_MACHINE_AARCH64_TRUE@am__append_148 = 
++@HAVE_LIBM_MACHINE_AMDGCN_TRUE@am__append_149 = $(libm_machine_amdgcn_src)
++@HAVE_LIBM_MACHINE_ARM_TRUE@am__append_150 = $(libm_machine_arm_src)
++@HAVE_LIBM_MACHINE_I386_TRUE@am__append_151 = $(libm_machine_i386_src)
++@HAVE_LIBM_MACHINE_I386_TRUE@@HAVE_LONG_DOUBLE_TRUE@am__append_152 = $(libm_ld80_lsrc)
++@HAVE_LIBM_MACHINE_I386_TRUE@am__append_153 = 
++@HAVE_LIBM_MACHINE_I386_TRUE@am__append_154 = 
++@HAVE_LIBM_MACHINE_MIPS_TRUE@am__append_155 = $(libm_machine_mips_src)
++@HAS_NDS32_FPU_SP_TRUE@@HAVE_LIBM_MACHINE_NDS32_TRUE@am__append_156 = libm/machine/nds32/wf_sqrt.S
++@HAS_NDS32_FPU_DP_TRUE@@HAVE_LIBM_MACHINE_NDS32_TRUE@am__append_157 = libm/machine/nds32/w_sqrt.S
++@HAVE_LIBM_MACHINE_NDS32_TRUE@am__append_158 = $(libm_machine_nds32_src)
++@HAVE_LIBM_MACHINE_POWERPC_TRUE@am__append_159 = $(libm_machine_powerpc_src)
++@HAVE_LIBM_MACHINE_PRU_TRUE@am__append_160 = $(libm_machine_pru_src)
++@HAVE_LIBM_MACHINE_SPARC_TRUE@am__append_161 = $(libm_machine_sparc_src)
++@HAVE_LIBM_MACHINE_SPU_TRUE@am__append_162 = $(libm_machine_spu_src)
++@HAVE_LIBM_MACHINE_RISCV_TRUE@am__append_163 = $(libm_machine_riscv_src)
++@HAVE_LIBM_MACHINE_RISCV_TRUE@@HAVE_LONG_DOUBLE_TRUE@am__append_164 = $(libm_ld128_lsrc)
++@HAVE_LIBM_MACHINE_RISCV_TRUE@am__append_165 = 
++@HAVE_LIBM_MACHINE_RISCV_TRUE@am__append_166 = 
++@HAVE_LIBM_MACHINE_X86_64_TRUE@am__append_167 = $(libm_machine_x86_64_src)
++@HAVE_LIBM_MACHINE_X86_64_TRUE@@HAVE_LONG_DOUBLE_TRUE@am__append_168 = $(libm_ld80_lsrc)
++@HAVE_LIBM_MACHINE_X86_64_TRUE@am__append_169 = 
++@HAVE_LIBM_MACHINE_X86_64_TRUE@am__append_170 = 
++@HAVE_LIBM_MACHINE_XTENSA_TRUE@@XTENSA_XCHAL_HAVE_FP_SQRT_TRUE@am__append_171 = \
+ @HAVE_LIBM_MACHINE_XTENSA_TRUE@@XTENSA_XCHAL_HAVE_FP_SQRT_TRUE@	libm/machine/xtensa/ef_sqrt.c
+ 
+-@HAVE_LIBM_MACHINE_XTENSA_TRUE@am__append_170 = $(libm_machine_xtensa_src)
++@HAVE_LIBM_MACHINE_XTENSA_TRUE@am__append_172 = $(libm_machine_xtensa_src)
+ subdir = .
+ ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
+ am__aclocal_m4_deps = $(top_srcdir)/../config/depstand.m4 \
+@@ -1731,7 +1732,7 @@
+ @HAVE_LIBC_SYS_NETWARE_DIR_TRUE@	libc/sys/netware/libc_a-link.$(OBJEXT)
+ @HAVE_LIBC_SYS_OR1K_DIR_TRUE@am__objects_64 = libc/sys/or1k/libc_a-getreent.$(OBJEXT) \
+ @HAVE_LIBC_SYS_OR1K_DIR_TRUE@	libc/sys/or1k/libc_a-mlock.$(OBJEXT)
+-@HAVE_LIBC_SYS_RDOS_DIR_TRUE@am__objects_65 = libc/sys/rdos/libc_a-chown.$(OBJEXT) \
++@HAVE_LIBC_SYS_RDOS_DIR_TRUE@am__objects_66 = libc/sys/rdos/libc_a-chown.$(OBJEXT) \
+ @HAVE_LIBC_SYS_RDOS_DIR_TRUE@	libc/sys/rdos/libc_a-close.$(OBJEXT) \
+ @HAVE_LIBC_SYS_RDOS_DIR_TRUE@	libc/sys/rdos/libc_a-execve.$(OBJEXT) \
+ @HAVE_LIBC_SYS_RDOS_DIR_TRUE@	libc/sys/rdos/libc_a-fork.$(OBJEXT) \
+@@ -1755,15 +1756,15 @@
+ @HAVE_LIBC_SYS_RDOS_DIR_TRUE@	libc/sys/rdos/libc_a-unlink.$(OBJEXT) \
+ @HAVE_LIBC_SYS_RDOS_DIR_TRUE@	libc/sys/rdos/libc_a-wait.$(OBJEXT) \
+ @HAVE_LIBC_SYS_RDOS_DIR_TRUE@	libc/sys/rdos/libc_a-write.$(OBJEXT)
+-@HAVE_LIBC_SYS_RTEMS_DIR_TRUE@am__objects_66 = libc/sys/rtems/libc_a-dummysys.$(OBJEXT) \
++@HAVE_LIBC_SYS_RTEMS_DIR_TRUE@am__objects_67 = libc/sys/rtems/libc_a-dummysys.$(OBJEXT) \
+ @HAVE_LIBC_SYS_RTEMS_DIR_TRUE@	libc/sys/rtems/libc_a-cpusetalloc.$(OBJEXT) \
+ @HAVE_LIBC_SYS_RTEMS_DIR_TRUE@	libc/sys/rtems/libc_a-cpusetfree.$(OBJEXT)
+-@HAVE_LIBC_SYS_SH_DIR_TRUE@@MAY_SUPPLY_SYSCALLS_TRUE@am__objects_67 = libc/sys/sh/libc_a-syscalls.$(OBJEXT) \
++@HAVE_LIBC_SYS_SH_DIR_TRUE@@MAY_SUPPLY_SYSCALLS_TRUE@am__objects_68 = libc/sys/sh/libc_a-syscalls.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SH_DIR_TRUE@@MAY_SUPPLY_SYSCALLS_TRUE@	libc/sys/sh/libc_a-trap.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SH_DIR_TRUE@@MAY_SUPPLY_SYSCALLS_TRUE@	libc/sys/sh/libc_a-creat.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SH_DIR_TRUE@@MAY_SUPPLY_SYSCALLS_TRUE@	libc/sys/sh/libc_a-ftruncate.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SH_DIR_TRUE@@MAY_SUPPLY_SYSCALLS_TRUE@	libc/sys/sh/libc_a-truncate.$(OBJEXT)
+-@HAVE_LIBC_SYS_SYSMEC_DIR_TRUE@am__objects_68 = libc/sys/sysmec/libc_a-_exit.$(OBJEXT) \
++@HAVE_LIBC_SYS_SYSMEC_DIR_TRUE@am__objects_69 = libc/sys/sysmec/libc_a-_exit.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SYSMEC_DIR_TRUE@	libc/sys/sysmec/libc_a-access.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SYSMEC_DIR_TRUE@	libc/sys/sysmec/libc_a-chmod.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SYSMEC_DIR_TRUE@	libc/sys/sysmec/libc_a-chown.$(OBJEXT) \
+@@ -1791,11 +1792,11 @@
+ @HAVE_LIBC_SYS_SYSMEC_DIR_TRUE@	libc/sys/sysmec/libc_a-write.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SYSMEC_DIR_TRUE@	libc/sys/sysmec/libc_a-times.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SYSMEC_DIR_TRUE@	libc/sys/sysmec/libc_a-gettime.$(OBJEXT)
+-@HAVE_LIBC_SYS_SYSNEC810_DIR_TRUE@am__objects_69 = libc/sys/sysnec810/libc_a-io.$(OBJEXT) \
++@HAVE_LIBC_SYS_SYSNEC810_DIR_TRUE@am__objects_70 = libc/sys/sysnec810/libc_a-io.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SYSNEC810_DIR_TRUE@	libc/sys/sysnec810/libc_a-write.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SYSNEC810_DIR_TRUE@	libc/sys/sysnec810/libc_a-sbrk.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SYSNEC810_DIR_TRUE@	libc/sys/sysnec810/libc_a-misc.$(OBJEXT)
+-@HAVE_LIBC_SYS_SYSNECV850_DIR_TRUE@@MAY_SUPPLY_SYSCALLS_TRUE@am__objects_70 = libc/sys/sysnecv850/libc_a-_exit.$(OBJEXT) \
++@HAVE_LIBC_SYS_SYSNECV850_DIR_TRUE@@MAY_SUPPLY_SYSCALLS_TRUE@am__objects_71 = libc/sys/sysnecv850/libc_a-_exit.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SYSNECV850_DIR_TRUE@@MAY_SUPPLY_SYSCALLS_TRUE@	libc/sys/sysnecv850/libc_a-access.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SYSNECV850_DIR_TRUE@@MAY_SUPPLY_SYSCALLS_TRUE@	libc/sys/sysnecv850/libc_a-chmod.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SYSNECV850_DIR_TRUE@@MAY_SUPPLY_SYSCALLS_TRUE@	libc/sys/sysnecv850/libc_a-chown.$(OBJEXT) \
+@@ -1825,7 +1826,7 @@
+ @HAVE_LIBC_SYS_SYSNECV850_DIR_TRUE@@MAY_SUPPLY_SYSCALLS_TRUE@	libc/sys/sysnecv850/libc_a-times.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SYSNECV850_DIR_TRUE@@MAY_SUPPLY_SYSCALLS_TRUE@	libc/sys/sysnecv850/libc_a-gettime.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SYSNECV850_DIR_TRUE@@MAY_SUPPLY_SYSCALLS_TRUE@	libc/sys/sysnecv850/libc_a-rename.$(OBJEXT)
+-@HAVE_LIBC_SYS_SYSVI386_DIR_TRUE@am__objects_71 = libc/sys/sysvi386/libc_a-ioctl.$(OBJEXT) \
++@HAVE_LIBC_SYS_SYSVI386_DIR_TRUE@am__objects_72 = libc/sys/sysvi386/libc_a-ioctl.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SYSVI386_DIR_TRUE@	libc/sys/sysvi386/libc_a-isatty.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SYSVI386_DIR_TRUE@	libc/sys/sysvi386/libc_a-read.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SYSVI386_DIR_TRUE@	libc/sys/sysvi386/libc_a-lseek.$(OBJEXT) \
+@@ -1888,7 +1889,7 @@
+ @HAVE_LIBC_SYS_SYSVI386_DIR_TRUE@	libc/sys/sysvi386/libc_a-access.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SYSVI386_DIR_TRUE@	libc/sys/sysvi386/libc_a-_longjmp.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SYSVI386_DIR_TRUE@	libc/sys/sysvi386/libc_a-_setjmp.$(OBJEXT)
+-@HAVE_LIBC_SYS_SYSVNECV70_DIR_TRUE@am__objects_72 = libc/sys/sysvnecv70/libc_a-ioctl.$(OBJEXT) \
++@HAVE_LIBC_SYS_SYSVNECV70_DIR_TRUE@am__objects_73 = libc/sys/sysvnecv70/libc_a-ioctl.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SYSVNECV70_DIR_TRUE@	libc/sys/sysvnecv70/libc_a-isatty.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SYSVNECV70_DIR_TRUE@	libc/sys/sysvnecv70/libc_a-read.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SYSVNECV70_DIR_TRUE@	libc/sys/sysvnecv70/libc_a-lseek.$(OBJEXT) \
+@@ -1902,11 +1903,11 @@
+ @HAVE_LIBC_SYS_SYSVNECV70_DIR_TRUE@	libc/sys/sysvnecv70/libc_a-fpx.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SYSVNECV70_DIR_TRUE@	libc/sys/sysvnecv70/libc_a-fps.$(OBJEXT) \
+ @HAVE_LIBC_SYS_SYSVNECV70_DIR_TRUE@	libc/sys/sysvnecv70/libc_a-open.$(OBJEXT)
+-@HAVE_LIBC_SYS_TIRTOS_DIR_TRUE@am__objects_73 = libc/sys/tirtos/libc_a-lock.$(OBJEXT)
+-@HAVE_LIBC_SYS_W65_DIR_TRUE@am__objects_74 = libc/sys/w65/libc_a-syscalls.$(OBJEXT) \
++@HAVE_LIBC_SYS_TIRTOS_DIR_TRUE@am__objects_74 = libc/sys/tirtos/libc_a-lock.$(OBJEXT)
++@HAVE_LIBC_SYS_W65_DIR_TRUE@am__objects_75 = libc/sys/w65/libc_a-syscalls.$(OBJEXT) \
+ @HAVE_LIBC_SYS_W65_DIR_TRUE@	libc/sys/w65/libc_a-trap.$(OBJEXT)
+-@HAVE_LIBC_SYS_Z8KSIM_DIR_TRUE@am__objects_75 = libc/sys/z8ksim/libc_a-glue.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_AARCH64_TRUE@am__objects_76 = libc/machine/aarch64/libc_a-memchr-stub.$(OBJEXT) \
++@HAVE_LIBC_SYS_Z8KSIM_DIR_TRUE@am__objects_76 = libc/sys/z8ksim/libc_a-glue.$(OBJEXT)
++@HAVE_LIBC_MACHINE_AARCH64_TRUE@am__objects_77 = libc/machine/aarch64/libc_a-memchr-stub.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_AARCH64_TRUE@	libc/machine/aarch64/libc_a-memchr.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_AARCH64_TRUE@	libc/machine/aarch64/libc_a-memcmp-stub.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_AARCH64_TRUE@	libc/machine/aarch64/libc_a-memcmp.$(OBJEXT) \
+@@ -1938,13 +1939,13 @@
+ @HAVE_LIBC_MACHINE_AARCH64_TRUE@	libc/machine/aarch64/libc_a-strnlen.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_AARCH64_TRUE@	libc/machine/aarch64/libc_a-strrchr-stub.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_AARCH64_TRUE@	libc/machine/aarch64/libc_a-strrchr.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_AMDGCN_TRUE@am__objects_77 = libc/machine/amdgcn/libc_a-_exit.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_AMDGCN_TRUE@am__objects_78 = libc/machine/amdgcn/libc_a-_exit.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_AMDGCN_TRUE@	libc/machine/amdgcn/libc_a-abort.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_AMDGCN_TRUE@	libc/machine/amdgcn/libc_a-atexit.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_AMDGCN_TRUE@	libc/machine/amdgcn/libc_a-mlock.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_AMDGCN_TRUE@	libc/machine/amdgcn/libc_a-getreent.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_AMDGCN_TRUE@	libc/machine/amdgcn/libc_a-signal.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_ARC_TRUE@am__objects_78 = libc/machine/arc/libc_a-memcmp.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_ARC_TRUE@am__objects_79 = libc/machine/arc/libc_a-memcmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_ARC_TRUE@	libc/machine/arc/libc_a-memcmp-bs-norm.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_ARC_TRUE@	libc/machine/arc/libc_a-memcmp-stub.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_ARC_TRUE@	libc/machine/arc/libc_a-memcpy.$(OBJEXT) \
+@@ -1974,7 +1975,7 @@
+ @HAVE_LIBC_MACHINE_ARC_TRUE@	libc/machine/arc/libc_a-strncpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_ARC_TRUE@	libc/machine/arc/libc_a-strncpy-stub.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_ARC_TRUE@	libc/machine/arc/libc_a-strncpy-bs.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_ARC64_TRUE@am__objects_79 = libc/machine/arc64/libc_a-memcmp.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_ARC64_TRUE@am__objects_80 = libc/machine/arc64/libc_a-memcmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_ARC64_TRUE@	libc/machine/arc64/libc_a-memcmp-stub.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_ARC64_TRUE@	libc/machine/arc64/libc_a-memcpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_ARC64_TRUE@	libc/machine/arc64/libc_a-memcpy-stub.$(OBJEXT) \
+@@ -1986,7 +1987,7 @@
+ @HAVE_LIBC_MACHINE_ARC64_TRUE@	libc/machine/arc64/libc_a-memmove.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_ARC64_TRUE@	libc/machine/arc64/libc_a-strcmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_ARC64_TRUE@	libc/machine/arc64/libc_a-memchr.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_ARM_TRUE@am__objects_80 = libc/machine/arm/libc_a-setjmp.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_ARM_TRUE@am__objects_81 = libc/machine/arm/libc_a-setjmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_ARM_TRUE@	libc/machine/arm/libc_a-strcmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_ARM_TRUE@	libc/machine/arm/libc_a-strcpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_ARM_TRUE@	libc/machine/arm/libc_a-aeabi_memcpy.$(OBJEXT) \
+@@ -2002,44 +2003,44 @@
+ @HAVE_LIBC_MACHINE_ARM_TRUE@	libc/machine/arm/libc_a-memcpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_ARM_TRUE@	libc/machine/arm/libc_a-strlen-stub.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_ARM_TRUE@	libc/machine/arm/libc_a-strlen.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_BFIN_TRUE@am__objects_81 = libc/machine/bfin/libc_a-setjmp.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_BFIN_TRUE@am__objects_82 = libc/machine/bfin/libc_a-setjmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_BFIN_TRUE@	libc/machine/bfin/libc_a-longjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_CR16_TRUE@am__objects_82 = libc/machine/cr16/libc_a-setjmp.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_CR16_TRUE@am__objects_83 = libc/machine/cr16/libc_a-setjmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_CR16_TRUE@	libc/machine/cr16/libc_a-getenv.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_CRIS_TRUE@am__objects_83 = libc/machine/cris/libc_a-setjmp.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_CRIS_TRUE@am__objects_84 = libc/machine/cris/libc_a-setjmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_CRIS_TRUE@	libc/machine/cris/libc_a-memcpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_CRIS_TRUE@	libc/machine/cris/libc_a-memset.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_CRIS_TRUE@	libc/machine/cris/libc_a-memmove.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_CRIS_TRUE@	libc/machine/cris/libc_a-libcdtor.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_CRX_TRUE@am__objects_84 = libc/machine/crx/libc_a-setjmp.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_CRX_TRUE@am__objects_85 = libc/machine/crx/libc_a-setjmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_CRX_TRUE@	libc/machine/crx/libc_a-getenv.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_CSKY_TRUE@am__objects_85 = libc/machine/csky/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_D10V_TRUE@am__objects_86 = libc/machine/d10v/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_D30V_TRUE@am__objects_87 = libc/machine/d30v/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_EPIPHANY_TRUE@am__objects_88 = libc/machine/epiphany/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_FR30_TRUE@am__objects_89 = libc/machine/fr30/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_FRV_TRUE@am__objects_90 = libc/machine/frv/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_FT32_TRUE@am__objects_91 = libc/machine/ft32/libc_a-setjmp.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_CSKY_TRUE@am__objects_86 = libc/machine/csky/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_D10V_TRUE@am__objects_87 = libc/machine/d10v/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_D30V_TRUE@am__objects_88 = libc/machine/d30v/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_EPIPHANY_TRUE@am__objects_89 = libc/machine/epiphany/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_FR30_TRUE@am__objects_90 = libc/machine/fr30/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_FRV_TRUE@am__objects_91 = libc/machine/frv/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_FT32_TRUE@am__objects_92 = libc/machine/ft32/libc_a-setjmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_FT32_TRUE@	libc/machine/ft32/libc_a-strlen.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_FT32_TRUE@	libc/machine/ft32/libc_a-memcpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_FT32_TRUE@	libc/machine/ft32/libc_a-strcmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_FT32_TRUE@	libc/machine/ft32/libc_a-memset.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_FT32_TRUE@	libc/machine/ft32/libc_a-strcpy.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_H8300_TRUE@am__objects_92 = libc/machine/h8300/libc_a-reg_memcpy.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_H8300_TRUE@am__objects_93 = libc/machine/h8300/libc_a-reg_memcpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_H8300_TRUE@	libc/machine/h8300/libc_a-reg_memset.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_H8300_TRUE@	libc/machine/h8300/libc_a-strcmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_H8300_TRUE@	libc/machine/h8300/libc_a-memcpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_H8300_TRUE@	libc/machine/h8300/libc_a-memset.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_H8300_TRUE@	libc/machine/h8300/libc_a-setjmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_H8300_TRUE@	libc/machine/h8300/libc_a-h8sx_strcpy.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_H8500_TRUE@am__objects_93 = libc/machine/h8500/libc_a-divsi3.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_H8500_TRUE@am__objects_94 = libc/machine/h8500/libc_a-divsi3.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_H8500_TRUE@	libc/machine/h8500/libc_a-mulsi3.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_H8500_TRUE@	libc/machine/h8500/libc_a-divhi3.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_H8500_TRUE@	libc/machine/h8500/libc_a-shifts.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_H8500_TRUE@	libc/machine/h8500/libc_a-cmpsi.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_H8500_TRUE@	libc/machine/h8500/libc_a-psi.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_H8500_TRUE@	libc/machine/h8500/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_HPPA_TRUE@am__objects_94 = libc/machine/hppa/libc_a-memchr.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_HPPA_TRUE@am__objects_95 = libc/machine/hppa/libc_a-memchr.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_HPPA_TRUE@	libc/machine/hppa/libc_a-memcmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_HPPA_TRUE@	libc/machine/hppa/libc_a-memcpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_HPPA_TRUE@	libc/machine/hppa/libc_a-memset.$(OBJEXT) \
+@@ -2051,15 +2052,15 @@
+ @HAVE_LIBC_MACHINE_HPPA_TRUE@	libc/machine/hppa/libc_a-strncat.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_HPPA_TRUE@	libc/machine/hppa/libc_a-strncmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_HPPA_TRUE@	libc/machine/hppa/libc_a-strncpy.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_I386_TRUE@@MACH_ADD_SETJMP_TRUE@am__objects_95 = libc/machine/i386/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_I386_TRUE@am__objects_96 = libc/machine/i386/libc_a-memchr.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_I386_TRUE@@MACH_ADD_SETJMP_TRUE@am__objects_96 = libc/machine/i386/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_I386_TRUE@am__objects_97 = libc/machine/i386/libc_a-memchr.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_I386_TRUE@	libc/machine/i386/libc_a-memcmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_I386_TRUE@	libc/machine/i386/libc_a-memcpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_I386_TRUE@	libc/machine/i386/libc_a-memset.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_I386_TRUE@	libc/machine/i386/libc_a-strchr.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_I386_TRUE@	libc/machine/i386/libc_a-memmove.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_I386_TRUE@	libc/machine/i386/libc_a-strlen.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_I960_TRUE@am__objects_97 = libc/machine/i960/libc_a-memccpy_ca.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_I960_TRUE@am__objects_98 = libc/machine/i960/libc_a-memccpy_ca.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_I960_TRUE@	libc/machine/i960/libc_a-memccpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_I960_TRUE@	libc/machine/i960/libc_a-memchr_ca.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_I960_TRUE@	libc/machine/i960/libc_a-memchr.$(OBJEXT) \
+@@ -2087,31 +2088,31 @@
+ @HAVE_LIBC_MACHINE_I960_TRUE@	libc/machine/i960/libc_a-strncpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_I960_TRUE@	libc/machine/i960/libc_a-strpbrk.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_I960_TRUE@	libc/machine/i960/libc_a-strrchr.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_IQ2000_TRUE@am__objects_98 = libc/machine/iq2000/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_LM32_TRUE@am__objects_99 = libc/machine/lm32/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_M32C_TRUE@am__objects_100 = libc/machine/m32c/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_M32R_TRUE@am__objects_101 = libc/machine/m32r/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_M68HC11_TRUE@am__objects_102 = libc/machine/m68hc11/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_M68K_TRUE@am__objects_103 = libc/machine/m68k/libc_a-setjmp.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_IQ2000_TRUE@am__objects_99 = libc/machine/iq2000/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_LM32_TRUE@am__objects_100 = libc/machine/lm32/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_M32C_TRUE@am__objects_101 = libc/machine/m32c/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_M32R_TRUE@am__objects_102 = libc/machine/m32r/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_M68HC11_TRUE@am__objects_103 = libc/machine/m68hc11/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_M68K_TRUE@am__objects_104 = libc/machine/m68k/libc_a-setjmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_M68K_TRUE@	libc/machine/m68k/libc_a-strcpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_M68K_TRUE@	libc/machine/m68k/libc_a-strlen.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_M68K_TRUE@	libc/machine/m68k/libc_a-memcpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_M68K_TRUE@	libc/machine/m68k/libc_a-memset.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_M88K_TRUE@am__objects_104 = libc/machine/m88k/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_MEP_TRUE@am__objects_105 = libc/machine/mep/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_MICROBLAZE_TRUE@am__objects_106 = libc/machine/microblaze/libc_a-strlen.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_M88K_TRUE@am__objects_105 = libc/machine/m88k/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_MEP_TRUE@am__objects_106 = libc/machine/mep/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_MICROBLAZE_TRUE@am__objects_107 = libc/machine/microblaze/libc_a-strlen.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_MICROBLAZE_TRUE@	libc/machine/microblaze/libc_a-strcmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_MICROBLAZE_TRUE@	libc/machine/microblaze/libc_a-strcpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_MICROBLAZE_TRUE@	libc/machine/microblaze/libc_a-setjmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_MICROBLAZE_TRUE@	libc/machine/microblaze/libc_a-longjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_MIPS_TRUE@am__objects_107 = libc/machine/mips/libc_a-setjmp.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_MIPS_TRUE@am__objects_108 = libc/machine/mips/libc_a-setjmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_MIPS_TRUE@	libc/machine/mips/libc_a-strlen.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_MIPS_TRUE@	libc/machine/mips/libc_a-strcmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_MIPS_TRUE@	libc/machine/mips/libc_a-strncpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_MIPS_TRUE@	libc/machine/mips/libc_a-memset.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_MIPS_TRUE@	libc/machine/mips/libc_a-memcpy.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_MN10200_TRUE@am__objects_108 = libc/machine/mn10200/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_MN10300_TRUE@am__objects_109 = libc/machine/mn10300/libc_a-setjmp.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_MN10200_TRUE@am__objects_109 = libc/machine/mn10200/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_MN10300_TRUE@am__objects_110 = libc/machine/mn10300/libc_a-setjmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_MN10300_TRUE@	libc/machine/mn10300/libc_a-memchr.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_MN10300_TRUE@	libc/machine/mn10300/libc_a-memcmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_MN10300_TRUE@	libc/machine/mn10300/libc_a-memcpy.$(OBJEXT) \
+@@ -2120,21 +2121,21 @@
+ @HAVE_LIBC_MACHINE_MN10300_TRUE@	libc/machine/mn10300/libc_a-strcmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_MN10300_TRUE@	libc/machine/mn10300/libc_a-strcpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_MN10300_TRUE@	libc/machine/mn10300/libc_a-strlen.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_MOXIE_TRUE@am__objects_110 = libc/machine/moxie/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_MSP430_TRUE@am__objects_111 = libc/machine/msp430/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_MSP430_TRUE@@NEWLIB_NANO_FORMATTED_IO_TRUE@am__objects_112 = libc/machine/msp430/libc_a-tiny-puts.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_MOXIE_TRUE@am__objects_111 = libc/machine/moxie/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_MSP430_TRUE@am__objects_112 = libc/machine/msp430/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_MSP430_TRUE@@NEWLIB_NANO_FORMATTED_IO_TRUE@am__objects_113 = libc/machine/msp430/libc_a-tiny-puts.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_MSP430_TRUE@@NEWLIB_NANO_FORMATTED_IO_TRUE@	libc/machine/msp430/libc_a-tiny-printf.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_MT_TRUE@am__objects_113 = libc/machine/mt/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_NDS32_TRUE@am__objects_114 = libc/machine/nds32/libc_a-abort.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_MT_TRUE@am__objects_114 = libc/machine/mt/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_NDS32_TRUE@am__objects_115 = libc/machine/nds32/libc_a-abort.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_NDS32_TRUE@	libc/machine/nds32/libc_a-setjmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_NDS32_TRUE@	libc/machine/nds32/libc_a-strcmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_NDS32_TRUE@	libc/machine/nds32/libc_a-strcpy.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_NDS32_TRUE@@IS_NDS32_ISA_V3M_FALSE@am__objects_115 = libc/machine/nds32/libc_a-memcpy.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_NDS32_TRUE@@IS_NDS32_ISA_V3M_FALSE@am__objects_116 = libc/machine/nds32/libc_a-memcpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_NDS32_TRUE@@IS_NDS32_ISA_V3M_FALSE@	libc/machine/nds32/libc_a-memset.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_NECV70_TRUE@am__objects_116 = libc/machine/necv70/libc_a-fastmath.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_NECV70_TRUE@am__objects_117 = libc/machine/necv70/libc_a-fastmath.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_NECV70_TRUE@	libc/machine/necv70/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_NIOS2_TRUE@am__objects_117 = libc/machine/nios2/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_NVPTX_TRUE@am__objects_118 = libc/machine/nvptx/libc_a-_exit.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_NIOS2_TRUE@am__objects_118 = libc/machine/nios2/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_NVPTX_TRUE@am__objects_119 = libc/machine/nvptx/libc_a-_exit.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_NVPTX_TRUE@	libc/machine/nvptx/libc_a-calloc.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_NVPTX_TRUE@	libc/machine/nvptx/libc_a-callocr.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_NVPTX_TRUE@	libc/machine/nvptx/libc_a-malloc.$(OBJEXT) \
+@@ -2150,9 +2151,9 @@
+ @HAVE_LIBC_MACHINE_NVPTX_TRUE@	libc/machine/nvptx/libc_a-abort.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_NVPTX_TRUE@	libc/machine/nvptx/libc_a-misc.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_NVPTX_TRUE@	libc/machine/nvptx/libc_a-clock.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_OR1K_TRUE@am__objects_119 = libc/machine/or1k/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_POWERPC_TRUE@am__objects_120 = libc/machine/powerpc/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_ALTIVEC_TRUE@am__objects_121 = libc/machine/powerpc/libc_a-vfprintf.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_OR1K_TRUE@am__objects_120 = libc/machine/or1k/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_POWERPC_TRUE@am__objects_121 = libc/machine/powerpc/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_ALTIVEC_TRUE@am__objects_122 = libc/machine/powerpc/libc_a-vfprintf.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_ALTIVEC_TRUE@	libc/machine/powerpc/libc_a-vfscanf.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_ALTIVEC_TRUE@	libc/machine/powerpc/libc_a-vec_malloc.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_ALTIVEC_TRUE@	libc/machine/powerpc/libc_a-vec_calloc.$(OBJEXT) \
+@@ -2161,7 +2162,7 @@
+ @HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_ALTIVEC_TRUE@	libc/machine/powerpc/libc_a-vec_mallocr.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_ALTIVEC_TRUE@	libc/machine/powerpc/libc_a-vec_callocr.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_ALTIVEC_TRUE@	libc/machine/powerpc/libc_a-vec_reallocr.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_SPE_TRUE@am__objects_122 = libc/machine/powerpc/libc_a-atosfix16.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_SPE_TRUE@am__objects_123 = libc/machine/powerpc/libc_a-atosfix16.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_SPE_TRUE@	libc/machine/powerpc/libc_a-atosfix32.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_SPE_TRUE@	libc/machine/powerpc/libc_a-atosfix64.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_SPE_TRUE@	libc/machine/powerpc/libc_a-atoufix16.$(OBJEXT) \
+@@ -2177,8 +2178,9 @@
+ @HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_SPE_TRUE@	libc/machine/powerpc/libc_a-ufix64toa.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_SPE_TRUE@	libc/machine/powerpc/libc_a-vfprintf.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_SPE_TRUE@	libc/machine/powerpc/libc_a-vfscanf.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_PRU_TRUE@am__objects_123 = libc/machine/pru/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_RISCV_TRUE@am__objects_124 = libc/machine/riscv/libc_a-memmove-asm.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_PRU_TRUE@am__objects_124 = libc/machine/pru/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_R5900_TRUE@am__objects_125 = libc/machine/r5900/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_RISCV_TRUE@am__objects_126 = libc/machine/riscv/libc_a-memmove-asm.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_RISCV_TRUE@	libc/machine/riscv/libc_a-memmove.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_RISCV_TRUE@	libc/machine/riscv/libc_a-memset.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_RISCV_TRUE@	libc/machine/riscv/libc_a-memcpy-asm.$(OBJEXT) \
+@@ -2192,8 +2194,8 @@
+ @HAVE_LIBC_MACHINE_RISCV_TRUE@	libc/machine/riscv/libc_a-setjmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_RISCV_TRUE@	libc/machine/riscv/libc_a-ieeefp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_RISCV_TRUE@	libc/machine/riscv/libc_a-ffs.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_RL78_TRUE@am__objects_125 = libc/machine/rl78/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_RX_TRUE@am__objects_126 = libc/machine/rx/libc_a-setjmp.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_RL78_TRUE@am__objects_127 = libc/machine/rl78/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_RX_TRUE@am__objects_128 = libc/machine/rx/libc_a-setjmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_RX_TRUE@	libc/machine/rx/libc_a-strncmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_RX_TRUE@	libc/machine/rx/libc_a-strcmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_RX_TRUE@	libc/machine/rx/libc_a-strncpy.$(OBJEXT) \
+@@ -2206,17 +2208,17 @@
+ @HAVE_LIBC_MACHINE_RX_TRUE@	libc/machine/rx/libc_a-memcpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_RX_TRUE@	libc/machine/rx/libc_a-memmove.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_RX_TRUE@	libc/machine/rx/libc_a-memchr.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_SH_TRUE@am__objects_127 = libc/machine/sh/libc_a-memcpy.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_SH_TRUE@am__objects_129 = libc/machine/sh/libc_a-memcpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_SH_TRUE@	libc/machine/sh/libc_a-memset.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_SH_TRUE@	libc/machine/sh/libc_a-setjmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_SH_TRUE@	libc/machine/sh/libc_a-strcpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_SH_TRUE@	libc/machine/sh/libc_a-strlen.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_SH_TRUE@	libc/machine/sh/libc_a-strcmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_SH_TRUE@@SH64_TRUE@am__objects_128 = libc/machine/sh/libc_a-strncpy.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_SPARC_TRUE@am__objects_129 = libc/machine/sparc/libc_a-scan.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_SH_TRUE@@SH64_TRUE@am__objects_130 = libc/machine/sh/libc_a-strncpy.$(OBJEXT)
++@HAVE_LIBC_MACHINE_SPARC_TRUE@am__objects_131 = libc/machine/sparc/libc_a-scan.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_SPARC_TRUE@	libc/machine/sparc/libc_a-shuffle.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_SPARC_TRUE@	libc/machine/sparc/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_SPU_TRUE@am__objects_130 = libc/machine/spu/libc_a-setjmp.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_SPU_TRUE@am__objects_132 = libc/machine/spu/libc_a-setjmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_SPU_TRUE@	libc/machine/spu/libc_a-assert.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_SPU_TRUE@	libc/machine/spu/libc_a-clearerr.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_SPU_TRUE@	libc/machine/spu/libc_a-creat.$(OBJEXT) \
+@@ -2311,7 +2313,7 @@
+ @HAVE_LIBC_MACHINE_SPU_TRUE@	libc/machine/spu/libc_a-spu_timer_free.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_SPU_TRUE@	libc/machine/spu/libc_a-spu_timebase.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_SPU_TRUE@	libc/machine/spu/libc_a-fdopen.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_SPU_TRUE@@HAVE_SPU_EA_TRUE@am__objects_131 = libc/machine/spu/libc_a-calloc_ea.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_SPU_TRUE@@HAVE_SPU_EA_TRUE@am__objects_133 = libc/machine/spu/libc_a-calloc_ea.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_SPU_TRUE@@HAVE_SPU_EA_TRUE@	libc/machine/spu/libc_a-free_ea.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_SPU_TRUE@@HAVE_SPU_EA_TRUE@	libc/machine/spu/libc_a-malloc_ea.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_SPU_TRUE@@HAVE_SPU_EA_TRUE@	libc/machine/spu/libc_a-memchr_ea.$(OBJEXT) \
+@@ -2346,15 +2348,15 @@
+ @HAVE_LIBC_MACHINE_SPU_TRUE@@HAVE_SPU_EA_TRUE@	libc/machine/spu/libc_a-writev_ea.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_SPU_TRUE@@HAVE_SPU_EA_TRUE@	libc/machine/spu/libc_a-spu-mcount.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_SPU_TRUE@@HAVE_SPU_EA_TRUE@	libc/machine/spu/libc_a-spu-gmon.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_TIC4X_TRUE@am__objects_132 = libc/machine/tic4x/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_TIC6X_TRUE@am__objects_133 = libc/machine/tic6x/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_TIC80_TRUE@am__objects_134 = libc/machine/tic80/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_V850_TRUE@am__objects_135 = libc/machine/v850/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_VISIUM_TRUE@am__objects_136 = libc/machine/visium/libc_a-memcpy.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_TIC4X_TRUE@am__objects_134 = libc/machine/tic4x/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_TIC6X_TRUE@am__objects_135 = libc/machine/tic6x/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_TIC80_TRUE@am__objects_136 = libc/machine/tic80/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_V850_TRUE@am__objects_137 = libc/machine/v850/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_VISIUM_TRUE@am__objects_138 = libc/machine/visium/libc_a-memcpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_VISIUM_TRUE@	libc/machine/visium/libc_a-memset.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_VISIUM_TRUE@	libc/machine/visium/libc_a-memmove.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_VISIUM_TRUE@	libc/machine/visium/libc_a-setjmp.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_W65_TRUE@am__objects_137 = libc/machine/w65/libc_a-udivhi3.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_W65_TRUE@am__objects_139 = libc/machine/w65/libc_a-udivhi3.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_W65_TRUE@	libc/machine/w65/libc_a-umodhi3.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_W65_TRUE@	libc/machine/w65/libc_a-smulhi3.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_W65_TRUE@	libc/machine/w65/libc_a-lshrhi.$(OBJEXT) \
+@@ -2362,13 +2364,13 @@
+ @HAVE_LIBC_MACHINE_W65_TRUE@	libc/machine/w65/libc_a-mulsi3.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_W65_TRUE@	libc/machine/w65/libc_a-divsi3.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_W65_TRUE@	libc/machine/w65/libc_a-cmpsi.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_X86_64_TRUE@am__objects_138 = libc/machine/x86_64/libc_a-setjmp.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_X86_64_TRUE@am__objects_140 = libc/machine/x86_64/libc_a-setjmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_X86_64_TRUE@	libc/machine/x86_64/libc_a-memcpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_X86_64_TRUE@	libc/machine/x86_64/libc_a-memset.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_XC16X_TRUE@am__objects_139 = libc/machine/xc16x/libc_a-setjmp.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_XC16X_TRUE@am__objects_141 = libc/machine/xc16x/libc_a-setjmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_XC16X_TRUE@	libc/machine/xc16x/libc_a-puts.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_XC16X_TRUE@	libc/machine/xc16x/libc_a-putchar.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_XSTORMY16_TRUE@am__objects_140 = libc/machine/xstormy16/libc_a-setjmp.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_XSTORMY16_TRUE@am__objects_142 = libc/machine/xstormy16/libc_a-setjmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_XSTORMY16_TRUE@	libc/machine/xstormy16/libc_a-calloc.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_XSTORMY16_TRUE@	libc/machine/xstormy16/libc_a-callocr.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_XSTORMY16_TRUE@	libc/machine/xstormy16/libc_a-cfree.$(OBJEXT) \
+@@ -2381,14 +2383,14 @@
+ @HAVE_LIBC_MACHINE_XSTORMY16_TRUE@	libc/machine/xstormy16/libc_a-realloc.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_XSTORMY16_TRUE@	libc/machine/xstormy16/libc_a-reallocr.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_XSTORMY16_TRUE@	libc/machine/xstormy16/libc_a-valloc.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_XTENSA_TRUE@am__objects_141 = libc/machine/xtensa/libc_a-memcpy.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_XTENSA_TRUE@am__objects_143 = libc/machine/xtensa/libc_a-memcpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_XTENSA_TRUE@	libc/machine/xtensa/libc_a-memset.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_XTENSA_TRUE@	libc/machine/xtensa/libc_a-setjmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_XTENSA_TRUE@	libc/machine/xtensa/libc_a-strcmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_XTENSA_TRUE@	libc/machine/xtensa/libc_a-strcpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_XTENSA_TRUE@	libc/machine/xtensa/libc_a-strlen.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_XTENSA_TRUE@	libc/machine/xtensa/libc_a-strncpy.$(OBJEXT)
+-@HAVE_LIBC_MACHINE_Z8K_TRUE@am__objects_142 = libc/machine/z8k/libc_a-setjmp.$(OBJEXT) \
++@HAVE_LIBC_MACHINE_Z8K_TRUE@am__objects_144 = libc/machine/z8k/libc_a-setjmp.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_Z8K_TRUE@	libc/machine/z8k/libc_a-memset.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_Z8K_TRUE@	libc/machine/z8k/libc_a-memcpy.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_Z8K_TRUE@	libc/machine/z8k/libc_a-memmove.$(OBJEXT) \
+@@ -2657,33 +2659,33 @@
+ 	$(am__objects_54) $(am__objects_55) $(am__objects_56) \
+ 	$(am__objects_57) $(am__objects_58) $(am__objects_59) \
+ 	$(am__objects_60) $(am__objects_61) $(am__objects_62) \
+-	$(am__objects_63) $(am__objects_64) $(am__objects_65) \
+-	$(am__objects_66) $(am__objects_67) $(am__objects_68) \
+-	$(am__objects_69) $(am__objects_70) $(am__objects_71) \
+-	$(am__objects_72) $(am__objects_73) $(am__objects_74) \
+-	$(am__objects_75) $(am__objects_76) $(am__objects_77) \
+-	$(am__objects_78) $(am__objects_79) $(am__objects_80) \
+-	$(am__objects_81) $(am__objects_82) $(am__objects_83) \
+-	$(am__objects_84) $(am__objects_85) $(am__objects_86) \
+-	$(am__objects_87) $(am__objects_88) $(am__objects_89) \
+-	$(am__objects_90) $(am__objects_91) $(am__objects_92) \
+-	$(am__objects_93) $(am__objects_94) $(am__objects_95) \
+-	$(am__objects_96) $(am__objects_97) $(am__objects_98) \
+-	$(am__objects_99) $(am__objects_100) $(am__objects_101) \
+-	$(am__objects_102) $(am__objects_103) $(am__objects_104) \
+-	$(am__objects_105) $(am__objects_106) $(am__objects_107) \
+-	$(am__objects_108) $(am__objects_109) $(am__objects_110) \
+-	$(am__objects_111) $(am__objects_112) $(am__objects_113) \
+-	$(am__objects_114) $(am__objects_115) $(am__objects_116) \
+-	$(am__objects_117) $(am__objects_118) $(am__objects_119) \
+-	$(am__objects_120) $(am__objects_121) $(am__objects_122) \
+-	$(am__objects_123) $(am__objects_124) $(am__objects_125) \
+-	$(am__objects_126) $(am__objects_127) $(am__objects_128) \
+-	$(am__objects_129) $(am__objects_130) $(am__objects_131) \
+-	$(am__objects_132) $(am__objects_133) $(am__objects_134) \
+-	$(am__objects_135) $(am__objects_136) $(am__objects_137) \
+-	$(am__objects_138) $(am__objects_139) $(am__objects_140) \
+-	$(am__objects_141) $(am__objects_142)
++	$(am__objects_63) $(am__objects_64) $(am__objects_66) \
++	$(am__objects_67) $(am__objects_68) $(am__objects_69) \
++	$(am__objects_70) $(am__objects_71) $(am__objects_72) \
++	$(am__objects_73) $(am__objects_74) $(am__objects_75) \
++	$(am__objects_76) $(am__objects_77) $(am__objects_78) \
++	$(am__objects_79) $(am__objects_80) $(am__objects_81) \
++	$(am__objects_82) $(am__objects_83) $(am__objects_84) \
++	$(am__objects_85) $(am__objects_86) $(am__objects_87) \
++	$(am__objects_88) $(am__objects_89) $(am__objects_90) \
++	$(am__objects_91) $(am__objects_92) $(am__objects_93) \
++	$(am__objects_94) $(am__objects_95) $(am__objects_96) \
++	$(am__objects_97) $(am__objects_98) $(am__objects_99) \
++	$(am__objects_100) $(am__objects_101) $(am__objects_102) \
++	$(am__objects_103) $(am__objects_104) $(am__objects_105) \
++	$(am__objects_106) $(am__objects_107) $(am__objects_108) \
++	$(am__objects_109) $(am__objects_110) $(am__objects_111) \
++	$(am__objects_112) $(am__objects_113) $(am__objects_114) \
++	$(am__objects_115) $(am__objects_116) $(am__objects_117) \
++	$(am__objects_118) $(am__objects_119) $(am__objects_120) \
++	$(am__objects_121) $(am__objects_122) $(am__objects_123) \
++	$(am__objects_124) $(am__objects_125) $(am__objects_126) $(am__objects_127) \
++	$(am__objects_128) $(am__objects_129) $(am__objects_130) \
++	$(am__objects_131) $(am__objects_132) $(am__objects_133) \
++	$(am__objects_134) $(am__objects_135) $(am__objects_136) \
++	$(am__objects_137) $(am__objects_138) $(am__objects_139) \
++	$(am__objects_140) $(am__objects_141) $(am__objects_142) \
++	$(am__objects_143) $(am__objects_144)
+ libc_a_OBJECTS = $(am_libc_a_OBJECTS)
+ libc_machine_cris_libic_a_AR = $(AR) $(ARFLAGS)
+ @HAVE_LIBC_MACHINE_CRIS_TRUE@libc_machine_cris_libic_a_DEPENDENCIES = libc/machine/cris/libc_a-setjmp.o \
+@@ -2696,7 +2698,7 @@
+ 	$(am_libc_machine_cris_libic_a_OBJECTS)
+ libm_a_AR = $(AR) $(ARFLAGS)
+ libm_a_LIBADD =
+-@NEWLIB_HW_FP_TRUE@am__objects_143 =  \
++@NEWLIB_HW_FP_TRUE@am__objects_145 =  \
+ @NEWLIB_HW_FP_TRUE@	libm/mathfp/libm_a-s_acos.$(OBJEXT) \
+ @NEWLIB_HW_FP_TRUE@	libm/mathfp/libm_a-s_frexp.$(OBJEXT) \
+ @NEWLIB_HW_FP_TRUE@	libm/mathfp/libm_a-s_mathcnst.$(OBJEXT) \
+@@ -2744,7 +2746,7 @@
+ @NEWLIB_HW_FP_TRUE@	libm/mathfp/libm_a-s_signif.$(OBJEXT) \
+ @NEWLIB_HW_FP_TRUE@	libm/mathfp/libm_a-s_exp2.$(OBJEXT) \
+ @NEWLIB_HW_FP_TRUE@	libm/mathfp/libm_a-s_tgamma.$(OBJEXT)
+-@NEWLIB_HW_FP_TRUE@am__objects_144 =  \
++@NEWLIB_HW_FP_TRUE@am__objects_146 =  \
+ @NEWLIB_HW_FP_TRUE@	libm/mathfp/libm_a-sf_ceil.$(OBJEXT) \
+ @NEWLIB_HW_FP_TRUE@	libm/mathfp/libm_a-sf_acos.$(OBJEXT) \
+ @NEWLIB_HW_FP_TRUE@	libm/mathfp/libm_a-sf_frexp.$(OBJEXT) \
+@@ -2792,9 +2794,9 @@
+ @NEWLIB_HW_FP_TRUE@	libm/mathfp/libm_a-sf_signif.$(OBJEXT) \
+ @NEWLIB_HW_FP_TRUE@	libm/mathfp/libm_a-sf_exp2.$(OBJEXT) \
+ @NEWLIB_HW_FP_TRUE@	libm/mathfp/libm_a-sf_tgamma.$(OBJEXT)
+-@NEWLIB_HW_FP_TRUE@am__objects_145 = $(am__objects_143) \
+-@NEWLIB_HW_FP_TRUE@	$(am__objects_144)
+-@NEWLIB_HW_FP_FALSE@am__objects_146 =  \
++@NEWLIB_HW_FP_TRUE@am__objects_147 = $(am__objects_145) \
++@NEWLIB_HW_FP_TRUE@	$(am__objects_146)
++@NEWLIB_HW_FP_FALSE@am__objects_148 =  \
+ @NEWLIB_HW_FP_FALSE@	libm/math/libm_a-k_standard.$(OBJEXT) \
+ @NEWLIB_HW_FP_FALSE@	libm/math/libm_a-k_rem_pio2.$(OBJEXT) \
+ @NEWLIB_HW_FP_FALSE@	libm/math/libm_a-k_cos.$(OBJEXT) \
+@@ -2863,7 +2865,7 @@
+ @NEWLIB_HW_FP_FALSE@	libm/math/libm_a-s_tanh.$(OBJEXT) \
+ @NEWLIB_HW_FP_FALSE@	libm/math/libm_a-w_exp2.$(OBJEXT) \
+ @NEWLIB_HW_FP_FALSE@	libm/math/libm_a-w_tgamma.$(OBJEXT)
+-@NEWLIB_HW_FP_FALSE@am__objects_147 =  \
++@NEWLIB_HW_FP_FALSE@am__objects_149 =  \
+ @NEWLIB_HW_FP_FALSE@	libm/math/libm_a-kf_rem_pio2.$(OBJEXT) \
+ @NEWLIB_HW_FP_FALSE@	libm/math/libm_a-kf_cos.$(OBJEXT) \
+ @NEWLIB_HW_FP_FALSE@	libm/math/libm_a-kf_sin.$(OBJEXT) \
+@@ -2931,11 +2933,11 @@
+ @NEWLIB_HW_FP_FALSE@	libm/math/libm_a-wf_exp2.$(OBJEXT) \
+ @NEWLIB_HW_FP_FALSE@	libm/math/libm_a-wf_tgamma.$(OBJEXT) \
+ @NEWLIB_HW_FP_FALSE@	libm/math/libm_a-wf_log2.$(OBJEXT)
+-@NEWLIB_HW_FP_FALSE@am__objects_148 =  \
++@NEWLIB_HW_FP_FALSE@am__objects_150 =  \
+ @NEWLIB_HW_FP_FALSE@	libm/math/libm_a-el_hypot.$(OBJEXT)
+-@NEWLIB_HW_FP_FALSE@am__objects_149 = $(am__objects_146) \
+-@NEWLIB_HW_FP_FALSE@	$(am__objects_147) $(am__objects_148)
+-am__objects_150 = libm/common/libm_a-s_finite.$(OBJEXT) \
++@NEWLIB_HW_FP_FALSE@am__objects_151 = $(am__objects_148) \
++@NEWLIB_HW_FP_FALSE@	$(am__objects_149) $(am__objects_150)
++am__objects_152 = libm/common/libm_a-s_finite.$(OBJEXT) \
+ 	libm/common/libm_a-s_copysign.$(OBJEXT) \
+ 	libm/common/libm_a-s_modf.$(OBJEXT) \
+ 	libm/common/libm_a-s_scalbn.$(OBJEXT) \
+@@ -2980,7 +2982,7 @@
+ 	libm/common/libm_a-log2_data.$(OBJEXT) \
+ 	libm/common/libm_a-pow.$(OBJEXT) \
+ 	libm/common/libm_a-pow_log_data.$(OBJEXT)
+-am__objects_151 = libm/common/libm_a-sf_finite.$(OBJEXT) \
++am__objects_153 = libm/common/libm_a-sf_finite.$(OBJEXT) \
+ 	libm/common/libm_a-sf_copysign.$(OBJEXT) \
+ 	libm/common/libm_a-sf_modf.$(OBJEXT) \
+ 	libm/common/libm_a-sf_scalbn.$(OBJEXT) \
+@@ -3027,7 +3029,7 @@
+ 	libm/common/libm_a-sincosf.$(OBJEXT) \
+ 	libm/common/libm_a-sincosf_data.$(OBJEXT) \
+ 	libm/common/libm_a-math_errf.$(OBJEXT)
+-am__objects_152 = libm/common/libm_a-atanl.$(OBJEXT) \
++am__objects_154 = libm/common/libm_a-atanl.$(OBJEXT) \
+ 	libm/common/libm_a-cosl.$(OBJEXT) \
+ 	libm/common/libm_a-sinl.$(OBJEXT) \
+ 	libm/common/libm_a-tanl.$(OBJEXT) \
+@@ -3087,8 +3089,8 @@
+ 	libm/common/libm_a-nexttowardl.$(OBJEXT) \
+ 	libm/common/libm_a-log2l.$(OBJEXT) \
+ 	libm/common/libm_a-sl_finite.$(OBJEXT)
+-@HAVE_LONG_DOUBLE_TRUE@am__objects_153 = $(am__objects_152)
+-@HAVE_FPMATH_H_TRUE@am__objects_154 =  \
++@HAVE_LONG_DOUBLE_TRUE@am__objects_155 = $(am__objects_154)
++@HAVE_FPMATH_H_TRUE@am__objects_156 =  \
+ @HAVE_FPMATH_H_TRUE@	libm/ld/libm_a-e_acoshl.$(OBJEXT) \
+ @HAVE_FPMATH_H_TRUE@	libm/ld/libm_a-e_acosl.$(OBJEXT) \
+ @HAVE_FPMATH_H_TRUE@	libm/ld/libm_a-e_asinl.$(OBJEXT) \
+@@ -3134,9 +3136,9 @@
+ @HAVE_FPMATH_H_TRUE@	libm/ld/libm_a-s_tanhl.$(OBJEXT) \
+ @HAVE_FPMATH_H_TRUE@	libm/ld/libm_a-s_tanl.$(OBJEXT) \
+ @HAVE_FPMATH_H_TRUE@	libm/ld/libm_a-s_truncl.$(OBJEXT)
+-@HAVE_FPMATH_H_TRUE@@HAVE_LONG_DOUBLE_TRUE@am__objects_155 =  \
+-@HAVE_FPMATH_H_TRUE@@HAVE_LONG_DOUBLE_TRUE@	$(am__objects_154)
+-am__objects_156 = libm/complex/libm_a-cabs.$(OBJEXT) \
++@HAVE_FPMATH_H_TRUE@@HAVE_LONG_DOUBLE_TRUE@am__objects_157 =  \
++@HAVE_FPMATH_H_TRUE@@HAVE_LONG_DOUBLE_TRUE@	$(am__objects_156)
++am__objects_158 = libm/complex/libm_a-cabs.$(OBJEXT) \
+ 	libm/complex/libm_a-cacos.$(OBJEXT) \
+ 	libm/complex/libm_a-cacosh.$(OBJEXT) \
+ 	libm/complex/libm_a-carg.$(OBJEXT) \
+@@ -3160,7 +3162,7 @@
+ 	libm/complex/libm_a-csqrt.$(OBJEXT) \
+ 	libm/complex/libm_a-ctan.$(OBJEXT) \
+ 	libm/complex/libm_a-ctanh.$(OBJEXT)
+-am__objects_157 = libm/complex/libm_a-cabsf.$(OBJEXT) \
++am__objects_159 = libm/complex/libm_a-cabsf.$(OBJEXT) \
+ 	libm/complex/libm_a-casinf.$(OBJEXT) \
+ 	libm/complex/libm_a-ccosf.$(OBJEXT) \
+ 	libm/complex/libm_a-cimagf.$(OBJEXT) \
+@@ -3184,7 +3186,7 @@
+ 	libm/complex/libm_a-cexpf.$(OBJEXT) \
+ 	libm/complex/libm_a-cpowf.$(OBJEXT) \
+ 	libm/complex/libm_a-csinhf.$(OBJEXT)
+-am__objects_158 = libm/complex/libm_a-cabsl.$(OBJEXT) \
++am__objects_160 = libm/complex/libm_a-cabsl.$(OBJEXT) \
+ 	libm/complex/libm_a-creall.$(OBJEXT) \
+ 	libm/complex/libm_a-cimagl.$(OBJEXT) \
+ 	libm/complex/libm_a-ccoshl.$(OBJEXT) \
+@@ -3207,7 +3209,7 @@
+ 	libm/complex/libm_a-csinhl.$(OBJEXT) \
+ 	libm/complex/libm_a-csinl.$(OBJEXT) \
+ 	libm/complex/libm_a-catanl.$(OBJEXT)
+-am__objects_159 = libm/fenv/libm_a-feclearexcept.$(OBJEXT) \
++am__objects_161 = libm/fenv/libm_a-feclearexcept.$(OBJEXT) \
+ 	libm/fenv/libm_a-fe_dfl_env.$(OBJEXT) \
+ 	libm/fenv/libm_a-fegetenv.$(OBJEXT) \
+ 	libm/fenv/libm_a-fegetexceptflag.$(OBJEXT) \
+@@ -3219,7 +3221,7 @@
+ 	libm/fenv/libm_a-fesetround.$(OBJEXT) \
+ 	libm/fenv/libm_a-fetestexcept.$(OBJEXT) \
+ 	libm/fenv/libm_a-feupdateenv.$(OBJEXT)
+-@HAVE_LIBM_MACHINE_AARCH64_TRUE@am__objects_160 = libm/machine/aarch64/libm_a-e_sqrt.$(OBJEXT) \
++@HAVE_LIBM_MACHINE_AARCH64_TRUE@am__objects_162 = libm/machine/aarch64/libm_a-e_sqrt.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_AARCH64_TRUE@	libm/machine/aarch64/libm_a-ef_sqrt.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_AARCH64_TRUE@	libm/machine/aarch64/libm_a-s_ceil.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_AARCH64_TRUE@	libm/machine/aarch64/libm_a-s_fabs.$(OBJEXT) \
+@@ -3263,8 +3265,8 @@
+ @HAVE_LIBM_MACHINE_AARCH64_TRUE@	libm/machine/aarch64/libm_a-fesetround.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_AARCH64_TRUE@	libm/machine/aarch64/libm_a-fetestexcept.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_AARCH64_TRUE@	libm/machine/aarch64/libm_a-feupdateenv.$(OBJEXT)
+-@HAVE_LIBM_MACHINE_AARCH64_TRUE@am__objects_161 = $(am__objects_160)
+-@HAVE_LIBM_MACHINE_AARCH64_FALSE@@HAVE_LIBM_MACHINE_RISCV_TRUE@am__objects_162 = libm/ld128/libm_a-e_powl.$(OBJEXT) \
++@HAVE_LIBM_MACHINE_AARCH64_TRUE@am__objects_163 = $(am__objects_162)
++@HAVE_LIBM_MACHINE_AARCH64_FALSE@@HAVE_LIBM_MACHINE_RISCV_TRUE@am__objects_164 = libm/ld128/libm_a-e_powl.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_AARCH64_FALSE@@HAVE_LIBM_MACHINE_RISCV_TRUE@	libm/ld128/libm_a-s_erfl.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_AARCH64_FALSE@@HAVE_LIBM_MACHINE_RISCV_TRUE@	libm/ld128/libm_a-s_exp2l.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_AARCH64_FALSE@@HAVE_LIBM_MACHINE_RISCV_TRUE@	libm/ld128/libm_a-s_expl.$(OBJEXT) \
+@@ -3277,7 +3279,7 @@
+ @HAVE_LIBM_MACHINE_AARCH64_FALSE@@HAVE_LIBM_MACHINE_RISCV_TRUE@	libm/ld128/libm_a-k_tanl.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_AARCH64_FALSE@@HAVE_LIBM_MACHINE_RISCV_TRUE@	libm/ld128/libm_a-s_sinpil.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_AARCH64_FALSE@@HAVE_LIBM_MACHINE_RISCV_TRUE@	libm/ld128/libm_a-s_cospil.$(OBJEXT)
+-@HAVE_LIBM_MACHINE_AARCH64_TRUE@am__objects_162 = libm/ld128/libm_a-e_powl.$(OBJEXT) \
++@HAVE_LIBM_MACHINE_AARCH64_TRUE@am__objects_164 = libm/ld128/libm_a-e_powl.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_AARCH64_TRUE@	libm/ld128/libm_a-s_erfl.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_AARCH64_TRUE@	libm/ld128/libm_a-s_exp2l.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_AARCH64_TRUE@	libm/ld128/libm_a-s_expl.$(OBJEXT) \
+@@ -3290,8 +3292,8 @@
+ @HAVE_LIBM_MACHINE_AARCH64_TRUE@	libm/ld128/libm_a-k_tanl.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_AARCH64_TRUE@	libm/ld128/libm_a-s_sinpil.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_AARCH64_TRUE@	libm/ld128/libm_a-s_cospil.$(OBJEXT)
+-@HAVE_LIBM_MACHINE_AARCH64_TRUE@@HAVE_LONG_DOUBLE_TRUE@am__objects_163 = $(am__objects_162)
+-@HAVE_LIBM_MACHINE_AMDGCN_TRUE@am__objects_164 = libm/machine/amdgcn/libm_a-v64_mathcnst.$(OBJEXT) \
++@HAVE_LIBM_MACHINE_AARCH64_TRUE@@HAVE_LONG_DOUBLE_TRUE@am__objects_165 = $(am__objects_164)
++@HAVE_LIBM_MACHINE_AMDGCN_TRUE@am__objects_166 = libm/machine/amdgcn/libm_a-v64_mathcnst.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_AMDGCN_TRUE@	libm/machine/amdgcn/libm_a-v64_reent.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_AMDGCN_TRUE@	libm/machine/amdgcn/libm_a-v64df_acos.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_AMDGCN_TRUE@	libm/machine/amdgcn/libm_a-v64df_acosh.$(OBJEXT) \
+@@ -3379,8 +3381,8 @@
+ @HAVE_LIBM_MACHINE_AMDGCN_TRUE@	libm/machine/amdgcn/libm_a-v64sf_tan.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_AMDGCN_TRUE@	libm/machine/amdgcn/libm_a-v64sf_tanh.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_AMDGCN_TRUE@	libm/machine/amdgcn/libm_a-v64sf_tgamma.$(OBJEXT)
+-@HAVE_LIBM_MACHINE_AMDGCN_TRUE@am__objects_165 = $(am__objects_164)
+-@HAVE_LIBM_MACHINE_ARM_TRUE@am__objects_166 = libm/machine/arm/libm_a-e_sqrt.$(OBJEXT) \
++@HAVE_LIBM_MACHINE_AMDGCN_TRUE@am__objects_167 = $(am__objects_166)
++@HAVE_LIBM_MACHINE_ARM_TRUE@am__objects_168 = libm/machine/arm/libm_a-e_sqrt.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_ARM_TRUE@	libm/machine/arm/libm_a-ef_sqrt.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_ARM_TRUE@	libm/machine/arm/libm_a-s_ceil.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_ARM_TRUE@	libm/machine/arm/libm_a-s_floor.$(OBJEXT) \
+@@ -3411,8 +3413,8 @@
+ @HAVE_LIBM_MACHINE_ARM_TRUE@	libm/machine/arm/libm_a-feupdateenv.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_ARM_TRUE@	libm/machine/arm/libm_a-feenableexcept.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_ARM_TRUE@	libm/machine/arm/libm_a-fedisableexcept.$(OBJEXT)
+-@HAVE_LIBM_MACHINE_ARM_TRUE@am__objects_167 = $(am__objects_166)
+-@HAVE_LIBM_MACHINE_I386_TRUE@am__objects_168 = libm/machine/i386/libm_a-f_atan2.$(OBJEXT) \
++@HAVE_LIBM_MACHINE_ARM_TRUE@am__objects_169 = $(am__objects_168)
++@HAVE_LIBM_MACHINE_I386_TRUE@am__objects_170 = libm/machine/i386/libm_a-f_atan2.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_I386_TRUE@	libm/machine/i386/libm_a-f_atan2f.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_I386_TRUE@	libm/machine/i386/libm_a-f_exp.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_I386_TRUE@	libm/machine/i386/libm_a-f_expf.$(OBJEXT) \
+@@ -3449,8 +3451,8 @@
+ @HAVE_LIBM_MACHINE_I386_TRUE@	libm/machine/i386/libm_a-fesetround.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_I386_TRUE@	libm/machine/i386/libm_a-fetestexcept.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_I386_TRUE@	libm/machine/i386/libm_a-feupdateenv.$(OBJEXT)
+-@HAVE_LIBM_MACHINE_I386_TRUE@am__objects_169 = $(am__objects_168)
+-@HAVE_LIBM_MACHINE_I386_FALSE@@HAVE_LIBM_MACHINE_X86_64_TRUE@am__objects_170 = libm/ld80/libm_a-b_tgammal.$(OBJEXT) \
++@HAVE_LIBM_MACHINE_I386_TRUE@am__objects_171 = $(am__objects_170)
++@HAVE_LIBM_MACHINE_I386_FALSE@@HAVE_LIBM_MACHINE_X86_64_TRUE@am__objects_172 = libm/ld80/libm_a-b_tgammal.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_I386_FALSE@@HAVE_LIBM_MACHINE_X86_64_TRUE@	libm/ld80/libm_a-e_powl.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_I386_FALSE@@HAVE_LIBM_MACHINE_X86_64_TRUE@	libm/ld80/libm_a-s_erfl.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_I386_FALSE@@HAVE_LIBM_MACHINE_X86_64_TRUE@	libm/ld80/libm_a-s_exp2l.$(OBJEXT) \
+@@ -3463,7 +3465,7 @@
+ @HAVE_LIBM_MACHINE_I386_FALSE@@HAVE_LIBM_MACHINE_X86_64_TRUE@	libm/ld80/libm_a-k_cosl.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_I386_FALSE@@HAVE_LIBM_MACHINE_X86_64_TRUE@	libm/ld80/libm_a-k_sinl.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_I386_FALSE@@HAVE_LIBM_MACHINE_X86_64_TRUE@	libm/ld80/libm_a-k_tanl.$(OBJEXT)
+-@HAVE_LIBM_MACHINE_I386_TRUE@am__objects_170 = libm/ld80/libm_a-b_tgammal.$(OBJEXT) \
++@HAVE_LIBM_MACHINE_I386_TRUE@am__objects_172 = libm/ld80/libm_a-b_tgammal.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_I386_TRUE@	libm/ld80/libm_a-e_powl.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_I386_TRUE@	libm/ld80/libm_a-s_erfl.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_I386_TRUE@	libm/ld80/libm_a-s_exp2l.$(OBJEXT) \
+@@ -3476,8 +3478,8 @@
+ @HAVE_LIBM_MACHINE_I386_TRUE@	libm/ld80/libm_a-k_cosl.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_I386_TRUE@	libm/ld80/libm_a-k_sinl.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_I386_TRUE@	libm/ld80/libm_a-k_tanl.$(OBJEXT)
+-@HAVE_LIBM_MACHINE_I386_TRUE@@HAVE_LONG_DOUBLE_TRUE@am__objects_171 = $(am__objects_170)
+-@HAVE_LIBM_MACHINE_MIPS_TRUE@am__objects_172 = libm/machine/mips/libm_a-feclearexcept.$(OBJEXT) \
++@HAVE_LIBM_MACHINE_I386_TRUE@@HAVE_LONG_DOUBLE_TRUE@am__objects_173 = $(am__objects_172)
++@HAVE_LIBM_MACHINE_MIPS_TRUE@am__objects_174 = libm/machine/mips/libm_a-feclearexcept.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_MIPS_TRUE@	libm/machine/mips/libm_a-fegetenv.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_MIPS_TRUE@	libm/machine/mips/libm_a-fegetexceptflag.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_MIPS_TRUE@	libm/machine/mips/libm_a-fegetround.$(OBJEXT) \
+@@ -3489,13 +3491,13 @@
+ @HAVE_LIBM_MACHINE_MIPS_TRUE@	libm/machine/mips/libm_a-fetestexcept.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_MIPS_TRUE@	libm/machine/mips/libm_a-feupdateenv.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_MIPS_TRUE@	libm/machine/mips/libm_a-fenv.$(OBJEXT)
+-@HAVE_LIBM_MACHINE_MIPS_TRUE@am__objects_173 = $(am__objects_172)
+-@HAS_NDS32_FPU_SP_TRUE@@HAVE_LIBM_MACHINE_NDS32_TRUE@am__objects_174 = libm/machine/nds32/libm_a-wf_sqrt.$(OBJEXT)
+-@HAS_NDS32_FPU_DP_TRUE@@HAVE_LIBM_MACHINE_NDS32_TRUE@am__objects_175 = libm/machine/nds32/libm_a-w_sqrt.$(OBJEXT)
+-@HAVE_LIBM_MACHINE_NDS32_TRUE@am__objects_176 = $(am__objects_174) \
+-@HAVE_LIBM_MACHINE_NDS32_TRUE@	$(am__objects_175)
+-@HAVE_LIBM_MACHINE_NDS32_TRUE@am__objects_177 = $(am__objects_176)
+-@HAVE_LIBM_MACHINE_POWERPC_TRUE@am__objects_178 = libm/machine/powerpc/libm_a-feclearexcept.$(OBJEXT) \
++@HAVE_LIBM_MACHINE_MIPS_TRUE@am__objects_175 = $(am__objects_174)
++@HAS_NDS32_FPU_SP_TRUE@@HAVE_LIBM_MACHINE_NDS32_TRUE@am__objects_176 = libm/machine/nds32/libm_a-wf_sqrt.$(OBJEXT)
++@HAS_NDS32_FPU_DP_TRUE@@HAVE_LIBM_MACHINE_NDS32_TRUE@am__objects_177 = libm/machine/nds32/libm_a-w_sqrt.$(OBJEXT)
++@HAVE_LIBM_MACHINE_NDS32_TRUE@am__objects_178 = $(am__objects_176) \
++@HAVE_LIBM_MACHINE_NDS32_TRUE@	$(am__objects_177)
++@HAVE_LIBM_MACHINE_NDS32_TRUE@am__objects_179 = $(am__objects_178)
++@HAVE_LIBM_MACHINE_POWERPC_TRUE@am__objects_180 = libm/machine/powerpc/libm_a-feclearexcept.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_POWERPC_TRUE@	libm/machine/powerpc/libm_a-fegetenv.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_POWERPC_TRUE@	libm/machine/powerpc/libm_a-fegetexceptflag.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_POWERPC_TRUE@	libm/machine/powerpc/libm_a-fegetround.$(OBJEXT) \
+@@ -3507,8 +3509,8 @@
+ @HAVE_LIBM_MACHINE_POWERPC_TRUE@	libm/machine/powerpc/libm_a-fesetround.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_POWERPC_TRUE@	libm/machine/powerpc/libm_a-fetestexcept.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_POWERPC_TRUE@	libm/machine/powerpc/libm_a-feupdateenv.$(OBJEXT)
+-@HAVE_LIBM_MACHINE_POWERPC_TRUE@am__objects_179 = $(am__objects_178)
+-@HAVE_LIBM_MACHINE_PRU_TRUE@am__objects_180 = libm/machine/pru/libm_a-fpclassify.$(OBJEXT) \
++@HAVE_LIBM_MACHINE_POWERPC_TRUE@am__objects_181 = $(am__objects_180)
++@HAVE_LIBM_MACHINE_PRU_TRUE@am__objects_182 = libm/machine/pru/libm_a-fpclassify.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_PRU_TRUE@	libm/machine/pru/libm_a-fpclassifyf.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_PRU_TRUE@	libm/machine/pru/libm_a-isfinite.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_PRU_TRUE@	libm/machine/pru/libm_a-isfinitef.$(OBJEXT) \
+@@ -3518,8 +3520,8 @@
+ @HAVE_LIBM_MACHINE_PRU_TRUE@	libm/machine/pru/libm_a-isnanf.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_PRU_TRUE@	libm/machine/pru/libm_a-isnormal.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_PRU_TRUE@	libm/machine/pru/libm_a-isnormalf.$(OBJEXT)
+-@HAVE_LIBM_MACHINE_PRU_TRUE@am__objects_181 = $(am__objects_180)
+-@HAVE_LIBM_MACHINE_SPARC_TRUE@am__objects_182 = libm/machine/sparc/libm_a-feclearexcept.$(OBJEXT) \
++@HAVE_LIBM_MACHINE_PRU_TRUE@am__objects_183 = $(am__objects_182)
++@HAVE_LIBM_MACHINE_SPARC_TRUE@am__objects_184 = libm/machine/sparc/libm_a-feclearexcept.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_SPARC_TRUE@	libm/machine/sparc/libm_a-fegetenv.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_SPARC_TRUE@	libm/machine/sparc/libm_a-fegetexceptflag.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_SPARC_TRUE@	libm/machine/sparc/libm_a-fegetround.$(OBJEXT) \
+@@ -3531,8 +3533,8 @@
+ @HAVE_LIBM_MACHINE_SPARC_TRUE@	libm/machine/sparc/libm_a-fetestexcept.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_SPARC_TRUE@	libm/machine/sparc/libm_a-feupdateenv.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_SPARC_TRUE@	libm/machine/sparc/libm_a-fenv.$(OBJEXT)
+-@HAVE_LIBM_MACHINE_SPARC_TRUE@am__objects_183 = $(am__objects_182)
+-@HAVE_LIBM_MACHINE_SPU_TRUE@am__objects_184 = libm/machine/spu/libm_a-feclearexcept.$(OBJEXT) \
++@HAVE_LIBM_MACHINE_SPARC_TRUE@am__objects_185 = $(am__objects_184)
++@HAVE_LIBM_MACHINE_SPU_TRUE@am__objects_186 = libm/machine/spu/libm_a-feclearexcept.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_SPU_TRUE@	libm/machine/spu/libm_a-fe_dfl_env.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_SPU_TRUE@	libm/machine/spu/libm_a-fegetenv.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_SPU_TRUE@	libm/machine/spu/libm_a-fegetexceptflag.$(OBJEXT) \
+@@ -3657,8 +3659,8 @@
+ @HAVE_LIBM_MACHINE_SPU_TRUE@	libm/machine/spu/libm_a-w_sinh.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_SPU_TRUE@	libm/machine/spu/libm_a-w_sqrt.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_SPU_TRUE@	libm/machine/spu/libm_a-w_tgamma.$(OBJEXT)
+-@HAVE_LIBM_MACHINE_SPU_TRUE@am__objects_185 = $(am__objects_184)
+-@HAVE_LIBM_MACHINE_RISCV_TRUE@am__objects_186 = libm/machine/riscv/libm_a-feclearexcept.$(OBJEXT) \
++@HAVE_LIBM_MACHINE_SPU_TRUE@am__objects_187 = $(am__objects_186)
++@HAVE_LIBM_MACHINE_RISCV_TRUE@am__objects_188 = libm/machine/riscv/libm_a-feclearexcept.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_RISCV_TRUE@	libm/machine/riscv/libm_a-fe_dfl_env.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_RISCV_TRUE@	libm/machine/riscv/libm_a-fegetenv.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_RISCV_TRUE@	libm/machine/riscv/libm_a-fegetexceptflag.$(OBJEXT) \
+@@ -3698,9 +3700,9 @@
+ @HAVE_LIBM_MACHINE_RISCV_TRUE@	libm/machine/riscv/libm_a-sf_llrint.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_RISCV_TRUE@	libm/machine/riscv/libm_a-s_llround.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_RISCV_TRUE@	libm/machine/riscv/libm_a-sf_llround.$(OBJEXT)
+-@HAVE_LIBM_MACHINE_RISCV_TRUE@am__objects_187 = $(am__objects_186)
+-@HAVE_LIBM_MACHINE_RISCV_TRUE@@HAVE_LONG_DOUBLE_TRUE@am__objects_188 = $(am__objects_162)
+-@HAVE_LIBM_MACHINE_X86_64_TRUE@am__objects_189 = libm/machine/x86_64/libm_a-feclearexcept.$(OBJEXT) \
++@HAVE_LIBM_MACHINE_RISCV_TRUE@am__objects_189 = $(am__objects_188)
++@HAVE_LIBM_MACHINE_RISCV_TRUE@@HAVE_LONG_DOUBLE_TRUE@am__objects_190 = $(am__objects_164)
++@HAVE_LIBM_MACHINE_X86_64_TRUE@am__objects_191 = libm/machine/x86_64/libm_a-feclearexcept.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_X86_64_TRUE@	libm/machine/x86_64/libm_a-fegetenv.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_X86_64_TRUE@	libm/machine/x86_64/libm_a-fegetexceptflag.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_X86_64_TRUE@	libm/machine/x86_64/libm_a-fegetround.$(OBJEXT) \
+@@ -3712,10 +3714,10 @@
+ @HAVE_LIBM_MACHINE_X86_64_TRUE@	libm/machine/x86_64/libm_a-fesetround.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_X86_64_TRUE@	libm/machine/x86_64/libm_a-fetestexcept.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_X86_64_TRUE@	libm/machine/x86_64/libm_a-feupdateenv.$(OBJEXT)
+-@HAVE_LIBM_MACHINE_X86_64_TRUE@am__objects_190 = $(am__objects_189)
+-@HAVE_LIBM_MACHINE_X86_64_TRUE@@HAVE_LONG_DOUBLE_TRUE@am__objects_191 = $(am__objects_170)
+-@HAVE_LIBM_MACHINE_XTENSA_TRUE@@XTENSA_XCHAL_HAVE_FP_SQRT_TRUE@am__objects_192 = libm/machine/xtensa/libm_a-ef_sqrt.$(OBJEXT)
+-@HAVE_LIBM_MACHINE_XTENSA_TRUE@am__objects_193 = libm/machine/xtensa/libm_a-feclearexcept.$(OBJEXT) \
++@HAVE_LIBM_MACHINE_X86_64_TRUE@am__objects_192 = $(am__objects_191)
++@HAVE_LIBM_MACHINE_X86_64_TRUE@@HAVE_LONG_DOUBLE_TRUE@am__objects_193 = $(am__objects_172)
++@HAVE_LIBM_MACHINE_XTENSA_TRUE@@XTENSA_XCHAL_HAVE_FP_SQRT_TRUE@am__objects_194 = libm/machine/xtensa/libm_a-ef_sqrt.$(OBJEXT)
++@HAVE_LIBM_MACHINE_XTENSA_TRUE@am__objects_195 = libm/machine/xtensa/libm_a-feclearexcept.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_XTENSA_TRUE@	libm/machine/xtensa/libm_a-fegetenv.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_XTENSA_TRUE@	libm/machine/xtensa/libm_a-fegetexcept.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_XTENSA_TRUE@	libm/machine/xtensa/libm_a-fegetexceptflag.$(OBJEXT) \
+@@ -3724,18 +3726,18 @@
+ @HAVE_LIBM_MACHINE_XTENSA_TRUE@	libm/machine/xtensa/libm_a-feraiseexcept.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_XTENSA_TRUE@	libm/machine/xtensa/libm_a-fetestexcept.$(OBJEXT) \
+ @HAVE_LIBM_MACHINE_XTENSA_TRUE@	libm/machine/xtensa/libm_a-feupdateenv.$(OBJEXT) \
+-@HAVE_LIBM_MACHINE_XTENSA_TRUE@	$(am__objects_192)
+-@HAVE_LIBM_MACHINE_XTENSA_TRUE@am__objects_194 = $(am__objects_193)
+-am_libm_a_OBJECTS = $(am__objects_145) $(am__objects_149) \
+-	$(am__objects_150) $(am__objects_151) $(am__objects_153) \
+-	$(am__objects_155) $(am__objects_156) $(am__objects_157) \
+-	$(am__objects_158) $(am__objects_159) $(am__objects_161) \
+-	$(am__objects_163) $(am__objects_165) $(am__objects_167) \
+-	$(am__objects_169) $(am__objects_171) $(am__objects_173) \
+-	$(am__objects_177) $(am__objects_179) $(am__objects_181) \
+-	$(am__objects_183) $(am__objects_185) $(am__objects_187) \
+-	$(am__objects_188) $(am__objects_190) $(am__objects_191) \
+-	$(am__objects_194)
++@HAVE_LIBM_MACHINE_XTENSA_TRUE@	$(am__objects_194)
++@HAVE_LIBM_MACHINE_XTENSA_TRUE@am__objects_196 = $(am__objects_195)
++am_libm_a_OBJECTS = $(am__objects_147) $(am__objects_151) \
++	$(am__objects_152) $(am__objects_153) $(am__objects_155) \
++	$(am__objects_157) $(am__objects_158) $(am__objects_159) \
++	$(am__objects_160) $(am__objects_161) $(am__objects_163) \
++	$(am__objects_165) $(am__objects_167) $(am__objects_169) \
++	$(am__objects_171) $(am__objects_173) $(am__objects_175) \
++	$(am__objects_179) $(am__objects_181) $(am__objects_183) \
++	$(am__objects_185) $(am__objects_187) $(am__objects_189) \
++	$(am__objects_190) $(am__objects_192) $(am__objects_193) \
++	$(am__objects_196)
+ libm_a_OBJECTS = $(am_libm_a_OBJECTS)
+ am_libm_test_test_OBJECTS = libm/test/test.$(OBJEXT) \
+ 	libm/test/string.$(OBJEXT) libm/test/convert.$(OBJEXT) \
+@@ -4089,7 +4091,7 @@
+ AM_CFLAGS = $(AM_CFLAGS_$(subst /,_,$(@D))) $(AM_CFLAGS_$(subst /,_,$(@D)_$(<F)))
+ AM_CCASFLAGS = $(AM_CCASFLAGS_$(subst /,_,$(@D))) $(AM_CCASFLAGS_$(subst /,_,$(@D)_$(<F)))
+ AM_CPPFLAGS = $(NEWLIB_CFLAGS) $(TARGET_CFLAGS) $(AM_CPPFLAGS_$(subst /,_,$(@D))) $(AM_CPPFLAGS_$(subst /,_,$(@D)_$(<F))) -idirafter $(srcroot)/include
+-toollib_LIBRARIES = libm.a libc.a $(am__append_73)
++toollib_LIBRARIES = libm.a libc.a $(am__append_74)
+ @HAVE_MULTISUBDIR_TRUE@BUILD_MULTISUBDIR = $(builddir)$(MULTISUBDIR)
+ toollib_DATA = $(CRT0) $(CRT1)
+ AWK_UNIQUE_OBJS = $(AWK) '{ \
+@@ -4254,47 +4256,47 @@
+ 	$(am__append_44) $(am__append_45) $(am__append_46) \
+ 	$(am__append_47) $(am__append_48) $(am__append_49) \
+ 	$(am__append_50) $(am__append_51) $(am__append_52) \
+-	$(am__append_53) $(am__append_54) $(am__append_55) \
+-	$(am__append_56) $(am__append_57) $(am__append_58) \
+-	$(am__append_59) $(am__append_60) $(am__append_61) \
+-	$(am__append_62) $(am__append_63) $(am__append_64) \
+-	$(am__append_65) $(am__append_66) $(am__append_67) \
+-	$(am__append_68) $(am__append_69) $(am__append_70) \
+-	$(am__append_71) $(am__append_72) $(am__append_74) \
+-	$(am__append_75) $(am__append_76) $(am__append_77) \
+-	$(am__append_78) $(am__append_79) $(am__append_80) \
+-	$(am__append_81) $(am__append_82) $(am__append_83) \
+-	$(am__append_84) $(am__append_85) $(am__append_86) \
+-	$(am__append_87) $(am__append_88) $(am__append_89) \
+-	$(am__append_90) $(am__append_91) $(am__append_92) \
+-	$(am__append_93) $(am__append_94) $(am__append_95) \
+-	$(am__append_96) $(am__append_97) $(am__append_98) \
+-	$(am__append_99) $(am__append_100) $(am__append_101) \
+-	$(am__append_102) $(am__append_103) $(am__append_104) \
+-	$(am__append_105) $(am__append_106) $(am__append_107) \
+-	$(am__append_108) $(am__append_109) $(am__append_110) \
+-	$(am__append_111) $(am__append_112) $(am__append_113) \
+-	$(am__append_114) $(am__append_115) $(am__append_116) \
+-	$(am__append_117) $(am__append_118) $(am__append_119) \
+-	$(am__append_120) $(am__append_121) $(am__append_122) \
+-	$(am__append_123) $(am__append_124) $(am__append_125) \
+-	$(am__append_126) $(am__append_127) $(am__append_128) \
+-	$(am__append_129) $(am__append_130) $(am__append_131) \
+-	$(am__append_132)
++	$(am__append_53) $(am__append_55) $(am__append_56) \
++	$(am__append_57) $(am__append_58) $(am__append_59) \
++	$(am__append_60) $(am__append_61) $(am__append_62) \
++	$(am__append_63) $(am__append_64) $(am__append_65) \
++	$(am__append_66) $(am__append_67) $(am__append_68) \
++	$(am__append_69) $(am__append_70) $(am__append_71) \
++	$(am__append_72) $(am__append_73) $(am__append_75) \
++	$(am__append_76) $(am__append_77) $(am__append_78) \
++	$(am__append_79) $(am__append_80) $(am__append_81) \
++	$(am__append_82) $(am__append_83) $(am__append_84) \
++	$(am__append_85) $(am__append_86) $(am__append_87) \
++	$(am__append_88) $(am__append_89) $(am__append_90) \
++	$(am__append_91) $(am__append_92) $(am__append_93) \
++	$(am__append_94) $(am__append_95) $(am__append_96) \
++	$(am__append_97) $(am__append_98) $(am__append_99) \
++	$(am__append_100) $(am__append_101) $(am__append_102) \
++	$(am__append_103) $(am__append_104) $(am__append_105) \
++	$(am__append_106) $(am__append_107) $(am__append_108) \
++	$(am__append_109) $(am__append_110) $(am__append_111) \
++	$(am__append_112) $(am__append_113) $(am__append_114) $(am__append_115) \
++	$(am__append_116) $(am__append_117) $(am__append_118) \
++	$(am__append_119) $(am__append_120) $(am__append_121) \
++	$(am__append_122) $(am__append_123) $(am__append_124) \
++	$(am__append_125) $(am__append_126) $(am__append_127) \
++	$(am__append_128) $(am__append_129) $(am__append_130) \
++	$(am__append_131) $(am__append_132) $(am__append_133) \
++	$(am__append_134)
+ libc_a_CFLAGS = $(AM_CFLAGS) $(libc_a_CFLAGS_$(subst /,_,$(@D))) $(libc_a_CFLAGS_$(subst /,_,$(@D)_$(<F)))
+ libc_a_CCASFLAGS = $(AM_CCASFLAGS) $(libc_a_CCASFLAGS_$(subst /,_,$(@D))) $(libc_a_CCASFLAGS_$(subst /,_,$(@D)_$(<F)))
+ libc_a_CPPFLAGS = $(AM_CPPFLAGS) $(libc_a_CPPFLAGS_$(subst /,_,$(@D))) $(libc_a_CPPFLAGS_$(subst /,_,$(@D)_$(<F)))
+ libc_a_DEPENDENCIES = stamp-libc-math-objects
+-libm_a_SOURCES = $(am__append_133) $(am__append_136) \
+-	$(libm_common_src) $(libm_common_fsrc) $(am__append_139) \
+-	$(am__append_140) $(libm_complex_src) $(libm_complex_fsrc) \
+-	$(libm_complex_lsrc) $(libm_fenv_src) $(am__append_143) \
+-	$(am__append_144) $(am__append_147) $(am__append_148) \
+-	$(am__append_149) $(am__append_150) $(am__append_153) \
+-	$(am__append_156) $(am__append_157) $(am__append_158) \
+-	$(am__append_159) $(am__append_160) $(am__append_161) \
+-	$(am__append_162) $(am__append_165) $(am__append_166) \
+-	$(am__append_170)
++libm_a_SOURCES = $(am__append_135) $(am__append_138) \
++	$(libm_common_src) $(libm_common_fsrc) $(am__append_141) \
++	$(am__append_142) $(libm_complex_src) $(libm_complex_fsrc) \
++	$(libm_complex_lsrc) $(libm_fenv_src) $(am__append_145) \
++	$(am__append_146) $(am__append_149) $(am__append_150) \
++	$(am__append_151) $(am__append_152) $(am__append_155) \
++	$(am__append_158) $(am__append_159) $(am__append_160) \
++	$(am__append_161) $(am__append_162) $(am__append_163) \
++	$(am__append_164) $(am__append_167) $(am__append_168) \
++	$(am__append_172)
+ libm_a_CFLAGS = $(AM_CFLAGS) $(libm_a_CFLAGS_$(subst /,_,$(@D))) $(libm_a_CFLAGS_$(subst /,_,$(@D)_$(<F)))
+ libm_a_CCASFLAGS = $(AM_CCASFLAGS) $(libm_a_CCASFLAGS_$(subst /,_,$(@D))) $(libm_a_CCASFLAGS_$(subst /,_,$(@D)_$(<F)))
+ libm_a_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/libm/common $(libm_a_CPPFLAGS_$(subst /,_,$(@D))) $(libm_a_CPPFLAGS_$(subst /,_,$(@D)_$(<F)))
+@@ -4697,7 +4699,7 @@
+ @HAVE_LIBC_MACHINE_XTENSA_TRUE@@XTENSA_ESP32_PSRAM_CACHE_FIX_TRUE@	-DXTENSA_ESP32_PSRAM_CACHE_FIX
+ 
+ libm_libm_TEXINFOS = libm/targetdep.tex $(LIBM_CHEWOUT_FILES)
+-LIBM_CHEWOUT_FILES = $(am__append_134) $(am__append_137) \
++LIBM_CHEWOUT_FILES = $(am__append_136) $(am__append_139) \
+ 	libm/common/s_cbrt.def libm/common/s_copysign.def \
+ 	libm/common/s_exp10.def libm/common/s_expm1.def \
+ 	libm/common/s_ilogb.def libm/common/s_infinity.def \
+@@ -4712,7 +4714,7 @@
+ 	libm/common/s_remquo.def libm/common/s_rint.def \
+ 	libm/common/s_round.def libm/common/s_signbit.def \
+ 	libm/common/s_trunc.def libm/common/isgreater.def \
+-	$(am__append_141) libm/complex/cabs.def libm/complex/cacos.def \
++	$(am__append_143) libm/complex/cabs.def libm/complex/cacos.def \
+ 	libm/complex/cacosh.def libm/complex/carg.def \
+ 	libm/complex/casin.def libm/complex/casinh.def \
+ 	libm/complex/catan.def libm/complex/catanh.def \
+@@ -4729,11 +4731,11 @@
+ 	libm/fenv/feraiseexcept.def libm/fenv/fesetenv.def \
+ 	libm/fenv/fesetexceptflag.def libm/fenv/fesetround.def \
+ 	libm/fenv/fetestexcept.def libm/fenv/feupdateenv.def \
+-	$(am__append_145) $(am__append_151) $(am__append_163) \
+-	$(am__append_167)
+-LIBM_CHAPTERS = $(am__append_135) $(am__append_138) $(am__append_142) \
+-	libm/complex/complex.tex libm/fenv/fenv.tex $(am__append_146) \
+-	$(am__append_152) $(am__append_164) $(am__append_168)
++	$(am__append_147) $(am__append_153) $(am__append_165) \
++	$(am__append_169)
++LIBM_CHAPTERS = $(am__append_137) $(am__append_140) $(am__append_144) \
++	libm/complex/complex.tex libm/fenv/fenv.tex $(am__append_148) \
++	$(am__append_154) $(am__append_166) $(am__append_170)
+ LIBM_DOCBOOK_OUT_FILES = $(LIBM_CHEWOUT_FILES:.def=.xml)
+ @NEWLIB_HW_FP_TRUE@libm_mathfp_src = \
+ @NEWLIB_HW_FP_TRUE@	libm/mathfp/s_acos.c libm/mathfp/s_frexp.c libm/mathfp/s_mathcnst.c \
+@@ -5273,8 +5275,8 @@
+ # fenv.c cannot be compiled as mips16 since it uses the cfc1 instruction.
+ @HAVE_LIBM_MACHINE_MIPS_TRUE@libm_a_CFLAGS_libm_machine_mips_fenv.c = -mno-mips16
+ @HAVE_LIBM_MACHINE_NDS32_TRUE@libm_machine_nds32_src =  \
+-@HAVE_LIBM_MACHINE_NDS32_TRUE@	$(am__append_154) \
+-@HAVE_LIBM_MACHINE_NDS32_TRUE@	$(am__append_155)
++@HAVE_LIBM_MACHINE_NDS32_TRUE@	$(am__append_156) \
++@HAVE_LIBM_MACHINE_NDS32_TRUE@	$(am__append_157)
+ @HAVE_LIBM_MACHINE_POWERPC_TRUE@libm_machine_powerpc_src = \
+ @HAVE_LIBM_MACHINE_POWERPC_TRUE@	libm/machine/powerpc/feclearexcept.c libm/machine/powerpc/fegetenv.c libm/machine/powerpc/fegetexceptflag.c \
+ @HAVE_LIBM_MACHINE_POWERPC_TRUE@	libm/machine/powerpc/fegetround.c libm/machine/powerpc/feholdexcept.c libm/machine/powerpc/fenv.c libm/machine/powerpc/feraiseexcept.c libm/machine/powerpc/fesetenv.c \
+@@ -5345,7 +5347,7 @@
+ @HAVE_LIBM_MACHINE_XTENSA_TRUE@	libm/machine/xtensa/feraiseexcept.c \
+ @HAVE_LIBM_MACHINE_XTENSA_TRUE@	libm/machine/xtensa/fetestexcept.c \
+ @HAVE_LIBM_MACHINE_XTENSA_TRUE@	libm/machine/xtensa/feupdateenv.c \
+-@HAVE_LIBM_MACHINE_XTENSA_TRUE@	$(am__append_169)
++@HAVE_LIBM_MACHINE_XTENSA_TRUE@	$(am__append_171)
+ @HAVE_LIBM_MACHINE_XTENSA_TRUE@libm_a_CFLAGS_libm_machine_xtensa = -D_LIBM
+ all: newlib.h _newlib_version.h
+ 	$(MAKE) $(AM_MAKEFLAGS) all-am
+@@ -9161,6 +9163,15 @@
+ libc/machine/pru/libc_a-setjmp.$(OBJEXT):  \
+ 	libc/machine/pru/$(am__dirstamp) \
+ 	libc/machine/pru/$(DEPDIR)/$(am__dirstamp)
++libc/machine/r5900/$(am__dirstamp):
++	@$(MKDIR_P) libc/machine/r5900
++	@: > libc/machine/r5900/$(am__dirstamp)
++libc/machine/r5900/$(DEPDIR)/$(am__dirstamp):
++	@$(MKDIR_P) libc/machine/r5900/$(DEPDIR)
++	@: > libc/machine/r5900/$(DEPDIR)/$(am__dirstamp)
++libc/machine/r5900/libc_a-setjmp.$(OBJEXT):  \
++	libc/machine/r5900/$(am__dirstamp) \
++	libc/machine/r5900/$(DEPDIR)/$(am__dirstamp)
+ libc/machine/riscv/$(am__dirstamp):
+ 	@$(MKDIR_P) libc/machine/riscv
+ 	@: > libc/machine/riscv/$(am__dirstamp)
+@@ -13158,6 +13169,7 @@
+ @AMDEP_TRUE@@am__include@ @am__quote@libc/machine/powerpc/$(DEPDIR)/libc_a-vec_reallocr.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@libc/machine/powerpc/$(DEPDIR)/libc_a-vfprintf.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@libc/machine/powerpc/$(DEPDIR)/libc_a-vfscanf.Po@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@libc/machine/r5900/$(DEPDIR)/libc_a-setjmp.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@libc/machine/riscv/$(DEPDIR)/libc_a-ffs.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@libc/machine/riscv/$(DEPDIR)/libc_a-ieeefp.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@libc/machine/riscv/$(DEPDIR)/libc_a-memchr.Po@am__quote@
+@@ -19163,6 +19175,21 @@
+ @AMDEP_TRUE@@am__fastdepCCAS_FALSE@	DEPDIR=$(DEPDIR) $(CCASDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+ @am__fastdepCCAS_FALSE@	$(AM_V_CPPAS@am__nodep@)$(CCAS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libc_a_CPPFLAGS) $(CPPFLAGS) $(libc_a_CCASFLAGS) $(CCASFLAGS) -c -o libc/machine/powerpc/libc_a-setjmp.obj `if test -f 'libc/machine/powerpc/setjmp.S'; then $(CYGPATH_W) 'libc/machine/powerpc/setjmp.S'; else $(CYGPATH_W) '$(srcdir)/libc/machine/powerpc/setjmp.S'; fi`
+ 
++
++libc/machine/r5900/libc_a-setjmp.o: libc/machine/r5900/setjmp.S
++@am__fastdepCCAS_TRUE@	$(AM_V_CPPAS)$(CCAS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libc_a_CPPFLAGS) $(CPPFLAGS) $(libc_a_CCASFLAGS) $(CCASFLAGS) -MT libc/machine/r5900/libc_a-setjmp.o -MD -MP -MF libc/machine/r5900/$(DEPDIR)/libc_a-setjmp.Tpo -c -o libc/machine/r5900/libc_a-setjmp.o `test -f 'libc/machine/r5900/setjmp.S' || echo '$(srcdir)/'`libc/machine/r5900/setjmp.S
++@am__fastdepCCAS_TRUE@	$(AM_V_at)$(am__mv) libc/machine/r5900/$(DEPDIR)/libc_a-setjmp.Tpo libc/machine/r5900/$(DEPDIR)/libc_a-setjmp.Po
++@AMDEP_TRUE@@am__fastdepCCAS_FALSE@	$(AM_V_CPPAS)source='libc/machine/r5900/setjmp.S' object='libc/machine/r5900/libc_a-setjmp.o' libtool=no @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCCAS_FALSE@	DEPDIR=$(DEPDIR) $(CCASDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCCAS_FALSE@	$(AM_V_CPPAS@am__nodep@)$(CCAS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libc_a_CPPFLAGS) $(CPPFLAGS) $(libc_a_CCASFLAGS) $(CCASFLAGS) -c -o libc/machine/r5900/libc_a-setjmp.o `test -f 'libc/machine/r5900/setjmp.S' || echo '$(srcdir)/'`libc/machine/r5900/setjmp.S
++
++libc/machine/r5900/libc_a-setjmp.obj: libc/machine/r5900/setjmp.S
++@am__fastdepCCAS_TRUE@	$(AM_V_CPPAS)$(CCAS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libc_a_CPPFLAGS) $(CPPFLAGS) $(libc_a_CCASFLAGS) $(CCASFLAGS) -MT libc/machine/r5900/libc_a-setjmp.obj -MD -MP -MF libc/machine/r5900/$(DEPDIR)/libc_a-setjmp.Tpo -c -o libc/machine/r5900/libc_a-setjmp.obj `if test -f 'libc/machine/r5900/setjmp.S'; then $(CYGPATH_W) 'libc/machine/r5900/setjmp.S'; else $(CYGPATH_W) '$(srcdir)/libc/machine/r5900/setjmp.S'; fi`
++@am__fastdepCCAS_TRUE@	$(AM_V_at)$(am__mv) libc/machine/r5900/$(DEPDIR)/libc_a-setjmp.Tpo libc/machine/r5900/$(DEPDIR)/libc_a-setjmp.Po
++@AMDEP_TRUE@@am__fastdepCCAS_FALSE@	$(AM_V_CPPAS)source='libc/machine/r5900/setjmp.S' object='libc/machine/r5900/libc_a-setjmp.obj' libtool=no @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCCAS_FALSE@	DEPDIR=$(DEPDIR) $(CCASDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCCAS_FALSE@	$(AM_V_CPPAS@am__nodep@)$(CCAS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libc_a_CPPFLAGS) $(CPPFLAGS) $(libc_a_CCASFLAGS) $(CCASFLAGS) -c -o libc/machine/r5900/libc_a-setjmp.obj `if test -f 'libc/machine/r5900/setjmp.S'; then $(CYGPATH_W) 'libc/machine/r5900/setjmp.S'; else $(CYGPATH_W) '$(srcdir)/libc/machine/r5900/setjmp.S'; fi`
++
+ libc/machine/riscv/libc_a-memmove-asm.o: libc/machine/riscv/memmove-asm.S
+ @am__fastdepCCAS_TRUE@	$(AM_V_CPPAS)$(CCAS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libc_a_CPPFLAGS) $(CPPFLAGS) $(libc_a_CCASFLAGS) $(CCASFLAGS) -MT libc/machine/riscv/libc_a-memmove-asm.o -MD -MP -MF libc/machine/riscv/$(DEPDIR)/libc_a-memmove-asm.Tpo -c -o libc/machine/riscv/libc_a-memmove-asm.o `test -f 'libc/machine/riscv/memmove-asm.S' || echo '$(srcdir)/'`libc/machine/riscv/memmove-asm.S
+ @am__fastdepCCAS_TRUE@	$(AM_V_at)$(am__mv) libc/machine/riscv/$(DEPDIR)/libc_a-memmove-asm.Tpo libc/machine/riscv/$(DEPDIR)/libc_a-memmove-asm.Po
+@@ -31835,6 +31862,7 @@
+ @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+ @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libc_a_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -c -o libc/sys/or1k/libc_a-mlock.obj `if test -f 'libc/sys/or1k/mlock.c'; then $(CYGPATH_W) 'libc/sys/or1k/mlock.c'; else $(CYGPATH_W) '$(srcdir)/libc/sys/or1k/mlock.c'; fi`
+ 
++
+ libc/sys/rdos/libc_a-chown.o: libc/sys/rdos/chown.c
+ @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libc_a_CPPFLAGS) $(CPPFLAGS) $(libc_a_CFLAGS) $(CFLAGS) -MT libc/sys/rdos/libc_a-chown.o -MD -MP -MF libc/sys/rdos/$(DEPDIR)/libc_a-chown.Tpo -c -o libc/sys/rdos/libc_a-chown.o `test -f 'libc/sys/rdos/chown.c' || echo '$(srcdir)/'`libc/sys/rdos/chown.c
+ @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) libc/sys/rdos/$(DEPDIR)/libc_a-chown.Tpo libc/sys/rdos/$(DEPDIR)/libc_a-chown.Po
+@@ -50614,6 +50642,8 @@
+ 	-rm -f libc/machine/powerpc/$(am__dirstamp)
+ 	-rm -f libc/machine/pru/$(DEPDIR)/$(am__dirstamp)
+ 	-rm -f libc/machine/pru/$(am__dirstamp)
++	-rm -f libc/machine/r5900/$(DEPDIR)/$(am__dirstamp)
++	-rm -f libc/machine/r5900/$(am__dirstamp)
+ 	-rm -f libc/machine/riscv/$(DEPDIR)/$(am__dirstamp)
+ 	-rm -f libc/machine/riscv/$(am__dirstamp)
+ 	-rm -f libc/machine/rl78/$(DEPDIR)/$(am__dirstamp)
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/newlib/configure newlib-4.6.0.20260123-kos/newlib/configure
+--- newlib-4.6.0.20260123/newlib/configure	2026-01-23 14:12:49
++++ newlib-4.6.0.20260123-kos/newlib/configure	2026-07-02 12:52:38
+@@ -673,6 +673,8 @@
+ HAVE_LIBC_MACHINE_RL78_TRUE
+ HAVE_LIBC_MACHINE_RISCV_FALSE
+ HAVE_LIBC_MACHINE_RISCV_TRUE
++HAVE_LIBC_MACHINE_R5900_FALSE
++HAVE_LIBC_MACHINE_R5900_TRUE
+ HAVE_LIBC_MACHINE_PRU_FALSE
+ HAVE_LIBC_MACHINE_PRU_TRUE
+ HAVE_LIBC_MACHINE_POWERPC_FALSE
+@@ -6065,6 +6067,13 @@
+   HAVE_LIBC_MACHINE_PRU_TRUE='#'
+   HAVE_LIBC_MACHINE_PRU_FALSE=
+ fi
++ if test "${machine_dir}" = r5900; then
++  HAVE_LIBC_MACHINE_R5900_TRUE=
++  HAVE_LIBC_MACHINE_R5900_FALSE='#'
++else
++  HAVE_LIBC_MACHINE_R5900_TRUE='#'
++  HAVE_LIBC_MACHINE_R5900_FALSE=
++fi
+  if test "${machine_dir}" = riscv; then
+   HAVE_LIBC_MACHINE_RISCV_TRUE=
+   HAVE_LIBC_MACHINE_RISCV_FALSE='#'
+@@ -7975,6 +7984,10 @@
+ fi
+ if test -z "${HAVE_LIBC_MACHINE_PRU_TRUE}" && test -z "${HAVE_LIBC_MACHINE_PRU_FALSE}"; then
+   as_fn_error $? "conditional \"HAVE_LIBC_MACHINE_PRU\" was never defined.
++Usually this means the macro was only invoked conditionally." "$LINENO" 5
++fi
++if test -z "${HAVE_LIBC_MACHINE_R5900_TRUE}" && test -z "${HAVE_LIBC_MACHINE_R5900_FALSE}"; then
++  as_fn_error $? "conditional \"HAVE_LIBC_MACHINE_R5900\" was never defined.
+ Usually this means the macro was only invoked conditionally." "$LINENO" 5
+ fi
+ if test -z "${HAVE_LIBC_MACHINE_RISCV_TRUE}" && test -z "${HAVE_LIBC_MACHINE_RISCV_FALSE}"; then
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/newlib/configure.host newlib-4.6.0.20260123-kos/newlib/configure.host
+--- newlib-4.6.0.20260123/newlib/configure.host	2026-01-23 14:12:49
++++ newlib-4.6.0.20260123-kos/newlib/configure.host	2026-07-02 12:52:38
 @@ -130,8 +130,7 @@
  	machine_dir=arc64
  	;;
@@ -11,7 +1490,17 @@ diff --color -ruN newlib-4.6.0.20260123/newlib/configure.host newlib-4.6.0.20260
  	;;
    avr*)
  	newlib_cflags="${newlib_cflags} -DPREFER_SIZE_OVER_SPEED -mcall-prologues"
-@@ -326,6 +325,7 @@
+@@ -249,6 +248,9 @@
+   mep)
+ 	machine_dir=mep
+ 	;;
++  mips64r5900*)
++	machine_dir=r5900
++	;;
+   mips*)
+ 	machine_dir=mips
+ 	libm_machine_dir=mips
+@@ -326,6 +328,7 @@
  	;;
    sh | sh64)
  	machine_dir=sh
@@ -19,7 +1508,28 @@ diff --color -ruN newlib-4.6.0.20260123/newlib/configure.host newlib-4.6.0.20260
  	;;
    sparc*)
  	libm_machine_dir=sparc
-@@ -823,7 +823,11 @@
+@@ -540,6 +543,9 @@
+   microblaze*-*-*)
+ 	machine_dir=microblaze
+ 	;;
++  mips*-ps2-*)
++	newlib_cflags="${newlib_cflags} -G0 -DREENTRANT_SYSCALLS_PROVIDED -DMALLOC_PROVIDED -DABORT_PROVIDED -DHAVE_FCNTL -ffunction-sections -fdata-sections"
++	;;
+   mmix-knuth-mmixware)
+ 	sys_dir=mmixware
+ 	;;
+@@ -783,6 +789,10 @@
+ 	default_newlib_io_long_long="yes"
+ 	newlib_cflags="${newlib_cflags} -DMISSING_SYSCALL_NAMES"
+ 	;;
++  mips*-ps2-elf*)
++	syscall_dir=syscalls
++	default_newlib_io_long_long="yes"
++	;;
+   mips*-*-elf*)
+ 	default_newlib_io_long_long="yes"
+ 	newlib_cflags="${newlib_cflags} -DMISSING_SYSCALL_NAMES"
+@@ -823,7 +833,11 @@
  	default_newlib_io_long_long="yes"
  	newlib_cflags="${newlib_cflags} -DMISSING_SYSCALL_NAMES"
  	;;
@@ -32,9 +1542,21 @@ diff --color -ruN newlib-4.6.0.20260123/newlib/configure.host newlib-4.6.0.20260
    powerpc*-*-elf* | \
    powerpc*-*-linux* | \
    powerpc*-*-rtem* | \
-diff --color -ruN newlib-4.6.0.20260123/newlib/libc/include/assert.h newlib-4.6.0.20260123-kos/newlib/libc/include/assert.h
---- newlib-4.6.0.20260123/newlib/libc/include/assert.h	2024-02-10 09:30:58.781247667 -0600
-+++ newlib-4.6.0.20260123-kos/newlib/libc/include/assert.h	2024-02-10 09:31:16.329331366 -0600
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/newlib/libc/acinclude.m4 newlib-4.6.0.20260123-kos/newlib/libc/acinclude.m4
+--- newlib-4.6.0.20260123/newlib/libc/acinclude.m4	2026-01-23 14:12:49
++++ newlib-4.6.0.20260123-kos/newlib/libc/acinclude.m4	2026-07-02 12:52:38
+@@ -54,7 +54,7 @@
+   nds32 necv70 nios2 nvptx
+   or1k
+   powerpc pru
+-  riscv rl78 rx
++  r5900 riscv rl78 rx
+   sh sparc spu
+   tic4x tic6x tic80
+   v850 visium
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/newlib/libc/include/assert.h newlib-4.6.0.20260123-kos/newlib/libc/include/assert.h
+--- newlib-4.6.0.20260123/newlib/libc/include/assert.h	2026-01-23 14:12:49
++++ newlib-4.6.0.20260123-kos/newlib/libc/include/assert.h	2026-05-13 05:01:13
 @@ -13,8 +13,8 @@
  #ifdef NDEBUG           /* required by ANSI standard */
  # define assert(__e) ((void)0)
@@ -61,9 +1583,31 @@ diff --color -ruN newlib-4.6.0.20260123/newlib/libc/include/assert.h newlib-4.6.
  
  #if __STDC_VERSION__ >= 201112L && !defined __cplusplus
  # define static_assert _Static_assert
-diff --color -ruN newlib-4.6.0.20260123/newlib/libc/include/sys/_pthreadtypes.h newlib-4.6.0.20260123-kos/newlib/libc/include/sys/_pthreadtypes.h
---- newlib-4.6.0.20260123/newlib/libc/include/sys/_pthreadtypes.h	2024-02-10 09:30:58.783247676 -0600
-+++ newlib-4.6.0.20260123-kos/newlib/libc/include/sys/_pthreadtypes.h	2024-02-10 09:31:16.329331366 -0600
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/newlib/libc/include/machine/setjmp.h newlib-4.6.0.20260123-kos/newlib/libc/include/machine/setjmp.h
+--- newlib-4.6.0.20260123/newlib/libc/include/machine/setjmp.h	2026-01-23 14:12:49
++++ newlib-4.6.0.20260123-kos/newlib/libc/include/machine/setjmp.h	2026-05-13 05:01:13
+@@ -138,10 +138,17 @@
+ 
+ #ifdef __mips__
+ # if defined(__mips64)
+-#  define _JBTYPE long long
++#  if defined(_MIPS_ARCH_R5900)
++    typedef unsigned int jbtype128 __attribute__((mode(TI))) __attribute__((aligned(16)));
++#   define _JBTYPE jbtype128
++#  else
++#   define _JBTYPE long long
++#  endif
+ # endif
+ # ifdef __mips_soft_float
+ #  define _JBLEN 11
++# elif defined(_MIPS_ARCH_R5900)
++#  define _JBLEN 14
+ # else
+ #  define _JBLEN 23
+ # endif
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/newlib/libc/include/sys/_pthreadtypes.h newlib-4.6.0.20260123-kos/newlib/libc/include/sys/_pthreadtypes.h
+--- newlib-4.6.0.20260123/newlib/libc/include/sys/_pthreadtypes.h	2026-01-23 14:12:49
++++ newlib-4.6.0.20260123-kos/newlib/libc/include/sys/_pthreadtypes.h	2026-05-13 05:01:13
 @@ -22,16 +22,6 @@
  
  #include <sys/sched.h>
@@ -175,7 +1719,7 @@ diff --color -ruN newlib-4.6.0.20260123/newlib/libc/include/sys/_pthreadtypes.h 
 -
 -#define _PTHREAD_ONCE_INIT  { 1, 0 }  /* is initialized and not run */
  #endif /* defined(_POSIX_THREADS) || __POSIX_VISIBLE >= 199506 */
- 
+-
 -/* POSIX Barrier Types */
 -
 -#if defined(_POSIX_BARRIERS)
@@ -208,51 +1752,176 @@ diff --color -ruN newlib-4.6.0.20260123/newlib/libc/include/sys/_pthreadtypes.h 
 -#endif
 -} pthread_rwlockattr_t;
 -#endif /* defined(_POSIX_READER_WRITER_LOCKS) */
--
+ 
  #endif /* ! _SYS__PTHREADTYPES_H_ */
-diff --color -ruN newlib-4.6.0.20260123/newlib/libc/include/sys/signal.h newlib-4.6.0.20260123-kos/newlib/libc/include/sys/signal.h
---- newlib-4.6.0.20260123/newlib/libc/include/sys/signal.h	2024-02-10 09:30:58.783247676 -0600
-+++ newlib-4.6.0.20260123-kos/newlib/libc/include/sys/signal.h	2024-02-10 09:31:16.329331366 -0600
-@@ -223,9 +223,11 @@
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/newlib/libc/include/sys/_types.h newlib-4.6.0.20260123-kos/newlib/libc/include/sys/_types.h
+--- newlib-4.6.0.20260123/newlib/libc/include/sys/_types.h	2026-01-23 14:12:49
++++ newlib-4.6.0.20260123-kos/newlib/libc/include/sys/_types.h	2026-05-13 05:01:13
+@@ -69,7 +69,7 @@
+ 
+ #ifndef __machine_ino_t_defined
+ #if (defined(__i386__) && (defined(GO32) || defined(__MSDOS__))) || \
+-    defined(__sparc__) || defined(__SPU__)
++    defined(__sparc__) || defined(__SPU__) || defined(__sh__) || defined(__PPC__) || defined(__ARMEL__) || defined(__mips__)
+ typedef unsigned long __ino_t;
+ #else
+ typedef unsigned short __ino_t;
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/newlib/libc/include/sys/signal.h newlib-4.6.0.20260123-kos/newlib/libc/include/sys/signal.h
+--- newlib-4.6.0.20260123/newlib/libc/include/sys/signal.h	2026-01-23 14:12:49
++++ newlib-4.6.0.20260123-kos/newlib/libc/include/sys/signal.h	2026-05-13 05:01:13
+@@ -223,8 +223,10 @@
  int sigaltstack (const stack_t *__restrict, stack_t *__restrict);
  #endif
  
 +#if 0
  #if __POSIX_VISIBLE >= 199506
  int pthread_kill (pthread_t, int);
- #endif
 +#endif
+ #endif
  
  #if __POSIX_VISIBLE >= 199309
-
-diff --color -ruN newlib-4.6.0.20260123/newlib/libc/include/sys/stat.h newlib-4.6.0.20260123-kos/newlib/libc/include/sys/stat.h
---- newlib-4.6.0.20260123/newlib/libc/include/sys/stat.h	2025-03-18 17:54:52.217013623 -0500
-+++ newlib-4.6.0.20260123-kos/newlib/libc/include/sys/stat.h	2025-03-18 17:54:59.003048247 -0500
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/newlib/libc/include/sys/stat.h newlib-4.6.0.20260123-kos/newlib/libc/include/sys/stat.h
+--- newlib-4.6.0.20260123/newlib/libc/include/sys/stat.h	2026-01-23 14:12:49
++++ newlib-4.6.0.20260123-kos/newlib/libc/include/sys/stat.h	2026-05-13 05:01:13
 @@ -157,8 +157,8 @@
  int	stat (const char *__restrict __path, struct stat *__restrict __sbuf );
  mode_t	umask (mode_t __mask );
-
+ 
 -#if defined (__SPU__) || defined(__rtems__) || defined(__CYGWIN__)
  int	lstat (const char *__restrict __path, struct stat *__restrict __buf );
 +#if defined (__SPU__) || defined(__rtems__) || defined(__CYGWIN__)
  int	mknod (const char *__path, mode_t __mode, dev_t __dev );
  #endif
-
-diff --color -ruN newlib-4.6.0.20260123/newlib/libc/include/sys/_types.h newlib-4.6.0.20260123-kos/newlib/libc/include/sys/_types.h
---- newlib-4.6.0.20260123/newlib/libc/include/sys/_types.h	2024-02-10 09:30:58.783247676 -0600
-+++ newlib-4.6.0.20260123-kos/newlib/libc/include/sys/_types.h	2024-02-10 09:31:16.329331366 -0600
-@@ -69,7 +69,7 @@
  
- #ifndef __machine_ino_t_defined
- #if (defined(__i386__) && (defined(GO32) || defined(__MSDOS__))) || \
--    defined(__sparc__) || defined(__SPU__)
-+    defined(__sparc__) || defined(__SPU__) || defined(__sh__) || defined(__PPC__) || defined(__ARMEL__)
- typedef unsigned long __ino_t;
- #else
- typedef unsigned short __ino_t;
-diff --color -ruN newlib-4.6.0.20260123/newlib/libc/ssp/stack_protector.c newlib-4.6.0.20260123-kos/newlib/libc/ssp/stack_protector.c
---- newlib-4.6.0.20260123/newlib/libc/ssp/stack_protector.c	2024-02-10 09:30:58.832247910 -0600
-+++ newlib-4.6.0.20260123-kos/newlib/libc/ssp/stack_protector.c	2024-02-10 09:31:16.329331366 -0600
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/newlib/libc/machine/Makefile.inc newlib-4.6.0.20260123-kos/newlib/libc/machine/Makefile.inc
+--- newlib-4.6.0.20260123/newlib/libc/machine/Makefile.inc	2026-01-23 14:12:49
++++ newlib-4.6.0.20260123-kos/newlib/libc/machine/Makefile.inc	2026-05-13 05:01:13
+@@ -127,6 +127,9 @@
+ if HAVE_LIBC_MACHINE_PRU
+ include %D%/pru/Makefile.inc
+ endif
++if HAVE_LIBC_MACHINE_R5900
++include %D%/r5900/Makefile.inc
++endif
+ if HAVE_LIBC_MACHINE_RISCV
+ include %D%/riscv/Makefile.inc
+ endif
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/newlib/libc/machine/r5900/Makefile.inc newlib-4.6.0.20260123-kos/newlib/libc/machine/r5900/Makefile.inc
+--- newlib-4.6.0.20260123/newlib/libc/machine/r5900/Makefile.inc	1969-12-31 16:00:00
++++ newlib-4.6.0.20260123-kos/newlib/libc/machine/r5900/Makefile.inc	2026-05-13 05:01:13
+@@ -0,0 +1 @@
++libc_a_SOURCES += %D%/setjmp.S
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/newlib/libc/machine/r5900/setjmp.S newlib-4.6.0.20260123-kos/newlib/libc/machine/r5900/setjmp.S
+--- newlib-4.6.0.20260123/newlib/libc/machine/r5900/setjmp.S	1969-12-31 16:00:00
++++ newlib-4.6.0.20260123-kos/newlib/libc/machine/r5900/setjmp.S	2026-05-13 05:01:13
+@@ -0,0 +1,104 @@
++/* This is a simple version of setjmp and longjmp.
++ * Floating point support in. */
++
++#define O_S0	0x00
++#define O_S1	0x10
++#define O_S2	0x20
++#define O_S3	0x30
++#define O_S4	0x40
++#define O_S5	0x50
++#define O_S6	0x60
++#define O_S7	0x70
++#define O_FP	0x80
++#define O_SP	0x90
++#define O_RA	0xa0
++#define O_F20   0xb0
++#define O_F21   0xb4
++#define O_F22   0xb8
++#define O_F23   0xbc
++#define O_F24   0xc0
++#define O_F25   0xc4
++#define O_F26   0xc8
++#define O_F27   0xcc
++#define O_F28   0xd0
++#define O_F29   0xd4
++#define O_F30   0xd8
++#define O_F31   0xdc
++
++/* int setjmp (jmp_buf);  */
++	.globl	setjmp
++	.ent	setjmp
++setjmp:
++	.frame	$sp,0,$31
++
++	sq	$s0, O_S0($a0)
++	sq	$s1, O_S1($a0)
++	sq	$s2, O_S2($a0)
++	sq	$s3, O_S3($a0)
++	sq	$s4, O_S4($a0)
++	sq	$s5, O_S5($a0)
++	sq	$s6, O_S6($a0)
++	sq	$s7, O_S7($a0)
++	sq	$fp, O_FP($a0)
++	sq	$sp, O_SP($a0)
++	sq	$ra, O_RA($a0)
++
++	swc1    $f20, O_F20($a0)
++	swc1    $f21, O_F21($a0)
++	swc1    $f22, O_F22($a0)
++	swc1    $f23, O_F23($a0)
++	swc1    $f24, O_F24($a0)
++	swc1    $f25, O_F25($a0)
++	swc1    $f26, O_F26($a0)
++	swc1    $f27, O_F27($a0)
++	swc1    $f28, O_F28($a0)
++	swc1    $f29, O_F29($a0)
++	swc1    $f30, O_F30($a0)
++	swc1    $f31, O_F31($a0)
++
++
++	move	$v0, $0
++
++	jr	$ra
++
++	.end	setjmp
++
++/* volatile void longjmp (jmp_buf, int);  */
++	.globl	longjmp
++	.ent	longjmp
++longjmp:
++	.frame	$sp,0,$31
++
++	lq	$s0, O_S0($a0)
++	lq	$s1, O_S1($a0)
++	lq	$s2, O_S2($a0)
++	lq	$s3, O_S3($a0)
++	lq	$s4, O_S4($a0)
++	lq	$s5, O_S5($a0)
++	lq	$s6, O_S6($a0)
++	lq	$s7, O_S7($a0)
++	lq	$fp, O_FP($a0)
++	lq	$sp, O_SP($a0)
++	lq	$ra, O_RA($a0)
++
++	lwc1    $f20, O_F20($a0)
++	lwc1    $f21, O_F21($a0)
++	lwc1    $f22, O_F22($a0)
++	lwc1    $f23, O_F23($a0)
++	lwc1    $f24, O_F24($a0)
++	lwc1    $f25, O_F25($a0)
++	lwc1    $f26, O_F26($a0)
++	lwc1    $f27, O_F27($a0)
++	lwc1    $f28, O_F28($a0)
++	lwc1    $f29, O_F29($a0)
++	lwc1    $f30, O_F30($a0)
++	lwc1    $f31, O_F31($a0)
++
++	bne	$a1, $0, 1f
++	li	$a1, 1
++1:
++	move	$v0, $a1
++
++	jr	$ra
++
++	.end longjmp
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/newlib/libc/ssp/stack_protector.c newlib-4.6.0.20260123-kos/newlib/libc/ssp/stack_protector.c
+--- newlib-4.6.0.20260123/newlib/libc/ssp/stack_protector.c	2026-01-23 14:12:49
++++ newlib-4.6.0.20260123-kos/newlib/libc/ssp/stack_protector.c	2026-05-13 05:01:13
 @@ -32,12 +32,11 @@
  #endif
  
@@ -267,9 +1936,9 @@ diff --color -ruN newlib-4.6.0.20260123/newlib/libc/ssp/stack_protector.c newlib
    _exit (127);
  }
  
-diff --color -ruN newlib-4.6.0.20260123/newlib/libc/stdlib/assert.c newlib-4.6.0.20260123-kos/newlib/libc/stdlib/assert.c
---- newlib-4.6.0.20260123/newlib/libc/stdlib/assert.c	2024-02-10 09:30:58.811247810 -0600
-+++ newlib-4.6.0.20260123-kos/newlib/libc/stdlib/assert.c	2024-02-10 09:31:16.329331366 -0600
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/newlib/libc/stdlib/assert.c newlib-4.6.0.20260123-kos/newlib/libc/stdlib/assert.c
+--- newlib-4.6.0.20260123/newlib/libc/stdlib/assert.c	2026-01-23 14:12:49
++++ newlib-4.6.0.20260123-kos/newlib/libc/stdlib/assert.c	2026-05-13 05:01:13
 @@ -47,6 +47,8 @@
  #include <stdlib.h>
  #include <stdio.h>

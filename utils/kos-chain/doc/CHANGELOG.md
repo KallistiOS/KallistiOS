@@ -2,6 +2,7 @@
 
 | Date<br/>_____________ | Author(s)<br/>_____________ | Changes<br/>_____________ |
 |:-----------------------|:----------------------------|---------------------------|
+| 2026-07-06 | Andress Barajas | Add support for PS2/IOP/DVP toolchains and add PS2 profiles |
 | 2026-06-30 | Eric Fradella | Bump GCC series 14/15/16/17 profiles to latest available versions, update LRA testing toolchain |
 | 2026-06-30 | Eric Fradella | Update binutils to 2.46.1 for most profiles |
 | 2026-02-07 | Eric Fradella | Rename to KallistiOS Toolchain Builder, move to utils/kos-chain, stabilize GCC 15.2.0, various bug fixes |

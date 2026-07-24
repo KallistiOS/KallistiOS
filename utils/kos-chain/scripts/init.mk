@@ -52,6 +52,19 @@ CXX_FOR_TARGET = $(target)-$(GXX)
 
 # Handle macOS
 ifdef MACOS
+  # GCC needs GNU sed and GNU m4; prefer Homebrew's over the BSD versions.
+  ifeq ($(shell command -v brew >/dev/null 2>&1 && echo yes),yes)
+    PATH := $(shell brew --prefix gnu-sed)/libexec/gnubin:$(PATH)
+    PATH := $(shell brew --prefix m4)/bin:$(PATH)
+  endif
+  # gawk 5.4.0 has a regex bug that breaks GCC's option parsing; probe for
+  # it and fall back to the system awk.
+  cparen := )
+  ifneq (,$(shell command -v gawk 2>/dev/null))
+    ifneq (a,$(shell gawk 'BEGIN{s="a$(cparen)b"; sub("\\$(cparen).*", "", s); print s}' 2>/dev/null))
+      export AWK := /usr/bin/awk
+    endif
+  endif
   ifdef MACOS_MOJAVE_AND_UP
     # Starting from macOS Mojave (10.14+)
     sdkroot = $(shell xcrun --sdk macosx --show-sdk-path)
