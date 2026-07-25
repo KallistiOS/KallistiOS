@@ -28,6 +28,9 @@ toolchain is optional and only necessary for compiling custom AICA drivers.
 - **GameCube**: `powerpc-eabi` toolchain, the cross-compiler toolchain targeting
 the **IBM Gekko PowerPC (PPC) CPU** in the Nintendo GameCube. GameCube support
 is coming soon to KallistiOS.
+- **Xbox**: `i686-pc-xbox` toolchain, an experimental cross-compiler targeting
+the Pentium III-class CPU in the original Microsoft Xbox. It emits 32-bit
+PE/COFF objects for a later XBE conversion stage.
 
 ## Getting started
 

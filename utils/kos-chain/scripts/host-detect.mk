@@ -13,12 +13,26 @@ config_sub_url = https://gcc.gnu.org/git/gitweb.cgi?p=gcc.git;a=blob_plain;f=${c
 
 is_clean_target=$(findstring clean,$(MAKECMDGOALS))
 config_guess_check=$(shell test -f ./config.guess || echo 0)
+config_sub_check=$(shell test -f ./config.sub || echo 0)
 ifeq ($(is_clean_target),)
-  ifeq ($(config_guess_check),0)
+  ifneq ($(config_guess_check)$(config_sub_check),)
     $(info Downloading $(config_guess))
     $(shell $(call web_download,$(config_guess_url),$(config_guess)))
     $(shell $(call web_download,$(config_sub_url),$(config_sub)))
     $(shell chmod +x $(config_guess))
+  endif
+endif
+
+# The downloaded config.sub is copied into the GCC and newlib trees by the
+# patch step, so it must know the Xbox OS. Binutils keeps its own patched
+# config.sub (see patches/targets/i686-pc-xbox), because patch-binutils
+# skips the config.sub refresh. Only the xbox platform needs any of this.
+ifeq (xbox,$(platform))
+  # $(shell test -f) rather than $(wildcard): make caches wildcard results,
+  # so a config.sub downloaded earlier in this same parse would be missed.
+  ifeq ($(shell test -f ./$(config_sub) && echo yes),yes)
+    $(info Ensuring Xbox target support in $(config_sub))
+    $(shell ./scripts/config-sub-xbox.sh ./$(config_sub))
   endif
 endif
 

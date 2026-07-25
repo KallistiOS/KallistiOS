@@ -1,0 +1,43 @@
+--- binutils-2.46.1/bfd/config.bfd
++++ binutils-2.46.1-xbox/bfd/config.bfd
+@@ -784,7 +784,7 @@
+     targ_defvec=i386_elf32_vec
+     targ_selvecs="iamcu_elf32_vec i386_coff_vec"
+     ;;
+-  i[3-7]86-*-mingw32* | i[3-7]86-*-cygwin* | i[3-7]86-*-winnt | i[3-7]86-*-pe)
++  i[3-7]86-*-mingw32* | i[3-7]86-*-cygwin* | i[3-7]86-*-winnt | i[3-7]86-*-pe | i[3-7]86-*-xbox*)
+     targ_defvec=i386_pe_vec
+     targ_selvecs="i386_pe_vec i386_pe_big_vec i386_pei_vec i386_elf32_vec iamcu_elf32_vec pdb_vec"
+     targ_underscore=yes
+--- binutils-2.46.1/ld/configure.tgt
++++ binutils-2.46.1-xbox/ld/configure.tgt
+@@ -410,6 +410,9 @@
+ i[3-7]86-*-pe)		targ_emul=i386pe ;
+ 			targ_extra_ofiles="deffilep.o pdb.o pe-dll.o"
+ 			;;
++i[3-7]86-*-xbox*)	targ_emul=i386pe ;
++			targ_extra_ofiles="deffilep.o pdb.o pe-dll.o"
++			;;
+ i[3-7]86-*-cygwin*)	targ_emul=i386pe ;
+ 			targ_extra_ofiles="deffilep.o pdb.o pe-dll.o" ;
+ 			test "$targ" != "$host" && LIB_PATH='${tooldir}/lib/w32api'
+--- binutils-2.46.1/gas/configure.tgt
++++ binutils-2.46.1-xbox/gas/configure.tgt
+@@ -253,6 +253,7 @@
+   i386-*-msdos*)			fmt=aout ;;
+   i386-*-moss*)				fmt=elf ;;
+   i386-*-pe)				fmt=coff em=pe ;;
++  i386-*-xbox*)			fmt=coff em=pe ;;
+   i386-*-cygwin*)
+    case ${cpu} in
+      x86_64*)				fmt=coff em=pep ;;
+--- binutils-2.46.1/config.sub
++++ binutils-2.46.1-xbox/config.sub
+@@ -2161,6 +2161,7 @@
+ 	| windiss* \
+ 	| windows* \
+ 	| winnt* \
++	| xbox* \
+ 	| xenix* \
+ 	| xray* \
+ 	| zephyr* \

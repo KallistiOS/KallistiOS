@@ -1,0 +1,16 @@
+--- newlib-4.6.0.20260123/newlib/configure.host
++++ newlib-4.6.0.20260123-xbox/newlib/configure.host
+@@ -726,6 +726,13 @@
+ 	syscall_dir=syscalls	
+ 	newlib_cflags="${newlib_cflags} -DSMALL_DTOA -DSMALL_MEMORY"
+ 	;;	
++  i[34567]86-*-xbox*)
++	default_newlib_io_long_long="yes"
++	syscall_dir=syscalls
++	newlib_cflags="${newlib_cflags} -DREENTRANT_SYSCALLS_PROVIDED -DMALLOC_PROVIDED -DABORT_PROVIDED -DHAVE_FCNTL"
++	newlib_cflags="${newlib_cflags} -ffunction-sections -fdata-sections"
++	newlib_cv_initfinit_array=yes
++	;;
+   i[34567]86-*-sco*)
+ 	newlib_cflags="${newlib_cflags} -DSIGNAL_PROVIDED -DHAVE_FCNTL"
+ 	;;

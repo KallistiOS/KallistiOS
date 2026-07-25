@@ -9,3 +9,5 @@ build-*
 config.guess
 config.sub
 *.cfg
+!Makefile.*.cfg
+!patches/**/*.diff
