@@ -7,7 +7,7 @@
 */
 
 #include <dc/scif.h>
-#include <dc/fs_dcload.h>
+#include <kos/fs_kosload.h>
 #include <kos/timer.h>
 #include <kos/dbglog.h>
 #include <kos/regfield.h>
@@ -45,11 +45,11 @@ int scif_spi_init(void) {
         dbglog(DBG_KDEBUG, "SCIF-SPI: Already in use\n");
         return -1;
     }
-    /* Make sure we're not using dcload-serial. If we are, then we definitely do
+    /* Make sure we're not using kosload-serial. If we are, then we definitely do
        not have a SPI device on the serial port. */
-    if(dcload_type == DCLOAD_TYPE_SER) {
+    if(kosload_type == KOSLOAD_TYPE_SER) {
         dbglog(DBG_KDEBUG, "scif_spi_init: no spi device -- using "
-               "dcload-serial\n");
+               "kosload-serial\n");
         return -1;
     }
 
