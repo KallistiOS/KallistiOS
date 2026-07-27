@@ -53,19 +53,11 @@ void pvr_fog_table_color(float a, float r, float g, float b);
 
     This function sets the fog color for vertex fog. `0-1` range for all colors.
 
-    \todo
-    This function is currently not implemented, as vertex fog is not supported
-    by KOS.
-
-    \warning
-    Calling this function will cause an assertion failure.
-
-    \param  a               Alpha value of the fog
     \param  r               Red value of the fog
     \param  g               Green value of the fog
     \param  b               Blue value of the fog
 */
-void pvr_fog_vertex_color(float a, float r, float g, float b);
+void pvr_fog_vertex_color(float r, float g, float b);
 
 /** Set the fog far depth.
 

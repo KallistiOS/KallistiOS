@@ -182,7 +182,7 @@ int pvr_init(const pvr_init_params_t *params) {
     PVR_SET(PVR_TEXTURE_CLIP, 0x00000000);      /* texture clip distance */
     PVR_SET(PVR_SPANSORT_CFG, 0x00000101);      /* M */
     PVR_SET(PVR_FOG_TABLE_COLOR, 0x007f7f7f);   /* Fog table color */
-    PVR_SET(PVR_FOG_VERTEX_COLOR, 0x007f7f7f);  /* Fog vertex color */
+    pvr_fog_vertex_color(0.5f, 0.5f, 0.5f);     /* Fog vertex color */
     PVR_SET(PVR_COLOR_CLAMP_MIN, 0x00000000);   /* color clamp min */
     PVR_SET(PVR_COLOR_CLAMP_MAX, 0xffffffff);   /* color clamp max */
     PVR_SET(PVR_UNK_0080, 0x00000007);      /* M */
