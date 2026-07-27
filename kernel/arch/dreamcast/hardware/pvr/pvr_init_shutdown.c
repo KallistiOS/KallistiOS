@@ -73,7 +73,7 @@ int pvr_init(const pvr_init_params_t *params) {
     assert(vid_mode->width != 0 && vid_mode->height != 0);
 
     /* Check for compatibility with 3D stuff */
-    if((vid_mode->width % 32) != 0) {
+    if(!__is_aligned(vid_mode->width, 32)) {
         dbglog(DBG_WARNING, "pvr: mode %dx%d isn't usable for 3D (width not multiples of 32)\n",
                vid_mode->width, vid_mode->height);
         return -1;
@@ -89,10 +89,10 @@ int pvr_init(const pvr_init_params_t *params) {
     /* Start off with a nice empty structure */
     memset((void *)&pvr_state, 0, sizeof(pvr_state));
 
-    // Enable DMA if the user wants that.
+    /* Enable DMA if the user wants that. */
     pvr_state.dma_mode = params->dma_enabled;
 
-    // Copy over FSAA setting.
+    /* Copy over FSAA setting. */
     pvr_state.fsaa = params->fsaa_enabled;
 
     pvr_state.vbuf_doublebuf = !params->vbuf_doublebuf_disabled;
@@ -100,22 +100,16 @@ int pvr_init(const pvr_init_params_t *params) {
     /* Everything's clear, do the initial buffer pointer setup */
     pvr_allocate_buffers(params);
 
-    // Initialize tile matrices
+    /* Initialize tile matrices */
     pvr_init_tile_matrices(!!params->autosort_disabled);
-
-    // Setup all pipeline targets. Yes, this is redundant. :) I just
-    // like to have it explicit.
-    pvr_state.ram_target = 0;
-    pvr_state.ta_target = 0;
-    pvr_state.view_target = 0;
 
     pvr_state.list_reg_open = PVR_LIST_NONE;
 
-    // Sync all the hardware registers with our pipeline state.
+    /* Sync all the hardware registers with our pipeline state. */
     pvr_sync_view();
     pvr_sync_reg_buffer();
 
-    // Clear out our stats
+    /* Clear out our stats */
     pvr_state.vbl_count = 0;
     pvr_state.frame_last_time = 0;
     pvr_state.buf_start_time = 0;
@@ -143,7 +137,7 @@ int pvr_init(const pvr_init_params_t *params) {
 
     /* Hook the PVR interrupt events on G2 */
     pvr_state.vbl_handle = vblank_handler_add(pvr_vblank_handler, NULL);
-    
+
     asic_evt_set_handler(ASIC_EVT_PVR_OPAQUEDONE, pvr_int_handler, NULL);
     asic_evt_enable(ASIC_EVT_PVR_OPAQUEDONE, ASIC_IRQ_DEFAULT);
     asic_evt_set_handler(ASIC_EVT_PVR_OPAQUEMODDONE, pvr_int_handler, NULL);
@@ -157,8 +151,8 @@ int pvr_init(const pvr_init_params_t *params) {
     asic_evt_set_handler(ASIC_EVT_PVR_RENDERDONE_TSP, pvr_int_handler, NULL);
     asic_evt_enable(ASIC_EVT_PVR_RENDERDONE_TSP, ASIC_IRQ_DEFAULT);
 
+    /* Hook up interrupt handlers for error events */
     if(__is_defined(PVR_RENDER_DBG)) {
-        /* Hook up interrupt handlers for error events */
         asic_evt_set_handler(ASIC_EVT_PVR_ISP_OUTOFMEM, pvr_int_handler, NULL);
         asic_evt_enable(ASIC_EVT_PVR_ISP_OUTOFMEM, ASIC_IRQ_DEFAULT);
         asic_evt_set_handler(ASIC_EVT_PVR_STRIP_HALT, pvr_int_handler, NULL);
@@ -174,23 +168,23 @@ int pvr_init(const pvr_init_params_t *params) {
     /* 3d-specific parameters; these are all about rendering and
        nothing to do with setting up the video; some stuff in here
        is still unknown. */
-    PVR_SET(PVR_UNK_00A8, 0x15d1c951);      /* M (Unknown magic value) */
-    PVR_SET(PVR_UNK_00A0, 0x00000020);      /* M */
+    PVR_SET(PVR_UNK_00A8, 0x15d1c951);          /* M (Unknown magic value) */
+    PVR_SET(PVR_UNK_00A0, 0x00000020);          /* M */
     /* PVR_FB_CFG_2 is configured in vid_set_mode() */
-    PVR_SET(PVR_UNK_0110, 0x00093f39);      /* M */
-    PVR_SET(PVR_UNK_0098, 0x00800408);      /* M */
+    PVR_SET(PVR_UNK_0110, 0x00093f39);          /* M */
+    PVR_SET(PVR_UNK_0098, 0x00800408);          /* M */
     PVR_SET(PVR_TEXTURE_CLIP, 0x00000000);      /* texture clip distance */
     PVR_SET(PVR_SPANSORT_CFG, 0x00000101);      /* M */
-    PVR_SET(PVR_FOG_TABLE_COLOR, 0x007f7f7f);   /* Fog table color */
+    pvr_fog_table_color(0.0f, 0.5f, 0.5f, 0.5f);/* Fog table color */
     pvr_fog_vertex_color(0.5f, 0.5f, 0.5f);     /* Fog vertex color */
-    PVR_SET(PVR_COLOR_CLAMP_MIN, 0x00000000);   /* color clamp min */
-    PVR_SET(PVR_COLOR_CLAMP_MAX, 0xffffffff);   /* color clamp max */
-    PVR_SET(PVR_UNK_0080, 0x00000007);      /* M */
+    PVR_SET(PVR_COLOR_CLAMP_MIN, PVR_PACK_COLOR(0, 0, 0, 0));   /* color clamp min */
+    PVR_SET(PVR_COLOR_CLAMP_MAX, PVR_PACK_COLOR(1, 1, 1, 1));   /* color clamp max */
+    PVR_SET(PVR_UNK_0080, 0x00000007);          /* M */
     PVR_SET(PVR_CHEAP_SHADOW, 0x00000001);      /* cheap shadow */
-    PVR_SET(PVR_UNK_007C, 0x0027df77);      /* M */
+    PVR_SET(PVR_UNK_007C, 0x0027df77);          /* M */
     PVR_SET(PVR_TEXTURE_MODULO, 0x00000000);    /* stride width */
     PVR_SET(PVR_FOG_DENSITY, 0x0000ff07);       /* fog density */
-    PVR_SET(PVR_UNK_0118, 0x00008040);      /* M */
+    PVR_SET(PVR_UNK_0118, 0x00008040);          /* M */
 
     /* Initialize PVR DMA */
     sem_init((semaphore_t *)&pvr_state.dma_lock, 1);
@@ -202,11 +196,6 @@ int pvr_init(const pvr_init_params_t *params) {
     /* Validate our memory pool */
     pvr_mem_initialize((pvr_ptr_t)(PVR_RAM_INT_BASE + pvr_state.texture_base), PVR_RAM_SIZE - pvr_state.texture_base);
     pvr_mem_reset();
-    /* This doesn't work right now... */
-    /*#ifndef NDEBUG
-        dbglog(DBG_KDEBUG, "pvr: free memory is %08lx bytes\n",
-            pvr_mem_available());
-    #endif*//* !NDEBUG */
 
     return 0;
 }
