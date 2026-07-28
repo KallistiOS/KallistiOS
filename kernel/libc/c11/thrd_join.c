@@ -5,6 +5,7 @@
 */
 
 #include <threads.h>
+#include <stdint.h>
 
 int thrd_join(thrd_t thr, int *res) {
     void *rv;
@@ -13,7 +14,7 @@ int thrd_join(thrd_t thr, int *res) {
         return thrd_error;
 
     if(res)
-        *res = (int)rv;
+        *res = (int)(intptr_t)rv;
 
     return thrd_success;
 }

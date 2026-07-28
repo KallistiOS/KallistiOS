@@ -42,7 +42,7 @@ $(INTER): hello.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $< -o $@
 
 $(TARGET): $(INTER)
-	$(OBJCOPY) -O elf32-i386 $< $@
+	$(OBJCOPY) -O elf32-i386 --strip-debug --remove-section=.reloc $< $@
 
 # Upload and run on a real Xbox via kos-tool (xbox-load-ip must be running):
 run: $(TARGET)

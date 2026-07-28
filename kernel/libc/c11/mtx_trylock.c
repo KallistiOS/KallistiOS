@@ -10,7 +10,7 @@
 int mtx_trylock(mtx_t *mtx) {
     if(mtx->type > MUTEX_TYPE_RECURSIVE) {
         errno = EINVAL;
-        return -1;
+        return thrd_error;
     }
 
     if(mutex_trylock(mtx)) {

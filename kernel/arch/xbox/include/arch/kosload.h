@@ -33,6 +33,15 @@
 /** \brief  Address of the word holding the kos-load syscall function pointer. */
 #define VEC_KOSLOAD      ((uintptr_t)0x00011004)
 
+/**
+ * \brief End of the virtual-address arena mapped for uploaded Xbox guests.
+ *
+ * xbox-load-ip reserves 0x00400000..0x023fffff for uploaded programs. The
+ * remaining physical RAM is not part of the loader-hosted guest mapping and
+ * must not be exposed to KOS's heap or entropy sampler.
+ */
+#define KOSLOAD_GUEST_ARENA_TOP ((uintptr_t)0x02400000)
+
 /** \brief  x86 has no serial FIFO to drain before a syscall; no-op. */
 #define KOSLOAD_ARCH_FIFO_FLUSH()  do { } while(0)
 

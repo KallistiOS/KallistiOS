@@ -33,6 +33,11 @@
 #include <arch/stack.h>
 #include <arch/tls_static.h>
 
+#ifndef THD_KERNEL_STACK_BASE
+#define THD_KERNEL_STACK_BASE \
+    ((void *)_arch_mem_top - THD_KERNEL_STACK_SIZE)
+#endif
+
 /*
 
 This module supports thread scheduling in KOS. The timer interrupt is used
@@ -47,8 +52,16 @@ also using their queue library verbatim (sys/queue.h).
 */
 
 /* Builtin background thread data */
-static alignas(THD_STACK_ALIGNMENT) uint8_t thd_reaper_stack[512];
-static alignas(THD_STACK_ALIGNMENT) uint8_t thd_idle_stack[512];
+#ifndef THD_REAPER_STACK_SIZE
+#define THD_REAPER_STACK_SIZE 512U
+#endif
+#ifndef THD_IDLE_STACK_SIZE
+#define THD_IDLE_STACK_SIZE 512U
+#endif
+static alignas(THD_STACK_ALIGNMENT)
+    uint8_t thd_reaper_stack[THD_REAPER_STACK_SIZE];
+static alignas(THD_STACK_ALIGNMENT)
+    uint8_t thd_idle_stack[THD_IDLE_STACK_SIZE];
 
 /*****************************************************************************/
 /* Thread scheduler data */
@@ -631,6 +644,9 @@ static inline void thd_schedule_inner(kthread_t *thd, uint64_t now) {
 
     /* Make sure the thread hasn't underrun its stack */
     if(thd_current->stack && thd_current->stack_size) {
+        if(!arch_stk_check(thd_current)) {
+            arch_panic("Thread stack canary corrupted");
+        }
         if(CONTEXT_SP(thd_current->context) < (uintptr_t)(thd_current->stack)) {
             thd_pslist(printf);
             thd_pslist_queue(printf);
@@ -1063,7 +1079,7 @@ int thd_set_hz(unsigned int hertz) {
 int thd_init(void) {
     const kthread_attr_t kern_attr = {
         .stack_size = THD_KERNEL_STACK_SIZE,
-        .stack_ptr  = (void *)_arch_mem_top - THD_KERNEL_STACK_SIZE,
+        .stack_ptr  = THD_KERNEL_STACK_BASE,
         .label      = "[kernel]"
     };
 
@@ -1119,6 +1135,10 @@ int thd_init(void) {
         dbglog(DBG_DEAD, "thd: failed to create kernel thread\n");
         return -1;
     }
+    /* thd_create_ex() skips architecture stack setup for the already-running
+       kernel thread because it has no synthetic birth frame. Stack metadata
+       such as the Xbox bottom canary is still safe and necessary to install. */
+    arch_stk_setup(kern);
 
     /* Main thread -- the kern thread */
     thd_current = kern;

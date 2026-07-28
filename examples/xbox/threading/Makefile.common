@@ -1,0 +1,35 @@
+# KallistiOS ##version##
+#
+# Common rules for Xbox threading examples.
+#
+
+PE_TARGET := $(basename $(TARGET)).exe
+KOS_CFLAGS += -Werror
+
+all: rm-images $(TARGET)
+all_retail: all
+
+include $(KOS_BASE)/Makefile.rules
+
+clean: rm-images
+	-rm -f $(OBJS)
+
+rm-images:
+	-rm -f $(TARGET) $(PE_TARGET)
+
+$(PE_TARGET): $(OBJS)
+	$(LINKER) -Wl,--image-base,0x00400000 -o $@ $(OBJS) \
+		$(EXAMPLE_LDFLAGS) $(EXAMPLE_LIBS)
+
+$(TARGET): $(PE_TARGET)
+	$(KOS_OBJCOPY) -O elf32-i386 --strip-debug \
+		--remove-section=.reloc $< $@
+
+run: $(TARGET)
+	$(KOS_LOADER) $(TARGET)
+
+dist: $(TARGET)
+	-rm -f $(OBJS) $(PE_TARGET)
+	$(KOS_STRIP) $(TARGET)
+
+.PHONY: all all_retail clean rm-images run dist

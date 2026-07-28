@@ -75,7 +75,8 @@ typedef enum {
 */
 static int kosload_syscall(kosload_cmd_t cmd, void *param1, void *param2, void *param3) {
     uintptr_t *syscall_ptr = (uintptr_t *)VEC_KOSLOAD;
-    int (*syscall)() = (int (*)())(*syscall_ptr);
+    int (*syscall)(kosload_cmd_t, void *, void *, void *) =
+        (int (*)(kosload_cmd_t, void *, void *, void *))(*syscall_ptr);
 
     /* Disable IRQs until the syscall returns */
     irq_disable_scoped();
@@ -142,7 +143,7 @@ static int kosload_assignwrkmem(int *buf) {
     return kosload_syscall(KOSLOAD_ASSIGNWRKMEM, (void *)buf, NULL, NULL);
 }
 
-static __attribute__((unused)) void kosload_exit(void) {
+void fs_kosload_exit(void) {
     kosload_syscall(KOSLOAD_EXIT, NULL, NULL, NULL);
 }
 

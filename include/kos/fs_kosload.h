@@ -100,6 +100,9 @@ int syscall_kosload_detected(void);
 void fs_kosload_init_console(void);
 void fs_kosload_init(void);
 void fs_kosload_shutdown(void);
+/** Notify kos-tool that execution is ending. The loader syscall returns; the
+    architecture backend must still return control to its loader entry frame. */
+void fs_kosload_exit(void);
 
 /* \endcond */
 

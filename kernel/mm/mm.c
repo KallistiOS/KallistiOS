@@ -15,14 +15,12 @@
 
 #include <arch/arch.h>
 #include <arch/stack.h>
-#include <kos/dbglog.h>
+#include <kos/dbgio.h>
 #include <kos/mm.h>
 #include <kos/linker.h>
 #include <errno.h>
-#include <inttypes.h>
 #include <stdatomic.h>
 #include <stdint.h>
-#include <stdio.h>
 
 /* The end of the program is always marked by the 'end' symbol. So we'll
    just longword-align that. sbrk() calls will move up from there. */
@@ -48,8 +46,12 @@ void *mm_sbrk(ptrdiff_t increment) {
         new_base = base + increment;
 
         if(new_base >= (_arch_mem_top - THD_KERNEL_STACK_SIZE)) {
-            dbglog(DBG_CRITICAL, "Out of memory. Requested sbrk_base %" PRIxPTR \
-                   ", was %" PRIxPTR ", diff %zu\n", new_base, base, increment);
+            /* This is called by malloc while its internal lock and allocator
+               state may be active. Do not recurse through stdio/dbglog here:
+               newlib's stream machinery can allocate and requires a valid
+               per-thread reentrancy object. The raw debug backend is the only
+               failure-safe diagnostic path at this layer. */
+            dbgio_write_str("KOS mm_sbrk: out of memory\n");
             errno = ENOMEM;
             return (void *)-1;
         }

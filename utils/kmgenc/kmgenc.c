@@ -205,7 +205,7 @@ static int valid_size(int x) {
 
 static const char *figure_outfilename(const char *f, const char *newext) {
     char *newname;
-    char *ext;
+    const char *ext;
 
     ext = strrchr(f, '.');
 
@@ -224,8 +224,7 @@ static const char *figure_outfilename(const char *f, const char *newext) {
 
         if(newname) {
             strcpy(newname, f);
-            ext = strrchr(newname, '.') + 1;
-            strcpy(ext, newext);
+            strcpy(newname + (ext - f) + 1, newext);
         }
     }
 

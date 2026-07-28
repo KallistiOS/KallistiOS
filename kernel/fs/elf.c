@@ -116,10 +116,14 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
 
     /* Print some debug info */
     dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "File size is %d bytes\n", sz);
-    dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "	entry point	%08lx\n", hdr->entry);
-    dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "	ph offset	%08lx\n", hdr->phoff);
-    dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "	sh offset	%08lx\n", hdr->shoff);
-    dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "	flags		%08lx\n", hdr->flags);
+    dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "	entry point	%08lx\n",
+           (unsigned long)hdr->entry);
+    dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "	ph offset	%08lx\n",
+           (unsigned long)hdr->phoff);
+    dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "	sh offset	%08lx\n",
+           (unsigned long)hdr->shoff);
+    dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "	flags		%08lx\n",
+           (unsigned long)hdr->flags);
     dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "	ehsize		%08x\n", hdr->ehsize);
     dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "	phentsize	%08x\n", hdr->phentsize);
     dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "	phnum		%08x\n", hdr->phnum);
@@ -198,14 +202,17 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
         if(shdrs[i].flags & SHF_ALLOC) {
             if(shdrs[i].type == SHT_NOBITS) {
                 dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), 
-                     "  setting %ld bytes of zeros at %08lx\n",
-                     shdrs[i].size, shdrs[i].addr);
+                     "  setting %lu bytes of zeros at %08lx\n",
+                     (unsigned long)shdrs[i].size,
+                     (unsigned long)shdrs[i].addr);
                 memset(imgout + shdrs[i].addr, 0, shdrs[i].size);
             }
             else {
                 dbglog(DBG_SOURCE(ELF_DBG_VERBOSE),
-                     "  copying %ld bytes from %08lx to %08lx\n",
-                     shdrs[i].size, shdrs[i].offset, shdrs[i].addr);
+                     "  copying %lu bytes from %08lx to %08lx\n",
+                     (unsigned long)shdrs[i].size,
+                     (unsigned long)shdrs[i].offset,
+                     (unsigned long)shdrs[i].addr);
                 memcpy(imgout + shdrs[i].addr,
                        img + shdrs[i].offset,
                        shdrs[i].size);
@@ -274,10 +281,12 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
                     if(symtab[sym].shndx == SHN_UNDEF) {
                         dbglog(DBG_SOURCE(ELF_DBG_VERBOSE),
                              "  Writing undefined RELA %08lx(%08lx+%08lx) -> %08lx\n",
-                             symtab[sym].value + relatab[j].addend,
-                             symtab[sym].value,
-                             relatab[j].addend,
-                             vma + shdrs[sect].addr + relatab[j].offset);
+                             (unsigned long)(symtab[sym].value +
+                                             relatab[j].addend),
+                             (unsigned long)symtab[sym].value,
+                             (unsigned long)relatab[j].addend,
+                             (unsigned long)(vma + shdrs[sect].addr +
+                                             relatab[j].offset));
                         *((uint32_t *)(imgout
                                      + shdrs[sect].addr
                                      + relatab[j].offset))
@@ -287,9 +296,16 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
                     else {
                         dbglog(DBG_SOURCE(ELF_DBG_VERBOSE),
                              "  Writing RELA %08lx(%08lx+%08lx+%08lx+%08lx) -> %08lx\n",
-                             vma + shdrs[symtab[sym].shndx].addr + symtab[sym].value + relatab[j].addend,
-                             vma, shdrs[symtab[sym].shndx].addr, symtab[sym].value, relatab[j].addend,
-                             vma + shdrs[sect].addr + relatab[j].offset);
+                             (unsigned long)(vma +
+                                             shdrs[symtab[sym].shndx].addr +
+                                             symtab[sym].value +
+                                             relatab[j].addend),
+                             (unsigned long)vma,
+                             (unsigned long)shdrs[symtab[sym].shndx].addr,
+                             (unsigned long)symtab[sym].value,
+                             (unsigned long)relatab[j].addend,
+                             (unsigned long)(vma + shdrs[sect].addr +
+                                             relatab[j].offset));
                         *((uint32_t*)(imgout
                                     + shdrs[sect].addr      /* assuming 1 == .text */
                                     + relatab[j].offset))
@@ -328,8 +344,9 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
                             dbglog(DBG_SOURCE(ELF_DBG_VERBOSE),
                                  "  Writing undefined %s %08lx -> %08lx",
                                  pcrel ? "PCREL" : "ABSREL",
-                                 value,
-                                 vma + shdrs[sect].addr + reltab[j].offset);
+                                 (unsigned long)value,
+                                 (unsigned long)(vma + shdrs[sect].addr +
+                                                 reltab[j].offset));
                         }
 
                         if(pcrel)
@@ -342,7 +359,9 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
 
                         if(sect == 1 && j < 5) {
                             dbglog(DBG_SOURCE(ELF_DBG_VERBOSE),"(%08lx)\n",
-                             *((uint32_t *)(imgout + shdrs[sect].addr + reltab[j].offset)));
+                             (unsigned long)*((uint32_t *)(imgout +
+                                             shdrs[sect].addr +
+                                             reltab[j].offset)));
                         }
                     }
                     else {
@@ -353,9 +372,12 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
                             dbglog(DBG_SOURCE(ELF_DBG_VERBOSE),
                                  "  Writing %s %08lx(%08lx+%08lx+%08lx) -> %08lx",
                                  pcrel ? "PCREL" : "ABSREL",
-                                 value,
-                                 vma, shdrs[symtab[sym].shndx].addr, symtab[sym].value,
-                                 vma + shdrs[sect].addr + reltab[j].offset);
+                                 (unsigned long)value,
+                                 (unsigned long)vma,
+                                 (unsigned long)shdrs[symtab[sym].shndx].addr,
+                                 (unsigned long)symtab[sym].value,
+                                 (unsigned long)(vma + shdrs[sect].addr +
+                                                 reltab[j].offset));
                         }
 
                         if(pcrel)
@@ -368,7 +390,9 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
 
                         if(sect == 1 && j < 5) {
                             dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "(%08lx)\n",
-                             *((uint32_t *)(imgout + shdrs[sect].addr + reltab[j].offset)));
+                             (unsigned long)*((uint32_t *)(imgout +
+                                             shdrs[sect].addr +
+                                             reltab[j].offset)));
                         }
                     }
                 }
@@ -404,7 +428,9 @@ int elf_load(const char *fn, klibrary_t *shell, elf_prog_t *out) {
     }
 
     free(img);
-    dbglog(DBG_SOURCE(ELF_DBG_VERBOSE), "elf_load final ELF stats: memory image at %p, size %08lx\n", out->data, out->size);
+    dbglog(DBG_SOURCE(ELF_DBG_VERBOSE),
+           "elf_load final ELF stats: memory image at %p, size %08lx\n",
+           out->data, (unsigned long)out->size);
 
     /* Flush the icache for that zone */
     icache_sync_range((uint32_t)out->data, out->size);

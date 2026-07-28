@@ -75,7 +75,7 @@ static void kthread_key_delete_destructor(kthread_key_t key) {
 
 /* Create a new TLS key. */
 int kthread_key_create(kthread_key_t *key, void (*destructor)(void *)) {
-    kthread_tls_dest_t *dest;
+    kthread_tls_dest_t *dest = NULL;
 
     if(irq_inside_int() && destructor &&
         (!malloc_irq_safe() || mutex_is_locked(&dlist_mtx))) {

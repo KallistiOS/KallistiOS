@@ -60,54 +60,34 @@ __BEGIN_DECLS
     @{
 */
 
-/** The number of bytes required to save thread context.
+/** Bytes required for the normalized Xbox context, including FXSAVE state. */
+#define REG_BYTE_CNT 576
 
-    This should include all general CPU registers and status regs (even if not
-    all of these are actually used).
+/** Normalized thread/exception context.
 
-    \note
-    On the Xbox (x86-32) the register file below is small; we round the byte
-    count up to a nicer number for sanity and future FPU/SSE state.
-*/
-#define REG_BYTE_CNT 256
-
-/** Architecture-specific structure for holding the processor state.
-
-    This models a standard x86-32 exception stack frame: the general-purpose
-    register file, the stack/instruction pointers, the flags register, and the
-    segment selectors, plus a slot for the exception vector and its (optional)
-    hardware error code.
-
-    \note
-    The size of this structure should be less than or equal to the
-    \ref REG_BYTE_CNT value.
+    The first 64 bytes contain integer, control, and segment state.
+    The final 512-byte area is the hardware-defined FXSAVE image, preserving
+    x87, MMX, SSE, MXCSR, and associated status. Its offset and the containing
+    structure are both 16-byte aligned as required by FXSAVE/FXRSTOR.
 */
 struct __attribute__((aligned(16))) irq_context {
-    /* General-purpose registers (pusha order kept explicit for clarity). */
-    uint32_t edi;         /**< Destination index register */
-    uint32_t esi;         /**< Source index register */
-    uint32_t ebp;         /**< Base (frame) pointer */
-    uint32_t esp;         /**< Stack pointer */
-    uint32_t ebx;         /**< General-purpose register B */
-    uint32_t edx;         /**< General-purpose register D */
-    uint32_t ecx;         /**< General-purpose register C */
-    uint32_t eax;         /**< General-purpose register A / return value */
-
-    /* Segment selectors. */
-    uint32_t ds;          /**< Data segment selector */
-    uint32_t es;          /**< Extra segment selector */
-    uint32_t fs;          /**< FS segment selector (TLS base on x86) */
-    uint32_t gs;          /**< GS segment selector */
-
-    /* Exception identification. */
-    uint32_t vector;      /**< Exception/interrupt vector number */
-    uint32_t error_code;  /**< CPU-pushed error code (0 if none) */
-
-    /* Interrupt stack frame pushed by the CPU. */
-    uint32_t eip;         /**< Program counter (instruction pointer) */
-    uint32_t cs;          /**< Code segment selector */
-    uint32_t eflags;      /**< Flags register */
-    uint32_t ss;          /**< Stack segment selector */
+    uint32_t edi;        /**< 0x00 Destination index register */
+    uint32_t esi;        /**< 0x04 Source index register */
+    uint32_t ebp;        /**< 0x08 Frame pointer */
+    uint32_t esp;        /**< 0x0c Stack pointer at resumed EIP */
+    uint32_t ebx;        /**< 0x10 General register B */
+    uint32_t edx;        /**< 0x14 General register D */
+    uint32_t ecx;        /**< 0x18 General register C */
+    uint32_t eax;        /**< 0x1c General register A / return value */
+    uint32_t eip;        /**< 0x20 Instruction pointer */
+    uint32_t eflags;     /**< 0x24 Flags */
+    uint32_t cs;         /**< 0x28 Code selector */
+    uint32_t ds;         /**< 0x2c Data selector */
+    uint32_t es;         /**< 0x30 Extra selector */
+    uint32_t fs;         /**< 0x34 FS selector */
+    uint32_t gs;         /**< 0x38 GS selector */
+    uint32_t ss;         /**< 0x3c Stack selector */
+    uint8_t fxstate[512] __attribute__((aligned(16))); /**< 0x40 FXSAVE image */
 };
 
 /** \name Register Accessors

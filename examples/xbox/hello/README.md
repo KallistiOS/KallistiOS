@@ -18,10 +18,12 @@ kos-tool's own `console-test` / `xbox-video-test` examples:
 
 ## Build
 
-Uses the `i686-pc-xbox` cross toolchain directly (the KOS build env doesn't
-cover Xbox yet). It links a PE image at the guest load address
-(`0x00400000`) and `objcopy`s it to `elf32-i386`, which is what the loader
-consumes:
+Uses the `i686-pc-xbox` cross toolchain directly. It links a symbol-rich PE
+image at the guest load address (`0x00400000`) and `objcopy`s a stripped
+runtime-only copy to `elf32-i386`, which is what the loader consumes. Keep the
+`.exe` for debugging; the uploadable `.elf` deliberately excludes PE
+relocations and DWARF sections because xbox-load-ip transfers address-bearing
+sections into guest memory:
 
 ```sh
 make                                                   # -> hello.elf

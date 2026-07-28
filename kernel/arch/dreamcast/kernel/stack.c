@@ -124,6 +124,10 @@ void arch_stk_setup(kthread_t *nt) {
     (void)nt;
 }
 
+bool arch_stk_check(const kthread_t *thread) {
+    return thread && thread->stack && thread->stack_size;
+}
+
 /* Do a stack trace from the current function; leave off the first n frames
    (i.e., in assert()). */
 void arch_stk_trace(int n) {

@@ -7,20 +7,27 @@
 #include <threads.h>
 #include <errno.h>
 
+#include "threads_timeout.h"
+
 int cnd_timedwait(cnd_t *restrict cond, mtx_t *restrict mtx,
                   const struct timespec *restrict ts) {
-    int ms = 0;
+    unsigned int timeout;
+    int deadline_status = c11_timeout_ms(ts, &timeout);
 
-    /* Calculate the number of milliseconds to sleep for. No, you don't get
-       anywhere near nanosecond precision here. */
-    ms = ts->tv_sec * 1000 + ts->tv_nsec / 1000000;
+    if(deadline_status < 0)
+        return thrd_error;
+    if(!deadline_status) {
+        /* Even when the deadline has already passed, C11 requires this
+           operation to release and reacquire the mutex. A one-millisecond
+           timed wait preserves cond_wait_timed()'s atomic release-and-wait
+           behavior without turning timeout == 0 into an indefinite wait. */
+        if(cond_wait_timed(cond, mtx, 1) && errno != ETIMEDOUT)
+            return thrd_error;
 
-    /* The standard wording implies that we must wait at least the time period
-       specified, so if we have an uneven number of milliseconds, round up. */
-    if(ts->tv_nsec % 1000000)
-        ++ms;
+        return thrd_timedout;
+    }
 
-    if(cond_wait_timed(cond, mtx, ms)) {
+    if(cond_wait_timed(cond, mtx, timeout)) {
         if(errno == ETIMEDOUT)
             return thrd_timedout;
 

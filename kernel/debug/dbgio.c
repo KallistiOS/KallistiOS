@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <kos/dbgio.h>
+#include <kos/irq.h>
 #include <kos/spinlock.h>
 
 /*
@@ -175,12 +176,17 @@ static spinlock_t lock = SPINLOCK_INITIALIZER;
 int dbgio_printf(const char *fmt, ...) {
     va_list args;
     int i;
+    irq_mask_t irq_state;
 
-    /* XXX This isn't correct. We could be inside an int with IRQs
-      enabled, and we could be outside an int with IRQs disabled, which
-      would cause a deadlock here. We need an irq_is_enabled()! */
-    if(!irq_inside_int())
-        spinlock_lock(&lock);
+    /* KOS is single-core. Prevent the current thread from being preempted
+       while it owns the shared formatter buffer and lock; otherwise a
+       higher-priority thread can spin on this lock forever while the owner
+       cannot be rescheduled. This is also safe from an IRQ: an interrupt
+       cannot enter while a non-IRQ caller holds the lock, and restoring an
+       IRQ caller's prior mask leaves interrupts disabled until exception
+       return. */
+    irq_state = irq_disable();
+    spinlock_lock(&lock);
 
     va_start(args, fmt);
     i = vsnprintf(printf_buf, sizeof(printf_buf), fmt, args);
@@ -189,8 +195,8 @@ int dbgio_printf(const char *fmt, ...) {
     if(i >= 0)
         dbgio_write_str(printf_buf);
 
-    if(!irq_inside_int())
-        spinlock_unlock(&lock);
+    spinlock_unlock(&lock);
+    irq_restore(irq_state);
 
     return i;
 }

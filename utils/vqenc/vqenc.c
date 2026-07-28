@@ -685,7 +685,7 @@ static void place_quads(context_t *cb, mipmap_t *m) {
 
 
 static const char *figure_outfilename(const char *f, const char *newext) {
-    char *ext;
+    const char *ext;
     size_t namelen;
     char *newname;
 

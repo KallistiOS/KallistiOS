@@ -124,6 +124,9 @@ bool arch_stk_unwind_step(uintptr_t sp, uintptr_t *ret_addr_out,
 */
 void arch_stk_setup(kthread_t *nt);
 
+/** \brief Check architecture-specific stack metadata. */
+bool arch_stk_check(const kthread_t *thread);
+
 /** \brief  Do a stack trace from the current function.
 
     This function does a stack trace from the current function, printing the

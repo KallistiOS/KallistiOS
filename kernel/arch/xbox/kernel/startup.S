@@ -25,17 +25,10 @@
    The entry symbol is _start, selected by "-e _start" in the toolchain's
    LINK_SPEC; 'start' is provided as an alias to match the Dreamcast naming.
 
-   NOTE: This is an early bring-up stub. It is the first piece of a KOS Xbox
-   arch port and is not self-contained yet. It still needs:
-       - an Xbox linker script (ENTRY(_start), image base 0x10000, PE/XBE
-         section layout), and
-       - kernel/arch/xbox implementing arch_main(), which is responsible for
-         clearing BSS and bringing up KOS before calling main() (this mirrors
-         the Dreamcast split, where init.c -- not startup.S -- zeroes BSS).
-
-   Proper title shutdown/reboot must go through the kernel thunk table
-   (HalReturnToFirmware). Until that exists, arch_real_exit() simply restores
-   the loader's stack and returns to whoever launched the image.
+   xbox.ld and arch_main() provide the companion image layout and C bootstrap.
+   Proper native-title shutdown/reboot must eventually go through the kernel
+   thunk table (HalReturnToFirmware). During loader-hosted bring-up,
+   arch_real_exit() restores the loader's stack and returns to its caller.
 */
 
 /* Size of the private kernel stack reserved below, in bytes. */
@@ -48,6 +41,8 @@
 	.globl	_start
 	.globl	_arch_real_exit
 	.globl	_arch_old_stack
+	.globl	_arch_stack_base
+	.globl	_arch_stack_top
 
 /* XBE entry point. */
 _start:
@@ -90,10 +85,11 @@ start:
 
 /* void arch_real_exit(int code)
 
-   Hand control back to the Xbox. Early implementation: restore the loader's
-   stack and return to it. TODO: route through the kernel thunk table
-   (HalReturnToFirmware) so the exit code / reboot mode is honored. */
+   Return a loader-hosted guest through the exact stack supplied at entry.
+   Native XBE shutdown never uses this path: arch_exit_handler() invokes the
+   isolated HalReturnToFirmware thunk after KOS teardown. */
 _arch_real_exit:
+	movl	4(%esp), %eax
 	movl	_arch_old_stack, %esp
 	ret
 
@@ -101,7 +97,27 @@ _arch_real_exit:
 mxcsr_init:
 	.long	0x00001f80		/* default MXCSR: all SIMD FP exceptions masked */
 
-	.bss
+	/*
+	 * Unique module identity used by __cxa_atexit() and
+	 * __cxa_thread_atexit(). PE/COFF does not supply crtbegin.o, which
+	 * normally defines this symbol for ELF targets.
+	 */
+	.data
+	.align	4
+	.globl	___dso_handle
+___dso_handle:
+	.long	___dso_handle
+
+	/*
+	   Keep the bootstrap stack outside .bss. arch_main() clears .bss while
+	   running on this stack, so placing it there would erase the live call
+	   frames. xbox.ld maps this input section as an uninitialized, writable
+	   part of the image that is not included in the BSS clearing range.
+
+	   _arch_old_stack lives here for the same reason: it is written before
+	   arch_main() and must survive the BSS clear for arch_real_exit().
+	*/
+	.section .stack,"bw"
 
 	/* Saved loader stack pointer (set at entry, used by arch_real_exit). */
 	.align	4
