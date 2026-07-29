@@ -26,30 +26,7 @@
    and translucent lists, and 0's for everything else; 512k of vertex
    buffer. This is equivalent to the old ta_init_defaults() for now. */
 int pvr_init_defaults(void) {
-    const pvr_init_params_t params = {
-        /* Enable opaque and translucent polygons with size 16 */
-        { PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_0 },
-
-        /* Vertex buffer size 512K */
-        512 * 1024,
-
-        /* No DMA */
-        0,
-
-        /* No FSAA */
-        0,
-
-        /* Translucent Autosort enabled. */
-        0,
-
-        /* Extra OPBs */
-        3,
-
-        /* Vertex buffer double-buffering enabled */
-        0
-    };
-
-    return pvr_init(&params);
+    return pvr_init(&pvr_default_params);
 }
 
 /* Initialize the PVR chip to ready status, enabling the specified lists

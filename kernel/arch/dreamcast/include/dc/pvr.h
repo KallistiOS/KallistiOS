@@ -659,6 +659,7 @@ Striplength set to 2 */
     You essentially fill one of these in, and pass it to pvr_init().
 
     \headerfile dc/pvr.h
+    \sa pvr_default_params
 */
 typedef struct {
     /** \brief  Bin sizes.
@@ -714,6 +715,19 @@ typedef struct {
 
 } pvr_init_params_t;
 
+/** \brief   PVR initialization structure defaults
+    \ingroup pvr_init
+
+    These are the default values for pvr_init_params_t used by pvr_init_defaults().
+
+    \sa pvr_init_defaults()
+*/
+static const pvr_init_params_t pvr_default_params = {
+    .opb_sizes = { PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_0 },
+    .vertex_buf_size = 512 * 1024,
+    .opb_overflow_count = 3
+};
+
 /** \brief   Initialize the PVR chip to ready status.
     \ingroup pvr_init
 
@@ -732,13 +746,14 @@ int pvr_init(const pvr_init_params_t *params);
 /** \brief   Simple PVR initialization.
     \ingroup pvr_init
 
-    This simpler function initializes the PVR using 16/16 for the opaque
-    and translucent lists' bin sizes, and 0's for everything else. It sets 512KB
-    of vertex buffer. This is equivalent to the old ta_init_defaults() for now.
+    This simpler function initializes the PVR using the default parameters defined in
+    pvr_default_params.
 
     \retval 0               On success
     \retval -1              If the PVR has already been initialized or the video
                             mode active is not suitable for 3D
+
+    \sa pvr_default_params
 */
 int pvr_init_defaults(void);
 
