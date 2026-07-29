@@ -7,5 +7,5 @@
 #include <threads.h>
 
 int mtx_lock(mtx_t *mtx) {
-    return mutex_lock(mtx);
+    return mutex_lock(mtx) ? thrd_error : thrd_success;
 }
