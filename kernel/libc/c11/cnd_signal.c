@@ -7,5 +7,5 @@
 #include <threads.h>
 
 int cnd_signal(cnd_t *cond) {
-    return cond_signal(cond);
+    return cond_signal(cond) ? thrd_error : thrd_success;
 }
