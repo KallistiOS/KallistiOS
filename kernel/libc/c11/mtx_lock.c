@@ -10,8 +10,8 @@
 int mtx_lock(mtx_t *mtx) {
     if(mtx->type > MUTEX_TYPE_RECURSIVE) {
         errno = EINVAL;
-        return -1;
+        return thrd_error;
     }
 
-    return mutex_lock(mtx);
+    return mutex_lock(mtx) ? thrd_error : thrd_success;
 }

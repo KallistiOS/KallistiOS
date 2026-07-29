@@ -7,5 +7,5 @@
 #include <threads.h>
 
 int tss_set(tss_t key, void *val) {
-    return kthread_setspecific(key, val);
+    return kthread_setspecific(key, val) ? thrd_error : thrd_success;
 }

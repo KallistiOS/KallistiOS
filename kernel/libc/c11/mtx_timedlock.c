@@ -12,7 +12,7 @@ int mtx_timedlock(mtx_t *restrict mtx, const struct timespec *restrict ts) {
 
     if(mtx->type > MUTEX_TYPE_RECURSIVE) {
         errno = EINVAL;
-        return -1;
+        return thrd_error;
     }
 
     /* Calculate the number of milliseconds to sleep for. No, you don't get

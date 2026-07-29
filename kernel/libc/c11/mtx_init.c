@@ -8,7 +8,7 @@
 
 int mtx_init(mtx_t *mtx, int type) {
     if(type & mtx_recursive)
-        return mutex_init(mtx, MUTEX_TYPE_RECURSIVE);
+        return mutex_init(mtx, MUTEX_TYPE_RECURSIVE) ? thrd_error : thrd_success;
 
-    return mutex_init(mtx, MUTEX_TYPE_NORMAL);
+    return mutex_init(mtx, MUTEX_TYPE_NORMAL) ? thrd_error : thrd_success;
 }
