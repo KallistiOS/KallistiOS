@@ -211,7 +211,7 @@ void pvr_txr_load_kimg(const kos_img_t *img, pvr_ptr_t dst, uint32_t flags) {
             if(flags & PVR_TXRLOAD_DMA) {
                 sem_wait((semaphore_t *)&pvr_state.dma_lock);
                 pvr_txr_load_dma(img->data, dst, img->byte_count,
-                                 (flags & PVR_TXRLOAD_NONBLOCK) ? 1 : 0, NULL, 0);
+                                 !(flags & PVR_TXRLOAD_NONBLOCK), NULL, 0);
                 sem_signal((semaphore_t *)&pvr_state.dma_lock);
             }
             else if(flags & PVR_TXRLOAD_SQ) {
