@@ -22,6 +22,7 @@ volatile int kosh_exit = KE_JOINED;
 static kthread_t *thd;
 
 static void *kosh_thread(void *p) {
+    (void)p;
     conio_printf("  **** KOSH, The KallistiOS Shell ****\n");
     kosh_chdir("/");
     while (kosh_exit == KE_NO)

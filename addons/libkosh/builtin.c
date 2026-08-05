@@ -56,7 +56,7 @@ static void builtin_help(int argc, char *argv[]) {
 
 /* exit the shell */
 static void builtin_exit(int argc, char *argv[]) {
-    if (argc > 1)
+    if ((argc > 1) || argv)
         conio_printf("Superfluous arguments to exit\n");
     else
         kosh_exit = 1;
@@ -109,12 +109,14 @@ static void builtin_cd(int argc, char *argv[]) {
 /* print the current directory */
 static void builtin_pwd(int argc, char *argv[]) {
     char buff[NAME_MAX];
+    (void)argc; (void)argv;
 
     conio_printf("%s\n", getcwd(buff, NAME_MAX));
 }
 
 /* clear the screen */
 static void builtin_clear(int argc, char *argv[]) {
+    (void)argc; (void)argv;
     conio_clear();
     conio_gotoxy(0, 0);
 }
@@ -306,6 +308,7 @@ static void builtin_theme(int argc, char *argv[]) {
 
 /* exit to the DC menus */
 static void builtin_menu(int argc, char *argv[]) {
+    (void)argc; (void)argv;
     conio_printf("bye!\n");
     arch_menu();
 }
@@ -342,11 +345,13 @@ static void builtin_mount_romdisk(int argc, char *argv[]) {
 
 /* Print out a list of running threads */
 static void builtin_threads(int argc, char *argv[]) {
+    (void)argc; (void)argv;
     thd_pslist(conio_printf);
 }
 
 /* Print out memory usage statistics */
 static void builtin_mstats(int argc, char *argv[]) {
+    (void)argc; (void)argv;
     struct mallinfo mi = mallinfo();
 
     conio_printf("Memory usage:\n");
@@ -362,6 +367,7 @@ static void builtin_mstats(int argc, char *argv[]) {
 
 /* Kill the whole KOS program */
 static void builtin_die(int argc, char *argv[]) {
+    (void)argc; (void)argv;
     conio_printf("Goodbye cruel world...\n");
     arch_exit();
 }
