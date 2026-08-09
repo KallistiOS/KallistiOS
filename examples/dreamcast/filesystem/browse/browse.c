@@ -9,7 +9,8 @@
    file operations like copying and deleting files.
 */
 
-#include <stdio.h> 
+#include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <dirent.h>
@@ -19,7 +20,6 @@
 
 #include <dc/video.h>
 #include <fat/fs_fat.h>
-#include <kos/string.h>
 
 #include <kos/fs_romdisk.h>
 #include <kos/fs_ramdisk.h>
