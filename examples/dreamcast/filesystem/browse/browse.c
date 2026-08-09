@@ -129,8 +129,9 @@ int main(int argc, char **argv) {
 
                     memset(directory_temp2, 0, BUFFER_LENGTH);
                     fs_normalize_path(directory_temp, directory_temp2);
-                    content_count = browse_directory(directory_temp2, directory_contents);
-                    if(content_count > 0) {
+                    int tmp_content_count = browse_directory(directory_temp2, directory_contents);
+                    if(tmp_content_count > 0) {
+                        content_count = tmp_content_count;
                         realpath(directory_temp2, current_directory);
                         changed_directory = true;
                         selector_index = 0;
@@ -157,8 +158,9 @@ int main(int argc, char **argv) {
                     int copy_count = strrchr(current_directory, '/') - current_directory;
                     strncat(directory_temp, current_directory, (copy_count==0) ? 1 : copy_count );
                     /* Go the previous directory and get the directory contents */
-                    content_count = browse_directory(directory_temp, directory_contents);
-                    if(content_count > 0) {
+                    int tmp_content_count = browse_directory(directory_temp, directory_contents);
+                    if(tmp_content_count > 0) {
+                        content_count = tmp_content_count;
                         strcpy(current_directory, directory_temp);
                         changed_directory = true;
                         selector_index = 0;
