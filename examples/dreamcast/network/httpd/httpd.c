@@ -42,8 +42,8 @@ int st_init(void) {
     return 0;
 }
 
-http_state_t * st_create(void) {
-    http_state_t * ns;
+http_state_t *st_create(void) {
+    http_state_t *ns;
 
     ns = calloc(1, sizeof(http_state_t));
     mutex_lock(&list_mutex);
@@ -60,8 +60,8 @@ void st_destroy(http_state_t *st) {
     free(st);
 }
 
-int st_add_fds(fd_set * fds, int maxfd) {
-    http_state_t * st;
+int st_add_fds(fd_set *fds, int maxfd) {
+    http_state_t *st;
 
     mutex_lock(&list_mutex);
     st_foreach(st) {
@@ -103,7 +103,7 @@ int readline(int sock, char *buf, int bufsize) {
     return 0;
 }
 
-int read_headers(http_state_t * hs, char * buffer, int bufsize) {
+int read_headers(http_state_t *hs, char *buffer, int bufsize) {
     char fn[256];
     int i, j;
 
@@ -142,12 +142,12 @@ int read_headers(http_state_t * hs, char * buffer, int bufsize) {
 
 /**********************************************************************/
 
-static const char * errmsg1 = "<html><head><title>";
-static const char * errmsg2 = "</title></head><body bgcolor=\"white\"><h4>";
-static const char * errmsg3 = "</h4>\n<hr>\nKOSHttp/1.0 server\n</body></html>";
+static const char *errmsg1 = "<html><head><title>";
+static const char *errmsg2 = "</title></head><body bgcolor=\"white\"><h4>";
+static const char *errmsg3 = "</h4>\n<hr>\nKOSHttp/1.0 server\n</body></html>";
 
-int send_error(http_state_t * hs, int errcode, const char * str) {
-    char * buffer = malloc(65536);
+int send_error(http_state_t *hs, int errcode, const char *str) {
+    char *buffer = malloc(65536);
 
     if(buffer == NULL)
         return -1;
@@ -172,7 +172,7 @@ int send_error(http_state_t * hs, int errcode, const char * str) {
     return 0;
 }
 
-int send_ok(http_state_t * hs, const char * ct) {
+int send_ok(http_state_t *hs, const char *ct) {
     char buffer[512];
 
     sprintf(buffer, "HTTP/1.0 200 OK\r\nContent-type: %s\r\nConnection: close\r\n\r\n", ct);
@@ -183,8 +183,8 @@ int send_ok(http_state_t * hs, const char * ct) {
 
 /**********************************************************************/
 
-int do_dirlist(const char * name, http_state_t * hs, file_t f) {
-    char * dl, *dlout;
+int do_dirlist(const char *name, http_state_t *hs, file_t f) {
+    char *dl, *dlout;
     const dirent_t *d;
     int dlsize, r;
 
@@ -241,9 +241,9 @@ int do_dirlist(const char * name, http_state_t * hs, file_t f) {
 #define BUFSIZE (256*1024)
 
 void *client_thread(void *p) {
-    http_state_t * hs = (http_state_t *)p;
-    char * buf, * ext;
-    const char * ct;
+    http_state_t *hs = (http_state_t *)p;
+    char *buf, *ext;
+    const char *ct;
     file_t f = FILEHND_INVALID;
     int r, o, cnt;
 
@@ -328,7 +328,7 @@ out:
 /**********************************************************************/
 
 /*
-int handle_read(http_state_t * hs) {
+int handle_read(http_state_t *hs) {
     char buffer[80];
     int rc;
 
