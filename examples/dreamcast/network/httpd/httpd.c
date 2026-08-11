@@ -20,6 +20,9 @@
 #include <kos/thread.h>
 #include <kos/mutex.h>
 
+static volatile bool daemon_shutdown = false;
+
+int listenfd;
 struct http_state;
 typedef TAILQ_HEAD(http_state_list, http_state) http_state_list_t;
 
@@ -346,7 +349,6 @@ int handle_read(http_state_t *hs) {
 /**********************************************************************/
 
 void httpd(void) {
-    int listenfd;
     struct sockaddr_in saddr;
     fd_set readset;
     fd_set writeset;
@@ -380,7 +382,7 @@ void httpd(void) {
     st_init();
     printf("httpd: listening for connections on socket %d\n", listenfd);
 
-    for(; ;) {
+    while(!daemon_shutdown) {
         maxfdp1 = listenfd + 1;
 
         FD_ZERO(&readset);
@@ -391,7 +393,7 @@ void httpd(void) {
 
         i = select(maxfdp1, &readset, &writeset, 0, 0);
 
-        if(i == 0)
+        if(i <= 0)
             continue;
 
         // Check for new incoming connections
@@ -435,4 +437,19 @@ void httpd(void) {
         }
 #endif
     }
+}
+
+void httpd_shutdown(void) {
+    /* First make sure httpd doesn't loop more */
+    daemon_shutdown = true;
+
+    /* Then shut down the listener socket */
+    shutdown(listenfd, SHUT_RDWR);
+    close(listenfd);
+
+    /* As long as there are still states, keep passing. The httpd thread will
+    destroy its state and not loop again, and client threads have a chance to
+    finish working. */
+    while(TAILQ_FIRST(&states))
+        thd_pass();
 }
