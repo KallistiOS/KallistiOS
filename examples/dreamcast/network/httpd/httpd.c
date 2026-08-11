@@ -201,12 +201,12 @@ int do_dirlist(const char *name, http_state_t *hs, file_t f) {
     dlout += strlen(dlout);
 
     while((d = fs_readdir(f))) {
-        if(d->size >= 0) {
-            sprintf(dlout, "<tr><td><a href=\"%s\">%s</a></td><td>%d</td></tr>\n", d->name, d->name, d->size);
+        if(d->attr & O_DIR) {
+            sprintf(dlout, "<tr><td><a href=\"%s/\">%s/</a></td><td align=right>&lt;DIR&gt;</td></tr>\n", d->name, d->name);
             dlout += strlen(dlout);
         }
         else {
-            sprintf(dlout, "<tr><td><a href=\"%s/\">%s/</a></td><td>%d</td></tr>\n", d->name, d->name, d->size);
+            sprintf(dlout, "<tr><td><a href=\"%s\">%s</a></td><td>%d</td></tr>\n", d->name, d->name, d->size);
             dlout += strlen(dlout);
         }
     }
