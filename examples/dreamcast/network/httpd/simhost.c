@@ -7,9 +7,15 @@
 
 KOS_INIT_FLAGS(INIT_DEFAULT | INIT_NET);
 
+static volatile bool main_shutdown = false;
+
 void httpd(void);
 void *do_httpd(void *foo) {
     httpd();
+
+    /* If the daemon dies, shut down the host as well */
+    main_shutdown = true;
+
     return NULL;
 }
 
@@ -22,11 +28,11 @@ int main(int argc, char **argv) {
 
     thd_sleep(1000 * 5);
 
-    for(; ;) {
+    while(!main_shutdown) {
         MAPLE_FOREACH_BEGIN(MAPLE_FUNC_CONTROLLER, cont_state_t, st)
 
         if(st->buttons & CONT_START)
-            return 0;
+            main_shutdown = true;
 
         MAPLE_FOREACH_END()
     }
