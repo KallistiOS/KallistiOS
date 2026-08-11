@@ -9,6 +9,7 @@ KOS_INIT_FLAGS(INIT_DEFAULT | INIT_NET);
 
 static volatile bool main_shutdown = false;
 
+void httpd_shutdown(void);
 void httpd(void);
 void *do_httpd(void *foo) {
     httpd();
@@ -36,6 +37,9 @@ int main(int argc, char **argv) {
 
         MAPLE_FOREACH_END()
     }
+
+    /* Request the httpd be shut down */
+    httpd_shutdown();
 
     return 0;
 }
