@@ -36,14 +36,9 @@ typedef struct http_state {
     kthread_t       * thd;
 } http_state_t;
 
-http_state_list_t states;
+http_state_list_t states = TAILQ_HEAD_INITIALIZER(states);
 #define st_foreach(var) TAILQ_FOREACH(var, &states, list)
 mutex_t list_mutex = MUTEX_INITIALIZER;
-
-int st_init(void) {
-    TAILQ_INIT(&states);
-    return 0;
-}
 
 http_state_t *st_create(void) {
     http_state_t *ns;
@@ -379,7 +374,6 @@ void httpd(void) {
         return;
     }
 
-    st_init();
     printf("httpd: listening for connections on socket %d\n", listenfd);
 
     while(!daemon_shutdown) {
