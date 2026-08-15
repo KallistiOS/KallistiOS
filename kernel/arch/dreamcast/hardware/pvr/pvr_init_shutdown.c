@@ -103,8 +103,14 @@ int pvr_init(const pvr_init_params_t *params) {
     if(vid_mode->cable_type == CT_VGA) {
         dbglog(DBG_KDEBUG, "pvr: disabling vertical scaling for VGA\n");
     } else {
-        dbglog(DBG_KDEBUG, "pvr: enabling vertical scaling for non-VGA\n");
-        vscale++;
+        /* If using an interlaced video mode, enable vertical smoothing ("flicker filter"),
+           otherwise disable it */
+        if(vid_mode->flags & VID_INTERLACE) {
+            dbglog(DBG_KDEBUG, "pvr: enabling vertical scaling for interlaced non-VGA\n");
+            vscale++;
+        } else {
+            dbglog(DBG_KDEBUG, "pvr: disabling vertical scaling for progressive non-VGA\n");
+        }
     }
 
     /* Set horizontal / vertical scale factors */
