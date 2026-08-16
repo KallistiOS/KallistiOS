@@ -191,12 +191,12 @@ static int fs_hnd_unref(fs_hnd_t *ref) {
 
 /* Assigns a file descriptor (index) to a file handle (pointer). Will auto-
    reference the handle, and unrefs on error. */
-static int fs_hnd_assign(fs_hnd_t *hnd) {
+static file_t fs_hnd_assign(fs_hnd_t *hnd) {
     int i;
 
     fs_hnd_ref(hnd);
 
-    for(i = 0; i < FD_SETSIZE; i++) {
+    for(i = 3; i < FD_SETSIZE; i++) {
         fs_hnd_t *old = NULL;
 
         if(atomic_compare_exchange_strong(&fd_table[i], &old, hnd))
@@ -210,10 +210,10 @@ static int fs_hnd_assign(fs_hnd_t *hnd) {
 
         fs_hnd_unref(hnd);
         errno = EMFILE;
-        return -1;
+        return FILEHND_INVALID;
     }
 
-    return i;
+    return (file_t)i;
 }
 
 int fs_fdtbl_destroy(void) {
@@ -238,7 +238,7 @@ file_t fs_open(const char *fn, int mode) {
     hnd = fs_hnd_open(fn, mode);
 
     if(!hnd)
-        return -1;
+        return FILEHND_INVALID;
 
     /* Ok, that succeeded -- now look for a file descriptor. */
     return fs_hnd_assign(hnd);
@@ -253,7 +253,7 @@ file_t fs_open_handle(vfs_handler_t * vfs, void * vhnd) {
 
     if(hnd == NULL) {
         errno = ENOMEM;
-        return -1;
+        return FILEHND_INVALID;
     }
 
     hnd->handler = vfs;
@@ -286,13 +286,13 @@ void * fs_get_handle(file_t fd) {
 
 file_t fs_dup(file_t oldfd) {
     /* Make sure it exists */
-    if(oldfd < 0 || oldfd >= FD_SETSIZE) {
+    if(oldfd < 0 || oldfd >= FD_SETSIZE || oldfd == FILEHND_INVALID) {
         errno = EBADF;
-        return -1;
+        return FILEHND_INVALID;
     }
     else if(!fd_table[oldfd]) {
         errno = EBADF;
-        return -1;
+        return FILEHND_INVALID;
     }
 
     return fs_hnd_assign(fd_table[oldfd]);
@@ -302,14 +302,18 @@ file_t fs_dup2(file_t oldfd, file_t newfd) {
     fs_hnd_t *prev;
 
     /* Make sure the descriptors are valid */
-    if(oldfd < 0 || oldfd >= FD_SETSIZE || newfd < 0 || newfd >= FD_SETSIZE) {
+    if(oldfd < 0 || oldfd >= FD_SETSIZE || oldfd == FILEHND_INVALID ||
+       newfd < 0 || newfd >= FD_SETSIZE || newfd == FILEHND_INVALID) {
         errno = EBADF;
-        return -1;
+        return FILEHND_INVALID;
     }
     else if(!fd_table[oldfd]) {
         errno = EBADF;
-        return -1;
+        return FILEHND_INVALID;
     }
+
+    if(oldfd == newfd)
+        goto out_get_ref;
 
     do {
         prev = fd_table[newfd];
@@ -321,6 +325,7 @@ file_t fs_dup2(file_t oldfd, file_t newfd) {
     } while(!atomic_compare_exchange_strong(&fd_table[newfd],
                                             &prev, fd_table[oldfd]));
 
+out_get_ref:
     fs_hnd_ref(fd_table[newfd]);
 
     return newfd;
@@ -328,8 +333,8 @@ file_t fs_dup2(file_t oldfd, file_t newfd) {
 
 /* Returns a file handle for a given fd, or NULL if the parameters
    are not valid. */
-static fs_hnd_t * fs_map_hnd(file_t fd) {
-    if(fd < 0 || fd >= FD_SETSIZE) {
+static fs_hnd_t *fs_map_hnd(file_t fd) {
+    if(fd < 0 || fd >= FD_SETSIZE || fd == FILEHND_INVALID) {
         errno = EBADF;
         return NULL;
     }
@@ -827,7 +832,7 @@ int fs_symlink(const char *path1, const char *path2) {
     }
 }
 
-int fs_readlink(const char *path, char *buf, size_t bufsize) {
+ssize_t fs_readlink(const char *path, char *buf, size_t bufsize) {
     vfs_handler_t *vfs;
     char fullpath[PATH_MAX];
 
@@ -859,12 +864,12 @@ int fs_readlink(const char *path, char *buf, size_t bufsize) {
     }
 }
 
-int fs_stat(const char *path, struct stat *buf, int flag) {
+int fs_stat(const char *path, struct stat *st, int flag) {
     vfs_handler_t *vfs;
     char fullpath[PATH_MAX];
 
     /* Verify the input... */
-    if(!buf || !path) {
+    if(!st || !path) {
         errno = EFAULT;
         return -1;
     }
@@ -883,6 +888,16 @@ int fs_stat(const char *path, struct stat *buf, int flag) {
         strcat(fullpath, path);
     }
 
+    /* The VFS root has no backing handler so stat it directly as a directory */
+    if(!strcmp(fullpath, "/")) {
+        *st = (struct stat) {
+            .st_mode = S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO,
+            .st_size = -1,
+            .st_nlink = 2
+        };
+        return 0;
+    }
+
     /* Look for the handler */
     vfs = fs_verify_handler(fullpath);
 
@@ -892,8 +907,17 @@ int fs_stat(const char *path, struct stat *buf, int flag) {
     }
 
     if(vfs->stat) {
-        return vfs->stat(vfs, fullpath + strlen(vfs->nmmgr.pathname), buf,
+        return vfs->stat(vfs, fullpath + strlen(vfs->nmmgr.pathname), st,
                          flag);
+    }
+    else if(!strcmp(path, vfs->nmmgr.pathname)) {
+        /* no vfs->stat - handle stat() on the mount folder */
+        *st = (struct stat) {
+            .st_mode = S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO,
+            .st_size = -1,
+            .st_nlink = 2
+        };
+        return 0;
     }
     else {
         errno = ENOSYS;
@@ -916,7 +940,7 @@ int fs_rewinddir(file_t fd) {
         return -1;
     }
 
-    h->idx = 0;
+    h->idx = -2;
 
     return h->handler->rewinddir(h->hnd);
 }
@@ -931,8 +955,13 @@ int fs_fstat(file_t fd, struct stat *st) {
         return -1;
     }
 
+    /* The VFS root has no backing handler so stat it directly as a directory */
     if(h->handler == NULL) {
-        h->hnd = (void *)0;
+        *st = (struct stat) {
+            .st_mode = S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO,
+            .st_size = -1,
+            .st_nlink = 2
+        };
         return 0;
     }
 

@@ -8,7 +8,7 @@
 void fTexWrite(const PvrTexEncoder *pte, const char *outfname) {
 	assert(pte);
 
-	FILE *f = fopen(outfname, "w");
+	FILE *f = fopen(outfname, "wb");
 	assert(f);
 
 	unsigned textype = 0;
@@ -61,7 +61,7 @@ void fTexWritePalette(const PvrTexEncoder *pte, const char *outfname) {
 
 	pteLog(LOG_COMPLETION, "Writing .PAL to \"%s\"...\n", outfname);
 
-	FILE *f = fopen(outfname, "w");
+	FILE *f = fopen(outfname, "wb");
 	assert(f);
 
 	WriteFourCC("DPAL", f);

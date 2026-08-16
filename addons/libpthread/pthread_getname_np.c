@@ -15,7 +15,7 @@ int pthread_getname_np(pthread_t thread, char *buf, size_t buflen) {
     kthread_t *thd = (kthread_t *)thread;
     int old;
 
-    if(!thd)
+    if(!thd || buflen == 0)
         return EINVAL;
 
     if(!buf)

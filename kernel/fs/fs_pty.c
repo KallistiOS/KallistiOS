@@ -123,8 +123,8 @@ int fs_pty_create(char *buffer, int maxbuflen, file_t *master_out, file_t *slave
         return -1;
 
     /* Initialize outputs to invalid values */
-    *master_out = -1;
-    *slave_out = -1;
+    *master_out = FILEHND_INVALID;
+    *slave_out = FILEHND_INVALID;
 
     /* Are we bootstrapping? */
     boot = LIST_EMPTY(&ptys);
@@ -177,12 +177,13 @@ int fs_pty_create(char *buffer, int maxbuflen, file_t *master_out, file_t *slave
     sprintf(mname, "/pty/ma%02x", master->id);
     sprintf(sname, "/pty/sl%02x", slave->id);
     *slave_out = fs_open(sname, O_RDWR);
-    if(*slave_out < 0)
+    if(*slave_out == FILEHND_INVALID)
         goto cleanup;
 
     if(boot) {
         /* Get the slave channel setup first, and dup it across
-           our stdout and stderr. */
+           our stdin, stdout and stderr. */
+        fs_dup2(*slave_out, STDIN_FILENO);
         fs_dup2(*slave_out, STDOUT_FILENO);
         fs_dup2(*slave_out, STDERR_FILENO);
     }
@@ -211,7 +212,8 @@ static void pty_destroy_unused(void) {
 
     /* Make sure no one else is messing with the list and then disable
        everything for a bit */
-    mutex_lock_irqsafe(&list_mutex);
+    if(mutex_lock_irqsafe(&list_mutex))
+        return;
 
     old = irq_disable();
 
@@ -428,7 +430,8 @@ static int pty_close(void *h) {
 
     if(fdobj->type == PF_PTY) {
         /* De-ref this end of it */
-        mutex_lock_irqsafe(&fdobj->d.p->mutex);
+        if(mutex_lock_irqsafe(&fdobj->d.p->mutex))
+            return -1;
 
         fdobj->d.p->refcnt--;
 
@@ -855,8 +858,8 @@ static int initted = 0;
 
 /* Initialize the file system */
 void fs_pty_init(void) {
-    int cm, cs;
-    int tm, ts;
+    file_t cm, cs;
+    file_t tm, ts;
 
     if(initted)
         return;
@@ -889,7 +892,8 @@ void fs_pty_shutdown(void) {
     if(!initted)
         return;
 
-    mutex_lock_irqsafe(&list_mutex);
+    /* If we fail, we proceed anyways */
+    mutex_trylock(&list_mutex);
 
     /* Go through and free all the pty entries */
     c = LIST_FIRST(&ptys);

@@ -46,7 +46,7 @@ __BEGIN_DECLS
 #define SND_STREAM_BUFFER_MAX_PCM8  (64 << 10)
 
 /** \brief  The maximum buffer size for each channel of ADPCM stream. */
-#define SND_STREAM_BUFFER_MAX_ADPCM (32 << 10)
+#define SND_STREAM_BUFFER_MAX_ADPCM ((32 << 10) - 64)
 
 /** \brief  The maximum buffer size for each channel of streams by default
             and for backward compatibility. */

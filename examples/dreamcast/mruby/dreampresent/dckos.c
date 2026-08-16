@@ -66,7 +66,7 @@ static mrb_value read_whole_txt_file(mrb_state *mrb, mrb_value self) {
   path = mrb_str_to_cstr(mrb, m_path);
   f = fs_open(path, O_RDONLY);
 
-  if(f < 0) {
+  if(f == FILEHND_INVALID) {
     printf("Failed to open %s.\n", path);
     return mrb_nil_value();
   }

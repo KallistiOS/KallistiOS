@@ -30,7 +30,7 @@
 void draw_dir(void) {
     file_t      d;
     size_t      y = INFO_Y;
-    dirent_t    *de;
+    const dirent_t    *de;
 
     d = fs_open("/vmu/a1", O_RDONLY | O_DIR);
 
@@ -137,7 +137,7 @@ void write_entry(void) {
     fs_unlink("/vmu/a1/TESTFILE");
     f = fs_open("/vmu/a1/TESTFILE", O_WRONLY);
 
-    if(!f) {
+    if(f == FILEHND_INVALID) {
         printf("error writing\n");
         return;
     }

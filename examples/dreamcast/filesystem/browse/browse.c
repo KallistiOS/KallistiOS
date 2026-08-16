@@ -119,9 +119,11 @@ int main(int argc, char **argv) {
                     fs_path_append(directory_temp, current_directory, BUFFER_LENGTH);
                     fs_path_append(directory_temp, directory_contents[selector_index].filename, BUFFER_LENGTH);
 
-                    content_count = browse_directory(directory_temp, directory_contents);
+                    memset(directory_temp2, 0, BUFFER_LENGTH);
+                    fs_normalize_path(directory_temp, directory_temp2);
+                    content_count = browse_directory(directory_temp2, directory_contents);
                     if(content_count > 0) {
-                        realpath(directory_temp, current_directory);
+                        realpath(directory_temp2, current_directory);
                         changed_directory = true;
                         selector_index = 0;
                     } 

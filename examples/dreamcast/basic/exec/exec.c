@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
 
     /* Map the sub-elf */
     f = fs_open("/rd/sub.bin", O_RDONLY);
-    assert(f);
+    assert(f != FILEHND_INVALID);
     subelf = fs_mmap(f);
     assert(subelf);
 

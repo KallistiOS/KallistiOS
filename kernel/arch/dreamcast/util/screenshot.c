@@ -131,7 +131,7 @@ int vid_screen_shot(const char *destfn) {
 
     /* Open output file */
     f = fs_open(destfn, O_WRONLY | O_TRUNC);
-    if(!f) {
+    if(f == FILEHND_INVALID) {
         dbglog(DBG_ERROR, "vid_screen_shot: can't open output file '%s'\n", destfn);
         return -1;
     }

@@ -5,6 +5,8 @@
 # Copyright (C) 2024 Falco Girgis
 #
 
+$(if ${KOS_BASE},,$(error KallistiOS environment not found. Did you source environ.sh? Please take a look at doc/README for more info.))
+
 # Make sure things compile nice and cleanly. We don't necessarily want to push
 # these flags out on to user code, but it's a good idea to keep them around for
 # compiling all of KOS proper.
@@ -14,14 +16,6 @@ KOS_CFLAGS += -Wextra -Wno-deprecated
 
 # Add stuff to SUBDIRS to auto-compile it with the big tree.
 SUBDIRS = utils kernel addons # examples
-
-# Detect a non-working or missing environ.sh file.
-ifndef KOS_BASE
-error:
-	@echo You don\'t seem to have a working  environ.sh file. Please take a look at
-	@echo doc/README for more info.
-	@exit 0
-endif
 
 all: subdirs
 

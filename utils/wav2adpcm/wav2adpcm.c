@@ -119,10 +119,16 @@ void pcm2adpcm(uint8_t *outbuffer, int16_t *buffer, size_t bytes) {
         adpcm_sample = CLAMP(adpcm_sample, 0, 7);
         if(step < 0)
             adpcm_sample |= 8;
+        /* jn64 - Pack low nibble first to match adpcm2pcm() (and AICA behavior),
+           which decodes the low nibble of each byte before the high nibble. The
+           previous order wrote sample 0 into the high nibble, leaving a null low
+           nibble, so encode->decode was offset by one sample (a leading zero
+           sample, everything shifted, last sample dropped). Even samples go in
+           the low nibble, odd samples in the high nibble. */
         if(!nibble)
-            *outbuffer++ = buf_sample | (adpcm_sample<<4);
+            buf_sample = adpcm_sample & 0x0F;
         else
-            buf_sample = (adpcm_sample & 15);
+            *outbuffer++ = buf_sample | (adpcm_sample << 4);
         nibble ^= 1;
         ymz_step(adpcm_sample, &history, &step_size);
     }
@@ -307,7 +313,6 @@ int straight_copy(FILE *in, const char *outfile) {
 
     if(fread(buffer, filesize, 1, in) != 1) {
         fprintf(stderr, "Cannot read file.\n");
-        free(buffer);
         result = -1;
         goto cleanup;
     }
@@ -372,7 +377,8 @@ int wav2adpcm(const char *infile, const char *outfile) {
     }
 
     pcmsize = wavhdr_chunk.datasize;
-    adpcmsize = pcmsize / 4;
+    /* round size up to next multiple of 4 before division */
+    adpcmsize = ((pcmsize + 3) & ~3) / 4;
 
     pcmbuf = malloc(pcmsize);
     adpcmbuf = malloc(adpcmsize);

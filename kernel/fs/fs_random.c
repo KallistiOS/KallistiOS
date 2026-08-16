@@ -50,7 +50,13 @@ static rnd_fh_t *rnd_open_file(vfs_handler_t *vfs, const char *fn, int mode) {
     (void) vfs;
     (void) fn;
 
-    rnd_fh_t    * fd;       /* file descriptor */
+    rnd_fh_t *fd;       /* file descriptor */
+
+    /* This is a special file, not a directory */
+    if(mode & O_DIR) {
+        errno = ENOTDIR;
+        return NULL;
+    }
 
     /* We only allow reading, not writing */
     if((mode & O_MODE_MASK) != O_RDONLY) {
@@ -72,33 +78,31 @@ static rnd_fh_t *rnd_open_file(vfs_handler_t *vfs, const char *fn, int mode) {
 }
 
 /* open function */
-static void * rnd_open(vfs_handler_t *vfs, const char *path, int mode) {
+static void *rnd_open(vfs_handler_t *vfs, const char *path, int mode) {
     rnd_fh_t *fh = rnd_open_file(vfs, path, mode);
     if(!fh) {
         return NULL;
     }
 
     /* link the fh onto the top of the list */
-    mutex_lock(&fh_mutex);
+    mutex_lock_scoped(&fh_mutex);
     TAILQ_INSERT_TAIL(&rnd_fh, fh, listent);
-    mutex_unlock(&fh_mutex);
 
     return (void *)fh;
 }
 
 /* Verify that a given hnd is actually in the list */
 static int rnd_verify_hnd(void *hnd) {
-    rnd_fh_t    *cur;
-    int     rv = 0;
+    rnd_fh_t *cur;
+    int rv = 0;
 
-    mutex_lock(&fh_mutex);
+    mutex_lock_scoped(&fh_mutex);
     TAILQ_FOREACH(cur, &rnd_fh, listent) {
         if((void *)cur == hnd) {
             rv = 1;
             break;
         }
     }
-    mutex_unlock(&fh_mutex);
 
     return rv;
 }
@@ -128,7 +132,7 @@ static int rnd_close(void *hnd) {
 /* read function */
 static ssize_t rnd_read(void *hnd, void *buffer, size_t cnt) {
     rnd_fh_t *fh;
-    uint8_t* buf = buffer;
+    uint8_t *buf = buffer;
 
     /* Check the handle */
     if(!rnd_verify_hnd(hnd))
@@ -150,7 +154,7 @@ static ssize_t rnd_write(void *hnd, const void *buffer, size_t cnt) {
     (void) buffer;
     (void) cnt;
 
-    rnd_fh_t    *fh;
+    rnd_fh_t *fh;
 
     /* Check the handle we were given */
     if(!rnd_verify_hnd(hnd))
@@ -329,7 +333,7 @@ void fs_rnd_init(void) {
 }
 
 void fs_rnd_shutdown(void) {
-    rnd_fh_t * c, * n;
+    rnd_fh_t *c, *n;
 
     mutex_lock(&fh_mutex);
 

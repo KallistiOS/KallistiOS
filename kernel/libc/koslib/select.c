@@ -83,18 +83,18 @@ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *errorfds,
 
         if(pollfds[i].revents & POLLIN) {
             FD_SET(pollfds[i].fd, readfds);
-            ++j;
+            ++rv;
         }
         if(pollfds[i].revents & POLLOUT) {
             FD_SET(pollfds[i].fd, writefds);
-            ++j;
+            ++rv;
         }
         if((pollfds[i].events & POLLPRI) &&
            (pollfds[i].revents & (POLLPRI | POLLERR | POLLHUP))) {
             FD_SET(pollfds[i].fd, errorfds);
-            ++j;
+            ++rv;
         }
     }
 
-    return j;
+    return rv;
 }

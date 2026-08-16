@@ -255,7 +255,7 @@ extern struct fs_hnd *fd_table[FD_SETSIZE];
                             "File Open Modes" list. Multiple values can be ORed
                             together.
     
-    \return                 The new file descriptor on success, -1 on error.
+    \return                 The new file descriptor on success, FILEHND_INVALID on error.
 */
 file_t fs_open(const char *fn, int mode);
 
@@ -623,7 +623,7 @@ int fs_fstat(file_t hnd, struct stat *buf);
 
     \param  oldfd           The old file descriptor to duplicate.
     
-    \return                 The new file descriptor on success, -1 on failure.
+    \return                 The new file descriptor on success, FILEHND_INVALID on failure.
 */
 file_t fs_dup(file_t oldfd);
 
@@ -637,7 +637,7 @@ file_t fs_dup(file_t oldfd);
     \param  oldfd           The old file descriptor to duplicate.
     \param  newfd           The descriptor to copy into.
     
-    \return                 The new file descriptor on success, -1 on failure.
+    \return                 The new file descriptor on success, FILEHND_INVALID on failure.
 */
 file_t fs_dup2(file_t oldfd, file_t newfd);
 
@@ -652,7 +652,7 @@ file_t fs_dup2(file_t oldfd, file_t newfd);
     \param  vfs             The VFS handler structure to use for the file.
     \param  hnd             Internal handle data for the file.
     
-    \return                 The opened descriptor on success, -1 on failure.
+    \return                 The opened descriptor on success, FILEHND_INVALID on failure.
 */
 file_t fs_open_handle(vfs_handler_t *vfs, void *hnd);
 

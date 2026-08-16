@@ -20,7 +20,7 @@ void fPvrWrite(const PvrTexEncoder *pte, const char *outfname) {
 	assert(pte->pvr_tex);
 	assert(outfname);
 
-	FILE *f = fopen(outfname, "w");
+	FILE *f = fopen(outfname, "wb");
 	assert(f);
 
 	//Write header

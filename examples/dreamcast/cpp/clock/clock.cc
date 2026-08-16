@@ -11,8 +11,6 @@
 fntRenderer *text;
 fntTexFont *font;
 
-int filter_mode = 0;
-
 const char *days[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 const char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
                          "Aug", "Sep", "Oct", "Nov", "Dec"
@@ -70,7 +68,7 @@ void drawFrame() {
     pvr_scene_begin();
     pvr_list_begin(PVR_LIST_TR_POLY);
 
-    text->setFilterMode(filter_mode);
+    text->setFilterMode(PVR_FILTER_NEAREST);
 
     text->setFont(font);
     text->setPointSize(30);

@@ -13,8 +13,7 @@ void draw_findings(void) {
     file_t      d;
 
     d = fs_open("/vmu/a1", O_RDONLY | O_DIR);
-
-    if(!d) {
+    if(d == FILEHND_INVALID) {
         bfont_draw_str_vram_fmt(10, 88, false, "Can't read VMU");
     }
     else {
@@ -73,8 +72,7 @@ void write_game_entry(void) {
     maple_device_t *dev;
 
     f = fs_open("/rd/TETRIS.VMS", O_RDONLY);
-
-    if(!f) {
+    if(f == FILEHND_INVALID) {
         printf("Error reading Tetris game from romdisk\n");
         return;
     }

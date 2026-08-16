@@ -286,7 +286,7 @@ int socket(int domain, int type, int protocol) {
     /* Attempt to get a handle for this socket */
     sock->fd = fs_open_handle(&vh, sock);
 
-    if(sock->fd < 0) {
+    if(sock->fd == FILEHND_INVALID) {
         free(sock);
         mutex_unlock(&proto_rlock);
         return -1;
@@ -329,7 +329,7 @@ net_socket_t *fs_socket_open_sock(fs_socket_proto_t *proto) {
     /* Attempt to get a handle for this socket */
     sock->fd = fs_open_handle(&vh, sock);
 
-    if(sock->fd < 0) {
+    if(sock->fd == FILEHND_INVALID) {
         free(sock);
         return NULL;
     }
