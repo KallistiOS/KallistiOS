@@ -7,20 +7,29 @@
 #include <threads.h>
 #include <errno.h>
 
+#include "threads_timeout.h"
+
 int cnd_timedwait(cnd_t *restrict cond, mtx_t *restrict mtx,
                   const struct timespec *restrict ts) {
-    int ms = 0;
+    unsigned int timeout;
 
-    /* Calculate the number of milliseconds to sleep for. No, you don't get
-       anywhere near nanosecond precision here. */
-    ms = ts->tv_sec * 1000 + ts->tv_nsec / 1000000;
+    /* Convert deadline to relative milliseconds. */
+    int deadline_status = c11_timeout_ms(ts, &timeout);
 
-    /* The standard wording implies that we must wait at least the time period
-       specified, so if we have an uneven number of milliseconds, round up. */
-    if(ts->tv_nsec % 1000000)
-        ++ms;
+    /* Negative means a bad deadline or an unusable clock. */
+    if(deadline_status < 0)
+        return thrd_error;
 
-    if(cond_wait_timed(cond, mtx, ms)) {
+    /* Deadline has already expired. C11 still requires the mutex to be
+       released and reacquired, but there is nothing left to wait for. */
+    if(!deadline_status) {
+        mutex_unlock(mtx);
+        mutex_lock(mtx);
+        return thrd_timedout;
+    }
+
+    /* Wait for a signal or the deadline, whichever comes first. */
+    if(cond_wait_timed(cond, mtx, timeout)) {
         if(errno == ETIMEDOUT)
             return thrd_timedout;
 
