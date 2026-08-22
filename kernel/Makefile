@@ -13,6 +13,7 @@ STUBS = stubs/kernel_export_stubs.o stubs/arch_export_stubs.o stubs/subarch_expo
 KOS_CFLAGS += $(KOS_CSTD)
 
 all: banner.h defaultall $(STUBS)
+	@mkdir -p $(KOS_BASE)/lib/$(KOS_ARCH)
 	rm -f $(KOS_BASE)/lib/$(KOS_ARCH)/libkallisti.a
 	kos-ar rcs $(KOS_BASE)/lib/$(KOS_ARCH)/libromdiskbase.a romdisk/*.o
 	kos-ar rcs $(KOS_BASE)/lib/$(KOS_ARCH)/libkallisti.a build/*.o

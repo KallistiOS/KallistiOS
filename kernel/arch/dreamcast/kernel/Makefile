@@ -18,7 +18,8 @@ SUBDIRS =
 
 myall: $(OBJS)
 	-cp $(COPYOBJS) $(KOS_BASE)/kernel/build/
-	-cp startup.o $(KOS_BASE)/lib/$(KOS_ARCH)/_kos_startup.o
+	@mkdir -p $(KOS_BASE)/lib/$(KOS_ARCH)
+	cp startup.o $(KOS_BASE)/lib/$(KOS_ARCH)/_kos_startup.o
 
 include $(KOS_BASE)/Makefile.prefab
 
