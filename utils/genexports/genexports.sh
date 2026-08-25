@@ -30,6 +30,11 @@ echo '#ifdef __STRICT_ANSI__' >> $outpfile
 echo '#undef __STRICT_ANSI__' >> $outpfile
 echo '#endif' >> $outpfile
 
+#Provide prototypes for stack protector to work
+echo '#include <stdint.h>' >> $outpfile
+echo 'extern uintptr_t __stack_chk_guard;' >> $outpfile
+echo 'void __stack_chk_fail(void);' >> $outpfile
+
 for i in $includes; do
 	echo "#include <$i>" >> $outpfile
 done
