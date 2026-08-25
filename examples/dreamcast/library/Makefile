@@ -21,7 +21,7 @@ KOS_CFLAGS += -I./loadable-dependence
 all: rm-elf $(TARGET_LIB) loadable $(TARGET)
 
 clean: rm-elf
-	-rm -f $(OBJS)
+	-rm -f $(OBJS) exports.c exports_stubs.*
 	-rm -rf ./romdisk
 	cd loadable-dependence && make clean
 	cd loadable-dependent && make clean
