@@ -30,32 +30,41 @@ struct dbgio_handlers_list dbgio_handlers;
 /* Our currently selected handler. */
 static dbgio_handler_t *dbgio = NULL;
 
-int dbgio_dev_select(const char *name) {
+static dbgio_handler_t *dbgio_dev_lookup(const char *name) {
     dbgio_handler_t *cur;
 
     SLIST_FOREACH(cur, &dbgio_handlers, entry) {
-        if(!strcmp(cur->name, name)) {
-            /* Already selected, nothing to do */
-            if(cur == dbgio)
-                return 0;
-
-            /* If it has init, try to and kick on failure. */
-            if(!cur->output && cur->init && cur->init()) {
-                errno = ENODEV;
-                return -1;
-            }
-
-            /* If it won't be used, and has a shutdown, do so */
-            if(!dbgio->output && dbgio->shutdown)
-                dbgio->shutdown();
-
-            dbgio = cur;
-            return 0;
-        }
+        if(!strcmp(cur->name, name))
+            return cur;
     }
 
-    errno = ENODEV;
-    return -1;
+    return NULL;
+}
+
+int dbgio_dev_select(const char *name) {
+    dbgio_handler_t *cur = dbgio_dev_lookup(name);
+
+    if(!cur) {
+        errno = ENODEV;
+        return -1;
+    }
+
+   /* Already selected, nothing to do */
+    if(cur == dbgio)
+        return 0;
+
+    /* If it has init, try to and kick on failure. */
+    if(!cur->output && cur->init && cur->init()) {
+        errno = ENODEV;
+        return -1;
+    }
+
+    /* If it won't be used, and has a shutdown, do so */
+    if(!dbgio->output && dbgio->shutdown)
+        dbgio->shutdown();
+
+    dbgio = cur;
+    return 0;
 }
 
 const char *dbgio_dev_get(void) {
@@ -66,45 +75,43 @@ const char *dbgio_dev_get(void) {
 }
 
 int dbgio_dev_output(const char *name, bool output) {
-    dbgio_handler_t *cur;
+    dbgio_handler_t *cur = dbgio_dev_lookup(name);
 
-    SLIST_FOREACH(cur, &dbgio_handlers, entry) {
-        if(!strcmp(cur->name, name)) {
-            /* Nothing to do */
-            if(output == cur->output)
-                return 0;
-
-            /* Already set as primary so just pass through */
-            if(cur == dbgio) {
-                cur->output = output;
-                return 0;
-            }
-
-            /* Enable the outputter */
-            if(output) {
-                /* If it has init, and can't, fail. */
-                if(cur->init && cur->init()) {
-                    errno = ENODEV;
-                    return -1;
-                }
-                cur->output = true;
-
-                return 0;
-            }
-            /* Disable the outputter */
-            else {
-                cur->output = false;
-
-                if(cur->shutdown)
-                    cur->shutdown();
-
-                return 0;
-            }
-        }
+    if(!cur) {
+        errno = ENODEV;
+        return -1;
     }
 
-    errno = ENODEV;
-    return -1;
+    /* Nothing to do */
+    if(output == cur->output)
+        return 0;
+
+    /* Already set as primary so just pass through */
+    if(cur == dbgio) {
+        cur->output = output;
+        return 0;
+    }
+
+    /* Enable the outputter */
+    if(output) {
+        /* If it has init, and can't, fail. */
+        if(cur->init && cur->init()) {
+            errno = ENODEV;
+            return -1;
+        }
+        cur->output = true;
+
+        return 0;
+    }
+    /* Disable the outputter */
+    else {
+        cur->output = false;
+
+        if(cur->shutdown)
+            cur->shutdown();
+
+        return 0;
+    }
 }
 
 static int dbgio_enabled = 0;
@@ -117,6 +124,11 @@ void dbgio_disable(void) {
 
 int dbgio_add_handler(dbgio_handler_t *handler) {
     int rv = 0;
+
+    /* If we already have a handler with the same name, nothing to do */
+    if(dbgio_dev_lookup((handler->name)))
+        return 0;
+
     /* The handler's set by default to always output */
     if(handler->output)
         if(handler->init)
