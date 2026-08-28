@@ -117,7 +117,7 @@ typedef struct dbgio_handler {
     \retval 0               No errors.
     \retval Non-zero        The return of a handler's init if set to output by default.
 */
-int dbgio_add_handler(dbgio_handler_t *handler);
+int dbgio_add_handler(dbgio_handler_t *handler) __nonnull_all;
 
 /** \brief   Remove a dbgio handler from the list.
     \ingroup logging
@@ -129,7 +129,7 @@ int dbgio_add_handler(dbgio_handler_t *handler);
     \retval 0               On success
     \retval -1              On error
 */
-int dbgio_remove_handler(dbgio_handler_t *handler);
+int dbgio_remove_handler(dbgio_handler_t *handler) __nonnull_all;
 
 /** \brief   Select a new dbgio interface by name.
     \ingroup logging
@@ -145,7 +145,7 @@ int dbgio_remove_handler(dbgio_handler_t *handler);
     \par    Error Conditions:
     \em     ENODEV - The specified device could not be initialized or wasn't found.
 */
-int dbgio_dev_select(const char *name);
+int dbgio_dev_select(const char *name) __nonnull_all;
 
 /** \brief   Select a valid dbgio interface automatically.
     \ingroup logging
@@ -191,7 +191,7 @@ const char *dbgio_dev_get(void);
     \par    Error Conditions:
     \em     ENODEV - The specified device could not be initialized or wasn't found.
 */
-int dbgio_dev_output(const char *name, bool output);
+int dbgio_dev_output(const char *name, bool output) __nonnull_all;
 
 /** \brief   Initialize the dbgio console.
     \ingroup logging
