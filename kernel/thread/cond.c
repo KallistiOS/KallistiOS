@@ -15,6 +15,7 @@
 
 #include <kos/thread.h>
 #include <kos/cond.h>
+#include <kos/errno.h>
 #include <kos/genwait.h>
 
 #include <kos/dbglog.h>
@@ -59,6 +60,9 @@ int cond_wait_timed(condvar_t *cv, mutex_t *m, int timeout) {
 
     if(rv < 0 && errno == EAGAIN)
         errno = ETIMEDOUT;
+
+    /* Caching errno since a contended mutex sets EBUSY. */
+    errno_save_scoped();
 
     /* Re-lock our mutex */
     mutex_lock(m);
