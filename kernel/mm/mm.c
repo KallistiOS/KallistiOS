@@ -15,14 +15,14 @@
 
 #include <arch/arch.h>
 #include <arch/stack.h>
-#include <kos/dbglog.h>
+#include <kos/dbgio.h>
 #include <kos/mm.h>
 #include <kos/linker.h>
 #include <errno.h>
-#include <inttypes.h>
 #include <stdatomic.h>
 #include <stdint.h>
-#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 /* The end of the program is always marked by the 'end' symbol. So we'll
    just longword-align that. sbrk() calls will move up from there. */
@@ -48,8 +48,17 @@ void *mm_sbrk(ptrdiff_t increment) {
         new_base = base + increment;
 
         if(new_base >= (_arch_mem_top - THD_KERNEL_STACK_SIZE)) {
-            dbglog(DBG_CRITICAL, "Out of memory. Requested sbrk_base %" PRIxPTR \
-                   ", was %" PRIxPTR ", diff %zu\n", new_base, base, increment);
+            char buf[128];
+
+            strcpy(buf, "Out of memory. Requested sbrk_base 0x");
+            itoa(new_base, buf + strlen(buf), 16);
+            strcat(buf, ", was 0x");
+            itoa(base, buf + strlen(buf), 16);
+            strcat(buf, ", diff ");
+            itoa(increment, buf + strlen(buf), 10);
+            strcat(buf, "\n");
+            dbgio_write_str(buf);
+
             errno = ENOMEM;
             return (void *)-1;
         }
