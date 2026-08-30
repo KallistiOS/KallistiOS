@@ -1582,9 +1582,7 @@ static Void_t*  mEMALIGn(size_t, size_t);
 #if 0
 static Void_t*  vALLOc(size_t);
 #endif
-#ifndef KM_DBG
 static Void_t*  cALLOc(size_t, size_t);
-#endif
 #if 0
 static int      mTRIm(size_t);
 #endif
@@ -1655,8 +1653,6 @@ static pthread_mutex_t mALLOC_MUTEx = PTHREAD_MUTEX_INITIALIZER;
 
 /************************** Debug Stuff **************************/
 
-#ifdef KM_DBG
-
 #include <stdlib.h>
 #include <kos/dbgio.h>
 #include <kos/thread.h>
@@ -1691,7 +1687,7 @@ static LIST_HEAD(memctl_list, memctl) block_list;
 
 #define get_cur_tid_safe ((thd_current == NULL) ? (tid_t)0 : thd_current->tid)
 
-char dbg_print_buffer[256];
+static char dbg_print_buffer[256];
 
 enum func_type_names { name_MALLOC = 0, name_REALLOC = 1, name_MEMALIGN = 2, name_CALLOC = 3,
     name_FREE = 4, name_CHECKALL = 5, name_CHECK = 6, name_STATS = 7};
@@ -1700,10 +1696,16 @@ static const char *func_type[8] =
     {"malloc", "realloc", "memalign", "calloc", "free", "check_all", "check", "stats"};
 
 void dbg_print_thd_addr_action(tid_t thread, uint32_t addr, void *m, size_t s, uint8_t which) {
+    /* This should not happen so just protect against that accident */
+    if(!__is_defined(KM_DBG)) {
+        assert(0);
+        return;
+    }
+
     strcpy(dbg_print_buffer, "Thread ");
-    itoa(thread, (dbg_print_buffer + strlen(dbg_print_buffer)), 10);
+    utoa(thread, (dbg_print_buffer + strlen(dbg_print_buffer)), 10);
     strcat(dbg_print_buffer, ", addr 0x");
-    itoa(addr, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+    utoa(addr, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
     strcat(dbg_print_buffer, " ");
     strcat(dbg_print_buffer, func_type[which]);
 
@@ -1711,13 +1713,13 @@ void dbg_print_thd_addr_action(tid_t thread, uint32_t addr, void *m, size_t s, u
         strcat(dbg_print_buffer, "ing all memory blocks");
     else if(which == name_FREE) {
         strcat(dbg_print_buffer, "ing mem @ 0x");
-        itoa((uint32_t)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+        utoa((uint32_t)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
     }
     else {
         strcat(dbg_print_buffer, "ing ");
-        itoa(s, (dbg_print_buffer + strlen(dbg_print_buffer)), 10);
+        utoa(s, (dbg_print_buffer + strlen(dbg_print_buffer)), 10);
         strcat(dbg_print_buffer, " bytes @ 0x");
-        itoa((uint32_t)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+        utoa((uint32_t)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
     }
 
     strcat(dbg_print_buffer, "\n");
@@ -1725,16 +1727,15 @@ void dbg_print_thd_addr_action(tid_t thread, uint32_t addr, void *m, size_t s, u
     dbgio_write_str(dbg_print_buffer);
 }
 
-int mem_check_block_int(memctl_t *ctl, int source) {
+static int mem_check_block_int(memctl_t *ctl, int source) {
     uint32_t rv = arch_get_ret_addr(), *nt, i;
-    int dmg = 0;
     int retv = 0;
 
     if(ctl->magic != BLOCK_MAGIC) {
         dbg_print_thd_addr_action(get_cur_tid_safe, rv, get_buff_p(ctl), 0, source);
 
         strcpy(dbg_print_buffer, "  'magic' is not correct! 0x");
-        itoa(ctl->magic, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+        utoa(ctl->magic, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
         strcat(dbg_print_buffer, "\n");
         dbgio_write_str(dbg_print_buffer);
         
@@ -1748,13 +1749,12 @@ int mem_check_block_int(memctl_t *ctl, int source) {
                 dbg_print_thd_addr_action(get_cur_tid_safe, rv, get_buff_p(ctl), 0, source);
 
                 strcpy(dbg_print_buffer, "  pre-magic is wrong at index ");
-                itoa(i, (dbg_print_buffer + strlen(dbg_print_buffer)), 10);
+                utoa(i, (dbg_print_buffer + strlen(dbg_print_buffer)), 10);
                 strcat(dbg_print_buffer, " (0x");
-                itoa(nt[i], (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+                utoa(nt[i], (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
                 strcat(dbg_print_buffer, ")\n");
                 dbgio_write_str(dbg_print_buffer);
 
-                dmg = 1;
                 retv = -2;
             }
         }
@@ -1766,18 +1766,17 @@ int mem_check_block_int(memctl_t *ctl, int source) {
                 dbg_print_thd_addr_action(get_cur_tid_safe, rv, get_buff_p(ctl), 0, source);
 
                 strcpy(dbg_print_buffer, "  post-magic is wrong at index ");
-                itoa(i, (dbg_print_buffer + strlen(dbg_print_buffer)), 10);
+                utoa(i, (dbg_print_buffer + strlen(dbg_print_buffer)), 10);
                 strcat(dbg_print_buffer, " (0x");
-                itoa(nt[i], (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+                utoa(nt[i], (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
                 strcat(dbg_print_buffer, ")\n");
                 dbgio_write_str(dbg_print_buffer);
 
-                dmg = 1;
                 retv = -3;
             }
         }
 
-        if(dmg) {
+        if(retv) {
              dbgio_write_str("  DAMAGED BLOCK DURING MEM_CHECK_BLOCK\n");
         }
     }
@@ -1785,58 +1784,54 @@ int mem_check_block_int(memctl_t *ctl, int source) {
     return retv;
 }
 
-#endif  /* KM_DEBUG */
-
-Void_t* public_mALLOc(size_t bytes) {
-    Void_t* m;
-
-#ifdef KM_DBG
-    uint32_t rv = arch_get_ret_addr(), *nt1, *nt2, i, rs;
-    memctl_t * ctl;
-#endif
+Void_t *public_mALLOc(size_t bytes) {
+    Void_t *m;
 
     if(MALLOC_PREACTION != 0) {
         return 0;
     }
 
-#ifdef KM_DBG
+    if(__is_defined(KM_DBG)) {
+        uint32_t rv = arch_get_ret_addr(), *nt1, *nt2, i, rs;
+        memctl_t *ctl;
 
-    if(bytes & 31)
-        rs = (bytes & ~31) + 32;
+        rs = __align_up(bytes, 32);
+
+        ctl = (memctl_t *)mALLOc(rs + (BUFFER_SIZE * 2));
+        if(!ctl) {
+            if(MALLOC_POSTACTION != 0) {
+            }
+
+            return NULL;
+        }
+        memset(ctl, 0, sizeof(memctl_t));
+        ctl->magic = BLOCK_MAGIC;
+        ctl->size = bytes;
+        ctl->thread = get_cur_tid_safe;
+        ctl->addr = rv;
+
+        nt1 = (uint32_t *)ctl;
+
+        for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++)
+            nt1[i] = PRE_MAGIC;
+
+        ctl->post = nt2 = nt1 + BUFFER_SIZE / 4 + rs / 4;
+
+        for(i = 0; i < BUFFER_SIZE / 4; i++)
+            nt2[i] = POST_MAGIC;
+
+        ctl->type = func_type[0];
+
+        LIST_INSERT_HEAD(&block_list, ctl, list);
+
+        m = (void *)(nt1 + BUFFER_SIZE / 4);
+
+
+        if(__is_defined(KM_DBG_VERBOSE))
+            dbg_print_thd_addr_action(ctl->thread, ctl->addr, m, bytes, name_MALLOC);
+    }
     else
-        rs = bytes;
-
-    ctl = (memctl_t *)mALLOc(rs + (BUFFER_SIZE * 2));
-    memset(ctl, 0, sizeof(memctl_t));
-    ctl->magic = BLOCK_MAGIC;
-    ctl->size = bytes;
-    ctl->thread = get_cur_tid_safe;
-    ctl->addr = rv;
-
-    nt1 = (uint32_t *)ctl;
-
-    for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++)
-        nt1[i] = PRE_MAGIC;
-
-    ctl->post = nt2 = nt1 + BUFFER_SIZE / 4 + rs / 4;
-
-    for(i = 0; i < BUFFER_SIZE / 4; i++)
-        nt2[i] = POST_MAGIC;
-
-    ctl->type = func_type[0];
-
-    LIST_INSERT_HEAD(&block_list, ctl, list);
-
-    m = (void *)(nt1 + BUFFER_SIZE / 4);
-
-
-#ifdef KM_DBG_VERBOSE
-    dbg_print_thd_addr_action(ctl->thread, ctl->addr, m, bytes, name_MALLOC);
-#endif
-
-#else
-    m = mALLOc(bytes);
-#endif
+        m = mALLOc(bytes);
 
     if(MALLOC_POSTACTION != 0) {
     }
@@ -1845,12 +1840,6 @@ Void_t* public_mALLOc(size_t bytes) {
 }
 
 void public_fREe(Void_t* m) {
-#ifdef KM_DBG
-    memctl_t * ctl;
-#ifdef KM_DBG_VERBOSE
-    uint32_t rv = arch_get_ret_addr();
-#endif
-#endif
 
     /* standard C says if block is NULL, do not try to free it */
     if(m == NULL)
@@ -1860,53 +1849,44 @@ void public_fREe(Void_t* m) {
         return;
     }
 
-#ifdef KM_DBG
+    if(__is_defined(KM_DBG)) {
+        if(__is_defined(KM_DBG_VERBOSE))
+            dbg_print_thd_addr_action(get_cur_tid_safe, arch_get_ret_addr(), m, 0, name_FREE);
 
-#ifdef KM_DBG_VERBOSE
-    dbg_print_thd_addr_action(get_cur_tid_safe, rv, m, 0, name_FREE);
-#endif
+        memctl_t *ctl = get_memctl(m);
 
-    ctl = get_memctl(m);
-
-    if(mem_check_block_int(ctl, name_FREE) != -1) {
-        LIST_REMOVE(ctl, list);
-        fREe(ctl);
+        if(mem_check_block_int(ctl, name_FREE) != -1) {
+            LIST_REMOVE(ctl, list);
+            fREe(ctl);
+        }
     }
-
-#else
-    fREe(m);
-#endif
+    else
+        fREe(m);
 
     if(MALLOC_POSTACTION != 0) {
     }
 }
 
 int mem_check_block(void *m) {
-#ifdef KM_DBG
-    memctl_t * ctl;
-    ctl = get_memctl(m);
-    return mem_check_block_int(ctl, name_CHECK);
-#else
-    (void)m;
-    return 0;
-#endif
+    if(__is_defined(KM_DBG))
+        return mem_check_block_int(get_memctl(m), name_CHECK);
+    else
+        return 0;
 }
 
 int mem_check_all(void) {
-#ifdef KM_DBG
+    if(!__is_defined(KM_DBG))
+        return 0;
+
     int retv = 0, rvp;
-#ifdef KM_DBG_VERBOSE
-    uint32_t rv = arch_get_ret_addr();
-#endif
-    memctl_t * ctl;
+    memctl_t *ctl;
 
     if(MALLOC_PREACTION != 0) {
         return 0;
     }
 
-#ifdef KM_DBG_VERBOSE
-    dbg_print_thd_addr_action(get_cur_tid_safe, rv, 0, 0, name_CHECKALL);
-#endif
+    if(__is_defined(KM_DBG_VERBOSE))
+        dbg_print_thd_addr_action(get_cur_tid_safe, arch_get_ret_addr(), 0, 0, name_CHECKALL);
 
     LIST_FOREACH(ctl, &block_list, list) {
         rvp = mem_check_block_int(ctl, name_CHECKALL);
@@ -1919,96 +1899,92 @@ int mem_check_all(void) {
     }
 
     return retv;
-#else
-    return 0;
-#endif
 }
 
-Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
-#ifdef KM_DBG
-    uint32_t rv = arch_get_ret_addr(), rs, *nt, i;
-    memctl_t * ctl;
-    int dmg = 0;
-#endif
+Void_t *public_rEALLOc(Void_t *m, size_t bytes) {
 
     if(MALLOC_PREACTION != 0) {
         return 0;
     }
 
-#ifdef KM_DBG
-    ctl = get_memctl(m);
+    if(__is_defined(KM_DBG)) {
+        uint32_t rv = arch_get_ret_addr(), rs, *nt, i;
+        int dmg = 0;
+        memctl_t *ctl = get_memctl(m);
 
-#ifdef KM_DBG_VERBOSE
-    dbg_print_thd_addr_action(get_cur_tid_safe, rv, m, bytes, name_REALLOC);
-#endif
+        if(__is_defined(KM_DBG_VERBOSE))
+            dbg_print_thd_addr_action(get_cur_tid_safe, rv, m, bytes, name_REALLOC);
 
-    // We can't check realloc'ing the zero block (this is valid but of
-    // course there is no "previous" block to check).
-    if(m != NULL) {
-        if(mem_check_block_int(ctl, name_REALLOC) != -1)
-            LIST_REMOVE(ctl, list);
-    }
-    else
-        ctl = NULL;
-
-    if(!dmg) {
-        if(bytes & 31)
-            rs = (bytes & ~31) + 32;
-        else
-            rs = bytes;
-
-        ctl = (memctl_t *)rEALLOc(ctl, rs + (BUFFER_SIZE * 2));
-
-        if(bytes != 0)
-            assert(ctl != NULL);
-
-#ifdef KM_DBG_VERBOSE
-    strcpy(dbg_print_buffer, " realloc'd block 0x");
-    itoa((uint32_t)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
-    strcat(dbg_print_buffer, " to 0x");
-    itoa(((uint32_t)ctl) + BUFFER_SIZE, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
-    strcat(dbg_print_buffer, "\n");
-    dbgio_write_str(dbg_print_buffer);
-#endif
-
-        // If they realloc'd to zero, we're done here.
-        if(bytes != 0) {
-            /* Our data may or may not still be there because the realloc
-               may have gone from NULL. So redo both sentinels and add
-               it back to the list. */
-            /* Our data is still there, we just need to move the end
-               block sentinel and add it back to the list */
-            memset(ctl, 0, sizeof(memctl_t));
-            ctl->magic = BLOCK_MAGIC;
-            ctl->size = bytes;
-            ctl->thread = get_cur_tid_safe;
-            ctl->addr = rv;
-
-            nt = (uint32_t *)ctl;
-
-            for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++)
-                nt[i] = PRE_MAGIC;
-
-            ctl->size = bytes;
-
-            ctl->post = nt = ((uint32_t *)ctl) + BUFFER_SIZE / 4 + rs / 4;
-
-            for(i = 0; i < BUFFER_SIZE / 4; i++)
-                nt[i] = POST_MAGIC;
-
-            LIST_INSERT_HEAD(&block_list, ctl, list);
-
-            ctl->type = func_type[1];
-
-            m = (void *)(((uint32_t)ctl) + BUFFER_SIZE);
+        // We can't check realloc'ing the zero block (this is valid but of
+        // course there is no "previous" block to check).
+        if(m != NULL) {
+            if(!mem_check_block_int(ctl, name_REALLOC))
+                LIST_REMOVE(ctl, list);
+            else
+                dmg = 1;
         }
         else
-            m = NULL;
-    }
+            ctl = NULL;
 
-#else
-    m = rEALLOc(m, bytes);
-#endif
+        if(!dmg) {
+            rs = __align_up(bytes, 32);
+
+            ctl = (memctl_t *)rEALLOc(ctl, rs + (BUFFER_SIZE * 2));
+
+            if(__is_defined(KM_DBG_VERBOSE)) {
+                strcpy(dbg_print_buffer, " realloc'd block 0x");
+                utoa((uint32_t)m, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+                strcat(dbg_print_buffer, " to 0x");
+                utoa(((uint32_t)ctl) + BUFFER_SIZE, (dbg_print_buffer + strlen(dbg_print_buffer)), 16);
+                strcat(dbg_print_buffer, "\n");
+                dbgio_write_str(dbg_print_buffer);
+            }
+
+            if(bytes != 0) {
+                assert(ctl != NULL);
+
+                /* If in NDEBUG for some reason, still behave well */
+                if(MALLOC_POSTACTION != 0) { }
+                return NULL;
+            }
+
+            // If they realloc'd to zero, we're done here.
+            if(bytes != 0) {
+                /* Our data may or may not still be there because the realloc
+                   may have gone from NULL. So redo both sentinels and add
+                   it back to the list. */
+                /* Our data is still there, we just need to move the end
+                   block sentinel and add it back to the list */
+                memset(ctl, 0, sizeof(memctl_t));
+                ctl->magic = BLOCK_MAGIC;
+                ctl->size = bytes;
+                ctl->thread = get_cur_tid_safe;
+                ctl->addr = rv;
+
+                nt = (uint32_t *)ctl;
+
+                for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++)
+                    nt[i] = PRE_MAGIC;
+
+                ctl->size = bytes;
+
+                ctl->post = nt = ((uint32_t *)ctl) + BUFFER_SIZE / 4 + rs / 4;
+
+                for(i = 0; i < BUFFER_SIZE / 4; i++)
+                    nt[i] = POST_MAGIC;
+
+                LIST_INSERT_HEAD(&block_list, ctl, list);
+
+                ctl->type = func_type[1];
+
+                m = (void *)(((uint32_t)ctl) + BUFFER_SIZE);
+            }
+            else
+                m = NULL;
+        }
+    }
+    else
+        m = rEALLOc(m, bytes);
 
     if(MALLOC_POSTACTION != 0) {
     }
@@ -2016,56 +1992,52 @@ Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
     return m;
 }
 
-Void_t* public_mEMALIGn(size_t alignment, size_t bytes) {
-    Void_t* m;
-
-#ifdef KM_DBG
-    uint32_t rv = arch_get_ret_addr(), rs, *nt1, *nt2, i;
-    memctl_t * ctl;
-#endif
+Void_t *public_mEMALIGn(size_t alignment, size_t bytes) {
+    Void_t *m;
 
     if(MALLOC_PREACTION != 0) {
         return 0;
     }
 
-#ifdef KM_DBG
+    if(__is_defined(KM_DBG)) {
+        uint32_t rv = arch_get_ret_addr(), *nt1, *nt2, i;
+        uint32_t rs = __align_up(bytes, 32);
 
-    if(bytes & 31)
-        rs = (bytes & ~31) + 32;
+        memctl_t *ctl = (memctl_t *)mEMALIGn(alignment, rs + (BUFFER_SIZE * 2));
+        if(!ctl) {
+            if(MALLOC_POSTACTION != 0) {
+            }
+
+            return NULL;
+        }
+        memset(ctl, 0, BUFFER_SIZE);
+        ctl->magic = BLOCK_MAGIC;
+        ctl->size = bytes;
+        ctl->thread = get_cur_tid_safe;
+        ctl->addr = rv;
+
+        nt1 = (uint32_t *)ctl;
+
+        for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++)
+            nt1[i] = PRE_MAGIC;
+
+        ctl->post = nt2 = nt1 + BUFFER_SIZE / 4 + rs / 4;
+
+        for(i = 0; i < BUFFER_SIZE / 4; i++)
+            nt2[i] = POST_MAGIC;
+
+        ctl->type = func_type[2];
+
+        LIST_INSERT_HEAD(&block_list, ctl, list);
+
+        m = (void *)(nt1 + BUFFER_SIZE / 4);
+        assert(!((uint32_t)m % alignment));
+
+        if(__is_defined(KM_DBG_VERBOSE))
+            dbg_print_thd_addr_action(ctl->thread, ctl->addr, m, bytes, name_MEMALIGN);
+    }
     else
-        rs = bytes;
-
-    ctl = (memctl_t *)mEMALIGn(alignment, rs + (BUFFER_SIZE * 2));
-    memset(ctl, 0, BUFFER_SIZE);
-    ctl->magic = BLOCK_MAGIC;
-    ctl->size = bytes;
-    ctl->thread = get_cur_tid_safe;
-    ctl->addr = rv;
-
-    nt1 = (uint32_t *)ctl;
-
-    for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++)
-        nt1[i] = PRE_MAGIC;
-
-    ctl->post = nt2 = nt1 + BUFFER_SIZE / 4 + rs / 4;
-
-    for(i = 0; i < BUFFER_SIZE / 4; i++)
-        nt2[i] = POST_MAGIC;
-
-    ctl->type = func_type[2];
-
-    LIST_INSERT_HEAD(&block_list, ctl, list);
-
-    m = (void *)(nt1 + BUFFER_SIZE / 4);
-    assert(!((uint32_t)m % alignment));
-
-#ifdef KM_DBG_VERBOSE
-    dbg_print_thd_addr_action(ctl->thread, ctl->addr, m, bytes, name_MEMALIGN);
-#endif
-
-#else
-    m = mEMALIGn(alignment, bytes);
-#endif
+        m = mEMALIGn(alignment, bytes);
 
     if(MALLOC_POSTACTION != 0) {
     }
@@ -2073,73 +2045,69 @@ Void_t* public_mEMALIGn(size_t alignment, size_t bytes) {
     return m;
 }
 
-Void_t* public_vALLOc(size_t bytes) {
-#ifdef KM_DBG
-    assert(0);  /* unsupported */
-#endif
+Void_t *public_vALLOc(size_t bytes) {
+    /* unsupported */
+    assert(!__is_defined(KM_DBG));
+
     (void)bytes;
     return 0;
 }
 
-Void_t* public_pVALLOc(size_t bytes) {
-#ifdef KM_DBG
-    assert(0);  /* unsupported */
-#endif
+Void_t *public_pVALLOc(size_t bytes) {
+    /* unsupported */
+    assert(!__is_defined(KM_DBG));
+
     (void)bytes;
     return 0;
 }
 
-Void_t* public_cALLOc(size_t n, size_t elem_size) {
-    Void_t* m;
-
-#ifdef KM_DBG
-    uint32_t rv = arch_get_ret_addr(), *nt1, *nt2, i, rs;
-    size_t bytes = n * elem_size;
-    memctl_t * ctl;
-#endif
+Void_t *public_cALLOc(size_t n, size_t elem_size) {
+    Void_t *m;
 
     if(MALLOC_PREACTION != 0) {
         return 0;
     }
 
-#ifdef KM_DBG
+    if(__is_defined(KM_DBG)) {
+        uint32_t rv = arch_get_ret_addr(), *nt1, *nt2, i;
+        size_t bytes = n * elem_size;
+        uint32_t rs = __align_up(bytes, 32);
 
-    if(bytes & 31)
-        rs = (bytes & ~31) + 32;
+        memctl_t *ctl = (memctl_t *)mALLOc(rs + (BUFFER_SIZE * 2));
+        if(!ctl) {
+            if(MALLOC_POSTACTION != 0) {
+            }
+
+            return NULL;
+        }
+        memset(ctl, 0, BUFFER_SIZE);
+        ctl->magic = BLOCK_MAGIC;
+        ctl->size = bytes;
+        ctl->thread = get_cur_tid_safe;
+        ctl->addr = rv;
+
+        nt1 = (uint32_t *)ctl;
+
+        for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++)
+            nt1[i] = PRE_MAGIC;
+
+        ctl->post = nt2 = nt1 + BUFFER_SIZE / 4 + rs / 4;
+
+        for(i = 0; i < BUFFER_SIZE / 4; i++)
+            nt2[i] = POST_MAGIC;
+
+        ctl->type = func_type[3];
+
+        LIST_INSERT_HEAD(&block_list, ctl, list);
+
+        m = (void *)(nt1 + BUFFER_SIZE / 4);
+        memset(m, 0, bytes);
+
+        if(__is_defined(KM_DBG_VERBOSE))
+            dbg_print_thd_addr_action(ctl->thread, ctl->addr, m, bytes, name_CALLOC);
+    }
     else
-        rs = bytes;
-
-    ctl = (memctl_t *)mALLOc(rs + (BUFFER_SIZE * 2));
-    memset(ctl, 0, BUFFER_SIZE);
-    ctl->magic = BLOCK_MAGIC;
-    ctl->size = bytes;
-    ctl->thread = get_cur_tid_safe;
-    ctl->addr = rv;
-
-    nt1 = (uint32_t *)ctl;
-
-    for(i = sizeof(memctl_t) / 4; i < BUFFER_SIZE / 4; i++)
-        nt1[i] = PRE_MAGIC;
-
-    ctl->post = nt2 = nt1 + BUFFER_SIZE / 4 + rs / 4;
-
-    for(i = 0; i < BUFFER_SIZE / 4; i++)
-        nt2[i] = POST_MAGIC;
-
-    ctl->type = func_type[3];
-
-    LIST_INSERT_HEAD(&block_list, ctl, list);
-
-    m = (void *)(nt1 + BUFFER_SIZE / 4);
-    memset(m, 0, bytes);
-
-#ifdef KM_DBG_VERBOSE
-    dbg_print_thd_addr_action(ctl->thread, ctl->addr, m, bytes, name_CALLOC);
-#endif
-
-#else
-    m = cALLOc(n, elem_size);
-#endif
+        m = cALLOc(n, elem_size);
 
     if(MALLOC_POSTACTION != 0) {
     }
@@ -2148,43 +2116,43 @@ Void_t* public_cALLOc(size_t n, size_t elem_size) {
 }
 
 
-Void_t** public_iCALLOc(size_t n, size_t elem_size, Void_t** chunks) {
-#ifdef KM_DBG
-    assert(0);  /* unsupported */
-#endif
+Void_t **public_iCALLOc(size_t n, size_t elem_size, Void_t **chunks) {
+    /* unsupported */
+    assert(!__is_defined(KM_DBG));
+
     (void)n;
     (void)elem_size;
     (void)chunks;
     return 0;
 }
 
-Void_t** public_iCOMALLOc(size_t n, size_t sizes[], Void_t** chunks) {
-#ifdef KM_DBG
-    assert(0);  /* unsupported */
-#endif
+Void_t **public_iCOMALLOc(size_t n, size_t sizes[], Void_t **chunks) {
+    /* unsupported */
+    assert(!__is_defined(KM_DBG));
+
     (void)n;
     (void)sizes;
     (void)chunks;
     return 0;
 }
 
-void public_cFREe(Void_t* m) {
-#ifdef KM_DBG
-    assert(0);  /* unsupported */
-#endif
+void public_cFREe(Void_t *m) {
+    /* unsupported */
+    assert(!__is_defined(KM_DBG));
+
     (void)m;
     return;
 }
 
 int public_mTRIm(size_t s) {
-#ifdef KM_DBG
-    assert(0);  /* unsupported */
-#endif
+    /* unsupported */
+    assert(!__is_defined(KM_DBG));
+
     (void)s;
     return 0;
 }
 
-size_t public_mUSABLe(Void_t* m) {
+size_t public_mUSABLe(Void_t *m) {
     size_t result;
 
     if(MALLOC_PREACTION != 0) {
@@ -2200,33 +2168,28 @@ size_t public_mUSABLe(Void_t* m) {
 }
 
 void public_mSTATs(void) {
-#ifdef KM_DBG
-    memctl_t *c;
-#endif
-
     if(MALLOC_PREACTION != 0) {
         return;
     }
 
     mSTATs();
 
-#ifdef KM_DBG
+    if(__is_defined(KM_DBG)) {
+        memctl_t *c;
+        if(!LIST_EMPTY(&block_list)) {
+            dbglog(DBG_CRITICAL, "KM_DBG: Still-allocated memory blocks:\n");
+            LIST_FOREACH(c, &block_list, list) {
+                dbglog(DBG_CRITICAL, "  INUSE %08lx: size %lu, thread %d, addr %08lx, type %s\n",
+                       (uint32_t)c + BUFFER_SIZE, c->size, c->thread,
+                       c->addr, c->type);
 
-    if(!LIST_EMPTY(&block_list)) {
-        dbglog(DBG_CRITICAL, "KM_DBG: Still-allocated memory blocks:\n");
-        LIST_FOREACH(c, &block_list, list) {
-            dbglog(DBG_CRITICAL, "  INUSE %08lx: size %lu, thread %d, addr %08lx, type %s\n",
-                   (uint32_t)c + BUFFER_SIZE, c->size, c->thread,
-                   c->addr, c->type);
-
-            mem_check_block_int(c, name_STATS);
+                mem_check_block_int(c, name_STATS);
+            }
+        }
+        else {
+            dbglog(DBG_CRITICAL, "KM_DBG: All memory blocks were properly freed\n");
         }
     }
-    else {
-        dbglog(DBG_CRITICAL, "KM_DBG: All memory blocks were properly freed\n");
-    }
-
-#endif
 
     if(MALLOC_POSTACTION != 0) {
     }
@@ -5029,7 +4992,6 @@ size_t bytes;
   ------------------------------ calloc ------------------------------
 */
 
-#ifndef KM_DBG
 #if __STD_C
 Void_t* cALLOc(size_t n_elements, size_t elem_size)
 #else
@@ -5099,7 +5061,6 @@ size_t elem_size;
 
     return mem;
 }
-#endif
 
 
 /*** Begin Code Removed for KOS ***/
