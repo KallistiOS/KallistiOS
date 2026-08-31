@@ -202,6 +202,10 @@ void gdb_handle_read_mem_binary(char *ptr) {
     }
 
     src = (const unsigned char *)addr;
+
+    /* 'x' reply must begin with a literal 'b' before the binary payload */
+    *out++ = 'b';
+
     for(uint32_t i = 0; i < len; ++i) {
         if((size_t)(out - remcom_out_buffer) > BUFMAX - 3u) {
             gdb_error_with_code_str(GDB_EMEM_SIZE, "x: response too large");
