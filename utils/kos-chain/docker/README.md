@@ -26,3 +26,6 @@ This Dockerfile builds the `stable` toolchain by default, but can be used to
 build the other toolchains like `9.5.0-winxp`, `15.2.1-dev`, etc., as long as
 you pass the `dc_chain` argument in the docker command line (see the Dockerfile
 for an example of the syntax).
+
+GDB is not built by default. To include it in the image, pass the
+`include_gdb=1` build argument when invoking `docker build`.
