@@ -53,7 +53,7 @@ static int rwsem_update_timed(rw_semaphore_t *s, unsigned int timeout,
         if(timeout) {
             /* Update the timeout value to the remaining time */
             timeout = deadline - timer_ms_gettime64();
-            if(timeout <= 0) {
+            if((int)timeout <= 0) {
                 if(type == UPDATE_TYPE_READ)
                     atomic_fetch_sub(&s->read_count, 1);
                 mutex_unlock(&s->write_lock);
