@@ -92,35 +92,25 @@ extern __time_t timegm(struct tm *timeptr);
 
 #endif
 
-/* =========== Enable the following for POSIX POSIX.1b (1993) =========== */
-#if defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 199309L)
+/* ================= POSIX.1b (1993) realtime option macros ================= */
 
-/* We do not support POSIX timers!
+/* KOS implements the clock half of the POSIX Timers option (clock_gettime(),
+   clock_settime(), clock_getres() and nanosleep()) along with the monotonic
+   and CPU-time clocks. */
 #ifndef _POSIX_TIMERS
-#define _POSIX_TIMERS 1
-#endif */
+#define _POSIX_TIMERS           200809L
+#endif
 
 #ifndef _POSIX_MONOTONIC_CLOCK
-#define _POSIX_MONOTONIC_CLOCK 1
+#define _POSIX_MONOTONIC_CLOCK  200809L
 #endif
 
 #ifndef _POSIX_CPUTIME
-#define _POSIX_CPUTIME 1
+#define _POSIX_CPUTIME          200809L
 #endif
 
 #ifndef _POSIX_THREAD_CPUTIME
-#define _POSIX_THREAD_CPUTIME 1
-#endif
-
-/* Explicitly provided function declarations for POSIX clock API, since
-   getting them from Newlib requires supporting the rest of the _POSIX_TIMERS
-   API, which is not implemented yet. */
-extern int clock_settime(__clockid_t clock_id, const struct timespec *ts);
-extern int clock_gettime(__clockid_t clock_id, struct timespec *ts);
-extern int clock_getres(__clockid_t clock_id, struct timespec *res);
-
-extern int nanosleep(const struct timespec *req, struct timespec *rem);
-
+#define _POSIX_THREAD_CPUTIME   200809L
 #endif
 
 /** \endcond */
