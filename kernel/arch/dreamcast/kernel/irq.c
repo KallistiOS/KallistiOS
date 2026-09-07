@@ -300,6 +300,7 @@ void arch_irq_create_context(irq_context_t *context,
     /* Setup the program frame */
     context->pc = (uint32_t)routine;
     context->sr = 0x40000000;   /* note: need to handle IMASK */
+    context->fpscr = __builtin_sh_get_fpscr();
     context->r[15] = stack_pointer;
     context->r[14] = 0xffffffff;
 
