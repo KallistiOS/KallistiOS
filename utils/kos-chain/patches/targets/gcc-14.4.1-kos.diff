@@ -145,6 +145,21 @@ diff -ruN gcc-14.4.1/libstdc++-v3/configure gcc-14.4.1-kos/libstdc++-v3/configur
      mcf)	thread_header=config/i386/gthr-mcf.h ;;
  esac
  
+@@ -21303,6 +21304,14 @@
+       vxworks*)
+         ac_has_nanosleep=yes
+         ;;
++      # KallistiOS: libkallisti provides clock_gettime(), nanosleep() and
++      # sched_yield(), but is not available to link tests at this point.
++      elf*)
++        ac_has_clock_monotonic=yes
++        ac_has_clock_realtime=yes
++        ac_has_nanosleep=yes
++        ac_has_sched_yield=yes
++        ;;
+       gnu* | linux* | kfreebsd*-gnu | knetbsd*-gnu)
+         # Don't use link test for freestanding library, in case gcc_no_link=yes
+         if test x"$is_hosted" = xyes; then
 diff -ruN gcc-14.4.1/libgcc/config/sh/t-sh gcc-14.4.1-kos/libgcc/config/sh/t-sh
 --- gcc-14.4.1/libgcc/config/sh/t-sh	2026-07-24 00:00:00.000000000 -0600
 +++ gcc-14.4.1-kos/libgcc/config/sh/t-sh	2026-07-24 00:00:00.000000000 -0600
