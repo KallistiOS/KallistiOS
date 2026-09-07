@@ -30,6 +30,12 @@
 /* Interrupt priority registers */
 #define REG_IPR(x) ( *((volatile uint16_t *)(0xffd00004 + (x) * 4)) )
 
+/* FPSCR cause and flag bits: status, not mode. */
+#define FPSCR_STATUS_BITS  0x0003f07c
+
+/* FP mode new threads start from; DN=1 or denormals trap. */
+static uint32_t irq_fpscr_init = 0x00040000;
+
 /* Individual exception handlers */
 static irq_cb_t        irq_handlers[0x40];
 /* TRAPA exception handlers */
@@ -300,6 +306,7 @@ void arch_irq_create_context(irq_context_t *context,
     /* Setup the program frame */
     context->pc = (uint32_t)routine;
     context->sr = 0x40000000;   /* note: need to handle IMASK */
+    context->fpscr = irq_fpscr_init;
     context->r[15] = stack_pointer;
     context->r[14] = 0xffffffff;
 
@@ -340,6 +347,9 @@ int irq_init(void) {
 
     /* Make sure interrupts are disabled */
     irq_disable();
+
+    /* Inherit the kernel thread's FP mode for later threads. */
+    irq_fpscr_init = __builtin_sh_get_fpscr() & ~FPSCR_STATUS_BITS;
 
     /* Blank the exception handler tables */
     memset(irq_handlers,        0, sizeof(irq_handlers));
