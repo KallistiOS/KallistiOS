@@ -32,6 +32,7 @@ endif
 fixup-newlib-init: $(build_newlib)
 	-mkdir -p $(newlib_inc)
 	-mkdir -p $(newlib_inc)/sys
+	-mkdir -p $(newlib_inc)/machine
 
 fixup-newlib-apply: fixup-newlib-init
 	@echo "+++ Fixing up newlib includes..."
@@ -42,6 +43,8 @@ fixup-newlib-apply: fixup-newlib-init
 	cp $(kos_base)/include/pthread.h $(newlib_inc)
 	cp $(kos_base)/include/sys/_pthreadtypes.h $(newlib_inc)/sys
 	cp $(kos_base)/include/sys/dirent.h $(newlib_inc)/sys
+# KOS machine/time.h defines _POSIX_TIMERS & co.
+	cp $(kos_base)/include/machine/time.h $(newlib_inc)/machine
 ifndef MINGW32
 	ln -nsf $(kos_base)/include/kos $(newlib_inc)
 else
