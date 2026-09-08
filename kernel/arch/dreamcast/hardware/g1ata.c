@@ -177,7 +177,6 @@ static uint8_t orig_dev = 0x00;
 
 /* Variables related to DMA. */
 static int dma_in_progress = 0;
-static int dma_blocking = 0;
 static uint8_t dma_cmd = 0;
 static size_t dma_nb_sectors = 0;
 static uint64_t dma_sector = 0;
@@ -240,10 +239,9 @@ static void g1_ata_set_sector_and_count(uint64_t sector, size_t count, int lba28
 
 static void g1_dma_done(void) {
     /* Signal the calling thread to continue, if it is blocking. */
-    if(dma_blocking) {
+    if(sem_count(&dma_done)) {
         sem_signal(&dma_done);
         thd_schedule(true);
-        dma_blocking = 0;
     }
 
     dma_in_progress = 0;
@@ -727,7 +725,6 @@ int g1_ata_read_lba_dma(uint64_t sector, size_t count, void *buf,
     }
 
     /* Set the settings for this transfer and re-enable IRQs. */
-    dma_blocking = block;
     dma_in_progress = 1;
     dma_nb_sectors = count;
     dma_sector = sector;
@@ -918,7 +915,6 @@ int g1_ata_write_lba_dma(uint64_t sector, size_t count, const void *buf,
     }
 
     /* Set the settings for this transfer and re-enable IRQs. */
-    dma_blocking = block;
     dma_in_progress = 1;
     dma_nb_sectors = count;
     dma_sector = sector;
