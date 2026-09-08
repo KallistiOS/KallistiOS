@@ -31,7 +31,7 @@ __BEGIN_DECLS
 #include <dc/fb_console.h>
 #include <dc/flashrom.h>
 #include <dc/fmath.h>
-#include <dc/fs_dcload.h>
+#include <kos/fs_kosload.h>
 #include <dc/fs_iso9660.h>
 #include <dc/fs_vmu.h>
 #include <dc/g1ata.h>
