@@ -2,7 +2,7 @@
 
    dc/spu.h
    Copyright (C) 2000, 2001 Megan Potter
-   Copyright (C) 2023, 2024 Ruslan Rostovtsev
+   Copyright (C) 2023, 2024, 2026 Ruslan Rostovtsev
 
 */
 
@@ -22,6 +22,7 @@
 #include <kos/cdefs.h>
 __BEGIN_DECLS
 
+#include <arch/arch.h>
 #include <dc/memory.h>
 #include <dc/g2bus.h>
 
@@ -32,6 +33,14 @@ __BEGIN_DECLS
 /** \brief  Sound ram address from the SH4 side */
 #define SPU_RAM_BASE 0x00800000
 #define SPU_RAM_UNCACHED_BASE (MEM_AREA_P2_BASE | SPU_RAM_BASE)
+
+/** \brief  Sound RAM size on Dreamcast */
+#define SPU_RAM_SIZE_2MB    0x200000
+/** \brief  Sound RAM size on NAOMI */
+#define SPU_RAM_SIZE_8MB    0x800000
+/** \brief  Sound RAM size for the current hardware */
+#define SPU_RAM_SIZE        (hardware_sys_mode(NULL) == HW_TYPE_RETAIL ? \
+                             SPU_RAM_SIZE_2MB : SPU_RAM_SIZE_8MB)
 
 /** \brief  Copy a block of data to sound RAM.
 

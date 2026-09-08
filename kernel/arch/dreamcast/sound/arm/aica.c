@@ -29,7 +29,7 @@ void aica_init(void) {
     SNDREG32(0x28B0) = 0x08;
 
     /* Drop master volume while channel registers are cleared. */
-    SNDREG32(0x2800) = 0x0000;
+    SNDREG8(0x2800) = 0;
 
     /* Initialize AICA channels */
     for(i = 0; i < 64; i++) {
@@ -42,7 +42,7 @@ void aica_init(void) {
     }
 
     /* Restore default mixer routing after channel reset. */
-    SNDREG32(0x2800) = 0x000f;
+    SNDREG8(0x2800) = 0x0f;
     /* Timer A reload (same as crt0.s). */
     SNDREG32(0x2890) = 256 - (44100 / 4410);
     /* SCIEB bit 6: unmask Timer A as the sole FIQ source. */
