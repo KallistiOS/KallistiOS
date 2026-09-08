@@ -355,7 +355,7 @@ kthread_t *thd_by_tid(tid_t tid);
     \relatesalso kthread_t
 
     This function adds a thread to the runnable queue after the process group of
-    the same priority if front_of_line is zero, otherwise queues it at the front
+    the same priority if front_of_line is false, otherwise queues it at the front
     of its priority group. Generally, you will not have to do this manually.
 
     \param  t               The thread to queue.

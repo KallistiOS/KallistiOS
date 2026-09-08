@@ -333,46 +333,15 @@ void thd_exit(void *rv) {
 /*****************************************************************************/
 /* Thread creation and deletion */
 
-/* Enqueue a process in the runnable queue; adds it right after the
-   process group of the same priority (front_of_line==0) or
-   right before the process group of the same priority (front_of_line!=0).
-   See thd_schedule for why this is helpful. */
+/* Enqueue a process in the runnable queue. */
 void thd_add_to_runnable(kthread_t *t, bool front_of_line) {
-    kthread_t *i;
-    int done;
 
     if(t->flags & THD_QUEUED)
         return;
 
-    done = 0;
-
-    if(!front_of_line) {
-        /* Look for a thread of lower priority and insert
-           before it. If there is nothing on the run queue, we'll
-           fall through to the bottom. */
-        TAILQ_FOREACH(i, &run_queue, thdq) {
-            if(i->prio > t->prio) {
-                TAILQ_INSERT_BEFORE(i, t, thdq);
-                done = 1;
-                break;
-            }
-        }
-    }
-    else {
-        /* Look for a thread of the same or lower priority and
-           insert before it. If there is nothing on the run queue,
-           we'll fall through to the bottom. */
-        TAILQ_FOREACH(i, &run_queue, thdq) {
-            if(i->prio >= t->prio) {
-                TAILQ_INSERT_BEFORE(i, t, thdq);
-                done = 1;
-                break;
-            }
-        }
-    }
-
-    /* Didn't find one, put it at the end */
-    if(!done)
+    if(front_of_line)
+        TAILQ_INSERT_HEAD(&run_queue, t, thdq);
+    else
         TAILQ_INSERT_TAIL(&run_queue, t, thdq);
 
     t->flags |= THD_QUEUED;
@@ -511,7 +480,7 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
             ++thd_count;
 
             /* Schedule it */
-            thd_add_to_runnable(nt, 0);
+            thd_add_to_runnable(nt, false);
         }
     }
 
@@ -772,7 +741,7 @@ void thd_schedule_next(kthread_t *thd) {
     }
     else if(thd_current->state == STATE_RUNNING) {
         thd_current->state = STATE_READY;
-        thd_add_to_runnable(thd_current, 0);
+        thd_add_to_runnable(thd_current, false);
     }
 
     thd_schedule_inner(thd, timer_ms_gettime64());

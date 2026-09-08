@@ -131,7 +131,7 @@ static void __nonnull_all genwait_unqueue(kthread_t *thd, int err) {
 
     /* Make it runnable again */
     thd->state = STATE_READY;
-    thd_add_to_runnable(thd, 0);
+    thd_add_to_runnable(thd, false);
 }
 
 static int genwait_wake_thd_cnt(const void *obj, int cntmax, kthread_t *thd, int err) {
