@@ -41,7 +41,6 @@ typedef struct {
 /* Signaling semaphore */
 static semaphore_t dma_done[4];
 static int dma_progress[4];
-static int dma_blocking[4];
 static g2_dma_callback_t dma_callback[4];
 static void *dma_cbdata[4];
 
@@ -147,8 +146,7 @@ static void g2_dma_irq_hnd(uint32_t code, void *data) {
         dma_progress[chn] = 0;
 
         /* Signal the calling thread to continue, if any. */
-        if(dma_blocking[chn]) {
-            dma_blocking[chn] = 0;
+        if(sem_count(&dma_done[chn])) {
             sem_signal(&dma_done[chn]);
             thd_schedule(true);
         }
@@ -196,7 +194,6 @@ int g2_dma_transfer(void *sh4, void *g2bus, size_t length, uint32_t block,
     /* Make sure length is a multiple of 32 */
     length = __align_up(length, 32);
 
-    dma_blocking[g2chn] = block;
     dma_callback[g2chn] = callback;
     dma_cbdata[g2chn] = cbdata;
 
@@ -237,7 +234,6 @@ int g2_dma_init(void) {
         /* Create an initially blocked semaphore */
         sem_init(&dma_done[i], 0);
         dma_progress[i] = 0;
-        dma_blocking[i] = 0;
         dma_callback[i] = NULL;
         dma_cbdata[i] = 0;
 
