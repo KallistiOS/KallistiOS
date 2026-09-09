@@ -650,13 +650,6 @@ void thd_schedule(bool front_of_line) {
         arch_exit();
     }
 
-    /* If the current thread is supposed to be in the front of the line, and it
-       did not die, re-enqueue it to the front of the line now. */
-    if(front_of_line && thd_current->state == STATE_RUNNING) {
-        thd_current->state = STATE_READY;
-        thd_add_to_runnable(thd_current, front_of_line);
-    }
-
     /* Look for timed out waits */
     genwait_check_timeouts(now);
 
@@ -692,15 +685,15 @@ void thd_schedule(bool front_of_line) {
         }
     }
 
-    /* If we didn't already re-enqueue the thread and we are supposed to do so,
-       do it now. */
-    if(!front_of_line && thd_current->state == STATE_RUNNING) {
+    /* If the thread is still running, or has been set to poll re-enqueue. */
+    if(thd_current->state == STATE_RUNNING) {
         thd_current->state = STATE_READY;
         thd_add_to_runnable(thd_current, front_of_line);
 
-        /* Make sure we have a thread, just in case we couldn't find anything
-           above. */
-        if(next_thd == NULL || next_thd == thd_idle_thd)
+        /* If current thread is running return to it if: no thread could be found,
+            we would otherwise go to idle, or it was requested to be prioritized. */
+        if(next_thd == NULL || next_thd == thd_idle_thd ||
+            (front_of_line && (thd_current->prio <= max_prio)))
             next_thd = thd_current;
     }
     else if(__predict_false(thd_current->state == STATE_POLLING)) {
