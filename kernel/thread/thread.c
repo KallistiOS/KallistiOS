@@ -620,17 +620,14 @@ static inline prio_t thd_calc_prio(const kthread_t *thd, uint32_t now) {
 }
 
 /* Thread scheduler; this function will find a new thread to run when a
-   context switch is requested. No work is done in here except to change
-   out the thd_current variable contents. Assumed that we are in an
-   interrupt context.
+   context switch is requested. Assumed that we are in an interrupt context.
 
    In the normal operation mode, the current thread is pushed back onto
-   the run queue at the end of its priority group. This implements the
-   standard round robin scheduling within priority groups. If you set the
-   front_of_line parameter to non-zero, then this behavior is modified:
-   the current thread is pushed onto the run queue at the _front_ of its
-   priority group. The effect is that no context switching is done, but
-   priority groups are re-checked. This is useful when returning from an
+   the end of the run queue. This implements the standard round robin
+   scheduling within priority groups. If you set the front_of_line parameter
+   to true, then this behavior is modified: the current thread is pushed onto
+   the _front_ of the run queue. The effect is that no context switching is
+   done, but priority groups are re-checked. This is useful when returning from an
    IRQ after doing something like a sem_signal, where you'd ideally like
    to make sure the priorities are all straight before returning, but you
    don't want a full context switch inside the same priority group.
@@ -638,17 +635,10 @@ static inline prio_t thd_calc_prio(const kthread_t *thd, uint32_t now) {
 void thd_schedule(bool front_of_line) {
     kthread_t *thd, *next_thd = NULL;
     prio_t prio, max_prio = INT_MAX;
-    uint64_t now;
-    int ret;
+    uint64_t now = timer_ms_gettime64();
 
-    now = timer_ms_gettime64();
-
-    /* If there's only two thread left, it's the idle task and the reaper task:
-       exit the OS */
-    if(thd_count == 2) {
-        dbgio_printf("\nthd_schedule: idle tasks are the only things left; exiting\n");
-        arch_exit();
-    }
+    /* If idle and reaper are the only things left, something is wrong. */
+    assert_msg(thd_count != 2, "thd_schedule: idle tasks are the only things left\n");
 
     /* Look for timed out waits */
     genwait_check_timeouts(now);
@@ -665,7 +655,7 @@ void thd_schedule(bool front_of_line) {
                 CONTEXT_RET(thd->context) = 0;
             }
             else {
-                ret = thd->poll_cb(thd->wait_obj);
+                int ret = thd->poll_cb(thd->wait_obj);
 
                 if(ret) {
                     thd->state = STATE_READY;
@@ -701,10 +691,7 @@ void thd_schedule(bool front_of_line) {
     }
 
     /* Didn't find one? Big problem here... */
-    if(next_thd == NULL) {
-        thd_pslist(printf);
-        arch_panic("couldn't find a runnable thread");
-    }
+    assert_msg(next_thd != NULL, "thd_schedule: couldn't find a runnable thread");
 
     /* We should now have a runnable thread, so remove it from the
        run queue and switch to it. */

@@ -452,11 +452,9 @@ void thd_exit(void *rv) __noreturn;
     This function is the thread scheduler, and MUST be called in an interrupt
     context (typically from the primary timer interrupt).
 
-    For most cases, you'll want to set front_of_line to zero, but read the
+    For most cases, you'll want to set front_of_line to false, but read the
     comments in kernel/thread/thread.c for more info, especially if you need to
-    guarantee low latencies. This function just updates irq_srt_addr and
-    thd_current. Set 'now' to non-zero if you want to use a particular system
-    time for checking timeouts.
+    guarantee low latencies.
 
     \param  front_of_line   Set to false, unless you have a good reason not to.
 
