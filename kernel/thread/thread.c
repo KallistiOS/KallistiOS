@@ -79,6 +79,8 @@ static struct ktqueue run_queue;
 /* The currently executing thread. This thread should not be on any queues. */
 kthread_t *thd_current = NULL;
 
+static struct _reent *old_impure;
+
 /* Thread mode: uninitialized or pre-emptive. */
 static kthread_mode_t thd_mode = THD_MODE_NONE;
 
@@ -1067,6 +1069,9 @@ int thd_init(void) {
         return -1;
     }
 
+    /* Preserve the newlib reent struct before we switch to kern's */
+    old_impure = _impure_ptr;
+
     /* Main thread -- the kern thread */
     thd_current = kern;
     thd_schedule_inner(kern, timer_ms_gettime64());
@@ -1103,6 +1108,9 @@ void thd_shutdown(void) {
     /* Remove our pre-emption handler */
     timer_primary_set_callback(NULL);
 
+    /* Restore the newlib reent struct */
+    _impure_ptr = old_impure;
+
     /* Kill remaining live threads */
     LIST_FOREACH_SAFE(cur, &thd_list, t_list, tmp) {
         if(cur->tid != 1)
@@ -1119,6 +1127,4 @@ void thd_shutdown(void) {
     /* Not running */
     thd_mode = THD_MODE_NONE;
     thd_count = 0;
-
-    // XXX _impure_ptr is borked
 }
