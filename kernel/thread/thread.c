@@ -506,11 +506,12 @@ int thd_destroy(kthread_t *thd) {
 
     /* If this thread was waiting on something, we need to remove it from
        genwait so that it doesn't try to notify a dead thread later. */
-    if(thd->wait_obj)
+    if(thd->state == STATE_WAIT)
         genwait_wake_thd(thd->wait_obj, thd, ECANCELED);
 
     /* De-schedule the thread if it's scheduled. */
-    thd_remove_from_runnable(thd);
+    if(thd->flags & THD_QUEUED)
+        thd_remove_from_runnable(thd);
 
     /* Remove it from the thread list. */
     LIST_REMOVE(thd, t_list);
@@ -523,11 +524,8 @@ int thd_destroy(kthread_t *thd) {
     }
 
     /* Free TLS entries. */
-    i = LIST_FIRST(&thd->tls_list);
-    while(i != NULL) {
-        i2 = LIST_NEXT(i, kv_list);
+    LIST_FOREACH_SAFE(i, &thd->tls_list, kv_list, i2) {
         free(i);
-        i = i2;
     }
 
     /* Free its stack (if we're managing it). */
