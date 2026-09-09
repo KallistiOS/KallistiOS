@@ -81,9 +81,9 @@ export_sym_t *export_lookup(const char *name);
 */
 export_sym_t *export_lookup_path(const char *name, const char *path);
 
-/** \brief  Look up a symbol by approx addr.
-            It can be useful for unhandled exceptions messages.
-    \param  addr            The symbol to look up
+/** \brief  Look up the nearest exported symbol at or before addr.
+            Useful for exception messages.
+    \param  addr            The address to look up
     \return                 The export structure, or NULL on failure
 */
 export_sym_t *export_lookup_addr(uintptr_t addr);
