@@ -287,3 +287,31 @@ diff --color -ruN newlib-4.6.0.20260123/newlib/libc/stdlib/assert.c newlib-4.6.0
 +// This is put in here to cause link errors if a proper newlib isn't present.
 +int __newlib_kos_patch = 1;
 +
+
+--- newlib-4.6.0.20260123/newlib/configure.host
++++ newlib-4.6.0.20260123-kos/newlib/configure.host
+@@ -726,6 +726,13 @@
+ 	syscall_dir=syscalls	
+ 	newlib_cflags="${newlib_cflags} -DSMALL_DTOA -DSMALL_MEMORY"
+ 	;;	
++  i[34567]86-*-xbox*)
++	default_newlib_io_long_long="yes"
++	syscall_dir=syscalls
++	newlib_cflags="${newlib_cflags} -DREENTRANT_SYSCALLS_PROVIDED -DMALLOC_PROVIDED -DABORT_PROVIDED -DHAVE_FCNTL"
++	newlib_cflags="${newlib_cflags} -ffunction-sections -fdata-sections"
++	newlib_cv_initfinit_array=yes
++	;;
+   i[34567]86-*-sco*)
+ 	newlib_cflags="${newlib_cflags} -DSIGNAL_PROVIDED -DHAVE_FCNTL"
+ 	;;
+
+--- newlib-4.6.0.20260123/config.sub
++++ newlib-4.6.0.20260123-kos/config.sub
+@@ -1734,6 +1734,7 @@
+ 	     | ekkobsd* | freebsd* | riscix* | lynxos* | os400* \
+ 	     | bosx* | nextstep* | cxux* | aout* | elf* | oabi* \
+ 	     | ptx* | coff* | ecoff* | winnt* | domain* | vsta* \
++	     | xbox* \
+ 	     | udi* | lites* | ieee* | go32* | aux* | hcos* \
+ 	     | chorusrdb* | cegcc* | glidix* | serenity* \
+ 	     | cygwin* | msys* | pe* | moss* | proelf* | rtems* \
