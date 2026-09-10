@@ -14,8 +14,6 @@ CFLAGS = --coverage
 
 include $(KOS_BASE)/Makefile.rules
 
-ifeq ($(call KOS_GCCVER_MIN_CHECK,$(KOS_GCCVER_MIN)),1)
-
 all: rm-elf $(TARGET)
 
 clean: rm-elf
@@ -44,8 +42,3 @@ report:
 	lcov --capture --directory . --gcov-tool $(KOS_GCOV) --rc geninfo_unexecuted_blocks=1 --ignore-errors inconsistent,unused,source,empty --output-file coverage.info
 	genhtml coverage.info --output-directory html --ignore-errors inconsistent,source
 	@echo "open html/index.html"
-
-else
-  all $(TARGET) clean rm-elf run dist:
-	$(KOS_GCCVER_MIN_WARNING)
-endif
