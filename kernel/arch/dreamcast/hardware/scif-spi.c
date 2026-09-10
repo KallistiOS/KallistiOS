@@ -7,7 +7,7 @@
 */
 
 #include <dc/scif.h>
-#include <dc/fs_dcload.h>
+#include <dc/dcload.h>
 #include <kos/timer.h>
 #include <kos/dbglog.h>
 #include <kos/regfield.h>
