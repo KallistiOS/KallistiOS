@@ -2,7 +2,7 @@
 
    arch/dreamcast/include/arch/cache.h
    Copyright (C) 2001 Megan Potter
-   Copyright (C) 2014, 2016, 2023 Ruslan Rostovtsev
+   Copyright (C) 2014, 2016, 2023, 2026 Ruslan Rostovtsev
    Copyright (C) 2023 Andy Barajas
    Copyright (C) 2025 Eric Fradella
    Copyright (C) 2026 Falco Girgis
@@ -67,7 +67,7 @@ static inline void arch_dcache_pref_line(const void *src) {
 static inline void arch_dcache_alloc_line_with_value(void *src, uintptr_t value) {
     uintptr_t *ptr = (uintptr_t *)src;
 
-    __asm__ ("movca.l r0, @%8\n\t"
+    __asm__ __volatile__("movca.l r0, @%8\n\t"
              : "=m"(ptr[0]),
                "=m"(ptr[1]),
                "=m"(ptr[2]),
@@ -83,7 +83,7 @@ static inline void arch_dcache_alloc_line_with_value(void *src, uintptr_t value)
 static inline void arch_dcache_alloc_line(void *src) {
     uintptr_t *ptr = (uintptr_t *)src;
 
-    __asm__ ("movca.l r0, @%8\n\t"
+    __asm__ __volatile__("movca.l r0, @%8\n\t"
              : "=m"(ptr[0]),
                "=m"(ptr[1]),
                "=m"(ptr[2]),
@@ -107,7 +107,7 @@ static inline void arch_dcache_zero_alloc_line(void *src) {
 static inline void arch_dcache_inval_line(void *src) {
     uintptr_t *ptr = (uintptr_t *)src;
 
-    __asm__ ("ocbi @%8\n\t"
+    __asm__ __volatile__("ocbi @%8\n\t"
              : "=m"(ptr[0]),
                "=m"(ptr[1]),
                "=m"(ptr[2]),
@@ -123,15 +123,15 @@ static inline void arch_dcache_inval_line(void *src) {
 static inline void arch_dcache_purge_line(void *src) {
     uintptr_t *ptr = (uintptr_t *)src;
 
-    __asm__ ("ocbp @%8\n\t"
-             : "=m"(ptr[0]),
-               "=m"(ptr[1]),
-               "=m"(ptr[2]),
-               "=m"(ptr[3]),
-               "=m"(ptr[4]),
-               "=m"(ptr[5]),
-               "=m"(ptr[6]),
-               "=m"(ptr[7])
+    __asm__ __volatile__("ocbp @%8\n\t"
+             : "+m"(ptr[0]),
+               "+m"(ptr[1]),
+               "+m"(ptr[2]),
+               "+m"(ptr[3]),
+               "+m"(ptr[4]),
+               "+m"(ptr[5]),
+               "+m"(ptr[6]),
+               "+m"(ptr[7])
              : "r" (ptr)
     );
 }
@@ -139,15 +139,15 @@ static inline void arch_dcache_purge_line(void *src) {
 static inline void arch_dcache_wback_line(void *src) {
     uintptr_t *ptr = (uintptr_t *)src;
 
-    __asm__ ("ocbwb @%8\n\t"
-             : "=m"(ptr[0]),
-               "=m"(ptr[1]),
-               "=m"(ptr[2]),
-               "=m"(ptr[3]),
-               "=m"(ptr[4]),
-               "=m"(ptr[5]),
-               "=m"(ptr[6]),
-               "=m"(ptr[7])
+    __asm__ __volatile__("ocbwb @%8\n\t"
+             : "+m"(ptr[0]),
+               "+m"(ptr[1]),
+               "+m"(ptr[2]),
+               "+m"(ptr[3]),
+               "+m"(ptr[4]),
+               "+m"(ptr[5]),
+               "+m"(ptr[6]),
+               "+m"(ptr[7])
              : "r" (ptr)
     );
 }
