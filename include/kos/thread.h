@@ -274,7 +274,7 @@ typedef struct __attribute__((aligned(32))) kthread {
     \headerfile kos/thread.h
 */
 typedef struct kthread_attr {
-    /** \brief  1 for a detached thread. */
+    /** \brief  true for a detached thread. */
     bool create_detached;
 
     /** \brief  Set the size of the stack to be created. */
@@ -290,7 +290,7 @@ typedef struct kthread_attr {
     /** \brief  Thread label. */
     const char *label;
 
-    /** \brief 1 if the thread doesn't use thread_local variables. */
+    /** \brief true if the thread doesn't use thread_local variables. */
     bool disable_tls;
 } kthread_attr_t;
 
