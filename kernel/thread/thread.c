@@ -241,14 +241,7 @@ static bool thd_has_polls(void) {
 
 /* An idle function. This function literally does nothing but loop
    forever. It's meant to be used for an idle task. */
-static void *thd_idle_task(void *param) {
-    /* Uncomment these if you want some debug for deadlocking */
-    /*  int old = irq_disable();
-    #ifndef NDEBUG
-        thd_pslist();
-        printf("Inside idle task now\n");
-    #endif
-        irq_restore(old); */
+static _Noreturn void *thd_idle_task(void *param) {
     (void)param;
 
     for(;;) {
@@ -258,13 +251,12 @@ static void *thd_idle_task(void *param) {
             arch_sleep();   /* We can safely enter sleep mode here */
     }
 
-    /* Never reached */
-    abort();
+    __unreachable();
 }
 
 /* Reaper function. This function is here to reap old zombie threads as they are
    created. */
-static void *thd_reaper(void *param) {
+static _Noreturn void *thd_reaper(void *param) {
     kthread_t *thd, *tmp;
 
     (void)param;
@@ -283,14 +275,13 @@ static void *thd_reaper(void *param) {
         }
     }
 
-    /* Never reached */
-    abort();
+    __unreachable();
 }
 
 /* Thread execution wrapper; when the thd_create function below
    adds a new thread to the thread chain, this function is the one
    that gets called in the new context. */
-static void thd_birth(void *(*routine)(void *param), void *param) {
+static _Noreturn void thd_birth(void *(*routine)(void *param), void *param) {
     /* Call the thread function */
     void *rv = routine(param);
 
@@ -327,8 +318,7 @@ void thd_exit(void *rv) {
     /* Manually reschedule */
     thd_block_now(&thd_current->context);
 
-    /* not reached */
-    abort();
+    __unreachable();
 }
 
 
