@@ -17,6 +17,7 @@
 #include <reent.h>
 #include <errno.h>
 #include <stdalign.h>
+#include <stdatomic.h>
 
 #include <kos/thread.h>
 #include <kos/dbgio.h>
@@ -199,17 +200,6 @@ int thd_pslist_queue(int (*pf)(const char *fmt, ...)) {
 /*****************************************************************************/
 /* Returns a fresh thread ID for each new thread */
 
-/* Highest thread id (used when assigning next thread id) */
-static tid_t tid_highest;
-
-/* Return the next available thread id (assumes wraparound will not run
-   into old processes). */
-static tid_t thd_next_free(void) {
-    int id;
-    id = tid_highest++;
-    return id;
-}
-
 /* Given a thread ID, locates the thread structure */
 kthread_t *thd_by_tid(tid_t tid) {
     kthread_t *np;
@@ -348,6 +338,9 @@ int thd_remove_from_runnable(kthread_t *thd) {
     return 0;
 }
 
+/* Highest thread id (used when assigning next thread id) */
+static atomic_int tid_highest = 1;
+
 /* New thread function; given a routine address, it will create a
    new thread with the given attributes. When the routine returns,
    the thread will exit. Returns the new thread struct.
@@ -377,10 +370,8 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
     if(!real_attr.prio)
         real_attr.prio = PRIO_DEFAULT;
 
-    irq_disable_scoped();
-
     /* Get a new thread id */
-    tid = thd_next_free();
+    tid = atomic_fetch_add(&tid_highest, 1);
 
     if(tid >= 0) {
         /* Create a new thread structure */
@@ -464,6 +455,9 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
 
             /* Initialize thread-local storage. */
             LIST_INIT(&nt->tls_list);
+
+            /* Now that the thread is created, add it into the lists */
+            irq_disable_scoped();
 
             /* Insert it into the thread list */
             LIST_INSERT_HEAD(&thd_list, nt, t_list);
