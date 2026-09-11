@@ -372,103 +372,101 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
 
     /* Get a new thread id */
     tid = atomic_fetch_add(&tid_highest, 1);
+    if(tid < 0) return NULL;
 
-    if(tid >= 0) {
-        /* Create a new thread structure */
-        nt = aligned_alloc(32, sizeof(kthread_t));
+    /* Create a new thread structure */
+    nt = aligned_alloc(32, sizeof(kthread_t));
+    if(!nt) return NULL;
 
-        if(nt != NULL) {
-            /* Clear out potentially unused stuff */
-            memset(nt, 0, sizeof(kthread_t));
+    /* Clear out potentially unused stuff */
+    memset(nt, 0, sizeof(kthread_t));
 
-            /* Initialize the flags to defaults immediately. */
-            nt->flags = THD_DEFAULTS;
+    /* Initialize the flags to defaults immediately. */
+    nt->flags = THD_DEFAULTS;
 
-            /* Create a new thread stack */
-            if(!real_attr.stack_ptr) {
-                nt->stack = (uint32_t*)aligned_alloc(THD_STACK_ALIGNMENT,
-                                                     real_attr.stack_size);
+    /* Create a new thread stack */
+    if(!real_attr.stack_ptr) {
+        nt->stack = (uint32_t*)aligned_alloc(THD_STACK_ALIGNMENT,
+                                             real_attr.stack_size);
 
-                if(!nt->stack) {
-                    free(nt);
-                    return NULL;
-                }
-
-                /* Since we allocated the stack, we own the stack! */
-                nt->flags |= THD_OWNS_STACK;
-            }
-            else {
-                nt->stack = (uint32_t*)real_attr.stack_ptr;
-            }
-
-            nt->stack_size = real_attr.stack_size;
-
-            /* Populate the context */
-            params[0] = (uintptr_t)routine;
-            params[1] = (uintptr_t)param;
-            params[2] = 0;
-            params[3] = 0;
-            irq_create_context(&nt->context,
-                               ((uintptr_t)nt->stack) + nt->stack_size,
-                               (uintptr_t)thd_birth, params);
-
-            /* Some architectures require setting up a new stack before use.
-               We won't do this if routine is NULL, however, as this means
-               we are creating the kernel thread, which is already running. */
-            if(routine) {
-                arch_stk_setup(nt);
-            }
-
-            /* Create static TLS data if the thread hasn't disabled it. */
-            if(real_attr.disable_tls) {
-                nt->flags |= THD_DISABLE_TLS;
-            } else if(!arch_tls_setup_data(nt)) {
-                if(nt->flags & THD_OWNS_STACK)
-                    free(nt->stack);
-                free(nt);
-                return NULL;
-            }
-
-            nt->tid = tid;
-            nt->real_prio = real_attr.prio;
-            nt->prio = real_attr.prio;
-            nt->state = STATE_READY;
-
-            if(!real_attr.label) {
-                strcpy(nt->label, "unnamed");
-            }
-            else {
-                strncpy(nt->label, real_attr.label, 255);
-                nt->label[255] = 0;
-            }
-
-            if(thd_current)
-                strcpy(nt->pwd, thd_current->pwd);
-            else
-                strcpy(nt->pwd, "/");
-
-            _REENT_INIT_PTR((&(nt->thd_reent)));
-
-            /* Should we detach the thread? */
-            if(real_attr.create_detached)
-                nt->flags |= THD_DETACHED;
-
-            /* Initialize thread-local storage. */
-            LIST_INIT(&nt->tls_list);
-
-            /* Now that the thread is created, add it into the lists */
-            irq_disable_scoped();
-
-            /* Insert it into the thread list */
-            LIST_INSERT_HEAD(&thd_list, nt, t_list);
-
-            /* Add it to our count */
-            ++thd_count;
-
-            /* Schedule it */
-            thd_add_to_runnable(nt, false);
+        if(!nt->stack) {
+            free(nt);
+            return NULL;
         }
+
+        /* Since we allocated the stack, we own the stack! */
+        nt->flags |= THD_OWNS_STACK;
     }
+    else {
+        nt->stack = (uint32_t*)real_attr.stack_ptr;
+    }
+
+    nt->stack_size = real_attr.stack_size;
+
+    /* Populate the context */
+    params[0] = (uintptr_t)routine;
+    params[1] = (uintptr_t)param;
+    params[2] = 0;
+    params[3] = 0;
+    irq_create_context(&nt->context,
+                       ((uintptr_t)nt->stack) + nt->stack_size,
+                       (uintptr_t)thd_birth, params);
+
+    /* Some architectures require setting up a new stack before use.
+       We won't do this if routine is NULL, however, as this means
+       we are creating the kernel thread, which is already running. */
+    if(routine) {
+        arch_stk_setup(nt);
+    }
+
+    /* Create static TLS data if the thread hasn't disabled it. */
+    if(real_attr.disable_tls) {
+        nt->flags |= THD_DISABLE_TLS;
+    } else if(!arch_tls_setup_data(nt)) {
+        if(nt->flags & THD_OWNS_STACK)
+            free(nt->stack);
+        free(nt);
+        return NULL;
+    }
+
+    nt->tid = tid;
+    nt->real_prio = real_attr.prio;
+    nt->prio = real_attr.prio;
+    nt->state = STATE_READY;
+
+    if(!real_attr.label) {
+        strcpy(nt->label, "unnamed");
+    }
+    else {
+        strncpy(nt->label, real_attr.label, 255);
+        nt->label[255] = 0;
+    }
+
+    if(thd_current)
+        strcpy(nt->pwd, thd_current->pwd);
+    else
+        strcpy(nt->pwd, "/");
+
+    _REENT_INIT_PTR((&(nt->thd_reent)));
+
+    /* Should we detach the thread? */
+    if(real_attr.create_detached)
+        nt->flags |= THD_DETACHED;
+
+    /* Initialize thread-local storage. */
+    LIST_INIT(&nt->tls_list);
+
+    /* Now that the thread is created, add it into the lists */
+    irq_disable_scoped();
+
+    /* Insert it into the thread list */
+    LIST_INSERT_HEAD(&thd_list, nt, t_list);
+
+    /* Add it to our count */
+    ++thd_count;
+
+    /* Schedule it */
+    thd_add_to_runnable(nt, false);
 
     return nt;
 }
