@@ -352,23 +352,19 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
     kthread_t *nt = NULL;
     tid_t tid;
     uintptr_t params[4];
-    kthread_attr_t real_attr = { false, THD_STACK_SIZE, NULL, PRIO_DEFAULT, NULL, false };
+    kthread_attr_t real_attr = { false, THD_STACK_SIZE, NULL, PRIO_DEFAULT, "unnamed", false };
 
-    if(attr)
-        real_attr = *attr;
+    if(attr) {
+        /* Check for invalid */
+        assert_msg(!attr->stack_ptr || attr->stack_size, "thd_create_ex: No size provided for stack pointer\n");
 
-    /* Look through the attributes and see what we have. If any are set to 0,
-       then default them now to save ourselves trouble later. */
-    if(real_attr.stack_ptr && !real_attr.stack_size) {
-        errno = EINVAL;
-        return NULL;
+        real_attr.create_detached = attr->create_detached;
+        if(attr->stack_size) real_attr.stack_size = attr->stack_size;
+        real_attr.stack_ptr = attr->stack_ptr;
+        if(attr->prio) real_attr.prio = attr->prio;
+        if(attr->label) real_attr.label = attr->label;
+        real_attr.disable_tls = attr->disable_tls;
     }
-
-    if(!real_attr.stack_size)
-        real_attr.stack_size = THD_STACK_SIZE;
-
-    if(!real_attr.prio)
-        real_attr.prio = PRIO_DEFAULT;
 
     /* Get a new thread id */
     tid = atomic_fetch_add(&tid_highest, 1);
@@ -386,7 +382,7 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
 
     /* Create a new thread stack */
     if(!real_attr.stack_ptr) {
-        nt->stack = (uint32_t*)aligned_alloc(THD_STACK_ALIGNMENT,
+        nt->stack = (uint32_t *)aligned_alloc(THD_STACK_ALIGNMENT,
                                              real_attr.stack_size);
 
         if(!nt->stack) {
@@ -434,13 +430,7 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
     nt->prio = real_attr.prio;
     nt->state = STATE_READY;
 
-    if(!real_attr.label) {
-        strcpy(nt->label, "unnamed");
-    }
-    else {
-        strncpy(nt->label, real_attr.label, 255);
-        nt->label[255] = 0;
-    }
+    strncpy(nt->label, real_attr.label, 254);
 
     if(thd_current)
         strcpy(nt->pwd, thd_current->pwd);
