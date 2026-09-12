@@ -24,6 +24,7 @@ clean: clean_subdirs
 distclean: clean
 	-rm -f lib/$(KOS_ARCH)/*
 	-rm -f addons/lib/$(KOS_ARCH)/*
+	-rm -rf $(KOS_SYSROOT)
 
 docs:
 	doxygen $(KOS_BASE)/doc/Doxyfile
@@ -35,13 +36,10 @@ docs_open: docs
 	open $(KOS_BASE)/doc/reference/html/index.html
 
 kos-ports_all:
-	$(KOS_PORTS)/utils/build-all.sh
+	$(MAKE) -C $(KOS_PORTS) all
 
 kos-ports_clean:
-	$(KOS_PORTS)/utils/clean-all.sh
-
-kos-ports_distclean: kos-ports_clean
-	$(KOS_PORTS)/utils/uninstall-all.sh
+	$(MAKE) -C $(KOS_PORTS) clean
 
 all_auto_kos_base:
 	$(MAKE) all KOS_BASE=$(CURDIR)
