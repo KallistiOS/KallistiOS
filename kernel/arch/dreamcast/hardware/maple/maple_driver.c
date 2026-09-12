@@ -69,18 +69,24 @@ int maple_driver_unreg(maple_driver_t *driver) {
 int maple_driver_attach(maple_frame_t *det) {
     maple_driver_t      *i;
     maple_response_t    *resp;
-    maple_devinfo_t     *devinfo;
+    maple_devinfo_t     devinfo;
     maple_device_t      *dev = maple_state.ports[det->dst_port].units[det->dst_unit];
     bool                dev_allocated = false;
 
     /* Resolve some pointers first */
     resp = (maple_response_t *)det->recv_buf;
-    devinfo = (maple_devinfo_t *)resp->data;
+
+    /* recv_buf is uncached: read the response once, the DMA may still be
+       filling it. A zero mask means the payload has not landed. */
+    devinfo = *(maple_devinfo_t *)resp->data;
+
+    if(!devinfo.functions)
+        return -1;
 
     /* Go through the list and look for a matching driver */
     LIST_FOREACH(i, &maple_state.driver_list, drv_list) {
         /* For now we just pick the first matching driver */
-        if(i->functions & devinfo->functions) {
+        if(i->functions & devinfo.functions) {
 
             /* Driver matches. Alloc a device if needed. */
             if(!dev) {
@@ -95,7 +101,7 @@ int maple_driver_attach(maple_frame_t *det) {
                 dev_allocated = true;
             }
 
-            memcpy(&dev->info, devinfo, sizeof(maple_devinfo_t));
+            dev->info = devinfo;
 
             /* Now lets allocate a new status buffer */
             if(i->status_size && !dev->status) {
