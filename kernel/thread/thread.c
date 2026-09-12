@@ -17,6 +17,7 @@
 #include <reent.h>
 #include <errno.h>
 #include <stdalign.h>
+#include <stdatomic.h>
 
 #include <kos/thread.h>
 #include <kos/dbgio.h>
@@ -78,6 +79,8 @@ static struct ktqueue run_queue;
 
 /* The currently executing thread. This thread should not be on any queues. */
 kthread_t *thd_current = NULL;
+
+static struct _reent *old_impure;
 
 /* Thread mode: uninitialized or pre-emptive. */
 static kthread_mode_t thd_mode = THD_MODE_NONE;
@@ -197,17 +200,6 @@ int thd_pslist_queue(int (*pf)(const char *fmt, ...)) {
 /*****************************************************************************/
 /* Returns a fresh thread ID for each new thread */
 
-/* Highest thread id (used when assigning next thread id) */
-static tid_t tid_highest;
-
-/* Return the next available thread id (assumes wraparound will not run
-   into old processes). */
-static tid_t thd_next_free(void) {
-    int id;
-    id = tid_highest++;
-    return id;
-}
-
 /* Given a thread ID, locates the thread structure */
 kthread_t *thd_by_tid(tid_t tid) {
     kthread_t *np;
@@ -239,14 +231,7 @@ static bool thd_has_polls(void) {
 
 /* An idle function. This function literally does nothing but loop
    forever. It's meant to be used for an idle task. */
-static void *thd_idle_task(void *param) {
-    /* Uncomment these if you want some debug for deadlocking */
-    /*  int old = irq_disable();
-    #ifndef NDEBUG
-        thd_pslist();
-        printf("Inside idle task now\n");
-    #endif
-        irq_restore(old); */
+static _Noreturn void *thd_idle_task(void *param) {
     (void)param;
 
     for(;;) {
@@ -256,13 +241,12 @@ static void *thd_idle_task(void *param) {
             arch_sleep();   /* We can safely enter sleep mode here */
     }
 
-    /* Never reached */
-    abort();
+    __unreachable();
 }
 
 /* Reaper function. This function is here to reap old zombie threads as they are
    created. */
-static void *thd_reaper(void *param) {
+static _Noreturn void *thd_reaper(void *param) {
     kthread_t *thd, *tmp;
 
     (void)param;
@@ -281,14 +265,13 @@ static void *thd_reaper(void *param) {
         }
     }
 
-    /* Never reached */
-    abort();
+    __unreachable();
 }
 
 /* Thread execution wrapper; when the thd_create function below
    adds a new thread to the thread chain, this function is the one
    that gets called in the new context. */
-static void thd_birth(void *(*routine)(void *param), void *param) {
+static _Noreturn void thd_birth(void *(*routine)(void *param), void *param) {
     /* Call the thread function */
     void *rv = routine(param);
 
@@ -325,54 +308,22 @@ void thd_exit(void *rv) {
     /* Manually reschedule */
     thd_block_now(&thd_current->context);
 
-    /* not reached */
-    abort();
+    __unreachable();
 }
 
 
 /*****************************************************************************/
 /* Thread creation and deletion */
 
-/* Enqueue a process in the runnable queue; adds it right after the
-   process group of the same priority (front_of_line==0) or
-   right before the process group of the same priority (front_of_line!=0).
-   See thd_schedule for why this is helpful. */
+/* Enqueue a process in the runnable queue. */
 void thd_add_to_runnable(kthread_t *t, bool front_of_line) {
-    kthread_t *i;
-    int done;
 
     if(t->flags & THD_QUEUED)
         return;
 
-    done = 0;
-
-    if(!front_of_line) {
-        /* Look for a thread of lower priority and insert
-           before it. If there is nothing on the run queue, we'll
-           fall through to the bottom. */
-        TAILQ_FOREACH(i, &run_queue, thdq) {
-            if(i->prio > t->prio) {
-                TAILQ_INSERT_BEFORE(i, t, thdq);
-                done = 1;
-                break;
-            }
-        }
-    }
-    else {
-        /* Look for a thread of the same or lower priority and
-           insert before it. If there is nothing on the run queue,
-           we'll fall through to the bottom. */
-        TAILQ_FOREACH(i, &run_queue, thdq) {
-            if(i->prio >= t->prio) {
-                TAILQ_INSERT_BEFORE(i, t, thdq);
-                done = 1;
-                break;
-            }
-        }
-    }
-
-    /* Didn't find one, put it at the end */
-    if(!done)
+    if(front_of_line)
+        TAILQ_INSERT_HEAD(&run_queue, t, thdq);
+    else
         TAILQ_INSERT_TAIL(&run_queue, t, thdq);
 
     t->flags |= THD_QUEUED;
@@ -387,6 +338,9 @@ int thd_remove_from_runnable(kthread_t *thd) {
     return 0;
 }
 
+/* Highest thread id (used when assigning next thread id) */
+static atomic_int tid_highest = 1;
+
 /* New thread function; given a routine address, it will create a
    new thread with the given attributes. When the routine returns,
    the thread will exit. Returns the new thread struct.
@@ -398,122 +352,111 @@ kthread_t *thd_create_ex(const kthread_attr_t *restrict attr,
     kthread_t *nt = NULL;
     tid_t tid;
     uintptr_t params[4];
-    kthread_attr_t real_attr = { false, THD_STACK_SIZE, NULL, PRIO_DEFAULT, NULL, false };
+    kthread_attr_t real_attr = { false, THD_STACK_SIZE, NULL, PRIO_DEFAULT, "unnamed", false };
 
-    if(attr)
-        real_attr = *attr;
+    if(attr) {
+        /* Check for invalid */
+        assert_msg(!attr->stack_ptr || attr->stack_size, "thd_create_ex: No size provided for stack pointer\n");
 
-    /* Look through the attributes and see what we have. If any are set to 0,
-       then default them now to save ourselves trouble later. */
-    if(real_attr.stack_ptr && !real_attr.stack_size) {
-        errno = EINVAL;
+        real_attr.create_detached = attr->create_detached;
+        if(attr->stack_size) real_attr.stack_size = attr->stack_size;
+        real_attr.stack_ptr = attr->stack_ptr;
+        if(attr->prio) real_attr.prio = attr->prio;
+        if(attr->label) real_attr.label = attr->label;
+        real_attr.disable_tls = attr->disable_tls;
+    }
+
+    /* Get a new thread id */
+    tid = atomic_fetch_add(&tid_highest, 1);
+    if(tid < 0) return NULL;
+
+    /* Create a new thread structure */
+    nt = aligned_alloc(32, sizeof(kthread_t));
+    if(!nt) return NULL;
+
+    /* Clear out potentially unused stuff */
+    memset(nt, 0, sizeof(kthread_t));
+
+    /* Initialize the flags to defaults immediately. */
+    nt->flags = THD_DEFAULTS;
+
+    /* Create a new thread stack */
+    if(!real_attr.stack_ptr) {
+        nt->stack = (uint32_t *)aligned_alloc(THD_STACK_ALIGNMENT,
+                                             real_attr.stack_size);
+
+        if(!nt->stack) {
+            free(nt);
+            return NULL;
+        }
+
+        /* Since we allocated the stack, we own the stack! */
+        nt->flags |= THD_OWNS_STACK;
+    }
+    else {
+        nt->stack = (uint32_t*)real_attr.stack_ptr;
+    }
+
+    nt->stack_size = real_attr.stack_size;
+
+    /* Populate the context */
+    params[0] = (uintptr_t)routine;
+    params[1] = (uintptr_t)param;
+    params[2] = 0;
+    params[3] = 0;
+    irq_create_context(&nt->context,
+                       ((uintptr_t)nt->stack) + nt->stack_size,
+                       (uintptr_t)thd_birth, params);
+
+    /* Some architectures require setting up a new stack before use.
+       We won't do this if routine is NULL, however, as this means
+       we are creating the kernel thread, which is already running. */
+    if(routine) {
+        arch_stk_setup(nt);
+    }
+
+    /* Create static TLS data if the thread hasn't disabled it. */
+    if(real_attr.disable_tls) {
+        nt->flags |= THD_DISABLE_TLS;
+    } else if(!arch_tls_setup_data(nt)) {
+        if(nt->flags & THD_OWNS_STACK)
+            free(nt->stack);
+        free(nt);
         return NULL;
     }
 
-    if(!real_attr.stack_size)
-        real_attr.stack_size = THD_STACK_SIZE;
+    nt->tid = tid;
+    nt->real_prio = real_attr.prio;
+    nt->prio = real_attr.prio;
+    nt->state = STATE_READY;
 
-    if(!real_attr.prio)
-        real_attr.prio = PRIO_DEFAULT;
+    strncpy(nt->label, real_attr.label, 254);
 
+    if(thd_current)
+        strcpy(nt->pwd, thd_current->pwd);
+    else
+        strcpy(nt->pwd, "/");
+
+    _REENT_INIT_PTR((&(nt->thd_reent)));
+
+    /* Should we detach the thread? */
+    if(real_attr.create_detached)
+        nt->flags |= THD_DETACHED;
+
+    /* Initialize thread-local storage. */
+    LIST_INIT(&nt->tls_list);
+
+    /* Now that the thread is created, add it into the lists */
     irq_disable_scoped();
 
-    /* Get a new thread id */
-    tid = thd_next_free();
+    /* Insert it into the thread list */
+    LIST_INSERT_HEAD(&thd_list, nt, t_list);
 
-    if(tid >= 0) {
-        /* Create a new thread structure */
-        nt = aligned_alloc(32, sizeof(kthread_t));
+    /* Add it to our count */
+    ++thd_count;
 
-        if(nt != NULL) {
-            /* Clear out potentially unused stuff */
-            memset(nt, 0, sizeof(kthread_t));
-
-            /* Initialize the flags to defaults immediately. */
-            nt->flags = THD_DEFAULTS;
-
-            /* Create a new thread stack */
-            if(!real_attr.stack_ptr) {
-                nt->stack = (uint32_t*)aligned_alloc(THD_STACK_ALIGNMENT,
-                                                     real_attr.stack_size);
-
-                if(!nt->stack) {
-                    free(nt);
-                    return NULL;
-                }
-
-                /* Since we allocated the stack, we own the stack! */
-                nt->flags |= THD_OWNS_STACK;
-            }
-            else {
-                nt->stack = (uint32_t*)real_attr.stack_ptr;
-            }
-
-            nt->stack_size = real_attr.stack_size;
-
-            /* Populate the context */
-            params[0] = (uintptr_t)routine;
-            params[1] = (uintptr_t)param;
-            params[2] = 0;
-            params[3] = 0;
-            irq_create_context(&nt->context,
-                               ((uintptr_t)nt->stack) + nt->stack_size,
-                               (uintptr_t)thd_birth, params);
-
-            /* Some architectures require setting up a new stack before use.
-               We won't do this if routine is NULL, however, as this means
-               we are creating the kernel thread, which is already running. */
-            if(routine) {
-                arch_stk_setup(nt);
-            }
-
-            /* Create static TLS data if the thread hasn't disabled it. */
-            if(real_attr.disable_tls) {
-                nt->flags |= THD_DISABLE_TLS;
-            } else if(!arch_tls_setup_data(nt)) {
-                if(nt->flags & THD_OWNS_STACK)
-                    free(nt->stack);
-                free(nt);
-                return NULL;
-            }
-
-            nt->tid = tid;
-            nt->real_prio = real_attr.prio;
-            nt->prio = real_attr.prio;
-            nt->state = STATE_READY;
-
-            if(!real_attr.label) {
-                strcpy(nt->label, "unnamed");
-            }
-            else {
-                strncpy(nt->label, real_attr.label, 255);
-                nt->label[255] = 0;
-            }
-
-            if(thd_current)
-                strcpy(nt->pwd, thd_current->pwd);
-            else
-                strcpy(nt->pwd, "/");
-
-            _REENT_INIT_PTR((&(nt->thd_reent)));
-
-            /* Should we detach the thread? */
-            if(real_attr.create_detached)
-                nt->flags |= THD_DETACHED;
-
-            /* Initialize thread-local storage. */
-            LIST_INIT(&nt->tls_list);
-
-            /* Insert it into the thread list */
-            LIST_INSERT_HEAD(&thd_list, nt, t_list);
-
-            /* Add it to our count */
-            ++thd_count;
-
-            /* Schedule it */
-            thd_add_to_runnable(nt, 0);
-        }
-    }
+    /* Schedule it */
+    thd_add_to_runnable(nt, false);
 
     return nt;
 }
@@ -537,11 +480,12 @@ int thd_destroy(kthread_t *thd) {
 
     /* If this thread was waiting on something, we need to remove it from
        genwait so that it doesn't try to notify a dead thread later. */
-    if(thd->wait_obj)
+    if(thd->state == STATE_WAIT)
         genwait_wake_thd(thd->wait_obj, thd, ECANCELED);
 
     /* De-schedule the thread if it's scheduled. */
-    thd_remove_from_runnable(thd);
+    if(thd->flags & THD_QUEUED)
+        thd_remove_from_runnable(thd);
 
     /* Remove it from the thread list. */
     LIST_REMOVE(thd, t_list);
@@ -554,11 +498,8 @@ int thd_destroy(kthread_t *thd) {
     }
 
     /* Free TLS entries. */
-    i = LIST_FIRST(&thd->tls_list);
-    while(i != NULL) {
-        i2 = LIST_NEXT(i, kv_list);
+    LIST_FOREACH_SAFE(i, &thd->tls_list, kv_list, i2) {
         free(i);
-        i = i2;
     }
 
     /* Free its stack (if we're managing it). */
@@ -651,17 +592,14 @@ static inline prio_t thd_calc_prio(const kthread_t *thd, uint32_t now) {
 }
 
 /* Thread scheduler; this function will find a new thread to run when a
-   context switch is requested. No work is done in here except to change
-   out the thd_current variable contents. Assumed that we are in an
-   interrupt context.
+   context switch is requested. Assumed that we are in an interrupt context.
 
    In the normal operation mode, the current thread is pushed back onto
-   the run queue at the end of its priority group. This implements the
-   standard round robin scheduling within priority groups. If you set the
-   front_of_line parameter to non-zero, then this behavior is modified:
-   the current thread is pushed onto the run queue at the _front_ of its
-   priority group. The effect is that no context switching is done, but
-   priority groups are re-checked. This is useful when returning from an
+   the end of the run queue. This implements the standard round robin
+   scheduling within priority groups. If you set the front_of_line parameter
+   to true, then this behavior is modified: the current thread is pushed onto
+   the _front_ of the run queue. The effect is that no context switching is
+   done, but priority groups are re-checked. This is useful when returning from an
    IRQ after doing something like a sem_signal, where you'd ideally like
    to make sure the priorities are all straight before returning, but you
    don't want a full context switch inside the same priority group.
@@ -669,24 +607,10 @@ static inline prio_t thd_calc_prio(const kthread_t *thd, uint32_t now) {
 void thd_schedule(bool front_of_line) {
     kthread_t *thd, *next_thd = NULL;
     prio_t prio, max_prio = INT_MAX;
-    uint64_t now;
-    int ret;
+    uint64_t now = timer_ms_gettime64();
 
-    now = timer_ms_gettime64();
-
-    /* If there's only two thread left, it's the idle task and the reaper task:
-       exit the OS */
-    if(thd_count == 2) {
-        dbgio_printf("\nthd_schedule: idle tasks are the only things left; exiting\n");
-        arch_exit();
-    }
-
-    /* If the current thread is supposed to be in the front of the line, and it
-       did not die, re-enqueue it to the front of the line now. */
-    if(front_of_line && thd_current->state == STATE_RUNNING) {
-        thd_current->state = STATE_READY;
-        thd_add_to_runnable(thd_current, front_of_line);
-    }
+    /* If idle and reaper are the only things left, something is wrong. */
+    assert_msg(thd_count != 2, "thd_schedule: idle tasks are the only things left\n");
 
     /* Look for timed out waits */
     genwait_check_timeouts(now);
@@ -703,7 +627,7 @@ void thd_schedule(bool front_of_line) {
                 CONTEXT_RET(thd->context) = 0;
             }
             else {
-                ret = thd->poll_cb(thd->wait_obj);
+                int ret = thd->poll_cb(thd->wait_obj);
 
                 if(ret) {
                     thd->state = STATE_READY;
@@ -723,15 +647,15 @@ void thd_schedule(bool front_of_line) {
         }
     }
 
-    /* If we didn't already re-enqueue the thread and we are supposed to do so,
-       do it now. */
-    if(!front_of_line && thd_current->state == STATE_RUNNING) {
+    /* If the thread is still running, or has been set to poll re-enqueue. */
+    if(thd_current->state == STATE_RUNNING) {
         thd_current->state = STATE_READY;
         thd_add_to_runnable(thd_current, front_of_line);
 
-        /* Make sure we have a thread, just in case we couldn't find anything
-           above. */
-        if(next_thd == NULL || next_thd == thd_idle_thd)
+        /* If current thread is running return to it if: no thread could be found,
+            we would otherwise go to idle, or it was requested to be prioritized. */
+        if(next_thd == NULL || next_thd == thd_idle_thd ||
+            (front_of_line && (thd_current->prio <= max_prio)))
             next_thd = thd_current;
     }
     else if(__predict_false(thd_current->state == STATE_POLLING)) {
@@ -739,10 +663,7 @@ void thd_schedule(bool front_of_line) {
     }
 
     /* Didn't find one? Big problem here... */
-    if(next_thd == NULL) {
-        thd_pslist(printf);
-        arch_panic("couldn't find a runnable thread");
-    }
+    assert_msg(next_thd != NULL, "thd_schedule: couldn't find a runnable thread");
 
     /* We should now have a runnable thread, so remove it from the
        run queue and switch to it. */
@@ -772,7 +693,7 @@ void thd_schedule_next(kthread_t *thd) {
     }
     else if(thd_current->state == STATE_RUNNING) {
         thd_current->state = STATE_READY;
-        thd_add_to_runnable(thd_current, 0);
+        thd_add_to_runnable(thd_current, false);
     }
 
     thd_schedule_inner(thd, timer_ms_gettime64());
@@ -1120,6 +1041,9 @@ int thd_init(void) {
         return -1;
     }
 
+    /* Preserve the newlib reent struct before we switch to kern's */
+    old_impure = _impure_ptr;
+
     /* Main thread -- the kern thread */
     thd_current = kern;
     thd_schedule_inner(kern, timer_ms_gettime64());
@@ -1156,6 +1080,9 @@ void thd_shutdown(void) {
     /* Remove our pre-emption handler */
     timer_primary_set_callback(NULL);
 
+    /* Restore the newlib reent struct */
+    _impure_ptr = old_impure;
+
     /* Kill remaining live threads */
     LIST_FOREACH_SAFE(cur, &thd_list, t_list, tmp) {
         if(cur->tid != 1)
@@ -1172,6 +1099,4 @@ void thd_shutdown(void) {
     /* Not running */
     thd_mode = THD_MODE_NONE;
     thd_count = 0;
-
-    // XXX _impure_ptr is borked
 }
