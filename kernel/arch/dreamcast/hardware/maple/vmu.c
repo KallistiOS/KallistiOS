@@ -181,12 +181,12 @@ void vmu_shutdown(void) {
 }
 
 /* Dynamically add the periodic polling callback to the driver when button input is enabled. */
-void vmu_set_buttons_enabled(int enable) {
+void vmu_set_buttons_enabled(bool enable) {
     vmu_drv.periodic = enable ? vmu_periodic : NULL;
 }
 
 /* Determine whether polling for button input is enabled or not by presence of periodic callback. */
-int vmu_get_buttons_enabled(void) {
+bool vmu_get_buttons_enabled(void) {
     return !!vmu_drv.periodic;
 }
 
@@ -202,32 +202,48 @@ int vmu_has_241_blocks(maple_device_t *dev) {
     return 0;
 }
 
-int vmu_toggle_241_blocks(maple_device_t *dev, int enable) {
-    vmu_root_t root;
+int vmu_toggle_241_blocks(maple_device_t *dev, bool enable) {
+    vmu_root_t  root;
+    uint16_t    blk_cnt = enable ? 241 : 200;
 
-    if(vmufs_root_read(dev, &root) < 0)
+    vmufs_mutex_lock();
+    if(vmufs_root_read(dev, &root) < 0) {
+        vmufs_mutex_unlock();
         return -1;
+    }
 
-    root.blk_cnt = (enable != 0) ? 241 : 200;
+    /* Only write if we need to. */
+    if(blk_cnt != root.blk_cnt) {
+        root.blk_cnt = blk_cnt;
+        if(vmufs_root_write(dev, &root) < 0) {
+            vmufs_mutex_unlock();
+            return -1;
+        }
+    }
 
-    if(vmufs_root_write(dev, &root) < 0)
-        return -1;
-
+    vmufs_mutex_unlock();
     return 0;
 }
 
-int vmu_use_custom_color(maple_device_t *dev, int enable) {
-    vmu_root_t root;
+int vmu_use_custom_color(maple_device_t *dev, bool enable) {
+    vmu_root_t  root;
 
-    if(vmufs_root_read(dev, &root) < 0)
+    vmufs_mutex_lock();
+    if(vmufs_root_read(dev, &root) < 0) {
+        vmufs_mutex_unlock();
         return -1;
+    }
 
-    /* 1 - Enables the use of the custom color. 0 - Disables */
-    root.use_custom = (enable != 0) ? 1 : 0;
+    /* Only write if we need to. */
+    if(enable != root.use_custom) {
+        root.use_custom = enable;
+        if(vmufs_root_write(dev, &root) < 0) {
+            vmufs_mutex_unlock();
+            return -1;
+        }
+    }
 
-    if(vmufs_root_write(dev, &root) < 0)
-        return -1;
-
+    vmufs_mutex_unlock();
     return 0;
 }
 
@@ -236,19 +252,27 @@ int vmu_use_custom_color(maple_device_t *dev, int enable) {
 int vmu_set_custom_color(maple_device_t *dev, uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha) {
     vmu_root_t root;
 
-    if(vmufs_root_read(dev, &root) < 0)
+    vmufs_mutex_lock();
+    if(vmufs_root_read(dev, &root) < 0) {
+        vmufs_mutex_unlock();
         return -1;
+    }
 
-    /* 1 - Enables the use of the custom color. 0 - Disables */
-    root.use_custom = 1;
-    root.custom_color[0] = blue;
-    root.custom_color[1] = green;
-    root.custom_color[2] = red;
-    root.custom_color[3] = alpha;
+    /* Only write if we need to. */
+    if((root.use_custom != 1) || (root.custom_color[0] != blue) || (root.custom_color[1] != green) ||
+        (root.custom_color[2] != red) || (root.custom_color[3] != alpha) ) {
+        root.use_custom = 1;
+        root.custom_color[0] = blue;
+        root.custom_color[1] = green;
+        root.custom_color[2] = red;
+        root.custom_color[3] = alpha;
+        if(vmufs_root_write(dev, &root) < 0) {
+            vmufs_mutex_unlock();
+            return -1;
+        }
+    }
 
-    if(vmufs_root_write(dev, &root) < 0)
-        return -1;
-
+    vmufs_mutex_unlock();
     return 0;
 }
 
@@ -264,17 +288,27 @@ int vmu_set_icon_shape(maple_device_t *dev, uint8_t icon_shape) {
     if(icon_shape < BFONT_ICON_VMUICON || icon_shape > BFONT_ICON_EMBROIDERY)
         return -1;
 
-    if(vmufs_root_read(dev, &root) < 0)
+    vmufs_mutex_lock();
+    if(vmufs_root_read(dev, &root) < 0) {
+        vmufs_mutex_unlock();
         return -1;
+    }
 
     /* Valid value range is 0-123 and starts with BFONT_ICON_VMUICON which
        has a value of 5.  This is because we can't use the first 5 icons
        found in the bios so we must subtract 5 */
-    root.icon_shape = icon_shape - BFONT_ICON_VMUICON;
+    icon_shape = icon_shape - BFONT_ICON_VMUICON;
 
-    if(vmufs_root_write(dev, &root) < 0)
-        return -1;
+    /* Only write if we need to. */
+    if(root.icon_shape != icon_shape) {
+        root.icon_shape = icon_shape;
+        if(vmufs_root_write(dev, &root) < 0) {
+            vmufs_mutex_unlock();
+            return -1;
+        }
+    }
 
+    vmufs_mutex_unlock();
     return 0;
 }
 
