@@ -83,6 +83,7 @@ sd_shutdown
 sd_read_blocks
 sd_write_blocks
 sd_get_size
+sd_get_interface
 sd_blockdev_for_partition
 sd_blockdev_for_device
 
