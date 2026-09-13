@@ -152,7 +152,7 @@ __noinline void *sq_cpy(void *dest, const void *src, size_t n) {
             }
         } else { /* If src is 8-byte aligned, fast path */
             sq_fast_cpy(d, s, nb);
-            s += nb * 32;
+            s += nb * 8;
         }
 
         sq_unlock();
