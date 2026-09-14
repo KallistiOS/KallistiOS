@@ -279,198 +279,202 @@ static void inter_vert_commit_intensity(pvr_vertex_t *dest, pvr_vertex_t *inside
 
 int pvr_vertex_commit_zclip(pvr_vertex_t *src, int size)
 {
-	pvr_vertex_t *dest = (pvr_vertex_t *)SQ_MASK_DEST((void *)PVR_TA_INPUT);
-	pvr_vertex_t *top = dest;
-	sq_lock((void *)PVR_TA_INPUT);
-	src = (pvr_vertex_t *)&src->flags;
-	for (int strip_num = 2; size; size -= strip_num)
-	{
-		int clip = 0;
-		if (size < 3)
-			break;
-		/*  First and Second point */
-		if (1.0f >= src->z && src->z > 0.0f)
-		{
-			vert_commit(dest++, src, 0);
-			src++;
-			if (1.0f >= src->z && src->z > 0.0f)
-			{
-				/* 0, 1 inside */
-				vert_commit(dest++, src, 0);
-				clip = 6;
-			}
-			else
-			{
-				/* 0 inside, 1 outside */
-				inter_vert_commit(dest++, &src[-1], src, 0);
-				clip = 2;
-			}
-		}
-		else
-		{
-			src++;
-			if (1.0f >= src->z && src->z > 0.0f)
-			{
-				/* 0 outside and 1 inside */
-				inter_vert_commit(dest++, src, &src[-1], 0);
-				vert_commit(dest++, src, 0);
-				clip = 4;
-			}
-		}
-		src++;
-		/* Third point and more */
-		for (int eos = 0; !eos; src++, strip_num++)
-		{
-			/* End of strip */
-			eos = src->flags >> 28 & 1;
-			/* Clip code */
-			clip >>= 1;
-			if (1.0f >= src->z && src->z > 0.0f)
-				clip |= 4;
-			/* Clipping */
-			if (!clip)
-			{
-				/* all outside */
-				continue;
-			}
-			else if (clip == 7)
-			{
-				/* all inside */
-				vert_commit(dest++, src, eos);
-				continue;
-			}
-			switch (clip)
-			{
-			case 1: /* 0 inside, 1 and 2 outside */
-				/* Pause strip */
-				inter_vert_commit(dest++, &src[-2], src, 1);
-				break;
-			case 3: /* 0 and 1 inside, 2 outside */
-				inter_vert_commit(dest++, &src[-2], src, 0);
-				vert_commit(dest++, &src[-1], 0);
-			case 2: /* 0 outside, 1 inside, 2 outside */
-				inter_vert_commit(dest++, &src[-1], src, eos);
-				break;
-			case 4: /* 0 and 1 outside, 2 inside */
-				inter_vert_commit(dest++, src, &src[-2], 0);
-				if (strip_num & 0x01)
-				{
-				case 5: /* 0 inside, 1 outside and 2 inside */
-					/* Turn over */
-					vert_commit(dest++, src, 0);
-				}
-				inter_vert_commit(dest++, src, &src[-1], 0);
-				vert_commit(dest++, src, eos);
-				break;
-			case 6: /* 0 outside, 1 and 2 inside */
-				inter_vert_commit(dest++, src, &src[-2], 0);
-				vert_commit(dest++, &src[-1], 0);
-				vert_commit(dest++, src, eos);
-				break;
-			default:
-			}
-		}
-	}
-	sq_unlock();
-	return (int)(dest - top) * 8;
+    pvr_vertex_t *dest = (pvr_vertex_t *)SQ_MASK_DEST((void *)PVR_TA_INPUT);
+    pvr_vertex_t *top = dest;
+    sq_lock((void *)PVR_TA_INPUT);
+    src = (pvr_vertex_t *)&src->flags;
+    for (int strip_num = 2; size; size -= strip_num)
+    {
+        int clip = 0;
+        if (size < 3)
+            break;
+        /*  First and Second point */
+        if (1.0f >= src->z && src->z > 0.0f)
+        {
+            vert_commit(dest++, src, 0);
+            src++;
+            if (1.0f >= src->z && src->z > 0.0f)
+            {
+                /* 0, 1 inside */
+                vert_commit(dest++, src, 0);
+                clip = 6;
+            }
+            else
+            {
+                /* 0 inside, 1 outside */
+                inter_vert_commit(dest++, &src[-1], src, 0);
+                clip = 2;
+            }
+        }
+        else
+        {
+            src++;
+            if (1.0f >= src->z && src->z > 0.0f)
+            {
+                /* 0 outside and 1 inside */
+                inter_vert_commit(dest++, src, &src[-1], 0);
+                vert_commit(dest++, src, 0);
+                clip = 4;
+            }
+        }
+        src++;
+        /* Third point and more */
+        for (int eos = 0; !eos; src++, strip_num++)
+        {
+            /* End of strip */
+            eos = src->flags >> 28 & 1;
+            /* Clip code */
+            clip >>= 1;
+            if (1.0f >= src->z && src->z > 0.0f)
+                clip |= 4;
+            /* Clipping */
+            if (!clip)
+            {
+                /* all outside */
+                continue;
+            }
+            else if (clip == 7)
+            {
+                /* all inside */
+                vert_commit(dest++, src, eos);
+                continue;
+            }
+            switch (clip)
+            {
+            case 1: /* 0 inside, 1 and 2 outside */
+                /* Pause strip */
+                inter_vert_commit(dest++, &src[-2], src, 1);
+                break;
+            case 3: /* 0 and 1 inside, 2 outside */
+                inter_vert_commit(dest++, &src[-2], src, 0);
+                vert_commit(dest++, &src[-1], 0);
+                __fallthrough;
+            case 2: /* 0 outside, 1 inside, 2 outside */
+                inter_vert_commit(dest++, &src[-1], src, eos);
+                break;
+            case 4: /* 0 and 1 outside, 2 inside */
+                inter_vert_commit(dest++, src, &src[-2], 0);
+                if (strip_num & 0x01)
+                {
+                case 5: /* 0 inside, 1 outside and 2 inside */
+                    /* Turn over */
+                    vert_commit(dest++, src, 0);
+                }
+                inter_vert_commit(dest++, src, &src[-1], 0);
+                vert_commit(dest++, src, eos);
+                break;
+            case 6: /* 0 outside, 1 and 2 inside */
+                inter_vert_commit(dest++, src, &src[-2], 0);
+                vert_commit(dest++, &src[-1], 0);
+                vert_commit(dest++, src, eos);
+                break;
+            default:
+                break;
+            }
+        }
+    }
+    sq_unlock();
+    return (int)(dest - top) * 8;
 }
 
 int pvr_vertex_commit_zclip_intensity(pvr_vertex_t *src, int size)
 {
-	pvr_vertex_t *dest = (pvr_vertex_t *)SQ_MASK_DEST((void *)PVR_TA_INPUT);
-	pvr_vertex_t *top = dest;
-	sq_lock((void *)PVR_TA_INPUT);
-	src = (pvr_vertex_t *)&src->flags;
-	for (int strip_num = 2; size; size -= strip_num)
-	{
-		int clip = 0;
-		if (size < 3)
-			break;
-		/*  First and Second point */
-		if (1.0f >= src->z && src->z > 0.0f)
-		{
-			vert_commit(dest++, src, 0);
-			src++;
-			if (1.0f >= src->z && src->z > 0.0f)
-			{
-				/* 0, 1 inside */
-				vert_commit(dest++, src, 0);
-				clip = 6;
-			}
-			else
-			{
-				/* 0 inside, 1 outside */
-				inter_vert_commit_intensity(dest++, &src[-1], src, 0);
-				clip = 2;
-			}
-		}
-		else
-		{
-			src++;
-			if (1.0f >= src->z && src->z > 0.0f)
-			{
-				/* 0 outside and 1 inside */
-				inter_vert_commit_intensity(dest++, src, &src[-1], 0);
-				vert_commit(dest++, src, 0);
-				clip = 4;
-			}
-		}
-		src++;
-		/* Third point and more */
-		for (int eos = 0; !eos; src++, strip_num++)
-		{
-			/* End of strip */
-			eos = src->flags >> 28 & 1;
-			/* Clip code */
-			clip >>= 1;
-			if (1.0f >= src->z && src->z > 0.0f)
-				clip |= 4;
-			/* Clipping */
-			if (!clip)
-			{
-				/* all outside */
-				continue;
-			}
-			else if (clip == 7)
-			{
-				/* all inside */
-				vert_commit(dest++, src, eos);
-				continue;
-			}
-			switch (clip)
-			{
-			case 1: /* 0 inside, 1 and 2 outside */
-				/* Pause strip */
-				inter_vert_commit_intensity(dest++, &src[-2], src, 1);
-				break;
-			case 3: /* 0 and 1 inside, 2 outside */
-				inter_vert_commit_intensity(dest++, &src[-2], src, 0);
-				vert_commit(dest++, &src[-1], 0);
-			case 2: /* 0 outside, 1 inside, 2 outside */
-				inter_vert_commit_intensity(dest++, &src[-1], src, eos);
-				break;
-			case 4: /* 0 and 1 outside, 2 inside */
-				inter_vert_commit_intensity(dest++, src, &src[-2], 0);
-				if (strip_num & 0x01)
-				{
-				case 5: /* 0 inside, 1 outside and 2 inside */
-					/* Turn over */
-					vert_commit(dest++, src, 0);
-				}
-				inter_vert_commit_intensity(dest++, src, &src[-1], 0);
-				vert_commit(dest++, src, eos);
-				break;
-			case 6: /* 0 outside, 1 and 2 inside */
-				inter_vert_commit_intensity(dest++, src, &src[-2], 0);
-				vert_commit(dest++, &src[-1], 0);
-				vert_commit(dest++, src, eos);
-				break;
-			default:
-			}
-		}
-	}
-	sq_unlock();
-	return (int)(dest - top) * 8;
+    pvr_vertex_t *dest = (pvr_vertex_t *)SQ_MASK_DEST((void *)PVR_TA_INPUT);
+    pvr_vertex_t *top = dest;
+    sq_lock((void *)PVR_TA_INPUT);
+    src = (pvr_vertex_t *)&src->flags;
+    for (int strip_num = 2; size; size -= strip_num)
+    {
+        int clip = 0;
+        if (size < 3)
+            break;
+        /*  First and Second point */
+        if (1.0f >= src->z && src->z > 0.0f)
+        {
+            vert_commit(dest++, src, 0);
+            src++;
+            if (1.0f >= src->z && src->z > 0.0f)
+            {
+                /* 0, 1 inside */
+                vert_commit(dest++, src, 0);
+                clip = 6;
+            }
+            else
+            {
+                /* 0 inside, 1 outside */
+                inter_vert_commit_intensity(dest++, &src[-1], src, 0);
+                clip = 2;
+            }
+        }
+        else
+        {
+            src++;
+            if (1.0f >= src->z && src->z > 0.0f)
+            {
+                /* 0 outside and 1 inside */
+                inter_vert_commit_intensity(dest++, src, &src[-1], 0);
+                vert_commit(dest++, src, 0);
+                clip = 4;
+            }
+        }
+        src++;
+        /* Third point and more */
+        for (int eos = 0; !eos; src++, strip_num++)
+        {
+            /* End of strip */
+            eos = src->flags >> 28 & 1;
+            /* Clip code */
+            clip >>= 1;
+            if (1.0f >= src->z && src->z > 0.0f)
+                clip |= 4;
+            /* Clipping */
+            if (!clip)
+            {
+                /* all outside */
+                continue;
+            }
+            else if (clip == 7)
+            {
+                /* all inside */
+                vert_commit(dest++, src, eos);
+                continue;
+            }
+            switch (clip)
+            {
+            case 1: /* 0 inside, 1 and 2 outside */
+                /* Pause strip */
+                inter_vert_commit_intensity(dest++, &src[-2], src, 1);
+                break;
+            case 3: /* 0 and 1 inside, 2 outside */
+                inter_vert_commit_intensity(dest++, &src[-2], src, 0);
+                vert_commit(dest++, &src[-1], 0);
+                __fallthrough;
+            case 2: /* 0 outside, 1 inside, 2 outside */
+                inter_vert_commit_intensity(dest++, &src[-1], src, eos);
+                break;
+            case 4: /* 0 and 1 outside, 2 inside */
+                inter_vert_commit_intensity(dest++, src, &src[-2], 0);
+                if (strip_num & 0x01)
+                {
+                case 5: /* 0 inside, 1 outside and 2 inside */
+                    /* Turn over */
+                    vert_commit(dest++, src, 0);
+                }
+                inter_vert_commit_intensity(dest++, src, &src[-1], 0);
+                vert_commit(dest++, src, eos);
+                break;
+            case 6: /* 0 outside, 1 and 2 inside */
+                inter_vert_commit_intensity(dest++, src, &src[-2], 0);
+                vert_commit(dest++, &src[-1], 0);
+                vert_commit(dest++, src, eos);
+                break;
+            default:
+                break;
+            }
+        }
+    }
+    sq_unlock();
+    return (int)(dest - top) * 8;
 }
 
 static void *modi_commit(void *dest, pvr_mod_hdr_t *header, pvr_modifier_vol_t *vol, int eol)

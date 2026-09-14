@@ -9,8 +9,19 @@
  * by Twada
  */
 #include <kos.h>
+
+/* Allow both old kos-ports location and standard */
+#if __has_include("png/png.h")
 #include <png/png.h>
+#else
+#include <png.h>
+#endif
+#if __has_include("zlib/zlib.h")
 #include <zlib/zlib.h>
+#else
+#include <zlib.h>
+#endif
+
 #include "pvr_zclip.h"
 
 /* textures */
