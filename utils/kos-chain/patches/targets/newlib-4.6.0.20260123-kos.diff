@@ -11,7 +11,17 @@ diff --color -ruN newlib-4.6.0.20260123/newlib/configure.host newlib-4.6.0.20260
  	;;
    avr*)
  	newlib_cflags="${newlib_cflags} -DPREFER_SIZE_OVER_SPEED -mcall-prologues"
-@@ -326,6 +325,7 @@
+@@ -249,6 +248,9 @@
+   mep)
+ 	machine_dir=mep
+ 	;;
++  mips64r5900*)
++	machine_dir=r5900
++	;;
+   mips*)
+ 	machine_dir=mips
+ 	libm_machine_dir=mips
+@@ -326,6 +328,7 @@
  	;;
    sh | sh64)
  	machine_dir=sh
@@ -19,7 +29,28 @@ diff --color -ruN newlib-4.6.0.20260123/newlib/configure.host newlib-4.6.0.20260
  	;;
    sparc*)
  	libm_machine_dir=sparc
-@@ -823,7 +823,11 @@
+@@ -540,6 +543,9 @@
+   microblaze*-*-*)
+ 	machine_dir=microblaze
+ 	;;
++  mips*-ps2-*)
++	newlib_cflags="${newlib_cflags} -G0 -DREENTRANT_SYSCALLS_PROVIDED -DMALLOC_PROVIDED -DABORT_PROVIDED -DHAVE_FCNTL -ffunction-sections -fdata-sections"
++	;;
+   mmix-knuth-mmixware)
+ 	sys_dir=mmixware
+ 	;;
+@@ -783,6 +789,10 @@
+ 	default_newlib_io_long_long="yes"
+ 	newlib_cflags="${newlib_cflags} -DMISSING_SYSCALL_NAMES"
+ 	;;
++  mips*-ps2-elf*)
++	syscall_dir=syscalls
++	default_newlib_io_long_long="yes"
++	;;
+   mips*-*-elf*)
+ 	default_newlib_io_long_long="yes"
+ 	newlib_cflags="${newlib_cflags} -DMISSING_SYSCALL_NAMES"
+@@ -823,7 +833,11 @@
  	default_newlib_io_long_long="yes"
  	newlib_cflags="${newlib_cflags} -DMISSING_SYSCALL_NAMES"
  	;;
@@ -246,7 +277,7 @@ diff --color -ruN newlib-4.6.0.20260123/newlib/libc/include/sys/_types.h newlib-
  #ifndef __machine_ino_t_defined
  #if (defined(__i386__) && (defined(GO32) || defined(__MSDOS__))) || \
 -    defined(__sparc__) || defined(__SPU__)
-+    defined(__sparc__) || defined(__SPU__) || defined(__sh__) || defined(__PPC__) || defined(__ARMEL__)
++    defined(__sparc__) || defined(__SPU__) || defined(__sh__) || defined(__PPC__) || defined(__ARMEL__) || defined(__mips__)
  typedef unsigned long __ino_t;
  #else
  typedef unsigned short __ino_t;
@@ -287,3 +318,308 @@ diff --color -ruN newlib-4.6.0.20260123/newlib/libc/stdlib/assert.c newlib-4.6.0
 +// This is put in here to cause link errors if a proper newlib isn't present.
 +int __newlib_kos_patch = 1;
 +
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/configure newlib-4.6.0.20260123-kos/configure
+--- newlib-4.6.0.20260123/configure	2026-01-23 14:12:49
++++ newlib-4.6.0.20260123-kos/configure	2026-07-14 09:36:41
+@@ -3985,6 +3985,9 @@
+   | mips*-*-irix* | mips*-*-lnews* | mips*-*-riscos*)
+     noconfigdirs="$noconfigdirs ld gas gprof"
+     ;;
++  mips*-ps2-*)
++    noconfigdirs="$noconfigdirs target-libgloss"
++    ;;
+   mips*-*-*)
+     noconfigdirs="$noconfigdirs gprof"
+     ;;
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/configure.ac newlib-4.6.0.20260123-kos/configure.ac
+--- newlib-4.6.0.20260123/configure.ac	2026-01-23 14:12:49
++++ newlib-4.6.0.20260123-kos/configure.ac	2026-07-14 09:36:41
+@@ -1269,6 +1269,9 @@
+   | mips*-*-irix* | mips*-*-lnews* | mips*-*-riscos*)
+     noconfigdirs="$noconfigdirs ld gas gprof"
+     ;;
++  mips*-ps2-*)
++    noconfigdirs="$noconfigdirs target-libgloss"
++    ;;
+   mips*-*-*)
+     noconfigdirs="$noconfigdirs gprof"
+     ;;
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/newlib/Makefile.in newlib-4.6.0.20260123-kos/newlib/Makefile.in
+--- newlib-4.6.0.20260123/newlib/Makefile.in	2026-01-23 14:12:49
++++ newlib-4.6.0.20260123-kos/newlib/Makefile.in	2026-07-14 09:36:52
+@@ -855,6 +855,7 @@
+ @HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_SPE_TRUE@	libc/machine/powerpc/vfscanf.c
+ 
+ @HAVE_LIBC_MACHINE_PRU_TRUE@am__append_113 = libc/machine/pru/setjmp.s
++@HAVE_LIBC_MACHINE_R5900_TRUE@am__append_171 = libc/machine/r5900/setjmp.S
+ @HAVE_LIBC_MACHINE_RISCV_TRUE@am__append_114 = \
+ @HAVE_LIBC_MACHINE_RISCV_TRUE@	libc/machine/riscv/memmove-asm.S libc/machine/riscv/memmove.c libc/machine/riscv/memset.S libc/machine/riscv/memcpy-asm.S libc/machine/riscv/memcpy.c libc/machine/riscv/strlen.c \
+ @HAVE_LIBC_MACHINE_RISCV_TRUE@	libc/machine/riscv/strcpy.c libc/machine/riscv/stpcpy.c libc/machine/riscv/strcmp.S libc/machine/riscv/memchr.c libc/machine/riscv/memrchr.c libc/machine/riscv/setjmp.S libc/machine/riscv/ieeefp.c libc/machine/riscv/ffs.c
+@@ -2178,6 +2179,7 @@
+ @HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_SPE_TRUE@	libc/machine/powerpc/libc_a-vfprintf.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_POWERPC_TRUE@@HAVE_POWERPC_SPE_TRUE@	libc/machine/powerpc/libc_a-vfscanf.$(OBJEXT)
+ @HAVE_LIBC_MACHINE_PRU_TRUE@am__objects_123 = libc/machine/pru/libc_a-setjmp.$(OBJEXT)
++@HAVE_LIBC_MACHINE_R5900_TRUE@am__objects_195 = libc/machine/r5900/libc_a-setjmp.$(OBJEXT)
+ @HAVE_LIBC_MACHINE_RISCV_TRUE@am__objects_124 = libc/machine/riscv/libc_a-memmove-asm.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_RISCV_TRUE@	libc/machine/riscv/libc_a-memmove.$(OBJEXT) \
+ @HAVE_LIBC_MACHINE_RISCV_TRUE@	libc/machine/riscv/libc_a-memset.$(OBJEXT) \
+@@ -2677,7 +2679,7 @@
+ 	$(am__objects_114) $(am__objects_115) $(am__objects_116) \
+ 	$(am__objects_117) $(am__objects_118) $(am__objects_119) \
+ 	$(am__objects_120) $(am__objects_121) $(am__objects_122) \
+-	$(am__objects_123) $(am__objects_124) $(am__objects_125) \
++	$(am__objects_123) $(am__objects_195) $(am__objects_124) $(am__objects_125) \
+ 	$(am__objects_126) $(am__objects_127) $(am__objects_128) \
+ 	$(am__objects_129) $(am__objects_130) $(am__objects_131) \
+ 	$(am__objects_132) $(am__objects_133) $(am__objects_134) \
+@@ -4273,7 +4275,7 @@
+ 	$(am__append_102) $(am__append_103) $(am__append_104) \
+ 	$(am__append_105) $(am__append_106) $(am__append_107) \
+ 	$(am__append_108) $(am__append_109) $(am__append_110) \
+-	$(am__append_111) $(am__append_112) $(am__append_113) \
++	$(am__append_111) $(am__append_112) $(am__append_113) $(am__append_171) \
+ 	$(am__append_114) $(am__append_115) $(am__append_116) \
+ 	$(am__append_117) $(am__append_118) $(am__append_119) \
+ 	$(am__append_120) $(am__append_121) $(am__append_122) \
+@@ -9161,6 +9163,15 @@
+ libc/machine/pru/libc_a-setjmp.$(OBJEXT):  \
+ 	libc/machine/pru/$(am__dirstamp) \
+ 	libc/machine/pru/$(DEPDIR)/$(am__dirstamp)
++libc/machine/r5900/$(am__dirstamp):
++	@$(MKDIR_P) libc/machine/r5900
++	@: > libc/machine/r5900/$(am__dirstamp)
++libc/machine/r5900/$(DEPDIR)/$(am__dirstamp):
++	@$(MKDIR_P) libc/machine/r5900/$(DEPDIR)
++	@: > libc/machine/r5900/$(DEPDIR)/$(am__dirstamp)
++libc/machine/r5900/libc_a-setjmp.$(OBJEXT):  \
++	libc/machine/r5900/$(am__dirstamp) \
++	libc/machine/r5900/$(DEPDIR)/$(am__dirstamp)
+ libc/machine/riscv/$(am__dirstamp):
+ 	@$(MKDIR_P) libc/machine/riscv
+ 	@: > libc/machine/riscv/$(am__dirstamp)
+@@ -13158,6 +13169,7 @@
+ @AMDEP_TRUE@@am__include@ @am__quote@libc/machine/powerpc/$(DEPDIR)/libc_a-vec_reallocr.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@libc/machine/powerpc/$(DEPDIR)/libc_a-vfprintf.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@libc/machine/powerpc/$(DEPDIR)/libc_a-vfscanf.Po@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@libc/machine/r5900/$(DEPDIR)/libc_a-setjmp.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@libc/machine/riscv/$(DEPDIR)/libc_a-ffs.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@libc/machine/riscv/$(DEPDIR)/libc_a-ieeefp.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@libc/machine/riscv/$(DEPDIR)/libc_a-memchr.Po@am__quote@
+@@ -19163,6 +19175,21 @@
+ @AMDEP_TRUE@@am__fastdepCCAS_FALSE@	DEPDIR=$(DEPDIR) $(CCASDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+ @am__fastdepCCAS_FALSE@	$(AM_V_CPPAS@am__nodep@)$(CCAS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libc_a_CPPFLAGS) $(CPPFLAGS) $(libc_a_CCASFLAGS) $(CCASFLAGS) -c -o libc/machine/powerpc/libc_a-setjmp.obj `if test -f 'libc/machine/powerpc/setjmp.S'; then $(CYGPATH_W) 'libc/machine/powerpc/setjmp.S'; else $(CYGPATH_W) '$(srcdir)/libc/machine/powerpc/setjmp.S'; fi`
+ 
++
++libc/machine/r5900/libc_a-setjmp.o: libc/machine/r5900/setjmp.S
++@am__fastdepCCAS_TRUE@	$(AM_V_CPPAS)$(CCAS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libc_a_CPPFLAGS) $(CPPFLAGS) $(libc_a_CCASFLAGS) $(CCASFLAGS) -MT libc/machine/r5900/libc_a-setjmp.o -MD -MP -MF libc/machine/r5900/$(DEPDIR)/libc_a-setjmp.Tpo -c -o libc/machine/r5900/libc_a-setjmp.o `test -f 'libc/machine/r5900/setjmp.S' || echo '$(srcdir)/'`libc/machine/r5900/setjmp.S
++@am__fastdepCCAS_TRUE@	$(AM_V_at)$(am__mv) libc/machine/r5900/$(DEPDIR)/libc_a-setjmp.Tpo libc/machine/r5900/$(DEPDIR)/libc_a-setjmp.Po
++@AMDEP_TRUE@@am__fastdepCCAS_FALSE@	$(AM_V_CPPAS)source='libc/machine/r5900/setjmp.S' object='libc/machine/r5900/libc_a-setjmp.o' libtool=no @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCCAS_FALSE@	DEPDIR=$(DEPDIR) $(CCASDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCCAS_FALSE@	$(AM_V_CPPAS@am__nodep@)$(CCAS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libc_a_CPPFLAGS) $(CPPFLAGS) $(libc_a_CCASFLAGS) $(CCASFLAGS) -c -o libc/machine/r5900/libc_a-setjmp.o `test -f 'libc/machine/r5900/setjmp.S' || echo '$(srcdir)/'`libc/machine/r5900/setjmp.S
++
++libc/machine/r5900/libc_a-setjmp.obj: libc/machine/r5900/setjmp.S
++@am__fastdepCCAS_TRUE@	$(AM_V_CPPAS)$(CCAS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libc_a_CPPFLAGS) $(CPPFLAGS) $(libc_a_CCASFLAGS) $(CCASFLAGS) -MT libc/machine/r5900/libc_a-setjmp.obj -MD -MP -MF libc/machine/r5900/$(DEPDIR)/libc_a-setjmp.Tpo -c -o libc/machine/r5900/libc_a-setjmp.obj `if test -f 'libc/machine/r5900/setjmp.S'; then $(CYGPATH_W) 'libc/machine/r5900/setjmp.S'; else $(CYGPATH_W) '$(srcdir)/libc/machine/r5900/setjmp.S'; fi`
++@am__fastdepCCAS_TRUE@	$(AM_V_at)$(am__mv) libc/machine/r5900/$(DEPDIR)/libc_a-setjmp.Tpo libc/machine/r5900/$(DEPDIR)/libc_a-setjmp.Po
++@AMDEP_TRUE@@am__fastdepCCAS_FALSE@	$(AM_V_CPPAS)source='libc/machine/r5900/setjmp.S' object='libc/machine/r5900/libc_a-setjmp.obj' libtool=no @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCCAS_FALSE@	DEPDIR=$(DEPDIR) $(CCASDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCCAS_FALSE@	$(AM_V_CPPAS@am__nodep@)$(CCAS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libc_a_CPPFLAGS) $(CPPFLAGS) $(libc_a_CCASFLAGS) $(CCASFLAGS) -c -o libc/machine/r5900/libc_a-setjmp.obj `if test -f 'libc/machine/r5900/setjmp.S'; then $(CYGPATH_W) 'libc/machine/r5900/setjmp.S'; else $(CYGPATH_W) '$(srcdir)/libc/machine/r5900/setjmp.S'; fi`
++
+ libc/machine/riscv/libc_a-memmove-asm.o: libc/machine/riscv/memmove-asm.S
+ @am__fastdepCCAS_TRUE@	$(AM_V_CPPAS)$(CCAS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libc_a_CPPFLAGS) $(CPPFLAGS) $(libc_a_CCASFLAGS) $(CCASFLAGS) -MT libc/machine/riscv/libc_a-memmove-asm.o -MD -MP -MF libc/machine/riscv/$(DEPDIR)/libc_a-memmove-asm.Tpo -c -o libc/machine/riscv/libc_a-memmove-asm.o `test -f 'libc/machine/riscv/memmove-asm.S' || echo '$(srcdir)/'`libc/machine/riscv/memmove-asm.S
+ @am__fastdepCCAS_TRUE@	$(AM_V_at)$(am__mv) libc/machine/riscv/$(DEPDIR)/libc_a-memmove-asm.Tpo libc/machine/riscv/$(DEPDIR)/libc_a-memmove-asm.Po
+@@ -50614,6 +50641,8 @@
+ 	-rm -f libc/machine/powerpc/$(am__dirstamp)
+ 	-rm -f libc/machine/pru/$(DEPDIR)/$(am__dirstamp)
+ 	-rm -f libc/machine/pru/$(am__dirstamp)
++	-rm -f libc/machine/r5900/$(DEPDIR)/$(am__dirstamp)
++	-rm -f libc/machine/r5900/$(am__dirstamp)
+ 	-rm -f libc/machine/riscv/$(DEPDIR)/$(am__dirstamp)
+ 	-rm -f libc/machine/riscv/$(am__dirstamp)
+ 	-rm -f libc/machine/rl78/$(DEPDIR)/$(am__dirstamp)
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/newlib/configure newlib-4.6.0.20260123-kos/newlib/configure
+--- newlib-4.6.0.20260123/newlib/configure	2026-01-23 14:12:49
++++ newlib-4.6.0.20260123-kos/newlib/configure	2026-07-14 09:36:41
+@@ -673,6 +673,8 @@
+ HAVE_LIBC_MACHINE_RL78_TRUE
+ HAVE_LIBC_MACHINE_RISCV_FALSE
+ HAVE_LIBC_MACHINE_RISCV_TRUE
++HAVE_LIBC_MACHINE_R5900_FALSE
++HAVE_LIBC_MACHINE_R5900_TRUE
+ HAVE_LIBC_MACHINE_PRU_FALSE
+ HAVE_LIBC_MACHINE_PRU_TRUE
+ HAVE_LIBC_MACHINE_POWERPC_FALSE
+@@ -6065,6 +6067,13 @@
+   HAVE_LIBC_MACHINE_PRU_TRUE='#'
+   HAVE_LIBC_MACHINE_PRU_FALSE=
+ fi
++ if test "${machine_dir}" = r5900; then
++  HAVE_LIBC_MACHINE_R5900_TRUE=
++  HAVE_LIBC_MACHINE_R5900_FALSE='#'
++else
++  HAVE_LIBC_MACHINE_R5900_TRUE='#'
++  HAVE_LIBC_MACHINE_R5900_FALSE=
++fi
+  if test "${machine_dir}" = riscv; then
+   HAVE_LIBC_MACHINE_RISCV_TRUE=
+   HAVE_LIBC_MACHINE_RISCV_FALSE='#'
+@@ -7975,6 +7984,10 @@
+ fi
+ if test -z "${HAVE_LIBC_MACHINE_PRU_TRUE}" && test -z "${HAVE_LIBC_MACHINE_PRU_FALSE}"; then
+   as_fn_error $? "conditional \"HAVE_LIBC_MACHINE_PRU\" was never defined.
++Usually this means the macro was only invoked conditionally." "$LINENO" 5
++fi
++if test -z "${HAVE_LIBC_MACHINE_R5900_TRUE}" && test -z "${HAVE_LIBC_MACHINE_R5900_FALSE}"; then
++  as_fn_error $? "conditional \"HAVE_LIBC_MACHINE_R5900\" was never defined.
+ Usually this means the macro was only invoked conditionally." "$LINENO" 5
+ fi
+ if test -z "${HAVE_LIBC_MACHINE_RISCV_TRUE}" && test -z "${HAVE_LIBC_MACHINE_RISCV_FALSE}"; then
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/newlib/libc/acinclude.m4 newlib-4.6.0.20260123-kos/newlib/libc/acinclude.m4
+--- newlib-4.6.0.20260123/newlib/libc/acinclude.m4	2026-01-23 14:12:49
++++ newlib-4.6.0.20260123-kos/newlib/libc/acinclude.m4	2026-07-14 09:36:41
+@@ -54,7 +54,7 @@
+   nds32 necv70 nios2 nvptx
+   or1k
+   powerpc pru
+-  riscv rl78 rx
++  r5900 riscv rl78 rx
+   sh sparc spu
+   tic4x tic6x tic80
+   v850 visium
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/newlib/libc/include/machine/setjmp.h newlib-4.6.0.20260123-kos/newlib/libc/include/machine/setjmp.h
+--- newlib-4.6.0.20260123/newlib/libc/include/machine/setjmp.h	2026-01-23 14:12:49
++++ newlib-4.6.0.20260123-kos/newlib/libc/include/machine/setjmp.h	2026-07-14 09:36:41
+@@ -138,10 +138,17 @@
+ 
+ #ifdef __mips__
+ # if defined(__mips64)
+-#  define _JBTYPE long long
++#  if defined(_MIPS_ARCH_R5900)
++    typedef unsigned int jbtype128 __attribute__((mode(TI))) __attribute__((aligned(16)));
++#   define _JBTYPE jbtype128
++#  else
++#   define _JBTYPE long long
++#  endif
+ # endif
+ # ifdef __mips_soft_float
+ #  define _JBLEN 11
++# elif defined(_MIPS_ARCH_R5900)
++#  define _JBLEN 14
+ # else
+ #  define _JBLEN 23
+ # endif
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/newlib/libc/machine/Makefile.inc newlib-4.6.0.20260123-kos/newlib/libc/machine/Makefile.inc
+--- newlib-4.6.0.20260123/newlib/libc/machine/Makefile.inc	2026-01-23 14:12:49
++++ newlib-4.6.0.20260123-kos/newlib/libc/machine/Makefile.inc	2026-07-14 09:36:41
+@@ -127,6 +127,9 @@
+ if HAVE_LIBC_MACHINE_PRU
+ include %D%/pru/Makefile.inc
+ endif
++if HAVE_LIBC_MACHINE_R5900
++include %D%/r5900/Makefile.inc
++endif
+ if HAVE_LIBC_MACHINE_RISCV
+ include %D%/riscv/Makefile.inc
+ endif
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/newlib/libc/machine/r5900/Makefile.inc newlib-4.6.0.20260123-kos/newlib/libc/machine/r5900/Makefile.inc
+--- newlib-4.6.0.20260123/newlib/libc/machine/r5900/Makefile.inc	1969-12-31 16:00:00
++++ newlib-4.6.0.20260123-kos/newlib/libc/machine/r5900/Makefile.inc	2026-07-14 09:36:41
+@@ -0,0 +1 @@
++libc_a_SOURCES += %D%/setjmp.S
+diff -ruN -x .DS_Store newlib-4.6.0.20260123/newlib/libc/machine/r5900/setjmp.S newlib-4.6.0.20260123-kos/newlib/libc/machine/r5900/setjmp.S
+--- newlib-4.6.0.20260123/newlib/libc/machine/r5900/setjmp.S	1969-12-31 16:00:00
++++ newlib-4.6.0.20260123-kos/newlib/libc/machine/r5900/setjmp.S	2026-07-14 09:36:41
+@@ -0,0 +1,94 @@
++/* setjmp/longjmp for the PlayStation 2 Emotion Engine (MIPS R5900).
++ *
++ * Clean-room implementation written from the MIPS n32 calling convention and
++ * the public R5900 architecture; not derived from any third-party source.
++ *
++ * The R5900 has 128-bit general registers (the upper 64 bits hold MMI data),
++ * so callee-saved GPRs are preserved with the R5900 sq/lq (store/load
++ * quadword) instructions to keep the full width across a longjmp. Floating
++ * point is single precision only, so the callee-saved FP registers are saved
++ * as 32-bit words with swc1/lwc1.
++ *
++ * jmp_buf layout (matches machine/setjmp.h: _JBLEN = 14 128-bit slots):
++ *   0x00..0xa0  eleven 128-bit GPR slots: s0-s7, sp, fp, ra
++ *   0xb0..0xdc  twelve 32-bit FP words:   f20-f31
++ * Total 224 bytes.
++ */
++
++	.set	noreorder
++	.set	noat
++
++	.text
++	.globl	setjmp
++	.ent	setjmp
++	.type	setjmp, @function
++setjmp:
++	sq	$16, 0x00($4)		/* s0 */
++	sq	$17, 0x10($4)		/* s1 */
++	sq	$18, 0x20($4)		/* s2 */
++	sq	$19, 0x30($4)		/* s3 */
++	sq	$20, 0x40($4)		/* s4 */
++	sq	$21, 0x50($4)		/* s5 */
++	sq	$22, 0x60($4)		/* s6 */
++	sq	$23, 0x70($4)		/* s7 */
++	sq	$29, 0x80($4)		/* sp */
++	sq	$30, 0x90($4)		/* fp */
++	sq	$31, 0xa0($4)		/* ra */
++
++	swc1	$f20, 0xb0($4)
++	swc1	$f21, 0xb4($4)
++	swc1	$f22, 0xb8($4)
++	swc1	$f23, 0xbc($4)
++	swc1	$f24, 0xc0($4)
++	swc1	$f25, 0xc4($4)
++	swc1	$f26, 0xc8($4)
++	swc1	$f27, 0xcc($4)
++	swc1	$f28, 0xd0($4)
++	swc1	$f29, 0xd4($4)
++	swc1	$f30, 0xd8($4)
++	swc1	$f31, 0xdc($4)
++
++	jr	$31			/* setjmp returns 0 */
++	move	$2, $0
++	.end	setjmp
++	.size	setjmp, .-setjmp
++
++	.globl	longjmp
++	.ent	longjmp
++	.type	longjmp, @function
++longjmp:
++	lq	$16, 0x00($4)		/* s0 */
++	lq	$17, 0x10($4)		/* s1 */
++	lq	$18, 0x20($4)		/* s2 */
++	lq	$19, 0x30($4)		/* s3 */
++	lq	$20, 0x40($4)		/* s4 */
++	lq	$21, 0x50($4)		/* s5 */
++	lq	$22, 0x60($4)		/* s6 */
++	lq	$23, 0x70($4)		/* s7 */
++	lq	$29, 0x80($4)		/* sp */
++	lq	$30, 0x90($4)		/* fp */
++	lq	$31, 0xa0($4)		/* ra */
++
++	lwc1	$f20, 0xb0($4)
++	lwc1	$f21, 0xb4($4)
++	lwc1	$f22, 0xb8($4)
++	lwc1	$f23, 0xbc($4)
++	lwc1	$f24, 0xc0($4)
++	lwc1	$f25, 0xc4($4)
++	lwc1	$f26, 0xc8($4)
++	lwc1	$f27, 0xcc($4)
++	lwc1	$f28, 0xd0($4)
++	lwc1	$f29, 0xd4($4)
++	lwc1	$f30, 0xd8($4)
++	lwc1	$f31, 0xdc($4)
++
++	/* return value: the second argument, forced to 1 if it was 0 */
++	move	$2, $5
++	bne	$5, $0, 1f
++	nop
++	li	$2, 1
++1:
++	jr	$31
++	nop
++	.end	longjmp
++	.size	longjmp, .-longjmp
