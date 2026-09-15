@@ -1,13 +1,12 @@
 diff -ruN gcc-16.2.0/gcc/config/elfos.h gcc-16.2.0-kos/gcc/config/elfos.h
 --- gcc-16.2.0/gcc/config/elfos.h	2025-04-17 16:01:33.790051712 -0600
 +++ gcc-16.2.0-kos/gcc/config/elfos.h	2025-04-17 16:01:42.910094466 -0600
-@@ -486,3 +486,6 @@
+@@ -486,3 +486,5 @@
  
  #undef TARGET_LIBC_HAS_FUNCTION
  #define TARGET_LIBC_HAS_FUNCTION no_c99_libc_has_function
 +
 +#define TARGET_OS_CPP_BUILTINS()			\
-+  builtin_define ("__KOS_GCC_PATCHLEVEL__=2025062800")
 diff -ruN gcc-16.2.0/gcc/configure gcc-16.2.0-kos/gcc/configure
 --- gcc-16.2.0/gcc/configure	2025-04-18 16:01:33.801051764 -0600
 +++ gcc-16.2.0-kos/gcc/configure	2025-04-18 16:01:42.913094480 -0600
@@ -35,7 +34,7 @@ diff --color -ruN gcc-16.2.0/libgcc/config.host gcc-16.2.0-kos/libgcc/config.hos
 diff -ruN /dev/null gcc-16.2.0-kos/libgcc/config/t-kos
 --- /dev/null	2025-04-27 14:45:09.695053718 -0600
 +++ gcc-16.2.0-kos/libgcc/config/t-kos	2025-04-27 15:10:10.267714917 -0600
-@@ -0,0 +1 @@
+@@ -0,0 +1,1 @@
 +LIB2ADD = $(srcdir)/config/fake-kos.c
 diff -ruN gcc-16.2.0/libgcc/configure gcc-16.2.0-kos/libgcc/configure
 --- gcc-16.2.0/libgcc/configure	2025-04-18 16:01:37.139067412 -0600
@@ -172,3 +171,89 @@ diff -ruN gcc-16.2.0/libgcc/config/sh/t-sh gcc-16.2.0-kos/libgcc/config/sh/t-sh
  	$(gcc_compile) $(LIBGCC2_CFLAGS) $(vis_hide) -fexceptions -Os -c $<
  
  OBJS_Os_4_200=sdivsi3_i4i-Os-4-200.o udivsi3_i4i-Os-4-200.o unwind-dw2-Os-4-200.o
+
+--- gcc-16.2.0/gcc/config.gcc
++++ gcc-16.2.0-kos/gcc/config.gcc
+@@ -2233,6 +2233,15 @@
+ 	    ;;
+ 	esac
+ 	;;
++i[34567]86-*-xbox*)
++	# elfos.h emits .tdata/.tbss, giving native %gs TLS instead of libgcc's emutls.
++	tm_file="${tm_file} i386/unix.h i386/att.h elfos.h newlib-stdint.h"
++	tm_file="${tm_file} i386/i386elf.h i386/xbox.h"
++	gas=yes
++	gnu_ld=yes
++	default_use_cxa_atexit=yes
++	use_gcc_stdint=wrap
++	;;
+ i[34567]86-*-cygwin*)
+ 	tm_file="${tm_file} i386/unix.h i386/bsd.h i386/gas.h i386/cygming.h i386/cygwin.h i386/cygwin-stdint.h"
+ 	tm_file="${tm_file} mingw/winnt.h"
+--- gcc-16.2.0/gcc/config/i386/xbox.h
++++ gcc-16.2.0-kos/gcc/config/i386/xbox.h
+@@ -0,0 +1,40 @@
++/* Target definitions for the original Microsoft Xbox running KallistiOS.  */
++
++#undef TARGET_OS_CPP_BUILTINS
++#define TARGET_OS_CPP_BUILTINS()				\
++  do								\
++    {								\
++      builtin_define ("__XBOX__");				\
++      builtin_assert ("system=xbox");				\
++    }								\
++  while (0)
++
++/* KOS maps the whole %gs segment flat (4 GB limit), the way Linux does with
++   %fs, so a thread-local can be reached with one segment-prefixed
++   instruction -- movl %gs:x@ntpoff, %eax -- instead of loading the thread
++   pointer from %gs:0 first. i386 is TLS variant II, so @ntpoff is negative
++   and the effective address relies on the segment offset wrapping modulo
++   2^32; that is only valid while the descriptor really does span 4 GB. Build
++   with -mno-tls-direct-seg-refs if %gs is ever given a bounded limit.  */
++#undef TARGET_TLS_DIRECT_SEG_REFS_DEFAULT
++#define TARGET_TLS_DIRECT_SEG_REFS_DEFAULT MASK_TLS_DIRECT_SEG_REFS
++
++/* newlib-stdint.h already resolves to the correct i386 types: the fast types
++   are int-sized because INT_TYPE_SIZE is 32, and the pointer types follow
++   PTRDIFF_TYPE / SIZE_TYPE. No Xbox-specific override is required.  */
++
++/* crti.o/crtn.o bracket crtbegin.o's .init and .fini fragments, forming
++   the _init()/_fini() pair arch_main() calls, as on the Dreamcast.  */
++#undef STARTFILE_SPEC
++#define STARTFILE_SPEC "crti.o%s crtbegin.o%s"
++
++#undef ENDFILE_SPEC
++#define ENDFILE_SPEC "crtend.o%s crtn.o%s"
++
++#undef LIB_SPEC
++#define LIB_SPEC "%{!nostdlib:%{!nodefaultlibs:-lc}}"
++
++/* The KOS linker script names the entry point too; pass it explicitly so a
++   link that does not use the script still starts in the right place.  */
++#undef LINK_SPEC
++#define LINK_SPEC "%{!r:%{!nostdlib:%{!e*:-e _start}}}"
+--- gcc-16.2.0/libgcc/config.host
++++ gcc-16.2.0-kos/libgcc/config.host
+@@ -843,6 +843,10 @@
+ 	;;
+ i[4567]86-wrs-vxworks*|x86_64-wrs-vxworks*)
+ 	;;
++i[34567]86-*-xbox*)
++	tmake_file="$tmake_file i386/t-crtstuff t-crtfm t-dfprules"
++	extra_parts="$extra_parts crti.o crtn.o crtbegin.o crtend.o crtfastmath.o"
++	;;
+ i[34567]86-*-cygwin*)
+ 	extra_parts="crtbegin.o crtbeginS.o crtend.o crtfastmath.o"
+ 	if test x$enable_vtable_verify = xyes; then
+
+--- gcc-16.2.0/config.sub
++++ gcc-16.2.0-kos/config.sub
+@@ -1734,6 +1734,7 @@
+ 	     | ekkobsd* | freebsd* | riscix* | lynxos* | os400* \
+ 	     | bosx* | nextstep* | cxux* | aout* | elf* | oabi* \
+ 	     | ptx* | coff* | ecoff* | winnt* | domain* | vsta* \
++	     | xbox* \
+ 	     | udi* | lites* | ieee* | go32* | aux* | hcos* \
+ 	     | chorusrdb* | cegcc* | glidix* | serenity* \
+ 	     | cygwin* | msys* | pe* | moss* | proelf* | rtems* \
