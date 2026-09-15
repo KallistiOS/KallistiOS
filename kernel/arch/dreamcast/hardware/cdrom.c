@@ -66,7 +66,7 @@ static bool dma_blocking = false;
 static bool dma_auto_unlock = false;
 static semaphore_t dma_done = SEM_INITIALIZER(0);
 static asic_evt_handler_entry_t old_dma_irq = {NULL, NULL};
-static int vblank_hnd = -1;
+static vblhnd_t *vblank_hnd;
 
 /* Streaming */
 static bool stream_enabled = false;
