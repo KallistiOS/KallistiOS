@@ -56,7 +56,7 @@ static void mouse_reply(maple_state_t *st, maple_frame_t *frm) {
 
     /* Fill the "nice" struct from the raw data */
     cooked = (mouse_state_t *)(frm->dev->status);
-    cooked->buttons = (~raw->buttons) & 14;
+    cooked->buttons = (~raw->buttons) & MOUSE_BUTTONS;
     cooked->dx = raw->dx - MOUSE_DELTA_CENTER;
     cooked->dy = raw->dy - MOUSE_DELTA_CENTER;
     cooked->dz = raw->dz - MOUSE_DELTA_CENTER;

@@ -38,9 +38,11 @@ __BEGIN_DECLS
 
     @{
 */
-#define MOUSE_RIGHTBUTTON   BIT(1)  /**< \brief Right mouse button */
-#define MOUSE_LEFTBUTTON    BIT(2)  /**< \brief Left mouse button */
-#define MOUSE_SIDEBUTTON    BIT(3)  /**< \brief Side mouse button */
+#define MOUSE_MIDDLEBUTTON  BIT(0)          /**< \brief Middle mouse button */
+#define MOUSE_RIGHTBUTTON   BIT(1)          /**< \brief Right mouse button */
+#define MOUSE_LEFTBUTTON    BIT(2)          /**< \brief Left mouse button */
+#define MOUSE_SIDEBUTTON    BIT(3)          /**< \brief Side mouse button */
+#define MOUSE_BUTTONS       GENMASK(3, 0)   /**< \brief All buttons mask */
 /** @} */
 
 /* More civilized mouse structure. There are several significant
