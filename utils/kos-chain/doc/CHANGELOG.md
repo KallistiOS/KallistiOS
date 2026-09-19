@@ -2,6 +2,7 @@
 
 | Date<br/>_____________ | Author(s)<br/>_____________ | Changes<br/>_____________ |
 |:-----------------------|:----------------------------|---------------------------|
+| 2026-08-19 | Andy Barajas | Add support for the original Xbox toolchain and add xbox profiles |
 | 2026-08-07 | Eric Fradella | Update GCC 16 series to 16.2.0, update binutils to 2.47 for most profiles |
 | 2026-06-30 | Eric Fradella | Bump GCC series 14/15/16/17 profiles to latest available versions, update LRA testing toolchain |
 | 2026-06-30 | Eric Fradella | Update binutils to 2.46.1 for most profiles |
