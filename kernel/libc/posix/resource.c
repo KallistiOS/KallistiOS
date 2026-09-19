@@ -5,29 +5,59 @@
 */
 
 #include <errno.h>
+#include <stdint.h>
 #include <kos/thread.h>
 #include <kos/timer.h>
 #include <sys/resource.h>
 
-static int priorities[PRIO_USER + 1] = { 0 };
-
 int getpriority(int which, id_t who) {
-    if(who || (which > PRIO_USER) || (which < PRIO_PROCESS)) {
+    kthread_t *thd;
+
+    if(which > PRIO_USER || which < PRIO_PROCESS) {
         errno = EINVAL;
         return -1;
     }
 
-    return priorities[which];
+    if(!who)
+        thd = thd_get_current();
+    else
+        thd = thd_by_tid((tid_t)who);
+    if(!thd) {
+        errno = ESRCH;
+        return -1;
+    }
+
+    /* Scale from KOS to POSIX ranges */
+    int prio = (int)thd_get_prio(thd) * 2 - 20;
+    if(prio > 19)
+        prio = 19;
+
+    return prio;
 }
 
 int setpriority(int which, id_t who, int value) {
-    if(who || (which > PRIO_USER) || (which < PRIO_PROCESS)) {
+    kthread_t *thd;
+
+    if(which > PRIO_USER || which < PRIO_PROCESS || value < -20 || value > 19) {
         errno = EINVAL;
         return -1;
     }
 
-    priorities[which] = value;
-    return 0;
+    if(!who)
+        thd = thd_get_current();
+    else
+        thd = thd_by_tid((tid_t)who);
+    if(!thd) {
+        errno = ESRCH;
+        return -1;
+    }
+
+    /* Scale from POSIX to KOS ranges */
+    int prio = (value + 20) / 2;
+    if(prio == 0)
+        prio = 1;
+
+    return thd_set_prio(thd, prio);
 }
 
 int getrlimit(int resource, struct rlimit *rlp) {
