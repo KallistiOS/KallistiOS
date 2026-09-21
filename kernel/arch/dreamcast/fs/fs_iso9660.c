@@ -215,13 +215,18 @@ static cache_block_t *dcache[NUM_CACHE_BLOCKS];     /* data cache */
 static unsigned char *cache_data;
 static cache_block_t *caches;
 
-/* Cache modification mutex */
-static mutex_t cache_mutex;
+/* Mutex protecting all of the driver's shared state: the block caches, the
+   per-disc info, the list of open files and the current stream.
+
+   Cache blocks are handed out by index, and the index of a block changes
+   whenever another block gets graduated; so the lock must be held not only
+   while looking up a block, but for as long as its data is being used. For
+   that reason it is taken once in each of the VFS entry points, and all of
+   the internal functions below expect it to be held by their caller. */
+static mutex_t iso_mutex;
 
 /* Clears all cache blocks */
 static void bclear_cache(cache_block_t **cache) {
-    mutex_lock_scoped(&cache_mutex);
-
     for(size_t i = 0; i < NUM_CACHE_BLOCKS; i++)
         cache[i]->sector = (uint32_t)-1;
 }
@@ -245,20 +250,15 @@ static void bgrad_cache(cache_block_t **cache, int block) {
 /* Pulls the requested sector into a cache block and returns the cache
    block index. Note that the sector in question may already be in the
    cache, in which case it just returns the containing block. */
-static void iso_break_all(void);
-static void iso_abort_stream(bool lock);
+static void iso_abort_stream(void);
 static int bread_cache(cache_block_t **cache, uint32_t sector) {
-    int i, j, rv;
-
-    rv = -1;
-    mutex_lock(&cache_mutex);
+    int i, j;
 
     /* Look for a pre-existing cache block */
     for(i = NUM_CACHE_BLOCKS - 1; i >= 0; i--) {
         if(cache[i]->sector == sector) {
             bgrad_cache(cache, i);
-            rv = NUM_CACHE_BLOCKS - 1;
-            goto bread_exit;
+            return NUM_CACHE_BLOCKS - 1;
         }
     }
 
@@ -272,7 +272,7 @@ static int bread_cache(cache_block_t **cache, uint32_t sector) {
         i = 0;
     }
 
-    iso_abort_stream(cache == icache);
+    iso_abort_stream();
     // dbglog(DBG_DEBUG, "Stream stop for %s read\n", cache == icache ? "cached" : "inode");
 
     /* Load the requested block */
@@ -285,20 +285,16 @@ static int bread_cache(cache_block_t **cache, uint32_t sector) {
             init_percd();
         }
 
-        rv = -1;
-        goto bread_exit;
+        return -1;
     }
 
     cache[i]->sector = sector;
 
     /* Move it to the most-recently-used position */
     bgrad_cache(cache, i);
-    rv = NUM_CACHE_BLOCKS - 1;
 
     /* Return the new cache block index */
-bread_exit:
-    mutex_unlock(&cache_mutex);
-    return rv;
+    return NUM_CACHE_BLOCKS - 1;
 }
 
 /* read data block */
@@ -332,6 +328,7 @@ static iso_dirent_t root_dirent;
 
 /* Per-disc initialization; this is done every time it's discovered that
    a new CD has been inserted. */
+static void iso_reset_locked(void);
 static int init_percd(void) {
     int     i, blk;
     cd_toc_t   toc;
@@ -339,7 +336,7 @@ static int init_percd(void) {
     dbglog(DBG_NOTICE, "fs_iso9660: disc change detected\n");
 
     /* Start off with no cached blocks and no open files*/
-    iso_reset();
+    iso_reset_locked();
 
     /* Locate the root session */
     if((i = cdrom_reinit()) != 0) {
@@ -588,8 +585,6 @@ typedef struct iso_fd {
 
 static TAILQ_HEAD(iso_fd_queue, iso_fd) iso_fd_queue;
 
-/* Mutex for protecting access to the iso_fd_queue */
-static mutex_t fh_mutex;
 static iso_fd_t *stream_fd = NULL;
 
 /* Break all of our open file descriptor. This is necessary when the disc
@@ -599,25 +594,17 @@ static iso_fd_t *stream_fd = NULL;
 static inline void iso_break_all(void) {
     iso_fd_t *fd;
 
-    mutex_lock_scoped(&fh_mutex);
-
     TAILQ_FOREACH(fd, &iso_fd_queue, next) {
         fd->broken = true;
     }
 }
 
 /* Abort the current stream. */
-static inline void iso_abort_stream(bool lock) {
+static inline void iso_abort_stream(void) {
     if(stream_fd) {
-        if(lock)
-            mutex_lock(&fh_mutex);
-
         cdrom_stream_stop(false);
         stream_fd->stream_part = 0;
         stream_fd = NULL;
-
-        if(lock)
-            mutex_unlock(&fh_mutex);
     }
 }
 
@@ -633,6 +620,8 @@ static void * iso_open(vfs_handler_t * vfs, const char *fn, int mode) {
         errno = EROFS;
         return 0;
     }
+
+    mutex_lock_scoped(&iso_mutex);
 
     /* Do this only when we need to (this is still imperfect) */
     if(!percd_done && init_percd() < 0) {
@@ -666,8 +655,6 @@ static void * iso_open(vfs_handler_t * vfs, const char *fn, int mode) {
         .stream_data = {0},
     };
 
-    mutex_lock_scoped(&fh_mutex);
-
     TAILQ_INSERT_TAIL(&iso_fd_queue, fd, next);
 
     return fd;
@@ -677,10 +664,10 @@ static void * iso_open(vfs_handler_t * vfs, const char *fn, int mode) {
 static int iso_close(void * h) {
     iso_fd_t *fd = (iso_fd_t *)h;
 
-    mutex_lock_scoped(&fh_mutex);
+    mutex_lock_scoped(&iso_mutex);
 
     if(fd == stream_fd) {
-        iso_abort_stream(false);
+        iso_abort_stream();
         // dbglog(DBG_DEBUG, "Stream stop on close, fd=%p\n", fd);
     }
 
@@ -703,6 +690,8 @@ static ssize_t iso_read(void *h, void *buf, size_t bytes) {
     uint32_t sector;
     iso_fd_t *fd = (iso_fd_t *)h;
 
+    mutex_lock_scoped(&iso_mutex);
+
     /* Check that the fd is valid */
     if(fd->first_extent == 0 || fd->broken) {
         errno = EBADF;
@@ -711,7 +700,6 @@ static ssize_t iso_read(void *h, void *buf, size_t bytes) {
 
     rv = 0;
     outbuf = (uint8_t *)buf;
-    mutex_lock(&fh_mutex);
 
     /* Read zero or more sectors into the buffer from the current pos */
     while(bytes > 0) {
@@ -761,7 +749,7 @@ static ssize_t iso_read(void *h, void *buf, size_t bytes) {
                     req_size = (req_size + 2048) & ~2047;
                 }
                 if(stream_fd) {
-                    iso_abort_stream(false);
+                    iso_abort_stream();
                     // dbglog(DBG_DEBUG, "Stream stop for file fd: %p -> %p\n", stream_fd, fd);
                 }
                 c = cdrom_stream_start(sector + 150, req_size / 2048, true);
@@ -789,7 +777,7 @@ static ssize_t iso_read(void *h, void *buf, size_t bytes) {
             }
 
             if(remain_size == 0) {
-                iso_abort_stream(false);
+                iso_abort_stream();
                 // dbglog(DBG_DEBUG, "Stream stop on end, fd=%p\n", fd);
             }
             goto end_loop;
@@ -812,7 +800,7 @@ static ssize_t iso_read(void *h, void *buf, size_t bytes) {
             //         toread, remain_size, fd->stream_part, outbuf, fd);
 
             if(remain_size == 0) {
-                iso_abort_stream(false);
+                iso_abort_stream();
                 // dbglog(DBG_DEBUG, "Stream stop on end, fd=%p\n", fd);
             }
             goto end_loop;
@@ -850,12 +838,10 @@ end_loop:
         rv += toread;
     }
 
-    mutex_unlock(&fh_mutex);
     return rv;
 
 read_error:
     errno = EIO;
-    mutex_unlock(&fh_mutex);
     return -1;
 }
 
@@ -863,6 +849,8 @@ read_error:
 static off_t iso_seek(void * h, off_t offset, int whence) {
     uint32_t old_ptr;
     iso_fd_t *fd = (iso_fd_t *)h;
+
+    mutex_lock_scoped(&iso_mutex);
 
     /* Check that the fd is valid */
     if(fd->first_extent == 0 || fd->broken) {
@@ -909,7 +897,7 @@ static off_t iso_seek(void * h, off_t offset, int whence) {
     if(fd->ptr > fd->size) fd->ptr = fd->size;
 
     if(fd == stream_fd && old_ptr != fd->ptr) {
-        iso_abort_stream(true);
+        iso_abort_stream();
         // dbglog(DBG_DEBUG, "Stream stop on seek: %ld != %ld\n", old_ptr, fd->ptr);
     }
 
@@ -968,6 +956,8 @@ static const dirent_t *iso_readdir(void * h) {
     uint8_t       *pnt;
 
     iso_fd_t *fd = (iso_fd_t *)h;
+
+    mutex_lock_scoped(&iso_mutex);
 
     if(fd->first_extent == 0 || !fd->dir || fd->broken) {
         errno = EBADF;
@@ -1070,6 +1060,8 @@ static int iso_ioctl(void *h, int cmd, va_list ap) {
 static int iso_rewinddir(void * h) {
     iso_fd_t *fd = (iso_fd_t *)h;
 
+    mutex_lock_scoped(&iso_mutex);
+
     if(fd->first_extent == 0 || !fd->dir || fd->broken) {
         errno = EBADF;
         return -1;
@@ -1080,11 +1072,17 @@ static int iso_rewinddir(void * h) {
     return 0;
 }
 
-int iso_reset(void) {
+static void iso_reset_locked(void) {
     iso_break_all();
     bclear();
-    iso_abort_stream(false);
+    iso_abort_stream();
     percd_done = false;
+}
+
+int iso_reset(void) {
+    mutex_lock_scoped(&iso_mutex);
+
+    iso_reset_locked();
     return 0;
 }
 
@@ -1133,6 +1131,8 @@ static int iso_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
 
         return 0;
     }
+
+    mutex_lock_scoped(&iso_mutex);
 
     /* Do this only when we need to (this is still imperfect) */
     if(!percd_done && init_percd() < 0) {
@@ -1270,8 +1270,7 @@ void fs_iso9660_init(void) {
     TAILQ_INIT(&iso_fd_queue);
 
     /* Init thread mutexes */
-    mutex_init(&cache_mutex, MUTEX_TYPE_NORMAL);
-    mutex_init(&fh_mutex, MUTEX_TYPE_NORMAL);
+    mutex_init(&iso_mutex, MUTEX_TYPE_NORMAL);
 
     /* Allocate cache block space, properly aligned for DMA access */
     cache_data = aligned_alloc(32, 2 * NUM_CACHE_BLOCKS * 2048);
@@ -1306,8 +1305,7 @@ void fs_iso9660_shutdown(void) {
     free(caches);
 
     /* Free muteces */
-    mutex_destroy(&cache_mutex);
-    mutex_destroy(&fh_mutex);
+    mutex_destroy(&iso_mutex);
 
     nmmgr_handler_remove(&vh.nmmgr);
 }
