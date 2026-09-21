@@ -77,7 +77,9 @@ typedef struct aica_channel {
     uint32      vol;        /**< \brief Volume 0-255 */
     uint32      pan;        /**< \brief Pan 0-255 */
     uint32      pos;        /**< \brief Sample playback pos */
-    uint32      pad[5];     /**< \brief Padding */
+    uint32      aeg;        /**< \brief aeg state and value */
+    uint32      looped;     /**< \brief set to true if looped at least once */
+    uint32      pad[3];     /**< \brief Padding */
 } aica_channel_t;
 
 /** \brief Macro for declaring an aica channel command

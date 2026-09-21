@@ -77,7 +77,11 @@ void process_chn(uint32 chn, aica_channel_t *chndat) {
             }
             else {
                 memcpy((void*)(chans + chn), chndat, sizeof(aica_channel_t));
+                aica_stop(chn);
+                aica_get_pos(chn); // clears the LP bit
+                chans[chn].aeg = 0;
                 chans[chn].pos = 0;
+                chans[chn].looped = 0;
                 aica_play(chn, chndat->cmd & AICA_CH_START_DELAY);
             }
 
