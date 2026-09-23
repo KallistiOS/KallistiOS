@@ -111,7 +111,7 @@ uint8_t sd_crc7(const uint8_t *data, int size, uint8_t crc) {
 
 /* Unified wrappers for different interfaces */
 static uint8_t sci_rw_byte(uint8_t data) {
-    uint8_t rx;
+    uint8_t rx = 0;
     sci_spi_rw_byte(data, &rx);
     return rx;
 }
@@ -136,7 +136,7 @@ static int scif_write_data_wrapper(const uint8_t *data, size_t len) {
 }
 
 static uint8_t sci_read_byte_wrapper(void) {
-    uint8_t rx;
+    uint8_t rx = 0;
     sci_spi_read_byte(&rx);
     return rx;
 }
