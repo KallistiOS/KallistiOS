@@ -8,7 +8,6 @@
 #include <dc/maple.h>
 #include <kos/thread.h>
 #include <kos/regfield.h>
-#include <assert.h>
 
 /* Return the number of connected devices */
 int maple_enum_count(void) {
@@ -54,8 +53,9 @@ maple_device_t *maple_enum_type(int n, uint32_t func) {
 maple_device_t *maple_enum_type_ex(int n, uint32_t func, uint32_t cap) {
     uint32_t funcmask;
 
-    /* If func is 0, there can be no match (and it's UB for clz below) */
-    if(!func) return NULL;
+    /* Function-data indexing is only defined for one function at a time. */
+    if(n < 0 || !func || (func & (func - 1)))
+        return NULL;
 
     /* Create a mask that leaves only the bits above func. */
     funcmask = ~GENMASK(31 - __builtin_clz(func), 0);
@@ -71,15 +71,14 @@ maple_device_t *maple_enum_type_ex(int n, uint32_t func, uint32_t cap) {
                 /* Figure out which function data we want to look at. Function
                    data entries are arranged by the function code, most
                    significant bit first. So we count the bits above func. */
-                int d = __builtin_popcount(dev->info.functions & funcmask);
+                unsigned int d =
+                    __builtin_popcount(dev->info.functions & funcmask);
 
-                /* Ensure that the result is in-bounds */
-                assert((d >= 0) && (d < 3));
+                /* Devices publish descriptors for at most three functions. */
+                if(d >= 3)
+                    continue;
 
-                /* Check if the function data for the function type checks out
-                   with what it should be. */
-                cap = __builtin_bswap32(cap);
-
+                /* Public capability masks use the stored descriptor order. */
                 if((dev->info.function_data[d] & cap) == cap) {
                     if(!n)
                         return dev;
@@ -103,4 +102,3 @@ void *maple_dev_status(maple_device_t *dev) {
     /* Cast and return the status buffer */
     return dev->status;
 }
-
