@@ -60,20 +60,22 @@ static uint8_t __pure dec_to_bcd(int dec) {
 
 void vmufs_dir_fill_time(vmu_dir_t *d) {
     struct tm tm;
+    int year;
 
     /* Get the time */
     time_t t = time(NULL);
     localtime_r(&t, &tm);
+    year = tm.tm_year + 1900;
 
     /* Fill in the struct, converting to BCD */
-    d->timestamp.cent = dec_to_bcd(tm.tm_year / 100) + 0x19;
-    d->timestamp.year = dec_to_bcd(tm.tm_year - 100);
+    d->timestamp.cent = dec_to_bcd(year / 100);
+    d->timestamp.year = dec_to_bcd(year % 100);
     d->timestamp.month = dec_to_bcd(tm.tm_mon + 1);
     d->timestamp.day = dec_to_bcd(tm.tm_mday);
     d->timestamp.hour = dec_to_bcd(tm.tm_hour);
     d->timestamp.min = dec_to_bcd(tm.tm_min);
     d->timestamp.sec = dec_to_bcd(tm.tm_sec);
-    d->timestamp.dow = dec_to_bcd((tm.tm_wday - 1) % 7);
+    d->timestamp.dow = dec_to_bcd((tm.tm_wday + 6) % 7);
 }
 
 int vmufs_root_read(maple_device_t *dev, vmu_root_t *root_buf) {
