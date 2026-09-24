@@ -3,7 +3,7 @@
    dc/pvr/pvr_regs.h
    Copyright (C) 2002 Megan Potter
    Copyright (C) 2014 Lawrence Sebald
-   Copyright (C) 2023, 2025 Ruslan Rostovtsev
+   Copyright (C) 2023, 2025, 2026 Ruslan Rostovtsev
    Copyright (C) 2024 Falco Girgis
 */
 
@@ -58,6 +58,22 @@ __BEGIN_DECLS
 */
 #define PVR_SET(REG, VALUE) PVR_GET(REG) = (VALUE)
 
+/** \brief   Address stride from CLXA to CLXB (registers and VRAM windows).
+
+    NAOMI 2 only. The second PVR is not mapped until \ref pvr2_init().
+*/
+#define PVR2_ADDR_STRIDE 0x02000000
+
+/** \brief   Retrieve a register from the second PVR (CLXB). */
+#define PVR2_GET(REG) (* ( (volatile uint32_t *)( 0xa25f8000 + (REG) ) ) )
+
+/** \brief   Set a register on the second PVR (CLXB). */
+#define PVR2_SET(REG, VALUE) PVR2_GET(REG) = (VALUE)
+
+/** \brief   Write a PVR register to both chips (write-only broadcast). */
+#define PVR_BCAST_SET(REG, VALUE) \
+    (* ( (volatile uint32_t *)( 0xa85f8000 + (REG) ) ) = (VALUE))
+
 /** @} */
 
 /** \defgroup pvr_regs   Offsets
@@ -78,12 +94,12 @@ __BEGIN_DECLS
 #define PVR_RESET               0x0008  /**< \brief Reset pins */
 
 #define PVR_ISP_START           0x0014  /**< \brief Start the ISP/TSP */
-#define PVR_UNK_0018            0x0018  /**< \brief ?? */
+#define PVR_TEST_SELECT         0x0018  /**< \brief Test select (writes prohibited) */
 
 #define PVR_ISP_VERTBUF_ADDR    0x0020  /**< \brief Vertex buffer address for scene rendering */
 
 #define PVR_ISP_TILEMAT_ADDR    0x002c  /**< \brief Tile matrix address for scene rendering */
-#define PVR_SPANSORT_CFG        0x0030  /**< \brief ?? -- write 0x101 for now */
+#define PVR_SPANSORT_CFG        0x0030  /**< \brief Span sorter control -- write 0x101 for now */
 
 #define PVR_BORDER_COLOR        0x0040  /**< \brief Border Color in RGB888 */
 #define PVR_FB_CFG_1            0x0044  /**< \brief Framebuffer config 1 */
@@ -100,17 +116,18 @@ __BEGIN_DECLS
 
 #define PVR_CHEAP_SHADOW        0x0074  /**< \brief Cheap shadow control */
 #define PVR_OBJECT_CLIP         0x0078  /**< \brief Distance for polygon culling */
-#define PVR_UNK_007C            0x007c  /**< \brief ?? -- write 0x0027df77 for now */
-#define PVR_UNK_0080            0x0080  /**< \brief ?? -- write 7 for now */
+#define PVR_FPU_PARAM_CFG       0x007c  /**< \brief Parameter read control -- write 0x0027df77 for now */
+#define PVR_HALF_OFFSET         0x0080  /**< \brief Pixel sampling control -- write 7 for now */
 #define PVR_TEXTURE_CLIP        0x0084  /**< \brief Distance for texture clipping */
 #define PVR_BGPLANE_Z           0x0088  /**< \brief Distance for background plane */
 #define PVR_BGPLANE_CFG         0x008c  /**< \brief Background plane config */
 
-#define PVR_UNK_0098            0x0098  /**< \brief ?? -- write 0x00800408 for now */
+#define PVR_ISP_FEED_CFG        0x0098  /**< \brief Translucent polygon sort mode -- write 0x00800408 for now */
 
-#define PVR_UNK_00A0            0x00a0  /**< \brief ?? -- write 0x20 for now */
+#define PVR_SDRAM_REFRESH       0x00a0  /**< \brief Texture memory refresh counter -- write 0x20 for now */
+#define PVR_SDRAM_ARB_CFG       0x00a4  /**< \brief Texture memory arbiter control -- write 0x1f on NAOMI */
 
-#define PVR_UNK_00A8            0x00a8  /**< \brief ?? -- write 0x15d1c951 for now */
+#define PVR_SDRAM_CFG           0x00a8  /**< \brief Texture memory control -- write 0x15d1c951 (DC) / 0x15d1c955 (NAOMI) */
 
 #define PVR_FOG_TABLE_COLOR     0x00b0  /**< \brief Table fog color */
 #define PVR_FOG_VERTEX_COLOR    0x00b4  /**< \brief Vertex fog color */
@@ -133,9 +150,9 @@ __BEGIN_DECLS
 
 #define PVR_PALETTE_CFG         0x0108  /**< \brief Palette format */
 #define PVR_SYNC_STATUS         0x010c  /**< \brief V/H blank status */
-#define PVR_UNK_0110            0x0110  /**< \brief ?? -- write 0x93f39 for now */
-#define PVR_UNK_0114            0x0114  /**< \brief ?? -- write 0x200000 for now */
-#define PVR_UNK_0118            0x0118  /**< \brief ?? -- write 0x8040 for now */
+#define PVR_FB_BURSTCTRL        0x0110  /**< \brief Framebuffer burst control -- write 0x93f39 for now */
+#define PVR_FB_C_SOF            0x0114  /**< \brief Current framebuffer start address (read) */
+#define PVR_Y_COEFF             0x0118  /**< \brief Y scaling coefficient -- write 0x8040 for now */
 
 #define PVR_PT_ALPHA_REF        0x011c  /**< \brief Only pixels with alpha >= this value are drawn for Punch Through polygons */
 
@@ -152,7 +169,7 @@ __BEGIN_DECLS
 #define PVR_YUV_CFG             0x014c  /**< \brief YUV configuration */
 #define PVR_YUV_STAT            0x0150  /**< \brief The number of YUV macroblocks converted */
 
-#define PVR_UNK_0160            0x0160  /**< \brief ?? */
+#define PVR_TA_LIST_CONT        0x0160  /**< \brief TA list continuation */
 #define PVR_TA_OPB_INIT         0x0164  /**< \brief Object pointer buffer position init */
 
 #define PVR_FOG_TABLE_BASE      0x0200  /**< \brief Base of the fog table */
@@ -182,6 +199,13 @@ __BEGIN_DECLS
 
 #define PVR_RAM_TOP         (PVR_RAM_BASE + PVR_RAM_SIZE)       /**< \brief Top of raw PVR RAM */
 #define PVR_RAM_INT_TOP     (PVR_RAM_INT_BASE + PVR_RAM_SIZE)   /**< \brief Top of int PVR RAM */
+
+#define PVR2_RAM_BASE_32_P0 (PVR_RAM_BASE_32_P0 + PVR2_ADDR_STRIDE) /**< \brief CLXB VRAM 32-bit, P0 */
+#define PVR2_RAM_BASE_64_P0 (PVR_RAM_BASE_64_P0 + PVR2_ADDR_STRIDE) /**< \brief CLXB VRAM 64-bit, P0 */
+#define PVR2_RAM_BASE       (PVR_RAM_BASE + PVR2_ADDR_STRIDE)       /**< \brief CLXB VRAM 32-bit, P2 */
+#define PVR2_RAM_INT_BASE   (PVR_RAM_INT_BASE + PVR2_ADDR_STRIDE)   /**< \brief CLXB VRAM 64-bit, P2 */
+#define PVR2_RAM_TOP        (PVR2_RAM_BASE + PVR_RAM_SIZE)          /**< \brief Top of CLXB 32-bit VRAM */
+#define PVR2_RAM_INT_TOP    (PVR2_RAM_INT_BASE + PVR_RAM_SIZE)      /**< \brief Top of CLXB 64-bit VRAM */
 /** @} */
 
 /* Register content defines, as needed; these will be filled in over time
