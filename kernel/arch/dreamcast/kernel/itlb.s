@@ -1,6 +1,4 @@
-! Routine to flush the ITLB cache
-! This routine will probably turn out to be useless in its current
-!   form, but will be required later as pages are mapped and unmapped.
+! Reset all four ITLB entries from P2; caller excludes concurrent refills.
 
 	.text
 	.globl _mmu_reset_itlb
@@ -22,7 +20,8 @@ mmu_reset_real:
 	mov.l	itlb1,r4
 	mov	#0,r0
 	mov	#1,r1
-	shll16	r1
+	! Entry selection is address bits 9:8 in all three ITLB arrays.
+	shll8	r1
 	mov.l	r0,@r4
 	add	r1,r4
 	mov.l	r0,@r4
