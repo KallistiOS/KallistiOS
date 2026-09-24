@@ -1,6 +1,6 @@
-# Maple capability matching
+# Maple
 
-Branch: `pr/maple-capability-matching`
+Branch: `pr/maple`
 
 Role: Narrow upstream candidate
 
