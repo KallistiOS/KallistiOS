@@ -2,6 +2,7 @@
 
    fs_fat.c
    Copyright (C) 2012, 2013, 2014, 2016, 2019 Lawrence Sebald
+   Copyright (C) 2026 Joseph Black
 */
 
 #include <time.h>
@@ -1403,10 +1404,8 @@ int fs_fat_mount(const char *mp, kos_blockdev_t *dev, uint32_t flags) {
     vfsh->privdata = mnt;
     mnt->vfsh = vfsh;
 
-    /* Add it to our list */
-    LIST_INSERT_HEAD(&fat_fses, mnt, entry);
-
-    /* Register with the VFS */
+    /* Publish before adding the mount to the private list. This keeps a failed
+       registration from leaving a freed list entry behind. */
     if(nmmgr_handler_add(&vfsh->nmmgr)) {
         dbglog(DBG_DEBUG, "fs_fat: couldn't add fs to nmmgr\n");
         free(vfsh);
@@ -1416,13 +1415,14 @@ int fs_fat_mount(const char *mp, kos_blockdev_t *dev, uint32_t flags) {
         return -1;
     }
 
+    LIST_INSERT_HEAD(&fat_fses, mnt, entry);
     mutex_unlock(&fat_mutex);
     return 0;
 }
 
 int fs_fat_unmount(const char *mp) {
     fs_fat_fs_t *i;
-    int found = 0, rv = 0;
+    int found = 0;
 
     /* Find the fs in question */
     mutex_lock(&fat_mutex);
@@ -1435,20 +1435,28 @@ int fs_fat_unmount(const char *mp) {
 
     if(found) {
         LIST_REMOVE(i, entry);
-
-        /* XXXX: We should probably do something with open files... */
-        nmmgr_handler_remove(&i->vfsh->nmmgr);
-        fat_fs_shutdown(i->fs);
-        free(i->vfsh);
-        free(i);
     }
-    else {
-        errno = ENOENT;
-        rv = -1;
-    }
-
     mutex_unlock(&fat_mutex);
-    return rv;
+
+    if(!found) {
+        errno = ENOENT;
+        return -1;
+    }
+
+    /* Handler close operations take fat_mutex, so retained users must drain
+       after the mount is detached and the mutex has been released. */
+    if(nmmgr_handler_remove(&i->vfsh->nmmgr) < 0) {
+        /* Keep the detached mount reachable for a removal retry. */
+        mutex_lock(&fat_mutex);
+        LIST_INSERT_HEAD(&fat_fses, i, entry);
+        mutex_unlock(&fat_mutex);
+        return -1;
+    }
+
+    fat_fs_shutdown(i->fs);
+    free(i->vfsh);
+    free(i);
+    return 0;
 }
 
 int fs_fat_sync(const char *mp) {

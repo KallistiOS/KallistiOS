@@ -1301,6 +1301,10 @@ void fs_iso9660_shutdown(void) {
     /* De-register with vblank */
     vblank_handler_remove(iso_vblank_hnd);
 
+    /* Drain retained path calls and descriptors before destroying caches. */
+    if(nmmgr_handler_remove(&vh.nmmgr) < 0)
+        return;
+
     /* Dealloc cache block space */
     free(cache_data);
     free(caches);
@@ -1309,5 +1313,4 @@ void fs_iso9660_shutdown(void) {
     mutex_destroy(&cache_mutex);
     mutex_destroy(&fh_mutex);
 
-    nmmgr_handler_remove(&vh.nmmgr);
 }

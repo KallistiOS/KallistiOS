@@ -863,6 +863,9 @@ int fs_vmu_init(void) {
 int fs_vmu_shutdown(void) {
     vmu_fh_t * c, * n;
 
+    if(nmmgr_handler_remove(&vh.nmmgr) < 0)
+        return -1;
+
     mutex_lock(&fh_mutex);
 
     TAILQ_FOREACH_SAFE(c, &vmu_fh, listent, n) {
@@ -897,5 +900,5 @@ int fs_vmu_shutdown(void) {
         free(dft_header);
     }
 
-    return nmmgr_handler_remove(&vh.nmmgr);
+    return 0;
 }

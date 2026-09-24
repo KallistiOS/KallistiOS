@@ -3,6 +3,7 @@
    fs_ramdisk.c
    Copyright (C) 2002, 2003 Megan Potter
    Copyright (C) 2012, 2013, 2014, 2016 Lawrence Sebald
+   Copyright (C) 2026 Joseph Black
 
 */
 
@@ -901,6 +902,9 @@ void fs_ramdisk_shutdown(void) {
     if(rootdir == NULL)
         return;
 
+    if(nmmgr_handler_remove(&vh.nmmgr) < 0)
+        return;
+
     /* First free up the open handles */
     TAILQ_FOREACH_SAFE(fd1, &rd_fd_queue, next, fd2) {
         ramdisk_close(fd1);
@@ -920,5 +924,4 @@ void fs_ramdisk_shutdown(void) {
     free(root);
 
     mutex_destroy(&rd_mutex);
-    nmmgr_handler_remove(&vh.nmmgr);
 }

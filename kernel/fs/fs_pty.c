@@ -3,6 +3,7 @@
    fs_pty.c
    Copyright (C) 2003 Megan Potter
    Copyright (C) 2012, 2014, 2016 Lawrence Sebald
+   Copyright (C) 2026 Joseph Black
 
 */
 
@@ -844,6 +845,9 @@ void fs_pty_shutdown(void) {
     if(!initted)
         return;
 
+    if(nmmgr_handler_remove(&vh.nmmgr) < 0)
+        return;
+
     /* If we fail, we proceed anyways */
     mutex_trylock(&list_mutex);
 
@@ -860,8 +864,6 @@ void fs_pty_shutdown(void) {
 
         c = n;
     }
-
-    nmmgr_handler_remove(&vh.nmmgr);
 
     mutex_destroy(&list_mutex);
 

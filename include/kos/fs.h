@@ -3,6 +3,7 @@
    kos/fs.h
    Copyright (C) 2000, 2001, 2002, 2003 Megan Potter
    Copyright (C) 2012, 2013, 2014, 2016 Lawrence Sebald
+   Copyright (C) 2026 Joseph Black
 
 */
 
@@ -213,6 +214,10 @@ struct fs_hnd;
 
 /* The kernel-wide file descriptor table. These will reference to open files. */
 extern struct fs_hnd *fd_table[FD_SETSIZE];
+
+/* Drain the descriptor table without disabling later opens. Automatic
+   shutdown uses this before unloading modules which may own VFS handlers. */
+int fs_fdtbl_destroy(void);
 /** \endcond */
 
 /* Open modes */
@@ -646,6 +651,9 @@ file_t fs_dup2(file_t oldfd, file_t newfd);
     if you're trying to implement your own filesystem handler in your code, you
     may need this function, otherwise you should just ignore it.
 
+    Ownership of hnd transfers only on success. On failure, the caller still
+    owns hnd and the VFS close callback is not invoked.
+
     \param  vfs             The VFS handler structure to use for the file.
     \param  hnd             Internal handle data for the file.
 
@@ -659,6 +667,9 @@ file_t fs_open_handle(vfs_handler_t *vfs, void *hnd);
     file descriptor. There is generally no reason to call this function in user
     code, as it is meant for use internally.
 
+    \warning The returned pointer is borrowed. The caller must prevent another
+    thread from closing fd while using it.
+
     \param  fd              The file descriptor to retrieve the handler for.
 
     \return                 The VFS' handler structure.
@@ -670,6 +681,9 @@ vfs_handler_t *fs_get_handler(file_t fd);
     This function retrieves the internal file handle data of the specified file
     descriptor. There is generally no reason to call this function in user code,
     as it is meant for use internally.
+
+    \warning The returned pointer is borrowed. The caller must prevent another
+    thread from closing fd while using it.
 
     \param  fd              The file descriptor to retrieve the handler for.
 

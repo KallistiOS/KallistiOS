@@ -2,6 +2,7 @@
 
    fs_dev.c
    Copyright (C) 2024 Donald Haase
+   Copyright (C) 2026 Joseph Black
 */
 
 #include <stdio.h>
@@ -26,23 +27,12 @@ static dev_hnd_t dev_root_hnd = {0};
 static dirent_t dev_readdir_dirent;
 
 static dirent_t *dev_root_readdir(dev_hnd_t *handle) {
-    nmmgr_handler_t *nmhnd;
-    nmmgr_list_t    *nmhead;
-    uintptr_t        cnt;
+    char pathname[NAME_MAX];
+    const uintptr_t cnt = (uintptr_t)handle->hnd;
 
-    cnt = (uintptr_t)handle->hnd;
-
-    nmhead = nmmgr_get_list();
-
-    SLIST_FOREACH(nmhnd, nmhead, list_ent) {
-        if(!(nmhnd->flags & NMMGR_FLAGS_INDEV))
-            continue;
-
-        if(!(cnt--))
-            break;
-    }
-
-    if(nmhnd == NULL)
+    if(nmmgr_handler_get_path(cnt, NMMGR_TYPE_UNKNOWN,
+                              NMMGR_FLAGS_INDEV, 0, pathname,
+                              sizeof(pathname)) < 0)
         return NULL;
 
     /* Entries in /dev are special files */
@@ -50,7 +40,7 @@ static dirent_t *dev_root_readdir(dev_hnd_t *handle) {
     dev_readdir_dirent.time = 0;
     dev_readdir_dirent.attr = 0;
 
-    strcpy(dev_readdir_dirent.name, nmhnd->pathname + strlen("/dev/"));
+    strcpy(dev_readdir_dirent.name, pathname + strlen("/dev/"));
 
     handle->hnd = (void *)((uintptr_t)handle->hnd + 1);
 
@@ -192,6 +182,7 @@ void fs_dev_init(void) {
 }
 
 void fs_dev_shutdown(void) {
+    if(nmmgr_handler_remove(&vh.nmmgr) < 0)
+        return;
     memset(&dev_root_hnd, 0, sizeof(dev_root_hnd));
-    nmmgr_handler_remove(&vh.nmmgr);
 }

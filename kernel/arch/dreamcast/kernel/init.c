@@ -232,21 +232,18 @@ void  __weak_symbol arch_auto_shutdown(void) {
     /* Restore the native transport before it is torn down below. */
     dcload_syscall_net_shutdown();
 
+    /* Close descriptors before unloading libraries that may own handlers.
+       Module destructors can still open temporary files during this phase. */
+    if(fs_shutdown_weak)
+        fs_fdtbl_destroy();
+    KOS_INIT_FLAG_CALL(library_shutdown);
+
+    /* Stop descriptor admission before handlers drain. Keep threads, IRQs
+       and hardware available to final close callbacks. Application workers
+       must already be quiescent before automatic shutdown begins. */
+    KOS_INIT_FLAG_CALL(fs_shutdown);
     if (!KOS_PLATFORM_IS_NAOMI)
         KOS_INIT_FLAG_CALL(net_shutdown);
-
-    snd_shutdown();
-    hardware_shutdown();
-    /* XXX: We should investigate shrinking this irq_disabled
-       time. Until then, all these shut downs happen with
-       irqs disabled which prevents things like safely joining
-       threads or sending cleanup commands to hardware.
-    */
-    irq_disable();
-    timer_shutdown();
-    pvr_shutdown();
-
-    KOS_INIT_FLAG_CALL(library_shutdown);
 
     KOS_INIT_FLAG_CALL(fs_dcload_shutdown);
     KOS_INIT_FLAG_CALL(vmu_fs_shutdown);
@@ -260,13 +257,15 @@ void  __weak_symbol arch_auto_shutdown(void) {
     KOS_INIT_FLAG_CALL(fs_null_shutdown);
     KOS_INIT_FLAG_CALL(fs_dev_shutdown);
 
-    /* As a workaround, shut down the base FS before fs_pty
-       to avoid triggering bugs. */
-    KOS_INIT_FLAG_CALL(fs_shutdown);
-
     KOS_INIT_FLAG_CALL(fs_pty_shutdown);
 
+    nmmgr_shutdown();
+    snd_shutdown();
+    pvr_shutdown();
+    hardware_shutdown();
     thd_shutdown();
+    irq_disable();
+    timer_shutdown();
     rtc_shutdown();
 }
 

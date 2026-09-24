@@ -3,6 +3,7 @@
    fs_romdisk.c
    Copyright (C) 2001, 2002, 2003 Megan Potter
    Copyright (C) 2012, 2013, 2014, 2016 Lawrence Sebald
+   Copyright (C) 2026 Joseph Black
 
 */
 
@@ -621,20 +622,21 @@ static vfs_handler_t vh = {
 /* Are we initialized? */
 static int initted = 0;
 
-/* Internal helper for unmount/shutdown to deduplicate this behavior.
-    Presumes that the romdisk list has been locked by the caller and
-    we aren't in an unsafe `LIST_FOREACH`
-*/
-static void fs_romdisk_list_remove(rd_image_t *n) {
-    /* Remove it from the mount list */
-    LIST_REMOVE(n, list_ent);
-
+/* Finish removal after the mount has been detached from the private list.
+   This must run without fh_mutex: an outstanding descriptor's final close
+   needs that mutex before the name-manager reference can drain. */
+static int fs_romdisk_finish_remove(rd_image_t *n) {
     dbglog(DBG_DEBUG, "fs_romdisk: unmounting image at %p from %s\n",
            n->image, n->vfsh->nmmgr.pathname);
 
-    /* Unmount it */
     assert((void *)&n->vfsh->nmmgr == (void *)n->vfsh);
-    nmmgr_handler_remove(&n->vfsh->nmmgr);
+
+    if(nmmgr_handler_remove(&n->vfsh->nmmgr) < 0) {
+        mutex_lock(&fh_mutex);
+        LIST_INSERT_HEAD(&romdisks, n, list_ent);
+        mutex_unlock(&fh_mutex);
+        return -1;
+    }
 
     /* If we own the buffer, free it */
     if(n->own_buffer) {
@@ -645,6 +647,8 @@ static void fs_romdisk_list_remove(rd_image_t *n) {
     /* Free the structs */
     free(n->vfsh);
     free(n);
+
+    return 0;
 }
 
 /* Initialize the file system */
@@ -666,7 +670,7 @@ void fs_romdisk_init(void) {
 
 /* De-init the file system; also unmounts any mounted images. */
 void fs_romdisk_shutdown(void) {
-    rd_image_t  *n, *c;
+    rd_image_t  *image;
     rd_fd_t     *i, *j;
 
     if(!initted)
@@ -674,14 +678,25 @@ void fs_romdisk_shutdown(void) {
 
     initted = 0;
 
-    mutex_lock(&fh_mutex);
+    /* Detach one mount at a time, then drop the list lock while the name
+       manager waits for retained descriptors and path calls to finish. */
+    for(;;) {
+        mutex_lock(&fh_mutex);
+        image = LIST_FIRST(&romdisks);
 
-    /* Go through and free all the romdisk mount entries */
-    LIST_FOREACH_SAFE(c, &romdisks, list_ent, n) {
-        fs_romdisk_list_remove(c);
+        if(image)
+            LIST_REMOVE(image, list_ent);
+
+        mutex_unlock(&fh_mutex);
+
+        if(!image)
+            break;
+
+        if(fs_romdisk_finish_remove(image) < 0) {
+            initted = 1;
+            return;
+        }
     }
-
-    mutex_unlock(&fh_mutex);
 
     /* Iterate through any dangling files and clean them */
     TAILQ_FOREACH_SAFE(i, &rd_fd_queue, next, j) {
@@ -742,20 +757,26 @@ int fs_romdisk_mount(const char *mountpoint, const uint8_t *img, bool own_buffer
 
     assert((void *)&mnt->vfsh->nmmgr == (void *)mnt->vfsh);
 
-    /* Add it to our mount list */
+    /* Publish and add to the private list as one mount operation. */
     mutex_lock(&fh_mutex);
+
+    if(nmmgr_handler_add(&vfsh->nmmgr) < 0) {
+        mutex_unlock(&fh_mutex);
+        free(vfsh);
+        free(mnt);
+        return -1;
+    }
+
     LIST_INSERT_HEAD(&romdisks, mnt, list_ent);
     mutex_unlock(&fh_mutex);
-
-    /* Register with VFS */
-    return nmmgr_handler_add(&vfsh->nmmgr);
+    return 0;
 }
 
 /* Unmount a romdisk image */
 int fs_romdisk_unmount(const char *mountpoint) {
     rd_image_t  *n;
 
-    mutex_lock_scoped(&fh_mutex);
+    mutex_lock(&fh_mutex);
 
     LIST_FOREACH(n, &romdisks, list_ent) {
         if(!strcmp(mountpoint, n->vfsh->nmmgr.pathname)) {
@@ -765,11 +786,13 @@ int fs_romdisk_unmount(const char *mountpoint) {
 
     /* The LIST_FOREACH got to the end and didn't find anything */
     if(!n) {
+        mutex_unlock(&fh_mutex);
         errno = ENOENT;
         return -1;
     }
 
-    fs_romdisk_list_remove(n);
+    LIST_REMOVE(n, list_ent);
+    mutex_unlock(&fh_mutex);
 
-    return 0;
+    return fs_romdisk_finish_remove(n);
 }

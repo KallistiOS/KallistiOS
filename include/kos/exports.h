@@ -69,12 +69,15 @@ typedef struct symtab_handler {
 void export_init(void);
 
 /** \brief  Look up a symbol by name.
+    \warning Results are borrowed. The caller must serialize module unload
+    through use of the result. Handler retention protects traversal only.
     \param  name            The symbol to look up
     \return                 The export structure, or NULL on failure
 */
 export_sym_t *export_lookup(const char *name);
 
 /** \brief  Look up a symbol by name and Name Manager path.
+    \warning The result is borrowed; serialize module unload through its use.
     \param  name            The symbol to look up
     \param  path            The Name Manager path to look up
     \return                 The export structure, or NULL on failure
@@ -83,6 +86,9 @@ export_sym_t *export_lookup_path(const char *name, const char *path);
 
 /** \brief  Look up the nearest exported symbol at or before addr.
             Useful for exception messages.
+    \note In interrupt/exception context, only built-in static symbol tables
+    are searched, without acquiring the name-manager mutex. In thread context,
+    dynamic results are borrowed and require caller-serialized module unload.
     \param  addr            The address to look up
     \return                 The export structure, or NULL on failure
 */

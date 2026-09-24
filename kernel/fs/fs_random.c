@@ -2,6 +2,7 @@
 
    fs_random.c
    Copyright (C) 2023 Luke Benstead
+   Copyright (C) 2026 Joseph Black
 */
 
 #include <stdio.h>
@@ -324,6 +325,11 @@ void fs_rnd_init(void) {
 void fs_rnd_shutdown(void) {
     rnd_fh_t *c, *n;
 
+    if(nmmgr_handler_remove(&ah_u.nmmgr) < 0 && errno != ENOENT)
+        return;
+    if(nmmgr_handler_remove(&vh.nmmgr) < 0)
+        return;
+
     mutex_lock(&fh_mutex);
 
     /* First, clean up any open files */
@@ -333,7 +339,4 @@ void fs_rnd_shutdown(void) {
 
     mutex_unlock(&fh_mutex);
     mutex_destroy(&fh_mutex);
-
-    nmmgr_handler_remove(&vh.nmmgr);
-    nmmgr_handler_remove(&ah_u.nmmgr);
 }

@@ -3,6 +3,7 @@
    fs.c
    Copyright (C) 2000, 2001, 2002, 2003 Megan Potter
    Copyright (C) 2012, 2013, 2014, 2015, 2016 Lawrence Sebald
+   Copyright (C) 2026 Joseph Black
 
 */
 
@@ -28,6 +29,7 @@ something like this:
 */
 
 #include <stdatomic.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
@@ -46,12 +48,14 @@ something like this:
 typedef struct fs_hnd {
     vfs_handler_t *handler;   /* Handler */
     void *hnd;   /* Handler-internal */
-    int refcnt;  /* Reference count */
+    atomic_int refcnt;  /* Descriptor and in-flight operation references */
     int idx;     /* Current index for readdir */
 } fs_hnd_t;
 
 /* The global file descriptor table */
 fs_hnd_t *fd_table[FD_SETSIZE] = { NULL };
+static mutex_t fd_mutex = MUTEX_INITIALIZER;
+static bool fs_accepting_descriptors;
 
 /* Internal file commands for root dir reading */
 static fs_hnd_t *fs_root_opendir(void) {
@@ -60,31 +64,21 @@ static fs_hnd_t *fs_root_opendir(void) {
 
 static dirent_t root_readdir_dirent;
 static dirent_t *fs_root_readdir(fs_hnd_t *handle) {
-    nmmgr_handler_t *nmhnd;
-    nmmgr_list_t    *nmhead = nmmgr_get_list();
-    uintptr_t        cnt = (uintptr_t)handle->hnd;
+    char pathname[NAME_MAX];
+    const uintptr_t cnt = (uintptr_t)handle->hnd;
 
-    SLIST_FOREACH(nmhnd, nmhead, list_ent) {
-        if((nmhnd->flags & NMMGR_FLAGS_INDEV))
-            continue;
-
-        if(nmhnd->type != NMMGR_TYPE_VFS)
-            continue;
-
-        if(!(cnt--))
-            break;
-    }
-
-    if(nmhnd == NULL)
+    if(nmmgr_handler_get_path(cnt, NMMGR_TYPE_VFS, 0,
+                              NMMGR_FLAGS_INDEV, pathname,
+                              sizeof(pathname)) < 0)
         return NULL;
 
     root_readdir_dirent.attr = O_DIR;
     root_readdir_dirent.size = -1;
 
-    if(nmhnd->pathname[0] == '/')
-        strcpy(root_readdir_dirent.name, nmhnd->pathname + 1);
+    if(pathname[0] == '/')
+        strcpy(root_readdir_dirent.name, pathname + 1);
     else
-        strcpy(root_readdir_dirent.name, nmhnd->pathname);
+        strcpy(root_readdir_dirent.name, pathname);
 
     handle->hnd = (void *)((uintptr_t)handle->hnd + 1);
 
@@ -116,9 +110,12 @@ static fs_hnd_t *fs_hnd_open(const char *fn, int mode) {
     }
 
     /* Look for a handler */
-    nmhnd = nmmgr_lookup(rfn);
+    nmhnd = nmmgr_lookup_ref(rfn);
 
     if(nmhnd == NULL || nmhnd->type != NMMGR_TYPE_VFS) {
+        if(nmhnd)
+            nmmgr_handler_release(nmhnd);
+
         errno = ENOENT;
         return NULL;
     }
@@ -130,19 +127,26 @@ static fs_hnd_t *fs_hnd_open(const char *fn, int mode) {
 
     /* Invoke the handler */
     if(cur->open == NULL) {
+        nmmgr_handler_release(nmhnd);
         errno = ENOSYS;
         return NULL;
     }
 
     h = cur->open(cur, cname, mode);
 
-    if(h == NULL) return NULL;
+    if(h == NULL) {
+        nmmgr_handler_release(nmhnd);
+        return NULL;
+    }
 
     /* Wrap it up in a structure */
     hnd = malloc(sizeof(fs_hnd_t));
 
     if(hnd == NULL) {
-        cur->close(h);
+        if(cur->close)
+            cur->close(h);
+
+        nmmgr_handler_release(nmhnd);
         errno = ENOMEM;
         return NULL;
     }
@@ -177,32 +181,47 @@ static int fs_hnd_unref(fs_hnd_t *ref) {
         if(ref->handler && ref->handler->close)
             retval = ref->handler->close(ref->hnd);
 
+        const int saved_errno = errno;
+        if(ref->handler)
+            nmmgr_handler_release(&ref->handler->nmmgr);
+
         free(ref);
+        errno = saved_errno;
     }
 
     return retval;
 }
 
-/* Assigns a file descriptor (index) to a file handle (pointer). Will auto-
-   reference the handle, and unrefs on error. */
+/* Assign a descriptor and acquire its reference only on success.
+   The caller owns the wrapper and underlying handle on failure. */
 static file_t fs_hnd_assign(fs_hnd_t *hnd) {
     int i;
 
-    fs_hnd_ref(hnd);
+    if(mutex_lock(&fd_mutex) < 0) {
+        return FILEHND_INVALID;
+    }
+
+    if(!fs_accepting_descriptors) {
+        mutex_unlock(&fd_mutex);
+        errno = ENODEV;
+        return FILEHND_INVALID;
+    }
 
     for(i = 3; i < FD_SETSIZE; i++) {
-        fs_hnd_t *old = NULL;
-
-        if(atomic_compare_exchange_strong(&fd_table[i], &old, hnd))
+        if(!fd_table[i]) {
+            fs_hnd_ref(hnd);
+            fd_table[i] = hnd;
             break;
+        }
     }
+
+    mutex_unlock(&fd_mutex);
 
     if(i >= FD_SETSIZE) {
         dbglog(DBG_ERROR, "fs_hnd_assign: Update FD_SETSIZE definition in \
               opts.h to support additional files being opened. Current \
               limit is %d\n", FD_SETSIZE);
 
-        fs_hnd_unref(hnd);
         errno = EMFILE;
         return FILEHND_INVALID;
     }
@@ -210,16 +229,32 @@ static file_t fs_hnd_assign(fs_hnd_t *hnd) {
     return (file_t)i;
 }
 
-int fs_fdtbl_destroy(void) {
+static int fs_fdtbl_drain(bool stop_new_descriptors) {
+    fs_hnd_t *detached[FD_SETSIZE];
+
+    if(mutex_lock(&fd_mutex) < 0)
+        return -1;
+
+    if(stop_new_descriptors)
+        fs_accepting_descriptors = false;
 
     for(size_t i = 0; i < FD_SETSIZE; i++) {
-        if(fd_table[i])
-            fs_hnd_unref(fd_table[i]);
-
+        detached[i] = fd_table[i];
         fd_table[i] = NULL;
     }
 
+    mutex_unlock(&fd_mutex);
+
+    for(size_t i = 0; i < FD_SETSIZE; i++) {
+        if(detached[i])
+            fs_hnd_unref(detached[i]);
+    }
+
     return 0;
+}
+
+int fs_fdtbl_destroy(void) {
+    return fs_fdtbl_drain(false);
 }
 
 /* Attempt to open a file, given a path name. Follows the process described
@@ -232,7 +267,14 @@ file_t fs_open(const char *fn, int mode) {
         return FILEHND_INVALID;
 
     /* Ok, that succeeded -- now look for a file descriptor. */
-    return fs_hnd_assign(hnd);
+    file_t fd = fs_hnd_assign(hnd);
+    if(fd == FILEHND_INVALID) {
+        const int saved_errno = errno;
+        fs_hnd_ref(hnd);
+        fs_hnd_unref(hnd);
+        errno = saved_errno;
+    }
+    return fd;
 }
 
 /* See header for comments */
@@ -245,62 +287,146 @@ file_t fs_open_handle(vfs_handler_t *vfs, void *vhnd) {
         return FILEHND_INVALID;
     }
 
+    if(!vfs || nmmgr_handler_retain(&vfs->nmmgr) < 0) {
+        free(hnd);
+        errno = ENODEV;
+        return FILEHND_INVALID;
+    }
+
     hnd->handler = vfs;
     hnd->hnd = vhnd;
     hnd->refcnt = 0;
+    hnd->idx = -2;
 
     /* Ok, that succeeded -- now look for a file descriptor. */
-    return fs_hnd_assign(hnd);
+    file_t fd = fs_hnd_assign(hnd);
+    if(fd == FILEHND_INVALID) {
+        const int saved_errno = errno;
+        nmmgr_handler_release(&vfs->nmmgr);
+        free(hnd);
+        errno = saved_errno;
+    }
+    return fd;
 }
 
 /* Returns a file handle for a given fd, or NULL if the parameters
    are not valid. */
-static fs_hnd_t *fs_map_hnd(file_t fd) {
+static fs_hnd_t *fs_map_hnd_ref(file_t fd) {
+    fs_hnd_t *hnd;
+
     if(fd < 0 || fd >= FD_SETSIZE || fd == FILEHND_INVALID) {
         errno = EBADF;
         return NULL;
     }
 
-    if(!fd_table[fd]) {
+    if(mutex_lock(&fd_mutex) < 0)
+        return NULL;
+
+    hnd = fd_table[fd];
+
+    if(hnd)
+        fs_hnd_ref(hnd);
+
+    mutex_unlock(&fd_mutex);
+
+    if(!hnd) {
         errno = EBADF;
         return NULL;
     }
 
-    return fd_table[fd];
+    return hnd;
+}
+
+static void fs_hnd_cleanup(fs_hnd_t **hnd) {
+    const int saved_errno = errno;
+    if(*hnd)
+        fs_hnd_unref(*hnd);
+    errno = saved_errno;
 }
 
 vfs_handler_t *fs_get_handler(file_t fd) {
-    fs_hnd_t *h = fs_map_hnd(fd);
+    vfs_handler_t *handler;
+    bool exists;
 
-    if(!h) return NULL;
+    if(fd < 0 || fd >= FD_SETSIZE || fd == FILEHND_INVALID) {
+        errno = EBADF;
+        return NULL;
+    }
 
-    return h->handler;
+    if(mutex_lock(&fd_mutex) < 0)
+        return NULL;
+    exists = fd_table[fd] != NULL;
+    handler = exists ? fd_table[fd]->handler : NULL;
+    mutex_unlock(&fd_mutex);
+
+    if(!exists)
+        errno = EBADF;
+
+    return handler;
 }
 
 void *fs_get_handle(file_t fd) {
-    fs_hnd_t *h = fs_map_hnd(fd);
+    void *handle;
+    bool exists;
 
-    if(!h) return NULL;
+    if(fd < 0 || fd >= FD_SETSIZE || fd == FILEHND_INVALID) {
+        errno = EBADF;
+        return NULL;
+    }
 
-    return h->hnd;
+    if(mutex_lock(&fd_mutex) < 0)
+        return NULL;
+    exists = fd_table[fd] != NULL;
+    handle = exists ? fd_table[fd]->hnd : NULL;
+    mutex_unlock(&fd_mutex);
+
+    if(!exists)
+        errno = EBADF;
+
+    return handle;
 }
 
 file_t fs_dup(file_t oldfd) {
-    /* Make sure it exists */
+    fs_hnd_t *hnd;
+    int newfd;
+
     if(oldfd < 0 || oldfd >= FD_SETSIZE || oldfd == FILEHND_INVALID) {
         errno = EBADF;
         return FILEHND_INVALID;
     }
-    else if(!fd_table[oldfd]) {
+
+    if(mutex_lock(&fd_mutex) < 0)
+        return FILEHND_INVALID;
+
+    hnd = fd_table[oldfd];
+
+    if(!hnd) {
+        mutex_unlock(&fd_mutex);
         errno = EBADF;
         return FILEHND_INVALID;
     }
 
-    return fs_hnd_assign(fd_table[oldfd]);
+    for(newfd = 3; newfd < FD_SETSIZE; ++newfd) {
+        if(!fd_table[newfd]) {
+            fs_hnd_ref(hnd);
+            fd_table[newfd] = hnd;
+            break;
+        }
+    }
+
+    mutex_unlock(&fd_mutex);
+
+    if(newfd >= FD_SETSIZE) {
+        errno = EMFILE;
+        return FILEHND_INVALID;
+    }
+
+    return newfd;
 }
 
 file_t fs_dup2(file_t oldfd, file_t newfd) {
     fs_hnd_t *prev;
+    fs_hnd_t *hnd;
 
     /* Make sure the descriptors are valid */
     if(oldfd < 0 || oldfd >= FD_SETSIZE || oldfd == FILEHND_INVALID ||
@@ -308,26 +434,29 @@ file_t fs_dup2(file_t oldfd, file_t newfd) {
         errno = EBADF;
         return FILEHND_INVALID;
     }
-    else if(!fd_table[oldfd]) {
+    if(mutex_lock(&fd_mutex) < 0)
+        return FILEHND_INVALID;
+
+    hnd = fd_table[oldfd];
+
+    if(!hnd) {
+        mutex_unlock(&fd_mutex);
         errno = EBADF;
         return FILEHND_INVALID;
     }
 
-    if(oldfd == newfd)
-        goto out_get_ref;
+    if(oldfd == newfd) {
+        mutex_unlock(&fd_mutex);
+        return newfd;
+    }
 
-    do {
-        prev = fd_table[newfd];
-        if(prev) {
-            fs_close(newfd);
-            prev = NULL;
-        }
+    fs_hnd_ref(hnd);
+    prev = fd_table[newfd];
+    fd_table[newfd] = hnd;
+    mutex_unlock(&fd_mutex);
 
-    } while(!atomic_compare_exchange_strong(&fd_table[newfd],
-                                            &prev, fd_table[oldfd]));
-
-out_get_ref:
-    fs_hnd_ref(fd_table[newfd]);
+    if(prev)
+        fs_hnd_unref(prev);
 
     return newfd;
 }
@@ -335,20 +464,37 @@ out_get_ref:
 /* Close a file and clean up the handle */
 int fs_close(file_t fd) {
     int retval;
-    fs_hnd_t *h = fs_map_hnd(fd);
+    fs_hnd_t *h;
 
-    if(!h) return -1;
+    if(fd < 0 || fd >= FD_SETSIZE || fd == FILEHND_INVALID) {
+        errno = EBADF;
+        return -1;
+    }
 
-    /* Deref it and remove it from our table */
+    if(mutex_lock(&fd_mutex) < 0)
+        return -1;
+
+    h = fd_table[fd];
+
+    if(!h) {
+        mutex_unlock(&fd_mutex);
+        errno = EBADF;
+        return -1;
+    }
+
+    /* Detach first so a concurrent operation can no longer acquire a
+       temporary reference to a handle whose final close is in progress. */
+    fd_table[fd] = NULL;
+    mutex_unlock(&fd_mutex);
+
     retval = fs_hnd_unref(h);
-
-    atomic_store(&fd_table[fd], NULL);
     return retval ? -1 : 0;
 }
 
 /* The rest of these pretty much map straight through */
 ssize_t fs_read(file_t fd, void *buffer, size_t cnt) {
-    fs_hnd_t *h = fs_map_hnd(fd);
+    fs_hnd_t *h __attribute__((cleanup(fs_hnd_cleanup))) =
+        fs_map_hnd_ref(fd);
 
     if(!h) return -1;
 
@@ -361,7 +507,8 @@ ssize_t fs_read(file_t fd, void *buffer, size_t cnt) {
 }
 
 ssize_t fs_write(file_t fd, const void *buffer, size_t cnt) {
-    fs_hnd_t *h = fs_map_hnd(fd);
+    fs_hnd_t *h __attribute__((cleanup(fs_hnd_cleanup))) =
+        fs_map_hnd_ref(fd);
 
     if(!h) return -1;
 
@@ -374,7 +521,8 @@ ssize_t fs_write(file_t fd, const void *buffer, size_t cnt) {
 }
 
 off_t fs_seek(file_t fd, off_t offset, int whence) {
-    fs_hnd_t *h = fs_map_hnd(fd);
+    fs_hnd_t *h __attribute__((cleanup(fs_hnd_cleanup))) =
+        fs_map_hnd_ref(fd);
 
     if(!h) return -1;
 
@@ -394,7 +542,8 @@ off_t fs_seek(file_t fd, off_t offset, int whence) {
 }
 
 _off64_t fs_seek64(file_t fd, _off64_t offset, int whence) {
-    fs_hnd_t *h = fs_map_hnd(fd);
+    fs_hnd_t *h __attribute__((cleanup(fs_hnd_cleanup))) =
+        fs_map_hnd_ref(fd);
 
     if(!h) return -1;
 
@@ -414,7 +563,8 @@ _off64_t fs_seek64(file_t fd, _off64_t offset, int whence) {
 }
 
 off_t fs_tell(file_t fd) {
-    fs_hnd_t *h = fs_map_hnd(fd);
+    fs_hnd_t *h __attribute__((cleanup(fs_hnd_cleanup))) =
+        fs_map_hnd_ref(fd);
 
     if(!h) return -1;
 
@@ -434,7 +584,8 @@ off_t fs_tell(file_t fd) {
 }
 
 _off64_t fs_tell64(file_t fd) {
-    fs_hnd_t *h = fs_map_hnd(fd);
+    fs_hnd_t *h __attribute__((cleanup(fs_hnd_cleanup))) =
+        fs_map_hnd_ref(fd);
 
     if(!h) return -1;
 
@@ -454,7 +605,8 @@ _off64_t fs_tell64(file_t fd) {
 }
 
 ssize_t fs_total(file_t fd) {
-    fs_hnd_t *h = fs_map_hnd(fd);
+    fs_hnd_t *h __attribute__((cleanup(fs_hnd_cleanup))) =
+        fs_map_hnd_ref(fd);
 
     if(!h) return -1;
 
@@ -474,7 +626,8 @@ ssize_t fs_total(file_t fd) {
 }
 
 int64_t fs_total64(file_t fd) {
-    fs_hnd_t *h = fs_map_hnd(fd);
+    fs_hnd_t *h __attribute__((cleanup(fs_hnd_cleanup))) =
+        fs_map_hnd_ref(fd);
 
     if(!h) return -1;
 
@@ -508,7 +661,8 @@ static const dirent_t dotdot_dirent = {
 };
 
 const dirent_t *fs_readdir(file_t fd) {
-    fs_hnd_t *h = fs_map_hnd(fd);
+    fs_hnd_t *h __attribute__((cleanup(fs_hnd_cleanup))) =
+        fs_map_hnd_ref(fd);
     const dirent_t *dirent;
 
     if(!h) return NULL;
@@ -541,7 +695,8 @@ const dirent_t *fs_readdir(file_t fd) {
 }
 
 int fs_vioctl(file_t fd, int cmd, va_list ap) {
-    fs_hnd_t *h = fs_map_hnd(fd);
+    fs_hnd_t *h __attribute__((cleanup(fs_hnd_cleanup))) =
+        fs_map_hnd_ref(fd);
 
     if(!h) return -1;
 
@@ -563,31 +718,45 @@ int fs_ioctl(file_t fd, int cmd, ...) {
     return rv;
 }
 
-static vfs_handler_t *fs_verify_handler(const char *fn) {
-    nmmgr_handler_t *nh = nmmgr_lookup(fn);
+static void fs_vfs_cleanup(vfs_handler_t **handler) {
+    const int saved_errno = errno;
+    if(*handler)
+        nmmgr_handler_release(&(*handler)->nmmgr);
+    errno = saved_errno;
+}
 
-    if(nh == NULL || nh->type != NMMGR_TYPE_VFS)
+static vfs_handler_t *fs_verify_handler_ref(const char *fn) {
+    nmmgr_handler_t *nh = nmmgr_lookup_ref(fn);
+
+    if(nh == NULL)
         return NULL;
-    else
-        return (vfs_handler_t *)nh;
+
+    if(nh->type != NMMGR_TYPE_VFS) {
+        nmmgr_handler_release(nh);
+        errno = ENOENT;
+        return NULL;
+    }
+
+    return (vfs_handler_t *)nh;
 }
 
 int fs_rename(const char *fn1, const char *fn2) {
-    vfs_handler_t   *fh1, *fh2;
+    vfs_handler_t *fh1 __attribute__((cleanup(fs_vfs_cleanup))) = NULL;
+    vfs_handler_t *fh2 __attribute__((cleanup(fs_vfs_cleanup))) = NULL;
     char        rfn1[PATH_MAX], rfn2[PATH_MAX];
 
     if(!fs_normalize_path(fn1, rfn1) || !fs_normalize_path(fn2, rfn2))
         return -1;
 
     /* Look for handlers */
-    fh1 = fs_verify_handler(rfn1);
+    fh1 = fs_verify_handler_ref(rfn1);
 
     if(fh1 == NULL) {
         errno = ENOENT;
         return -1;
     }
 
-    fh2 = fs_verify_handler(rfn2);
+    fh2 = fs_verify_handler_ref(rfn2);
 
     if(fh2 == NULL) {
         errno = ENOENT;
@@ -609,14 +778,14 @@ int fs_rename(const char *fn1, const char *fn2) {
 }
 
 int fs_unlink(const char *fn) {
-    vfs_handler_t   *cur;
+    vfs_handler_t *cur __attribute__((cleanup(fs_vfs_cleanup))) = NULL;
     char        rfn[PATH_MAX];
 
     if(!fs_normalize_path(fn, rfn))
         return -1;
 
     /* Look for a handler */
-    cur = fs_verify_handler(rfn);
+    cur = fs_verify_handler_ref(rfn);
 
     if(cur == NULL) return 1;
 
@@ -643,7 +812,8 @@ const char *fs_getwd(void) {
 }
 
 void *fs_mmap(file_t fd) {
-    fs_hnd_t *h = fs_map_hnd(fd);
+    fs_hnd_t *h __attribute__((cleanup(fs_hnd_cleanup))) =
+        fs_map_hnd_ref(fd);
 
     if(!h) return NULL;
 
@@ -656,7 +826,8 @@ void *fs_mmap(file_t fd) {
 }
 
 int fs_complete(file_t fd, ssize_t *rv) {
-    fs_hnd_t *h = fs_map_hnd(fd);
+    fs_hnd_t *h __attribute__((cleanup(fs_hnd_cleanup))) =
+        fs_map_hnd_ref(fd);
 
     if(!h) return -1;
 
@@ -669,14 +840,14 @@ int fs_complete(file_t fd, ssize_t *rv) {
 }
 
 int fs_mkdir(const char *fn) {
-    vfs_handler_t   *cur;
+    vfs_handler_t *cur __attribute__((cleanup(fs_vfs_cleanup))) = NULL;
     char        rfn[PATH_MAX];
 
     if(!fs_normalize_path(fn, rfn))
         return -1;
 
     /* Look for a handler */
-    cur = fs_verify_handler(rfn);
+    cur = fs_verify_handler_ref(rfn);
 
     if(cur == NULL) return -1;
 
@@ -689,14 +860,14 @@ int fs_mkdir(const char *fn) {
 }
 
 int fs_rmdir(const char *fn) {
-    vfs_handler_t   *cur;
+    vfs_handler_t *cur __attribute__((cleanup(fs_vfs_cleanup))) = NULL;
     char        rfn[PATH_MAX];
 
     if(!fs_normalize_path(fn, rfn))
         return -1;
 
     /* Look for a handler */
-    cur = fs_verify_handler(rfn);
+    cur = fs_verify_handler_ref(rfn);
 
     if(cur == NULL) return -1;
 
@@ -709,7 +880,8 @@ int fs_rmdir(const char *fn) {
 }
 
 static int fs_vfcntl(file_t fd, int cmd, va_list ap) {
-    fs_hnd_t *h = fs_map_hnd(fd);
+    fs_hnd_t *h __attribute__((cleanup(fs_hnd_cleanup))) =
+        fs_map_hnd_ref(fd);
 
     if(!h) return -1;
 
@@ -732,21 +904,22 @@ int fs_fcntl(file_t fd, int cmd, ...) {
 }
 
 int fs_link(const char *path1, const char *path2) {
-    vfs_handler_t *fh1, *fh2;
+    vfs_handler_t *fh1 __attribute__((cleanup(fs_vfs_cleanup))) = NULL;
+    vfs_handler_t *fh2 __attribute__((cleanup(fs_vfs_cleanup))) = NULL;
     char rfn1[PATH_MAX], rfn2[PATH_MAX];
 
     if(!fs_normalize_path(path1, rfn1) || !fs_normalize_path(path2, rfn2))
         return -1;
 
     /* Look for handlers */
-    fh1 = fs_verify_handler(rfn1);
+    fh1 = fs_verify_handler_ref(rfn1);
 
     if(!fh1) {
         errno = ENOENT;
         return -1;
     }
 
-    fh2 = fs_verify_handler(rfn2);
+    fh2 = fs_verify_handler_ref(rfn2);
 
     if(!fh2) {
         errno = ENOENT;
@@ -769,14 +942,14 @@ int fs_link(const char *path1, const char *path2) {
 }
 
 int fs_symlink(const char *path1, const char *path2) {
-    vfs_handler_t *vfs;
+    vfs_handler_t *vfs __attribute__((cleanup(fs_vfs_cleanup))) = NULL;
     char rfn[PATH_MAX];
 
     if(!fs_normalize_path(path2, rfn))
         return -1;
 
     /* Look for the handler */
-    vfs = fs_verify_handler(rfn);
+    vfs = fs_verify_handler_ref(rfn);
 
     if(!vfs) {
         errno = ENOENT;
@@ -793,14 +966,14 @@ int fs_symlink(const char *path1, const char *path2) {
 }
 
 ssize_t fs_readlink(const char *path, char *buf, size_t bufsize) {
-    vfs_handler_t *vfs;
+    vfs_handler_t *vfs __attribute__((cleanup(fs_vfs_cleanup))) = NULL;
     char fullpath[PATH_MAX];
 
     if(!fs_normalize_path(path, fullpath))
         return -1;
 
     /* Look for the handler */
-    vfs = fs_verify_handler(fullpath);
+    vfs = fs_verify_handler_ref(fullpath);
 
     if(!vfs) {
         errno = ENOENT;
@@ -818,7 +991,7 @@ ssize_t fs_readlink(const char *path, char *buf, size_t bufsize) {
 }
 
 int fs_stat(const char *path, struct stat *st, int flag) {
-    vfs_handler_t *vfs;
+    vfs_handler_t *vfs __attribute__((cleanup(fs_vfs_cleanup))) = NULL;
     char fullpath[PATH_MAX];
 
     /* Verify the input... */
@@ -845,7 +1018,7 @@ int fs_stat(const char *path, struct stat *st, int flag) {
     }
 
     /* Look for the handler */
-    vfs = fs_verify_handler(fullpath);
+    vfs = fs_verify_handler_ref(fullpath);
 
     if(!vfs) {
         errno = ENOENT;
@@ -872,7 +1045,8 @@ int fs_stat(const char *path, struct stat *st, int flag) {
 }
 
 int fs_rewinddir(file_t fd) {
-    fs_hnd_t *h = fs_map_hnd(fd);
+    fs_hnd_t *h __attribute__((cleanup(fs_hnd_cleanup))) =
+        fs_map_hnd_ref(fd);
 
     if(!h) return -1;
 
@@ -892,7 +1066,8 @@ int fs_rewinddir(file_t fd) {
 }
 
 int fs_fstat(file_t fd, struct stat *st) {
-    fs_hnd_t *h = fs_map_hnd(fd);
+    fs_hnd_t *h __attribute__((cleanup(fs_hnd_cleanup))) =
+        fs_map_hnd_ref(fd);
 
     if(!h) return -1;
 
@@ -921,8 +1096,11 @@ int fs_fstat(file_t fd, struct stat *st) {
 
 /* Initialize FS structures */
 void fs_init(void) {
+    mutex_lock(&fd_mutex);
+    fs_accepting_descriptors = true;
+    mutex_unlock(&fd_mutex);
 }
 
 void fs_shutdown(void) {
-    fs_fdtbl_destroy();
+    fs_fdtbl_drain(true);
 }

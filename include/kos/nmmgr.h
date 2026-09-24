@@ -2,6 +2,7 @@
 
    kos/nmmgr.h
    Copyright (C)2003 Megan Potter
+   Copyright (C) 2026 Joseph Black
 
 */
 
@@ -23,6 +24,7 @@
 __BEGIN_DECLS
 
 #include <stdint.h>
+#include <stddef.h>
 #include <kos/limits.h>
 #include <sys/queue.h>
 
@@ -131,11 +133,30 @@ typedef struct alias_handler {
 
     This function will retrieve a name handler by its pathname.
 
+    \warning The legacy result is not retained and is unsafe against concurrent
+    handler removal. New code which can race teardown should use
+    nmmgr_lookup_ref().
+
     \param  name            The handler to look up
 
     \return                 The handler, or NULL on failure.
 */
 nmmgr_handler_t * nmmgr_lookup(const char *name);
+
+/** \brief Retrieve and retain a name handler by name.
+    \ingroup system_namemgr
+
+    Unlike nmmgr_lookup(), the returned handler cannot finish removal until the
+    caller releases it with nmmgr_handler_release(). New retained lookups stop
+    as soon as removal unpublishes the handler.
+
+    This function and nmmgr_handler_release() must be called from thread
+    context.
+
+    \param name            Name to resolve.
+    \return                Retained handler, or NULL with errno set.
+*/
+nmmgr_handler_t *nmmgr_lookup_ref(const char *name);
 
 /** \brief   Get the head element of the name list.
     \ingroup system_namemgr
@@ -159,10 +180,32 @@ nmmgr_list_t * nmmgr_get_list(void);
 */
 int nmmgr_handler_add(nmmgr_handler_t *hnd);
 
+/** \brief Retain a published handler directly.
+    \ingroup system_namemgr
+
+    This is useful when an API receives a handler pointer instead of resolving
+    a path. The matching nmmgr_handler_release() may occur after the handler is
+    unpublished.
+
+    \retval 0              On success.
+    \retval -1             If the handler is invalid or not published.
+*/
+int nmmgr_handler_retain(nmmgr_handler_t *hnd);
+
+/** \brief Release a retained handler.
+    \ingroup system_namemgr
+
+    \retval 0              On success.
+    \retval -1             If the handler has no matching retained reference.
+*/
+int nmmgr_handler_release(nmmgr_handler_t *hnd);
+
 /** \brief   Remove a name handler.
     \ingroup system_namemgr
 
-    This function removes a name handler from the list in the kernel.
+    This function unpublishes a handler and waits without a deadline for all
+    retained users to drain. It must be called from thread context and must not
+    be called from an operation retaining the same handler.
 
     \param  hnd             The handler to remove
 
@@ -170,6 +213,50 @@ int nmmgr_handler_add(nmmgr_handler_t *hnd);
     \retval -1              If the handler wasn't found
 */
 int nmmgr_handler_remove(nmmgr_handler_t *hnd);
+
+/** \brief Unpublish a handler and wait for retained users to drain.
+    \ingroup system_namemgr
+
+    The handler disappears from new lookup and directory-enumeration operations
+    before this function waits. A timeout leaves it unpublished; the caller may
+    invoke this function again to finish removal. This function must not be
+    called from an operation that is itself retaining the same handler.
+
+    \param hnd             Handler to remove.
+    \param timeout         Maximum wait in milliseconds, or zero for no limit.
+
+    \retval 0              On successful removal.
+    \retval -1             On failure with errno set.
+
+    \par Error Conditions:
+    \em ENOENT - the handler was never added or removal already completed.\n
+    \em EBUSY - another thread is removing the handler.\n
+    \em EPERM - called from interrupt context.\n
+    \em ETIMEDOUT - retained users did not drain before the deadline.
+*/
+int nmmgr_handler_remove_timed(nmmgr_handler_t *hnd, unsigned int timeout);
+
+/** \brief Copy the pathname of a matching published handler by index.
+    \ingroup system_namemgr
+
+    This provides race-free directory-style enumeration without exposing the
+    name manager's internal linked list. A type of NMMGR_TYPE_UNKNOWN matches
+    every type.
+
+    \param index           Zero-based index among matching handlers.
+    \param type            Required handler type or NMMGR_TYPE_UNKNOWN.
+    \param required_flags  Flags which must all be present.
+    \param excluded_flags  Flags which must all be absent.
+    \param path            Destination for a NUL-terminated pathname.
+    \param path_size       Size of path.
+
+    \retval 0              On success.
+    \retval -1             On failure with errno set.
+*/
+int nmmgr_handler_get_path(size_t index, uint32_t type,
+                           uint32_t required_flags,
+                           uint32_t excluded_flags, char *path,
+                           size_t path_size);
 
 /** \cond */
 /* Name manager init */
@@ -180,4 +267,3 @@ void nmmgr_shutdown(void);
 __END_DECLS
 
 #endif  /* __KOS_NMMGR_H */
-

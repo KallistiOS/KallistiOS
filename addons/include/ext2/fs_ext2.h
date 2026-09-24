@@ -121,6 +121,12 @@ int fs_ext2_mount(const char *mp, kos_blockdev_t *dev, uint32_t flags);
     This function unmoutns an ext2 filesystem that was previously mounted by the
     fs_ext2_mount() function.
 
+    It waits for open files and in-flight VFS calls to drain without holding
+    the filesystem mutex. Close files first, or arrange for another thread to
+    close them. Do not unmount from a callback retaining this filesystem.
+    Serialize mount/unmount/shutdown operations and keep the block device alive
+    until unmount succeeds.
+
     \param  mp          The mount point of the filesystem to be unmounted.
     
     \retval 0           On success.

@@ -3,6 +3,7 @@
    exports.c
    Copyright (C) 2003 Megan Potter
    Copyright (C) 2024 Ruslan Rostovtsev
+   Copyright (C) 2026 Joseph Black
 
 */
 
@@ -19,6 +20,7 @@ to be a somewhat slow process anyway.
 #include <string.h>
 #include <kos/nmmgr.h>
 #include <kos/exports.h>
+#include <kos/irq.h>
 
 static symtab_handler_t st_kern = {
     {
@@ -65,19 +67,24 @@ void export_init(void) {
 
 export_sym_t *export_lookup(const char *name) {
     nmmgr_handler_t *nmmgr;
-    nmmgr_list_t *nmmgrs;
+    char path[NAME_MAX];
+    size_t index;
     int i;
     symtab_handler_t *sth;
 
-    /* Get the name manager list */
-    nmmgrs = nmmgr_get_list();
+    for(index = 0;
+        nmmgr_handler_get_path(index, NMMGR_TYPE_SYMTAB, 0, 0, path,
+                               sizeof(path)) == 0;
+        ++index) {
+        nmmgr = nmmgr_lookup_ref(path);
 
-    /* Go through and look at each symtab entry */
-    SLIST_FOREACH(nmmgr, nmmgrs, list_ent) {
-        /* Not a symtab -> ignore */
-        if(nmmgr->type != NMMGR_TYPE_SYMTAB)
+        if(!nmmgr)
             continue;
 
+        if(nmmgr->type != NMMGR_TYPE_SYMTAB) {
+            nmmgr_handler_release(nmmgr);
+            continue;
+        }
         sth = (symtab_handler_t *)nmmgr;
 
         /* First look through the kernel table */
@@ -85,9 +92,15 @@ export_sym_t *export_lookup(const char *name) {
             if(sth->table[i].name == NULL)
                 break;
 
-            if(!strcmp(name, sth->table[i].name))
-                return sth->table + i;
+            if(!strcmp(name, sth->table[i].name)) {
+                export_sym_t *result = sth->table + i;
+
+                nmmgr_handler_release(nmmgr);
+                return result;
+            }
         }
+
+        nmmgr_handler_release(nmmgr);
     }
 
     return NULL;
@@ -99,24 +112,47 @@ export_sym_t *export_lookup_path(const char *name, const char *path) {
     int i;
 
     /* Get the name manager list */
-    nmmgr = nmmgr_lookup(path);
+    nmmgr = nmmgr_lookup_ref(path);
 
     if(nmmgr == NULL) {
+        return NULL;
+    }
+    if(nmmgr->type != NMMGR_TYPE_SYMTAB) {
+        nmmgr_handler_release(nmmgr);
         return NULL;
     }
     sth = (symtab_handler_t *)nmmgr;
 
     for(i = 0; sth->table[i].name; i++) {
-        if(!strcmp(name, sth->table[i].name))
-            return sth->table + i;
+        if(!strcmp(name, sth->table[i].name)) {
+            export_sym_t *result = sth->table + i;
+
+            nmmgr_handler_release(nmmgr);
+            return result;
+        }
     }
 
+    nmmgr_handler_release(nmmgr);
     return NULL;
 }
 
 export_sym_t *export_lookup_addr(uintptr_t addr) {
+    /* Exception diagnostics cannot wait on a mutex held by the interrupted
+       thread. Built-in tables have static lifetime; skip dynamic tables here. */
+    if(irq_inside_int()) {
+        export_sym_t *tables[] = { kernel_symtab, arch_symtab, subarch_symtab };
+        export_sym_t *best = NULL;
+        for(size_t t = 0; t < sizeof(tables) / sizeof(tables[0]); ++t) {
+            for(export_sym_t *symbol = tables[t]; symbol->name; ++symbol) {
+                if(symbol->ptr <= addr && (!best || symbol->ptr > best->ptr))
+                    best = symbol;
+            }
+        }
+        return best;
+    }
     nmmgr_handler_t *nmmgr;
-    nmmgr_list_t *nmmgrs;
+    char path[NAME_MAX];
+    size_t index;
     int i;
     symtab_handler_t *sth;
     uintptr_t sym_addr;
@@ -124,15 +160,19 @@ export_sym_t *export_lookup_addr(uintptr_t addr) {
     uintptr_t off;
     export_sym_t *best = NULL;
 
-    /* Get the name manager list */
-    nmmgrs = nmmgr_get_list();
+    for(index = 0;
+        nmmgr_handler_get_path(index, NMMGR_TYPE_SYMTAB, 0, 0, path,
+                               sizeof(path)) == 0;
+        ++index) {
+        nmmgr = nmmgr_lookup_ref(path);
 
-    /* Go through and look at each symtab entry */
-    SLIST_FOREACH(nmmgr, nmmgrs, list_ent) {
-        /* Not a symtab -> ignore */
-        if(nmmgr->type != NMMGR_TYPE_SYMTAB)
+        if(!nmmgr)
             continue;
 
+        if(nmmgr->type != NMMGR_TYPE_SYMTAB) {
+            nmmgr_handler_release(nmmgr);
+            continue;
+        }
         sth = (symtab_handler_t *)nmmgr;
 
         /* First look through the kernel table */
@@ -149,6 +189,8 @@ export_sym_t *export_lookup_addr(uintptr_t addr) {
                 best = sth->table + i;
             }
         }
+
+        nmmgr_handler_release(nmmgr);
     }
 
     return best;

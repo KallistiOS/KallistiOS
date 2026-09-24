@@ -95,8 +95,11 @@ int fs_romdisk_mount(const char * mountpoint, const uint8_t *img, bool own_buffe
 /** \brief  Unmount a ROMFS image.
 
     This function unmounts a ROMFS image that has been previously mounted with
-    fs_romdisk_mount(). This function does not check for open files on the fs,
-    so make sure that all files have been closed before calling it. If the VFS
+    fs_romdisk_mount(). It unpublishes the handler, then waits for open files
+    and in-flight VFS calls to drain. Close your files before calling it, or
+    arrange for another thread to close them. Never unmount from a callback
+    retaining the same handler. Serialize mount/unmount/shutdown operations.
+    If the VFS
     owns the buffer (own_buffer was true when you called the mount function)
     then this function will also free the buffer.
 
@@ -114,4 +117,3 @@ int fs_romdisk_unmount(const char * mountpoint);
 __END_DECLS
 
 #endif  /* __KOS_FS_ROMDISK_H */
-
