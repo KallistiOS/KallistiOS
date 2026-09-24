@@ -17,7 +17,7 @@
 int clock_getcpuclockid(pid_t pid, clockid_t *clock_id) {
     /* pid of 0 means the current process,
        and we only support a single process. */
-    if(pid != 0 || pid != KOS_PID)
+    if(pid != 0 && pid != KOS_PID)
         return ESRCH;
 
     assert(clock_id);
@@ -32,25 +32,19 @@ int clock_getres(clockid_t clk_id, struct timespec *ts) {
         /* Backed by the nanosecond resolution */
         case CLOCK_REALTIME:
         case CLOCK_MONOTONIC:
-            if(!ts) {
-                errno = EFAULT;
-                return -1;
+            if(ts) {
+                ts->tv_sec = 0;
+                ts->tv_nsec = 1;
             }
-
-            ts->tv_sec = 0;
-            ts->tv_nsec = 1;
             return 0;
 
         /* Backed by the millisecond resolution */
         case CLOCK_PROCESS_CPUTIME_ID:
         case CLOCK_THREAD_CPUTIME_ID:
-            if(!ts) {
-                errno = EFAULT;
-                return -1;
+            if(ts) {
+                ts->tv_sec = 0;
+                ts->tv_nsec = 1000000;
             }
-
-            ts->tv_sec = 0;
-            ts->tv_nsec = 1000000;
             return 0;
 
         default:
@@ -107,6 +101,11 @@ int clock_settime(clockid_t clk_id, const struct timespec *ts) {
         case CLOCK_REALTIME:
             if(!ts) {
                 errno = EFAULT;
+                return -1;
+            }
+
+            if(ts->tv_nsec < 0 || ts->tv_nsec >= 1000000000L) {
+                errno = EINVAL;
                 return -1;
             }
 
