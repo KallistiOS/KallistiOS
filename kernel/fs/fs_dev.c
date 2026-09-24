@@ -192,6 +192,7 @@ void fs_dev_init(void) {
 }
 
 void fs_dev_shutdown(void) {
+    fs_vfs_shutdown(&vh);
     memset(&dev_root_hnd, 0, sizeof(dev_root_hnd));
     nmmgr_handler_remove(&vh.nmmgr);
 }
