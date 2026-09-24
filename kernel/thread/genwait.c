@@ -131,7 +131,7 @@ static void __nonnull_all genwait_unqueue(kthread_t *thd, int err) {
 
     /* Make it runnable again */
     thd->state = STATE_READY;
-    thd_add_to_runnable(thd, 0);
+    thd_add_to_runnable(thd, false);
 }
 
 static int genwait_wake_thd_cnt(const void *obj, int cntmax, kthread_t *thd, int err) {
@@ -199,15 +199,6 @@ void genwait_check_timeouts(uint64_t tm) {
     }
 }
 
-uint64_t genwait_next_timeout(void) {
-    kthread_t *t = tq_next();
-
-    if(t == NULL)
-        return 0;
-    else
-        return t->wait_timeout;
-}
-
 int genwait_init(void) {
     for(size_t i = 0; i < TABLESIZE; i++)
         TAILQ_INIT(&slpque[i]);
@@ -219,5 +210,4 @@ int genwait_init(void) {
 void genwait_shutdown(void) {
     /* XXX Do something about queued up procs */
 }
-
 
