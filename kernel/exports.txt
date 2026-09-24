@@ -177,6 +177,18 @@ thd_block_now
 #library_open
 #library_close
 
+# Workqueues
+include kos/workqueue.h
+workqueue_create
+workqueue_destroy
+workqueue_kill
+workqueue_enqueue
+workqueue_enqueue_ex
+workqueue_cancel
+workqueue_cancel_ex
+workqueue_job_get_info
+workqueue_get_thread
+
 # Low-level debug I/O
 dbglog_level
 dbglog_set_level
