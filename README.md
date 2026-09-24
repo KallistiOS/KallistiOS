@@ -1,3 +1,14 @@
+<!-- FORK BRANCH DESCRIPTION -->
+> **Filesystem object and mount lifetime** — `pr/fs-object-lifetime` (narrow upstream candidate).
+>
+> Retains filesystem handlers and open-file state while operations and teardown overlap.
+>
+> Read [this branch's scope and dependencies](BRANCH.md),
+> [the complete branch guide](https://github.com/restricted-628/KallistiOS/blob/master/BRANCHES.md), and
+> [how integrated master differs from upstream](https://github.com/restricted-628/KallistiOS/blob/master/FORK.md).
+> This is a branch of an experimental fork, not the official KallistiOS release.
+<!-- END FORK BRANCH DESCRIPTION -->
+
 <!-- PROJECT LOGO -->
 <div align="center">
   <h1 align="center"><strong>KallistiOS</strong></h1>
