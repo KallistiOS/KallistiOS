@@ -25,7 +25,7 @@ OBJS += spu.o
 OBJS += asic.o g2bus.o
 
 # Video-related
-OBJS += video.o vblank.o
+OBJS += video.o vblank.o elan.o
 
 # CPU-related
 OBJS += sq.o sq_fast_cpy.o scif.o sci.o ubc.o dmac.o wdt.o
