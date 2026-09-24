@@ -151,23 +151,23 @@ int pvr_init(const pvr_init_params_t *params) {
     /* 3d-specific parameters; these are all about rendering and
        nothing to do with setting up the video; some stuff in here
        is still unknown. */
-    PVR_SET(PVR_UNK_00A8, 0x15d1c951);          /* M (Unknown magic value) */
-    PVR_SET(PVR_UNK_00A0, 0x00000020);          /* M */
+    PVR_SET(PVR_SDRAM_CFG, 0x15d1c951);         /* M (Unknown magic value) */
+    PVR_SET(PVR_SDRAM_REFRESH, 0x00000020);     /* M */
     /* PVR_FB_CFG_2 is configured in vid_set_mode() */
-    PVR_SET(PVR_UNK_0110, 0x00093f39);          /* M */
-    PVR_SET(PVR_UNK_0098, 0x00800408);          /* M */
+    PVR_SET(PVR_FB_BURSTCTRL, 0x00093f39);      /* M */
+    PVR_SET(PVR_ISP_FEED_CFG, 0x00800408);      /* M */
     PVR_SET(PVR_TEXTURE_CLIP, 0x00000000);      /* texture clip distance */
     PVR_SET(PVR_SPANSORT_CFG, 0x00000101);      /* M */
     pvr_fog_table_color(0.0f, 0.5f, 0.5f, 0.5f);/* Fog table color */
     pvr_fog_vertex_color(0.5f, 0.5f, 0.5f);     /* Fog vertex color */
     PVR_SET(PVR_COLOR_CLAMP_MIN, PVR_PACK_COLOR(0, 0, 0, 0));   /* color clamp min */
     PVR_SET(PVR_COLOR_CLAMP_MAX, PVR_PACK_COLOR(1, 1, 1, 1));   /* color clamp max */
-    PVR_SET(PVR_UNK_0080, 0x00000007);          /* M */
+    PVR_SET(PVR_HALF_OFFSET, 0x00000007);       /* M */
     PVR_SET(PVR_CHEAP_SHADOW, 0x00000001);      /* cheap shadow */
-    PVR_SET(PVR_UNK_007C, 0x0027df77);          /* M */
+    PVR_SET(PVR_FPU_PARAM_CFG, 0x0027df77);     /* M */
     PVR_SET(PVR_TEXTURE_MODULO, 0x00000000);    /* stride width */
     PVR_SET(PVR_FOG_DENSITY, 0x0000ff07);       /* fog density */
-    PVR_SET(PVR_UNK_0118, 0x00008040);          /* M */
+    PVR_SET(PVR_Y_COEFF, 0x00008040);           /* M */
 
     /* Initialize PVR DMA */
     sem_init((semaphore_t *)&pvr_state.dma_lock, 1);
