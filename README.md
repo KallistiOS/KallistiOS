@@ -1,7 +1,7 @@
 <!-- FORK BRANCH DESCRIPTION -->
-> **Maple capability matching** — `pr/maple-capability-matching` (narrow upstream candidate).
+> **Maple** — `pr/maple` (narrow upstream candidate).
 >
-> Corrects extended device matching against advertised function descriptors.
+> Corrects extended device matching.
 >
 > Read [this branch's scope and dependencies](BRANCH.md),
 > [the complete branch guide](https://github.com/restricted-628/KallistiOS/blob/master/BRANCHES.md), and
