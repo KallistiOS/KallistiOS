@@ -52,6 +52,7 @@ __BEGIN_DECLS
 #include <dc/net/lan_adapter.h>
 #include <dc/perfctr.h>
 #include <dc/pvr.h>
+#include <dc/elan.h>
 #include <dc/scif.h>
 #include <dc/sci.h>
 #include <dc/sd.h>
