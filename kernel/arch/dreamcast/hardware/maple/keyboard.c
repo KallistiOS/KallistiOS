@@ -795,8 +795,7 @@ static int kbd_attach(maple_driver_t *drv, maple_device_t *dev) {
         state->region = KBD_REGION_US;
     }
 
-    /* Advance by one state object; adding sizeof(kbd_state_t) to this typed
-       pointer would scale the offset a second time and clear unrelated RAM. */
+    /* Advance by one state object */
     memset(state + 1, 0,
             sizeof(kbd_state_private_t) - sizeof(kbd_state_t));
 
