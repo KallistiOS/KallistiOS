@@ -862,7 +862,7 @@ maple_device_t *maple_enum_dev(int p, int u);
     \ingroup maple
 
     \param  n               The index to look up.
-    \param  func            The function code to look for.
+    \param  func            The function code(s) to look for.
     \return                 The device found, if any. NULL otherwise.
 */
 maple_device_t *maple_enum_type(size_t n, uint32_t func);
@@ -877,7 +877,7 @@ maple_device_t *maple_enum_type(size_t n, uint32_t func);
     the bits mean at the moment).
 
     \param  n               The index to look up.
-    \param  func            The function code to look for.
+    \param  func            The single function code to check caps of.
     \param  cap             Capabilities bits to look for.
     \return                 The device found, if any. NULL otherwise.
 */
