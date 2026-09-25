@@ -76,10 +76,6 @@ maple_device_t *maple_enum_type_ex(int n, uint32_t func, uint32_t cap) {
                 /* Ensure that the result is in-bounds */
                 assert((d >= 0) && (d < 3));
 
-                /* Check if the function data for the function type checks out
-                   with what it should be. */
-                cap = __builtin_bswap32(cap);
-
                 if((dev->info.function_data[d] & cap) == cap) {
                     if(!n)
                         return dev;
