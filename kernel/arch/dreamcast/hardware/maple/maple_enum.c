@@ -32,7 +32,7 @@ maple_device_t *maple_enum_dev(int p, int u) {
 }
 
 /* Return the Nth device of the requested type (where N is zero-indexed) */
-maple_device_t *maple_enum_type(int n, uint32_t func) {
+maple_device_t *maple_enum_type(size_t n, uint32_t func) {
 
     for(size_t p = 0; p < MAPLE_PORT_COUNT; p++) {
         for(size_t u = 0; u < MAPLE_UNIT_COUNT; u++) {
@@ -51,7 +51,7 @@ maple_device_t *maple_enum_type(int n, uint32_t func) {
 
 /* Return the Nth device that is of the requested type and supports the list of
    capabilities given. */
-maple_device_t *maple_enum_type_ex(int n, uint32_t func, uint32_t cap) {
+maple_device_t *maple_enum_type_ex(size_t n, uint32_t func, uint32_t cap) {
     uint32_t funcmask;
 
     /* If func is 0, there can be no match (and it's UB for clz below) */
