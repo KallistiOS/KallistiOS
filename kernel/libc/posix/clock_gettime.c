@@ -17,7 +17,7 @@
 int clock_getcpuclockid(pid_t pid, clockid_t *clock_id) {
     /* pid of 0 means the current process,
        and we only support a single process. */
-    if(pid != 0 || pid != KOS_PID)
+    if(pid != 0 && pid != KOS_PID)
         return ESRCH;
 
     assert(clock_id);
