@@ -1,0 +1,53 @@
+--- binutils-2.47/bfd/config.bfd
++++ binutils-2.47-kos/bfd/config.bfd
+@@ -562,6 +562,12 @@
+     targ_defvec=i386_elf32_vec
+     targ_selvecs="i386_coff_vec"
+     ;;
++  i[3-7]86-*-xbox*)
++    # ELF by default: the i386 TLS relocations and .tdata/.tbss need it.
++    # PE/COFF stays selectable for XBE conversion.
++    targ_defvec=i386_elf32_vec
++    targ_selvecs="i386_coff_vec i386_pe_vec i386_pe_big_vec i386_pei_vec pdb_vec"
++    ;;
+   i[3-7]86-*-solaris2*)
+     targ_defvec=i386_elf32_sol2_vec
+     # Include 64-bit support to match GCC.
+
+--- binutils-2.47/ld/configure.tgt
++++ binutils-2.47-kos/ld/configure.tgt
+@@ -381,6 +381,12 @@
+ 			;;
+ i[3-7]86-*-elf* | i[3-7]86-*-rtems* | i[3-7]86-*-genode*)
+ 			targ_emul=elf_i386
++			;;
++i[3-7]86-*-xbox*)	targ_emul=elf_i386
++			targ_extra_emuls=i386pe
++			# The ELF emulation still needs the default ldelf.o/ldelfgen.o;
++			# the rest are what i386pe pulls in.
++			targ_extra_ofiles="ldelf.o ldelfgen.o deffilep.o pdb.o pe-dll.o"
+ 			;;
+ i[3-7]86-*-dragonfly*)	targ_emul=elf_i386
+ 			targ_extra_emuls="i386bsd"
+
+--- binutils-2.47/gas/configure.tgt
++++ binutils-2.47-kos/gas/configure.tgt
+@@ -229,6 +229,7 @@
+   i386-*-beos*)				fmt=elf ;;
+   i386-*-elfiamcu)			fmt=elf arch=iamcu ;;
+   i386-*-elf*)				fmt=elf ;;
++  i386-*-xbox*)				fmt=elf ;;
+   i386-*-fuchsia*)			fmt=elf ;;
+   i386-*-haiku*)			fmt=elf em=haiku ;;
+   i386-*-genode*)			fmt=elf ;;
+
+--- binutils-2.47/config.sub
++++ binutils-2.47-kos/config.sub
+@@ -2152,6 +2152,7 @@
+ 	| windiss* \
+ 	| windows* \
+ 	| winnt* \
++	| xbox* \
+ 	| xenix* \
+ 	| xray* \
+ 	| zephyr* \
