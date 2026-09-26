@@ -174,11 +174,11 @@ static vmu_fh_t *vmu_open_vmu_dir(void) {
 
     dbglog(DBG_SOURCE(VMUFS_DEBUG), "# of memcards found: %d\n", num);
 
-    if(!(dh = malloc(sizeof(vmu_dh_t))))
+    if(!(dh = calloc(1, sizeof(vmu_dh_t))))
         return NULL;
-    memset(dh, 0, sizeof(vmu_dh_t));
+
     dh->strtype = VMU_DIR;
-    dh->dirblocks = malloc(num * sizeof(vmu_dir_t));
+    dh->dirblocks = calloc(num, sizeof(vmu_dir_t));
 
     if(!dh->dirblocks) {
         free(dh);
@@ -192,7 +192,6 @@ static vmu_fh_t *vmu_open_vmu_dir(void) {
 
     /* Create the directory entries */
     for(u = 0; u < num; u++) {
-        memset(dh->dirblocks + u, 0, sizeof(vmu_dir_t));    /* Start in a clean room */
         memcpy(dh->dirblocks[u].filename, names + u, 2);
         dh->dirblocks[u].filetype = 0xff;   /* Set to an invalid type as this isn't a real vmu dir. */
     }
@@ -265,13 +264,12 @@ static vmu_fh_t *vmu_open_file(maple_device_t *dev, const char *path, int mode) 
 
     /* We're in O_TRUNC or didn't get a datasize back from vmufs_read */
     if(datasize == -1) {
-        data = malloc(VMU_BLOCK_SIZE);
+        data = calloc(1, VMU_BLOCK_SIZE);
         if(data == NULL) {
             free(fd);
             return NULL;
         }
         datasize = VMU_BLOCK_SIZE;
-        memset(data, 0, VMU_BLOCK_SIZE);
     } else if(!fd->raw && !vmu_pkg_parse(data, datasize, &vmu_pkg)) {
         fd->header = vmu_pkg_dup(&vmu_pkg);
         fd->start = (unsigned int)vmu_pkg.data - (unsigned int)data;
