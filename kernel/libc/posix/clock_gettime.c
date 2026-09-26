@@ -106,6 +106,11 @@ int clock_settime(clockid_t clk_id, const struct timespec *ts) {
                 return -1;
             }
 
+            if(ts->tv_sec < 0 || ts->tv_nsec < 0 || ts->tv_nsec >= 1000000000L) {
+                errno = EINVAL;
+                return -1;
+            }
+
             return rtc_set_unix_secs(ts->tv_sec);
 
         default:
