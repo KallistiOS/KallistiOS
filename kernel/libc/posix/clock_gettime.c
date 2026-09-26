@@ -32,25 +32,21 @@ int clock_getres(clockid_t clk_id, struct timespec *ts) {
         /* Backed by the nanosecond resolution */
         case CLOCK_REALTIME:
         case CLOCK_MONOTONIC:
-            if(!ts) {
-                errno = EFAULT;
-                return -1;
+            if(ts) {
+                ts->tv_sec = 0;
+                ts->tv_nsec = 1;
             }
 
-            ts->tv_sec = 0;
-            ts->tv_nsec = 1;
             return 0;
 
         /* Backed by the millisecond resolution */
         case CLOCK_PROCESS_CPUTIME_ID:
         case CLOCK_THREAD_CPUTIME_ID:
             if(!ts) {
-                errno = EFAULT;
-                return -1;
+                ts->tv_sec = 0;
+                ts->tv_nsec = 1000000;
             }
 
-            ts->tv_sec = 0;
-            ts->tv_nsec = 1000000;
             return 0;
 
         default:
