@@ -2,6 +2,7 @@
 
 | Date<br/>_____________ | Author(s)<br/>_____________ | Changes<br/>_____________ |
 |:-----------------------|:----------------------------|---------------------------|
+| 2026-09-26 | Mickaël Cardoso | Add GCC 13.4.0 patch for MinGW-w64/MSYS2, add Python support to GDB |
 | 2026-08-07 | Eric Fradella | Update GCC 16 series to 16.2.0, update binutils to 2.47 for most profiles |
 | 2026-06-30 | Eric Fradella | Bump GCC series 14/15/16/17 profiles to latest available versions, update LRA testing toolchain |
 | 2026-06-30 | Eric Fradella | Update binutils to 2.46.1 for most profiles |
@@ -33,7 +34,7 @@
 | 2024-05-24 | Eric Fradella | Added support for GCC 13.3.0. |
 | 2024-05-08 | Falco Girgis | Added configuration option for libstdc++'s timezone database. |
 | 2024-05-02 | Eric Fradella | Deprecated GCC 4.7.4 profile. Revamped configuration system into separate profiles and Makefile.cfg. Revised configuration options and documentation. |
-| 2024-05-01 | Falco Girgis | Added config option for enabling the Ada langauge. |
+| 2024-05-01 | Falco Girgis | Added config option for enabling the Ada language. |
 | 2024-04-30 | Falco Girgis | Added config option for enabling iconv library support in Newlib. |
 | 2024-04-29 | Donald Haase<br/>Eric Fradella | Patch Newlib headers to expose lstat() declaration. |
 | 2024-04-26 | Eric Fradella | Update git repo cloning to use treeless clone. |
