@@ -32,7 +32,7 @@ maple_device_t *maple_enum_dev(int p, int u) {
 }
 
 /* Return the Nth device of the requested type (where N is zero-indexed) */
-maple_device_t *maple_enum_type(int n, uint32_t func) {
+maple_device_t *maple_enum_type(size_t n, uint32_t func) {
 
     for(size_t p = 0; p < MAPLE_PORT_COUNT; p++) {
         for(size_t u = 0; u < MAPLE_UNIT_COUNT; u++) {
@@ -51,14 +51,13 @@ maple_device_t *maple_enum_type(int n, uint32_t func) {
 
 /* Return the Nth device that is of the requested type and supports the list of
    capabilities given. */
-maple_device_t *maple_enum_type_ex(int n, uint32_t func, uint32_t cap) {
-    uint32_t funcmask;
-
-    /* If func is 0, there can be no match (and it's UB for clz below) */
-    if(!func) return NULL;
+maple_device_t *maple_enum_type_ex(size_t n, uint32_t func, uint32_t cap) {
+    /* If func is 0, there can be no match (and it's UB for clz below),
+       and if it's multiple funcs/ANY it w*/
+    assert_msg(__builtin_popcount(func) == 1, "func must be a single MAPLE_FUNC_ value");
 
     /* Create a mask that leaves only the bits above func. */
-    funcmask = ~GENMASK(31 - __builtin_clz(func), 0);
+    uint32_t funcmask = ~GENMASK(31 - __builtin_clz(func), 0);
 
     for(size_t p = 0; p < MAPLE_PORT_COUNT; ++p) {
         for(size_t u = 0; u < MAPLE_UNIT_COUNT; ++u) {
@@ -75,10 +74,6 @@ maple_device_t *maple_enum_type_ex(int n, uint32_t func, uint32_t cap) {
 
                 /* Ensure that the result is in-bounds */
                 assert((d >= 0) && (d < 3));
-
-                /* Check if the function data for the function type checks out
-                   with what it should be. */
-                cap = __builtin_bswap32(cap);
 
                 if((dev->info.function_data[d] & cap) == cap) {
                     if(!n)
