@@ -296,8 +296,18 @@ static void *vmu_open(vfs_handler_t *vfs, const char *path, int mode) {
 
     (void)vfs;
 
+    /* /vmu should be opened */
     if(!*path || (path[0] == '/' && !path[1])) {
-        /* /vmu should be opened */
+        /* Short circuit and error on bad flags */
+        if(!(mode & O_DIR)) {
+            errno = EINVAL;
+            return NULL;
+        }
+        else if((mode & O_WRONLY) ||  (mode & O_RDWR)) {
+            errno = EISDIR;
+            return NULL;
+        }
+
         fh = vmu_open_vmu_dir();
     }
     else {
@@ -312,12 +322,23 @@ static void *vmu_open(vfs_handler_t *vfs, const char *path, int mode) {
 
         /* Check for open as dir */
         if(strlen(path) == 3 || (strlen(path) == 4 && path[3] == '/')) {
-            if(!(mode & O_DIR)) return NULL;
+        /* Short circuit and error on bad flags */
+            if(!(mode & O_DIR)) {
+                errno = EINVAL;
+                return NULL;
+            }
+            else if((mode & O_WRONLY) ||  (mode & O_RDWR)) {
+                errno = EISDIR;
+                return NULL;
+            }
 
             fh = vmu_open_dir(dev);
         }
         else {
-            if(mode & O_DIR) return NULL;
+            if(mode & O_DIR) {
+                errno = EINVAL;
+                return NULL;
+            }
 
             fh = vmu_open_file(dev, path, mode);
         }
