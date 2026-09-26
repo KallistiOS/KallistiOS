@@ -85,6 +85,7 @@ endif
 
 # Set static flags to pass to configure if needed
 ifeq ($(standalone_binary),1)
+  $(info Building static binaries)
   ifndef MINGW32
     $(warning 'standalone_binary' should be used *ONLY* on MinGW/MSYS or MinGW-w64/MSYS2 environments)
   endif
