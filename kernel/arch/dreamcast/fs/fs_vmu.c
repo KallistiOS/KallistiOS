@@ -46,13 +46,9 @@ Define VMUFS_DEBUG in kos/opts.h, in your CFLAGS, or here if you want copious
 debug output.
 */
 
-#define VMU_DIR     0
-#define VMU_FILE    1
-#define VMU_ANY     -1  /* Used for checking validity */
-
 /* File handles */
 typedef struct vmu_fh_str {
-    uint32_t strtype;                   /* 0==dir, 1==file */
+    bool isdir;                         /* true==dir, false==file */
     TAILQ_ENTRY(vmu_fh_str) listent;    /* list entry */
 
     int mode;                           /* mode the file was opened with */
@@ -69,10 +65,10 @@ typedef struct vmu_fh_str {
 
 /* Directory handles */
 typedef struct vmu_dh_str {
-    uint32_t strtype;                   /* 0==dir, 1==file */
+    bool isdir;                         /* true==dir, false==file */
     TAILQ_ENTRY(vmu_dh_str) listent;    /* list entry */
 
-    int rootdir;                        /* 1 if we're reading /vmu */
+    bool rootdir;                       /* true if we're reading /vmu */
     dirent_t dirent;                    /* Dirent to pass back */
     vmu_dir_t *dirblocks;               /* Copy of all directory blocks */
     uint16_t entry;                     /* Current dirent */
@@ -177,7 +173,7 @@ static vmu_fh_t *vmu_open_vmu_dir(void) {
     if(!(dh = calloc(1, sizeof(vmu_dh_t))))
         return NULL;
 
-    dh->strtype = VMU_DIR;
+    dh->isdir = true;
     dh->dirblocks = calloc(num, sizeof(vmu_dir_t));
 
     if(!dh->dirblocks) {
@@ -185,7 +181,7 @@ static vmu_fh_t *vmu_open_vmu_dir(void) {
         return NULL;
     }
 
-    dh->rootdir = 1;
+    dh->rootdir = true;
     dh->entry = 0;
     dh->dircnt = num;
     dh->dev = NULL;
@@ -214,9 +210,9 @@ static vmu_fh_t *vmu_open_dir(maple_device_t *dev) {
     /* Allocate a handle for the dir blocks */
     if(!(dh = malloc(sizeof(vmu_dh_t))))
         return NULL;
-    dh->strtype = VMU_DIR;
+    dh->isdir = true;
     dh->dirblocks = dirents;
-    dh->rootdir = 0;
+    dh->rootdir = false;
     dh->entry = 0;
     dh->dircnt = dircnt;
     dh->dev = dev;
@@ -238,7 +234,7 @@ static vmu_fh_t *vmu_open_file(maple_device_t *dev, const char *path, int mode) 
         return NULL;
 
     /* Fill in the filehandle struct */
-    fd->strtype = VMU_FILE;
+    fd->isdir = false;
     fd->mode = mode;
     strncpy(fd->path, path, 16);
     strncpy(fd->name, path + 4, VMU_FILENAME_SIZE);
@@ -353,17 +349,22 @@ static void *vmu_open(vfs_handler_t *vfs, const char *path, int mode) {
     return (void *)fh;
 }
 
+/* Options for type in vmu_verify_hnd */
+#define VMU_DIR     1
+#define VMU_FILE    0
+#define VMU_ANY     -1  /* Used for checking validity */
+
 /* Verify that a given hnd is actually in the list */
-static int vmu_verify_hnd(void *hnd, int type) {
+static bool vmu_verify_hnd(void *hnd, int type) {
     vmu_fh_t    *cur;
 
     mutex_lock_scoped(&fh_mutex);
     TAILQ_FOREACH(cur, &vmu_fh, listent) {
         if((void *)cur == hnd) {
-            return (type == VMU_ANY) ? 1 : ((int)cur->strtype == type);
+            return (type == VMU_ANY) ? true : (cur->isdir == (type == VMU_DIR));
         }
     }
-    return 0;
+    return false;
 }
 
 /* write a file out before closing it: we aren't perfect on error handling here */
@@ -407,36 +408,30 @@ static int vmu_close(void *hnd) {
 
     fh = (vmu_fh_t *)hnd;
 
-    switch(fh->strtype) {
-        case VMU_DIR: {
-            vmu_dh_t *dir = (vmu_dh_t *)hnd;
+    if(fh->isdir) {
+        vmu_dh_t *dir = (vmu_dh_t *)hnd;
 
-            if(dir->dirblocks)
-                free(dir->dirblocks);
-
-            break;
+        if(dir->dirblocks)
+            free(dir->dirblocks);
+    }
+    else /* file */ {
+        if((fh->mode & O_MODE_MASK) == O_WRONLY ||
+                (fh->mode & O_MODE_MASK) == O_RDWR) {
+            if((st = vmu_write_close(hnd))) {
+                if(st == -7)
+                    errno = ENOSPC;
+                else
+                    errno = EIO;
+                retval = -1;
+            }
         }
 
-        case VMU_FILE:
-            if((fh->mode & O_MODE_MASK) == O_WRONLY ||
-                    (fh->mode & O_MODE_MASK) == O_RDWR) {
-                if((st = vmu_write_close(hnd))) {
-                    if(st == -7)
-                        errno = ENOSPC;
-                    else
-                        errno = EIO;
-                    retval = -1;
-                }
-            }
-
-            if(fh->header) {
-                free(fh->header->eyecatch_data);
-                free(fh->header->icon_data);
-                free(fh->header);
-            }
-            free(fh->data);
-            break;
-
+        if(fh->header) {
+            free(fh->header->eyecatch_data);
+            free(fh->header->icon_data);
+            free(fh->header);
+        }
+        free(fh->data);
     }
 
     /* Look for the one to get rid of */
@@ -637,7 +632,7 @@ static int vmu_ioctl(void *fd, int cmd, va_list ap) {
     vmu_pkg_t *old_hdr, *hdr = NULL;
     const vmu_pkg_t *new_hdr;
 
-    if(!dh || (dh->strtype == VMU_DIR && !dh->rootdir)) {
+    if(!dh || (dh->isdir && !dh->rootdir)) {
         errno = EBADF;
         return -1;
     }
@@ -651,7 +646,7 @@ static int vmu_ioctl(void *fd, int cmd, va_list ap) {
                 return -1;
         }
 
-        if(fh->strtype == VMU_FILE) {
+        if(!fh->isdir) {
             old_hdr = fh->header;
             fh->header = hdr;
         } else {
@@ -748,7 +743,7 @@ static int vmu_fcntl(void *fd, int cmd, va_list ap) {
     switch(cmd) {
         case F_GETFL:
 
-            if(fh->strtype)
+            if(!fh->isdir)
                 rv = fh->mode;
             else
                 rv = O_RDONLY | O_DIR;
@@ -800,10 +795,10 @@ static int vmu_fstat(void *fd, struct stat *st) {
     memset(st, 0, sizeof(struct stat));
     st->st_dev = (dev_t)((uintptr_t)fh->dev);
     st->st_mode =  S_IRWXU | S_IRWXG | S_IRWXO;
-    st->st_mode |= (fh->strtype == VMU_DIR) ? S_IFDIR : S_IFREG;
-    st->st_size = (fh->strtype == VMU_DIR) ? 
+    st->st_mode |= fh->isdir ? S_IFDIR : S_IFREG;
+    st->st_size = fh->isdir ?
         vmufs_free_blocks(((vmu_dh_t *)fh)->dev) : (int)(fh->filesize * VMU_BLOCK_SIZE);
-    st->st_nlink = (fh->strtype == VMU_DIR) ? 2 : 1;
+    st->st_nlink = fh->isdir ? 2 : 1;
     st->st_blksize = VMU_BLOCK_SIZE;
 
     return 0;
@@ -863,22 +858,17 @@ int fs_vmu_shutdown(void) {
 
     TAILQ_FOREACH_SAFE(c, &vmu_fh, listent, n) {
 
-        switch(c->strtype) {
-            case VMU_DIR: {
-                vmu_dh_t * dir = (vmu_dh_t *)c;
-                free(dir->dirblocks);
-                break;
+        if(c->isdir)  {
+            vmu_dh_t * dir = (vmu_dh_t *)c;
+            free(dir->dirblocks);
+        }
+        else /* file */ {
+            if((c->mode & O_MODE_MASK) == O_WRONLY ||
+                    (c->mode & O_MODE_MASK) == O_RDWR) {
+                dbglog(DBG_ERROR, "fs_vmu_shutdown: still-open file '%s' not written!\n", c->path);
             }
 
-            case VMU_FILE:
-
-                if((c->mode & O_MODE_MASK) == O_WRONLY ||
-                        (c->mode & O_MODE_MASK) == O_RDWR) {
-                    dbglog(DBG_ERROR, "fs_vmu_shutdown: still-open file '%s' not written!\n", c->path);
-                }
-
-                free(c->data);
-                break;
+            free(c->data);
         }
 
         free(c);

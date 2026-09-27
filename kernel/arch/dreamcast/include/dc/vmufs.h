@@ -113,12 +113,12 @@ _Static_assert(sizeof(vmu_root_t) == VMU_BLOCK_SIZE, "Invalid vmu_root_t size");
     \headerfile dc/vmufs.h
 
     \note
-    vmu_dir_t::dirty should always be zero when written out to the VMU. What
+    vmu_dir_t::dirty should always be false when written out to the VMU. What
     this lets us do, though, is conserve on flash writes. If you only want to
     modify one single file (which is the standard case) then re-writing all
     of the dir blocks is a big waste. Instead, you should set the dirty flag
     on the in-mem copy of the directory, and writing it back out will only
-    flush the containing block back to the VMU, setting it back to zero
+    flush the containing block back to the VMU, setting it back to false
     in the process. Loaded blocks should always have zero here (though we
     enforce that in the code to make sure) so it will be non-dirty by
     default.
@@ -132,7 +132,7 @@ typedef struct {
     vmu_timestamp_t timestamp;      /**< \brief File time */
     uint16_t        filesize;       /**< \brief Size of the file in blocks */
     uint16_t        hdroff;         /**< \brief Offset of header, in blocks from start of file */
-    uint8_t         dirty;          /**< \brief See header notes */
+    bool            dirty;          /**< \brief See header notes */
     uint8_t         pad1[3];        /**< \brief All zeros */
 } vmu_dir_t;
 

@@ -125,7 +125,7 @@ static int vmufs_dir_ops(maple_device_t *dev, const vmu_root_t *root, vmu_dir_t 
                     needsop = true;
                 }
 
-                dir_buf[i].dirty = 0;
+                dir_buf[i].dirty = false;
             }
         }
         else
@@ -231,7 +231,7 @@ int vmufs_dir_add(const vmu_root_t *root, vmu_dir_t *dir, const vmu_dir_t *newdi
         memcpy(dir + i, newdirent, sizeof(vmu_dir_t));
 
         /* Set this entry dirty so its dir block will get written out */
-        dir[i].dirty = 1;
+        dir[i].dirty = true;
 
         return 0;
     }
@@ -427,7 +427,7 @@ int vmufs_file_delete(const vmu_root_t *root, uint16_t *fat, vmu_dir_t *dir, con
     memset(dir + idx, 0, sizeof(vmu_dir_t));
 
     /* Set it dirty so it'll be flushed out */
-    dir[idx].dirty = 1;
+    dir[idx].dirty = true;
 
     return 0;
 }
@@ -718,7 +718,7 @@ int vmufs_write(maple_device_t *dev, const char *fn, void *inbuf, int insize, in
     vmufs_dir_fill_time(&nd);
     nd.filesize = insize / VMU_BLOCK_SIZE;
     nd.hdroff = (flags & VMUFS_VMUGAME) ? 1 : 0;
-    nd.dirty = 1;
+    nd.dirty = true;
 
     // If any of these fail, the action to take can be decided by the caller.
 
