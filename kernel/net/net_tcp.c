@@ -2957,6 +2957,8 @@ static int net_tcp_input(netif_t *src, int domain, const void *hdr,
     struct tcp_sock *s;
     int rv = -1;
     uint16_t c;
+    short poll_ev = 0;
+    file_t poll_fd = FILEHND_INVALID;
 
     switch(domain) {
         case AF_INET:
@@ -3035,19 +3037,20 @@ static int net_tcp_input(netif_t *src, int domain, const void *hdr,
                 break;
         }
 
-        short poll_ev = s->poll_pending;
-        file_t poll_fd = s->sock;
+        poll_ev = s->poll_pending;
+        poll_fd = s->sock;
         s->poll_pending = 0;
 
         mutex_unlock(&s->mutex);
-
-        /* Fire poll wakeups after releasing sock->mutex to avoid the
-           poll-mutex / sock->mutex ABBA deadlock. */
-        if(poll_ev)
-            __poll_event_trigger(poll_fd, poll_ev);
     }
 
     rwsem_read_unlock(&tcp_sem);
+
+    /* Fire poll wakeups after releasing both locks: poll() takes tcp_sem
+       while holding its own mutex. The socket may be gone by now, so only
+       the copied values are used. */
+    if(poll_ev)
+        __poll_event_trigger(poll_fd, poll_ev);
 
     /* If we get in here, something went wrong... Send a RST. */
     if(rv && !(flags & TCP_FLAG_RST)) {
