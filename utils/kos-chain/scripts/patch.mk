@@ -50,15 +50,20 @@ endef
 # This function is used to replace the config.guess & config.sub that come
 # bundled with the sources with updated versions from GNU. This fixes issues
 # when trying to compile older versions of the toolchain software on newer
-# hardware.
+# hardware. If a KOS patch modifies the file (e.g. config.sub gaining a new
+# target like dvp-elf), keep the patched copy: the GNU version would undo it.
 define update_configs
-	@echo "+++ Updating $(1) files in $(src_dir)"; \
-	files=$$(find $(src_dir) -name $(1)); \
-	echo "$${files}" | while I= read -r line; do \
-		echo "    $${line}"; \
-		cp $(1) $${line} > /dev/null; \
-	done; \
-	echo ""
+	@if grep -q '^+++ .*/$(1)' /dev/null $(diff_patches); then \
+		echo "+++ Keeping patched $(1) in $(src_dir)"; \
+	else \
+		echo "+++ Updating $(1) files in $(src_dir)"; \
+		files=$$(find $(src_dir) -name $(1)); \
+		echo "$${files}" | while I= read -r line; do \
+			echo "    $${line}"; \
+			cp $(1) $${line} > /dev/null; \
+		done; \
+		echo ""; \
+	fi
 endef
 
 define update_config_guess_sub

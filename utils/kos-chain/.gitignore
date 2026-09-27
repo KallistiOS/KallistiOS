@@ -1,10 +1,12 @@
 logs
 *.tar.*
-binutils-*
-gcc-*
-newlib-*
-gdb-*
-build-*
+# Anchored to this directory: these ignore the unpacked source trees and build
+# dirs, and must not swallow the tracked patches under patches/targets/.
+/binutils-*
+/gcc-*
+/newlib-*
+/gdb-*
+/build-*
 *.stamp
 config.guess
 config.sub
