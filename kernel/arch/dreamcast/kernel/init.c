@@ -151,7 +151,7 @@ int  __weak_symbol arch_auto_init(void) {
     /* Do this immediately so we can receive exceptions for init code
        and use ints for dbgio receive. */
     irq_init();         /* IRQs */
-    irq_disable();      /* Turn on exceptions */
+    irq_disable();
 
     ubc_init();
 

@@ -333,6 +333,8 @@ static bool initted = false;
 
 /* Init routine */
 int irq_init(void) {
+    uint32_t sr;
+
     assert(!initted);
 
     /* Save SR and VBR */
@@ -368,9 +370,17 @@ int irq_init(void) {
        enabled later) */
     irq_set_context(&irq_context_default);
 
-    /* Set VBR to our exception table above, but don't enable
-       exceptions and IRQs yet. */
+    /* Set VBR to our exception table above, but don't enable IRQs yet. */
     __asm__("ldc r0,vbr" :: "z"(irq_vma_table));
+
+    /* Turn on exceptions by clearing SR.BL. */
+    __asm__ volatile(
+        "stc  sr, %0\n\t"
+        "and  %1, %0\n\t"
+        "ldc  %0, sr\n\t"
+    : "=&r" (sr)
+    : "r" (0xefffffff)
+    : "memory");
 
     initted = true;
 

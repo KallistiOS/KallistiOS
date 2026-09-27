@@ -237,26 +237,53 @@ static inline int arch_irq_inside_int(void) {
     return inside_int;
 }
 
+#define ARCH_IRQ_SR_RW_MASK    0x70008303
+#define ARCH_IRQ_SR_IMASK      0x000000f0
+
 static inline void arch_irq_restore(irq_mask_t old) {
-    __asm__ volatile("ldc %0, sr" : : "r" (old) : "memory");
+    uintptr_t sr;
+
+    __asm__ volatile(
+        "stc  sr, %0\n\t"
+        "and  %1, %0\n\t"
+        "or   %2, %0\n\t"
+        "ldc  %0, sr\n\t"
+    : "=&r" (sr)
+    : "r" (ARCH_IRQ_SR_RW_MASK), "r" (old)
+    : "memory");
 }
 
 static inline irq_mask_t arch_irq_disable(void) {
-    irq_mask_t mask;
+    uintptr_t smask = ARCH_IRQ_SR_RW_MASK;
+    irq_mask_t imask;
 
-    __asm__ volatile("stc sr, %0" : "=r" (mask) : : "memory");
+    __asm__ volatile(
+        "stc  sr, %0\n\t"
+        "and  %0, %1\n\t"
+        "and  %2, %0\n\t"
+        "or   %2, %1\n\t"
+        "ldc  %1, sr\n\t"
+    : "=&r" (imask), "+&r" (smask)
+    : "r" (ARCH_IRQ_SR_IMASK)
+    : "memory");
 
-    arch_irq_restore((mask & 0xefffff0f) | 0x000000f0);
-    return mask;
+    return imask;
 }
 
 static inline void arch_irq_enable(void) {
     irq_mask_t mask;
 
-    __asm__ volatile("stc sr, %0" : "=r" (mask) : : "memory");
-
-    arch_irq_restore(mask & 0xefffff0f);
+    __asm__ volatile(
+        "stc   sr, %0\n\t"
+        "and   %1, %0\n\t"
+        "ldc   %0, sr\n\t"
+    : "=&r" (mask)
+    : "r" (ARCH_IRQ_SR_RW_MASK)
+    : "memory");
 }
+
+#undef ARCH_IRQ_SR_RW_MASK
+#undef ARCH_IRQ_SR_IMASK
 
 /** \defgroup irq_ctrl Control Flow
     \brief Methods for managing control flow within an irq_handler.
