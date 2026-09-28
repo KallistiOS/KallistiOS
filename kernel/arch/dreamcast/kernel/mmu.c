@@ -837,6 +837,6 @@ void mmu_set_sq_addr(void *addr) {
     uint32_t ppn2 = ppn1 + 0x00100000;
 
     /* Reset the base target address for the SQs */
-    *(uint32_t *)(MEM_AREA_UTLB_DATA_ARRAY1_BASE + (0x3e << 8)) = ppn1 | 0x1fc;
-    *(uint32_t *)(MEM_AREA_UTLB_DATA_ARRAY1_BASE + (0x3f << 8)) = ppn2 | 0x1fc;
+    *(uint32_t *)(MEM_AREA_UTLB_DATA_ARRAY1_BASE + (0x3e << 8)) = ppn1 | 0x1fe;
+    *(uint32_t *)(MEM_AREA_UTLB_DATA_ARRAY1_BASE + (0x3f << 8)) = ppn2 | 0x1fe;
 }
