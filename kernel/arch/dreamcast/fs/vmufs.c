@@ -46,7 +46,7 @@ Function comments located in vmufs.h.
 /* We need some sort of access control here for threads. This is somewhat
    less than optimal (one mutex for all VMUs) but I doubt it'll really
    be much of an issue :) */
-static mutex_t mutex;
+static mutex_t mutex = MUTEX_INITIALIZER;
 
 /* Convert a decimal number to BCD; max of two digits */
 static uint8_t __pure dec_to_bcd(int dec) {
@@ -203,9 +203,9 @@ int vmufs_fat_write(maple_device_t *dev, const vmu_root_t *root, uint16_t *fat_b
 }
 
 int vmufs_dir_find(const vmu_root_t *root, const vmu_dir_t *dir, const char *fn) {
-    int dcnt = root->dir_size * VMU_BLOCK_SIZE / sizeof(vmu_dir_t);
+    size_t dcnt = root->dir_size * VMU_BLOCK_SIZE / sizeof(vmu_dir_t);
 
-    for(int i = 0; i < dcnt; i++) {
+    for(size_t i = 0; i < dcnt; i++) {
         /* Not a file -> skip it */
         if(dir[i].filetype == VMU_FILE_NONE)
             continue;
@@ -244,10 +244,10 @@ int vmufs_file_read(maple_device_t *dev, const uint16_t *fat, const vmu_dir_t *d
     uint8_t *out = (uint8_t *)outbuf;
 
     /* Find the first block */
-    int curblk = dirent->firstblk;
+    uint16_t curblk = dirent->firstblk;
 
     /* And the blocks remaining */
-    int blkleft = dirent->filesize;
+    uint16_t blkleft = dirent->filesize;
 
     /* While we've got stuff remaining... */
     while(blkleft > 0) {
@@ -270,7 +270,7 @@ int vmufs_file_read(maple_device_t *dev, const uint16_t *fat, const vmu_dir_t *d
         /* Scoot our counters */
         curblk = fat[curblk];
         blkleft--;
-        out += 512;
+        out += VMU_BLOCK_SIZE;
     }
 
     /* Make sure the FAT matches up with the directory */
@@ -396,7 +396,7 @@ int vmufs_file_write(maple_device_t *dev, const vmu_root_t *root, uint16_t *fat,
 }
 
 int vmufs_file_delete(const vmu_root_t *root, uint16_t *fat, vmu_dir_t *dir, const char *fn) {
-    int blk, nextblk;
+    uint16_t blk, nextblk;
 
     /* Find the file */
     int idx = vmufs_dir_find(root, dir, fn);
@@ -806,7 +806,6 @@ int vmufs_free_blocks(maple_device_t *dev) {
 }
 
 int vmufs_init(void) {
-    mutex_init(&mutex, MUTEX_TYPE_NORMAL);
     return 0;
 }
 
