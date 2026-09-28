@@ -290,7 +290,7 @@ int vmufs_file_read(maple_device_t *dev, const uint16_t *fat, const vmu_dir_t *d
     \return                 0 on success, <0 on failure.
 */
 int vmufs_file_write(maple_device_t *dev, const vmu_root_t *root, uint16_t *fat,
-                     vmu_dir_t *dir, vmu_dir_t *newdirent, const void *filebuf, int size);
+                     vmu_dir_t *dir, vmu_dir_t *newdirent, const void *filebuf, size_t size);
 
 /** \brief  Given a previously-read FAT and directory, delete the named file.
 
@@ -312,7 +312,7 @@ int vmufs_file_delete(const vmu_root_t *root, uint16_t *fat, vmu_dir_t *dir, con
     \param  fat             The FAT to be examined.
     \return                 The number of blocks available.
 */
-int vmufs_fat_free(const vmu_root_t *root, const uint16_t *fat);
+uint16_t vmufs_fat_free(const vmu_root_t *root, const uint16_t *fat);
 
 /** \brief  Given a previously-read directory, return the number of dirents
             available for new files.
@@ -321,7 +321,7 @@ int vmufs_fat_free(const vmu_root_t *root, const uint16_t *fat);
     \param  dir             The directory in question.
     \return                 The number of entries available.
 */
-int vmufs_dir_free(const vmu_root_t *root, const vmu_dir_t *dir);
+uint16_t vmufs_dir_free(const vmu_root_t *root, const vmu_dir_t *dir);
 
 /** \brief  Lock the vmufs mutex.
 

@@ -313,13 +313,12 @@ static int vmufs_find_block(const vmu_root_t *root, const uint16_t *fat, const v
 }
 
 int vmufs_file_write(maple_device_t *dev, const vmu_root_t *root, uint16_t *fat,
-                     vmu_dir_t *dir, vmu_dir_t *newdirent, const void *filebuf, int size) {
+                     vmu_dir_t *dir, vmu_dir_t *newdirent, const void *filebuf, size_t size) {
     int curblk, blkleft, rv;
-    int vmuspaceleft;
     uint8_t *out = (uint8_t *)filebuf;
 
     /* Files must be at least one block long */
-    if(size <= 0) {
+    if(!size) {
         dbglog(DBG_ERROR, "vmufs_file_write: file '%s' is too short (%d blocks)\n", newdirent->filename, size);
         return -3;
     }
@@ -332,7 +331,7 @@ int vmufs_file_write(maple_device_t *dev, const vmu_root_t *root, uint16_t *fat,
     }
 
     /* Don't even start if there isn't enough room to write the whole file */
-    vmuspaceleft = vmufs_fat_free(root, fat);
+    uint16_t vmuspaceleft = vmufs_fat_free(root, fat);
 
     if(vmuspaceleft < size) {
         dbglog(DBG_INFO, "vmufs_file_write: not enough space for file. Need %d blocks, have %d\n", size, vmuspaceleft);
@@ -433,8 +432,8 @@ int vmufs_file_delete(const vmu_root_t *root, uint16_t *fat, vmu_dir_t *dir, con
 }
 
 /* hee hee :) */
-int vmufs_fat_free(const vmu_root_t *root, const uint16_t *fat) {
-    int freeblocks = 0;
+uint16_t vmufs_fat_free(const vmu_root_t *root, const uint16_t *fat) {
+    uint16_t freeblocks = 0;
 
     for(size_t i = 0; i < root->blk_cnt; i++) {
         /* only count user blocks */
@@ -445,8 +444,8 @@ int vmufs_fat_free(const vmu_root_t *root, const uint16_t *fat) {
     return freeblocks;
 }
 
-int vmufs_dir_free(const vmu_root_t *root, const vmu_dir_t *dir) {
-    int freeblocks = 0;
+uint16_t vmufs_dir_free(const vmu_root_t *root, const vmu_dir_t *dir) {
+    uint16_t freeblocks = 0;
 
     for(size_t i = 0; i < root->dir_size * VMU_BLOCK_SIZE / sizeof(vmu_dir_t); i++) {
         if(dir[i].filetype == VMU_FILE_NONE)
