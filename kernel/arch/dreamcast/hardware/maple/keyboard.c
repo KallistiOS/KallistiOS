@@ -796,7 +796,7 @@ static int kbd_attach(maple_driver_t *drv, maple_device_t *dev) {
     }
 
     /* Zero out private state data */
-    memset(state + sizeof(kbd_state_t), 0,
+    memset(state + 1, 0,
             sizeof(kbd_state_private_t) - sizeof(kbd_state_t));
 
     return 0;
