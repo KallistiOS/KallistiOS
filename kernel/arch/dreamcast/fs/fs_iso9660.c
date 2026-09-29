@@ -210,19 +210,22 @@ static cache_block_t *dcache[NUM_CACHE_BLOCKS];     /* data cache */
 static unsigned char *cache_data;
 static cache_block_t *caches;
 
-/* Cache modification mutex */
-static mutex_t cache_mutex;
+/* Mutex protecting all of the driver's shared state: the block caches, the
+   per-disc info and the list of open files.
+
+   Cache blocks are handed out by index, and the index of a block changes
+   whenever another block gets graduated; so the lock must be held not only
+   while looking up a block, but for as long as its data is being used. For
+   that reason it is taken once in each of the VFS entry points, and all of
+   the internal functions below expect it to be held by their caller. */
+static mutex_t iso_mutex;
 
 /* Clears all cache blocks */
 static void bclear_cache(cache_block_t **cache) {
     int i;
 
-    mutex_lock(&cache_mutex);
-
     for(i = 0; i < NUM_CACHE_BLOCKS; i++)
         cache[i]->sector = (uint32)-1;
-
-    mutex_unlock(&cache_mutex);
 }
 
 /* Graduate a block from its current position to the MRU end of the cache */
@@ -245,19 +248,14 @@ static void bgrad_cache(cache_block_t **cache, int block) {
 /* Pulls the requested sector into a cache block and returns the cache
    block index. Note that the sector in question may already be in the
    cache, in which case it just returns the containing block. */
-static void iso_break_all(void);
 static int bread_cache(cache_block_t **cache, uint32 sector) {
-    int i, j, rv;
-
-    rv = -1;
-    mutex_lock(&cache_mutex);
+    int i, j;
 
     /* Look for a pre-existing cache block */
     for(i = NUM_CACHE_BLOCKS - 1; i >= 0; i--) {
         if(cache[i]->sector == sector) {
             bgrad_cache(cache, i);
-            rv = NUM_CACHE_BLOCKS - 1;
-            goto bread_exit;
+            return NUM_CACHE_BLOCKS - 1;
         }
     }
 
@@ -281,20 +279,16 @@ static int bread_cache(cache_block_t **cache, uint32 sector) {
             init_percd();
         }
 
-        rv = -1;
-        goto bread_exit;
+        return -1;
     }
 
     cache[i]->sector = sector;
 
     /* Move it to the most-recently-used position */
     bgrad_cache(cache, i);
-    rv = NUM_CACHE_BLOCKS - 1;
 
     /* Return the new cache block index */
-bread_exit:
-    mutex_unlock(&cache_mutex);
-    return rv;
+    return NUM_CACHE_BLOCKS - 1;
 }
 
 /* read data block */
@@ -328,6 +322,7 @@ static iso_dirent_t root_dirent;
 
 /* Per-disc initialization; this is done every time it's discovered that
    a new CD has been inserted. */
+static void iso_reset_locked(void);
 static int init_percd(void) {
     int     i, blk;
     CDROM_TOC   toc;
@@ -335,7 +330,7 @@ static int init_percd(void) {
     dbglog(DBG_NOTICE, "fs_iso9660: disc change detected\n");
 
     /* Start off with no cached blocks and no open files*/
-    iso_reset();
+    iso_reset_locked();
 
     /* Locate the root session */
     if((i = cdrom_reinit()) != 0) {
@@ -584,17 +579,12 @@ typedef struct iso_fd {
 
 static TAILQ_HEAD(iso_fd_queue, iso_fd) iso_fd_queue;
 
-/* Mutex for protecting access to the iso_fd_queue */
-static mutex_t fh_mutex;
-
 /* Break all of our open file descriptor. This is necessary when the disc
    is changed so that we don't accidentally try to keep on doing stuff
    with the old info. As files are closed and re-opened, the broken flag
    will be cleared. */
 static void iso_break_all(void) {
     iso_fd_t *fd;
-
-    mutex_lock_scoped(&fh_mutex);
 
     TAILQ_FOREACH(fd, &iso_fd_queue, next) {
         fd->broken = true;
@@ -613,6 +603,8 @@ static void * iso_open(vfs_handler_t * vfs, const char *fn, int mode) {
         errno = EROFS;
         return 0;
     }
+
+    mutex_lock_scoped(&iso_mutex);
 
     /* Do this only when we need to (this is still imperfect) */
     if(!percd_done && init_percd() < 0) {
@@ -643,8 +635,6 @@ static void * iso_open(vfs_handler_t * vfs, const char *fn, int mode) {
         .size = iso_733(de->size),
     };
 
-    mutex_lock_scoped(&fh_mutex);
-
     TAILQ_INSERT_TAIL(&iso_fd_queue, fd, next);
 
     return fd;
@@ -654,7 +644,7 @@ static void * iso_open(vfs_handler_t * vfs, const char *fn, int mode) {
 static int iso_close(void * h) {
     iso_fd_t *fd = (iso_fd_t *)h;
 
-    mutex_lock_scoped(&fh_mutex);
+    mutex_lock_scoped(&iso_mutex);
 
     TAILQ_REMOVE(&iso_fd_queue, fd, next);
     free(fd);
@@ -667,6 +657,8 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
     int rv, toread, thissect, c;
     uint8 * outbuf;
     iso_fd_t *fd = (iso_fd_t *)h;
+
+    mutex_lock_scoped(&iso_mutex);
 
     /* Check that the fd is valid */
     if(fd->first_extent == 0 || fd->broken) {
@@ -732,6 +724,8 @@ static ssize_t iso_read(void * h, void *buf, size_t bytes) {
 /* Seek elsewhere in a file */
 static off_t iso_seek(void * h, off_t offset, int whence) {
     iso_fd_t *fd = (iso_fd_t *)h;
+
+    mutex_lock_scoped(&iso_mutex);
 
     /* Check that the fd is valid */
     if(fd->first_extent == 0 || fd->broken) {
@@ -832,6 +826,8 @@ static const dirent_t *iso_readdir(void * h) {
 
     iso_fd_t *fd = (iso_fd_t *)h;
 
+    mutex_lock_scoped(&iso_mutex);
+
     if(fd->first_extent == 0 || !fd->dir || fd->broken) {
         errno = EBADF;
         return NULL;
@@ -914,6 +910,8 @@ static const dirent_t *iso_readdir(void * h) {
 static int iso_rewinddir(void * h) {
     iso_fd_t *fd = (iso_fd_t *)h;
 
+    mutex_lock_scoped(&iso_mutex);
+
     if(fd->first_extent == 0 || !fd->dir || fd->broken) {
         errno = EBADF;
         return -1;
@@ -924,10 +922,16 @@ static int iso_rewinddir(void * h) {
     return 0;
 }
 
-int iso_reset(void) {
+static void iso_reset_locked(void) {
     iso_break_all();
     bclear();
     percd_done = 0;
+}
+
+int iso_reset(void) {
+    mutex_lock_scoped(&iso_mutex);
+
+    iso_reset_locked();
     return 0;
 }
 
@@ -976,6 +980,8 @@ static int iso_stat(vfs_handler_t *vfs, const char *path, struct stat *st,
 
         return 0;
     }
+
+    mutex_lock_scoped(&iso_mutex);
 
     /* First try opening as a file */
     de = find_object_path(path, 0, &root_dirent);
@@ -1105,8 +1111,7 @@ void fs_iso9660_init(void) {
     TAILQ_INIT(&iso_fd_queue);
 
     /* Init thread mutexes */
-    mutex_init(&cache_mutex, MUTEX_TYPE_NORMAL);
-    mutex_init(&fh_mutex, MUTEX_TYPE_NORMAL);
+    mutex_init(&iso_mutex, MUTEX_TYPE_NORMAL);
 
     /* Allocate cache block space, properly aligned for DMA access */
     cache_data = aligned_alloc(32, 2 * NUM_CACHE_BLOCKS * 2048);
@@ -1141,8 +1146,7 @@ void fs_iso9660_shutdown(void) {
     free(caches);
 
     /* Free muteces */
-    mutex_destroy(&cache_mutex);
-    mutex_destroy(&fh_mutex);
+    mutex_destroy(&iso_mutex);
 
     nmmgr_handler_remove(&vh.nmmgr);
 }
