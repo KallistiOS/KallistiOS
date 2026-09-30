@@ -296,6 +296,10 @@ int sd_init(void) {
     return sd_init_ex(&params);
 }
 
+sd_interface_t sd_get_interface(void) {
+    return initted ? current_interface : SD_IF_NONE;
+}
+
 static int sd_reinit(void) {
     sd_init_params_t params = {
         .interface = current_interface,
