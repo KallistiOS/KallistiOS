@@ -1,6 +1,13 @@
 #include <kos.h>
+
+/* Allow both old kos-ports location and standard */
+#if __has_include("modplug/stdafx.h")
 #include <modplug/stdafx.h>
 #include <modplug/sndfile.h>
+#else
+#include <libmodplug/stdafx.h>
+#include <libmodplug/sndfile.h>
+#endif
 
 uint16 sound_buffer[65536] = {0};
 CSoundFile *soundfile;
@@ -44,6 +51,7 @@ int main(int argc, char **argv) {
 
     if(!mod_buffer) {
         printf("Not enough memory\n");
+        fs_close(hnd);
         return 0;
     }
 
@@ -51,11 +59,13 @@ int main(int argc, char **argv) {
 
     if((size_t)fs_read(hnd, mod_buffer, fs_total(hnd)) != fs_total(hnd)) {
         printf("Read error\n");
+        fs_close(hnd);
         free(mod_buffer);
         return 0;
     }
 
     printf("File read\n");
+    fs_close(hnd);
 
     soundfile = new CSoundFile;
 
@@ -79,9 +89,6 @@ int main(int argc, char **argv) {
     printf("Type: %li\n", soundfile->GetType());
     printf("Title: %s\n", soundfile->GetTitle());
 
-    /*fs_close(hnd);
-    free(mod_buffer);*/
-
     snd_stream_hnd_t shnd = snd_stream_alloc(mod_callback, SND_STREAM_BUFFER_MAX);
     snd_stream_start(shnd, 44100, 1);
 
@@ -101,6 +108,7 @@ int main(int argc, char **argv) {
         timer_spin_sleep(10);
     }
 
+    free(mod_buffer);
     delete soundfile;
 
     snd_stream_destroy(shnd);

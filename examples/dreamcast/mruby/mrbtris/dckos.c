@@ -27,12 +27,20 @@
 */
 
 #include <kos.h>
+
+/* Allow both old kos-ports location and standard */
+#if __has_include("mruby/mruby.h")
 #include <mruby/mruby.h>
-#include <mruby/mruby/internal.h>
-#include <mruby/mruby/data.h>
-#include <mruby/mruby/string.h>
-#include <mruby/mruby/error.h>
 #include <mruby/mruby/array.h>
+#include <mruby/mruby/internal.h>
+#include <mruby/mruby/string.h>
+#else
+#include <mruby.h>
+#include <mruby/array.h>
+#include <mruby/internal.h>
+#include <mruby/string.h>
+#endif
+
 #include <stdio.h>
 #include <inttypes.h>
 
@@ -52,7 +60,8 @@ struct InputBuf {
 static mrb_value btn_mrb_buffer;
 
 // buf has to be BUFSIZE elements at least
-void *read_buttons(void*) {
+void *read_buttons(void *unused) {
+  (void)unused;
   while(1) {
     input_buf.index = (input_buf.index + 1) % BUFSIZE;
     //printf("index: %" PRIu32 "\n", buf_index);

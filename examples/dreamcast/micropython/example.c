@@ -12,6 +12,8 @@
 
 #include <kos.h>
 
+/* Allow both old kos-ports location and standard */
+#if __has_include("micropython/py/runtime.h")
 #include <micropython/py/parse.h>
 #include <micropython/py/lexer.h>
 #include <micropython/py/gc.h>
@@ -21,6 +23,17 @@
 #include <micropython/py/stackctrl.h>
 #include <micropython/py/qstr.h>
 #include <micropython/py/obj.h>
+#else
+#include <py/parse.h>
+#include <py/lexer.h>
+#include <py/gc.h>
+#include <py/nlr.h>
+#include <py/compile.h>
+#include <py/runtime.h>
+#include <py/stackctrl.h>
+#include <py/qstr.h>
+#include <py/obj.h>
+#endif
 
 static char mp_heap[8 * 1024];
 
