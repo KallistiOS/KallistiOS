@@ -54,6 +54,9 @@ dbgio_handler_t dbgio_conio = {
 
 /* The main program */
 int main(int argc, char **argv) {
+    /* Track the original dbgio interface to demo multi-output */
+    const char *base_dbgio = dbgio_dev_get();
+
     /* Setup the console */
     pvr_init_defaults();
     conio_init(CONIO_TTY_PVR, CONIO_INPUT_LINE);
@@ -66,6 +69,14 @@ int main(int argc, char **argv) {
 
     dbglog(DBG_INFO, kos_get_banner());
     dbglog(DBG_INFO, "This is KOS dbglog() output via conio!\n");
+
+    if(base_dbgio) {
+        dbgio_dev_output(base_dbgio, true);
+        dbglog(DBG_INFO, "This message tests multi-output and should come through via conio AND %s.\n", base_dbgio);
+        dbgio_dev_output(base_dbgio, false);
+    }
+    else
+        dbglog(DBG_INFO, "Couldn't test multi-output as no other dbgio but conio was working\n");
 
     dbgio_remove_handler(&dbgio_conio);
 

@@ -25,7 +25,6 @@
 __BEGIN_DECLS
 
 #include <stdint.h>
-#include <kos/dbgio.h>
 
 /** \defgroup system_scif   SCIF
     \brief                  Driver for managing the serial port
@@ -53,11 +52,6 @@ void scif_set_parameters(int baud, int fifo);
     \retval 0               On success (no error conditions defined).
 */
 int scif_set_irq_usage(int on);
-
-/** \brief  Is the SCIF port detected? Of course it is!
-    \return                 1
-*/
-int scif_detected(void);
 
 /** \brief  Initialize the SCIF port.
 
@@ -122,9 +116,6 @@ int scif_write_buffer(const uint8_t *data, int len, int xlat);
     \return                 The number of bytes read on success, -1 on error.
 */
 int scif_read_buffer(uint8_t *data, int len);
-
-/** \brief  SCIF debug I/O handler. Do not modify! */
-extern dbgio_handler_t dbgio_scif;
 
 /* Low-level SPI related functionality below here... */
 /** \brief  Initialize the SCIF port for use of an SPI peripheral.
