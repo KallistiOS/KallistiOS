@@ -270,6 +270,7 @@ static int tcp_send_syn(struct tcp_sock *sock, int ack);
 static void tcp_send_ack(struct tcp_sock *sock);
 static void tcp_send_data(struct tcp_sock *sock, int resend);
 static void tcp_send_fin_ack(struct tcp_sock *sock);
+static void tcp_abort(struct tcp_sock *sock);
 
 /* Sockets interface... */
 static int net_tcp_socket(net_socket_t *hnd, int domain, int type, int proto) {
@@ -355,7 +356,7 @@ net_tcp_read_lock_and_get_sock(net_socket_t *hnd, rw_semaphore_t *sem) {
 static void net_tcp_close(net_socket_t *hnd) {
     struct tcp_sock *sock;
     struct lsock *ls;
-    int i;
+    int i, listening;
 
 retry:
     if(!(sock = net_tcp_write_lock_and_get_sock(hnd, &tcp_sem)))
@@ -376,6 +377,8 @@ retry:
         thd_pass();
         goto retry;
     }
+
+    listening = sock->state == TCP_STATE_LISTEN;
 
     /* Deal with queued data and/or connections and sending the closing messages
        as appropriate. */
@@ -411,6 +414,12 @@ retry:
             goto ret_remove;
 
         case TCP_STATE_ESTABLISHED:
+
+            /* Unread data is being discarded: reset (RFC 9293 3.6.1) */
+            if(sock->data.rcvbuf_cur_sz) {
+                tcp_abort(sock);
+                goto ret_no_remove;
+            }
 
             /* See if all sends have finished... */
             if(sock->data.sndbuf_cur_sz) {
@@ -465,8 +474,12 @@ ret_remove:
     return;
 
 ret_no_remove:
-    if(sock->state != TCP_STATE_LISTEN)
+    if(sock->state != TCP_STATE_LISTEN) {
         sock->intflags = TCP_IFLAG_CANBEDEL;
+
+        if(!listening)
+            sock->data.timer = timer_ms_gettime64();
+    }
 
     if(sock->state == TCP_STATE_ESTABLISHED ||
             sock->state == TCP_STATE_CLOSE_WAIT)
@@ -2229,6 +2242,15 @@ static void tcp_send_ack(struct tcp_sock *sock) {
                   &sock->remote_addr.sin6_addr);
 }
 
+/* Reset the connection, leaving the socket closed. */
+static void tcp_abort(struct tcp_sock *sock) {
+    tcp_rst(sock->data.net, &sock->local_addr.sin6_addr,
+            &sock->remote_addr.sin6_addr, sock->local_addr.sin6_port,
+            sock->remote_addr.sin6_port, TCP_FLAG_RST | TCP_FLAG_ACK,
+            sock->data.snd.nxt, sock->data.rcv.nxt);
+    sock->state = TCP_STATE_RESET | TCP_STATE_CLOSED;
+}
+
 static void tcp_send_data(struct tcp_sock *sock, int resend) {
     uint32_t wnd = sock->data.snd.wnd, snd;
     int sz;
@@ -2668,6 +2690,17 @@ static int process_pkt(netif_t *src, const struct in6_addr *srca,
     /* Check the validity of the incoming segment's sequence number */
     sz = size - TCP_GET_OFFSET(flags);
     buf += TCP_GET_OFFSET(flags);
+
+    /* Data for a socket that has been closed can never be read: reset the
+       connection (RFC 9293 3.6.1) */
+    if(sz && (s->intflags & TCP_IFLAG_CANBEDEL)) {
+        if(!(flags & TCP_FLAG_RST))
+            tcp_abort(s);
+        else
+            s->state = TCP_STATE_RESET | TCP_STATE_CLOSED;
+
+        return 0;
+    }
 
     if(s->data.rcv.wnd == 0) {
         if(sz || seq != s->data.rcv.nxt)
@@ -3133,7 +3166,21 @@ static void net_tcp_job(workqueue_t *wq, workqueue_job_t *job) {
 
                     tcp_send_fin_ack(i);
                     ++i->data.snd.nxt;
+                    i->data.timer = timer;
                 }
+
+                break;
+
+            case TCP_STATE_FIN_WAIT_1:
+            case TCP_STATE_FIN_WAIT_2:
+            case TCP_STATE_CLOSING:
+            case TCP_STATE_LAST_ACK:
+
+                /* Don't keep a closed socket forever if the peer never
+                   finishes closing the connection. */
+                if((i->intflags & TCP_IFLAG_CANBEDEL) &&
+                        i->data.timer + 2 * TCP_DEFAULT_MSL <= timer)
+                    tcp_abort(i);
 
                 break;
         }
