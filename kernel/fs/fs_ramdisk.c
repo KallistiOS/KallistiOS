@@ -895,16 +895,15 @@ void fs_ramdisk_init(void) {
 /* De-init the file system */
 void fs_ramdisk_shutdown(void) {
     rd_file_t   *f1, *f2;
-    rd_fd_t     *fd1, *fd2;
 
     /* Test if initted */
     if(rootdir == NULL)
         return;
 
-    /* First free up the open handles */
-    TAILQ_FOREACH_SAFE(fd1, &rd_fd_queue, next, fd2) {
-        ramdisk_close(fd1);
-    }
+    fs_vfs_shutdown(&vh);
+
+    /* fs_vfs_shutdown should have cleared these all out */
+    assert(TAILQ_EMPTY(&rd_fd_queue));
 
     /* For now assume there's only the root dir, since mkdir and
        rmdir aren't even implemented... */
