@@ -35,6 +35,21 @@ ifeq ($(MACOS), 1)
   endif
 endif
 
+# When linking statically on MinGW, the ncurses headers must not declare their
+# symbols as dllimport, otherwise the link fails on '__imp_' references.
+# Also, readline must not define the termcap 'PC', 'BC' and 'UP' variables,
+# as they are already defined in the static ncurses library.
+# This is passed through CC/CXX as the top-level configure doesn't forward
+# CPPFLAGS to the subdirectories (e.g. 'gdb').
+ifeq ($(standalone_binary),1)
+  gdb_static_defines := -DNCURSES_STATIC -DNEED_EXTERN_PC
+endif
+
+# Python support: 'auto' (default if empty), 'no' or path to a Python install.
+ifneq ($(gdb_python),)
+  gdb_python_configure_args := --with-python=$(gdb_python)
+endif
+
 $(stamp_gdb_build): patch-gdb
 	@echo "+++ Building GDB..."
 	rm -f $@
@@ -46,10 +61,11 @@ $(stamp_gdb_build): patch-gdb
           --disable-werror \
           --prefix=$(toolchain_path) \
           --target=$(target) \
-          CC="$(CC)" \
-          CXX="$(CXX)" \
+          CC="$(strip $(CC) $(gdb_static_defines))" \
+          CXX="$(strip $(CXX) $(gdb_static_defines))" \
           CFLAGS="$(CFLAGS) -Wno-error=incompatible-pointer-types" \
           $(macos_gdb_configure_args) \
+          $(gdb_python_configure_args) \
           $(static_flag) \
           $(to_log)
 	$(MAKE) $(jobs_arg) -C $(build) $(to_log)
