@@ -631,7 +631,9 @@ static inline void thd_schedule_inner(kthread_t *thd, uint64_t now) {
 
     /* Make sure the thread hasn't underrun its stack */
     if(thd_current->stack && thd_current->stack_size) {
-        if(CONTEXT_SP(thd_current->context) < (uintptr_t)(thd_current->stack)) {
+        /* soft-gUSA may temporarily keep a restart marker in raw r15. */
+        if(irq_context_stack_pointer(&thd_current->context) <
+           (uintptr_t)thd_current->stack) {
             thd_pslist(printf);
             thd_pslist_queue(printf);
             assert_msg(0, "Thread stack underrun");
