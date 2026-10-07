@@ -29,37 +29,79 @@ export KOS_INC_PATHS="${KOS_INC_PATHS} -isystem ${KOS_BASE}/include \
 -isystem ${KOS_BASE}/kernel/arch/${KOS_ARCH}/include -isystem ${KOS_BASE}/addons/include/ \
 -isystem ${KOS_PORTS}/include"
 
-# "System" libraries.
-export KOS_LIB_PATHS="-L${KOS_BASE}/lib/${KOS_ARCH} -L${KOS_BASE}/addons/lib/${KOS_ARCH} -L${KOS_PORTS}/lib"
-export KOS_LIBS="-Wl,--start-group -lkallisti -lm -lc -lgcc -Wl,--end-group"
+if [ "$KOS_TOOLCHAIN" == "gcc" ]; then
 
-# Main arch compiler paths.
-export KOS_CC="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-gcc"
-export KOS_CCPLUS="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-g++"
-export KOS_AS="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-as"
-export KOS_AR="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-gcc-ar"
-export KOS_OBJCOPY="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-objcopy"
-export KOS_OBJDUMP="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-objdump"
-export KOS_ADDR2LINE="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-addr2line"
-export KOS_GCOV="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-gcov"
-export KOS_GPROF="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-gprof"
-export KOS_LD="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-ld"
-export KOS_RANLIB="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-gcc-ranlib"
-export KOS_STRIP="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-strip"
-export KOS_SIZE="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-size"
+  # "System" libraries.
+  export KOS_LIB_PATHS="-L${KOS_BASE}/lib/${KOS_ARCH} -L${KOS_BASE}/addons/lib/${KOS_ARCH} -L${KOS_PORTS}/lib"
+  export KOS_LIBS="-Wl,--start-group -lkallisti -lm -lc -lgcc -Wl,--end-group"
 
-# Pull in the arch environ file.
-. ${KOS_BASE}/environ_${KOS_ARCH}.sh
+  # Main arch compiler paths.
+  export KOS_CC="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-gcc"
+  export KOS_CCPLUS="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-g++"
+  export KOS_AS="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-as"
+  export KOS_AR="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-gcc-ar"
+  export KOS_OBJCOPY="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-objcopy"
+  export KOS_OBJDUMP="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-objdump"
+  export KOS_ADDR2LINE="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-addr2line"
+  export KOS_GCOV="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-gcov"
+  export KOS_GPROF="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-gprof"
+  export KOS_LD="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-ld"
+  export KOS_RANLIB="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-gcc-ranlib"
+  export KOS_STRIP="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-strip"
+  export KOS_SIZE="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-size"
 
-export KOS_CFLAGS="${KOS_CFLAGS} ${KOS_INC_PATHS} -D_arch_${KOS_ARCH}=1 -D_arch_sub_${KOS_SUBARCH}=1 -Wall -g"
-export KOS_CPPFLAGS="${KOS_CPPFLAGS} ${KOS_INC_PATHS_CPP}"
+  # Pull in the arch environ file.
+  . ${KOS_BASE}/environ_${KOS_ARCH}.sh
 
-# Which standards modes we want to compile for.
-# Note that this only covers KOS itself, not necessarily anything else compiled
-# with kos-cc or kos-c++.
-export KOS_CSTD="-std=gnu17"
-export KOS_CPPSTD="-std=gnu++17"
+  export KOS_CFLAGS="${KOS_CFLAGS} ${KOS_INC_PATHS} -D_arch_${KOS_ARCH}=1 -D_arch_sub_${KOS_SUBARCH}=1 -Wall -g"
+  export KOS_CPPFLAGS="${KOS_CPPFLAGS} ${KOS_INC_PATHS_CPP}"
 
-export KOS_GCCVER="`kos-cc -dumpversion`"
+  # Which standards modes we want to compile for.
+  # Note that this only covers KOS itself, not necessarily anything else compiled
+  # with kos-cc or kos-c++.
+  export KOS_CSTD="-std=gnu17"
+  export KOS_CPPSTD="-std=gnu++17"
 
-export KOS_LDFLAGS="${KOS_CFLAGS} ${KOS_LDFLAGS} ${KOS_LD_SCRIPT} -nostdlib ${KOS_LIB_PATHS}"
+  export KOS_GCCVER="`kos-cc -dumpversion`"
+
+  export KOS_LDFLAGS="${KOS_CFLAGS} ${KOS_LDFLAGS} ${KOS_LD_SCRIPT} -nostdlib ${KOS_LIB_PATHS}"
+
+elif [ "$KOS_TOOLCHAIN" == "clang" ]; then
+
+  # "System" libraries.
+  export KOS_LIB_PATHS="-L${KOS_BASE}/lib/${KOS_ARCH} -L${KOS_BASE}/addons/lib/${KOS_ARCH} -L${KOS_PORTS}/lib"
+  export KOS_LIBS="-Wl,--start-group -lkallisti -lm -lc -lcompiler-rt -Wl,--end-group"
+
+  # Main arch compiler paths.
+  export KOS_CC="${KOS_CC_BASE}/bin/clang"
+  export KOS_CCPLUS="${KOS_CC_BASE}/bin/clang++"
+  export KOS_AS="${KOS_CC_BASE}/bin/llvm-as"
+  export KOS_AR="${KOS_CC_BASE}/bin/llvm-gcc-ar"
+  export KOS_OBJCOPY="${KOS_CC_BASE}/bin/llvm-objcopy"
+  export KOS_OBJDUMP="${KOS_CC_BASE}/bin/llvm-objdump"
+  export KOS_ADDR2LINE="${KOS_CC_BASE}/bin/llvm-addr2line"
+  export KOS_GCOV="${KOS_CC_BASE}/bin/llvm-gcov"
+  export KOS_GPROF="${KOS_CC_BASE}/bin/llvm-gprof"
+  export KOS_LD="${KOS_CC_BASE}/bin/ld.lld"
+  export KOS_RANLIB="${KOS_CC_BASE}/bin/llvm-ranlib"
+  export KOS_STRIP="${KOS_CC_BASE}/bin/llvm-strip"
+  export KOS_SIZE="${KOS_CC_BASE}/bin/llvm-size"
+
+  # Pull in the arch environ file.
+  . ${KOS_BASE}/environ_${KOS_ARCH}.sh
+
+  export KOS_CFLAGS="${KOS_CFLAGS} ${KOS_INC_PATHS} -D_arch_${KOS_ARCH}=1 -D_arch_sub_${KOS_SUBARCH}=1 -Wall -g"
+  export KOS_CPPFLAGS="${KOS_CPPFLAGS} ${KOS_INC_PATHS_CPP}"
+
+  # Which standards modes we want to compile for.
+  # Note that this only covers KOS itself, not necessarily anything else compiled
+  # with kos-cc or kos-c++.
+  export KOS_CSTD="-std=gnu17"
+  export KOS_CPPSTD="-std=gnu++17"
+
+  export KOS_GCCVER="`kos-cc -dumpversion`"
+
+  export KOS_LDFLAGS="${KOS_CFLAGS} ${KOS_LDFLAGS} ${KOS_LD_SCRIPT} -nostdlib ${KOS_LIB_PATHS}"
+else
+  echo "ERROR: Unsupported compiler toolchain $KOS_TOOLCHAIN"
+fi
