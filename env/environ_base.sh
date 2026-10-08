@@ -8,7 +8,7 @@ export KOS_VERSION="${KOS_VERSION_MAJOR}.${KOS_VERSION_MINOR}.${KOS_VERSION_PATC
 
 # Default the kos-ports path if it isn't already set.
 if [ -z "${KOS_PORTS}" ] ; then
-    export KOS_PORTS="${KOS_BASE}/../kos-ports"
+  export KOS_PORTS="${KOS_BASE}/../kos-ports"
 fi
 
 # Arch kernel folder.
