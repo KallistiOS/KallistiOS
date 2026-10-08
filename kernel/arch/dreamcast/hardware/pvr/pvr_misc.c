@@ -155,7 +155,7 @@ void pvr_sync_reg_buffer(void) {
     /* Set buffer pointers */
     PVR_SET(PVR_TA_OPB_START,       buf->opb);
     PVR_SET(PVR_TA_OPB_INIT,        buf->opb + buf->opb_size);
-    PVR_SET(PVR_TA_OPB_END,         buf->opb + buf->opb_size * (1 + buf->opb_overflow_count));
+    PVR_SET(PVR_TA_OPB_END,         buf->opb + buf->opb_size * (1 + buf->opb_overflow_count) - 32);  // OBP end, unlike VERTBUF_END, is inclusive
     PVR_SET(PVR_TA_VERTBUF_START,   buf->vertex);
     PVR_SET(PVR_TA_VERTBUF_END,     buf->vertex + buf->vertex_size);
 
