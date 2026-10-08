@@ -4,7 +4,7 @@
 all: bin2c
 
 bin2c: bin2c.c
-	gcc -o $@ $^
+	$(CC) -o $@ $^
 
 clean:
 	-rm -f bin2c
