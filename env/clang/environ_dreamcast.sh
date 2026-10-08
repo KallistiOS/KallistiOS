@@ -16,9 +16,9 @@ if ! expr ":$PATH:" : ".*:${DC_TOOLS_BASE}:.*" > /dev/null ; then
   export PATH="${PATH}:${DC_TOOLS_BASE}"
 fi
 
-export KOS_CFLAGS="${KOS_CFLAGS} ${KOS_SH4_PRECISION} -ml --target=sh4el-elf -mcpu=sh7091"
+export KOS_CFLAGS="${KOS_CFLAGS} --target=shel-elf"
 export KOS_AFLAGS="${KOS_AFLAGS} -little"
-export KOS_LDFLAGS="${KOS_LDFLAGS} ${KOS_SH4_PRECISION} -ml -Wl,--gc-sections"
+export KOS_LDFLAGS="${KOS_LDFLAGS} -Wl,--gc-sections"
 export KOS_LD_SCRIPT="-T${KOS_BASE}/utils/ldscripts/shlelf.xc"
 
 export KOS_GDB_CPU=sh4
