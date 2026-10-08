@@ -10,6 +10,8 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <reent.h>
+
 #include <kos/banner.h>
 #include <kos/dbgio.h>
 #include <kos/dbglog.h>
@@ -33,6 +35,9 @@
 #include <dc/dcload.h>
 
 #include "initall_hdrs.h"
+
+/* A reent struct for newlib to point to before/after threading */
+static struct _reent nonthread_reent;
 
 /* ctor/dtor stuff from libgcc. */
 extern void _init(void);
@@ -281,6 +286,10 @@ void arch_main(void) {
     /* Enable caches */
     cache_write_ccr((uint32_t)~0, CCR_DEFAULT);
 
+    /* Init then set newlib's reent, for errno usage */
+    _REENT_INIT_PTR(&nonthread_reent);
+    _impure_ptr = &nonthread_reent;
+
     dma_init();
 
     /* Ensure the WDT is not enabled from a previous session */
@@ -351,6 +360,9 @@ void arch_shutdown(void) {
     /* Shut down any other hardware things */
     hardware_shutdown();
 #endif
+
+    /* Clean up newlib reent */
+    _reclaim_reent(&nonthread_reent);
 
     if(__kos_init_flags & INIT_MALLOCSTATS) {
         malloc_stats();
