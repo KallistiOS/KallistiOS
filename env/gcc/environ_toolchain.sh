@@ -17,9 +17,6 @@ export KOS_RANLIB="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-gcc-ranlib"
 export KOS_STRIP="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-strip"
 export KOS_SIZE="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-size"
 
-# Pull in the arch environ file.
-. ${KOS_BASE}/env/environ_${KOS_ARCH}.sh
-
 export KOS_CFLAGS="${KOS_CFLAGS} ${KOS_INC_PATHS} -D_arch_${KOS_ARCH}=1 -D_arch_sub_${KOS_SUBARCH}=1 -Wall -g"
 export KOS_CPPFLAGS="${KOS_CPPFLAGS} ${KOS_INC_PATHS_CPP}"
 

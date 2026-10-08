@@ -29,10 +29,11 @@ export KOS_INC_PATHS="${KOS_INC_PATHS} -isystem ${KOS_BASE}/include \
 -isystem ${KOS_BASE}/kernel/arch/${KOS_ARCH}/include -isystem ${KOS_BASE}/addons/include/ \
 -isystem ${KOS_PORTS}/include"
 
-if [ "$KOS_TOOLCHAIN" == "gcc" ]; then
-  . ${KOS_BASE}/env/environ_gcc.sh
-elif [ "$KOS_TOOLCHAIN" == "clang" ]; then
-  . ${KOS_BASE}/env/environ_clang.sh
-else
+if [ -z "${KOS_BASE}/env/${KOS_TOOLCHAIN}" ]; then
   echo "ERROR: Unknown toolchain $KOS_TOOLCHAIN"
+  return -1
 fi
+
+# Pull in the toolchain and arch environ file.
+. ${KOS_BASE}/env/${KOS_TOOLCHAIN}/environ_toolchain.sh
+. ${KOS_BASE}/env/${KOS_TOOLCHAIN}/environ_${KOS_ARCH}.sh
