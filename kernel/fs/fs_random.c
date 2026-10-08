@@ -4,6 +4,7 @@
    Copyright (C) 2023 Luke Benstead
 */
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -322,16 +323,11 @@ void fs_rnd_init(void) {
 }
 
 void fs_rnd_shutdown(void) {
-    rnd_fh_t *c, *n;
+    fs_vfs_shutdown(&vh);
 
-    mutex_lock(&fh_mutex);
+    /* fs_vfs_shutdown should have cleared these all out */
+    assert(TAILQ_EMPTY(&rnd_fh));
 
-    /* First, clean up any open files */
-    TAILQ_FOREACH_SAFE(c, &rnd_fh, listent, n) {
-        free(c);
-    }
-
-    mutex_unlock(&fh_mutex);
     mutex_destroy(&fh_mutex);
 
     nmmgr_handler_remove(&vh.nmmgr);
