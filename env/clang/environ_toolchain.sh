@@ -6,7 +6,7 @@ export KOS_LIBS="-Wl,--start-group -lkallisti -lm -lc -lcompiler-rt -Wl,--end-gr
 export KOS_CC="${KOS_CC_BASE}/bin/clang"
 export KOS_CCPLUS="${KOS_CC_BASE}/bin/clang++"
 export KOS_AS="${KOS_CC_BASE}/bin/llvm-as"
-export KOS_AR="${KOS_CC_BASE}/bin/llvm-gcc-ar"
+export KOS_AR="${KOS_CC_BASE}/bin/llvm-ar"
 export KOS_OBJCOPY="${KOS_CC_BASE}/bin/llvm-objcopy"
 export KOS_OBJDUMP="${KOS_CC_BASE}/bin/llvm-objdump"
 export KOS_ADDR2LINE="${KOS_CC_BASE}/bin/llvm-addr2line"
@@ -16,9 +16,6 @@ export KOS_LD="${KOS_CC_BASE}/bin/ld.lld"
 export KOS_RANLIB="${KOS_CC_BASE}/bin/llvm-ranlib"
 export KOS_STRIP="${KOS_CC_BASE}/bin/llvm-strip"
 export KOS_SIZE="${KOS_CC_BASE}/bin/llvm-size"
-
-# Pull in the arch environ file.
-. ${KOS_BASE}/env/environ_${KOS_ARCH}.sh
 
 export KOS_CFLAGS="${KOS_CFLAGS} ${KOS_INC_PATHS} -D_arch_${KOS_ARCH}=1 -D_arch_sub_${KOS_SUBARCH}=1 -Wall -g"
 export KOS_CPPFLAGS="${KOS_CPPFLAGS} ${KOS_INC_PATHS_CPP}"
