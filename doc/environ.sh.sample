@@ -10,6 +10,17 @@
 # the KOS environment is set up automatically for each shell session.
 #
 
+# Compiler Toolchain
+#
+# Set this to the name of the toolchain to use for building KOS and
+# KOS projects.
+#
+# Valid values:
+#   "gcc"       - Use GCC (default)
+#   "clang"     - Use LLVM clang.
+#
+export KOS_TOOLCHAIN="gcc"
+
 # Build Architecture
 #
 # Set the major architecture you'll be building for.
@@ -238,4 +249,4 @@ export KOS_SH4_PRECISION="-m4-single"
 # environment settings. If you want to configure additional compiler
 # options or see where other build flags are set, look at this file.
 #
-. ${KOS_BASE}/environ_base.sh
+. ${KOS_BASE}/env/environ_base.sh
