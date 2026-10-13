@@ -72,6 +72,7 @@ __BEGIN_DECLS
     KOS_INIT_FLAG(flags, INIT_LIBRARY, library_init); \
     KOS_INIT_FLAG(flags, INIT_LIBRARY, library_shutdown); \
     KOS_INIT_FLAG_NONE(flags, INIT_NO_SHUTDOWN, kos_shutdown); \
+    KOS_INIT_FLAG(flags, INIT_ARGS, args_init); \
     KOS_INIT_FLAGS_ARCH(flags)
 
 #define __KOS_INIT_FLAGS_1(flags) \
@@ -164,6 +165,7 @@ extern const void * __kos_romdisk;
 #define INIT_FS_RND      0x00000200  /**< Enable support for /dev/urandom VFS */
 
 #define INIT_NO_SHUTDOWN 0x00000400  /**< Disable hardware shutdown */
+#define INIT_ARGS        0x00000800  /**< Enable reading argc/argv */
 /** @} */
 
 __END_DECLS
