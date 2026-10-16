@@ -238,7 +238,7 @@ static inline int arch_irq_inside_int(void) {
 }
 
 static inline void arch_irq_restore(irq_mask_t old) {
-    __asm__ volatile("ldc %0, sr" : : "r" (old) : "memory");
+    __asm__ volatile("ldc %0, sr" : : "r" (old) : "memory", "t");
 }
 
 static inline irq_mask_t arch_irq_disable(void) {
