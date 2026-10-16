@@ -14,7 +14,7 @@
 | [Donald Haase](https://github.com/QuzarDC) | 2012 |
 | [Christian Groessler](https://github.com/groessler) | 2014 |
 | [Luke Benstead](https://simulant.dev/) | 2016, 2017, 2018, 2019, 2020 |
-| [Mickaël Cardoso](http://sizious.com/) | 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025 |
+| [Mickaël Cardoso](http://sizious.com/) | 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026 |
 | [Ellen Marie Dash](https://gitlab.com/duckinator) | 2019 |
 | [Ben Baron](https://github.com/einsteinx2) | 2020 |
 | [Jon Daniel](https://github.com/jopadan) | 2020 |
