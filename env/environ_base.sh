@@ -29,7 +29,10 @@ export KOS_INC_PATHS="${KOS_INC_PATHS} -isystem ${KOS_BASE}/include \
 -isystem ${KOS_BASE}/kernel/arch/${KOS_ARCH}/include -isystem ${KOS_BASE}/addons/include/ \
 -isystem ${KOS_PORTS}/include"
 
-if [ -z "${KOS_BASE}/env/${KOS_TOOLCHAIN}" ]; then
+if [ -z "$KOS_TOOLCHAIN" ]; then
+  echo "ERROR: No toolchain specified! Outdated environ.sh?"
+  return -1
+elif [ ! -d "${KOS_BASE}/env/${KOS_TOOLCHAIN}" ]; then
   echo "ERROR: Unknown toolchain $KOS_TOOLCHAIN"
   return -1
 fi
