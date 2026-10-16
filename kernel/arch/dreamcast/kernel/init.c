@@ -45,7 +45,7 @@ void arch_real_exit(int ret_code) __noreturn;
 
 void (*__kos_init_early_fn)(void) __attribute__((weak,section(".data"))) = NULL;
 
-int main(int argc, char **argv);
+int main(int argc, const char **argv);
 
 void arch_init_net_dcload_ip(void) {
     union {
@@ -311,7 +311,7 @@ void arch_main(void) {
     _init();
 
     /* Call the user's main function */
-    rv = main(0, NULL);
+    rv = main(0, (const char*[]){ NULL });
 
     /* Call kernel exit */
     exit(rv);
