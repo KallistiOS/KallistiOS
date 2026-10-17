@@ -2073,7 +2073,8 @@ int fs_ext2_shutdown(void) {
     while(i) {
         next = LIST_NEXT(i, entry);
 
-        /* XXXX: We should probably do something with open files... */
+        /* Request open files be closed */
+        fs_vfs_shutdown(i->vfsh);
         nmmgr_handler_remove(&i->vfsh->nmmgr);
         ext2_fs_shutdown(i->fs);
         free(i->vfsh);

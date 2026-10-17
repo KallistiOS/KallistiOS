@@ -10,6 +10,7 @@
 #include <kos/fs_socket.h>
 #include <kos/net.h>
 
+#include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
@@ -153,19 +154,15 @@ int fs_socket_init(void) {
 }
 
 int fs_socket_shutdown(void) {
-    net_socket_t *c, *n;
     fs_socket_proto_t *i, *j;
 
     if(initted == 0)
         return 0;
 
-    c = LIST_FIRST(&sockets);
+    fs_vfs_shutdown(&vh);
 
-    while(c != NULL) {
-        n = LIST_NEXT(c, sock_list);
-        fs_close(c->fd);
-        c = n;
-    }
+    /* fs_vfs_shutdown should have cleared these all out */
+    assert(LIST_EMPTY(&sockets));
 
     if(nmmgr_handler_remove(&vh.nmmgr) < 0)
         return -1;
