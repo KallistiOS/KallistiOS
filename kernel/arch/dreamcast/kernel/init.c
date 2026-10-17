@@ -311,7 +311,7 @@ void arch_main(void) {
     _init();
 
     /* Call the user's main function */
-    rv = main(0, NULL);
+    rv = main(0, (char *[]){ NULL });
 
     /* Call kernel exit */
     exit(rv);
