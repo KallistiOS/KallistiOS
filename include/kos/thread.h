@@ -274,7 +274,7 @@ typedef struct __attribute__((aligned(32))) kthread {
     \headerfile kos/thread.h
 */
 typedef struct kthread_attr {
-    /** \brief  1 for a detached thread. */
+    /** \brief  true for a detached thread. */
     bool create_detached;
 
     /** \brief  Set the size of the stack to be created. */
@@ -290,7 +290,7 @@ typedef struct kthread_attr {
     /** \brief  Thread label. */
     const char *label;
 
-    /** \brief 1 if the thread doesn't use thread_local variables. */
+    /** \brief true if the thread doesn't use thread_local variables. */
     bool disable_tls;
 } kthread_attr_t;
 
@@ -355,7 +355,7 @@ kthread_t *thd_by_tid(tid_t tid);
     \relatesalso kthread_t
 
     This function adds a thread to the runnable queue after the process group of
-    the same priority if front_of_line is zero, otherwise queues it at the front
+    the same priority if front_of_line is false, otherwise queues it at the front
     of its priority group. Generally, you will not have to do this manually.
 
     \param  t               The thread to queue.
@@ -452,11 +452,9 @@ void thd_exit(void *rv) __noreturn;
     This function is the thread scheduler, and MUST be called in an interrupt
     context (typically from the primary timer interrupt).
 
-    For most cases, you'll want to set front_of_line to zero, but read the
+    For most cases, you'll want to set front_of_line to false, but read the
     comments in kernel/thread/thread.c for more info, especially if you need to
-    guarantee low latencies. This function just updates irq_srt_addr and
-    thd_current. Set 'now' to non-zero if you want to use a particular system
-    time for checking timeouts.
+    guarantee low latencies.
 
     \param  front_of_line   Set to false, unless you have a good reason not to.
 

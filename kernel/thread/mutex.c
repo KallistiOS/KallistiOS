@@ -89,17 +89,8 @@ int mutex_lock_timed(mutex_t *m, unsigned int timeout) {
 
         for(;;) {
             /* Check whether we should boost priority. */
-            if (m->holder->prio >= thd_current->prio) {
+            if(m->holder->prio >= thd_current->prio)
                 m->holder->prio = thd_current->prio;
-
-                /* Reschedule if currently scheduled. */
-                if(m->holder->state == STATE_READY) {
-                    /* Thread list is sorted by priority, update the position
-                     * of the thread holding the lock */
-                    thd_remove_from_runnable(m->holder);
-                    thd_add_to_runnable(m->holder, true);
-                }
-            }
 
             rv = genwait_wait(m, timeout ? "mutex_lock_timed" : "mutex_lock",
                               timeout);
