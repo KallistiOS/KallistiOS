@@ -619,7 +619,7 @@ static void thd_update_cpu_time(kthread_t *thd, uint64_t now) {
     thd->cpu_time.scheduled = now;
 }
 
-static bool thd_stack_overflow(const kthread_t *thd) {
+static inline bool thd_stack_overflow(const kthread_t *thd) {
     uintptr_t sp = CONTEXT_SP(thd->context);
 
 #if defined(__SH_ATOMIC_MODEL_SOFT_GUSA__) && __SH_ATOMIC_MODEL_SOFT_GUSA__
