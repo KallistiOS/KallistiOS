@@ -622,12 +622,10 @@ static void thd_update_cpu_time(kthread_t *thd, uint64_t now) {
 static inline bool thd_stack_overflow(const kthread_t *thd) {
     uintptr_t sp = CONTEXT_SP(thd->context);
 
-#if defined(__SH_ATOMIC_MODEL_SOFT_GUSA__) && __SH_ATOMIC_MODEL_SOFT_GUSA__
     /* soft-gUSA temporarily stores a negative restart offset in r15.
        Defer the stack check until r15 holds a stack pointer again. */
-    if(sp > UINT32_MAX - 128u)
+    if(__is_defined(__SH_ATOMIC_MODEL_SOFT_GUSA__) && sp > UINT32_MAX - 128u)
         return false;
-#endif
 
     return thd->stack && thd->stack_size && sp < (uintptr_t)thd->stack;
 }
