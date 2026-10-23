@@ -35,9 +35,21 @@
 
 #define DHCP_POLL_PERIOD_MS 50
 
+/* Retransmissions back off from 4s up to this, as RFC 2131 section 4.1
+   suggests. Without a cap the doubling delay overflows after a day or so. */
+#define DHCP_MAX_RETRANSMIT_MS 64000
+
 
 static int dhcp_sock = -1;
-struct sockaddr_in srv_addr;
+static struct sockaddr_in srv_addr;
+static uint32_t xid_seq = 0;
+
+/* time() only moves once a second, and a server that sees the transaction ID
+   it just answered may reply differently (one gateway answers a repeated
+   DISCOVER xid with an ACK instead of an OFFER), so make each one distinct. */
+static uint32_t net_dhcp_new_xid(void) {
+    return htonl(((uint32_t)time(NULL) ^ 0xDEADBEEF) + (++xid_seq << 16));
+}
 
 struct dhcp_pkt_out {
     STAILQ_ENTRY(dhcp_pkt_out) pkt_queue;
@@ -71,6 +83,13 @@ static int net_dhcp_fill_options(netif_t *net, dhcp_pkt_t *req, uint8_t msgtype,
     req->options[pos++] = DHCP_OPTION_MESSAGE_TYPE;
     req->options[pos++] = 1; /* Length = 1 */
     req->options[pos++] = msgtype;
+
+    /* Rapid Commit (RFC 4039): a server that supports it may answer the
+       DISCOVER with an ACK straight away and skip the OFFER/REQUEST round. */
+    if(msgtype == DHCP_MSG_DHCPDISCOVER) {
+        req->options[pos++] = DHCP_OPTION_RAPID_COMMIT;
+        req->options[pos++] = 0; /* Length = 0 */
+    }
 
     /* Max Message Length: 1500 octets */
     req->options[pos++] = DHCP_OPTION_MAX_MESSAGE;
@@ -142,9 +161,11 @@ static int __pure net_dhcp_get_message_type(dhcp_pkt_t *pkt, int len) {
         if(pkt->options[i] == DHCP_OPTION_MESSAGE_TYPE) {
             return pkt->options[i + 2];
         }
-        else if(pkt->options[i] == DHCP_OPTION_PAD ||
-                pkt->options[i] == DHCP_OPTION_END) {
+        else if(pkt->options[i] == DHCP_OPTION_PAD) {
             ++i;
+        }
+        else if(pkt->options[i] == DHCP_OPTION_END) {
+            break;
         }
         else {
             i += pkt->options[i + 1] + 2;
@@ -226,7 +247,7 @@ static int do_net_dhcp_request(uint32_t required_address, bool in_wq) {
     req->htype = DHCP_HTYPE_10MB_ETHERNET;
     req->hlen = DHCP_HLEN_ETHERNET;
     req->hops = 0;
-    req->xid = htonl(time(NULL) ^ 0xDEADBEEF);
+    req->xid = net_dhcp_new_xid();
     req->secs = 0;
     req->flags = 0;
     req->ciaddr = 0;
@@ -357,7 +378,7 @@ static void net_dhcp_renew(void) {
     req->htype = DHCP_HTYPE_10MB_ETHERNET;
     req->hlen = DHCP_HLEN_ETHERNET;
     req->hops = 0;
-    req->xid = time(NULL) ^ 0xDEADBEEF;
+    req->xid = net_dhcp_new_xid();
     req->secs = 0;
     req->flags = 0;
     req->ciaddr = htonl(net_ipv4_address(net_default_dev->ip_addr));
@@ -370,9 +391,12 @@ static void net_dhcp_renew(void) {
     memset(req->sname, 0, sizeof(req->sname));
     memset(req->file, 0, sizeof(req->file));
 
-    /* Fill in options */
+    /* Fill in options. The address being renewed goes in ciaddr only: RFC 2131
+       section 4.3.2 says a RENEWING/REBINDING request MUST NOT carry the
+       server identifier or requested IP options, and some servers NAK or
+       treat it as an INIT-REBOOT if it does. */
     optlen = net_dhcp_fill_options(net_default_dev, req, DHCP_MSG_DHCPREQUEST,
-                                   0, ntohl(req->ciaddr));
+                                   0, 0);
 
     /* Add to our packet queue */
     qpkt = (struct dhcp_pkt_out *)malloc(sizeof(struct dhcp_pkt_out));
@@ -463,13 +487,18 @@ static void net_dhcp_bind(dhcp_pkt_t *pkt, int len) {
     tmp = net_dhcp_get_32bit(pkt, DHCP_OPTION_IP_LEASE_TIME, len);
 
     if(tmp != 0 && tmp != 0xFFFFFFFF) {
-        /* Set our renewal timer to half the lease time and the rebinding timer
-           to .875 * lease time. */
+        /* net_dhcp_get_32bit() already returns host order, and leases are in
+           seconds: 64-bit milliseconds so that anything over 24 days (2^31 ms)
+           doesn't overflow. T1 and T2 come from the server when it sends them
+           (options 58 and 59), otherwise RFC 2131 says 0.5 and 0.875 of the
+           lease. */
         uint64_t now = timer_ms_gettime64();
-        int expiry = ntohl(tmp) * 1000;
+        uint64_t expiry = (uint64_t)tmp * 1000;
+        uint32_t t1 = net_dhcp_get_32bit(pkt, DHCP_OPTION_RENEWAL_TIME, len);
+        uint32_t t2 = net_dhcp_get_32bit(pkt, DHCP_OPTION_REBINDING_TIME, len);
 
-        renew_time = now + (expiry >> 1);
-        rebind_time = now + (uint64_t)(expiry * 0.875);
+        renew_time = now + ((t1 && t1 < tmp) ? (uint64_t)t1 * 1000 : expiry / 2);
+        rebind_time = now + ((t2 && t2 < tmp) ? (uint64_t)t2 * 1000 : expiry - expiry / 8);
         lease_expires = now + expiry;
     }
     else if(tmp == 0xFFFFFFFF) {
@@ -536,9 +565,15 @@ static void net_dhcp_job(workqueue_t *wq, workqueue_job_t *job) {
     /* Check if we have any packets waiting to come in. */
     while((len = recvfrom(dhcp_sock, buf, 1024, 0,
                           (struct sockaddr *)&addr, &addr_len)) != -1) {
+        /* Too short to hold a header and the magic cookie? Not DHCP. */
+        if(len < (ssize_t)(sizeof(dhcp_pkt_t) + 4)) {
+            continue;
+        }
+
         /* Ignore any boot request packets -- they shouldn't be sent to
-           the port we're monitoring anyway. */
-        if(pkt->op != DHCP_OP_BOOTREPLY) {
+           the port we're monitoring anyway. Servers reply from port 67. */
+        if(pkt->op != DHCP_OP_BOOTREPLY ||
+                addr.sin_port != htons(DHCP_SERVER_PORT)) {
             continue;
         }
 
@@ -546,6 +581,12 @@ static void net_dhcp_job(workqueue_t *wq, workqueue_job_t *job) {
            packet coming in. */
         if(pkt->options[0] != 0x63 || pkt->options[1] != 0x82 ||
                 pkt->options[2] != 0x53 || pkt->options[3] != 0x63) {
+            continue;
+        }
+
+        /* Servers broadcast replies to other clients too; only ours carry
+           our hardware address. */
+        if(memcmp(pkt->chaddr, net_default_dev->mac_addr, DHCP_HLEN_ETHERNET)) {
             continue;
         }
 
@@ -566,14 +607,28 @@ static void net_dhcp_job(workqueue_t *wq, workqueue_job_t *job) {
         if(found) {
             switch(net_dhcp_get_message_type(pkt2, qpkt->size)) {
                 case DHCP_MSG_DHCPDISCOVER:
+                    found = net_dhcp_get_message_type(pkt, len);
 
-                    if(net_dhcp_get_message_type(pkt, len) !=
-                            DHCP_MSG_DHCPOFFER) {
+                    if(found == DHCP_MSG_DHCPOFFER) {
+                        /* Send our DHCPREQUEST packet */
+                        net_dhcp_send_request(pkt, len, pkt2, qpkt->size);
+                    }
+                    else if(found == DHCP_MSG_DHCPACK && pkt->yiaddr &&
+                            net_dhcp_get_32bit(pkt, DHCP_OPTION_SERVER_ID,
+                                               len)) {
+                        /* An ACK straight back to the DISCOVER: Rapid Commit
+                           (we asked for it with option 80), or a gateway that
+                           does this on its own for a client it already knows.
+                           Either way the server has committed the lease, so
+                           there is nothing left to request. */
+                        srv_addr.sin_addr.s_addr = addr.sin_addr.s_addr;
+                        net_dhcp_bind(pkt, len);
+                        genwait_wake_all(&dhcp_sock);
+                    }
+                    else {
+                        /* Not an answer to a DISCOVER; keep waiting. */
                         break;
                     }
-
-                    /* Send our DHCPREQUEST packet */
-                    net_dhcp_send_request(pkt, len, pkt2, qpkt->size);
 
                     /* Remove the old packet from our queue */
                     STAILQ_REMOVE(&dhcp_pkts, qpkt, dhcp_pkt_out,
@@ -593,8 +648,11 @@ static void net_dhcp_job(workqueue_t *wq, workqueue_job_t *job) {
                         genwait_wake_all(&dhcp_sock);
                     }
                     else if(found == DHCP_MSG_DHCPNAK) {
-                        /* We got a NAK, try to discover again. */
+                        /* We got a NAK: the address is not ours (any more), so
+                           drop it and discover again from 0.0.0.0. */
                         state = DHCP_STATE_INIT;
+                        srv_addr.sin_addr.s_addr = INADDR_BROADCAST;
+                        memset(net_default_dev->ip_addr, 0, 4);
                         do_net_dhcp_request(0, true);
                     }
 
@@ -619,6 +677,9 @@ static void net_dhcp_job(workqueue_t *wq, workqueue_job_t *job) {
                    (struct sockaddr *)&srv_addr, sizeof(srv_addr));
             qpkt->next_send = now + qpkt->next_delay;
             qpkt->next_delay <<= 1;
+
+            if(qpkt->next_delay > DHCP_MAX_RETRANSMIT_MS)
+                qpkt->next_delay = DHCP_MAX_RETRANSMIT_MS;
         }
     }
 
