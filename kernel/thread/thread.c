@@ -619,6 +619,17 @@ static void thd_update_cpu_time(kthread_t *thd, uint64_t now) {
     thd->cpu_time.scheduled = now;
 }
 
+static inline bool thd_stack_overflow(const kthread_t *thd) {
+    uintptr_t sp = CONTEXT_SP(thd->context);
+
+    /* soft-gUSA temporarily stores a negative restart offset in r15.
+       Defer the stack check until r15 holds a stack pointer again. */
+    if(__is_defined(__SH_ATOMIC_MODEL_SOFT_GUSA__) && sp > UINT32_MAX - 128u)
+        return false;
+
+    return thd->stack && thd->stack_size && sp < (uintptr_t)thd->stack;
+}
+
 /* Helper function that sets a thread being scheduled */
 static inline void thd_schedule_inner(kthread_t *thd, uint64_t now) {
     thd_remove_from_runnable(thd);
@@ -630,12 +641,10 @@ static inline void thd_schedule_inner(kthread_t *thd, uint64_t now) {
     thd->state = STATE_RUNNING;
 
     /* Make sure the thread hasn't underrun its stack */
-    if(thd_current->stack && thd_current->stack_size) {
-        if(CONTEXT_SP(thd_current->context) < (uintptr_t)(thd_current->stack)) {
-            thd_pslist(printf);
-            thd_pslist_queue(printf);
-            assert_msg(0, "Thread stack underrun");
-        }
+    if(thd_stack_overflow(thd_current)) {
+        thd_pslist(printf);
+        thd_pslist_queue(printf);
+        assert_msg(0, "Thread stack underrun");
     }
 
     irq_set_context(&thd_current->context);

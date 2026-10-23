@@ -1,34 +1,3 @@
-# KallistiOS environment variable settings. These are the shared pieces
-# that are generated from the user config. Configure if you like.
-
-export KOS_VERSION_MAJOR=`awk '$2 == "KOS_VERSION_MAJOR"{print $3; exit}' ${KOS_BASE}/include/kos/version.h`
-export KOS_VERSION_MINOR=`awk '$2 == "KOS_VERSION_MINOR"{print $3; exit}' ${KOS_BASE}/include/kos/version.h`
-export KOS_VERSION_PATCH=`awk '$2 == "KOS_VERSION_PATCH"{print $3; exit}' ${KOS_BASE}/include/kos/version.h`
-export KOS_VERSION="${KOS_VERSION_MAJOR}.${KOS_VERSION_MINOR}.${KOS_VERSION_PATCH}"
-
-# Default the kos-ports path if it isn't already set.
-if [ -z "${KOS_PORTS}" ] ; then
-    export KOS_PORTS="${KOS_BASE}/../kos-ports"
-fi
-
-# Arch kernel folder.
-export KOS_ARCH_DIR="${KOS_BASE}/kernel/arch/${KOS_ARCH}"
-
-# Add the compiler bins dir to the path if it is not already.
-if ! expr ":$PATH:" : ".*:${KOS_CC_BASE}/bin:.*" > /dev/null ; then
-  export PATH="${PATH}:${KOS_CC_BASE}/bin"
-fi
-
-# Add the build wrappers dir to the path if it is not already.
-if ! expr ":$PATH:" : ".*:${KOS_BASE}/utils/build_wrappers:.*" > /dev/null ; then
-  export PATH="${PATH}:${KOS_BASE}/utils/build_wrappers"
-fi
-
-# Our includes.
-export KOS_INC_PATHS="${KOS_INC_PATHS} -isystem ${KOS_BASE}/include \
--isystem ${KOS_BASE}/kernel/arch/${KOS_ARCH}/include -isystem ${KOS_BASE}/addons/include/ \
--isystem ${KOS_PORTS}/include"
-
 # "System" libraries.
 export KOS_LIB_PATHS="-L${KOS_BASE}/lib/${KOS_ARCH} -L${KOS_BASE}/addons/lib/${KOS_ARCH} -L${KOS_PORTS}/lib"
 export KOS_LIBS="-Wl,--start-group -lkallisti -lm -lc -lgcc -Wl,--end-group"
@@ -47,9 +16,6 @@ export KOS_LD="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-ld"
 export KOS_RANLIB="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-gcc-ranlib"
 export KOS_STRIP="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-strip"
 export KOS_SIZE="${KOS_CC_BASE}/bin/${KOS_CC_PREFIX}-size"
-
-# Pull in the arch environ file.
-. ${KOS_BASE}/environ_${KOS_ARCH}.sh
 
 export KOS_CFLAGS="${KOS_CFLAGS} ${KOS_INC_PATHS} -D_arch_${KOS_ARCH}=1 -D_arch_sub_${KOS_SUBARCH}=1 -Wall -g"
 export KOS_CPPFLAGS="${KOS_CPPFLAGS} ${KOS_INC_PATHS_CPP}"
