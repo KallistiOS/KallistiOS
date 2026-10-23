@@ -830,7 +830,7 @@ static const dirent_t *fs_fat_readdir(void *h) {
     uint32_t bs, cl;
     uint8_t *block;
     int err, has_longname = 0;
-    fat_dentry_t *dent;
+    fat_dentry_t *dent, found;
 
     mutex_lock(&fat_mutex);
 
@@ -872,15 +872,9 @@ static const dirent_t *fs_fat_readdir(void *h) {
     memset(longname_buf, 0, sizeof(uint16_t) * 256);
 
     /* Grab the entry. */
-    do {
+    for(;;) {
         dent = (fat_dentry_t *)(block + (fh[fd].ptr & (bs - 1)));
         fh[fd].ptr += 32;
-
-        /* If this is a long name entry, copy the name out... */
-        if(FAT_IS_LONG_NAME(dent)) {
-            has_longname = 1;
-            copy_longname(dent);
-        }
 
         /* Did we hit the end? */
         if(dent->name[0] == FAT_ENTRY_EOD) {
@@ -890,41 +884,63 @@ static const dirent_t *fs_fat_readdir(void *h) {
             mutex_unlock(&fat_mutex);
             return NULL;
         }
-        /* This entry is empty, so move onto the next one... */
-        else if(dent->name[0] == FAT_ENTRY_FREE || FAT_IS_LONG_NAME(dent)) {
-            /* Are we at the end of this block/cluster? */
-            if((fh[fd].ptr & (bs - 1)) == 0) {
-                if(fat_fs_type(fs) == FAT_FS_FAT32 || fh[fd].dentry_cluster) {
-                    cl = fat_read_fat(fs, fh[fd].cluster, &err);
 
-                    if(cl == FAT_INVALID_CLUSTER) {
-                        errno = err;
-                        mutex_unlock(&fat_mutex);
-                        return NULL;
-                    }
-                    else if(fat_is_eof(fs, cl)) {
-                        /* We've actually hit the end of the directory... */
-                        mutex_unlock(&fat_mutex);
-                        return NULL;
-                    }
+        /* If this is a long name entry, copy the name out... */
+        if(FAT_IS_LONG_NAME(dent)) {
+            has_longname = 1;
+            copy_longname(dent);
+        }
+        /* A file or directory: it's the one to return. Copy it out, as moving
+           on to the next cluster below may reuse the block's buffer. */
+        else if(dent->name[0] != FAT_ENTRY_FREE) {
+            memcpy(&found, dent, sizeof(fat_dentry_t));
+            dent = &found;
+        }
 
-                    fh[fd].cluster = cl;
-                    ++fh[fd].cluster_order;
+        /* Are we at the end of this block/cluster? Move on to the next one,
+           and read it, whether this entry was the one to return or not (the
+           next call starts from there). */
+        if((fh[fd].ptr & (bs - 1)) == 0) {
+            if(fat_fs_type(fs) == FAT_FS_FAT32 || fh[fd].dentry_cluster) {
+                cl = fat_read_fat(fs, fh[fd].cluster, &err);
+
+                if(cl == FAT_INVALID_CLUSTER) {
+                    errno = err;
+                    mutex_unlock(&fat_mutex);
+                    return NULL;
                 }
-                else {
-                    /* Are we at the end of the directory? */
-                    if((fh[fd].ptr >> 5) >= fat_rootdir_length(fs)) {
-                        fh[fd].cluster = 0x0FFFFFFF;
-                        mutex_unlock(&fat_mutex);
-                        return NULL;
-                    }
 
+                fh[fd].cluster = cl;
+                ++fh[fd].cluster_order;
+            }
+            else {
+                /* Are we at the end of the directory? */
+                if((fh[fd].ptr >> 5) >= fat_rootdir_length(fs))
+                    fh[fd].cluster = 0x0FFFFFFF;
+                else
                     ++fh[fd].cluster;
-                    ++fh[fd].cluster_order;
-                }
+                ++fh[fd].cluster_order;
+            }
+
+            if(dent == &found)
+                break;
+
+            /* We've actually hit the end of the directory... */
+            if(fat_is_eof(fs, fh[fd].cluster)) {
+                mutex_unlock(&fat_mutex);
+                return NULL;
+            }
+
+            if(!(block = fat_cluster_read(fs, fh[fd].cluster, &err))) {
+                errno = err;
+                mutex_unlock(&fat_mutex);
+                return NULL;
             }
         }
-    } while(dent->name[0] == FAT_ENTRY_FREE || FAT_IS_LONG_NAME(dent));
+        else if(dent == &found) {
+            break;
+        }
+    }
 
     /* We now have a dentry to work with... Fill in the static dirent_t. */
     if(!has_longname)
