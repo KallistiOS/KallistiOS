@@ -19,6 +19,7 @@
 #include <dc/scif.h>
 #include <dc/flashrom.h>
 #include <dc/syscalls.h>
+#include <dc/net/w5500_adapter.h>
 #include <kos/mutex.h>
 
 /* W5500 Register Definitions & Constants */
@@ -71,11 +72,6 @@
 #define W5500_SPI_VDM   0x00
 
 #define MAC_FILTER_SIZE 16
-
-typedef enum {
-    W5500_IF_SCI = 0,
-    W5500_IF_SCIF = 1
-} w5500_interface_t;
 
 static w5500_interface_t current_interface = W5500_IF_SCI;
 static kthread_t *w5500_rx_thread = NULL;
@@ -862,4 +858,11 @@ int w5500_adapter_shutdown(void) {
         w5500_registered = false;
     }
     return 0;
+}
+
+w5500_interface_t w5500_adapter_interface(void) {
+    if(!w5500_registered) {
+        return W5500_IF_NONE;
+    }
+    return current_interface;
 }
