@@ -39,4 +39,3 @@ fi
 
 # Pull in the toolchain and arch environ file.
 . ${KOS_BASE}/env/${KOS_TOOLCHAIN}/environ_toolchain.sh
-. ${KOS_BASE}/env/${KOS_TOOLCHAIN}/environ_${KOS_ARCH}.sh
