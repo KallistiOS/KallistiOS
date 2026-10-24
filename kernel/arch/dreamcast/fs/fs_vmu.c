@@ -347,11 +347,16 @@ static int vmu_verify_hnd(void *hnd, int type) {
     return 0;
 }
 
+/* Size of the file's data, not counting a VMS header in front of it */
+static size_t vmu_data_size(const vmu_fh_t *fh) {
+    return fh->filesize * VMU_BLOCK_SIZE - fh->start;
+}
+
 /* write a file out before closing it: we aren't perfect on error handling here */
 static int vmu_write_close(void *hnd) {
     vmu_fh_t    *fh = (vmu_fh_t*)hnd;
     uint8_t     *data = fh->data + fh->start;
-    int         ret, data_len = fh->filesize * VMU_BLOCK_SIZE;
+    int         ret, data_len = vmu_data_size(fh);
     vmu_pkg_t   *hdr = fh->header ?: dft_header;
 
     if(!fh->raw) {
@@ -432,6 +437,7 @@ static int vmu_close(void *hnd) {
 /* read function */
 static ssize_t vmu_read(void *hnd, void *buffer, size_t cnt) {
     vmu_fh_t *fh;
+    size_t size;
 
     /* Check the handle */
     if(!vmu_verify_hnd(hnd, VMU_FILE))
@@ -444,8 +450,8 @@ static ssize_t vmu_read(void *hnd, void *buffer, size_t cnt) {
         return 0;
 
     /* Check size */
-    cnt = (fh->loc + cnt) > (fh->filesize * VMU_BLOCK_SIZE) ?
-          (fh->filesize * VMU_BLOCK_SIZE - fh->loc) : cnt;
+    size = vmu_data_size(fh);
+    cnt = (fh->loc + cnt) > size ? (size - fh->loc) : cnt;
 
     /* Reads past EOF return 0 */
     if((long)cnt < 0)
@@ -539,7 +545,7 @@ static off_t vmu_seek(void *hnd, off_t offset, int whence) {
             offset += fh->loc;
             break;
         case SEEK_END:
-            offset = fh->filesize * VMU_BLOCK_SIZE - offset;
+            offset += vmu_data_size(fh);
             break;
         default:
             return -1;
@@ -569,8 +575,7 @@ static size_t vmu_total(void *fd) {
     if(!vmu_verify_hnd(fd, VMU_FILE))
         return -1;
 
-    /* note that all filesizes are multiples of 512 for the vmu */
-    return (((vmu_fh_t *) fd)->filesize) * VMU_BLOCK_SIZE;
+    return vmu_data_size((vmu_fh_t *)fd);
 }
 
 /* read a directory handle */
@@ -783,7 +788,7 @@ static int vmu_fstat(void *fd, struct stat *st) {
     st->st_mode =  S_IRWXU | S_IRWXG | S_IRWXO;
     st->st_mode |= (fh->strtype == VMU_DIR) ? S_IFDIR : S_IFREG;
     st->st_size = (fh->strtype == VMU_DIR) ? 
-        vmufs_free_blocks(((vmu_dh_t *)fh)->dev) : (int)(fh->filesize * VMU_BLOCK_SIZE);
+        vmufs_free_blocks(((vmu_dh_t *)fh)->dev) : (int)vmu_data_size(fh);
     st->st_nlink = (fh->strtype == VMU_DIR) ? 2 : 1;
     st->st_blksize = VMU_BLOCK_SIZE;
 
