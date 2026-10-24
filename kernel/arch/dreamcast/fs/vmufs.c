@@ -663,6 +663,7 @@ int vmufs_write(maple_device_t *dev, const char *fn, void *inbuf, int insize, in
     vmu_root_t  root;
     vmu_dir_t   *dir = NULL, nd;
     uint16_t    *fat = NULL;
+    void        *padded = NULL;
     int     oldinsize, fatsize, dirsize, idx, rv = 0, st;
 
     /* Round up the size if necessary */
@@ -672,11 +673,26 @@ int vmufs_write(maple_device_t *dev, const char *fn, void *inbuf, int insize, in
     if(oldinsize != insize) {
         dbglog(DBG_WARNING, "vmufs_write: padded file '%s' from %d to %d bytes\n",
                fn, oldinsize, insize);
+
+        /* The card takes whole blocks. Write them from a zero-padded copy
+           rather than read past the end of the caller's buffer. */
+        if(!(padded = calloc(1, insize))) {
+            dbglog(DBG_ERROR, "vmufs_write: can't alloc %d bytes to pad file '%s'\n",
+                   insize, fn);
+            return -1;
+        }
+
+        if(oldinsize)
+            memcpy(padded, inbuf, oldinsize);
+
+        inbuf = padded;
     }
 
     /* Init everything */
-    if(vmufs_setup(dev, &root, &dir, &dirsize, &fat, &fatsize) < 0)
+    if(vmufs_setup(dev, &root, &dir, &dirsize, &fat, &fatsize) < 0) {
+        free(padded);
         return -1;
+    }
 
     /* Check if the file already exists */
     idx = vmufs_dir_find(&root, dir, fn);
@@ -752,6 +768,7 @@ int vmufs_write(maple_device_t *dev, const char *fn, void *inbuf, int insize, in
     /* Looks like everything was good */
 ex:
     vmufs_teardown(dir, fat);
+    free(padded);
     return rv;
 }
 
