@@ -1,0 +1,2 @@
+# Dreamcast can have PVR support.
+CFLAGS := -DGFX
