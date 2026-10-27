@@ -943,11 +943,12 @@ static const dirent_t *fs_fat_readdir(void *h) {
     }
 
     /* We now have a dentry to work with... Fill in the static dirent_t. */
-    if(!has_longname)
+    /* A long name that doesn't fit in NAME_MAX bytes of UTF-8 (up to 3 bytes a
+       character) is returned as its short name, which still opens it. */
+    if(!has_longname ||
+       fat_ucs2_to_utf8((uint8_t *)fh[fd].dent.name, longname_buf, NAME_MAX,
+                        fat_strlen_ucs2(longname_buf)))
         copy_shortname(dent, fh[fd].dent.name);
-    else
-        fat_ucs2_to_utf8((uint8_t *)fh[fd].dent.name, longname_buf, 256,
-                         fat_strlen_ucs2(longname_buf));
 
     fh[fd].dent.size = dent->size;
     fh[fd].dent.time = fat_time_to_stat(dent->mdate, dent->mtime);

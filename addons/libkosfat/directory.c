@@ -233,7 +233,13 @@ static int fat_search_long(fat_fs_t *fs, const char *fn, uint32_t cluster,
         max2 = (int32_t)fs->sb.root_dir;
     }
 
-    fat_utf8_to_ucs2(longname_buf2, (const uint8_t *)fn, 256, l);
+    /* The long name entries hold UCS-2 characters, so compare lengths in
+       those: strlen(fn) counts UTF-8 bytes, which is more than the number of
+       characters for any name outside ASCII. */
+    if(fat_utf8_to_ucs2(longname_buf2, (const uint8_t *)fn, 256, l))
+        return -ENOENT;
+
+    l = fat_strlen_ucs2(longname_buf2);
 
     while(!done) {
         if(!(cl = fat_cluster_read(fs, cluster, &err))) {
