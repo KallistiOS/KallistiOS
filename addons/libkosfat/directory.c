@@ -233,7 +233,13 @@ static int fat_search_long(fat_fs_t *fs, const char *fn, uint32_t cluster,
         max2 = (int32_t)fs->sb.root_dir;
     }
 
-    fat_utf8_to_ucs2(longname_buf2, (const uint8_t *)fn, 256, l);
+    /* The long name entries hold UCS-2 characters, so compare lengths in
+       those: strlen(fn) counts UTF-8 bytes, which is more than the number of
+       characters for any name outside ASCII. */
+    if(fat_utf8_to_ucs2(longname_buf2, (const uint8_t *)fn, 256, l))
+        return -ENOENT;
+
+    l = fat_strlen_ucs2(longname_buf2);
 
     while(!done) {
         if(!(cl = fat_cluster_read(fs, cluster, &err))) {
@@ -310,8 +316,9 @@ static int fat_search_long(fat_fs_t *fs, const char *fn, uint32_t cluster,
 
             if(!memcmp(longname_buf, longname_buf2, fnlen * sizeof(uint16_t))) {
                 /* The next entry should be the dentry we want (that is to say,
-                   the short name entry for this long name). */
-                if(i < max) {
+                   the short name entry for this long name), if it's in this
+                   cluster (the last long name entry may be its last). */
+                if(i + 1 < max) {
                     if(cluster != cluster2) {
                         if(!(cl = fat_cluster_read(fs, cluster, &err))) {
                             dbglog(DBG_ERROR, "Error reading directory at "
@@ -381,8 +388,17 @@ static int fat_search_long(fat_fs_t *fs, const char *fn, uint32_t cluster,
             else {
                 skip = 1;
 
-                if(cluster2 != cluster)
-                    break;
+                /* The long name ran on into the next cluster (read_longname
+                   moved cluster and i there): carry on from there, rather
+                   than breaking out and moving on yet another cluster. */
+                if(cluster2 != cluster) {
+                    if(!(cl = fat_cluster_read(fs, cluster, &err))) {
+                        dbglog(DBG_ERROR, "Error reading directory at "
+                               "cluster %" PRIu32 ": %s\n", cluster,
+                               strerror(err));
+                        return -EIO;
+                    }
+                }
             }
         }
 
@@ -401,6 +417,9 @@ static int fat_search_long(fat_fs_t *fs, const char *fn, uint32_t cluster,
             if(max2 <= 0)
                 done = 1;
         }
+
+        /* The next cluster's entries start at its first. */
+        i = 0;
     }
 
     return -ENOENT;
