@@ -50,7 +50,7 @@ int fat_utf8_to_ucs2(uint16_t *out, const uint8_t *in, size_t olen,
             if((in[i] & 0xC0) != 0x80)
                 return -1;
 
-            out[j] |= (uint16_t)(in[i++] & 0x3F);
+            out[j++] |= (uint16_t)(in[i++] & 0x3F);
         }
         /* 4 byte sequences can't be encoded as UCS-2. */
         else {
