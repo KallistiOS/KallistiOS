@@ -113,12 +113,12 @@ _Static_assert(sizeof(vmu_root_t) == VMU_BLOCK_SIZE, "Invalid vmu_root_t size");
     \headerfile dc/vmufs.h
 
     \note
-    vmu_dir_t::dirty should always be zero when written out to the VMU. What
+    vmu_dir_t::dirty should always be false when written out to the VMU. What
     this lets us do, though, is conserve on flash writes. If you only want to
     modify one single file (which is the standard case) then re-writing all
     of the dir blocks is a big waste. Instead, you should set the dirty flag
     on the in-mem copy of the directory, and writing it back out will only
-    flush the containing block back to the VMU, setting it back to zero
+    flush the containing block back to the VMU, setting it back to false
     in the process. Loaded blocks should always have zero here (though we
     enforce that in the code to make sure) so it will be non-dirty by
     default.
@@ -132,7 +132,7 @@ typedef struct {
     vmu_timestamp_t timestamp;      /**< \brief File time */
     uint16_t        filesize;       /**< \brief Size of the file in blocks */
     uint16_t        hdroff;         /**< \brief Offset of header, in blocks from start of file */
-    uint8_t         dirty;          /**< \brief See header notes */
+    bool            dirty;          /**< \brief See header notes */
     uint8_t         pad1[3];        /**< \brief All zeros */
 } vmu_dir_t;
 
@@ -290,7 +290,7 @@ int vmufs_file_read(maple_device_t *dev, const uint16_t *fat, const vmu_dir_t *d
     \return                 0 on success, <0 on failure.
 */
 int vmufs_file_write(maple_device_t *dev, const vmu_root_t *root, uint16_t *fat,
-                     vmu_dir_t *dir, vmu_dir_t *newdirent, const void *filebuf, int size);
+                     vmu_dir_t *dir, vmu_dir_t *newdirent, const void *filebuf, size_t size);
 
 /** \brief  Given a previously-read FAT and directory, delete the named file.
 
@@ -312,7 +312,7 @@ int vmufs_file_delete(const vmu_root_t *root, uint16_t *fat, vmu_dir_t *dir, con
     \param  fat             The FAT to be examined.
     \return                 The number of blocks available.
 */
-int vmufs_fat_free(const vmu_root_t *root, const uint16_t *fat);
+uint16_t vmufs_fat_free(const vmu_root_t *root, const uint16_t *fat);
 
 /** \brief  Given a previously-read directory, return the number of dirents
             available for new files.
@@ -321,7 +321,7 @@ int vmufs_fat_free(const vmu_root_t *root, const uint16_t *fat);
     \param  dir             The directory in question.
     \return                 The number of entries available.
 */
-int vmufs_dir_free(const vmu_root_t *root, const vmu_dir_t *dir);
+uint16_t vmufs_dir_free(const vmu_root_t *root, const vmu_dir_t *dir);
 
 /** \brief  Lock the vmufs mutex.
 
