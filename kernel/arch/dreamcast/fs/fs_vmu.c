@@ -468,6 +468,7 @@ static ssize_t vmu_read(void *hnd, void *buffer, size_t cnt) {
 static ssize_t vmu_write(void *hnd, const void *buffer, size_t cnt) {
     vmu_fh_t    *fh;
     void        *tmp;
+    size_t      size;
     int         n;
 
     /* Check the handle we were given */
@@ -481,9 +482,11 @@ static ssize_t vmu_write(void *hnd, const void *buffer, size_t cnt) {
         return -1;
 
     /* Check to make sure we have enough room in data */
-    if(fh->loc + fh->start + cnt > fh->filesize * VMU_BLOCK_SIZE) {
+    size = vmu_data_size(fh);
+
+    if(fh->loc + cnt > size) {
         /* Figure out the new block count */
-        n = ((fh->loc + fh->start + cnt) - (fh->filesize * VMU_BLOCK_SIZE));
+        n = fh->loc + cnt - size;
 
         n = __align_up(n, VMU_BLOCK_SIZE) / VMU_BLOCK_SIZE;
 
@@ -505,7 +508,7 @@ static ssize_t vmu_write(void *hnd, const void *buffer, size_t cnt) {
 
     /* insert the data in buffer into fh->data at fh->loc */
     dbglog(DBG_SOURCE(VMUFS_DEBUG), "VMUFS: adding %d bytes of data at loc %ld (%ld avail)\n",
-           cnt, fh->loc, fh->filesize * VMU_BLOCK_SIZE);
+           cnt, fh->loc, (long)vmu_data_size(fh));
 
     memcpy(fh->data + fh->loc + fh->start, buffer, cnt);
     fh->loc += cnt;
