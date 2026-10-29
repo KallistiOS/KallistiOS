@@ -1,5 +1,5 @@
 # "System" libraries.
-export KOS_LIB_PATHS="-L${KOS_BASE}/lib/${KOS_ARCH} -L${KOS_BASE}/addons/lib/${KOS_ARCH} -L${KOS_PORTS}/lib"
+export KOS_LIB_PATHS="-L${KOS_BASE}/lib/${KOS_ARCH} -L${KOS_BASE}/addons/lib/${KOS_ARCH} -L${KOS_SYSROOT}/lib"
 export KOS_LIBS="-Wl,--start-group -lkallisti -lm -lc -lgcc -Wl,--end-group"
 
 # Main arch compiler paths.

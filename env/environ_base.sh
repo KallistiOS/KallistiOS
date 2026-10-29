@@ -14,6 +14,9 @@ fi
 # Arch kernel folder.
 export KOS_ARCH_DIR="${KOS_BASE}/kernel/arch/${KOS_ARCH}"
 
+# Sysroot folder.
+export KOS_SYSROOT="${KOS_BASE}/sysroot/${KOS_ARCH}"
+
 # Add the compiler bins dir to the path if it is not already.
 if ! expr ":$PATH:" : ".*:${KOS_CC_BASE}/bin:.*" > /dev/null ; then
   export PATH="${PATH}:${KOS_CC_BASE}/bin"
@@ -27,7 +30,7 @@ fi
 # Our includes.
 export KOS_INC_PATHS="${KOS_INC_PATHS} -isystem ${KOS_BASE}/include \
 -isystem ${KOS_BASE}/kernel/arch/${KOS_ARCH}/include -isystem ${KOS_BASE}/addons/include/ \
--isystem ${KOS_PORTS}/include"
+-isystem ${KOS_SYSROOT}/include"
 
 if [ -z "$KOS_TOOLCHAIN" ]; then
   echo "ERROR: No toolchain specified! Outdated environ.sh?"
