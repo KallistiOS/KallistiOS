@@ -2,6 +2,7 @@
 
 | Date<br/>_____________ | Author(s)<br/>_____________ | Changes<br/>_____________ |
 |:-----------------------|:----------------------------|---------------------------|
+| 2026-10-27 | Mickaël Cardoso | Move Newlib header fixup to `scripts/fixup-newlib.sh`, add `fixup-newlib-only` target to apply it without rebuilding Newlib |
 | 2026-09-26 | Mickaël Cardoso | Add GCC 13.4.0 patch for MinGW-w64/MSYS2, add Python support to GDB |
 | 2026-09-14 | Eric Fradella | Update GCC 13 series to its final 13.5.0 release and remove its dev profile |
 | 2026-08-07 | Eric Fradella | Update GCC 16 series to 16.2.0, update binutils to 2.47 for most profiles |

@@ -35,22 +35,18 @@ fixup-newlib-init: $(build_newlib)
 	-mkdir -p $(newlib_inc)/machine
 
 fixup-newlib-apply: fixup-newlib-init
-	@echo "+++ Fixing up newlib includes..."
-# KOS pthread.h is modified
-# to define _POSIX_THREADS
-# pthreads to kthreads mapping
-# so KOS includes are available as kos/file.h
-	cp $(kos_base)/include/pthread.h $(newlib_inc)
-	cp $(kos_base)/include/sys/_pthreadtypes.h $(newlib_inc)/sys
-	cp $(kos_base)/include/sys/dirent.h $(newlib_inc)/sys
-# KOS machine/time.h defines _POSIX_TIMERS & co.
-	cp $(kos_base)/include/machine/time.h $(newlib_inc)/machine
-ifndef MINGW32
-	ln -nsf $(kos_base)/include/kos $(newlib_inc)
-else
-# Under MinGW/MSYS or MinGW-w64/MSYS2, the ln tool is not efficient, so it's
-# better to do a simple copy. Please keep that in mind when upgrading
+
+# Apply the fixups only, without (re)building newlib. This is useful after
+# updating KallistiOS on MinGW/MSYS or MinGW-w64/MSYS2.
+fixup-newlib-only: newlib_inc = $(toolchain_path)/$(target)/include
+
+# The list of fixed up headers is maintained in scripts/fixup-newlib.sh.
+# Under MinGW/MSYS or MinGW-w64/MSYS2, the ln tool is not efficient, so the
+# script does a simple copy. Please keep that in mind when upgrading
 # KallistiOS or your toolchain!
-	cp -r $(kos_base)/include/kos $(newlib_inc)
+fixup-newlib-apply fixup-newlib-only:
+	@echo "+++ Fixing up newlib includes..."
+	$(SHELL) $(fixup_newlib_script) $(fixup_newlib_mode) $(kos_base) $(newlib_inc)
+ifdef MINGW32
 	touch $(fixup_newlib_stamp)
 endif
