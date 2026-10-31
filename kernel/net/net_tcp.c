@@ -2672,6 +2672,22 @@ static uint32_t tcp_ooo_consume(struct tcp_sock *s) {
 
 /* This implements the processing described for the synchronized states, as
    described in pages 69-76 of the RFC. */
+/* Enter TIME-WAIT. Once close() has been called, the socket only has to
+   re-ACK the peer's FIN from here on, so its data buffers (most of its
+   memory) can go now rather than in 2 * MSL. */
+static void tcp_enter_time_wait(struct tcp_sock *s) {
+    s->state = TCP_STATE_TIME_WAIT;
+    s->data.timer = timer_ms_gettime64();
+
+    if(s->intflags & TCP_IFLAG_CANBEDEL) {
+        free(s->data.rcvbuf);
+        free(s->data.sndbuf);
+        s->data.rcvbuf = s->data.sndbuf = NULL;
+        s->data.rcvbuf_cur_sz = s->data.sndbuf_cur_sz = 0;
+        s->data.ooo_count = 0;
+    }
+}
+
 static int process_pkt(netif_t *src, const struct in6_addr *srca,
                        const struct in6_addr *dsta, const tcp_hdr_t *tcp,
                        struct tcp_sock *s, uint16_t flags, size_t size) {
@@ -2823,8 +2839,7 @@ static int process_pkt(netif_t *src, const struct in6_addr *srca,
 
             /* If the FIN has been acked, go to TIME-WAIT */
             if(ack == s->data.snd.nxt) {
-                s->state = TCP_STATE_TIME_WAIT;
-                s->data.timer = timer_ms_gettime64();
+                tcp_enter_time_wait(s);
                 break;
             }
             else {
@@ -2966,8 +2981,7 @@ static int process_pkt(netif_t *src, const struct in6_addr *srca,
                 break;
 
             case TCP_STATE_FIN_WAIT_2:
-                s->state = TCP_STATE_TIME_WAIT;
-                s->data.timer = timer_ms_gettime64();
+                tcp_enter_time_wait(s);
                 break;
 
             case TCP_STATE_TIME_WAIT:
