@@ -2471,9 +2471,11 @@ static int listen_pkt(netif_t *src, const struct in6_addr *srca,
         }
     }
 
-    /* Next, see if we have space for this one in the queue... */
+    /* Next, see if we have space for this one in the queue. If not, drop the
+       SYN rather than reset the connection: the peer retransmits it, and by
+       then accept() has probably made room. */
     if(s->listen.count == s->listen.backlog)
-        return -1;
+        return 0;
 
     /* The rest of the processing is put off until the program does an accept().
        Save the connection in the list of incoming sockets. */
