@@ -2266,7 +2266,7 @@ static void tcp_send_data(struct tcp_sock *sock, int resend) {
     if(!resend) {
         seq = sock->data.snd.nxt;
         unacked = sock->data.snd.nxt - sock->data.snd.una;
-        wnd -= unacked;
+        wnd = wnd > unacked ? wnd - unacked : 0;
         head = sock->data.sndbuf_head;
     }
     else {
@@ -2800,6 +2800,15 @@ static int process_pkt(netif_t *src, const struct in6_addr *srca,
             s->data.snd.wl1 = seq;
             s->data.snd.wl2 = ack;
         }
+
+        /* send() only sent what the window had room for. Send the rest now
+           that there is room, rather than when the retransmission timer next
+           fires. */
+        if((s->state == TCP_STATE_ESTABLISHED ||
+                s->state == TCP_STATE_CLOSE_WAIT) &&
+                s->data.snd.nxt - s->data.snd.una < s->data.sndbuf_cur_sz &&
+                s->data.snd.nxt - s->data.snd.una < s->data.snd.wnd)
+            tcp_send_data(s, 0);
     }
     else if(SEQ_GT(ack, s->data.snd.nxt)) {
         /* This ACKs something we haven't sent, so try to correct the other side
