@@ -28,7 +28,7 @@
 #include <stdlib.h>
 
 //! Number of balls to render (play with me!)
-constexpr unsigned BALL_COUNT    = 93;
+constexpr unsigned BALL_COUNT    = 100;
 //! Number of Z stacks which comprise the ball's geometry
 constexpr unsigned SPHERE_STACKS = 20;
 //! Number of X/Y slices which comprise each stack of the ball's geometry
@@ -72,6 +72,8 @@ static void cache_polygon_header(pvr_poly_hdr_t* poly_header) {
     shz_dcache_alloc_line(poly_header);
     // Initialize the polygon context for an untextured opaque polygon.
     pvr_poly_cxt_col(&cxt, PVR_LIST_OP_POLY);
+    // Have the TA store our long strips in pieces of 6 triangles instead of the default 2.
+    cxt.gen.strip_len = PVR_STRIP_LEN_6;
     //! Compile the polygon context into a polygon header for use later.
     pvr_poly_compile(poly_header, &cxt);
 }
