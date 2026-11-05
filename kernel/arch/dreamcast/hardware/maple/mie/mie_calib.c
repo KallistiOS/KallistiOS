@@ -219,8 +219,8 @@ void mie_analog_calib_start(void) {
     last_wheel = 0;
     last_accel = 0;
     last_brake = 0;
-    /* User moves wheel full range first, then captures center on next step. */
-    step_calib = MIE_ANALOG_CALIB_WHEEL;
+    /* Center first, then however far the user turns the wheel becomes full scale. */
+    step_calib = MIE_ANALOG_CALIB_WHEEL_CENTER;
 }
 
 void mie_analog_calib_cancel(void) {
@@ -235,14 +235,14 @@ mie_analog_calib_step_t mie_analog_calib_current(void) {
     return step_calib;
 }
 
-/* Wizard: wheel extremes -> wheel center -> accel -> brake -> commit. */
+/* Wizard: wheel center -> wheel travel -> accel -> brake -> commit. */
 bool mie_analog_calib_capture(void) {
     switch(step_calib) {
-        case MIE_ANALOG_CALIB_WHEEL:
-            step_calib = MIE_ANALOG_CALIB_WHEEL_CENTER;
-            return false;
         case MIE_ANALOG_CALIB_WHEEL_CENTER:
             work_calib.wheel.center = last_wheel;
+            step_calib = MIE_ANALOG_CALIB_WHEEL;
+            return false;
+        case MIE_ANALOG_CALIB_WHEEL:
             step_calib = MIE_ANALOG_CALIB_ACCEL;
             return false;
         case MIE_ANALOG_CALIB_ACCEL:

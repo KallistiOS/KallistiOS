@@ -417,7 +417,7 @@ typedef struct mie_analog_calib {
 */
 typedef enum mie_analog_calib_step {
     MIE_ANALOG_CALIB_IDLE = 0,      /**< \brief No session running. */
-    MIE_ANALOG_CALIB_WHEEL,         /**< \brief Turn the wheel fully both ways. */
+    MIE_ANALOG_CALIB_WHEEL,         /**< \brief Turn the wheel through the travel to use. */
     MIE_ANALOG_CALIB_WHEEL_CENTER,  /**< \brief Hold the wheel centered. */
     MIE_ANALOG_CALIB_ACCEL,         /**< \brief Release then fully press accelerator. */
     MIE_ANALOG_CALIB_BRAKE          /**< \brief Release then fully press brake. */
@@ -729,8 +729,10 @@ void mie_analog_calib_reset(void);
 /** \brief   Start the interactive calibration session.
     \ingroup mie_analog
 
-    Begins at \ref MIE_ANALOG_CALIB_WHEEL. While a session runs the driver tracks
-    channel extremes automatically and feeds raw values to \ref mie_state_t::cont.
+    Begins at \ref MIE_ANALOG_CALIB_WHEEL_CENTER. While a session runs the driver
+    tracks channel extremes automatically and feeds raw values to
+    \ref mie_state_t::cont. The wheel step records only how far the user turns
+    it, so a shorter turn shortens the mapped steering range.
 */
 void mie_analog_calib_start(void);
 

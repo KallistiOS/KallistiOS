@@ -188,10 +188,10 @@ static void outputs_blink(void) {
 
 static const char *calib_step_name(mie_analog_calib_step_t step) {
     switch(step) {
-    case MIE_ANALOG_CALIB_WHEEL:
-        return "turn wheel fully both ways, press A";
     case MIE_ANALOG_CALIB_WHEEL_CENTER:
         return "hold wheel centered, press A";
+    case MIE_ANALOG_CALIB_WHEEL:
+        return "turn wheel left and right, press A";
     case MIE_ANALOG_CALIB_ACCEL:
         return "press accel fully, press A";
     case MIE_ANALOG_CALIB_BRAKE:

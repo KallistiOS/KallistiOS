@@ -14,6 +14,7 @@
 #include <dc/maple.h>
 #include <dc/memory.h>
 
+#include <kos/cache.h>
 #include <kos/irq.h>
 #include <kos/thread.h>
 
@@ -151,6 +152,13 @@ void maple_frame_init(maple_frame_t *frame) {
 
     assert(frame->state == MAPLE_FRAME_UNSENT);
     assert(!frame->queued);
+
+    /* The reply is DMA'd into the buffer and read through P2, but the frame
+       usually lives in calloc()ed memory that was zeroed through the cache.
+       A dirty line evicted after the DMA would overwrite the reply, so write
+       those lines back and drop them before the buffer is used. */
+    dcache_purge_range(((uintptr_t)frame->recv_buf_arr & MEM_AREA_CACHE_MASK) |
+                       MEM_AREA_P1_BASE, sizeof(frame->recv_buf_arr));
 
     /* Setup the buffer pointer (32-byte align and force -> P2) */
     uint32_t buf_ptr = __align_up((uint32_t)frame->recv_buf_arr, 32);

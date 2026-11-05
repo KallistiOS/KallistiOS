@@ -1,0 +1,14 @@
+diff -ruN gcc-13.4.0/libcpp/system.h gcc-13.4.0-patched/libcpp/system.h
+--- gcc-13.4.0/libcpp/system.h 2025-06-05 18:03:02.000000000 +0200
++++ gcc-13.4.0-patched/libcpp/system.h 2026-09-20 14:13:13.201137700 +0200
+@@ -272,7 +272,9 @@
+ #endif
+
+ #ifndef HAVE_SETLOCALE
+-# define setlocale(category, locale) (locale)
++# ifndef ENABLE_NLS
++#  define setlocale(category, locale) (locale)
++# endif
+ #endif
+
+ #ifdef ENABLE_NLS
