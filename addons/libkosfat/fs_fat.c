@@ -659,8 +659,10 @@ static ssize_t fs_fat_write(void *h, const void *buf, size_t cnt) {
     }
 
     /* If the file pointer is past the end of the file as recorded in its
-       directory entry, update the directory entry with the new size. */
-    if(fh[fd].ptr > fh[fd].dentry.size || mode == O_WRONLY) {
+       directory entry, update the directory entry with the new size. A write
+       inside the file leaves its size alone, whatever mode it was opened in:
+       only O_TRUNC (or ftruncate) makes a file shorter. */
+    if(fh[fd].ptr > fh[fd].dentry.size) {
         fh[fd].dentry.size = fh[fd].ptr;
 
         if((err = fat_update_dentry(fs, &fh[fd].dentry,
