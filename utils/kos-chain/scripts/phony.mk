@@ -5,6 +5,7 @@
 .PHONY: patch $(patch_targets)
 .PHONY: build $(build_targets)
 .PHONY: build-binutils build-newlib build-gcc-pass1 build-gcc-pass2 fixup-newlib
+.PHONY: fixup-newlib-init fixup-newlib-apply fixup-newlib-only
 .PHONY: gdb install-gdb build-gdb patch-gdb fetch-gdb
 .PHONY: clean clean-builds clean-downloads
 .PHONY: deepclean

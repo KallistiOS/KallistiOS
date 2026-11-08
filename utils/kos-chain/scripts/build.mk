@@ -5,6 +5,8 @@ build-gcc: build-gcc-pass2
 build-newlib: build-newlib-only fixup-newlib
 
 fixup_newlib_stamp = fixup-newlib.stamp
+fixup_newlib_script = $(CURDIR)/scripts/fixup-newlib.sh
+fixup_newlib_mode = $(if $(MINGW32),-c,-l)
 build-done: build-gcc
 	@if test -f "$(fixup_newlib_stamp)"; then \
 		echo ""; \
@@ -14,6 +16,9 @@ build-done: build-gcc
 		echo "    Be careful when upgrading KallistiOS or your toolchain!"; \
 		echo "    You need to fixup-newlib again as the 'ln' utility is not working"; \
 		echo "    properly on MinGW/MSYS and MinGW-w64/MSYS2 environments!"; \
+		echo ""; \
+		echo "    To do so, run 'make fixup-newlib-only' from this directory, or:"; \
+		echo "    bash $(fixup_newlib_script) $(fixup_newlib_mode) $(abspath $(kos_base)) $(toolchain_path)/$(target)/include"; \
 		echo ""; \
 		echo "    See ./doc/mingw/ for details."; \
 		echo ""; \
