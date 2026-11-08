@@ -10,19 +10,19 @@ For build and usage instructions, see [README.md](README.md).
 
 ## Overview
 
-The tool is organized into three main source files:
+The detection logic lives in a small reusable library, `libbincheck` (public header [`src/libbincheck/bincheck.h`](src/libbincheck/bincheck.h)), and the command-line tool is a thin layer on top of it:
 
 | File | Purpose |
 |------|---------|
 | [`src/main.c`](src/main.c) | Command-line interface: handles options and prints results or warnings. |
-| [`src/scramble.c`](src/scramble.c) | The scrambling and unscrambling algorithms (adapted from the KallistiOS `scramble` tool). |
-| [`src/check.c`](src/check.c) | The core analysis and detection logic (`bincheck_analyze_buffer()`). |
+| [`src/libbincheck/scramble.c`](src/libbincheck/scramble.c) | The scrambling and unscrambling algorithms (adapted from the KallistiOS `scramble` tool). |
+| [`src/libbincheck/bincheck.c`](src/libbincheck/bincheck.c) | The core analysis and detection logic (`bincheck_analyze_buffer()`). |
 
 ---
 
 ## Step 1: Unscrambling
 
-The unscrambling code in [`src/scramble.c`](src/scramble.c) is ported directly from Marcus Comstedt's `scramble` utility in KallistiOS (`utils/scramble`).
+The unscrambling code in [`src/libbincheck/scramble.c`](src/libbincheck/scramble.c) is ported directly from Marcus Comstedt's `scramble` utility in KallistiOS (`utils/scramble`).
 
 Dreamcast scrambling is **not encryption**. It does not alter byte values or password-protect anything. Instead:
 1. The file is split into **32-byte slices**.
@@ -36,7 +36,7 @@ Because the shuffle depends purely on the file size, it is completely reversible
 
 ## Step 2: Detection
 
-The core detection function, `bincheck_analyze_buffer()` in [`src/check.c`](src/check.c), follows these steps:
+The core detection function, `bincheck_analyze_buffer()` in [`src/libbincheck/bincheck.c`](src/libbincheck/bincheck.c), follows these steps:
 
 1. **Always unscramble:** It unscrambles the binary into a separate memory buffer, regardless of whether the input file was scrambled or unscrambled.
 2. **Measure entropy variance:** It calculates the **entropy variance** (explained below) for both the original file and the unscrambled copy.
@@ -157,7 +157,7 @@ Earlier iterations tried this with the `dcdis` disassembler, but disassembling p
 1. **SH-4 instructions are very dense:** In the SH-4 architecture, almost any random 16-bit number happens to map to a technically valid instruction. Even random white noise decodes to roughly 90% "valid" instructions. A scrambled file still looks like valid code to a disassembler.
 2. **Ambiguous differences:** On test programs, the percentage of valid instructions slightly increased after unscrambling in *both* cases (for example, rising from 86% to 90% for a scrambled file, and 90% to 93% for an unscrambled file). A disassembler cannot clearly tell which file is scrambled.
 
-Removing the disassembler also keeps `bincheck` entirely under permissive licenses (BSD 2-Clause, and the KOS License for `src/scramble.c`), since `dcdis` is GPLv3.
+Removing the disassembler also keeps `bincheck` entirely under permissive licenses (BSD 2-Clause, and the KOS License for `src/libbincheck/scramble.c`), since `dcdis` is GPLv3.
 
 ---
 

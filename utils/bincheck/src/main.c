@@ -35,7 +35,7 @@
  * entropy variance before and after.
  */
 
-#include "check.h"
+#include "bincheck.h"
 
 #include <stdio.h>
 #include <stdlib.h>

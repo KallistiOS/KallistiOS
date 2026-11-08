@@ -90,10 +90,11 @@ build_chunk_sequence(prng_t *p, uint32_t *idx, uint32_t *seq, uint32_t nslices)
 }
 
 /* Apply the transformation (scramble or descramble) to a whole buffer.
- * direction is DC_SCRAMBLE or DC_DESCRAMBLE. dst must be distinct from src,
- * since reads and writes hit different positions within the same chunk. */
+ * direction is BINCHECK_SCRAMBLE or BINCHECK_DESCRAMBLE. dst must be
+ * distinct from src, since reads and writes hit different positions within
+ * the same chunk. */
 static bool
-transform_buffer(const uint8_t *src, uint8_t *dst, size_t size, dc_scramble_dir_t direction)
+transform_buffer(const uint8_t *src, uint8_t *dst, size_t size, bincheck_scramble_dir_t direction)
 {
     prng_t p;
     uint32_t *idx = NULL, *seq = NULL;
@@ -123,7 +124,7 @@ transform_buffer(const uint8_t *src, uint8_t *dst, size_t size, dc_scramble_dir_
 
             build_chunk_sequence(&p, idx, seq, nslices);
 
-            if (direction == DC_SCRAMBLE) {
+            if (direction == BINCHECK_SCRAMBLE) {
                 /* sequential position k <- source slice seq[k] */
                 for (k = 0; k < nslices; k++) {
                     memcpy(dst + base + (size_t)k * SC_SLICE,
@@ -155,13 +156,13 @@ transform_buffer(const uint8_t *src, uint8_t *dst, size_t size, dc_scramble_dir_
 }
 
 bool
-dc_scramble_buffer(const uint8_t *src, uint8_t *dst, size_t size)
+bincheck_scramble_buffer(const uint8_t *src, uint8_t *dst, size_t size)
 {
-    return transform_buffer(src, dst, size, DC_SCRAMBLE);
+    return transform_buffer(src, dst, size, BINCHECK_SCRAMBLE);
 }
 
 bool
-dc_descramble_buffer(const uint8_t *src, uint8_t *dst, size_t size)
+bincheck_descramble_buffer(const uint8_t *src, uint8_t *dst, size_t size)
 {
-    return transform_buffer(src, dst, size, DC_DESCRAMBLE);
+    return transform_buffer(src, dst, size, BINCHECK_DESCRAMBLE);
 }

@@ -29,7 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "check.h"
+#include "bincheck.h"
 #include "scramble.h"
 
 #include <stdio.h>
@@ -152,14 +152,14 @@ bincheck_analyze_buffer(const uint8_t *buf, size_t size,
     unscrambled = (uint8_t *)malloc(size);
     if (!unscrambled) return false;
 
-    ok = dc_descramble_buffer(buf, unscrambled, size);
+    ok = bincheck_descramble_buffer(buf, unscrambled, size);
     if (!ok) {
         free(unscrambled);
         return false;
     }
 
     /* Decision signal: per-block entropy variance, as-is vs after the real
-     * descramble (see check.h for why this signal is used). */
+     * descramble (see bincheck.h for why this signal is used). */
     out_result->variance_as_is       = block_entropy_variance(buf, size, opts->entropy_block);
     out_result->variance_unscrambled = block_entropy_variance(unscrambled, size, opts->entropy_block);
 

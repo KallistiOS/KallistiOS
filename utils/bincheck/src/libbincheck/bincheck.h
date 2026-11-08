@@ -30,7 +30,7 @@
  */
 
 /**
- * check - scrambled/unscrambled detection for Sega Dreamcast
+ * libbincheck - scrambled/unscrambled detection for Sega Dreamcast
  * binaries (1ST_READ.BIN), built on the real (de)scramble algorithm
  * (Fisher-Yates over 32-byte slices, seeded by the file size; see
  * scramble.h). Deterministic, validated by round-trip on real samples.
@@ -50,14 +50,28 @@
  *     by 51% after the real descramble.
  *
  *   - So the variance is computed on the file as-is AND on the output of
- *     the REAL dc_descramble_buffer() (deterministic, not a guess). If the
- *     variance rises clearly after descrambling, the file was scrambled.
+ *     the REAL bincheck_descramble_buffer() (deterministic, not a guess).
+ *     If the variance rises clearly after descrambling, the file was
+ *     scrambled.
  *
  * NOTE: only applies to raw .BIN files (not ELF).
+ *
+ * This is the public header of libbincheck, the reusable library behind the
+ * bincheck command-line tool. To use it in another program, build
+ * libbincheck.a (see the Makefile in this directory), include this header
+ * and link with -lbincheck -lm. Minimal example:
+ *
+ *     bincheck_result_t r;
+ *     if (bincheck_analyze_file("1ST_READ.BIN", NULL, &r))
+ *         printf("%s\n", r.is_scrambled ? "Scrambled" : "Unscrambled");
+ *
+ * Passing NULL options uses the defaults (bincheck_options_init()). The
+ * is_elf and looks_like_sh4 fields do not change the verdict: they tell the
+ * caller whether the verdict is meaningful for this input.
  */
 
-#ifndef CHECK_H
-#define CHECK_H
+#ifndef BINCHECK_H
+#define BINCHECK_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -118,4 +132,4 @@ bool bincheck_analyze_file(const char *filename,
 }
 #endif
 
-#endif /* CHECK_H */
+#endif /* BINCHECK_H */

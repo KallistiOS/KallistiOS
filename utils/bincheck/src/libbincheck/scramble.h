@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SCRAMBLE_H
-#define SCRAMBLE_H
+#ifndef BINCHECK_SCRAMBLE_H
+#define BINCHECK_SCRAMBLE_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -41,20 +41,20 @@ extern "C" {
 #endif
 
 typedef enum {
-    DC_SCRAMBLE = 0,
-    DC_DESCRAMBLE = 1
-} dc_scramble_dir_t;
+    BINCHECK_SCRAMBLE = 0,
+    BINCHECK_DESCRAMBLE = 1
+} bincheck_scramble_dir_t;
 
 /* Scramble a linear (unscrambled) buffer into dst.
  * `src` and `dst` must both be `size` bytes and must NOT overlap. */
-bool dc_scramble_buffer(const uint8_t *src, uint8_t *dst, size_t size);
+bool bincheck_scramble_buffer(const uint8_t *src, uint8_t *dst, size_t size);
 
 /* Descramble a scrambled buffer into dst (linear/unscrambled).
  * `src` and `dst` must both be `size` bytes and must NOT overlap. */
-bool dc_descramble_buffer(const uint8_t *src, uint8_t *dst, size_t size);
+bool bincheck_descramble_buffer(const uint8_t *src, uint8_t *dst, size_t size);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SCRAMBLE_H */
+#endif /* BINCHECK_SCRAMBLE_H */

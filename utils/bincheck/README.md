@@ -137,19 +137,48 @@ To compile the project, run:
 make
 ```
 
-This compiles all source files in `src/` and places the `bincheck` executable in this directory (`utils/bincheck`). To clean up build files, run `make clean`.
+This first builds the `libbincheck.a` library in `src/libbincheck/`, then compiles the command-line tool in `src/` and places the `bincheck` executable in this directory (`utils/bincheck`). To clean up build files, run `make clean`.
 
 The version number is set by `VERSION` in `src/Makefile` and shown by `bincheck --version` (and in `bincheck -h`). See [CHANGELOG.md](CHANGELOG.md) for the changes in each version.
 
 `bincheck` only requires standard C library functions and the math library (`libm`). It builds cleanly with GCC on Linux and on Windows (via MinGW / DreamSDK), and should build as-is on macOS.
+
+## Using libbincheck in another program
+
+The detection logic is available as a small static library, `libbincheck`, so other tools (for example a disc image builder) can check a binary without running the `bincheck` executable. It has no dependency other than the C library and `libm`, so you can either build it with its own Makefile or simply copy the `src/libbincheck/` directory into your project and compile its `.c` files with the rest of your sources.
+
+```bash
+make -C src/libbincheck    # produces src/libbincheck/libbincheck.a
+```
+
+Then include `bincheck.h` and link with `-lbincheck -lm`:
+
+```c
+#include "bincheck.h"
+
+bincheck_result_t result;
+
+if (bincheck_analyze_file("1ST_READ.BIN", NULL, &result)) {
+    if (result.is_elf || !result.looks_like_sh4) {
+        /* the verdict is not meaningful for this file */
+    }
+    printf("%s
+", result.is_scrambled ? "Scrambled" : "Unscrambled");
+}
+```
+
+`bincheck_analyze_buffer()` does the same on a file already loaded in memory. Pass a `bincheck_options_t` (initialized with `bincheck_options_init()`) instead of `NULL` to change the block size or the threshold. See [`src/libbincheck/bincheck.h`](src/libbincheck/bincheck.h) for the full API.
 
 ## Project structure
 
 ```text
 bincheck/
 ├── src/
-│   ├── scramble.h/.c        # Scramble/unscramble logic
-│   ├── check.h/.c           # Entropy variance analysis and checks
+│   ├── libbincheck/         # Reusable detection library (libbincheck.a)
+│   │   ├── bincheck.h       # Public API: bincheck_analyze_buffer()/_file()
+│   │   ├── bincheck.c       # Entropy variance analysis and checks
+│   │   ├── scramble.h/.c    # Scramble/unscramble logic (internal)
+│   │   └── Makefile         # Builds libbincheck.a
 │   ├── main.c               # CLI interface and output formatting
 │   └── Makefile             # Builds bincheck (sets VERSION)
 ├── CHANGELOG.md             # Version history
@@ -162,4 +191,4 @@ bincheck/
 ## License
 
 - `bincheck` is open source under the **BSD 2-Clause License** (see [LICENSE](LICENSE)).
-- `src/scramble.c` is based on Marcus Comstedt's `scramble.c` (from KallistiOS `utils/scramble`), licensed under the BSD-compatible KOS License.
+- `src/libbincheck/scramble.c` is based on Marcus Comstedt's `scramble.c` (from KallistiOS `utils/scramble`), licensed under the BSD-compatible KOS License.
