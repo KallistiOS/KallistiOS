@@ -1,0 +1,5 @@
+include kos/exports.h
+include kmg/kmg.h
+
+# Exports for the klf file
+kmg_to_img
