@@ -152,10 +152,16 @@ void pvr_sync_reg_buffer(void) {
     //PVR_SET(PVR_RESET, PVR_RESET_TA);
     //PVR_SET(PVR_RESET, PVR_RESET_NONE);
 
-    /* Set buffer pointers */
+    /* Set buffer pointers. Until PVR_TA_INIT resets it to PVR_TA_OPB_INIT,
+       the TA's OPB position (PVR_TA_OPB_POS) is still where the last scene
+       left it, in the other buffer: an OPB end below it raises
+       ASIC_EVT_PVR_OPB_OUTOFMEM (every switch from the buffer at 0x400000
+       to the one at 0), and an OPB init above the old end does the same on
+       the way back. So the end goes out of the way first, the TA starts on
+       the new OPB, and only then gets its real end and starts again. */
+    PVR_SET(PVR_TA_OPB_END,         PVR_RAM_SIZE - 4);
     PVR_SET(PVR_TA_OPB_START,       buf->opb);
     PVR_SET(PVR_TA_OPB_INIT,        buf->opb + buf->opb_size);
-    PVR_SET(PVR_TA_OPB_END,         buf->opb + buf->opb_size * (1 + buf->opb_overflow_count));
     PVR_SET(PVR_TA_VERTBUF_START,   buf->vertex);
     PVR_SET(PVR_TA_VERTBUF_END,     buf->vertex + buf->vertex_size);
 
@@ -163,6 +169,11 @@ void pvr_sync_reg_buffer(void) {
     PVR_SET(PVR_TILEMAT_CFG,        pvr_state.tsize_const);     /* Tile count: (H/32-1) << 16 | (W/32-1) */
     PVR_SET(PVR_OPB_CFG,            pvr_state.list_reg_mask);   /* List enables */
     PVR_SET(PVR_TA_INIT,            PVR_TA_INIT_GO);            /* Confirm settings */
+    (void)PVR_GET(PVR_TA_INIT);
+
+    /* The OPB's real end, now that the position is at its init */
+    PVR_SET(PVR_TA_OPB_END,         buf->opb + buf->opb_size * (1 + buf->opb_overflow_count));
+    PVR_SET(PVR_TA_INIT,            PVR_TA_INIT_GO);
     (void)PVR_GET(PVR_TA_INIT);
 
 #if 0
