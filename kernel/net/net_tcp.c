@@ -446,7 +446,7 @@ retry:
 
             tcp_send_fin_ack(sock);
             ++sock->data.snd.nxt;
-            sock->state = TCP_STATE_CLOSING;
+            sock->state = TCP_STATE_LAST_ACK;
             goto ret_no_remove;
 
         case TCP_STATE_CLOSED | TCP_STATE_RESET:
@@ -3161,7 +3161,7 @@ static void net_tcp_job(workqueue_t *wq, workqueue_job_t *job) {
                         i->state = TCP_STATE_FIN_WAIT_1;
                     }
                     else {
-                        i->state = TCP_STATE_CLOSING;
+                        i->state = TCP_STATE_LAST_ACK;
                     }
 
                     tcp_send_fin_ack(i);
