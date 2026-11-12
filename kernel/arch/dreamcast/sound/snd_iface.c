@@ -33,6 +33,18 @@ static int initted = 0;
    at the same time in separate threads. */
 static mutex_t queue_proc_mutex = MUTEX_INITIALIZER;
 
+/* Where the SH4->AICA queue's data lives and where our next packet goes.
+   The firmware picks the layout once at startup and we are the only ones to
+   move the head, so they are read from the AICA once per firmware load
+   rather than for every packet: each of those reads is over a microsecond
+   on G2, with interrupts disabled. */
+static struct {
+    bool     valid;
+    uint32_t bot;
+    uint32_t top;
+    uint32_t head;
+} cmd_queue;
+
 /* Initialize driver; note that this replaces the AICA program so that
    if you had anything else going on, it's gone now! */
 int snd_init(void) {
@@ -41,6 +53,7 @@ int snd_init(void) {
     /* Finish loading the stream driver */
     if(!initted) {
         spu_disable();
+        cmd_queue.valid = false;
         spu_memset_sq(0, 0, AICA_RAM_START);
         amt = snd_stream_drv_size;
 
@@ -79,13 +92,21 @@ int snd_sh4_to_aica(void *packet, uint32_t size) {
 
     g2_lock_scoped();
 
-    /* Set these up for reference */
     qa = SPU_RAM_UNCACHED_BASE + AICA_MEM_CMD_QUEUE;
-    assert_msg(g2_read_32_raw(qa + offsetof(aica_queue_t, valid)), "Queue is not yet valid");
 
-    bot = SPU_RAM_UNCACHED_BASE + g2_read_32_raw(qa + offsetof(aica_queue_t, data));
-    top = bot + g2_read_32_raw(qa + offsetof(aica_queue_t, size));
-    start = bot + g2_read_32_raw(qa + offsetof(aica_queue_t, head));
+    /* Look the queue up the first time the firmware has it ready */
+    if(__predict_false(!cmd_queue.valid)) {
+        cmd_queue.valid = g2_read_32_raw(qa + offsetof(aica_queue_t, valid));
+        assert_msg(cmd_queue.valid, "Queue is not yet valid");
+
+        cmd_queue.bot = SPU_RAM_UNCACHED_BASE + g2_read_32_raw(qa + offsetof(aica_queue_t, data));
+        cmd_queue.top = cmd_queue.bot + g2_read_32_raw(qa + offsetof(aica_queue_t, size));
+        cmd_queue.head = cmd_queue.bot + g2_read_32_raw(qa + offsetof(aica_queue_t, head));
+    }
+
+    bot = cmd_queue.bot;
+    top = cmd_queue.top;
+    start = cmd_queue.head;
     pkt32 = (uint32_t *)packet;
     cnt = 0;
 
@@ -110,6 +131,7 @@ int snd_sh4_to_aica(void *packet, uint32_t size) {
         g2_fifo_wait();
 
     g2_write_32_raw(qa + offsetof(aica_queue_t, head), start - bot);
+    cmd_queue.head = start;
 
     /* We could wait until head == tail here for processing, but there's
        not really much point; it'll just slow things down. */
