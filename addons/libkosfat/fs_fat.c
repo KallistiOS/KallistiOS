@@ -817,8 +817,11 @@ static void copy_longname(fat_dentry_t *dent) {
 
     lent = (fat_longname_t *)dent;
 
-    /* We've got our expected long name block... Deal with it. */
+    /* We've got our expected long name block... Deal with it. (An order past
+       the 20 a 255 character name takes would write past longname_buf.) */
     fnlen = ((lent->order - 1) & 0x3F) * 13;
+    if(fnlen + 13 > 255)
+        return;
 
     /* Build out the filename component we have. */
     memcpy(&longname_buf[fnlen], lent->name1, 10);
@@ -887,8 +890,18 @@ static const dirent_t *fs_fat_readdir(void *h) {
             return NULL;
         }
 
+        /* A deleted entry (a long name entry's too: its order byte 0xE5): no
+           part of a name. It also ends any long name collected so far, which
+           was a deleted file's (macOS leaves its "._" files' deleted long
+           names in front of the next entry). */
+        if(dent->name[0] == FAT_ENTRY_FREE) {
+            if(has_longname) {
+                has_longname = 0;
+                memset(longname_buf, 0, sizeof(uint16_t) * 256);
+            }
+        }
         /* If this is a long name entry, copy the name out... */
-        if(FAT_IS_LONG_NAME(dent)) {
+        else if(FAT_IS_LONG_NAME(dent)) {
             has_longname = 1;
             copy_longname(dent);
         }
