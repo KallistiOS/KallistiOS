@@ -905,6 +905,13 @@ static const dirent_t *fs_fat_readdir(void *h) {
             has_longname = 1;
             copy_longname(dent);
         }
+        /* The volume label: not a file, and no long name is its. */
+        else if(dent->attr & FAT_ATTR_VOLUME_ID) {
+            if(has_longname) {
+                has_longname = 0;
+                memset(longname_buf, 0, sizeof(uint16_t) * 256);
+            }
+        }
         /* A file or directory: it's the one to return. Copy it out, as moving
            on to the next cluster below may reuse the block's buffer. */
         else if(dent->name[0] != FAT_ENTRY_FREE) {

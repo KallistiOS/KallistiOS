@@ -97,6 +97,11 @@ static int fat_search_dir(fat_fs_t *fs, const char *fn, uint32_t cluster,
             else if(FAT_IS_LONG_NAME(ent)) {
                 continue;
             }
+            /* And the volume label, which isn't a file (a card labelled
+               "FRPCE" would otherwise hide a folder of that name). */
+            else if(ent->attr & FAT_ATTR_VOLUME_ID) {
+                continue;
+            }
 
             /* We've got something useful, let's see if it's what we're looking
                for... */
