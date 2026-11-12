@@ -198,6 +198,8 @@ typedef struct {
     size_t   frame_count;                // Total number of viewed frames
     size_t   vtx_buf_used;               // Vertex buffer used size for the last frame
     size_t   vtx_buf_used_max;           // Maximum used vertex buffer size
+    size_t   opb_ovf_used;               // OPB overflow space used for the last frame
+    size_t   opb_ovf_used_max;           // Maximum used OPB overflow space
 
     // Handle for the vblank interrupt
     int     vbl_handle;

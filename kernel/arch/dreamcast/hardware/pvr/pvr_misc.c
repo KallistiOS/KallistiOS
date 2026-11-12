@@ -72,6 +72,8 @@ int pvr_get_stats(pvr_stats_t *stat) {
 
     stat->vtx_buffer_used = pvr_state.vtx_buf_used;
     stat->vtx_buffer_used_max = pvr_state.vtx_buf_used_max;
+    stat->opb_overflow_used = pvr_state.opb_ovf_used;
+    stat->opb_overflow_used_max = pvr_state.opb_ovf_used_max;
     stat->buf_last_time = pvr_state.buf_last_len;
     stat->frame_count = pvr_state.frame_count;
 
@@ -87,6 +89,7 @@ int pvr_vertex_dma_enabled(void) {
 /* Update statistical counters */
 void pvr_sync_stats(int event) {
     uint64_t t;
+    uint32_t opb_ovf, opb_pos;
     volatile pvr_ta_buffers_t *buf;
 
     if(event == PVR_SYNC_VBLANK) {
@@ -109,6 +112,17 @@ void pvr_sync_stats(int event) {
 
                 if(pvr_state.vtx_buf_used > pvr_state.vtx_buf_used_max)
                     pvr_state.vtx_buf_used_max = pvr_state.vtx_buf_used;
+
+                /* The TA takes overflow bins from the space after the tiles'
+                   own, and PVR_TA_OPB_POS is the next free one, counted in
+                   32-bit words. Emulators that don't model the OPBs leave it
+                   at the address written to PVR_TA_OPB_INIT. */
+                opb_ovf = buf->opb + buf->opb_size;
+                opb_pos = PVR_GET(PVR_TA_OPB_POS);
+                pvr_state.opb_ovf_used = opb_pos == opb_ovf ? 0 : (opb_pos << 2) - opb_ovf;
+
+                if(pvr_state.opb_ovf_used > pvr_state.opb_ovf_used_max)
+                    pvr_state.opb_ovf_used_max = pvr_state.opb_ovf_used;
 
                 break;
 
