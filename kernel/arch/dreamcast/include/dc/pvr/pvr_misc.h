@@ -166,6 +166,12 @@ int pvr_get_vbl_count(void);
 
     This structure is used to hold various statistics about the operation of the
     PVR since initialization.
+
+    The OPB overflow figures count the extra tile bins the TA allocated
+    because a tile's own bin was full. The space they come from is
+    pvr_init_params_t::opb_overflow_count times the size of one set of bins
+    (the sum of pvr_init_params_t::opb_sizes, in 32-bit words, for every
+    tile), so they show how much of it a scene needs.
 */
 typedef struct pvr_stats {
     uint64_t frame_last_time;     /**< \brief Ready-to-Ready length for the last frame in nanoseconds */
@@ -176,6 +182,8 @@ typedef struct pvr_stats {
     size_t   vbl_count;           /**< \brief VBlank count */
     size_t   vtx_buffer_used;     /**< \brief Number of bytes used in the vertex buffer for the last frame */
     size_t   vtx_buffer_used_max; /**< \brief Number of bytes used in the vertex buffer for the largest frame */
+    size_t   opb_overflow_used;   /**< \brief Number of bytes used in the OPB overflow space for the last frame */
+    size_t   opb_overflow_used_max; /**< \brief Number of bytes used in the OPB overflow space for the largest frame */
     float    frame_rate;          /**< \brief Current frame rate (per second) */
     uint32_t enabled_list_mask;   /**< \brief Which lists are enabled? */
     /* ... more later as it's implemented ... */
