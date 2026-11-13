@@ -3,6 +3,7 @@ This directory contains a number of PC-side tools used for a variety of purposes
 
 - [**bin2c**](bin2c/): Converts a binary file to a C integer array for inclusion in a source file
 - [**bin2o**](bin2o/): Converts a binary file to an object file for linking into a project
+- [**bincheck**](bincheck/): Detects whether a Dreamcast binary (.BIN) is scrambled or unscrambled
 - [**bincnv**](bincnv/): An ELF to BIN conversion testing utility
 - [**blender**](blender/): A Python-based Blender export plugin
 - [**cmake**](cmake/): CMake configuration files to build KOS projects using CMake
