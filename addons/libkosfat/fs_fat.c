@@ -659,8 +659,10 @@ static ssize_t fs_fat_write(void *h, const void *buf, size_t cnt) {
     }
 
     /* If the file pointer is past the end of the file as recorded in its
-       directory entry, update the directory entry with the new size. */
-    if(fh[fd].ptr > fh[fd].dentry.size || mode == O_WRONLY) {
+       directory entry, update the directory entry with the new size. A write
+       inside the file leaves its size alone, whatever mode it was opened in:
+       only O_TRUNC (or ftruncate) makes a file shorter. */
+    if(fh[fd].ptr > fh[fd].dentry.size) {
         fh[fd].dentry.size = fh[fd].ptr;
 
         if((err = fat_update_dentry(fs, &fh[fd].dentry,
@@ -815,8 +817,11 @@ static void copy_longname(fat_dentry_t *dent) {
 
     lent = (fat_longname_t *)dent;
 
-    /* We've got our expected long name block... Deal with it. */
+    /* We've got our expected long name block... Deal with it. (An order past
+       the 20 a 255 character name takes would write past longname_buf.) */
     fnlen = ((lent->order - 1) & 0x3F) * 13;
+    if(fnlen + 13 > 255)
+        return;
 
     /* Build out the filename component we have. */
     memcpy(&longname_buf[fnlen], lent->name1, 10);
@@ -830,7 +835,7 @@ static const dirent_t *fs_fat_readdir(void *h) {
     uint32_t bs, cl;
     uint8_t *block;
     int err, has_longname = 0;
-    fat_dentry_t *dent;
+    fat_dentry_t *dent, found;
 
     mutex_lock(&fat_mutex);
 
@@ -872,15 +877,9 @@ static const dirent_t *fs_fat_readdir(void *h) {
     memset(longname_buf, 0, sizeof(uint16_t) * 256);
 
     /* Grab the entry. */
-    do {
+    for(;;) {
         dent = (fat_dentry_t *)(block + (fh[fd].ptr & (bs - 1)));
         fh[fd].ptr += 32;
-
-        /* If this is a long name entry, copy the name out... */
-        if(FAT_IS_LONG_NAME(dent)) {
-            has_longname = 1;
-            copy_longname(dent);
-        }
 
         /* Did we hit the end? */
         if(dent->name[0] == FAT_ENTRY_EOD) {
@@ -890,48 +889,88 @@ static const dirent_t *fs_fat_readdir(void *h) {
             mutex_unlock(&fat_mutex);
             return NULL;
         }
-        /* This entry is empty, so move onto the next one... */
-        else if(dent->name[0] == FAT_ENTRY_FREE || FAT_IS_LONG_NAME(dent)) {
-            /* Are we at the end of this block/cluster? */
-            if((fh[fd].ptr & (bs - 1)) == 0) {
-                if(fat_fs_type(fs) == FAT_FS_FAT32 || fh[fd].dentry_cluster) {
-                    cl = fat_read_fat(fs, fh[fd].cluster, &err);
 
-                    if(cl == FAT_INVALID_CLUSTER) {
-                        errno = err;
-                        mutex_unlock(&fat_mutex);
-                        return NULL;
-                    }
-                    else if(fat_is_eof(fs, cl)) {
-                        /* We've actually hit the end of the directory... */
-                        mutex_unlock(&fat_mutex);
-                        return NULL;
-                    }
-
-                    fh[fd].cluster = cl;
-                    ++fh[fd].cluster_order;
-                }
-                else {
-                    /* Are we at the end of the directory? */
-                    if((fh[fd].ptr >> 5) >= fat_rootdir_length(fs)) {
-                        fh[fd].cluster = 0x0FFFFFFF;
-                        mutex_unlock(&fat_mutex);
-                        return NULL;
-                    }
-
-                    ++fh[fd].cluster;
-                    ++fh[fd].cluster_order;
-                }
+        /* A deleted entry (a long name entry's too: its order byte 0xE5): no
+           part of a name. It also ends any long name collected so far, which
+           was a deleted file's (macOS leaves its "._" files' deleted long
+           names in front of the next entry). */
+        if(dent->name[0] == FAT_ENTRY_FREE) {
+            if(has_longname) {
+                has_longname = 0;
+                memset(longname_buf, 0, sizeof(uint16_t) * 256);
             }
         }
-    } while(dent->name[0] == FAT_ENTRY_FREE || FAT_IS_LONG_NAME(dent));
+        /* If this is a long name entry, copy the name out... */
+        else if(FAT_IS_LONG_NAME(dent)) {
+            has_longname = 1;
+            copy_longname(dent);
+        }
+        /* The volume label: not a file, and no long name is its. */
+        else if(dent->attr & FAT_ATTR_VOLUME_ID) {
+            if(has_longname) {
+                has_longname = 0;
+                memset(longname_buf, 0, sizeof(uint16_t) * 256);
+            }
+        }
+        /* A file or directory: it's the one to return. Copy it out, as moving
+           on to the next cluster below may reuse the block's buffer. */
+        else if(dent->name[0] != FAT_ENTRY_FREE) {
+            memcpy(&found, dent, sizeof(fat_dentry_t));
+            dent = &found;
+        }
+
+        /* Are we at the end of this block/cluster? Move on to the next one,
+           and read it, whether this entry was the one to return or not (the
+           next call starts from there). */
+        if((fh[fd].ptr & (bs - 1)) == 0) {
+            if(fat_fs_type(fs) == FAT_FS_FAT32 || fh[fd].dentry_cluster) {
+                cl = fat_read_fat(fs, fh[fd].cluster, &err);
+
+                if(cl == FAT_INVALID_CLUSTER) {
+                    errno = err;
+                    mutex_unlock(&fat_mutex);
+                    return NULL;
+                }
+
+                fh[fd].cluster = cl;
+                ++fh[fd].cluster_order;
+            }
+            else {
+                /* Are we at the end of the directory? */
+                if((fh[fd].ptr >> 5) >= fat_rootdir_length(fs))
+                    fh[fd].cluster = 0x0FFFFFFF;
+                else
+                    ++fh[fd].cluster;
+                ++fh[fd].cluster_order;
+            }
+
+            if(dent == &found)
+                break;
+
+            /* We've actually hit the end of the directory... */
+            if(fat_is_eof(fs, fh[fd].cluster)) {
+                mutex_unlock(&fat_mutex);
+                return NULL;
+            }
+
+            if(!(block = fat_cluster_read(fs, fh[fd].cluster, &err))) {
+                errno = err;
+                mutex_unlock(&fat_mutex);
+                return NULL;
+            }
+        }
+        else if(dent == &found) {
+            break;
+        }
+    }
 
     /* We now have a dentry to work with... Fill in the static dirent_t. */
-    if(!has_longname)
+    /* A long name that doesn't fit in NAME_MAX bytes of UTF-8 (up to 3 bytes a
+       character) is returned as its short name, which still opens it. */
+    if(!has_longname ||
+       fat_ucs2_to_utf8((uint8_t *)fh[fd].dent.name, longname_buf, NAME_MAX,
+                        fat_strlen_ucs2(longname_buf)))
         copy_shortname(dent, fh[fd].dent.name);
-    else
-        fat_ucs2_to_utf8((uint8_t *)fh[fd].dent.name, longname_buf, 256,
-                         fat_strlen_ucs2(longname_buf));
 
     fh[fd].dent.size = dent->size;
     fh[fd].dent.time = fat_time_to_stat(dent->mdate, dent->mtime);
