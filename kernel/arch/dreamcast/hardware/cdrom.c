@@ -459,6 +459,7 @@ int cdrom_stream_start(int sector, int cnt, bool dma) {
         cdrom_stream_stop(false);
     }
     stream_dma = dma;
+    stream_enabled = true;
 
     if(stream_dma) {
         rv = cdrom_exec_cmd_timed(CD_CMD_DMAREAD_STREAM, &params, 0);
