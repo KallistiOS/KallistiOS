@@ -705,6 +705,10 @@ static void cdrom_vblank(uint32_t evt, void *data) {
                 sem_signal(&dma_done);
                 thd_schedule(true);
             }
+            else if(dma_auto_unlock) {
+                sem_signal(&_g1_ata_sem);
+                dma_auto_unlock = false;
+            }
         }
     }
 }
