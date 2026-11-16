@@ -205,7 +205,7 @@ struct sockaddr_storage {
 #define SHUT_RDWR (SHUT_RD | SHUT_WR)
 
 /** \brief  Maximum backlog for a listening socket. */
-#define SOMAXCONN   32
+#define SOMAXCONN   128
 
 /** \brief  Accept a new connection on a socket.
 
