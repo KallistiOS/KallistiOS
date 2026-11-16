@@ -287,3 +287,23 @@ diff --color -ruN newlib-4.6.0.20260123/newlib/libc/stdlib/assert.c newlib-4.6.0
 +// This is put in here to cause link errors if a proper newlib isn't present.
 +int __newlib_kos_patch = 1;
 +
+diff --color -ruN newlib-4.6.0.20260123/newlib/Makefile.in newlib-4.6.0.20260123-kos/newlib/Makefile.in
+--- newlib-4.6.0.20260123/newlib/Makefile.in	2026-01-23 23:12:49.000000000 +0100
++++ newlib-4.6.0.20260123-kos/newlib/Makefile.in	2026-11-03 18:51:59.853640749 +0100
+@@ -423,6 +423,8 @@
+ @HAVE_POSIX_DIR_TRUE@	libc/posix/rewinddir.c libc/posix/sleep.c libc/posix/usleep.c \
+ @HAVE_POSIX_DIR_TRUE@	libc/posix/telldir.c libc/posix/ftw.c libc/posix/nftw.c
+ 
++@HAVE_POSIX_DIR_FALSE@am__append_29 = libc/posix/fnmatch.c
++
+ @ELIX_LEVEL_1_TRUE@@HAVE_POSIX_DIR_TRUE@am__append_30 = 
+ @ELIX_LEVEL_1_FALSE@@ELIX_LEVEL_2_TRUE@@HAVE_POSIX_DIR_TRUE@am__append_31 = $(libc_posix_ELIX_2_SOURCES)
+ @ELIX_LEVEL_1_FALSE@@ELIX_LEVEL_2_FALSE@@ELIX_LEVEL_3_TRUE@@HAVE_POSIX_DIR_TRUE@am__append_32 = $(libc_posix_ELIX_2_SOURCES) $(libc_posix_ELIX_3_SOURCES)
+@@ -1495,6 +1497,7 @@
+ @HAVE_POSIX_DIR_TRUE@	libc/posix/libc_a-telldir.$(OBJEXT) \
+ @HAVE_POSIX_DIR_TRUE@	libc/posix/libc_a-ftw.$(OBJEXT) \
+ @HAVE_POSIX_DIR_TRUE@	libc/posix/libc_a-nftw.$(OBJEXT)
++@HAVE_POSIX_DIR_FALSE@am__objects_37 = libc/posix/libc_a-fnmatch.$(OBJEXT)
+ @HAVE_POSIX_DIR_TRUE@am__objects_38 =  \
+ @HAVE_POSIX_DIR_TRUE@	libc/posix/libc_a-scandir.$(OBJEXT) \
+ @HAVE_POSIX_DIR_TRUE@	libc/posix/libc_a-seekdir.$(OBJEXT)
