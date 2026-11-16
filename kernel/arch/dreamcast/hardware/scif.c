@@ -9,7 +9,7 @@
 #include <kos/dbgio.h>
 #include <kos/irq.h>
 #include <arch/arch.h>
-#include <dc/fs_dcload.h>
+#include <kos/fs_kosload.h>
 #include <dc/scif.h>
 
 /*
@@ -204,7 +204,7 @@ int scif_init(void) {
 
     /*  If dcload-serial is active, then do nothing here, or we'll
         screw that up. */
-    if(dcload_type == DCLOAD_TYPE_SER)
+    if(kosload_type == KOSLOAD_TYPE_SER)
         return 0;
 
     /* Disable interrupts, transmit/receive,
