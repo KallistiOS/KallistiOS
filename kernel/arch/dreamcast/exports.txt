@@ -1,6 +1,7 @@
 include kos.h
 include dc/sound/sound.h
 include dc/maple/mie.h
+include dc/net/w5500_adapter.h
 
 # Cache management
 arch_icache_inval_range
@@ -83,8 +84,14 @@ sd_shutdown
 sd_read_blocks
 sd_write_blocks
 sd_get_size
+sd_get_interface
 sd_blockdev_for_partition
 sd_blockdev_for_device
+
+# W5500
+w5500_adapter_init
+w5500_adapter_shutdown
+w5500_adapter_interface
 
 # Timers
 timer_prime

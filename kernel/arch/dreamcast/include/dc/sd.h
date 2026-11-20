@@ -2,7 +2,7 @@
 
    dc/sd.h
    Copyright (C) 2012 Lawrence Sebald
-   Copyright (C) 2025 Ruslan Rostovtsev
+   Copyright (C) 2025, 2026 Ruslan Rostovtsev
 */
 
 /** \file    dc/sd.h
@@ -57,6 +57,7 @@ __BEGIN_DECLS
 
 /** \brief  SD card interface type */
 typedef enum {
+    SD_IF_NONE = -1,   /**< Not detected */
     SD_IF_SCIF = 0,    /**< Use SCIF interface */
     SD_IF_SCI = 1      /**< Use SCI interface */
 } sd_interface_t;
@@ -106,6 +107,12 @@ int sd_init_ex(const sd_init_params_t *params);
                             detected.
 */
 int sd_init(void);
+
+/** \brief  Return the SPI interface used by the SD card.
+    \return                 SD_IF_SCIF or SD_IF_SCI if a card is initialized,
+                            SD_IF_NONE otherwise.
+*/
+sd_interface_t sd_get_interface(void);
 
 /** \brief  Shut down SD card support.
 
