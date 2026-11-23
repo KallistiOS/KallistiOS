@@ -36,6 +36,9 @@
 #include <sys/features.h>
 #include <sys/_pthreadtypes.h>
 
+/* Enable pthread-related symbol declarations from Newlib headers. */
+#define _POSIX_THREADS              1
+
 #include <sched.h>
 #include <time.h>
 
