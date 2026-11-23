@@ -123,27 +123,10 @@ void genwait_wake_one_err(const void *obj, int err);
 */
 int genwait_wake_thd(const void *obj, kthread_t *thd, int err) __nonnull((2));
 
-/** \brief  Look for timed out genwait_wait() calls.
-
-    There should be no reason you need to call this function, it is called
-    internally by the scheduler for you.
-
-    \param  now             The current system time, in milliseconds since boot
-*/
+/** \cond */
+/* Look for timed out genwait_wait() calls */
 void genwait_check_timeouts(uint64_t now);
 
-/** \brief  Look for the next timeout event time.
-
-    This function looks up when the next genwait_wait() call will timeout. This
-    function is for the internal use of the scheduler, and should not be called
-    from user code.
-
-    \return                 The next timeout time in milliseconds since boot, or
-                            0 if there are no pending genwait_wait() calls
-*/
-uint64_t genwait_next_timeout(void);
-
-/** \cond */
 /* Initialize the genwait system */
 int genwait_init(void);
 
@@ -151,8 +134,6 @@ int genwait_init(void);
 void genwait_shutdown(void);
 /** \endcond */
 
-
 __END_DECLS
 
 #endif  /* __KOS_GENWAIT_H */
-
