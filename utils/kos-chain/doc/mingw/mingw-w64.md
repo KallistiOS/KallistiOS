@@ -150,12 +150,25 @@ symbolic links are not well managed under this environment.
 That's why you need to manually fix up **SH4** `Newlib` when updating your
 toolchains (i.e. rebuilding it) and/or updating **KallistiOS**.
 
-This is the purpose of the provided `fixup-sh4-newlib.sh` script.
-
-Before executing it, edit the file to be sure the `$toolchains_base` variable
-is correctly set, then run it by entering:
+To do so, without rebuilding `Newlib`, enter the following from the
+`kos-chain` directory:
 ```
-./packages/fixup-sh4-newlib.sh
+make fixup-newlib-only
+```
+You can also run the `scripts/fixup-newlib.sh` script directly, passing the
+**KallistiOS** directory and the `Newlib` include directory, e.g.:
+```
+./scripts/fixup-newlib.sh /opt/toolchains/dc/kos /opt/toolchains/dc/sh-elf/sh-elf/include
+```
+If the **KallistiOS** `environ.sh` file has been sourced, both arguments can
+be omitted, as they are read from `KOS_BASE`, `KOS_CC_BASE` and
+`KOS_CC_PREFIX`.
+
+The provided `packages/fixup-sh4-newlib.sh` script is a wrapper around it,
+using these variables or the default `/opt/toolchains/dc` paths. Run it by
+entering:
+```
+./doc/mingw/packages/fixup-sh4-newlib.sh
 ```
 
 ## Next steps ##
