@@ -88,15 +88,17 @@ int pvr_init(const pvr_init_params_t *params) {
 
     pvr_state.vbuf_doublebuf = !params->vbuf_doublebuf_disabled;
 
-    /* List groups */
+    /* List groups, and the translucent sort mode of each */
     pvr_state.group_count = params->list_group_count > 1 ?
                             params->list_group_count : 1;
+    pvr_state.group_presort = params->autosort_disabled ?
+                             (uint32_t)(BIT(pvr_state.group_count) - 1) : 0;
 
     /* Everything's clear, do the initial buffer pointer setup */
     pvr_allocate_buffers(params);
 
     /* Initialize tile matrices */
-    pvr_init_tile_matrices(!!params->autosort_disabled);
+    pvr_init_tile_matrices();
 
     pvr_state.list_reg_open = PVR_LIST_NONE;
 

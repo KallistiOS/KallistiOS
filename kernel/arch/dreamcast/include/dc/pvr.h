@@ -1119,8 +1119,8 @@ int pvr_scene_finish(void);
       cleared, background plane drawn.
     - Each later group keeps the depth buffer and the colour left in the tile
       by the earlier groups, and its polygons are depth-tested against them.
-    - Each group sorts its own translucent list, in the sort mode set with
-      pvr_set_presort_mode(). Sorting never crosses a group boundary: all of
+    - Each group sorts its own translucent list, autosorted or presorted (see
+      pvr_set_group_presort()). Sorting never crosses a group boundary: all of
       a later group's polygons, opaque ones included, are drawn after all of
       an earlier group's polygons.
     - A later group's opaque polygons are shaded on their own pixels only:
@@ -1135,10 +1135,11 @@ int pvr_scene_finish(void);
       draw (a decal or shadow drawn without depth write) has to be presorted.
 
     This allows, for example, opaque geometry drawn after translucent geometry
-    (keeping the opaque list's deferred shading), or a layer with its own
-    depth range: a full-screen polygon at the end of a group, with depth
-    compare "always", depth write on and a far depth, resets the depth buffer
-    and keeps the colour.
+    (keeping the opaque list's deferred shading), presorted and autosorted
+    translucency in one frame, or a layer with its own depth range: a
+    full-screen polygon at the end of a group, with depth compare "always",
+    depth write on and a far depth, resets the depth buffer and keeps the
+    colour.
 
     The tile is written out to the frame buffer (or texture) only after its
     last group. If a scene calls pvr_list_continue() fewer than

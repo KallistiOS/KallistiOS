@@ -122,6 +122,7 @@ typedef struct {
     uint32_t  tile_matrix, tile_matrix_size;  /* Tile matrix, size */
     uint32_t  opb_overflow_count;             /* Extra OPB space after opb_size for TA overflow */
     uint32_t  opb_overflow_size;              /* Size of that space: opb_overflow_count OPB sets of one list group */
+    uint32_t  tile_matrix_key;                /* Settings (group presort mask) the tile matrix was written with */
 } pvr_ta_buffers_t;
 
 // DMA buffers structure: we have two sets of these
@@ -167,6 +168,7 @@ typedef struct {
     // List continuation state
     int       group_count;               // List groups per scene (>= 1)
     int       group_cur;                 // Group being submitted
+    uint32_t  group_presort;             // (1 << group) for each group whose TR list is presorted
     uint32_t  group_opb[PVR_MAX_LIST_GROUPS];        // Offset of each group's first OPBs from the OPB area
 
     semaphore_t         dma_lock;       // Locked if a DMA is in progress (vertex or texture)
@@ -268,7 +270,11 @@ typedef struct pvr_bkg_poly {
 void pvr_allocate_buffers(const pvr_init_params_t *params);
 
 /* Fill the tile matrices (after it's initialized) */
-void pvr_init_tile_matrices(bool presort);
+void pvr_init_tile_matrices(void);
+
+/* Rewrite a TA buffer's tile matrix if it doesn't match the current settings
+   (sort mode of each group). */
+void pvr_sync_tile_matrix(int which);
 
 /* The region array (RA), called the tile matrix in KOS: a zero header of
    PVR_TILE_MATRIX_HEADER_SIZE bytes, a dummy entry, then the entries of the

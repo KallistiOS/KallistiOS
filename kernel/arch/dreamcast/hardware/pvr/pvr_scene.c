@@ -106,6 +106,9 @@ static void pvr_start_ta_rendering(void) {
         if(!pvr_state.vbuf_doublebuf)
             pvr_wait_render_done();
 
+        // Bring the tile matrix's sort modes up to date.
+        pvr_sync_tile_matrix(pvr_state.ta_target);
+
         pvr_state.ta_checked_ready = 1;
         pvr_state.curr_to_texture = pvr_state.next_to_texture;
         pvr_state.to_txr_rp = pvr_state.next_to_txr_rp;

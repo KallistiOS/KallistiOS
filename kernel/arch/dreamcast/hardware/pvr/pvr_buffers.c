@@ -135,10 +135,21 @@ void pvr_ra_set_flags(uint32_t tile_matrix, int tw, int th, int group_count,
         vr[-PVR_RA_ENTRY_WORDS * group_count] |= PVR_RA_LAST;
 }
 
+/* Control word flags of group p, as currently configured in pvr_state. */
+static uint32_t pvr_group_flags(int p) {
+    return pvr_ra_group_flags(p, pvr_state.group_count,
+                             !!(pvr_state.group_presort & BIT(p)));
+}
+
+/* What a tile matrix's contents depend on, apart from the buffer layout. */
+static uint32_t pvr_tile_matrix_key(void) {
+    return pvr_state.group_presort;
+}
+
 /* Fill Tile Matrix buffers. This function takes a base address and sets up
    the rendering structures there. Each tile of the screen (32x32) receives
    a small buffer space, once per list group. */
-static void pvr_init_tile_matrix(int which, bool presort) {
+static void pvr_init_tile_matrix(int which) {
     volatile pvr_ta_buffers_t *buf;
     pvr_ra_group_t groups[PVR_MAX_LIST_GROUPS];
     uint32_t base;
@@ -149,7 +160,7 @@ static void pvr_init_tile_matrix(int which, bool presort) {
     /* Each group has its own first object pointer blocks, one group after the
        other in the OPB area, each list's blocks after the previous list's. */
     for(p = 0; p < pvr_state.group_count; p++) {
-        groups[p].flags = pvr_ra_group_flags(p, pvr_state.group_count, presort);
+        groups[p].flags = pvr_group_flags(p);
         base = buf->opb + pvr_state.group_opb[p];
 
         for(i = 0; i < PVR_OPB_COUNT; i++) {
@@ -167,29 +178,58 @@ static void pvr_init_tile_matrix(int which, bool presort) {
 
     pvr_ra_write(buf->tile_matrix, pvr_state.tw, pvr_state.th,
                  groups, pvr_state.group_count);
+
+    buf->tile_matrix_key = pvr_tile_matrix_key();
 }
 
 /* Fill all tile matrices */
-void pvr_init_tile_matrices(bool presort) {
+void pvr_init_tile_matrices(void) {
     int i;
 
     for(i = 0; i < 2; i++)
-        pvr_init_tile_matrix(i, presort);
+        pvr_init_tile_matrix(i);
+}
+
+/* Rewrite the control words of the given TA buffer's tile matrix */
+static void pvr_write_tile_matrix_flags(int which) {
+    volatile pvr_ta_buffers_t *buf = pvr_state.ta_buffers + which;
+    int p;
+
+    for(p = 0; p < pvr_state.group_count; p++)
+        pvr_ra_set_flags(buf->tile_matrix, pvr_state.tw, pvr_state.th,
+                         pvr_state.group_count, p, pvr_group_flags(p));
+
+    buf->tile_matrix_key = pvr_tile_matrix_key();
+}
+
+void pvr_sync_tile_matrix(int which) {
+    if(pvr_state.ta_buffers[which].tile_matrix_key != pvr_tile_matrix_key())
+        pvr_init_tile_matrix(which);
 }
 
 void pvr_set_presort_mode(bool presort) {
-    uint32_t tile_matrix;
-    int p;
+    if(__predict_false(!pvr_state.vbuf_doublebuf))
+        pvr_wait_render_done();
+
+    pvr_state.group_presort = presort ? (uint32_t)(BIT(pvr_state.group_count) - 1) : 0;
+    pvr_write_tile_matrix_flags(pvr_state.ta_target);
+}
+
+int pvr_set_group_presort(int group, bool presort) {
+    if(group < 0 || group >= pvr_state.group_count)
+        return -1;
 
     if(__predict_false(!pvr_state.vbuf_doublebuf))
         pvr_wait_render_done();
 
-    tile_matrix = pvr_state.ta_buffers[pvr_state.ta_target].tile_matrix;
+    if(presort)
+        pvr_state.group_presort |= BIT(group);
+    else
+        pvr_state.group_presort &= ~BIT(group);
 
-    for(p = 0; p < pvr_state.group_count; p++)
-        pvr_ra_set_flags(tile_matrix, pvr_state.tw, pvr_state.th,
-                         pvr_state.group_count, p,
-                         pvr_ra_group_flags(p, pvr_state.group_count, presort));
+    pvr_write_tile_matrix_flags(pvr_state.ta_target);
+
+    return 0;
 }
 
 
