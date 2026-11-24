@@ -181,8 +181,11 @@ typedef enum pvr_pixel_mode {
 
 /** \brief   Triangle strip length
 
-    This sets the maximum length of a triangle strip, if not
-    configured in auto mode.
+    This sets the maximum number of triangles the TA stores per strip piece.
+    Longer strips are split into pieces of at most this many triangles, each
+    with its own copy of the header in the vertex buffer and its own entry in
+    the object lists. Longer pieces use less vertex buffer memory for long
+    triangle strips.
 */
 typedef enum pvr_strip_len {
     PVR_STRIP_LEN_1,
@@ -242,9 +245,13 @@ typedef struct pvr_poly_hdr_cmd {
     bool modifier_en             :1; /* 7 */     /**< Enable modifier effects */
     uint32_t                     :8; /* 15-8 */
     pvr_clip_mode_t clip_mode    :2; /* 17-16 */ /**< Clipping mode */
-    pvr_strip_len_t strip_len    :2; /* 19-18 */ /**< Triangle strips length (if non-auto) */
+    pvr_strip_len_t strip_len    :2; /* 19-18 */ /**< Triangle strips length (applied when auto_strip_len/Group_En is set) */
     uint32_t                     :3; /* 22-20 */
-    bool auto_strip_len          :1; /* 23 */    /**< Auto select triangle strips length */
+    bool auto_strip_len          :1; /* 23 */    /**< Group_En: apply this header's strip_len.
+                                                      If unset, the previous setting stays in effect.
+                                                      (Per spec this also gates clip_mode, but due to
+                                                      a hardware bug clip_mode is always taken from
+                                                      every header.) */
     pvr_list_t list_type         :3; /* 26-24 */ /**< Render list to use */
     uint32_t                     :1; /* 27 */
     bool strip_end               :1; /* 28 */    /**< Mark an end-of-strip */

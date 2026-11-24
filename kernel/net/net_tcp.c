@@ -167,6 +167,7 @@ struct tcp_sock {
             int count;
             struct lsock *queue;
             condvar_t cv;
+            struct sockaddr_in6 accepting; /* the peer accept() is setting up */
         } listen;
         struct {
             netif_t *net;
@@ -446,7 +447,7 @@ retry:
 
             tcp_send_fin_ack(sock);
             ++sock->data.snd.nxt;
-            sock->state = TCP_STATE_CLOSING;
+            sock->state = TCP_STATE_LAST_ACK;
             goto ret_no_remove;
 
         case TCP_STATE_CLOSED | TCP_STATE_RESET:
@@ -722,6 +723,7 @@ static int net_tcp_accept(net_socket_t *hnd, struct sockaddr *addr,
        unacceptable (and the second one will probably end up with an EINVAL
        error because of this). */
     else {
+        sock->listen.accepting = lsock.remote_addr;
         sock->state |= TCP_STATE_ACCEPTING;
         mutex_unlock(&sock->mutex);
         rwsem_write_lock(&tcp_sem);
@@ -3050,8 +3052,15 @@ static int net_tcp_input(netif_t *src, int domain, const void *hdr,
                 break;
 
             case TCP_STATE_LISTEN | TCP_STATE_ACCEPTING:
-                /* Ugly hack... */
-                rv = 0;
+                /* accept() is between taking a connection off the queue and
+                   adding its socket. Ignore a retransmitted SYN of that
+                   connection (it would be queued twice), but queue everyone
+                   else's: dropping them costs each one a SYN retransmission. */
+                if(ADDR_EQUAL(s->listen.accepting.sin6_addr, srca) &&
+                        s->listen.accepting.sin6_port == tcp->src_port)
+                    rv = 0;
+                else
+                    rv = listen_pkt(src, &srca, &dsta, tcp, s, flags, size);
                 break;
 
             case TCP_STATE_SYN_SENT:
@@ -3161,7 +3170,7 @@ static void net_tcp_job(workqueue_t *wq, workqueue_job_t *job) {
                         i->state = TCP_STATE_FIN_WAIT_1;
                     }
                     else {
-                        i->state = TCP_STATE_CLOSING;
+                        i->state = TCP_STATE_LAST_ACK;
                     }
 
                     tcp_send_fin_ack(i);

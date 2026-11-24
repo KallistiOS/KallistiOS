@@ -33,7 +33,8 @@ void pvr_poly_compile(pvr_poly_hdr_t *dst, const pvr_poly_cxt_t *src) {
        into place, and OR it into the final result. */
 
     /* The base values for CMD */
-    cmd = PVR_CMD_POLYHDR
+    cmd = (PVR_CMD_POLYHDR & ~PVR_TA_CMD_STRIPLEN)
+        | FIELD_PREP(PVR_TA_CMD_STRIPLEN, src->gen.strip_len)
         | FIELD_PREP(PVR_TA_CMD_TXRENABLE, src->txr.enable)
         | FIELD_PREP(PVR_TA_CMD_TYPE, src->list_type)
         | FIELD_PREP(PVR_TA_CMD_CLRFMT, src->fmt.color)
@@ -118,6 +119,7 @@ void pvr_poly_cxt_col(pvr_poly_cxt_t *dst, pvr_list_t list) {
     dst->depth.comparison = PVR_DEPTHCMP_GREATER;
     dst->depth.write = PVR_DEPTHWRITE_ENABLE;
     dst->gen.culling = PVR_CULLING_CCW;
+    dst->gen.strip_len = PVR_STRIP_LEN_2;
     dst->txr.enable = false;
 
     dst->gen.alpha = alpha;
@@ -156,6 +158,7 @@ void pvr_poly_cxt_txr(pvr_poly_cxt_t *dst, pvr_list_t list,
     dst->depth.comparison = PVR_DEPTHCMP_GREATER;
     dst->depth.write = PVR_DEPTHWRITE_ENABLE;
     dst->gen.culling = PVR_CULLING_CCW;
+    dst->gen.strip_len = PVR_STRIP_LEN_2;
     dst->txr.enable = true;
 
     dst->gen.alpha = alpha;
@@ -363,7 +366,8 @@ void pvr_poly_mod_compile(pvr_poly_mod_hdr_t *dst, const pvr_poly_cxt_t *src) {
        into place, and OR it into the final result. */
 
     /* The base values for CMD */
-    cmd = PVR_CMD_POLYHDR
+    cmd = (PVR_CMD_POLYHDR & ~PVR_TA_CMD_STRIPLEN)
+        | FIELD_PREP(PVR_TA_CMD_STRIPLEN, src->gen.strip_len)
         | FIELD_PREP(PVR_TA_CMD_TXRENABLE, src->txr.enable)
         | FIELD_PREP(PVR_TA_CMD_TYPE, src->list_type)
         | FIELD_PREP(PVR_TA_CMD_CLRFMT, src->fmt.color)
@@ -479,6 +483,7 @@ void pvr_poly_cxt_col_mod(pvr_poly_cxt_t *dst, pvr_list_t list) {
     dst->depth.comparison = PVR_DEPTHCMP_GREATER;
     dst->depth.write = PVR_DEPTHWRITE_ENABLE;
     dst->gen.culling = PVR_CULLING_CCW;
+    dst->gen.strip_len = PVR_STRIP_LEN_2;
     dst->fmt.modifier = true;
     dst->gen.modifier_mode = true;
     dst->txr.enable = false;
@@ -531,6 +536,7 @@ void pvr_poly_cxt_txr_mod(pvr_poly_cxt_t *dst, pvr_list_t list,
     dst->depth.comparison = PVR_DEPTHCMP_GREATER;
     dst->depth.write = PVR_DEPTHWRITE_ENABLE;
     dst->gen.culling = PVR_CULLING_CCW;
+    dst->gen.strip_len = PVR_STRIP_LEN_2;
     dst->fmt.modifier = true;
     dst->gen.modifier_mode = true;
     dst->txr.enable = true;

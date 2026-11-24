@@ -181,6 +181,8 @@ typedef struct {
         bool                alpha2;         /**< \brief Enable alpha inside modifier */
         pvr_fog_type_t      fog_type2;      /**< \brief Fog type inside modifier */
         bool                color_clamp2;   /**< \brief Enable color clamping inside modifer */
+        pvr_strip_len_t     strip_len;      /**< \brief Max triangles per strip piece stored by the TA
+                                                 (defaults to PVR_STRIP_LEN_2) */
     } gen;                                  /**< \brief General parameters */
     struct {
         pvr_blend_mode_t    src;            /**< \brief Source blending mode outside modifier */
@@ -596,6 +598,7 @@ Striplength set to 2 */
     @{
 */
 #define PVR_TA_CMD_TYPE            GENMASK(26, 24)
+#define PVR_TA_CMD_STRIPLEN        GENMASK(19, 18)
 #define PVR_TA_CMD_USERCLIP        GENMASK(17, 16)
 #define PVR_TA_CMD_MODIFIER        BIT(7)
 #define PVR_TA_CMD_MODIFIERMODE    BIT(6)
