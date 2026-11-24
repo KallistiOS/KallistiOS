@@ -64,12 +64,6 @@ int pvr_init(const pvr_init_params_t *params) {
         return -1;
     }
 
-    /* Vertex DMA sends each list in one piece, so it can't do list groups */
-    if(params->list_group_count > 1 && params->dma_enabled) {
-        dbglog(DBG_ERROR, "pvr: list groups don't work with vertex DMA\n");
-        return -1;
-    }
-
     /* Check the bin sizes of each list group: valid sizes, at least one
        list per group */
     if(params->list_groups) {
@@ -236,6 +230,17 @@ int pvr_init(const pvr_init_params_t *params) {
 int pvr_shutdown(void) {
     if(!pvr_state.valid)
         return -1;
+
+    /* With vertex DMA, a scene's DMA goes on from interrupt to interrupt
+       after pvr_scene_finish() (with several list groups, waiting for the
+       TA between groups). Let it finish: reset in the middle of it, a
+       scene with list groups after the next pvr_init() never registers. */
+    if(pvr_state.dma_mode) {
+        pvr_wait_ready();
+
+        if(sem_wait_timed((semaphore_t *)&pvr_state.dma_lock, 100) == 0)
+            sem_signal((semaphore_t *)&pvr_state.dma_lock);
+    }
 
     /* Set us invalid */
     pvr_state.valid = 0;

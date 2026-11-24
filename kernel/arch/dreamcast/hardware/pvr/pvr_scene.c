@@ -202,6 +202,15 @@ int pvr_list_begin(pvr_list_t list) {
                    "list group %d\n", list, pvr_state.group_cur);
             return -1;
         }
+
+        /* With DMA, the groups go to the TA one after the other when the
+           scene is finished: no list can go to the TA directly before. */
+        if(pvr_state.dma_mode &&
+           !pvr_state.dma_buffers[pvr_state.ram_target].base[list]) {
+            dbglog(DBG_WARNING, "pvr_list_begin: list %d has no vertex "
+                   "buffer (needed with vertex DMA and list groups)\n", list);
+            return -1;
+        }
     }
 
     /* If we already had a list open, close it first */
@@ -371,9 +380,62 @@ static void pvr_ta_continue(void) {
     pvr_state.group_cur = group;
 }
 
+/* With vertex DMA: end the current group in the vertex buffer of each of its
+   lists, with a blank polygon header in a list that got nothing, and an end
+   of list marker. pvr_dma_group_advance() later sends each group's part of
+   each buffer. */
+static int pvr_dma_group_close(void) {
+    volatile pvr_dma_buffers_t *b = pvr_state.dma_buffers + pvr_state.ram_target;
+    int group = pvr_state.group_cur;
+    uint32_t start;
+    int i;
+
+    if(pvr_state.list_reg_open != PVR_LIST_NONE)
+        pvr_list_finish();
+
+    for(i = 0; i < PVR_OPB_COUNT; i++) {
+        start = group ? b->group_end[group - 1][i] : 0;
+
+        if(pvr_state.group_lists[group] & BIT(i)) {
+            if(!b->base[i]) {
+                dbglog(DBG_ERROR, "pvr: list %d of list group %d has no "
+                       "vertex buffer\n", i, group);
+                return -1;
+            }
+
+            /* Make sure there's at least one primitive in it */
+            if(b->ptr[i] == start) {
+                pvr_blank_polyhdr_buf(i, (pvr_poly_hdr_t *)(b->base[i] + b->ptr[i]));
+                b->ptr[i] += 32;
+            }
+
+            /* Put a zero-marker on the end */
+            memset(b->base[i] + b->ptr[i], 0, 32);
+            b->ptr[i] += 32;
+
+            /* Verify that there is no overrun */
+            assert(b->ptr[i] <= b->size[i]);
+        }
+
+        b->group_end[group][i] = b->ptr[i];
+    }
+
+    pvr_state.lists_closed = 0;
+
+    return 0;
+}
+
 int pvr_list_continue(void) {
     if(pvr_state.group_cur >= pvr_state.group_count - 1)
         return -1;
+
+    if(pvr_state.dma_mode) {
+        if(pvr_dma_group_close() < 0)
+            return -1;
+
+        pvr_state.group_cur++;
+        return 0;
+    }
 
     pvr_group_close();
     pvr_ta_continue();
@@ -393,8 +455,33 @@ int pvr_scene_finish(void) {
     int i, o;
     volatile pvr_dma_buffers_t *b;
 
+    // With vertex DMA and several list groups: end each group in the vertex
+    // buffers, the unused groups empty, and let the DMA send them in order.
+    if(pvr_state.dma_mode && pvr_state.group_count > 1) {
+        if(pvr_dma_group_close() < 0)
+            return -1;
+
+        while(pvr_state.group_cur < pvr_state.group_count - 1) {
+            pvr_state.group_cur++;
+
+            if(pvr_dma_group_close() < 0)
+                return -1;
+        }
+
+        pvr_start_ta_rendering();
+
+        // Flip buffers and mark them complete.
+        o = irq_disable();
+        pvr_state.dma_buffers[pvr_state.ram_target].ready = 1;
+        pvr_state.ram_target ^= 1;
+        irq_restore(o);
+
+        pvr_sync_stats(PVR_SYNC_BUFDONE);
+
+        pvr_start_dma();
+    }
     // If we're in DMA mode, then this works a little differently...
-    if(pvr_state.dma_mode) {
+    else if(pvr_state.dma_mode) {
         // If any enabled lists are empty, fill them with a blank polyhdr. Also
         // add a zero-marker to the end of each list.
         b = pvr_state.dma_buffers + pvr_state.ram_target;

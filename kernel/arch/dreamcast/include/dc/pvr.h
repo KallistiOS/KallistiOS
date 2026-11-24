@@ -740,8 +740,9 @@ typedef struct {
         opb_sizes above times the tile count, or the group's own sizes, see
         list_groups) per TA buffer, plus 24 bytes of region array per tile.
 
-        List groups don't work with vertex DMA (dma_enabled): pvr_init()
-        fails if both are set.
+        With vertex DMA (dma_enabled), every list a group uses must have a
+        vertex buffer (pvr_set_vertbuf()): lists submitted directly can't be
+        mixed with DMA lists in a scene with several groups.
     */
     int     list_group_count;
 
@@ -1176,6 +1177,12 @@ int pvr_scene_finish(void);
     Each group can have its own bin sizes (pvr_init_params_t::list_groups),
     including lists that only some groups use.
 
+    With vertex DMA, pvr_list_continue() only marks where each list's group
+    ends in its vertex buffer. pvr_scene_finish() then hands the scene to the
+    DMA, which sends the groups one after the other, and the TA moves on to
+    the next group from the interrupt that ends the previous one. Every list
+    used in a group must have a vertex buffer.
+
     How it works: the region array (tile matrix) holds list_group_count
     consecutive entries per tile. Bit 30 of an entry's control word keeps
     the depth and colour from the previous entry (no depth clear, no
@@ -1215,8 +1222,13 @@ int pvr_scene_finish(void);
     list continuation (TA_LIST_CONT). After this call, every list type the
     next group has bins for can be opened again.
 
+    With vertex DMA, the TA moves on later, when the DMA sends the scene;
+    this call just ends the group in each list's vertex buffer.
+
     \retval 0               On success.
-    \retval -1              If the scene is already in its last group.
+    \retval -1              If the scene is already in its last group, or
+                            if, with vertex DMA, a list of the group has no
+                            vertex buffer.
 
     \sa pvr_init_params_t::list_group_count
 */

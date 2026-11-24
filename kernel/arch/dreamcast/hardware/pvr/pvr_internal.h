@@ -131,6 +131,7 @@ typedef struct {
     uint32_t    ptr[PVR_OPB_COUNT];    // DMA buffer write pointer, if used
     uint32_t    size[PVR_OPB_COUNT];   // DMA buffer sizes, or zero if none
     int         ready;                 // >0 if these buffers are ready to be DMAed
+    uint32_t    group_end[PVR_MAX_LIST_GROUPS][PVR_OPB_COUNT]; // End of each list group's data (list continuation)
 } pvr_dma_buffers_t;
 
 // Frame buffers structure: we have two sets of these
@@ -174,6 +175,8 @@ typedef struct {
     uint32_t  group_opb[PVR_MAX_LIST_GROUPS];        // Offset of each group's first OPBs from the OPB area
     uint32_t  group_bin_size[PVR_MAX_LIST_GROUPS][PVR_OPB_COUNT]; // Bin size of each list in each group, in bytes
     uint8_t   lists_done_target[PVR_OPB_COUNT];      // Done interrupts expected per scene for each list (groups using it)
+    int       dma_group;                 // Group being DMAed (DMA mode)
+    int       dma_group_fed;             // >0 once the DMA has sent all of dma_group
 
     semaphore_t         dma_lock;       // Locked if a DMA is in progress (vertex or texture)
     int     ta_checked_ready;           // >0 if the TA has been checked to be ready for the new scene
@@ -365,6 +368,11 @@ uint32_t pvr_ra_group_flags(int p, int group_count, bool presort);
    first OPBs and bin sizes, then TA_LIST_CONT. The previous group's lists
    must all be done. */
 void pvr_ta_continue_group(int group);
+
+/* With vertex DMA and several list groups: once the DMA has sent all of the
+   current group and the TA has finished its lists, continue to the next
+   group and DMA it. Called from interrupt context. */
+void pvr_dma_group_advance(void);
 
 /* What event is happening (for pvr_sync_stats)? */
 #define PVR_SYNC_VBLANK     1   /* VBlank IRQ */

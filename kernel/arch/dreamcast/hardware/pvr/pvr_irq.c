@@ -26,6 +26,66 @@
    rendering time.
 */
 
+static void dma_next_list(void *thread);
+
+// With several list groups: DMA the next list of the current group, from
+// where the previous group ended in its buffer. Once the whole group is
+// sent, the next group waits for the TA to finish this one (see
+// pvr_dma_group_advance()); after the last group, free the DMA channel.
+static void dma_next_group_list(volatile pvr_dma_buffers_t *b, void *thread) {
+    int group = pvr_state.dma_group;
+    uint32_t start, end;
+    unsigned int i;
+
+    for(i = 0; i < PVR_OPB_COUNT; i++) {
+        if((pvr_state.group_lists[group] & BIT(i))
+                && !(pvr_state.lists_dmaed & BIT(i))) {
+            pvr_state.lists_dmaed |= BIT(i);
+
+            start = group ? b->group_end[group - 1][i] : 0;
+            end = b->group_end[group][i];
+
+            pvr_dma_load_ta(b->base[i] + start, end - start, 0,
+                            dma_next_list, thread);
+            return;
+        }
+    }
+
+    if(group < pvr_state.group_count - 1) {
+        pvr_state.dma_group_fed = 1;
+        pvr_dma_group_advance();
+        return;
+    }
+
+    // That was the last group: free up the DMA channel.
+    pvr_state.lists_dmaed = 0;
+    sem_signal((semaphore_t *)&pvr_state.dma_lock);
+    b->ready = 0;
+}
+
+void pvr_dma_group_advance(void) {
+    int group = pvr_state.dma_group;
+    unsigned int i;
+
+    if(!pvr_state.dma_group_fed)
+        return;
+
+    // Wait for the done interrupts of every list of the group: usually they
+    // come after the DMA's, but the order isn't guaranteed.
+    for(i = 0; i < PVR_OPB_COUNT; i++) {
+        if((pvr_state.group_lists[group] & BIT(i)) &&
+           pvr_state.lists_done[i] < pvr_lists_done_by(group, i))
+            return;
+    }
+
+    pvr_state.dma_group_fed = 0;
+    pvr_state.lists_dmaed = 0;
+    pvr_state.dma_group = group + 1;
+
+    pvr_ta_continue_group(group + 1);
+    dma_next_list(NULL);
+}
+
 // Find the next list to DMA out. If we have none left to do, then do
 // nothing. Otherwise, start the DMA and chain back to us upon completion.
 static void dma_next_list(void *thread) {
@@ -34,6 +94,11 @@ static void dma_next_list(void *thread) {
 
     // Get the buffers for this frame.
     b = pvr_state.dma_buffers + (pvr_state.ram_target ^ 1);
+
+    if(pvr_state.group_count > 1) {
+        dma_next_group_list(b, thread);
+        return;
+    }
 
     for(i = 0; i < PVR_OPB_COUNT; i++) {
         if((pvr_state.lists_enabled & BIT(i))
@@ -72,6 +137,10 @@ void pvr_start_dma(void) {
 
     sem_wait((semaphore_t *)&pvr_state.dma_lock);
 
+    // Start with the first list group.
+    pvr_state.dma_group = 0;
+    pvr_state.dma_group_fed = 0;
+
     // Begin DMAing the first list.
     dma_next_list(thd_get_current());
 }
@@ -81,10 +150,13 @@ void pvr_start_dma(void) {
    last of those, so that the render starts only once the whole scene is in.
    Counting (rather than resetting a mask at each group) also keeps a late
    interrupt from an earlier group from being mistaken for one of the next
-   group. */
+   group. With vertex DMA, the end of a group lets the next one go. */
 static inline void pvr_list_done(pvr_list_t list) {
     if(++pvr_state.lists_done[list] >= pvr_state.lists_done_target[list])
         pvr_state.lists_transferred |= BIT(list);
+
+    if(pvr_state.dma_group_fed)
+        pvr_dma_group_advance();
 }
 
 static void pvr_render_lists(void) {
