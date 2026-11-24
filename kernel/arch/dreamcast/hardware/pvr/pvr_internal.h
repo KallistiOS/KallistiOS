@@ -263,6 +263,27 @@ void pvr_allocate_buffers(const pvr_init_params_t *params);
 /* Fill the tile matrices (after it's initialized) */
 void pvr_init_tile_matrices(bool presort);
 
+/* The region array (RA, called the tile matrix in KOS): a zero header of PVR_TILE_MATRIX_HEADER_SIZE bytes, a dummy
+   entry, then the entries of the tiles. Each entry is six words: a control
+   word and the addresses of the tile's first object pointer block for the
+   OP, OP modifier, TR, TR modifier and PT lists, in that order. A list
+   address with bit 31 set (PVR_RA_LIST_EMPTY) means an empty list. */
+
+#define PVR_TILE_MATRIX_HEADER_SIZE 0x48
+
+#define PVR_RA_ENTRY_WORDS  6           /* Words per region array entry */
+
+#define PVR_RA_LAST         BIT(31)     /* Last entry of the array */
+#define PVR_RA_PRESORT      BIT(29)     /* Presort the TR list of this entry */
+#define PVR_RA_NO_WRITEOUT  BIT(28)     /* Don't write the tile out after this entry.
+                                           On a tile's last entry the tile is
+                                           never written; on the array's last
+                                           entry the render never finishes. */
+#define PVR_RA_TILE_Y(y)    ((uint32_t)(y) << 8)
+#define PVR_RA_TILE_X(x)    ((uint32_t)(x) << 2)
+
+#define PVR_RA_LIST_EMPTY   0x80000000
+
 
 /**** pvr_misc.c ******************************************************/
 
