@@ -40,9 +40,10 @@ static void dma_next_list(void *thread) {
 
             /* If we are in PVR DMA mode, yet we haven't associated a
                RAM-residing vertex buffer with the current list
-               (because we submitted it directly, for example),
-               mark it as complete, so we skip trying to DMA it. */
-            if(!b->base[i]) {
+               (because we submitted it directly, for example), or
+               pvr_list_flush() already sent it, mark it as complete,
+               so we skip trying to DMA it. */
+            if(!b->base[i] || (b->flushed & BIT(i))) {
                 pvr_state.lists_dmaed |= BIT(i);
                 continue;
             }

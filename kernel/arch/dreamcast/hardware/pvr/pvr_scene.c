@@ -134,6 +134,8 @@ void pvr_scene_begin(void) {
             pvr_state.dma_buffers[pvr_state.ram_target].ptr[i] = 0;
         }
 
+        pvr_state.dma_buffers[pvr_state.ram_target].flushed = 0;
+
         pvr_sync_stats(PVR_SYNC_BUFSTART);
     }
     else {
@@ -184,6 +186,13 @@ int pvr_list_begin(pvr_list_t list) {
     /* Check to make sure we can do this */
     if(PVR_DEBUG && !pvr_state.dma_mode && pvr_state.lists_closed & BIT(list)) {
         dbglog(DBG_WARNING, "pvr_list_begin: attempt to open already closed list\n");
+        return -1;
+    }
+
+    /* A list sent by pvr_list_flush() is done for this scene */
+    if(pvr_state.dma_mode &&
+       (pvr_state.dma_buffers[pvr_state.ram_target].flushed & BIT(list))) {
+        dbglog(DBG_WARNING, "pvr_list_begin: attempt to open flushed list\n");
         return -1;
     }
 
@@ -286,11 +295,69 @@ int pvr_list_prim(pvr_list_t list, const void *data, size_t size) {
     return 0;
 }
 
-int pvr_list_flush(pvr_list_t list) {
-    (void)list;
+/* Terminate a list's DMA buffer: a blank header if it is empty, then the
+   zero marker that ends the list. */
+static void pvr_list_terminate(volatile pvr_dma_buffers_t *b, pvr_list_t list) {
+    if(b->ptr[list] == 0) {
+        pvr_blank_polyhdr_buf(list, (pvr_poly_hdr_t *)(b->base[list]));
+        b->ptr[list] += 32;
+    }
 
-    assert_msg(0, "not implemented yet");
-    return -1;
+    memset(b->base[list] + b->ptr[list], 0, 32);
+    b->ptr[list] += 32;
+
+    assert(b->ptr[list] <= b->size[list]);
+}
+
+int pvr_list_flush(pvr_list_t list) {
+    volatile pvr_dma_buffers_t *b;
+    int rv;
+
+    if(list < 0 || list >= PVR_OPB_COUNT || !pvr_state.dma_mode
+       || !(pvr_state.lists_enabled & BIT(list))) {
+        dbglog(DBG_WARNING, "pvr_list_flush: list %d is not a DMA list\n",
+               (int)list);
+        return -1;
+    }
+
+    b = pvr_state.dma_buffers + pvr_state.ram_target;
+
+    if(!b->base[list]) {
+        dbglog(DBG_WARNING, "pvr_list_flush: list %d has no vertex buffer\n",
+               (int)list);
+        return -1;
+    }
+
+    if(b->flushed & BIT(list)) {
+        dbglog(DBG_WARNING, "pvr_list_flush: list %d already flushed\n",
+               (int)list);
+        return -1;
+    }
+
+    /* Close the open list: a direct one must reach the TA in full before
+       the DMA starts. */
+    if(pvr_state.list_reg_open != PVR_LIST_NONE)
+        pvr_list_finish();
+
+    pvr_list_terminate(b, list);
+
+    /* The TA must be done with the previous scene, as for a list submitted
+       directly. */
+    pvr_start_ta_rendering();
+
+    /* The previous scene's DMA chain has ended by now; take the channel all
+       the same, as pvr_start_dma() does. */
+    sem_wait((semaphore_t *)&pvr_state.dma_lock);
+    rv = pvr_dma_load_ta(b->base[list], b->ptr[list], true, NULL, NULL);
+    sem_signal((semaphore_t *)&pvr_state.dma_lock);
+
+    if(rv < 0)
+        return -1;
+
+    b->flushed |= BIT(list);
+    pvr_state.lists_closed |= BIT(list);
+
+    return 0;
 }
 
 /* Call this after you have finished submitting all data for a frame; once
@@ -321,22 +388,14 @@ int pvr_scene_finish(void) {
 
             /* We never associated an in-RAM DMA vertex buffer with the given
                list type, because we're using hybrid rendering and submitted
-               that list type directly - skip it */
-            if(!b->base[i])
+               that list type directly, or pvr_list_flush() already sent it -
+               skip it */
+            if(!b->base[i] || (b->flushed & BIT(i)))
                 continue;
 
-            // Make sure there's at least one primitive in each.
-            if(b->ptr[i] == 0) {
-                pvr_blank_polyhdr_buf(i, (pvr_poly_hdr_t*)(b->base[i]));
-                b->ptr[i] += 32;
-            }
-
-            // Put a zero-marker on the end.
-            memset(b->base[i] + b->ptr[i], 0, 32);
-            b->ptr[i] += 32;
-
-            // Verify that there is no overrun.
-            assert(b->ptr[i] <= b->size[i]);
+            /* Make sure there's at least one primitive in each, and put a
+               zero-marker on the end. */
+            pvr_list_terminate(b, i);
         }
 
         pvr_start_ta_rendering();

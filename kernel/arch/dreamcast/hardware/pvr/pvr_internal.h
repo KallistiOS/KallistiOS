@@ -128,6 +128,7 @@ typedef struct {
     uint8_t     *base[PVR_OPB_COUNT];  // DMA buffers, if assigned
     uint32_t    ptr[PVR_OPB_COUNT];    // DMA buffer write pointer, if used
     uint32_t    size[PVR_OPB_COUNT];   // DMA buffer sizes, or zero if none
+    uint32_t    flushed;               // (1 << idx) for each list sent by pvr_list_flush()
     int         ready;                 // >0 if these buffers are ready to be DMAed
 } pvr_dma_buffers_t;
 
