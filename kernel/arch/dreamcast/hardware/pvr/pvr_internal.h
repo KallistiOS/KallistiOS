@@ -263,11 +263,15 @@ void pvr_allocate_buffers(const pvr_init_params_t *params);
 /* Fill the tile matrices (after it's initialized) */
 void pvr_init_tile_matrices(bool presort);
 
-/* The region array (RA, called the tile matrix in KOS): a zero header of PVR_TILE_MATRIX_HEADER_SIZE bytes, a dummy
-   entry, then the entries of the tiles. Each entry is six words: a control
-   word and the addresses of the tile's first object pointer block for the
-   OP, OP modifier, TR, TR modifier and PT lists, in that order. A list
-   address with bit 31 set (PVR_RA_LIST_EMPTY) means an empty list. */
+/* The region array (RA), called the tile matrix in KOS: a zero header of
+   PVR_TILE_MATRIX_HEADER_SIZE bytes, a dummy entry, then the entries of the
+   tiles. Each entry is six words: a control word and the addresses of the
+   tile's first object pointer block for the OP, OP modifier, TR, TR
+   modifier and PT lists, in that order. A list address with bit 31 set
+   (PVR_RA_LIST_EMPTY) means an empty list.
+
+   pvr_ra_write() writes the tiles in column order (x outer, y inner), with
+   one entry per group for each tile, consecutive and in group order. */
 
 #define PVR_TILE_MATRIX_HEADER_SIZE 0x48
 
@@ -281,8 +285,44 @@ void pvr_init_tile_matrices(bool presort);
                                            entry the render never finishes. */
 #define PVR_RA_TILE_Y(y)    ((uint32_t)(y) << 8)
 #define PVR_RA_TILE_X(x)    ((uint32_t)(x) << 2)
+#define PVR_RA_FLAGS_MASK   (PVR_RA_PRESORT | PVR_RA_NO_WRITEOUT)
 
 #define PVR_RA_LIST_EMPTY   0x80000000
+
+/* One group of the region array, i.e. one entry per tile. */
+typedef struct pvr_ra_group {
+    /* Control word flags for this group's entries: PVR_RA_PRESORT and/or
+       PVR_RA_NO_WRITEOUT. The writer adds the tile
+       position, and PVR_RA_LAST on the final entry of the array. */
+    uint32_t    flags;
+
+    /* VRAM address (32-bit area offset) of the first object pointer block of
+       tile 0 for each list, or PVR_RA_LIST_EMPTY. Tile n's block is at
+       opb[list] + bin_size[list] * n, n = tw * y + x. */
+    uint32_t    opb[PVR_OPB_COUNT];
+
+    /* First-block size of each list in this group, in bytes */
+    uint32_t    bin_size[PVR_OPB_COUNT];
+} pvr_ra_group_t;
+
+/* Write a full region array at VRAM offset tile_matrix (the address that
+   goes into PVR_ISP_TILEMAT_ADDR; the header goes before it): the dummy
+   entry, then group_count entries per tile of a tw x th grid, entry p taking
+   its flags, list bases and bin sizes from groups[p]. Returns the size in
+   bytes from tile_matrix to the end of the array. */
+size_t pvr_ra_write(uint32_t tile_matrix, int tw, int th,
+                    const pvr_ra_group_t *groups, int group_count);
+
+/* Size in bytes from tile_matrix to the end of such an array. */
+#define PVR_RA_SIZE(tw, th, group_count) \
+    (4 * PVR_RA_ENTRY_WORDS * (1 + (tw) * (th) * (group_count)))
+
+/* Rewrite the control word of every entry of group p of an array written by
+   pvr_ra_write() (same tw, th and group_count), with the given flags. Writes
+   whole control words without reading VRAM; sets PVR_RA_LAST again on the
+   final entry. */
+void pvr_ra_set_flags(uint32_t tile_matrix, int tw, int th, int group_count,
+                      int p, uint32_t flags);
 
 
 /**** pvr_misc.c ******************************************************/
