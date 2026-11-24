@@ -153,9 +153,11 @@ void pvr_sync_reg_buffer(void) {
     //PVR_SET(PVR_RESET, PVR_RESET_NONE);
 
     /* Set buffer pointers */
+    /* The first OPBs of each list group, then the overflow OPBs. A scene
+       starts with the first group's OPBs and bin sizes. */
     PVR_SET(PVR_TA_OPB_START,       buf->opb);
     PVR_SET(PVR_TA_OPB_INIT,        buf->opb + buf->opb_size);
-    PVR_SET(PVR_TA_OPB_END,         buf->opb + buf->opb_size * (1 + buf->opb_overflow_count));
+    PVR_SET(PVR_TA_OPB_END,         buf->opb + buf->opb_size + buf->opb_overflow_size);
     PVR_SET(PVR_TA_VERTBUF_START,   buf->vertex);
     PVR_SET(PVR_TA_VERTBUF_END,     buf->vertex + buf->vertex_size);
 
@@ -170,6 +172,21 @@ void pvr_sync_reg_buffer(void) {
     printf("TA_OL_BASE: %08lx\nTA_OL_LIMIT: %08lx\nTA_NEXT_OPB: %08lx\n",
            PVR_GET(TA_OL_BASE), PVR_GET(TA_OL_LIMIT), PVR_GET(TA_NEXT_OPB) << 2);
 #endif
+}
+
+void pvr_ta_continue_group(int group) {
+    volatile pvr_ta_buffers_t *buf = pvr_state.ta_buffers + pvr_state.ta_target;
+
+    /* The next group's object lists start in that group's first OPBs, which
+       its region array entries point to (without this, the TA overwrites
+       the previous group's first OPBs), with the group's bin sizes; then
+       restart list input. Overflow OPBs keep being allocated from where the
+       earlier groups left off. */
+    PVR_SET(PVR_TA_OPB_START, buf->opb + pvr_state.group_opb[group]);
+    PVR_SET(PVR_OPB_CFG, pvr_state.group_reg_mask[group]);
+
+    PVR_SET(PVR_TA_LIST_CONT, BIT(31));
+    (void)PVR_GET(PVR_TA_LIST_CONT);
 }
 
 /* Begin a render operation that has been queued completely (i.e., the

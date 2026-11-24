@@ -56,6 +56,42 @@ int pvr_init(const pvr_init_params_t *params) {
         return -1;
     }
 
+    /* Check the list group count */
+    if(params->list_group_count < 0 ||
+       params->list_group_count > PVR_MAX_LIST_GROUPS) {
+        dbglog(DBG_ERROR, "pvr: list_group_count %d out of range (0 to %d)\n",
+               params->list_group_count, PVR_MAX_LIST_GROUPS);
+        return -1;
+    }
+
+    /* Check the bin sizes of each list group: valid sizes, at least one
+       list per group */
+    if(params->list_groups) {
+        int g, i, groups = params->list_group_count > 1 ?
+                           params->list_group_count : 1;
+
+        for(g = 0; g < groups; g++) {
+            const int *sizes = params->list_groups[g].opb_sizes;
+            int used = 0;
+
+            for(i = 0; i < PVR_OPB_COUNT; i++) {
+                if(sizes[i] != PVR_BINSIZE_0 && sizes[i] != PVR_BINSIZE_8 &&
+                   sizes[i] != PVR_BINSIZE_16 && sizes[i] != PVR_BINSIZE_32) {
+                    dbglog(DBG_ERROR, "pvr: list group %d: invalid bin size "
+                           "%d for list %d\n", g, sizes[i], i);
+                    return -1;
+                }
+
+                used |= sizes[i];
+            }
+
+            if(!used) {
+                dbglog(DBG_ERROR, "pvr: list group %d has no list\n", g);
+                return -1;
+            }
+        }
+    }
+
     /* Clear out video memory */
     vid_empty();
 
@@ -74,11 +110,17 @@ int pvr_init(const pvr_init_params_t *params) {
 
     pvr_state.vbuf_doublebuf = !params->vbuf_doublebuf_disabled;
 
+    /* List groups, and the translucent sort mode of each */
+    pvr_state.group_count = params->list_group_count > 1 ?
+                            params->list_group_count : 1;
+    pvr_state.group_presort = params->autosort_disabled ?
+                             (uint32_t)(BIT(pvr_state.group_count) - 1) : 0;
+
     /* Everything's clear, do the initial buffer pointer setup */
     pvr_allocate_buffers(params);
 
     /* Initialize tile matrices */
-    pvr_init_tile_matrices(!!params->autosort_disabled);
+    pvr_init_tile_matrices();
 
     pvr_state.list_reg_open = PVR_LIST_NONE;
 
@@ -188,6 +230,17 @@ int pvr_init(const pvr_init_params_t *params) {
 int pvr_shutdown(void) {
     if(!pvr_state.valid)
         return -1;
+
+    /* With vertex DMA, a scene's DMA goes on from interrupt to interrupt
+       after pvr_scene_finish() (with several list groups, waiting for the
+       TA between groups). Let it finish: reset in the middle of it, a
+       scene with list groups after the next pvr_init() never registers. */
+    if(pvr_state.dma_mode) {
+        pvr_wait_ready();
+
+        if(sem_wait_timed((semaphore_t *)&pvr_state.dma_lock, 100) == 0)
+            sem_signal((semaphore_t *)&pvr_state.dma_lock);
+    }
 
     /* Set us invalid */
     pvr_state.valid = 0;

@@ -146,6 +146,26 @@ int pvr_set_vertical_scale(float factor);
 */
 void pvr_set_presort_mode(bool presort);
 
+/** \brief   Set the translucent polygon sort mode of one list group.
+    \ingroup pvr_list_cont
+
+    With several list groups (see pvr_init_params_t::list_group_count), each
+    group sorts its translucent list on its own: autosorted per pixel, or
+    presorted (drawn in submission order). This function sets the mode of
+    one group; pvr_set_presort_mode() sets every group. The initial mode of
+    every group comes from pvr_init_params_t::autosort_disabled.
+
+    The setting is kept for later frames, until changed again. Called while a
+    scene is being submitted, it applies to that scene.
+
+    \param  group           The group, from 0 to list_group_count - 1.
+    \param  presort         True for presort mode, false for autosort mode.
+
+    \retval 0               On success.
+    \retval -1              If group is out of range.
+*/
+int pvr_set_group_presort(int group, bool presort);
+
 /** \brief   Retrieve the current VBlank count.
     \ingroup pvr_stats
 

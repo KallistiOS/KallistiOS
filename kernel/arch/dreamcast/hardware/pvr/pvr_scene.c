@@ -15,6 +15,7 @@
 #include <kos/genwait.h>
 #include <kos/regfield.h>
 #include <kos/thread.h>
+#include <arch/timer.h>
 #include <dc/pvr.h>
 #include <dc/sq.h>
 #include "pvr_internal.h"
@@ -25,6 +26,9 @@
 #else
 #  define PVR_DEBUG 1
 #endif
+
+/* How long to wait for the TA to finish the lists of a list group */
+#define PVR_GROUP_TIMEOUT_US 100000
 
 /*
 
@@ -102,6 +106,9 @@ static void pvr_start_ta_rendering(void) {
         if(!pvr_state.vbuf_doublebuf)
             pvr_wait_render_done();
 
+        // Bring the tile matrix's sort modes up to date.
+        pvr_sync_tile_matrix(pvr_state.ta_target);
+
         pvr_state.ta_checked_ready = 1;
         pvr_state.curr_to_texture = pvr_state.next_to_texture;
         pvr_state.to_txr_rp = pvr_state.next_to_txr_rp;
@@ -124,6 +131,7 @@ void pvr_scene_begin(void) {
     pvr_state.next_to_texture = 0;
     pvr_state.ta_checked_ready = 0;
     pvr_state.lists_closed = 0;
+    pvr_state.group_cur = 0;
 
     // Get general stuff ready.
     pvr_state.list_reg_open = PVR_LIST_NONE;
@@ -185,6 +193,24 @@ int pvr_list_begin(pvr_list_t list) {
     if(PVR_DEBUG && !pvr_state.dma_mode && pvr_state.lists_closed & BIT(list)) {
         dbglog(DBG_WARNING, "pvr_list_begin: attempt to open already closed list\n");
         return -1;
+    }
+
+    if(pvr_state.group_count > 1) {
+        /* The list must have bins in the current group */
+        if(!(pvr_state.group_lists[pvr_state.group_cur] & BIT(list))) {
+            dbglog(DBG_WARNING, "pvr_list_begin: list %d has no bins in "
+                   "list group %d\n", list, pvr_state.group_cur);
+            return -1;
+        }
+
+        /* With DMA, the groups go to the TA one after the other when the
+           scene is finished: no list can go to the TA directly before. */
+        if(pvr_state.dma_mode &&
+           !pvr_state.dma_buffers[pvr_state.ram_target].base[list]) {
+            dbglog(DBG_WARNING, "pvr_list_begin: list %d has no vertex "
+                   "buffer (needed with vertex DMA and list groups)\n", list);
+            return -1;
+        }
     }
 
     /* If we already had a list open, close it first */
@@ -293,6 +319,134 @@ int pvr_list_flush(pvr_list_t list) {
     return -1;
 }
 
+/* Close the current group: close the open list, if any, and submit blank lists
+   for the group's lists that weren't submitted in it. Every first OPB of the
+   group is then terminated, and each of its lists will raise its done
+   interrupt. */
+static void pvr_group_close(void) {
+    int i;
+
+    /* If a list was open, close it */
+    if(pvr_state.list_reg_open != PVR_LIST_NONE)
+        pvr_list_finish();
+
+    /* If any lists weren't submitted, then submit blank ones now */
+    for(i = 0; i < PVR_OPB_COUNT; i++) {
+        if((pvr_state.group_lists[pvr_state.group_cur] & BIT(i))
+                && (!(pvr_state.lists_closed & BIT(i)))) {
+            pvr_list_begin(i);
+            pvr_blank_polyhdr(i);
+            pvr_list_finish();
+        }
+    }
+}
+
+/* Wait until the TA has processed every list of the given group, i.e. until
+   each list has raised its done interrupt once for each group up to this
+   one that has it. */
+static int pvr_group_wait(int group) {
+    uint64_t start = timer_us_gettime64();
+    int i;
+
+    for(i = 0; i < PVR_OPB_COUNT; i++) {
+        if(!(pvr_state.group_lists[group] & BIT(i)))
+            continue;
+
+        while(pvr_state.lists_done[i] < pvr_lists_done_by(group, i)) {
+            if(timer_us_gettime64() - start > PVR_GROUP_TIMEOUT_US) {
+                dbglog(DBG_WARNING, "pvr: timed out waiting for group %d "
+                       "of list %d\n", group, i);
+                return -1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+/* Move the TA on to the next group after a closed one: TA list
+   continuation. */
+static void pvr_ta_continue(void) {
+    int group = pvr_state.group_cur + 1;
+
+    /* Let the TA finish the lists of the closed group first. On hardware,
+       writing TA_LIST_CONT while the TA was still binning gave the same
+       picture, but the wait is short and keeps it safe. */
+    pvr_group_wait(pvr_state.group_cur);
+
+    pvr_ta_continue_group(group);
+
+    pvr_state.lists_closed = 0;
+    pvr_state.group_cur = group;
+}
+
+/* With vertex DMA: end the current group in the vertex buffer of each of its
+   lists, with a blank polygon header in a list that got nothing, and an end
+   of list marker. pvr_dma_group_advance() later sends each group's part of
+   each buffer. */
+static int pvr_dma_group_close(void) {
+    volatile pvr_dma_buffers_t *b = pvr_state.dma_buffers + pvr_state.ram_target;
+    int group = pvr_state.group_cur;
+    uint32_t start;
+    int i;
+
+    if(pvr_state.list_reg_open != PVR_LIST_NONE)
+        pvr_list_finish();
+
+    for(i = 0; i < PVR_OPB_COUNT; i++) {
+        start = group ? b->group_end[group - 1][i] : 0;
+
+        if(pvr_state.group_lists[group] & BIT(i)) {
+            if(!b->base[i]) {
+                dbglog(DBG_ERROR, "pvr: list %d of list group %d has no "
+                       "vertex buffer\n", i, group);
+                return -1;
+            }
+
+            /* Make sure there's at least one primitive in it */
+            if(b->ptr[i] == start) {
+                pvr_blank_polyhdr_buf(i, (pvr_poly_hdr_t *)(b->base[i] + b->ptr[i]));
+                b->ptr[i] += 32;
+            }
+
+            /* Put a zero-marker on the end */
+            memset(b->base[i] + b->ptr[i], 0, 32);
+            b->ptr[i] += 32;
+
+            /* Verify that there is no overrun */
+            assert(b->ptr[i] <= b->size[i]);
+        }
+
+        b->group_end[group][i] = b->ptr[i];
+    }
+
+    pvr_state.lists_closed = 0;
+
+    return 0;
+}
+
+int pvr_list_continue(void) {
+    if(pvr_state.group_cur >= pvr_state.group_count - 1)
+        return -1;
+
+    if(pvr_state.dma_mode) {
+        if(pvr_dma_group_close() < 0)
+            return -1;
+
+        pvr_state.group_cur++;
+        return 0;
+    }
+
+    pvr_group_close();
+    pvr_ta_continue();
+
+    return 0;
+}
+
+int pvr_list_get_group(void) {
+    return pvr_state.group_cur;
+}
+
 /* Call this after you have finished submitting all data for a frame; once
    this has been called, you can not submit any more data until one of the
    pvr_scene_begin() functions is called again. An error (-1) is returned if
@@ -301,8 +455,33 @@ int pvr_scene_finish(void) {
     int i, o;
     volatile pvr_dma_buffers_t *b;
 
+    // With vertex DMA and several list groups: end each group in the vertex
+    // buffers, the unused groups empty, and let the DMA send them in order.
+    if(pvr_state.dma_mode && pvr_state.group_count > 1) {
+        if(pvr_dma_group_close() < 0)
+            return -1;
+
+        while(pvr_state.group_cur < pvr_state.group_count - 1) {
+            pvr_state.group_cur++;
+
+            if(pvr_dma_group_close() < 0)
+                return -1;
+        }
+
+        pvr_start_ta_rendering();
+
+        // Flip buffers and mark them complete.
+        o = irq_disable();
+        pvr_state.dma_buffers[pvr_state.ram_target].ready = 1;
+        pvr_state.ram_target ^= 1;
+        irq_restore(o);
+
+        pvr_sync_stats(PVR_SYNC_BUFDONE);
+
+        pvr_start_dma();
+    }
     // If we're in DMA mode, then this works a little differently...
-    if(pvr_state.dma_mode) {
+    else if(pvr_state.dma_mode) {
         // If any enabled lists are empty, fill them with a blank polyhdr. Also
         // add a zero-marker to the end of each list.
         b = pvr_state.dma_buffers + pvr_state.ram_target;
@@ -352,18 +531,14 @@ int pvr_scene_finish(void) {
         pvr_start_dma();
     }
     else {
-        /* If a list was open, close it */
-        if(pvr_state.list_reg_open != PVR_LIST_NONE)
-            pvr_list_finish();
+        /* Close the current group. */
+        pvr_group_close();
 
-        /* If any lists weren't submitted, then submit blank ones now */
-        for(i = 0; i < PVR_OPB_COUNT; i++) {
-            if((pvr_state.lists_enabled & BIT(i))
-                    && (!(pvr_state.lists_closed & BIT(i)))) {
-                pvr_list_begin(i);
-                pvr_blank_polyhdr(i);
-                pvr_list_finish();
-            }
+        /* The region array has entries for every group: submit the groups
+           that weren't used, empty. */
+        while(pvr_state.group_cur < pvr_state.group_count - 1) {
+            pvr_ta_continue();
+            pvr_group_close();
         }
     }
 
