@@ -121,7 +121,7 @@ typedef struct {
     uint32_t  opb_addresses[PVR_OPB_COUNT];        /* Object pointer buffers (of each type) */
     uint32_t  tile_matrix, tile_matrix_size;  /* Tile matrix, size */
     uint32_t  opb_overflow_count;             /* Extra OPB space after opb_size for TA overflow */
-    uint32_t  opb_overflow_size;              /* Size of that space: opb_overflow_count OPB sets of one list group */
+    uint32_t  opb_overflow_size;              /* Size of that space: opb_overflow_count OPB sets of the largest list group */
     uint32_t  tile_matrix_key;                /* Settings (group presort mask) the tile matrix was written with */
 } pvr_ta_buffers_t;
 
@@ -169,7 +169,11 @@ typedef struct {
     int       group_count;               // List groups per scene (>= 1)
     int       group_cur;                 // Group being submitted
     uint32_t  group_presort;             // (1 << group) for each group whose TR list is presorted
+    uint32_t  group_lists[PVR_MAX_LIST_GROUPS];      // (1 << idx) for each list the group has bins for
+    uint32_t  group_reg_mask[PVR_MAX_LIST_GROUPS];   // TA_ALLOC_CTRL value of each group
     uint32_t  group_opb[PVR_MAX_LIST_GROUPS];        // Offset of each group's first OPBs from the OPB area
+    uint32_t  group_bin_size[PVR_MAX_LIST_GROUPS][PVR_OPB_COUNT]; // Bin size of each list in each group, in bytes
+    uint8_t   lists_done_target[PVR_OPB_COUNT];      // Done interrupts expected per scene for each list (groups using it)
 
     semaphore_t         dma_lock;       // Locked if a DMA is in progress (vertex or texture)
     int     ta_checked_ready;           // >0 if the TA has been checked to be ready for the new scene
@@ -269,6 +273,17 @@ typedef struct pvr_bkg_poly {
 /* Initialize buffers for TA/ISP/TSP usage */
 void pvr_allocate_buffers(const pvr_init_params_t *params);
 
+/* Done interrupts list `list` raises up to the end of group `group`: one
+   per group from 0 to `group` that has the list. */
+static inline int pvr_lists_done_by(int group, int list) {
+    int g, n = 0;
+
+    for(g = 0; g <= group; g++)
+        n += !!(pvr_state.group_lists[g] & BIT(list));
+
+    return n;
+}
+
 /* Fill the tile matrices (after it's initialized) */
 void pvr_init_tile_matrices(void);
 
@@ -347,8 +362,8 @@ uint32_t pvr_ra_group_flags(int p, int group_count, bool presort);
 /**** pvr_misc.c ******************************************************/
 
 /* Move the TA on to list group `group` of the scene being registered: its
-   first OPBs, then TA_LIST_CONT. The previous group's lists must all be
-   done. */
+   first OPBs and bin sizes, then TA_LIST_CONT. The previous group's lists
+   must all be done. */
 void pvr_ta_continue_group(int group);
 
 /* What event is happening (for pvr_sync_stats)? */

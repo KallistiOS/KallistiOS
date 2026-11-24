@@ -70,6 +70,34 @@ int pvr_init(const pvr_init_params_t *params) {
         return -1;
     }
 
+    /* Check the bin sizes of each list group: valid sizes, at least one
+       list per group */
+    if(params->list_groups) {
+        int g, i, groups = params->list_group_count > 1 ?
+                           params->list_group_count : 1;
+
+        for(g = 0; g < groups; g++) {
+            const int *sizes = params->list_groups[g].opb_sizes;
+            int used = 0;
+
+            for(i = 0; i < PVR_OPB_COUNT; i++) {
+                if(sizes[i] != PVR_BINSIZE_0 && sizes[i] != PVR_BINSIZE_8 &&
+                   sizes[i] != PVR_BINSIZE_16 && sizes[i] != PVR_BINSIZE_32) {
+                    dbglog(DBG_ERROR, "pvr: list group %d: invalid bin size "
+                           "%d for list %d\n", g, sizes[i], i);
+                    return -1;
+                }
+
+                used |= sizes[i];
+            }
+
+            if(!used) {
+                dbglog(DBG_ERROR, "pvr: list group %d has no list\n", g);
+                return -1;
+            }
+        }
+    }
+
     /* Clear out video memory */
     vid_empty();
 

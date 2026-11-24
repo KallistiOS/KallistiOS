@@ -154,7 +154,7 @@ void pvr_sync_reg_buffer(void) {
 
     /* Set buffer pointers */
     /* The first OPBs of each list group, then the overflow OPBs. A scene
-       starts with the first group's OPBs. */
+       starts with the first group's OPBs and bin sizes. */
     PVR_SET(PVR_TA_OPB_START,       buf->opb);
     PVR_SET(PVR_TA_OPB_INIT,        buf->opb + buf->opb_size);
     PVR_SET(PVR_TA_OPB_END,         buf->opb + buf->opb_size + buf->opb_overflow_size);
@@ -179,9 +179,11 @@ void pvr_ta_continue_group(int group) {
 
     /* The next group's object lists start in that group's first OPBs, which
        its region array entries point to (without this, the TA overwrites
-       the previous group's first OPBs); then restart list input. Overflow
-       OPBs keep being allocated from where the earlier groups left off. */
+       the previous group's first OPBs), with the group's bin sizes; then
+       restart list input. Overflow OPBs keep being allocated from where the
+       earlier groups left off. */
     PVR_SET(PVR_TA_OPB_START, buf->opb + pvr_state.group_opb[group]);
+    PVR_SET(PVR_OPB_CFG, pvr_state.group_reg_mask[group]);
 
     PVR_SET(PVR_TA_LIST_CONT, BIT(31));
     (void)PVR_GET(PVR_TA_LIST_CONT);

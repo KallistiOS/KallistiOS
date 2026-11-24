@@ -12,6 +12,7 @@
 #include <dc/video.h>
 #include <kos/regfield.h>
 
+#include <string.h>
 #include "pvr_internal.h"
 
 /*
@@ -164,9 +165,9 @@ static void pvr_init_tile_matrix(int which) {
         base = buf->opb + pvr_state.group_opb[p];
 
         for(i = 0; i < PVR_OPB_COUNT; i++) {
-            groups[p].bin_size[i] = pvr_state.opb_size[i];
+            groups[p].bin_size[i] = pvr_state.group_bin_size[p][i];
 
-            if(LIST_ENABLED(i)) {
+            if(pvr_state.group_lists[p] & BIT(i)) {
                 groups[p].opb[i] = base;
                 base += groups[p].bin_size[i] * pvr_state.tw * pvr_state.th;
             }
@@ -247,7 +248,7 @@ void pvr_allocate_buffers(const pvr_init_params_t *params) {
     volatile pvr_ta_buffers_t   *buf;
     volatile pvr_frame_buffers_t    *fbuf;
     int i, j, g;
-    uint32_t  outaddr, sconst, opb_size_accum, opb_total_size, opb_group_size;
+    uint32_t  outaddr, sconst, opb_size_accum, opb_total_size, opb_group_max;
 
     /* Set screen sizes; pvr_init has ensured that we have a valid mode
        and all that by now, so we can freely dig into the vid_mode
@@ -281,56 +282,70 @@ void pvr_allocate_buffers(const pvr_init_params_t *params) {
     pvr_state.pclip_y = (pvr_state.pclip_bottom << 16) | (pvr_state.pclip_top);
 
     /* Look at active lists and figure out how much to allocate
-       for each poly type */
-    opb_group_size = 0;
+       for each poly type, in each list group */
+    opb_total_size = 0;
+    opb_group_max = 0;
+    pvr_state.lists_enabled = 0;
+    memset((void *)pvr_state.lists_done_target, 0,
+           sizeof(pvr_state.lists_done_target));
 
-    /* Previously, we specified BIT(20) to say that the OPB grows "down" when
-       the TA needs more than one. To make it grow "up" instead (increasing addresses),
-       we set 0 as the default value.
-     */
-#if 0
-    pvr_state.list_reg_mask = BIT(20);
-#else
-    pvr_state.list_reg_mask = 0;
-#endif
+    for(g = 0; g < pvr_state.group_count; g++) {
+        const int *sizes = params->list_groups ?
+                           params->list_groups[g].opb_sizes : params->opb_sizes;
+        uint32_t group_size = 0;
 
-    for(i = 0; i < PVR_OPB_COUNT; i++) {
-        pvr_state.opb_size[i] = WORDS_TO_BYTES(params->opb_sizes[i]);   /* in bytes */
+        /* Previously, we specified BIT(20) to say that the OPB grows "down"
+           when the TA needs more than one. To make it grow "up" instead
+           (increasing addresses), we set 0 as the default value. */
+        pvr_state.group_reg_mask[g] = 0;
+        pvr_state.group_lists[g] = 0;
+        pvr_state.group_opb[g] = opb_total_size;
 
-        /* Calculate the total size of the OPBs for this list */
-        opb_group_size += pvr_state.opb_size[i] * pvr_state.tw * pvr_state.th;
+        for(i = 0; i < PVR_OPB_COUNT; i++) {
+            /* in bytes */
+            pvr_state.group_bin_size[g][i] = WORDS_TO_BYTES(sizes[i]);
 
-        switch(params->opb_sizes[i]) {
-            case PVR_BINSIZE_0:
-                sconst = 0;
-                break;
-            case PVR_BINSIZE_8:
-                sconst = 1;
-                break;
-            case PVR_BINSIZE_16:
-                sconst = 2;
-                break;
-            case PVR_BINSIZE_32:
-                sconst = 3;
-                break;
-            default:
-                assert_msg(0, "invalid poly_buf_size");
-                sconst = 2;
-                break;
+            /* Calculate the total size of the OPBs for this list */
+            group_size += pvr_state.group_bin_size[g][i] * pvr_state.tw * pvr_state.th;
+
+            switch(sizes[i]) {
+                case PVR_BINSIZE_0:
+                    sconst = 0;
+                    break;
+                case PVR_BINSIZE_8:
+                    sconst = 1;
+                    break;
+                case PVR_BINSIZE_16:
+                    sconst = 2;
+                    break;
+                case PVR_BINSIZE_32:
+                    sconst = 3;
+                    break;
+                default:
+                    assert_msg(0, "invalid poly_buf_size");
+                    sconst = 2;
+                    break;
+            }
+
+            if(sconst > 0) {
+                pvr_state.group_lists[g] |= BIT(i);
+                pvr_state.group_reg_mask[g] |= sconst << (4 * i);
+                pvr_state.lists_done_target[i]++;
+            }
         }
 
-        if(sconst > 0) {
-            pvr_state.lists_enabled |= BIT(i);
-            pvr_state.list_reg_mask |= sconst << (4 * i);
-        }
+        pvr_state.lists_enabled |= pvr_state.group_lists[g];
+        opb_total_size += group_size;
+
+        if(group_size > opb_group_max)
+            opb_group_max = group_size;
     }
 
-    /* Each list group has its own set of first OPBs, one group after the
-       other */
-    for(g = 0; g < pvr_state.group_count; g++)
-        pvr_state.group_opb[g] = opb_group_size * g;
+    /* The first group's settings are the ones a new scene starts with */
+    pvr_state.list_reg_mask = pvr_state.group_reg_mask[0];
 
-    opb_total_size = opb_group_size * pvr_state.group_count;
+    for(i = 0; i < PVR_OPB_COUNT; i++)
+        pvr_state.opb_size[i] = pvr_state.group_bin_size[0][i];
 
     /* Initialize each buffer set */
     for(i = 0; i < 2; i++) {
@@ -355,11 +370,12 @@ void pvr_allocate_buffers(const pvr_init_params_t *params) {
 
         /* Object Pointer Blocks: the first OPBs of every list group, one
            group after the other, then extra space for overflow (when one OPB
-           isn't big enough), shared by the groups. */
+           isn't big enough), shared by the groups and sized after the
+           largest. */
         buf->opb = outaddr;
         buf->opb_size = opb_total_size;
         buf->opb_overflow_count = params->opb_overflow_count;
-        buf->opb_overflow_size = opb_group_size * buf->opb_overflow_count;
+        buf->opb_overflow_size = opb_group_max * buf->opb_overflow_count;
         outaddr += buf->opb_size + buf->opb_overflow_size;
 
         /* Set up the opb pointers to each section of the first group */

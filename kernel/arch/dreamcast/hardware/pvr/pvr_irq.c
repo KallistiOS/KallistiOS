@@ -83,7 +83,7 @@ void pvr_start_dma(void) {
    interrupt from an earlier group from being mistaken for one of the next
    group. */
 static inline void pvr_list_done(pvr_list_t list) {
-    if(++pvr_state.lists_done[list] >= pvr_state.group_count)
+    if(++pvr_state.lists_done[list] >= pvr_state.lists_done_target[list])
         pvr_state.lists_transferred |= BIT(list);
 }
 

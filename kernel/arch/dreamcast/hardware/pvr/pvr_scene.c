@@ -195,6 +195,15 @@ int pvr_list_begin(pvr_list_t list) {
         return -1;
     }
 
+    if(pvr_state.group_count > 1) {
+        /* The list must have bins in the current group */
+        if(!(pvr_state.group_lists[pvr_state.group_cur] & BIT(list))) {
+            dbglog(DBG_WARNING, "pvr_list_begin: list %d has no bins in "
+                   "list group %d\n", list, pvr_state.group_cur);
+            return -1;
+        }
+    }
+
     /* If we already had a list open, close it first */
     if(pvr_state.list_reg_open != PVR_LIST_NONE && pvr_state.list_reg_open != list)
         pvr_list_finish();
@@ -314,7 +323,7 @@ static void pvr_group_close(void) {
 
     /* If any lists weren't submitted, then submit blank ones now */
     for(i = 0; i < PVR_OPB_COUNT; i++) {
-        if((pvr_state.lists_enabled & BIT(i))
+        if((pvr_state.group_lists[pvr_state.group_cur] & BIT(i))
                 && (!(pvr_state.lists_closed & BIT(i)))) {
             pvr_list_begin(i);
             pvr_blank_polyhdr(i);
@@ -325,16 +334,16 @@ static void pvr_group_close(void) {
 
 /* Wait until the TA has processed every list of the given group, i.e. until
    each list has raised its done interrupt once for each group up to this
-   one. */
+   one that has it. */
 static int pvr_group_wait(int group) {
     uint64_t start = timer_us_gettime64();
     int i;
 
     for(i = 0; i < PVR_OPB_COUNT; i++) {
-        if(!(pvr_state.lists_enabled & BIT(i)))
+        if(!(pvr_state.group_lists[group] & BIT(i)))
             continue;
 
-        while(pvr_state.lists_done[i] < group + 1) {
+        while(pvr_state.lists_done[i] < pvr_lists_done_by(group, i)) {
             if(timer_us_gettime64() - start > PVR_GROUP_TIMEOUT_US) {
                 dbglog(DBG_WARNING, "pvr: timed out waiting for group %d "
                        "of list %d\n", group, i);

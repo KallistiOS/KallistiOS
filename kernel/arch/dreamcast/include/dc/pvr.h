@@ -651,6 +651,18 @@ Striplength set to 2 */
 #define PVR_BINSIZE_32  32  /**< \brief 32-word (128-byte) length */
 /** @} */
 
+/** \brief   Settings of one list group (TA list continuation).
+    \ingroup pvr_init
+
+    \sa pvr_init_params_t::list_groups, \ref pvr_list_cont
+*/
+typedef struct pvr_list_group_params {
+    /** \brief  Bin sizes of the group's lists, in the order of
+                pvr_init_params_t::opb_sizes. PVR_BINSIZE_0 disables a list
+                in this group. */
+    int     opb_sizes[5];
+} pvr_list_group_params_t;
+
 /** \brief   PVR initialization structure
     \ingroup pvr_init
 
@@ -725,14 +737,28 @@ typedef struct {
         left by the earlier ones. See \ref pvr_list_cont for details.
 
         Every extra group costs one more set of object pointer bins (the
-        opb_sizes above times the tile count) per TA buffer, plus 24 bytes of
-        region array per tile. The overflow bins (opb_overflow_count) are
-        shared by the groups.
+        opb_sizes above times the tile count, or the group's own sizes, see
+        list_groups) per TA buffer, plus 24 bytes of region array per tile.
 
         List groups don't work with vertex DMA (dma_enabled): pvr_init()
         fails if both are set.
     */
     int     list_group_count;
+
+    /** \brief  Bin sizes of each list group.
+
+        NULL to give every group the bin sizes in opb_sizes. Otherwise an
+        array of list_group_count entries: group g uses the bin sizes in
+        list_groups[g].opb_sizes, and opb_sizes is not used. A list with
+        bin size PVR_BINSIZE_0 in a group is disabled in that group: it
+        can't be opened in it, and costs no bins there. Every group needs at
+        least one list.
+
+        So a group that only draws translucent polygons, say, reserves no
+        opaque bins. The overflow bins (opb_overflow_count) are shared by all
+        groups and sized after the largest group.
+    */
+    const struct pvr_list_group_params *list_groups;
 
 } pvr_init_params_t;
 
@@ -1147,14 +1173,18 @@ int pvr_scene_finish(void);
     empty. Render-to-texture scenes (pvr_scene_begin_rtt()) work with groups
     the same way.
 
+    Each group can have its own bin sizes (pvr_init_params_t::list_groups),
+    including lists that only some groups use.
+
     How it works: the region array (tile matrix) holds list_group_count
     consecutive entries per tile. Bit 30 of an entry's control word keeps
     the depth and colour from the previous entry (no depth clear, no
     background plane), bit 29 presorts its translucent list, and bit 28
     keeps the tile on chip after the entry. Between groups, KOS waits for
     the list-done interrupts of the finished group, points TA_OL_BASE at the
-    next group's object pointer bins and writes TA_LIST_CONT; overflow bins
-    are shared by all groups.
+    next group's object pointer bins, sets the group's bin sizes
+    (TA_ALLOC_CTRL) and writes TA_LIST_CONT; overflow bins are shared by all
+    groups.
 
     Measured on hardware, with and without FSAA:
     - Bit 28 = 1 means "don't write the tile out". KOS sets it on every entry
@@ -1182,8 +1212,8 @@ int pvr_scene_finish(void);
 
     Closes the open list, submits blank lists for the group's lists that
     weren't submitted in it, and moves the TA on to the next group with TA
-    list continuation (TA_LIST_CONT). After this call, every enabled list
-    type can be opened again.
+    list continuation (TA_LIST_CONT). After this call, every list type the
+    next group has bins for can be opened again.
 
     \retval 0               On success.
     \retval -1              If the scene is already in its last group.
