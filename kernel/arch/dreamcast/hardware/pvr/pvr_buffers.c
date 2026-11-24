@@ -30,6 +30,20 @@
 
 #define LIST_ENABLED(i) (pvr_state.lists_enabled & BIT(i))
 
+uint32_t pvr_ra_group_flags(int p, int group_count, bool presort) {
+    uint32_t flags = presort ? PVR_RA_PRESORT : 0;
+
+    /* Every group after the first keeps the depth and colour of the tile, and
+       every group before the last keeps the tile on chip. */
+    if(p > 0)
+        flags |= PVR_RA_ZKEEP;
+
+    if(p < group_count - 1)
+        flags |= PVR_RA_NO_WRITEOUT;
+
+    return flags;
+}
+
 size_t pvr_ra_write(uint32_t tile_matrix, int tw, int th,
                     const pvr_ra_group_t *groups, int group_count) {
     uint32_t *vr;   /* Note: We're working in 4-byte pointer maths here */
@@ -123,21 +137,36 @@ void pvr_ra_set_flags(uint32_t tile_matrix, int tw, int th, int group_count,
 
 /* Fill Tile Matrix buffers. This function takes a base address and sets up
    the rendering structures there. Each tile of the screen (32x32) receives
-   a small buffer space. */
+   a small buffer space, once per list group. */
 static void pvr_init_tile_matrix(int which, bool presort) {
     volatile pvr_ta_buffers_t *buf;
-    pvr_ra_group_t group;
-    int i;
+    pvr_ra_group_t groups[PVR_MAX_LIST_GROUPS];
+    uint32_t base;
+    int p, i;
 
     buf = pvr_state.ta_buffers + which;
-    group.flags = presort ? PVR_RA_PRESORT : 0;
 
-    for(i = 0; i < PVR_OPB_COUNT; i++) {
-        group.bin_size[i] = pvr_state.opb_size[i];
-        group.opb[i] = LIST_ENABLED(i) ? buf->opb_addresses[i] : PVR_RA_LIST_EMPTY;
+    /* Each group has its own first object pointer blocks, one group after the
+       other in the OPB area, each list's blocks after the previous list's. */
+    for(p = 0; p < pvr_state.group_count; p++) {
+        groups[p].flags = pvr_ra_group_flags(p, pvr_state.group_count, presort);
+        base = buf->opb + pvr_state.group_opb[p];
+
+        for(i = 0; i < PVR_OPB_COUNT; i++) {
+            groups[p].bin_size[i] = pvr_state.opb_size[i];
+
+            if(LIST_ENABLED(i)) {
+                groups[p].opb[i] = base;
+                base += groups[p].bin_size[i] * pvr_state.tw * pvr_state.th;
+            }
+            else {
+                groups[p].opb[i] = PVR_RA_LIST_EMPTY;
+            }
+        }
     }
 
-    pvr_ra_write(buf->tile_matrix, pvr_state.tw, pvr_state.th, &group, 1);
+    pvr_ra_write(buf->tile_matrix, pvr_state.tw, pvr_state.th,
+                 groups, pvr_state.group_count);
 }
 
 /* Fill all tile matrices */
@@ -150,13 +179,17 @@ void pvr_init_tile_matrices(bool presort) {
 
 void pvr_set_presort_mode(bool presort) {
     uint32_t tile_matrix;
+    int p;
 
     if(__predict_false(!pvr_state.vbuf_doublebuf))
         pvr_wait_render_done();
 
     tile_matrix = pvr_state.ta_buffers[pvr_state.ta_target].tile_matrix;
-    pvr_ra_set_flags(tile_matrix, pvr_state.tw, pvr_state.th, 1, 0,
-                     presort ? PVR_RA_PRESORT : 0);
+
+    for(p = 0; p < pvr_state.group_count; p++)
+        pvr_ra_set_flags(tile_matrix, pvr_state.tw, pvr_state.th,
+                         pvr_state.group_count, p,
+                         pvr_ra_group_flags(p, pvr_state.group_count, presort));
 }
 
 
@@ -173,8 +206,8 @@ up and placed at 0x000000 and 0x400000.
 void pvr_allocate_buffers(const pvr_init_params_t *params) {
     volatile pvr_ta_buffers_t   *buf;
     volatile pvr_frame_buffers_t    *fbuf;
-    int i, j;
-    uint32_t  outaddr, sconst, opb_size_accum, opb_total_size;
+    int i, j, g;
+    uint32_t  outaddr, sconst, opb_size_accum, opb_total_size, opb_group_size;
 
     /* Set screen sizes; pvr_init has ensured that we have a valid mode
        and all that by now, so we can freely dig into the vid_mode
@@ -209,7 +242,7 @@ void pvr_allocate_buffers(const pvr_init_params_t *params) {
 
     /* Look at active lists and figure out how much to allocate
        for each poly type */
-    opb_total_size = 0;
+    opb_group_size = 0;
 
     /* Previously, we specified BIT(20) to say that the OPB grows "down" when
        the TA needs more than one. To make it grow "up" instead (increasing addresses),
@@ -225,7 +258,7 @@ void pvr_allocate_buffers(const pvr_init_params_t *params) {
         pvr_state.opb_size[i] = WORDS_TO_BYTES(params->opb_sizes[i]);   /* in bytes */
 
         /* Calculate the total size of the OPBs for this list */
-        opb_total_size += pvr_state.opb_size[i] * pvr_state.tw * pvr_state.th;
+        opb_group_size += pvr_state.opb_size[i] * pvr_state.tw * pvr_state.th;
 
         switch(params->opb_sizes[i]) {
             case PVR_BINSIZE_0:
@@ -252,6 +285,13 @@ void pvr_allocate_buffers(const pvr_init_params_t *params) {
         }
     }
 
+    /* Each list group has its own set of first OPBs, one group after the
+       other */
+    for(g = 0; g < pvr_state.group_count; g++)
+        pvr_state.group_opb[g] = opb_group_size * g;
+
+    opb_total_size = opb_group_size * pvr_state.group_count;
+
     /* Initialize each buffer set */
     for(i = 0; i < 2; i++) {
         /* Frame 0 goes at 0, Frame 1 goes at 0x400000 (half way) */
@@ -273,22 +313,21 @@ void pvr_allocate_buffers(const pvr_init_params_t *params) {
         /* N-byte align */
         outaddr = __align_up(outaddr, 128);
 
-        /* Object Pointer Blocks */
+        /* Object Pointer Blocks: the first OPBs of every list group, one
+           group after the other, then extra space for overflow (when one OPB
+           isn't big enough), shared by the groups. */
         buf->opb = outaddr;
         buf->opb_size = opb_total_size;
-
-        /* Allocate extra space for overflow (when one OPB isn't big enough) */
         buf->opb_overflow_count = params->opb_overflow_count;
-        outaddr += opb_total_size * (1 + buf->opb_overflow_count);
+        buf->opb_overflow_size = opb_group_size * buf->opb_overflow_count;
+        outaddr += buf->opb_size + buf->opb_overflow_size;
 
-        /* Set up the opb pointers to each section */
+        /* Set up the opb pointers to each section of the first group */
         opb_size_accum = 0;
         for(j = 0; j < PVR_OPB_COUNT; j++) {
             buf->opb_addresses[j] = buf->opb + opb_size_accum;
             opb_size_accum += pvr_state.opb_size[j] * pvr_state.tw * pvr_state.th;
         }
-
-        assert(buf->opb_size == opb_size_accum);
 
         /* N-byte align */
         outaddr = __align_up(outaddr, 128);
@@ -298,7 +337,7 @@ void pvr_allocate_buffers(const pvr_init_params_t *params) {
 
         /* Tile Matrix */
         buf->tile_matrix = outaddr;
-        buf->tile_matrix_size = PVR_RA_SIZE(pvr_state.tw, pvr_state.th, 1);
+        buf->tile_matrix_size = PVR_RA_SIZE(pvr_state.tw, pvr_state.th, pvr_state.group_count);
         outaddr += buf->tile_matrix_size;
 
         /* N-byte align */

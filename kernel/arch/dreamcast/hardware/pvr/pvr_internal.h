@@ -121,6 +121,7 @@ typedef struct {
     uint32_t  opb_addresses[PVR_OPB_COUNT];        /* Object pointer buffers (of each type) */
     uint32_t  tile_matrix, tile_matrix_size;  /* Tile matrix, size */
     uint32_t  opb_overflow_count;             /* Extra OPB space after opb_size for TA overflow */
+    uint32_t  opb_overflow_size;              /* Size of that space: opb_overflow_count OPB sets of one list group */
 } pvr_ta_buffers_t;
 
 // DMA buffers structure: we have two sets of these
@@ -161,6 +162,12 @@ typedef struct {
     uint32_t  lists_closed;             // (1 << idx) for each list which the SH4 has lost interest in
     uint32_t  lists_transferred;        // (1 << idx) for each list which has completely transferred to the TA
     uint32_t  lists_dmaed;              // (1 << idx) for each list which has been DMA'd (DMA mode only)
+    uint8_t   lists_done[PVR_OPB_COUNT];// Done interrupts received for each list in this scene (one per group)
+
+    // List continuation state
+    int       group_count;               // List groups per scene (>= 1)
+    int       group_cur;                 // Group being submitted
+    uint32_t  group_opb[PVR_MAX_LIST_GROUPS];        // Offset of each group's first OPBs from the OPB area
 
     semaphore_t         dma_lock;       // Locked if a DMA is in progress (vertex or texture)
     int     ta_checked_ready;           // >0 if the TA has been checked to be ready for the new scene
@@ -278,6 +285,7 @@ void pvr_init_tile_matrices(bool presort);
 #define PVR_RA_ENTRY_WORDS  6           /* Words per region array entry */
 
 #define PVR_RA_LAST         BIT(31)     /* Last entry of the array */
+#define PVR_RA_ZKEEP        BIT(30)     /* Keep depth (and colour) from the previous entry */
 #define PVR_RA_PRESORT      BIT(29)     /* Presort the TR list of this entry */
 #define PVR_RA_NO_WRITEOUT  BIT(28)     /* Don't write the tile out after this entry.
                                            On a tile's last entry the tile is
@@ -285,14 +293,14 @@ void pvr_init_tile_matrices(bool presort);
                                            entry the render never finishes. */
 #define PVR_RA_TILE_Y(y)    ((uint32_t)(y) << 8)
 #define PVR_RA_TILE_X(x)    ((uint32_t)(x) << 2)
-#define PVR_RA_FLAGS_MASK   (PVR_RA_PRESORT | PVR_RA_NO_WRITEOUT)
+#define PVR_RA_FLAGS_MASK   (PVR_RA_ZKEEP | PVR_RA_PRESORT | PVR_RA_NO_WRITEOUT)
 
 #define PVR_RA_LIST_EMPTY   0x80000000
 
 /* One group of the region array, i.e. one entry per tile. */
 typedef struct pvr_ra_group {
-    /* Control word flags for this group's entries: PVR_RA_PRESORT and/or
-       PVR_RA_NO_WRITEOUT. The writer adds the tile
+    /* Control word flags for this group's entries: any of PVR_RA_ZKEEP,
+       PVR_RA_PRESORT and PVR_RA_NO_WRITEOUT. The writer adds the tile
        position, and PVR_RA_LAST on the final entry of the array. */
     uint32_t    flags;
 
@@ -324,8 +332,18 @@ size_t pvr_ra_write(uint32_t tile_matrix, int tw, int th,
 void pvr_ra_set_flags(uint32_t tile_matrix, int tw, int th, int group_count,
                       int p, uint32_t flags);
 
+/* Control word flags of group p of group_count, presorted or not:
+   PVR_RA_ZKEEP on all groups but the first, PVR_RA_NO_WRITEOUT on all but
+   the last. */
+uint32_t pvr_ra_group_flags(int p, int group_count, bool presort);
+
 
 /**** pvr_misc.c ******************************************************/
+
+/* Move the TA on to list group `group` of the scene being registered: its
+   first OPBs, then TA_LIST_CONT. The previous group's lists must all be
+   done. */
+void pvr_ta_continue_group(int group);
 
 /* What event is happening (for pvr_sync_stats)? */
 #define PVR_SYNC_VBLANK     1   /* VBlank IRQ */

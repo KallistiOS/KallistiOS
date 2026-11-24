@@ -15,6 +15,7 @@
 #include <kos/genwait.h>
 #include <kos/regfield.h>
 #include <kos/thread.h>
+#include <arch/timer.h>
 #include <dc/pvr.h>
 #include <dc/sq.h>
 #include "pvr_internal.h"
@@ -25,6 +26,9 @@
 #else
 #  define PVR_DEBUG 1
 #endif
+
+/* How long to wait for the TA to finish the lists of a list group */
+#define PVR_GROUP_TIMEOUT_US 100000
 
 /*
 
@@ -124,6 +128,7 @@ void pvr_scene_begin(void) {
     pvr_state.next_to_texture = 0;
     pvr_state.ta_checked_ready = 0;
     pvr_state.lists_closed = 0;
+    pvr_state.group_cur = 0;
 
     // Get general stuff ready.
     pvr_state.list_reg_open = PVR_LIST_NONE;
@@ -293,6 +298,81 @@ int pvr_list_flush(pvr_list_t list) {
     return -1;
 }
 
+/* Close the current group: close the open list, if any, and submit blank lists
+   for the group's lists that weren't submitted in it. Every first OPB of the
+   group is then terminated, and each of its lists will raise its done
+   interrupt. */
+static void pvr_group_close(void) {
+    int i;
+
+    /* If a list was open, close it */
+    if(pvr_state.list_reg_open != PVR_LIST_NONE)
+        pvr_list_finish();
+
+    /* If any lists weren't submitted, then submit blank ones now */
+    for(i = 0; i < PVR_OPB_COUNT; i++) {
+        if((pvr_state.lists_enabled & BIT(i))
+                && (!(pvr_state.lists_closed & BIT(i)))) {
+            pvr_list_begin(i);
+            pvr_blank_polyhdr(i);
+            pvr_list_finish();
+        }
+    }
+}
+
+/* Wait until the TA has processed every list of the given group, i.e. until
+   each list has raised its done interrupt once for each group up to this
+   one. */
+static int pvr_group_wait(int group) {
+    uint64_t start = timer_us_gettime64();
+    int i;
+
+    for(i = 0; i < PVR_OPB_COUNT; i++) {
+        if(!(pvr_state.lists_enabled & BIT(i)))
+            continue;
+
+        while(pvr_state.lists_done[i] < group + 1) {
+            if(timer_us_gettime64() - start > PVR_GROUP_TIMEOUT_US) {
+                dbglog(DBG_WARNING, "pvr: timed out waiting for group %d "
+                       "of list %d\n", group, i);
+                return -1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+/* Move the TA on to the next group after a closed one: TA list
+   continuation. */
+static void pvr_ta_continue(void) {
+    int group = pvr_state.group_cur + 1;
+
+    /* Let the TA finish the lists of the closed group first. On hardware,
+       writing TA_LIST_CONT while the TA was still binning gave the same
+       picture, but the wait is short and keeps it safe. */
+    pvr_group_wait(pvr_state.group_cur);
+
+    pvr_ta_continue_group(group);
+
+    pvr_state.lists_closed = 0;
+    pvr_state.group_cur = group;
+}
+
+int pvr_list_continue(void) {
+    if(pvr_state.group_cur >= pvr_state.group_count - 1)
+        return -1;
+
+    pvr_group_close();
+    pvr_ta_continue();
+
+    return 0;
+}
+
+int pvr_list_get_group(void) {
+    return pvr_state.group_cur;
+}
+
 /* Call this after you have finished submitting all data for a frame; once
    this has been called, you can not submit any more data until one of the
    pvr_scene_begin() functions is called again. An error (-1) is returned if
@@ -352,18 +432,14 @@ int pvr_scene_finish(void) {
         pvr_start_dma();
     }
     else {
-        /* If a list was open, close it */
-        if(pvr_state.list_reg_open != PVR_LIST_NONE)
-            pvr_list_finish();
+        /* Close the current group. */
+        pvr_group_close();
 
-        /* If any lists weren't submitted, then submit blank ones now */
-        for(i = 0; i < PVR_OPB_COUNT; i++) {
-            if((pvr_state.lists_enabled & BIT(i))
-                    && (!(pvr_state.lists_closed & BIT(i)))) {
-                pvr_list_begin(i);
-                pvr_blank_polyhdr(i);
-                pvr_list_finish();
-            }
+        /* The region array has entries for every group: submit the groups
+           that weren't used, empty. */
+        while(pvr_state.group_cur < pvr_state.group_count - 1) {
+            pvr_ta_continue();
+            pvr_group_close();
         }
     }
 

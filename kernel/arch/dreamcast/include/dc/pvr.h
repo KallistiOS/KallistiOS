@@ -715,7 +715,31 @@ typedef struct {
         but it allows using much smaller vertex buffers. */
     int     vbuf_doublebuf_disabled;
 
+    /** \brief  Number of list groups per scene (TA list continuation).
+
+        Set to 0 or 1 for the usual single group of lists per scene. Set to 2
+        up to \ref PVR_MAX_LIST_GROUPS to send each scene in that many
+        groups; pvr_list_continue() closes a group and starts the next. Each
+        group has its own set of lists, every enabled list type can be opened
+        again in each group, and a later group draws over the colour and depth
+        left by the earlier ones. See \ref pvr_list_cont for details.
+
+        Every extra group costs one more set of object pointer bins (the
+        opb_sizes above times the tile count) per TA buffer, plus 24 bytes of
+        region array per tile. The overflow bins (opb_overflow_count) are
+        shared by the groups.
+
+        List groups don't work with vertex DMA (dma_enabled): pvr_init()
+        fails if both are set.
+    */
+    int     list_group_count;
+
 } pvr_init_params_t;
+
+/** \brief   Maximum value of pvr_init_params_t::list_group_count.
+    \ingroup pvr_init
+*/
+#define PVR_MAX_LIST_GROUPS 8
 
 /** \brief   PVR initialization structure defaults
     \ingroup pvr_init
@@ -1076,6 +1100,104 @@ int pvr_list_flush(pvr_list_t list);
     \retval -1              On error (no scene started).
 */
 int pvr_scene_finish(void);
+
+/** \defgroup pvr_list_cont TA List Continuation
+    \brief                  Sending a scene's lists in several groups
+    \ingroup                pvr_scene_mgmt
+
+    With pvr_init_params_t::list_group_count set above 1, a scene is made of
+    that many list groups. Each group has its own opaque, opaque modifier,
+    translucent, translucent modifier and punch-through lists. Within a
+    group, the lists work as in a scene without continuation.
+    pvr_list_continue() closes the current group and starts the next through
+    TA list continuation, after which every list type can be opened again.
+
+    The PVR is started once per scene. It renders each 32x32 tile once per
+    group, in group order, before moving on to the next tile:
+
+    - The first group starts like a scene without continuation: depth
+      cleared, background plane drawn.
+    - Each later group keeps the depth buffer and the colour left in the tile
+      by the earlier groups, and its polygons are depth-tested against them.
+    - Each group sorts its own translucent list, in the sort mode set with
+      pvr_set_presort_mode(). Sorting never crosses a group boundary: all of
+      a later group's polygons, opaque ones included, are drawn after all of
+      an earlier group's polygons.
+    - A later group's opaque polygons are shaded on their own pixels only:
+      the colour left by the earlier groups, translucent blending included,
+      stays everywhere else in the tile.
+    - Modifier volumes act within their group: a volume shadows only the
+      polygons of its own group, and doesn't affect later groups.
+    - An autosorted translucent list leaves its polygons' depth in the depth
+      buffer, whatever their depth write setting: later groups are depth
+      tested against them. A presorted list follows the depth write setting.
+      So a group whose translucent polygons must not hide what later groups
+      draw (a decal or shadow drawn without depth write) has to be presorted.
+
+    This allows, for example, opaque geometry drawn after translucent geometry
+    (keeping the opaque list's deferred shading), or a layer with its own
+    depth range: a full-screen polygon at the end of a group, with depth
+    compare "always", depth write on and a far depth, resets the depth buffer
+    and keeps the colour.
+
+    The tile is written out to the frame buffer (or texture) only after its
+    last group. If a scene calls pvr_list_continue() fewer than
+    list_group_count - 1 times, pvr_scene_finish() submits the remaining groups
+    empty. Render-to-texture scenes (pvr_scene_begin_rtt()) work with groups
+    the same way.
+
+    How it works: the region array (tile matrix) holds list_group_count
+    consecutive entries per tile. Bit 30 of an entry's control word keeps
+    the depth and colour from the previous entry (no depth clear, no
+    background plane), bit 29 presorts its translucent list, and bit 28
+    keeps the tile on chip after the entry. Between groups, KOS waits for
+    the list-done interrupts of the finished group, points TA_OL_BASE at the
+    next group's object pointer bins and writes TA_LIST_CONT; overflow bins
+    are shared by all groups.
+
+    Measured on hardware, with and without FSAA:
+    - Bit 28 = 1 means "don't write the tile out". KOS sets it on every entry
+      of a tile but the last. Cleared on every entry, the picture is still
+      right, but a two-group 640x480 frame took 11.8 ms instead of 3.7 ms
+      (23.5 ms instead of 7.0 ms with FSAA). Set on a tile's last entry
+      too, the tile is not written out; on the array's last entry, the
+      render never finishes (no render-done interrupt).
+    - TA_OL_BASE must move: without it, the next group's object lists
+      overwrite the earlier group's first bins and its geometry is lost.
+    - Waiting for the list-done interrupts before TA_LIST_CONT was not
+      needed in the test (1500 frames of a heavy group, TA_LIST_CONT written
+      while the TA was still binning, no difference). KOS waits anyway; the
+      wait took at most 56 us (120 us with FSAA) in that test, and next to
+      nothing with light groups.
+    - Bit 30 = 0 on a later entry doesn't only clear the depth: the tile
+      starts over from the background plane, and everything the earlier
+      groups drew in it is lost. So there's no depth-only clear between
+      groups; use the full-screen polygon described above.
+
+    @{
+*/
+
+/** \brief   Close the current list group and start the next one.
+
+    Closes the open list, submits blank lists for the group's lists that
+    weren't submitted in it, and moves the TA on to the next group with TA
+    list continuation (TA_LIST_CONT). After this call, every enabled list
+    type can be opened again.
+
+    \retval 0               On success.
+    \retval -1              If the scene is already in its last group.
+
+    \sa pvr_init_params_t::list_group_count
+*/
+int pvr_list_continue(void);
+
+/** \brief   Retrieve the index of the list group being submitted.
+
+    \return                 The current group, from 0 to list_group_count - 1.
+*/
+int pvr_list_get_group(void);
+
+/** @} */
 
 /** \brief   Block the caller until the PVR system is ready for another frame to
              be submitted.

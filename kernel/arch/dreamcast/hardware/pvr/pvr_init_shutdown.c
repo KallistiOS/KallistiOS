@@ -56,6 +56,20 @@ int pvr_init(const pvr_init_params_t *params) {
         return -1;
     }
 
+    /* Check the list group count */
+    if(params->list_group_count < 0 ||
+       params->list_group_count > PVR_MAX_LIST_GROUPS) {
+        dbglog(DBG_ERROR, "pvr: list_group_count %d out of range (0 to %d)\n",
+               params->list_group_count, PVR_MAX_LIST_GROUPS);
+        return -1;
+    }
+
+    /* Vertex DMA sends each list in one piece, so it can't do list groups */
+    if(params->list_group_count > 1 && params->dma_enabled) {
+        dbglog(DBG_ERROR, "pvr: list groups don't work with vertex DMA\n");
+        return -1;
+    }
+
     /* Clear out video memory */
     vid_empty();
 
@@ -73,6 +87,10 @@ int pvr_init(const pvr_init_params_t *params) {
     pvr_state.fsaa = params->fsaa_enabled;
 
     pvr_state.vbuf_doublebuf = !params->vbuf_doublebuf_disabled;
+
+    /* List groups */
+    pvr_state.group_count = params->list_group_count > 1 ?
+                            params->list_group_count : 1;
 
     /* Everything's clear, do the initial buffer pointer setup */
     pvr_allocate_buffers(params);
