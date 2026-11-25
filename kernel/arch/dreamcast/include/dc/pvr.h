@@ -1060,13 +1060,13 @@ int pvr_list_prim(pvr_list_t list, const void *data, size_t size);
     buffer (pvr_set_vertbuf()) is collected in RAM and sent to the TA by DMA
     after pvr_scene_finish(), while a list without one is submitted directly,
     as it is drawn. This sends a buffered list to the TA now instead: it closes
-    the list, ends it, and DMAs it, returning once the DMA is done (not the
-    rendering). The list can't be opened again in this scene, and
-    pvr_scene_finish() doesn't send it again.
+    the list, ends it, and starts its DMA. The list can't be opened again in
+    this scene, and pvr_scene_finish() doesn't send it again.
 
-    This is what lets a scene mix the two ways ("hybrid" submission) in any
-    order: the TA takes the lists in the order they reach it, so a list
-    collected in RAM can go ahead of lists submitted directly after it.
+    It returns once the DMA has started; the transfer goes on while the
+    program does other work, such as filling the other buffered lists. The
+    next list submitted directly waits for it to end, as does the next DMA
+    (another flush, pvr_scene_finish(), a texture DMA).
 
     Like the first list submitted directly, this waits until the TA is done
     with the previous scene (pvr_wait_ready()). An open list is closed first.
@@ -1075,8 +1075,8 @@ int pvr_list_prim(pvr_list_t list, const void *data, size_t size);
 
     \retval 0               On success.
     \retval -1              If vertex DMA is off, the list is not enabled or
-                            has no vertex buffer, it was already flushed in
-                            this scene, or the DMA failed.
+                            has no vertex buffer, or it was already flushed in
+                            this scene.
 */
 int pvr_list_flush(pvr_list_t list);
 

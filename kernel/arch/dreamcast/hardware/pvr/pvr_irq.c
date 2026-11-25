@@ -25,55 +25,53 @@
    rendering time.
 */
 
-// Find the next list to DMA out. If we have none left to do, then do
-// nothing. Otherwise, start the DMA and chain back to us upon completion.
+// Find the next list to DMA out. If we have none left to do, then free
+// the DMA channel. Otherwise, start the DMA and chain back to us upon
+// completion.
 static void dma_next_list(void *thread) {
     volatile pvr_dma_buffers_t * b;
     unsigned int i;
 
-    // Get the buffers for this frame.
-    b = pvr_state.dma_buffers + (pvr_state.ram_target ^ 1);
+    // Get the buffers the lists are sent from.
+    b = pvr_state.dma_buffers + pvr_state.dma_target;
 
-    for(i = 0; i < PVR_OPB_COUNT; i++) {
-        if((pvr_state.lists_enabled & BIT(i))
-                && !(pvr_state.lists_dmaed & BIT(i))) {
+    if(pvr_state.lists_to_dma) {
+        i = __builtin_ctz(pvr_state.lists_to_dma);
 
-            /* If we are in PVR DMA mode, yet we haven't associated a
-               RAM-residing vertex buffer with the current list
-               (because we submitted it directly, for example), or
-               pvr_list_flush() already sent it, mark it as complete,
-               so we skip trying to DMA it. */
-            if(!b->base[i] || (b->flushed & BIT(i))) {
-                pvr_state.lists_dmaed |= BIT(i);
-                continue;
-            }
+        // Mark this list as processed.
+        pvr_state.lists_to_dma &= ~BIT(i);
 
-            // Mark this list as processed.
-            pvr_state.lists_dmaed |= BIT(i);
-
-            // Start the DMA transfer, chaining to ourselves.
-            pvr_dma_load_ta(b->base[i], b->ptr[i], 0, dma_next_list, thread);
-            return;
-        }
+        // Start the DMA transfer, chaining to ourselves.
+        pvr_dma_load_ta(b->base[i], b->ptr[i], 0, dma_next_list, thread);
+        return;
     }
 
-    // If that was the last one, then free up the DMA channel.
-    pvr_state.lists_dmaed = 0;
-
-    // Unlock
-    sem_signal((semaphore_t *)&pvr_state.dma_lock);
-
     // Buffers are now empty again
-    pvr_state.dma_buffers[pvr_state.ram_target ^ 1].ready = 0;
+    b->ready = 0;
+
+    // If that was the last one, then free up the DMA channel.
+    sem_signal((semaphore_t *)&pvr_state.dma_lock);
 }
 
-void pvr_start_dma(void) {
-    pvr_sync_stats(PVR_SYNC_REGSTART);
-
+/* Send the given lists of RAM buffer target to the TA by DMA, in list
+   order. Returns once the first DMA has started: the transfer ends in the
+   background, and pvr_wait_dma() waits for it. A transfer started before
+   (vertex or texture DMA) is waited for first. */
+void pvr_start_dma(int target, uint32_t lists) {
     sem_wait((semaphore_t *)&pvr_state.dma_lock);
+
+    pvr_state.dma_target = target;
+    pvr_state.lists_to_dma = lists;
 
     // Begin DMAing the first list.
     dma_next_list(thd_get_current());
+}
+
+/* Wait until the DMA channel is free, as before the TA takes a list
+   submitted directly after pvr_list_flush(). */
+void pvr_wait_dma(void) {
+    sem_wait((semaphore_t *)&pvr_state.dma_lock);
+    sem_signal((semaphore_t *)&pvr_state.dma_lock);
 }
 
 static void pvr_render_lists(void) {

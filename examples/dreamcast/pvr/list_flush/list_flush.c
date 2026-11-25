@@ -11,17 +11,19 @@
    list without one is submitted directly. Here the translucent particles
    are collected while the frame's state is worked out, and the opaque
    tiles behind them are submitted directly afterwards. pvr_list_flush()
-   sends the particles to the TA as soon as they are built; without it,
+   starts sending the particles to the TA as soon as they are built, and
+   the tiles' colours are worked out while that DMA runs; without it,
    pvr_scene_finish() sends them after the tiles. The picture is the same
    either way. The TA can only take a direct list once it is done with the
-   previous scene, and pvr_list_flush() waits for that too.
+   previous scene, and pvr_list_flush() waits for that too; the tiles, the
+   first list submitted directly after the flush, wait for the DMA to end.
 
    It switches between the two every 5 seconds and prints, for each, the
    CPU time from pvr_scene_begin() to the return of pvr_scene_finish().
-   Flushing early waits for the DMA inside the frame, so it costs the CPU
-   the DMA time (about 0.2 ms for these 75 KB). In return the TA has the
-   whole scene when pvr_scene_finish() returns, where otherwise the
-   particles still have to be sent.
+   The particles' DMA (75 KB) takes about 0.2 ms; flushing early hides it
+   behind the colours' work, and the TA has the whole scene when
+   pvr_scene_finish() returns, where otherwise the particles still have to
+   be sent.
 
    Controls:
      A          flush the particles early / send them at the scene's end
@@ -43,6 +45,7 @@
 #define TR_BUF_SIZE (256 * 1024)
 
 static uint8_t tr_buf[TR_BUF_SIZE] __attribute__((aligned(32)));
+static uint32_t tile_argb[24][32];
 static pvr_poly_hdr_t op_hdr, tr_hdr;
 
 static void quad(float x0, float y0, float x1, float y1, float z,
@@ -107,20 +110,30 @@ static void particles(float t) {
     pvr_list_finish();
 }
 
-/* The opaque tiles behind them. */
-static void tiles(float t) {
+/* The opaque tiles' colours: CPU work that needs neither list. */
+static void tile_colours(float t) {
     int x, y;
     uint32_t c;
+
+    for(y = 0; y < 24; y++) {
+        for(x = 0; x < 32; x++) {
+            c = (uint32_t)(96 + 64 * sinf(t + x * 0.4f + y * 0.6f));
+            tile_argb[y][x] = 0xff000000 | c << 8 | ((x + y) & 1 ? 0x40 : 0x20);
+        }
+    }
+}
+
+/* The opaque tiles behind them. */
+static void tiles(void) {
+    int x, y;
 
     pvr_list_begin(PVR_LIST_OP_POLY);
     pvr_prim(&op_hdr, sizeof(op_hdr));
 
-    for(y = 0; y < 480; y += 20) {
-        for(x = 0; x < 640; x += 20) {
-            c = (uint32_t)(96 + 64 * sinf(t + x * 0.02f + y * 0.03f));
-            quad(x, y, x + 19, y + 19, 1.0f,
-                 0xff000000 | c << 8 | (((x + y) / 20) & 1 ? 0x40 : 0x20));
-        }
+    for(y = 0; y < 24; y++) {
+        for(x = 0; x < 32; x++)
+            quad(x * 20, y * 20, x * 20 + 19, y * 20 + 19, 1.0f,
+                 tile_argb[y][x]);
     }
 
     pvr_list_finish();
@@ -177,7 +190,8 @@ int main(int argc, char *argv[]) {
         if(early)
             pvr_list_flush(PVR_LIST_TR_POLY);
 
-        tiles(t);
+        tile_colours(t);
+        tiles();
         pvr_scene_finish();
         cpu_us += timer_us_gettime64() - begin_us;
         frames++;

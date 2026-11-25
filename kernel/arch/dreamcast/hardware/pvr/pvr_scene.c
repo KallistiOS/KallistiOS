@@ -204,6 +204,12 @@ int pvr_list_begin(pvr_list_t list) {
 
     if(!pvr_list_dma) {
         pvr_start_ta_rendering();
+
+        /* Lists sent by pvr_list_flush() reach the TA first */
+        if(pvr_state.dma_mode &&
+           pvr_state.dma_buffers[pvr_state.ram_target].flushed)
+            pvr_wait_dma();
+
         sq_lock((void *)PVR_TA_INPUT);
     }
 
@@ -309,9 +315,29 @@ static void pvr_list_terminate(volatile pvr_dma_buffers_t *b, pvr_list_t list) {
     assert(b->ptr[list] <= b->size[list]);
 }
 
+/* End the given lists of the scene's DMA buffers and start sending them to
+   the TA. */
+static void pvr_lists_flush(uint32_t lists) {
+    volatile pvr_dma_buffers_t *b = pvr_state.dma_buffers + pvr_state.ram_target;
+    unsigned int i;
+
+    for(i = 0; i < PVR_OPB_COUNT; i++) {
+        if(lists & BIT(i))
+            pvr_list_terminate(b, i);
+    }
+
+    b->flushed |= lists;
+    pvr_state.lists_closed |= lists;
+
+    /* The TA must be done with the previous scene, as for a list submitted
+       directly. */
+    pvr_start_ta_rendering();
+
+    pvr_start_dma(pvr_state.ram_target, lists);
+}
+
 int pvr_list_flush(pvr_list_t list) {
     volatile pvr_dma_buffers_t *b;
-    int rv;
 
     if(list < 0 || list >= PVR_OPB_COUNT || !pvr_state.dma_mode
        || !(pvr_state.lists_enabled & BIT(list))) {
@@ -339,23 +365,7 @@ int pvr_list_flush(pvr_list_t list) {
     if(pvr_state.list_reg_open != PVR_LIST_NONE)
         pvr_list_finish();
 
-    pvr_list_terminate(b, list);
-
-    /* The TA must be done with the previous scene, as for a list submitted
-       directly. */
-    pvr_start_ta_rendering();
-
-    /* The previous scene's DMA chain has ended by now; take the channel all
-       the same, as pvr_start_dma() does. */
-    sem_wait((semaphore_t *)&pvr_state.dma_lock);
-    rv = pvr_dma_load_ta(b->base[list], b->ptr[list], true, NULL, NULL);
-    sem_signal((semaphore_t *)&pvr_state.dma_lock);
-
-    if(rv < 0)
-        return -1;
-
-    b->flushed |= BIT(list);
-    pvr_state.lists_closed |= BIT(list);
+    pvr_lists_flush(BIT(list));
 
     return 0;
 }
@@ -370,8 +380,8 @@ int pvr_scene_finish(void) {
 
     // If we're in DMA mode, then this works a little differently...
     if(pvr_state.dma_mode) {
-        // If any enabled lists are empty, fill them with a blank polyhdr. Also
-        // add a zero-marker to the end of each list.
+        uint32_t lists = 0;
+
         b = pvr_state.dma_buffers + pvr_state.ram_target;
 
         for(i = 0; i < PVR_OPB_COUNT; i++) {
@@ -386,29 +396,27 @@ int pvr_scene_finish(void) {
                 pvr_list_finish();
             }
 
-            /* We never associated an in-RAM DMA vertex buffer with the given
-               list type, because we're using hybrid rendering and submitted
-               that list type directly, or pvr_list_flush() already sent it -
-               skip it */
-            if(!b->base[i] || (b->flushed & BIT(i)))
-                continue;
-
-            /* Make sure there's at least one primitive in each, and put a
-               zero-marker on the end. */
-            pvr_list_terminate(b, i);
+            /* Send the lists still in RAM; skip those we submitted directly
+               (no in-RAM DMA vertex buffer: hybrid rendering) and those
+               pvr_list_flush() already sent. */
+            if(b->base[i] && !(b->flushed & BIT(i)))
+                lists |= BIT(i);
         }
 
-        pvr_start_ta_rendering();
-
-        // Flip buffers and mark them complete.
-        o = irq_disable();
-        pvr_state.dma_buffers[pvr_state.ram_target].ready = 1;
-        pvr_state.ram_target ^= 1;
-        irq_restore(o);
+        // Mark the buffers complete.
+        b->ready = 1;
 
         pvr_sync_stats(PVR_SYNC_BUFDONE);
+        pvr_sync_stats(PVR_SYNC_REGSTART);
 
-        pvr_start_dma();
+        /* Each gets a blank header if empty and a zero-marker at its end,
+           then the DMA starts. */
+        pvr_lists_flush(lists);
+
+        // Flip buffers.
+        o = irq_disable();
+        pvr_state.ram_target ^= 1;
+        irq_restore(o);
     }
     else {
         /* If a list was open, close it */
