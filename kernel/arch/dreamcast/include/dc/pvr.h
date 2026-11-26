@@ -1056,13 +1056,27 @@ int pvr_list_prim(pvr_list_t list, const void *data, size_t size);
 /** \brief   Flush the buffered data of the given list type to the TA.
     \ingroup pvr_list_mgmt
 
-    This function is currently not implemented, and calling it will result in an
-    assertion failure. It is intended to be used later in a "hybrid" mode where
-    both direct and DMA TA submission is possible.
+    With vertex DMA (pvr_init_params_t::dma_enabled), a list that has a vertex
+    buffer (pvr_set_vertbuf()) is collected in RAM and sent to the TA by DMA
+    after pvr_scene_finish(), while a list without one is submitted directly,
+    as it is drawn. This sends a buffered list to the TA now instead: it closes
+    the list, ends it, and starts its DMA. The list can't be opened again in
+    this scene, and pvr_scene_finish() doesn't send it again.
+
+    It returns once the DMA has started; the transfer goes on while the
+    program does other work, such as filling the other buffered lists. The
+    next list submitted directly waits for it to end, as does the next DMA
+    (another flush, pvr_scene_finish(), a texture DMA).
+
+    Like the first list submitted directly, this waits until the TA is done
+    with the previous scene (pvr_wait_ready()). An open list is closed first.
 
     \param  list            The list to flush.
 
-    \retval -1              On error (it is not possible to succeed).
+    \retval 0               On success.
+    \retval -1              If vertex DMA is off, the list is not enabled or
+                            has no vertex buffer, or it was already flushed in
+                            this scene.
 */
 int pvr_list_flush(pvr_list_t list);
 

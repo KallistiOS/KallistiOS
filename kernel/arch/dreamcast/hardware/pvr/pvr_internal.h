@@ -128,6 +128,7 @@ typedef struct {
     uint8_t     *base[PVR_OPB_COUNT];  // DMA buffers, if assigned
     uint32_t    ptr[PVR_OPB_COUNT];    // DMA buffer write pointer, if used
     uint32_t    size[PVR_OPB_COUNT];   // DMA buffer sizes, or zero if none
+    uint32_t    flushed;               // (1 << idx) for each list sent by pvr_list_flush()
     int         ready;                 // >0 if these buffers are ready to be DMAed
 } pvr_dma_buffers_t;
 
@@ -160,7 +161,8 @@ typedef struct {
     pvr_list_t  list_reg_open;          // Which list is open for registration, if any? (non-DMA only)
     uint32_t  lists_closed;             // (1 << idx) for each list which the SH4 has lost interest in
     uint32_t  lists_transferred;        // (1 << idx) for each list which has completely transferred to the TA
-    uint32_t  lists_dmaed;              // (1 << idx) for each list which has been DMA'd (DMA mode only)
+    uint32_t  lists_to_dma;             // (1 << idx) for each list the running vertex DMA has yet to send (DMA mode only)
+    int     dma_target;                 // RAM buffer the running vertex DMA sends from
 
     semaphore_t         dma_lock;       // Locked if a DMA is in progress (vertex or texture)
     int     ta_checked_ready;           // >0 if the TA has been checked to be ready for the new scene
@@ -302,6 +304,7 @@ void pvr_blank_polyhdr_buf(int type, pvr_poly_hdr_t * buf);
 void pvr_int_handler(uint32_t code, void *data);
 void pvr_vblank_handler(uint32_t code, void *data);
 
-void pvr_start_dma(void);
+void pvr_start_dma(int target, uint32_t lists);
+void pvr_wait_dma(void);
 
 #endif
